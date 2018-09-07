@@ -304,6 +304,9 @@ class AdaptiveCI : public Wavefunction {
 
     /// Print a wave function
     void print_wfn(DeterminantHashVec& space, WFNOperator& op, SharedMatrix evecs, int nroot);
+    /// Find all the relevant excitations out of the P space
+    void find_Q_space(DeterminantHashVec& P_space, DeterminantHashVec& PQ_space,
+                      SharedVector evals, SharedMatrix evecs);
 
     /// Batched version of find q space
     void find_q_space_batched(DeterminantHashVec& P_space, DeterminantHashVec& PQ_space,
@@ -328,24 +331,16 @@ class AdaptiveCI : public Wavefunction {
     void find_q_space_single_root(int nroot, SharedVector evals, SharedMatrix evecs);
 
     /// Basic determinant generator (threaded, no batching, all determinants stored)
-    void get_excited_determinants(int nroot, SharedMatrix evecs, DeterminantHashVec& P_space,
-                                  det_hash<std::vector<double>>& V_hash);
+    void get_excited_determinants_avg(int nroot, SharedMatrix evecs, SharedVector evals,  DeterminantHashVec& P_space,
+                                           std::vector<std::pair<double, Determinant>>& F_space);
 
-    /// Alternate/experimental determinant generator (threaded, each thread builds part of F)
-    void get_excited_determinants_seq(int nroot, SharedMatrix evecs, DeterminantHashVec& P_space,
-                                   det_hash<std::vector<double>>& V_hash);
     /// Get excited determinants with a specified hole
-    void get_core_excited_determinants(SharedMatrix evecs, DeterminantHashVec& P_space,
-                                       det_hash<std::vector<double>>& V_hash);
+    void get_excited_determinants_restrict(SharedMatrix evecs, SharedVector evals,  DeterminantHashVec& P_space,
+                                           std::vector<std::pair<double, Determinant>>& F_space);
 
     // Optimized for a single root
-    void get_excited_determinants_sr(SharedMatrix evecs, DeterminantHashVec& P_space,
-                                     det_hash<double>& V_hash);
-
-    // Primitive batching algorithm, each thread does one bin, to be removed
-    double get_excited_determinants_batch_old(SharedMatrix evecs, SharedVector evals,
-                                          DeterminantHashVec& P_space,
-                                          std::vector<std::pair<double, Determinant>>& F_space);
+    void get_excited_determinants_sr(SharedMatrix evecs, SharedVector evals,  DeterminantHashVec& P_space,
+                                           std::vector<std::pair<double, Determinant>>& F_space);
 
     // (DEFAULT in batching) Optimized batching algorithm, prescreens the batches to significantly reduce storage, based on hashes
     double get_excited_determinants_batch(SharedMatrix evecs, SharedVector evals,
@@ -356,10 +351,6 @@ class AdaptiveCI : public Wavefunction {
     double get_excited_determinants_batch_vecsort(SharedMatrix evecs, SharedVector evals,
                                            DeterminantHashVec& P_space,
                                            std::vector<std::pair<double, Determinant>>& F_space);
-
-    /// Builds excited determinants for a bin, no threading, hash-based, to be removed
-    det_hash<double> get_bin_F_space_old(int bin, int nbin, SharedMatrix evecs,
-                                     DeterminantHashVec& P_space);
 
     /// (DEFAULT)  Builds excited determinants for a bin, uses all threads, hash-based
     det_hash<double> get_bin_F_space(int bin, int nbin,double E0, SharedMatrix evecs,

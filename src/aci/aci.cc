@@ -206,7 +206,6 @@ void set_ACI_options(ForteOptions& foptions) {
     /*- Computes RDMs without coupling lists -*/
     foptions.add_bool("ACI_DIRECT_RDMS", false, "Computes RDMs without coupling lists"); 
 
-
     //temp
     foptions.add_str("ACI_BATCH_ALG", "HASH", "Algorithm to use for batching");
 }
@@ -829,16 +828,6 @@ void AdaptiveCI::print_final(DeterminantHashVec& dets, SharedMatrix& PQ_evecs,
         //    	}
     }
 
-    if (ex_alg_ == "ROOT_SELECT") {
-        outfile->Printf("\n\n  Energy optimized for Root %d: %.12f Eh", ref_root_,
-                        PQ_evals->get(ref_root_) + nuclear_repulsion_energy_ +
-                            fci_ints_->scalar_energy());
-        outfile->Printf("\n\n  Root %d Energy + PT2:         %.12f Eh", ref_root_,
-                        PQ_evals->get(ref_root_) + nuclear_repulsion_energy_ +
-                            fci_ints_->scalar_energy() +
-                            multistate_pt2_energy_correction_[ref_root_]);
-    }
-
     if ((ex_alg_ != "ROOT_ORTHOGONALIZE") or (nroot_ == 1)) {
         outfile->Printf("\n\n  ==> Wavefunction Information <==");
 
@@ -865,339 +854,368 @@ void AdaptiveCI::print_final(DeterminantHashVec& dets, SharedMatrix& PQ_evecs,
     //   }
 }
 
-void AdaptiveCI::find_q_space_batched(DeterminantHashVec& P_space, DeterminantHashVec& PQ_space,
+
+void AdaptiveCI::find_Q_space(DeterminantHashVec& P_space, DeterminantHashVec& PQ_space,
                                       SharedVector evals, SharedMatrix evecs) {
 
-    timer find_q("ACI:Build Model Space");
-    Timer build;
-    outfile->Printf("\n  Using batched Q_space algorithm");
-
+    // First get the F space, using one of many algorithms
     std::vector<std::pair<double, Determinant>> F_space;
-    double remainder = 0.0; 
-    if( options_.get_str("ACI_BATCH_ALG") == "HASH"){
-        remainder = get_excited_determinants_batch(evecs, evals, P_space, F_space);
-    } else {
-        remainder = get_excited_determinants_batch_vecsort( evecs, evals, P_space, F_space );
+    
+    std::string screen_alg = options_.get_str("ACI_SCREEN_ALG");
+
+    if( ex_alg_ == "AVERAGE" ){
+        screen_alg = "AVERAGE";
     }
 
-    PQ_space.clear();
-    external_wfn_.clear();
-    PQ_space.swap(P_space);
-
-    if (!quiet_mode_) {
-        outfile->Printf("\n  %s: %zu determinants", "Dimension of the truncated SD space",
-                        F_space.size());
-        outfile->Printf("\n  %s: %f s\n", "Time spent building the external space (default)",
-                        build.get());
-    }
-
-    Timer sorter;
-    std::sort(F_space.begin(), F_space.end(), pairComp);
-    outfile->Printf("\n  Time spent sorting: %1.6f", sorter.get());
-
-    Timer screen;
-    double ept2 = 0.0 - remainder;
-    Timer select;
-    double sum = remainder;
-    size_t last_excluded = 0;
-    for (size_t I = 0, max_I = F_space.size(); I < max_I; ++I) {
-        double& energy = F_space[I].first;
-        Determinant& det = F_space[I].second;
-        if (sum + energy < sigma_) {
-            sum += energy;
-            ept2 -= energy;
-            last_excluded = I;
-
-        } else {
-            PQ_space.add(det);
-        }
-    }
-    // Add missing determinants
-    if (add_aimed_degenerate_) {
-        size_t num_extra = 0;
-        for (size_t I = 0, max_I = last_excluded; I < max_I; ++I) {
-            size_t J = last_excluded - I;
-            if (std::fabs(F_space[last_excluded + 1].first - F_space[J].first) < 1.0e-9) {
-                PQ_space.add(F_space[J].second);
-                num_extra++;
-            } else {
-                break;
-            }
-        }
-        if (num_extra > 0 and (!quiet_mode_)) {
-            outfile->Printf("\n  Added %zu missing determinants in aimed selection.", num_extra);
-        }
-    }
-    outfile->Printf("\n  Time spent selecting: %1.6f", select.get());
-    multistate_pt2_energy_correction_.resize(nroot_);
-    multistate_pt2_energy_correction_[0] = ept2;
-
-    if (!quiet_mode_) {
-        outfile->Printf("\n  %s: %zu determinants", "Dimension of the P + Q space",
-                        PQ_space.size());
-        outfile->Printf("\n  %s: %f s", "Time spent screening the model space", screen.get());
+    if ( screen_alg == "AVERAGE" ){
+        //multiroot 
+        get_excited_determinants_avg(nroot_, evecs, evals, P_space, F_space);
+    } else if ( screen_alg == "SR" ){
+        //single-root optimized
+        get_excited_determinants_sr(evecs, evals, P_space, F_space);
+    } else if ( screen_alg == "RESTRICTED" ){
+        // restricted
+        get_excited_determinants_restrict(evecs, evals, P_space, F_space);
+    } else if ( screen_alg == "BATCH_HASH" ){
+        // hash batch
+        get_excited_determinants_batch( evecs, evals, P_space, F_space);
+    } else if ( screen_alg == "BATCH_VEC" ){
+        // vec batch
+        get_excited_determinants_batch_vecsort( evecs, evals, P_space, F_space);
     }
 }
 
-void AdaptiveCI::default_find_q_space(DeterminantHashVec& P_space, DeterminantHashVec& PQ_space,
-                                      SharedVector evals, SharedMatrix evecs) {
-    timer find_q("ACI:Build Model Space");
-    Timer build;
-
-    det_hash<double> V_hash;
-    get_excited_determinants_sr(evecs, P_space, V_hash);
-
-    // This will contain all the determinants
-    PQ_space.clear();
-    external_wfn_.clear();
-    // Add the P-space determinants and zero the hash
-    Timer erase;
-    const det_hashvec& detmap = P_space.wfn_hash();
-    for (det_hashvec::iterator it = detmap.begin(), endit = detmap.end(); it != endit; ++it) {
-        V_hash.erase(*it);
-    }
-    PQ_space.swap(P_space);
-    outfile->Printf("\n  Time spent preparing PQ_space: %1.6f", erase.get());
-
-    if (!quiet_mode_) {
-        outfile->Printf("\n  %s: %zu determinants", "Dimension of the SD space", V_hash.size());
-        outfile->Printf("\n  %s: %f s\n", "Time spent building the external space (default)",
-                        build.get());
-    }
-
-    Timer screen;
-
-    // Compute criteria for all dets, store them all
-    Determinant zero_det; // <- xsize (nact_);
-    std::vector<std::pair<double, Determinant>> F_space(V_hash.size(),
-                                                        std::make_pair(0.0, zero_det));
-    Timer build_sort;
-    size_t max = V_hash.size();
-#pragma omp parallel
-    {
-        int num_thread = omp_get_max_threads();
-        int tid = omp_get_thread_num();
-        size_t N = 0;
-        // sorted_dets.reserve(max);
-        for (const auto& I : V_hash) {
-            if ((N % num_thread) == tid) {
-                double delta = fci_ints_->energy(I.first) - evals->get(0);
-                double V = I.second;
-
-                double criteria = 0.5 * (delta - sqrt(delta * delta + V * V * 4.0));
-                F_space[N] = std::make_pair(std::fabs(criteria), I.first);
-            }
-            N++;
-        }
-    }
-    outfile->Printf("\n  Time spent building sorting list: %1.6f", build_sort.get());
-
-    Timer sorter;
-    std::sort(F_space.begin(), F_space.end(), pairComp);
-    outfile->Printf("\n  Time spent sorting: %1.6f", sorter.get());
-
-    double ept2 = 0.0;
-    Timer select;
-    double sum = 0.0;
-    size_t last_excluded = 0;
-    for (size_t I = 0, max_I = F_space.size(); I < max_I; ++I) {
-        double& energy = F_space[I].first;
-        Determinant& det = F_space[I].second;
-        if (sum + energy < sigma_) {
-            sum += energy;
-            ept2 -= energy;
-            last_excluded = I;
-
-        } else {
-            PQ_space.add(det);
-        }
-    }
-    // Add missing determinants
-    if (add_aimed_degenerate_) {
-        size_t num_extra = 0;
-        for (size_t I = 0, max_I = last_excluded; I < max_I; ++I) {
-            size_t J = last_excluded - I;
-            if (std::fabs(F_space[last_excluded + 1].first - F_space[J].first) < 1.0e-9) {
-                PQ_space.add(F_space[J].second);
-                num_extra++;
-            } else {
-                break;
-            }
-        }
-        if (num_extra > 0 and (!quiet_mode_)) {
-            outfile->Printf("\n  Added %zu missing determinants in aimed selection.", num_extra);
-        }
-    }
-    outfile->Printf("\n  Time spent selecting: %1.6f", select.get());
-    multistate_pt2_energy_correction_.resize(nroot_);
-    multistate_pt2_energy_correction_[0] = ept2;
-
-    if (!quiet_mode_) {
-        outfile->Printf("\n  %s: %zu determinants", "Dimension of the P + Q space",
-                        PQ_space.size());
-        outfile->Printf("\n  %s: %f s", "Time spent screening the model space", screen.get());
-    }
-}
-
-void AdaptiveCI::find_q_space(DeterminantHashVec& P_space, DeterminantHashVec& PQ_space, int nroot,
-                              SharedVector evals, SharedMatrix evecs) {
-    timer find_q("ACI:Build Model Space");
-    Timer t_ms_build;
-
-    // This hash saves the determinant coupling to the model space eigenfunction
-    det_hash<std::vector<double>> V_hash;
-    if (options_.get_bool("ACI_LOW_MEM_SCREENING")) {
-        get_excited_determinants_seq(nroot_, evecs, P_space, V_hash);
-    } else if ((options_.get_str("ACI_EX_TYPE") == "CORE") and (root_ > 0)) {
-        get_core_excited_determinants(evecs, P_space, V_hash);
-    } else {
-        get_excited_determinants(nroot_, evecs, P_space, V_hash);
-    }
-
-    if (!quiet_mode_) {
-        outfile->Printf("\n  %s: %zu determinants", "Dimension of the SD space", V_hash.size());
-        outfile->Printf("\n  %s: %f s\n", "Time spent building the external space",
-                        t_ms_build.get());
-    }
-
-    // This will contain all the determinants
-    PQ_space.clear();
-
-    // Add the P-space determinants and zero the hash
-    PQ_space.copy(P_space);
-
-    Timer t_ms_screen;
-
-    // Define coupling out of loop, assume perturb_select_ = false
-    std::function<double(double A, double B, double C)> C1_eq = [](double A, double B,
-                                                                   double C) -> double {
-        return 0.5 * ((B - C) - sqrt((B - C) * (B - C) + 4.0 * A * A)) / A;
-    };
-
-    std::function<double(double A, double B, double C)> E2_eq = [](double A, double B,
-                                                                   double C) -> double {
-        return 0.5 * ((B - C) - sqrt((B - C) * (B - C) + 4.0 * A * A));
-    };
-
-    if (perturb_select_) {
-        C1_eq = [](double A, double B, double C) -> double { return -A / (B - C); };
-        E2_eq = [](double A, double B, double C) -> double { return -A * A / (B - C); };
-    }
-
-    // Check the coupling between the reference and the SD space
-
-    std::vector<std::pair<double, Determinant>> sorted_dets;
-    std::vector<double> ept2(nroot_, 0.0);
-
-    if (aimed_selection_) {
-        Determinant zero_det; // <- xsize (nact_);
-        sorted_dets.resize(V_hash.size(), std::make_pair(0.0, zero_det));
-    }
-
-#pragma omp parallel
-    {
-        int ithread = omp_get_thread_num();
-        int nthreads = omp_get_num_threads();
-        double criteria;
-
-        std::vector<double> C1(nroot_, 0.0);
-        std::vector<double> E2(nroot_, 0.0);
-        std::vector<double> e2(nroot_, 0.0);
-
-        size_t count = 0;
-        for (const auto& it : V_hash) {
-            if ((count % nthreads) == ithread) {
-                double EI = fci_ints_->energy(it.first);
-                for (int n = 0; n < nroot; ++n) {
-                    double V = it.second[n];
-                    double C1_I = C1_eq(V, EI, evals->get(n));
-                    double E2_I = E2_eq(V, EI, evals->get(n));
-
-                    C1[n] = std::fabs(C1_I);
-                    E2[n] = std::fabs(E2_I);
-
-                    e2[n] = E2_I;
-                }
-                if (ex_alg_ == "AVERAGE" and nroot > 1) {
-                    criteria = average_q_values(nroot, C1, E2);
-                } else {
-                    criteria = root_select(nroot, C1, E2);
-                }
-
-                if (aimed_selection_) {
-                    sorted_dets[count] = std::make_pair(criteria, it.first);
-                } else {
-                    if (std::fabs(criteria) > sigma_) {
-#pragma omp critical
-                        { PQ_space.add(it.first); }
-                    } else {
-#pragma omp critical
-                        {
-                            for (int n = 0; n < nroot; ++n) {
-                                ept2[n] += e2[n];
-                            }
-                        }
-                    }
-                }
-            }
-            count++;
-        }
-    } // end loop over determinants
-
-    if (aimed_selection_) {
-        // Sort the CI coefficients in ascending order
-        std::sort(sorted_dets.begin(), sorted_dets.end(), pairComp);
-
-        double sum = 0.0;
-        size_t last_excluded = 0;
-        for (size_t I = 0, max_I = sorted_dets.size(); I < max_I; ++I) {
-            const Determinant& det = sorted_dets[I].second;
-            if (sum + sorted_dets[I].first < sigma_) {
-                sum += sorted_dets[I].first;
-                double EI = fci_ints_->energy(det);
-                const std::vector<double>& V_vec = V_hash[det];
-                for (int n = 0; n < nroot; ++n) {
-                    double V = V_vec[n];
-                    double E2_I = E2_eq(V, EI, evals->get(n));
-
-                    ept2[n] += E2_I;
-                }
-                last_excluded = I;
-
-            } else {
-                PQ_space.add(sorted_dets[I].second);
-            }
-        }
-        // outfile->Printf("\n sum : %1.12f", sum );
-        // add missing determinants that have the same weight as the last one
-        // included
-        if (add_aimed_degenerate_) {
-            size_t num_extra = 0;
-            for (size_t I = 0, max_I = last_excluded; I < max_I; ++I) {
-                size_t J = last_excluded - I;
-                if (std::fabs(sorted_dets[last_excluded + 1].first - sorted_dets[J].first) <
-                    1.0e-9) {
-                    PQ_space.add(sorted_dets[J].second);
-                    num_extra++;
-                } else {
-                    break;
-                }
-            }
-            if (num_extra > 0 and (!quiet_mode_)) {
-                outfile->Printf("\n  Added %zu missing determinants in aimed selection.",
-                                num_extra);
-            }
-        }
-    }
-
-    multistate_pt2_energy_correction_ = ept2;
-
-    if (!quiet_mode_) {
-        outfile->Printf("\n  %s: %zu determinants", "Dimension of the P + Q space",
-                        PQ_space.size());
-        outfile->Printf("\n  %s: %f s", "Time spent screening the model space", t_ms_screen.get());
-    }
-}
+//void AdaptiveCI::find_q_space_batched(DeterminantHashVec& P_space, DeterminantHashVec& PQ_space,
+//                                      SharedVector evals, SharedMatrix evecs) {
+//
+//    timer find_q("ACI:Build Model Space");
+//    Timer build;
+//    outfile->Printf("\n  Using batched Q_space algorithm");
+//
+//    std::vector<std::pair<double, Determinant>> F_space;
+//    double remainder = 0.0; 
+//    if( options_.get_str("ACI_BATCH_ALG") == "HASH"){
+//        remainder = get_excited_determinants_batch(evecs, evals, P_space, F_space);
+//    } else {
+//        remainder = get_excited_determinants_batch_vecsort( evecs, evals, P_space, F_space );
+//    }
+//
+//    PQ_space.clear();
+//    external_wfn_.clear();
+//    PQ_space.swap(P_space);
+//
+//    if (!quiet_mode_) {
+//        outfile->Printf("\n  %s: %zu determinants", "Dimension of the truncated SD space",
+//                        F_space.size());
+//        outfile->Printf("\n  %s: %f s\n", "Time spent building the external space (default)",
+//                        build.get());
+//    }
+//
+//    Timer sorter;
+//    std::sort(F_space.begin(), F_space.end(), pairComp);
+//    outfile->Printf("\n  Time spent sorting: %1.6f", sorter.get());
+//
+//    Timer screen;
+//    double ept2 = 0.0 - remainder;
+//    Timer select;
+//    double sum = remainder;
+//    size_t last_excluded = 0;
+//    for (size_t I = 0, max_I = F_space.size(); I < max_I; ++I) {
+//        double& energy = F_space[I].first;
+//        Determinant& det = F_space[I].second;
+//        if (sum + energy < sigma_) {
+//            sum += energy;
+//            ept2 -= energy;
+//            last_excluded = I;
+//
+//        } else {
+//            PQ_space.add(det);
+//        }
+//    }
+//    // Add missing determinants
+//    if (add_aimed_degenerate_) {
+//        size_t num_extra = 0;
+//        for (size_t I = 0, max_I = last_excluded; I < max_I; ++I) {
+//            size_t J = last_excluded - I;
+//            if (std::fabs(F_space[last_excluded + 1].first - F_space[J].first) < 1.0e-9) {
+//                PQ_space.add(F_space[J].second);
+//                num_extra++;
+//            } else {
+//                break;
+//            }
+//        }
+//        if (num_extra > 0 and (!quiet_mode_)) {
+//            outfile->Printf("\n  Added %zu missing determinants in aimed selection.", num_extra);
+//        }
+//    }
+//    outfile->Printf("\n  Time spent selecting: %1.6f", select.get());
+//    multistate_pt2_energy_correction_.resize(nroot_);
+//    multistate_pt2_energy_correction_[0] = ept2;
+//
+//    if (!quiet_mode_) {
+//        outfile->Printf("\n  %s: %zu determinants", "Dimension of the P + Q space",
+//                        PQ_space.size());
+//        outfile->Printf("\n  %s: %f s", "Time spent screening the model space", screen.get());
+//    }
+//}
+//
+//void AdaptiveCI::default_find_q_space(DeterminantHashVec& P_space, DeterminantHashVec& PQ_space,
+//                                      SharedVector evals, SharedMatrix evecs) {
+//    timer find_q("ACI:Build Model Space");
+//    Timer build;
+//
+//    det_hash<double> V_hash;
+//    get_excited_determinants_sr(evecs, P_space, V_hash);
+//
+//    // This will contain all the determinants
+//    PQ_space.clear();
+//    external_wfn_.clear();
+//    // Add the P-space determinants and zero the hash
+//    Timer erase;
+//    const det_hashvec& detmap = P_space.wfn_hash();
+//    for (det_hashvec::iterator it = detmap.begin(), endit = detmap.end(); it != endit; ++it) {
+//        V_hash.erase(*it);
+//    }
+//    PQ_space.swap(P_space);
+//    outfile->Printf("\n  Time spent preparing PQ_space: %1.6f", erase.get());
+//
+//    if (!quiet_mode_) {
+//        outfile->Printf("\n  %s: %zu determinants", "Dimension of the SD space", V_hash.size());
+//        outfile->Printf("\n  %s: %f s\n", "Time spent building the external space (default)",
+//                        build.get());
+//    }
+//
+//    Timer screen;
+//
+//    // Compute criteria for all dets, store them all
+//    Determinant zero_det; // <- xsize (nact_);
+//    std::vector<std::pair<double, Determinant>> F_space(V_hash.size(),
+//                                                        std::make_pair(0.0, zero_det));
+//    Timer build_sort;
+//    size_t max = V_hash.size();
+//#pragma omp parallel
+//    {
+//        int num_thread = omp_get_max_threads();
+//        int tid = omp_get_thread_num();
+//        size_t N = 0;
+//        // sorted_dets.reserve(max);
+//        for (const auto& I : V_hash) {
+//            if ((N % num_thread) == tid) {
+//                double delta = fci_ints_->energy(I.first) - evals->get(0);
+//                double V = I.second;
+//
+//                double criteria = 0.5 * (delta - sqrt(delta * delta + V * V * 4.0));
+//                F_space[N] = std::make_pair(std::fabs(criteria), I.first);
+//            }
+//            N++;
+//        }
+//    }
+//    outfile->Printf("\n  Time spent building sorting list: %1.6f", build_sort.get());
+//
+//    Timer sorter;
+//    std::sort(F_space.begin(), F_space.end(), pairComp);
+//    outfile->Printf("\n  Time spent sorting: %1.6f", sorter.get());
+//
+//    double ept2 = 0.0;
+//    Timer select;
+//    double sum = 0.0;
+//    size_t last_excluded = 0;
+//    for (size_t I = 0, max_I = F_space.size(); I < max_I; ++I) {
+//        double& energy = F_space[I].first;
+//        Determinant& det = F_space[I].second;
+//        if (sum + energy < sigma_) {
+//            sum += energy;
+//            ept2 -= energy;
+//            last_excluded = I;
+//
+//        } else {
+//            PQ_space.add(det);
+//        }
+//    }
+//    // Add missing determinants
+//    if (add_aimed_degenerate_) {
+//        size_t num_extra = 0;
+//        for (size_t I = 0, max_I = last_excluded; I < max_I; ++I) {
+//            size_t J = last_excluded - I;
+//            if (std::fabs(F_space[last_excluded + 1].first - F_space[J].first) < 1.0e-9) {
+//                PQ_space.add(F_space[J].second);
+//                num_extra++;
+//            } else {
+//                break;
+//            }
+//        }
+//        if (num_extra > 0 and (!quiet_mode_)) {
+//            outfile->Printf("\n  Added %zu missing determinants in aimed selection.", num_extra);
+//        }
+//    }
+//    outfile->Printf("\n  Time spent selecting: %1.6f", select.get());
+//    multistate_pt2_energy_correction_.resize(nroot_);
+//    multistate_pt2_energy_correction_[0] = ept2;
+//
+//    if (!quiet_mode_) {
+//        outfile->Printf("\n  %s: %zu determinants", "Dimension of the P + Q space",
+//                        PQ_space.size());
+//        outfile->Printf("\n  %s: %f s", "Time spent screening the model space", screen.get());
+//    }
+//}
+//
+//void AdaptiveCI::find_q_space(DeterminantHashVec& P_space, DeterminantHashVec& PQ_space, int nroot,
+//                              SharedVector evals, SharedMatrix evecs) {
+//    timer find_q("ACI:Build Model Space");
+//    Timer t_ms_build;
+//
+//    // This hash saves the determinant coupling to the model space eigenfunction
+//    det_hash<std::vector<double>> V_hash;
+//    if ((options_.get_str("ACI_EX_TYPE") == "CORE") and (root_ > 0)) {
+//        get_core_excited_determinants(evecs, P_space, V_hash);
+//    } else {
+//        get_excited_determinants(nroot_, evecs, P_space, V_hash);
+//    }
+//
+//    if (!quiet_mode_) {
+//        outfile->Printf("\n  %s: %zu determinants", "Dimension of the SD space", V_hash.size());
+//        outfile->Printf("\n  %s: %f s\n", "Time spent building the external space",
+//                        t_ms_build.get());
+//    }
+//
+//    // This will contain all the determinants
+//    PQ_space.clear();
+//
+//    // Add the P-space determinants and zero the hash
+//    PQ_space.copy(P_space);
+//
+//    Timer t_ms_screen;
+//
+//    // Define coupling out of loop, assume perturb_select_ = false
+//    std::function<double(double A, double B, double C)> C1_eq = [](double A, double B,
+//                                                                   double C) -> double {
+//        return 0.5 * ((B - C) - sqrt((B - C) * (B - C) + 4.0 * A * A)) / A;
+//    };
+//
+//    std::function<double(double A, double B, double C)> E2_eq = [](double A, double B,
+//                                                                   double C) -> double {
+//        return 0.5 * ((B - C) - sqrt((B - C) * (B - C) + 4.0 * A * A));
+//    };
+//
+//    if (perturb_select_) {
+//        C1_eq = [](double A, double B, double C) -> double { return -A / (B - C); };
+//        E2_eq = [](double A, double B, double C) -> double { return -A * A / (B - C); };
+//    }
+//
+//    // Check the coupling between the reference and the SD space
+//
+//    std::vector<std::pair<double, Determinant>> sorted_dets;
+//    std::vector<double> ept2(nroot_, 0.0);
+//
+//    if (aimed_selection_) {
+//        Determinant zero_det; // <- xsize (nact_);
+//        sorted_dets.resize(V_hash.size(), std::make_pair(0.0, zero_det));
+//    }
+//
+//#pragma omp parallel
+//    {
+//        int ithread = omp_get_thread_num();
+//        int nthreads = omp_get_num_threads();
+//        double criteria;
+//
+//        std::vector<double> C1(nroot_, 0.0);
+//        std::vector<double> E2(nroot_, 0.0);
+//        std::vector<double> e2(nroot_, 0.0);
+//
+//        size_t count = 0;
+//        for (const auto& it : V_hash) {
+//            if ((count % nthreads) == ithread) {
+//                double EI = fci_ints_->energy(it.first);
+//                for (int n = 0; n < nroot; ++n) {
+//                    double V = it.second[n];
+//                    double C1_I = C1_eq(V, EI, evals->get(n));
+//                    double E2_I = E2_eq(V, EI, evals->get(n));
+//
+//                    C1[n] = std::fabs(C1_I);
+//                    E2[n] = std::fabs(E2_I);
+//
+//                    e2[n] = E2_I;
+//                }
+//                if (ex_alg_ == "AVERAGE" and nroot > 1) {
+//                    criteria = average_q_values(nroot, C1, E2);
+//                } else {
+//                    criteria = root_select(nroot, C1, E2);
+//                }
+//
+//                if (aimed_selection_) {
+//                    sorted_dets[count] = std::make_pair(criteria, it.first);
+//                } else {
+//                    if (std::fabs(criteria) > sigma_) {
+//#pragma omp critical
+//                        { PQ_space.add(it.first); }
+//                    } else {
+//#pragma omp critical
+//                        {
+//                            for (int n = 0; n < nroot; ++n) {
+//                                ept2[n] += e2[n];
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//            count++;
+//        }
+//    } // end loop over determinants
+//
+//    if (aimed_selection_) {
+//        // Sort the CI coefficients in ascending order
+//        std::sort(sorted_dets.begin(), sorted_dets.end(), pairComp);
+//
+//        double sum = 0.0;
+//        size_t last_excluded = 0;
+//        for (size_t I = 0, max_I = sorted_dets.size(); I < max_I; ++I) {
+//            const Determinant& det = sorted_dets[I].second;
+//            if (sum + sorted_dets[I].first < sigma_) {
+//                sum += sorted_dets[I].first;
+//                double EI = fci_ints_->energy(det);
+//                const std::vector<double>& V_vec = V_hash[det];
+//                for (int n = 0; n < nroot; ++n) {
+//                    double V = V_vec[n];
+//                    double E2_I = E2_eq(V, EI, evals->get(n));
+//
+//                    ept2[n] += E2_I;
+//                }
+//                last_excluded = I;
+//
+//            } else {
+//                PQ_space.add(sorted_dets[I].second);
+//            }
+//        }
+//        // outfile->Printf("\n sum : %1.12f", sum );
+//        // add missing determinants that have the same weight as the last one
+//        // included
+//        if (add_aimed_degenerate_) {
+//            size_t num_extra = 0;
+//            for (size_t I = 0, max_I = last_excluded; I < max_I; ++I) {
+//                size_t J = last_excluded - I;
+//                if (std::fabs(sorted_dets[last_excluded + 1].first - sorted_dets[J].first) <
+//                    1.0e-9) {
+//                    PQ_space.add(sorted_dets[J].second);
+//                    num_extra++;
+//                } else {
+//                    break;
+//                }
+//            }
+//            if (num_extra > 0 and (!quiet_mode_)) {
+//                outfile->Printf("\n  Added %zu missing determinants in aimed selection.",
+//                                num_extra);
+//            }
+//        }
+//    }
+//
+//    multistate_pt2_energy_correction_ = ept2;
+//
+//    if (!quiet_mode_) {
+//        outfile->Printf("\n  %s: %zu determinants", "Dimension of the P + Q space",
+//                        PQ_space.size());
+//        outfile->Printf("\n  %s: %f s", "Time spent screening the model space", t_ms_screen.get());
+//    }
+//}
 
 double AdaptiveCI::average_q_values(int nroot, std::vector<double>& C1, std::vector<double>& E2) {
     // f_E2 and f_C1 will store the selected function of the chosen q criteria
@@ -2067,10 +2085,6 @@ void AdaptiveCI::compute_aci(DeterminantHashVec& PQ_space, SharedMatrix& PQ_evec
     std::vector<Determinant> old_dets;
     SharedMatrix old_evecs;
 
-    if (options_.get_str("ACI_EXCITED_ALGORITHM") == "ROOT_SELECT") {
-        ref_root_ = options_.get_int("ACI_ROOT");
-    }
-
     // Save the P_space energies to predict convergence
     std::vector<double> P_energies;
     // approx_rdm_ = false;
@@ -2084,8 +2098,7 @@ void AdaptiveCI::compute_aci(DeterminantHashVec& PQ_space, SharedMatrix& PQ_evec
         std::string cycle_h = "Cycle " + std::to_string(cycle_);
 
         bool follow = false;
-        if (options_.get_str("ACI_EXCITED_ALGORITHM") == "ROOT_SELECT" or
-            options_.get_str("ACI_EXCITED_ALGORITHM") == "ROOT_COMBINE" or
+        if( options_.get_str("ACI_EXCITED_ALGORITHM") == "ROOT_COMBINE" or
             options_.get_str("ACI_EXCITED_ALGORITHM") == "MULTISTATE" or
             options_.get_str("ACI_EXCITED_ALGORITHM") == "ROOT_ORTHOGONALIZE") {
 
@@ -2274,9 +2287,6 @@ void AdaptiveCI::compute_aci(DeterminantHashVec& PQ_space, SharedMatrix& PQ_evec
         // If doing root-following, grab the initial root
         if (follow and (cycle == (pre_iter_ - 1) or (pre_iter_ == 0 and cycle == 0))) {
 
-            if (options_.get_str("ACI_EXCITED_ALGORITHM") == "ROOT_SELECT") {
-                ref_root_ = options_.get_int("ACI_ROOT");
-            }
             size_t dim = std::min(static_cast<int>(PQ_space.size()), 1000);
             P_ref.subspace(PQ_space, PQ_evecs, P_ref_evecs, dim, ref_root_);
         }
@@ -2558,43 +2568,43 @@ void AdaptiveCI::compute_multistate(SharedVector& PQ_evals) {
     //    PQ_evals->print();
 }
 
-DeterminantHashVec AdaptiveCI::approximate_wfn(DeterminantHashVec& PQ_space, SharedMatrix& evecs,
-                                               SharedVector& evals, SharedMatrix& new_evecs) {
-    DeterminantHashVec new_wfn;
-    new_wfn.copy(PQ_space);
-
-    det_hash<std::vector<double>> external_space;
-    get_excited_determinants(1, evecs, PQ_space, external_space);
-
-    size_t n_ref = PQ_space.size();
-    size_t n_external = external_space.size();
-    size_t total_size = n_ref + n_external;
-
-    outfile->Printf("\n  Size of external space: %zu", n_external);
-    new_evecs.reset(new Matrix("U", total_size, 1));
-    double sum = 0.0;
-
-    for (size_t I = 0; I < n_ref; ++I) {
-        double val = evecs->get(I, 0);
-        new_evecs->set(I, 0, val);
-        sum += val * val;
-    }
-
-    double E0 = evals->get(0);
-    for (auto& I : external_space) {
-        new_wfn.add(I.first);
-        double val = I.second[0] / (E0 - fci_ints_->energy(I.first));
-        new_evecs->set(new_wfn.get_idx(I.first), 0, val);
-        sum += val * val;
-    }
-
-    outfile->Printf("\n  Norm of approximate wfn: %1.12f", std::sqrt(sum));
-    // Normalize new evecs
-    sum = 1.0 / std::sqrt(sum);
-    new_evecs->scale_column(0, 0, sum);
-
-    return new_wfn;
-}
+//DeterminantHashVec AdaptiveCI::approximate_wfn(DeterminantHashVec& PQ_space, SharedMatrix& evecs,
+//                                               SharedVector& evals, SharedMatrix& new_evecs) {
+//    DeterminantHashVec new_wfn;
+//    new_wfn.copy(PQ_space);
+//
+//    det_hash<std::vector<double>> external_space;
+//    get_excited_determinants_sr(1, evecs, PQ_space, external_space);
+//
+//    size_t n_ref = PQ_space.size();
+//    size_t n_external = external_space.size();
+//    size_t total_size = n_ref + n_external;
+//
+//    outfile->Printf("\n  Size of external space: %zu", n_external);
+//    new_evecs.reset(new Matrix("U", total_size, 1));
+//    double sum = 0.0;
+//
+//    for (size_t I = 0; I < n_ref; ++I) {
+//        double val = evecs->get(I, 0);
+//        new_evecs->set(I, 0, val);
+//        sum += val * val;
+//    }
+//
+//    double E0 = evals->get(0);
+//    for (auto& I : external_space) {
+//        new_wfn.add(I.first);
+//        double val = I.second[0] / (E0 - fci_ints_->energy(I.first));
+//        new_evecs->set(new_wfn.get_idx(I.first), 0, val);
+//        sum += val * val;
+//    }
+//
+//    outfile->Printf("\n  Norm of approximate wfn: %1.12f", std::sqrt(sum));
+//    // Normalize new evecs
+//    sum = 1.0 / std::sqrt(sum);
+//    new_evecs->scale_column(0, 0, sum);
+//
+//    return new_wfn;
+//}
 
 void AdaptiveCI::compute_nos() {
 
