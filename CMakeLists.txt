@@ -28,6 +28,16 @@ include(autocmake_omp)
 include(autocmake_mpi)  # MPI option A
 #include(custom_static_library)
 
+include(ExternalProject)
+set(EXTERNAL_INSTALL_LOCATION ${CMAKE_BINARY_DIR}/external)
+
+ExternalProject_Add(fortedet
+    GIT_REPOSITORY https://github.com/evangelistalab/fortedet.git
+)
+
+#include_directories(${EXTERNAL_INSTALL_LOCATION}/include)
+#link_directories(${EXTERNAL_INSTALL_LOCATION}/lib)
+
 #find_package(psi4 1.1 REQUIRED COMPONENTS ambit chemps2)
 find_package(psi4 1.1 REQUIRED)
 
