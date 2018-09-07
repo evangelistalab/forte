@@ -188,6 +188,10 @@ script:
 - cd ${HOME}/build/evangelistalab/forte/tests/methods
 - python run_forte_tests_travis.py 
 - grep 'Size of Determinant class' aci-1/output.dat
+- if [[ $MAX_DET_ORB >= 128 ]]; then
+    cd ${HOME}/build/evangelistalab/forte/tests/large_det
+    python run_forte_tests_travis.py
+  fi
 - cd ${HOME}/build/evangelistalab/forte
 - ./forte_tests
 - ./forte_benchmarks
