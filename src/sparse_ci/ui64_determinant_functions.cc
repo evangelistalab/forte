@@ -37,6 +37,7 @@
 #include "../fci/fci_integrals.h"
 
 #include "ui64_determinant.h"
+#include "stl_bitset_determinant.h"
 
 namespace psi {
 namespace forte {
