@@ -114,6 +114,14 @@ extern "C" PSI_API SharedWavefunction forte(SharedWavefunction ref_wfn, Options&
         exit(1);
     }
 
+    if( ( (options.get_str("DIAG_ALGORITHM") == "DYNAMIC") or (options.get_bool("ACI_DIRECT_RDMS") == true) ) 
+        and ( mo_space_info->size("ACTIVE") > 64 ) ) {
+    
+        outfile->Printf("\n  FATAL:  Dynamic diagonalization or dynamic RDM builds cannot be used for active spaces larger than 64 orbitals!");  
+
+        exit(1);
+    }
+
     // Make a subspace object
     SharedMatrix Ps = make_aosubspace_projector(ref_wfn, options);
 
