@@ -3,9 +3,9 @@
 
 import forte
 
-refscf = -14.8435740628451978 #TEST
-refaci = -14.880554763928 #TEST
-refacipt2 = -14.880875582454 #TEST
+refscf = -14.8435208330370827 #TEST
+refaci = -14.880521233114 #TEST
+refacipt2 = -14.880583937553 #TEST
 
 molecule li2{
    Li
@@ -13,7 +13,7 @@ molecule li2{
 }
 
 set {
-  basis cc-pvqz
+  basis cc-pcvtz
   e_convergence 10
   d_convergence 10
   r_convergence 10
