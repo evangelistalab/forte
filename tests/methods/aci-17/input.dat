@@ -33,7 +33,7 @@ set forte {
   ms 0.5
   job_type = aci
   frozen_docc = [0,0,0,0,0,0,0,0]
-  aci_SELECT_TYPE amp
+#  aci_SELECT_TYPE amp
   gamma 10.00
   sigma 0.001000
   aci_enforce_spin_complete false

@@ -35,7 +35,6 @@ set forte {
   active [1,0,1,0]
   root_sym 0
   multiplicity 1
-  aci_SELECT_TYPE aimed_energy
   sigma 0.8
   aci_prescreen_threshold 0.0
   aci_max_cycle 1

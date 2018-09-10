@@ -32,7 +32,6 @@ set {
 set forte {
   JOB_TYPE aci
   multiplicity 1
-  aci_SELECT_TYPE aimed_energy
   sigma 0.07
   aci_nroot 1
   charge 0
