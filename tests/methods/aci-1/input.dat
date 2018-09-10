@@ -31,13 +31,10 @@ set forte {
   job_type = aci
   multiplicity 1
   ms 0.0
-  ACI_SELECT_TYPE energy
-  sigma 0.00001000
-  gamma 100.0
+  aci_screen_alg sr
+  sigma 0.001
   aci_nroot 1
-  root_sym 0
   charge 0
-  aci_perturb_select true
   aci_enforce_spin_complete false
   active_ref_type hf 
 }

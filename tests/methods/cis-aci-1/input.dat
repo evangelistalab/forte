@@ -28,15 +28,16 @@ set forte {
   frozen_docc [1,0,0,0,0,1,0,0]
   sigma 0.05
   charge 0
+  nroot 2
   aci_nroot 2
   aci_n_average 2
-  ACI_INITIAL_SPACE CIS
+  active_ref_type CIS
   aci_excited_algorithm average
   aci_pq_function average
+  aci_screen_alg average
 }
 
 energy('scf')
 compare_values(refscf, get_variable("SCF total energy"),10, "SCF energy") #TEST
 energy('forte')
 compare_values(refaci, get_variable("ACI ENERGY"),10, "ACI energy") #TEST
-compare_values(refacipt2, get_variable("ACI+PT2 ENERGY"),10, "ACI+PT2 energy") #TEST

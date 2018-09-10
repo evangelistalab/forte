@@ -192,8 +192,6 @@ class AdaptiveCI : public Wavefunction {
     double screen_thresh_;
     /// The number of roots computed
     int nroot_;
-    /// Use threshold from perturbation theory?
-    bool perturb_select_;
 
     /// Add missing degenerate determinants excluded from the aimed selection?
     bool add_aimed_degenerate_;
@@ -309,26 +307,23 @@ class AdaptiveCI : public Wavefunction {
                       SharedVector evals, SharedMatrix evecs);
 
     /// Batched version of find q space
-    void find_q_space_batched(DeterminantHashVec& P_space, DeterminantHashVec& PQ_space,
-                              SharedVector evals, SharedMatrix evecs);
-
-    /// Streamlined version of find q space
-    void default_find_q_space(DeterminantHashVec& P_space, DeterminantHashVec& PQ_space,
-                              SharedVector evals, SharedMatrix evecs);
-
+//    void find_q_space_batched(DeterminantHashVec& P_space, DeterminantHashVec& PQ_space,
+//                              SharedVector evals, SharedMatrix evecs);
+//
+//    /// Streamlined version of find q space
+//    void default_find_q_space(DeterminantHashVec& P_space, DeterminantHashVec& PQ_space,
+//                              SharedVector evals, SharedMatrix evecs);
+//
     /// Find all the relevant excitations out of the P space
-    void find_q_space(DeterminantHashVec& P_space, DeterminantHashVec& PQ_space, int nroot,
-                      SharedVector evals, SharedMatrix evecs);
+//    void find_q_space(DeterminantHashVec& P_space, DeterminantHashVec& PQ_space, int nroot,
+//                      SharedVector evals, SharedMatrix evecs);
 
     /// Generate set of state-averaged q-criteria and determinants
-    double average_q_values(int nroot, std::vector<double>& C1, std::vector<double>& E2);
-
-    /// Get criteria for a specific root
-    double root_select(int nroot, std::vector<double>& C1, std::vector<double>& E2);
+    double average_q_values(int nroot, std::vector<double>& E2);
 
     /// Find all the relevant excitations out of the P space - single root
     /// version
-    void find_q_space_single_root(int nroot, SharedVector evals, SharedMatrix evecs);
+//    void find_q_space_single_root(int nroot, SharedVector evals, SharedMatrix evecs);
 
     /// Basic determinant generator (threaded, no batching, all determinants stored)
     void get_excited_determinants_avg(int nroot, SharedMatrix evecs, SharedVector evals,  DeterminantHashVec& P_space,
