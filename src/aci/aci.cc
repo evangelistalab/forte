@@ -208,6 +208,10 @@ void set_ACI_options(ForteOptions& foptions) {
 
     //temp
     foptions.add_str("ACI_BATCH_ALG", "HASH", "Algorithm to use for batching");
+
+    foptions.add_array("ACI_RAS_SPACES", "RAS spaces");
+    foptions.add_array("ACI_RAS_RESTRICTIONS","");
+    
 }
 
 bool pairComp(const std::pair<double, Determinant> E1, const std::pair<double, Determinant> E2) {
@@ -491,7 +495,7 @@ double AdaptiveCI::compute_energy() {
 
     DeterminantHashVec PQ_space;
 
-    if (options_.get_str("ACI_EX_TYPE") == "CORE") {
+    if (options_.get_str("ACI_SCREEN_ALG") == "CORE") {
         ex_alg_ = "ROOT_ORTHOGONALIZE";
     }
 
@@ -505,7 +509,7 @@ double AdaptiveCI::compute_energy() {
             root_ = i;
         }
 
-        if( (options_.get_str("ACI_EX_TYPE") == "CORE") and (i > 0) ){
+        if( (options_.get_str("ACI_SCREEN_ALG") == "CORE") and (i > 0) ){
             ref_root_ = i-1; 
         }
 
@@ -848,9 +852,20 @@ void AdaptiveCI::find_Q_space(DeterminantHashVec& P_space, DeterminantHashVec& P
     
     std::string screen_alg = options_.get_str("ACI_SCREEN_ALG");
 
-    if( ex_alg_ == "AVERAGE" ){
+    if( screen_alg == "CORE" ){
+        if( root_ == 0 ) {
+            screen_alg = "SR";
+        } else {
+            screen_alg = "CORE";
+        }
+    }
+
+    if( (ex_alg_ == "AVERAGE") and (screen_alg != "CORE" )){
         screen_alg = "AVERAGE";
     }
+
+    outfile->Printf("\n root = %d", root_);
+    outfile->Printf("\n  Using %s screening algorithm", screen_alg.c_str());
 
     double remainder = 0.0;
     if ( screen_alg == "AVERAGE" ){
@@ -859,10 +874,11 @@ void AdaptiveCI::find_Q_space(DeterminantHashVec& P_space, DeterminantHashVec& P
     } else if ( screen_alg == "SR" ){
         //single-root optimized
         get_excited_determinants_sr(evecs, evals, P_space, F_space);
-    } else if ( screen_alg == "RESTRICTED" ){
+    } else if ( (screen_alg == "RESTRICTED")){
         // restricted
-        get_excited_determinants_restrict(evecs, evals, P_space, F_space);
-        //get_excited_determinants_core(evecs, evals, P_space, F_space);
+        get_excited_determinants_restrict(nroot_,evecs, evals, P_space, F_space);
+    } else if (screen_alg == "CORE" ){
+        get_excited_determinants_core(evecs, evals, P_space, F_space);
     } else if ( screen_alg == "BATCH_HASH" ){
         // hash batch
         remainder = get_excited_determinants_batch( evecs, evals, P_space, F_space);
@@ -1857,7 +1873,7 @@ void AdaptiveCI::compute_aci(DeterminantHashVec& PQ_space, SharedMatrix& PQ_evec
     std::vector<double> P_ref_evecs;
     DeterminantHashVec P_space(initial_reference_);
 
-    if ((options_.get_str("ACI_EX_TYPE") == "CORE") and (root_ > 0)) {
+    if ((options_.get_str("ACI_SCREEN_ALG") == "CORE") and (root_ > 0)) {
 
         int nf_orb = options_.get_int("ACI_NFROZEN_CORE");
         int ncstate = options_.get_int("ACI_ROOTS_PER_CORE");
