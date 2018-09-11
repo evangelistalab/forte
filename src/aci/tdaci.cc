@@ -100,7 +100,7 @@ double TDACI::compute_energy() {
     DeterminantHashVec aci_dets = aci->get_wavefunction();
     SharedMatrix aci_coeffs = aci->get_evecs();
     outfile->Printf("\n  ACI wavefunction built");
-    
+
     // 2. Generate the n-1 Determinants (not just core)
   //  DeterminantHashVec ann_dets;
     for( int i = 0; i < nact; ++i ){
@@ -1267,6 +1267,5 @@ std::vector<double> TDACI::compute_occupation( SharedVector Cr, SharedVector Ci,
 
     return occ_vec;
 }
-
 
 }}
