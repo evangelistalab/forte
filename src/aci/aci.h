@@ -330,7 +330,10 @@ class AdaptiveCI : public Wavefunction {
                                            std::vector<std::pair<double, Determinant>>& F_space);
 
     /// Get excited determinants with a specified hole
-    void get_excited_determinants_restrict(SharedMatrix evecs, SharedVector evals,  DeterminantHashVec& P_space,
+    void get_excited_determinants_restrict(int nroot, SharedMatrix evecs, SharedVector evals,  DeterminantHashVec& P_space,
+                                           std::vector<std::pair<double, Determinant>>& F_space);
+    /// Get excited determinants with a specified hole
+    void get_excited_determinants_core(SharedMatrix evecs, SharedVector evals,  DeterminantHashVec& P_space,
                                            std::vector<std::pair<double, Determinant>>& F_space);
 
     // Optimized for a single root
@@ -440,6 +443,8 @@ class AdaptiveCI : public Wavefunction {
                                                             SharedMatrix& evecs, int nroot);
 
     std::vector<std::tuple<double, int, int>> sym_labeled_orbitals(std::string type);
+
+    std::vector<std::pair<int, Determinant>> ras_masks();
 
     //    int david2(double **A, int N, int M, double *eps, double **v,double
     //    cutoff, int print);
