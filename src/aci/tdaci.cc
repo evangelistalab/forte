@@ -2052,5 +2052,4 @@ void TDACI::propagate_RK4_select(std::vector<double>& PQ_coeffs_r,std::vector<do
     //outfile->Printf("\n  Time spent propogating (RK4): %1.6f", total.get());
 }
 
-
 }}
