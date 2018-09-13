@@ -63,6 +63,34 @@ void SigmaVectorMPI::compute_sigma(SharedVector sigma, SharedVector b) {}
 
 #endif
 
+
+inline double clamp(double x, double a, double b)
+
+{
+    return x < a ? a : (x > b ? b : x);
+}
+
+/**
+ * @brief smootherstep
+ * @param edge0
+ * @param edge1
+ * @param x
+ * @return
+ *
+ * This is a smooth step function that is
+ * 0.0 for x <= edge0
+ * 1.0 for x >= edge1
+ */
+inline double smootherstep(double edge0, double edge1, double x) {
+    if (edge1 == edge0) {
+        return x <= edge0 ? 0.0 : 1.0;
+    }
+    // Scale, and clamp x to 0..1 range
+    x = clamp((x - edge0) / (edge1 - edge0), 0.0, 1.0);
+    // Evaluate polynomial
+    return x * x * x * (x * (x * 6. - 15.) + 10.);
+}
+
 SigmaVectorList::SigmaVectorList(const std::vector<Determinant>& space, bool print_details,
                                  std::shared_ptr<FCIIntegrals> fci_ints)
     : SigmaVector(space.size()), space_(space), fci_ints_(fci_ints) {
@@ -712,6 +740,16 @@ SigmaVectorWfn2::SigmaVectorWfn2(const DeterminantHashVec& space, WFNOperator& o
     }
 }
 
+void SigmaVectorWfn1::set_smooth( int idx, std::vector<double>& smooth_en){}
+void SigmaVectorWfn3::set_smooth( int idx, std::vector<double>& smooth_en){}
+void SigmaVectorList::set_smooth( int idx, std::vector<double>& smooth_en){}
+void SigmaVectorSparse::set_smooth( int idx, std::vector<double>& smooth_en){}
+
+void SigmaVectorWfn2::set_smooth( int idx, std::vector<double>& smooth_en){ 
+    smooth_idx_ = idx;
+    smooth_en_ = smooth_en;
+ }
+
 void SigmaVectorWfn2::add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& roots) {
     bad_states_.clear();
     for (int i = 0, max_i = roots.size(); i < max_i; ++i) {
@@ -751,14 +789,35 @@ void SigmaVectorWfn2::compute_sigma(SharedVector sigma, SharedVector b) {
             std::vector<std::pair<size_t, double>>& bad_state = bad_states_[n];
             size_t ndet = bad_state.size();
 
-#pragma omp parallel for
+            #pragma omp parallel for
             for (size_t det = 0; det < ndet; ++det) {
                 b_p[bad_state[det].first] -= bad_state[det].second * overlap[n];
             }
         }
     }
+    for (size_t J = 0; J < size_; ++J) {
+        sigma_p[J] += diag_[J] * b_p[J]; // Make DDOT
+    }
 
     auto& dets = space_.wfn_hash();
+    std::vector<double> F;
+
+    if( smooth_idx_ >= 0 ){
+        int nsmooth = size_ - smooth_idx_;
+        F.resize(nsmooth);
+
+        // Get the edge energies
+        double E0 = smooth_en_[0];
+        double E1 = smooth_en_[nsmooth];
+    
+        for( int I = 0; I < nsmooth; ++I ){
+            double EI = smooth_en_[I];
+            F[I] = smootherstep(E1, E0, EI); 
+        //    outfile->Printf("\n  Det %zu (%1.9f) scale by %1.8f", I, EI,F[I]);
+            b_p[I + smooth_idx_] = b_p[I + smooth_idx_] * F[I];
+        } 
+    }
+
 
 #pragma omp parallel
     {
@@ -776,9 +835,9 @@ void SigmaVectorWfn2::compute_sigma(SharedVector sigma, SharedVector b) {
                 : (size_ % num_thread) * (bin_size + 1) + (tid - (size_ % num_thread)) * bin_size;
         size_t end_idx = start_idx + bin_size;
 
-        for (size_t J = start_idx; J < end_idx; ++J) {
-            sigma_p[J] += diag_[J] * b_p[J]; // Make DDOT
-        }
+       // for (size_t J = start_idx; J < end_idx; ++J) {
+       //     sigma_p[J] += diag_[J] * b_p[J]; // Make DDOT
+       // }
 
         // a singles
         size_t end_a_idx = a_list_.size();
@@ -803,6 +862,7 @@ void SigmaVectorWfn2::compute_sigma(SharedVector sigma, SharedVector b) {
                                 sign_q;
                             sigma_t[I] += HIJ * b_p[J];
                             sigma_t[J] += HIJ * b_p[I];
+                            
                         }
                     }
                 }
@@ -833,6 +893,7 @@ void SigmaVectorWfn2::compute_sigma(SharedVector sigma, SharedVector b) {
                                 sign_q;
                             sigma_t[I] += HIJ * b_p[J];
                             sigma_t[J] += HIJ * b_p[I];
+                            
                         }
                     }
                 }
@@ -928,12 +989,23 @@ void SigmaVectorWfn2::compute_sigma(SharedVector sigma, SharedVector b) {
 
         //        #pragma omp critical
         //        {
-        for (size_t I = 0; I < size_; ++I) {
+        for (size_t I = 0, maxI= size_; I < maxI; ++I) {
 #pragma omp atomic update
-            sigma_p[I] += sigma_t[I];
+            if( I < smooth_idx_ ){
+                sigma_p[I] += sigma_t[I];
+            } else {
+                sigma_p[I] += sigma_t[I] * F[I-smooth_idx_];
+            }
         }
-        //        }
+
     }
+
+   // if( smooth_idx_ >= 0 ){ 
+   //     int nsmooth = size_ - smooth_idx_;
+   //     for( int I = 0; I < nsmooth; ++I ){
+   //         sigma_p[I + smooth_idx_] *= F[I];
+   //     }
+   // }
 }
 
 SigmaVectorWfn3::SigmaVectorWfn3(const DeterminantHashVec& space, WFNOperator& op,

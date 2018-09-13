@@ -119,7 +119,7 @@ SigmaVectorDynamic::SigmaVectorDynamic(const DeterminantHashVec& space,
 }
 
 SigmaVectorDynamic::~SigmaVectorDynamic() { print_SigmaVectorDynamic_stats(); }
-
+void SigmaVectorDynamic::set_smooth( int idx, std::vector<double>& smooth_en_ ) {}
 void SigmaVectorDynamic::compute_sigma(SharedVector sigma, SharedVector b) {
     sigma->zero();
     compute_sigma_scalar(sigma, b);

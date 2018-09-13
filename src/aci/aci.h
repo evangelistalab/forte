@@ -455,6 +455,11 @@ class AdaptiveCI : public Wavefunction {
 
     std::vector<std::tuple<double, int, int>> sym_labeled_orbitals(std::string type);
 
+
+    // Store smoothing determinants
+    DeterminantHashVec smoothing_dets_;
+    std::vector<double> smoothing_en_;
+
     //    int david2(double **A, int N, int M, double *eps, double **v,double
     //    cutoff, int print);
     //    /// Perform a Davidson-Liu diagonalization

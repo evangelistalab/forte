@@ -149,6 +149,7 @@ void SparseCISolver::diagonalize_dl(const DeterminantHashVec& space, WFNOperator
         SigmaVectorWfn2 svw(space, op, fci_ints_);
         sigma_vector = &svw;
         sigma_vector->add_bad_roots(bad_states_);
+        sigma_vector->set_smooth( smooth_idx_, smooth_en_ );
         davidson_liu_solver_map(space, sigma_vector, evals, evecs, nroot, multiplicity);
     } else if (sigma_method_ == "MMULT") {
         SigmaVectorWfn3 svw(space, op, fci_ints_);
@@ -673,6 +674,11 @@ SparseCISolver::initial_guess_map(const DeterminantHashVec& space, int nroot, in
     }
 
     return guess;
+}
+
+void SparseCISolver::set_smooth_idx( int idx, std::vector<double>& smooth_en ){
+    smooth_idx_ = idx; 
+    smooth_en_ = smooth_en;
 }
 
 void SparseCISolver::add_bad_states(std::vector<std::vector<std::pair<size_t, double>>>& roots) {

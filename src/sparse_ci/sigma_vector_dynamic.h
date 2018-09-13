@@ -52,6 +52,7 @@ class SigmaVectorDynamic : public SigmaVector {
     void add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& bad_states);
     std::vector<std::vector<std::pair<size_t, double>>> bad_states_;
 
+    void set_smooth( int idx, std::vector<double>& en);
   protected:
     SigmaVectorMode mode_ = SigmaVectorMode::Dynamic;
     /// The number of threads

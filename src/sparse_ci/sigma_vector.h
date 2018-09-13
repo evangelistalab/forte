@@ -57,7 +57,7 @@ class SigmaVector {
     //    virtual void compute_sigma(Matrix& sigma, Matrix& b, int nroot) = 0;
     virtual void get_diagonal(Vector& diag) = 0;
     virtual void add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& bad_states) = 0;
-
+    virtual void set_smooth( int idx, std::vector<double>& en ) = 0;
   protected:
     /// The length of the C/sigma vector (number of determinants)
     size_t size_;
@@ -77,6 +77,7 @@ class SigmaVectorSparse : public SigmaVector {
     //   void compute_sigma(Matrix& sigma, Matrix& b, int nroot) {}
     void get_diagonal(Vector& diag);
     void add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& bad_states);
+    void set_smooth( int idx, std::vector<double>& en);
 
     std::vector<std::vector<std::pair<size_t, double>>> bad_states_;
 
@@ -100,6 +101,7 @@ class SigmaVectorList : public SigmaVector {
     void get_hamiltonian(Matrix& H);
     std::vector<std::pair<std::vector<int>, std::vector<double>>> get_sparse_hamiltonian();
     void add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& bad_states);
+    void set_smooth( int idx, std::vector<double>& en);
 
     std::vector<std::vector<std::pair<size_t, double>>> bad_states_;
 
@@ -138,6 +140,7 @@ class SigmaVectorWfn1 : public SigmaVector {
     void get_diagonal(Vector& diag);
     void add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& bad_states);
     std::vector<std::vector<std::pair<size_t, double>>> bad_states_;
+    void set_smooth( int idx, std::vector<double>& en);
 
   protected:
     // Create the list of a_p|N>
@@ -175,7 +178,8 @@ class SigmaVectorWfn2 : public SigmaVector {
     // void compute_sigma(Matrix& sigma, Matrix& b, int nroot);
     void get_diagonal(Vector& diag);
     void add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& bad_states_);
-
+    void set_smooth( int idx, std::vector<double>& en);
+    
     std::vector<std::vector<std::pair<size_t, double>>> bad_states_;
 
   protected:
@@ -186,6 +190,8 @@ class SigmaVectorWfn2 : public SigmaVector {
     // size_t noalfa_;
     // size_t nobeta_;
 
+    int smooth_idx_;
+    std::vector<double> smooth_en_;
     std::vector<double> diag_;
     std::shared_ptr<FCIIntegrals> fci_ints_;
 };
@@ -204,6 +210,7 @@ class SigmaVectorWfn3 : public SigmaVector {
     // void compute_sigma(Matrix& sigma, Matrix& b, int nroot);
     void get_diagonal(Vector& diag);
     void add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& bad_states_);
+    void set_smooth( int idx, std::vector<double>& en);
 
     std::vector<std::vector<std::pair<size_t, double>>> bad_states_;
 

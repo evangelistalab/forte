@@ -47,7 +47,7 @@
 namespace psi {
 namespace forte {
 
-enum DiagonalizationMethod { Full, DLSolver, DLString, DLDisk, MPI, Sparse, Direct, Dynamic };
+enum DiagonalizationMethod { Full, DLSolver, DLString, DLDisk, MPI, Sparse, Direct, Dynamic, Smooth };
 
 /**
  * @brief The SparseCISolver class
@@ -124,6 +124,9 @@ class SparseCISolver {
 
     /// Set a customized SigmaVector for Davidson-Liu algorithm
     void set_sigma_vector(SigmaVector* sigma_vec) { sigma_vec_ = sigma_vec; }
+
+    /// Set the index for when to turn on smoothing function
+    void set_smooth_idx( int idx, std::vector<double>& smooth_en_ );
 
   private:
     /// Form the full Hamiltonian and diagonalize it (for debugging)
@@ -206,6 +209,10 @@ class SparseCISolver {
     // Number of guess vectors
     size_t nvec_ = 10;
     std::shared_ptr<FCIIntegrals> fci_ints_;
+
+    // When to start smoothing
+    int smooth_idx_ = -1;
+    std::vector<double> smooth_en_;
 
     /// The SigmaVector object for Davidson-Liu algorithm
     SigmaVector* sigma_vec_ = nullptr;
