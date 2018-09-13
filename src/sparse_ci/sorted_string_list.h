@@ -31,10 +31,10 @@
 #define _sorted_string_list_h_
 
 #include "stl_bitset_string.h"
-#include "stl_bitset_determinant.h"
-#include "ui64_determinant.h"
+#include "determinant.h"
 #include "../determinant_hashvector.h"
 #include "../fci/fci_integrals.h"
+#include "../sparse_ci/ui64_determinant.h"
 
 namespace psi {
 namespace forte {

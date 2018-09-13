@@ -187,50 +187,49 @@ void FCIIntegrals::set_active_integrals_and_restricted_docc() {
     tei_bb_ = act_bb.data();
     RestrictedOneBodyOperator(oei_a_, oei_b_);
 }
-double FCIIntegrals::energy_bit(const Determinant& det) const {
-    double energy = frozen_core_energy_;
-    uint64_t Ia = det.get_alfa_bits();
-    uint64_t Ib = det.get_beta_bits();
-
-    int naocc = det.count_alfa(); 
-    int nbocc = det.count_beta(); 
-    
-    for(int A = 0; A < naocc; ++A ){
-        int p = lowest_one_idx( Ia );
-        energy += oei_a_[p * nmo_ + p];
-        Ia = clear_lowest_one(Ia);    
-        uint64_t Iac = Ia;
-
-        for( int AA = A+1; AA < naocc; ++AA ){
-            int q = lowest_one_idx(Iac);
-            energy += tei_aa_[p*nmo3_ + q*nmo2_ + p*nmo_ + q];
-            Iac = clear_lowest_one(Iac);
-        }
-       
-        uint64_t Ibc = Ib;
-        for( int B = 0; B < nbocc; ++B ){
-            int q = lowest_one_idx(Ibc);
-            energy += tei_ab_[p*nmo3_ + q*nmo2_ + p*nmo_ + q];
-            Ibc = clear_lowest_one(Ibc); 
-        } 
-    }
-
-    for( int B = 0; B < nbocc; ++B ){
-        int p = lowest_one_idx(Ib);
-        energy += oei_b_[p*nmo_ + p];
-        Ib = clear_lowest_one(Ib);
-        uint64_t Ibc = Ib;
-        for( int BB = B+1; BB < nbocc; ++BB ) {
-            int q = lowest_one_idx(Ibc);
-            energy += tei_bb_[p*nmo3_ + q*nmo2_ + p*nmo_ + q];
-            Ibc = clear_lowest_one(Ibc);
-        } 
-    }
-    return energy;
-}
 
 double FCIIntegrals::energy(const Determinant& det) const {
     double energy = frozen_core_energy_;
+
+#ifdef SMALL_BITSET
+    uint64_t Ia = det.get_alfa_bits();
+    uint64_t Ib = det.get_beta_bits();
+
+    int naocc = det.count_alfa();
+    int nbocc = det.count_beta();
+
+    for (int A = 0; A < naocc; ++A) {
+        int p = lowest_one_idx(Ia);
+        energy += oei_a_[p * nmo_ + p];
+        Ia = clear_lowest_one(Ia);
+        uint64_t Iac = Ia;
+
+        for (int AA = A + 1; AA < naocc; ++AA) {
+            int q = lowest_one_idx(Iac);
+            energy += tei_aa_[p * nmo3_ + q * nmo2_ + p * nmo_ + q];
+            Iac = clear_lowest_one(Iac);
+        }
+
+        uint64_t Ibc = Ib;
+        for (int B = 0; B < nbocc; ++B) {
+            int q = lowest_one_idx(Ibc);
+            energy += tei_ab_[p * nmo3_ + q * nmo2_ + p * nmo_ + q];
+            Ibc = clear_lowest_one(Ibc);
+        }
+    }
+
+    for (int B = 0; B < nbocc; ++B) {
+        int p = lowest_one_idx(Ib);
+        energy += oei_b_[p * nmo_ + p];
+        Ib = clear_lowest_one(Ib);
+        uint64_t Ibc = Ib;
+        for (int BB = B + 1; BB < nbocc; ++BB) {
+            int q = lowest_one_idx(Ibc);
+            energy += tei_bb_[p * nmo3_ + q * nmo2_ + p * nmo_ + q];
+            Ibc = clear_lowest_one(Ibc);
+        }
+    }
+#else
     for (int p = 0; p < nmo_; p++) {
         if (det.get_alfa_bit(p)) {
             energy += oei_a_[p * nmo_ + p];
@@ -254,39 +253,12 @@ double FCIIntegrals::energy(const Determinant& det) const {
             }
         }
     }
+#endif
+
     return energy;
 }
 
-double FCIIntegrals::energy(Determinant& det) {
-    double energy = frozen_core_energy_;
-    for (int p = 0; p < nmo_; p++) {
-        if (det.get_alfa_bit(p)) {
-            energy += oei_a_[p * nmo_ + p];
-            for (int q = p + 1; q < nmo_; ++q) {
-                if (det.get_alfa_bit(q)) {
-                    energy += tei_aa_[p * nmo3_ + q * nmo2_ + p * nmo_ + q];
-                }
-            }
-            for (int q = 0; q < nmo_; ++q) {
-                if (det.get_beta_bit(q)) {
-                    energy += tei_ab_[p * nmo3_ + q * nmo2_ + p * nmo_ + q];
-                }
-            }
-        }
-        if (det.get_beta_bit(p)) {
-            energy += oei_b_[p * nmo_ + p];
-            for (int q = p + 1; q < nmo_; ++q) {
-                if (det.get_beta_bit(q)) {
-                    energy += tei_bb_[p * nmo3_ + q * nmo2_ + p * nmo_ + q];
-                }
-            }
-        }
-    }
-    return energy;
-}
-
-double FCIIntegrals::slater_rules(const Determinant& lhs,
-                                  const Determinant& rhs) const {
+double FCIIntegrals::slater_rules(const Determinant& lhs, const Determinant& rhs) const {
     int nadiff = 0;
     int nbdiff = 0;
     // Count how many differences in mos are there
@@ -607,8 +579,7 @@ double FCIIntegrals::slater_rules_double_alpha_beta_pre(const Determinant& lhs,
     return lhs.slater_sign_bb(j, l) * tei_ab_[i * nmo3_ + j * nmo2_ + k * nmo_ + l];
 }
 
-double FCIIntegrals::slater_rules_single_alpha(const Determinant& det, int i,
-                                               int a) const {
+double FCIIntegrals::slater_rules_single_alpha(const Determinant& det, int i, int a) const {
     // Slater rule 2 PhiI = j_a^+ i_a PhiJ
     double sign = det.slater_sign_aa(i, a);
     double matrix_element = oei_a_[i * nmo_ + a];
@@ -623,8 +594,7 @@ double FCIIntegrals::slater_rules_single_alpha(const Determinant& det, int i,
     return sign * matrix_element;
 }
 
-double FCIIntegrals::slater_rules_single_alpha_abs(const Determinant& det, int i,
-                                                   int a) const {
+double FCIIntegrals::slater_rules_single_alpha_abs(const Determinant& det, int i, int a) const {
     // Slater rule 2 PhiI = j_a^+ i_a PhiJ
     double matrix_element = oei_a_[i * nmo_ + a];
     for (int p = 0; p < nmo_; ++p) {
@@ -653,8 +623,7 @@ double FCIIntegrals::slater_rules_single_beta(const Determinant& det, int i, int
     return sign * matrix_element;
 }
 
-double FCIIntegrals::slater_rules_single_beta_abs(const Determinant& det, int i,
-                                                  int a) const {
+double FCIIntegrals::slater_rules_single_beta_abs(const Determinant& det, int i, int a) const {
     // Slater rule 2 PhiI = j_a^+ i_a PhiJ
     double matrix_element = oei_b_[i * nmo_ + a];
     for (int p = 0; p < nmo_; ++p) {

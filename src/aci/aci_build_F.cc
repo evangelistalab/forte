@@ -1182,7 +1182,7 @@ AdaptiveCI::get_excited_determinants_batch_vecsort(SharedMatrix evecs, SharedVec
                 double& V = pair.second;
                 if (V != 0.0) {
                     auto& det = pair.first;
-                    double delta = fci_ints_->energy_bit(det) - E0;
+                    double delta = fci_ints_->energy(det) - E0;
                     V = std::fabs(0.5 * (delta - sqrt(delta * delta + V * V * 4.0)));
                 }
             }
@@ -1399,7 +1399,7 @@ AdaptiveCI::get_excited_determinants_batch(SharedMatrix evecs, SharedVector eval
                     double& V = pair.second;
 
                     //double delta = fci_ints_->energy(det) - E0;
-                    double delta = fci_ints_->energy_bit(det) - E0;
+                    double delta = fci_ints_->energy(det) - E0;
 
                     F_tmp[idx] = std::make_pair(
                         std::fabs(0.5 * (delta - sqrt(delta * delta + V * V * 4.0))), det);

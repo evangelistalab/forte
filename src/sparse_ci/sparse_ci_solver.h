@@ -34,7 +34,7 @@
 #include "../operator.h"
 #include "../helpers.h"
 
-#include "stl_bitset_determinant.h"
+#include "determinant.h"
 #include "sigma_vector.h"
 
 #ifdef HAVE_MPI

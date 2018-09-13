@@ -29,6 +29,10 @@
 #ifndef _stl_determinant_h_
 #define _stl_determinant_h_
 
+#ifndef MAX_DET_ORB
+#define MAX_DET_ORB 128
+#endif
+
 #include <bitset>
 #include <unordered_map>
 #include <algorithm>
@@ -57,7 +61,7 @@ namespace forte {
 class STLBitsetDeterminant {
   public:
     /// The number of bits used to represent a string (half a determinant)
-    static constexpr int num_str_bits = 128;
+    static constexpr int num_str_bits = MAX_DET_ORB;
     /// The number of bits used to represent a determinant
     static constexpr int num_det_bits = 2 * num_str_bits;
 

@@ -33,7 +33,6 @@
 #include <cstdint>
 #include <memory>
 #include <vector>
-//#include <bitset>
 
 #include "determinant_common.h"
 

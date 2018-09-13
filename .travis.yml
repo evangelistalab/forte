@@ -24,6 +24,30 @@ matrix:
       - BUILD_TYPE='Debug'
       - NAME='clang'
       - VERSION='3.6'
+      - MAX_DET_ORB=64
+  - os: linux
+    compiler: clang
+    addons: &1
+      apt:
+        sources:
+        - llvm-toolchain-precise-3.6
+        - ubuntu-toolchain-r-test
+        - george-edison55-precise-backports
+        packages:
+        - liblapack-dev
+        - clang-3.6
+        - libhdf5-serial-dev
+        - gfortran
+        - g++-4.9
+    env:
+      - CXX_COMPILER='clang++-3.6'
+      - PYTHON_VER='3.6'
+      - C_COMPILER='clang-3.6'
+      - Fortran_COMPILER='gfortran'
+      - BUILD_TYPE='Debug'
+      - NAME='clang'
+      - VERSION='3.6'
+      - MAX_DET_ORB=128
 # - os: linux
 #   compiler: clang
 #   addons: &2
@@ -156,13 +180,18 @@ install:
 # Compile forte
 - cd ${HOME}/build/evangelistalab/forte
 - FORTE_CMAKE_COM=$(psi4 --plugin-compile)
-- $FORTE_CMAKE_COM -Dambit_DIR=/home/travis/build/ambit-bin/share/cmake/ambit/ -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DENABLE_ForteTests=ON
+- $FORTE_CMAKE_COM -Dambit_DIR=/home/travis/build/ambit-bin/share/cmake/ambit/ -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DMAX_DET_ORB=${MAX_DET_ORB} -DENABLE_ForteTests=ON
 - make -j2
 - export PYTHONPATH="${HOME}/build/evangelistalab:$PYTHONPATH"
 - hash -r
 script:
 - cd ${HOME}/build/evangelistalab/forte/tests/methods
 - python run_forte_tests_travis.py 
+- grep 'Size of Determinant class' aci-1/output.dat
+- if [ "$MAX_DET_ORB" -ge "128" ]; then
+    cd ${HOME}/build/evangelistalab/forte/tests/large_det;
+    python run_forte_tests_travis.py;
+  fi
 - cd ${HOME}/build/evangelistalab/forte
 - ./forte_tests
 - ./forte_benchmarks
