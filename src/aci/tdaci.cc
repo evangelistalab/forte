@@ -136,6 +136,9 @@ double TDACI::compute_energy() {
         }
     }
 
+    // Print full Hamiltonian
+    save_matrix( full_aH, "hamiltonian.txt");
+
     SharedMatrix full_evecs = std::make_shared<Matrix>("evec", nann,nann);
     SharedVector full_evals = std::make_shared<Vector>("evals", nann);
 
