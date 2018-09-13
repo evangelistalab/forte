@@ -990,10 +990,11 @@ void SigmaVectorWfn2::compute_sigma(SharedVector sigma, SharedVector b) {
         //        #pragma omp critical
         //        {
         for (size_t I = 0, maxI= size_; I < maxI; ++I) {
-#pragma omp atomic update
             if( I < smooth_idx_ ){
+#pragma omp atomic update
                 sigma_p[I] += sigma_t[I];
             } else {
+#pragma omp atomic update
                 sigma_p[I] += sigma_t[I] * F[I-smooth_idx_];
             }
         }
