@@ -813,7 +813,7 @@ void SigmaVectorWfn2::compute_sigma(SharedVector sigma, SharedVector b) {
         for( int I = 0; I < nsmooth; ++I ){
             double EI = smooth_en_[I];
             F[I] = smootherstep(E1, E0, EI); 
-        //    outfile->Printf("\n  Det %zu (%1.9f) scale by %1.8f", I, EI,F[I]);
+         //   outfile->Printf("\n  Det %zu (%1.9f) scale by %1.8f", I, EI,F[I]);
             b_p[I + smooth_idx_] = b_p[I + smooth_idx_] * F[I];
         } 
     }
@@ -987,16 +987,15 @@ void SigmaVectorWfn2::compute_sigma(SharedVector sigma, SharedVector b) {
             }
         }
 
-        //        #pragma omp critical
-        //        {
+        #pragma omp critical
+        {
         for (size_t I = 0, maxI= size_; I < maxI; ++I) {
             if( I < smooth_idx_ ){
-#pragma omp atomic update
                 sigma_p[I] += sigma_t[I];
             } else {
-#pragma omp atomic update
                 sigma_p[I] += sigma_t[I] * F[I-smooth_idx_];
             }
+        }
         }
 
     }
