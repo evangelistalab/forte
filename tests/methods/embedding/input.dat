@@ -1,4 +1,6 @@
 import forte
+sys.path.insert(0, '/mnt/c/Users/Forec/source/')
+import ownmp2
 
 def set_wfn_mod(wfn_sys, wfn_mod):
     Ca_sys = wfn_sys.Ca()
@@ -30,9 +32,9 @@ molecule water_dimer{
      H  -0.599677   0.040712   0.000000
      --
      0 1
-     O   1.350625   0.111469   0.000000
-     H   1.680398  -0.373741  -0.758561
-     H   1.680398  -0.373741   0.758561
+     O   51.350625   0.111469   0.000000
+     H   51.680398  -0.373741  -0.758561
+     H   51.680398  -0.373741   0.758561
 
      units angstrom
      no_reorient
@@ -85,11 +87,12 @@ set forte {
 
 E_cheap_sys, ref_wfn_ownscf = energy('forte', ref_wfn=wfn_sys, return_wfn=True)
 
-set {
-  mp2_type conv
+set ownmp2 {
+  print 1
+  reference hf_readF
 }
 
-E_exp_sys = energy('mp2', ref_wfn=ref_wfn_ownscf)
+energy('ownmp2', ref_wfn = ref_wfn_ownscf)
 
 # ****** Calculate expensive system method ******
 # ****** Create embedded system wfn ******
@@ -110,6 +113,7 @@ set forte {
   SYSTEM_MATRIX ALL
   C_SIZE ALL
   MATRIX_BASIS IAO_IBO
+  WRITE_TRANS  U
 }
 
 E_test, wfn_mod_iao = energy('forte', ref_wfn=ori_wfn_2, return_wfn=True)
@@ -127,15 +131,18 @@ set {
 E_sys_ref_2, wfn_sys_2 = energy('scf', return_wfn=True)
 set_wfn_mod(wfn_sys_2, wfn_mod_iao)
 
-set forte {
-  job_type ownscf
+#set forte {
+#  job_type ownscf
 #  INTEGRAL_METHOD mints
+#}
+
+#E_cheap_sys, wfn_ownscf_2 = energy('forte', ref_wfn=wfn_sys_2, return_wfn=True)
+
+set ownmp2 {
+  print 1
+  reference other_fock
+  rotate_int calculate
 }
 
-E_cheap_sys, wfn_ownscf_2 = energy('forte', ref_wfn=wfn_sys_2, return_wfn=True)
+energy('ownmp2', ref_wfn = wfn_sys_2)
 
-set {
-  mp2_type conv
-}
-
-E_exp_sys = energy('mp2', ref_wfn=wfn_ownscf_2)

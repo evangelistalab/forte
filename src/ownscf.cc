@@ -82,7 +82,7 @@ SharedMatrix build_Cocc_scf(SharedMatrix C, int nirrep, Dimension nmopi, Dimensi
 				C_occ->set(h, u, i, C->get(h, u, i));
 			}
 		}
-	}
+	}  
 	return C_occ;
 }
 
@@ -140,8 +140,6 @@ void build_G(SharedWavefunction wfn, SharedMatrix C, SharedMatrix G, Options& op
         JK_occ->set_do_K(true);
 
         SharedMatrix C_occ = build_Cocc_scf(C, nirrep, nmopi, noccpi);
-        // Known problem: when building system G, here we should use system nmopi and system noccpi
-        // !!!
 
         std::vector<std::shared_ptr<Matrix>>& Cl = JK_occ->C_left();
         std::vector<std::shared_ptr<Matrix>>& Cr = JK_occ->C_right();

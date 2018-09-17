@@ -62,6 +62,7 @@ void set_EMBEDDING_options(ForteOptions& foptions) {
     foptions.add_str("C_SIZE", "SYS", "Size of coeffs: SYS, ALL");
     foptions.add_int("SYS_DOCC", 0, "System occupancy");
 	foptions.add_str("MATRIX_BASIS", "AO", "AO or IAO_IBO");
+	foptions.add_str("WRITE_TRANS", "None", "None, U");
 }
 
 void Embedding::startup() {}
@@ -500,6 +501,10 @@ double Embedding::compute_energy() {
 
     Dimension docc_sys_pi = doccpi_;
     docc_sys_pi[0] = options_.get_int("SYS_DOCC");
+	Dimension dvir_sys_pi = nmo_sys_pi - docc_sys_pi;
+
+	Slice sys_docc(nzeropi, docc_sys_pi);
+	Slice sys_dvir(docc_sys_pi, nmo_sys_pi);
 
 	//Swap Matrices here, build sys, env type matrix
 	SharedMatrix C_iao = Loc["IAO"]->get_block(allmo,allmo);
@@ -513,8 +518,8 @@ double Embedding::compute_energy() {
 			else {
 				outfile->Printf("Swap %d and %d \n", i, count_swap);
 				Loc["IAO"]->swap_columns(0, i, count_swap);
-				//Loc["Trans"]->swap_columns(0, i, count_swap);
-				//Loc["Trans"]->swap_rows(0, i, count_swap);
+				Loc["Trans"]->swap_columns(0, i, count_swap);
+				Loc["Trans"]->swap_rows(0, i, count_swap);
 			}
 			++count_swap;
 		}
@@ -675,8 +680,8 @@ double Embedding::compute_energy() {
 	h_sys->add(Pb);
 
 	//Build F A-in-B
-	SharedMatrix Fab = h_sys->get_block(allmo, allmo);
-	Fab->add(Gab); //F = h A-in-B + G(A+B)
+	//SharedMatrix Fab = h_sys->get_block(allmo, allmo);
+	//Fab->add(Gab); //F = h A-in-B + G(A+B)
 
     // 6. Compute (cheap environment method) energy for system A, with h A-in-B
     // Known issue: JKbuilder and Mintshelper will die if the size of basis and size of matrix
@@ -689,21 +694,37 @@ double Embedding::compute_energy() {
 		H_->copy(h_sys->get_block(sys, sys)); // set H in wfn to be embedded h_sys
 		Ca_->copy(C_origin->get_block(sys, sys));
 		S_->copy(S_origin->get_block(sys, sys));
-		Fa_->copy(Fab->get_block(sys, sys)); 
+		Fa_->copy(Fa_origin->get_block(sys, sys)); 
 		Da_->copy(Da->get_block(sys, sys));
 	}
 	if (options_.get_str("MATRIX_BASIS") == "IAO_IBO") {
 		//rotate to IAO and get system block
 		outfile->Printf("\n All output Matrix in IBO basis \n");
 		Ca_->copy(C_A->get_block(sys, sys));
+		outfile->Printf("\n The IBO coeffs, Matrix will be built with A_ibo = Ct_A_C \n");
+		Loc["IAO"]->print();
 		S_->copy(Matrix::triplet(Loc["IAO"], S_origin, Loc["IAO"], true, false, false)->get_block(sys, sys));
 		H_->copy(Matrix::triplet(Loc["IAO"], h_sys, Loc["IAO"], true, false, false)->get_block(sys, sys));
-		Fa_->copy(Matrix::triplet(Loc["IAO"], Fab, Loc["IAO"], true, false, false)->get_block(sys, sys));
+		Fa_->copy(Matrix::triplet(Loc["IAO"], Fa_origin, Loc["IAO"], true, false, false)->get_block(sys, sys));
 		
+		outfile->Printf("\n Fa before truncation and semi-canonicalization:");
+		SharedMatrix Fsee = Matrix::triplet(Loc["IAO"], Fa_origin, Loc["IAO"], true, false, false);
+		Fsee->print();
 		//Semi-canonicalization
+		SharedMatrix Utran1(new Matrix("Utran", nirrep_, docc_sys_pi, docc_sys_pi));
+		SharedVector F_diag1(new Vector("F_diag", nirrep_, docc_sys_pi));
+		Fa_->get_block(sys_docc, sys_docc)->diagonalize(Utran1, F_diag1);
+
+		SharedMatrix Utran2(new Matrix("Utran", nirrep_, dvir_sys_pi, dvir_sys_pi));
+		SharedVector F_diag2(new Vector("F_diag", nirrep_, dvir_sys_pi));
+		Fa_->get_block(sys_dvir, sys_dvir)->diagonalize(Utran2, F_diag2);
+
 		SharedMatrix Utran(new Matrix("Utran", nirrep_, nmo_sys_pi, nmo_sys_pi));
-		SharedVector F_diag(new Vector("F_diag", nirrep_, nmo_sys_pi));
-		Fa_->diagonalize(Utran, F_diag);
+		Utran->set_block(sys_docc, sys_docc, Utran1);
+		Utran->set_block(sys_dvir, sys_dvir, Utran2);
+		outfile->Printf("\n The transformation matrix U:");
+		Utran->print();
+
 		Ca_->copy(Matrix::doublet(Ca_, Utran, false, false));
 		S_->copy(Matrix::triplet(Utran, S_, Utran, true, false, false));
 		H_->copy(Matrix::triplet(Utran, H_, Utran, true, false, false));
@@ -711,19 +732,23 @@ double Embedding::compute_energy() {
 		outfile->Printf("\n Test semi-canonicalized F, should be diagonal \n");
 		Fa_->print();
 
+		if (options_.get_str("WRITE_TRANS") == "U") {
+			outfile->Printf("\n MO->IBO reordered trans \n");
+			Loc["Trans"]->print();
+			S_->copy(Matrix::doublet(Loc["Trans"]->get_block(allmo, sys), Utran, false, false));
+			outfile->Printf("\n Combined trans \n");
+			S_->print();
+		}
+
 		build_D(Ca_, docc_sys_pi, Da);
 		Da_->copy(Da->get_block(sys, sys));
 
 		outfile->Printf("\n Print those matrices \n");
+		Ca_->print();
 		S_->print();
 		H_->print();
 		Fa_->print();
 		Da_->print();
-		outfile->Printf("\n Comparison \n");
-		Da->print();
-		build_D(C_A, docc_sys_pi, Da);
-		Da->print();
-		Dab->print();
 	}
 
     // 7. Compute （expensive system method) energy for system A, with h A-in-B
