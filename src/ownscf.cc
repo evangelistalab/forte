@@ -55,6 +55,7 @@ OwnSCF::OwnSCF(SharedWavefunction ref_wfn, Options& options,
 void set_SCF_options(ForteOptions& foptions) {
     foptions.add_int("MAXCYC", 50, "Max cycle of HF iteration");
     foptions.add_str("INTEGRAL_METHOD", "JK", "Method of integral calculation");
+	foptions.add_str("INTEGRAL_BASIS", "AO", "Basis of integrals");
     foptions.add_double("E_CONV", 1e-10, "The energy convergence criteria");
     foptions.add_double("D_CONV", 1e-10, "The density convergence criteria");
 }
@@ -163,6 +164,37 @@ void build_G(SharedWavefunction wfn, SharedMatrix C, SharedMatrix G, Options& op
     }
     if (options.get_str("INTEGRAL_METHOD") == "MINTS") {
         SharedMatrix TEI = AO_TEI_scf(wfn);
+		SharedMatrix INTUSE(TEI->clone());
+		int nmo = wfn->nmo();
+		double tmpe;
+
+		if (options.get_str("INTEGRAL_BASIS") == "OTHER") {
+			INTUSE->zero();
+			SharedMatrix Ca = wfn->Ca();
+			for (int p = 0; p < nmo; ++p) {
+				for (int q = 0; q < nmo; ++q) {
+					for (int r = 0; r < nmo; ++r) {
+						for (int s = 0; s < nmo; ++s) {
+							tmpe = 0;
+							for (int u = 0; u < nmo; ++u) {
+								for (int v = 0; v < nmo; ++v) {
+									for (int l = 0; l < nmo; ++l) {
+										for (int sig = 0; sig < nmo; ++sig) {
+											tmpe +=
+												Ca->get(0, u, p) * Ca->get(0, v, q) * Ca->get(0, l, r) *
+												Ca->get(0, sig, s) *
+												eri_index_scf(TEI, u, v, l, sig, nmopi);
+										}
+									}
+								}
+							}
+							INTUSE->set(0, p*nmo + q, r*nmo + s, tmpe);
+						}
+					}
+				}
+			}
+		}
+		
         SharedMatrix D(new Matrix("Density", nirrep, nmopi, nmopi));
         build_D_scf(C, noccpi, D);
         // D->print();
@@ -175,8 +207,8 @@ void build_G(SharedWavefunction wfn, SharedMatrix C, SharedMatrix G, Options& op
                     tmp = 0.0;
                     for (int l = 0; l < nmopi[h]; ++l) {
                         for (int s = 0; s < nmopi[h]; ++s) {
-                            jkfactor = 2 * eri_index_scf(TEI, u, v, l, s, nmopi) -
-                                       eri_index_scf(TEI, u, l, v, s, nmopi);
+                            jkfactor = 2 * eri_index_scf(INTUSE, u, v, l, s, nmopi) -
+                                       eri_index_scf(INTUSE, u, l, v, s, nmopi);
                             tmp += D->get(h, l, s) * jkfactor;
                         }
                     }

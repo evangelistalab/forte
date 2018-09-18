@@ -410,7 +410,7 @@ std::vector<std::string> IAOBuilder::print_IAO(SharedMatrix A_, int nmin, int nb
 	//}
 	//outfile->Printf("\n Hello World #1.4.1 \n");
 	//outfile->Printf("\n nmin: %d, iao sum size: %d \n", nmin, iao_sum_size);
-    for(int i = 0; i < nmin; ++i){
+    for(int i = 0; i < nmin; ++i){ //i < nmin in ori
 	//outfile->Printf("\n Hello World #1.4.1.1 \n");
 	std::vector<std::tuple<double,int,std::string>> iao_max_contributions;
     double a = 0.0;
@@ -445,7 +445,7 @@ std::vector<std::string> IAOBuilder::print_IAO(SharedMatrix A_, int nmin, int nb
 	iao_labs.push_back(std::get<2>(iao_max_contributions[0]).c_str());
     }
 	//outfile->Printf("\n Hello World #1.5 \n");
-    for (int ind = 0; ind < nmin ; ++ind){
+    for (int ind = 0; ind < nmin ; ++ind){ // nmin ori
         iao_inds.push_back(ind);
      }
     cube.compute_orbitals(A_nbf, iao_inds,iao_labs, "iao");

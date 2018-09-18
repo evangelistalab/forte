@@ -32,9 +32,9 @@ molecule water_dimer{
      H  -0.599677   0.040712   0.000000
      --
      0 1
-     O   51.350625   0.111469   0.000000
-     H   51.680398  -0.373741  -0.758561
-     H   51.680398  -0.373741   0.758561
+     O   21.350625   0.111469   0.000000
+     H   21.680398  -0.373741  -0.758561
+     H   21.680398  -0.373741   0.758561
 
      units angstrom
      no_reorient
@@ -113,7 +113,7 @@ set forte {
   SYSTEM_MATRIX ALL
   C_SIZE ALL
   MATRIX_BASIS IAO_IBO
-  WRITE_TRANS  U
+#  WRITE_TRANS  U
 }
 
 E_test, wfn_mod_iao = energy('forte', ref_wfn=ori_wfn_2, return_wfn=True)
@@ -131,18 +131,19 @@ set {
 E_sys_ref_2, wfn_sys_2 = energy('scf', return_wfn=True)
 set_wfn_mod(wfn_sys_2, wfn_mod_iao)
 
-#set forte {
-#  job_type ownscf
-#  INTEGRAL_METHOD mints
-#}
+set forte {
+  job_type ownscf
+  INTEGRAL_METHOD mints
+  integral_basis other
+}
 
-#E_cheap_sys, wfn_ownscf_2 = energy('forte', ref_wfn=wfn_sys_2, return_wfn=True)
+E_cheap_sys, wfn_ownscf_2 = energy('forte', ref_wfn=wfn_sys_2, return_wfn=True)
 
 set ownmp2 {
   print 1
-  reference other_fock
-  rotate_int calculate
+  reference hf_readF
+  #rotate_int calculate
 }
 
-energy('ownmp2', ref_wfn = wfn_sys_2)
+energy('ownmp2', ref_wfn = wfn_ownscf_2)
 

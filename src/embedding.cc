@@ -352,19 +352,23 @@ std::map<std::string, SharedMatrix> Embedding::localize(SharedWavefunction wfn, 
     int nirrep = wfn->nirrep();
     Dimension nmopi = wfn->nmopi();
     Dimension noccpi = wfn->doccpi();
+	Dimension nvirpi = nmopi - noccpi;
+	Slice vir(noccpi, nmopi);
 
     if (options_.get_str("LOCALIZATION_METHOD") == "IAO"|| options_.get_str("LOCALIZATION_METHOD") == "IAO_IBO") {
         // IAO localization
         outfile->Printf("\n Coeffs before localization \n");
         wfn->Ca()->print();
         std::shared_ptr<IAOBuilder> iaobd;
-        iaobd = IAOBuilder::build(wfn->basisset(), wfn->get_basisset("MINAO_BASIS"), wfn->Ca(), //wfn->get_basis("MINAO_BASIS")
+        iaobd = IAOBuilder::build(wfn->basisset(), wfn->get_basisset("MINAO_BASIS"), wfn->Ca(),
                                   options);
         std::map<std::string, SharedMatrix> ret = iaobd->build_iaos();
 
         SharedMatrix Cocc = build_Cocc(wfn->Ca(), nirrep, nmopi, noccpi);
         SharedMatrix Focc = build_Focc(wfn->Fa(), nirrep, nmopi, noccpi);
         std::vector<int> ranges = {};
+		//ranges.push_back(0);
+		//ranges.push_back(Cocc->colspi()[0]);
         std::map<std::string, SharedMatrix> ret_loc = iaobd->localize(Cocc, Focc, ranges);
         outfile->Printf("iao build C occ\n");
         ret_loc["L"]->print();
@@ -373,11 +377,17 @@ std::map<std::string, SharedMatrix> Embedding::localize(SharedWavefunction wfn, 
         outfile->Printf("\n ------ IAO rotation matrix U (localizer) ------ \n");
         ret_loc["U"]->print();
 
+		//std::map<std::string, SharedMatrix> ret_loc_vir = iaobd->localize(Cocc, Focc, ranges);
+		outfile->Printf("\n ------ IAO rotation matrix U (modified to conserve virtual) ------ \n");
+		SharedMatrix idn(new Matrix("Identity of size Vir", nirrep, nvirpi, nvirpi));
+		idn->identity();
+		ret_loc["U"]->set_block(vir, vir, idn);
+		ret_loc["U"]->print();
+
 		SharedMatrix C_loc = Matrix::doublet(wfn->Ca(), ret_loc["U"]); 
 		outfile->Printf("iao build C all\n");
 		C_loc->print();
 
-		outfile->Printf("\n Hello World #1 \n");
 		SharedMatrix C_ret((new Matrix("Saved Coeffs", nirrep, nmopi, nmopi)));
 		if (options_.get_str("LOCALIZATION_METHOD") == "IAO") {
 			C_ret->copy(ret["A"]);
@@ -386,12 +396,10 @@ std::map<std::string, SharedMatrix> Embedding::localize(SharedWavefunction wfn, 
 			C_ret->copy(C_loc);
 		}
         std::vector<std::string> iaolabel =
-            iaobd->print_IAO(C_ret, ret_loc["U"]->colspi()[0], wfn->basisset()->nbf(), wfn);
+            iaobd->print_IAO(C_ret, wfn->get_basisset("MINAO_BASIS")->nbf(), wfn->basisset()->nbf(), wfn);
 
-		outfile->Printf("\n Hello World #2 \n");
         int sizelab = iaolabel.size();
         std::vector<int> index_label = {};
-		outfile->Printf("Hello World #3");
         for (int i = 0; i < sizelab; ++i) {
             std::string tmps = iaolabel[i];
             char tmp = tmps.at(0);
@@ -400,14 +408,12 @@ std::map<std::string, SharedMatrix> Embedding::localize(SharedWavefunction wfn, 
             outfile->Printf("\n IAO orbital: %s, Atom number %d \n", tmps.c_str(), tmpint);
             index_label.push_back(tmpint);
         }
-		outfile->Printf("Hello World #4");
 
         SharedMatrix Ind(new Matrix("Index Matrix", nirrep, nmopi, nmopi));
         for (int i = 0; i < nmopi[0]; ++i) {
             Ind->set(0, i, i, index_label[i]);
         }
 
-		outfile->Printf("Hello World #5");
 		ret_loc["I"] = Ind;
 		ret_loc["IAO"] = C_ret;
 		if (options_.get_str("LOCALIZATION_METHOD") == "IAO") {
@@ -680,8 +686,8 @@ double Embedding::compute_energy() {
 	h_sys->add(Pb);
 
 	//Build F A-in-B
-	//SharedMatrix Fab = h_sys->get_block(allmo, allmo);
-	//Fab->add(Gab); //F = h A-in-B + G(A+B)
+	SharedMatrix Fa_sys = h_sys->get_block(allmo, allmo);
+	Fa_sys->add(Ga); //F = h A-in-B + G(A+B)
 
     // 6. Compute (cheap environment method) energy for system A, with h A-in-B
     // Known issue: JKbuilder and Mintshelper will die if the size of basis and size of matrix
@@ -694,7 +700,7 @@ double Embedding::compute_energy() {
 		H_->copy(h_sys->get_block(sys, sys)); // set H in wfn to be embedded h_sys
 		Ca_->copy(C_origin->get_block(sys, sys));
 		S_->copy(S_origin->get_block(sys, sys));
-		Fa_->copy(Fa_origin->get_block(sys, sys)); 
+		Fa_->copy(Fa_sys->get_block(sys, sys)); 
 		Da_->copy(Da->get_block(sys, sys));
 	}
 	if (options_.get_str("MATRIX_BASIS") == "IAO_IBO") {
@@ -705,7 +711,7 @@ double Embedding::compute_energy() {
 		Loc["IAO"]->print();
 		S_->copy(Matrix::triplet(Loc["IAO"], S_origin, Loc["IAO"], true, false, false)->get_block(sys, sys));
 		H_->copy(Matrix::triplet(Loc["IAO"], h_sys, Loc["IAO"], true, false, false)->get_block(sys, sys));
-		Fa_->copy(Matrix::triplet(Loc["IAO"], Fa_origin, Loc["IAO"], true, false, false)->get_block(sys, sys));
+		Fa_->copy(Matrix::triplet(Loc["IAO"], Fa_sys, Loc["IAO"], true, false, false)->get_block(sys, sys));
 		
 		outfile->Printf("\n Fa before truncation and semi-canonicalization:");
 		SharedMatrix Fsee = Matrix::triplet(Loc["IAO"], Fa_origin, Loc["IAO"], true, false, false);
