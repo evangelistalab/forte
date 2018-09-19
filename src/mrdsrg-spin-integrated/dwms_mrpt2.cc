@@ -318,19 +318,66 @@ std::shared_ptr<FCI_MO> DWMS_DSRGPT2::precompute_energy() {
         std::shared_ptr<MASTER_DSRG> dsrg_pt;
         fci_ints_ = compute_dsrg_pt(dsrg_pt, reference, dwms_ref_);
 
-        print_h2("Diagonalize SA-DSRG-%s Active Hamiltonian", dwms_ref_.c_str());
-        fci_mo->set_fci_int(fci_ints_);
-        fci_mo->set_localize_actv(false);
-        fci_mo->compute_energy();
-        eigens = fci_mo->eigens();
-
-        // save SA-DSRG-PT2/3 energies
         Ept_0_.resize(nentry);
+
+        BlockedTensor oei = ambit::BlockedTensor::build(ambit::CoreTensor, "oei", spin_cases({"aa"}));
+        oei.block("aa").data() = fci_ints_->oei_a_vector();
+        oei.block("AA").data() = fci_ints_->oei_b_vector();
+
+        BlockedTensor tei = ambit::BlockedTensor::build(ambit::CoreTensor, "tei", spin_cases({"aaaa"}));
+        tei.block("aaaa").data() = fci_ints_->tei_aa_vector();
+        tei.block("aAaA").data() = fci_ints_->tei_ab_vector();
+        tei.block("AAAA").data() = fci_ints_->tei_bb_vector();
+
+        BlockedTensor D1 = ambit::BlockedTensor::build(ambit::CoreTensor, "D1", spin_cases({"aa"}));
+        BlockedTensor D2 = ambit::BlockedTensor::build(ambit::CoreTensor, "D2", spin_cases({"aaaa"}));
+
         for (int n = 0; n < nentry; ++n) {
-            for (int i = 0, nroots = nrootspi[n]; i < nroots; ++i) {
-                Ept_0_[n].push_back(eigens[n][i].second);
+            int multi, irrep, nroots;
+            std::tie(irrep, multi, nroots, std::ignore) = sa_info[n];
+
+            for (int A = 0; A < nroots; ++A) {
+                double value = 0.0;
+
+                auto filenames = fci_mo->density_filenames_generator(1, irrep, multi, A, A);
+                bool files_exist = fci_mo->check_density_files(1, irrep, multi, A, A);
+                if (files_exist) {
+                    read_disk_vector_double(filenames[0], D1.block("aa").data());
+                    read_disk_vector_double(filenames[1], D1.block("AA").data());
+                }
+                value += oei["uv"] * D1["uv"];
+                value += oei["UV"] * D1["UV"];
+
+
+                filenames = fci_mo->density_filenames_generator(2, irrep, multi, A, A);
+                files_exist = fci_mo->check_density_files(2, irrep, multi, A, A);
+                if (files_exist) {
+                    read_disk_vector_double(filenames[0], D2.block("aaaa").data());
+                    read_disk_vector_double(filenames[1], D2.block("aAaA").data());
+                    read_disk_vector_double(filenames[2], D2.block("AAAA").data());
+                }
+                value += 0.25 * tei["uvxy"] * D2["xyuv"];
+                value += 0.25 * tei["UVXY"] * D2["XYUV"];
+                value += tei["uVxY"] * D2["xYuV"];
+
+                outfile->Printf("\n  %20.15f", value);
+                Ept_0_[n].push_back(value);
             }
         }
+
+//        print_h2("Diagonalize SA-DSRG-%s Active Hamiltonian", dwms_ref_.c_str());
+//        fci_mo->set_fci_int(fci_ints_);
+//        fci_mo->set_localize_actv(false);
+//        fci_mo->compute_energy();
+//        eigens = fci_mo->eigens();
+
+//        // save SA-DSRG-PT2/3 energies
+//        Ept_0_.resize(nentry);
+//        for (int n = 0; n < nentry; ++n) {
+//            for (int i = 0, nroots = nrootspi[n]; i < nroots; ++i) {
+//                Ept_0_[n].push_back(eigens[n][i].second);
+//            }
+//        }
     }
 
     // save CI vectors if orthogonalized separated diagonalizations

@@ -109,6 +109,12 @@ class FCI_MO : public Wavefunction {
     Reference transition_reference(int root1, int root2, bool multi_state, int entry = 0,
                                    int max_level = 3, bool do_cumulant = false, bool disk = true);
 
+    /// Density files
+    std::vector<std::string> density_filenames_generator(int rdm_level, int irrep, int multi,
+                                                         int root1, int root2);
+    bool check_density_files(int rdm_level, int irrep, int multi, int root1, int root2);
+    void remove_density_files(int rdm_level, int irrep, int multi, int root1, int root2);
+
     /// Compute dipole moments with DSRG transformed MO dipole integrals
     /// This function is used for reference relaxation and SA-MRDSRG
     /// This function should be in RUN_DSRG
@@ -388,10 +394,10 @@ class FCI_MO : public Wavefunction {
     /// File Names of Densities Stored on Disk
     std::unordered_set<std::string> density_files_;
     bool safe_to_read_density_files_ = false;
-    std::vector<std::string> density_filenames_generator(int rdm_level, int irrep, int multi,
-                                                         int root1, int root2);
-    bool check_density_files(int rdm_level, int irrep, int multi, int root1, int root2);
-    void remove_density_files(int rdm_level, int irrep, int multi, int root1, int root2);
+//    std::vector<std::string> density_filenames_generator(int rdm_level, int irrep, int multi,
+//                                                         int root1, int root2);
+//    bool check_density_files(int rdm_level, int irrep, int multi, int root1, int root2);
+//    void remove_density_files(int rdm_level, int irrep, int multi, int root1, int root2);
     void clean_all_density_files();
 
     std::vector<ambit::Tensor> compute_n_rdm(const vecdet& p_space, SharedMatrix evecs,
