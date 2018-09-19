@@ -1896,8 +1896,10 @@ void AdaptiveCI::compute_aci(DeterminantHashVec& PQ_space, SharedMatrix& PQ_evec
 
         for (int n = 0, max_n = avir.size(); n < max_n; ++n) {
             if ((mo_symmetry_[hole_] ^ mo_symmetry_[avir[n]]) == 0) {
-                det.set_alfa_bit(avir[particle], true);
-                detb.set_beta_bit(avir[particle], true);
+                //det.set_alfa_bit(avir[particle], true);
+                //detb.set_beta_bit(avir[particle], true);
+                det.set_alfa_bit(avir[n], true);
+                detb.set_beta_bit(avir[n], true);
                 break;
             }
         }
