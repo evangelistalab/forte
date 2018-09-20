@@ -375,7 +375,7 @@ double ASCI::compute_energy() {
 
     outfile->Printf("\n  Iterations required:                         %zu", cycle);
     outfile->Printf("\n  Dimension of optimized determinant space:    %zu\n", dim);
-    outfile->Printf("\n  * AS-CI Energy Root %3d        = %.12f Eh = %8.4f eV",root_energy);
+    outfile->Printf("\n  * AS-CI Energy Root 0        = %.12f Eh",root_energy);
 
     outfile->Printf("\n\n  ==> Wavefunction Information <==");
 
