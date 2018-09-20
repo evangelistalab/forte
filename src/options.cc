@@ -27,6 +27,7 @@
  */
 
 #include "aci/aci.h"
+#include "asci.h"
 #include "avas.h"
 #include "ci-no/ci-no.h"
 #include "ci-no/mrci-no.h"
@@ -48,6 +49,7 @@ void forte_options(std::string name, ForteOptions& foptions) {
     // Method-specific options
     set_FCI_options(foptions);
     set_ACI_options(foptions);
+    set_ASCI_options(foptions);
     set_PCI_options(foptions);
     set_INT_options(foptions);
     set_PT2_options(foptions);

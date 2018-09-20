@@ -55,6 +55,7 @@ src/active_dsrgpt2.cc
 src/active_space_solver.cc
 src/ao_helper.cc
 src/avas.cc
+src/asci.cc
 src/bitset_performance.cc
 src/blockedtensorfactory.cc
 src/casscf.cc
