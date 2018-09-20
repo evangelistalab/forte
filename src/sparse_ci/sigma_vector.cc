@@ -65,7 +65,6 @@ void SigmaVectorMPI::compute_sigma(SharedVector sigma, SharedVector b) {}
 
 
 inline double clamp(double x, double a, double b)
-
 {
     return x < a ? a : (x > b ? b : x);
 }
@@ -88,7 +87,9 @@ inline double smootherstep(double edge0, double edge1, double x) {
     // Scale, and clamp x to 0..1 range
     x = clamp((x - edge0) / (edge1 - edge0), 0.0, 1.0);
     // Evaluate polynomial
-    return x * x * x * (x * (x * 6. - 15.) + 10.);
+    double value = x * x * x * (x * (x * 6. - 15.) + 10.);
+    return value;
+   //return (value * value * value * value * value * value * value * value);
 }
 
 SigmaVectorList::SigmaVectorList(const std::vector<Determinant>& space, bool print_details,
@@ -801,7 +802,6 @@ void SigmaVectorWfn2::compute_sigma(SharedVector sigma, SharedVector b) {
 
     auto& dets = space_.wfn_hash();
     std::vector<double> F;
-
     if( smooth_idx_ >= 0 ){
         int nsmooth = size_ - smooth_idx_;
         F.resize(nsmooth);

@@ -216,6 +216,8 @@ void set_ACI_options(ForteOptions& foptions) {
 
     // Threshold for smoothing
     foptions.add_double("ACI_SMOOTH_SIGMA", 0.02, "Second threshold to add determinants to be smoothed"); 
+    foptions.add_str("ACI_SMOOTH_ALG", "", " ");
+    foptions.add_int("ACI_MAX_SMOOTH_DETS",50000, "Total number of determinants");
 
 }
 
@@ -642,49 +644,49 @@ double AdaptiveCI::compute_energy() {
     }
 
     // * smooth the final hamiltonian
-    if( options_.get_bool("ACI_SMOOTH") ){
-        // Rediagonalize final space, smoothing some of the end
-        outfile->Printf("\n  Smoothing Hamiltonian with sigma_0 = %1.4f", 
-                                        options_.get_double("ACI_SMOOTH_SIGMA"));
-        outfile->Printf("\n  %zu determinants added for smoothing", smoothing_dets_.size());
-        size_t first_smooth = final_wfn_.size();
-        final_wfn_.merge(smoothing_dets_);
-        if( build_lists_ ){
-            if (sigma_method == "HZ") {
-                op_.clear_op_lists();
-                op_.clear_tp_lists();
-                Timer str;
-                op_.build_strings(final_wfn_);
-                outfile->Printf("\n  Time spent building strings      %1.6f s", str.get());
-                op_.op_lists(final_wfn_);
-                op_.tp_lists(final_wfn_);
-            } else {
-                op_.clear_op_s_lists();
-                op_.clear_tp_s_lists();
-                op_.build_strings(final_wfn_);
-                op_.op_s_lists(final_wfn_);
-                op_.tp_s_lists(final_wfn_);
-            }
-        }
-
-        size_t nvec = options_.get_int("N_GUESS_VEC");
-        SparseCISolver sparse_solver(fci_ints_);
-        sparse_solver.set_smooth_idx( first_smooth, smoothing_en_ );
-        sparse_solver.set_parallel(true);
-        sparse_solver.set_force_diag(options_.get_bool("FORCE_DIAG_METHOD"));
-        sparse_solver.set_e_convergence(options_.get_double("E_CONVERGENCE"));
-        sparse_solver.set_maxiter_davidson(options_.get_int("DL_MAXITER"));
-        sparse_solver.set_spin_project(project_out_spin_contaminants_);
-        //    sparse_solver.set_spin_project_full(project_out_spin_contaminants_);
-        sparse_solver.set_guess_dimension(options_.get_int("DL_GUESS_SIZE"));
-        sparse_solver.set_num_vecs(nvec);
-        sparse_solver.set_sigma_method(sigma_method);
-        sparse_solver.set_spin_project_full(false);
-        sparse_solver.set_max_memory(options_.get_int("SIGMA_VECTOR_MAX_MEMORY"));
-        sparse_solver.diagonalize_hamiltonian_map(final_wfn_, op_, PQ_evals, PQ_evecs, nroot_,
-                                                  multiplicity_, diag_method_);
-    }
-
+//    if( options_.get_bool("ACI_SMOOTH") ){
+//        // Rediagonalize final space, smoothing some of the end
+//        //outfile->Printf("\n  Smoothing Hamiltonian with sigma_0 = %1.4f", 
+//        //                                options_.get_double("ACI_SMOOTH_SIGMA"));
+//        outfile->Printf("\n  %zu determinants added for smoothing", smoothing_dets_.size());
+//        size_t first_smooth = final_wfn_.size();
+//        final_wfn_.merge(smoothing_dets_);
+//        if( build_lists_ ){
+//            if (sigma_method == "HZ") {
+//                op_.clear_op_lists();
+//                op_.clear_tp_lists();
+//                Timer str;
+//                op_.build_strings(final_wfn_);
+//                outfile->Printf("\n  Time spent building strings      %1.6f s", str.get());
+//                op_.op_lists(final_wfn_);
+//                op_.tp_lists(final_wfn_);
+//            } else {
+//                op_.clear_op_s_lists();
+//                op_.clear_tp_s_lists();
+//                op_.build_strings(final_wfn_);
+//                op_.op_s_lists(final_wfn_);
+//                op_.tp_s_lists(final_wfn_);
+//            }
+//        }
+//
+//        size_t nvec = options_.get_int("N_GUESS_VEC");
+//        SparseCISolver sparse_solver(fci_ints_);
+//        sparse_solver.set_smooth_idx( first_smooth, smoothing_en_ );
+//        sparse_solver.set_parallel(true);
+//        sparse_solver.set_force_diag(options_.get_bool("FORCE_DIAG_METHOD"));
+//        sparse_solver.set_e_convergence(options_.get_double("E_CONVERGENCE"));
+//        sparse_solver.set_maxiter_davidson(options_.get_int("DL_MAXITER"));
+//        sparse_solver.set_spin_project(project_out_spin_contaminants_);
+//        //    sparse_solver.set_spin_project_full(project_out_spin_contaminants_);
+//        sparse_solver.set_guess_dimension(options_.get_int("DL_GUESS_SIZE"));
+//        sparse_solver.set_num_vecs(nvec);
+//        sparse_solver.set_sigma_method(sigma_method);
+//        sparse_solver.set_spin_project_full(false);
+//        sparse_solver.set_max_memory(options_.get_int("SIGMA_VECTOR_MAX_MEMORY"));
+//        sparse_solver.diagonalize_hamiltonian_map(final_wfn_, op_, PQ_evals, PQ_evecs, nroot_,
+//                                                  multiplicity_, diag_method_);
+//    }
+//
 
 
     //** Optionally compute full PT2 energy **//
@@ -1081,9 +1083,17 @@ void AdaptiveCI::default_find_q_space(DeterminantHashVec& P_space, DeterminantHa
             outfile->Printf("\n  Added %zu missing determinants in aimed selection.", num_extra);
         }
     }
+    if (spin_complete_) {
+        PQ_space.make_spin_complete(nact_); // <- xsize
+        if (!quiet_mode_)
+            outfile->Printf("\n  Spin-complete dimension of the PQ space: %zu",
+                            PQ_space.size());
+    }
 
-    if( options_.get_bool("ACI_SMOOTH")){
+    if( options_.get_str("ACI_SMOOTH_ALG") == "SIGMA"){
         last_excluded -= num_extra;
+        smoothing_dets_.clear();
+        smoothing_en_.clear();
 
         double delta_sigma = sigma_ - options_.get_double("ACI_SMOOTH_SIGMA");
         double sum = 0.0;
@@ -1101,12 +1111,41 @@ void AdaptiveCI::default_find_q_space(DeterminantHashVec& P_space, DeterminantHa
                 sum += energy;
                 smoothing_dets_.add(det);
                 smoothing_en_.push_back(energy);
+               // smoothing_en_.push_back( fci_ints_->energy(det) );
             } else {
                 smoothing_en_.push_back(energy);
+                //smoothing_en_.push_back( fci_ints_->energy(det) );
                 break;
             } 
         }
         outfile->Printf("\n  Using %zu dets to smooth Hamiltonian", smoothing_dets_.size());
+    } else if (options_.get_str("ACI_SMOOTH_ALG") == "MAX_DET" ){
+        last_excluded -= num_extra;
+        smoothing_dets_.clear();
+        smoothing_en_.clear();
+        size_t n_pq = PQ_space.size();
+        size_t max_det = options_.get_int("ACI_MAX_SMOOTH_DETS");
+    
+      //  for( size_t I = last_excluded; I > max_det; --I ){
+      //  for( size_t I = last_excluded; --I ){
+        size_t I = last_excluded;
+        size_t total_dets = n_pq;
+        while( total_dets < max_det ){
+            auto& pair = F_space[I];
+            Determinant& det = pair.second;
+            double& energy = pair.first;
+            
+            if( PQ_space.has_det(det) ){
+              //  outfile->Printf("\n PQ space aready has this det!");
+                //max_det--;
+            } else{ 
+                smoothing_dets_.add(det);
+                smoothing_en_.push_back( fci_ints_->energy(det) );
+                //smoothing_en_.push_back(energy);
+                total_dets++;
+            }
+            I--;
+        }
     }
 
     outfile->Printf("\n  Time spent selecting: %1.6f", select.get());
@@ -2124,6 +2163,7 @@ void AdaptiveCI::compute_aci(DeterminantHashVec& PQ_space, SharedMatrix& PQ_evec
     if (quiet_mode_) {
         sparse_solver.set_print_details(false);
     }
+ 
     sparse_solver.set_parallel(true);
     sparse_solver.set_force_diag(options_.get_bool("FORCE_DIAG_METHOD"));
     sparse_solver.set_e_convergence(options_.get_double("E_CONVERGENCE"));
@@ -2220,6 +2260,7 @@ void AdaptiveCI::compute_aci(DeterminantHashVec& PQ_space, SharedMatrix& PQ_evec
         }
 
         sparse_solver.manual_guess(false);
+        sparse_solver.set_smooth_idx( -1, smoothing_en_ );
         Timer diag;
         sparse_solver.diagonalize_hamiltonian_map(P_space, op_, P_evals, P_evecs, num_ref_roots,
                                                   multiplicity_, diag_method_);
@@ -2280,12 +2321,12 @@ void AdaptiveCI::compute_aci(DeterminantHashVec& PQ_space, SharedMatrix& PQ_evec
         }
         outfile->Printf("\n  Time spent building the model space: %1.6f", build_space.get());
         // Check if P+Q space is spin complete
-        if (spin_complete_) {
-            PQ_space.make_spin_complete(nact_); // <- xsize
-            if (!quiet_mode_)
-                outfile->Printf("\n  Spin-complete dimension of the PQ space: %zu",
-                                PQ_space.size());
-        }
+      //  if (spin_complete_) {
+      //      PQ_space.make_spin_complete(nact_); // <- xsize
+      //      if (!quiet_mode_)
+      //          outfile->Printf("\n  Spin-complete dimension of the PQ space: %zu",
+      //                          PQ_space.size());
+      //  }
 
         if ((options_.get_str("ACI_EXCITED_ALGORITHM") == "ROOT_ORTHOGONALIZE") and (root_ > 0) and
             cycle >= pre_iter_) {
@@ -2295,23 +2336,49 @@ void AdaptiveCI::compute_aci(DeterminantHashVec& PQ_space, SharedMatrix& PQ_evec
         }
 
         // Step 3. Diagonalize the Hamiltonian in the P + Q space
-        if (sigma_method == "HZ") {
-            op_.clear_op_lists();
-            op_.clear_tp_lists();
-            Timer str;
-            op_.build_strings(PQ_space);
-            outfile->Printf("\n  Time spent building strings      %1.6f s", str.get());
-            op_.op_lists(PQ_space);
-            op_.tp_lists(PQ_space);
-        } else if (diag_method_ != Dynamic) {
-            op_.clear_op_s_lists();
-            op_.clear_tp_s_lists();
-            op_.build_strings(PQ_space);
-            op_.op_s_lists(PQ_space);
-            op_.tp_s_lists(PQ_space);
+        if( options_.get_bool("ACI_SMOOTH")){
+            size_t first_smooth = PQ_space.size();
+            //outfile->Printf("\n  Smoothing Hamiltonian with sigma_0 = %1.4f",options_.get_double("ACI_SMOOTH_SIGMA")); 
+            outfile->Printf("\n  %zu determinants added for smoothing", smoothing_dets_.size());
+            PQ_space.merge(smoothing_dets_);     
+            if( build_lists_ ){                                                                
+                if (sigma_method == "HZ") {                                                    
+                    op_.clear_op_lists();                                                      
+                    op_.clear_tp_lists();                                                      
+                    Timer str;                                                                 
+                    op_.build_strings(PQ_space);                                             
+                    outfile->Printf("\n  Time spent building strings      %1.6f s", str.get());
+                    op_.op_lists(PQ_space);                                                  
+                    op_.tp_lists(PQ_space);                                                  
+                } else {                                                                       
+                    op_.clear_op_s_lists();                                                    
+                    op_.clear_tp_s_lists();                                                    
+                    op_.build_strings(PQ_space);                                             
+                    op_.op_s_lists(PQ_space);                                                
+                    op_.tp_s_lists(PQ_space);                                                
+                }                                                                              
+            } 
+            sparse_solver.set_smooth_idx( first_smooth, smoothing_en_ );
+        } else {     
+            if (sigma_method == "HZ") {
+                op_.clear_op_lists();
+                op_.clear_tp_lists();
+                Timer str;
+                op_.build_strings(PQ_space);
+                outfile->Printf("\n  Time spent building strings      %1.6f s", str.get());
+                op_.op_lists(PQ_space);
+                op_.tp_lists(PQ_space);
+            } else if (diag_method_ != Dynamic) {
+                op_.clear_op_s_lists();
+                op_.clear_tp_s_lists();
+                op_.build_strings(PQ_space);
+                op_.op_s_lists(PQ_space);
+                op_.tp_s_lists(PQ_space);
+            }
         }
         Timer diag_pq;
-
+        
+           
         sparse_solver.diagonalize_hamiltonian_map(PQ_space, op_, PQ_evals, PQ_evecs, num_ref_roots,
                                                   multiplicity_, diag_method_);
 
