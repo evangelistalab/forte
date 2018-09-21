@@ -156,7 +156,7 @@ void ASCI::startup() {
 
     max_cycle_ = 20;
     if (options_["ASCI_MAX_CYCLE"].has_changed()) {
-        max_cycle_ = options_.get_int("ACI_MAX_CYCLE");
+        max_cycle_ = options_.get_int("ASCI_MAX_CYCLE");
     }
 
     diag_method_ = DLSolver;
