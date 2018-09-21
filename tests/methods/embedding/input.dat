@@ -32,9 +32,9 @@ molecule water_dimer{
      H  -0.599677   0.040712   0.000000
      --
      0 1
-     O   21.350625   0.111469   0.000000
-     H   21.680398  -0.373741  -0.758561
-     H   21.680398  -0.373741   0.758561
+     O   11.350625   0.111469   0.000000
+     H   11.680398  -0.373741  -0.758561
+     H   11.680398  -0.373741   0.758561
 
      units angstrom
      no_reorient
@@ -61,51 +61,8 @@ set {
 
 E, ori_wfn = energy('scf', return_wfn=True)
 
-# ****** Calculate cheap system method ******
+# ****** Calculate cheap and expensive system method ******
 # ****** Create embedded system wfn ******
-set forte {
-  job_type Embedding
-  SYS_DOCC 5
-  LOCALIZATION_METHOD IAO_IBO
-  SYSTEM_MATRIX ALL
-  C_SIZE ALL
-  MATRIX_BASIS AO
-}
-
-E_test, wfn_mod = energy('forte', ref_wfn=ori_wfn, return_wfn=True)
-
-activate(water_sys)
-E_sys_ref, wfn_sys = energy('scf', return_wfn=True)
-
-# ****** Set modified(embedded) matrices ******
-set_wfn_mod(wfn_sys, wfn_mod)
-
-set forte {
-  job_type ownscf
-#  INTEGRAL_METHOD mints
-}
-
-E_cheap_sys, ref_wfn_ownscf = energy('forte', ref_wfn=wfn_sys, return_wfn=True)
-
-set ownmp2 {
-  print 1
-  reference hf_readF
-}
-
-energy('ownmp2', ref_wfn = ref_wfn_ownscf)
-
-# ****** Calculate expensive system method ******
-# ****** Create embedded system wfn ******
-activate(water_dimer)
-set {
-  basis         sto-3g
-  scf_type      pk
-  e_convergence 10
-  d_convergence 10
-}
-
-E, ori_wfn_2 = energy('scf', return_wfn=True)
-
 set forte {
   job_type Embedding
   SYS_DOCC 5
@@ -116,7 +73,7 @@ set forte {
 #  WRITE_TRANS  U
 }
 
-E_test, wfn_mod_iao = energy('forte', ref_wfn=ori_wfn_2, return_wfn=True)
+E_test, wfn_mod_iao = energy('forte', ref_wfn=ori_wfn, return_wfn=True)
 
 # ****** Set modified(embedded) matrices ******
 activate(water_sys)
@@ -128,8 +85,16 @@ set {
   d_convergence 10
 }
 
-E_sys_ref_2, wfn_sys_2 = energy('scf', return_wfn=True)
-set_wfn_mod(wfn_sys_2, wfn_mod_iao)
+E_sys_ref, wfn_sys = energy('scf', return_wfn=True)
+set_wfn_mod(wfn_sys, wfn_mod_iao)
+
+set ownmp2 {
+  print 1
+  reference other_fock
+  rotate_int calculate
+}
+
+energy('ownmp2', ref_wfn = wfn_sys)
 
 set forte {
   job_type ownscf
@@ -137,13 +102,5 @@ set forte {
   integral_basis other
 }
 
-E_cheap_sys, wfn_ownscf_2 = energy('forte', ref_wfn=wfn_sys_2, return_wfn=True)
-
-set ownmp2 {
-  print 1
-  reference hf_readF
-  #rotate_int calculate
-}
-
-energy('ownmp2', ref_wfn = wfn_ownscf_2)
+E_cheap_sys, wfn_ownscf = energy('forte', ref_wfn=wfn_sys, return_wfn=True)
 
