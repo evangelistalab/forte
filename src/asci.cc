@@ -369,17 +369,30 @@ double ASCI::compute_energy() {
 
     outfile->Printf("\n\n  %s: %f s", "ASCI ran in ", asci_elapse.get());
 
+    double pt2 = 0.0;
+    if (options_.get_bool("MRPT2")) {
+        MRPT2 pt(reference_wavefunction_, options_, ints_, mo_space_info_, PQ_space, PQ_evecs,PQ_evals);
+        pt2 = pt.compute_energy();
+    }
+
+
     size_t dim = PQ_space.size();
     // Print a summary
     outfile->Printf("\n\n  ==> ASCI Summary <==\n");
 
     outfile->Printf("\n  Iterations required:                         %zu", cycle);
     outfile->Printf("\n  Dimension of optimized determinant space:    %zu\n", dim);
-    outfile->Printf("\n  * AS-CI Energy Root 0        = %.12f Eh",root_energy);
+    outfile->Printf(    "\n  * AS-CI Energy Root 0        = %.12f Eh",root_energy);
+    if (options_.get_bool("MRPT2")) {
+        outfile->Printf("\n  * AS-CI+PT2 Energy Root 0    = %.12f Eh",root_energy+pt2);
+    }
 
     outfile->Printf("\n\n  ==> Wavefunction Information <==");
 
     print_wfn(PQ_space, op_, PQ_evecs, nroot_);
+
+    
+
     return root_energy;
 }
 
