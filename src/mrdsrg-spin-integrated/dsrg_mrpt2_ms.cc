@@ -305,9 +305,15 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
                         if (A == B) {
                             H_AB += Efrzc_ + fci_ints->scalar_energy() + Enuc_;
                             Heff->set(A, B, H_AB);
+                            std::stringstream name;
+                            name << "MS DIAGONAL ENERGY ENTRY " << n << " ROOT " << A;
+                            Process::environment.globals[name.str()] = H_AB;
                         } else {
                             Heff->set(A, B, H_AB);
                             Heff->set(B, A, H_AB);
+                            std::stringstream name;
+                            name << "COUPLING ENTRY " << n << " ROOT " << A << ", " << B;
+                            Process::environment.globals[name.str()] = H_AB;
                         }
                     }
                 } // end forming effective Hamiltonian
