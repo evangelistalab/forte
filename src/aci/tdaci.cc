@@ -49,6 +49,9 @@ namespace forte {
 //#endif
 
 void set_TDACI_options(ForteOptions& foptions) {
+    foptions.add_str("TDACI_PROPOGATOR", "EXACT", "Type of propogator");
+    foptions.add_double("TDACI_TIMESTEP", 1.0, "Timestep (as)");
+    foptions.add_double("TDACI_ETA", 1e-12, "Path filtering threshold");
 }
 
 TDACI::TDACI(SharedWavefunction ref_wfn, Options& options,
@@ -75,7 +78,7 @@ double TDACI::compute_energy() {
     SharedMatrix aci_coeffs = aci->get_evecs();
     outfile->Printf("\n  ACI wavefunction built");
     
-    // 2. Now, build the full Hamiltonian in the n-1 space
+    // 2. Now, build the full Hamiltonian in the n-1 space (not just core)
     DeterminantHashVec ann_dets;
     for( int i = 0; i < ncmo; ++i ){
         annihilate_wfn(aci_dets, ann_dets,i);  
@@ -85,11 +88,8 @@ double TDACI::compute_energy() {
     outfile->Printf("\n  size of ann dets: %zu", ann_dets.size());
 
     // 3. Remove a core electron from aci wfn, compile coeffss
-    outfile->Printf("\n  Applying annihilation to orbital 0");
     DeterminantHashVec core_dets;
-    //std::vector<double> core_coeffs( ann_dets.size(), 0.0);
-    SharedVector core_coeffs = std::make_shared<Vector>("core", nann); 
-    core_coeffs->zero();
+    std::vector<double> core_coeffs(nann, 0.0); 
 
     const det_hashvec& dets = aci_dets.wfn_hash();
     size_t ndet = dets.size();
@@ -100,7 +100,7 @@ double TDACI::compute_energy() {
             Determinant adet(detI);
             adet.set_alfa_bit(0, false);
             size_t idx = ann_dets.get_idx(adet);
-            core_coeffs->set(idx, core_coeffs->get(idx) + aci_coeffs->get(aci_dets.get_idx(detI),0)); 
+            core_coeffs[idx] +=  aci_coeffs->get(aci_dets.get_idx(detI),0); 
             core_dets.add(adet);
 //            outfile->Printf("\n %s  %s",detI.str(ncmo).c_str(),  adet.str(ncmo).c_str());
         }  
@@ -108,7 +108,7 @@ double TDACI::compute_energy() {
             Determinant adet(detI);
             adet.set_beta_bit(0, false);
             size_t idx = ann_dets.get_idx(adet);
-            core_coeffs->set(idx, core_coeffs->get(idx) + aci_coeffs->get(aci_dets.get_idx(detI),0)); 
+            core_coeffs[idx] +=  aci_coeffs->get(aci_dets.get_idx(detI),0); 
             core_dets.add(adet);
 //            outfile->Printf("\n %s  %s",detI.str(ncmo).c_str(),  adet.str(ncmo).c_str());
         }  
@@ -117,42 +117,82 @@ double TDACI::compute_energy() {
     
     // 2. Renormalize wave function
     outfile->Printf("\n  Renormalizing wave function");
-//    renormalize_wfn( core_coeffs );
-    double norm = core_coeffs->norm();
-    norm = 1.0/norm;
-    core_coeffs->scale(norm);
-
-    // 3. Build full n-1 hamiltonian
-    std::shared_ptr<FCIIntegrals> fci_ints_ = aci->get_aci_ints();
-
-    SharedMatrix full_aH = std::make_shared<Matrix>("aH",nann, nann);
-    for( size_t I = 0; I < nann; ++I ){
-        Determinant detI = ann_dets.get_det(I);
-        for( size_t J = I; J < nann; ++J ){
-            Determinant detJ = ann_dets.get_det(J);
-            double value = fci_ints_->slater_rules(detI,detJ);
-            full_aH->set(I,J, value);
-            full_aH->set(J,I, value);
-        }
+    double norm = 0.0;//core_coeffs->norm();
+    for( auto& val : core_coeffs ){
+        norm += val * val;
+    }
+    norm = 1.0/ std::sqrt(norm);
+    for( auto& val : core_coeffs ){
+        val *= norm;
     }
 
-    // Print full Hamiltonian
-    save_matrix( full_aH, "hamiltonian.txt");
-
-    SharedMatrix full_evecs = std::make_shared<Matrix>("evec", nann,nann);
-    SharedVector full_evals = std::make_shared<Vector>("evals", nann);
-
-    full_aH->diagonalize(full_evecs, full_evals);
-
-
-//    full_evecs->print();
-//    core_coeffs->print();
-
-    save_vector(core_coeffs,"c_init.txt");
-    save_matrix(full_evecs, "full_evecs.txt");
-    save_vector(full_evals, "full_evals.txt");
+    // 3. Build full n-1 hamiltonian
+    if( options_.get_str("TDACI_PROPOGATOR") == "EXACT" ){
+        std::shared_ptr<FCIIntegrals> fci_ints = aci->get_aci_ints();
+        SharedMatrix full_aH = std::make_shared<Matrix>("aH",nann, nann);
+        for( size_t I = 0; I < nann; ++I ){
+            Determinant detI = ann_dets.get_det(I);
+            for( size_t J = I; J < nann; ++J ){
+                Determinant detJ = ann_dets.get_det(J);
+                double value = fci_ints->slater_rules(detI,detJ);
+                full_aH->set(I,J, value);
+                full_aH->set(J,I, value);
+            }
+        }
+        // Print full Hamiltonian
+        save_matrix( full_aH, "hamiltonian.txt");
+        SharedMatrix full_evecs = std::make_shared<Matrix>("evec", nann,nann);
+        SharedVector full_evals = std::make_shared<Vector>("evals", nann);
+        full_aH->diagonalize(full_evecs, full_evals);
+        save_vector(core_coeffs,"c_init.txt");
+        save_matrix(full_evecs, "full_evecs.txt");
+        save_vector(full_evals, "full_evals.txt");
+    } else if (options_.get_str("TDACI_PROPOGATOR") == "TAYLOR" ){
+        std::shared_ptr<FCIIntegrals> fci_ints = aci->get_aci_ints();
+        std::vector<std::pair<double,double>> C_new;
+        std::vector<std::pair<double,double>> C0(nann);
+        for( size_t I = 0; I < nann; ++I ){
+            C0[I] = std::make_pair(core_coeffs[I], 0.0 );
+        }
+        
+        propogate_taylor(C0, C_new, fci_ints, ann_dets );
+    }
 
     return en;
+}
+
+void TDACI::propogate_taylor(std::vector<std::pair<double,double>>& C0, std::vector<std::pair<double,double>>& C_tau, std::shared_vector<FCIIntegrals> fci_ints, DeterminantHashVec& ann_dets  ) {
+    
+
+    // The screening criterion
+    double eta = options_.get_double("TDACI_ETA");        
+    
+    // 1. Copy initial wfn into new one
+    size_t ndet = ann_dets.size();
+    C_tau.resize(ndet);
+    for( int I = 0; I < ndet; ++I ){ 
+        C_tau[I] = C0[I];
+    }
+
+    WFNOperator op(mo_space_info_->symmetry("ACTIVE"), fci_ints);
+    op.build_strings(ann_dets);
+    op.op_s_lists(ann_dets);
+    op.tp_s_lists(ann_dets);
+    std::vector<std::pair<std::vector<size_t>, std::vector<double>>> H_sparse = op.build_H_sparse(ann_dets);
+
+    size_t ndet = ann_dets.size();
+    //for( size_t I = 0; I < ndet; +I) {
+    //    auto& row_indices = H_sparse[I].first; 
+    //    auto& row_values  = H_sparse[I].values;
+    //    size_t row_dim = row_values.size();
+    //    for( int J = 0; J < row_dim; ++J ){
+    //        size_t idx = row_indices[J];
+    //        double HIJC = C0[idx] * row_values[J];
+    //        if( std::abs(HIJC) >= eta ){
+    //            
+    //        } 
+    //    }        
+    //} 
 }
 
 
@@ -178,6 +218,15 @@ void TDACI::save_vector( SharedVector vec, std::string name) {
     }
 }
 
+void TDACI::save_vector( std::vector<double>& vec, std::string name) {
+    
+    size_t dim = vec.size();
+    std::ofstream file;
+    file.open(name, std::ofstream::out | std::ofstream::trunc);
+    for( size_t I = 0; I < dim; ++I ){
+        file << std::setw(12) << std::setprecision(11) << vec[I] << "\n" ;
+    }
+}
 void TDACI::annihilate_wfn( DeterminantHashVec& olddets,
                             DeterminantHashVec& anndets, int frz_orb ) {
 
