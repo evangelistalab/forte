@@ -1890,23 +1890,25 @@ void AdaptiveCI::compute_aci(DeterminantHashVec& PQ_space, SharedMatrix& PQ_evec
         std::vector<int> avir = det.get_alfa_vir(nact_); // TODO check this
         outfile->Printf("\n  %s", det.str(nact_).c_str());
         outfile->Printf("\n  Freezing alpha orbital %d", hole_);
-        outfile->Printf("\n  Exciting electron from %d to %d", hole_, avir[particle]);
+        //outfile->Printf("\n  Exciting electron from %d to %d", hole_, avir[particle]);
         det.set_alfa_bit(hole_, false);
         detb.set_beta_bit(hole_, false);
 
-        for (int n = 0, max_n = avir.size(); n < max_n; ++n) {
+        for (int n = 0; n < ncstate; ++n) {
             if ((mo_symmetry_[hole_] ^ mo_symmetry_[avir[n]]) == 0) {
                 //det.set_alfa_bit(avir[particle], true);
                 //detb.set_beta_bit(avir[particle], true);
                 det.set_alfa_bit(avir[n], true);
                 detb.set_beta_bit(avir[n], true);
-                break;
+                outfile->Printf("\n  %s", det.str(nact_).c_str());
+                outfile->Printf("\n  %s", detb.str(nact_).c_str());
+                P_space.add(det);
+                P_space.add(detb);
+                det.set_alfa_bit(avir[n], false);
+                detb.set_beta_bit(avir[n],false);
+        //        break;
             }
         }
-        outfile->Printf("\n  %s", det.str(nact_).c_str());
-        outfile->Printf("\n  %s", detb.str(nact_).c_str());
-        P_space.add(det);
-        P_space.add(detb);
     }
 
     size_t nvec = options_.get_int("N_GUESS_VEC");
