@@ -387,7 +387,9 @@ void DMRGSolver::compute_energy() {
         throw PSIEXCEPTION("CheMPS2::Problem : No Hilbert state vector "
                            "compatible with all symmetry sectors!");
     }
+    
     Prob->SetupReorderD2h();
+    Prob->SetupReorderC2v();
 
     // the list of ints for reordering
     if(options_.get_bool("REORDER_ORBS")){
@@ -638,6 +640,24 @@ void DMRGSolver::compute_energy() {
     for(int k = 0; k<nact; k++){
       outfile->Printf("\n  Single Orb EE Si(%i) = %8.12f", k, one_orb_ee[k]);
     }
+
+
+    outfile->Printf("\n\n DMRG used orbital ORDERING:");
+    outfile->Printf("\n [ ");
+    for(int k = 0; k<mo_space_info_->size("ACTIVE"); k++){
+      outfile->Printf(" %d,", Prob->gf2(k));
+    }
+    outfile->Printf(" ]\n");
+
+    outfile->Printf("\n Ham used orbital ORDERING:");
+    outfile->Printf("\n [ ");
+    for(int k = 0; k<mo_space_info_->size("ACTIVE"); k++){
+      outfile->Printf(" %d,", Prob->gf1(k));
+    }
+    outfile->Printf(" ]\n");
+
+    outfile->Printf("\n reodered orbs? : %d \n", Prob->gReorder());
+
 
     std::ofstream my_1oee_file;
     my_1oee_file.open ("1oee.dat");
