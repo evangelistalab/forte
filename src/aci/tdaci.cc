@@ -75,6 +75,7 @@ void set_TDACI_options(ForteOptions& foptions) {
     foptions.add_int("TDACI_KRYLOV_DIM", 5, "Dimension of Krylov subspace for Lanczos method");
 //    foptions.add_int("TDACI_TAYLOR_ORDER", 1, "Maximum order of taylor expansion used");
     foptions.add_str("TDACI_PROPOGATOR", "EXACT", "Type of propogator");
+    foptions.add_int("TDACI_NSTEP", 20, "Number of steps");
     foptions.add_double("TDACI_TIMESTEP", 1.0, "Timestep (as)");
     foptions.add_double("TDACI_ETA", 1e-12, "Path filtering threshold");
 }
@@ -526,7 +527,6 @@ void TDACI::propogate_taylor1(SharedVector C0, SharedMatrix H  ) {
 }
 
 void TDACI::propogate_taylor2(SharedVector C0, SharedMatrix H  ) {
-    
 
     outfile->Printf("\n  Propogating with quadratic Taylor algorithm");
     Timer t2;
@@ -777,7 +777,6 @@ void TDACI::propogate_RK4(SharedVector C0, SharedMatrix H  ) {
         time += dt;
     }
     outfile->Printf("\n  Time spent propogating (RK4): %1.6f", total.get());
-
 }
 
 void TDACI::propogate_QCN(SharedVector C0, SharedMatrix H  ) {
