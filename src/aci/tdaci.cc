@@ -50,6 +50,7 @@ namespace forte {
 
 void set_TDACI_options(ForteOptions& foptions) {
     foptions.add_str("TDACI_PROPOGATOR", "EXACT", "Type of propogator");
+    foptions.add_int("TDACI_NSTEP", 20, "Number of steps");
     foptions.add_double("TDACI_TIMESTEP", 1.0, "Timestep (as)");
     foptions.add_double("TDACI_ETA", 1e-12, "Path filtering threshold");
 }
@@ -156,43 +157,72 @@ double TDACI::compute_energy() {
         }
         
         propogate_taylor(C0, C_new, fci_ints, ann_dets );
+
     }
 
     return en;
 }
 
-void TDACI::propogate_taylor(std::vector<std::pair<double,double>>& C0, std::vector<std::pair<double,double>>& C_tau, std::shared_vector<FCIIntegrals> fci_ints, DeterminantHashVec& ann_dets  ) {
+void TDACI::propogate_taylor(std::vector<std::pair<double,double>>& C0, std::vector<std::pair<double,double>>& C_tau, std::shared_ptr<FCIIntegrals> fci_ints, DeterminantHashVec& ann_dets  ) {
     
 
     // The screening criterion
     double eta = options_.get_double("TDACI_ETA");        
+    double d_tau = options_.get_double("TDACI_TIMESTEP");        
+    double tau = 0.0;
+
+    //convert attosecond to a.u.
+    tau *= 0.0413413745758;
+
+    int nstep = options_.get_int("TDACI_NSTEP");
     
     // 1. Copy initial wfn into new one
     size_t ndet = ann_dets.size();
     C_tau.resize(ndet);
-    for( int I = 0; I < ndet; ++I ){ 
-        C_tau[I] = C0[I];
-    }
+ //   for( int I = 0; I < ndet; ++I ){ 
+ //       C_tau[I] = C0[I];
+ //   }
 
-    WFNOperator op(mo_space_info_->symmetry("ACTIVE"), fci_ints);
+    auto active_sym = mo_space_info_->symmetry("ACTIVE");
+    WFNOperator op(active_sym, fci_ints);
     op.build_strings(ann_dets);
     op.op_s_lists(ann_dets);
     op.tp_s_lists(ann_dets);
     std::vector<std::pair<std::vector<size_t>, std::vector<double>>> H_sparse = op.build_H_sparse(ann_dets);
 
-    size_t ndet = ann_dets.size();
-    //for( size_t I = 0; I < ndet; +I) {
-    //    auto& row_indices = H_sparse[I].first; 
-    //    auto& row_values  = H_sparse[I].values;
-    //    size_t row_dim = row_values.size();
-    //    for( int J = 0; J < row_dim; ++J ){
-    //        size_t idx = row_indices[J];
-    //        double HIJC = C0[idx] * row_values[J];
-    //        if( std::abs(HIJC) >= eta ){
-    //            
-    //        } 
-    //    }        
-    //} 
+    for( int N = 0; N < nstep; ++N ){
+        outfile->Printf("\n  Computing wavefunction for tau = %1.6f",tau); 
+        for( size_t I = 0; I < ndet; ++I) {
+            auto& C0_I = C0[I];
+            auto& row_indices = H_sparse[I].first; 
+            auto& row_values  = H_sparse[I].second;
+            size_t row_dim = row_values.size();
+            double re = 0.0;
+            double im = 0.0;
+            for( int J = 0; J < row_dim; ++J ){
+                size_t idx = row_indices[J];
+                double HIJC_r = C0[idx].first * row_values[J];
+                double HIJC_i = C0[idx].second * row_values[J];
+                if( std::sqrt((HIJC_r*HIJC_r) + (HIJC_i*HIJC_i)) >= eta ){
+                    re = C0_I.first + tau * HIJC_i *0.0413413745758; 
+                    im = C0_I.second - tau * HIJC_r*0.0413413745758; 
+                } 
+            }        
+            C_tau[I] = std::make_pair(re,im);
+        } 
+        C0 = C_tau;   
+        // print the wavefunction
+        if( N % 100 == 0 ){ 
+            std::vector<double> sumsq(ndet);
+            for( int I = 0; I < ndet; ++I ){
+                double re = C_tau[I].first;
+                double im = C_tau[I].second;
+                sumsq[I] = re*re + im*im;
+            } 
+            save_vector(sumsq,"tau_"+ std::to_string(tau) + ".txt");
+        }
+        tau += d_tau;
+    } 
 }
 
 
