@@ -27,6 +27,9 @@
  * @END LICENSE
  */
 
+#include <iomanip>
+#include <sstream>
+
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/pointgrp.h"
@@ -190,8 +193,9 @@ void TDACI::propogate_taylor(std::vector<std::pair<double,double>>& C0, std::vec
     op.tp_s_lists(ann_dets);
     std::vector<std::pair<std::vector<size_t>, std::vector<double>>> H_sparse = op.build_H_sparse(ann_dets);
 
-    for( int N = 0; N < nstep; ++N ){
-        outfile->Printf("\n  Computing wavefunction for tau = %1.6f",tau); 
+    int print_val = 1;
+    for( int N = 1; N <= nstep; ++N ){
+//        outfile->Printf("\n  Computing wavefunction for tau = %1.6f",tau); 
         for( size_t I = 0; I < ndet; ++I) {
             auto& C0_I = C0[I];
             auto& row_indices = H_sparse[I].first; 
@@ -211,15 +215,33 @@ void TDACI::propogate_taylor(std::vector<std::pair<double,double>>& C0, std::vec
             C_tau[I] = std::make_pair(re,im);
         } 
         C0 = C_tau;   
+        //renormalize 
+        double norm = 0.0;//core_coeffs->norm();
+        for( auto& pair : C0 ){
+            double re = pair.first;
+            double im = pair.second;
+            norm += std::sqrt( re*re + im*im );
+        }
+        norm = 1.0/ std::sqrt(norm);
+        for( auto& pair : C0 ){
+            pair.first *= norm;
+            pair.second *= norm;
+        }
+
         // print the wavefunction
-        if( N % 100 == 0 ){ 
+        //if( N % 100 == 0 ){ 
+        if( N == (print_val+1)){ 
             std::vector<double> sumsq(ndet);
             for( int I = 0; I < ndet; ++I ){
-                double re = C_tau[I].first;
-                double im = C_tau[I].second;
+                double re = C0[I].first;
+                double im = C0[I].second;
                 sumsq[I] = re*re + im*im;
             } 
-            save_vector(sumsq,"tau_"+ std::to_string(tau) + ".txt");
+            //save_vector(sumsq,"tau_"+ std::to_string(tau) + ".txt");
+            std::stringstream ss;
+            ss << std::setprecision(3) << tau;
+            save_vector(sumsq,"tau_" + ss.str()+ ".txt");
+            print_val *= 10;
         }
         tau += d_tau;
     } 
