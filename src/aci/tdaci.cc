@@ -194,6 +194,8 @@ void TDACI::propogate_taylor(std::vector<std::pair<double,double>>& C0, std::vec
     std::vector<std::pair<std::vector<size_t>, std::vector<double>>> H_sparse = op.build_H_sparse(ann_dets);
 
     int print_val = 1;
+
+    outfile->Printf("\n  Propogating with tau = %1.2f", d_tau);
     for( int N = 1; N <= nstep; ++N ){
 //        outfile->Printf("\n  Computing wavefunction for tau = %1.6f",tau); 
         for( size_t I = 0; I < ndet; ++I) {
@@ -230,7 +232,8 @@ void TDACI::propogate_taylor(std::vector<std::pair<double,double>>& C0, std::vec
 
         // print the wavefunction
         //if( N % 100 == 0 ){ 
-        if( N == (print_val+1)){ 
+        if( N == (print_val+1) or (N==1) ){ 
+            outfile->Printf("\n Saving wavefunction for t = %1.3f as", tau);
             std::vector<double> sumsq(ndet);
             for( int I = 0; I < ndet; ++I ){
                 double re = C0[I].first;
