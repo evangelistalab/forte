@@ -32,9 +32,9 @@ molecule water_dimer{
      H  -0.599677   0.040712   0.000000
      --
      0 1
-     O   11.350625   0.111469   0.000000
-     H   11.680398  -0.373741  -0.758561
-     H   11.680398  -0.373741   0.758561
+     O   1.350625   0.111469   0.000000
+     H   1.680398  -0.373741  -0.758561
+     H   1.680398  -0.373741   0.758561
 
      units angstrom
      no_reorient
@@ -54,7 +54,7 @@ molecule water_sys{
 #****** Calculate environment method ******
 activate(water_dimer)
 set {
-  basis         sto-3g
+  basis         cc-pvdz
   scf_type      pk
   e_convergence 10
 }
@@ -68,6 +68,7 @@ set forte {
   SYS_DOCC 5
   LOCALIZATION_METHOD IAO_IBO
   SYSTEM_MATRIX ALL
+  ORBITAL_SEPARATION P_AB
   C_SIZE ALL
   MATRIX_BASIS IAO_IBO
 #  WRITE_TRANS  U
@@ -79,7 +80,7 @@ E_test, wfn_mod_iao = energy('forte', ref_wfn=ori_wfn, return_wfn=True)
 activate(water_sys)
 
 set {
-  basis         sto-3g
+  basis         cc-pvdz
   scf_type      pk
   e_convergence 10
   d_convergence 10

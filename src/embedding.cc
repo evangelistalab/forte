@@ -290,8 +290,68 @@ std::vector<int> Separate_IAO_subset(SharedWavefunction wfn, int natom_sys, Dime
 	if (options.get_str("ORBITAL_SEPARATION") == "P_AB") {
 		//Add P_pq calculation here
 		SharedMatrix S_ao = wfn->S();
+		Dimension noccpi = wfn->doccpi();
+		Dimension zeropi = nmopi - nmopi;
+		Dimension nvirpi = nmopi - noccpi;
+		Dimension sys_mo = nmopi;
+		sys_mo[0] = count_basis;
+		Slice sys(zeropi, sys_mo);
+		Slice occ(zeropi, noccpi);
+		Slice vir(noccpi, nmopi);
+		SharedMatrix S_sys = S_ao->get_block(sys, sys);
+		SharedMatrix L(new Matrix("L", nirrep, sys_mo, sys_mo));
+		SharedVector lm(new Vector("lambda", nirrep, sys_mo));
+		SharedVector lminvhalf(new Vector("lambda inv half", nirrep, sys_mo));
+		SharedMatrix LM(new Matrix("LM", nirrep, sys_mo, sys_mo));
 
-		//Generate labels directly from P_pq, modify the return map -> add ind
+		//Construct S_sys^-1/2
+		S_sys->diagonalize(L, lm);
+		for (int i = 0; i < sys_mo[0]; ++i) {
+			double tmp = 1.0 / lm->get(0, i);
+			lminvhalf->set(0, i, sqrt(tmp));
+		}
+		LM->set_diagonal(lminvhalf);
+		SharedMatrix S_sys_invhalf = Matrix::triplet(L, LM, L, false, false, true);
+
+		SharedMatrix S_sys_in_all(new Matrix("S system in fullsize", nirrep, nmopi, nmopi));
+		S_sys_in_all->set_block(sys, sys, S_sys_invhalf);
+
+		//Build P_pq
+		S_sys_in_all->transform(S_ao);
+		S_sys_in_all->transform(Loc["IAO"]);
+		//S_sys_in_all->print();
+		
+		//Diagonalize P_pq for occ and vir part, respectively.
+		SharedMatrix P_oo = S_sys_in_all->get_block(occ, occ);
+		SharedMatrix Uo(new Matrix("Uo", nirrep, noccpi, noccpi));
+		SharedVector lo(new Vector("lo", nirrep, noccpi));
+		P_oo->diagonalize(Uo, lo, descending);
+		lo->print();
+
+		SharedMatrix P_vv = S_sys_in_all->get_block(vir, vir);
+		SharedMatrix Uv(new Matrix("Uv", nirrep, nvirpi, nvirpi));
+		SharedVector lv(new Vector("lv", nirrep, nvirpi));
+		P_vv->diagonalize(Uv, lv, descending);
+		lv->print();
+
+		//Generate index list
+		int count_sys = count_basis; //Change this in the future if we want different number of sys orbitals
+		double tmp = 0.0;
+		std::vector<std::pair<double, int>> Alist = {};
+		for (int i = 0; i < nmopi[0]; ++i) {
+			tmp = S_sys_in_all->get(0, i, i);
+			std::pair<double, int> entry_this = std::make_pair(tmp, i);
+			Alist.push_back(entry_this);
+		}
+		std::sort(Alist.begin(), Alist.end(), std::greater<std::pair<double, int>>());
+		for (int i = 0; i < count_sys; ++i) {
+			index_trace.push_back(Alist[i].second);
+		}
+		std::sort(index_trace.begin(), index_trace.end(), std::less<int>());
+		outfile->Printf("\n %d orbitals belonging to system are selected, index is: \n", count_sys);
+		for (int i = 0; i < count_sys; ++i) {
+			outfile->Printf("%d ", index_trace[i]);
+		}
 	}
 
     // Use index_trace to generate C_sys
@@ -374,8 +434,8 @@ std::map<std::string, SharedMatrix> Embedding::localize(SharedWavefunction wfn, 
         SharedMatrix Cocc = build_Cocc(wfn->Ca(), nirrep, nmopi, noccpi);
         SharedMatrix Focc = build_Focc(wfn->Fa(), nirrep, nmopi, noccpi);
         std::vector<int> ranges = {};
-		//ranges.push_back(0);
-		//ranges.push_back(Cocc->colspi()[0]);
+		ranges.push_back(0);
+		ranges.push_back(noccpi[0]);
         std::map<std::string, SharedMatrix> ret_loc = iaobd->localize(Cocc, Focc, ranges);
         outfile->Printf("iao build C occ\n");
         ret_loc["L"]->print();
