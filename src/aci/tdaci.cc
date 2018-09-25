@@ -204,8 +204,8 @@ void TDACI::propogate_taylor(std::vector<std::pair<double,double>>& C0, std::vec
                 double HIJC_r = C0[idx].first * row_values[J];
                 double HIJC_i = C0[idx].second * row_values[J];
                 if( std::sqrt((HIJC_r*HIJC_r) + (HIJC_i*HIJC_i)) >= eta ){
-                    re = C0_I.first + tau * HIJC_i *0.0413413745758; 
-                    im = C0_I.second - tau * HIJC_r*0.0413413745758; 
+                    re = C0_I.first + d_tau * HIJC_i *0.0413413745758; 
+                    im = C0_I.second - d_tau * HIJC_r*0.0413413745758; 
                 } 
             }        
             C_tau[I] = std::make_pair(re,im);
