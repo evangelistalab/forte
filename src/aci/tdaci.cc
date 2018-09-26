@@ -174,9 +174,6 @@ void TDACI::propogate_taylor(std::vector<std::pair<double,double>>& C0, std::vec
     double d_tau = options_.get_double("TDACI_TIMESTEP")*0.0413413745758;        
     double tau = 0.0;
 
-    //convert attosecond to a.u.
-    tau *= 0.0413413745758;
-
     int nstep = options_.get_int("TDACI_NSTEP");
     
     // 1. Copy initial wfn into new one
@@ -185,6 +182,19 @@ void TDACI::propogate_taylor(std::vector<std::pair<double,double>>& C0, std::vec
  //   for( int I = 0; I < ndet; ++I ){ 
  //       C_tau[I] = C0[I];
  //   }
+
+
+    // Save initial wavefunction
+    
+    outfile->Printf("\n Saving wavefunction for t = 0.0 as");
+    std::vector<double> sum_sq(ndet);
+    for( int I = 0; I < ndet; ++I ){
+        double re = C0[I].first;
+        double im = C0[I].second;
+        sum_sq[I] = re*re + im*im;
+    } 
+    //save_vector(sumsq,"tau_"+ std::to_string(tau) + ".txt");
+    save_vector(sum_sq,"tau_0.0.txt");
 
     auto active_sym = mo_space_info_->symmetry("ACTIVE");
     WFNOperator op(active_sym, fci_ints);
@@ -197,7 +207,7 @@ void TDACI::propogate_taylor(std::vector<std::pair<double,double>>& C0, std::vec
 
     outfile->Printf("\n  Propogating with tau = %1.2f", d_tau);
     for( int N = 1; N <= nstep; ++N ){
-//        outfile->Printf("\n  Computing wavefunction for tau = %1.6f",tau); 
+        tau += d_tau;
         for( size_t I = 0; I < ndet; ++I) {
             auto& C0_I = C0[I];
             auto& row_indices = H_sparse[I].first; 
@@ -256,7 +266,6 @@ void TDACI::propogate_taylor(std::vector<std::pair<double,double>>& C0, std::vec
             save_vector(sum_sq,"tau_" + ss.str()+ ".txt");
             print_val *= 10;
         }
-        tau += d_tau;
     } 
 }
 
