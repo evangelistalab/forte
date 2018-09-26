@@ -252,7 +252,7 @@ void TDACI::propogate_taylor(std::vector<std::pair<double,double>>& C0, std::vec
         }
         // print the wavefunction
         //if( N % 100 == 0 ){ 
-        if( N == (print_val+1) or (N==1) ){ 
+        if( N == (print_val) ){ 
             outfile->Printf("\n Saving wavefunction for t = %1.3f as", tau/0.0413413745758);
             std::vector<double> sum_sq(ndet);
             for( int I = 0; I < ndet; ++I ){
