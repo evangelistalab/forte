@@ -171,7 +171,7 @@ void TDACI::propogate_taylor(std::vector<std::pair<double,double>>& C0, std::vec
 
     // The screening criterion
     double eta = options_.get_double("TDACI_ETA");        
-    double d_tau = options_.get_double("TDACI_TIMESTEP");        
+    double d_tau = options_.get_double("TDACI_TIMESTEP")*0.0413413745758;        
     double tau = 0.0;
 
     //convert attosecond to a.u.
@@ -209,41 +209,51 @@ void TDACI::propogate_taylor(std::vector<std::pair<double,double>>& C0, std::vec
                 size_t idx = row_indices[J];
                 double HIJC_r = C0[idx].first * row_values[J];
                 double HIJC_i = C0[idx].second * row_values[J];
-                if( std::sqrt((HIJC_r*HIJC_r) + (HIJC_i*HIJC_i)) >= eta ){
-                    re = C0_I.first + d_tau * HIJC_i *0.0413413745758; 
-                    im = C0_I.second - d_tau * HIJC_r*0.0413413745758; 
-                } 
+                re = C0_I.first + d_tau * HIJC_i; 
+                im = C0_I.second - d_tau * HIJC_r; 
             }        
             C_tau[I] = std::make_pair(re,im);
         } 
         C0 = C_tau;   
-        //renormalize 
-        double norm = 0.0;//core_coeffs->norm();
-        for( auto& pair : C0 ){
-            double re = pair.first;
-            double im = pair.second;
-            norm += std::sqrt( re*re + im*im );
-        }
-        norm = 1.0/ std::sqrt(norm);
-        for( auto& pair : C0 ){
-            pair.first *= norm;
-            pair.second *= norm;
-        }
 
-        // print the wavefunction
-        //if( N % 100 == 0 ){ 
-        if( N == (print_val+1) or (N==1) ){ 
-            outfile->Printf("\n Saving wavefunction for t = %1.3f as", tau);
-            std::vector<double> sumsq(ndet);
+        // Adaptively screen the wavefunction
+        if( eta > 0.0 ){
+            std::vector<std::pair<double, size_t>> sumsq(ndet);
+            double norm = 0.0;
             for( int I = 0; I < ndet; ++I ){
                 double re = C0[I].first;
                 double im = C0[I].second;
-                sumsq[I] = re*re + im*im;
+                sumsq[I] = std::make_pair(re*re + im*im, I);
+                norm += std::sqrt( re*re + im*im );
+            } 
+            norm = 1.0/ std::sqrt(norm);
+            std::sort(sumsq.begin(), sumsq.end()); 
+            double sum = 0.0;
+            for( int I = 0; I < ndet; ++I ){
+                double& val = sumsq[I].first;
+                if( sum + val <= eta*norm ){
+                    sum += val;
+                    size_t idx = sumsq[I].second;
+                    C0[idx] = std::make_pair(0.0,0.0);
+                }else{
+                    break;
+                }
+            }
+        }
+        // print the wavefunction
+        //if( N % 100 == 0 ){ 
+        if( N == (print_val+1) or (N==1) ){ 
+            outfile->Printf("\n Saving wavefunction for t = %1.3f as", tau/0.0413413745758);
+            std::vector<double> sum_sq(ndet);
+            for( int I = 0; I < ndet; ++I ){
+                double re = C0[I].first;
+                double im = C0[I].second;
+                sum_sq[I] = re*re + im*im;
             } 
             //save_vector(sumsq,"tau_"+ std::to_string(tau) + ".txt");
             std::stringstream ss;
-            ss << std::setprecision(3) << tau;
-            save_vector(sumsq,"tau_" + ss.str()+ ".txt");
+            ss << std::setprecision(3) << tau/0.0413413745758;
+            save_vector(sum_sq,"tau_" + ss.str()+ ".txt");
             print_val *= 10;
         }
         tau += d_tau;
