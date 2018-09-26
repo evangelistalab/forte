@@ -998,7 +998,6 @@ AdaptiveCI::get_excited_determinants_batch(SharedMatrix evecs, SharedVector eval
                 excluded += en;
             } else {
                 F_space.push_back(std::make_pair(en, det));
-                outfile->Printf("\n adding %s", det.str().c_str());
             }
         }
         total_excluded += excluded;
