@@ -268,6 +268,8 @@ class AdaptiveCI : public Wavefunction {
 
     bool set_rdm_ = false;
 
+    bool core_ = false;
+
     /// The alpha MO always unoccupied
     int hole_;
 
@@ -352,6 +354,10 @@ class AdaptiveCI : public Wavefunction {
 
     /// (DEFAULT)  Builds excited determinants for a bin, uses all threads, hash-based
     det_hash<double> get_bin_F_space(int bin, int nbin,double E0, SharedMatrix evecs,
+                                      DeterminantHashVec& P_space);
+
+    /// Builds core excited determinants for a bin, uses all threads, hash-based
+    det_hash<double> get_bin_F_space_core(int bin, int nbin,double E0, SharedMatrix evecs,
                                       DeterminantHashVec& P_space);
 
     /// Builds excited determinants in batch using sorting of vectors
