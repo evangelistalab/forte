@@ -51,7 +51,7 @@ set forte{
    sigma                    0.0
    gamma                    0.0
    job_type                 CASSCF
-   aci_select_type              amp
+#   aci_select_type              amp
 }
 
 

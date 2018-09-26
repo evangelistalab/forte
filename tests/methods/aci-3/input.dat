@@ -29,7 +29,6 @@ set forte {
   multiplicity 1
   ms 0.0
   job_type aci
-  aci_SELECT_TYPE aimed_energy
   sigma 0.001000
   aci_nroot 1
   charge 0

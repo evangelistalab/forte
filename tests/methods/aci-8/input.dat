@@ -28,7 +28,7 @@ set {
 
 set forte {
   job_type aci
-  aci_SELECT_TYPE amp
+#  aci_SELECT_TYPE amp
   aci_add_aimed_degenerate false
   aci_project_out_spin_contaminants false
   aci_enforce_spin_complete false

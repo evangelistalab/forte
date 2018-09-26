@@ -25,7 +25,6 @@ set {
 
 set forte {
   job_type aci
-  aci_select_type aimed_energy
   aci_add_aimed_degenerate false
   aci_enforce_spin_complete false
   frozen_docc [1,0,0,0,0,1,0,0]
