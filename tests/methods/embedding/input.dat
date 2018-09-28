@@ -54,7 +54,7 @@ molecule water_sys{
 #****** Calculate environment method ******
 activate(water_dimer)
 set {
-  basis         cc-pvdz
+  basis         sto-3g
   scf_type      pk
   e_convergence 10
 }
@@ -75,12 +75,14 @@ set forte {
 }
 
 E_test, wfn_mod_iao = energy('forte', ref_wfn=ori_wfn, return_wfn=True)
+#set cubeprop_tasks ['orbitals', 'density','basis_functions']
+#cubeprop(wfn_mod_iao)
 
 # ****** Set modified(embedded) matrices ******
 activate(water_sys)
 
 set {
-  basis         cc-pvdz
+  basis         sto-3g
   scf_type      pk
   e_convergence 10
   d_convergence 10
@@ -97,6 +99,12 @@ set ownmp2 {
 
 energy('ownmp2', ref_wfn = wfn_sys)
 
+set {
+    mp2_type conv
+}
+
+energy('mp2', ref_wfn = wfn_sys)
+
 set forte {
   job_type ownscf
   INTEGRAL_METHOD mints
@@ -105,3 +113,16 @@ set forte {
 
 E_cheap_sys, wfn_ownscf = energy('forte', ref_wfn=wfn_sys, return_wfn=True)
 
+set ownmp2 {
+  print 1
+  reference other_fock
+  rotate_int calculate
+}
+
+energy('ownmp2', ref_wfn = wfn_ownscf)
+
+set {
+    mp2_type conv
+}
+
+energy('mp2', ref_wfn = wfn_ownscf)

@@ -171,6 +171,8 @@ void build_G(SharedWavefunction wfn, SharedMatrix C, SharedMatrix G, Options& op
 		if (options.get_str("INTEGRAL_BASIS") == "OTHER") {
 			INTUSE->zero();
 			SharedMatrix Ca = wfn->Ca();
+
+			/*
 			for (int p = 0; p < nmo; ++p) {
 				for (int q = 0; q < nmo; ++q) {
 					for (int r = 0; r < nmo; ++r) {
@@ -189,6 +191,47 @@ void build_G(SharedWavefunction wfn, SharedMatrix C, SharedMatrix G, Options& op
 								}
 							}
 							INTUSE->set(0, p*nmo + q, r*nmo + s, tmpe);
+						}
+					}
+				}
+			}
+			*/
+
+			int i, j, k, l;
+
+			SharedMatrix X(new Matrix(nmo, nmo));
+			SharedMatrix TMP(new Matrix((nmo*nmo), (nmo*nmo)));
+
+			for (i = 0; i < nmo; ++i) {
+				for (j = 0; j < nmo; ++j) {
+					for (k = 0; k < nmo; ++k) {
+						for (l = 0; l < nmo; ++l) {
+							X->set(k, l, eri_index_scf(TEI, i, j, k, l, nmopi));
+							//X->set(l, k, ao_int_index(TEI, i, j, k, l, nmo));
+						}
+					}
+					X->transform(Ca);
+					for (k = 0; k < nmo; ++k) {
+						for (l = 0; l < nmo; ++l) {
+							TMP->set(k*nmo + l, i*nmo + j, X->get(k, l));
+						}
+					}
+				}
+			}
+
+			for (k = 0; k < nmo; ++k) {
+				for (l = 0; l < nmo; ++l) {
+					X->zero();
+					for (i = 0; i < nmo; ++i) {
+						for (j = 0; j < nmo; ++j) {
+							X->set(i, j, TMP->get(k*nmo + l, i*nmo + j));
+							//X->set(l, k, TMP->get(kl, ij));
+						}
+					}
+					X->transform(Ca);
+					for (i = 0; i < nmo; ++i) {
+						for (j = 0; j < nmo; ++j) {
+							INTUSE->set(0, k*nmo + l, i*nmo + j, X->get(i, j));
 						}
 					}
 				}
@@ -341,6 +384,7 @@ std::map<std::string, SharedMatrix> do_HF(SharedWavefunction wfn, SharedMatrix h
 
 double OwnSCF::compute_energy() {
     // run HF calculation
+	SharedMatrix Ca_origin = ref_wfn_->Ca(); //store original Ca, use to rotate C back to AO if needed
 	std::map<std::string, SharedMatrix> scf_calc = do_HF(ref_wfn_, ref_wfn_->H(), nirrep_, nmopi_, doccpi_, Maxcyc_, E_conv_, options_);
 	energy_ = scf_calc["escf"]->get(0, 0, 0);
 	outfile->Printf("The SCF energy stored to wfn is %8.8f", ref_wfn_->reference_energy());
@@ -349,7 +393,14 @@ double OwnSCF::compute_energy() {
 			epsilon_a_->set(h, i, scf_calc["epis"]->get(h, i, i));
 		}
 	}
-	Ca_->copy(scf_calc["Ca"]);
+	if (options_.get_str("INTEGRAL_BASIS") == "OTHER") { //Rotate everything back to AO! C should be AO-MO
+		Ca_ = Matrix::doublet(Ca_origin, scf_calc["Ca"]);
+		scf_calc["Da"]->back_transform(Ca_origin);
+		scf_calc["Fa"]->back_transform(Ca_origin);
+	}
+	else {
+		Ca_->copy(scf_calc["Ca"]);
+	}
 	Da_->copy(scf_calc["Da"]);
 	Fa_->copy(scf_calc["Fa"]);
 

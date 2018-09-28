@@ -435,7 +435,7 @@ std::map<std::string, SharedMatrix> Embedding::localize(SharedWavefunction wfn, 
         SharedMatrix Focc = build_Focc(wfn->Fa(), nirrep, nmopi, noccpi);
         std::vector<int> ranges = {};
 		ranges.push_back(0);
-		ranges.push_back(noccpi[0]);
+		ranges.push_back(nmopi[0]);
         std::map<std::string, SharedMatrix> ret_loc = iaobd->localize(Cocc, Focc, ranges);
         outfile->Printf("iao build C occ\n");
         ret_loc["L"]->print();
@@ -450,6 +450,7 @@ std::map<std::string, SharedMatrix> Embedding::localize(SharedWavefunction wfn, 
 		idn->identity();
 		ret_loc["U"]->set_block(vir, vir, idn);
 		ret_loc["U"]->print();
+		//ret_loc["U"]->identity(); //Use MO directly!!
 
 		SharedMatrix C_loc = Matrix::doublet(wfn->Ca(), ret_loc["U"]); 
 		outfile->Printf("iao build C all\n");
@@ -597,6 +598,7 @@ double Embedding::compute_energy() {
 		}
 	}
 	*/
+	//SharedMatrix C_plot(Loc["IAO"]->clone()); //Just for plot! comment this when running regular calculation!
 
 	for (int i = 0; i < IAO_index_sys.size(); ++i) {
 		outfile->Printf("Swap %d and %d \n", i, MO_index_sys[i]);
@@ -830,6 +832,13 @@ double Embedding::compute_energy() {
 		H_->print();
 		Fa_->print();
 		Da_->print();
+		//conventional psi4_mp2 or other psi4 post HF method will read Dijab from epsilon instead from fock! so modify epsilon in wfn is necessary.
+		for (int h = 0; h < nirrep_; ++h) {
+			for (int i = 0; i < nmo_sys_pi[h]; ++i) {
+				epsilon_a_->set(h, IAO_index_sys[i], Fa_->get(h, i, i));
+			}
+		}
+		//Ca_->copy(C_plot); //Just for plot! comment this when running regular calculation!
 	}
 
     // 7. Compute （expensive system method) energy for system A, with h A-in-B
