@@ -75,6 +75,7 @@ double TDACI::compute_energy() {
     double en = 0.0;
     int ncmo = mo_space_info_->size("ACTIVE");
 
+
     // 1. Grab an ACI wavefunction
     auto aci = std::make_shared<AdaptiveCI>(wfn_, options_, ints_, mo_space_info_);
     aci->set_quiet(true);
@@ -91,99 +92,104 @@ double TDACI::compute_energy() {
 
     size_t nann = ann_dets.size();
     outfile->Printf("\n  size of ann dets: %zu", ann_dets.size());
+    std::ifstream file("c_init.txt", std::ios::in);
+    if( !file ){
 
-    // 3. Remove a core electron from aci wfn, compile coeffss
-    DeterminantHashVec core_dets;
-    std::vector<double> core_coeffs(nann, 0.0); 
+        // 3. Remove a core electron from aci wfn, compile coeffss
+        DeterminantHashVec core_dets;
+        std::vector<double> core_coeffs(nann, 0.0); 
 
-    const det_hashvec& dets = aci_dets.wfn_hash();
-    size_t ndet = dets.size();
-    size_t ncore = 0;
-    for ( size_t I = 0; I < ndet; ++I ){
-        auto& detI = dets[I];
-        if( detI.get_alfa_bit(0) == true ){
-            Determinant adet(detI);
-            adet.set_alfa_bit(0, false);
-            size_t idx = ann_dets.get_idx(adet);
-            core_coeffs[idx] +=  aci_coeffs->get(aci_dets.get_idx(detI),0); 
-            core_dets.add(adet);
-//            outfile->Printf("\n %s  %s",detI.str(ncmo).c_str(),  adet.str(ncmo).c_str());
-        }  
-        if( detI.get_beta_bit(0) == true ){
-            Determinant adet(detI);
-            adet.set_beta_bit(0, false);
-            size_t idx = ann_dets.get_idx(adet);
-            core_coeffs[idx] +=  aci_coeffs->get(aci_dets.get_idx(detI),0); 
-            core_dets.add(adet);
-//            outfile->Printf("\n %s  %s",detI.str(ncmo).c_str(),  adet.str(ncmo).c_str());
-        }  
-    }
-    outfile->Printf("\n  size of core dets: %zu", core_dets.size());    
-    
-    // 2. Renormalize wave function
-    outfile->Printf("\n  Renormalizing wave function");
-    double norm = 0.0;//core_coeffs->norm();
-    for( auto& val : core_coeffs ){
-        norm += val * val;
-    }
-    norm = 1.0/ std::sqrt(norm);
-    for( auto& val : core_coeffs ){
-        val *= norm;
-    }
-
-    // 3. Build full n-1 hamiltonian
-    if( options_.get_str("TDACI_PROPOGATOR") == "EXACT" ){
-        std::shared_ptr<FCIIntegrals> fci_ints = aci->get_aci_ints();
-        SharedMatrix full_aH = std::make_shared<Matrix>("aH",nann, nann);
-        for( size_t I = 0; I < nann; ++I ){
-            Determinant detI = ann_dets.get_det(I);
-            for( size_t J = I; J < nann; ++J ){
-                Determinant detJ = ann_dets.get_det(J);
-                double value = fci_ints->slater_rules(detI,detJ);
-                full_aH->set(I,J, value);
-                full_aH->set(J,I, value);
-            }
+        const det_hashvec& dets = aci_dets.wfn_hash();
+        size_t ndet = dets.size();
+        size_t ncore = 0;
+        for ( size_t I = 0; I < ndet; ++I ){
+            auto& detI = dets[I];
+            if( detI.get_alfa_bit(0) == true ){
+                Determinant adet(detI);
+                adet.set_alfa_bit(0, false);
+                size_t idx = ann_dets.get_idx(adet);
+                core_coeffs[idx] +=  aci_coeffs->get(aci_dets.get_idx(detI),0); 
+                core_dets.add(adet);
+  //              outfile->Printf("\n %s  %s",detI.str(ncmo).c_str(),  adet.str(ncmo).c_str());
+            }  
+            if( detI.get_beta_bit(0) == true ){
+                Determinant adet(detI);
+                adet.set_beta_bit(0, false);
+                size_t idx = ann_dets.get_idx(adet);
+                core_coeffs[idx] +=  aci_coeffs->get(aci_dets.get_idx(detI),0); 
+                core_dets.add(adet);
+  //              outfile->Printf("\n %s  %s",detI.str(ncmo).c_str(),  adet.str(ncmo).c_str());
+            }  
         }
-        // Print full Hamiltonian
-        outfile->Printf("\n Writing Hamiltonian");
-        save_matrix( full_aH, "hamiltonian.txt");
-        outfile->Printf("  ...done");
-
-        outfile->Printf("\n Diagonalizing H");
-        SharedMatrix full_evecs = std::make_shared<Matrix>("evec", nann,nann);
-        SharedVector full_evals = std::make_shared<Vector>("evals", nann);
-        full_aH->diagonalize(full_evecs, full_evals);
-        outfile->Printf("  ...done");
-
-        outfile->Printf("\n Writing c_init");
-        save_vector(core_coeffs,"c_init.txt");
-        outfile->Printf("  ...done");
-
-        outfile->Printf("\n Writing full evecs");
-        save_matrix(full_evecs, "full_evecs.txt");
-        outfile->Printf("  ...done");
-
-        outfile->Printf("\n Writing full evals");
-        save_vector(full_evals, "full_evals.txt");
-        outfile->Printf("  ...done");
-    }
-    if (options_.get_str("TDACI_PROPOGATOR") == "TAYLOR" ){
-        std::shared_ptr<FCIIntegrals> fci_ints = aci->get_aci_ints();
-        //std::vector<std::pair<double,double>> C_new;
-        SharedVector C0 = std::make_shared<Vector>("C0r", ann_dets.size());
-        //std::vector<double> C0(nann);
-        for( size_t I = 0; I < nann; ++I ){
-            C0->set(I,core_coeffs[I]);
-        }
+        outfile->Printf("\n  size of core dets: %zu", core_dets.size());    
         
-        propogate_taylor(C0, fci_ints, ann_dets );
+        // 2. Renormalize wave function
+        outfile->Printf("\n  Renormalizing wave function");
+        double norm = 0.0;//core_coeffs->norm();
+        for( auto& val : core_coeffs ){
+            norm += val * val;
+        }
+        norm = 1.0/ std::sqrt(norm);
+        for( auto& val : core_coeffs ){
+            val *= norm;
+        }
 
-    }
-//    if (options_.get_str("TDACI_PROPOGATOR") == "VERLET" ){
-//        propogate_verlet(C0, C_new, fci_ints, ann_dets);
-//    }
+        // 3. Build full n-1 hamiltonian
+        if( options_.get_str("TDACI_PROPOGATOR") == "EXACT" ){
+            std::shared_ptr<FCIIntegrals> fci_ints = aci->get_aci_ints();
+            SharedMatrix full_aH = std::make_shared<Matrix>("aH",nann, nann);
+            for( size_t I = 0; I < nann; ++I ){
+                Determinant detI = ann_dets.get_det(I);
+                for( size_t J = I; J < nann; ++J ){
+                    Determinant detJ = ann_dets.get_det(J);
+                    double value = fci_ints->slater_rules(detI,detJ);
+                    full_aH->set(I,J, value);
+                    full_aH->set(J,I, value);
+                }
+            }
+            // Print full Hamiltonian
+            outfile->Printf("\n Writing Hamiltonian");
+            save_matrix( full_aH, "hamiltonian.txt");
+            outfile->Printf("  ...done");
+
+            outfile->Printf("\n Diagonalizing H");
+            SharedMatrix full_evecs = std::make_shared<Matrix>("evec", nann,nann);
+            SharedVector full_evals = std::make_shared<Vector>("evals", nann);
+            full_aH->diagonalize(full_evecs, full_evals);
+            outfile->Printf("  ...done");
+
+            outfile->Printf("\n Writing c_init");
+            save_vector(core_coeffs,"c_init.txt");
+            outfile->Printf("  ...done");
+
+            outfile->Printf("\n Writing full evecs");
+            save_matrix(full_evecs, "full_evecs.txt");
+            outfile->Printf("  ...done");
+
+            outfile->Printf("\n Writing full evals");
+            save_vector(full_evals, "full_evals.txt");
+            outfile->Printf("  ...done");
+        }
+    } else {
+        if (options_.get_str("TDACI_PROPOGATOR") == "TAYLOR" ){
+            SharedVector C0 = std::make_shared<Vector>("C0r", ann_dets.size());
+            std::shared_ptr<FCIIntegrals> fci_ints = aci->get_aci_ints();
+            //std::vector<std::pair<double,double>> C_new;
+            //std::vector<double> C0(nann);
+            for( size_t I = 0; I < nann; ++I ){
+                double num = 0.0;
+                file >> num;
+                C0->set(I,num);
+            }
+            
+            propogate_taylor(C0, fci_ints, ann_dets );
+
+        }
+//        if (options_.get_str("TDACI_PROPOGATOR") == "VERLET" ){
+//            propogate_verlet(C0, C_new, fci_ints, ann_dets);
+//        }
     
-
+    }
     return en;
 }
 
@@ -206,7 +212,6 @@ void TDACI::propogate_taylor(SharedVector C0_r, std::shared_ptr<FCIIntegrals> fc
     outfile->Printf("\n Saving wavefunction for t = 0.0 as");
     save_vector(C0_r,"tau_0.00_r.txt");
     save_vector(C0_i,"tau_0.00_i.txt");
-
     auto active_sym = mo_space_info_->symmetry("ACTIVE");
    // WFNOperator op(active_sym, fci_ints);
    // op.build_strings(ann_dets);
@@ -249,6 +254,7 @@ void TDACI::propogate_taylor(SharedVector C0_r, std::shared_ptr<FCIIntegrals> fc
     outfile->Printf("\n  Propogating with tau = %1.2f", d_tau);
     outfile->Printf("\n Truncation Taylor expansion at order %d", order);
     for( int N = 0; N < nstep; ++N ){
+        std::vector<size_t> counter(ndet, 0);
         tau += d_tau;
 
         SharedVector sigma_r = std::make_shared<Vector>("Sr", ndet);        
@@ -274,27 +280,6 @@ void TDACI::propogate_taylor(SharedVector C0_r, std::shared_ptr<FCIIntegrals> fc
             Ct_r->add(sigma_i);
             Ct_i->subtract(sigma_r);
 
-            //for( size_t I = 0; I < ndet; ++I) {
-            //    auto& C0_I = C0[I];
-            //    //auto& row_indices = H_sparse[I].first; 
-            //    //auto& row_values  = H_sparse[I].second;
-            //    //size_t row_dim = row_values.size();
-            //    double re = 0.0;
-            //    double im = 0.0;
-            //    for( int J = 0; J < ndet; ++J ){
-            //        //size_t idx = row_indices[J];
-            //        //sigma_r[I] += C0[idx].first * row_values[J];
-            //        //sigma_i[I] += C0[idx].second * row_values[J];
-            //        sigma_r[I] += C0[J].first * full_aH->get(I,J);
-            //        sigma_i[I] += C0[J].second * full_aH->get(I,J);
-
-            //    }        
-            //    re = C0_I.first + d_tau * sigma_i[I]; 
-            //    im = C0_I.second - d_tau * sigma_r[I]; 
-            //    C_tau[I] = std::make_pair(re,im);
-            //} 
-       //     C0 = C_tau;   
-
             // Adaptively screen the wavefunction
             if( eta > 0.0 ){
                 std::vector<std::pair<double, size_t>> sumsq(ndet);
@@ -310,13 +295,13 @@ void TDACI::propogate_taylor(SharedVector C0_r, std::shared_ptr<FCIIntegrals> fc
                 double sum = 0.0;
                 for( int I = 0; I < ndet; ++I ){
                     double& val = sumsq[I].first;
+                    size_t idx = sumsq[I].second;
                     if( sum + val <= eta*norm ){
                         sum += val;
-                        size_t idx = sumsq[I].second;
                         C0_r->set(idx,0.0);
                         C0_i->set(idx,0.0);
                     }else{
-                        break;
+                        counter[idx]++;
                     }
                 }
             }
@@ -324,25 +309,34 @@ void TDACI::propogate_taylor(SharedVector C0_r, std::shared_ptr<FCIIntegrals> fc
         // Quadratic correction
         if( order >= 2 ){
             
-         //   for( int I = 0; I < ndet; ++I ){
-         //       //auto& row_indices = H_sparse[I].first; 
-         //       //auto& row_values  = H_sparse[I].second;
-         //       //size_t row_dim = row_values.size();
-         //       double re = 0.0;
-         //       double im = 0.0;
-         //       for( int J = 0; J < ndet; ++J ){
-         //           //re += row_values[J]* sigma_r[J]; 
-         //           //im += row_values[J]* sigma_i[J]; 
-         //           re += full_aH->get(I,J)* sigma_r[J]; 
-         //           im += full_aH->get(I,J)* sigma_i[J]; 
-         //       }
-         //       re *= d_tau * d_tau * 0.25;
-         //       im *= d_tau * d_tau * 0.25;
-         //       
-         //       C_tau[I].first -= re;
-         //       C_tau[I].second -= im;
-         //       
-         //   }
+            sigma_r->gemv(false, 1.0, &(*full_aH), &(*sigma_r), 0.0);
+            sigma_i->gemv(false, 1.0, &(*full_aH), &(*sigma_i), 0.0);
+
+            sigma_r->scale( d_tau * d_tau * 0.25);
+            sigma_i->scale( d_tau * d_tau * 0.25);
+
+            Ct_r->subtract(sigma_r);
+            Ct_i->subtract(sigma_i);
+
+            //for( int I = 0; I < ndet; ++I ){
+            //    //auto& row_indices = H_sparse[I].first; 
+            //    //auto& row_values  = H_sparse[I].second;
+            //    //size_t row_dim = row_values.size();
+            //    double re = 0.0;
+            //    double im = 0.0;
+            //    for( int J = 0; J < ndet; ++J ){
+            //        //re += row_values[J]* sigma_r[J]; 
+            //        //im += row_values[J]* sigma_i[J]; 
+            //        re += full_aH->get(I,J)* sigma_r[J]; 
+            //        im += full_aH->get(I,J)* sigma_i[J]; 
+            //    }
+            //    re *= d_tau * d_tau * 0.25;
+            //    im *= d_tau * d_tau * 0.25;
+            //    
+            //    C_tau[I].first -= re;
+            //    C_tau[I].second -= im;
+            //    
+            //}
 
         }
 
@@ -375,6 +369,7 @@ void TDACI::propogate_taylor(SharedVector C0_r, std::shared_ptr<FCIIntegrals> fc
             ss << std::fixed << std::setprecision(2) << tau/0.0413413745758;
             save_vector(Ct_r,"tau_" + ss.str()+ "_r.txt");
             save_vector(Ct_i,"tau_" + ss.str()+ "_i.txt");
+            save_vector( counter, "det_"+ss.str()+"_counter.txt");
             print_val += print_interval;
         }
     } 
@@ -455,6 +450,15 @@ void TDACI::save_vector( SharedVector vec, std::string name) {
     }
 }
 
+void TDACI::save_vector( std::vector<size_t>& vec, std::string name) {
+    
+    size_t dim = vec.size();
+    std::ofstream file;
+    file.open(name, std::ofstream::out | std::ofstream::trunc);
+    for( size_t I = 0; I < dim; ++I ){
+        file << vec[I] << "\n" ;
+    }
+}
 void TDACI::save_vector( std::vector<double>& vec, std::string name) {
     
     size_t dim = vec.size();
