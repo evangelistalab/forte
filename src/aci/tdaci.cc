@@ -73,7 +73,7 @@ TDACI::~TDACI() {}
 double TDACI::compute_energy() {
 
     double en = 0.0;
-    int ncmo = mo_space_info_->size("ACTIVE");
+    int nact = mo_space_info_->size("ACTIVE");
 
 
     // 1. Grab an ACI wavefunction
@@ -86,12 +86,22 @@ double TDACI::compute_energy() {
     
     // 2. Now, build the full Hamiltonian in the n-1 space (not just core)
     DeterminantHashVec ann_dets;
-    for( int i = 0; i < ncmo; ++i ){
+    for( int i = 0; i < nact; ++i ){
         annihilate_wfn(aci_dets, ann_dets,i);  
     }
-
     size_t nann = ann_dets.size();
     outfile->Printf("\n  size of ann dets: %zu", ann_dets.size());
+
+    std::vector<std::string> det_vec(nann);
+    // Save occupations to file
+    const det_hashvec& annhash = ann_dets.wfn_hash();
+    for ( size_t I = 0; I < nann; ++I ){
+        auto& detI = annhash[I];
+        det_vec[I] = detI.str(nact);
+    }
+    save_vector(det_vec, "ann_dets.txt");
+    
+
     std::ifstream file("c_init.txt", std::ios::in);
     if( !file ){
 
@@ -447,6 +457,15 @@ void TDACI::save_vector( SharedVector vec, std::string name) {
     file.open(name, std::ofstream::out | std::ofstream::trunc);
     for( size_t I = 0; I < dim; ++I ){
         file << std::setw(12) << std::setprecision(11) << vec->get(I) << "\n" ;
+    }
+}
+void TDACI::save_vector( std::vector<std::string>& vec, std::string name) {
+    
+    size_t dim = vec.size();
+    std::ofstream file;
+    file.open(name, std::ofstream::out | std::ofstream::trunc);
+    for( size_t I = 0; I < dim; ++I ){
+        file << vec[I] << "\n" ;
     }
 }
 
