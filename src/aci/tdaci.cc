@@ -122,14 +122,6 @@ double TDACI::compute_energy() {
                 core_dets.add(adet);
   //              outfile->Printf("\n %s  %s",detI.str(ncmo).c_str(),  adet.str(ncmo).c_str());
             }  
-            if( detI.get_beta_bit(0) == true ){
-                Determinant adet(detI);
-                adet.set_beta_bit(0, false);
-                size_t idx = ann_dets.get_idx(adet);
-                core_coeffs[idx] +=  aci_coeffs->get(aci_dets.get_idx(detI),0); 
-                core_dets.add(adet);
-  //              outfile->Printf("\n %s  %s",detI.str(ncmo).c_str(),  adet.str(ncmo).c_str());
-            }  
         }
         outfile->Printf("\n  size of core dets: %zu", core_dets.size());    
         
@@ -505,37 +497,7 @@ void TDACI::annihilate_wfn( DeterminantHashVec& olddets,
                 anndets.add(new_det);
             }
         }
-        if( detI.get_beta_bit(frz_orb) == true ){
-            Determinant new_det(detI);
-            new_det.set_beta_bit(frz_orb, false);
-            if( !anndets.has_det(new_det) ){
-//                outfile->Printf("\n %s", new_det.str(ncmo ).c_str());
-                anndets.add(new_det);
-            }
-        }   
     }
 }
-
-//void TDACI::renormalize_wfn( SharedVector vec ) {
-//    
-//    // compute the norm
-//    double norm = 0.0;
-//    for( auto& I : vec ){
-//        norm += I*I;
-//    }
-//    outfile->Printf("\n  norm = %1.5f", norm);
-//    norm = 1.0 / std::sqrt(norm);
-//    for( auto& I : vec ){
-//        I *= norm;
-//    } 
-//        
-//    //check
-//    //double nnorm = 0.0;
-//    //for( auto& I : vec ){
-//    //    nnorm += I*I;
-//    //}
-//    //outfile->Printf("\n new  norm = %1.5f", nnorm);
-//
-//} 
 
 }}
