@@ -365,7 +365,7 @@ double ASCI::compute_energy() {
         PQ_evals->get(0) + nuclear_repulsion_energy_ + fci_ints_->scalar_energy();
 
     Process::environment.globals["CURRENT ENERGY"] = root_energy;
-    Process::environment.globals["ACI ENERGY"] = root_energy;
+    Process::environment.globals["ASCI ENERGY"] = root_energy;
 
     outfile->Printf("\n\n  %s: %f s", "ASCI ran in ", asci_elapse.get());
 
