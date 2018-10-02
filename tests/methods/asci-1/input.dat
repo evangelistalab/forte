@@ -1,0 +1,43 @@
+import forte                              
+
+# From first paper
+refscf = -75.38645665583094 
+refasci = -75.718418131215 
+                                         
+molecule CH2{                            
+0 1
+C
+c 1 1.27273
+
+#symmetry c1
+}                                        
+                                         
+set {                                    
+  scf_type pk                            
+  multiplicity 1                         
+ basis cc-pvdz                      
+ # basis sto-3g
+  reference rohf
+}                                        
+                                         
+                                         
+set forte {                              
+  multiplicity 1
+  job_type asci                          
+  multiplicity 1                         
+  frozen_docc [1,0,0,0,0,1,0,0]
+ # active [4]
+  charge 0                               
+  nroot 1
+  active_ref_type hf
+  dl_maxiter 500
+  asci_cdet 4000
+  asci_tdet 10000
+ # mrpt2 true
+  asci_max_cycle 6   
+}                                        
+                                         
+Escf, scf_wfn = energy('scf', return_wfn=True)
+compare_values(refscf, get_variable("CURRENT ENERGY"),9, "SCF energy")
+energy('forte', ref_wfn = scf_wfn) 
+compare_values(refasci,get_variable("ASCI ENERGY"),9,"ASCI ENERGY")
