@@ -26,14 +26,12 @@ set forte {
   job_type asci                          
   multiplicity 1                         
   frozen_docc [1,0,0,0,0,1,0,0]
- # active [4]
   charge 0                               
   nroot 1
   active_ref_type hf
   dl_maxiter 500
   asci_cdet 4000
   asci_tdet 10000
- # mrpt2 true
   asci_max_cycle 6   
 }                                        
                                          
