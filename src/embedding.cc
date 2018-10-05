@@ -289,13 +289,17 @@ std::vector<int> Separate_IAO_subset(SharedWavefunction wfn, int natom_sys, Dime
 
 	if (options.get_str("ORBITAL_SEPARATION") == "P_AB") {
 		//Add P_pq calculation here
+		outfile->Printf("\n Check the S_ao: \n");
 		SharedMatrix S_ao = wfn->S();
+		S_ao->print();
 		Dimension noccpi = wfn->doccpi();
 		Dimension zeropi = nmopi - nmopi;
 		Dimension nvirpi = nmopi - noccpi;
 		Dimension sys_mo = nmopi;
 		sys_mo[0] = count_basis;
 		Slice sys(zeropi, sys_mo);
+		Slice env(sys_mo, nmopi);
+		Slice allmo(zeropi, nmopi);
 		Slice occ(zeropi, noccpi);
 		Slice vir(noccpi, nmopi);
 		SharedMatrix S_sys = S_ao->get_block(sys, sys);
@@ -308,18 +312,36 @@ std::vector<int> Separate_IAO_subset(SharedWavefunction wfn, int natom_sys, Dime
 		S_sys->diagonalize(L, lm);
 		for (int i = 0; i < sys_mo[0]; ++i) {
 			double tmp = 1.0 / lm->get(0, i);
-			lminvhalf->set(0, i, sqrt(tmp));
+			lminvhalf->set(0, i, tmp);
 		}
 		LM->set_diagonal(lminvhalf);
 		SharedMatrix S_sys_invhalf = Matrix::triplet(L, LM, L, false, false, true);
 
+		//SharedMatrix S_sys_invhalf(S_sys->clone());
+		//S_sys_invhalf->general_invert();
+
 		SharedMatrix S_sys_in_all(new Matrix("S system in fullsize", nirrep, nmopi, nmopi));
 		S_sys_in_all->set_block(sys, sys, S_sys_invhalf);
+		outfile->Printf("\n S_sys in large \n");
+		S_sys_in_all->print();
 
 		//Build P_pq
+		//SharedMatrix S_zero(new Matrix("S zero", nirrep, sys_mo, nmopi));
+		//S_ao->set_block(env, allmo, S_zero);
+		SharedMatrix Ca_t = wfn->Ca();
 		S_sys_in_all->transform(S_ao);
-		S_sys_in_all->transform(Loc["IAO"]);
+		S_sys_in_all->transform(Ca_t);
 		//S_sys_in_all->print();
+
+		//Test coeff normailzation
+		/*
+		outfile->Printf("\n The Coeffs to use: \n");
+		Loc["IAO"]->print();
+		outfile->Printf("\n Orbital normailzation test \n");
+		//SharedMatrix Chere = Matrix::doublet(Loc["IAO"], );
+		SharedMatrix Tesc = Matrix::doublet(Loc["IAO"], Loc["IAO"], true, false);
+		Tesc->print();
+		*/
 		
 		//Diagonalize P_pq for occ and vir part, respectively.
 		SharedMatrix P_oo = S_sys_in_all->get_block(occ, occ);
@@ -334,7 +356,31 @@ std::vector<int> Separate_IAO_subset(SharedWavefunction wfn, int natom_sys, Dime
 		P_vv->diagonalize(Uv, lv, descending);
 		lv->print();
 
+		SharedMatrix U_all(new Matrix("U with Pab", nirrep, nmopi, nmopi));
+		U_all->set_block(occ, occ, Uo);
+		U_all->set_block(vir, vir, Uv);
+		SharedMatrix U_ori(Loc["Trans"]->clone());
+		Loc["Trans"]->copy(Matrix::doublet(U_ori, U_all));
+
 		//Generate index list
+		int count_A = 0;
+		double thresh = 0.3;
+		for(int i = 0; i < nmopi[0]; ++i) {
+			if (i < noccpi[0]) {
+				if (lo->get(0, i) > thresh) {
+					index_trace.push_back(i);
+					++count_A;
+				}
+			}
+			else {
+				if (lv->get(0, i-noccpi[0]) > thresh) {
+					index_trace.push_back(i);
+					++count_A;
+				}
+			}
+		}
+
+		/*
 		int count_sys = count_basis; //Change this in the future if we want different number of sys orbitals
 		double tmp = 0.0;
 		std::vector<std::pair<double, int>> Alist = {};
@@ -348,8 +394,10 @@ std::vector<int> Separate_IAO_subset(SharedWavefunction wfn, int natom_sys, Dime
 			index_trace.push_back(Alist[i].second);
 		}
 		std::sort(index_trace.begin(), index_trace.end(), std::less<int>());
-		outfile->Printf("\n %d orbitals belonging to system are selected, index is: \n", count_sys);
-		for (int i = 0; i < count_sys; ++i) {
+		*/
+
+		outfile->Printf("\n %d orbitals belonging to system are selected, index is: \n", count_A);
+		for (int i = 0; i < count_A; ++i) {
 			outfile->Printf("%d ", index_trace[i]);
 		}
 	}
@@ -449,8 +497,8 @@ std::map<std::string, SharedMatrix> Embedding::localize(SharedWavefunction wfn, 
 		SharedMatrix idn(new Matrix("Identity of size Vir", nirrep, nvirpi, nvirpi));
 		idn->identity();
 		ret_loc["U"]->set_block(vir, vir, idn);
+		ret_loc["U"]->identity(); //Use MO directly!!
 		ret_loc["U"]->print();
-		//ret_loc["U"]->identity(); //Use MO directly!!
 
 		SharedMatrix C_loc = Matrix::doublet(wfn->Ca(), ret_loc["U"]); 
 		outfile->Printf("iao build C all\n");
@@ -495,6 +543,17 @@ std::map<std::string, SharedMatrix> Embedding::localize(SharedWavefunction wfn, 
         return ret_loc;
     }
 
+	if (options_.get_str("LOCALIZATION_METHOD") == "NONE") {
+		std::map<std::string, SharedMatrix> ret_noloc;
+		SharedMatrix U_I((new Matrix("Idn U", nirrep, nmopi, nmopi)));
+		U_I->identity();
+		SharedMatrix C_I(wfn->Ca()->clone());
+		ret_noloc["IAO"] = C_I;
+		ret_noloc["Trans"] = U_I;
+
+		return ret_noloc;
+	}
+
     // Other localization methods go here
 }
 
@@ -503,6 +562,20 @@ double Embedding::compute_energy() {
     // Require a molecule in wfn object with subset A and B!
 
     std::shared_ptr<Molecule> mol = ref_wfn_->molecule();
+	
+	/*
+	SharedMatrix C_see = ref_wfn_->Ca();
+	C_see->print();
+	SharedMatrix SeeTest1 = Matrix::doublet(C_see, C_see, false, true);
+	SeeTest1->print();
+	SharedMatrix SeeTest2 = Matrix::doublet(C_see, C_see, true, false);
+	SeeTest2->print();
+	SharedMatrix S_see = ref_wfn_->S();
+	S_see->print();
+	S_see->transform(C_see);
+	S_see->print();
+	*/
+
     int nfrag = mol->nfragments();
 
     if (nfrag == 1) {
@@ -528,6 +601,14 @@ double Embedding::compute_energy() {
     int natom_sys = mol_sys->natom();
 	Dimension docc_sys_pi = doccpi_;
 	docc_sys_pi[0] = options_.get_int("SYS_DOCC");
+	SharedMatrix C_origin((new Matrix("Saved Coeffs", nirrep_, nmopi_, nmopi_)));
+	C_origin->copy(ref_wfn_->Ca());
+	SharedMatrix S_origin((new Matrix("Saved Overlaps", nirrep_, nmopi_, nmopi_)));
+	S_origin->copy(ref_wfn_->S());
+	SharedMatrix H_origin((new Matrix("Saved Hcore", nirrep_, nmopi_, nmopi_)));
+	H_origin->copy(ref_wfn_->H());
+	SharedMatrix Fa_origin((new Matrix("Saved Fock", nirrep_, nmopi_, nmopi_)));
+	Fa_origin->copy(ref_wfn_->Fa());
 
     // 1. Compute (environment method) energy for the whole system, currently HF
     SharedMatrix h_tot = ref_wfn_->H();
@@ -559,17 +640,12 @@ double Embedding::compute_energy() {
 	Slice sys_dvir(docc_sys_pi, nmo_sys_pi);
 
     // 4. create wfn of system with basis and C_A
-    SharedMatrix C_origin((new Matrix("Saved Coeffs", nirrep_, nmopi_, nmopi_)));
-    C_origin->copy(ref_wfn_->Ca());
-    SharedMatrix S_origin((new Matrix("Saved Overlaps", nirrep_, nmopi_, nmopi_)));
-    S_origin->copy(ref_wfn_->S());
-    SharedMatrix H_origin((new Matrix("Saved Hcore", nirrep_, nmopi_, nmopi_)));
-    H_origin->copy(ref_wfn_->H());
-    SharedMatrix Fa_origin((new Matrix("Saved Fock", nirrep_, nmopi_, nmopi_)));
-    Fa_origin->copy(ref_wfn_->Fa());
 
     // From here, change the ref_wfn_ to wfn of system
     outfile->Printf("\n ****** Setting up system wavefunction ****** \n");
+
+	//Set or update C_A
+	Loc["IAO"]->copy(Matrix::doublet(ref_wfn_->Ca(), Loc["Trans"], false, false));
 
 	// Build environment G A+B
 	SharedMatrix Dab(new Matrix("D A + B", nirrep_, nmopi_, nmopi_));
@@ -826,12 +902,15 @@ double Embedding::compute_energy() {
 		build_D(Ca_, docc_sys_pi, Da);
 		Da_->copy(Da->get_block(sys, sys));
 
+		/*
 		outfile->Printf("\n Print those matrices \n");
 		Ca_->print();
 		S_->print();
 		H_->print();
 		Fa_->print();
 		Da_->print();
+		*/
+
 		//conventional psi4_mp2 or other psi4 post HF method will read Dijab from epsilon instead from fock! so modify epsilon in wfn is necessary.
 		for (int h = 0; h < nirrep_; ++h) {
 			for (int i = 0; i < nmo_sys_pi[h]; ++i) {

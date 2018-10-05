@@ -32,9 +32,9 @@ molecule water_dimer{
      H  -0.599677   0.040712   0.000000
      --
      0 1
-     O   1.350625   0.111469   0.000000
-     H   1.680398  -0.373741  -0.758561
-     H   1.680398  -0.373741   0.758561
+     O   3.350625   0.111469   0.000000
+     H   3.680398  -0.373741  -0.758561
+     H   3.680398  -0.373741   0.758561
 
      units angstrom
      no_reorient
@@ -66,7 +66,7 @@ E, ori_wfn = energy('scf', return_wfn=True)
 set forte {
   job_type Embedding
   SYS_DOCC 5
-  LOCALIZATION_METHOD IAO_IBO
+  LOCALIZATION_METHOD NONE
   SYSTEM_MATRIX ALL
   ORBITAL_SEPARATION P_AB
   C_SIZE ALL
@@ -115,7 +115,7 @@ E_cheap_sys, wfn_ownscf = energy('forte', ref_wfn=wfn_sys, return_wfn=True)
 
 set ownmp2 {
   print 1
-  reference other_fock
+  reference hf_default
   rotate_int calculate
 }
 
