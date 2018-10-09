@@ -25,13 +25,17 @@ def set_wfn_mod(wfn_sys, wfn_mod):
 
 
 
-molecule water_dimer{
+molecule AB{
+     0 1
+     O  -3.535769   3.084336  -0.905856
+     C  -4.184301   4.243079  -1.205620
+     H  -4.722911   4.736433  -0.476563
+     H  -4.137341   4.628168  -2.161929
+     --
      0 1
      O  -1.551007  -0.114520   0.000000
      H  -1.934259   0.762503   0.000000
      H  -0.599677   0.040712   0.000000
-     --
-     0 1
      O   3.350625   0.111469   0.000000
      H   3.680398  -0.373741  -0.758561
      H   3.680398  -0.373741   0.758561
@@ -41,20 +45,21 @@ molecule water_dimer{
      symmetry c1
 }
 
-molecule water_sys{
+molecule A{
      0 1
-     O  -1.551007  -0.114520   0.000000
-     H  -1.934259   0.762503   0.000000
-     H  -0.599677   0.040712   0.000000
+     O  -3.535769   3.084336  -0.905856
+     C  -4.184301   4.243079  -1.205620
+     H  -4.722911   4.736433  -0.476563
+     H  -4.137341   4.628168  -2.161929
      units angstrom
      no_reorient
      symmetry c1
 }
 
 #****** Calculate environment method ******
-activate(water_dimer)
+activate(AB)
 set {
-  basis         sto-3g
+  basis         cc-pvdz
   scf_type      pk
   e_convergence 10
 }
@@ -79,10 +84,10 @@ E_test, wfn_mod_iao = energy('forte', ref_wfn=ori_wfn, return_wfn=True)
 #cubeprop(wfn_mod_iao)
 
 # ****** Set modified(embedded) matrices ******
-activate(water_sys)
+activate(A)
 
 set {
-  basis         sto-3g
+  basis         cc-pvdz
   scf_type      pk
   e_convergence 10
   d_convergence 10
@@ -115,7 +120,7 @@ E_cheap_sys, wfn_ownscf = energy('forte', ref_wfn=wfn_sys, return_wfn=True)
 
 set ownmp2 {
   print 1
-  reference hf_default
+  reference hf_readF
   rotate_int calculate
 }
 

@@ -61,6 +61,7 @@ void set_EMBEDDING_options(ForteOptions& foptions) {
     foptions.add_str("SYSTEM_MATRIX", "SYS", "Size of system Matrix: SYS, ALL");
     foptions.add_str("C_SIZE", "SYS", "Size of coeffs: SYS, ALL");
     foptions.add_int("SYS_DOCC", 0, "System occupancy");
+	foptions.add_double("PAB_THRESHOLD", 0.5, "The threshold to assign system orbitals");
 	foptions.add_str("MATRIX_BASIS", "AO", "AO or IAO_IBO");
 	foptions.add_str("WRITE_TRANS", "None", "None, U");
 }
@@ -364,7 +365,7 @@ std::vector<int> Separate_IAO_subset(SharedWavefunction wfn, int natom_sys, Dime
 
 		//Generate index list
 		int count_A = 0;
-		double thresh = 0.3;
+		double thresh = options.get_double("PAB_THRESHOLD");
 		for(int i = 0; i < nmopi[0]; ++i) {
 			if (i < noccpi[0]) {
 				if (lo->get(0, i) > thresh) {
@@ -683,6 +684,9 @@ double Embedding::compute_energy() {
 		Loc["Trans"]->swap_rows(0, i, IAO_index_sys[i]);
 	}
 
+	Loc["IAO"]->print_to_mathematica();
+
+	//The MO sorting code is not working! Avoid this (AO output) for now
 	for (int i = 0; i < MO_index_sys.size(); ++i) {
 		outfile->Printf("Swap %d and %d \n", i, MO_index_sys[i]);
 		C_origin->swap_columns(0, i, MO_index_sys[i]);
