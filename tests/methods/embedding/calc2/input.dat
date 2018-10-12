@@ -75,7 +75,7 @@ E, ori_wfn = energy('scf', return_wfn=True)
 # ****** Create embedded system wfn ******
 set forte {
   job_type Embedding
-  SYS_DOCC 5
+  SYS_DOCC 14
   LOCALIZATION_METHOD NONE
   SYSTEM_MATRIX ALL
   ORBITAL_SEPARATION P_AB

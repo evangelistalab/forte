@@ -263,7 +263,7 @@ void build_G(SharedWavefunction wfn, SharedMatrix C, SharedMatrix G, Options& op
 }
 
 std::map<std::string, SharedMatrix> do_HF(SharedWavefunction wfn, SharedMatrix hcore, int nirrep, Dimension nmopi,
-             Dimension noccpi, int Maxcyc, double E_conv, Options& options) {
+             Dimension noccpi, int Maxcyc, double E_conv, double D_conv, Options& options) {
 
     // Hartree-Fock calculation with given core hamiltonian hcore
 
@@ -296,9 +296,12 @@ std::map<std::string, SharedMatrix> do_HF(SharedWavefunction wfn, SharedMatrix h
 
     int count = 0;
     double eps = 0.0;
+	double epsD = 0.0;
     double E_scf = 0.0;
     double Etmp = 0.0;
 	double Echeck = 0.0;
+	double Dtmp = 0.0;
+	double Dcheck = 0.0;
     SharedMatrix C_star(new Matrix("C*", nirrep, nmopi, nmopi));
     SharedVector epis(new Vector("Eigens", nirrep, nmopi));
     SharedMatrix Fock_uv(new Matrix("Fock uv", nirrep, nmopi, nmopi));
@@ -332,6 +335,9 @@ std::map<std::string, SharedMatrix> do_HF(SharedWavefunction wfn, SharedMatrix h
         C_iter = Matrix::doublet(S_half, C_star, false, false);
 
         // calculate energy here
+		Dcheck = Dtmp;
+		Dtmp = D_iter->trace(); //Save previous density
+		outfile->Printf("\n Current density trace: %8.8f", Dtmp);
         build_D_scf(C_iter, noccpi, D_iter);
 		Echeck = Etmp;
         Etmp = E_scf;
@@ -342,12 +348,22 @@ std::map<std::string, SharedMatrix> do_HF(SharedWavefunction wfn, SharedMatrix h
         E_scf = calculate_HF_energy(hpF, D_iter);
         outfile->Printf("\n SCF iterations %d, E_scf = %8.8f", count, E_scf);
         eps = fabs(E_scf - Etmp);
+		epsD = fabs(D_iter->trace() - Dtmp);
+
+		//Check convergence
         if (eps < E_conv) {
             outfile->Printf("\n SCF converged after %d iterations.", count);
             E_scf += wfn->molecule()->nuclear_repulsion_energy(wfn->get_dipole_field_strength());
             outfile->Printf("\n E_SCF_electron = %8.8f \n", E_scf);
             break;
         }
+
+		//if (epsD < D_conv) {
+		//	outfile->Printf("\n SCF converged after %d iterations.", count);
+		//	E_scf += wfn->molecule()->nuclear_repulsion_energy(wfn->get_dipole_field_strength());
+		//	outfile->Printf("\n E_SCF_electron = %8.8f \n", E_scf);
+		//	break;
+		//}
 
         // update Fock
         build_G(wfn, C_iter, G, options);
@@ -357,12 +373,34 @@ std::map<std::string, SharedMatrix> do_HF(SharedWavefunction wfn, SharedMatrix h
         Fock->add(hcore);
         Fock->add(G);
 
+		//Simple direct extrapulation to help convergence. Consider using DIIS here in the future
 		double epsh = fabs(E_scf - Echeck); //check if scf ran into bounce!
 		if (epsh < 100.0*E_conv) {
 			//bouncing! Use average fock of recent two step (Fn+1 + Fn)/2!
 			Fock->add(Fock_uv);
 			Fock->scale(0.5);
 		}
+
+		//double epshD = fabs(D_iter->trace() - Dcheck);
+		//if (epshD < 100.0*D_conv) {
+		//	//bouncing! Use average fock of recent two step (Fn+1 + Fn)/2!
+		//	Fock->add(Fock_uv);
+		//	Fock->scale(0.5);
+		//}
+
+		if (epsh < 10000.0*E_conv && epsh > 100.0*E_conv) {
+			//Mix one-step extrapulation
+			Fock->scale(4.0);
+			Fock->add(Fock_uv);
+			Fock->scale(0.2);
+		}
+
+		//if (epshD < 10000.0*D_conv && epshD > 100.0*D_conv) {
+		//	//Mix one-step extrapulation
+		//	Fock->scale(4.0);
+		//	Fock->add(Fock_uv);
+		//	Fock->scale(0.2);
+		//}
 
         ++count;
     }
@@ -385,7 +423,7 @@ std::map<std::string, SharedMatrix> do_HF(SharedWavefunction wfn, SharedMatrix h
 double OwnSCF::compute_energy() {
     // run HF calculation
 	SharedMatrix Ca_origin = ref_wfn_->Ca(); //store original Ca, use to rotate C back to AO if needed
-	std::map<std::string, SharedMatrix> scf_calc = do_HF(ref_wfn_, ref_wfn_->H(), nirrep_, nmopi_, doccpi_, Maxcyc_, E_conv_, options_);
+	std::map<std::string, SharedMatrix> scf_calc = do_HF(ref_wfn_, ref_wfn_->H(), nirrep_, nmopi_, doccpi_, Maxcyc_, E_conv_, D_conv_, options_);
 	energy_ = scf_calc["escf"]->get(0, 0, 0);
 	outfile->Printf("The SCF energy stored to wfn is %8.8f", ref_wfn_->reference_energy());
 	for (int h = 0; h < nirrep_; ++h) {

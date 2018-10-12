@@ -599,6 +599,8 @@ double Embedding::compute_energy() {
     outfile->Printf("\n Environment Fragment(s) \n");
     mol_env->print();
 
+	outfile->Printf("\n The size of Mat from wfn is: Ca, %d, S, %d, H, %d, Fa, %d. \n", ref_wfn_->Ca()->ncol(), ref_wfn_->S()->ncol(), ref_wfn_->H()->ncol(), ref_wfn_->Fa()->ncol());
+
     int natom_sys = mol_sys->natom();
 	Dimension docc_sys_pi = doccpi_;
 	docc_sys_pi[0] = options_.get_int("SYS_DOCC");
@@ -685,6 +687,45 @@ double Embedding::compute_energy() {
 	}
 
 	Loc["IAO"]->print_to_mathematica();
+	
+	//Study contributions here:
+	SharedMatrix C_AA = Loc["IAO"]->get_block(sys, sys);
+	SharedMatrix C_BA = Loc["IAO"]->get_block(env, sys);
+	SharedMatrix C_AB = Loc["IAO"]->get_block(sys, env);
+	SharedMatrix C_BB = Loc["IAO"]->get_block(env, env);
+	SharedMatrix C_large(C_origin->clone());
+
+	C_large->zero();
+	C_large->set_block(env, sys, C_BA);
+	SharedMatrix BA_cont = Matrix::triplet(C_large, S_origin, C_large, true, false, false);
+	double BAcont = BA_cont->trace();
+
+	C_large->zero();
+	C_large->set_block(sys, sys, C_AA);
+	SharedMatrix AA_cont = Matrix::triplet(C_large, S_origin, C_large, true, false, false);
+	double AAcont = AA_cont->trace();
+
+	C_large->zero();
+	C_large->set_block(sys, env, C_AB);
+	SharedMatrix AB_cont = Matrix::triplet(C_large, S_origin, C_large, true, false, false);
+	double ABcont = AB_cont->trace();
+
+	C_large->zero();
+	C_large->set_block(env, env, C_BB);
+	SharedMatrix BB_cont = Matrix::triplet(C_large, S_origin, C_large, true, false, false);
+	double BBcont = BB_cont->trace();
+
+	outfile->Printf("\n$$$ The total contribution is %8.8f,\n", S_origin->trace());
+	outfile->Printf("$$$ The BA contribution is %8.8f, the AB contribution is %8.8f. \n", BAcont, ABcont);
+	outfile->Printf("$$$ The AA contribution is %8.8f, the BB contribution is %8.8f. \n", AAcont, BBcont);
+
+	for (int i = 0; i < nmopi_[0]; ++i) {
+		double all_cont_this = 0.0;
+		for (int j = 0; j < nmo_sys_pi[0]; ++j) {
+			all_cont_this += BA_cont->get(i, j);
+		}
+		outfile->Printf("\n%8.8f", all_cont_this);
+	}
 
 	//The MO sorting code is not working! Avoid this (AO output) for now
 	for (int i = 0; i < MO_index_sys.size(); ++i) {
