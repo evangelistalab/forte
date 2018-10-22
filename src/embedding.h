@@ -1,37 +1,37 @@
 /*
- * @BEGIN LICENSE
- *
- * Forte: an open-source plugin to Psi4 (https://github.com/psi4/psi4)
- * that implements a variety of quantum chemistry methods for strongly
- * correlated electrons.
- *
- * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
- *
- * The copyrights for code used from other parties are included in
- * the corresponding files.
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/.
- *
- * @END LICENSE
- */
+* @BEGIN LICENSE
+*
+* new_ivocalc by Psi4 Developer, a plugin to:
+*
+* Psi4: an open-source quantum chemistry software package
+*
+* Copyright (c) 2007-2018 The Psi4 Developers.
+*
+* The copyrights for code used from other parties are included in
+* the corresponding files.
+*
+* This file is part of Psi4.
+*
+* Psi4 is free software; you can redistribute it and/or modify
+* it under the terms of the GNU Lesser General Public License as published by
+* the Free Software Foundation, version 3.
+*
+* Psi4 is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU Lesser General Public License for more details.
+*
+* You should have received a copy of the GNU Lesser General Public License along
+* with Psi4; if not, write to the Free Software Foundation, Inc.,
+* 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+*
+* @END LICENSE
+*/
 
 #ifndef _embedding_h_
 #define _embedding_h_
 
-#include "psi4/libmints/molecule.h"
 #include "psi4/libmints/wavefunction.h"
-#include "psi4/liboptions/liboptions.h"
 
 #include "ci_rdm/ci_rdms.h"
 #include "helpers.h"
@@ -45,39 +45,47 @@
 #include "forte_options.h"
 
 namespace psi {
+	namespace forte {
 
-namespace forte {
+		void set_EMBEDDING_options(ForteOptions& foptions);
 
-	void set_EMBEDDING_options(ForteOptions& foptions);
+		/**
+		* @The IVO class
+		* This class implements Improved Virtual Orbitals with one hole
+		*/
+		class embedding : public Wavefunction {
+		public:
+			// ==> Class Constructor and Destructor <==
 
-/**
- * @brief The Embedding class
- * Computes embedding excitation with iao
- */
-class Embedding : public Wavefunction {
-  public:
-    // => Constructor <= //
-    Embedding(SharedWavefunction ref_wfn, Options& options, 
-              std::shared_ptr<MOSpaceInfo> mo_space_info);
+			/**
+			* Constructor
+			* @param ref_wfn The reference wavefunction object
+			* @param options The main options object
+			*/
+			embedding(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
-    ~Embedding();
+			/// Destructor
+			~embedding();
 
-    double compute_energy();
+			// ==> Class Interface <==
 
-  private:
-    void startup();
+			/// Run calculation
+			double compute_energy();
 
-    double do_env(SharedWavefunction wfn, SharedMatrix h, Options& options);
+		private:
+			// ==> Class data <==
+			int print;
+			int num_occ;
+			int num_vir;
+			double thresh;
+			std::shared_ptr<MOSpaceInfo> mo_space_info_;
+			SharedWavefunction ref_wfn_;
 
-    double do_sys(SharedWavefunction wfn, SharedMatrix h, Options& options);
+			// ==> Class functions <==
 
-    std::map<std::string, SharedMatrix> localize(SharedWavefunction wfn, Options& options);
+		};
 
-    std::shared_ptr<MOSpaceInfo> mo_space_info_;
+	}
+}
 
-    SharedWavefunction ref_wfn_;
-};
-} // namespace forte
-} // namespace psi
-
-#endif // _embedding_h_
+#endif

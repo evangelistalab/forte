@@ -94,7 +94,7 @@ extern "C" PSI_API SharedWavefunction forte(SharedWavefunction ref_wfn, Options&
 
 	if (options.get_str("JOB_TYPE") == "EMBEDDING" || options.get_str("JOB_TYPE") == "OWNSCF") {
 		if (options.get_str("JOB_TYPE") == "EMBEDDING") {
-			auto emb = std::make_shared<Embedding>(ref_wfn, options, mo_space_info);
+			auto emb = std::make_shared<embedding>(ref_wfn, options, mo_space_info);
 			emb->compute_energy();
 		}
 		if (options.get_str("JOB_TYPE") == "OWNSCF") {
