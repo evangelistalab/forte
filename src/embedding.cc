@@ -48,7 +48,7 @@ void set_EMBEDDING_options(ForteOptions& foptions) {
 	foptions.add_int("NUM_OCC", 0, "dummy");
 	foptions.add_int("NUM_VIR", 0, "dummy");
 	foptions.add_double("THRESHOLD", 0.5, "dummy");
-	foptions.add_str("REFERENCE", "HF", "dummy");
+	foptions.add_str("REFERENCE", "HF", "HF, UHF, ROHF, MCSCF, CASSCF, DFT");
 	foptions.add_bool("WRITE_FREEZE_MO", true, "dummy");
 	foptions.add_bool("SEMICANON", true, "dummy");
 }
@@ -120,31 +120,49 @@ double embedding::compute_energy() {
 	Dimension zeropi = nmopi - nmopi;
 	Dimension nvirpi = nmopi - noccpi;
 	Dimension sys_mo = nmopi;
+	int num_actv = 0;
+	int num_rdocc = 0;
+	int num_docc = 0;
+	Dimension actv_a = zeropi;
+	Dimension res_docc_ori = zeropi;
+	Dimension docc_ori = zeropi;
+
+	if (options_.get_str("REFERENCE") == "CASSCF") {
+
+		num_actv = options_["ACTIVE"][0].to_integer();
+		num_rdocc = options_["RESTRICTED_DOCC"][0].to_integer();
+		num_docc = options_["DOCC"][0].to_integer();
+
+		actv_a[0] = num_actv;
+		res_docc_ori[0] = num_rdocc;
+		docc_ori[0] = num_docc;
+
+		//Change the following part when symmetry is applied
+	}
+
+	int num_actv_docc = num_docc - num_rdocc;
+	int num_actv_vir = num_actv - num_actv_docc;
+	outfile->Printf("The reference has %d active occupied, %d active virtual, will be assigned to A (without any change)", num_actv_docc, num_actv_vir);
 	sys_mo[0] = count_basis;
+
+	Dimension nroccpi = noccpi;
+	nroccpi[0] = noccpi[0] - num_actv_docc;
+	//Dimension nrvirpi = noccpi;
+	//nrvirpi[0] = nvirpi[0] - num_actv_vir;
+
 	Slice sys(zeropi, sys_mo);
 	Slice env(sys_mo, nmopi);
 	Slice allmo(zeropi, nmopi);
 	Slice occ(zeropi, noccpi);
 	Slice vir(noccpi, nmopi);
+	Slice actv(nroccpi, nroccpi + actv_a);
+
 	SharedMatrix S_sys = S_ao->get_block(sys, sys);
-	SharedMatrix L(new Matrix("L", nirrep, sys_mo, sys_mo));
-	SharedVector lm(new Vector("lambda", nirrep, sys_mo));
-	SharedVector lminvhalf(new Vector("lambda inv half", nirrep, sys_mo));
-	SharedMatrix LM(new Matrix("LM", nirrep, sys_mo, sys_mo));
 
-	//Construct S_sys^-1/2
-	S_sys->diagonalize(L, lm);
-	for (int i = 0; i < sys_mo[0]; ++i) {
-		double tmp = 1.0 / lm->get(0, i);
-		lminvhalf->set(0, i, tmp);
-	}
-	LM->set_diagonal(lminvhalf);
-	SharedMatrix S_sys_invhalf = Matrix::triplet(L, LM, L, false, false, true);
-
+	//Construct S_sys^-1 in full size
+	S_sys->general_invert();
 	SharedMatrix S_sys_in_all(new Matrix("S system in fullsize", nirrep, nmopi, nmopi));
-	S_sys_in_all->set_block(sys, sys, S_sys_invhalf);
-	//outfile->Printf("\n S_sys in large \n");
-	//S_sys_in_all->print();
+	S_sys_in_all->set_block(sys, sys, S_sys);
 
 	//Build P_pq
 	SharedMatrix Ca_t = ref_wfn_->Ca();
@@ -156,17 +174,29 @@ double embedding::compute_energy() {
 	SharedMatrix Uo(new Matrix("Uo", nirrep, noccpi, noccpi));
 	SharedVector lo(new Vector("lo", nirrep, noccpi));
 	P_oo->diagonalize(Uo, lo, descending);
-	lo->print();
+	//lo->print();
 
 	SharedMatrix P_vv = S_sys_in_all->get_block(vir, vir);
 	SharedMatrix Uv(new Matrix("Uv", nirrep, nvirpi, nvirpi));
 	SharedVector lv(new Vector("lv", nirrep, nvirpi));
 	P_vv->diagonalize(Uv, lv, descending);
-	lv->print();
+	//lv->print();
 
 	SharedMatrix U_all(new Matrix("U with Pab", nirrep, nmopi, nmopi));
 	U_all->set_block(occ, occ, Uo);
 	U_all->set_block(vir, vir, Uv);
+
+	if (options_.get_str("REFERENCE") == "CASSCF") {
+		SharedMatrix Ua(new Matrix("Uv", nirrep, actv_a, actv_a));
+		Ua->identity();
+		for (int i = 0; i < num_actv; ++i) {
+			U_all->zero_row(0, nroccpi[0] + i);
+			U_all->zero_column(0, nroccpi[0] + i);
+		}
+		U_all->set_block(actv, actv, Ua);
+	}
+	outfile->Printf("\n Localization rotation matrix: \n");
+	U_all->print();
 
 	//Update MO coeffs
 	Ca_->copy(Matrix::doublet(Ca_t, U_all, false, false));
@@ -250,6 +280,12 @@ double embedding::compute_energy() {
 	//Ca_Rt->print();
 
 	//Update Ca_
+	if (options_.get_str("REFERENCE") == "CASSCF") {
+		//copy original columns in active space from Ca_
+		for (int i = 0; i < num_actv; ++i) {
+			Ca_Rt->set_column(0, i + num_rdocc, Ca_->get_column(0, i + num_rdocc));
+		}
+	}
 	Ca_->copy(Ca_Rt);
 
 	if (options_.get_bool("SEMICANON") == true) {
@@ -291,14 +327,35 @@ double embedding::compute_energy() {
 		U_all_2->set_block(AVs, AVs, Uav);
 		U_all_2->set_block(BOs, BOs, Ubo);
 		U_all_2->set_block(BVs, BVs, Ubv);
-		//U_all_2->print();
+
+		outfile->Printf("\n Semi-canonicalization rotation matrix \n");
+		U_all_2->print();
+
+		if (options_.get_str("REFERENCE") == "CASSCF") {
+			SharedMatrix Ua(new Matrix("Uv", nirrep, actv_a, actv_a));
+			Ua->identity();
+			for (int i = 0; i < num_actv; ++i) {
+				U_all->zero_row(0, nroccpi[0] + i);
+				U_all->zero_column(0, nroccpi[0] + i);
+			}
+			U_all_2->set_block(actv, actv, Ua);
+		}
+		U_all_2->print();
 		
 		//Build new Fock
-		//outfile->Printf("\n Fock matrix in localized basis afer canonicalization: \n");
+		outfile->Printf("\n Original Fock matrix: \n");
+		Fa_->print();
+
+		SharedMatrix Fa_actv = Fa_->get_block(actv, actv);
 		Fa_loc->set_block(AOs, AOs, Fa_AOAO);
 		Fa_loc->set_block(AVs, AVs, Fa_AVAV);
+		if (options_.get_str("REFERENCE") == "CASSCF") {
+			Fa_loc->set_block(actv, actv, Fa_actv);
+		}
 		Fa_->copy(Fa_loc);
-		//Fa_->print();
+
+		outfile->Printf("\n Fock matrix in localized basis afer canonicalization: \n");
+		Fa_->print();
 
 		//Rotate Coeffs
 		//outfile->Printf("\n Coefficients after canonicalization \n");
@@ -315,8 +372,14 @@ double embedding::compute_energy() {
 
 	if (options_.get_bool("WRITE_FREEZE_MO") == true) {
 		options_["FROZEN_DOCC"].add(0);
+		options_["RESTRICTED_DOCC"].add(0);
+		options_["ACTIVE"].add(0);
+		options_["RESTRICTED_UOCC"].add(0);
 		options_["FROZEN_UOCC"].add(0);
 		options_["FROZEN_DOCC"][0].assign(sizeBO);
+		options_["RESTRICTED_DOCC"][0].assign(sizeAO - num_actv_docc);
+		options_["ACTIVE"][0].assign(num_actv);
+		options_["RESTRICTED_UOCC"][0].assign(sizeAV - num_actv_vir);
 		options_["FROZEN_UOCC"][0].assign(sizeBV);
 
 		/*
