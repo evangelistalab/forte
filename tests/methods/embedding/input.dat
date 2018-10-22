@@ -1,140 +1,74 @@
+
+# PYTHONPATH must include directory above plugin directory.
+#     Define either externally or here, then import plugin.
+sys.path.insert(0, './../../..')
+import embedding
 import forte
-sys.path.insert(0, '/mnt/c/Users/Forec/source/')
-import ownmp2
 
-def set_wfn_mod(wfn_sys, wfn_mod):
-    Ca_sys = wfn_sys.Ca()
-    Ca_mod = wfn_mod.Ca()
-    Ca_sys.copy(Ca_mod)
+molecule {
+0 2
+C       -0.2451526198      3.4481492184      0.0035091847                 
+C       -1.4362187688      2.8445365603     -0.0943662571
+H       -0.2118480253      4.5329193404      0.0811063334                 
+H       -1.5218714917      1.7642505190     -0.1653178480                 
+H       -2.3553702887      3.4224369069     -0.0981837126      
+--
+0 2
+C        4.8004394812      3.7321244441      0.0083175121                 
+C        3.5716876570      2.8219263257      0.0405049102                 
+C        2.2692486902      3.6229859469     -0.0151378178                 
+C        6.0876148165      2.9198891983      0.1564540984                 
+C        1.0529123981      2.6920878010      0.0215774354                 
+C        7.3237427360      3.7834546033     -0.0343632853                                  
+H        7.3327830906      4.6231520738      0.6674234535                 
+H        8.2285284653      3.1901358797      0.1315946998                 
+H        7.3647361236      4.1842596108     -1.0523241670                 
+H        6.1184728842      2.4609401965      1.1518274638                 
+H        6.1055102387      2.1046972797     -0.5760714486                 
+H        4.8167051644      4.2907068476     -0.9352324490                 
+H        4.7401848221      4.4684711736      0.8191742129                 
+H        3.5879943372      2.2139100618      0.9531279219                 
+H        3.6112978361      2.1293472887     -0.8093518789                 
+H        2.2468156377      4.2309453817     -0.9282867593                 
+H        2.2308771051      4.3165026363      0.8345167851                 
+H        1.0954332105      2.0814999301      0.9316421385                 
+H        1.0918836479      2.0140600071     -0.8399710541     
 
-    Fa_sys = wfn_sys.Fa()
-    Fa_mod = wfn_mod.Fa()
-    Fa_sys.copy(Fa_mod)
-
-    Da_sys = wfn_sys.Da()
-    Da_mod = wfn_mod.Da()
-    Da_sys.copy(Da_mod)
-
-    H_sys = wfn_sys.H()
-    H_mod = wfn_mod.H()
-    H_sys.copy(H_mod)
-
-    S_sys = wfn_sys.S()
-    S_mod = wfn_mod.S()
-    S_sys.copy(S_mod)
-
-
-
-molecule AB{
-     3 6
-     Fe      -1.4767542268      0.1027333523      0.0338469005  
-     --
-     0 1               
-     O       -1.4272350904      0.0495923677     -2.0234490040                 
-     O       -1.5157988038      0.1271561648      2.0934130784                 
-     O       -1.5788009983     -1.9517458775      0.0664090175                 
-     O       -3.5349500532      0.2059028532      0.0028592568                 
-     O        0.5810901752      0.0241461986      0.0983399275                 
-     O       -1.3943973192      2.1571917404      0.0001147967                 
-     H       -1.9475169569     -0.4630022769     -2.7200926879                 
-     H       -0.8759546646      0.5115622839     -2.7290336676                 
-     H       -1.5421192850      0.8634291804      2.7816229206                 
-     H       -1.5090291791     -0.5878146078      2.8050677935                 
-     H       -2.3178975164     -2.6185283902      0.2294451262                 
-     H       -0.9064646103     -2.6842448932     -0.1011394140                 
-     H       -4.2280560109      0.3227592464     -0.7205484324                 
-     H       -4.2407451211      0.1712958038      0.7220074665                 
-     H        1.2384882840     -0.1770582533      0.8373261866                 
-     H        1.3229379669      0.1634699090     -0.5693707819                 
-     H       -2.0930402405      2.8778825176     -0.1052958862                 
-     H       -0.6537540363      2.8367531328      0.0743623109                 
-     no_reorient
-     symmetry c1
-}
-
-molecule A{
-     3 6
-     Fe      -1.4767542268      0.1027333523      0.0338469005
      units angstrom
      no_reorient
      symmetry c1
 }
 
-#****** Calculate environment method ******
-activate(AB)
 set {
-  basis         3-21g
-  scf_type      pk
-  e_convergence 10
-  reference uhf
+  basis sto-3g
+  reference rohf
+  scf_type pk
 }
 
-E, ori_wfn = energy('scf', return_wfn=True)
-
-# ****** Calculate cheap and expensive system method ******
-# ****** Create embedded system wfn ******
-set forte {
-  job_type Embedding
-  SYS_DOCC 5
-  LOCALIZATION_METHOD NONE
-  SYSTEM_MATRIX ALL
-  ORBITAL_SEPARATION P_AB
-  C_SIZE ALL
-  MATRIX_BASIS IAO_IBO
-#  WRITE_TRANS  U
-}
-
-E_test, wfn_mod_iao = energy('forte', ref_wfn=ori_wfn, return_wfn=True)
-#set cubeprop_tasks ['orbitals', 'density','basis_functions']
-#cubeprop(wfn_mod_iao)
-
-# ****** Set modified(embedded) matrices ******
-activate(A)
-
-set {
-  basis         3-21g
-  scf_type      pk
-  e_convergence 10
-  d_convergence 10
-  reference uhf
-}
-
-E_sys_ref, wfn_sys = energy('scf', return_wfn=True)
-set_wfn_mod(wfn_sys, wfn_mod_iao)
-
-set ownmp2 {
-  print 1
-  reference other_fock
-  rotate_int calculate
-}
-
-energy('ownmp2', ref_wfn = wfn_sys)
-
-set {
-    mp2_type conv
-}
-
-energy('mp2', ref_wfn = wfn_sys)
+#E, wfn_ori = energy('scf', return_wfn = True)
 
 set forte {
-  job_type ownscf
-  MAXCYC 100
-  INTEGRAL_METHOD mints
-  integral_basis other
+  job_type embedding
+  threshold 0.5
+  semicanon true
 }
 
-E_cheap_sys, wfn_ownscf = energy('forte', ref_wfn=wfn_sys, return_wfn=True)
+E, wfn = energy('forte', return_wfn = True)
 
-set ownmp2 {
-  print 1
-  reference hf_default
-  rotate_int calculate
+set forte {
+  job_type           active-dsrgpt2
+  cino               false
+  frozen_docc        [26] #freeze C core too
+  restricted_docc    [5]
+  active             [4]
+  frozen_uocc        [19]
+  cas_type           cas
+  fcimo_actv_type    full
+  nrootpi            [4]
+# print              2
+  d_convergence      10
+  dsrg_s             0.5
+# internal_amp       singles_doubles
 }
 
-energy('ownmp2', ref_wfn = wfn_ownscf)
-
-set {
-    mp2_type conv
-}
-
-energy('mp2', ref_wfn = wfn_ownscf)
+Eforte, wfn_cas = energy('forte', ref_wfn=wfn, return_wfn=True)
