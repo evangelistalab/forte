@@ -130,9 +130,6 @@ void set_ACI_options(ForteOptions& foptions) {
     /*- Print Natural orbitals -*/
     foptions.add_bool("ACI_PRINT_NO", true, "Print the natural orbitals");
 
-    /*- Save the final wavefunction -*/
-    foptions.add_bool("SAVE_FINAL_WFN", false, "Save the final wavefunction to a file");
-
     /*- Compute ACI-NOs -*/
     foptions.add_bool("ACI_NO", false, "Computes ACI natural orbitals");
 
@@ -723,6 +720,13 @@ double AdaptiveCI::compute_energy() {
     // printf( "\n%1.5f\n", aci_elapse.get());
     if (options_.get_bool("ACI_SPIN_ANALYSIS") and !(options_.get_bool("ACI_RELAXED_SPIN")) ){
         spin_analysis();
+    }
+
+    // Save final wave function to a file
+    if( options_.get_bool("ACI_SAVE_FINAL_WFN") ){
+        int root = options_.get_int("ACI_ROOT");
+        outfile->Printf("\n  Saving final wave function for root %d", root);
+        wfn_to_file(final_wfn_, PQ_evecs, root); 
     }
 
 //    if (options_.get_bool("UNPAIRED_DENSITY")) {
@@ -1461,90 +1465,17 @@ std::vector<std::pair<double, double>> AdaptiveCI::compute_spin(DeterminantHashV
     return spin_vec;
 }
 
-/*
-void AdaptiveCI::wfn_analyzer(DeterminantMap& det_space, SharedMatrix evecs, int nroot) {
+void AdaptiveCI::wfn_to_file(DeterminantHashVec& det_space, SharedMatrix evecs, int root) {
 
-    std::vector<bool> occ(2 * nact_, 0);
-    std::vector<std::tuple<double, int, int>> labeled_orb_en = sym_labeled_orbitals("RHF");
-    for (int i = 0; i < nalpha_; ++i) {
-        occ[std::get<2>(labeled_orb_en[i])] = 1;
+    std::ofstream final_wfn;
+    final_wfn.open("final_wfn_"+ std::to_string(root) +  ".txt");
+    const det_hashvec& detmap = det_space.wfn_hash();
+    for (size_t I = 0, maxI = detmap.size(); I < maxI; ++I) {
+        final_wfn << std::setw(18) << std::setprecision(12) << evecs->get(I,root) << "\t" << detmap[I].str(nact_).c_str() << std::endl;
     }
-    for (int i = 0; i < nbeta_; ++i) {
-        occ[nact_ + std::get<2>(labeled_orb_en[i])] = 1;
-    }
-
-    //     bool print_final_wfn = options_.get_bool("SAVE_FINAL_WFN");
-
-    //  std::ofstream final_wfn;
-    //  if( print_final_wfn ){
-    //      final_wfn.open("final_wfn_"+ std::to_string(root_) +  ".txt");
-    //      final_wfn << det_space.size() << "  " << nact_ << "  " << nalpha_ <<
-    //      "  " << nbeta_ << endl;
-    //  }
-    outfile->Printf("\n  ndet: %zu", det_space.size());
-
-    Determinant rdet(occ);
-    auto ref_bits = rdet.bits();
-    int max_ex = 1 + (cycle_ + 1) * 2;
-    for (int n = 0; n < nroot; ++n) {
-        std::vector<double> c2_vals(max_ex, 0.0);
-        std::vector<size_t> ndet(max_ex, 0);
-
-        //        det_hash<size_t> detmap = det_space.wfn_hash();
-        //        for (det_hash<size_t>::iterator it = detmap.begin(),
-        //                                        endit = detmap.end();
-        //             it != endit; ++it) {
-
-        const std::vector<Determinant>& dets = det_space.determinants();
-        for (size_t I = 0, maxI = det_space.size(); I < maxI; ++I) {
-            int ndiff = 0;
-            auto ex_bits = dets[I].bits();
-
-            double coeff = evecs->get(I, n) * evecs->get(I, n);
-
-            // Compute number of differences in both alpha and beta strings wrt
-            // ref
-            for (size_t a = 0; a < nact_ * 2; ++a) {
-                if (ref_bits[a] != ex_bits[a]) {
-                    ++ndiff;
-                }
-            }
-            ndiff = static_cast<int>(ndiff / 2.0);
-            c2_vals[ndiff] += coeff;
-            ndet[ndiff]++;
-            //            std::make_pair(excitation_counter[ndiff].first + 1,
-            //                           excitation_counter[ndiff].second + coeff);
-
-            //         if( print_final_wfn and (n == root_) ){
-
-            //             auto abits =
-            //             it->first.get_alfa_bits_vector_bool();
-            //             auto bbits =
-            //             it->first.get_beta_bits_vector_bool();
-
-            //             final_wfn << std::setw(18) << std::setprecision(12)
-            //             <<  evecs->get(it->second,n) << "  ";// <<  abits << "  "
-            //             << bbits <<
-            //             it->first.str().c_str() << endl;
-            //             for( size_t i = 0; i < nact_; ++i ){
-            //                 final_wfn << abits[i];
-            //             }
-            //             final_wfn << "   ";
-            //             for( size_t i = 0; i < nact_; ++i ){
-            //                 final_wfn << bbits[i];
-            //             }
-            //             final_wfn << endl;
-            //         }
-        }
-        for (int i = 0, maxi = c2_vals.size(); i < maxi; ++i) {
-            outfile->Printf("\n       %d        %8zu           %.11f", i, ndet[i], c2_vals[i]);
-        }
-    }
-    //  if( print_final_wfn ) final_wfn.close();
-    //
+    final_wfn.close();
 }
 
-*/
 std::vector<std::tuple<double, int, int>> AdaptiveCI::sym_labeled_orbitals(std::string type) {
     std::vector<std::tuple<double, int, int>> labeled_orb;
 
@@ -1696,19 +1627,6 @@ double AdaptiveCI::compute_spin_contamination(DeterminantHashVec& space, WFNOper
     spin_contam -= (0.25 * (multiplicity_ * multiplicity_ - 1.0));
 
     return spin_contam;
-}
-
-void AdaptiveCI::save_dets_to_file(DeterminantHashVec& space, SharedMatrix evecs) {
-    // Use for single-root calculations only
-    const det_hashvec& detmap = space.wfn_hash();
-    for (size_t i = 0, max_i = detmap.size(); i < max_i; ++i) {
-        det_list_ << detmap[i].str(nact_).c_str() << " " << std::fabs(evecs->get(i, 0)) << " ";
-        //	for(size_t J = 0, maxJ = space.size(); J < maxJ; ++J){
-        //		det_list_ << space[I].slater_rules(space[J]) << " ";
-        //	}
-        //	det_list_ << "\n";
-    }
-    det_list_ << "\n";
 }
 
 std::vector<double> AdaptiveCI::davidson_correction(std::vector<Determinant>& P_dets,
@@ -2236,8 +2154,6 @@ void AdaptiveCI::compute_aci(DeterminantHashVec& PQ_space, SharedMatrix& PQ_evec
 
         if (!quiet_mode_)
             outfile->Printf("\n  Total time spent diagonalizing H:   %1.6f s", diag_pq.get());
-        //  if (det_save_)
-        //      save_dets_to_file(PQ_space, PQ_evecs);
 
         // Save the solutions for the next iteration
         //        old_dets.clear();
