@@ -29,6 +29,7 @@
 
 #include <iomanip>
 #include <sstream>
+#include <complex>
 
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libmints/molecule.h"
@@ -84,7 +85,7 @@ double TDACI::compute_energy() {
     SharedMatrix aci_coeffs = aci->get_evecs();
     outfile->Printf("\n  ACI wavefunction built");
     
-    // 2. Now, build the full Hamiltonian in the n-1 space (not just core)
+    // 2. Generate the n-1 Determinants (not just core)
     DeterminantHashVec ann_dets;
     for( int i = 0; i < nact; ++i ){
         annihilate_wfn(aci_dets, ann_dets,i);  
@@ -92,107 +93,292 @@ double TDACI::compute_energy() {
     size_t nann = ann_dets.size();
     outfile->Printf("\n  size of ann dets: %zu", ann_dets.size());
 
-    std::vector<std::string> det_vec(nann);
-    // Save occupations to file
-    const det_hashvec& annhash = ann_dets.wfn_hash();
-    for ( size_t I = 0; I < nann; ++I ){
-        auto& detI = annhash[I];
-        det_vec[I] = detI.str(nact);
+    // 3. Build the full n-1 Hamiltonian
+    std::shared_ptr<FCIIntegrals> fci_ints = aci->get_aci_ints();
+    SharedMatrix full_aH = std::make_shared<Matrix>("aH",nann, nann);
+    for( size_t I = 0; I < nann; ++I ){
+        Determinant detI = ann_dets.get_det(I);
+        for( size_t J = I; J < nann; ++J ){
+            Determinant detJ = ann_dets.get_det(J);
+            double value = fci_ints->slater_rules(detI,detJ);
+            full_aH->set(I,J, value);
+            full_aH->set(J,I, value);
+        }
     }
-    save_vector(det_vec, "ann_dets.txt");
     
+    // 4. Prepare initial state by removing a core electron from aci wfn 
+    DeterminantHashVec core_dets;
+    SharedVector core_coeffs = std::make_shared<Vector>("init", nann);
+    core_coeffs->zero();
+    
+    const det_hashvec& dets = aci_dets.wfn_hash();
+    size_t ndet = dets.size();
+    size_t ncore = 0;
+    for ( size_t I = 0; I < ndet; ++I ){
+        auto& detI = dets[I];
+        if( detI.get_alfa_bit(0) == true ){
+            Determinant adet(detI);
+            adet.set_alfa_bit(0, false);
+            size_t idx = ann_dets.get_idx(adet);
+            core_coeffs->set(idx, core_coeffs->get(idx) + aci_coeffs->get(aci_dets.get_idx(detI),0) ); 
+            core_dets.add(adet);
+        }  
+    }
+    outfile->Printf("\n  Size of initial state: %zu", core_dets.size());    
+    
+    // 5. Renormalize wave function
+    outfile->Printf("\n  Renormalizing wave function");
+    double norm = core_coeffs->norm();
+    norm = 1.0/ norm;
+    core_coeffs->scale(norm);
 
-    std::ifstream file("c_init.txt", std::ios::in);
-    if( !file ){
+    // 5. Propogate
 
-        // 3. Remove a core electron from aci wfn, compile coeffss
-        DeterminantHashVec core_dets;
-        std::vector<double> core_coeffs(nann, 0.0); 
+    if( options_.get_str("TDACI_PROPOGATOR") == "EXACT" ){
+        propogate_exact( core_coeffs, full_aH );
+    } else if ( options_.get_str("TDACI_PROPOGATOR") == "CN" ){
+        propogate_cn( core_coeffs, full_aH );
+    }
+    
+    //} else {
+    //    if (options_.get_str("TDACI_PROPOGATOR") == "TAYLOR" ){
+    //        SharedVector C0 = std::make_shared<Vector>("C0r", ann_dets.size());
+    //        std::shared_ptr<FCIIntegrals> fci_ints = aci->get_aci_ints();
+    //        //std::vector<std::pair<double,double>> C_new;
+    //        //std::vector<double> C0(nann);
+    //        for( size_t I = 0; I < nann; ++I ){
+    //            double num = 0.0;
+    //            file >> num;
+    //            C0->set(I,num);
+    //        }
+    //        
+    //        propogate_taylor(C0, fci_ints, ann_dets );
 
-        const det_hashvec& dets = aci_dets.wfn_hash();
-        size_t ndet = dets.size();
-        size_t ncore = 0;
-        for ( size_t I = 0; I < ndet; ++I ){
-            auto& detI = dets[I];
-            if( detI.get_alfa_bit(0) == true ){
-                Determinant adet(detI);
-                adet.set_alfa_bit(0, false);
-                size_t idx = ann_dets.get_idx(adet);
-                core_coeffs[idx] +=  aci_coeffs->get(aci_dets.get_idx(detI),0); 
-                core_dets.add(adet);
-  //              outfile->Printf("\n %s  %s",detI.str(ncmo).c_str(),  adet.str(ncmo).c_str());
-            }  
+    //    }
+//  //      if (options_.get_str("TDACI_PROPOGATOR") == "VERLET" ){
+//  //          propogate_verlet(C0, C_new, fci_ints, ann_dets);
+//  //      }
+    
+ //   }
+    return en;
+}
+
+void TDACI::propogate_exact(SharedVector C0, SharedMatrix H) {
+
+
+    size_t ndet = C0->dim();
+
+    // Diagonalize the full Hamiltonian
+    SharedMatrix evecs = std::make_shared<Matrix>("evecs",ndet,ndet);
+    SharedVector evals = std::make_shared<Vector>("evals",ndet);
+
+    outfile->Printf("\n  Diagonalizing Hamiltonian");
+    H->diagonalize(evecs, evals);
+
+    int nstep = options_.get_int("TDACI_NSTEP");
+    double dt = options_.get_double("TDACI_TIMESTEP");
+
+    SharedVector ct_r = std::make_shared<Vector>("ct_R",ndet);
+    SharedVector ct_i = std::make_shared<Vector>("ct_I",ndet);
+    ct_r->zero();
+    ct_i->zero();
+
+    // Convert to a.u. from as
+    double conv = 1.0/24.18884326505;
+    //dt /= 24.18884326505;
+    double time = dt;
+
+    SharedVector mag = std::make_shared<Vector>("mag", ndet);
+    SharedVector int1 = std::make_shared<Vector>("int1", ndet);
+    SharedVector int1r = std::make_shared<Vector>("int2r", ndet);
+    SharedVector int1i = std::make_shared<Vector>("int2i", ndet);
+    mag->zero();
+    // First multiply the evecs by the initial vector
+    int1->gemv(true, 1.0, &(*evecs), &(*C0), 0.0);
+  //  C0->print();
+
+    for( int n = 0; n < nstep; ++n ){
+        outfile->Printf("\n  Propogating for t = %1.3f as", time);
+        for( int I = 0; I < ndet; ++I ){
+            int1r->set(I, int1->get(I) * std::cos( -1.0 * evals->get(I) * time*conv ) ); 
+            int1i->set(I, int1->get(I) * std::sin( -1.0 * evals->get(I) * time*conv ) ); 
         }
-        outfile->Printf("\n  size of core dets: %zu", core_dets.size());    
+        ct_r->gemv(false, 1.0, &(*evecs), &(*int1r), 0.0);
+        ct_i->gemv(false, 1.0, &(*evecs), &(*int1i), 0.0);
+
+        std::stringstream ss;
+        ss << std::fixed << std::setprecision(2) << time;
         
-        // 2. Renormalize wave function
-        outfile->Printf("\n  Renormalizing wave function");
-        double norm = 0.0;//core_coeffs->norm();
-        for( auto& val : core_coeffs ){
-            norm += val * val;
-        }
-        norm = 1.0/ std::sqrt(norm);
-        for( auto& val : core_coeffs ){
-            val *= norm;
-        }
+        double norm = 0.0;
+        for( int I = 0; I < ndet; ++I ){
+            double re = ct_r->get(I);
+            double im = ct_i->get(I);
+            mag->set(I, (re*re) + (im*im));
+            norm += (re*re) + (im*im);
+        }        
+        outfile->Printf("\n  norm(t=%1.3f) = %1.5f", time, norm);
+        save_vector(mag,"exact_" + ss.str()+ ".txt");
+        int1r->zero();
+        int1i->zero();
 
-        // 3. Build full n-1 hamiltonian
-        if( options_.get_str("TDACI_PROPOGATOR") == "EXACT" ){
-            std::shared_ptr<FCIIntegrals> fci_ints = aci->get_aci_ints();
-            SharedMatrix full_aH = std::make_shared<Matrix>("aH",nann, nann);
-            for( size_t I = 0; I < nann; ++I ){
-                Determinant detI = ann_dets.get_det(I);
-                for( size_t J = I; J < nann; ++J ){
-                    Determinant detJ = ann_dets.get_det(J);
-                    double value = fci_ints->slater_rules(detI,detJ);
-                    full_aH->set(I,J, value);
-                    full_aH->set(J,I, value);
-                }
+        time += dt;
+    }
+}
+
+void TDACI::propogate_cn( SharedVector C0, SharedMatrix H ){
+
+    Timer total;
+    size_t ndet = C0->dim();
+
+    int nstep = options_.get_int("TDACI_NSTEP");
+    double dt = options_.get_double("TDACI_TIMESTEP");
+    double conv = 1.0/24.18884326505;
+    dt *= conv;
+    double time = dt;
+
+
+    // Copy initial state into iteratively updated vectors
+    SharedVector ct_r = std::make_shared<Vector>("ct_R",ndet);
+    SharedVector ct_i = std::make_shared<Vector>("ct_I",ndet);
+
+    ct_r->copy(C0->clone());
+    ct_i->zero();
+
+    // Get the zeroed diagonal H
+    SharedMatrix H0 = std::make_shared<Matrix>("H0",ndet,ndet);
+    H0->copy(H->clone());
+    H0->zero_diagonal();
+
+    for( int n = 1; n <= nstep; ++n ){
+        outfile->Printf("\n  Propogating at t = %1.6f", time/conv);        
+        // Form b vector
+        Timer b;
+        SharedVector b_r = std::make_shared<Vector>("br",ndet);
+        SharedVector b_i = std::make_shared<Vector>("bi",ndet);
+
+        //b_r->copy(ct_r->clone());
+        //b_i->copy(ct_i->clone());
+
+        b_r->gemv(false, 1.0*0.5*dt, &(*H), &(*ct_i), 0.0);
+        b_i->gemv(false, -1.0*0.5*dt, &(*H), &(*ct_r), 0.0);
+
+        b_r->add(ct_r);
+        b_i->add(ct_i);
+    
+        outfile->Printf("\n  Form b: %1.4f s", b.get());
+
+        // Form D^(-1) matrix
+        Timer dinv;
+        SharedMatrix Dinv_r = std::make_shared<Matrix>("Dr", ndet,ndet); 
+        SharedMatrix Dinv_i = std::make_shared<Matrix>("Di", ndet,ndet); 
+        Dinv_r->zero();
+        Dinv_i->zero();
+
+        for( size_t I = 0; I < ndet; ++I ){
+            double HII = H->get(I,I);
+            Dinv_r->set(I,I, 1.0/(1.0 + HII*HII*0.25*dt*dt) );
+            Dinv_i->set(I,I, (HII*dt*-0.5)/(1.0 + HII*HII*0.25*dt*dt) );
+        }
+        outfile->Printf("\n  Form Dinv: %1.4f s", dinv.get());
+
+        // Transform b my D^(-1)
+        Timer db;
+        // real part
+        SharedVector Dbr = std::make_shared<Vector>("Dbr",ndet); 
+        Dbr->gemv(false, 1.0, &(*Dinv_r), &(*b_r), 0.0); 
+        Dbr->gemv(false, 1.0, &(*Dinv_i), &(*b_i), 1.0); 
+        // Imag part
+        SharedVector Dbi = std::make_shared<Vector>("Dbi",ndet); 
+        Dbi->gemv(false, 1.0, &(*Dinv_r), &(*b_i), 0.0); 
+        Dbi->gemv(false, 1.0, &(*Dinv_i), &(*b_r), 1.0); 
+        outfile->Printf("\n  Form DB: %1.4f s", db.get());
+
+      //  Timer HD;
+      //  // Store intermediate H^(od)D^(-1) matrices
+      //  SharedMatrix HD_r = std::make_shared<Matrix>("hdr", ndet,ndet);
+      //  SharedMatrix HD_i = std::make_shared<Matrix>("hdi", ndet,ndet);
+
+      //  HD_r->gemm(false,false, 1.0, H0, Dinv_r, 0.0);
+      //  HD_i->gemm(false,false, 1.0, H0, Dinv_i, 0.0);        
+
+      //  HD_r->scale(0.5*dt*conv);
+      //  HD_i->scale(0.5*dt*conv);
+      //  outfile->Printf("\n HD: %1.4f s", HD.get());
+
+        // Converge C(t+dt)
+        bool converged = false;
+        SharedVector ct_r_new = std::make_shared<Vector>("ct_R",ndet);
+        SharedVector ct_i_new = std::make_shared<Vector>("ct_I",ndet);
+
+        while( !converged ){
+            SharedVector r_new = std::make_shared<Vector>("ct_R",ndet);
+            r_new->zero();
+            r_new->gemv(false,1.0, &(*Dinv_r), &(*ct_i), 0.0);
+            r_new->gemv(false,1.0, &(*Dinv_i), &(*ct_r), 1.0);
+            r_new->scale(0.5*dt); 
+            
+            ct_r_new->copy(Dbr->clone());
+            ct_r_new->gemv(false,1.0,&(*H0),&(*r_new),1.0); 
+            
+            SharedVector i_new = std::make_shared<Vector>("ct_R",ndet);
+            i_new->zero();
+            i_new->gemv(false,1.0, &(*Dinv_r), &(*ct_r), 0.0);
+            i_new->gemv(false,1.0, &(*Dinv_i), &(*ct_i), 1.0);
+            i_new->scale(-0.5*dt); 
+            
+            ct_i_new->copy(Dbi->clone());
+            ct_i_new->gemv(false,1.0,&(*H0),&(*i_new),1.0); 
+
+            // Test convergence
+            SharedVector err = std::make_shared<Vector>("err",ndet);
+            double norm = 0.0;  
+            for( size_t I = 0; I < ndet; ++I ){
+                double rn = ct_r_new->get(I);
+                double in = ct_i_new->get(I);
+                norm += (rn*rn + in*in);
             }
-            // Print full Hamiltonian
-            outfile->Printf("\n Writing Hamiltonian");
-            save_matrix( full_aH, "hamiltonian.txt");
-            outfile->Printf("  ...done");
+            ct_r_new->scale( 1.0/sqrt(norm));
+            ct_i_new->scale( 1.0/sqrt(norm));
+            for( size_t I = 0; I < ndet; ++I ){
+                double rn = ct_r_new->get(I);
+                double in = ct_i_new->get(I);
+                double ro = ct_r->get(I);
+                double io = ct_i->get(I);
+                err->set(I, (rn*rn + in*in) - (ro*ro + io*io));                
+            }
 
-            outfile->Printf("\n Diagonalizing H");
-            SharedMatrix full_evecs = std::make_shared<Matrix>("evec", nann,nann);
-            SharedVector full_evals = std::make_shared<Vector>("evals", nann);
-            full_aH->diagonalize(full_evecs, full_evals);
-            outfile->Printf("  ...done");
-
-            outfile->Printf("\n Writing c_init");
-            save_vector(core_coeffs,"c_init.txt");
-            outfile->Printf("  ...done");
-
-            outfile->Printf("\n Writing full evecs");
-            save_matrix(full_evecs, "full_evecs.txt");
-            outfile->Printf("  ...done");
-
-            outfile->Printf("\n Writing full evals");
-            save_vector(full_evals, "full_evals.txt");
-            outfile->Printf("  ...done");
-        }
-    } else {
-        if (options_.get_str("TDACI_PROPOGATOR") == "TAYLOR" ){
-            SharedVector C0 = std::make_shared<Vector>("C0r", ann_dets.size());
-            std::shared_ptr<FCIIntegrals> fci_ints = aci->get_aci_ints();
-            //std::vector<std::pair<double,double>> C_new;
-            //std::vector<double> C0(nann);
-            for( size_t I = 0; I < nann; ++I ){
-                double num = 0.0;
-                file >> num;
-                C0->set(I,num);
+            outfile->Printf("\n  %1.9f", err->norm());
+            if( err->norm() <= 1e-12 ){
+                converged = true;
             }
             
-            propogate_taylor(C0, fci_ints, ann_dets );
-
+            ct_r->copy( ct_r_new->clone() );
+            ct_i->copy( ct_i_new->clone() );
         }
-//        if (options_.get_str("TDACI_PROPOGATOR") == "VERLET" ){
-//            propogate_verlet(C0, C_new, fci_ints, ann_dets);
-//        }
-    
+        std::stringstream ss;
+        ss << std::fixed << std::setprecision(3) << time/conv << "_" << dt/conv;
+        double norm = 0.0;
+        SharedVector mag = std::make_shared<Vector>("mag",ndet);
+        for( int I = 0; I < ndet; ++I ){
+            double re = ct_r->get(I);
+            double im = ct_i->get(I);
+            mag->set(I, (re*re) + (im*im));
+            norm += (re*re) + (im*im);
+        }        
+        norm = std::sqrt(norm);
+        outfile->Printf("\n norm: %1.6f", norm);
+        ct_r->scale(1.0/norm);
+        ct_i->scale(1.0/norm);
+
+//        outfile->Printf("\n  norm(t=%1.3f) = %1.5f", time/conv, norm);
+        
+        if( n == nstep ){
+            save_vector(mag,"CN_" + ss.str()+ ".txt");
+        }
+
+        time += dt;
     }
-    return en;
+    outfile->Printf("\n  Total time: %1.4f s", total.get()); 
 }
 
 void TDACI::propogate_taylor(SharedVector C0_r, std::shared_ptr<FCIIntegrals> fci_ints, DeterminantHashVec& ann_dets  ) {
