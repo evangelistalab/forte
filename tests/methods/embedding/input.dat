@@ -69,11 +69,11 @@ E, wfn_emb = energy('forte', ref_wfn = wfn_cas, return_wfn = True)
 set forte {
   job_type           active-dsrgpt2
   cino               false
-  frozen_docc        [24] #freeze C core too
-  restricted_docc    [7]
-  active             [2]
-  restricted_uocc    [4]
-  frozen_uocc        [19]
+#  frozen_docc        [24] #freeze C core too
+#  restricted_docc    [7]
+#  active             [2]
+#  restricted_uocc    [4]
+#  frozen_uocc        [19]
   cas_type           cas
   fcimo_actv_type    full
   nrootpi            [2]
