@@ -327,7 +327,6 @@ double embedding::compute_energy() {
 		Slice AVs(AO_BO_A, AO_BO_A_AV);
 		Slice BVs(AO_BO_A_AV, nmopi);
 
-		outfile->Printf("\n Hello #1 *** \n");
 		//Build Fock in localized basis
 		SharedMatrix Fa_loc = Matrix::triplet(Ca_Rt, Fa_, Ca_Rt, true, false, false);
 		//outfile->Printf("\n Fock matrix in localized basis: \n");
@@ -344,7 +343,7 @@ double embedding::compute_energy() {
 		for (int i = 0; i < AO[0]; ++i) {
 			Fa_AOAO->set(0, i, i, lao->get(0, i));
 		}
-		Fa_AOAO->print();
+		//Fa_AOAO->print();
 
 		//AV[0] -= num_actv_vir;
 		SharedMatrix Uav(new Matrix("Uvv", nirrep, AV, AV));
@@ -354,18 +353,8 @@ double embedding::compute_energy() {
 		for (int i = 0; i < AV[0]; ++i) {
 			Fa_AVAV->set(0, i, i, lav->get(0, i));
 		}
-		Fa_AVAV->print();
+		//Fa_AVAV->print();
 
-		SharedMatrix Uaa(new Matrix("Uvv", nirrep, actv_a, actv_a));
-		SharedVector laa(new Vector("lvv", nirrep, actv_a));
-		Fa_AAAA->diagonalize(Uaa, laa, ascending);
-		Fa_AAAA->zero();
-		for (int i = 0; i < actv_a[0]; ++i) {
-			Fa_AAAA->set(0, i, i, laa->get(0, i));
-		}
-		Fa_AAAA->print();
-
-		outfile->Printf("\n Hello #2 *** \n");
 		//Build transformation matrix
 		SharedMatrix U_all_2(new Matrix("U with Pab", nirrep, nmopi, nmopi));
 		SharedMatrix Ubo(new Matrix("Ubo", nirrep, BO, BO));
@@ -374,7 +363,6 @@ double embedding::compute_energy() {
 		Ubv->identity();
 		U_all_2->set_block(AOs, AOs, Uao);
 		U_all_2->set_block(AVs, AVs, Uav);
-		U_all_2->set_block(actv, actv, Uaa);
 		U_all_2->set_block(BOs, BOs, Ubo);
 		U_all_2->set_block(BVs, BVs, Ubv);
 
@@ -400,17 +388,22 @@ double embedding::compute_energy() {
 
 		//SharedMatrix Fa_actv = Fa_->get_block(actv, actv);
 		Fa_loc->set_block(AOs, AOs, Fa_AOAO);
-		Fa_loc->set_block(actv, actv, Fa_AAAA);
 		Fa_loc->set_block(AVs, AVs, Fa_AVAV);
-		//if (options_.get_str("REFERENCE") == "CASSCF") {
-		//	for (int i = 0; i < num_actv; ++i) {
-		//		//outfile->Printf("\n Index: %d", nroccpi[0] + i);
-		//		//outfile->Printf("\n Check diagonal (Fa_): %8.8f \n", Fa_->get(0, nroccpi[0] + i, nroccpi[0] + i));
-		//		Fa_loc->set_row(0, nroccpi[0] + i, Fa_loc_previous->get_row(0, nroccpi[0] + i));
-		//		Fa_loc->set_column(0, nroccpi[0] + i, Fa_loc_previous->get_column(0, nroccpi[0] + i));
-		//		//outfile->Printf("Check diagonal (Fa_loc): %8.8f \n", Fa_loc->get(0, nroccpi[0] + i, nroccpi[0] + i));
-		//	}
-		//}
+
+		if (options_.get_str("REFERENCE") == "CASSCF") {
+			SharedMatrix Uaa(new Matrix("Uaa", nirrep, actv_a, actv_a));
+			SharedVector laa(new Vector("laa", nirrep, actv_a));
+			Fa_AAAA->diagonalize(Uaa, laa, ascending);
+			Fa_AAAA->zero();
+			for (int i = 0; i < actv_a[0]; ++i) {
+				Fa_AAAA->set(0, i, i, laa->get(0, i));
+			}
+			//Fa_AAAA->print();
+
+			U_all_2->set_block(actv, actv, Uaa);
+			Fa_loc->set_block(actv, actv, Fa_AAAA);
+		}
+
 		Fa_->copy(Fa_loc);
 
 		outfile->Printf("\n Fock matrix in localized basis afer canonicalization: \n");
