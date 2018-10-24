@@ -114,8 +114,15 @@ double embedding::compute_energy() {
 	}
 	outfile->Printf("\n number of basis on \"system\" atoms: %d", count_basis);
 
+
 	//Naive partition
 	SharedMatrix S_ao = ref_wfn_->S();
+
+	outfile->Printf("\n Orbital test 1: \n");
+	SharedMatrix S_test_1(S_ao->clone());
+	S_test_1->transform(Ca_);
+	S_test_1->print();
+
 	Dimension noccpi = ref_wfn_->doccpi();
 	Dimension zeropi = nmopi - nmopi;
 	Dimension nvirpi = nmopi - noccpi;
@@ -147,14 +154,14 @@ double embedding::compute_energy() {
 
 	Dimension nroccpi = noccpi;
 	nroccpi[0] = noccpi[0] - num_actv_docc;
-	//Dimension nrvirpi = noccpi;
-	//nrvirpi[0] = nvirpi[0] - num_actv_vir;
+	Dimension nrvirpi = noccpi;
+	nrvirpi[0] = nvirpi[0] - num_actv_vir;
 
 	Slice sys(zeropi, sys_mo);
 	Slice env(sys_mo, nmopi);
 	Slice allmo(zeropi, nmopi);
-	Slice occ(zeropi, noccpi);
-	Slice vir(noccpi, nmopi);
+	Slice occ(zeropi, nroccpi);
+	Slice vir(nroccpi + actv_a, nmopi);
 	Slice actv(nroccpi, nroccpi + actv_a);
 
 	SharedMatrix S_sys = S_ao->get_block(sys, sys);
@@ -171,35 +178,20 @@ double embedding::compute_energy() {
 
 	//Diagonalize P_pq for occ and vir part, respectively.
 	SharedMatrix P_oo = S_sys_in_all->get_block(occ, occ);
-	SharedMatrix Uo(new Matrix("Uo", nirrep, noccpi, noccpi));
-	SharedVector lo(new Vector("lo", nirrep, noccpi));
+	SharedMatrix Uo(new Matrix("Uo", nirrep, nroccpi, nroccpi));
+	SharedVector lo(new Vector("lo", nirrep, nroccpi));
 	P_oo->diagonalize(Uo, lo, descending);
-	//lo->print();
+	lo->print();
 
 	SharedMatrix P_vv = S_sys_in_all->get_block(vir, vir);
-	SharedMatrix Uv(new Matrix("Uv", nirrep, nvirpi, nvirpi));
-	SharedVector lv(new Vector("lv", nirrep, nvirpi));
+	SharedMatrix Uv(new Matrix("Uv", nirrep, nrvirpi, nrvirpi));
+	SharedVector lv(new Vector("lv", nirrep, nrvirpi));
 	P_vv->diagonalize(Uv, lv, descending);
-	//lv->print();
+	lv->print();
 
 	SharedMatrix U_all(new Matrix("U with Pab", nirrep, nmopi, nmopi));
 	U_all->set_block(occ, occ, Uo);
 	U_all->set_block(vir, vir, Uv);
-
-	if (options_.get_str("REFERENCE") == "CASSCF") {
-		SharedMatrix Ua(new Matrix("Uv", nirrep, actv_a, actv_a));
-		Ua->identity();
-		for (int i = 0; i < num_actv; ++i) {
-			U_all->zero_row(0, nroccpi[0] + i);
-			U_all->zero_column(0, nroccpi[0] + i);
-		}
-		U_all->set_block(actv, actv, Ua);
-	}
-	outfile->Printf("\n Localization rotation matrix: \n");
-	U_all->print();
-
-	//Update MO coeffs
-	Ca_->copy(Matrix::doublet(Ca_t, U_all, false, false));
 
 	//Based on threshold or num_occ/num_vir, decide the mo_space_info
 	std::vector<int> index_trace_occ = {};
@@ -233,13 +225,14 @@ double embedding::compute_energy() {
 	//Rotate Bocc to first block, rotate Bvir to last block, in order to freeze them
 	//Change to block operation soon
 	SharedMatrix Ca_Rt(Ca_t->clone());
-	Ca_Rt->zero();
 
 	//Write Bocc
-	int sizeBO = noccpi[0] - index_trace_occ.size();
-	int sizeBV = nvirpi[0] - index_trace_vir.size();
-	int sizeAO = index_trace_occ.size();
+	int sizeBO = noccpi[0] - index_trace_occ.size() - num_actv_docc;
+	int sizeBV = nvirpi[0] - index_trace_vir.size() - num_actv_vir;
+	int sizeAO = index_trace_occ.size(); //AO and AV will not include AA
 	int sizeAV = index_trace_vir.size();
+	outfile->Printf("\n sizeBO: %d, sizeAO: %d, sizeAV: %d, sizeBV: %d \n", sizeBO, sizeAO, sizeAV, sizeBV);
+
 	Dimension AO = nmopi;
 	AO[0] = sizeAO;
 	Dimension AV = nmopi;
@@ -250,13 +243,43 @@ double embedding::compute_energy() {
 	BV[0] = sizeBV;
 	Dimension AO_BO = nmopi;
 	AO_BO[0] = sizeAO + sizeBO;
-	Dimension AO_BO_AV = nmopi;
-	AO_BO_AV[0] = sizeAO + sizeBO + sizeAV;
-	Slice BOs(zeropi, BO);
-	Slice AOs(BO, AO_BO);
-	Slice AVs(AO_BO, AO_BO_AV);
-	Slice BVs(AO_BO_AV, nmopi);
+	Dimension AO_BO_A = nmopi;
+	AO_BO_A[0] = sizeAO + sizeBO + num_actv;
+	Dimension AO_BO_A_AV = nmopi;
+	AO_BO_A_AV[0] = sizeAO + sizeBO + num_actv + sizeAV;
 
+	outfile->Printf("\n Original coeffs before localization \n");
+	Ca_->print(); //Structure is O-A-V
+
+	outfile->Printf("\n Orbital test 2: \n");
+	SharedMatrix S_test_2(S_ao->clone());
+	S_test_2->transform(Ca_);
+	S_test_2->print();
+
+	outfile->Printf("\n Localization rotation matrix: \n");
+	U_all->print();
+
+	//Rotate MO coeffs
+	Ca_->copy(Matrix::doublet(Ca_t, U_all, false, false)); //Structure becomes AO-BO-0-AV-BV
+
+	if (options_.get_str("REFERENCE") == "CASSCF") {
+		//SharedMatrix Ua(new Matrix("Uv", nirrep, actv_a, actv_a));
+		//Ua->identity();
+		for (int i = 0; i < num_actv; ++i) {
+			Ca_->set_column(0, nroccpi[0] + i, Ca_Rt->get_column(0, nroccpi[0] + i)); //Structure becomes AO-BO-A-AV-BV
+		}
+	}
+
+	outfile->Printf("\n Coeffs after localization \n");
+	Ca_->print();
+
+	outfile->Printf("\n Orbital test 3: \n");
+	SharedMatrix S_test_3(S_ao->clone());
+	S_test_3->transform(Ca_);
+	S_test_3->print();
+
+	Ca_Rt->zero();
+	//Write Bocc
 	for (int i = 0; i < sizeBO; ++i) {
 		Ca_Rt->set_column(0, i, Ca_->get_column(0, sizeAO + i));
 	}
@@ -268,37 +291,52 @@ double embedding::compute_energy() {
 
 	//Write Avir
 	for (int i = 0; i < sizeAV; ++i) {
-		Ca_Rt->set_column(0, i + sizeBO + sizeAO, Ca_->get_column(0, i + sizeAO + sizeBO));
+		Ca_Rt->set_column(0, i + AO_BO_A[0], Ca_->get_column(0, i + AO_BO_A[0]));
 	}
 
 	//Write Bvir
 	for (int i = 0; i < sizeBV; ++i) {
-		Ca_Rt->set_column(0, i + sizeBO + sizeAO + sizeAV, Ca_->get_column(0, sizeBO + sizeAO + sizeAV + i));
+		Ca_Rt->set_column(0, i + AO_BO_A_AV[0], Ca_->get_column(0, AO_BO_A_AV[0] + i));
 	}
 
 	//outfile->Printf("\n  The MO coefficients after localization and rotation: \n", sizeBO);
 	//Ca_Rt->print();
 
 	//Update Ca_
-	if (options_.get_str("REFERENCE") == "CASSCF") {
+	if (options_.get_str("REFERENCE") == "CASSCF") { //Ca_: AO-BO-A-AV-BV
 		//copy original columns in active space from Ca_
 		for (int i = 0; i < num_actv; ++i) {
-			Ca_Rt->set_column(0, i + num_rdocc, Ca_->get_column(0, i + num_rdocc));
+			Ca_Rt->set_column(0, i + num_rdocc, Ca_->get_column(0, num_rdocc + i));
 		}
 	}
-	Ca_->copy(Ca_Rt);
+	Ca_->copy(Ca_Rt); //Ca_: BO-AO-A-AV-BV
+
+	outfile->Printf("\n Original coeffs before semicon \n");
+	Ca_->print();
+
+	outfile->Printf("\n Orbital test 4: \n");
+	SharedMatrix S_test_4(S_ao->clone());
+	S_test_4->transform(Ca_);
+	S_test_4->print();
 
 	if (options_.get_bool("SEMICANON") == true) {
 		outfile->Printf("\n *** Semi-canonicalization *** \n");
 
+		Slice BOs(zeropi, BO);
+		Slice AOs(BO, AO_BO);
+		Slice AVs(AO_BO_A, AO_BO_A_AV);
+		Slice BVs(AO_BO_A_AV, nmopi);
+
+		outfile->Printf("\n Hello #1 *** \n");
 		//Build Fock in localized basis
 		SharedMatrix Fa_loc = Matrix::triplet(Ca_Rt, Fa_, Ca_Rt, true, false, false);
 		//outfile->Printf("\n Fock matrix in localized basis: \n");
 		//Fa_loc->print();
-		outfile->Printf("\n");
 		SharedMatrix Fa_AOAO = Fa_loc->get_block(AOs, AOs);
 		SharedMatrix Fa_AVAV = Fa_loc->get_block(AVs, AVs);
+		SharedMatrix Fa_AAAA = Fa_loc->get_block(actv, actv);
 
+		//AO[0] -= num_actv_docc;
 		SharedMatrix Uao(new Matrix("Uoo", nirrep, AO, AO));
 		SharedVector lao(new Vector("loo", nirrep, AO));
 		Fa_AOAO->diagonalize(Uao, lao, ascending);
@@ -306,8 +344,9 @@ double embedding::compute_energy() {
 		for (int i = 0; i < AO[0]; ++i) {
 			Fa_AOAO->set(0, i, i, lao->get(0, i));
 		}
-		//Fa_AOAO->print();
+		Fa_AOAO->print();
 
+		//AV[0] -= num_actv_vir;
 		SharedMatrix Uav(new Matrix("Uvv", nirrep, AV, AV));
 		SharedVector lav(new Vector("lvv", nirrep, AV));
 		Fa_AVAV->diagonalize(Uav, lav, ascending);
@@ -315,8 +354,18 @@ double embedding::compute_energy() {
 		for (int i = 0; i < AV[0]; ++i) {
 			Fa_AVAV->set(0, i, i, lav->get(0, i));
 		}
-		//Fa_AVAV->print();
+		Fa_AVAV->print();
 
+		SharedMatrix Uaa(new Matrix("Uvv", nirrep, actv_a, actv_a));
+		SharedVector laa(new Vector("lvv", nirrep, actv_a));
+		Fa_AAAA->diagonalize(Uaa, laa, ascending);
+		Fa_AAAA->zero();
+		for (int i = 0; i < actv_a[0]; ++i) {
+			Fa_AAAA->set(0, i, i, laa->get(0, i));
+		}
+		Fa_AAAA->print();
+
+		outfile->Printf("\n Hello #2 *** \n");
 		//Build transformation matrix
 		SharedMatrix U_all_2(new Matrix("U with Pab", nirrep, nmopi, nmopi));
 		SharedMatrix Ubo(new Matrix("Ubo", nirrep, BO, BO));
@@ -325,33 +374,43 @@ double embedding::compute_energy() {
 		Ubv->identity();
 		U_all_2->set_block(AOs, AOs, Uao);
 		U_all_2->set_block(AVs, AVs, Uav);
+		U_all_2->set_block(actv, actv, Uaa);
 		U_all_2->set_block(BOs, BOs, Ubo);
 		U_all_2->set_block(BVs, BVs, Ubv);
 
-		outfile->Printf("\n Semi-canonicalization rotation matrix \n");
-		U_all_2->print();
+		//outfile->Printf("\n Semi-canonicalization rotation matrix \n");
+		//U_all_2->print();
 
-		if (options_.get_str("REFERENCE") == "CASSCF") {
-			SharedMatrix Ua(new Matrix("Uv", nirrep, actv_a, actv_a));
-			Ua->identity();
-			for (int i = 0; i < num_actv; ++i) {
-				U_all->zero_row(0, nroccpi[0] + i);
-				U_all->zero_column(0, nroccpi[0] + i);
-			}
-			U_all_2->set_block(actv, actv, Ua);
-		}
-		U_all_2->print();
+		//if (options_.get_str("REFERENCE") == "CASSCF") {
+		//	SharedMatrix Ua(new Matrix("Uv", nirrep, actv_a, actv_a));
+		//	Ua->identity();
+		//	for (int i = 0; i < num_actv; ++i) {
+		//		U_all_2->zero_row(0, num_rdocc + i);
+		//		U_all_2->zero_column(0, num_rdocc + i);
+		//		U_all_2->set(0, num_rdocc + i, num_rdocc + i, 1.0);
+		//	}
+		//}
+		//U_all_2->print();
 		
 		//Build new Fock
-		outfile->Printf("\n Original Fock matrix: \n");
-		Fa_->print();
+		outfile->Printf("\n Original Fock matrix in localized basis: \n");
+		Fa_loc->print();
 
-		SharedMatrix Fa_actv = Fa_->get_block(actv, actv);
+		//SharedMatrix Fa_loc_previous(Fa_loc->clone());
+
+		//SharedMatrix Fa_actv = Fa_->get_block(actv, actv);
 		Fa_loc->set_block(AOs, AOs, Fa_AOAO);
+		Fa_loc->set_block(actv, actv, Fa_AAAA);
 		Fa_loc->set_block(AVs, AVs, Fa_AVAV);
-		if (options_.get_str("REFERENCE") == "CASSCF") {
-			Fa_loc->set_block(actv, actv, Fa_actv);
-		}
+		//if (options_.get_str("REFERENCE") == "CASSCF") {
+		//	for (int i = 0; i < num_actv; ++i) {
+		//		//outfile->Printf("\n Index: %d", nroccpi[0] + i);
+		//		//outfile->Printf("\n Check diagonal (Fa_): %8.8f \n", Fa_->get(0, nroccpi[0] + i, nroccpi[0] + i));
+		//		Fa_loc->set_row(0, nroccpi[0] + i, Fa_loc_previous->get_row(0, nroccpi[0] + i));
+		//		Fa_loc->set_column(0, nroccpi[0] + i, Fa_loc_previous->get_column(0, nroccpi[0] + i));
+		//		//outfile->Printf("Check diagonal (Fa_loc): %8.8f \n", Fa_loc->get(0, nroccpi[0] + i, nroccpi[0] + i));
+		//	}
+		//}
 		Fa_->copy(Fa_loc);
 
 		outfile->Printf("\n Fock matrix in localized basis afer canonicalization: \n");
@@ -362,25 +421,37 @@ double embedding::compute_energy() {
 		Ca_->copy(Matrix::doublet(Ca_Rt, U_all_2, false, false));
 		//Ca_->print();
 
-		//S_ao->transform(Ca_);
-		//S_ao->print();
+		outfile->Printf("\n Orbital test 5: \n");
+		SharedMatrix S_test(S_ao->clone());
+		S_test->transform(Ca_);
+		S_test->print();
 	}
+
+	outfile->Printf("\n Coeffs after semicon \n");
+	Ca_->print();
 
 	//Write MO space info and print
 	outfile->Printf("\n  FROZEN_DOCC     = %d", sizeBO);
+	outfile->Printf("\n  RESTRICTED_DOCC     = %d", sizeAO);
+	outfile->Printf("\n  ACTIVE     = %d", num_actv);
+	outfile->Printf("\n  RESTRICTED_UOCC     = %d", sizeAV);
 	outfile->Printf("\n  FROZEN_UOCC	 = %d", sizeBV);
+	outfile->Printf("\n");
 
 	if (options_.get_bool("WRITE_FREEZE_MO") == true) {
 		options_["FROZEN_DOCC"].add(0);
-		options_["RESTRICTED_DOCC"].add(0);
-		options_["ACTIVE"].add(0);
-		options_["RESTRICTED_UOCC"].add(0);
 		options_["FROZEN_UOCC"].add(0);
 		options_["FROZEN_DOCC"][0].assign(sizeBO);
-		options_["RESTRICTED_DOCC"][0].assign(sizeAO - num_actv_docc);
-		options_["ACTIVE"][0].assign(num_actv);
-		options_["RESTRICTED_UOCC"][0].assign(sizeAV - num_actv_vir);
 		options_["FROZEN_UOCC"][0].assign(sizeBV);
+
+		if (options_.get_str("REFERENCE") == "CASSCF") {
+			options_["RESTRICTED_DOCC"].add(0);
+			options_["ACTIVE"].add(0);
+			options_["RESTRICTED_UOCC"].add(0);
+			options_["RESTRICTED_DOCC"][0].assign(sizeAO - num_actv_docc);
+			options_["ACTIVE"][0].assign(num_actv);
+			options_["RESTRICTED_UOCC"][0].assign(sizeAV - num_actv_vir);
+		}
 
 		/*
 		for (int h = 0; h < nirrep_; h++) {
