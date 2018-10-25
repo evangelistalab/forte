@@ -4,9 +4,9 @@
 
 import forte
 
-refscf = -75.05258982716603 
-refaci = -75.3837175309
-refacipt2  = -75.439721740269
+refscf = -75.0525898286472284 
+refaci = -75.383717530874
+refacipt2  = -75.439721740377
 
 molecule N2{
 C 

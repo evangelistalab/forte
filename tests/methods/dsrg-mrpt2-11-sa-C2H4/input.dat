@@ -1,7 +1,10 @@
 #! Generated using commit GITCOMMIT
 
-ref_cas = -77.748792522752652
-ref_pt2 = -78.320027291052526
+#ref_cas = -77.748792522752652
+#ref_pt2 = -78.320027291052526
+
+ref_cas = -77.748792521157270
+ref_pt2 = -78.320027290785
 
 import forte
 

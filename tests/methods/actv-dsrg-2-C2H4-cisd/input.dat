@@ -1,10 +1,9 @@
 #! Generated using commit GITCOMMIT
 
 import forte
-
-Eoovv = -77.995170959945227
-Eauto = -77.995168905999904
-Eall  = -77.995164435596493
+Eoovv = -77.995170958041726
+Eauto = -77.995168904096431
+Eall  = -77.995164433692835
 
 
 molecule C2H4{
