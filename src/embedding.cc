@@ -197,13 +197,13 @@ double embedding::compute_energy() {
 	std::vector<int> index_trace_occ = {};
 	std::vector<int> index_trace_vir = {};
 	if (options_.get_str("CUTOFF_BY") == "THRESHOLD") {
-		for (int i = 0; i < noccpi[0]; i++) {
+		for (int i = 0; i < nroccpi[0]; i++) {
 			if (lo->get(0, i) > thresh) {
 				index_trace_occ.push_back(i);
 				outfile->Printf("\n Occupied orbital %d is partitioned to A with eigenvalue %8.8f", i, lo->get(0, i));
 			}
 		}
-		for (int i = 0; i < nvirpi[0]; i++) {
+		for (int i = 0; i < nrvirpi[0]; i++) {
 			if (lv->get(0, i) > thresh) {
 				index_trace_vir.push_back(i);
 				outfile->Printf("\n Virtual orbital %d is partitioned to A with eigenvalue %8.8f", i, lv->get(0, i));
@@ -231,7 +231,7 @@ double embedding::compute_energy() {
 	int sizeBV = nvirpi[0] - index_trace_vir.size() - num_actv_vir;
 	int sizeAO = index_trace_occ.size(); //AO and AV will not include AA
 	int sizeAV = index_trace_vir.size();
-	//outfile->Printf("\n sizeBO: %d, sizeAO: %d, sizeAV: %d, sizeBV: %d \n", sizeBO, sizeAO, sizeAV, sizeBV);
+	outfile->Printf("\n sizeBO: %d, sizeAO: %d, sizeAV: %d, sizeBV: %d \n", sizeBO, sizeAO, sizeAV, sizeBV);
 
 	Dimension AO = nmopi;
 	AO[0] = sizeAO;

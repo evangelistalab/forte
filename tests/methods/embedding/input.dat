@@ -60,7 +60,9 @@ E, wfn_cas = energy('casscf', return_wfn = True)
 set forte {
   job_type embedding
   reference casscf
-  threshold 0.5
+  CUTOFF_BY threshold
+  threshold -0.1
+  WRITE_FREEZE_MO true
   semicanon true
 }
 
