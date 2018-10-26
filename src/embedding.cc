@@ -44,13 +44,13 @@
 namespace psi{ namespace forte {
 
 void set_EMBEDDING_options(ForteOptions& foptions) {
-	foptions.add_str("CUTOFF_BY", "THRESHOLD", "dummy");
-	foptions.add_int("NUM_OCC", 0, "dummy");
-	foptions.add_int("NUM_VIR", 0, "dummy");
-	foptions.add_double("THRESHOLD", 0.5, "dummy");
+	foptions.add_str("CUTOFF_BY", "THRESHOLD", "Cut off by: threshold or number.");
+	foptions.add_int("NUM_OCC", 0, "Number of (restricted) occpied in system A");
+	foptions.add_int("NUM_VIR", 0, "Number of (restricted) virtual in system A");
+	foptions.add_double("THRESHOLD", 0.5, "Projector eigenvalue threshold, 0.5 as default");
 	foptions.add_str("REFERENCE", "HF", "HF, UHF, ROHF, MCSCF, CASSCF, DFT");
-	foptions.add_bool("WRITE_FREEZE_MO", true, "dummy");
-	foptions.add_bool("SEMICANON", true, "dummy");
+	foptions.add_bool("WRITE_FREEZE_MO", true, "Pass orbital space information automatically or manually");
+	foptions.add_bool("SEMICANON", true, "Perform semi-canonicalization or not in the end");
 }
 
 embedding::embedding(SharedWavefunction ref_wfn, Options& options,
