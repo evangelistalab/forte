@@ -35,7 +35,6 @@
 #include "version.h"
 #include "psi4/psi4-dec.h"
 #include "embedding.h"
-#include "ownscf.h"
 
 #ifdef HAVE_CHEMPS2
 #include "dmrgscf.h"
@@ -97,10 +96,10 @@ extern "C" PSI_API SharedWavefunction forte(SharedWavefunction ref_wfn, Options&
 			auto emb = std::make_shared<embedding>(ref_wfn, options, mo_space_info);
 			emb->compute_energy();
 		}
-		if (options.get_str("JOB_TYPE") == "OWNSCF") {
-			auto scf = std::make_shared<OwnSCF>(ref_wfn, options, mo_space_info);
-			scf->compute_energy();
-		}
+		//if (options.get_str("JOB_TYPE") == "OWNSCF") {
+		//	auto scf = std::make_shared<OwnSCF>(ref_wfn, options, mo_space_info);
+		//	scf->compute_energy();
+		//}
 	}
 	else {
 		// Sanity check
