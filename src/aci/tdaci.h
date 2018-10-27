@@ -109,8 +109,8 @@ class TDACI : public Wavefunction {
 
     void propogate_exact( SharedVector C0, SharedMatrix H);
     void propogate_cn( SharedVector C0, SharedMatrix H);
-
-    void propogate_taylor( SharedVector C0, std::shared_ptr<FCIIntegrals> fci_ints, DeterminantHashVec& ann_dets);
+    void propogate_taylor1( SharedVector C0, SharedMatrix H);
+    void propogate_taylor2( SharedVector C0, SharedMatrix H);
     
 
 };
