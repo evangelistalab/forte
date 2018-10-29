@@ -77,6 +77,8 @@ namespace psi {
 			int print;
 			int num_occ;
 			int num_vir;
+			int frz_sys_docc;
+			int frz_sys_uocc;
 			double thresh;
 			std::shared_ptr<MOSpaceInfo> mo_space_info_;
 			SharedWavefunction ref_wfn_;
