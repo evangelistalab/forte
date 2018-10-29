@@ -1,9 +1,9 @@
 
     -----------------------------------------------------------------------
           Psi4: An Open-Source Ab Initio Electronic Structure Package
-                               Psi4 1.2a1.dev388 
+                               Psi4 undefined 
 
-                         Git: Rev {parallel_timer} df084d7 dirty
+                         Git: Rev {master} 3c26e8e 
 
 
     R. M. Parrish, L. A. Burns, D. G. A. Smith, A. C. Simmonett,
@@ -12,16 +12,21 @@
     H. R. McAlexander, A. Kumar, M. Saitow, X. Wang, B. P. Pritchard,
     P. Verma, H. F. Schaefer III, K. Patkowski, R. A. King, E. F. Valeev,
     F. A. Evangelista, J. M. Turney, T. D. Crawford, and C. D. Sherrill,
-    J. Chem. Theory Comput. in press (2017).
+    J. Chem. Theory Comput. 13(7) pp 3185--3197 (2017).
     (doi: 10.1021/acs.jctc.7b00174)
+
+
+                         Additional Contributions by
+    P. Kraus, H. Kruse, M. H. Lechner, M. C. Schieber, and R. A. Shaw
 
     -----------------------------------------------------------------------
 
 
-    Psi4 started on: Monday, 10 July 2017 06:24PM
+    Psi4 started on: Thursday, 25 October 2018 04:20PM
 
-    Process ID:  56927
-    PSIDATADIR: /Users/tianyuanzhang/Documents/Source/psi4_2017/psi4-bin-clang-debug/share/psi4
+    Process ID: 93642
+    Host:       jeffschriber
+    PSIDATADIR: /Users/jeffschriber/src/psi4-debug-install/share/psi4
     Memory:     500.0 MiB
     Threads:    1
     
@@ -33,8 +38,8 @@
 
 import forte
 
-refscf = -108.3243829450626947 #TEST
-refpci = -108.638029874900 #TEST
+refscf = -108.3243829457663878 #TEST
+refpci = -108.638029876760 #TEST
 
 molecule N2{
    N
@@ -71,20 +76,16 @@ compare_values(refscf, get_variable("CURRENT ENERGY"), 11, "SCF energy") #TEST
 energy('forte')
 compare_values(refpci, get_variable("PCI ENERGY"), 9, "PCI energy") #TEST
 --------------------------------------------------------------------------
-/Users/tianyuanzhang/Documents/Source/psi4_2017/forte/forte.so loaded.
 
-*** tstart() called on n-ac-90-21.wireless.emory.edu
-*** at Mon Jul 10 18:24:37 2017
+*** tstart() called on jeffschriber
+*** at Thu Oct 25 16:20:00 2018
 
    => Loading Basis Set <=
 
     Name: CC-PVDZ
     Role: ORBITAL
     Keyword: BASIS
-    atoms 1-2 entry N          line   168 file /Users/tianyuanzhang/Documents/Source/psi4_2017/psi4-bin-clang-debug/share/psi4/basis/cc-pvdz.gbs 
-
-    There are an even number of electrons - assuming singlet.
-    Specify the multiplicity in the molecule input block.
+    atoms 1-2 entry N          line   168 file /Users/jeffschriber/src/psi4-debug-install/share/psi4/basis/cc-pvdz.gbs 
 
 
          ---------------------------------------------------------
@@ -104,14 +105,14 @@ compare_values(refpci, get_variable("PCI ENERGY"), 9, "PCI energy") #TEST
 
        Center              X                  Y                   Z               Mass       
     ------------   -----------------  -----------------  -----------------  -----------------
-           N          0.000000000000     0.000000000000    -1.000000000000    14.003074004780
-           N          0.000000000000     0.000000000000     1.000000000000    14.003074004780
+         N            0.000000000000     0.000000000000    -1.000000000000    14.003074004780
+         N            0.000000000000     0.000000000000     1.000000000000    14.003074004780
 
   Running in d2h symmetry.
 
   Rotational constants: A = ************  B =      0.60193  C =      0.60193 [cm^-1]
-  Rotational constants: A = ************  B =  18045.28794  C =  18045.28794 [MHz]
-  Nuclear repulsion =   12.964841610454998
+  Rotational constants: A = ************  B =  18045.28808  C =  18045.28808 [MHz]
+  Nuclear repulsion =   12.964841661414994
 
   Charge       = 0
   Multiplicity = 1
@@ -174,16 +175,18 @@ compare_values(refpci, get_variable("PCI ENERGY"), 9, "PCI energy") #TEST
   Using 165242 doubles for integral storage.
   We computed 3081 shell quartets total.
   Whereas there are 3081 unique shell quartets.
+
   ==> DiskJK: Disk-Based J/K Matrices <==
 
     J tasked:                  Yes
     K tasked:                  Yes
     wK tasked:                  No
-    Memory (MB):               375
+    Memory [MiB]:              375
     Schwarz Cutoff:          1E-12
 
     OpenMP threads:              1
-  Minimum eigenvalue in the overlap matrix is 7.6048492079E-02.
+
+  Minimum eigenvalue in the overlap matrix is 7.6048491036E-02.
   Using Symmetric Orthogonalization.
 
   SCF Guess: Core (One-Electron) Hamiltonian.
@@ -192,22 +195,24 @@ compare_values(refpci, get_variable("PCI ENERGY"), 9, "PCI energy") #TEST
 
                         Total Energy        Delta E     RMS |[F,P]|
 
-   @RHF iter   1:  -102.98708156702818   -1.02987e+02   2.00808e-01 
-   @RHF iter   2:  -107.77761215001175   -4.79053e+00   9.33986e-02 DIIS
-   @RHF iter   3:  -108.30541220118701   -5.27800e-01   1.42986e-02 DIIS
-   @RHF iter   4:  -108.32360370311024   -1.81915e-02   2.56157e-03 DIIS
-   @RHF iter   5:  -108.32436599817984   -7.62295e-04   3.68920e-04 DIIS
-   @RHF iter   6:  -108.32438261139218   -1.66132e-05   6.07933e-05 DIIS
-   @RHF iter   7:  -108.32438294179082   -3.30399e-07   5.63997e-06 DIIS
-   @RHF iter   8:  -108.32438294490098   -3.11016e-09   1.29267e-06 DIIS
-   @RHF iter   9:  -108.32438294506068   -1.59702e-10   1.28121e-07 DIIS
-   @RHF iter  10:  -108.32438294506258   -1.90425e-12   1.29241e-08 DIIS
-   @RHF iter  11:  -108.32438294506265   -7.10543e-14   1.06214e-09 DIIS
+   @RHF iter   1:  -102.98708156193142   -1.02987e+02   2.00808e-01 
+   @RHF iter   2:  -107.77761214589189   -4.79053e+00   9.33986e-02 DIIS
+   @RHF iter   3:  -108.30541220183223   -5.27800e-01   1.42986e-02 DIIS
+   @RHF iter   4:  -108.32360370381217   -1.81915e-02   2.56157e-03 DIIS
+   @RHF iter   5:  -108.32436599888337   -7.62295e-04   3.68920e-04 DIIS
+   @RHF iter   6:  -108.32438261209573   -1.66132e-05   6.07933e-05 DIIS
+   @RHF iter   7:  -108.32438294249451   -3.30399e-07   5.63997e-06 DIIS
+   @RHF iter   8:  -108.32438294560464   -3.11013e-09   1.29267e-06 DIIS
+   @RHF iter   9:  -108.32438294576446   -1.59815e-10   1.28121e-07 DIIS
+   @RHF iter  10:  -108.32438294576630   -1.84741e-12   1.29241e-08 DIIS
+   @RHF iter  11:  -108.32438294576639   -8.52651e-14   1.06214e-09 DIIS
+  Energy converged.
+
 
   ==> Post-Iterations <==
 
-    Orbital Energies (a.u.)
-    -----------------------
+    Orbital Energies [Eh]
+    ---------------------
 
     Doubly Occupied:                                                      
 
@@ -229,56 +234,55 @@ compare_values(refpci, get_variable("PCI ENERGY"), 9, "PCI energy") #TEST
              Ag   B1g   B2g   B3g    Au   B1u   B2u   B3u 
     DOCC [     2,    0,    1,    0,    0,    2,    1,    1 ]
 
-  Energy converged.
-
-  @RHF Final Energy:  -108.32438294506265
+  @RHF Final Energy:  -108.32438294576639
 
    => Energetics <=
 
-    Nuclear Repulsion Energy =             12.9648416104549984
-    One-Electron Energy =                -172.8583850526089805
-    Two-Electron Energy =                  51.5691604970913176
-    Total Energy =                       -108.3243829450626521
+    Nuclear Repulsion Energy =             12.9648416614149937
+    One-Electron Energy =                -172.8583851529445212
+    Two-Electron Energy =                  51.5691605457631326
+    Total Energy =                       -108.3243829457663878
+
+Computation Completed
 
 
-
-Properties will be evaluated at   0.000000,   0.000000,   0.000000 Bohr
+Properties will be evaluated at   0.000000,   0.000000,   0.000000 [a0]
 
 Properties computed using the SCF density matrix
 
-  Nuclear Dipole Moment: (a.u.)
+  Nuclear Dipole Moment: [e a0]
      X:     0.0000      Y:     0.0000      Z:     0.0000
 
-  Electronic Dipole Moment: (a.u.)
+  Electronic Dipole Moment: [e a0]
      X:     0.0000      Y:     0.0000      Z:     0.0000
 
-  Dipole Moment: (a.u.)
+  Dipole Moment: [e a0]
      X:     0.0000      Y:     0.0000      Z:     0.0000     Total:     0.0000
 
-  Dipole Moment: (Debye)
+  Dipole Moment: [D]
      X:     0.0000      Y:     0.0000      Z:     0.0000     Total:     0.0000
 
 
-*** tstop() called on n-ac-90-21.wireless.emory.edu at Mon Jul 10 18:24:37 2017
+*** tstop() called on jeffschriber at Thu Oct 25 16:20:01 2018
 Module time:
-	user time   =       0.38 seconds =       0.01 minutes
-	system time =       0.01 seconds =       0.00 minutes
-	total time  =          0 seconds =       0.00 minutes
+	user time   =       0.35 seconds =       0.01 minutes
+	system time =       0.02 seconds =       0.00 minutes
+	total time  =          1 seconds =       0.02 minutes
 Total time:
-	user time   =       0.38 seconds =       0.01 minutes
-	system time =       0.01 seconds =       0.00 minutes
-	total time  =          0 seconds =       0.00 minutes
+	user time   =       0.35 seconds =       0.01 minutes
+	system time =       0.02 seconds =       0.00 minutes
+	total time  =          1 seconds =       0.02 minutes
 	SCF energy........................................................PASSED
 
-*** tstart() called on n-ac-90-21.wireless.emory.edu
-*** at Mon Jul 10 18:24:37 2017
+*** tstart() called on jeffschriber
+*** at Thu Oct 25 16:20:01 2018
 
    => Loading Basis Set <=
 
     Name: CC-PVDZ
     Role: ORBITAL
     Keyword: BASIS
-    atoms 1-2 entry N          line   168 file /Users/tianyuanzhang/Documents/Source/psi4_2017/psi4-bin-clang-debug/share/psi4/basis/cc-pvdz.gbs 
+    atoms 1-2 entry N          line   168 file /Users/jeffschriber/src/psi4-debug-install/share/psi4/basis/cc-pvdz.gbs 
 
 
          ---------------------------------------------------------
@@ -298,14 +302,14 @@ Total time:
 
        Center              X                  Y                   Z               Mass       
     ------------   -----------------  -----------------  -----------------  -----------------
-           N          0.000000000000     0.000000000000    -1.000000000000    14.003074004780
-           N          0.000000000000     0.000000000000     1.000000000000    14.003074004780
+         N            0.000000000000     0.000000000000    -1.000000000000    14.003074004780
+         N            0.000000000000     0.000000000000     1.000000000000    14.003074004780
 
   Running in d2h symmetry.
 
   Rotational constants: A = ************  B =      0.60193  C =      0.60193 [cm^-1]
-  Rotational constants: A = ************  B =  18045.28794  C =  18045.28794 [MHz]
-  Nuclear repulsion =   12.964841610454998
+  Rotational constants: A = ************  B =  18045.28808  C =  18045.28808 [MHz]
+  Nuclear repulsion =   12.964841661414994
 
   Charge       = 0
   Multiplicity = 1
@@ -368,16 +372,18 @@ Total time:
   Using 165242 doubles for integral storage.
   We computed 3081 shell quartets total.
   Whereas there are 3081 unique shell quartets.
+
   ==> DiskJK: Disk-Based J/K Matrices <==
 
     J tasked:                  Yes
     K tasked:                  Yes
     wK tasked:                  No
-    Memory (MB):               375
+    Memory [MiB]:              375
     Schwarz Cutoff:          1E-12
 
     OpenMP threads:              1
-  Minimum eigenvalue in the overlap matrix is 7.6048492079E-02.
+
+  Minimum eigenvalue in the overlap matrix is 7.6048491036E-02.
   Using Symmetric Orthogonalization.
 
   SCF Guess: Core (One-Electron) Hamiltonian.
@@ -386,22 +392,24 @@ Total time:
 
                         Total Energy        Delta E     RMS |[F,P]|
 
-   @RHF iter   1:  -102.98708156702818   -1.02987e+02   2.00808e-01 
-   @RHF iter   2:  -107.77761215001175   -4.79053e+00   9.33986e-02 DIIS
-   @RHF iter   3:  -108.30541220118701   -5.27800e-01   1.42986e-02 DIIS
-   @RHF iter   4:  -108.32360370311024   -1.81915e-02   2.56157e-03 DIIS
-   @RHF iter   5:  -108.32436599817984   -7.62295e-04   3.68920e-04 DIIS
-   @RHF iter   6:  -108.32438261139218   -1.66132e-05   6.07933e-05 DIIS
-   @RHF iter   7:  -108.32438294179082   -3.30399e-07   5.63997e-06 DIIS
-   @RHF iter   8:  -108.32438294490098   -3.11016e-09   1.29267e-06 DIIS
-   @RHF iter   9:  -108.32438294506068   -1.59702e-10   1.28121e-07 DIIS
-   @RHF iter  10:  -108.32438294506258   -1.90425e-12   1.29241e-08 DIIS
-   @RHF iter  11:  -108.32438294506265   -7.10543e-14   1.06214e-09 DIIS
+   @RHF iter   1:  -102.98708156193143   -1.02987e+02   2.00808e-01 
+   @RHF iter   2:  -107.77761214589189   -4.79053e+00   9.33986e-02 DIIS
+   @RHF iter   3:  -108.30541220183225   -5.27800e-01   1.42986e-02 DIIS
+   @RHF iter   4:  -108.32360370381217   -1.81915e-02   2.56157e-03 DIIS
+   @RHF iter   5:  -108.32436599888337   -7.62295e-04   3.68920e-04 DIIS
+   @RHF iter   6:  -108.32438261209579   -1.66132e-05   6.07933e-05 DIIS
+   @RHF iter   7:  -108.32438294249451   -3.30399e-07   5.63997e-06 DIIS
+   @RHF iter   8:  -108.32438294560464   -3.11013e-09   1.29267e-06 DIIS
+   @RHF iter   9:  -108.32438294576444   -1.59801e-10   1.28121e-07 DIIS
+   @RHF iter  10:  -108.32438294576630   -1.86162e-12   1.29241e-08 DIIS
+   @RHF iter  11:  -108.32438294576640   -9.94760e-14   1.06214e-09 DIIS
+  Energy converged.
+
 
   ==> Post-Iterations <==
 
-    Orbital Energies (a.u.)
-    -----------------------
+    Orbital Energies [Eh]
+    ---------------------
 
     Doubly Occupied:                                                      
 
@@ -423,51 +431,50 @@ Total time:
              Ag   B1g   B2g   B3g    Au   B1u   B2u   B3u 
     DOCC [     2,    0,    1,    0,    0,    2,    1,    1 ]
 
-  Energy converged.
-
-  @RHF Final Energy:  -108.32438294506265
+  @RHF Final Energy:  -108.32438294576640
 
    => Energetics <=
 
-    Nuclear Repulsion Energy =             12.9648416104549984
-    One-Electron Energy =                -172.8583850526089805
-    Two-Electron Energy =                  51.5691604970913176
-    Total Energy =                       -108.3243829450626521
+    Nuclear Repulsion Energy =             12.9648416614149937
+    One-Electron Energy =                -172.8583851529445212
+    Two-Electron Energy =                  51.5691605457631255
+    Total Energy =                       -108.3243829457664020
+
+Computation Completed
 
 
-
-Properties will be evaluated at   0.000000,   0.000000,   0.000000 Bohr
+Properties will be evaluated at   0.000000,   0.000000,   0.000000 [a0]
 
 Properties computed using the SCF density matrix
 
-  Nuclear Dipole Moment: (a.u.)
+  Nuclear Dipole Moment: [e a0]
      X:     0.0000      Y:     0.0000      Z:     0.0000
 
-  Electronic Dipole Moment: (a.u.)
+  Electronic Dipole Moment: [e a0]
      X:     0.0000      Y:     0.0000      Z:     0.0000
 
-  Dipole Moment: (a.u.)
+  Dipole Moment: [e a0]
      X:     0.0000      Y:     0.0000      Z:     0.0000     Total:     0.0000
 
-  Dipole Moment: (Debye)
+  Dipole Moment: [D]
      X:     0.0000      Y:     0.0000      Z:     0.0000     Total:     0.0000
 
 
-*** tstop() called on n-ac-90-21.wireless.emory.edu at Mon Jul 10 18:24:38 2017
+*** tstop() called on jeffschriber at Thu Oct 25 16:20:01 2018
 Module time:
-	user time   =       0.38 seconds =       0.01 minutes
-	system time =       0.02 seconds =       0.00 minutes
-	total time  =          1 seconds =       0.02 minutes
-Total time:
-	user time   =       0.79 seconds =       0.01 minutes
+	user time   =       0.34 seconds =       0.01 minutes
 	system time =       0.03 seconds =       0.00 minutes
+	total time  =          0 seconds =       0.00 minutes
+Total time:
+	user time   =       0.70 seconds =       0.01 minutes
+	system time =       0.05 seconds =       0.00 minutes
 	total time  =          1 seconds =       0.02 minutes
    => Loading Basis Set <=
 
     Name: STO-3G
     Role: ORBITAL
     Keyword: MINAO_BASIS
-    atoms 1-2 entry N          line    71 file /Users/tianyuanzhang/Documents/Source/psi4_2017/psi4-bin-clang-debug/share/psi4/basis/sto-3g.gbs 
+    atoms 1-2 entry N          line    71 file /Users/jeffschriber/src/psi4-debug-install/share/psi4/basis/sto-3g.gbs 
 
 
 Reading options from the FORTE block
@@ -479,20 +486,19 @@ Calling plugin forte.so.
   ----------------------------------------------------------------------------
   A suite of quantum chemistry methods for strongly correlated electrons
 
-    git branch: master - git commit: 63976f22
+    git branch: master - git commit: 9480afcf
 
   Developed by:
     Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
     Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai
   ----------------------------------------------------------------------------
 
+  Size of Determinant class: 16
 
   ==> MO Space Information <==
 
   Read options for space FROZEN_DOCC
   Read options for space FROZEN_UOCC
- Removing orbital 0
- Removing orbital 15
   -------------------------------------------------------------------------
                        Ag   B1g   B2g   B3g    Au   B1u   B2u   B3u   Sum
   -------------------------------------------------------------------------
@@ -506,72 +512,11 @@ Calling plugin forte.so.
 
   ==> Integral Transformation <==
 
-  Number of molecular orbitals:               28
-  Number of correlated molecular orbitals:     7
-  Number of frozen occupied orbitals:          2
-  Number of frozen unoccupied orbitals:       19
-
-    Molecular point group: d2h
-    Full point group: D_inf_h
-
-    Geometry (in Angstrom), charge = 0, multiplicity = 1:
-
-       Center              X                  Y                   Z               Mass       
-    ------------   -----------------  -----------------  -----------------  -----------------
-           N          0.000000000000     0.000000000000    -1.000000000000    14.003074004780
-           N          0.000000000000     0.000000000000     1.000000000000    14.003074004780
-
-  -AO BASIS SET INFORMATION:
-    Name                   = CC-PVDZ
-    Blend                  = CC-PVDZ
-    Total number of shells = 12
-    Number of primitives   = 44
-    Number of AO           = 30
-    Number of SO           = 28
-    Maximum AM             = 2
-    Spherical Harmonics    = TRUE
-
-  -Contraction Scheme:
-    Atom   Type   All Primitives // Shells:
-   ------ ------ --------------------------
-       1     N     17s 4p 1d // 3s 2p 1d 
-       2     N     17s 4p 1d // 3s 2p 1d 
-
-  ==> AO Basis Functions <==
-
-    [ CC-PVDZ ]
-    spherical
-    ****
-    N   1
-    S   8 1.00
-                      9046.00000000           0.00070000
-                      1357.00000000           0.00538900
-                       309.30000000           0.02740600
-                        87.73000000           0.10320700
-                        28.56000000           0.27872300
-                        10.21000000           0.44854000
-                         3.83800000           0.27823800
-                         0.74660000           0.01544000
-    S   8 1.00
-                      9046.00000000          -0.00015300
-                      1357.00000000          -0.00120800
-                       309.30000000          -0.00599200
-                        87.73000000          -0.02454400
-                        28.56000000          -0.06745900
-                        10.21000000          -0.15807800
-                         3.83800000          -0.12183100
-                         0.74660000           0.54900300
-    S   1 1.00
-                         0.22480000           1.00000000
-    P   3 1.00
-                        13.55000000           0.03991900
-                         2.91700000           0.21716900
-                         0.79730000           0.51031900
-    P   1 1.00
-                         0.21850000           1.00000000
-    D   1 1.00
-                         0.81700000           1.00000000
-    ****
+  Number of molecular orbitals:                    28
+  Number of correlated molecular orbitals:          7
+  Number of frozen occupied orbitals:               2
+  Number of frozen unoccupied orbitals:            19
+  Two-electron integral type:              Conventional
 
 
   Overall Conventional Integrals timings
@@ -585,7 +530,7 @@ Calling plugin forte.so.
 	Starting second half-transformation.
 	Two-electron integral transformation complete.
 
-  Integral transformation done. 0.02121200 s
+  Integral transformation done. 0.02787961 s
   Reading the two-electron integrals from disk
   Size of two-electron integrals:   0.013739 GB  Using in-core PK algorithm.
    Calculation information:
@@ -603,11 +548,12 @@ Calling plugin forte.so.
   We computed 3081 shell quartets total.
   Whereas there are 3081 unique shell quartets.
 
-  Frozen-core energy            -95.815668971291 a.u.
 
-  FrozenOneBody Operator takes  0.20911100 s
+  Frozen-core energy            -95.815668996250 a.u.
+  Timing for frozen one-body operator:                        0.157 s.
   Resorting integrals after freezing core.
-  Conventional integrals take 0.43634300 s
+  Timing for freezing core and virtual orbitals:              0.185 s.
+  Conventional integrals take 0.38117723 s
 
                 ------------------------------------------------
                   Second-Order Moller-Plesset Natural Orbitals
@@ -615,71 +561,9 @@ Calling plugin forte.so.
                 ------------------------------------------------
 
 
-    SCF energy                            = -108.324382945062652
-    MP2 correlation energy                =   -0.083906514436969
-  * MP2 total energy                      = -108.408289459499628
-
-    Molecular point group: d2h
-    Full point group: D_inf_h
-
-    Geometry (in Angstrom), charge = 0, multiplicity = 1:
-
-       Center              X                  Y                   Z               Mass       
-    ------------   -----------------  -----------------  -----------------  -----------------
-           N          0.000000000000     0.000000000000    -1.000000000000    14.003074004780
-           N          0.000000000000     0.000000000000     1.000000000000    14.003074004780
-
-  -AO BASIS SET INFORMATION:
-    Name                   = CC-PVDZ
-    Blend                  = CC-PVDZ
-    Total number of shells = 12
-    Number of primitives   = 44
-    Number of AO           = 30
-    Number of SO           = 28
-    Maximum AM             = 2
-    Spherical Harmonics    = TRUE
-
-  -Contraction Scheme:
-    Atom   Type   All Primitives // Shells:
-   ------ ------ --------------------------
-       1     N     17s 4p 1d // 3s 2p 1d 
-       2     N     17s 4p 1d // 3s 2p 1d 
-
-  ==> AO Basis Functions <==
-
-    [ CC-PVDZ ]
-    spherical
-    ****
-    N   1
-    S   8 1.00
-                      9046.00000000           0.00070000
-                      1357.00000000           0.00538900
-                       309.30000000           0.02740600
-                        87.73000000           0.10320700
-                        28.56000000           0.27872300
-                        10.21000000           0.44854000
-                         3.83800000           0.27823800
-                         0.74660000           0.01544000
-    S   8 1.00
-                      9046.00000000          -0.00015300
-                      1357.00000000          -0.00120800
-                       309.30000000          -0.00599200
-                        87.73000000          -0.02454400
-                        28.56000000          -0.06745900
-                        10.21000000          -0.15807800
-                         3.83800000          -0.12183100
-                         0.74660000           0.54900300
-    S   1 1.00
-                         0.22480000           1.00000000
-    P   3 1.00
-                        13.55000000           0.03991900
-                         2.91700000           0.21716900
-                         0.79730000           0.51031900
-    P   1 1.00
-                         0.21850000           1.00000000
-    D   1 1.00
-                         0.81700000           1.00000000
-    ****
+    SCF energy                            = -108.324382945766402
+    MP2 correlation energy                =   -0.083906514046582
+  * MP2 total energy                      = -108.408289459812991
 
 
  Integrals are about to be computed.	Presorting SO-basis two-electron integrals.
@@ -691,7 +575,7 @@ Calling plugin forte.so.
 	Starting second half-transformation.
 	Two-electron integral transformation complete.
 
-  Integral transformation done. 0.02159600 s
+  Integral transformation done. 0.02455957 s
   Reading the two-electron integrals from disk
   Size of two-electron integrals:   0.013739 GB
  Integrals are about to be updated.  Using in-core PK algorithm.
@@ -710,17 +594,21 @@ Calling plugin forte.so.
   We computed 3081 shell quartets total.
   Whereas there are 3081 unique shell quartets.
 
-  Frozen-core energy            -95.815668971291 a.u.
 
-  FrozenOneBody Operator takes  0.21084900 s
+  Frozen-core energy            -95.815668996250 a.u.
+  Timing for frozen one-body operator:                        0.157 s.
   Resorting integrals after freezing core.
-  Frozen Orbitals takes     0.219 s.
+  Timing for freezing core and virtual orbitals:              0.184 s.
+  Number of active alpha electrons: 5
+  Number of active beta electrons: 5
+  Maximum reference space size: 1000
+  |2020222>
 
 	  ---------------------------------------------------------
 	    Projector Configuration Interaction HashVector implementation
 	         by Francesco A. Evangelista and Tianyuan Zhang
-	                      version Jun. 29 2017
-	                       1 thread(s) 
+	                      version Jul. 28 2017
+	                       1 thread(s) (OMP)
 	  ---------------------------------------------------------
 
   ==> Calculation Information <==
@@ -742,206 +630,208 @@ Calling plugin forte.so.
     Use intermediate normalization                 YES
     Fast variational estimate                      YES
     Result perturbation analysis                    NO
-    Using OpenMP                                    NO
+    Using OpenMP                                   YES
 
-  ==> Initial Guess <==
+  ==> Initial Guess <==    -108.324382945766 -1.083e+02
 
   Initial guess size = 17
   Found 13 roots with 2S+1 = 1 *
   Found 3 roots with 2S+1 = 3
   Found 1 roots with 2S+1 = 5
 
-  Initial guess energy (variational) =    -108.480325638384 Eh (root = 1)
+  Initial guess energy (variational) =    -108.480325640559 Eh (root = 1)
 
   Most important contributions to the wave function:
 
-    0      -0.687155      0.472181           5 |2200222>   -121.265271538778
-    1       0.508277      0.258345           2 |2220220>   -121.131894506178
-    2       0.417188      0.174046           4 |2002222>   -121.249457759062
-    3      -0.305475     0.0933148           3 |2022220>   -121.111272018306
-    4      0.0359058    0.00128923          11 |2220202>   -121.394753683053
-    5     -0.0196141   0.000384712           0 |2020222>   -121.289224555518
-    6      0.0167562   0.000280769           7 |2220022>   -120.270373964085
-    7    -0.00984363   9.68971e-05           6 |2022022>   -120.253484121149
-    8     0.00749749   5.62124e-05          10 |2022202>   -121.137726860748
-    9     0.00119546   1.42912e-06           8 |0220222>   -120.029570811869
+    0      -0.687155      0.472181           0 |2200222000000000000000000000000000000000000000000000000000000000>   -121.265271593903
+    1       0.508277      0.258345           1 |2220220000000000000000000000000000000000000000000000000000000000>   -121.131894559185
+    2       0.417188      0.174046           2 |2002222000000000000000000000000000000000000000000000000000000000>   -121.249457810683
+    3      -0.305475     0.0933147           3 |2022220000000000000000000000000000000000000000000000000000000000>   -121.111272067839
+    4      0.0359058    0.00128923           4 |2220202000000000000000000000000000000000000000000000000000000000>   -121.394753735137
+    5     -0.0196141   0.000384711           5 |2020222000000000000000000000000000000000000000000000000000000000>   -121.289224607181
+    6      0.0167562   0.000280769           6 |2220022000000000000000000000000000000000000000000000000000000000>   -120.270374019483
+    7    -0.00984363   9.68971e-05           7 |2022022000000000000000000000000000000000000000000000000000000000>   -120.253484173454
+    8     0.00749749   5.62123e-05           8 |2022202000000000000000000000000000000000000000000000000000000000>   -121.137726910238
+    9     0.00119546   1.42912e-06           9 |0220222000000000000000000000000000000000000000000000000000000000>   -120.029570863539
 
   Spin State: S^2 = 0.000, S = 0.000, singlet (from 4 determinants,99.79)
 
   ==> Estimate highest excitation energy <==
   Highest Excited determinant:
-  |0222022>
-  Determinant Energy                    :  -106.252919434878
-  Highest Energy Gershgorin circle Est. :  -104.873589317181
+  |0222022000000000000000000000000000000000000000000000000000000000>
+  Determinant Energy                    :  -106.252919434960
+  Highest Energy Gershgorin circle Est. :  -104.873589315105
 
   ==> Characteristic Function <==
     f(x) = -1.677753e+00 * x^5 +1.512803e+00 * x^4 +5.456282e+00 * x^3 -3.689882e+00 * x^2 -3.327108e+00 * x +1.000000e+00
-    with tau = 1.000000e+00, shift = -119.641799088237, range = 1.803368160602
-    Initial guess: lambda_1= -108.480325638384
-    Est. Highest eigenvalue= -104.873589317181
+    with tau = 1.000000e+00, shift = -119.641799139247, range = 1.803368162727
+    Initial guess: lambda_1= -108.480325640559
+    Est. Highest eigenvalue= -104.873589315105
 
   ==> PCI Iterations <==
 
-  ------------------------------------------------------------------------------------------------
-    Steps  Beta/Eh      Ndets     Proj. Energy/Eh     dEp/dt      Approx. Energy/Eh   dEv/dt
-  ------------------------------------------------------------------------------------------------
-        0     0.00         55    -108.625469217293 -1.451e-01    -108.577529228434 -9.720e-02
-        1     1.00         61    -108.625616238435 -1.470e-04    -108.627644544552 -5.012e-02
-        2     2.00         61    -108.627497070027 -1.881e-03    -108.635467009758 -7.822e-03
-        3     3.00         61    -108.632171777414 -4.675e-03    -108.637379206620 -1.912e-03
-        4     4.00         61    -108.634864557057 -2.693e-03    -108.637854497247 -4.753e-04
-        5     5.00         61    -108.636337245746 -1.473e-03    -108.637976687119 -1.222e-04
-        6     6.00         61    -108.637128162652 -7.909e-04    -108.638010727425 -3.404e-05
-        7     7.00         61    -108.637552592214 -4.244e-04    -108.638017786858 -7.059e-06
-        8     8.00         61    -108.637771282271 -2.187e-04    -108.638022167247 -4.380e-06
-        9     9.00         61    -108.637896287364 -1.250e-04    -108.638023077626 -9.104e-07
-       10    10.00         61    -108.637956476241 -6.019e-05    -108.638024986779 -1.909e-06
-       11    11.00         61    -108.637994421009 -3.794e-05    -108.638024970136  1.664e-08
-       12    12.00         61    -108.638008770569 -1.435e-05    -108.638026510243 -1.540e-06
-       13    13.00         61    -108.638022241997 -1.347e-05    -108.638026273930  2.363e-07
-       14    14.00         61    -108.638023572395 -1.330e-06    -108.638027655802 -1.382e-06
-       15    15.00         61    -108.638030132049 -6.560e-06    -108.638027280372  3.754e-07
-       16    16.00         61    -108.638027770045  2.362e-06    -108.638027708546 -4.282e-07
-       17    17.00         61    -108.638029288450 -1.518e-06    -108.638028076796 -3.682e-07
-       18    18.00         61    -108.638030114576 -8.261e-07    -108.638028402423 -3.256e-07
-       19    19.00         61    -108.638030506605 -3.920e-07    -108.638028690436 -2.880e-07
-       20    20.00         61    -108.638030696495 -1.899e-07    -108.638028945187 -2.548e-07
-       21    21.00         61    -108.638030791143 -9.465e-08    -108.638029170519 -2.253e-07
-       22    22.00         61    -108.638030839380 -4.824e-08    -108.638029369827 -1.993e-07
-       23    23.00         61    -108.638030864398 -2.502e-08    -108.638029546117 -1.763e-07
-       24    24.00         61    -108.638030877562 -1.316e-08    -108.638029702048 -1.559e-07
-       25    25.00         61    -108.638030884588 -7.025e-09    -108.638029839969 -1.379e-07
-       26    26.00         61    -108.638030888399 -3.811e-09    -108.638029961961 -1.220e-07
-       27    27.00         61    -108.638030890514 -2.115e-09    -108.638030069863 -1.079e-07
-       28    28.00         61    -108.638030891727 -1.213e-09    -108.638030165303 -9.544e-08
-       29    29.00         61    -108.638030892457 -7.295e-10    -108.638030249719 -8.442e-08
-       30    30.00         61    -108.638030892924 -4.678e-10    -108.638030324385 -7.467e-08
-       31    31.00         61    -108.638030893248 -3.238e-10    -108.638030390427 -6.604e-08
-       32    32.00         61    -108.638030893491 -2.427e-10    -108.638030448841 -5.841e-08
-       33    33.00         61    -108.638030893686 -1.953e-10    -108.638030500508 -5.167e-08
-       34    34.00         61    -108.638030893852 -1.662e-10    -108.638030546207 -4.570e-08
-       35    35.00         61    -108.638030893999 -1.469e-10    -108.638030586627 -4.042e-08
-       36    36.00         61    -108.638030894132 -1.332e-10    -108.638030622379 -3.575e-08
-       37    37.00         61    -108.638030894255 -1.226e-10    -108.638030654001 -3.162e-08
-       38    38.00         61    -108.638030894369 -1.138e-10    -108.638030681970 -2.797e-08
-       39    39.00         61    -108.638030894475 -1.064e-10    -108.638030706709 -2.474e-08
-       40    40.00         61    -108.638030894575 -9.955e-11    -108.638030728590 -2.188e-08
-       41    41.00         61    -108.638030894668 -9.354e-11    -108.638030747944 -1.935e-08
-       42    42.00         61    -108.638030894756 -8.772e-11    -108.638030765062 -1.712e-08
-       43    43.00         61    -108.638030894838 -8.248e-11    -108.638030780203 -1.514e-08
-       44    44.00         61    -108.638030894916 -7.753e-11    -108.638030793595 -1.339e-08
-       45    45.00         61    -108.638030894989 -7.296e-11    -108.638030805440 -1.185e-08
-       46    46.00         61    -108.638030895057 -6.851e-11    -108.638030815917 -1.048e-08
-       47    47.00         61    -108.638030895122 -6.452e-11    -108.638030825184 -9.267e-09
-       48    48.00         61    -108.638030895183 -6.064e-11    -108.638030833380 -8.196e-09
-       49    49.00         61    -108.638030895239 -5.696e-11    -108.638030840629 -7.250e-09
-       50    50.00         61    -108.638030895293 -5.366e-11    -108.638030847042 -6.412e-09
-       51    51.00         61    -108.638030895344 -5.045e-11    -108.638030852713 -5.671e-09
-       52    52.00         61    -108.638030895391 -4.744e-11    -108.638030857729 -5.016e-09
-       53    53.00         61    -108.638030895436 -4.457e-11    -108.638030862166 -4.437e-09
-       54    54.00         61    -108.638030895478 -4.192e-11    -108.638030866091 -3.924e-09
-       55    55.00         61    -108.638030895517 -3.949e-11    -108.638030869562 -3.471e-09
-       56    56.00         61    -108.638030895554 -3.712e-11    -108.638030872632 -3.070e-09
-       57    57.00         61    -108.638030895589 -3.492e-11    -108.638030875347 -2.715e-09
-       58    58.00         61    -108.638030895622 -3.276e-11    -108.638030877749 -2.402e-09
-       59    59.00         61    -108.638030895653 -3.091e-11    -108.638030879874 -2.124e-09
-       60    60.00         61    -108.638030895682 -2.902e-11    -108.638030881753 -1.879e-09
-       61    61.00         61    -108.638030895709 -2.731e-11    -108.638030883415 -1.662e-09
-       62    62.00         61    -108.638030895735 -2.568e-11    -108.638030884884 -1.470e-09
-       63    63.00         61    -108.638030895759 -2.417e-11    -108.638030886185 -1.300e-09
-       64    64.00         61    -108.638030895782 -2.265e-11    -108.638030887335 -1.150e-09
-       65    65.00         61    -108.638030895803 -2.136e-11    -108.638030888352 -1.017e-09
-       66    66.00         61    -108.638030895823 -2.011e-11    -108.638030889251 -8.997e-10
-       67    67.00         61    -108.638030895842 -1.887e-11    -108.638030890047 -7.957e-10
-       68    68.00         61    -108.638030895860 -1.776e-11    -108.638030890751 -7.038e-10
-       69    69.00         61    -108.638030895876 -1.673e-11    -108.638030891374 -6.225e-10
-       70    70.00         61    -108.638030895892 -1.573e-11    -108.638030891924 -5.506e-10
-       71    71.00         61    -108.638030895907 -1.481e-11    -108.638030892411 -4.870e-10
-       72    72.00         61    -108.638030895921 -1.394e-11    -108.638030892842 -4.307e-10
-       73    73.00         61    -108.638030895934 -1.300e-11    -108.638030893223 -3.810e-10
-       74    74.00         61    -108.638030895946 -1.229e-11    -108.638030893560 -3.370e-10
-       75    75.00         61    -108.638030895958 -1.157e-11    -108.638030893858 -2.981e-10
-       76    76.00         61    -108.638030895969 -1.084e-11    -108.638030894122 -2.636e-10
-       77    77.00         61    -108.638030895979 -1.022e-11    -108.638030894355 -2.332e-10
-       78    78.00         61    -108.638030895988 -9.678e-12    -108.638030894561 -2.063e-10
-       79    79.00         61    -108.638030895997 -8.981e-12    -108.638030894744 -1.824e-10
-       80    80.00         61    -108.638030896006 -8.512e-12    -108.638030894905 -1.614e-10
-       81    81.00         61    -108.638030896014 -8.015e-12    -108.638030895048 -1.427e-10
-       82    82.00         61    -108.638030896022 -7.603e-12    -108.638030895174 -1.262e-10
-       83    83.00         61    -108.638030896029 -7.034e-12    -108.638030895285 -1.116e-10
-       84    84.00         61    -108.638030896035 -6.622e-12    -108.638030895384 -9.875e-11
-       85    85.00         61    -108.638030896042 -6.310e-12    -108.638030895472 -8.735e-11
-       86    86.00         61    -108.638030896047 -5.826e-12    -108.638030895549 -7.725e-11
-       87    87.00         61    -108.638030896053 -5.571e-12    -108.638030895617 -6.833e-11
-       88    88.00         61    -108.638030896058 -5.201e-12    -108.638030895678 -6.044e-11
-       89    89.00         61    -108.638030896063 -4.903e-12    -108.638030895731 -5.346e-11
-       90    90.00         61    -108.638030896068 -4.590e-12    -108.638030895778 -4.728e-11
-       91    91.00         61    -108.638030896072 -4.292e-12    -108.638030895820 -4.182e-11
-       92    92.00         61    -108.638030896076 -4.107e-12    -108.638030895857 -3.699e-11
-       93    93.00         61    -108.638030896080 -3.780e-12    -108.638030895890 -3.271e-11
-       94    94.00         61    -108.638030896083 -3.652e-12    -108.638030895919 -2.895e-11
-       95    95.00         61    -108.638030896087 -3.382e-12    -108.638030895944 -2.558e-11
-       96    96.00         61    -108.638030896090 -3.155e-12    -108.638030895967 -2.265e-11
-       97    97.00         61    -108.638030896093 -3.055e-12    -108.638030895987 -2.002e-11
-       98    98.00         61    -108.638030896096 -2.785e-12    -108.638030896005 -1.771e-11
-       99    99.00         61    -108.638030896098 -2.615e-12    -108.638030896020 -1.566e-11
-      100   100.00         61    -108.638030896101 -2.544e-12    -108.638030896034 -1.386e-11
-      101   101.00         61    -108.638030896103 -2.359e-12    -108.638030896047 -1.225e-11
-      102   102.00         61    -108.638030896106 -2.174e-12    -108.638030896057 -1.084e-11
-      103   103.00         61    -108.638030896108 -2.103e-12    -108.638030896067 -9.592e-12
-      104   104.00         61    -108.638030896110 -1.918e-12    -108.638030896075 -8.484e-12
-      105   105.00         61    -108.638030896111 -1.791e-12    -108.638030896083 -7.503e-12
-      106   106.00         61    -108.638030896113 -1.805e-12    -108.638030896090 -6.622e-12
-      107   107.00         61    -108.638030896115 -1.592e-12    -108.638030896095 -5.869e-12
-      108   108.00         61    -108.638030896116 -1.549e-12    -108.638030896101 -5.187e-12
-      109   109.00         61    -108.638030896118 -1.421e-12    -108.638030896105 -4.590e-12
-      110   110.00         61    -108.638030896119 -1.336e-12    -108.638030896109 -4.064e-12
-      111   111.00         61    -108.638030896120 -1.322e-12    -108.638030896113 -3.595e-12
-      112   112.00         61    -108.638030896121 -1.108e-12    -108.638030896116 -3.169e-12
-      113   113.00         61    -108.638030896123 -1.180e-12    -108.638030896119 -2.814e-12
-      114   114.00         61    -108.638030896124 -1.052e-12    -108.638030896121 -2.487e-12
-      115   115.00         61    -108.638030896125 -9.948e-13    -108.638030896124 -2.188e-12
-      116   116.00         61    -108.638030896126 -9.095e-13    -108.638030896125 -1.947e-12
-      117   117.00         61    -108.638030896126 -8.811e-13    -108.638030896127 -1.720e-12
-      118   118.00         61    -108.638030896127 -8.100e-13    -108.638030896129 -1.521e-12
-      119   119.00         61    -108.638030896128 -7.674e-13    -108.638030896130 -1.350e-12
-      120   120.00         61    -108.638030896129 -7.390e-13    -108.638030896131 -1.194e-12
-      121   121.00         61    -108.638030896130 -7.105e-13    -108.638030896132 -1.052e-12
-      122   122.00         61    -108.638030896130 -6.537e-13    -108.638030896133 -9.237e-13
-      123   123.00         61    -108.638030896131 -5.826e-13
-  ------------------------------------------------------------------------------------------------
+  --------------------------------------------------------------------------------------------------------------
+    Steps  Beta/Eh      Ndets      NoffDiag     Proj. Energy/Eh     dEp/dt      Approx. Energy/Eh   dEv/dt
+  --------------------------------------------------------------------------------------------------------------
+        0     0.00         55           344    -108.625469220326 -1.451e-01    -108.577529232759 -9.720e-02
+        1     1.00         61           904    -108.625616240513 -1.470e-04    -108.627644547517 -5.012e-02
+        2     2.00         61          1020    -108.627497072006 -1.881e-03    -108.635467011883 -7.822e-03
+        3     3.00         61          1004    -108.632171779348 -4.675e-03    -108.637379208538 -1.912e-03
+        4     4.00         61           970    -108.634864558960 -2.693e-03    -108.637854499120 -4.753e-04
+        5     5.00         61           954    -108.636337247630 -1.473e-03    -108.637976688982 -1.222e-04
+        6     6.00         61           954    -108.637128164526 -7.909e-04    -108.638010729286 -3.404e-05
+        7     7.00         61           942    -108.637552594082 -4.244e-04    -108.638017788718 -7.059e-06
+        8     8.00         61           938    -108.637771284136 -2.187e-04    -108.638022169107 -4.380e-06
+        9     9.00         61           922    -108.637896289227 -1.250e-04    -108.638023079486 -9.104e-07
+       10    10.00         61           926    -108.637956478103 -6.019e-05    -108.638024988639 -1.909e-06
+       11    11.00         61           922    -108.637994422870 -3.794e-05    -108.638024971996  1.664e-08
+       12    12.00         61           926    -108.638008772429 -1.435e-05    -108.638026512104 -1.540e-06
+       13    13.00         61           922    -108.638022243858 -1.347e-05    -108.638026275790  2.363e-07
+       14    14.00         61           926    -108.638023574255 -1.330e-06    -108.638027657663 -1.382e-06
+       15    15.00         61           922    -108.638030133909 -6.560e-06    -108.638027282232  3.754e-07
+       16    16.00         61           926    -108.638027771905  2.362e-06    -108.638027710406 -4.282e-07
+       17    17.00         61           926    -108.638029290310 -1.518e-06    -108.638028078656 -3.682e-07
+       18    18.00         61           926    -108.638030116436 -8.261e-07    -108.638028404283 -3.256e-07
+       19    19.00         61           926    -108.638030508464 -3.920e-07    -108.638028692296 -2.880e-07
+       20    20.00         61           926    -108.638030698355 -1.899e-07    -108.638028947048 -2.548e-07
+       21    21.00         61           926    -108.638030793003 -9.465e-08    -108.638029172379 -2.253e-07
+       22    22.00         61           926    -108.638030841240 -4.824e-08    -108.638029371687 -1.993e-07
+       23    23.00         61           926    -108.638030866258 -2.502e-08    -108.638029547977 -1.763e-07
+       24    24.00         61           926    -108.638030879422 -1.316e-08    -108.638029703908 -1.559e-07
+       25    25.00         61           926    -108.638030886448 -7.025e-09    -108.638029841829 -1.379e-07
+       26    26.00         61           926    -108.638030890259 -3.811e-09    -108.638029963821 -1.220e-07
+       27    27.00         61           926    -108.638030892374 -2.115e-09    -108.638030071723 -1.079e-07
+       28    28.00         61           926    -108.638030893587 -1.213e-09    -108.638030167163 -9.544e-08
+       29    29.00         61           926    -108.638030894317 -7.295e-10    -108.638030251579 -8.442e-08
+       30    30.00         61           926    -108.638030894784 -4.678e-10    -108.638030326245 -7.467e-08
+       31    31.00         61           926    -108.638030895108 -3.238e-10    -108.638030392287 -6.604e-08
+       32    32.00         61           926    -108.638030895351 -2.427e-10    -108.638030450701 -5.841e-08
+       33    33.00         61           926    -108.638030895546 -1.953e-10    -108.638030502368 -5.167e-08
+       34    34.00         61           926    -108.638030895712 -1.661e-10    -108.638030548067 -4.570e-08
+       35    35.00         61           926    -108.638030895859 -1.469e-10    -108.638030588487 -4.042e-08
+       36    36.00         61           926    -108.638030895992 -1.331e-10    -108.638030624239 -3.575e-08
+       37    37.00         61           926    -108.638030896115 -1.226e-10    -108.638030655861 -3.162e-08
+       38    38.00         61           926    -108.638030896229 -1.139e-10    -108.638030683830 -2.797e-08
+       39    39.00         61           926    -108.638030896335 -1.063e-10    -108.638030708569 -2.474e-08
+       40    40.00         61           926    -108.638030896435 -9.959e-11    -108.638030730450 -2.188e-08
+       41    41.00         61           926    -108.638030896528 -9.349e-11    -108.638030749804 -1.935e-08
+       42    42.00         61           926    -108.638030896616 -8.771e-11    -108.638030766922 -1.712e-08
+       43    43.00         61           926    -108.638030896698 -8.252e-11    -108.638030782063 -1.514e-08
+       44    44.00         61           926    -108.638030896776 -7.752e-11    -108.638030795455 -1.339e-08
+       45    45.00         61           926    -108.638030896849 -7.292e-11    -108.638030807300 -1.185e-08
+       46    46.00         61           926    -108.638030896917 -6.857e-11    -108.638030817777 -1.048e-08
+       47    47.00         61           926    -108.638030896982 -6.446e-11    -108.638030827044 -9.267e-09
+       48    48.00         61           926    -108.638030897042 -6.061e-11    -108.638030835240 -8.196e-09
+       49    49.00         61           926    -108.638030897100 -5.709e-11    -108.638030842489 -7.250e-09
+       50    50.00         61           926    -108.638030897153 -5.359e-11    -108.638030848902 -6.412e-09
+       51    51.00         61           926    -108.638030897204 -5.043e-11    -108.638030854573 -5.671e-09
+       52    52.00         61           926    -108.638030897251 -4.746e-11    -108.638030859589 -5.016e-09
+       53    53.00         61           926    -108.638030897296 -4.455e-11    -108.638030864026 -4.437e-09
+       54    54.00         61           926    -108.638030897338 -4.201e-11    -108.638030867951 -3.924e-09
+       55    55.00         61           926    -108.638030897377 -3.942e-11    -108.638030871422 -3.471e-09
+       56    56.00         61           926    -108.638030897414 -3.710e-11    -108.638030874492 -3.070e-09
+       57    57.00         61           926    -108.638030897449 -3.490e-11    -108.638030877207 -2.715e-09
+       58    58.00         61           926    -108.638030897482 -3.283e-11    -108.638030879609 -2.402e-09
+       59    59.00         61           926    -108.638030897513 -3.088e-11    -108.638030881734 -2.124e-09
+       60    60.00         61           926    -108.638030897542 -2.900e-11    -108.638030883613 -1.879e-09
+       61    61.00         61           926    -108.638030897569 -2.731e-11    -108.638030885274 -1.662e-09
+       62    62.00         61           926    -108.638030897595 -2.562e-11    -108.638030886744 -1.470e-09
+       63    63.00         61           926    -108.638030897619 -2.419e-11    -108.638030888045 -1.300e-09
+       64    64.00         61           926    -108.638030897642 -2.271e-11    -108.638030889195 -1.150e-09
+       65    65.00         61           926    -108.638030897663 -2.137e-11    -108.638030890212 -1.017e-09
+       66    66.00         61           926    -108.638030897683 -2.005e-11    -108.638030891111 -8.997e-10
+       67    67.00         61           926    -108.638030897702 -1.894e-11    -108.638030891907 -7.957e-10
+       68    68.00         61           926    -108.638030897720 -1.771e-11    -108.638030892611 -7.038e-10
+       69    69.00         61           926    -108.638030897736 -1.673e-11    -108.638030893234 -6.225e-10
+       70    70.00         61           926    -108.638030897752 -1.570e-11    -108.638030893784 -5.506e-10
+       71    71.00         61           926    -108.638030897767 -1.481e-11    -108.638030894271 -4.870e-10
+       72    72.00         61           926    -108.638030897781 -1.388e-11    -108.638030894702 -4.308e-10
+       73    73.00         61           926    -108.638030897794 -1.307e-11    -108.638030895083 -3.810e-10
+       74    74.00         61           926    -108.638030897806 -1.235e-11    -108.638030895420 -3.370e-10
+       75    75.00         61           926    -108.638030897818 -1.151e-11    -108.638030895718 -2.981e-10
+       76    76.00         61           926    -108.638030897829 -1.091e-11    -108.638030895982 -2.636e-10
+       77    77.00         61           926    -108.638030897839 -1.020e-11    -108.638030896215 -2.332e-10
+       78    78.00         61           926    -108.638030897848 -9.635e-12    -108.638030896421 -2.063e-10
+       79    79.00         61           926    -108.638030897857 -9.038e-12    -108.638030896603 -1.824e-10
+       80    80.00         61           926    -108.638030897866 -8.527e-12    -108.638030896765 -1.614e-10
+       81    81.00         61           926    -108.638030897874 -7.930e-12    -108.638030896908 -1.427e-10
+       82    82.00         61           926    -108.638030897881 -7.560e-12    -108.638030897034 -1.262e-10
+       83    83.00         61           926    -108.638030897889 -7.049e-12    -108.638030897145 -1.116e-10
+       84    84.00         61           926    -108.638030897895 -6.665e-12    -108.638030897244 -9.875e-11
+       85    85.00         61           926    -108.638030897901 -6.281e-12    -108.638030897331 -8.734e-11
+       86    86.00         61           926    -108.638030897907 -5.869e-12    -108.638030897409 -7.726e-11
+       87    87.00         61           926    -108.638030897913 -5.542e-12    -108.638030897477 -6.833e-11
+       88    88.00         61           926    -108.638030897918 -5.201e-12    -108.638030897538 -6.044e-11
+       89    89.00         61           926    -108.638030897923 -4.917e-12    -108.638030897591 -5.346e-11
+       90    90.00         61           926    -108.638030897928 -4.590e-12    -108.638030897638 -4.728e-11
+       91    91.00         61           926    -108.638030897932 -4.334e-12    -108.638030897680 -4.182e-11
+       92    92.00         61           926    -108.638030897936 -4.079e-12    -108.638030897717 -3.699e-11
+       93    93.00         61           926    -108.638030897940 -3.865e-12    -108.638030897750 -3.271e-11
+       94    94.00         61           926    -108.638030897943 -3.567e-12    -108.638030897779 -2.893e-11
+       95    95.00         61           926    -108.638030897947 -3.396e-12    -108.638030897804 -2.559e-11
+       96    96.00         61           926    -108.638030897950 -3.126e-12    -108.638030897827 -2.264e-11
+       97    97.00         61           926    -108.638030897953 -3.027e-12    -108.638030897847 -2.004e-11
+       98    98.00         61           926    -108.638030897956 -2.842e-12    -108.638030897865 -1.771e-11
+       99    99.00         61           926    -108.638030897958 -2.643e-12    -108.638030897880 -1.566e-11
+      100   100.00         61           926    -108.638030897961 -2.473e-12    -108.638030897894 -1.386e-11
+      101   101.00         61           926    -108.638030897963 -2.359e-12    -108.638030897906 -1.225e-11
+      102   102.00         61           926    -108.638030897965 -2.188e-12    -108.638030897917 -1.084e-11
+      103   103.00         61           926    -108.638030897968 -2.089e-12    -108.638030897927 -9.578e-12
+      104   104.00         61           926    -108.638030897970 -1.933e-12    -108.638030897935 -8.484e-12
+      105   105.00         61           926    -108.638030897971 -1.890e-12    -108.638030897943 -7.503e-12
+      106   106.00         61           926    -108.638030897973 -1.691e-12    -108.638030897950 -6.636e-12
+      107   107.00         61           926    -108.638030897975 -1.592e-12    -108.638030897955 -5.869e-12
+      108   108.00         61           926    -108.638030897976 -1.563e-12    -108.638030897961 -5.187e-12
+      109   109.00         61           926    -108.638030897978 -1.407e-12    -108.638030897965 -4.590e-12
+      110   110.00         61           926    -108.638030897979 -1.336e-12    -108.638030897969 -4.064e-12
+      111   111.00         61           926    -108.638030897980 -1.336e-12    -108.638030897973 -3.595e-12
+      112   112.00         61           926    -108.638030897981 -1.151e-12    -108.638030897976 -3.169e-12
+      113   113.00         61           926    -108.638030897983 -1.151e-12    -108.638030897979 -2.814e-12
+      114   114.00         61           926    -108.638030897984 -1.052e-12    -108.638030897981 -2.487e-12
+      115   115.00         61           926    -108.638030897985 -9.805e-13    -108.638030897983 -2.188e-12
+      116   116.00         61           926    -108.638030897986 -8.811e-13    -108.638030897985 -1.947e-12
+      117   117.00         61           926    -108.638030897986 -8.527e-13    -108.638030897987 -1.720e-12
+      118   118.00         61           926    -108.638030897987 -8.811e-13    -108.638030897989 -1.521e-12
+      119   119.00         61           926    -108.638030897988 -8.242e-13    -108.638030897990 -1.350e-12
+      120   120.00         61           926    -108.638030897989 -7.532e-13    -108.638030897991 -1.180e-12
+      121   121.00         61           926    -108.638030897989 -6.111e-13    -108.638030897992 -1.066e-12
+      122   122.00         61           926    -108.638030897990 -6.963e-13    -108.638030897993 -9.237e-13
+      123   123.00         61           926    -108.638030897991 -5.969e-13
+  --------------------------------------------------------------------------------------------------------------
 
   Calculation converged.
 
   ==> Post-Iterations <==
 
   * Size of CI space                    = 61
-  * Projector-CI Approximate Energy     =  -108.638030896133 Eh
-  Variational energy estimated with 61 determinants to meet the max error 0.000000e+00
-  * Projector-CI Projective  Energy     =  -108.638030896131 Eh
-
-  * Projector-CI Variational Energy     =  -108.638029874900 Eh
-  * Projector-CI Var. Corr.  Energy     =    -0.313646929838 Eh
-  * 1st order perturbation   Energy     =     0.000001021233 Eh
-
-  Projector-CI (bitset) ran in  : 0.881278 s
+  * Number of off-diagonal elements     = 926
+  * Projector-CI Approximate Energy     =  -108.638030897993 Eh
+  * Projector-CI Projective  Energy     =  -108.638030897991 Eh
 
   Most important contributions to the wave function:
 
-    0      -0.606889      0.368314           5 |2200222>   -121.265271538778
-    1       0.421146      0.177364           2 |2220220>   -121.131894506178
-    2       0.396289      0.157045          42 |2202202>   -121.122865390575
-    3      -0.322786      0.104191          22 |2222200>   -120.984109825100
-    4      -0.251575     0.0632902          26 |22-+2+->   -121.520352940839
-    5      -0.251575     0.0632902          24 |22+-2-+>   -121.520352940839
-    6      -0.147919     0.0218801          31 |22+-2+->   -121.128530482408
-    7      -0.147919     0.0218801          18 |22-+2-+>   -121.128530482408
-    8       0.103427     0.0106972          25 |22--2++>   -121.130730944560
-    9       0.103427     0.0106972          23 |22++2-->   -121.130730944560
+    0      -0.606889      0.368314           0 |2200222000000000000000000000000000000000000000000000000000000000>   -121.265271593903
+    1       0.421146      0.177364           1 |2220220000000000000000000000000000000000000000000000000000000000>   -121.131894559185
+    2       0.396289      0.157045           2 |2202202000000000000000000000000000000000000000000000000000000000>   -121.122865443471
+    3      -0.322786      0.104191           3 |2222200000000000000000000000000000000000000000000000000000000000>   -120.984109875759
+    4      -0.251575     0.0632902           4 |22+-2-+000000000000000000000000000000000000000000000000000000000>   -121.520352993077
+    5      -0.251575     0.0632902           5 |22-+2+-000000000000000000000000000000000000000000000000000000000>   -121.520352993077
+    6      -0.147919     0.0218801           6 |22-+2-+000000000000000000000000000000000000000000000000000000000>   -121.128530535384
+    7      -0.147919     0.0218801           7 |22+-2+-000000000000000000000000000000000000000000000000000000000>   -121.128530535384
+    8       0.103427     0.0106972           8 |22--2++000000000000000000000000000000000000000000000000000000000>   -121.130730997570
+    9       0.103427     0.0106972           9 |22++2--000000000000000000000000000000000000000000000000000000000>   -121.130730997570
 
   Spin State: S^2 = 0.044, S = 0.042, singlet (from 8 determinants,97.73)
+  Projector-CI (bitset) steps finished in  : 0.323469 s
 
-  Your calculation took 1.76391800 seconds
-	PCI energy........................................................PASSED
+  Variational energy estimated with 61 determinants to meet the max error 0.000000e+00
+  * Projector-CI Variational Energy     =  -108.638029876760 Eh
+  * Projector-CI Var. Corr.  Energy     =    -0.313646930994 Eh
+  * 1st order perturbation   Energy     =     0.000001021233 Eh
+
+  Projector-CI (bitset) ran in  : 0.324216 s	PCI energy........................................................PASSED
+
+    Psi4 stopped on: Thursday, 25 October 2018 04:20PM
+    Psi4 wall time for execution: 0:00:01.98
 
 *** Psi4 exiting successfully. Buy a developer a beer!

@@ -3,8 +3,8 @@
 
 import forte
 
-refrhf       = -2.17907250154
-refdsrgpt2   = -2.238709489537815
+refrhf       = -2.1790725000725892 
+refdsrgpt2   = -2.238709488021925
 
 memory 500 mb
 

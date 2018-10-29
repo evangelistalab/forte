@@ -2,8 +2,8 @@
 
 import forte
 
-refrhf       = -2.17907771115918 # cc-pVDZ
-refdsrgpt2   = -2.23866688789344 # cc-pVDZ
+refrhf       = -2.1790777096871579 # cc-pVDZ
+refdsrgpt2   = -2.238666886378053 # cc-pVDZ
 
 memory 500 mb
 

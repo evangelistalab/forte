@@ -3,8 +3,8 @@
 
 import forte
 
-refscf = -1.11317721661752 #TEST
-refpci = -1.145796367592 #TEST
+refscf = -1.1131772159334095 #TEST
+refpci = -1.145796366869 #TEST
 
 molecule H2{
    H

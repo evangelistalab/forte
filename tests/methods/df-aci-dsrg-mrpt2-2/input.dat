@@ -3,8 +3,8 @@
 
 import forte
 
-refmcscf     = -99.939316381644 #cc-pvdz
-refdsrgpt2_jk_rd = -100.105012600765463
+refmcscf     = -99.939316382624 #cc-pvdz
+refdsrgpt2_jk_rd = -100.105012601885079
 
 memory 500 mb
 

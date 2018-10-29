@@ -3,8 +3,8 @@
 import forte
 memory 500 mb
 
-refmcscf     = -99.406065222746975
-refdsrgpt3   = -99.498903266920394
+refmcscf     = -99.406065223639
+refdsrgpt3   = -99.498903267935276
 
 molecule HF{
   0 1

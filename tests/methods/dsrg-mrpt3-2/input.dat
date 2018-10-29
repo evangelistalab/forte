@@ -3,9 +3,9 @@
 import forte
 memory 500 mb
 
-refmcscf     = -99.406065222746975
-refdsrgpt3   = -99.497571401336231 # no relaxation
-refdsrgpt3   = -99.498903266920166 # relaxed once
+refmcscf     = -99.406065223639
+refdsrgpt3   = -99.497571402141162 # no relaxation
+refdsrgpt3   = -99.498903267726078 # relaxed once
 
 molecule HF{
   0 1

@@ -1,9 +1,9 @@
 
     -----------------------------------------------------------------------
           Psi4: An Open-Source Ab Initio Electronic Structure Package
-                               Psi4 1.2rc2.dev6 
+                               Psi4 undefined 
 
-                         Git: Rev {master} ce9c78d dirty
+                         Git: Rev {master} 3c26e8e 
 
 
     R. M. Parrish, L. A. Burns, D. G. A. Smith, A. C. Simmonett,
@@ -15,13 +15,17 @@
     J. Chem. Theory Comput. 13(7) pp 3185--3197 (2017).
     (doi: 10.1021/acs.jctc.7b00174)
 
+
+                         Additional Contributions by
+    P. Kraus, H. Kruse, M. H. Lechner, M. C. Schieber, and R. A. Shaw
+
     -----------------------------------------------------------------------
 
 
-    Psi4 started on: Wednesday, 30 May 2018 11:20AM
+    Psi4 started on: Thursday, 25 October 2018 03:45PM
 
-    Process ID: 11497
-    Host:       jeffs-mbp-2.wireless.emory.edu
+    Process ID: 92224
+    Host:       jeffschriber
     PSIDATADIR: /Users/jeffschriber/src/psi4-debug-install/share/psi4
     Memory:     500.0 MiB
     Threads:    1
@@ -33,8 +37,8 @@ import forte
 
 memory 2 gb
 
-escf = -304.9057795487569251
-eaci = -305.390029670098386 
+escf = -304.9057795504939463
+eaci = -305.390029668114892 
 
 molecule ene2{
 0 1
@@ -110,8 +114,8 @@ compare_values(eaci,get_variable("CURRENT ENERGY"), 9, "ACI-DSRG-MRPT2 energy")
   Memory set to   1.863 GiB by Python driver.
   Threads set to 8 by Python driver.
 
-*** tstart() called on jeffs-mbp-2.wireless.emory.edu
-*** at Wed May 30 11:20:14 2018
+*** tstart() called on jeffschriber
+*** at Thu Oct 25 15:45:39 2018
 
    => Loading Basis Set <=
 
@@ -139,30 +143,30 @@ compare_values(eaci,get_variable("CURRENT ENERGY"), 9, "ACI-DSRG-MRPT2 energy")
 
        Center              X                  Y                   Z               Mass       
     ------------   -----------------  -----------------  -----------------  -----------------
-           C          0.335863347908    -0.638024351991     0.000000000207    12.000000000000
-           H          1.432938644893    -0.620850793123     0.000000000280     1.007825032070
-           C         -0.296842800370    -1.839541056853     0.000000000164    12.000000000000
-           H         -1.393739522764    -1.860704439495     0.000000000280     1.007825032070
-           C          0.383204758655    -3.118962138239     0.000000000233    12.000000000000
-           H          1.479554406702    -3.087254985300     0.000000001289     1.007825032070
-           C         -0.237579194060    -4.313790051647    -0.000000000740    12.000000000000
-           H          0.325161338012    -5.249189944735    -0.000000000503     1.007825032070
-           H         -1.329245280272    -4.386987205251    -0.000000001655     1.007825032070
-           C         -0.335863360640     0.638024352182     0.000000000468    12.000000000000
-           H         -1.432938656420     0.620850793004     0.000000000922     1.007825032070
-           C          0.296842792408     1.839541055584     0.000000000041    12.000000000000
-           H          1.393739512934     1.860704430863    -0.000000000539     1.007825032070
-           C         -0.383204755743     3.118962141979     0.000000000141    12.000000000000
-           H         -1.479554404938     3.087254999541     0.000000000472     1.007825032070
-           C          0.237579209937     4.313790049182    -0.000000000431    12.000000000000
-           H          1.329245296894     4.386987192215    -0.000000001010     1.007825032070
-           H         -0.325161312367     5.249189949931    -0.000000000534     1.007825032070
+         C            0.335863347908    -0.638024351991     0.000000000207    12.000000000000
+         H            1.432938644893    -0.620850793123     0.000000000280     1.007825032070
+         C           -0.296842800370    -1.839541056853     0.000000000164    12.000000000000
+         H           -1.393739522764    -1.860704439495     0.000000000280     1.007825032070
+         C            0.383204758655    -3.118962138239     0.000000000233    12.000000000000
+         H            1.479554406702    -3.087254985300     0.000000001289     1.007825032070
+         C           -0.237579194060    -4.313790051647    -0.000000000740    12.000000000000
+         H            0.325161338012    -5.249189944735    -0.000000000503     1.007825032070
+         H           -1.329245280272    -4.386987205251    -0.000000001655     1.007825032070
+         C           -0.335863360640     0.638024352182     0.000000000468    12.000000000000
+         H           -1.432938656420     0.620850793004     0.000000000922     1.007825032070
+         C            0.296842792408     1.839541055584     0.000000000041    12.000000000000
+         H            1.393739512934     1.860704430863    -0.000000000539     1.007825032070
+         C           -0.383204755743     3.118962141979     0.000000000141    12.000000000000
+         H           -1.479554404938     3.087254999541     0.000000000472     1.007825032070
+         C            0.237579209937     4.313790049182    -0.000000000431    12.000000000000
+         H            1.329245296894     4.386987192215    -0.000000001010     1.007825032070
+         H           -0.325161312367     5.249189949931    -0.000000000534     1.007825032070
 
   Running in c1 symmetry.
 
   Rotational constants: A =      0.65101  B =      0.01889  C =      0.01836 [cm^-1]
-  Rotational constants: A =  19516.70357  B =    566.30750  C =    550.33857 [MHz]
-  Nuclear repulsion =  296.638712432607065
+  Rotational constants: A =  19516.70371  B =    566.30750  C =    550.33857 [MHz]
+  Nuclear repulsion =  296.638713598584616
 
   Charge       = 0
   Multiplicity = 1
@@ -211,13 +215,15 @@ compare_values(eaci,get_variable("CURRENT ENERGY"), 9, "ACI-DSRG-MRPT2 energy")
 
   ==> Integral Setup <==
 
+  DFHelper Memory: AOs need 0.014 GiB; user supplied 1.397 GiB. Using in-core AOs.
+
   ==> MemDFJK: Density-Fitted J/K Matrices <==
 
     J tasked:                   Yes
     K tasked:                   Yes
     wK tasked:                   No
     OpenMP threads:               8
-    Memory (MB):               1430
+    Memory [MiB]:              1430
     Algorithm:                 Core
     Schwarz Cutoff:           1E-12
     Mask sparsity (%):       9.0400
@@ -233,7 +239,7 @@ compare_values(eaci,get_variable("CURRENT ENERGY"), 9, "ACI-DSRG-MRPT2 energy")
     Spherical Harmonics?: true
     Max angular momentum: 3
 
-  Minimum eigenvalue in the overlap matrix is 1.8898432374E-01.
+  Minimum eigenvalue in the overlap matrix is 1.8898432078E-01.
   Using Symmetric Orthogonalization.
 
   SCF Guess: Superposition of Atomic Densities via on-the-fly atomic UHF.
@@ -242,21 +248,23 @@ compare_values(eaci,get_variable("CURRENT ENERGY"), 9, "ACI-DSRG-MRPT2 energy")
 
                            Total Energy        Delta E     RMS |[F,P]|
 
-   @DF-RHF iter   0:  -306.82071885816373   -3.06821e+02   9.80756e-02 
-   @DF-RHF iter   1:  -304.85489123903699    1.96583e+00   4.78660e-03 
-   @DF-RHF iter   2:  -304.89930687989806   -4.44156e-02   1.74667e-03 DIIS
-   @DF-RHF iter   3:  -304.90450375538370   -5.19688e-03   6.71369e-04 DIIS
-   @DF-RHF iter   4:  -304.90567141661484   -1.16766e-03   1.72686e-04 DIIS
-   @DF-RHF iter   5:  -304.90577298667415   -1.01570e-04   4.43963e-05 DIIS
-   @DF-RHF iter   6:  -304.90577918352085   -6.19685e-06   9.76326e-06 DIIS
-   @DF-RHF iter   7:  -304.90577950020577   -3.16685e-07   4.19324e-06 DIIS
-   @DF-RHF iter   8:  -304.90577954043016   -4.02244e-08   1.60513e-06 DIIS
-   @DF-RHF iter   9:  -304.90577954861635   -8.18619e-09   2.06597e-07 DIIS
-   @DF-RHF iter  10:  -304.90577954877449   -1.58138e-10   3.67410e-08 DIIS
-   @DF-RHF iter  11:  -304.90577954877932   -4.83169e-12   7.92717e-09 DIIS
-   @DF-RHF iter  12:  -304.90577954877961   -2.84217e-13   2.24232e-09 DIIS
-   @DF-RHF iter  13:  -304.90577954877961    0.00000e+00   3.67708e-10 DIIS
-   @DF-RHF iter  14:  -304.90577954877949    1.13687e-13   5.32610e-11 DIIS
+   @DF-RHF iter   0:  -306.83632951290400   -3.06836e+02   8.48524e-02 
+   @DF-RHF iter   1:  -304.85805473161258    1.97827e+00   4.33264e-03 
+   @DF-RHF iter   2:  -304.89993859393348   -4.18839e-02   1.44204e-03 DIIS
+   @DF-RHF iter   3:  -304.90464026200641   -4.70167e-03   6.04253e-04 DIIS
+   @DF-RHF iter   4:  -304.90568025287564   -1.03999e-03   1.38889e-04 DIIS
+   @DF-RHF iter   5:  -304.90577357652796   -9.33237e-05   3.35095e-05 DIIS
+   @DF-RHF iter   6:  -304.90577925963220   -5.68310e-06   8.71153e-06 DIIS
+   @DF-RHF iter   7:  -304.90577951435745   -2.54725e-07   3.06779e-06 DIIS
+   @DF-RHF iter   8:  -304.90577954332326   -2.89658e-08   1.28115e-06 DIIS
+   @DF-RHF iter   9:  -304.90577955035678   -7.03352e-09   1.63144e-07 DIIS
+   @DF-RHF iter  10:  -304.90577955049019   -1.33412e-10   2.75656e-08 DIIS
+   @DF-RHF iter  11:  -304.90577955049400   -3.80851e-12   5.90119e-09 DIIS
+   @DF-RHF iter  12:  -304.90577955049423   -2.27374e-13   1.58505e-09 DIIS
+   @DF-RHF iter  13:  -304.90577955049378    4.54747e-13   3.28090e-10 DIIS
+   @DF-RHF iter  14:  -304.90577955049389   -1.13687e-13   4.18493e-11 DIIS
+  Energy converged.
+
 
   ==> Post-Iterations <==
 
@@ -290,17 +298,16 @@ compare_values(eaci,get_variable("CURRENT ENERGY"), 9, "ACI-DSRG-MRPT2 energy")
               A 
     DOCC [    29 ]
 
-  Energy converged.
-
-  @DF-RHF Final Energy:  -304.90577954877949
+  @DF-RHF Final Energy:  -304.90577955049389
 
    => Energetics <=
 
-    Nuclear Repulsion Energy =            296.6387124326070648
-    One-Electron Energy =               -1000.9691362933247092
-    Two-Electron Energy =                 399.4246443119382093
-    Total Energy =                       -304.9057795487794920
+    Nuclear Repulsion Energy =            296.6387135985846157
+    One-Electron Energy =               -1000.9691385375917889
+    Two-Electron Energy =                 399.4246453885132269
+    Total Energy =                       -304.9057795504938895
 
+Computation Completed
 
 
 Properties will be evaluated at   0.000000,   0.000000,   0.000000 [a0]
@@ -320,14 +327,14 @@ Properties computed using the SCF density matrix
      X:     0.0000      Y:     0.0000      Z:     0.0000     Total:     0.0000
 
 
-*** tstop() called on jeffs-mbp-2.wireless.emory.edu at Wed May 30 11:20:18 2018
+*** tstop() called on jeffschriber at Thu Oct 25 15:45:43 2018
 Module time:
-	user time   =       5.64 seconds =       0.09 minutes
-	system time =       2.72 seconds =       0.05 minutes
+	user time   =       5.58 seconds =       0.09 minutes
+	system time =       2.73 seconds =       0.05 minutes
 	total time  =          4 seconds =       0.07 minutes
 Total time:
-	user time   =       5.64 seconds =       0.09 minutes
-	system time =       2.72 seconds =       0.05 minutes
+	user time   =       5.58 seconds =       0.09 minutes
+	system time =       2.73 seconds =       0.05 minutes
 	total time  =          4 seconds =       0.07 minutes
 	SCF energy........................................................PASSED
    => Loading Basis Set <=
@@ -356,7 +363,7 @@ Calling plugin forte.so.
   ----------------------------------------------------------------------------
   A suite of quantum chemistry methods for strongly correlated electrons
 
-    git branch: det64 - git commit: ef75a956
+    git branch: master - git commit: 9480afcf
 
   Developed by:
     Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
@@ -370,14 +377,6 @@ Calling plugin forte.so.
   Read options for space FROZEN_DOCC
   Read options for space RESTRICTED_DOCC
   Read options for space ACTIVE
- Removing orbital 0
- Removing orbital 1
- Removing orbital 2
- Removing orbital 3
- Removing orbital 4
- Removing orbital 5
- Removing orbital 6
- Removing orbital 7
   -------------------------------
                         A   Sum
   -------------------------------
@@ -391,262 +390,31 @@ Calling plugin forte.so.
 
   ==> Integral Transformation <==
 
-  Number of molecular orbitals:               50
-  Number of correlated molecular orbitals:    42
-  Number of frozen occupied orbitals:          8
-  Number of frozen unoccupied orbitals:        0
-
-    Molecular point group: c1
-    Full point group: Cs
-
-    Geometry (in Angstrom), charge = 0, multiplicity = 1:
-
-       Center              X                  Y                   Z               Mass       
-    ------------   -----------------  -----------------  -----------------  -----------------
-           C          0.335863347908    -0.638024351991     0.000000000207    12.000000000000
-           H          1.432938644893    -0.620850793123     0.000000000280     1.007825032070
-           C         -0.296842800370    -1.839541056853     0.000000000164    12.000000000000
-           H         -1.393739522764    -1.860704439495     0.000000000280     1.007825032070
-           C          0.383204758655    -3.118962138239     0.000000000233    12.000000000000
-           H          1.479554406702    -3.087254985300     0.000000001289     1.007825032070
-           C         -0.237579194060    -4.313790051647    -0.000000000740    12.000000000000
-           H          0.325161338012    -5.249189944735    -0.000000000503     1.007825032070
-           H         -1.329245280272    -4.386987205251    -0.000000001655     1.007825032070
-           C         -0.335863360640     0.638024352182     0.000000000468    12.000000000000
-           H         -1.432938656420     0.620850793004     0.000000000922     1.007825032070
-           C          0.296842792408     1.839541055584     0.000000000041    12.000000000000
-           H          1.393739512934     1.860704430863    -0.000000000539     1.007825032070
-           C         -0.383204755743     3.118962141979     0.000000000141    12.000000000000
-           H         -1.479554404938     3.087254999541     0.000000000472     1.007825032070
-           C          0.237579209937     4.313790049182    -0.000000000431    12.000000000000
-           H          1.329245296894     4.386987192215    -0.000000001010     1.007825032070
-           H         -0.325161312367     5.249189949931    -0.000000000534     1.007825032070
-
-  -AO BASIS SET INFORMATION:
-    Name                   = STO-3G
-    Blend                  = STO-3G
-    Total number of shells = 34
-    Number of primitives   = 102
-    Number of AO           = 50
-    Number of SO           = 50
-    Maximum AM             = 1
-    Spherical Harmonics    = TRUE
-
-  -Contraction Scheme:
-    Atom   Type   All Primitives // Shells:
-   ------ ------ --------------------------
-       1     C     6s 3p // 2s 1p 
-       2     H     3s // 1s 
-       3     C     6s 3p // 2s 1p 
-       4     H     3s // 1s 
-       5     C     6s 3p // 2s 1p 
-       6     H     3s // 1s 
-       7     C     6s 3p // 2s 1p 
-       8     H     3s // 1s 
-       9     H     3s // 1s 
-      10     C     6s 3p // 2s 1p 
-      11     H     3s // 1s 
-      12     C     6s 3p // 2s 1p 
-      13     H     3s // 1s 
-      14     C     6s 3p // 2s 1p 
-      15     H     3s // 1s 
-      16     C     6s 3p // 2s 1p 
-      17     H     3s // 1s 
-      18     H     3s // 1s 
-
-  ==> AO Basis Functions <==
-
-    [ STO-3G ]
-    spherical
-    ****
-    C   1
-    S   3 1.00
-                        71.61683700           0.15432897
-                        13.04509600           0.53532814
-                         3.53051220           0.44463454
-    S   3 1.00
-                         2.94124940          -0.09996723
-                         0.68348310           0.39951283
-                         0.22228990           0.70011547
-    P   3 1.00
-                         2.94124940           0.15591627
-                         0.68348310           0.60768372
-                         0.22228990           0.39195739
-    ****
-    H   2
-    S   3 1.00
-                         3.42525091           0.15432897
-                         0.62391373           0.53532814
-                         0.16885540           0.44463454
-    ****
-    C   3
-    S   3 1.00
-                        71.61683700           0.15432897
-                        13.04509600           0.53532814
-                         3.53051220           0.44463454
-    S   3 1.00
-                         2.94124940          -0.09996723
-                         0.68348310           0.39951283
-                         0.22228990           0.70011547
-    P   3 1.00
-                         2.94124940           0.15591627
-                         0.68348310           0.60768372
-                         0.22228990           0.39195739
-    ****
-    H   4
-    S   3 1.00
-                         3.42525091           0.15432897
-                         0.62391373           0.53532814
-                         0.16885540           0.44463454
-    ****
-    C   5
-    S   3 1.00
-                        71.61683700           0.15432897
-                        13.04509600           0.53532814
-                         3.53051220           0.44463454
-    S   3 1.00
-                         2.94124940          -0.09996723
-                         0.68348310           0.39951283
-                         0.22228990           0.70011547
-    P   3 1.00
-                         2.94124940           0.15591627
-                         0.68348310           0.60768372
-                         0.22228990           0.39195739
-    ****
-    H   6
-    S   3 1.00
-                         3.42525091           0.15432897
-                         0.62391373           0.53532814
-                         0.16885540           0.44463454
-    ****
-    C   7
-    S   3 1.00
-                        71.61683700           0.15432897
-                        13.04509600           0.53532814
-                         3.53051220           0.44463454
-    S   3 1.00
-                         2.94124940          -0.09996723
-                         0.68348310           0.39951283
-                         0.22228990           0.70011547
-    P   3 1.00
-                         2.94124940           0.15591627
-                         0.68348310           0.60768372
-                         0.22228990           0.39195739
-    ****
-    H   8
-    S   3 1.00
-                         3.42525091           0.15432897
-                         0.62391373           0.53532814
-                         0.16885540           0.44463454
-    ****
-    H   9
-    S   3 1.00
-                         3.42525091           0.15432897
-                         0.62391373           0.53532814
-                         0.16885540           0.44463454
-    ****
-    C  10
-    S   3 1.00
-                        71.61683700           0.15432897
-                        13.04509600           0.53532814
-                         3.53051220           0.44463454
-    S   3 1.00
-                         2.94124940          -0.09996723
-                         0.68348310           0.39951283
-                         0.22228990           0.70011547
-    P   3 1.00
-                         2.94124940           0.15591627
-                         0.68348310           0.60768372
-                         0.22228990           0.39195739
-    ****
-    H  11
-    S   3 1.00
-                         3.42525091           0.15432897
-                         0.62391373           0.53532814
-                         0.16885540           0.44463454
-    ****
-    C  12
-    S   3 1.00
-                        71.61683700           0.15432897
-                        13.04509600           0.53532814
-                         3.53051220           0.44463454
-    S   3 1.00
-                         2.94124940          -0.09996723
-                         0.68348310           0.39951283
-                         0.22228990           0.70011547
-    P   3 1.00
-                         2.94124940           0.15591627
-                         0.68348310           0.60768372
-                         0.22228990           0.39195739
-    ****
-    H  13
-    S   3 1.00
-                         3.42525091           0.15432897
-                         0.62391373           0.53532814
-                         0.16885540           0.44463454
-    ****
-    C  14
-    S   3 1.00
-                        71.61683700           0.15432897
-                        13.04509600           0.53532814
-                         3.53051220           0.44463454
-    S   3 1.00
-                         2.94124940          -0.09996723
-                         0.68348310           0.39951283
-                         0.22228990           0.70011547
-    P   3 1.00
-                         2.94124940           0.15591627
-                         0.68348310           0.60768372
-                         0.22228990           0.39195739
-    ****
-    H  15
-    S   3 1.00
-                         3.42525091           0.15432897
-                         0.62391373           0.53532814
-                         0.16885540           0.44463454
-    ****
-    C  16
-    S   3 1.00
-                        71.61683700           0.15432897
-                        13.04509600           0.53532814
-                         3.53051220           0.44463454
-    S   3 1.00
-                         2.94124940          -0.09996723
-                         0.68348310           0.39951283
-                         0.22228990           0.70011547
-    P   3 1.00
-                         2.94124940           0.15591627
-                         0.68348310           0.60768372
-                         0.22228990           0.39195739
-    ****
-    H  17
-    S   3 1.00
-                         3.42525091           0.15432897
-                         0.62391373           0.53532814
-                         0.16885540           0.44463454
-    ****
-    H  18
-    S   3 1.00
-                         3.42525091           0.15432897
-                         0.62391373           0.53532814
-                         0.16885540           0.44463454
-    ****
+  Number of molecular orbitals:                    50
+  Number of correlated molecular orbitals:         42
+  Number of frozen occupied orbitals:               8
+  Number of frozen unoccupied orbitals:             0
+  Two-electron integral type:              Density fitting
 
 
-  DFIntegrals overall time
- Computing Density fitted integrals 
+  Computing Density fitted integrals 
 
- Number of auxiliary basis functions:  588
- Need 0.010952 GB to store DF integrals
+  Number of auxiliary basis functions:  588
+  Need 11.76 MB to store DF integrals
+  DFHelper Memory: AOs need 0.010 GiB; user supplied 1.907 GiB. Using in-core AOs.
 
-  Computing DF Integrals               ......Done. Timing        0.071238 s
-  Frozen-core energy           -397.044911783775 a.u.
 
-  FrozenOneBody Operator takes  0.84588500 s
+  Transforming DF Integrals            ......Done.
+  Timing for density-fitting transformation:                  0.066 s.
+  DFHelper Memory: AOs need 0.011 GiB; user supplied 11.921 GiB. Using in-core AOs.
+
+
+  Frozen-core energy           -397.044912338556 a.u.
+  Timing for frozen one-body operator:                        0.848 s.
   Resorting integrals after freezing core.
- Done with resorting
- Resorting integrals takes   0.07096500s
-  DFIntegrals take      2.04984700 s
+  Timing for resorting DF integrals:                          0.064 s.
+  Timing for freezing core and virtual orbitals:              0.915 s.
+  Timing for computing density-fitted integrals:              2.023 s.
   Number of active alpha electrons: 4
   Number of active beta electrons: 4
   Maximum reference space size: 1000
@@ -710,75 +478,71 @@ Calling plugin forte.so.
   ----------------------------------------
     Iter.      Avg. Energy       Delta_E
   ----------------------------------------
-      1     -405.500712151746  -4.055e+02
-      2     -405.504332640863  -3.620e-03
-      3     -405.504511926676  -1.793e-04
-      4     -405.504532935923  -2.101e-05
-      5     -405.504538003197  -5.067e-06
-      6     -405.504538326823  -3.236e-07
-      7     -405.504538365516  -3.869e-08
-      8     -405.504538372878  -7.362e-09
-      9     -405.504538374695  -1.817e-09
-     10     -405.504538374923  -2.285e-10
-     11     -405.504538374954  -3.035e-11
+      1     -405.500712739363  -4.055e+02
+      2     -405.504333228431  -3.620e-03
+      3     -405.504512514239  -1.793e-04
+      4     -405.504533523485  -2.101e-05
+      5     -405.504538590759  -5.067e-06
+      6     -405.504538914385  -3.236e-07
+      7     -405.504538953078  -3.869e-08
+      8     -405.504538960440  -7.362e-09
+      9     -405.504538962257  -1.817e-09
+     10     -405.504538962485  -2.285e-10
+     11     -405.504538962516  -3.035e-11
   ----------------------------------------
   The Davidson-Liu algorithm converged in 12 iterations.
-  Davidson-Liu procedure took  0.035181 s
-  Time spent diagonalizing H:   0.338998 s
+  Davidson-Liu procedure took  0.042398 s
+  Time spent diagonalizing H:   0.333877 s
 
-    P-space  CI Energy Root   0        = -304.961117485447 Eh =   0.0000 eV
+    P-space  CI Energy Root   0        = -304.961117486801 Eh =   0.0000 eV
 
   Using batched Q_space algorithm
   Setting nbin to 1 based on estimated memory ( 1.331 MB)
   Overwriting nbin to 4 based on user input
  -----------------------------------------
                 Bin 0
-  Build: 0.003502
-  Merge: 0.000975
-  Correlation ignored: 0.000000000000
-    Build F                  0.005801 
-    Build criteria vector    0.000598
-    Sort vector              0.000142
-    Screening                0.000037
-    Added 122 dets of 719 from bin 0
+  Build: 0.005869
+  Merge: 0.000079
+    Build F                  0.006554 
+    Build criteria vector    0.000296
+    Sort vector              0.000104
+    Screening                0.000018
+    Added 122 dets of 717 from bin 0
                 Bin 1
-  Build: 0.001866
-  Merge: 0.001631
-  Correlation ignored: 0.000000000000
-    Build F                  0.004124 
-    Build criteria vector    0.000395
-    Sort vector              0.000077
-    Screening                0.000011
+  Build: 0.001368
+  Merge: 0.001801
+    Build F                  0.003586 
+    Build criteria vector    0.000232
+    Sort vector              0.000073
+    Screening                0.000010
     Added 205 dets of 560 from bin 1
                 Bin 2
-  Build: 0.001371
-  Merge: 0.001929
-  Correlation ignored: 0.000000000000
-    Build F                  0.003680 
-    Build criteria vector    0.000452
-    Sort vector              0.000089
-    Screening                0.000005
+  Build: 0.001283
+  Merge: 0.001958
+    Build F                  0.003559 
+    Build criteria vector    0.000322
+    Sort vector              0.000091
+    Screening                0.000006
     Added 232 dets of 645 from bin 2
                 Bin 3
-  Build: 0.001357
-  Merge: 0.001894
-  Correlation ignored: 0.000000000000
-    Build F                  0.003882 
-    Build criteria vector    0.000605
-    Sort vector              0.000117
+  Build: 0.002329
+  Merge: 0.001172
+    Build F                  0.003958 
+    Build criteria vector    0.000335
+    Sort vector              0.000116
     Screening                0.000014
-    Added 347 dets of 838 from bin 3
+    Added 347 dets of 834 from bin 3
  ------------------------------------
   Screened out 0.0004929198 Eh of correlation
   Dimension of the truncated SD space: 347 determinants
-  Time spent building the external space (default): 0.020832 s
+  Time spent building the external space (default): 0.020490 s
 
   Time spent sorting: 0.000057
   Added 1 missing determinants in aimed selection.
-  Time spent selecting: 0.000095
+  Time spent selecting: 0.000090
   Dimension of the P + Q space: 464 determinants
-  Time spent screening the model space: 0.000120 s
-  Time spent building the model space: 0.021123
+  Time spent screening the model space: 0.000159 s
+  Time spent building the model space: 0.021295
   Spin-complete dimension of the PQ space: 620
 
   Davidson-Liu solver algorithm with dynamic sigma builds
@@ -800,45 +564,45 @@ Calling plugin forte.so.
   ----------------------------------------
     Iter.      Avg. Energy       Delta_E
   ----------------------------------------
-      1     -405.530960413988  -4.055e+02
-      2     -405.605068835368  -7.411e-02
-      3     -405.610719899194  -5.651e-03
-      4     -405.611593227243  -8.733e-04
-      5     -405.611849809777  -2.566e-04
-      6     -405.611877262850  -2.745e-05
-      7     -405.611885756598  -8.494e-06
-      8     -405.611887539291  -1.783e-06
-      9     -405.611888018514  -4.792e-07
-     10     -405.611888116988  -9.847e-08
-     11     -405.611888143615  -2.663e-08
-     12     -405.611888150397  -6.782e-09
-     13     -405.611888152557  -2.160e-09
-     14     -405.611888153147  -5.895e-10
-     15     -405.611888153313  -1.664e-10
-     16     -405.611888153362  -4.934e-11
+      1     -405.530961001277  -4.055e+02
+      2     -405.605069421735  -7.411e-02
+      3     -405.610720485442  -5.651e-03
+      4     -405.611593813469  -8.733e-04
+      5     -405.611850395995  -2.566e-04
+      6     -405.611877849067  -2.745e-05
+      7     -405.611886342814  -8.494e-06
+      8     -405.611888125507  -1.783e-06
+      9     -405.611888604729  -4.792e-07
+     10     -405.611888703203  -9.847e-08
+     11     -405.611888729831  -2.663e-08
+     12     -405.611888736613  -6.782e-09
+     13     -405.611888738773  -2.160e-09
+     14     -405.611888739362  -5.896e-10
+     15     -405.611888739529  -1.667e-10
+     16     -405.611888739578  -4.934e-11
   ----------------------------------------
   The Davidson-Liu algorithm converged in 17 iterations.
-  Davidson-Liu procedure took  0.078219 s
-  Total time spent diagonalizing H:   0.375842 s
+  Davidson-Liu procedure took  0.067442 s
+  Total time spent diagonalizing H:   0.351128 s
 
-    PQ-space CI Energy Root   0        = -305.068467263855 Eh =   0.0000 eV
-    PQ-space CI Energy + EPT2 Root   0 = -305.069462403910 Eh =   0.0000 eV
+    PQ-space CI Energy Root   0        = -305.068467263864 Eh =   0.0000 eV
+    PQ-space CI Energy + EPT2 Root   0 = -305.069462403895 Eh =   0.0000 eV
 
 
   Most important contributions to root   0:
-    0   0.880772 0.775760112         224 |22220000>
+    0   0.880772 0.775760115         224 |22220000>
     1  -0.199099 0.039640603         208 |22202000>
     2   0.105304 0.011088828         189 |22+--+00>
     3   0.105304 0.011088828         147 |22-++-00>
     4  -0.095393 0.009099914         128 |22020200>
     5  -0.077741 0.006043605         460 |2+2--0+0>
     6  -0.077741 0.006043605         459 |2-2++0-0>
-    7   0.076980 0.005925963         462 |+22--00+>
-    8   0.076980 0.005925963         461 |-22++00->
+    7   0.076980 0.005925963         461 |-22++00->
+    8   0.076980 0.005925963         462 |+22--00+>
     9   0.073502 0.005402473         203 |22+-+-00>
 
   Spin state for root 0: S^2 = 0.000000, S = 0.000, singlet
-  Cycle 0 took: 0.743429 s
+  Cycle 0 took: 0.717388 s
 
   ==> Cycle 1 <==
 
@@ -864,79 +628,75 @@ Calling plugin forte.so.
   ----------------------------------------
     Iter.      Avg. Energy       Delta_E
   ----------------------------------------
-      1     -405.567693895566  -4.056e+02
-      2     -405.606339824113  -3.865e-02
-      3     -405.610520044305  -4.180e-03
-      4     -405.611091678363  -5.716e-04
-      5     -405.611294630274  -2.030e-04
-      6     -405.611314979449  -2.035e-05
-      7     -405.611318713608  -3.734e-06
-      8     -405.611319396849  -6.832e-07
-      9     -405.611319584303  -1.875e-07
-     10     -405.611319618052  -3.375e-08
-     11     -405.611319625761  -7.710e-09
-     12     -405.611319627706  -1.945e-09
-     13     -405.611319628310  -6.036e-10
-     14     -405.611319628443  -1.333e-10
-     15     -405.611319628474  -3.115e-11
+      1     -405.567694482452  -4.056e+02
+      2     -405.606340410471  -3.865e-02
+      3     -405.610520630561  -4.180e-03
+      4     -405.611092264599  -5.716e-04
+      5     -405.611295216501  -2.030e-04
+      6     -405.611315565675  -2.035e-05
+      7     -405.611319299833  -3.734e-06
+      8     -405.611319983074  -6.832e-07
+      9     -405.611320170528  -1.875e-07
+     10     -405.611320204276  -3.375e-08
+     11     -405.611320211986  -7.710e-09
+     12     -405.611320213931  -1.945e-09
+     13     -405.611320214535  -6.036e-10
+     14     -405.611320214668  -1.332e-10
+     15     -405.611320214699  -3.121e-11
   ----------------------------------------
   The Davidson-Liu algorithm converged in 16 iterations.
-  Davidson-Liu procedure took  0.053611 s
-  Time spent diagonalizing H:   0.347330 s
+  Davidson-Liu procedure took  0.048332 s
+  Time spent diagonalizing H:   0.329903 s
 
-    P-space  CI Energy Root   0        = -305.067898738967 Eh =   0.0000 eV
+    P-space  CI Energy Root   0        = -305.067898738985 Eh =   0.0000 eV
 
   Using batched Q_space algorithm
   Setting nbin to 1 based on estimated memory ( 2.271 MB)
   Overwriting nbin to 4 based on user input
  -----------------------------------------
                 Bin 0
-  Build: 0.006624
-  Merge: 0.000449
-  Correlation ignored: 0.000000000000
-    Build F                  0.007995 
-    Build criteria vector    0.000632
-    Sort vector              0.000128
-    Screening                0.000023
-    Added 153 dets of 991 from bin 0
-                Bin 1
-  Build: 0.002504
-  Merge: 0.003487
-  Correlation ignored: 0.000000000000
-    Build F                  0.006944 
-    Build criteria vector    0.000626
-    Sort vector              0.000170
-    Screening                0.000034
-    Added 307 dets of 983 from bin 1
-                Bin 2
-  Build: 0.004729
-  Merge: 0.002477
-  Correlation ignored: 0.000000000000
-    Build F                  0.008365 
-    Build criteria vector    0.000617
+  Build: 0.001855
+  Merge: 0.005985
+    Build F                  0.008678 
+    Build criteria vector    0.000399
     Sort vector              0.000123
+    Screening                0.000023
+    Added 153 dets of 990 from bin 0
+                Bin 1
+  Build: 0.003576
+  Merge: 0.002556
+    Build F                  0.006980 
+    Build criteria vector    0.000389
+    Sort vector              0.000126
+    Screening                0.000017
+    Added 307 dets of 982 from bin 1
+                Bin 2
+  Build: 0.002535
+  Merge: 0.003955
+    Build F                  0.007356 
+    Build criteria vector    0.000395
+    Sort vector              0.000117
     Screening                0.000013
-    Added 469 dets of 972 from bin 2
+    Added 469 dets of 973 from bin 2
                 Bin 3
-  Build: 0.002530
-  Merge: 0.003736
-  Correlation ignored: 0.000000000000
-    Build F                  0.007306 
-    Build criteria vector    0.000705
-    Sort vector              0.000191
-    Screening                0.000047
-    Added 625 dets of 986 from bin 3
+  Build: 0.002481
+  Merge: 0.003659
+    Build F                  0.006976 
+    Build criteria vector    0.000391
+    Sort vector              0.000127
+    Screening                0.000019
+    Added 625 dets of 987 from bin 3
  ------------------------------------
   Screened out 0.0004954037 Eh of correlation
   Dimension of the truncated SD space: 625 determinants
-  Time spent building the external space (default): 0.034801 s
+  Time spent building the external space (default): 0.032589 s
 
-  Time spent sorting: 0.000127
+  Time spent sorting: 0.000116
   Added 2 missing determinants in aimed selection.
-  Time spent selecting: 0.000162
+  Time spent selecting: 0.000143
   Dimension of the P + Q space: 853 determinants
-  Time spent screening the model space: 0.000197 s
-  Time spent building the model space: 0.035229
+  Time spent screening the model space: 0.000162 s
+  Time spent building the model space: 0.032934
   Spin-complete dimension of the PQ space: 1207
 
   Davidson-Liu solver algorithm with dynamic sigma builds
@@ -958,47 +718,47 @@ Calling plugin forte.so.
   ----------------------------------------
     Iter.      Avg. Energy       Delta_E
   ----------------------------------------
-      1     -405.564289787053  -4.056e+02
-      2     -405.611512798936  -4.722e-02
-      3     -405.619321025110  -7.808e-03
-      4     -405.620468264365  -1.147e-03
-      5     -405.620808670825  -3.404e-04
-      6     -405.620850617094  -4.195e-05
-      7     -405.620863488096  -1.287e-05
-      8     -405.620867084609  -3.597e-06
-      9     -405.620868342261  -1.258e-06
-     10     -405.620868664858  -3.226e-07
-     11     -405.620868762206  -9.735e-08
-     12     -405.620868791595  -2.939e-08
-     13     -405.620868803203  -1.161e-08
-     14     -405.620868806944  -3.741e-09
-     15     -405.620868808262  -1.319e-09
-     16     -405.620868808735  -4.732e-10
-     17     -405.620868808927  -1.915e-10
-     18     -405.620868808990  -6.338e-11
+      1     -405.564290373981  -4.056e+02
+      2     -405.611513385156  -4.722e-02
+      3     -405.619321611124  -7.808e-03
+      4     -405.620468850341  -1.147e-03
+      5     -405.620809256787  -3.404e-04
+      6     -405.620851203053  -4.195e-05
+      7     -405.620864074054  -1.287e-05
+      8     -405.620867670567  -3.597e-06
+      9     -405.620868928219  -1.258e-06
+     10     -405.620869250816  -3.226e-07
+     11     -405.620869348163  -9.735e-08
+     12     -405.620869377553  -2.939e-08
+     13     -405.620869389161  -1.161e-08
+     14     -405.620869392902  -3.741e-09
+     15     -405.620869394220  -1.318e-09
+     16     -405.620869394693  -4.732e-10
+     17     -405.620869394885  -1.919e-10
+     18     -405.620869394948  -6.344e-11
   ----------------------------------------
   The Davidson-Liu algorithm converged in 19 iterations.
-  Davidson-Liu procedure took  0.126161 s
-  Total time spent diagonalizing H:   0.424940 s
+  Davidson-Liu procedure took  0.107582 s
+  Total time spent diagonalizing H:   0.394368 s
 
-    PQ-space CI Energy Root   0        = -305.077447919483 Eh =   0.0000 eV
-    PQ-space CI Energy + EPT2 Root   0 = -305.078444695952 Eh =   0.0000 eV
+    PQ-space CI Energy Root   0        = -305.077447919234 Eh =   0.0000 eV
+    PQ-space CI Energy + EPT2 Root   0 = -305.078444695680 Eh =   0.0000 eV
 
 
   Most important contributions to root   0:
-    0   0.868754 0.754733290         281 |22220000>
+    0   0.868754 0.754733293         281 |22220000>
     1  -0.194942 0.038002234         280 |22202000>
     2   0.103959 0.010807434         278 |22-++-00>
     3   0.103959 0.010807434         279 |22+--+00>
     4  -0.093449 0.008732773         277 |22020200>
-    5   0.079629 0.006340719         274 |+22--00+>
-    6   0.079629 0.006340719         273 |-22++00->
-    7  -0.079087 0.006254695         275 |2-2++0-0>
-    8  -0.079087 0.006254695         276 |2+2--0+0>
+    5   0.079629 0.006340719         273 |+22--00+>
+    6   0.079629 0.006340719         274 |-22++00->
+    7  -0.079087 0.006254694         275 |2-2++0-0>
+    8  -0.079087 0.006254694         276 |2+2--0+0>
     9   0.075467 0.005695193         272 |22+-+-00>
 
   Spin state for root 0: S^2 = 0.000000, S = 0.000, singlet
-  Cycle 1 took: 0.821912 s
+  Cycle 1 took: 0.770618 s
 
   ==> Cycle 2 <==
 
@@ -1024,81 +784,77 @@ Calling plugin forte.so.
   ----------------------------------------
     Iter.      Avg. Energy       Delta_E
   ----------------------------------------
-      1     -405.564289787053  -4.056e+02
-      2     -405.611044299603  -4.675e-02
-      3     -405.618606915985  -7.563e-03
-      4     -405.619663543234  -1.057e-03
-      5     -405.619984119095  -3.206e-04
-      6     -405.620025624426  -4.151e-05
-      7     -405.620037972793  -1.235e-05
-      8     -405.620041118563  -3.146e-06
-      9     -405.620042063153  -9.446e-07
-     10     -405.620042280080  -2.169e-07
-     11     -405.620042341286  -6.121e-08
-     12     -405.620042357738  -1.645e-08
-     13     -405.620042363404  -5.666e-09
-     14     -405.620042365115  -1.711e-09
-     15     -405.620042365695  -5.793e-10
-     16     -405.620042365884  -1.888e-10
-     17     -405.620042365952  -6.798e-11
+      1     -405.564290373981  -4.056e+02
+      2     -405.611044885835  -4.675e-02
+      3     -405.618607502018  -7.563e-03
+      4     -405.619664129231  -1.057e-03
+      5     -405.619984705079  -3.206e-04
+      6     -405.620026210407  -4.151e-05
+      7     -405.620038558773  -1.235e-05
+      8     -405.620041704542  -3.146e-06
+      9     -405.620042649132  -9.446e-07
+     10     -405.620042866059  -2.169e-07
+     11     -405.620042927266  -6.121e-08
+     12     -405.620042943717  -1.645e-08
+     13     -405.620042949384  -5.666e-09
+     14     -405.620042951095  -1.711e-09
+     15     -405.620042951674  -5.790e-10
+     16     -405.620042951863  -1.888e-10
+     17     -405.620042951931  -6.798e-11
   ----------------------------------------
   The Davidson-Liu algorithm converged in 18 iterations.
-  Davidson-Liu procedure took  0.100042 s
-  Time spent diagonalizing H:   0.395786 s
+  Davidson-Liu procedure took  0.083622 s
+  Time spent diagonalizing H:   0.363802 s
 
-    P-space  CI Energy Root   0        = -305.076621476445 Eh =   0.0000 eV
+    P-space  CI Energy Root   0        = -305.076621476217 Eh =   0.0000 eV
 
   Using batched Q_space algorithm
   Setting nbin to 1 based on estimated memory ( 6.138 MB)
   Overwriting nbin to 4 based on user input
  -----------------------------------------
                 Bin 0
-  Build: 0.007462
-  Merge: 0.007536
-  Correlation ignored: 0.000000000000
-    Build F                  0.015899 
-    Build criteria vector    0.000634
-    Sort vector              0.000095
-    Screening                0.000027
+  Build: 0.004460
+  Merge: 0.013519
+    Build F                  0.018779 
+    Build criteria vector    0.000393
+    Sort vector              0.000098
+    Screening                0.000019
     Added 79 dets of 888 from bin 0
                 Bin 1
-  Build: 0.006480
-  Merge: 0.008500
-  Correlation ignored: 0.000000000000
-    Build F                  0.015874 
-    Build criteria vector    0.000592
-    Sort vector              0.000093
-    Screening                0.000026
-    Added 163 dets of 887 from bin 1
+  Build: 0.006391
+  Merge: 0.008175
+    Build F                  0.015328 
+    Build criteria vector    0.000354
+    Sort vector              0.000094
+    Screening                0.000013
+    Added 163 dets of 883 from bin 1
                 Bin 2
-  Build: 0.006660
-  Merge: 0.017421
-  Correlation ignored: 0.000000000000
-    Build F                  0.024962 
-    Build criteria vector    0.000563
-    Sort vector              0.000122
+  Build: 0.006421
+  Merge: 0.007623
+    Build F                  0.014743 
+    Build criteria vector    0.000339
+    Sort vector              0.000080
     Screening                0.000008
-    Added 212 dets of 840 from bin 2
+    Added 212 dets of 839 from bin 2
                 Bin 3
-  Build: 0.009045
-  Merge: 0.006554
-  Correlation ignored: 0.000000000000
-    Build F                  0.016764 
-    Build criteria vector    0.000704
-    Sort vector              0.000096
-    Screening                0.000015
-    Added 281 dets of 873 from bin 3
+  Build: 0.006491
+  Merge: 0.009435
+    Build F                  0.016663 
+    Build criteria vector    0.000349
+    Sort vector              0.000089
+    Screening                0.000013
+    Added 281 dets of 872 from bin 3
  ------------------------------------
   Screened out 0.0004954566 Eh of correlation
   Dimension of the truncated SD space: 281 determinants
-  Time spent building the external space (default): 0.077252 s
+  Time spent building the external space (default): 0.067843 s
 
   Time spent sorting: 0.000047
   Added 1 missing determinants in aimed selection.
-  Time spent selecting: 0.000054
+  Time spent selecting: 0.000043
   Dimension of the P + Q space: 1174 determinants
-  Time spent screening the model space: 0.000081 s
-  Time spent building the model space: 0.077556
+  Time spent screening the model space: 0.000062 s
+  Time spent building the model space: 0.068009
   Spin-complete dimension of the PQ space: 1286
 
   Davidson-Liu solver algorithm with dynamic sigma builds
@@ -1120,35 +876,35 @@ Calling plugin forte.so.
   ----------------------------------------
     Iter.      Avg. Energy       Delta_E
   ----------------------------------------
-      1     -405.564289787053  -4.056e+02
-      2     -405.611571942216  -4.728e-02
-      3     -405.619614034955  -8.042e-03
-      4     -405.620867573230  -1.254e-03
-      5     -405.621267927701  -4.004e-04
-      6     -405.621313896140  -4.597e-05
-      7     -405.621326989846  -1.309e-05
-      8     -405.621330856321  -3.866e-06
-      9     -405.621332373890  -1.518e-06
-     10     -405.621332766916  -3.930e-07
-     11     -405.621332879707  -1.128e-07
-     12     -405.621332915300  -3.559e-08
-     13     -405.621332930287  -1.499e-08
-     14     -405.621332934964  -4.677e-09
-     15     -405.621332936550  -1.586e-09
-     16     -405.621332937148  -5.979e-10
-     17     -405.621332937411  -2.631e-10
-     18     -405.621332937498  -8.703e-11
+      1     -405.564290373981  -4.056e+02
+      2     -405.611572528435  -4.728e-02
+      3     -405.619614620960  -8.042e-03
+      4     -405.620868159192  -1.254e-03
+      5     -405.621268513645  -4.004e-04
+      6     -405.621314482081  -4.597e-05
+      7     -405.621327575786  -1.309e-05
+      8     -405.621331442261  -3.866e-06
+      9     -405.621332959831  -1.518e-06
+     10     -405.621333352857  -3.930e-07
+     11     -405.621333465647  -1.128e-07
+     12     -405.621333501240  -3.559e-08
+     13     -405.621333516228  -1.499e-08
+     14     -405.621333520904  -4.677e-09
+     15     -405.621333522490  -1.586e-09
+     16     -405.621333523088  -5.979e-10
+     17     -405.621333523351  -2.635e-10
+     18     -405.621333523438  -8.703e-11
   ----------------------------------------
   The Davidson-Liu algorithm converged in 19 iterations.
-  Davidson-Liu procedure took  0.135203 s
-  Total time spent diagonalizing H:   0.440343 s
+  Davidson-Liu procedure took  0.158251 s
+  Total time spent diagonalizing H:   0.441285 s
 
-    PQ-space CI Energy Root   0        = -305.077912047991 Eh =   0.0000 eV
-    PQ-space CI Energy + EPT2 Root   0 = -305.078907559684 Eh =   0.0000 eV
+    PQ-space CI Energy Root   0        = -305.077912047724 Eh =   0.0000 eV
+    PQ-space CI Energy + EPT2 Root   0 = -305.078907559389 Eh =   0.0000 eV
 
 
   Most important contributions to root   0:
-    0   0.868036 0.753487338         685 |22220000>
+    0   0.868036 0.753487342         685 |22220000>
     1  -0.194213 0.037718521         684 |22202000>
     2   0.103957 0.010807155         683 |22-++-00>
     3   0.103957 0.010807155         682 |22+--+00>
@@ -1160,7 +916,7 @@ Calling plugin forte.so.
     9   0.075551 0.005707883         676 |22+-+-00>
 
   Spin state for root 0: S^2 = 0.000000, S = 0.000, singlet
-  Cycle 2 took: 0.930912 s
+  Cycle 2 took: 0.889165 s
 
   ==> Cycle 3 <==
 
@@ -1186,82 +942,78 @@ Calling plugin forte.so.
   ----------------------------------------
     Iter.      Avg. Energy       Delta_E
   ----------------------------------------
-      1     -405.564289787053  -4.056e+02
-      2     -405.611256256025  -4.697e-02
-      3     -405.618939738439  -7.683e-03
-      4     -405.620096971430  -1.157e-03
-      5     -405.620460465828  -3.635e-04
-      6     -405.620506153191  -4.569e-05
-      7     -405.620519152302  -1.300e-05
-      8     -405.620522723057  -3.571e-06
-      9     -405.620523930543  -1.207e-06
-     10     -405.620524214305  -2.838e-07
-     11     -405.620524292546  -7.824e-08
-     12     -405.620524315174  -2.263e-08
-     13     -405.620524323759  -8.585e-09
-     14     -405.620524326345  -2.586e-09
-     15     -405.620524327198  -8.530e-10
-     16     -405.620524327492  -2.942e-10
-     17     -405.620524327608  -1.157e-10
-     18     -405.620524327644  -3.644e-11
+      1     -405.564290373981  -4.056e+02
+      2     -405.611256842252  -4.697e-02
+      3     -405.618940324463  -7.683e-03
+      4     -405.620097557415  -1.157e-03
+      5     -405.620461051797  -3.635e-04
+      6     -405.620506739157  -4.569e-05
+      7     -405.620519738267  -1.300e-05
+      8     -405.620523309022  -3.571e-06
+      9     -405.620524516508  -1.207e-06
+     10     -405.620524800270  -2.838e-07
+     11     -405.620524878511  -7.824e-08
+     12     -405.620524901139  -2.263e-08
+     13     -405.620524909724  -8.585e-09
+     14     -405.620524912310  -2.586e-09
+     15     -405.620524913163  -8.528e-10
+     16     -405.620524913457  -2.943e-10
+     17     -405.620524913573  -1.158e-10
+     18     -405.620524913609  -3.638e-11
   ----------------------------------------
   The Davidson-Liu algorithm converged in 19 iterations.
-  Davidson-Liu procedure took  0.116129 s
-  Time spent diagonalizing H:   0.411512 s
+  Davidson-Liu procedure took  0.098704 s
+  Time spent diagonalizing H:   0.381352 s
 
-    P-space  CI Energy Root   0        = -305.077103438137 Eh =   0.0000 eV
+    P-space  CI Energy Root   0        = -305.077103437895 Eh =   0.0000 eV
 
   Using batched Q_space algorithm
   Setting nbin to 1 based on estimated memory ( 6.653 MB)
   Overwriting nbin to 4 based on user input
  -----------------------------------------
                 Bin 0
-  Build: 0.015485
-  Merge: 0.000290
-  Correlation ignored: 0.000000000000
-    Build F                  0.016606 
-    Build criteria vector    0.000658
-    Sort vector              0.000139
+  Build: 0.012896
+  Merge: 0.005078
+    Build F                  0.018750 
+    Build criteria vector    0.000349
+    Sort vector              0.000088
     Screening                0.000016
-    Added 63 dets of 864 from bin 0
+    Added 63 dets of 866 from bin 0
                 Bin 1
-  Build: 0.008131
-  Merge: 0.008983
-  Correlation ignored: 0.000000000000
-    Build F                  0.018466 
-    Build criteria vector    0.000928
-    Sort vector              0.000104
-    Screening                0.000017
-    Added 119 dets of 854 from bin 1
+  Build: 0.006964
+  Merge: 0.010655
+    Build F                  0.018355 
+    Build criteria vector    0.000352
+    Sort vector              0.000083
+    Screening                0.000012
+    Added 119 dets of 852 from bin 1
                 Bin 2
-  Build: 0.009903
-  Merge: 0.011933
-  Correlation ignored: 0.000000000000
-    Build F                  0.026101 
-    Build criteria vector    0.000570
-    Sort vector              0.000082
-    Screening                0.000013
-    Added 160 dets of 834 from bin 2
+  Build: 0.010080
+  Merge: 0.006874
+    Build F                  0.017653 
+    Build criteria vector    0.000332
+    Sort vector              0.000079
+    Screening                0.000011
+    Added 160 dets of 832 from bin 2
                 Bin 3
-  Build: 0.009117
-  Merge: 0.006931
-  Correlation ignored: 0.000000000000
-    Build F                  0.017347 
-    Build criteria vector    0.001010
-    Sort vector              0.000104
-    Screening                0.000010
-    Added 222 dets of 863 from bin 3
+  Build: 0.007092
+  Merge: 0.009716
+    Build F                  0.017543 
+    Build criteria vector    0.000346
+    Sort vector              0.000085
+    Screening                0.000009
+    Added 222 dets of 859 from bin 3
  ------------------------------------
   Screened out 0.0004952869 Eh of correlation
   Dimension of the truncated SD space: 222 determinants
-  Time spent building the external space (default): 0.083213 s
+  Time spent building the external space (default): 0.074617 s
 
-  Time spent sorting: 0.000038
+  Time spent sorting: 0.000035
   Added 1 missing determinants in aimed selection.
-  Time spent selecting: 0.000046
+  Time spent selecting: 0.000032
   Dimension of the P + Q space: 1212 determinants
-  Time spent screening the model space: 0.000072 s
-  Time spent building the model space: 0.083412
+  Time spent screening the model space: 0.000051 s
+  Time spent building the model space: 0.074760
   Spin-complete dimension of the PQ space: 1280
 
   Davidson-Liu solver algorithm with dynamic sigma builds
@@ -1283,35 +1035,35 @@ Calling plugin forte.so.
   ----------------------------------------
     Iter.      Avg. Energy       Delta_E
   ----------------------------------------
-      1     -405.564289787053  -4.056e+02
-      2     -405.611496225624  -4.721e-02
-      3     -405.619561715475  -8.065e-03
-      4     -405.620837239245  -1.276e-03
-      5     -405.621254235351  -4.170e-04
-      6     -405.621302848960  -4.861e-05
-      7     -405.621316406253  -1.356e-05
-      8     -405.621320413937  -4.008e-06
-      9     -405.621321996443  -1.583e-06
-     10     -405.621322404662  -4.082e-07
-     11     -405.621322520282  -1.156e-07
-     12     -405.621322556886  -3.660e-08
-     13     -405.621322572338  -1.545e-08
-     14     -405.621322577105  -4.766e-09
-     15     -405.621322578695  -1.591e-09
-     16     -405.621322579294  -5.987e-10
-     17     -405.621322579557  -2.632e-10
-     18     -405.621322579643  -8.589e-11
+      1     -405.564290373981  -4.056e+02
+      2     -405.611496811845  -4.721e-02
+      3     -405.619562301481  -8.065e-03
+      4     -405.620837825207  -1.276e-03
+      5     -405.621254821295  -4.170e-04
+      6     -405.621303434901  -4.861e-05
+      7     -405.621316992193  -1.356e-05
+      8     -405.621320999877  -4.008e-06
+      9     -405.621322582382  -1.583e-06
+     10     -405.621322990602  -4.082e-07
+     11     -405.621323106221  -1.156e-07
+     12     -405.621323142826  -3.660e-08
+     13     -405.621323158278  -1.545e-08
+     14     -405.621323163045  -4.766e-09
+     15     -405.621323164635  -1.590e-09
+     16     -405.621323165234  -5.988e-10
+     17     -405.621323165497  -2.636e-10
+     18     -405.621323165583  -8.595e-11
   ----------------------------------------
   The Davidson-Liu algorithm converged in 19 iterations.
-  Davidson-Liu procedure took  0.131513 s
-  Total time spent diagonalizing H:   0.441106 s
+  Davidson-Liu procedure took  0.112374 s
+  Total time spent diagonalizing H:   0.396463 s
 
-    PQ-space CI Energy Root   0        = -305.077901690136 Eh =   0.0000 eV
-    PQ-space CI Energy + EPT2 Root   0 = -305.078896689899 Eh =   0.0000 eV
+    PQ-space CI Energy Root   0        = -305.077901689869 Eh =   0.0000 eV
+    PQ-space CI Energy + EPT2 Root   0 = -305.078896689603 Eh =   0.0000 eV
 
 
   Most important contributions to root   0:
-    0   0.867977 0.753384326         732 |22220000>
+    0   0.867977 0.753384330         732 |22220000>
     1  -0.194298 0.037751748         731 |22202000>
     2   0.103938 0.010803116         730 |22-++-00>
     3   0.103938 0.010803116         729 |22+--+00>
@@ -1323,7 +1075,7 @@ Calling plugin forte.so.
     9   0.075611 0.005717071         723 |22+-+-00>
 
   Spin state for root 0: S^2 = 0.000000, S = 0.000, singlet
-  Cycle 3 took: 0.954005 s
+  Cycle 3 took: 0.868634 s
 
   ==> Cycle 4 <==
 
@@ -1349,82 +1101,78 @@ Calling plugin forte.so.
   ----------------------------------------
     Iter.      Avg. Energy       Delta_E
   ----------------------------------------
-      1     -405.564289787053  -4.056e+02
-      2     -405.611256256025  -4.697e-02
-      3     -405.618939738439  -7.683e-03
-      4     -405.620096971430  -1.157e-03
-      5     -405.620460465828  -3.635e-04
-      6     -405.620506153191  -4.569e-05
-      7     -405.620519152302  -1.300e-05
-      8     -405.620522723057  -3.571e-06
-      9     -405.620523930543  -1.207e-06
-     10     -405.620524214305  -2.838e-07
-     11     -405.620524292546  -7.824e-08
-     12     -405.620524315174  -2.263e-08
-     13     -405.620524323759  -8.585e-09
-     14     -405.620524326345  -2.586e-09
-     15     -405.620524327198  -8.528e-10
-     16     -405.620524327492  -2.943e-10
-     17     -405.620524327608  -1.156e-10
-     18     -405.620524327644  -3.644e-11
+      1     -405.564290373981  -4.056e+02
+      2     -405.611256842252  -4.697e-02
+      3     -405.618940324463  -7.683e-03
+      4     -405.620097557415  -1.157e-03
+      5     -405.620461051797  -3.635e-04
+      6     -405.620506739158  -4.569e-05
+      7     -405.620519738267  -1.300e-05
+      8     -405.620523309022  -3.571e-06
+      9     -405.620524516508  -1.207e-06
+     10     -405.620524800270  -2.838e-07
+     11     -405.620524878511  -7.824e-08
+     12     -405.620524901139  -2.263e-08
+     13     -405.620524909724  -8.585e-09
+     14     -405.620524912310  -2.586e-09
+     15     -405.620524913163  -8.531e-10
+     16     -405.620524913457  -2.943e-10
+     17     -405.620524913573  -1.154e-10
+     18     -405.620524913609  -3.638e-11
   ----------------------------------------
   The Davidson-Liu algorithm converged in 19 iterations.
-  Davidson-Liu procedure took  0.134395 s
-  Time spent diagonalizing H:   0.449224 s
+  Davidson-Liu procedure took  0.099456 s
+  Time spent diagonalizing H:   0.381424 s
 
-    P-space  CI Energy Root   0        = -305.077103438137 Eh =   0.0000 eV
+    P-space  CI Energy Root   0        = -305.077103437895 Eh =   0.0000 eV
 
   Using batched Q_space algorithm
   Setting nbin to 1 based on estimated memory ( 6.653 MB)
   Overwriting nbin to 4 based on user input
  -----------------------------------------
                 Bin 0
-  Build: 0.017178
-  Merge: 0.000071
-  Correlation ignored: 0.000000000000
-    Build F                  0.018092 
-    Build criteria vector    0.000579
-    Sort vector              0.000085
-    Screening                0.000016
-    Added 63 dets of 864 from bin 0
+  Build: 0.004783
+  Merge: 0.014045
+    Build F                  0.019586 
+    Build criteria vector    0.000374
+    Sort vector              0.000089
+    Screening                0.000017
+    Added 63 dets of 866 from bin 0
                 Bin 1
-  Build: 0.008885
-  Merge: 0.007937
-  Correlation ignored: 0.000000000000
-    Build F                  0.018201 
-    Build criteria vector    0.000837
-    Sort vector              0.000093
-    Screening                0.000014
-    Added 119 dets of 854 from bin 1
+  Build: 0.006913
+  Merge: 0.009174
+    Build F                  0.016807 
+    Build criteria vector    0.000337
+    Sort vector              0.000084
+    Screening                0.000011
+    Added 119 dets of 852 from bin 1
                 Bin 2
-  Build: 0.018177
-  Merge: 0.005816
-  Correlation ignored: 0.000000000000
-    Build F                  0.025517 
-    Build criteria vector    0.000657
-    Sort vector              0.000096
-    Screening                0.000012
-    Added 160 dets of 834 from bin 2
+  Build: 0.008904
+  Merge: 0.008052
+    Build F                  0.017706 
+    Build criteria vector    0.000342
+    Sort vector              0.000080
+    Screening                0.000011
+    Added 160 dets of 832 from bin 2
                 Bin 3
-  Build: 0.007067
-  Merge: 0.007684
-  Correlation ignored: 0.000000000000
-    Build F                  0.015526 
-    Build criteria vector    0.000574
-    Sort vector              0.000096
+  Build: 0.006974
+  Merge: 0.010121
+    Build F                  0.017832 
+    Build criteria vector    0.000355
+    Sort vector              0.000087
     Screening                0.000009
-    Added 222 dets of 863 from bin 3
+    Added 222 dets of 859 from bin 3
  ------------------------------------
   Screened out 0.0004952869 Eh of correlation
   Dimension of the truncated SD space: 222 determinants
-  Time spent building the external space (default): 0.081569 s
+  Time spent building the external space (default): 0.074188 s
 
-  Time spent sorting: 0.000048
+  Time spent sorting: 0.000036
   Added 1 missing determinants in aimed selection.
-  Time spent selecting: 0.000066
+  Time spent selecting: 0.000032
   Dimension of the P + Q space: 1212 determinants
-  Time spent screening the model space: 0.000119 s
-  Time spent building the model space: 0.081887
+  Time spent screening the model space: 0.000051 s
+  Time spent building the model space: 0.074331
   Spin-complete dimension of the PQ space: 1280
 
   Davidson-Liu solver algorithm with dynamic sigma builds
@@ -1446,31 +1194,31 @@ Calling plugin forte.so.
   ----------------------------------------
     Iter.      Avg. Energy       Delta_E
   ----------------------------------------
-      1     -405.564289787053  -4.056e+02
-      2     -405.611496225624  -4.721e-02
-      3     -405.619561715475  -8.065e-03
-      4     -405.620837239245  -1.276e-03
-      5     -405.621254235351  -4.170e-04
-      6     -405.621302848960  -4.861e-05
-      7     -405.621316406253  -1.356e-05
-      8     -405.621320413937  -4.008e-06
-      9     -405.621321996443  -1.583e-06
-     10     -405.621322404662  -4.082e-07
-     11     -405.621322520282  -1.156e-07
-     12     -405.621322556886  -3.660e-08
-     13     -405.621322572339  -1.545e-08
-     14     -405.621322577105  -4.766e-09
-     15     -405.621322578695  -1.590e-09
-     16     -405.621322579294  -5.988e-10
-     17     -405.621322579557  -2.635e-10
-     18     -405.621322579643  -8.589e-11
+      1     -405.564290373981  -4.056e+02
+      2     -405.611496811845  -4.721e-02
+      3     -405.619562301481  -8.065e-03
+      4     -405.620837825207  -1.276e-03
+      5     -405.621254821296  -4.170e-04
+      6     -405.621303434902  -4.861e-05
+      7     -405.621316992193  -1.356e-05
+      8     -405.621320999877  -4.008e-06
+      9     -405.621322582383  -1.583e-06
+     10     -405.621322990602  -4.082e-07
+     11     -405.621323106221  -1.156e-07
+     12     -405.621323142826  -3.660e-08
+     13     -405.621323158278  -1.545e-08
+     14     -405.621323163045  -4.766e-09
+     15     -405.621323164635  -1.590e-09
+     16     -405.621323165234  -5.988e-10
+     17     -405.621323165497  -2.635e-10
+     18     -405.621323165583  -8.595e-11
   ----------------------------------------
   The Davidson-Liu algorithm converged in 19 iterations.
-  Davidson-Liu procedure took  0.131095 s
-  Total time spent diagonalizing H:   0.436814 s
+  Davidson-Liu procedure took  0.111201 s
+  Total time spent diagonalizing H:   0.392468 s
 
-    PQ-space CI Energy Root   0        = -305.077901690137 Eh =   0.0000 eV
-    PQ-space CI Energy + EPT2 Root   0 = -305.078896689900 Eh =   0.0000 eV
+    PQ-space CI Energy Root   0        = -305.077901689869 Eh =   0.0000 eV
+    PQ-space CI Energy + EPT2 Root   0 = -305.078896689603 Eh =   0.0000 eV
 
   ***** Calculation Converged *****
   Saving root 0, ref_root is 0
@@ -1481,13 +1229,13 @@ Calling plugin forte.so.
   Iterations required:                         4
   Dimension of optimized determinant space:    1280
 
-  * Adaptive-CI Energy Root   0        = -305.077901690137 Eh =   0.0000 eV
-  * Adaptive-CI Energy Root   0 + EPT2 = -305.078896689900 Eh =   0.0000 eV
+  * Adaptive-CI Energy Root   0        = -305.077901689869 Eh =   0.0000 eV
+  * Adaptive-CI Energy Root   0 + EPT2 = -305.078896689603 Eh =   0.0000 eV
 
   ==> Wavefunction Information <==
 
   Most important contributions to root   0:
-    0   0.867977 0.753384326         732 |22220000>
+    0   0.867977 0.753384330         732 |22220000>
     1  -0.194298 0.037751748         731 |22202000>
     2   0.103938 0.010803116         730 |22-++-00>
     3   0.103938 0.010803116         729 |22+--+00>
@@ -1499,12 +1247,12 @@ Calling plugin forte.so.
     9   0.075611 0.005717071         723 |22+-+-00>
 
   Spin state for root 0: S^2 = 0.000000, S = 0.000, singlet
-  Diag takes 0.008680
- all alpha takes 0.031325
- all beta takes 0.027049
-  2dif: 0.051735  
-  4dif: 0.027854
- all alpha/beta takes 0.080040
+  Diag takes 0.008738
+ all alpha takes 0.020020
+ all beta takes 0.019408
+  2dif: 0.042907  
+  4dif: 0.022915
+ all alpha/beta takes 0.066260
 
   ==> NATURAL ORBITALS <==
 
@@ -1513,9 +1261,9 @@ Calling plugin forte.so.
         7A      0.095540      8A      0.075201  
 
 
-  RDMS took 0.161796
+  RDMS took 0.126916
 
-  Adaptive-CI ran in : 4.600018 s
+  Adaptive-CI ran in : 4.267454 s
 
   Saving information for root: 0
   energy: -305.077901690
@@ -1525,282 +1273,50 @@ Calling plugin forte.so.
          Chenyang Li, Jeffrey B. Schriber and Francesco A. Evangelista
        -----------------------------------------------------------------
 
-  Took 0.163578 s to build Fock matrix
+  Took 0.151776 s to build Fock matrix
 
   ==> Checking Fock Matrix Diagonal Blocks <==
 
     Off-Diag. Elements       Max           2-Norm
     ------------------------------------------------
-    Fa actv              0.0042942368   0.0114917483
-    Fb actv              0.0042942368   0.0114917483
+    Fa actv              0.0042942368   0.0114917482
+    Fb actv              0.0042942368   0.0114917482
     ------------------------------------------------
     Fa core              0.0007210754   0.0031844351
     Fb core              0.0007210754   0.0031844351
     ------------------------------------------------
-    Fa virt              0.0011085142   0.0048237229
-    Fb virt              0.0011085142   0.0048237229
+    Fa virt              0.0011085142   0.0048237228
+    Fb virt              0.0011085142   0.0048237228
     ------------------------------------------------
 
   ==> Integral Transformation to Semicanonical Basis <==
-    Molecular point group: c1
-    Full point group: Cs
-
-    Geometry (in Angstrom), charge = 0, multiplicity = 1:
-
-       Center              X                  Y                   Z               Mass       
-    ------------   -----------------  -----------------  -----------------  -----------------
-           C          0.335863347908    -0.638024351991     0.000000000207    12.000000000000
-           H          1.432938644893    -0.620850793123     0.000000000280     1.007825032070
-           C         -0.296842800370    -1.839541056853     0.000000000164    12.000000000000
-           H         -1.393739522764    -1.860704439495     0.000000000280     1.007825032070
-           C          0.383204758655    -3.118962138239     0.000000000233    12.000000000000
-           H          1.479554406702    -3.087254985300     0.000000001289     1.007825032070
-           C         -0.237579194060    -4.313790051647    -0.000000000740    12.000000000000
-           H          0.325161338012    -5.249189944735    -0.000000000503     1.007825032070
-           H         -1.329245280272    -4.386987205251    -0.000000001655     1.007825032070
-           C         -0.335863360640     0.638024352182     0.000000000468    12.000000000000
-           H         -1.432938656420     0.620850793004     0.000000000922     1.007825032070
-           C          0.296842792408     1.839541055584     0.000000000041    12.000000000000
-           H          1.393739512934     1.860704430863    -0.000000000539     1.007825032070
-           C         -0.383204755743     3.118962141979     0.000000000141    12.000000000000
-           H         -1.479554404938     3.087254999541     0.000000000472     1.007825032070
-           C          0.237579209937     4.313790049182    -0.000000000431    12.000000000000
-           H          1.329245296894     4.386987192215    -0.000000001010     1.007825032070
-           H         -0.325161312367     5.249189949931    -0.000000000534     1.007825032070
-
-  -AO BASIS SET INFORMATION:
-    Name                   = STO-3G
-    Blend                  = STO-3G
-    Total number of shells = 34
-    Number of primitives   = 102
-    Number of AO           = 50
-    Number of SO           = 50
-    Maximum AM             = 1
-    Spherical Harmonics    = TRUE
-
-  -Contraction Scheme:
-    Atom   Type   All Primitives // Shells:
-   ------ ------ --------------------------
-       1     C     6s 3p // 2s 1p 
-       2     H     3s // 1s 
-       3     C     6s 3p // 2s 1p 
-       4     H     3s // 1s 
-       5     C     6s 3p // 2s 1p 
-       6     H     3s // 1s 
-       7     C     6s 3p // 2s 1p 
-       8     H     3s // 1s 
-       9     H     3s // 1s 
-      10     C     6s 3p // 2s 1p 
-      11     H     3s // 1s 
-      12     C     6s 3p // 2s 1p 
-      13     H     3s // 1s 
-      14     C     6s 3p // 2s 1p 
-      15     H     3s // 1s 
-      16     C     6s 3p // 2s 1p 
-      17     H     3s // 1s 
-      18     H     3s // 1s 
-
-  ==> AO Basis Functions <==
-
-    [ STO-3G ]
-    spherical
-    ****
-    C   1
-    S   3 1.00
-                        71.61683700           0.15432897
-                        13.04509600           0.53532814
-                         3.53051220           0.44463454
-    S   3 1.00
-                         2.94124940          -0.09996723
-                         0.68348310           0.39951283
-                         0.22228990           0.70011547
-    P   3 1.00
-                         2.94124940           0.15591627
-                         0.68348310           0.60768372
-                         0.22228990           0.39195739
-    ****
-    H   2
-    S   3 1.00
-                         3.42525091           0.15432897
-                         0.62391373           0.53532814
-                         0.16885540           0.44463454
-    ****
-    C   3
-    S   3 1.00
-                        71.61683700           0.15432897
-                        13.04509600           0.53532814
-                         3.53051220           0.44463454
-    S   3 1.00
-                         2.94124940          -0.09996723
-                         0.68348310           0.39951283
-                         0.22228990           0.70011547
-    P   3 1.00
-                         2.94124940           0.15591627
-                         0.68348310           0.60768372
-                         0.22228990           0.39195739
-    ****
-    H   4
-    S   3 1.00
-                         3.42525091           0.15432897
-                         0.62391373           0.53532814
-                         0.16885540           0.44463454
-    ****
-    C   5
-    S   3 1.00
-                        71.61683700           0.15432897
-                        13.04509600           0.53532814
-                         3.53051220           0.44463454
-    S   3 1.00
-                         2.94124940          -0.09996723
-                         0.68348310           0.39951283
-                         0.22228990           0.70011547
-    P   3 1.00
-                         2.94124940           0.15591627
-                         0.68348310           0.60768372
-                         0.22228990           0.39195739
-    ****
-    H   6
-    S   3 1.00
-                         3.42525091           0.15432897
-                         0.62391373           0.53532814
-                         0.16885540           0.44463454
-    ****
-    C   7
-    S   3 1.00
-                        71.61683700           0.15432897
-                        13.04509600           0.53532814
-                         3.53051220           0.44463454
-    S   3 1.00
-                         2.94124940          -0.09996723
-                         0.68348310           0.39951283
-                         0.22228990           0.70011547
-    P   3 1.00
-                         2.94124940           0.15591627
-                         0.68348310           0.60768372
-                         0.22228990           0.39195739
-    ****
-    H   8
-    S   3 1.00
-                         3.42525091           0.15432897
-                         0.62391373           0.53532814
-                         0.16885540           0.44463454
-    ****
-    H   9
-    S   3 1.00
-                         3.42525091           0.15432897
-                         0.62391373           0.53532814
-                         0.16885540           0.44463454
-    ****
-    C  10
-    S   3 1.00
-                        71.61683700           0.15432897
-                        13.04509600           0.53532814
-                         3.53051220           0.44463454
-    S   3 1.00
-                         2.94124940          -0.09996723
-                         0.68348310           0.39951283
-                         0.22228990           0.70011547
-    P   3 1.00
-                         2.94124940           0.15591627
-                         0.68348310           0.60768372
-                         0.22228990           0.39195739
-    ****
-    H  11
-    S   3 1.00
-                         3.42525091           0.15432897
-                         0.62391373           0.53532814
-                         0.16885540           0.44463454
-    ****
-    C  12
-    S   3 1.00
-                        71.61683700           0.15432897
-                        13.04509600           0.53532814
-                         3.53051220           0.44463454
-    S   3 1.00
-                         2.94124940          -0.09996723
-                         0.68348310           0.39951283
-                         0.22228990           0.70011547
-    P   3 1.00
-                         2.94124940           0.15591627
-                         0.68348310           0.60768372
-                         0.22228990           0.39195739
-    ****
-    H  13
-    S   3 1.00
-                         3.42525091           0.15432897
-                         0.62391373           0.53532814
-                         0.16885540           0.44463454
-    ****
-    C  14
-    S   3 1.00
-                        71.61683700           0.15432897
-                        13.04509600           0.53532814
-                         3.53051220           0.44463454
-    S   3 1.00
-                         2.94124940          -0.09996723
-                         0.68348310           0.39951283
-                         0.22228990           0.70011547
-    P   3 1.00
-                         2.94124940           0.15591627
-                         0.68348310           0.60768372
-                         0.22228990           0.39195739
-    ****
-    H  15
-    S   3 1.00
-                         3.42525091           0.15432897
-                         0.62391373           0.53532814
-                         0.16885540           0.44463454
-    ****
-    C  16
-    S   3 1.00
-                        71.61683700           0.15432897
-                        13.04509600           0.53532814
-                         3.53051220           0.44463454
-    S   3 1.00
-                         2.94124940          -0.09996723
-                         0.68348310           0.39951283
-                         0.22228990           0.70011547
-    P   3 1.00
-                         2.94124940           0.15591627
-                         0.68348310           0.60768372
-                         0.22228990           0.39195739
-    ****
-    H  17
-    S   3 1.00
-                         3.42525091           0.15432897
-                         0.62391373           0.53532814
-                         0.16885540           0.44463454
-    ****
-    H  18
-    S   3 1.00
-                         3.42525091           0.15432897
-                         0.62391373           0.53532814
-                         0.16885540           0.44463454
-    ****
-
 
  Integrals are about to be computed.
- Computing Density fitted integrals 
+  Computing Density fitted integrals 
 
- Number of auxiliary basis functions:  588
- Need 0.010952 GB to store DF integrals
+  Number of auxiliary basis functions:  588
+  Need 11.76 MB to store DF integrals
+  DFHelper Memory: AOs need 0.010 GiB; user supplied 1.907 GiB. Using in-core AOs.
 
-  Computing DF Integrals               ......Done. Timing        0.074610 s
- Integrals are about to be updated.
-  Frozen-core energy           -397.044911783775 a.u.
 
-  FrozenOneBody Operator takes  1.37131600 s
+  Transforming DF Integrals            ......Done.
+  Timing for density-fitting transformation:                  0.063 s.
+
+ Integrals are about to be updated.  DFHelper Memory: AOs need 0.011 GiB; user supplied 11.921 GiB. Using in-core AOs.
+
+
+  Frozen-core energy           -397.044912338556 a.u.
+  Timing for frozen one-body operator:                        0.851 s.
   Resorting integrals after freezing core.
- Done with resorting
- Resorting integrals takes   0.06399200s
-  Frozen Orbitals takes     1.442 s.
+  Timing for resorting DF integrals:                          0.061 s.
+  Timing for freezing core and virtual orbitals:              0.914 s.
 
   ==> Reference Transformation to Semicanonical Basis <==
 
     Transformed 1 cumulants.
     Transformed 2 cumulants and RDMs.
     Transformed 3 cumulants.
-  SemiCanonicalize takes 3.350402 s.
+  SemiCanonicalize takes 2.790695 s.
 
   ==> Multireference Driven Similarity Renormalization Group <==
 
@@ -1856,51 +1372,51 @@ Calling plugin forte.so.
 
   ==> Computing DSRG-MRPT2 Energy <==
 
-  Reference Energy = -305.077901690136457
-    Computing T2                             ...... Done. Timing        0.103849 s
-    Renormalizing V                          ...... Done. Timing        0.091565 s
-    Computing T1                             ...... Done. Timing        0.003131 s
-    Renormalizing F                          ...... Done. Timing        0.004086 s
-    Computing <[F, T1]>                      ...... Done. Timing        0.001319 s
-    Computing <[F, T2]>                      ...... Done. Timing        0.004253 s
-    Computing <[V, T1]>                      ...... Done. Timing        0.003257 s
-    Computing <[V, T2]> 4HH                  ...... Done. Timing        0.005054 s
-    Computing <V, T2]> 4PP                   ...... Done. Timing        0.004860 s
-    Computing [V, T2] 4PH                    ...... Done. Timing        0.024219 s
-    Computing [V, T2] λ3                     ...... Done. Timing        0.064167 s
-    Computing <[V, T2]> (C_2)^4 (no ccvv)    ...... Done. Timing        0.021672 s
-    Computing <[V, T2]> (C_2)^4 ccvv         ...... Done. Timing        0.025268 s
-  Eccvv: -0.2177086598
+  Reference Energy = -305.077901689868781
+    Computing T2                             ...... Done. Timing        0.103524 s
+    Renormalizing V                          ...... Done. Timing        0.090962 s
+    Computing T1                             ...... Done. Timing        0.003488 s
+    Renormalizing F                          ...... Done. Timing        0.004089 s
+    Computing <[F, T1]>                      ...... Done. Timing        0.002091 s
+    Computing <[F, T2]>                      ...... Done. Timing        0.003989 s
+    Computing <[V, T1]>                      ...... Done. Timing        0.003439 s
+    Computing <[V, T2]> 4HH                  ...... Done. Timing        0.005116 s
+    Computing <V, T2]> 4PP                   ...... Done. Timing        0.005334 s
+    Computing [V, T2] 4PH                    ...... Done. Timing        0.023652 s
+    Computing [V, T2] λ3                     ...... Done. Timing        0.061184 s
+    Computing <[V, T2]> (C_2)^4 (no ccvv)    ...... Done. Timing        0.021225 s
+    Computing <[V, T2]> (C_2)^4 ccvv         ...... Done. Timing        0.025093 s
+  Eccvv: -0.2177086582
 
   ==> DSRG-MRPT2 (DF/CD) Energy Summary <==
 
-    E0 (reference)                 =   -305.077901690136457
-    <[F, T1]>                      =     -0.000016917489446
+    E0 (reference)                 =   -305.077901689868781
+    <[F, T1]>                      =     -0.000016917488865
     <[F, T2]>                      =      0.000000000000000
     <[V, T1]>                      =     -0.000000000000000
-    <[V, T2]> C_4 (C_2)^2 HH       =      0.005491706837688
-    <[V, T2]> C_4 (C_2)^2 PP       =      0.004395539935200
-    <[V, T2]> C_4 (C_2)^2 PH       =      0.100267708745157
+    <[V, T2]> C_4 (C_2)^2 HH       =      0.005491706806723
+    <[V, T2]> C_4 (C_2)^2 PP       =      0.004395539876604
+    <[V, T2]> C_4 (C_2)^2 PH       =      0.100267706726339
     <[V, T2]> C_6 C_2              =     -0.000000000000000
-    <[V, T2]> (C_2)^4              =     -0.422266017991998
-    <[V, T2]>                      =     -0.312111062473953
-    DSRG-MRPT2 correlation energy  =     -0.312127979963399
-    DSRG-MRPT2 total energy        =   -305.390029670099864
-    max(T1)                        =      0.000645008782010
-    ||T1||                         =      0.003322586221213
+    <[V, T2]> (C_2)^4              =     -0.422266014166541
+    <[V, T2]>                      =     -0.312111060756875
+    DSRG-MRPT2 correlation energy  =     -0.312127978245740
+    DSRG-MRPT2 total energy        =   -305.390029668114494
+    max(T1)                        =      0.000645008769319
+    ||T1||                         =      0.003322586154612
 
   ==> Total Timings (s) for Computing Commutators <==
 
              [H1, T1]    [H1, T2]    [H2, T1]    [H2, T2]
     -----------------------------------------------------
-    -> C0       0.001       0.004       0.003       0.081
+    -> C0       0.002       0.004       0.003       0.081
     -> C1       0.000       0.000       0.000       0.000
     -> C2                   0.000       0.000       0.000
     -----------------------------------------------------
 
- CD/DF DSRG-MRPT2 took  9.03121 s.	ACI-DSRG-MRPT2 energy.............................................PASSED
+ CD/DF DSRG-MRPT2 took  8.11943 s.	ACI-DSRG-MRPT2 energy.............................................PASSED
 
-    Psi4 stopped on: Wednesday, 30 May 2018 11:20AM
-    Psi4 wall time for execution: 0:00:15.21
+    Psi4 stopped on: Thursday, 25 October 2018 03:45PM
+    Psi4 wall time for execution: 0:00:14.32
 
 *** Psi4 exiting successfully. Buy a developer a beer!

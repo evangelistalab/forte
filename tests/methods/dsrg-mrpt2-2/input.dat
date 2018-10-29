@@ -2,10 +2,10 @@
 
 import forte
 
-#refmcscf     =  -99.972055826365903 # cc-pVTZ
-#refdsrgpt2   = -100.200752137944022 # cc-pVTZ
-refmcscf     =  -99.939316381643451 # cc-pVDZ
-refdsrgpt2   = -100.100858039676922 # cc-pVDZ
+#refmcscf     =  -99.939316381643451 # cc-pVDZ
+refmcscf     =  -99.939316382624
+#refdsrgpt2   = -100.100858039676922 # cc-pVDZ
+refdsrgpt2   = -100.100858040813449 # cc-pVDZ
 
 memory 500 mb
 

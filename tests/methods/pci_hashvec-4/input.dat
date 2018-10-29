@@ -3,8 +3,8 @@
 
 import forte
 
-refscf = -108.3243829450626947 #TEST
-refpci = -108.638029874900 #TEST
+refscf = -108.3243829457663878 #TEST
+refpci = -108.638029876760 #TEST
 
 molecule N2{
    N

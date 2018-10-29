@@ -33,7 +33,7 @@ adaptive_ci_tests = ["aci-1","aci-2","aci-3",
                      "aci-4","aci-5",
                      "aci-7","aci-8","aci-9",
                      "aci-10","aci-11","aci-12",
-                     "aci-13","aci-14","aci-15","aci-16","aci-17","aci-18","aci-19","aci_scf-1","cis-aci-1"]
+                     "aci-13","aci-14","aci-15","aci-16","aci-17","aci-18","aci-19","aci_scf-1"] #,"cis-aci-1"]
                      #"aci-mrcisd-1","aci-mrcisd-2"]
 
 pci_tests = ["pci-1","pci-2","pci-3","pci-4","pci-5", "pci-6", "pci-7", "pci-8","pci-9"]

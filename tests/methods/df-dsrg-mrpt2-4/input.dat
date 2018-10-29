@@ -2,9 +2,8 @@
 #! Perform a DF-DSRG-MRPT2 on N2
 import forte
 
-refrhf     = -108.95379624015762 
-refdsrgpt2 = -109.25189866738
-refdsrgpt2_jk_rd = -109.25189813072
+refrhf     = -108.9537962408121530 
+refdsrgpt2_jk_rd = -109.251898130391154
 
 memory 500 mb
 

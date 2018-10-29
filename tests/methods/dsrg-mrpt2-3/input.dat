@@ -4,8 +4,10 @@ import forte
 
 #refrhf       = -2.18862199153970 # cc-pVTZ
 #refdsrgpt2   = -2.25959715906599 # cc-pVTZ
-refrhf       = -2.17907771115918 # cc-pVDZ
-refdsrgpt2   = -2.23866688789344 # cc-pVDZ
+#refrhf       = -2.17907771115918 # cc-pVDZ
+refrhf       = -2.1790777096871565
+#refdsrgpt2   = -2.23866688789344 # cc-pVDZ
+refdsrgpt2   = -2.238666886378056 # cc-pVDZ
 
 memory 500 mb
 

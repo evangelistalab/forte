@@ -5,7 +5,8 @@
 import forte 
 
 #The triplet ROHF energy
-ref_rohf = -3.85103041668458
+#ref_rohf = -3.85103041668458
+ref_rohf = -3.8510304164778151
 #Reference value in wavenumbers
 ref_split = (-3.851214594496629 - -3.851030416685039) * 219474.63
 

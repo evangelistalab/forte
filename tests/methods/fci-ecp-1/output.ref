@@ -3,7 +3,7 @@
           Psi4: An Open-Source Ab Initio Electronic Structure Package
                                Psi4 undefined 
 
-                         Git: Rev {master} 9d1564e 
+                         Git: Rev {master} 3c26e8e 
 
 
     R. M. Parrish, L. A. Burns, D. G. A. Smith, A. C. Simmonett,
@@ -12,16 +12,21 @@
     H. R. McAlexander, A. Kumar, M. Saitow, X. Wang, B. P. Pritchard,
     P. Verma, H. F. Schaefer III, K. Patkowski, R. A. King, E. F. Valeev,
     F. A. Evangelista, J. M. Turney, T. D. Crawford, and C. D. Sherrill,
-    J. Chem. Theory Comput. in press (2017).
+    J. Chem. Theory Comput. 13(7) pp 3185--3197 (2017).
     (doi: 10.1021/acs.jctc.7b00174)
+
+
+                         Additional Contributions by
+    P. Kraus, H. Kruse, M. H. Lechner, M. C. Schieber, and R. A. Shaw
 
     -----------------------------------------------------------------------
 
 
-    Psi4 started on: Monday, 22 May 2017 10:03AM
+    Psi4 started on: Thursday, 25 October 2018 03:12PM
 
-    Process ID:  34885
-    PSIDATADIR: /Users/fevange/Source/psi4/objdir/stage/usr/local/psi4/share/psi4
+    Process ID: 90922
+    Host:       jeffschriber
+    PSIDATADIR: /Users/jeffschriber/src/psi4-debug-install/share/psi4
     Memory:     500.0 MiB
     Threads:    1
     
@@ -32,8 +37,10 @@
 
 import forte
 
-nucenergy =   23.253113522963400  #TEST
-refenergy =  -96.673557940220277  #TEST
+#nucenergy =  23.253113522963400  #TEST
+nucenergy =   23.2531136143627961
+#refenergy =  -96.673557940220277  #TEST
+refenergy =  -96.673557940467774
 
 molecule arwater {
     Ar  0.000000000000     0.000000000000     3.000000000000
@@ -56,25 +63,23 @@ set forte {
 }
 
 e = energy('forte')
-compare_values(nucenergy, arwater.nuclear_repulsion_energy(), 10, "Nuclear repulsion energy")   #TEST
-compare_values(refenergy, e,10, "FCI energy with ECP")                                          #TEST
+compare_values(nucenergy, arwater.nuclear_repulsion_energy(), 9, "Nuclear repulsion energy")   #TEST
+compare_values(refenergy, e, 9, "FCI energy with ECP")                                          #TEST
 --------------------------------------------------------------------------
-/users/fevange/Source/forte/forte.so loaded.
 
-*** tstart() called on CHE-FEVANGE-01I
-*** at Mon May 22 10:03:39 2017
+*** tstart() called on jeffschriber
+*** at Thu Oct 25 15:12:44 2018
 
    => Loading Basis Set <=
 
     Name: LANL2DZ
     Role: ORBITAL
     Keyword: BASIS
-    atoms 1   entry AR         line   286 (ECP: line  1702) file /Users/fevange/Source/psi4/objdir/stage/usr/local/psi4/share/psi4/basis/lanl2dz.gbs 
-    atoms 2   entry O          line   136 file /Users/fevange/Source/psi4/objdir/stage/usr/local/psi4/share/psi4/basis/lanl2dz.gbs 
-    atoms 3-4 entry H          line    19 file /Users/fevange/Source/psi4/objdir/stage/usr/local/psi4/share/psi4/basis/lanl2dz.gbs 
+    atoms 1   entry AR         line   286 (ECP: line  1702) file /Users/jeffschriber/src/psi4-debug-install/share/psi4/basis/lanl2dz.gbs 
+    atoms 2   entry O          line   136 file /Users/jeffschriber/src/psi4-debug-install/share/psi4/basis/lanl2dz.gbs 
+    atoms 3-4 entry H          line    19 file /Users/jeffschriber/src/psi4-debug-install/share/psi4/basis/lanl2dz.gbs 
 
-    There are an even number of electrons - assuming singlet.
-    Specify the multiplicity in the molecule input block.
+    !!!  WARNING: ECP capability is in beta. Please check occupations closely.  !!!
 
 
          ---------------------------------------------------------
@@ -94,16 +99,16 @@ compare_values(refenergy, e,10, "FCI energy with ECP")                          
 
        Center              X                  Y                   Z               Mass       
     ------------   -----------------  -----------------  -----------------  -----------------
-          AR          0.000000000000     0.000000000000     0.932015639979    39.962383122510
-           O          0.000000000000     0.000000000000    -2.139127396213    15.994914619560
-           H          0.000000000000    -0.758215806856    -1.503438554220     1.007825032070
-           H         -0.000000000000     0.758215806856    -1.503438554220     1.007825032070
+         AR           0.000000000000     0.000000000000     0.932015639979    39.962383122510
+         O            0.000000000000     0.000000000000    -2.139127396213    15.994914619560
+         H            0.000000000000    -0.758215806856    -1.503438554220     1.007825032070
+         H           -0.000000000000     0.758215806856    -1.503438554220     1.007825032070
 
   Running in c2v symmetry.
 
   Rotational constants: A =     14.54775  B =      0.14990  C =      0.14837 [cm^-1]
-  Rotational constants: A = 436130.43148  B =   4493.85302  C =   4448.02096 [MHz]
-  Nuclear repulsion =   23.253113522963400
+  Rotational constants: A = 436130.43480  B =   4493.85305  C =   4448.02100 [MHz]
+  Nuclear repulsion =   23.253113614362796
 
   Charge       = 0
   Multiplicity = 1
@@ -133,10 +138,9 @@ compare_values(refenergy, e,10, "FCI energy with ECP")                          
     Max angular momentum: 1
 
   Core potential: LANL2DZ
-    Blend: LANL2DZ
     Number of shells: 3
-    Number of terms: 16
-    Number of core electrons: 10
+    Number of ECP primitives: 16
+    Number of ECP core electrons: 10
     Max angular momentum: 2
 
   ==> Pre-Iterations <==
@@ -169,16 +173,18 @@ compare_values(refenergy, e,10, "FCI energy with ECP")                          
   Using 53592 doubles for integral storage.
   We computed 4174 shell quartets total.
   Whereas there are 4186 unique shell quartets.
+
   ==> DiskJK: Disk-Based J/K Matrices <==
 
     J tasked:                  Yes
     K tasked:                  Yes
     wK tasked:                  No
-    Memory (MB):               375
+    Memory [MiB]:              375
     Schwarz Cutoff:          1E-12
 
     OpenMP threads:              1
-  Minimum eigenvalue in the overlap matrix is 5.5953493270E-02.
+
+  Minimum eigenvalue in the overlap matrix is 5.5953492778E-02.
   Using Symmetric Orthogonalization.
 
   SCF Guess: Superposition of Atomic Densities via on-the-fly atomic UHF.
@@ -187,24 +193,27 @@ compare_values(refenergy, e,10, "FCI energy with ECP")                          
 
                         Total Energy        Delta E     RMS |[F,P]|
 
-   @RHF iter   0:   -87.76403628699930   -8.77640e+01   2.06086e-01 
-   @RHF iter   1:   -96.59988819028256   -8.83585e+00   2.51600e-02 
-   @RHF iter   2:   -96.66405041220014   -6.41622e-02   1.08110e-02 DIIS
-   @RHF iter   3:   -96.67255773895877   -8.50733e-03   3.09357e-03 DIIS
-   @RHF iter   4:   -96.67351361599529   -9.55877e-04   5.41860e-04 DIIS
-   @RHF iter   5:   -96.67355397796089   -4.03620e-05   1.22452e-04 DIIS
-   @RHF iter   6:   -96.67355765000769   -3.67205e-06   3.15989e-05 DIIS
-   @RHF iter   7:   -96.67355793735268   -2.87345e-07   3.57407e-06 DIIS
-   @RHF iter   8:   -96.67355794017745   -2.82476e-09   4.43683e-07 DIIS
-   @RHF iter   9:   -96.67355794021860   -4.11546e-11   8.97445e-08 DIIS
-   @RHF iter  10:   -96.67355794022021   -1.60583e-12   1.04363e-08 DIIS
-   @RHF iter  11:   -96.67355794022031   -9.94760e-14   6.15579e-10 DIIS
-   @RHF iter  12:   -96.67355794022032   -1.42109e-14   8.51412e-11 DIIS
+   @RHF iter   0:   -87.85010368230617   -8.78501e+01   2.06874e-01 
+   @RHF iter   1:   -96.47796284550624   -8.62786e+00   3.67731e-02 
+   @RHF iter   2:   -96.64397025051358   -1.66007e-01   1.88201e-02 DIIS
+   @RHF iter   3:   -96.67058807236097   -2.66178e-02   4.68949e-03 DIIS
+   @RHF iter   4:   -96.67343787526472   -2.84980e-03   9.50370e-04 DIIS
+   @RHF iter   5:   -96.67355040700367   -1.12532e-04   2.01213e-04 DIIS
+   @RHF iter   6:   -96.67355757435878   -7.16736e-06   4.07239e-05 DIIS
+   @RHF iter   7:   -96.67355792922791   -3.54869e-07   7.89392e-06 DIIS
+   @RHF iter   8:   -96.67355794013669   -1.09088e-08   1.07077e-06 DIIS
+   @RHF iter   9:   -96.67355794044985   -3.13165e-10   2.71517e-07 DIIS
+   @RHF iter  10:   -96.67355794046739   -1.75362e-11   3.55776e-08 DIIS
+   @RHF iter  11:   -96.67355794046762   -2.27374e-13   2.03408e-09 DIIS
+   @RHF iter  12:   -96.67355794046756    5.68434e-14   3.75334e-10 DIIS
+   @RHF iter  13:   -96.67355794046752    4.26326e-14   2.97524e-11 DIIS
+  Energy converged.
+
 
   ==> Post-Iterations <==
 
-    Orbital Energies (a.u.)
-    -----------------------
+    Orbital Energies [Eh]
+    ---------------------
 
     Doubly Occupied:                                                      
 
@@ -223,53 +232,52 @@ compare_values(refenergy, e,10, "FCI energy with ECP")                          
              A1    A2    B1    B2 
     DOCC [     5,    0,    2,    2 ]
 
-  Energy converged.
-
-  @RHF Final Energy:   -96.67355794022032
+  @RHF Final Energy:   -96.67355794046752
 
    => Energetics <=
 
-    Nuclear Repulsion Energy =             23.2531135229633996
-    One-Electron Energy =                -186.2124137573891858
-    Two-Electron Energy =                  66.2857422942054768
-    Total Energy =                        -96.6735579402203200
+    Nuclear Repulsion Energy =             23.2531136143627961
+    One-Electron Energy =                -186.2124139309865996
+    Two-Electron Energy =                  66.2857423761562785
+    Total Energy =                        -96.6735579404675178
+
+Computation Completed
 
 
-
-Properties will be evaluated at   0.000000,   0.000000,   0.000000 Bohr
+Properties will be evaluated at   0.000000,   0.000000,   0.000000 [a0]
 
 Properties computed using the SCF density matrix
 
-  Nuclear Dipole Moment: (a.u.)
+  Nuclear Dipole Moment: [e a0]
      X:     0.0000      Y:     0.0000      Z:   -23.9311
 
-  Electronic Dipole Moment: (a.u.)
+  Electronic Dipole Moment: [e a0]
      X:     0.0000      Y:     0.0000      Z:    25.0637
 
-  Dipole Moment: (a.u.)
+  Dipole Moment: [e a0]
      X:     0.0000      Y:     0.0000      Z:     1.1326     Total:     1.1326
 
-  Dipole Moment: (Debye)
+  Dipole Moment: [D]
      X:     0.0000      Y:     0.0000      Z:     2.8788     Total:     2.8788
 
 
-*** tstop() called on CHE-FEVANGE-01I at Mon May 22 10:03:39 2017
+*** tstop() called on jeffschriber at Thu Oct 25 15:12:45 2018
 Module time:
-	user time   =       0.50 seconds =       0.01 minutes
+	user time   =       0.97 seconds =       0.02 minutes
 	system time =       0.02 seconds =       0.00 minutes
-	total time  =          0 seconds =       0.00 minutes
+	total time  =          1 seconds =       0.02 minutes
 Total time:
-	user time   =       0.50 seconds =       0.01 minutes
+	user time   =       0.97 seconds =       0.02 minutes
 	system time =       0.02 seconds =       0.00 minutes
-	total time  =          0 seconds =       0.00 minutes
+	total time  =          1 seconds =       0.02 minutes
    => Loading Basis Set <=
 
     Name: STO-3G
     Role: ORBITAL
     Keyword: MINAO_BASIS
-    atoms 1   entry AR         line   209 file /Users/fevange/Source/psi4/objdir/stage/usr/local/psi4/share/psi4/basis/sto-3g.gbs 
-    atoms 2   entry O          line    81 file /Users/fevange/Source/psi4/objdir/stage/usr/local/psi4/share/psi4/basis/sto-3g.gbs 
-    atoms 3-4 entry H          line    19 file /Users/fevange/Source/psi4/objdir/stage/usr/local/psi4/share/psi4/basis/sto-3g.gbs 
+    atoms 1   entry AR         line   209 file /Users/jeffschriber/src/psi4-debug-install/share/psi4/basis/sto-3g.gbs 
+    atoms 2   entry O          line    81 file /Users/jeffschriber/src/psi4-debug-install/share/psi4/basis/sto-3g.gbs 
+    atoms 3-4 entry H          line    19 file /Users/jeffschriber/src/psi4-debug-install/share/psi4/basis/sto-3g.gbs 
 
 
 Reading options from the FORTE block
@@ -277,6 +285,18 @@ Calling plugin forte.so.
 
 
 
+  Forte
+  ----------------------------------------------------------------------------
+  A suite of quantum chemistry methods for strongly correlated electrons
+
+    git branch: master - git commit: 9480afcf
+
+  Developed by:
+    Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
+    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai
+  ----------------------------------------------------------------------------
+
+  Size of Determinant class: 16
 
   ==> MO Space Information <==
 
@@ -295,88 +315,11 @@ Calling plugin forte.so.
 
   ==> Integral Transformation <==
 
-  Number of molecular orbitals:               21
-  Number of correlated molecular orbitals:    21
-  Number of frozen occupied orbitals:          0
-  Number of frozen unoccupied orbitals:        0
-
-    Molecular point group: c2v
-    Full point group: C2v
-
-    Geometry (in Angstrom), charge = 0, multiplicity = 1:
-
-       Center              X                  Y                   Z               Mass       
-    ------------   -----------------  -----------------  -----------------  -----------------
-          AR          0.000000000000     0.000000000000     0.932015639979    39.962383122510
-           O          0.000000000000     0.000000000000    -2.139127396213    15.994914619560
-           H          0.000000000000    -0.758215806856    -1.503438554220     1.007825032070
-           H         -0.000000000000     0.758215806856    -1.503438554220     1.007825032070
-
-  -AO BASIS SET INFORMATION:
-    Name                   = LANL2DZ
-    Blend                  = LANL2DZ
-    Total number of shells = 13
-    Number of primitives   = 29
-    Number of AO           = 21
-    Number of SO           = 21
-    Maximum AM             = 1
-    Spherical Harmonics    = FALSE
-
-  -Contraction Scheme:
-    Atom   Type   All Primitives // Shells:
-   ------ ------ --------------------------
-       1    AR     3s 3p // 2s 2p 
-       2     O     10s 5p // 3s 2p 
-       3     H     4s // 2s 
-       4     H     4s // 2s 
-
-  ==> AO Basis Functions <==
-
-    [ LANL2DZ ]
-    cartesian
-    ****
-   AR   1
-    S   2 1.00
-                         2.61300000          -0.51104630
-                         0.57360000           1.27012360
-    S   1 1.00
-                         0.20140000           1.00000000
-    P   2 1.00
-                         7.86000000          -0.05551670
-                         0.73870000           1.01159820
-    P   1 1.00
-                         0.20810000           1.00000000
-    ****
-    O   2
-    S   7 1.00
-                      7817.00000000           0.00117600
-                      1176.00000000           0.00896800
-                       273.20000000           0.04286800
-                        81.17000000           0.14393000
-                        27.18000000           0.35563000
-                         9.53200000           0.46124800
-                         3.41400000           0.14020600
-    S   2 1.00
-                         9.53200000          -0.15415300
-                         0.93980000           1.05691400
-    S   1 1.00
-                         0.28460000           1.00000000
-    P   4 1.00
-                        35.18000000           0.01958000
-                         7.90400000           0.12420000
-                         2.30500000           0.39471400
-                         0.71710000           0.62737600
-    P   1 1.00
-                         0.21370000           1.00000000
-    ****
-    H   3
-    S   3 1.00
-                        19.23840000           0.03282800
-                         2.89870000           0.23120400
-                         0.65350000           0.81722600
-    S   1 1.00
-                         0.17760000           1.00000000
-    ****
+  Number of molecular orbitals:                    21
+  Number of correlated molecular orbitals:         21
+  Number of frozen occupied orbitals:               0
+  Number of frozen unoccupied orbitals:             0
+  Two-electron integral type:              Conventional
 
 
   Overall Conventional Integrals timings
@@ -390,10 +333,11 @@ Calling plugin forte.so.
 	Starting second half-transformation.
 	Two-electron integral transformation complete.
 
-  Integral transformation done. 0.01188100 s
+  Integral transformation done. 0.01941117 s
   Reading the two-electron integrals from disk
   Size of two-electron integrals:   0.004347 GB
-  Conventional integrals take 0.04465500 s
+  Timing for freezing core and virtual orbitals:              0.000 s.
+  Conventional integrals take 0.43873671 s
 
                 -----------------------------------------------
                   String-based Full Configuration Interaction
@@ -417,7 +361,6 @@ Calling plugin forte.so.
   Timing for NN strings     =      0.000 s
   Timing for VO strings     =      0.000 s
   Timing for OO strings     =      0.000 s
-  Timing for Knowles-Handy  =      0.000 s
   Timing for VVOO strings   =      0.000 s
   Timing for VOVO strings   =      0.000 s
   Timing for 1-hole strings =      0.000 s
@@ -441,7 +384,7 @@ Calling plugin forte.so.
   ---------------------------------------------
     Root            Energy     <S^2>   Spin
   ---------------------------------------------
-      0      -96.673557940220  0.000  singlet
+      0      -96.673557940467  0.000  singlet
   ---------------------------------------------
   Timing for initial guess  =      0.000 s
 
@@ -450,7 +393,7 @@ Calling plugin forte.so.
   ----------------------------------------
     Iter.      Avg. Energy       Delta_E
   ----------------------------------------
-      1      -96.673557940220  -9.667e+01
+      1      -96.673557940467  -9.667e+01
   ----------------------------------------
   The Davidson-Liu algorithm converged in 2 iterations.
 
@@ -458,7 +401,7 @@ Calling plugin forte.so.
 
          1.00000000
 
-    Total Energy:       -96.673557940220263
+    Total Energy:       -96.673557940467362
 
   ==> Computing RDMs for Root No. 0 <==
 
@@ -467,10 +410,10 @@ Calling plugin forte.so.
   ==> NATURAL ORBITALS <==
 
     
-
-
-  Your calculation took 0.21284500 seconds
 	Nuclear repulsion energy..........................................PASSED
 	FCI energy with ECP...............................................PASSED
+
+    Psi4 stopped on: Thursday, 25 October 2018 03:12PM
+    Psi4 wall time for execution: 0:00:01.96
 
 *** Psi4 exiting successfully. Buy a developer a beer!

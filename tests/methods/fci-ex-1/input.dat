@@ -1,7 +1,9 @@
 import forte
 
-refgs = -190.903043353085195
-refex = -190.460579061322 # NB: previous value was: -190.460579057245468
+#refgs = -190.903043353085195
+refgs = -190.903043353414034
+#refex = -190.460579061322 # NB: previous value was: -190.460579057245468
+refex = -190.46057905898135
  
 memory 1 gb
 
