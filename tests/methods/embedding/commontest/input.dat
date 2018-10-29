@@ -1,0 +1,78 @@
+
+# PYTHONPATH must include directory above plugin directory.
+#     Define either externally or here, then import plugin.
+sys.path.insert(0, './../../..')
+import embedding
+import forte
+
+molecule {
+-1 1
+C       -0.2451526198      3.4481492184      0.0035091847                 
+C       -1.4362187688      2.8445365603     -0.0943662571
+H       -0.2118480253      4.5329193404      0.0811063334                 
+H       -1.5218714917      1.7642505190     -0.1653178480                 
+H       -2.3553702887      3.4224369069     -0.0981837126      
+--
+1 1
+C        4.8004394812      3.7321244441      0.0083175121                 
+C        3.5716876570      2.8219263257      0.0405049102                 
+C        2.2692486902      3.6229859469     -0.0151378178                 
+C        6.0876148165      2.9198891983      0.1564540984                 
+C        1.0529123981      2.6920878010      0.0215774354                 
+C        7.3237427360      3.7834546033     -0.0343632853                                  
+H        7.3327830906      4.6231520738      0.6674234535                 
+H        8.2285284653      3.1901358797      0.1315946998                 
+H        7.3647361236      4.1842596108     -1.0523241670                 
+H        6.1184728842      2.4609401965      1.1518274638                 
+H        6.1055102387      2.1046972797     -0.5760714486                 
+H        4.8167051644      4.2907068476     -0.9352324490                 
+H        4.7401848221      4.4684711736      0.8191742129                 
+H        3.5879943372      2.2139100618      0.9531279219                 
+H        3.6112978361      2.1293472887     -0.8093518789                 
+H        2.2468156377      4.2309453817     -0.9282867593                 
+H        2.2308771051      4.3165026363      0.8345167851                 
+H        1.0954332105      2.0814999301      0.9316421385                 
+H        1.0918836479      2.0140600071     -0.8399710541     
+
+     units angstrom
+     no_reorient
+     symmetry c1
+}
+
+set {
+  basis                  sto-3g
+  reference              rhf
+  scf_type               pk
+  maxiter                200
+  e_convergence          10
+  d_convergence          7
+}
+
+E, wfn_cas = energy('scf', return_wfn = True)
+
+set forte {
+  job_type embedding
+  reference hf
+  threshold 0.5
+  semicanon true
+}
+
+E, wfn_emb = energy('forte', ref_wfn = wfn_cas, return_wfn = True)
+
+set forte {
+  job_type           active-dsrgpt2
+  cino               false
+#  frozen_docc        [26] #freeze C core too
+  restricted_docc    [7]
+  active             [2]
+#  frozen_uocc        [19]
+  cas_type           cas
+  fcimo_actv_type    full
+  nrootpi            [2]
+# print              2
+  d_convergence      10
+  dsrg_s             0.5
+# internal_amp       singles_doubles
+}
+
+Eforte, wfn = energy('forte', ref_wfn = wfn_emb, return_wfn=True)
