@@ -57,6 +57,7 @@ void set_TDACI_options(ForteOptions& foptions) {
     foptions.add_int("TDACI_NSTEP", 20, "Number of steps");
     foptions.add_double("TDACI_TIMESTEP", 1.0, "Timestep (as)");
     foptions.add_double("TDACI_ETA", 1e-12, "Path filtering threshold");
+    foptions.add_double("TDACI_CN_CONVERGENCE", 1e-12, "Convergence threshold for CN iterations");
 //    foptions.add_int("TDACI_TAYLOR_ORDER", 1, "Maximum order of taylor expansion used");
 }
 
@@ -142,11 +143,14 @@ double TDACI::compute_energy() {
         propogate_taylor1( core_coeffs, full_aH);
     } else if ( options_.get_str("TDACI_PROPOGATOR") == "QUADRATIC" ){
         propogate_taylor2( core_coeffs, full_aH);
+    } else if (options_.get_str("TDACI_PROPOGATOR") == "RK4" ){
+        propogate_RK4( core_coeffs, full_aH);
     } else if (options_.get_str("TDACI_PROPOGATOR") == "ALL" ){
         propogate_exact( core_coeffs, full_aH );
         propogate_cn( core_coeffs, full_aH );
         propogate_taylor1( core_coeffs, full_aH);
         propogate_taylor2( core_coeffs, full_aH);
+        propogate_RK4( core_coeffs, full_aH);
     }
     
     //} else {
@@ -175,6 +179,7 @@ double TDACI::compute_energy() {
 void TDACI::propogate_exact(SharedVector C0, SharedMatrix H) {
 
 
+    Timer t1;
     size_t ndet = C0->dim();
 
     // Diagonalize the full Hamiltonian
@@ -207,7 +212,7 @@ void TDACI::propogate_exact(SharedVector C0, SharedMatrix H) {
   //  C0->print();
 
     for( int n = 0; n < nstep; ++n ){
-        outfile->Printf("\n  Propogating for t = %1.3f as", time);
+//        outfile->Printf("\n  Propogating for t = %1.3f as", time);
         for( int I = 0; I < ndet; ++I ){
             int1r->set(I, int1->get(I) * std::cos( -1.0 * evals->get(I) * time*conv ) ); 
             int1i->set(I, int1->get(I) * std::sin( -1.0 * evals->get(I) * time*conv ) ); 
@@ -225,7 +230,6 @@ void TDACI::propogate_exact(SharedVector C0, SharedMatrix H) {
             mag->set(I, (re*re) + (im*im));
             norm += (re*re) + (im*im);
         }        
-        outfile->Printf("\n  norm(t=%1.8f) = %1.5f", time, norm);
 
         if( std::abs( time - round(time) ) <= 1e-8){
           //  save_vector(mag,"exact_" + ss.str()+ ".txt");
@@ -237,9 +241,12 @@ void TDACI::propogate_exact(SharedVector C0, SharedMatrix H) {
 
         time += dt;
     }
+    outfile->Printf("\n Time spent propogating (exact): %1.6f s", t1.get()); 
 }
 
 void TDACI::propogate_cn( SharedVector C0, SharedMatrix H ){
+
+    outfile->Printf("\n  Propogating with Crank-Nicholson algorithm");
 
     Timer total;
     size_t ndet = C0->dim();
@@ -264,7 +271,7 @@ void TDACI::propogate_cn( SharedVector C0, SharedMatrix H ){
     H0->zero_diagonal();
 
     for( int n = 1; n <= nstep; ++n ){
-        outfile->Printf("\n  Propogating at t = %1.6f", time/conv);        
+//        outfile->Printf("\n  Propogating at t = %1.6f", time/conv);        
         // Form b vector
         Timer b;
         SharedVector b_r = std::make_shared<Vector>("br",ndet);
@@ -279,7 +286,7 @@ void TDACI::propogate_cn( SharedVector C0, SharedMatrix H ){
         b_r->add(ct_r);
         b_i->add(ct_i);
     
-        outfile->Printf("\n  Form b: %1.4f s", b.get());
+//        outfile->Printf("\n  Form b: %1.4f s", b.get());
 
         // Form D^(-1) matrix
         Timer dinv;
@@ -293,7 +300,7 @@ void TDACI::propogate_cn( SharedVector C0, SharedMatrix H ){
             Dinv_r->set(I,I, 1.0/(1.0 + HII*HII*0.25*dt*dt) );
             Dinv_i->set(I,I, (HII*dt*-0.5)/(1.0 + HII*HII*0.25*dt*dt) );
         }
-        outfile->Printf("\n  Form Dinv: %1.4f s", dinv.get());
+//        outfile->Printf("\n  Form Dinv: %1.4f s", dinv.get());
 
         // Transform b my D^(-1)
         Timer db;
@@ -305,7 +312,7 @@ void TDACI::propogate_cn( SharedVector C0, SharedMatrix H ){
         SharedVector Dbi = std::make_shared<Vector>("Dbi",ndet); 
         Dbi->gemv(false, 1.0, &(*Dinv_r), &(*b_i), 0.0); 
         Dbi->gemv(false, 1.0, &(*Dinv_i), &(*b_r), 1.0); 
-        outfile->Printf("\n  Form DB: %1.4f s", db.get());
+//        outfile->Printf("\n  Form DB: %1.4f s", db.get());
 
         // Converge C(t+dt)
         bool converged = false;
@@ -349,8 +356,8 @@ void TDACI::propogate_cn( SharedVector C0, SharedMatrix H ){
                 err->set(I, (rn*rn + in*in) - (ro*ro + io*io));                
             }
 
-            outfile->Printf("\n  %1.9f", err->norm());
-            if( err->norm() <= 1e-12 ){
+ //           outfile->Printf("\n  %1.9f", err->norm());
+            if( err->norm() <= options_.get_double("TDACI_CN_CONVERGENCE") ){
                 converged = true;
             }
             
@@ -369,7 +376,7 @@ void TDACI::propogate_cn( SharedVector C0, SharedMatrix H ){
             norm += (re*re) + (im*im);
         }        
         norm = std::sqrt(norm);
-        outfile->Printf("\n norm: %1.6f", norm);
+//        outfile->Printf("\n norm: %1.6f", norm);
         ct_r->scale(1.0/norm);
         ct_i->scale(1.0/norm);
 
@@ -377,6 +384,7 @@ void TDACI::propogate_cn( SharedVector C0, SharedMatrix H ){
         
         double intp;
         if( std::fabs( (time/conv) - round(time/conv)) <= 1e-8 ){
+            outfile->Printf("\n Saving wavefunction for t = %1.3f as", time/conv);
           //  save_vector(mag,"CN_" + ss.str()+ ".txt");
             save_vector(ct_r,"CN_" + ss.str()+ "_r.txt");
             save_vector(ct_i,"CN_" + ss.str()+ "_i.txt");
@@ -384,12 +392,13 @@ void TDACI::propogate_cn( SharedVector C0, SharedMatrix H ){
 
         time += dt;
     }
-    outfile->Printf("\n  Total time: %1.4f s", total.get()); 
+    outfile->Printf("\n  Time spent propogating (CN): %1.6f", total.get());
 }
 
 void TDACI::propogate_taylor1(SharedVector C0, SharedMatrix H  ) {
+    outfile->Printf("\n  Propogating with linear Taylor algorithm");
     
-
+    Timer t1;
     // The screening criterion
     double eta = options_.get_double("TDACI_ETA");        
     double d_tau = options_.get_double("TDACI_TIMESTEP")*0.0413413745758;        
@@ -416,11 +425,10 @@ void TDACI::propogate_taylor1(SharedVector C0, SharedMatrix H  ) {
     int print_val = 9;
     int print_interval = 10;
 
-    outfile->Printf("\n  Propogating with tau = %1.2f", d_tau);
-    outfile->Printf("\n  Using Linear Propogator");
     for( int N = 0; N < nstep; ++N ){
         std::vector<size_t> counter(ndet, 0);
         tau += d_tau;
+//        outfile->Printf("\n  Propogating at t = %1.6f", tau/0.0413413745758);        
 
         SharedVector sigma_r = std::make_shared<Vector>("Sr", ndet);        
         SharedVector sigma_i = std::make_shared<Vector>("Si", ndet);        
@@ -493,11 +501,14 @@ void TDACI::propogate_taylor1(SharedVector C0, SharedMatrix H  ) {
         C0_i->copy(Ct_i->clone());
         print_val += print_interval;
     }
+    outfile->Printf("\n  Time spent propogating (linear): %1.6f", t1.get());
 }
 
 void TDACI::propogate_taylor2(SharedVector C0, SharedMatrix H  ) {
     
 
+    outfile->Printf("\n  Propogating with quadratic Taylor algorithm");
+    Timer t2;
     // The screening criterion
     double eta = options_.get_double("TDACI_ETA");        
     double d_tau = options_.get_double("TDACI_TIMESTEP")*0.0413413745758;        
@@ -522,12 +533,11 @@ void TDACI::propogate_taylor2(SharedVector C0, SharedMatrix H  ) {
    // std::vector<std::pair<std::vector<size_t>, std::vector<double>>> H_sparse = op.build_H_sparse(ann_dets);
     
 
-    outfile->Printf("\n  Propogating with tau = %1.2f", d_tau);
-    outfile->Printf("\n  Using Quadratic Propogator");
     for( int N = 0; N < nstep; ++N ){
         std::vector<size_t> counter(ndet, 0);
         tau += d_tau;
 
+//        outfile->Printf("\n  Propogating at t = %1.6f", tau/0.0413413745758);        
         SharedVector sigma_r = std::make_shared<Vector>("Sr", ndet);        
         SharedVector sigma_i = std::make_shared<Vector>("Si", ndet);        
     
@@ -606,7 +616,145 @@ void TDACI::propogate_taylor2(SharedVector C0, SharedMatrix H  ) {
         C0_r->copy(Ct_r->clone());
         C0_i->copy(Ct_i->clone());
     } 
+    outfile->Printf("\n  Time spent propogating (quadratic): %1.6f", t2.get());
 }
+
+void TDACI::propogate_RK4(SharedVector C0, SharedMatrix H  ) {
+
+    outfile->Printf("\n  Propogating with 4th order Runge-Kutta algorithm");
+
+    Timer total;
+    size_t ndet = C0->dim();
+
+    int nstep = options_.get_int("TDACI_NSTEP");
+    double dt = options_.get_double("TDACI_TIMESTEP");
+    double conv = 1.0/24.18884326505;
+    dt *= conv;
+    double time = dt;
+
+
+    // Copy initial state into iteratively updated vectors
+    SharedVector ct_r = std::make_shared<Vector>("ct_R",ndet);
+    SharedVector ct_i = std::make_shared<Vector>("ct_I",ndet);
+
+    ct_r->copy(C0->clone());
+    ct_i->zero();
+
+    for( int n = 1; n <= nstep; ++n ){
+
+        // k1
+        SharedVector k1r = std::make_shared<Vector>("k1r", ndet);
+        SharedVector k1i = std::make_shared<Vector>("k1i", ndet);
+
+        k1r->gemv(false, 1.0, &(*H), &(*ct_i), 0.0);
+        k1i->gemv(false, -1.0, &(*H), &(*ct_r), 0.0);
+        
+        // k2
+        SharedVector intr = std::make_shared<Vector>("intr", ndet);
+        SharedVector inti = std::make_shared<Vector>("inti", ndet);
+
+        intr->copy(ct_r->clone());
+        inti->copy(ct_i->clone());
+
+        k1r->scale(0.5*dt);
+        k1i->scale(0.5*dt);
+        //k1r->scale(0.5);
+        //k1i->scale(0.5);
+        intr->add(k1r);
+        inti->add(k1i);
+        k1r->scale(2.0/dt);
+        k1i->scale(2.0/dt);
+        //k1r->scale(2.0);
+        //k1i->scale(2.0);
+
+        SharedVector k2r = std::make_shared<Vector>("k2r", ndet);
+        SharedVector k2i = std::make_shared<Vector>("k2i", ndet);
+
+        k2r->gemv(false, 1.0, &(*H), &(*inti), 0.0);
+        k2i->gemv(false, -1.0, &(*H), &(*intr), 0.0);
+        
+        // k3
+        intr->copy(ct_r->clone());
+        inti->copy(ct_i->clone());
+
+        k2r->scale(0.5*dt);
+        k2i->scale(0.5*dt);
+        //k2r->scale(0.5);
+        //k2i->scale(0.5);
+        intr->add(k2r); 
+        inti->add(k2i);
+        k2r->scale(2.0 * 1.0/dt);
+        k2i->scale(2.0 * 1.0/dt);
+        //k2r->scale(2.0);
+        //k2i->scale(2.0);
+
+        SharedVector k3r = std::make_shared<Vector>("k3r", ndet);
+        SharedVector k3i = std::make_shared<Vector>("k3i", ndet);
+
+        k3r->gemv(false, 1.0, &(*H), &(*inti), 0.0);
+        k3i->gemv(false, -1.0, &(*H), &(*intr), 0.0);
+
+        // k4
+        intr->copy(ct_r->clone());
+        inti->copy(ct_i->clone());
+        
+        k3r->scale(dt);
+        k3i->scale(dt);
+        intr->add(k3r); 
+        inti->add(k3i);
+        k3r->scale(1.0/dt);
+        k3i->scale(1.0/dt);
+
+        SharedVector k4r = std::make_shared<Vector>("k4r", ndet);
+        SharedVector k4i = std::make_shared<Vector>("k4i", ndet);
+
+        k4r->gemv(false, 1.0, &(*H), &(*inti), 0.0);
+        k4i->gemv(false, -1.0, &(*H), &(*intr), 0.0);
+    
+        // Compile all intermediates
+
+        k1r->scale(dt/6.0);
+        k2r->scale(dt/3.0);
+        k3r->scale(dt/3.0);
+        k4r->scale(dt/6.0);
+        k1r->add(k2r);
+        k1r->add(k3r);
+        k1r->add(k4r);
+        ct_r->add(k1r);
+        
+        k1i->scale(dt/6.0);
+        k2i->scale(dt/3.0);
+        k3i->scale(dt/3.0);
+        k4i->scale(dt/6.0);
+        k1i->add(k2i);
+        k1i->add(k3i);
+        k1i->add(k4i);
+        ct_i->add(k1i);
+
+        std::stringstream ss;
+        ss << std::fixed << std::setprecision(3) << time/conv;
+        double norm = 0.0;
+        for( int I = 0; I < ndet; ++I ){
+            double re = ct_r->get(I);
+            double im = ct_i->get(I);
+            norm += (re*re) + (im*im);
+        }        
+        norm = std::sqrt(norm);
+        ct_r->scale(1.0/norm);
+        ct_i->scale(1.0/norm);
+
+        if( std::fabs( (time/conv) - round(time/conv)) <= 1e-8 ){
+            outfile->Printf("\n Saving wavefunction for t = %1.3f as", time/conv);
+            save_vector(ct_r,"RK4_" + ss.str()+ "_r.txt");
+            save_vector(ct_i,"RK4_" + ss.str()+ "_i.txt");
+        }
+
+        time += dt;
+    }
+    outfile->Printf("\n  Time spent propogating (RK4): %1.6f", total.get());
+
+}
+
 
 //void TDACI::propogate_verlet(std::vector<std::pair<double,double>>& C0, std::vector<std::pair<double,double>>& C_tau, std::shared_ptr<FCIIntegrals> fci_ints, DeterminantHashVec& ann_dets  ) {
 //    
