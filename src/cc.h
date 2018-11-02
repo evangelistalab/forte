@@ -80,6 +80,9 @@ class CC : public Wavefunction {
     /// The molecular integrals
     std::shared_ptr<ForteIntegrals> ints_;
 
+    /// If ERI density fitted or Cholesky decomposed
+    bool eri_df_;
+
     /// MO space info
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
 
@@ -105,6 +108,14 @@ class CC : public Wavefunction {
     void build_ints();
     /// Build Fock matrix and diagonal Fock matrix elements
     void build_fock(BlockedTensor& H, BlockedTensor& V);
+    void build_fock_df(BlockedTensor& H, BlockedTensor& B);
+    /// Fill the tensor T with three-index DF or CD integrals
+    void fill_three_index_ints(ambit::BlockedTensor T);
+
+    /// Initialize T with mp2 amplitudes
+    void initial_mp2_t();
+    /// Compute CC correlation energy by T amplitudes.
+    double cc_energy();
 
     /// Kevin's Tensor Wrapper
     std::shared_ptr<BlockedTensorFactory> BTF_;
@@ -115,6 +126,8 @@ class CC : public Wavefunction {
     ambit::BlockedTensor H_;
     /// Two-electron integral
     ambit::BlockedTensor V_;
+    /// Three-index integrals
+    ambit::BlockedTensor B_;
     /// Generalized Fock matrix
     ambit::BlockedTensor F_;
     /// Single excitation amplitude

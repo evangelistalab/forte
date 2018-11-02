@@ -1,0 +1,28 @@
+#! RHF-CCSD 6-31G** all-electron optimization of the H2O molecule
+import forte
+
+molecule h2o {
+    O
+    H 1 1.1
+    H 1 1.1 2 104.0
+}
+
+set {
+  basis sto-3g
+  scf_type           pk
+  reference          rhf
+  e_convergence      8
+  d_convergence      10
+  docc               [3,0,1,1]
+}
+
+set forte {
+  job_type               cc
+  int_type               conventional
+  restricted_docc        [3,0,1,1]
+  restricted_uocc        [1,0,0,1]
+}
+
+energy('ccsd')
+
+energy('forte')
