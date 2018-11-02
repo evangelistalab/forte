@@ -58,6 +58,8 @@ void set_TDACI_options(ForteOptions& foptions) {
     foptions.add_double("TDACI_TIMESTEP", 1.0, "Timestep (as)");
     foptions.add_double("TDACI_ETA", 1e-12, "Path filtering threshold");
     foptions.add_double("TDACI_CN_CONVERGENCE", 1e-12, "Convergence threshold for CN iterations");
+    foptions.add_bool("TDACI_PRINT_WFN", true, "Print coefficients to files");
+    foptions.add_array("TDACI_OCC_ORB","" );
 //    foptions.add_int("TDACI_TAYLOR_ORDER", 1, "Maximum order of taylor expansion used");
 }
 
@@ -87,7 +89,7 @@ double TDACI::compute_energy() {
     outfile->Printf("\n  ACI wavefunction built");
     
     // 2. Generate the n-1 Determinants (not just core)
-    DeterminantHashVec ann_dets;
+  //  DeterminantHashVec ann_dets;
     for( int i = 0; i < nact; ++i ){
         annihilate_wfn(aci_dets, ann_dets,i);  
     }
@@ -108,7 +110,7 @@ double TDACI::compute_energy() {
     }
     
     // 4. Prepare initial state by removing a core electron from aci wfn 
-    DeterminantHashVec core_dets;
+    //DeterminantHashVec core_dets;
     SharedVector core_coeffs = std::make_shared<Vector>("init", nann);
     core_coeffs->zero();
     
@@ -122,10 +124,10 @@ double TDACI::compute_energy() {
             adet.set_alfa_bit(0, false);
             size_t idx = ann_dets.get_idx(adet);
             core_coeffs->set(idx, core_coeffs->get(idx) + aci_coeffs->get(aci_dets.get_idx(detI),0) ); 
-            core_dets.add(adet);
+            core_dets_.add(adet);
         }  
     }
-    outfile->Printf("\n  Size of initial state: %zu", core_dets.size());    
+    outfile->Printf("\n  Size of initial state: %zu", core_dets_.size());    
     
     // 5. Renormalize wave function
     outfile->Printf("\n  Renormalizing wave function");
@@ -134,11 +136,12 @@ double TDACI::compute_energy() {
     core_coeffs->scale(norm);
 
     // 5. Propogate
-
     if( options_.get_str("TDACI_PROPOGATOR") == "EXACT" ){
         propogate_exact( core_coeffs, full_aH );
-    } else if ( options_.get_str("TDACI_PROPOGATOR") == "CN" ){
+    } else if ( options_.get_str("TDACI_PROPOGATOR") == "CN"){
         propogate_cn( core_coeffs, full_aH );
+    } else if ( options_.get_str("TDACI_PROPOGATOR") == "QCN" ){
+        propogate_QCN( core_coeffs, full_aH );
     } else if ( options_.get_str("TDACI_PROPOGATOR") == "LINEAR" ){
         propogate_taylor1( core_coeffs, full_aH);
     } else if ( options_.get_str("TDACI_PROPOGATOR") == "QUADRATIC" ){
@@ -151,33 +154,26 @@ double TDACI::compute_energy() {
         propogate_taylor1( core_coeffs, full_aH);
         propogate_taylor2( core_coeffs, full_aH);
         propogate_RK4( core_coeffs, full_aH);
+        propogate_QCN( core_coeffs, full_aH);
     }
     
-    //} else {
-    //    if (options_.get_str("TDACI_PROPOGATOR") == "TAYLOR" ){
-    //        SharedVector C0 = std::make_shared<Vector>("C0r", ann_dets.size());
-    //        std::shared_ptr<FCIIntegrals> fci_ints = aci->get_aci_ints();
-    //        //std::vector<std::pair<double,double>> C_new;
-    //        //std::vector<double> C0(nann);
-    //        for( size_t I = 0; I < nann; ++I ){
-    //            double num = 0.0;
-    //            file >> num;
-    //            C0->set(I,num);
-    //        }
-    //        
-    //        propogate_taylor(C0, fci_ints, ann_dets );
 
-    //    }
-//  //      if (options_.get_str("TDACI_PROPOGATOR") == "VERLET" ){
-//  //          propogate_verlet(C0, C_new, fci_ints, ann_dets);
-//  //      }
     
- //   }
+
     return en;
 }
 
 void TDACI::propogate_exact(SharedVector C0, SharedMatrix H) {
 
+
+
+    //std::vector<int> orbs(options_["TDACI_OCC_ORB"].size());
+    std::vector<int> orbs(6);
+    //for( int h = 0; h < options_["TDACI_OCC_ORB"].size(); ++h ){
+    for( int h = 0; h < options_["TDACI_OCC_ORB"].size(); ++h ){
+    //    int orb = options_["TDACI_OCC_ORB"][h].to_integer();
+        orbs[h] = h;
+    }
 
     Timer t1;
     size_t ndet = C0->dim();
@@ -199,47 +195,46 @@ void TDACI::propogate_exact(SharedVector C0, SharedMatrix H) {
 
     // Convert to a.u. from as
     double conv = 1.0/24.18884326505;
-    //dt /= 24.18884326505;
     double time = dt;
 
-    SharedVector mag = std::make_shared<Vector>("mag", ndet);
+    std::vector<std::vector<double>> occupations(orbs.size(), std::vector<double>(nstep));
     SharedVector int1 = std::make_shared<Vector>("int1", ndet);
     SharedVector int1r = std::make_shared<Vector>("int2r", ndet);
     SharedVector int1i = std::make_shared<Vector>("int2i", ndet);
-    mag->zero();
     // First multiply the evecs by the initial vector
     int1->gemv(true, 1.0, &(*evecs), &(*C0), 0.0);
-  //  C0->print();
 
     for( int n = 0; n < nstep; ++n ){
-//        outfile->Printf("\n  Propogating for t = %1.3f as", time);
         for( int I = 0; I < ndet; ++I ){
             int1r->set(I, int1->get(I) * std::cos( -1.0 * evals->get(I) * time*conv ) ); 
             int1i->set(I, int1->get(I) * std::sin( -1.0 * evals->get(I) * time*conv ) ); 
         }
         ct_r->gemv(false, 1.0, &(*evecs), &(*int1r), 0.0);
         ct_i->gemv(false, 1.0, &(*evecs), &(*int1i), 0.0);
-
-        std::stringstream ss;
-        ss << std::fixed << std::setprecision(3) << time;
         
-        double norm = 0.0;
-        for( int I = 0; I < ndet; ++I ){
-            double re = ct_r->get(I);
-            double im = ct_i->get(I);
-            mag->set(I, (re*re) + (im*im));
-            norm += (re*re) + (im*im);
-        }        
 
-        if( std::abs( time - round(time) ) <= 1e-8){
-          //  save_vector(mag,"exact_" + ss.str()+ ".txt");
-            save_vector(ct_r, "exact_" + ss.str() +"_r.txt");
-            save_vector(ct_i, "exact_" + ss.str() +"_i.txt");
+        std::vector<double> occ = compute_occupation(ct_r, ct_i, orbs);
+        for( int i = 0; i < orbs.size(); ++i ){
+            //occupations[i].push_back(occ[i]);
+            occupations[i][n] = occ[i];
+        }
+
+        if( options_.get_bool("TDACI_PRINT_WFN")){
+            if( std::abs( time - round(time) ) <= 1e-8){
+                std::stringstream ss;
+                ss << std::fixed << std::setprecision(3) << time;
+              //  save_vector(mag,"exact_" + ss.str()+ ".txt");
+                save_vector(ct_r, "exact_" + ss.str() +"_r.txt");
+                save_vector(ct_i, "exact_" + ss.str() +"_i.txt");
+            }
         }
         int1r->zero();
         int1i->zero();
 
         time += dt;
+    }
+    for( int i = 0; i < orbs.size(); ++i ){
+        save_vector(occupations[i], "occupations" + std::to_string(orbs[i]) + ".txt");
     }
     outfile->Printf("\n Time spent propogating (exact): %1.6f s", t1.get()); 
 }
@@ -383,11 +378,13 @@ void TDACI::propogate_cn( SharedVector C0, SharedMatrix H ){
 //        outfile->Printf("\n  norm(t=%1.3f) = %1.5f", time/conv, norm);
         
         double intp;
-        if( std::fabs( (time/conv) - round(time/conv)) <= 1e-8 ){
-            outfile->Printf("\n Saving wavefunction for t = %1.3f as", time/conv);
-          //  save_vector(mag,"CN_" + ss.str()+ ".txt");
-            save_vector(ct_r,"CN_" + ss.str()+ "_r.txt");
-            save_vector(ct_i,"CN_" + ss.str()+ "_i.txt");
+        if( options_.get_bool("TDACI_PRINT_WFN")){
+            if( std::fabs( (time/conv) - round(time/conv)) <= 1e-8 ){
+                outfile->Printf("\n Saving wavefunction for t = %1.3f as", time/conv);
+              //  save_vector(mag,"CN_" + ss.str()+ ".txt");
+                save_vector(ct_r,"CN_" + ss.str()+ "_r.txt");
+                save_vector(ct_i,"CN_" + ss.str()+ "_i.txt");
+            }
         }
 
         time += dt;
@@ -488,14 +485,16 @@ void TDACI::propogate_taylor1(SharedVector C0, SharedMatrix H  ) {
         Ct_i->scale(norm);        
 
         // print the wavefunction
-        if( std::abs( (tau/0.0413413745758) - round(tau/0.0413413745758)) <= 1e-8){ 
+        if( options_.get_bool("TDACI_PRINT_WFN")){
+            if( std::abs( (tau/0.0413413745758) - round(tau/0.0413413745758)) <= 1e-8){ 
 
-            outfile->Printf("\n Saving wavefunction for t = %1.3f as", tau/0.0413413745758);
-            std::stringstream ss;
-            ss << std::fixed << std::setprecision(3) << tau/0.0413413745758;
-            save_vector(Ct_r,"taylor_" + ss.str()+ "_r.txt");
-            save_vector(Ct_i,"taylor_" + ss.str()+ "_i.txt");
-           
+                outfile->Printf("\n Saving wavefunction for t = %1.3f as", tau/0.0413413745758);
+                std::stringstream ss;
+                ss << std::fixed << std::setprecision(3) << tau/0.0413413745758;
+                save_vector(Ct_r,"taylor_" + ss.str()+ "_r.txt");
+                save_vector(Ct_i,"taylor_" + ss.str()+ "_i.txt");
+               
+            }
         }
         C0_r->copy(Ct_r->clone());
         C0_i->copy(Ct_i->clone());
@@ -606,12 +605,14 @@ void TDACI::propogate_taylor2(SharedVector C0, SharedMatrix H  ) {
 
 
         // print the wavefunction
-        if( std::abs( (tau/0.0413413745758) - round(tau/0.0413413745758)) <= 1e-8){ 
-            outfile->Printf("\n Saving wavefunction for t = %1.3f as", tau/0.0413413745758);
-            std::stringstream ss;
-            ss << std::fixed << std::setprecision(3) << tau/0.0413413745758;
-            save_vector(Ct_r,"taylor2_" + ss.str()+ "_r.txt");
-            save_vector(Ct_i,"taylor2_" + ss.str()+ "_i.txt");
+        if( options_.get_bool("TDACI_PRINT_WFN")){
+            if( std::abs( (tau/0.0413413745758) - round(tau/0.0413413745758)) <= 1e-8){ 
+                outfile->Printf("\n Saving wavefunction for t = %1.3f as", tau/0.0413413745758);
+                std::stringstream ss;
+                ss << std::fixed << std::setprecision(3) << tau/0.0413413745758;
+                save_vector(Ct_r,"taylor2_" + ss.str()+ "_r.txt");
+                save_vector(Ct_i,"taylor2_" + ss.str()+ "_i.txt");
+            }
         }
         C0_r->copy(Ct_r->clone());
         C0_i->copy(Ct_i->clone());
@@ -743,10 +744,12 @@ void TDACI::propogate_RK4(SharedVector C0, SharedMatrix H  ) {
         ct_r->scale(1.0/norm);
         ct_i->scale(1.0/norm);
 
-        if( std::fabs( (time/conv) - round(time/conv)) <= 1e-8 ){
-            outfile->Printf("\n Saving wavefunction for t = %1.3f as", time/conv);
-            save_vector(ct_r,"RK4_" + ss.str()+ "_r.txt");
-            save_vector(ct_i,"RK4_" + ss.str()+ "_i.txt");
+        if( options_.get_bool("TDACI_PRINT_WFN")){
+            if( std::fabs( (time/conv) - round(time/conv)) <= 1e-8 ){
+                outfile->Printf("\n Saving wavefunction for t = %1.3f as", time/conv);
+                save_vector(ct_r,"RK4_" + ss.str()+ "_r.txt");
+                save_vector(ct_i,"RK4_" + ss.str()+ "_i.txt");
+            }
         }
 
         time += dt;
@@ -755,6 +758,106 @@ void TDACI::propogate_RK4(SharedVector C0, SharedMatrix H  ) {
 
 }
 
+void TDACI::propogate_QCN(SharedVector C0, SharedMatrix H  ) {
+
+    Timer total;
+    size_t ndet = C0->dim();
+
+    int nstep = options_.get_int("TDACI_NSTEP");
+    double dt = options_.get_double("TDACI_TIMESTEP");
+    double conv = 1.0/24.18884326505;
+    dt *= conv;
+    double time = dt;
+
+
+    // Copy initial state into iteratively updated vectors
+    SharedVector ct_r = std::make_shared<Vector>("ct_R",ndet);
+    SharedVector ct_i = std::make_shared<Vector>("ct_I",ndet);
+
+    ct_r->copy(C0->clone());
+    ct_i->zero();
+
+    for( int n = 1; n <= nstep; ++n ){
+
+        SharedVector b_r = std::make_shared<Vector>("br",ndet);
+        SharedVector b_i = std::make_shared<Vector>("bi",ndet);
+
+        // Quadratic propogator for b
+
+        b_r->copy(ct_r->clone());
+        b_i->copy(ct_i->clone());
+
+        SharedVector sigma_r = std::make_shared<Vector>("sr",ndet);
+        SharedVector sigma_i = std::make_shared<Vector>("si",ndet);
+        sigma_r->gemv(false, 0.5*dt, &(*H), &(*ct_r), 0.0);
+        sigma_i->gemv(false, 0.5*dt, &(*H), &(*ct_i), 0.0);
+
+        b_r->add(sigma_i);
+        b_i->subtract(sigma_r);
+        // Quadratic correction
+        b_r->gemv(false, -0.5*dt, &(*H), &(*sigma_r), 1.0);
+        b_i->gemv(false, -0.5*dt, &(*H), &(*sigma_i), 1.0);
+    
+        bool converged = false;
+        SharedVector ct_r_new = std::make_shared<Vector>("ct_R",ndet);
+        SharedVector ct_i_new = std::make_shared<Vector>("ct_I",ndet);
+
+
+        while( !converged ){
+            ct_r_new->copy(b_r->clone());
+            ct_i_new->copy(b_i->clone());
+             
+            SharedVector tmp_r = std::make_shared<Vector>("t_r",ndet);
+            SharedVector tmp_i = std::make_shared<Vector>("t_i",ndet);
+            
+            tmp_r->gemv(false, 0.5*dt, &(*H), &(*ct_r), 0.0);
+            tmp_i->gemv(false, 0.5*dt, &(*H), &(*ct_i), 0.0);
+
+            ct_r_new->add(tmp_i);
+            ct_i_new->subtract(tmp_r);
+
+            ct_r_new->gemv(false, 0.5*dt, &(*H), &(*tmp_r), 1.0);
+            ct_i_new->gemv(false, 0.5*dt, &(*H), &(*tmp_i), 1.0);
+            
+            // Test convergence
+            SharedVector err = std::make_shared<Vector>("err",ndet);
+            double norm = 0.0;  
+            for( size_t I = 0; I < ndet; ++I ){
+                double rn = ct_r_new->get(I);
+                double in = ct_i_new->get(I);
+                norm += (rn*rn + in*in);
+            }
+            ct_r_new->scale( 1.0/sqrt(norm));
+            ct_i_new->scale( 1.0/sqrt(norm));
+            for( size_t I = 0; I < ndet; ++I ){
+                double rn = ct_r_new->get(I);
+                double in = ct_i_new->get(I);
+                double ro = ct_r->get(I);
+                double io = ct_i->get(I);
+                err->set(I, (rn*rn + in*in) - (ro*ro + io*io));                
+            }
+
+ //           outfile->Printf("\n  %1.9f", err->norm());
+            if( err->norm() <= options_.get_double("TDACI_CN_CONVERGENCE") ){
+                converged = true;
+            }
+            
+            ct_r->copy( ct_r_new->clone() );
+            ct_i->copy( ct_i_new->clone() );
+        }
+        if( options_.get_bool("TDACI_PRINT_WFN")){
+            if( std::fabs( (time/conv) - round(time/conv)) <= 1e-8 ){
+                std::stringstream ss;
+                ss << std::fixed << std::setprecision(3) << time/conv;
+                outfile->Printf("\n Saving wavefunction for t = %1.3f as", time/conv);
+                save_vector(ct_r,"QCN_" + ss.str()+ "_r.txt");
+                save_vector(ct_i,"QCN_" + ss.str()+ "_i.txt");
+            }
+        }
+
+        time += dt;
+    }
+} 
 
 //void TDACI::propogate_verlet(std::vector<std::pair<double,double>>& C0, std::vector<std::pair<double,double>>& C_tau, std::shared_ptr<FCIIntegrals> fci_ints, DeterminantHashVec& ann_dets  ) {
 //    
@@ -878,5 +981,30 @@ void TDACI::annihilate_wfn( DeterminantHashVec& olddets,
         }
     }
 }
+
+std::vector<double> TDACI::compute_occupation( SharedVector Cr, SharedVector Ci, std::vector<int>& orbs ) {
+
+    int nact = Cr->dim();
+    std::vector<double> occ_vec(orbs.size(), 0.0); 
+    
+    for(int i = 0; i < orbs.size(); ++i  ){ 
+        double occ = 0.0;
+        int orb = orbs[i];
+        for( int I = 0; I < nact; ++I) {
+            
+            const Determinant& detI = ann_dets.get_det(I);
+            if( detI.get_alfa_bit(orb) == true ){
+                size_t idx = ann_dets.get_idx(detI);
+                double re = Cr->get(idx);
+                double im = Ci->get(idx);
+                occ += re*re + im*im; 
+            }
+        }      
+        occ_vec[i] = occ;
+    }
+
+    return occ_vec;
+}
+
 
 }}

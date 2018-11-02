@@ -112,7 +112,13 @@ class TDACI : public Wavefunction {
     void propogate_taylor1( SharedVector C0, SharedMatrix H);
     void propogate_taylor2( SharedVector C0, SharedMatrix H);
     void propogate_RK4( SharedVector C0, SharedMatrix H);
+    void propogate_QCN( SharedVector C0, SharedMatrix H);
     
+
+    // The core state determinant space
+    DeterminantHashVec core_dets_;
+    DeterminantHashVec ann_dets;
+    std::vector<double> compute_occupation( SharedVector Cr, SharedVector Ci, std::vector<int>& orb);
 
 };
 
