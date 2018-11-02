@@ -73,16 +73,6 @@ class CC : public Wavefunction {
     /// Start-up function called in the constructor
     void startup();
     /// Clean-up function called in the destructor
-    //    void cleanup();
-
-    //    /// Read options
-    //    void read_options();
-
-    //    /// Print levels
-    //    int print_;
-
-    //    /// The energy of the reference
-    //    double Eref_;
 
     /// The frozen-core energy
     double frozen_core_energy_;
@@ -110,9 +100,6 @@ class CC : public Wavefunction {
     std::string bocc_label_;
     /// Beta virtual label
     std::string bvir_label_;
-
-    //    /// Map from space label to list of MOs
-    //    std::map<char, std::vector<size_t>> label_to_spacemo_;
 
     /// Fill up integrals
     void build_ints();
