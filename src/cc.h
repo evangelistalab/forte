@@ -80,6 +80,8 @@ class CC : public Wavefunction {
     /// The molecular integrals
     std::shared_ptr<ForteIntegrals> ints_;
 
+    /// The integral type
+    std::string ints_type_;
     /// If ERI density fitted or Cholesky decomposed
     bool eri_df_;
 
@@ -94,6 +96,8 @@ class CC : public Wavefunction {
     std::vector<size_t> bocc_mos_;
     /// List of beta virtual MOs
     std::vector<size_t> bvir_mos_;
+    /// List of auxiliary MOs when DF/CD
+    std::vector<size_t> aux_mos_;
 
     /// Alpha occupied label
     std::string aocc_label_;
@@ -103,6 +107,8 @@ class CC : public Wavefunction {
     std::string bocc_label_;
     /// Beta virtual label
     std::string bvir_label_;
+    /// Auxillary basis label
+    std::string aux_label_;
 
     /// Fill up integrals
     void build_ints();
@@ -112,8 +118,16 @@ class CC : public Wavefunction {
     /// Fill the tensor T with three-index DF or CD integrals
     void fill_three_index_ints(ambit::BlockedTensor T);
 
+    /// Compute the denominator tensors
+    void compute_denominators();
     /// Initialize T with mp2 amplitudes
     void initial_mp2_t();
+    /// Compute the effective two-particle excitation operators
+    void compute_effective_tau();
+    /// Compute Stanton intermediate tensors
+    void compute_intermediates();
+    /// Update T amplitudes
+    void update_t();
     /// Compute CC correlation energy by T amplitudes.
     double cc_energy();
 
@@ -134,6 +148,15 @@ class CC : public Wavefunction {
     ambit::BlockedTensor T1_;
     /// Double excitation amplitude
     ambit::BlockedTensor T2_;
+    /// Effective two-particle operator
+    ambit::BlockedTensor tilde_tau_;
+    ambit::BlockedTensor tau_;
+    /// Denominators
+    ambit::BlockedTensor D1_;
+    ambit::BlockedTensor D2_;
+    /// Intermediates
+    ambit::BlockedTensor W1_;
+    ambit::BlockedTensor W2_;
     /// Difference of consecutive singles
     ambit::BlockedTensor DT1_;
     /// Difference of consecutive doubles

@@ -23,6 +23,7 @@ set forte {
   restricted_uocc        [1,0,0,1]
 }
 
-energy('ccsd')
+Ehf, wfn = energy('scf', return_wfn=True)
+energy('ccsd', ref_wfn = wfn)
 
-energy('forte')
+energy('forte', ref_wfn = wfn)
