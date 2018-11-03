@@ -68,7 +68,7 @@ dmrg_tests = ["dmrgscf-1", "df-dmrgscf-1", "cd-dmrgscf-1", "dmrg-dsrg-mrpt2-1", 
 #tests =  fci_tests + casscf_tests + dsrg_mrpt2_tests + adaptive_ci_tests + pci_tests + fciqmc_tests + ct_tests + dsrg_tests
 #tests =  fci_tests + casscf_tests + dsrg_mrpt2_tests + dmrg_tests + mrdsrg_tests + adaptive_ci_tests + pci_tests
 tests = integrals_tests + fci_tests + casscf_tests + dsrg_mrpt2_tests + dsrg_mrpt3_tests + mrdsrg_tests + adaptive_ci_tests + pci_tests + pci_hashvec_tests
-tests += active_dsrgpt2_tests + dwms_dsrgpt2_tests
+tests += active_dsrgpt2_tests + dwms_dsrgpt_tests
 
 maindir = os.getcwd()
 if len(sys.argv) == 1:

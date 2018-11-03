@@ -77,7 +77,7 @@ ambit_tests = ["ambit-1"]
 #tests =  fci_tests + casscf_tests + dsrg_mrpt2_tests + adaptive_ci_tests + pci_tests + fciqmc_tests + ct_tests + dsrg_tests
 tests = ambit_tests
 tests += fci_tests + casscf_tests + dsrg_mrpt2_tests + dsrg_mrpt3_tests + mrdsrg_tests + mrdsrg_df_tests + adaptive_ci_tests + pci_tests + pci_hashvec_tests
-tests += active_dsrgpt2_tests + dwms_dsrgpt2_tests
+tests += active_dsrgpt2_tests + dwms_dsrgpt_tests
 
 maindir = os.getcwd()
 if len(sys.argv) == 1:
