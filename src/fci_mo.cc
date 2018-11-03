@@ -2360,7 +2360,7 @@ void FCI_MO::add_wedge_cu2(const ambit::Tensor& L1a, const ambit::Tensor& L1b, a
     std::string job_name = "add_wedge_cu2";
     outfile->Printf("\n  Adding wedge product for 2-cumulants ... ");
     timer_on(job_name);
-    ForteTimer timer;
+    Timer timer;
 
     L2aa("pqrs") -= L1a("pr") * L1a("qs");
     L2aa("pqrs") += L1a("ps") * L1a("qr");
@@ -2370,7 +2370,7 @@ void FCI_MO::add_wedge_cu2(const ambit::Tensor& L1a, const ambit::Tensor& L1b, a
 
     L2ab("pqrs") -= L1a("pr") * L1b("qs");
 
-    outfile->Printf("Done. Timing %15.6f s", timer.elapsed());
+    outfile->Printf("Done. Timing %15.6f s", timer.get());
     timer_off(job_name);
 }
 
@@ -2381,7 +2381,7 @@ void FCI_MO::add_wedge_cu3(const ambit::Tensor& L1a, const ambit::Tensor& L1b,
     std::string job_name = "add_wedge_cu3";
     outfile->Printf("\n  Adding wedge product for 3-cumulants ... ");
     timer_on(job_name);
-    ForteTimer timer;
+    Timer timer;
 
     // aaa
     L3aaa("pqrstu") -= L1a("ps") * L2aa("qrtu");
@@ -2449,7 +2449,7 @@ void FCI_MO::add_wedge_cu3(const ambit::Tensor& L1a, const ambit::Tensor& L1b,
     L3bbb("pqrstu") += L1b("pu") * L1b("qt") * L1b("rs");
     L3bbb("pqrstu") += L1b("pt") * L1b("qs") * L1b("ru");
 
-    outfile->Printf("Done. Timing %15.6f s", timer.elapsed());
+    outfile->Printf("Done. Timing %15.6f s", timer.get());
     timer_off(job_name);
 }
 
@@ -3059,7 +3059,7 @@ std::vector<ambit::Tensor> FCI_MO::compute_n_rdm(const vecdet& p_space, SharedMa
     timer_on(job_name);
     outfile->Printf("\n  Computing %5s (%d-%d) of %s %s ... ", job_name.c_str(), root1, root2,
                     multi_symbols_[multi - 1].c_str(), irrep_symbols_[irrep].c_str());
-    ForteTimer timer;
+    Timer timer;
 
     std::vector<std::string> names;
     if (rdm_level == 1) {
@@ -3111,7 +3111,7 @@ std::vector<ambit::Tensor> FCI_MO::compute_n_rdm(const vecdet& p_space, SharedMa
         }
     }
 
-    outfile->Printf("Done. Timing %15.6f s", timer.elapsed());
+    outfile->Printf("Done. Timing %15.6f s", timer.get());
     timer_off(job_name);
     return out;
 }
