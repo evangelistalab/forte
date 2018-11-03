@@ -474,7 +474,7 @@ void ACTIVE_DSRGPT2::set_fcimo_params(int nroots, int root, int multiplicity) {
 double ACTIVE_DSRGPT2::compute_dsrg_mrpt2_energy(std::shared_ptr<MASTER_DSRG>& dsrg,
                                                  Reference& reference) {
     IntegralType int_type = ints_->integral_type();
-    if (int_type == ConventionalInts) {
+    if (int_type == Conventional) {
         dsrg = std::make_shared<DSRG_MRPT2>(reference, reference_wavefunction_, options_, ints_,
                                             mo_space_info_);
     } else if (int_type == Cholesky || int_type == DF || int_type == DiskDF) {
