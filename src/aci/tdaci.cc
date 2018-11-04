@@ -53,6 +53,7 @@ namespace forte {
 //#endif
 
 void set_TDACI_options(ForteOptions& foptions) {
+    foptions.add_int("TDACI_HOLE", 0, "");
     foptions.add_str("TDACI_PROPOGATOR", "EXACT", "Type of propogator");
     foptions.add_int("TDACI_NSTEP", 20, "Number of steps");
     foptions.add_double("TDACI_TIMESTEP", 1.0, "Timestep (as)");
@@ -78,7 +79,7 @@ double TDACI::compute_energy() {
 
     double en = 0.0;
     int nact = mo_space_info_->size("ACTIVE");
-
+    int hole = options_.get_int("TDACI_HOLE");
 
     // 1. Grab an ACI wavefunction
     auto aci = std::make_shared<AdaptiveCI>(wfn_, options_, ints_, mo_space_info_);
@@ -97,10 +98,12 @@ double TDACI::compute_energy() {
     outfile->Printf("\n  size of ann dets: %zu", ann_dets.size());
 
     // 3. Build the full n-1 Hamiltonian
+    std::vector<std::string> det_str( nann);
     std::shared_ptr<FCIIntegrals> fci_ints = aci->get_aci_ints();
     SharedMatrix full_aH = std::make_shared<Matrix>("aH",nann, nann);
     for( size_t I = 0; I < nann; ++I ){
         Determinant detI = ann_dets.get_det(I);
+        det_str[I] = detI.str(nact).c_str();
         for( size_t J = I; J < nann; ++J ){
             Determinant detJ = ann_dets.get_det(J);
             double value = fci_ints->slater_rules(detI,detJ);
@@ -108,8 +111,9 @@ double TDACI::compute_energy() {
             full_aH->set(J,I, value);
         }
     }
+    save_vector(det_str, "determinants.txt");
     
-    // 4. Prepare initial state by removing a core electron from aci wfn 
+    // 4. Prepare initial state by removing an electron from aci wfn 
     //DeterminantHashVec core_dets;
     SharedVector core_coeffs = std::make_shared<Vector>("init", nann);
     core_coeffs->zero();
@@ -119,9 +123,9 @@ double TDACI::compute_energy() {
     size_t ncore = 0;
     for ( size_t I = 0; I < ndet; ++I ){
         auto& detI = dets[I];
-        if( detI.get_alfa_bit(0) == true ){
+        if( detI.get_alfa_bit(hole) == true ){
             Determinant adet(detI);
-            adet.set_alfa_bit(0, false);
+            adet.set_alfa_bit(hole, false);
             size_t idx = ann_dets.get_idx(adet);
             core_coeffs->set(idx, core_coeffs->get(idx) + aci_coeffs->get(aci_dets.get_idx(detI),0) ); 
             core_dets_.add(adet);
@@ -167,12 +171,12 @@ void TDACI::propogate_exact(SharedVector C0, SharedMatrix H) {
 
 
 
-    //std::vector<int> orbs(options_["TDACI_OCC_ORB"].size());
-    std::vector<int> orbs(6);
+    std::vector<int> orbs(options_["TDACI_OCC_ORB"].size());
+    //std::vector<int> orbs(6);
     //for( int h = 0; h < options_["TDACI_OCC_ORB"].size(); ++h ){
     for( int h = 0; h < options_["TDACI_OCC_ORB"].size(); ++h ){
-    //    int orb = options_["TDACI_OCC_ORB"][h].to_integer();
-        orbs[h] = h;
+        int orb = options_["TDACI_OCC_ORB"][h].to_integer();
+        orbs[h] = orb;
     }
 
     Timer t1;
@@ -234,7 +238,7 @@ void TDACI::propogate_exact(SharedVector C0, SharedMatrix H) {
         time += dt;
     }
     for( int i = 0; i < orbs.size(); ++i ){
-        save_vector(occupations[i], "occupations" + std::to_string(orbs[i]) + ".txt");
+        save_vector(occupations[i], "occupations_" + std::to_string(orbs[i]) + ".txt");
     }
     outfile->Printf("\n Time spent propogating (exact): %1.6f s", t1.get()); 
 }
