@@ -347,9 +347,9 @@ void CC::compute_intermediates() {
     W2_["mNiJ"] += T1_["ie"] * V_["mNeJ"];
     W2_["MNIJ"] -= T1_["IE"] * V_["MNJE"];
 
-    W2_["mnij"] += 0.25 * T2_["ijef"] * V_["mnef"];
-    W2_["mNiJ"] += 0.5 * T2_["iJeF"] * V_["mNeF"];
-    W2_["MNIJ"] += 0.25 * T2_["IJEF"] * V_["MNEF"];
+    W2_["mnij"] += 0.25 * tau_["ijef"] * V_["mnef"];
+    W2_["mNiJ"] += 0.5 * tau_["iJeF"] * V_["mNeF"];
+    W2_["MNIJ"] += 0.25 * tau_["IJEF"] * V_["MNEF"];
 
     W2_["abef"] = V_["abef"];
     W2_["aBeF"] = V_["aBeF"];
@@ -363,9 +363,9 @@ void CC::compute_intermediates() {
     W2_["aBeF"] -= T1_["ma"] * V_["mBeF"];
     W2_["ABEF"] += T1_["MA"] * V_["BMEF"];
 
-    W2_["abef"] += 0.25 * T2_["mnab"] * V_["mnef"];
-    W2_["aBeF"] += 0.5 * T2_["mNaB"] * V_["mNeF"];
-    W2_["ABEF"] += 0.25 * T2_["MNAB"] * V_["MNEF"];
+    W2_["abef"] += 0.25 * tau_["mnab"] * V_["mnef"];
+    W2_["aBeF"] += 0.5 * tau_["mNaB"] * V_["mNeF"];
+    W2_["ABEF"] += 0.25 * tau_["MNAB"] * V_["MNEF"];
 
     W2_["mbej"] = V_["mbej"];
     W2_["mBeJ"] = V_["mBeJ"];
@@ -380,8 +380,10 @@ void CC::compute_intermediates() {
     W2_["MBEJ"] -= T1_["NB"] * V_["MNEJ"];
 
     W2_["mbej"] -= 0.5 * T2_["jnfb"] * V_["mnef"];
+    W2_["mbej"] += 0.5 * T2_["jNbF"] * V_["mNeF"];
     W2_["mBeJ"] += 0.5 * T2_["nJfB"] * V_["mnef"];
-    W2_["mBeJ"] += 0.5 * T2_["NJFB"] * V_["mNeF"];
+    W2_["mBeJ"] -= 0.5 * T2_["JNFB"] * V_["mNeF"];
+    W2_["MBEJ"] += 0.5 * T2_["nJfB"] * V_["nMfE"];
     W2_["MBEJ"] -= 0.5 * T2_["JNFB"] * V_["MNEF"];
 
     W2_["mbej"] -= T1_["jf"] * T1_["nb"] * V_["mnef"];
@@ -429,8 +431,6 @@ void CC::update_t() {
     NT1["IA"] -= T2_["nMeA"] * V_["nMeI"];
     NT1["IA"] -= 0.5 * T2_["MNAE"] * V_["NMEI"];
 
-    T1_["ia"] = NT1["ia"] * D1_["ia"];
-    T1_["IA"] = NT1["IA"] * D1_["IA"];
 
     NT2["ijab"] = V_["ijab"];
     NT2["iJaB"] = V_["iJaB"];
@@ -468,13 +468,13 @@ void CC::update_t() {
     NT2["iJaB"] -= 0.5 * T2_["mJaB"] * T1_["ie"] * W1_["me"];
     NT2["IJAB"] += 0.5 * T2_["JMAB"] * T1_["IE"] * W1_["ME"];
 
-    NT2["ijab"] += 0.5 * T2_["mnab"] * W2_["mnij"];
-    NT2["iJaB"] += T2_["mNaB"] * W2_["mNiJ"];
-    NT2["IJAB"] += 0.5 * T2_["MNAB"] * W2_["MNIJ"];
+    NT2["ijab"] += 0.5 * tau_["mnab"] * W2_["mnij"];
+    NT2["iJaB"] += tau_["mNaB"] * W2_["mNiJ"];
+    NT2["IJAB"] += 0.5 * tau_["MNAB"] * W2_["MNIJ"];
 
-    NT2["ijab"] += 0.5 * T2_["ijef"] * W2_["abef"];
-    NT2["iJaB"] += T2_["iJeF"] * W2_["aBeF"];
-    NT2["IJAB"] += 0.5 * T2_["IJEF"] * W2_["ABEF"];
+    NT2["ijab"] += 0.5 * tau_["ijef"] * W2_["abef"];
+    NT2["iJaB"] += tau_["iJeF"] * W2_["aBeF"];
+    NT2["IJAB"] += 0.5 * tau_["IJEF"] * W2_["ABEF"];
 
     NT2["ijab"] += T2_["imae"] * W2_["mbej"];
     NT2["ijab"] += T2_["iMaE"] * W2_["bMjE"];
@@ -533,6 +533,10 @@ void CC::update_t() {
     NT2["ijab"] += T1_["mb"] * V_["maij"];
     NT2["iJaB"] -= T1_["MB"] * V_["aMiJ"];
     NT2["IJAB"] += T1_["MB"] * V_["MAIJ"];
+
+
+    T1_["ia"] = NT1["ia"] * D1_["ia"];
+    T1_["IA"] = NT1["IA"] * D1_["IA"];
 
     T2_["ijab"] = NT2["ijab"] * D2_["ijab"];
     T2_["iJaB"] = NT2["iJaB"] * D2_["iJaB"];
