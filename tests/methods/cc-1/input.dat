@@ -5,6 +5,7 @@ molecule h2o {
     O
     H 1 1.1
     H 1 1.1 2 104.0
+symmetry c1
 }
 
 set {
@@ -13,14 +14,16 @@ set {
   reference          rhf
   e_convergence      8
   d_convergence      10
-  docc               [3,0,1,1]
+#  docc               [3,0,1,1]
 }
 
 set forte {
   job_type               cc
   int_type               conventional
-  restricted_docc        [3,0,1,1]
-  restricted_uocc        [1,0,0,1]
+#  restricted_docc        [3,0,1,1]
+#  restricted_uocc        [1,0,0,1]
+  restricted_docc        [5]
+  restricted_uocc        [2]
 }
 
 Ehf, wfn = energy('scf', return_wfn=True)

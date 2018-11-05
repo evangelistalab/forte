@@ -58,6 +58,7 @@ double CC::compute_energy() {
     outfile->Printf("\n  MP2 energy = %.12f", Ecc);
     compute_effective_tau();
     compute_intermediates();
+    //    W2_.print();
     update_t();
     Ecc = cc_energy();
     outfile->Printf("\n  CCSD(1) energy = %.12f", Ecc);
@@ -123,8 +124,10 @@ void CC::startup() {
     D1_ = BTF_->build(tensor_type_, "D1", spin_cases({"ov"}));
     D2_ = BTF_->build(tensor_type_, "D2", spin_cases({"oovv"}));
 
-    W1_ = BTF_->build(tensor_type_, "W1", spin_cases({"gg"}));
-    W2_ = BTF_->build(tensor_type_, "W2", spin_cases({"gggg"}));
+    W1_ = BTF_->build(tensor_type_, "W1", spin_cases({"oo", "ov", "vv"}));
+    //    W2_ = BTF_->build(tensor_type_, "W2", spin_cases({"ovvo","oooo","vvvv"}));
+    W2_ = BTF_->build(tensor_type_, "W2", {"oooo", "oOoO", "OOOO", "vvvv", "vVvV", "VVVV", "ovvo",
+                                           "OVVO", "oVvO", "OvvO", "oVVo"});
 
     DT1_ = BTF_->build(tensor_type_, "DT1", spin_cases({"ov"}));
     DT2_ = BTF_->build(tensor_type_, "DT2", spin_cases({"oovv"}));
@@ -373,14 +376,20 @@ void CC::compute_intermediates() {
     W2_["mbej"] = V_["mbej"];
     W2_["mBeJ"] = V_["mBeJ"];
     W2_["MBEJ"] = V_["MBEJ"];
+    W2_["mBEj"] = -V_["mBjE"];
+    W2_["MbeJ"] = -V_["bMeJ"];
 
     W2_["mbej"] += T1_["jf"] * V_["mbef"];
     W2_["mBeJ"] += T1_["JF"] * V_["mBeF"];
     W2_["MBEJ"] += T1_["JF"] * V_["MBEF"];
+    W2_["mBEj"] -= T1_["jf"] * V_["mBfE"];
+    W2_["MbeJ"] -= T1_["JF"] * V_["bMeF"];
 
     W2_["mbej"] -= T1_["nb"] * V_["mnej"];
     W2_["mBeJ"] -= T1_["NB"] * V_["mNeJ"];
     W2_["MBEJ"] -= T1_["NB"] * V_["MNEJ"];
+    W2_["mBEj"] += T1_["NB"] * V_["mNjE"];
+    W2_["MbeJ"] += T1_["nb"] * V_["nMeJ"];
 
     W2_["mbej"] -= 0.5 * T2_["jnfb"] * V_["mnef"];
     W2_["mbej"] += 0.5 * T2_["jNbF"] * V_["mNeF"];
@@ -388,22 +397,20 @@ void CC::compute_intermediates() {
     W2_["mBeJ"] -= 0.5 * T2_["JNFB"] * V_["mNeF"];
     W2_["MBEJ"] += 0.5 * T2_["nJfB"] * V_["nMfE"];
     W2_["MBEJ"] -= 0.5 * T2_["JNFB"] * V_["MNEF"];
+    W2_["mBEj"] += 0.5 * T2_["jNfB"] * V_["mNfE"];
+    W2_["MbeJ"] += 0.5 * T2_["nJbF"] * V_["nMeF"];
 
     W2_["mbej"] -= T1_["jf"] * T1_["nb"] * V_["mnef"];
     W2_["mBeJ"] -= T1_["JF"] * T1_["NB"] * V_["mNeF"];
     W2_["MBEJ"] -= T1_["JF"] * T1_["NB"] * V_["MNEF"];
+    W2_["mBEj"] += T1_["jf"] * T1_["NB"] * V_["mNfE"];
+    W2_["MbeJ"] += T1_["JF"] * T1_["nb"] * V_["nMeF"];
 }
 
 void CC::update_t() {
     ambit::BlockedTensor NT1, NT2;
     NT1 = BTF_->build(tensor_type_, "NT1", spin_cases({"ov"}));
     NT2 = BTF_->build(tensor_type_, "NT2", spin_cases({"oovv"}));
-
-    DT1_["ia"] = T1_["ia"];
-    DT1_["IA"] = T1_["IA"];
-    DT2_["ijab"] = T2_["ijab"];
-    DT2_["iJaB"] = T2_["iJaB"];
-    DT2_["IJAB"] = T2_["IJAB"];
 
     NT1["ia"] = F_["ia"];
     NT1["IA"] = F_["IA"];
@@ -433,7 +440,6 @@ void CC::update_t() {
     NT1["ia"] -= T2_["mNaE"] * V_["mNiE"];
     NT1["IA"] -= T2_["nMeA"] * V_["nMeI"];
     NT1["IA"] -= 0.5 * T2_["MNAE"] * V_["NMEI"];
-
 
     NT2["ijab"] = V_["ijab"];
     NT2["iJaB"] = V_["iJaB"];
@@ -479,29 +485,31 @@ void CC::update_t() {
     NT2["iJaB"] += tau_["iJeF"] * W2_["aBeF"];
     NT2["IJAB"] += 0.5 * tau_["IJEF"] * W2_["ABEF"];
 
+    //    NT2.print();
+
     NT2["ijab"] += T2_["imae"] * W2_["mbej"];
-    NT2["ijab"] += T2_["iMaE"] * W2_["bMjE"];
+    NT2["ijab"] += T2_["iMaE"] * W2_["jEbM"];
     NT2["iJaB"] += T2_["imae"] * W2_["mBeJ"];
     NT2["iJaB"] += T2_["iMaE"] * W2_["MBEJ"];
     NT2["IJAB"] += T2_["mIeA"] * W2_["mBeJ"];
     NT2["IJAB"] += T2_["IMAE"] * W2_["MBEJ"];
 
     NT2["ijab"] -= T2_["imbe"] * W2_["maej"];
-    NT2["ijab"] -= T2_["iMbE"] * W2_["aMjE"];
-    NT2["iJaB"] -= T2_["iMeB"] * W2_["aMeJ"];
+    NT2["ijab"] -= T2_["iMbE"] * W2_["jEaM"];
+    NT2["iJaB"] += T2_["iMeB"] * W2_["MaeJ"];
     NT2["IJAB"] -= T2_["mIeB"] * W2_["mAeJ"];
     NT2["IJAB"] -= T2_["IMBE"] * W2_["MAEJ"];
 
     NT2["ijab"] -= T2_["jmae"] * W2_["mbei"];
-    NT2["ijab"] -= T2_["jMaE"] * W2_["bMiE"];
-    NT2["iJaB"] -= T2_["mJaE"] * W2_["mBiE"];
+    NT2["ijab"] -= T2_["jMaE"] * W2_["iEbM"];
+    NT2["iJaB"] += T2_["mJaE"] * W2_["mBEi"];
     NT2["IJAB"] -= T2_["mJeA"] * W2_["mBeI"];
     NT2["IJAB"] -= T2_["JMAE"] * W2_["MBEI"];
 
     NT2["ijab"] += T2_["jmbe"] * W2_["maei"];
-    NT2["ijab"] += T2_["jMbE"] * W2_["aMiE"];
+    NT2["ijab"] += T2_["jMbE"] * W2_["iEaM"];
     NT2["iJaB"] += T2_["mJeB"] * W2_["maei"];
-    NT2["iJaB"] += T2_["JMBE"] * W2_["aMiE"];
+    NT2["iJaB"] += T2_["JMBE"] * W2_["iEaM"];
     NT2["IJAB"] += T2_["mJeB"] * W2_["mAeI"];
     NT2["IJAB"] += T2_["JMBE"] * W2_["MAEI"];
 
@@ -520,6 +528,11 @@ void CC::update_t() {
     NT2["ijab"] -= T1_["je"] * T1_["mb"] * V_["maei"];
     NT2["iJaB"] -= T1_["JE"] * T1_["MB"] * V_["aMiE"];
     NT2["IJAB"] -= T1_["JE"] * T1_["MB"] * V_["MAEI"];
+
+//    DT2_.block("oovv")("ijab") = NT2.block("oOvV")("ijab") - NT2.block("oOvV")("ijba");
+//    DT2_.block("oovv")("ijab") -= NT2.block("oovv")("ijab");
+
+//    DT2_.block("oOvV").print();
 
 //    ambit::BlockedTensor temp;
 //    temp = BTF_->build(tensor_type_, "temp", spin_cases({"oovv"}));
@@ -568,6 +581,11 @@ void CC::update_t() {
     NT2["iJaB"] -= T1_["MB"] * V_["aMiJ"];
     NT2["IJAB"] += T1_["MB"] * V_["MAIJ"];
 
+    DT1_["ia"] = T1_["ia"];
+    DT1_["IA"] = T1_["IA"];
+    DT2_["ijab"] = T2_["ijab"];
+    DT2_["iJaB"] = T2_["iJaB"];
+    DT2_["IJAB"] = T2_["IJAB"];
 
     T1_["ia"] = NT1["ia"] * D1_["ia"];
     T1_["IA"] = NT1["IA"] * D1_["IA"];
