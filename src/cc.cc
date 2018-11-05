@@ -277,9 +277,12 @@ void CC::compute_effective_tau() {
     tau_["IJAB"] = T1_["IA"] * T1_["JB"];
     tau_["IJAB"] -= T1_["IB"] * T1_["JA"];
 
-    tilde_tau_["ijab"] = T2_["ijab"] + 0.5 * tau_["ijab"];
-    tilde_tau_["iJaB"] = T2_["iJaB"] + 0.5 * tau_["iJaB"];
-    tilde_tau_["IJAB"] = T2_["IJAB"] + 0.5 * tau_["IJAB"];
+    tilde_tau_["ijab"] = T2_["ijab"];
+    tilde_tau_["ijab"] += 0.5 * tau_["ijab"];
+    tilde_tau_["iJaB"] = T2_["iJaB"];
+    tilde_tau_["iJaB"] += 0.5 * tau_["iJaB"];
+    tilde_tau_["IJAB"] = T2_["IJAB"];
+    tilde_tau_["IJAB"] += 0.5 * tau_["IJAB"];
 
     tau_["ijab"] += T2_["ijab"];
     tau_["iJaB"] += T2_["iJaB"];
@@ -477,14 +480,14 @@ void CC::update_t() {
     NT2["IJAB"] += 0.5 * tau_["IJEF"] * W2_["ABEF"];
 
     NT2["ijab"] += T2_["imae"] * W2_["mbej"];
-    NT2["ijab"] += T2_["iMaE"] * W2_["bMjE"];
+    NT2["ijab"] += T2_["iMaE"] * W2_["jEbM"];
     NT2["iJaB"] += T2_["imae"] * W2_["mBeJ"];
     NT2["iJaB"] += T2_["iMaE"] * W2_["MBEJ"];
     NT2["IJAB"] += T2_["mIeA"] * W2_["mBeJ"];
     NT2["IJAB"] += T2_["IMAE"] * W2_["MBEJ"];
 
     NT2["ijab"] -= T2_["imbe"] * W2_["maej"];
-    NT2["ijab"] -= T2_["iMbE"] * W2_["aMjE"];
+    NT2["ijab"] -= T2_["iMbE"] * W2_["jEaM"];
     NT2["iJaB"] -= T2_["iMeB"] * W2_["aMeJ"];
     NT2["IJAB"] -= T2_["mIeB"] * W2_["mAeJ"];
     NT2["IJAB"] -= T2_["IMBE"] * W2_["MAEJ"];
