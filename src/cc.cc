@@ -480,14 +480,14 @@ void CC::update_t() {
     NT2["IJAB"] += 0.5 * tau_["IJEF"] * W2_["ABEF"];
 
     NT2["ijab"] += T2_["imae"] * W2_["mbej"];
-    NT2["ijab"] += T2_["iMaE"] * W2_["jEbM"];
+    NT2["ijab"] += T2_["iMaE"] * W2_["bMjE"];
     NT2["iJaB"] += T2_["imae"] * W2_["mBeJ"];
     NT2["iJaB"] += T2_["iMaE"] * W2_["MBEJ"];
     NT2["IJAB"] += T2_["mIeA"] * W2_["mBeJ"];
     NT2["IJAB"] += T2_["IMAE"] * W2_["MBEJ"];
 
     NT2["ijab"] -= T2_["imbe"] * W2_["maej"];
-    NT2["ijab"] -= T2_["iMbE"] * W2_["jEaM"];
+    NT2["ijab"] -= T2_["iMbE"] * W2_["aMjE"];
     NT2["iJaB"] -= T2_["iMeB"] * W2_["aMeJ"];
     NT2["IJAB"] -= T2_["mIeB"] * W2_["mAeJ"];
     NT2["IJAB"] -= T2_["IMBE"] * W2_["MAEJ"];
@@ -520,6 +520,37 @@ void CC::update_t() {
     NT2["ijab"] -= T1_["je"] * T1_["mb"] * V_["maei"];
     NT2["iJaB"] -= T1_["JE"] * T1_["MB"] * V_["aMiE"];
     NT2["IJAB"] -= T1_["JE"] * T1_["MB"] * V_["MAEI"];
+
+//    ambit::BlockedTensor temp;
+//    temp = BTF_->build(tensor_type_, "temp", spin_cases({"oovv"}));
+//    temp["ijab"] += T2_["imae"] * W2_["mbej"];
+//    temp["ijab"] += T2_["iMaE"] * W2_["bMjE"];
+//    temp["iJaB"] += T2_["imae"] * W2_["mBeJ"];
+//    temp["iJaB"] += T2_["iMaE"] * W2_["MBEJ"];
+//    temp["IJAB"] += T2_["mIeA"] * W2_["mBeJ"];
+//    temp["IJAB"] += T2_["IMAE"] * W2_["MBEJ"];
+//    temp["ijab"] -= T1_["ie"] * T1_["ma"] * V_["mbej"];
+//    temp["iJaB"] -= T1_["ie"] * T1_["ma"] * V_["mBeJ"];
+//    temp["IJAB"] -= T1_["IE"] * T1_["MA"] * V_["MBEJ"];
+
+//    NT2["ijab"] += temp["ijab"];
+//    NT2["iJaB"] += temp["iJaB"];
+//    NT2["IJAB"] += temp["IJAB"];
+
+//    NT2["ijab"] -= temp["ijba"];
+//    NT2["iJaB"] += temp["iJaB"];
+//    NT2["IJAB"] -= temp["IJBA"];
+
+//    NT2["ijab"] -= temp["jiab"];
+//    NT2["iJaB"] += temp["iJaB"];
+//    NT2["IJAB"] -= temp["JIAB"];
+
+//    NT2["ijab"] += temp["jiba"];
+//    NT2["iJaB"] += temp["iJaB"];
+//    NT2["IJAB"] += temp["JIBA"];
+
+//    NT2.print();
+//    W2_.block("ovvo").print();
 
     NT2["ijab"] += T1_["ie"] * V_["abej"];
     NT2["iJaB"] += T1_["ie"] * V_["aBeJ"];
