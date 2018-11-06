@@ -2974,6 +2974,7 @@ void FCI_MO::clean_all_density_files() {
             throw PSIEXCEPTION(ss.str());
         }
     }
+    density_files_.clear();
 }
 
 void FCI_MO::localize_actv_orbs() {
@@ -3043,6 +3044,7 @@ void FCI_MO::set_eigens(const std::vector<vector<pair<SharedVector, double>>>& e
         }
         eigens_ = eigens;
         safe_to_read_density_files_ = false;
+        clean_all_density_files();
     } else {
         throw PSIEXCEPTION("Cannot set eigens of FCI_MO: mismatching number of SA entries.");
     }

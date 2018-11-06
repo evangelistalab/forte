@@ -54,6 +54,19 @@ void set_DWMS_options(ForteOptions& foptions) {
     foptions.add_bool("DWMS_DELTA_AMP", false,
                       "Consider amplitudes difference between states in SA "
                       "algorithm, testing in non-DF DSRG-MRPT2");
+
+    /*- Iteratively update the states coefficients -*/
+    foptions.add_bool("DWMS_ITERATE", false, "Iterative update the reference CI coefficients in SA "
+                                             "algorithm, testing in non-DF DSRG-MRPT2");
+
+    /*- Max number of iteration for the update of reference CI coefficients -*/
+    foptions.add_int("DWMS_MAXITER", 10,
+                     "Max number of iteration in the update of the reference CI coefficients in SA "
+                     "algorithm, testing in non-DF DSRG-MRPT2");
+
+    /*- Energy convergence criteria for DWMS iteration -*/
+    foptions.add_double("DWMS_E_CONVERGENCE", 1.0e-7,
+                        "Energy convergence criteria for DWMS iteration");
 }
 
 DWMS_DSRGPT2::DWMS_DSRGPT2(SharedWavefunction ref_wfn, Options& options,
@@ -108,6 +121,9 @@ void DWMS_DSRGPT2::read_options() {
     algorithm_ = options_.get_str("DWMS_ALGORITHM");
     dwms_ref_ = options_.get_str("DWMS_REFERENCE");
     do_delta_amp_ = options_.get_bool("DWMS_DELTA_AMP");
+    dwms_iterate_ = options_.get_bool("DWMS_ITERATE");
+    dwms_maxiter_ = options_.get_int("DWMS_MAXITER");
+    dwms_e_convergence_ = options_.get_double("DWMS_E_CONVERGENCE");
 
     do_hbar3_ = options_.get_bool("FORM_HBAR3");
     max_hbar_level_ = do_hbar3_ ? 3 : 2;
@@ -127,6 +143,11 @@ void DWMS_DSRGPT2::print_options() {
     if (algorithm_ == "SA" || algorithm_ == "XSA") {
         std::string damps = do_delta_amp_ ? "TRUE" : "FALSE";
         outfile->Printf("\n    DO DELTA AMPS      %10s", damps.c_str());
+    }
+
+    if (dwms_iterate_) {
+        outfile->Printf("\n    MAX ITERATION      %10d", dwms_maxiter_);
+        outfile->Printf("\n    E_CONVERGENCE      %10.2e", dwms_e_convergence_);
     }
 }
 
@@ -268,7 +289,11 @@ double DWMS_DSRGPT2::compute_energy() {
     if (algorithm_ == "MS" || algorithm_ == "XMS") {
         compute_dwms_energy(fci_mo);
     } else if (algorithm_ == "SA" || algorithm_ == "XSA") {
-        compute_dwsa_energy(fci_mo);
+        if (dwms_iterate_) {
+            compute_dwsa_energy_iterate(fci_mo);
+        } else {
+            compute_dwsa_energy(fci_mo);
+        }
     } else {
         name = "DWMS(sH)-DSRG-";
         compute_dwms_energy_separated_H(fci_mo);
@@ -455,17 +480,90 @@ DWMS_DSRGPT2::compute_macro_dsrg_pt(std::shared_ptr<MASTER_DSRG>& dsrg_pt,
     return compute_dsrg_pt(dsrg_pt, reference, dwms_corrlv_);
 }
 
-double DWMS_DSRGPT2::compute_dwsa_energy(std::shared_ptr<FCI_MO>& fci_mo) {
+void DWMS_DSRGPT2::compute_dwsa_energy_iterate(std::shared_ptr<FCI_MO>& fci_mo) {
+    auto sa_info = fci_mo->sa_info();
+    auto Eold(Eref_0_);
+    for (auto& vec : Eold) {
+        for (auto& value : vec) {
+            value = 0.0;
+        }
+    }
+
+    bool converged = true, failed = true;
+    std::string dash(70, '-');
+    do {
+        print_h2("Start DWMS Iteration " + std::to_string(dwms_niter_));
+        compute_dwsa_energy(fci_mo);
+
+        print_h2("DWMS Iteration " + std::to_string(dwms_niter_) + " Summary");
+        outfile->Printf("\n    Multi.  Irrep.  No. %18s  %18s  %10s", "E new", "E old", "E diff");
+        outfile->Printf("\n    %s", dash.c_str());
+
+        for (int n = 0, counter = 0, nentry = Ept_.size(); n < nentry; ++n) {
+            int irrep, multi, nroots;
+            std::tie(irrep, multi, nroots, std::ignore) = sa_info[n];
+
+            for (int i = 0; i < nroots; ++i) {
+                double diff = Ept_[n][i] - Eold[n][i];
+                if (fabs(diff) > dwms_e_convergence_) {
+                    converged = false;
+                }
+
+                outfile->Printf("\n     %3d     %3s    %2d  %18.10f  %18.10f  %10.2e", multi,
+                                irrep_symbol_[irrep].c_str(), i, Ept_[n][i], Eold[n][i], diff);
+
+                std::stringstream ss;
+                ss << "ITER " << dwms_niter_ << " ENERGY ROOT " << counter;
+                Process::environment.globals[ss.str()] = Ept_[n][i];
+                counter += 1;
+            }
+            outfile->Printf("\n    %s", dash.c_str());
+        }
+        outfile->Printf("\n");
+
+        if (converged) {
+            failed = false;
+            break;
+        } else {
+            converged = true;
+        }
+
+        Eold = Ept_;
+    } while (dwms_niter_++ < dwms_maxiter_);
+
+    if (converged && (!failed)) {
+        outfile->Printf("\n  !! DWMS iterations converged in %d runs !!", dwms_niter_);
+    } else {
+        outfile->Printf("\n  !! DWMS iterations did not converge in %d runs !!", dwms_maxiter_);
+
+        print_h2("Dynamically Weighted Driven Similarity Renormalization Group Energy Summary");
+        auto sa_info = fci_mo->sa_info();
+        print_energy_list("CASCI", Eref_0_, sa_info);
+        if (dwms_ref_ != "CASCI") {
+            print_energy_list("SA-DSRG-" + dwms_ref_, Ept_0_, sa_info);
+        }
+        print_energy_list("DW-DSRG" + dwms_corrlv_, Ept_, sa_info, true);
+
+        throw PSIEXCEPTION("DWMS iterations did not converge!");
+    }
+}
+
+void DWMS_DSRGPT2::compute_dwsa_energy(std::shared_ptr<FCI_MO>& fci_mo) {
     // prepare the final DWMS-DSRG-PT2/3 energies
     auto sa_info = fci_mo->sa_info();
     int nentry = sa_info.size();
     Ept_.resize(nentry);
 
+    // eigens for iterative procedure
+    std::vector<std::vector<std::pair<SharedVector, double>>> eigens_new;
+    // old eigens
+    auto eigens = fci_mo->eigens();
+
     std::shared_ptr<MASTER_DSRG> dsrg_pt;
     std::shared_ptr<FCIIntegrals> fci_ints;
 
     // if zeta == 0, just transform Hamiltonian once
-    if (zeta_ == 0) {
+    if (zeta_ == 0.0) {
         print_h2("Important Note of DW-DSRG");
         outfile->Printf("\n  DWMS_ZETA is detected to be 0.0.");
         outfile->Printf("\n  The bare Hamiltonian will be transformed ONLY once.");
@@ -606,16 +704,46 @@ double DWMS_DSRGPT2::compute_dwsa_energy(std::shared_ptr<FCI_MO>& fci_mo) {
             U->eivprint(Ems);
         }
 
+        if (dwms_iterate_ && dwms_niter_ < dwms_maxiter_) {
+            // update eigen and pushes to eigens
+            eigens_new.push_back(compute_new_eigen(eigens[n], Ems, U));
+        }
+
         // set Ept_ value
         for (int i = 0; i < nroots; ++i) {
             Ept_[n][i] = Ems->get(i);
         }
     }
 
-    return Ept_[0][0];
+    // set new eigens to fci_mo
+    if (eigens_new.size() != 0) {
+        fci_mo->set_eigens(eigens_new);
+    }
 }
 
-double DWMS_DSRGPT2::compute_dwms_energy(std::shared_ptr<FCI_MO>& fci_mo) {
+std::vector<std::pair<SharedVector, double>>
+DWMS_DSRGPT2::compute_new_eigen(const std::vector<std::pair<SharedVector, double>>& old_eigen,
+                                SharedVector new_vals, SharedMatrix new_vecs) {
+    int nroots = new_vals->dim();
+    int ndets = (old_eigen[0].first)->dim();
+    std::vector<std::pair<SharedVector, double>> out;
+    out.reserve(nroots);
+
+    for (int i = 0; i < nroots; ++i) {
+        SharedVector vec(new Vector("New Eigen Vector State " + std::to_string(i), ndets));
+        SharedVector vec_root = new_vecs->get_column(0, i);
+        for (int j = 0; j < nroots; ++j) {
+            SharedVector temp((old_eigen[j].first)->clone());
+            temp->scale(vec_root->get(j));
+            vec->add(temp);
+        }
+        out.push_back(std::make_pair(vec, new_vals->get(i)));
+    }
+
+    return out;
+}
+
+void DWMS_DSRGPT2::compute_dwms_energy(std::shared_ptr<FCI_MO>& fci_mo) {
     // prepare the final DWMS-DSRG-PT2 energies
     auto sa_info = fci_mo->sa_info();
     int nentry = sa_info.size();
@@ -751,8 +879,6 @@ double DWMS_DSRGPT2::compute_dwms_energy(std::shared_ptr<FCI_MO>& fci_mo) {
             Ept_[n][i] = Ems->get(i);
         }
     }
-
-    return Ept_[0][0];
 }
 
 void DWMS_DSRGPT2::rotate_H1(ambit::Tensor& H1a, ambit::Tensor& H1b) {
@@ -907,7 +1033,7 @@ void DWMS_DSRGPT2::print_energy_list(
     outfile->Printf("\n");
 }
 
-double DWMS_DSRGPT2::compute_dwms_energy_separated_H(std::shared_ptr<FCI_MO>& fci_mo) {
+void DWMS_DSRGPT2::compute_dwms_energy_separated_H(std::shared_ptr<FCI_MO>& fci_mo) {
     // the final DWMS-DSRG-PT2 energies
     auto sa_info = fci_mo->sa_info();
     int nentry = sa_info.size();
@@ -988,8 +1114,6 @@ double DWMS_DSRGPT2::compute_dwms_energy_separated_H(std::shared_ptr<FCI_MO>& fc
         std::string Sname = "Overlap of " + multi_symbol_[multi - 1] + " " + irrep_symbol_[irrep];
         print_overlap(evecs_new, Sname);
     }
-
-    return Ept_[0][0];
 }
 
 std::vector<std::tuple<int, int, int, std::vector<double>>> DWMS_DSRGPT2::compute_dwms_weights(

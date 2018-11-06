@@ -60,6 +60,15 @@ class DWMS_DSRGPT2 : public Wavefunction {
     /// Consider X(αβ) = A(β) - A(α) in SA algorithm
     bool do_delta_amp_;
 
+    /// Iteratively update the reference CI coefficients
+    bool dwms_iterate_;
+    /// Max number of iteration for the update of the reference CI
+    int dwms_maxiter_;
+    /// Current number of iteration for the update of the reference CI
+    int dwms_niter_ = 1;
+    /// DWMS energy convergence
+    double dwms_e_convergence_;
+
     /// form Hbar3 for DSRG-MRPT2
     bool do_hbar3_;
     /// max body of Hbar computed
@@ -91,10 +100,19 @@ class DWMS_DSRGPT2 : public Wavefunction {
                                                         int root);
 
     /// compute DWSA energies
-    double compute_dwsa_energy(std::shared_ptr<FCI_MO>& fci_mo);
+    void compute_dwsa_energy(std::shared_ptr<FCI_MO>& fci_mo);
+    void compute_dwsa_energy_iterate(std::shared_ptr<FCI_MO>& fci_mo);
+
+    /// update eigen vectors and values for a given entry
+    /// old_eigen - original states
+    /// new_vals - new energy
+    /// new_vecs - linear combinations of original states
+    std::vector<std::pair<SharedVector, double>>
+    compute_new_eigen(const std::vector<std::pair<SharedVector, double>>& old_eigen,
+                      SharedVector new_vals, SharedMatrix new_vecs);
 
     /// compute MS or XMS energies
-    double compute_dwms_energy(std::shared_ptr<FCI_MO>& fci_mo);
+    void compute_dwms_energy(std::shared_ptr<FCI_MO>& fci_mo);
 
     /// rotate 2nd-order effective Hamiltonian from semicanonical to original
     void rotate_H1(ambit::Tensor& H1a, ambit::Tensor& H1b);
@@ -111,7 +129,7 @@ class DWMS_DSRGPT2 : public Wavefunction {
                                ambit::Tensor& H3bbb, Reference& TrD, bool transpose);
 
     /// compute DWMS energies by diagonalizing separate Hamiltonians
-    double compute_dwms_energy_separated_H(std::shared_ptr<FCI_MO>& fci_mo);
+    void compute_dwms_energy_separated_H(std::shared_ptr<FCI_MO>& fci_mo);
 
     /// initial guesses if separate diagonalizations and require orthogonalized final CI vectors
     std::vector<std::vector<SharedVector>> initial_guesses_;
