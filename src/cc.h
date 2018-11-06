@@ -70,9 +70,18 @@ class CC : public Wavefunction {
   protected:
     // => Class initialization and termination <= //
 
+    /// Reference single reference determinant energy
+    double E_ref_;
+
     /// Start-up function called in the constructor
     void startup();
     /// Clean-up function called in the destructor
+
+    /// Max iteration for amplitude update.
+    int maxiter_;
+    /// Convergence thresholds
+    double e_convergence_;
+    double r_convergence_;
 
     /// The frozen-core energy
     double frozen_core_energy_;

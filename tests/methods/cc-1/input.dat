@@ -12,8 +12,9 @@ set {
   basis sto-3g
   scf_type           pk
   reference          rhf
-  e_convergence      8
+  e_convergence      10
   d_convergence      10
+  r_convergence      10
 #  docc               [3,0,1,1]
 }
 
@@ -21,9 +22,12 @@ set forte {
   job_type               cc
   int_type               conventional
 #  restricted_docc        [3,0,1,1]
-#  restricted_uocc        [1,0,0,1]
+#  active                 [0,0,0,0]
   restricted_docc        [5]
-  restricted_uocc        [2]
+  active                 [0]
+  e_convergence          10
+  r_convergence          10
+  maxiter                1
 }
 
 Ehf, wfn = energy('scf', return_wfn=True)

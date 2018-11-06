@@ -33,9 +33,11 @@
 
 #include "psi4/libmints/molecule.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
+#include "psi4/libpsi4util/process.h"
 
 #include "cc.h"
 #include "helpers.h"
+#include "helpers/printing.h"
 
 namespace psi {
 namespace forte {
@@ -44,6 +46,7 @@ CC::CC(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegr
        std::shared_ptr<MOSpaceInfo> mo_space_info)
     : Wavefunction(options), ints_(ints), mo_space_info_(mo_space_info),
       BTF_(new BlockedTensorFactory(options)), tensor_type_(CoreTensor) {
+    reference_wavefunction_ = ref_wfn;
     startup();
 }
 
@@ -52,20 +55,62 @@ CC::~CC() {}
 
 /// Compute the corr_level energy with fixed reference
 double CC::compute_energy() {
+    timer t("compute_energy");
+    outfile->Printf("\n  * Reference energy        = %18.12f", E_ref_);
     compute_denominators();
     initial_mp2_t();
     double Ecc = cc_energy();
-    outfile->Printf("\n  MP2 energy = %.12f", Ecc);
-    compute_effective_tau();
-    compute_intermediates();
-    //    W2_.print();
-    update_t();
-    Ecc = cc_energy();
-    outfile->Printf("\n  CCSD(1) energy = %.12f", Ecc);
+    double pre_Ecc = Ecc;
+    outfile->Printf("\n  MP2 correlation energy    = %18.12f", Ecc);
+    outfile->Printf("\n  * MP2 total energy        = %18.12f\n", Ecc + E_ref_);
+
+    outfile->Printf("\n  ------------------------------------------------");
+    outfile->Printf("\n  Iter         E(CCSD)         dE          dT");
+    outfile->Printf("\n  ----- ------------------ ----------- -----------");
+    for (size_t i = 1; i <= maxiter_; ++i) {
+        compute_effective_tau();
+        compute_intermediates();
+        update_t();
+        Ecc = cc_energy();
+        double DT_norm = DT1_.norm() + DT2_.norm();
+        outfile->Printf("\n  %4zu   %16.12f   %.3e   %.3e", i, Ecc, fabs(Ecc - pre_Ecc), DT_norm);
+        if (fabs(Ecc - pre_Ecc) <= e_convergence_ and DT_norm <= r_convergence_)
+            break;
+        pre_Ecc = Ecc;
+    }
+    outfile->Printf("\n  ------------------------------------------------\n");
+//    tau_.print();
+//    tilde_tau_.print();
+//    W1_.print();
+    W2_.block("ovvo").print();
+    W2_.block("OVVO").print();
+    W2_.block("oVvO").print();
+    W2_.block("OvvO").print();
+    W2_.block("oVVo").print();
+//    T1_.print();
+//    T2_.print();
+
+    outfile->Printf("\n  CCSD correlation energy   = %18.12f", Ecc);
+    outfile->Printf("\n  * CCSD total energy       = %18.12f\n", Ecc + E_ref_);
     return 0.0;
 }
 
 void CC::startup() {
+    timer t("startup");
+    print_method_banner({"Coupled Cluster Singles and Doubles (CCSD)", "Tianyuan Zhang"});
+
+    e_convergence_ = options_.get_double("E_CONVERGENCE");
+    r_convergence_ = options_.get_double("R_CONVERGENCE");
+    maxiter_ = options_.get_int("MAXITER");
+
+    outfile->Printf("\n  --------------------------");
+    outfile->Printf("\n  Parameters");
+    outfile->Printf("\n  --------------------------");
+    outfile->Printf("\n  E_convergence  =   %.1e", e_convergence_);
+    outfile->Printf("\n  R_convergence  =   %.1e", r_convergence_);
+    outfile->Printf("\n  Maxiter        =   %d", maxiter_);
+    outfile->Printf("\n  --------------------------\n");
+
     // frozen-core energy
     ambit::BlockedTensor::reset_mo_spaces();
     frozen_core_energy_ = ints_->frozen_core_energy();
@@ -135,6 +180,8 @@ void CC::startup() {
 
 void CC::build_ints() {
     // prepare integrals
+    timer t("build_ints");
+
     H_ = BTF_->build(tensor_type_, "H", spin_cases({"gg"}));
     // prepare one-electron integrals
     H_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
@@ -199,6 +246,16 @@ void CC::build_fock(BlockedTensor& H, BlockedTensor& V) {
     F_["PQ"] += V["nPmQ"] * D1c["mn"];
     F_["PQ"] += V["PNQM"] * D1c["MN"];
 
+    E_ref_ = Process::environment.molecule()->nuclear_repulsion_energy(
+                 reference_wavefunction_->get_dipole_field_strength()) +
+             ints_->frozen_core_energy();
+    for (const std::string block : {"oo", "OO"}) {
+        for (size_t m = 0, nc = mo_space_info_->size("RESTRICTED_DOCC"); m < nc; ++m) {
+            E_ref_ += 0.5 * H.block(block).data()[m * nc + m];
+            E_ref_ += 0.5 * F_.block(block).data()[m * nc + m];
+        }
+    }
+
     // obtain diagonal elements of Fock matrix
     size_t ncmo_ = mo_space_info_->size("CORRELATED");
     Fa_.resize(ncmo_);
@@ -254,6 +311,7 @@ void CC::build_fock_df(BlockedTensor& H, BlockedTensor& B) {
 }
 
 void CC::compute_denominators() {
+    timer t("denominators");
     D1_.iterate(
         [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
             if (spin[0] == AlphaSpin)
@@ -274,6 +332,7 @@ void CC::compute_denominators() {
 }
 
 void CC::compute_effective_tau() {
+    timer t("effective_tau");
     tau_["ijab"] = T1_["ia"] * T1_["jb"];
     tau_["ijab"] -= T1_["ib"] * T1_["ja"];
     tau_["iJaB"] = T1_["ia"] * T1_["JB"];
@@ -293,6 +352,10 @@ void CC::compute_effective_tau() {
 }
 
 void CC::compute_intermediates() {
+    timer t("intermediates");
+
+    timer Fae("Fae");
+
     W1_["ae"] = F_["ae"];
     W1_["AE"] = F_["AE"];
     for (size_t m = 0, nc = mo_space_info_->size("RESTRICTED_UOCC"); m < nc; ++m) {
@@ -312,6 +375,10 @@ void CC::compute_intermediates() {
     W1_["ae"] -= tilde_tau_["mNaF"] * V_["mNeF"];
     W1_["AE"] -= tilde_tau_["nMfA"] * V_["nMfE"];
     W1_["AE"] -= 0.5 * tilde_tau_["MNAF"] * V_["MNEF"];
+
+    Fae.stop();
+
+    timer Fmi("Fmi");
 
     W1_["mi"] = F_["mi"];
     W1_["MI"] = F_["MI"];
@@ -333,6 +400,10 @@ void CC::compute_intermediates() {
     W1_["MI"] += tilde_tau_["nIfE"] * V_["nMfE"];
     W1_["MI"] += 0.5 * tilde_tau_["INEF"] * V_["MNEF"];
 
+    Fmi.stop();
+
+    timer Fme("Fme");
+
     W1_["me"] = F_["me"];
     W1_["ME"] = F_["ME"];
 
@@ -340,6 +411,10 @@ void CC::compute_intermediates() {
     W1_["me"] += T1_["NF"] * V_["mNeF"];
     W1_["ME"] += T1_["nf"] * V_["nMfE"];
     W1_["ME"] += T1_["NF"] * V_["MNEF"];
+
+    Fme.stop();
+
+    timer Wmnij("Wmnij");
 
     W2_["mnij"] = V_["mnij"];
     W2_["mNiJ"] = V_["mNiJ"];
@@ -357,6 +432,10 @@ void CC::compute_intermediates() {
     W2_["mNiJ"] += 0.5 * tau_["iJeF"] * V_["mNeF"];
     W2_["MNIJ"] += 0.25 * tau_["IJEF"] * V_["MNEF"];
 
+    Wmnij.stop();
+
+    timer Wabef("Wabef");
+
     W2_["abef"] = V_["abef"];
     W2_["aBeF"] = V_["aBeF"];
     W2_["ABEF"] = V_["ABEF"];
@@ -372,6 +451,10 @@ void CC::compute_intermediates() {
     W2_["abef"] += 0.25 * tau_["mnab"] * V_["mnef"];
     W2_["aBeF"] += 0.5 * tau_["mNaB"] * V_["mNeF"];
     W2_["ABEF"] += 0.25 * tau_["MNAB"] * V_["MNEF"];
+
+    Wabef.stop();
+
+    timer Wmbej("Wmbej");
 
     W2_["mbej"] = V_["mbej"];
     W2_["mBeJ"] = V_["mBeJ"];
@@ -405,12 +488,17 @@ void CC::compute_intermediates() {
     W2_["MBEJ"] -= T1_["JF"] * T1_["NB"] * V_["MNEF"];
     W2_["mBEj"] += T1_["jf"] * T1_["NB"] * V_["mNfE"];
     W2_["MbeJ"] += T1_["JF"] * T1_["nb"] * V_["nMeF"];
+
+    Wmbej.stop();
 }
 
 void CC::update_t() {
+    timer t("update_t");
     ambit::BlockedTensor NT1, NT2;
+
+    timer t1("T1");
+
     NT1 = BTF_->build(tensor_type_, "NT1", spin_cases({"ov"}));
-    NT2 = BTF_->build(tensor_type_, "NT2", spin_cases({"oovv"}));
 
     NT1["ia"] = F_["ia"];
     NT1["IA"] = F_["IA"];
@@ -440,6 +528,11 @@ void CC::update_t() {
     NT1["ia"] -= T2_["mNaE"] * V_["mNiE"];
     NT1["IA"] -= T2_["nMeA"] * V_["nMeI"];
     NT1["IA"] -= 0.5 * T2_["MNAE"] * V_["NMEI"];
+
+    t1.stop();
+    timer t2("T2");
+
+    NT2 = BTF_->build(tensor_type_, "NT2", spin_cases({"oovv"}));
 
     NT2["ijab"] = V_["ijab"];
     NT2["iJaB"] = V_["iJaB"];
@@ -485,8 +578,6 @@ void CC::update_t() {
     NT2["iJaB"] += tau_["iJeF"] * W2_["aBeF"];
     NT2["IJAB"] += 0.5 * tau_["IJEF"] * W2_["ABEF"];
 
-    //    NT2.print();
-
     NT2["ijab"] += T2_["imae"] * W2_["mbej"];
     NT2["ijab"] += T2_["iMaE"] * W2_["jEbM"];
     NT2["iJaB"] += T2_["imae"] * W2_["mBeJ"];
@@ -529,42 +620,6 @@ void CC::update_t() {
     NT2["iJaB"] -= T1_["JE"] * T1_["MB"] * V_["aMiE"];
     NT2["IJAB"] -= T1_["JE"] * T1_["MB"] * V_["MAEI"];
 
-//    DT2_.block("oovv")("ijab") = NT2.block("oOvV")("ijab") - NT2.block("oOvV")("ijba");
-//    DT2_.block("oovv")("ijab") -= NT2.block("oovv")("ijab");
-
-//    DT2_.block("oOvV").print();
-
-//    ambit::BlockedTensor temp;
-//    temp = BTF_->build(tensor_type_, "temp", spin_cases({"oovv"}));
-//    temp["ijab"] += T2_["imae"] * W2_["mbej"];
-//    temp["ijab"] += T2_["iMaE"] * W2_["bMjE"];
-//    temp["iJaB"] += T2_["imae"] * W2_["mBeJ"];
-//    temp["iJaB"] += T2_["iMaE"] * W2_["MBEJ"];
-//    temp["IJAB"] += T2_["mIeA"] * W2_["mBeJ"];
-//    temp["IJAB"] += T2_["IMAE"] * W2_["MBEJ"];
-//    temp["ijab"] -= T1_["ie"] * T1_["ma"] * V_["mbej"];
-//    temp["iJaB"] -= T1_["ie"] * T1_["ma"] * V_["mBeJ"];
-//    temp["IJAB"] -= T1_["IE"] * T1_["MA"] * V_["MBEJ"];
-
-//    NT2["ijab"] += temp["ijab"];
-//    NT2["iJaB"] += temp["iJaB"];
-//    NT2["IJAB"] += temp["IJAB"];
-
-//    NT2["ijab"] -= temp["ijba"];
-//    NT2["iJaB"] += temp["iJaB"];
-//    NT2["IJAB"] -= temp["IJBA"];
-
-//    NT2["ijab"] -= temp["jiab"];
-//    NT2["iJaB"] += temp["iJaB"];
-//    NT2["IJAB"] -= temp["JIAB"];
-
-//    NT2["ijab"] += temp["jiba"];
-//    NT2["iJaB"] += temp["iJaB"];
-//    NT2["IJAB"] += temp["JIBA"];
-
-//    NT2.print();
-//    W2_.block("ovvo").print();
-
     NT2["ijab"] += T1_["ie"] * V_["abej"];
     NT2["iJaB"] += T1_["ie"] * V_["aBeJ"];
     NT2["IJAB"] += T1_["IE"] * V_["ABEJ"];
@@ -580,6 +635,8 @@ void CC::update_t() {
     NT2["ijab"] += T1_["mb"] * V_["maij"];
     NT2["iJaB"] -= T1_["MB"] * V_["aMiJ"];
     NT2["IJAB"] += T1_["MB"] * V_["MAIJ"];
+
+    t2.stop();
 
     DT1_["ia"] = T1_["ia"];
     DT1_["IA"] = T1_["IA"];
@@ -610,12 +667,14 @@ void CC::update_t() {
 }
 
 void CC::initial_mp2_t() {
+    timer t("initial_mp2_t");
     T2_["ijab"] = V_["ijab"] * D2_["ijab"];
     T2_["iJaB"] = V_["iJaB"] * D2_["iJaB"];
     T2_["IJAB"] = V_["IJAB"] * D2_["IJAB"];
 }
 
 double CC::cc_energy() {
+    timer t("E_corr");
     double Ecc = 0.0;
 
     Ecc += F_["ia"] * T1_["ia"];
