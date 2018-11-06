@@ -79,20 +79,11 @@ double CC::compute_energy() {
         pre_Ecc = Ecc;
     }
     outfile->Printf("\n  ------------------------------------------------\n");
-//    tau_.print();
-//    tilde_tau_.print();
-//    W1_.print();
-    W2_.block("ovvo").print();
-    W2_.block("OVVO").print();
-    W2_.block("oVvO").print();
-    W2_.block("OvvO").print();
-    W2_.block("oVVo").print();
-//    T1_.print();
-//    T2_.print();
 
     outfile->Printf("\n  CCSD correlation energy   = %18.12f", Ecc);
     outfile->Printf("\n  * CCSD total energy       = %18.12f\n", Ecc + E_ref_);
-    return 0.0;
+    Process::environment.globals["CURRENT ENERGY"] = Ecc + E_ref_;
+    return Ecc + E_ref_;
 }
 
 void CC::startup() {
@@ -172,7 +163,7 @@ void CC::startup() {
     W1_ = BTF_->build(tensor_type_, "W1", spin_cases({"oo", "ov", "vv"}));
     //    W2_ = BTF_->build(tensor_type_, "W2", spin_cases({"ovvo","oooo","vvvv"}));
     W2_ = BTF_->build(tensor_type_, "W2", {"oooo", "oOoO", "OOOO", "vvvv", "vVvV", "VVVV", "ovvo",
-                                           "OVVO", "oVvO", "OvvO", "oVVo"});
+                                           "OVVO", "oVvO", "OvVo", "OvvO", "oVVo"});
 
     DT1_ = BTF_->build(tensor_type_, "DT1", spin_cases({"ov"}));
     DT2_ = BTF_->build(tensor_type_, "DT2", spin_cases({"oovv"}));
@@ -461,18 +452,21 @@ void CC::compute_intermediates() {
     W2_["MBEJ"] = V_["MBEJ"];
     W2_["mBEj"] = -V_["mBjE"];
     W2_["MbeJ"] = -V_["bMeJ"];
+    W2_["MbEj"] = V_["bMjE"];
 
     W2_["mbej"] += T1_["jf"] * V_["mbef"];
     W2_["mBeJ"] += T1_["JF"] * V_["mBeF"];
     W2_["MBEJ"] += T1_["JF"] * V_["MBEF"];
     W2_["mBEj"] -= T1_["jf"] * V_["mBfE"];
     W2_["MbeJ"] -= T1_["JF"] * V_["bMeF"];
+    W2_["MbEj"] += T1_["jf"] * V_["bMfE"];
 
     W2_["mbej"] -= T1_["nb"] * V_["mnej"];
     W2_["mBeJ"] -= T1_["NB"] * V_["mNeJ"];
     W2_["MBEJ"] -= T1_["NB"] * V_["MNEJ"];
     W2_["mBEj"] += T1_["NB"] * V_["mNjE"];
     W2_["MbeJ"] += T1_["nb"] * V_["nMeJ"];
+    W2_["MbEj"] -= T1_["nb"] * V_["nMjE"];
 
     W2_["mbej"] -= 0.5 * T2_["jnfb"] * V_["mnef"];
     W2_["mbej"] += 0.5 * T2_["jNbF"] * V_["mNeF"];
@@ -482,12 +476,15 @@ void CC::compute_intermediates() {
     W2_["MBEJ"] -= 0.5 * T2_["JNFB"] * V_["MNEF"];
     W2_["mBEj"] += 0.5 * T2_["jNfB"] * V_["mNfE"];
     W2_["MbeJ"] += 0.5 * T2_["nJbF"] * V_["nMeF"];
+    W2_["MbEj"] -= 0.5 * T2_["jnfb"] * V_["nMfE"];
+    W2_["MbEj"] += 0.5 * T2_["jNbF"] * V_["MNEF"];
 
     W2_["mbej"] -= T1_["jf"] * T1_["nb"] * V_["mnef"];
     W2_["mBeJ"] -= T1_["JF"] * T1_["NB"] * V_["mNeF"];
     W2_["MBEJ"] -= T1_["JF"] * T1_["NB"] * V_["MNEF"];
     W2_["mBEj"] += T1_["jf"] * T1_["NB"] * V_["mNfE"];
     W2_["MbeJ"] += T1_["JF"] * T1_["nb"] * V_["nMeF"];
+    W2_["MbEj"] -= T1_["jf"] * T1_["nb"] * V_["nMfE"];
 
     Wmbej.stop();
 }
@@ -579,28 +576,28 @@ void CC::update_t() {
     NT2["IJAB"] += 0.5 * tau_["IJEF"] * W2_["ABEF"];
 
     NT2["ijab"] += T2_["imae"] * W2_["mbej"];
-    NT2["ijab"] += T2_["iMaE"] * W2_["jEbM"];
+    NT2["ijab"] += T2_["iMaE"] * W2_["MbEj"];
     NT2["iJaB"] += T2_["imae"] * W2_["mBeJ"];
     NT2["iJaB"] += T2_["iMaE"] * W2_["MBEJ"];
     NT2["IJAB"] += T2_["mIeA"] * W2_["mBeJ"];
     NT2["IJAB"] += T2_["IMAE"] * W2_["MBEJ"];
 
     NT2["ijab"] -= T2_["imbe"] * W2_["maej"];
-    NT2["ijab"] -= T2_["iMbE"] * W2_["jEaM"];
+    NT2["ijab"] -= T2_["iMbE"] * W2_["MaEj"];
     NT2["iJaB"] += T2_["iMeB"] * W2_["MaeJ"];
     NT2["IJAB"] -= T2_["mIeB"] * W2_["mAeJ"];
     NT2["IJAB"] -= T2_["IMBE"] * W2_["MAEJ"];
 
     NT2["ijab"] -= T2_["jmae"] * W2_["mbei"];
-    NT2["ijab"] -= T2_["jMaE"] * W2_["iEbM"];
+    NT2["ijab"] -= T2_["jMaE"] * W2_["MbEi"];
     NT2["iJaB"] += T2_["mJaE"] * W2_["mBEi"];
     NT2["IJAB"] -= T2_["mJeA"] * W2_["mBeI"];
     NT2["IJAB"] -= T2_["JMAE"] * W2_["MBEI"];
 
     NT2["ijab"] += T2_["jmbe"] * W2_["maei"];
-    NT2["ijab"] += T2_["jMbE"] * W2_["iEaM"];
+    NT2["ijab"] += T2_["jMbE"] * W2_["MaEi"];
     NT2["iJaB"] += T2_["mJeB"] * W2_["maei"];
-    NT2["iJaB"] += T2_["JMBE"] * W2_["iEaM"];
+    NT2["iJaB"] += T2_["JMBE"] * W2_["MaEi"];
     NT2["IJAB"] += T2_["mJeB"] * W2_["mAeI"];
     NT2["IJAB"] += T2_["JMBE"] * W2_["MAEI"];
 

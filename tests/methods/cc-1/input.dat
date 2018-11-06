@@ -9,7 +9,7 @@ symmetry c1
 }
 
 set {
-  basis sto-3g
+  basis DZ
   scf_type           pk
   reference          rhf
   e_convergence      10
@@ -27,10 +27,11 @@ set forte {
   active                 [0]
   e_convergence          10
   r_convergence          10
-  maxiter                1
+  maxiter                100
 }
 
 Ehf, wfn = energy('scf', return_wfn=True)
-energy('ccsd', ref_wfn = wfn)
+E_ccsd = energy('ccsd', ref_wfn = wfn)
 
 energy('forte', ref_wfn = wfn)
+compare_values(E_ccsd, get_variable("CURRENT ENERGY"), 10, "CCSD Energy") #TEST
