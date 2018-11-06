@@ -3042,6 +3042,7 @@ void FCI_MO::set_eigens(const std::vector<vector<pair<SharedVector, double>>>& e
             }
         }
         eigens_ = eigens;
+        safe_to_read_density_files_ = false;
     } else {
         throw PSIEXCEPTION("Cannot set eigens of FCI_MO: mismatching number of SA entries.");
     }

@@ -761,7 +761,7 @@ void MASTER_DSRG::rotate_ints_semi_to_origin(const std::string& name, BlockedTen
     outfile->Printf("Done. Timing %8.3f s", timer2.get());
 
     Timer timer3;
-    outfile->Printf("\n    %-40s ... ", "Rotating 3-body to original basis");
+    outfile->Printf("\n    %-40s ... ", "Rotating 3-body term to original basis");
     temp = H3.block("aaaaaa").clone(tensor_type_);
     H3.block("aaaaaa")("pqrstu") =
         Ua("pa") * Ua("qb") * Ua("rc") * temp("abcijk") * Ua("si") * Ua("tj") * Ua("uk");

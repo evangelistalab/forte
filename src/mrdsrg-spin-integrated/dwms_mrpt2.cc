@@ -370,7 +370,9 @@ std::shared_ptr<FCI_MO> DWMS_DSRGPT2::precompute_energy() {
                 }
             }
         } else {
-            print_h2("Diagonalize SA-DSRG-%s Active Hamiltonian", dwms_ref_.c_str());
+            std::stringstream title;
+            title << "Diagonalize SA-DSRG-" << dwms_ref_ << " Active Hamiltonian";
+            print_h2(title.str());
             fci_mo->set_fci_int(fci_ints_);
             fci_mo->set_localize_actv(false);
             fci_mo->compute_energy();
