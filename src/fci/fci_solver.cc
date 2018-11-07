@@ -29,7 +29,7 @@
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libmints/molecule.h"
 
-#include "../mini-boost/boost/format.hpp"
+#include "boost/format.hpp"
 
 #include "../sparse_ci/determinant.h"
 #include "../iterative_solvers.h"

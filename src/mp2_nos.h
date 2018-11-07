@@ -35,7 +35,6 @@
 #include "helpers.h"
 #include "integrals/integrals.h"
 #include "reference.h"
-#include "../blockedtensorfactory.h"
 
 namespace psi {
 

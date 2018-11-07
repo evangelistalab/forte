@@ -30,8 +30,8 @@
 #include "psi4/libpsi4util/PsiOutStream.h"
 
 #include "../helpers.h"
-#include "../mini-boost/boost/format.hpp"
-#include "../mini-boost/boost/numeric/odeint.hpp"
+#include "boost/format.hpp"
+#include "boost/numeric/odeint.hpp"
 #include "mrdsrg.h"
 
 using namespace boost::numeric::odeint;

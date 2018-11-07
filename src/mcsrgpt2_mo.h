@@ -29,7 +29,7 @@
 #ifndef _mcsrgpt2_mo_h_
 #define _mcsrgpt2_mo_h_
 
-#include "mini-boost/boost/assign.hpp"
+#include "boost/assign.hpp"
 #include "psi4/liboptions/liboptions.h"
 #include "psi4/libmints/vector.h"
 #include "psi4/libmints/matrix.h"
@@ -37,7 +37,7 @@
 #include <cmath>
 #include "fci_mo.h"
 #include "integrals/integrals.h"
-#include "./mrdsrg-helper/dsrg_source.h"
+#include "mrdsrg-helper/dsrg_source.h"
 
 using d1 = std::vector<double>;
 using d2 = std::vector<d1>;

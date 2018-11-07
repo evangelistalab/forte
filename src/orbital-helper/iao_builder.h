@@ -38,7 +38,7 @@
 #include "psi4/libmints/basisset.h"
 #include "psi4/libcubeprop/cubeprop.h"
 
-#include "../mini-boost/boost/format.hpp"
+#include "boost/format.hpp"
 
 namespace psi {
 namespace forte {

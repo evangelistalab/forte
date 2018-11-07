@@ -34,8 +34,8 @@
 #include <unordered_map>
 #include <utility>
 
-#include "../mini-boost/boost/format.hpp"
-#include "../mini-boost/boost/math/special_functions/bessel.hpp"
+#include "boost/format.hpp"
+#include "boost/math/special_functions/bessel.hpp"
 
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libciomr/libciomr.h"

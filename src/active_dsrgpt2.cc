@@ -40,12 +40,12 @@
 
 #include "psi4/physconst.h"
 
-#include "../fci/fci_integrals.h"
+#include "fci/fci_integrals.h"
 #include "fci_mo.h"
 #include "semi_canonicalize.h"
 #include "active_dsrgpt2.h"
-#include "mini-boost/boost/format.hpp"
-#include "../helpers/printing.h"
+#include "boost/format.hpp"
+#include "helpers/printing.h"
 
 namespace psi {
 namespace forte {

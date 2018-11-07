@@ -30,7 +30,7 @@
 
 #include <exception>
 
-#include "mini-boost/boost/numeric/odeint.hpp"
+#include "boost/numeric/odeint.hpp"
 
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/wavefunction.h"
