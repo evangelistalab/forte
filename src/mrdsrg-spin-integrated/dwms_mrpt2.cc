@@ -402,6 +402,7 @@ std::shared_ptr<FCI_MO> DWMS_DSRGPT2::precompute_energy() {
             fci_mo->set_localize_actv(false);
             fci_mo->compute_energy();
             eigens = fci_mo->eigens();
+            fci_mo->set_safe_to_read_density_files(false);
 
             // save SA-DSRG-PT2/3 energies
             Ept_0_.resize(nentry);

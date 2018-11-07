@@ -205,7 +205,6 @@ class FCI_MO : public Wavefunction {
 
     /// Return the vector of eigen vectors and eigen values (used in state-average computation)
     std::vector<std::vector<std::pair<SharedVector, double>>> const eigens() {
-//        safe_to_read_density_files_ = false;
         return eigens_;
     }
 
