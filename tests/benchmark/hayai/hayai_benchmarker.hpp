@@ -1,6 +1,7 @@
 #ifndef __HAYAI_BENCHMARKER
 #define __HAYAI_BENCHMARKER
 #include <algorithm>
+#include <random>
 #include <vector>
 #include <limits>
 #include <iomanip>
@@ -299,9 +300,11 @@ namespace hayai
         /// Randomly shuffles the order of tests.
         static void ShuffleTests()
         {
+            std::random_device rd;
+            std::mt19937 g(rd());
             Benchmarker& instance = Instance();
-            std::random_shuffle(instance._tests.begin(),
-                                instance._tests.end());
+            std::shuffle(instance._tests.begin(),
+                                instance._tests.end(),  g);
         }
     private:
         /// Calibration model.
