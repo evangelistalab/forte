@@ -156,8 +156,7 @@ install:
 - make install
 # Compile Psi4
 - cd ${HOME}/build
-- git clone https://github.com/psi4/psi4.git psi4
-#- git clone -b minipsi4 https://github.com/evangelistalab/psi4.git psi4
+- git clone https://github.com/evangelistalab/psi4.git psi4
 - cd psi4
 - >
     cmake -Bbuild -H.
