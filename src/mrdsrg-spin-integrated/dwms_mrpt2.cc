@@ -465,7 +465,10 @@ DWMS_DSRGPT2::compute_macro_dsrg_pt(std::shared_ptr<MASTER_DSRG>& dsrg_pt,
     auto sa_info = fci_mo->sa_info();
 
     // compute new weights
-    std::vector<std::vector<double>>& Erefs = (dwms_ref_ == "CASCI") ? Eref_0_ : Ept_0_;
+    std::vector<std::vector<double>> Erefs = (dwms_ref_ == "CASCI") ? Eref_0_ : Ept_0_;
+    if (dwms_iterate_ && dwms_niter_ != 1) {
+        Erefs = Ept_;
+    }
     auto sa_info_new = compute_dwms_weights(sa_info, entry, root, Erefs);
     print_sa_info("Original State Averaging Summary", sa_info);
     print_sa_info("Reweighted State Averaging Summary", sa_info_new);
@@ -483,11 +486,10 @@ DWMS_DSRGPT2::compute_macro_dsrg_pt(std::shared_ptr<MASTER_DSRG>& dsrg_pt,
 
 void DWMS_DSRGPT2::compute_dwsa_energy_iterate(std::shared_ptr<FCI_MO>& fci_mo) {
     auto sa_info = fci_mo->sa_info();
-    auto Eold(Eref_0_);
-    for (auto& vec : Eold) {
-        for (auto& value : vec) {
-            value = 0.0;
-        }
+    int nentry = sa_info.size();
+    std::vector<std::vector<double>> Eold;
+    for (int i = 0; i < nentry; ++i) {
+        Eold.push_back(std::vector<double>(Eref_0_[i].size(), 0.0));
     }
 
     bool converged = true, failed = true;
@@ -706,7 +708,6 @@ void DWMS_DSRGPT2::compute_dwsa_energy(std::shared_ptr<FCI_MO>& fci_mo) {
         }
 
         if (dwms_iterate_ && dwms_niter_ < dwms_maxiter_) {
-            // update eigen and pushes to eigens
             eigens_new.push_back(compute_new_eigen(eigens[n], Ems, U));
         }
 
