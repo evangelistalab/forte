@@ -91,15 +91,11 @@ extern "C" PSI_API SharedWavefunction forte(SharedWavefunction ref_wfn, Options&
     // Make a MOSpaceInfo object
     auto mo_space_info = make_mo_space_info(ref_wfn, options);
 
-	if (options.get_str("JOB_TYPE") == "EMBEDDING" || options.get_str("JOB_TYPE") == "OWNSCF") {
+	if (options.get_str("JOB_TYPE") == "EMBEDDING") {
 		if (options.get_str("JOB_TYPE") == "EMBEDDING") {
 			auto emb = std::make_shared<embedding>(ref_wfn, options, mo_space_info);
 			emb->compute_energy();
 		}
-		//if (options.get_str("JOB_TYPE") == "OWNSCF") {
-		//	auto scf = std::make_shared<OwnSCF>(ref_wfn, options, mo_space_info);
-		//	scf->compute_energy();
-		//}
 	}
 	else {
 		// Sanity check

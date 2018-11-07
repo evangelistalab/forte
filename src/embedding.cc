@@ -49,7 +49,7 @@ void set_EMBEDDING_options(ForteOptions& foptions) {
     foptions.add_int("NUM_OCC", 0, "Number of (restricted) occpied in system A");
     foptions.add_int("NUM_VIR", 0, "Number of (restricted) virtual in system A");
     foptions.add_double("THRESHOLD", 0.5, "Projector eigenvalue threshold, 0.5 as default");
-    foptions.add_str("REFERENCE", "HF", "HF, UHF, ROHF, MCSCF, CASSCF, DFT");
+    foptions.add_str("REFERENCE", "HF", "HF, UHF, MCSCF, CASSCF, CINO");
     foptions.add_bool("WRITE_FREEZE_MO", true,
                       "Pass orbital space information automatically or manually");
     foptions.add_bool("SEMICANON", true, "Perform semi-canonicalization or not in the end");
@@ -100,8 +100,8 @@ double embedding::compute_energy() {
     std::shared_ptr<Molecule> mol_env = mol->extract_subsets(env_list, none_list);
     outfile->Printf("\n System Fragment \n");
     mol_sys->print();
-    outfile->Printf("\n Environment Fragment(s) \n");
-    mol_env->print();
+    //outfile->Printf("\n Environment Fragment(s) \n");
+    //mol_env->print();
 
     std::shared_ptr<BasisSet> basis = ref_wfn_->basisset();
     Dimension nmopi = ref_wfn_->nmopi();
@@ -140,6 +140,12 @@ double embedding::compute_energy() {
     Dimension actv_a = zeropi;
     Dimension res_docc_ori = zeropi;
     Dimension docc_ori = zeropi;
+
+	if (options_.get_str("REFERENCE") == "CINO") {
+		outfile->Printf("\n Clear the previous frozen orbs when doing NO rotation\n");
+		options_["FROZEN_DOCC"][0].assign(0);
+		options_["FROZEN_UOCC"][0].assign(0);
+	}
 
     if (options_.get_str("REFERENCE") == "CASSCF") {
 
@@ -484,6 +490,11 @@ double embedding::compute_energy() {
             options_["ACTIVE"][0].assign(num_actv);
             options_["RESTRICTED_UOCC"][0].assign(sizeAV);
         }
+
+		if (options_.get_str("REFERENCE") == "CINO") {
+			options_["FROZEN_DOCC"][0].assign(sizeBO);
+			options_["FROZEN_UOCC"][0].assign(sizeBV);
+		}
 
         /*
         for (int h = 0; h < nirrep_; h++) {
