@@ -38,6 +38,16 @@ if(ENABLE_CheMPS2)
     find_package(CheMPS2 1.8.3 CONFIG REQUIRED)
 endif()
 
+set(Boost_USE_STATIC_LIBS OFF) 
+set(Boost_USE_MULTITHREADED ON)  
+set(Boost_USE_STATIC_RUNTIME OFF) 
+find_package(Boost REQUIRED) 
+
+if(Boost_FOUND)
+    include_directories(${Boost_INCLUDE_DIRS}) 
+#    target_link_libraries(forte ${Boost_LIBRARIES})
+endif()
+
 # Including custom cmake rules
 include(cmake/clang-cxx-dev-tools.cmake)
 include(cmake/git-version.cmake)
@@ -172,7 +182,6 @@ if(TARGET CheMPS2::chemps2)
 endif()
 
 target_include_directories(forte PRIVATE src)
-target_include_directories(forte PRIVATE external/mini-boost)
 
 ## 64bit implementation
 if(MAX_DET_ORB EQUAL OFF)
