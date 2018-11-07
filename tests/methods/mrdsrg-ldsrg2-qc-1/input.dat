@@ -3,9 +3,9 @@
 import forte
 
 refmcscf   = -99.406065223640
-refdsrg    = -99.497356555037 # no relaxation
-refdsrg    = -99.498401702633 # relax once
-refdsrg    = -99.498194734726 # relax iterative
+refdsrg    = -99.497356556031 # no relaxation
+refdsrg    = -99.498401703623 # relax once
+refdsrg    = -99.498194735718 # relax iterative
 
 memory 500 mb
 

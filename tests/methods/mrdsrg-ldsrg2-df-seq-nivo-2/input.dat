@@ -2,10 +2,10 @@
 
 import forte
 
-refmcscf   = -99.406065222746975
-refudsrg   = -99.498877580929829
-refprdsrg  = -99.500379477238937
-refrdsrg   = -99.500197312848783
+refmcscf   = -99.406065223640
+refudsrg   = -99.498877581701
+refprdsrg  = -99.500379478002
+refrdsrg   = -99.500197313857
 
 memory 500 mb
 

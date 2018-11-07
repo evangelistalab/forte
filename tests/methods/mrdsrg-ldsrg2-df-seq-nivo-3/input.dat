@@ -2,9 +2,9 @@
 
 import forte
 
-refrhf   = -2.179077711159176
-refdsrg  = -2.253241856589615 # semi_canonical true
-refdsrg  = -2.253241869563188 # semi_canonical false
+refrhf   = -2.179077709687157
+refdsrg  = -2.253241855057433 # semi_canonical true
+refdsrg  = -2.253241855057861 # semi_canonical false
 
 memory 500 mb
 
