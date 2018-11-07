@@ -171,7 +171,8 @@ if(TARGET CheMPS2::chemps2)
     target_link_libraries(forte PRIVATE CheMPS2::chemps2)
 endif()
 
-target_include_directories(forte PRIVATE src/mini-boost)
+target_include_directories(forte PRIVATE src)
+target_include_directories(forte PRIVATE external/mini-boost)
 
 ## 64bit implementation
 if(MAX_DET_ORB EQUAL OFF)
