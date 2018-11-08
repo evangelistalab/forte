@@ -113,7 +113,7 @@ ElementwiseCI::ElementwiseCI(SharedWavefunction ref_wfn, Options& options,
     startup();
 }
 
-std::shared_ptr<FCIIntegrals> ElementwiseCI::fci_ints_ = 0;
+std::shared_ptr<FCIIntegrals> ElementwiseCI::fci_ints_ = nullptr;
 
 void ElementwiseCI::startup() {
     // Connect the integrals to the determinant class
