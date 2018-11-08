@@ -167,8 +167,7 @@ void CC::startup() {
     D2_ = BTF_->build(tensor_type_, "D2", spin_cases({"oovv"}));
 
     W1_ = BTF_->build(tensor_type_, "W1", spin_cases({"oo", "ov", "vv"}));
-    //    W2_ = BTF_->build(tensor_type_, "W2", spin_cases({"ovvo","oooo","vvvv"}));
-    W2_ = BTF_->build(tensor_type_, "W2", {"oooo", "oOoO", "OOOO", "vvvv", "vVvV", "VVVV", "ovvo",
+    W2_ = BTF_->build(tensor_type_, "W2", {"oooo", "oOoO", "OOOO", "ovvo",
                                            "OVVO", "oVvO", "OvVo", "OvvO", "oVVo"});
 
     DT1_ = BTF_->build(tensor_type_, "DT1", spin_cases({"ov"}));
