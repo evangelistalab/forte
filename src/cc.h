@@ -30,7 +30,7 @@
 #define _cc_h_
 
 #include <cmath>
-#include "mini-boost/boost/assign.hpp"
+#include "boost/assign.hpp"
 
 #include "psi4/liboptions/liboptions.h"
 #include "psi4/libmints/wavefunction.h"

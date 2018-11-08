@@ -31,7 +31,7 @@
 #include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/psi4-dec.h"
 
-#include "mini-boost/boost/numeric/odeint.hpp"
+#include "boost/numeric/odeint.hpp"
 
 #include "tensorsrg.h"
 

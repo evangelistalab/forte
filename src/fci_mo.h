@@ -35,19 +35,6 @@
 #include <vector>
 
 #include "ambit/tensor.h"
-#include "psi4/libmints/basisset.h"
-#include "psi4/libmints/integral.h"
-#include "psi4/libmints/matrix.h"
-#include "psi4/libmints/mintshelper.h"
-#include "psi4/libmints/molecule.h"
-#include "psi4/libmints/sointegral_onebody.h"
-#include "psi4/libmints/vector.h"
-#include "psi4/libmints/wavefunction.h"
-#include "psi4/liboptions/liboptions.h"
-#include "psi4/libpsio/psio.h"
-#include "psi4/libpsio/psio.hpp"
-#include "psi4/libqt/qt.h"
-#include "psi4/physconst.h"
 
 #include "active_dsrgpt2.h"
 #include "ci_rdm/ci_rdms.h"

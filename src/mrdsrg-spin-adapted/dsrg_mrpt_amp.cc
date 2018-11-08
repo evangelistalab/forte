@@ -26,7 +26,7 @@
  * @END LICENSE
  */
 
-#include "../mini-boost/boost/format.hpp"
+#include "boost/format.hpp"
 
 #include "psi4/libpsi4util/PsiOutStream.h"
 

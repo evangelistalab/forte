@@ -42,11 +42,11 @@
 #include "fci/fci_vector.h"
 #include "fci_mo.h"
 #include "forte_options.h"
-#include "mini-boost/boost/algorithm/string/predicate.hpp"
+#include "boost/algorithm/string/predicate.hpp"
 #include "operator.h"
 #include "semi_canonicalize.h"
 #include "orbital-helper/iao_builder.h"
-#include "../helpers/printing.h"
+#include "helpers/printing.h"
 
 namespace psi {
 namespace forte {

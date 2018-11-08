@@ -34,8 +34,8 @@
 #include <unordered_map>
 #include <utility>
 
-#include "../mini-boost/boost/format.hpp"
-#include "../mini-boost/boost/math/special_functions/bessel.hpp"
+#include "boost/format.hpp"
+#include "boost/math/special_functions/bessel.hpp"
 
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libciomr/libciomr.h"
@@ -135,7 +135,7 @@ ProjectorCI_HashVec::ProjectorCI_HashVec(SharedWavefunction ref_wfn, Options& op
     startup();
 }
 
-std::shared_ptr<FCIIntegrals> ProjectorCI_HashVec::fci_ints_ = 0;
+std::shared_ptr<FCIIntegrals> ProjectorCI_HashVec::fci_ints_ = nullptr;
 
 void ProjectorCI_HashVec::startup() {
     // Connect the integrals to the determinant class

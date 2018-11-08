@@ -129,7 +129,7 @@ install:
 - conda config --set always_yes yes --set changeps1 no
 - conda update -q conda
 - conda info -a
-- conda create -q -n p4env python=$PYTHON_VER numpy cmake gdma pylibefp libint libxc gau2grid -c psi4/label/test -c psi4
+- conda create -q -n p4env python=$PYTHON_VER numpy cmake gdma pylibefp libint libxc gau2grid boost -c psi4/label/test -c psi4
 - source activate p4env
 #- conda list
 - conda install pint pylibefp -c psi4/label/dev
@@ -156,8 +156,7 @@ install:
 - make install
 # Compile Psi4
 - cd ${HOME}/build
-- git clone https://github.com/psi4/psi4.git psi4
-#- git clone -b minipsi4 https://github.com/evangelistalab/psi4.git psi4
+- git clone https://github.com/evangelistalab/psi4.git psi4
 - cd psi4
 - >
     cmake -Bbuild -H.

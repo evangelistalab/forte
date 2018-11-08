@@ -37,7 +37,7 @@
 #include "psi4/libpsio/psio.h"
 #include "ambit/blocked_tensor.h"
 
-#include "../mini-boost/boost/assign.hpp"
+#include "boost/assign.hpp"
 #include "../integrals/integrals.h"
 #include "../reference.h"
 #include "../mrdsrg-helper/dsrg_source.h"

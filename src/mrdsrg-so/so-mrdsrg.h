@@ -35,7 +35,7 @@
 #include "psi4/libmints/wavefunction.h"
 #include "ambit/blocked_tensor.h"
 
-#include "../mini-boost/boost/assign.hpp"
+#include "boost/assign.hpp"
 #include "../helpers.h"
 #include "../integrals/integrals.h"
 #include "../reference.h"

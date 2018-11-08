@@ -32,14 +32,10 @@
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/liboptions/liboptions.h"
 
-#include "ci_rdm/ci_rdms.h"
 #include "helpers.h"
-#include "reference.h"
-#include "sparse_ci/determinant.h"
 #include "integrals/integrals.h"
-#include "fci/fci_integrals.h"
 #include "determinant_hashvector.h"
-#include "operator.h"
+#include "fci/fci_integrals.h"
 #include "sparse_ci/sparse_ci_solver.h"
 
 namespace psi {

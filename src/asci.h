@@ -29,7 +29,6 @@
 #ifndef _as_ci_h_
 #define _as_ci_h_
 
-
 #include "forte_options.h"
 #include "ci_rdm/ci_rdms.h"
 #include "ci_reference.h"
@@ -48,7 +47,6 @@
 #define omp_get_thread_num() 0
 #define omp_get_num_threads() 1
 #endif
-
 
 namespace psi {
 namespace forte {
@@ -125,7 +123,6 @@ class ASCI : public Wavefunction {
     Dimension nactpi_;
     /// The number of active orbitals
     size_t nact_;
-
     /// The nuclear repulsion energy
     double nuclear_repulsion_energy_;
     /// The reference determinant
@@ -221,7 +218,6 @@ class ASCI : public Wavefunction {
     /// Compute the RDMs
     void compute_rdms(std::shared_ptr<FCIIntegrals> fci_ints, DeterminantHashVec& dets,
                       WFNOperator& op, SharedMatrix& PQ_evecs, int root1, int root2);
-
 
 };
 

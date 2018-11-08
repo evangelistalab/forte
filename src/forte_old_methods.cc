@@ -30,7 +30,7 @@
 #include <cmath>
 #include <memory>
 
-#include "mini-boost/boost/format.hpp"
+#include "boost/format.hpp"
 #include <ambit/tensor.h>
 
 #include "psi4/libdpd/dpd.h"

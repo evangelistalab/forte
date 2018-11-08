@@ -36,7 +36,7 @@
 #include "psi4/libqt/qt.h"
 #include "psi4/psifiles.h"
 
-#include "../helpers/printing.h"
+#include "helpers/printing.h"
 
 #include "aci/aci.h"
 #include "fci/fci_solver.h"

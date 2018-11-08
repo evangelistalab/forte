@@ -79,7 +79,7 @@ FCIQMC::FCIQMC(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<For
 
 FCIQMC::~FCIQMC() {}
 // Initialize static pointer to ints
-std::shared_ptr<FCIIntegrals> FCIQMC::fci_ints_ = 0;
+std::shared_ptr<FCIIntegrals> FCIQMC::fci_ints_ = nullptr;
 
 void FCIQMC::startup() {
     // Connect the integrals to the determinant class

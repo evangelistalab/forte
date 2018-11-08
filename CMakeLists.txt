@@ -11,18 +11,18 @@ set(forte_AUTHORS      "Francesco A. Evangelista and Group")
 set(forte_DESCRIPTION  "Quantum Chemistry Methods for Strongly Correlated Electrons plugin to Psi4")
 set(forte_URL          "https://github.com/evangelistalab/forte")
 set(forte_LICENSE      "GPL-3.0+")
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 
 cmake_minimum_required(VERSION 3.1 FATAL_ERROR)
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 include(psi4OptionsTools)
 
-option_with_print(ENABLE_CheMPS2 "Enable CheMPS2 solver." OFF)
-option_with_print(ENABLE_OPENMP "Enable threadsafe linking to OpenMP parallelized programs." ON)
+option_with_print(ENABLE_CheMPS2 "Enable CheMPS2 solver" OFF)
+option_with_print(ENABLE_OPENMP "Enable threadsafe linking to OpenMP parallelized programs" ON)
 option_with_print(ENABLE_MPI "Enable MPI parallelization" OFF)
 option_with_print(ENABLE_GA "Enable Global Arrays" OFF)
-option_with_print(MAX_DET_ORB  "Set the maximum number of orbitals (spin adapted) in a determinant."  64)
+option_with_print(MAX_DET_ORB "Set the maximum number of orbitals in a determinant" 64)
 #option_with_print(ENABLE_GENERIC "Enable mostly static linking in shared library" OFF)
 
 include(autocmake_omp)
@@ -36,6 +36,16 @@ find_package(TargetLAPACK REQUIRED)
 find_package(ambit REQUIRED)
 if(ENABLE_CheMPS2)
     find_package(CheMPS2 1.8.3 CONFIG REQUIRED)
+endif()
+
+set(Boost_USE_STATIC_LIBS OFF) 
+set(Boost_USE_MULTITHREADED ON)  
+set(Boost_USE_STATIC_RUNTIME OFF) 
+find_package(Boost REQUIRED) 
+
+if(Boost_FOUND)
+    include_directories(${Boost_INCLUDE_DIRS}) 
+#    target_link_libraries(forte ${Boost_LIBRARIES})
 endif()
 
 # Including custom cmake rules
@@ -172,11 +182,11 @@ if(TARGET CheMPS2::chemps2)
     target_link_libraries(forte PRIVATE CheMPS2::chemps2)
 endif()
 
-target_include_directories(forte PRIVATE src/mini-boost)
+target_include_directories(forte PRIVATE src)
 
 ## 64bit implementation
-if(MAX_DET_ORB LESS_EQUAL 64)
-    add_definitions(-DSMALL_BITSET)
+if(MAX_DET_ORB EQUAL OFF)
+    add_definitions(-DMAX_DET_ORB=64)
 else()
     add_definitions(-DMAX_DET_ORB=${MAX_DET_ORB})
 endif()

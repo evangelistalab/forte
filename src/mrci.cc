@@ -32,8 +32,18 @@
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/liboptions/liboptions.h"
 
-#include "../helpers/printing.h"
+#include "helpers/printing.h"
 #include "mrci.h"
+
+//#include "ci_rdm/ci_rdms.h"
+//#include "helpers.h"
+//#include "reference.h"
+//#include "sparse_ci/determinant.h"
+//
+
+//
+//#include "operator.h"
+//
 
 namespace psi {
 namespace forte {

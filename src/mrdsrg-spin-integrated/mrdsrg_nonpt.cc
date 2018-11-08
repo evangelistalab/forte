@@ -39,7 +39,7 @@
 #include "psi4/libqt/qt.h"
 
 #include "../helpers.h"
-#include "../mini-boost/boost/format.hpp"
+#include "boost/format.hpp"
 #include "mrdsrg.h"
 
 namespace psi {

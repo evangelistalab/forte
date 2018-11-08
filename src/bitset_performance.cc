@@ -31,7 +31,7 @@
 //#include "psi4/psi4-dec.h"
 //#include "psi4/libmints/matrix.h"
 
-//#include "mini-boost/boost/lexical_cast.hpp"
+//#include "boost/lexical_cast.hpp"
 
 //#include "sparse_ci/determinant.h"
 //#include "fci/fci_vector.h"

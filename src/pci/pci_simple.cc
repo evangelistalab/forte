@@ -31,8 +31,8 @@
 #include <functional>
 #include <unordered_map>
 
-#include "../mini-boost/boost/format.hpp"
-#include "../mini-boost/boost/math/special_functions/bessel.hpp"
+#include "boost/format.hpp"
+#include "boost/math/special_functions/bessel.hpp"
 
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libciomr/libciomr.h"
@@ -110,7 +110,7 @@ ProjectorCI_Simple::ProjectorCI_Simple(SharedWavefunction ref_wfn, Options& opti
     startup();
 }
 
-std::shared_ptr<FCIIntegrals> ProjectorCI_Simple::fci_ints_ = 0;
+std::shared_ptr<FCIIntegrals> ProjectorCI_Simple::fci_ints_ = nullptr;
 
 void ProjectorCI_Simple::startup() {
     // Connect the integrals to the determinant class
