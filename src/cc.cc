@@ -67,6 +67,7 @@ double CC::compute_energy() {
     outfile->Printf("\n  ------------------------------------------------");
     outfile->Printf("\n  Iter         E(CCSD)         dE          dT");
     outfile->Printf("\n  ----- ------------------ ----------- -----------");
+    bool converged = false;
     for (size_t i = 1; i <= maxiter_; ++i) {
         compute_effective_tau();
         compute_intermediates();
@@ -74,11 +75,16 @@ double CC::compute_energy() {
         Ecc = cc_energy();
         double DT_norm = DT1_.norm() + DT2_.norm();
         outfile->Printf("\n  %4zu   %16.12f   %.3e   %.3e", i, Ecc, fabs(Ecc - pre_Ecc), DT_norm);
-        if (fabs(Ecc - pre_Ecc) <= e_convergence_ and DT_norm <= r_convergence_)
+        if (fabs(Ecc - pre_Ecc) <= e_convergence_ and DT_norm <= r_convergence_) {
+            converged = true;
             break;
+        }
         pre_Ecc = Ecc;
     }
     outfile->Printf("\n  ------------------------------------------------\n");
+
+    if (!converged)
+        outfile->Printf("\n  Warning! CC iteration did not converge.\n");
 
     outfile->Printf("\n  CCSD correlation energy   = %18.12f", Ecc);
     outfile->Printf("\n  * CCSD total energy       = %18.12f\n", Ecc + E_ref_);
@@ -563,47 +569,39 @@ void CC::update_t() {
     NT2["iJaB"] -= tau_["iJeF"] * T1_["MB"] * V_["aMeF"];
     NT2["IJAB"] -= 0.5 * tau_["IJEF"] * T1_["MB"] * V_["AMEF"];
 
-    NT2["ijab"] += T2_["imae"] * W2_["mbej"];
-    NT2["ijab"] += T2_["iMaE"] * W2_["MbEj"];
+    ambit::BlockedTensor tmp;
+    tmp = BTF_->build(tensor_type_, "tmp", {"oovv", "OOVV"});
+
+    tmp["ijab"] = T2_["imae"] * W2_["mbej"];
+    tmp["ijab"] += T2_["iMaE"] * W2_["MbEj"];
+    tmp["ijab"] -= T1_["ie"] * T1_["ma"] * V_["mbej"];
+    NT2["ijab"] += tmp["ijab"];
+    NT2["ijab"] -= tmp["ijba"];
+    NT2["ijab"] -= tmp["jiab"];
+    NT2["ijab"] += tmp["jiba"];
+
+    tmp["IJAB"] = T2_["mIeA"] * W2_["mBeJ"];
+    tmp["IJAB"] += T2_["IMAE"] * W2_["MBEJ"];
+    tmp["IJAB"] -= T1_["IE"] * T1_["MA"] * V_["MBEJ"];
+    NT2["IJAB"] += tmp["IJAB"];
+    NT2["IJAB"] -= tmp["IJBA"];
+    NT2["IJAB"] -= tmp["JIAB"];
+    NT2["IJAB"] += tmp["JIBA"];
+
     NT2["iJaB"] += T2_["imae"] * W2_["mBeJ"];
     NT2["iJaB"] += T2_["iMaE"] * W2_["MBEJ"];
-    NT2["IJAB"] += T2_["mIeA"] * W2_["mBeJ"];
-    NT2["IJAB"] += T2_["IMAE"] * W2_["MBEJ"];
 
-    NT2["ijab"] -= T2_["imbe"] * W2_["maej"];
-    NT2["ijab"] -= T2_["iMbE"] * W2_["MaEj"];
     NT2["iJaB"] += T2_["iMeB"] * W2_["MaeJ"];
-    NT2["IJAB"] -= T2_["mIeB"] * W2_["mAeJ"];
-    NT2["IJAB"] -= T2_["IMBE"] * W2_["MAEJ"];
 
-    NT2["ijab"] -= T2_["jmae"] * W2_["mbei"];
-    NT2["ijab"] -= T2_["jMaE"] * W2_["MbEi"];
     NT2["iJaB"] += T2_["mJaE"] * W2_["mBEi"];
-    NT2["IJAB"] -= T2_["mJeA"] * W2_["mBeI"];
-    NT2["IJAB"] -= T2_["JMAE"] * W2_["MBEI"];
 
-    NT2["ijab"] += T2_["jmbe"] * W2_["maei"];
-    NT2["ijab"] += T2_["jMbE"] * W2_["MaEi"];
     NT2["iJaB"] += T2_["mJeB"] * W2_["maei"];
     NT2["iJaB"] += T2_["JMBE"] * W2_["MaEi"];
-    NT2["IJAB"] += T2_["mJeB"] * W2_["mAeI"];
-    NT2["IJAB"] += T2_["JMBE"] * W2_["MAEI"];
 
-    NT2["ijab"] -= T1_["ie"] * T1_["ma"] * V_["mbej"];
     NT2["iJaB"] -= T1_["ie"] * T1_["ma"] * V_["mBeJ"];
-    NT2["IJAB"] -= T1_["IE"] * T1_["MA"] * V_["MBEJ"];
-
-    NT2["ijab"] += T1_["ie"] * T1_["mb"] * V_["maej"];
     NT2["iJaB"] -= T1_["ie"] * T1_["MB"] * V_["aMeJ"];
-    NT2["IJAB"] += T1_["IE"] * T1_["MB"] * V_["MAEJ"];
-
-    NT2["ijab"] += T1_["je"] * T1_["ma"] * V_["mbei"];
     NT2["iJaB"] -= T1_["JE"] * T1_["ma"] * V_["mBiE"];
-    NT2["IJAB"] += T1_["JE"] * T1_["MA"] * V_["MBEI"];
-
-    NT2["ijab"] -= T1_["je"] * T1_["mb"] * V_["maei"];
     NT2["iJaB"] -= T1_["JE"] * T1_["MB"] * V_["aMiE"];
-    NT2["IJAB"] -= T1_["JE"] * T1_["MB"] * V_["MAEI"];
 
     NT2["ijab"] += T1_["ie"] * V_["abej"];
     NT2["iJaB"] += T1_["ie"] * V_["aBeJ"];
