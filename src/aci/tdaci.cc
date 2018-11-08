@@ -30,6 +30,7 @@
 #include <iomanip>
 #include <sstream>
 #include <complex>
+#include <stdlib.h>
 
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libmints/molecule.h"
@@ -40,6 +41,16 @@
 #include "tdaci.h"
 
 using namespace psi;
+
+/* Complex datatype */
+struct _fcomplex { float re, im; };
+typedef struct _fcomplex fcomplex;
+
+/* CHEEV prototype */
+extern "C" {
+extern void cheev( char* jobz, char* uplo, int* n, fcomplex* a, int* lda,
+                float* w, fcomplex* work, int* lwork, float* rwork, int* info );
+}
 
 namespace psi {
 namespace forte {
@@ -61,6 +72,7 @@ void set_TDACI_options(ForteOptions& foptions) {
     foptions.add_double("TDACI_CN_CONVERGENCE", 1e-12, "Convergence threshold for CN iterations");
     foptions.add_bool("TDACI_PRINT_WFN", true, "Print coefficients to files");
     foptions.add_array("TDACI_OCC_ORB","" );
+    foptions.add_int("TDACI_KRYLOV_DIM", 5, "Dimension of Krylov subspace for Lanczos method");
 //    foptions.add_int("TDACI_TAYLOR_ORDER", 1, "Maximum order of taylor expansion used");
 }
 
@@ -152,6 +164,8 @@ double TDACI::compute_energy() {
         propogate_taylor2( core_coeffs, full_aH);
     } else if (options_.get_str("TDACI_PROPOGATOR") == "RK4" ){
         propogate_RK4( core_coeffs, full_aH);
+    } else if (options_.get_str("TDACI_PROPOGATOR") == "LANCZOS" ){
+        propogate_lanczos( core_coeffs, full_aH);
     } else if (options_.get_str("TDACI_PROPOGATOR") == "ALL" ){
         propogate_exact( core_coeffs, full_aH );
         propogate_cn( core_coeffs, full_aH );
@@ -159,6 +173,7 @@ double TDACI::compute_energy() {
         propogate_taylor2( core_coeffs, full_aH);
         propogate_RK4( core_coeffs, full_aH);
         propogate_QCN( core_coeffs, full_aH);
+        propogate_lanczos( core_coeffs, full_aH);
     }
     
 
@@ -773,7 +788,6 @@ void TDACI::propogate_QCN(SharedVector C0, SharedMatrix H  ) {
     dt *= conv;
     double time = dt;
 
-
     // Copy initial state into iteratively updated vectors
     SharedVector ct_r = std::make_shared<Vector>("ct_R",ndet);
     SharedVector ct_i = std::make_shared<Vector>("ct_I",ndet);
@@ -862,6 +876,140 @@ void TDACI::propogate_QCN(SharedVector C0, SharedMatrix H  ) {
         time += dt;
     }
 } 
+
+void TDACI::propogate_lanczos(SharedVector C0, SharedMatrix H  ) {
+
+
+
+    outfile->Printf("\n  Propogating with Arnoldi-Lanzcos algorithm");
+    Timer total;
+    size_t ndet = C0->dim();
+
+    int nstep = options_.get_int("TDACI_NSTEP");
+    double dt = options_.get_double("TDACI_TIMESTEP");
+    double conv = 1.0/24.18884326505;
+    dt *= conv;
+    double time = dt;
+
+    // Copy initial state into iteratively updated vectors
+    SharedVector ct_r = std::make_shared<Vector>("ct_R",ndet);
+    SharedVector ct_i = std::make_shared<Vector>("ct_I",ndet);
+
+
+    ct_r->copy(C0->clone());
+    ct_i->zero();
+
+    int krylov_dim = options_.get_int("TDACI_KRYLOV_DIM");
+
+    for( int N = 0; N < nstep; ++N ){
+    
+        // 1. Form the Krylov subspace vectors and subspace hamiltonian simultaneously
+        std::vector<std::pair<SharedVector,SharedVector>> Kn(krylov_dim);
+        //SharedMatrix Hs = std::make_shared<Matrix>("Hs", krylov_order,krylov_order);
+        //Hs->zero();
+        fcomplex *Hs = new fcomplex[krylov_dim*krylov_dim];
+        //std::vector<double> Hs(4*krylov_dim*krylov_dim, 0.0); 
+        // 1a. Generate non-orthonormalized basis
+        Kn[0] = std::make_pair(ct_r, ct_i);
+        for( int k = 0 ; k < krylov_dim; ++k ){
+        
+            // Need to get last diagonal
+
+
+            SharedVector wk_r = std::make_shared<Vector>("r",ndet); 
+            SharedVector wk_i = std::make_shared<Vector>("i",ndet); 
+            wk_r->zero();
+            wk_i->zero();
+    
+            SharedVector qk_r = std::make_shared<Vector>("r",ndet); 
+            SharedVector qk_i = std::make_shared<Vector>("i",ndet); 
+            qk_r->zero();
+            qk_i->zero();
+
+            qk_r->add(Kn[k].first);
+            qk_i->add(Kn[k].second);
+
+            wk_r->gemv(false, 1.0, &(*H), &(*qk_r), 0.0);
+            wk_i->gemv(false, 1.0, &(*H), &(*qk_i), 0.0);
+            // Modified Gram-Schmidt
+            for( int i = 0; i <= k; ++i ){
+                SharedVector qi_r = std::make_shared<Vector>("r",ndet); 
+                SharedVector qi_i = std::make_shared<Vector>("i",ndet); 
+                qi_r->zero();
+                qi_i->zero();
+                qi_r->add(Kn[i].first);
+                qi_i->add(Kn[i].second);
+
+                float hik_r = wk_r->vector_dot(qi_r) + wk_i->dot(&(*qi_i)); 
+                float hik_i = wk_i->vector_dot(qi_r) - wk_r->dot(&(*qi_i)); 
+            
+            //    outfile->Printf("\n r: %1.5f, i:%1.5f", hik_r, hik_i); 
+                Hs[krylov_dim*i + k] = {0.0,0.0 };
+                Hs[krylov_dim*k + i] = {hik_r, hik_i};
+               // Hs[2*krylov_dim*k + 2*i] = hik_r;
+               // Hs[2*krylov_dim*k + 2*i + 1] = hik_i;
+               // Hs[2*krylov_dim*i + 2*k] = hik_r;
+               // Hs[2*krylov_dim*i + 2*k + 1] = hik_i;
+
+                qi_r->scale(hik_r);
+                qi_i->scale(hik_i);
+                wk_r->subtract( qi_r );
+                wk_i->subtract( qi_i );
+            }
+                
+            float norm = 0.0;
+            for( int I = 0; I < ndet; ++I ){
+                double re = wk_r->get(I);
+                double im = wk_i->get(I);
+                norm += re*re + im*im; 
+            }
+            norm = sqrt(norm);
+            //outfile->Printf("\n  norm(%d) = %1.5f", k, norm);
+            wk_r->scale(1.0/norm);
+            wk_i->scale(1.0/norm);
+
+            if( k < (krylov_dim-1)){
+                Hs[krylov_dim*(k+1) + k] = {norm,0.0};
+                //Hs[2*krylov_dim*(k+1) + 2*k] = norm;
+                //Hs[2*krylov_dim*(k+1) + 2*k + 1] = 0.0;
+               // Hs[2*krylov_dim*k + 2*(k+1)] = norm;
+               // Hs[2*krylov_dim*k + 2*(k+1) + 1] = 0.0;
+                Kn[k+1] = std::make_pair(wk_r,wk_i);
+            }
+        }
+
+        //test, print Hs
+        outfile->Printf("\n");
+        for( int i = 0; i < krylov_dim; ++i ){
+            for( int j = 0; j < krylov_dim; ++j ){
+                auto vec1 = Kn[i].first;
+                auto vec2 = Kn[j].first;
+                outfile->Printf("%5.3f\t", vec1->dot(&(*vec2)));
+            }
+            outfile->Printf("\n");
+        }
+        
+        for( int i = 0; i < krylov_dim; ++i){
+            outfile->Printf("\n");
+            for( int j = 0; j < krylov_dim; ++j){
+                outfile->Printf("%5.2f+%5.2fi\t", Hs[krylov_dim*i + j].re, Hs[krylov_dim*i + j].im);
+            }
+        }
+        // Diagonalize matrix in Krylov subspace
+        int n = krylov_dim, lda = krylov_dim, info, lwork;
+        fcomplex wkopt;
+        fcomplex* work;
+        /* Local arrays */
+        /* rwork dimension should be at least max(1,3*n-2) */
+        float w[n], rwork[3*n-2];
+        lwork = 2*n-1;
+        cheev( "V", "L", &n, Hs, &lda, w, work, &lwork, rwork, &info );
+
+        delete[] Hs;
+
+    }    
+
+}
 
 //void TDACI::propogate_verlet(std::vector<std::pair<double,double>>& C0, std::vector<std::pair<double,double>>& C_tau, std::shared_ptr<FCIIntegrals> fci_ints, DeterminantHashVec& ann_dets  ) {
 //    

@@ -113,6 +113,7 @@ class TDACI : public Wavefunction {
     void propogate_taylor2( SharedVector C0, SharedMatrix H);
     void propogate_RK4( SharedVector C0, SharedMatrix H);
     void propogate_QCN( SharedVector C0, SharedMatrix H);
+    void propogate_lanczos( SharedVector C0, SharedMatrix H);
     
 
     // The core state determinant space
