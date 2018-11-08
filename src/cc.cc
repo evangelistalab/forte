@@ -367,10 +367,10 @@ void CC::compute_intermediates() {
     W1_["AE"] += T1_["mf"] * V_["mAfE"];
     W1_["AE"] += T1_["MF"] * V_["MAFE"];
 
-    W1_["ae"] -= 0.5 * tilde_tau_["mnaf"] * V_["mnef"];
-    W1_["ae"] -= tilde_tau_["mNaF"] * V_["mNeF"];
+    W1_["ae"] -= 0.5 * tilde_tau_["mnfa"] * V_["mnfe"];
+    W1_["ae"] -= tilde_tau_["mNaF"] * V_["eFmN"];
     W1_["AE"] -= tilde_tau_["nMfA"] * V_["nMfE"];
-    W1_["AE"] -= 0.5 * tilde_tau_["MNAF"] * V_["MNEF"];
+    W1_["AE"] -= 0.5 * tilde_tau_["MNFA"] * V_["MNFE"];
 
     Fae.stop();
 
@@ -393,7 +393,7 @@ void CC::compute_intermediates() {
 
     W1_["mi"] += 0.5 * tilde_tau_["inef"] * V_["mnef"];
     W1_["mi"] += tilde_tau_["iNeF"] * V_["mNeF"];
-    W1_["MI"] += tilde_tau_["nIfE"] * V_["nMfE"];
+    W1_["MI"] += tilde_tau_["nIfE"] * V_["fEnM"];
     W1_["MI"] += 0.5 * tilde_tau_["INEF"] * V_["MNEF"];
 
     Fmi.stop();
@@ -421,7 +421,7 @@ void CC::compute_intermediates() {
     W2_["MNIJ"] += T1_["JE"] * V_["MNIE"];
 
     W2_["mnij"] -= T1_["ie"] * V_["mnje"];
-    W2_["mNiJ"] += T1_["ie"] * V_["mNeJ"];
+    W2_["mNiJ"] += T1_["ie"] * V_["eJmN"];
     W2_["MNIJ"] -= T1_["IE"] * V_["MNJE"];
 
     W2_["mnij"] += 0.5 * tau_["ijef"] * V_["mnef"];
@@ -442,14 +442,14 @@ void CC::compute_intermediates() {
     W2_["mbej"] += T1_["jf"] * V_["mbef"];
     W2_["mBeJ"] += T1_["JF"] * V_["mBeF"];
     W2_["MBEJ"] += T1_["JF"] * V_["MBEF"];
-    W2_["mBEj"] -= T1_["jf"] * V_["mBfE"];
+    W2_["mBEj"] -= T1_["jf"] * V_["fEmB"];
     W2_["MbeJ"] -= T1_["JF"] * V_["bMeF"];
-    W2_["MbEj"] += T1_["jf"] * V_["bMfE"];
+    W2_["MbEj"] += T1_["jf"] * V_["fEbM"];
 
-    W2_["mbej"] -= T1_["nb"] * V_["mnej"];
-    W2_["mBeJ"] -= T1_["NB"] * V_["mNeJ"];
-    W2_["MBEJ"] -= T1_["NB"] * V_["MNEJ"];
-    W2_["mBEj"] += T1_["NB"] * V_["mNjE"];
+    W2_["mbej"] -= T1_["nb"] * V_["ejmn"];
+    W2_["mBeJ"] -= T1_["NB"] * V_["eJmN"];
+    W2_["MBEJ"] -= T1_["NB"] * V_["EJMN"];
+    W2_["mBEj"] += T1_["NB"] * V_["jEmN"];
     W2_["MbeJ"] += T1_["nb"] * V_["nMeJ"];
     W2_["MbEj"] -= T1_["nb"] * V_["nMjE"];
 
@@ -464,12 +464,12 @@ void CC::compute_intermediates() {
     W2_["MbEj"] -= 0.5 * T2_["jnfb"] * V_["nMfE"];
     W2_["MbEj"] += 0.5 * T2_["jNbF"] * V_["MNEF"];
 
-    W2_["mbej"] -= T1_["jf"] * T1_["nb"] * V_["mnef"];
+    W2_["mbej"] += T1_["jf"] * T1_["nb"] * V_["nmef"];
     W2_["mBeJ"] -= T1_["JF"] * T1_["NB"] * V_["mNeF"];
-    W2_["MBEJ"] -= T1_["JF"] * T1_["NB"] * V_["MNEF"];
-    W2_["mBEj"] += T1_["jf"] * T1_["NB"] * V_["mNfE"];
+    W2_["MBEJ"] += T1_["JF"] * T1_["NB"] * V_["NMEF"];
+    W2_["mBEj"] += T1_["jf"] * T1_["NB"] * V_["fEmN"];
     W2_["MbeJ"] += T1_["JF"] * T1_["nb"] * V_["nMeF"];
-    W2_["MbEj"] -= T1_["jf"] * T1_["nb"] * V_["nMfE"];
+    W2_["MbEj"] -= T1_["jf"] * T1_["nb"] * V_["fEnM"];
 
     Wmbej.stop();
 }
@@ -501,15 +501,15 @@ void CC::update_t() {
     NT1["IA"] += T1_["nf"] * V_["nAfI"];
     NT1["IA"] -= T1_["NF"] * V_["NAIF"];
 
-    NT1["ia"] -= 0.5 * T2_["imef"] * V_["maef"];
+    NT1["ia"] += 0.5 * T2_["imef"] * V_["amef"];
     NT1["ia"] += T2_["iMeF"] * V_["aMeF"];
-    NT1["IA"] += T2_["mIeF"] * V_["mAeF"];
-    NT1["IA"] -= 0.5 * T2_["IMEF"] * V_["MAEF"];
+    NT1["IA"] += T2_["mIeF"] * V_["eFmA"];
+    NT1["IA"] += 0.5 * T2_["IMEF"] * V_["AMEF"];
 
-    NT1["ia"] -= 0.5 * T2_["mnae"] * V_["nmei"];
-    NT1["ia"] -= T2_["mNaE"] * V_["mNiE"];
+    NT1["ia"] -= 0.5 * T2_["nmea"] * V_["nmei"];
+    NT1["ia"] -= T2_["mNaE"] * V_["iEmN"];
     NT1["IA"] -= T2_["nMeA"] * V_["nMeI"];
-    NT1["IA"] -= 0.5 * T2_["MNAE"] * V_["NMEI"];
+    NT1["IA"] -= 0.5 * T2_["NMEA"] * V_["NMEI"];
 
     t1.stop();
     timer t2("T2");
@@ -536,21 +536,21 @@ void CC::update_t() {
     NT2["iJaB"] -= 0.5 * T2_["iJeB"] * T1_["ma"] * W1_["me"];
     NT2["IJAB"] += 0.5 * T2_["IJBE"] * T1_["MA"] * W1_["ME"];
 
-    NT2["ijab"] -= T2_["imab"] * W1_["mj"];
+    NT2["ijab"] += T2_["miab"] * W1_["mj"];
     NT2["iJaB"] -= T2_["iMaB"] * W1_["MJ"];
-    NT2["IJAB"] -= T2_["IMAB"] * W1_["MJ"];
+    NT2["IJAB"] += T2_["MIAB"] * W1_["MJ"];
 
-    NT2["ijab"] += T2_["jmab"] * W1_["mi"];
+    NT2["ijab"] -= T2_["mjab"] * W1_["mi"];
     NT2["iJaB"] -= T2_["mJaB"] * W1_["mi"];
-    NT2["IJAB"] += T2_["JMAB"] * W1_["MI"];
+    NT2["IJAB"] -= T2_["MJAB"] * W1_["MI"];
 
-    NT2["ijab"] -= 0.5 * T2_["imab"] * T1_["je"] * W1_["me"];
+    NT2["ijab"] += 0.5 * T2_["miab"] * T1_["je"] * W1_["me"];
     NT2["iJaB"] -= 0.5 * T2_["iMaB"] * T1_["JE"] * W1_["ME"];
-    NT2["IJAB"] -= 0.5 * T2_["IMAB"] * T1_["JE"] * W1_["ME"];
+    NT2["IJAB"] += 0.5 * T2_["MIAB"] * T1_["JE"] * W1_["ME"];
 
-    NT2["ijab"] += 0.5 * T2_["jmab"] * T1_["ie"] * W1_["me"];
+    NT2["ijab"] -= 0.5 * T2_["mjab"] * T1_["ie"] * W1_["me"];
     NT2["iJaB"] -= 0.5 * T2_["mJaB"] * T1_["ie"] * W1_["me"];
-    NT2["IJAB"] += 0.5 * T2_["JMAB"] * T1_["IE"] * W1_["ME"];
+    NT2["IJAB"] -= 0.5 * T2_["MJAB"] * T1_["IE"] * W1_["ME"];
 
     NT2["ijab"] += 0.5 * tau_["mnab"] * W2_["mnij"];
     NT2["iJaB"] += tau_["mNaB"] * W2_["mNiJ"];
@@ -573,7 +573,7 @@ void CC::update_t() {
 
     tmp["ijab"] = T2_["imae"] * W2_["mbej"];
     tmp["ijab"] += T2_["iMaE"] * W2_["MbEj"];
-    tmp["ijab"] -= T1_["ie"] * T1_["ma"] * V_["mbej"];
+    tmp["ijab"] += T1_["ie"] * T1_["ma"] * V_["mbje"];
     NT2["ijab"] += tmp["ijab"];
     NT2["ijab"] -= tmp["ijba"];
     NT2["ijab"] -= tmp["jiab"];
@@ -581,7 +581,7 @@ void CC::update_t() {
 
     tmp["IJAB"] = T2_["mIeA"] * W2_["mBeJ"];
     tmp["IJAB"] += T2_["IMAE"] * W2_["MBEJ"];
-    tmp["IJAB"] -= T1_["IE"] * T1_["MA"] * V_["MBEJ"];
+    tmp["IJAB"] += T1_["IE"] * T1_["MA"] * V_["MBJE"];
     NT2["IJAB"] += tmp["IJAB"];
     NT2["IJAB"] -= tmp["IJBA"];
     NT2["IJAB"] -= tmp["JIAB"];
@@ -597,26 +597,26 @@ void CC::update_t() {
     NT2["iJaB"] += T2_["mJeB"] * W2_["maei"];
     NT2["iJaB"] += T2_["JMBE"] * W2_["MaEi"];
 
-    NT2["iJaB"] -= T1_["ie"] * T1_["ma"] * V_["mBeJ"];
-    NT2["iJaB"] -= T1_["ie"] * T1_["MB"] * V_["aMeJ"];
+    NT2["iJaB"] -= T1_["ie"] * T1_["ma"] * V_["eJmB"];
+    NT2["iJaB"] -= T1_["ie"] * T1_["MB"] * V_["eJaM"];
     NT2["iJaB"] -= T1_["JE"] * T1_["ma"] * V_["mBiE"];
     NT2["iJaB"] -= T1_["JE"] * T1_["MB"] * V_["aMiE"];
 
-    NT2["ijab"] += T1_["ie"] * V_["abej"];
-    NT2["iJaB"] += T1_["ie"] * V_["aBeJ"];
-    NT2["IJAB"] += T1_["IE"] * V_["ABEJ"];
+    NT2["ijab"] += T1_["ie"] * V_["ejab"];
+    NT2["iJaB"] += T1_["ie"] * V_["eJaB"];
+    NT2["IJAB"] += T1_["IE"] * V_["EJAB"];
 
-    NT2["ijab"] -= T1_["je"] * V_["abei"];
+    NT2["ijab"] += T1_["je"] * V_["abie"];
     NT2["iJaB"] += T1_["JE"] * V_["aBiE"];
-    NT2["IJAB"] -= T1_["JE"] * V_["ABEI"];
+    NT2["IJAB"] += T1_["JE"] * V_["ABIE"];
 
     NT2["ijab"] -= T1_["ma"] * V_["mbij"];
     NT2["iJaB"] -= T1_["ma"] * V_["mBiJ"];
     NT2["IJAB"] -= T1_["MA"] * V_["MBIJ"];
 
-    NT2["ijab"] += T1_["mb"] * V_["maij"];
-    NT2["iJaB"] -= T1_["MB"] * V_["aMiJ"];
-    NT2["IJAB"] += T1_["MB"] * V_["MAIJ"];
+    NT2["ijab"] -= T1_["mb"] * V_["ijam"];
+    NT2["iJaB"] -= T1_["MB"] * V_["iJaM"];
+    NT2["IJAB"] -= T1_["MB"] * V_["IJAM"];
 
     t2.stop();
 
