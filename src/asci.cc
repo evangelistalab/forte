@@ -32,7 +32,7 @@
 #include "psi4/libmints/pointgrp.h"
 #include "psi4/libpsio/psio.hpp"
 
-#include "../helpers/printing.h"
+#include "helpers/printing.h"
 #include "asci.h"
 
 using namespace psi;
