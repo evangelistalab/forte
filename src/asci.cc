@@ -73,7 +73,7 @@ void ASCI::set_fci_ints(std::shared_ptr<FCIIntegrals> fci_ints) {
 }
 
 void ASCI::set_asci_ints(SharedWavefunction ref_wfn, std::shared_ptr<ForteIntegrals> ints) {
-    timer int_timer("ACI:Form Integrals");
+    timer int_timer("ASCI:Form Integrals");
     ints_ = ints;
     shallow_copy(ref_wfn);
     reference_wavefunction_ = ref_wfn;

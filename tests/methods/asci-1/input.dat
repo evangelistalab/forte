@@ -1,17 +1,8 @@
 import forte                              
 
-<<<<<<< HEAD
-# From first paper, Table 2, first row
-# -75.71842
-# citation: 
-#Tubman, N. M., Lee, J., Takeshita, T. Y., Head-Gordon, M., & Whaley, K. B. (2016). 
-#The Journal of Chemical Physics, 145(4), 044112. http://doi.org/doi: 10.1063/1.4955109
-
-=======
 # This test reproduces the ASCI energy of C2 reported in the Table 2 of the following paper:
 #   Tubman, N. M., Lee, J., Takeshita, T. Y., Head-Gordon, M., & Whaley, K. B. (2016). 
 #   J. Chem. Phys., 145 (4), 044112. http://doi.org/doi: 10.1063/1.4955109
->>>>>>> fa1870a070ce9c1a773b41ee319ce45d667bfaa6
 
 refscf = -75.38645665583094 
 refasci = -75.718424927906 
@@ -19,11 +10,7 @@ refasci = -75.718424927906
 molecule CH2{                            
 0 1
 C
-<<<<<<< HEAD
-c 1 1.27273
-=======
 C 1 1.27273
->>>>>>> fa1870a070ce9c1a773b41ee319ce45d667bfaa6
 
 }                                        
                                          
@@ -46,6 +33,7 @@ set forte {
   asci_cdet 4000
   asci_tdet 10000
   asci_max_cycle 6   
+  asci_e_convergence 1e-5
 }                                        
                                          
 Escf, scf_wfn = energy('scf', return_wfn=True)

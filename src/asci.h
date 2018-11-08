@@ -149,7 +149,7 @@ class ASCI : public Wavefunction {
     SharedMatrix evecs_;
 
     bool build_lists_;
-    bool print_weights_;
+    bool print_weights_ = false;
 
     /// Order of RDM to compute
     int rdm_level_ = 1;
