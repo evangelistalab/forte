@@ -1003,7 +1003,8 @@ void TDACI::propogate_lanczos(SharedVector C0, SharedMatrix H  ) {
         /* rwork dimension should be at least max(1,3*n-2) */
         float w[n], rwork[3*n-2];
         lwork = 2*n-1;
-        cheev( "V", "L", &n, Hs, &lda, w, work, &lwork, rwork, &info );
+        work = (fcomplex*)malloc( lwork*sizeof(fcomplex) );
+        cheev( "V", "U", &n, Hs, &lda, w, work, &lwork, rwork, &info );
 
         delete[] Hs;
 
