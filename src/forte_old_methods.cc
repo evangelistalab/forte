@@ -43,7 +43,6 @@
 
 #include "aci/aci.h"
 #include "asci.h"
-#include "active_dsrgpt2.h"
 #include "blockedtensorfactory.h"
 #include "casscf.h"
 #include "cc.h"
@@ -63,6 +62,7 @@
 #include "mrdsrg-so/mrdsrg_so.h"
 #include "mrdsrg-so/so-mrdsrg.h"
 #include "mrdsrg-spin-adapted/dsrg_mrpt.h"
+#include "mrdsrg-spin-integrated/active_dsrgpt2.h"
 #include "mrdsrg-spin-integrated/dsrg_mrpt2.h"
 #include "mrdsrg-spin-integrated/dsrg_mrpt3.h"
 #include "mrdsrg-spin-integrated/mrdsrg.h"
