@@ -40,14 +40,6 @@ using namespace psi;
 namespace psi {
 namespace forte {
 
-//#ifdef _OPENMP
-//#include <omp.h>
-//#else
-//#define omp_get_max_threads() 1
-//#define omp_get_thread_num() 0
-//#define omp_get_num_threads() 1
-//#endif
-
 void set_ACI_options(ForteOptions& foptions) {
     /* Convergence Threshold -*/
     foptions.add_double("ACI_CONVERGENCE", 1e-9, "ACI Convergence threshold");
