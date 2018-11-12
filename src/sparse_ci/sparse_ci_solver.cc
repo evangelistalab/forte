@@ -132,7 +132,7 @@ void SparseCISolver::diagonalize_dl(const DeterminantHashVec& space, WFNOperator
     size_t dim_space = space.size();
     evecs.reset(new Matrix("U", dim_space, nroot));
     evals.reset(new Vector("e", nroot));
-    SigmaVector* sigma_vector = 0;
+    SigmaVector* sigma_vector = nullptr;
 
     if (sigma_vec_ != nullptr) {
         sigma_vec_->add_bad_roots(bad_states_);

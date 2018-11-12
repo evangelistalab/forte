@@ -110,7 +110,7 @@ ProjectorCI_Simple::ProjectorCI_Simple(SharedWavefunction ref_wfn, Options& opti
     startup();
 }
 
-std::shared_ptr<FCIIntegrals> ProjectorCI_Simple::fci_ints_ = 0;
+std::shared_ptr<FCIIntegrals> ProjectorCI_Simple::fci_ints_ = nullptr;
 
 void ProjectorCI_Simple::startup() {
     // Connect the integrals to the determinant class

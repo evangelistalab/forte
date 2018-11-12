@@ -42,6 +42,7 @@
 #include "psi4/psifiles.h"
 
 #include "aci/aci.h"
+#include "asci.h"
 #include "blockedtensorfactory.h"
 #include "casscf.h"
 #include "cc.h"
@@ -61,6 +62,7 @@
 #include "mrdsrg-so/mrdsrg_so.h"
 #include "mrdsrg-so/so-mrdsrg.h"
 #include "mrdsrg-spin-adapted/dsrg_mrpt.h"
+#include "mrdsrg-spin-integrated/active_dsrgpt2.h"
 #include "mrdsrg-spin-integrated/dsrg_mrpt2.h"
 #include "mrdsrg-spin-integrated/dsrg_mrpt3.h"
 #include "mrdsrg-spin-integrated/mrdsrg.h"
@@ -132,6 +134,10 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
     if (options.get_str("JOB_TYPE") == "FCIQMC") {
         auto fciqmc = std::make_shared<FCIQMC>(ref_wfn, options, ints, mo_space_info);
         fciqmc->compute_energy();
+    }
+    if (options.get_str("JOB_TYPE") == "ASCI") {
+        auto asci = std::make_shared<ASCI>(ref_wfn, options, ints, mo_space_info);
+        asci->compute_energy();
     }
     if (options.get_str("JOB_TYPE") == "ACI") {
         auto aci = std::make_shared<AdaptiveCI>(ref_wfn, options, ints, mo_space_info);
