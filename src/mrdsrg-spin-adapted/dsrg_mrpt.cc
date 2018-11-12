@@ -50,7 +50,93 @@ DSRG_MRPT::DSRG_MRPT(Reference reference, SharedWavefunction ref_wfn, Options& o
     print_citation();
     read_options();
     print_options();
+    //    hack_doublet();
     startup();
+}
+
+void DSRG_MRPT::hack_doublet() {
+    // form spin multiplets averaged densities
+    ambit::Tensor D1 = reference_.L1a().clone();
+    D1("pq") += reference_.L1b()("pq");
+    D1.scale(0.5);
+    reference_.set_L1a(D1);
+    reference_.set_L1b(D1.clone());
+
+    ambit::Tensor D2aa = reference_.L2aa().clone();
+    D2aa("pqrs") += reference_.L2bb()("pqrs");
+    D2aa.scale(0.5);
+
+    D2aa("pqrs") -= D1("pr") * D1("qs");
+    D2aa("pqrs") += D1("ps") * D1("qr");
+
+    ambit::Tensor D2ab = reference_.L2ab().clone();
+    D2ab("pqrs") += reference_.L2ab()("qpsr");
+    D2ab.scale(0.5);
+
+    D2ab("pqrs") -= D1("pr") * D1("qs");
+
+    reference_.set_L2aa(D2aa);
+    reference_.set_L2ab(D2ab);
+    reference_.set_L2bb(D2aa.clone());
+
+    ambit::Tensor D3aaa = reference_.L3aaa().clone();
+    D3aaa("pqrstu") += reference_.L3bbb()("pqrstu");
+    D3aaa.scale(0.5);
+
+    D3aaa("pqrstu") -= D1("ps") * D2aa("qrtu");
+    D3aaa("pqrstu") += D1("pt") * D2aa("qrsu");
+    D3aaa("pqrstu") += D1("pu") * D2aa("qrts");
+
+    D3aaa("pqrstu") -= D1("qt") * D2aa("prsu");
+    D3aaa("pqrstu") += D1("qs") * D2aa("prtu");
+    D3aaa("pqrstu") += D1("qu") * D2aa("prst");
+
+    D3aaa("pqrstu") -= D1("ru") * D2aa("pqst");
+    D3aaa("pqrstu") += D1("rs") * D2aa("pqut");
+    D3aaa("pqrstu") += D1("rt") * D2aa("pqsu");
+
+    D3aaa("pqrstu") -= D1("ps") * D1("qt") * D1("ru");
+    D3aaa("pqrstu") -= D1("pt") * D1("qu") * D1("rs");
+    D3aaa("pqrstu") -= D1("pu") * D1("qs") * D1("rt");
+
+    D3aaa("pqrstu") += D1("ps") * D1("qu") * D1("rt");
+    D3aaa("pqrstu") += D1("pu") * D1("qt") * D1("rs");
+    D3aaa("pqrstu") += D1("pt") * D1("qs") * D1("ru");
+
+    ambit::Tensor D3aab = reference_.L3aab().clone();
+    D3aab("pqrstu") += reference_.L3abb()("rpqust");
+    D3aab.scale(0.5);
+
+    D3aab("pqRstU") -= D1("ps") * D2ab("qRtU");
+    D3aab("pqRstU") += D1("pt") * D2ab("qRsU");
+
+    D3aab("pqRstU") -= D1("qt") * D2ab("pRsU");
+    D3aab("pqRstU") += D1("qs") * D2ab("pRtU");
+
+    D3aab("pqRstU") -= D1("RU") * D2aa("pqst");
+
+    D3aab("pqRstU") -= D1("ps") * D1("qt") * D1("RU");
+    D3aab("pqRstU") += D1("pt") * D1("qs") * D1("RU");
+
+    ambit::Tensor D3abb = reference_.L3abb().clone();
+    D3abb("pqrstu") += reference_.L3aab()("qrptus");
+    D3abb.scale(0.5);
+
+    D3abb("pQRsTU") -= D1("ps") * D2aa("QRTU");
+
+    D3abb("pQRsTU") -= D1("QT") * D2ab("pRsU");
+    D3abb("pQRsTU") += D1("QU") * D2ab("pRsT");
+
+    D3abb("pQRsTU") -= D1("RU") * D2ab("pQsT");
+    D3abb("pQRsTU") += D1("RT") * D2ab("pQsU");
+
+    D3abb("pQRsTU") -= D1("ps") * D1("QT") * D1("RU");
+    D3abb("pQRsTU") += D1("ps") * D1("QU") * D1("RT");
+
+    reference_.set_L3aaa(D3aaa);
+    reference_.set_L3aab(D3aab);
+    reference_.set_L3abb(D3abb);
+    reference_.set_L3bbb(D3aaa.clone());
 }
 
 DSRG_MRPT::~DSRG_MRPT() { cleanup(); }
@@ -369,12 +455,8 @@ bool DSRG_MRPT::check_semicanonical() {
     // compute norm and max values
     for (auto& block : {"cc", "aa", "vv"}) {
         ambit::Tensor diff_block = diff.block(block);
-        Fd_od_norm.emplace_back(diff_block.norm());
-        std::vector<double>& data = diff_block.data();
-        auto iter = std::max_element(data.begin(), data.end(), [&](double x, double y) {
-            return std::fabs(x) < std::fabs(y);
-        });
-        Fd_od_max.emplace_back(*iter);
+        Fd_od_norm.emplace_back(diff_block.norm(1));
+        Fd_od_max.emplace_back(diff_block.norm(0));
     }
 
     double Fd_od_sum = std::accumulate(Fd_od_norm.begin(), Fd_od_norm.end(), 0.0);

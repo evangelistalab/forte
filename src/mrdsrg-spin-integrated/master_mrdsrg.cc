@@ -237,7 +237,6 @@ void MASTER_DSRG::build_fock_from_ints(std::shared_ptr<ForteIntegrals> ints, Blo
     F = BTF_->build(tensor_type_, "Fock", spin_cases({"gg"}));
 
     // for convenience, directly call make_fock_matrix in ForteIntegral
-
     SharedMatrix D1a(new Matrix("D1a", ncmo, ncmo));
     SharedMatrix D1b(new Matrix("D1b", ncmo, ncmo));
     for (size_t m = 0, ncore = core_mos_.size(); m < ncore; m++) {

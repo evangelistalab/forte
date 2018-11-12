@@ -128,7 +128,7 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     /// Threshold for the Taylor expansion of f(z) = (1-exp(-z^2))/z
     double taylor_threshold_;
 
-    /// The integral integral
+    /// The integral type
     std::string ints_type_;
     /// If ERI density fitted or Cholesky decomposed
     bool eri_df_;

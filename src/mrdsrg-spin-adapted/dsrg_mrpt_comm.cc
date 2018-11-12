@@ -123,7 +123,7 @@ void DSRG_MRPT::H2_T2_C0_L1(BlockedTensor& H2, BlockedTensor& T2, const double& 
         size_t core_size = core_mos_.size();
         std::vector<std::vector<size_t>> nb_core_mos;
         int nc = nbatch_;
-        if (core_size < nbatch_)
+        if (core_size < nbatch_ && core_size != 0)
             nc = core_size;
         size_t even = core_size / nc;
         size_t left = core_size % nc;
