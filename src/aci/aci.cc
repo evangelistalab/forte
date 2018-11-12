@@ -1460,10 +1460,10 @@ std::vector<std::pair<double, double>> AdaptiveCI::compute_spin(DeterminantHashV
 void AdaptiveCI::wfn_to_file(DeterminantHashVec& det_space, SharedMatrix evecs, int root) {
 
     std::ofstream final_wfn;
-    final_wfn.open("final_wfn_"+ std::to_string(root) +  ".txt");
+    final_wfn.open("aci_final_wfn_"+ std::to_string(root) +  ".txt");
     const det_hashvec& detmap = det_space.wfn_hash();
     for (size_t I = 0, maxI = detmap.size(); I < maxI; ++I) {
-        final_wfn << std::setw(18) << std::setprecision(12) << evecs->get(I,root) << "\t" << detmap[I].str(nact_).c_str() << std::endl;
+        final_wfn << std::scientific << std::setw(20) << std::setprecision(11) << evecs->get(I,root) << " \t " << detmap[I].str(nact_).c_str() << std::endl;
     }
     final_wfn.close();
 }
