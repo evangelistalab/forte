@@ -43,13 +43,13 @@
 using namespace psi;
 
 /* Complex datatype */
-struct _fcomplex { float re, im; };
-typedef struct _fcomplex fcomplex;
+struct _dcomplex { double re, im; };
+typedef struct _dcomplex dcomplex;
 
 /* CHEEV prototype */
 extern "C" {
-extern void cheev( char* jobz, char* uplo, int* n, fcomplex* a, int* lda,
-                float* w, fcomplex* work, int* lwork, float* rwork, int* info );
+extern void zheev( char* jobz, char* uplo, int* n, dcomplex* a, int* lda,
+                double* w, dcomplex* work, int* lwork, double* rwork, int* info );
 }
 
 namespace psi {
@@ -880,6 +880,11 @@ void TDACI::propogate_QCN(SharedVector C0, SharedMatrix H  ) {
 void TDACI::propogate_lanczos(SharedVector C0, SharedMatrix H  ) {
 
 
+    std::vector<int> orbs(options_["TDACI_OCC_ORB"].size());
+    for( int h = 0; h < options_["TDACI_OCC_ORB"].size(); ++h ){
+        int orb = options_["TDACI_OCC_ORB"][h].to_integer();
+        orbs[h] = orb;
+    }
 
     outfile->Printf("\n  Propogating with Arnoldi-Lanzcos algorithm");
     Timer total;
@@ -892,8 +897,8 @@ void TDACI::propogate_lanczos(SharedVector C0, SharedMatrix H  ) {
     double time = dt;
 
     // Copy initial state into iteratively updated vectors
-    SharedVector ct_r = std::make_shared<Vector>("ct_R",ndet);
-    SharedVector ct_i = std::make_shared<Vector>("ct_I",ndet);
+    SharedVector ct_r = std::make_shared<Vector>("ct_R", ndet);
+    SharedVector ct_i = std::make_shared<Vector>("ct_I", ndet);
 
 
     ct_r->copy(C0->clone());
@@ -901,115 +906,219 @@ void TDACI::propogate_lanczos(SharedVector C0, SharedMatrix H  ) {
 
     int krylov_dim = options_.get_int("TDACI_KRYLOV_DIM");
 
+    std::vector<std::vector<double>> occupations(orbs.size(), std::vector<double>(nstep));
+    SharedMatrix Kn_r = std::make_shared<Matrix>("knr", ndet, krylov_dim);
+    SharedMatrix Kn_i = std::make_shared<Matrix>("kni", ndet, krylov_dim);
     for( int N = 0; N < nstep; ++N ){
     
         // 1. Form the Krylov subspace vectors and subspace hamiltonian simultaneously
-        std::vector<std::pair<SharedVector,SharedVector>> Kn(krylov_dim);
-        //SharedMatrix Hs = std::make_shared<Matrix>("Hs", krylov_order,krylov_order);
-        //Hs->zero();
-        fcomplex *Hs = new fcomplex[krylov_dim*krylov_dim];
-        //std::vector<double> Hs(4*krylov_dim*krylov_dim, 0.0); 
-        // 1a. Generate non-orthonormalized basis
-        Kn[0] = std::make_pair(ct_r, ct_i);
+        //std::vector<std::pair<SharedVector,SharedVector>> Kn(krylov_dim);
+        Kn_r->zero();
+        Kn_i->zero();
+
+        dcomplex *Hs = new dcomplex[krylov_dim*krylov_dim];
+        Kn_r->set_column(0, 0, ct_r);
+        Kn_i->set_column(0, 0, ct_i);
         for( int k = 0 ; k < krylov_dim; ++k ){
         
             // Need to get last diagonal
-
-
-            SharedVector wk_r = std::make_shared<Vector>("r",ndet); 
-            SharedVector wk_i = std::make_shared<Vector>("i",ndet); 
+            SharedVector wk_r = std::make_shared<Vector>("r", ndet); 
+            SharedVector wk_i = std::make_shared<Vector>("i", ndet); 
             wk_r->zero();
             wk_i->zero();
     
-            SharedVector qk_r = std::make_shared<Vector>("r",ndet); 
-            SharedVector qk_i = std::make_shared<Vector>("i",ndet); 
+            SharedVector qk_r = std::make_shared<Vector>("r", ndet); 
+            SharedVector qk_i = std::make_shared<Vector>("i", ndet); 
             qk_r->zero();
             qk_i->zero();
 
-            qk_r->add(Kn[k].first);
-            qk_i->add(Kn[k].second);
+            qk_r->add(Kn_r->get_column(0,k));
+            qk_i->add(Kn_i->get_column(0,k));
 
             wk_r->gemv(false, 1.0, &(*H), &(*qk_r), 0.0);
             wk_i->gemv(false, 1.0, &(*H), &(*qk_i), 0.0);
             // Modified Gram-Schmidt
             for( int i = 0; i <= k; ++i ){
-                SharedVector qi_r = std::make_shared<Vector>("r",ndet); 
-                SharedVector qi_i = std::make_shared<Vector>("i",ndet); 
+                SharedVector qi_r = std::make_shared<Vector>("r", ndet); 
+                SharedVector qi_i = std::make_shared<Vector>("i", ndet); 
                 qi_r->zero();
                 qi_i->zero();
-                qi_r->add(Kn[i].first);
-                qi_i->add(Kn[i].second);
+                qi_r->add(Kn_r->get_column(0,i));
+                qi_i->add(Kn_i->get_column(0,i));
 
-                float hik_r = wk_r->vector_dot(qi_r) + wk_i->dot(&(*qi_i)); 
-                float hik_i = wk_i->vector_dot(qi_r) - wk_r->dot(&(*qi_i)); 
+                double hik_r = qi_r->vector_dot(wk_r) + qi_i->vector_dot(wk_i); 
+                double hik_i = qi_i->vector_dot(wk_r) - qi_r->vector_dot(wk_i); 
             
-            //    outfile->Printf("\n r: %1.5f, i:%1.5f", hik_r, hik_i); 
-                Hs[krylov_dim*i + k] = {0.0,0.0 };
+                Hs[krylov_dim*i + k] = {0.0,0.0};
                 Hs[krylov_dim*k + i] = {hik_r, hik_i};
-               // Hs[2*krylov_dim*k + 2*i] = hik_r;
-               // Hs[2*krylov_dim*k + 2*i + 1] = hik_i;
-               // Hs[2*krylov_dim*i + 2*k] = hik_r;
-               // Hs[2*krylov_dim*i + 2*k + 1] = hik_i;
 
-                qi_r->scale(hik_r);
-                qi_i->scale(hik_i);
-                wk_r->subtract( qi_r );
-                wk_i->subtract( qi_i );
+                wk_r->axpy(-1.0*hik_r, qi_r);
+                wk_r->axpy( 1.0*hik_i, qi_i);
+                wk_i->axpy(-1.0*hik_r, qi_i);
+                wk_i->axpy(-1.0*hik_i, qi_r);
             }
                 
-            float norm = 0.0;
+            double norm = 0.0;
             for( int I = 0; I < ndet; ++I ){
                 double re = wk_r->get(I);
                 double im = wk_i->get(I);
                 norm += re*re + im*im; 
             }
             norm = sqrt(norm);
-            //outfile->Printf("\n  norm(%d) = %1.5f", k, norm);
             wk_r->scale(1.0/norm);
             wk_i->scale(1.0/norm);
 
             if( k < (krylov_dim-1)){
                 Hs[krylov_dim*(k+1) + k] = {norm,0.0};
-                //Hs[2*krylov_dim*(k+1) + 2*k] = norm;
-                //Hs[2*krylov_dim*(k+1) + 2*k + 1] = 0.0;
-               // Hs[2*krylov_dim*k + 2*(k+1)] = norm;
-               // Hs[2*krylov_dim*k + 2*(k+1) + 1] = 0.0;
-                Kn[k+1] = std::make_pair(wk_r,wk_i);
+                Kn_r->set_column(0, k+1, wk_r);
+                Kn_i->set_column(0, k+1, wk_i);
             }
         }
+      //  outfile->Printf("\n");
+      //  for( int i = 0; i < krylov_dim; ++i){
+      //      auto vecr = Kn_r->get_column(0,i);
+      //      auto veci = Kn_i->get_column(0,i);
+      //      for( int j = 0; j < krylov_dim; ++j){
+      //          auto vec2r = Kn_r->get_column(0,j);
+      //          auto vec2i = Kn_i->get_column(0,j);
+      //          
+      //          double dot = vecr->vector_dot(vec2r) + veci->vector_dot(vec2i);
+      //          double doti= vecr->vector_dot(vec2i) - vecr->vector_dot(vec2i);
+      //          outfile->Printf(" %8.4f + %8.4fi \t", dot, doti);
+    
+      //      }
+      //      outfile->Printf("\n");
+      //  }
 
-        //test, print Hs
-        outfile->Printf("\n");
-        for( int i = 0; i < krylov_dim; ++i ){
-            for( int j = 0; j < krylov_dim; ++j ){
-                auto vec1 = Kn[i].first;
-                auto vec2 = Kn[j].first;
-                outfile->Printf("%5.3f\t", vec1->dot(&(*vec2)));
-            }
-            outfile->Printf("\n");
-        }
-        
-        for( int i = 0; i < krylov_dim; ++i){
-            outfile->Printf("\n");
-            for( int j = 0; j < krylov_dim; ++j){
-                outfile->Printf("%5.2f+%5.2fi\t", Hs[krylov_dim*i + j].re, Hs[krylov_dim*i + j].im);
-            }
-        }
+      //  outfile->Printf("\n");
+      //  for( int i = 0; i < krylov_dim; ++i){
+      //      for( int j = 0; j < krylov_dim; ++j){
+      //          outfile->Printf("%12.9f + %12.9fi \t",Hs[krylov_dim*i + j].re , Hs[krylov_dim*i + j].im);
+      //      }
+      //      outfile->Printf("\n");
+      //  }
+
         // Diagonalize matrix in Krylov subspace
         int n = krylov_dim, lda = krylov_dim, info, lwork;
-        fcomplex wkopt;
-        fcomplex* work;
+        dcomplex* work;
         /* Local arrays */
         /* rwork dimension should be at least max(1,3*n-2) */
-        float w[n], rwork[3*n-2];
+        double w[n], rwork[3*n-2];
         lwork = 2*n-1;
-        work = (fcomplex*)malloc( lwork*sizeof(fcomplex) );
-        cheev( "V", "U", &n, Hs, &lda, w, work, &lwork, rwork, &info );
+        work = (dcomplex*)malloc( lwork*sizeof(dcomplex) );
+        zheev( "V", "L", &n, Hs, &lda, w, work, &lwork, rwork, &info );
+        // Evecs are stored in Hs, let's unpack it and the energy
 
+        SharedMatrix evecs_r = std::make_shared<Matrix>("er",n, n);
+        SharedMatrix evecs_i = std::make_shared<Matrix>("ei",n, n);
+        SharedVector evals = std::make_shared<Vector>("evals", n);
+        for( int i = 0; i < krylov_dim; ++i){
+            evals->set(i,w[i]); 
+            for( int j = 0; j < krylov_dim; ++j){
+                evecs_r->set(i,j,Hs[krylov_dim*i + j].re);
+                evecs_i->set(i,j,Hs[krylov_dim*i + j].im);
+            }
+        }
+      //  outfile->Printf("\n");
+      //  for( int i = 0; i < krylov_dim; ++i){
+      //      auto vecr = evecs_r->get_column(0,i);
+      //      auto veci = evecs_i->get_column(0,i);
+      //      for( int j = 0; j < krylov_dim; ++j){
+      //          auto vec2r = evecs_r->get_column(0,j);
+      //          auto vec2i = evecs_i->get_column(0,j);
+      //          
+      //          double dot = vecr->vector_dot(vec2r) + veci->vector_dot(vec2i);
+      //          double doti= vecr->vector_dot(vec2i) - vecr->vector_dot(vec2i);
+      //          outfile->Printf(" %8.4f + %8.4fi \t", dot, doti);
+    
+      //      }
+      //      outfile->Printf("\n");
+      //  }
+      //  outfile->Printf("\n");
+      //  for( int i = 0; i < krylov_dim; ++i){
+      //      for( int j = 0; j < krylov_dim; ++j){
+      //          outfile->Printf("%12.9f + %12.9fi \t",Hs[krylov_dim*i + j].re , Hs[krylov_dim*i + j].im);
+      //      }
+      //      outfile->Printf("\n");
+      //  }
+    
         delete[] Hs;
+        delete[] work;
+        // Do the propogation
+        
+        SharedVector ct_int_r = std::make_shared<Vector>("ct_R", krylov_dim);
+        SharedVector ct_int_i = std::make_shared<Vector>("ct_I", krylov_dim);
+       
+        SharedVector kd_r = std::make_shared<Vector>("ct_R", krylov_dim);
+        SharedVector kd_i = std::make_shared<Vector>("ct_I", krylov_dim);
+        for( int i =0; i<krylov_dim; ++i ){
+            kd_r->set(i, Kn_r->get_column(0,i)->vector_dot(ct_r) );
+            kd_r->add(i, Kn_i->get_column(0,i)->vector_dot(ct_i) );
 
+            kd_i->set(i, Kn_r->get_column(0,i)->vector_dot(ct_i) );
+            kd_i->add(i, -1.0*Kn_i->get_column(0,i)->vector_dot(ct_r) );
+        }
+
+        ct_int_r->gemv(true, 1.0, &(*evecs_r), &(*kd_r), 0.0);
+        ct_int_r->gemv(true, 1.0, &(*evecs_i), &(*kd_i), 1.0);
+        
+        ct_int_i->gemv(true, 1.0, &(*evecs_r), &(*kd_i), 0.0);
+        ct_int_i->gemv(true, -1.0, &(*evecs_i), &(*kd_r), 1.0);
+
+        for( int I = 0; I < krylov_dim; ++I ){
+            double rval = ct_int_r->get(I);
+            double ival = ct_int_i->get(I);
+            double eval = evals->get(I);
+            ct_int_r->set(I, rval * std::cos(eval * dt) + ival*std::sin(eval*dt) ); 
+            ct_int_i->set(I, ival * std::cos(eval * dt) - rval*std::sin(eval*dt) ); 
+        }
+
+        kd_r->gemv(false, 1.0, &(*evecs_r), &(*ct_int_r), 0.0);
+        kd_r->gemv(false, -1.0, &(*evecs_i), &(*ct_int_i), 1.0);
+        
+        kd_i->gemv(false, 1.0, &(*evecs_r), &(*ct_int_i), 0.0);
+        kd_i->gemv(false, 1.0, &(*evecs_i), &(*ct_int_r), 1.0);
+
+        ct_r->zero();
+        ct_i->zero();
+
+        for( int i =0; i<ndet; ++i ){
+            ct_r->set(i, Kn_r->get_row(0,i)->vector_dot(kd_r) );
+            ct_r->add(i, -1.0* Kn_i->get_row(0,i)->vector_dot(kd_i) );
+
+            ct_i->set(i, Kn_r->get_row(0,i)->vector_dot(kd_i) );
+            ct_i->add(i, Kn_i->get_row(0,i)->vector_dot(kd_r) );
+        }
+
+        double norm = 0.0;
+        for( int I = 0; I < ndet; ++I ){
+            double re = ct_r->get(I);
+            double im = ct_i->get(I);
+            norm += (re*re) + (im*im);
+        }        
+      //  outfile->Printf("\n  norm: %1.6f", norm);
+        ct_r->scale( 1.0/sqrt(norm));
+        ct_i->scale( 1.0/sqrt(norm));
+
+        std::vector<double> occ = compute_occupation(ct_r, ct_i, orbs);
+        for( int i = 0; i < orbs.size(); ++i ){
+            occupations[i][N] = occ[i];
+        }
+        if( options_.get_bool("TDACI_PRINT_WFN")){
+            if( std::abs( (time/conv) - round((time/conv)) ) <= 1e-8){
+                std::stringstream ss;
+                ss << std::fixed << std::setprecision(3) << time/conv;
+                save_vector(ct_r, "lanczos_" + ss.str() +"_r.txt");
+                save_vector(ct_i, "lanczos_" + ss.str() +"_i.txt");
+            }
+        }
+        time += dt;
     }    
+    for( int i = 0; i < orbs.size(); ++i ){
+        save_vector(occupations[i], "occupations_" + std::to_string(orbs[i]) + ".txt");
+    }
 
+    outfile->Printf("\n  Time spent propogating (Lanzcos): %1.6f", total.get());
 }
 
 //void TDACI::propogate_verlet(std::vector<std::pair<double,double>>& C0, std::vector<std::pair<double,double>>& C_tau, std::shared_ptr<FCIIntegrals> fci_ints, DeterminantHashVec& ann_dets  ) {
