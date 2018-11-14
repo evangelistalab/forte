@@ -2,11 +2,11 @@
 
 import forte
 
-refrhf     = -2.179077711159176
-refudsrg   = -2.253563514096931 # unrelaxed
-refprdsrg  = -2.253633681241636 # partially relaxed
-refrdsrg   = -2.253662706529829 # relaxed
-reffrdsrg  = -2.253662748528925 # fully relaxed
+refrhf     = -2.17907770968716
+refudsrg   = -2.25356351256480 # unrelaxed
+refprdsrg  = -2.25363367970945 # partially relaxed
+refrdsrg   = -2.25366270734146 # relaxed
+reffrdsrg  = -2.25366274932353 # fully relaxed
 
 memory 500 mb
 
@@ -39,7 +39,7 @@ set forte{
    dsrg_s                  0.5
    e_convergence           8
    dsrg_hbar_seq           true
-   relax_ref               none
+#  relax_ref               iterate
 }
 
 Escf, wfn = energy('scf', return_wfn=True)

@@ -2,10 +2,10 @@
 
 import forte
 
-refmcscf   = -99.406065222746975
-refudsrg   = -99.498950709756130 # no relaxation semi-canonical orbitals
-refprdsrg  = -99.500465983081270 # partially relaxed energy
-refrdsrg   = -99.500273993688737 # relaxed energy
+refmcscf   = -99.406065223640
+refudsrg   = -99.498950710324 # no relaxation semi-canonical orbitals
+refprdsrg  = -99.500465983682 # partially relaxed energy
+refrdsrg   = -99.500273994694 # relaxed energy
 
 memory 500 mb
 

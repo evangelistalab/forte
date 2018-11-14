@@ -34,6 +34,7 @@
 #include <vector>
 
 #include "psi4/libmints/typedefs.h"
+#include "psi4/libmints/dimension.h"
 #include "ambit/blocked_tensor.h"
 
 namespace psi {

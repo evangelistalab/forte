@@ -40,8 +40,7 @@ double Reference::compute_Eref(std::shared_ptr<ForteIntegrals> ints,
     // similar to MASTER_DSRG::compute_reference_energy_from_ints (use Fock and cumulants)
     // here I form two density and directly use bare Hamiltonian
 
-    double Efrzc = ints->frozen_core_energy();
-    double E = Enuc + Efrzc;
+    double E = Enuc + ints->frozen_core_energy();
 
     std::vector<size_t> core_mos = mo_space_info->get_corr_abs_mo("RESTRICTED_DOCC");
     std::vector<size_t> actv_mos = mo_space_info->get_corr_abs_mo("ACTIVE");

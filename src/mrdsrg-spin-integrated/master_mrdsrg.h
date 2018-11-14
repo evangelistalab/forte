@@ -16,6 +16,7 @@
 #include "../blockedtensorfactory.h"
 #include "../mrdsrg-helper/dsrg_source.h"
 #include "../mrdsrg-helper/dsrg_time.h"
+#include "../mrdsrg-helper/dsrg_tensors.h"
 
 using namespace ambit;
 namespace psi {
@@ -39,7 +40,21 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     virtual double compute_energy() = 0;
 
     /// Compute DSRG transformed Hamiltonian
-    virtual std::shared_ptr<FCIIntegrals> compute_Heff();
+    virtual std::shared_ptr<FCIIntegrals> compute_Heff_actv();
+
+    /// Compute second-order effective Hamiltonian couplings (child class overrides)
+    /// <M|H + HA(N)|N> = Heff1 * TrD1 + Heff2 * TrD2 + Heff3 * TrD3 if CAS
+    virtual void compute_Heff_2nd_coupling(double& H0, ambit::Tensor& H1a, ambit::Tensor& H1b,
+                                           ambit::Tensor& H2aa, ambit::Tensor& H2ab,
+                                           ambit::Tensor& H2bb, ambit::Tensor& H3aaa,
+                                           ambit::Tensor& H3aab, ambit::Tensor& H3abb,
+                                           ambit::Tensor& H3bbb) {
+        throw PSIEXCEPTION("Child class should override this function");
+    }
+
+    /// Compute [H, T] without using MK-GNO
+    dsrgHeff commutator_HT_noGNO(ambit::BlockedTensor H1, ambit::BlockedTensor H2,
+                                 ambit::BlockedTensor T1, ambit::BlockedTensor T2);
 
     /// Compute DSRG dressed density
     //    virtual void compute_density() = 0;
@@ -47,6 +62,30 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     /// Compute DSRG transformed dipole integrals
     //    virtual void compute_dm_eff(std::vector<double>& M0, std::vector<BlockedTensor>& M1,
     //                                std::vector<BlockedTensor>& M2) = 0;
+
+    /// Return de-normal-ordered T1 amplitudes
+    virtual ambit::BlockedTensor get_T1deGNO(double& T0deGNO) {
+        throw PSIEXCEPTION("Child class should override this function");
+    }
+
+    /// Return T2 amplitudes
+    virtual ambit::BlockedTensor get_T2(const std::vector<std::string>& blocks) {
+        throw PSIEXCEPTION("Child class should override this function");
+    }
+    virtual ambit::BlockedTensor get_T2() {
+        throw PSIEXCEPTION("Child class should override this function");
+    }
+
+    /// Return de-normal-ordered 1-body renormalized 1st-order Hamiltonian
+    virtual ambit::BlockedTensor get_RH1deGNO() {
+        throw PSIEXCEPTION("Only used in non-DF DSRG-MRPT2");
+    }
+
+    /// Return 2-body renormalized 1st-order Hamiltonian
+    virtual ambit::BlockedTensor get_RH2() { throw PSIEXCEPTION("Only used in non-DF DSRG-MRPT2"); }
+
+    /// Return the Hbar of a given order
+    std::vector<ambit::Tensor> Hbar(int n);
 
     /// Set unitary matrix (in active space) from original to semicanonical
     void set_Uactv(ambit::Tensor& Ua, ambit::Tensor& Ub) {
@@ -89,7 +128,7 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     /// Threshold for the Taylor expansion of f(z) = (1-exp(-z^2))/z
     double taylor_threshold_;
 
-    /// The integral integral
+    /// The integral type
     std::string ints_type_;
     /// If ERI density fitted or Cholesky decomposed
     bool eri_df_;
@@ -257,6 +296,14 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
      */
     void deGNO_ints(const std::string& name, double& H0, BlockedTensor& H1, BlockedTensor& H2,
                     BlockedTensor& H3);
+
+    /**
+     * De-normal-order the T1 and T2 amplitudes and return the effective T1
+     * T1eff = T1 - T2["ivau"] * D1["uv"]
+     *
+     * This assumes no internal amplitudes !!!
+     */
+    ambit::BlockedTensor deGNO_Tamp(BlockedTensor& T1, BlockedTensor& T2, BlockedTensor& D1);
 
     /**
      * Fill the tensor T with three-index DF or CD integrals

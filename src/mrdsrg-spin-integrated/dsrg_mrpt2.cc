@@ -108,12 +108,6 @@ void DSRG_MRPT2::startup() {
         }
     }
 
-    // ignore semicanonical test
-    std::string actv_type = options_.get_str("FCIMO_ACTV_TYPE");
-    if (actv_type != "COMPLETE" && actv_type != "DOCI") {
-        ignore_semicanonical_ = true;
-    }
-
     // print levels
     if (print_ > 1) {
         Gamma1_.print(stdout);
@@ -260,32 +254,6 @@ void DSRG_MRPT2::build_fock() {
     Fock_["PQ"] = F_["PQ"];
 }
 
-bool DSRG_MRPT2::check_semicanonical() {
-    bool semi = check_semi_orbs();
-    if (ignore_semicanonical_) {
-        std::string actv_type = options_.get_str("FCIMO_ACTV_TYPE");
-        if (actv_type == "CIS" || actv_type == "CISD") {
-            outfile->Printf("\n    It is OK for Fock (active) not being diagonal because %s "
-                            "active space is incomplete.",
-                            actv_type.c_str());
-            outfile->Printf("\n    Please inspect if the Fock diag. blocks (C, AH, AP, V) "
-                            "are diagonal or not in the prior CI step.");
-        } else {
-            outfile->Printf("\n    Warning: ignore testing of semi-canonical orbitals.");
-            outfile->Printf("\n    Please inspect if the Fock diag. blocks (C, A, V) are "
-                            "diagonal or not.");
-
-            warnings_.push_back(std::make_tuple("Semicanonical orbital test",
-                                                "Ignore test results",
-                                                "Post an issue for advice."));
-        }
-        outfile->Printf("\n");
-        semi = true;
-    }
-
-    return semi;
-}
-
 void DSRG_MRPT2::print_options_summary() {
     // Print a summary
     std::vector<std::pair<std::string, int>> calculation_info{{"ntamp", ntamp_}};
@@ -371,7 +339,7 @@ double DSRG_MRPT2::compute_ref() {
 
 double DSRG_MRPT2::compute_energy() {
     // check semi-canonical orbitals
-    semi_canonical_ = check_semicanonical();
+    semi_canonical_ = check_semi_orbs();
     if (!semi_canonical_) {
         outfile->Printf("\n    Orbital invariant formalism will be employed for DSRG-MRPT2.");
         U_ = ambit::BlockedTensor::build(tensor_type_, "U", spin_cases({"gg"}));
@@ -390,8 +358,12 @@ double DSRG_MRPT2::compute_energy() {
     compute_t1();
 
     // Compute effective integrals
-    renormalize_V();
-    renormalize_F();
+    if (options_.get_bool("DSRGPT")) {
+        renormalize_V();
+        renormalize_F();
+    } else {
+        outfile->Printf("\n    Ignore [H0th, A1st] in DSRG-MRPT2!");
+    }
     if (print_ > 1)
         F_.print(stdout);
     if (print_ > 2) {
@@ -1737,7 +1709,7 @@ double DSRG_MRPT2::compute_energy_relaxed() {
     std::map<std::string, std::vector<double>> dm_relax;
 
     // obtain the all-active DSRG transformed Hamiltonian
-    auto fci_ints = compute_Heff();
+    auto fci_ints = compute_Heff_actv();
 
     // diagonalize Hbar depending on CAS_TYPE
     if (options_.get_str("CAS_TYPE") == "CAS") {
@@ -1762,9 +1734,9 @@ double DSRG_MRPT2::compute_energy_relaxed() {
 
             // compute permanent dipoles
             if (options_.get_bool("FORM_MBAR3")) {
-                dm_relax = fci_mo.compute_relaxed_dm(Mbar0_, Mbar1_, Mbar2_, Mbar3_);
+                dm_relax = fci_mo.compute_ref_relaxed_dm(Mbar0_, Mbar1_, Mbar2_, Mbar3_);
             } else {
-                dm_relax = fci_mo.compute_relaxed_dm(Mbar0_, Mbar1_, Mbar2_);
+                dm_relax = fci_mo.compute_ref_relaxed_dm(Mbar0_, Mbar1_, Mbar2_);
             }
         }
     } else if (options_.get_str("CAS_TYPE") == "ACI") {
@@ -2817,31 +2789,24 @@ void DSRG_MRPT2::combine_tensor(ambit::Tensor& tens, ambit::Tensor& tens_h, cons
     }
 }
 
-ambit::BlockedTensor DSRG_MRPT2::get_T1(const std::vector<std::string>& blocks) {
-    for (const std::string& block : blocks) {
-        if (!T1_.is_block(block)) {
-            std::string error = "Error from T1(blocks): cannot find block " + block;
-            throw PSIEXCEPTION(error);
-        }
-    }
-    ambit::BlockedTensor out = ambit::BlockedTensor::build(tensor_type_, "T1 selected", blocks);
-    out["ia"] = T1_["ia"];
-    out["IA"] = T1_["IA"];
-    return out;
-}
+ambit::BlockedTensor DSRG_MRPT2::get_T1deGNO(double& T0deGNO) {
+    ambit::BlockedTensor T1eff = deGNO_Tamp(T1_, T2_, Gamma1_);
 
-ambit::BlockedTensor DSRG_MRPT2::get_T1deGNO(const std::vector<std::string>& blocks) {
-    for (const std::string& block : blocks) {
-        if (!T1eff_.is_block(block)) {
-            std::string error = "Error from T1deGNO(blocks): cannot find block " + block;
-            throw PSIEXCEPTION(error);
-        }
+    if (internal_amp_) {
+        // the scalar term of amplitudes when de-normal-ordering
+        T0deGNO -= T1_["uv"] * Gamma1_["vu"];
+        T0deGNO -= T1_["UV"] * Gamma1_["VU"];
+
+        T0deGNO -= 0.25 * T2_["xyuv"] * Lambda2_["uvxy"];
+        T0deGNO -= 0.25 * T2_["XYUV"] * Lambda2_["UVXY"];
+        T0deGNO -= T2_["xYuV"] * Lambda2_["uVxY"];
+
+        T0deGNO += 0.5 * T2_["xyuv"] * Gamma1_["ux"] * Gamma1_["vy"];
+        T0deGNO += 0.5 * T2_["XYUV"] * Gamma1_["UX"] * Gamma1_["VY"];
+        T0deGNO += T2_["xYuV"] * Gamma1_["ux"] * Gamma1_["VY"];
     }
-    ambit::BlockedTensor out =
-        ambit::BlockedTensor::build(tensor_type_, "T1deGNO selected", blocks);
-    out["ia"] = T1eff_["ia"];
-    out["IA"] = T1eff_["IA"];
-    return out;
+
+    return T1eff;
 }
 
 ambit::BlockedTensor DSRG_MRPT2::get_T2(const std::vector<std::string>& blocks) {
@@ -2856,6 +2821,20 @@ ambit::BlockedTensor DSRG_MRPT2::get_T2(const std::vector<std::string>& blocks) 
     out["iJaB"] = T2_["iJaB"];
     out["IJAB"] = T2_["IJAB"];
     return out;
+}
+
+ambit::BlockedTensor DSRG_MRPT2::get_RH1deGNO() {
+    ambit::BlockedTensor RH1eff = BTF_->build(tensor_type_, "RH1 from deGNO", spin_cases({"ph"}));
+
+    RH1eff["ai"] = F_["ai"];
+    RH1eff["AI"] = F_["AI"];
+
+    RH1eff["ai"] -= V_["auiv"] * Gamma1_["vu"];
+    RH1eff["ai"] -= V_["aUiV"] * Gamma1_["VU"];
+    RH1eff["AI"] -= V_["uAvI"] * Gamma1_["vu"];
+    RH1eff["AI"] -= V_["AUIV"] * Gamma1_["VU"];
+
+    return RH1eff;
 }
 
 void DSRG_MRPT2::rotate_amp(SharedMatrix Ua, SharedMatrix Ub, const bool& transpose,

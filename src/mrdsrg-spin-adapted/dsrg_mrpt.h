@@ -67,6 +67,8 @@ class DSRG_MRPT : public Wavefunction {
     double compute_energy();
 
   protected:
+    void hack_doublet();
+
     // => Class initialization and termination <= //
 
     /// Start-up function called in the constructor

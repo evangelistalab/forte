@@ -143,12 +143,6 @@ void THREE_DSRG_MRPT2::startup() {
     internal_amp_ = options_.get_str("INTERNAL_AMP") != "NONE";
     internal_amp_select_ = options_.get_str("INTERNAL_AMP_SELECT");
 
-    // ignore semicanonical test
-    std::string actv_type = options_.get_str("FCIMO_ACTV_TYPE");
-    if (actv_type != "COMPLETE" && actv_type != "DOCI") {
-        ignore_semicanonical_ = true;
-    }
-
     rdoccpi_ = mo_space_info_->get_dimension("RESTRICTED_DOCC");
     actvpi_ = mo_space_info_->get_dimension("ACTIVE");
     ruoccpi_ = mo_space_info_->get_dimension("RESTRICTED_UOCC");
@@ -173,8 +167,7 @@ void THREE_DSRG_MRPT2::startup() {
         outfile->Printf("\n             Set DSRG_MULTI_STATE back to default SA_FULL.");
         multi_state_algorithm_ = "SA_FULL";
 
-        warnings_.push_back(std::make_tuple("Unsupported DSRG_MULTI_STATE",
-                                            "Change to SA_FULL",
+        warnings_.push_back(std::make_tuple("Unsupported DSRG_MULTI_STATE", "Change to SA_FULL",
                                             "Change options in input.dat"));
     }
 
@@ -288,6 +281,10 @@ void THREE_DSRG_MRPT2::startup() {
             Hbar2_ = BTF_->build(tensor_type_, "Two-body Hbar", spin_cases({"aaaa"}));
             Hbar1_["uv"] = F_["uv"];
             Hbar1_["UV"] = F_["UV"];
+
+            if (options_.get_bool("FORM_HBAR3")) {
+                Hbar3_ = BTF_->build(tensor_type_, "3-body Hbar", spin_cases({"aaaaaa"}));
+            }
         }
     }
 }
@@ -321,6 +318,12 @@ void THREE_DSRG_MRPT2::print_options_summary() {
         calculation_info_string.push_back({"Internal_amp_select", internal_amp_select_});
     }
 
+    if (options_.get_bool("FORM_HBAR3")) {
+        calculation_info_string.push_back({"form Hbar3", "TRUE"});
+    } else {
+        calculation_info_string.push_back({"form Hbar3", "FALSE"});
+    }
+
     // Print some information
     print_h2("Calculation Information");
     for (auto& str_dim : calculation_info_int) {
@@ -347,10 +350,13 @@ double THREE_DSRG_MRPT2::compute_energy() {
 
     if (my_proc == 0) {
         // check semi-canonical orbitals
-        semi_canonical_ = check_semicanonical();
+        semi_canonical_ = check_semi_orbs();
         if (!semi_canonical_) {
-            outfile->Printf("\n    Warning: DF/CD-DSRG-MRPT2 only takes semi-canonical orbitals. "
-                            "The code will keep running.");
+            outfile->Printf("\n    Warning: DF/CD-DSRG-MRPT2 only takes semi-canonical orbitals.");
+            outfile->Printf("\n    Energy is reliable to similar digit as max(|Fij|), i != j.");
+            outfile->Printf("\n    Please make sure SEMI_CANONICAL option is set to TRUE.");
+            outfile->Printf("\n    Please check previous lines from Semicanonical class.");
+            outfile->Printf("\n    The code will keep running.");
 
             warnings_.push_back(std::make_tuple("Semicanonical orbital test",
                                                 "Assume Semicanonical orbital",
@@ -3052,282 +3058,62 @@ void THREE_DSRG_MRPT2::form_Hbar() {
     Hbar2_["UVXY"] += C2["XYUV"];
     outfile->Printf("Done. Timing: %10.3f s.", timer2.get());
 
-
-
+    // Again, the below block assume V[ijab] = V[iJaB] - V[iJbA]
     if (integral_type_ == DiskDF) {
-        /**
-         * AVCC and VACC Blocks of APTEI
-         *
-         * Spin integrated form:
-         * [V, T]["zw"] <- -0.5 * V'["zemn"] * T["mnwe"] - V'["zEmN"] * T["mNwE"]
-         * [V, T]["ZW"] <- -0.5 * V'["ZEMN"] * T["MNWE"] - V'["eZmN"] * T["mNeW"]
-         * where V' = V * (1 + exp(-s * D * D)) and T = V * (1 - exp(-s * D * D)) / D.
-         * V is expressed using DF, for example, V["zEmN"] = B(L|zm) * B(L|en).
-         *
-         * Assume spin Ms = 0 => V["zemn"] = V["ZEMN"] = V["zEmN"] - V["zEnM"].
-         * Then it is easy to show:
-         * [V, T]["zw"] <- -2 * V''(zn|em) * T''(nw|me) + V''(zn|em) * T''(mw|ne)  (*)
-         * [V, T]["ZW"] <- -2 * V''(zn|em) * T''(nw|me) + V''(zn|em) * T''(mw|ne)  (*)
-         * where V'' and T'' are NOT antisymmetrized, e.g., V''(zn|em) = V'["zEnM"].
-         *
-         * We will implement the spin adapted form, i.e., Eq. (*),
-         * because B is formed using only Ca (thus Cb is ignored throughout).
-         *
-         * 1. We will batch over w and z, assuming two tensors of size c * c * v can be stored.
-         *    This assumption is almost always reasonable, for example, v = 2500, c = 500.
-         * 2. In the code, B1 refers to B(L|zm) for a fixed index "z";
-         *    B2 refers to B(L|mw) (used to form T'') for a fixed index "w".
-         *    Since L * v * c can potentially large, we load B(L|en) in batches of e.
-         *    B3 refers to a vector (size = num_threads) of B(L|en) for a fixed index "e".
-         * 3. For convenience, we store T'' for a given "w" as {nvirtual_, ncore_, ncore_}.
-         * 4. Remember to include Hermitian adjoint of [V, T] to Hbar1!
-         **/
+        C1.zero();
 
         Timer timer3;
         outfile->Printf("\n    %-40s ... ", "Computing DISKDF Hbar C");
-
-        size_t nc2 = ncore_ * ncore_;
-        ambit::Tensor V, T, B1, B2;
-        V = ambit::Tensor::build(tensor_type_, "V_z", {nvirtual_, ncore_, ncore_});
-        T = ambit::Tensor::build(tensor_type_, "T_w", {nvirtual_, ncore_, ncore_});
-
-        int nthread = 1;
-#ifdef _OPENMP
-        nthread = num_threads_;
-#endif
-
-        std::vector<ambit::Tensor> B3, temp;
-        for (int thread = 0; thread < nthread; ++thread) {
-            B3.push_back(ambit::Tensor());
-            temp.push_back(ambit::Tensor::build(tensor_type_, "V_ez", {ncore_, ncore_}));
-        }
-
-        /// => start from here <=
-        for (size_t z = 0; z < nactive_; ++z) {
-            size_t nz = actv_mos_[z];
-            double Fz = Fa_[nz];
-
-            /// V (alpha-beta equivalent) for a given "z"
-            B1 = ints_->three_integral_block_two_index(aux_mos_, nz, core_mos_);
-
-#pragma omp parallel for
-            for (size_t e = 0; e < nvirtual_; ++e) {
-                size_t ne = virt_mos_[e];
-                int thread = 0; // SUPER IMPORTANT!!!
-#ifdef _OPENMP
-                thread = omp_get_thread_num();
-#endif
-#pragma omp critical
-                { B3[thread] = ints_->three_integral_block_two_index(aux_mos_, ne, core_mos_); }
-
-                // compute V for a given "z" and "e"
-                temp[thread]("nm") = B1("gn") * B3[thread]("gm");
-
-                // copy temp to V
-                size_t offset = e * nc2;
-                std::copy(temp[thread].data().begin(), temp[thread].data().end(),
-                          V.data().begin() + offset);
-            }
-
-            // scale V := V * (1 + e^{-s * D * D})
-            // TODO: test if this needs to be parallelized
-            V.iterate([&](const std::vector<size_t>& i, double& value) {
-                double D = Fa_[virt_mos_[i[0]]] + Fz - Fa_[core_mos_[i[1]]] - Fa_[core_mos_[i[2]]];
-                value += value * dsrg_source_->compute_renormalized(D);
-            });
-
-            /// => loop active index for T <=
-            for (size_t w = 0; w < nactive_; ++w) {
-                size_t nw = actv_mos_[w];
-                double Fw = Fa_[nw];
-
-                /// T (alpha-beta equivalent) for a given "w"
-                B2 = ints_->three_integral_block_two_index(aux_mos_, nw, core_mos_);
-
-#pragma omp parallel for
-                for (size_t e = 0; e < nvirtual_; ++e) {
-                    size_t ne = virt_mos_[e];
-                    int thread = 0; // SUPER IMPORTANT!!!
-#ifdef _OPENMP
-                    thread = omp_get_thread_num();
-#endif
-#pragma omp critical
-                    { B3[thread] = ints_->three_integral_block_two_index(aux_mos_, ne, core_mos_); }
-
-                    // compute V for T for a given "w" and "e"
-                    temp[thread]("nm") = B2("gn") * B3[thread]("gm");
-
-                    // copy temp to T
-                    size_t offset = e * nc2;
-                    std::copy(temp[thread].data().begin(), temp[thread].data().end(),
-                              T.data().begin() + offset);
-                }
-
-                // scale T := V * (1 - e^{-s * D * D}) / D
-                // TODO: test if this needs to be parallelized
-                T.iterate([&](const std::vector<size_t>& i, double& value) {
-                    double D =
-                        Fa_[core_mos_[i[1]]] + Fa_[core_mos_[i[2]]] - Fw - Fa_[virt_mos_[i[0]]];
-                    value *= dsrg_source_->compute_renormalized_denominator(D);
-                });
-
-                /// contract V and T
-                double hbar = 0.0;
-                hbar += V("emn") * T("emn");       // J
-                hbar -= 0.5 * V("emn") * T("enm"); // K
-                Hbar1_.block("aa").data()[w * nactive_ + z] -= hbar;
-                Hbar1_.block("aa").data()[z * nactive_ + w] -= hbar;
-                Hbar1_.block("AA").data()[w * nactive_ + z] -= hbar;
-                Hbar1_.block("AA").data()[z * nactive_ + w] -= hbar;
-            }
-        }
+        compute_Hbar1C_diskDF(C1);
         outfile->Printf("Done. Timing: %10.3f s.", timer3.get());
-
-        /**
-         * VVAC and VVCA Blocks of APTEI
-         *
-         * Spin integrated form (similar to previous block):
-         * [V, T]["zw"] <- 0.5 * <ef||wm>' * T<zm||ef> + <eF||wM>' * T<eM||eF>
-         * [V, T]["ZW"] <- 0.5 * <EF||WM>' * T<ZM||EF> + <eF||mW>' * T<mZ||eF>
-         * where <ef||wm>' = <ef||wm> * (1 + exp(-s * D * D)),
-         * and T<zm||ef> = <zm||ef> * (1 - exp(-s * D * D)) / D.
-         * Note, <eF||wM>' = <eF|wM>' because of the spin.
-         *
-         * Assume spin Ms = 0 => <ef||wm> = <EF||WM> = <eF|wM> - <eF|mW> = (ew|fm) - (em|fw).
-         * Then it is easy to show:
-         * [V, T]["zw"] <- 2 * (ew|fm)'' * T(ze|mf)'' - (ew|fm)'' * T(zf|me)''  (*)
-         * [V, T]["ZW"] <- 2 * (ew|fm)'' * T(ze|mf)'' - (ew|fm)'' * T(zf|me)''  (*)
-         * where (ew|fm)'' and T(ze|mf)'' are NOT antisymmetrized, e.g., (ew|fm)'' = <eF|wM>'.
-         *
-         * We will implement the spin adapted form, i.e., Eq. (*),
-         * because B is formed using only Ca (thus Cb is ignored throughout).
-         *
-         * 1. We will batch over w and z, assuming two tensors of size v * v * c can be stored.
-         *    This assumption is usually reasonable, for example, v = 2000, c = 500.
-         * 2. In the code, B1 refers to B(L|ew) for a fixed index "w";
-         *    B2 refers to B(L|ze) (used to form T'') for a fixed index "z".
-         *    Since L * v * c can potentially large, we load B(L|fm) in batches of m:
-         *    B3 refers to a vector (size = num_threads) of B(L|fm) for a fixed index "m".
-         * 3. For convenience, we store T'' for a given "z" as {ncore_, nvirtual_, nvirtual_}.
-         * 4. Remember to include Hermitian adjoint of [V, T] to Hbar1!
-         **/
 
         Timer timer4;
         outfile->Printf("\n    %-40s ... ", "Computing DISKDF Hbar V");
-
-        size_t nv2 = nvirtual_ * nvirtual_;
-        V = ambit::Tensor::build(tensor_type_, "V_w", {ncore_, nvirtual_, nvirtual_});
-        T = ambit::Tensor::build(tensor_type_, "T_z", {ncore_, nvirtual_, nvirtual_});
-
-        for (int thread = 0; thread < nthread; ++thread) {
-            temp[thread] = ambit::Tensor::build(tensor_type_, "V_wm", {nvirtual_, nvirtual_});
-        }
-
-        for (size_t w = 0; w < nactive_; ++w) {
-            size_t nw = actv_mos_[w];
-            double Fw = Fa_[nw];
-
-            /// compute (ew|fm) = B(L|ew) * B(L|fm) for a given "w"
-            B1 = ints_->three_integral_block_two_index(aux_mos_, nw, virt_mos_);
-
-#pragma omp parallel for
-            for (size_t m = 0; m < ncore_; ++m) {
-                size_t nm = core_mos_[m];
-                int thread = 0; // SUPER IMPORTANT!!!
-#ifdef _OPENMP
-                thread = omp_get_thread_num();
-#endif
-#pragma omp critical
-                { B3[thread] = ints_->three_integral_block_two_index(aux_mos_, nm, virt_mos_); }
-
-                // compute V for a given "w" and "m"
-                temp[thread]("ef") = B1("ge") * B3[thread]("gf");
-
-                // copy temp to V
-                size_t offset = m * nv2;
-                std::copy(temp[thread].data().begin(), temp[thread].data().end(),
-                          V.data().begin() + offset);
-            }
-
-            // scale V := V * (1 + e^{-s * D * D})
-            // TODO: test if this needs to be parallelized
-            V.iterate([&](const std::vector<size_t>& i, double& value) {
-                double D = Fa_[virt_mos_[i[1]]] + Fa_[virt_mos_[i[2]]] - Fa_[core_mos_[i[0]]] - Fw;
-                value += value * dsrg_source_->compute_renormalized(D);
-            });
-
-            for (size_t z = 0; z < nactive_; ++z) {
-                size_t nz = actv_mos_[z];
-                double Fz = Fa_[nz];
-
-                /// compute (ze|mf) = B(L|ze) * B(L|mf) for T for a given "z"
-                B2 = ints_->three_integral_block_two_index(aux_mos_, nz, virt_mos_);
-
-#pragma omp parallel for
-                for (size_t m = 0; m < ncore_; ++m) {
-                    size_t nm = core_mos_[m];
-                    int thread = 0; // SUPER IMPORTANT!!!
-#ifdef _OPENMP
-                    thread = omp_get_thread_num();
-#endif
-#pragma omp critical
-                    { B3[thread] = ints_->three_integral_block_two_index(aux_mos_, nm, virt_mos_); }
-
-                    // compute T for a given "z" and "m"
-                    temp[thread]("ef") = B2("ge") * B3[thread]("gf");
-
-                    // copy temp to T
-                    size_t offset = m * nv2;
-                    std::copy(temp[thread].data().begin(), temp[thread].data().end(),
-                              T.data().begin() + offset);
-                }
-
-                // scale T := V * (1 - e^{-s * D * D}) / D
-                // TODO: test if this needs to be parallelized
-                T.iterate([&](const std::vector<size_t>& i, double& value) {
-                    double D =
-                        Fa_[core_mos_[i[0]]] + Fz - Fa_[virt_mos_[i[1]]] - Fa_[virt_mos_[i[2]]];
-                    value *= dsrg_source_->compute_renormalized_denominator(D);
-                });
-
-                /// contract V and T
-                double hbar = 0.0;
-                hbar += V("mef") * T("mef");       // J
-                hbar -= 0.5 * V("mef") * T("mfe"); // K
-                Hbar1_.block("aa").data()[w * nactive_ + z] += hbar;
-                Hbar1_.block("aa").data()[z * nactive_ + w] += hbar;
-                Hbar1_.block("AA").data()[w * nactive_ + z] += hbar;
-                Hbar1_.block("AA").data()[z * nactive_ + w] += hbar;
-            }
-        }
+        compute_Hbar1V_diskDF(C1);
         outfile->Printf("Done. Timing: %10.3f s.", timer4.get());
+
+        Hbar1_["uv"] += 0.5 * C1["uv"];
+        Hbar1_["uv"] += 0.5 * C1["vu"];
+        Hbar1_["UV"] += 0.5 * C1["UV"];
+        Hbar1_["UV"] += 0.5 * C1["VU"];
     }
 
     if ( options_.get_bool("PRINT_1BODY_EVALS") ){
-
-        SharedMatrix Hb1 = std::make_shared<Matrix>("HB1", nactive_, nactive_); 
-        
+        SharedMatrix Hb1 = std::make_shared<Matrix>("HB1", nactive_, nactive_);
         for( int p = 0; p < nactive_; ++p ){
             for( int q = 0; q < nactive_; ++q ){
-                Hb1->set(p,q, Hbar1_.block("aa").data()[p * nactive_ + q]); 
+                Hb1->set(p,q, Hbar1_.block("aa").data()[p * nactive_ + q]);
             }
         }
 
         SharedMatrix evecs = std::make_shared<Matrix>("evecs", nactive_, nactive_);
         SharedVector evals = std::make_shared<Vector>("Eigenvalues of Hbar1", nactive_);
-
         Hb1->diagonalize(evecs, evals);
-    
+
         evals->print();
     }
 
+    if (options_.get_bool("FORM_HBAR3")) {
+        BlockedTensor C3 = BTF_->build(tensor_type_, "C3", spin_cases({"aaaaaa"}));
+        H2_T2_C3(V_, T2_, 0.5, C3, true);
+
+        Hbar3_["uvwxyz"] += C3["uvwxyz"];
+        Hbar3_["uvwxyz"] += C3["xyzuvw"];
+        Hbar3_["uvWxyZ"] += C3["uvWxyZ"];
+        Hbar3_["uvWxyZ"] += C3["xyZuvW"];
+        Hbar3_["uVWxYZ"] += C3["uVWxYZ"];
+        Hbar3_["uVWxYZ"] += C3["xYZuVW"];
+        Hbar3_["UVWXYZ"] += C3["UVWXYZ"];
+        Hbar3_["UVWXYZ"] += C3["XYZUVW"];
+    }
 }
 
 void THREE_DSRG_MRPT2::relax_reference_once() {
 
-outfile->Printf("\n Computing ints for Heff");
-    auto fci_ints = compute_Heff();
-outfile->Printf("\n done");
+    outfile->Printf("\n Computing ints for Heff");
+    auto fci_ints = compute_Heff_actv();
+    outfile->Printf("\n done");
+
     std::vector<double> E_relaxed = relaxed_energy(fci_ints);
 
     if (options_["AVG_STATE"].size() == 0) {
@@ -3363,8 +3149,10 @@ outfile->Printf("\n done");
             int nstates = options_["AVG_STATE"][n][2].to_integer();
 
             for (int i = 0; i < nstates; ++i) {
+                int ni = i + offset;
                 outfile->Printf("\n     %3d     %3s    %2d   %20.12f", multi,
-                                irrep_symbol[irrep].c_str(), i, E_relaxed[i + offset]);
+                                irrep_symbol[irrep].c_str(), i, E_relaxed[ni]);
+                Process::environment.globals["ENERGY ROOT " + std::to_string(ni)] = E_relaxed[ni];
             }
             outfile->Printf("\n    %s", dash.c_str());
 
@@ -3386,6 +3174,255 @@ void THREE_DSRG_MRPT2::set_Ufull( SharedMatrix& Ua, SharedMatrix& Ub ){
     Ua_full_->copy(Ua);
     Ub_full_->copy(Ub);
     outfile->Printf("\n done");
+}
+
+void THREE_DSRG_MRPT2::compute_Hbar1C_diskDF(ambit::BlockedTensor& Hbar1, bool scaleV) {
+    /**
+     * AVCC and VACC Blocks of APTEI
+     *
+     * Spin integrated form:
+     * [V, T]["zw"] <- -0.5 * V'["zemn"] * T["mnwe"] - V'["zEmN"] * T["mNwE"]
+     * [V, T]["ZW"] <- -0.5 * V'["ZEMN"] * T["MNWE"] - V'["eZmN"] * T["mNeW"]
+     * where V' = V * (1 + exp(-s * D * D)) and T = V * (1 - exp(-s * D * D)) / D.
+     * V is expressed using DF, for example, V["zEmN"] = B(L|zm) * B(L|en).
+     *
+     * Assume spin Ms = 0 => V["zemn"] = V["ZEMN"] = V["zEmN"] - V["zEnM"].
+     * Then it is easy to show:
+     * [V, T]["zw"] <- -2 * V''(zn|em) * T''(nw|me) + V''(zn|em) * T''(mw|ne)  (*)
+     * [V, T]["ZW"] <- -2 * V''(zn|em) * T''(nw|me) + V''(zn|em) * T''(mw|ne)  (*)
+     * where V'' and T'' are NOT antisymmetrized, e.g., V''(zn|em) = V'["zEnM"].
+     *
+     * We will implement the spin adapted form, i.e., Eq. (*),
+     * because B is formed using only Ca (thus Cb is ignored throughout).
+     *
+     * 1. We will batch over w and z, assuming two tensors of size c * c * v can be stored.
+     *    This assumption is almost always reasonable, for example, v = 2500, c = 500.
+     * 2. In the code, B1 refers to B(L|zm) for a fixed index "z";
+     *    B2 refers to B(L|mw) (used to form T'') for a fixed index "w".
+     *    Since L * v * c can potentially large, we load B(L|en) in batches of e.
+     *    B3 refers to a vector (size = num_threads) of B(L|en) for a fixed index "e".
+     * 3. For convenience, we store T'' for a given "w" as {nvirtual_, ncore_, ncore_}.
+     * 4. Remember to include Hermitian adjoint of [V, T] to Hbar1!
+     **/
+
+    size_t nc2 = ncore_ * ncore_;
+    ambit::Tensor V, T, B1, B2;
+    V = ambit::Tensor::build(tensor_type_, "V_z", {nvirtual_, ncore_, ncore_});
+    T = ambit::Tensor::build(tensor_type_, "T_w", {nvirtual_, ncore_, ncore_});
+
+    int nthread = 1;
+#ifdef _OPENMP
+    nthread = num_threads_;
+#endif
+
+    std::vector<ambit::Tensor> B3(nthread, ambit::Tensor());
+    std::vector<ambit::Tensor> temp(nthread, ambit::Tensor());
+    for (int thread = 0; thread < nthread; ++thread) {
+        temp[thread] = ambit::Tensor::build(tensor_type_, "V_ez", {ncore_, ncore_});
+    }
+
+    /// => start from here <=
+    for (size_t z = 0; z < nactive_; ++z) {
+        size_t nz = actv_mos_[z];
+        double Fz = Fa_[nz];
+
+        /// V (alpha-beta equivalent) for a given "z"
+        B1 = ints_->three_integral_block_two_index(aux_mos_, nz, core_mos_);
+
+#pragma omp parallel for
+        for (size_t e = 0; e < nvirtual_; ++e) {
+            size_t ne = virt_mos_[e];
+            int thread = 0; // SUPER IMPORTANT!!!
+#ifdef _OPENMP
+            thread = omp_get_thread_num();
+#endif
+#pragma omp critical
+            { B3[thread] = ints_->three_integral_block_two_index(aux_mos_, ne, core_mos_); }
+
+            // compute V for a given "z" and "e"
+            temp[thread]("nm") = B1("gn") * B3[thread]("gm");
+
+            // copy temp to V
+            size_t offset = e * nc2;
+            std::copy(temp[thread].data().begin(), temp[thread].data().end(),
+                      V.data().begin() + offset);
+        }
+
+        // scale V := V * (1 + e^{-s * D * D})
+        // TODO: test if this needs to be parallelized
+        if (scaleV) {
+            V.iterate([&](const std::vector<size_t>& i, double& value) {
+                double D = Fa_[virt_mos_[i[0]]] + Fz - Fa_[core_mos_[i[1]]] - Fa_[core_mos_[i[2]]];
+                value += value * dsrg_source_->compute_renormalized(D);
+            });
+        }
+
+        /// => loop active index for T <=
+        for (size_t w = 0; w < nactive_; ++w) {
+            size_t nw = actv_mos_[w];
+            double Fw = Fa_[nw];
+
+            /// T (alpha-beta equivalent) for a given "w"
+            B2 = ints_->three_integral_block_two_index(aux_mos_, nw, core_mos_);
+
+#pragma omp parallel for
+            for (size_t e = 0; e < nvirtual_; ++e) {
+                size_t ne = virt_mos_[e];
+                int thread = 0; // SUPER IMPORTANT!!!
+#ifdef _OPENMP
+                thread = omp_get_thread_num();
+#endif
+#pragma omp critical
+                { B3[thread] = ints_->three_integral_block_two_index(aux_mos_, ne, core_mos_); }
+
+                // compute V for T for a given "w" and "e"
+                temp[thread]("nm") = B2("gn") * B3[thread]("gm");
+
+                // copy temp to T
+                size_t offset = e * nc2;
+                std::copy(temp[thread].data().begin(), temp[thread].data().end(),
+                          T.data().begin() + offset);
+            }
+
+            // scale T := V * (1 - e^{-s * D * D}) / D
+            // TODO: test if this needs to be parallelized
+            T.iterate([&](const std::vector<size_t>& i, double& value) {
+                double D = Fa_[core_mos_[i[1]]] + Fa_[core_mos_[i[2]]] - Fw - Fa_[virt_mos_[i[0]]];
+                value *= dsrg_source_->compute_renormalized_denominator(D);
+            });
+
+            /// contract V and T
+            double hbar = 0.0;
+            hbar += V("emn") * T("emn");       // J
+            hbar -= 0.5 * V("emn") * T("enm"); // K
+            Hbar1.block("aa").data()[z * nactive_ + w] -= 2.0 * hbar;
+            Hbar1.block("AA").data()[z * nactive_ + w] -= 2.0 * hbar;
+        }
+    }
+}
+
+void THREE_DSRG_MRPT2::compute_Hbar1V_diskDF(ambit::BlockedTensor& Hbar1, bool scaleV) {
+    /**
+     * VVAC and VVCA Blocks of APTEI
+     *
+     * Spin integrated form:
+     * [V, T]["zw"] <- 0.5 * <ef||wm>' * T<zm||ef> + <eF||wM>' * T<eM||eF>
+     * [V, T]["ZW"] <- 0.5 * <EF||WM>' * T<ZM||EF> + <eF||mW>' * T<mZ||eF>
+     * where <ef||wm>' = <ef||wm> * (1 + exp(-s * D * D)),
+     * and T<zm||ef> = <zm||ef> * (1 - exp(-s * D * D)) / D.
+     * Note, <eF||wM>' = <eF|wM>' because of the spin.
+     *
+     * Assume spin Ms = 0 => <ef||wm> = <EF||WM> = <eF|wM> - <eF|mW> = (ew|fm) - (em|fw).
+     * Then it is easy to show:
+     * [V, T]["zw"] <- 2 * (ew|fm)'' * T(ze|mf)'' - (ew|fm)'' * T(zf|me)''  (*)
+     * [V, T]["ZW"] <- 2 * (ew|fm)'' * T(ze|mf)'' - (ew|fm)'' * T(zf|me)''  (*)
+     * where (ew|fm)'' and T(ze|mf)'' are NOT antisymmetrized, e.g., (ew|fm)'' = <eF|wM>'.
+     *
+     * We will implement the spin adapted form, i.e., Eq. (*),
+     * because B is formed using only Ca (thus Cb is ignored throughout).
+     *
+     * 1. We will batch over w and z, assuming two tensors of size v * v * c can be stored.
+     *    This assumption is usually reasonable, for example, v = 2000, c = 500.
+     * 2. In the code, B1 refers to B(L|ew) for a fixed index "w";
+     *    B2 refers to B(L|ze) (used to form T'') for a fixed index "z".
+     *    Since L * v * c can potentially large, we load B(L|fm) in batches of m:
+     *    B3 refers to a vector (size = num_threads) of B(L|fm) for a fixed index "m".
+     * 3. For convenience, we store T'' for a given "z" as {ncore_, nvirtual_, nvirtual_}.
+     * 4. Remember to include Hermitian adjoint of [V, T] to Hbar1!
+     **/
+
+    ambit::Tensor V, T, B1, B2;
+    size_t nv2 = nvirtual_ * nvirtual_;
+    V = ambit::Tensor::build(tensor_type_, "V_w", {ncore_, nvirtual_, nvirtual_});
+    T = ambit::Tensor::build(tensor_type_, "T_z", {ncore_, nvirtual_, nvirtual_});
+
+    int nthread = 1;
+#ifdef _OPENMP
+    nthread = num_threads_;
+#endif
+
+    std::vector<ambit::Tensor> B3(nthread, ambit::Tensor());
+    std::vector<ambit::Tensor> temp(nthread, ambit::Tensor());
+    for (int thread = 0; thread < nthread; ++thread) {
+        temp[thread] = ambit::Tensor::build(tensor_type_, "V_wm", {nvirtual_, nvirtual_});
+    }
+
+    for (size_t w = 0; w < nactive_; ++w) {
+        size_t nw = actv_mos_[w];
+        double Fw = Fa_[nw];
+
+        /// compute (ew|fm) = B(L|ew) * B(L|fm) for a given "w"
+        B1 = ints_->three_integral_block_two_index(aux_mos_, nw, virt_mos_);
+
+#pragma omp parallel for
+        for (size_t m = 0; m < ncore_; ++m) {
+            size_t nm = core_mos_[m];
+            int thread = 0; // SUPER IMPORTANT!!!
+#ifdef _OPENMP
+            thread = omp_get_thread_num();
+#endif
+#pragma omp critical
+            { B3[thread] = ints_->three_integral_block_two_index(aux_mos_, nm, virt_mos_); }
+
+            // compute V for a given "w" and "m"
+            temp[thread]("ef") = B1("ge") * B3[thread]("gf");
+
+            // copy temp to V
+            size_t offset = m * nv2;
+            std::copy(temp[thread].data().begin(), temp[thread].data().end(),
+                      V.data().begin() + offset);
+        }
+
+        // scale V := V * (1 + e^{-s * D * D})
+        // TODO: test if this needs to be parallelized
+        if (scaleV) {
+            V.iterate([&](const std::vector<size_t>& i, double& value) {
+                double D = Fa_[virt_mos_[i[1]]] + Fa_[virt_mos_[i[2]]] - Fa_[core_mos_[i[0]]] - Fw;
+                value += value * dsrg_source_->compute_renormalized(D);
+            });
+        }
+
+        for (size_t z = 0; z < nactive_; ++z) {
+            size_t nz = actv_mos_[z];
+            double Fz = Fa_[nz];
+
+            /// compute (ze|mf) = B(L|ze) * B(L|mf) for T for a given "z"
+            B2 = ints_->three_integral_block_two_index(aux_mos_, nz, virt_mos_);
+
+#pragma omp parallel for
+            for (size_t m = 0; m < ncore_; ++m) {
+                size_t nm = core_mos_[m];
+                int thread = 0; // SUPER IMPORTANT!!!
+#ifdef _OPENMP
+                thread = omp_get_thread_num();
+#endif
+#pragma omp critical
+                { B3[thread] = ints_->three_integral_block_two_index(aux_mos_, nm, virt_mos_); }
+
+                // compute T for a given "z" and "m"
+                temp[thread]("ef") = B2("ge") * B3[thread]("gf");
+
+                // copy temp to T
+                size_t offset = m * nv2;
+                std::copy(temp[thread].data().begin(), temp[thread].data().end(),
+                          T.data().begin() + offset);
+            }
+
+            // scale T := V * (1 - e^{-s * D * D}) / D
+            // TODO: test if this needs to be parallelized
+            T.iterate([&](const std::vector<size_t>& i, double& value) {
+                double D = Fa_[core_mos_[i[0]]] + Fz - Fa_[virt_mos_[i[1]]] - Fa_[virt_mos_[i[2]]];
+                value *= dsrg_source_->compute_renormalized_denominator(D);
+            });
+
+            /// contract V and T
+            double hbar = 0.0;
+            hbar += V("mef") * T("mef");       // J
+            hbar -= 0.5 * V("mef") * T("mfe"); // K
+            Hbar1.block("aa").data()[z * nactive_ + w] += 2.0 * hbar;
+            Hbar1.block("AA").data()[z * nactive_ + w] += 2.0 * hbar;
+        }
+    }
 }
 
 std::vector<double> THREE_DSRG_MRPT2::relaxed_energy(std::shared_ptr<FCIIntegrals> fci_ints) {
@@ -3427,7 +3464,7 @@ std::vector<double> THREE_DSRG_MRPT2::relaxed_energy(std::shared_ptr<FCIIntegral
         // Only do ground state ACI for now
         AdaptiveCI aci(reference_wavefunction_, options_, ints_, mo_space_info_);
         aci.set_fci_ints(fci_ints);
-        if( options_["ACI_RELAX_SIGMA"].has_changed() ){
+        if (options_["ACI_RELAX_SIGMA"].has_changed()) {
             aci.update_sigma();
         }
 
@@ -3435,7 +3472,7 @@ std::vector<double> THREE_DSRG_MRPT2::relaxed_energy(std::shared_ptr<FCIIntegral
         Erelax.push_back(relaxed_aci_en);
 
         // Compute relaxed NOs
-        if( options_.get_bool("ACI_NO") ){
+        if (options_.get_bool("ACI_NO")) {
             aci.compute_nos();
         }
         if( options_.get_bool("ACI_SPIN_ANALYSIS") ){
@@ -3453,7 +3490,8 @@ std::vector<double> THREE_DSRG_MRPT2::relaxed_energy(std::shared_ptr<FCIIntegral
         int ntrial_per_root = options_.get_int("NTRIAL_PER_ROOT");
         Dimension active_dim = mo_space_info_->get_dimension("ACTIVE");
         std::shared_ptr<Molecule> molecule = Process::environment.molecule();
-        double Enuc = molecule->nuclear_repulsion_energy(reference_wavefunction_->get_dipole_field_strength());
+        double Enuc = molecule->nuclear_repulsion_energy(
+            reference_wavefunction_->get_dipole_field_strength());
         int charge = molecule->molecular_charge();
         if (options_["CHARGE"].has_changed()) {
             charge = options_.get_int("CHARGE");
@@ -3539,6 +3577,221 @@ std::vector<double> THREE_DSRG_MRPT2::relaxed_energy(std::shared_ptr<FCIIntegral
     return Erelax;
 }
 
+void THREE_DSRG_MRPT2::compute_Heff_2nd_coupling(double& H0, ambit::Tensor& H1a, ambit::Tensor& H1b,
+                                                 ambit::Tensor& H2aa, ambit::Tensor& H2ab,
+                                                 ambit::Tensor& H2bb, ambit::Tensor& H3aaa,
+                                                 ambit::Tensor& H3aab, ambit::Tensor& H3abb,
+                                                 ambit::Tensor& H3bbb) {
+    // reset Tensors
+    BlockedTensor H1 = BTF_->build(tensor_type_, "Heff1_2nd", spin_cases({"aa"}));
+    H1a = H1.block("aa");
+    H1b = H1.block("AA");
+
+    BlockedTensor H2 = BTF_->build(tensor_type_, "Heff2_2nd", spin_cases({"aaaa"}));
+    H2aa = H2.block("aaaa");
+    H2ab = H2.block("aAaA");
+    H2bb = H2.block("AAAA");
+
+    BlockedTensor H3 = BTF_->build(tensor_type_, "Heff3_2nd", spin_cases({"aaaaaa"}));
+    H3aaa = H3.block("aaaaaa");
+    H3aab = H3.block("aaAaaA");
+    H3abb = H3.block("aAAaAA");
+    H3bbb = H3.block("AAAAAA");
+
+    // ignore scalar term
+    H0 = 0.0;
+
+    // de-normal-order amplitudes
+    BlockedTensor T1eff = deGNO_Tamp(T1_, T2_, Gamma1_);
+
+    // reset APTEI because it is renormalized
+    std::vector<std::string> list_of_pphh_V = BTF_->generate_indices("vac", "pphh");
+    if (integral_type_ != DiskDF) {
+        V_["abij"] = ThreeIntegral_["gai"] * ThreeIntegral_["gbj"];
+        V_["abij"] -= ThreeIntegral_["gaj"] * ThreeIntegral_["gbi"];
+
+        V_["aBiJ"] = ThreeIntegral_["gai"] * ThreeIntegral_["gBJ"];
+
+        V_["ABIJ"] = ThreeIntegral_["gAI"] * ThreeIntegral_["gBJ"];
+        V_["ABIJ"] -= ThreeIntegral_["gAJ"] * ThreeIntegral_["gBI"];
+    } else {
+        V_ = compute_V_minimal(BTF_->spin_cases_avoid(list_of_pphh_V, 2), false);
+    }
+
+    // "effective" one-electron integrals: hbar^p_q = h^p_q + sum_m v^{mp}_{mq}
+    BlockedTensor Hoei = BTF_->build(tensor_type_, "OEI", spin_cases({"ph"}));
+    Hoei["pq"] = H_["pq"];
+    Hoei["PQ"] = H_["PQ"];
+
+    // add core contribution to Hoei
+    ambit::Tensor Vtemp, I;
+    size_t nc = core_mos_.size();
+    I = ambit::Tensor::build(tensor_type_, "I", std::vector<size_t>{nc, nc});
+    I.iterate([&](const std::vector<size_t>& i, double& value) {
+        if (i[0] == i[1]) {
+            value = 1.0;
+        }
+    });
+
+    Vtemp = ints_->aptei_aa_block(core_mos_, actv_mos_, core_mos_, actv_mos_);
+    Hoei.block("aa")("pq") += Vtemp("mpnq") * I("mn");
+
+    Vtemp = ints_->aptei_ab_block(actv_mos_, core_mos_, actv_mos_, core_mos_);
+    Hoei.block("aa")("pq") += Vtemp("pmqn") * I("mn");
+
+    Vtemp = ints_->aptei_ab_block(core_mos_, actv_mos_, core_mos_, actv_mos_);
+    Hoei.block("AA")("pq") += Vtemp("mpnq") * I("mn");
+
+    Vtemp = ints_->aptei_bb_block(core_mos_, actv_mos_, core_mos_, actv_mos_);
+    Hoei.block("AA")("pq") += Vtemp("mpnq") * I("mn");
+
+    I = ambit::Tensor::build(tensor_type_, "I", std::vector<size_t>{1, 1});
+    I.data()[0] = 1.0;
+    for (const size_t& m : core_mos_) {
+        for (const std::string& block : {"ac", "va", "vc"}) {
+            std::string block_beta =
+                std::string(1, toupper(block[0])) + std::string(1, toupper(block[1]));
+            std::vector<size_t>& mos1 = label_to_spacemo_[block[0]];
+            std::vector<size_t>& mos2 = label_to_spacemo_[block[1]];
+
+            Vtemp = ints_->aptei_aa_block({m}, mos1, {m}, mos2);
+            Hoei.block(block)("pq") += Vtemp("mpnq") * I("mn");
+
+            Vtemp = ints_->aptei_ab_block(mos1, {m}, mos2, {m});
+            Hoei.block(block)("pq") += Vtemp("pmqn") * I("mn");
+
+            Vtemp = ints_->aptei_ab_block({m}, mos1, {m}, mos2);
+            Hoei.block(block_beta)("pq") += Vtemp("mpnq") * I("mn");
+
+            Vtemp = ints_->aptei_bb_block({m}, mos1, {m}, mos2);
+            Hoei.block(block_beta)("pq") += Vtemp("mpnq") * I("mn");
+        }
+    }
+
+    // 1-body
+    H1["uv"] = Hoei["uv"];
+    H1["UV"] = Hoei["UV"];
+
+    H1["vu"] += Hoei["eu"] * T1eff["ve"];
+    H1["VU"] += Hoei["EU"] * T1eff["VE"];
+
+    H1["vu"] -= Hoei["vm"] * T1eff["mu"];
+    H1["VU"] -= Hoei["VM"] * T1eff["MU"];
+
+    H1["vu"] += V_["avmu"] * T1eff["ma"];
+    H1["vu"] += V_["vAuM"] * T1eff["MA"];
+    H1["VU"] += V_["aVmU"] * T1eff["ma"];
+    H1["VU"] += V_["AVMU"] * T1eff["MA"];
+
+    H1["vu"] += Hoei["am"] * T2_["mvau"];
+    H1["vu"] += Hoei["AM"] * T2_["vMuA"];
+    H1["VU"] += Hoei["am"] * T2_["mVaU"];
+    H1["VU"] += Hoei["AM"] * T2_["MVAU"];
+
+    H1["vu"] += 0.5 * V_["abum"] * T2_["vmab"];
+    H1["vu"] += V_["aBuM"] * T2_["vMaB"];
+    H1["VU"] += 0.5 * V_["ABUM"] * T2_["VMAB"];
+    H1["VU"] += V_["aBmU"] * T2_["mVaB"];
+
+    H1["vu"] -= 0.5 * V_["avmn"] * T2_["mnau"];
+    H1["vu"] -= V_["vAmN"] * T2_["mNuA"];
+    H1["VU"] -= 0.5 * V_["AVMN"] * T2_["MNAU"];
+    H1["VU"] -= V_["aVmN"] * T2_["mNaU"];
+
+    if (integral_type_ == DiskDF) {
+        compute_Hbar1C_diskDF(H1, false);
+        compute_Hbar1V_diskDF(H1, false);
+    }
+
+    // 2-body
+    H2["uvxy"] = V_["uvxy"];
+    H2["uVxY"] = V_["uVxY"];
+    H2["UVXY"] = V_["UVXY"];
+
+    BlockedTensor temp = BTF_->build(tensor_type_, "temp", {"aaaa", "AAAA"});
+
+    temp["xyuv"] = V_["eyuv"] * T1eff["xe"];
+    temp["XYUV"] = V_["EYUV"] * T1eff["XE"];
+
+    H2["xyuv"] += temp["xyuv"];
+    H2["XYUV"] += temp["XYUV"];
+    H2["xyuv"] -= temp["yxuv"];
+    H2["XYUV"] -= temp["YXUV"];
+
+    H2["xYuV"] += V_["eYuV"] * T1eff["xe"];
+    H2["xYuV"] += V_["xEuV"] * T1eff["YE"];
+
+    temp["xyuv"] = V_["xymv"] * T1eff["mu"];
+    temp["XYUV"] = V_["XYMV"] * T1eff["MU"];
+
+    H2["xyuv"] -= temp["xyuv"];
+    H2["XYUV"] -= temp["XYUV"];
+    H2["xyuv"] += temp["xyvu"];
+    H2["XYUV"] += temp["XYVU"];
+
+    H2["xYuV"] -= V_["xYmV"] * T1eff["mu"];
+    H2["xYuV"] -= V_["xYuM"] * T1eff["MV"];
+
+    temp["xyuv"] = Hoei["eu"] * T2_["xyev"];
+    temp["XYUV"] = Hoei["EU"] * T2_["XYEV"];
+
+    H2["xyuv"] += temp["xyuv"];
+    H2["XYUV"] += temp["XYUV"];
+    H2["xyuv"] -= temp["xyvu"];
+    H2["XYUV"] -= temp["XYVU"];
+
+    H2["xYuV"] += Hoei["eu"] * T2_["xYeV"];
+    H2["xYuV"] += Hoei["EV"] * T2_["xYuE"];
+
+    temp["xyuv"] = Hoei["xm"] * T2_["myuv"];
+    temp["XYUV"] = Hoei["XM"] * T2_["MYUV"];
+
+    H2["xyuv"] -= temp["xyuv"];
+    H2["XYUV"] -= temp["XYUV"];
+    H2["xyuv"] += temp["yxuv"];
+    H2["XYUV"] += temp["YXUV"];
+
+    H2["xYuV"] -= Hoei["xm"] * T2_["mYuV"];
+    H2["xYuV"] -= Hoei["YM"] * T2_["xMuV"];
+
+    H2["xyuv"] += 0.5 * V_["abuv"] * T2_["xyab"];
+    H2["xYuV"] += V_["aBuV"] * T2_["xYaB"];
+    H2["XYUV"] += 0.5 * V_["ABUV"] * T2_["XYAB"];
+
+    H2["xyuv"] -= 0.5 * V_["xyij"] * T2_["ijuv"];
+    H2["xYuV"] -= V_["xYiJ"] * T2_["iJuV"];
+    H2["XYUV"] -= 0.5 * V_["XYIJ"] * T2_["IJUV"];
+
+    H2["xyuv"] += V_["xyim"] * T2_["imuv"];
+    H2["xYuV"] += V_["xYiM"] * T2_["iMuV"];
+    H2["xYuV"] += V_["xYmI"] * T2_["mIuV"];
+    H2["XYUV"] += V_["XYIM"] * T2_["IMUV"];
+
+    temp["xyuv"] = V_["ayum"] * T2_["xmav"];
+    temp["xyuv"] += V_["yAuM"] * T2_["xMvA"];
+    temp["XYUV"] = V_["aYmU"] * T2_["mXaV"];
+    temp["XYUV"] += V_["AYUM"] * T2_["XMAV"];
+
+    H2["xyuv"] -= temp["xyuv"];
+    H2["XYUV"] -= temp["XYUV"];
+    H2["xyuv"] += temp["yxuv"];
+    H2["XYUV"] += temp["YXUV"];
+    H2["xyuv"] += temp["xyvu"];
+    H2["XYUV"] += temp["XYVU"];
+    H2["xyuv"] -= temp["yxvu"];
+    H2["XYUV"] -= temp["YXVU"];
+
+    H2["xYuV"] -= V_["aYuM"] * T2_["xMaV"];
+    H2["xYuV"] += V_["xaum"] * T2_["mYaV"];
+    H2["xYuV"] += V_["xAuM"] * T2_["MYAV"];
+    H2["xYuV"] += V_["aYmV"] * T2_["xmua"];
+    H2["xYuV"] += V_["AYMV"] * T2_["xMuA"];
+    H2["xYuV"] -= V_["xAmV"] * T2_["mYuA"];
+
+    // 3-body
+    H2_T2_C3(V_, T2_, 1.0, H3, true);
+}
+
 void THREE_DSRG_MRPT2::de_normal_order() {
     // printing
     print_h2("De-Normal-Order the DSRG Transformed Hamiltonian");
@@ -3594,7 +3847,9 @@ void THREE_DSRG_MRPT2::de_normal_order() {
 
     // test if de-normal-ordering is correct
     print_h2("Test De-Normal-Ordered Hamiltonian");
-    double Etest = scalar_include_fc + molecule_->nuclear_repulsion_energy(reference_wavefunction_->get_dipole_field_strength());
+    double Etest =
+        scalar_include_fc +
+        molecule_->nuclear_repulsion_energy(reference_wavefunction_->get_dipole_field_strength());
 
     double Etest1 = 0.0;
     Etest1 += temp1["uv"] * Gamma1_["vu"];
@@ -3618,33 +3873,6 @@ void THREE_DSRG_MRPT2::de_normal_order() {
     if (std::fabs(Etest - Eref_ - Hbar0_) > 100.0 * options_.get_double("E_CONVERGENCE")) {
         throw PSIEXCEPTION("De-normal-odering failed.");
     }
-}
-
-bool THREE_DSRG_MRPT2::check_semicanonical() {
-    bool semi = check_semi_orbs();
-    if (ignore_semicanonical_) {
-        std::string actv_type = options_.get_str("FCIMO_ACTV_TYPE");
-        if (actv_type == "CIS" || actv_type == "CISD") {
-            outfile->Printf("\n    It is OK for Fock (active) not being diagonal because %s "
-                            "active space is incomplete.",
-                            actv_type.c_str());
-            outfile->Printf("\n    Please inspect if the Fock diag. blocks (C, AH, AP, V) "
-                            "are diagonal or not in the prior CI step.");
-
-        } else {
-            outfile->Printf("\n    Warning: ignore testing of semi-canonical orbitals.");
-            outfile->Printf("\n    Please inspect if the Fock diag. blocks (C, A, V) are "
-                            "diagonal or not.");
-
-            warnings_.push_back(std::make_tuple("Semicanonical orbital test",
-                                                "Ignore test results",
-                                                "Post an issue for advice"));
-        }
-        outfile->Printf("\n");
-        semi = true;
-    }
-
-    return semi;
 }
 
 std::vector<std::vector<double>> THREE_DSRG_MRPT2::diagonalize_Fock_diagblocks(BlockedTensor& U) {
@@ -3802,62 +4030,82 @@ void THREE_DSRG_MRPT2::combine_tensor(ambit::Tensor& tens, ambit::Tensor& tens_h
     }
 }
 
-double THREE_DSRG_MRPT2::Tamp_deGNO() {
-    // de-normal-order T1
-    T1eff_ = BTF_->build(tensor_type_, "Effective T1 from de-GNO", spin_cases({"hp"}));
+ambit::BlockedTensor THREE_DSRG_MRPT2::get_T1deGNO(double& T0deGNO) {
+    ambit::BlockedTensor T1eff = deGNO_Tamp(T1_, T2_, Gamma1_);
 
-    T1eff_["ia"] = T1_["ia"];
-    T1eff_["IA"] = T1_["IA"];
-
-    T1eff_["ia"] -= T2_["iuav"] * Gamma1_["vu"];
-    T1eff_["ia"] -= T2_["iUaV"] * Gamma1_["VU"];
-    T1eff_["IA"] -= T2_["uIvA"] * Gamma1_["vu"];
-    T1eff_["IA"] -= T2_["IUAV"] * Gamma1_["VU"];
-
-    double out = 0.0;
     if (internal_amp_) {
         // the scalar term of amplitudes when de-normal-ordering
-        out -= T1_["uv"] * Gamma1_["vu"];
-        out -= T1_["UV"] * Gamma1_["VU"];
+        T0deGNO -= T1_["uv"] * Gamma1_["vu"];
+        T0deGNO -= T1_["UV"] * Gamma1_["VU"];
 
-        out -= 0.25 * T2_["xyuv"] * Lambda2_["uvxy"];
-        out -= 0.25 * T2_["XYUV"] * Lambda2_["UVXY"];
-        out -= T2_["xYuV"] * Lambda2_["uVxY"];
+        T0deGNO -= 0.25 * T2_["xyuv"] * Lambda2_["uvxy"];
+        T0deGNO -= 0.25 * T2_["XYUV"] * Lambda2_["UVXY"];
+        T0deGNO -= T2_["xYuV"] * Lambda2_["uVxY"];
 
-        out += 0.5 * T2_["xyuv"] * Gamma1_["ux"] * Gamma1_["vy"];
-        out += 0.5 * T2_["XYUV"] * Gamma1_["UX"] * Gamma1_["VY"];
-        out += T2_["xYuV"] * Gamma1_["ux"] * Gamma1_["VY"];
+        T0deGNO += 0.5 * T2_["xyuv"] * Gamma1_["ux"] * Gamma1_["vy"];
+        T0deGNO += 0.5 * T2_["XYUV"] * Gamma1_["UX"] * Gamma1_["VY"];
+        T0deGNO += T2_["xYuV"] * Gamma1_["ux"] * Gamma1_["VY"];
     }
 
-    return out;
+    return T1eff;
 }
 
-ambit::BlockedTensor THREE_DSRG_MRPT2::get_T1(const std::vector<std::string>& blocks) {
-    for (const std::string& block : blocks) {
-        if (!T1_.is_block(block)) {
-            std::string error = "Error from T1(blocks): cannot find block " + block;
-            throw PSIEXCEPTION(error);
-        }
-    }
-    ambit::BlockedTensor out = ambit::BlockedTensor::build(tensor_type_, "T1 selected", blocks);
-    out["ia"] = T1_["ia"];
-    out["IA"] = T1_["IA"];
-    return out;
-}
+// double THREE_DSRG_MRPT2::Tamp_deGNO() {
+//    // de-normal-order T1
+//    T1eff_ = BTF_->build(tensor_type_, "Effective T1 from de-GNO", spin_cases({"hp"}));
 
-ambit::BlockedTensor THREE_DSRG_MRPT2::get_T1deGNO(const std::vector<std::string>& blocks) {
-    for (const std::string& block : blocks) {
-        if (!T1eff_.is_block(block)) {
-            std::string error = "Error from T1deGNO(blocks): cannot find block " + block;
-            throw PSIEXCEPTION(error);
-        }
-    }
-    ambit::BlockedTensor out =
-        ambit::BlockedTensor::build(tensor_type_, "T1deGNO selected", blocks);
-    out["ia"] = T1eff_["ia"];
-    out["IA"] = T1eff_["IA"];
-    return out;
-}
+//    T1eff_["ia"] = T1_["ia"];
+//    T1eff_["IA"] = T1_["IA"];
+
+//    T1eff_["ia"] -= T2_["iuav"] * Gamma1_["vu"];
+//    T1eff_["ia"] -= T2_["iUaV"] * Gamma1_["VU"];
+//    T1eff_["IA"] -= T2_["uIvA"] * Gamma1_["vu"];
+//    T1eff_["IA"] -= T2_["IUAV"] * Gamma1_["VU"];
+
+//    double out = 0.0;
+//    if (internal_amp_) {
+//        // the scalar term of amplitudes when de-normal-ordering
+//        out -= T1_["uv"] * Gamma1_["vu"];
+//        out -= T1_["UV"] * Gamma1_["VU"];
+
+//        out -= 0.25 * T2_["xyuv"] * Lambda2_["uvxy"];
+//        out -= 0.25 * T2_["XYUV"] * Lambda2_["UVXY"];
+//        out -= T2_["xYuV"] * Lambda2_["uVxY"];
+
+//        out += 0.5 * T2_["xyuv"] * Gamma1_["ux"] * Gamma1_["vy"];
+//        out += 0.5 * T2_["XYUV"] * Gamma1_["UX"] * Gamma1_["VY"];
+//        out += T2_["xYuV"] * Gamma1_["ux"] * Gamma1_["VY"];
+//    }
+
+//    return out;
+//}
+
+// ambit::BlockedTensor THREE_DSRG_MRPT2::get_T1(const std::vector<std::string>& blocks) {
+//    for (const std::string& block : blocks) {
+//        if (!T1_.is_block(block)) {
+//            std::string error = "Error from T1(blocks): cannot find block " + block;
+//            throw PSIEXCEPTION(error);
+//        }
+//    }
+//    ambit::BlockedTensor out = ambit::BlockedTensor::build(tensor_type_, "T1 selected", blocks);
+//    out["ia"] = T1_["ia"];
+//    out["IA"] = T1_["IA"];
+//    return out;
+//}
+
+// ambit::BlockedTensor THREE_DSRG_MRPT2::get_T1deGNO(const std::vector<std::string>& blocks) {
+//    for (const std::string& block : blocks) {
+//        if (!T1eff_.is_block(block)) {
+//            std::string error = "Error from T1deGNO(blocks): cannot find block " + block;
+//            throw PSIEXCEPTION(error);
+//        }
+//    }
+//    ambit::BlockedTensor out =
+//        ambit::BlockedTensor::build(tensor_type_, "T1deGNO selected", blocks);
+//    out["ia"] = T1eff_["ia"];
+//    out["IA"] = T1eff_["IA"];
+//    return out;
+//}
 
 ambit::BlockedTensor THREE_DSRG_MRPT2::get_T2(const std::vector<std::string>& blocks) {
     for (const std::string& block : blocks) {

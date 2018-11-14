@@ -106,7 +106,7 @@ void CI_RDMS::set_max_rdm(int rdm) { max_rdm_ = rdm; }
 double CI_RDMS::get_energy(std::vector<double>& oprdm_a, std::vector<double>& oprdm_b,
                            std::vector<double>& tprdm_aa, std::vector<double>& tprdm_bb,
                            std::vector<double>& tprdm_ab) {
-    double nuc_rep = Process::environment.molecule()->nuclear_repulsion_energy({0,0,0});
+    double nuc_rep = Process::environment.molecule()->nuclear_repulsion_energy({0, 0, 0});
     double scalar_energy = fci_ints_->frozen_core_energy() + fci_ints_->scalar_energy();
     double energy_1rdm = 0.0;
     double energy_2rdm = 0.0;
@@ -155,8 +155,8 @@ void CI_RDMS::compute_1rdm(std::vector<double>& oprdm_a, std::vector<double>& op
         outfile->Printf("\n  Time spent forming 1-map:   %1.6f", one.get());
 
     Timer build;
-    oprdm_a.resize(ncmo2_, 0.0);
-    oprdm_b.resize(ncmo2_, 0.0);
+    oprdm_a.assign(ncmo2_, 0.0);
+    oprdm_b.assign(ncmo2_, 0.0);
     for (size_t J = 0; J < dim_space_; ++J) {
         for (auto& aJ_mo_sign : a_ann_list_[J]) {
             const size_t aJ_add = aJ_mo_sign.first;
@@ -195,8 +195,8 @@ void CI_RDMS::compute_1rdm(std::vector<double>& oprdm_a, std::vector<double>& op
     std::vector<std::vector<std::pair<size_t, short>>>& b_list = op.b_list_;
 
     Timer build;
-    oprdm_a.resize(ncmo2_, 0.0);
-    oprdm_b.resize(ncmo2_, 0.0);
+    oprdm_a.assign(ncmo2_, 0.0);
+    oprdm_b.assign(ncmo2_, 0.0);
 
     //// Do something about diagonal
     const det_hashvec& dets = wfn_.wfn_hash();
@@ -263,9 +263,9 @@ void CI_RDMS::compute_1rdm(std::vector<double>& oprdm_a, std::vector<double>& op
 
 void CI_RDMS::compute_2rdm(std::vector<double>& tprdm_aa, std::vector<double>& tprdm_ab,
                            std::vector<double>& tprdm_bb) {
-    tprdm_aa.resize(ncmo4_, 0.0);
-    tprdm_ab.resize(ncmo4_, 0.0);
-    tprdm_bb.resize(ncmo4_, 0.0);
+    tprdm_aa.assign(ncmo4_, 0.0);
+    tprdm_ab.assign(ncmo4_, 0.0);
+    tprdm_bb.assign(ncmo4_, 0.0);
 
     Timer two;
     get_two_map();
@@ -349,9 +349,9 @@ void CI_RDMS::compute_2rdm(std::vector<double>& tprdm_aa, std::vector<double>& t
 
     const det_hashvec& dets = wfn_.wfn_hash();
 
-    tprdm_aa.resize(ncmo4_, 0.0);
-    tprdm_ab.resize(ncmo4_, 0.0);
-    tprdm_bb.resize(ncmo4_, 0.0);
+    tprdm_aa.assign(ncmo4_, 0.0);
+    tprdm_ab.assign(ncmo4_, 0.0);
+    tprdm_bb.assign(ncmo4_, 0.0);
 
     std::vector<std::vector<std::tuple<size_t, short, short>>>& aa_list = op.aa_list_;
     std::vector<std::vector<std::tuple<size_t, short, short>>>& ab_list = op.ab_list_;
@@ -507,10 +507,10 @@ void CI_RDMS::compute_3rdm(std::vector<double>& tprdm_aaa, std::vector<double>& 
     size_t ncmo5 = ncmo4_ * ncmo_;
     size_t ncmo6 = ncmo3_ * ncmo3_;
 
-    tprdm_aaa.resize(ncmo6, 0.0);
-    tprdm_aab.resize(ncmo6, 0.0);
-    tprdm_abb.resize(ncmo6, 0.0);
-    tprdm_bbb.resize(ncmo6, 0.0);
+    tprdm_aaa.assign(ncmo6, 0.0);
+    tprdm_aab.assign(ncmo6, 0.0);
+    tprdm_abb.assign(ncmo6, 0.0);
+    tprdm_bbb.assign(ncmo6, 0.0);
 
     Timer three;
     get_three_map();
@@ -701,10 +701,10 @@ void CI_RDMS::compute_3rdm(std::vector<double>& tprdm_aaa, std::vector<double>& 
     size_t ncmo5 = ncmo4_ * ncmo_;
     size_t ncmo6 = ncmo3_ * ncmo3_;
 
-    tprdm_aaa.resize(ncmo6, 0.0);
-    tprdm_aab.resize(ncmo6, 0.0);
-    tprdm_abb.resize(ncmo6, 0.0);
-    tprdm_bbb.resize(ncmo6, 0.0);
+    tprdm_aaa.assign(ncmo6, 0.0);
+    tprdm_aab.assign(ncmo6, 0.0);
+    tprdm_abb.assign(ncmo6, 0.0);
+    tprdm_bbb.assign(ncmo6, 0.0);
 
     std::vector<std::vector<std::tuple<size_t, short, short, short>>>& aaa_list = op.aaa_list_;
     std::vector<std::vector<std::tuple<size_t, short, short, short>>>& aab_list = op.aab_list_;

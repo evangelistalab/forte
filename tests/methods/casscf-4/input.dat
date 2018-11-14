@@ -20,8 +20,8 @@ set globals{
    d_convergence        10
    e_convergence        10
    basis                3-21g
-   restricted_docc                 [2,0,0,0]
-   active                          [1,0,0,1]
+   restricted_docc      [2,0,0,0]
+   active               [1,0,0,1]
    maxiter              20
    reference            RHF
    MCSCF_E_CONVERGENCE  8

@@ -88,9 +88,6 @@ class DSRG_MRPT3 : public MASTER_DSRG {
         p_spaces_ = p_spaces;
     }
 
-    /// Ignore semi-canonical testing in DSRG-MRPT3
-    void ignore_semicanonical(bool ignore) { ignore_semicanonical_ = ignore; }
-
   protected:
     // => Class initialization and termination <= //
 
@@ -129,10 +126,6 @@ class DSRG_MRPT3 : public MASTER_DSRG {
 
     /// Are orbitals semi-canonicalized?
     bool semi_canonical_;
-    /// Ignore semi-canonical testing result
-    bool ignore_semicanonical_ = false;
-    /// Check if orbitals are semi-canonicalized
-    bool check_semicanonical();
     /// Diagonal elements of Fock matrices
     std::vector<double> Fa_;
     std::vector<double> Fb_;
@@ -284,11 +277,8 @@ class DSRG_MRPT3 : public MASTER_DSRG {
 
     /// Rotate RDMs computed by eigens_ (in original basis) to semicanonical basis
     /// so that they are in the same basis as amplitudes (in semicanonical basis)
-    void rotate_1rdm(std::vector<double>& opdm_a, std::vector<double>& opdm_b);
-    void rotate_2rdm(std::vector<double>& tpdm_aa, std::vector<double>& tpdm_ab,
-                     std::vector<double>& tpdm_bb);
-    void rotate_3rdm(std::vector<double>& tpdm_aaa, std::vector<double>& tpdm_aab,
-                     std::vector<double>& tpdm_abb, std::vector<double>& tpdm_bbb);
+    void rotate_1rdm(ambit::Tensor& L1a, ambit::Tensor& L1b);
+    void rotate_2rdm(ambit::Tensor& L2aa, ambit::Tensor& L2ab, ambit::Tensor& L2bb);
 
     // => Dipole related <= //
 

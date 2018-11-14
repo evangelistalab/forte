@@ -56,8 +56,6 @@ void DSRG_TIME::add(const std::string& code, const double& t) {
         if (iter != code_.end()) {
             timing_[code_to_tidx_[code]] += t;
         } else {
-//            print_h2("Echo from DSRG_TIME", "!!!", "!!!");
-//            outfile->Printf("  Cannot find time code %s. Add nothing.", code.c_str());
             create_code(code);
             timing_[code_to_tidx_[code]] += t;
         }

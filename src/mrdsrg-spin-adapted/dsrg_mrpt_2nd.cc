@@ -87,7 +87,7 @@ double DSRG_MRPT::compute_energy_pt2() {
     }
 
     outfile->Printf("\n\n  DSRG-MRPT2 energy took %10.3f s.", DSRG_energy.get());
-    return Etotal;
+    return Ecorr;
 }
 
 void DSRG_MRPT::renormalize_V_E2nd() {

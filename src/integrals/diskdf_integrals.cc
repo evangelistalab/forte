@@ -377,15 +377,7 @@ void DISKDFIntegrals::gather_integrals() {
     outfile->Printf("\n Computing Density fitted integrals \n");
 
     std::shared_ptr<BasisSet> primary = wfn_->basisset();
-    if (options_.get_str("DF_BASIS_MP2").length() == 0) {
-        outfile->Printf("\n Please set a DF_BASIS_MP2 option to a specified "
-                        "auxiliary basis set");
-        throw PSIEXCEPTION("Select a DF_BASIS_MP2 for use with DFIntegrals");
-    }
-
     std::shared_ptr<BasisSet> auxiliary = wfn_->get_basisset("DF_BASIS_MP2");
-    //            BasisSet::pyconstruct_orbital(primary->molecule(),
-    //            "DF_BASIS_MP2",options_.get_str("DF_BASIS_MP2"));
 
     size_t nprim = primary->nbf();
     size_t naux = auxiliary->nbf();

@@ -68,6 +68,14 @@ void MASTER_DSRG::startup() {
 
     // recompute reference energy from ForteIntegral and check consistency with Reference
     check_init_reference_energy();
+
+    // initialize Uactv_ to identity
+    Uactv_ = BTF_->build(tensor_type_, "Uactv", spin_cases({"aa"}));
+    Uactv_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+        if (i[0] == i[1]) {
+            value = 1.0;
+        }
+    });
 }
 
 void MASTER_DSRG::read_options() {
@@ -229,7 +237,6 @@ void MASTER_DSRG::build_fock_from_ints(std::shared_ptr<ForteIntegrals> ints, Blo
     F = BTF_->build(tensor_type_, "Fock", spin_cases({"gg"}));
 
     // for convenience, directly call make_fock_matrix in ForteIntegral
-
     SharedMatrix D1a(new Matrix("D1a", ncmo, ncmo));
     SharedMatrix D1b(new Matrix("D1b", ncmo, ncmo));
     for (size_t m = 0, ncore = core_mos_.size(); m < ncore; m++) {
@@ -286,6 +293,8 @@ void MASTER_DSRG::check_init_reference_energy() {
                                             "A bug? Post an issue."));
         Eref_ = E;
     }
+
+    Process::environment.globals["DSRG REFERENCE ENERGY"] = Eref_;
 }
 
 double MASTER_DSRG::compute_reference_energy_from_ints(std::shared_ptr<ForteIntegrals> ints) {
@@ -318,7 +327,7 @@ double MASTER_DSRG::compute_reference_energy_from_ints(std::shared_ptr<ForteInte
 
     // an identity tensor of shape 1 * nc * 1 * nc for F["mm"] <- sum_{n} V["mnmn"]
     size_t nc = core_mos_.size();
-    std::vector<size_t> Idims {1, nc, 1, nc};
+    std::vector<size_t> Idims{1, nc, 1, nc};
     ambit::Tensor I = ambit::Tensor::build(tensor_type_, "I", Idims);
     I.iterate([&](const std::vector<size_t>& i, double& value) {
         if (i[1] == i[3]) {
@@ -518,7 +527,7 @@ void MASTER_DSRG::compute_dm_ref() {
     }
 }
 
-std::shared_ptr<FCIIntegrals> MASTER_DSRG::compute_Heff() {
+std::shared_ptr<FCIIntegrals> MASTER_DSRG::compute_Heff_actv() {
     // de-normal-order DSRG transformed Hamiltonian
     double Edsrg = Eref_ + Hbar0_;
     if (options_.get_bool("FORM_HBAR3")) {
@@ -528,54 +537,6 @@ std::shared_ptr<FCIIntegrals> MASTER_DSRG::compute_Heff() {
         deGNO_ints("Hamiltonian", Edsrg, Hbar1_, Hbar2_);
         rotate_ints_semi_to_origin("Hamiltonian", Hbar1_, Hbar2_);
     }
-
-    //    if (!eri_df_) {
-    //        ints_->set_print(0);
-    //        Timer t_int;
-    //        outfile->Printf("\n    %-40s ... ", "Updating integrals");
-
-    //        // transfer integrals to ForteIntegrals
-    //        ints_->set_scalar(Edsrg - Enuc_ - Efrzc_);
-
-    //        // TODO: before zero hhhh integrals, is is probably good to save a copy
-    //        std::vector<size_t> hole_mos = mo_space_info_->get_corr_abs_mo("GENERALIZED HOLE");
-    //        for (const size_t& i : hole_mos) {
-    //            for (const size_t& j : hole_mos) {
-    //                ints_->set_oei(i, j, 0.0, true);
-    //                ints_->set_oei(i, j, 0.0, false);
-    //                for (const size_t& k : hole_mos) {
-    //                    for (const size_t& l : hole_mos) {
-    //                        ints_->set_tei(i, j, k, l, 0.0, true, true);
-    //                        ints_->set_tei(i, j, k, l, 0.0, true, false);
-    //                        ints_->set_tei(i, j, k, l, 0.0, false, false);
-    //                    }
-    //                }
-    //            }
-    //        }
-
-    //        Hbar1_.citerate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin,
-    //                            const double& value) {
-    //            if (spin[0] == AlphaSpin) {
-    //                ints_->set_oei(i[0], i[1], value, true);
-    //            } else {
-    //                ints_->set_oei(i[0], i[1], value, false);
-    //            }
-    //        });
-
-    //        Hbar2_.citerate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin,
-    //                            const double& value) {
-    //            if ((spin[0] == AlphaSpin) && (spin[1] == AlphaSpin)) {
-    //                ints_->set_tei(i[0], i[1], i[2], i[3], value, true, true);
-    //            } else if ((spin[0] == AlphaSpin) && (spin[1] == BetaSpin)) {
-    //                ints_->set_tei(i[0], i[1], i[2], i[3], value, true, false);
-    //            } else if ((spin[0] == BetaSpin) && (spin[1] == BetaSpin)) {
-    //                ints_->set_tei(i[0], i[1], i[2], i[3], value, false, false);
-    //            }
-    //        });
-
-    //        outfile->Printf("Done. Timing %8.3f s", t_int.get());
-    //        ints_->set_print(print_);
-    //    }
 
     // create FCIIntegral shared_ptr
     std::shared_ptr<FCIIntegrals> fci_ints =
@@ -725,6 +686,21 @@ void MASTER_DSRG::fill_three_index_ints(ambit::BlockedTensor T)
     }
 }
 
+ambit::BlockedTensor MASTER_DSRG::deGNO_Tamp(BlockedTensor& T1, BlockedTensor& T2,
+                                             BlockedTensor& D1) {
+    BlockedTensor T1eff = BTF_->build(tensor_type_, "T1eff from de-GNO", spin_cases({"hp"}));
+
+    T1eff["ia"] = T1["ia"];
+    T1eff["IA"] = T1["IA"];
+
+    T1eff["ia"] -= T2["iuav"] * D1["vu"];
+    T1eff["ia"] -= T2["iUaV"] * D1["VU"];
+    T1eff["IA"] -= T2["uIvA"] * D1["vu"];
+    T1eff["IA"] -= T2["IUAV"] * D1["VU"];
+
+    return T1eff;
+}
+
 void MASTER_DSRG::rotate_ints_semi_to_origin(const std::string& name, BlockedTensor& H1,
                                              BlockedTensor& H2) {
 
@@ -784,7 +760,7 @@ void MASTER_DSRG::rotate_ints_semi_to_origin(const std::string& name, BlockedTen
     outfile->Printf("Done. Timing %8.3f s", timer2.get());
 
     Timer timer3;
-    outfile->Printf("\n    %-40s ... ", "Rotating 3-body to original basis");
+    outfile->Printf("\n    %-40s ... ", "Rotating 3-body term to original basis");
     temp = H3.block("aaaaaa").clone(tensor_type_);
     H3.block("aaaaaa")("pqrstu") =
         Ua("pa") * Ua("qb") * Ua("rc") * temp("abcijk") * Ua("si") * Ua("tj") * Ua("uk");
@@ -802,6 +778,25 @@ void MASTER_DSRG::rotate_ints_semi_to_origin(const std::string& name, BlockedTen
         Ub("pa") * Ub("qb") * Ub("rc") * temp("abcijk") * Ub("si") * Ub("tj") * Ub("uk");
 
     outfile->Printf("Done. Timing %8.3f s", timer3.get());
+}
+
+std::vector<ambit::Tensor> MASTER_DSRG::Hbar(int n) {
+    std::vector<ambit::Tensor> out;
+    if (n == 1) {
+        out = {Hbar1_.block("aa"), Hbar1_.block("AA")};
+    } else if (n == 2) {
+        out = {Hbar2_.block("aaaa"), Hbar2_.block("aAaA"), Hbar2_.block("AAAA")};
+    } else if (n == 3) {
+        if (options_.get_bool("FORM_HBAR3")) {
+            out = {Hbar3_.block("aaaaaa"), Hbar3_.block("aaAaaA"), Hbar3_.block("aAAaAA"),
+                   Hbar3_.block("AAAAAA")};
+        } else {
+            throw PSIEXCEPTION("Hbar3 is not formed. Check your code.");
+        }
+    } else {
+        throw PSIEXCEPTION("Only 1, 2, and 3 Hbar are in Tensor format.");
+    }
+    return out;
 }
 
 void MASTER_DSRG::H1_T1_C0(BlockedTensor& H1, BlockedTensor& T1, const double& alpha, double& C0) {
@@ -1759,8 +1754,168 @@ void MASTER_DSRG::H2_T2_C3(BlockedTensor& H2, BlockedTensor& T2, const double& a
     dsrg_time_.add("223", timer.get());
 }
 
+dsrgHeff MASTER_DSRG::commutator_HT_noGNO(ambit::BlockedTensor H1, ambit::BlockedTensor H2,
+                                          ambit::BlockedTensor T1, ambit::BlockedTensor T2) {
+    dsrgHeff Heff;
+
+    Heff.H1 = BTF_->build(tensor_type_, "[H,T]1", spin_cases({"aa"}));
+    Heff.H1a = Heff.H1.block("aa");
+    Heff.H1b = Heff.H1.block("AA");
+
+    Heff.H2 = BTF_->build(tensor_type_, "[H,T]2", spin_cases({"aaaa"}));
+    Heff.H2aa = Heff.H2.block("aaaa");
+    Heff.H2ab = Heff.H2.block("aAaA");
+    Heff.H2bb = Heff.H2.block("AAAA");
+
+    Heff.H3 = BTF_->build(tensor_type_, "[H,T]3", spin_cases({"aaaaaa"}));
+    Heff.H3aaa = Heff.H3.block("aaaaaa");
+    Heff.H3aab = Heff.H3.block("aaAaaA");
+    Heff.H3abb = Heff.H3.block("aAAaAA");
+    Heff.H3bbb = Heff.H3.block("AAAAAA");
+
+    // scalar
+    double& H0 = Heff.H0;
+    H0 += H1["am"] * T1["ma"];
+    H0 += H1["AM"] * T1["MA"];
+
+    H0 += 0.25 * H2["abmn"] * T2["mnab"];
+    H0 += H2["aBmN"] * T2["mNaB"];
+    H0 += 0.25 * H2["ABMN"] * T2["MNAB"];
+
+    // 1-body
+    ambit::BlockedTensor& C1 = Heff.H1;
+    C1["vu"] += H1["eu"] * T1["ve"];
+    C1["VU"] += H1["EU"] * T1["VE"];
+
+    C1["vu"] -= H1["vm"] * T1["mu"];
+    C1["VU"] -= H1["VM"] * T1["MU"];
+
+    C1["vu"] += H2["avmu"] * T1["ma"];
+    C1["vu"] += H2["vAuM"] * T1["MA"];
+    C1["VU"] += H2["aVmU"] * T1["ma"];
+    C1["VU"] += H2["AVMU"] * T1["MA"];
+
+    C1["vu"] += H1["am"] * T2["vmua"];
+    C1["vu"] += H1["AM"] * T2["vMuA"];
+    C1["VU"] += H1["am"] * T2["mVaU"];
+    C1["VU"] += H1["AM"] * T2["VMUA"];
+
+    C1["vu"] += 0.5 * H2["abum"] * T2["vmab"];
+    C1["vu"] += H2["aBuM"] * T2["vMaB"];
+    C1["VU"] += H2["aBmU"] * T2["mVaB"];
+    C1["VU"] += 0.5 * H2["ABUM"] * T2["VMAB"];
+
+    C1["vu"] -= 0.5 * H2["avmn"] * T2["mnau"];
+    C1["vu"] -= H2["vAmN"] * T2["mNuA"];
+    C1["VU"] -= H2["aVmN"] * T2["mNaU"];
+    C1["VU"] -= 0.5 * H2["AVMN"] * T2["MNAU"];
+
+    // 2-body
+    ambit::BlockedTensor& C2 = Heff.H2;
+    BlockedTensor temp = BTF_->build(tensor_type_, "temp", {"aaaa", "AAAA"});
+
+    temp["xyuv"] = H2["eyuv"] * T1["xe"];
+    temp["XYUV"] = H2["EYUV"] * T1["XE"];
+
+    C2["xyuv"] += temp["xyuv"];
+    C2["XYUV"] += temp["XYUV"];
+    C2["xyuv"] -= temp["yxuv"];
+    C2["XYUV"] -= temp["YXUV"];
+
+    C2["xYuV"] += H2["eYuV"] * T1["xe"];
+    C2["xYuV"] += H2["xEuV"] * T1["YE"];
+
+    temp["xyuv"] = H2["xymv"] * T1["mu"];
+    temp["XYUV"] = H2["XYMV"] * T1["MU"];
+
+    C2["xyuv"] -= temp["xyuv"];
+    C2["XYUV"] -= temp["XYUV"];
+    C2["xyuv"] += temp["xyvu"];
+    C2["XYUV"] += temp["XYVU"];
+
+    C2["xYuV"] -= H2["xYmV"] * T1["mu"];
+    C2["xYuV"] -= H2["xYuM"] * T1["MV"];
+
+    temp["xyuv"] = H1["eu"] * T2["xyev"];
+    temp["XYUV"] = H1["EU"] * T2["XYEV"];
+
+    C2["xyuv"] += temp["xyuv"];
+    C2["XYUV"] += temp["XYUV"];
+    C2["xyuv"] -= temp["xyvu"];
+    C2["XYUV"] -= temp["XYVU"];
+
+    C2["xYuV"] += H1["eu"] * T2["xYeV"];
+    C2["xYuV"] += H1["EV"] * T2["xYuE"];
+
+    temp["xyuv"] = H1["xm"] * T2["myuv"];
+    temp["XYUV"] = H1["XM"] * T2["MYUV"];
+
+    C2["xyuv"] -= temp["xyuv"];
+    C2["XYUV"] -= temp["XYUV"];
+    C2["xyuv"] += temp["yxuv"];
+    C2["XYUV"] += temp["YXUV"];
+
+    C2["xYuV"] -= H1["xm"] * T2["mYuV"];
+    C2["xYuV"] -= H1["YM"] * T2["xMuV"];
+
+    C2["xyuv"] += 0.5 * H2["abuv"] * T2["xyab"];
+    C2["xYuV"] += H2["aBuV"] * T2["xYaB"];
+    C2["XYUV"] += 0.5 * H2["ABUV"] * T2["XYAB"];
+
+    C2["xyuv"] -= 0.5 * H2["xyij"] * T2["ijuv"];
+    C2["xYuV"] -= H2["xYiJ"] * T2["iJuV"];
+    C2["XYUV"] -= 0.5 * H2["XYIJ"] * T2["IJUV"];
+
+    C2["xyuv"] += H2["xyim"] * T2["imuv"];
+    C2["xYuV"] += H2["xYiM"] * T2["iMuV"];
+    C2["xYuV"] += H2["xYmI"] * T2["mIuV"];
+    C2["XYUV"] += H2["XYIM"] * T2["IMUV"];
+
+    temp["xyuv"] = H2["ayum"] * T2["xmav"];
+    temp["xyuv"] += H2["yAuM"] * T2["xMvA"];
+    temp["XYUV"] = H2["aYmU"] * T2["mXaV"];
+    temp["XYUV"] += H2["AYUM"] * T2["XMAV"];
+
+    C2["xyuv"] -= temp["xyuv"];
+    C2["XYUV"] -= temp["XYUV"];
+    C2["xyuv"] += temp["yxuv"];
+    C2["XYUV"] += temp["YXUV"];
+    C2["xyuv"] += temp["xyvu"];
+    C2["XYUV"] += temp["XYVU"];
+    C2["xyuv"] -= temp["yxvu"];
+    C2["XYUV"] -= temp["YXVU"];
+
+    C2["xYuV"] -= H2["aYuM"] * T2["xMaV"];
+    C2["xYuV"] += H2["xaum"] * T2["mYaV"];
+    C2["xYuV"] += H2["xAuM"] * T2["MYAV"];
+    C2["xYuV"] += H2["aYmV"] * T2["xmua"];
+    C2["xYuV"] += H2["AYMV"] * T2["xMuA"];
+    C2["xYuV"] -= H2["xAmV"] * T2["mYuA"];
+
+    // 3-body
+    H2_T2_C3(H2, T2, 1.0, Heff.H3, true);
+
+    return Heff;
+}
+
 bool MASTER_DSRG::check_semi_orbs() {
     print_h2("Checking Semicanonical Orbitals");
+
+    std::string actv_type = options_.get_str("FCIMO_ACTV_TYPE");
+    if (actv_type == "CIS" || actv_type == "CISD") {
+        std::string job_type = options_.get_str("JOB_TYPE");
+        bool fci_mo = options_.get_str("CAS_TYPE") == "CAS";
+        if ((job_type == "MRDSRG" || job_type == "DSRG-MRPT3") && fci_mo) {
+            std::stringstream ss;
+            ss << "Unsupported FCIMO_ACTV_TYPE for " << job_type << " code.";
+            throw PSIEXCEPTION(ss.str());
+        }
+
+        outfile->Printf("\n    Incomplete active space %s is detected.", actv_type.c_str());
+        outfile->Printf("\n    Please make sure Semicanonical class has been called.");
+        outfile->Printf("\n    Abort checking semicanonical orbitals.");
+        return true;
+    }
 
     BlockedTensor Fd = BTF_->build(tensor_type_, "Fd", spin_cases({"cc", "aa", "vv"}));
     Fd["pq"] = Fock_["pq"];
@@ -1776,7 +1931,7 @@ bool MASTER_DSRG::check_semi_orbs() {
     std::vector<double> Fmax, Fnorm;
     double e_conv = options_.get_double("E_CONVERGENCE");
     double cd = options_.get_double("CHOLESKY_TOLERANCE");
-    e_conv = cd < e_conv ? e_conv : cd;
+    e_conv = cd < e_conv ? e_conv : cd * 0.1;
     e_conv = e_conv < 1.0e-12 ? 1.0e-12 : e_conv;
     double threshold_max = 10.0 * e_conv;
     for (const auto& block : {"cc", "aa", "vv", "CC", "AA", "VV"}) {
@@ -1812,7 +1967,6 @@ bool MASTER_DSRG::check_semi_orbs() {
         outfile->Printf("\n    Orbitals are semi-canonicalized.");
     } else {
         outfile->Printf("\n    Warning! Orbitals are not semi-canonicalized!");
-        outfile->Printf("\n    Energy is reliable about to the same digit as max(|Fij|, i != j).");
     }
 
     return semi;

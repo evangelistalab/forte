@@ -1,10 +1,15 @@
 #! Generated using commit GITCOMMIT
+memory 1 gb
 
 import forte
 
-Emcscf_avg = -106.75288506058001
-Ept2_root0 = -106.93005699410999
-Ept2_root1 = -106.91457784175027
+Emcscf_avg      = -106.75289569194828
+Ept2_root0      = -106.99125923711713
+Ept2_root1      = -106.98231128648528
+Ept2xsa_root0   = -106.99130493088082
+Ept2xsa_root1   = -106.98228339820706
+Ept2Hbar3_root0 = -106.99141638213850
+Ept2Hbar3_root1 = -106.98226280118608
 
 molecule {
   0 1
@@ -55,13 +60,14 @@ D   1   1.00
 
 set globals{
   reference           rhf
-  scf_type            out_of_core
+  scf_type            df
   maxiter             300
   e_convergence       10
   d_convergence       10
   docc                [4,0,1,1]
   restricted_docc     [3,0,1,1]
   active              [2,0,0,0]
+  mcscf_type          df
   mcscf_r_convergence 7
   mcscf_e_convergence 10
   mcscf_maxiter       250
@@ -73,21 +79,55 @@ set globals{
 
 set forte{
   job_type           dwms-dsrgpt2
-  frozen_docc        [3,0,0,0]
-  restricted_docc    [0,0,1,1]
-  active             [2,0,0,0]
+  int_type           df
+  frozen_docc        [2,0,0,0]
+  restricted_docc    [1,0,0,0]
+  active             [3,0,2,2]
   dsrg_s             0.5
   maxiter            50
   e_convergence      10
   cas_type           cas
   avg_state          [[0,1,2]]
-  dwms_zeta          100.0
-  dwms_algorithm     dwms-1
+  dwms_algorithm     sa
+  dwms_zeta          1000.0
 }
 
 Emcscf, wfn = energy('casscf', return_wfn=True)
 compare_values(Emcscf_avg,get_variable("CURRENT ENERGY"),8,"SA-CASSCF energy")
 
-energy('forte',ref_wfn=wfn)
-compare_values(Ept2_root0,get_variable("ENERGY ROOT 0"),8,"DWMS-DSRG-PT2 energy on root 0")
-compare_values(Ept2_root1,get_variable("ENERGY ROOT 1"),8,"DWMS-DSRG-PT2 energy on root 1")
+energy('forte', ref_wfn=wfn)
+E0 = get_variable("ENERGY ROOT 0")
+E1 = get_variable("ENERGY ROOT 1")
+compare_values(Ept2_root0,E0,8,"DWSA-DSRG-PT2 (DF) energy on root 0")
+compare_values(Ept2_root1,E1,8,"DWSA-DSRG-PT2 (DF) energy on root 1")
+
+set forte {
+  dwms_algorithm xsa
+}
+
+energy('forte', ref_wfn=wfn)
+E0 = get_variable("ENERGY ROOT 0")
+E1 = get_variable("ENERGY ROOT 1")
+compare_values(Ept2xsa_root0,E0,8,"DWXSA-DSRG-PT2 (DF) energy on root 0")
+compare_values(Ept2xsa_root1,E1,8,"DWXSA-DSRG-PT2 (DF) energy on root 1")
+
+set forte{
+  dwms_algorithm sa
+  form_hbar3     true
+}
+
+energy('forte', ref_wfn=wfn)
+E0 = get_variable("ENERGY ROOT 0")
+E1 = get_variable("ENERGY ROOT 1")
+compare_values(Ept2Hbar3_root0,E0,8,"DWSA-DSRG-PT2 (DF, HBAR3) energy on root 0")
+compare_values(Ept2Hbar3_root1,E1,8,"DWSA-DSRG-PT2 (DF, HBAR3) energy on root 1")
+
+set forte{
+  int_type diskdf
+}
+
+energy('forte', ref_wfn=wfn)
+E0 = get_variable("ENERGY ROOT 0")
+E1 = get_variable("ENERGY ROOT 1")
+compare_values(Ept2Hbar3_root0,E0,8,"DWSA-DSRG-PT2 (DiskDF, HBAR3) energy on root 0")
+compare_values(Ept2Hbar3_root1,E1,8,"DWSA-DSRG-PT2 (DiskDF, HBAR3) energy on root 1")

@@ -591,7 +591,9 @@ void SOMRDSRG::print_summary() {
 double SOMRDSRG::compute_energy() {
     print_h2("Computing the SO-MR-DSRG(2) energy");
 
-    E0_ = molecule_->nuclear_repulsion_energy(reference_wavefunction_->get_dipole_field_strength()) + ints_->frozen_core_energy();
+    E0_ =
+        molecule_->nuclear_repulsion_energy(reference_wavefunction_->get_dipole_field_strength()) +
+        ints_->frozen_core_energy();
     E0_ += F["qp"] * Gamma1["pq"];
     E0_ += -0.5 * V["rspq"] * Gamma1["pr"] * Gamma1["qs"];
     E0_ += 0.25 * V["rspq"] * Lambda2["pqrs"];

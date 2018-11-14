@@ -62,8 +62,8 @@ MCSRGPT2_MO::MCSRGPT2_MO(SharedWavefunction ref_wfn, Options& options,
 
     // semicanonicalize orbitals
     SemiCanonical semi(reference_wavefunction_, integral_, mo_space_info_);
-    if (active_space_type_ == "CIS" || active_space_type_ == "CISD") {
-        semi.set_actv_dims(active_h_, active_p_);
+    if (actv_space_type_ == "CIS" || actv_space_type_ == "CISD") {
+        semi.set_actv_dims(actv_hole_dim_, actv_part_dim_);
     }
     semi.semicanonicalize(ref, max_rdm_level);
 
@@ -135,12 +135,22 @@ void MCSRGPT2_MO::startup(Options& options) {
     taylor_order_ = floor((e_conv / taylor_threshold_ + 1.0) / expo_delta_) + 1;
 
     // Print Original Orbital Indices
-    outfile->Printf("\n\n  ==> Correlated Subspace Indices <==\n");
-    print_idx("CORE", idx_c_);
-    print_idx("ACTIVE", idx_a_);
-    print_idx("HOLE", idx_h_);
-    print_idx("VIRTUAL", idx_v_);
-    print_idx("PARTICLE", idx_p_);
+    print_h2("Correlated Subspace Indices");
+    auto print_idx = [&](const string& str, const std::vector<size_t>& vec) {
+        outfile->Printf("\n    %-30s", str.c_str());
+        size_t c = 0;
+        for (size_t x : vec) {
+            outfile->Printf("%4zu ", x);
+            ++c;
+            if (c % 15 == 0)
+                outfile->Printf("\n  %-32c", ' ');
+        }
+    };
+    print_idx("CORE", core_mos_);
+    print_idx("ACTIVE", actv_mos_);
+    print_idx("HOLE", hole_mos_);
+    print_idx("VIRTUAL", virt_mos_);
+    print_idx("PARTICLE", part_mos_);
     outfile->Printf("\n");
 
     // Compute Reference Energy
@@ -152,9 +162,9 @@ void MCSRGPT2_MO::startup(Options& options) {
     // 2-Particle Density Cumulant
     string twopdc = options.get_str("TWOPDC");
     if (twopdc == "ZERO") {
-        L2aa_ = d4(na_, d3(na_, d2(na_, d1(na_))));
-        L2ab_ = d4(na_, d3(na_, d2(na_, d1(na_))));
-        L2bb_ = d4(na_, d3(na_, d2(na_, d1(na_))));
+        L2aa_ = d4(nactv_, d3(nactv_, d2(nactv_, d1(nactv_))));
+        L2ab_ = d4(nactv_, d3(nactv_, d2(nactv_, d1(nactv_))));
+        L2bb_ = d4(nactv_, d3(nactv_, d2(nactv_, d1(nactv_))));
     }
 
     if (options.get_str("CORR_LEVEL") == "SRG_PT2") {
@@ -186,11 +196,11 @@ void MCSRGPT2_MO::startup(Options& options) {
         //        }
     } else {
         // Form T Amplitudes
-        T2aa_ = d4(nh_, d3(nh_, d2(npt_, d1(npt_))));
-        T2ab_ = d4(nh_, d3(nh_, d2(npt_, d1(npt_))));
-        T2bb_ = d4(nh_, d3(nh_, d2(npt_, d1(npt_))));
-        T1a_ = d2(nh_, d1(npt_));
-        T1b_ = d2(nh_, d1(npt_));
+        T2aa_ = d4(nhole_, d3(nhole_, d2(npart_, d1(npart_))));
+        T2ab_ = d4(nhole_, d3(nhole_, d2(npart_, d1(npart_))));
+        T2bb_ = d4(nhole_, d3(nhole_, d2(npart_, d1(npart_))));
+        T1a_ = d2(nhole_, d1(npart_));
+        T1b_ = d2(nhole_, d1(npart_));
 
         string t_algorithm = options.get_str("T_ALGORITHM");
         t1_amp_ = options.get_str("T1_AMP");
@@ -324,8 +334,8 @@ void MCSRGPT2_MO::Form_Fock_SRG() {
             double va = integral_->oei_a(p, q);
             double vb = integral_->oei_b(p, q);
 
-            for (size_t m = 0; m < nc_; ++m) {
-                size_t nm = idx_c_[m];
+            for (size_t m = 0; m < ncore_; ++m) {
+                size_t nm = core_mos_[m];
 
                 va += integral_->aptei_aa(p, nm, q, nm);
                 va += integral_->aptei_ab(p, nm, q, nm);
@@ -338,10 +348,10 @@ void MCSRGPT2_MO::Form_Fock_SRG() {
         }
     }
 
-    for (size_t u = 0; u < na_; ++u) {
-        size_t nu = idx_a_[u];
-        for (size_t v = 0; v < na_; ++v) {
-            size_t nv = idx_a_[v];
+    for (size_t u = 0; u < nactv_; ++u) {
+        size_t nu = actv_mos_[u];
+        for (size_t v = 0; v < nactv_; ++v) {
+            size_t nv = actv_mos_[v];
             Fa_srg_[nu][nv] = 0.0;
             Fb_srg_[nu][nv] = 0.0;
         }
@@ -359,15 +369,15 @@ void MCSRGPT2_MO::Form_Fock_DSRG(d2& A, d2& B, const bool& dsrgpt) {
         }
     }
     if (dsrgpt) {
-        for (size_t i = 0; i < nh_; ++i) {
-            size_t ni = idx_h_[i];
-            for (size_t a = 0; a < npt_; ++a) {
-                size_t na = idx_p_[a];
+        for (size_t i = 0; i < nhole_; ++i) {
+            size_t ni = hole_mos_[i];
+            for (size_t a = 0; a < npart_; ++a) {
+                size_t na = part_mos_[a];
                 double value_a = 0.0, value_b = 0.0;
-                for (size_t u = 0; u < na_; ++u) {
-                    size_t nu = idx_a_[u];
-                    for (size_t x = 0; x < na_; ++x) {
-                        size_t nx = idx_a_[x];
+                for (size_t u = 0; u < nactv_; ++u) {
+                    size_t nu = actv_mos_[u];
+                    for (size_t x = 0; x < nactv_; ++x) {
+                        size_t nx = actv_mos_[x];
                         value_a += (Fa_[nx][nx] - Fa_[nu][nu]) * T2aa_[i][u][a][x] * Da_[nx][nu];
                         value_a += (Fb_[nx][nx] - Fb_[nu][nu]) * T2ab_[i][u][a][x] * Db_[nx][nu];
                         value_b += (Fa_[nx][nx] - Fa_[nu][nu]) * T2ab_[u][i][x][a] * Da_[nx][nu];
@@ -394,14 +404,14 @@ void MCSRGPT2_MO::Form_APTEI_DSRG(const bool& dsrgpt) {
     timer_on("APTEI_DSRG");
 
     if (dsrgpt) {
-        for (size_t i = 0; i < nh_; ++i) {
-            size_t ni = idx_h_[i];
-            for (size_t j = 0; j < nh_; ++j) {
-                size_t nj = idx_h_[j];
-                for (size_t a = 0; a < npt_; ++a) {
-                    size_t na = idx_p_[a];
-                    for (size_t b = 0; b < npt_; ++b) {
-                        size_t nb = idx_p_[b];
+        for (size_t i = 0; i < nhole_; ++i) {
+            size_t ni = hole_mos_[i];
+            for (size_t j = 0; j < nhole_; ++j) {
+                size_t nj = hole_mos_[j];
+                for (size_t a = 0; a < npart_; ++a) {
+                    size_t na = part_mos_[a];
+                    for (size_t b = 0; b < npart_; ++b) {
+                        size_t nb = part_mos_[b];
                         double Daa = Fa_[ni][ni] + Fa_[nj][nj] - Fa_[na][na] - Fa_[nb][nb];
                         double Dab = Fa_[ni][ni] + Fb_[nj][nj] - Fa_[na][na] - Fb_[nb][nb];
                         double Dbb = Fb_[ni][ni] + Fb_[nj][nj] - Fb_[na][na] - Fb_[nb][nb];
@@ -433,23 +443,23 @@ void MCSRGPT2_MO::Form_APTEI_DSRG(const bool& dsrgpt) {
 void MCSRGPT2_MO::compute_ref() {
     timer_on("Compute Ref");
     Eref_ = 0.0;
-    for (size_t p = 0; p < nh_; ++p) {
-        size_t np = idx_h_[p];
-        for (size_t q = 0; q < nh_; ++q) {
-            size_t nq = idx_h_[q];
+    for (size_t p = 0; p < nhole_; ++p) {
+        size_t np = hole_mos_[p];
+        for (size_t q = 0; q < nhole_; ++q) {
+            size_t nq = hole_mos_[q];
             Eref_ += (integral_->oei_a(nq, np) + Fa_[nq][np]) * Da_[np][nq];
             Eref_ += (integral_->oei_b(nq, np) + Fb_[nq][np]) * Db_[np][nq];
         }
     }
     Eref_ *= 0.5;
-    for (size_t p = 0; p < na_; ++p) {
-        size_t np = idx_a_[p];
-        for (size_t q = 0; q < na_; ++q) {
-            size_t nq = idx_a_[q];
-            for (size_t r = 0; r < na_; ++r) {
-                size_t nr = idx_a_[r];
-                for (size_t s = 0; s < na_; ++s) {
-                    size_t ns = idx_a_[s];
+    for (size_t p = 0; p < nactv_; ++p) {
+        size_t np = actv_mos_[p];
+        for (size_t q = 0; q < nactv_; ++q) {
+            size_t nq = actv_mos_[q];
+            for (size_t r = 0; r < nactv_; ++r) {
+                size_t nr = actv_mos_[r];
+                for (size_t s = 0; s < nactv_; ++s) {
+                    size_t ns = actv_mos_[s];
                     Eref_ += 0.25 * integral_->aptei_aa(np, nq, nr, ns) * L2aa_[p][q][r][s];
                     Eref_ += 0.25 * integral_->aptei_bb(np, nq, nr, ns) * L2bb_[p][q][r][s];
                     Eref_ += integral_->aptei_ab(np, nq, nr, ns) * L2ab_[p][q][r][s];
@@ -515,14 +525,14 @@ double MCSRGPT2_MO::ElementT(const string& source, const double& D, const double
 
 void MCSRGPT2_MO::Form_T2_DSRG(d4& AA, d4& AB, d4& BB, string& T_ALGOR) {
     timer_on("Form T2");
-    for (size_t i = 0; i < nh_; ++i) {
-        size_t ni = idx_h_[i];
-        for (size_t j = 0; j < nh_; ++j) {
-            size_t nj = idx_h_[j];
-            for (size_t a = 0; a < npt_; ++a) {
-                size_t na = idx_p_[a];
-                for (size_t b = 0; b < npt_; ++b) {
-                    size_t nb = idx_p_[b];
+    for (size_t i = 0; i < nhole_; ++i) {
+        size_t ni = hole_mos_[i];
+        for (size_t j = 0; j < nhole_; ++j) {
+            size_t nj = hole_mos_[j];
+            for (size_t a = 0; a < npart_; ++a) {
+                size_t na = part_mos_[a];
+                for (size_t b = 0; b < npart_; ++b) {
+                    size_t nb = part_mos_[b];
 
                     double Daa = Fa_[ni][ni] + Fa_[nj][nj] - Fa_[na][na] - Fa_[nb][nb];
                     double Dab = Fa_[ni][ni] + Fb_[nj][nj] - Fa_[na][na] - Fb_[nb][nb];
@@ -541,10 +551,10 @@ void MCSRGPT2_MO::Form_T2_DSRG(d4& AA, d4& AB, d4& BB, string& T_ALGOR) {
     }
 
     // Zero Internal Excitations
-    for (size_t i = 0; i < na_; ++i) {
-        for (size_t j = 0; j < na_; ++j) {
-            for (size_t k = 0; k < na_; ++k) {
-                for (size_t l = 0; l < na_; ++l) {
+    for (size_t i = 0; i < nactv_; ++i) {
+        for (size_t j = 0; j < nactv_; ++j) {
+            for (size_t k = 0; k < nactv_; ++k) {
+                for (size_t l = 0; l < nactv_; ++l) {
                     AA[i][j][k][l] = 0.0;
                     AB[i][j][k][l] = 0.0;
                     BB[i][j][k][l] = 0.0;
@@ -557,11 +567,11 @@ void MCSRGPT2_MO::Form_T2_DSRG(d4& AA, d4& AB, d4& BB, string& T_ALGOR) {
     if (T_ALGOR == "DSRG_NOSEMI") {
         outfile->Printf("\n  Exclude excitations of (active, active -> active, "
                         "virtual) and (core, active -> active, active).");
-        for (size_t x = 0; x < na_; ++x) {
-            for (size_t y = 0; y < na_; ++y) {
-                for (size_t z = 0; z < na_; ++z) {
-                    for (size_t nm = 0; nm < nc_; ++nm) {
-                        size_t m = nm + na_;
+        for (size_t x = 0; x < nactv_; ++x) {
+            for (size_t y = 0; y < nactv_; ++y) {
+                for (size_t z = 0; z < nactv_; ++z) {
+                    for (size_t nm = 0; nm < ncore_; ++nm) {
+                        size_t m = nm + nactv_;
                         AA[m][z][y][x] = 0.0;
                         AA[z][m][y][x] = 0.0;
                         AB[m][z][y][x] = 0.0;
@@ -569,8 +579,8 @@ void MCSRGPT2_MO::Form_T2_DSRG(d4& AA, d4& AB, d4& BB, string& T_ALGOR) {
                         BB[m][z][y][x] = 0.0;
                         BB[z][m][y][x] = 0.0;
                     }
-                    for (size_t ne = 0; ne < nv_; ++ne) {
-                        size_t e = ne + na_;
+                    for (size_t ne = 0; ne < nvirt_; ++ne) {
+                        size_t e = ne + nactv_;
                         AA[x][y][z][e] = 0.0;
                         AA[x][y][e][z] = 0.0;
                         AB[x][y][z][e] = 0.0;
@@ -587,10 +597,10 @@ void MCSRGPT2_MO::Form_T2_DSRG(d4& AA, d4& AB, d4& BB, string& T_ALGOR) {
 
 void MCSRGPT2_MO::Form_T1_DSRG(d2& A, d2& B) {
     timer_on("Form T1");
-    for (size_t i = 0; i < nh_; ++i) {
-        size_t ni = idx_h_[i];
-        for (size_t a = 0; a < npt_; ++a) {
-            size_t na = idx_p_[a];
+    for (size_t i = 0; i < nhole_; ++i) {
+        size_t ni = hole_mos_[i];
+        for (size_t a = 0; a < npart_; ++a) {
+            size_t na = part_mos_[a];
 
             double Da = Fa_[ni][ni] - Fa_[na][na];
             double Db = Fb_[ni][ni] - Fb_[na][na];
@@ -598,10 +608,10 @@ void MCSRGPT2_MO::Form_T1_DSRG(d2& A, d2& B) {
             double RFa = Fa_[ni][na];
             double RFb = Fb_[ni][na];
 
-            for (size_t u = 0; u < na_; ++u) {
-                size_t nu = idx_a_[u];
-                for (size_t x = 0; x < na_; ++x) {
-                    size_t nx = idx_a_[x];
+            for (size_t u = 0; u < nactv_; ++u) {
+                size_t nu = actv_mos_[u];
+                for (size_t x = 0; x < nactv_; ++x) {
+                    size_t nx = actv_mos_[x];
 
                     double A_Da = Fa_[nx][nx] - Fa_[nu][nu];
                     double A_Db = Fb_[nx][nx] - Fb_[nu][nu];
@@ -639,8 +649,8 @@ void MCSRGPT2_MO::Form_T1_DSRG(d2& A, d2& B) {
     }
 
     // Zero Internal Excitations
-    for (size_t i = 0; i < na_; ++i) {
-        for (size_t j = 0; j < na_; ++j) {
+    for (size_t i = 0; i < nactv_; ++i) {
+        for (size_t j = 0; j < nactv_; ++j) {
             A[i][j] = 0.0;
             B[i][j] = 0.0;
         }
@@ -650,14 +660,14 @@ void MCSRGPT2_MO::Form_T1_DSRG(d2& A, d2& B) {
 
 void MCSRGPT2_MO::Form_T2_SELEC(d4& AA, d4& AB, d4& BB) {
     timer_on("Form T2");
-    for (size_t i = 0; i < nc_; ++i) {
-        size_t ni = idx_c_[i];
-        for (size_t j = 0; j < nc_; ++j) {
-            size_t nj = idx_c_[j];
-            for (size_t a = 0; a < na_; ++a) {
-                size_t na = idx_a_[a];
-                for (size_t b = 0; b < na_; ++b) {
-                    size_t nb = idx_a_[b];
+    for (size_t i = 0; i < ncore_; ++i) {
+        size_t ni = core_mos_[i];
+        for (size_t j = 0; j < ncore_; ++j) {
+            size_t nj = core_mos_[j];
+            for (size_t a = 0; a < nactv_; ++a) {
+                size_t na = actv_mos_[a];
+                for (size_t b = 0; b < nactv_; ++b) {
+                    size_t nb = actv_mos_[b];
 
                     double Daa = Fa_[ni][ni] + Fa_[nj][nj] - Fa_[na][na] - Fa_[nb][nb];
                     double Dab = Fa_[ni][ni] + Fb_[nj][nj] - Fa_[na][na] - Fb_[nb][nb];
@@ -667,25 +677,25 @@ void MCSRGPT2_MO::Form_T2_SELEC(d4& AA, d4& AB, d4& BB) {
                     double Vab = integral_->aptei_ab(na, nb, ni, nj);
                     double Vbb = integral_->aptei_bb(na, nb, ni, nj);
 
-                    i += na_;
-                    j += na_;
+                    i += nactv_;
+                    j += nactv_;
                     AA[i][j][a][b] = ElementT("STANDARD", Daa, Vaa);
                     AB[i][j][a][b] = ElementT("STANDARD", Dab, Vab);
                     BB[i][j][a][b] = ElementT("STANDARD", Dbb, Vbb);
-                    i -= na_;
-                    j -= na_;
+                    i -= nactv_;
+                    j -= nactv_;
                 }
             }
         }
     }
-    for (size_t i = 0; i < nc_; ++i) {
-        size_t ni = idx_c_[i];
-        for (size_t j = 0; j < nc_; ++j) {
-            size_t nj = idx_c_[j];
-            for (size_t a = 0; a < nv_; ++a) {
-                size_t na = idx_v_[a];
-                for (size_t b = 0; b < nv_; ++b) {
-                    size_t nb = idx_v_[b];
+    for (size_t i = 0; i < ncore_; ++i) {
+        size_t ni = core_mos_[i];
+        for (size_t j = 0; j < ncore_; ++j) {
+            size_t nj = core_mos_[j];
+            for (size_t a = 0; a < nvirt_; ++a) {
+                size_t na = virt_mos_[a];
+                for (size_t b = 0; b < nvirt_; ++b) {
+                    size_t nb = virt_mos_[b];
 
                     double Daa = Fa_[ni][ni] + Fa_[nj][nj] - Fa_[na][na] - Fa_[nb][nb];
                     double Dab = Fa_[ni][ni] + Fb_[nj][nj] - Fa_[na][na] - Fb_[nb][nb];
@@ -695,29 +705,29 @@ void MCSRGPT2_MO::Form_T2_SELEC(d4& AA, d4& AB, d4& BB) {
                     double Vab = integral_->aptei_ab(na, nb, ni, nj);
                     double Vbb = integral_->aptei_bb(na, nb, ni, nj);
 
-                    i += na_;
-                    j += na_;
-                    a += na_;
-                    b += na_;
+                    i += nactv_;
+                    j += nactv_;
+                    a += nactv_;
+                    b += nactv_;
                     AA[i][j][a][b] = ElementT("STANDARD", Daa, Vaa);
                     AB[i][j][a][b] = ElementT("STANDARD", Dab, Vab);
                     BB[i][j][a][b] = ElementT("STANDARD", Dbb, Vbb);
-                    i -= na_;
-                    j -= na_;
-                    a -= na_;
-                    b -= na_;
+                    i -= nactv_;
+                    j -= nactv_;
+                    a -= nactv_;
+                    b -= nactv_;
                 }
             }
         }
     }
-    for (size_t i = 0; i < na_; ++i) {
-        size_t ni = idx_a_[i];
-        for (size_t j = 0; j < na_; ++j) {
-            size_t nj = idx_a_[j];
-            for (size_t a = 0; a < nv_; ++a) {
-                size_t na = idx_v_[a];
-                for (size_t b = 0; b < nv_; ++b) {
-                    size_t nb = idx_v_[b];
+    for (size_t i = 0; i < nactv_; ++i) {
+        size_t ni = actv_mos_[i];
+        for (size_t j = 0; j < nactv_; ++j) {
+            size_t nj = actv_mos_[j];
+            for (size_t a = 0; a < nvirt_; ++a) {
+                size_t na = virt_mos_[a];
+                for (size_t b = 0; b < nvirt_; ++b) {
+                    size_t nb = virt_mos_[b];
 
                     double Daa = Fa_[ni][ni] + Fa_[nj][nj] - Fa_[na][na] - Fa_[nb][nb];
                     double Dab = Fa_[ni][ni] + Fb_[nj][nj] - Fa_[na][na] - Fb_[nb][nb];
@@ -727,13 +737,13 @@ void MCSRGPT2_MO::Form_T2_SELEC(d4& AA, d4& AB, d4& BB) {
                     double Vab = integral_->aptei_ab(na, nb, ni, nj);
                     double Vbb = integral_->aptei_bb(na, nb, ni, nj);
 
-                    a += na_;
-                    b += na_;
+                    a += nactv_;
+                    b += nactv_;
                     AA[i][j][a][b] = ElementT("STANDARD", Daa, Vaa);
                     AB[i][j][a][b] = ElementT("STANDARD", Dab, Vab);
                     BB[i][j][a][b] = ElementT("STANDARD", Dbb, Vbb);
-                    a -= na_;
-                    b -= na_;
+                    a -= nactv_;
+                    b -= nactv_;
                 }
             }
         }
@@ -743,14 +753,14 @@ void MCSRGPT2_MO::Form_T2_SELEC(d4& AA, d4& AB, d4& BB) {
 
 void MCSRGPT2_MO::Form_T2_ISA(d4& AA, d4& AB, d4& BB, const double& b_const) {
     timer_on("Form T2");
-    for (size_t i = 0; i < nh_; ++i) {
-        size_t ni = idx_h_[i];
-        for (size_t j = 0; j < nh_; ++j) {
-            size_t nj = idx_h_[j];
-            for (size_t a = 0; a < npt_; ++a) {
-                size_t na = idx_p_[a];
-                for (size_t b = 0; b < npt_; ++b) {
-                    size_t nb = idx_p_[b];
+    for (size_t i = 0; i < nhole_; ++i) {
+        size_t ni = hole_mos_[i];
+        for (size_t j = 0; j < nhole_; ++j) {
+            size_t nj = hole_mos_[j];
+            for (size_t a = 0; a < npart_; ++a) {
+                size_t na = part_mos_[a];
+                for (size_t b = 0; b < npart_; ++b) {
+                    size_t nb = part_mos_[b];
 
                     double Daa = Fa_[ni][ni] + Fa_[nj][nj] - Fa_[na][na] - Fa_[nb][nb];
                     double Dab = Fa_[ni][ni] + Fb_[nj][nj] - Fa_[na][na] - Fb_[nb][nb];
@@ -769,10 +779,10 @@ void MCSRGPT2_MO::Form_T2_ISA(d4& AA, d4& AB, d4& BB, const double& b_const) {
     }
 
     // Zero Internal Excitations
-    for (size_t i = 0; i < na_; ++i) {
-        for (size_t j = 0; j < na_; ++j) {
-            for (size_t k = 0; k < na_; ++k) {
-                for (size_t l = 0; l < na_; ++l) {
+    for (size_t i = 0; i < nactv_; ++i) {
+        for (size_t j = 0; j < nactv_; ++j) {
+            for (size_t k = 0; k < nactv_; ++k) {
+                for (size_t l = 0; l < nactv_; ++l) {
                     AA[i][j][k][l] = 0.0;
                     AB[i][j][k][l] = 0.0;
                     BB[i][j][k][l] = 0.0;
@@ -785,18 +795,18 @@ void MCSRGPT2_MO::Form_T2_ISA(d4& AA, d4& AB, d4& BB, const double& b_const) {
 
 void MCSRGPT2_MO::Form_T1_ISA(d2& A, d2& B, const double& b_const) {
     timer_on("Form T1");
-    for (size_t i = 0; i < nh_; ++i) {
-        size_t ni = idx_h_[i];
-        for (size_t a = 0; a < npt_; ++a) {
-            size_t na = idx_p_[a];
+    for (size_t i = 0; i < nhole_; ++i) {
+        size_t ni = hole_mos_[i];
+        for (size_t a = 0; a < npart_; ++a) {
+            size_t na = part_mos_[a];
 
             double scalar_a = Fa_[ni][na];
             double scalar_b = Fb_[ni][na];
 
-            for (size_t u = 0; u < na_; ++u) {
-                size_t nu = idx_a_[u];
-                for (size_t x = 0; x < na_; ++x) {
-                    size_t nx = idx_a_[x];
+            for (size_t u = 0; u < nactv_; ++u) {
+                size_t nu = actv_mos_[u];
+                for (size_t x = 0; x < nactv_; ++x) {
+                    size_t nx = actv_mos_[x];
 
                     scalar_a += (Fa_[nx][nx] - Fa_[nu][nu]) * T2aa_[i][u][a][x] * Da_[nx][nu];
                     scalar_a += (Fb_[nx][nx] - Fb_[nu][nu]) * T2ab_[i][u][a][x] * Db_[nx][nu];
@@ -814,8 +824,8 @@ void MCSRGPT2_MO::Form_T1_ISA(d2& A, d2& B, const double& b_const) {
     }
 
     // Zero Internal Excitations
-    for (size_t i = 0; i < na_; ++i) {
-        for (size_t j = 0; j < na_; ++j) {
+    for (size_t i = 0; i < nactv_; ++i) {
+        for (size_t j = 0; j < nactv_; ++j) {
             A[i][j] = 0.0;
             B[i][j] = 0.0;
         }
@@ -838,14 +848,14 @@ void MCSRGPT2_MO::Check_T2(const string& x, const d4& M, double& Norm, double& M
         ntamp, std::make_tuple(0.0, 0, 0, 0, 0));
     double value = 0.0;
     size_t count = 0;
-    for (size_t i = 0; i < nh_; ++i) {
-        size_t ni = idx_h_[i];
-        for (size_t j = 0; j < nh_; ++j) {
-            size_t nj = idx_h_[j];
-            for (size_t a = 0; a < npt_; ++a) {
-                size_t na = idx_p_[a];
-                for (size_t b = 0; b < npt_; ++b) {
-                    size_t nb = idx_p_[b];
+    for (size_t i = 0; i < nhole_; ++i) {
+        size_t ni = hole_mos_[i];
+        for (size_t j = 0; j < nhole_; ++j) {
+            size_t nj = hole_mos_[j];
+            for (size_t a = 0; a < npart_; ++a) {
+                size_t na = part_mos_[a];
+                for (size_t b = 0; b < npart_; ++b) {
+                    size_t nb = part_mos_[b];
                     double m = M[i][j][a][b];
                     value += pow(m, 2.0);
                     if (std::fabs(m) > std::fabs(std::get<0>(Large[ntamp - 1]))) {
@@ -943,10 +953,10 @@ void MCSRGPT2_MO::Check_T1(const string& x, const d2& M, double& Norm, double& M
     std::vector<std::tuple<double, size_t, size_t>> Large(ntamp, std::make_tuple(0.0, 0, 0));
     double value = 0.0;
     size_t count = 0;
-    for (size_t i = 0; i < nh_; ++i) {
-        size_t ni = idx_h_[i];
-        for (size_t a = 0; a < npt_; ++a) {
-            size_t na = idx_p_[a];
+    for (size_t i = 0; i < nhole_; ++i) {
+        size_t ni = hole_mos_[i];
+        for (size_t a = 0; a < npart_; ++a) {
+            size_t na = part_mos_[a];
             double m = M[i][a];
             value += pow(m, 2.0);
             if (std::fabs(m) > std::fabs(std::get<0>(Large[ntamp - 1]))) {
@@ -1021,29 +1031,29 @@ void MCSRGPT2_MO::test_D1_RE() {
     double small_threshold = 0.1;
     std::vector<std::pair<std::vector<size_t>, double>> smallD1;
 
-    for (size_t i = 0; i < nh_; ++i) {
-        size_t ni = idx_h_[i];
-        for (size_t a = 0; a < npt_; ++a) {
-            size_t na = idx_p_[a];
+    for (size_t i = 0; i < nhole_; ++i) {
+        size_t ni = hole_mos_[i];
+        for (size_t a = 0; a < npart_; ++a) {
+            size_t na = part_mos_[a];
 
             // must belong to the same irrep
             if ((sym_ncmo_[ni] ^ sym_ncmo_[na]) != 0)
                 continue;
 
             // cannot be all active
-            if (std::find(idx_a_.begin(), idx_a_.end(), ni) != idx_a_.end() &&
-                std::find(idx_a_.begin(), idx_a_.end(), na) != idx_a_.end()) {
+            if (std::find(actv_mos_.begin(), actv_mos_.end(), ni) != actv_mos_.end() &&
+                std::find(actv_mos_.begin(), actv_mos_.end(), na) != actv_mos_.end()) {
                 continue;
             } else {
                 double Da = Fa_[ni][ni] - Fa_[na][na];
 
-                for (size_t k = 0; k < nh_; ++k) {
-                    size_t nk = idx_h_[k];
+                for (size_t k = 0; k < nhole_; ++k) {
+                    size_t nk = hole_mos_[k];
                     Da -= integral_->aptei_aa(ni, na, na, nk) * Da_[nk][ni];
                 }
 
-                for (size_t v = 0; v < na_; ++v) {
-                    size_t nv = idx_a_[v];
+                for (size_t v = 0; v < nactv_; ++v) {
+                    size_t nv = actv_mos_[v];
                     Da += integral_->aptei_aa(ni, nv, na, ni) * Da_[na][nv];
                 }
 
@@ -1139,33 +1149,33 @@ void MCSRGPT2_MO::test_D2_RE() {
     std::vector<std::pair<std::vector<size_t>, double>> smallD2aa;
     std::vector<std::pair<std::vector<size_t>, double>> smallD2ab;
 
-    for (size_t i = 0; i < nh_; ++i) {
-        size_t ni = idx_h_[i];
-        for (size_t j = i; j < nh_; ++j) {
-            size_t nj = idx_h_[j];
-            for (size_t a = 0; a < npt_; ++a) {
-                size_t na = idx_p_[a];
-                for (size_t b = a; b < npt_; ++b) {
-                    size_t nb = idx_p_[b];
+    for (size_t i = 0; i < nhole_; ++i) {
+        size_t ni = hole_mos_[i];
+        for (size_t j = i; j < nhole_; ++j) {
+            size_t nj = hole_mos_[j];
+            for (size_t a = 0; a < npart_; ++a) {
+                size_t na = part_mos_[a];
+                for (size_t b = a; b < npart_; ++b) {
+                    size_t nb = part_mos_[b];
 
                     // product must be all symmetric
                     if ((sym_ncmo_[ni] ^ sym_ncmo_[nj] ^ sym_ncmo_[na] ^ sym_ncmo_[nb]) != 0)
                         continue;
 
                     // cannot be all active
-                    if (std::find(idx_a_.begin(), idx_a_.end(), ni) != idx_a_.end() &&
-                        std::find(idx_a_.begin(), idx_a_.end(), nj) != idx_a_.end() &&
-                        std::find(idx_a_.begin(), idx_a_.end(), na) != idx_a_.end() &&
-                        std::find(idx_a_.begin(), idx_a_.end(), nb) != idx_a_.end()) {
+                    if (std::find(actv_mos_.begin(), actv_mos_.end(), ni) != actv_mos_.end() &&
+                        std::find(actv_mos_.begin(), actv_mos_.end(), nj) != actv_mos_.end() &&
+                        std::find(actv_mos_.begin(), actv_mos_.end(), na) != actv_mos_.end() &&
+                        std::find(actv_mos_.begin(), actv_mos_.end(), nb) != actv_mos_.end()) {
                         continue;
                     } else {
                         double Daa = Fa_[ni][ni] + Fa_[nj][nj] - Fa_[na][na] - Fa_[nb][nb];
                         double Dab = Fa_[ni][ni] + Fb_[nj][nj] - Fa_[na][na] - Fb_[nb][nb];
 
-                        for (size_t c = 0; c < npt_; ++c) {
-                            size_t nc = idx_p_[c];
-                            for (size_t d = 0; d < npt_; ++d) {
-                                size_t nd = idx_p_[d];
+                        for (size_t c = 0; c < npart_; ++c) {
+                            size_t nc = part_mos_[c];
+                            for (size_t d = 0; d < npart_; ++d) {
+                                size_t nd = part_mos_[d];
                                 Daa -= 0.5 * integral_->aptei_aa(nc, nd, na, nb) *
                                        (1.0 - Da_[na][nc]) * (1.0 - Da_[nb][nd]);
                                 Dab -= integral_->aptei_ab(nc, nd, na, nb) * (1.0 - Da_[na][nc]) *
@@ -1173,10 +1183,10 @@ void MCSRGPT2_MO::test_D2_RE() {
                             }
                         }
 
-                        for (size_t v = 0; v < na_; ++v) {
-                            size_t nv = idx_a_[v];
-                            for (size_t y = 0; y < na_; ++y) {
-                                size_t ny = idx_a_[y];
+                        for (size_t v = 0; v < nactv_; ++v) {
+                            size_t nv = actv_mos_[v];
+                            for (size_t y = 0; y < nactv_; ++y) {
+                                size_t ny = actv_mos_[y];
                                 Daa += 0.5 * integral_->aptei_aa(nv, ny, na, nb) * Da_[na][nv] *
                                        Da_[nb][ny];
                                 Dab +=
@@ -1184,10 +1194,10 @@ void MCSRGPT2_MO::test_D2_RE() {
                             }
                         }
 
-                        for (size_t k = 0; k < nh_; ++k) {
-                            size_t nk = idx_h_[k];
-                            for (size_t l = 0; l < nh_; ++l) {
-                                size_t nl = idx_h_[l];
+                        for (size_t k = 0; k < nhole_; ++k) {
+                            size_t nk = hole_mos_[k];
+                            for (size_t l = 0; l < nhole_; ++l) {
+                                size_t nl = hole_mos_[l];
                                 Daa -= 0.5 * integral_->aptei_aa(ni, nj, nk, nl) * Da_[nk][ni] *
                                        Da_[nl][nj];
                                 Dab -=
@@ -1195,10 +1205,10 @@ void MCSRGPT2_MO::test_D2_RE() {
                             }
                         }
 
-                        for (size_t u = 0; u < na_; ++u) {
-                            size_t nu = idx_a_[u];
-                            for (size_t x = 0; x < na_; ++x) {
-                                size_t nx = idx_a_[x];
+                        for (size_t u = 0; u < nactv_; ++u) {
+                            size_t nu = actv_mos_[u];
+                            for (size_t x = 0; x < nactv_; ++x) {
+                                size_t nx = actv_mos_[x];
                                 Daa += 0.5 * integral_->aptei_aa(ni, nj, nu, nx) *
                                        (1.0 - Da_[nu][ni]) * (1.0 - Da_[nx][nj]);
                                 Dab += integral_->aptei_ab(ni, nj, nu, nx) * (1.0 - Da_[nu][ni]) *
@@ -1206,8 +1216,8 @@ void MCSRGPT2_MO::test_D2_RE() {
                             }
                         }
 
-                        for (size_t k = 0; k < nh_; ++k) {
-                            size_t nk = idx_h_[k];
+                        for (size_t k = 0; k < nhole_; ++k) {
+                            size_t nk = hole_mos_[k];
 
                             Daa -= integral_->aptei_aa(na, ni, nk, na) * Da_[nk][ni];
                             Daa -= integral_->aptei_aa(nb, ni, nk, nb) * Da_[nk][ni];
@@ -1220,8 +1230,8 @@ void MCSRGPT2_MO::test_D2_RE() {
                             Dab -= integral_->aptei_bb(nb, nj, nk, nb) * Da_[nk][nj];
                         }
 
-                        for (size_t y = 0; y < na_; ++y) {
-                            size_t ny = idx_a_[y];
+                        for (size_t y = 0; y < nactv_; ++y) {
+                            size_t ny = actv_mos_[y];
 
                             Daa += integral_->aptei_aa(ny, ni, ni, na) * Da_[na][ny];
                             Daa += integral_->aptei_aa(ny, ni, ni, nb) * Da_[nb][ny];
@@ -1300,14 +1310,14 @@ void MCSRGPT2_MO::test_D2_Dyall() {
     std::vector<std::pair<std::vector<size_t>, double>> smallD2ab;
 
     // core-core-active-active block
-    for (size_t m = 0; m < nc_; ++m) {
-        size_t nm = idx_c_[m];
-        for (size_t n = 0; n < nc_; ++n) {
-            size_t nn = idx_c_[n];
-            for (size_t u = 0; u < na_; ++u) {
-                size_t nu = idx_a_[u];
-                for (size_t v = 0; v < na_; ++v) {
-                    size_t nv = idx_a_[v];
+    for (size_t m = 0; m < ncore_; ++m) {
+        size_t nm = core_mos_[m];
+        for (size_t n = 0; n < ncore_; ++n) {
+            size_t nn = core_mos_[n];
+            for (size_t u = 0; u < nactv_; ++u) {
+                size_t nu = actv_mos_[u];
+                for (size_t v = 0; v < nactv_; ++v) {
+                    size_t nv = actv_mos_[v];
                     if ((sym_ncmo_[nm] ^ sym_ncmo_[nn] ^ sym_ncmo_[nu] ^ sym_ncmo_[nv]) != 0)
                         continue;
 
@@ -1317,8 +1327,8 @@ void MCSRGPT2_MO::test_D2_Dyall() {
                     Daa -= 0.5 * integral_->aptei_aa(nu, nv, nu, nv);
                     Dab -= 0.5 * integral_->aptei_ab(nu, nv, nu, nv);
 
-                    for (size_t x = 0; x < na_; ++x) {
-                        size_t nx = idx_a_[x];
+                    for (size_t x = 0; x < nactv_; ++x) {
+                        size_t nx = actv_mos_[x];
                         Daa += Da_[nu][nx] * integral_->aptei_aa(nx, nv, nu, nv);
                         Dab += Da_[nu][nx] * integral_->aptei_ab(nx, nv, nu, nv);
                     }
@@ -1337,14 +1347,14 @@ void MCSRGPT2_MO::test_D2_Dyall() {
     }
 
     // active-active-virtual-virtual block
-    for (size_t x = 0; x < na_; ++x) {
-        size_t nx = idx_a_[x];
-        for (size_t y = 0; y < na_; ++y) {
-            size_t ny = idx_a_[y];
-            for (size_t e = 0; e < nv_; ++e) {
-                size_t ne = idx_v_[e];
-                for (size_t f = 0; f < nv_; ++f) {
-                    size_t nf = idx_v_[f];
+    for (size_t x = 0; x < nactv_; ++x) {
+        size_t nx = actv_mos_[x];
+        for (size_t y = 0; y < nactv_; ++y) {
+            size_t ny = actv_mos_[y];
+            for (size_t e = 0; e < nvirt_; ++e) {
+                size_t ne = virt_mos_[e];
+                for (size_t f = 0; f < nvirt_; ++f) {
+                    size_t nf = virt_mos_[f];
                     if ((sym_ncmo_[nx] ^ sym_ncmo_[ny] ^ sym_ncmo_[ne] ^ sym_ncmo_[nf]) != 0)
                         continue;
 
@@ -1354,8 +1364,8 @@ void MCSRGPT2_MO::test_D2_Dyall() {
                     Daa += 0.5 * integral_->aptei_aa(nx, ny, nx, ny);
                     Dab += 0.5 * integral_->aptei_ab(nx, ny, nx, ny);
 
-                    for (size_t u = 0; u < na_; ++u) {
-                        size_t nu = idx_a_[u];
+                    for (size_t u = 0; u < nactv_; ++u) {
+                        size_t nu = actv_mos_[u];
                         Daa -= Da_[nu][nx] * integral_->aptei_aa(nx, ny, nu, ny);
                         Dab -= Da_[nu][nx] * integral_->aptei_ab(nx, ny, nu, ny);
                     }
@@ -1374,14 +1384,14 @@ void MCSRGPT2_MO::test_D2_Dyall() {
     }
 
     // active-core-active-virtual block
-    for (size_t m = 0; m < nc_; ++m) {
-        size_t nm = idx_c_[m];
-        for (size_t y = 0; y < na_; ++y) {
-            size_t ny = idx_a_[y];
-            for (size_t e = 0; e < nv_; ++e) {
-                size_t ne = idx_v_[e];
-                for (size_t v = 0; v < na_; ++v) {
-                    size_t nv = idx_a_[v];
+    for (size_t m = 0; m < ncore_; ++m) {
+        size_t nm = core_mos_[m];
+        for (size_t y = 0; y < nactv_; ++y) {
+            size_t ny = actv_mos_[y];
+            for (size_t e = 0; e < nvirt_; ++e) {
+                size_t ne = virt_mos_[e];
+                for (size_t v = 0; v < nactv_; ++v) {
+                    size_t nv = actv_mos_[v];
                     if ((sym_ncmo_[nm] ^ sym_ncmo_[ny] ^ sym_ncmo_[ne] ^ sym_ncmo_[nv]) != 0)
                         continue;
 
@@ -1390,8 +1400,8 @@ void MCSRGPT2_MO::test_D2_Dyall() {
                     double D2 = Fa_[nm][nm] + Fb_[ny][ny] - Fb_[ne][ne] - Fa_[nv][nv];
                     double D3 = Fb_[nm][nm] + Fa_[ny][ny] - Fa_[ne][ne] - Fb_[nv][nv];
 
-                    for (size_t u = 0; u < na_; ++u) {
-                        size_t nu = idx_a_[u];
+                    for (size_t u = 0; u < nactv_; ++u) {
+                        size_t nu = actv_mos_[u];
                         Daa += Da_[nu][ny] * integral_->aptei_aa(ny, nv, nu, nv);
                         Daa -= Da_[nv][nu] * integral_->aptei_aa(nu, ny, nv, ny);
 
@@ -1427,14 +1437,14 @@ void MCSRGPT2_MO::test_D2_Dyall() {
     }
 
     // active-active-active-virtual block
-    for (size_t x = 0; x < na_; ++x) {
-        size_t nx = idx_a_[x];
-        for (size_t y = 0; y < na_; ++y) {
-            size_t ny = idx_a_[y];
-            for (size_t z = 0; z < na_; ++z) {
-                size_t nz = idx_a_[z];
-                for (size_t e = 0; e < nv_; ++e) {
-                    size_t ne = idx_v_[e];
+    for (size_t x = 0; x < nactv_; ++x) {
+        size_t nx = actv_mos_[x];
+        for (size_t y = 0; y < nactv_; ++y) {
+            size_t ny = actv_mos_[y];
+            for (size_t z = 0; z < nactv_; ++z) {
+                size_t nz = actv_mos_[z];
+                for (size_t e = 0; e < nvirt_; ++e) {
+                    size_t ne = virt_mos_[e];
                     if ((sym_ncmo_[nx] ^ sym_ncmo_[ny] ^ sym_ncmo_[nz] ^ sym_ncmo_[ne]) != 0)
                         continue;
 
@@ -1444,8 +1454,8 @@ void MCSRGPT2_MO::test_D2_Dyall() {
                     Daa += 0.5 * integral_->aptei_aa(nx, ny, nx, ny);
                     Dab += 0.5 * integral_->aptei_ab(nx, ny, nx, ny);
 
-                    for (size_t u = 0; u < na_; ++u) {
-                        size_t nu = idx_a_[u];
+                    for (size_t u = 0; u < nactv_; ++u) {
+                        size_t nu = actv_mos_[u];
 
                         Daa -= Da_[nu][nx] * integral_->aptei_aa(nx, ny, nu, ny);
                         Daa += Da_[nu][nx] * integral_->aptei_aa(nx, nz, nu, nz);
@@ -1474,14 +1484,14 @@ void MCSRGPT2_MO::test_D2_Dyall() {
     }
 
     // core-active-active-active block
-    for (size_t m = 0; m < nc_; ++m) {
-        size_t nm = idx_c_[m];
-        for (size_t w = 0; w < na_; ++w) {
-            size_t nw = idx_a_[w];
-            for (size_t u = 0; u < na_; ++u) {
-                size_t nu = idx_a_[u];
-                for (size_t v = 0; v < na_; ++v) {
-                    size_t nv = idx_a_[v];
+    for (size_t m = 0; m < ncore_; ++m) {
+        size_t nm = core_mos_[m];
+        for (size_t w = 0; w < nactv_; ++w) {
+            size_t nw = actv_mos_[w];
+            for (size_t u = 0; u < nactv_; ++u) {
+                size_t nu = actv_mos_[u];
+                for (size_t v = 0; v < nactv_; ++v) {
+                    size_t nv = actv_mos_[v];
                     if ((sym_ncmo_[nm] ^ sym_ncmo_[nw] ^ sym_ncmo_[nu] ^ sym_ncmo_[nv]) != 0)
                         continue;
 
@@ -1491,8 +1501,8 @@ void MCSRGPT2_MO::test_D2_Dyall() {
                     Daa -= 0.5 * integral_->aptei_aa(nu, nv, nu, nv);
                     Dab -= 0.5 * integral_->aptei_ab(nu, nv, nu, nv);
 
-                    for (size_t x = 0; x < na_; ++x) {
-                        size_t nx = idx_a_[x];
+                    for (size_t x = 0; x < nactv_; ++x) {
+                        size_t nx = actv_mos_[x];
 
                         Daa += Da_[nu][nx] * integral_->aptei_aa(nx, nv, nu, nv);
                         Daa += Da_[nx][nw] * integral_->aptei_aa(nu, nw, nu, nx);
@@ -1569,23 +1579,23 @@ void MCSRGPT2_MO::test_D2_Dyall() {
 void MCSRGPT2_MO::PrintDelta() {
     std::ofstream out_delta;
     out_delta.open("Delta_ijab");
-    for (size_t i = 0; i < nh_; ++i) {
-        size_t ni = idx_h_[i];
-        for (size_t j = i; j < nh_; ++j) {
-            size_t nj = idx_h_[j];
-            for (size_t a = 0; a < npt_; ++a) {
-                size_t na = idx_p_[a];
-                for (size_t b = a; b < npt_; ++b) {
-                    size_t nb = idx_p_[b];
+    for (size_t i = 0; i < nhole_; ++i) {
+        size_t ni = hole_mos_[i];
+        for (size_t j = i; j < nhole_; ++j) {
+            size_t nj = hole_mos_[j];
+            for (size_t a = 0; a < npart_; ++a) {
+                size_t na = part_mos_[a];
+                for (size_t b = a; b < npart_; ++b) {
+                    size_t nb = part_mos_[b];
 
                     if (ni == nj && ni == na && ni == nb)
                         continue;
                     if ((sym_ncmo_[ni] ^ sym_ncmo_[nj] ^ sym_ncmo_[na] ^ sym_ncmo_[nb]) != 0)
                         continue;
-                    if (std::find(idx_a_.begin(), idx_a_.end(), ni) != idx_a_.end() &&
-                        std::find(idx_a_.begin(), idx_a_.end(), nj) != idx_a_.end() &&
-                        std::find(idx_a_.begin(), idx_a_.end(), na) != idx_a_.end() &&
-                        std::find(idx_a_.begin(), idx_a_.end(), nb) != idx_a_.end()) {
+                    if (std::find(actv_mos_.begin(), actv_mos_.end(), ni) != actv_mos_.end() &&
+                        std::find(actv_mos_.begin(), actv_mos_.end(), nj) != actv_mos_.end() &&
+                        std::find(actv_mos_.begin(), actv_mos_.end(), na) != actv_mos_.end() &&
+                        std::find(actv_mos_.begin(), actv_mos_.end(), nb) != actv_mos_.end()) {
                         continue;
                     } else {
                         double Daa = Fa_[ni][ni] + Fa_[nj][nj] - Fa_[na][na] - Fa_[nb][nb];
@@ -1614,16 +1624,16 @@ void MCSRGPT2_MO::PrintDelta() {
     out_delta.close();
     out_delta.clear();
     out_delta.open("Delta_ia");
-    for (size_t i = 0; i < nh_; ++i) {
-        size_t ni = idx_h_[i];
-        for (size_t a = 0; a < npt_; ++a) {
-            size_t na = idx_p_[a];
+    for (size_t i = 0; i < nhole_; ++i) {
+        size_t ni = hole_mos_[i];
+        for (size_t a = 0; a < npart_; ++a) {
+            size_t na = part_mos_[a];
             if (ni == na)
                 continue;
             if ((sym_ncmo_[ni] ^ sym_ncmo_[na]) != 0)
                 continue;
-            if (std::find(idx_a_.begin(), idx_a_.end(), ni) != idx_a_.end() &&
-                std::find(idx_a_.begin(), idx_a_.end(), na) != idx_a_.end()) {
+            if (std::find(actv_mos_.begin(), actv_mos_.end(), ni) != actv_mos_.end() &&
+                std::find(actv_mos_.begin(), actv_mos_.end(), na) != actv_mos_.end()) {
                 continue;
             } else {
                 double delta_a = Fa_[ni][ni] - Fa_[na][na];
@@ -1737,14 +1747,14 @@ double MCSRGPT2_MO::compute_energy_dsrg() {
 void MCSRGPT2_MO::E_FT1(double& E) {
     timer_on("[F, T1]");
     E = 0.0;
-    for (size_t i = 0; i < nh_; ++i) {
-        size_t ni = idx_h_[i];
-        for (size_t j = 0; j < nh_; ++j) {
-            size_t nj = idx_h_[j];
-            for (size_t a = 0; a < npt_; ++a) {
-                size_t na = idx_p_[a];
-                for (size_t b = 0; b < npt_; ++b) {
-                    size_t nb = idx_p_[b];
+    for (size_t i = 0; i < nhole_; ++i) {
+        size_t ni = hole_mos_[i];
+        for (size_t j = 0; j < nhole_; ++j) {
+            size_t nj = hole_mos_[j];
+            for (size_t a = 0; a < npart_; ++a) {
+                size_t na = part_mos_[a];
+                for (size_t b = 0; b < npart_; ++b) {
+                    size_t nb = part_mos_[b];
                     E +=
                         Fa_dsrg_[nb][nj] * T1a_[i][a] * Da_[nj][ni] * (Delta(na, nb) - Da_[na][nb]);
                     E +=
@@ -1762,18 +1772,18 @@ void MCSRGPT2_MO::E_VT1_FT2(double& EF1, double& EF2, double& EV1, double& EV2) 
     EF2 = 0.0;
     EV1 = 0.0;
     EV2 = 0.0;
-    for (size_t u = 0; u < na_; ++u) {
-        size_t nu = idx_a_[u];
-        for (size_t v = 0; v < na_; ++v) {
-            size_t nv = idx_a_[v];
-            for (size_t x = 0; x < na_; ++x) {
-                size_t nx = idx_a_[x];
-                for (size_t y = 0; y < na_; ++y) {
-                    size_t ny = idx_a_[y];
+    for (size_t u = 0; u < nactv_; ++u) {
+        size_t nu = actv_mos_[u];
+        for (size_t v = 0; v < nactv_; ++v) {
+            size_t nv = actv_mos_[v];
+            for (size_t x = 0; x < nactv_; ++x) {
+                size_t nx = actv_mos_[x];
+                for (size_t y = 0; y < nactv_; ++y) {
+                    size_t ny = actv_mos_[y];
 
-                    for (size_t e = 0; e < nv_; ++e) {
-                        size_t ne = idx_v_[e];
-                        size_t te = e + na_;
+                    for (size_t e = 0; e < nvirt_; ++e) {
+                        size_t ne = virt_mos_[e];
+                        size_t te = e + nactv_;
                         EV1 +=
                             integral_->aptei_aa(nx, ny, ne, nv) * T1a_[u][te] * L2aa_[x][y][u][v];
                         EV1 +=
@@ -1789,9 +1799,9 @@ void MCSRGPT2_MO::E_VT1_FT2(double& EF1, double& EF2, double& EV1, double& EV2) 
                         EF1 += 2 * Fb_dsrg_[ne][nx] * T2ab_[v][u][y][te] * L2ab_[y][x][v][u];
                     }
 
-                    for (size_t m = 0; m < nc_; ++m) {
-                        size_t nm = idx_c_[m];
-                        size_t tm = m + na_;
+                    for (size_t m = 0; m < ncore_; ++m) {
+                        size_t nm = core_mos_[m];
+                        size_t tm = m + nactv_;
                         EV2 -=
                             integral_->aptei_aa(nm, ny, nu, nv) * T1a_[tm][x] * L2aa_[x][y][u][v];
                         EV2 -=
@@ -1820,19 +1830,19 @@ void MCSRGPT2_MO::E_VT1_FT2(double& EF1, double& EF2, double& EV1, double& EV2) 
 void MCSRGPT2_MO::E_VT2_2(double& E) {
     timer_on("[V, T2] C_2^4");
     E = 0.0;
-    d4 C1aa(npt_, d3(npt_, d2(nh_, d1(nh_))));
-    d4 C1ab(npt_, d3(npt_, d2(nh_, d1(nh_))));
-    d4 C1bb(npt_, d3(npt_, d2(nh_, d1(nh_))));
-    for (size_t k = 0; k < nh_; ++k) {
-        size_t nk = idx_h_[k];
-        for (size_t l = 0; l < nh_; ++l) {
-            size_t nl = idx_h_[l];
-            for (size_t a = 0; a < npt_; ++a) {
-                size_t na = idx_p_[a];
-                for (size_t d = 0; d < npt_; ++d) {
-                    size_t nd = idx_p_[d];
-                    for (size_t c = 0; c < npt_; ++c) {
-                        size_t nc = idx_p_[c];
+    d4 C1aa(npart_, d3(npart_, d2(nhole_, d1(nhole_))));
+    d4 C1ab(npart_, d3(npart_, d2(nhole_, d1(nhole_))));
+    d4 C1bb(npart_, d3(npart_, d2(nhole_, d1(nhole_))));
+    for (size_t k = 0; k < nhole_; ++k) {
+        size_t nk = hole_mos_[k];
+        for (size_t l = 0; l < nhole_; ++l) {
+            size_t nl = hole_mos_[l];
+            for (size_t a = 0; a < npart_; ++a) {
+                size_t na = part_mos_[a];
+                for (size_t d = 0; d < npart_; ++d) {
+                    size_t nd = part_mos_[d];
+                    for (size_t c = 0; c < npart_; ++c) {
+                        size_t nc = part_mos_[c];
                         C1aa[a][d][k][l] +=
                             integral_->aptei_aa(nk, nl, nc, nd) * (Delta(na, nc) - Da_[na][nc]);
                         C1ab[a][d][k][l] +=
@@ -1844,16 +1854,16 @@ void MCSRGPT2_MO::E_VT2_2(double& E) {
             }
         }
     }
-    d4 C2aa(npt_, d3(npt_, d2(nh_, d1(nh_))));
-    d4 C2ab(npt_, d3(npt_, d2(nh_, d1(nh_))));
-    d4 C2bb(npt_, d3(npt_, d2(nh_, d1(nh_))));
-    for (size_t k = 0; k < nh_; ++k) {
-        for (size_t l = 0; l < nh_; ++l) {
-            for (size_t a = 0; a < npt_; ++a) {
-                for (size_t b = 0; b < npt_; ++b) {
-                    size_t nb = idx_p_[b];
-                    for (size_t d = 0; d < npt_; ++d) {
-                        size_t nd = idx_p_[d];
+    d4 C2aa(npart_, d3(npart_, d2(nhole_, d1(nhole_))));
+    d4 C2ab(npart_, d3(npart_, d2(nhole_, d1(nhole_))));
+    d4 C2bb(npart_, d3(npart_, d2(nhole_, d1(nhole_))));
+    for (size_t k = 0; k < nhole_; ++k) {
+        for (size_t l = 0; l < nhole_; ++l) {
+            for (size_t a = 0; a < npart_; ++a) {
+                for (size_t b = 0; b < npart_; ++b) {
+                    size_t nb = part_mos_[b];
+                    for (size_t d = 0; d < npart_; ++d) {
+                        size_t nd = part_mos_[d];
                         C2aa[a][b][k][l] += C1aa[a][d][k][l] * (Delta(nb, nd) - Da_[nb][nd]);
                         C2ab[a][b][k][l] += C1ab[a][d][k][l] * (Delta(nb, nd) - Db_[nb][nd]);
                         C2bb[a][b][k][l] += C1bb[a][d][k][l] * (Delta(nb, nd) - Db_[nb][nd]);
@@ -1862,16 +1872,16 @@ void MCSRGPT2_MO::E_VT2_2(double& E) {
             }
         }
     }
-    C1aa = d4(npt_, d3(npt_, d2(nh_, d1(nh_))));
-    C1ab = d4(npt_, d3(npt_, d2(nh_, d1(nh_))));
-    C1bb = d4(npt_, d3(npt_, d2(nh_, d1(nh_))));
-    for (size_t b = 0; b < npt_; ++b) {
-        for (size_t l = 0; l < nh_; ++l) {
-            for (size_t a = 0; a < npt_; ++a) {
-                for (size_t i = 0; i < nh_; ++i) {
-                    size_t ni = idx_h_[i];
-                    for (size_t k = 0; k < nh_; ++k) {
-                        size_t nk = idx_h_[k];
+    C1aa = d4(npart_, d3(npart_, d2(nhole_, d1(nhole_))));
+    C1ab = d4(npart_, d3(npart_, d2(nhole_, d1(nhole_))));
+    C1bb = d4(npart_, d3(npart_, d2(nhole_, d1(nhole_))));
+    for (size_t b = 0; b < npart_; ++b) {
+        for (size_t l = 0; l < nhole_; ++l) {
+            for (size_t a = 0; a < npart_; ++a) {
+                for (size_t i = 0; i < nhole_; ++i) {
+                    size_t ni = hole_mos_[i];
+                    for (size_t k = 0; k < nhole_; ++k) {
+                        size_t nk = hole_mos_[k];
                         C1aa[a][b][i][l] += C2aa[a][b][k][l] * Da_[nk][ni];
                         C1ab[a][b][i][l] += C2ab[a][b][k][l] * Da_[nk][ni];
                         C1bb[a][b][i][l] += C2bb[a][b][k][l] * Db_[nk][ni];
@@ -1880,16 +1890,16 @@ void MCSRGPT2_MO::E_VT2_2(double& E) {
             }
         }
     }
-    C2aa = d4(npt_, d3(npt_, d2(nh_, d1(nh_))));
-    C2ab = d4(npt_, d3(npt_, d2(nh_, d1(nh_))));
-    C2bb = d4(npt_, d3(npt_, d2(nh_, d1(nh_))));
-    for (size_t a = 0; a < npt_; ++a) {
-        for (size_t b = 0; b < npt_; ++b) {
-            for (size_t i = 0; i < nh_; ++i) {
-                for (size_t j = 0; j < nh_; ++j) {
-                    size_t nj = idx_h_[j];
-                    for (size_t l = 0; l < nh_; ++l) {
-                        size_t nl = idx_h_[l];
+    C2aa = d4(npart_, d3(npart_, d2(nhole_, d1(nhole_))));
+    C2ab = d4(npart_, d3(npart_, d2(nhole_, d1(nhole_))));
+    C2bb = d4(npart_, d3(npart_, d2(nhole_, d1(nhole_))));
+    for (size_t a = 0; a < npart_; ++a) {
+        for (size_t b = 0; b < npart_; ++b) {
+            for (size_t i = 0; i < nhole_; ++i) {
+                for (size_t j = 0; j < nhole_; ++j) {
+                    size_t nj = hole_mos_[j];
+                    for (size_t l = 0; l < nhole_; ++l) {
+                        size_t nl = hole_mos_[l];
                         C2aa[a][b][i][j] += C1aa[a][b][i][l] * Da_[nl][nj];
                         C2ab[a][b][i][j] += C1ab[a][b][i][l] * Db_[nl][nj];
                         C2bb[a][b][i][j] += C1bb[a][b][i][l] * Db_[nl][nj];
@@ -1898,10 +1908,10 @@ void MCSRGPT2_MO::E_VT2_2(double& E) {
             }
         }
     }
-    for (size_t i = 0; i < nh_; ++i) {
-        for (size_t j = 0; j < nh_; ++j) {
-            for (size_t a = 0; a < npt_; ++a) {
-                for (size_t b = 0; b < npt_; ++b) {
+    for (size_t i = 0; i < nhole_; ++i) {
+        for (size_t j = 0; j < nhole_; ++j) {
+            for (size_t a = 0; a < npart_; ++a) {
+                for (size_t b = 0; b < npart_; ++b) {
                     E += T2aa_[i][j][a][b] * C2aa[a][b][i][j];
                     E += 4 * T2ab_[i][j][a][b] * C2ab[a][b][i][j];
                     E += T2bb_[i][j][a][b] * C2bb[a][b][i][j];
@@ -1916,19 +1926,19 @@ void MCSRGPT2_MO::E_VT2_2(double& E) {
 void MCSRGPT2_MO::E_VT2_4PP(double& E) {
     timer_on("[V, T2] C_4 * C_2^2: PP");
     E = 0.0;
-    d4 C1aa(npt_, d3(npt_, d2(na_, d1(na_))));
-    d4 C1ab(npt_, d3(npt_, d2(na_, d1(na_))));
-    d4 C1bb(npt_, d3(npt_, d2(na_, d1(na_))));
-    for (size_t x = 0; x < na_; ++x) {
-        size_t nx = idx_a_[x];
-        for (size_t y = 0; y < na_; ++y) {
-            size_t ny = idx_a_[y];
-            for (size_t d = 0; d < npt_; ++d) {
-                size_t nd = idx_p_[d];
-                for (size_t a = 0; a < npt_; ++a) {
-                    size_t na = idx_p_[a];
-                    for (size_t c = 0; c < npt_; ++c) {
-                        size_t nc = idx_p_[c];
+    d4 C1aa(npart_, d3(npart_, d2(nactv_, d1(nactv_))));
+    d4 C1ab(npart_, d3(npart_, d2(nactv_, d1(nactv_))));
+    d4 C1bb(npart_, d3(npart_, d2(nactv_, d1(nactv_))));
+    for (size_t x = 0; x < nactv_; ++x) {
+        size_t nx = actv_mos_[x];
+        for (size_t y = 0; y < nactv_; ++y) {
+            size_t ny = actv_mos_[y];
+            for (size_t d = 0; d < npart_; ++d) {
+                size_t nd = part_mos_[d];
+                for (size_t a = 0; a < npart_; ++a) {
+                    size_t na = part_mos_[a];
+                    for (size_t c = 0; c < npart_; ++c) {
+                        size_t nc = part_mos_[c];
                         C1aa[a][d][x][y] +=
                             integral_->aptei_aa(nx, ny, nc, nd) * (Delta(na, nc) - Da_[na][nc]);
                         C1ab[a][d][x][y] +=
@@ -1940,16 +1950,16 @@ void MCSRGPT2_MO::E_VT2_4PP(double& E) {
             }
         }
     }
-    d4 C2aa(npt_, d3(npt_, d2(na_, d1(na_))));
-    d4 C2ab(npt_, d3(npt_, d2(na_, d1(na_))));
-    d4 C2bb(npt_, d3(npt_, d2(na_, d1(na_))));
-    for (size_t x = 0; x < na_; ++x) {
-        for (size_t y = 0; y < na_; ++y) {
-            for (size_t a = 0; a < npt_; ++a) {
-                for (size_t b = 0; b < npt_; ++b) {
-                    size_t nb = idx_p_[b];
-                    for (size_t d = 0; d < npt_; ++d) {
-                        size_t nd = idx_p_[d];
+    d4 C2aa(npart_, d3(npart_, d2(nactv_, d1(nactv_))));
+    d4 C2ab(npart_, d3(npart_, d2(nactv_, d1(nactv_))));
+    d4 C2bb(npart_, d3(npart_, d2(nactv_, d1(nactv_))));
+    for (size_t x = 0; x < nactv_; ++x) {
+        for (size_t y = 0; y < nactv_; ++y) {
+            for (size_t a = 0; a < npart_; ++a) {
+                for (size_t b = 0; b < npart_; ++b) {
+                    size_t nb = part_mos_[b];
+                    for (size_t d = 0; d < npart_; ++d) {
+                        size_t nd = part_mos_[d];
                         C2aa[a][b][x][y] += C1aa[a][d][x][y] * (Delta(nb, nd) - Da_[nb][nd]);
                         C2ab[a][b][x][y] += C1ab[a][d][x][y] * (Delta(nb, nd) - Db_[nb][nd]);
                         C2bb[a][b][x][y] += C1bb[a][d][x][y] * (Delta(nb, nd) - Db_[nb][nd]);
@@ -1958,15 +1968,15 @@ void MCSRGPT2_MO::E_VT2_4PP(double& E) {
             }
         }
     }
-    C1aa = d4(npt_, d3(npt_, d2(na_, d1(na_))));
-    C1ab = d4(npt_, d3(npt_, d2(na_, d1(na_))));
-    C1bb = d4(npt_, d3(npt_, d2(na_, d1(na_))));
-    for (size_t u = 0; u < na_; ++u) {
-        for (size_t v = 0; v < na_; ++v) {
-            for (size_t a = 0; a < npt_; ++a) {
-                for (size_t b = 0; b < npt_; ++b) {
-                    for (size_t x = 0; x < na_; ++x) {
-                        for (size_t y = 0; y < na_; ++y) {
+    C1aa = d4(npart_, d3(npart_, d2(nactv_, d1(nactv_))));
+    C1ab = d4(npart_, d3(npart_, d2(nactv_, d1(nactv_))));
+    C1bb = d4(npart_, d3(npart_, d2(nactv_, d1(nactv_))));
+    for (size_t u = 0; u < nactv_; ++u) {
+        for (size_t v = 0; v < nactv_; ++v) {
+            for (size_t a = 0; a < npart_; ++a) {
+                for (size_t b = 0; b < npart_; ++b) {
+                    for (size_t x = 0; x < nactv_; ++x) {
+                        for (size_t y = 0; y < nactv_; ++y) {
                             C1aa[a][b][u][v] += C2aa[a][b][x][y] * L2aa_[x][y][u][v];
                             C1bb[a][b][u][v] += C2bb[a][b][x][y] * L2bb_[x][y][u][v];
                             C1ab[a][b][u][v] += C2ab[a][b][x][y] * L2ab_[x][y][u][v];
@@ -1976,10 +1986,10 @@ void MCSRGPT2_MO::E_VT2_4PP(double& E) {
             }
         }
     }
-    for (size_t u = 0; u < na_; ++u) {
-        for (size_t v = 0; v < na_; ++v) {
-            for (size_t a = 0; a < npt_; ++a) {
-                for (size_t b = 0; b < npt_; ++b) {
+    for (size_t u = 0; u < nactv_; ++u) {
+        for (size_t v = 0; v < nactv_; ++v) {
+            for (size_t a = 0; a < npart_; ++a) {
+                for (size_t b = 0; b < npart_; ++b) {
                     E += C1aa[a][b][u][v] * T2aa_[u][v][a][b];
                     E += C1bb[a][b][u][v] * T2bb_[u][v][a][b];
                     E += 8 * C1ab[a][b][u][v] * T2ab_[u][v][a][b];
@@ -1994,19 +2004,19 @@ void MCSRGPT2_MO::E_VT2_4PP(double& E) {
 void MCSRGPT2_MO::E_VT2_4HH(double& E) {
     timer_on("[V, T2] C_4 * C_2^2: HH");
     E = 0.0;
-    d4 C1aa(na_, d3(na_, d2(nh_, d1(nh_))));
-    d4 C1ab(na_, d3(na_, d2(nh_, d1(nh_))));
-    d4 C1bb(na_, d3(na_, d2(nh_, d1(nh_))));
-    for (size_t u = 0; u < na_; ++u) {
-        size_t nu = idx_a_[u];
-        for (size_t v = 0; v < na_; ++v) {
-            size_t nv = idx_a_[v];
-            for (size_t l = 0; l < nh_; ++l) {
-                size_t nl = idx_h_[l];
-                for (size_t k = 0; k < nh_; ++k) {
-                    size_t nk = idx_h_[k];
-                    for (size_t i = 0; i < nh_; ++i) {
-                        size_t ni = idx_h_[i];
+    d4 C1aa(nactv_, d3(nactv_, d2(nhole_, d1(nhole_))));
+    d4 C1ab(nactv_, d3(nactv_, d2(nhole_, d1(nhole_))));
+    d4 C1bb(nactv_, d3(nactv_, d2(nhole_, d1(nhole_))));
+    for (size_t u = 0; u < nactv_; ++u) {
+        size_t nu = actv_mos_[u];
+        for (size_t v = 0; v < nactv_; ++v) {
+            size_t nv = actv_mos_[v];
+            for (size_t l = 0; l < nhole_; ++l) {
+                size_t nl = hole_mos_[l];
+                for (size_t k = 0; k < nhole_; ++k) {
+                    size_t nk = hole_mos_[k];
+                    for (size_t i = 0; i < nhole_; ++i) {
+                        size_t ni = hole_mos_[i];
                         C1aa[u][v][i][l] += integral_->aptei_aa(nk, nl, nu, nv) * Da_[nk][ni];
                         C1ab[u][v][i][l] += integral_->aptei_ab(nk, nl, nu, nv) * Da_[nk][ni];
                         C1bb[u][v][i][l] += integral_->aptei_bb(nk, nl, nu, nv) * Db_[nk][ni];
@@ -2015,16 +2025,16 @@ void MCSRGPT2_MO::E_VT2_4HH(double& E) {
             }
         }
     }
-    d4 C2aa(na_, d3(na_, d2(nh_, d1(nh_))));
-    d4 C2ab(na_, d3(na_, d2(nh_, d1(nh_))));
-    d4 C2bb(na_, d3(na_, d2(nh_, d1(nh_))));
-    for (size_t u = 0; u < na_; ++u) {
-        for (size_t v = 0; v < na_; ++v) {
-            for (size_t i = 0; i < nh_; ++i) {
-                for (size_t l = 0; l < nh_; ++l) {
-                    size_t nl = idx_h_[l];
-                    for (size_t j = 0; j < nh_; ++j) {
-                        size_t nj = idx_h_[j];
+    d4 C2aa(nactv_, d3(nactv_, d2(nhole_, d1(nhole_))));
+    d4 C2ab(nactv_, d3(nactv_, d2(nhole_, d1(nhole_))));
+    d4 C2bb(nactv_, d3(nactv_, d2(nhole_, d1(nhole_))));
+    for (size_t u = 0; u < nactv_; ++u) {
+        for (size_t v = 0; v < nactv_; ++v) {
+            for (size_t i = 0; i < nhole_; ++i) {
+                for (size_t l = 0; l < nhole_; ++l) {
+                    size_t nl = hole_mos_[l];
+                    for (size_t j = 0; j < nhole_; ++j) {
+                        size_t nj = hole_mos_[j];
                         C2aa[u][v][i][j] += C1aa[u][v][i][l] * Da_[nl][nj];
                         C2ab[u][v][i][j] += C1ab[u][v][i][l] * Db_[nl][nj];
                         C2bb[u][v][i][j] += C1bb[u][v][i][l] * Db_[nl][nj];
@@ -2033,15 +2043,15 @@ void MCSRGPT2_MO::E_VT2_4HH(double& E) {
             }
         }
     }
-    C1aa = d4(na_, d3(na_, d2(nh_, d1(nh_))));
-    C1ab = d4(na_, d3(na_, d2(nh_, d1(nh_))));
-    C1bb = d4(na_, d3(na_, d2(nh_, d1(nh_))));
-    for (size_t x = 0; x < na_; ++x) {
-        for (size_t y = 0; y < na_; ++y) {
-            for (size_t i = 0; i < nh_; ++i) {
-                for (size_t j = 0; j < nh_; ++j) {
-                    for (size_t u = 0; u < na_; ++u) {
-                        for (size_t v = 0; v < na_; ++v) {
+    C1aa = d4(nactv_, d3(nactv_, d2(nhole_, d1(nhole_))));
+    C1ab = d4(nactv_, d3(nactv_, d2(nhole_, d1(nhole_))));
+    C1bb = d4(nactv_, d3(nactv_, d2(nhole_, d1(nhole_))));
+    for (size_t x = 0; x < nactv_; ++x) {
+        for (size_t y = 0; y < nactv_; ++y) {
+            for (size_t i = 0; i < nhole_; ++i) {
+                for (size_t j = 0; j < nhole_; ++j) {
+                    for (size_t u = 0; u < nactv_; ++u) {
+                        for (size_t v = 0; v < nactv_; ++v) {
                             C1aa[x][y][i][j] += C2aa[u][v][i][j] * L2aa_[x][y][u][v];
                             C1ab[x][y][i][j] += C2ab[u][v][i][j] * L2ab_[x][y][u][v];
                             C1bb[x][y][i][j] += C2bb[u][v][i][j] * L2bb_[x][y][u][v];
@@ -2051,10 +2061,10 @@ void MCSRGPT2_MO::E_VT2_4HH(double& E) {
             }
         }
     }
-    for (size_t x = 0; x < na_; ++x) {
-        for (size_t y = 0; y < na_; ++y) {
-            for (size_t i = 0; i < nh_; ++i) {
-                for (size_t j = 0; j < nh_; ++j) {
+    for (size_t x = 0; x < nactv_; ++x) {
+        for (size_t y = 0; y < nactv_; ++y) {
+            for (size_t i = 0; i < nhole_; ++i) {
+                for (size_t j = 0; j < nhole_; ++j) {
                     E += C1aa[x][y][i][j] * T2aa_[i][j][x][y];
                     E += 8 * C1ab[x][y][i][j] * T2ab_[i][j][x][y];
                     E += C1bb[x][y][i][j] * T2bb_[i][j][x][y];
@@ -2069,22 +2079,22 @@ void MCSRGPT2_MO::E_VT2_4HH(double& E) {
 void MCSRGPT2_MO::E_VT2_4PH(double& E) {
     timer_on("[V, T2] C_4 * C_2^2: PH");
     E = 0.0;
-    d4 C11(na_, d3(npt_, d2(nh_, d1(na_))));
-    d4 C12(na_, d3(npt_, d2(nh_, d1(na_))));
-    d4 C13(na_, d3(npt_, d2(nh_, d1(na_))));
-    d4 C14(na_, d3(npt_, d2(nh_, d1(na_))));
-    d4 C19(na_, d3(npt_, d2(nh_, d1(na_))));
-    d4 C110(na_, d3(npt_, d2(nh_, d1(na_))));
-    for (size_t x = 0; x < na_; ++x) {
-        size_t nx = idx_a_[x];
-        for (size_t v = 0; v < na_; ++v) {
-            size_t nv = idx_a_[v];
-            for (size_t j = 0; j < nh_; ++j) {
-                size_t nj = idx_h_[j];
-                for (size_t a = 0; a < npt_; ++a) {
-                    size_t na = idx_p_[a];
-                    for (size_t b = 0; b < npt_; ++b) {
-                        size_t nb = idx_p_[b];
+    d4 C11(nactv_, d3(npart_, d2(nhole_, d1(nactv_))));
+    d4 C12(nactv_, d3(npart_, d2(nhole_, d1(nactv_))));
+    d4 C13(nactv_, d3(npart_, d2(nhole_, d1(nactv_))));
+    d4 C14(nactv_, d3(npart_, d2(nhole_, d1(nactv_))));
+    d4 C19(nactv_, d3(npart_, d2(nhole_, d1(nactv_))));
+    d4 C110(nactv_, d3(npart_, d2(nhole_, d1(nactv_))));
+    for (size_t x = 0; x < nactv_; ++x) {
+        size_t nx = actv_mos_[x];
+        for (size_t v = 0; v < nactv_; ++v) {
+            size_t nv = actv_mos_[v];
+            for (size_t j = 0; j < nhole_; ++j) {
+                size_t nj = hole_mos_[j];
+                for (size_t a = 0; a < npart_; ++a) {
+                    size_t na = part_mos_[a];
+                    for (size_t b = 0; b < npart_; ++b) {
+                        size_t nb = part_mos_[b];
                         C11[v][a][j][x] +=
                             integral_->aptei_aa(nj, nx, nv, nb) * (Delta(na, nb) - Da_[na][nb]);
                         C12[v][a][j][x] -=
@@ -2102,19 +2112,19 @@ void MCSRGPT2_MO::E_VT2_4PH(double& E) {
             }
         }
     }
-    d4 C21(na_, d3(npt_, d2(nh_, d1(na_))));
-    d4 C22(na_, d3(npt_, d2(nh_, d1(na_))));
-    d4 C23(na_, d3(npt_, d2(nh_, d1(na_))));
-    d4 C24(na_, d3(npt_, d2(nh_, d1(na_))));
-    d4 C29(na_, d3(npt_, d2(nh_, d1(na_))));
-    d4 C210(na_, d3(npt_, d2(nh_, d1(na_))));
-    for (size_t x = 0; x < na_; ++x) {
-        for (size_t v = 0; v < na_; ++v) {
-            for (size_t a = 0; a < npt_; ++a) {
-                for (size_t i = 0; i < nh_; ++i) {
-                    size_t ni = idx_h_[i];
-                    for (size_t j = 0; j < nh_; ++j) {
-                        size_t nj = idx_h_[j];
+    d4 C21(nactv_, d3(npart_, d2(nhole_, d1(nactv_))));
+    d4 C22(nactv_, d3(npart_, d2(nhole_, d1(nactv_))));
+    d4 C23(nactv_, d3(npart_, d2(nhole_, d1(nactv_))));
+    d4 C24(nactv_, d3(npart_, d2(nhole_, d1(nactv_))));
+    d4 C29(nactv_, d3(npart_, d2(nhole_, d1(nactv_))));
+    d4 C210(nactv_, d3(npart_, d2(nhole_, d1(nactv_))));
+    for (size_t x = 0; x < nactv_; ++x) {
+        for (size_t v = 0; v < nactv_; ++v) {
+            for (size_t a = 0; a < npart_; ++a) {
+                for (size_t i = 0; i < nhole_; ++i) {
+                    size_t ni = hole_mos_[i];
+                    for (size_t j = 0; j < nhole_; ++j) {
+                        size_t nj = hole_mos_[j];
                         C21[v][a][i][x] += C11[v][a][j][x] * Da_[nj][ni];
                         C22[v][a][i][x] += C12[v][a][j][x] * Db_[nj][ni];
                         C23[v][a][i][x] += C13[v][a][j][x] * Db_[nj][ni];
@@ -2126,22 +2136,22 @@ void MCSRGPT2_MO::E_VT2_4PH(double& E) {
             }
         }
     }
-    d4 C31(na_, d3(na_, d2(na_, d1(na_))));
-    d4 C32(na_, d3(na_, d2(na_, d1(na_))));
-    d4 C33(na_, d3(na_, d2(na_, d1(na_))));
-    d4 C34(na_, d3(na_, d2(na_, d1(na_))));
-    d4 C35(na_, d3(na_, d2(na_, d1(na_))));
-    d4 C36(na_, d3(na_, d2(na_, d1(na_))));
-    d4 C37(na_, d3(na_, d2(na_, d1(na_))));
-    d4 C38(na_, d3(na_, d2(na_, d1(na_))));
-    d4 C39(na_, d3(na_, d2(na_, d1(na_))));
-    d4 C310(na_, d3(na_, d2(na_, d1(na_))));
-    for (size_t u = 0; u < na_; ++u) {
-        for (size_t y = 0; y < na_; ++y) {
-            for (size_t x = 0; x < na_; ++x) {
-                for (size_t v = 0; v < na_; ++v) {
-                    for (size_t i = 0; i < nh_; ++i) {
-                        for (size_t a = 0; a < npt_; ++a) {
+    d4 C31(nactv_, d3(nactv_, d2(nactv_, d1(nactv_))));
+    d4 C32(nactv_, d3(nactv_, d2(nactv_, d1(nactv_))));
+    d4 C33(nactv_, d3(nactv_, d2(nactv_, d1(nactv_))));
+    d4 C34(nactv_, d3(nactv_, d2(nactv_, d1(nactv_))));
+    d4 C35(nactv_, d3(nactv_, d2(nactv_, d1(nactv_))));
+    d4 C36(nactv_, d3(nactv_, d2(nactv_, d1(nactv_))));
+    d4 C37(nactv_, d3(nactv_, d2(nactv_, d1(nactv_))));
+    d4 C38(nactv_, d3(nactv_, d2(nactv_, d1(nactv_))));
+    d4 C39(nactv_, d3(nactv_, d2(nactv_, d1(nactv_))));
+    d4 C310(nactv_, d3(nactv_, d2(nactv_, d1(nactv_))));
+    for (size_t u = 0; u < nactv_; ++u) {
+        for (size_t y = 0; y < nactv_; ++y) {
+            for (size_t x = 0; x < nactv_; ++x) {
+                for (size_t v = 0; v < nactv_; ++v) {
+                    for (size_t i = 0; i < nhole_; ++i) {
+                        for (size_t a = 0; a < npart_; ++a) {
                             C31[u][v][x][y] += C21[v][a][i][x] * T2aa_[i][u][a][y];
                             C32[u][v][x][y] += C22[v][a][i][x] * T2ab_[u][i][y][a];
                             C33[u][v][x][y] += C23[v][a][i][x] * T2bb_[i][u][a][y];
@@ -2158,10 +2168,10 @@ void MCSRGPT2_MO::E_VT2_4PH(double& E) {
             }
         }
     }
-    for (size_t u = 0; u < na_; ++u) {
-        for (size_t v = 0; v < na_; ++v) {
-            for (size_t x = 0; x < na_; ++x) {
-                for (size_t y = 0; y < na_; ++y) {
+    for (size_t u = 0; u < nactv_; ++u) {
+        for (size_t v = 0; v < nactv_; ++v) {
+            for (size_t x = 0; x < nactv_; ++x) {
+                for (size_t y = 0; y < nactv_; ++y) {
                     E += C31[u][v][x][y] * L2aa_[x][y][u][v];
                     E += C32[u][v][x][y] * L2aa_[x][y][u][v];
                     E += C33[u][v][x][y] * L2bb_[x][y][u][v];
@@ -2183,20 +2193,20 @@ void MCSRGPT2_MO::E_VT2_6(double& E1, double& E2) {
     timer_on("[V, T2] C_6 * C_2");
     E1 = 0.0;
     E2 = 0.0;
-    for (size_t u = 0; u < na_; ++u) {
-        size_t nu = idx_a_[u];
-        for (size_t v = 0; v < na_; ++v) {
-            size_t nv = idx_a_[v];
-            for (size_t w = 0; w < na_; ++w) {
-                size_t nw = idx_a_[w];
-                for (size_t x = 0; x < na_; ++x) {
-                    size_t nx = idx_a_[x];
-                    for (size_t y = 0; y < na_; ++y) {
-                        size_t ny = idx_a_[y];
-                        for (size_t z = 0; z < na_; ++z) {
-                            size_t nz = idx_a_[z];
-                            for (size_t i = 0; i < nh_; ++i) {
-                                size_t ni = idx_h_[i];
+    for (size_t u = 0; u < nactv_; ++u) {
+        size_t nu = actv_mos_[u];
+        for (size_t v = 0; v < nactv_; ++v) {
+            size_t nv = actv_mos_[v];
+            for (size_t w = 0; w < nactv_; ++w) {
+                size_t nw = actv_mos_[w];
+                for (size_t x = 0; x < nactv_; ++x) {
+                    size_t nx = actv_mos_[x];
+                    for (size_t y = 0; y < nactv_; ++y) {
+                        size_t ny = actv_mos_[y];
+                        for (size_t z = 0; z < nactv_; ++z) {
+                            size_t nz = actv_mos_[z];
+                            for (size_t i = 0; i < nhole_; ++i) {
+                                size_t ni = hole_mos_[i];
                                 // L3aaa & L3bbb
                                 E1 += integral_->aptei_aa(ni, nz, nu, nv) * T2aa_[i][w][x][y] *
                                       L3aaa_[x][y][z][u][v][w];
@@ -2219,8 +2229,8 @@ void MCSRGPT2_MO::E_VT2_6(double& E1, double& E2) {
                                 E1 -= 2 * L3abb_[x][y][z][w][u][v] * T2ab_[w][i][x][y] *
                                       integral_->aptei_bb(ni, nz, nu, nv);
                             }
-                            for (size_t a = 0; a < npt_; ++a) {
-                                size_t na = idx_p_[a];
+                            for (size_t a = 0; a < npart_; ++a) {
+                                size_t na = part_mos_[a];
                                 // L3aaa & L3bbb
                                 E2 += integral_->aptei_aa(nx, ny, nw, na) * T2aa_[u][v][a][z] *
                                       L3aaa_[x][y][z][u][v][w];
@@ -2257,19 +2267,19 @@ void MCSRGPT2_MO::E_VT2_6(double& E1, double& E2) {
 double MCSRGPT2_MO::ESRG_11() {
     double E = 0.0;
 
-    for (size_t i = 0; i < nh_; ++i) {
-        size_t ni = idx_h_[i];
-        for (size_t a = 0; a < npt_; ++a) {
-            size_t na = idx_p_[a];
+    for (size_t i = 0; i < nhole_; ++i) {
+        size_t ni = hole_mos_[i];
+        for (size_t a = 0; a < npart_; ++a) {
+            size_t na = part_mos_[a];
 
             // i, a cannot all be active
-            if (i < na_ && a < na_)
+            if (i < nactv_ && a < nactv_)
                 continue;
 
-            for (size_t j = 0; j < nh_; ++j) {
-                size_t nj = idx_h_[j];
-                for (size_t b = 0; b < npt_; ++b) {
-                    size_t nb = idx_p_[b];
+            for (size_t j = 0; j < nhole_; ++j) {
+                size_t nj = hole_mos_[j];
+                for (size_t b = 0; b < npart_; ++b) {
+                    size_t nb = part_mos_[b];
 
                     double va = 0.0, vb = 0.0;
 
@@ -2283,10 +2293,10 @@ double MCSRGPT2_MO::ESRG_11() {
                     va += Fb_srg_[nb][nj] * Fb_srg_[ni][na] * d1 *
                           srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
 
-                    for (size_t u = 0; u < na_; ++u) {
-                        size_t nu = idx_a_[u];
-                        for (size_t v = 0; v < na_; ++v) {
-                            size_t nv = idx_a_[v];
+                    for (size_t u = 0; u < nactv_; ++u) {
+                        size_t nu = actv_mos_[u];
+                        for (size_t v = 0; v < nactv_; ++v) {
+                            size_t nv = actv_mos_[v];
 
                             d1 = Fa_[ni][ni] + Fa_[nv][nv] - Fa_[na][na] - Fa_[nu][nu];
                             d2 = Fa_[nb][nb] - Fa_[nj][nj];
@@ -2328,10 +2338,10 @@ double MCSRGPT2_MO::ESRG_11() {
                                   Db_[nu][nv] * d1 *
                                   srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
 
-                            for (size_t x = 0; x < na_; ++x) {
-                                size_t nx = idx_a_[x];
-                                for (size_t y = 0; y < na_; ++y) {
-                                    size_t ny = idx_a_[y];
+                            for (size_t x = 0; x < nactv_; ++x) {
+                                size_t nx = actv_mos_[x];
+                                for (size_t y = 0; y < nactv_; ++y) {
+                                    size_t ny = actv_mos_[y];
 
                                     d1 = Fa_[ni][ni] + Fa_[nv][nv] - Fa_[na][na] - Fa_[nu][nu];
                                     d2 = Fa_[nb][nb] + Fa_[ny][ny] - Fa_[nj][nj] - Fa_[nx][nx];
@@ -2410,20 +2420,20 @@ double MCSRGPT2_MO::ESRG_11() {
 double MCSRGPT2_MO::ESRG_12() {
     double E = 0.0;
 
-    for (size_t u = 0; u < na_; ++u) {
-        size_t nu = idx_a_[u];
-        for (size_t v = 0; v < na_; ++v) {
-            size_t nv = idx_a_[v];
-            for (size_t x = 0; x < na_; ++x) {
-                size_t nx = idx_a_[x];
-                for (size_t y = 0; y < na_; ++y) {
-                    size_t ny = idx_a_[y];
+    for (size_t u = 0; u < nactv_; ++u) {
+        size_t nu = actv_mos_[u];
+        for (size_t v = 0; v < nactv_; ++v) {
+            size_t nv = actv_mos_[v];
+            for (size_t x = 0; x < nactv_; ++x) {
+                size_t nx = actv_mos_[x];
+                for (size_t y = 0; y < nactv_; ++y) {
+                    size_t ny = actv_mos_[y];
 
                     double vaa = 0.0, vab = 0.0, vbb = 0.0;
 
                     // virtual
-                    for (size_t e = 0; e < nv_; ++e) {
-                        size_t ne = idx_v_[e];
+                    for (size_t e = 0; e < nvirt_; ++e) {
+                        size_t ne = virt_mos_[e];
 
                         double d1 = Fa_[nu][nu] - Fa_[ne][ne];
                         double d2 = Fa_[ne][ne] + Fa_[nv][nv] - Fa_[nx][nx] - Fa_[ny][ny];
@@ -2445,10 +2455,10 @@ double MCSRGPT2_MO::ESRG_12() {
                         vab += integral_->aptei_ab(nu, ne, nx, ny) * Fb_srg_[nv][ne] * d1 *
                                srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
 
-                        for (size_t w = 0; w < na_; ++w) {
-                            size_t nw = idx_a_[w];
-                            for (size_t z = 0; z < na_; ++z) {
-                                size_t nz = idx_a_[z];
+                        for (size_t w = 0; w < nactv_; ++w) {
+                            size_t nw = actv_mos_[w];
+                            for (size_t z = 0; z < nactv_; ++z) {
+                                size_t nz = actv_mos_[z];
 
                                 d1 = Fa_[nu][nu] + Fa_[nw][nw] - Fa_[ne][ne] - Fa_[nz][nz];
                                 d2 = Fa_[ne][ne] + Fa_[nv][nv] - Fa_[nx][nx] - Fa_[ny][ny];
@@ -2502,8 +2512,8 @@ double MCSRGPT2_MO::ESRG_12() {
                     }
 
                     // core
-                    for (size_t m = 0; m < nc_; ++m) {
-                        size_t nm = idx_c_[m];
+                    for (size_t m = 0; m < ncore_; ++m) {
+                        size_t nm = core_mos_[m];
 
                         double d1 = Fa_[nm][nm] - Fa_[nx][nx];
                         double d2 = Fa_[nu][nu] + Fa_[nv][nv] - Fa_[nm][nm] - Fa_[ny][ny];
@@ -2525,10 +2535,10 @@ double MCSRGPT2_MO::ESRG_12() {
                         vab -= integral_->aptei_ab(nu, nv, nx, nm) * Fa_srg_[nm][ny] * d1 *
                                srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
 
-                        for (size_t w = 0; w < na_; ++w) {
-                            size_t nw = idx_a_[w];
-                            for (size_t z = 0; z < na_; ++z) {
-                                size_t nz = idx_a_[z];
+                        for (size_t w = 0; w < nactv_; ++w) {
+                            size_t nw = actv_mos_[w];
+                            for (size_t z = 0; z < nactv_; ++z) {
+                                size_t nz = actv_mos_[z];
 
                                 d1 = Fa_[nm][nm] + Fa_[nw][nw] - Fa_[nx][nx] - Fa_[nz][nz];
                                 d2 = Fa_[nu][nu] + Fa_[nv][nv] - Fa_[nm][nm] - Fa_[ny][ny];
@@ -2595,20 +2605,20 @@ double MCSRGPT2_MO::ESRG_12() {
 double MCSRGPT2_MO::ESRG_21() {
     double E = 0.0;
 
-    for (size_t u = 0; u < na_; ++u) {
-        size_t nu = idx_a_[u];
-        for (size_t v = 0; v < na_; ++v) {
-            size_t nv = idx_a_[v];
-            for (size_t x = 0; x < na_; ++x) {
-                size_t nx = idx_a_[x];
-                for (size_t y = 0; y < na_; ++y) {
-                    size_t ny = idx_a_[y];
+    for (size_t u = 0; u < nactv_; ++u) {
+        size_t nu = actv_mos_[u];
+        for (size_t v = 0; v < nactv_; ++v) {
+            size_t nv = actv_mos_[v];
+            for (size_t x = 0; x < nactv_; ++x) {
+                size_t nx = actv_mos_[x];
+                for (size_t y = 0; y < nactv_; ++y) {
+                    size_t ny = actv_mos_[y];
 
                     double vaa = 0.0, vab = 0.0, vbb = 0.0;
 
                     // virtual
-                    for (size_t e = 0; e < nv_; ++e) {
-                        size_t ne = idx_v_[e];
+                    for (size_t e = 0; e < nvirt_; ++e) {
+                        size_t ne = virt_mos_[e];
 
                         double d1 = Fa_[nu][nu] + Fa_[nv][nv] - Fa_[ne][ne] - Fa_[ny][ny];
                         double d2 = Fa_[ne][ne] - Fa_[nx][nx];
@@ -2630,10 +2640,10 @@ double MCSRGPT2_MO::ESRG_21() {
                         vab += Fb_srg_[ne][ny] * integral_->aptei_ab(nu, nv, nx, ne) * d1 *
                                srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
 
-                        for (size_t w = 0; w < na_; ++w) {
-                            size_t nw = idx_a_[w];
-                            for (size_t z = 0; z < na_; ++z) {
-                                size_t nz = idx_a_[z];
+                        for (size_t w = 0; w < nactv_; ++w) {
+                            size_t nw = actv_mos_[w];
+                            for (size_t z = 0; z < nactv_; ++z) {
+                                size_t nz = actv_mos_[z];
 
                                 d1 = Fa_[nu][nu] + Fa_[nv][nv] - Fa_[ne][ne] - Fa_[ny][ny];
                                 d2 = Fa_[ne][ne] + Fa_[nw][nw] - Fa_[nx][nx] - Fa_[nz][nz];
@@ -2687,8 +2697,8 @@ double MCSRGPT2_MO::ESRG_21() {
                     }
 
                     // core
-                    for (size_t m = 0; m < nc_; ++m) {
-                        size_t nm = idx_c_[m];
+                    for (size_t m = 0; m < ncore_; ++m) {
+                        size_t nm = core_mos_[m];
 
                         double d1 = Fa_[nu][nu] + Fa_[nm][nm] - Fa_[nx][nx] - Fa_[ny][ny];
                         double d2 = Fa_[nv][nv] - Fa_[nm][nm];
@@ -2710,10 +2720,10 @@ double MCSRGPT2_MO::ESRG_21() {
                         vab -= Fa_srg_[nu][nm] * integral_->aptei_ab(nm, nv, nx, ny) * d1 *
                                srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
 
-                        for (size_t w = 0; w < na_; ++w) {
-                            size_t nw = idx_a_[w];
-                            for (size_t z = 0; z < na_; ++z) {
-                                size_t nz = idx_a_[z];
+                        for (size_t w = 0; w < nactv_; ++w) {
+                            size_t nw = actv_mos_[w];
+                            for (size_t z = 0; z < nactv_; ++z) {
+                                size_t nz = actv_mos_[z];
 
                                 d1 = Fa_[nu][nu] + Fa_[nm][nm] - Fa_[nx][nx] - Fa_[ny][ny];
                                 d2 = Fa_[nv][nv] + Fa_[nw][nw] - Fa_[nm][nm] - Fa_[nz][nz];
@@ -2780,27 +2790,27 @@ double MCSRGPT2_MO::ESRG_21() {
 double MCSRGPT2_MO::ESRG_22_2() {
     double E = 0.0;
 
-    for (size_t i = 0; i < nh_; ++i) {
-        size_t ni = idx_h_[i];
-        for (size_t j = 0; j < nh_; ++j) {
-            size_t nj = idx_h_[j];
-            for (size_t a = 0; a < npt_; ++a) {
-                size_t na = idx_p_[a];
-                for (size_t b = 0; b < npt_; ++b) {
-                    size_t nb = idx_p_[b];
+    for (size_t i = 0; i < nhole_; ++i) {
+        size_t ni = hole_mos_[i];
+        for (size_t j = 0; j < nhole_; ++j) {
+            size_t nj = hole_mos_[j];
+            for (size_t a = 0; a < npart_; ++a) {
+                size_t na = part_mos_[a];
+                for (size_t b = 0; b < npart_; ++b) {
+                    size_t nb = part_mos_[b];
 
                     // i, j, a, b cannot all be active
-                    if (i < na_ && j < na_ && a < na_ && b < na_)
+                    if (i < nactv_ && j < nactv_ && a < nactv_ && b < nactv_)
                         continue;
 
-                    for (size_t k = 0; k < nh_; ++k) {
-                        size_t nk = idx_h_[k];
-                        for (size_t l = 0; l < nh_; ++l) {
-                            size_t nl = idx_h_[l];
-                            for (size_t c = 0; c < npt_; ++c) {
-                                size_t nc = idx_p_[c];
-                                for (size_t d = 0; d < npt_; ++d) {
-                                    size_t nd = idx_p_[d];
+                    for (size_t k = 0; k < nhole_; ++k) {
+                        size_t nk = hole_mos_[k];
+                        for (size_t l = 0; l < nhole_; ++l) {
+                            size_t nl = hole_mos_[l];
+                            for (size_t c = 0; c < npart_; ++c) {
+                                size_t nc = part_mos_[c];
+                                for (size_t d = 0; d < npart_; ++d) {
+                                    size_t nd = part_mos_[d];
 
                                     double d1 =
                                         Fa_[ni][ni] + Fa_[nj][nj] - Fa_[na][na] - Fa_[nb][nb];
@@ -2845,31 +2855,31 @@ double MCSRGPT2_MO::ESRG_22_2() {
 double MCSRGPT2_MO::ESRG_22_4() {
     double E = 0.0;
 
-    for (size_t u = 0; u < na_; ++u) {
-        size_t nu = idx_a_[u];
-        for (size_t v = 0; v < na_; ++v) {
-            size_t nv = idx_a_[v];
-            for (size_t x = 0; x < na_; ++x) {
-                size_t nx = idx_a_[x];
-                for (size_t y = 0; y < na_; ++y) {
-                    size_t ny = idx_a_[y];
+    for (size_t u = 0; u < nactv_; ++u) {
+        size_t nu = actv_mos_[u];
+        for (size_t v = 0; v < nactv_; ++v) {
+            size_t nv = actv_mos_[v];
+            for (size_t x = 0; x < nactv_; ++x) {
+                size_t nx = actv_mos_[x];
+                for (size_t y = 0; y < nactv_; ++y) {
+                    size_t ny = actv_mos_[y];
 
                     double vaa = 0.0, vab = 0.0, vbb = 0.0;
 
                     // hole-hole
-                    for (size_t i = 0; i < nh_; ++i) {
-                        size_t ni = idx_h_[i];
-                        for (size_t j = 0; j < nh_; ++j) {
-                            size_t nj = idx_h_[j];
+                    for (size_t i = 0; i < nhole_; ++i) {
+                        size_t ni = hole_mos_[i];
+                        for (size_t j = 0; j < nhole_; ++j) {
+                            size_t nj = hole_mos_[j];
 
                             // i, j cannot all be active
-                            if (i < na_ && j < na_)
+                            if (i < nactv_ && j < nactv_)
                                 continue;
 
-                            for (size_t k = 0; k < nh_; ++k) {
-                                size_t nk = idx_h_[k];
-                                for (size_t l = 0; l < nh_; ++l) {
-                                    size_t nl = idx_h_[l];
+                            for (size_t k = 0; k < nhole_; ++k) {
+                                size_t nk = hole_mos_[k];
+                                for (size_t l = 0; l < nhole_; ++l) {
+                                    size_t nl = hole_mos_[l];
 
                                     double d1 =
                                         Fa_[ni][ni] + Fa_[nj][nj] - Fa_[nx][nx] - Fa_[ny][ny];
@@ -2902,19 +2912,19 @@ double MCSRGPT2_MO::ESRG_22_4() {
                     }
 
                     // particle-particle
-                    for (size_t a = 0; a < npt_; ++a) {
-                        size_t na = idx_p_[a];
-                        for (size_t b = 0; b < npt_; ++b) {
-                            size_t nb = idx_p_[b];
+                    for (size_t a = 0; a < npart_; ++a) {
+                        size_t na = part_mos_[a];
+                        for (size_t b = 0; b < npart_; ++b) {
+                            size_t nb = part_mos_[b];
 
                             // a, b cannot all be active
-                            if (a < na_ && b < na_)
+                            if (a < nactv_ && b < nactv_)
                                 continue;
 
-                            for (size_t c = 0; c < npt_; ++c) {
-                                size_t nc = idx_p_[c];
-                                for (size_t d = 0; d < npt_; ++d) {
-                                    size_t nd = idx_p_[d];
+                            for (size_t c = 0; c < npart_; ++c) {
+                                size_t nc = part_mos_[c];
+                                for (size_t d = 0; d < npart_; ++d) {
+                                    size_t nd = part_mos_[d];
 
                                     double d1 =
                                         Fa_[nu][nu] + Fa_[nv][nv] - Fa_[na][na] - Fa_[nb][nb];
@@ -2950,19 +2960,19 @@ double MCSRGPT2_MO::ESRG_22_4() {
                     }
 
                     // particle-hole
-                    for (size_t i = 0; i < nh_; ++i) {
-                        size_t ni = idx_h_[i];
-                        for (size_t a = 0; a < npt_; ++a) {
-                            size_t na = idx_p_[a];
+                    for (size_t i = 0; i < nhole_; ++i) {
+                        size_t ni = hole_mos_[i];
+                        for (size_t a = 0; a < npart_; ++a) {
+                            size_t na = part_mos_[a];
 
                             // i, a cannot all be active
-                            if (i < na_ && a < na_)
+                            if (i < nactv_ && a < nactv_)
                                 continue;
 
-                            for (size_t j = 0; j < nh_; ++j) {
-                                size_t nj = idx_h_[j];
-                                for (size_t b = 0; b < npt_; ++b) {
-                                    size_t nb = idx_p_[b];
+                            for (size_t j = 0; j < nhole_; ++j) {
+                                size_t nj = hole_mos_[j];
+                                for (size_t b = 0; b < npart_; ++b) {
+                                    size_t nb = part_mos_[b];
 
                                     double d1 =
                                         Fa_[ni][ni] + Fa_[nv][nv] - Fa_[na][na] - Fa_[ny][ny];
@@ -3064,24 +3074,24 @@ double MCSRGPT2_MO::ESRG_22_4() {
 double MCSRGPT2_MO::ESRG_22_6() {
     double E = 0.0;
 
-    for (size_t u = 0; u < na_; ++u) {
-        size_t nu = idx_a_[u];
-        for (size_t v = 0; v < na_; ++v) {
-            size_t nv = idx_a_[v];
-            for (size_t w = 0; w < na_; ++w) {
-                size_t nw = idx_a_[w];
-                for (size_t x = 0; x < na_; ++x) {
-                    size_t nx = idx_a_[x];
-                    for (size_t y = 0; y < na_; ++y) {
-                        size_t ny = idx_a_[y];
-                        for (size_t z = 0; z < na_; ++z) {
-                            size_t nz = idx_a_[z];
+    for (size_t u = 0; u < nactv_; ++u) {
+        size_t nu = actv_mos_[u];
+        for (size_t v = 0; v < nactv_; ++v) {
+            size_t nv = actv_mos_[v];
+            for (size_t w = 0; w < nactv_; ++w) {
+                size_t nw = actv_mos_[w];
+                for (size_t x = 0; x < nactv_; ++x) {
+                    size_t nx = actv_mos_[x];
+                    for (size_t y = 0; y < nactv_; ++y) {
+                        size_t ny = actv_mos_[y];
+                        for (size_t z = 0; z < nactv_; ++z) {
+                            size_t nz = actv_mos_[z];
 
                             double vaaa = 0.0, vaab = 0.0, vabb = 0.0, vbbb = 0.0;
 
                             // core
-                            for (size_t m = 0; m < nc_; ++m) {
-                                size_t nm = idx_c_[m];
+                            for (size_t m = 0; m < ncore_; ++m) {
+                                size_t nm = core_mos_[m];
 
                                 double d1 = Fa_[nm][nm] + Fa_[nw][nw] - Fa_[nx][nx] - Fa_[ny][ny];
                                 double d2 = Fa_[nu][nu] + Fa_[nv][nv] - Fa_[nm][nm] - Fa_[nz][nz];
@@ -3141,8 +3151,8 @@ double MCSRGPT2_MO::ESRG_22_6() {
                             }
 
                             // virtual
-                            for (size_t e = 0; e < nv_; ++e) {
-                                size_t ne = idx_v_[e];
+                            for (size_t e = 0; e < nvirt_; ++e) {
+                                size_t ne = virt_mos_[e];
 
                                 double d1 = Fa_[nu][nu] + Fa_[nv][nv] - Fa_[ne][ne] - Fa_[nz][nz];
                                 double d2 = Fa_[nw][nw] + Fa_[ne][ne] - Fa_[nx][nx] - Fa_[ny][ny];

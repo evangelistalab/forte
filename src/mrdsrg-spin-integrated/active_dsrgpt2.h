@@ -44,13 +44,13 @@
 #include "ambit/blocked_tensor.h"
 #include "ambit/tensor.h"
 
-#include "helpers.h"
-#include "integrals/integrals.h"
-#include "mrdsrg-spin-integrated/dsrg_mrpt2.h"
-#include "mrdsrg-spin-integrated/dsrg_mrpt3.h"
-#include "mrdsrg-spin-integrated/three_dsrg_mrpt2.h"
-#include "reference.h"
-#include "sparse_ci/determinant.h"
+#include "../helpers.h"
+#include "../integrals/integrals.h"
+#include "../reference.h"
+#include "../sparse_ci/determinant.h"
+#include "master_mrdsrg.h"
+#include "dsrg_mrpt2.h"
+#include "three_dsrg_mrpt2.h"
 
 namespace psi {
 namespace forte {
@@ -79,7 +79,6 @@ class ACTIVE_DSRGPT2 : public Wavefunction {
 
     /// Compute energy
     double compute_energy();
-    double compute_energy_old();
 
   private:
     /// Basic Preparation
@@ -90,9 +89,6 @@ class ACTIVE_DSRGPT2 : public Wavefunction {
 
     /// MO space info
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
-
-    /// Name of the code
-    std::string code_name_;
 
     /// Multiplicity
     int multiplicity_;
@@ -125,21 +121,17 @@ class ACTIVE_DSRGPT2 : public Wavefunction {
     std::vector<std::vector<Determinant>> dominant_dets_;
 
     /// Compute the excitaion type based on ref_det
-    std::string compute_ex_type(const Determinant& det1,
-                                const Determinant& ref_det);
+    std::string compute_ex_type(const Determinant& det1, const Determinant& ref_det);
 
-    /** Precompute all energies to
-     *  1) determine excitation type
-     *  2) obtain original orbital extent
-     *  3) determine %T1 in CISD
-     *  4) obtain unitary matrices that semicanonicalize the orbitals
-     *  5) compute VCIS or VCISD oscillator strength
-     */
-    void precompute_energy();
+    /// Compute unrelaxed DSRG-MRPT2 energy and return energy value
+    double compute_dsrg_mrpt2_energy(std::shared_ptr<MASTER_DSRG>& dsrg, Reference& reference);
 
-    /// Unitary matrices that semicanonicalize orbitals of each state
-    std::vector<std::vector<SharedMatrix>> Uaorbs_;
-    std::vector<std::vector<SharedMatrix>> Uborbs_;
+    /// Set FCI_MO parameters
+    void set_fcimo_params(int nroots, int root, int multiplicity);
+
+    /// Rotate amplitudes
+    void rotate_amp(SharedMatrix Ua, SharedMatrix Ub, ambit::BlockedTensor& T1,
+                    ambit::BlockedTensor& T2);
 
     /// Rotate to semicanonical orbitals and pass to this
     void rotate_orbs(SharedMatrix Ca0, SharedMatrix Cb0, SharedMatrix Ua, SharedMatrix Ub);
@@ -149,8 +141,6 @@ class ACTIVE_DSRGPT2 : public Wavefunction {
 
     /// MO dipole integrals in C1 Pitzer ordering in the original basis
     std::vector<SharedMatrix> modipole_ints_;
-    /// Compute MO dipole integrals from libmints using the current orbitals
-    void compute_modipole();
 
     /// Active indices in C1 symmetry per irrep
     std::vector<std::vector<size_t>> actvIdxC1_;
@@ -161,8 +151,8 @@ class ACTIVE_DSRGPT2 : public Wavefunction {
 
     /// Compute VCIS/VCISD transition dipole from root0 -> root1
     Vector4 compute_td_ref_root(std::shared_ptr<FCIIntegrals> fci_ints,
-                                const std::vector<Determinant>& p_space,
-                                SharedMatrix evecs, const int& root0, const int& root1);
+                                const std::vector<Determinant>& p_space, SharedMatrix evecs,
+                                const int& root0, const int& root1);
     /// Compute VCIS/VCISD oscillator strength
     /// Only compute root_0 of eigen0 -> root_n of eigen0 or eigen1
     /// eigen0 and eigen1 are assumed to be different by default
@@ -233,8 +223,6 @@ class ACTIVE_DSRGPT2 : public Wavefunction {
     /// Format a double to string
     std::string format_double(const double& value, const int& width, const int& precision,
                               const bool& scientific = false);
-    /// Rename a file
-    void rename_file(const std::string& oldName, const std::string& newName);
 
     /// Orbital extents of original orbitals
     std::vector<double> orb_extents_;
@@ -242,12 +230,6 @@ class ACTIVE_DSRGPT2 : public Wavefunction {
     /// Flatten the structure of orbital extents in fci_mo and return a vector of <r^2>
     std::vector<double>
     flatten_fci_orbextents(const std::vector<std::vector<std::vector<double>>>& fci_orb_extents);
-
-    /// Test if a file exist or not
-    bool is_file_exist(const std::string& name) {
-        struct stat buffer;
-        return (stat(name.c_str(), &buffer) == 0);
-    }
 
     // ==> debug functions for pt2 oscillator strength <==
 
@@ -258,25 +240,24 @@ class ACTIVE_DSRGPT2 : public Wavefunction {
     */
 
     /// transform the reference determinants of size nactive to size nmo with Pitzer ordering
-    std::map<Determinant, double>
-    p_space_actv_to_nmo(const std::vector<Determinant>& p_space, SharedVector wfn);
+    std::map<Determinant, double> p_space_actv_to_nmo(const std::vector<Determinant>& p_space,
+                                                      SharedVector wfn);
 
     /// generate excited determinants from the reference
-    std::map<Determinant, double>
-    excited_wfn_1st(const std::map<Determinant, double>& ref, ambit::BlockedTensor& T1,
-                    ambit::BlockedTensor& T2);
+    std::map<Determinant, double> excited_wfn_1st(const std::map<Determinant, double>& ref,
+                                                  ambit::BlockedTensor& T1,
+                                                  ambit::BlockedTensor& T2);
 
     /// compute pt2 oscillator strength using determinants
     void compute_osc_pt2_dets(const int& irrep, const int& root, const double& Tde_x,
                               ambit::BlockedTensor& T1_x, ambit::BlockedTensor& T2_x);
 
     /// generate singly excited determinants from the reference
-    std::map<Determinant, double>
-    excited_ref(const std::map<Determinant, double>& ref, const int& p, const int& q);
+    std::map<Determinant, double> excited_ref(const std::map<Determinant, double>& ref,
+                                              const int& p, const int& q);
 
     /// compute overlap between two wavefunctions
-    double compute_overlap(std::map<Determinant, double> wfn1,
-                           std::map<Determinant, double> wfn2);
+    double compute_overlap(std::map<Determinant, double> wfn1, std::map<Determinant, double> wfn2);
 
     /// compute pt2 oscillator strength using determinants overlap
     void compute_osc_pt2_overlap(const int& irrep, const int& root, const double& Tde_x,

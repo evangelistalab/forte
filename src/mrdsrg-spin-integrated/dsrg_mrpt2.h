@@ -75,6 +75,27 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     /// Compute the DSRG-MRPT2 energy
     virtual double compute_energy();
 
+    /// Compute second-order effective Hamiltonian couplings
+    /// <M|H + HA(N)|N> = Heff1 * TrD1 + Heff2 * TrD2 + Heff3 * TrD3 if CAS
+    virtual void compute_Heff_2nd_coupling(double& H0, ambit::Tensor& H1a, ambit::Tensor& H1b,
+                                           ambit::Tensor& H2aa, ambit::Tensor& H2ab,
+                                           ambit::Tensor& H2bb, ambit::Tensor& H3aaa,
+                                           ambit::Tensor& H3aab, ambit::Tensor& H3abb,
+                                           ambit::Tensor& H3bbb);
+
+    /// Return de-normal-ordered T1 amplitudes
+    virtual ambit::BlockedTensor get_T1deGNO(double& T0deGNO);
+
+    /// Return T2 amplitudes
+    virtual ambit::BlockedTensor get_T2(const std::vector<std::string>& blocks);
+    virtual ambit::BlockedTensor get_T2() { return T2_; }
+
+    /// Return de-normal-ordered 1-body renormalized 1st-order Hamiltonian
+    virtual ambit::BlockedTensor get_RH1deGNO();
+
+    /// Return 2-body renormalized 1st-order Hamiltonian
+    virtual ambit::BlockedTensor get_RH2() { return V_; }
+
     /// Compute one-electron density of DSRG
     /// Important: T1 and T2 are de-normal-ordered!
     ambit::BlockedTensor compute_OE_density(BlockedTensor& T1, BlockedTensor& T2, BlockedTensor& D1,
@@ -97,21 +118,18 @@ class DSRG_MRPT2 : public MASTER_DSRG {
         p_spaces_ = p_spaces;
     }
 
-    /// Ignore semi-canonical testing in DSRG-MRPT2
-    void set_ignore_semicanonical(bool ignore) { ignore_semicanonical_ = ignore; }
+    //    /// Compute de-normal-ordered amplitudes and return the scalar term
+    //    double Tamp_deGNO();
 
-    /// Compute de-normal-ordered amplitudes and return the scalar term
-    double Tamp_deGNO();
-
-    /// Return a BlockedTensor of T1 amplitudes
-    ambit::BlockedTensor get_T1(const std::vector<std::string>& blocks);
-    ambit::BlockedTensor get_T1() { return T1_; }
-    /// Return a BlockedTensor of de-normal-ordered T1 amplitudes
-    ambit::BlockedTensor get_T1deGNO(const std::vector<std::string>& blocks);
-    ambit::BlockedTensor get_T1deGNO() { return T1eff_; }
-    /// Return a BlockedTensor of T2 amplitudes
-    ambit::BlockedTensor get_T2(const std::vector<std::string>& blocks);
-    ambit::BlockedTensor get_T2() { return T2_; }
+    //    /// Return a BlockedTensor of T1 amplitudes
+    //    ambit::BlockedTensor get_T1(const std::vector<std::string>& blocks);
+    //    ambit::BlockedTensor get_T1() { return T1_; }
+    //    /// Return a BlockedTensor of de-normal-ordered T1 amplitudes
+    //    ambit::BlockedTensor get_T1deGNOa(const std::vector<std::string>& blocks);
+    //    ambit::BlockedTensor get_T1deGNO() { return T1eff_; }
+    //    /// Return a BlockedTensor of T2 amplitudes
+    //    ambit::BlockedTensor get_T2(const std::vector<std::string>& blocks);
+    //    ambit::BlockedTensor get_T2() { return T2_; }
 
     /// Rotate orbital basis for amplitudes according to unitary matrix U
     /// @param U unitary matrix from FCI_MO (INCLUDES frozen orbitals)
@@ -146,10 +164,6 @@ class DSRG_MRPT2 : public MASTER_DSRG {
 
     /// Are orbitals semi-canonicalized?
     bool semi_canonical_;
-    /// Check if orbitals are semi-canonicalized
-    bool check_semicanonical();
-    /// Ignore semi-canonical testing
-    bool ignore_semicanonical_ = false;
     /// Diagonal elements of Fock matrices
     std::vector<double> Fa_;
     std::vector<double> Fb_;
@@ -296,13 +310,12 @@ class DSRG_MRPT2 : public MASTER_DSRG {
 
     /// Compute density cumulants
     void compute_cumulants(std::shared_ptr<FCIIntegrals> fci_ints,
-                           std::vector<psi::forte::Determinant>& p_space,
-                           SharedMatrix evecs, const int& root1, const int& root2,
-                           const int& irrep);
+                           std::vector<psi::forte::Determinant>& p_space, SharedMatrix evecs,
+                           const int& root1, const int& root2, const int& irrep);
     /// Compute denisty matrices and puts in Gamma1_, Lambda2_, and Lambda3_
     void compute_densities(std::shared_ptr<FCIIntegrals> fci_ints,
-                           std::vector<Determinant>& p_space, SharedMatrix evecs,
-                           const int& root1, const int& root2, const int& irrep);
+                           std::vector<Determinant>& p_space, SharedMatrix evecs, const int& root1,
+                           const int& root2, const int& irrep);
 
     /// Compute MS coupling <M|H|N>
     double compute_ms_1st_coupling(const std::string& name);
@@ -311,11 +324,10 @@ class DSRG_MRPT2 : public MASTER_DSRG {
 
     /// Rotate RDMs computed by eigens_ (in original basis) to semicanonical basis
     /// so that they are in the same basis as amplitudes (in semicanonical basis)
-    void rotate_1rdm(std::vector<double>& opdm_a, std::vector<double>& opdm_b);
-    void rotate_2rdm(std::vector<double>& tpdm_aa, std::vector<double>& tpdm_ab,
-                     std::vector<double>& tpdm_bb);
-    void rotate_3rdm(std::vector<double>& tpdm_aaa, std::vector<double>& tpdm_aab,
-                     std::vector<double>& tpdm_abb, std::vector<double>& tpdm_bbb);
+    void rotate_1rdm(ambit::Tensor& L1a, ambit::Tensor& L1b);
+    void rotate_2rdm(ambit::Tensor& L2aa, ambit::Tensor& L2ab, ambit::Tensor& L2bb);
+    void rotate_3rdm(ambit::Tensor& L3aaa, ambit::Tensor& L3aab, ambit::Tensor& L3abb,
+                     ambit::Tensor& L3bbb);
 };
 }
 } // End Namespaces

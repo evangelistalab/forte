@@ -123,7 +123,7 @@ void DSRG_MRPT::H2_T2_C0_L1(BlockedTensor& H2, BlockedTensor& T2, const double& 
         size_t core_size = core_mos_.size();
         std::vector<std::vector<size_t>> nb_core_mos;
         int nc = nbatch_;
-        if (core_size < nbatch_)
+        if (core_size < nbatch_ && core_size != 0)
             nc = core_size;
         size_t even = core_size / nc;
         size_t left = core_size % nc;
@@ -200,9 +200,9 @@ void DSRG_MRPT::H2_T2_C0_L1(BlockedTensor& H2, BlockedTensor& T2, const double& 
     temp.zero();
     temp.set_name("temp_aaav_caaa");
     temp["uxyv"] += 0.5 * H2["xwve"] * T2["yzue"] * L1_["wz"];
-    temp["uxyv"] -= 0.25 * H2["xwve"] * T2["zyue"] * L1_["wz"];
+    temp["uxyv"] -= 0.25 * H2["wxve"] * T2["yzue"] * L1_["wz"];
     temp["uxyv"] += 0.5 * H2["mxvz"] * T2["myuw"] * Eta1_["wz"];
-    temp["uxyv"] -= 0.25 * H2["mxvz"] * T2["mywu"] * Eta1_["wz"];
+    temp["uxyv"] -= 0.25 * H2["xmvz"] * T2["myuw"] * Eta1_["wz"];
     E += temp["uxyv"] * Eta1_["uv"] * L1_["xy"];
 
     E *= alpha;

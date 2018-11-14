@@ -367,31 +367,6 @@ void DSRG_MRPT3::build_fock_full() {
     });
 }
 
-bool DSRG_MRPT3::check_semicanonical() {
-    bool semi = check_semi_orbs();
-    if (ignore_semicanonical_) {
-        std::string actv_type = options_.get_str("FCIMO_ACTV_TYPE");
-        if (actv_type == "CIS" || actv_type == "CISD") {
-            outfile->Printf("\n    It is OK for Fock (active) not being diagonal because %s "
-                            "active space is incomplete.",
-                            actv_type.c_str());
-            outfile->Printf("\n    Please inspect if the Fock diag. blocks (C, AH, AP, V) "
-                            "are diagonal or not in the prior CI step.");
-
-        } else {
-            outfile->Printf("\n    Warning: ignore testing of semi-canonical orbitals.");
-            outfile->Printf(
-                "\n    Please inspect if the Fock diag. blocks (C, A, V) are diagonal or not.");
-
-            warnings_.push_back(std::make_tuple("Semicanonical orbital test", "Ignore test results",
-                                                "Post an issue for advice."));
-        }
-        semi = true;
-    }
-
-    return semi;
-}
-
 void DSRG_MRPT3::print_options_summary() {
     // Print a summary
     std::vector<std::pair<std::string, int>> calculation_info_int{{"ntamp", ntamp_}};
@@ -430,7 +405,7 @@ void DSRG_MRPT3::cleanup() {}
 
 double DSRG_MRPT3::compute_energy() {
     // check semi-canonical orbitals
-    semi_canonical_ = check_semicanonical();
+    semi_canonical_ = check_semi_orbs();
     if (!semi_canonical_) {
         outfile->Printf("\n    Orbital invariant formalism will be employed for DSRG-MRPT3.");
         U_ = ambit::BlockedTensor::build(tensor_type_, "U", spin_cases({"gg"}));
@@ -521,6 +496,7 @@ double DSRG_MRPT3::compute_energy() {
     outfile->Printf("\n      Hbar1st = H1st + [H0th, A1st]");
     outfile->Printf("\n      Hbar2nd = 0.5 * [H1st + Hbar1st, A1st] + [H0th, A2nd]");
 
+    Process::environment.globals["UNRELAXED ENERGY"] = Etotal;
     Process::environment.globals["CURRENT ENERGY"] = Etotal;
 
     // compute DSRG dipole integrals part 2
@@ -1307,7 +1283,7 @@ double DSRG_MRPT3::compute_energy_sa() {
     compute_energy();
 
     // obtain active-only transformed intergals
-    std::shared_ptr<FCIIntegrals> fci_ints = compute_Heff();
+    std::shared_ptr<FCIIntegrals> fci_ints = compute_Heff_actv();
 
     //    // transfer integrals
     //    transfer_integrals();
@@ -1369,7 +1345,7 @@ double DSRG_MRPT3::compute_energy_sa() {
             }
 
             // compute permanent dipoles
-            auto dm_relax = fci_mo.compute_relaxed_dm(Mbar0_, Mbar1_, Mbar2_);
+            auto dm_relax = fci_mo.compute_ref_relaxed_dm(Mbar0_, Mbar1_, Mbar2_);
 
             print_h2("SA-DSRG-PT3 Dipole Moment (in a.u.) Summary");
             outfile->Printf("\n    %14s  %10s  %10s  %10s", "State", "X", "Y", "Z");
@@ -1387,7 +1363,7 @@ double DSRG_MRPT3::compute_energy_sa() {
             outfile->Printf("\n    %s", dash.c_str());
 
             // oscillator strength
-            auto osc = fci_mo.compute_relaxed_osc(Mbar1_, Mbar2_);
+            auto osc = fci_mo.compute_ref_relaxed_osc(Mbar1_, Mbar2_);
 
             print_h2("SA-DSRG-PT3 Oscillator Strength (in a.u.) Summary");
             outfile->Printf("\n    %32s  %10s  %10s  %10s  %10s", "State", "X", "Y", "Z", "Total");
@@ -1491,26 +1467,22 @@ double DSRG_MRPT3::compute_energy_sa() {
                         // compute rdms
                         CI_RDMS ci_rdms(fci_ints, p_space, evecs, A, B);
 
-                        std::vector<double> opdm_a, opdm_b;
-                        std::vector<double> tpdm_aa, tpdm_ab, tpdm_bb;
+                        ambit::BlockedTensor D1, D2;
+                        D1 = BTF_->build(tensor_type_, "D1", spin_cases({"aa"}), true);
+                        D2 = BTF_->build(tensor_type_, "D2", spin_cases({"aaaa"}), true);
 
-                        ci_rdms.compute_1rdm(opdm_a, opdm_b);
-                        ci_rdms.compute_2rdm(tpdm_aa, tpdm_ab, tpdm_bb);
+                        ambit::Tensor D1a, D1b, D2aa, D2ab, D2bb;
+                        D1a = D1.block("aa");
+                        D1b = D1.block("AA");
+                        D2aa = D2.block("aaaa");
+                        D2ab = D2.block("aAaA");
+                        D2bb = D2.block("AAAA");
 
-                        rotate_1rdm(opdm_a, opdm_b);
-                        rotate_2rdm(tpdm_aa, tpdm_ab, tpdm_bb);
+                        ci_rdms.compute_1rdm(D1a.data(), D1b.data());
+                        rotate_1rdm(D1a, D1b);
 
-                        // put rdms in tensor format
-                        BlockedTensor D1 =
-                            BTF_->build(tensor_type_, "D1", spin_cases({"aa"}), true);
-                        D1.block("aa").data() = std::move(opdm_a);
-                        D1.block("AA").data() = std::move(opdm_b);
-
-                        BlockedTensor D2 =
-                            BTF_->build(tensor_type_, "D2", spin_cases({"aaaa"}), true);
-                        D2.block("aaaa").data() = std::move(tpdm_aa);
-                        D2.block("aAaA").data() = std::move(tpdm_ab);
-                        D2.block("AAAA").data() = std::move(tpdm_bb);
+                        ci_rdms.compute_2rdm(D2aa.data(), D2ab.data(), D2bb.data());
+                        rotate_2rdm(D2aa, D2ab, D2bb);
 
                         double H_AB = 0.0;
                         H_AB += oei["uv"] * D1["uv"];
@@ -1553,7 +1525,7 @@ double DSRG_MRPT3::compute_energy_sa() {
     std::string dash(41, '-');
     outfile->Printf("\n    %s", dash.c_str());
 
-    for (int n = 0; n < nentry; ++n) {
+    for (int n = 0, counter = 0; n < nentry; ++n) {
         int irrep = options_["AVG_STATE"][n][0].to_integer();
         int multi = options_["AVG_STATE"][n][1].to_integer();
         int nstates = options_["AVG_STATE"][n][2].to_integer();
@@ -1561,6 +1533,8 @@ double DSRG_MRPT3::compute_energy_sa() {
         for (int i = 0; i < nstates; ++i) {
             outfile->Printf("\n     %3d     %3s    %2d   %20.12f", multi,
                             irrep_symbol[irrep].c_str(), i, Edsrg_sa[n][i]);
+            Process::environment.globals["ENERGY ROOT " + std::to_string(counter)] = Edsrg_sa[n][i];
+            ++counter;
         }
         outfile->Printf("\n    %s", dash.c_str());
     }
@@ -1581,7 +1555,7 @@ double DSRG_MRPT3::compute_energy_relaxed() {
     std::map<std::string, std::vector<double>> dm_relax;
 
     // obtain the all-active DSRG transformed Hamiltonian
-    auto fci_ints = compute_Heff();
+    auto fci_ints = compute_Heff_actv();
 
     if (options_.get_str("CAS_TYPE") == "CAS") {
         FCI_MO fci_mo(reference_wavefunction_, options_, ints_, mo_space_info_, fci_ints);
@@ -1599,7 +1573,7 @@ double DSRG_MRPT3::compute_energy_relaxed() {
             }
 
             // compute permanent dipoles
-            dm_relax = fci_mo.compute_relaxed_dm(Mbar0_, Mbar1_, Mbar2_);
+            dm_relax = fci_mo.compute_ref_relaxed_dm(Mbar0_, Mbar1_, Mbar2_);
         }
     } else if (options_.get_str("CAS_TYPE") == "ACI" ){
         AdaptiveCI aci(reference_wavefunction_, options_, ints_, mo_space_info_);
@@ -5739,84 +5713,31 @@ ambit::Tensor DSRG_MRPT3::sub_block(ambit::Tensor& T,
     return Ts;
 }
 
-void DSRG_MRPT3::rotate_1rdm(std::vector<double>& opdm_a, std::vector<double>& opdm_b) {
-    size_t na = actv_mos_.size();
-    if ((na * na != opdm_a.size()) || (na * na != opdm_b.size())) {
-        throw PSIEXCEPTION("Cannot rotate 1RDM in DSRG_MRPT2.");
-    }
-
+void DSRG_MRPT3::rotate_1rdm(ambit::Tensor& L1a, ambit::Tensor& L1b) {
+    ambit::Tensor temp;
     ambit::Tensor Ua = Uactv_.block("aa");
     ambit::Tensor Ub = Uactv_.block("AA");
 
-    ambit::Tensor temp = ambit::Tensor::build(tensor_type_, "temp", {na, na});
-    ambit::Tensor D = ambit::Tensor::build(tensor_type_, "D1", {na, na});
+    temp = L1a.clone();
+    L1a("pq") = Ua("ap") * temp("ab") * Ua("bq");
 
-    temp.data() = std::move(opdm_a);
-    D("pq") = Ua("ap") * temp("ab") * Ua("bq");
-    opdm_a = D.data();
-
-    temp.data() = std::move(opdm_b);
-    D("PQ") = Ub("AP") * temp("AB") * Ub("BQ");
-    opdm_b = D.data();
+    temp("pq") = L1b("pq");
+    L1b("PQ") = Ub("AP") * temp("AB") * Ub("BQ");
 }
 
-void DSRG_MRPT3::rotate_2rdm(std::vector<double>& tpdm_aa, std::vector<double>& tpdm_ab,
-                             std::vector<double>& tpdm_bb) {
-    size_t na = actv_mos_.size();
-    size_t na4 = na * na * na * na;
-    if ((na4 != tpdm_aa.size()) || (na4 != tpdm_ab.size()) || (na4 != tpdm_bb.size())) {
-        throw PSIEXCEPTION("Cannot rotate 2RDM in DSRG_MRPT2.");
-    }
-
+void DSRG_MRPT3::rotate_2rdm(ambit::Tensor& L2aa, ambit::Tensor& L2ab, ambit::Tensor& L2bb) {
+    ambit::Tensor temp;
     ambit::Tensor Ua = Uactv_.block("aa");
     ambit::Tensor Ub = Uactv_.block("AA");
 
-    ambit::Tensor temp = ambit::Tensor::build(tensor_type_, "temp", {na, na, na, na});
-    ambit::Tensor D = ambit::Tensor::build(tensor_type_, "D2", {na, na, na, na});
+    temp = L2aa.clone();
+    L2aa("pqrs") = Ua("ap") * Ua("bq") * temp("abcd") * Ua("cr") * Ua("ds");
 
-    temp.data() = std::move(tpdm_aa);
-    D("pqrs") = Ua("ap") * Ua("bq") * temp("abcd") * Ua("cr") * Ua("ds");
-    tpdm_aa = D.data();
+    temp("pqrs") = L2ab("pqrs");
+    L2ab("pQrS") = Ua("ap") * Ub("BQ") * temp("aBcD") * Ua("cr") * Ub("DS");
 
-    temp.data() = std::move(tpdm_ab);
-    D("pQrS") = Ua("ap") * Ub("BQ") * temp("aBcD") * Ua("cr") * Ub("DS");
-    tpdm_ab = D.data();
-
-    temp.data() = std::move(tpdm_bb);
-    D("PQRS") = Ub("AP") * Ub("BQ") * temp("ABCD") * Ub("CR") * Ub("DS");
-    tpdm_bb = D.data();
-}
-
-void DSRG_MRPT3::rotate_3rdm(std::vector<double>& tpdm_aaa, std::vector<double>& tpdm_aab,
-                             std::vector<double>& tpdm_abb, std::vector<double>& tpdm_bbb) {
-    size_t na = actv_mos_.size();
-    size_t na6 = na * na * na * na * na * na;
-    if ((na6 != tpdm_aaa.size()) || (na6 != tpdm_aab.size()) || (na6 != tpdm_abb.size()) ||
-        (na6 != tpdm_bbb.size())) {
-        throw PSIEXCEPTION("Cannot rotate 3RDM in DSRG_MRPT2.");
-    }
-
-    ambit::Tensor Ua = Uactv_.block("aa");
-    ambit::Tensor Ub = Uactv_.block("AA");
-
-    ambit::Tensor temp = ambit::Tensor::build(tensor_type_, "temp", {na, na, na, na, na, na});
-    ambit::Tensor D = ambit::Tensor::build(tensor_type_, "D3", {na, na, na, na, na, na});
-
-    temp.data() = std::move(tpdm_aaa);
-    D("pqrstu") = Ua("ap") * Ua("bq") * Ua("cr") * temp("abcijk") * Ua("is") * Ua("jt") * Ua("ku");
-    tpdm_aaa = D.data();
-
-    temp.data() = std::move(tpdm_aab);
-    D("pqRstU") = Ua("ap") * Ua("bq") * Ub("CR") * temp("abCijK") * Ua("is") * Ua("jt") * Ub("KU");
-    tpdm_aab = D.data();
-
-    temp.data() = std::move(tpdm_abb);
-    D("pQRsTU") = Ua("ap") * Ub("BQ") * Ub("CR") * temp("aBCiJK") * Ua("is") * Ub("JT") * Ub("KU");
-    tpdm_abb = D.data();
-
-    temp.data() = std::move(tpdm_bbb);
-    D("PQRSTU") = Ub("AP") * Ub("BQ") * Ub("CR") * temp("ABCIJK") * Ub("IS") * Ub("JT") * Ub("KU");
-    tpdm_bbb = D.data();
+    temp("pqrs") = L2bb("pqrs");
+    L2bb("PQRS") = Ub("AP") * Ub("BQ") * temp("ABCD") * Ub("CR") * Ub("DS");
 }
 }
 } // End Namespaces

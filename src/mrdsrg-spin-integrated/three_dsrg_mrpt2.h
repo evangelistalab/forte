@@ -66,24 +66,35 @@ class THREE_DSRG_MRPT2 : public MASTER_DSRG {
     /// Compute the DSRG-MRPT2 energy
     virtual double compute_energy();
 
+    /// Compute second-order effective Hamiltonian couplings
+    /// <M|H + HA(N)|N> = Heff1 * TrD1 + Heff2 * TrD2 + Heff3 * TrD3 if CAS
+    virtual void compute_Heff_2nd_coupling(double& H0, ambit::Tensor& H1a, ambit::Tensor& H1b,
+                                           ambit::Tensor& H2aa, ambit::Tensor& H2ab,
+                                           ambit::Tensor& H2bb, ambit::Tensor& H3aaa,
+                                           ambit::Tensor& H3aab, ambit::Tensor& H3abb,
+                                           ambit::Tensor& H3bbb);
+
+    /// Return de-normal-ordered T1 amplitudes
+    virtual ambit::BlockedTensor get_T1deGNO(double& T0deGNO);
+
+    /// Return T2 amplitudes
+    virtual ambit::BlockedTensor get_T2(const std::vector<std::string>& blocks);
+
     /// Allow the reference to relax
     void relax_reference_once();
 
-    /// Ignore semi-canonical testing in DSRG-MRPT2
-    void ignore_semicanonical(bool ignore) { ignore_semicanonical_ = ignore; }
+    //    /// Compute de-normal-ordered amplitudes and return the scalar term
+    //    double Tamp_deGNO();
 
-    /// Compute de-normal-ordered amplitudes and return the scalar term
-    double Tamp_deGNO();
-
-    /// Return a BlockedTensor of T1 amplitudes
-    ambit::BlockedTensor get_T1(const std::vector<std::string>& blocks);
-    ambit::BlockedTensor get_T1() { return T1_; }
-    /// Return a BlockedTensor of de-normal-ordered T1 amplitudes
-    ambit::BlockedTensor get_T1deGNO(const std::vector<std::string>& blocks);
-    ambit::BlockedTensor get_T1deGNO() { return T1eff_; }
-    /// Return a BlockedTensor of T2 amplitudes
-    ambit::BlockedTensor get_T2(const std::vector<std::string>& blocks);
-    ambit::BlockedTensor get_T2() { return T2_; }
+    //    /// Return a BlockedTensor of T1 amplitudes
+    //    ambit::BlockedTensor get_T1(const std::vector<std::string>& blocks);
+    //    ambit::BlockedTensor get_T1() { return T1_; }
+    //    /// Return a BlockedTensor of de-normal-ordered T1 amplitudes
+    //    ambit::BlockedTensor get_T1deGNO(const std::vector<std::string>& blocks);
+    //    ambit::BlockedTensor get_T1deGNO() { return T1eff_; }
+    //    /// Return a BlockedTensor of T2 amplitudes
+    //    ambit::BlockedTensor get_T2(const std::vector<std::string>& blocks);
+    //    ambit::BlockedTensor get_T2() { return T2_; }
 
     /// Rotate orbital basis for amplitudes according to unitary matrix U
     /// @param U unitary matrix from FCI_MO (INCLUDES frozen orbitals)
@@ -226,19 +237,23 @@ class THREE_DSRG_MRPT2 : public MASTER_DSRG {
     /// Form Hbar for reference relaxation
     void form_Hbar();
 
+    /// Compute Hbar1 from core contraction when doing DiskDF
+    void compute_Hbar1C_diskDF(ambit::BlockedTensor& Hbar1, bool scaleV=true);
+    /// Compute Hbar1 from virtual contraction when doing DiskDF
+    void compute_Hbar1V_diskDF(ambit::BlockedTensor& Hbar1, bool scaleV=true);
+
     std::vector<double> relaxed_energy(std::shared_ptr<FCIIntegrals> fci_ints);
 
     /// Print detailed timings
     bool detail_time_ = false;
 
-//    /// This function will remove the indices that do not have at least one
-//    /// active index
-//    /// This function generates all possible MO spaces and spin components
-//    /// Param:  std::string is the lables - "cav"
-//    /// Will take a string like cav and generate all possible combinations of
-//    /// this
-//    /// for a four character string
-//    std::shared_ptr<BlockedTensorFactory> BTF_;
+    //    /// This function will remove the indices that do not have at least one
+    //    /// active index
+    //    /// This function generates all possible MO spaces and spin components
+    //    /// Param:  std::string is the lables - "cav"
+    //    /// Will take a string like cav and generate all possible combinations of
+    //    /// this for a four character string
+    //    std::shared_ptr<BlockedTensorFactory> BTF_;
 
     /// Integral type (DF, CD, DISKDF)
     IntegralType integral_type_;
@@ -250,10 +265,6 @@ class THREE_DSRG_MRPT2 : public MASTER_DSRG {
 
     /// Are orbitals semi-canonicalized?
     bool semi_canonical_;
-    /// Check if orbitals are semi-canonicalized
-    bool check_semicanonical();
-    /// Ignore semi-canonical testing
-    bool ignore_semicanonical_ = false;
     /// Unitary matrix to block diagonal Fock
     ambit::BlockedTensor U_;
     /// Diagonalize the diagonal blocks of the Fock matrix

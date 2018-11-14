@@ -1,0 +1,62 @@
+import forte
+
+Escf = -230.53543239670859
+Ept2 = [-231.30832424749573, -231.00230709211525, -231.00230720464043,
+        -231.06775337253512, -231.02412450777396, -231.12121128176713,
+        -231.02412450349900]
+
+memory 1 gb
+
+molecule benzene{
+0 1
+
+H   0.000000   2.484212   0.000000
+H   0.000000  -2.484212   0.000000
+H   2.151390   1.242106   0.000000
+H  -2.151390  -1.242106   0.000000
+H  -2.151390   1.242106   0.000000
+H   2.151390  -1.242106   0.000000
+C   0.000000   1.396792   0.000000
+C   0.000000  -1.396792   0.000000
+C   1.209657   0.698396   0.000000
+C  -1.209657  -0.698396   0.000000
+C  -1.209657   0.698396   0.000000
+C   1.209657  -0.698396   0.000000
+
+noreorient
+}
+
+set {
+  reference      rhf
+  scf_type       df
+  basis          def2-svp
+  df_basis_scf   def2-svp-jkfit
+  df_basis_mp2   def2-svp-ri
+  e_convergence  12
+  d_convergence  10
+  maxiter        100
+  docc           [6,3,1,1,0,1,5,4]
+}
+Escf, wfn = energy('scf', return_wfn=True)
+compare_values(Escf,get_variable("CURRENT ENERGY"),8,"DF-SCF(RHF) energy")
+
+set forte{
+  job_type           dwms-dsrgpt2
+  int_type           df
+  cas_type           cas
+  dsrg_s             0.50
+  frozen_docc        [2,1,0,0,0,0,2,1]
+  restricted_docc    [4,2,0,0,0,0,3,3]
+  active             [0,0,1,2,1,2,0,0]
+  dl_maxiter         500
+  e_convergence      10
+  avg_state          [[0,1,2], [1,1,1], [6,1,2], [7,1,2]]
+  form_hbar3         true
+  dwms_zeta          1000.0
+}
+
+energy('forte', ref_wfn=wfn)
+for i in range(7):
+    msg = "DWMS-DSRG-PT2 energy on root {}".format(i)
+    E = get_variable("ENERGY ROOT {}".format(i))
+    compare_values(Ept2[i], E, 8, msg)

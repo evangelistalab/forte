@@ -33,10 +33,11 @@
 #include <string>
 #include <tuple>
 #include <vector>
+#include <utility>
+#include <unordered_set>
 
 #include "ambit/tensor.h"
 
-#include "active_dsrgpt2.h"
 #include "ci_rdm/ci_rdms.h"
 #include "helpers.h"
 #include "integrals/integrals.h"
@@ -44,6 +45,7 @@
 #include "sparse_ci/sparse_ci_solver.h"
 #include "fci/fci_integrals.h"
 #include "sparse_ci/determinant.h"
+#include "mrdsrg-spin-integrated/active_dsrgpt2.h"
 
 using d1 = std::vector<double>;
 using d2 = std::vector<d1>;
@@ -60,7 +62,6 @@ namespace forte {
 void set_FCI_MO_options(ForteOptions& foptions);
 
 class FCI_MO : public Wavefunction {
-    friend class ACTIVE_DSRGPT2;
 
   public:
     /**
@@ -95,28 +96,46 @@ class FCI_MO : public Wavefunction {
     /// Compute state-averaged CASCI energy
     double compute_sa_energy();
 
-    /// Returns the reference object
+    /// Return the reference object
+    /// Return averaged cumulants if AVG_STATE is not empty
     Reference reference(const int& level = 3);
+
+    /// Compute densities or transition densities
+    /// root1, root2 -- the ket and bra roots of p_space and eigen
+    /// multi_state -- grab p_spaces_ and eigens_ if true, otherwise p_space_ and eigen_
+    /// entry -- symmetry entry of p_spaces_ and eigens_ (same entry as sa_info_)
+    /// max_level -- max RDM level to be computed
+    /// do_cumulant -- returned Reference is filled by cumulants (not RDMs) if true
+    Reference transition_reference(int root1, int root2, bool multi_state, int entry = 0,
+                                   int max_level = 3, bool do_cumulant = false, bool disk = true);
+
+    /// Density files
+    std::vector<std::string> density_filenames_generator(int rdm_level, int irrep, int multi,
+                                                         int root1, int root2);
+    bool check_density_files(int rdm_level, int irrep, int multi, int root1, int root2);
+    void remove_density_files(int rdm_level, int irrep, int multi, int root1, int root2);
 
     /// Compute dipole moments with DSRG transformed MO dipole integrals
     /// This function is used for reference relaxation and SA-MRDSRG
     /// This function should be in RUN_DSRG
-    std::map<std::string, std::vector<double>> compute_relaxed_dm(const std::vector<double>& dm0,
-                                                                  std::vector<BlockedTensor>& dm1,
-                                                                  std::vector<BlockedTensor>& dm2);
-    std::map<std::string, std::vector<double>> compute_relaxed_dm(const std::vector<double>& dm0,
-                                                                  std::vector<BlockedTensor>& dm1,
-                                                                  std::vector<BlockedTensor>& dm2,
-                                                                  std::vector<BlockedTensor>& dm3);
+    std::map<std::string, std::vector<double>>
+    compute_ref_relaxed_dm(const std::vector<double>& dm0, std::vector<ambit::BlockedTensor>& dm1,
+                           std::vector<ambit::BlockedTensor>& dm2);
+    std::map<std::string, std::vector<double>>
+    compute_ref_relaxed_dm(const std::vector<double>& dm0, std::vector<ambit::BlockedTensor>& dm1,
+                           std::vector<ambit::BlockedTensor>& dm2,
+                           std::vector<ambit::BlockedTensor>& dm3);
 
     /// Compute oscillator strengths using DSRG transformed MO dipole integrals
     /// This function is used for SA-MRDSRG
     /// This function should be in RUN_DSRG
-    std::map<std::string, std::vector<double>> compute_relaxed_osc(std::vector<BlockedTensor>& dm1,
-                                                                   std::vector<BlockedTensor>& dm2);
-    std::map<std::string, std::vector<double>> compute_relaxed_osc(std::vector<BlockedTensor>& dm1,
-                                                                   std::vector<BlockedTensor>& dm2,
-                                                                   std::vector<BlockedTensor>& dm3);
+    std::map<std::string, std::vector<double>>
+    compute_ref_relaxed_osc(std::vector<ambit::BlockedTensor>& dm1,
+                            std::vector<ambit::BlockedTensor>& dm2);
+    std::map<std::string, std::vector<double>>
+    compute_ref_relaxed_osc(std::vector<ambit::BlockedTensor>& dm1,
+                            std::vector<ambit::BlockedTensor>& dm2,
+                            std::vector<ambit::BlockedTensor>& dm3);
 
     /// Compute Fock (stored in ForteIntegal) using this->Da_
     void compute_Fock_ints();
@@ -125,7 +144,10 @@ class FCI_MO : public Wavefunction {
      * @brief Rotate the SA references such that <M|F|N> is diagonal
      * @param irrep The irrep of states M and N (same irrep)
      */
-    void xms_rotate(const int& irrep);
+    void xms_rotate_civecs();
+
+    /// Set if safe to read densities from files
+    void set_safe_to_read_density_files(bool safe) { safe_to_read_density_files_ = safe; }
 
     /// Set fci_int_ pointer
     void set_fci_int(std::shared_ptr<FCIIntegrals> fci_ints) { fci_ints_ = fci_ints; }
@@ -145,18 +167,6 @@ class FCI_MO : public Wavefunction {
     /// Quiet mode (no printing, for use with CASSCF)
     void set_quite_mode(bool quiet) { quiet_ = quiet; }
 
-    //    /// Set true to compute semi-canonical orbitals
-    //    void set_semi(bool semi) { semi_ = semi; }
-
-    //    /// Set false to skip Fock build in FCI_MO
-    //    void set_form_Fock(bool form_fock) { form_Fock_ = form_fock; }
-
-    //    /// Set active space type
-    //    void set_active_space_type(string act) { active_space_type_ = act; }
-
-    //    /// Set orbitals
-    //    void set_orbs(SharedMatrix Ca, SharedMatrix Cb);
-
     /// Set if localize orbitals
     void set_localize_actv(bool localize) { localize_actv_ = localize; }
 
@@ -174,7 +184,7 @@ class FCI_MO : public Wavefunction {
     void set_sa_info(const std::vector<std::tuple<int, int, int, std::vector<double>>>& info);
 
     /// Set state-averaged eigen values and vectors
-    void set_eigens(const std::vector<vector<pair<SharedVector, double>>>& eigens);
+    void set_eigens(const std::vector<std::vector<std::pair<SharedVector, double>>>& eigens);
 
     /// Return fci_int_ pointer
     std::shared_ptr<FCIIntegrals> fci_ints() { return fci_ints_; }
@@ -186,28 +196,32 @@ class FCI_MO : public Wavefunction {
     std::vector<vecdet> p_spaces() { return p_spaces_; }
 
     /// Return the orbital extents of the current state
-    std::vector<vector<vector<double>>> orb_extents() { return compute_orbital_extents(); }
+    std::vector<std::vector<std::vector<double>>> orb_extents() {
+        return compute_orbital_extents();
+    }
 
     /// Return the vector of eigen vectors and eigen values
-    std::vector<pair<SharedVector, double>> const eigen() { return eigen_; }
+    std::vector<std::pair<SharedVector, double>> const eigen() { return eigen_; }
 
     /// Return the vector of eigen vectors and eigen values (used in state-average computation)
-    std::vector<vector<pair<SharedVector, double>>> const eigens() { return eigens_; }
+    std::vector<std::vector<std::pair<SharedVector, double>>> const eigens() {
+        return eigens_;
+    }
 
     /// Return a vector of dominant determinant for each root
     std::vector<Determinant> dominant_dets() { return dominant_dets_; }
 
     /// Return indices (relative to active, not absolute) of active occupied orbitals
-    std::vector<size_t> actv_occ() { return ah_; }
+    std::vector<size_t> actv_occ() { return actv_hole_mos_; }
 
     /// Return indices (relative to active, not absolute) of active virtual orbitals
-    std::vector<size_t> actv_uocc() { return ap_; }
+    std::vector<size_t> actv_uocc() { return actv_part_mos_; }
 
     /// Return the Dimension of active occupied orbitals
-    Dimension actv_docc() { return active_h_; }
+    Dimension actv_docc() { return actv_hole_dim_; }
 
     /// Return the Dimension of active virtual orbitals
-    Dimension actv_virt() { return active_p_; }
+    Dimension actv_virt() { return actv_part_dim_; }
 
     /// Return the T1 percentage in CISD computations
     std::vector<double> compute_T1_percentage();
@@ -248,39 +262,41 @@ class FCI_MO : public Wavefunction {
     /// Multiplicity
     int multi_;
     int twice_ms_;
+    std::vector<std::string> multi_symbols_;
 
     /// Symmetry
-    int nirrep_;                  // number of irrep
-    int root_sym_;                // root
-    std::vector<int> sym_active_; // active MOs
-    std::vector<int> sym_ncmo_;   // correlated MOs
+    int nirrep_;                // number of irrep
+    int root_sym_;              // root
+    std::vector<int> sym_actv_; // active MOs
+    std::vector<int> sym_ncmo_; // correlated MOs
+    std::vector<std::string> irrep_symbols_;
 
     /// Molecular Orbitals
     size_t nmo_; // total MOs
     Dimension nmopi_;
     size_t ncmo_; // correlated MOs
     Dimension ncmopi_;
-    Dimension frzcpi_; // frozen core
-    Dimension frzvpi_; // frozen virtual
+    Dimension frzc_dim_; // frozen core
+    Dimension frzv_dim_; // frozen virtual
     size_t nfrzc_;
     size_t nfrzv_;
-    Dimension core_; // core MOs
-    size_t nc_;
-    std::vector<size_t> idx_c_;
-    Dimension active_; // active MOs
-    size_t na_;
-    std::vector<size_t> idx_a_;
-    size_t nv_; // virtual MOs
-    Dimension virtual_;
-    std::vector<size_t> idx_v_;
-    size_t nh_; // hole MOs
-    std::vector<size_t> idx_h_;
-    size_t npt_; // particle MOs
-    std::vector<size_t> idx_p_;
-    Dimension active_h_; // active hole for incomplete active space
-    std::vector<size_t> ah_;
-    Dimension active_p_; // active particle for incomplete active space
-    std::vector<size_t> ap_;
+    Dimension core_dim_; // core MOs
+    size_t ncore_;
+    std::vector<size_t> core_mos_;
+    Dimension actv_dim_; // active MOs
+    size_t nactv_;
+    std::vector<size_t> actv_mos_;
+    size_t nvirt_; // virtual MOs
+    Dimension virt_dim_;
+    std::vector<size_t> virt_mos_;
+    size_t nhole_; // hole MOs
+    std::vector<size_t> hole_mos_;
+    size_t npart_; // particle MOs
+    std::vector<size_t> part_mos_;
+    Dimension actv_hole_dim_; // active hole for incomplete active space
+    std::vector<size_t> actv_hole_mos_;
+    Dimension actv_part_dim_; // active particle for incomplete active space
+    std::vector<size_t> actv_part_mos_;
 
     /// Compute IP or EA
     std::string ipea_;
@@ -290,7 +306,7 @@ class FCI_MO : public Wavefunction {
     long int nbeta_;
 
     /// Active Space Type: CAS, CIS, CISD
-    string active_space_type_;
+    std::string actv_space_type_;
 
     /// Form Determiants Space
     void form_p_space();
@@ -307,17 +323,17 @@ class FCI_MO : public Wavefunction {
     size_t singles_size_;
 
     /// Orbital Strings
-    std::vector<vector<vector<bool>>> Form_String(const int& active_elec,
-                                                  const bool& print = false);
+    std::vector<std::vector<std::vector<bool>>> Form_String(const int& active_elec,
+                                                            const bool& print = false);
     std::vector<bool> Form_String_Ref(const bool& print = false);
-    std::vector<vector<vector<bool>>> Form_String_Singles(const std::vector<bool>& ref_string,
-                                                          const bool& print = false);
-    std::vector<vector<vector<bool>>> Form_String_Doubles(const std::vector<bool>& ref_string,
-                                                          const bool& print = false);
-    std::vector<vector<vector<bool>>> Form_String_IP(const std::vector<bool>& ref_string,
-                                                     const bool& print = false);
-    std::vector<vector<vector<bool>>> Form_String_EA(const std::vector<bool>& ref_string,
-                                                     const bool& print = false);
+    std::vector<std::vector<std::vector<bool>>>
+    Form_String_Singles(const std::vector<bool>& ref_string, const bool& print = false);
+    std::vector<std::vector<std::vector<bool>>>
+    Form_String_Doubles(const std::vector<bool>& ref_string, const bool& print = false);
+    std::vector<std::vector<std::vector<bool>>> Form_String_IP(const std::vector<bool>& ref_string,
+                                                               const bool& print = false);
+    std::vector<std::vector<std::vector<bool>>> Form_String_EA(const std::vector<bool>& ref_string,
+                                                               const bool& print = false);
 
     /// Choice of Roots
     int nroot_; // number of roots
@@ -333,29 +349,22 @@ class FCI_MO : public Wavefunction {
     std::vector<std::pair<size_t, double>> initial_guess_;
 
     /// Eigen Values and Eigen Vectors of Certain Symmetry
-    std::vector<pair<SharedVector, double>> eigen_;
+    std::vector<std::pair<SharedVector, double>> eigen_;
     /// A List of Eigen Values and Vectors for State Average
-    std::vector<vector<pair<SharedVector, double>>> eigens_;
+    std::vector<std::vector<std::pair<SharedVector, double>>> eigens_;
     /// The algorithm for diagonalization
     std::string diag_algorithm_;
 
     /// Diagonalize the Hamiltonian
     void Diagonalize_H(const vecdet& P_space, const int& multi, const int& nroot,
-                       std::vector<pair<SharedVector, double>>& eigen);
+                       std::vector<std::pair<SharedVector, double>>& eigen);
     /// Diagonalize the Hamiltonian without the HF determinant
     void Diagonalize_H_noHF(const vecdet& p_space, const int& multi, const int& nroot,
-                            std::vector<pair<SharedVector, double>>& eigen);
+                            std::vector<std::pair<SharedVector, double>>& eigen);
 
-    /// Print the CI Vectors and Configurations (figure out the dominant
-    /// determinants)
+    /// Print the CI Vectors and Configurations (figure out the dominant determinants)
     void print_CI(const int& nroot, const double& CI_threshold,
-                  const std::vector<pair<SharedVector, double>>& eigen, const vecdet& det);
-
-    /// Semi-canonicalize orbitals
-    bool semi_;
-    void semi_canonicalize();
-    /// Use natural orbitals
-    void nat_orbs();
+                  const std::vector<std::pair<SharedVector, double>>& eigen, const vecdet& det);
 
     /// Density Matrix
     d2 Da_;
@@ -381,82 +390,56 @@ class FCI_MO : public Wavefunction {
     ambit::Tensor L3abb;
     ambit::Tensor L3bbb;
 
+    /// File Names of Densities Stored on Disk
+    std::unordered_set<std::string> density_files_;
+    bool safe_to_read_density_files_ = false;
+//    std::vector<std::string> density_filenames_generator(int rdm_level, int irrep, int multi,
+//                                                         int root1, int root2);
+//    bool check_density_files(int rdm_level, int irrep, int multi, int root1, int root2);
+//    void remove_density_files(int rdm_level, int irrep, int multi, int root1, int root2);
+    void clean_all_density_files();
+
+    std::vector<ambit::Tensor> compute_n_rdm(const vecdet& p_space, SharedMatrix evecs,
+                                             int rdm_level, int root1, int root2, int irrep,
+                                             int multi, bool disk);
+
     /// Print Functions
-    void print_d2(const string& str, const d2& OnePD);
-    void print2PDC(const string& str, const d4& TwoPDC, const int& PRINT);
-    void print3PDC(const string& str, const d6& ThreePDC, const int& PRINT);
+    void print2PDC(const std::string& str, const d4& TwoPDC, const int& PRINT);
+    void print3PDC(const std::string& str, const d6& ThreePDC, const int& PRINT);
 
     /// Print Density Matrix (Active ONLY)
-    void print_density(const string& spin, const d2& density);
-    /// Form Density Matrix
-    void FormDensity(CI_RDMS& ci_rdms, d2& A, d2& B);
-    /// Check Density Matrix
-    bool CheckDensity();
-    /// Fill in L1a, L1b from Da_, Db_
-    void fill_density();
-    /// Fill in L1a, L1b, Da_, Db_ from the RDM Vectors
-    void fill_density(vector<double>& opdm_a, std::vector<double>& opdm_b);
+    void print_density(const std::string& spin, const d2& density);
+
+    /// Fill in non-tensor cumulants used in the naive MR-DSRG-PT2 code
+    void fill_naive_cumulants(Reference& ref, const int& level);
     /// Fill in non-tensor quantities D1a_ and D1b_ using ambit tensors
     void fill_one_cumulant(ambit::Tensor& L1a, ambit::Tensor& L1b);
-
-    /// Form 2-Particle Density Cumulant
-    void FormCumulant2(CI_RDMS& ci_rdms, d4& AA, d4& AB, d4& BB);
-    void FormCumulant2AA(const std::vector<double>& tpdm_aa, const std::vector<double>& tpdm_bb,
-                         d4& AA, d4& BB);
-    void FormCumulant2AB(const std::vector<double>& tpdm_ab, d4& AB);
-    /// Fill in L2aa, L2ab and L2bb from L2aa_, L2ab_, and L2bb_
-    void fill_cumulant2();
-    /// Fill in L2aa, L2ab, L2bb from the 2RDMs (used in state average, L2aa_
-    /// ... are not initialized)
-    void compute_cumulant2(vector<double>& tpdm_aa, std::vector<double>& tpdm_ab,
-                           std::vector<double>& tpdm_bb);
     /// Fill in non-tensor quantities L2aa_, L2ab_, and L2bb_ using ambit tensors
     void fill_two_cumulant(ambit::Tensor& L2aa, ambit::Tensor& L2ab, ambit::Tensor& L2bb);
-
-    /// Form 3-Particle Density Cumulant
-    void FormCumulant3(CI_RDMS& ci_rdms, d6& AAA, d6& AAB, d6& ABB, d6& BBB, string& DC);
-    void FormCumulant3AAA(const std::vector<double>& tpdm_aaa, const std::vector<double>& tpdm_bbb,
-                          d6& AAA, d6& BBB, string& DC);
-    void FormCumulant3AAB(const std::vector<double>& tpdm_aab, const std::vector<double>& tpdm_abb,
-                          d6& AAB, d6& ABB, string& DC);
-    void FormCumulant3_DIAG(const vecdet& determinants, const int& root, d6& AAA, d6& AAB, d6& ABB,
-                            d6& BBB);
-    /// Fill in L3aaa, L3aab, L3abb, L3bbb from L3aaa_, L3aab_, L3abb_, L3bbb_
-    void fill_cumulant3();
-    /// Fill in L3aaa, L3aab, L3abb, L3bbb from the 3RDMs (used in state
-    /// average, L3aaa_ ... are not initialized)
-    void compute_cumulant3(vector<double>& tpdm_aaa, std::vector<double>& tpdm_aab,
-                           std::vector<double>& tpdm_abb, std::vector<double>& tpdm_bbb);
     /// Fill in non-tensor quantities L3aaa_, L3aab_, L3abb_ and L3bbb_ using ambit tensors
     void fill_three_cumulant(ambit::Tensor& L3aaa, ambit::Tensor& L3aab, ambit::Tensor& L3abb,
                              ambit::Tensor& L3bbb);
 
-    /// Fill in non-tensor cumulants used in the naive MR-DSRG-PT2 code
-    void fill_naive_cumulants(Reference& ref, const int& level);
-
-    /// N-Particle Operator
-    double OneOP(const Determinant& J, Determinant& Jnew, const size_t& p, const bool& sp,
-                 const size_t& q, const bool& sq);
-    double TwoOP(const Determinant& J, Determinant& Jnew, const size_t& p, const bool& sp,
-                 const size_t& q, const bool& sq, const size_t& r, const bool& sr, const size_t& s,
-                 const bool& ss);
-    double ThreeOP(const Determinant& J, Determinant& Jnew, const size_t& p, const bool& sp,
-                   const size_t& q, const bool& sq, const size_t& r, const bool& sr,
-                   const size_t& s, const bool& ss, const size_t& t, const bool& st,
-                   const size_t& u, const bool& su);
+    /// Add wedge product of L1 to L2
+    void add_wedge_cu2(const ambit::Tensor& L1a, const ambit::Tensor& L1b, ambit::Tensor& L2aa,
+                       ambit::Tensor& L2ab, ambit::Tensor& L2bb);
+    /// Add wedge product of L1 and L2 to L3
+    void add_wedge_cu3(const ambit::Tensor& L1a, const ambit::Tensor& L1b,
+                       const ambit::Tensor& L2aa, const ambit::Tensor& L2ab,
+                       const ambit::Tensor& L2bb, ambit::Tensor& L3aaa, ambit::Tensor& L3aab,
+                       ambit::Tensor& L3abb, ambit::Tensor& L3bbb);
 
     /// Fock Matrix
     d2 Fa_;
     d2 Fb_;
-    //    bool form_Fock_ = true;
+    /// Form Fock matrix
     void Form_Fock(d2& A, d2& B);
-    void Check_Fock(const d2& A, const d2& B, const double& E, size_t& count);
-    void Check_FockBlock(const d2& A, const d2& B, const double& E, size_t& count,
-                         const size_t& dim, const std::vector<size_t>& idx, const string& str);
-    void BD_Fock(const d2& Fa, const d2& Fb, SharedMatrix& Ua, SharedMatrix& Ub,
-                 const string& name);
     /// Print Fock Matrix in Blocks
-    void print_Fock(const string& spin, const d2& Fock);
+    void print_Fock(const std::string& spin, const d2& Fock);
+
+    /// Rotate the given CI vectors by XMS
+    SharedMatrix xms_rotate_this_civecs(const det_vec& p_space, SharedMatrix civecs,
+                                        ambit::Tensor Fa, ambit::Tensor Fb);
 
     /// Reference Energy
     double Eref_;
@@ -475,6 +458,9 @@ class FCI_MO : public Wavefunction {
     /// Compute permanent dipole moments
     void compute_permanent_dipole();
 
+    /// Reformat 1RDM from nactv x nactv vector to N x N SharedMatrix
+    SharedMatrix reformat_1rdm(const std::string& name, const std::vector<double>& data, bool TrD);
+
     /// Transition dipoles
     std::map<std::string, std::vector<double>> trans_dipole_;
     /// Compute transition dipole of same symmetry
@@ -489,148 +475,28 @@ class FCI_MO : public Wavefunction {
 
     /// Compute dipole (or transition dipole) using DSRG transformed MO dipole integrals (dm)
     /// and densities (or transition densities, D)
-    double relaxed_dm_helper(const double& dm0, BlockedTensor& dm1, BlockedTensor& dm2,
-                             BlockedTensor& D1, BlockedTensor& D2);
-    double relaxed_dm_helper(const double& dm0, BlockedTensor& dm1, BlockedTensor& dm2,
-                             BlockedTensor& dm3, BlockedTensor& D1, BlockedTensor& D2,
-                             BlockedTensor& D3);
+    double ref_relaxed_dm_helper(const double& dm0, ambit::BlockedTensor& dm1,
+                                 ambit::BlockedTensor& dm2, ambit::BlockedTensor& D1,
+                                 ambit::BlockedTensor& D2);
+    double ref_relaxed_dm_helper(const double& dm0, ambit::BlockedTensor& dm1,
+                                 ambit::BlockedTensor& dm2, ambit::BlockedTensor& dm3,
+                                 ambit::BlockedTensor& D1, ambit::BlockedTensor& D2,
+                                 ambit::BlockedTensor& D3);
 
     /// Compute RDMs at given order and put into BlockedTensor format
     ambit::BlockedTensor compute_n_rdm(CI_RDMS& cirdm, const int& order);
-
-    /// Intrinsic atomic orbital analysis
-    void iao_analysis();
 
     /// Localize active orbitals
     bool localize_actv_;
     void localize_actv_orbs();
 
-    /**
-     * @brief Return a vector of corresponding indices before the vector is
-     * sorted
-     * @typename T The data type of the sorted vector
-     * @param v The sorted vector
-     * @param decending Sort the vector v in decending order?
-     * @return The vector of indices before sorting v
-     */
-    template <typename T>
-    std::vector<size_t> sort_indexes(const std::vector<T>& v, const bool& decend = false) {
-
-        // initialize original index locations
-        std::vector<size_t> idx(v.size());
-        std::iota(idx.begin(), idx.end(), 0);
-
-        // sort indexes based on comparing values in v
-        if (decend) {
-            sort(idx.begin(), idx.end(), [&v](size_t i1, size_t i2) { return v[i1] > v[i2]; });
-        } else {
-            sort(idx.begin(), idx.end(), [&v](size_t i1, size_t i2) { return v[i1] < v[i2]; });
-        }
-
-        return idx;
-    }
-
-    /// Check Sign (inline functons)
-    double CheckSign(const std::vector<bool>& I, const int& n) {
-        timer_on("Check Sign");
-        size_t count = 0;
-        for (vector<bool>::const_iterator iter = I.begin(); iter != I.begin() + n; ++iter) {
-            if (*iter)
-                ++count;
-        }
-        timer_off("Check Sign");
-        return pow(-1.0, count % 2);
-    }
-    double CheckSign(bool* I, const int& n) {
-        timer_on("Check Sign");
-        size_t count = 0;
-        for (int i = 0; i < n; ++i) {
-            if (I[i])
-                ++count;
-        }
-        timer_off("Check Sign");
-        return pow(-1.0, count % 2);
-    }
-
-    /// Print Size of a Array with Irrep
-    void print_irrep(const string& str, const Dimension& array) {
-        outfile->Printf("\n    %-30s", str.c_str());
-        outfile->Printf("[");
-        for (int h = 0; h < nirrep_; ++h) {
-            outfile->Printf(" %4d ", array[h]);
-        }
-        outfile->Printf("]");
-    }
-
-    /// Print Indices
-    void print_idx(const string& str, const std::vector<size_t>& vec) {
-        outfile->Printf("\n    %-30s", str.c_str());
-        size_t c = 0;
-        for (size_t x : vec) {
-            outfile->Printf("%4zu ", x);
-            ++c;
-            if (c % 15 == 0)
-                outfile->Printf("\n  %-32c", ' ');
-        }
-    }
-
     /// Print Determinants
-    void print_det(const vecdet& dets) {
-        outfile->Printf("\n\n  ==> Determinants |alpha|beta> <==\n");
-        for (const Determinant& x : dets) {
-            outfile->Printf("  %s", x.str().c_str());
-        }
-        outfile->Printf("\n");
-    }
+    void print_det(const vecdet& dets);
 
-    /// Permutations for 3-PDC
-    double P3DDD(const d2& Density, const size_t& p, const size_t& q, const size_t& r,
-                 const size_t& s, const size_t& t, const size_t& u) {
-        double E = 0.0;
-        int index[] = {0, 1, 2};
-        size_t cop[] = {p, q, r};
-        int count1 = 1;
-        do {
-            int count2 = count1 / 2;
-            E += pow(-1.0, count2) * Density[cop[index[0]]][s] * Density[cop[index[1]]][t] *
-                 Density[cop[index[2]]][u];
-            ++count1;
-        } while (std::next_permutation(index, index + 3));
-        return E;
-    }
-    double P3DC(const d2& Density, const d4& Cumulant, const size_t& p, const size_t& q,
-                const size_t& r, const size_t& s, const size_t& t, const size_t& u) {
-        double E = 0.0;
-        int idc[] = {0, 1, 2};    // creation index of cop[]
-        int ida[] = {0, 1, 2};    // annihilation index of aop[]
-        size_t cop[] = {p, q, r}; // abs. creation index
-        size_t aop[] = {s, t, u}; // abs. annihilation index
-        int a = 1;                // a and b decide the sign
-        do {
-            if (a % 2 == 0) {
-                ++a;
-                continue;
-            }
-            int count1 = a / 2;
-            int b = 1;
-            do {
-                if (b % 2 == 0) {
-                    ++b;
-                    continue;
-                }
-                int count2 = b / 2;
-                size_t Didx1 = idx_a_[cop[idc[0]]]; // first index (creation) of denisty
-                size_t Didx2 = idx_a_[aop[ida[0]]]; // second index
-                                                    // (annihilation) of density
-                double value = Density[Didx1][Didx2];
-                value *= Cumulant[cop[idc[1]]][cop[idc[2]]][aop[ida[1]]][aop[ida[2]]];
-                E += pow(-1.0, (count1 + count2)) * value;
-                ++b;
-            } while (std::next_permutation(ida, ida + 3));
-            ++a;
-        } while (std::next_permutation(idc, idc + 3));
-        return E;
-    }
+    /// Print occupations of strings
+    void
+    print_occupation_strings_perirrep(std::string name,
+                                      const std::vector<std::vector<std::vector<bool>>>& string);
 };
 }
 }
