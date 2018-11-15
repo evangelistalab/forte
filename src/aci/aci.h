@@ -398,8 +398,9 @@ class AdaptiveCI : public Wavefunction {
     double compute_spin_contamination(DeterminantHashVec& space, WFNOperator& op,
                                       SharedMatrix evecs, int nroot);
 
-    /// Save coefficients of lowest-root determinant
-    void save_dets_to_file(DeterminantHashVec& space, SharedMatrix evecs);
+    /// Save a wave function
+    void wfn_to_file(DeterminantHashVec& det_space, SharedMatrix evecs, int root);
+
     /// Compute the Davidson correction
     std::vector<double> davidson_correction(std::vector<Determinant>& P_dets, SharedVector P_evals,
                                             SharedMatrix PQ_evecs,
