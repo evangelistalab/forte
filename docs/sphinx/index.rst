@@ -21,12 +21,10 @@ correlated electrons.
    mospaceinfo
    integrals
    methods/fci
+   methods/aci
    methods/dsrg
    programming/index
-   aci
-   pci
    aosubspace
-   dsrg-mrpt
    mr-dsrg
    options
 

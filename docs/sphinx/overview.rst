@@ -27,7 +27,6 @@ In general, Forte is composed of two types of methods:
         #. DSRG-MRPT2
         #. DSRG-MRPT3
         #. MR-LDSRG(2) 
-    #. Uncontracted multireference configuraiton interaction (MRCI)
 
 Note that the active space methods, notably FCI, ACI, and PCI, can operate within the full
 orbital basis defined by the user-selected basis set. In this case, these methods also recover
