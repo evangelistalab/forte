@@ -412,7 +412,8 @@ void MRDSRG::H2_T2_C0_DF(BlockedTensor& B, BlockedTensor& T2, const double& alph
     TIME_LINE(E += 0.25 * B["gEM"] * B["gFN"] * T2["MNEF"]);
     TIME_LINE(E -= 0.25 * B["gEN"] * B["gFM"] * T2["MNEF"]);
 
-    TIME_LINE(BlockedTensor temp = ambit::BlockedTensor::build(tensor_type_, "temp", spin_cases({"aa"})));
+    TIME_LINE(BlockedTensor temp =
+                  ambit::BlockedTensor::build(tensor_type_, "temp", spin_cases({"aa"})));
     TIME_LINE(temp["vu"] += 0.5 * B["gem"] * B["gfu"] * T2["mvef"]);
     TIME_LINE(temp["vu"] -= 0.5 * B["geu"] * B["gfm"] * T2["mvef"]);
     TIME_LINE(temp["vu"] += B["gfu"] * B["gEM"] * T2["vMfE"]);
@@ -859,10 +860,14 @@ void MRDSRG::H2_T2_C1_DF(BlockedTensor& B, BlockedTensor& T2, const double& alph
     TIME_LINE(C1["IR"] -= 0.5 * alpha * Gamma1_["UV"] * B["gAU"] * B["gBR"] * T2["IVAB"]);
     TIME_LINE(C1["IR"] += alpha * Gamma1_["uv"] * B["gau"] * B["gBR"] * T2["vIaB"]);
 
-    TIME_LINE(C1["ir"] += 0.5 * alpha * T2["ijux"] * Gamma1_["xy"] * Gamma1_["uv"] * B["gvr"] * B["gyj"]);
-    TIME_LINE(C1["ir"] -= 0.5 * alpha * T2["ijux"] * Gamma1_["xy"] * Gamma1_["uv"] * B["gvj"] * B["gyr"]);
-    TIME_LINE(C1["IR"] += 0.5 * alpha * T2["IJUX"] * Gamma1_["XY"] * Gamma1_["UV"] * B["gVR"] * B["gYJ"]);
-    TIME_LINE(C1["IR"] -= 0.5 * alpha * T2["IJUX"] * Gamma1_["XY"] * Gamma1_["UV"] * B["gVJ"] * B["gYR"]);
+    TIME_LINE(C1["ir"] +=
+              0.5 * alpha * T2["ijux"] * Gamma1_["xy"] * Gamma1_["uv"] * B["gvr"] * B["gyj"]);
+    TIME_LINE(C1["ir"] -=
+              0.5 * alpha * T2["ijux"] * Gamma1_["xy"] * Gamma1_["uv"] * B["gvj"] * B["gyr"]);
+    TIME_LINE(C1["IR"] +=
+              0.5 * alpha * T2["IJUX"] * Gamma1_["XY"] * Gamma1_["UV"] * B["gVR"] * B["gYJ"]);
+    TIME_LINE(C1["IR"] -=
+              0.5 * alpha * T2["IJUX"] * Gamma1_["XY"] * Gamma1_["UV"] * B["gVJ"] * B["gYR"]);
     TIME_LINE(temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"hHaA"}));
     TIME_LINE(temp["iJvY"] = T2["iJuX"] * Gamma1_["XY"] * Gamma1_["uv"]);
     TIME_LINE(C1["ir"] += alpha * temp["iJvY"] * B["gvr"] * B["gYJ"]);
@@ -901,10 +906,14 @@ void MRDSRG::H2_T2_C1_DF(BlockedTensor& B, BlockedTensor& T2, const double& alph
     TIME_LINE(C1["PA"] += 0.5 * alpha * Eta1_["UV"] * T2["IJAU"] * B["gPJ"] * B["gVI"]);
     TIME_LINE(C1["PA"] -= alpha * Eta1_["uv"] * T2["iJuA"] * B["gvi"] * B["gPJ"]);
 
-    TIME_LINE(C1["pa"] -= 0.5 * alpha * T2["vyab"] * Eta1_["uv"] * Eta1_["xy"] * B["gpu"] * B["gbx"]);
-    TIME_LINE(C1["pa"] += 0.5 * alpha * T2["vyab"] * Eta1_["uv"] * Eta1_["xy"] * B["gpx"] * B["gbu"]);
-    TIME_LINE(C1["PA"] -= 0.5 * alpha * T2["VYAB"] * Eta1_["UV"] * Eta1_["XY"] * B["gPU"] * B["gBX"]);
-    TIME_LINE(C1["PA"] += 0.5 * alpha * T2["VYAB"] * Eta1_["UV"] * Eta1_["XY"] * B["gPX"] * B["gBU"]);
+    TIME_LINE(C1["pa"] -=
+              0.5 * alpha * T2["vyab"] * Eta1_["uv"] * Eta1_["xy"] * B["gpu"] * B["gbx"]);
+    TIME_LINE(C1["pa"] +=
+              0.5 * alpha * T2["vyab"] * Eta1_["uv"] * Eta1_["xy"] * B["gpx"] * B["gbu"]);
+    TIME_LINE(C1["PA"] -=
+              0.5 * alpha * T2["VYAB"] * Eta1_["UV"] * Eta1_["XY"] * B["gPU"] * B["gBX"]);
+    TIME_LINE(C1["PA"] +=
+              0.5 * alpha * T2["VYAB"] * Eta1_["UV"] * Eta1_["XY"] * B["gPX"] * B["gBU"]);
     TIME_LINE(temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"aApP"}));
     TIME_LINE(temp["uXaB"] = T2["vYaB"] * Eta1_["uv"] * Eta1_["XY"]);
     TIME_LINE(C1["pa"] -= alpha * B["gpu"] * B["gBX"] * temp["uXaB"]);
