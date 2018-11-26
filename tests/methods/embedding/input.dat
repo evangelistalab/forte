@@ -5,6 +5,8 @@ sys.path.insert(0, './../../..')
 import embedding
 import forte
 
+refdsrgpt2_in_casscf =  -308.664335732396864 #TEST
+
 molecule {
 -1 1
 C       -0.2451526198      3.4481492184      0.0035091847                 
@@ -47,12 +49,15 @@ set {
   e_convergence          10
   d_convergence          7
   docc                   [32]
-  restricted_docc        [31]
+  restricted_docc        [23]
   active                 [2]
   mcscf_maxiter          100
   mcscf_r_convergence    10
   mcscf_e_convergence    10
   mcscf_diis_start       5
+  freeze_core            true
+  frozen_docc            [8]
+  frozen_uocc            [0]
 }
 
 E, wfn_cas = energy('casscf', return_wfn = True)
@@ -61,7 +66,7 @@ set forte {
   job_type embedding
   reference casscf
   CUTOFF_BY threshold
-  threshold -0.1
+  threshold 0.5
   WRITE_FREEZE_MO true
   semicanon true
 }
@@ -69,20 +74,14 @@ set forte {
 E, wfn_emb = energy('forte', ref_wfn = wfn_cas, return_wfn = True)
 
 set forte {
-  job_type           active-dsrgpt2
-  cino               false
-#  frozen_docc        [24] #freeze C core too
-#  restricted_docc    [7]
-#  active             [2]
-#  restricted_uocc    [4]
-#  frozen_uocc        [19]
+  job_type           dsrg-mrpt2
   cas_type           cas
-  fcimo_actv_type    full
-  nrootpi            [2]
-# print              2
+  root_sym           0
+  nroot              1
+  root               0
   d_convergence      10
   dsrg_s             0.5
-# internal_amp       singles_doubles
 }
 
 Eforte, wfn = energy('forte', ref_wfn = wfn_emb, return_wfn=True)
+compare_values(refdsrgpt2_in_casscf,get_variable("CURRENT ENERGY"),8,"PT2-in-CASSCF energy") #TEST

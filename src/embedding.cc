@@ -49,7 +49,7 @@ void set_EMBEDDING_options(ForteOptions& foptions) {
     foptions.add_int("NUM_OCC", 0, "Number of (restricted) occpied in system A");
     foptions.add_int("NUM_VIR", 0, "Number of (restricted) virtual in system A");
     foptions.add_double("THRESHOLD", 0.5, "Projector eigenvalue threshold, 0.5 as default");
-    foptions.add_str("REFERENCE", "HF", "HF, UHF, MCSCF, CASSCF, CINO");
+    foptions.add_str("REFERENCE", "HF", "HF, UHF, MCSCF, CASSCF, CINO, CINOACTV");
     foptions.add_bool("WRITE_FREEZE_MO", true,
                       "Pass orbital space information automatically or manually");
     foptions.add_bool("SEMICANON", true, "Perform semi-canonicalization or not in the end");
@@ -141,13 +141,13 @@ double embedding::compute_energy() {
     Dimension res_docc_ori = zeropi;
     Dimension docc_ori = zeropi;
 
-	if (options_.get_str("REFERENCE") == "CINO") {
+	if (options_.get_str("REFERENCE") == "CINO" || options_.get_str("REFERENCE") == "CINOACTV") {
 		outfile->Printf("\n Clear the previous frozen orbs when doing NO rotation\n");
 		options_["FROZEN_DOCC"][0].assign(0);
 		options_["FROZEN_UOCC"][0].assign(0);
 	}
 
-    if (options_.get_str("REFERENCE") == "CASSCF") {
+    if (options_.get_str("REFERENCE") == "CASSCF" || options_.get_str("REFERENCE") == "CINOACTV") {
 
         num_actv = options_["ACTIVE"][0].to_integer();
         num_rdocc = options_["RESTRICTED_DOCC"][0].to_integer();
@@ -291,7 +291,7 @@ double embedding::compute_energy() {
     // Rotate MO coeffs
     Ca_->copy(Matrix::doublet(Ca_t, U_all, false, false)); // Structure becomes AO-BO-0-AV-BV
 
-    if (options_.get_str("REFERENCE") == "CASSCF") {
+    if (options_.get_str("REFERENCE") == "CASSCF" || options_.get_str("REFERENCE") == "CINOACTV") {
         // SharedMatrix Ua(new Matrix("Uv", nirrep, actv_a, actv_a));
         // Ua->identity();
         for (int i = 0; i < num_actv; ++i) {
@@ -334,7 +334,7 @@ double embedding::compute_energy() {
     // Ca_Rt->print();
 
     // Update Ca_
-    if (options_.get_str("REFERENCE") == "CASSCF") { // Ca_: AO-BO-A-AV-BV
+    if (options_.get_str("REFERENCE") == "CASSCF" || options_.get_str("REFERENCE") == "CINOACTV") { // Ca_: AO-BO-A-AV-BV
         // copy original columns in active space from Ca_
         for (int i = 0; i < num_actv; ++i) {
             Ca_Rt->set_column(0, i + nroccpi[0], Ca_->get_column(0, nroccpi[0] + i));
@@ -421,7 +421,7 @@ double embedding::compute_energy() {
         Fa_loc->set_block(AOs, AOs, Fa_AOAO);
         Fa_loc->set_block(AVs, AVs, Fa_AVAV);
 
-        if (options_.get_str("REFERENCE") == "CASSCF") {
+        if (options_.get_str("REFERENCE") == "CASSCF" || options_.get_str("REFERENCE") == "CINOACTV") {
             SharedMatrix Uaa(new Matrix("Uaa", nirrep, actv_a, actv_a));
             SharedVector laa(new Vector("laa", nirrep, actv_a));
             Fa_AAAA->diagonalize(Uaa, laa, ascending);
@@ -482,7 +482,7 @@ double embedding::compute_energy() {
         options_["FROZEN_DOCC"][0].assign(sizeBO);
         options_["FROZEN_UOCC"][0].assign(sizeBV);
 
-        if (options_.get_str("REFERENCE") == "CASSCF") {
+        if (options_.get_str("REFERENCE") == "CASSCF" || options_.get_str("REFERENCE") == "CINOACTV") {
             // options_["RESTRICTED_DOCC"].add(0);
             // options_["ACTIVE"].add(0);
             options_["RESTRICTED_UOCC"].add(0);
@@ -490,11 +490,6 @@ double embedding::compute_energy() {
             options_["ACTIVE"][0].assign(num_actv);
             options_["RESTRICTED_UOCC"][0].assign(sizeAV);
         }
-
-		if (options_.get_str("REFERENCE") == "CINO") {
-			options_["FROZEN_DOCC"][0].assign(sizeBO);
-			options_["FROZEN_UOCC"][0].assign(sizeBV);
-		}
 
         /*
         for (int h = 0; h < nirrep_; h++) {
