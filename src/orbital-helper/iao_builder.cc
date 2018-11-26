@@ -132,6 +132,7 @@ std::map<std::string, SharedMatrix> IAOBuilder::build_iaos()
     SharedMatrix S11(new Matrix("S11", primary_->nbf(), primary_->nbf()));
     SharedMatrix S12f(new Matrix("S12f", primary_->nbf(), minao_->nbf()));
     SharedMatrix S22f(new Matrix("S22f", minao_->nbf(), minao_->nbf()));
+
     ints11->compute(S11); 
     ints12->compute(S12f); 
     ints22->compute(S22f); 
@@ -143,6 +144,7 @@ std::map<std::string, SharedMatrix> IAOBuilder::build_iaos()
     fact11.reset();
     fact12.reset();
     fact22.reset();
+
     // => Ghosted Overlap Integrals <= //
 
     SharedMatrix S12(new Matrix("S12", primary_->nbf(), true_iaos_.size()));
@@ -164,6 +166,7 @@ std::map<std::string, SharedMatrix> IAOBuilder::build_iaos()
 
         }
     }
+
     // => Metric Inverses <= //
 
     SharedMatrix S11_m12(S11->clone());
@@ -181,6 +184,7 @@ std::map<std::string, SharedMatrix> IAOBuilder::build_iaos()
     SharedMatrix T3 = Matrix::doublet(T2, T2, true, false);
     T3->power(-1.0/2.0, condition_);
     SharedMatrix Ctilde = Matrix::triplet(S11_m12, T2, T3, false, false, false);
+
     // => D and Tilde D <= //
 
     SharedMatrix D = Matrix::doublet(C, C, false, true);
@@ -204,6 +208,7 @@ std::map<std::string, SharedMatrix> IAOBuilder::build_iaos()
     V->power(-1.0/2.0, condition_);
 
     SharedMatrix A = Matrix::doublet(AN, V, false, false);
+
     // => Assignment <= //
 
     S_ = S11;
@@ -225,6 +230,7 @@ std::map<std::string, SharedMatrix> IAOBuilder::build_iaos()
     }
     
     int nocc = L->rowspi()[0];
+    
     std::vector<int> ranges;
     ranges.push_back(0);
     ranges.push_back(nocc);
@@ -240,6 +246,7 @@ std::map<std::string, SharedMatrix> IAOBuilder::build_iaos()
         }
     }
 
+
     // Build projection matrix U
 
     SharedMatrix Cinv(C->clone());
@@ -253,6 +260,7 @@ std::map<std::string, SharedMatrix> IAOBuilder::build_iaos()
     //print_IAO(Acoeff,nmin,primary_->nbf()); Function I envision
     //ret["A"] = set_name("A")
     //ret["S_min"] = set_name("S_min")
+    
     return ret;
 }
 
@@ -573,7 +581,7 @@ std::map<std::string, SharedMatrix > IAOBuilder::localize(
     L = ret1["L"];
     SharedMatrix L_local(L->clone());
     outfile->Printf("Localized Matrix from ibo code! \n");
-    L_local->print();
+    //L_local->print();
     SharedMatrix U = ret1["U"];
 
     if (use_stars_) {
@@ -581,6 +589,7 @@ std::map<std::string, SharedMatrix > IAOBuilder::localize(
         double** Qp = Q->pointer();
         int nocc  = Q->colspi()[0];
         int natom = Q->rowspi()[0];
+
         std::vector<int> pi_orbs;
         for (int i = 0; i < nocc; i++) {
             std::vector<double> Qs;            for (int A = 0; A < natom; A++) {
@@ -601,6 +610,7 @@ std::map<std::string, SharedMatrix > IAOBuilder::localize(
                 rot_inds2.push_back(std::pair<int,int>(pi_orbs[iind],pi_orbs[jind]));
             }
         }
+
         std::vector<std::vector<int> > minao_inds2;
         for (int Aind = 0; Aind < stars_.size(); Aind++) {
             int A = -1;
@@ -729,6 +739,7 @@ SharedMatrix IAOBuilder::reorder_orbitals(
             Up[i][fvals[i-start].second] = 1.0;
         }
     }
+
     return U;
 }
 
