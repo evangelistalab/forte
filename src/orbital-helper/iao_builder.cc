@@ -349,7 +349,6 @@ std::vector<std::string> IAOBuilder::print_IAO(SharedMatrix A_, int nmin, int nb
                     std::tuple<int,double,std::string> iao_cont;
 		            base = std::make_tuple(outstr_primary.c_str(), a);
                     iao_cont = std::make_tuple(num,a,outstr_primary.c_str());
-					//outfile->Printf("The iao num here is %d \n", num);
 		            all_basis_conts.push_back(base);
                     all_iao_contributions.push_back(iao_cont);
 	        }
@@ -370,14 +369,10 @@ std::vector<std::string> IAOBuilder::print_IAO(SharedMatrix A_, int nmin, int nb
     //    iao_inds.push_back(ind);
     // }
     //cube.compute_orbitals(A_nbf, iao_inds,iao_labs, "iao");
-	//outfile->Printf("\n Hello World #1.3 \n");
+     
     std::vector<std::string> duplicates;
     int basis_conts_size =  all_basis_conts.size();
     int all_iao_size = all_iao_contributions.size();
-	//for (int i = 0; i < all_iao_size; i++) {
-	//	outfile->Printf("\n aic label: %d \n", std::get<0>(all_iao_contributions[i]));
-	//}
-	//outfile->Printf("basis_conts_size: %d, all_iao_size: %d", basis_conts_size, all_iao_size);
     std::vector<std::tuple<int,double,std::string>> iao_sum;
     std::vector<std::tuple<int, std::string>> iao_sum_final;
     for (int i = 0; i < all_iao_size; ++i){
@@ -402,54 +397,34 @@ std::vector<std::string> IAOBuilder::print_IAO(SharedMatrix A_, int nmin, int nb
   	    }
     }
 
-	//outfile->Printf("\n Hello World #1.4 \n");
     std::sort(iao_sum.begin(),iao_sum.end());
     int iao_sum_size = iao_sum.size();
-	//for (int i = 0; i < iao_sum_size; i++) {
-	//	outfile->Printf("\n label: %d \n", std::get<0>(iao_sum[i]));
-	//}
-	//outfile->Printf("\n Hello World #1.4.1 \n");
-	//outfile->Printf("\n nmin: %d, iao sum size: %d \n", nmin, iao_sum_size);
-    for(int i = 0; i < nmin; ++i){ //i < nmin in ori
-	//outfile->Printf("\n Hello World #1.4.1.1 \n");
+    for(int i = 0; i < nmin; ++i){
 	std::vector<std::tuple<double,int,std::string>> iao_max_contributions;
     double a = 0.0;
 	for(int j = 0; j < iao_sum_size; ++j){
 	   std::vector<double> max_candidates;
 	   if(i == std::get<0>(iao_sum[j])){
 	       a = std::get<1>(iao_sum[j]);
-		   //outfile->Printf("\n Found iao_sum %d details: \n", i);
-		   //outfile->Printf("(std::get<1>(iao_sum[j]) %.2f\n", (std::get<1>(iao_sum[j])));
-		   //outfile->Printf("(std::get<0>(iao_sum[j]) %d\n", (std::get<0>(iao_sum[j])));
-		   //outfile->Printf("(std::get<2>(iao_sum[j]).c_str() %s\n", (std::get<2>(iao_sum[j])).c_str());
 	       //outfile->Printf("for i=%d -> (%s)\n", iao_sum[j].get<0>(), iao_sum[j].get<2>().c_str());
                std::tuple<double,int,std::string> iao_max_candidate;
 	       iao_max_candidate = std::make_tuple(std::get<1>(iao_sum[j]), std::get<0>(iao_sum[j]), std::get<2>(iao_sum[j]).c_str());
 	       iao_max_contributions.push_back(iao_max_candidate);
-		   //outfile->Printf("\n This contribution has been pushed into iao_max_contributio \n", i);
 	   }
 	   else{}
         //outfile->Printf("Saved Tuple: (%d,%.2f,%s)\n",iao_sum[i].get<0>(),iao_sum[i].get<1>(),iao_sum[i].get<2>().c_str());
 	}
-	//outfile->Printf("\n Hello World #1.4.1.2 \n");
 	std::sort(iao_max_contributions.begin(),iao_max_contributions.end());
-	//outfile->Printf("\n Hello World #1.4.1.3 \n");
 	std::reverse(iao_max_contributions.begin(),iao_max_contributions.end());
-	//outfile->Printf("\n Hello World #1.4.1.4 \n");
-
-	//outfile->Printf("\n %d \n", std::get<1>(iao_max_contributions[0]));
-	//outfile->Printf("\n %s \n", std::get<2>(iao_max_contributions[0]).c_str());
-	//outfile->Printf("\n %.2f \n", std::get<0>(iao_max_contributions[0]));
-
 	outfile->Printf("IAO%d -> %s(%.2f) \n", std::get<1>(iao_max_contributions[0]), std::get<2>(iao_max_contributions[0]).c_str(),std::get<0>(iao_max_contributions[0]));
 	iao_labs.push_back(std::get<2>(iao_max_contributions[0]).c_str());
     }
-	//outfile->Printf("\n Hello World #1.5 \n");
-    for (int ind = 0; ind < nmin ; ++ind){ // nmin ori
+    
+    for (int ind = 0; ind < nmin ; ++ind){
         iao_inds.push_back(ind);
      }
     cube.compute_orbitals(A_nbf, iao_inds,iao_labs, "iao");
-	//outfile->Printf("\n Hello World #1.6 \n");
+ 
     //A_->print();
     //A_nbf->print();
     return iao_labs;
