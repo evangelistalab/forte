@@ -808,7 +808,8 @@ if(options_.get_bool("CHUNK_SPACE_ENERGY")){
 
         //std::cout << "I get here 1" <<std::endl;
 
-        twomulent_correlation(FCI_2RCM_cor_info);
+        std::string tau_method = "FCI";
+        twomulent_correlation(FCI_2RCM_cor_info, tau_method);
 
         double FCI_2RCM_Fnorm_sq = FCI_2RCM_cor_info[0];
         //std::cout << "FCI 2mulant Fnorm: " << FCI_2RCM_Fnorm_sq << std::endl;
@@ -892,7 +893,8 @@ if(options_.get_bool("CHUNK_SPACE_ENERGY")){
             }
 
             //use modified C_ to get correlation/entanglement info
-            twomulent_correlation(Tau_2RCM_cor_info);
+            tau_method = std::to_string(Tau)+ "_TC_";
+            twomulent_correlation(Tau_2RCM_cor_info, tau_method);
             entanglement_info_1orb(Tau_1oee_info);
             //reset C_ global
             C_->set_coefficient_blocks(C_temp_clone_tc);
@@ -923,7 +925,8 @@ if(options_.get_bool("CHUNK_SPACE_ENERGY")){
               }
             }
 
-            twomulent_correlation(Tau_2RCM_cor_info);
+            tau_method = std::to_string(Tau)+ "_ST_";
+            twomulent_correlation(Tau_2RCM_cor_info, tau_method);
             entanglement_info_1orb(Tau_1oee_info);
             //reset C_ global
             C_->set_coefficient_blocks(C_temp_clone_st);
@@ -933,7 +936,8 @@ if(options_.get_bool("CHUNK_SPACE_ENERGY")){
           if (options_.get_bool("FCI_SVD_TILE")){
               double fci_nergy = dls.eigenvalues()->get(root_) + nuclear_repulsion_energy;
               fci_svd_tiles(HC, fci_ints, fci_nergy, options_.get_int("FCI_SVD_N_TILES"), Tau, Tau_info);
-              twomulent_correlation(Tau_2RCM_cor_info);
+              tau_method = std::to_string(Tau)+ "_TR_";
+              twomulent_correlation(Tau_2RCM_cor_info, tau_method);
               entanglement_info_1orb(Tau_1oee_info);
               C_->set_coefficient_blocks(C_temp_clone_tile_svd);
           }
@@ -943,7 +947,8 @@ if(options_.get_bool("CHUNK_SPACE_ENERGY")){
           if (options_.get_bool("FCI_SVD")){
               double fci_energy = dls.eigenvalues()->get(root_) + nuclear_repulsion_energy;
               fci_svd(HC,fci_ints,fci_energy, Tau, Tau_info);
-              twomulent_correlation(Tau_2RCM_cor_info);
+              tau_method = std::to_string(Tau)+ "_FR_";
+              twomulent_correlation(Tau_2RCM_cor_info, tau_method);
               entanglement_info_1orb(Tau_1oee_info);
               C_->set_coefficient_blocks(C_temp_clone_full_svd);
           }

@@ -670,6 +670,14 @@ double AdaptiveCI::compute_energy() {
     //std::cout << "I get here 3" <<std::endl;
     outfile->Printf("\n  @ ||2mulant||_F^2 : %.12f",Cumu_Fnorm_sq);
 
+    std::ofstream my_2RCM_file;
+    my_2RCM_file.open ("2RCM.dat");
+
+    for(int i = 0; i < rdm_dim; i++){
+      my_2RCM_file << twoRCMaa[i] + twoRCMab[i] + twoRCMbb[i] << " ";
+    }
+    my_2RCM_file.close();
+
 
     // Add fuction to print single orbital entanglement info //
 

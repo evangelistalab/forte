@@ -138,7 +138,7 @@ void FCISolver::rev_basis_cluster(std::vector<SharedMatrix>& C, std::vector<std:
 }
 
 //will each time write a file (ment for use with single tau run..)
-void FCISolver::twomulent_correlation(std::vector<double>& Tau_2RCM_cor_info){
+void FCISolver::twomulent_correlation(std::vector<double>& Tau_2RCM_cor_info, std::string Tau_method){
 
   C_->compute_rdms();
 
@@ -231,6 +231,16 @@ void FCISolver::twomulent_correlation(std::vector<double>& Tau_2RCM_cor_info){
           }
           //std::cout << "I get here 3" <<std::endl;
           Tau_2RCM_cor_info.push_back(Cumu_Fnorm_sq);
+          if (options_.get_bool("PRINT_ALL_2RCM")) {
+
+            std::ofstream my_2RCM_file;
+            my_2RCM_file.open (Tau_method + "2RCM.dat");
+
+            for(int i = 0; i < nact4; i++){
+              my_2RCM_file << twoRCMaa[i] + twoRCMab[i] + twoRCMbb[i] << " ";
+            }
+            my_2RCM_file.close();
+          }
       //}
    //}
 }
