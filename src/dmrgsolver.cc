@@ -387,7 +387,7 @@ void DMRGSolver::compute_energy() {
         throw PSIEXCEPTION("CheMPS2::Problem : No Hilbert state vector "
                            "compatible with all symmetry sectors!");
     }
-    
+
     Prob->SetupReorderD2h();
     Prob->SetupReorderC2v();
 
@@ -599,6 +599,14 @@ void DMRGSolver::compute_energy() {
     }
     //std::cout << "I get here 3" <<std::endl;
     outfile->Printf("\n @||2Lam||F^2: %8.12f", Cumu_Fnorm_sq);
+
+    std::ofstream my_2RCM_file;
+    my_2RCM_file.open ("2RCM.dat");
+
+    for(int i = 0; i < nact4; i++){
+      my_2RCM_file << twoRCMaa[i] + twoRCMab[i] + twoRCMbb[i] << " ";
+    }
+    my_2RCM_file.close();
 
 
 
