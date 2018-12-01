@@ -96,6 +96,7 @@ class TDACI : public Wavefunction {
     std::shared_ptr<ForteIntegrals> ints_;
     SharedWavefunction wfn_;      
     std::shared_ptr<MOSpaceInfo> mo_space_info_; 
+    std::shared_ptr<FCIIntegrals> fci_ints_;
 
     void annihilate_wfn( DeterminantHashVec& olddets, DeterminantHashVec& adets, int frz_orb );
 
@@ -114,13 +115,23 @@ class TDACI : public Wavefunction {
     void propogate_RK4( SharedVector C0, SharedMatrix H);
     void propogate_QCN( SharedVector C0, SharedMatrix H);
     void propogate_lanczos( SharedVector C0, SharedMatrix H);
+
+    void compute_tdaci_select(SharedVector C0, SharedMatrix H);
     
+    void propagate_exact_select( std::vector<double>& PQ_coeffs_r,std::vector<double>& PQ_coeffs_i, 
+                                                            DeterminantHashVec& PQ_space, double dt);
 
     // The core state determinant space
     DeterminantHashVec core_dets_;
-    DeterminantHashVec ann_dets;
+    DeterminantHashVec ann_dets_;
     std::vector<double> compute_occupation( SharedVector Cr, SharedVector Ci, std::vector<int>& orb);
+    std::vector<double> compute_occupation( std::vector<double>& Cr, std::vector<double>& Ci, std::vector<int>& orb);
 
+    void get_PQ_space( DeterminantHashVec& P_space, std::vector<double>& P_coeffs_r, std::vector<double>& P_coeffs_i,
+                       DeterminantHashVec& PQ_space,std::vector<double>& PQ_coeffs_r, std::vector<double>& PQ_coeffs_i);
+
+    void update_P_space(DeterminantHashVec& P_space, std::vector<double>& P_coeffs_r, std::vector<double>& P_coeffs_i,
+                        DeterminantHashVec& PQ_space, std::vector<double>& PQ_coeffs_r, std::vector<double>& PQ_coeffs_i);
 };
 
 } // namespace forte

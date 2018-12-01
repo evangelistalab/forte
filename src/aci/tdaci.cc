@@ -77,7 +77,9 @@ void set_TDACI_options(ForteOptions& foptions) {
     foptions.add_str("TDACI_PROPOGATOR", "EXACT", "Type of propogator");
     foptions.add_int("TDACI_NSTEP", 20, "Number of steps");
     foptions.add_double("TDACI_TIMESTEP", 1.0, "Timestep (as)");
-    foptions.add_double("TDACI_ETA", 1e-12, "Path filtering threshold");
+    foptions.add_double("TDACI_ETA_P", 1e-12, "Path filtering threshold for P space");
+    foptions.add_double("TDACI_ETA_PQ", 1e-12, "Path filtering threshold for Q space");
+    foptions.add_double("TDACI_PRESCREEN_THRESH", 1e-12, "Prescreening threshold");
 }
 
 TDACI::TDACI(SharedWavefunction ref_wfn, Options& options,
@@ -97,6 +99,12 @@ double TDACI::compute_energy() {
     int nact = mo_space_info_->size("ACTIVE");
     int hole = options_.get_int("TDACI_HOLE");
 
+    // skip some steps if doing screening
+    bool screen = false;
+    if (options_.get_str("TDACI_PROPOGATOR") == "EXACT_SELECT" ){
+        screen = true;
+    }
+
     // 1. Grab an ACI wavefunction
     auto aci = std::make_shared<AdaptiveCI>(wfn_, options_, ints_, mo_space_info_);
     aci->set_quiet(true);
@@ -108,26 +116,28 @@ double TDACI::compute_energy() {
     // 2. Generate the n-1 Determinants (not just core)
   //  DeterminantHashVec ann_dets;
     for( int i = 0; i < nact; ++i ){
-        annihilate_wfn(aci_dets, ann_dets,i);  
+        annihilate_wfn(aci_dets, ann_dets_,i);  
     }
-    size_t nann = ann_dets.size();
-    outfile->Printf("\n  size of ann dets: %zu", ann_dets.size());
+    size_t nann = ann_dets_.size();
+    outfile->Printf("\n  size of ann dets: %zu", ann_dets_.size());
 
-    // 3. Build the full n-1 Hamiltonian
-    std::vector<std::string> det_str( nann);
-    std::shared_ptr<FCIIntegrals> fci_ints = aci->get_aci_ints();
-    SharedMatrix full_aH = std::make_shared<Matrix>("aH",nann, nann);
-    for( size_t I = 0; I < nann; ++I ){
-        Determinant detI = ann_dets.get_det(I);
-        det_str[I] = detI.str(nact).c_str();
-        for( size_t J = I; J < nann; ++J ){
-            Determinant detJ = ann_dets.get_det(J);
-            double value = fci_ints->slater_rules(detI,detJ);
-            full_aH->set(I,J, value);
-            full_aH->set(J,I, value);
+    // 3. Build the full n-1 Hamiltonian if not screening
+        std::vector<std::string> det_str( nann);
+        fci_ints_ = aci->get_aci_ints();
+        SharedMatrix full_aH = std::make_shared<Matrix>("aH",nann, nann);
+    if (!screen){
+        for( size_t I = 0; I < nann; ++I ){
+            Determinant detI = ann_dets_.get_det(I);
+            det_str[I] = detI.str(nact).c_str();
+            for( size_t J = I; J < nann; ++J ){
+                Determinant detJ = ann_dets_.get_det(J);
+                double value = fci_ints_->slater_rules(detI,detJ);
+                full_aH->set(I,J, value);
+                full_aH->set(J,I, value);
+            }
         }
+        save_vector(det_str, "determinants.txt");
     }
-    save_vector(det_str, "determinants.txt");
     
     // 4. Prepare initial state by removing an electron from aci wfn 
     //DeterminantHashVec core_dets;
@@ -142,7 +152,7 @@ double TDACI::compute_energy() {
         if( detI.get_alfa_bit(hole) == true ){
             Determinant adet(detI);
             adet.set_alfa_bit(hole, false);
-            size_t idx = ann_dets.get_idx(adet);
+            size_t idx = ann_dets_.get_idx(adet);
             core_coeffs->set(idx, core_coeffs->get(idx) + aci_coeffs->get(aci_dets.get_idx(detI),0) ); 
             core_dets_.add(adet);
         }  
@@ -170,6 +180,8 @@ double TDACI::compute_energy() {
         propogate_RK4( core_coeffs, full_aH);
     } else if (options_.get_str("TDACI_PROPOGATOR") == "LANCZOS" ){
         propogate_lanczos( core_coeffs, full_aH);
+    } else if (options_.get_str("TDACI_PROPOGATOR") == "EXACT_SELECT" ){
+        compute_tdaci_select( core_coeffs, full_aH);
     } else if (options_.get_str("TDACI_PROPOGATOR") == "ALL" ){
         propogate_exact( core_coeffs, full_aH );
         propogate_cn( core_coeffs, full_aH );
@@ -180,9 +192,6 @@ double TDACI::compute_energy() {
         propogate_lanczos( core_coeffs, full_aH);
     }
     
-
-    
-
     return en;
 }
 
@@ -238,7 +247,6 @@ void TDACI::propogate_exact(SharedVector C0, SharedMatrix H) {
 
         std::vector<double> occ = compute_occupation(ct_r, ct_i, orbs);
         for( int i = 0; i < orbs.size(); ++i ){
-            //occupations[i].push_back(occ[i]);
             occupations[i][n] = occ[i];
         }
 
@@ -420,7 +428,7 @@ void TDACI::propogate_taylor1(SharedVector C0, SharedMatrix H  ) {
     
     Timer t1;
     // The screening criterion
-    double eta = options_.get_double("TDACI_ETA");        
+    double eta = options_.get_double("TDACI_ETA_P");        
     double d_tau = options_.get_double("TDACI_TIMESTEP")*0.0413413745758;        
     double tau = 0.0;
     int nstep = options_.get_int("TDACI_NSTEP");
@@ -1246,6 +1254,29 @@ void TDACI::annihilate_wfn( DeterminantHashVec& olddets,
     }
 }
 
+std::vector<double> TDACI::compute_occupation( std::vector<double>& Cr, std::vector<double>& Ci, std::vector<int>& orbs ) {
+
+    int nact = Cr.size();
+    std::vector<double> occ_vec(orbs.size(), 0.0); 
+    
+    for(int i = 0; i < orbs.size(); ++i  ){ 
+        double occ = 0.0;
+        int orb = orbs[i];
+        for( int I = 0; I < nact; ++I) {
+            
+            const Determinant& detI = ann_dets_.get_det(I);
+            if( detI.get_alfa_bit(orb) == true ){
+                size_t idx = ann_dets_.get_idx(detI);
+                double re = Cr[idx];
+                double im = Ci[idx];
+                occ += re*re + im*im; 
+            }
+        }      
+        occ_vec[i] = occ;
+    }
+    return occ_vec;
+}
+
 std::vector<double> TDACI::compute_occupation( SharedVector Cr, SharedVector Ci, std::vector<int>& orbs ) {
 
     int nact = Cr->dim();
@@ -1256,9 +1287,9 @@ std::vector<double> TDACI::compute_occupation( SharedVector Cr, SharedVector Ci,
         int orb = orbs[i];
         for( int I = 0; I < nact; ++I) {
             
-            const Determinant& detI = ann_dets.get_det(I);
+            const Determinant& detI = ann_dets_.get_det(I);
             if( detI.get_alfa_bit(orb) == true ){
-                size_t idx = ann_dets.get_idx(detI);
+                size_t idx = ann_dets_.get_idx(detI);
                 double re = Cr->get(idx);
                 double im = Ci->get(idx);
                 occ += re*re + im*im; 
@@ -1266,8 +1297,470 @@ std::vector<double> TDACI::compute_occupation( SharedVector Cr, SharedVector Ci,
         }      
         occ_vec[i] = occ;
     }
-
     return occ_vec;
 }
+
+void TDACI::compute_tdaci_select(SharedVector C0, SharedMatrix H) {
+
+
+
+    Timer t1;
+    double eta = options_.get_double("TDACI_ETA_P");
+    int nact = mo_space_info_->size("ACTIVE");
+
+    // A list of orbitals to compute occupations during propogation
+    std::vector<int> orbs(options_["TDACI_OCC_ORB"].size());
+    for( int h = 0; h < options_["TDACI_OCC_ORB"].size(); ++h ){
+        int orb = options_["TDACI_OCC_ORB"][h].to_integer();
+        orbs[h] = orb;
+    }
+
+    // Timestep details
+    int nstep = options_.get_int("TDACI_NSTEP");
+    double dt = options_.get_double("TDACI_TIMESTEP");
+    double conv = 1.0/24.18884326505;
+    dt *= conv;
+    double time = dt;
+
+    std::vector<std::vector<double>> occupations(orbs.size(), std::vector<double>(nstep));
+    // Get the initial P and Q space determinants
+    DeterminantHashVec P_space;
+    DeterminantHashVec PQ_space;
+
+    const det_hashvec& dets = ann_dets_.wfn_hash();
+    size_t n_core_dets = core_dets_.size();
+    size_t n_ann_dets = ann_dets_.size();
+    std::vector<std::pair<double, size_t>> sorted_dets(n_ann_dets);
+    for( size_t I = 0; I < n_ann_dets; ++I ){
+        double cI = C0->get(I);
+        sorted_dets[I] = std::make_pair(cI*cI, I);
+    }
+    // Sort by abs value of coefficient
+    std::sort( sorted_dets.begin(), sorted_dets.end() );
+    for( size_t I = n_ann_dets-n_core_dets; I < n_ann_dets; ++I ){
+        auto d_pair = sorted_dets[I];
+        double ci = C0->get(d_pair.second);
+//        outfile->Printf("\n  %12.10f: %s",ci, dets[d_pair.second].str(nact).c_str()); 
+    }
+
+    std::vector<double> P_coeffs_r;
+    std::vector<double> PQ_coeffs_r;
+    std::vector<double> PQ_coeffs_i;
+    double sum = 0.0;
+    size_t n_excluded = 0;
+    for( size_t I = (n_ann_dets-n_core_dets); I < n_ann_dets; ++I ){
+        auto d_pair = sorted_dets[I];
+        double cI = d_pair.first;
+        Determinant det = dets[d_pair.second];
+        if( sum + cI < eta ){
+            sum += cI;
+            n_excluded++;
+//            outfile->Printf("\n (%6.4f) %10.6f: %s", sum, cI, det.str(nact).c_str());
+        } else {
+//            break; // I think this is faster
+            P_space.add(det);
+            P_coeffs_r.push_back(C0->get(d_pair.second));
+        }
+    }
+//    outfile->Printf("\n  Remove %zu out of %zu", n_excluded, n_core_dets);
+    std::vector<double> P_coeffs_i(P_space.size(), 0.0);
+
+ //   for( size_t I = n_excluded; I < n_core_dets; ++I ){
+ //       auto d_pair = sorted_dets[I];
+ //       double cI = d_pair.first;
+ //       Determinant det = d_pair.second;
+ //       
+ //       outfile->Printf("\n  %10.6f: %s", cI, det.str(nact).c_str());
+ //       P_coeffs_r[I - n_excluded] = cI;
+ //       P_space.add(det);
+ //   }
+
+    // Begin the timesteps
+    for(int N = 0; N < nstep; ++N) {
+
+        // 1. Get 1st order opproximation to current basis for propagation
+        get_PQ_space( P_space, P_coeffs_r, P_coeffs_i, PQ_space, PQ_coeffs_r, PQ_coeffs_i );
+
+        outfile->Printf("\n  (t = %10.2f)  P: %6zu, PQ: %6zu", time/conv, P_space.size(), PQ_space.size());
+
+        // 2. Propogate in PQ space
+        propagate_exact_select(PQ_coeffs_r, PQ_coeffs_i, PQ_space, dt ); 
+
+        // 3. Save wfn/occ to file
+        std::vector<double> occ = compute_occupation(PQ_coeffs_r, PQ_coeffs_i, orbs);
+        for( int i = 0; i < orbs.size(); ++i ){
+            occupations[i][N] = occ[i];
+        }
+
+        if( options_.get_bool("TDACI_PRINT_WFN")){
+            if( std::abs( (time/conv) - round(time/conv) ) <= 1e-8){
+                std::stringstream ss;
+                ss << std::fixed << std::setprecision(3) << time/conv;
+                save_vector(PQ_coeffs_r, "select_exact_" + ss.str() +"_r.txt");
+                save_vector(PQ_coeffs_i, "select_exact_" + ss.str() +"_i.txt");
+
+                size_t npq = PQ_space.size();
+                std::vector<std::string> det_str(npq);
+                const det_hashvec& PQ_dets = PQ_space.wfn_hash(); 
+                for(int I = 0; I < npq; ++I ){ 
+                    auto detI = PQ_dets[I];
+                    det_str[I] = detI.str(nact).c_str();
+                }
+                save_vector(det_str, "determinants_"+ ss.str()+ ".txt");
+            }
+        }
+
+        // 4. Update P space
+        update_P_space( P_space, P_coeffs_r, P_coeffs_i, PQ_space, PQ_coeffs_r, PQ_coeffs_i );
+
+        time += dt;
+    }  
+    for( int i = 0; i < orbs.size(); ++i ){
+        save_vector(occupations[i], "occupations_" + std::to_string(orbs[i]) + ".txt");
+    }
+
+    outfile->Printf("\n Time spent propogating (exact): %1.6f s", t1.get()); 
+}
+
+void TDACI::get_PQ_space( DeterminantHashVec& P_space,  std::vector<double>& P_coeffs_r,std::vector<double>& P_coeffs_i, 
+                          DeterminantHashVec& PQ_space, std::vector<double>& PQ_coeffs_r,std::vector<double>& PQ_coeffs_i ) {
+
+    double eta = options_.get_double("TDACI_ETA_PQ");
+    double dt = options_.get_double("TDACI_TIMESTEP");
+    double conv = 1.0/24.18884326505;
+    dt *= conv;
+    int nact = mo_space_info_->size("ACTIVE");
+    auto mo_sym = mo_space_info_->symmetry("ACTIVE");
+    double thresh = options_.get_double("TDACI_PRESCREEN_THRESH");
+
+    size_t max_P = P_space.size();
+    const det_hashvec& P_dets = P_space.wfn_hash();
+    
+
+    DeterminantHashVec F_space;
+    std::vector<double> F_approx_r;
+    std::vector<double> F_approx_i;
+
+#pragma omp parallel
+    {
+        int ntd = omp_get_num_threads();
+        int tid = omp_get_thread_num();
+        int bin_size = max_P / ntd;
+        bin_size += (tid < (max_P % ntd)) ? 1 : 0;
+        int start_idx = (tid < (max_P%ntd)) ? tid*bin_size : (max_P%ntd)*(bin_size+1) + (tid - (max_P%ntd))*bin_size;
+        int end_idx = start_idx + bin_size;
+
+        det_hash<std::pair<double,double>> Hc_t;
+        for( size_t P = start_idx; P < end_idx; ++P ){ 
+            const Determinant& det = P_dets[P];
+            double Cp_r = P_coeffs_r[P];
+            double Cp_i = P_coeffs_i[P];
+            double Cmag_sq = Cp_r*Cp_r + Cp_i*Cp_i;
+
+
+
+            std::vector<int> aocc = det.get_alfa_occ(nact); 
+            std::vector<int> bocc = det.get_beta_occ(nact); 
+            std::vector<int> avir = det.get_alfa_vir(nact); 
+            std::vector<int> bvir = det.get_beta_vir(nact); 
+
+            int noalpha = aocc.size();
+            int nobeta = bocc.size();
+            int nvalpha = avir.size();
+            int nvbeta = bvir.size();
+//            outfile->Printf("\n  %10.6f: %s", Cp_r, det.str(nact).c_str());
+
+            Determinant new_det(det);
+            // single alpha
+            for( int i = 0; i < noalpha; ++i ){
+                int ii = aocc[i];
+                for( int a = 0; a < nvalpha; ++a ){
+                    int aa = avir[a];
+                    if( (mo_sym[ii] ^ mo_sym[aa]) == 0 ){
+                        double int_ia =  fci_ints_->slater_rules_single_alpha( det, ii, aa );
+                        if( std::fabs(int_ia * Cmag_sq) >= thresh ){
+
+                            new_det = det;
+                            new_det.set_alfa_bit(ii,false);
+                            new_det.set_alfa_bit(aa,true);
+    
+                            double HIJ_r = int_ia * Cp_r;
+                            double HIJ_i = int_ia * Cp_i;
+                            auto& pair = Hc_t[new_det];
+                            pair.first += HIJ_r;
+                            pair.second += HIJ_i;
+//                        outfile->Printf("\n %s", new_det.str(nact).c_str());
+                        }
+                    }
+                }
+            }
+            // single beta
+            for( int i = 0; i < nobeta; ++i ){
+                int ii = bocc[i];
+                for( int a = 0; a < nvbeta; ++a ){
+                    int aa = bvir[a];
+                    if( (mo_sym[ii] ^ mo_sym[aa]) == 0 ){
+                        double int_ia =  fci_ints_->slater_rules_single_beta( det, ii, aa );
+                        if( std::fabs(int_ia * Cmag_sq) >= thresh ){
+                            new_det = det;
+                            new_det.set_beta_bit(ii,false);
+                            new_det.set_beta_bit(aa,true);
+                            auto& pair = Hc_t[new_det];
+                            pair.first += int_ia * Cp_r;
+                            pair.second += int_ia * Cp_i;
+                        }
+                    }
+                }
+            }
+            // aabb doubles
+            for( int i = 0; i < noalpha; ++i ){
+                int ii = aocc[i];
+                for( int j = 0; j < nobeta; ++j ){
+                    int jj = bocc[j];
+                    for( int a = 0; a < nvalpha; ++a ){
+                        int aa = avir[a];
+                        for( int b = 0; b < nvbeta; ++b ){
+                            int bb = bvir[b];
+                            if ((mo_sym[ii] ^ mo_sym[jj] ^ mo_sym[aa] ^ mo_sym[bb]) == 0 ){
+                                double int_ijab = fci_ints_->tei_ab(ii,jj,aa,bb);
+                                if( std::fabs(int_ijab * Cmag_sq) >= thresh ){
+                                    new_det = det;
+                                    int_ijab *= new_det.double_excitation_ab(ii,jj,aa,bb);
+                                    auto& pair = Hc_t[new_det];
+                                    pair.first += int_ijab * Cp_r;
+                                    pair.second += int_ijab * Cp_i;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            // aaaa doubles
+            for( int i = 0; i < noalpha; ++i ){
+                int ii = aocc[i];
+                for( int j = i+1; j < noalpha; ++j ){
+                    int jj = aocc[j];
+                    for( int a = 0; a < nvalpha; ++a ){
+                        int aa = avir[a];
+                        for( int b = a+1; b < nvalpha; ++b ){
+                            int bb = avir[b];
+                            if ((mo_sym[ii] ^ mo_sym[jj] ^ mo_sym[aa] ^ mo_sym[bb]) == 0 ){
+                                double int_ijab = fci_ints_->tei_aa(ii,jj,aa,bb);
+                                if( std::fabs(int_ijab * Cmag_sq) >= thresh ){
+                                    new_det = det;
+                                    int_ijab *= new_det.double_excitation_aa(ii,jj,aa,bb);
+                                    auto& pair = Hc_t[new_det];
+                                    pair.first += int_ijab * Cp_r;
+                                    pair.second += int_ijab * Cp_i;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            // bbbb doubles
+            for( int i = 0; i < nobeta; ++i ){
+                int ii = bocc[i];
+                for( int j = i+1; j < nobeta; ++j ){
+                    int jj = bocc[j];
+                    for( int a = 0; a < nvbeta; ++a ){
+                        int aa = bvir[a];
+                        for( int b = a+1; b < nvbeta; ++b ){
+                            int bb = bvir[b];
+                            if ((mo_sym[ii] ^ mo_sym[jj] ^ mo_sym[aa] ^ mo_sym[bb]) == 0 ){
+                                double int_ijab = fci_ints_->tei_bb(ii,jj,aa,bb);
+                                if( std::fabs(int_ijab * Cmag_sq) >= thresh ){
+                                    new_det = det;
+                                    int_ijab *= new_det.double_excitation_bb(ii,jj,aa,bb);
+                                    auto& pair = Hc_t[new_det];
+                                    pair.first += int_ijab * Cp_r;
+                                    pair.second += int_ijab * Cp_i;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        } // loop over reference
+
+        // Merge
+        #pragma omp critical
+        {
+            for( auto& pair : Hc_t ){
+                const Determinant& det = pair.first;
+                if (F_space.has_det(det)){
+                    size_t idx = F_space.get_idx(det); 
+                    F_approx_i[idx] -= pair.second.first;
+                    F_approx_r[idx] += pair.second.second;
+                } else {
+                    F_space.add(det);
+                    size_t idx = F_space.get_idx(det); 
+                    //PQ_approx_r[idx] += pair.second.first;
+                    //PQ_approx_i[idx] += pair.second.second;
+                    F_approx_i.push_back(pair.second.first * -1.0);
+                    F_approx_r.push_back(pair.second.second);
+//                    outfile->Printf("\n %s", det.str(nact).c_str());
+                }
+            }
+        }
+    } // close threads
+
+    // Compute full correction vector
+    size_t nF = F_space.size();
+//    outfile->Printf("\n  Size of F: %zu", nF);
+    const det_hashvec& F_dets = F_space.wfn_hash();
+    std::vector<std::pair<double, Determinant>> sorted_dets(nF);
+
+    double norm = 0.0;
+    for( size_t I = 0; I < nF; ++I ){
+        double& cr = F_approx_r[I];         
+        double& ci = F_approx_i[I];         
+        
+        cr *= dt;
+        ci *= dt;
+
+        const Determinant& det = F_dets[I];        
+
+        if( P_space.has_det(det) ){
+            size_t idx = P_space.get_idx(det);
+            cr += P_coeffs_r[idx];
+            ci += P_coeffs_i[idx];
+        }
+        norm += cr*cr + ci*ci; 
+    } 
+
+    // Copy normalized vectors into sortable list
+    norm = 1.0 /std::sqrt(norm);
+    for( size_t I = 0; I < nF; ++I ){
+        double cr = F_approx_r[I]*norm;         
+        double ci = F_approx_i[I]*norm;         
+        const Determinant& det = F_dets[I];        
+        sorted_dets[I] = std::make_pair( cr*cr + ci*ci, det);
+//        outfile->Printf("\n  %12.10f   %s", cr*cr + ci*ci, det.str(nact).c_str());
+    }
+
+    // Merge P space
+    PQ_space.merge(P_space);
+
+    // Now, screen the determinants
+    std::sort( sorted_dets.begin(), sorted_dets.end() ); 
+    PQ_space.clear();
+    double sum = 0.0;
+    for( size_t I = 0; I < nF; ++I ){
+
+        const auto& dpair = sorted_dets[I];
+        const double cI = dpair.first;
+
+        size_t last_excluded = 0;
+        if( sum + cI < eta ){
+            sum += cI;            
+            last_excluded = I;
+        }else{
+            PQ_space.add(dpair.second);
+        } 
+    }
+    // This will be the initial state for propogation
+    PQ_coeffs_r.resize(PQ_space.size(), 0.0);
+    PQ_coeffs_i.resize(PQ_space.size(), 0.0);
+    for( int I = 0; I < max_P; ++I ){
+        const Determinant& det = P_dets[I];
+        size_t p_idx = P_space.get_idx(det);
+        size_t pq_idx = PQ_space.get_idx(det);
+        PQ_coeffs_r[pq_idx] = P_coeffs_r[p_idx];
+        PQ_coeffs_i[pq_idx] = P_coeffs_i[p_idx];
+    } 
+    
+}
+void TDACI::propagate_exact_select(std::vector<double>& PQ_coeffs_r,std::vector<double>& PQ_coeffs_i, 
+                                                             DeterminantHashVec& PQ_space, double dt) {
+
+    // Build a full Hamiltonian in the PQ space
+    size_t npq = PQ_space.size();
+    SharedMatrix H = std::make_shared<Matrix>("H", npq, npq);
+
+    const det_hashvec& PQ_dets = PQ_space.wfn_hash(); 
+    for( int I = 0; I < npq; ++I ){
+        const Determinant& detI = PQ_dets[I]; 
+        for( int J = I; J < npq; ++J ){
+            const Determinant& detJ = PQ_dets[J]; 
+            double value = fci_ints_->slater_rules(detI,detJ);
+            H->set(I,J, value);
+            H->set(J,I, value);
+        }
+    }    
+
+    SharedMatrix evecs = std::make_shared<Matrix>("evecs",npq,npq);
+    SharedVector evals = std::make_shared<Vector>("evals",npq);
+    H->diagonalize(evecs, evals);
+
+    std::vector<double> int_r(npq, 0.0);
+    std::vector<double> int_i(npq, 0.0);
+
+    //int1->gemv(true, 1.0, &(*evecs), &(*C0), 0.0);
+    C_DGEMV('t', npq, npq, 1.0, &(evecs->pointer(0)[0][0]), npq, &(PQ_coeffs_r[0]), 1, 0.0, &(int_r[0]), 1);
+    C_DGEMV('t', npq, npq, 1.0, &(evecs->pointer(0)[0][0]), npq, &(PQ_coeffs_i[0]), 1, 0.0, &(int_i[0]), 1);
+
+    for( int I = 0; I < npq; ++I ){
+        double rval = int_r[I];
+        double ival = int_i[I];
+        double eval = evals->get(I);
+        int_r[I] = std::cos(eval * dt)*rval + std::sin(eval*dt)*ival; 
+        int_i[I] = std::cos(eval * dt)*ival - std::sin(eval*dt)*rval; 
+    }
+    C_DGEMV('n', npq, npq, 1.0, &(evecs->pointer(0)[0][0]), npq, &(int_r[0]), 1, 0.0, &(PQ_coeffs_r[0]), 1);
+    C_DGEMV('n', npq, npq, 1.0, &(evecs->pointer(0)[0][0]), npq, &(int_i[0]), 1, 0.0, &(PQ_coeffs_i[0]), 1);
+}
+
+void TDACI::update_P_space( DeterminantHashVec& P_space, std::vector<double>& P_coeffs_r, std::vector<double>& P_coeffs_i, 
+                            DeterminantHashVec& PQ_space, std::vector<double>& PQ_coeffs_r, std::vector<double>& PQ_coeffs_i ) {
+
+    // Clear the P space
+    P_space.clear();
+    P_coeffs_r.clear();
+    P_coeffs_i.clear();
+    
+    size_t npq = PQ_space.size();
+    
+    // Put PQ |c_I|^2 into sortable list
+    std::vector<std::pair<double, size_t>> sorted_dets(npq);
+    for( int I = 0; I < npq; ++I ){
+        double cr = PQ_coeffs_r[I];
+        double ci = PQ_coeffs_i[I];
+
+        sorted_dets[I] = std::make_pair( cr*cr + ci*ci, I ); 
+    }
+
+    std::sort( sorted_dets.begin(), sorted_dets.end() );
+
+    double eta = options_.get_double("TDACI_ETA_P");
+    const det_hashvec& PQ_dets = PQ_space.wfn_hash();
+    
+    double sum = 0.0;
+    size_t last = 0;
+    for( int I = 0; I < npq; ++I ){
+        double mag = sorted_dets[I].first;
+
+        if( mag + sum < eta ){
+            sum += mag;
+            last = I;
+        } else {
+            size_t idx = sorted_dets[I].second;
+            P_space.add(PQ_dets[idx]);
+        } 
+    }
+
+    size_t np = P_space.size();
+    P_coeffs_r.resize(np);
+    P_coeffs_i.resize(np);
+    const det_hashvec& P_dets = P_space.wfn_hash();
+    for( int I = 0; I < np; ++I){
+        const Determinant& det = P_dets[I];
+        size_t idx = PQ_space.get_idx(det);
+        P_coeffs_r[I] = PQ_coeffs_r[idx]; 
+        P_coeffs_i[I] = PQ_coeffs_i[idx]; 
+    }
+}
+
+
 
 }}
