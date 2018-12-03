@@ -45,7 +45,7 @@ namespace psi {
 namespace forte {
 
 void set_EMBEDDING_options(ForteOptions& foptions) {
-    foptions.add_str("CUTOFF_BY", "THRESHOLD", "Cut off by: threshold or number.");
+    foptions.add_str("CUTOFF_BY", "THRESHOLD", "Cut off by: threshold cumulative threshold, or number.");
     foptions.add_int("NUM_OCC", 0, "Number of (restricted) occpied in system A");
     foptions.add_int("NUM_VIR", 0, "Number of (restricted) virtual in system A");
     foptions.add_double("THRESHOLD", 0.5, "Projector eigenvalue threshold, 0.5 as default");
@@ -236,6 +236,27 @@ double embedding::compute_energy() {
             }
         }
     }
+
+	if (options_.get_str("CUTOFF_BY") == "CUMULATIVE_THRESHOLD") {
+		double tmp = 0.0;
+		for (int i = 0; i < nroccpi[0]; i++) {
+			tmp += lo->get(0, i);
+			if (tmp / float(i + 1) > thresh) {
+				index_trace_occ.push_back(i);
+				outfile->Printf("\n Occupied orbital %d is partitioned to A, cumulative eigenvalue (Occ) reaches %8.8f",
+					tmp / float(i + 1));
+			}
+		}
+		tmp = 0.0;
+		for (int i = 0; i < nrvirpi[0]; i++) {
+			tmp += lv->get(0, i);
+			if (tmp / float(i + 1) > thresh) {
+				index_trace_vir.push_back(i);
+				outfile->Printf("\n Virtual orbital %d is partitioned to A, cumulative eigenvalue (Vir) reaches %8.8f",
+					tmp / float(i + 1));
+			}
+		}
+	}
 
     if (options_.get_str("CUTOFF_BY") == "NUMBER") {
         for (int i = 0; i < num_occ; i++) {
