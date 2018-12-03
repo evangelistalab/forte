@@ -72,6 +72,11 @@ bool FCISolver::pairCompare(const std::pair<double, int>& firstElem, const std::
     return firstElem.first > secondElem.first;
 }
 
+bool FCISolver::pairTupleCompare(const std::tuple<double, int, int>& firstElem, const std::tuple<double, int, int>& secondElem)
+{
+    return std::get<0>(firstElem) > std::get<0>(secondElem);
+}
+
 void FCISolver::basis_cluster(std::vector<SharedMatrix>& C, std::vector<std::pair<double, int> >& st_vec)
 {
   // fill vectors of pairs for ij indicies using Calph^2, the sorted order will be the i'j' indicies
@@ -651,18 +656,33 @@ void FCISolver::string_trimmer(std::vector<SharedMatrix>& C, double DELTA, FCIVe
   double nuclear_repulsion_energy =
       Process::environment.molecule()->nuclear_repulsion_energy({0, 0, 0});
 
-  std::vector<std::pair<double, int> > sorted_strings;
-
-  for(auto C_h: C){
+  int nirrep = C.size();
+  //std::vector<std::pair<double, int> > sorted_strings;
+  std::vector<std::tuple<double, int, int> > sorted_strings;
+                      // Omega    h    i
+  for(int h=0; h < nirrep; h++){
     // for alpha strings
-    for(int i=0; i<C_h->coldim(); i++){
+    for(int i=0; i<C[h]->coldim(); i++){
       double temp = 0.0;
-      for(int j=0; j<C_h->rowdim(); j++){
-        temp += std::pow(C_h->get(i,j), 2);
+      for(int j=0; j<C[h]->rowdim(); j++){
+        temp += std::pow(C[h]->get(i,j), 2);
       }
-      sorted_strings.push_back(std::make_pair(temp, i));
+      sorted_strings.push_back(std::make_tuple(temp, h, i));
     }
   }
+
+
+
+  // for(auto C_h: C){
+  //   // for alpha strings
+  //   for(int i=0; i<C_h->coldim(); i++){
+  //     double temp = 0.0;
+  //     for(int j=0; j<C_h->rowdim(); j++){
+  //       temp += std::pow(C_h->get(i,j), 2);
+  //     }
+  //     sorted_strings.push_back(std::make_pair(temp, i));
+  //   }
+  // }
 
   // for (auto T : sorted_strings) {
   //     outfile->Printf("\n   %20.12f      %d      ", T.first, T.second);
@@ -671,12 +691,15 @@ void FCISolver::string_trimmer(std::vector<SharedMatrix>& C, double DELTA, FCIVe
 
   outfile->Printf("\n");
 
-  std::sort(sorted_strings.begin(), sorted_strings.end(), pairCompare);
+  std::sort(sorted_strings.begin(), sorted_strings.end(), pairTupleCompare);
+
+  // check 1
 
   double st_norm = 0.0;
-  for (auto T : sorted_strings) {
+  for (auto ST : sorted_strings) {
       //outfile->Printf("\n   %20.12f      %d      ", T.first, T.second);
-      st_norm += T.first;
+      st_norm += std::get<0>(ST);
+      //st_norm += T.first;
   }
 
   // outfile->Printf("\n");
@@ -690,8 +713,9 @@ void FCISolver::string_trimmer(std::vector<SharedMatrix>& C, double DELTA, FCIVe
 
   //std::cout << "\n ==> NEW TAU : " << DELTA << " <===  " << std::endl;
 
-  for (auto ST : sorted_strings) {
-      string_norm_sum += ST.first;
+  for (auto ST : sorted_strings) { // shoud be for loop over all strings
+      //string_norm_sum += ST.first;
+      string_norm_sum += std::get<0>(ST);
       if (string_norm_sum > norm_cut * st_norm) {
           break;
       }
@@ -700,10 +724,13 @@ void FCISolver::string_trimmer(std::vector<SharedMatrix>& C, double DELTA, FCIVe
       // std::cout << "string norm sum :  " << string_norm_sum << std::endl;
       // std::cout << "N strings  " << sorted_strings.size() << std::endl;
       if(delta_counter < sorted_strings.size()){
-        diff_val = sorted_strings[delta_counter - 1].first - sorted_strings[delta_counter].first;
+        diff_val = std::get<0>(sorted_strings[delta_counter - 1]) - std::get<0>(sorted_strings[delta_counter]);
+        //diff_val = sorted_strings[delta_counter - 1].first - sorted_strings[delta_counter].first;
         //std::cout << "vec[count-1] - vec[count] :  " << diff_val << std::endl;
       }
   }
+
+  //check 2
 
   // std::cout << "Delta Count :  " << delta_counter << std::endl;
   // std::cout << "str norm cut :  " << sorted_strings[delta_counter].first << std::endl;
@@ -720,13 +747,16 @@ void FCISolver::string_trimmer(std::vector<SharedMatrix>& C, double DELTA, FCIVe
         if(delta_counter == sorted_strings.size() - 1){ // again include all strings if we make it to 2nd to last one
           sum_cut = 0.0;
         } else { // inclue the 'almost' same valed strings
-          double diff_val2 = sorted_strings[delta_counter].first - sorted_strings[delta_counter+1].first;
-          sum_cut = sorted_strings[delta_counter].first - 0.5*diff_val2;
+          double diff_val2 = std::get<0>(sorted_strings[delta_counter]) - std::get<0>(sorted_strings[delta_counter+1]);
+          sum_cut = std::get<0>(sorted_strings[delta_counter]) - 0.5*diff_val2;
+          // double diff_val2 = sorted_strings[delta_counter].first - sorted_strings[delta_counter+1].first;
+          // sum_cut = sorted_strings[delta_counter].first - 0.5*diff_val2;
           //std::cout << "==> Close string inclueded! : " << delta_counter << std::endl;
         }
 
       } else { // buisness as usual
-        sum_cut = sorted_strings[delta_counter-1].first - 0.5*diff_val;
+        sum_cut = std::get<0>(sorted_strings[delta_counter-1]) - 0.5*diff_val;
+        //sum_cut = sorted_strings[delta_counter-1].first - 0.5*diff_val;
         // std::cout << "  ==> Buisness as usual : " << delta_counter << std::endl;
         // std::cout << "  ==> tnc : " << sum_cut << std::endl;
         // std::cout << "  ==> last included : " << sorted_strings[delta_counter-1].first << std::endl;
@@ -737,70 +767,106 @@ void FCISolver::string_trimmer(std::vector<SharedMatrix>& C, double DELTA, FCIVe
     std::cout << "WOAH, should be a seg fault ..." << std::endl;
   }
 
+  //check 3
+
   double Om_a;
   double Om_b;
 
   int N_par = 0;
-  std::vector<int> Ia_bool(C[0]->coldim(), 1);
-  std::vector<int> Ib_bool(C[0]->rowdim(), 1);
+  std::vector<std::vector<int> > Ia_bool(nirrep);
+  std::vector<std::vector<int> > Ib_bool(nirrep);
+
+
+
+  // std::vector<int> Ia_bool(C[0]->coldim(), 1);
+  // std::vector<int> Ib_bool(C[0]->rowdim(), 1);
 
   // for(auto C_h: C){
   //   N_par += C_h->rowdim() * C_h->coldim();
   // }
 
-  for(auto C_h: C){
+  for(int h=0; h < nirrep; h++){
+  // for(auto C: C){
     // for alpha strings
-    for(int i=0; i<C_h->coldim(); i++){
+    for(int i=0; i<C[h]->coldim(); i++){
       Om_a = 0;
-      for(int j=0; j<C_h->rowdim(); j++){
-        Om_a += std::pow(C_h->get(i,j), 2);
+      for(int j=0; j<C[h]->rowdim(); j++){
+        Om_a += std::pow(C[h]->get(i,j), 2);
       }
       if(Om_a < sum_cut){
-      Ia_bool[i]--;
+        Ia_bool[h].push_back(0);
         // for(int j=0; j<C_h->rowdim(); j++){
         //   //C_h->set(i,j,0);
         //   N_par--;
         // }
+      } else {
+        Ia_bool[h].push_back(1);
       }
     }
 
     // for beta strings
-    for(int j=0; j<C_h->rowdim(); j++){
+    for(int j=0; j<C[h]->rowdim(); j++){
       Om_b = 0;
-      for(int i=0; i<C_h->coldim(); i++){
-        Om_b += std::pow(C_h->get(i,j), 2);
+      for(int i=0; i<C[h]->coldim(); i++){
+        Om_b += std::pow(C[h]->get(i,j), 2);
       }
       if(Om_b < sum_cut){
-        Ib_bool[j]--;
+        Ib_bool[h].push_back(0);
         // for(int i=0; i<C_h->coldim(); i++){
         //   //C_h->set(i,j,0);
         //   N_par--;
+      } else {
+        Ib_bool[h].push_back(1);
       }
+
+      ////WHERE WAS I? //////
+
+      // for(int j=0; j<C_h->rowdim(); j++){
+      //   Om_b = 0;
+      //   for(int i=0; i<C_h->coldim(); i++){
+      //     Om_b += std::pow(C_h->get(i,j), 2);
+      //   }
+      //   if(Om_b < sum_cut){
+      //     Ib_bool[j]--;
+      //     // for(int i=0; i<C_h->coldim(); i++){
+      //     //   //C_h->set(i,j,0);
+      //     //   N_par--;
+      //   }
     }
 
 
     //set blocks
-    for(int i=0; i<C_h->coldim(); i++){
-      for(int j=0; j<C_h->rowdim(); j++){
-        if(Ia_bool[i]*Ib_bool[j] > 0) N_par++;
-        C_h->set(i ,j , Ia_bool[i]*Ib_bool[j]*C_h->get(i,j));
+    for(int i=0; i<C[h]->coldim(); i++){
+      for(int j=0; j<C[h]->rowdim(); j++){
+        if(Ia_bool[h][i]*Ib_bool[h][j] > 0) N_par++;
+        C[h]->set(i ,j , Ia_bool[h][i]*Ib_bool[h][j]*C[h]->get(i,j));
       }
     }
   }
+
+  //std::cout << "I get here 2!" << std::endl;
   // Re-Normalize Wvfn
 
   double norm_C_trimmed = 0.0;
-  for (auto C_h : C) {
-      norm_C_trimmed += C_h->sum_of_squares();
-  }
-  norm_C_trimmed = std::sqrt(norm_C_trimmed);
-  for (auto C_h : C) {
-      C_h->scale(1. / norm_C_trimmed);
+  for (int h=0; h<nirrep; h++) {
+      norm_C_trimmed += C[h]->sum_of_squares();
   }
 
+  // for (auto C_h : C) {
+  //     norm_C_trimmed += C_h->sum_of_squares();
+  // }
+  norm_C_trimmed = std::sqrt(norm_C_trimmed);
+  for (int h=0; h<nirrep; h++) {
+      C[h]->scale(1. / norm_C_trimmed);
+  }
+  // for (auto C_h : C) {
+  //     C_h->scale(1. / norm_C_trimmed);
+  // }
+
   double Norm = 0.0;
-  for(auto C_h: C){
-    Norm += C_h->sum_of_squares();
+
+  for(int h=0; h<nirrep; h++){
+    Norm += C[h]->sum_of_squares();
   }
 
   //Print MATRIX
@@ -951,7 +1017,10 @@ void FCISolver::zero_tile(std::vector<SharedMatrix>& C,
   auto M = C[h]->get_block(row_slice, col_slice);
 
   double area_factor = ((double)n*(double)d) / ((double)dim*(double)dim);
-  double tile_factor = M->sum_of_squares() / area_factor;
+  //double tile_factor = M->sum_of_squares() / area_factor;
+  double tile_factor = C[h]->get(i,j);
+  tile_factor *= tile_factor;
+
 
   if(tile_factor < tile_norm_cut){
     M->set(0.0);
@@ -991,7 +1060,9 @@ void FCISolver::add_to_tle_vect(std::vector<SharedMatrix>& C,
   //if(n == 0 || d == 0){std::cout << "\nrought ro! i:  " << i << "  j:  " << std::endl; }
 
   double area_factor = ((double)n*(double)d) / ((double)dim*(double)dim);
-  double tile_factor = M->sum_of_squares() / area_factor;
+  //double tile_factor = M->sum_of_squares() / area_factor;
+  double tile_factor = C[h]->get(i,j);
+  tile_factor *= tile_factor;
 
   if(area_factor < 0.001){std::cout << "\nrought ro! n:  " << n << "  d:  " << d << " val:  "<< (n*d) / (dim*dim)<< std::endl; }
   //if(M->sum_of_squares() > 0.5){std::cout << "\nrought ro! i:  " << i << "  j:  " << j << " val:  "<< M->sum_of_squares() << std::endl; }

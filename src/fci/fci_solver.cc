@@ -676,7 +676,7 @@ if(options_.get_bool("CHUNK_SPACE_ENERGY")){
       std::vector<SharedMatrix> C_temp_clone_tile_svd(nirrep_);
       std::vector<SharedMatrix> C_temp_clone_full_svd(nirrep_);
 
-      string_stats(C_temp);
+      //string_stats(C_temp);
 
       //print unadultarated C matrix
       //py_mat_print(C_temp[0], "C_fci.mat");
@@ -841,7 +841,7 @@ if(options_.get_bool("CHUNK_SPACE_ENERGY")){
           std::vector<SharedMatrix> C_temp_clone_tile_svd(nirrep_);
           std::vector<SharedMatrix> C_temp_clone_full_svd(nirrep_);
 
-          string_stats(C_temp);
+          //string_stats(C_temp);
 
           //print unadultarated C matrix
           //py_mat_print(C_temp[0], "C_fci.mat");
