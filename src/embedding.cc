@@ -45,7 +45,8 @@ namespace psi {
 namespace forte {
 
 void set_EMBEDDING_options(ForteOptions& foptions) {
-    foptions.add_str("CUTOFF_BY", "THRESHOLD", "Cut off by: threshold cumulative threshold, or number.");
+    foptions.add_str("CUTOFF_BY", "THRESHOLD",
+                     "Cut off by: threshold cumulative threshold, or number.");
     foptions.add_int("NUM_OCC", 0, "Number of (restricted) occpied in system A");
     foptions.add_int("NUM_VIR", 0, "Number of (restricted) virtual in system A");
     foptions.add_double("THRESHOLD", 0.5, "Projector eigenvalue threshold, 0.5 as default");
@@ -53,8 +54,8 @@ void set_EMBEDDING_options(ForteOptions& foptions) {
     foptions.add_bool("WRITE_FREEZE_MO", true,
                       "Pass orbital space information automatically or manually");
     foptions.add_bool("SEMICANON", true, "Perform semi-canonicalization or not in the end");
-	foptions.add_int("FROZEN_SYS_DOCC", 0, "Freeze system occ orbitals");
-	foptions.add_int("FROZEN_SYS_UOCC", 0, "Freeze system vir orbitals");
+    foptions.add_int("FROZEN_SYS_DOCC", 0, "Freeze system occ orbitals");
+    foptions.add_int("FROZEN_SYS_UOCC", 0, "Freeze system vir orbitals");
 }
 
 embedding::embedding(SharedWavefunction ref_wfn, Options& options,
@@ -69,8 +70,8 @@ embedding::embedding(SharedWavefunction ref_wfn, Options& options,
     thresh = options.get_double("THRESHOLD");
     num_occ = options.get_int("NUM_OCC");
     num_vir = options.get_int("NUM_VIR");
-	frz_sys_docc = options.get_int("FROZEN_SYS_DOCC");
-	frz_sys_uocc = options.get_int("FROZEN_SYS_UOCC");
+    frz_sys_docc = options.get_int("FROZEN_SYS_DOCC");
+    frz_sys_uocc = options.get_int("FROZEN_SYS_UOCC");
 
     std::shared_ptr<PSIO> psio(_default_psio_lib_);
     if (!ref_wfn)
@@ -100,8 +101,8 @@ double embedding::compute_energy() {
     std::shared_ptr<Molecule> mol_env = mol->extract_subsets(env_list, none_list);
     outfile->Printf("\n System Fragment \n");
     mol_sys->print();
-    //outfile->Printf("\n Environment Fragment(s) \n");
-    //mol_env->print();
+    // outfile->Printf("\n Environment Fragment(s) \n");
+    // mol_env->print();
 
     std::shared_ptr<BasisSet> basis = ref_wfn_->basisset();
     Dimension nmopi = ref_wfn_->nmopi();
@@ -135,17 +136,17 @@ double embedding::compute_energy() {
     int num_actv = 0;
     int num_rdocc = 0;
     int num_docc = 0;
-	int num_fo = 0;
-	int num_fv = 0;
+    int num_fo = 0;
+    int num_fv = 0;
     Dimension actv_a = zeropi;
     Dimension res_docc_ori = zeropi;
     Dimension docc_ori = zeropi;
 
-	if (options_.get_str("REFERENCE") == "CINO" || options_.get_str("REFERENCE") == "CINOACTV") {
-		outfile->Printf("\n Clear the previous frozen orbs when doing NO rotation\n");
-		options_["FROZEN_DOCC"][0].assign(0);
-		options_["FROZEN_UOCC"][0].assign(0);
-	}
+    if (options_.get_str("REFERENCE") == "CINO" || options_.get_str("REFERENCE") == "CINOACTV") {
+        outfile->Printf("\n Clear the previous frozen orbs when doing NO rotation\n");
+        options_["FROZEN_DOCC"][0].assign(0);
+        options_["FROZEN_UOCC"][0].assign(0);
+    }
 
     if (options_.get_str("REFERENCE") == "CASSCF" || options_.get_str("REFERENCE") == "CINOACTV") {
 
@@ -160,19 +161,19 @@ double embedding::compute_energy() {
         // Change the following part when symmetry is applied
     }
 
-	if (options_.get_str("FREEZE_CORE") ==
-		"TRUE") {
-		outfile->Printf("\n Read frozen core info: \n");
-		num_fo = options_["FROZEN_DOCC"][0].to_integer();
-		num_fv = options_["FROZEN_UOCC"][0].to_integer();
-		outfile->Printf("fo: %d, fv: %d \n", num_fo, num_fv);
-	}
+    if (options_.get_str("FREEZE_CORE") == "TRUE") {
+        outfile->Printf("\n Read frozen core info: \n");
+        num_fo = options_["FROZEN_DOCC"][0].to_integer();
+        num_fv = options_["FROZEN_UOCC"][0].to_integer();
+        outfile->Printf("fo: %d, fv: %d \n", num_fo, num_fv);
+    }
 
     int num_actv_docc = num_docc - num_rdocc - num_fo;
     int num_actv_vir = num_actv - num_actv_docc;
     outfile->Printf(
         "\n The reference has %d active occupied, %d active virtual, they will be assigned to A "
-        "(without any change);\n %d frozen core and %d frozen virtual will be assigned directly to B \n",
+        "(without any change);\n %d frozen core and %d frozen virtual will be assigned directly to "
+        "B \n",
         num_actv_docc, num_actv_vir, num_fo, num_fv);
     sys_mo[0] = count_basis;
 
@@ -188,11 +189,18 @@ double embedding::compute_energy() {
     Slice vir(nroccpi + actv_a, nmopi);
     Slice actv(nroccpi, nroccpi + actv_a);
 
+    // Transform to IAO if option is iao
+
+    // Rotate S_ao to iao basis
+
     SharedMatrix S_sys = S_ao->get_block(sys, sys);
 
     // Construct S_sys^-1 in full size
     S_sys->general_invert();
     SharedMatrix S_sys_in_all(new Matrix("S system in fullsize", nirrep, nmopi, nmopi));
+
+    // If iao, set S_sys to identity here
+
     S_sys_in_all->set_block(sys, sys, S_sys);
 
     // Build P_pq
@@ -237,26 +245,28 @@ double embedding::compute_energy() {
         }
     }
 
-	if (options_.get_str("CUTOFF_BY") == "CUMULATIVE_THRESHOLD") {
-		double tmp = 0.0;
-		for (int i = 0; i < nroccpi[0]; i++) {
-			tmp += lo->get(0, i);
-			if (tmp / float(i + 1) > thresh) {
-				index_trace_occ.push_back(i);
-				outfile->Printf("\n Occupied orbital %d is partitioned to A, cumulative eigenvalue (Occ) reaches %8.8f",
-					tmp / float(i + 1));
-			}
-		}
-		tmp = 0.0;
-		for (int i = 0; i < nrvirpi[0]; i++) {
-			tmp += lv->get(0, i);
-			if (tmp / float(i + 1) > thresh) {
-				index_trace_vir.push_back(i);
-				outfile->Printf("\n Virtual orbital %d is partitioned to A, cumulative eigenvalue (Vir) reaches %8.8f",
-					tmp / float(i + 1));
-			}
-		}
-	}
+    if (options_.get_str("CUTOFF_BY") == "CUMULATIVE_THRESHOLD") {
+        double tmp = 0.0;
+        for (int i = 0; i < nroccpi[0]; i++) {
+            tmp += lo->get(0, i);
+            if (tmp / float(i + 1) > thresh) {
+                index_trace_occ.push_back(i);
+                outfile->Printf("\n Occupied orbital %d is partitioned to A, cumulative eigenvalue "
+                                "(Occ) reaches %8.8f",
+                                tmp / float(i + 1));
+            }
+        }
+        tmp = 0.0;
+        for (int i = 0; i < nrvirpi[0]; i++) {
+            tmp += lv->get(0, i);
+            if (tmp / float(i + 1) > thresh) {
+                index_trace_vir.push_back(i);
+                outfile->Printf("\n Virtual orbital %d is partitioned to A, cumulative eigenvalue "
+                                "(Vir) reaches %8.8f",
+                                tmp / float(i + 1));
+            }
+        }
+    }
 
     if (options_.get_str("CUTOFF_BY") == "NUMBER") {
         for (int i = 0; i < num_occ; i++) {
@@ -355,7 +365,8 @@ double embedding::compute_energy() {
     // Ca_Rt->print();
 
     // Update Ca_
-    if (options_.get_str("REFERENCE") == "CASSCF" || options_.get_str("REFERENCE") == "CINOACTV") { // Ca_: AO-BO-A-AV-BV
+    if (options_.get_str("REFERENCE") == "CASSCF" ||
+        options_.get_str("REFERENCE") == "CINOACTV") { // Ca_: AO-BO-A-AV-BV
         // copy original columns in active space from Ca_
         for (int i = 0; i < num_actv; ++i) {
             Ca_Rt->set_column(0, i + nroccpi[0], Ca_->get_column(0, nroccpi[0] + i));
@@ -442,7 +453,8 @@ double embedding::compute_energy() {
         Fa_loc->set_block(AOs, AOs, Fa_AOAO);
         Fa_loc->set_block(AVs, AVs, Fa_AVAV);
 
-        if (options_.get_str("REFERENCE") == "CASSCF" || options_.get_str("REFERENCE") == "CINOACTV") {
+        if (options_.get_str("REFERENCE") == "CASSCF" ||
+            options_.get_str("REFERENCE") == "CINOACTV") {
             SharedMatrix Uaa(new Matrix("Uaa", nirrep, actv_a, actv_a));
             SharedVector laa(new Vector("laa", nirrep, actv_a));
             Fa_AAAA->diagonalize(Uaa, laa, ascending);
@@ -475,13 +487,13 @@ double embedding::compute_energy() {
     // outfile->Printf("\n Coeffs after semicon \n");
     // Ca_->print();
 
-	//Apply frozen system core/virtual
-	sizeBO += frz_sys_docc;
-	sizeAO -= frz_sys_docc;
-	sizeAV -= frz_sys_uocc;
-	sizeBV += frz_sys_uocc;
+    // Apply frozen system core/virtual
+    sizeBO += frz_sys_docc;
+    sizeAO -= frz_sys_docc;
+    sizeAV -= frz_sys_uocc;
+    sizeBV += frz_sys_uocc;
 
-	// Write MO space info and print
+    // Write MO space info and print
     outfile->Printf("\n  FROZEN_DOCC     = %d", sizeBO);
     outfile->Printf("\n  RESTRICTED_DOCC     = %d", sizeAO);
     outfile->Printf("\n  ACTIVE     = %d", num_actv);
@@ -492,18 +504,19 @@ double embedding::compute_energy() {
     if (options_.get_bool("WRITE_FREEZE_MO") == true) {
         if (options_.get_str("FREEZE_CORE") ==
             "TRUE") { // If the initial calculation includes freeze_core, add them to environment
-			outfile->Printf("\n Clear the previous frozen cores\n");
-			options_["FROZEN_DOCC"][0].assign(0);
-			options_["FROZEN_UOCC"][0].assign(0);
+            outfile->Printf("\n Clear the previous frozen cores\n");
+            options_["FROZEN_DOCC"][0].assign(0);
+            options_["FROZEN_UOCC"][0].assign(0);
         } else {
-			outfile->Printf("\n Create frozen B \n");
+            outfile->Printf("\n Create frozen B \n");
             options_["FROZEN_DOCC"].add(0);
             options_["FROZEN_UOCC"].add(0);
         }
         options_["FROZEN_DOCC"][0].assign(sizeBO);
         options_["FROZEN_UOCC"][0].assign(sizeBV);
 
-        if (options_.get_str("REFERENCE") == "CASSCF" || options_.get_str("REFERENCE") == "CINOACTV") {
+        if (options_.get_str("REFERENCE") == "CASSCF" ||
+            options_.get_str("REFERENCE") == "CINOACTV") {
             // options_["RESTRICTED_DOCC"].add(0);
             // options_["ACTIVE"].add(0);
             options_["RESTRICTED_UOCC"].add(0);
