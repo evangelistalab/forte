@@ -38,6 +38,7 @@
 #include "psi4/libqt/qt.h"
 #include "psi4/psifiles.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
+#include "psi4/libpsi4util/libpsi4util.h"
 
 #include "orbitaloptimizer.h"
 

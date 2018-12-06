@@ -34,12 +34,14 @@ namespace forte {
 void forte_options(std::string name, ForteOptions& options);
 
 void forte_banner();
-}
-}
 
-/// These functions replace the Memory Allocator in GA with C/C++ allocator.
-void* replace_malloc(size_t bytes, int align, char* name) { return malloc(bytes); }
-void replace_free(void* ptr) { free(ptr); }
+int read_forte_options(std::string name, Options& options);
+SharedWavefunction run_forte(SharedWavefunction ref_wfn, Options& options);
+
+int api_forte_read_options(Options& options);
+SharedWavefunction api_run_forte(SharedWavefunction ref_wfn, Options& options);
+}
+}
 
 namespace psi {
 namespace forte {

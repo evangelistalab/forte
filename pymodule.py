@@ -27,7 +27,10 @@
 # @END LICENSE
 #
 
+import timeit
+
 import psi4
+import forte
 import psi4.driver.p4util as p4util
 from psi4.driver.procrouting import proc_util
 
@@ -41,30 +44,62 @@ def run_forte(name, **kwargs):
     lowername = name.lower()
     kwargs = p4util.kwargs_lower(kwargs)
 
-    # Your plugin's psi4 run sequence goes here
-
     # Compute a SCF reference, a wavefunction is return which holds the molecule used, orbitals
     # Fock matrices, and more
     ref_wfn = kwargs.get('ref_wfn', None)
     if ref_wfn is None:
         ref_wfn = psi4.driver.scf_helper(name, **kwargs)
 
-    if ('DF' in psi4.core.get_option('FORTE','INT_TYPE')):
+    options = psi4.core.get_options()
+    options.set_current_module('FORTE')
+    options.print()
+    options.print_globals()
+
+    if ('DF' in options.get_str('INT_TYPE')):
         aux_basis = psi4.core.BasisSet.build(ref_wfn.molecule(), 'DF_BASIS_MP2',
                                          psi4.core.get_global_option('DF_BASIS_MP2'),
                                          'RIFIT', psi4.core.get_global_option('BASIS'))
         ref_wfn.set_basisset('DF_BASIS_MP2', aux_basis)
 
-    if (psi4.core.get_option('FORTE','MINAO_BASIS')):
+    if (options.get_str('MINAO_BASIS')):
         minao_basis = psi4.core.BasisSet.build(ref_wfn.molecule(), 'MINAO_BASIS',
-                                               psi4.core.get_option('FORTE','MINAO_BASIS'))
+                                               options.get_str('MINAO_BASIS'))
         ref_wfn.set_basisset('MINAO_BASIS', minao_basis)
 
-    # Call the Psi4 plugin
-    # Please note that setting the reference wavefunction in this way is ONLY for plugins
-    forte_wfn = psi4.core.plugin('forte.so', ref_wfn)
+    # Start Forte, initialize ambit
+    my_proc_n_nodes = forte.forte_startup()
+    my_proc, n_nodes = my_proc_n_nodes
 
-    return forte_wfn
+    # Print the banner
+    forte.forte_banner()
+
+    # Create the MOSpaceInfo object
+    mo_space_info = forte.make_mo_space_info(ref_wfn, options)
+
+    # Create the AO subspace projector
+    ps = forte.make_aosubspace_projector(ref_wfn, options)
+
+    # Run a method
+    job_type = options.get_str('JOB_TYPE')
+#    job_type = psi4.core.get_option('FORTE','JOB_TYPE')
+    if job_type != 'NONE':
+        start = timeit.timeit()
+
+        # Make an integral object
+        ints = forte.make_forte_integrals(ref_wfn, options, mo_space_info)
+
+        if options.get_bool("LOCALIZE"):
+            forte.LOCALIZE(ref_wfn,options,ints,mo_space_info)
+
+        # Run a method
+        forte.forte_old_methods(ref_wfn, options, ints, mo_space_info, my_proc)
+
+        end = timeit.timeit()
+        #print('\n\n  Your calculation took ', (end - start), ' seconds');
+
+    # Close ambit, etc.
+    forte.forte_cleanup()
+    return ref_wfn
 
 # Integration with driver routines
 psi4.driver.procedures['energy']['forte'] = run_forte

@@ -34,6 +34,7 @@
 #include "psi4/libmints/vector.h"
 #include "psi4/libpsio/psio.hpp"
 #include "psi4/libqt/qt.h"
+#include "psi4/libpsi4util/libpsi4util.h"
 
 #include "../forte-def.h"
 #include "../iterative_solvers.h"

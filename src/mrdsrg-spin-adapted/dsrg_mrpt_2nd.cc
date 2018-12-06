@@ -28,9 +28,10 @@
 
 #include <utility>
 
-#include "dsrg_mrpt.h"
-
+#include "psi4/libpsi4util/libpsi4util.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
+
+#include "dsrg_mrpt.h"
 
 namespace psi {
 namespace forte {

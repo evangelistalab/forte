@@ -30,15 +30,18 @@
 """Plugin docstring.
 
 """
-__version__ = '0.1'
-__author__  = 'Psi4 Developer'
+__version__ = '1.0'
+__author__  = 'Forte Developers'
 
 # Load Python modules
 from .pymodule import *
 
 # Load C++ plugin
-import os
+#import os
 import psi4
-plugdir = os.path.split(os.path.abspath(__file__))[0]
-sofile = plugdir + '/' + os.path.split(plugdir)[1] + '.so'
-psi4.core.plugin_load(sofile)
+from .forte import *
+
+# Register options with psi
+options = psi4.core.get_options()
+options.set_current_module('FORTE')
+forte.read_forte_options(psi4.core.get_options())

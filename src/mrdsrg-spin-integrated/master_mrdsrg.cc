@@ -1,5 +1,6 @@
 #include <numeric>
 
+#include "psi4/libpsi4util/libpsi4util.h"
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/dipole.h"
@@ -431,10 +432,9 @@ void MASTER_DSRG::init_dm_ints() {
     outfile->Printf("\n    Preparing ambit tensors for dipole moments ...... ");
     dm_.clear();
     dm_nuc_ = std::vector<double>(3, 0.0);
-    SharedVector dm_nuc =
-        DipoleInt::nuclear_contribution(Process::environment.molecule(), Vector3(0.0, 0.0, 0.0));
+    Vector3 dm_nuc = Process::environment.molecule()->nuclear_dipole(Vector3(0.0, 0.0, 0.0));
     for (int i = 0; i < 3; ++i) {
-        dm_nuc_[i] = dm_nuc->get(i);
+        dm_nuc_[i] = dm_nuc[i];
         BlockedTensor dm_i = BTF_->build(tensor_type_, "Dipole " + dm_dirs_[i], spin_cases({"gg"}));
         dm_.emplace_back(dm_i);
     }

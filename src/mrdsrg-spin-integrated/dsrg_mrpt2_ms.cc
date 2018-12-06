@@ -28,6 +28,8 @@
 
 #include <iomanip>
 
+#include "psi4/libpsi4util/libpsi4util.h"
+
 #include "../ci_rdm/ci_rdms.h"
 #include "../fci/fci_solver.h"
 #include "../fci_mo.h"

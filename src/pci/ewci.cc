@@ -39,6 +39,7 @@
 #include "boost/format.hpp"
 #include "boost/math/special_functions/bessel.hpp"
 
+#include "psi4/libpsi4util/libpsi4util.h"
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libciomr/libciomr.h"
 #include "psi4/libmints/matrix.h"

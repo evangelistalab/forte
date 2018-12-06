@@ -30,9 +30,12 @@
 #include <map>
 #include <vector>
 
-#include "psi4/libpsi4util/PsiOutStream.h"
-#include "../helpers.h"
 #include "boost/format.hpp"
+
+#include "psi4/libpsi4util/libpsi4util.h"
+#include "psi4/libpsi4util/PsiOutStream.h"
+
+#include "../helpers.h"
 #include "mrdsrg.h"
 
 namespace psi {

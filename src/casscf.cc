@@ -30,6 +30,7 @@
 #include "integrals/integrals.h"
 #include "reference.h"
 
+#include "psi4/libpsi4util/libpsi4util.h"
 #include "psi4/libfock/jk.h"
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/wavefunction.h"

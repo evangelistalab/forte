@@ -28,12 +28,13 @@
 
 #include <cmath>
 
+#include "psi4/psi4-dec.h"
+#include "psi4/psifiles.h"
+#include "psi4/libpsi4util/libpsi4util.h"
 #include "psi4/libdpd/dpd.h"
 #include "psi4/libmints/mintshelper.h"
 #include "psi4/libpsio/psio.hpp"
 #include "psi4/libtrans/integraltransform.h"
-#include "psi4/psi4-dec.h"
-#include "psi4/psifiles.h"
 
 #include "../blockedtensorfactory.h"
 #include "../helpers.h"

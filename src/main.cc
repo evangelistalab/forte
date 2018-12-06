@@ -28,6 +28,19 @@
 
 #include <fstream>
 
+#include <pybind11/pybind11.h>
+
+//#include "psi4/libpsi4util/process.h"
+//#include "psi4/libmints/wavefunction.h"
+
+//#include "integrals/integrals.h"
+//#include "forte.h"
+
+namespace py = pybind11;
+
+#include "psi4/libpsi4util/process.h"
+
+
 #include "aosubspace/aosubspace.h"
 #include "avas.h"
 #include "forte_options.h"
@@ -63,25 +76,44 @@
 namespace psi {
 namespace forte {
 
+int read_forte_options(std::string name, Options& options);
+SharedWavefunction run_forte(SharedWavefunction ref_wfn, Options& options);
+
 /**
  * @brief Read options from the input file. Called by psi4 before everything else.
  */
-extern "C" PSI_API int read_options(std::string name, Options& options) {
+//extern "C" PSI_API int read_options(std::string name, Options& options) {
+//    return read_forte_options(name, options);
+//}
+
+/**
+ * @brief Wrapper of the main forte function for the psi4 plugin interface
+ */
+extern "C" PSI_API SharedWavefunction forte(SharedWavefunction ref_wfn, Options& options) {
+    return run_forte(ref_wfn, options);
+}
+
+/**
+ * @brief Read options from the input file. Called by psi4 before everything else.
+ */
+int read_forte_options(std::string name, Options& options) {
+
+    options.set_current_module("FORTE");
 
     ForteOptions foptions; // <<
 
     forte_options(name, foptions);
 
     //    if (name == "FORTE" || options.read_globals()) {
-    if (name == "FORTE") {
+//    if (name == "FORTE") {
         // Old way (deprecated) to pass options to Psi4
         forte_old_options(options);
         // New way to pass options to Psi4
         foptions.add_psi4_options(options);
-    }
+//    }
     if (options.get_str("JOB_TYPE") == "DOCUMENTATION") {
         std::ofstream docs;
-        docs.open ("options.rst");
+        docs.open("options.rst");
         docs << foptions.generate_documentation();
         docs.close();
     }
@@ -92,11 +124,11 @@ extern "C" PSI_API int read_options(std::string name, Options& options) {
 /**
  * @brief The main forte function.
  */
-extern "C" PSI_API SharedWavefunction forte(SharedWavefunction ref_wfn, Options& options) {
+SharedWavefunction run_forte(SharedWavefunction ref_wfn, Options& options) {
     // Start a timer
     timer total_time("Forte");
 
-    forte_banner();
+//    forte_banner();
 
     auto my_proc_n_nodes = forte_startup();
     int my_proc = my_proc_n_nodes.first;
@@ -114,10 +146,12 @@ extern "C" PSI_API SharedWavefunction forte(SharedWavefunction ref_wfn, Options&
         exit(1);
     }
 
-    if( ( (options.get_str("DIAG_ALGORITHM") == "DYNAMIC") or (options.get_bool("ACI_DIRECT_RDMS") == true) ) 
-        and ( mo_space_info->size("ACTIVE") > 64 ) ) {
-    
-        outfile->Printf("\n  FATAL:  Dynamic diagonalization or dynamic RDM builds cannot be used for active spaces larger than 64 orbitals!");  
+    if (((options.get_str("DIAG_ALGORITHM") == "DYNAMIC") or
+         (options.get_bool("ACI_DIRECT_RDMS") == true)) and
+        (mo_space_info->size("ACTIVE") > 64)) {
+
+        outfile->Printf("\n  FATAL:  Dynamic diagonalization or dynamic RDM builds cannot be used "
+                        "for active spaces larger than 64 orbitals!");
 
         exit(1);
     }
@@ -143,6 +177,10 @@ extern "C" PSI_API SharedWavefunction forte(SharedWavefunction ref_wfn, Options&
     forte_cleanup();
     return ref_wfn;
 }
+
+/// These functions replace the Memory Allocator in GA with C/C++ allocator.
+void* replace_malloc(size_t bytes, int align, char* name) { return malloc(bytes); }
+void replace_free(void* ptr) { free(ptr); }
 
 /**
  * @brief Initialize ambit, MPI, and GA. All functions that need to be called
@@ -270,5 +308,6 @@ void forte_banner() {
     //    std::cout << "\n " << Determinant::alfa_mask << std::endl;
     //    std::cout << "\n " << Determinant::beta_mask << std::endl;
 }
+
 } // namespace forte
 } // namespace psi

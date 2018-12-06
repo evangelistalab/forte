@@ -37,6 +37,7 @@
 #include "psi4/libmints/dipole.h"
 #include "psi4/libmints/petitelist.h"
 #include "psi4/libmints/dimension.h"
+#include "psi4/libpsi4util/libpsi4util.h"
 
 #include "psi4/physconst.h"
 
