@@ -1,3 +1,5 @@
+#include "psi4/libpsi4util/libpsi4util.h"
+
 #include "aci.h"
 
 namespace psi {

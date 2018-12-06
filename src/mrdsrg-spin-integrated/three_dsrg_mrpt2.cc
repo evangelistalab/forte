@@ -43,6 +43,7 @@
 #define GA_Nodeid() 0
 #endif
 
+#include "psi4/libpsi4util/libpsi4util.h"
 #include "psi4/lib3index/dftensor.h"
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/molecule.h"

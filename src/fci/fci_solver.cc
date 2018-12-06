@@ -26,6 +26,7 @@
  * @END LICENSE
  */
 
+#include "psi4/libpsi4util/libpsi4util.h"
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libmints/molecule.h"
 
@@ -44,16 +45,6 @@
 #include "psi4/psi4-dec.h"
 
 using namespace psi;
-
-// extern double h1_aa_timer;
-// extern double h1_bb_timer;
-// extern double h2_aaaa_timer;
-// extern double h2_aabb_timer;
-// extern double h2_bbbb_timer;
-// extern double oo_list_timer;
-// extern double vo_list_timer;
-// extern double vovo_list_timer;
-// extern double vvoo_list_timer;
 
 int fci_debug_level = 4;
 

@@ -33,6 +33,7 @@
 #include "boost/format.hpp"
 #include <ambit/tensor.h>
 
+#include "psi4/libpsi4util/libpsi4util.h"
 #include "psi4/libdpd/dpd.h"
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/wavefunction.h"

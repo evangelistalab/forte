@@ -103,12 +103,12 @@ void test_davidson() {
 int david2(double** A, int N, int M, double* eps, double** v, double cutoff, int print) {
     int i, j, k, L, I;
     double minimum;
-    int min_pos, numf, iter, *conv, converged, maxdim, skip_check;
-    int* small2big;
+    int min_pos, numf, iter, converged, maxdim, skip_check;
     int init_dim = 0;
     int smart_guess = 1;
-    double *Adiag, **b, **bnew, **sigma, **G;
-    double *lambda, **alpha, **f, *lambda_old;
+    double **b, **bnew, **sigma, **G;
+    //    double *lambda, **alpha, **f, *lambda_old;
+    double **alpha, **f;
     double norm, denom, diff;
 
     maxdim = 8 * M;
@@ -119,17 +119,20 @@ int david2(double** A, int N, int M, double* eps, double** v, double cutoff, int
     G = block_matrix(maxdim, maxdim);     /* Davidson mini-Hamitonian */
     f = block_matrix(maxdim, N);          /* residual eigenvectors, stored by row */
     alpha = block_matrix(maxdim, maxdim); /* eigenvectors of G */
-    lambda = init_array(maxdim);          /* eigenvalues of G */
-    lambda_old = init_array(maxdim);      /* approximate roots from previous iteration */
-
+    std::vector<double> lambda(maxdim);
+    std::vector<double> lambda_old(maxdim);
+    //    lambda = init_array(maxdim);          /* eigenvalues of G */
+    //    lambda_old = init_array(maxdim);      /* approximate roots from previous iteration */
+    std::vector<double> Adiag(N, 0.0);
     if (smart_guess) { /* Use eigenvectors of a sub-matrix as initial guesses */
 
         if (N > 7 * M)
             init_dim = 7 * M;
         else
             init_dim = M;
-        Adiag = init_array(N);
-        small2big = init_int_array(7 * M);
+//        Adiag = init_array(N);
+        std::vector<int> small2big(7 * M);
+//        small2big = init_int_array(7 * M);
         for (i = 0; i < N; i++) {
             Adiag[i] = A[i][i];
         }
@@ -151,17 +154,17 @@ int david2(double** A, int N, int M, double* eps, double** v, double cutoff, int
                 G[i][j] = A[small2big[i]][small2big[j]];
         }
 
-        sq_rsp(init_dim, init_dim, G, lambda, 1, alpha, 1e-12);
+        sq_rsp(init_dim, init_dim, G, lambda.data(), 1, alpha, 1e-12);
 
         for (i = 0; i < init_dim; i++) {
             for (j = 0; j < init_dim; j++)
                 b[i][small2big[j]] = alpha[j][i];
         }
 
-        free(Adiag);
-        free(small2big);
+//        free(Adiag);
+//        free(small2big);
     } else { /* Use unit vectors as initial guesses */
-        Adiag = init_array(N);
+//        Adiag = init_array(N);
         for (i = 0; i < N; i++) {
             Adiag[i] = A[i][i];
         }
@@ -178,14 +181,14 @@ int david2(double** A, int N, int M, double* eps, double** v, double cutoff, int
             Adiag[min_pos] = BIGNUM;
             lambda_old[i] = minimum;
         }
-        free(Adiag);
+//        free(Adiag);
     }
 
     // L = init_dim;
     iter = 0;
     converged = 0;
-    conv = init_int_array(M); /* boolean array for convergence of each
-                   root */
+    std::vector<int> conv(M, 0);
+    //conv = init_int_array(M); /* boolean array for convergence of each root */
     while (converged < M && iter < MAXIT) {
 
         skip_check = 0;
@@ -198,7 +201,7 @@ int david2(double** A, int N, int M, double* eps, double** v, double cutoff, int
                 maxdim);
 
         /* diagonalize mini-matrix */
-        sq_rsp(L, L, G, lambda, 1, alpha, 1e-12);
+        sq_rsp(L, L, G, lambda.data(), 1, alpha, 1e-12);
 
         /* form preconditioned residue vectors */
         for (k = 0; k < M; k++)
@@ -282,7 +285,10 @@ int david2(double** A, int N, int M, double* eps, double** v, double cutoff, int
         /* check convergence on all roots */
         if (!skip_check) {
             converged = 0;
-            zero_int_array(conv, M);
+            for (int& i : conv) {
+                i = 0;
+            }
+//            zero_int_array(conv, M);
             if (print) {
                 printf("Root      Eigenvalue       Delta  Converged?\n");
                 printf("---- -------------------- ------- ----------\n");
@@ -329,15 +335,11 @@ int david2(double** A, int N, int M, double* eps, double** v, double cutoff, int
         printf("Davidson algorithm converged in %d iterations.\n", iter);
     //    }
 
-    free(conv);
     free_block(b);
     free_block(bnew);
     free_block(sigma);
     free_block(G);
     free_block(f);
     free_block(alpha);
-    free(lambda);
-    free(lambda_old);
-
     return converged;
 }

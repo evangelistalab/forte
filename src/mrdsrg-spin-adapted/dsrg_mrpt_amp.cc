@@ -28,6 +28,7 @@
 
 #include "boost/format.hpp"
 
+#include "psi4/libpsi4util/libpsi4util.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
 
 #include "dsrg_mrpt.h"

@@ -33,6 +33,7 @@
 #include <numeric>
 #include <sstream>
 
+#include "psi4/libpsi4util/libpsi4util.h"
 #include "psi4/libmints/dipole.h"
 #include "psi4/libmints/oeprop.h"
 #include "psi4/libmints/petitelist.h"
@@ -1451,8 +1452,9 @@ void FCI_MO::compute_permanent_dipole() {
     std::vector<SharedMatrix> aodipole_ints = integral_->AOdipole_ints();
 
     // Nuclear dipole contribution
-    SharedVector ndip =
-        DipoleInt::nuclear_contribution(Process::environment.molecule(), Vector3(0.0, 0.0, 0.0));
+    Vector3 ndip =
+            Process::environment.molecule()->nuclear_dipole(Vector3(0.0, 0.0, 0.0));
+//        DipoleInt::nuclear_contribution(Process::environment.molecule(), );
 
     // SO to AO transformer
     SharedMatrix sotoao(this->aotoso()->transpose());
@@ -1483,8 +1485,8 @@ void FCI_MO::compute_permanent_dipole() {
         std::vector<double> de(4, 0.0);
         for (int i = 0; i < 3; ++i) {
             de[i] = 2.0 * AOdens->vector_dot(aodipole_ints[i]); // 2.0 for beta spin
-            de[i] += ndip->get(i);                              // add nuclear contributions
-            de[3] += de[i] * de[i];
+            de[i] += ndip[i];                                   // add nuclear contributions
+            de[3] += de[i] * de[i];                             // store de * de in the fourth dim
         }
         de[3] = sqrt(de[3]);
 

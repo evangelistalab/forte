@@ -30,6 +30,7 @@
 #include <map>
 #include <vector>
 
+#include "psi4/libpsi4util/libpsi4util.h"
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libmints/molecule.h"
 

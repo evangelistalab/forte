@@ -30,6 +30,7 @@
 #define _mcsrgpt2_mo_h_
 
 #include "boost/assign.hpp"
+#include "psi4/libpsi4util/libpsi4util.h"
 #include "psi4/liboptions/liboptions.h"
 #include "psi4/libmints/vector.h"
 #include "psi4/libmints/matrix.h"

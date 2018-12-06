@@ -27,9 +27,10 @@
  * @END LICENSE
  */
 
+#include "psi4/psi4-dec.h"
+#include "psi4/libpsi4util/libpsi4util.h"
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/pointgrp.h"
-#include "psi4/psi4-dec.h"
 
 #include "../ci_rdm/ci_rdms.h"
 #include "../fci/fci_integrals.h"
@@ -37,7 +38,6 @@
 #include "../sparse_ci/sparse_ci_solver.h"
 #include "../sparse_ci/determinant.h"
 #include "ci-no.h"
-//#include "../hash_vector.h"
 
 namespace psi {
 namespace forte {

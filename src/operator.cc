@@ -28,6 +28,7 @@
 
 #include <cmath>
 
+#include "psi4/libpsi4util/libpsi4util.h"
 #include "psi4/libmints/dimension.h"
 
 #include "operator.h"

@@ -34,6 +34,7 @@
 #include <fstream>
 #include <iostream>
 
+#include "psi4/libpsi4util/libpsi4util.h"
 #include "psi4/libmints/molecule.h"
 #include "psi4/libpsio/psio.h"
 #include "psi4/libpsio/psio.hpp"
