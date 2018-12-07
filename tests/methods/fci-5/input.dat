@@ -10,7 +10,6 @@ ref_rohf = -3.8510304164778151
 #Reference value in wavenumbers
 ref_split = (-3.851214594496629 - -3.851030416685039) * 219474.63
 
-
 memory 1 GB
 molecule HHeH {
 0   3

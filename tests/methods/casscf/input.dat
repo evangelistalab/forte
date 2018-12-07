@@ -16,7 +16,7 @@ molecule {
   no_reorient
 }
 
-set globals{
+set globals {
    scf_type             out_of_core
    MCSCF_E_CONVERGENCE  8
    MCSCF_R_CONVERGENCE  6
@@ -30,10 +30,9 @@ set globals{
    mcscf_type           conv
 }
 refscf = energy('casscf')
-#compare_values(refscf, scf, 6, "SCF ENERGY")
 
-energy('scf')
 set scf_type direct
+
 set forte{
    job_type             casscf
    CASSCF_REFERENCE      true
