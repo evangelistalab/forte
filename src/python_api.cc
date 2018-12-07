@@ -47,9 +47,9 @@ namespace forte {
 PYBIND11_MODULE(forte, m) {
     m.doc() = "pybind11 Forte module"; // module docstring
     m.def("read_options", &read_options, "Read Forte options");
-    m.def("forte_startup", &forte_startup);
-    m.def("forte_cleanup", &forte_cleanup);
-    m.def("forte_banner", &forte_banner, "Print forte banner");
+    m.def("startup", &startup);
+    m.def("cleanup", &cleanup);
+    m.def("banner", &banner, "Print forte banner");
     m.def("make_mo_space_info", &make_mo_space_info, "Make a MOSpaceInfo object");
     m.def("make_aosubspace_projector", &make_aosubspace_projector, "Make a AOSubspace projector");
     m.def("make_forte_integrals", &make_forte_integrals, "Make Forte integrals");
