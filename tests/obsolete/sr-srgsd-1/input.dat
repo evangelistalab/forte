@@ -27,5 +27,5 @@ set libadaptive {
 
 energy('sr-srgsd')
 
-compare_values(refscf, get_variable("SCF total energy"),10, "SCF energy") #TEST
-compare_values(refsrg, get_variable("CURRENT ENERGY"),10, "SR-SRGSD energy") #TEST
+compare_values(refscf, variable("SCF total energy"),10, "SCF energy") #TEST
+compare_values(refsrg, variable("CURRENT ENERGY"),10, "SR-SRGSD energy") #TEST

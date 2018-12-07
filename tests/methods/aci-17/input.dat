@@ -43,8 +43,8 @@ set forte {
 }
 
 e_scf, scf_wfn = energy('scf', return_wfn=True)
-compare_values(refscf, get_variable("CURRENT ENERGY"),9, "SCF energy") #TEST
+compare_values(refscf, variable("CURRENT ENERGY"),9, "SCF energy") #TEST
 
 energy('forte', ref_wfn = scf_wfn)
-compare_values(refaci, get_variable("ACI ENERGY"),9, "ACI energy") #TEST
-compare_values(refacipt2, get_variable("ACI+PT2 ENERGY"),8, "ACI+PT2 energy") #TEST
+compare_values(refaci, variable("ACI ENERGY"),9, "ACI energy") #TEST
+compare_values(refacipt2, variable("ACI+PT2 ENERGY"),8, "ACI+PT2 energy") #TEST

@@ -51,8 +51,8 @@ set forte{
 
 activate(N2)
 Ev2rdm, wfn = energy('v2rdm-casscf', return_wfn=True)
-compare_values(refscf, get_variable("SCF TOTAL ENERGY"), 8, "SCF total energy")
-compare_values(refv2rdm, get_variable("CURRENT ENERGY"), 4, "v2RDM-CASSCF total energy")
+compare_values(refscf, variable("SCF TOTAL ENERGY"), 8, "SCF total energy")
+compare_values(refv2rdm, variable("CURRENT ENERGY"), 4, "v2RDM-CASSCF total energy")
 
 energy('forte',ref_wfn=wfn)
-compare_values(refpt2, get_variable("CURRENT ENERGY"), 4, "DSRG-MRPT2 total energy")
+compare_values(refpt2, variable("CURRENT ENERGY"), 4, "DSRG-MRPT2 total energy")

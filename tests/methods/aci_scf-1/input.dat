@@ -55,7 +55,7 @@ set forte{
 }
 
 
-#compare_values(refmcscf,get_variable("CURRENT ENERGY"),10,"MCSCF energy")
+#compare_values(refmcscf,variable("CURRENT ENERGY"),10,"MCSCF energy")
 
 casscf = energy('forte')
-compare_values(refcasscf,get_variable("CURRENT ENERGY"),6,"CASSCF energy")
+compare_values(refcasscf,variable("CURRENT ENERGY"),6,"CASSCF energy")

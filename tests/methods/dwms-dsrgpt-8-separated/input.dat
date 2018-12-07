@@ -84,13 +84,13 @@ set forte{
 }
 
 Emcscf, wfn = energy('casscf', return_wfn=True)
-compare_values(Emcscf_avg,get_variable("CURRENT ENERGY"),8,"SA-CASSCF energy")
+compare_values(Emcscf_avg,variable("CURRENT ENERGY"),8,"SA-CASSCF energy")
 
 Ept2_root0 = -106.93005699411140
 Ept2_root1 = -106.91457748207812
 energy('forte',ref_wfn=wfn)
-compare_values(Ept2_root0,get_variable("ENERGY ROOT 0"),8,"CASCI/DWMS(sH0)-DSRG-PT2 energy on root 0")
-compare_values(Ept2_root1,get_variable("ENERGY ROOT 1"),8,"CASCI/DWMS(sH0)-DSRG-PT2 energy on root 1")
+compare_values(Ept2_root0,variable("ENERGY ROOT 0"),8,"CASCI/DWMS(sH0)-DSRG-PT2 energy on root 0")
+compare_values(Ept2_root1,variable("ENERGY ROOT 1"),8,"CASCI/DWMS(sH0)-DSRG-PT2 energy on root 1")
 
 set forte{
   dwms_algorithm sh-1
@@ -98,8 +98,8 @@ set forte{
 Ept2_root0 = -106.93005699410999
 Ept2_root1 = -106.91457784175027
 energy('forte',ref_wfn=wfn)
-compare_values(Ept2_root0,get_variable("ENERGY ROOT 0"),8,"CASCI/DWMS(sH1)-DSRG-PT2 energy on root 0")
-compare_values(Ept2_root1,get_variable("ENERGY ROOT 1"),8,"CASCI/DWMS(sH1)-DSRG-PT2 energy on root 1")
+compare_values(Ept2_root0,variable("ENERGY ROOT 0"),8,"CASCI/DWMS(sH1)-DSRG-PT2 energy on root 0")
+compare_values(Ept2_root1,variable("ENERGY ROOT 1"),8,"CASCI/DWMS(sH1)-DSRG-PT2 energy on root 1")
 
 set forte{
   dwms_algorithm sh-0
@@ -108,8 +108,8 @@ set forte{
 Ept2_root0 = -106.92994534239719
 Ept2_root1 = -106.91463499737895
 energy('forte',ref_wfn=wfn)
-compare_values(Ept2_root0,get_variable("ENERGY ROOT 0"),8,"PT2/DWMS(sH0)-DSRG-PT2 energy on root 0")
-compare_values(Ept2_root1,get_variable("ENERGY ROOT 1"),8,"PT2/DWMS(sH0)-DSRG-PT2 energy on root 1")
+compare_values(Ept2_root0,variable("ENERGY ROOT 0"),8,"PT2/DWMS(sH0)-DSRG-PT2 energy on root 0")
+compare_values(Ept2_root1,variable("ENERGY ROOT 1"),8,"PT2/DWMS(sH0)-DSRG-PT2 energy on root 1")
 
 set forte{
   dwms_algorithm sh-1
@@ -118,5 +118,5 @@ set forte{
 Ept2_root0 = -106.92994534239851
 Ept2_root1 = -106.91463499781882
 energy('forte',ref_wfn=wfn)
-compare_values(Ept2_root0,get_variable("ENERGY ROOT 0"),8,"PT2/DWMS(sH1)-DSRG-PT2 energy on root 0")
-compare_values(Ept2_root1,get_variable("ENERGY ROOT 1"),8,"PT2/DWMS(sH1)-DSRG-PT2 energy on root 1")
+compare_values(Ept2_root0,variable("ENERGY ROOT 0"),8,"PT2/DWMS(sH1)-DSRG-PT2 energy on root 0")
+compare_values(Ept2_root1,variable("ENERGY ROOT 1"),8,"PT2/DWMS(sH1)-DSRG-PT2 energy on root 1")

@@ -13,7 +13,7 @@ def test_psi4_basic():
     psi4.set_options({'basis': "cc-pVDZ"})
     psi4.energy('scf')
 
-    assert psi4.compare_values(-76.0266327341067125, psi4.get_variable('SCF TOTAL ENERGY'), 6, 'SCF energy')
+    assert psi4.compare_values(-76.0266327341067125, psi4.variable('SCF TOTAL ENERGY'), 6, 'SCF energy')
 
 
 # LAB 25 May 2017 segfaulting after PQ-space in both psithon and psiapi forms
@@ -58,11 +58,11 @@ def test_psi4_basic():
 #    })
 #
 #    psi4.energy('scf')
-#    assert psi4.compare_values(refscf, psi4.get_variable("CURRENT ENERGY"),9, "SCF energy")
+#    assert psi4.compare_values(refscf, psi4.variable("CURRENT ENERGY"),9, "SCF energy")
 #
 #    psi4.energy('forte')
-#    assert psi4.compare_values(refaci, psi4.get_variable("ACI ENERGY"),9, "ACI energy")
-#    assert psi4.compare_values(refacipt2, psi4.get_variable("ACI+PT2 ENERGY"),8, "ACI+PT2 energy")
+#    assert psi4.compare_values(refaci, psi4.variable("ACI ENERGY"),9, "ACI energy")
+#    assert psi4.compare_values(refacipt2, psi4.variable("ACI+PT2 ENERGY"),8, "ACI+PT2 energy")
 
 
 def test_aci_10():
@@ -120,6 +120,6 @@ def test_aci_10():
     assert psi4.compare_values(refscf, scf,10,"SCF Energy")
 
     psi4.energy('forte')
-    assert psi4.compare_values(refaci, psi4.get_variable("ACI ENERGY"),10,"ACI energy")
-    assert psi4.compare_values(refacipt2, psi4.get_variable("ACI+PT2 ENERGY"),8,"ACI+PT2 energy")
+    assert psi4.compare_values(refaci, psi4.variable("ACI ENERGY"),10,"ACI energy")
+    assert psi4.compare_values(refacipt2, psi4.variable("ACI+PT2 ENERGY"),8,"ACI+PT2 energy")
 

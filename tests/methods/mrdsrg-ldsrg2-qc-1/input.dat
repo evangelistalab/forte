@@ -49,7 +49,7 @@ set forte{
 }
 
 Emcscf, wfn = energy('mcscf', return_wfn=True)
-compare_values(refmcscf,get_variable("CURRENT ENERGY"),10,"MCSCF energy") #TEST
+compare_values(refmcscf,variable("CURRENT ENERGY"),10,"MCSCF energy") #TEST
 
 energy('forte', ref_wfn=wfn)
-compare_values(refdsrg,get_variable("CURRENT ENERGY"),8,"MRDSRG fully relaxed energy") #TEST
+compare_values(refdsrg,variable("CURRENT ENERGY"),8,"MRDSRG fully relaxed energy") #TEST

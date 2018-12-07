@@ -78,7 +78,7 @@ set forte {
 }
 
 energy('scf')
-compare_values(refrohf,get_variable("CURRENT ENERGY"),10,"ROHF energy") #TEST
+compare_values(refrohf,variable("CURRENT ENERGY"),10,"ROHF energy") #TEST
 
 energy('forte')
-compare_values(refdsrg,get_variable("CURRENT ENERGY"),8, "MRDSRG relaxed energy") #TEST
+compare_values(refdsrg,variable("CURRENT ENERGY"),8, "MRDSRG relaxed energy") #TEST

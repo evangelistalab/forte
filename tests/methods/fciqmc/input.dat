@@ -34,7 +34,7 @@ set forte {
 }
 
 energy('scf')
-compare_values(refscf, get_variable("CURRENT ENERGY"), 11, "SCF energy") #TEST
+compare_values(refscf, variable("CURRENT ENERGY"), 11, "SCF energy") #TEST
 
 energy('forte')
-compare_values(reffciqmc, get_variable("CURRENT ENERGY"), 3, "FCIQMC energy") #TEST
+compare_values(reffciqmc, variable("CURRENT ENERGY"), 3, "FCIQMC energy") #TEST

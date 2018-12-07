@@ -59,4 +59,4 @@ set forte {
 
 
 my_casscf = energy('forte')
-compare_values(my_casscf, get_variable("CURRENT ENERGY"),6,"CASSCF energy")
+compare_values(my_casscf, variable("CURRENT ENERGY"),6,"CASSCF energy")

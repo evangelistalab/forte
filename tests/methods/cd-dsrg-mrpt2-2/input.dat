@@ -45,7 +45,7 @@ set forte{
 }
 
 refmcscf, refwfn = energy('mcscf', return_wfn=True)
-compare_values(refmcscf,get_variable("CURRENT ENERGY"),10,"MCSCF energy")
+compare_values(refmcscf,variable("CURRENT ENERGY"),10,"MCSCF energy")
 
 energy('forte', ref_wfn = refwfn )
-compare_values(refdsrgpt2,get_variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")
+compare_values(refdsrgpt2,variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")

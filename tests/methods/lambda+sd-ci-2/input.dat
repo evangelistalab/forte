@@ -31,5 +31,5 @@ set libadaptive {
 energy('mcscf')
 energy('libadaptive')
 
-compare_values(refscf, get_variable("SCF total energy"),10, "SCF energy") #TEST
-compare_values(reflci, get_variable("LAMBDA+SD-CI ENERGY"),10, "Lambda-CI energy") #TEST
+compare_values(refscf, variable("SCF total energy"),10, "SCF energy") #TEST
+compare_values(reflci, variable("LAMBDA+SD-CI ENERGY"),10, "Lambda-CI energy") #TEST

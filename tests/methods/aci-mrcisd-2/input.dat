@@ -88,7 +88,7 @@ D   1   1.00
 
 
 energy('scf')
-compare_values(refrohf,get_variable("CURRENT ENERGY"),10,"SCF energy") #TEST
+compare_values(refrohf,variable("CURRENT ENERGY"),10,"SCF energy") #TEST
 
 energy('forte')
-compare_values(refmrci,get_variable("MRCISD ENERGY"),10,"MRCISD energy") #TEST
+compare_values(refmrci,variable("MRCISD ENERGY"),10,"MRCISD energy") #TEST

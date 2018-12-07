@@ -32,7 +32,7 @@ set {
 
 Escf, wfnSCF = energy('scf', return_wfn=True)
 Ecasscf, wfn = energy('casscf', ref_wfn=wfnSCF, return_wfn=True)
-compare_values(refcasscf,get_variable("CURRENT ENERGY"),10,"PSI4 CASSCF energy")
+compare_values(refcasscf,variable("CURRENT ENERGY"),10,"PSI4 CASSCF energy")
 
 set forte {
   job_type             casscf
@@ -48,7 +48,7 @@ set forte {
   casscf_diis_freq     4
 }
 Ecasscf, wfn = energy('forte', ref_wfn=wfnSCF, return_wfn=True)
-compare_values(refcasscf,get_variable("CURRENT ENERGY"),10,"FORTE CASSCF energy")
+compare_values(refcasscf,variable("CURRENT ENERGY"),10,"FORTE CASSCF energy")
 
 set forte {
   job_type           dsrg-mrpt2
@@ -64,4 +64,4 @@ set forte {
 }
 
 Eforte, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
-compare_values(refpt2_relax,get_variable("CURRENT ENERGY"),8,"DSRG-MRPT2 relaxed energy")
+compare_values(refpt2_relax,variable("CURRENT ENERGY"),8,"DSRG-MRPT2 relaxed energy")

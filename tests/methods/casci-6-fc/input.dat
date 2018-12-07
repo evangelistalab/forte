@@ -30,6 +30,6 @@ set forte {
 }
 
 energy('mcscf')
-compare_values(refscf, get_variable("SCF total energy"),10, "SCF energy") #TEST
+compare_values(refscf, variable("SCF total energy"),10, "SCF energy") #TEST
 energy('forte')
-compare_values(reflci, get_variable("LAMBDA-CI ENERGY"),10, "Lambda-CI energy") #TEST
+compare_values(reflci, variable("LAMBDA-CI ENERGY"),10, "Lambda-CI energy") #TEST

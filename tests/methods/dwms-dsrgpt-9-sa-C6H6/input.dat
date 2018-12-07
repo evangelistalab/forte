@@ -38,7 +38,7 @@ set {
   docc           [6,3,1,1,0,1,5,4]
 }
 Escf, wfn = energy('scf', return_wfn=True)
-compare_values(Escf,get_variable("CURRENT ENERGY"),8,"DF-SCF(RHF) energy")
+compare_values(Escf,variable("CURRENT ENERGY"),8,"DF-SCF(RHF) energy")
 
 set forte{
   job_type           dwms-dsrgpt2
@@ -58,5 +58,5 @@ set forte{
 energy('forte', ref_wfn=wfn)
 for i in range(7):
     msg = "DWMS-DSRG-PT2 energy on root {}".format(i)
-    E = get_variable("ENERGY ROOT {}".format(i))
+    E = variable("ENERGY ROOT {}".format(i))
     compare_values(Ept2[i], E, 8, msg)

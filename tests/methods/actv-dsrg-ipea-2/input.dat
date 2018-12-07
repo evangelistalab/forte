@@ -21,7 +21,7 @@ set {
 }
 Escf, wfn = energy('scf', return_wfn=True)
 oeprop(wfn,"MO_EXTENTS")
-compare_values(refscf,get_variable("CURRENT ENERGY"),8,"SCF energy") #TEST
+compare_values(refscf,variable("CURRENT ENERGY"),8,"SCF energy") #TEST
 
 set forte{
   job_type           active-dsrgpt2
@@ -38,4 +38,4 @@ set forte{
 # diag_algorithm     full    # full may not work when diffused orbital is added
 }
 Edsrg, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
-compare_values(refdsrg_b1,get_variable("CURRENT ENERGY"),8,"DSRG energy of B1 state") #TEST
+compare_values(refdsrg_b1,variable("CURRENT ENERGY"),8,"DSRG energy of B1 state") #TEST

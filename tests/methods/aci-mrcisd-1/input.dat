@@ -46,7 +46,7 @@ set forte {
 
 energy('scf')
 
-compare_values(refscf, get_variable("CURRENT ENERGY"),9,"SCF energy")
+compare_values(refscf, variable("CURRENT ENERGY"),9,"SCF energy")
 energy('forte')
-compare_values(refen, get_variable("MRCISD ENERGY"), 9, "MR-CISD energy")
+compare_values(refen, variable("MRCISD ENERGY"), 9, "MR-CISD energy")
 

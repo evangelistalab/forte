@@ -85,11 +85,11 @@ set forte{
 }
 
 Emcscf, wfn = energy('casscf', return_wfn=True)
-compare_values(Emcscf_avg,get_variable("CURRENT ENERGY"),8,"SA-CASSCF energy")
+compare_values(Emcscf_avg,variable("CURRENT ENERGY"),8,"SA-CASSCF energy")
 
 energy('forte', ref_wfn=wfn)
-E0 = get_variable("ENERGY ROOT 0")
-E1 = get_variable("ENERGY ROOT 1")
+E0 = variable("ENERGY ROOT 0")
+E1 = variable("ENERGY ROOT 1")
 compare_values(Ept2_root0,E0,8,"SA-DSRG-PT2c energy on root 0")
 compare_values(Ept2_root1,E1,8,"SA-DSRG-PT2c energy on root 1")
 
@@ -99,5 +99,5 @@ set forte{
   dwms_algorithm     sa
 }
 energy('forte', ref_wfn=wfn)
-compare_values(E0,get_variable("ENERGY ROOT 0"),8,"DWSA-DSRG-PT2 energy on root 0")
-compare_values(E1,get_variable("ENERGY ROOT 1"),8,"DWSA-DSRG-PT2 energy on root 1")
+compare_values(E0,variable("ENERGY ROOT 0"),8,"DWSA-DSRG-PT2 energy on root 0")
+compare_values(E1,variable("ENERGY ROOT 1"),8,"DWSA-DSRG-PT2 energy on root 1")

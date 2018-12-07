@@ -44,7 +44,7 @@ set forte{
 }
 
 Ecas, wfn = energy('casscf', return_wfn=True)
-compare_values(refcasscf,get_variable("CURRENT ENERGY"),10,"CASSCF energy") #TEST
+compare_values(refcasscf,variable("CURRENT ENERGY"),10,"CASSCF energy") #TEST
 
 Esrgpt2_ode = energy('forte', ref_wfn=wfn)
 compare_values(Esrgpt2_mb,Esrgpt2_ode,6,"SRG-MRPT2 energy") #TEST

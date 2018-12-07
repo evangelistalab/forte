@@ -59,6 +59,6 @@ scf = energy('scf')
 compare_values(refrohf, scf,8,"SCF Energy")
 
 energy('forte')
-compare_values(refdsrgpt2, get_variable("CURRENT ENERGY"),8,"DSRG-MRPT2 energy")
+compare_values(refdsrgpt2, variable("CURRENT ENERGY"),8,"DSRG-MRPT2 energy")
 
 
