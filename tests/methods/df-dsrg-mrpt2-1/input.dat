@@ -68,4 +68,4 @@ S   1   1.00
 }
 
 forte_energy = energy('forte')
-compare_values(refdsrgpt2,get_variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")
+compare_values(refdsrgpt2,variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")

@@ -31,7 +31,7 @@ set forte {
 set basis DZ
 
 energy('scf')
-compare_values(refscf,get_variable("CURRENT ENERGY"),10,"SCF energy") #TEST
+compare_values(refscf,variable("CURRENT ENERGY"),10,"SCF energy") #TEST
 
 energy('forte')
-compare_values(refct,get_variable("CURRENT ENERGY"),10,"SR-CTSD energy") #TEST
+compare_values(refct,variable("CURRENT ENERGY"),10,"SR-CTSD energy") #TEST

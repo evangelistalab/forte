@@ -46,11 +46,11 @@ set forte {
 }
 
 Ecasscf, wfn_cas = energy('casscf', return_wfn=True)
-compare_values(refcasscf, get_variable("CURRENT ENERGY"), 10, "CASSCF energy (canonical orbitals)")
+compare_values(refcasscf, variable("CURRENT ENERGY"), 10, "CASSCF energy (canonical orbitals)")
 
 Eforte, wfn = energy('forte', ref_wfn=wfn_cas, return_wfn=True)
-compare_values(refpt2, get_variable("UNRELAXED ENERGY"), 10, "DSRG-MRPT2 urelaxed energy")
-compare_values(refpt2_relax, get_variable("PARTIALLY RELAXED ENERGY"), 10,
+compare_values(refpt2, variable("UNRELAXED ENERGY"), 10, "DSRG-MRPT2 urelaxed energy")
+compare_values(refpt2_relax, variable("PARTIALLY RELAXED ENERGY"), 10,
                "DSRG-MRPT2 partially relaxed energy")
 
 # try CASSCF with natual orbital
@@ -58,11 +58,11 @@ set {
   nat_orbs true
 }
 Ecasscf, wfn_cas = energy('casscf', return_wfn=True)
-compare_values(refcasscf, get_variable("CURRENT ENERGY"), 10, "CASSCF energy (natural orbitals)")
+compare_values(refcasscf, variable("CURRENT ENERGY"), 10, "CASSCF energy (natural orbitals)")
 
 set forte {
   cas_type           fci
 }
 Eforte, wfn = energy('forte', ref_wfn=wfn_cas, return_wfn=True)
-compare_values(refpt2_relax, get_variable("CURRENT ENERGY"), 6,
+compare_values(refpt2_relax, variable("CURRENT ENERGY"), 6,
                "DSRG-MRPT2 partially relaxed energy")

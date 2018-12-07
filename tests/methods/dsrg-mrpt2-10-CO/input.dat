@@ -37,7 +37,7 @@ set {
 }
 
 Ecasscf, wfn_cas = energy('casscf', return_wfn=True)
-compare_values(refcasscf,get_variable("CURRENT ENERGY"),10,"CASSCF energy")
+compare_values(refcasscf,variable("CURRENT ENERGY"),10,"CASSCF energy")
 
 set forte {
   job_type           dsrg-mrpt2
@@ -54,7 +54,7 @@ set forte {
 }
 
 Eforte, wfn_cas = energy('forte', ref_wfn=wfn_cas, return_wfn=True)
-compare_values(refpt2,get_variable("UNRELAXED ENERGY"),9,"DSRG-MRPT2 unrelaxed energy")
-compare_values(refpt2_relax,get_variable("PARTIALLY RELAXED ENERGY"),9,"DSRG-MRPT2 partially relaxed energy")
-compare_values(refdm,get_variable("UNRELAXED DIPOLE"),5,"DSRG-MRPT2 dipole moment unrelaxed ref")
-compare_values(refdm_relax,get_variable("PARTIALLY RELAXED DIPOLE"),5,"DSRG-MRPT2 dipole moment partially relaxed ref")
+compare_values(refpt2,variable("UNRELAXED ENERGY"),9,"DSRG-MRPT2 unrelaxed energy")
+compare_values(refpt2_relax,variable("PARTIALLY RELAXED ENERGY"),9,"DSRG-MRPT2 partially relaxed energy")
+compare_values(refdm,variable("UNRELAXED DIPOLE"),5,"DSRG-MRPT2 dipole moment unrelaxed ref")
+compare_values(refdm_relax,variable("PARTIALLY RELAXED DIPOLE"),5,"DSRG-MRPT2 dipole moment partially relaxed ref")

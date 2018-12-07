@@ -18,7 +18,7 @@ set {
   maxiter        100
 }
 Escf, wfn = energy('scf', return_wfn=True)
-compare_values(refscf,get_variable("CURRENT ENERGY"),8,"SCF energy") #TEST
+compare_values(refscf,variable("CURRENT ENERGY"),8,"SCF energy") #TEST
 
 set forte{
   job_type           active-dsrgpt2
@@ -34,4 +34,4 @@ set forte{
   dsrg_s             0.5
 }
 energy('forte', ref_wfn=wfn)
-compare_values(refdsrg,get_variable("CURRENT ENERGY"),8,"DSRG energy of Ag state") #TEST
+compare_values(refdsrg,variable("CURRENT ENERGY"),8,"DSRG energy of Ag state") #TEST

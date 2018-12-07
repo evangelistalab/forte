@@ -56,7 +56,7 @@ scf = energy('scf')
 compare_values(refscf, scf,10,"SCF Energy")
 
 energy('forte')
-compare_values(refaci, get_variable("ACI ENERGY"),10,"ACI energy")
-compare_values(refacipt2, get_variable("ACI+PT2 ENERGY"),8,"ACI+PT2 energy")
+compare_values(refaci, variable("ACI ENERGY"),10,"ACI energy")
+compare_values(refacipt2, variable("ACI+PT2 ENERGY"),8,"ACI+PT2 energy")
 
 

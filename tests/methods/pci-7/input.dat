@@ -38,8 +38,8 @@ set forte {
 }
 
 energy('scf')
-compare_values(refscf, get_variable("CURRENT ENERGY"), 11, "SCF energy") #TEST
+compare_values(refscf, variable("CURRENT ENERGY"), 11, "SCF energy") #TEST
 
 energy('forte')
-compare_values(refpci, get_variable("PCI ENERGY"), 10, "PCI energy") #TEST
-compare_values(refpostdiag, get_variable("PCI POST DIAG ENERGY"), 10, "POST DIAG energy") #TEST
+compare_values(refpci, variable("PCI ENERGY"), 10, "PCI energy") #TEST
+compare_values(refpostdiag, variable("PCI POST DIAG ENERGY"), 10, "POST DIAG energy") #TEST

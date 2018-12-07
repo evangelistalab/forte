@@ -43,10 +43,10 @@ set forte{
 }
 
 Escf, wfn = energy('scf', return_wfn=True)
-compare_values(refrhf,get_variable("CURRENT ENERGY"),10,"SCF energy")
+compare_values(refrhf,variable("CURRENT ENERGY"),10,"SCF energy")
 
 energy('forte', ref_wfn=wfn)
-compare_values(refudsrg,get_variable("UNRELAXED ENERGY"),8,"MRDSRG unrelaxed energy")
-compare_values(refprdsrg,get_variable("PARTIALLY RELAXED ENERGY"),8,"MRDSRG partially relaxed energy")
-compare_values(refrdsrg,get_variable("RELAXED ENERGY"),8,"MRDSRG relaxed energy")
-compare_values(reffrdsrg,get_variable("FULLY RELAXED ENERGY"),8,"MRDSRG fully relaxed energy")
+compare_values(refudsrg,variable("UNRELAXED ENERGY"),8,"MRDSRG unrelaxed energy")
+compare_values(refprdsrg,variable("PARTIALLY RELAXED ENERGY"),8,"MRDSRG partially relaxed energy")
+compare_values(refrdsrg,variable("RELAXED ENERGY"),8,"MRDSRG relaxed energy")
+compare_values(reffrdsrg,variable("FULLY RELAXED ENERGY"),8,"MRDSRG fully relaxed energy")

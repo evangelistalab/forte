@@ -34,7 +34,7 @@ set {
 }
 
 Ecasscf, wfn_cas = energy('casscf', return_wfn=True)
-compare_values(refcasscf,get_variable("CURRENT ENERGY"),10,"CASSCF energy") #TEST
+compare_values(refcasscf,variable("CURRENT ENERGY"),10,"CASSCF energy") #TEST
 
 set forte {
   job_type           dsrg-mrpt2
@@ -52,4 +52,4 @@ set forte {
 }
 
 Eforte, wfn_cas = energy('forte', ref_wfn=wfn_cas, return_wfn=True)
-compare_values(refpt2_relax,get_variable("CURRENT ENERGY"),10,"DSRG-MRPT2 relaxed energy") #TEST
+compare_values(refpt2_relax,variable("CURRENT ENERGY"),10,"DSRG-MRPT2 relaxed energy") #TEST

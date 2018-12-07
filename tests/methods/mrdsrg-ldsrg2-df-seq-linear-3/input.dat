@@ -41,7 +41,7 @@ set forte{
 }
 
 energy('scf')
-compare_values(refrhf,get_variable("CURRENT ENERGY"),10,"SCF energy")
+compare_values(refrhf,variable("CURRENT ENERGY"),10,"SCF energy")
 
 energy('forte')
-compare_values(refdsrg,get_variable("CURRENT ENERGY"),10,"MRDSRG energy")
+compare_values(refdsrg,variable("CURRENT ENERGY"),10,"MRDSRG energy")

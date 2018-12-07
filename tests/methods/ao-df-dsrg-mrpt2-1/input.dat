@@ -42,6 +42,6 @@ set forte{
 #
 #ref = energy('scf')
 forte_energy = energy('forte')
-compare_values(df_mp2,get_variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")
+compare_values(df_mp2,variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")
 
 

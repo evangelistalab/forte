@@ -27,9 +27,9 @@ set forte {
   pci_e_convergence 12
 }
 energy('scf')
-compare_values(refscf, get_variable("CURRENT ENERGY"), 11, "SCF energy") #TEST
+compare_values(refscf, variable("CURRENT ENERGY"), 11, "SCF energy") #TEST
 
 energy('forte')
-compare_values(refpci, get_variable("PCI ENERGY"), 11, "PCI energy") #TEST
-compare_values(refpostdiag, get_variable("PCI POST DIAG ENERGY"), 10, "PCI POST DIAG ENERGY") #TEST
+compare_values(refpci, variable("PCI ENERGY"), 11, "PCI energy") #TEST
+compare_values(refpostdiag, variable("PCI POST DIAG ENERGY"), 10, "PCI POST DIAG ENERGY") #TEST
 

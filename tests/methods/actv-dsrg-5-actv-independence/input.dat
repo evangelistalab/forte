@@ -39,7 +39,7 @@ set forte{
 
 Escf, wfn = energy('scf', return_wfn=True)
 Edsrg = energy('forte', ref_wfn=wfn)
-compare_values(refdsrgpt2,get_variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")
+compare_values(refdsrgpt2,variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")
 
 # now test CD-DSRG-MRPT2
 set forte{
@@ -47,7 +47,7 @@ set forte{
   cholesky_tolerance      8
 }
 energy('forte', ref_wfn=wfn)
-compare_values(refdsrgpt2,get_variable("CURRENT ENERGY"),7,"CD-DSRG-MRPT2 energy")
+compare_values(refdsrgpt2,variable("CURRENT ENERGY"),7,"CD-DSRG-MRPT2 energy")
 
 # now do single reference DSRG-PT2
 set forte{

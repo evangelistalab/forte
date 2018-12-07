@@ -20,7 +20,7 @@ set {
 }
 
 energy('scf')
-compare_values(refscf, get_variable("CURRENT ENERGY"),11, "SCF energy") #TEST
+compare_values(refscf, variable("CURRENT ENERGY"),11, "SCF energy") #TEST
 
 set forte {
   job_type fci
@@ -29,7 +29,7 @@ set forte {
 }
 
 energy('forte')
-compare_values(reffci, get_variable("CURRENT ENERGY"),11, "FCI energy (M_S =  1/2)") #TEST
+compare_values(reffci, variable("CURRENT ENERGY"),11, "FCI energy (M_S =  1/2)") #TEST
 
 set forte {
   job_type fci
@@ -38,7 +38,7 @@ set forte {
 }
 
 energy('forte')
-compare_values(reffci, get_variable("CURRENT ENERGY"),11, "FCI energy (M_S = -1/2)") #TEST
+compare_values(reffci, variable("CURRENT ENERGY"),11, "FCI energy (M_S = -1/2)") #TEST
 
 clean()
 
@@ -55,7 +55,7 @@ units bohr
 }
 
 scf_triplet = energy('scf')
-compare_values(refscf_triplet, get_variable("CURRENT ENERGY"),11, "SCF energy") #TEST
+compare_values(refscf_triplet, variable("CURRENT ENERGY"),11, "SCF energy") #TEST
 
 set forte {
   job_type fci
@@ -64,7 +64,7 @@ set forte {
 }
 
 energy('forte')
-compare_values(reffci_triplet, get_variable("CURRENT ENERGY"),11, "FCI energy (M_S =  1)") #TEST
+compare_values(reffci_triplet, variable("CURRENT ENERGY"),11, "FCI energy (M_S =  1)") #TEST
 
 set forte {
   job_type fci
@@ -73,7 +73,7 @@ set forte {
 }
 
 energy('forte')
-compare_values(reffci_triplet, get_variable("CURRENT ENERGY"),11, "FCI energy (M_S =  0)") #TEST
+compare_values(reffci_triplet, variable("CURRENT ENERGY"),11, "FCI energy (M_S =  0)") #TEST
 
 set forte {
   job_type fci
@@ -82,4 +82,4 @@ set forte {
 }
 
 energy('forte')
-compare_values(reffci_triplet, get_variable("CURRENT ENERGY"),11, "FCI energy (M_S = -1)") #TEST
+compare_values(reffci_triplet, variable("CURRENT ENERGY"),11, "FCI energy (M_S = -1)") #TEST
