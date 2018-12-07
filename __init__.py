@@ -44,4 +44,4 @@ from .forte import *
 # Register options with psi
 options = psi4.core.get_options()
 options.set_current_module('FORTE')
-forte.read_forte_options(psi4.core.get_options())
+forte.read_options(psi4.core.get_options())

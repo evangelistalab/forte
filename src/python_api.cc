@@ -44,31 +44,9 @@ namespace py = pybind11;
 namespace psi {
 namespace forte {
 
-/**
- * @brief Wrapper of the main forte function for the pybind11 interface
- */
-int api_forte_read_options(Options& options) {
-    //    Process::environment.options.set_read_globals(true);
-    int value = read_forte_options("FORTE", options); // options are not read by default
-    //    Process::environment.options.set_read_globals(false);
-    return value;
-}
-
-int add(int a, int b) { return a + b; }
-
-/**
- * @brief Wrapper of the main forte function for the pybind11 interface
- */
-SharedWavefunction api_run_forte(SharedWavefunction ref_wfn, Options& options) {
-    options.set_current_module("FORTE");
-    return run_forte(ref_wfn, options);
-}
-
 PYBIND11_MODULE(forte, m) {
     m.doc() = "pybind11 Forte module"; // module docstring
-    m.def("read_forte_options", &api_forte_read_options, "Read Forte options");
-    m.def("run_forte", &api_run_forte, "Run Forte plugin");
-    m.def("add", &add, "Run Forte plugin");
+    m.def("read_options", &read_options, "Read Forte options");
     m.def("forte_startup", &forte_startup);
     m.def("forte_cleanup", &forte_cleanup);
     m.def("forte_banner", &forte_banner, "Print forte banner");

@@ -31,20 +31,12 @@
 namespace psi {
 namespace forte {
 
-void forte_options(std::string name, ForteOptions& options);
+void forte_options(ForteOptions& options);
 
 void forte_banner();
 
-int read_forte_options(std::string name, Options& options);
+int read_options(Options& options);
 SharedWavefunction run_forte(SharedWavefunction ref_wfn, Options& options);
-
-int api_forte_read_options(Options& options);
-SharedWavefunction api_run_forte(SharedWavefunction ref_wfn, Options& options);
-}
-}
-
-namespace psi {
-namespace forte {
 
 std::pair<int, int> forte_startup();
 
