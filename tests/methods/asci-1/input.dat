@@ -16,11 +16,10 @@ C 1 1.27273
                                          
 set {                                    
   scf_type pk                            
-  multiplicity 1                         
+  #multiplicity 1                         
   basis cc-pvdz                      
   reference rohf
 }                                        
-                                         
                                          
 set forte {                              
   multiplicity 1
