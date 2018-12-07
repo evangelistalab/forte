@@ -44,7 +44,7 @@
 namespace psi {
 namespace forte {
 
-void forte_options(std::string name, ForteOptions& foptions) {
+void forte_options(ForteOptions& foptions) {
 
     // Method-specific options
     set_FCI_options(foptions);
