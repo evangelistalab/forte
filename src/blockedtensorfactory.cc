@@ -35,6 +35,7 @@
 #include "psi4/libpsio/psio.hpp"
 #include "psi4/libpsi4util/process.h"
 
+#include <algorithm>
 #include <string>
 #include <tuple>
 #include <vector>
