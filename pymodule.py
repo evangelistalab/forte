@@ -50,10 +50,9 @@ def run_forte(name, **kwargs):
     if ref_wfn is None:
         ref_wfn = psi4.driver.scf_helper(name, **kwargs)
 
+    # Get the option object
     options = psi4.core.get_options()
     options.set_current_module('FORTE')
-    options.print()
-    options.print_globals()
 
     if ('DF' in options.get_str('INT_TYPE')):
         aux_basis = psi4.core.BasisSet.build(ref_wfn.molecule(), 'DF_BASIS_MP2',
