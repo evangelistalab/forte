@@ -33,14 +33,14 @@ namespace forte {
 
 void forte_options(ForteOptions& options);
 
-void forte_banner();
+std::pair<int, int> startup();
+void banner();
+void cleanup();
 
 int read_options(Options& options);
 SharedWavefunction run_forte(SharedWavefunction ref_wfn, Options& options);
 
-std::pair<int, int> forte_startup();
 
-void forte_cleanup();
 
 std::shared_ptr<MOSpaceInfo> make_mo_space_info(SharedWavefunction ref_wfn, Options& options);
 

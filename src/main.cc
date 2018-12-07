@@ -110,7 +110,7 @@ int read_options(Options& options) {
  * once before running forte should go here.
  * @return The pair (my_proc,n_nodes)
  */
-std::pair<int, int> forte_startup() {
+std::pair<int, int> startup() {
     ambit::initialize();
 
 #ifdef HAVE_MPI
@@ -139,7 +139,7 @@ std::pair<int, int> forte_startup() {
  * @brief Finalize ambit, MPI, and GA. All functions that need to be called
  * once after running forte should go here.
  */
-void forte_cleanup() {
+void cleanup() {
 
 #ifdef HAVE_GA
     GA_Terminate();
@@ -215,7 +215,7 @@ std::shared_ptr<ForteIntegrals> make_forte_integrals(SharedWavefunction ref_wfn,
     return ints;
 }
 
-void forte_banner() {
+void banner() {
     outfile->Printf(
         "\n"
         "  Forte\n"
@@ -228,8 +228,6 @@ void forte_banner() {
         "  ----------------------------------------------------------------------------\n",
         GIT_BRANCH, GIT_COMMIT_HASH);
     outfile->Printf("\n  Size of Determinant class: %d", sizeof(Determinant));
-    //    std::cout << "\n " << Determinant::alfa_mask << std::endl;
-    //    std::cout << "\n " << Determinant::beta_mask << std::endl;
 }
 
 } // namespace forte

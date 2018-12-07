@@ -66,11 +66,11 @@ def run_forte(name, **kwargs):
         ref_wfn.set_basisset('MINAO_BASIS', minao_basis)
 
     # Start Forte, initialize ambit
-    my_proc_n_nodes = forte.forte_startup()
+    my_proc_n_nodes = forte.startup()
     my_proc, n_nodes = my_proc_n_nodes
 
     # Print the banner
-    forte.forte_banner()
+    forte.banner()
 
     # Create the MOSpaceInfo object
     mo_space_info = forte.make_mo_space_info(ref_wfn, options)
@@ -97,7 +97,7 @@ def run_forte(name, **kwargs):
         #print('\n\n  Your calculation took ', (end - start), ' seconds');
 
     # Close ambit, etc.
-    forte.forte_cleanup()
+    forte.cleanup()
     return ref_wfn
 
 # Integration with driver routines
