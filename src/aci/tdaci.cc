@@ -114,7 +114,6 @@ double TDACI::compute_energy() {
     outfile->Printf("\n  ACI wavefunction built");
 
     // 2. Generate the n-1 Determinants (not just core)
-  //  DeterminantHashVec ann_dets;
     for( int i = 0; i < nact; ++i ){
         annihilate_wfn(aci_dets, ann_dets_,i);  
     }
@@ -122,9 +121,9 @@ double TDACI::compute_energy() {
     outfile->Printf("\n  size of ann dets: %zu", ann_dets_.size());
 
     // 3. Build the full n-1 Hamiltonian if not screening
-        std::vector<std::string> det_str( nann);
-        fci_ints_ = aci->get_aci_ints();
-        SharedMatrix full_aH = std::make_shared<Matrix>("aH",nann, nann);
+    std::vector<std::string> det_str( nann);
+    fci_ints_ = aci->get_aci_ints();
+    SharedMatrix full_aH = std::make_shared<Matrix>("aH",nann, nann);
     if (!screen){
         for( size_t I = 0; I < nann; ++I ){
             Determinant detI = ann_dets_.get_det(I);
@@ -180,7 +179,7 @@ double TDACI::compute_energy() {
         propogate_RK4( core_coeffs, full_aH);
     } else if (options_.get_str("TDACI_PROPOGATOR") == "LANCZOS" ){
         propogate_lanczos( core_coeffs, full_aH);
-    } else if (options_.get_str("TDACI_PROPOGATOR") == "EXACT_SELECT" ){
+    } else if (options_.get_str("TDACI_PROPOGATOR") == "EXACT_SELECT" or options_.get_str("TDACI_PROPOGATOR") == "RK4_SELECT"){
         compute_tdaci_select( core_coeffs, full_aH);
     } else if (options_.get_str("TDACI_PROPOGATOR") == "ALL" ){
         propogate_exact( core_coeffs, full_aH );
@@ -200,8 +199,6 @@ void TDACI::propogate_exact(SharedVector C0, SharedMatrix H) {
 
 
     std::vector<int> orbs(options_["TDACI_OCC_ORB"].size());
-    //std::vector<int> orbs(6);
-    //for( int h = 0; h < options_["TDACI_OCC_ORB"].size(); ++h ){
     for( int h = 0; h < options_["TDACI_OCC_ORB"].size(); ++h ){
         int orb = options_["TDACI_OCC_ORB"][h].to_integer();
         orbs[h] = orb;
@@ -427,6 +424,11 @@ void TDACI::propogate_taylor1(SharedVector C0, SharedMatrix H  ) {
     outfile->Printf("\n  Propogating with linear Taylor algorithm");
     
     Timer t1;
+    std::vector<int> orbs(options_["TDACI_OCC_ORB"].size());
+    for( int h = 0; h < options_["TDACI_OCC_ORB"].size(); ++h ){
+        int orb = options_["TDACI_OCC_ORB"][h].to_integer();
+        orbs[h] = orb;
+    }
     // The screening criterion
     double eta = options_.get_double("TDACI_ETA_P");        
     double d_tau = options_.get_double("TDACI_TIMESTEP")*0.0413413745758;        
@@ -443,6 +445,7 @@ void TDACI::propogate_taylor1(SharedVector C0, SharedMatrix H  ) {
     C0_r->copy(C0->clone());
     C0_i->zero();
     
+    std::vector<std::vector<double>> occupations(orbs.size(), std::vector<double>(nstep));
     auto active_sym = mo_space_info_->symmetry("ACTIVE");
    // WFNOperator op(active_sym, fci_ints);
    // op.build_strings(ann_dets);
@@ -515,6 +518,11 @@ void TDACI::propogate_taylor1(SharedVector C0, SharedMatrix H  ) {
         Ct_r->scale(norm);        
         Ct_i->scale(norm);        
 
+        std::vector<double> occ = compute_occupation(Ct_r, Ct_i, orbs);
+        for( int i = 0; i < orbs.size(); ++i ){
+            occupations[i][N] = occ[i];
+        }
+
         // print the wavefunction
         if( options_.get_bool("TDACI_PRINT_WFN")){
             if( std::abs( (tau/0.0413413745758) - round(tau/0.0413413745758)) <= 1e-8){ 
@@ -531,6 +539,9 @@ void TDACI::propogate_taylor1(SharedVector C0, SharedMatrix H  ) {
         C0_i->copy(Ct_i->clone());
         print_val += print_interval;
     }
+    for( int i = 0; i < orbs.size(); ++i ){
+        save_vector(occupations[i], "occupations_" + std::to_string(orbs[i]) + ".txt");
+    }
     outfile->Printf("\n  Time spent propogating (linear): %1.6f", t1.get());
 }
 
@@ -538,6 +549,11 @@ void TDACI::propogate_taylor2(SharedVector C0, SharedMatrix H  ) {
 
     outfile->Printf("\n  Propogating with quadratic Taylor algorithm");
     Timer t2;
+    std::vector<int> orbs(options_["TDACI_OCC_ORB"].size());
+    for( int h = 0; h < options_["TDACI_OCC_ORB"].size(); ++h ){
+        int orb = options_["TDACI_OCC_ORB"][h].to_integer();
+        orbs[h] = orb;
+    }
     // The screening criterion
     double eta = options_.get_double("TDACI_ETA");        
     double d_tau = options_.get_double("TDACI_TIMESTEP")*0.0413413745758;        
@@ -545,6 +561,7 @@ void TDACI::propogate_taylor2(SharedVector C0, SharedMatrix H  ) {
     int nstep = options_.get_int("TDACI_NSTEP");
     
     size_t ndet = C0->dim();
+    std::vector<std::vector<double>> occupations(orbs.size(), std::vector<double>(nstep));
     //The imaginary part
     SharedVector C0_r = std::make_shared<Vector>("C0r", ndet);
     SharedVector C0_i = std::make_shared<Vector>("C0i", ndet);
@@ -633,6 +650,10 @@ void TDACI::propogate_taylor2(SharedVector C0, SharedMatrix H  ) {
         Ct_r->scale(norm);        
         Ct_i->scale(norm);        
 
+        std::vector<double> occ = compute_occupation(Ct_r, Ct_i, orbs);
+        for( int i = 0; i < orbs.size(); ++i ){
+            occupations[i][N] = occ[i];
+        }
 
         // print the wavefunction
         if( options_.get_bool("TDACI_PRINT_WFN")){
@@ -647,6 +668,9 @@ void TDACI::propogate_taylor2(SharedVector C0, SharedMatrix H  ) {
         C0_r->copy(Ct_r->clone());
         C0_i->copy(Ct_i->clone());
     } 
+    for( int i = 0; i < orbs.size(); ++i ){
+        save_vector(occupations[i], "occupations_" + std::to_string(orbs[i]) + ".txt");
+    }
     outfile->Printf("\n  Time spent propogating (quadratic): %1.6f", t2.get());
 }
 
@@ -1254,7 +1278,7 @@ void TDACI::annihilate_wfn( DeterminantHashVec& olddets,
     }
 }
 
-std::vector<double> TDACI::compute_occupation( std::vector<double>& Cr, std::vector<double>& Ci, std::vector<int>& orbs ) {
+std::vector<double> TDACI::compute_occupation( DeterminantHashVec& dets, std::vector<double>& Cr, std::vector<double>& Ci, std::vector<int>& orbs ) {
 
     int nact = Cr.size();
     std::vector<double> occ_vec(orbs.size(), 0.0); 
@@ -1264,9 +1288,9 @@ std::vector<double> TDACI::compute_occupation( std::vector<double>& Cr, std::vec
         int orb = orbs[i];
         for( int I = 0; I < nact; ++I) {
             
-            const Determinant& detI = ann_dets_.get_det(I);
+            const Determinant& detI = dets.get_det(I);
             if( detI.get_alfa_bit(orb) == true ){
-                size_t idx = ann_dets_.get_idx(detI);
+                size_t idx = dets.get_idx(detI);
                 double re = Cr[idx];
                 double im = Ci[idx];
                 occ += re*re + im*im; 
@@ -1337,11 +1361,11 @@ void TDACI::compute_tdaci_select(SharedVector C0, SharedMatrix H) {
     }
     // Sort by abs value of coefficient
     std::sort( sorted_dets.begin(), sorted_dets.end() );
-    for( size_t I = n_ann_dets-n_core_dets; I < n_ann_dets; ++I ){
-        auto d_pair = sorted_dets[I];
-        double ci = C0->get(d_pair.second);
-//        outfile->Printf("\n  %12.10f: %s",ci, dets[d_pair.second].str(nact).c_str()); 
-    }
+//    for( size_t I = n_ann_dets-n_core_dets; I < n_ann_dets; ++I ){
+//        auto d_pair = sorted_dets[I];
+//        double ci = C0->get(d_pair.second);
+////        outfile->Printf("\n  %12.10f: %s",ci, dets[d_pair.second].str(nact).c_str()); 
+//    }
 
     std::vector<double> P_coeffs_r;
     std::vector<double> PQ_coeffs_r;
@@ -1364,6 +1388,17 @@ void TDACI::compute_tdaci_select(SharedVector C0, SharedMatrix H) {
     }
 //    outfile->Printf("\n  Remove %zu out of %zu", n_excluded, n_core_dets);
     std::vector<double> P_coeffs_i(P_space.size(), 0.0);
+    double norm = 0.0;
+    for( int I = 0, maxI=P_space.size(); I < maxI; ++I){
+        double val_r = P_coeffs_r[I]; 
+        norm += val_r*val_r; 
+    }
+    norm = 1.0 /std::sqrt(norm);
+    for( int I = 0, maxI=P_space.size(); I < maxI; ++I){
+        double cr = P_coeffs_r[I];         
+        cr *= norm; 
+        P_coeffs_r[I] = cr;         
+    }
 
  //   for( size_t I = n_excluded; I < n_core_dets; ++I ){
  //       auto d_pair = sorted_dets[I];
@@ -1384,10 +1419,29 @@ void TDACI::compute_tdaci_select(SharedVector C0, SharedMatrix H) {
         outfile->Printf("\n  (t = %10.2f)  P: %6zu, PQ: %6zu", time/conv, P_space.size(), PQ_space.size());
 
         // 2. Propogate in PQ space
-        propagate_exact_select(PQ_coeffs_r, PQ_coeffs_i, PQ_space, dt ); 
+        Timer prop;
+
+        if( options_.get_str("TDACI_PROPOGATOR") == "EXACT_SELECT"){
+            propagate_exact_select(PQ_coeffs_r, PQ_coeffs_i, PQ_space, dt ); 
+        } else if (options_.get_str("TDACI_PROPOGATOR") == "RK4_SELECT") {
+            propagate_RK4_select(PQ_coeffs_r, PQ_coeffs_i, PQ_space, dt ); 
+        }
+
+//        outfile->Printf("\n  propogate: %1.6f", prop.get());
+
+//        const det_hashvec& PQ_dets = PQ_space.wfn_hash();
+//        for( size_t I = 0; I < PQ_space.size(); ++I ){
+//            const Determinant& det = PQ_dets[I];
+//            if( P_space.has_det(det) ){
+//                size_t p_idx = P_space.get_idx(det);
+//                outfile->Printf("\n  %11.8f  %11.8f  %s", P_coeffs_r[p_idx], PQ_coeffs_r[I], det.str(nact).c_str());
+//            } else {
+//                outfile->Printf("\n  %11.8f  %11.8f  %s", 0.0, PQ_coeffs_r[I], det.str(nact).c_str());
+//            }
+//        }
 
         // 3. Save wfn/occ to file
-        std::vector<double> occ = compute_occupation(PQ_coeffs_r, PQ_coeffs_i, orbs);
+        std::vector<double> occ = compute_occupation(PQ_space, PQ_coeffs_r, PQ_coeffs_i, orbs);
         for( int i = 0; i < orbs.size(); ++i ){
             occupations[i][N] = occ[i];
         }
@@ -1441,22 +1495,32 @@ void TDACI::get_PQ_space( DeterminantHashVec& P_space,  std::vector<double>& P_c
     std::vector<double> F_approx_r;
     std::vector<double> F_approx_i;
 
-#pragma omp parallel
-    {
-        int ntd = omp_get_num_threads();
-        int tid = omp_get_thread_num();
-        int bin_size = max_P / ntd;
-        bin_size += (tid < (max_P % ntd)) ? 1 : 0;
-        int start_idx = (tid < (max_P%ntd)) ? tid*bin_size : (max_P%ntd)*(bin_size+1) + (tid - (max_P%ntd))*bin_size;
-        int end_idx = start_idx + bin_size;
+//#pragma omp parallel
+//    {
+//        int ntd = omp_get_num_threads();
+//        int tid = omp_get_thread_num();
+//        int bin_size = max_P / ntd;
+//        bin_size += (tid < (max_P % ntd)) ? 1 : 0;
+//        int start_idx = (tid < (max_P%ntd)) ? tid*bin_size : (max_P%ntd)*(bin_size+1) + (tid - (max_P%ntd))*bin_size;
+//        int end_idx = start_idx + bin_size;
+        int start_idx = 0;
+        int end_idx = max_P;
 
         det_hash<std::pair<double,double>> Hc_t;
+
+        // First do diagonal part
+        for( size_t P = start_idx; P < end_idx; ++P ){ 
+            const Determinant& det = P_dets[P];
+            double Cp_r = P_coeffs_r[P];
+            double Cp_i = P_coeffs_i[P];
+            Hc_t[det] = std::make_pair( Cp_r*fci_ints_->energy(det), Cp_i*fci_ints_->energy(det) );
+        }
+
         for( size_t P = start_idx; P < end_idx; ++P ){ 
             const Determinant& det = P_dets[P];
             double Cp_r = P_coeffs_r[P];
             double Cp_i = P_coeffs_i[P];
             double Cmag_sq = Cp_r*Cp_r + Cp_i*Cp_i;
-
 
 
             std::vector<int> aocc = det.get_alfa_occ(nact); 
@@ -1486,9 +1550,17 @@ void TDACI::get_PQ_space( DeterminantHashVec& P_space,  std::vector<double>& P_c
     
                             double HIJ_r = int_ia * Cp_r;
                             double HIJ_i = int_ia * Cp_i;
-                            auto& pair = Hc_t[new_det];
-                            pair.first += HIJ_r;
-                            pair.second += HIJ_i;
+                            auto it = Hc_t.find(new_det);
+                            if( it != Hc_t.end() ){
+                                auto pair = Hc_t[new_det];
+                                double cr = pair.first;
+                                double ci = pair.second;
+                                cr += HIJ_r;
+                                ci += HIJ_i;
+                                Hc_t[new_det] = std::make_pair(cr,ci);
+                            } else {
+                                Hc_t[new_det] = std::make_pair(HIJ_r,HIJ_i);
+                            }
 //                        outfile->Printf("\n %s", new_det.str(nact).c_str());
                         }
                     }
@@ -1505,9 +1577,19 @@ void TDACI::get_PQ_space( DeterminantHashVec& P_space,  std::vector<double>& P_c
                             new_det = det;
                             new_det.set_beta_bit(ii,false);
                             new_det.set_beta_bit(aa,true);
-                            auto& pair = Hc_t[new_det];
-                            pair.first += int_ia * Cp_r;
-                            pair.second += int_ia * Cp_i;
+                            double HIJ_r = int_ia * Cp_r;
+                            double HIJ_i = int_ia * Cp_i;
+                            auto it = Hc_t.find(new_det);
+                            if( it != Hc_t.end() ){
+                                auto pair = Hc_t[new_det];
+                                double cr = pair.first;
+                                double ci = pair.second;
+                                cr += HIJ_r;
+                                ci += HIJ_i;
+                                Hc_t[new_det] = std::make_pair(cr,ci);
+                            } else {
+                                Hc_t[new_det] = std::make_pair(HIJ_r,HIJ_i);
+                            }
                         }
                     }
                 }
@@ -1526,9 +1608,20 @@ void TDACI::get_PQ_space( DeterminantHashVec& P_space,  std::vector<double>& P_c
                                 if( std::fabs(int_ijab * Cmag_sq) >= thresh ){
                                     new_det = det;
                                     int_ijab *= new_det.double_excitation_ab(ii,jj,aa,bb);
-                                    auto& pair = Hc_t[new_det];
-                                    pair.first += int_ijab * Cp_r;
-                                    pair.second += int_ijab * Cp_i;
+                                    double HIJ_r = int_ijab * Cp_r;
+                                    double HIJ_i = int_ijab * Cp_i;
+
+                                    auto it = Hc_t.find(new_det);
+                                    if( it != Hc_t.end() ){
+                                        auto pair = Hc_t[new_det];
+                                        double cr = pair.first;
+                                        double ci = pair.second;
+                                        cr += HIJ_r;
+                                        ci += HIJ_i;
+                                        Hc_t[new_det] = std::make_pair(cr,ci);
+                                    } else {
+                                        Hc_t[new_det] = std::make_pair(HIJ_r,HIJ_i);
+                                    }
                                 }
                             }
                         }
@@ -1549,9 +1642,21 @@ void TDACI::get_PQ_space( DeterminantHashVec& P_space,  std::vector<double>& P_c
                                 if( std::fabs(int_ijab * Cmag_sq) >= thresh ){
                                     new_det = det;
                                     int_ijab *= new_det.double_excitation_aa(ii,jj,aa,bb);
-                                    auto& pair = Hc_t[new_det];
-                                    pair.first += int_ijab * Cp_r;
-                                    pair.second += int_ijab * Cp_i;
+
+                                    double HIJ_r = int_ijab * Cp_r;
+                                    double HIJ_i = int_ijab * Cp_i;
+
+                                    auto it = Hc_t.find(new_det);
+                                    if( it != Hc_t.end() ){
+                                        auto pair = Hc_t[new_det];
+                                        double cr = pair.first;
+                                        double ci = pair.second;
+                                        cr += HIJ_r;
+                                        ci += HIJ_i;
+                                        Hc_t[new_det] = std::make_pair(cr,ci);
+                                    } else {
+                                        Hc_t[new_det] = std::make_pair(HIJ_r,HIJ_i);
+                                    }
                                 }
                             }
                         }
@@ -1572,9 +1677,21 @@ void TDACI::get_PQ_space( DeterminantHashVec& P_space,  std::vector<double>& P_c
                                 if( std::fabs(int_ijab * Cmag_sq) >= thresh ){
                                     new_det = det;
                                     int_ijab *= new_det.double_excitation_bb(ii,jj,aa,bb);
-                                    auto& pair = Hc_t[new_det];
-                                    pair.first += int_ijab * Cp_r;
-                                    pair.second += int_ijab * Cp_i;
+
+                                    double HIJ_r = int_ijab * Cp_r;
+                                    double HIJ_i = int_ijab * Cp_i;
+
+                                    auto it = Hc_t.find(new_det);
+                                    if( it != Hc_t.end() ){
+                                        auto pair = Hc_t[new_det];
+                                        double cr = pair.first;
+                                        double ci = pair.second;
+                                        cr += HIJ_r;
+                                        ci += HIJ_i;
+                                        Hc_t[new_det] = std::make_pair(cr,ci);
+                                    } else {
+                                        Hc_t[new_det] = std::make_pair(HIJ_r,HIJ_i);
+                                    }
                                 }
                             }
                         }
@@ -1583,27 +1700,26 @@ void TDACI::get_PQ_space( DeterminantHashVec& P_space,  std::vector<double>& P_c
             }
         } // loop over reference
 
-        // Merge
-        #pragma omp critical
-        {
+  //      // Merge
+  //      #pragma omp critical
+  //      {
             for( auto& pair : Hc_t ){
                 const Determinant& det = pair.first;
                 if (F_space.has_det(det)){
                     size_t idx = F_space.get_idx(det); 
-                    F_approx_i[idx] -= pair.second.first;
-                    F_approx_r[idx] += pair.second.second;
+                    F_approx_i[idx] -= pair.second.first*dt;
+                    F_approx_r[idx] += pair.second.second*dt;
                 } else {
                     F_space.add(det);
-                    size_t idx = F_space.get_idx(det); 
+//                    size_t idx = F_space.get_idx(det); 
                     //PQ_approx_r[idx] += pair.second.first;
                     //PQ_approx_i[idx] += pair.second.second;
-                    F_approx_i.push_back(pair.second.first * -1.0);
-                    F_approx_r.push_back(pair.second.second);
-//                    outfile->Printf("\n %s", det.str(nact).c_str());
+                    F_approx_i.push_back(pair.second.first * -1.0 * dt);
+                    F_approx_r.push_back(pair.second.second * dt);
                 }
             }
-        }
-    } // close threads
+  //      }
+ //   } // close threads
 
     // Compute full correction vector
     size_t nF = F_space.size();
@@ -1613,19 +1729,23 @@ void TDACI::get_PQ_space( DeterminantHashVec& P_space,  std::vector<double>& P_c
 
     double norm = 0.0;
     for( size_t I = 0; I < nF; ++I ){
-        double& cr = F_approx_r[I];         
-        double& ci = F_approx_i[I];         
+        double cr = F_approx_r[I];         
+        double ci = F_approx_i[I];         
         
-        cr *= dt;
-        ci *= dt;
-
         const Determinant& det = F_dets[I];        
-
         if( P_space.has_det(det) ){
             size_t idx = P_space.get_idx(det);
             cr += P_coeffs_r[idx];
             ci += P_coeffs_i[idx];
+//            outfile->Printf("\n  %10.8f, %10.8f, %s", cr, ci, det.str(nact).c_str());
+//        }else {
+//            outfile->Printf("\n  %10.8f, %10.8f, %s", cr, ci, det.str(nact).c_str());
         }
+
+        
+        F_approx_r[I] = cr;
+        F_approx_i[I] = ci;
+
         norm += cr*cr + ci*ci; 
     } 
 
@@ -1636,41 +1756,65 @@ void TDACI::get_PQ_space( DeterminantHashVec& P_space,  std::vector<double>& P_c
         double ci = F_approx_i[I]*norm;         
         const Determinant& det = F_dets[I];        
         sorted_dets[I] = std::make_pair( cr*cr + ci*ci, det);
-//        outfile->Printf("\n  %12.10f   %s", cr*cr + ci*ci, det.str(nact).c_str());
+////        outfile->Printf("\n  %12.10f   %s", cr*cr + ci*ci, det.str(nact).c_str());
+//        F_approx_r[I] = cr;
+//        F_approx_i[I] = ci;
     }
 
-    // Merge P space
-    PQ_space.merge(P_space);
-
+//        if( options_.get_bool("TDACI_PRINT_WFN")){
+//                save_vector(F_approx_r, "lin_select_exact_r.txt");
+//                save_vector(F_approx_i, "lin_select_exact_i.txt");
+//
+//                std::vector<std::string> det_str(nF);
+//                const det_hashvec& F_dets = F_space.wfn_hash(); 
+//                for(int I = 0; I < nF; ++I ){ 
+//                    auto detI = F_dets[I];
+//                    det_str[I] = detI.str(nact).c_str();
+//                }
+//                save_vector(det_str, "lin_determinants_.txt");
+//        }
+//
     // Now, screen the determinants
     std::sort( sorted_dets.begin(), sorted_dets.end() ); 
     PQ_space.clear();
+    // Merge P space
+//    PQ_space.merge(P_space);
     double sum = 0.0;
     for( size_t I = 0; I < nF; ++I ){
 
         const auto& dpair = sorted_dets[I];
         const double cI = dpair.first;
 
-        size_t last_excluded = 0;
         if( sum + cI < eta ){
             sum += cI;            
-            last_excluded = I;
         }else{
+//            outfile->Printf("\n  Keep:");
             PQ_space.add(dpair.second);
         } 
+//        outfile->Printf("\n  %12.10f   %s", cI, dpair.second.str(nact).c_str());
     }
-    // This will be the initial state for propogation
-    PQ_coeffs_r.resize(PQ_space.size(), 0.0);
-    PQ_coeffs_i.resize(PQ_space.size(), 0.0);
+    // This will be the initial state for propagation
+
+    size_t npq = PQ_space.size();
+
+    PQ_coeffs_r.resize(npq, 0.0);
+    PQ_coeffs_i.resize(npq, 0.0);
     for( int I = 0; I < max_P; ++I ){
         const Determinant& det = P_dets[I];
-        size_t p_idx = P_space.get_idx(det);
-        size_t pq_idx = PQ_space.get_idx(det);
-        PQ_coeffs_r[pq_idx] = P_coeffs_r[p_idx];
-        PQ_coeffs_i[pq_idx] = P_coeffs_i[p_idx];
+        if( PQ_space.has_det(det) ){
+            size_t pq_idx = PQ_space.get_idx(det);
+            PQ_coeffs_r[pq_idx] = P_coeffs_r[I];
+            PQ_coeffs_i[pq_idx] = P_coeffs_i[I];
+        } else {
+            PQ_space.add(det);
+            
+            size_t pq_idx = PQ_space.get_idx(det);
+            PQ_coeffs_r[pq_idx] = P_coeffs_r[I];
+            PQ_coeffs_i[pq_idx] = P_coeffs_i[I];
+        }
     } 
-    
 }
+
 void TDACI::propagate_exact_select(std::vector<double>& PQ_coeffs_r,std::vector<double>& PQ_coeffs_i, 
                                                              DeterminantHashVec& PQ_space, double dt) {
 
@@ -1689,6 +1833,7 @@ void TDACI::propagate_exact_select(std::vector<double>& PQ_coeffs_r,std::vector<
         }
     }    
 
+    // Diagonalize the Hamiltonian
     SharedMatrix evecs = std::make_shared<Matrix>("evecs",npq,npq);
     SharedVector evals = std::make_shared<Vector>("evals",npq);
     H->diagonalize(evecs, evals);
@@ -1696,7 +1841,6 @@ void TDACI::propagate_exact_select(std::vector<double>& PQ_coeffs_r,std::vector<
     std::vector<double> int_r(npq, 0.0);
     std::vector<double> int_i(npq, 0.0);
 
-    //int1->gemv(true, 1.0, &(*evecs), &(*C0), 0.0);
     C_DGEMV('t', npq, npq, 1.0, &(evecs->pointer(0)[0][0]), npq, &(PQ_coeffs_r[0]), 1, 0.0, &(int_r[0]), 1);
     C_DGEMV('t', npq, npq, 1.0, &(evecs->pointer(0)[0][0]), npq, &(PQ_coeffs_i[0]), 1, 0.0, &(int_i[0]), 1);
 
@@ -1750,17 +1894,159 @@ void TDACI::update_P_space( DeterminantHashVec& P_space, std::vector<double>& P_
     }
 
     size_t np = P_space.size();
-    P_coeffs_r.resize(np);
-    P_coeffs_i.resize(np);
+    P_coeffs_r.resize(np,0.0);
+    P_coeffs_i.resize(np,0.0);
     const det_hashvec& P_dets = P_space.wfn_hash();
+
+    double norm = 0.0;
     for( int I = 0; I < np; ++I){
         const Determinant& det = P_dets[I];
         size_t idx = PQ_space.get_idx(det);
-        P_coeffs_r[I] = PQ_coeffs_r[idx]; 
-        P_coeffs_i[I] = PQ_coeffs_i[idx]; 
+        double val_r = PQ_coeffs_r[idx]; 
+        double val_i = PQ_coeffs_i[idx]; 
+        P_coeffs_r[I] = val_r; 
+        P_coeffs_i[I] = val_i;
+        norm += val_r*val_r + val_i*val_i;
+    }
+
+    norm = 1.0 /std::sqrt(norm);
+    for( size_t I = 0; I < np; ++I ){
+        double cr = P_coeffs_r[I];         
+        double ci = P_coeffs_i[I];         
+        cr *= norm; 
+        ci *= norm; 
+        P_coeffs_r[I] = cr;         
+        P_coeffs_i[I] = ci;         
     }
 }
 
+void TDACI::propagate_RK4_select(std::vector<double>& PQ_coeffs_r,std::vector<double>& PQ_coeffs_i, 
+                                                             DeterminantHashVec& PQ_space, double dt) {
+
+    Timer total;
+    size_t npq = PQ_space.size();
+
+    SharedMatrix H = std::make_shared<Matrix>("H", npq, npq);
+
+    // dumb implementation for now:
+    SharedVector ct_r = std::make_shared<Vector>("ctr", npq);
+    SharedVector ct_i = std::make_shared<Vector>("ctr", npq);
+
+    const det_hashvec& PQ_dets = PQ_space.wfn_hash(); 
+    for( int I = 0; I < npq; ++I ){
+        const Determinant& detI = PQ_dets[I]; 
+
+        ct_r->set(I, PQ_coeffs_r[I]);
+        ct_i->set(I, PQ_coeffs_i[I]);
+
+        for( int J = I; J < npq; ++J ){
+            const Determinant& detJ = PQ_dets[J]; 
+            double value = fci_ints_->slater_rules(detI,detJ);
+            H->set(I,J, value);
+            H->set(J,I, value);
+        }
+    }    
+
+
+    // k1
+    SharedVector k1r = std::make_shared<Vector>("k1r", npq);
+    SharedVector k1i = std::make_shared<Vector>("k1i", npq);
+
+    k1r->gemv(false, 1.0, &(*H), &(*ct_i), 0.0);
+    k1i->gemv(false, -1.0, &(*H), &(*ct_r), 0.0);
+    
+    // k2
+    SharedVector intr = std::make_shared<Vector>("intr", npq);
+    SharedVector inti = std::make_shared<Vector>("inti", npq);
+
+    intr->copy(ct_r->clone());
+    inti->copy(ct_i->clone());
+
+    k1r->scale(0.5*dt);
+    k1i->scale(0.5*dt);
+    intr->add(k1r);
+    inti->add(k1i);
+    k1r->scale(2.0/dt);
+    k1i->scale(2.0/dt);
+
+    SharedVector k2r = std::make_shared<Vector>("k2r", npq);
+    SharedVector k2i = std::make_shared<Vector>("k2i", npq);
+
+    k2r->gemv(false, 1.0, &(*H), &(*inti), 0.0);
+    k2i->gemv(false, -1.0, &(*H), &(*intr), 0.0);
+    
+    // k3
+    intr->copy(ct_r->clone());
+    inti->copy(ct_i->clone());
+
+    k2r->scale(0.5*dt);
+    k2i->scale(0.5*dt);
+    intr->add(k2r); 
+    inti->add(k2i);
+    k2r->scale(2.0 * 1.0/dt);
+    k2i->scale(2.0 * 1.0/dt);
+
+    SharedVector k3r = std::make_shared<Vector>("k3r", npq);
+    SharedVector k3i = std::make_shared<Vector>("k3i", npq);
+
+    k3r->gemv(false, 1.0, &(*H), &(*inti), 0.0);
+    k3i->gemv(false, -1.0, &(*H), &(*intr), 0.0);
+
+    // k4
+    intr->copy(ct_r->clone());
+    inti->copy(ct_i->clone());
+    
+    k3r->scale(dt);
+    k3i->scale(dt);
+    intr->add(k3r); 
+    inti->add(k3i);
+    k3r->scale(1.0/dt);
+    k3i->scale(1.0/dt);
+
+    SharedVector k4r = std::make_shared<Vector>("k4r", npq);
+    SharedVector k4i = std::make_shared<Vector>("k4i", npq);
+
+    k4r->gemv(false, 1.0, &(*H), &(*inti), 0.0);
+    k4i->gemv(false, -1.0, &(*H), &(*intr), 0.0);
+    
+    // Compile all intermediates
+
+    k1r->scale(dt/6.0);
+    k2r->scale(dt/3.0);
+    k3r->scale(dt/3.0);
+    k4r->scale(dt/6.0);
+    k1r->add(k2r);
+    k1r->add(k3r);
+    k1r->add(k4r);
+    ct_r->add(k1r);
+    
+    k1i->scale(dt/6.0);
+    k2i->scale(dt/3.0);
+    k3i->scale(dt/3.0);
+    k4i->scale(dt/6.0);
+    k1i->add(k2i);
+    k1i->add(k3i);
+    k1i->add(k4i);
+    ct_i->add(k1i);
+
+    double norm = 0.0;
+    for( int I = 0; I < npq; ++I ){
+        double re = ct_r->get(I);
+        double im = ct_i->get(I);
+        norm += (re*re) + (im*im);
+    }        
+    norm = std::sqrt(norm);
+    ct_r->scale(1.0/norm);
+    ct_i->scale(1.0/norm);
+    
+    for( int I = 0; I < npq; ++I ){
+        PQ_coeffs_r[I] = ct_r->get(I);
+        PQ_coeffs_i[I] = ct_i->get(I);
+    }
+
+
+    //outfile->Printf("\n  Time spent propogating (RK4): %1.6f", total.get());
+}
 
 
 }}
