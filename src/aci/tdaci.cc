@@ -1712,8 +1712,6 @@ void TDACI::get_PQ_space( DeterminantHashVec& P_space,  std::vector<double>& P_c
                 } else {
                     F_space.add(det);
 //                    size_t idx = F_space.get_idx(det); 
-                    //PQ_approx_r[idx] += pair.second.first;
-                    //PQ_approx_i[idx] += pair.second.second;
                     F_approx_i.push_back(pair.second.first * -1.0 * dt);
                     F_approx_r.push_back(pair.second.second * dt);
                 }
@@ -1796,6 +1794,9 @@ void TDACI::get_PQ_space( DeterminantHashVec& P_space,  std::vector<double>& P_c
     // This will be the initial state for propagation
 
     size_t npq = PQ_space.size();
+
+    PQ_coeffs_r.clear();
+    PQ_coeffs_i.clear();
 
     PQ_coeffs_r.resize(npq, 0.0);
     PQ_coeffs_i.resize(npq, 0.0);
@@ -1908,16 +1909,19 @@ void TDACI::update_P_space( DeterminantHashVec& P_space, std::vector<double>& P_
         P_coeffs_i[I] = val_i;
         norm += val_r*val_r + val_i*val_i;
     }
-
+//    outfile->Printf("\n  norm: %14.8f", norm);
     norm = 1.0 /std::sqrt(norm);
-    for( size_t I = 0; I < np; ++I ){
-        double cr = P_coeffs_r[I];         
-        double ci = P_coeffs_i[I];         
-        cr *= norm; 
-        ci *= norm; 
-        P_coeffs_r[I] = cr;         
-        P_coeffs_i[I] = ci;         
-    }
+    std::transform(P_coeffs_r.begin(), P_coeffs_r.end(), P_coeffs_r.begin(),
+               std::bind(std::multiplies<double>(), std::placeholders::_1, norm));
+
+    std::transform(P_coeffs_i.begin(), P_coeffs_i.end(), P_coeffs_i.begin(),
+               std::bind(std::multiplies<double>(), std::placeholders::_1, norm));
+  //  for( size_t I = 0; I < np; ++I ){
+  //      double& cr = P_coeffs_r[I];         
+  //      double& ci = P_coeffs_i[I];         
+  //      cr *= norm; 
+  //      ci *= norm; 
+  //  }
 }
 
 void TDACI::propagate_RK4_select(std::vector<double>& PQ_coeffs_r,std::vector<double>& PQ_coeffs_i, 
