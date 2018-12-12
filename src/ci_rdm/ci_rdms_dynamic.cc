@@ -29,9 +29,9 @@
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/liboptions/liboptions.h"
-#include "psi4/libpsi4util/libpsi4util.h"
 #include "psi4/libpsi4util/process.h"
 
+#include "helpers/timer.h"
 #include "ci_rdms.h"
 #include "../helpers.h"
 #include "../reference.h"
@@ -72,7 +72,7 @@ void CI_RDMS::compute_rdms_dynamic(std::vector<double>& oprdm_a,
     size_t num_bstr = sorted_bstr.size();
     const auto& sorted_b_dets = b_sorted_string_list_.sorted_dets();
     const auto& sorted_a_dets = a_sorted_string_list_.sorted_dets();
-Timer diag;
+local_timer diag;
     //*-  Diagonal Contributions  -*//
     for( size_t I = 0; I < dim_space_; ++I ){
         size_t Ia = b_sorted_string_list_.add(I);
@@ -167,7 +167,7 @@ Timer diag;
     }
 outfile->Printf("\n  Diag takes %1.6f", diag.get());
     
-    Timer aaa;
+    local_timer aaa;
     //-* All Alpha RDMs *-//
 
     // loop through all beta strings
@@ -347,7 +347,7 @@ outfile->Printf("\n  Diag takes %1.6f", diag.get());
 outfile->Printf("\n all alpha takes %1.6f", aaa.get());
 
     //- All beta RDMs -//
-    Timer bbb;
+    local_timer bbb;
     // loop through all alpha strings
     const std::vector<UI64Determinant::bit_t>& sorted_astr = a_sorted_string_list_.sorted_half_dets();
     size_t num_astr = sorted_astr.size();
@@ -525,7 +525,7 @@ void CI_RDMS::make_ab(SortedStringList_UI64 a_sorted_string_list_, const std::ve
                     const std::vector<UI64Determinant>& sorted_a_dets, 
                         std::vector<double>& tprdm_ab, std::vector<double>& tprdm_aab,std::vector<double>& tprdm_abb)
 {
-    Timer mix; 
+    local_timer mix; 
     double d2 = 0.0;
     double d4 = 0.0;
     for( auto& detIa : sorted_astr ){
@@ -538,7 +538,7 @@ void CI_RDMS::make_ab(SortedStringList_UI64 a_sorted_string_list_, const std::ve
             detIJa_common = detIa ^ detJa;
             int ndiff = ui64_bit_count(detIJa_common);
             if (ndiff == 2) {
-            Timer t2;
+            local_timer t2;
                 uint64_t Ia_d = detIa & detIJa_common;   
                 uint64_t p = lowest_one_idx(Ia_d);
                 uint64_t Ja_d = detJa & detIJa_common;   
@@ -614,7 +614,7 @@ void CI_RDMS::make_ab(SortedStringList_UI64 a_sorted_string_list_, const std::ve
                 }
                 d2 += t2.get();
             } else if( ndiff == 4) {
-                Timer t4; 
+                local_timer t4; 
                 // Get aa-aa part of aab 3rdm
                 uint64_t Ia_sub = detIa & detIJa_common;
                 uint64_t p = lowest_one_idx(Ia_sub);
