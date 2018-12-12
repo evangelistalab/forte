@@ -5,7 +5,8 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER,
+ * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -30,11 +31,11 @@
 #define _helpers_h_
 
 #include <algorithm>
-#include <map>
-#include <vector>
-#include <string>
 #include <chrono>
+#include <map>
 #include <numeric>
+#include <string>
+#include <vector>
 
 #include "ambit/blocked_tensor.h"
 #include "psi4/libmints/matrix.h"
@@ -235,34 +236,25 @@ std::pair<double, std::string> to_xb(size_t nele, size_t type_size);
 std::pair<std::vector<int>, std::vector<int>> split_up_tasks(size_t size_of_tasks, int nproc);
 
 template <typename T, typename Compare>
-std::vector<std::size_t> sort_permutation(
-    const std::vector<T>& vec,
-    Compare& compare)
-{
+std::vector<std::size_t> sort_permutation(const std::vector<T>& vec, Compare& compare) {
     std::vector<std::size_t> p(vec.size());
     std::iota(p.begin(), p.end(), 0);
     std::sort(p.begin(), p.end(),
-        [&](std::size_t i, std::size_t j){ return compare(vec[i], vec[j]); });
+              [&](std::size_t i, std::size_t j) { return compare(vec[i], vec[j]); });
     return p;
 }
 
 template <typename T>
-void apply_permutation_in_place(
-    std::vector<T>& vec,
-    const std::vector<std::size_t>& p)
-{
+void apply_permutation_in_place(std::vector<T>& vec, const std::vector<std::size_t>& p) {
     std::vector<bool> done(vec.size());
-    for (std::size_t i = 0; i < vec.size(); ++i)
-    {
-        if (done[i])
-        {
+    for (std::size_t i = 0; i < vec.size(); ++i) {
+        if (done[i]) {
             continue;
         }
         done[i] = true;
         std::size_t prev_j = i;
         std::size_t j = p[i];
-        while (i != j)
-        {
+        while (i != j) {
             std::swap(vec[prev_j], vec[j]);
             done[j] = true;
             prev_j = j;
@@ -272,7 +264,25 @@ void apply_permutation_in_place(
 }
 
 /**
-  * @brief A timer class
+ * @brief A timer class that returns the elapsed time
+ */
+class local_timer {
+  public:
+    local_timer() : start_(std::chrono::high_resolution_clock::now()) {}
+
+    /// return the elapsed time in seconds
+    double get() {
+        auto duration = std::chrono::high_resolution_clock::now() - start_;
+        return std::chrono::duration_cast<std::chrono::duration<double>>(duration).count();
+    }
+
+  private:
+    /// stores the time when this object is created
+    std::chrono::high_resolution_clock::time_point start_;
+};
+
+/**
+  * @brief A timer class that prints timing to a file (timer.dat)
   */
 class timer {
   public:
