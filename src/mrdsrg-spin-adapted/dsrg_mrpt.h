@@ -346,6 +346,6 @@ class DSRG_MRPT : public Wavefunction {
     /// Print the summary of 2- and 3-body density cumulant
     void print_cumulant_summary();
 };
-}
-}
+} // namespace forte
+} // namespace psi
 #endif // DSRG_MRPT_H

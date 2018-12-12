@@ -28,8 +28,8 @@
 
 #include <utility>
 
-#include "psi4/libpsi4util/libpsi4util.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
+#include "helpers/timer.h"
 
 #include "dsrg_mrpt.h"
 
@@ -37,7 +37,7 @@ namespace psi {
 namespace forte {
 
 double DSRG_MRPT::compute_energy_pt2() {
-    Timer DSRG_energy;
+    local_timer DSRG_energy;
     print_h2("Computing DSRG-MRPT2 Energy");
 
     // Compute effective integrals
@@ -92,7 +92,7 @@ double DSRG_MRPT::compute_energy_pt2() {
 }
 
 void DSRG_MRPT::renormalize_V_E2nd() {
-    Timer timer;
+    local_timer timer;
     std::string str = "Renormalizing two-electron integrals";
     outfile->Printf("\n    %-40s ...", str.c_str());
 
@@ -103,7 +103,7 @@ void DSRG_MRPT::renormalize_V_E2nd() {
 }
 
 void DSRG_MRPT::renormalize_F_E2nd() {
-    Timer timer;
+    local_timer timer;
     std::string str = "Renormalizing the Fock matrix";
     outfile->Printf("\n    %-40s ...", str.c_str());
 
@@ -173,9 +173,8 @@ void DSRG_MRPT::BT_scaled_by_Rplus1(BlockedTensor& BT) {
     if (BT.rank() == 4) {
         BT.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
             if (std::fabs(value) > 1.0e-15) {
-                value *= 1.0 +
-                         dsrg_source_->compute_renormalized(Fdiag_[i[0]] + Fdiag_[i[1]] -
-                                                            Fdiag_[i[2]] - Fdiag_[i[3]]);
+                value *= 1.0 + dsrg_source_->compute_renormalized(Fdiag_[i[0]] + Fdiag_[i[1]] -
+                                                                  Fdiag_[i[2]] - Fdiag_[i[3]]);
             } else {
                 value = 0.0; // ignore all noise
             }
@@ -222,5 +221,5 @@ void DSRG_MRPT::BT_scaled_by_RD(BlockedTensor& BT) {
         throw PSIEXCEPTION("Wrong rank when using function BT_scaled_by_RD!");
     }
 }
-}
-}
+} // namespace forte
+} // namespace psi

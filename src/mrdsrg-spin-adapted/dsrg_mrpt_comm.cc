@@ -26,16 +26,16 @@
  * @END LICENSE
  */
 
-#include "psi4/libpsi4util/libpsi4util.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
 
 #include "dsrg_mrpt.h"
+#include "helpers/timer.h"
 
 namespace psi {
 namespace forte {
 
 void DSRG_MRPT::H1_T1_C0(BlockedTensor& H1, BlockedTensor& T1, const double& alpha, double& C0) {
-    Timer timer;
+    local_timer timer;
 
     double E = 0.0;
     E += 2.0 * H1["ma"] * T1["ma"];
@@ -54,7 +54,7 @@ void DSRG_MRPT::H1_T1_C0(BlockedTensor& H1, BlockedTensor& T1, const double& alp
 }
 
 void DSRG_MRPT::H1_T2_C0(BlockedTensor& H1, BlockedTensor& T2, const double& alpha, double& C0) {
-    Timer timer;
+    local_timer timer;
 
     double E = 0.0;
     ambit::BlockedTensor temp = ambit::BlockedTensor::build(tensor_type_, "Temp120", {"aaaa"});
@@ -74,7 +74,7 @@ void DSRG_MRPT::H1_T2_C0(BlockedTensor& H1, BlockedTensor& T2, const double& alp
 }
 
 void DSRG_MRPT::H2_T1_C0(BlockedTensor& H2, BlockedTensor& T1, const double& alpha, double& C0) {
-    Timer timer;
+    local_timer timer;
 
     double E = 0.0;
     ambit::BlockedTensor temp = ambit::BlockedTensor::build(tensor_type_, "Temp120", {"aaaa"});
@@ -95,7 +95,7 @@ void DSRG_MRPT::H2_T1_C0(BlockedTensor& H2, BlockedTensor& T1, const double& alp
 
 void DSRG_MRPT::H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, double& C0,
                          const bool& stored) {
-    Timer timer;
+    local_timer timer;
 
     double E = 0.0;
 
@@ -114,7 +114,7 @@ void DSRG_MRPT::H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const double& alp
 
 void DSRG_MRPT::H2_T2_C0_L1(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, double& C0,
                             const bool& stored) {
-    Timer timer;
+    local_timer timer;
     double E = 0.0;
 
     if (!stored) {
@@ -377,7 +377,7 @@ double DSRG_MRPT::V_T2_C0_L1_ccav() {
 }
 
 void DSRG_MRPT::H2_T2_C0_L2(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, double& C0) {
-    Timer timer;
+    local_timer timer;
     double E = 0.0;
     ambit::BlockedTensor temp = ambit::BlockedTensor::build(tensor_type_, "temp_ccaa", {"aaaa"});
 
@@ -415,7 +415,7 @@ void DSRG_MRPT::H2_T2_C0_L2(BlockedTensor& H2, BlockedTensor& T2, const double& 
 }
 
 void DSRG_MRPT::H2_T2_C0_L3(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, double& C0) {
-    Timer timer;
+    local_timer timer;
     double E = 0.0;
 
     E += H2["xyew"] * T2["uvez"] * L3_["xyzuwv"];
@@ -425,5 +425,5 @@ void DSRG_MRPT::H2_T2_C0_L3(BlockedTensor& H2, BlockedTensor& T2, const double& 
     C0 += E;
     dsrg_time_.add("220", timer.get());
 }
-}
-}
+} // namespace forte
+} // namespace psi
