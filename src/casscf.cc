@@ -30,7 +30,6 @@
 #include "integrals/integrals.h"
 #include "reference.h"
 
-#include "psi4/libpsi4util/libpsi4util.h"
 #include "psi4/libfock/jk.h"
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/wavefunction.h"
@@ -38,7 +37,7 @@
 #include "psi4/psifiles.h"
 
 #include "helpers/printing.h"
-
+#include "helpers/timer.h"
 #include "aci/aci.h"
 #include "fci/fci_solver.h"
 
@@ -117,9 +116,9 @@ void CASSCF::compute_casscf() {
     outfile->Printf("\n iter    ||g||           Delta_E            E_CASSCF       CONV_TYPE");
 
     for (int iter = 0; iter < maxiter; iter++) {
-        Timer casscf_total_iter;
+        local_timer casscf_total_iter;
 
-        Timer transform_integrals_timer;
+        local_timer transform_integrals_timer;
         tei_paaa_ = transform_integrals();
         if (print_ > 0) {
             outfile->Printf("\n\n Transform Integrals takes %8.8f s.",
@@ -131,9 +130,10 @@ void CASSCF::compute_casscf() {
         /// If CASSCF_DEBUG_PRINTING is on, will compare CAS-CI with SPIN-FREE RDM
         E_casscf_old = E_casscf_;
         if (print_ > 0) {
-            outfile->Printf("\n\n  Performing a CAS with %s", options_.get_str("CASSCF_CI_SOLVER").c_str());
+            outfile->Printf("\n\n  Performing a CAS with %s",
+                            options_.get_str("CASSCF_CI_SOLVER").c_str());
         }
-        Timer cas_timer;
+        local_timer cas_timer;
         /// Perform a DMRG-CI, ACI, FCI inside an active space
         /// If casscf_freq is on, do the CI step every casscf_iteration
         /// Ie, every 5 iterations, run a CAS_CI.
@@ -217,8 +217,8 @@ void CASSCF::compute_casscf() {
         if (iter >= diis_start && do_diis == true && g_norm < diis_gradient_norm) {
             diis_start_label = "DIIS";
         }
-        outfile->Printf("\n %4d   %10.12f   %10.12f   %10.12f  %10.6f s  %4s ~", iter, g_norm, Ediff,
-                        E_casscf_, casscf_total_iter.get(), diis_start_label.c_str());
+        outfile->Printf("\n %4d   %10.12f   %10.12f   %10.12f  %10.6f s  %4s ~", iter, g_norm,
+                        Ediff, E_casscf_, casscf_total_iter.get(), diis_start_label.c_str());
     }
     // if(casscf_debug_print_)
     //{
@@ -245,20 +245,19 @@ void CASSCF::compute_casscf() {
     Process::environment.globals["CURRENT ENERGY"] = E_casscf_;
     Process::environment.globals["CASSCF_ENERGY"] = E_casscf_;
 
-//    reference_wavefunction_->Ca()->print();
-    Timer retrans_ints;
-//    ints_->retransform_integrals();
+    //    reference_wavefunction_->Ca()->print();
+    local_timer retrans_ints;
+    //    ints_->retransform_integrals();
     if (print_ > 0) {
         outfile->Printf("\n Overall retranformation of integrals takes %6.4f s.\n",
                         retrans_ints.get());
     }
 
-
-   // if (options_.get_bool("SEMI_CANONICAL")) {
-   //     ints_->retransform_integrals();
-   //     SemiCanonical semi(reference_wavefunction_, ints_, mo_space_info_);
-   //     semi.semicanonicalize(cas_ref_, 0);
-   // }
+    // if (options_.get_bool("SEMI_CANONICAL")) {
+    //     ints_->retransform_integrals();
+    //     SemiCanonical semi(reference_wavefunction_, ints_, mo_space_info_);
+    //     semi.semicanonicalize(cas_ref_, 0);
+    // }
 }
 void CASSCF::startup() {
     print_method_banner({"Complete Active Space Self Consistent Field", "Kevin Hannon"});
@@ -321,7 +320,7 @@ void CASSCF::startup() {
     Hcore_->add(T);
     Hcore_->add(V);
 
-    Timer JK_initialize;
+    local_timer JK_initialize;
     if (options_.get_str("SCF_TYPE") == "GTFOCK") {
 #ifdef HAVE_JK_FACTORY
         Process::environment.set_legacy_molecule(this->molecule());
@@ -331,8 +330,8 @@ void CASSCF::startup() {
 #endif
     } else {
         if (options_.get_str("SCF_TYPE") == "DF") {
-         //   JK_ = JK::build_JK(basisset(), get_basisset("DF_BASIS_SCF"), options_);
-            JK_ = std::make_shared<DiskDFJK>(basisset(), get_basisset("DF_BASIS_SCF")); 
+            //   JK_ = JK::build_JK(basisset(), get_basisset("DF_BASIS_SCF"), options_);
+            JK_ = std::make_shared<DiskDFJK>(basisset(), get_basisset("DF_BASIS_SCF"));
         } else {
             JK_ = JK::build_JK(basisset(), BasisSet::zero_ao_basis_set(), options_);
         }
@@ -365,7 +364,7 @@ void CASSCF::cas_ci() {
     } else if (options_.get_str("CASSCF_CI_SOLVER") == "CAS") {
         set_up_fcimo();
     } else if (options_.get_str("CASSCF_CI_SOLVER") == "ACI") {
-       // ints_->retransform_integrals();
+        // ints_->retransform_integrals();
         std::shared_ptr<FCIIntegrals> fci_ints = get_ci_integrals();
         AdaptiveCI aci(reference_wavefunction_, options_, ints_, mo_space_info_);
         aci.set_fci_ints(fci_ints);
@@ -382,7 +381,8 @@ void CASSCF::cas_ci() {
         std::pair<ambit::Tensor, std::vector<double>> integral_pair = CI_Integrals();
         dmrg.set_up_integrals(integral_pair.first, integral_pair.second);
         dmrg.set_scalar(scalar_energy_ + ints_->frozen_core_energy() +
-                        Process::environment.molecule()->nuclear_repulsion_energy(reference_wavefunction_->get_dipole_field_strength()));
+                        Process::environment.molecule()->nuclear_repulsion_energy(
+                            reference_wavefunction_->get_dipole_field_strength()));
         dmrg.compute_energy();
 
         cas_ref_ = dmrg.reference();
@@ -451,10 +451,10 @@ void CASSCF::cas_ci_final() {
     } else if (options_.get_str("CASSCF_CI_SOLVER") == "CAS") {
         set_up_fcimo();
     } else if (options_.get_str("CASSCF_CI_SOLVER") == "ACI") {
-       // ints_->retransform_integrals();
-     //   std::shared_ptr<FCIIntegrals> fci_ints = get_ci_integrals();
+        // ints_->retransform_integrals();
+        //   std::shared_ptr<FCIIntegrals> fci_ints = get_ci_integrals();
         AdaptiveCI aci(reference_wavefunction_, options_, ints_, mo_space_info_);
-     //   aci.set_fci_ints(fci_ints);
+        //   aci.set_fci_ints(fci_ints);
         aci.set_max_rdm(3);
         aci.set_quiet(quiet);
         aci.compute_energy();
@@ -468,7 +468,8 @@ void CASSCF::cas_ci_final() {
         std::pair<ambit::Tensor, std::vector<double>> integral_pair = CI_Integrals();
         dmrg.set_up_integrals(integral_pair.first, integral_pair.second);
         dmrg.set_scalar(scalar_energy_ + ints_->frozen_core_energy() +
-                        Process::environment.molecule()->nuclear_repulsion_energy(reference_wavefunction_->get_dipole_field_strength()));
+                        Process::environment.molecule()->nuclear_repulsion_energy(
+                            reference_wavefunction_->get_dipole_field_strength()));
         dmrg.compute_energy();
 
         cas_ref_ = dmrg.reference();
@@ -482,7 +483,7 @@ void CASSCF::cas_ci_final() {
 double CASSCF::cas_check(Reference cas_ref) {
     ambit::Tensor gamma1 = ambit::Tensor::build(ambit::CoreTensor, "Gamma1", {na_, na_});
     ambit::Tensor gamma2 = ambit::Tensor::build(ambit::CoreTensor, "Gamma2", {na_, na_, na_, na_});
-   // ints_->retransform_integrals();
+    // ints_->retransform_integrals();
     std::shared_ptr<FCIIntegrals> fci_ints =
         std::make_shared<FCIIntegrals>(ints_, mo_space_info_->get_corr_abs_mo("ACTIVE"),
                                        mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
@@ -540,7 +541,8 @@ double CASSCF::cas_check(Reference cas_ref) {
     Frozen = ints_->frozen_core_energy();
     E_casscf += fci_ints->scalar_energy();
     fci_ints_scalar = fci_ints->scalar_energy();
-    E_casscf += Process::environment.molecule()->nuclear_repulsion_energy(reference_wavefunction_->get_dipole_field_strength());
+    E_casscf += Process::environment.molecule()->nuclear_repulsion_energy(
+        reference_wavefunction_->get_dipole_field_strength());
     outfile->Printf("\n\n OneBody: %8.8f TwoBody: %8.8f Frozen: %8.8f "
                     "fci_ints_scalar: %8.8f",
                     OneBody, TwoBody, Frozen, fci_ints_scalar);
@@ -611,7 +613,7 @@ ambit::Tensor CASSCF::transform_integrals() {
 
     // Transform from the SO to the AO basis for the C matrix.
     // just transfroms the C_{mu_ao i} -> C_{mu_so i}
-    Timer CSO2AO;
+    local_timer CSO2AO;
     for (size_t h = 0, index = 0; h < nirrep_; ++h) {
         for (int i = 0; i < nmopi[h]; ++i) {
             size_t nao = nso;
@@ -642,7 +644,7 @@ ambit::Tensor CASSCF::transform_integrals() {
     ///         = C_{Mp}^{T} D_{MN}^{xy} C_{Nu}
 
     std::vector<std::pair<std::shared_ptr<Matrix>, std::vector<int>>> D_vec;
-    Timer c_dger;
+    local_timer c_dger;
     for (size_t i = 0; i < na_; i++) {
         SharedVector C_i = CAct->get_column(0, i);
         for (size_t j = i; j < na_; j++) {
@@ -673,7 +675,7 @@ ambit::Tensor CASSCF::transform_integrals() {
         Cl.push_back(D_vec[d].first);
         Cr.push_back(Identity);
     }
-    Timer jk_build;
+    local_timer jk_build;
     JK_->compute();
     if (print_ > 1) {
         outfile->Printf("\n JK builder takes %8.6f s", jk_build.get());
@@ -1106,7 +1108,8 @@ void CASSCF::set_up_fcimo() {
 }
 void CASSCF::write_orbitals_molden() {
     SharedVector occ_vector(new Vector(nirrep_, nmopi_));
-    view_modified_orbitals(reference_wavefunction_, reference_wavefunction_->Ca(), this->epsilon_a(), occ_vector);
+    view_modified_orbitals(reference_wavefunction_, reference_wavefunction_->Ca(),
+                           this->epsilon_a(), occ_vector);
 }
 // void CASSCF::overlap_coefficients() {
 //    outfile->Printf("\n iter  Overlap_{i-1} Overlap_{i}");
@@ -1139,9 +1142,7 @@ std::pair<ambit::Tensor, std::vector<double>> CASSCF::CI_Integrals() {
     return pair_return;
 }
 
-Reference CASSCF::casscf_reference() {
-    return cas_ref_;    
-}
+Reference CASSCF::casscf_reference() { return cas_ref_; }
 
-}
-}
+} // namespace forte
+} // namespace psi
