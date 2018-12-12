@@ -30,11 +30,11 @@
 #include <map>
 #include <vector>
 
-#include "psi4/libpsi4util/libpsi4util.h"
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libmints/molecule.h"
 
 #include "../helpers/printing.h"
+#include "../helpers/timer.h"
 #include "mrdsrg_so.h"
 
 namespace psi {
@@ -387,7 +387,7 @@ void MRDSRG_SO::print_summary() {
 }
 
 void MRDSRG_SO::guess_t2() {
-    Timer timer;
+    local_timer timer;
     std::string str = "Computing T2 amplitudes     ...";
     outfile->Printf("\n    %-35s", str.c_str());
 
@@ -412,7 +412,7 @@ void MRDSRG_SO::guess_t2() {
 }
 
 void MRDSRG_SO::guess_t1() {
-    Timer timer;
+    local_timer timer;
     std::string str = "Computing T1 amplitudes     ...";
     outfile->Printf("\n    %-35s", str.c_str());
 
@@ -819,7 +819,7 @@ void MRDSRG_SO::compute_qhbar() {
 }
 
 void MRDSRG_SO::H1_T1_C0(BlockedTensor& H1, BlockedTensor& T1, const double& alpha, double& C0) {
-    //    Timer timer;
+    //    local_timer timer;
     //    std::string str = "Computing [Hbar1, T1] -> C0 ...";
     //    outfile->Printf("\n    %-35s", str.c_str());
 
@@ -835,7 +835,7 @@ void MRDSRG_SO::H1_T1_C0(BlockedTensor& H1, BlockedTensor& T1, const double& alp
 }
 
 void MRDSRG_SO::H2_T1_C0(BlockedTensor& H2, BlockedTensor& T1, const double& alpha, double& C0) {
-    //    Timer timer;
+    //    local_timer timer;
     //    std::string str = "Computing [Hbar2, T1] -> C0 ...";
     //    outfile->Printf("\n    %-35s", str.c_str());
 
@@ -852,7 +852,7 @@ void MRDSRG_SO::H2_T1_C0(BlockedTensor& H2, BlockedTensor& T1, const double& alp
 }
 
 void MRDSRG_SO::H1_T2_C0(BlockedTensor& H1, BlockedTensor& T2, const double& alpha, double& C0) {
-    //    Timer timer;
+    //    local_timer timer;
     //    std::string str = "Computing [Hbar1, T2] -> C0 ...";
     //    outfile->Printf("\n    %-35s", str.c_str());
 
@@ -869,7 +869,7 @@ void MRDSRG_SO::H1_T2_C0(BlockedTensor& H1, BlockedTensor& T2, const double& alp
 }
 
 void MRDSRG_SO::H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, double& C0) {
-    //    Timer timer;
+    //    local_timer timer;
     //    std::string str = "Computing [Hbar2, T2] -> C0 ...";
     //    outfile->Printf("\n    %-35s", str.c_str());
 
@@ -929,7 +929,7 @@ void MRDSRG_SO::H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const double& alp
 
 void MRDSRG_SO::H1_T1_C1(BlockedTensor& H1, BlockedTensor& T1, const double& alpha,
                          BlockedTensor& C1) {
-    //    Timer timer;
+    //    local_timer timer;
     //    std::string str = "Computing [Hbar1, T1] -> C1 ...";
     //    outfile->Printf("\n    %-35s", str.c_str());
 
@@ -941,7 +941,7 @@ void MRDSRG_SO::H1_T1_C1(BlockedTensor& H1, BlockedTensor& T1, const double& alp
 
 void MRDSRG_SO::H2_T1_C1(BlockedTensor& H2, BlockedTensor& T1, const double& alpha,
                          BlockedTensor& C1) {
-    //    Timer timer;
+    //    local_timer timer;
     //    std::string str = "Computing [Hbar2, T1] -> C1 ...";
     //    outfile->Printf("\n    %-35s", str.c_str());
 
@@ -953,7 +953,7 @@ void MRDSRG_SO::H2_T1_C1(BlockedTensor& H2, BlockedTensor& T1, const double& alp
 
 void MRDSRG_SO::H1_T2_C1(BlockedTensor& H1, BlockedTensor& T2, const double& alpha,
                          BlockedTensor& C1) {
-    //    Timer timer;
+    //    local_timer timer;
     //    std::string str = "Computing [Hbar1, T2] -> C1 ...";
     //    outfile->Printf("\n    %-35s", str.c_str());
 
@@ -965,7 +965,7 @@ void MRDSRG_SO::H1_T2_C1(BlockedTensor& H1, BlockedTensor& T2, const double& alp
 
 void MRDSRG_SO::H2_T2_C1(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
                          BlockedTensor& C1) {
-    //    Timer timer;
+    //    local_timer timer;
     //    std::string str = "Computing [Hbar2, T2] -> C1 ...";
     //    outfile->Printf("\n    %-35s", str.c_str());
 
@@ -1030,7 +1030,7 @@ void MRDSRG_SO::H2_T2_C1(BlockedTensor& H2, BlockedTensor& T2, const double& alp
 
 void MRDSRG_SO::H1_T2_C2(BlockedTensor& H1, BlockedTensor& T2, const double& alpha,
                          BlockedTensor& C2) {
-    //    Timer timer;
+    //    local_timer timer;
     //    std::string str = "Computing [Hbar1, T2] -> C2 ...";
     //    outfile->Printf("\n    %-35s", str.c_str());
 
@@ -1044,7 +1044,7 @@ void MRDSRG_SO::H1_T2_C2(BlockedTensor& H1, BlockedTensor& T2, const double& alp
 
 void MRDSRG_SO::H2_T1_C2(BlockedTensor& H2, BlockedTensor& T1, const double& alpha,
                          BlockedTensor& C2) {
-    //    Timer timer;
+    //    local_timer timer;
     //    std::string str = "Computing [Hbar2, T1] -> C2 ...";
     //    outfile->Printf("\n    %-35s", str.c_str());
 
@@ -1058,7 +1058,7 @@ void MRDSRG_SO::H2_T1_C2(BlockedTensor& H2, BlockedTensor& T1, const double& alp
 
 void MRDSRG_SO::H2_T2_C2(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
                          BlockedTensor& C2) {
-    //    Timer timer;
+    //    local_timer timer;
     //    std::string str = "Computing [Hbar2, T2] -> C2 ...";
     //    outfile->Printf("\n    %-35s", str.c_str());
 
