@@ -17,7 +17,7 @@ bool pair_compd(const std::pair<Determinant, double> E1, const std::pair<Determi
 
 void AdaptiveCI::get_excited_determinants_sr(SharedMatrix evecs, DeterminantHashVec& P_space,
                                              det_hash<double>& V_hash) {
-    Timer build;
+    local_timer build;
     size_t max_P = P_space.size();
     const det_hashvec& P_dets = P_space.wfn_hash();
     int nroot = 1;
@@ -152,7 +152,7 @@ void AdaptiveCI::get_excited_determinants_sr(SharedMatrix evecs, DeterminantHash
         }
         if (tid == 0)
             outfile->Printf("\n  Time spent forming F space: %20.6f", build.get());
-        Timer merge_t;
+        local_timer merge_t;
 #pragma omp critical
         {
             for (auto& pair : V_hash_t) {
@@ -892,7 +892,7 @@ AdaptiveCI::get_excited_determinants_batch_old(SharedMatrix evecs, SharedVector 
         // Loop over bins
         for (int bin = start_idx; bin < end_idx; ++bin) {
 
-            Timer sp;
+            local_timer sp;
             // 1. Build the full bin-subset
             det_hash<double> A_b = get_bin_F_space_old(bin, nbin, evecs, P_space);
             outfile->Printf("\n  F subspace (bin %d) takes %1.6f s", bin, sp.get());
@@ -1164,13 +1164,13 @@ AdaptiveCI::get_excited_determinants_batch_vecsort(SharedMatrix evecs, SharedVec
     outfile->Printf("\n -----------------------------------------");
     for (int bin = 0; bin < nbin; ++bin) {
         outfile->Printf("\n                Bin %d", bin);
-        Timer sp;
+        local_timer sp;
         // 1. Build the full bin-subset // all threading in here
         auto A_b_t = get_bin_F_space_vecsort(bin, nbin, evecs, P_space);
         outfile->Printf("\n    Build F                %10.6f ", sp.get());
 
         // 2. Put the dets/vals in a sortable list (F_tmp)
-        Timer bint;
+        local_timer bint;
 #pragma omp parallel
         {
             int ntd = omp_get_num_threads();
@@ -1192,7 +1192,7 @@ AdaptiveCI::get_excited_determinants_batch_vecsort(SharedMatrix evecs, SharedVec
         outfile->Printf("\n    Build criteria vector  %10.6f", bint.get());
 
         // 3. Sort the list
-      //  Timer sortt;
+      //  local_timer sortt;
       //  #pragma omp parallel
       //  {
       //      int tid = omp_get_thread_num();
@@ -1206,7 +1206,7 @@ AdaptiveCI::get_excited_determinants_batch_vecsort(SharedMatrix evecs, SharedVec
 
         // 4. Screen subspaces
         // Can it be done without recombining/resorting?
-        Timer screener;
+        local_timer screener;
         // single-thread algorithm
         double b_sigma = sigma_ * (aci_scale / nbin);
         double excluded = 0.0;
@@ -1251,7 +1251,7 @@ AdaptiveCI::get_excited_determinants_batch_vecsort(SharedMatrix evecs, SharedVec
         total_excluded += excluded;
 
 /*
-        Timer sc;
+        local_timer sc;
 
         int num_threads = A_b_t.second.size();
         std::vector<std::pair<std::pair<Determinant,double>,int>> criteria(num_threads);
@@ -1318,7 +1318,7 @@ AdaptiveCI::get_excited_determinants_batch_vecsort(SharedMatrix evecs, SharedVec
         }
         total_excluded += excluded;
         // Now add the remainder to the model space
-        Timer fill;
+        local_timer fill;
         for( int& i : good_threads ){
             auto& A_b = A_b_t.first[i];
             size_t start = indices[i] ;
@@ -1374,7 +1374,7 @@ AdaptiveCI::get_excited_determinants_batch(SharedMatrix evecs, SharedVector eval
     outfile->Printf("\n -----------------------------------------");
     for (int bin = 0; bin < nbin; ++bin) {
         outfile->Printf("\n                Bin %d", bin);
-        Timer sp;
+        local_timer sp;
 
         // 0. Get energy estimate from prescreening.
 //        total_excluded += prescreen_F(bin,nbin,evals->get(0), evecs,P_space);
@@ -1384,7 +1384,7 @@ AdaptiveCI::get_excited_determinants_batch(SharedMatrix evecs, SharedVector eval
         outfile->Printf("\n    Build F                %10.6f ", sp.get());
 
         // 2. Put the dets/vals in a sortable list (F_tmp)
-        Timer bint;
+        local_timer bint;
 
         // get sizes
         size_t subspace_size = A_b.size();
@@ -1414,12 +1414,12 @@ AdaptiveCI::get_excited_determinants_batch(SharedMatrix evecs, SharedVector eval
         outfile->Printf("\n    Build criteria vector  %10.6f", bint.get());
 
         // 3. Sort the list
-        Timer sortt;
+        local_timer sortt;
         std::sort(F_tmp.begin(), F_tmp.end(), pair_comp);
         outfile->Printf("\n    Sort vector            %10.6f", sortt.get());
 
         // 4. Screen subspaces
-        Timer screener;
+        local_timer screener;
         double b_sigma = sigma_ * (aci_scale / nbin);
         double excluded = 0.0;
         for (size_t I = 0, max_I = F_tmp.size(); I < max_I; ++I) {
@@ -1446,7 +1446,7 @@ AdaptiveCI::get_excited_determinants_batch(SharedMatrix evecs, SharedVector eval
 double AdaptiveCI::prescreen_F(int bin, int nbin, double E0, SharedMatrix evecs,DeterminantHashVec& P_space) {
 
     det_hash<double> ex_f_space;
-    Timer build;
+    local_timer build;
 
     const size_t n_dets = P_space.size();
     const det_hashvec& dets = P_space.wfn_hash();
@@ -1671,7 +1671,7 @@ double AdaptiveCI::prescreen_F(int bin, int nbin, double E0, SharedMatrix evecs,
         if (thread_id == 0)
             outfile->Printf("\n  Build: %1.6f", build.get());
 
-        Timer merge;
+        local_timer merge;
 #pragma omp critical
         {
             for (auto& pair : A_b_t[thread_id]) {
@@ -1707,7 +1707,7 @@ det_hash<double> AdaptiveCI::get_bin_F_space(int bin, int nbin,double E0, Shared
 
     det_hash<double> bin_f_space;
     //det_hash<double> bin_E_space;
-    Timer build;
+    local_timer build;
 
     const size_t n_dets = P_space.size();
     const det_hashvec& dets = P_space.wfn_hash();
@@ -1947,7 +1947,7 @@ det_hash<double> AdaptiveCI::get_bin_F_space(int bin, int nbin,double E0, Shared
         if (thread_id == 0)
             outfile->Printf("\n  Build: %1.6f", build.get());
 
-        Timer merge;
+        local_timer merge;
 #pragma omp critical
         {
             for (auto& pair : A_b_t[thread_id]) {
@@ -1989,7 +1989,7 @@ std::pair<std::vector<std::vector<std::pair<Determinant, double>>>, std::vector<
 AdaptiveCI::get_bin_F_space_vecsort(int bin, int nbin, SharedMatrix evecs, DeterminantHashVec& P_space) {
 
     det_hash<double> bin_f_space;
-    Timer build;
+    local_timer build;
     const size_t n_dets = P_space.size();
     const det_hashvec& dets = P_space.wfn_hash();
     int nmo = fci_ints_->nmo();
@@ -2224,7 +2224,7 @@ AdaptiveCI::get_bin_F_space_vecsort(int bin, int nbin, SharedMatrix evecs, Deter
   //      }
 
         // Sort the determinant contributions
-        Timer F_sort;
+        local_timer F_sort;
         //        std::sort(vec_A_b.begin(), vec_A_b.begin() + num_new_dets);
 
         std::sort(
@@ -2240,7 +2240,7 @@ AdaptiveCI::get_bin_F_space_vecsort(int bin, int nbin, SharedMatrix evecs, Deter
         //          }
 
         // Combine identical contributions by looping over all elements
-        Timer Combine;
+        local_timer Combine;
         Determinant d = vec_A_b[0].first;
         double sum = 0.0;
         size_t pos = 0;
@@ -2269,7 +2269,7 @@ AdaptiveCI::get_bin_F_space_vecsort(int bin, int nbin, SharedMatrix evecs, Deter
         if (thread_id == 0)
             outfile->Printf("\n  Build: %1.6f", build.get());
 
-        Timer merge;
+        local_timer merge;
 
         std::vector<Determinant> sorted_dets(dets.size());
         for (const Determinant& det : dets) {
@@ -2317,7 +2317,7 @@ AdaptiveCI::get_bin_F_space_vecsort(int bin, int nbin, SharedMatrix evecs, Deter
 
     // Account for duplicates between threads by adding
     // to thread 0, and zeroing other threads
-    Timer merget;
+    local_timer merget;
     int ntd = vec_A_b_t.size();
     if( ntd > 1 ){
         //auto& vec_ref = vec_A_b_t[0];
