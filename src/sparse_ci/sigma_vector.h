@@ -29,11 +29,12 @@
 #ifndef _sigma_vector_h_
 #define _sigma_vector_h_
 
-#include "../helpers.h"
+#include "helpers.h"
+#include "helpers/timer.h"
 
-#include "../determinant_hashvector.h"
-#include "../fci/fci_integrals.h"
-#include "../operator.h"
+#include "determinant_hashvector.h"
+#include "fci/fci_integrals.h"
+#include "operator.h"
 #include "determinant.h"
 
 #ifdef HAVE_MPI

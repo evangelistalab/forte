@@ -37,8 +37,8 @@
 #include "psi4/libpsio/psio.hpp"
 #include "psi4/libqt/qt.h"
 
-#include "../forte-def.h"
-#include "../iterative_solvers.h"
+#include "forte-def.h"
+#include "iterative_solvers.h"
 #include "sigma_vector_dynamic.h"
 
 #ifdef _OPENMP
