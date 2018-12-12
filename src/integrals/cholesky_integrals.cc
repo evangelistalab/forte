@@ -29,7 +29,6 @@
 #include <cmath>
 #include <cstring>
 
-#include "psi4/libpsi4util/libpsi4util.h"
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libmints/basisset.h"
 #include "psi4/libmints/wavefunction.h"
@@ -41,8 +40,9 @@
 #include "psi4/libqt/qt.h"
 #include "psi4/psifiles.h"
 
-#include "../helpers/printing.h"
-#include "../helpers/memory.h"
+#include "helpers/timer.h"
+#include "helpers/printing.h"
+#include "helpers/memory.h"
 #include "cholesky_integrals.h"
 
 using namespace ambit;
@@ -57,7 +57,7 @@ CholeskyIntegrals::CholeskyIntegrals(psi::Options& options, SharedWavefunction r
 
     integral_type_ = Cholesky;
     print_info();
-    Timer int_timer;
+    local_timer int_timer;
     gather_integrals();
     freeze_core_orbitals();
     print_timing("computing Cholesky integrals", int_timer.get());
@@ -157,7 +157,7 @@ void CholeskyIntegrals::gather_integrals() {
     double tol_cd = options_.get_double("CHOLESKY_TOLERANCE");
 
     // This is creates the cholesky decomposed AO integrals
-    Timer timer;
+    local_timer timer;
     std::shared_ptr<CholeskyERI> Ch(new CholeskyERI(std::shared_ptr<TwoBodyAOInt>(integral->eri()),
                                                     options_.get_double("INTS_TOLERANCE"), tol_cd,
                                                     Process::environment.get_memory()));
@@ -235,8 +235,8 @@ void CholeskyIntegrals::gather_integrals() {
     int_mem_ = (nthree_ * nbf * nbf * sizeof(double) / 1073741824.0);
 
     if (print_) {
-        outfile->Printf("\n  Number of Cholesky vectors required for %.3e tolerance: %d\n",
-                        tol_cd, nthree_);
+        outfile->Printf("\n  Number of Cholesky vectors required for %.3e tolerance: %d\n", tol_cd,
+                        nthree_);
     }
     transform_integrals();
 }

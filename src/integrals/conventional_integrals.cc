@@ -30,14 +30,14 @@
 
 #include "psi4/psi4-dec.h"
 #include "psi4/psifiles.h"
-#include "psi4/libpsi4util/libpsi4util.h"
 #include "psi4/libdpd/dpd.h"
 #include "psi4/libmints/mintshelper.h"
 #include "psi4/libpsio/psio.hpp"
 #include "psi4/libtrans/integraltransform.h"
 
-#include "../blockedtensorfactory.h"
-#include "../helpers.h"
+#include "blockedtensorfactory.h"
+#include "helpers.h"
+#include "helpers/timer.h"
 
 #include "conventional_integrals.h"
 
@@ -60,7 +60,7 @@ ConventionalIntegrals::ConventionalIntegrals(psi::Options& options, SharedWavefu
     integral_type_ = Conventional;
     print_info();
     outfile->Printf("\n  Overall Conventional Integrals timings\n\n");
-    Timer ConvTime;
+    local_timer ConvTime;
 
     // Allocate the memory required to store the two-electron integrals
     aphys_tei_aa.assign(num_aptei_, 0.0);
@@ -103,7 +103,7 @@ void ConventionalIntegrals::transform_integrals() {
 
     // Keep the SO integrals on disk in case we want to retransform them
     integral_transform_->set_keep_iwl_so_ints(true);
-    Timer int_timer;
+    local_timer int_timer;
     integral_transform_->transform_tei(MOSpace::all, MOSpace::all, MOSpace::all, MOSpace::all);
 
     dpd_set_default(integral_transform_->get_dpd_id());

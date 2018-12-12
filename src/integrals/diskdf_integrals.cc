@@ -29,7 +29,6 @@
 #include <cmath>
 #include <numeric>
 
-#include "psi4/libpsi4util/libpsi4util.h"
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libmints/basisset.h"
 #include "psi4/libmints/matrix.h"
@@ -44,8 +43,9 @@
 #include <macdecls.h>
 #endif
 
-#include "../blockedtensorfactory.h"
-#include "../helpers/printing.h"
+#include "blockedtensorfactory.h"
+#include "helpers/printing.h"
+#include "helpers/timer.h"
 #include "diskdf_integrals.h"
 
 using namespace ambit;
@@ -59,7 +59,7 @@ DISKDFIntegrals::DISKDFIntegrals(psi::Options& options, SharedWavefunction ref_w
 
     integral_type_ = DiskDF;
     print_info();
-    Timer int_timer;
+    local_timer int_timer;
 
     int my_proc = 0;
 #ifdef HAVE_GA
@@ -427,7 +427,7 @@ void DISKDFIntegrals::gather_integrals() {
 
     // Finally computes the df integrals
     // Does the timings also
-    Timer timer;
+    local_timer timer;
     std::string str = "Computing DF Integrals";
     outfile->Printf("\n    %-36s ...", str.c_str());
     df_->transform();
@@ -514,7 +514,7 @@ void DISKDFIntegrals::make_fock_matrix(SharedMatrix gamma_aM, SharedMatrix gamma
     ambit::Tensor ThreeIntegralTensorK;
     ambit::Tensor ThreeIntegralTensorJ;
 
-    Timer block_read;
+    local_timer block_read;
     for (size_t i = 0; i < num_block; i++) {
         std::vector<size_t> A_block;
         if (nthree_ % num_block == 0) {
@@ -583,7 +583,7 @@ void DISKDFIntegrals::make_fock_matrix(SharedMatrix gamma_aM, SharedMatrix gamma
 }
 
 void DISKDFIntegrals::resort_integrals_after_freezing() {
-    Timer resort_integrals;
+    local_timer resort_integrals;
     outfile->Printf("\n  Resorting integrals after freezing core.");
 
     // Create an array that maps the CMOs to the MOs (cmo2mo).
