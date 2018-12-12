@@ -39,7 +39,6 @@
 #include "boost/format.hpp"
 #include "boost/math/special_functions/bessel.hpp"
 
-#include "psi4/libpsi4util/libpsi4util.h"
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libciomr/libciomr.h"
 #include "psi4/libmints/matrix.h"
@@ -50,6 +49,7 @@
 #include "psi4/libqt/qt.h"
 
 #include "ewci.h"
+#include "../helpers/timer.h"
 #include "../ci_reference.h"
 
 using namespace psi;
@@ -136,7 +136,8 @@ void ElementwiseCI::startup() {
     frzcpi_ = mo_space_info_->get_dimension("INACTIVE_DOCC");
     nfrzc_ = mo_space_info_->size("INACTIVE_DOCC");
 
-    nuclear_repulsion_energy_ = molecule_->nuclear_repulsion_energy(reference_wavefunction_->get_dipole_field_strength());
+    nuclear_repulsion_energy_ =
+        molecule_->nuclear_repulsion_energy(reference_wavefunction_->get_dipole_field_strength());
 
     mo_symmetry_ = mo_space_info_->symmetry("ACTIVE");
 
@@ -548,7 +549,7 @@ void ElementwiseCI::print_characteristic_function() {
 
 double ElementwiseCI::compute_energy() {
     timer_on("EWCI:Energy");
-    Timer t_apici;
+    local_timer t_apici;
 
     // Increase the root counter (ground state = 0)
     current_root_ += 1;
@@ -785,8 +786,7 @@ double ElementwiseCI::compute_energy() {
         print_wfn(dets_hashvec, C);
     }
 
-    outfile->Printf("\n  %s: %f s\n", "ElementwiseCI (bitset) steps finished in  ",
-                    t_apici.get());
+    outfile->Printf("\n  %s: %f s\n", "ElementwiseCI (bitset) steps finished in  ", t_apici.get());
 
     timer_on("EWCI:<E>end_v");
     if (fast_variational_estimate_) {
@@ -3029,7 +3029,7 @@ void ElementwiseCI::compute_double_couplings(double double_coupling_threshold) {
 
 void ElementwiseCI::compute_couplings_half(const det_hashvec& dets, size_t cut_size) {
     Determinant andBits(dets[0]), orBits(dets[0]);
-    andBits.flip();    
+    andBits.flip();
     for (size_t i = 0; i < cut_size; ++i) {
         andBits = common_occupation(andBits, dets[i]);
         orBits = union_occupation(orBits, dets[i]);

@@ -2890,7 +2890,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_one_active() {
     ambit::Tensor BmvQ_swapped =
         ambit::Tensor::build(tensor_type_, "Bm_vQ", {ncore_, nthree_, nactive_});
     BmvQ_swapped("m, Q, u") = BmvQ("Q, m, u");
-    Timer cavvTimer;
+    local_timer cavvTimer;
     for (int thread = 0; thread < nthread; thread++) {
         Bm_vQ.push_back(ambit::Tensor::build(tensor_type_, "BemQ", {nthree_, nactive_}));
         Bn_eQ.push_back(ambit::Tensor::build(tensor_type_, "Bf_uQ", {nthree_, nvirtual_}));
@@ -3014,7 +3014,7 @@ void THREE_DSRG_MRPT2::form_Hbar() {
     print_h2("Form DSRG-PT2 Transformed Hamiltonian");
 
     // initialize Hbar2 (Hbar1 is initialized in the end of startup function)
-    Timer timer;
+    local_timer timer;
     outfile->Printf("\n    %-40s ... ", "Initalizing Hbar");
     BlockedTensor Bactv = compute_B_minimal({"aaaa", "aAaA", "AAAA"});
     Hbar2_["pqrs"] = Bactv["gpr"] * Bactv["gqs"];
@@ -3035,7 +3035,7 @@ void THREE_DSRG_MRPT2::form_Hbar() {
      * IMPORTANT: I (York) use spin adapted form for the last two cases!!!
      **/
 
-    Timer timer2;
+    local_timer timer2;
     outfile->Printf("\n    %-40s ... ", "Computing all-active Hbar");
     BlockedTensor C1 = BTF_->build(tensor_type_, "C1", spin_cases({"aa"}));
     BlockedTensor C2 = BTF_->build(tensor_type_, "C2", spin_cases({"aaaa"}));
@@ -3063,12 +3063,12 @@ void THREE_DSRG_MRPT2::form_Hbar() {
     if (integral_type_ == DiskDF) {
         C1.zero();
 
-        Timer timer3;
+        local_timer timer3;
         outfile->Printf("\n    %-40s ... ", "Computing DISKDF Hbar C");
         compute_Hbar1C_diskDF(C1);
         outfile->Printf("Done. Timing: %10.3f s.", timer3.get());
 
-        Timer timer4;
+        local_timer timer4;
         outfile->Printf("\n    %-40s ... ", "Computing DISKDF Hbar V");
         compute_Hbar1V_diskDF(C1);
         outfile->Printf("Done. Timing: %10.3f s.", timer4.get());
@@ -3798,7 +3798,7 @@ void THREE_DSRG_MRPT2::de_normal_order() {
     print_h2("De-Normal-Order the DSRG Transformed Hamiltonian");
 
     // compute scalar term
-    Timer t_scalar;
+    local_timer t_scalar;
     std::string str = "Computing the scalar term   ...";
     outfile->Printf("\n    %-35s", str.c_str());
     double scalar0 = Eref_ + Hbar0_ - Enuc_ - Efrzc_;
@@ -3822,7 +3822,7 @@ void THREE_DSRG_MRPT2::de_normal_order() {
     outfile->Printf("  Done. Timing %10.3f s", t_scalar.get());
 
     // compute one-body term
-    Timer t_one;
+    local_timer t_one;
     str = "Computing the one-body term ...";
     outfile->Printf("\n    %-35s", str.c_str());
     BlockedTensor temp1 = BTF_->build(tensor_type_, "temp1", spin_cases({"aa"}));

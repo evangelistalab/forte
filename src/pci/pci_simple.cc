@@ -34,7 +34,6 @@
 #include "boost/format.hpp"
 #include "boost/math/special_functions/bessel.hpp"
 
-#include "psi4/libpsi4util/libpsi4util.h"
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libciomr/libciomr.h"
 #include "psi4/libmints/matrix.h"
@@ -45,6 +44,7 @@
 #include "psi4/libqt/qt.h"
 
 #include "pci_simple.h"
+#include "../helpers/timer.h"
 #include "../ci_reference.h"
 
 using namespace psi;
@@ -531,7 +531,7 @@ void ProjectorCI_Simple::print_characteristic_function() {
 
 double ProjectorCI_Simple::compute_energy() {
     timer_on("PCI:Energy");
-    Timer t_apici;
+    local_timer t_apici;
     old_max_one_HJI_ = 1e100;
     new_max_one_HJI_ = 1e100;
     old_max_two_HJI_ = 1e100;

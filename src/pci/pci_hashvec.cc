@@ -37,7 +37,6 @@
 #include "boost/format.hpp"
 #include "boost/math/special_functions/bessel.hpp"
 
-#include "psi4/libpsi4util/libpsi4util.h"
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libciomr/libciomr.h"
 #include "psi4/libmints/matrix.h"
@@ -48,6 +47,7 @@
 #include "psi4/libqt/qt.h"
 
 #include "pci_hashvec.h"
+#include "../helpers/timer.h"
 #include "../ci_reference.h"
 
 using namespace psi;
@@ -158,7 +158,8 @@ void ProjectorCI_HashVec::startup() {
     frzcpi_ = mo_space_info_->get_dimension("INACTIVE_DOCC");
     nfrzc_ = mo_space_info_->size("INACTIVE_DOCC");
 
-    nuclear_repulsion_energy_ = molecule_->nuclear_repulsion_energy(reference_wavefunction_->get_dipole_field_strength());
+    nuclear_repulsion_energy_ =
+        molecule_->nuclear_repulsion_energy(reference_wavefunction_->get_dipole_field_strength());
 
     mo_symmetry_ = mo_space_info_->symmetry("ACTIVE");
 
@@ -507,7 +508,7 @@ void ProjectorCI_HashVec::print_characteristic_function() {
 
 double ProjectorCI_HashVec::compute_energy() {
     timer_on("PCI:Energy");
-    Timer t_apici;
+    local_timer t_apici;
 
     // Increase the root counter (ground state = 0)
     current_root_ += 1;
@@ -736,8 +737,7 @@ double ProjectorCI_HashVec::compute_energy() {
         print_wfn(dets_hashvec, C);
     }
 
-    outfile->Printf("\n  %s: %f s\n", "Projector-CI (bitset) steps finished in  ",
-                    t_apici.get());
+    outfile->Printf("\n  %s: %f s\n", "Projector-CI (bitset) steps finished in  ", t_apici.get());
 
     timer_on("PCI:<E>end_v");
     if (fast_variational_estimate_) {
