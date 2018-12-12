@@ -37,8 +37,7 @@
 #include "psi4/libmints/dipole.h"
 #include "psi4/libmints/petitelist.h"
 #include "psi4/libmints/dimension.h"
-#include "psi4/libpsi4util/libpsi4util.h"
-
+#include "helpers/timer.h"
 #include "psi4/physconst.h"
 
 #include "fci/fci_integrals.h"
@@ -435,7 +434,7 @@ double ACTIVE_DSRGPT2::compute_energy() {
 
             // if the reference oscillator strength is nonzero
             if (do_osc) {
-                Timer osc_pt2;
+                local_timer osc_pt2;
                 outfile->Printf("\n\n  Computing V%s-DSRG-PT2 oscillator strength ...",
                                 ref_type_.c_str());
                 compute_osc_pt2(h, i_real, Tde, T1, T2);
