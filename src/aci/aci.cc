@@ -33,7 +33,8 @@
 #include "psi4/libmints/pointgrp.h"
 #include "psi4/libpsio/psio.hpp"
 
-#include "../helpers/printing.h"
+#include "../helpers/timer.h"
+#include "helpers/printing.h"
 #include "aci.h"
 
 using namespace psi;
@@ -472,7 +473,7 @@ double AdaptiveCI::compute_energy() {
     }
 
     op_.set_quiet_mode(quiet_mode_);
-    Timer aci_elapse;
+    local_timer aci_elapse;
 
     // The eigenvalues and eigenvectors
     SharedMatrix PQ_evecs;
