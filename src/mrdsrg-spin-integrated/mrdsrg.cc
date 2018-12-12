@@ -182,9 +182,10 @@ void MRDSRG::build_ints() {
     if (eri_df_) {
         fill_three_index_ints(B_);
 
-//        B_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
-////            value = ints_->three_integral(i[0], i[1], i[2]);
-//        });
+        //        B_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double&
+        //        value) {
+        ////            value = ints_->three_integral(i[0], i[1], i[2]);
+        //        });
     } else {
         V_.iterate(
             [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
@@ -373,14 +374,14 @@ double MRDSRG::compute_energy_relaxed() {
             FCI_MO fci_mo(reference_wavefunction_, options_, ints_, mo_space_info_, fci_ints);
             fci_mo.set_localize_actv(false);
             Erelax = fci_mo.compute_energy();
-        } else if (cas_type == "ACI" ){
+        } else if (cas_type == "ACI") {
             AdaptiveCI aci(reference_wavefunction_, options_, ints_, mo_space_info_);
             aci.set_fci_ints(fci_ints);
-            if( options_["ACI_RELAX_SIGMA"].has_changed() ){
+            if (options_["ACI_RELAX_SIGMA"].has_changed()) {
                 aci.update_sigma();
             }
             Erelax = aci.compute_energy();
-        
+
         } else {
             FCI fci(reference_wavefunction_, options_, ints_, mo_space_info_, fci_ints);
             fci.set_max_rdm_level(1);
@@ -438,10 +439,10 @@ double MRDSRG::compute_energy_relaxed() {
                 Erelax = fci_mo.compute_energy();
 
                 reference_ = fci_mo.reference(max_rdm_level);
-            } else if (cas_type == "ACI" ){
+            } else if (cas_type == "ACI") {
                 AdaptiveCI aci(reference_wavefunction_, options_, ints_, mo_space_info_);
                 aci.set_fci_ints(fci_ints);
-                if( options_["ACI_RELAX_SIGMA"].has_changed() ){
+                if (options_["ACI_RELAX_SIGMA"].has_changed()) {
                     aci.update_sigma();
                 }
                 Erelax = aci.compute_energy();
@@ -774,7 +775,7 @@ double MRDSRG::compute_energy_sa() {
 //    print_h2("De-Normal-Order the DSRG Transformed Hamiltonian");
 
 //    // compute scalar term (all active only)
-//    Timer t_scalar;
+//    local_timer t_scalar;
 //    std::string str = "Computing the scalar term   ...";
 //    outfile->Printf("\n    %-35s", str.c_str());
 //    double scalar0 =
@@ -802,7 +803,7 @@ double MRDSRG::compute_energy_sa() {
 //    outfile->Printf("  Done. Timing %10.3f s", t_scalar.get());
 
 //    // compute one-body term
-//    Timer t_one;
+//    local_timer t_one;
 //    str = "Computing the one-body term ...";
 //    outfile->Printf("\n    %-35s", str.c_str());
 //    BlockedTensor temp1 = BTF_->build(tensor_type_, "temp1", spin_cases({"aa"}));
@@ -873,7 +874,7 @@ double MRDSRG::compute_energy_sa() {
 //    //    temp1["UV"] -= V_["UMVN"] * h1["NM"];
 
 //    // update integrals
-//    Timer t_int;
+//    local_timer t_int;
 //    str = "Updating integrals          ...";
 //    outfile->Printf("\n    %-35s", str.c_str());
 //    ints_->set_scalar(scalar);

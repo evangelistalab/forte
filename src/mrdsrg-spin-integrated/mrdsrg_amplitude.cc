@@ -31,10 +31,10 @@
 #include <vector>
 
 #include "psi4/psi4-dec.h"
-#include "psi4/libpsi4util/libpsi4util.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
 
 #include "../helpers.h"
+#include "../helpers/timer.h"
 #include "boost/format.hpp"
 #include "mrdsrg.h"
 
@@ -80,7 +80,7 @@ void MRDSRG::update_t() {
 }
 
 void MRDSRG::guess_t2_std(BlockedTensor& V, BlockedTensor& T2) {
-    Timer timer;
+    local_timer timer;
     std::string str = "Computing T2 amplitudes ...";
     outfile->Printf("\n    %-35s", str.c_str());
     T2max_ = 0.0, t2aa_norm_ = 0.0, t2ab_norm_ = 0.0, t2bb_norm_ = 0.0;
@@ -158,7 +158,7 @@ void MRDSRG::guess_t2_std(BlockedTensor& V, BlockedTensor& T2) {
 }
 
 void MRDSRG::guess_t2_std_df(BlockedTensor& B, BlockedTensor& T2) {
-    Timer timer;
+    local_timer timer;
     std::string str = "Computing T2 amplitudes ...";
     outfile->Printf("\n    %-35s", str.c_str());
     T2max_ = 0.0, t2aa_norm_ = 0.0, t2ab_norm_ = 0.0, t2bb_norm_ = 0.0;
@@ -238,7 +238,7 @@ void MRDSRG::guess_t2_std_df(BlockedTensor& B, BlockedTensor& T2) {
 }
 
 void MRDSRG::guess_t1_std(BlockedTensor& F, BlockedTensor& T2, BlockedTensor& T1) {
-    Timer timer;
+    local_timer timer;
     std::string str = "Computing T1 amplitudes ...";
     outfile->Printf("\n    %-35s", str.c_str());
     T1max_ = 0.0, t1a_norm_ = 0.0, t1b_norm_ = 0.0;
@@ -336,7 +336,7 @@ void MRDSRG::guess_t1_std(BlockedTensor& F, BlockedTensor& T2, BlockedTensor& T1
 }
 
 void MRDSRG::guess_t2_noccvv(BlockedTensor& V, BlockedTensor& T2) {
-    Timer timer;
+    local_timer timer;
     std::string str = "Computing T2 amplitudes ...";
     outfile->Printf("\n    %-35s", str.c_str());
     T2max_ = 0.0, t2aa_norm_ = 0.0, t2ab_norm_ = 0.0, t2bb_norm_ = 0.0;
@@ -467,7 +467,7 @@ void MRDSRG::guess_t2_noccvv(BlockedTensor& V, BlockedTensor& T2) {
 }
 
 void MRDSRG::guess_t2_noccvv_df(BlockedTensor& B, BlockedTensor& T2) {
-    Timer timer;
+    local_timer timer;
     std::string str = "Computing T2 amplitudes ...";
     outfile->Printf("\n    %-35s", str.c_str());
     T2max_ = 0.0, t2aa_norm_ = 0.0, t2ab_norm_ = 0.0, t2bb_norm_ = 0.0;
@@ -600,7 +600,7 @@ void MRDSRG::guess_t2_noccvv_df(BlockedTensor& B, BlockedTensor& T2) {
 }
 
 void MRDSRG::guess_t1_nocv(BlockedTensor& F, BlockedTensor& T2, BlockedTensor& T1) {
-    Timer timer;
+    local_timer timer;
     std::string str = "Computing T1 amplitudes ...";
     outfile->Printf("\n    %-35s", str.c_str());
     T1max_ = 0.0, t1a_norm_ = 0.0, t1b_norm_ = 0.0;
