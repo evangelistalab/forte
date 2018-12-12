@@ -27,7 +27,6 @@
  * @END LICENSE
  */
 
-#include "psi4/libpsi4util/libpsi4util.h"
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/wavefunction.h"
@@ -35,6 +34,7 @@
 
 #include "helpers/printing.h"
 #include "mrci.h"
+#include "helpers/timer.h"
 
 //#include "ci_rdm/ci_rdms.h"
 //#include "helpers.h"
@@ -94,7 +94,7 @@ double MRCI::compute_energy() {
     WFNOperator op(mo_symmetry_, fci_ints_);
 
     outfile->Printf("\n  Adding single and double excitations ...");
-    Timer add;
+    local_timer add;
     get_excited_determinants();
     outfile->Printf("\n  Excitations took %1.5f s", add.get());
     outfile->Printf("\n  Dimension of model space: %zu", reference_.size());
