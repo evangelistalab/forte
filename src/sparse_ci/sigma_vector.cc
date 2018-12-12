@@ -32,10 +32,9 @@
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/vector.h"
 #include "psi4/libpsio/psio.hpp"
-#include "psi4/libpsi4util/libpsi4util.h"
 
-#include "../forte-def.h"
-#include "../iterative_solvers.h"
+#include "forte-def.h"
+#include "iterative_solvers.h"
 #include "sigma_vector.h"
 
 struct PairHash {
@@ -79,7 +78,7 @@ SigmaVectorList::SigmaVectorList(const std::vector<Determinant>& space, bool pri
     // Make alpha and beta strings
     det_hash a_str_map;
     det_hash b_str_map;
-    Timer single;
+    local_timer single;
     if (print_details) {
         outfile->Printf("\n  Generating determinants with N-1 electrons.\n");
     }
@@ -599,7 +598,7 @@ void SigmaVectorWfn1::compute_sigma(SharedVector sigma, SharedVector b) {
                 ? tid * bin_size
                 : (size_ % num_thread) * (bin_size + 1) + (tid - (size_ % num_thread)) * bin_size;
         size_t end_idx = start_idx + bin_size;
-        // Timer cycl;
+        // local_timer cycl;
         {
             const det_hashvec& dets = space_.wfn_hash();
             for (size_t J = start_idx; J < end_idx; ++J) {
@@ -642,7 +641,7 @@ void SigmaVectorWfn1::compute_sigma(SharedVector sigma, SharedVector b) {
             }
         }
         // outfile->Printf("\n  Time spent on singles: %1.5f", cycl.get());
-        // Timer cycl2;
+        // local_timer cycl2;
         for (size_t J = start_idx; J < end_idx; ++J) {
             // aaaa doubles
             for (auto& aaJ_mo_sign : aa_ann_list_[J]) {
@@ -792,7 +791,7 @@ void SigmaVectorWfn2::compute_sigma(SharedVector sigma, SharedVector b) {
                     const size_t J = detJ.first;
                     const size_t p = std::abs(detJ.second) - 1;
                     double sign_p = detJ.second > 0.0 ? 1.0 : -1.0;
-                    for (size_t det2 = det+1; det2 < max_det; ++det2) {
+                    for (size_t det2 = det + 1; det2 < max_det; ++det2) {
                         auto& detI = c_dets[det2];
                         const size_t q = std::abs(detI.second) - 1;
                         if (p != q) {
@@ -822,7 +821,7 @@ void SigmaVectorWfn2::compute_sigma(SharedVector sigma, SharedVector b) {
                     const size_t J = detJ.first;
                     const size_t p = std::abs(detJ.second) - 1;
                     double sign_p = detJ.second > 0.0 ? 1.0 : -1.0;
-                    for (size_t det2 = det+1; det2 < max_det; ++det2) {
+                    for (size_t det2 = det + 1; det2 < max_det; ++det2) {
                         auto& detI = c_dets[det2];
                         const size_t q = std::abs(detI.second) - 1;
                         if (p != q) {
@@ -858,7 +857,7 @@ void SigmaVectorWfn2::compute_sigma(SharedVector sigma, SharedVector b) {
                     short p = std::abs(std::get<1>(detJ)) - 1;
                     short q = std::get<2>(detJ);
                     double sign_p = std::get<1>(detJ) > 0.0 ? 1.0 : -1.0;
-                    for (size_t det2 = det+1; det2 < max_det; ++det2) {
+                    for (size_t det2 = det + 1; det2 < max_det; ++det2) {
                         auto& detI = c_dets[det2];
                         short r = std::abs(std::get<1>(detI)) - 1;
                         short s = std::get<2>(detI);
@@ -885,7 +884,7 @@ void SigmaVectorWfn2::compute_sigma(SharedVector sigma, SharedVector b) {
                     short p = std::abs(std::get<1>(detJ)) - 1;
                     short q = std::get<2>(detJ);
                     double sign_p = std::get<1>(detJ) > 0.0 ? 1.0 : -1.0;
-                    for (size_t det2 = det+1; det2 < max_det; ++det2) {
+                    for (size_t det2 = det + 1; det2 < max_det; ++det2) {
                         auto& detI = c_dets[det2];
                         short r = std::abs(std::get<1>(detI)) - 1;
                         short s = std::get<2>(detI);
@@ -910,10 +909,10 @@ void SigmaVectorWfn2::compute_sigma(SharedVector sigma, SharedVector b) {
                     short p = std::abs(std::get<1>(detJ)) - 1;
                     short q = std::get<2>(detJ);
                     double sign_p = std::get<1>(detJ) > 0.0 ? 1.0 : -1.0;
-                    for (size_t det2 = det+1; det2 < max_det; ++det2) {
-                            auto& detI = c_dets[det2];
-                            short r = std::abs(std::get<1>(detI)) - 1;
-                            short s = std::get<2>(detI);
+                    for (size_t det2 = det + 1; det2 < max_det; ++det2) {
+                        auto& detI = c_dets[det2];
+                        short r = std::abs(std::get<1>(detI)) - 1;
+                        short s = std::get<2>(detI);
                         if ((p != r) and (q != s)) {
                             size_t I = std::get<0>(detI);
                             double sign_q = std::get<1>(detI) > 0.0 ? 1.0 : -1.0;
@@ -954,7 +953,7 @@ SigmaVectorWfn3::SigmaVectorWfn3(const DeterminantHashVec& space, WFNOperator& o
     ab_tei_ = SharedMatrix(new Matrix("aa", nact2, nact2));
 
     outfile->Printf("\n  Building integral matrices");
-    Timer build;
+    local_timer build;
     aa_tei_->zero();
     ab_tei_->zero();
     bb_tei_->zero();
@@ -1121,7 +1120,7 @@ void SigmaVectorWfn3::compute_sigma(SharedVector sigma, SharedVector b) {
                 C_rs->set(K, r * ncmo + s, sign_rs * b_p[J]);
             }
         }
-        // Timer mult;
+        // local_timer mult;
         B_pq->gemm(false, true, 1.0, aa_tei_, C_rs, 0.0);
         // C_DGEMV('N',ncmo2,ncmo2,1.0, &(ab_tei_->pointer()[0][0]),ncmo2,
         // &(C_rs->pointer()[0]),1,0.0,&(B_pq->pointer()[0]),1);
@@ -1157,7 +1156,7 @@ void SigmaVectorWfn3::compute_sigma(SharedVector sigma, SharedVector b) {
                 C_rs->set(K, r * ncmo + s, sign_rs * b_p[J]);
             }
         }
-        // Timer mult;
+        // local_timer mult;
         B_pq->gemm(false, true, 1.0, bb_tei_, C_rs, 0.0);
         // C_DGEMV('N',ncmo2,ncmo2,1.0, &(ab_tei_->pointer()[0][0]),ncmo2,
         // &(C_rs->pointer()[0]),1,0.0,&(B_pq->pointer()[0]),1);
@@ -1181,7 +1180,7 @@ void SigmaVectorWfn3::compute_sigma(SharedVector sigma, SharedVector b) {
         SharedMatrix B_pq = SharedMatrix(new Matrix("B_pq", ncmo2, max_K));
         SharedMatrix C_rs = SharedMatrix(new Matrix("C_rs", max_K, ncmo2));
 
-        // Timer AB;
+        // local_timer AB;
         B_pq->zero();
         C_rs->zero();
         for (size_t K = 0; K < max_K; ++K) {
@@ -1196,7 +1195,7 @@ void SigmaVectorWfn3::compute_sigma(SharedVector sigma, SharedVector b) {
                 C_rs->set(K, r * ncmo + s, sign_rs * b_p[J]);
             }
         }
-        // Timer mult;
+        // local_timer mult;
         B_pq->gemm(false, true, 1.0, ab_tei_, C_rs, 0.0);
         // C_DGEMV('N',ncmo2,ncmo2,1.0, &(ab_tei_->pointer()[0][0]),ncmo2,
         // &(C_rs->pointer()[0]),1,0.0,&(B_pq->pointer()[0]),1);

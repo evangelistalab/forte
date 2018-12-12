@@ -43,7 +43,6 @@
 #define GA_Nodeid() 0
 #endif
 
-#include "psi4/libpsi4util/libpsi4util.h"
 #include "psi4/lib3index/dftensor.h"
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/molecule.h"
@@ -55,6 +54,7 @@
 #include "../ao_helper.h"
 #include "../blockedtensorfactory.h"
 #include "../helpers/printing.h"
+#include "../helpers/timer.h"
 #include "../fci/fci_solver.h"
 #include "../fci/fci_vector.h"
 #include "../fci_mo.h"
@@ -180,7 +180,7 @@ void THREE_DSRG_MRPT2::startup() {
     if (my_proc == 0)
         nthree_ = ints_->nthree();
 
-//    Timer naux_bcast;
+//    local_timer naux_bcast;
 #ifdef HAVE_MPI
     MPI_Bcast(&nthree_, 1, MPI_INT, 0, MPI_COMM_WORLD);
 // printf("\n P%d took %8.8f s to broadcast %d size", my_proc, naux_bcast.get(),
@@ -341,7 +341,7 @@ void THREE_DSRG_MRPT2::print_options_summary() {
 void THREE_DSRG_MRPT2::cleanup() {}
 
 double THREE_DSRG_MRPT2::compute_energy() {
-    Timer ComputeEnergy;
+    local_timer ComputeEnergy;
     int my_proc = 0;
     int nproc = 1;
 #ifdef HAVE_MPI
@@ -374,12 +374,12 @@ double THREE_DSRG_MRPT2::compute_energy() {
         } else {
             // we only store V and T2 with at least two active indices
             outfile->Printf("\n    %-40s ...", "Computing minimal T2");
-            Timer T2timer;
+            local_timer T2timer;
             T2_ = compute_T2_minimal(BTF_->spin_cases_avoid(no_hhpp_, 2));
             outfile->Printf("... Done. Timing %15.6f s", T2timer.get());
 
             outfile->Printf("\n    %-40s ...", "Renormalizing minimal V");
-            Timer Vtimer;
+            local_timer Vtimer;
             std::vector<std::string> list_of_pphh_V = BTF_->generate_indices("vac", "pphh");
             V_ = compute_V_minimal(BTF_->spin_cases_avoid(list_of_pphh_V, 2));
             outfile->Printf("... Done. Timing %15.6f s", Vtimer.get());
@@ -546,7 +546,7 @@ double THREE_DSRG_MRPT2::compute_ref() {
 
 void THREE_DSRG_MRPT2::compute_t2() {
     outfile->Printf("\n    %-40s ...", "Computing T2");
-    Timer timer;
+    local_timer timer;
 
     T2_["ijab"] = V_["abij"];
     T2_["iJaB"] = V_["aBiJ"];
@@ -681,11 +681,11 @@ THREE_DSRG_MRPT2::compute_T2_minimal(const std::vector<std::string>& t2_spaces) 
     ambit::BlockedTensor T2min;
 
     T2min = BTF_->build(tensor_type_, "T2min", t2_spaces, true);
-    Timer timer_b_min;
+    local_timer timer_b_min;
     ambit::BlockedTensor ThreeInt = compute_B_minimal(t2_spaces);
     if (detail_time_)
         outfile->Printf("\n Took %8.4f s to compute_B_minimal", timer_b_min.get());
-    Timer v_t2;
+    local_timer v_t2;
     T2min["ijab"] = (ThreeInt["gia"] * ThreeInt["gjb"]);
     T2min["ijab"] -= (ThreeInt["gib"] * ThreeInt["gja"]);
     T2min["IJAB"] = (ThreeInt["gIA"] * ThreeInt["gJB"]);
@@ -694,7 +694,7 @@ THREE_DSRG_MRPT2::compute_T2_minimal(const std::vector<std::string>& t2_spaces) 
     if (detail_time_)
         outfile->Printf("\n Took %8.4f s to compute T2 from B", v_t2.get());
 
-    Timer t2_iterate;
+    local_timer t2_iterate;
     T2min.iterate(
         [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
             if (spin[0] == AlphaSpin && spin[1] == AlphaSpin) {
@@ -827,12 +827,12 @@ ambit::BlockedTensor THREE_DSRG_MRPT2::compute_V_minimal(const std::vector<std::
                                                          bool renormalize) {
     ambit::BlockedTensor Vmin = BTF_->build(tensor_type_, "Vmin", spaces, true);
     ambit::BlockedTensor ThreeInt;
-    Timer computeB;
+    local_timer computeB;
     ThreeInt = compute_B_minimal(spaces);
     if (detail_time_) {
         outfile->Printf("\n  Compute B minimal takes %8.6f s", computeB.get());
     }
-    Timer ComputeV;
+    local_timer ComputeV;
     Vmin["abij"] = ThreeInt["gai"] * ThreeInt["gbj"];
     Vmin["abij"] -= ThreeInt["gaj"] * ThreeInt["gbi"];
     Vmin["ABIJ"] = ThreeInt["gAI"] * ThreeInt["gBJ"];
@@ -843,7 +843,7 @@ ambit::BlockedTensor THREE_DSRG_MRPT2::compute_V_minimal(const std::vector<std::
     }
 
     if (renormalize) {
-        Timer RenormV;
+        local_timer RenormV;
         Vmin.iterate(
             [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
                 if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)) {
@@ -945,7 +945,7 @@ ambit::BlockedTensor THREE_DSRG_MRPT2::compute_B_minimal(const std::vector<std::
 
 void THREE_DSRG_MRPT2::compute_t1() {
     outfile->Printf("\n    %-40s ...", "Computing T1");
-    Timer timer;
+    local_timer timer;
     BlockedTensor temp = BTF_->build(tensor_type_, "temp", spin_cases({"aa"}), true);
     temp["xu"] = Gamma1_["xu"] * Delta1_["xu"];
     temp["XU"] = Gamma1_["XU"] * Delta1_["XU"];
@@ -1020,7 +1020,7 @@ void THREE_DSRG_MRPT2::check_t1() {
 }
 
 void THREE_DSRG_MRPT2::renormalize_V() {
-    Timer timer;
+    local_timer timer;
     outfile->Printf("\n    %-40s ...", "Renormalizing V");
 
     V_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
@@ -1043,7 +1043,7 @@ void THREE_DSRG_MRPT2::renormalize_V() {
 }
 
 void THREE_DSRG_MRPT2::renormalize_F() {
-    Timer timer;
+    local_timer timer;
     outfile->Printf("\n    %-40s ...", "Renormalizing F");
 
     BlockedTensor temp_aa = BTF_->build(tensor_type_, "temp_aa", spin_cases({"aa"}), true);
@@ -1077,7 +1077,7 @@ void THREE_DSRG_MRPT2::renormalize_F() {
 }
 
 double THREE_DSRG_MRPT2::E_FT1() {
-    Timer timer;
+    local_timer timer;
     outfile->Printf("\n    %-40s ...", "Computing <[F, T1]>");
 
     double E = 0.0;
@@ -1103,7 +1103,7 @@ double THREE_DSRG_MRPT2::E_FT1() {
 }
 
 double THREE_DSRG_MRPT2::E_VT1() {
-    Timer timer;
+    local_timer timer;
     outfile->Printf("\n    %-40s ...", "Computing <[V, T1]>");
 
     double E = 0.0;
@@ -1149,7 +1149,7 @@ double THREE_DSRG_MRPT2::E_VT1() {
 }
 
 double THREE_DSRG_MRPT2::E_FT2() {
-    Timer timer;
+    local_timer timer;
     outfile->Printf("\n    %-40s ...", "Computing <[F, T2]>");
 
     double E = 0.0;
@@ -1201,7 +1201,7 @@ double THREE_DSRG_MRPT2::E_VT2_2() {
     my_proc = MPI::COMM_WORLD.Get_rank();
 #endif
     ambit::BlockedTensor temp = BTF_->build(tensor_type_, "temp", {"aa", "AA"});
-    Timer timer;
+    local_timer timer;
     if (my_proc == 0) {
         outfile->Printf("\n    %-40s ...", "Computing <[V, T2]> (C_2)^4 (no ccvv)");
         // TODO: Implement these without storing V and/or T2 by using blocking
@@ -1281,7 +1281,7 @@ double THREE_DSRG_MRPT2::E_VT2_2() {
     // Calculates all but ccvv, cCvV, and CCVV energies
     double Eccvv = 0.0;
     std::string ccvv_algorithm = options_.get_str("ccvv_algorithm");
-    Timer ccvv_timer;
+    local_timer ccvv_timer;
     if (my_proc == 0) {
         outfile->Printf("\n    %-40s ...", "Computing <[V, T2]> (C_2)^4 ccvv");
     }
@@ -1383,7 +1383,7 @@ double THREE_DSRG_MRPT2::E_VT2_2() {
 }
 
 double THREE_DSRG_MRPT2::E_VT2_4HH() {
-    Timer timer;
+    local_timer timer;
     outfile->Printf("\n    %-40s ...", "Computing <[V, T2]> 4HH");
 
     double E = 0.0;
@@ -1423,7 +1423,7 @@ double THREE_DSRG_MRPT2::E_VT2_4HH() {
 }
 
 double THREE_DSRG_MRPT2::E_VT2_4PP() {
-    Timer timer;
+    local_timer timer;
     outfile->Printf("\n    %-40s ...", "Computing <V, T2]> 4PP");
 
     double E = 0.0;
@@ -1463,7 +1463,7 @@ double THREE_DSRG_MRPT2::E_VT2_4PP() {
 }
 
 double THREE_DSRG_MRPT2::E_VT2_4PH() {
-    Timer timer;
+    local_timer timer;
     outfile->Printf("\n    %-40s ...", "Computing [V, T2] 4PH");
 
     double E = 0.0;
@@ -1543,7 +1543,7 @@ double THREE_DSRG_MRPT2::E_VT2_4PH() {
 }
 
 double THREE_DSRG_MRPT2::E_VT2_6() {
-    Timer timer;
+    local_timer timer;
     outfile->Printf("\n    %-40s  ...", "Computing [V, T2] λ3");
     double E = 0.0;
 
@@ -2204,7 +2204,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core() {
             }
             size_t m_size = m_batch.size();
             size_t n_size = n_batch.size();
-            Timer Core_Loop;
+            local_timer Core_Loop;
 #pragma omp parallel for schedule(runtime) reduction(+ : Ealpha, Emixed)
             for (size_t mn = 0; mn < m_size * n_size; ++mn) {
                 int thread = 0;
@@ -2559,7 +2559,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_virtual() {
             }
             size_t e_size = e_batch.size();
             size_t f_size = f_batch.size();
-            Timer Virtual_loop;
+            local_timer Virtual_loop;
 #pragma omp parallel for schedule(runtime) reduction(+ : Ealpha, Emixed)
             for (size_t ef = 0; ef < e_size * f_size; ++ef) {
                 int thread = 0;
@@ -2638,10 +2638,10 @@ double THREE_DSRG_MRPT2::E_VT2_2_core() {
     BlockedTensor ThreeIntegral = BTF_->build(tensor_type_, "ThreeInt", {"Lph", "LPH"});
     fill_three_index_ints(ThreeIntegral);
 
-//    ThreeIntegral.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&,
-//                              double& value) {
-////        value = ints_->three_integral(i[0], i[1], i[2]);
-//    });
+    //    ThreeIntegral.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&,
+    //                              double& value) {
+    ////        value = ints_->three_integral(i[0], i[1], i[2]);
+    //    });
 
     v("mnef") = ThreeIntegral("gem") * ThreeIntegral("gfn");
     v("mnef") -= ThreeIntegral("gfm") * ThreeIntegral("gen");
@@ -2738,7 +2738,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_one_active() {
     std::vector<ambit::Tensor> tempTaa;
     std::vector<ambit::Tensor> tempTAA;
 
-    Timer ccvaTimer;
+    local_timer ccvaTimer;
     for (int thread = 0; thread < nthread; thread++) {
         Bm_Qe.push_back(ambit::Tensor::build(tensor_type_, "BemQ", {nthree_, nvirtual_}));
         Bm_Qf.push_back(ambit::Tensor::build(tensor_type_, "Bmq", {nthree_, nvirtual_}));
@@ -3079,11 +3079,11 @@ void THREE_DSRG_MRPT2::form_Hbar() {
         Hbar1_["UV"] += 0.5 * C1["VU"];
     }
 
-    if ( options_.get_bool("PRINT_1BODY_EVALS") ){
+    if (options_.get_bool("PRINT_1BODY_EVALS")) {
         SharedMatrix Hb1 = std::make_shared<Matrix>("HB1", nactive_, nactive_);
-        for( int p = 0; p < nactive_; ++p ){
-            for( int q = 0; q < nactive_; ++q ){
-                Hb1->set(p,q, Hbar1_.block("aa").data()[p * nactive_ + q]);
+        for (int p = 0; p < nactive_; ++p) {
+            for (int q = 0; q < nactive_; ++q) {
+                Hb1->set(p, q, Hbar1_.block("aa").data()[p * nactive_ + q]);
             }
         }
 
@@ -3164,7 +3164,7 @@ void THREE_DSRG_MRPT2::relax_reference_once() {
     }
 }
 
-void THREE_DSRG_MRPT2::set_Ufull( SharedMatrix& Ua, SharedMatrix& Ub ){
+void THREE_DSRG_MRPT2::set_Ufull(SharedMatrix& Ua, SharedMatrix& Ub) {
     outfile->Printf("\n here");
 
     Dimension nmopi = mo_space_info_->get_dimension("ALL");
@@ -3432,7 +3432,7 @@ std::vector<double> THREE_DSRG_MRPT2::relaxed_energy(std::shared_ptr<FCIIntegral
     std::vector<double> Erelax;
     std::string cas_type;
 
-    if( options_.get_str("CAS_TYPE") == "CASSCF" ){
+    if (options_.get_str("CAS_TYPE") == "CASSCF") {
         cas_type = options_.get_str("CASSCF_CI_SOLVER");
     } else {
         cas_type = options_.get_str("CAS_TYPE");
@@ -3476,11 +3476,11 @@ std::vector<double> THREE_DSRG_MRPT2::relaxed_energy(std::shared_ptr<FCIIntegral
         if (options_.get_bool("ACI_NO")) {
             aci.compute_nos();
         }
-        if( options_.get_bool("ACI_SPIN_ANALYSIS") ){
+        if (options_.get_bool("ACI_SPIN_ANALYSIS")) {
             aci.spin_analysis();
         }
 
-        if( options_.get_bool("UNPAIRED_DENSITY") ){
+        if (options_.get_bool("UNPAIRED_DENSITY")) {
 
             aci.unpaired_density(Ua_full_, Ub_full_);
         }

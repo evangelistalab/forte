@@ -1,10 +1,10 @@
 #include <numeric>
 
-#include "psi4/libpsi4util/libpsi4util.h"
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/dipole.h"
 
+#include "../helpers/timer.h"
 #include "master_mrdsrg.h"
 
 namespace psi {
@@ -555,7 +555,7 @@ void MASTER_DSRG::deGNO_ints(const std::string& name, double& H0, BlockedTensor&
     print_h2("De-Normal-Order DSRG Transformed " + name);
 
     // compute scalar
-    Timer t0;
+    local_timer t0;
     outfile->Printf("\n    %-40s ... ", "Computing the scalar term");
 
     // scalar from H1
@@ -577,7 +577,7 @@ void MASTER_DSRG::deGNO_ints(const std::string& name, double& H0, BlockedTensor&
     outfile->Printf("Done. Timing %8.3f s", t0.get());
 
     // compute 1-body term
-    Timer t1;
+    local_timer t1;
     outfile->Printf("\n    %-40s ... ", "Computing the 1-body term");
 
     H1["uv"] -= H2["uxvy"] * Gamma1_["yx"];
@@ -592,7 +592,7 @@ void MASTER_DSRG::deGNO_ints(const std::string& name, double& H0, BlockedTensor&
     print_h2("De-Normal-Order DSRG Transformed " + name);
 
     // compute scalar
-    Timer t0;
+    local_timer t0;
     outfile->Printf("\n    %-40s ... ", "Computing the scalar term");
 
     // scalar from H1
@@ -634,7 +634,7 @@ void MASTER_DSRG::deGNO_ints(const std::string& name, double& H0, BlockedTensor&
     outfile->Printf("Done. Timing %8.3f s", t0.get());
 
     // compute 1-body term
-    Timer t1;
+    local_timer t1;
     outfile->Printf("\n    %-40s ... ", "Computing the 1-body term");
 
     // 1-body from H2
@@ -662,7 +662,7 @@ void MASTER_DSRG::deGNO_ints(const std::string& name, double& H0, BlockedTensor&
     outfile->Printf("Done. Timing %8.3f s", t1.get());
 
     // compute 2-body term
-    Timer t2;
+    local_timer t2;
     outfile->Printf("\n    %-40s ... ", "Computing the 2-body term");
     H2["xyuv"] -= H3["xyzuvw"] * Gamma1_["wz"];
     H2["xyuv"] -= H3["xyZuvW"] * Gamma1_["WZ"];
@@ -709,7 +709,7 @@ void MASTER_DSRG::rotate_ints_semi_to_origin(const std::string& name, BlockedTen
     ambit::Tensor Ua = Uactv_.block("aa");
     ambit::Tensor Ub = Uactv_.block("AA");
 
-    Timer timer;
+    local_timer timer;
     outfile->Printf("\n    %-40s ... ", "Rotating 1-body term to original basis");
     temp = H1.block("aa").clone(tensor_type_);
     H1.block("aa")("pq") = Ua("pu") * temp("uv") * Ua("qv");
@@ -718,7 +718,7 @@ void MASTER_DSRG::rotate_ints_semi_to_origin(const std::string& name, BlockedTen
     H1.block("AA")("PQ") = Ub("PU") * temp("UV") * Ub("QV");
     outfile->Printf("Done. Timing %8.3f s", timer.get());
 
-    Timer timer2;
+    local_timer timer2;
     outfile->Printf("\n    %-40s ... ", "Rotating 2-body term to original basis");
     temp = H2.block("aaaa").clone(tensor_type_);
     H2.block("aaaa")("pqrs") = Ua("pa") * Ua("qb") * temp("abcd") * Ua("rc") * Ua("sd");
@@ -738,7 +738,7 @@ void MASTER_DSRG::rotate_ints_semi_to_origin(const std::string& name, BlockedTen
     ambit::Tensor Ua = Uactv_.block("aa");
     ambit::Tensor Ub = Uactv_.block("AA");
 
-    Timer timer;
+    local_timer timer;
     outfile->Printf("\n    %-40s ... ", "Rotating 1-body term to original basis");
     temp = H1.block("aa").clone(tensor_type_);
     H1.block("aa")("pq") = Ua("pu") * temp("uv") * Ua("qv");
@@ -747,7 +747,7 @@ void MASTER_DSRG::rotate_ints_semi_to_origin(const std::string& name, BlockedTen
     H1.block("AA")("PQ") = Ub("PU") * temp("UV") * Ub("QV");
     outfile->Printf("Done. Timing %8.3f s", timer.get());
 
-    Timer timer2;
+    local_timer timer2;
     outfile->Printf("\n    %-40s ... ", "Rotating 2-body term to original basis");
     temp = H2.block("aaaa").clone(tensor_type_);
     H2.block("aaaa")("pqrs") = Ua("pa") * Ua("qb") * temp("abcd") * Ua("rc") * Ua("sd");
@@ -759,7 +759,7 @@ void MASTER_DSRG::rotate_ints_semi_to_origin(const std::string& name, BlockedTen
     H2.block("AAAA")("PQRS") = Ub("PA") * Ub("QB") * temp("ABCD") * Ub("RC") * Ub("SD");
     outfile->Printf("Done. Timing %8.3f s", timer2.get());
 
-    Timer timer3;
+    local_timer timer3;
     outfile->Printf("\n    %-40s ... ", "Rotating 3-body term to original basis");
     temp = H3.block("aaaaaa").clone(tensor_type_);
     H3.block("aaaaaa")("pqrstu") =
@@ -800,7 +800,7 @@ std::vector<ambit::Tensor> MASTER_DSRG::Hbar(int n) {
 }
 
 void MASTER_DSRG::H1_T1_C0(BlockedTensor& H1, BlockedTensor& T1, const double& alpha, double& C0) {
-    Timer timer;
+    local_timer timer;
 
     double E = 0.0;
     E += H1["em"] * T1["me"];
@@ -821,7 +821,7 @@ void MASTER_DSRG::H1_T1_C0(BlockedTensor& H1, BlockedTensor& T1, const double& a
 }
 
 void MASTER_DSRG::H1_T2_C0(BlockedTensor& H1, BlockedTensor& T2, const double& alpha, double& C0) {
-    Timer timer;
+    local_timer timer;
     BlockedTensor temp;
     double E = 0.0;
 
@@ -852,7 +852,7 @@ void MASTER_DSRG::H1_T2_C0(BlockedTensor& H1, BlockedTensor& T2, const double& a
 }
 
 void MASTER_DSRG::H2_T1_C0(BlockedTensor& H2, BlockedTensor& T1, const double& alpha, double& C0) {
-    Timer timer;
+    local_timer timer;
     BlockedTensor temp;
     double E = 0.0;
 
@@ -883,7 +883,7 @@ void MASTER_DSRG::H2_T1_C0(BlockedTensor& H2, BlockedTensor& T1, const double& a
 }
 
 void MASTER_DSRG::H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, double& C0) {
-    Timer timer;
+    local_timer timer;
 
     // <[Hbar2, T2]> (C_2)^4
     double E = H2["eFmN"] * T2["mNeF"];
@@ -1050,7 +1050,7 @@ void MASTER_DSRG::H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const double& a
 
 void MASTER_DSRG::H1_T1_C1(BlockedTensor& H1, BlockedTensor& T1, const double& alpha,
                            BlockedTensor& C1) {
-    Timer timer;
+    local_timer timer;
 
     C1["ip"] += alpha * H1["ap"] * T1["ia"];
     C1["qa"] -= alpha * T1["ia"] * H1["qi"];
@@ -1065,7 +1065,7 @@ void MASTER_DSRG::H1_T1_C1(BlockedTensor& H1, BlockedTensor& T1, const double& a
 
 // void MASTER_DSRG::H1_T1_C1aa(BlockedTensor& H1, BlockedTensor& T1, const double& alpha,
 //                             BlockedTensor& C1) {
-//    Timer timer;
+//    local_timer timer;
 
 //    C1["uv"] += alpha * H1["av"] * T1["ua"];
 //    C1["uv"] -= alpha * T1["iv"] * H1["ui"];
@@ -1080,7 +1080,7 @@ void MASTER_DSRG::H1_T1_C1(BlockedTensor& H1, BlockedTensor& T1, const double& a
 
 // void MASTER_DSRG::H1_T1_C1ph(BlockedTensor& H1, BlockedTensor& T1, const double& alpha,
 //                             BlockedTensor& C1) {
-//    Timer timer;
+//    local_timer timer;
 
 //    C1["ui"] += alpha * H1["ai"] * T1["ua"];
 //    C1["au"] -= alpha * T1["iu"] * H1["ai"];
@@ -1095,7 +1095,7 @@ void MASTER_DSRG::H1_T1_C1(BlockedTensor& H1, BlockedTensor& T1, const double& a
 
 // void MASTER_DSRG::H1_T1_C1hp(BlockedTensor& H1, BlockedTensor& T1, const double& alpha,
 //                             BlockedTensor& C1) {
-//    Timer timer;
+//    local_timer timer;
 
 //    C1["ib"] += alpha * H1["ab"] * T1["ia"];
 //    C1["ja"] -= alpha * T1["ia"] * H1["ji"];
@@ -1110,7 +1110,7 @@ void MASTER_DSRG::H1_T1_C1(BlockedTensor& H1, BlockedTensor& T1, const double& a
 
 void MASTER_DSRG::H1_T2_C1(BlockedTensor& H1, BlockedTensor& T2, const double& alpha,
                            BlockedTensor& C1) {
-    Timer timer;
+    local_timer timer;
 
     C1["ia"] += alpha * H1["bm"] * T2["imab"];
     C1["ia"] += alpha * H1["bu"] * Gamma1_["uv"] * T2["ivab"];
@@ -1134,7 +1134,7 @@ void MASTER_DSRG::H1_T2_C1(BlockedTensor& H1, BlockedTensor& T2, const double& a
 
 // void MASTER_DSRG::H1_T2_C1aa(BlockedTensor& H1, BlockedTensor& T2, const double& alpha,
 //                             BlockedTensor& C1) {
-//    Timer timer;
+//    local_timer timer;
 
 //    C1["xy"] += alpha * H1["bm"] * T2["xmyb"];
 //    C1["xy"] += alpha * H1["bu"] * Gamma1_["uv"] * T2["xvyb"];
@@ -1168,7 +1168,7 @@ void MASTER_DSRG::H1_T2_C1(BlockedTensor& H1, BlockedTensor& T2, const double& a
 
 void MASTER_DSRG::H2_T1_C1(BlockedTensor& H2, BlockedTensor& T1, const double& alpha,
                            BlockedTensor& C1) {
-    Timer timer;
+    local_timer timer;
 
     C1["qp"] += alpha * T1["ma"] * H2["qapm"];
     C1["qp"] += alpha * T1["xe"] * Gamma1_["yx"] * H2["qepy"];
@@ -1192,7 +1192,7 @@ void MASTER_DSRG::H2_T1_C1(BlockedTensor& H2, BlockedTensor& T1, const double& a
 
 // void MASTER_DSRG::H2_T1_C1aa(BlockedTensor& H2, BlockedTensor& T1, const double& alpha,
 //                             BlockedTensor& C1) {
-//    Timer timer;
+//    local_timer timer;
 
 //    C1["xy"] += alpha * T1["ma"] * H2["xaym"];
 //    C1["xy"] += alpha * T1["ue"] * Gamma1_["vu"] * H2["xeyv"];
@@ -1216,7 +1216,7 @@ void MASTER_DSRG::H2_T1_C1(BlockedTensor& H2, BlockedTensor& T1, const double& a
 
 // void MASTER_DSRG::H2_T1_C1hp(BlockedTensor& H2, BlockedTensor& T1, const double& alpha,
 //                             BlockedTensor& C1) {
-//    Timer timer;
+//    local_timer timer;
 
 //    C1["kc"] += alpha * T1["ma"] * H2["kacm"];
 //    C1["kc"] += alpha * T1["xe"] * Gamma1_["yx"] * H2["kecy"];
@@ -1240,7 +1240,7 @@ void MASTER_DSRG::H2_T1_C1(BlockedTensor& H2, BlockedTensor& T1, const double& a
 
 // void MASTER_DSRG::H2_T1_C1ph(BlockedTensor& H2, BlockedTensor& T1, const double& alpha,
 //                           BlockedTensor& C1) {
-//    Timer timer;
+//    local_timer timer;
 
 //    C1["ck"] += alpha * T1["ma"] * H2["cakm"];
 //    C1["ck"] += alpha * T1["xe"] * Gamma1_["yx"] * H2["ceky"];
@@ -1264,7 +1264,7 @@ void MASTER_DSRG::H2_T1_C1(BlockedTensor& H2, BlockedTensor& T1, const double& a
 
 void MASTER_DSRG::H2_T2_C1(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
                            BlockedTensor& C1) {
-    Timer timer;
+    local_timer timer;
     BlockedTensor temp;
 
     /// max intermediate: a * a * p * p
@@ -1427,7 +1427,7 @@ void MASTER_DSRG::H2_T2_C1(BlockedTensor& H2, BlockedTensor& T2, const double& a
 
 void MASTER_DSRG::H1_T2_C2(BlockedTensor& H1, BlockedTensor& T2, const double& alpha,
                            BlockedTensor& C2) {
-    Timer timer;
+    local_timer timer;
 
     C2["ijpb"] += alpha * T2["ijab"] * H1["ap"];
     C2["ijap"] += alpha * T2["ijab"] * H1["bp"];
@@ -1452,7 +1452,7 @@ void MASTER_DSRG::H1_T2_C2(BlockedTensor& H1, BlockedTensor& T2, const double& a
 
 void MASTER_DSRG::H2_T1_C2(BlockedTensor& H2, BlockedTensor& T1, const double& alpha,
                            BlockedTensor& C2) {
-    Timer timer;
+    local_timer timer;
 
     C2["irpq"] += alpha * T1["ia"] * H2["arpq"];
     C2["ripq"] += alpha * T1["ia"] * H2["rapq"];
@@ -1477,7 +1477,7 @@ void MASTER_DSRG::H2_T1_C2(BlockedTensor& H2, BlockedTensor& T1, const double& a
 
 void MASTER_DSRG::H2_T2_C2(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
                            BlockedTensor& C2) {
-    Timer timer;
+    local_timer timer;
 
     /// max intermediate: g * g * p * p
 
@@ -1593,7 +1593,7 @@ void MASTER_DSRG::H2_T2_C2(BlockedTensor& H2, BlockedTensor& T2, const double& a
 
 void MASTER_DSRG::H2_T2_C3(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
                            BlockedTensor& C3, const bool& active_only) {
-    Timer timer;
+    local_timer timer;
 
     /// Potentially be as large as p * p * h * g * g * g
 

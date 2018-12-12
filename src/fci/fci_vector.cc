@@ -31,7 +31,7 @@
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/pointgrp.h"
 
-#include "../helpers.h"
+#include "helpers.h"
 #include "fci_vector.h"
 
 namespace psi {

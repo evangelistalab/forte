@@ -26,14 +26,13 @@
  * @END LICENSE
  */
 
-#include "psi4/libpsi4util/libpsi4util.h"
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libmints/molecule.h"
 
 #include "boost/format.hpp"
 
-#include "../sparse_ci/determinant.h"
-#include "../iterative_solvers.h"
+#include "sparse_ci/determinant.h"
+#include "iterative_solvers.h"
 
 #include "fci_solver.h"
 
@@ -123,9 +122,10 @@ void FCISolver::startup() {
  * See Appendix A in J. Comput. Chem. 2001 vol. 22 (13) pp. 1574-1589
 */
 double FCISolver::compute_energy() {
-    Timer t;
+    local_timer t;
 
-    double nuclear_repulsion_energy = Process::environment.molecule()->nuclear_repulsion_energy({0,0,0});
+    double nuclear_repulsion_energy =
+        Process::environment.molecule()->nuclear_repulsion_energy({0, 0, 0});
     std::shared_ptr<FCIIntegrals> fci_ints;
     if (!provide_integrals_and_restricted_docc_) {
         fci_ints = std::make_shared<FCIIntegrals>(ints_, active_mo_, core_mo_);
@@ -293,7 +293,8 @@ double FCISolver::compute_energy() {
                     continue;
 
                 std::bitset<Determinant::num_str_bits> Ia_v = lists_->alfa_str(h, add_Ia);
-                std::bitset<Determinant::num_str_bits> Ib_v = lists_->beta_str(h ^ symmetry_, add_Ib);
+                std::bitset<Determinant::num_str_bits> Ib_v =
+                    lists_->beta_str(h ^ symmetry_, add_Ib);
 
                 outfile->Printf("\n    ");
                 size_t offset = 0;
@@ -382,9 +383,10 @@ void FCISolver::compute_rdms_root(int root) {
 std::vector<std::pair<int, std::vector<std::tuple<size_t, size_t, size_t, double>>>>
 FCISolver::initial_guess(FCIWfn& diag, size_t n, size_t multiplicity,
                          std::shared_ptr<FCIIntegrals> fci_ints) {
-    Timer t;
+    local_timer t;
 
-    double nuclear_repulsion_energy = Process::environment.molecule()->nuclear_repulsion_energy({0,0,0});
+    double nuclear_repulsion_energy =
+        Process::environment.molecule()->nuclear_repulsion_energy({0, 0, 0});
     double scalar_energy = fci_ints->scalar_energy();
 
     size_t ntrial = n * ntrial_per_root_;

@@ -39,6 +39,8 @@
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/sieve.h"
 
+#include "helpers/timer.h"
+
 #include "psi4/libfock/jk.h"
 #ifdef _OPENMP
 #include <omp.h>
@@ -57,7 +59,7 @@ ParallelDFMO::ParallelDFMO(std::shared_ptr<BasisSet> primary, std::shared_ptr<Ba
     memory_ = Process::environment.get_memory();
 }
 void ParallelDFMO::compute_integrals() {
-    Timer compute_integrals_time;
+    local_timer compute_integrals_time;
     timer_on("DFMO: transform_integrals()");
     transform_integrals();
     printf("\n P%d compute_integrals_time: %8.6f ", GA_Nodeid(), compute_integrals_time.get());
@@ -220,7 +222,7 @@ void ParallelDFMO::transform_integrals() {
     /// shell_end represents the end of shells for this processor
     /// NOTE:  This code will have terrible load balance (shells do not
     /// correspond to equal number of functions
-    Timer compute_Aia;
+    local_timer compute_Aia;
     {
         int Pstart = shell_start;
         int Pstop = shell_end;
@@ -328,11 +330,11 @@ void ParallelDFMO::transform_integrals() {
     }
     printf("\n  P%d Aia took %8.6f s.", GA_Nodeid(), compute_Aia.get());
 
-    Timer J_one_half_time;
+    local_timer J_one_half_time;
     J_one_half();
     printf("\n  P%d J^({-1/2}} took %8.6f s.", GA_Nodeid(), J_one_half_time.get());
 
-    Timer GA_DGEMM;
+    local_timer GA_DGEMM;
     GA_Dgemm('T', 'N', naux, nmo_ * nmo_, naux, 1.0, GA_J_onehalf_, Aia_ga, 0.0, GA_Q_PQ_);
     printf("\n  P%d DGEMM took %8.6f s.", GA_Nodeid(), GA_DGEMM.get());
     GA_Destroy(GA_J_onehalf_);
@@ -422,7 +424,7 @@ void ParallelDFMO::J_one_half() {
         }
     }
 }
-}
-}
+} // namespace forte
+} // namespace psi
 
 #endif

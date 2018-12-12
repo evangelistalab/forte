@@ -34,10 +34,9 @@
 #include "psi4/libmints/vector.h"
 #include "psi4/libpsio/psio.hpp"
 #include "psi4/libqt/qt.h"
-#include "psi4/libpsi4util/libpsi4util.h"
 
-#include "../forte-def.h"
-#include "../iterative_solvers.h"
+#include "forte-def.h"
+#include "iterative_solvers.h"
 #include "sparse_ci_solver.h"
 #include "sigma_vector_dynamic.h"
 
@@ -93,10 +92,10 @@ void SparseCISolver::diagonalize_hamiltonian_map(const DeterminantHashVec& space
         diagonalize_full(dets, evals, evecs, nroot, multiplicity);
     } else if (diag_method == Sparse) {
         diagonalize_dl_sparse(space, op, evals, evecs, nroot, multiplicity);
-//    } else if (diag_method == MPI) {
-//        diagonalize_mpi(space, op, evals, evecs, nroot, multiplicity);
-//    } else if (diag_method == Direct) {
-//        diagonalize_dl_direct(space, op, evals, evecs, nroot, multiplicity);
+        //    } else if (diag_method == MPI) {
+        //        diagonalize_mpi(space, op, evals, evecs, nroot, multiplicity);
+        //    } else if (diag_method == Direct) {
+        //        diagonalize_dl_direct(space, op, evals, evecs, nroot, multiplicity);
     } else if (diag_method == Dynamic) {
         diagonalize_dl_dynamic(space, op, evals, evecs, nroot, multiplicity);
     } else {
@@ -344,7 +343,7 @@ std::vector<std::pair<std::vector<int>, std::vector<double>>>
 SparseCISolver::build_sparse_hamiltonian(const std::vector<Determinant>& space) {
     // std::vector<std::pair<std::vector<int>, std::vector<double>>>
     // SparseCISolver::build_sparse_hamiltonian(const DeterminantMap& space) {
-    Timer t_h_build2;
+    local_timer t_h_build2;
     // Allocate as many elements as we need
     size_t dim_space = space.size();
     std::vector<std::pair<std::vector<int>, std::vector<double>>> H_sparse(dim_space);
@@ -835,7 +834,7 @@ bool SparseCISolver::davidson_liu_solver_map(const DeterminantHashVec& space,
                                              SharedMatrix Eigenvectors, int nroot,
                                              int multiplicity) {
     //    print_details_ = true;
-    Timer dl;
+    local_timer dl;
     size_t fci_size = sigma_vector->size();
     DavidsonLiuSolver dls(fci_size, nroot);
     dls.set_e_convergence(e_convergence_);
