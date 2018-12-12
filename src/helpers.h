@@ -264,24 +264,6 @@ void apply_permutation_in_place(std::vector<T>& vec, const std::vector<std::size
 }
 
 /**
- * @brief A timer class that returns the elapsed time
- */
-class local_timer {
-  public:
-    local_timer() : start_(std::chrono::high_resolution_clock::now()) {}
-
-    /// return the elapsed time in seconds
-    double get() {
-        auto duration = std::chrono::high_resolution_clock::now() - start_;
-        return std::chrono::duration_cast<std::chrono::duration<double>>(duration).count();
-    }
-
-  private:
-    /// stores the time when this object is created
-    std::chrono::high_resolution_clock::time_point start_;
-};
-
-/**
   * @brief A timer class that prints timing to a file (timer.dat)
   */
 class timer {
