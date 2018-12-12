@@ -29,8 +29,8 @@
 #ifndef _fci_integrals_
 #define _fci_integrals_
 
-#include "../integrals/integrals.h"
-#include "../sparse_ci/determinant.h"
+#include "integrals/integrals.h"
+#include "sparse_ci/determinant.h"
 #include "string_lists.h"
 
 namespace psi {

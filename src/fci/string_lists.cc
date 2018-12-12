@@ -28,7 +28,6 @@
 
 #include "psi4/psi4-dec.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
-#include "psi4/libpsi4util/libpsi4util.h"
 
 #include "string_lists.h"
 
@@ -90,7 +89,7 @@ void StringLists::startup() {
         nbs_ += beta_graph_->strpi(h);
     }
 
-    // Timers
+    // local_timers
     double str_list_timer = 0.0;
     double vo_list_timer = 0.0;
     double nn_list_timer = 0.0;
@@ -102,53 +101,53 @@ void StringLists::startup() {
     double vvoo_list_timer = 0.0;
 
     {
-        Timer t;
+        local_timer t;
         make_strings(alfa_graph_, alfa_list_);
         make_strings(beta_graph_, beta_list_);
         str_list_timer += t.get();
     }
     {
-        Timer t;
+        local_timer t;
         make_pair_list(nn_list);
         nn_list_timer += t.get();
     }
     {
-        Timer t;
+        local_timer t;
         make_vo_list(alfa_graph_, alfa_vo_list);
         make_vo_list(beta_graph_, beta_vo_list);
         vo_list_timer += t.get();
     }
     {
-        Timer t;
+        local_timer t;
         make_oo_list(alfa_graph_, alfa_oo_list);
         make_oo_list(beta_graph_, beta_oo_list);
         oo_list_timer += t.get();
     }
     {
-        Timer t;
+        local_timer t;
         make_1h_list(alfa_graph_, alfa_graph_1h_, alfa_1h_list);
         make_1h_list(beta_graph_, beta_graph_1h_, beta_1h_list);
         h1_list_timer += t.get();
     }
     {
-        Timer t;
+        local_timer t;
         make_2h_list(alfa_graph_, alfa_graph_2h_, alfa_2h_list);
         make_2h_list(beta_graph_, beta_graph_2h_, beta_2h_list);
         h2_list_timer += t.get();
     }
     {
-        Timer t;
+        local_timer t;
         make_3h_list(alfa_graph_, alfa_graph_3h_, alfa_3h_list);
         make_3h_list(beta_graph_, beta_graph_3h_, beta_3h_list);
         h3_list_timer += t.get();
     }
     if (required_lists_ == twoSubstituitionVVOO) {
-        Timer t;
+        local_timer t;
         make_vvoo_list(alfa_graph_, alfa_vvoo_list);
         make_vvoo_list(beta_graph_, beta_vvoo_list);
         vvoo_list_timer += t.get();
     } else if (required_lists_ == twoSubstituitionVOVO) {
-        Timer t;
+        local_timer t;
         make_vovo_list(alfa_graph_, alfa_vovo_list);
         make_vovo_list(beta_graph_, beta_vovo_list);
         vovo_list_timer += t.get();
