@@ -62,6 +62,7 @@
 #include "dmrgsolver.h"
 #include "fci/fci_vector.h"
 #include "helpers.h"
+#include "helpers/timer.h"
 #include "integrals/integrals.h"
 
 // This allows us to be lazy in getting the spaces in DPD calls
@@ -388,12 +389,12 @@ void DMRGSolver::compute_energy() {
             ints_->aptei_ab_block(active_array, active_array, active_array, active_array);
         /// SCF_TYPE CD tends to be slow.  Avoid it and use integral class
         if (options_.get_str("SCF_TYPE") != "CD") {
-            Timer one_body_timer;
+            local_timer one_body_timer;
             one_body_integrals_ = one_body_operator();
             outfile->Printf("\n OneBody integrals (though one_body_operator) takes %6.5f s",
                             one_body_timer.get());
         } else {
-            Timer one_body_fci_ints;
+            local_timer one_body_fci_ints;
             std::shared_ptr<FCIIntegrals> fci_ints =
                 std::make_shared<FCIIntegrals>(ints_, mo_space_info_->get_corr_abs_mo("ACTIVE"),
                                                mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
@@ -453,10 +454,10 @@ void DMRGSolver::compute_energy() {
         if (state > 0) {
             DMRGCI->newExcitation(std::fabs(Energy));
         }
-        Timer DMRGSolve;
+        local_timer DMRGSolve;
         Energy = DMRGCI->Solve();
         outfile->Printf("\n Overall DMRG Solver took %6.5f s.", DMRGSolve.get());
-        Timer DMRGRDMs;
+        local_timer DMRGRDMs;
 
         DMRGCI->calc_rdms_and_correlations(max_rdm_ > 2 ? true : false, disk_3_rdm_);
         outfile->Printf("\n Overall DMRG RDM computation took %6.5f s.", DMRGRDMs.get());
