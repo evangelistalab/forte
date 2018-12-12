@@ -29,9 +29,9 @@
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/liboptions/liboptions.h"
-#include "psi4/libpsi4util/libpsi4util.h"
 #include "psi4/libpsi4util/process.h"
 
+#include "helpers/timer.h"
 #include "ci_rdms.h"
 #include "../helpers.h"
 #include "../reference.h"
@@ -150,12 +150,12 @@ double CI_RDMS::get_energy(std::vector<double>& oprdm_a, std::vector<double>& op
 }
 
 void CI_RDMS::compute_1rdm(std::vector<double>& oprdm_a, std::vector<double>& oprdm_b) {
-    Timer one;
+    local_timer one;
     get_one_map();
     if (print_)
         outfile->Printf("\n  Time spent forming 1-map:   %1.6f", one.get());
 
-    Timer build;
+    local_timer build;
     oprdm_a.assign(ncmo2_, 0.0);
     oprdm_b.assign(ncmo2_, 0.0);
     for (size_t J = 0; J < dim_space_; ++J) {
@@ -195,7 +195,7 @@ void CI_RDMS::compute_1rdm(std::vector<double>& oprdm_a, std::vector<double>& op
     std::vector<std::vector<std::pair<size_t, short>>>& a_list = op.a_list_;
     std::vector<std::vector<std::pair<size_t, short>>>& b_list = op.b_list_;
 
-    Timer build;
+    local_timer build;
     oprdm_a.assign(ncmo2_, 0.0);
     oprdm_b.assign(ncmo2_, 0.0);
 
@@ -268,12 +268,12 @@ void CI_RDMS::compute_2rdm(std::vector<double>& tprdm_aa, std::vector<double>& t
     tprdm_ab.assign(ncmo4_, 0.0);
     tprdm_bb.assign(ncmo4_, 0.0);
 
-    Timer two;
+    local_timer two;
     get_two_map();
     if (print_)
         outfile->Printf("\n  Time spent forming 2-map:   %1.6f", two.get());
 
-    Timer build;
+    local_timer build;
     for (size_t J = 0; J < dim_space_; ++J) {
         // aaaa
         for (auto& aaJ_mo_sign : aa_ann_list_[J]) {
@@ -346,7 +346,7 @@ void CI_RDMS::compute_2rdm(std::vector<double>& tprdm_aa, std::vector<double>& t
 
 void CI_RDMS::compute_2rdm(std::vector<double>& tprdm_aa, std::vector<double>& tprdm_ab,
                            std::vector<double>& tprdm_bb, WFNOperator& op) {
-    Timer build;
+    local_timer build;
 
     const det_hashvec& dets = wfn_.wfn_hash();
 
@@ -513,12 +513,12 @@ void CI_RDMS::compute_3rdm(std::vector<double>& tprdm_aaa, std::vector<double>& 
     tprdm_abb.assign(ncmo6, 0.0);
     tprdm_bbb.assign(ncmo6, 0.0);
 
-    Timer three;
+    local_timer three;
     get_three_map();
     if (print_)
         outfile->Printf("\n  Time spent forming 3-map:   %1.6f", three.get());
 
-    Timer build;
+    local_timer build;
     for (size_t J = 0; J < dim_space_; ++J) {
         // aaa aaa
         for (auto& aaaJ_mo_sign : aaa_ann_list_[J]) {
