@@ -103,11 +103,11 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
                        std::shared_ptr<ForteIntegrals> ints,
                        std::shared_ptr<MOSpaceInfo> mo_space_info, int my_proc) {
     timer method_timer("Method");
-//    if (options.get_str("ALTERNATIVE_CASSCF") == "FTHF") {
-//        auto FTHF = std::make_shared<FiniteTemperatureHF>(ref_wfn, options, mo_space_info);
-//        FTHF->compute_energy();
-//        ints->retransform_integrals();
-//    }
+    //    if (options.get_str("ALTERNATIVE_CASSCF") == "FTHF") {
+    //        auto FTHF = std::make_shared<FiniteTemperatureHF>(ref_wfn, options, mo_space_info);
+    //        FTHF->compute_energy();
+    //        ints->retransform_integrals();
+    //    }
 
     if (options.get_bool("CASSCF_REFERENCE") == true or options.get_str("JOB_TYPE") == "CASSCF") {
         auto casscf = std::make_shared<CASSCF>(ref_wfn, options, ints, mo_space_info);
@@ -151,7 +151,7 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
             aci->upcast_reference(wfn);
             aci->add_external_excitations(wfn);
         }
-        if( options.get_bool("UNPAIRED_DENSITY")){
+        if (options.get_bool("UNPAIRED_DENSITY")) {
             SharedMatrix Ua;
             SharedMatrix Ub;
 
@@ -599,7 +599,7 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
                 aci2->compute_energy();
                 aci_reference = aci2->reference();
             }
-            //if( options.get_bool("UNPAIRED_DENSITY")){
+            // if( options.get_bool("UNPAIRED_DENSITY")){
             //    aci->unpaired_density();
             //}
             SemiCanonical semi(ref_wfn, ints, mo_space_info);
@@ -612,7 +612,7 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
             three_dsrg_mrpt2->set_Uactv(Ua, Ub);
             three_dsrg_mrpt2->compute_energy();
             if (ref_relax || multi_state) {
-                if( options.get_bool("UNPAIRED_DENSITY") ){
+                if (options.get_bool("UNPAIRED_DENSITY")) {
                     SharedMatrix Ua_f = semi.Ua();
                     SharedMatrix Ub_f = semi.Ub();
                     three_dsrg_mrpt2->set_Ufull(Ua_f, Ub_f);
@@ -620,12 +620,11 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
                 three_dsrg_mrpt2->relax_reference_once();
             }
 
-          //  if( options.get_bool("UNPAIRED_DENSITY")){
-          //      SharedMatrix Uam = semi.Ua();
-          //      SharedMatrix Ubm = semi.Ub();
-          //      aci->unpaired_density(Uam, Ubm);
-          //  }
-
+            //  if( options.get_bool("UNPAIRED_DENSITY")){
+            //      SharedMatrix Uam = semi.Ua();
+            //      SharedMatrix Ubm = semi.Ub();
+            //      aci->unpaired_density(Uam, Ubm);
+            //  }
 
         } else if (cas_type == "FCI") {
             auto fci = std::make_shared<FCI>(ref_wfn, options, ints, mo_space_info);

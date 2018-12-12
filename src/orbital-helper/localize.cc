@@ -49,7 +49,7 @@ LOCALIZE::LOCALIZE(std::shared_ptr<Wavefunction> wfn, Options& options,
     nrst_ = mo_space_info->size("RESTRICTED_DOCC");
     namo_ = mo_space_info->size("ACTIVE");
 
-    if( wfn_->nirrep() > 1 ){
+    if (wfn_->nirrep() > 1) {
         throw PSIEXCEPTION("\n\n ERROR: Localizer only implemented for C1 symmetry!");
     }
 
@@ -153,10 +153,10 @@ void LOCALIZE::split_localize() {
     }
 
     double value = 0.0;
-    for( int h = 0; h < nirrep; ++h ){
-        for ( int i = 0; i < Ca->rowdim(h); ++i ){
-            for ( int j = 0; j < Ca->coldim(h); ++j ){
-                value = std::fabs(Ca->get(i,j) - Cb->get(i,j)); 
+    for (int h = 0; h < nirrep; ++h) {
+        for (int i = 0; i < Ca->rowdim(h); ++i) {
+            for (int j = 0; j < Ca->coldim(h); ++j) {
+                value = std::fabs(Ca->get(i, j) - Cb->get(i, j));
             }
         }
     }
@@ -165,18 +165,17 @@ void LOCALIZE::split_localize() {
     ints_->retransform_integrals();
 }
 
-void LOCALIZE::full_localize(){ 
-
+void LOCALIZE::full_localize() {
 
     // Build C matrices
-    SharedMatrix Ca = wfn_->Ca(); 
-    SharedMatrix Cb = wfn_->Cb(); 
+    SharedMatrix Ca = wfn_->Ca();
+    SharedMatrix Cb = wfn_->Cb();
     Dimension nsopi = wfn_->nsopi();
     int nirrep = wfn_->nirrep();
 
     size_t nact = abs_act_.size();
-    
-    SharedMatrix Caact(new Matrix("Caact", nsopi[0], nact ));
+
+    SharedMatrix Caact(new Matrix("Caact", nsopi[0], nact));
     for (int h = 0; h < nirrep; h++) {
         for (int mu = 0; mu < nsopi[h]; mu++) {
             for (int i = 0; i < nact; i++) {
@@ -203,14 +202,11 @@ void LOCALIZE::full_localize(){
     }
     ints_->retransform_integrals();
 
-    U_ = SharedMatrix(new Matrix("U", nsopi[0],nact));
+    U_ = SharedMatrix(new Matrix("U", nsopi[0], nact));
     U_->copy(U);
 }
 
-SharedMatrix LOCALIZE::get_U()
-{
-    return U_;
-}
+SharedMatrix LOCALIZE::get_U() { return U_; }
 
 LOCALIZE::~LOCALIZE() {}
 }

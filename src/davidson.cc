@@ -130,9 +130,9 @@ int david2(double** A, int N, int M, double* eps, double** v, double cutoff, int
             init_dim = 7 * M;
         else
             init_dim = M;
-//        Adiag = init_array(N);
+        //        Adiag = init_array(N);
         std::vector<int> small2big(7 * M);
-//        small2big = init_int_array(7 * M);
+        //        small2big = init_int_array(7 * M);
         for (i = 0; i < N; i++) {
             Adiag[i] = A[i][i];
         }
@@ -161,10 +161,10 @@ int david2(double** A, int N, int M, double* eps, double** v, double cutoff, int
                 b[i][small2big[j]] = alpha[j][i];
         }
 
-//        free(Adiag);
-//        free(small2big);
+        //        free(Adiag);
+        //        free(small2big);
     } else { /* Use unit vectors as initial guesses */
-//        Adiag = init_array(N);
+             //        Adiag = init_array(N);
         for (i = 0; i < N; i++) {
             Adiag[i] = A[i][i];
         }
@@ -181,14 +181,14 @@ int david2(double** A, int N, int M, double* eps, double** v, double cutoff, int
             Adiag[min_pos] = BIGNUM;
             lambda_old[i] = minimum;
         }
-//        free(Adiag);
+        //        free(Adiag);
     }
 
     // L = init_dim;
     iter = 0;
     converged = 0;
     std::vector<int> conv(M, 0);
-    //conv = init_int_array(M); /* boolean array for convergence of each root */
+    // conv = init_int_array(M); /* boolean array for convergence of each root */
     while (converged < M && iter < MAXIT) {
 
         skip_check = 0;
@@ -288,7 +288,7 @@ int david2(double** A, int N, int M, double* eps, double** v, double cutoff, int
             for (int& i : conv) {
                 i = 0;
             }
-//            zero_int_array(conv, M);
+            //            zero_int_array(conv, M);
             if (print) {
                 printf("Root      Eigenvalue       Delta  Converged?\n");
                 printf("---- -------------------- ------- ----------\n");

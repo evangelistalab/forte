@@ -34,16 +34,13 @@
 namespace psi {
 namespace forte {
 
-std::vector<std::string> split_string(const std::string& str,
-                                      const std::string& delimiter)
-{
+std::vector<std::string> split_string(const std::string& str, const std::string& delimiter) {
     std::vector<std::string> strings;
 
     std::string::size_type pos = 0;
     std::string::size_type prev = 0;
-    while ((pos = str.find(delimiter, prev)) != std::string::npos)
-    {
-        if (pos != prev){ // avoid repetitions
+    while ((pos = str.find(delimiter, prev)) != std::string::npos) {
+        if (pos != prev) { // avoid repetitions
             strings.push_back(str.substr(prev, pos - prev));
         }
         prev = pos + 1;
@@ -53,6 +50,5 @@ std::vector<std::string> split_string(const std::string& str,
 
     return strings;
 }
-
 }
 }

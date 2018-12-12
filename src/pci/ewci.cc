@@ -758,9 +758,9 @@ double ElementwiseCI::compute_energy() {
     if (converged) {
         outfile->Printf("\n\n  Calculation converged.");
     } else {
-        outfile->Printf("\n\n  Calculation %s", iter_ != maxiter_
-                                                    ? "stoped in appearance of higher new low."
-                                                    : "did not converge!");
+        outfile->Printf("\n\n  Calculation %s",
+                        iter_ != maxiter_ ? "stoped in appearance of higher new low."
+                                          : "did not converge!");
     }
 
     if (do_shift_) {

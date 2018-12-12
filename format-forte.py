@@ -41,7 +41,7 @@ if args.a:
 if len(args.files) > 0:
     file_list = args.files
 
-print "Formatting the following files:\n" + "\n".join(file_list)
+print("Formatting the following files:\n" + "\n".join(file_list))
 
 command = ['clang-format','-i','-style=file']
 command.extend(file_list)

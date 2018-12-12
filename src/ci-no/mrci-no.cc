@@ -79,11 +79,10 @@ void set_MRCINO_options(ForteOptions& foptions) {
      * 3 - Do 1 and 2 -*/
 
     // add options of whether pass MOSpaceInfo or not
-    foptions.add_bool("MRCINO_AUTO", false,
-                      "Allow the users to choose"
-                      "whether pass frozen_docc"
-                      "actice_docc and restricted_docc"
-                      "or not");
+    foptions.add_bool("MRCINO_AUTO", false, "Allow the users to choose"
+                                            "whether pass frozen_docc"
+                                            "actice_docc and restricted_docc"
+                                            "or not");
 }
 
 MRCINO::MRCINO(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,

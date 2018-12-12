@@ -401,7 +401,8 @@ void DMRGSolver::compute_energy() {
             fci_ints->set_active_integrals_and_restricted_docc();
             one_body_integrals_ = fci_ints->oei_a_vector();
             scalar_energy_ = fci_ints->scalar_energy();
-            scalar_energy_ += Process::environment.molecule()->nuclear_repulsion_energy(wfn_->get_dipole_field_strength()) +
+            scalar_energy_ += Process::environment.molecule()->nuclear_repulsion_energy(
+                                  wfn_->get_dipole_field_strength()) +
                               ints_->frozen_core_energy();
             outfile->Printf("\n OneBody integrals (fci_ints) takes %6.5f s",
                             one_body_fci_ints.get());
@@ -443,8 +444,9 @@ void DMRGSolver::compute_energy() {
     std::memset(DMRG1DM, 0.0, sizeof(double) * nOrbDMRG * nOrbDMRG);
     std::memset(DMRG2DM, 0.0, sizeof(double) * nOrbDMRG * nOrbDMRG * nOrbDMRG * nOrbDMRG);
     if (max_rdm_ > 2 && !disk_3_rdm_)
-        std::memset(DMRG3DM, 0.0, sizeof(double) * nOrbDMRG * nOrbDMRG * nOrbDMRG * nOrbDMRG *
-                                      nOrbDMRG * nOrbDMRG);
+        std::memset(DMRG3DM, 0.0,
+                    sizeof(double) * nOrbDMRG * nOrbDMRG * nOrbDMRG * nOrbDMRG * nOrbDMRG *
+                        nOrbDMRG);
 
     std::shared_ptr<CheMPS2::DMRG> DMRGCI =
         std::make_shared<CheMPS2::DMRG>(Prob.get(), OptScheme.get());
@@ -626,7 +628,8 @@ std::vector<double> DMRGSolver::one_body_operator() {
         }
     }
     Dimension restricted_docc = mo_space_info_->get_dimension("INACTIVE_DOCC");
-    double E_restricted = Process::environment.molecule()->nuclear_repulsion_energy(wfn->get_dipole_field_strength());
+    double E_restricted =
+        Process::environment.molecule()->nuclear_repulsion_energy(wfn->get_dipole_field_strength());
     for (int h = 0; h < nirrep; h++) {
         for (int rd = 0; rd < restricted_docc[h]; rd++) {
             E_restricted += Hcore->get(h, rd, rd) + F_restricted->get(h, rd, rd);

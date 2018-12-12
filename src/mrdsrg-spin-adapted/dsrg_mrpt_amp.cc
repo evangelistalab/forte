@@ -352,10 +352,9 @@ void DSRG_MRPT::print_intruder(const std::string& name,
             double down = fi + fj - fa - fb;
             double v = datapair.second;
 
-            output += "\n" + indent +
-                      str(boost::format("[%3d %3d %3d %3d] %13.8f (%10.6f + "
-                                        "%10.6f - %10.6f - %10.6f = %10.6f)") %
-                          i % j % a % b % v % fi % fj % fa % fb % down);
+            output += "\n" + indent + str(boost::format("[%3d %3d %3d %3d] %13.8f (%10.6f + "
+                                                        "%10.6f - %10.6f - %10.6f = %10.6f)") %
+                                          i % j % a % b % v % fi % fj % fa % fb % down);
         }
     } else {
         outfile->Printf("\n    Printing of amplitude is implemented only for T1 and T2!");

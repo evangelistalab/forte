@@ -43,11 +43,11 @@
 namespace psi {
 namespace forte {
 
-UPDensity::UPDensity(std::shared_ptr<Wavefunction> wfn, 
-                    std::shared_ptr<ForteIntegrals> ints,
-                    std::shared_ptr<MOSpaceInfo> mo_space_info, 
-                    Options& options, SharedMatrix Ua, SharedMatrix Ub)
-    : options_(options),wfn_(wfn), ints_(ints), mo_space_info_(mo_space_info), Uas_(Ua), Ubs_(Ub) {}
+UPDensity::UPDensity(std::shared_ptr<Wavefunction> wfn, std::shared_ptr<ForteIntegrals> ints,
+                     std::shared_ptr<MOSpaceInfo> mo_space_info, Options& options, SharedMatrix Ua,
+                     SharedMatrix Ub)
+    : options_(options), wfn_(wfn), ints_(ints), mo_space_info_(mo_space_info), Uas_(Ua), Ubs_(Ub) {
+}
 
 void UPDensity::compute_unpaired_density(std::vector<double>& oprdm_a,
                                          std::vector<double>& oprdm_b) {
@@ -77,9 +77,8 @@ void UPDensity::compute_unpaired_density(std::vector<double>& oprdm_a,
         }
         offset += nactpi[h];
     }
-//    opdm_a->transform(Uas_);
-//    opdm_b->transform(Ubs_);
-
+    //    opdm_a->transform(Uas_);
+    //    opdm_b->transform(Ubs_);
 
     // Diagonalize the 1-RDMs
     SharedVector OCC_A(new Vector("ALPHA NOCC", nirrep, nactpi));
@@ -98,16 +97,15 @@ void UPDensity::compute_unpaired_density(std::vector<double>& oprdm_a,
     Ua->zero();
     Ub->zero();
 
-
     // This Ua/Ub build will ensure that the density only includes active orbitals
     // If natural orbitals are desired, change the 1.0 to NO_a->get(p,q)
     for (int h = 0; h < nirrep; ++h) {
         size_t irrep_offset = fdocc[h] + rdocc[h];
         for (int p = 0; p < nactpi[h]; ++p) {
-           // for (int q = 0; q < nactpi[h]; ++q) {
-                Ua->set(h, p + irrep_offset, p + irrep_offset, 1.0);
-                Ub->set(h, p + irrep_offset, p + irrep_offset, 1.0);
-          //  }
+            // for (int q = 0; q < nactpi[h]; ++q) {
+            Ua->set(h, p + irrep_offset, p + irrep_offset, 1.0);
+            Ub->set(h, p + irrep_offset, p + irrep_offset, 1.0);
+            //  }
         }
     }
 
@@ -118,38 +116,36 @@ void UPDensity::compute_unpaired_density(std::vector<double>& oprdm_a,
 
     SharedMatrix Ua_act(new Matrix(nact, nact));
 
-    //relocalize to atoms
+    // relocalize to atoms
 
     // Grab matrix that takes the transforms from the NO basis to our local basis
     auto loc = std::make_shared<LOCALIZE>(wfn_, options_, ints_, mo_space_info_);
     loc->full_localize();
     Ua_act = loc->get_U()->clone();
-    SharedMatrix Noinv( NO_A->clone());
+    SharedMatrix Noinv(NO_A->clone());
     Noinv->invert();
-    SharedMatrix Ua_act_r = Matrix::doublet(Noinv, Ua_act,  false, false);
-
+    SharedMatrix Ua_act_r = Matrix::doublet(Noinv, Ua_act, false, false);
 
     // Compute sum(p,i) n_i * ( 1 - n_i ) * (U_p,i)^2
     double total = 0.0;
     std::vector<double> scales(nact);
-    for( int i = 0; i < nact; ++i ){
+    for (int i = 0; i < nact; ++i) {
         double value = 0.0;
         for (int h = 0; h < nirrep; ++h) {
             int offset = fdocc[h] + rdocc[h];
             for (int p = 0; p < nactpi[h]; ++p) {
-//                double n_p = OCC_A->get(p) + OCC_B->get(p);
+                //                double n_p = OCC_A->get(p) + OCC_B->get(p);
                 double n_p = OCC_A->get(p);
                 double up_el = n_p * (1.0 - n_p);
 
-                value += up_el *  Ua_act_r->get(p,i) * Ua_act_r->get(p,i);
+                value += up_el * Ua_act_r->get(p, i) * Ua_act_r->get(p, i);
             }
         }
         scales[i] = value;
         total += value;
-        outfile->Printf("\n  MO %d:  %1.6f",i, value);
+        outfile->Printf("\n  MO %d:  %1.6f", i, value);
     }
     outfile->Printf("\n  Total unpaired electrons: %1.4f", total);
-
 
     // Build the density using scaled columns of C
 
@@ -158,15 +154,15 @@ void UPDensity::compute_unpaired_density(std::vector<double>& oprdm_a,
 
     SharedMatrix Ca_new = Matrix::doublet(Ca->clone(), Ua, false, false);
     SharedMatrix Cb_new = Matrix::doublet(Cb->clone(), Ub, false, false);
-    
+
     for (int h = 0; h < nirrep; ++h) {
         int offset = fdocc[h] + rdocc[h];
         for (int p = 0; p < nactpi[h]; ++p) {
-            //double n_p = OCC_A->get(p) + OCC_B->get(p);
-            //double up_el = n_p * (2.0 - n_p);
+            // double n_p = OCC_A->get(p) + OCC_B->get(p);
+            // double up_el = n_p * (2.0 - n_p);
             double up_el = scales[p];
-//            double up_el = n_p * n_p * (2.0 - n_p ) * (2.0 - n_p);
-//            outfile->Printf("\n  Weight for orbital (%d,%d): %1.5f", h, p, up_el);
+            //            double up_el = n_p * n_p * (2.0 - n_p ) * (2.0 - n_p);
+            //            outfile->Printf("\n  Weight for orbital (%d,%d): %1.5f", h, p, up_el);
             Ca_new->scale_column(h, offset + p, up_el);
             Cb_new->scale_column(h, offset + p, up_el);
         }
@@ -183,44 +179,43 @@ void UPDensity::compute_unpaired_density(std::vector<double>& oprdm_a,
 
     Da->copy(Da_new);
     Db->copy(Db_new);
-    
-// This is for IAOs, don't really need it
-//    std::shared_ptr<IAOBuilder> IAO =
-//            IAOBuilder::build(wfn_->basisset(),
-//                              wfn_->get_basisset("MINAO_BASIS"), Ca, options_);
-//    outfile->Printf("\n  Computing IAOs\n");
-//    std::map<std::string, SharedMatrix> iao_info = IAO->build_iaos();
-//    SharedMatrix iao_orbs(iao_info["A"]->clone());
-//
-//    SharedMatrix Cainv(Ca->clone());
-//    Cainv->invert();
-//    SharedMatrix iao_coeffs = Matrix::doublet(Cainv, iao_orbs, false, false);
-//
-//    size_t new_dim = iao_orbs->colspi()[0];
-//    size_t new_dim2 = new_dim * new_dim;
-//    size_t new_dim3 = new_dim2 * new_dim;
-//
-//    auto labels = IAO->print_IAO(iao_orbs, new_dim, nmo, wfn_);
-//
-//    outfile->Printf("\n label size: %zu", labels.size());
-//
-//    std::vector<int> IAO_inds;
-//    for (int i = 0; i < labels.size(); ++i) {
-//        std::string label = labels[i];
-//        if (label.find("z") != std::string::npos) {
-//            IAO_inds.push_back(i);
-//        }
-//    }
-//    std::vector<size_t> active_mo = mo_space_info_->get_absolute_mo("ACTIVE");
-//    for (int i = 0; i < nact; ++i) {
-//        int idx = IAO_inds[i];
-//        outfile->Printf("\n Using IAO %d", idx);
-//        for (int j = 0; j < nact; ++j) {
-//            int mo = active_mo[j];
-//            Ua_act->set(j, i, iao_coeffs->get(mo, idx));
-//        }
-//    }
 
+    // This is for IAOs, don't really need it
+    //    std::shared_ptr<IAOBuilder> IAO =
+    //            IAOBuilder::build(wfn_->basisset(),
+    //                              wfn_->get_basisset("MINAO_BASIS"), Ca, options_);
+    //    outfile->Printf("\n  Computing IAOs\n");
+    //    std::map<std::string, SharedMatrix> iao_info = IAO->build_iaos();
+    //    SharedMatrix iao_orbs(iao_info["A"]->clone());
+    //
+    //    SharedMatrix Cainv(Ca->clone());
+    //    Cainv->invert();
+    //    SharedMatrix iao_coeffs = Matrix::doublet(Cainv, iao_orbs, false, false);
+    //
+    //    size_t new_dim = iao_orbs->colspi()[0];
+    //    size_t new_dim2 = new_dim * new_dim;
+    //    size_t new_dim3 = new_dim2 * new_dim;
+    //
+    //    auto labels = IAO->print_IAO(iao_orbs, new_dim, nmo, wfn_);
+    //
+    //    outfile->Printf("\n label size: %zu", labels.size());
+    //
+    //    std::vector<int> IAO_inds;
+    //    for (int i = 0; i < labels.size(); ++i) {
+    //        std::string label = labels[i];
+    //        if (label.find("z") != std::string::npos) {
+    //            IAO_inds.push_back(i);
+    //        }
+    //    }
+    //    std::vector<size_t> active_mo = mo_space_info_->get_absolute_mo("ACTIVE");
+    //    for (int i = 0; i < nact; ++i) {
+    //        int idx = IAO_inds[i];
+    //        outfile->Printf("\n Using IAO %d", idx);
+    //        for (int j = 0; j < nact; ++j) {
+    //            int mo = active_mo[j];
+    //            Ua_act->set(j, i, iao_coeffs->get(mo, idx));
+    //        }
+    //    }
 }
 
 UPDensity::~UPDensity() {}

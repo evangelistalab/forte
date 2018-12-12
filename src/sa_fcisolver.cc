@@ -313,7 +313,8 @@ double SA_FCISolver::compute_energy() {
         //        }
 
         SharedVector evals;
-        double Enuc = Process::environment.molecule()->nuclear_repulsion_energy(wfn_->get_dipole_field_strength());
+        double Enuc = Process::environment.molecule()->nuclear_repulsion_energy(
+            wfn_->get_dipole_field_strength());
         for (int root_number = 0; root_number < nroot; root_number++) {
             fcisolver.set_root(root_number);
 

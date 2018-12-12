@@ -141,8 +141,7 @@ double MRDSRG::smart_s_davg_min_delta1() {
         davg.emplace_back(Eta1_.block("aa").data()[i * nactv + i]);
     }
     double davg_sum = std::accumulate(davg.begin(), davg.end(), 0.0);
-    std::transform(davg.begin(), davg.end(), davg.begin(),
-                   [&](double x) { return x / davg_sum; });
+    std::transform(davg.begin(), davg.end(), davg.begin(), [&](double x) { return x / davg_sum; });
 
     // density averaged denorminator
     double Edelta = 0.0;
@@ -176,8 +175,7 @@ double MRDSRG::smart_s_davg_max_delta1() {
         davg.emplace_back(Gamma1_.block("aa").data()[i * nactv + i]);
     }
     double davg_sum = std::accumulate(davg.begin(), davg.end(), 0.0);
-    std::transform(davg.begin(), davg.end(), davg.begin(),
-                   [&](double x) { return x / davg_sum; });
+    std::transform(davg.begin(), davg.end(), davg.begin(), [&](double x) { return x / davg_sum; });
 
     // density averaged denorminator
     double Edelta = 0.0;

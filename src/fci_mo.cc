@@ -1452,9 +1452,8 @@ void FCI_MO::compute_permanent_dipole() {
     std::vector<SharedMatrix> aodipole_ints = integral_->AOdipole_ints();
 
     // Nuclear dipole contribution
-    Vector3 ndip =
-            Process::environment.molecule()->nuclear_dipole(Vector3(0.0, 0.0, 0.0));
-//        DipoleInt::nuclear_contribution(Process::environment.molecule(), );
+    Vector3 ndip = Process::environment.molecule()->nuclear_dipole(Vector3(0.0, 0.0, 0.0));
+    //        DipoleInt::nuclear_contribution(Process::environment.molecule(), );
 
     // SO to AO transformer
     SharedMatrix sotoao(this->aotoso()->transpose());

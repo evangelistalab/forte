@@ -673,15 +673,14 @@ void MASTER_DSRG::deGNO_ints(const std::string& name, double& H0, BlockedTensor&
     outfile->Printf("Done. Timing %8.3f s", t2.get());
 }
 
-void MASTER_DSRG::fill_three_index_ints(ambit::BlockedTensor T)
-{
+void MASTER_DSRG::fill_three_index_ints(ambit::BlockedTensor T) {
     const auto& block_labels = T.block_labels();
     for (const std::string& string_block : block_labels) {
         auto mo_to_index = BTF_->get_mo_to_index();
-        std::vector<size_t> first_index = mo_to_index[string_block.substr(0,1)];
-        std::vector<size_t> second_index = mo_to_index[string_block.substr(1,1)];
-        std::vector<size_t> third_index = mo_to_index[string_block.substr(2,1)];
-        ambit::Tensor block = ints_->three_integral_block(first_index,second_index,third_index);
+        std::vector<size_t> first_index = mo_to_index[string_block.substr(0, 1)];
+        std::vector<size_t> second_index = mo_to_index[string_block.substr(1, 1)];
+        std::vector<size_t> third_index = mo_to_index[string_block.substr(2, 1)];
+        ambit::Tensor block = ints_->three_integral_block(first_index, second_index, third_index);
         T.block(string_block).copy(block);
     }
 }

@@ -173,8 +173,9 @@ void DSRG_MRPT::BT_scaled_by_Rplus1(BlockedTensor& BT) {
     if (BT.rank() == 4) {
         BT.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
             if (std::fabs(value) > 1.0e-15) {
-                value *= 1.0 + dsrg_source_->compute_renormalized(Fdiag_[i[0]] + Fdiag_[i[1]] -
-                                                                  Fdiag_[i[2]] - Fdiag_[i[3]]);
+                value *= 1.0 +
+                         dsrg_source_->compute_renormalized(Fdiag_[i[0]] + Fdiag_[i[1]] -
+                                                            Fdiag_[i[2]] - Fdiag_[i[3]]);
             } else {
                 value = 0.0; // ignore all noise
             }

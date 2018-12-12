@@ -59,11 +59,9 @@ det_hashvec& DeterminantHashVec::wfn_hash() { return wfn_; }
 
 void DeterminantHashVec::clear() { wfn_.clear(); }
 
-std::vector<Determinant> DeterminantHashVec::determinants() const {
-    return wfn_.toVector();
-}
+std::vector<Determinant> DeterminantHashVec::determinants() const { return wfn_.toVector(); }
 
-std::vector<std::pair<Determinant,size_t>> DeterminantHashVec::determinant_index_pairs() const {
+std::vector<std::pair<Determinant, size_t>> DeterminantHashVec::determinant_index_pairs() const {
     return wfn_.toKeyIndex();
 }
 
