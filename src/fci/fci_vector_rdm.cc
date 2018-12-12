@@ -103,7 +103,8 @@ double FCIWfn::energy_from_rdms(std::shared_ptr<FCIIntegrals> fci_ints) {
     size_t na = alfa_graph_->nones();
     size_t nb = beta_graph_->nones();
 
-    double nuclear_repulsion_energy = Process::environment.molecule()->nuclear_repulsion_energy( {0,0,0} );
+    double nuclear_repulsion_energy =
+        Process::environment.molecule()->nuclear_repulsion_energy({0, 0, 0});
 
     double scalar_energy = fci_ints->frozen_core_energy() + fci_ints->scalar_energy();
     double energy_1rdm = 0.0;

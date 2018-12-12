@@ -124,7 +124,8 @@ void FCISolver::startup() {
 double FCISolver::compute_energy() {
     local_timer t;
 
-    double nuclear_repulsion_energy = Process::environment.molecule()->nuclear_repulsion_energy({0,0,0});
+    double nuclear_repulsion_energy =
+        Process::environment.molecule()->nuclear_repulsion_energy({0, 0, 0});
     std::shared_ptr<FCIIntegrals> fci_ints;
     if (!provide_integrals_and_restricted_docc_) {
         fci_ints = std::make_shared<FCIIntegrals>(ints_, active_mo_, core_mo_);
@@ -292,7 +293,8 @@ double FCISolver::compute_energy() {
                     continue;
 
                 std::bitset<Determinant::num_str_bits> Ia_v = lists_->alfa_str(h, add_Ia);
-                std::bitset<Determinant::num_str_bits> Ib_v = lists_->beta_str(h ^ symmetry_, add_Ib);
+                std::bitset<Determinant::num_str_bits> Ib_v =
+                    lists_->beta_str(h ^ symmetry_, add_Ib);
 
                 outfile->Printf("\n    ");
                 size_t offset = 0;
@@ -383,7 +385,8 @@ FCISolver::initial_guess(FCIWfn& diag, size_t n, size_t multiplicity,
                          std::shared_ptr<FCIIntegrals> fci_ints) {
     local_timer t;
 
-    double nuclear_repulsion_energy = Process::environment.molecule()->nuclear_repulsion_energy({0,0,0});
+    double nuclear_repulsion_energy =
+        Process::environment.molecule()->nuclear_repulsion_energy({0, 0, 0});
     double scalar_energy = fci_ints->scalar_energy();
 
     size_t ntrial = n * ntrial_per_root_;
