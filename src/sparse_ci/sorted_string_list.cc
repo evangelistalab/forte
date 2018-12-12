@@ -27,7 +27,7 @@
  * @END LICENSE
  */
 
-#include "../helpers.h"
+#include "helpers.h"
 #include "sorted_string_list.h"
 
 namespace psi {
