@@ -27,13 +27,11 @@
  * @END LICENSE
  */
 
-#include "psi4/libpsi4util/libpsi4util.h"
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/pointgrp.h"
 #include "psi4/libpsio/psio.hpp"
 
-#include "../helpers/timer.h"
 #include "helpers/printing.h"
 #include "aci.h"
 
@@ -582,7 +580,7 @@ double AdaptiveCI::compute_energy() {
     }
 
     if (ex_alg_ == "MULTISTATE") {
-        Timer multi;
+        local_timer multi;
         compute_multistate(PQ_evals);
         outfile->Printf("\n  Time spent computing multistate solution: %1.5f s", multi.get());
         //    PQ_evals->print();
@@ -598,7 +596,7 @@ double AdaptiveCI::compute_energy() {
             if (sigma_method == "HZ") {
                 op_.clear_op_lists();
                 op_.clear_tp_lists();
-                Timer str;
+                local_timer str;
                 op_.build_strings(final_wfn_);
                 outfile->Printf("\n  Time spent building strings      %1.6f s", str.get());
                 op_.op_lists(final_wfn_);
@@ -651,7 +649,7 @@ double AdaptiveCI::compute_energy() {
     double list_time = 0.0;
     if ((options_.get_int("ACI_MAX_RDM") >= 3 or (rdm_level_ >= 3)) and !(options_.get_bool("ACI_DIRECT_RDMS")) ) {
         outfile->Printf("\n  Computing 3-list...    ");
-        Timer l3;
+        local_timer l3;
         op_.three_s_lists(final_wfn_);
         outfile->Printf(" done (%1.5f s)", l3.get());
         list_time += l3.get();
@@ -676,7 +674,7 @@ double AdaptiveCI::compute_energy() {
         compute_rdms(fci_ints_, approx, op_, new_evecs, 0, 0);
 
     } else {
-        Timer totaltt;
+        local_timer totaltt;
         if( !(options_.get_bool("ACI_DIRECT_RDMS")) ){
             op_.clear_op_s_lists();
             op_.clear_tp_s_lists();
@@ -867,7 +865,7 @@ void AdaptiveCI::find_q_space_batched(DeterminantHashVec& P_space, DeterminantHa
                                       SharedVector evals, SharedMatrix evecs) {
 
     timer find_q("ACI:Build Model Space");
-    Timer build;
+    local_timer build;
     outfile->Printf("\n  Using batched Q_space algorithm");
 
     std::vector<std::pair<double, Determinant>> F_space;
@@ -889,13 +887,13 @@ void AdaptiveCI::find_q_space_batched(DeterminantHashVec& P_space, DeterminantHa
                         build.get());
     }
 
-    Timer sorter;
+    local_timer sorter;
     std::sort(F_space.begin(), F_space.end(), pairComp);
     outfile->Printf("\n  Time spent sorting: %1.6f", sorter.get());
 
-    Timer screen;
+    local_timer screen;
     double ept2 = 0.0 - remainder;
-    Timer select;
+    local_timer select;
     double sum = remainder;
     size_t last_excluded = 0;
     for (size_t I = 0, max_I = F_space.size(); I < max_I; ++I) {
@@ -940,7 +938,7 @@ void AdaptiveCI::find_q_space_batched(DeterminantHashVec& P_space, DeterminantHa
 void AdaptiveCI::default_find_q_space(DeterminantHashVec& P_space, DeterminantHashVec& PQ_space,
                                       SharedVector evals, SharedMatrix evecs) {
     timer find_q("ACI:Build Model Space");
-    Timer build;
+    local_timer build;
 
     det_hash<double> V_hash;
     get_excited_determinants_sr(evecs, P_space, V_hash);
@@ -949,7 +947,7 @@ void AdaptiveCI::default_find_q_space(DeterminantHashVec& P_space, DeterminantHa
     PQ_space.clear();
     external_wfn_.clear();
     // Add the P-space determinants and zero the hash
-    Timer erase;
+    local_timer erase;
     const det_hashvec& detmap = P_space.wfn_hash();
     for (det_hashvec::iterator it = detmap.begin(), endit = detmap.end(); it != endit; ++it) {
         V_hash.erase(*it);
@@ -963,13 +961,13 @@ void AdaptiveCI::default_find_q_space(DeterminantHashVec& P_space, DeterminantHa
                         build.get());
     }
 
-    Timer screen;
+    local_timer screen;
 
     // Compute criteria for all dets, store them all
     Determinant zero_det; // <- xsize (nact_);
     std::vector<std::pair<double, Determinant>> F_space(V_hash.size(),
                                                         std::make_pair(0.0, zero_det));
-    Timer build_sort;
+    local_timer build_sort;
     size_t max = V_hash.size();
 #pragma omp parallel
     {
@@ -990,12 +988,12 @@ void AdaptiveCI::default_find_q_space(DeterminantHashVec& P_space, DeterminantHa
     }
     outfile->Printf("\n  Time spent building sorting list: %1.6f", build_sort.get());
 
-    Timer sorter;
+    local_timer sorter;
     std::sort(F_space.begin(), F_space.end(), pairComp);
     outfile->Printf("\n  Time spent sorting: %1.6f", sorter.get());
 
     double ept2 = 0.0;
-    Timer select;
+    local_timer select;
     double sum = 0.0;
     size_t last_excluded = 0;
     for (size_t I = 0, max_I = F_space.size(); I < max_I; ++I) {
@@ -1040,7 +1038,7 @@ void AdaptiveCI::default_find_q_space(DeterminantHashVec& P_space, DeterminantHa
 void AdaptiveCI::find_q_space(DeterminantHashVec& P_space, DeterminantHashVec& PQ_space, int nroot,
                               SharedVector evals, SharedMatrix evecs) {
     timer find_q("ACI:Build Model Space");
-    Timer t_ms_build;
+    local_timer t_ms_build;
 
     // This hash saves the determinant coupling to the model space eigenfunction
     det_hash<std::vector<double>> V_hash;
@@ -1064,7 +1062,7 @@ void AdaptiveCI::find_q_space(DeterminantHashVec& P_space, DeterminantHashVec& P
     // Add the P-space determinants and zero the hash
     PQ_space.copy(P_space);
 
-    Timer t_ms_screen;
+    local_timer t_ms_screen;
 
     // Define coupling out of loop, assume perturb_select_ = false
     std::function<double(double A, double B, double C)> C1_eq = [](double A, double B,
@@ -1545,7 +1543,7 @@ void AdaptiveCI::print_wfn(DeterminantHashVec& space, WFNOperator& op, SharedMat
 }
 
 void AdaptiveCI::full_spin_transform(DeterminantHashVec& det_space, SharedMatrix cI, int nroot) {
-    //	Timer timer;
+    //	local_timer timer;
     //	outfile->Printf("\n  Performing spin projection...");
     //
     //	// Build the S^2 Matrix
@@ -1989,7 +1987,7 @@ void AdaptiveCI::compute_aci(DeterminantHashVec& PQ_space, SharedMatrix& PQ_evec
 
     int cycle;
     for (cycle = 0; cycle < max_cycle_; ++cycle) {
-        Timer cycle_time;
+        local_timer cycle_time;
         // Step 1. Diagonalize the Hamiltonian in the P space
         int num_ref_roots = std::min(nroot_, int(P_space.size()));
         cycle_ = cycle;
@@ -2051,7 +2049,7 @@ void AdaptiveCI::compute_aci(DeterminantHashVec& PQ_space, SharedMatrix& PQ_evec
         }
 
         sparse_solver.manual_guess(false);
-        Timer diag;
+        local_timer diag;
         sparse_solver.diagonalize_hamiltonian_map(P_space, op_, P_evals, P_evecs, num_ref_roots,
                                                   multiplicity_, diag_method_);
         if (!quiet_mode_)
@@ -2101,7 +2099,7 @@ void AdaptiveCI::compute_aci(DeterminantHashVec& PQ_space, SharedMatrix& PQ_evec
             print_wfn(P_space, op_, P_evecs, num_ref_roots);
 
         // Step 2. Find determinants in the Q space
-        Timer build_space;
+        local_timer build_space;
         if (options_.get_bool("ACI_BATCHED_SCREENING")) {
             find_q_space_batched(P_space, PQ_space, P_evals, P_evecs);
         } else if (streamline_qspace_) {
@@ -2129,7 +2127,7 @@ void AdaptiveCI::compute_aci(DeterminantHashVec& PQ_space, SharedMatrix& PQ_evec
         if (sigma_method == "HZ") {
             op_.clear_op_lists();
             op_.clear_tp_lists();
-            Timer str;
+            local_timer str;
             op_.build_strings(PQ_space);
             outfile->Printf("\n  Time spent building strings      %1.6f s", str.get());
             op_.op_lists(PQ_space);
@@ -2141,7 +2139,7 @@ void AdaptiveCI::compute_aci(DeterminantHashVec& PQ_space, SharedMatrix& PQ_evec
             op_.op_s_lists(PQ_space);
             op_.tp_s_lists(PQ_space);
         }
-        Timer diag_pq;
+        local_timer diag_pq;
 
         sparse_solver.diagonalize_hamiltonian_map(PQ_space, op_, PQ_evals, PQ_evecs, num_ref_roots,
                                                   multiplicity_, diag_method_);
@@ -2292,7 +2290,7 @@ void AdaptiveCI::compute_rdms(std::shared_ptr<FCIIntegrals> fci_ints, Determinan
 
     
     if(options_.get_bool("ACI_DIRECT_RDMS") ){
-       // Timer dyn;
+       // local_timer dyn;
      //   CI_RDMS ci_rdms_(final_wfn_, fci_ints_, PQ_evecs, 0, 0);
         ci_rdms_.compute_rdms_dynamic(ordm_a_, ordm_b_, trdm_aa_, trdm_ab_, trdm_bb_,
                                         trdm_aaa_,trdm_aab_,trdm_abb_,trdm_bbb_);
@@ -2301,7 +2299,7 @@ void AdaptiveCI::compute_rdms(std::shared_ptr<FCIIntegrals> fci_ints, Determinan
        // outfile->Printf("\n  RDMS (bits) took           %1.6f", dt);
     } else {
         if (rdm_level_ >= 1) {
-            Timer one_r;
+            local_timer one_r;
             ci_rdms_.compute_1rdm(ordm_a_, ordm_b_, op);
             outfile->Printf("\n  1-RDM  took %2.6f s (determinant)", one_r.get());
 
@@ -2310,12 +2308,12 @@ void AdaptiveCI::compute_rdms(std::shared_ptr<FCIIntegrals> fci_ints, Determinan
             }
         }
         if (rdm_level_ >= 2) {
-            Timer two_r;
+            local_timer two_r;
             ci_rdms_.compute_2rdm(trdm_aa_, trdm_ab_, trdm_bb_, op);
             outfile->Printf("\n  2-RDMS took %2.6f s (determinant)", two_r.get());
         }
         if (rdm_level_ >= 3) {
-            Timer tr;
+            local_timer tr;
             ci_rdms_.compute_3rdm(trdm_aaa_, trdm_aab_, trdm_abb_, trdm_bbb_, op);
             outfile->Printf("\n  3-RDMs took %2.6f s (determinant)", tr.get());
         }

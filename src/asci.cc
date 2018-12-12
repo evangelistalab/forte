@@ -27,11 +27,12 @@
  * @END LICENSE
  */
 
-#include "psi4/libpsi4util/libpsi4util.h"
+
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/pointgrp.h"
 #include "psi4/libpsio/psio.hpp"
+#include "helpers/timer.h"
 #include "helpers/printing.h"
 #include "asci.h"
 
@@ -205,7 +206,7 @@ double ASCI::compute_energy() {
     print_info();
     outfile->Printf("\n  Using %d threads", omp_get_max_threads());
 
-    Timer asci_elapse;
+    local_timer asci_elapse;
 
     // The eigenvalues and eigenvectors
     SharedMatrix PQ_evecs;
@@ -247,7 +248,7 @@ double ASCI::compute_energy() {
 
     int cycle;
     for (cycle = 0; cycle < max_cycle_; ++cycle) {
-        Timer cycle_time;
+        local_timer cycle_time;
 
         // Step 1. Diagonalize the Hamiltonian in the P space
         std::string cycle_h = "Cycle " + std::to_string(cycle);
@@ -269,7 +270,7 @@ double ASCI::compute_energy() {
         }
 
         sparse_solver.manual_guess(false);
-        Timer diag;
+        local_timer diag;
         sparse_solver.diagonalize_hamiltonian_map(P_space, op_, P_evals, P_evecs, nroot_,
                                                   multiplicity_, diag_method_);
         outfile->Printf("\n  Time spent diagonalizing H:   %1.6f s", diag.get());
@@ -283,9 +284,9 @@ double ASCI::compute_energy() {
         outfile->Printf("\n    P-space  CI Energy Root 0       = "
                         "%.12f ", P_abs_energy);
         outfile->Printf("\n");
-        
+
         // Step 2. Find determinants in the Q space
-        Timer build_space;
+        local_timer build_space;
         find_q_space(P_space, PQ_space, P_evals, P_evecs);
         outfile->Printf("\n  Time spent building the model space: %1.6f", build_space.get());
 
@@ -293,7 +294,7 @@ double ASCI::compute_energy() {
         if (sigma_method == "HZ") {
             op_.clear_op_lists();
             op_.clear_tp_lists();
-            Timer str;
+            local_timer str;
             op_.build_strings(PQ_space);
             outfile->Printf("\n  Time spent building strings      %1.6f s", str.get());
             op_.op_lists(PQ_space);
@@ -305,7 +306,7 @@ double ASCI::compute_energy() {
             op_.op_s_lists(PQ_space);
             op_.tp_s_lists(PQ_space);
         }
-        Timer diag_pq;
+        local_timer diag_pq;
 
         sparse_solver.diagonalize_hamiltonian_map(PQ_space, op_, PQ_evals, PQ_evecs, nroot_,
                                                   multiplicity_, diag_method_);
@@ -319,7 +320,7 @@ double ASCI::compute_energy() {
         outfile->Printf("\n    PQ-space CI Energy Root 0        = "
                         "%.12f Eh", abs_energy);
         outfile->Printf("\n");
-        
+
 
 
         // Step 4. Check convergence and break if needed
@@ -366,7 +367,7 @@ double ASCI::compute_energy() {
     outfile->Printf("\n\n  ==> Wavefunction Information <==");
 
     print_wfn(PQ_space, op_, PQ_evecs, nroot_);
-    
+
     compute_rdms(fci_ints_, PQ_space, op_, PQ_evecs, 0,0);
 
     return root_energy;
@@ -375,7 +376,7 @@ double ASCI::compute_energy() {
 void ASCI::find_q_space(DeterminantHashVec& P_space, DeterminantHashVec& PQ_space,
                                       SharedVector evals, SharedMatrix evecs) {
     timer find_q("ASCI:Build Model Space");
-    Timer build;
+    local_timer build;
 
     det_hash<double> V_hash;
     get_excited_determinants_sr(evecs, P_space, V_hash);
@@ -393,13 +394,13 @@ void ASCI::find_q_space(DeterminantHashVec& P_space, DeterminantHashVec& PQ_spac
     outfile->Printf("\n  %s: %f s\n", "Time spent building the external space (default)",
                     build.get());
 
-    Timer screen;
+    local_timer screen;
     // Compute criteria for all dets, store them all
     Determinant zero_det; // <- xsize (nact_);
     std::vector<std::pair<double, Determinant>> F_space(V_hash.size(),
                                                         std::make_pair(0.0, zero_det));
 
-    Timer build_sort;
+    local_timer build_sort;
     size_t max = V_hash.size();
     size_t N = 0;
     // sorted_dets.reserve(max);
@@ -409,18 +410,18 @@ void ASCI::find_q_space(DeterminantHashVec& P_space, DeterminantHashVec& PQ_spac
 
         double criteria = V / delta;
         F_space[N] = std::make_pair(std::fabs(criteria), I.first);
-        
+
         N++;
     }
     for( const auto& I : detmap ){
-        F_space.push_back( std::make_pair( std::fabs(evecs->get(P_space.get_idx(I), 0)), I )); 
+        F_space.push_back( std::make_pair( std::fabs(evecs->get(P_space.get_idx(I), 0)), I ));
     }
     outfile->Printf("\n  Time spent building sorting list: %1.6f", build_sort.get());
 
-    Timer sorter;
+    local_timer sorter;
     std::sort(F_space.begin(), F_space.end(), pairCompDescend);
     outfile->Printf("\n  Time spent sorting: %1.6f", sorter.get());
-    Timer select;
+    local_timer select;
 
     size_t maxI = std::min( t_det_, int(F_space.size()) );
     for (size_t I = 0; I < maxI; ++I) {
@@ -431,7 +432,7 @@ void ASCI::find_q_space(DeterminantHashVec& P_space, DeterminantHashVec& PQ_spac
     outfile->Printf("\n  %s: %zu determinants", "Dimension of the P + Q space",
                     PQ_space.size());
     outfile->Printf("\n  %s: %f s", "Time spent screening the model space", screen.get());
-    
+
 }
 
 bool ASCI::check_convergence(std::vector<std::vector<double>>& energy_history,
@@ -456,7 +457,7 @@ bool ASCI::check_convergence(std::vector<std::vector<double>>& energy_history,
     new_energies.push_back(state_n_energy);
     new_avg_energy += state_n_energy;
     old_avg_energy += old_energies[0];
-    
+
     old_avg_energy /= static_cast<double>(nroot);
     new_avg_energy /= static_cast<double>(nroot);
 
@@ -516,7 +517,7 @@ std::vector<std::pair<double, double>> ASCI::compute_spin(DeterminantHashVec& sp
             double S2 = op.s2_direct(space, evecs, n);
             double S = std::fabs(0.5 * (std::sqrt(1.0 + 4.0 * S2) - 1.0));
             spin_vec[n] = std::make_pair(S, S2);
-        } 
+        }
     } else {
         for (int n = 0; n < nroot_; ++n) {
             double S2 = op.s2(space, evecs, n);
@@ -551,7 +552,7 @@ void ASCI::print_wfn(DeterminantHashVec& space, WFNOperator& op, SharedMatrix ev
     state_label = s2_labels[std::round(spins[0].first * 2.0)];
     root_spin_vec_.clear();
     root_spin_vec_[0] = std::make_pair(spins[0].first, spins[0].second);
-    outfile->Printf("\n\n  Spin state for root 0: S^2 = %5.6f, S = %5.3f, %s \n", 
+    outfile->Printf("\n\n  Spin state for root 0: S^2 = %5.6f, S = %5.3f, %s \n",
                     root_spin_vec_[0].first, root_spin_vec_[0].second, state_label.c_str());
 }
 
@@ -688,30 +689,30 @@ void ASCI::compute_rdms(std::shared_ptr<FCIIntegrals> fci_ints, DeterminantHashV
 //    double total_time = 0.0;
     ci_rdms_.set_max_rdm(rdm_level_);
 
-    
+
     if (rdm_level_ >= 1) {
-        Timer one_r;
+        local_timer one_r;
         ci_rdms_.compute_1rdm(ordm_a_, ordm_b_, op);
         outfile->Printf("\n  1-RDM  took %2.6f s (determinant)", one_r.get());
 
         print_nos();
     }
     if (rdm_level_ >= 2) {
-        Timer two_r;
+        local_timer two_r;
         ci_rdms_.compute_2rdm(trdm_aa_, trdm_ab_, trdm_bb_, op);
         outfile->Printf("\n  2-RDMS took %2.6f s (determinant)", two_r.get());
     }
     if (rdm_level_ >= 3) {
-        Timer tr;
+        local_timer tr;
         ci_rdms_.compute_3rdm(trdm_aaa_, trdm_aab_, trdm_abb_, trdm_bbb_, op);
         outfile->Printf("\n  3-RDMs took %2.6f s (determinant)", tr.get());
     }
-    
+
 }
 
 void ASCI::get_excited_determinants_sr(SharedMatrix evecs, DeterminantHashVec& P_space,
                                              det_hash<double>& V_hash) {
-    Timer build;
+    local_timer build;
     size_t max_P = P_space.size();
     const det_hashvec& P_dets = P_space.wfn_hash();
     int nroot = 1;
@@ -847,7 +848,7 @@ void ASCI::get_excited_determinants_sr(SharedMatrix evecs, DeterminantHashVec& P
         }
         if (tid == 0)
             outfile->Printf("\n  Time spent forming F space: %20.6f", build.get());
-        Timer merge_t;
+        local_timer merge_t;
 #pragma omp critical
         {
             for (auto& pair : V_hash_t) {

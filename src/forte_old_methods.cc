@@ -33,7 +33,6 @@
 #include "boost/format.hpp"
 #include <ambit/tensor.h>
 
-#include "psi4/libpsi4util/libpsi4util.h"
 #include "psi4/libdpd/dpd.h"
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/wavefunction.h"
@@ -81,6 +80,7 @@
 #include "tensorsrg.h"
 #include "test_ambit.h"
 #include "v2rdm.h"
+#include "helpers/timer.h"
 
 #ifdef HAVE_CHEMPS2
 #include "dmrgscf.h"
@@ -504,7 +504,7 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
         }
     }
     if (options.get_str("JOB_TYPE") == "THREE-DSRG-MRPT2") {
-        Timer all_three_dsrg_mrpt2;
+        local_timer all_three_dsrg_mrpt2;
 
         if (options.get_str("INT_TYPE") == "CONVENTIONAL") {
             outfile->Printf("\n THREE-DSRG-MRPT2 is designed for DF/CD integrals");
