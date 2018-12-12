@@ -27,13 +27,13 @@
  * @END LICENSE
  */
 
-#include "psi4/libpsi4util/libpsi4util.h"
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/liboptions/liboptions.h"
 
 #include "forte_options.h"
 #include "mrpt2.h"
+#include "helpers/timer.h"
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -91,7 +91,7 @@ double MRPT2::compute_energy() {
     outfile->Printf("\n\n  Computing PT2 correction from %zu reference determinants",
                     reference_.size());
 
-    Timer en;
+    local_timer en;
     double pt2_energy = compute_pt2_energy();
     //  double scalar = fci_ints_->scalar_energy() + molecule_->nuclear_repulsion_energy();
     //  double energy = pt2_energy + scalar + evals_->get(0);
