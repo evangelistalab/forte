@@ -38,8 +38,7 @@
 #include "psi4/libqt/qt.h"
 #include "psi4/psifiles.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
-#include "psi4/libpsi4util/libpsi4util.h"
-
+#include "helpers/timer.h"
 #include "orbitaloptimizer.h"
 
 #include "reference.h"
@@ -61,21 +60,21 @@ void OrbitalOptimizer::update() {
     /// F^{I}_{pq} = h_{pq} + 2 (pq | kk) - (pk |qk)
     /// This is done using JK builder: F^{I}_{pq} = h_{pq} + C^{T}[2J - K]C
     /// Built in the AO basis for efficiency
-    Timer overall_update;
+    local_timer overall_update;
 
-    Timer fock_core;
+    local_timer fock_core;
     form_fock_intermediates();
     if (timings_) {
         outfile->Printf("\n\n FormFockIntermediates took %8.8f s.", fock_core.get());
     }
 
-    Timer orbital_grad;
+    local_timer orbital_grad;
     orbital_gradient();
     if (timings_) {
         outfile->Printf("\n\n FormOrbitalGradient took %8.8f s.", orbital_grad.get());
     }
 
-    Timer diag_hess;
+    local_timer diag_hess;
     diagonal_hessian();
     if (timings_) {
         outfile->Printf("\n\n FormDiagHessian took %8.8f s.", diag_hess.get());
@@ -138,7 +137,8 @@ void OrbitalOptimizer::startup() {
         cas_ = true;
     } else {
         outfile->Printf("\n\n Please set your CASSCF_CI_SOLVER to either FCI, CAS, ACI, or DMRG");
-        outfile->Printf("\n\n You set your CASSCF_CI_SOLVER to %s.", options_.get_str("CASSCF_CI_SOLVER").c_str());
+        outfile->Printf("\n\n You set your CASSCF_CI_SOLVER to %s.",
+                        options_.get_str("CASSCF_CI_SOLVER").c_str());
         throw PSIEXCEPTION("You did not specify your CASSCF_CI_SOLVER correctly.");
     }
     cas_ = true;
