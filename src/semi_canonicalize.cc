@@ -41,6 +41,7 @@
 
 #include "blockedtensorfactory.h"
 #include "helpers/printing.h"
+#include "helpers/timer.h"
 #include "semi_canonicalize.h"
 
 namespace psi {
@@ -168,7 +169,7 @@ void SemiCanonical::set_actv_dims(const Dimension& actv_docc, const Dimension& a
 
 void SemiCanonical::semicanonicalize(Reference& reference, const int& max_rdm_level,
                                      const bool& build_fock, const bool& transform) {
-    Timer SemiCanonicalize;
+    local_timer SemiCanonicalize;
 
     // 1. Build the Fock matrix from ForteIntegral
     if (build_fock) {
@@ -224,7 +225,7 @@ void SemiCanonical::build_fock_matrix(Reference& reference) {
         offset += ncmopi_[h] - rdocc_[h];
     }
 
-    Timer FockTime;
+    local_timer FockTime;
     ints_->make_fock_matrix(Da, Db);
     outfile->Printf("\n  Took %8.6f s to build Fock matrix", FockTime.get());
 }
