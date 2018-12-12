@@ -28,10 +28,9 @@
  */
 
 #include "psi4/psi4-dec.h"
-#include "psi4/libpsi4util/libpsi4util.h"
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/pointgrp.h"
-
+#include "helpers/timer.h"
 #include "../ci_rdm/ci_rdms.h"
 #include "../fci/fci_integrals.h"
 #include "../forte_options.h"
@@ -78,10 +77,11 @@ void set_CINO_options(ForteOptions& foptions) {
      * 3 - Do 1 and 2 -*/
 
     // add options of whether pass MOSpaceInfo or not
-    foptions.add_bool("CINO_AUTO", false, "Allow the users to choose"
-                                          "whether pass frozen_docc"
-                                          "actice_docc and restricted_docc"
-                                          "or not");
+    foptions.add_bool("CINO_AUTO", false,
+                      "Allow the users to choose"
+                      "whether pass frozen_docc"
+                      "actice_docc and restricted_docc"
+                      "or not");
 }
 
 CINO::CINO(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
@@ -116,8 +116,8 @@ double CINO::compute_energy() {
     SharedMatrix Density_b(new Matrix(actvpi_, actvpi_));
     int sum = 0;
 
-    //Build CAS determinants
-    //std::vector<std::vector<Determinant> > dets_cas = build_dets_cas();
+    // Build CAS determinants
+    // std::vector<std::vector<Determinant> > dets_cas = build_dets_cas();
 
     for (int h = 0; h < nirrep_; ++h) {
         int nsolutions = options_["CINO_ROOTS_PER_IRREP"][h].to_integer();
@@ -138,18 +138,16 @@ double CINO::compute_energy() {
             std::pair<SharedMatrix, SharedMatrix> gamma =
                 build_density_matrix(dets, evals_evecs.second, nsolutions);
 
-             //Add density matrix to avg_gamma;
+            // Add density matrix to avg_gamma;
             gamma.first->scale(static_cast<double>(nsolutions));
             gamma.second->scale(static_cast<double>(nsolutions));
             Density_a->add(gamma.first);
             Density_b->add(gamma.second);
-
         }
     }
 
     Density_a->scale(1.0 / static_cast<double>(sum));
     Density_b->scale(1.0 / static_cast<double>(sum));
-
 
     std::pair<SharedMatrix, SharedMatrix> avg_gamma = std::make_pair(Density_a, Density_b);
 
@@ -181,9 +179,9 @@ void CINO::startup() {
     // Read Options
     rdm_level_ = options_.get_int("ACI_MAX_RDM");
     nactv_ = mo_space_info_->size("ACTIVE");
-    nmo_ = mo_space_info_->size("FROZEN_DOCC") + mo_space_info_->size("RESTRICTED_DOCC")
-           + mo_space_info_->size("ACTIVE") +mo_space_info_->size("FROZEN_UOCC") +mo_space_info_->size("RESTRICTED_UOCC");
-
+    nmo_ = mo_space_info_->size("FROZEN_DOCC") + mo_space_info_->size("RESTRICTED_DOCC") +
+           mo_space_info_->size("ACTIVE") + mo_space_info_->size("FROZEN_UOCC") +
+           mo_space_info_->size("RESTRICTED_UOCC");
 
     actvpi_ = mo_space_info_->get_dimension("ACTIVE");
     fdoccpi_ = mo_space_info_->get_dimension("FROZEN_DOCC");
@@ -196,8 +194,6 @@ void CINO::startup() {
     aoccpi_ = nalphapi_ - rdoccpi_ - fdoccpi_;
     cino_auto = options_.get_bool("CINO_AUTO");
 }
-
-
 
 std::vector<Determinant> CINO::build_dets(int irrep) {
 
@@ -248,7 +244,7 @@ std::vector<Determinant> CINO::build_dets(int irrep) {
                 single_ia.set_alfa_bit(i + offset, false);
                 single_ia.set_alfa_bit(a + offset_vir, true);
                 dets.push_back(single_ia);
-//                single_ia.print();
+                //                single_ia.print();
             }
         }
         offset += actvpi_[irrep_i];
@@ -327,9 +323,7 @@ std::vector<Determinant> CINO::build_dets(int irrep) {
         //        }
     }
 
-
     return dets;
-
 }
 /// Diagonalize the Hamiltonian in this basis
 std::pair<SharedVector, SharedMatrix>
@@ -352,7 +346,8 @@ CINO::diagonalize_hamiltonian(const std::vector<Determinant>& dets, int nsolutio
     outfile->Printf("\n  ----------------------------");
     for (int i = 0; i < nsolutions; ++i) {
         double energy = evals_evecs.first->get(i) + fci_ints_->scalar_energy() +
-                        molecule_->nuclear_repulsion_energy(reference_wavefunction_->get_dipole_field_strength());
+                        molecule_->nuclear_repulsion_energy(
+                            reference_wavefunction_->get_dipole_field_strength());
         outfile->Printf("\n    %3d %20.10f", i, energy);
     }
     outfile->Printf("\n  ------------------------------\n");
@@ -375,7 +370,7 @@ CINO::build_density_matrix(const std::vector<Determinant>& dets, SharedMatrix ev
         CI_RDMS ci_rdms_(fci_ints_, dets, evecs, i, i);
         ci_rdms_.set_max_rdm(rdm_level_);
         if (rdm_level_ >= 1) {
-            Timer one_r;
+            local_timer one_r;
             ci_rdms_.compute_1rdm(template_a_, template_b_);
             outfile->Printf("\n  1-RDM  took %2.6f s (determinant)", one_r.get());
         }
@@ -411,7 +406,7 @@ CINO::build_density_matrix(const std::vector<Determinant>& dets, SharedMatrix ev
         }
         offset += actvpi_[h];
     }
-    //opdm_a->print();
+    // opdm_a->print();
     return std::make_pair(opdm_a, opdm_b);
 }
 
@@ -445,15 +440,13 @@ CINO::diagonalize_density_matrix(std::pair<SharedMatrix, SharedMatrix> gamma) {
     SharedVector OCC_A_vir(new Vector("Virtual ALPHA OCCUPATION", avirpi));
     gamma_a_occ->diagonalize(NO_A_occ, OCC_A_occ, descending);
     gamma_a_vir->diagonalize(NO_A_vir, OCC_A_vir, descending);
-//        OCC_A_occ->print();
-//        OCC_A_vir->print();
+    //        OCC_A_occ->print();
+    //        OCC_A_vir->print();
 
     OCC_A->set_block(aocc_slice, OCC_A_occ);
     NO_A->set_block(aocc_slice, aocc_slice, NO_A_occ);
     OCC_A->set_block(avir_slice, OCC_A_vir);
     NO_A->set_block(avir_slice, avir_slice, NO_A_vir);
-
-
 
     /// Diagonalize Beta density matrix
     Dimension boccpi = nbetapi_ - rdoccpi_ - fdoccpi_;
@@ -468,21 +461,20 @@ CINO::diagonalize_density_matrix(std::pair<SharedMatrix, SharedMatrix> gamma) {
     SharedMatrix gamma_b_vir = gamma.second->get_block(bvir_slice, bvir_slice);
     gamma_b_vir->set_name("Gamma beta virtual");
 
-
-//    for (int h = 0; h < nirrep_; h++) {
-//        for (int i = 0; i < boccpi[h]; i++) {
-//            for (int j = 0; j < boccpi[h]; j++) {
-//                gamma_b_occ->set(h, i, j, gamma.second->get(h, i, j));
-//            }
-//        }
-//    }
-//    for (int h = 0; h < nirrep_; h++) {
-//        for (int a = 0; a < bvirpi[h]; a++) {
-//            for (int b = 0; b < bvirpi[h]; b++) {
-//                gamma_b_vir->set(h, a, b, gamma.second->get(h, a + boccpi[h], b + boccpi[h]));
-//            }
-//        }
-//    }
+    //    for (int h = 0; h < nirrep_; h++) {
+    //        for (int i = 0; i < boccpi[h]; i++) {
+    //            for (int j = 0; j < boccpi[h]; j++) {
+    //                gamma_b_occ->set(h, i, j, gamma.second->get(h, i, j));
+    //            }
+    //        }
+    //    }
+    //    for (int h = 0; h < nirrep_; h++) {
+    //        for (int a = 0; a < bvirpi[h]; a++) {
+    //            for (int b = 0; b < bvirpi[h]; b++) {
+    //                gamma_b_vir->set(h, a, b, gamma.second->get(h, a + boccpi[h], b + boccpi[h]));
+    //            }
+    //        }
+    //    }
 
     // Diagonalize beta density matrix
     SharedMatrix NO_B_occ(new Matrix(boccpi, boccpi));
@@ -499,22 +491,22 @@ CINO::diagonalize_density_matrix(std::pair<SharedMatrix, SharedMatrix> gamma) {
     OCC_B->set_block(bvir_slice, OCC_B_vir);
     NO_B->set_block(bvir_slice, bvir_slice, NO_B_vir);
 
-//    for (int h = 0; h < nirrep_; h++) {
-//        for (int i = 0; i < boccpi[h]; i++) {
-//            OCC_B->set(h, i, OCC_B_occ->get(h, i));
-//            for (int j = 0; j < boccpi[h]; j++) {
-//                NO_B->set(h, i, j, NO_B_occ->get(h, i, j));
-//            }
-//        }
-//    }
-//    for (int h = 0; h < nirrep_; h++) {
-//        for (int a = 0; a < bvirpi[h]; a++) {
-//            OCC_B->set(h, a + boccpi[h], OCC_B_vir->get(h, a));
-//            for (int b = 0; b < bvirpi[h]; b++) {
-//                NO_B->set(h, a + boccpi[h], b + boccpi[h], NO_B_vir->get(h, a, b));
-//            }
-//        }
-//    }
+    //    for (int h = 0; h < nirrep_; h++) {
+    //        for (int i = 0; i < boccpi[h]; i++) {
+    //            OCC_B->set(h, i, OCC_B_occ->get(h, i));
+    //            for (int j = 0; j < boccpi[h]; j++) {
+    //                NO_B->set(h, i, j, NO_B_occ->get(h, i, j));
+    //            }
+    //        }
+    //    }
+    //    for (int h = 0; h < nirrep_; h++) {
+    //        for (int a = 0; a < bvirpi[h]; a++) {
+    //            OCC_B->set(h, a + boccpi[h], OCC_B_vir->get(h, a));
+    //            for (int b = 0; b < bvirpi[h]; b++) {
+    //                NO_B->set(h, a + boccpi[h], b + boccpi[h], NO_B_vir->get(h, a, b));
+    //            }
+    //        }
+    //    }
 
     //    gamma.first->diagonalize(NO_A, OCC_A, descending);
     //    gamma.second->diagonalize(NO_B, OCC_B, descending);
@@ -612,5 +604,5 @@ void CINO::find_active_space_and_transform(
         }
     }
 }
-}
-} // EndNamespaces
+} // namespace forte
+} // namespace psi
