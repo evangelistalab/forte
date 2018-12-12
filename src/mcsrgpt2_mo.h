@@ -179,7 +179,7 @@ class MCSRGPT2_MO : public FCI_MO {
 
     /// Timings
     void Print_Timing();
-    Timer dsrg_timer;
+    local_timer dsrg_timer;
     double T2_timing;
     double T1_timing;
     double FT1_timing;
