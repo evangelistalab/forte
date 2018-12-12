@@ -26,14 +26,13 @@
  * @END LICENSE
  */
 
-#include "psi4/libpsi4util/libpsi4util.h"
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libmints/molecule.h"
 
 #include "boost/format.hpp"
 
-#include "../sparse_ci/determinant.h"
-#include "../iterative_solvers.h"
+#include "sparse_ci/determinant.h"
+#include "iterative_solvers.h"
 
 #include "fci_solver.h"
 
@@ -123,7 +122,7 @@ void FCISolver::startup() {
  * See Appendix A in J. Comput. Chem. 2001 vol. 22 (13) pp. 1574-1589
 */
 double FCISolver::compute_energy() {
-    Timer t;
+    local_timer t;
 
     double nuclear_repulsion_energy = Process::environment.molecule()->nuclear_repulsion_energy({0,0,0});
     std::shared_ptr<FCIIntegrals> fci_ints;
@@ -382,7 +381,7 @@ void FCISolver::compute_rdms_root(int root) {
 std::vector<std::pair<int, std::vector<std::tuple<size_t, size_t, size_t, double>>>>
 FCISolver::initial_guess(FCIWfn& diag, size_t n, size_t multiplicity,
                          std::shared_ptr<FCIIntegrals> fci_ints) {
-    Timer t;
+    local_timer t;
 
     double nuclear_repulsion_energy = Process::environment.molecule()->nuclear_repulsion_energy({0,0,0});
     double scalar_energy = fci_ints->scalar_energy();

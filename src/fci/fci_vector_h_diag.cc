@@ -31,17 +31,16 @@
 #include <vector>
 
 #include "psi4/libpsi4util/PsiOutStream.h"
-#include "psi4/libpsi4util/libpsi4util.h"
 #include "psi4/psi4-dec.h"
 
-#include "../helpers.h"
+#include "helpers.h"
 #include "fci_vector.h"
 
 namespace psi {
 namespace forte {
 
 void FCIWfn::form_H_diagonal(std::shared_ptr<FCIIntegrals> fci_ints) {
-    Timer t;
+    local_timer t;
 
     int wfn_sym = symmetry_;
     int n = ncmo_;

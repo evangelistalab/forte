@@ -29,8 +29,8 @@
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libmints/molecule.h"
 
-#include "../forte_options.h"
-#include "../helpers/printing.h"
+#include "forte_options.h"
+#include "helpers/printing.h"
 #include "fci_solver.h"
 
 #include "fci.h"

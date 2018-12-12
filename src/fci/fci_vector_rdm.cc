@@ -29,13 +29,12 @@
 #include <cmath>
 
 #include "psi4/psi4-dec.h"
-#include "psi4/libpsi4util/libpsi4util.h"
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libmints/molecule.h"
 #include "psi4/libqt/qt.h"
 
-#include "../helpers.h"
-#include "../sparse_ci/determinant.h"
+#include "helpers.h"
+#include "sparse_ci/determinant.h"
 
 #include "fci_vector.h"
 #include "fci_solver.h"
@@ -56,7 +55,7 @@ void FCIWfn::compute_rdms(int max_order) {
     size_t nb = beta_graph_->nones();
 
     if (max_order >= 1) {
-        Timer t;
+        local_timer t;
         if (na >= 1)
             compute_1rdm(opdm_a_, true);
         if (nb >= 1)
@@ -65,7 +64,7 @@ void FCIWfn::compute_rdms(int max_order) {
     }
 
     if (max_order >= 2) {
-        Timer t;
+        local_timer t;
         if (na >= 2)
             compute_2rdm_aa(tpdm_aa_, true);
         if (nb >= 2)
@@ -76,7 +75,7 @@ void FCIWfn::compute_rdms(int max_order) {
     }
 
     if (max_order >= 3) {
-        Timer t;
+        local_timer t;
         if (na >= 3)
             compute_3rdm_aaa(tpdm_aaa_, true);
         if (nb >= 3)

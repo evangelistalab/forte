@@ -3,7 +3,6 @@
 import argparse
 import glob
 
-
 import sys
 import re
 import subprocess
@@ -44,6 +43,6 @@ if len(args.files) > 0:
 
 print "Formatting the following files:\n" + "\n".join(file_list)
 
-command = ['clang-format','-i']
+command = ['clang-format','-i','-style=file']
 command.extend(file_list)
 subprocess.call(command)
