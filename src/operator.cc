@@ -28,12 +28,11 @@
 
 #include <cmath>
 
-#include "psi4/libpsi4util/libpsi4util.h"
 #include "psi4/libmints/dimension.h"
 
 #include "operator.h"
 #include "forte-def.h"
-
+#include "helpers/timer.h"
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -61,7 +60,7 @@ void WFNOperator::initialize(std::vector<int>& symmetry, std::shared_ptr<FCIInte
 
 std::vector<std::pair<std::vector<size_t>, std::vector<double>>>
 WFNOperator::build_H_sparse(const DeterminantHashVec& wfn) {
-    Timer build;
+    local_timer build;
     size_t size = wfn.size();
     std::vector<std::pair<std::vector<size_t>, std::vector<double>>> H_sparse(size);
     size_t n_nonzero = 0;
@@ -709,7 +708,7 @@ void WFNOperator::op_s_lists(DeterminantHashVec& wfn) {
 
     // Get a reference to the determinants
     const det_hashvec& dets = wfn.wfn_hash();
-    Timer ann;
+    local_timer ann;
     for (size_t b = 0, max_b = beta_strings_.size(); b < max_b; ++b) {
         size_t na_ann = 0;
         std::vector<std::vector<std::pair<size_t, short>>> tmp;
@@ -753,7 +752,7 @@ void WFNOperator::op_s_lists(DeterminantHashVec& wfn) {
     if (!quiet_) {
         outfile->Printf("\n        α          %7.6f s", ann.get());
     }
-    Timer bnn;
+    local_timer bnn;
     for (size_t a = 0, max_a = alpha_strings_.size(); a < max_a; ++a) {
         size_t nb_ann = 0;
         std::vector<std::vector<std::pair<size_t, short>>> tmp;
@@ -800,7 +799,7 @@ void WFNOperator::op_lists(DeterminantHashVec& wfn) {
     b_ann_list_.resize(ndets);
     const det_hashvec& dets = wfn.wfn_hash();
     // Generate alpha coupling list
-    Timer ann;
+    local_timer ann;
     {
         size_t na_ann = 0;
         for (size_t b = 0, max_b = beta_strings_.size(); b < max_b; ++b) {
@@ -840,7 +839,7 @@ void WFNOperator::op_lists(DeterminantHashVec& wfn) {
         outfile->Printf("\n  Time spent building a_ann_list   %1.6f s", ann.get());
     }
     // Generate beta coupling list
-    Timer bnn;
+    local_timer bnn;
     {
         size_t nb_ann = 0;
         for (size_t a = 0, max_a = alpha_strings_.size(); a < max_a; ++a) {
@@ -909,7 +908,7 @@ void WFNOperator::tp_s_lists(DeterminantHashVec& wfn) {
     timer ops("Double sub. lists");
     const det_hashvec& dets = wfn.wfn_hash();
     // Generate alpha-alpha coupling list
-    Timer aa;
+    local_timer aa;
     {
         for (size_t b = 0, max_b = beta_strings_.size(); b < max_b; ++b) {
             size_t naa_ann = 0;
@@ -960,7 +959,7 @@ void WFNOperator::tp_s_lists(DeterminantHashVec& wfn) {
         outfile->Printf("\n        αα         %7.6f s", aa.get());
     }
     // Generate beta-beta coupling list
-    Timer bb;
+    local_timer bb;
     {
         for (size_t a = 0, max_a = alpha_strings_.size(); a < max_a; ++a) {
             size_t nbb_ann = 0;
@@ -1014,7 +1013,7 @@ void WFNOperator::tp_s_lists(DeterminantHashVec& wfn) {
         outfile->Printf("\n        ββ         %7.6f s", bb.get());
     }
 
-    Timer ab;
+    local_timer ab;
     // Generate alfa-beta coupling list
     {
         for (size_t a = 0, max_a = alpha_a_strings_.size(); a < max_a; ++a) {
@@ -1078,7 +1077,7 @@ void WFNOperator::tp_lists(DeterminantHashVec& wfn) {
     bb_ann_list_.resize(ndets);
     const det_hashvec& dets = wfn.wfn_hash();
     // Generate alpha-alpha coupling list
-    Timer aa;
+    local_timer aa;
     {
         size_t naa_ann = 0;
         for (size_t b = 0, max_b = beta_strings_.size(); b < max_b; ++b) {
@@ -1126,7 +1125,7 @@ void WFNOperator::tp_lists(DeterminantHashVec& wfn) {
         outfile->Printf("\n  Time spent building aa_ann_list  %1.6f s", aa.get());
     }
     // Generate beta-beta coupling list
-    Timer bb;
+    local_timer bb;
     {
         size_t nbb_ann = 0;
         for (size_t a = 0, max_a = alpha_strings_.size(); a < max_a; ++a) {
@@ -1178,7 +1177,7 @@ void WFNOperator::tp_lists(DeterminantHashVec& wfn) {
         outfile->Printf("\n  Time spent building bb_ann_list  %1.6f s", bb.get());
     }
 
-    Timer ab;
+    local_timer ab;
     // Generate alfa-beta coupling list
     {
         size_t nab_ann = 0;
@@ -1351,7 +1350,7 @@ void WFNOperator::three_s_lists(DeterminantHashVec& wfn) {
 
     /// AAB coupling
     {
-        Timer aab;
+        local_timer aab;
         // We need the beta-1 list:
         const det_hashvec& wfn_map = wfn.wfn_hash();
         std::vector<std::vector<std::pair<int, size_t>>> beta_string;
