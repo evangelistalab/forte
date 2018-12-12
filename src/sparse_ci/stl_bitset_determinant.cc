@@ -216,14 +216,15 @@ std::vector<int> STLBitsetDeterminant::get_beta_vir(int norb) const {
     return orbs;
 }
 
-std::vector<std::vector<int>> STLBitsetDeterminant::get_asym_occ(int norb, std::vector<int> act_mo) const { 
+std::vector<std::vector<int>> STLBitsetDeterminant::get_asym_occ(int norb,
+                                                                 std::vector<int> act_mo) const {
 
     size_t nirrep = act_mo.size();
     std::vector<std::vector<int>> occ(nirrep);
 
     int abs = 0;
-    for( int h = 0; h < nirrep; ++h ){
-        for( int p = 0; p < act_mo[h]; ++p ){
+    for (int h = 0; h < nirrep; ++h) {
+        for (int p = 0; p < act_mo[h]; ++p) {
             if (ALFA(abs)) {
                 occ[h].push_back(abs);
             }
@@ -233,13 +234,14 @@ std::vector<std::vector<int>> STLBitsetDeterminant::get_asym_occ(int norb, std::
     return occ;
 }
 
-std::vector<std::vector<int>> STLBitsetDeterminant::get_bsym_occ(int norb, std::vector<int> act_mo) const { 
+std::vector<std::vector<int>> STLBitsetDeterminant::get_bsym_occ(int norb,
+                                                                 std::vector<int> act_mo) const {
     size_t nirrep = act_mo.size();
     std::vector<std::vector<int>> occ(nirrep);
 
     int abs = 0;
-    for( int h = 0; h < nirrep; ++h ){
-        for( int p = 0; p < act_mo[h]; ++p ){
+    for (int h = 0; h < nirrep; ++h) {
+        for (int p = 0; p < act_mo[h]; ++p) {
             if (BETA(abs)) {
                 occ[h].push_back(abs);
             }
@@ -249,13 +251,14 @@ std::vector<std::vector<int>> STLBitsetDeterminant::get_bsym_occ(int norb, std::
     return occ;
 }
 
-std::vector<std::vector<int>> STLBitsetDeterminant::get_asym_vir(int norb, std::vector<int> act_mo) const { 
+std::vector<std::vector<int>> STLBitsetDeterminant::get_asym_vir(int norb,
+                                                                 std::vector<int> act_mo) const {
     size_t nirrep = act_mo.size();
     std::vector<std::vector<int>> occ(nirrep);
 
     int abs = 0;
-    for( int h = 0; h < nirrep; ++h ){
-        for( int p = 0; p < act_mo[h]; ++p ){
+    for (int h = 0; h < nirrep; ++h) {
+        for (int p = 0; p < act_mo[h]; ++p) {
             if (!ALFA(abs)) {
                 occ[h].push_back(abs);
             }
@@ -265,13 +268,14 @@ std::vector<std::vector<int>> STLBitsetDeterminant::get_asym_vir(int norb, std::
     return occ;
 }
 
-std::vector<std::vector<int>> STLBitsetDeterminant::get_bsym_vir(int norb, std::vector<int> act_mo) const { 
+std::vector<std::vector<int>> STLBitsetDeterminant::get_bsym_vir(int norb,
+                                                                 std::vector<int> act_mo) const {
     size_t nirrep = act_mo.size();
     std::vector<std::vector<int>> occ(nirrep);
 
     int abs = 0;
-    for( int h = 0; h < nirrep; ++h ){
-        for( int p = 0; p < act_mo[h]; ++p ){
+    for (int h = 0; h < nirrep; ++h) {
+        for (int p = 0; p < act_mo[h]; ++p) {
             if (!BETA(abs)) {
                 occ[h].push_back(abs);
             }

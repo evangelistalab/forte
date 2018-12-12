@@ -122,12 +122,12 @@ double slater_rules_double_beta_beta(uint64_t Ib, uint64_t Jb,
 
 double slater_rules_double_alpha_beta_pre(int i, int a, uint64_t Ib, uint64_t Jb,
                                           const std::shared_ptr<FCIIntegrals>& ints) {
-//    outfile->Printf("\n %zu %zu", Ib, Jb);
+    //    outfile->Printf("\n %zu %zu", Ib, Jb);
     uint64_t Ib_xor_Jb = Ib ^ Jb;
     uint64_t j = lowest_one_idx(Ib_xor_Jb);
     Ib_xor_Jb = clear_lowest_one(Ib_xor_Jb);
     uint64_t b = lowest_one_idx(Ib_xor_Jb);
-//    outfile->Printf("\n  i = %d, j = %d, a = %d, b = %d", i, j, a, b);
+    //    outfile->Printf("\n  i = %d, j = %d, a = %d, b = %d", i, j, a, b);
     return ui64_slater_sign(Ib, j, b) * ints->tei_ab(i, j, a, b);
 }
 

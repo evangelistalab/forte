@@ -40,7 +40,7 @@ namespace psi {
 namespace forte {
 
 class FCIIntegrals;
-//class STLBitsetDeterminant;
+// class STLBitsetDeterminant;
 
 class UI64Determinant {
   public:
@@ -90,7 +90,6 @@ class UI64Determinant {
     /// Return a vector of virtual beta orbitals
     std::vector<int> get_beta_vir(int norb) const;
 
-
     /// Return the dimensions for occupied alpha orbitals
     std::vector<std::vector<int>> get_asym_occ(int norb, std::vector<int> act_mo) const;
     /// Return the dimensions for occupied beta orbitals
@@ -99,7 +98,6 @@ class UI64Determinant {
     std::vector<std::vector<int>> get_asym_vir(int norb, std::vector<int> act_mo) const;
     /// Return the dimensions for virtual beta orbitals
     std::vector<std::vector<int>> get_bsym_vir(int norb, std::vector<int> act_mo) const;
-    
 
     /// Set the value of an alpha bit
     double create_alfa_bit(int n);
@@ -147,7 +145,7 @@ class UI64Determinant {
 
     struct Hash {
         std::size_t operator()(const psi::forte::UI64Determinant& bs) const {
-          return ((bs.a_ * 13466917) + bs.b_) % 1405695061;
+            return ((bs.a_ * 13466917) + bs.b_) % 1405695061;
         }
     };
 

@@ -791,7 +791,7 @@ void SigmaVectorWfn2::compute_sigma(SharedVector sigma, SharedVector b) {
                     const size_t J = detJ.first;
                     const size_t p = std::abs(detJ.second) - 1;
                     double sign_p = detJ.second > 0.0 ? 1.0 : -1.0;
-                    for (size_t det2 = det+1; det2 < max_det; ++det2) {
+                    for (size_t det2 = det + 1; det2 < max_det; ++det2) {
                         auto& detI = c_dets[det2];
                         const size_t q = std::abs(detI.second) - 1;
                         if (p != q) {
@@ -821,7 +821,7 @@ void SigmaVectorWfn2::compute_sigma(SharedVector sigma, SharedVector b) {
                     const size_t J = detJ.first;
                     const size_t p = std::abs(detJ.second) - 1;
                     double sign_p = detJ.second > 0.0 ? 1.0 : -1.0;
-                    for (size_t det2 = det+1; det2 < max_det; ++det2) {
+                    for (size_t det2 = det + 1; det2 < max_det; ++det2) {
                         auto& detI = c_dets[det2];
                         const size_t q = std::abs(detI.second) - 1;
                         if (p != q) {
@@ -857,7 +857,7 @@ void SigmaVectorWfn2::compute_sigma(SharedVector sigma, SharedVector b) {
                     short p = std::abs(std::get<1>(detJ)) - 1;
                     short q = std::get<2>(detJ);
                     double sign_p = std::get<1>(detJ) > 0.0 ? 1.0 : -1.0;
-                    for (size_t det2 = det+1; det2 < max_det; ++det2) {
+                    for (size_t det2 = det + 1; det2 < max_det; ++det2) {
                         auto& detI = c_dets[det2];
                         short r = std::abs(std::get<1>(detI)) - 1;
                         short s = std::get<2>(detI);
@@ -884,7 +884,7 @@ void SigmaVectorWfn2::compute_sigma(SharedVector sigma, SharedVector b) {
                     short p = std::abs(std::get<1>(detJ)) - 1;
                     short q = std::get<2>(detJ);
                     double sign_p = std::get<1>(detJ) > 0.0 ? 1.0 : -1.0;
-                    for (size_t det2 = det+1; det2 < max_det; ++det2) {
+                    for (size_t det2 = det + 1; det2 < max_det; ++det2) {
                         auto& detI = c_dets[det2];
                         short r = std::abs(std::get<1>(detI)) - 1;
                         short s = std::get<2>(detI);
@@ -909,10 +909,10 @@ void SigmaVectorWfn2::compute_sigma(SharedVector sigma, SharedVector b) {
                     short p = std::abs(std::get<1>(detJ)) - 1;
                     short q = std::get<2>(detJ);
                     double sign_p = std::get<1>(detJ) > 0.0 ? 1.0 : -1.0;
-                    for (size_t det2 = det+1; det2 < max_det; ++det2) {
-                            auto& detI = c_dets[det2];
-                            short r = std::abs(std::get<1>(detI)) - 1;
-                            short s = std::get<2>(detI);
+                    for (size_t det2 = det + 1; det2 < max_det; ++det2) {
+                        auto& detI = c_dets[det2];
+                        short r = std::abs(std::get<1>(detI)) - 1;
+                        short s = std::get<2>(detI);
                         if ((p != r) and (q != s)) {
                             size_t I = std::get<0>(detI);
                             double sign_q = std::get<1>(detI) > 0.0 ? 1.0 : -1.0;
