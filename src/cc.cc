@@ -32,9 +32,12 @@
 #include <vector>
 
 #include "psi4/libmints/molecule.h"
+#include "psi4/libpsi4util/PsiOutStream.h"
+#include "psi4/libpsi4util/process.h"
 
 #include "cc.h"
 #include "helpers.h"
+#include "helpers/printing.h"
 
 namespace psi {
 namespace forte {
@@ -43,6 +46,7 @@ CC::CC(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegr
        std::shared_ptr<MOSpaceInfo> mo_space_info)
     : Wavefunction(options), ints_(ints), mo_space_info_(mo_space_info),
       BTF_(new BlockedTensorFactory(options)), tensor_type_(CoreTensor) {
+    reference_wavefunction_ = ref_wfn;
     startup();
 }
 
@@ -50,72 +54,76 @@ CC::CC(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegr
 CC::~CC() {}
 
 /// Compute the corr_level energy with fixed reference
-double CC::compute_energy() { return 0.0; }
+double CC::compute_energy() {
+    timer t("compute_energy");
+    outfile->Printf("\n  * Reference energy        = %18.12f", E_ref_);
+    compute_denominators();
+    initial_mp2_t();
+    double Ecc = cc_energy();
+    double pre_Ecc = Ecc;
+    outfile->Printf("\n  MP2 correlation energy    = %18.12f", Ecc);
+    outfile->Printf("\n  * MP2 total energy        = %18.12f\n", Ecc + E_ref_);
 
-// MRDSRG::MRDSRG(Reference reference, SharedWavefunction ref_wfn, Options&
-// options,
-//               std::shared_ptr<ForteIntegrals> ints,
-//               std::shared_ptr<MOSpaceInfo> mo_space_info)
-//    : Wavefunction(options), reference_(reference), ints_(ints),
-//      mo_space_info_(mo_space_info), BTF_(new BlockedTensorFactory(options)),
-//      tensor_type_(CoreTensor)
-//{
-//    shallow_copy(ref_wfn);
-//    reference_wavefunction_ = ref_wfn;
+    outfile->Printf("\n  ------------------------------------------------");
+    outfile->Printf("\n  Iter         E(CCSD)         dE          dT");
+    outfile->Printf("\n  ----- ------------------ ----------- -----------");
+    bool converged = false;
+    for (size_t i = 1; i <= maxiter_; ++i) {
+        compute_effective_tau();
+        compute_intermediates();
+        update_t();
+        Ecc = cc_energy();
+        double DT_norm = DT1_.norm() + DT2_.norm();
+        outfile->Printf("\n  %4zu   %16.12f   %.3e   %.3e", i, Ecc, fabs(Ecc - pre_Ecc), DT_norm);
+        if (fabs(Ecc - pre_Ecc) <= e_convergence_ and DT_norm <= r_convergence_) {
+            converged = true;
+            break;
+        }
+        pre_Ecc = Ecc;
+    }
+    outfile->Printf("\n  ------------------------------------------------\n");
 
-//    print_method_banner({"Multireference Driven Similarity Renormalization
-//    Group","Chenyang Li"});
-//    read_options();
-//    print_options();
-//
-//}
+    if (!converged)
+        outfile->Printf("\n  Warning! CC iteration did not converge.\n");
 
-// MRDSRG::~MRDSRG(){
-//    cleanup();
-//}
-
-// void MRDSRG::cleanup(){
-//    dsrg_time_.print_comm_time();
-//}
-
-// void MRDSRG::read_options(){
-
-//    print_ = options_.get_int("PRINT");
-
-//    s_ = options_.get_double("DSRG_S");
-//    if(s_ < 0){
-//        outfile->Printf("\n  S parameter for DSRG must >= 0!");
-//        throw PSIEXCEPTION("S parameter for DSRG must >= 0!");
-//    }
-//    taylor_threshold_ = options_.get_int("TAYLOR_THRESHOLD");
-//    if(taylor_threshold_ <= 0){
-//        outfile->Printf("\n  Threshold for Taylor expansion must be an integer
-//        greater than 0!");
-//        throw PSIEXCEPTION("Threshold for Taylor expansion must be an integer
-//        greater than 0!");
-//    }
-
-//    source_ = options_.get_str("SOURCE");
-//    if(source_ != "STANDARD" && source_ != "LABS" && source_ != "DYSON"){
-//        outfile->Printf("\n  Warning: SOURCE option \"%s\" is not implemented
-//        in MRDSRG. Changed to STANDARD.", source_.c_str());
-//        source_ = "STANDARD";
-//    }
-//    if(source_ == "STANDARD"){
-//        dsrg_source_ = std::make_shared<STD_SOURCE>(s_,taylor_threshold_);
-//    }else if(source_ == "LABS"){
-//        dsrg_source_ = std::make_shared<LABS_SOURCE>(s_,taylor_threshold_);
-//    }else if(source_ == "DYSON"){
-//        dsrg_source_ = std::make_shared<DYSON_SOURCE>(s_,taylor_threshold_);
-//    }
-
-//    ntamp_ = options_.get_int("NTAMP");
-//    intruder_tamp_ = options_.get_double("INTRUDER_TAMP");
-//}
+    outfile->Printf("\n  CCSD correlation energy   = %18.12f", Ecc);
+    outfile->Printf("\n  * CCSD total energy       = %18.12f\n", Ecc + E_ref_);
+    Process::environment.globals["CURRENT ENERGY"] = Ecc + E_ref_;
+    return Ecc + E_ref_;
+}
 
 void CC::startup() {
+    timer t("startup");
+    print_method_banner({"Coupled Cluster Singles and Doubles (CCSD)", "Tianyuan Zhang"});
+
+    e_convergence_ = options_.get_double("E_CONVERGENCE");
+    r_convergence_ = options_.get_double("R_CONVERGENCE");
+    maxiter_ = options_.get_int("MAXITER");
+
+    outfile->Printf("\n  --------------------------");
+    outfile->Printf("\n  Parameters");
+    outfile->Printf("\n  --------------------------");
+    outfile->Printf("\n  E_convergence  =   %.1e", e_convergence_);
+    outfile->Printf("\n  R_convergence  =   %.1e", r_convergence_);
+    outfile->Printf("\n  Maxiter        =   %d", maxiter_);
+    outfile->Printf("\n  --------------------------\n");
+
     // frozen-core energy
+    ambit::BlockedTensor::reset_mo_spaces();
     frozen_core_energy_ = ints_->frozen_core_energy();
+
+    eri_df_ = false;
+    ints_type_ = options_.get_str("INT_TYPE");
+    if (ints_type_ == "CHOLESKY" || ints_type_ == "DF" || ints_type_ == "DISKDF") {
+        eri_df_ = true;
+        aux_mos_ = std::vector<size_t>(ints_->nthree());
+        std::iota(aux_mos_.begin(), aux_mos_.end(), 0);
+        aux_label_ = "L";
+        BTF_->add_mo_space(aux_label_, "g", aux_mos_, NoSpin);
+        for (auto s : aux_mos_) {
+            outfile->Printf("\naux_mos_: %zu", s);
+        }
+    }
 
     // orbital spaces
     BlockedTensor::reset_mo_spaces();
@@ -127,195 +135,542 @@ void CC::startup() {
     // define space labels
     aocc_label_ = "o";
     avir_label_ = "v";
-    bocc_label_ = "o";
-    bvir_label_ = "v";
+    bocc_label_ = "O";
+    bvir_label_ = "V";
 
     BTF_->add_mo_space(aocc_label_, "ijklmn", aocc_mos_, AlphaSpin);
     BTF_->add_mo_space(bocc_label_, "IJKLMN", bocc_mos_, BetaSpin);
     BTF_->add_mo_space(avir_label_, "abcdef", avir_mos_, AlphaSpin);
     BTF_->add_mo_space(bvir_label_, "ABCDEF", bvir_mos_, BetaSpin);
 
-    //    // map space labels to mo spaces
-    //    label_to_spacemo_[acore_label_[0]] = acore_mos_;
-    //    label_to_spacemo_[bcore_label_[0]] = bcore_mos_;
-    //    label_to_spacemo_[aactv_label_[0]] = aactv_mos_;
-    //    label_to_spacemo_[bactv_label_[0]] = bactv_mos_;
-    //    label_to_spacemo_[avirt_label_[0]] = avirt_mos_;
-    //    label_to_spacemo_[bvirt_label_[0]] = bvirt_mos_;
-
     // define composite spaces
     BTF_->add_composite_mo_space("g", "pqrsto", {aocc_label_, avir_label_});
     BTF_->add_composite_mo_space("G", "PQRSTO", {bocc_label_, bvir_label_});
 
-    // prepare integrals
-    H_ = BTF_->build(tensor_type_, "H", spin_cases({"gg"}));
-    V_ = BTF_->build(tensor_type_, "V", spin_cases({"gggg"}));
-    //    build_ints();
+    build_ints();
 
     // build Fock matrix
     F_ = BTF_->build(tensor_type_, "Fock", spin_cases({"gg"}));
-    //    build_fock(H_, V_);
+    if (eri_df_) {
+        build_fock_df(H_, B_);
+    } else {
+        build_fock(H_, V_);
+    }
+
+    T1_ = BTF_->build(tensor_type_, "T1", spin_cases({"ov"}));
+    T2_ = BTF_->build(tensor_type_, "T2", spin_cases({"oovv"}));
+
+    tilde_tau_ = BTF_->build(tensor_type_, "tilde_tau", spin_cases({"oovv"}));
+    tau_ = BTF_->build(tensor_type_, "tau", spin_cases({"oovv"}));
+
+    D1_ = BTF_->build(tensor_type_, "D1", spin_cases({"ov"}));
+    D2_ = BTF_->build(tensor_type_, "D2", spin_cases({"oovv"}));
+
+    W1_ = BTF_->build(tensor_type_, "W1", spin_cases({"oo", "ov", "vv"}));
+    W2_ = BTF_->build(tensor_type_, "W2",
+                      {"oooo", "oOoO", "OOOO", "ovvo", "OVVO", "oVvO", "OvVo", "OvvO", "oVVo"});
+
+    DT1_ = BTF_->build(tensor_type_, "DT1", spin_cases({"ov"}));
+    DT2_ = BTF_->build(tensor_type_, "DT2", spin_cases({"oovv"}));
 }
 
-// void MRDSRG::build_ints(){
-//    // prepare one-electron integrals
-//    H_.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>&
-//    spin,double& value){
-//        if (spin[0] == AlphaSpin) value = ints_->oei_a(i[0],i[1]);
-//        else value = ints_->oei_b(i[0],i[1]);
-//    });
+void CC::build_ints() {
+    // prepare integrals
+    timer t("build_ints");
 
-//    // prepare two-electron integrals
-//    V_.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>&
-//    spin,double& value){
-//        if ((spin[0] == AlphaSpin) && (spin[1] == AlphaSpin)) value =
-//        ints_->aptei_aa(i[0],i[1],i[2],i[3]);
-//        if ((spin[0] == AlphaSpin) && (spin[1] == BetaSpin))  value =
-//        ints_->aptei_ab(i[0],i[1],i[2],i[3]);
-//        if ((spin[0] == BetaSpin)  && (spin[1] == BetaSpin))  value =
-//        ints_->aptei_bb(i[0],i[1],i[2],i[3]);
-//    });
-//}
+    H_ = BTF_->build(tensor_type_, "H", spin_cases({"gg"}));
+    // prepare one-electron integrals
+    H_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+        if (spin[0] == AlphaSpin)
+            value = ints_->oei_a(i[0], i[1]);
+        else
+            value = ints_->oei_b(i[0], i[1]);
+    });
 
-// void MRDSRG::build_density(){
-//    // prepare density matrices
-//    (Gamma1_.block("cc")).iterate([&](const std::vector<size_t>& i,double&
-//    value){
-//        value = i[0] == i[1] ? 1.0 : 0.0;});
-//    (Gamma1_.block("CC")).iterate([&](const std::vector<size_t>& i,double&
-//    value){
-//        value = i[0] == i[1] ? 1.0 : 0.0;});
-//    (Eta1_.block("aa")).iterate([&](const std::vector<size_t>& i,double&
-//    value){
-//        value = i[0] == i[1] ? 1.0 : 0.0;});
-//    (Eta1_.block("AA")).iterate([&](const std::vector<size_t>& i,double&
-//    value){
-//        value = i[0] == i[1] ? 1.0 : 0.0;});
-//    (Eta1_.block("vv")).iterate([&](const std::vector<size_t>& i,double&
-//    value){
-//        value = i[0] == i[1] ? 1.0 : 0.0;});
-//    (Eta1_.block("VV")).iterate([&](const std::vector<size_t>& i,double&
-//    value){
-//        value = i[0] == i[1] ? 1.0 : 0.0;});
-//    // symmetrize beta spin
-//    outfile->Printf("\n  Warning: I am forcing density Db = Da to avoid spin
-//    symmetry breaking.");
-//    outfile->Printf("\n  If this is not desired, go to mrdsrg.cc
-//    build_density() around line 190.");
-//    Gamma1_.block("aa")("pq") = reference_.L1a()("pq");
-//    Gamma1_.block("AA")("pq") = reference_.L1a()("pq");
-//    Eta1_.block("aa")("pq") -= reference_.L1a()("pq");
-//    Eta1_.block("AA")("pq") -= reference_.L1a()("pq");
+    // prepare two-electron integrals or three-index B
+    if (eri_df_) {
+        B_ = BTF_->build(tensor_type_, "B 3-idx", {"Lgg", "LGG"});
+        outfile->Printf("\nBlocks: %s\n", B_.block_labels()[0].c_str());
+        fill_three_index_ints(B_);
+    } else {
+        V_ = BTF_->build(tensor_type_, "V", spin_cases({"gggg"}));
+        V_.iterate(
+            [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+                if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin))
+                    value = ints_->aptei_aa(i[0], i[1], i[2], i[3]);
+                if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin))
+                    value = ints_->aptei_ab(i[0], i[1], i[2], i[3]);
+                if ((spin[0] == BetaSpin) and (spin[1] == BetaSpin))
+                    value = ints_->aptei_bb(i[0], i[1], i[2], i[3]);
+            });
+    }
+}
 
-////    ambit::Tensor Diff =
-/// ambit::Tensor::build(tensor_type_,"Diff",reference_.L1a().dims());
-////    Diff.data() = reference_.L1a().data();
-////    Diff("pq") -= reference_.L1b()("pq");
-////    outfile->Printf("\n  L1a diff Here !!!!");
-////    Diff.citerate([&](const std::vector<size_t>& i,const double& value){
-////        if(value != 0.0){
-////            outfile->Printf("\n  [%zu][%zu] = %20.15f",i[0],i[1],value);
-////        }
-////    });
+void CC::fill_three_index_ints(ambit::BlockedTensor T) {
+    const auto& block_labels = T.block_labels();
+    for (const std::string& string_block : block_labels) {
+        auto mo_to_index = BTF_->get_mo_to_index();
+        std::vector<size_t> first_index = mo_to_index[string_block.substr(0, 1)];
 
-//    // prepare two-body density cumulants
-//    ambit::Tensor Lambda2_aa = Lambda2_.block("aaaa");
-//    ambit::Tensor Lambda2_aA = Lambda2_.block("aAaA");
-//    ambit::Tensor Lambda2_AA = Lambda2_.block("AAAA");
-//    Lambda2_aa("pqrs") = reference_.L2aa()("pqrs");
-//    Lambda2_aA("pqrs") = reference_.L2ab()("pqrs");
-//    Lambda2_AA("pqrs") = reference_.L2bb()("pqrs");
+        for (auto s : first_index) {
+            outfile->Printf("\nfirst_index: %zu", s);
+        }
+        std::vector<size_t> second_index = mo_to_index[string_block.substr(1, 1)];
+        std::vector<size_t> third_index = mo_to_index[string_block.substr(2, 1)];
 
-////    Diff =
-/// ambit::Tensor::build(tensor_type_,"Diff",reference_.L2aa().dims());
-////    Diff.data() = reference_.L2aa().data();
-////    Diff("pqrs") -= reference_.L2bb()("pqrs");
-////    outfile->Printf("\n  L2aa diff Here !!!!");
-////    Diff.citerate([&](const std::vector<size_t>& i,const double& value){
-////        if(value != 0.0){
-////            outfile->Printf("\n  [%zu][%zu][%zu][%zu] =
-///%20.15f",i[0],i[1],i[2],i[3],value);
-////        }
-////    });
+        for (auto s : third_index) {
+            outfile->Printf("\nthird_index: %zu", s);
+        }
+        ambit::Tensor block = ints_->three_integral_block(first_index, second_index, third_index);
+        T.block(string_block).copy(block);
+    }
+}
 
-//    // prepare three-body density cumulants
-//    if(options_.get_str("THREEPDC") != "ZERO"){
-//        ambit::Tensor Lambda3_aaa = Lambda3_.block("aaaaaa");
-//        ambit::Tensor Lambda3_aaA = Lambda3_.block("aaAaaA");
-//        ambit::Tensor Lambda3_aAA = Lambda3_.block("aAAaAA");
-//        ambit::Tensor Lambda3_AAA = Lambda3_.block("AAAAAA");
-//        Lambda3_aaa("pqrstu") = reference_.L3aaa()("pqrstu");
-//        Lambda3_aaA("pqrstu") = reference_.L3aab()("pqrstu");
-//        Lambda3_aAA("pqrstu") = reference_.L3abb()("pqrstu");
-//        Lambda3_AAA("pqrstu") = reference_.L3bbb()("pqrstu");
-//    }
+void CC::build_fock(BlockedTensor& H, BlockedTensor& V) {
+    // the core-core density is an identity matrix
+    BlockedTensor D1c = BTF_->build(tensor_type_, "Gamma1 core", spin_cases({"oo"}));
+    for (size_t m = 0, nc = mo_space_info_->size("RESTRICTED_DOCC"); m < nc; ++m) {
+        D1c.block("oo").data()[m * nc + m] = 1.0;
+        D1c.block("OO").data()[m * nc + m] = 1.0;
+    }
 
-//    // check cumulants
-//    print_cumulant_summary();
-//}
+    // build Fock matrix
+    F_["pq"] = H["pq"];
+    F_["pq"] += V["pnqm"] * D1c["mn"];
+    F_["pq"] += V["pNqM"] * D1c["MN"];
+    F_["PQ"] = H["PQ"];
+    F_["PQ"] += V["nPmQ"] * D1c["mn"];
+    F_["PQ"] += V["PNQM"] * D1c["MN"];
 
-// void MRDSRG::build_fock(BlockedTensor& H, BlockedTensor& V){
-//    // build Fock matrix
-//    F_["pq"]  = H["pq"];
-//    F_["pq"] += V["pjqi"] * Gamma1_["ij"];
-//    F_["pq"] += V["pJqI"] * Gamma1_["IJ"];
-//    F_["PQ"]  = H["PQ"];
-//    F_["PQ"] += V["jPiQ"] * Gamma1_["ij"];
-//    F_["PQ"] += V["PJQI"] * Gamma1_["IJ"];
+    E_ref_ = Process::environment.molecule()->nuclear_repulsion_energy(
+                 reference_wavefunction_->get_dipole_field_strength()) +
+             ints_->frozen_core_energy();
+    for (const std::string block : {"oo", "OO"}) {
+        for (size_t m = 0, nc = mo_space_info_->size("RESTRICTED_DOCC"); m < nc; ++m) {
+            E_ref_ += 0.5 * H.block(block).data()[m * nc + m];
+            E_ref_ += 0.5 * F_.block(block).data()[m * nc + m];
+        }
+    }
 
-//    // obtain diagonal elements of Fock matrix
-//    size_t ncmo_ = mo_space_info_->size("CORRELATED");
-//    Fa_ = std::vector<double>(ncmo_);
-//    Fb_ = std::vector<double>(ncmo_);
-//    F_.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>&
-//    spin,double& value){
-//        if (spin[0] == AlphaSpin and (i[0] == i[1])){
-//            Fa_[i[0]] = value;
-//        }
-//        if (spin[0] == BetaSpin and (i[0] == i[1])){
-//            Fb_[i[0]] = value;
-//        }
-//    });
-//}
+    // obtain diagonal elements of Fock matrix
+    size_t ncmo_ = mo_space_info_->size("CORRELATED");
+    Fa_.resize(ncmo_);
+    Fb_.resize(ncmo_);
+    F_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+        if (spin[0] == AlphaSpin and (i[0] == i[1])) {
+            Fa_[i[0]] = value;
+        }
+        if (spin[0] == BetaSpin and (i[0] == i[1])) {
+            Fb_[i[0]] = value;
+        }
+    });
+}
 
-// void MRDSRG::print_options()
-//{
-//    // fill in information
-//    std::vector<std::pair<std::string,int>> calculation_info{
-//        {"ntamp", ntamp_},
-//        {"diis_min_vecs", options_.get_int("DIIS_MIN_VECS")},
-//        {"diis_max_vecs", options_.get_int("DIIS_MAX_VECS")}};
+void CC::build_fock_df(BlockedTensor& H, BlockedTensor& B) {
+    // the core-core density is an identity matrix
+    BlockedTensor D1c = BTF_->build(tensor_type_, "Gamma1 core", spin_cases({"oo"}));
+    for (size_t m = 0, nc = mo_space_info_->size("RESTRICTED_DOCC"); m < nc; ++m) {
+        D1c.block("oo").data()[m * nc + m] = 1.0;
+        D1c.block("OO").data()[m * nc + m] = 1.0;
+    }
 
-//    std::vector<std::pair<std::string,double>> calculation_info_double{
-//        {"flow parameter",s_},
-//        {"taylor expansion threshold",pow(10.0,-double(taylor_threshold_))},
-//        {"intruder_tamp", intruder_tamp_}};
+    // build Fock matrix
+    F_["pq"] = H["pq"];
+    F_["PQ"] = H["PQ"];
 
-//    std::vector<std::pair<std::string,std::string>> calculation_info_string{
-//        {"corr_level", options_.get_str("CORR_LEVEL")},
-//        {"int_type", options_.get_str("INT_TYPE")},
-//        {"source operator", source_},
-//        {"smart_dsrg_s", options_.get_str("SMART_DSRG_S")},
-//        {"reference relaxation", options_.get_str("RELAX_REF")},
-//        {"dsrg transformation type", options_.get_str("DSRG_TRANS_TYPE")},
-//        {"core virtual source type", options_.get_str("CCVV_SOURCE")}};
+    BlockedTensor temp = BTF_->build(tensor_type_, "B temp", {"L"});
+    temp["g"] = B["gmn"] * D1c["mn"];
+    F_["pq"] += temp["g"] * B["gpq"];
+    F_["PQ"] += temp["g"] * B["gPQ"];
 
-//    // print some information
-//    print_h2("Calculation Information");
-//    for (auto& str_dim : calculation_info){
-//        outfile->Printf("\n    %-35s
-//        %15d",str_dim.first.c_str(),str_dim.second);
-//    }
-//    for (auto& str_dim : calculation_info_double){
-//        outfile->Printf("\n    %-35s
-//        %15.3e",str_dim.first.c_str(),str_dim.second);
-//    }
-//    for (auto& str_dim : calculation_info_string){
-//        outfile->Printf("\n    %-35s
-//        %15s",str_dim.first.c_str(),str_dim.second.c_str());
-//    }
-//    outfile->Printf("\n");
-//
-//}
+    temp["g"] = B["gMN"] * D1c["MN"];
+    F_["pq"] += temp["g"] * B["gpq"];
+    F_["PQ"] += temp["g"] * B["gPQ"];
+
+    // exchange
+    F_["pq"] -= B["gpn"] * B["gmq"] * D1c["mn"];
+
+    F_["PQ"] -= B["gPN"] * B["gMQ"] * D1c["MN"];
+
+    // obtain diagonal elements of Fock matrix
+    size_t ncmo_ = mo_space_info_->size("CORRELATED");
+    Fa_ = std::vector<double>(ncmo_);
+    Fb_ = std::vector<double>(ncmo_);
+    F_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+        if (spin[0] == AlphaSpin and (i[0] == i[1])) {
+            Fa_[i[0]] = value;
+        }
+        if (spin[0] == BetaSpin and (i[0] == i[1])) {
+            Fb_[i[0]] = value;
+        }
+    });
+}
+
+void CC::compute_denominators() {
+    timer t("denominators");
+    D1_.iterate(
+        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+            if (spin[0] == AlphaSpin)
+                value = 1.0 / (Fa_[i[0]] - Fa_[i[1]]);
+            if (spin[0] == BetaSpin)
+                value = 1.0 / (Fb_[i[0]] - Fb_[i[1]]);
+        });
+
+    D2_.iterate(
+        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+            if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin))
+                value = 1.0 / (Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]]);
+            if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin))
+                value = 1.0 / (Fa_[i[0]] + Fb_[i[1]] - Fa_[i[2]] - Fb_[i[3]]);
+            if ((spin[0] == BetaSpin) and (spin[1] == BetaSpin))
+                value = 1.0 / (Fb_[i[0]] + Fb_[i[1]] - Fb_[i[2]] - Fb_[i[3]]);
+        });
+}
+
+void CC::compute_effective_tau() {
+    timer t("effective_tau");
+    tau_["ijab"] = T1_["ia"] * T1_["jb"];
+    tau_["ijab"] -= T1_["ib"] * T1_["ja"];
+    tau_["iJaB"] = T1_["ia"] * T1_["JB"];
+    tau_["IJAB"] = T1_["IA"] * T1_["JB"];
+    tau_["IJAB"] -= T1_["IB"] * T1_["JA"];
+
+    tilde_tau_["ijab"] = T2_["ijab"];
+    tilde_tau_["ijab"] += 0.5 * tau_["ijab"];
+    tilde_tau_["iJaB"] = T2_["iJaB"];
+    tilde_tau_["iJaB"] += 0.5 * tau_["iJaB"];
+    tilde_tau_["IJAB"] = T2_["IJAB"];
+    tilde_tau_["IJAB"] += 0.5 * tau_["IJAB"];
+
+    tau_["ijab"] += T2_["ijab"];
+    tau_["iJaB"] += T2_["iJaB"];
+    tau_["IJAB"] += T2_["IJAB"];
+}
+
+void CC::compute_intermediates() {
+    timer t("intermediates");
+
+    timer Fae("Fae");
+
+    W1_["ae"] = F_["ae"];
+    W1_["AE"] = F_["AE"];
+    for (size_t m = 0, nc = mo_space_info_->size("RESTRICTED_UOCC"); m < nc; ++m) {
+        W1_.block("vv").data()[m * nc + m] = 0.0;
+        W1_.block("VV").data()[m * nc + m] = 0.0;
+    }
+
+    W1_["ae"] -= 0.5 * T1_["ma"] * F_["me"];
+    W1_["AE"] -= 0.5 * T1_["MA"] * F_["ME"];
+
+    W1_["ae"] += T1_["mf"] * V_["mafe"];
+    W1_["ae"] += T1_["MF"] * V_["aMeF"];
+    W1_["AE"] += T1_["mf"] * V_["mAfE"];
+    W1_["AE"] += T1_["MF"] * V_["MAFE"];
+
+    W1_["ae"] -= 0.5 * tilde_tau_["mnfa"] * V_["mnfe"];
+    W1_["ae"] -= tilde_tau_["mNaF"] * V_["eFmN"];
+    W1_["AE"] -= tilde_tau_["nMfA"] * V_["nMfE"];
+    W1_["AE"] -= 0.5 * tilde_tau_["MNFA"] * V_["MNFE"];
+
+    Fae.stop();
+
+    timer Fmi("Fmi");
+
+    W1_["mi"] = F_["mi"];
+    W1_["MI"] = F_["MI"];
+    for (size_t m = 0, nc = mo_space_info_->size("RESTRICTED_DOCC"); m < nc; ++m) {
+        W1_.block("oo").data()[m * nc + m] = 0.0;
+        W1_.block("OO").data()[m * nc + m] = 0.0;
+    }
+
+    W1_["mi"] += 0.5 * T1_["ie"] * F_["me"];
+    W1_["MI"] += 0.5 * T1_["IE"] * F_["ME"];
+
+    W1_["mi"] += T1_["ne"] * V_["mnie"];
+    W1_["mi"] += T1_["NE"] * V_["mNiE"];
+    W1_["MI"] += T1_["ne"] * V_["nMeI"];
+    W1_["MI"] += T1_["NE"] * V_["MNIE"];
+
+    W1_["mi"] += 0.5 * tilde_tau_["inef"] * V_["mnef"];
+    W1_["mi"] += tilde_tau_["iNeF"] * V_["mNeF"];
+    W1_["MI"] += tilde_tau_["nIfE"] * V_["fEnM"];
+    W1_["MI"] += 0.5 * tilde_tau_["INEF"] * V_["MNEF"];
+
+    Fmi.stop();
+
+    timer Fme("Fme");
+
+    W1_["me"] = F_["me"];
+    W1_["ME"] = F_["ME"];
+
+    W1_["me"] += T1_["nf"] * V_["mnef"];
+    W1_["me"] += T1_["NF"] * V_["mNeF"];
+    W1_["ME"] += T1_["nf"] * V_["nMfE"];
+    W1_["ME"] += T1_["NF"] * V_["MNEF"];
+
+    Fme.stop();
+
+    timer Wmnij("Wmnij");
+
+    W2_["mnij"] = V_["mnij"];
+    W2_["mNiJ"] = V_["mNiJ"];
+    W2_["MNIJ"] = V_["MNIJ"];
+
+    W2_["mnij"] += T1_["je"] * V_["mnie"];
+    W2_["mNiJ"] += T1_["JE"] * V_["mNiE"];
+    W2_["MNIJ"] += T1_["JE"] * V_["MNIE"];
+
+    W2_["mnij"] -= T1_["ie"] * V_["mnje"];
+    W2_["mNiJ"] += T1_["ie"] * V_["eJmN"];
+    W2_["MNIJ"] -= T1_["IE"] * V_["MNJE"];
+
+    W2_["mnij"] += 0.5 * tau_["ijef"] * V_["mnef"];
+    W2_["mNiJ"] += tau_["iJeF"] * V_["mNeF"];
+    W2_["MNIJ"] += 0.5 * tau_["IJEF"] * V_["MNEF"];
+
+    Wmnij.stop();
+
+    timer Wmbej("Wmbej");
+
+    W2_["mbej"] = V_["mbej"];
+    W2_["mBeJ"] = V_["mBeJ"];
+    W2_["MBEJ"] = V_["MBEJ"];
+    W2_["mBEj"] = -V_["mBjE"];
+    W2_["MbeJ"] = -V_["bMeJ"];
+    W2_["MbEj"] = V_["bMjE"];
+
+    W2_["mbej"] += T1_["jf"] * V_["mbef"];
+    W2_["mBeJ"] += T1_["JF"] * V_["mBeF"];
+    W2_["MBEJ"] += T1_["JF"] * V_["MBEF"];
+    W2_["mBEj"] -= T1_["jf"] * V_["fEmB"];
+    W2_["MbeJ"] -= T1_["JF"] * V_["bMeF"];
+    W2_["MbEj"] += T1_["jf"] * V_["fEbM"];
+
+    W2_["mbej"] -= T1_["nb"] * V_["ejmn"];
+    W2_["mBeJ"] -= T1_["NB"] * V_["eJmN"];
+    W2_["MBEJ"] -= T1_["NB"] * V_["EJMN"];
+    W2_["mBEj"] += T1_["NB"] * V_["jEmN"];
+    W2_["MbeJ"] += T1_["nb"] * V_["nMeJ"];
+    W2_["MbEj"] -= T1_["nb"] * V_["nMjE"];
+
+    W2_["mbej"] -= 0.5 * T2_["jnfb"] * V_["mnef"];
+    W2_["mbej"] += 0.5 * T2_["jNbF"] * V_["mNeF"];
+    W2_["mBeJ"] += 0.5 * T2_["nJfB"] * V_["mnef"];
+    W2_["mBeJ"] -= 0.5 * T2_["JNFB"] * V_["mNeF"];
+    W2_["MBEJ"] += 0.5 * T2_["nJfB"] * V_["nMfE"];
+    W2_["MBEJ"] -= 0.5 * T2_["JNFB"] * V_["MNEF"];
+    W2_["mBEj"] += 0.5 * T2_["jNfB"] * V_["mNfE"];
+    W2_["MbeJ"] += 0.5 * T2_["nJbF"] * V_["nMeF"];
+    W2_["MbEj"] -= 0.5 * T2_["jnfb"] * V_["nMfE"];
+    W2_["MbEj"] += 0.5 * T2_["jNbF"] * V_["MNEF"];
+
+    W2_["mbej"] += T1_["jf"] * T1_["nb"] * V_["nmef"];
+    W2_["mBeJ"] -= T1_["JF"] * T1_["NB"] * V_["mNeF"];
+    W2_["MBEJ"] += T1_["JF"] * T1_["NB"] * V_["NMEF"];
+    W2_["mBEj"] += T1_["jf"] * T1_["NB"] * V_["fEmN"];
+    W2_["MbeJ"] += T1_["JF"] * T1_["nb"] * V_["nMeF"];
+    W2_["MbEj"] -= T1_["jf"] * T1_["nb"] * V_["fEnM"];
+
+    Wmbej.stop();
+}
+
+void CC::update_t() {
+    timer t("update_t");
+    ambit::BlockedTensor NT1, NT2;
+
+    timer t1("T1");
+
+    NT1 = BTF_->build(tensor_type_, "NT1", spin_cases({"ov"}));
+
+    NT1["ia"] = F_["ia"];
+    NT1["IA"] = F_["IA"];
+
+    NT1["ia"] += T1_["ie"] * W1_["ae"];
+    NT1["IA"] += T1_["IE"] * W1_["AE"];
+
+    NT1["ia"] -= T1_["ma"] * W1_["mi"];
+    NT1["IA"] -= T1_["MA"] * W1_["MI"];
+
+    NT1["ia"] += T2_["imae"] * W1_["me"];
+    NT1["ia"] += T2_["iMaE"] * W1_["ME"];
+    NT1["IA"] += T2_["mIeA"] * W1_["me"];
+    NT1["IA"] += T2_["IMAE"] * W1_["ME"];
+
+    NT1["ia"] -= T1_["nf"] * V_["naif"];
+    NT1["ia"] += T1_["NF"] * V_["aNiF"];
+    NT1["IA"] += T1_["nf"] * V_["nAfI"];
+    NT1["IA"] -= T1_["NF"] * V_["NAIF"];
+
+    NT1["ia"] += 0.5 * T2_["imef"] * V_["amef"];
+    NT1["ia"] += T2_["iMeF"] * V_["aMeF"];
+    NT1["IA"] += T2_["mIeF"] * V_["eFmA"];
+    NT1["IA"] += 0.5 * T2_["IMEF"] * V_["AMEF"];
+
+    NT1["ia"] -= 0.5 * T2_["nmea"] * V_["nmei"];
+    NT1["ia"] -= T2_["mNaE"] * V_["iEmN"];
+    NT1["IA"] -= T2_["nMeA"] * V_["nMeI"];
+    NT1["IA"] -= 0.5 * T2_["NMEA"] * V_["NMEI"];
+
+    t1.stop();
+    timer t2("T2");
+
+    NT2 = BTF_->build(tensor_type_, "NT2", spin_cases({"oovv"}));
+
+    NT2["ijab"] = V_["ijab"];
+    NT2["iJaB"] = V_["iJaB"];
+    NT2["IJAB"] = V_["IJAB"];
+
+    NT2["ijab"] += T2_["ijae"] * W1_["be"];
+    NT2["iJaB"] += T2_["iJaE"] * W1_["BE"];
+    NT2["IJAB"] += T2_["IJAE"] * W1_["BE"];
+
+    NT2["ijab"] -= T2_["ijbe"] * W1_["ae"];
+    NT2["iJaB"] += T2_["iJeB"] * W1_["ae"];
+    NT2["IJAB"] -= T2_["IJBE"] * W1_["AE"];
+
+    NT2["ijab"] -= 0.5 * T2_["ijae"] * T1_["mb"] * W1_["me"];
+    NT2["iJaB"] -= 0.5 * T2_["iJaE"] * T1_["MB"] * W1_["ME"];
+    NT2["IJAB"] -= 0.5 * T2_["IJAE"] * T1_["MB"] * W1_["ME"];
+
+    NT2["ijab"] += 0.5 * T2_["ijbe"] * T1_["ma"] * W1_["me"];
+    NT2["iJaB"] -= 0.5 * T2_["iJeB"] * T1_["ma"] * W1_["me"];
+    NT2["IJAB"] += 0.5 * T2_["IJBE"] * T1_["MA"] * W1_["ME"];
+
+    NT2["ijab"] += T2_["miab"] * W1_["mj"];
+    NT2["iJaB"] -= T2_["iMaB"] * W1_["MJ"];
+    NT2["IJAB"] += T2_["MIAB"] * W1_["MJ"];
+
+    NT2["ijab"] -= T2_["mjab"] * W1_["mi"];
+    NT2["iJaB"] -= T2_["mJaB"] * W1_["mi"];
+    NT2["IJAB"] -= T2_["MJAB"] * W1_["MI"];
+
+    NT2["ijab"] += 0.5 * T2_["miab"] * T1_["je"] * W1_["me"];
+    NT2["iJaB"] -= 0.5 * T2_["iMaB"] * T1_["JE"] * W1_["ME"];
+    NT2["IJAB"] += 0.5 * T2_["MIAB"] * T1_["JE"] * W1_["ME"];
+
+    NT2["ijab"] -= 0.5 * T2_["mjab"] * T1_["ie"] * W1_["me"];
+    NT2["iJaB"] -= 0.5 * T2_["mJaB"] * T1_["ie"] * W1_["me"];
+    NT2["IJAB"] -= 0.5 * T2_["MJAB"] * T1_["IE"] * W1_["ME"];
+
+    NT2["ijab"] += 0.5 * tau_["mnab"] * W2_["mnij"];
+    NT2["iJaB"] += tau_["mNaB"] * W2_["mNiJ"];
+    NT2["IJAB"] += 0.5 * tau_["MNAB"] * W2_["MNIJ"];
+
+    NT2["ijab"] += 0.5 * tau_["ijef"] * V_["abef"];
+    NT2["iJaB"] += tau_["iJeF"] * V_["aBeF"];
+    NT2["IJAB"] += 0.5 * tau_["IJEF"] * V_["ABEF"];
+
+    NT2["ijab"] += 0.5 * tau_["ijef"] * T1_["ma"] * V_["bmef"];
+    NT2["iJaB"] -= tau_["iJeF"] * T1_["ma"] * V_["mBeF"];
+    NT2["IJAB"] += 0.5 * tau_["IJEF"] * T1_["MA"] * V_["BMEF"];
+
+    NT2["ijab"] -= 0.5 * tau_["ijef"] * T1_["mb"] * V_["amef"];
+    NT2["iJaB"] -= tau_["iJeF"] * T1_["MB"] * V_["aMeF"];
+    NT2["IJAB"] -= 0.5 * tau_["IJEF"] * T1_["MB"] * V_["AMEF"];
+
+    ambit::BlockedTensor tmp;
+    tmp = BTF_->build(tensor_type_, "tmp", {"oovv", "OOVV"});
+
+    tmp["ijab"] = T2_["imae"] * W2_["mbej"];
+    tmp["ijab"] += T2_["iMaE"] * W2_["MbEj"];
+    tmp["ijab"] += T1_["ie"] * T1_["ma"] * V_["mbje"];
+    NT2["ijab"] += tmp["ijab"];
+    NT2["ijab"] -= tmp["ijba"];
+    NT2["ijab"] -= tmp["jiab"];
+    NT2["ijab"] += tmp["jiba"];
+
+    tmp["IJAB"] = T2_["mIeA"] * W2_["mBeJ"];
+    tmp["IJAB"] += T2_["IMAE"] * W2_["MBEJ"];
+    tmp["IJAB"] += T1_["IE"] * T1_["MA"] * V_["MBJE"];
+    NT2["IJAB"] += tmp["IJAB"];
+    NT2["IJAB"] -= tmp["IJBA"];
+    NT2["IJAB"] -= tmp["JIAB"];
+    NT2["IJAB"] += tmp["JIBA"];
+
+    NT2["iJaB"] += T2_["imae"] * W2_["mBeJ"];
+    NT2["iJaB"] += T2_["iMaE"] * W2_["MBEJ"];
+
+    NT2["iJaB"] += T2_["iMeB"] * W2_["MaeJ"];
+
+    NT2["iJaB"] += T2_["mJaE"] * W2_["mBEi"];
+
+    NT2["iJaB"] += T2_["mJeB"] * W2_["maei"];
+    NT2["iJaB"] += T2_["JMBE"] * W2_["MaEi"];
+
+    NT2["iJaB"] -= T1_["ie"] * T1_["ma"] * V_["eJmB"];
+    NT2["iJaB"] -= T1_["ie"] * T1_["MB"] * V_["eJaM"];
+    NT2["iJaB"] -= T1_["JE"] * T1_["ma"] * V_["mBiE"];
+    NT2["iJaB"] -= T1_["JE"] * T1_["MB"] * V_["aMiE"];
+
+    NT2["ijab"] += T1_["ie"] * V_["ejab"];
+    NT2["iJaB"] += T1_["ie"] * V_["eJaB"];
+    NT2["IJAB"] += T1_["IE"] * V_["EJAB"];
+
+    NT2["ijab"] += T1_["je"] * V_["abie"];
+    NT2["iJaB"] += T1_["JE"] * V_["aBiE"];
+    NT2["IJAB"] += T1_["JE"] * V_["ABIE"];
+
+    NT2["ijab"] -= T1_["ma"] * V_["mbij"];
+    NT2["iJaB"] -= T1_["ma"] * V_["mBiJ"];
+    NT2["IJAB"] -= T1_["MA"] * V_["MBIJ"];
+
+    NT2["ijab"] -= T1_["mb"] * V_["ijam"];
+    NT2["iJaB"] -= T1_["MB"] * V_["iJaM"];
+    NT2["IJAB"] -= T1_["MB"] * V_["IJAM"];
+
+    t2.stop();
+
+    DT1_["ia"] = T1_["ia"];
+    DT1_["IA"] = T1_["IA"];
+    DT2_["ijab"] = T2_["ijab"];
+    DT2_["iJaB"] = T2_["iJaB"];
+    DT2_["IJAB"] = T2_["IJAB"];
+
+    T1_["ia"] = NT1["ia"] * D1_["ia"];
+    T1_["IA"] = NT1["IA"] * D1_["IA"];
+
+    T2_["ijab"] = NT2["ijab"] * D2_["ijab"];
+    T2_["iJaB"] = NT2["iJaB"] * D2_["iJaB"];
+    T2_["IJAB"] = NT2["IJAB"] * D2_["IJAB"];
+
+    NT1["ia"] = DT1_["ia"];
+    NT1["IA"] = DT1_["IA"];
+
+    NT2["ijab"] = DT2_["ijab"];
+    NT2["iJaB"] = DT2_["iJaB"];
+    NT2["IJAB"] = DT2_["IJAB"];
+
+    DT1_["ia"] = T1_["ia"] - NT1["ia"];
+    DT1_["IA"] = T1_["IA"] - NT1["IA"];
+
+    DT2_["ijab"] = T2_["ijab"] - NT2["ijab"];
+    DT2_["iJaB"] = T2_["iJaB"] - NT2["iJaB"];
+    DT2_["IJAB"] = T2_["IJAB"] - NT2["IJAB"];
+}
+
+void CC::initial_mp2_t() {
+    timer t("initial_mp2_t");
+    T2_["ijab"] = V_["ijab"] * D2_["ijab"];
+    T2_["iJaB"] = V_["iJaB"] * D2_["iJaB"];
+    T2_["IJAB"] = V_["IJAB"] * D2_["IJAB"];
+}
+
+double CC::cc_energy() {
+    timer t("E_corr");
+    double Ecc = 0.0;
+
+    Ecc += F_["ia"] * T1_["ia"];
+    Ecc += F_["IA"] * T1_["IA"];
+
+    Ecc += 0.5 * V_["ijab"] * T1_["ia"] * T1_["jb"];
+    Ecc += V_["iJaB"] * T1_["ia"] * T1_["JB"];
+    Ecc += 0.5 * V_["IJAB"] * T1_["IA"] * T1_["JB"];
+
+    Ecc += 0.25 * V_["ijab"] * T2_["ijab"];
+    Ecc += V_["iJaB"] * T2_["iJaB"];
+    Ecc += 0.25 * V_["IJAB"] * T2_["IJAB"];
+
+    return Ecc;
+}
 }
 }

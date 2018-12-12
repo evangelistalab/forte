@@ -70,25 +70,29 @@ class CC : public Wavefunction {
   protected:
     // => Class initialization and termination <= //
 
+    /// Reference single reference determinant energy
+    double E_ref_;
+
     /// Start-up function called in the constructor
     void startup();
     /// Clean-up function called in the destructor
-    //    void cleanup();
 
-    //    /// Read options
-    //    void read_options();
-
-    //    /// Print levels
-    //    int print_;
-
-    //    /// The energy of the reference
-    //    double Eref_;
+    /// Max iteration for amplitude update.
+    int maxiter_;
+    /// Convergence thresholds
+    double e_convergence_;
+    double r_convergence_;
 
     /// The frozen-core energy
     double frozen_core_energy_;
 
     /// The molecular integrals
     std::shared_ptr<ForteIntegrals> ints_;
+
+    /// The integral type
+    std::string ints_type_;
+    /// If ERI density fitted or Cholesky decomposed
+    bool eri_df_;
 
     /// MO space info
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
@@ -101,6 +105,8 @@ class CC : public Wavefunction {
     std::vector<size_t> bocc_mos_;
     /// List of beta virtual MOs
     std::vector<size_t> bvir_mos_;
+    /// List of auxiliary MOs when DF/CD
+    std::vector<size_t> aux_mos_;
 
     /// Alpha occupied label
     std::string aocc_label_;
@@ -110,14 +116,29 @@ class CC : public Wavefunction {
     std::string bocc_label_;
     /// Beta virtual label
     std::string bvir_label_;
-
-    //    /// Map from space label to list of MOs
-    //    std::map<char, std::vector<size_t>> label_to_spacemo_;
+    /// Auxillary basis label
+    std::string aux_label_;
 
     /// Fill up integrals
     void build_ints();
     /// Build Fock matrix and diagonal Fock matrix elements
     void build_fock(BlockedTensor& H, BlockedTensor& V);
+    void build_fock_df(BlockedTensor& H, BlockedTensor& B);
+    /// Fill the tensor T with three-index DF or CD integrals
+    void fill_three_index_ints(ambit::BlockedTensor T);
+
+    /// Compute the denominator tensors
+    void compute_denominators();
+    /// Initialize T with mp2 amplitudes
+    void initial_mp2_t();
+    /// Compute the effective two-particle excitation operators
+    void compute_effective_tau();
+    /// Compute Stanton intermediate tensors
+    void compute_intermediates();
+    /// Update T amplitudes
+    void update_t();
+    /// Compute CC correlation energy by T amplitudes.
+    double cc_energy();
 
     /// Kevin's Tensor Wrapper
     std::shared_ptr<BlockedTensorFactory> BTF_;
@@ -128,12 +149,23 @@ class CC : public Wavefunction {
     ambit::BlockedTensor H_;
     /// Two-electron integral
     ambit::BlockedTensor V_;
+    /// Three-index integrals
+    ambit::BlockedTensor B_;
     /// Generalized Fock matrix
     ambit::BlockedTensor F_;
     /// Single excitation amplitude
     ambit::BlockedTensor T1_;
     /// Double excitation amplitude
     ambit::BlockedTensor T2_;
+    /// Effective two-particle operator
+    ambit::BlockedTensor tilde_tau_;
+    ambit::BlockedTensor tau_;
+    /// Denominators
+    ambit::BlockedTensor D1_;
+    ambit::BlockedTensor D2_;
+    /// Intermediates
+    ambit::BlockedTensor W1_;
+    ambit::BlockedTensor W2_;
     /// Difference of consecutive singles
     ambit::BlockedTensor DT1_;
     /// Difference of consecutive doubles
