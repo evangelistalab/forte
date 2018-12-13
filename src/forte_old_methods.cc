@@ -57,7 +57,7 @@
 #include "finite_temperature.h"
 #include "helpers.h"
 #include "mcsrgpt2_mo.h"
-#include "mp2_nos.h"
+#include "orbital-helpers/mp2_nos.h"
 #include "mrci.h"
 #include "mrdsrg-so/mrdsrg_so.h"
 #include "mrdsrg-so/so-mrdsrg.h"

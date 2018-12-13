@@ -42,7 +42,7 @@
 #include "fci/fci_solver.h"
 
 #include "fci_mo.h"
-#include "mp2_nos.h"
+#include "orbital-helpers/mp2_nos.h"
 #include "orbital-helpers/orbitaloptimizer.h"
 #include "sa_fcisolver.h"
 #include "semi_canonicalize.h"
