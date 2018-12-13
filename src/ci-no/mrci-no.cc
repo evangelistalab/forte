@@ -31,14 +31,14 @@
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/pointgrp.h"
 #include "helpers/timer.h"
-#include "../ci_rdm/ci_rdms.h"
-#include "../fci/fci_integrals.h"
-#include "../forte_options.h"
-#include "../sparse_ci/sparse_ci_solver.h"
-#include "../sparse_ci/determinant.h"
+#include "ci_rdm/ci_rdms.h"
+#include "fci/fci_integrals.h"
+#include "forte_options.h"
+#include "sparse_ci/sparse_ci_solver.h"
+#include "sparse_ci/determinant.h"
 #include "mrci-no.h"
 #include "ci-no.h"
-//#include "../hash_vector.h"
+//#include "hash_vector.h"
 
 namespace psi {
 namespace forte {

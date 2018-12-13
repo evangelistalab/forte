@@ -33,8 +33,8 @@
 #include "psi4/psi4-dec.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
 
-#include "../helpers.h"
-#include "../helpers/timer.h"
+#include "helpers.h"
+#include "helpers/timer.h"
 #include "boost/format.hpp"
 #include "mrdsrg.h"
 

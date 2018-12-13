@@ -30,7 +30,7 @@
 
 #include "psi4/libpsi4util/PsiOutStream.h"
 
-#include "../helpers.h"
+#include "helpers.h"
 #include "boost/format.hpp"
 #include "dsrg_time.h"
 

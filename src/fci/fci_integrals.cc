@@ -26,7 +26,7 @@
  * @END LICENSE
  */
 
-#include "../helpers.h"
+#include "helpers.h"
 
 #include "fci_vector.h"
 

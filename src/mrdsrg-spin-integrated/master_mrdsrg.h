@@ -8,15 +8,15 @@
 #include "ambit/tensor.h"
 #include "ambit/blocked_tensor.h"
 
-#include "../dynamic_correlation_solver.h"
-#include "../integrals/integrals.h"
-#include "../fci/fci_integrals.h"
-#include "../reference.h"
-#include "../helpers.h"
-#include "../blockedtensorfactory.h"
-#include "../mrdsrg-helper/dsrg_source.h"
-#include "../mrdsrg-helper/dsrg_time.h"
-#include "../mrdsrg-helper/dsrg_tensors.h"
+#include "dynamic_correlation_solver.h"
+#include "integrals/integrals.h"
+#include "fci/fci_integrals.h"
+#include "reference.h"
+#include "helpers.h"
+#include "blockedtensorfactory.h"
+#include "mrdsrg-helper/dsrg_source.h"
+#include "mrdsrg-helper/dsrg_time.h"
+#include "mrdsrg-helper/dsrg_tensors.h"
 
 using namespace ambit;
 namespace psi {

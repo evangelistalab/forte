@@ -30,9 +30,9 @@
 
 #include <numeric>
 
-#include "../blockedtensorfactory.h"
-#include "../fci/fci_solver.h"
-#include "../fci/fci_vector.h"
+#include "blockedtensorfactory.h"
+#include "fci/fci_solver.h"
+#include "fci/fci_vector.h"
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/vector.h"

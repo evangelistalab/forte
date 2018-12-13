@@ -33,9 +33,9 @@
 
 #include "helpers/timer.h"
 #include "ci_rdms.h"
-#include "../helpers.h"
-#include "../reference.h"
-#include "../sparse_ci/determinant.h"
+#include "helpers.h"
+#include "reference.h"
+#include "sparse_ci/determinant.h"
 
 namespace psi {
 namespace forte {

@@ -38,11 +38,11 @@
 #include "ambit/blocked_tensor.h"
 
 #include "boost/assign.hpp"
-#include "../integrals/integrals.h"
-#include "../reference.h"
-#include "../mrdsrg-helper/dsrg_source.h"
-#include "../mrdsrg-helper/dsrg_time.h"
-#include "../helpers.h"
+#include "integrals/integrals.h"
+#include "reference.h"
+#include "mrdsrg-helper/dsrg_source.h"
+#include "mrdsrg-helper/dsrg_time.h"
+#include "helpers.h"
 
 using namespace ambit;
 namespace psi {

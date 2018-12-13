@@ -36,11 +36,11 @@
 #include "psi4/libmints/wavefunction.h"
 #include "ambit/blocked_tensor.h"
 
-#include "../integrals/integrals.h"
-#include "../reference.h"
-#include "../blockedtensorfactory.h"
-#include "../mrdsrg-helper/dsrg_source.h"
-#include "../mrdsrg-helper/dsrg_time.h"
+#include "integrals/integrals.h"
+#include "reference.h"
+#include "blockedtensorfactory.h"
+#include "mrdsrg-helper/dsrg_source.h"
+#include "mrdsrg-helper/dsrg_time.h"
 #include "master_mrdsrg.h"
 
 namespace psi {

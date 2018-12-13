@@ -30,7 +30,7 @@
 #include <numeric>
 #include <vector>
 
-#include "../helpers.h"
+#include "helpers.h"
 #include "mrdsrg.h"
 
 namespace psi {

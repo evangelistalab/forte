@@ -34,8 +34,8 @@
 
 #include "psi4/libpsi4util/PsiOutStream.h"
 
-#include "../helpers.h"
-#include "../helpers/timer.h"
+#include "helpers.h"
+#include "helpers/timer.h"
 #include "mrdsrg.h"
 
 namespace psi {

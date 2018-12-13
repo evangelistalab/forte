@@ -38,7 +38,7 @@
 #include "psi4/libmints/molecule.h"
 #include "psi4/libqt/qt.h"
 
-#include "../helpers.h"
+#include "helpers.h"
 #include "boost/format.hpp"
 #include "mrdsrg.h"
 

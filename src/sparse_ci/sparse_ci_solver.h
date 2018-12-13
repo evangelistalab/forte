@@ -29,10 +29,10 @@
 #ifndef _sparse_ci_h_
 #define _sparse_ci_h_
 
-#include "../fci/fci_integrals.h"
-#include "../determinant_hashvector.h"
-#include "../operator.h"
-#include "../helpers.h"
+#include "fci/fci_integrals.h"
+#include "determinant_hashvector.h"
+#include "operator.h"
+#include "helpers.h"
 
 #include "determinant.h"
 #include "sigma_vector.h"

@@ -33,9 +33,9 @@
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/libmints/local.h"
 
-#include "../helpers.h"
-#include "../integrals/integrals.h"
-#include "../reference.h"
+#include "helpers.h"
+#include "integrals/integrals.h"
+#include "reference.h"
 
 namespace psi {
 
