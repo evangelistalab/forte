@@ -35,7 +35,7 @@
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/vector.h"
 #include "psi4/liboptions/liboptions.h"
-#include "reference.h"
+#include "base_classes/reference.h"
 
 #include "localize.h"
 

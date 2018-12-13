@@ -30,7 +30,7 @@
 #define _orbital_optimizer_h_
 
 #include "ambit/blocked_tensor.h"
-#include "reference.h"
+#include "base_classes/reference.h"
 #include "helpers.h"
 #include "blockedtensorfactory.h"
 #include "psi4/libmints/matrix.h"

@@ -43,7 +43,7 @@
 #include "mrpt2.h"
 #include "orbital-helpers/unpaired_density.h"
 #include "determinant_hashvector.h"
-#include "reference.h"
+#include "base_classes/reference.h"
 #include "sparse_ci/sparse_ci_solver.h"
 #include "sparse_ci/determinant.h"
 #include "orbital-helpers/iao_builder.h"

@@ -11,7 +11,7 @@
 #include "base_classes/dynamic_correlation_solver.h"
 #include "integrals/integrals.h"
 #include "fci/fci_integrals.h"
-#include "reference.h"
+#include "base_classes/reference.h"
 #include "helpers.h"
 #include "blockedtensorfactory.h"
 #include "mrdsrg-helper/dsrg_source.h"

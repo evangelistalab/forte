@@ -38,7 +38,7 @@
 
 //#include "ci_rdm/ci_rdms.h"
 //#include "helpers.h"
-//#include "reference.h"
+//#include "base_classes/reference.h"
 //#include "sparse_ci/determinant.h"
 //
 

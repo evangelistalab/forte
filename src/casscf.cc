@@ -28,7 +28,7 @@
 
 #include "casscf.h"
 #include "integrals/integrals.h"
-#include "reference.h"
+#include "base_classes/reference.h"
 
 #include "psi4/libfock/jk.h"
 #include "psi4/libmints/matrix.h"
@@ -42,10 +42,10 @@
 #include "fci/fci_solver.h"
 
 #include "fci_mo.h"
-#include "mp2_nos.h"
-#include "orbitaloptimizer.h"
+#include "orbital-helpers/mp2_nos.h"
+#include "orbital-helpers/orbitaloptimizer.h"
 #include "sa_fcisolver.h"
-#include "semi_canonicalize.h"
+#include "orbital-helpers/semi_canonicalize.h"
 
 #ifdef HAVE_CHEMPS2
 #include "dmrgsolver.h"

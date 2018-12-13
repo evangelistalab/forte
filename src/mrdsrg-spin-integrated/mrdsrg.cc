@@ -36,9 +36,9 @@
 #include "fci/fci.h"
 #include "fci_mo.h"
 #include "helpers/printing.h"
-#include "semi_canonicalize.h"
+#include "orbital-helpers/semi_canonicalize.h"
 #include "boost/format.hpp"
-#include "mp2_nos.h"
+#include "orbital-helpers/mp2_nos.h"
 #include "mrdsrg.h"
 
 namespace psi {

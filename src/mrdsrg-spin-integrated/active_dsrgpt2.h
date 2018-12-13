@@ -46,7 +46,7 @@
 
 #include "helpers.h"
 #include "integrals/integrals.h"
-#include "reference.h"
+#include "base_classes/reference.h"
 #include "sparse_ci/determinant.h"
 #include "master_mrdsrg.h"
 #include "dsrg_mrpt2.h"
