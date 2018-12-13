@@ -33,7 +33,6 @@
 #include <numeric>
 #include <sstream>
 
-#include "psi4/libpsi4util/libpsi4util.h"
 #include "psi4/libmints/dipole.h"
 #include "psi4/libmints/oeprop.h"
 #include "psi4/libmints/petitelist.h"
@@ -48,6 +47,7 @@
 #include "semi_canonicalize.h"
 #include "orbital-helper/iao_builder.h"
 #include "helpers/printing.h"
+#include "helpers/timer.h"
 
 namespace psi {
 namespace forte {
@@ -636,7 +636,7 @@ void FCI_MO::form_det() {
     int nb_a = nbeta_ - ncore_ - nfrzc_;
 
     // Alpha and Beta Strings
-    Timer tstrings;
+    local_timer tstrings;
     if (!quiet_) {
         outfile->Printf("\n  %-35s ...", "Forming alpha and beta strings");
     }
@@ -647,7 +647,7 @@ void FCI_MO::form_det() {
     }
 
     // Form Determinant
-    Timer tdet;
+    local_timer tdet;
     if (!quiet_) {
         outfile->Printf("\n  %-35s ...", "Forming determinants");
     }
@@ -737,7 +737,7 @@ void FCI_MO::form_det_cis() {
     }
 
     // singles
-    Timer tdet;
+    local_timer tdet;
     if (!quiet_) {
         outfile->Printf("\n  %-35s ...", "Forming determinants");
     }
@@ -784,7 +784,7 @@ void FCI_MO::form_det_cisd() {
     }
 
     // singles
-    Timer tdet;
+    local_timer tdet;
     if (!quiet_) {
         outfile->Printf("\n  %-35s ...", "Forming determinants");
     }
@@ -1120,7 +1120,7 @@ void FCI_MO::Diagonalize_H_noHF(const vecdet& p_space, const int& multi, const i
 void FCI_MO::Diagonalize_H(const vecdet& p_space, const int& multi, const int& nroot,
                            std::vector<pair<SharedVector, double>>& eigen) {
     timer_on("Diagonalize H");
-    Timer tdiagH;
+    local_timer tdiagH;
     if (!quiet_) {
         outfile->Printf("\n  %-35s ...", "Diagonalizing Hamiltonian");
     }
@@ -1410,7 +1410,7 @@ void FCI_MO::Form_Fock(d2& A, d2& B) {
 }
 
 void FCI_MO::compute_Fock_ints() {
-    Timer tfock;
+    local_timer tfock;
     if (!quiet_) {
         outfile->Printf("\n  %-35s ...", "Forming generalized Fock matrix");
     }
@@ -1452,9 +1452,8 @@ void FCI_MO::compute_permanent_dipole() {
     std::vector<SharedMatrix> aodipole_ints = integral_->AOdipole_ints();
 
     // Nuclear dipole contribution
-    Vector3 ndip =
-            Process::environment.molecule()->nuclear_dipole(Vector3(0.0, 0.0, 0.0));
-//        DipoleInt::nuclear_contribution(Process::environment.molecule(), );
+    Vector3 ndip = Process::environment.molecule()->nuclear_dipole(Vector3(0.0, 0.0, 0.0));
+    //        DipoleInt::nuclear_contribution(Process::environment.molecule(), );
 
     // SO to AO transformer
     SharedMatrix sotoao(this->aotoso()->transpose());
@@ -2362,7 +2361,7 @@ void FCI_MO::add_wedge_cu2(const ambit::Tensor& L1a, const ambit::Tensor& L1b, a
     std::string job_name = "add_wedge_cu2";
     outfile->Printf("\n  Adding wedge product for 2-cumulants ... ");
     timer_on(job_name);
-    Timer timer;
+    local_timer timer;
 
     L2aa("pqrs") -= L1a("pr") * L1a("qs");
     L2aa("pqrs") += L1a("ps") * L1a("qr");
@@ -2383,7 +2382,7 @@ void FCI_MO::add_wedge_cu3(const ambit::Tensor& L1a, const ambit::Tensor& L1b,
     std::string job_name = "add_wedge_cu3";
     outfile->Printf("\n  Adding wedge product for 3-cumulants ... ");
     timer_on(job_name);
-    Timer timer;
+    local_timer timer;
 
     // aaa
     L3aaa("pqrstu") -= L1a("ps") * L2aa("qrtu");
@@ -3064,7 +3063,7 @@ std::vector<ambit::Tensor> FCI_MO::compute_n_rdm(const vecdet& p_space, SharedMa
     timer_on(job_name);
     outfile->Printf("\n  Computing %5s (%d-%d) of %s %s ... ", job_name.c_str(), root1, root2,
                     multi_symbols_[multi - 1].c_str(), irrep_symbols_[irrep].c_str());
-    Timer timer;
+    local_timer timer;
 
     std::vector<std::string> names;
     if (rdm_level == 1) {

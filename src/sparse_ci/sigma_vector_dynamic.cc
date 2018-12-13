@@ -37,8 +37,8 @@
 #include "psi4/libpsio/psio.hpp"
 #include "psi4/libqt/qt.h"
 
-#include "../forte-def.h"
-#include "../iterative_solvers.h"
+#include "forte-def.h"
+#include "iterative_solvers.h"
 #include "sigma_vector_dynamic.h"
 
 #ifdef _OPENMP
@@ -48,7 +48,6 @@
 #define omp_get_thread_num() 0
 #define omp_get_num_threads() 1
 #endif
-
 
 namespace psi {
 namespace forte {
@@ -89,10 +88,8 @@ SigmaVectorDynamic::SigmaVectorDynamic(const DeterminantHashVec& space,
     temp_sigma_.resize(size_);
     temp_b_.resize(size_);
 
-#pragma omp parallel 
-{
-    num_threads_ = omp_get_max_threads();
-}
+#pragma omp parallel
+    { num_threads_ = omp_get_max_threads(); }
 
     total_space_ = max_memory;
     size_t space_per_thread = total_space_ / num_threads_;

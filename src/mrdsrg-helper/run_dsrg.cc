@@ -27,13 +27,13 @@
  * @END LICENSE
  */
 
-#include "../mrdsrg-so/mrdsrg_so.h"
-#include "../mrdsrg-so/so-mrdsrg.h"
-#include "../mrdsrg-spin-adapted/dsrg_mrpt.h"
-#include "../mrdsrg-spin-integrated/dsrg_mrpt2.h"
-#include "../mrdsrg-spin-integrated/dsrg_mrpt3.h"
-#include "../mrdsrg-spin-integrated/mrdsrg.h"
-#include "../mrdsrg-spin-integrated/three_dsrg_mrpt2.h"
+#include "mrdsrg-so/mrdsrg_so.h"
+#include "mrdsrg-so/so-mrdsrg.h"
+#include "mrdsrg-spin-adapted/dsrg_mrpt.h"
+#include "mrdsrg-spin-integrated/dsrg_mrpt2.h"
+#include "mrdsrg-spin-integrated/dsrg_mrpt3.h"
+#include "mrdsrg-spin-integrated/mrdsrg.h"
+#include "mrdsrg-spin-integrated/three_dsrg_mrpt2.h"
 
 #include "run_dsrg.h"
 
@@ -43,8 +43,9 @@ namespace forte {
 void set_DSRG_options(ForteOptions& foptions) {
 
     /*- Correlation level -*/
-    foptions.add_str("CORR_LEVEL", "PT2", {"PT2", "PT3", "LDSRG2", "LDSRG2_QC", "LSRG2", "SRG_PT2",
-                                           "QDSRG2", "LDSRG2_P3", "QDSRG2_P3"},
+    foptions.add_str("CORR_LEVEL", "PT2",
+                     {"PT2", "PT3", "LDSRG2", "LDSRG2_QC", "LSRG2", "SRG_PT2", "QDSRG2",
+                      "LDSRG2_P3", "QDSRG2_P3"},
                      "Correlation level of MR-DSRG (used in mrdsrg code, "
                      "LDSRG2_P3 and QDSRG2_P3 not implemented)");
 
@@ -184,11 +185,11 @@ void set_DSRG_options(ForteOptions& foptions) {
     foptions.add_bool("DSRG_HBAR_SEQ", false, "Evaluate H_bar sequentially if true");
 
     /*- Omit blocks with >= 3 virtual indices -*/
-    foptions.add_bool("DSRG_NIVO", false, "NIVO approximation: Omit tensor blocks with >= 3 virtual indices if true");
+    foptions.add_bool("DSRG_NIVO", false,
+                      "NIVO approximation: Omit tensor blocks with >= 3 virtual indices if true");
 
     /*- Print eigenvalues of 1-body effective H -*/
     foptions.add_bool("PRINT_1BODY_EVALS", false, "Print eigenvalues of 1-body effective H");
-
 }
 
 /// A uniformed function to run DSRG related jobs

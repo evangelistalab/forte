@@ -36,15 +36,14 @@
 #include "psi4/libpsio/psio.hpp"
 #include "psi4/libqt/qt.h"
 #include "psi4/libmints/dipole.h"
-#include "psi4/libpsi4util/libpsi4util.h"
 
-
-#include "../ci_rdm/ci_rdms.h"
-#include "../fci/fci.h"
+#include "helpers/timer.h"
+#include "ci_rdm/ci_rdms.h"
+#include "fci/fci.h"
 #include "boost/format.hpp"
-#include "../fci_mo.h"
-#include "../fci/fci_solver.h"
-#include "../helpers/printing.h"
+#include "fci_mo.h"
+#include "fci/fci_solver.h"
+#include "helpers/printing.h"
 #include "dsrg_mrpt2.h"
 
 using namespace ambit;
@@ -308,7 +307,7 @@ void DSRG_MRPT2::print_options_summary() {
 void DSRG_MRPT2::cleanup() {}
 
 double DSRG_MRPT2::compute_ref() {
-    Timer timer;
+    local_timer timer;
     std::string str = "Computing reference energy";
     outfile->Printf("\n    %-40s ...", str.c_str());
     double E = 0.0;
@@ -350,7 +349,7 @@ double DSRG_MRPT2::compute_energy() {
         Fb_ = eigens[1];
     }
 
-    Timer DSRG_energy;
+    local_timer DSRG_energy;
     print_h2("Computing DSRG-MRPT2 ...");
 
     // Compute T2 and T1
@@ -502,7 +501,7 @@ double DSRG_MRPT2::compute_energy() {
         print_h2("Transforming Dipole Integrals ... ");
         Mbar0_ = std::vector<double>{dm_ref_[0], dm_ref_[1], dm_ref_[2]};
         for (int i = 0; i < 3; ++i) {
-            Timer timer;
+            local_timer timer;
             std::string name = "Computing direction " + dm_dirs_[i];
             outfile->Printf("\n    %-30s ...", name.c_str());
 
@@ -528,7 +527,7 @@ double DSRG_MRPT2::compute_energy() {
 }
 
 void DSRG_MRPT2::compute_t2() {
-    Timer timer;
+    local_timer timer;
     std::string str = "Computing T2 amplitudes";
     outfile->Printf("\n    %-40s ...", str.c_str());
 
@@ -712,7 +711,7 @@ void DSRG_MRPT2::compute_t2() {
 }
 
 void DSRG_MRPT2::compute_t1() {
-    Timer timer;
+    local_timer timer;
     std::string str = "Computing T1 amplitudes";
     outfile->Printf("\n    %-40s ...", str.c_str());
 
@@ -838,7 +837,7 @@ void DSRG_MRPT2::compute_t1() {
 }
 
 void DSRG_MRPT2::renormalize_V() {
-    Timer timer;
+    local_timer timer;
     std::string str = "Renormalizing two-electron integrals";
     outfile->Printf("\n    %-40s ...", str.c_str());
 
@@ -890,7 +889,7 @@ void DSRG_MRPT2::renormalize_V() {
 }
 
 void DSRG_MRPT2::renormalize_F() {
-    Timer timer;
+    local_timer timer;
     std::string str = "Renormalizing Fock matrix elements";
     outfile->Printf("\n    %-40s ...", str.c_str());
 
@@ -975,7 +974,7 @@ void DSRG_MRPT2::renormalize_F() {
 }
 
 double DSRG_MRPT2::E_FT1() {
-    Timer timer;
+    local_timer timer;
     std::string str = "Computing <[F, T1]>";
     outfile->Printf("\n    %-40s ...", str.c_str());
 
@@ -1002,7 +1001,7 @@ double DSRG_MRPT2::E_FT1() {
 }
 
 double DSRG_MRPT2::E_VT1() {
-    Timer timer;
+    local_timer timer;
     std::string str = "Computing <[V, T1]>";
     outfile->Printf("\n    %-40s ...", str.c_str());
 
@@ -1049,7 +1048,7 @@ double DSRG_MRPT2::E_VT1() {
 }
 
 double DSRG_MRPT2::E_FT2() {
-    Timer timer;
+    local_timer timer;
     std::string str = "Computing <[F, T2]>";
     outfile->Printf("\n    %-40s ...", str.c_str());
 
@@ -1096,7 +1095,7 @@ double DSRG_MRPT2::E_FT2() {
 }
 
 double DSRG_MRPT2::E_VT2_2() {
-    Timer timer;
+    local_timer timer;
     std::string str = "Computing <[V, T2]> (C_2)^4";
     outfile->Printf("\n    %-40s ...", str.c_str());
 
@@ -1193,7 +1192,7 @@ double DSRG_MRPT2::E_VT2_2() {
 }
 
 double DSRG_MRPT2::E_VT2_4HH() {
-    Timer timer;
+    local_timer timer;
     std::string str = "Computing <[V, T2]> C_4 (C_2)^2 HH";
     outfile->Printf("\n    %-40s ...", str.c_str());
 
@@ -1234,7 +1233,7 @@ double DSRG_MRPT2::E_VT2_4HH() {
 }
 
 double DSRG_MRPT2::E_VT2_4PP() {
-    Timer timer;
+    local_timer timer;
     std::string str = "Computing <[V, T2]> C_4 (C_2)^2 PP";
     outfile->Printf("\n    %-40s ...", str.c_str());
 
@@ -1275,7 +1274,7 @@ double DSRG_MRPT2::E_VT2_4PP() {
 }
 
 double DSRG_MRPT2::E_VT2_4PH() {
-    Timer timer;
+    local_timer timer;
     std::string str = "Computing <[V, T2]> C_4 (C_2)^2 PH";
     outfile->Printf("\n    %-40s ...", str.c_str());
 
@@ -1356,7 +1355,7 @@ double DSRG_MRPT2::E_VT2_4PH() {
 }
 
 double DSRG_MRPT2::E_VT2_6() {
-    Timer timer;
+    local_timer timer;
     std::string str = "Computing <[V, T2]> C_6 C_2";
     outfile->Printf("\n    %-40s ...", str.c_str());
 
@@ -1962,7 +1961,7 @@ void DSRG_MRPT2::transfer_integrals() {
     print_h2("De-Normal-Order the DSRG Transformed Hamiltonian");
 
     // compute scalar term (all active only)
-    Timer t_scalar;
+    local_timer t_scalar;
     std::string str = "Computing the scalar term   ...";
     outfile->Printf("\n    %-35s", str.c_str());
     double scalar0 = Eref_ + Hbar0_ - Enuc_ - Efrzc_;
@@ -2010,7 +2009,7 @@ void DSRG_MRPT2::transfer_integrals() {
     outfile->Printf("  Done. Timing %10.3f s", t_scalar.get());
 
     // compute one-body term
-    Timer t_one;
+    local_timer t_one;
     str = "Computing the one-body term ...";
     outfile->Printf("\n    %-35s", str.c_str());
     BlockedTensor temp1 = BTF_->build(tensor_type_, "temp1", spin_cases({"aa"}));
@@ -2063,7 +2062,7 @@ void DSRG_MRPT2::transfer_integrals() {
     }
 
     // update integrals
-    Timer t_int;
+    local_timer t_int;
     str = "Updating integrals          ...";
     outfile->Printf("\n    %-35s", str.c_str());
     //    ints_->set_scalar(Edsrg - Enuc_ - Efrzc_);
@@ -2203,7 +2202,7 @@ void DSRG_MRPT2::transfer_integrals() {
 
 void DSRG_MRPT2::H1_T1_C1aa(BlockedTensor& H1, BlockedTensor& T1, const double& alpha,
                             BlockedTensor& C1) {
-    Timer timer;
+    local_timer timer;
 
     C1["uv"] += alpha * H1["av"] * T1["ua"];
     C1["vu"] -= alpha * T1["iu"] * H1["vi"];
@@ -2219,7 +2218,7 @@ void DSRG_MRPT2::H1_T1_C1aa(BlockedTensor& H1, BlockedTensor& T1, const double& 
 
 void DSRG_MRPT2::H1_T2_C1aa(BlockedTensor& H1, BlockedTensor& T2, const double& alpha,
                             BlockedTensor& C1) {
-    Timer timer;
+    local_timer timer;
 
     C1["vu"] += alpha * H1["bm"] * T2["vmub"];
     C1["yx"] += alpha * H1["bu"] * T2["yvxb"] * Gamma1_["uv"];
@@ -2243,7 +2242,7 @@ void DSRG_MRPT2::H1_T2_C1aa(BlockedTensor& H1, BlockedTensor& T2, const double& 
 
 void DSRG_MRPT2::H2_T1_C1aa(BlockedTensor& H2, BlockedTensor& T1, const double& alpha,
                             BlockedTensor& C1) {
-    Timer timer;
+    local_timer timer;
 
     C1["uv"] += alpha * T1["ma"] * H2["uavm"];
     C1["uv"] += alpha * T1["xe"] * Gamma1_["yx"] * H2["uevy"];
@@ -2267,7 +2266,7 @@ void DSRG_MRPT2::H2_T1_C1aa(BlockedTensor& H2, BlockedTensor& T1, const double& 
 
 void DSRG_MRPT2::H2_T2_C1aa(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
                             BlockedTensor& C1) {
-    Timer timer;
+    local_timer timer;
     BlockedTensor temp;
 
     // [Hbar2, T2] (C_2)^3 -> C1 particle contractions
@@ -2428,7 +2427,7 @@ void DSRG_MRPT2::H2_T2_C1aa(BlockedTensor& H2, BlockedTensor& T2, const double& 
 
 void DSRG_MRPT2::H1_T2_C2aaaa(BlockedTensor& H1, BlockedTensor& T2, const double& alpha,
                               BlockedTensor& C2) {
-    Timer timer;
+    local_timer timer;
 
     C2["uvxy"] += alpha * T2["uvay"] * H1["ax"];
     C2["uvxy"] += alpha * T2["uvxb"] * H1["by"];
@@ -2453,7 +2452,7 @@ void DSRG_MRPT2::H1_T2_C2aaaa(BlockedTensor& H1, BlockedTensor& T2, const double
 
 void DSRG_MRPT2::H2_T1_C2aaaa(BlockedTensor& H2, BlockedTensor& T1, const double& alpha,
                               BlockedTensor& C2) {
-    Timer timer;
+    local_timer timer;
 
     C2["uvxy"] += alpha * T1["ua"] * H2["avxy"];
     C2["uvxy"] += alpha * T1["va"] * H2["uaxy"];
@@ -2478,7 +2477,7 @@ void DSRG_MRPT2::H2_T1_C2aaaa(BlockedTensor& H2, BlockedTensor& T1, const double
 
 void DSRG_MRPT2::H2_T2_C2aaaa(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
                               BlockedTensor& C2) {
-    Timer timer;
+    local_timer timer;
 
     // particle-particle contractions
     C2["uvxy"] += 0.5 * alpha * H2["abxy"] * T2["uvab"];
@@ -2556,7 +2555,7 @@ void DSRG_MRPT2::H2_T2_C2aaaa(BlockedTensor& H2, BlockedTensor& T2, const double
 void DSRG_MRPT2::H2_T2_C3aaaaaa(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
                                 BlockedTensor& C3) {
     dsrg_time_.create_code("223");
-    Timer timer;
+    local_timer timer;
 
     // compute only all active !
 

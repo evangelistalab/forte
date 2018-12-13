@@ -32,17 +32,17 @@
 
 #include "boost/format.hpp"
 
-#include "psi4/libpsi4util/libpsi4util.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
 
-#include "../helpers.h"
+#include "helpers.h"
+#include "helpers/timer.h"
 #include "mrdsrg.h"
 
 namespace psi {
 namespace forte {
 
 // void MRDSRG::H1_T1_C0(BlockedTensor& H1, BlockedTensor& T1, const double& alpha, double& C0) {
-//    Timer timer;
+//    local_timer timer;
 
 //    double E = 0.0;
 //    E += H1["em"] * T1["me"];
@@ -63,7 +63,7 @@ namespace forte {
 //}
 
 // void MRDSRG::H1_T2_C0(BlockedTensor& H1, BlockedTensor& T2, const double& alpha, double& C0) {
-//    Timer timer;
+//    local_timer timer;
 //    BlockedTensor temp;
 //    double E = 0.0;
 
@@ -94,7 +94,7 @@ namespace forte {
 //}
 
 // void MRDSRG::H2_T1_C0(BlockedTensor& H2, BlockedTensor& T1, const double& alpha, double& C0) {
-//    Timer timer;
+//    local_timer timer;
 //    BlockedTensor temp;
 //    double E = 0.0;
 
@@ -125,7 +125,7 @@ namespace forte {
 //}
 
 // void MRDSRG::H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, double& C0) {
-//    Timer timer;
+//    local_timer timer;
 
 //    // <[Hbar2, T2]> (C_2)^4
 //    double E = H2["eFmN"] * T2["mNeF"];
@@ -292,7 +292,7 @@ namespace forte {
 //}
 
 void MRDSRG::H2_T1_C0_DF(BlockedTensor& B, BlockedTensor& T1, const double& alpha, double& C0) {
-    Timer timer;
+    local_timer timer;
     BlockedTensor temp;
     double E = 0.0;
 
@@ -326,8 +326,9 @@ void MRDSRG::H2_T1_C0_DF(BlockedTensor& B, BlockedTensor& T1, const double& alph
     dsrg_time_.add("210", timer.get());
 }
 
-void MRDSRG::H2_T1_C1_DF(BlockedTensor& B, BlockedTensor& T1, const double& alpha, BlockedTensor& C1) {
-    Timer timer;
+void MRDSRG::H2_T1_C1_DF(BlockedTensor& B, BlockedTensor& T1, const double& alpha,
+                         BlockedTensor& C1) {
+    local_timer timer;
 
     C1["qp"] += alpha * T1["ma"] * B["gqp"] * B["gam"];
     C1["qp"] -= alpha * T1["ma"] * B["gqm"] * B["gap"];
@@ -355,8 +356,9 @@ void MRDSRG::H2_T1_C1_DF(BlockedTensor& B, BlockedTensor& T1, const double& alph
     dsrg_time_.add("211", timer.get());
 }
 
-void MRDSRG::H2_T1_C2_DF(BlockedTensor& B, BlockedTensor& T1, const double& alpha, BlockedTensor& C2) {
-    Timer timer;
+void MRDSRG::H2_T1_C2_DF(BlockedTensor& B, BlockedTensor& T1, const double& alpha,
+                         BlockedTensor& C2) {
+    local_timer timer;
 
     C2["irpq"] += alpha * T1["ia"] * B["gap"] * B["grq"];
     C2["irpq"] -= alpha * T1["ia"] * B["gaq"] * B["grp"];
@@ -388,7 +390,7 @@ void MRDSRG::H2_T1_C2_DF(BlockedTensor& B, BlockedTensor& T1, const double& alph
 }
 
 void MRDSRG::H2_T2_C0_DF(BlockedTensor& B, BlockedTensor& T2, const double& alpha, double& C0) {
-    Timer timer;
+    local_timer timer;
 
     // <[Hbar2, T2]> (C_2)^4
     double E = B["gem"] * B["gFN"] * T2["mNeF"];
@@ -599,7 +601,7 @@ void MRDSRG::H2_T2_C0_DF(BlockedTensor& B, BlockedTensor& T2, const double& alph
 
 // void MRDSRG::H1_T1_C1(BlockedTensor& H1, BlockedTensor& T1, const double& alpha,
 //                      BlockedTensor& C1) {
-//    Timer timer;
+//    local_timer timer;
 
 //    C1["ip"] += alpha * H1["ap"] * T1["ia"];
 //    C1["qa"] -= alpha * T1["ia"] * H1["qi"];
@@ -615,7 +617,7 @@ void MRDSRG::H2_T2_C0_DF(BlockedTensor& B, BlockedTensor& T2, const double& alph
 
 // void MRDSRG::H1_T2_C1(BlockedTensor& H1, BlockedTensor& T2, const double& alpha,
 //                      BlockedTensor& C1) {
-//    Timer timer;
+//    local_timer timer;
 
 //    C1["ia"] += alpha * H1["bm"] * T2["imab"];
 //    C1["ia"] += alpha * H1["bu"] * T2["ivab"] * Gamma1_["uv"];
@@ -639,7 +641,7 @@ void MRDSRG::H2_T2_C0_DF(BlockedTensor& B, BlockedTensor& T2, const double& alph
 
 // void MRDSRG::H2_T1_C1(BlockedTensor& H2, BlockedTensor& T1, const double& alpha,
 //                      BlockedTensor& C1) {
-//    Timer timer;
+//    local_timer timer;
 
 //    C1["qp"] += alpha * T1["ma"] * H2["qapm"];
 //    C1["qp"] += alpha * T1["xe"] * Gamma1_["yx"] * H2["qepy"];
@@ -663,7 +665,7 @@ void MRDSRG::H2_T2_C0_DF(BlockedTensor& B, BlockedTensor& T2, const double& alph
 
 // void MRDSRG::H2_T2_C1(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
 //                      BlockedTensor& C1) {
-//    Timer timer;
+//    local_timer timer;
 //    BlockedTensor temp;
 
 //    // [Hbar2, T2] (C_2)^3 -> C1 particle contractions
@@ -824,7 +826,7 @@ void MRDSRG::H2_T2_C0_DF(BlockedTensor& B, BlockedTensor& T2, const double& alph
 
 void MRDSRG::H2_T2_C1_DF(BlockedTensor& B, BlockedTensor& T2, const double& alpha,
                          BlockedTensor& C1) {
-    Timer timer;
+    local_timer timer;
     BlockedTensor temp;
 
     // [Hbar2, T2] (C_2)^3 -> C1 particle contractions
@@ -1021,7 +1023,7 @@ void MRDSRG::H2_T2_C1_DF(BlockedTensor& B, BlockedTensor& T2, const double& alph
 
 // void MRDSRG::H1_T2_C2(BlockedTensor& H1, BlockedTensor& T2, const double& alpha,
 //                      BlockedTensor& C2) {
-//    Timer timer;
+//    local_timer timer;
 
 //    C2["ijpb"] += alpha * T2["ijab"] * H1["ap"];
 //    C2["ijap"] += alpha * T2["ijab"] * H1["bp"];
@@ -1072,7 +1074,7 @@ void MRDSRG::H2_T2_C1_DF(BlockedTensor& B, BlockedTensor& T2, const double& alph
 
 // void MRDSRG::H2_T1_C2(BlockedTensor& H2, BlockedTensor& T1, const double& alpha,
 //                      BlockedTensor& C2) {
-//    Timer timer;
+//    local_timer timer;
 
 //    C2["irpq"] += alpha * T1["ia"] * H2["arpq"];
 //    C2["ripq"] += alpha * T1["ia"] * H2["rapq"];
@@ -1097,7 +1099,7 @@ void MRDSRG::H2_T2_C1_DF(BlockedTensor& B, BlockedTensor& T2, const double& alph
 
 // void MRDSRG::H2_T2_C2(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
 //                      BlockedTensor& C2) {
-//    Timer timer;
+//    local_timer timer;
 
 //    // particle-particle contractions
 //    forte::timer pp("H2_T2_C2 pp");
@@ -1188,7 +1190,7 @@ void MRDSRG::H2_T2_C1_DF(BlockedTensor& B, BlockedTensor& T2, const double& alph
 
 void MRDSRG::H2_T2_C2_DF(BlockedTensor& B, BlockedTensor& T2, const double& alpha,
                          BlockedTensor& C2) {
-    Timer timer;
+    local_timer timer;
 
     // particle-particle contractions
     forte::timer pp("H2_T2_C2 pp");
@@ -1298,7 +1300,7 @@ void MRDSRG::H2_T2_C2_DF(BlockedTensor& B, BlockedTensor& T2, const double& alph
 }
 
 void MRDSRG::H1_G1_C0(BlockedTensor& H1, BlockedTensor& G1, const double& alpha, double& C0) {
-    Timer timer;
+    local_timer timer;
 
     double E = 0.0;
     E += H1["qm"] * G1["mq"];
@@ -1318,7 +1320,7 @@ void MRDSRG::H1_G1_C0(BlockedTensor& H1, BlockedTensor& G1, const double& alpha,
 }
 
 void MRDSRG::H1_G2_C0(BlockedTensor& H1, BlockedTensor& G2, const double& alpha, double& C0) {
-    Timer timer;
+    local_timer timer;
 
     BlockedTensor temp;
     double E = 0.0;
@@ -1346,7 +1348,7 @@ void MRDSRG::H1_G2_C0(BlockedTensor& H1, BlockedTensor& G2, const double& alpha,
 }
 
 void MRDSRG::H2_G2_C0(BlockedTensor& H2, BlockedTensor& G2, const double& alpha, double& C0) {
-    Timer timer;
+    local_timer timer;
     double E = 0.0;
 
     // <[Hbar2, T2]> (C_2)^4
@@ -1579,7 +1581,7 @@ void MRDSRG::H2_G2_C0(BlockedTensor& H2, BlockedTensor& G2, const double& alpha,
 
 void MRDSRG::H1_G1_C1(BlockedTensor& H1, BlockedTensor& G1, const double& alpha,
                       BlockedTensor& C1) {
-    Timer timer;
+    local_timer timer;
 
     C1["sp"] += alpha * H1["qp"] * G1["sq"];
     C1["qr"] -= alpha * H1["qp"] * G1["pr"];
@@ -1592,7 +1594,7 @@ void MRDSRG::H1_G1_C1(BlockedTensor& H1, BlockedTensor& G1, const double& alpha,
 
 void MRDSRG::H1_G2_C1(BlockedTensor& H1, BlockedTensor& G2, const double& alpha,
                       BlockedTensor& C1) {
-    Timer timer;
+    local_timer timer;
 
     C1["os"] += alpha * H1["qm"] * G2["moqs"];
     C1["os"] += alpha * H1["qu"] * G2["voqs"] * Gamma1_["uv"];
@@ -1617,7 +1619,7 @@ void MRDSRG::H1_G2_C1(BlockedTensor& H1, BlockedTensor& G2, const double& alpha,
 
 void MRDSRG::H2_G2_C1(BlockedTensor& H2, BlockedTensor& G2, const double& alpha,
                       BlockedTensor& C1) {
-    Timer timer;
+    local_timer timer;
 
     // [Hbar2, T2] (C_2)^3 -> C1 +--,++-
     C1["pq"] += 0.5 * alpha * H2["rsqm"] * G2["pmrs"];
@@ -1806,7 +1808,7 @@ void MRDSRG::H2_G2_C1(BlockedTensor& H2, BlockedTensor& G2, const double& alpha,
 
 void MRDSRG::H1_G2_C2(BlockedTensor& H1, BlockedTensor& G2, const double& alpha,
                       BlockedTensor& C2) {
-    Timer timer;
+    local_timer timer;
 
     C2["tops"] += alpha * H1["rp"] * G2["tors"];
     C2["torp"] += alpha * H1["sp"] * G2["tors"];
@@ -1828,7 +1830,7 @@ void MRDSRG::H1_G2_C2(BlockedTensor& H1, BlockedTensor& G2, const double& alpha,
 
 void MRDSRG::H2_G2_C2(BlockedTensor& H2, BlockedTensor& G2, const double& alpha,
                       BlockedTensor& C2) {
-    Timer timer;
+    local_timer timer;
 
     // --,++
     C2["pqrs"] += 0.5 * alpha * H2["tors"] * G2["pqto"];

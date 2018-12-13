@@ -29,8 +29,8 @@
 #ifndef _fci_integrals_
 #define _fci_integrals_
 
-#include "../integrals/integrals.h"
-#include "../sparse_ci/determinant.h"
+#include "integrals/integrals.h"
+#include "sparse_ci/determinant.h"
 #include "string_lists.h"
 
 namespace psi {
@@ -79,18 +79,13 @@ class FCIIntegrals {
     double slater_rules(const Determinant& lhs, const Determinant& rhs) const;
     /// Compute the matrix element of the Hamiltonian between this determinant
     /// and a given one
-    double slater_rules_single_alpha(const Determinant& lhs,
-                                     const Determinant& rhs) const;
-    double slater_rules_single_beta(const Determinant& lhs,
-                                    const Determinant& rhs) const;
-    double slater_rules_double_alpha_alpha(const Determinant& lhs,
-                                           const Determinant& rhs) const;
-    double slater_rules_double_beta_beta(const Determinant& lhs,
-                                         const Determinant& rhs) const;
-    double slater_rules_double_alpha_beta(const Determinant& lhs,
-                                          const Determinant& rhs) const;
-    double slater_rules_double_alpha_beta_pre(const Determinant& lhs,
-                                              const Determinant& rhs, int i, int k) const;
+    double slater_rules_single_alpha(const Determinant& lhs, const Determinant& rhs) const;
+    double slater_rules_single_beta(const Determinant& lhs, const Determinant& rhs) const;
+    double slater_rules_double_alpha_alpha(const Determinant& lhs, const Determinant& rhs) const;
+    double slater_rules_double_beta_beta(const Determinant& lhs, const Determinant& rhs) const;
+    double slater_rules_double_alpha_beta(const Determinant& lhs, const Determinant& rhs) const;
+    double slater_rules_double_alpha_beta_pre(const Determinant& lhs, const Determinant& rhs, int i,
+                                              int k) const;
     /// Compute the matrix element of the Hamiltonian between this determinant
     /// and a given one
     double slater_rules_single_alpha(const Determinant& det, int i, int a) const;

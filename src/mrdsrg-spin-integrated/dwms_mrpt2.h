@@ -3,10 +3,10 @@
 
 #include "psi4/liboptions/liboptions.h"
 
-#include "../integrals/integrals.h"
-#include "../helpers.h"
-#include "../fci_mo.h"
-#include "../sparse_ci/determinant.h"
+#include "integrals/integrals.h"
+#include "helpers.h"
+#include "fci_mo.h"
+#include "sparse_ci/determinant.h"
 
 namespace psi {
 namespace forte {

@@ -47,12 +47,13 @@
 
 #ifdef HAVE_GA
 #include "paralleldfmo.h"
+#include "helpers/timer.h"
 #include <ga.h>
 #include <macdecls.h>
 #include <mpi.h>
 #endif
 
-#include "../blockedtensorfactory.h"
+#include "blockedtensorfactory.h"
 
 using namespace ambit;
 namespace psi {
@@ -69,7 +70,7 @@ DistDFIntegrals::DistDFIntegrals(psi::Options& options, SharedWavefunction ref_w
     integral_type_ = DistDF;
     outfile->Printf("\n  DistDFIntegrals overall time with %d MPI Process and %d threads",
                     GA_Nnodes(), omp_get_max_threads());
-    Timer DFInt;
+    local_timer DFInt;
 #define omp_get_max_threads() 1
     allocate();
 
@@ -87,7 +88,7 @@ DistDFIntegrals::DistDFIntegrals(psi::Options& options, SharedWavefunction ref_w
     outfile->Printf("\n  DistDFIntegrals take %15.8f s", DFInt.get());
 }
 
-DistDFIntegrals::~DistDFIntegrals() { }
+DistDFIntegrals::~DistDFIntegrals() {}
 void DistDFIntegrals::test_distributed_integrals() {
     outfile->Printf("\n Computing Density fitted integrals \n");
 
@@ -153,7 +154,7 @@ void DistDFIntegrals::test_distributed_integrals() {
 
     // Finally computes the df integrals
     // Does the timings also
-    Timer timer;
+    local_timer timer;
     std::string str = "Computing DF Integrals";
     outfile->Printf("\n    %-36s ...", str.c_str());
     df->compute();
@@ -478,7 +479,7 @@ void DistDFIntegrals::retransform_integrals() {
     outfile->Printf("\n Integrals are about to be updated.");
     freeze_core_orbitals();
 }
-}
-}
+} // namespace forte
+} // namespace psi
 
 #endif // HAVE_GA

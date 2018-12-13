@@ -252,7 +252,8 @@ void DMRGSCF::buildHamDMRG(std::shared_ptr<IntegralTransform> ints,
 
     // Econstant and one-electron integrals
     {
-        double Econstant = Process::environment.molecule()->nuclear_repulsion_energy(reference_wavefunction_->get_dipole_field_strength());
+        double Econstant = Process::environment.molecule()->nuclear_repulsion_energy(
+            reference_wavefunction_->get_dipole_field_strength());
         for (int h = 0; h < iHandler->getNirreps(); h++) {
             const int NOCC = iHandler->getNOCC(h);
             for (int froz = 0; froz < NOCC; froz++) {

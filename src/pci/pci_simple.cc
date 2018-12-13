@@ -34,7 +34,6 @@
 #include "boost/format.hpp"
 #include "boost/math/special_functions/bessel.hpp"
 
-#include "psi4/libpsi4util/libpsi4util.h"
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libciomr/libciomr.h"
 #include "psi4/libmints/matrix.h"
@@ -45,7 +44,8 @@
 #include "psi4/libqt/qt.h"
 
 #include "pci_simple.h"
-#include "../ci_reference.h"
+#include "helpers/timer.h"
+#include "ci_reference.h"
 
 using namespace psi;
 using namespace psi::forte::GeneratorType_Simple;
@@ -133,7 +133,8 @@ void ProjectorCI_Simple::startup() {
     frzcpi_ = mo_space_info_->get_dimension("INACTIVE_DOCC");
     nfrzc_ = mo_space_info_->size("INACTIVE_DOCC");
 
-    nuclear_repulsion_energy_ = molecule_->nuclear_repulsion_energy(reference_wavefunction_->get_dipole_field_strength());
+    nuclear_repulsion_energy_ =
+        molecule_->nuclear_repulsion_energy(reference_wavefunction_->get_dipole_field_strength());
 
     mo_symmetry_ = mo_space_info_->symmetry("ACTIVE");
 
@@ -531,7 +532,7 @@ void ProjectorCI_Simple::print_characteristic_function() {
 
 double ProjectorCI_Simple::compute_energy() {
     timer_on("PCI:Energy");
-    Timer t_apici;
+    local_timer t_apici;
     old_max_one_HJI_ = 1e100;
     new_max_one_HJI_ = 1e100;
     old_max_two_HJI_ = 1e100;

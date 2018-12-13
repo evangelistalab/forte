@@ -27,7 +27,6 @@
  * @END LICENSE
  */
 
-#include "psi4/libpsi4util/libpsi4util.h"
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/wavefunction.h"
@@ -35,6 +34,7 @@
 
 #include "helpers/printing.h"
 #include "mrci.h"
+#include "helpers/timer.h"
 
 //#include "ci_rdm/ci_rdms.h"
 //#include "helpers.h"
@@ -94,7 +94,7 @@ double MRCI::compute_energy() {
     WFNOperator op(mo_symmetry_, fci_ints_);
 
     outfile->Printf("\n  Adding single and double excitations ...");
-    Timer add;
+    local_timer add;
     get_excited_determinants();
     outfile->Printf("\n  Excitations took %1.5f s", add.get());
     outfile->Printf("\n  Dimension of model space: %zu", reference_.size());
@@ -129,7 +129,8 @@ double MRCI::compute_energy() {
                                               diag_method_);
 
     std::vector<double> energy(nroot_);
-    double scalar = fci_ints_->scalar_energy() + molecule_->nuclear_repulsion_energy(ref_wfn_->get_dipole_field_strength());
+    double scalar = fci_ints_->scalar_energy() +
+                    molecule_->nuclear_repulsion_energy(ref_wfn_->get_dipole_field_strength());
 
     outfile->Printf("\n");
     for (int n = 0; n < nroot_; ++n) {
@@ -266,58 +267,58 @@ void MRCI::get_excited_determinants() {
 }
 
 void MRCI::upcast_reference() {
-//    auto mo_sym = mo_space_info_->symmetry("GENERALIZED PARTICLE");
+    //    auto mo_sym = mo_space_info_->symmetry("GENERALIZED PARTICLE");
 
-//    Dimension old_dim = mo_space_info_->get_dimension("ACTIVE");
-//    Dimension new_dim = mo_space_info_->get_dimension("GENERALIZED PARTICLE");
-//    size_t nact = mo_space_info_->size("ACTIVE");
-//    size_t ncorr = mo_space_info_->size("GENERALIZED PARTICLE");
-//    int n_irrep = old_dim.n();
+    //    Dimension old_dim = mo_space_info_->get_dimension("ACTIVE");
+    //    Dimension new_dim = mo_space_info_->get_dimension("GENERALIZED PARTICLE");
+    //    size_t nact = mo_space_info_->size("ACTIVE");
+    //    size_t ncorr = mo_space_info_->size("GENERALIZED PARTICLE");
+    //    int n_irrep = old_dim.n();
 
-//    det_hashvec ref_dets;
-//    ref_dets.swap(reference_.wfn_hash());
-//    reference_.clear();
+    //    det_hashvec ref_dets;
+    //    ref_dets.swap(reference_.wfn_hash());
+    //    reference_.clear();
 
-//    // Compute shifts
-//    std::vector<int> shift(n_irrep, 0);
-//    if (n_irrep > 1) {
-//        for (int n = 1; n < n_irrep; ++n) {
-//            shift[n] += new_dim[n - 1] - old_dim[n - 1] + shift[n - 1];
-//        }
-//    }
-//    int b_shift = ncorr - nact;
+    //    // Compute shifts
+    //    std::vector<int> shift(n_irrep, 0);
+    //    if (n_irrep > 1) {
+    //        for (int n = 1; n < n_irrep; ++n) {
+    //            shift[n] += new_dim[n - 1] - old_dim[n - 1] + shift[n - 1];
+    //        }
+    //    }
+    //    int b_shift = ncorr - nact;
 
-//    for (size_t I = 0, max = ref_dets.size(); I < max; ++I) {
-//        Determinant det(ref_dets[I]);
+    //    for (size_t I = 0, max = ref_dets.size(); I < max; ++I) {
+    //        Determinant det(ref_dets[I]);
 
-//        // First beta
-//        for (int n = n_irrep - 1; n >= 0; --n) {
-//            int min = 0;
-//            for (int m = 0; m < n; ++m) {
-//                min += old_dim[m];
-//            }
-//            for (int pos = nact + min + old_dim[n] - 1; pos >= min + nact; --pos) {
-//                det.set_beta_bit(pos + b_shift + shift[n], );
-//                det.bits_[pos + b_shift + shift[n]] = det.bits_[pos];
-//                det.bits_[pos] = 0;
-//            }
-//        }
-//        // Then alpha
-//        for (int n = n_irrep - 1; n >= 0; --n) {
-//            int min = 0;
-//            for (int m = 0; m < n; ++m) {
-//                min += old_dim[m];
-//            }
-//            for (int pos = min + old_dim[n] - 1; pos >= min; --pos) {
-//                det.bits_[pos + shift[n]] = det.bits_[pos];
+    //        // First beta
+    //        for (int n = n_irrep - 1; n >= 0; --n) {
+    //            int min = 0;
+    //            for (int m = 0; m < n; ++m) {
+    //                min += old_dim[m];
+    //            }
+    //            for (int pos = nact + min + old_dim[n] - 1; pos >= min + nact; --pos) {
+    //                det.set_beta_bit(pos + b_shift + shift[n], );
+    //                det.bits_[pos + b_shift + shift[n]] = det.bits_[pos];
+    //                det.bits_[pos] = 0;
+    //            }
+    //        }
+    //        // Then alpha
+    //        for (int n = n_irrep - 1; n >= 0; --n) {
+    //            int min = 0;
+    //            for (int m = 0; m < n; ++m) {
+    //                min += old_dim[m];
+    //            }
+    //            for (int pos = min + old_dim[n] - 1; pos >= min; --pos) {
+    //                det.bits_[pos + shift[n]] = det.bits_[pos];
 
-//                if (n > 0)
-//                    det.bits_[pos] = 0;
-//            }
-//        }
+    //                if (n > 0)
+    //                    det.bits_[pos] = 0;
+    //            }
+    //        }
 
-//        reference_.add(det);
-//    }
+    //        reference_.add(det);
+    //    }
 }
 }
 }

@@ -28,11 +28,10 @@
 
 #include <iomanip>
 
-#include "psi4/libpsi4util/libpsi4util.h"
-
-#include "../ci_rdm/ci_rdms.h"
-#include "../fci/fci_solver.h"
-#include "../fci_mo.h"
+#include "helpers/timer.h"
+#include "ci_rdm/ci_rdms.h"
+#include "fci/fci_solver.h"
+#include "fci_mo.h"
 #include "dsrg_mrpt2.h"
 
 namespace psi {
@@ -639,7 +638,7 @@ SharedMatrix DSRG_MRPT2::xms_rotation(std::shared_ptr<FCIIntegrals> fci_ints,
 //}
 
 double DSRG_MRPT2::compute_ms_1st_coupling(const std::string& name) {
-    Timer timer;
+    local_timer timer;
     std::string str = "Computing coupling of " + name;
     outfile->Printf("\n    %-40s ...", str.c_str());
 
@@ -656,7 +655,7 @@ double DSRG_MRPT2::compute_ms_1st_coupling(const std::string& name) {
 }
 
 double DSRG_MRPT2::compute_ms_2nd_coupling(const std::string& name) {
-    Timer timer;
+    local_timer timer;
     std::string str = "Computing coupling of " + name;
     outfile->Printf("\n    %-40s ...", str.c_str());
 

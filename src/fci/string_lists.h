@@ -36,7 +36,8 @@
 #include <utility>
 
 #include "binary_graph.hpp"
-#include "../sparse_ci/stl_bitset_string.h"
+#include "sparse_ci/stl_bitset_string.h"
+#include "helpers/timer.h"
 
 namespace psi {
 namespace forte {
@@ -143,8 +144,12 @@ class StringLists {
     GraphPtr alfa_graph_3h() { return alfa_graph_3h_; }
     GraphPtr beta_graph_3h() { return beta_graph_3h_; }
 
-    std::bitset<Determinant::num_str_bits> alfa_str(size_t h, size_t I) const { return alfa_list_[h][I]; }
-    std::bitset<Determinant::num_str_bits> beta_str(size_t h, size_t I) const { return beta_list_[h][I]; }
+    std::bitset<Determinant::num_str_bits> alfa_str(size_t h, size_t I) const {
+        return alfa_list_[h][I];
+    }
+    std::bitset<Determinant::num_str_bits> beta_str(size_t h, size_t I) const {
+        return beta_list_[h][I];
+    }
 
     std::vector<StringSubstitution>& get_alfa_vo_list(size_t p, size_t q, int h);
     std::vector<StringSubstitution>& get_beta_vo_list(size_t p, size_t q, int h);
@@ -287,7 +292,6 @@ class StringLists {
 
     void print_string(bool* I, size_t n);
 };
-
 }
 }
 #endif // _string_lists_

@@ -27,13 +27,12 @@
  * @END LICENSE
  */
 
-#include "psi4/libpsi4util/libpsi4util.h"
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/liboptions/liboptions.h"
-
-#include "../helpers/printing.h"
+#include "helpers/timer.h"
+#include "helpers/printing.h"
 #include "es-nos.h"
 
 namespace psi {
@@ -88,7 +87,7 @@ void ESNO::compute_nos() {
     WFNOperator op(mo_symmetry_, fci_ints_);
 
     outfile->Printf("\n  Adding single excitations ...");
-    Timer add;
+    local_timer add;
     get_excited_determinants();
     outfile->Printf("\n  Excitations took %1.5f s", add.get());
     outfile->Printf("\n  Dimension of full space: %zu", reference_.size());
@@ -211,7 +210,7 @@ void ESNO::get_excited_determinants() {
 
     const auto& internal = reference_.wfn_hash();
     for (const auto& det : internal) {
-        outfile->Printf("\n  %s",det.str().c_str());
+        outfile->Printf("\n  %s", det.str().c_str());
         std::vector<int> aocc = det.get_alfa_occ(nrdo + nact); // TODO check this
         std::vector<int> bocc = det.get_beta_occ(nrdo + nact); // TODO check this
 
@@ -231,7 +230,7 @@ void ESNO::get_excited_determinants() {
                     new_det.set_alfa_bit(ii, false);
                     new_det.set_alfa_bit(aa, true);
                     external.add(new_det);
-                    outfile->Printf("\n  %s",new_det.str().c_str());
+                    outfile->Printf("\n  %s", new_det.str().c_str());
                 }
             }
         }
@@ -302,7 +301,7 @@ void ESNO::upcast_reference() {
             }
         }
         reference_.add(det);
-        outfile->Printf("\n  %s",det.str().c_str());
+        outfile->Printf("\n  %s", det.str().c_str());
     }
 }
 

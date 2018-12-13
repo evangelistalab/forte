@@ -33,7 +33,7 @@
 
 #include "psi4/libpsi4util/process.h"
 #include "boost/format.hpp"
-#include "../helpers/printing.h"
+#include "helpers/printing.h"
 #include "dsrg_mrpt.h"
 
 namespace psi {

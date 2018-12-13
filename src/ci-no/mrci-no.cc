@@ -27,19 +27,18 @@
  * @END LICENSE
  */
 
-#include "psi4/libpsi4util/libpsi4util.h"
 #include "psi4/psi4-dec.h"
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/pointgrp.h"
-
-#include "../ci_rdm/ci_rdms.h"
-#include "../fci/fci_integrals.h"
-#include "../forte_options.h"
-#include "../sparse_ci/sparse_ci_solver.h"
-#include "../sparse_ci/determinant.h"
+#include "helpers/timer.h"
+#include "ci_rdm/ci_rdms.h"
+#include "fci/fci_integrals.h"
+#include "forte_options.h"
+#include "sparse_ci/sparse_ci_solver.h"
+#include "sparse_ci/determinant.h"
 #include "mrci-no.h"
 #include "ci-no.h"
-//#include "../hash_vector.h"
+//#include "hash_vector.h"
 
 namespace psi {
 namespace forte {
@@ -53,7 +52,7 @@ namespace forte {
 #define omp_get_num_threads() 1
 #endif
 
-//std::string dimension_to_string(Dimension dim) {
+// std::string dimension_to_string(Dimension dim) {
 //    std::string s = "[";
 //    int nirrep = dim.n();
 //    for (int h = 0; h < nirrep; h++) {
@@ -81,13 +80,13 @@ void set_MRCINO_options(ForteOptions& foptions) {
 
     // add options of whether pass MOSpaceInfo or not
     foptions.add_bool("MRCINO_AUTO", false, "Allow the users to choose"
-                                          "whether pass frozen_docc"
-                                          "actice_docc and restricted_docc"
-                                          "or not");
+                                            "whether pass frozen_docc"
+                                            "actice_docc and restricted_docc"
+                                            "or not");
 }
 
 MRCINO::MRCINO(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
-           std::shared_ptr<MOSpaceInfo> mo_space_info)
+               std::shared_ptr<MOSpaceInfo> mo_space_info)
     : Wavefunction(options), ints_(ints), mo_space_info_(mo_space_info) {
     // Copy the wavefunction information
     shallow_copy(ref_wfn);
@@ -98,11 +97,9 @@ MRCINO::MRCINO(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<For
 
     fci_ints_ = std::make_shared<FCIIntegrals>(ints, active_mo, std::vector<size_t>());
 
-
-//    for (auto& i: active_mo){
-//        outfile->Printf("\n %zu", i);
-//    }
-
+    //    for (auto& i: active_mo){
+    //        outfile->Printf("\n %zu", i);
+    //    }
 
     ambit::Tensor tei_active_aa = ints->aptei_aa_block(active_mo, active_mo, active_mo, active_mo);
     ambit::Tensor tei_active_ab = ints->aptei_ab_block(active_mo, active_mo, active_mo, active_mo);
@@ -125,8 +122,8 @@ double MRCINO::compute_energy() {
     SharedMatrix Density_b(new Matrix(corrpi_, corrpi_));
     int sum = 0;
 
-    //Build CAS determinants
-    std::vector<std::vector<Determinant> > dets_cas = build_dets_cas();
+    // Build CAS determinants
+    std::vector<std::vector<Determinant>> dets_cas = build_dets_cas();
 
     for (int h = 0; h < nirrep_; ++h) {
         int nsolutions = options_["MRCINO_ROOTS_PER_IRREP"][h].to_integer();
@@ -137,7 +134,7 @@ double MRCINO::compute_energy() {
 
             // 1. Build the space of determinants
             std::vector<Determinant> dets = build_dets(h, dets_cas);
-//           // std::vector<Determinant> dets = build_dets(h);
+            //           // std::vector<Determinant> dets = build_dets(h);
 
             // 2. Diagonalize the Hamiltonian in this basis
             std::pair<SharedVector, SharedMatrix> evals_evecs =
@@ -158,7 +155,7 @@ double MRCINO::compute_energy() {
     Density_a->scale(1.0 / static_cast<double>(sum));
     Density_b->scale(1.0 / static_cast<double>(sum));
 
-   // Density_a->print();
+    // Density_a->print();
 
     std::pair<SharedMatrix, SharedMatrix> avg_gamma = std::make_pair(Density_a, Density_b);
 
@@ -166,7 +163,7 @@ double MRCINO::compute_energy() {
     std::tuple<SharedVector, SharedMatrix, SharedVector, SharedMatrix> no_U =
         diagonalize_density_matrix(avg_gamma);
 
-//    // 5. Find optimal active space and transform the orbitals
+    //    // 5. Find optimal active space and transform the orbitals
     find_active_space_and_transform(no_U);
 
     return 0.0;
@@ -190,9 +187,7 @@ void MRCINO::startup() {
     // Read Options
     rdm_level_ = options_.get_int("ACI_MAX_RDM");
     nactv_ = mo_space_info_->size("ACTIVE");
-    corr_ =  mo_space_info_->size("CORRELATED");
-
-
+    corr_ = mo_space_info_->size("CORRELATED");
 
     actvpi_ = mo_space_info_->get_dimension("ACTIVE");
     fdoccpi_ = mo_space_info_->get_dimension("FROZEN_DOCC");
@@ -207,10 +202,10 @@ void MRCINO::startup() {
     mrcino_auto = options_.get_bool("MRCINO_AUTO");
 }
 
-std::vector<std::vector<Determinant> > MRCINO:: build_dets_cas(){
+std::vector<std::vector<Determinant>> MRCINO::build_dets_cas() {
 
-    //Build vector of all irrep determinants
-    std::vector<std::vector<Determinant> > dets_cas(nirrep_, std::vector<Determinant>());
+    // Build vector of all irrep determinants
+    std::vector<std::vector<Determinant>> dets_cas(nirrep_, std::vector<Determinant>());
 
     // Compute subspace vectors
     std::vector<bool> tmp_det_a(nactv_, false);
@@ -235,7 +230,7 @@ std::vector<std::vector<Determinant> > MRCINO:: build_dets_cas(){
     std::vector<bool> occupation_a(corr_);
     std::vector<bool> occupation_b(corr_);
 
-     //add the reference determinant
+    // add the reference determinant
     offset = 0;
     for (int h = 0; h < nirrep_; h++) {
         int aocc_h = nalphapi_[h] - fdoccpi_[h];
@@ -247,7 +242,7 @@ std::vector<std::vector<Determinant> > MRCINO:: build_dets_cas(){
             occupation_b[i + offset] = true;
         }
         offset += corrpi_[h];
-//        outfile->Printf("\n corrpi_ is : %d \n", corrpi_[h]);
+        //        outfile->Printf("\n corrpi_ is : %d \n", corrpi_[h]);
     }
 
     Determinant ref(occupation_a, occupation_b);
@@ -277,39 +272,36 @@ std::vector<std::vector<Determinant> > MRCINO:: build_dets_cas(){
 
                 offset_corr += corrpi_[h];
                 offset_act += actvpi_[h];
-
-           }
-            //Check Symmetry and assign to right vector
-            for(int irrep = 0; irrep < nirrep_; irrep++){
+            }
+            // Check Symmetry and assign to right vector
+            for (int irrep = 0; irrep < nirrep_; irrep++) {
                 if (sym == irrep)
                     dets_cas[irrep].push_back(det);
             }
 
-
         } while (std::next_permutation(tmp_det_b.begin(), tmp_det_b.begin() + nactv_));
     } while (std::next_permutation(tmp_det_a.begin(), tmp_det_a.begin() + nactv_));
 
-//   for(auto& i : dets_cas[0]){
-//       i.print();
-//   }
-   return dets_cas;
-
+    //   for(auto& i : dets_cas[0]){
+    //       i.print();
+    //   }
+    return dets_cas;
 }
 
-std::vector<Determinant> MRCINO::build_dets(int irrep, const std::vector<std::vector<Determinant> >& dets_cas) {
+std::vector<Determinant> MRCINO::build_dets(int irrep,
+                                            const std::vector<std::vector<Determinant>>& dets_cas) {
     std::vector<Determinant> dets_irrep = dets_cas[irrep];
 
-        //Build unordered set of irrep determinant;
+    // Build unordered set of irrep determinant;
     std::unordered_set<Determinant, Determinant::Hash> dets_set;
-    for (auto dets : dets_cas[irrep]){
+    for (auto dets : dets_cas[irrep]) {
         dets_set.emplace(dets);
-
     }
 
     // alpha excitation
-    for (auto dets : dets_cas[irrep]){
+    for (auto dets : dets_cas[irrep]) {
         int offset = 0;
-        for(int irrep_i = 0; irrep_i < nirrep_; irrep_i++){
+        for (int irrep_i = 0; irrep_i < nirrep_; irrep_i++) {
             // i and a orbitals should have same sym
 
             // core -> virtual
@@ -322,9 +314,8 @@ std::vector<Determinant> MRCINO::build_dets(int irrep, const std::vector<std::ve
                     Determinant single_ia(dets);
                     single_ia.set_alfa_bit(i + offset, false);
                     single_ia.set_alfa_bit(a + offset, true);
-                    if(dets_set.count(single_ia) == 0){
+                    if (dets_set.count(single_ia) == 0) {
                         dets_irrep.push_back(single_ia);
-
                     }
                 }
             }
@@ -333,47 +324,41 @@ std::vector<Determinant> MRCINO::build_dets(int irrep, const std::vector<std::ve
             // loop over core orbitals in irrep
             // loop over active orbitals in irrep
             for (int a = core_irrep; a < unvir_irrep; ++a) {
-                if(not dets.get_alfa_bit(a + offset)){
+                if (not dets.get_alfa_bit(a + offset)) {
                     for (int i = 0; i < core_irrep; ++i) {
                         Determinant single_ia(dets);
                         single_ia.set_alfa_bit(i + offset, false);
                         single_ia.set_alfa_bit(a + offset, true);
 
-                        if(dets_set.count(single_ia) == 0){
+                        if (dets_set.count(single_ia) == 0) {
                             dets_irrep.push_back(single_ia);
-
                         }
                     }
-                 }
+                }
             }
 
             // active -> virtual
             // loop over active orbitals in irrep
             // loop over virtual orbitals in irrep
             for (int i = core_irrep; i < unvir_irrep; ++i) {
-                if(dets.get_alfa_bit(i+ offset)){
+                if (dets.get_alfa_bit(i + offset)) {
                     for (int a = unvir_irrep; a < corrpi_[irrep_i]; ++a) {
                         Determinant single_ia(dets);
                         single_ia.set_alfa_bit(i + offset, false);
                         single_ia.set_alfa_bit(a + offset, true);
-                        if(dets_set.count(single_ia) == 0){
+                        if (dets_set.count(single_ia) == 0) {
                             dets_irrep.push_back(single_ia);
-
                         }
-
                     }
-
                 }
             }
 
             offset += corrpi_[irrep_i];
-
         }
 
-    // beta excitation
+        // beta excitation
         offset = 0;
-        for(int irrep_i = 0; irrep_i < nirrep_; irrep_i++){
-
+        for (int irrep_i = 0; irrep_i < nirrep_; irrep_i++) {
 
             // core -> virtual
             // loop over core orbitals in irrep
@@ -385,9 +370,8 @@ std::vector<Determinant> MRCINO::build_dets(int irrep, const std::vector<std::ve
                     Determinant single_ib(dets);
                     single_ib.set_beta_bit(i + offset, false);
                     single_ib.set_beta_bit(a + offset, true);
-                    if(dets_set.count(single_ib) == 0){
+                    if (dets_set.count(single_ib) == 0) {
                         dets_irrep.push_back(single_ib);
-
                     }
                 }
             }
@@ -396,14 +380,13 @@ std::vector<Determinant> MRCINO::build_dets(int irrep, const std::vector<std::ve
             // loop over core orbitals in irrep
             // loop over active orbitals in irrep
             for (int a = core_irrep; a < unvir_irrep; ++a) {
-                if(not dets.get_beta_bit(a + offset)){
+                if (not dets.get_beta_bit(a + offset)) {
                     for (int i = 0; i < core_irrep; ++i) {
                         Determinant single_ib(dets);
                         single_ib.set_beta_bit(i + offset, false);
                         single_ib.set_beta_bit(a + offset, true);
-                        if(dets_set.count(single_ib) == 0){
+                        if (dets_set.count(single_ib) == 0) {
                             dets_irrep.push_back(single_ib);
-
                         }
                     }
                 }
@@ -413,14 +396,13 @@ std::vector<Determinant> MRCINO::build_dets(int irrep, const std::vector<std::ve
             // loop over active orbitals in irrep
             // loop over virtual orbitals in irrep
             for (int i = core_irrep; i < unvir_irrep; ++i) {
-                if(dets.get_beta_bit(i + offset)){
+                if (dets.get_beta_bit(i + offset)) {
                     for (int a = unvir_irrep; a < corrpi_[irrep_i]; ++a) {
                         Determinant single_ib(dets);
                         single_ib.set_beta_bit(i + offset, false);
                         single_ib.set_beta_bit(a + offset, true);
-                        if(dets_set.count(single_ib) == 0){
+                        if (dets_set.count(single_ib) == 0) {
                             dets_irrep.push_back(single_ib);
-
                         }
                     }
                 }
@@ -428,10 +410,7 @@ std::vector<Determinant> MRCINO::build_dets(int irrep, const std::vector<std::ve
 
             offset += corrpi_[irrep_i];
         }
-
     }
-
-
 
     if (options_.get_str("MRCINO_TYPE") == "CISD") {
         // alpha-alpha double excitation
@@ -482,24 +461,22 @@ std::vector<Determinant> MRCINO::build_dets(int irrep, const std::vector<std::ve
     }
 
     outfile->Printf("\n size is %d\n", dets_irrep.size());
-//    outfile->Printf("\n cis is :\n");
-//    for (auto& d: dets_irrep) {
-//        d.print();
-//    }
+    //    outfile->Printf("\n cis is :\n");
+    //    for (auto& d: dets_irrep) {
+    //        d.print();
+    //    }
 
     return dets_irrep;
-
 }
 /// Diagonalize the Hamiltonian in this basis
 std::pair<SharedVector, SharedMatrix>
 MRCINO::diagonalize_hamiltonian(const std::vector<Determinant>& dets, int nsolutions) {
 
     /// TODO: remove
-//    for (auto& d: dets) {
-//        d.print();
-//        outfile->Printf("  Energy: %20.15f", fci_ints_->energy(d));
-//    }
-
+    //    for (auto& d: dets) {
+    //        d.print();
+    //        outfile->Printf("  Energy: %20.15f", fci_ints_->energy(d));
+    //    }
 
     std::pair<SharedVector, SharedMatrix> evals_evecs;
 
@@ -520,7 +497,8 @@ MRCINO::diagonalize_hamiltonian(const std::vector<Determinant>& dets, int nsolut
     outfile->Printf("\n  ----------------------------");
     for (int i = 0; i < nsolutions; ++i) {
         double energy = evals_evecs.first->get(i) + fci_ints_->scalar_energy() +
-                        molecule_->nuclear_repulsion_energy(reference_wavefunction_->get_dipole_field_strength());
+                        molecule_->nuclear_repulsion_energy(
+                            reference_wavefunction_->get_dipole_field_strength());
         outfile->Printf("\n    %3d %20.10f", i, energy);
     }
     outfile->Printf("\n  ------------------------------\n");
@@ -543,7 +521,7 @@ MRCINO::build_density_matrix(const std::vector<Determinant>& dets, SharedMatrix 
         CI_RDMS ci_rdms_(fci_ints_, dets, evecs, i, i);
         ci_rdms_.set_max_rdm(rdm_level_);
         if (rdm_level_ >= 1) {
-            Timer one_r;
+            local_timer one_r;
             ci_rdms_.compute_1rdm(template_a_, template_b_);
             outfile->Printf("\n  1-RDM  took %2.6f s (determinant)", one_r.get());
         }
@@ -613,8 +591,8 @@ MRCINO::diagonalize_density_matrix(std::pair<SharedMatrix, SharedMatrix> gamma) 
     SharedVector OCC_A_vir(new Vector("Virtual ALPHA OCCUPATION", avirpi));
     gamma_a_occ->diagonalize(NO_A_occ, OCC_A_occ, descending);
     gamma_a_vir->diagonalize(NO_A_vir, OCC_A_vir, descending);
-//    OCC_A_occ->print();
-//    OCC_A_vir->print();
+    //    OCC_A_occ->print();
+    //    OCC_A_vir->print();
 
     OCC_A->set_block(aocc_slice, OCC_A_occ);
     NO_A->set_block(aocc_slice, aocc_slice, NO_A_occ);
@@ -634,7 +612,6 @@ MRCINO::diagonalize_density_matrix(std::pair<SharedMatrix, SharedMatrix> gamma) 
     SharedMatrix gamma_b_vir = gamma.second->get_block(bvir_slice, bvir_slice);
     gamma_b_vir->set_name("Gamma beta virtual");
 
-
     // Diagonalize beta density matrix
     SharedMatrix NO_B_occ(new Matrix(boccpi, boccpi));
     SharedMatrix NO_B_vir(new Matrix(bvirpi, bvirpi));
@@ -642,19 +619,18 @@ MRCINO::diagonalize_density_matrix(std::pair<SharedMatrix, SharedMatrix> gamma) 
     SharedVector OCC_B_vir(new Vector("Virtual BETA OCCUPATION", bvirpi));
     gamma_b_occ->diagonalize(NO_B_occ, OCC_B_occ, descending);
     gamma_b_vir->diagonalize(NO_B_vir, OCC_B_vir, descending);
-//        OCC_B_occ->print();
-//        OCC_B_vir->print();
+    //        OCC_B_occ->print();
+    //        OCC_B_vir->print();
 
     OCC_B->set_block(bocc_slice, OCC_B_occ);
     NO_B->set_block(bocc_slice, bocc_slice, NO_B_occ);
     OCC_B->set_block(bvir_slice, OCC_B_vir);
     NO_B->set_block(bvir_slice, bvir_slice, NO_B_vir);
 
-
-//        gamma.first->diagonalize(NO_A, OCC_A, descending);
-//        gamma.second->diagonalize(NO_B, OCC_B, descending);
-//        OCC_A->print();
-//        OCC_B->print();
+    //        gamma.first->diagonalize(NO_A, OCC_A, descending);
+    //        gamma.second->diagonalize(NO_B, OCC_B, descending);
+    //        OCC_A->print();
+    //        OCC_B->print();
     return std::make_tuple(OCC_A, NO_A, OCC_B, NO_B);
 }
 
@@ -733,24 +709,22 @@ void MRCINO::find_active_space_and_transform(
     Dimension noci_fdocc = fdoccpi_;
     Dimension noci_actv = nactv_occ + nactv_vir;
     Dimension noci_rdocc = aoccpi_ - nactv_occ;
-    //Dimension noci_rducc = corrpi_ - aoccpi_ - nactv_vir;
+    // Dimension noci_rducc = corrpi_ - aoccpi_ - nactv_vir;
 
     outfile->Printf("\n  FROZEN_DOCC     = %s", dimension_to_string(noci_fdocc).c_str());
     outfile->Printf("\n  RESTRICTED_DOCC = %s", dimension_to_string(noci_rdocc).c_str());
     outfile->Printf("\n  ACTIVE          = %s", dimension_to_string(noci_actv).c_str());
-   // outfile->Printf("\n  RESTRICTED_UOCC = %s", dimension_to_string(noci_rducc).c_str());
-
-
+    // outfile->Printf("\n  RESTRICTED_UOCC = %s", dimension_to_string(noci_rducc).c_str());
 
     // Pass the MOSpaceInfo
     if (mrcino_auto) {
         for (int h = 0; h < nirrep_; h++) {
-            //options_["RESTRICTED_DOCC"].add(h);
-            //options_["ACTIVE"].add(h);
+            // options_["RESTRICTED_DOCC"].add(h);
+            // options_["ACTIVE"].add(h);
             options_["RESTRICTED_DOCC"][h].assign(noci_rdocc[h]);
             options_["ACTIVE"][h].assign(noci_actv[h]);
         }
     }
 }
-}
-} // EndNamespaces
+} // namespace forte
+} // namespace psi

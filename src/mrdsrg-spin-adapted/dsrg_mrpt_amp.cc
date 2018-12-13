@@ -28,10 +28,10 @@
 
 #include "boost/format.hpp"
 
-#include "psi4/libpsi4util/libpsi4util.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
 
 #include "dsrg_mrpt.h"
+#include "helpers/timer.h"
 
 namespace psi {
 namespace forte {
@@ -47,7 +47,7 @@ void DSRG_MRPT::compute_T_1st(BlockedTensor& V, BlockedTensor& T2, BlockedTensor
 }
 
 void DSRG_MRPT::compute_T2_1st(BlockedTensor& V, BlockedTensor& T2) {
-    Timer timer;
+    local_timer timer;
     std::string str = "Computing T2 amplitudes ...";
     outfile->Printf("\n    %-35s", str.c_str());
     T2max_ = 0.0, T2norm_ = 0.0;
@@ -77,7 +77,7 @@ void DSRG_MRPT::compute_T2_1st(BlockedTensor& V, BlockedTensor& T2) {
 }
 
 void DSRG_MRPT::compute_T1_1st(BlockedTensor& F, BlockedTensor& T2, BlockedTensor& T1) {
-    Timer timer;
+    local_timer timer;
     std::string str = "Computing T1 amplitudes ...";
     outfile->Printf("\n    %-35s", str.c_str());
     T1max_ = 0.0, T1norm_ = 0.0;
@@ -368,5 +368,5 @@ void DSRG_MRPT::print_intruder(const std::string& name,
     }
     outfile->Printf("\n%s", output.c_str());
 }
-}
-}
+} // namespace forte
+} // namespace psi

@@ -35,14 +35,14 @@
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/liboptions/liboptions.h"
 
-#include "../determinant_hashvector.h"
-#include "../helpers.h"
-#include "../operator.h"
-#include "../reference.h"
-#include "../sparse_ci/determinant.h"
-#include "../sparse_ci/sorted_string_list.h"
-#include "../fci/string_lists.h"
-#include "../fci/fci_integrals.h"
+#include "determinant_hashvector.h"
+#include "helpers.h"
+#include "operator.h"
+#include "reference.h"
+#include "sparse_ci/determinant.h"
+#include "sparse_ci/sorted_string_list.h"
+#include "fci/string_lists.h"
+#include "fci/fci_integrals.h"
 
 namespace psi {
 namespace forte {

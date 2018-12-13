@@ -30,7 +30,6 @@
 #define _mcsrgpt2_mo_h_
 
 #include "boost/assign.hpp"
-#include "psi4/libpsi4util/libpsi4util.h"
 #include "psi4/liboptions/liboptions.h"
 #include "psi4/libmints/vector.h"
 #include "psi4/libmints/matrix.h"
@@ -179,7 +178,7 @@ class MCSRGPT2_MO : public FCI_MO {
 
     /// Timings
     void Print_Timing();
-    Timer dsrg_timer;
+    local_timer dsrg_timer;
     double T2_timing;
     double T1_timing;
     double FT1_timing;

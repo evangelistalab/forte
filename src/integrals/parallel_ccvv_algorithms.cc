@@ -30,9 +30,9 @@
 
 #include <numeric>
 
-#include "../blockedtensorfactory.h"
-#include "../fci/fci_solver.h"
-#include "../fci/fci_vector.h"
+#include "blockedtensorfactory.h"
+#include "fci/fci_solver.h"
+#include "fci/fci_vector.h"
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/vector.h"
@@ -40,7 +40,8 @@
 #include "psi4/libpsio/psio.hpp"
 #include "psi4/libqt/qt.h"
 
-#include "../three_dsrg_mrpt2.h"
+#include "three_dsrg_mrpt2.h"
+#include "helpers/printer.h"
 #include <algorithm>
 #include <string>
 #include <vector>
@@ -117,7 +118,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga() {
         Fa_.resize(ncmo_);
         Fb_.resize(ncmo_);
     }
-    Timer F_BCAST;
+    local_timer F_BCAST;
     MPI_Bcast(&Fa_[0], ncmo_, MPI_DOUBLE, 0, MPI_COMM_WORLD);
     MPI_Bcast(&Fb_[0], ncmo_, MPI_DOUBLE, 0, MPI_COMM_WORLD);
     if (debug_print)
@@ -730,7 +731,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_rep() {
         ambit::Tensor B = ints_->three_integral_block(naux, acore_mos_, avirt_mos_);
         BmQe("mQe") = B("Qme");
     }
-    Timer F_Bcast;
+    local_timer F_Bcast;
     if (debug_print)
         printf("\n F_Bcast for F about to start on P%d", my_proc);
     MPI_Bcast(&Fa_[0], ncmo_, MPI_DOUBLE, 0, MPI_COMM_WORLD);
@@ -741,7 +742,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_rep() {
         printf("\n F_Bcast for F took %8.6f s on P%d.", F_Bcast.get(), my_proc);
     if (debug_print)
         printf("\n B_Bcast for B about to start on P%d", my_proc);
-    Timer B_Bcast;
+    local_timer B_Bcast;
     MPI_Bcast(&BmQe.data()[0], nthree_ * virtual_ * core_, MPI_DOUBLE, 0, MPI_COMM_WORLD);
     if (debug_print)
         printf("\n B_Bcast took %8.8f on P%d", B_Bcast.get(), my_proc);
@@ -1148,7 +1149,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_virtual_ga() {
     return (Ealpha + Ebeta + Emixed);
 }
 #endif
-}
-}
+} // namespace forte
+} // namespace psi
 
 #endif

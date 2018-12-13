@@ -32,11 +32,11 @@
 #include <memory>
 #include <vector>
 
-#include "psi4/libpsi4util/libpsi4util.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/libdiis/diismanager.h"
 
-#include "../helpers.h"
+#include "helpers.h"
+#include "helpers/timer.h"
 #include "boost/format.hpp"
 #include "mrdsrg.h"
 
@@ -265,7 +265,7 @@ std::vector<std::pair<std::string, double>> MRDSRG::compute_energy_pt2_FdiagV() 
     // start iteration
     do {
         // compute Hbar
-        Timer t_hbar;
+        local_timer t_hbar;
         Hbar1_["pq"] = F_["pq"];
         Hbar1_["PQ"] = F_["PQ"];
         Hbar1_["pq"] -= H0th_["pq"];
@@ -306,7 +306,7 @@ std::vector<std::pair<std::string, double>> MRDSRG::compute_energy_pt2_FdiagV() 
         double Hbar2od = Hbar2od_norm(blocks2);
 
         // update amplitudes
-        Timer t_amp;
+        local_timer t_amp;
         update_t();
         double time_amp = t_amp.get();
 
@@ -506,7 +506,7 @@ std::vector<std::pair<std::string, double>> MRDSRG::compute_energy_pt2_FdiagVdia
     // start iteration
     do {
         // compute Hbar
-        Timer t_hbar;
+        local_timer t_hbar;
         Hbar1_["pq"] = F_["pq"];
         Hbar1_["PQ"] = F_["PQ"];
         Hbar1_["pq"] -= H0th_["pq"];
@@ -547,7 +547,7 @@ std::vector<std::pair<std::string, double>> MRDSRG::compute_energy_pt2_FdiagVdia
         double Hbar2od = Hbar2od_norm(blocks2);
 
         // update amplitudes
-        Timer t_amp;
+        local_timer t_amp;
         update_t();
         double time_amp = t_amp.get();
 
@@ -713,7 +713,7 @@ std::vector<std::pair<std::string, double>> MRDSRG::compute_energy_pt2_FdiagVdia
         // start iteration
         do {
             // compute Hbar
-            Timer t_hbar;
+            local_timer t_hbar;
             Hbar1_["pq"] = C1_["pq"];
             Hbar1_["PQ"] = C1_["PQ"];
             Hbar2_["pqrs"] = C2_["pqrs"];
@@ -748,7 +748,7 @@ std::vector<std::pair<std::string, double>> MRDSRG::compute_energy_pt2_FdiagVdia
             double Hbar2od = Hbar2od_norm(blocks2);
 
             // update amplitudes
-            Timer t_amp;
+            local_timer t_amp;
             update_t();
             double time_amp = t_amp.get();
 
@@ -886,7 +886,7 @@ std::vector<std::pair<std::string, double>> MRDSRG::compute_energy_pt2_Ffull() {
     // start iteration
     do {
         // compute Hbar
-        Timer t_hbar;
+        local_timer t_hbar;
         Hbar1_.zero();
         Hbar2_["pqrs"] = V_["pqrs"];
         Hbar2_["pQrS"] = V_["pQrS"];
@@ -923,7 +923,7 @@ std::vector<std::pair<std::string, double>> MRDSRG::compute_energy_pt2_Ffull() {
         double Hbar2od = Hbar2od_norm(blocks2);
 
         // update amplitudes
-        Timer t_amp;
+        local_timer t_amp;
         update_t();
         double time_amp = t_amp.get();
 
@@ -1042,7 +1042,7 @@ std::vector<std::pair<std::string, double>> MRDSRG::compute_energy_pt2_Ffull() {
     // start iteration
     do {
         // compute Hbar
-        Timer t_hbar;
+        local_timer t_hbar;
 
         Hbar1_["pq"] = O1_["pq"];
         Hbar1_["PQ"] = O1_["PQ"];
@@ -1087,7 +1087,7 @@ std::vector<std::pair<std::string, double>> MRDSRG::compute_energy_pt2_Ffull() {
         double Hbar2od = Hbar2od_norm(blocks2);
 
         // update amplitudes
-        Timer t_amp;
+        local_timer t_amp;
         update_t();
         double time_amp = t_amp.get();
 

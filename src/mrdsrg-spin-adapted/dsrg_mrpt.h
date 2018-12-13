@@ -38,11 +38,11 @@
 #include "ambit/blocked_tensor.h"
 
 #include "boost/assign.hpp"
-#include "../integrals/integrals.h"
-#include "../reference.h"
-#include "../mrdsrg-helper/dsrg_source.h"
-#include "../mrdsrg-helper/dsrg_time.h"
-#include "../helpers.h"
+#include "integrals/integrals.h"
+#include "reference.h"
+#include "mrdsrg-helper/dsrg_source.h"
+#include "mrdsrg-helper/dsrg_time.h"
+#include "helpers.h"
 
 using namespace ambit;
 namespace psi {
@@ -346,6 +346,6 @@ class DSRG_MRPT : public Wavefunction {
     /// Print the summary of 2- and 3-body density cumulant
     void print_cumulant_summary();
 };
-}
-}
+} // namespace forte
+} // namespace psi
 #endif // DSRG_MRPT_H

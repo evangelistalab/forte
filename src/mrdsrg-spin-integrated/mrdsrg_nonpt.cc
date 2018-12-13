@@ -33,13 +33,12 @@
 #include <memory>
 #include <vector>
 
-#include "psi4/libpsi4util/libpsi4util.h"
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libdiis/diismanager.h"
 #include "psi4/libmints/molecule.h"
 #include "psi4/libqt/qt.h"
 
-#include "../helpers.h"
+#include "helpers.h"
 #include "boost/format.hpp"
 #include "mrdsrg.h"
 
@@ -749,7 +748,7 @@ double MRDSRG::compute_energy_ldsrg2() {
     // start iteration
     do {
         // compute Hbar
-        Timer t_hbar;
+        local_timer t_hbar;
         timer hbar("Compute Hbar");
         if (sequential_Hbar_) {
             compute_hbar_sequential_rotation();
@@ -767,7 +766,7 @@ double MRDSRG::compute_energy_ldsrg2() {
         double Hbar2od = Hbar2od_norm(blocks2);
 
         // update amplitudes
-        Timer t_amp;
+        local_timer t_amp;
         update_t();
         double time_amp = t_amp.get();
         od.stop();
@@ -1054,7 +1053,7 @@ double MRDSRG::compute_energy_ldsrg2_qc() {
     // start iteration
     do {
         // compute Hbar
-        Timer t_hbar;
+        local_timer t_hbar;
         compute_hbar_qc();
         double Edelta = Hbar0_ - Ecorr;
         Ecorr = Hbar0_;
@@ -1065,7 +1064,7 @@ double MRDSRG::compute_energy_ldsrg2_qc() {
         double Hbar2od = Hbar2od_norm(blocks2);
 
         // update amplitudes
-        Timer t_amp;
+        local_timer t_amp;
         update_t();
         double time_amp = t_amp.get();
 
@@ -1371,5 +1370,5 @@ void MRDSRG::return_amp_diis(BlockedTensor& T1, const std::vector<std::string>& 
         T2.block(block).data() = T2_this_block;
     }
 }
-}
-}
+} // namespace forte
+} // namespace psi

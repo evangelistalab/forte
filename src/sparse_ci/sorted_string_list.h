@@ -32,9 +32,9 @@
 
 #include "stl_bitset_string.h"
 #include "determinant.h"
-#include "../determinant_hashvector.h"
-#include "../fci/fci_integrals.h"
-#include "../sparse_ci/ui64_determinant.h"
+#include "determinant_hashvector.h"
+#include "fci/fci_integrals.h"
+#include "sparse_ci/ui64_determinant.h"
 
 namespace psi {
 namespace forte {

@@ -29,7 +29,6 @@
 #include <cmath>
 #include <numeric>
 
-#include "psi4/libpsi4util/libpsi4util.h"
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libmints/basisset.h"
 #include "psi4/libmints/matrix.h"
@@ -45,9 +44,10 @@
 #include <mpi.h>
 #endif
 
-#include "../blockedtensorfactory.h"
-#include "../helpers/printing.h"
-#include "../helpers/memory.h"
+#include "blockedtensorfactory.h"
+#include "helpers/printing.h"
+#include "helpers/timer.h"
+#include "helpers/memory.h"
 
 #include "df_integrals.h"
 
@@ -63,7 +63,7 @@ DFIntegrals::DFIntegrals(psi::Options& options, SharedWavefunction ref_wfn,
     // If code calls constructor print things
     // But if someone calls retransform integrals do not print it
     print_info();
-    Timer int_timer;
+    local_timer int_timer;
 
     int my_proc = 0;
 #ifdef HAVE_GA
@@ -226,7 +226,7 @@ void DFIntegrals::gather_integrals() {
 
     // Finally computes the df integrals
     // Does the timings also
-    Timer timer;
+    local_timer timer;
     std::string str = "Transforming DF Integrals";
     if (print_ > 0) {
         outfile->Printf("\n  %-36s ...", str.c_str());
@@ -328,7 +328,7 @@ void DFIntegrals::resort_three(SharedMatrix& threeint, std::vector<size_t>& map)
 }
 
 void DFIntegrals::resort_integrals_after_freezing() {
-    Timer timer_resort;
+    local_timer timer_resort;
     if (print_ > 0) {
         outfile->Printf("\n  Resorting integrals after freezing core.");
     }
