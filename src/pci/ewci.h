@@ -37,14 +37,14 @@
 #include "psi4/liboptions/liboptions.h"
 #include "psi4/physconst.h"
 
-#include "../fci/fci_vector.h"
-#include "../forte-def.h"
-#include "../forte_options.h"
-#include "../hash_vector.h"
-#include "../helpers.h"
-#include "../integrals/integrals.h"
-#include "../sparse_ci/sparse_ci_solver.h"
-#include "../sparse_ci/determinant.h"
+#include "fci/fci_vector.h"
+#include "forte-def.h"
+#include "forte_options.h"
+#include "hash_vector.h"
+#include "helpers.h"
+#include "integrals/integrals.h"
+#include "sparse_ci/sparse_ci_solver.h"
+#include "sparse_ci/determinant.h"
 
 namespace psi {
 namespace forte {

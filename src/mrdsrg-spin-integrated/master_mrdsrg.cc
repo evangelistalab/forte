@@ -4,7 +4,7 @@
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/dipole.h"
 
-#include "../helpers/timer.h"
+#include "helpers/timer.h"
 #include "master_mrdsrg.h"
 
 namespace psi {

@@ -38,12 +38,12 @@
 #include "psi4/libmints/dipole.h"
 
 #include "helpers/timer.h"
-#include "../ci_rdm/ci_rdms.h"
-#include "../fci/fci.h"
+#include "ci_rdm/ci_rdms.h"
+#include "fci/fci.h"
 #include "boost/format.hpp"
-#include "../fci_mo.h"
-#include "../fci/fci_solver.h"
-#include "../helpers/printing.h"
+#include "fci_mo.h"
+#include "fci/fci_solver.h"
+#include "helpers/printing.h"
 #include "dsrg_mrpt2.h"
 
 using namespace ambit;

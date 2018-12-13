@@ -36,7 +36,7 @@
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/libqt/qt.h"
 
-#include "../helpers.h"
+#include "helpers.h"
 
 #ifdef HAVE_GA
 #include <ga.h>

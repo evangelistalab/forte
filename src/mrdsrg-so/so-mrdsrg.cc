@@ -35,8 +35,8 @@
 #include "psi4/libpsio/psio.hpp"
 #include "psi4/libqt/qt.h"
 
-#include "../blockedtensorfactory.h"
-#include "../helpers/printing.h"
+#include "blockedtensorfactory.h"
+#include "helpers/printing.h"
 #include "so-mrdsrg.h"
 
 #define ISA(x) (x < nactv)

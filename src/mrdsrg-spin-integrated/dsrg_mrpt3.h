@@ -39,14 +39,14 @@
 #include "ambit/blocked_tensor.h"
 
 #include "boost/assign.hpp"
-#include "../integrals/integrals.h"
-#include "../reference.h"
-#include "../helpers.h"
-#include "../blockedtensorfactory.h"
-#include "../mrdsrg-helper/dsrg_time.h"
-#include "../mrdsrg-helper/dsrg_source.h"
-#include "../fci/fci_vector.h"
-#include "../sparse_ci/determinant.h"
+#include "integrals/integrals.h"
+#include "reference.h"
+#include "helpers.h"
+#include "blockedtensorfactory.h"
+#include "mrdsrg-helper/dsrg_time.h"
+#include "mrdsrg-helper/dsrg_source.h"
+#include "fci/fci_vector.h"
+#include "sparse_ci/determinant.h"
 #include "master_mrdsrg.h"
 
 using namespace ambit;
