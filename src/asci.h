@@ -34,11 +34,11 @@
 #include "ci_reference.h"
 #include "fci/fci_integrals.h"
 #include "mrpt2.h"
-#include "orbital-helper/unpaired_density.h"
+#include "orbital-helpers/unpaired_density.h"
 #include "determinant_hashvector.h"
 #include "reference.h"
 #include "sparse_ci/sparse_ci_solver.h"
-#include "orbital-helper/localize.h"
+#include "orbital-helpers/localize.h"
 
 #ifdef _OPENMP
 #include <omp.h>

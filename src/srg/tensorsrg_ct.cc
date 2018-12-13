@@ -33,7 +33,7 @@
 #include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/psi4-dec.h"
 
-#include "tensorsrg.h"
+#include "srg/tensorsrg.h"
 
 using namespace psi;
 using namespace ambit;

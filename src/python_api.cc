@@ -36,7 +36,7 @@
 
 #include "helpers.h"
 #include "integrals/integrals.h"
-#include "orbital-helper/localize.h"
+#include "orbital-helpers/localize.h"
 #include "forte.h"
 
 namespace py = pybind11;

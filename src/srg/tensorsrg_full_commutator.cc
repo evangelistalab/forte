@@ -31,7 +31,7 @@
 #include "psi4/libpsi4util/PsiOutStream.h"
 #include "helpers/timer.h"
 #include "helpers.h"
-#include "tensorsrg.h"
+#include "srg/tensorsrg.h"
 
 using namespace psi;
 

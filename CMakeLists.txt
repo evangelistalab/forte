@@ -22,7 +22,7 @@ option_with_print(ENABLE_CheMPS2 "Enable CheMPS2 solver" OFF)
 option_with_print(ENABLE_OPENMP "Enable threadsafe linking to OpenMP parallelized programs" ON)
 option_with_print(ENABLE_MPI "Enable MPI parallelization" OFF)
 option_with_print(ENABLE_GA "Enable Global Arrays" OFF)
-option_with_print(MAX_DET_ORB "Set the maximum number of orbitals in a determinant" 64)
+option_with_print(MAX_DET_ORB "Set the maximum number of orbitals in a determinant" OFF)
 #option_with_print(ENABLE_GENERIC "Enable mostly static linking in shared library" OFF)
 
 include(autocmake_omp)
@@ -87,7 +87,6 @@ src/helpers.cc
 src/iterative_solvers.cc
 src/main.cc
 src/mcsrgpt2_mo.cc
-src/methodbase.cc
 src/mp2_nos.cc
 src/mrci.cc
 src/mrpt2.cc
@@ -106,13 +105,14 @@ src/sparse_ci/stl_bitset_string.cc
 src/sparse_ci/sorted_string_list.cc
 src/sparse_ci/ui64_determinant.cc
 src/sparse_ci/ui64_determinant_functions.cc
-src/tensorsrg.cc
-src/tensorsrg_antihermitian_commutators.cc
-src/tensorsrg_ct.cc
-src/tensorsrg_full_commutator.cc
-src/tensorsrg_hermitian_commutator.cc
-src/tensorsrg_save.cc
-src/tensorsrg_srg.cc
+src/srg/methodbase.cc
+src/srg/tensorsrg.cc
+src/srg/tensorsrg_antihermitian_commutators.cc
+src/srg/tensorsrg_ct.cc
+src/srg/tensorsrg_full_commutator.cc
+src/srg/tensorsrg_hermitian_commutator.cc
+src/srg/tensorsrg_save.cc
+src/srg/tensorsrg_srg.cc
 src/test_ambit.cc
 src/v2rdm.cc
 src/aci/aci.cc
@@ -168,10 +168,11 @@ src/mrdsrg-spin-integrated/mrdsrg_srg.cc
 src/mrdsrg-spin-integrated/three_dsrg_mrpt2.cc
 src/mrdsrg-spin-integrated/active_dsrgpt2.cc
 src/mrdsrg-spin-integrated/dwms_mrpt2.cc
-src/orbital-helper/localize.cc
-src/orbital-helper/unpaired_density.cc
-src/orbital-helper/iao_builder.cc
-src/orbital-helper/es-nos.cc
+src/orbital-helpers/localize.cc
+src/orbital-helpers/unpaired_density.cc
+src/orbital-helpers/iao_builder.cc
+src/orbital-helpers/es-nos.cc
+src/orbital-helpers/ao_helper.cc
 src/pci/pci.cc
 src/pci/pci_hashvec.cc
 src/pci/pci_simple.cc
@@ -186,10 +187,10 @@ endif()
 target_include_directories(forte PRIVATE src)
 
 ## 64bit implementation
-if(MAX_DET_ORB EQUAL OFF)
-    add_definitions(-DMAX_DET_ORB=64)
-else()
+if(MAX_DET_ORB)
     add_definitions(-DMAX_DET_ORB=${MAX_DET_ORB})
+else()
+    add_definitions(-DMAX_DET_ORB=64)
 endif()
 
 if(ENABLE_MPI)

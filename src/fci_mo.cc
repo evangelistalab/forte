@@ -45,7 +45,7 @@
 #include "boost/algorithm/string/predicate.hpp"
 #include "operator.h"
 #include "semi_canonicalize.h"
-#include "orbital-helper/iao_builder.h"
+#include "orbital-helpers/iao_builder.h"
 #include "helpers/printing.h"
 #include "helpers/timer.h"
 
