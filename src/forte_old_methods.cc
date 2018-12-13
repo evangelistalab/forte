@@ -77,14 +77,15 @@
 #include "pci/pci.h"
 #include "pci/pci_hashvec.h"
 #include "pci/pci_simple.h"
+#include "semi_canonicalize.h"
 #include "srg/tensorsrg.h"
 #include "test_ambit.h"
 #include "v2rdm/v2rdm.h"
 #include "helpers/timer.h"
 
 #ifdef HAVE_CHEMPS2
-#include "dmrgscf.h"
-#include "dmrgsolver.h"
+#include "dmrg/dmrgscf.h"
+#include "dmrg/dmrgsolver.h"
 #endif
 
 #ifdef HAVE_GA
