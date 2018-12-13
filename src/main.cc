@@ -224,7 +224,8 @@ void banner() {
         "    git branch: %s - git commit: %s\n\n"
         "  Developed by:\n"
         "    Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,\n"
-        "    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai\n"
+        "    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai,"
+        "    Nan He, Nicholas Stair, Shuhe Wang, Renke Huang\n"
         "  ----------------------------------------------------------------------------\n",
         GIT_BRANCH, GIT_COMMIT_HASH);
     outfile->Printf("\n  Size of Determinant class: %d", sizeof(Determinant));
