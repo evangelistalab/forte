@@ -32,7 +32,7 @@
 #include "psi4/psi4-dec.h"
 #include "helpers/timer.h"
 #include "helpers.h"
-#include "tensorsrg.h"
+#include "srg/tensorsrg.h"
 
 using namespace psi;
 

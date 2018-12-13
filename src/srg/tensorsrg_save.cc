@@ -33,7 +33,7 @@
 
 #include "psi4/libdiis/diismanager.h"
 
-#include "tensorsrg.h"
+#include "srg/tensorsrg.h"
 
 using namespace psi;
 

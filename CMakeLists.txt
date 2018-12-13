@@ -62,7 +62,6 @@ endif()
 # List of CC files
 add_psi4_plugin(forte
 src/active_space_solver.cc
-src/ao_helper.cc
 src/avas.cc
 src/asci.cc
 src/bitset_performance.cc
@@ -87,7 +86,6 @@ src/helpers.cc
 src/iterative_solvers.cc
 src/main.cc
 src/mcsrgpt2_mo.cc
-src/methodbase.cc
 src/mp2_nos.cc
 src/mrci.cc
 src/mrpt2.cc
@@ -106,13 +104,14 @@ src/sparse_ci/stl_bitset_string.cc
 src/sparse_ci/sorted_string_list.cc
 src/sparse_ci/ui64_determinant.cc
 src/sparse_ci/ui64_determinant_functions.cc
-src/tensorsrg.cc
-src/tensorsrg_antihermitian_commutators.cc
-src/tensorsrg_ct.cc
-src/tensorsrg_full_commutator.cc
-src/tensorsrg_hermitian_commutator.cc
-src/tensorsrg_save.cc
-src/tensorsrg_srg.cc
+src/srg/methodbase.cc
+src/srg/tensorsrg.cc
+src/srg/tensorsrg_antihermitian_commutators.cc
+src/srg/tensorsrg_ct.cc
+src/srg/tensorsrg_full_commutator.cc
+src/srg/tensorsrg_hermitian_commutator.cc
+src/srg/tensorsrg_save.cc
+src/srg/tensorsrg_srg.cc
 src/test_ambit.cc
 src/v2rdm.cc
 src/aci/aci.cc
@@ -172,6 +171,7 @@ src/orbital-helpers/localize.cc
 src/orbital-helpers/unpaired_density.cc
 src/orbital-helpers/iao_builder.cc
 src/orbital-helpers/es-nos.cc
+src/orbital-helpers/ao_helper.cc
 src/pci/pci.cc
 src/pci/pci_hashvec.cc
 src/pci/pci_simple.cc
