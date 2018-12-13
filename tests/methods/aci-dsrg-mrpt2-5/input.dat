@@ -3,8 +3,8 @@ import forte
 memory 2 gb
 
 escf = -304.9057795504940600
-efix = -305.390029668114494 
-eaci = -305.398101397722598 
+efix = -305.389272899777779 
+eaci = -305.397732409345565
 
 molecule ene2{
 0 1
@@ -64,6 +64,7 @@ set forte {
   charge 0
   print_no true
   relax_ref once
+  localize split_pm
 }
 
 set_num_threads(8)
