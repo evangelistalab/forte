@@ -63,7 +63,6 @@ endif()
 add_psi4_plugin(forte
 src/base_classes/active_space_solver.cc
 src/orbital-helpers/avas.cc
-src/sci/asci.cc
 src/bitset_performance.cc
 src/casscf/casscf.cc
 src/cc/cc.cc
@@ -76,7 +75,6 @@ src/helpers/davidson.cc
 src/dmrg/dmrgscf.cc
 src/dmrg/dmrgsolver.cc
 src/base_classes/dynamic_correlation_solver.cc
-src/fci_mo.cc
 src/finite_temperature.cc
 src/forte_old_methods.cc
 src/forte_old_options.cc
@@ -84,13 +82,17 @@ src/forte_options.cc
 src/helpers.cc
 src/helpers/iterative_solvers.cc
 src/main.cc
-src/sci/mrci.cc
-src/sci/mrpt2.cc
 src/sparse_ci/operator.cc
 src/options.cc
 src/orbital-helpers/orbitaloptimizer.cc
 src/python_api.cc
 src/base_classes/reference.cc
+src/sci/aci.cc
+src/sci/aci_build_F.cc
+src/sci/asci.cc
+src/sci/fci_mo.cc
+src/sci/mrci.cc
+src/sci/mrpt2.cc
 src/sparse_ci/sparse_ci_solver.cc
 src/sparse_ci/sigma_vector.cc
 src/sparse_ci/sigma_vector_dynamic.cc
@@ -107,8 +109,6 @@ src/srg/tensorsrg_full_commutator.cc
 src/srg/tensorsrg_hermitian_commutator.cc
 src/srg/tensorsrg_save.cc
 src/srg/tensorsrg_srg.cc
-src/sci/aci.cc
-src/sci/aci_build_F.cc
 src/orbital-helpers/aosubspace.cc
 src/orbital-helpers/ci-no/ci-no.cc
 src/orbital-helpers/ci-no/mrci-no.cc

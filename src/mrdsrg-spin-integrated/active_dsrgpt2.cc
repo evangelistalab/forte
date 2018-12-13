@@ -41,7 +41,7 @@
 #include "psi4/physconst.h"
 
 #include "fci/fci_integrals.h"
-#include "fci_mo.h"
+#include "sci/fci_mo.h"
 #include "orbital-helpers/semi_canonicalize.h"
 #include "master_mrdsrg.h"
 #include "active_dsrgpt2.h"

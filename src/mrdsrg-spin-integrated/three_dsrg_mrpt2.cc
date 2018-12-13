@@ -57,7 +57,7 @@
 #include "helpers/timer.h"
 #include "fci/fci_solver.h"
 #include "fci/fci_vector.h"
-#include "fci_mo.h"
+#include "sci/fci_mo.h"
 #include "sci/aci.h"
 #include "three_dsrg_mrpt2.h"
 

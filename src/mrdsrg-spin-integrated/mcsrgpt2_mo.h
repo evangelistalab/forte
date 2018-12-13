@@ -35,7 +35,7 @@
 #include "psi4/libmints/matrix.h"
 #include <vector>
 #include <cmath>
-#include "fci_mo.h"
+#include "sci/fci_mo.h"
 #include "integrals/integrals.h"
 #include "mrdsrg-helper/dsrg_source.h"
 

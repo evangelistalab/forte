@@ -5,7 +5,7 @@
 
 #include "integrals/integrals.h"
 #include "helpers.h"
-#include "fci_mo.h"
+#include "sci/fci_mo.h"
 #include "sparse_ci/determinant.h"
 
 namespace psi {

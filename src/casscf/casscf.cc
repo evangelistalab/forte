@@ -41,7 +41,7 @@
 #include "sci/aci.h"
 #include "fci/fci_solver.h"
 
-#include "fci_mo.h"
+#include "sci/fci_mo.h"
 #include "fci/sa_fcisolver.h"
 #include "orbital-helpers/mp2_nos.h"
 #include "orbital-helpers/orbitaloptimizer.h"
