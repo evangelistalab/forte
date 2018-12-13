@@ -1,4 +1,4 @@
-#include "active_space_solver.h"
+#include "base_classes/active_space_solver.h"
 
 namespace psi {
 namespace forte {
