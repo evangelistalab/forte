@@ -77,7 +77,6 @@
 #include "pci/pci.h"
 #include "pci/pci_hashvec.h"
 #include "pci/pci_simple.h"
-#include "semi_canonicalize.h"
 #include "srg/tensorsrg.h"
 #include "test_ambit.h"
 #include "v2rdm/v2rdm.h"
