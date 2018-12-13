@@ -28,7 +28,7 @@
 
 #include "casscf.h"
 #include "integrals/integrals.h"
-#include "reference.h"
+#include "base_classes/reference.h"
 
 #include "psi4/libfock/jk.h"
 #include "psi4/libmints/matrix.h"
