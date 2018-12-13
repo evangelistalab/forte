@@ -106,7 +106,6 @@ src/srg/tensorsrg_full_commutator.cc
 src/srg/tensorsrg_hermitian_commutator.cc
 src/srg/tensorsrg_save.cc
 src/srg/tensorsrg_srg.cc
-src/test_ambit.cc
 src/aci/aci.cc
 src/aci/aci_build_F.cc
 src/orbital-helpers/aosubspace.cc
