@@ -33,7 +33,6 @@
 #include <memory>
 #include <vector>
 
-#include "psi4/libpsi4util/libpsi4util.h"
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libdiis/diismanager.h"
 #include "psi4/libmints/molecule.h"
@@ -1371,5 +1370,5 @@ void MRDSRG::return_amp_diis(BlockedTensor& T1, const std::vector<std::string>& 
         T2.block(block).data() = T2_this_block;
     }
 }
-}
-}
+} // namespace forte
+} // namespace psi
