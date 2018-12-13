@@ -85,12 +85,6 @@ src/forte_options.cc
 src/helpers.cc
 src/iterative_solvers.cc
 src/main.cc
-<<<<<<< HEAD
-src/mcsrgpt2_mo.cc
-src/orbital-helpers/mp2_nos.cc
-=======
-src/mp2_nos.cc
->>>>>>> c5e78e02e17bf8d42d19030e9b0df7024c133623
 src/mrci.cc
 src/mrpt2.cc
 src/operator.cc
@@ -174,6 +168,7 @@ src/orbital-helpers/ao_helper.cc
 src/orbital-helpers/es-nos.cc
 src/orbital-helpers/localize.cc
 src/orbital-helpers/iao_builder.cc
+src/orbital-helpers/mp2_nos.cc
 src/orbital-helpers/semi_canonicalize.cc
 src/orbital-helpers/unpaired_density.cc
 src/pci/pci.cc
