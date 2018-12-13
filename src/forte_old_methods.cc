@@ -49,7 +49,7 @@
 #include "cc/cc.h"
 #include "orbital-helpers/ci-no/ci-no.h"
 #include "orbital-helpers/ci-no/mrci-no.h"
-#include "determinant_hashvector.h"
+#include "sparse_ci/determinant_hashvector.h"
 #include "fci/fci.h"
 #include "fci/fci_solver.h"
 #include "fci/fci_integrals.h"

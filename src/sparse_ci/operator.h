@@ -31,7 +31,7 @@
 
 #include "psi4/libpsi4util/process.h"
 #include "fci/fci_integrals.h"
-#include "determinant_hashvector.h"
+#include "sparse_ci/determinant_hashvector.h"
 #include "sparse_ci/determinant.h"
 #include "sparse_ci/sorted_string_list.h"
 #include "helpers.h"

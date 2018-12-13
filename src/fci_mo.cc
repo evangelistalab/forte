@@ -38,7 +38,7 @@
 #include "psi4/libmints/petitelist.h"
 #include "psi4/libmints/local.h"
 
-#include "determinant_hashvector.h"
+#include "sparse_ci/determinant_hashvector.h"
 #include "fci/fci_vector.h"
 #include "fci_mo.h"
 #include "forte_options.h"

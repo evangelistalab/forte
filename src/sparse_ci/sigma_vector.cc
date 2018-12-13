@@ -34,7 +34,7 @@
 #include "psi4/libpsio/psio.hpp"
 
 #include "forte-def.h"
-#include "iterative_solvers.h"
+#include "helpers/iterative_solvers.h"
 #include "sigma_vector.h"
 
 struct PairHash {
