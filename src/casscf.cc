@@ -45,7 +45,7 @@
 #include "orbital-helpers/mp2_nos.h"
 #include "orbital-helpers/orbitaloptimizer.h"
 #include "sa_fcisolver.h"
-#include "semi_canonicalize.h"
+#include "orbital-helpers/semi_canonicalize.h"
 
 #ifdef HAVE_CHEMPS2
 #include "dmrgsolver.h"

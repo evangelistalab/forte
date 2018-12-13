@@ -40,7 +40,7 @@
 #include "psi4/libqt/qt.h"
 
 #include "mcsrgpt2_mo.h"
-#include "semi_canonicalize.h"
+#include "orbital-helpers/semi_canonicalize.h"
 #include "helpers/printing.h"
 
 #define Delta(i, j) ((i == j) ? 1 : 0)

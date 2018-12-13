@@ -85,8 +85,12 @@ src/forte_options.cc
 src/helpers.cc
 src/iterative_solvers.cc
 src/main.cc
+<<<<<<< HEAD
 src/mcsrgpt2_mo.cc
 src/orbital-helpers/mp2_nos.cc
+=======
+src/mp2_nos.cc
+>>>>>>> c5e78e02e17bf8d42d19030e9b0df7024c133623
 src/mrci.cc
 src/mrpt2.cc
 src/operator.cc
@@ -95,7 +99,6 @@ src/orbital-helpers/orbitaloptimizer.cc
 src/python_api.cc
 src/reference.cc
 src/sa_fcisolver.cc
-src/semi_canonicalize.cc
 src/sparse_ci/sparse_ci_solver.cc
 src/sparse_ci/sigma_vector.cc
 src/sparse_ci/sigma_vector_dynamic.cc
@@ -156,6 +159,7 @@ src/mrdsrg-spin-integrated/master_mrdsrg.cc
 src/mrdsrg-spin-integrated/dsrg_mrpt2.cc
 src/mrdsrg-spin-integrated/dsrg_mrpt2_ms.cc
 src/mrdsrg-spin-integrated/dsrg_mrpt3.cc
+src/mrdsrg-spin-integrated/mcsrgpt2_mo.cc
 src/mrdsrg-spin-integrated/mrdsrg.cc
 src/mrdsrg-spin-integrated/mrdsrg_amplitude.cc
 src/mrdsrg-spin-integrated/mrdsrg_commutator.cc
@@ -166,11 +170,12 @@ src/mrdsrg-spin-integrated/mrdsrg_srg.cc
 src/mrdsrg-spin-integrated/three_dsrg_mrpt2.cc
 src/mrdsrg-spin-integrated/active_dsrgpt2.cc
 src/mrdsrg-spin-integrated/dwms_mrpt2.cc
-src/orbital-helpers/localize.cc
-src/orbital-helpers/unpaired_density.cc
-src/orbital-helpers/iao_builder.cc
-src/orbital-helpers/es-nos.cc
 src/orbital-helpers/ao_helper.cc
+src/orbital-helpers/es-nos.cc
+src/orbital-helpers/localize.cc
+src/orbital-helpers/iao_builder.cc
+src/orbital-helpers/semi_canonicalize.cc
+src/orbital-helpers/unpaired_density.cc
 src/pci/pci.cc
 src/pci/pci_hashvec.cc
 src/pci/pci_simple.cc
