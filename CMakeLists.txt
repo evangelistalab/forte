@@ -116,7 +116,7 @@ src/test_ambit.cc
 src/v2rdm.cc
 src/aci/aci.cc
 src/aci/aci_build_F.cc
-src/aosubspace/aosubspace.cc
+src/orbital-helpers/aosubspace.cc
 src/ci-no/ci-no.cc
 src/ci-no/mrci-no.cc
 src/fci/binary_graph.cc
