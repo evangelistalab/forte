@@ -85,7 +85,6 @@ src/forte_options.cc
 src/helpers.cc
 src/iterative_solvers.cc
 src/main.cc
-src/mcsrgpt2_mo.cc
 src/mrci.cc
 src/mrpt2.cc
 src/operator.cc
