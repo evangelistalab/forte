@@ -66,7 +66,7 @@ src/orbital-helpers/avas.cc
 src/asci.cc
 src/bitset_performance.cc
 src/blockedtensorfactory.cc
-src/casscf.cc
+src/base_classes/casscf.cc
 src/cc.cc
 src/ci_rdm/ci_rdms.cc
 src/ci_rdm/ci_rdms_dynamic.cc
