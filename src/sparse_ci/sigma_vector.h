@@ -32,7 +32,7 @@
 #include "helpers.h"
 #include "helpers/timer.h"
 
-#include "determinant_hashvector.h"
+#include "sparse_ci/determinant_hashvector.h"
 #include "fci/fci_integrals.h"
 #include "operator.h"
 #include "determinant.h"

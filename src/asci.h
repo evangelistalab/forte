@@ -35,7 +35,7 @@
 #include "fci/fci_integrals.h"
 #include "mrpt2.h"
 #include "orbital-helpers/unpaired_density.h"
-#include "determinant_hashvector.h"
+#include "sparse_ci/determinant_hashvector.h"
 #include "base_classes/reference.h"
 #include "sparse_ci/sparse_ci_solver.h"
 #include "orbital-helpers/localize.h"

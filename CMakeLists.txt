@@ -72,7 +72,7 @@ src/ci_rdm/ci_rdms.cc
 src/ci_rdm/ci_rdms_dynamic.cc
 src/ci_reference.cc
 src/davidson.cc
-src/determinant_hashvector.cc
+src/sparse_ci/determinant_hashvector.cc
 src/dmrg/dmrgscf.cc
 src/dmrg/dmrgsolver.cc
 src/base_classes/dynamic_correlation_solver.cc

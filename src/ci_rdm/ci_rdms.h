@@ -35,7 +35,7 @@
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/liboptions/liboptions.h"
 
-#include "determinant_hashvector.h"
+#include "sparse_ci/determinant_hashvector.h"
 #include "helpers.h"
 #include "operator.h"
 #include "base_classes/reference.h"
