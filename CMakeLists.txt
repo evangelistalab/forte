@@ -62,7 +62,7 @@ endif()
 # List of CC files
 add_psi4_plugin(forte
 src/base_classes/active_space_solver.cc
-src/avas.cc
+src/orbital-helpers/avas.cc
 src/asci.cc
 src/bitset_performance.cc
 src/blockedtensorfactory.cc
@@ -91,7 +91,7 @@ src/mrci.cc
 src/mrpt2.cc
 src/operator.cc
 src/options.cc
-src/orbitaloptimizer.cc
+src/orbital-helpers/orbitaloptimizer.cc
 src/python_api.cc
 src/reference.cc
 src/sa_fcisolver.cc
