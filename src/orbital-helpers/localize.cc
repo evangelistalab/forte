@@ -66,16 +66,16 @@ LOCALIZE::LOCALIZE(StateInfo state, std::shared_ptr<SCFInfo> scf_info,
 
 void LOCALIZE::localize() {
 
-    if ( (local_type_ == "FULL_BOYS") or (local_type_ == "SPLIT_BOYS") ) {
+    if ((local_type_ == "FULL_BOYS") or (local_type_ == "SPLIT_BOYS")) {
         local_method_ = "BOYS";
     }
-    if ((local_type_ == "FULL_PM") or (local_type_ == "SPLIT_PM") ) {
+    if ((local_type_ == "FULL_PM") or (local_type_ == "SPLIT_PM")) {
         local_method_ = "PIPEK_MEZEY";
     }
 
-    if( (local_type_ == "FULL_BOYS") or (local_type_ == "FULL_PM") ) {
+    if ((local_type_ == "FULL_BOYS") or (local_type_ == "FULL_PM")) {
         full_localize();
-    } else if( (local_type_ == "SPLIT_BOYS") or (local_type_ == "SPLIT_PM") ){
+    } else if ((local_type_ == "SPLIT_BOYS") or (local_type_ == "SPLIT_PM")) {
         split_localize();
     }
 }
