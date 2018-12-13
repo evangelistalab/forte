@@ -62,7 +62,6 @@ endif()
 # List of CC files
 add_psi4_plugin(forte
 src/base_classes/active_space_solver.cc
-src/ao_helper.cc
 src/avas.cc
 src/asci.cc
 src/bitset_performance.cc
