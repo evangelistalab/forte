@@ -77,7 +77,6 @@
 #include "pci/pci_hashvec.h"
 #include "pci/pci_simple.h"
 #include "srg/tensorsrg.h"
-#include "test_ambit.h"
 #include "v2rdm/v2rdm.h"
 #include "helpers/timer.h"
 
@@ -864,10 +863,6 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
         DeterminantHashVec reference = aci->get_wavefunction();
         auto mrci = std::make_shared<MRCI>(ref_wfn, options, ints, mo_space_info, reference);
         mrci->compute_energy();
-    }
-
-    if (options.get_str("JOB_TYPE") == "TEST_AMBIT") {
-        AMBIT_TEST::test_ambit();
     }
 }
 }
