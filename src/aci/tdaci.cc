@@ -1721,7 +1721,6 @@ void TDACI::get_PQ_space( DeterminantHashVec& P_space,  std::vector<double>& P_c
 
     // Compute full correction vector
     size_t nF = F_space.size();
-//    outfile->Printf("\n  Size of F: %zu", nF);
     const det_hashvec& F_dets = F_space.wfn_hash();
     std::vector<std::pair<double, Determinant>> sorted_dets(nF);
 
@@ -1735,9 +1734,6 @@ void TDACI::get_PQ_space( DeterminantHashVec& P_space,  std::vector<double>& P_c
             size_t idx = P_space.get_idx(det);
             cr += P_coeffs_r[idx];
             ci += P_coeffs_i[idx];
-//            outfile->Printf("\n  %10.8f, %10.8f, %s", cr, ci, det.str(nact).c_str());
-//        }else {
-//            outfile->Printf("\n  %10.8f, %10.8f, %s", cr, ci, det.str(nact).c_str());
         }
 
         
@@ -1754,29 +1750,18 @@ void TDACI::get_PQ_space( DeterminantHashVec& P_space,  std::vector<double>& P_c
         double ci = F_approx_i[I]*norm;         
         const Determinant& det = F_dets[I];        
         sorted_dets[I] = std::make_pair( cr*cr + ci*ci, det);
-////        outfile->Printf("\n  %12.10f   %s", cr*cr + ci*ci, det.str(nact).c_str());
-//        F_approx_r[I] = cr;
-//        F_approx_i[I] = ci;
     }
 
-//        if( options_.get_bool("TDACI_PRINT_WFN")){
-//                save_vector(F_approx_r, "lin_select_exact_r.txt");
-//                save_vector(F_approx_i, "lin_select_exact_i.txt");
-//
-//                std::vector<std::string> det_str(nF);
-//                const det_hashvec& F_dets = F_space.wfn_hash(); 
-//                for(int I = 0; I < nF; ++I ){ 
-//                    auto detI = F_dets[I];
-//                    det_str[I] = detI.str(nact).c_str();
-//                }
-//                save_vector(det_str, "lin_determinants_.txt");
-//        }
-//
     // Now, screen the determinants
     std::sort( sorted_dets.begin(), sorted_dets.end() ); 
+
+    // Get a copy of PQ space
+    DeterminantHashVec PQ_copy(PQ_space);
+    std::vector<double> PQ_copy_r = PQ_coeffs_r;
+    std::vector<double> PQ_copy_i = PQ_coeffs_i;
+
+
     PQ_space.clear();
-    // Merge P space
-//    PQ_space.merge(P_space);
     double sum = 0.0;
     for( size_t I = 0; I < nF; ++I ){
 
@@ -1786,34 +1771,45 @@ void TDACI::get_PQ_space( DeterminantHashVec& P_space,  std::vector<double>& P_c
         if( sum + cI < eta ){
             sum += cI;            
         }else{
-//            outfile->Printf("\n  Keep:");
             PQ_space.add(dpair.second);
         } 
-//        outfile->Printf("\n  %12.10f   %s", cI, dpair.second.str(nact).c_str());
     }
     // This will be the initial state for propagation
-
     size_t npq = PQ_space.size();
-
     PQ_coeffs_r.clear();
     PQ_coeffs_i.clear();
 
     PQ_coeffs_r.resize(npq, 0.0);
     PQ_coeffs_i.resize(npq, 0.0);
-    for( int I = 0; I < max_P; ++I ){
-        const Determinant& det = P_dets[I];
-        if( PQ_space.has_det(det) ){
-            size_t pq_idx = PQ_space.get_idx(det);
-            PQ_coeffs_r[pq_idx] = P_coeffs_r[I];
-            PQ_coeffs_i[pq_idx] = P_coeffs_i[I];
-        } else {
-            PQ_space.add(det);
-            
-            size_t pq_idx = PQ_space.get_idx(det);
-            PQ_coeffs_r[pq_idx] = P_coeffs_r[I];
-            PQ_coeffs_i[pq_idx] = P_coeffs_i[I];
+
+    const det_hashvec& PQ_dets = PQ_space.wfn_hash();
+    for( int I = 0; I < npq; ++I ){
+        const Determinant& det = PQ_dets[I]; 
+        if( P_space.has_det(det) ){
+            size_t p_idx = P_space.get_idx(det);
+            PQ_coeffs_r[I] = P_coeffs_r[p_idx];
+            PQ_coeffs_i[I] = P_coeffs_i[p_idx];
+        } else if (PQ_copy.has_det(det) ){
+            size_t pq_idx = PQ_copy.get_idx(det);
+            PQ_coeffs_r[I] = PQ_copy_r[pq_idx];
+            PQ_coeffs_i[I] = PQ_copy_i[pq_idx];
         }
-    } 
+    }
+
+//    for( int I = 0; I < max_P; ++I ){
+//        const Determinant& det = P_dets[I];
+//        if( PQ_space.has_det(det) ){
+//            size_t pq_idx = PQ_space.get_idx(det);
+//            PQ_coeffs_r[pq_idx] = P_coeffs_r[I];
+//            PQ_coeffs_i[pq_idx] = P_coeffs_i[I];
+//        } else {
+//            PQ_space.add(det);
+//            
+//            size_t pq_idx = PQ_space.get_idx(det);
+//            PQ_coeffs_r[pq_idx] = P_coeffs_r[I];
+//            PQ_coeffs_i[pq_idx] = P_coeffs_i[I];
+//        }
+//    } 
 }
 
 void TDACI::propagate_exact_select(std::vector<double>& PQ_coeffs_r,std::vector<double>& PQ_coeffs_i, 
