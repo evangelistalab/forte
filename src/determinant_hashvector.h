@@ -33,7 +33,7 @@
 #include "psi4/libmints/matrix.h"
 #include "psi4/psi4-dec.h"
 #include "sparse_ci/determinant.h"
-#include "hash_vector.h"
+#include "helpers/hash_vector.h"
 
 namespace psi {
 namespace forte {

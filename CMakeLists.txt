@@ -66,7 +66,7 @@ src/orbital-helpers/avas.cc
 src/asci.cc
 src/bitset_performance.cc
 src/casscf/casscf.cc
-src/cc.cc
+src/cc/cc.cc
 src/ci_rdm/ci_rdms.cc
 src/ci_rdm/ci_rdms_dynamic.cc
 src/ci_reference.cc
@@ -76,7 +76,6 @@ src/dmrg/dmrgscf.cc
 src/dmrg/dmrgsolver.cc
 src/base_classes/dynamic_correlation_solver.cc
 src/fci_mo.cc
-src/fcimc.cc
 src/finite_temperature.cc
 src/forte_old_methods.cc
 src/forte_old_options.cc
