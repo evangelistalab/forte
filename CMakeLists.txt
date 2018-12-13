@@ -85,7 +85,7 @@ src/iterative_solvers.cc
 src/main.cc
 src/mrci.cc
 src/mrpt2.cc
-src/operator.cc
+src/sparse_ci/operator.cc
 src/options.cc
 src/orbital-helpers/orbitaloptimizer.cc
 src/python_api.cc

@@ -31,7 +31,7 @@
 
 #include "fci/fci_integrals.h"
 #include "determinant_hashvector.h"
-#include "operator.h"
+#include "sparse_ci/operator.h"
 #include "helpers.h"
 
 #include "determinant.h"

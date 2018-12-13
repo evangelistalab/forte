@@ -43,7 +43,7 @@
 #include "fci_mo.h"
 #include "forte_options.h"
 #include "boost/algorithm/string/predicate.hpp"
-#include "operator.h"
+#include "sparse_ci/operator.h"
 #include "orbital-helpers/semi_canonicalize.h"
 #include "orbital-helpers/iao_builder.h"
 #include "helpers/printing.h"
