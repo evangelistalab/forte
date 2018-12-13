@@ -113,7 +113,6 @@ src/srg/tensorsrg_hermitian_commutator.cc
 src/srg/tensorsrg_save.cc
 src/srg/tensorsrg_srg.cc
 src/test_ambit.cc
-src/v2rdm.cc
 src/aci/aci.cc
 src/aci/aci_build_F.cc
 src/orbital-helpers/aosubspace.cc
@@ -176,6 +175,7 @@ src/pci/pci.cc
 src/pci/pci_hashvec.cc
 src/pci/pci_simple.cc
 src/pci/ewci.cc
+src/v2rdm/v2rdm.cc
 )
 
 target_link_libraries(forte PRIVATE ambit::ambit)
