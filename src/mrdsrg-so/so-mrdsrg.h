@@ -38,7 +38,7 @@
 #include "boost/assign.hpp"
 #include "helpers.h"
 #include "integrals/integrals.h"
-#include "reference.h"
+#include "base_classes/reference.h"
 #include "blockedtensorfactory.h"
 
 namespace psi {

@@ -43,7 +43,7 @@
 //#include "boost/assign.hpp"
 #include "aci/aci.h"
 #include "integrals/integrals.h"
-#include "reference.h"
+#include "base_classes/reference.h"
 #include "helpers.h"
 #include "blockedtensorfactory.h"
 #include "mrdsrg-helper/dsrg_time.h"

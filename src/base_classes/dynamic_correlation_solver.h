@@ -8,7 +8,7 @@
 
 #include "integrals/integrals.h"
 #include "fci/fci_integrals.h"
-#include "reference.h"
+#include "base_classes/reference.h"
 
 namespace psi {
 namespace forte {

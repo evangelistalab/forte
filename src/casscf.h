@@ -35,7 +35,7 @@
 
 #include "integrals/integrals.h"
 #include "ambit/blocked_tensor.h"
-#include "reference.h"
+#include "base_classes/reference.h"
 #include "helpers.h"
 #include "blockedtensorfactory.h"
 #include "fci/fci_vector.h"

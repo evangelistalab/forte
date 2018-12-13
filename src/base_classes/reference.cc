@@ -26,7 +26,7 @@
  * @END LICENSE
  */
 
-#include "reference.h"
+#include "base_classes/reference.h"
 
 namespace psi {
 namespace forte {

@@ -97,7 +97,7 @@ src/operator.cc
 src/options.cc
 src/orbital-helpers/orbitaloptimizer.cc
 src/python_api.cc
-src/reference.cc
+src/base_classes/reference.cc
 src/sa_fcisolver.cc
 src/sparse_ci/sparse_ci_solver.cc
 src/sparse_ci/sigma_vector.cc

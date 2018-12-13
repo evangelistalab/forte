@@ -41,7 +41,7 @@
 #include "helpers/timer.h"
 #include "orbitaloptimizer.h"
 
-#include "reference.h"
+#include "base_classes/reference.h"
 using namespace psi;
 
 namespace psi {

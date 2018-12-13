@@ -40,7 +40,7 @@
 
 #include "boost/assign.hpp"
 #include "integrals/integrals.h"
-#include "reference.h"
+#include "base_classes/reference.h"
 #include "blockedtensorfactory.h"
 #include "sparse_ci/determinant.h"
 #include "master_mrdsrg.h"

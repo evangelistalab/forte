@@ -34,7 +34,7 @@
 #include "psi4/libiwl/iwl.h"
 #include "psi4/libpsio/psio.hpp"
 #include "integrals/integrals.h"
-#include "reference.h"
+#include "base_classes/reference.h"
 
 #define PSIF_V2RDM_D2AA 270
 #define PSIF_V2RDM_D2AB 271

@@ -37,7 +37,7 @@
 #include "forte_options.h"
 #include "integrals/integrals.h"
 #include "pci/pci.h"
-#include "reference.h"
+#include "base_classes/reference.h"
 #include "mrdsrg-helper/run_dsrg.h"
 #include "mrdsrg-spin-integrated/dwms_mrpt2.h"
 

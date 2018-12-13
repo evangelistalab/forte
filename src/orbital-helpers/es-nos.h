@@ -33,7 +33,7 @@
 #include "psi4/liboptions/liboptions.h"
 
 #include "ci_rdm/ci_rdms.h"
-#include "reference.h"
+#include "base_classes/reference.h"
 #include "sparse_ci/determinant.h"
 #include "integrals/integrals.h"
 #include "fci/fci_integrals.h"
