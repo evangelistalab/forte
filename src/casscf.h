@@ -40,7 +40,7 @@
 #include "blockedtensorfactory.h"
 #include "fci/fci_vector.h"
 #include "fci/fci_integrals.h"
-#include "semi_canonicalize.h"
+#include "orbital-helpers/semi_canonicalize.h"
 
 namespace psi {
 namespace forte {
