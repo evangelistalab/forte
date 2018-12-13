@@ -72,6 +72,7 @@ src/ci_rdm/ci_rdms_dynamic.cc
 src/ci_reference.cc
 src/davidson.cc
 src/sparse_ci/determinant_hashvector.cc
+src/helpers/davidson.cc
 src/dmrg/dmrgscf.cc
 src/dmrg/dmrgsolver.cc
 src/base_classes/dynamic_correlation_solver.cc
@@ -81,7 +82,7 @@ src/forte_old_methods.cc
 src/forte_old_options.cc
 src/forte_options.cc
 src/helpers.cc
-src/iterative_solvers.cc
+src/helpers/iterative_solvers.cc
 src/main.cc
 src/mrci.cc
 src/mrpt2.cc
