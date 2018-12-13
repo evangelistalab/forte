@@ -52,9 +52,12 @@ class LOCALIZE : public OrbitalTransform {
     psi::SharedMatrix get_Ua();
     psi::SharedMatrix get_Ub();
 
-    void split_localize();
+    // Call to localize, class handles options
+    void localize();    
 
-    void full_localize();
+    // Returns unitary matrix that transforms
+    // RHF -> local basis
+    SharedMatrix get_U();
 
     void compute_transformation();
 

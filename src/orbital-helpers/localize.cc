@@ -29,8 +29,8 @@
 #include "psi4/libpsio/psio.h"
 #include "psi4/libpsio/psio.hpp"
 #include "psi4/libmints/local.h"
-#include "psi4/libmints/matrix.h"
-#include "psi4/libmints/vector.h"
+//#include "psi4/libmints/matrix.h"
+//#include "psi4/libmints/vector.h"
 #include "psi4/liboptions/liboptions.h"
 #include "base_classes/reference.h"
 
@@ -61,16 +61,24 @@ LOCALIZE::LOCALIZE(StateInfo state, std::shared_ptr<SCFInfo> scf_info,
 
     // virtual active
     navir_ = namo_ - naocc_;
-
     abs_act_ = mo_space_info->get_absolute_mo("ACTIVE");
 
     local_type_ = options->get_str("LOCALIZE_TYPE");
+}
 
-    if (local_type_ == "BOYS" or local_type_ == "SPLIT_BOYS") {
+void LOCALIZE::localize() {
+
+    if ( (local_type_ == "FULL_BOYS") or (local_type_ == "SPLIT_BOYS") ) {
         local_method_ = "BOYS";
     }
-    if (local_type_ == "PM" or local_type_ == "SPLIT_PM") {
+    if ((local_type_ == "FULL_PM") or (local_type_ == "SPLIT_PM") ) {
         local_method_ = "PIPEK_MEZEY";
+    }
+
+    if( (local_type_ == "FULL_BOYS") or (local_type_ == "FULL_PM") ) {
+        full_localize();
+    } else if( (local_type_ == "SPLIT_BOYS") or (local_type_ == "SPLIT_PM") ){
+        full_localize();
     }
 }
 
@@ -95,9 +103,9 @@ void LOCALIZE::split_localize() {
     psi::SharedMatrix Ca = ints_->Ca();
     psi::SharedMatrix Cb = ints_->Cb();
 
-    psi::SharedMatrix Caocc(new psi::Matrix("Caocc", nsopi[0], naocc_));
-    psi::SharedMatrix Cavir(new psi::Matrix("Cavir", nsopi[0], navir_));
-    psi::SharedMatrix Caact(new psi::Matrix("Caact", nsopi[0], off));
+    SharedMatrix Caocc = std::make_shared<Matrix>("Caocc", nsopi[0], naocc_);
+    SharedMatrix Cavir = std::make_shared<Matrix>("Cavir", nsopi[0], navir_);
+    SharedMatrix Caact = std::make_shared<Matrix>("Caact", nsopi[0], off);
 
     for (int h = 0; h < nirrep; h++) {
         for (int mu = 0; mu < nsopi[h]; mu++) {
@@ -113,9 +121,7 @@ void LOCALIZE::split_localize() {
         }
     }
 
-
     std::shared_ptr<psi::BasisSet> primary = ints_->basisset();
-
     std::shared_ptr<Localizer> loc_a = Localizer::build(local_type_, primary, Caocc);
     loc_a->localize();
 

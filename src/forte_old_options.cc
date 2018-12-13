@@ -181,7 +181,6 @@ void forte_old_options(ForteOptions& options) {
     options.add_str("LOCALIZE", "NONE", "NONE SPLIT FULL");
     /*- Type of localization -*/
     options.add_str("LOCALIZE_TYPE", "PIPEK_MEZEY", "BOYS");
-
     /*- Number of orbitals for CI guess  -*/
     options.add_int("ACTIVE_GUESS_SIZE", 1000);
 
