@@ -79,7 +79,7 @@
 #include "semi_canonicalize.h"
 #include "srg/tensorsrg.h"
 #include "test_ambit.h"
-#include "v2rdm.h"
+#include "v2rdm/v2rdm.h"
 #include "helpers/timer.h"
 
 #ifdef HAVE_CHEMPS2
