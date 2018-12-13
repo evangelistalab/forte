@@ -29,8 +29,6 @@
 #include "psi4/libpsio/psio.h"
 #include "psi4/libpsio/psio.hpp"
 #include "psi4/libmints/local.h"
-//#include "psi4/libmints/matrix.h"
-//#include "psi4/libmints/vector.h"
 #include "psi4/liboptions/liboptions.h"
 #include "base_classes/reference.h"
 
