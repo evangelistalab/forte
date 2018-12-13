@@ -51,7 +51,7 @@
 #include "psi4/libpsio/psio.hpp"
 #include "psi4/libqt/qt.h"
 
-#include "ao_helper.h"
+#include "orbital-helpers/ao_helper.h"
 #include "blockedtensorfactory.h"
 #include "helpers/printing.h"
 #include "helpers/timer.h"
