@@ -85,7 +85,6 @@ src/forte_options.cc
 src/helpers.cc
 src/iterative_solvers.cc
 src/main.cc
-src/mcsrgpt2_mo.cc
 src/mp2_nos.cc
 src/mrci.cc
 src/mrpt2.cc
@@ -155,6 +154,7 @@ src/mrdsrg-spin-integrated/master_mrdsrg.cc
 src/mrdsrg-spin-integrated/dsrg_mrpt2.cc
 src/mrdsrg-spin-integrated/dsrg_mrpt2_ms.cc
 src/mrdsrg-spin-integrated/dsrg_mrpt3.cc
+src/mrdsrg-spin-integrated/mcsrgpt2_mo.cc
 src/mrdsrg-spin-integrated/mrdsrg.cc
 src/mrdsrg-spin-integrated/mrdsrg_amplitude.cc
 src/mrdsrg-spin-integrated/mrdsrg_commutator.cc
