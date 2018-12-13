@@ -99,14 +99,14 @@ src/sparse_ci/stl_bitset_string.cc
 src/sparse_ci/sorted_string_list.cc
 src/sparse_ci/ui64_determinant.cc
 src/sparse_ci/ui64_determinant_functions.cc
-#src/srg/methodbase.cc
-#src/srg/tensorsrg.cc
-#src/srg/tensorsrg_antihermitian_commutators.cc
-#src/srg/tensorsrg_ct.cc
-#src/srg/tensorsrg_full_commutator.cc
-#src/srg/tensorsrg_hermitian_commutator.cc
-#src/srg/tensorsrg_save.cc
-#src/srg/tensorsrg_srg.cc
+src/srg/methodbase.cc
+src/srg/tensorsrg.cc
+src/srg/tensorsrg_antihermitian_commutators.cc
+src/srg/tensorsrg_ct.cc
+src/srg/tensorsrg_full_commutator.cc
+src/srg/tensorsrg_hermitian_commutator.cc
+src/srg/tensorsrg_save.cc
+src/srg/tensorsrg_srg.cc
 src/aci/aci.cc
 src/aci/aci_build_F.cc
 src/orbital-helpers/aosubspace.cc
@@ -170,10 +170,10 @@ src/orbital-helpers/iao_builder.cc
 src/orbital-helpers/mp2_nos.cc
 src/orbital-helpers/semi_canonicalize.cc
 src/orbital-helpers/unpaired_density.cc
-#src/pci/pci.cc
-#src/pci/pci_hashvec.cc
-#src/pci/pci_simple.cc
-#src/pci/ewci.cc
+src/pci/pci.cc
+src/pci/pci_hashvec.cc
+src/pci/pci_simple.cc
+src/pci/ewci.cc
 src/v2rdm/v2rdm.cc
 )
 
