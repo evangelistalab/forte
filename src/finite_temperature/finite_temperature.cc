@@ -42,7 +42,7 @@
 #include "psi4/liboptions/liboptions.h"
 #include "psi4/libpsio/psio.hpp"
 
-#include "finite_temperature.h"
+#include "finite_temperature/finite_temperature.h"
 #include "helpers.h"
 
 namespace psi {

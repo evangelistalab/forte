@@ -54,7 +54,7 @@
 #include "fci/fci_solver.h"
 #include "fci/fci_integrals.h"
 #include "sci/fci_mo.h"
-#include "finite_temperature.h"
+#include "finite_temperature/finite_temperature.h"
 #include "helpers.h"
 #include "sci/mrci.h"
 #include "mrdsrg-so/mrdsrg_so.h"

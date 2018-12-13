@@ -75,7 +75,7 @@ src/helpers/davidson.cc
 src/dmrg/dmrgscf.cc
 src/dmrg/dmrgsolver.cc
 src/base_classes/dynamic_correlation_solver.cc
-src/finite_temperature.cc
+src/finite_temperature/finite_temperature.cc
 src/forte_old_methods.cc
 src/forte_old_options.cc
 src/forte_options.cc
