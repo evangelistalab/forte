@@ -52,7 +52,7 @@
 #include "psi4/libqt/qt.h"
 
 #include "orbital-helpers/ao_helper.h"
-#include "blockedtensorfactory.h"
+#include "helpers/blockedtensorfactory.h"
 #include "helpers/printing.h"
 #include "helpers/timer.h"
 #include "fci/fci_solver.h"

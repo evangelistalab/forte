@@ -44,7 +44,7 @@
 #include <mpi.h>
 #endif
 
-#include "blockedtensorfactory.h"
+#include "helpers/blockedtensorfactory.h"
 #include "helpers/printing.h"
 #include "helpers/timer.h"
 #include "helpers/memory.h"

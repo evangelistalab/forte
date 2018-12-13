@@ -37,7 +37,7 @@
 #include "ambit/blocked_tensor.h"
 #include "base_classes/reference.h"
 #include "helpers.h"
-#include "blockedtensorfactory.h"
+#include "helpers/blockedtensorfactory.h"
 #include "fci/fci_vector.h"
 #include "fci/fci_integrals.h"
 #include "orbital-helpers/semi_canonicalize.h"

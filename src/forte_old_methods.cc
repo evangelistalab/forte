@@ -44,7 +44,7 @@
 #include "aci/aci.h"
 #include "asci.h"
 #include "base_classes/reference.h"
-#include "blockedtensorfactory.h"
+#include "helpers/blockedtensorfactory.h"
 #include "casscf/casscf.h"
 #include "cc.h"
 #include "orbital-helpers/ci-no/ci-no.h"

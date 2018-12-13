@@ -37,7 +37,7 @@
 #include "psi4/psifiles.h"
 
 #include "helpers.h"
-#include "blockedtensorfactory.h"
+#include "helpers/blockedtensorfactory.h"
 #include "helpers/string_algorithms.h"
 
 #include "custom_integrals.h"

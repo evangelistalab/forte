@@ -40,7 +40,7 @@
 
 #include "integrals/integrals.h"
 #include "base_classes/reference.h"
-#include "blockedtensorfactory.h"
+#include "helpers/blockedtensorfactory.h"
 #include "./mrdsrg-helper/dsrg_source.h"
 #include "./mrdsrg-helper/dsrg_time.h"
 #include "sparse_ci/determinant.h"

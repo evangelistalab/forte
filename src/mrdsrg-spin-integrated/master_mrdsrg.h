@@ -13,7 +13,7 @@
 #include "fci/fci_integrals.h"
 #include "base_classes/reference.h"
 #include "helpers.h"
-#include "blockedtensorfactory.h"
+#include "helpers/blockedtensorfactory.h"
 #include "mrdsrg-helper/dsrg_source.h"
 #include "mrdsrg-helper/dsrg_time.h"
 #include "mrdsrg-helper/dsrg_tensors.h"

@@ -38,7 +38,7 @@
 
 #include "psi4/libpsi4util/PsiOutStream.h"
 
-#include "blockedtensorfactory.h"
+#include "helpers/blockedtensorfactory.h"
 #include "helpers/printing.h"
 #include "helpers/timer.h"
 #include "semi_canonicalize.h"

@@ -39,7 +39,7 @@
 #include "helpers.h"
 #include "integrals/integrals.h"
 #include "base_classes/reference.h"
-#include "blockedtensorfactory.h"
+#include "helpers/blockedtensorfactory.h"
 
 namespace psi {
 

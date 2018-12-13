@@ -65,7 +65,6 @@ src/base_classes/active_space_solver.cc
 src/orbital-helpers/avas.cc
 src/asci.cc
 src/bitset_performance.cc
-src/blockedtensorfactory.cc
 src/casscf/casscf.cc
 src/cc.cc
 src/ci_rdm/ci_rdms.cc
@@ -128,6 +127,7 @@ src/fci/string_lists.cc
 src/fci/string_oo_list.cc
 src/fci/string_vo_list.cc
 src/fci/string_vvoo_list.cc
+src/helpers/blockedtensorfactory.cc
 src/helpers/printing.cc
 src/helpers/string_algorithms.cc
 src/integrals/cholesky_integrals.cc

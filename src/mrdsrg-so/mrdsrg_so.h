@@ -39,7 +39,7 @@
 
 #include "integrals/integrals.h"
 #include "base_classes/reference.h"
-#include "blockedtensorfactory.h"
+#include "helpers/blockedtensorfactory.h"
 
 using namespace ambit;
 namespace psi {
