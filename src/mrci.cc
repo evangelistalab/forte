@@ -36,15 +36,6 @@
 #include "mrci.h"
 #include "helpers/timer.h"
 
-//#include "ci_rdm/ci_rdms.h"
-//#include "helpers.h"
-//#include "base_classes/reference.h"
-//#include "sparse_ci/determinant.h"
-//
-
-//
-//#include "operator.h"
-//
 
 namespace psi {
 namespace forte {

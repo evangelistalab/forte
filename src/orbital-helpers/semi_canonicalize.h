@@ -35,9 +35,9 @@
 #include "psi4/libmints/wavefunction.h"
 
 #include "helpers.h"
+#include "helpers/blockedtensorfactory.h"
 #include "integrals/integrals.h"
 #include "base_classes/reference.h"
-#include "blockedtensorfactory.h"
 
 namespace psi {
 

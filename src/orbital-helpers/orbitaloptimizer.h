@@ -32,7 +32,7 @@
 #include "ambit/blocked_tensor.h"
 #include "base_classes/reference.h"
 #include "helpers.h"
-#include "blockedtensorfactory.h"
+#include "helpers/blockedtensorfactory.h"
 #include "psi4/libmints/matrix.h"
 #include "psi4/libfock/jk.h"
 

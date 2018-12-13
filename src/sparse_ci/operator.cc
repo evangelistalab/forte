@@ -30,7 +30,7 @@
 
 #include "psi4/libmints/dimension.h"
 
-#include "operator.h"
+#include "sparse_ci/operator.h"
 #include "forte-def.h"
 #include "helpers/timer.h"
 

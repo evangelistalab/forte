@@ -30,7 +30,7 @@
 
 #include <numeric>
 
-#include "blockedtensorfactory.h"
+#include "helpers/blockedtensorfactory.h"
 #include "fci/fci_solver.h"
 #include "fci/fci_vector.h"
 #include "psi4/libmints/matrix.h"

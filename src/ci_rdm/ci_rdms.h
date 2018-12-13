@@ -37,7 +37,7 @@
 
 #include "sparse_ci/determinant_hashvector.h"
 #include "helpers.h"
-#include "operator.h"
+#include "sparse_ci/operator.h"
 #include "base_classes/reference.h"
 #include "sparse_ci/determinant.h"
 #include "sparse_ci/sorted_string_list.h"

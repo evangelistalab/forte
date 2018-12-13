@@ -34,7 +34,7 @@
 
 #include "sparse_ci/determinant_hashvector.h"
 #include "fci/fci_integrals.h"
-#include "operator.h"
+#include "sparse_ci/operator.h"
 #include "determinant.h"
 
 #ifdef HAVE_MPI

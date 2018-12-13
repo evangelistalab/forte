@@ -34,7 +34,7 @@
 #include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/libpsi4util/exception.h"
 
-#include "blockedtensorfactory.h"
+#include "helpers/blockedtensorfactory.h"
 
 #include "own_integrals.h"
 
