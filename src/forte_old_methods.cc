@@ -54,7 +54,6 @@
 #include "fci/fci_solver.h"
 #include "fci/fci_integrals.h"
 #include "fci_mo.h"
-#include "fcimc.h"
 #include "finite_temperature.h"
 #include "helpers.h"
 #include "mrci.h"
@@ -131,10 +130,6 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
 
     if (options.get_str("JOB_TYPE") == "MR-DSRG-PT2") {
         MCSRGPT2_MO mcsrgpt2_mo(ref_wfn, options, ints, mo_space_info);
-    }
-    if (options.get_str("JOB_TYPE") == "FCIQMC") {
-        auto fciqmc = std::make_shared<FCIQMC>(ref_wfn, options, ints, mo_space_info);
-        fciqmc->compute_energy();
     }
     if (options.get_str("JOB_TYPE") == "ASCI") {
         auto asci = std::make_shared<ASCI>(ref_wfn, options, ints, mo_space_info);
