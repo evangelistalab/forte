@@ -31,7 +31,7 @@
 
 #include "psi4/physconst.h"
 #include "fci_solver.h"
-#include "active_space_solver.h"
+#include "base_classes/active_space_solver.h"
 
 namespace psi {
 namespace forte {

@@ -77,7 +77,7 @@
 #include "pci/pci_simple.h"
 #include "reference.h"
 #include "semi_canonicalize.h"
-#include "tensorsrg.h"
+#include "srg/tensorsrg.h"
 #include "test_ambit.h"
 #include "v2rdm.h"
 #include "helpers/timer.h"

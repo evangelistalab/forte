@@ -33,7 +33,7 @@
 
 #include "boost/numeric/odeint.hpp"
 
-#include "tensorsrg.h"
+#include "srg/tensorsrg.h"
 
 using namespace psi;
 using namespace boost::numeric::odeint;
