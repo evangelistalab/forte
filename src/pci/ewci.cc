@@ -50,7 +50,7 @@
 
 #include "ewci.h"
 #include "helpers/timer.h"
-#include "ci_reference.h"
+#include "sparse_ci/ci_reference.h"
 
 using namespace psi;
 using namespace psi::forte::GeneratorType_EWCI;

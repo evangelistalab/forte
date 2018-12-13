@@ -31,7 +31,7 @@
 
 #include "forte_options.h"
 #include "ci_rdm/ci_rdms.h"
-#include "ci_reference.h"
+#include "sparse_ci/ci_reference.h"
 #include "fci/fci_integrals.h"
 #include "mrpt2.h"
 #include "orbital-helpers/unpaired_density.h"
