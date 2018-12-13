@@ -36,7 +36,7 @@
 #include "ambit/blocked_tensor.h"
 
 #include "boost/assign.hpp"
-#include "helpers.h"
+#include "helpers/mo_space_info.h"
 #include "integrals/integrals.h"
 #include "base_classes/reference.h"
 #include "helpers/blockedtensorfactory.h"

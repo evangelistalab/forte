@@ -44,7 +44,7 @@
 
 #include "helpers/blockedtensorfactory.h"
 #include "forte_options.h"
-#include "helpers.h"
+#include "helpers/mo_space_info.h"
 #include "helpers/printing.h"
 #include "helpers/timer.h"
 #include "integrals.h"

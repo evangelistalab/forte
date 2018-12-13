@@ -78,8 +78,8 @@ src/finite_temperature/finite_temperature.cc
 src/forte_old_methods.cc
 src/forte_old_options.cc
 src/forte_options.cc
-src/helpers.cc
 src/helpers/iterative_solvers.cc
+src/helpers/mo_space_info.cc
 src/main.cc
 src/sparse_ci/operator.cc
 src/options.cc

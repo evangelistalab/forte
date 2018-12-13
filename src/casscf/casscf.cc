@@ -37,6 +37,7 @@
 #include "psi4/psifiles.h"
 
 #include "helpers/printing.h"
+#include "helpers/helpers.h"
 #include "helpers/timer.h"
 #include "sci/aci.h"
 #include "fci/fci_solver.h"

@@ -35,6 +35,7 @@
 #include "helpers/iterative_solvers.h"
 
 #include "fci_solver.h"
+#include "helpers/helpers.h"
 
 #ifdef HAVE_GA
 #include <ga.h>

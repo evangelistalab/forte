@@ -34,7 +34,7 @@
 #include "psi4/libfock/jk.h"
 #include "base_classes/reference.h"
 #include "integrals/integrals.h"
-#include "helpers.h"
+#include "helpers/mo_space_info.h"
 
 #include "chemps2/Irreps.h"
 #include "chemps2/Problem.h"

@@ -39,7 +39,7 @@
 #include "integrals/integrals.h"
 #include "sparse_ci/determinant.h"
 #include "sparse_ci/sparse_ci_solver.h"
-#include "helpers.h"
+#include "helpers/mo_space_info.h"
 #include "fci/fci_vector.h"
 #include "forte_options.h"
 

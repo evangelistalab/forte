@@ -57,7 +57,7 @@
 
 #include "ambit/blocked_tensor.h"
 #include "dmrgscf.h"
-#include "helpers.h"
+#include "helpers/mo_space_info.h"
 #include "integrals/integrals.h"
 
 // This allows us to be lazy in getting the spaces in DPD calls

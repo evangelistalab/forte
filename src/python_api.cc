@@ -34,7 +34,7 @@
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libmints/wavefunction.h"
 
-#include "helpers.h"
+#include "helpers/mo_space_info.h"
 #include "integrals/integrals.h"
 #include "orbital-helpers/localize.h"
 #include "forte.h"

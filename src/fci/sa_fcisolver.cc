@@ -36,6 +36,7 @@
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/pointgrp.h"
 
+#include "helpers/helpers.h"
 #include "sa_fcisolver.h"
 
 namespace psi {

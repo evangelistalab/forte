@@ -32,6 +32,7 @@
 #include "psi4/libmints/pointgrp.h"
 #include "psi4/libpsio/psio.hpp"
 #include "helpers/timer.h"
+#include "helpers/helpers.h"
 #include "helpers/printing.h"
 #include "asci.h"
 

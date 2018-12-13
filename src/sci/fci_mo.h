@@ -39,7 +39,8 @@
 #include "ambit/tensor.h"
 
 #include "ci_rdm/ci_rdms.h"
-#include "helpers.h"
+#include "helpers/mo_space_info.h"
+#include "helpers/helpers.h"
 #include "integrals/integrals.h"
 #include "base_classes/reference.h"
 #include "sparse_ci/sparse_ci_solver.h"

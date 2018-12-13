@@ -12,7 +12,7 @@
 #include "integrals/integrals.h"
 #include "fci/fci_integrals.h"
 #include "base_classes/reference.h"
-#include "helpers.h"
+#include "helpers/mo_space_info.h"
 #include "helpers/blockedtensorfactory.h"
 #include "mrdsrg-helper/dsrg_source.h"
 #include "mrdsrg-helper/dsrg_time.h"

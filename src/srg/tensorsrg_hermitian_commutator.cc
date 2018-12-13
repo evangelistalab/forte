@@ -31,7 +31,7 @@
 #include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/psi4-dec.h"
 #include "helpers/timer.h"
-#include "helpers.h"
+#include "helpers/mo_space_info.h"
 #include "srg/tensorsrg.h"
 
 using namespace psi;

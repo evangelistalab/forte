@@ -37,6 +37,7 @@
 
 #include "helpers/blockedtensorfactory.h"
 #include "helpers/printing.h"
+#include "helpers/helpers.h"
 #include "so-mrdsrg.h"
 
 #define ISA(x) (x < nactv)

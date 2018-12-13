@@ -33,7 +33,7 @@
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/libmints/local.h"
 
-#include "helpers.h"
+#include "helpers/mo_space_info.h"
 #include "integrals/integrals.h"
 #include "base_classes/reference.h"
 #include "iao_builder.h"

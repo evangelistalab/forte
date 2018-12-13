@@ -28,7 +28,7 @@
 
 #include "methodbase.h"
 
-#include "helpers.h"
+#include "helpers/mo_space_info.h"
 #include "psi4/libpsio/psio.h"
 #include "psi4/libpsio/psio.hpp"
 

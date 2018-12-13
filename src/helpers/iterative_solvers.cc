@@ -31,7 +31,7 @@
 #include "psi4/libpsi4util/PsiOutStream.h"
 
 #include "helpers/timer.h"
-#include "helpers.h"
+#include "helpers/mo_space_info.h"
 #include "helpers/iterative_solvers.h"
 
 #define PRINT_VARS(msg)                                                                            \

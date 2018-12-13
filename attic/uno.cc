@@ -27,7 +27,7 @@
  */
 
 #include "uno.h"
-#include "helpers.h"
+#include "helpers/mo_space_info.h"
 #include <cmath>
 #include <cstdio>
 #include <libmints/basisset.h>

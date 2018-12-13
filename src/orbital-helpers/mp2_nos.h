@@ -32,7 +32,7 @@
 #include "psi4/liboptions/liboptions.h"
 #include "psi4/libmints/wavefunction.h"
 
-#include "helpers.h"
+#include "helpers/mo_space_info.h"
 #include "integrals/integrals.h"
 #include "base_classes/reference.h"
 

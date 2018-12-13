@@ -36,7 +36,7 @@
 #include "psi4/psi4-dec.h"
 #include "psi4/psifiles.h"
 
-#include "helpers.h"
+#include "helpers/mo_space_info.h"
 #include "helpers/blockedtensorfactory.h"
 #include "helpers/string_algorithms.h"
 

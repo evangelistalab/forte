@@ -34,7 +34,7 @@
 #include "sparse_ci/determinant_hashvector.h"
 #include "sparse_ci/determinant.h"
 #include "sparse_ci/sorted_string_list.h"
-#include "helpers.h"
+#include "helpers/mo_space_info.h"
 
 namespace psi {
 namespace forte {

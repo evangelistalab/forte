@@ -32,7 +32,7 @@
 #include "psi4/psi4-dec.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
 
-#include "helpers.h"
+#include "helpers/mo_space_info.h"
 #include "sq.h"
 
 using namespace psi;

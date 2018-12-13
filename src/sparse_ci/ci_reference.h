@@ -35,7 +35,7 @@
 
 #include "fci/fci_integrals.h"
 #include "sparse_ci/determinant.h"
-#include "helpers.h"
+#include "helpers/mo_space_info.h"
 
 namespace psi {
 namespace forte {

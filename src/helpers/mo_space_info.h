@@ -27,8 +27,8 @@
  * @END LICENSE
  */
 
-#ifndef _helpers_h_
-#define _helpers_h_
+#ifndef _mo_space_info_h_
+#define _mo_space_info_h_
 
 #include <algorithm>
 #include <chrono>
@@ -165,149 +165,7 @@ class MOSpaceInfo {
     std::vector<size_t> mo_to_cmo_;
 };
 
-/**
- * @brief tensor_to_matrix
- * @param t The input tensor
- * @param dims Dimensions of the matrix extracted from the tensor
- * @return A copy of the tensor data in symmetry blocked form
- */
-Matrix tensor_to_matrix(ambit::Tensor t, Dimension dims);
+} // namespace forte
+} // namespace psi
 
-SharedMatrix tensor_to_matrix(ambit::Tensor t);
-
-/// Save a vector of double to file
-void write_disk_vector_double(const std::string& filename, const std::vector<double>& data);
-
-/// Read a vector of double from file
-void read_disk_vector_double(const std::string& filename, std::vector<double>& data);
-
-/**
- * @brief view_modified_orbitals Write orbitals using molden
- * @param Ca  The Ca matrix to be viewed with MOLDEN
- * @param diag_F -> The Orbital energies (diagonal elements of Fock operator)
- * @param occupation -> occupation vector
- */
-void view_modified_orbitals(SharedWavefunction wfn, const std::shared_ptr<Matrix>& Ca,
-                            const std::shared_ptr<Vector>& diag_F,
-                            const std::shared_ptr<Vector>& occupation);
-
-/**
- * @brief print_h2 Print a header
- * @param text The string to print in the header.
- * @param left_separator The left separator (default = "==>")
- * @param right_separator The right separator (default = "<==")
- */
-void print_h2(const std::string& text, const std::string& left_separator = "==>",
-              const std::string& right_separator = "<==");
-
-/**
- * Returns the Ms as a string, using
- * fractions if needed
- */
-std::string get_ms_string(double twice_ms);
-
-std::string to_string(const std::vector<std::string>& vec_str, const std::string& sep = ",");
-
-/**
- * @brief Compute the memory (in GB) required to store arrays
- * @typename T The data typename
- * @param num_el The number of elements to store
- * @return The size in GB
- */
-template <typename T> double to_gb(T num_el) {
-    return static_cast<double>(num_el) * static_cast<double>(sizeof(T)) / 1073741824.0;
-}
-
-/**
- * @brief Compute the memory requirement
- * @param nele The number of elements for storage
- * @param type_size The size of the data type
- * @return A pair of size in appropriate unit (B, KB, MB, GB, TB, PB)
- */
-std::pair<double, std::string> to_xb(size_t nele, size_t type_size);
-
-/**
- * @brief split up a vector into different processors
- * @param size_t size_of_tasks
- * @param nproc (the global number of processors)
- * @return a pair of vectors -> pair.0 -> start for each processor
- *                           -> pair.1 -> end or each processor
- */
-std::pair<std::vector<int>, std::vector<int>> split_up_tasks(size_t size_of_tasks, int nproc);
-
-template <typename T, typename Compare>
-std::vector<std::size_t> sort_permutation(const std::vector<T>& vec, Compare& compare) {
-    std::vector<std::size_t> p(vec.size());
-    std::iota(p.begin(), p.end(), 0);
-    std::sort(p.begin(), p.end(),
-              [&](std::size_t i, std::size_t j) { return compare(vec[i], vec[j]); });
-    return p;
-}
-
-template <typename T>
-void apply_permutation_in_place(std::vector<T>& vec, const std::vector<std::size_t>& p) {
-    std::vector<bool> done(vec.size());
-    for (std::size_t i = 0; i < vec.size(); ++i) {
-        if (done[i]) {
-            continue;
-        }
-        done[i] = true;
-        std::size_t prev_j = i;
-        std::size_t j = p[i];
-        while (i != j) {
-            std::swap(vec[prev_j], vec[j]);
-            done[j] = true;
-            prev_j = j;
-            j = p[j];
-        }
-    }
-}
-
-/**
-  * @brief A timer class that prints timing to a file (timer.dat)
-  */
-class timer {
-  public:
-    timer(const std::string& name) : name_(name) { timer_on(name_); }
-    ~timer() { stop(); }
-
-    /// Return the elapsed time in seconds
-    void stop() {
-        if (running_) {
-            running_ = false;
-            timer_off(name_);
-        }
-    }
-
-  private:
-    std::string name_;
-    bool running_ = true;
-};
-
-/**
-  * @brief A timer class
-  */
-class parallel_timer {
-  public:
-    parallel_timer(const std::string& name, int rank) : name_(name), rank_(rank) {
-        parallel_timer_on(name_, rank_);
-    }
-    ~parallel_timer() { stop(); }
-
-    /// Return the elapsed time in seconds
-    void stop() {
-        if (running_) {
-            running_ = false;
-            parallel_timer_off(name_, rank_);
-        }
-    }
-
-  private:
-    std::string name_;
-    int rank_;
-    bool running_ = true;
-};
-}
-} // End Namespaces
-
-#endif // _helpers_h_
+#endif // _mo_space_info_h_

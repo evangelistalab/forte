@@ -30,6 +30,8 @@
 #ifndef _helpers_timer_h_
 #define _helpers_timer_h_
 
+#include "psi4/libqt/qt.h"
+
 #include <chrono>
 
 namespace psi {
@@ -51,6 +53,51 @@ class local_timer {
   private:
     /// stores the time when this object is created
     std::chrono::high_resolution_clock::time_point start_;
+};
+
+/**
+  * @brief A timer class that prints timing to a file (timer.dat)
+  */
+class timer {
+  public:
+    timer(const std::string& name) : name_(name) { timer_on(name_); }
+    ~timer() { stop(); }
+
+    /// Return the elapsed time in seconds
+    void stop() {
+        if (running_) {
+            running_ = false;
+            timer_off(name_);
+        }
+    }
+
+  private:
+    std::string name_;
+    bool running_ = true;
+};
+
+/**
+  * @brief A timer class
+  */
+class parallel_timer {
+  public:
+    parallel_timer(const std::string& name, int rank) : name_(name), rank_(rank) {
+        parallel_timer_on(name_, rank_);
+    }
+    ~parallel_timer() { stop(); }
+
+    /// Return the elapsed time in seconds
+    void stop() {
+        if (running_) {
+            running_ = false;
+            parallel_timer_off(name_, rank_);
+        }
+    }
+
+  private:
+    std::string name_;
+    int rank_;
+    bool running_ = true;
 };
 }
 } // End Namespaces

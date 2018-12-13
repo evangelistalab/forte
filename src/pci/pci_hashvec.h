@@ -40,7 +40,7 @@
 #include "forte-def.h"
 #include "forte_options.h"
 #include "helpers/hash_vector.h"
-#include "helpers.h"
+#include "helpers/mo_space_info.h"
 #include "integrals/integrals.h"
 #include "sparse_ci/sparse_ci_solver.h"
 #include "sparse_ci/determinant.h"

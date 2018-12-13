@@ -31,7 +31,7 @@
 
 #include <ambit/tensor.h>
 #include "integrals/integrals.h"
-#include "helpers.h"
+#include "helpers/mo_space_info.h"
 
 namespace psi {
 namespace forte {

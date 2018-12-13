@@ -33,6 +33,7 @@
 #include "sparse_ci/operator.h"
 #include "forte-def.h"
 #include "helpers/timer.h"
+#include "helpers/helpers.h"
 
 #ifdef _OPENMP
 #include <omp.h>

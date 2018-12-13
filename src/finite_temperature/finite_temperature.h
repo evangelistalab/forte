@@ -35,7 +35,7 @@
 #include <vector>
 #include "psi4/psi4-dec.h"
 #include "psi4/liboptions/liboptions.h"
-#include "helpers.h"
+#include "helpers/mo_space_info.h"
 #include "psi4/libscf_solver/rhf.h"
 
 namespace psi {
