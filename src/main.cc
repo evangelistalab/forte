@@ -40,7 +40,7 @@ namespace py = pybind11;
 
 #include "psi4/libpsi4util/process.h"
 
-#include "aosubspace/aosubspace.h"
+#include "orbital-helpers/aosubspace.h"
 #include "avas.h"
 #include "forte_options.h"
 #include "helpers.h"
