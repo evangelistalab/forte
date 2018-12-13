@@ -43,8 +43,9 @@
 
 #include "aci/aci.h"
 #include "asci.h"
+#include "base_classes/reference.h"
 #include "blockedtensorfactory.h"
-#include "casscf.h"
+#include "base_classes/casscf.h"
 #include "cc.h"
 #include "orbital-helpers/ci-no/ci-no.h"
 #include "orbital-helpers/ci-no/mrci-no.h"
@@ -56,12 +57,6 @@
 #include "fcimc.h"
 #include "finite_temperature.h"
 #include "helpers.h"
-<<<<<<< HEAD
-#include "mcsrgpt2_mo.h"
-#include "orbital-helpers/mp2_nos.h"
-=======
-#include "mp2_nos.h"
->>>>>>> c5e78e02e17bf8d42d19030e9b0df7024c133623
 #include "mrci.h"
 #include "mrdsrg-so/mrdsrg_so.h"
 #include "mrdsrg-so/so-mrdsrg.h"
@@ -76,12 +71,12 @@
 #include "mrdsrg-spin-integrated/dwms_mrpt2.h"
 #include "orbital-helpers/localize.h"
 #include "orbital-helpers/es-nos.h"
+#include "orbital-helpers/mp2_nos.h"
 #include "orbital-helpers/semi_canonicalize.h"
 #include "pci/ewci.h"
 #include "pci/pci.h"
 #include "pci/pci_hashvec.h"
 #include "pci/pci_simple.h"
-#include "base_classes/reference.h"
 #include "semi_canonicalize.h"
 #include "srg/tensorsrg.h"
 #include "test_ambit.h"

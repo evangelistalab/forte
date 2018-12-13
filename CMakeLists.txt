@@ -66,7 +66,7 @@ src/orbital-helpers/avas.cc
 src/asci.cc
 src/bitset_performance.cc
 src/blockedtensorfactory.cc
-src/casscf.cc
+src/base_classes/casscf.cc
 src/cc.cc
 src/ci_rdm/ci_rdms.cc
 src/ci_rdm/ci_rdms_dynamic.cc
@@ -86,7 +86,6 @@ src/helpers.cc
 src/iterative_solvers.cc
 src/main.cc
 src/mcsrgpt2_mo.cc
-src/orbital-helpers/mp2_nos.cc
 src/mrci.cc
 src/mrpt2.cc
 src/operator.cc
@@ -170,6 +169,7 @@ src/orbital-helpers/ao_helper.cc
 src/orbital-helpers/es-nos.cc
 src/orbital-helpers/localize.cc
 src/orbital-helpers/iao_builder.cc
+src/orbital-helpers/mp2_nos.cc
 src/orbital-helpers/semi_canonicalize.cc
 src/orbital-helpers/unpaired_density.cc
 src/pci/pci.cc
