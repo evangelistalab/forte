@@ -62,8 +62,7 @@ endif()
 # List of CC files
 add_psi4_plugin(forte
 src/base_classes/active_space_solver.cc
-src/ao_helper.cc
-src/avas.cc
+src/orbital-helpers/avas.cc
 src/asci.cc
 src/bitset_performance.cc
 src/blockedtensorfactory.cc
@@ -114,10 +113,9 @@ src/srg/tensorsrg_hermitian_commutator.cc
 src/srg/tensorsrg_save.cc
 src/srg/tensorsrg_srg.cc
 src/test_ambit.cc
-src/v2rdm.cc
 src/aci/aci.cc
 src/aci/aci_build_F.cc
-src/aosubspace/aosubspace.cc
+src/orbital-helpers/aosubspace.cc
 src/ci-no/ci-no.cc
 src/ci-no/mrci-no.cc
 src/fci/binary_graph.cc
@@ -177,6 +175,7 @@ src/pci/pci.cc
 src/pci/pci_hashvec.cc
 src/pci/pci_simple.cc
 src/pci/ewci.cc
+src/v2rdm/v2rdm.cc
 )
 
 target_link_libraries(forte PRIVATE ambit::ambit)
