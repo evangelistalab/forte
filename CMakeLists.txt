@@ -91,7 +91,7 @@ src/mrci.cc
 src/mrpt2.cc
 src/operator.cc
 src/options.cc
-src/orbitaloptimizer.cc
+src/orbital-helpers/orbitaloptimizer.cc
 src/python_api.cc
 src/reference.cc
 src/sa_fcisolver.cc
