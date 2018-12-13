@@ -42,9 +42,9 @@
 #include "fci/fci_solver.h"
 
 #include "fci_mo.h"
+#include "fci/sa_fcisolver.h"
 #include "orbital-helpers/mp2_nos.h"
 #include "orbital-helpers/orbitaloptimizer.h"
-#include "sa_fcisolver.h"
 #include "orbital-helpers/semi_canonicalize.h"
 
 #ifdef HAVE_CHEMPS2

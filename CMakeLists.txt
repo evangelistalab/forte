@@ -92,7 +92,6 @@ src/options.cc
 src/orbital-helpers/orbitaloptimizer.cc
 src/python_api.cc
 src/base_classes/reference.cc
-src/sa_fcisolver.cc
 src/sparse_ci/sparse_ci_solver.cc
 src/sparse_ci/sigma_vector.cc
 src/sparse_ci/sigma_vector_dynamic.cc
@@ -118,6 +117,7 @@ src/orbital-helpers/ci-no/mrci-no.cc
 src/fci/binary_graph.cc
 src/fci/fci.cc
 src/fci/fci_integrals.cc
+src/fci/sa_fcisolver.cc
 src/fci/fci_solver.cc
 src/fci/fci_vector.cc
 src/fci/fci_vector_h_diag.cc
