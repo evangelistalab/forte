@@ -78,7 +78,7 @@ void LOCALIZE::localize() {
     if( (local_type_ == "FULL_BOYS") or (local_type_ == "FULL_PM") ) {
         full_localize();
     } else if( (local_type_ == "SPLIT_BOYS") or (local_type_ == "SPLIT_PM") ){
-        full_localize();
+        split_localize();
     }
 }
 
@@ -131,7 +131,7 @@ void LOCALIZE::split_localize() {
     psi::SharedMatrix Lact;
     psi::SharedMatrix Uact;
     if (multiplicity_ == 3) {
-        std::shared_ptr<Localizer> loc_c = Localizer::build(local_type_, primary, Caact);
+        std::shared_ptr<Localizer> loc_c = Localizer::build(local_method_, primary, Caact);
         loc_c->localize();
         Lact = loc_c->L();
         Uact = loc_c->U();
@@ -189,7 +189,7 @@ void LOCALIZE::full_localize() {
     // Localize all active together
     std::shared_ptr<psi::BasisSet> primary = ints_->basisset();
 
-    std::shared_ptr<Localizer> loc_a = Localizer::build(local_type_, primary, Caact);
+    std::shared_ptr<Localizer> loc_a = Localizer::build(local_method_, primary, Caact);
     loc_a->localize();
 
     psi::SharedMatrix Laocc = loc_a->L();
