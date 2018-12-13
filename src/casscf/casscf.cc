@@ -38,7 +38,7 @@
 
 #include "helpers/printing.h"
 #include "helpers/timer.h"
-#include "aci/aci.h"
+#include "sci/aci.h"
 #include "fci/fci_solver.h"
 
 #include "fci_mo.h"

@@ -41,7 +41,7 @@
 #include "ambit/blocked_tensor.h"
 
 //#include "boost/assign.hpp"
-#include "aci/aci.h"
+#include "sci/aci.h"
 #include "integrals/integrals.h"
 #include "base_classes/reference.h"
 #include "helpers.h"

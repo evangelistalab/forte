@@ -63,7 +63,7 @@ endif()
 add_psi4_plugin(forte
 src/base_classes/active_space_solver.cc
 src/orbital-helpers/avas.cc
-src/asci.cc
+src/sci/asci.cc
 src/bitset_performance.cc
 src/casscf/casscf.cc
 src/cc/cc.cc
@@ -84,8 +84,8 @@ src/forte_options.cc
 src/helpers.cc
 src/helpers/iterative_solvers.cc
 src/main.cc
-src/mrci.cc
-src/mrpt2.cc
+src/sci/mrci.cc
+src/sci/mrpt2.cc
 src/sparse_ci/operator.cc
 src/options.cc
 src/orbital-helpers/orbitaloptimizer.cc
@@ -107,8 +107,8 @@ src/srg/tensorsrg_full_commutator.cc
 src/srg/tensorsrg_hermitian_commutator.cc
 src/srg/tensorsrg_save.cc
 src/srg/tensorsrg_srg.cc
-src/aci/aci.cc
-src/aci/aci_build_F.cc
+src/sci/aci.cc
+src/sci/aci_build_F.cc
 src/orbital-helpers/aosubspace.cc
 src/orbital-helpers/ci-no/ci-no.cc
 src/orbital-helpers/ci-no/mrci-no.cc
