@@ -26,7 +26,7 @@
  * @END LICENSE
  */
 
-#include "casscf.h"
+#include "casscf/casscf.h"
 #include "integrals/integrals.h"
 #include "base_classes/reference.h"
 
