@@ -1,4 +1,4 @@
-#include "dynamic_correlation_solver.h"
+#include "base_classes/dynamic_correlation_solver.h"
 
 namespace psi {
 namespace forte {

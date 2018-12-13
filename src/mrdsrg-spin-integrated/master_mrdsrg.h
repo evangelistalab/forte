@@ -8,7 +8,7 @@
 #include "ambit/tensor.h"
 #include "ambit/blocked_tensor.h"
 
-#include "dynamic_correlation_solver.h"
+#include "base_classes/dynamic_correlation_solver.h"
 #include "integrals/integrals.h"
 #include "fci/fci_integrals.h"
 #include "reference.h"
