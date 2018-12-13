@@ -57,8 +57,8 @@ namespace py = pybind11;
 #include "psi4/psi4-dec.h"
 
 #ifdef HAVE_CHEMPS2
-#include "dmrgscf.h"
-#include "dmrgsolver.h"
+#include "dmrg/dmrgscf.h"
+#include "dmrg/dmrgsolver.h"
 #endif
 
 #ifdef HAVE_GA

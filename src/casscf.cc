@@ -48,7 +48,7 @@
 #include "orbital-helpers/semi_canonicalize.h"
 
 #ifdef HAVE_CHEMPS2
-#include "dmrgsolver.h"
+#include "dmrg/dmrgsolver.h"
 #endif
 #include "psi4/libdiis/diisentry.h"
 #include "psi4/libdiis/diismanager.h"

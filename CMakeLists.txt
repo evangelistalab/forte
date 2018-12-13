@@ -73,8 +73,8 @@ src/ci_rdm/ci_rdms_dynamic.cc
 src/ci_reference.cc
 src/davidson.cc
 src/determinant_hashvector.cc
-src/dmrgscf.cc
-src/dmrgsolver.cc
+src/dmrg/dmrgscf.cc
+src/dmrg/dmrgsolver.cc
 src/base_classes/dynamic_correlation_solver.cc
 src/fci_mo.cc
 src/fcimc.cc
@@ -85,12 +85,8 @@ src/forte_options.cc
 src/helpers.cc
 src/iterative_solvers.cc
 src/main.cc
-<<<<<<< HEAD
 src/mcsrgpt2_mo.cc
 src/orbital-helpers/mp2_nos.cc
-=======
-src/mp2_nos.cc
->>>>>>> c5e78e02e17bf8d42d19030e9b0df7024c133623
 src/mrci.cc
 src/mrpt2.cc
 src/operator.cc

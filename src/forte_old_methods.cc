@@ -81,20 +81,16 @@
 #include "pci/pci.h"
 #include "pci/pci_hashvec.h"
 #include "pci/pci_simple.h"
-<<<<<<< HEAD
 #include "base_classes/reference.h"
 #include "semi_canonicalize.h"
-=======
-#include "reference.h"
->>>>>>> c5e78e02e17bf8d42d19030e9b0df7024c133623
 #include "srg/tensorsrg.h"
 #include "test_ambit.h"
 #include "v2rdm/v2rdm.h"
 #include "helpers/timer.h"
 
 #ifdef HAVE_CHEMPS2
-#include "dmrgscf.h"
-#include "dmrgsolver.h"
+#include "dmrg/dmrgscf.h"
+#include "dmrg/dmrgsolver.h"
 #endif
 
 #ifdef HAVE_GA
