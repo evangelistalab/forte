@@ -33,7 +33,7 @@
 
 #include "psi4/libmints/molecule.h"
 
-#include "cc.h"
+#include "cc/cc.h"
 #include "helpers.h"
 
 namespace psi {
