@@ -77,7 +77,7 @@ namespace psi {
 namespace forte {
 
 /// These functions replace the Memory Allocator in GA with C/C++ allocator.
-void* replace_malloc(size_t bytes, int align, char* name) { return malloc(bytes); }
+void* replace_malloc(size_t bytes, int, char*) { return malloc(bytes); }
 void replace_free(void* ptr) { free(ptr); }
 
 /**

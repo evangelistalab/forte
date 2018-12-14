@@ -102,14 +102,6 @@ src/sparse_ci/stl_bitset_string.cc
 src/sparse_ci/sorted_string_list.cc
 src/sparse_ci/ui64_determinant.cc
 src/sparse_ci/ui64_determinant_functions.cc
-src/srg/methodbase.cc
-src/srg/tensorsrg.cc
-src/srg/tensorsrg_antihermitian_commutators.cc
-src/srg/tensorsrg_ct.cc
-src/srg/tensorsrg_full_commutator.cc
-src/srg/tensorsrg_hermitian_commutator.cc
-src/srg/tensorsrg_save.cc
-src/srg/tensorsrg_srg.cc
 src/orbital-helpers/aosubspace.cc
 src/orbital-helpers/ci-no/ci-no.cc
 src/orbital-helpers/ci-no/mrci-no.cc

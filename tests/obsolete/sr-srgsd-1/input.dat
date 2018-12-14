@@ -1,5 +1,4 @@
-
-import libadaptive
+import forte
 
 refscf = -14.35188047620 #TEST
 refsrg = -14.413732415377 #TEST
@@ -15,7 +14,8 @@ set {
   e_convergence 12
 }
 
-set libadaptive {
+set forte {
+  job_type TENSORSRG
   srg_eta white
   srg_smax 30.0
   srg_odeint FEHLBERG78
@@ -25,7 +25,7 @@ set libadaptive {
   SRG_ODEINT_RELERR 1.0e-6
 }
 
-energy('sr-srgsd')
+energy('forte')
 
 compare_values(refscf, variable("SCF total energy"),10, "SCF energy") #TEST
 compare_values(refsrg, variable("CURRENT ENERGY"),10, "SR-SRGSD energy") #TEST
