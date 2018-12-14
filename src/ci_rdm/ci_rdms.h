@@ -35,10 +35,10 @@
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/liboptions/liboptions.h"
 
-#include "determinant_hashvector.h"
-#include "helpers.h"
-#include "operator.h"
-#include "reference.h"
+#include "sparse_ci/determinant_hashvector.h"
+#include "helpers/mo_space_info.h"
+#include "sparse_ci/operator.h"
+#include "base_classes/reference.h"
 #include "sparse_ci/determinant.h"
 #include "sparse_ci/sorted_string_list.h"
 #include "fci/string_lists.h"
@@ -64,7 +64,7 @@ class CI_RDMS {
 
     //*** Notes on RDM class:
     // All rdms are stored in spin-labeled vector format.
-    // They are accessed in the standard way. E.g., for the alpha/alpha 2-RDM, 
+    // They are accessed in the standard way. E.g., for the alpha/alpha 2-RDM,
     // the element corresponding to p,q,r,s would be accessed with:
     // tp2rdm_aa[p*ncmo^(3) + q*nmco^(2) + r*ncmo + s], where ncmo is the number
     // of active orbitals.
@@ -75,10 +75,10 @@ class CI_RDMS {
     // corresponding WFNOperator object to avoid recomputing them.
 
     // In cases where these coupling lists are prohibitively large, a dynamic
-    // build is also available. This code relies on the UI64Determinant class, 
+    // build is also available. This code relies on the UI64Determinant class,
     // so be sure this is enabled. Also, the most efficient algorithm computes
     // all RDMs (1,2 and 3) in one function, but soon I'll write functions to grab
-    // separate RDMs (however, these should be avoided). 
+    // separate RDMs (however, these should be avoided).
     //***
 
 
@@ -119,7 +119,7 @@ class CI_RDMS {
     //                          std::vector<double>& tprdm_aab,
     //                          std::vector<double>& tprdm_abb,
     //                          std::vector<double>& tprdm_bbb);
-    void compute_rdms_dynamic(std::vector<double>& oprdm_a, 
+    void compute_rdms_dynamic(std::vector<double>& oprdm_a,
                               std::vector<double>& oprdm_b,
                               std::vector<double>& tprdm_aa,
                               std::vector<double>& tprdm_ab,
@@ -285,7 +285,7 @@ class CI_RDMS {
     void fill_3rdm( std::vector<double>& tprdm, double value, int p, int q, int r, int s, int t, int u , bool half = false);
 
     // Function to build non-trivial mixed-spin components of 1-, 2-, and 3- RDMs
-    void make_ab(SortedStringList_UI64 a_sorted_string_list_,const  std::vector<UI64Determinant::bit_t>& sorted_astr,const std::vector<UI64Determinant>& sorted_a_dets, 
+    void make_ab(SortedStringList_UI64 a_sorted_string_list_,const  std::vector<UI64Determinant::bit_t>& sorted_astr,const std::vector<UI64Determinant>& sorted_a_dets,
                 std::vector<double>& tprdm_ab, std::vector<double>& tprdm_aab,std::vector<double>& tprdm_abb);
 };
 }

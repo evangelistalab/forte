@@ -36,7 +36,7 @@
 #include "psi4/libqt/qt.h"
 
 #include "forte-def.h"
-#include "iterative_solvers.h"
+#include "helpers/iterative_solvers.h"
 #include "sparse_ci_solver.h"
 #include "sigma_vector_dynamic.h"
 

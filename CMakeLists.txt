@@ -22,7 +22,7 @@ option_with_print(ENABLE_CheMPS2 "Enable CheMPS2 solver" OFF)
 option_with_print(ENABLE_OPENMP "Enable threadsafe linking to OpenMP parallelized programs" ON)
 option_with_print(ENABLE_MPI "Enable MPI parallelization" OFF)
 option_with_print(ENABLE_GA "Enable Global Arrays" OFF)
-option_with_print(MAX_DET_ORB "Set the maximum number of orbitals in a determinant" 64)
+option_with_print(MAX_DET_ORB "Set the maximum number of orbitals in a determinant" OFF)
 #option_with_print(ENABLE_GENERIC "Enable mostly static linking in shared library" OFF)
 
 include(autocmake_omp)
@@ -38,13 +38,13 @@ if(ENABLE_CheMPS2)
     find_package(CheMPS2 1.8.3 CONFIG REQUIRED)
 endif()
 
-set(Boost_USE_STATIC_LIBS OFF) 
-set(Boost_USE_MULTITHREADED ON)  
-set(Boost_USE_STATIC_RUNTIME OFF) 
-find_package(Boost REQUIRED) 
+set(Boost_USE_STATIC_LIBS OFF)
+set(Boost_USE_MULTITHREADED ON)
+set(Boost_USE_STATIC_RUNTIME OFF)
+find_package(Boost REQUIRED)
 
 if(Boost_FOUND)
-    include_directories(${Boost_INCLUDE_DIRS}) 
+    include_directories(${Boost_INCLUDE_DIRS})
 #    target_link_libraries(forte ${Boost_LIBRARIES})
 endif()
 
@@ -58,46 +58,42 @@ if(SSE42_FLAG)
     message("-- Adding SSE4.2 Flag")
     set(CMAKE_CXX_FLAGS "-msse4.2")
 endif()
+add_compile_options(-Wall -Wextra -pedantic) # -Werror)
 
 # List of CC files
 add_psi4_plugin(forte
-src/active_space_solver.cc
-src/ao_helper.cc
-src/avas.cc
-src/asci.cc
-src/bitset_performance.cc
-src/blockedtensorfactory.cc
-src/casscf.cc
-src/cc.cc
+src/base_classes/active_space_solver.cc
+src/orbital-helpers/avas.cc
+src/casscf/casscf.cc
+src/cc/cc.cc
 src/ci_rdm/ci_rdms.cc
 src/ci_rdm/ci_rdms_dynamic.cc
-src/ci_reference.cc
-src/davidson.cc
-src/determinant_hashvector.cc
-src/dmrgscf.cc
-src/dmrgsolver.cc
-src/dynamic_correlation_solver.cc
-src/fci_mo.cc
-src/fcimc.cc
-src/finite_temperature.cc
+src/sparse_ci/ci_reference.cc
+src/helpers/davidson.cc
+src/sparse_ci/determinant_hashvector.cc
+src/helpers/davidson.cc
+src/dmrg/dmrgscf.cc
+src/dmrg/dmrgsolver.cc
+src/base_classes/dynamic_correlation_solver.cc
+src/finite_temperature/finite_temperature.cc
 src/forte_old_methods.cc
 src/forte_old_options.cc
 src/forte_options.cc
-src/helpers.cc
-src/iterative_solvers.cc
+src/helpers/iterative_solvers.cc
+src/helpers/mo_space_info.cc
+src/helpers/helpers.cc
 src/main.cc
-src/mcsrgpt2_mo.cc
-src/methodbase.cc
-src/mp2_nos.cc
-src/mrci.cc
-src/mrpt2.cc
-src/operator.cc
+src/sparse_ci/operator.cc
 src/options.cc
-src/orbitaloptimizer.cc
+src/orbital-helpers/orbitaloptimizer.cc
 src/python_api.cc
-src/reference.cc
-src/sa_fcisolver.cc
-src/semi_canonicalize.cc
+src/base_classes/reference.cc
+src/sci/aci.cc
+src/sci/aci_build_F.cc
+src/sci/asci.cc
+src/sci/fci_mo.cc
+src/sci/mrci.cc
+src/sci/mrpt2.cc
 src/sparse_ci/sparse_ci_solver.cc
 src/sparse_ci/sigma_vector.cc
 src/sparse_ci/sigma_vector_dynamic.cc
@@ -106,23 +102,21 @@ src/sparse_ci/stl_bitset_string.cc
 src/sparse_ci/sorted_string_list.cc
 src/sparse_ci/ui64_determinant.cc
 src/sparse_ci/ui64_determinant_functions.cc
-src/tensorsrg.cc
-src/tensorsrg_antihermitian_commutators.cc
-src/tensorsrg_ct.cc
-src/tensorsrg_full_commutator.cc
-src/tensorsrg_hermitian_commutator.cc
-src/tensorsrg_save.cc
-src/tensorsrg_srg.cc
-src/test_ambit.cc
-src/v2rdm.cc
-src/aci/aci.cc
-src/aci/aci_build_F.cc
-src/aosubspace/aosubspace.cc
-src/ci-no/ci-no.cc
-src/ci-no/mrci-no.cc
+src/srg/methodbase.cc
+src/srg/tensorsrg.cc
+src/srg/tensorsrg_antihermitian_commutators.cc
+src/srg/tensorsrg_ct.cc
+src/srg/tensorsrg_full_commutator.cc
+src/srg/tensorsrg_hermitian_commutator.cc
+src/srg/tensorsrg_save.cc
+src/srg/tensorsrg_srg.cc
+src/orbital-helpers/aosubspace.cc
+src/orbital-helpers/ci-no/ci-no.cc
+src/orbital-helpers/ci-no/mrci-no.cc
 src/fci/binary_graph.cc
 src/fci/fci.cc
 src/fci/fci_integrals.cc
+src/fci/sa_fcisolver.cc
 src/fci/fci_solver.cc
 src/fci/fci_vector.cc
 src/fci/fci_vector_h_diag.cc
@@ -133,6 +127,7 @@ src/fci/string_lists.cc
 src/fci/string_oo_list.cc
 src/fci/string_vo_list.cc
 src/fci/string_vvoo_list.cc
+src/helpers/blockedtensorfactory.cc
 src/helpers/printing.cc
 src/helpers/string_algorithms.cc
 src/integrals/cholesky_integrals.cc
@@ -158,6 +153,7 @@ src/mrdsrg-spin-integrated/master_mrdsrg.cc
 src/mrdsrg-spin-integrated/dsrg_mrpt2.cc
 src/mrdsrg-spin-integrated/dsrg_mrpt2_ms.cc
 src/mrdsrg-spin-integrated/dsrg_mrpt3.cc
+src/mrdsrg-spin-integrated/mcsrgpt2_mo.cc
 src/mrdsrg-spin-integrated/mrdsrg.cc
 src/mrdsrg-spin-integrated/mrdsrg_amplitude.cc
 src/mrdsrg-spin-integrated/mrdsrg_commutator.cc
@@ -168,14 +164,18 @@ src/mrdsrg-spin-integrated/mrdsrg_srg.cc
 src/mrdsrg-spin-integrated/three_dsrg_mrpt2.cc
 src/mrdsrg-spin-integrated/active_dsrgpt2.cc
 src/mrdsrg-spin-integrated/dwms_mrpt2.cc
-src/orbital-helper/localize.cc
-src/orbital-helper/unpaired_density.cc
-src/orbital-helper/iao_builder.cc
-src/orbital-helper/es-nos.cc
+src/orbital-helpers/ao_helper.cc
+src/orbital-helpers/es-nos.cc
+src/orbital-helpers/localize.cc
+src/orbital-helpers/iao_builder.cc
+src/orbital-helpers/mp2_nos.cc
+src/orbital-helpers/semi_canonicalize.cc
+src/orbital-helpers/unpaired_density.cc
 src/pci/pci.cc
 src/pci/pci_hashvec.cc
 src/pci/pci_simple.cc
 src/pci/ewci.cc
+src/v2rdm/v2rdm.cc
 )
 
 target_link_libraries(forte PRIVATE ambit::ambit)
@@ -186,10 +186,10 @@ endif()
 target_include_directories(forte PRIVATE src)
 
 ## 64bit implementation
-if(MAX_DET_ORB EQUAL OFF)
-    add_definitions(-DMAX_DET_ORB=64)
-else()
+if(MAX_DET_ORB)
     add_definitions(-DMAX_DET_ORB=${MAX_DET_ORB})
+else()
+    add_definitions(-DMAX_DET_ORB=64)
 endif()
 
 if(ENABLE_MPI)
@@ -220,5 +220,5 @@ if (ENABLE_ForteTests)
   add_executable(forte_benchmarks
     src/sparse_ci/ui64_determinant.cc
     tests/benchmark/determinant_benchmark.cc)
-  
+
 endif (ENABLE_ForteTests)

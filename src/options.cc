@@ -26,18 +26,18 @@
  * @END LICENSE
  */
 
-#include "aci/aci.h"
-#include "asci.h"
-#include "avas.h"
-#include "ci-no/ci-no.h"
-#include "ci-no/mrci-no.h"
+#include "sci/aci.h"
+#include "sci/asci.h"
+#include "orbital-helpers/avas.h"
+#include "orbital-helpers/ci-no/ci-no.h"
+#include "orbital-helpers/ci-no/mrci-no.h"
 #include "fci/fci_solver.h"
 #include "fci/fci.h"
-#include "fci_mo.h"
+#include "sci/fci_mo.h"
 #include "forte_options.h"
 #include "integrals/integrals.h"
 #include "pci/pci.h"
-#include "reference.h"
+#include "base_classes/reference.h"
 #include "mrdsrg-helper/run_dsrg.h"
 #include "mrdsrg-spin-integrated/dwms_mrpt2.h"
 

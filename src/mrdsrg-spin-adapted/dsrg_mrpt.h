@@ -39,10 +39,11 @@
 
 #include "boost/assign.hpp"
 #include "integrals/integrals.h"
-#include "reference.h"
+#include "base_classes/reference.h"
 #include "mrdsrg-helper/dsrg_source.h"
 #include "mrdsrg-helper/dsrg_time.h"
-#include "helpers.h"
+#include "helpers/mo_space_info.h"
+#include "helpers/helpers.h"
 
 using namespace ambit;
 namespace psi {

@@ -33,7 +33,7 @@
 #include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/psi4-dec.h"
 
-#include "helpers.h"
+#include "helpers/mo_space_info.h"
 #include "fci_vector.h"
 
 namespace psi {

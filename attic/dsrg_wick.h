@@ -31,7 +31,7 @@
 
 #include "ambit/blocked_tensor.h"
 #include "sq.h"
-#include "helpers.h"
+#include "helpers/mo_space_info.h"
 
 typedef std::vector<double> d1;
 typedef std::vector<d1> d2;

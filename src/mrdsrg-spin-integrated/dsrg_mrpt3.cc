@@ -40,9 +40,9 @@
 #include "psi4/libqt/qt.h"
 
 #include "helpers/timer.h"
-#include "blockedtensorfactory.h"
+#include "helpers/blockedtensorfactory.h"
 #include "fci/fci.h"
-#include "fci_mo.h"
+#include "sci/fci_mo.h"
 #include "boost/format.hpp"
 #include "helpers/printing.h"
 #include "dsrg_mrpt3.h"

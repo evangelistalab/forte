@@ -38,8 +38,8 @@
 #include "ambit/blocked_tensor.h"
 
 #include "integrals/integrals.h"
-#include "reference.h"
-#include "blockedtensorfactory.h"
+#include "base_classes/reference.h"
+#include "helpers/blockedtensorfactory.h"
 
 using namespace ambit;
 namespace psi {

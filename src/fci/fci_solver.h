@@ -35,11 +35,11 @@
 
 #include "fci_vector.h"
 
-#include "helpers.h"
+#include "helpers/mo_space_info.h"
 #include "helpers/timer.h"
 #include "integrals/integrals.h"
 #include "string_lists.h"
-#include "reference.h"
+#include "base_classes/reference.h"
 
 namespace psi {
 namespace forte {

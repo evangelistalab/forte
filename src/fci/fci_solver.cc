@@ -32,9 +32,10 @@
 #include "boost/format.hpp"
 
 #include "sparse_ci/determinant.h"
-#include "iterative_solvers.h"
+#include "helpers/iterative_solvers.h"
 
 #include "fci_solver.h"
+#include "helpers/helpers.h"
 
 #ifdef HAVE_GA
 #include <ga.h>

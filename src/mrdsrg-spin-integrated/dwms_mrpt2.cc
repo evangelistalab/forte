@@ -9,8 +9,8 @@
 #include "dsrg_mrpt2.h"
 #include "dsrg_mrpt3.h"
 #include "three_dsrg_mrpt2.h"
-#include "fci_mo.h"
-#include "semi_canonicalize.h"
+#include "sci/fci_mo.h"
+#include "orbital-helpers/semi_canonicalize.h"
 #include "helpers/printing.h"
 
 namespace psi {

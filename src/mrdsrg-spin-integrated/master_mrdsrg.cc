@@ -3,6 +3,7 @@
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/dipole.h"
+#include "helpers/helpers.h"
 
 #include "helpers/timer.h"
 #include "master_mrdsrg.h"

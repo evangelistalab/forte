@@ -51,14 +51,14 @@
 #include "psi4/libpsio/psio.hpp"
 #include "psi4/libqt/qt.h"
 
-#include "ao_helper.h"
-#include "blockedtensorfactory.h"
+#include "orbital-helpers/ao_helper.h"
+#include "helpers/blockedtensorfactory.h"
 #include "helpers/printing.h"
 #include "helpers/timer.h"
 #include "fci/fci_solver.h"
 #include "fci/fci_vector.h"
-#include "fci_mo.h"
-#include "aci/aci.h"
+#include "sci/fci_mo.h"
+#include "sci/aci.h"
 #include "three_dsrg_mrpt2.h"
 
 using namespace ambit;

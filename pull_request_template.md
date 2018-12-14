@@ -1,11 +1,11 @@
-## PR Description
+## Description
 A brief description of the goals accomplished by this PR
 
-## PR User Notes
+## User Notes
 - [ ] Features added
 - [ ] Changes to compilation (if any)
 
-## PR Checklist
+## Checklist
 - [ ] Added tests of new features
 - [ ] Removed comments in code and input files
 - [ ] Documented source code

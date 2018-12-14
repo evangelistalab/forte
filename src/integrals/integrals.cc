@@ -42,9 +42,9 @@
 #include "psi4/psi4-dec.h"
 #include "psi4/psifiles.h"
 
-#include "blockedtensorfactory.h"
+#include "helpers/blockedtensorfactory.h"
 #include "forte_options.h"
-#include "helpers.h"
+#include "helpers/mo_space_info.h"
 #include "helpers/printing.h"
 #include "helpers/timer.h"
 #include "integrals.h"

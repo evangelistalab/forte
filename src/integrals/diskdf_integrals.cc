@@ -36,14 +36,14 @@
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/libqt/qt.h"
 
-#include "helpers.h"
+#include "helpers/mo_space_info.h"
 
 #ifdef HAVE_GA
 #include <ga.h>
 #include <macdecls.h>
 #endif
 
-#include "blockedtensorfactory.h"
+#include "helpers/blockedtensorfactory.h"
 #include "helpers/printing.h"
 #include "helpers/timer.h"
 #include "diskdf_integrals.h"

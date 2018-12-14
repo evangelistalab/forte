@@ -40,9 +40,9 @@
 
 #include "boost/assign.hpp"
 #include "integrals/integrals.h"
-#include "reference.h"
-#include "helpers.h"
-#include "blockedtensorfactory.h"
+#include "base_classes/reference.h"
+#include "helpers/mo_space_info.h"
+#include "helpers/blockedtensorfactory.h"
 #include "mrdsrg-helper/dsrg_time.h"
 #include "mrdsrg-helper/dsrg_source.h"
 #include "fci/fci_vector.h"

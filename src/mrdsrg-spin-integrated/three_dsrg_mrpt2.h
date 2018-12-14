@@ -37,8 +37,8 @@
 #include "ambit/blocked_tensor.h"
 
 #include "integrals/integrals.h"
-#include "reference.h"
-#include "blockedtensorfactory.h"
+#include "base_classes/reference.h"
+#include "helpers/blockedtensorfactory.h"
 #include "mrdsrg-helper/dsrg_source.h"
 #include "mrdsrg-helper/dsrg_time.h"
 #include "master_mrdsrg.h"

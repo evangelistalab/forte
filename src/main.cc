@@ -40,10 +40,11 @@ namespace py = pybind11;
 
 #include "psi4/libpsi4util/process.h"
 
-#include "aosubspace/aosubspace.h"
-#include "avas.h"
+#include "orbital-helpers/aosubspace.h"
+#include "orbital-helpers/avas.h"
 #include "forte_options.h"
-#include "helpers.h"
+#include "helpers/mo_space_info.h"
+#include "helpers/timer.h"
 #include "integrals/integrals.h"
 #include "integrals/cholesky_integrals.h"
 #include "integrals/custom_integrals.h"
@@ -57,8 +58,8 @@ namespace py = pybind11;
 #include "psi4/psi4-dec.h"
 
 #ifdef HAVE_CHEMPS2
-#include "dmrgscf.h"
-#include "dmrgsolver.h"
+#include "dmrg/dmrgscf.h"
+#include "dmrg/dmrgsolver.h"
 #endif
 
 #ifdef HAVE_GA
@@ -224,7 +225,8 @@ void banner() {
         "    git branch: %s - git commit: %s\n\n"
         "  Developed by:\n"
         "    Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,\n"
-        "    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai\n"
+        "    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai,"
+        "    Nan He, Nicholas Stair, Shuhe Wang, Renke Huang\n"
         "  ----------------------------------------------------------------------------\n",
         GIT_BRANCH, GIT_COMMIT_HASH);
     outfile->Printf("\n  Size of Determinant class: %d", sizeof(Determinant));

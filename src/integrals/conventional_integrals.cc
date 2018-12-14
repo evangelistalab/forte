@@ -35,8 +35,8 @@
 #include "psi4/libpsio/psio.hpp"
 #include "psi4/libtrans/integraltransform.h"
 
-#include "blockedtensorfactory.h"
-#include "helpers.h"
+#include "helpers/blockedtensorfactory.h"
+#include "helpers/mo_space_info.h"
 #include "helpers/timer.h"
 
 #include "conventional_integrals.h"

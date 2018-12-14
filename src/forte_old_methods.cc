@@ -41,50 +41,48 @@
 #include "psi4/psi4-dec.h"
 #include "psi4/psifiles.h"
 
-#include "aci/aci.h"
-#include "asci.h"
-#include "blockedtensorfactory.h"
-#include "casscf.h"
-#include "cc.h"
-#include "ci-no/ci-no.h"
-#include "ci-no/mrci-no.h"
-#include "determinant_hashvector.h"
+#include "sci/aci.h"
+#include "sci/asci.h"
+#include "base_classes/reference.h"
+#include "helpers/blockedtensorfactory.h"
+#include "casscf/casscf.h"
+#include "cc/cc.h"
+#include "orbital-helpers/ci-no/ci-no.h"
+#include "orbital-helpers/ci-no/mrci-no.h"
+#include "sparse_ci/determinant_hashvector.h"
 #include "fci/fci.h"
 #include "fci/fci_solver.h"
 #include "fci/fci_integrals.h"
-#include "fci_mo.h"
-#include "fcimc.h"
-#include "finite_temperature.h"
-#include "helpers.h"
-#include "mcsrgpt2_mo.h"
-#include "mp2_nos.h"
-#include "mrci.h"
+#include "sci/fci_mo.h"
+#include "finite_temperature/finite_temperature.h"
+#include "helpers/mo_space_info.h"
+#include "sci/mrci.h"
 #include "mrdsrg-so/mrdsrg_so.h"
 #include "mrdsrg-so/so-mrdsrg.h"
 #include "mrdsrg-spin-adapted/dsrg_mrpt.h"
 #include "mrdsrg-spin-integrated/active_dsrgpt2.h"
 #include "mrdsrg-spin-integrated/dsrg_mrpt2.h"
 #include "mrdsrg-spin-integrated/dsrg_mrpt3.h"
+#include "mrdsrg-spin-integrated/mcsrgpt2_mo.h"
 #include "mrdsrg-spin-integrated/mrdsrg.h"
 #include "mrdsrg-spin-integrated/three_dsrg_mrpt2.h"
 #include "mrdsrg-spin-integrated/active_dsrgpt2.h"
 #include "mrdsrg-spin-integrated/dwms_mrpt2.h"
-#include "orbital-helper/localize.h"
-#include "orbital-helper/es-nos.h"
+#include "orbital-helpers/localize.h"
+#include "orbital-helpers/es-nos.h"
+#include "orbital-helpers/mp2_nos.h"
+#include "orbital-helpers/semi_canonicalize.h"
 #include "pci/ewci.h"
 #include "pci/pci.h"
 #include "pci/pci_hashvec.h"
 #include "pci/pci_simple.h"
-#include "reference.h"
-#include "semi_canonicalize.h"
-#include "tensorsrg.h"
-#include "test_ambit.h"
-#include "v2rdm.h"
+#include "srg/tensorsrg.h"
+#include "v2rdm/v2rdm.h"
 #include "helpers/timer.h"
 
 #ifdef HAVE_CHEMPS2
-#include "dmrgscf.h"
-#include "dmrgsolver.h"
+#include "dmrg/dmrgscf.h"
+#include "dmrg/dmrgsolver.h"
 #endif
 
 #ifdef HAVE_GA
@@ -131,10 +129,6 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
 
     if (options.get_str("JOB_TYPE") == "MR-DSRG-PT2") {
         MCSRGPT2_MO mcsrgpt2_mo(ref_wfn, options, ints, mo_space_info);
-    }
-    if (options.get_str("JOB_TYPE") == "FCIQMC") {
-        auto fciqmc = std::make_shared<FCIQMC>(ref_wfn, options, ints, mo_space_info);
-        fciqmc->compute_energy();
     }
     if (options.get_str("JOB_TYPE") == "ASCI") {
         auto asci = std::make_shared<ASCI>(ref_wfn, options, ints, mo_space_info);
@@ -869,10 +863,6 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
         DeterminantHashVec reference = aci->get_wavefunction();
         auto mrci = std::make_shared<MRCI>(ref_wfn, options, ints, mo_space_info, reference);
         mrci->compute_energy();
-    }
-
-    if (options.get_str("JOB_TYPE") == "TEST_AMBIT") {
-        AMBIT_TEST::test_ambit();
     }
 }
 }
