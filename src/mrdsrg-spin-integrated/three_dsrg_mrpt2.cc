@@ -3965,8 +3965,8 @@ std::vector<std::vector<double>> THREE_DSRG_MRPT2::diagonalize_Fock_diagblocks(B
 ambit::Tensor THREE_DSRG_MRPT2::separate_tensor(ambit::Tensor& tens, const Dimension& irrep,
                                                 const int& h) {
     // test tens and irrep
-    int tens_dim = static_cast<int>(tens.dim(0));
-    if (tens_dim != irrep.sum() || tens_dim != static_cast<int>(tens.dim(1))) {
+    size_t tens_dim = tens.dim(0);
+    if (tens_dim != static_cast<size_t>(irrep.sum()) || tens_dim != tens.dim(1)) {
         throw PSIEXCEPTION("Wrong dimension for the to-be-separated ambit Tensor.");
     }
     if (h >= irrep.n()) {

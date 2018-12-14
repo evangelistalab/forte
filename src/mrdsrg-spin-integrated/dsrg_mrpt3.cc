@@ -2624,7 +2624,7 @@ void DSRG_MRPT3::V_T2_C2_DF(BlockedTensor& B, BlockedTensor& T2, const double& a
     mem_total_ -=
         sizeof(double) *
         (2 * (p * h - a * a) + 3 * (p * p * h * h - a * a * a * a)); // local memory used in pt3_2
-    if (mem_total_ < 0 or static_cast<size_t> (mem_total_) < v * v * sizeof(double)) {
+    if (mem_total_ < 0 or static_cast<size_t>(mem_total_) < v * v * sizeof(double)) {
         outfile->Printf("\n    Not enough memory for batching.");
         throw PSIEXCEPTION("Not enough memory for batching at DSRG-MRPT3 V_T2_C2_DF.");
     }
@@ -2776,7 +2776,7 @@ void DSRG_MRPT3::V_T2_C2_DF(BlockedTensor& B, BlockedTensor& T2, const double& a
     }
 
     // particle-particle contractions
-    if (nele_pp_max * sizeof(double) < static_cast<size_t> (mem_total_)) {
+    if (nele_pp_max * sizeof(double) < static_cast<size_t>(mem_total_)) {
 
         // set timer
         start_ = std::chrono::system_clock::now();
@@ -3069,7 +3069,7 @@ void DSRG_MRPT3::V_T2_C2_DF(BlockedTensor& B, BlockedTensor& T2, const double& a
     }
 
     // compute exchange part
-    if (nele_ph_max * sizeof(double) < static_cast<size_t> (mem_total_)) {
+    if (nele_ph_max * sizeof(double) < static_cast<size_t>(mem_total_)) {
         start_ = std::chrono::system_clock::now();
         tt1_ = std::chrono::system_clock::to_time_t(start_);
         if (profile_print_) {
@@ -5291,8 +5291,8 @@ std::vector<std::vector<double>> DSRG_MRPT3::diagonalize_Fock_diagblocks(Blocked
 ambit::Tensor DSRG_MRPT3::separate_tensor(ambit::Tensor& tens, const Dimension& irrep,
                                           const int& h) {
     // test tens and irrep
-    int tens_dim = static_cast<int>(tens.dim(0));
-    if (tens_dim != irrep.sum() || tens_dim != static_cast<int>(tens.dim(1))) {
+    size_t tens_dim = tens.dim(0);
+    if (tens_dim != static_cast<size_t>(irrep.sum()) || tens_dim != tens.dim(1)) {
         throw PSIEXCEPTION("Wrong dimension for the to-be-separated ambit Tensor.");
     }
     if (h >= irrep.n()) {
