@@ -212,7 +212,7 @@ void FCI_MO::read_options() {
 
     // compute number of electrons
     int natom = molecule->natom();
-    size_t nelec = 0;
+    int nelec = 0;
     for (int i = 0; i < natom; ++i) {
         nelec += molecule->fZ(i);
     }
@@ -321,7 +321,7 @@ void FCI_MO::read_options() {
                 offset += actv_dim_[h_local];
             }
 
-            for (size_t i = 0; i < actv_dim_[h]; ++i) {
+            for (int i = 0; i < actv_dim_[h]; ++i) {
                 if (i < actv_hole_dim_[h]) {
                     actv_hole_mos_.push_back(i + offset);
                 } else {
@@ -334,13 +334,13 @@ void FCI_MO::read_options() {
     // state averaging
     if (options_["AVG_STATE"].size() != 0) {
         size_t nstates = 0;
-        int nentry = options_["AVG_STATE"].size();
+        size_t nentry = options_["AVG_STATE"].size();
 
         // figure out total number of states
         std::vector<int> nstatespim;
         std::vector<int> irreps;
         std::vector<int> multis;
-        for (int i = 0; i < nentry; ++i) {
+        for (size_t i = 0; i < nentry; ++i) {
             if (options_["AVG_STATE"][i].size() != 3) {
                 outfile->Printf("\n  Error: invalid input of AVG_STATE. Each "
                                 "entry should take an array of three numbers.");
@@ -390,7 +390,7 @@ void FCI_MO::read_options() {
             }
 
             double wsum = 0.0;
-            for (int i = 0; i < nentry; ++i) {
+            for (size_t i = 0; i < nentry; ++i) {
                 int nw = options_["AVG_WEIGHT"][i].size();
                 if (nw != nstatespim[i]) {
                     outfile->Printf("\n  Error: mismatched number of weights "
@@ -422,14 +422,14 @@ void FCI_MO::read_options() {
         } else {
             // use equal weights
             double w = 1.0 / nstates;
-            for (int i = 0; i < nentry; ++i) {
+            for (size_t i = 0; i < nentry; ++i) {
                 std::vector<double> weight(nstatespim[i], w);
                 weights.push_back(weight);
             }
         }
 
         // form option parser
-        for (int i = 0; i < nentry; ++i) {
+        for (size_t i = 0; i < nentry; ++i) {
             std::tuple<int, int, int, std::vector<double>> avg_info =
                 std::make_tuple(irreps[i], multis[i], nstatespim[i], weights[i]);
             sa_info_.push_back(avg_info);
@@ -561,7 +561,7 @@ double FCI_MO::compute_ss_energy() {
 
     // print CI vectors in eigen_
     size_t eigen_size = eigen_.size();
-    if (nroot_ > eigen_size) {
+    if (size_t(nroot_) > eigen_size) {
         outfile->Printf("\n  Too many roots of interest!");
         std::string be = (eigen_size > 1) ? "are" : "is";
         std::string plural = (eigen_size > 1) ? "roots" : "root";
@@ -730,7 +730,7 @@ void FCI_MO::form_det_cis() {
 
     // symmetry of ref (just active)
     int symmetry = 0;
-    for (int i = 0; i < nactv_; ++i) {
+    for (size_t i = 0; i < nactv_; ++i) {
         if (string_ref[i]) {
             symmetry ^= sym_actv_[i];
         }
@@ -777,7 +777,7 @@ void FCI_MO::form_det_cisd() {
 
     // symmetry of ref (just active)
     int symmetry = 0;
-    for (int i = 0; i < nactv_; ++i) {
+    for (size_t i = 0; i < nactv_; ++i) {
         if (string_ref[i]) {
             symmetry ^= sym_actv_[i];
         }
@@ -923,7 +923,7 @@ vector<vector<vector<bool>>> FCI_MO::Form_String_IP(const std::vector<bool>& ref
     // occupied and unoccupied indices, symmetry (active)
     int symmetry = 0;
     std::vector<int> occ;
-    for (int i = 0; i < nactv_; ++i) {
+    for (size_t i = 0; i < nactv_; ++i) {
         if (ref_string[i]) {
             occ.push_back(i);
             symmetry ^= sym_actv_[i];
@@ -956,7 +956,7 @@ vector<vector<vector<bool>>> FCI_MO::Form_String_EA(const std::vector<bool>& ref
     // occupied and unoccupied indices, symmetry (active)
     int symmetry = 0;
     std::vector<int> uocc;
-    for (int i = 0; i < nactv_; ++i) {
+    for (size_t i = 0; i < nactv_; ++i) {
         if (!ref_string[i]) {
             uocc.push_back(i);
         } else {
@@ -990,7 +990,7 @@ vector<vector<vector<bool>>> FCI_MO::Form_String_Doubles(const std::vector<bool>
     // occupied and unoccupied indices, symmetry (active)
     int symmetry = 0;
     std::vector<int> uocc, occ;
-    for (int i = 0; i < nactv_; ++i) {
+    for (size_t i = 0; i < nactv_; ++i) {
         if (ipea_ != "NONE" && i != idx_diffused_ &&
             std::find(diffused_orbs_.begin(), diffused_orbs_.end(), i) != diffused_orbs_.end()) {
             continue;
@@ -1223,7 +1223,7 @@ void FCI_MO::print_CI(const int& nroot, const double& CI_threshold,
                 size_t index = std::get<1>(ci_select[j]);
                 size_t ncmopi = 0;
                 for (int h = 0; h < nirrep_; ++h) {
-                    for (size_t k = 0; k < actv_dim_[h]; ++k) {
+                    for (int k = 0; k < actv_dim_[h]; ++k) {
                         size_t x = k + ncmopi;
                         bool a = det[index].get_alfa_bit(x);
                         bool b = det[index].get_beta_bit(x);
@@ -1462,7 +1462,7 @@ void FCI_MO::compute_permanent_dipole() {
     int dim = (eigen_[0].first)->dim();
     size_t eigen_size = eigen_.size();
     SharedMatrix evecs(new Matrix("evecs", dim, eigen_size));
-    for (int i = 0; i < eigen_size; ++i) {
+    for (size_t i = 0; i < eigen_size; ++i) {
         evecs->set_column(0, i, (eigen_[i]).first);
     }
 
@@ -1506,11 +1506,11 @@ SharedMatrix FCI_MO::reformat_1rdm(const std::string& name, const std::vector<do
     size_t offset = 0;
     for (int h = 0; h < nirrep_; ++h) {
         size_t offset1 = frzc_dim_[h] + core_dim_[h];
-        for (size_t u = 0; u < actv_dim_[h]; ++u) {
+        for (int u = 0; u < actv_dim_[h]; ++u) {
             size_t mu = u + offset;
             size_t nu = u + offset1;
 
-            for (size_t v = 0; v < actv_dim_[h]; ++v) {
+            for (int v = 0; v < actv_dim_[h]; ++v) {
                 size_t mv = v + offset;
                 size_t nv = v + offset1;
 
@@ -1523,13 +1523,13 @@ SharedMatrix FCI_MO::reformat_1rdm(const std::string& name, const std::vector<do
     if (!TrD) {
         for (int h = 0; h < nirrep_; ++h) {
             // frozen core
-            for (size_t i = 0; i < frzc_dim_[h]; ++i) {
+            for (int i = 0; i < frzc_dim_[h]; ++i) {
                 rdm->set(h, i, i, 1.0);
             }
 
             // restricted core
             size_t offset1 = frzc_dim_[h];
-            for (size_t i = 0; i < core_dim_[h]; ++i) {
+            for (int i = 0; i < core_dim_[h]; ++i) {
                 size_t ni = i + offset1;
                 rdm->set(h, ni, ni, 1.0);
             }
@@ -1580,7 +1580,7 @@ void FCI_MO::compute_transition_dipole() {
     int dim = (eigen_[0].first)->dim();
     size_t eigen_size = eigen_.size();
     SharedMatrix evecs(new Matrix("evecs", dim, eigen_size));
-    for (int i = 0; i < eigen_size; ++i) {
+    for (size_t i = 0; i < eigen_size; ++i) {
         evecs->set_column(0, i, (eigen_[i]).first);
     }
 
@@ -1714,7 +1714,7 @@ FCI_MO::compute_ref_relaxed_dm(const std::vector<double>& dm0, std::vector<Block
         int dim = (eigen_[0].first)->dim();
         size_t eigen_size = eigen_.size();
         SharedMatrix evecs(new Matrix("evecs", dim, eigen_size));
-        for (int i = 0; i < eigen_size; ++i) {
+        for (size_t i = 0; i < eigen_size; ++i) {
             evecs->set_column(0, i, (eigen_[i]).first);
         }
 
@@ -1747,7 +1747,7 @@ FCI_MO::compute_ref_relaxed_dm(const std::vector<double>& dm0, std::vector<Block
             int dim = (eigens_[n][0].first)->dim();
             size_t eigen_size = eigens_[n].size();
             SharedMatrix evecs(new Matrix("evecs", dim, eigen_size));
-            for (int i = 0; i < eigen_size; ++i) {
+            for (size_t i = 0; i < eigen_size; ++i) {
                 evecs->set_column(0, i, (eigens_[n][i]).first);
             }
 
@@ -1811,7 +1811,7 @@ FCI_MO::compute_ref_relaxed_dm(const std::vector<double>& dm0, std::vector<Block
         int dim = (eigen_[0].first)->dim();
         size_t eigen_size = eigen_.size();
         SharedMatrix evecs(new Matrix("evecs", dim, eigen_size));
-        for (int i = 0; i < eigen_size; ++i) {
+        for (size_t i = 0; i < eigen_size; ++i) {
             evecs->set_column(0, i, (eigen_[i]).first);
         }
 
@@ -1845,7 +1845,7 @@ FCI_MO::compute_ref_relaxed_dm(const std::vector<double>& dm0, std::vector<Block
             int dim = (eigens_[n][0].first)->dim();
             size_t eigen_size = eigens_[n].size();
             SharedMatrix evecs(new Matrix("evecs", dim, eigen_size));
-            for (int i = 0; i < eigen_size; ++i) {
+            for (size_t i = 0; i < eigen_size; ++i) {
                 evecs->set_column(0, i, (eigens_[n][i]).first);
             }
 
@@ -1904,7 +1904,7 @@ FCI_MO::compute_ref_relaxed_osc(std::vector<BlockedTensor>& dm1, std::vector<Blo
         std::vector<double> weights0;
         std::tie(irrep0, multi0, nroots0, weights0) = sa_info_[A];
 
-        int ndets0 = (eigens_[A][0].first)->dim();
+        size_t ndets0 = (eigens_[A][0].first)->dim();
         SharedMatrix evecs0(new Matrix("evecs", ndets0, nroots0));
         for (int i = 0; i < nroots0; ++i) {
             evecs0->set_column(0, i, (eigens_[A][i]).first);
@@ -1939,9 +1939,9 @@ FCI_MO::compute_ref_relaxed_osc(std::vector<BlockedTensor>& dm1, std::vector<Blo
             std::tie(irrep1, multi1, nroots1, weights1) = sa_info_[B];
 
             // combine two eigen vectors
-            int ndets1 = (eigens_[B][0].first)->dim();
-            int ndets = ndets0 + ndets1;
-            int nroots = nroots0 + nroots1;
+            size_t ndets1 = (eigens_[B][0].first)->dim();
+            size_t ndets = ndets0 + ndets1;
+            size_t nroots = nroots0 + nroots1;
             SharedMatrix evecs(new Matrix("evecs", ndets, nroots));
 
             for (int n = 0; n < nroots0; ++n) {
@@ -2021,7 +2021,7 @@ FCI_MO::compute_ref_relaxed_osc(std::vector<BlockedTensor>& dm1, std::vector<Blo
         std::vector<double> weights0;
         std::tie(irrep0, multi0, nroots0, weights0) = sa_info_[A];
 
-        int ndets0 = (eigens_[A][0].first)->dim();
+        size_t ndets0 = (eigens_[A][0].first)->dim();
         SharedMatrix evecs0(new Matrix("evecs", ndets0, nroots0));
         for (int i = 0; i < nroots0; ++i) {
             evecs0->set_column(0, i, (eigens_[A][i]).first);
@@ -2057,9 +2057,9 @@ FCI_MO::compute_ref_relaxed_osc(std::vector<BlockedTensor>& dm1, std::vector<Blo
             std::tie(irrep1, multi1, nroots1, weights1) = sa_info_[B];
 
             // combine two eigen vectors
-            int ndets1 = (eigens_[B][0].first)->dim();
-            int ndets = ndets0 + ndets1;
-            int nroots = nroots0 + nroots1;
+            size_t ndets1 = (eigens_[B][0].first)->dim();
+            size_t ndets = ndets0 + ndets1;
+            size_t nroots = nroots0 + nroots1;
             SharedMatrix evecs(new Matrix("evecs", ndets, nroots));
 
             for (int n = 0; n < nroots0; ++n) {
@@ -2247,7 +2247,7 @@ d3 FCI_MO::compute_orbital_extents() {
         diffused_orbs_.clear();
         size_t offset = 0;
         for (int h = 0; h < nirrep_; ++h) {
-            for (size_t i = 0; i < actv_dim_[h]; ++i) {
+            for (int i = 0; i < actv_dim_[h]; ++i) {
                 double orbext = orb_extents[h][i][0] + orb_extents[h][i][1] + orb_extents[h][i][2];
 
                 if (orbext > 1.0e6) {
@@ -2313,7 +2313,7 @@ void FCI_MO::compute_ref(const int& level) {
     int dim = (eigen_[0].first)->dim();
     size_t eigen_size = eigen_.size();
     SharedMatrix evecs(new Matrix("evecs", dim, eigen_size));
-    for (int i = 0; i < eigen_size; ++i) {
+    for (size_t i = 0; i < eigen_size; ++i) {
         evecs->set_column(0, i, (eigen_[i]).first);
     }
 
@@ -2634,7 +2634,7 @@ double FCI_MO::compute_sa_energy() {
         eigens_.push_back(eigen_);
 
         // print CI vectors in eigen_
-        size_t eigen_size = eigen_.size();
+        int eigen_size = eigen_.size();
         if (nroot_ > eigen_size) {
             outfile->Printf("\n  Too many roots of interest!");
             std::string be = (eigen_size > 1) ? "are" : "is";
@@ -2715,7 +2715,7 @@ void FCI_MO::xms_rotate_civecs() {
     });
 
     ambit::Tensor I = ambit::Tensor::build(CoreTensor, "Identity", {ncore_, ncore_});
-    for (int m = 0; m < ncore_; ++m) {
+    for (size_t m = 0; m < ncore_; ++m) {
         I.data()[m * ncore_ + m] = 1.0;
     }
 
@@ -2843,7 +2843,7 @@ void FCI_MO::compute_sa_ref(const int& level) {
     // save state-specific density to disk for DWMS-DSRG-PT
     bool do_disk = options_.get_str("JOB_TYPE") == "DWMS-DSRGPT2";
 
-    for (int n = 0, nentry = sa_info_.size(); n < nentry; ++n) {
+    for (size_t n = 0, nentry = sa_info_.size(); n < nentry; ++n) {
         // get current nroots and weights
         int nroots, irrep, multi;
         std::vector<double> weights;
@@ -2853,7 +2853,7 @@ void FCI_MO::compute_sa_ref(const int& level) {
         int dim = (eigens_[n][0].first)->dim();
         size_t eigen_size = eigens_[n].size();
         SharedMatrix evecs(new Matrix("evecs", dim, eigen_size));
-        for (int i = 0; i < eigen_size; ++i) {
+        for (size_t i = 0; i < eigen_size; ++i) {
             evecs->set_column(0, i, (eigens_[n][i]).first);
         }
 
@@ -3016,13 +3016,13 @@ void FCI_MO::localize_actv_orbs() {
 }
 
 void FCI_MO::set_sa_info(const std::vector<std::tuple<int, int, int, std::vector<double>>>& info) {
-    int nentry = info.size();
+    size_t nentry = info.size();
     if (sa_info_.size() == nentry) {
-        for (int n = 0; n < nentry; ++n) {
+        for (size_t n = 0; n < nentry; ++n) {
             int multi, irrep, nroots;
             std::vector<double> weights;
             std::tie(irrep, multi, nroots, weights) = info[n];
-            if (nroots != weights.size()) {
+            if (size_t(nroots) != weights.size()) {
                 outfile->Printf("\n  Irrep: %d, Multi: %d, Nroots: %d, Nweights: %d", irrep, multi,
                                 nroots, weights.size());
                 PSIEXCEPTION("Cannot set sa_info of FCI_MO: mismatching nroot and weights size.");
@@ -3035,11 +3035,11 @@ void FCI_MO::set_sa_info(const std::vector<std::tuple<int, int, int, std::vector
 }
 
 void FCI_MO::set_eigens(const std::vector<vector<pair<SharedVector, double>>>& eigens) {
-    int nentry = sa_info_.size();
+    size_t nentry = sa_info_.size();
     if (eigens.size() == nentry) {
-        for (int n = 0; n < nentry; ++n) {
+        for (size_t n = 0; n < nentry; ++n) {
             int ne = std::get<2>(sa_info_[n]);
-            if (eigens[n].size() != ne) {
+            if (eigens[n].size() != size_t(ne) ) {
                 outfile->Printf("\n  Entry %d: expected size %d, got %d", n, ne, eigens[n].size());
             }
         }
@@ -3151,7 +3151,7 @@ Reference FCI_MO::transition_reference(int root1, int root2, bool multi_state, i
     size_t dim = p_space.size();
     size_t eigen_size = eigen.size();
     SharedMatrix evecs(new Matrix("evecs", dim, eigen_size));
-    for (int i = 0; i < eigen_size; ++i) {
+    for (size_t i = 0; i < eigen_size; ++i) {
         evecs->set_column(0, i, (eigen[i]).first);
     }
 
