@@ -72,6 +72,7 @@ class SigmaVectorDynamic : public SigmaVector {
     SortedStringList_UI64 a_sorted_string_list_;
     SortedStringList_UI64 b_sorted_string_list_;
 
+
     /// The Hamiltonian stored as a list of pairs (H_IJ, I, J)
     std::vector<std::tuple<double, std::uint32_t, std::uint32_t>> H_IJ_list_;
     std::vector<size_t> H_IJ_list_thread_limit_;

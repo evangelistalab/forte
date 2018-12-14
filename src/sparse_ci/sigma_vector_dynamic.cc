@@ -173,8 +173,9 @@ void SigmaVectorDynamic::print_thread_stats() {
 #endif
 }
 
-//void SigmaVectorDynamic::add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& roots) {
-//}
+void SigmaVectorDynamic::add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& roots) {
+    bad_states_ = roots;
+}
 
 void SigmaVectorDynamic::get_diagonal(Vector& diag) {
     for (size_t I = 0; I < diag_.size(); ++I) {
