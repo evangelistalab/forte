@@ -526,18 +526,18 @@ MRCINO::build_density_matrix(const std::vector<Determinant>& dets, SharedMatrix 
             outfile->Printf("\n  1-RDM  took %2.6f s (determinant)", one_r.get());
         }
         // Add template value to average vector
-        for (int i = 0; i < ncmo2_; ++i) {
+        for (size_t i = 0; i < ncmo2_; ++i) {
             average_a_[i] += template_a_[i];
         }
-        for (int i = 0; i < ncmo2_; ++i) {
+        for (size_t i = 0; i < ncmo2_; ++i) {
             average_b_[i] += template_b_[i];
         }
     }
     // Divided by the number of solutions
-    for (int i = 0; i < ncmo2_; ++i) {
+    for (size_t i = 0; i < ncmo2_; ++i) {
         ordm_a_[i] = average_a_[i] / n;
     }
-    for (int i = 0; i < ncmo2_; ++i) {
+    for (size_t i = 0; i < ncmo2_; ++i) {
         ordm_b_[i] = average_b_[i] / n;
     }
     // Invert vector to matrix

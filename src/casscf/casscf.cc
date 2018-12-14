@@ -686,7 +686,6 @@ ambit::Tensor CASSCF::transform_integrals() {
     int count = 0;
     auto absolute_all = mo_space_info_->get_absolute_mo("CORRELATED");
     auto corr_abs = mo_space_info_->get_corr_abs_mo("CORRELATED");
-    int p = 0;
     for (auto d : D_vec) {
         int i = d.second[0];
         int j = d.second[1];

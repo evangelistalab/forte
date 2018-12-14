@@ -41,11 +41,6 @@ class AtomicOrbitalHelper {
     SharedMatrix AO_Screen_;
     SharedMatrix TransAO_Screen_;
 
-    // LaplaceDenominator Laplace_;
-    SharedMatrix Occupied_Laplace_;
-    SharedMatrix Virtual_Laplace_;
-    double laplace_tolerance_ = 1e-10;
-
     SharedMatrix CMO_;
     SharedVector eps_rdocc_;
     SharedVector eps_virtual_;
@@ -54,13 +49,18 @@ class AtomicOrbitalHelper {
     SharedMatrix PVir_;
     void Compute_Psuedo_Density();
 
-    int weights_;
-    int nbf_;
-    int nrdocc_;
-    int nvir_;
-    /// How many orbitals does it take to go from occupied to virtual (ie should
-    /// be active)
-    int shift_;
+	// LaplaceDenominator Laplace_;
+	SharedMatrix Occupied_Laplace_;
+	SharedMatrix Virtual_Laplace_;
+	double laplace_tolerance_=1e-10;
+
+	int weights_;
+	int nbf_;
+	int nrdocc_;
+	int nvir_;
+	/// How many orbitals does it take to go from occupied to virtual (ie should
+	/// be active)
+	int shift_;
 
   public:
     SharedMatrix AO_Screen() { return AO_Screen_; }
