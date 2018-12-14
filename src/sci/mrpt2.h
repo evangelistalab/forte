@@ -77,7 +77,6 @@ class MRPT2 : public Wavefunction {
 
     int nroot_;
     int multiplicity_;
-    DiagonalizationMethod diag_method_;
 
     double screen_thresh_;
 };
