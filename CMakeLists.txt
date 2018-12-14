@@ -80,6 +80,7 @@ src/forte_old_options.cc
 src/forte_options.cc
 src/helpers/iterative_solvers.cc
 src/helpers/mo_space_info.cc
+src/helpers/helpers.cc
 src/main.cc
 src/sparse_ci/operator.cc
 src/options.cc
