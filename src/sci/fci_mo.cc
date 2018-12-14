@@ -561,7 +561,7 @@ double FCI_MO::compute_ss_energy() {
 
     // print CI vectors in eigen_
     size_t eigen_size = eigen_.size();
-    if (size_t(nroot_) > eigen_size) {
+    if (static_cast<size_t>(nroot_) > eigen_size) {
         outfile->Printf("\n  Too many roots of interest!");
         std::string be = (eigen_size > 1) ? "are" : "is";
         std::string plural = (eigen_size > 1) ? "roots" : "root";
