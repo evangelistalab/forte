@@ -73,13 +73,13 @@ void CI_RDMS::compute_rdms_dynamic(std::vector<double>& oprdm_a, std::vector<dou
         UI64Determinant::bit_t det_a = sorted_b_dets[I].get_alfa_bits();
         UI64Determinant::bit_t det_b = sorted_b_dets[I].get_beta_bits();
 
-        for (int nda = 0; nda < na_; ++nda) {
+        for (size_t nda = 0; nda < na_; ++nda) {
             int p = lowest_one_idx(det_a);
             oprdm_a[p * ncmo_ + p] += CIa;
 
             uint64_t det_ac(det_a);
             det_a = clear_lowest_one(det_a);
-            for (int ndaa = nda; ndaa < na_; ++ndaa) {
+            for (size_t ndaa = nda; ndaa < na_; ++ndaa) {
                 int q = lowest_one_idx(det_ac);
                 // aa 2-rdm
                 tprdm_aa[p * ncmo3_ + q * ncmo2_ + p * ncmo_ + q] += CIa;
@@ -90,16 +90,16 @@ void CI_RDMS::compute_rdms_dynamic(std::vector<double>& oprdm_a, std::vector<dou
                 det_ac = clear_lowest_one(det_ac);
                 // aaa 3rdm
                 uint64_t det_acc(det_ac);
-                for (int ndaaa = ndaa + 1; ndaaa < na_; ++ndaaa) {
-                    int r = lowest_one_idx(det_acc);
+                for (size_t ndaaa = ndaa + 1; ndaaa < na_; ++ndaaa) {
+                    size_t r = lowest_one_idx(det_acc);
                     fill_3rdm(tprdm_aaa, CIa, p, q, r, p, q, r, true);
                     det_acc = clear_lowest_one(det_acc);
                 }
 
                 // aab 3rdm
                 uint64_t det_bc(det_b);
-                for (int n = 0; n < nb_; ++n) {
-                    int r = lowest_one_idx(det_bc);
+                for (size_t n = 0; n < nb_; ++n) {
+                    size_t r = lowest_one_idx(det_bc);
                     tprdm_aab[p * ncmo5_ + q * ncmo4_ + r * ncmo3_ + p * ncmo2_ + q * ncmo_ + r] +=
                         CIa;
                     tprdm_aab[p * ncmo5_ + q * ncmo4_ + r * ncmo3_ + q * ncmo2_ + p * ncmo_ + r] -=
@@ -114,8 +114,8 @@ void CI_RDMS::compute_rdms_dynamic(std::vector<double>& oprdm_a, std::vector<dou
             }
 
             uint64_t det_bc(det_b);
-            for (int n = 0; n < nb_; ++n) {
-                int q = lowest_one_idx(det_bc);
+            for (size_t n = 0; n < nb_; ++n) {
+                size_t q = lowest_one_idx(det_bc);
                 tprdm_ab[p * ncmo3_ + q * ncmo2_ + p * ncmo_ + q] += CIa;
                 det_bc = clear_lowest_one(det_bc);
             }
@@ -124,14 +124,14 @@ void CI_RDMS::compute_rdms_dynamic(std::vector<double>& oprdm_a, std::vector<dou
         det_b = sorted_b_dets[I].get_beta_bits();
         size_t Ib = a_sorted_string_list_.add(I);
         double CIb = evecs_->get(Ib, root1_) * evecs_->get(Ib, root2_);
-        for (int ndb = 0; ndb < nb_; ++ndb) {
+        for (size_t ndb = 0; ndb < nb_; ++ndb) {
             int p = lowest_one_idx(det_b);
 
             // b -1rdm
             oprdm_b[p * ncmo_ + p] += CIb;
             uint64_t det_bc(det_b);
-            for (int ndbb = ndb; ndbb < nb_; ++ndbb) {
-                int q = lowest_one_idx(det_bc);
+            for (size_t ndbb = ndb; ndbb < nb_; ++ndbb) {
+                size_t q = lowest_one_idx(det_bc);
                 // bb-2rdm
                 tprdm_bb[p * ncmo3_ + q * ncmo2_ + p * ncmo_ + q] += CIb;
                 tprdm_bb[q * ncmo3_ + p * ncmo2_ + q * ncmo_ + p] += CIb;
@@ -141,16 +141,16 @@ void CI_RDMS::compute_rdms_dynamic(std::vector<double>& oprdm_a, std::vector<dou
 
                 // bbb-3rdm
                 uint64_t det_bcc(det_bc);
-                for (int ndbbb = ndbb + 1; ndbbb < nb_; ++ndbbb) {
-                    int r = lowest_one_idx(det_bcc);
+                for (size_t ndbbb = ndbb + 1; ndbbb < nb_; ++ndbbb) {
+                    size_t r = lowest_one_idx(det_bcc);
                     fill_3rdm(tprdm_bbb, CIa, p, q, r, p, q, r, true);
                     det_bcc = clear_lowest_one(det_bcc);
                 }
 
                 // abb - 3rdm
                 uint64_t det_ac(det_a);
-                for (int n = 0; n < na_; ++n) {
-                    int r = lowest_one_idx(det_ac);
+                for (size_t n = 0; n < na_; ++n) {
+                    size_t r = lowest_one_idx(det_ac);
                     tprdm_abb[r * ncmo5_ + p * ncmo4_ + q * ncmo3_ + r * ncmo2_ + p * ncmo_ + q] +=
                         CIb;
                     tprdm_abb[r * ncmo5_ + p * ncmo4_ + q * ncmo3_ + r * ncmo2_ + q * ncmo_ + p] -=
@@ -206,7 +206,7 @@ void CI_RDMS::compute_rdms_dynamic(std::vector<double>& oprdm_a, std::vector<dou
                     // 2-rdm
                     auto Iac = Ia;
                     Iac ^= Ia_sub;
-                    for (int nbit_a = 1; nbit_a < na_; nbit_a++) {
+                    for (size_t nbit_a = 1; nbit_a < na_; nbit_a++) {
                         uint64_t m = lowest_one_idx(Iac);
                         tprdm_aa[p * ncmo3_ + m * ncmo2_ + q * ncmo_ + m] += value;
                         tprdm_aa[m * ncmo3_ + p * ncmo2_ + q * ncmo_ + m] -= value;
@@ -221,7 +221,7 @@ void CI_RDMS::compute_rdms_dynamic(std::vector<double>& oprdm_a, std::vector<dou
                         Iac = clear_lowest_one(Iac);
 
                         auto Ibc = Ib;
-                        for (int idx = 0; idx < nb_; ++idx) {
+                        for (size_t idx = 0; idx < nb_; ++idx) {
                             uint64_t n = lowest_one_idx(Ibc);
                             tprdm_aab[p * ncmo5_ + m * ncmo4_ + n * ncmo3_ + q * ncmo2_ +
                                       m * ncmo_ + n] += value;
@@ -244,14 +244,14 @@ void CI_RDMS::compute_rdms_dynamic(std::vector<double>& oprdm_a, std::vector<dou
                         }
                     }
                     auto Ibc = Ib;
-                    for (int nidx = 0; nidx < nb_; ++nidx) {
+                    for (size_t nidx = 0; nidx < nb_; ++nidx) {
                         uint64_t n = lowest_one_idx(Ibc);
                         tprdm_ab[p * ncmo3_ + n * ncmo2_ + q * ncmo_ + n] += value;
                         tprdm_ab[q * ncmo3_ + n * ncmo2_ + p * ncmo_ + n] += value;
                         Ibc = clear_lowest_one(Ibc);
 
                         uint64_t Ibcc = Ibc;
-                        for (int idx = nidx + 1; idx < nb_; ++idx) {
+                        for (size_t idx = nidx + 1; idx < nb_; ++idx) {
                             uint64_t m = lowest_one_idx(Ibcc);
                             tprdm_abb[p * ncmo5_ + m * ncmo4_ + n * ncmo3_ + q * ncmo2_ +
                                       m * ncmo_ + n] += value;
@@ -275,10 +275,10 @@ void CI_RDMS::compute_rdms_dynamic(std::vector<double>& oprdm_a, std::vector<dou
                     }
                     // 3-rdm
                     uint64_t Iacc = Ia ^ Ia_sub;
-                    for (int id = 1; id < na_; ++id) {
+                    for (size_t id = 1; id < na_; ++id) {
                         uint64_t n = lowest_one_idx(Iacc);
                         uint64_t I_n = clear_lowest_one(Iacc);
-                        for (int idd = id + 1; idd < na_; ++idd) {
+                        for (size_t idd = id + 1; idd < na_; ++idd) {
                             // while( I_n > 0 ){
                             uint64_t m = lowest_one_idx(I_n);
                             fill_3rdm(tprdm_aaa, value, p, n, m, q, n, m, false);
@@ -315,14 +315,14 @@ void CI_RDMS::compute_rdms_dynamic(std::vector<double>& oprdm_a, std::vector<dou
                     // 3-rdm
                     uint64_t Iac(Ia);
                     Iac ^= Ia_sub;
-                    for (int nda = 1; nda < na_; ++nda) {
+                    for (size_t nda = 1; nda < na_; ++nda) {
                         uint64_t n = lowest_one_idx(Iac);
                         fill_3rdm(tprdm_aaa, value, p, q, n, r, s, n, false);
                         Iac = clear_lowest_one(Iac);
                     }
 
                     uint64_t Ibc = Ib;
-                    for (int ndb = 0; ndb < nb_; ++ndb) {
+                    for (size_t ndb = 0; ndb < nb_; ++ndb) {
                         uint64_t n = lowest_one_idx(Ibc);
                         tprdm_aab[p * ncmo5_ + q * ncmo4_ + n * ncmo3_ + r * ncmo2_ + s * ncmo_ +
                                   n] += value;
@@ -405,7 +405,7 @@ void CI_RDMS::compute_rdms_dynamic(std::vector<double>& oprdm_a, std::vector<dou
                     oprdm_b[q * ncmo_ + p] += value;
                     auto Ibc = Ib;
                     Ibc ^= Ib_sub;
-                    for (int ndb = 1; ndb < nb_; ++ndb) {
+                    for (size_t ndb = 1; ndb < nb_; ++ndb) {
                         uint64_t m = lowest_one_idx(Ibc);
                         tprdm_bb[p * ncmo3_ + m * ncmo2_ + q * ncmo_ + m] += value;
                         tprdm_bb[m * ncmo3_ + p * ncmo2_ + q * ncmo_ + m] -= value;
@@ -420,7 +420,7 @@ void CI_RDMS::compute_rdms_dynamic(std::vector<double>& oprdm_a, std::vector<dou
                         Ibc = clear_lowest_one(Ibc);
 
                         uint64_t Iac = Ia;
-                        for (int idx = 0; idx < na_; ++idx) {
+                        for (size_t idx = 0; idx < na_; ++idx) {
                             uint64_t n = lowest_one_idx(Iac);
                             tprdm_abb[n * ncmo5_ + p * ncmo4_ + m * ncmo3_ + n * ncmo2_ +
                                       q * ncmo_ + m] += value;
@@ -443,14 +443,14 @@ void CI_RDMS::compute_rdms_dynamic(std::vector<double>& oprdm_a, std::vector<dou
                         }
                     }
                     auto Iac = Ia;
-                    for (int nidx = 0; nidx < na_; ++nidx) {
+                    for (size_t nidx = 0; nidx < na_; ++nidx) {
                         uint64_t n = lowest_one_idx(Iac);
                         tprdm_ab[n * ncmo3_ + p * ncmo2_ + n * ncmo_ + q] += value;
                         tprdm_ab[n * ncmo3_ + q * ncmo2_ + n * ncmo_ + p] += value;
                         Iac = clear_lowest_one(Iac);
 
                         auto Iacc = Iac;
-                        for (int midx = nidx + 1; midx < na_; ++midx) {
+                        for (size_t midx = nidx + 1; midx < na_; ++midx) {
                             uint64_t m = lowest_one_idx(Iacc);
                             tprdm_aab[n * ncmo5_ + m * ncmo4_ + p * ncmo3_ + n * ncmo2_ +
                                       m * ncmo_ + q] += value;
@@ -475,12 +475,12 @@ void CI_RDMS::compute_rdms_dynamic(std::vector<double>& oprdm_a, std::vector<dou
                     // 3-rdm
                     uint64_t Ibcc(Ib);
                     Ibcc ^= Ib_sub;
-                    for (int ndb = 1; ndb < nb_; ++ndb) {
+                    for (size_t ndb = 1; ndb < nb_; ++ndb) {
                         // while(Ibcc >0){
                         uint64_t n = lowest_one_idx(Ibcc);
                         Ibcc = clear_lowest_one(Ibcc);
                         uint64_t I_n = Ibcc;
-                        for (int ndbb = ndb + 1; ndbb < nb_; ++ndbb) {
+                        for (size_t ndbb = ndb + 1; ndbb < nb_; ++ndbb) {
                             // while( I_n > 0){
                             uint64_t m = lowest_one_idx(I_n);
                             fill_3rdm(tprdm_bbb, value, p, m, n, q, m, n, false);
@@ -513,13 +513,13 @@ void CI_RDMS::compute_rdms_dynamic(std::vector<double>& oprdm_a, std::vector<dou
                     // 3-rdm
                     uint64_t Ibc = Ib;
                     Ibc ^= Ib_sub;
-                    for (int ndb = 1; ndb < nb_; ++ndb) {
+                    for (size_t ndb = 1; ndb < nb_; ++ndb) {
                         uint64_t n = lowest_one_idx(Ibc);
                         fill_3rdm(tprdm_bbb, value, p, q, n, r, s, n, false);
                         Ibc = clear_lowest_one(Ibc);
                     }
                     uint64_t Iac = Ia;
-                    for (int nda = 0; nda < na_; ++nda) {
+                    for (size_t nda = 0; nda < na_; ++nda) {
                         uint64_t n = lowest_one_idx(Iac);
                         tprdm_abb[n * ncmo5_ + p * ncmo4_ + q * ncmo3_ + n * ncmo2_ + r * ncmo_ +
                                   s] += value;
@@ -618,7 +618,7 @@ void CI_RDMS::make_ab(SortedStringList_UI64 a_sorted_string_list_,
 
                             uint64_t Iac(detIa);
                             Iac ^= Ia_d;
-                            for (int d = 1; d < na_; ++d) {
+                            for (size_t d = 1; d < na_; ++d) {
                                 uint64_t n = lowest_one_idx(Iac);
                                 tprdm_aab[p * ncmo5_ + n * ncmo4_ + q * ncmo3_ + s * ncmo2_ +
                                           n * ncmo_ + r] += value;
@@ -633,7 +633,7 @@ void CI_RDMS::make_ab(SortedStringList_UI64 a_sorted_string_list_,
                             }
                             uint64_t Ibc(Ib);
                             Ibc ^= Ib_sub;
-                            for (int d = 1; d < nb_; ++d) {
+                            for (size_t d = 1; d < nb_; ++d) {
                                 uint64_t n = lowest_one_idx(Ibc);
                                 tprdm_abb[p * ncmo5_ + q * ncmo4_ + n * ncmo3_ + s * ncmo2_ +
                                           r * ncmo_ + n] += value;
