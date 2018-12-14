@@ -114,8 +114,6 @@ class MOSpaceInfo {
     size_t size(const std::string& space);
     /// @return The Dimension object for space
     Dimension get_dimension(const std::string& space);
-    /// @return The Slice object for space in a given composite space
-//    Slice get_slice(const std::string& space, const std::string& comp_space);
     /// @return The symmetry of each orbital
     std::vector<int> symmetry(const std::string& space);
     /// @return The list of the absolute index of the molecular orbitals in a
