@@ -108,8 +108,6 @@ class ProjectorCI_Simple : public Wavefunction {
     int wavefunction_symmetry_;
     /// The symmetry of each orbital in Pitzer ordering
     std::vector<int> mo_symmetry_;
-    /// The number of correlated molecular orbitals
-//    int ncmo_;
     /// The number of active electrons
     int nactel_;
     /// The number of correlated alpha electrons
