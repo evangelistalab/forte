@@ -352,7 +352,7 @@ ambit::Tensor DISKDFIntegrals::three_integral_block(const std::vector<size_t>& A
                 std::vector<size_t> p_range = {pn, pn};
                 std::vector<size_t> q_range = {qn, qn};
 
-                double* A_chunk = nullptr; // = new double[A.size()];
+                double* A_chunk = nullptr;
 
                 df_->fill_tensor("B", A_chunk, A_range, p_range, q_range);
 
