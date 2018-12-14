@@ -115,7 +115,7 @@ class DSRG_MRPT3 : public MASTER_DSRG {
     std::vector<std::vector<psi::forte::Determinant>> p_spaces_;
 
     /// Total memory left
-    long long int mem_total_;
+    int64_t mem_total_;
 
     /// Fill up two-electron integrals
     void build_tei(BlockedTensor& V);

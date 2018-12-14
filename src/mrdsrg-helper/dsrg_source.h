@@ -43,6 +43,8 @@ class DSRG_SOURCE {
      */
     DSRG_SOURCE(double s, double taylor_threshold);
 
+    virtual ~DSRG_SOURCE() = 0;
+
     /// Bare effect of source operator
     virtual double compute_renormalized(const double& D) = 0;
     /// Renormalize denominator
@@ -60,6 +62,8 @@ class STD_SOURCE : public DSRG_SOURCE {
   public:
     /// Constructor
     STD_SOURCE(double s, double taylor_threshold);
+
+    virtual ~STD_SOURCE() {}
 
     /// Return exp(-s * D^2)
     virtual double compute_renormalized(const double& D) { return std::exp(-s_ * D * D); }
@@ -101,6 +105,8 @@ class LABS_SOURCE : public DSRG_SOURCE {
   public:
     /// Constructor
     LABS_SOURCE(double s, double taylor_threshold);
+
+    virtual ~LABS_SOURCE() {}
 
     /// Return exp(-s * |D|)
     virtual double compute_renormalized(const double& D) { return std::exp(-s_ * std::fabs(D)); }
@@ -148,6 +154,8 @@ class DYSON_SOURCE : public DSRG_SOURCE {
     /// Constructor
     DYSON_SOURCE(double s, double taylor_threshold);
 
+    virtual ~DYSON_SOURCE() {}
+
     /// Return 1.0 / (1.0 + s * D^2)
     virtual double compute_renormalized(const double& D) { return 1.0 / (1.0 + s_ * D * D); }
 
@@ -161,6 +169,8 @@ class DYSON_SOURCE : public DSRG_SOURCE {
 class MP2_SOURCE : public DSRG_SOURCE {
   public:
     MP2_SOURCE(double s, double taylor_threshold);
+
+    virtual ~MP2_SOURCE() {}
 
     virtual double compute_renormalized(const double&) { return 1.0; }
 
