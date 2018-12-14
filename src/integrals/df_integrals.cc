@@ -191,8 +191,8 @@ void DFIntegrals::gather_integrals() {
     SharedMatrix Ca_ao(new Matrix("Ca_ao", nso_, nmopi_.sum()));
 
     // Transform from the SO to the AO basis
-    for (size_t h = 0, index = 0; h < nirrep_; ++h) {
-        for (size_t i = 0; i < nmopi_[h]; ++i) {
+    for (int h = 0, index = 0; h < nirrep_; ++h) {
+        for (int i = 0; i < nmopi_[h]; ++i) {
             size_t nao = nso_;
             size_t nso = nsopi_[h];
 

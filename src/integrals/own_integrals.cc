@@ -54,6 +54,7 @@ OwnIntegrals::OwnIntegrals(psi::Options& options, SharedWavefunction ref_wfn,
     //    freeze_core_orbitals();
 }
 
+
 OwnIntegrals::~OwnIntegrals() {}
 } // namespace forte
 } // namespace psi

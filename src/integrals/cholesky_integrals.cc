@@ -61,6 +61,7 @@ CholeskyIntegrals::CholeskyIntegrals(psi::Options& options, SharedWavefunction r
     gather_integrals();
     freeze_core_orbitals();
     print_timing("computing Cholesky integrals", int_timer.get());
+
 }
 
 CholeskyIntegrals::~CholeskyIntegrals() {}
@@ -165,7 +166,7 @@ void CholeskyIntegrals::gather_integrals() {
         std::shared_ptr<ERISieve> sieve(
             new ERISieve(primary, options_.get_double("INTS_TOLERANCE")));
         const std::vector<std::pair<int, int>>& function_pairs = sieve->function_pairs();
-        int ntri = sieve->function_pairs().size();
+        size_t ntri = sieve->function_pairs().size();
         size_t nbf = primary->nbf();
         std::string str = "Reading CD Integrals";
         if (print_) {
@@ -173,7 +174,6 @@ void CholeskyIntegrals::gather_integrals() {
         }
 
         std::shared_ptr<PSIO> psio(new PSIO());
-        psio_address addr = PSIO_ZERO;
         int file_unit = PSIF_DFSCF_BJ;
 
         if (psio->exists(file_unit)) {
