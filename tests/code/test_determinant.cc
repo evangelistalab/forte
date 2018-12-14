@@ -11,7 +11,7 @@ using namespace psi::forte;
 
 UI64Determinant make_det_from_string(std::string s) {
     UI64Determinant d;
-    int n = s.size() / 2;
+    size_t n = s.size() / 2;
     if (n % 2 == 0) {
         for (std::string::size_type i = 0; i < n; ++i) {
             d.set_alfa_bit(i, s[i] == '0' ? 0 : 1);
