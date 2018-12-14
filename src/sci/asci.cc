@@ -241,7 +241,6 @@ double ASCI::compute_energy() {
 
     // Save the P_space energies to predict convergence
     std::vector<double> P_energies;
-    // approx_rdm_ = false;
 
     int cycle;
     for (cycle = 0; cycle < max_cycle_; ++cycle) {
@@ -397,9 +396,7 @@ void ASCI::find_q_space(DeterminantHashVec& P_space, DeterminantHashVec& PQ_spac
                                                         std::make_pair(0.0, zero_det));
 
     local_timer build_sort;
-    size_t max = V_hash.size();
     size_t N = 0;
-    // sorted_dets.reserve(max);
     for (const auto& I : V_hash) {
         double delta = fci_ints_->energy(I.first) - evals->get(0);
         double V = I.second;
@@ -431,7 +428,6 @@ void ASCI::find_q_space(DeterminantHashVec& P_space, DeterminantHashVec& PQ_spac
 
 bool ASCI::check_convergence(std::vector<std::vector<double>>& energy_history, SharedVector evals) {
     int nroot = evals->dim();
-    int ref = 0;
 
     if (energy_history.size() == 0) {
         std::vector<double> new_energies;
@@ -703,14 +699,13 @@ void ASCI::get_excited_determinants_sr(SharedMatrix evecs, DeterminantHashVec& P
     local_timer build;
     size_t max_P = P_space.size();
     const det_hashvec& P_dets = P_space.wfn_hash();
-    int nroot = 1;
     double screen_thresh_ = options_.get_double("ASCI_PRESCREEN_THRESHOLD");
 
 // Loop over reference determinants
 #pragma omp parallel
     {
-        int num_thread = omp_get_num_threads();
-        int tid = omp_get_thread_num();
+        size_t num_thread = omp_get_num_threads();
+        size_t tid = omp_get_thread_num();
         size_t bin_size = max_P / num_thread;
         bin_size += (tid < (max_P % num_thread)) ? 1 : 0;
         size_t start_idx =
