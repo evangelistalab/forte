@@ -213,8 +213,7 @@ std::map<std::string, SharedMatrix> IAOBuilder::build_iaos() {
     for (size_t A = 0; A < true_atoms_.size(); A++) {
         std::vector<int> vec;
         for (size_t m = 0; m < iaos_to_atoms_.size(); m++) {
-			int Ai = A;
-            if (iaos_to_atoms_[m] == Ai) {
+            if (iaos_to_atoms_[m] == static_cast<int>(A)) {
                 vec.push_back(m);
             }
         }
@@ -557,8 +556,7 @@ std::map<std::string, SharedMatrix> IAOBuilder::localize(SharedMatrix Cocc, Shar
     for (size_t A = 0; A < true_atoms_.size(); A++) {
         std::vector<int> vec;
         for (size_t m = 0; m < iaos_to_atoms_.size(); m++) {
-			int Ai = A;
-            if (iaos_to_atoms_[m] == Ai) {
+            if (iaos_to_atoms_[m] == static_cast<int>(A)) {
                 vec.push_back(m);
             }
         }
