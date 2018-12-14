@@ -348,7 +348,7 @@ void CI_Reference::build_cas_reference(std::vector<Determinant>& ref_space) {
 }
 
 std::vector<std::tuple<double, int, int>> CI_Reference::sym_labeled_orbitals(std::string type) {
-    int nact = mo_space_info_->size("ACTIVE");
+    size_t nact = mo_space_info_->size("ACTIVE");
 
     std::vector<std::tuple<double, int, int>> labeled_orb;
 

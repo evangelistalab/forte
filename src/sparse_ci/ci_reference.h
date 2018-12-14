@@ -65,7 +65,7 @@ class CI_Reference // : public Wavefunction
     int nirrep_;
 
     // Maximum number of determinants
-    int subspace_size_;
+    size_t subspace_size_;
 
     // Pointer to the MOSpaceInfo object
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
