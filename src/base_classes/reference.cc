@@ -135,5 +135,5 @@ double Reference::compute_Eref(std::shared_ptr<ForteIntegrals> ints,
 
     return E;
 }
-}
-}
+} // namespace forte
+} // namespace psi

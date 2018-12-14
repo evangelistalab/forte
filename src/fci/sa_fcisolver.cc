@@ -61,13 +61,13 @@ void SA_FCISolver::read_options() {
     parsed_options_.clear();
 
     if (options_["AVG_STATE"].has_changed()) {
-        int nentry = options_["AVG_STATE"].size();
+        size_t nentry = options_["AVG_STATE"].size();
 
         // figure out total number of states
         std::vector<int> nstatespim;
         std::vector<int> irreps;
         std::vector<int> multis;
-        for (int i = 0; i < nentry; ++i) {
+        for (size_t i = 0; i < nentry; ++i) {
             if (options_["AVG_STATE"][i].size() != 3) {
                 outfile->Printf("\n  Error: invalid input of AVG_STATE. Each "
                                 "entry should take an array of three numbers.");
@@ -117,7 +117,7 @@ void SA_FCISolver::read_options() {
             }
 
             double wsum = 0.0;
-            for (int i = 0; i < nentry; ++i) {
+            for (size_t i = 0; i < nentry; ++i) {
                 int nw = options_["AVG_WEIGHT"][i].size();
                 if (nw != nstatespim[i]) {
                     outfile->Printf("\n  Error: mismatched number of weights "
@@ -149,14 +149,14 @@ void SA_FCISolver::read_options() {
         } else {
             // use equal weights
             double w = 1.0 / nstates_;
-            for (int i = 0; i < nentry; ++i) {
+            for (size_t i = 0; i < nentry; ++i) {
                 std::vector<double> weight(nstatespim[i], w);
                 weights.push_back(weight);
             }
         }
 
         // form option parser
-        for (int i = 0; i < nentry; ++i) {
+        for (size_t i = 0; i < nentry; ++i) {
             std::tuple<int, int, int, std::vector<double>> avg_info =
                 std::make_tuple(irreps[i], multis[i], nstatespim[i], weights[i]);
             parsed_options_.push_back(avg_info);
@@ -176,7 +176,7 @@ void SA_FCISolver::read_options() {
         std::string dash(ltotal, '-');
         outfile->Printf("\n    Irrep.  Multi.  Nstates  %sWeights", blank.c_str());
         outfile->Printf("\n    %s", dash.c_str());
-        for (int i = 0; i < nentry; ++i) {
+        for (size_t i = 0; i < nentry; ++i) {
             std::string w_str;
             for (double w : weights[i]) {
                 std::stringstream ss;
@@ -385,5 +385,5 @@ double SA_FCISolver::compute_energy() {
 
     return E_sa_casscf;
 }
-}
-}
+} // namespace forte
+} // namespace psi

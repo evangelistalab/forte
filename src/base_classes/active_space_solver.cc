@@ -9,5 +9,5 @@ ActiveSpaceSolver::ActiveSpaceSolver(SharedWavefunction ref_wfn, Options& option
     : Wavefunction(options), ints_(ints), mo_space_info_(mo_space_info) {
     shallow_copy(ref_wfn);
 }
-}
-}
+} // namespace forte
+} // namespace psi

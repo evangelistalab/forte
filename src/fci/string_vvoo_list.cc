@@ -123,7 +123,7 @@ void StringLists::make_vvoo(GraphPtr graph, VVOOList& list, int p, int q, int r,
 
     int n = graph->nbits() - 4 + (overlap ? 1 : 0);
     int k = graph->nones() - 2;
-    int nones = graph->nones();
+    // int nones = graph->nones();
 
     //    outfile->Printf("\n a = %2d %2d %2d %2d", p, q, r, s);
     //    outfile->Printf("\n a = %2d %2d %2d %2d", a[0], a[1], a[2], a[3]);
@@ -168,13 +168,13 @@ void StringLists::make_vvoo(GraphPtr graph, VVOOList& list, int p, int q, int r,
                     I[i] = b[k];
                     k++;
                 }
-                for (int i = a[3] + 1; i < ncmo_; ++i) {
+                for (int i = a[3] + 1; i < static_cast<int>(ncmo_); ++i) {
                     I[i] = b[k];
                     k++;
                 }
                 if (graph->sym(I) == h) {
                     // Copy I to J
-                    for (int i = 0; i < ncmo_; ++i)
+                    for (int i = 0; i < static_cast<int>(ncmo_); ++i)
                         J[i] = I[i];
                     short sign = 1;
                     // Apply a^{+}_p a^{+}_q a_s a_r to I
@@ -258,7 +258,7 @@ void StringLists::make_VOVO(GraphPtr graph, VOVOList& list, int p, int q, int r,
         do {
             if (graph->sym(I) == h) {
                 // Copy I to J
-                for (int i = 0; i < ncmo_; ++i)
+                for (int i = 0; i < static_cast<int>(ncmo_); ++i)
                     J[i] = I[i];
 
                 short sign = 1;
@@ -319,5 +319,5 @@ std::vector<StringSubstitution>& StringLists::get_beta_vovo_list(size_t p, size_
     std::tuple<size_t, size_t, size_t, size_t, int> pqrs_pair(p, q, r, s, h);
     return beta_vovo_list[pqrs_pair];
 }
-}
-}
+} // namespace forte
+} // namespace psi

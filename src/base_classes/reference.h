@@ -168,7 +168,7 @@ class Reference // : public Wavefunction
     ambit::Tensor g3abb_;
     ambit::Tensor g3bbb_;
 };
-}
-} // End Namespaces
+} // namespace forte
+} // namespace psi
 
 #endif // _reference_h_
