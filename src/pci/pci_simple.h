@@ -109,7 +109,7 @@ class ProjectorCI_Simple : public Wavefunction {
     /// The symmetry of each orbital in Pitzer ordering
     std::vector<int> mo_symmetry_;
     /// The number of correlated molecular orbitals
-    int ncmo_;
+//    int ncmo_;
     /// The number of active electrons
     int nactel_;
     /// The number of correlated alpha electrons
@@ -140,9 +140,9 @@ class ProjectorCI_Simple : public Wavefunction {
     /// maximum element in (pq|pq) matrix
     std::vector<double> pqpq_row_max_;
     /// 2loop total count
-    size_t schwarz_total_;
+//    size_t schwarz_total_;
     /// 2loop schwarz succeed count
-    size_t schwarz_succ_;
+//    size_t schwarz_succ_;
 
     // * Calculation info
     /// The threshold applied to the primary space
@@ -168,9 +168,9 @@ class ProjectorCI_Simple : public Wavefunction {
     /// The maximum number of iterations in Davidson generator
     int max_Davidson_iter_;
     /// The number of trial vector to retain after collapsing
-    int davidson_collapse_per_root_;
+    size_t davidson_collapse_per_root_;
     /// The maxim number of trial vectors
-    int davidson_subspace_per_root_;
+    size_t davidson_subspace_per_root_;
     /// The current iteration
     int iter_;
     /// The current root
@@ -319,12 +319,11 @@ class ProjectorCI_Simple : public Wavefunction {
     * @param S An energy shift subtracted from the Hamiltonian
     */
     void propagate(GeneratorType_Simple::GeneratorType generator, det_vec& dets,
-                   std::vector<double>& C, double tau, double spawning_threshold, double S);
+                   std::vector<double>& C, double spawning_threshold);
     /// A Delta projector fitted by 10th order chebyshev polynomial
-    void propagate_wallCh(det_vec& dets, std::vector<double>& C, double spawning_threshold,
-                          double S);
+    void propagate_wallCh(det_vec& dets, std::vector<double>& C, double spawning_threshold);
     /// The DL Generator
-    void propagate_DL(det_vec& dets, std::vector<double>& C, double spawning_threshold, double S);
+    void propagate_DL(det_vec& dets, std::vector<double>& C, double spawning_threshold);
     /// Apply symmetric approx tau H to a set of determinants with selection
     /// according to reference coefficients
     void apply_tau_H_ref_C_symm(double tau, double spawning_threshold, det_vec& dets,

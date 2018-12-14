@@ -88,11 +88,11 @@ void binomial_coefs(std::vector<double>& coefs, int order, double a, double b);
 void Taylor_generator_coefs(std::vector<double>& coefs, int order, double tau, double S);
 void Taylor_polynomial_coefs(std::vector<double>& coefs, int order);
 void Chebyshev_polynomial_coefs(std::vector<double>& coefs, int order);
-void Exp_Chebyshev_generator_coefs(std::vector<double>& coefs, int order, double tau, double S,
+void Exp_Chebyshev_generator_coefs(std::vector<double>& coefs, int order, double tau,
                                    double range);
-void Chebyshev_generator_coefs(std::vector<double>& coefs, int order, double tau, double S,
+void Chebyshev_generator_coefs(std::vector<double>& coefs, int order,
                                double range);
-void Wall_Chebyshev_generator_coefs(std::vector<double>& coefs, int order, double tau, double S,
+void Wall_Chebyshev_generator_coefs(std::vector<double>& coefs, int order,
                                     double range);
 void print_polynomial(std::vector<double>& coefs);
 
@@ -317,7 +317,7 @@ double ProjectorCI_Simple::estimate_high_energy() {
     int nea = 0, neb = 0;
     std::vector<std::pair<double, int>> obt_energies;
     Determinant high_det(reference_determinant_);
-    for (int i = 0; i < nact_; i++) {
+    for (size_t i = 0; i < nact_; i++) {
         if (reference_determinant_.get_alfa_bit(i)) {
             ++nea;
             high_det.destroy_alfa_bit(i);
@@ -328,7 +328,7 @@ double ProjectorCI_Simple::estimate_high_energy() {
         }
 
         double temp = fci_ints_->oei_a(i, i);
-        for (int p = 0; p < nact_; ++p) {
+        for (size_t p = 0; p < nact_; ++p) {
             if (reference_determinant_.get_alfa_bit(p)) {
                 temp += fci_ints_->tei_aa(i, p, i, p);
             }
@@ -505,14 +505,14 @@ void ProjectorCI_Simple::compute_characteristic_function() {
         Taylor_generator_coefs(cha_func_coefs_, 4, time_step_, range_);
         break;
     case ExpChebyshevGenerator:
-        Exp_Chebyshev_generator_coefs(cha_func_coefs_, chebyshev_order_, time_step_, shift_,
+        Exp_Chebyshev_generator_coefs(cha_func_coefs_, chebyshev_order_, time_step_,
                                       range_);
         break;
     case ChebyshevGenerator:
-        Chebyshev_generator_coefs(cha_func_coefs_, chebyshev_order_, time_step_, shift_, range_);
+        Chebyshev_generator_coefs(cha_func_coefs_, chebyshev_order_, range_);
         break;
     case WallChebyshevGenerator:
-        Wall_Chebyshev_generator_coefs(cha_func_coefs_, chebyshev_order_, time_step_, shift_,
+        Wall_Chebyshev_generator_coefs(cha_func_coefs_, chebyshev_order_,
                                        range_);
     default:
         break;
@@ -644,9 +644,9 @@ double ProjectorCI_Simple::compute_energy() {
             double min_C_abs = std::fabs(*minmax_C.first);
             double max_C = *minmax_C.second;
             max_C = max_C > min_C_abs ? max_C : min_C_abs;
-            propagate(generator_, dets, C, time_step_, spawning_threshold_ * max_C, shift_);
+            propagate(generator_, dets, C, spawning_threshold_ * max_C);
         } else {
-            propagate(generator_, dets, C, time_step_, spawning_threshold_, shift_);
+            propagate(generator_, dets, C, spawning_threshold_);
         }
         timer_off("PCI:Step");
 
@@ -925,13 +925,13 @@ double ProjectorCI_Simple::initial_guess(det_vec& dets, std::vector<double>& C) 
 }
 
 void ProjectorCI_Simple::propagate(GeneratorType generator, det_vec& dets, std::vector<double>& C,
-                                   double tau, double spawning_threshold, double S) {
+                                   double spawning_threshold) {
     switch (generator) {
     case WallChebyshevGenerator:
-        propagate_wallCh(dets, C, spawning_threshold, S);
+        propagate_wallCh(dets, C, spawning_threshold);
         break;
     case DLGenerator:
-        propagate_DL(dets, C, spawning_threshold, S);
+        propagate_DL(dets, C, spawning_threshold);
         break;
     default:
         outfile->Printf("\n\n  Selected Generator Unsupported in Simple version!!!");
@@ -942,7 +942,7 @@ void ProjectorCI_Simple::propagate(GeneratorType generator, det_vec& dets, std::
 }
 
 void ProjectorCI_Simple::propagate_wallCh(det_vec& dets, std::vector<double>& C,
-                                          double spawning_threshold, double S) {
+                                          double spawning_threshold) {
 
     // A map that contains the pair (determinant,coefficient)
     const double PI = 2 * acos(0.0);
@@ -1002,7 +1002,7 @@ void ProjectorCI_Simple::propagate_wallCh(det_vec& dets, std::vector<double>& C,
 //}
 
 void ProjectorCI_Simple::propagate_DL(det_vec& dets, std::vector<double>& C,
-                                      double spawning_threshold, double S) {
+                                      double spawning_threshold) {
     size_t ref_size = C.size();
     std::vector<std::vector<double>> b_vec(davidson_subspace_per_root_);
     std::vector<std::vector<double>> sigma_vec(davidson_subspace_per_root_);
@@ -1024,29 +1024,29 @@ void ProjectorCI_Simple::propagate_DL(det_vec& dets, std::vector<double>& C,
 
     size_t dets_size = dets.size();
     std::vector<double> diag_vec(dets_size);
-    for (int i = 0; i < dets_size; i++) {
+    for (size_t i = 0; i < dets_size; i++) {
         diag_vec[i] = fci_ints_->energy(dets[i]) + fci_ints_->scalar_energy();
     }
 
     double lambda = A->get(0, 0);
     alpha_vec[0] = 1.0;
     std::vector<double> delta_vec(dets_size, 0.0);
-    int current_order = 1;
+    size_t current_order = 1;
 
     int i = 1;
     for (i = 1; i < max_Davidson_iter_; i++) {
 
-        for (int k = 0; k < current_order; k++) {
+        for (size_t k = 0; k < current_order; k++) {
             for (int j = 0, jmax = b_vec[k].size(); j < jmax; j++) {
                 delta_vec[j] += alpha_vec[k] * (sigma_vec[k][j] - lambda * b_vec[k][j]);
             }
         }
-        for (int j = 0; j < dets_size; j++) {
+        for (size_t j = 0; j < dets_size; j++) {
             delta_vec[j] /= lambda - diag_vec[j];
         }
 
         normalize(delta_vec);
-        for (int m = 0; m < current_order; m++) {
+        for (size_t m = 0; m < current_order; m++) {
             double delta_dot_bm = dot(delta_vec, b_vec[m]);
             add(delta_vec, -delta_dot_bm, b_vec[m]);
         }
@@ -1070,7 +1070,7 @@ void ProjectorCI_Simple::propagate_DL(det_vec& dets, std::vector<double>& C,
         apply_tau_H_ref_C_symm(1.0, spawning_threshold, dets, b_vec[current_order], C, dets_C_hash,
                                0.0);
         copy_hash_to_vec_order_ref(dets_C_hash, dets, sigma_vec[current_order]);
-        for (int m = 0; m < current_order; m++) {
+        for (size_t m = 0; m < current_order; m++) {
             double b_dot_sigma_m = dot(b_vec[current_order], sigma_vec[m]);
             A->set(current_order, m, b_dot_sigma_m);
             A->set(m, current_order, b_dot_sigma_m);
@@ -1080,8 +1080,8 @@ void ProjectorCI_Simple::propagate_DL(det_vec& dets, std::vector<double>& C,
         current_order++;
         SharedMatrix G(new Matrix(current_order, current_order));
 
-        for (int k = 0; k < current_order; k++) {
-            for (int j = 0; j < current_order; j++) {
+        for (size_t k = 0; k < current_order; k++) {
+            for (size_t j = 0; j < current_order; j++) {
                 G->set(k, j, A->get(k, j));
             }
         }
@@ -1092,7 +1092,7 @@ void ProjectorCI_Simple::propagate_DL(det_vec& dets, std::vector<double>& C,
         double e_gradiant = -lambda;
 
         lambda = eigs->get(0);
-        for (int j = 0; j < current_order; j++) {
+        for (size_t j = 0; j < current_order; j++) {
             alpha_vec[j] = evecs->get(j, 0);
         }
         e_gradiant += lambda;
@@ -1104,33 +1104,33 @@ void ProjectorCI_Simple::propagate_DL(det_vec& dets, std::vector<double>& C,
         }
         if (current_order >= davidson_subspace_per_root_) {
             b_vec[0].resize(dets_size, 0.0);
-            for (int j = 0, jmax = dets.size(); j < jmax; j++) {
+            for (size_t j = 0, jmax = dets.size(); j < jmax; j++) {
                 std::vector<double> b_j(davidson_collapse_per_root_, 0.0);
                 std::vector<double> sigma_j(davidson_collapse_per_root_, 0.0);
-                for (int l = 0; l < davidson_collapse_per_root_; l++) {
-                    for (int k = 0; k < current_order; k++) {
+                for (size_t l = 0; l < davidson_collapse_per_root_; l++) {
+                    for (size_t k = 0; k < current_order; k++) {
                         b_j[l] += evecs->get(k, l) * b_vec[k][j];
                         sigma_j[l] += evecs->get(k, l) * sigma_vec[k][j];
                     }
                 }
-                for (int l = 0; l < davidson_collapse_per_root_; l++) {
+                for (size_t l = 0; l < davidson_collapse_per_root_; l++) {
                     b_vec[l][j] = b_j[l];
                     sigma_vec[l][j] = sigma_j[l];
                 }
             }
-            for (int l = davidson_collapse_per_root_; l < davidson_subspace_per_root_; l++) {
+            for (size_t l = davidson_collapse_per_root_; l < davidson_subspace_per_root_; l++) {
                 b_vec[l].clear();
                 sigma_vec[l].clear();
             }
-            for (int m = 0; m < davidson_collapse_per_root_; m++) {
-                for (int n = 0; n <= m; n++) {
+            for (size_t m = 0; m < davidson_collapse_per_root_; m++) {
+                for (size_t n = 0; n <= m; n++) {
                     double n_dot_sigma_m = dot(b_vec[n], sigma_vec[m]);
                     A->set(n, m, n_dot_sigma_m);
                     A->set(m, n, n_dot_sigma_m);
                 }
             }
             alpha_vec[0] = 1.0;
-            for (int l = 1; l < davidson_subspace_per_root_; l++) {
+            for (size_t l = 1; l < davidson_subspace_per_root_; l++) {
                 alpha_vec[l] = 0.0;
             }
             outfile->Printf("\nDavidson collapsed from %d vectors to %d vectors.", current_order,
@@ -1151,8 +1151,8 @@ void ProjectorCI_Simple::propagate_DL(det_vec& dets, std::vector<double>& C,
     scale(C, alpha_vec[0]);
     C.resize(dets.size(), 0.0);
     //    b_vec[0].resize(dets.size(), 0.0);
-    for (int i = 1; i < current_order; i++) {
-        for (int j = 0, jmax = b_vec[i].size(); j < jmax; j++) {
+    for (size_t i = 1; i < current_order; i++) {
+        for (size_t j = 0, jmax = b_vec[i].size(); j < jmax; j++) {
             C[j] += alpha_vec[i] * b_vec[i][j];
         }
     }
@@ -1670,7 +1670,6 @@ double ProjectorCI_Simple::estimate_2nd_order_perturbation_sub(det_vec& dets,
     double perturbation_energy_estimator = 0.0;
 #pragma omp parallel for reduction(+ : perturbation_energy_estimator)
     for (size_t I = 0; I < size; ++I) {
-        double current_V = 0.0;
         for (size_t J = 0; J < size; ++J) {
             double HIJ = fci_ints_->slater_rules(dets[I], dets[J]);
             if (std::fabs(C[I] * HIJ) < spawning_threshold && J != I) {
@@ -1804,7 +1803,7 @@ void ProjectorCI_Simple::print_wfn(det_vec& space, std::vector<double>& C, size_
                                         "sextet", "septet", "octet", "nonet", "decaet"});
     std::string state_label = s2_labels[std::round(S * 2.0)];
     outfile->Printf("\n\n  Spin State: S^2 = %5.3f, S = %5.3f, %s (from %zu "
-                    "determinants,%.2f\%)",
+                    "determinants,%.2f%%)",
                     S2, S, state_label.c_str(), max_I, 100.0 * sum_weight);
 }
 

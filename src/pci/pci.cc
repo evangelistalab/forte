@@ -181,28 +181,18 @@ void binomial_coefs(std::vector<double>& coefs, int order, double a, double b);
 void Taylor_generator_coefs(std::vector<double>& coefs, int order, double tau, double S);
 void Taylor_polynomial_coefs(std::vector<double>& coefs, int order);
 void Chebyshev_polynomial_coefs(std::vector<double>& coefs, int order);
-void Exp_Chebyshev_generator_coefs(std::vector<double>& coefs, int order, double tau, double S,
+void Exp_Chebyshev_generator_coefs(std::vector<double>& coefs, int order, double tau,
                                    double range);
-void Chebyshev_generator_coefs(std::vector<double>& coefs, int order, double tau, double S,
+void Chebyshev_generator_coefs(std::vector<double>& coefs, int order,
                                double range);
-void Wall_Chebyshev_generator_coefs(std::vector<double>& coefs, int order, double tau, double S,
+void Wall_Chebyshev_generator_coefs(std::vector<double>& coefs, int order,
                                     double range);
 void print_polynomial(std::vector<double>& coefs);
 
 void print_vector(const std::vector<double>& C, std::string description) {
     outfile->Printf("\n%s :", description.c_str());
-    for (int i = 0; i < C.size(); i++) {
+    for (size_t i = 0; i < C.size(); i++) {
         outfile->Printf(" %.12lf ", C[i]);
-    }
-    outfile->Printf("\n");
-}
-
-void print_hash(det_hash<>& C, std::string description, int nmo, bool print_det = false) {
-    outfile->Printf("\n%s :", description.c_str());
-    for (det_hash_it it = C.begin(); it != C.end(); it++) {
-        if (print_det)
-            outfile->Printf("\n  %s", it->first.str().c_str());
-        outfile->Printf(" %.12lf ", it->second);
     }
     outfile->Printf("\n");
 }
@@ -505,7 +495,7 @@ double ProjectorCI::estimate_high_energy() {
     int nea = 0, neb = 0;
     std::vector<std::pair<double, int>> obt_energies;
     Determinant high_det(reference_determinant_);
-    for (int i = 0; i < nact_; i++) {
+    for (size_t i = 0; i < nact_; i++) {
         if (reference_determinant_.get_alfa_bit(i)) {
             ++nea;
             high_det.destroy_alfa_bit(i);
@@ -516,7 +506,7 @@ double ProjectorCI::estimate_high_energy() {
         }
 
         double temp = fci_ints_->oei_a(i, i);
-        for (int p = 0; p < nact_; ++p) {
+        for (size_t p = 0; p < nact_; ++p) {
             if (reference_determinant_.get_alfa_bit(p)) {
                 temp += fci_ints_->tei_aa(i, p, i, p);
             }
@@ -714,14 +704,14 @@ void ProjectorCI::compute_characteristic_function() {
         Taylor_generator_coefs(cha_func_coefs_, 4, time_step_, range_);
         break;
     case ExpChebyshevGenerator:
-        Exp_Chebyshev_generator_coefs(cha_func_coefs_, chebyshev_order_, time_step_, shift_,
+        Exp_Chebyshev_generator_coefs(cha_func_coefs_, chebyshev_order_, time_step_,
                                       range_);
         break;
     case ChebyshevGenerator:
-        Chebyshev_generator_coefs(cha_func_coefs_, chebyshev_order_, time_step_, shift_, range_);
+        Chebyshev_generator_coefs(cha_func_coefs_, chebyshev_order_, range_);
         break;
     case WallChebyshevGenerator:
-        Wall_Chebyshev_generator_coefs(cha_func_coefs_, chebyshev_order_, time_step_, shift_,
+        Wall_Chebyshev_generator_coefs(cha_func_coefs_, chebyshev_order_,
                                        range_);
     default:
         break;
@@ -819,7 +809,7 @@ void Chebyshev_polynomial_coefs(std::vector<double>& coefs, int order) {
     }
 }
 
-void Exp_Chebyshev_generator_coefs(std::vector<double>& coefs, int order, double tau, double S,
+void Exp_Chebyshev_generator_coefs(std::vector<double>& coefs, int order, double tau,
                                    double range) {
     coefs.clear();
     std::vector<double> poly_coefs;
@@ -842,7 +832,7 @@ void Exp_Chebyshev_generator_coefs(std::vector<double>& coefs, int order, double
     Polynomial_generator_coefs(coefs, poly_coefs, -1.0 / range, 0.0);
 }
 
-void Chebyshev_generator_coefs(std::vector<double>& coefs, int order, double tau, double S,
+void Chebyshev_generator_coefs(std::vector<double>& coefs, int order,
                                double range) {
     coefs.clear();
     std::vector<double> poly_coefs;
@@ -851,7 +841,7 @@ void Chebyshev_generator_coefs(std::vector<double>& coefs, int order, double tau
     Polynomial_generator_coefs(coefs, poly_coefs, -1.0 / range, 0.0);
 }
 
-void Wall_Chebyshev_generator_coefs(std::vector<double>& coefs, int order, double tau, double S,
+void Wall_Chebyshev_generator_coefs(std::vector<double>& coefs, int order,
                                     double range) {
     coefs.clear();
     std::vector<double> poly_coefs;
@@ -1297,13 +1287,13 @@ void ProjectorCI::propagate(GeneratorType generator, det_vec& dets, std::vector<
 
     switch (generator) {
     case WallChebyshevGenerator:
-        propagate_wallCh(dets, C, spawning_threshold, S);
+        propagate_wallCh(dets, C, spawning_threshold);
         break;
     case LanczosGenerator:
-        propagate_Lanczos(dets, C, spawning_threshold, S);
+        propagate_Lanczos(dets, C, spawning_threshold);
         break;
     case DLGenerator:
-        propagate_DL(dets, C, spawning_threshold, S);
+        propagate_DL(dets, C, spawning_threshold);
         break;
     case ChebyshevGenerator:
         propagate_Chebyshev(dets, C, spawning_threshold);
@@ -1347,8 +1337,7 @@ void ProjectorCI::propagate(GeneratorType generator, det_vec& dets, std::vector<
     normalize(C);
 }
 
-void ProjectorCI::propagate_wallCh(det_vec& dets, std::vector<double>& C, double spawning_threshold,
-                                   double S) {
+void ProjectorCI::propagate_wallCh(det_vec& dets, std::vector<double>& C, double spawning_threshold) {
 
     // A map that contains the pair (determinant,coefficient)
     const double PI = 2 * acos(0.0);
@@ -1383,9 +1372,9 @@ void ProjectorCI::propagate_wallCh(det_vec& dets, std::vector<double>& C, double
 }
 
 void ProjectorCI::propagate_Lanczos(det_vec& dets, std::vector<double>& C,
-                                    double spawning_threshold, double S) {
+                                    double spawning_threshold) {
     size_t ref_size = C.size();
-    int krylov_order = krylov_order_ < ref_size + 1 ? krylov_order_ : ref_size + 1;
+    size_t krylov_order = krylov_order_ < ref_size + 1 ? krylov_order_ : ref_size + 1;
     std::vector<std::vector<double>> H_n_C(krylov_order + 1);
     H_n_C[0] = C;
     det_hash<> dets_C_hash;
@@ -1402,7 +1391,7 @@ void ProjectorCI::propagate_Lanczos(det_vec& dets, std::vector<double>& C,
 
     //    norms[0] = normalize(H_n_C[1]);
 
-    for (int i = 1; i <= krylov_order; i++) {
+    for (size_t i = 1; i <= krylov_order; i++) {
         //        for (int k = 0; k < H_n_C[i-1].size(); k++) {
         //            outfile -> Printf(" %lf ", H_n_C[i-1][k]);
         //        }
@@ -1430,8 +1419,8 @@ void ProjectorCI::propagate_Lanczos(det_vec& dets, std::vector<double>& C,
     //// Orthogonal solver BEGIN
     Matrix A(krylov_order, krylov_order);
 
-    for (int i = 0; i < krylov_order; i++) {
-        for (int j = i; j < krylov_order; j++) {
+    for (size_t i = 0; i < krylov_order; i++) {
+        for (size_t j = i; j < krylov_order; j++) {
             double dotIJ = norms[j] * dot(H_n_C[i], H_n_C[j + 1]);
             A.set(i, j, dotIJ);
             A.set(j, i, dotIJ);
@@ -1453,8 +1442,8 @@ void ProjectorCI::propagate_Lanczos(det_vec& dets, std::vector<double>& C,
 
     SharedMatrix H(new Matrix(current_order, current_order));
 
-    for (int i = 0; i < current_order; i++) {
-        for (int j = 0; j < current_order; j++) {
+    for (size_t i = 0; i < current_order; i++) {
+        for (size_t j = 0; j < current_order; j++) {
             H->set(i, j, A.get(i, j));
         }
     }
@@ -1471,7 +1460,7 @@ void ProjectorCI::propagate_Lanczos(det_vec& dets, std::vector<double>& C,
 
     int ground_index = 0;
     double abs_ground_coef = std::fabs(evecs->get(0, ground_index));
-    for (int i = 1; i < current_order; i++) {
+    for (size_t i = 1; i < current_order; i++) {
         if (std::fabs(evecs->get(0, i)) > abs_ground_coef) {
             abs_ground_coef = std::fabs(evecs->get(0, i));
             ground_index = i;
@@ -1481,8 +1470,8 @@ void ProjectorCI::propagate_Lanczos(det_vec& dets, std::vector<double>& C,
     while (ground_index != 0) {
         current_order -= ground_index;
         H.reset(new Matrix(current_order, current_order));
-        for (int i = 0; i < current_order; i++) {
-            for (int j = 0; j < current_order; j++) {
+        for (size_t i = 0; i < current_order; i++) {
+            for (size_t j = 0; j < current_order; j++) {
                 H->set(i, j, A.get(i, j));
             }
         }
@@ -1499,7 +1488,7 @@ void ProjectorCI::propagate_Lanczos(det_vec& dets, std::vector<double>& C,
 
         ground_index = 0;
         abs_ground_coef = std::fabs(evecs->get(0, ground_index));
-        for (int i = 1; i < current_order; i++) {
+        for (size_t i = 1; i < current_order; i++) {
             if (std::fabs(evecs->get(0, i)) > abs_ground_coef) {
                 abs_ground_coef = std::fabs(evecs->get(0, i));
                 ground_index = i;
@@ -1513,8 +1502,8 @@ void ProjectorCI::propagate_Lanczos(det_vec& dets, std::vector<double>& C,
 
     scale(C, evecs->get(0, 0));
     C.resize(dets.size());
-    for (int i = 1; i < current_order; i++) {
-        for (int j = 0; j < H_n_C[i].size(); j++) {
+    for (size_t i = 1; i < current_order; i++) {
+        for (size_t j = 0; j < H_n_C[i].size(); j++) {
             C[j] += evecs->get(i, 0) * H_n_C[i][j];
         }
     }
@@ -1648,8 +1637,7 @@ void ProjectorCI::propagate_Lanczos(det_vec& dets, std::vector<double>& C,
     //// Generalized eigenvalue problem solver END
 }
 
-void ProjectorCI::propagate_DL(det_vec& dets, std::vector<double>& C, double spawning_threshold,
-                               double S) {
+void ProjectorCI::propagate_DL(det_vec& dets, std::vector<double>& C, double spawning_threshold) {
     size_t ref_size = C.size();
     std::vector<std::vector<double>> b_vec(davidson_subspace_per_root_);
     std::vector<std::vector<double>> sigma_vec(davidson_subspace_per_root_);
@@ -1677,7 +1665,7 @@ void ProjectorCI::propagate_DL(det_vec& dets, std::vector<double>& C, double spa
 
     size_t dets_size = dets.size();
     std::vector<double> diag_vec(dets_size);
-    for (int i = 0; i < dets_size; i++) {
+    for (size_t i = 0; i < dets_size; i++) {
         diag_vec[i] = fci_ints_->energy(dets[i]) + fci_ints_->scalar_energy();
     }
 
@@ -1694,7 +1682,7 @@ void ProjectorCI::propagate_DL(det_vec& dets, std::vector<double>& C, double spa
                 delta_vec[j] += alpha_vec[k] * (sigma_vec[k][j] - lambda * b_vec[k][j]);
             }
         }
-        for (int j = 0; j < dets_size; j++) {
+        for (size_t j = 0; j < dets_size; j++) {
             delta_vec[j] /= lambda - diag_vec[j];
         }
 
@@ -2026,315 +2014,6 @@ void ProjectorCI::propagate_Olsen(det_vec& dets, std::vector<double>& C, double 
 
     // Overwrite the input vectors with the updated wave function
     copy_hash_to_vec(dets_C_hash, dets, C);
-}
-
-void ProjectorCI::propagate_DavidsonLiu(det_vec& dets, std::vector<double>& C,
-                                        double spawning_threshold) {
-    throw PSIEXCEPTION("\n\n  propagate_DavidsonLiu is not implemented yet.\n\n");
-
-    det_hash<> dets_C_hash;
-
-    int maxiter = 50;
-    bool print = false;
-
-    // Number of roots
-    int M = 1;
-
-    size_t collapse_size = 1 * M;
-    size_t subspace_size = 8 * M;
-
-    double e_convergence = 1.0e-10;
-
-    // current set of guess vectors
-    std::vector<det_hash<>> b(subspace_size);
-
-    // guess vectors formed from old vectors, stored by row
-    std::vector<det_hash<>> bnew(subspace_size);
-
-    // residual eigenvectors, stored by row
-    std::vector<det_hash<>> r(subspace_size);
-
-    // sigma vectors, stored by column
-    std::vector<det_hash<>> sigma(subspace_size);
-
-    // Davidson mini-Hamitonian
-    Matrix G("G", subspace_size, subspace_size);
-    // A metric matrix
-    Matrix S("S", subspace_size, subspace_size);
-    // Eigenvectors of the Davidson mini-Hamitonian
-    Matrix alpha("alpha", subspace_size, subspace_size);
-    Matrix alpha_t("alpha", subspace_size, subspace_size);
-    // Eigenvalues of the Davidson mini-Hamitonian
-    Vector lambda("lambda", subspace_size);
-    double* lambda_p = lambda.pointer();
-    // Old eigenvalues of the Davidson mini-Hamitonian
-    Vector lambda_old("lambda", subspace_size);
-
-    // Set b[0]
-    for (size_t I = 0, max_I = C.size(); I < max_I; ++I) {
-        b[0][dets[I]] = C[I];
-    }
-
-    size_t L = 1;
-    int iter = 0;
-    int converged = 0;
-    double old_energy = 0.0;
-    while ((converged < M) and (iter < maxiter)) {
-        bool skip_check = false;
-        if (print)
-            outfile->Printf("\n  iter = %d\n", iter);
-
-        // Step #2: Build and Diagonalize the Subspace Hamiltonian
-        for (size_t l = 0; l < L; ++l) {
-            sigma[l].clear();
-            //            apply_tau_H(1.0,spawning_threshold,b[l],sigma[l],0.0);
-            //            <= TODO : re-enable
-        }
-
-        G.zero();
-        S.zero();
-        for (size_t i = 0; i < L; ++i) {
-            for (size_t j = 0; j < L; ++j) {
-                double g = 0.0;
-                auto& sigma_j = sigma[j];
-                for (auto& det_b_i : b[i]) {
-                    g += det_b_i.second * sigma_j[det_b_i.first];
-                }
-                G.set(i, j, g);
-
-                double s = 0.0;
-                auto& b_j = b[j];
-                for (auto& det_b_i : b[i]) {
-                    s += det_b_i.second * b_j[det_b_i.first];
-                }
-                S.set(i, j, s);
-            }
-        }
-
-        S.power(-0.5);
-        G.transform(S);
-        G.diagonalize(alpha, lambda);
-        alpha_t.gemm(false, false, 1.0, S, alpha, 0.0);
-        double** alpha_p = alpha_t.pointer();
-
-        dets_C_hash.clear();
-        for (int i = 0; i < L; i++) {
-            for (auto& det_b_i : b[i]) {
-                dets_C_hash[det_b_i.first] += alpha_p[i][0] * det_b_i.second;
-            }
-        }
-
-        copy_hash_to_vec(dets_C_hash, dets, C);
-        double var_energy = estimate_var_energy_sparse(dets, C, 1.0e-8);
-
-        double var_energy_gradient = var_energy - old_energy;
-        old_energy = var_energy;
-        outfile->Printf("\n%9d %8.4f %10zu %20.12f %.3e %20.12f %.3e", iter, 0.0, C.size(), 0.0,
-                        0.0, var_energy, var_energy_gradient);
-
-        // If L is close to maxdim, collapse to one guess per root */
-        if (subspace_size - L < M) {
-            if (print) {
-                outfile->Printf("Subspace too large: maxdim = %d, L = %d\n", subspace_size, L);
-                outfile->Printf("Collapsing eigenvectors.\n");
-            }
-            for (int k = 0; k < collapse_size; k++) {
-                bnew[k].clear();
-                auto& bnew_k = bnew[k];
-                for (int i = 0; i < L; i++) {
-                    for (auto& det_b_i : b[i]) {
-                        bnew_k[det_b_i.first] += alpha_p[i][k] * det_b_i.second;
-                    }
-                }
-            }
-
-            // Copy them into place
-            L = 0;
-            for (int k = 0; k < collapse_size; k++) {
-                b[k].clear();
-                auto& b_k = b[k];
-                for (auto& det_bnew_k : bnew[k]) {
-                    b_k[det_bnew_k.first] = det_bnew_k.second;
-                }
-                L++;
-            }
-
-            skip_check = true;
-
-            // Step #2: Build and Diagonalize the Subspace Hamiltonian
-            for (size_t l = 0; l < L; ++l) {
-                sigma[l].clear();
-                //                apply_tau_H(1.0,spawning_threshold,b[l],sigma[l],0.0);
-                //                <= TODO : re-enable
-            }
-
-            // Rebuild and Diagonalize the Subspace Hamiltonian
-            G.zero();
-            S.zero();
-            for (size_t i = 0; i < L; ++i) {
-                for (size_t j = 0; j < L; ++j) {
-                    double g = 0.0;
-                    auto& sigma_j = sigma[j];
-                    for (auto& det_b_i : b[i]) {
-                        g += det_b_i.second * sigma_j[det_b_i.first];
-                    }
-                    G.set(i, j, g);
-
-                    double s = 0.0;
-                    auto& b_j = b[j];
-                    for (auto& det_b_i : b[i]) {
-                        s += det_b_i.second * b_j[det_b_i.first];
-                    }
-                    S.set(i, j, s);
-                }
-            }
-            for (size_t i = 1; i < L; ++i) {
-                for (size_t j = 1; j < L; ++j) {
-                    if (i != j) {
-                        G.set(i, j, 0.0);
-                    }
-                }
-            }
-
-            S.power(-0.5);
-            G.transform(S);
-            G.diagonalize(alpha, lambda);
-            alpha_t.gemm(false, false, 1.0, S, alpha, 0.0);
-        }
-
-        // Step #3: Build the Correction Vectors
-        // form preconditioned residue vectors
-        for (int k = 0; k < M; k++) { // loop over roots
-            r[k].clear();
-            auto& r_k = r[k];
-            for (int i = 0; i < L; i++) {
-                for (auto& det_sigma_i : sigma[i]) {
-                    r_k[det_sigma_i.first] += alpha_p[i][k] * det_sigma_i.second;
-                }
-            }
-            for (int i = 0; i < L; i++) {
-                for (auto& det_b_i : b[i]) {
-                    r_k[det_b_i.first] -= alpha_p[i][k] * lambda_p[k] * det_b_i.second;
-                }
-            }
-
-            for (auto& det_r_k : r_k) {
-                double denom =
-                    lambda_p[k] - fci_ints_->energy(det_r_k.first) + fci_ints_->scalar_energy();
-                if (std::fabs(denom) > 1e-6) {
-                    det_r_k.second /= denom;
-                } else {
-                    det_r_k.second = 0.0;
-                }
-            }
-        }
-
-        // Step #4: Add the new correction vectors
-        for (int k = 0; k < M; k++) { // loop over roots
-            auto& r_k = r[k];
-            auto& b_new = b[L];
-            for (auto& det_r_k : r_k) {
-                b_new[det_r_k.first] = det_r_k.second;
-            }
-            // Orthogonalize to previous roots
-            for (int i = 0; i < L; ++i) {
-                double s_i = 0.0;
-                double m_i = 0.0;
-                auto& b_i = b[i];
-                for (auto& det_b_new : b_new) {
-                    s_i += det_b_new.second * b_i[det_b_new.first];
-                }
-                for (auto& det_b_i : b_i) {
-                    m_i += det_b_i.second * det_b_i.second;
-                }
-                for (auto& det_b_i : b_i) {
-                    b_new[det_b_i.first] -= s_i * det_b_i.second / m_i;
-                }
-            }
-            L++;
-        }
-
-        //        /* normalize each residual */
-        //        for(int k = 0; k < M; k++) {
-        //            double norm = 0.0;
-        //            for(int I = 0; I < N; I++) {
-        //                norm += f_p[k][I] * f_p[k][I];
-        //            }
-        //            norm = std::sqrt(norm);
-        //            for(int I = 0; I < N; I++) {
-        //                f_p[k][I] /= norm;
-        //            }
-        //        }
-
-        //        // schmidt orthogonalize the f[k] against the set of b[i] and
-        //        add new vectors
-        //        for(int k = 0; k < M; k++){
-        //            if (L < subspace_size){
-        //                if(schmidt_add(b_p, L, N, f_p[k])) {
-        //                    L++;  // <- Increase L if we add one more basis
-        //                    vector
-        //                }
-        //            }
-        //        }
-
-        // check convergence on all roots
-        if (!skip_check) {
-            converged = 0;
-            if (print) {
-                outfile->Printf("Root      Eigenvalue       Delta  Converged?\n");
-                outfile->Printf("---- -------------------- ------- ----------\n");
-            }
-            for (int k = 0; k < M; k++) {
-                double diff = std::fabs(lambda.get(k) - lambda_old.get(k));
-                bool this_converged = false;
-                if (diff < e_convergence) {
-                    this_converged = true;
-                    converged++;
-                }
-                lambda_old.set(k, lambda.get(k));
-                if (print) {
-                    outfile->Printf("%3d  %20.14f %4.3e    %1s\n", k,
-                                    lambda.get(k) + nuclear_repulsion_energy_, diff,
-                                    this_converged ? "Y" : "N");
-                }
-            }
-        }
-
-        iter++;
-    }
-
-    //    /* generate final eigenvalues and eigenvectors */
-    //    //if(converged == M) {
-    //    double** alpha_p = alpha.pointer();
-    //    double** b_p = b.pointer();
-    //    for(int i = 0; i < M; i++) {
-    //        eps[i] = lambda.get(i);
-    //        for(int I = 0; I < N; I++){
-    //            v[I][i] = 0.0;
-    //        }
-    //        for(int j = 0; j < L; j++) {
-    //            for(int I=0; I < N; I++) {
-    //                v[I][i] += alpha_p[j][i] * b_p[j][I];
-    //            }
-    //        }
-    //        // Normalize v
-    //        double norm = 0.0;
-    //        for(int I = 0; I < N; I++) {
-    //            norm += v[I][i] * v[I][i];
-    //        }
-    //        norm = std::sqrt(norm);
-    //        for(int I = 0; I < N; I++) {
-    //            v[I][i] /= norm;
-    //        }
-    //    }
-
-    copy_hash_to_vec(dets_C_hash, dets, C);
-
-    outfile->Printf("\n  The Davidson-Liu algorithm converged in %d iterations.", iter);
-    double var_energy = estimate_var_energy_sparse(dets, C, 1.0e-14);
-    outfile->Printf("\n  * Adaptive-CI Variational Energy     = %.12f Eh", var_energy);
-    //    outfile->Printf("\n  %s: %f s","Time spent diagonalizing
-    //    H",t_davidson.get());
 }
 
 void ProjectorCI::apply_tau_H_symm_det_dynamic(
@@ -4829,7 +4508,6 @@ double ProjectorCI::estimate_2nd_order_perturbation_sub(det_vec& dets, std::vect
     double perturbation_energy_estimator = 0.0;
 #pragma omp parallel for reduction(+ : perturbation_energy_estimator)
     for (size_t I = 0; I < size; ++I) {
-        double current_V = 0.0;
         for (size_t J = 0; J < size; ++J) {
             double HIJ = fci_ints_->slater_rules(dets[I], dets[J]);
             if (std::fabs(C[I] * HIJ) < spawning_threshold && J != I) {
@@ -4962,7 +4640,7 @@ void ProjectorCI::print_wfn(det_vec& space, std::vector<double>& C, size_t max_o
                                         "sextet", "septet", "octet", "nonet", "decaet"});
     std::string state_label = s2_labels[std::round(S * 2.0)];
     outfile->Printf("\n\n  Spin State: S^2 = %5.3f, S = %5.3f, %s (from %zu "
-                    "determinants,%.2f\%)",
+                    "determinants,%.2f%%)",
                     S2, S, state_label.c_str(), max_I, 100.0 * sum_weight);
 }
 
@@ -5112,7 +4790,7 @@ double dot(std::vector<double>& C1, std::vector<double>& C2) {
     size1 = size1 < size2 ? size1 : size2;
     double result = 0.0;
 #pragma omp parallel for reduction(+ : result)
-    for (int i = 0; i < size1; i++) {
+    for (size_t i = 0; i < size1; i++) {
         result += C1[i] * C2[i];
     }
     return result;
@@ -5184,7 +4862,7 @@ void add(std::vector<double>& a, double k, std::vector<double>& b) {
     if (sizeA < sizeB)
         a.resize(sizeB);
 #pragma omp parallel for
-    for (int i = 0; i < sizeB; i++) {
+    for (size_t i = 0; i < sizeB; i++) {
         a[i] += k * b[i];
     }
 }

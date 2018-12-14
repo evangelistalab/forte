@@ -113,7 +113,7 @@ class ProjectorCI_HashVec : public Wavefunction {
     /// The symmetry of each orbital in Pitzer ordering
     std::vector<int> mo_symmetry_;
     /// The number of correlated molecular orbitals
-    int ncmo_;
+//    int ncmo_;
     /// The number of active electrons
     int nactel_;
     /// The number of correlated alpha electrons
@@ -166,9 +166,9 @@ class ProjectorCI_HashVec : public Wavefunction {
     /// The maximum number of iterations in Davidson generator
     int max_Davidson_iter_;
     /// The number of trial vector to retain after collapsing
-    int davidson_collapse_per_root_;
+    size_t davidson_collapse_per_root_;
     /// The maxim number of trial vectors
-    int davidson_subspace_per_root_;
+    size_t davidson_subspace_per_root_;
     /// The current iteration
     int iter_;
     /// The current root
@@ -199,7 +199,7 @@ class ProjectorCI_HashVec : public Wavefunction {
         b_couplings_;
     //    std::vector<std::vector<std::vector<double>>> single_alpha_excite_double_couplings_,
     //        single_beta_excite_double_couplings_;
-    double max_aa_coupling_, max_ab_coupling_, max_bb_coupling_, max_a_coupling_, max_b_coupling_;
+    double max_aa_coupling_, max_ab_coupling_, max_bb_coupling_;
     size_t aa_couplings_size_, ab_couplings_size_, bb_couplings_size_, a_couplings_size_,
         b_couplings_size_;
     size_t num_off_diag_elem_;
@@ -289,13 +289,12 @@ class ProjectorCI_HashVec : public Wavefunction {
     * @param S An energy shift subtracted from the Hamiltonian
     */
     void propagate(GeneratorType_HashVec::GeneratorType generator, det_hashvec& dets_hashvec,
-                   std::vector<double>& C, double tau, double spawning_threshold, double S);
+                   std::vector<double>& C, double spawning_threshold);
     /// A Delta projector fitted by 10th order chebyshev polynomial
     void propagate_wallCh(det_hashvec& dets_hashvec, std::vector<double>& C,
-                          double spawning_threshold, double S);
+                          double spawning_threshold);
     /// The DL Generator
-    void propagate_DL(det_hashvec& dets_hashvec, std::vector<double>& C, double spawning_threshold,
-                      double S);
+    void propagate_DL(det_hashvec& dets_hashvec, std::vector<double>& C, double spawning_threshold);
     /// Apply symmetric approx tau H to a set of determinants with selection
     /// according to reference coefficients
     void apply_tau_H_symm(double tau, double spawning_threshold, det_hashvec& dets_hashvec,
@@ -359,8 +358,7 @@ class ProjectorCI_HashVec : public Wavefunction {
     double estimate_var_energy_sparse(const det_hashvec& dets_hashvec, std::vector<double>& C,
                                       double max_error = 0.0);
     /// Form the product H c
-    double form_H_C(const det_hashvec& dets_hashvec, std::vector<double>& C, size_t I,
-                    size_t cut_index);
+    double form_H_C(const det_hashvec& dets_hashvec, std::vector<double>& C, size_t I);
     /// Form the product H c
     double form_H_C_2(const det_hashvec& dets_hashvec, std::vector<double>& C, size_t I,
                       size_t cut_index);
