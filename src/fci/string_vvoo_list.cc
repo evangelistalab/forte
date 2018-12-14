@@ -123,12 +123,6 @@ void StringLists::make_vvoo(GraphPtr graph, VVOOList& list, int p, int q, int r,
 
     int n = graph->nbits() - 4 + (overlap ? 1 : 0);
     int k = graph->nones() - 2;
-    // int nones = graph->nones();
-
-    //    outfile->Printf("\n a = %2d %2d %2d %2d", p, q, r, s);
-    //    outfile->Printf("\n a = %2d %2d %2d %2d", a[0], a[1], a[2], a[3]);
-    //    outfile->Printf("\n nb = %d no = %d n = %2d k = %2d", graph->nbits(), graph->nones(), n,
-    //    k);
 
     if (k >= 0 and n >= 0 and (n >= k)) {
         bool* b = new bool[n];
