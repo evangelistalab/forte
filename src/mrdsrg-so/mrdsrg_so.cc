@@ -132,7 +132,7 @@ void MRDSRG_SO::startup() {
 
     // prepare one-electron integrals
     H = BTF->build(tensor_type_, "H", {"gg"});
-    H.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+    H.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
         if (i[0] < nmo && i[1] < nmo) {
             value = ints_->oei_a(i[0], i[1]);
         }
@@ -143,7 +143,7 @@ void MRDSRG_SO::startup() {
 
     // prepare two-electron integrals
     V = BTF->build(tensor_type_, "V", {"gggg"});
-    V.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+    V.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
         bool spin0 = i[0] < nmo;
         bool spin1 = i[1] < nmo;
         bool spin2 = i[2] < nmo;
@@ -174,8 +174,9 @@ void MRDSRG_SO::startup() {
     (Gamma1.block("cc")).iterate([&](const std::vector<size_t>& i, double& value) {
         value = (i[0] == i[1] ? 1.0 : 0.0);
     });
-    Eta1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin,
-                     double& value) { value = (i[0] == i[1] ? 1.0 : 0.0); });
+    Eta1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+        value = (i[0] == i[1] ? 1.0 : 0.0);
+    });
     (reference_.L1a()).citerate([&](const std::vector<size_t>& i, const double& value) {
         size_t index = i[0] * na_ + i[1];
         (Gamma1.block("aa")).data()[index] = value;
@@ -354,7 +355,7 @@ void MRDSRG_SO::startup() {
     // obtain diagonal elements of Fock matrix
     Fd = std::vector<double>(nso_);
     F.citerate(
-        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, const double& value) {
+        [&](const std::vector<size_t>& i, const std::vector<SpinType>&, const double& value) {
             if (i[0] == i[1]) {
                 Fd[i[0]] = value;
             }
@@ -393,7 +394,7 @@ void MRDSRG_SO::guess_t2() {
 
     T2["ijab"] = V["ijab"];
 
-    T2.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+    T2.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
         value *= renormalized_denominator(Fd[i[0]] + Fd[i[1]] - Fd[i[2]] - Fd[i[3]]);
     });
 
@@ -402,11 +403,10 @@ void MRDSRG_SO::guess_t2() {
 
     // norm and max
     T2max = 0.0, T2norm = T2.norm();
-    T2.citerate(
-        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, const double& value) {
-            if (std::fabs(value) > std::fabs(T2max))
-                T2max = value;
-        });
+    T2.citerate([&](const std::vector<size_t>&, const std::vector<SpinType>&, const double& value) {
+        if (std::fabs(value) > std::fabs(T2max))
+            T2max = value;
+    });
 
     outfile->Printf("  Done. Timing %10.3f s", timer.get());
 }
@@ -425,7 +425,7 @@ void MRDSRG_SO::guess_t1() {
 
     T1["ia"] = F["ia"];
     //    T1["ia"] += temp["xu"] * T2["iuax"];
-    T1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+    T1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
         value *= renormalized_denominator(Fd[i[0]] - Fd[i[1]]);
     });
 
@@ -434,11 +434,10 @@ void MRDSRG_SO::guess_t1() {
 
     // norm and max
     T1max = 0.0, T1norm = T1.norm();
-    T1.citerate(
-        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, const double& value) {
-            if (std::fabs(value) > std::fabs(T1max))
-                T1max = value;
-        });
+    T1.citerate([&](const std::vector<size_t>&, const std::vector<SpinType>&, const double& value) {
+        if (std::fabs(value) > std::fabs(T1max))
+            T1max = value;
+    });
 
     outfile->Printf("  Done. Timing %10.3f s", timer.get());
 }
@@ -455,11 +454,11 @@ double MRDSRG_SO::renormalized_denominator(double D) {
 void MRDSRG_SO::update_t2() {
     BlockedTensor R2 = ambit::BlockedTensor::build(tensor_type_, "R2", {"hhpp"});
     R2["ijab"] = T2["ijab"];
-    R2.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+    R2.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
         value *= (Fd[i[0]] + Fd[i[1]] - Fd[i[2]] - Fd[i[3]]);
     });
     R2["ijab"] += Hbar2["ijab"];
-    R2.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+    R2.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
         value *= renormalized_denominator(Fd[i[0]] + Fd[i[1]] - Fd[i[2]] - Fd[i[3]]);
     });
 
@@ -474,21 +473,20 @@ void MRDSRG_SO::update_t2() {
 
     // norm and max
     T2max = 0.0, T2norm = T2.norm();
-    T2.citerate(
-        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, const double& value) {
-            if (std::fabs(value) > std::fabs(T2max))
-                T2max = value;
-        });
+    T2.citerate([&](const std::vector<size_t>&, const std::vector<SpinType>&, const double& value) {
+        if (std::fabs(value) > std::fabs(T2max))
+            T2max = value;
+    });
 }
 
 void MRDSRG_SO::update_t1() {
     BlockedTensor R1 = ambit::BlockedTensor::build(tensor_type_, "R1", {"hp"});
     R1["ia"] = T1["ia"];
-    R1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+    R1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
         value *= (Fd[i[0]] - Fd[i[1]]);
     });
     R1["ia"] += Hbar1["ia"];
-    R1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+    R1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
         value *= renormalized_denominator(Fd[i[0]] - Fd[i[1]]);
     });
 
@@ -503,11 +501,10 @@ void MRDSRG_SO::update_t1() {
 
     // norm and max
     T1max = 0.0, T1norm = T1.norm();
-    T1.citerate(
-        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, const double& value) {
-            if (std::fabs(value) > std::fabs(T1max))
-                T1max = value;
-        });
+    T1.citerate([&](const std::vector<size_t>&, const std::vector<SpinType>&, const double& value) {
+        if (std::fabs(value) > std::fabs(T1max))
+            T1max = value;
+    });
 }
 
 double MRDSRG_SO::compute_energy() {
