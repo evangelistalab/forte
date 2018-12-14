@@ -196,7 +196,7 @@ class DSRG_MRPT : public Wavefunction {
     void check_t1(BlockedTensor& T1);
 
     /// Number of amplitudes will be printed in amplitude summary
-    int ntamp_;
+    size_t ntamp_;
     /// Threshold for amplitudes considered as intruders
     double intruder_tamp_;
     /// List of large amplitudes

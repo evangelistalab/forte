@@ -39,11 +39,11 @@ namespace forte {
 void DSRG_MRPT::compute_T_1st(BlockedTensor& V, BlockedTensor& T2, BlockedTensor& F,
                               BlockedTensor& T1) {
     print_h2("Build Initial Amplitude from DSRG-MRPT2");
-    compute_T2_1st(V_, T2_);
-    compute_T1_1st(F_, T2_, T1_);
+    compute_T2_1st(V, T2);
+    compute_T1_1st(F, T2, T1);
 
     // check initial amplitudes
-    analyze_amplitudes(T1_, T2_, "First-Order");
+    analyze_amplitudes(T1, T2, "First-Order");
 }
 
 void DSRG_MRPT::compute_T2_1st(BlockedTensor& V, BlockedTensor& T2) {
