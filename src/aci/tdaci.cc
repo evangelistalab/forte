@@ -1783,33 +1783,37 @@ void TDACI::get_PQ_space( DeterminantHashVec& P_space,  std::vector<double>& P_c
     PQ_coeffs_i.resize(npq, 0.0);
 
     const det_hashvec& PQ_dets = PQ_space.wfn_hash();
+
+    norm = 0.0;
     for( int I = 0; I < npq; ++I ){
         const Determinant& det = PQ_dets[I]; 
+
+
         if( P_space.has_det(det) ){
             size_t p_idx = P_space.get_idx(det);
-            PQ_coeffs_r[I] = P_coeffs_r[p_idx];
-            PQ_coeffs_i[I] = P_coeffs_i[p_idx];
+            double& cr = PQ_coeffs_r[I];
+            double& ci = PQ_coeffs_i[I];
+            cr = P_coeffs_r[p_idx];
+            ci = P_coeffs_i[p_idx];
+
+            norm += (cr*cr + ci*ci);
         } else if (PQ_copy.has_det(det) ){
             size_t pq_idx = PQ_copy.get_idx(det);
-            PQ_coeffs_r[I] = PQ_copy_r[pq_idx];
-            PQ_coeffs_i[I] = PQ_copy_i[pq_idx];
+            double& cr = PQ_coeffs_r[I];
+            double& ci = PQ_coeffs_i[I];
+            cr = PQ_copy_r[pq_idx];
+            ci = PQ_copy_i[pq_idx];
+            norm += (cr*cr + ci*ci);
         }
     }
 
-//    for( int I = 0; I < max_P; ++I ){
-//        const Determinant& det = P_dets[I];
-//        if( PQ_space.has_det(det) ){
-//            size_t pq_idx = PQ_space.get_idx(det);
-//            PQ_coeffs_r[pq_idx] = P_coeffs_r[I];
-//            PQ_coeffs_i[pq_idx] = P_coeffs_i[I];
-//        } else {
-//            PQ_space.add(det);
-//            
-//            size_t pq_idx = PQ_space.get_idx(det);
-//            PQ_coeffs_r[pq_idx] = P_coeffs_r[I];
-//            PQ_coeffs_i[pq_idx] = P_coeffs_i[I];
-//        }
-//    } 
+    norm = 1.0 /std::sqrt(norm);
+    std::transform(PQ_coeffs_r.begin(), PQ_coeffs_r.end(), PQ_coeffs_r.begin(),
+               std::bind(std::multiplies<double>(), std::placeholders::_1, norm));
+
+    std::transform(PQ_coeffs_i.begin(), PQ_coeffs_i.end(), PQ_coeffs_i.begin(),
+               std::bind(std::multiplies<double>(), std::placeholders::_1, norm));
+
 }
 
 void TDACI::propagate_exact_select(std::vector<double>& PQ_coeffs_r,std::vector<double>& PQ_coeffs_i, 
