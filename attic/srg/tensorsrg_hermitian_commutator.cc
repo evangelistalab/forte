@@ -100,8 +100,8 @@ void TensorSRG::hermitian_commutator_A_B_C_SRC_fourth_order(double factor, Block
     // => Compute C = [A,B]_12 <= //
 
     hermitian_commutator_A1_B1_C0(A1, B1, +factor, C0);
-    hermitian_commutator_A1_B2_C0(A1, B2, +factor, C0);
-    hermitian_commutator_A1_B2_C0(B1, A2, -factor, C0);
+//    hermitian_commutator_A1_B2_C0(A1, B2, +factor, C0);
+//    hermitian_commutator_A1_B2_C0(B1, A2, -factor, C0);
     hermitian_commutator_A2_B2_C0(A2, B2, +factor, C0);
 
     hermitian_commutator_A1_B1_C1(A1, B1, +factor, C1);
@@ -156,9 +156,6 @@ void TensorSRG::hermitian_commutator_A1_B1_C1(BlockedTensor& A, BlockedTensor& B
     }
     //    time_comm_A1_B1_C1 += t.get();
 }
-
-void TensorSRG::hermitian_commutator_A1_B2_C0(BlockedTensor& A, BlockedTensor& B, double alpha,
-                                              double& C) {}
 
 void TensorSRG::hermitian_commutator_A1_B2_C1(BlockedTensor& A, BlockedTensor& B, double alpha,
                                               BlockedTensor& C) {

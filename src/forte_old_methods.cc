@@ -76,7 +76,6 @@
 #include "pci/pci.h"
 #include "pci/pci_hashvec.h"
 #include "pci/pci_simple.h"
-#include "srg/tensorsrg.h"
 #include "v2rdm/v2rdm.h"
 #include "helpers/timer.h"
 
@@ -682,34 +681,6 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
 
         outfile->Printf("\n CD/DF DSRG-MRPT2 took %8.5f s.", all_three_dsrg_mrpt2.get());
     }
-    if ((options.get_str("JOB_TYPE") == "TENSORSRG") or
-        (options.get_str("JOB_TYPE") == "SR-DSRG")) {
-        auto srg = std::make_shared<TensorSRG>(ref_wfn, options, ints, mo_space_info);
-        srg->compute_energy();
-    }
-    if (options.get_str("JOB_TYPE") == "SR-DSRG-ACI") {
-        {
-            auto dsrg = std::make_shared<TensorSRG>(ref_wfn, options, ints, mo_space_info);
-            dsrg->compute_energy();
-            dsrg->transfer_integrals();
-        }
-        {
-            auto aci = std::make_shared<AdaptiveCI>(ref_wfn, options, ints, mo_space_info);
-            aci->compute_energy();
-        }
-    }
-    if (options.get_str("JOB_TYPE") == "SR-DSRG-PCI") {
-        {
-            auto dsrg = std::make_shared<TensorSRG>(ref_wfn, options, ints, mo_space_info);
-            dsrg->compute_energy();
-            dsrg->transfer_integrals();
-        }
-        {
-            auto pci = std::make_shared<ProjectorCI>(ref_wfn, options, ints, mo_space_info);
-            pci->compute_energy();
-        }
-    }
-
     if (options.get_str("JOB_TYPE") == "DSRG-MRPT3") {
         std::string cas_type = options.get_str("CAS_TYPE");
         int max_rdm_level = (options.get_str("THREEPDC") == "ZERO") ? 2 : 3;

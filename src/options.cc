@@ -81,8 +81,6 @@ void forte_options(ForteOptions& foptions) {
                       "SR-DSRG",
                       "SR-DSRG-ACI",
                       "SR-DSRG-PCI",
-                      "TENSORSRG",
-                      "TENSORSRG-CI",
                       "DSRG-MRPT2",
                       "DSRG-MRPT3",
                       "MR-DSRG-PT2",

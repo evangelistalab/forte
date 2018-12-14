@@ -1,5 +1,5 @@
 
-import libadaptive
+import forte
 
 refscf = -14.351880476202
 refct  = -14.413735630340293 # From a spin-orbit pilot code
@@ -15,12 +15,13 @@ set {
   e_convergence 12
 }
 
-set libadaptive {
+set forte {
   det_threshold 0.01
+  job_type TENSORSRG
   maxiter 100
 }
 
-energy('sr-lctsd')
+energy('forte')
 
 compare_values(refscf, variable("SCF total energy"),10, "SCF energy") #TEST
 compare_values(refct, variable("CURRENT ENERGY"),10, "SR-CTSD energy") #TEST
