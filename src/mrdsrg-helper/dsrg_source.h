@@ -62,9 +62,7 @@ class STD_SOURCE : public DSRG_SOURCE {
     STD_SOURCE(double s, double taylor_threshold);
 
     /// Return exp(-s * D^2)
-    virtual double compute_renormalized(const double& D) {
-        return std::exp(-s_ * D * D);
-    }
+    virtual double compute_renormalized(const double& D) { return std::exp(-s_ * D * D); }
 
     /// Return [1 - exp(-s * D^2)] / D
     virtual double compute_renormalized_denominator(const double& D) {
@@ -164,7 +162,7 @@ class MP2_SOURCE : public DSRG_SOURCE {
   public:
     MP2_SOURCE(double s, double taylor_threshold);
 
-    virtual double compute_renormalized(const double& D) { return 1.0; }
+    virtual double compute_renormalized(const double&) { return 1.0; }
 
     virtual double compute_renormalized_denominator(const double& D) { return 1.0 / D; }
 };

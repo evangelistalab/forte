@@ -1456,7 +1456,7 @@ double DSRG_MRPT3::compute_energy_sa() {
                 int dim = (eigens_[n][0].first)->dim();
                 size_t eigen_size = eigens_[n].size();
                 SharedMatrix evecs(new Matrix("evecs", dim, eigen_size));
-                for (int i = 0; i < eigen_size; ++i) {
+                for (size_t i = 0; i < eigen_size; ++i) {
                     evecs->set_column(0, i, (eigens_[n][i]).first);
                 }
 
@@ -2619,7 +2619,6 @@ void DSRG_MRPT3::V_T2_C2_DF(BlockedTensor& B, BlockedTensor& T2, const double& a
     size_t v = virt_mos_.size();
     size_t h = c + a;
     size_t p = a + v;
-    size_t g = c + p;
     size_t L = aux_mos_.size();
 
     mem_total_ -=
@@ -4356,7 +4355,6 @@ void DSRG_MRPT3::V_T2_C2_DF_VA_EX(BlockedTensor& B, BlockedTensor& T2, const dou
     // Batches in "a". See See V_T2_C2_DF_AH_EX for more comments.
     // This function takes advantage of the fact that there is no spin in B.
 
-    size_t sc = core_mos_.size();
     size_t sa = actv_mos_.size();
     size_t sv = virt_mos_.size();
     size_t sL = aux_mos_.size();
@@ -4382,7 +4380,7 @@ void DSRG_MRPT3::V_T2_C2_DF_VA_EX(BlockedTensor& B, BlockedTensor& T2, const dou
         size_t nele_total =
             sL * (ss * svs + sq * sa) + sq * sa * ss * svs + smax_jb * svs * sa + sq * ss * smax_jb;
         size_t nele_batch = 2 * nele_total; // 2 for tensor resorting
-        while (nele_batch * sizeof(double) > static_cast<long long int>(0.95 * mem_total_)) {
+        while (nele_batch * sizeof(double) > static_cast<long long>(0.95 * mem_total_)) {
             nbatch += 1;
             svs = sv / nbatch;
             nele_batch = 2 * (sL * (ss * svs + sq * sa) + sq * sa * ss * svs + smax_jb * svs * sa +
@@ -5294,7 +5292,7 @@ ambit::Tensor DSRG_MRPT3::separate_tensor(ambit::Tensor& tens, const Dimension& 
                                           const int& h) {
     // test tens and irrep
     int tens_dim = static_cast<int>(tens.dim(0));
-    if (tens_dim != irrep.sum() || tens_dim != tens.dim(1)) {
+    if (tens_dim != irrep.sum() || tens_dim != static_cast<int>(tens.dim(1))) {
         throw PSIEXCEPTION("Wrong dimension for the to-be-separated ambit Tensor.");
     }
     if (h >= irrep.n()) {

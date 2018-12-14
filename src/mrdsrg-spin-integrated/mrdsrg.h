@@ -422,7 +422,7 @@ class MRSRG_ODEInt {
 class SRGPT2_ODEInt {
   public:
     SRGPT2_ODEInt(MRDSRG& mrdsrg_obj, std::string Hzero, bool relax_ref)
-        : mrdsrg_obj_(mrdsrg_obj), Hzero_(Hzero), relax_ref_(relax_ref) {}
+        : mrdsrg_obj_(mrdsrg_obj), relax_ref_(relax_ref), Hzero_(Hzero) {}
     void operator()(const odeint_state_type& x, odeint_state_type& dxdt, const double t);
 
   protected:

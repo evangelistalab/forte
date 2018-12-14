@@ -258,7 +258,7 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
                 int dim = (eigens_[n][0].first)->dim();
                 size_t eigen_size = eigens_[n].size();
                 SharedMatrix evecs(new Matrix("evecs", dim, eigen_size));
-                for (int i = 0; i < eigen_size; ++i) {
+                for (size_t i = 0; i < eigen_size; ++i) {
                     evecs->set_column(0, i, (eigens_[n][i]).first);
                 }
 
@@ -421,7 +421,7 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_xms() {
             }
 
             // XMS rotation
-            civecs = xms_rotation(fci_ints, p_space, civecs, irrep);
+            civecs = xms_rotation(fci_ints, p_space, civecs);
         }
 
         // prepare Heff
@@ -437,7 +437,7 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_xms() {
             print_h2("Compute DSRG-MRPT2 Energy of State " + std::to_string(M));
 
             // compute the densities
-            compute_cumulants(fci_ints, p_space, civecs, M, M, irrep);
+            compute_cumulants(fci_ints, p_space, civecs, M, M);
 
             // compute Fock
             build_fock();
@@ -471,7 +471,7 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_xms() {
                     continue;
                 } else {
                     // compute transition densities
-                    compute_densities(fci_ints, p_space, civecs, M, N, irrep);
+                    compute_densities(fci_ints, p_space, civecs, M, N);
 
                     // compute coupling of <N|H|M>
                     std::stringstream ss;
@@ -558,7 +558,7 @@ void DSRG_MRPT2::build_eff_oei() {
 
 SharedMatrix DSRG_MRPT2::xms_rotation(std::shared_ptr<FCIIntegrals> fci_ints,
                                       std::vector<psi::forte::Determinant>& p_space,
-                                      SharedMatrix civecs, const int& irrep) {
+                                      SharedMatrix civecs) {
     print_h2("Perform XMS Rotation to Reference States");
     outfile->Printf("\n");
 
@@ -810,12 +810,12 @@ void DSRG_MRPT2::compute_Heff_2nd_coupling(double& H0, ambit::Tensor& H1a, ambit
     // add contributions from bare Hamiltonian
     H0 = Heff.H0;
     size_t ncore = core_mos_.size();
-    for (int m = 0; m < ncore; ++m) {
+    for (size_t m = 0; m < ncore; ++m) {
         size_t nm = core_mos_[m];
         H0 += ints_->oei_a(nm, nm);
         H0 += ints_->oei_b(nm, nm);
 
-        for (int n = 0; n < ncore; ++n) {
+        for (size_t n = 0; n < ncore; ++n) {
             size_t nn = core_mos_[n];
             H0 += 0.5 * ints_->aptei_aa(nm, nn, nm, nn);
             H0 += 0.5 * ints_->aptei_bb(nm, nn, nm, nn);
@@ -848,7 +848,7 @@ void DSRG_MRPT2::compute_Heff_2nd_coupling(double& H0, ambit::Tensor& H1a, ambit
 
 void DSRG_MRPT2::compute_cumulants(std::shared_ptr<FCIIntegrals> fci_ints,
                                    std::vector<Determinant>& p_space, SharedMatrix evecs,
-                                   const int& root1, const int& root2, const int& irrep) {
+                                   const int& root1, const int& root2) {
     CI_RDMS ci_rdms(fci_ints, p_space, evecs, root1, root2);
 
     // 1 cumulant
@@ -960,8 +960,7 @@ void DSRG_MRPT2::compute_cumulants(std::shared_ptr<FCIIntegrals> fci_ints,
 
 void DSRG_MRPT2::compute_densities(std::shared_ptr<FCIIntegrals> fci_ints,
                                    std::vector<psi::forte::Determinant>& p_space,
-                                   SharedMatrix evecs, const int& root1, const int& root2,
-                                   const int& irrep) {
+                                   SharedMatrix evecs, const int& root1, const int& root2) {
     CI_RDMS ci_rdms(fci_ints, p_space, evecs, root1, root2);
 
     // 1 density
