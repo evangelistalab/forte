@@ -131,7 +131,6 @@ void UPDensity::compute_unpaired_density(std::vector<double>& oprdm_a,
     for (size_t i = 0; i < nact; ++i) {
         double value = 0.0;
         for (size_t h = 0; h < nirrep; ++h) {
-            //size_t offset = fdocc[h] + rdocc[h];
             for (int p = 0; p < nactpi[h]; ++p) {
                 //                double n_p = OCC_A->get(p) + OCC_B->get(p);
                 double n_p = OCC_A->get(p);
