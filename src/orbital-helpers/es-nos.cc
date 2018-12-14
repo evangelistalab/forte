@@ -40,8 +40,8 @@ namespace forte {
 
 ESNO::ESNO(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
            std::shared_ptr<MOSpaceInfo> mo_space_info, DeterminantHashVec& reference)
-    : Wavefunction(options), ref_wfn_(ref_wfn), ints_(ints), mo_space_info_(mo_space_info),
-      reference_(reference) {
+    : Wavefunction(options), ints_(ints), reference_(reference), ref_wfn_(ref_wfn),
+      mo_space_info_(mo_space_info) {
     shallow_copy(ref_wfn);
     print_method_banner({"External Singles Natural Orbitals", "Jeff Schriber"});
     startup();
@@ -261,7 +261,6 @@ void ESNO::upcast_reference() {
     Dimension old_dim = mo_space_info_->get_dimension("ACTIVE");
     Dimension new_dim = mo_space_info_->get_dimension("GENERALIZED PARTICLE");
     size_t nact = mo_space_info_->size("ACTIVE");
-    size_t ncorr = mo_space_info_->size("GENERALIZED PARTICLE");
     int n_irrep = old_dim.n();
 
     const det_hashvec& ref_dets = reference_.wfn_hash();
@@ -283,7 +282,7 @@ void ESNO::upcast_reference() {
             for (int m = 0; m < n; ++m) {
                 min += old_dim[m];
             }
-            for (int pos = nact + min + old_dim[n] - 1; pos >= min + nact; --pos) {
+            for (size_t pos = nact + min + old_dim[n] - 1; pos >= min + nact; --pos) {
                 det.set_beta_bit(pos + shift[n], det.get_beta_bit(pos));
                 det.set_beta_bit(pos, false);
             }
@@ -351,5 +350,5 @@ std::vector<size_t> ESNO::get_excitation_space() {
     */
     return ex_space;
 }
-}
-}
+} // namespace forte
+} // namespace psi

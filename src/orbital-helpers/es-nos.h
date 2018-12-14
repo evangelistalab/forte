@@ -60,8 +60,8 @@ class ESNO : public Wavefunction {
 
   private:
     std::shared_ptr<FCIIntegrals> fci_ints_;
+	std::shared_ptr<Wavefunction> ref_wfn_;
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
-    std::shared_ptr<Wavefunction> ref_wfn_;
 
     void startup();
 

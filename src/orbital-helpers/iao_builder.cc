@@ -32,7 +32,7 @@ namespace forte {
 
 IAOBuilder::IAOBuilder(std::shared_ptr<BasisSet> primary, std::shared_ptr<BasisSet> minao,
                        SharedMatrix C)
-    : primary_(primary), minao_(minao), C_(C) {
+    : C_(C), primary_(primary), minao_(minao) {
     if (C->nirrep() != 1) {
         throw PSIEXCEPTION("Localizer: C matrix is not C1");
     }
@@ -77,7 +77,7 @@ std::shared_ptr<IAOBuilder> IAOBuilder::build(std::shared_ptr<BasisSet> primary,
     local->set_stars_completeness(options.get_double("LOCAL_IBO_STARS_COMPLETENESS"));
 
     std::vector<int> stars;
-    for (int ind = 0; ind < options["LOCAL_IBO_STARS"].size(); ind++) {
+    for (size_t ind = 0; ind < options["LOCAL_IBO_STARS"].size(); ind++) {
         stars.push_back(options["LOCAL_IBO_STARS"][ind].to_integer() - 1);
     }
     local->set_stars(stars);
@@ -94,7 +94,7 @@ std::map<std::string, SharedMatrix> IAOBuilder::build_iaos() {
     for (int A = 0; A < mol->natom(); A++) {
         if (!use_ghosts_ && mol->Z(A) == 0.0)
             continue;
-        int Atrue = true_atoms_.size();
+        size_t Atrue = true_atoms_.size();
         int nPshells = minao_->nshell_on_center(A);
         int sPshells = minao_->shell_on_center(A, 0);
         for (int P = sPshells; P < sPshells + nPshells; P++) {
@@ -144,15 +144,15 @@ std::map<std::string, SharedMatrix> IAOBuilder::build_iaos() {
     double** S12p = S12->pointer();
     double** S12fp = S12f->pointer();
     for (int m = 0; m < primary_->nbf(); m++) {
-        for (int p = 0; p < true_iaos_.size(); p++) {
+        for (size_t p = 0; p < true_iaos_.size(); p++) {
             S12p[m][p] = S12fp[m][true_iaos_[p]];
         }
     }
 
     double** S22p = S22->pointer();
     double** S22fp = S22f->pointer();
-    for (int p = 0; p < true_iaos_.size(); p++) {
-        for (int q = 0; q < true_iaos_.size(); q++) {
+    for (size_t p = 0; p < true_iaos_.size(); p++) {
+        for (size_t q = 0; q < true_iaos_.size(); q++) {
             S22p[p][q] = S22fp[true_iaos_[p]][true_iaos_[q]];
         }
     }
@@ -210,10 +210,11 @@ std::map<std::string, SharedMatrix> IAOBuilder::build_iaos() {
     SharedMatrix L_clone(L->clone());
 
     std::vector<std::vector<int>> minao_inds;
-    for (int A = 0; A < true_atoms_.size(); A++) {
+    for (size_t A = 0; A < true_atoms_.size(); A++) {
         std::vector<int> vec;
-        for (int m = 0; m < iaos_to_atoms_.size(); m++) {
-            if (iaos_to_atoms_[m] == A) {
+        for (size_t m = 0; m < iaos_to_atoms_.size(); m++) {
+			int Ai = A;
+            if (iaos_to_atoms_[m] == Ai) {
                 vec.push_back(m);
             }
         }
@@ -227,7 +228,7 @@ std::map<std::string, SharedMatrix> IAOBuilder::build_iaos() {
     ranges.push_back(nocc);
 
     std::vector<std::pair<int, int>> rot_inds;
-    for (int ind = 0; ind < ranges.size() - 1; ind++) {
+    for (size_t ind = 0; ind < ranges.size() - 1; ind++) {
         int start = ranges[ind];
         int stop = ranges[ind + 1];
         for (int i = start; i < stop; i++) {
@@ -407,11 +408,9 @@ std::vector<std::string> IAOBuilder::print_IAO(SharedMatrix A_, int nmin, int nb
     int iao_sum_size = iao_sum.size();
     for (int i = 0; i < nmin; ++i) {
         std::vector<std::tuple<double, int, std::string>> iao_max_contributions;
-        double a = 0.0;
         for (int j = 0; j < iao_sum_size; ++j) {
             std::vector<double> max_candidates;
             if (i == std::get<0>(iao_sum[j])) {
-                a = std::get<1>(iao_sum[j]);
                 // outfile->Printf("for i=%d -> (%s)\n", iao_sum[j].get<0>(),
                 // iao_sum[j].get<2>().c_str());
                 std::tuple<double, int, std::string> iao_max_candidate;
@@ -448,7 +447,6 @@ IAOBuilder::ibo_localizer(SharedMatrix L, const std::vector<std::vector<int>>& m
                           int maxiter, int power) {
     int nmin = L->colspi()[0];
     int nocc = L->rowspi()[0];
-    int nvir = primary_->nbf() - nocc;
 
     SharedMatrix L2(L->clone());
     L2->copy(L);
@@ -469,9 +467,9 @@ IAOBuilder::ibo_localizer(SharedMatrix L, const std::vector<std::vector<int>>& m
 
         double metric = 0.0;
         for (int i = 0; i < nocc; i++) {
-            for (int A = 0; A < minao_inds.size(); A++) {
+            for (size_t A = 0; A < minao_inds.size(); A++) {
                 double Lval = 0.0;
-                for (int m = 0; m < minao_inds[A].size(); m++) {
+                for (size_t m = 0; m < minao_inds[A].size(); m++) {
                     int mind = minao_inds[A][m];
                     Lval += Lp[i][mind] * Lp[i][mind];
                 }
@@ -481,17 +479,17 @@ IAOBuilder::ibo_localizer(SharedMatrix L, const std::vector<std::vector<int>>& m
         metric = pow(metric, 1.0 / power);
 
         double gradient = 0.0;
-        for (int ind = 0; ind < rot_inds.size(); ind++) {
+        for (size_t ind = 0; ind < rot_inds.size(); ind++) {
             int i = rot_inds[ind].first;
             int j = rot_inds[ind].second;
 
             double Aij = 0.0;
             double Bij = 0.0;
-            for (int A = 0; A < minao_inds.size(); A++) {
+            for (size_t A = 0; A < minao_inds.size(); A++) {
                 double Qii = 0.0;
                 double Qij = 0.0;
                 double Qjj = 0.0;
-                for (int m = 0; m < minao_inds[A].size(); m++) {
+                for (size_t m = 0; m < minao_inds[A].size(); m++) {
                     int mind = minao_inds[A][m];
                     Qii += Lp[i][mind] * Lp[i][mind];
                     Qij += Lp[i][mind] * Lp[j][mind];
@@ -556,10 +554,11 @@ std::map<std::string, SharedMatrix> IAOBuilder::localize(SharedMatrix Cocc, Shar
     }
 
     std::vector<std::vector<int>> minao_inds;
-    for (int A = 0; A < true_atoms_.size(); A++) {
+    for (size_t A = 0; A < true_atoms_.size(); A++) {
         std::vector<int> vec;
-        for (int m = 0; m < iaos_to_atoms_.size(); m++) {
-            if (iaos_to_atoms_[m] == A) {
+        for (size_t m = 0; m < iaos_to_atoms_.size(); m++) {
+			int Ai = A;
+            if (iaos_to_atoms_[m] == Ai) {
                 vec.push_back(m);
             }
         }
@@ -567,7 +566,7 @@ std::map<std::string, SharedMatrix> IAOBuilder::localize(SharedMatrix Cocc, Shar
     }
 
     std::vector<std::pair<int, int>> rot_inds;
-    for (int ind = 0; ind < ranges.size() - 1; ind++) {
+    for (size_t ind = 0; ind < ranges.size() - 1; ind++) {
         int start = ranges[ind];
         int stop = ranges[ind + 1];
         for (int i = start; i < stop; i++) {
@@ -610,16 +609,16 @@ std::map<std::string, SharedMatrix> IAOBuilder::localize(SharedMatrix Cocc, Shar
             }
         }
         std::vector<std::pair<int, int>> rot_inds2;
-        for (int iind = 0; iind < pi_orbs.size(); iind++) {
-            for (int jind = 0; jind < iind; jind++) {
+        for (size_t iind = 0; iind < pi_orbs.size(); iind++) {
+            for (size_t jind = 0; jind < iind; jind++) {
                 rot_inds2.push_back(std::pair<int, int>(pi_orbs[iind], pi_orbs[jind]));
             }
         }
 
         std::vector<std::vector<int>> minao_inds2;
-        for (int Aind = 0; Aind < stars_.size(); Aind++) {
+        for (size_t Aind = 0; Aind < stars_.size(); Aind++) {
             int A = -1;
-            for (int A2 = 0; A2 < true_atoms_.size(); A2++) {
+            for (size_t A2 = 0; A2 < true_atoms_.size(); A2++) {
                 if (stars_[Aind] == true_atoms_[A2]) {
                     A = A2;
                     break;
@@ -628,7 +627,7 @@ std::map<std::string, SharedMatrix> IAOBuilder::localize(SharedMatrix Cocc, Shar
             if (A == -1)
                 continue;
             std::vector<int> vec;
-            for (int m = 0; m < iaos_to_atoms_.size(); m++) {
+            for (size_t m = 0; m < iaos_to_atoms_.size(); m++) {
                 if (iaos_to_atoms_[m] == A) {
                     vec.push_back(m);
                 }
@@ -641,7 +640,7 @@ std::map<std::string, SharedMatrix> IAOBuilder::localize(SharedMatrix Cocc, Shar
         outfile->Printf("    Number of Pis   = %11zu\n", pi_orbs.size());
         outfile->Printf("    Number of Stars = %11zu\n", stars_.size());
         outfile->Printf("    Star Centers: ");
-        for (int ind = 0; ind < stars_.size(); ind++) {
+        for (size_t ind = 0; ind < stars_.size(); ind++) {
             outfile->Printf("%3d ", stars_[ind] + 1);
         }
         outfile->Printf("\n\n");
@@ -680,7 +679,7 @@ std::map<std::string, SharedMatrix> IAOBuilder::localize(SharedMatrix Cocc, Shar
         }
 
         std::vector<int> centers;
-        for (int i2 = 0; i2 < pi_orbs.size(); i2++) {
+        for (size_t i2 = 0; i2 < pi_orbs.size(); i2++) {
             int i = pi_orbs[i2];
             int ind = 0;
             for (int A = 0; A < natom; A++) {
@@ -694,7 +693,7 @@ std::map<std::string, SharedMatrix> IAOBuilder::localize(SharedMatrix Cocc, Shar
 
         outfile->Printf("    *** Stars Analysis ***\n\n");
         outfile->Printf("    Pi Centers: ");
-        for (int ind = 0; ind < centers.size(); ind++) {
+        for (size_t ind = 0; ind < centers.size(); ind++) {
             outfile->Printf("%3d ", centers[ind] + 1);
         }
         outfile->Printf("\n\n");
@@ -731,7 +730,7 @@ SharedMatrix IAOBuilder::reorder_orbitals(SharedMatrix F, const std::vector<int>
     SharedMatrix U(new Matrix("U", nmo, nmo));
     double** Up = U->pointer();
 
-    for (int ind = 0; ind < ranges.size() - 1; ind++) {
+    for (size_t ind = 0; ind < ranges.size() - 1; ind++) {
         int start = ranges[ind];
         int stop = ranges[ind + 1];
         std::vector<std::pair<double, int>> fvals;
