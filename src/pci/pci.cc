@@ -191,7 +191,7 @@ void print_polynomial(std::vector<double>& coefs);
 
 void print_vector(const std::vector<double>& C, std::string description) {
     outfile->Printf("\n%s :", description.c_str());
-    for (size_t i = 0; i < C.size(); i++) {
+    for (size_t i = 0, C_size = C.size(); i < C_size; i++) {
         outfile->Printf(" %.12lf ", C[i]);
     }
     outfile->Printf("\n");
@@ -1503,7 +1503,7 @@ void ProjectorCI::propagate_Lanczos(det_vec& dets, std::vector<double>& C,
     scale(C, evecs->get(0, 0));
     C.resize(dets.size());
     for (size_t i = 1; i < current_order; i++) {
-        for (size_t j = 0; j < H_n_C[i].size(); j++) {
+        for (size_t j = 0, H_n_C_i_size = H_n_C[i].size(); j < H_n_C_i_size; j++) {
             C[j] += evecs->get(i, 0) * H_n_C[i][j];
         }
     }
