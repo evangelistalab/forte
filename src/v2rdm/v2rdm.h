@@ -80,7 +80,7 @@ class V2RDM : public Wavefunction {
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
 
     /// Number of irrep
-    int nirrep_;
+    size_t nirrep_;
     /// MO per irrep;
     Dimension nmopi_;
     /// Frozen docc per irrep
