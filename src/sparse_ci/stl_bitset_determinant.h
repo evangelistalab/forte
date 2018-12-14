@@ -130,13 +130,13 @@ class STLBitsetDeterminant {
     std::vector<int> get_beta_vir(int norb) const;
 
     /// Return a Dimension object for occupied alpha orbitals
-    std::vector<std::vector<int>> get_asym_occ(int norb, std::vector<int> act_mo) const;
+    std::vector<std::vector<int>> get_asym_occ(std::vector<int> act_mo) const;
     /// Return a Dimension object for occupied beta orbital
-    std::vector<std::vector<int>> get_bsym_occ(int norb, std::vector<int> act_mo) const;
+    std::vector<std::vector<int>> get_bsym_occ(std::vector<int> act_mo) const;
     /// Return a Dimension object for virtual alpha orbital
-    std::vector<std::vector<int>> get_asym_vir(int norb, std::vector<int> act_mo) const;
+    std::vector<std::vector<int>> get_asym_vir(std::vector<int> act_mo) const;
     /// Return a Dimension object for virtual beta orbitals
-    std::vector<std::vector<int>> get_bsym_vir(int norb, std::vector<int> act_mo) const;
+    std::vector<std::vector<int>> get_bsym_vir(std::vector<int> act_mo) const;
 
     //    /// Return a vector of occupied alpha orbitals
     //    std::vector<int> get_alfa_occ() const;
