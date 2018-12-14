@@ -137,10 +137,6 @@ class ProjectorCI_Simple : public Wavefunction {
     double pqpq_max_aa_, pqpq_max_ab_, pqpq_max_bb_;
     /// maximum element in (pq|pq) matrix
     std::vector<double> pqpq_row_max_;
-    /// 2loop total count
-//    size_t schwarz_total_;
-    /// 2loop schwarz succeed count
-//    size_t schwarz_succ_;
 
     // * Calculation info
     /// The threshold applied to the primary space
