@@ -3022,7 +3022,7 @@ void FCI_MO::set_sa_info(const std::vector<std::tuple<int, int, int, std::vector
             int multi, irrep, nroots;
             std::vector<double> weights;
             std::tie(irrep, multi, nroots, weights) = info[n];
-            if (size_t(nroots) != weights.size()) {
+            if (static_cast<size_t>(nroots) != weights.size()) {
                 outfile->Printf("\n  Irrep: %d, Multi: %d, Nroots: %d, Nweights: %d", irrep, multi,
                                 nroots, weights.size());
                 PSIEXCEPTION("Cannot set sa_info of FCI_MO: mismatching nroot and weights size.");
@@ -3039,7 +3039,7 @@ void FCI_MO::set_eigens(const std::vector<vector<pair<SharedVector, double>>>& e
     if (eigens.size() == nentry) {
         for (size_t n = 0; n < nentry; ++n) {
             int ne = std::get<2>(sa_info_[n]);
-            if (eigens[n].size() != size_t(ne) ) {
+            if (eigens[n].size() != static_cast<size_t>(ne) ) {
                 outfile->Printf("\n  Entry %d: expected size %d, got %d", n, ne, eigens[n].size());
             }
         }
