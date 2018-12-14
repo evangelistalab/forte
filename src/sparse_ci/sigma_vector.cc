@@ -408,8 +408,8 @@ void SigmaVectorList::compute_sigma(SharedVector sigma, SharedVector b) {
 
 #pragma omp parallel
     {
-        int num_thread = omp_get_max_threads();
-        int tid = omp_get_thread_num();
+        size_t num_thread = omp_get_max_threads();
+        size_t tid = omp_get_thread_num();
 
         size_t bin_size = size_ / num_thread;
         bin_size += (tid < (size_ % num_thread)) ? 1 : 0;
@@ -531,7 +531,7 @@ void SigmaVectorList::get_diagonal(Vector& diag) {
 
 SigmaVectorWfn1::SigmaVectorWfn1(const DeterminantHashVec& space, WFNOperator& op,
                                  std::shared_ptr<FCIIntegrals> fci_ints)
-    : SigmaVector(space.size()), space_(space), a_ann_list_(op.a_ann_list_), fci_ints_(fci_ints),
+    : SigmaVector(space.size()), space_(space), fci_ints_(fci_ints), a_ann_list_(op.a_ann_list_),
       a_cre_list_(op.a_cre_list_), b_ann_list_(op.b_ann_list_), b_cre_list_(op.b_cre_list_),
       aa_ann_list_(op.aa_ann_list_), aa_cre_list_(op.aa_cre_list_), ab_ann_list_(op.ab_ann_list_),
       ab_cre_list_(op.ab_cre_list_), bb_ann_list_(op.bb_ann_list_), bb_cre_list_(op.bb_cre_list_) {
@@ -587,8 +587,8 @@ void SigmaVectorWfn1::compute_sigma(SharedVector sigma, SharedVector b) {
     }
 #pragma omp parallel
     {
-        int num_thread = omp_get_max_threads();
-        int tid = omp_get_thread_num();
+        size_t num_thread = omp_get_max_threads();
+        size_t tid = omp_get_thread_num();
 
         size_t bin_size = size_ / num_thread;
         bin_size += (tid < (size_ % num_thread)) ? 1 : 0;
@@ -727,8 +727,6 @@ void SigmaVectorWfn2::get_diagonal(Vector& diag) {
 void SigmaVectorWfn2::compute_sigma(SharedVector sigma, SharedVector b) {
     sigma->zero();
 
-    size_t ncmo = fci_ints_->nmo();
-
     double* sigma_p = sigma->pointer();
     double* b_p = b->pointer();
 
@@ -761,8 +759,8 @@ void SigmaVectorWfn2::compute_sigma(SharedVector sigma, SharedVector b) {
 
 #pragma omp parallel
     {
-        int num_thread = omp_get_max_threads();
-        int tid = omp_get_thread_num();
+        size_t num_thread = omp_get_max_threads();
+        size_t tid = omp_get_thread_num();
 
         // Each thread gets local copy of sigma
         std::vector<double> sigma_t(size_);
@@ -957,10 +955,10 @@ SigmaVectorWfn3::SigmaVectorWfn3(const DeterminantHashVec& space, WFNOperator& o
     aa_tei_->zero();
     ab_tei_->zero();
     bb_tei_->zero();
-    for (int p = 0; p < nact; ++p) {
-        for (int q = 0; q < nact; ++q) {
-            for (int r = 0; r < nact; ++r) {
-                for (int s = 0; s < nact; ++s) {
+    for (size_t p = 0; p < nact; ++p) {
+        for (size_t q = 0; q < nact; ++q) {
+            for (size_t r = 0; r < nact; ++r) {
+                for (size_t s = 0; s < nact; ++s) {
                     if ((p != r) and (q != s) and (p != s) and (q != r)) {
                         aa_tei_->set(p * nact + q, r * nact + s, fci_ints_->tei_aa(p, q, r, s));
                     }
@@ -1034,8 +1032,8 @@ void SigmaVectorWfn3::compute_sigma(SharedVector sigma, SharedVector b) {
     }
 #pragma omp parallel
     {
-        int num_thread = omp_get_max_threads();
-        int tid = omp_get_thread_num();
+        size_t num_thread = omp_get_max_threads();
+        size_t tid = omp_get_thread_num();
 
         size_t bin_size = size_ / num_thread;
         bin_size += (tid < (size_ % num_thread)) ? 1 : 0;
@@ -1251,8 +1249,8 @@ void SigmaVectorSparse::compute_sigma(SharedVector sigma, SharedVector b) {
 
 #pragma omp parallel
     {
-        int num_thread = omp_get_max_threads();
-        int tid = omp_get_thread_num();
+        size_t num_thread = omp_get_max_threads();
+        size_t tid = omp_get_thread_num();
         size_t bin_size = size_ / num_thread;
         bin_size += (tid < (size_ % num_thread)) ? 1 : 0;
         size_t start_idx =

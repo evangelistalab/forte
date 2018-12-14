@@ -97,7 +97,7 @@ void SparseCISolver::diagonalize_hamiltonian_map(const DeterminantHashVec& space
         //    } else if (diag_method == Direct) {
         //        diagonalize_dl_direct(space, op, evals, evecs, nroot, multiplicity);
     } else if (diag_method == Dynamic) {
-        diagonalize_dl_dynamic(space, op, evals, evecs, nroot, multiplicity);
+        diagonalize_dl_dynamic(space,evals, evecs, nroot, multiplicity);
     } else {
         diagonalize_dl(space, op, evals, evecs, nroot, multiplicity);
     }
@@ -158,7 +158,7 @@ void SparseCISolver::diagonalize_dl(const DeterminantHashVec& space, WFNOperator
     }
 }
 
-void SparseCISolver::diagonalize_dl_dynamic(const DeterminantHashVec& space, WFNOperator& op,
+void SparseCISolver::diagonalize_dl_dynamic(const DeterminantHashVec& space,
                                             SharedVector& evals, SharedMatrix& evecs, int nroot,
                                             int multiplicity) {
     if (print_details_) {
@@ -236,7 +236,7 @@ void SparseCISolver::diagonalize_full(const std::vector<Determinant>& space, Sha
 
         // Select sub eigen vectors of S^2 with correct multiplicity
         SharedMatrix S2vecs_sub(new Matrix("Spin Selected S^2 Eigen Vectors", dim_space, nfound));
-        for (size_t i = 0; i < nfound; ++i) {
+        for (int i = 0; i < nfound; ++i) {
             SharedVector vec = S2vecs.get_column(0, multi_list[multiplicity][i]);
             S2vecs_sub->set_column(0, i, vec);
         }

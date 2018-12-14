@@ -123,8 +123,7 @@ class SigmaVectorDynamic : public SigmaVector {
 
     void compute_aa_coupling(const UI64Determinant::bit_t& detIb, const std::vector<double>& b);
     void compute_bb_coupling(const UI64Determinant::bit_t& detIa, const std::vector<double>& b);
-    void compute_abab_coupling(const UI64Determinant::bit_t& detIa, const std::vector<double>& b,
-                               size_t task_id);
+    void compute_abab_coupling(const UI64Determinant::bit_t& detIa, const std::vector<double>& b);
 };
 }
 }

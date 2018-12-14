@@ -173,8 +173,8 @@ void SigmaVectorDynamic::print_thread_stats() {
 #endif
 }
 
-void SigmaVectorDynamic::add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& roots) {
-}
+//void SigmaVectorDynamic::add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& roots) {
+//}
 
 void SigmaVectorDynamic::get_diagonal(Vector& diag) {
     for (size_t I = 0; I < diag_.size(); ++I) {
@@ -395,7 +395,7 @@ void SigmaVectorDynamic::sigma_abab_store_task(size_t task_id, size_t num_tasks)
                 first_abab_onthefly_group_[task_id] = group + num_tasks;
             }
         } else {
-            compute_abab_coupling(detIa, temp_b_, task_id);
+            compute_abab_coupling(detIa, temp_b_);
         }
     }
 }
@@ -417,7 +417,7 @@ void SigmaVectorDynamic::sigma_abab_dynamic_task(size_t task_id, size_t num_task
     size_t first_group = first_abab_onthefly_group_[task_id];
     for (size_t group = first_group; group < num_half_dets; group += num_tasks) {
         const auto& detIa = sorted_half_dets[group];
-        compute_abab_coupling(detIa, temp_b_, task_id);
+        compute_abab_coupling(detIa, temp_b_);
     }
 }
 
@@ -718,7 +718,7 @@ bool SigmaVectorDynamic::compute_abab_coupling_and_store(const UI64Determinant::
 }
 
 void SigmaVectorDynamic::compute_abab_coupling(const UI64Determinant::bit_t& detIa,
-                                               const std::vector<double>& b, size_t task_id) {
+                                               const std::vector<double>& b) {
     const auto& sorted_half_dets = a_sorted_string_list_.sorted_half_dets();
     const auto& sorted_dets = a_sorted_string_list_.sorted_dets();
     const auto& range_I = a_sorted_string_list_.range(detIa);
