@@ -58,6 +58,7 @@ if(SSE42_FLAG)
     message("-- Adding SSE4.2 Flag")
     set(CMAKE_CXX_FLAGS "-msse4.2")
 endif()
+add_compile_options(-Wall -Wextra -pedantic) # -Werror)
 
 # List of CC files
 add_psi4_plugin(forte
