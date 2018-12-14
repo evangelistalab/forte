@@ -38,7 +38,6 @@ class Dimension;
 
 namespace forte {
 
-enum FCIIntegralsType { Active, Correlated };
 /**
  * @brief The FCIIntegrals class stores integrals necessary for FCI calculations
  */
@@ -51,8 +50,7 @@ class FCIIntegrals {
                  std::vector<size_t> rdocc_mo);
 
     /// Constructor that needs to be deleted
-    FCIIntegrals(std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mospace_info,
-                 FCIIntegralsType type = Active);
+    FCIIntegrals(std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mospace_info);
 
     // ==> Class Interface <==
 
