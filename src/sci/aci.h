@@ -397,7 +397,7 @@ class AdaptiveCI : public Wavefunction {
                       SharedMatrix evecs, int nroot);
 
     /// Compute full S^2 matrix and diagonalize it
-    void full_spin_transform(DeterminantHashVec& det_space, SharedMatrix cI, int nroot);
+    //void full_spin_transform(DeterminantHashVec& det_space, SharedMatrix cI, int nroot);
 
     /// Check for spin contamination
     double compute_spin_contamination(DeterminantHashVec& space, WFNOperator& op,
