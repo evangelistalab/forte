@@ -46,7 +46,7 @@ namespace forte {
 UPDensity::UPDensity(std::shared_ptr<Wavefunction> wfn, std::shared_ptr<ForteIntegrals> ints,
                      std::shared_ptr<MOSpaceInfo> mo_space_info, Options& options, SharedMatrix Ua,
                      SharedMatrix Ub)
-    : options_(options), wfn_(wfn), ints_(ints), mo_space_info_(mo_space_info), Uas_(Ua), Ubs_(Ub) {
+    : options_(options), ints_(ints), wfn_(wfn), mo_space_info_(mo_space_info), Uas_(Ua), Ubs_(Ub) {
 }
 
 void UPDensity::compute_unpaired_density(std::vector<double>& oprdm_a,
@@ -60,7 +60,6 @@ void UPDensity::compute_unpaired_density(std::vector<double>& oprdm_a,
     Dimension fdocc = mo_space_info_->get_dimension("FROZEN_DOCC");
 
     size_t nact = nactpi.sum();
-    size_t nmo = nmopi.sum();
 
     // First compute natural orbitals
     std::shared_ptr<Matrix> opdm_a(new Matrix("OPDM_A", nirrep, nactpi, nactpi));
@@ -68,7 +67,7 @@ void UPDensity::compute_unpaired_density(std::vector<double>& oprdm_a,
 
     // Put 1-RDM into Shared matrix
     int offset = 0;
-    for (int h = 0; h < nirrep; ++h) {
+    for (size_t h = 0; h < nirrep; ++h) {
         for (int u = 0; u < nactpi[h]; ++u) {
             for (int v = 0; v < nactpi[h]; ++v) {
                 opdm_a->set(h, u, v, oprdm_a[(u + offset) * nact + v + offset]);
@@ -99,7 +98,7 @@ void UPDensity::compute_unpaired_density(std::vector<double>& oprdm_a,
 
     // This Ua/Ub build will ensure that the density only includes active orbitals
     // If natural orbitals are desired, change the 1.0 to NO_a->get(p,q)
-    for (int h = 0; h < nirrep; ++h) {
+    for (size_t h = 0; h < nirrep; ++h) {
         size_t irrep_offset = fdocc[h] + rdocc[h];
         for (int p = 0; p < nactpi[h]; ++p) {
             // for (int q = 0; q < nactpi[h]; ++q) {
@@ -129,10 +128,10 @@ void UPDensity::compute_unpaired_density(std::vector<double>& oprdm_a,
     // Compute sum(p,i) n_i * ( 1 - n_i ) * (U_p,i)^2
     double total = 0.0;
     std::vector<double> scales(nact);
-    for (int i = 0; i < nact; ++i) {
+    for (size_t i = 0; i < nact; ++i) {
         double value = 0.0;
-        for (int h = 0; h < nirrep; ++h) {
-            int offset = fdocc[h] + rdocc[h];
+        for (size_t h = 0; h < nirrep; ++h) {
+            //size_t offset = fdocc[h] + rdocc[h];
             for (int p = 0; p < nactpi[h]; ++p) {
                 //                double n_p = OCC_A->get(p) + OCC_B->get(p);
                 double n_p = OCC_A->get(p);
@@ -155,7 +154,7 @@ void UPDensity::compute_unpaired_density(std::vector<double>& oprdm_a,
     SharedMatrix Ca_new = Matrix::doublet(Ca->clone(), Ua, false, false);
     SharedMatrix Cb_new = Matrix::doublet(Cb->clone(), Ub, false, false);
 
-    for (int h = 0; h < nirrep; ++h) {
+    for (size_t h = 0; h < nirrep; ++h) {
         int offset = fdocc[h] + rdocc[h];
         for (int p = 0; p < nactpi[h]; ++p) {
             // double n_p = OCC_A->get(p) + OCC_B->get(p);

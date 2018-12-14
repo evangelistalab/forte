@@ -417,7 +417,7 @@ SharedMatrix OrbitalOptimizer::approx_solve() {
     }
     SharedMatrix S_tmp = G_grad->clone();
     // S_tmp->apply_denominator(D_grad);
-    for (int h = 0; h < nirrep_; h++) {
+    for (size_t h = 0; h < nirrep_; h++) {
         for (int p = 0; p < S_tmp->rowspi(h); p++) {
             for (int q = 0; q < S_tmp->colspi(h); q++) {
                 // if(std::fabs(D_grad->get(h, p, q)) > 1e-12)

@@ -63,7 +63,6 @@ LOCALIZE::LOCALIZE(std::shared_ptr<Wavefunction> wfn, Options& options,
     // The wavefunction multiplicity
     multiplicity_ = options.get_int("MULTIPLICITY");
     outfile->Printf("\n MULT: %d", multiplicity_);
-    int ms = multiplicity_ - 1;
 
     // The number of active electrons
     int nactel = nel - 2 * nfrz_ - 2 * nrst_;
@@ -178,7 +177,7 @@ void LOCALIZE::full_localize() {
     SharedMatrix Caact(new Matrix("Caact", nsopi[0], nact));
     for (int h = 0; h < nirrep; h++) {
         for (int mu = 0; mu < nsopi[h]; mu++) {
-            for (int i = 0; i < nact; i++) {
+            for (size_t i = 0; i < nact; i++) {
                 Caact->set(h, mu, i, Ca->get(h, mu, abs_act_[i]));
             }
         }
@@ -194,7 +193,7 @@ void LOCALIZE::full_localize() {
     SharedMatrix Laocc = loc_a->L();
 
     for (int h = 0; h < nirrep; ++h) {
-        for (int i = 0; i < nact; ++i) {
+        for (size_t i = 0; i < nact; ++i) {
             SharedVector vec = Laocc->get_column(h, i);
             Ca->set_column(h, i + nfrz_ + nrst_, vec);
             Cb->set_column(h, i + nfrz_ + nrst_, vec);
