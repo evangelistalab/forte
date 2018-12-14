@@ -140,7 +140,7 @@ class DavidsonLiuSolver {
     // ==> Class Private Data <==
 
     /// The maximum number of iterations
-    int maxiter_ = 35;
+//    int maxiter_ = 35;
     /// The print level
     size_t print_level_ = 1;
     /// Eigenvalue convergence threshold

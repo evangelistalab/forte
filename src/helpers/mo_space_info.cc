@@ -88,14 +88,14 @@ Dimension MOSpaceInfo::get_dimension(const std::string &space) {
   return result;
 }
 
-/// @return The Slice object for space in a given composite space
-Slice MOSpaceInfo::get_slice(const std::string &space,
-                             const std::string &comp_space) {
-  Dimension begin(nirrep_);
-  Dimension end(nirrep_);
+///// @return The Slice object for space in a given composite space
+//Slice MOSpaceInfo::get_slice(const std::string &space,
+//                             const std::string &comp_space) {
+//  Dimension begin(nirrep_);
+//  Dimension end(nirrep_);
 
-  return Slice(begin, end);
-}
+//  return Slice(begin, end);
+//}
 
 std::vector<int> MOSpaceInfo::symmetry(const std::string &space) {
   Dimension dims = get_dimension(space);
