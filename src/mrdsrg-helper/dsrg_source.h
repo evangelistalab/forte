@@ -43,7 +43,7 @@ class DSRG_SOURCE {
      */
     DSRG_SOURCE(double s, double taylor_threshold);
 
-    virtual ~DSRG_SOURCE() = 0;
+    virtual ~DSRG_SOURCE() {}
 
     /// Bare effect of source operator
     virtual double compute_renormalized(const double& D) = 0;
