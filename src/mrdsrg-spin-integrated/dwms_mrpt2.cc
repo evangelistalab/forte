@@ -1122,7 +1122,7 @@ std::vector<std::tuple<int, int, int, std::vector<double>>> DWMS_DSRGPT2::comput
     const std::vector<std::tuple<int, int, int, std::vector<double>>>& sa_info, int entry, int root,
     const std::vector<std::vector<double>>& energy) {
 
-    int nentry = sa_info.size();
+    size_t nentry = sa_info.size();
     if (nentry != energy.size()) {
         throw PSIEXCEPTION("Mismatching sizes between energy list and sa_info list");
     }
@@ -1137,7 +1137,7 @@ std::vector<std::tuple<int, int, int, std::vector<double>>> DWMS_DSRGPT2::comput
     double Ealpha = energy[entry][root];
     double wsum = 0.0;
 
-    for (int n = 0; n < nentry; ++n) {
+    for (size_t n = 0; n < nentry; ++n) {
         int irrep, multi, nroots;
         std::vector<double> weights;
         std::tie(irrep, multi, nroots, weights) = sa_info[n];
@@ -1151,7 +1151,7 @@ std::vector<std::tuple<int, int, int, std::vector<double>>> DWMS_DSRGPT2::comput
         }
     }
 
-    for (int n = 0; n < nentry; ++n) {
+    for (size_t n = 0; n < nentry; ++n) {
         for (int i = 0, nroots = new_weights[n].size(); i < nroots; ++i) {
             new_weights[n][i] /= wsum;
         }
@@ -1160,7 +1160,7 @@ std::vector<std::tuple<int, int, int, std::vector<double>>> DWMS_DSRGPT2::comput
     // form new sa_info
     std::vector<std::tuple<int, int, int, std::vector<double>>> out;
     out.resize(nentry);
-    for (int n = 0; n < nentry; ++n) {
+    for (size_t n = 0; n < nentry; ++n) {
         int irrep, multi, nroots;
         std::tie(irrep, multi, nroots, std::ignore) = sa_info[n];
 

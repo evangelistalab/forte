@@ -46,7 +46,6 @@ double DSRG_MRPT::compute_energy_pt2() {
 
     // Compute DSRG-MRPT2 correlation energy
     double Etemp = 0.0;
-    double EVT2 = 0.0;
     double Ecorr = 0.0;
     double Etotal = 0.0;
     std::vector<std::pair<std::string, double>> energy;

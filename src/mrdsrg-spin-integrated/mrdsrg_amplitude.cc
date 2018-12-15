@@ -134,15 +134,15 @@ void MRDSRG::guess_t2_std(BlockedTensor& V, BlockedTensor& T2) {
     }
 
     // zero internal amplitudes
-    T2.block("aaaa").iterate([&](const std::vector<size_t>& i, double& value) {
+    T2.block("aaaa").iterate([&](const std::vector<size_t>&, double& value) {
         t2aa_norm_ -= value * value;
         value = 0.0;
     });
-    T2.block("aAaA").iterate([&](const std::vector<size_t>& i, double& value) {
+    T2.block("aAaA").iterate([&](const std::vector<size_t>&, double& value) {
         t2ab_norm_ -= value * value;
         value = 0.0;
     });
-    T2.block("AAAA").iterate([&](const std::vector<size_t>& i, double& value) {
+    T2.block("AAAA").iterate([&](const std::vector<size_t>&, double& value) {
         t2bb_norm_ -= value * value;
         value = 0.0;
     });
@@ -214,15 +214,15 @@ void MRDSRG::guess_t2_std_df(BlockedTensor& B, BlockedTensor& T2) {
     }
 
     // zero internal amplitudes
-    T2.block("aaaa").iterate([&](const std::vector<size_t>& i, double& value) {
+    T2.block("aaaa").iterate([&](const std::vector<size_t>&, double& value) {
         t2aa_norm_ -= value * value;
         value = 0.0;
     });
-    T2.block("aAaA").iterate([&](const std::vector<size_t>& i, double& value) {
+    T2.block("aAaA").iterate([&](const std::vector<size_t>&, double& value) {
         t2ab_norm_ -= value * value;
         value = 0.0;
     });
-    T2.block("AAAA").iterate([&](const std::vector<size_t>& i, double& value) {
+    T2.block("AAAA").iterate([&](const std::vector<size_t>&, double& value) {
         t2bb_norm_ -= value * value;
         value = 0.0;
     });
@@ -317,11 +317,11 @@ void MRDSRG::guess_t1_std(BlockedTensor& F, BlockedTensor& T2, BlockedTensor& T1
     }
 
     // zero internal amplitudes
-    T1.block("aa").iterate([&](const std::vector<size_t>& i, double& value) {
+    T1.block("aa").iterate([&](const std::vector<size_t>&, double& value) {
         t1a_norm_ -= value * value;
         value = 0.0;
     });
-    T1.block("AA").iterate([&](const std::vector<size_t>& i, double& value) {
+    T1.block("AA").iterate([&](const std::vector<size_t>&, double& value) {
         t1b_norm_ -= value * value;
         value = 0.0;
     });
@@ -443,15 +443,15 @@ void MRDSRG::guess_t2_noccvv(BlockedTensor& V, BlockedTensor& T2) {
     }
 
     // zero internal amplitudes
-    T2.block("aaaa").iterate([&](const std::vector<size_t>& i, double& value) {
+    T2.block("aaaa").iterate([&](const std::vector<size_t>&, double& value) {
         t2aa_norm_ -= value * value;
         value = 0.0;
     });
-    T2.block("aAaA").iterate([&](const std::vector<size_t>& i, double& value) {
+    T2.block("aAaA").iterate([&](const std::vector<size_t>&, double& value) {
         t2ab_norm_ -= value * value;
         value = 0.0;
     });
-    T2.block("AAAA").iterate([&](const std::vector<size_t>& i, double& value) {
+    T2.block("AAAA").iterate([&](const std::vector<size_t>&, double& value) {
         t2bb_norm_ -= value * value;
         value = 0.0;
     });
@@ -576,15 +576,15 @@ void MRDSRG::guess_t2_noccvv_df(BlockedTensor& B, BlockedTensor& T2) {
     }
 
     // zero internal amplitudes
-    T2.block("aaaa").iterate([&](const std::vector<size_t>& i, double& value) {
+    T2.block("aaaa").iterate([&](const std::vector<size_t>&, double& value) {
         t2aa_norm_ -= value * value;
         value = 0.0;
     });
-    T2.block("aAaA").iterate([&](const std::vector<size_t>& i, double& value) {
+    T2.block("aAaA").iterate([&](const std::vector<size_t>&, double& value) {
         t2ab_norm_ -= value * value;
         value = 0.0;
     });
-    T2.block("AAAA").iterate([&](const std::vector<size_t>& i, double& value) {
+    T2.block("AAAA").iterate([&](const std::vector<size_t>&, double& value) {
         t2bb_norm_ -= value * value;
         value = 0.0;
     });
@@ -714,11 +714,11 @@ void MRDSRG::guess_t1_nocv(BlockedTensor& F, BlockedTensor& T2, BlockedTensor& T
     }
 
     // zero internal amplitudes
-    T1.block("aa").iterate([&](const std::vector<size_t>& i, double& value) {
+    T1.block("aa").iterate([&](const std::vector<size_t>&, double& value) {
         t1a_norm_ -= value * value;
         value = 0.0;
     });
-    T1.block("AA").iterate([&](const std::vector<size_t>& i, double& value) {
+    T1.block("AA").iterate([&](const std::vector<size_t>&, double& value) {
         t1b_norm_ -= value * value;
         value = 0.0;
     });
@@ -864,18 +864,17 @@ void MRDSRG::update_t2_std() {
     T2_["IJAB"] += DT2_["IJAB"];
 
     // compute norm and find maximum
-    T2_.iterate(
-        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
-            if ((spin[0] == AlphaSpin) && (spin[1] == AlphaSpin)) {
-                t2aa_norm_ += value * value;
-            } else if ((spin[0] == AlphaSpin) && (spin[1] == BetaSpin)) {
-                t2ab_norm_ += value * value;
-            } else if ((spin[0] == BetaSpin) && (spin[1] == BetaSpin)) {
-                t2bb_norm_ += value * value;
-            }
-            if (std::fabs(value) > std::fabs(T2max_))
-                T2max_ = value;
-        });
+    T2_.iterate([&](const std::vector<size_t>&, const std::vector<SpinType>& spin, double& value) {
+        if ((spin[0] == AlphaSpin) && (spin[1] == AlphaSpin)) {
+            t2aa_norm_ += value * value;
+        } else if ((spin[0] == AlphaSpin) && (spin[1] == BetaSpin)) {
+            t2ab_norm_ += value * value;
+        } else if ((spin[0] == BetaSpin) && (spin[1] == BetaSpin)) {
+            t2bb_norm_ += value * value;
+        }
+        if (std::fabs(value) > std::fabs(T2max_))
+            T2max_ = value;
+    });
 
     T2norm_ = std::sqrt(t2aa_norm_ + t2bb_norm_ + 4 * t2ab_norm_);
     t2aa_norm_ = std::sqrt(t2aa_norm_);
@@ -975,16 +974,15 @@ void MRDSRG::update_t1_std() {
     T1_["IA"] += DT1_["IA"];
 
     // compute norm and find maximum
-    T1_.iterate(
-        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
-            if (spin[0] == AlphaSpin) {
-                t1a_norm_ += value * value;
-            } else {
-                t1b_norm_ += value * value;
-            }
-            if (std::fabs(value) > std::fabs(T1max_))
-                T1max_ = value;
-        });
+    T1_.iterate([&](const std::vector<size_t>&, const std::vector<SpinType>& spin, double& value) {
+        if (spin[0] == AlphaSpin) {
+            t1a_norm_ += value * value;
+        } else {
+            t1b_norm_ += value * value;
+        }
+        if (std::fabs(value) > std::fabs(T1max_))
+            T1max_ = value;
+    });
 
     T1norm_ = std::sqrt(t1a_norm_ + t1b_norm_);
     t1a_norm_ = std::sqrt(t1a_norm_);
@@ -1118,15 +1116,15 @@ void MRDSRG::update_t2_noccvv() {
     }
 
     // zero internal amplitudes
-    R2.block("aaaa").iterate([&](const std::vector<size_t>& i, double& value) {
+    R2.block("aaaa").iterate([&](const std::vector<size_t>&, double& value) {
         t2aa_norm_ -= value * value;
         value = 0.0;
     });
-    R2.block("aAaA").iterate([&](const std::vector<size_t>& i, double& value) {
+    R2.block("aAaA").iterate([&](const std::vector<size_t>&, double& value) {
         t2ab_norm_ -= value * value;
         value = 0.0;
     });
-    R2.block("AAAA").iterate([&](const std::vector<size_t>& i, double& value) {
+    R2.block("AAAA").iterate([&](const std::vector<size_t>&, double& value) {
         t2bb_norm_ -= value * value;
         value = 0.0;
     });
@@ -1245,11 +1243,11 @@ void MRDSRG::update_t1_nocv() {
     }
 
     // zero internal amplitudes
-    R1.block("aa").iterate([&](const std::vector<size_t>& i, double& value) {
+    R1.block("aa").iterate([&](const std::vector<size_t>&, double& value) {
         t1a_norm_ -= value * value;
         value = 0.0;
     });
-    R1.block("AA").iterate([&](const std::vector<size_t>& i, double& value) {
+    R1.block("AA").iterate([&](const std::vector<size_t>&, double& value) {
         t1b_norm_ -= value * value;
         value = 0.0;
     });

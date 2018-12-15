@@ -172,7 +172,7 @@ class SOMRDSRG : public Wavefunction {
     /// Compute the commutator H <- [C,T]
     void H_eq_commutator_C_T(double factor, ambit::BlockedTensor& F, ambit::BlockedTensor& V,
                              ambit::BlockedTensor& T1, ambit::BlockedTensor& T2, double& H0,
-                             ambit::BlockedTensor& H1, ambit::BlockedTensor& H2, int order);
+                             ambit::BlockedTensor& H1, ambit::BlockedTensor& H2);
 
     /// T1 amplitude update
     void update_T1();

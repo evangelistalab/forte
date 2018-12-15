@@ -46,7 +46,7 @@ DSRG_TIME::DSRG_TIME() {
     timing_ = std::vector<double>(code_.size(), 0.0);
 
     // map code to time index
-    for (int i = 0; i < code_.size(); ++i) {
+    for (size_t i = 0; i < code_.size(); ++i) {
         code_to_tidx_[code_[i]] = i;
     }
 }
@@ -120,7 +120,7 @@ void DSRG_TIME::delete_code(const std::string& code) {
             timing_.erase(timing_.begin() + offset);
             auto it = code_to_tidx_.find(code);
             code_to_tidx_.erase(it, code_to_tidx_.end());
-            for (int i = offset; i < code_.size(); ++i) {
+            for (size_t i = offset; i < code_.size(); ++i) {
                 code_to_tidx_[code_[i]] = i;
             }
         }

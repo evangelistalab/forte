@@ -1096,7 +1096,7 @@ std::vector<std::vector<double>> MRDSRG::diagonalize_Fock_diagblocks(BlockedTens
 ambit::Tensor MRDSRG::separate_tensor(ambit::Tensor& tens, const Dimension& irrep, const int& h) {
     // test tens and irrep
     int tens_dim = static_cast<int>(tens.dim(0));
-    if (tens_dim != irrep.sum() || tens_dim != tens.dim(1)) {
+    if (tens_dim != irrep.sum() || tens_dim != static_cast<int>(tens.dim(1))) {
         throw PSIEXCEPTION("Wrong dimension for the to-be-separated ambit Tensor.");
     }
     if (h >= irrep.n()) {

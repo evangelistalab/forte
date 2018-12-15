@@ -260,8 +260,8 @@ class ACTIVE_DSRGPT2 : public Wavefunction {
     double compute_overlap(std::map<Determinant, double> wfn1, std::map<Determinant, double> wfn2);
 
     /// compute pt2 oscillator strength using determinants overlap
-    void compute_osc_pt2_overlap(const int& irrep, const int& root, const double& Tde_x,
-                                 ambit::BlockedTensor& T1_x, ambit::BlockedTensor& T2_x);
+    void compute_osc_pt2_overlap(const int& irrep, const int& root, ambit::BlockedTensor& T1_x,
+                                 ambit::BlockedTensor& T2_x);
 };
 }
 }

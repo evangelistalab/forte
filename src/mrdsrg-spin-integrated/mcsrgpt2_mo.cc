@@ -841,7 +841,7 @@ inline bool ReverseSortT2(const tuple<double, size_t, size_t, size_t, size_t>& l
 void MCSRGPT2_MO::Check_T2(const string& x, const d4& M, double& Norm, double& MaxT,
                            Options& options) {
     timer_on("Check T2");
-    int ntamp = options.get_int("NTAMP");
+    size_t ntamp = options.get_int("NTAMP");
     double intruder = options.get_double("INTRUDER_TAMP");
     std::vector<std::tuple<double, size_t, size_t, size_t, size_t>> Max;
     std::vector<std::tuple<double, size_t, size_t, size_t, size_t>> Large(
@@ -947,7 +947,7 @@ inline bool ReverseSortT1(const tuple<double, size_t, size_t>& lhs,
 void MCSRGPT2_MO::Check_T1(const string& x, const d2& M, double& Norm, double& MaxT,
                            Options& options) {
     timer_on("Check T1");
-    int ntamp = options.get_int("NTAMP");
+    size_t ntamp = options.get_int("NTAMP");
     double intruder = options.get_double("INTRUDER_TAMP");
     std::vector<std::tuple<double, size_t, size_t>> Max;
     std::vector<std::tuple<double, size_t, size_t>> Large(ntamp, std::make_tuple(0.0, 0, 0));

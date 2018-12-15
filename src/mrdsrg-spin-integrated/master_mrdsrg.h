@@ -44,11 +44,10 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
 
     /// Compute second-order effective Hamiltonian couplings (child class overrides)
     /// <M|H + HA(N)|N> = Heff1 * TrD1 + Heff2 * TrD2 + Heff3 * TrD3 if CAS
-    virtual void compute_Heff_2nd_coupling(double& H0, ambit::Tensor& H1a, ambit::Tensor& H1b,
-                                           ambit::Tensor& H2aa, ambit::Tensor& H2ab,
-                                           ambit::Tensor& H2bb, ambit::Tensor& H3aaa,
-                                           ambit::Tensor& H3aab, ambit::Tensor& H3abb,
-                                           ambit::Tensor& H3bbb) {
+    /// The parameter list: H0, H1a, H1b, H2aa, H2ab, H2bb, H3aaa, H3aab, H3abb, H3bbb
+    virtual void compute_Heff_2nd_coupling(double&, ambit::Tensor&, ambit::Tensor&, ambit::Tensor&,
+                                           ambit::Tensor&, ambit::Tensor&, ambit::Tensor&,
+                                           ambit::Tensor&, ambit::Tensor&, ambit::Tensor&) {
         throw PSIEXCEPTION("Child class should override this function");
     }
 
@@ -64,12 +63,12 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     //                                std::vector<BlockedTensor>& M2) = 0;
 
     /// Return de-normal-ordered T1 amplitudes
-    virtual ambit::BlockedTensor get_T1deGNO(double& T0deGNO) {
+    virtual ambit::BlockedTensor get_T1deGNO(double&) {
         throw PSIEXCEPTION("Child class should override this function");
     }
 
     /// Return T2 amplitudes
-    virtual ambit::BlockedTensor get_T2(const std::vector<std::string>& blocks) {
+    virtual ambit::BlockedTensor get_T2(const std::vector<std::string>&) {
         throw PSIEXCEPTION("Child class should override this function");
     }
     virtual ambit::BlockedTensor get_T2() {
@@ -139,7 +138,7 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     std::string multi_state_algorithm_;
 
     /// Number of amplitudes will be printed in amplitude summary
-    int ntamp_;
+    size_t ntamp_;
     /// Threshold for amplitudes considered as intruders
     double intruder_tamp_;
 

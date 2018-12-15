@@ -341,7 +341,6 @@ void THREE_DSRG_MRPT2::print_options_summary() {
 void THREE_DSRG_MRPT2::cleanup() {}
 
 double THREE_DSRG_MRPT2::compute_energy() {
-    local_timer ComputeEnergy;
     int my_proc = 0;
     int nproc = 1;
 #ifdef HAVE_MPI
@@ -2224,7 +2223,6 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core() {
                 size_t m_in_loop = mn / n_size;
                 size_t n_in_loop = mn % n_size;
                 size_t ma = m_batch[m_in_loop];
-                size_t mb = m_batch[m_in_loop];
 
                 size_t na = n_batch[n_in_loop];
                 size_t nb = n_batch[n_in_loop];
@@ -2403,7 +2401,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_AO_Slow() {
     Full_LTAO("w, m, e, n, f") = DF_LTAO("w, Q, m, e") * DF_LTAO("w, Q, n, f");
     Full_LTAO("w, m, e, n, f") -= DF_LTAO("w, Q, m, f") * DF_LTAO("w, Q, n, e");
     E_weight_alpha("w") = Full_LTAO("w,m,e,n,f") * AO_Full("m, e, n, f");
-    for (int w = 0; w < weights; w++) {
+    for (size_t w = 0; w < weights; w++) {
         Ealpha -= E_weight_alpha.data()[w];
         Ebeta -= E_weight_alpha.data()[w];
         Emixed -= E_weight_mixed.data()[w];
@@ -2578,7 +2576,6 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_virtual() {
                 size_t e_in_loop = ef / f_size;
                 size_t f_in_loop = ef % f_size;
                 size_t ea = e_batch[e_in_loop];
-                size_t eb = e_batch[e_in_loop];
 
                 size_t fa = f_batch[f_in_loop];
                 size_t fb = f_batch[f_in_loop];
@@ -3081,8 +3078,8 @@ void THREE_DSRG_MRPT2::form_Hbar() {
 
     if (options_.get_bool("PRINT_1BODY_EVALS")) {
         SharedMatrix Hb1 = std::make_shared<Matrix>("HB1", nactive_, nactive_);
-        for (int p = 0; p < nactive_; ++p) {
-            for (int q = 0; q < nactive_; ++q) {
+        for (size_t p = 0; p < nactive_; ++p) {
+            for (size_t q = 0; q < nactive_; ++q) {
                 Hb1->set(p, q, Hbar1_.block("aa").data()[p * nactive_ + q]);
             }
         }
@@ -3968,8 +3965,8 @@ std::vector<std::vector<double>> THREE_DSRG_MRPT2::diagonalize_Fock_diagblocks(B
 ambit::Tensor THREE_DSRG_MRPT2::separate_tensor(ambit::Tensor& tens, const Dimension& irrep,
                                                 const int& h) {
     // test tens and irrep
-    int tens_dim = static_cast<int>(tens.dim(0));
-    if (tens_dim != irrep.sum() || tens_dim != tens.dim(1)) {
+    size_t tens_dim = tens.dim(0);
+    if (tens_dim != static_cast<size_t>(irrep.sum()) || tens_dim != tens.dim(1)) {
         throw PSIEXCEPTION("Wrong dimension for the to-be-separated ambit Tensor.");
     }
     if (h >= irrep.n()) {

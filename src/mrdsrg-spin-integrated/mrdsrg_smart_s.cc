@@ -82,7 +82,7 @@ double MRDSRG::smart_s_min_delta1() {
         lowest_virt.emplace_back(Fa_[virt_mos_[index]]);
     }
 
-    double Edelta = 100.0, dsrg_s = 0.0;
+    double Edelta = 100.0;
     std::vector<int> actv_sym = mo_space_info_->symmetry("ACTIVE");
     size_t nactv = actv_sym.size();
     for (size_t i = 0; i < nactv; ++i) {
@@ -107,7 +107,7 @@ double MRDSRG::smart_s_max_delta1() {
         lowest_virt.emplace_back(Fa_[virt_mos_[index]]);
     }
 
-    double Edelta = 0.0, dsrg_s = 0.0;
+    double Edelta = 0.0;
     std::vector<int> actv_sym = mo_space_info_->symmetry("ACTIVE");
     size_t nactv = actv_sym.size();
     for (size_t i = 0; i < nactv; ++i) {

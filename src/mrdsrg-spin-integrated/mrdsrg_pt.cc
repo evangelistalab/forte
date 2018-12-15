@@ -454,10 +454,9 @@ std::vector<std::pair<std::string, double>> MRDSRG::compute_energy_pt2_FdiagVdia
     std::vector<std::string> blocks2 = od_two_labels_hhpp();
 
     // solve first-order amplitudes
-    double Ecorr = 0.0, E1st = 0.0;
+    double Ecorr = 0.0;
     std::vector<std::pair<std::string, double>> energy;
     int cycle = 0, maxiter = options_.get_int("MAXITER");
-    double e_conv = options_.get_double("E_CONVERGENCE");
     double r_conv = options_.get_double("R_CONVERGENCE");
     bool converged = false, failed = false;
 

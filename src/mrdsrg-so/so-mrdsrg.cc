@@ -712,17 +712,17 @@ double SOMRDSRG::compute_energy() {
 
         double max_T1 = 0.0;
         double max_T2 = 0.0;
-        T1.citerate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin,
-                        const double& value) {
-            if (std::fabs(value) > std::fabs(max_T1))
-                max_T1 = value;
-        });
+        T1.citerate(
+            [&](const std::vector<size_t>&, const std::vector<SpinType>&, const double& value) {
+                if (std::fabs(value) > std::fabs(max_T1))
+                    max_T1 = value;
+            });
 
-        T2.citerate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin,
-                        const double& value) {
-            if (std::fabs(value) > std::fabs(max_T2))
-                max_T2 = value;
-        });
+        T2.citerate(
+            [&](const std::vector<size_t>&, const std::vector<SpinType>&, const double& value) {
+                if (std::fabs(value) > std::fabs(max_T2))
+                    max_T2 = value;
+            });
 
         //        double norm_H1 = Hbar1.block("ov").norm();
         //        double norm_H2 = Hbar2.block("oovv").norm();
@@ -820,8 +820,8 @@ double SOMRDSRG::compute_hbar() {
         C1.zero();
         C2.zero();
 
-        // Compute the commutator C = 1/n [O,S]
-        H_eq_commutator_C_T(factor, O1, O2, T1, T2, C0, C1, C2, n);
+        // Compute the commutator C = 1/factor [O,S]
+        H_eq_commutator_C_T(factor, O1, O2, T1, T2, C0, C1, C2);
 
         // Hbar += C
         Hbar0 += C0;
@@ -853,7 +853,7 @@ double SOMRDSRG::compute_hbar() {
 
 void SOMRDSRG::H_eq_commutator_C_T(double factor, BlockedTensor& F, BlockedTensor& V,
                                    BlockedTensor& T1, BlockedTensor& T2, double& H0,
-                                   BlockedTensor& H1, BlockedTensor& H2, int order) {
+                                   BlockedTensor& H1, BlockedTensor& H2) {
     H0 += 1.000000 * Eta1["p1,p0"] * F["p0,h0"] * Gamma1["h0,h1"] * T1["h1,p1"];
     H0 += -0.500000 * F["a0,c0"] * Lambda2["a2,a3,a1,a0"] * T2["a1,c0,a2,a3"];
     H0 += 0.500000 * F["v0,a0"] * Lambda2["a0,a3,a1,a2"] * T2["a1,a2,v0,a3"];

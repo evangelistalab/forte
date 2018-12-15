@@ -123,8 +123,8 @@ void DSRG_MRPT::H2_T2_C0_L1(BlockedTensor& H2, BlockedTensor& T2, const double& 
         // separte core_mos_ to nbatch_ subvectors
         size_t core_size = core_mos_.size();
         std::vector<std::vector<size_t>> nb_core_mos;
-        int nc = nbatch_;
-        if (core_size < nbatch_ && core_size != 0)
+        size_t nc = nbatch_;
+        if (core_size < nc && core_size != 0)
             nc = core_size;
         size_t even = core_size / nc;
         size_t left = core_size % nc;
@@ -214,8 +214,8 @@ void DSRG_MRPT::H2_T2_C0_L1(BlockedTensor& H2, BlockedTensor& T2, const double& 
 double DSRG_MRPT::V_T2_C0_L1_ccvv(const std::vector<std::vector<size_t>>& small_core_mo) {
     double E = 0.0;
 
-    for (int i = 0; i < small_core_mo.size(); ++i) {
-        for (int j = i; j < small_core_mo.size(); ++j) {
+    for (size_t i = 0; i < small_core_mo.size(); ++i) {
+        for (size_t j = i; j < small_core_mo.size(); ++j) {
 
             // reset the mo_spaces for BlockedTensor
             ambit::BlockedTensor::reset_mo_spaces();
@@ -264,7 +264,7 @@ double DSRG_MRPT::V_T2_C0_L1_ccvv(const std::vector<std::vector<size_t>>& small_
 double DSRG_MRPT::V_T2_C0_L1_cavv(const std::vector<std::vector<size_t>>& small_core_mo) {
     double E = 0.0;
 
-    for (int i = 0; i < small_core_mo.size(); ++i) {
+    for (size_t i = 0; i < small_core_mo.size(); ++i) {
         // reset the mo_spaces for BlockedTensor
         ambit::BlockedTensor::reset_mo_spaces();
         ambit::BlockedTensor::add_mo_space("c", "mn", small_core_mo[i], NoSpin);

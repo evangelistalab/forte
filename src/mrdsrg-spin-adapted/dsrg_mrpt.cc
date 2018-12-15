@@ -198,7 +198,7 @@ void DSRG_MRPT::read_options() {
 
 void DSRG_MRPT::print_options() {
     // fill in information
-    std::vector<std::pair<std::string, int>> calculation_info{{"ntamp", ntamp_}};
+    std::vector<std::pair<std::string, size_t>> calculation_info{{"ntamp", ntamp_}};
 
     std::vector<std::pair<std::string, double>> calculation_info_double{
         {"flow parameter", s_},
@@ -215,7 +215,7 @@ void DSRG_MRPT::print_options() {
     // print some information
     print_h2("Calculation Information");
     for (auto& str_dim : calculation_info) {
-        outfile->Printf("\n    %-35s %15d", str_dim.first.c_str(), str_dim.second);
+        outfile->Printf("\n    %-35s %15zu", str_dim.first.c_str(), str_dim.second);
     }
     for (auto& str_dim : calculation_info_double) {
         outfile->Printf("\n    %-35s %15.3e", str_dim.first.c_str(), str_dim.second);

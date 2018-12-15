@@ -302,8 +302,7 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     std::vector<std::vector<double>> compute_energy_xms();
     /// XMS rotation for the reference states
     SharedMatrix xms_rotation(std::shared_ptr<FCIIntegrals> fci_ints,
-                              std::vector<Determinant>& p_space, SharedMatrix civecs,
-                              const int& irrep);
+                              std::vector<Determinant>& p_space, SharedMatrix civecs);
 
     /// Build effective singles: T_{ia} -= T_{iu,av} * Gamma_{vu}
     void build_T1eff_deGNO();
@@ -311,11 +310,11 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     /// Compute density cumulants
     void compute_cumulants(std::shared_ptr<FCIIntegrals> fci_ints,
                            std::vector<psi::forte::Determinant>& p_space, SharedMatrix evecs,
-                           const int& root1, const int& root2, const int& irrep);
+                           const int& root1, const int& root2);
     /// Compute denisty matrices and puts in Gamma1_, Lambda2_, and Lambda3_
     void compute_densities(std::shared_ptr<FCIIntegrals> fci_ints,
                            std::vector<Determinant>& p_space, SharedMatrix evecs, const int& root1,
-                           const int& root2, const int& irrep);
+                           const int& root2);
 
     /// Compute MS coupling <M|H|N>
     double compute_ms_1st_coupling(const std::string& name);

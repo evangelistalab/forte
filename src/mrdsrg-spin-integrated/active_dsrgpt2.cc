@@ -110,7 +110,7 @@ void ACTIVE_DSRGPT2::startup() {
         }
         std::sort(order.begin(), order.end(), std::less<std::tuple<double, int, int>>());
 
-        for (int idx = 0; idx < order.size(); ++idx) {
+        for (size_t idx = 0; idx < order.size(); ++idx) {
             int i = std::get<1>(order[idx]);
             int h = std::get<2>(order[idx]);
 
@@ -566,7 +566,7 @@ void ACTIVE_DSRGPT2::compute_osc_ref(const int& irrep0, const int& irrep1,
     SharedMatrix evecs(new Matrix("combined evecs", ndet, nroot));
 
     if (same) {
-        for (int n = 0; n < nroot0; ++n) {
+        for (size_t n = 0; n < nroot0; ++n) {
             evals[n] = eigen0[n].second;
             evecs->set_column(0, n, eigen0[n].first);
         }
@@ -575,7 +575,7 @@ void ACTIVE_DSRGPT2::compute_osc_ref(const int& irrep0, const int& irrep1,
         evals = std::vector<double>(nroot, 0.0);
         evecs = SharedMatrix(new Matrix("combined evecs", ndet, nroot));
 
-        for (int n = 0; n < nroot0; ++n) {
+        for (size_t n = 0; n < nroot0; ++n) {
             evals[n] = eigen0[n].second;
 
             SharedVector evec0 = eigen0[n].first;
@@ -586,7 +586,7 @@ void ACTIVE_DSRGPT2::compute_osc_ref(const int& irrep0, const int& irrep1,
             evecs->set_column(0, n, evec);
         }
 
-        for (int n = 0; n < nroot1; ++n) {
+        for (size_t n = 0; n < nroot1; ++n) {
             evals[n + nroot0] = eigen1[n].second;
 
             SharedVector evec1 = eigen1[n].first;
@@ -606,7 +606,7 @@ void ACTIVE_DSRGPT2::compute_osc_ref(const int& irrep0, const int& irrep1,
         offset = nroot0;
     }
 
-    for (int n = start; n < nroot; ++n) {
+    for (size_t n = start; n < nroot; ++n) {
         Vector4 transD = compute_td_ref_root(fci_mo_->fci_ints(), p_space, evecs, 0, n);
         double Eexcited = evals[n] - evals[0];
 
@@ -676,11 +676,11 @@ Vector4 ACTIVE_DSRGPT2::compute_td_ref_root(std::shared_ptr<FCIIntegrals> fci_in
         for (int h1 = 0; h1 < nirrep; ++h1) {
             size_t offset_rdm_h1 = offset_irrep(h1, actvpi);
 
-            for (size_t u = 0; u < actvpi[h0]; ++u) {
+            for (int u = 0; u < actvpi[h0]; ++u) {
                 size_t u_rdm = u + offset_rdm_h0;
                 size_t u_all = actvIdxC1_[h0][u];
 
-                for (size_t v = 0; v < actvpi[h1]; ++v) {
+                for (int v = 0; v < actvpi[h1]; ++v) {
                     size_t v_rdm = v + offset_rdm_h1;
                     size_t v_all = actvIdxC1_[h1][v];
 
@@ -1247,10 +1247,10 @@ std::string ACTIVE_DSRGPT2::compute_ex_type(const Determinant& det, const Determ
     // CIS
     if (A + B == 1) {
         int idx_ref, idx_det;
-        if (A == 1 && B == 0) {
+        if (A == 1) {
             idx_ref = occA_ref[0];
             idx_det = occA_det[0];
-        } else if (A == 0 && B == 1) {
+        } else {
             idx_ref = occB_ref[0];
             idx_det = occB_det[0];
         }
@@ -1263,7 +1263,7 @@ std::string ACTIVE_DSRGPT2::compute_ex_type(const Determinant& det, const Determ
 
     // CISD
     if (A + B == 2) {
-        if (A == 1 && B == 1) {
+        if (A == 1 && B == 1) { // both single excitations
             int i_ref = occA_ref[0], j_ref = occB_ref[0];
             int i_det = occA_det[0], j_det = occB_det[0];
             if (i_ref == j_ref && i_det == j_det) {
@@ -1287,10 +1287,10 @@ std::string ACTIVE_DSRGPT2::compute_ex_type(const Determinant& det, const Determ
             }
         } else {
             int i_ref, j_ref, i_det, j_det;
-            if (A == 2) {
+            if (A == 2) { // alpha double excitations
                 i_ref = occA_ref[0], j_ref = occA_ref[1];
                 i_det = occA_det[0], j_det = occA_det[1];
-            } else if (B == 2) {
+            } else { // beta double excitations
                 i_ref = occB_ref[0], j_ref = occB_ref[1];
                 i_det = occB_det[0], j_det = occB_det[1];
             }
@@ -1346,9 +1346,7 @@ ACTIVE_DSRGPT2::p_space_actv_to_nmo(const std::vector<Determinant>& p_space, Sha
     //    Determinant::reset_ints();
     std::map<Determinant, double> detsmap;
 
-    size_t ncmo = mo_space_info_->size("CORRELATED");
     size_t nact = mo_space_info_->size("ACTIVE");
-
     std::vector<size_t> core_mos = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
     std::vector<size_t> actv_mos = mo_space_info_->get_corr_abs_mo("ACTIVE");
 
@@ -1396,7 +1394,6 @@ ACTIVE_DSRGPT2::p_space_actv_to_nmo(const std::vector<Determinant>& p_space, Sha
 std::map<Determinant, double>
 ACTIVE_DSRGPT2::excited_wfn_1st(const std::map<Determinant, double>& ref, ambit::BlockedTensor& T1,
                                 ambit::BlockedTensor& T2) {
-    size_t ncmo = mo_space_info_->size("CORRELATED");
     //    Determinant::reset_ints();
 
     std::map<Determinant, double> out;
@@ -1754,7 +1751,6 @@ void ACTIVE_DSRGPT2::compute_osc_pt2_dets(const int& irrep, const int& root, con
 
 std::map<Determinant, double> ACTIVE_DSRGPT2::excited_ref(const std::map<Determinant, double>& ref,
                                                           const int& p, const int& q) {
-    size_t ncmo = mo_space_info_->size("CORRELATED");
     size_t nact = mo_space_info_->size("ACTIVE");
 
     std::map<Determinant, double> out;
@@ -1816,7 +1812,7 @@ std::map<Determinant, double> ACTIVE_DSRGPT2::excited_ref(const std::map<Determi
     return out;
 }
 
-void ACTIVE_DSRGPT2::compute_osc_pt2_overlap(const int& irrep, const int& root, const double& Tde_x,
+void ACTIVE_DSRGPT2::compute_osc_pt2_overlap(const int& irrep, const int& root,
                                              ambit::BlockedTensor& T1_x,
                                              ambit::BlockedTensor& T2_x) {
     // form determinants for ground and excited states

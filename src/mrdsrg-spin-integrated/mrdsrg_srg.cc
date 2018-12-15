@@ -39,7 +39,7 @@ using namespace boost::numeric::odeint;
 namespace psi {
 namespace forte {
 
-void MRSRG_ODEInt::operator()(const odeint_state_type& x, odeint_state_type& dxdt, const double t) {
+void MRSRG_ODEInt::operator()(const odeint_state_type& x, odeint_state_type& dxdt, const double) {
     auto t_start = std::chrono::high_resolution_clock::now();
 
     // a bunch of references to simplify the typing
@@ -257,8 +257,7 @@ double MRDSRG::compute_energy_lsrg2() {
     return Hbar0_;
 }
 
-void SRGPT2_ODEInt::operator()(const odeint_state_type& x, odeint_state_type& dxdt,
-                               const double t) {
+void SRGPT2_ODEInt::operator()(const odeint_state_type& x, odeint_state_type& dxdt, const double) {
     auto t_start = std::chrono::high_resolution_clock::now();
 
     // a bunch of references to simplify the typing
