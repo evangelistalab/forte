@@ -64,7 +64,8 @@ set forte {
   charge 0
   print_no true
   relax_ref once
-  localize split_pm
+  localize PIPEK_MEZEY
+  localize_space [25,28, 29,32]
 }
 
 set_num_threads(8)

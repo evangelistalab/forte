@@ -2931,12 +2931,17 @@ void AdaptiveCI::spin_analysis() {
     } else if (options_->get_str("SPIN_BASIS") == "LOCAL") {
         outfile->Printf("\n  Computing spin correlation in local basis \n");
 
-        //  auto loc =
-        //      std::make_shared<LOCALIZE>(reference_wavefunction_, options_-> ints_,
-        //      mo_space_info_);
-        //  loc->full_localize();
-        //  UA = loc->get_U()->clone();
-        //  UB = loc->get_U()->clone();
+        auto loc =
+            std::make_shared<LOCALIZE>(reference_wavefunction_, options_, ints_);
+
+        std::vector<size_t> actmo = mo_space_info_->get_absolute_mo("ACTIVE");
+        std::vector<int> loc_mo(2);        
+        loc_mo[0] = static_cast<int>(actmo[0]);
+        loc_mo[1] = static_cast<int>(actmo.back());
+        loc->set_orbital_space(loc_mo);
+        loc->localize();
+        UA = loc->get_U()->clone();
+        UB = loc->get_U()->clone();
 
     } else if (options_->get_str("SPIN_BASIS") == "CANONICAL") {
         outfile->Printf("\n  Computing spin correlation in reference basis \n");

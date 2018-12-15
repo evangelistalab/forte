@@ -177,10 +177,12 @@ void forte_old_options(ForteOptions& options) {
     /*- The maximum number of iterations -*/
     options.add_int("MAXITER", 100);
 
-    /*- Use localized basis? -*/
-    options.add_str("LOCALIZE", "NONE", "NONE SPLIT FULL");
-    /*- Type of localization -*/
-    options.add_str("LOCALIZE_TYPE", "PIPEK_MEZEY", "BOYS");
+    /*-One option to determine localization scheme -*/
+    options.add_str("LOCALIZE","NONE", "NONE PIPEK_MEZEY BOYS" );
+
+    /*-Sets the orbital space for localization-*/
+    options.add_array("LOCALIZE_SPACE");
+
     /*- Number of orbitals for CI guess  -*/
     options.add_int("ACTIVE_GUESS_SIZE", 1000);
 

@@ -33,7 +33,6 @@
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/libmints/local.h"
 
-#include "base_classes/mo_space_info.h"
 #include "integrals/integrals.h"
 #include "base_classes/reference.h"
 #include "base_classes/state_info.h"
@@ -52,6 +51,10 @@ class LOCALIZE : public OrbitalTransform {
     psi::SharedMatrix get_Ua();
     psi::SharedMatrix get_Ub();
 
+
+    // Sets the orbitals to localize, bool to split localize
+    void set_orbital_space( std::vector<int>& orbital_spaces );
+
     // Call to localize, class handles options
     void localize();
 
@@ -69,17 +72,10 @@ class LOCALIZE : public OrbitalTransform {
     psi::SharedMatrix Ua_;
     psi::SharedMatrix Ub_;
 
-    size_t nfrz_;
-    size_t nrst_;
-    size_t namo_;
+    // orbitals to localize
+    std::vector<int> orbital_spaces_;
 
-    int naocc_;
-    int navir_;
-    int multiplicity_;
-
-    std::vector<size_t> abs_act_;
-
-    std::string local_type_;
+    // Pipek-Mezey or Boys
     std::string local_method_;
 };
 } // namespace forte
