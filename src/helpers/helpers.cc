@@ -430,12 +430,12 @@ void view_modified_orbitals(SharedWavefunction wfn, const std::shared_ptr<Matrix
     molden->write(filename, Ca, Ca, diag_F, diag_F, occupation, occupation);
     */
 }
-std::pair<std::vector<int>, std::vector<int>> split_up_tasks(size_t size_of_tasks, int nproc) {
-    int mystart = 0;
-    int nbatch = 0;
-    std::vector<int> mystart_list(nproc, 0);
-    std::vector<int> myend_list(nproc, 0);
-    for (int me = 0; me < nproc; me++) {
+std::pair<std::vector<size_t>, std::vector<size_t>> split_up_tasks(size_t size_of_tasks, size_t nproc) {
+    size_t mystart = 0;
+    size_t nbatch = 0;
+    std::vector<size_t> mystart_list(nproc, 0);
+    std::vector<size_t> myend_list(nproc, 0);
+    for (size_t me = 0; me < nproc; me++) {
         mystart = (size_of_tasks / nproc) * me;
         if (size_of_tasks % nproc > me) {
             mystart += me;
@@ -447,7 +447,7 @@ std::pair<std::vector<int>, std::vector<int>> split_up_tasks(size_t size_of_task
         mystart_list[me] = mystart;
         myend_list[me] = nbatch;
     }
-    std::pair<std::vector<int>, std::vector<int>> my_lists =
+    std::pair<std::vector<size_t>, std::vector<size_t>> my_lists =
         std::make_pair(mystart_list, myend_list);
 
     return my_lists;

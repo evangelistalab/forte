@@ -74,7 +74,7 @@ void scale(std::vector<double>& A, double alpha);
 double normalize(std::vector<double>& C);
 double dot(std::vector<double>& C1, std::vector<double>& C2);
 void add(std::vector<double>& a, double k, std::vector<double>& b);
-void Wall_Chebyshev_generator_coefs(std::vector<double>& coefs, int order, double tau, double S,
+void Wall_Chebyshev_generator_coefs(std::vector<double>& coefs, int order,
                                     double range);
 void print_polynomial(std::vector<double>& coefs);
 
@@ -256,7 +256,7 @@ void ElementwiseCI::startup() {
         prescreen_H_CI_ = [](double HJI, double CI, double spawning_threshold) {
             return std::fabs(HJI * CI) >= spawning_threshold;
         };
-        important_H_CI_CJ_ = [](double HJI, double CI, double CJ, double spawning_threshold) {
+        important_H_CI_CJ_ = [](double, double, double, double) {
             return true;
         };
         functional_description_ = "|Hij|*max(|Ci|,|Cj|)";
@@ -358,7 +358,7 @@ double ElementwiseCI::estimate_high_energy() {
     int nea = 0, neb = 0;
     std::vector<std::pair<double, int>> obt_energies;
     Determinant high_det(reference_determinant_);
-    for (int i = 0; i < nact_; i++) {
+    for (size_t i = 0; i < nact_; i++) {
         if (reference_determinant_.get_alfa_bit(i)) {
             ++nea;
             high_det.destroy_alfa_bit(i);
@@ -369,7 +369,7 @@ double ElementwiseCI::estimate_high_energy() {
         }
 
         double temp = fci_ints_->oei_a(i, i);
-        for (int p = 0; p < nact_; ++p) {
+        for (size_t p = 0; p < nact_; ++p) {
             if (reference_determinant_.get_alfa_bit(p)) {
                 temp += fci_ints_->tei_aa(i, p, i, p);
             }
@@ -529,7 +529,7 @@ void ElementwiseCI::compute_characteristic_function() {
     range_ = (lambda_h_ - lambda_1_) / 2.0;
     switch (generator_) {
     case WallChebyshevGenerator:
-        Wall_Chebyshev_generator_coefs(cha_func_coefs_, chebyshev_order_, time_step_, shift_,
+        Wall_Chebyshev_generator_coefs(cha_func_coefs_, chebyshev_order_,
                                        range_);
     default:
         break;
@@ -672,9 +672,9 @@ double ElementwiseCI::compute_energy() {
         timer_on("EWCI:Step");
         if (use_inter_norm_) {
             double max_C = std::fabs(C[0]);
-            propagate(generator_, dets_hashvec, C, time_step_, spawning_threshold_ * max_C, shift_);
+            propagate(generator_, dets_hashvec, C, spawning_threshold_ * max_C);
         } else {
-            propagate(generator_, dets_hashvec, C, time_step_, spawning_threshold_, shift_);
+            propagate(generator_, dets_hashvec, C, spawning_threshold_);
         }
         timer_off("EWCI:Step");
 
@@ -964,17 +964,16 @@ double ElementwiseCI::initial_guess(det_hashvec& dets_hashvec, std::vector<doubl
 }
 
 void ElementwiseCI::propagate(GeneratorType generator, det_hashvec& dets_hashvec,
-                              std::vector<double>& C, double tau, double spawning_threshold,
-                              double S) {
+                              std::vector<double>& C, double spawning_threshold) {
     //    det_hashvec dets_hashvec(dets);
     //    det_vec dets;
     switch (generator) {
     case WallChebyshevGenerator:
-        propagate_wallCh(dets_hashvec, C, spawning_threshold, S);
+        propagate_wallCh(dets_hashvec, C, spawning_threshold);
         break;
     case DLGenerator:
         //        dets = dets_hashvec.toVector();
-        propagate_DL(dets_hashvec, C, spawning_threshold, S);
+        propagate_DL(dets_hashvec, C, spawning_threshold);
         //        dets_hashvec = det_hashvec(dets);
         break;
     default:
@@ -987,7 +986,7 @@ void ElementwiseCI::propagate(GeneratorType generator, det_hashvec& dets_hashvec
 }
 
 void ElementwiseCI::propagate_wallCh(det_hashvec& dets_hashvec, std::vector<double>& C,
-                                     double spawning_threshold, double S) {
+                                     double spawning_threshold) {
     //    det_hashvec dets_hashvec(dets);
     // A map that contains the pair (determinant,coefficient)
     const double PI = 2 * acos(0.0);
@@ -1024,7 +1023,7 @@ void ElementwiseCI::propagate_wallCh(det_hashvec& dets_hashvec, std::vector<doub
 }
 
 void ElementwiseCI::propagate_DL(det_hashvec& dets_hashvec, std::vector<double>& C,
-                                 double spawning_threshold, double S) {
+                                 double spawning_threshold) {
     size_t ref_size = C.size();
     //    det_hashvec result_dets;
     size_t overlap_size;
@@ -1057,31 +1056,31 @@ void ElementwiseCI::propagate_DL(det_hashvec& dets_hashvec, std::vector<double>&
 
     std::vector<double> diag_vec(dets_size);
 #pragma omp parallel for
-    for (int i = 0; i < dets_size; i++) {
+    for (size_t i = 0; i < dets_size; i++) {
         diag_vec[i] = fci_ints_->energy(dets_hashvec[i]) + fci_ints_->scalar_energy();
     }
 
     double lambda = A->get(0, 0);
     alpha_vec[0] = 1.0;
     std::vector<double> delta_vec(dets_size, 0.0);
-    int current_order = 1;
+    size_t current_order = 1;
 
     int i = 1;
     for (i = 1; i < max_Davidson_iter_; i++) {
 
-        for (int k = 0; k < current_order; k++) {
+        for (size_t k = 0; k < current_order; k++) {
 #pragma omp parallel for
-            for (int j = 0; j < dets_size; j++) {
+            for (size_t j = 0; j < dets_size; j++) {
                 delta_vec[j] += alpha_vec[k] * (sigma_vec[k][j] - lambda * b_vec[k][j]);
             }
         }
 #pragma omp parallel for
-        for (int j = 0; j < dets_size; j++) {
+        for (size_t j = 0; j < dets_size; j++) {
             delta_vec[j] /= lambda - diag_vec[j];
         }
 
         normalize(delta_vec);
-        for (int m = 0; m < current_order; m++) {
+        for (size_t m = 0; m < current_order; m++) {
             double delta_dot_bm = dot(delta_vec, b_vec[m]);
             add(delta_vec, -delta_dot_bm, b_vec[m]);
         }
@@ -1111,7 +1110,7 @@ void ElementwiseCI::propagate_DL(det_hashvec& dets_hashvec, std::vector<double>&
         apply_tau_H_ref_C_symm(1.0, spawning_threshold, dets_hashvec, C, b_vec[current_order],
                                sigma_vec[current_order], overlap_size, 0.0);
         //        dets = dets_hashvec.toVector();
-        for (int m = 0; m < current_order; m++) {
+        for (size_t m = 0; m < current_order; m++) {
             double b_dot_sigma_m = dot(b_vec[current_order], sigma_vec[m]);
             A->set(current_order, m, b_dot_sigma_m);
             A->set(m, current_order, b_dot_sigma_m);
@@ -1121,8 +1120,8 @@ void ElementwiseCI::propagate_DL(det_hashvec& dets_hashvec, std::vector<double>&
         current_order++;
         SharedMatrix G(new Matrix(current_order, current_order));
 
-        for (int k = 0; k < current_order; k++) {
-            for (int j = 0; j < current_order; j++) {
+        for (size_t k = 0; k < current_order; k++) {
+            for (size_t j = 0; j < current_order; j++) {
                 G->set(k, j, A->get(k, j));
             }
         }
@@ -1133,7 +1132,7 @@ void ElementwiseCI::propagate_DL(det_hashvec& dets_hashvec, std::vector<double>&
         double e_gradiant = -lambda;
 
         lambda = eigs->get(0);
-        for (int j = 0; j < current_order; j++) {
+        for (size_t j = 0; j < current_order; j++) {
             alpha_vec[j] = evecs->get(j, 0);
         }
         e_gradiant += lambda;
@@ -1146,33 +1145,33 @@ void ElementwiseCI::propagate_DL(det_hashvec& dets_hashvec, std::vector<double>&
         }
         if (current_order >= davidson_subspace_per_root_) {
 #pragma omp parallel for
-            for (int j = 0; j < dets_size; j++) {
+            for (size_t j = 0; j < dets_size; j++) {
                 std::vector<double> b_j(davidson_collapse_per_root_, 0.0);
                 std::vector<double> sigma_j(davidson_collapse_per_root_, 0.0);
-                for (int l = 0; l < davidson_collapse_per_root_; l++) {
-                    for (int k = 0; k < current_order; k++) {
+                for (size_t l = 0; l < davidson_collapse_per_root_; l++) {
+                    for (size_t k = 0; k < current_order; k++) {
                         b_j[l] += evecs->get(k, l) * b_vec[k][j];
                         sigma_j[l] += evecs->get(k, l) * sigma_vec[k][j];
                     }
                 }
-                for (int l = 0; l < davidson_collapse_per_root_; l++) {
+                for (size_t l = 0; l < davidson_collapse_per_root_; l++) {
                     b_vec[l][j] = b_j[l];
                     sigma_vec[l][j] = sigma_j[l];
                 }
             }
-            for (int l = davidson_collapse_per_root_; l < davidson_subspace_per_root_; l++) {
+            for (size_t l = davidson_collapse_per_root_; l < davidson_subspace_per_root_; l++) {
                 b_vec[l].clear();
                 sigma_vec[l].clear();
             }
-            for (int m = 0; m < davidson_collapse_per_root_; m++) {
-                for (int n = 0; n <= m; n++) {
+            for (size_t m = 0; m < davidson_collapse_per_root_; m++) {
+                for (size_t n = 0; n <= m; n++) {
                     double n_dot_sigma_m = dot(b_vec[n], sigma_vec[m]);
                     A->set(n, m, n_dot_sigma_m);
                     A->set(m, n, n_dot_sigma_m);
                 }
             }
             alpha_vec[0] = 1.0;
-            for (int l = 1; l < davidson_subspace_per_root_; l++) {
+            for (size_t l = 1; l < davidson_subspace_per_root_; l++) {
                 alpha_vec[l] = 0.0;
             }
             outfile->Printf("\nDavidson collapsed from %d vectors to %d vectors.", current_order,
@@ -1193,9 +1192,9 @@ void ElementwiseCI::propagate_DL(det_hashvec& dets_hashvec, std::vector<double>&
     scale(C, alpha_vec[0]);
     C.resize(dets_hashvec.size(), 0.0);
     //    b_vec[0].resize(dets.size(), 0.0);
-    for (int i = 1; i < current_order; i++) {
+    for (size_t i = 1; i < current_order; i++) {
 #pragma omp parallel for
-        for (int j = 0; j < dets_size; j++) {
+        for (size_t j = 0; j < dets_size; j++) {
             C[j] += alpha_vec[i] * b_vec[i][j];
         }
     }
@@ -1237,7 +1236,7 @@ void ElementwiseCI::apply_tau_H_symm(double tau, double spawning_threshold, det_
             thread_det_C_vecs[current_rank].clear();
             apply_tau_H_symm_det_dynamic_HBCI_2(tau, spawning_threshold, ref_dets, ref_C, I,
                                                 ref_C[I], result_C, thread_det_C_vecs[current_rank],
-                                                S, max_coupling);
+                                                max_coupling);
 #pragma omp critical(merge_extra)
             {
                 merge(extra_dets, extra_C, thread_det_C_vecs[current_rank],
@@ -1249,7 +1248,7 @@ void ElementwiseCI::apply_tau_H_symm(double tau, double spawning_threshold, det_
             thread_det_C_vecs[current_rank].clear();
             apply_tau_H_symm_det_dynamic_HBCI_2(tau, spawning_threshold, ref_dets, ref_C, I,
                                                 ref_C[I], result_C, thread_det_C_vecs[current_rank],
-                                                S, max_coupling);
+                                                max_coupling);
 #pragma omp critical(merge_extra)
             {
                 merge(extra_dets, extra_C, thread_det_C_vecs[current_rank],
@@ -1308,7 +1307,7 @@ void ElementwiseCI::apply_tau_H_symm(double tau, double spawning_threshold, det_
 void ElementwiseCI::apply_tau_H_symm_det_dynamic_HBCI_2(
     double tau, double spawning_threshold, const det_hashvec& dets_hashvec,
     const std::vector<double>& pre_C, size_t I, double CI, std::vector<double>& result_C,
-    std::vector<std::pair<Determinant, double>>& new_det_C_vec, double E0,
+    std::vector<std::pair<Determinant, double>>& new_det_C_vec,
     std::pair<double, double>& max_coupling) {
 
     const Determinant& detI = dets_hashvec[I];
@@ -1893,7 +1892,7 @@ void ElementwiseCI::apply_tau_H_ref_C_symm(double tau, double spawning_threshold
         max_coupling = dets_max_couplings_[result_dets[I]];
         apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(tau, spawning_threshold, result_dets, pre_C,
                                                   ref_C, I, pre_C[I], ref_C[I], overlap_size,
-                                                  result_C, S, max_coupling);
+                                                  result_C, max_coupling);
     }
 #pragma omp parallel for
     for (size_t I = 0; I < result_size; ++I) {
@@ -1909,7 +1908,7 @@ void ElementwiseCI::apply_tau_H_ref_C_symm(double tau, double spawning_threshold
 void ElementwiseCI::apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(
     double tau, double spawning_threshold, const det_hashvec& dets_hashvec,
     const std::vector<double>& pre_C, const std::vector<double>& ref_C, size_t I, double CI,
-    double ref_CI, const size_t overlap_size, std::vector<double>& result_C, double E0,
+    double ref_CI, const size_t overlap_size, std::vector<double>& result_C,
     const std::pair<double, double>& max_coupling) {
 
     const Determinant& detI = dets_hashvec[I];
@@ -2348,7 +2347,7 @@ double ElementwiseCI::estimate_var_energy_sparse(const det_hashvec& dets_hashvec
 
 #pragma omp parallel for
     for (size_t I = 0; I <= cut_index; ++I) {
-        energy[omp_get_thread_num()] += form_H_C(dets_hashvec, C, I, cut_index);
+        energy[omp_get_thread_num()] += form_H_C(dets_hashvec, C, I);
     }
     for (int t = 0; t < num_threads_; ++t) {
         variational_energy_estimator += energy[t];
@@ -2411,7 +2410,7 @@ void ElementwiseCI::print_wfn(const det_hashvec& space_hashvec, std::vector<doub
     }
 
     outfile->Printf("\n\n  Spin State: S^2 = %5.3f, S = %5.3f, %s (from %zu "
-                    "determinants,%.2f\%)",
+                    "determinants,%.2f%%)",
                     S2, S, state_label.c_str(), max_I, 100.0 * sum_weight);
 }
 
@@ -2449,8 +2448,7 @@ void ElementwiseCI::orthogonalize(
     normalize(C);
 }
 
-double ElementwiseCI::form_H_C(const det_hashvec& dets_hashvec, std::vector<double>& C, size_t I,
-                               size_t cut_index) {
+double ElementwiseCI::form_H_C(const det_hashvec& dets_hashvec, std::vector<double>& C, size_t I) {
     const Determinant& detI = dets_hashvec[I];
     double CI = C[I];
 
@@ -2782,15 +2780,15 @@ void ElementwiseCI::compute_single_couplings(double single_coupling_threshold) {
     dets_single_max_coupling_ = 0.0;
     a_couplings_.clear();
     a_couplings_.resize(nact_);
-    for (int i = 0; i < nact_; ++i) {
-        for (int a = i + 1; a < nact_; ++a) {
+    for (size_t i = 0; i < nact_; ++i) {
+        for (size_t a = i + 1; a < nact_; ++a) {
             if ((mo_symmetry_[i] ^ mo_symmetry_[a]) == 0) {
                 double Hia = fci_ints_->oei_a(i, a);
                 std::vector<double> aa_double_couplings(nact_);
                 std::vector<double> ab_double_couplings(nact_);
                 //                single_alpha_excite_double_couplings_[i][a].resize(2 * nact_);
                 //                single_alpha_excite_double_couplings_[a][i].resize(2 * nact_);
-                for (int p = 0; p < nact_; ++p) {
+                for (size_t p = 0; p < nact_; ++p) {
                     aa_double_couplings[p] = fci_ints_->tei_aa(i, p, a, p);
                     ab_double_couplings[p] = fci_ints_->tei_ab(i, p, a, p);
                     //                    single_alpha_excite_double_couplings_[i][a][p] =
@@ -2838,15 +2836,15 @@ void ElementwiseCI::compute_single_couplings(double single_coupling_threshold) {
 
     b_couplings_.clear();
     b_couplings_.resize(nact_);
-    for (int i = 0; i < nact_; ++i) {
-        for (int a = i + 1; a < nact_; ++a) {
+    for (size_t i = 0; i < nact_; ++i) {
+        for (size_t a = i + 1; a < nact_; ++a) {
             if ((mo_symmetry_[i] ^ mo_symmetry_[a]) == 0) {
                 double Hia = fci_ints_->oei_b(i, a);
                 std::vector<double> ab_double_couplings(nact_);
                 std::vector<double> bb_double_couplings(nact_);
                 //                single_beta_excite_double_couplings_[i][a].resize(2 * nact_);
                 //                single_beta_excite_double_couplings_[a][i].resize(2 * nact_);
-                for (int p = 0; p < nact_; ++p) {
+                for (size_t p = 0; p < nact_; ++p) {
                     ab_double_couplings[p] = fci_ints_->tei_ab(p, i, p, a);
                     bb_double_couplings[p] = fci_ints_->tei_bb(i, p, a, p);
                     //                    single_beta_excite_double_couplings_[i][a][p] =
@@ -2918,13 +2916,13 @@ void ElementwiseCI::compute_double_couplings(double double_coupling_threshold) {
     dets_double_max_coupling_ = 0.0;
 
     aa_couplings_.clear();
-    for (int i = 0; i < nact_; ++i) {
-        for (int j = i + 1; j < nact_; ++j) {
+    for (size_t i = 0; i < nact_; ++i) {
+        for (size_t j = i + 1; j < nact_; ++j) {
             std::vector<std::tuple<int, int, double>> ij_couplings;
-            for (int a = 0; a < nact_; ++a) {
+            for (size_t a = 0; a < nact_; ++a) {
                 if (a == i or a == j)
                     continue;
-                for (int b = a + 1; b < nact_; ++b) {
+                for (size_t b = a + 1; b < nact_; ++b) {
                     if (b == i or b == j)
                         continue;
                     if ((mo_symmetry_[i] ^ mo_symmetry_[j] ^ mo_symmetry_[a] ^ mo_symmetry_[b]) ==
@@ -2953,13 +2951,13 @@ void ElementwiseCI::compute_double_couplings(double double_coupling_threshold) {
     }
 
     ab_couplings_.clear();
-    for (int i = 0; i < nact_; ++i) {
-        for (int j = 0; j < nact_; ++j) {
+    for (size_t i = 0; i < nact_; ++i) {
+        for (size_t j = 0; j < nact_; ++j) {
             std::vector<std::tuple<int, int, double>> ij_couplings;
-            for (int a = 0; a < nact_; ++a) {
+            for (size_t a = 0; a < nact_; ++a) {
                 if (a == i)
                     continue;
-                for (int b = 0; b < nact_; ++b) {
+                for (size_t b = 0; b < nact_; ++b) {
                     if (b == j)
                         continue;
                     if ((mo_symmetry_[i] ^ mo_symmetry_[j] ^ mo_symmetry_[a] ^ mo_symmetry_[b]) ==
@@ -2990,13 +2988,13 @@ void ElementwiseCI::compute_double_couplings(double double_coupling_threshold) {
     }
 
     bb_couplings_.clear();
-    for (int i = 0; i < nact_; ++i) {
-        for (int j = i + 1; j < nact_; ++j) {
+    for (size_t i = 0; i < nact_; ++i) {
+        for (size_t j = i + 1; j < nact_; ++j) {
             std::vector<std::tuple<int, int, double>> ij_couplings;
-            for (int a = 0; a < nact_; ++a) {
+            for (size_t a = 0; a < nact_; ++a) {
                 if (a == i or a == j)
                     continue;
-                for (int b = a + 1; b < nact_; ++b) {
+                for (size_t b = a + 1; b < nact_; ++b) {
                     if (b == i or b == j)
                         continue;
                     if ((mo_symmetry_[i] ^ mo_symmetry_[j] ^ mo_symmetry_[a] ^ mo_symmetry_[b]) ==
@@ -3038,11 +3036,11 @@ void ElementwiseCI::compute_couplings_half(const det_hashvec& dets, size_t cut_s
 
     a_couplings_.clear();
     a_couplings_.resize(nact_);
-    for (int i = 0; i < nact_; ++i) {
+    for (size_t i = 0; i < nact_; ++i) {
         if (!actBits.get_alfa_bit(i))
             continue;
         std::vector<std::tuple<int, double>> i_couplings;
-        for (int a = i + 1; a < nact_; ++a) {
+        for (size_t a = i + 1; a < nact_; ++a) {
             if (!actBits.get_alfa_bit(a))
                 continue;
             if ((mo_symmetry_[i] ^ mo_symmetry_[a]) == 0) {
@@ -3058,11 +3056,11 @@ void ElementwiseCI::compute_couplings_half(const det_hashvec& dets, size_t cut_s
 
     b_couplings_.clear();
     b_couplings_.resize(nact_);
-    for (int i = 0; i < nact_; ++i) {
+    for (size_t i = 0; i < nact_; ++i) {
         if (!actBits.get_beta_bit(i))
             continue;
         std::vector<std::tuple<int, double>> i_couplings;
-        for (int a = i + 1; a < nact_; ++a) {
+        for (size_t a = i + 1; a < nact_; ++a) {
             if (!actBits.get_beta_bit(a))
                 continue;
             if ((mo_symmetry_[i] ^ mo_symmetry_[a]) == 0) {
@@ -3077,17 +3075,17 @@ void ElementwiseCI::compute_couplings_half(const det_hashvec& dets, size_t cut_s
     b_couplings_size_ = b_couplings_.size();
 
     aa_couplings_.clear();
-    for (int i = 0; i < nact_; ++i) {
+    for (size_t i = 0; i < nact_; ++i) {
         if (!actBits.get_alfa_bit(i))
             continue;
-        for (int j = i + 1; j < nact_; ++j) {
+        for (size_t j = i + 1; j < nact_; ++j) {
             if (!actBits.get_alfa_bit(j))
                 continue;
             std::vector<std::tuple<int, int, double>> ij_couplings;
-            for (int a = i + 1; a < nact_; ++a) {
+            for (size_t a = i + 1; a < nact_; ++a) {
                 if (a == j or !actBits.get_alfa_bit(a))
                     continue;
-                for (int b = a + 1; b < nact_; ++b) {
+                for (size_t b = a + 1; b < nact_; ++b) {
                     if (b == j or !actBits.get_alfa_bit(b))
                         continue;
                     if ((mo_symmetry_[i] ^ mo_symmetry_[j] ^ mo_symmetry_[a] ^ mo_symmetry_[b]) ==
@@ -3105,17 +3103,17 @@ void ElementwiseCI::compute_couplings_half(const det_hashvec& dets, size_t cut_s
     aa_couplings_size_ = aa_couplings_.size();
 
     ab_couplings_.clear();
-    for (int i = 0; i < nact_; ++i) {
+    for (size_t i = 0; i < nact_; ++i) {
         if (!actBits.get_alfa_bit(i))
             continue;
-        for (int j = 0; j < nact_; ++j) {
+        for (size_t j = 0; j < nact_; ++j) {
             if (!actBits.get_beta_bit(j))
                 continue;
             std::vector<std::tuple<int, int, double>> ij_couplings;
-            for (int a = i + 1; a < nact_; ++a) {
+            for (size_t a = i + 1; a < nact_; ++a) {
                 if (a == i or !actBits.get_alfa_bit(a))
                     continue;
-                for (int b = 0; b < nact_; ++b) {
+                for (size_t b = 0; b < nact_; ++b) {
                     if (b == j or !actBits.get_beta_bit(b))
                         continue;
                     if ((mo_symmetry_[i] ^ mo_symmetry_[j] ^ mo_symmetry_[a] ^ mo_symmetry_[b]) ==
@@ -3133,17 +3131,17 @@ void ElementwiseCI::compute_couplings_half(const det_hashvec& dets, size_t cut_s
     ab_couplings_size_ = ab_couplings_.size();
 
     bb_couplings_.clear();
-    for (int i = 0; i < nact_; ++i) {
+    for (size_t i = 0; i < nact_; ++i) {
         if (!actBits.get_beta_bit(i))
             continue;
-        for (int j = i + 1; j < nact_; ++j) {
+        for (size_t j = i + 1; j < nact_; ++j) {
             if (!actBits.get_beta_bit(j))
                 continue;
             std::vector<std::tuple<int, int, double>> ij_couplings;
-            for (int a = i + 1; a < nact_; ++a) {
+            for (size_t a = i + 1; a < nact_; ++a) {
                 if (a == j or !actBits.get_beta_bit(a))
                     continue;
-                for (int b = a + 1; b < nact_; ++b) {
+                for (size_t b = a + 1; b < nact_; ++b) {
                     if (b == j or !actBits.get_beta_bit(b))
                         continue;
                     if ((mo_symmetry_[i] ^ mo_symmetry_[j] ^ mo_symmetry_[a] ^ mo_symmetry_[b]) ==

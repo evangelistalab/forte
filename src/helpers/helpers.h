@@ -233,7 +233,7 @@ std::pair<double, std::string> to_xb(size_t nele, size_t type_size);
  * @return a pair of vectors -> pair.0 -> start for each processor
  *                           -> pair.1 -> end or each processor
  */
-std::pair<std::vector<int>, std::vector<int>> split_up_tasks(size_t size_of_tasks, int nproc);
+std::pair<std::vector<size_t>, std::vector<size_t>> split_up_tasks(size_t size_of_tasks, size_t nproc);
 
 template <typename T, typename Compare>
 std::vector<std::size_t> sort_permutation(const std::vector<T>& vec, Compare& compare) {

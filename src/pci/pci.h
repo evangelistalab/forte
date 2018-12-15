@@ -245,7 +245,7 @@ class ProjectorCI : public Wavefunction {
     /// Order of Chebyshev truncate
     int chebyshev_order_;
     /// Order of Krylov subspace truncate
-    int krylov_order_;
+    size_t krylov_order_;
     /// Threshold for norm of orthogonal basis to be colinear.
     double colinear_threshold_;
 
@@ -320,8 +320,7 @@ class ProjectorCI : public Wavefunction {
     void propagate(GeneratorType_::GeneratorType generator, det_vec& dets, std::vector<double>& C,
                    double tau, double spawning_threshold, double S);
     /// A Delta projector fitted by 10th order chebyshev polynomial
-    void propagate_wallCh(det_vec& dets, std::vector<double>& C, double spawning_threshold,
-                          double S);
+    void propagate_wallCh(det_vec& dets, std::vector<double>& C, double spawning_threshold);
     /// A first-order Generator
     void propagate_Linear(det_vec& dets, std::vector<double>& C, double tau,
                           double spawning_threshold, double S);
@@ -343,8 +342,6 @@ class ProjectorCI : public Wavefunction {
     /// The Olsen Generator
     void propagate_Olsen(det_vec& dets, std::vector<double>& C, double spawning_threshold,
                          double S);
-    /// The Davidson-Liu Generator
-    void propagate_DavidsonLiu(det_vec& dets, std::vector<double>& C, double spawning_threshold);
     /// The Chebyshev Generator
     void propagate_Chebyshev(det_vec& dets, std::vector<double>& C, double spawning_threshold);
     //    void propagate_Chebyshev(det_vec& dets,std::vector<double>& C,double
@@ -353,10 +350,9 @@ class ProjectorCI : public Wavefunction {
     void propagate_Polynomial(det_vec& dets, std::vector<double>& C, std::vector<double>& coef,
                               double spawning_threshold);
     /// The Lanczos Generator
-    void propagate_Lanczos(det_vec& dets, std::vector<double>& C, double spawning_threshold,
-                           double S);
+    void propagate_Lanczos(det_vec& dets, std::vector<double>& C, double spawning_threshold);
     /// The DL Generator
-    void propagate_DL(det_vec& dets, std::vector<double>& C, double spawning_threshold, double S);
+    void propagate_DL(det_vec& dets, std::vector<double>& C, double spawning_threshold);
 
     /// Apply tau H to a set of determinants
     void apply_tau_H(double tau, double spawning_threshold, det_vec& dets,
