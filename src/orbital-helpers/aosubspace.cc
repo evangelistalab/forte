@@ -100,7 +100,8 @@ SharedMatrix create_aosubspace_projector(SharedWavefunction wfn, Options& option
     return Ps;
 }
 
-AOSubspace::AOSubspace(std::shared_ptr<Molecule> molecule, std::shared_ptr<BasisSet> basis) {
+AOSubspace::AOSubspace(std::shared_ptr<Molecule> molecule, std::shared_ptr<BasisSet> basis)
+    : molecule_(molecule), basis_(basis) {
     startup();
 }
 
@@ -408,5 +409,5 @@ void AOSubspace::parse_basis_set() {
         element_count[Z] += 1; // increase the element count
     }
 }
-}
-}
+} // namespace forte
+} // namespace psi

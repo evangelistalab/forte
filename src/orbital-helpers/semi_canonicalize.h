@@ -49,9 +49,16 @@ namespace forte {
  */
 class SemiCanonical {
   public:
-    // => Constructor <= //
+    /**
+     * @brief SemiCanonical Constructor
+     * @param ref_wfn The reference wavefunction object
+     * @param ints ForteInegrals
+     * @param options PSI4 and FORTE options
+     * @param mo_space_info MOSpaceInfo
+     * @param quiet_banner Method banner is not printed if set to true
+     */
     SemiCanonical(std::shared_ptr<Wavefunction> wfn, std::shared_ptr<ForteIntegrals> ints,
-                  std::shared_ptr<MOSpaceInfo> mo_space_info, const bool& quiet = false);
+                  std::shared_ptr<MOSpaceInfo> mo_space_info, bool quiet_banner = false);
 
     /// Transforms integrals and reference
     void semicanonicalize(Reference& reference, const int& max_rdm_level = 3,
@@ -94,9 +101,6 @@ class SemiCanonical {
     std::shared_ptr<ForteIntegrals> ints_;
 
     std::shared_ptr<Wavefunction> wfn_;
-
-    // quiet printing
-    bool quiet_;
 
     // All orbitals
     Dimension nmopi_;
@@ -168,7 +172,7 @@ class SemiCanonical {
     void build_transformation_matrices(SharedMatrix& Ua, SharedMatrix& Ub, ambit::Tensor& Ua_t,
                                        ambit::Tensor& Ub_t);
 };
-}
-} // End Namespaces
+} // namespace forte
+} // namespace psi
 
 #endif // _mp2_nos_h_

@@ -64,7 +64,7 @@ class BlockedTensorFactory {
     std::map<std::string, std::vector<size_t>> molabel_to_index_;
 
   public:
-    BlockedTensorFactory(Options& options);
+    BlockedTensorFactory();
     ~BlockedTensorFactory();
     /* -- Builds a block tensor
     //@params  storage-> Core, disk, or agnostic (program decides) Core has been
