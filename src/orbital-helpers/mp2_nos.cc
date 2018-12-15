@@ -153,7 +153,7 @@ MP2_NOS::MP2_NOS(std::shared_ptr<Wavefunction> wfn, Options& options,
             value = ints->oei_b(i[0], i[1]);
     });
 
-    G1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+    G1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& , double& value) {
         value = i[0] == i[1] ? 1.0 : 0.0;
     });
 
@@ -271,10 +271,10 @@ MP2_NOS::MP2_NOS(std::shared_ptr<Wavefunction> wfn, Options& options,
                         "%6.4f are active",
                         virtual_orb);
         outfile->Printf("\n Remember, these are suggestions  :-)!\n");
-        for (size_t h = 0; h < nirrep; ++h) {
+        for (int h = 0; h < nirrep; ++h) {
             size_t restricted_docc_number = 0;
             size_t active_number = 0;
-            for (size_t i = 0; i < aoccpi[h]; ++i) {
+            for (int i = 0; i < aoccpi[h]; ++i) {
                 if (D1oo_evals.get(h, i) < occupied) {
                     active_number++;
                     outfile->Printf("\n In %u, orbital occupation %u = %8.6f "
@@ -288,7 +288,7 @@ MP2_NOS::MP2_NOS(std::shared_ptr<Wavefunction> wfn, Options& options,
                     restricted_docc[h] = restricted_docc_number;
                 }
             }
-            for (size_t a = 0; a < avirpi[h]; ++a) {
+            for (int a = 0; a < avirpi[h]; ++a) {
                 if (D1vv_evals.get(h, a) > virtual_orb) {
                     active_number++;
                     active[h] = active_number;
@@ -314,18 +314,18 @@ MP2_NOS::MP2_NOS(std::shared_ptr<Wavefunction> wfn, Options& options,
 
     Matrix Ua("Ua", nmopi, nmopi);
     // Patch together the transformation matrices
-    for (size_t h = 0; h < nirrep; ++h) {
+    for (int h = 0; h < nirrep; ++h) {
         size_t irrep_offset = 0;
 
         // Frozen core orbitals are unchanged
-        for (size_t p = 0; p < frzcpi[h]; ++p) {
+        for (int p = 0; p < frzcpi[h]; ++p) {
             Ua.set(h, p, p, 1.0);
         }
         irrep_offset += frzcpi[h];
 
         // Occupied alpha
-        for (size_t p = 0; p < aoccpi[h]; ++p) {
-            for (size_t q = 0; q < aoccpi[h]; ++q) {
+        for (int p = 0; p < aoccpi[h]; ++p) {
+            for (int q = 0; q < aoccpi[h]; ++q) {
                 double value = D1oo_evecs.get(h, p, q);
                 Ua.set(h, p + irrep_offset, q + irrep_offset, value);
             }
@@ -333,8 +333,8 @@ MP2_NOS::MP2_NOS(std::shared_ptr<Wavefunction> wfn, Options& options,
         irrep_offset += aoccpi[h];
 
         // Virtual alpha
-        for (size_t p = 0; p < avirpi[h]; ++p) {
-            for (size_t q = 0; q < avirpi[h]; ++q) {
+        for (int p = 0; p < avirpi[h]; ++p) {
+            for (int q = 0; q < avirpi[h]; ++q) {
                 double value = D1vv_evecs.get(h, p, q);
                 Ua.set(h, p + irrep_offset, q + irrep_offset, value);
             }
@@ -342,25 +342,25 @@ MP2_NOS::MP2_NOS(std::shared_ptr<Wavefunction> wfn, Options& options,
         irrep_offset += avirpi[h];
 
         // Frozen virtual orbitals are unchanged
-        for (size_t p = 0; p < frzvpi[h]; ++p) {
+        for (int p = 0; p < frzvpi[h]; ++p) {
             Ua.set(h, p + irrep_offset, p + irrep_offset, 1.0);
         }
     }
 
     Matrix Ub("Ub", nmopi, nmopi);
     // Patch together the transformation matrices
-    for (size_t h = 0; h < nirrep; ++h) {
+    for (int h = 0; h < nirrep; ++h) {
         size_t irrep_offset = 0;
 
         // Frozen core orbitals are unchanged
-        for (size_t p = 0; p < frzcpi[h]; ++p) {
+        for (int p = 0; p < frzcpi[h]; ++p) {
             Ub.set(h, p, p, 1.0);
         }
         irrep_offset += frzcpi[h];
 
         // Occupied alpha
-        for (size_t p = 0; p < boccpi[h]; ++p) {
-            for (size_t q = 0; q < boccpi[h]; ++q) {
+        for (int p = 0; p < boccpi[h]; ++p) {
+            for (int q = 0; q < boccpi[h]; ++q) {
                 double value = D1OO_evecs.get(h, p, q);
                 Ub.set(h, p + irrep_offset, q + irrep_offset, value);
             }
@@ -368,8 +368,8 @@ MP2_NOS::MP2_NOS(std::shared_ptr<Wavefunction> wfn, Options& options,
         irrep_offset += boccpi[h];
 
         // Virtual alpha
-        for (size_t p = 0; p < bvirpi[h]; ++p) {
-            for (size_t q = 0; q < bvirpi[h]; ++q) {
+        for (int p = 0; p < bvirpi[h]; ++p) {
+            for (int q = 0; q < bvirpi[h]; ++q) {
                 double value = D1VV_evecs.get(h, p, q);
                 Ub.set(h, p + irrep_offset, q + irrep_offset, value);
             }
@@ -377,7 +377,7 @@ MP2_NOS::MP2_NOS(std::shared_ptr<Wavefunction> wfn, Options& options,
         irrep_offset += bvirpi[h];
 
         // Frozen virtual orbitals are unchanged
-        for (size_t p = 0; p < frzvpi[h]; ++p) {
+        for (int p = 0; p < frzvpi[h]; ++p) {
             Ub.set(h, p + irrep_offset, p + irrep_offset, 1.0);
         }
     }

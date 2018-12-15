@@ -154,7 +154,6 @@ SharedMatrix AOSubspace::build_projector(const std::vector<int>& subspace,
                                          std::shared_ptr<Molecule> molecule,
                                          std::shared_ptr<BasisSet> min_basis,
                                          std::shared_ptr<BasisSet> large_basis) {
-    bool debug = false;
 
     std::shared_ptr<IntegralFactory> integral_mm(
         new IntegralFactory(min_basis, min_basis, min_basis, min_basis));

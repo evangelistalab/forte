@@ -71,13 +71,13 @@ void AtomicOrbitalHelper::Compute_Psuedo_Density() {
 
     double value_occ, value_vir = 0;
     for (int w = 0; w < weights_; w++) {
-        for (size_t mu = 0; mu < nbf_; mu++) {
-            for (size_t nu = 0; nu < nbf_; nu++) {
-                for (size_t i = 0; i < nrdocc_; i++) {
+        for (int mu = 0; mu < nbf_; mu++) {
+            for (int nu = 0; nu < nbf_; nu++) {
+                for (int i = 0; i < nrdocc_; i++) {
                     value_occ += CMO_->get(mu, i) * CMO_->get(nu, i) * Occupied_Laplace_->get(w, i);
                 }
                 Xocc->set(w, mu * nmo_ + nu, value_occ);
-                for (size_t a = 0; a < nvir_; a++) {
+                for (int a = 0; a < nvir_; a++) {
                     value_vir += CMO_->get(mu, nrdocc_ + shift_ + a) *
                                  CMO_->get(nu, nrdocc_ + shift_ + a) * Virtual_Laplace_->get(w, a);
                 }

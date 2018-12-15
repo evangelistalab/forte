@@ -52,7 +52,7 @@ using namespace ambit;
 SemiCanonical::SemiCanonical(std::shared_ptr<Wavefunction> wfn,
                              std::shared_ptr<ForteIntegrals> ints,
                              std::shared_ptr<MOSpaceInfo> mo_space_info, const bool& quiet)
-    : wfn_(wfn), mo_space_info_(mo_space_info), ints_(ints), quiet_(quiet) {
+    : mo_space_info_(mo_space_info), ints_(ints), wfn_(wfn), quiet_(quiet) {
 
     if (!quiet) {
         print_method_banner({"Semi-Canonical Orbitals",
@@ -105,7 +105,7 @@ void SemiCanonical::startup() {
     offsets_["actv"] = fdocc_ + rdocc_;
 
     std::vector<int> actv_off;
-    for (int h = 0, offset = 0; h < nirrep_; ++h) {
+    for (size_t h = 0, offset = 0; h < nirrep_; ++h) {
         actv_off.emplace_back(offset);
         offset += actv_[h];
     }
@@ -116,7 +116,7 @@ std::vector<std::vector<size_t>>
 SemiCanonical::idx_space(const Dimension& npi, const Dimension& bpi, const Dimension& tpi) {
     std::vector<std::vector<size_t>> out(nirrep_, std::vector<size_t>());
 
-    for (int h = 0, offset = 0; h < nirrep_; ++h) {
+    for (size_t h = 0, offset = 0; h < nirrep_; ++h) {
         offset += bpi[h];
         for (int i = 0; i < npi[h]; ++i) {
             out[h].emplace_back(offset + i);
@@ -157,7 +157,7 @@ void SemiCanonical::set_actv_dims(const Dimension& actv_docc, const Dimension& a
     offsets_["actv_virt"] = fdocc_ + rdocc_ + actv_docc_;
 
     std::vector<int> actvh_off, actvp_off;
-    for (int h = 0, offset = 0; h < nirrep_; ++h) {
+    for (size_t h = 0, offset = 0; h < nirrep_; ++h) {
         actvh_off.emplace_back(offset);
         offset += actv_docc[h];
         actvp_off.emplace_back(offset);
@@ -205,7 +205,7 @@ void SemiCanonical::build_fock_matrix(Reference& reference) {
     Matrix L1a = tensor_to_matrix(reference.L1a(), actv_);
     Matrix L1b = tensor_to_matrix(reference.L1b(), actv_);
 
-    for (int h = 0, offset = 0; h < nirrep_; ++h) {
+    for (size_t h = 0, offset = 0; h < nirrep_; ++h) {
         // core block (diagonal)
         for (int i = 0; i < rdocc_[h]; ++i) {
             Da->set(offset + i, offset + i, 1.0);
@@ -259,7 +259,7 @@ bool SemiCanonical::check_fock_matrix() {
         SharedMatrix Fa(new Matrix(name_a, npi, npi));
         SharedMatrix Fb(new Matrix(name_b, npi, npi));
 
-        for (int h = 0; h < nirrep_; ++h) {
+        for (size_t h = 0; h < nirrep_; ++h) {
             // TODO: try omp here
             for (int i = 0; i < npi[h]; ++i) {
                 for (int j = 0; j < npi[h]; ++j) {
@@ -338,7 +338,7 @@ void SemiCanonical::build_transformation_matrices(SharedMatrix& Ua, SharedMatrix
             SharedMatrix Fa(new Matrix(name_a, npi, npi));
             SharedMatrix Fb(new Matrix(name_b, npi, npi));
 
-            for (int h = 0; h < nirrep_; ++h) {
+            for (size_t h = 0; h < nirrep_; ++h) {
                 // TODO: try omp here
                 for (int i = 0; i < npi[h]; ++i) {
                     for (int j = 0; j < npi[h]; ++j) {
@@ -359,7 +359,7 @@ void SemiCanonical::build_transformation_matrices(SharedMatrix& Ua, SharedMatrix
             Fb->diagonalize(UsubB, evalsB);
 
             // fill in Ua and Ub
-            for (int h = 0; h < nirrep_; ++h) {
+            for (size_t h = 0; h < nirrep_; ++h) {
                 int offset = offsets_[name][h];
                 // TODO: try omp here
                 for (int i = 0; i < npi[h]; ++i) {
@@ -372,7 +372,7 @@ void SemiCanonical::build_transformation_matrices(SharedMatrix& Ua, SharedMatrix
 
             // fill in UaData and UbData if this block is active
             if (name.find("actv") != std::string::npos) {
-                for (int h = 0; h < nirrep_; ++h) {
+                for (size_t h = 0; h < nirrep_; ++h) {
                     int actv_off = actv_offsets_[name][h];
                     for (int u = 0; u < npi[h]; ++u) {
                         for (int v = 0; v < npi[h]; ++v) {

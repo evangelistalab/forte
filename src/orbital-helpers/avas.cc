@@ -101,7 +101,6 @@ void make_avas(SharedWavefunction ref_wfn, Options& options, SharedMatrix Ps) {
                 }
             }
 
-            int i = 9;
             Socc->diagonalize(Uocc, sigmaocc, descending);
 
             // Grab the virtual block and diagonalize it
@@ -183,8 +182,8 @@ void make_avas(SharedWavefunction ref_wfn, Options& options, SharedMatrix Ps) {
         std::vector<int> occ_inact, occ_act, vir_inact, vir_act;
 
         int avas_num_active = options.get_int("AVAS_NUM_ACTIVE");
-        int avas_num_active_occ = options.get_int("AVAS_NUM_ACTIVE_OCC");
-        int avas_num_active_vir = options.get_int("AVAS_NUM_ACTIVE_VIR");
+        size_t avas_num_active_occ = options.get_int("AVAS_NUM_ACTIVE_OCC");
+        size_t avas_num_active_vir = options.get_int("AVAS_NUM_ACTIVE_VIR");
         double avas_sigma = options.get_double("AVAS_SIGMA");
 
         if (avas_num_active_occ + avas_num_active_vir > 0) {
