@@ -192,7 +192,7 @@ double DeterminantHashVec::overlap(SharedMatrix det1_evecs, int root1, Determina
 }
 
 void DeterminantHashVec::subspace(DeterminantHashVec& dets, SharedMatrix evecs,
-                                  std::vector<double>& new_evecs, int dim, int root) {
+                                  std::vector<double>& new_evecs, size_t dim, int root) {
     // Clear current wfn
     this->clear();
     new_evecs.assign(dim, 0.0);

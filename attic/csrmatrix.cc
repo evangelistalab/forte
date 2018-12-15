@@ -88,6 +88,7 @@ void CSCMatrix::general_mv(const std::vector<double>& a, std::vector<double>& b)
     }
 }
 
+
 void CSCMatrix::symmetric_mv(const std::vector<double>& a, std::vector<double>& b) {
     //    size_t num_col = col_offset_.size() - 1;
     //    for (size_t j = 0; j < num_col; j++) {

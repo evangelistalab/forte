@@ -36,7 +36,6 @@
 #include "psi4/liboptions/liboptions.h"
 
 #include "sparse_ci/determinant_hashvector.h"
-#include "helpers/mo_space_info.h"
 #include "sparse_ci/operator.h"
 #include "base_classes/reference.h"
 #include "sparse_ci/determinant.h"
@@ -58,7 +57,7 @@ class CI_RDMS {
             int root2);
 
     CI_RDMS(DeterminantHashVec& wfn, std::shared_ptr<FCIIntegrals> fci_ints,
-            SharedMatrix evecs, int root1, int root2, bool dyn = false);
+            SharedMatrix evecs, int root1, int root2);
 
     ~CI_RDMS();
 
@@ -149,13 +148,11 @@ class CI_RDMS {
   private:
     /* Class Variables*/
 
-    // The FCI integrals
-    std::shared_ptr<FCIIntegrals> fci_ints_;
-    // The MOSpaceInfo object
-    std::shared_ptr<MOSpaceInfo> mo_space_info_;
-
     // The Wavefunction
     DeterminantHashVec wfn_;
+    // The FCI integrals
+    std::shared_ptr<FCIIntegrals> fci_ints_;
+
 
     // The Determinant Space
     const std::vector<Determinant> det_space_;

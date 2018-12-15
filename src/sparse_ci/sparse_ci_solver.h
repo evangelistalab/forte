@@ -145,7 +145,7 @@ class SparseCISolver {
                                SharedVector& evals, SharedMatrix& evecs, int nroot,
                                int multiplicity);
     /// Use a dynamic algorithm that does not require substitution lists
-    void diagonalize_dl_dynamic(const DeterminantHashVec& space, WFNOperator& op,
+    void diagonalize_dl_dynamic(const DeterminantHashVec& space,
                                 SharedVector& evals, SharedMatrix& evecs, int nroot,
                                 int multiplicity);
 

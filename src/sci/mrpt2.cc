@@ -54,7 +54,7 @@ void set_PT2_options(ForteOptions& foptions) {
 MRPT2::MRPT2(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
              std::shared_ptr<MOSpaceInfo> mo_space_info, DeterminantHashVec& reference,
              SharedMatrix evecs, SharedVector evals)
-    : Wavefunction(options), ints_(ints), mo_space_info_(mo_space_info), reference_(reference),
+    : Wavefunction(options), ints_(ints), reference_(reference), mo_space_info_(mo_space_info),
       evecs_(evecs), evals_(evals) {
     shallow_copy(ref_wfn);
     //    print_method_banner(

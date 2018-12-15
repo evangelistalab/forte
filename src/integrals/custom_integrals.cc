@@ -26,6 +26,7 @@
  * @END LICENSE
  */
 
+
 #include <cmath>
 #include <fstream>
 
@@ -162,10 +163,9 @@ void CustomIntegrals::gather_integrals() {
     std::string open_tag("&FCI");
     std::string close_tag("&END");
 
-    int norb = 0;
     int nelec = 0;
+    int norb = 0;
     int ms2 = 0;
-    bool uhf = false;
     std::vector<int> orbsym;
     std::vector<double> two_electron_integrals_chemist;
 
@@ -176,7 +176,7 @@ void CustomIntegrals::gather_integrals() {
             parsing_section = false;
             // now we know how many orbitals are there and we can allocate memory for the one- and
             // two-electron integrals
-            custom_integrals_allocate(norb, nelec, orbsym);
+            custom_integrals_allocate(norb, orbsym);
             two_electron_integrals_chemist.assign(num_tei_, 0.0);
         } else if (line.find(open_tag) != std::string::npos) {
             parsing_section = true;
@@ -290,7 +290,7 @@ void CustomIntegrals::gather_integrals() {
     //    }
 }
 
-void CustomIntegrals::custom_integrals_allocate(int norb, int nelec,
+void CustomIntegrals::custom_integrals_allocate(int norb,
                                                 const std::vector<int>& orbsym) {
     auto result = std::max_element(orbsym.begin(), orbsym.end());
     nirrep_ = *result; // set the number of irreps

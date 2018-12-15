@@ -72,6 +72,7 @@ class SigmaVectorDynamic : public SigmaVector {
     SortedStringList_UI64 a_sorted_string_list_;
     SortedStringList_UI64 b_sorted_string_list_;
 
+
     /// The Hamiltonian stored as a list of pairs (H_IJ, I, J)
     std::vector<std::tuple<double, std::uint32_t, std::uint32_t>> H_IJ_list_;
     std::vector<size_t> H_IJ_list_thread_limit_;
@@ -123,8 +124,7 @@ class SigmaVectorDynamic : public SigmaVector {
 
     void compute_aa_coupling(const UI64Determinant::bit_t& detIb, const std::vector<double>& b);
     void compute_bb_coupling(const UI64Determinant::bit_t& detIa, const std::vector<double>& b);
-    void compute_abab_coupling(const UI64Determinant::bit_t& detIa, const std::vector<double>& b,
-                               size_t task_id);
+    void compute_abab_coupling(const UI64Determinant::bit_t& detIa, const std::vector<double>& b);
 };
 }
 }

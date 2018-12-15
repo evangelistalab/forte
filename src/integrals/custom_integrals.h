@@ -101,7 +101,7 @@ class CustomIntegrals : public ForteIntegrals {
                aptei_idx_ * r + s;
     }
     /// Set the number of orbitals and allocate the memory
-    void custom_integrals_allocate(int norb, int nelec, const std::vector<int>& orbsym);
+    void custom_integrals_allocate(int norb, const std::vector<int>& orbsym);
 
     // ==> Class private virtual functions <==
 

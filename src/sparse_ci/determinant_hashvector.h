@@ -108,7 +108,7 @@ class DeterminantHashVec {
 
     // Save most important subspace as this
     void subspace(DeterminantHashVec& dets, SharedMatrix evecs, std::vector<double>& new_evecs,
-                  int dim, int root);
+                  size_t dim, int root);
 
     // Merge a wavefunction into this
     void merge(DeterminantHashVec& dets);

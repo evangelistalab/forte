@@ -54,7 +54,7 @@ void make_ci_nos(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<F
 
 void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
                        std::shared_ptr<ForteIntegrals> ints,
-                       std::shared_ptr<MOSpaceInfo> mo_space_info, int my_proc);
+                       std::shared_ptr<MOSpaceInfo> mo_space_info);
 
 void forte_old_options(Options& options);
 }

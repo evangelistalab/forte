@@ -33,7 +33,6 @@
 
 #include "helpers/timer.h"
 #include "ci_rdms.h"
-#include "helpers/mo_space_info.h"
 #include "base_classes/reference.h"
 #include "sparse_ci/determinant.h"
 
@@ -50,7 +49,7 @@ CI_RDMS::CI_RDMS(std::shared_ptr<FCIIntegrals> fci_ints, const std::vector<Deter
 }
 
 CI_RDMS::CI_RDMS(DeterminantHashVec& wfn, std::shared_ptr<FCIIntegrals> fci_ints,
-                 SharedMatrix evecs, int root1, int root2, bool dyn)
+                 SharedMatrix evecs, int root1, int root2)
     : wfn_(wfn), fci_ints_(fci_ints), evecs_(evecs), root1_(root1), root2_(root2) {
 
     Determinant det(wfn_.get_det(0));
@@ -73,7 +72,6 @@ void CI_RDMS::startup() {
      * StringList*/
 
     // The number of correlated molecular orbitals
-    //	ncmo_ = mo_space_info_->size("ACTIVE");
     ncmo_ = fci_ints_->nmo();
     ncmo2_ = ncmo_ * ncmo_;
     ncmo3_ = ncmo2_ * ncmo_;
@@ -1919,12 +1917,12 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a, std::vector<double>& oprdm_
                     }
                 }
             }
-            //            if (std::fabs(rdm) > 1.0e-12) {
-            //                error_1rdm_a += std::fabs(rdm - oprdm_a[q * ncmo_ + p]);
-            //                 outfile->Printf("\n  D1(a)[%3lu][%3lu] = %18.12lf
-            //                 (%18.12lf,%18.12lf)", p,q,
-            //                 rdm-oprdm_a[p*ncmo_+q],rdm,oprdm_a[p*ncmo_+q]);
-            //            }
+            if (std::fabs(rdm) > 1.0e-12) {
+                error_1rdm_a += std::fabs(rdm - oprdm_a[q * ncmo_ + p]);
+            //     outfile->Printf("\n  D1(a)[%3lu][%3lu] = %18.12lf
+            //     (%18.12lf,%18.12lf)", p,q,
+            //     rdm-oprdm_a[p*ncmo_+q],rdm,oprdm_a[p*ncmo_+q]);
+            }
         }
     }
     outfile->Printf("\n    A 1-RDM Error :   %2.15f", error_1rdm_a);

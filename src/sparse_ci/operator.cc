@@ -439,8 +439,8 @@ double WFNOperator::s2_direct(DeterminantHashVec& wfn, SharedMatrix& evecs, int 
             detIJa_common = detIa ^ detJa;
             int ndiff = ui64_bit_count(detIJa_common);
             if (ndiff == 2) {
-                int i, a;
-                for (int p = 0; p < ncmo_; ++p) {
+                size_t i, a;
+                for (size_t p = 0; p < ncmo_; ++p) {
                     const bool la_p = ui64_get_bit(detIa, p);
                     const bool ra_p = ui64_get_bit(detJa, p);
                     if (la_p ^ ra_p) {
@@ -489,9 +489,9 @@ void WFNOperator::add_singles(DeterminantHashVec& wfn) {
         std::vector<int> avir = det.get_alfa_vir(ncmo_);
 
         Determinant new_det(det);
-        for (int i = 0, noalpha = aocc.size(); i < noalpha; ++i) {
+        for (size_t i = 0, noalpha = aocc.size(); i < noalpha; ++i) {
             int ii = aocc[i];
-            for (int a = 0, nvalpha = avir.size(); a < nvalpha; ++a) {
+            for (size_t a = 0, nvalpha = avir.size(); a < nvalpha; ++a) {
                 int aa = avir[a];
                 if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0) {
                     new_det = det;
@@ -1056,10 +1056,6 @@ void WFNOperator::tp_s_lists(DeterminantHashVec& wfn) {
                 }
             }
         }
-        double map_size = (32. + sizeof(size_t)) * ab_list_.size();
-        // if (!quiet_) {
-        //     outfile->Printf("\n Memory for AB_ann: %1.3f MB", map_size / (1024. * 1024.));
-        // }
     }
     if (!quiet_) {
         outfile->Printf("\n        αβ         %7.6f s", ab.get());
@@ -1288,7 +1284,6 @@ void WFNOperator::clear_tp_s_lists() {
 void WFNOperator::three_s_lists(DeterminantHashVec& wfn) {
 
     timer ops("Triple sub. lists");
-    size_t ndets = wfn.size();
     const det_hashvec& dets = wfn.wfn_hash();
     //  Timer aaa;
     {
@@ -1377,25 +1372,25 @@ void WFNOperator::three_s_lists(DeterminantHashVec& wfn) {
                 beta_string[b_add].push_back(std::make_pair(ii, I));
             }
         }
-        for (int b = 0, max_b = beta_string.size(); b < max_b; ++b) {
+        for (size_t b = 0, max_b = beta_string.size(); b < max_b; ++b) {
             size_t naab_ann = 0;
             det_hash<int> aab_ann_map;
             std::vector<std::pair<int, size_t>>& c_dets = beta_string[b];
             std::vector<std::vector<std::tuple<size_t, short, short, short>>> tmp;
             size_t max_I = c_dets.size();
-            for (int I = 0; I < max_I; ++I) {
+            for (size_t I = 0; I < max_I; ++I) {
                 size_t idx = c_dets[I].second;
 
                 Determinant detI(dets[idx]);
-                int kk = c_dets[I].first;
+                size_t kk = c_dets[I].first;
                 detI.set_beta_bit(kk, false);
 
                 std::vector<int> aocc = detI.get_alfa_occ(ncmo_);
 
-                int noalfa = aocc.size();
+                size_t noalfa = aocc.size();
 
-                for (int i = 0, jk = 0; i < noalfa; ++i) {
-                    for (int j = i + 1; j < noalfa; ++j, ++jk) {
+                for (size_t i = 0, jk = 0; i < noalfa; ++i) {
+                    for (size_t j = i + 1; j < noalfa; ++j, ++jk) {
 
                         int ii = aocc[i];
                         int jj = aocc[j];
@@ -1442,7 +1437,7 @@ void WFNOperator::three_s_lists(DeterminantHashVec& wfn) {
             size_t max_I = c_dets.size();
             std::vector<std::vector<std::tuple<size_t, short, short, short>>> tmp;
 
-            for (int I = 0; I < max_I; ++I) {
+            for (size_t I = 0; I < max_I; ++I) {
                 size_t idx = c_dets[I].second;
 
                 Determinant detI(dets[idx]);
@@ -1501,7 +1496,7 @@ void WFNOperator::three_s_lists(DeterminantHashVec& wfn) {
             size_t max_I = c_dets.size();
             std::vector<std::vector<std::tuple<size_t, short, short, short>>> tmp;
 
-            for (int I = 0; I < max_I; ++I) {
+            for (size_t I = 0; I < max_I; ++I) {
                 size_t idx = c_dets[I];
                 Determinant detI(dets[idx]);
 
@@ -1572,15 +1567,14 @@ void WFNOperator::three_lists(DeterminantHashVec& wfn) {
                 std::vector<int> aocc = detI.get_alfa_occ(ncmo_);
                 std::vector<int> bocc = detI.get_beta_occ(ncmo_);
 
-                int noalfa = aocc.size();
-                int nobeta = bocc.size();
+                size_t noalfa = aocc.size();
 
                 aaa_ann_list_[idx].resize(noalfa * (noalfa - 1) * (noalfa - 2) / 6);
 
                 // aaa
-                for (int i = 0, ijk = 0; i < noalfa; ++i) {
-                    for (int j = i + 1; j < noalfa; ++j) {
-                        for (int k = j + 1; k < noalfa; ++k, ++ijk) {
+                for (size_t i = 0, ijk = 0; i < noalfa; ++i) {
+                    for (size_t j = i + 1; j < noalfa; ++j) {
+                        for (size_t k = j + 1; k < noalfa; ++k, ++ijk) {
 
                             int ii = aocc[i];
                             int jj = aocc[j];
@@ -1651,7 +1645,7 @@ void WFNOperator::three_lists(DeterminantHashVec& wfn) {
             det_hash<int> aab_ann_map;
             std::vector<std::pair<int, size_t>>& c_dets = beta_string[b];
             size_t max_I = c_dets.size();
-            for (int I = 0; I < max_I; ++I) {
+            for (size_t I = 0; I < max_I; ++I) {
                 size_t idx = c_dets[I].second;
 
                 Determinant detI(dets[idx]);
@@ -1708,7 +1702,7 @@ void WFNOperator::three_lists(DeterminantHashVec& wfn) {
             std::vector<std::pair<int, size_t>>& c_dets = alpha_a_strings_[a];
             size_t max_I = c_dets.size();
 
-            for (int I = 0; I < max_I; ++I) {
+            for (size_t I = 0; I < max_I; ++I) {
                 size_t idx = c_dets[I].second;
 
                 Determinant detI(dets[idx]);
@@ -1765,14 +1759,12 @@ void WFNOperator::three_lists(DeterminantHashVec& wfn) {
             std::vector<std::pair<int, size_t>>& c_dets = alpha_a_strings_[a];
             size_t max_I = c_dets.size();
 
-            for (int I = 0; I < max_I; ++I) {
+            for (size_t I = 0; I < max_I; ++I) {
                 size_t idx = c_dets[I].second;
                 Determinant detI(dets[idx]);
 
-                std::vector<int> aocc = detI.get_alfa_occ(ncmo_);
                 std::vector<int> bocc = detI.get_beta_occ(ncmo_);
 
-                int noalfa = aocc.size();
                 int nobeta = bocc.size();
 
                 bbb_ann_list_[idx].resize(nobeta * (nobeta - 1) * (nobeta - 2) / 6);

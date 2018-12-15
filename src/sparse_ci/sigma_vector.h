@@ -141,24 +141,24 @@ class SigmaVectorWfn1 : public SigmaVector {
     std::vector<std::vector<std::pair<size_t, double>>> bad_states_;
 
   protected:
+    const DeterminantHashVec& space_;
+    std::shared_ptr<FCIIntegrals> fci_ints_;
     // Create the list of a_p|N>
-    std::vector<std::vector<std::pair<size_t, short>>>& a_ann_list_;
-    std::vector<std::vector<std::pair<size_t, short>>>& b_ann_list_;
     // Create the list of a+_q |N-1>
+    std::vector<std::vector<std::pair<size_t, short>>>& a_ann_list_;
     std::vector<std::vector<std::pair<size_t, short>>>& a_cre_list_;
+    std::vector<std::vector<std::pair<size_t, short>>>& b_ann_list_;
     std::vector<std::vector<std::pair<size_t, short>>>& b_cre_list_;
 
     // Create the list of a_q a_p|N>
-    std::vector<std::vector<std::tuple<size_t, short, short>>>& aa_ann_list_;
-    std::vector<std::vector<std::tuple<size_t, short, short>>>& ab_ann_list_;
-    std::vector<std::vector<std::tuple<size_t, short, short>>>& bb_ann_list_;
     // Create the list of a+_s a+_r |N-2>
+    std::vector<std::vector<std::tuple<size_t, short, short>>>& aa_ann_list_;
     std::vector<std::vector<std::tuple<size_t, short, short>>>& aa_cre_list_;
+    std::vector<std::vector<std::tuple<size_t, short, short>>>& ab_ann_list_;
     std::vector<std::vector<std::tuple<size_t, short, short>>>& ab_cre_list_;
+    std::vector<std::vector<std::tuple<size_t, short, short>>>& bb_ann_list_;
     std::vector<std::vector<std::tuple<size_t, short, short>>>& bb_cre_list_;
     std::vector<double> diag_;
-    const DeterminantHashVec& space_;
-    std::shared_ptr<FCIIntegrals> fci_ints_;
 };
 
 /* Uses only cre lists, sparse sigma build */
@@ -166,11 +166,6 @@ class SigmaVectorWfn2 : public SigmaVector {
   public:
     SigmaVectorWfn2(const DeterminantHashVec& space, WFNOperator& op,
                     std::shared_ptr<FCIIntegrals> fci_ints);
-    std::vector<std::vector<std::pair<size_t, short>>>& a_list_;
-    std::vector<std::vector<std::pair<size_t, short>>>& b_list_;
-    std::vector<std::vector<std::tuple<size_t, short, short>>>& aa_list_;
-    std::vector<std::vector<std::tuple<size_t, short, short>>>& ab_list_;
-    std::vector<std::vector<std::tuple<size_t, short, short>>>& bb_list_;
 
     void compute_sigma(SharedVector sigma, SharedVector b);
     // void compute_sigma(Matrix& sigma, Matrix& b, int nroot);
@@ -189,17 +184,17 @@ class SigmaVectorWfn2 : public SigmaVector {
 
     std::vector<double> diag_;
     std::shared_ptr<FCIIntegrals> fci_ints_;
+    std::vector<std::vector<std::pair<size_t, short>>>& a_list_;
+    std::vector<std::vector<std::pair<size_t, short>>>& b_list_;
+    std::vector<std::vector<std::tuple<size_t, short, short>>>& aa_list_;
+    std::vector<std::vector<std::tuple<size_t, short, short>>>& ab_list_;
+    std::vector<std::vector<std::tuple<size_t, short, short>>>& bb_list_;
 };
 /* Uses only cre lists, DGEMM sigma build */
 class SigmaVectorWfn3 : public SigmaVector {
   public:
     SigmaVectorWfn3(const DeterminantHashVec& space, WFNOperator& op,
                     std::shared_ptr<FCIIntegrals> fci_ints);
-    std::vector<std::vector<std::pair<size_t, short>>>& a_list_;
-    std::vector<std::vector<std::pair<size_t, short>>>& b_list_;
-    std::vector<std::vector<std::tuple<size_t, short, short>>>& aa_list_;
-    std::vector<std::vector<std::tuple<size_t, short, short>>>& ab_list_;
-    std::vector<std::vector<std::tuple<size_t, short, short>>>& bb_list_;
 
     void compute_sigma(SharedVector sigma, SharedVector b);
     // void compute_sigma(Matrix& sigma, Matrix& b, int nroot);
@@ -212,10 +207,14 @@ class SigmaVectorWfn3 : public SigmaVector {
     bool print_;
     bool use_disk_ = false;
 
-    std::shared_ptr<FCIIntegrals> fci_ints_;
     const DeterminantHashVec& space_;
-    // size_t noalfa_;
-    // size_t nobeta_;
+    std::shared_ptr<FCIIntegrals> fci_ints_;
+
+    std::vector<std::vector<std::pair<size_t, short>>>& a_list_;
+    std::vector<std::vector<std::pair<size_t, short>>>& b_list_;
+    std::vector<std::vector<std::tuple<size_t, short, short>>>& aa_list_;
+    std::vector<std::vector<std::tuple<size_t, short, short>>>& ab_list_;
+    std::vector<std::vector<std::tuple<size_t, short, short>>>& bb_list_;
 
     std::vector<double> diag_;
 

@@ -76,7 +76,8 @@ void V2RDM::startup() {
 
     // map active absolute index to relative index
     for (size_t h = 0, offset_abs = 0, offset_rel = 0; h < nirrep_; ++h) {
-        for (size_t u = 0; u < active_[h]; ++u) {
+        size_t nact_h = active_[h];
+        for (size_t u = 0; u < nact_h; ++u) {
             size_t abs = fdoccpi_[h] + rdoccpi_[h] + u + offset_abs;
             size_t rel = u + offset_rel;
             abs_to_rel_[abs] = rel;
@@ -140,7 +141,7 @@ void V2RDM::read_2pdm() {
     psio->read_entry(PSIF_V2RDM_D2AB, "length", (char*)&nab, sizeof(long int));
 
     size_t nsymgem = 0; // number of totally symmetric geminals
-    for (int h = 0; h < nirrep_; ++h) {
+    for (size_t h = 0; h < nirrep_; ++h) {
         nsymgem += active_[h] * active_[h];
     }
     for (size_t n = 0; n < nsymgem; ++n) {

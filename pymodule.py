@@ -91,7 +91,7 @@ def run_forte(name, **kwargs):
             forte.LOCALIZE(ref_wfn,options,ints,mo_space_info)
 
         # Run a method
-        forte.forte_old_methods(ref_wfn, options, ints, mo_space_info, my_proc)
+        forte.forte_old_methods(ref_wfn, options, ints, mo_space_info)
 
         end = timeit.timeit()
         #print('\n\n  Your calculation took ', (end - start), ' seconds');

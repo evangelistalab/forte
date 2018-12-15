@@ -27,6 +27,7 @@
  * @END LICENSE
  */
 
+
 #include "aci.h"
 
 namespace psi {
@@ -47,13 +48,12 @@ void AdaptiveCI::get_excited_determinants_sr(SharedMatrix evecs, DeterminantHash
     local_timer build;
     size_t max_P = P_space.size();
     const det_hashvec& P_dets = P_space.wfn_hash();
-    int nroot = 1;
 
 // Loop over reference determinants
 #pragma omp parallel
     {
-        int num_thread = omp_get_num_threads();
-        int tid = omp_get_thread_num();
+        size_t num_thread = omp_get_num_threads();
+        size_t tid = omp_get_thread_num();
         size_t bin_size = max_P / num_thread;
         bin_size += (tid < (max_P % num_thread)) ? 1 : 0;
         size_t start_idx =
@@ -203,12 +203,12 @@ void AdaptiveCI::get_excited_determinants_seq(int nroot, SharedMatrix evecs,
     size_t guess_size = n_dets * nmo * nmo;
     double nbyte = (1073741824 * max_mem) / (sizeof(double));
 
-    int nbin = static_cast<int>(std::ceil(guess_size / (nbyte)));
+    size_t nbin = std::ceil(guess_size / (nbyte));
 
 #pragma omp parallel
     {
-        int tid = omp_get_thread_num();
-        int ntds = omp_get_num_threads();
+        size_t tid = omp_get_thread_num();
+        size_t ntds = omp_get_num_threads();
 
         if ((ntds > nbin)) {
             nbin = ntds;
@@ -224,7 +224,7 @@ void AdaptiveCI::get_excited_determinants_seq(int nroot, SharedMatrix evecs,
                                                    : (n_dets % ntds) * (bin_size + 1) +
                                                          (tid - (n_dets % ntds)) * bin_size;
         size_t end_idx = start_idx + bin_size;
-        for (int bin = 0; bin < nbin; ++bin) {
+        for (size_t bin = 0; bin < nbin; ++bin) {
 
             det_hash<std::vector<double>> A_I;
             // std::vector<std::pair<Determinant, std::vector<double>>> A_I;
@@ -445,8 +445,8 @@ void AdaptiveCI::get_excited_determinants(int nroot, SharedMatrix evecs,
 // Loop over reference determinants
 #pragma omp parallel
     {
-        int num_thread = omp_get_num_threads();
-        int tid = omp_get_thread_num();
+        size_t num_thread = omp_get_num_threads();
+        size_t tid = omp_get_thread_num();
         size_t bin_size = max_P / num_thread;
         bin_size += (tid < (max_P % num_thread)) ? 1 : 0;
         size_t start_idx =
@@ -656,8 +656,8 @@ void AdaptiveCI::get_core_excited_determinants(SharedMatrix evecs, DeterminantHa
 // Loop over reference determinants
 #pragma omp parallel
     {
-        int num_thread = omp_get_num_threads();
-        int tid = omp_get_thread_num();
+        size_t num_thread = omp_get_num_threads();
+        size_t tid = omp_get_thread_num();
         size_t bin_size = max_P / num_thread;
         bin_size += (tid < (max_P % num_thread)) ? 1 : 0;
         size_t start_idx =
@@ -978,7 +978,6 @@ det_hash<double> AdaptiveCI::get_bin_F_space_old(int bin, int nbin, SharedMatrix
 
     const size_t n_dets = P_space.size();
     const det_hashvec& dets = P_space.wfn_hash();
-    int nmo = fci_ints_->nmo();
     std::vector<int> act_mo = mo_space_info_->get_dimension("ACTIVE").blocks();
     det_hash<double> A_b;
 
@@ -986,10 +985,10 @@ det_hash<double> AdaptiveCI::get_bin_F_space_old(int bin, int nbin, SharedMatrix
     for (size_t I = 0; I < n_dets; ++I) {
         double c_I = evecs->get(I, 0);
         const Determinant& det = dets[I];
-        std::vector<std::vector<int>> noalpha = det.get_asym_occ(nmo, act_mo);
-        std::vector<std::vector<int>> nobeta = det.get_bsym_occ(nmo, act_mo);
-        std::vector<std::vector<int>> nvalpha = det.get_asym_vir(nmo, act_mo);
-        std::vector<std::vector<int>> nvbeta = det.get_bsym_vir(nmo, act_mo);
+        std::vector<std::vector<int>> noalpha = det.get_asym_occ(act_mo);
+        std::vector<std::vector<int>> nobeta = det.get_bsym_occ(act_mo);
+        std::vector<std::vector<int>> nvalpha = det.get_asym_vir(act_mo);
+        std::vector<std::vector<int>> nvbeta = det.get_bsym_vir(act_mo);
 
         Determinant new_det(det);
         // Generate alpha excitations
@@ -1199,13 +1198,9 @@ double AdaptiveCI::get_excited_determinants_batch_vecsort(
         local_timer bint;
 #pragma omp parallel
         {
-            int ntd = omp_get_num_threads();
             int tid = omp_get_thread_num();
             auto& A_b = A_b_t.first[tid];
-            //                        int idx = 0;
             double E0 = evals->get(0);
-            //            outfile->Printf("\n td %d, Ab: %zu, abt: %zu", tid ,A_b.size(),
-            //            A_b_t.second[tid]);
             for (size_t I = 0, max_I = A_b_t.second[tid]; I < max_I; I++) {
                 auto& pair = A_b[I];
                 double& V = pair.second;
@@ -1408,7 +1403,7 @@ AdaptiveCI::get_excited_determinants_batch(SharedMatrix evecs, SharedVector eval
         //        total_excluded += prescreen_F(bin,nbin,evals->get(0), evecs,P_space);
 
         // 1. Build the full bin-subset // all threading in here
-        auto A_b = get_bin_F_space(bin, nbin, evals->get(0), evecs, P_space);
+        auto A_b = get_bin_F_space(bin, nbin, evecs, P_space);
         outfile->Printf("\n    Build F                %10.6f ", sp.get());
 
         // 2. Put the dets/vals in a sortable list (F_tmp)
@@ -1735,26 +1730,22 @@ P_space) {
 }
 
 */
-det_hash<double> AdaptiveCI::get_bin_F_space(int bin, int nbin, double E0, SharedMatrix evecs,
+det_hash<double> AdaptiveCI::get_bin_F_space(int bin, int nbin, SharedMatrix evecs,
                                              DeterminantHashVec& P_space) {
 
     det_hash<double> bin_f_space;
-    // det_hash<double> bin_E_space;
     local_timer build;
 
     const size_t n_dets = P_space.size();
     const det_hashvec& dets = P_space.wfn_hash();
-    int nmo = fci_ints_->nmo();
     std::vector<int> act_mo = mo_space_info_->get_dimension("ACTIVE").blocks();
 
     std::vector<det_hash<double>> A_b_t;
-    // std::vector<det_hash<double>> E_b_t;
-    double value = 0.0;
 
-#pragma omp parallel reduction(+ : value)
+#pragma omp parallel 
     {
-        int n_threads = omp_get_num_threads();
-        int thread_id = omp_get_thread_num();
+        size_t n_threads = omp_get_num_threads();
+        size_t thread_id = omp_get_thread_num();
 
 #pragma omp critical
         {
@@ -1763,15 +1754,14 @@ det_hash<double> AdaptiveCI::get_bin_F_space(int bin, int nbin, double E0, Share
         }
 
         det_hash<double>& A_b = A_b_t[thread_id];
-        // det_hash<double>& E_b = E_b_t[thread_id];
 
-        int bin_size = n_dets / n_threads;
+        size_t bin_size = n_dets / n_threads;
         bin_size += (thread_id < (n_dets % n_threads)) ? 1 : 0;
-        int start_idx = (thread_id < (n_dets % n_threads))
+        size_t start_idx = (thread_id < (n_dets % n_threads))
                             ? thread_id * bin_size
                             : (n_dets % n_threads) * (bin_size + 1) +
                                   (thread_id - (n_dets % n_threads)) * bin_size;
-        int end_idx = start_idx + bin_size;
+        size_t end_idx = start_idx + bin_size;
 
         // Loop over P space determinants
         // size_t guess_a = nalpha_ * (ncmo_ - nalpha_);
@@ -1786,10 +1776,10 @@ det_hash<double> AdaptiveCI::get_bin_F_space(int bin, int nbin, double E0, Share
         for (size_t I = start_idx; I < end_idx; ++I) {
             double c_I = evecs->get(I, 0);
             const Determinant& det = dets[I];
-            std::vector<std::vector<int>> noalpha = det.get_asym_occ(nmo, act_mo);
-            std::vector<std::vector<int>> nobeta = det.get_bsym_occ(nmo, act_mo);
-            std::vector<std::vector<int>> nvalpha = det.get_asym_vir(nmo, act_mo);
-            std::vector<std::vector<int>> nvbeta = det.get_bsym_vir(nmo, act_mo);
+            std::vector<std::vector<int>> noalpha = det.get_asym_occ(act_mo);
+            std::vector<std::vector<int>> nobeta  = det.get_bsym_occ(act_mo);
+            std::vector<std::vector<int>> nvalpha = det.get_asym_vir(act_mo);
+            std::vector<std::vector<int>> nvbeta  = det.get_bsym_vir(act_mo);
 
             Determinant new_det(det);
             // Generate alpha excitations
@@ -2001,22 +1991,8 @@ det_hash<double> AdaptiveCI::get_bin_F_space(int bin, int nbin, double E0, Share
 #pragma omp barrier
         if (thread_id == 0)
             outfile->Printf("\n  Merge: %1.6f", merge.get());
-
-        // size_t idx = 0;
-        // for( auto& pair : bin_E_space ){
-        //    if( (idx % n_threads) == thread_id ){
-        //        auto& det = pair.first;
-        //        double& V = pair.second;
-
-        //        double delta = fci_ints_->energy(det) - E0;
-
-        //        value += std::fabs(0.5 * (delta - sqrt(delta * delta + V * V * 4.0)));
-        //    }
-        //    idx++;
-        //}
     } // close threads
 
-    //    outfile->Printf("\n  Correlation ignored: %1.12f", value);
     return bin_f_space;
 }
 
@@ -2035,8 +2011,8 @@ AdaptiveCI::get_bin_F_space_vecsort(int bin, int nbin, SharedMatrix evecs,
     std::vector<size_t> dets_t;
 #pragma omp parallel
     {
-        int n_threads = omp_get_num_threads();
-        int thread_id = omp_get_thread_num();
+        size_t n_threads = omp_get_num_threads();
+        size_t thread_id = omp_get_thread_num();
 
 #pragma omp critical
         {
@@ -2046,13 +2022,13 @@ AdaptiveCI::get_bin_F_space_vecsort(int bin, int nbin, SharedMatrix evecs,
 
         std::vector<std::pair<Determinant, double>>& vec_A_b = vec_A_b_t[thread_id];
 
-        int bin_size = n_dets / n_threads;
+        size_t bin_size = n_dets / n_threads;
         bin_size += (thread_id < (n_dets % n_threads)) ? 1 : 0;
-        int start_idx = (thread_id < (n_dets % n_threads))
+        size_t start_idx = (thread_id < (n_dets % n_threads))
                             ? thread_id * bin_size
                             : (n_dets % n_threads) * (bin_size + 1) +
                                   (thread_id - (n_dets % n_threads)) * bin_size;
-        int end_idx = start_idx + bin_size;
+        size_t end_idx = start_idx + bin_size;
 
         // Loop over P space determinants
         // size_t guess_a = nalpha_ * (ncmo_ - nalpha_);
@@ -2073,10 +2049,10 @@ AdaptiveCI::get_bin_F_space_vecsort(int bin, int nbin, SharedMatrix evecs,
         for (size_t I = start_idx; I < end_idx; ++I) {
             double c_I = evecs->get(I, 0);
             const Determinant& det = dets[I];
-            std::vector<std::vector<int>> noalpha = det.get_asym_occ(nmo, act_mo);
-            std::vector<std::vector<int>> nobeta = det.get_bsym_occ(nmo, act_mo);
-            std::vector<std::vector<int>> nvalpha = det.get_asym_vir(nmo, act_mo);
-            std::vector<std::vector<int>> nvbeta = det.get_bsym_vir(nmo, act_mo);
+            std::vector<std::vector<int>> noalpha = det.get_asym_occ(act_mo);
+            std::vector<std::vector<int>> nobeta  = det.get_bsym_occ(act_mo);
+            std::vector<std::vector<int>> nvalpha = det.get_asym_vir(act_mo);
+            std::vector<std::vector<int>> nvbeta  = det.get_bsym_vir(act_mo);
             Determinant new_det(det);
 
             // Generate alpha excitations
