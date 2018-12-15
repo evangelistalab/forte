@@ -107,7 +107,7 @@ void StringLists::make_oo(GraphPtr graph, OOList& list, int pq_sym, size_t pq) {
                     J[i] = I[i] = b[k];
                     k++;
                 }
-                for (int i = p + 1; i < ncmo_; ++i) {
+                for (int i = p + 1; i < static_cast<int>(ncmo_); ++i) {
                     J[i] = I[i] = b[k];
                     k++;
                 }
@@ -127,5 +127,5 @@ void StringLists::make_oo(GraphPtr graph, OOList& list, int pq_sym, size_t pq) {
         delete[] b;
     }
 }
-}
-}
+} // namespace forte
+} // namespace psi

@@ -213,12 +213,11 @@ class FCISolver {
 
     /// Initial CI wave function guess
     std::vector<std::pair<int, std::vector<std::tuple<size_t, size_t, size_t, double>>>>
-    initial_guess(FCIWfn& diag, size_t n, size_t multiplicity,
-                  std::shared_ptr<FCIIntegrals> fci_ints);
+    initial_guess(FCIWfn& diag, size_t n, std::shared_ptr<FCIIntegrals> fci_ints);
     /// The options object
     Options& options_;
 };
-}
-}
+} // namespace forte
+} // namespace psi
 
 #endif // _fci_solver_h_

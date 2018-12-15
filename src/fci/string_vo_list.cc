@@ -119,7 +119,7 @@ void StringLists::make_vo(GraphPtr graph, VOList& list, int p, int q) {
                         sign *= -1;
                     k++;
                 }
-                for (int i = std::max(p, q) + 1; i < ncmo_; ++i) {
+                for (int i = std::max(p, q) + 1; i < static_cast<int>(ncmo_); ++i) {
                     J[i] = I[i] = b[k];
                     k++;
                 }
@@ -141,8 +141,8 @@ void StringLists::make_vo(GraphPtr graph, VOList& list, int p, int q) {
         delete[] b;
     }
 }
-}
-}
+} // namespace forte
+} // namespace psi
 
 ///**
 // * Generate all the pairs of strings I,J connected by a^{+}_p a_q

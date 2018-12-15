@@ -104,7 +104,7 @@ double FCIWfn::energy_from_rdms(std::shared_ptr<FCIIntegrals> fci_ints) {
     size_t nb = beta_graph_->nones();
 
     double nuclear_repulsion_energy =
-        Process::environment.molecule()->nuclear_repulsion_energy({0, 0, 0});
+        Process::environment.molecule()->nuclear_repulsion_energy({{0, 0, 0}});
 
     double scalar_energy = fci_ints->frozen_core_energy() + fci_ints->scalar_energy();
     double energy_1rdm = 0.0;
@@ -582,14 +582,14 @@ void FCIWfn::rdm_test() {
     size_t na = lists_->na();
     size_t nb = lists_->nb();
 
-    for (int i = 0; i < ncmo_ - na; ++i)
+    for (size_t i = 0; i < ncmo_ - na; ++i)
         Ia[i] = false; // 0
-    for (int i = ncmo_ - na; i < ncmo_; ++i)
+    for (size_t i = ncmo_ - na; i < ncmo_; ++i)
         Ia[i] = true; // 1
 
-    for (int i = 0; i < ncmo_ - nb; ++i)
+    for (size_t i = 0; i < ncmo_ - nb; ++i)
         Ib[i] = false; // 0
-    for (int i = ncmo_ - nb; i < ncmo_; ++i)
+    for (size_t i = ncmo_ - nb; i < ncmo_; ++i)
         Ib[i] = true; // 1
 
     std::vector<Determinant> dets;
@@ -601,12 +601,12 @@ void FCIWfn::rdm_test() {
 
     size_t num_det = 0;
     do {
-        for (int i = 0; i < ncmo_; ++i)
+        for (size_t i = 0; i < ncmo_; ++i)
             a_occ[i] = Ia[i];
         do {
-            for (int i = 0; i < ncmo_; ++i)
+            for (size_t i = 0; i < ncmo_; ++i)
                 b_occ[i] = Ib[i];
-            if ((alfa_graph_->sym(Ia) ^ beta_graph_->sym(Ib)) == symmetry_) {
+            if ((alfa_graph_->sym(Ia) ^ beta_graph_->sym(Ib)) == static_cast<int>(symmetry_)) {
                 Determinant d(a_occ, b_occ);
                 dets.push_back(d);
                 double c = C_[alfa_graph_->sym(Ia)]->get(alfa_graph_->rel_add(Ia),
@@ -927,5 +927,5 @@ void FCIWfn::rdm_test() {
     delete[] Ia;
     delete[] Ib;
 }
-}
-}
+} // namespace forte
+} // namespace psi

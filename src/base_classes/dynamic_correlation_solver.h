@@ -44,6 +44,6 @@ class DynamicCorrelationSolver : public Wavefunction {
     /// The reference object (cumulants)
     Reference reference_;
 };
-}
-}
+} // namespace forte
+} // namespace psi
 #endif // DYNAMIC_CORRELATION_SOLVER_H

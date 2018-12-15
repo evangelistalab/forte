@@ -60,7 +60,7 @@ FCISolver::FCISolver(Dimension active_dim, std::vector<size_t> core_mo,
                      Options& options)
     : active_dim_(active_dim), core_mo_(core_mo), active_mo_(active_mo), ints_(ints),
       nirrep_(active_dim.n()), symmetry_(symmetry), na_(na), nb_(nb), multiplicity_(multiplicity),
-      nroot_(0), ntrial_per_root_(ntrial_per_root), mo_space_info_(mo_space_info), print_(print),
+      nroot_(0), ntrial_per_root_(ntrial_per_root), print_(print), mo_space_info_(mo_space_info),
       options_(options) {
     nroot_ = options_.get_int("NROOT");
     startup();
@@ -121,12 +121,12 @@ void FCISolver::startup() {
 
 /*
  * See Appendix A in J. Comput. Chem. 2001 vol. 22 (13) pp. 1574-1589
-*/
+ */
 double FCISolver::compute_energy() {
     local_timer t;
 
     double nuclear_repulsion_energy =
-        Process::environment.molecule()->nuclear_repulsion_energy({0, 0, 0});
+        Process::environment.molecule()->nuclear_repulsion_energy({{0, 0, 0}});
     std::shared_ptr<FCIIntegrals> fci_ints;
     if (!provide_integrals_and_restricted_docc_) {
         fci_ints = std::make_shared<FCIIntegrals>(ints_, active_mo_, core_mo_);
@@ -170,7 +170,7 @@ double FCISolver::compute_energy() {
     dls.startup(sigma);
 
     size_t guess_size = dls.collapse_size();
-    auto guess = initial_guess(Hdiag, guess_size, multiplicity_, fci_ints);
+    auto guess = initial_guess(Hdiag, guess_size, fci_ints);
 
     std::vector<int> guess_list;
     for (size_t g = 0; g < guess.size(); ++g) {
@@ -382,12 +382,11 @@ void FCISolver::compute_rdms_root(int root) {
 }
 
 std::vector<std::pair<int, std::vector<std::tuple<size_t, size_t, size_t, double>>>>
-FCISolver::initial_guess(FCIWfn& diag, size_t n, size_t multiplicity,
-                         std::shared_ptr<FCIIntegrals> fci_ints) {
+FCISolver::initial_guess(FCIWfn& diag, size_t n, std::shared_ptr<FCIIntegrals> fci_ints) {
     local_timer t;
 
     double nuclear_repulsion_energy =
-        Process::environment.molecule()->nuclear_repulsion_energy({0, 0, 0});
+        Process::environment.molecule()->nuclear_repulsion_energy({{0, 0, 0}});
     double scalar_energy = fci_ints->scalar_energy();
 
     size_t ntrial = n * ntrial_per_root_;
@@ -745,5 +744,5 @@ Reference FCISolver::reference() {
 
     return fci_ref;
 }
-}
-}
+} // namespace forte
+} // namespace psi

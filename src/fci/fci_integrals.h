@@ -196,8 +196,6 @@ class FCIIntegrals {
     /// The diagonal beta-beta antisymmetrized two-electron integrals in
     /// physicist notation
     std::vector<double> diag_tei_bb_;
-    /// Printing information
-    int print_ = 0;
     /// A vector of indices for the active molecular orbitals
     std::vector<size_t> active_mo_;
     /// A Vector of indices for the restricted_docc molecular orbitals
@@ -213,7 +211,7 @@ class FCIIntegrals {
     void RestrictedOneBodyOperator(std::vector<double>& oei_a, std::vector<double>& oei_b);
     void startup();
 };
-}
-}
+} // namespace forte
+} // namespace psi
 
 #endif // _fci_integrals_
