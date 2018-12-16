@@ -38,20 +38,20 @@ namespace forte {
 
 class AtomicOrbitalHelper {
   protected:
-    SharedMatrix AO_Screen_;
-    SharedMatrix TransAO_Screen_;
+    psi::SharedMatrix AO_Screen_;
+    psi::SharedMatrix TransAO_Screen_;
 
-    SharedMatrix CMO_;
+    psi::SharedMatrix CMO_;
     SharedVector eps_rdocc_;
     SharedVector eps_virtual_;
 
-    SharedMatrix POcc_;
-    SharedMatrix PVir_;
+    psi::SharedMatrix POcc_;
+    psi::SharedMatrix PVir_;
     void Compute_Psuedo_Density();
 
 	// LaplaceDenominator Laplace_;
-	SharedMatrix Occupied_Laplace_;
-	SharedMatrix Virtual_Laplace_;
+	psi::SharedMatrix Occupied_Laplace_;
+	psi::SharedMatrix Virtual_Laplace_;
 	double laplace_tolerance_=1e-10;
 
 	int weights_;
@@ -63,17 +63,17 @@ class AtomicOrbitalHelper {
 	int shift_;
 
   public:
-    SharedMatrix AO_Screen() { return AO_Screen_; }
-    SharedMatrix TransAO_Screen() { return TransAO_Screen_; }
-    SharedMatrix Occupied_Laplace() { return Occupied_Laplace_; }
-    SharedMatrix Virtual_Laplace() { return Virtual_Laplace_; }
-    SharedMatrix POcc() { return POcc_; }
-    SharedMatrix PVir() { return PVir_; }
+    psi::SharedMatrix AO_Screen() { return AO_Screen_; }
+    psi::SharedMatrix TransAO_Screen() { return TransAO_Screen_; }
+    psi::SharedMatrix Occupied_Laplace() { return Occupied_Laplace_; }
+    psi::SharedMatrix Virtual_Laplace() { return Virtual_Laplace_; }
+    psi::SharedMatrix POcc() { return POcc_; }
+    psi::SharedMatrix PVir() { return PVir_; }
     int Weights() { return weights_; }
 
-    AtomicOrbitalHelper(SharedMatrix CMO, SharedVector eps_occ, SharedVector eps_vir,
+    AtomicOrbitalHelper(psi::SharedMatrix CMO, SharedVector eps_occ, SharedVector eps_vir,
                         double laplace_tolerance);
-    AtomicOrbitalHelper(SharedMatrix CMO, SharedVector eps_occ, SharedVector eps_vir,
+    AtomicOrbitalHelper(psi::SharedMatrix CMO, SharedVector eps_occ, SharedVector eps_vir,
                         double laplace_tolerance, int shift);
     /// Compute (mu nu | mu nu)^{(1/2)}
     void Compute_AO_Screen(std::shared_ptr<BasisSet>& primary);

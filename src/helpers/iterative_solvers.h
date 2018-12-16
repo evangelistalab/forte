@@ -106,7 +106,7 @@ class DavidsonLiuSolver {
     /// Return the eigenvalues
     SharedVector eigenvalues() const;
     /// Return the eigenvectors
-    SharedMatrix eigenvectors() const;
+    psi::SharedMatrix eigenvectors() const;
     /// Return the n-th eigenvector
     SharedVector eigenvector(size_t n) const;
 
@@ -129,9 +129,9 @@ class DavidsonLiuSolver {
     /// Build the correction vectors
     void form_correction_vectors();
     /// Project out undesired roots
-    void project_out_roots(SharedMatrix v);
+    void project_out_roots(psi::SharedMatrix v);
     /// Normalize the correction vectors
-    void normalize_vectors(SharedMatrix v, size_t n);
+    void normalize_vectors(psi::SharedMatrix v, size_t n);
     /// Perform subspace collapse
     bool subspace_collapse();
     /// Collapse the vectors
@@ -169,19 +169,19 @@ class DavidsonLiuSolver {
     bool last_update_collapsed_ = false;
 
     /// Current set of guess vectors stored by row
-    SharedMatrix b_;
+    psi::SharedMatrix b_;
     /// Guess vectors formed from old vectors, stored by row
-    SharedMatrix bnew;
+    psi::SharedMatrix bnew;
     /// Residual eigenvectors, stored by row
-    SharedMatrix f;
+    psi::SharedMatrix f;
     /// Sigma vectors, stored by column
-    SharedMatrix sigma_;
+    psi::SharedMatrix sigma_;
     /// Davidson-Liu mini-Hamitonian
-    SharedMatrix G;
+    psi::SharedMatrix G;
     /// Davidson-Liu mini-metric
-    SharedMatrix S;
+    psi::SharedMatrix S;
     /// Eigenvectors of the Davidson mini-Hamitonian
-    SharedMatrix alpha;
+    psi::SharedMatrix alpha;
 
     /// Eigenvalues of the Davidson mini-Hamitonian
     SharedVector lambda;

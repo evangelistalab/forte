@@ -79,23 +79,23 @@ class CINO : public Wavefunction {
     /// The number of active orbitals
     size_t nactv_;
     /// The number of active orbitals per irrep
-    Dimension actvpi_;
+    psi::Dimension actvpi_;
     /// The number of restricted doubly occupied orbitals per irrep
-    Dimension rdoccpi_;
+    psi::Dimension rdoccpi_;
     /// The number of frozen doubly occupied orbitals per irrep
-    Dimension fdoccpi_;
+    psi::Dimension fdoccpi_;
     /// The number of restricted virtual orbitals per irrep
-    Dimension ruoccpi_;
+    psi::Dimension ruoccpi_;
     /// The number of frozen virtual orbitals per irrep
-    Dimension fuoccpi_;
+    psi::Dimension fuoccpi_;
     /// The number of alpha occupied active orbitals per irrep
-    Dimension aoccpi_;
+    psi::Dimension aoccpi_;
     //    /// The number of alpha unoccupied active orbitals per irrep
-    //    Dimension avirpi_;
+    //    psi::Dimension avirpi_;
     //    /// The number of beta occupied active orbitals per irrep
-    //    Dimension boccpi_;
+    //    psi::Dimension boccpi_;
     //    /// The number of beta unoccupied active orbitals per irrep
-    //    Dimension bvirpi_;
+    //    psi::Dimension bvirpi_;
 
     // ==> CINO Options <==
     /// Add missing degenerate determinants excluded from the aimed selection?
@@ -123,21 +123,21 @@ class CINO : public Wavefunction {
 
     std::vector<Determinant> build_dets(int irrep);
 
-    std::pair<SharedVector, SharedMatrix>
+    std::pair<SharedVector, psi::SharedMatrix>
     diagonalize_hamiltonian(const std::vector<Determinant>& dets, int nsolutions);
 
-    std::pair<SharedMatrix, SharedMatrix> build_density_matrix(const std::vector<Determinant>& dets,
-                                                               SharedMatrix evecs, int nroot_);
+    std::pair<psi::SharedMatrix, psi::SharedMatrix> build_density_matrix(const std::vector<Determinant>& dets,
+                                                               psi::SharedMatrix evecs, int nroot_);
 
     /// Diagonalize the density matrix
-    std::tuple<SharedVector, SharedMatrix, SharedVector, SharedMatrix>
-    diagonalize_density_matrix(std::pair<SharedMatrix, SharedMatrix> gamma);
+    std::tuple<SharedVector, psi::SharedMatrix, SharedVector, psi::SharedMatrix>
+    diagonalize_density_matrix(std::pair<psi::SharedMatrix, psi::SharedMatrix> gamma);
 
     /// Find optimal active space and transform the orbitals
     void find_active_space_and_transform(
-        std::tuple<SharedVector, SharedMatrix, SharedVector, SharedMatrix> no_U);
+        std::tuple<SharedVector, psi::SharedMatrix, SharedVector, psi::SharedMatrix> no_U);
 };
-std::string dimension_to_string(Dimension dim);
+std::string dimension_to_string(psi::Dimension dim);
 }
 } // End Namespaces
 

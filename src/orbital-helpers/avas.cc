@@ -35,10 +35,11 @@
 
 #include "avas.h"
 
+using namespace psi;
 
 namespace forte {
 
-SharedMatrix semicanonicalize_block(psi::SharedWavefunction ref_wfn, SharedMatrix C_tilde,
+psi::SharedMatrix semicanonicalize_block(psi::SharedWavefunction ref_wfn, psi::SharedMatrix C_tilde,
                                     std::vector<int>& mos, int offset);
 
 void set_AVAS_options(ForteOptions& foptions) {
@@ -62,7 +63,7 @@ void set_AVAS_options(ForteOptions& foptions) {
                                                 "threshold based selection.");
 }
 
-void make_avas(psi::SharedWavefunction ref_wfn, Options& options, SharedMatrix Ps) {
+void make_avas(psi::SharedWavefunction ref_wfn, psi::Options& options, psi::SharedMatrix Ps) {
     if (Ps) {
         outfile->Printf("\n  Generating AVAS orbitals\n");
 
@@ -78,7 +79,7 @@ void make_avas(psi::SharedWavefunction ref_wfn, Options& options, SharedMatrix P
         auto Socc = std::make_shared<Matrix>("S occupied block", nocc, nocc);
         auto Svir = std::make_shared<Matrix>("S virtual block", nvir, nvir);
 
-        SharedMatrix CPsC = Ps->clone();
+        psi::SharedMatrix CPsC = Ps->clone();
         CPsC->transform(ref_wfn->Ca());
         // No diagonalization Socc and Svir
         bool diagonalize_s = options.get_bool("AVAS_DIAGONALIZE");
@@ -294,8 +295,8 @@ void make_avas(psi::SharedWavefunction ref_wfn, Options& options, SharedMatrix P
             }
         }
 
-        SharedMatrix Fa = ref_wfn->Fa(); // get Fock matrix
-        SharedMatrix Fa_mo = Fa->clone();
+        psi::SharedMatrix Fa = ref_wfn->Fa(); // get Fock matrix
+        psi::SharedMatrix Fa_mo = Fa->clone();
         Fa_mo->transform(Ca_tilde_prime);
 
         // Update both the alpha and beta orbitals
@@ -306,7 +307,7 @@ void make_avas(psi::SharedWavefunction ref_wfn, Options& options, SharedMatrix P
     }
 }
 
-SharedMatrix semicanonicalize_block(psi::SharedWavefunction ref_wfn, SharedMatrix C_tilde,
+psi::SharedMatrix semicanonicalize_block(psi::SharedWavefunction ref_wfn, psi::SharedMatrix C_tilde,
                                     std::vector<int>& mos, int offset) {
     int nso = ref_wfn->nso();
     int nmo_block = mos.size();

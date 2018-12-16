@@ -99,21 +99,21 @@ class OrbitalOptimizer {
 
     /// You have to set these at the start of the computation
     /// The MO Coefficient you get from wfn_->Ca()
-    void set_symmmetry_mo(SharedMatrix C) { Ca_sym_ = C; }
+    void set_symmmetry_mo(psi::SharedMatrix C) { Ca_sym_ = C; }
     /// The MO Coefficient in pitzer ordering (symmetry-aware)
     /// The workhouse of the program:  Computes gradient, hessian.
     void update();
     /// Solution of g + Hx = 0 (with diagonal H), so x = - g / H
-    SharedMatrix approx_solve();
+    psi::SharedMatrix approx_solve();
     /// Exponentiate the orbital rotation parameter and use this to update your
     /// MOCoefficient
-    SharedMatrix rotate_orbitals(SharedMatrix C, SharedMatrix S);
+    psi::SharedMatrix rotate_orbitals(psi::SharedMatrix C, psi::SharedMatrix S);
     /// The norm of the orbital gradient
     double orbital_gradient_norm() { return (g_->rms()); }
     /// Must compute the frozen_one_body fock matrix
-    void set_frozen_one_body(SharedMatrix F_froze) { F_froze_ = F_froze; }
+    void set_frozen_one_body(psi::SharedMatrix F_froze) { F_froze_ = F_froze; }
     /// Give the AO one electron integrals (H = T + V)
-    void one_body(SharedMatrix H) { H_ = H; }
+    void one_body(psi::SharedMatrix H) { H_ = H; }
     /// Print a summary of timings
     void set_print_timings(bool timing) { timings_ = timing; }
     void set_wavefunction(psi::SharedWavefunction wfn) { wfn_ = wfn; }
@@ -122,12 +122,12 @@ class OrbitalOptimizer {
   protected:
     /// The 1-RDM (usually of size na_^2)
     ambit::Tensor gamma1_;
-    /// The 1-RDM SharedMatrix
-    SharedMatrix gamma1M_;
+    /// The 1-RDM psi::SharedMatrix
+    psi::SharedMatrix gamma1M_;
     /// The 2-RDM (usually of size na^4)
     ambit::Tensor gamma2_;
-    /// The 2-RDM SharedMatrix
-    SharedMatrix gamma2M_;
+    /// The 2-RDM psi::SharedMatrix
+    psi::SharedMatrix gamma2M_;
     ambit::Tensor integral_;
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
     std::shared_ptr<JK> JK_;
@@ -138,12 +138,12 @@ class OrbitalOptimizer {
     /// The mo_space_info
     /// The MO Coefficient matrix in Pfitzer ordering in whatever symmetry
     /// this matrix is ao by nmo
-    SharedMatrix Call_;
+    psi::SharedMatrix Call_;
     /// C matrix in the SO basis
-    SharedMatrix Ca_sym_;
+    psi::SharedMatrix Ca_sym_;
 
     /// The dimension for number of molecular orbitals (CORRELATED or ALL)
-    Dimension nmopi_;
+    psi::Dimension nmopi_;
     /// The number of correlated molecular orbitals (Restricted Core + Active +
     /// Restricted_UOCC + Frozen_Virt
     size_t nmo_;
@@ -152,7 +152,7 @@ class OrbitalOptimizer {
     /// The number of irreps
     size_t nirrep_;
     /// The number of SO (AO for C matrices)
-    Dimension nsopi_;
+    psi::Dimension nsopi_;
     /// the number of restricted_docc
     size_t nrdocc_;
     /// The number of frozen_docc
@@ -166,27 +166,27 @@ class OrbitalOptimizer {
     /// Equation 9
 
     /// H = T + V
-    SharedMatrix H_;
+    psi::SharedMatrix H_;
     /// The Fock matrix due to Frozen core orbitals
-    SharedMatrix F_froze_;
+    psi::SharedMatrix F_froze_;
     /// The core Fock Matrix
-    SharedMatrix F_core_;
+    psi::SharedMatrix F_core_;
     /// The F_act_ -> ie the fock matrix of nmo by nmo generated using the all
     /// active portion of the OPM
     /// Equation 10
-    SharedMatrix F_act_;
+    psi::SharedMatrix F_act_;
     /// The JK object
-    SharedMatrix JK_fock_;
+    psi::SharedMatrix JK_fock_;
     /// Intermediate in forming orbital gradient matrix
-    SharedMatrix Y_;
+    psi::SharedMatrix Y_;
     /// Z intermediate
-    SharedMatrix Z_;
+    psi::SharedMatrix Z_;
     /// The Orbital Gradient
-    SharedMatrix g_;
+    psi::SharedMatrix g_;
     /// The Orbital Hessian
-    SharedMatrix d_;
+    psi::SharedMatrix d_;
     /// Solution of g + HS = 0
-    SharedMatrix S_;
+    psi::SharedMatrix S_;
 
     /// private functions
 
@@ -199,14 +199,14 @@ class OrbitalOptimizer {
     /// check the cas_ci energy with spin-free RDM
     void orbital_rotation_parameter();
     /// Perform the exponential of x
-    SharedMatrix matrix_exp(const SharedMatrix&);
+    psi::SharedMatrix matrix_exp(const psi::SharedMatrix&);
     /// form SharedMatrices of Gamma1 and Gamma2 (Tensor library not great for
     /// non contractions)
     void fill_shared_density_matrices();
     /// Diagonalize an augmented Hessian and take lowest eigenvector as solution
-    SharedMatrix AugmentedHessianSolve();
+    psi::SharedMatrix AugmentedHessianSolve();
 
-    SharedMatrix make_c_sym_aware();
+    psi::SharedMatrix make_c_sym_aware();
 
     void startup();
 
@@ -218,14 +218,14 @@ class OrbitalOptimizer {
     /// Print timings
     bool timings_ = false;
 
-    /// The Dimensions for the major orbitals spaces involved in CASSCF
+    /// The psi::Dimensions for the major orbitals spaces involved in CASSCF
     /// Trying to get these all in the startup, so I can use them repeatly
     /// rather than create them in different places
-    Dimension frozen_docc_dim_;
-    Dimension restricted_docc_dim_;
-    Dimension active_dim_;
-    Dimension restricted_uocc_dim_;
-    Dimension inactive_docc_dim_;
+    psi::Dimension frozen_docc_dim_;
+    psi::Dimension restricted_docc_dim_;
+    psi::Dimension active_dim_;
+    psi::Dimension restricted_uocc_dim_;
+    psi::Dimension inactive_docc_dim_;
 
     std::vector<size_t> frozen_docc_abs_;
     std::vector<size_t> restricted_docc_abs_;
@@ -239,7 +239,7 @@ class OrbitalOptimizer {
     std::map<size_t, size_t> npart_map_;
     bool cas_;
     enum MATRIX_EXP { PSI4, TAYLOR };
-    void zero_redunant(SharedMatrix& matrix);
+    void zero_redunant(psi::SharedMatrix& matrix);
 };
 /// A Class for use in CASSCFOrbitalOptimizer (computes FockCore and FockActive
 /// using JK builders)

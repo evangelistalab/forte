@@ -67,7 +67,7 @@ class FCISolver {
      * @param initial_guess_per_root get from options object
      * @param print Control printing of FCISolver
      */
-    FCISolver(Dimension active_dim, std::vector<size_t> core_mo, std::vector<size_t> active_mo,
+    FCISolver(psi::Dimension active_dim, std::vector<size_t> core_mo, std::vector<size_t> active_mo,
               size_t na, size_t nb, size_t multiplicity, size_t symmetry,
               std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info,
               size_t initial_guess_per_root, int print, Options& options);
@@ -84,7 +84,7 @@ class FCISolver {
      * @param mo_space_info -> mo_space_info object
      * @param options object
      */
-    FCISolver(Dimension active_dim, std::vector<size_t> core_mo, std::vector<size_t> active_mo,
+    FCISolver(psi::Dimension active_dim, std::vector<size_t> core_mo, std::vector<size_t> active_mo,
               size_t na, size_t nb, size_t multiplicity, size_t symmetry,
               std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info,
               Options& options);
@@ -131,7 +131,7 @@ class FCISolver {
     std::shared_ptr<FCIWfn> get_FCIWFN() { return C_; }
 
     /// Return eigen vectors
-    SharedMatrix eigen_vecs() { return eigen_vecs_; }
+    psi::SharedMatrix eigen_vecs() { return eigen_vecs_; }
     /// Return eigen values
     SharedVector eigen_vals() { return eigen_vals_; }
     /// Return string lists
@@ -142,8 +142,8 @@ class FCISolver {
   private:
     // ==> Class Data <==
 
-    /// The Dimension object for the active space
-    Dimension active_dim_;
+    /// The psi::Dimension object for the active space
+    psi::Dimension active_dim_;
 
     /// The orbitals frozen at the CI level
     std::vector<size_t> core_mo_;
@@ -166,7 +166,7 @@ class FCISolver {
     std::shared_ptr<FCIWfn> C_;
 
     /// Eigen vectors
-    SharedMatrix eigen_vecs_;
+    psi::SharedMatrix eigen_vecs_;
     /// Eigen values
     SharedVector eigen_vals_;
 

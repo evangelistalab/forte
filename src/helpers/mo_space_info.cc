@@ -49,7 +49,7 @@
 
 namespace forte {
 
-MOSpaceInfo::MOSpaceInfo(Dimension &nmopi) : nirrep_(nmopi.n()), nmopi_(nmopi) {
+MOSpaceInfo::MOSpaceInfo(psi::Dimension &nmopi) : nirrep_(nmopi.n()), nmopi_(nmopi) {
   // Add the elementary spaces to the list of composite spaces
   for (const std::string &es : elementary_spaces_) {
     composite_spaces_[es] = {es};
@@ -73,8 +73,8 @@ size_t MOSpaceInfo::size(const std::string &space) {
   return s;
 }
 
-Dimension MOSpaceInfo::get_dimension(const std::string &space) {
-  Dimension result(nirrep_);
+psi::Dimension MOSpaceInfo::get_dimension(const std::string &space) {
+  psi::Dimension result(nirrep_);
   if (composite_spaces_.count(space) == 0) {
     std::string msg =
         "\n  MOSpaceInfo::size - composite space " + space + " is not defined.";
@@ -89,7 +89,7 @@ Dimension MOSpaceInfo::get_dimension(const std::string &space) {
 }
 
 std::vector<int> MOSpaceInfo::symmetry(const std::string &space) {
-  Dimension dims = get_dimension(space);
+  psi::Dimension dims = get_dimension(space);
   std::vector<int> result;
   for (int h = 0; h < dims.n(); ++h) {
     for (int i = 0; i < dims[h]; ++i) {
@@ -176,7 +176,7 @@ void MOSpaceInfo::read_options(psi::Options &options) {
   // Handle frozen core
 
   // Count the assigned orbitals
-  Dimension unassigned = nmopi_;
+  psi::Dimension unassigned = nmopi_;
   for (auto &str_si : mo_spaces_) {
     unassigned -= str_si.second.first;
   }
@@ -263,7 +263,7 @@ void MOSpaceInfo::read_options(psi::Options &options) {
   outfile->Printf("\n  %s", std::string(banner_width, '-').c_str());
 
   for (std::string space : elementary_spaces_) {
-    Dimension &dim = mo_spaces_[space].first;
+    psi::Dimension &dim = mo_spaces_[space].first;
     outfile->Printf("\n    %-*s", label_size, space.c_str());
     for (size_t h = 0; h < nirrep_; ++h) {
       outfile->Printf("%6d", dim[h]);
@@ -281,7 +281,7 @@ void MOSpaceInfo::read_options(psi::Options &options) {
 std::pair<SpaceInfo, bool> MOSpaceInfo::read_mo_space(const std::string &space,
                                                       Options &options) {
   bool read = false;
-  Dimension space_dim(nirrep_);
+  psi::Dimension space_dim(nirrep_);
   std::vector<MOInfo> vec_mo_info;
   if ((psi::Options[space].has_changed()) && (psi::Options[space].size() == nirrep_)) {
     for (size_t h = 0; h < nirrep_; ++h) {

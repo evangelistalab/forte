@@ -64,13 +64,13 @@ class SOMRDSRG : public Wavefunction {
 
     /// The number of correlated orbitals per irrep (excluding frozen core and
     /// virtuals)
-    Dimension ncmopi_;
+    psi::Dimension ncmopi_;
     /// The number of restricted doubly occupied orbitals per irrep (core)
-    Dimension rdoccpi_;
+    psi::Dimension rdoccpi_;
     /// The number of active orbitals per irrep (active)
-    Dimension actvpi_;
+    psi::Dimension actvpi_;
     /// The number of restricted unoccupied orbitals per irrep (virtual)
-    Dimension ruoccpi_;
+    psi::Dimension ruoccpi_;
 
     /// List of spin orbital core MOs
     std::vector<size_t> core_mos;

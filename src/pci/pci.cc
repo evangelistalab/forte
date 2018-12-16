@@ -1157,7 +1157,7 @@ double ProjectorCI::compute_energy() {
         outfile->Printf("\n\n  ==> Post-Diagonalization <==\n");
         timer_on("PCI:Post_Diag");
         //        sparse_solver.diagonalize_hamiltonian(dets,apfci_evals,apfci_evecs,nroot_,DavidsonLiuList);
-        SharedMatrix apfci_evecs(new Matrix("Eigenvectors", C.size(), nroot_));
+        psi::SharedMatrix apfci_evecs(new Matrix("Eigenvectors", C.size(), nroot_));
         SharedVector apfci_evals(new Vector("Eigenvalues", nroot_));
 
         sparse_solver.diagonalize_hamiltonian(dets, apfci_evals, apfci_evecs, nroot_,
@@ -1255,7 +1255,7 @@ double ProjectorCI::initial_guess(det_vec& dets, std::vector<double>& C) {
     sparse_solver.set_maxiter_davidson(psi::Options_.get_int("DL_MAXITER"));
     sparse_solver.set_spin_project(true);
 
-    SharedMatrix evecs(new Matrix("Eigenvectors", guess_size, nroot_));
+    psi::SharedMatrix evecs(new Matrix("Eigenvectors", guess_size, nroot_));
     SharedVector evals(new Vector("Eigenvalues", nroot_));
     //  std::vector<DynamicBitsetDeterminant> dyn_dets;
     // for (auto& d : dets){
@@ -1440,14 +1440,14 @@ void ProjectorCI::propagate_Lanczos(det_vec& dets, std::vector<double>& C,
         outfile->Printf("\n  Near linear dependency spotted, reduced krylov_order to %d",
                         current_order);
 
-    SharedMatrix H(new Matrix(current_order, current_order));
+    psi::SharedMatrix H(new Matrix(current_order, current_order));
 
     for (size_t i = 0; i < current_order; i++) {
         for (size_t j = 0; j < current_order; j++) {
             H->set(i, j, A.get(i, j));
         }
     }
-    SharedMatrix evecs(new Matrix(current_order, current_order));
+    psi::SharedMatrix evecs(new Matrix(current_order, current_order));
     SharedVector eigs(new Vector(current_order));
     H->diagonalize(evecs, eigs);
 
@@ -1532,8 +1532,8 @@ void ProjectorCI::propagate_Lanczos(det_vec& dets, std::vector<double>& C,
     //    outfile -> Printf("\n");
 
     //// Diagonalize overlap matrix BEGIN
-    //    SharedMatrix A(new Matrix (krylov_order, krylov_order));
-    //    SharedMatrix B(new Matrix (krylov_order, krylov_order));
+    //    psi::SharedMatrix A(new Matrix (krylov_order, krylov_order));
+    //    psi::SharedMatrix B(new Matrix (krylov_order, krylov_order));
 
     //    for (int i = 0; i < krylov_order; i++) {
     //        for (int j = i; j < krylov_order; j++) {
@@ -1553,7 +1553,7 @@ void ProjectorCI::propagate_Lanczos(det_vec& dets, std::vector<double>& C,
     //    A->print();
     //    B->print();
 
-    //    SharedMatrix evecs(new Matrix (krylov_order, krylov_order));
+    //    psi::SharedMatrix evecs(new Matrix (krylov_order, krylov_order));
     //    SharedVector evals(new Vector(krylov_order));
     //    A->diagonalize(B, evecs, evals);
 
@@ -1642,7 +1642,7 @@ void ProjectorCI::propagate_DL(det_vec& dets, std::vector<double>& C, double spa
     std::vector<std::vector<double>> b_vec(davidson_subspace_per_root_);
     std::vector<std::vector<double>> sigma_vec(davidson_subspace_per_root_);
     std::vector<double> alpha_vec(davidson_subspace_per_root_);
-    SharedMatrix A(new Matrix(davidson_subspace_per_root_, davidson_subspace_per_root_));
+    psi::SharedMatrix A(new Matrix(davidson_subspace_per_root_, davidson_subspace_per_root_));
     b_vec[0] = C;
     det_hash<> dets_C_hash;
     if (reference_spawning_) {
@@ -1725,14 +1725,14 @@ void ProjectorCI::propagate_DL(det_vec& dets, std::vector<double>& C, double spa
         A->set(current_order, current_order, dot(b_vec[current_order], sigma_vec[current_order]));
 
         current_order++;
-        SharedMatrix G(new Matrix(current_order, current_order));
+        psi::SharedMatrix G(new Matrix(current_order, current_order));
 
         for (int k = 0; k < current_order; k++) {
             for (int j = 0; j < current_order; j++) {
                 G->set(k, j, A->get(k, j));
             }
         }
-        SharedMatrix evecs(new Matrix(current_order, current_order));
+        psi::SharedMatrix evecs(new Matrix(current_order, current_order));
         SharedVector eigs(new Vector(current_order));
         G->diagonalize(evecs, eigs);
 

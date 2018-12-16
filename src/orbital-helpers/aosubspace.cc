@@ -55,8 +55,8 @@ std::vector<std::string> mysplit(const std::string& input, const std::string& re
 
 namespace forte {
 
-SharedMatrix create_aosubspace_projector(psi::SharedWavefunction wfn, Options& options) {
-    SharedMatrix Ps;
+psi::SharedMatrix create_aosubspace_projector(psi::SharedWavefunction wfn, Options& options) {
+    psi::SharedMatrix Ps;
 
     // Run this code only if user specified a subspace
     if (psi::Options["SUBSPACE"].size() > 0) {
@@ -151,7 +151,7 @@ void AOSubspace::startup() {
     }
 }
 
-SharedMatrix AOSubspace::build_projector(const std::vector<int>& subspace,
+psi::SharedMatrix AOSubspace::build_projector(const std::vector<int>& subspace,
                                          std::shared_ptr<Molecule> molecule,
                                          std::shared_ptr<BasisSet> min_basis,
                                          std::shared_ptr<BasisSet> large_basis) {
@@ -174,7 +174,7 @@ SharedMatrix AOSubspace::build_projector(const std::vector<int>& subspace,
 
     // Compute the overlap integral in the minimal basis
     std::shared_ptr<OneBodyAOInt> sOBI_mm(integral_mm->ao_overlap());
-    SharedMatrix S_mm = SharedMatrix(new Matrix("S_mm", nbf_m, nbf_m));
+    psi::SharedMatrix S_mm = psi::SharedMatrix(new Matrix("S_mm", nbf_m, nbf_m));
     sOBI_mm->compute(S_mm);
 
 #if _DEBUG_AOSUBSPACE_
@@ -182,7 +182,7 @@ SharedMatrix AOSubspace::build_projector(const std::vector<int>& subspace,
 #endif
 
     // Extract the subspace block
-    SharedMatrix S_ss = SharedMatrix(new Matrix("S_ss", nbf_s, nbf_s));
+    psi::SharedMatrix S_ss = psi::SharedMatrix(new Matrix("S_ss", nbf_s, nbf_s));
     for (int mu = 0; mu < nbf_s; mu++) {
         for (int nu = 0; nu < nbf_s; nu++) {
             S_ss->set(mu, nu, S_mm->get(subspace[mu], subspace[nu]));
@@ -193,7 +193,7 @@ SharedMatrix AOSubspace::build_projector(const std::vector<int>& subspace,
 #endif
 
     // Orthogonalize the subspace
-    SharedMatrix X_ss = SharedMatrix(new Matrix("X", nbf_s, nbf_s));
+    psi::SharedMatrix X_ss = psi::SharedMatrix(new Matrix("X", nbf_s, nbf_s));
     X_ss->copy(S_ss);
     X_ss->power(-0.5);
 
@@ -207,7 +207,7 @@ SharedMatrix AOSubspace::build_projector(const std::vector<int>& subspace,
     S_ss->print();
 #endif
 
-    SharedMatrix X_mm = SharedMatrix(new Matrix("X_mm", nbf_m, nbf_m));
+    psi::SharedMatrix X_mm = psi::SharedMatrix(new Matrix("X_mm", nbf_m, nbf_m));
     for (int mu = 0; mu < nbf_s; mu++) {
         for (int nu = 0; nu < nbf_s; nu++) {
             X_mm->set(subspace[mu], subspace[nu], X_ss->get(mu, nu));
@@ -219,14 +219,14 @@ SharedMatrix AOSubspace::build_projector(const std::vector<int>& subspace,
 
     // Compute the overlap integral in the minimal/large basis
     std::shared_ptr<OneBodyAOInt> sOBI_ml(integral_ml->ao_overlap());
-    SharedMatrix S_ml = SharedMatrix(new Matrix("S_ml", nbf_m, nbf_l));
+    psi::SharedMatrix S_ml = psi::SharedMatrix(new Matrix("S_ml", nbf_m, nbf_l));
     sOBI_ml->compute(S_ml);
 #if _DEBUG_AOSUBSPACE_
     S_ml->print();
 #endif
 
-    SharedMatrix XS_ml = SharedMatrix(new Matrix("XS_ml", nbf_m, nbf_l));
-    SharedMatrix SXXS_ll = SharedMatrix(new Matrix("SXXS_ll", nbf_l, nbf_l));
+    psi::SharedMatrix XS_ml = psi::SharedMatrix(new Matrix("XS_ml", nbf_m, nbf_l));
+    psi::SharedMatrix SXXS_ll = psi::SharedMatrix(new Matrix("SXXS_ll", nbf_l, nbf_l));
     XS_ml->gemm(false, false, 1.0, X_mm, S_ml, 0.0);
     SXXS_ll->gemm(true, false, 1.0, XS_ml, XS_ml, 0.0);
 #if _DEBUG_AOSUBSPACE_
@@ -235,9 +235,9 @@ SharedMatrix AOSubspace::build_projector(const std::vector<int>& subspace,
 #endif
 
     std::shared_ptr<PetiteList> plist(new PetiteList(large_basis, integral_ll));
-    SharedMatrix AO2SO_ = plist->aotoso();
-    Dimension large_basis_so_dim = plist->SO_basisdim();
-    SharedMatrix SXXS_ll_so(new Matrix("SXXS_ll_so", large_basis_so_dim, large_basis_so_dim));
+    psi::SharedMatrix AO2SO_ = plist->aotoso();
+    psi::Dimension large_basis_so_dim = plist->SO_basisdim();
+    psi::SharedMatrix SXXS_ll_so(new Matrix("SXXS_ll_so", large_basis_so_dim, large_basis_so_dim));
     SXXS_ll_so->apply_symmetry(SXXS_ll, AO2SO_);
 #if _DEBUG_AOSUBSPACE_
     SXXS_ll_so->print();

@@ -239,8 +239,8 @@ void MASTER_DSRG::build_fock_from_ints(std::shared_ptr<ForteIntegrals> ints, Blo
     F = BTF_->build(tensor_type_, "Fock", spin_cases({"gg"}));
 
     // for convenience, directly call make_fock_matrix in ForteIntegral
-    SharedMatrix D1a(new Matrix("D1a", ncmo, ncmo));
-    SharedMatrix D1b(new Matrix("D1b", ncmo, ncmo));
+    psi::SharedMatrix D1a(new Matrix("D1a", ncmo, ncmo));
+    psi::SharedMatrix D1b(new Matrix("D1b", ncmo, ncmo));
     for (size_t m = 0, ncore = core_mos_.size(); m < ncore; m++) {
         D1a->set(core_mos_[m], core_mos_[m], 1.0);
         D1b->set(core_mos_[m], core_mos_[m], 1.0);
@@ -440,8 +440,8 @@ void MASTER_DSRG::init_dm_ints() {
         dm_.emplace_back(dm_i);
     }
 
-    std::vector<SharedMatrix> dm_a = ints_->compute_MOdipole_ints(true, true);
-    std::vector<SharedMatrix> dm_b = ints_->compute_MOdipole_ints(false, true);
+    std::vector<psi::SharedMatrix> dm_a = ints_->compute_MOdipole_ints(true, true);
+    std::vector<psi::SharedMatrix> dm_b = ints_->compute_MOdipole_ints(false, true);
     fill_MOdm(dm_a, dm_b);
     compute_dm_ref();
 
@@ -469,7 +469,7 @@ void MASTER_DSRG::init_dm_ints() {
     outfile->Printf("Done");
 }
 
-void MASTER_DSRG::fill_MOdm(std::vector<SharedMatrix>& dm_a, std::vector<SharedMatrix>& dm_b) {
+void MASTER_DSRG::fill_MOdm(std::vector<psi::SharedMatrix>& dm_a, std::vector<psi::SharedMatrix>& dm_b) {
     // consider frozen-core part
     dm_frzc_ = std::vector<double>(3, 0.0);
     std::vector<size_t> frzc_mos = mo_space_info_->get_absolute_mo("FROZEN_DOCC");
@@ -484,9 +484,9 @@ void MASTER_DSRG::fill_MOdm(std::vector<SharedMatrix>& dm_a, std::vector<SharedM
 
     // find out correspondance between ncmo and nmo
     std::vector<size_t> cmo_to_mo;
-    Dimension frzcpi = mo_space_info_->get_dimension("FROZEN_DOCC");
-    Dimension frzvpi = mo_space_info_->get_dimension("FROZEN_UOCC");
-    Dimension ncmopi = mo_space_info_->get_dimension("CORRELATED");
+    psi::Dimension frzcpi = mo_space_info_->get_dimension("FROZEN_DOCC");
+    psi::Dimension frzvpi = mo_space_info_->get_dimension("FROZEN_UOCC");
+    psi::Dimension ncmopi = mo_space_info_->get_dimension("CORRELATED");
     for (int h = 0, p = 0; h < nirrep_; ++h) {
         p += frzcpi[h];
         for (int r = 0; r < ncmopi[h]; ++r) {

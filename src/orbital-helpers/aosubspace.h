@@ -90,7 +90,7 @@ class AOInfo {
  *    std::vector<int> subspace = aosub.subspace();
  *
  *    // Build a projector
- *    SharedMatrix Ps =
+ *    psi::SharedMatrix Ps =
  * aosub.build_projector(subspace,molecule,min_basis,basis);
  *
  *  Syntax:
@@ -150,7 +150,7 @@ class AOSubspace {
     // Return the index of the AOs that span the subspace selected
     const std::vector<int>& subspace();
 
-    SharedMatrix build_projector(const std::vector<int>& subspace,
+    psi::SharedMatrix build_projector(const std::vector<int>& subspace,
                                  std::shared_ptr<Molecule> molecule,
                                  std::shared_ptr<BasisSet> min_basis,
                                  std::shared_ptr<BasisSet> large_basis);
@@ -227,7 +227,7 @@ class AOSubspace {
 };
 
 // Helper function to create a projector using info in wfn and options
-SharedMatrix create_aosubspace_projector(psi::SharedWavefunction wfn, Options& options);
+psi::SharedMatrix create_aosubspace_projector(psi::SharedWavefunction wfn, Options& options);
 }
 }
 

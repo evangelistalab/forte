@@ -98,10 +98,10 @@ class THREE_DSRG_MRPT2 : public MASTER_DSRG {
 
     /// Rotate orbital basis for amplitudes according to unitary matrix U
     /// @param U unitary matrix from FCI_MO (INCLUDES frozen orbitals)
-    void rotate_amp(SharedMatrix Ua, SharedMatrix Ub, const bool& transpose = false,
+    void rotate_amp(psi::SharedMatrix Ua, psi::SharedMatrix Ub, const bool& transpose = false,
                     const bool& t1eff = false);
 
-    void set_Ufull( SharedMatrix& Ua, SharedMatrix& Ub );
+    void set_Ufull( psi::SharedMatrix& Ua, psi::SharedMatrix& Ub );
   protected:
     // => Class data <= //
 
@@ -119,13 +119,13 @@ class THREE_DSRG_MRPT2 : public MASTER_DSRG {
 
     /// The number of correlated orbitals per irrep (excluding frozen core and
     /// virtuals)
-    Dimension ncmopi_;
+    psi::Dimension ncmopi_;
     /// The number of restricted doubly occupied orbitals per irrep (core)
-    Dimension rdoccpi_;
+    psi::Dimension rdoccpi_;
     /// The number of active orbitals per irrep (active)
-    Dimension actvpi_;
+    psi::Dimension actvpi_;
     /// The number of restricted unoccupied orbitals per irrep (virtual)
-    Dimension ruoccpi_;
+    psi::Dimension ruoccpi_;
 
     /// Number of core orbitals
     size_t ncore_;
@@ -140,8 +140,8 @@ class THREE_DSRG_MRPT2 : public MASTER_DSRG {
     std::vector<double> Fb_;
 
     /// Semicanonical Transformation matrices
-    SharedMatrix Ua_full_;
-    SharedMatrix Ub_full_;
+    psi::SharedMatrix Ua_full_;
+    psi::SharedMatrix Ub_full_;
 
     // => Tensors <= //
     ambit::BlockedTensor H_;
@@ -270,9 +270,9 @@ class THREE_DSRG_MRPT2 : public MASTER_DSRG {
     /// Diagonalize the diagonal blocks of the Fock matrix
     std::vector<std::vector<double>> diagonalize_Fock_diagblocks(ambit::BlockedTensor& U);
     /// Separate an 2D ambit::Tensor according to its irrep
-    ambit::Tensor separate_tensor(ambit::Tensor& tens, const Dimension& irrep, const int& h);
+    ambit::Tensor separate_tensor(ambit::Tensor& tens, const psi::Dimension& irrep, const int& h);
     /// Combine a separated 2D ambit::Tensor
-    void combine_tensor(ambit::Tensor& tens, ambit::Tensor& tens_h, const Dimension& irrep,
+    void combine_tensor(ambit::Tensor& tens, ambit::Tensor& tens_h, const psi::Dimension& irrep,
                         const int& h);
 
     // => Dipole related <= //

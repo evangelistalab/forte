@@ -44,7 +44,7 @@ psi::SharedWavefunction run_forte(psi::SharedWavefunction ref_wfn, Options& opti
 
 std::shared_ptr<MOSpaceInfo> make_mo_space_info(psi::SharedWavefunction ref_wfn, Options& options);
 
-SharedMatrix make_aosubspace_projector(psi::SharedWavefunction ref_wfn, Options& options);
+psi::SharedMatrix make_aosubspace_projector(psi::SharedWavefunction ref_wfn, Options& options);
 
 std::shared_ptr<ForteIntegrals> make_forte_integrals(psi::SharedWavefunction ref_wfn, Options& options,
                                                      std::shared_ptr<MOSpaceInfo> mo_space_info);

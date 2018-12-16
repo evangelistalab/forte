@@ -119,7 +119,7 @@ class StringLists {
   public:
     // ==> Constructor and Destructor <==
 
-    StringLists(RequiredLists required_lists, Dimension cmopi, std::vector<size_t> core_mo,
+    StringLists(RequiredLists required_lists, psi::Dimension cmopi, std::vector<size_t> core_mo,
                 std::vector<size_t> cmo_to_mo, size_t na, size_t nb, int print);
     ~StringLists() {}
 
@@ -130,7 +130,7 @@ class StringLists {
     size_t ncmo() const { return ncmo_; }
     std::vector<size_t> cmo_to_mo() const { return cmo_to_mo_; }
     std::vector<size_t> fomo_to_mo() const { return fomo_to_mo_; }
-    Dimension cmopi() const { return cmopi_; }
+    psi::Dimension cmopi() const { return cmopi_; }
     std::vector<size_t> cmopi_offset() const { return cmopi_offset_; }
     size_t nb() const { return nb_; }
     size_t pairpi(int h) const { return pairpi_[h]; }
@@ -190,7 +190,7 @@ class StringLists {
     /// The total number of correlated molecular orbitals
     size_t ncmo_;
     /// The number of correlated molecular orbitals per irrep
-    Dimension cmopi_;
+    psi::Dimension cmopi_;
     /// The offset array for cmopi_
     std::vector<size_t> cmopi_offset_;
     /// The mapping between correlated molecular orbitals and all orbitals

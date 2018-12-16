@@ -113,10 +113,10 @@ void DistDFIntegrals::test_distributed_integrals() {
                     (nprim * nprim * naux * sizeof(double) / 1073741824.0));
     int_mem_ = (nprim * nprim * naux * sizeof(double));
 
-    Dimension nsopi_ = wfn_->nsopi();
-    SharedMatrix aotoso = wfn_->aotoso();
-    SharedMatrix Ca = wfn_->Ca();
-    SharedMatrix Ca_ao(new Matrix("Ca_ao", nso_, nmopi_.sum()));
+    psi::Dimension nsopi_ = wfn_->nsopi();
+    psi::SharedMatrix aotoso = wfn_->aotoso();
+    psi::SharedMatrix Ca = wfn_->Ca();
+    psi::SharedMatrix Ca_ao(new Matrix("Ca_ao", nso_, nmopi_.sum()));
 
     // Transform from the SO to the AO basis
     for (int h = 0, index = 0; h < nirrep_; ++h) {
@@ -435,8 +435,8 @@ void DistDFIntegrals::gather_integrals() {
     // BasisSet::pyconstruct_orbital(wfn_->molecule(),
     // "DF_BASIS_MP2",options_.get_str("DF_BASIS_MP2"));
     std::shared_ptr<BasisSet> auxiliary = wfn_->get_basisset("DF_BASIS_MP2");
-    SharedMatrix Ca = wfn_->Ca();
-    SharedMatrix Ca_ao(new Matrix("CA_AO", wfn_->nso(), wfn_->nmo()));
+    psi::SharedMatrix Ca = wfn_->Ca();
+    psi::SharedMatrix Ca_ao(new Matrix("CA_AO", wfn_->nso(), wfn_->nmo()));
     for (size_t h = 0, index = 0; h < wfn_->nirrep(); ++h) {
         for (size_t i = 0; i < wfn_->nmopi()[h]; ++i) {
             size_t nao = wfn_->nso();

@@ -218,11 +218,11 @@ class FCI_MO : public Wavefunction {
     /// Return indices (relative to active, not absolute) of active virtual orbitals
     std::vector<size_t> actv_uocc() { return actv_part_mos_; }
 
-    /// Return the Dimension of active occupied orbitals
-    Dimension actv_docc() { return actv_hole_dim_; }
+    /// Return the psi::Dimension of active occupied orbitals
+    psi::Dimension actv_docc() { return actv_hole_dim_; }
 
-    /// Return the Dimension of active virtual orbitals
-    Dimension actv_virt() { return actv_part_dim_; }
+    /// Return the psi::Dimension of active virtual orbitals
+    psi::Dimension actv_virt() { return actv_part_dim_; }
 
     /// Return the T1 percentage in CISD computations
     std::vector<double> compute_T1_percentage();
@@ -274,29 +274,29 @@ class FCI_MO : public Wavefunction {
 
     /// Molecular Orbitals
     size_t nmo_; // total MOs
-    Dimension nmopi_;
+    psi::Dimension nmopi_;
     size_t ncmo_; // correlated MOs
-    Dimension ncmopi_;
-    Dimension frzc_dim_; // frozen core
-    Dimension frzv_dim_; // frozen virtual
+    psi::Dimension ncmopi_;
+    psi::Dimension frzc_dim_; // frozen core
+    psi::Dimension frzv_dim_; // frozen virtual
     size_t nfrzc_;
     size_t nfrzv_;
-    Dimension core_dim_; // core MOs
+    psi::Dimension core_dim_; // core MOs
     size_t ncore_;
     std::vector<size_t> core_mos_;
-    Dimension actv_dim_; // active MOs
+    psi::Dimension actv_dim_; // active MOs
     size_t nactv_;
     std::vector<size_t> actv_mos_;
     size_t nvirt_; // virtual MOs
-    Dimension virt_dim_;
+    psi::Dimension virt_dim_;
     std::vector<size_t> virt_mos_;
     size_t nhole_; // hole MOs
     std::vector<size_t> hole_mos_;
     size_t npart_; // particle MOs
     std::vector<size_t> part_mos_;
-    Dimension actv_hole_dim_; // active hole for incomplete active space
+    psi::Dimension actv_hole_dim_; // active hole for incomplete active space
     std::vector<size_t> actv_hole_mos_;
-    Dimension actv_part_dim_; // active particle for incomplete active space
+    psi::Dimension actv_part_dim_; // active particle for incomplete active space
     std::vector<size_t> actv_part_mos_;
 
     /// Compute IP or EA
@@ -400,7 +400,7 @@ class FCI_MO : public Wavefunction {
 //    void remove_density_files(int rdm_level, int irrep, int multi, int root1, int root2);
     void clean_all_density_files();
 
-    std::vector<ambit::Tensor> compute_n_rdm(const vecdet& p_space, SharedMatrix evecs,
+    std::vector<ambit::Tensor> compute_n_rdm(const vecdet& p_space, psi::SharedMatrix evecs,
                                              int rdm_level, int root1, int root2, int irrep,
                                              int multi, bool disk);
 
@@ -439,7 +439,7 @@ class FCI_MO : public Wavefunction {
     void print_Fock(const std::string& spin, const d2& Fock);
 
     /// Rotate the given CI vectors by XMS
-    SharedMatrix xms_rotate_this_civecs(const det_vec& p_space, SharedMatrix civecs,
+    psi::SharedMatrix xms_rotate_this_civecs(const det_vec& p_space, psi::SharedMatrix civecs,
                                         ambit::Tensor Fa, ambit::Tensor Fb);
 
     /// Reference Energy
@@ -459,8 +459,8 @@ class FCI_MO : public Wavefunction {
     /// Compute permanent dipole moments
     void compute_permanent_dipole();
 
-    /// Reformat 1RDM from nactv x nactv vector to N x N SharedMatrix
-    SharedMatrix reformat_1rdm(const std::string& name, const std::vector<double>& data, bool TrD);
+    /// Reformat 1RDM from nactv x nactv vector to N x N psi::SharedMatrix
+    psi::SharedMatrix reformat_1rdm(const std::string& name, const std::vector<double>& data, bool TrD);
 
     /// Transition dipoles
     std::map<std::string, std::vector<double>> trans_dipole_;

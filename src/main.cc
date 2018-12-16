@@ -154,18 +154,18 @@ void cleanup() {
 }
 
 std::shared_ptr<MOSpaceInfo> make_mo_space_info(psi::SharedWavefunction ref_wfn, Options& options) {
-    Dimension nmopi = ref_wfn->nmopi();
+    psi::Dimension nmopi = ref_wfn->nmopi();
     auto mo_space_info = std::make_shared<MOSpaceInfo>(nmopi);
     mo_space_info->read_options(psi::Options);
     return mo_space_info;
 }
 
-SharedMatrix make_aosubspace_projector(psi::SharedWavefunction ref_wfn, Options& options) {
-    // Ps is a SharedMatrix Ps = S^{BA} X X^+ S^{AB}
+psi::SharedMatrix make_aosubspace_projector(psi::SharedWavefunction ref_wfn, Options& options) {
+    // Ps is a psi::SharedMatrix Ps = S^{BA} X X^+ S^{AB}
     auto Ps = create_aosubspace_projector(ref_wfn, options);
     if (Ps) {
 
-        SharedMatrix CPsC = Ps->clone();
+        psi::SharedMatrix CPsC = Ps->clone();
         CPsC->transform(ref_wfn->Ca());
         outfile->Printf("\n  Orbital overlap with ao subspace:\n");
         outfile->Printf("    ========================\n");
@@ -274,7 +274,7 @@ void banner() {
 //    }
 
 //    // Make a subspace object
-//    SharedMatrix Ps = make_aosubspace_projector(ref_wfn, options);
+//    psi::SharedMatrix Ps = make_aosubspace_projector(ref_wfn, options);
 
 //    // Transform the orbitals
 //    make_avas(ref_wfn, options, Ps);

@@ -53,7 +53,7 @@ namespace forte {
 
 class MOSpaceInfo;
 
-FCISolver::FCISolver(Dimension active_dim, std::vector<size_t> core_mo,
+FCISolver::FCISolver(psi::Dimension active_dim, std::vector<size_t> core_mo,
                      std::vector<size_t> active_mo, size_t na, size_t nb, size_t multiplicity,
                      size_t symmetry, std::shared_ptr<ForteIntegrals> ints,
                      std::shared_ptr<MOSpaceInfo> mo_space_info, size_t ntrial_per_root, int print,
@@ -66,7 +66,7 @@ FCISolver::FCISolver(Dimension active_dim, std::vector<size_t> core_mo,
     startup();
 }
 
-FCISolver::FCISolver(Dimension active_dim, std::vector<size_t> core_mo,
+FCISolver::FCISolver(psi::Dimension active_dim, std::vector<size_t> core_mo,
                      std::vector<size_t> active_mo, size_t na, size_t nb, size_t multiplicity,
                      size_t symmetry, std::shared_ptr<ForteIntegrals> ints,
                      std::shared_ptr<MOSpaceInfo> mo_space_info, Options& options)
@@ -283,7 +283,7 @@ double FCISolver::compute_energy() {
             C_->copy(dls.eigenvector(r));
             std::vector<std::tuple<double, double, size_t, size_t, size_t>> dets_config =
                 C_->max_abs_elements(guess_size * ntrial_per_root_);
-            Dimension nactvpi = mo_space_info_->get_dimension("ACTIVE");
+            psi::Dimension nactvpi = mo_space_info_->get_dimension("ACTIVE");
 
             for (auto& det_config : dets_config) {
                 double ci_abs, ci;

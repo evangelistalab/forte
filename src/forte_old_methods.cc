@@ -145,8 +145,8 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, Options& options,
             aci->add_external_excitations(wfn);
         }
         if (psi::Options.get_bool("UNPAIRED_DENSITY")) {
-            SharedMatrix Ua;
-            SharedMatrix Ub;
+            psi::SharedMatrix Ua;
+            psi::SharedMatrix Ub;
 
             Ua = ref_wfn->Ca()->clone();
             Ub = ref_wfn->Ca()->clone();
@@ -606,16 +606,16 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, Options& options,
             three_dsrg_mrpt2->compute_energy();
             if (ref_relax || multi_state) {
                 if (psi::Options.get_bool("UNPAIRED_DENSITY")) {
-                    SharedMatrix Ua_f = semi.Ua();
-                    SharedMatrix Ub_f = semi.Ub();
+                    psi::SharedMatrix Ua_f = semi.Ua();
+                    psi::SharedMatrix Ub_f = semi.Ub();
                     three_dsrg_mrpt2->set_Ufull(Ua_f, Ub_f);
                 }
                 three_dsrg_mrpt2->relax_reference_once();
             }
 
             //  if( options.get_bool("UNPAIRED_DENSITY")){
-            //      SharedMatrix Uam = semi.Ua();
-            //      SharedMatrix Ubm = semi.Ub();
+            //      psi::SharedMatrix Uam = semi.Ua();
+            //      psi::SharedMatrix Ubm = semi.Ub();
             //      aci->unpaired_density(Uam, Ubm);
             //  }
 

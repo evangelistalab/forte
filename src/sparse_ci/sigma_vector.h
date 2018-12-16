@@ -218,9 +218,9 @@ class SigmaVectorWfn3 : public SigmaVector {
 
     std::vector<double> diag_;
 
-    SharedMatrix aa_tei_;
-    SharedMatrix ab_tei_;
-    SharedMatrix bb_tei_;
+    psi::SharedMatrix aa_tei_;
+    psi::SharedMatrix ab_tei_;
+    psi::SharedMatrix bb_tei_;
 };
 
 #ifdef HAVE_MPI

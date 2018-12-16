@@ -52,8 +52,8 @@ namespace forte {
 /// index in irrep)
 using MOInfo = std::tuple<size_t, size_t, size_t>;
 
-/// SpaceInfo stores information about a MO space: (Dimension,vector of MOInfo)
-using SpaceInfo = std::pair<Dimension, std::vector<MOInfo>>;
+/// SpaceInfo stores information about a MO space: (psi::Dimension,vector of MOInfo)
+using SpaceInfo = std::pair<psi::psi::Dimension, std::vector<MOInfo>>;
 
 /**
  * @brief The MOSpaceInfo class
@@ -105,15 +105,15 @@ using SpaceInfo = std::pair<Dimension, std::vector<MOInfo>>;
  */
 class MOSpaceInfo {
   public:
-    MOSpaceInfo(Dimension& nmopi);
+    MOSpaceInfo(psi::Dimension& nmopi);
     ~MOSpaceInfo();
 
     /// @return The names of orbital spaces
     std::vector<std::string> space_names() const { return space_names_; }
     /// @return The number of orbitals in space
     size_t size(const std::string& space);
-    /// @return The Dimension object for space
-    Dimension get_dimension(const std::string& space);
+    /// @return The psi::Dimension object for space
+    psi::Dimension get_dimension(const std::string& space);
     /// @return The symmetry of each orbital
     std::vector<int> symmetry(const std::string& space);
     /// @return The list of the absolute index of the molecular orbitals in a
@@ -136,7 +136,7 @@ class MOSpaceInfo {
     /// The number of irreducible representations
     size_t nirrep_;
     /// The number of molecular orbitals per irrep
-    Dimension nmopi_;
+    psi::Dimension nmopi_;
     /// The mo space info
     std::map<std::string, SpaceInfo> mo_spaces_;
 

@@ -40,8 +40,7 @@ namespace forte {
 
 void set_AVAS_options(ForteOptions& foptions);
 
-void make_avas(psi::SharedWavefunction ref_wfn, Options& options, SharedMatrix Ps);
-}
+void make_avas(psi::SharedWavefunction ref_wfn, psi::Options& options, psi::SharedMatrix Ps);
 }
 
 #endif // _avas_h_

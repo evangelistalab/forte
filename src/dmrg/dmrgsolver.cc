@@ -40,7 +40,7 @@
 #include "psi4/psi4-dec.h"
 #include "psi4/psifiles.h"
 // Header above this comment contains typedef std::shared_ptr<psi::Matrix>
-// SharedMatrix;
+// psi::SharedMatrix;
 #include "psi4/libciomr/libciomr.h"
 #include "psi4/libfock/jk.h"
 #include "psi4/libmints/writer_file_prefix.h"
@@ -237,9 +237,9 @@ void DMRGSolver::compute_energy() {
     double* dmrg_noiseprefactors = options_.get_double_array("DMRG_NOISEPREFACTORS");
     const int ndmrg_noiseprefactors = options_["DMRG_NOISEPREFACTORS"].size();
     const bool dmrg_print_corr = options_.get_bool("DMRG_PRINT_CORR");
-    Dimension frozen_docc = mo_space_info_->get_dimension("INACTIVE_DOCC");
-    Dimension active = mo_space_info_->get_dimension("ACTIVE");
-    Dimension virtual_orbs = mo_space_info_->get_dimension("RESTRICTED_UOCC");
+    psi::Dimension frozen_docc = mo_space_info_->get_dimension("INACTIVE_DOCC");
+    psi::Dimension active = mo_space_info_->get_dimension("ACTIVE");
+    psi::Dimension virtual_orbs = mo_space_info_->get_dimension("RESTRICTED_UOCC");
     const double dmrgscf_convergence = options_.get_double("D_CONVERGENCE");
     const bool dmrgscf_store_unit = options_.get_bool("DMRG_STORE_UNIT");
     const bool dmrgscf_do_diis = options_.get_bool("DMRG_DO_DIIS");
@@ -269,7 +269,7 @@ void DMRGSolver::compute_energy() {
     const int SyGroup = chemps2_groupnumber(wfn_->molecule()->sym_label());
     const int nmo = mo_space_info_->size("ALL");
     const int nirrep = mo_space_info_->nirrep();
-    Dimension orbspi = mo_space_info_->get_dimension("ALL");
+    psi::Dimension orbspi = mo_space_info_->get_dimension("ALL");
     int* docc = wfn_->doccpi();
     int* socc = wfn_->soccpi();
     if (wfn_irrep < 0) {
@@ -545,13 +545,13 @@ int DMRGSolver::chemps2_groupnumber(const string SymmLabel) {
 }
 std::vector<double> DMRGSolver::one_body_operator() {
     ///
-    Dimension restricted_docc_dim = mo_space_info_->get_dimension("INACTIVE_DOCC");
-    Dimension nsopi = wfn_->nsopi();
+    psi::Dimension restricted_docc_dim = mo_space_info_->get_dimension("INACTIVE_DOCC");
+    psi::Dimension nsopi = wfn_->nsopi();
     int nirrep = wfn_->nirrep();
-    Dimension nmopi = mo_space_info_->get_dimension("ALL");
+    psi::Dimension nmopi = mo_space_info_->get_dimension("ALL");
 
-    SharedMatrix Cdocc(new Matrix("C_RESTRICTED", nirrep, nsopi, restricted_docc_dim));
-    SharedMatrix Ca = wfn_->Ca();
+    psi::SharedMatrix Cdocc(new Matrix("C_RESTRICTED", nirrep, nsopi, restricted_docc_dim));
+    psi::SharedMatrix Ca = wfn_->Ca();
     for (int h = 0; h < nirrep; h++) {
         for (int i = 0; i < restricted_docc_dim[h]; i++) {
             Cdocc->set_column(h, i, Ca->get_column(h, i));
@@ -574,33 +574,33 @@ std::vector<double> DMRGSolver::one_body_operator() {
     Cl.clear();
     Cl.push_back(Cdocc);
     JK_inactive->compute();
-    SharedMatrix J_restricted = JK_inactive->J()[0];
-    SharedMatrix K_restricted = JK_inactive->K()[0];
+    psi::SharedMatrix J_restricted = JK_inactive->J()[0];
+    psi::SharedMatrix K_restricted = JK_inactive->K()[0];
 
     J_restricted->scale(2.0);
-    SharedMatrix F_restricted = J_restricted->clone();
+    psi::SharedMatrix F_restricted = J_restricted->clone();
     F_restricted->subtract(K_restricted);
 
     /// Just create the OneInt integrals from scratch
     std::shared_ptr<PSIO> psio_ = PSIO::shared_object();
-    SharedMatrix T = SharedMatrix(wfn_->matrix_factory()->create_matrix(PSIF_SO_T));
-    SharedMatrix V = SharedMatrix(wfn_->matrix_factory()->create_matrix(PSIF_SO_V));
-    SharedMatrix OneInt = T;
+    psi::SharedMatrix T = psi::SharedMatrix(wfn_->matrix_factory()->create_matrix(PSIF_SO_T));
+    psi::SharedMatrix V = psi::SharedMatrix(wfn_->matrix_factory()->create_matrix(PSIF_SO_V));
+    psi::SharedMatrix OneInt = T;
     OneInt->zero();
 
     T->load(psio_, PSIF_OEI);
     V->load(psio_, PSIF_OEI);
-    SharedMatrix Hcore_ = wfn_->matrix_factory()->create_shared_matrix("Core Hamiltonian");
+    psi::SharedMatrix Hcore_ = wfn_->matrix_factory()->create_shared_matrix("Core Hamiltonian");
     Hcore_->add(T);
     Hcore_->add(V);
 
-    SharedMatrix Hcore(Hcore_->clone());
+    psi::SharedMatrix Hcore(Hcore_->clone());
     F_restricted->add(Hcore);
     F_restricted->transform(Ca);
     Hcore->transform(Ca);
 
     size_t all_nmo = mo_space_info_->size("ALL");
-    SharedMatrix F_restric_c1(new Matrix("F_restricted", all_nmo, all_nmo));
+    psi::SharedMatrix F_restric_c1(new Matrix("F_restricted", all_nmo, all_nmo));
     size_t offset = 0;
     for (int h = 0; h < nirrep; h++) {
         for (int p = 0; p < nmopi[h]; p++) {
@@ -627,7 +627,7 @@ std::vector<double> DMRGSolver::one_body_operator() {
                 outfile->Printf("\n oei(%d, %d) = %8.8f", u, v, value);
         }
     }
-    Dimension restricted_docc = mo_space_info_->get_dimension("INACTIVE_DOCC");
+    psi::Dimension restricted_docc = mo_space_info_->get_dimension("INACTIVE_DOCC");
     double E_restricted =
         Process::environment.molecule()->nuclear_repulsion_energy(wfn->get_dipole_field_strength());
     for (int h = 0; h < nirrep; h++) {
@@ -649,7 +649,7 @@ std::vector<double> DMRGSolver::one_body_operator() {
 }
 void DMRGSolver::print_natural_orbitals(double* opdm) {
     print_h2("NATURAL ORBITALS");
-    Dimension active_dim = mo_space_info_->get_dimension("ACTIVE");
+    psi::Dimension active_dim = mo_space_info_->get_dimension("ACTIVE");
     int nirrep = wfn_->nirrep();
     size_t na_ = mo_space_info_->size("ACTIVE");
 
@@ -665,7 +665,7 @@ void DMRGSolver::print_natural_orbitals(double* opdm) {
         offset += active_dim[h];
     }
     SharedVector OCC_A(new Vector("ALPHA OCCUPATION", nirrep, active_dim));
-    SharedMatrix NO_A(new Matrix(nirrep, active_dim, active_dim));
+    psi::SharedMatrix NO_A(new Matrix(nirrep, active_dim, active_dim));
 
     opdm_a->diagonalize(NO_A, OCC_A, descending);
     std::vector<std::pair<double, std::pair<int, int>>> vec_irrep_occupation;

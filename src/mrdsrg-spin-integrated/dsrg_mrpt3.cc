@@ -1423,7 +1423,7 @@ double DSRG_MRPT3::compute_energy_sa() {
                 auto na = (nelec_actv + ms) / 2;
                 auto nb = nelec_actv - na;
 
-                Dimension active_dim = mo_space_info_->get_dimension("ACTIVE");
+                psi::Dimension active_dim = mo_space_info_->get_dimension("ACTIVE");
                 int ntrial_per_root = options_.get_int("NTRIAL_PER_ROOT");
 
                 FCISolver fcisolver(active_dim, core_mos_, actv_mos_, na, nb, multi, irrep, ints_,
@@ -1455,12 +1455,12 @@ double DSRG_MRPT3::compute_energy_sa() {
 
                 int dim = (eigens_[n][0].first)->dim();
                 size_t eigen_size = eigens_[n].size();
-                SharedMatrix evecs(new Matrix("evecs", dim, eigen_size));
+                psi::SharedMatrix evecs(new Matrix("evecs", dim, eigen_size));
                 for (size_t i = 0; i < eigen_size; ++i) {
                     evecs->set_column(0, i, (eigens_[n][i]).first);
                 }
 
-                SharedMatrix Heff(
+                psi::SharedMatrix Heff(
                     new Matrix("Heff " + multi_label[multi - 1] + " " + irrep_symbol[irrep],
                                nstates, nstates));
                 for (int A = 0; A < nstates; ++A) {
@@ -1506,7 +1506,7 @@ double DSRG_MRPT3::compute_energy_sa() {
                 print_h2("Effective Hamiltonian Summary");
                 outfile->Printf("\n");
                 Heff->print();
-                SharedMatrix U(new Matrix("U of Heff", nstates, nstates));
+                psi::SharedMatrix U(new Matrix("U of Heff", nstates, nstates));
                 SharedVector Ems(new Vector("MS Energies", nstates));
                 Heff->diagonalize(U, Ems);
                 U->eivprint(Ems);
@@ -5203,22 +5203,22 @@ std::vector<std::vector<double>> DSRG_MRPT3::diagonalize_Fock_diagblocks(Blocked
     // diagonal blocks identifiers (C-A-V ordering)
     std::vector<std::string> blocks{"cc", "aa", "vv", "CC", "AA", "VV"};
 
-    // map MO space label to its Dimension
-    std::map<std::string, Dimension> MOlabel_to_dimension;
+    // map MO space label to its psi::Dimension
+    std::map<std::string, psi::Dimension> MOlabel_to_dimension;
     MOlabel_to_dimension[acore_label_] = mo_space_info_->get_dimension("RESTRICTED_DOCC");
     MOlabel_to_dimension[aactv_label_] = mo_space_info_->get_dimension("ACTIVE");
     MOlabel_to_dimension[avirt_label_] = mo_space_info_->get_dimension("RESTRICTED_UOCC");
 
     // eigen values to be returned
     size_t ncmo = mo_space_info_->size("CORRELATED");
-    Dimension corr = mo_space_info_->get_dimension("CORRELATED");
+    psi::Dimension corr = mo_space_info_->get_dimension("CORRELATED");
     std::vector<double> eigenvalues_a(ncmo, 0.0);
     std::vector<double> eigenvalues_b(ncmo, 0.0);
 
-    // map MO space label to its offset Dimension
-    std::map<std::string, Dimension> MOlabel_to_offset_dimension;
+    // map MO space label to its offset psi::Dimension
+    std::map<std::string, psi::Dimension> MOlabel_to_offset_dimension;
     int nirrep = corr.n();
-    MOlabel_to_offset_dimension["c"] = Dimension(std::vector<int>(nirrep, 0));
+    MOlabel_to_offset_dimension["c"] = psi::Dimension(std::vector<int>(nirrep, 0));
     MOlabel_to_offset_dimension["a"] = mo_space_info_->get_dimension("RESTRICTED_DOCC");
     MOlabel_to_offset_dimension["v"] =
         mo_space_info_->get_dimension("RESTRICTED_DOCC") + mo_space_info_->get_dimension("ACTIVE");
@@ -5253,7 +5253,7 @@ std::vector<std::vector<double>> DSRG_MRPT3::diagonalize_Fock_diagblocks(Blocked
             continue;
         } else {
             std::string label(1, tolower(block[0]));
-            Dimension space = MOlabel_to_dimension[label];
+            psi::Dimension space = MOlabel_to_dimension[label];
             int nirrep = space.n();
 
             // separate Fock with irrep
@@ -5288,7 +5288,7 @@ std::vector<std::vector<double>> DSRG_MRPT3::diagonalize_Fock_diagblocks(Blocked
     return {eigenvalues_a, eigenvalues_b};
 }
 
-ambit::Tensor DSRG_MRPT3::separate_tensor(ambit::Tensor& tens, const Dimension& irrep,
+ambit::Tensor DSRG_MRPT3::separate_tensor(ambit::Tensor& tens, const psi::Dimension& irrep,
                                           const int& h) {
     // test tens and irrep
     size_t tens_dim = tens.dim(0);
@@ -5322,7 +5322,7 @@ ambit::Tensor DSRG_MRPT3::separate_tensor(ambit::Tensor& tens, const Dimension& 
     return T_h;
 }
 
-void DSRG_MRPT3::combine_tensor(ambit::Tensor& tens, ambit::Tensor& tens_h, const Dimension& irrep,
+void DSRG_MRPT3::combine_tensor(ambit::Tensor& tens, ambit::Tensor& tens_h, const psi::Dimension& irrep,
                                 const int& h) {
     // test tens and irrep
     if (h >= irrep.n()) {

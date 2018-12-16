@@ -231,7 +231,7 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
                 auto na = (nelec_actv + ms) / 2;
                 auto nb = nelec_actv - na;
 
-                Dimension active_dim = mo_space_info_->get_dimension("ACTIVE");
+                psi::Dimension active_dim = mo_space_info_->get_dimension("ACTIVE");
                 int ntrial_per_root = options_.get_int("NTRIAL_PER_ROOT");
 
                 FCISolver fcisolver(active_dim, core_mos_, actv_mos_, na, nb, multi, irrep, ints_,
@@ -257,12 +257,12 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
 
                 int dim = (eigens_[n][0].first)->dim();
                 size_t eigen_size = eigens_[n].size();
-                SharedMatrix evecs(new Matrix("evecs", dim, eigen_size));
+                psi::SharedMatrix evecs(new Matrix("evecs", dim, eigen_size));
                 for (size_t i = 0; i < eigen_size; ++i) {
                     evecs->set_column(0, i, (eigens_[n][i]).first);
                 }
 
-                SharedMatrix Heff(
+                psi::SharedMatrix Heff(
                     new Matrix("Heff " + multi_label[multi - 1] + " " + irrep_symbol[irrep],
                                nstates, nstates));
                 for (int A = 0; A < nstates; ++A) {
@@ -322,7 +322,7 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
                 print_h2("Effective Hamiltonian Summary");
                 outfile->Printf("\n");
                 Heff->print();
-                SharedMatrix U(new Matrix("U of Heff", nstates, nstates));
+                psi::SharedMatrix U(new Matrix("U of Heff", nstates, nstates));
                 SharedVector Ems(new Vector("MS Energies", nstates));
                 Heff->diagonalize(U, Ems);
                 U->eivprint(Ems);
@@ -386,7 +386,7 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_xms() {
 
         // fill in ci vectors
         int dim = (eigens_[n][0].first)->dim();
-        SharedMatrix civecs(new Matrix("ci vecs", dim, nstates));
+        psi::SharedMatrix civecs(new Matrix("ci vecs", dim, nstates));
         for (int i = 0; i < nstates; ++i) {
             civecs->set_column(0, i, (eigens_[n][i]).first);
         }
@@ -425,9 +425,9 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_xms() {
         }
 
         // prepare Heff
-        SharedMatrix Heff(new Matrix("Heff " + multi_label[multi - 1] + " " + irrep_symbol[irrep],
+        psi::SharedMatrix Heff(new Matrix("Heff " + multi_label[multi - 1] + " " + irrep_symbol[irrep],
                                      nstates, nstates));
-        SharedMatrix Heff_sym(
+        psi::SharedMatrix Heff_sym(
             new Matrix("Heff (Symmetrized) " + multi_label[multi - 1] + " " + irrep_symbol[irrep],
                        nstates, nstates));
 
@@ -502,7 +502,7 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_xms() {
         Heff->print();
         Heff_sym->print();
 
-        SharedMatrix U(new Matrix("U of Heff (Symmetrized)", nstates, nstates));
+        psi::SharedMatrix U(new Matrix("U of Heff (Symmetrized)", nstates, nstates));
         SharedVector Ems(new Vector("MS Energies", nstates));
         Heff_sym->diagonalize(U, Ems);
         U->eivprint(Ems);
@@ -556,15 +556,15 @@ void DSRG_MRPT2::build_eff_oei() {
     }
 }
 
-SharedMatrix DSRG_MRPT2::xms_rotation(std::shared_ptr<FCIIntegrals> fci_ints,
+psi::SharedMatrix DSRG_MRPT2::xms_rotation(std::shared_ptr<FCIIntegrals> fci_ints,
                                       std::vector<forte::Determinant>& p_space,
-                                      SharedMatrix civecs) {
+                                      psi::SharedMatrix civecs) {
     print_h2("Perform XMS Rotation to Reference States");
     outfile->Printf("\n");
 
     // build Fock matrix
     int nstates = civecs->ncol();
-    SharedMatrix Fock(new Matrix("Fock", nstates, nstates));
+    psi::SharedMatrix Fock(new Matrix("Fock", nstates, nstates));
 
     for (int M = 0; M < nstates; ++M) {
         for (int N = M; N < nstates; ++N) {
@@ -590,13 +590,13 @@ SharedMatrix DSRG_MRPT2::xms_rotation(std::shared_ptr<FCIIntegrals> fci_ints,
     Fock->print();
 
     // diagonalize Fock
-    SharedMatrix Fevec(new Matrix("Fock Evec", nstates, nstates));
+    psi::SharedMatrix Fevec(new Matrix("Fock Evec", nstates, nstates));
     SharedVector Feval(new Vector("Fock Eval", nstates));
     Fock->diagonalize(Fevec, Feval);
     Fevec->eivprint(Feval);
 
     // Rotate ci vecs
-    SharedMatrix rcivecs(civecs->clone());
+    psi::SharedMatrix rcivecs(civecs->clone());
     rcivecs->zero();
     rcivecs->gemm(false, false, 1.0, civecs, Fevec, 0.0);
 
@@ -847,7 +847,7 @@ void DSRG_MRPT2::compute_Heff_2nd_coupling(double& H0, ambit::Tensor& H1a, ambit
 }
 
 void DSRG_MRPT2::compute_cumulants(std::shared_ptr<FCIIntegrals> fci_ints,
-                                   std::vector<Determinant>& p_space, SharedMatrix evecs,
+                                   std::vector<Determinant>& p_space, psi::SharedMatrix evecs,
                                    const int& root1, const int& root2) {
     CI_RDMS ci_rdms(fci_ints, p_space, evecs, root1, root2);
 
@@ -960,7 +960,7 @@ void DSRG_MRPT2::compute_cumulants(std::shared_ptr<FCIIntegrals> fci_ints,
 
 void DSRG_MRPT2::compute_densities(std::shared_ptr<FCIIntegrals> fci_ints,
                                    std::vector<forte::Determinant>& p_space,
-                                   SharedMatrix evecs, const int& root1, const int& root2) {
+                                   psi::SharedMatrix evecs, const int& root1, const int& root2) {
     CI_RDMS ci_rdms(fci_ints, p_space, evecs, root1, root2);
 
     // 1 density

@@ -131,7 +131,7 @@ class FCIWfn {
     /// The total number of correlated molecular orbitals
     size_t ncmo_;
     /// The number of correlated molecular orbitals per irrep
-    Dimension cmopi_;
+    psi::Dimension cmopi_;
     /// The offset array for cmopi_
     std::vector<size_t> cmopi_offset_;
     //    /// The mapping between correlated molecular orbitals and all orbitals
@@ -151,7 +151,7 @@ class FCIWfn {
     /// The beta string graph
     GraphPtr beta_graph_;
     /// Coefficient matrix stored in block-matrix form
-    std::vector<SharedMatrix> C_;
+    std::vector<psi::SharedMatrix> C_;
     std::vector<double> opdm_a_;
     std::vector<double> opdm_b_;
     std::vector<double> tpdm_aa_;
@@ -164,8 +164,8 @@ class FCIWfn {
 
     // ==> Class Static Data <==
 
-    static SharedMatrix C1;
-    static SharedMatrix Y1;
+    static psi::SharedMatrix C1;
+    static psi::SharedMatrix Y1;
     static size_t sizeC1;
     //    static FCIWfn* tmp_wfn1;
     //    static FCIWfn* tmp_wfn2;

@@ -797,7 +797,7 @@ double ProjectorCI_Simple::compute_energy() {
         outfile->Printf("\n\n  ==> Post-Diagonalization <==\n");
         timer_on("PCI:Post_Diag");
         //        sparse_solver.diagonalize_hamiltonian(dets,apfci_evals,apfci_evecs,nroot_,DavidsonLiuList);
-        SharedMatrix apfci_evecs(new Matrix("Eigenvectors", C.size(), nroot_));
+        psi::SharedMatrix apfci_evecs(new Matrix("Eigenvectors", C.size(), nroot_));
         SharedVector apfci_evals(new Vector("Eigenvalues", nroot_));
 
         sparse_solver.diagonalize_hamiltonian(dets, apfci_evals, apfci_evecs, nroot_,
@@ -902,7 +902,7 @@ double ProjectorCI_Simple::initial_guess(det_vec& dets, std::vector<double>& C) 
     sparse_solver.set_maxiter_davidson(psi::Options_.get_int("DL_MAXITER"));
     sparse_solver.set_spin_project(true);
 
-    SharedMatrix evecs(new Matrix("Eigenvectors", guess_size, nroot_));
+    psi::SharedMatrix evecs(new Matrix("Eigenvectors", guess_size, nroot_));
     SharedVector evals(new Vector("Eigenvalues", nroot_));
     //  std::vector<DynamicBitsetDeterminant> dyn_dets;
     // for (auto& d : dets){
@@ -1007,7 +1007,7 @@ void ProjectorCI_Simple::propagate_DL(det_vec& dets, std::vector<double>& C,
     std::vector<std::vector<double>> b_vec(davidson_subspace_per_root_);
     std::vector<std::vector<double>> sigma_vec(davidson_subspace_per_root_);
     std::vector<double> alpha_vec(davidson_subspace_per_root_);
-    SharedMatrix A(new Matrix(davidson_subspace_per_root_, davidson_subspace_per_root_));
+    psi::SharedMatrix A(new Matrix(davidson_subspace_per_root_, davidson_subspace_per_root_));
     b_vec[0] = C;
     det_hash<> dets_C_hash;
     apply_tau_H_ref_C_symm(1.0, spawning_threshold, dets, b_vec[0], C, dets_C_hash, 0.0);
@@ -1078,14 +1078,14 @@ void ProjectorCI_Simple::propagate_DL(det_vec& dets, std::vector<double>& C,
         A->set(current_order, current_order, dot(b_vec[current_order], sigma_vec[current_order]));
 
         current_order++;
-        SharedMatrix G(new Matrix(current_order, current_order));
+        psi::SharedMatrix G(new Matrix(current_order, current_order));
 
         for (size_t k = 0; k < current_order; k++) {
             for (size_t j = 0; j < current_order; j++) {
                 G->set(k, j, A->get(k, j));
             }
         }
-        SharedMatrix evecs(new Matrix(current_order, current_order));
+        psi::SharedMatrix evecs(new Matrix(current_order, current_order));
         SharedVector eigs(new Vector(current_order));
         G->diagonalize(evecs, eigs);
 

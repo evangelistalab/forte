@@ -55,15 +55,15 @@ namespace forte {
 class FiniteTemperatureHF : public scf::RHF {
   protected:
     /// Core Hamiltonian Matrix
-    SharedMatrix hMat_;
+    psi::SharedMatrix hMat_;
     /// The Overlap Matrix
-    SharedMatrix sMat_;
+    psi::SharedMatrix sMat_;
     /// The converged CMatrix from SCF
-    SharedMatrix CMatrix_;
+    psi::SharedMatrix CMatrix_;
     /// C = n_i * C_{mu, i}
-    SharedMatrix C_occ_folded_;
+    psi::SharedMatrix C_occ_folded_;
     /// Just the normal CMatrix
-    SharedMatrix C_occ_a_;
+    psi::SharedMatrix C_occ_a_;
     /// A Vector of eigenvalues
     SharedVector eps_;
     /// The active orbital energies (fractionally occupied orbitals)
@@ -74,12 +74,12 @@ class FiniteTemperatureHF : public scf::RHF {
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
     /// The options object
     Options options_;
-    /// The Dimension for restricted docc
-    Dimension rdocc_dim_;
-    /// The Dimension object for active
-    Dimension active_dim_;
-    /// The Dimension object for restricted_docc + active
-    Dimension rdocc_p_active_;
+    /// The psi::Dimension for restricted docc
+    psi::Dimension rdocc_dim_;
+    /// The psi::Dimension object for active
+    psi::Dimension active_dim_;
+    /// The psi::Dimension object for restricted_docc + active
+    psi::Dimension rdocc_p_active_;
 
     /// General variables for use in SCF code
     /// The irrep

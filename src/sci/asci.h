@@ -120,7 +120,7 @@ class ASCI : public Wavefunction {
     /// The number of frozen core orbitals
     int nfrzc_;
     /// The number of active orbitals per irrep
-    Dimension nactpi_;
+    psi::Dimension nactpi_;
     /// The number of active orbitals
     size_t nact_;
     /// The nuclear repulsion energy
@@ -146,7 +146,7 @@ class ASCI : public Wavefunction {
     /// Compute 1-RDM?
     bool compute_rdms_;
     /// The CI coeffiecients
-    SharedMatrix evecs_;
+    psi::SharedMatrix evecs_;
 
     bool build_lists_;
     bool print_weights_ = false;
@@ -180,25 +180,25 @@ class ASCI : public Wavefunction {
     void startup();
 
     /// Compute an aci wavefunction
-    void compute_aci(DeterminantHashVec& PQ_space, SharedMatrix& PQ_evecs, SharedVector& PQ_evals);
+    void compute_aci(DeterminantHashVec& PQ_space, psi::SharedMatrix& PQ_evecs, SharedVector& PQ_evals);
 
     /// Print information about this calculation
     void print_info();
 
     /// Print a wave function
-    void print_wfn(DeterminantHashVec& space, WFNOperator& op, SharedMatrix evecs, int nroot);
+    void print_wfn(DeterminantHashVec& space, WFNOperator& op, psi::SharedMatrix evecs, int nroot);
 
     /// Find all the relevant excitations out of the P space
     void find_q_space(DeterminantHashVec& P_space, DeterminantHashVec& PQ_space,
-                      SharedVector evals, SharedMatrix evecs);
+                      SharedVector evals, psi::SharedMatrix evecs);
 
     // Optimized for a single root
-    void get_excited_determinants_sr(SharedMatrix evecs, DeterminantHashVec& P_space,
+    void get_excited_determinants_sr(psi::SharedMatrix evecs, DeterminantHashVec& P_space,
                                      det_hash<double>& V_hash);
 
     /// Prune the space of determinants
     void prune_q_space(DeterminantHashVec& PQ_space, DeterminantHashVec& P_space,
-                       SharedMatrix evecs);
+                       psi::SharedMatrix evecs);
 
     /// Check if the procedure has converged
     bool check_convergence(std::vector<std::vector<double>>& energy_history,
@@ -206,18 +206,18 @@ class ASCI : public Wavefunction {
 
     /// Computes spin
     std::vector<std::pair<double, double>> compute_spin(DeterminantHashVec& space, WFNOperator& op,
-                                                        SharedMatrix evecs, int nroot);
+                                                        psi::SharedMatrix evecs, int nroot);
 
     /// Check for spin contamination
     double compute_spin_contamination(DeterminantHashVec& space, WFNOperator& op,
-                                      SharedMatrix evecs, int nroot);
+                                      psi::SharedMatrix evecs, int nroot);
 
     /// Print natural orbitals
     void print_nos();
 
     /// Compute the RDMs
     void compute_rdms(std::shared_ptr<FCIIntegrals> fci_ints, DeterminantHashVec& dets,
-                      WFNOperator& op, SharedMatrix& PQ_evecs, int root1, int root2);
+                      WFNOperator& op, psi::SharedMatrix& PQ_evecs, int root1, int root2);
 
 };
 

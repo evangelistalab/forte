@@ -72,21 +72,21 @@ MP2_NOS::MP2_NOS(std::shared_ptr<Wavefunction> wfn, Options& options,
     /// Map from all the MOs to the beta virtual
     std::map<size_t, size_t> mos_to_bvir;
 
-    Dimension ncmopi_ = mo_space_info->get_dimension("CORRELATED");
-    Dimension frzcpi = mo_space_info->get_dimension("FROZEN_DOCC");
-    Dimension frzvpi = mo_space_info->get_dimension("FROZEN_UOCC");
+    psi::Dimension ncmopi_ = mo_space_info->get_dimension("CORRELATED");
+    psi::Dimension frzcpi = mo_space_info->get_dimension("FROZEN_DOCC");
+    psi::Dimension frzvpi = mo_space_info->get_dimension("FROZEN_UOCC");
 
-    Dimension nmopi = wfn->nmopi();
-    Dimension doccpi = wfn->doccpi();
-    Dimension soccpi = wfn->soccpi();
+    psi::Dimension nmopi = wfn->nmopi();
+    psi::Dimension doccpi = wfn->doccpi();
+    psi::Dimension soccpi = wfn->soccpi();
 
-    Dimension corr_docc(doccpi);
+    psi::Dimension corr_docc(doccpi);
     corr_docc -= frzcpi;
 
-    Dimension aoccpi = corr_docc + wfn->soccpi();
-    Dimension boccpi = corr_docc;
-    Dimension avirpi = ncmopi_ - aoccpi;
-    Dimension bvirpi = ncmopi_ - boccpi;
+    psi::Dimension aoccpi = corr_docc + wfn->soccpi();
+    psi::Dimension boccpi = corr_docc;
+    psi::Dimension avirpi = ncmopi_ - aoccpi;
+    psi::Dimension bvirpi = ncmopi_ - boccpi;
 
     int nirrep = wfn->nirrep();
 
@@ -383,10 +383,10 @@ MP2_NOS::MP2_NOS(std::shared_ptr<Wavefunction> wfn, Options& options,
     }
 
     // Modify the orbital coefficients
-    SharedMatrix Ca = wfn->Ca();
-    SharedMatrix Cb = wfn->Cb();
-    SharedMatrix Ca_new(Ca->clone());
-    SharedMatrix Cb_new(Cb->clone());
+    psi::SharedMatrix Ca = wfn->Ca();
+    psi::SharedMatrix Cb = wfn->Cb();
+    psi::SharedMatrix Ca_new(Ca->clone());
+    psi::SharedMatrix Cb_new(Cb->clone());
     Ca_new->gemm(false, false, 1.0, Ca, Ua, 0.0);
     Cb_new->gemm(false, false, 1.0, Cb, Ub, 0.0);
     Ca->copy(Ca_new);

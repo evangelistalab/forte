@@ -210,7 +210,7 @@ double SA_FCISolver::compute_energy() {
         int nroot;
         std::tie(symmetry, multiplicity, nroot, std::ignore) = cas_solutions;
 
-        Dimension active_dim = mo_space_info_->get_dimension("ACTIVE");
+        psi::Dimension active_dim = mo_space_info_->get_dimension("ACTIVE");
         size_t nfdocc = mo_space_info_->size("FROZEN_DOCC");
         std::vector<size_t> rdocc = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
         std::vector<size_t> active = mo_space_info_->get_corr_abs_mo("ACTIVE");
@@ -290,7 +290,7 @@ double SA_FCISolver::compute_energy() {
         //        fcisolver.compute_energy();
         //        double Enuc =
         //        Process::environment.molecule()->nuclear_repulsion_energy();
-        //        SharedMatrix vecs = fcisolver.eigen_vecs();
+        //        psi::SharedMatrix vecs = fcisolver.eigen_vecs();
         //        SharedVector vals = fcisolver.eigen_vals();
         //        for(int n = 0; n < nroot; ++n){
         //            // create new FCIWfn pointers

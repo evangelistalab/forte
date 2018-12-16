@@ -38,8 +38,8 @@
 
 namespace forte {
 
-SharedMatrix FCIWfn::C1;
-SharedMatrix FCIWfn::Y1;
+psi::SharedMatrix FCIWfn::C1;
+psi::SharedMatrix FCIWfn::Y1;
 size_t FCIWfn::sizeC1 = 0;
 // FCIWfn* FCIWfn::tmp_wfn1 = nullptr;
 // FCIWfn* FCIWfn::tmp_wfn2 = nullptr;
@@ -64,8 +64,8 @@ void FCIWfn::allocate_temp_space(std::shared_ptr<StringLists> lists_, int print_
     }
 
     // Allocate the temporary arrays C1 and Y1 with the largest sizes
-    C1 = SharedMatrix(new Matrix("C1", maxC1, maxC1));
-    Y1 = SharedMatrix(new Matrix("Y1", maxC1, maxC1));
+    C1 = psi::SharedMatrix(new Matrix("C1", maxC1, maxC1));
+    Y1 = psi::SharedMatrix(new Matrix("Y1", maxC1, maxC1));
 
     if (print_)
         outfile->Printf("\n  Allocating memory for the Hamiltonian algorithm. "
@@ -109,7 +109,7 @@ void FCIWfn::startup() {
         int beta_sym = alfa_sym ^ symmetry_;
         //    outfile->Printf("\n\n  Block %d: allocate %d *
         //    %d",alfa_sym,(int)alfa_graph_->strpi(alfa_sym),(int)beta_graph_->strpi(beta_sym));
-        C_.push_back(SharedMatrix(
+        C_.push_back(psi::SharedMatrix(
             new Matrix("C", alfa_graph_->strpi(alfa_sym), beta_graph_->strpi(beta_sym))));
     }
 }
@@ -319,14 +319,14 @@ void FCIWfn::normalize() {
  * Zero the wave function
  */
 void FCIWfn::zero() {
-    for (SharedMatrix C_h : C_) {
+    for (psi::SharedMatrix C_h : C_) {
         C_h->zero();
     }
 }
 
 void FCIWfn::print_natural_orbitals(std::shared_ptr<MOSpaceInfo> mo_space_info) {
     print_h2("NATURAL ORBITALS");
-    Dimension active_dim = mo_space_info->get_dimension("ACTIVE");
+    psi::Dimension active_dim = mo_space_info->get_dimension("ACTIVE");
 
     size_t na = alfa_graph_->nones();
     size_t nb = beta_graph_->nones();

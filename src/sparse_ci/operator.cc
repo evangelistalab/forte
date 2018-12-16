@@ -357,7 +357,7 @@ WFNOperator::build_H_sparse(const DeterminantHashVec& wfn) {
     return H_sparse;
 }
 
-double WFNOperator::s2(DeterminantHashVec& wfn, SharedMatrix& evecs, int root) {
+double WFNOperator::s2(DeterminantHashVec& wfn, psi::SharedMatrix& evecs, int root) {
     double S2 = 0.0;
     const det_hashvec& wfn_map = wfn.wfn_hash();
 
@@ -405,7 +405,7 @@ double WFNOperator::s2(DeterminantHashVec& wfn, SharedMatrix& evecs, int root) {
     return S2;
 }
 
-double WFNOperator::s2_direct(DeterminantHashVec& wfn, SharedMatrix& evecs, int root) {
+double WFNOperator::s2_direct(DeterminantHashVec& wfn, psi::SharedMatrix& evecs, int root) {
     double S2 = 0.0;
     const det_hashvec& wfn_map = wfn.wfn_hash();
 

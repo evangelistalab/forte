@@ -206,7 +206,7 @@ double ASCI::compute_energy() {
     local_timer asci_elapse;
 
     // The eigenvalues and eigenvectors
-    SharedMatrix PQ_evecs;
+    psi::SharedMatrix PQ_evecs;
     SharedVector PQ_evals;
 
     // Compute wavefunction and energy
@@ -216,7 +216,7 @@ double ASCI::compute_energy() {
 
     DeterminantHashVec PQ_space;
 
-    SharedMatrix P_evecs;
+    psi::SharedMatrix P_evecs;
     SharedVector P_evals;
 
     // Set the P space dets
@@ -353,7 +353,7 @@ double ASCI::compute_energy() {
     outfile->Printf("\n\n  ==> ASCI Summary <==\n");
 
     outfile->Printf("\n  Iterations required:                         %zu", cycle);
-    outfile->Printf("\n  Dimension of optimized determinant space:    %zu\n", dim);
+    outfile->Printf("\n  psi::Dimension of optimized determinant space:    %zu\n", dim);
     outfile->Printf("\n  * AS-CI Energy Root 0        = %.12f Eh", root_energy);
     if (psi::Options_.get_bool("MRPT2")) {
         outfile->Printf("\n  * AS-CI+PT2 Energy Root 0    = %.12f Eh", root_energy + pt2);
@@ -369,7 +369,7 @@ double ASCI::compute_energy() {
 }
 
 void ASCI::find_q_space(DeterminantHashVec& P_space, DeterminantHashVec& PQ_space,
-                        SharedVector evals, SharedMatrix evecs) {
+                        SharedVector evals, psi::SharedMatrix evecs) {
     timer find_q("ASCI:Build Model Space");
     local_timer build;
 
@@ -385,7 +385,7 @@ void ASCI::find_q_space(DeterminantHashVec& P_space, DeterminantHashVec& PQ_spac
     }
     //  PQ_space.swap(P_space);
 
-    outfile->Printf("\n  %s: %zu determinants", "Dimension of the Ref + SD space", V_hash.size());
+    outfile->Printf("\n  %s: %zu determinants", "psi::Dimension of the Ref + SD space", V_hash.size());
     outfile->Printf("\n  %s: %f s\n", "Time spent building the external space (default)",
                     build.get());
 
@@ -422,7 +422,7 @@ void ASCI::find_q_space(DeterminantHashVec& P_space, DeterminantHashVec& PQ_spac
         PQ_space.add(pair.second);
     }
     outfile->Printf("\n  Time spent selecting: %1.6f", select.get());
-    outfile->Printf("\n  %s: %zu determinants", "Dimension of the P + Q space", PQ_space.size());
+    outfile->Printf("\n  %s: %zu determinants", "psi::Dimension of the P + Q space", PQ_space.size());
     outfile->Printf("\n  %s: %f s", "Time spent screening the model space", screen.get());
 }
 
@@ -457,7 +457,7 @@ bool ASCI::check_convergence(std::vector<std::vector<double>>& energy_history, S
 }
 
 void ASCI::prune_q_space(DeterminantHashVec& PQ_space, DeterminantHashVec& P_space,
-                         SharedMatrix evecs) {
+                         psi::SharedMatrix evecs) {
     // Select the new reference space using the sorted CI coefficients
     P_space.clear();
 
@@ -484,7 +484,7 @@ void ASCI::prune_q_space(DeterminantHashVec& PQ_space, DeterminantHashVec& P_spa
 }
 
 std::vector<std::pair<double, double>>
-ASCI::compute_spin(DeterminantHashVec& space, WFNOperator& op, SharedMatrix evecs, int nroot) {
+ASCI::compute_spin(DeterminantHashVec& space, WFNOperator& op, psi::SharedMatrix evecs, int nroot) {
     // WFNOperator op(mo_symmetry_);
 
     // op.build_strings(space);
@@ -516,7 +516,7 @@ ASCI::compute_spin(DeterminantHashVec& space, WFNOperator& op, SharedMatrix evec
     return spin_vec;
 }
 
-void ASCI::print_wfn(DeterminantHashVec& space, WFNOperator& op, SharedMatrix evecs, int nroot) {
+void ASCI::print_wfn(DeterminantHashVec& space, WFNOperator& op, psi::SharedMatrix evecs, int nroot) {
     std::string state_label;
     std::vector<std::string> s2_labels({"singlet", "doublet", "triplet", "quartet", "quintet",
                                         "sextet", "septet", "octet", "nonet", "decatet"});
@@ -544,7 +544,7 @@ void ASCI::print_wfn(DeterminantHashVec& space, WFNOperator& op, SharedMatrix ev
 }
 
 double ASCI::compute_spin_contamination(DeterminantHashVec& space, WFNOperator& op,
-                                        SharedMatrix evecs, int nroot) {
+                                        psi::SharedMatrix evecs, int nroot) {
     auto spins = compute_spin(space, op, evecs, nroot);
     double spin_contam = 0.0;
     for (int n = 0; n < nroot; ++n) {
@@ -584,8 +584,8 @@ void ASCI::print_nos() {
     }
     SharedVector OCC_A(new Vector("ALPHA OCCUPATION", nirrep_, nactpi_));
     SharedVector OCC_B(new Vector("BETA OCCUPATION", nirrep_, nactpi_));
-    SharedMatrix NO_A(new Matrix(nirrep_, nactpi_, nactpi_));
-    SharedMatrix NO_B(new Matrix(nirrep_, nactpi_, nactpi_));
+    psi::SharedMatrix NO_A(new Matrix(nirrep_, nactpi_, nactpi_));
+    psi::SharedMatrix NO_B(new Matrix(nirrep_, nactpi_, nactpi_));
 
     opdm_a->diagonalize(NO_A, OCC_A, descending);
     opdm_b->diagonalize(NO_B, OCC_B, descending);
@@ -656,7 +656,7 @@ void ASCI::print_nos() {
 }
 
 void ASCI::compute_rdms(std::shared_ptr<FCIIntegrals> fci_ints, DeterminantHashVec& dets,
-                        WFNOperator& op, SharedMatrix& PQ_evecs, int root1, int root2) {
+                        WFNOperator& op, psi::SharedMatrix& PQ_evecs, int root1, int root2) {
 
     ordm_a_.clear();
     ordm_b_.clear();
@@ -694,7 +694,7 @@ void ASCI::compute_rdms(std::shared_ptr<FCIIntegrals> fci_ints, DeterminantHashV
     }
 }
 
-void ASCI::get_excited_determinants_sr(SharedMatrix evecs, DeterminantHashVec& P_space,
+void ASCI::get_excited_determinants_sr(psi::SharedMatrix evecs, DeterminantHashVec& P_space,
                                        det_hash<double>& V_hash) {
     local_timer build;
     size_t max_P = P_space.size();

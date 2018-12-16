@@ -65,7 +65,7 @@ class SemiCanonical {
                           const bool& build_fock = true, const bool& transform = true);
 
     /// Transform integrals
-    void transform_ints(SharedMatrix& Ua, SharedMatrix& Ub);
+    void transform_ints(psi::SharedMatrix& Ua, psi::SharedMatrix& Ub);
 
     /// Transform all cumulants, rebuild 2-RDMs using 2-cumulants
     void transform_reference(ambit::Tensor& Ua, ambit::Tensor& Ub, Reference& reference,
@@ -73,19 +73,19 @@ class SemiCanonical {
 
     /// Back transform integrals
     /// Ua and Ub rotate non-semicanonical to semicanonical
-    void back_transform_ints(SharedMatrix& Ua, SharedMatrix& Ub);
+    void back_transform_ints(psi::SharedMatrix& Ua, psi::SharedMatrix& Ub);
 
     /// Back transform integrals
     void back_transform_ints() { back_transform_ints(Ua_, Ub_); }
 
     /// Set active hole and particle dimensions
-    void set_actv_dims(const Dimension& actv_docc, const Dimension& actv_virt);
+    void set_actv_dims(const psi::Dimension& actv_docc, const psi::Dimension& actv_virt);
 
     /// Return the alpha rotation matrix
-    SharedMatrix Ua() { return Ua_; }
+    psi::SharedMatrix Ua() { return Ua_; }
 
     /// Return the beta rotation matrix
-    SharedMatrix Ub() { return Ub_; }
+    psi::SharedMatrix Ub() { return Ub_; }
 
     /// Return the alpha rotation matrix in the active space
     ambit::Tensor Ua_t() { return Ua_t_; }
@@ -103,38 +103,38 @@ class SemiCanonical {
     std::shared_ptr<Wavefunction> wfn_;
 
     // All orbitals
-    Dimension nmopi_;
+    psi::Dimension nmopi_;
     // Correlated MOs
-    Dimension ncmopi_;
+    psi::Dimension ncmopi_;
     // Frozen core
-    Dimension fdocc_;
+    psi::Dimension fdocc_;
     // Restricted DOCC
-    Dimension rdocc_;
+    psi::Dimension rdocc_;
     // Active MOs
-    Dimension actv_;
+    psi::Dimension actv_;
     // Restricted virtuals
-    Dimension ruocc_;
+    psi::Dimension ruocc_;
     // Active holes
-    Dimension actv_docc_;
+    psi::Dimension actv_docc_;
     // Active particles
-    Dimension actv_virt_;
+    psi::Dimension actv_virt_;
 
     // Blocks map
-    std::map<std::string, Dimension> mo_dims_;
+    std::map<std::string, psi::Dimension> mo_dims_;
 
     // Indices (no frozen) map
     std::map<std::string, std::vector<std::vector<size_t>>> cmo_idx_;
 
     // Figure out indices [[(A1)...], [(A2)...], [(B1)...], [(B2)...]]
     // npi: this mo space; bpi: mo space before npi; tpi: total mo space
-    std::vector<std::vector<size_t>> idx_space(const Dimension& npi, const Dimension& bpi,
-                                               const Dimension& tpi);
+    std::vector<std::vector<size_t>> idx_space(const psi::Dimension& npi, const psi::Dimension& bpi,
+                                               const psi::Dimension& tpi);
 
     // Offset of active orbitals
     std::map<std::string, std::vector<int>> actv_offsets_;
 
     // Offsets
-    std::map<std::string, Dimension> offsets_;
+    std::map<std::string, psi::Dimension> offsets_;
 
     // Total active MOs
     size_t nact_;
@@ -144,9 +144,9 @@ class SemiCanonical {
     size_t nirrep_;
 
     /// Unitary matrix for alpha orbital rotation
-    SharedMatrix Ua_;
+    psi::SharedMatrix Ua_;
     /// Unitary matrix for beta orbital rotation
-    SharedMatrix Ub_;
+    psi::SharedMatrix Ub_;
     /// Unitary matrix for alpha orbital rotation in the active space
     ambit::Tensor Ua_t_;
     /// Unitary matrix for beta orbital rotation in the active space
@@ -169,7 +169,7 @@ class SemiCanonical {
      * Ua, Ub span all MOs
      * Ua_t, Ub_t span active MOs
      */
-    void build_transformation_matrices(SharedMatrix& Ua, SharedMatrix& Ub, ambit::Tensor& Ua_t,
+    void build_transformation_matrices(psi::SharedMatrix& Ua, psi::SharedMatrix& Ub, ambit::Tensor& Ua_t,
                                        ambit::Tensor& Ub_t);
 };
 } // namespace forte

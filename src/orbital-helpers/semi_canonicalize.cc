@@ -76,8 +76,8 @@ void SemiCanonical::startup() {
     ruocc_ = mo_space_info_->get_dimension("RESTRICTED_UOCC");
 
     // Preapare orbital rotation matrix, which transforms all MOs
-    Ua_ = SharedMatrix(new Matrix("Ua", nmopi_, nmopi_));
-    Ub_ = SharedMatrix(new Matrix("Ub", nmopi_, nmopi_));
+    Ua_ = psi::SharedMatrix(new Matrix("Ua", nmopi_, nmopi_));
+    Ub_ = psi::SharedMatrix(new Matrix("Ub", nmopi_, nmopi_));
 
     Ua_->identity();
     Ub_->identity();
@@ -95,7 +95,7 @@ void SemiCanonical::startup() {
     mo_dims_["virt"] = ruocc_;
 
     // index map
-    cmo_idx_["core"] = idx_space(rdocc_, Dimension(std::vector<int>(nirrep_, 0)), ncmopi_);
+    cmo_idx_["core"] = idx_space(rdocc_, psi::Dimension(std::vector<int>(nirrep_, 0)), ncmopi_);
     cmo_idx_["actv"] = idx_space(actv_, rdocc_, ncmopi_);
     cmo_idx_["virt"] = idx_space(ruocc_, rdocc_ + actv_, ncmopi_);
 
@@ -113,7 +113,7 @@ void SemiCanonical::startup() {
 }
 
 std::vector<std::vector<size_t>>
-SemiCanonical::idx_space(const Dimension& npi, const Dimension& bpi, const Dimension& tpi) {
+SemiCanonical::idx_space(const psi::Dimension& npi, const psi::Dimension& bpi, const psi::Dimension& tpi) {
     std::vector<std::vector<size_t>> out(nirrep_, std::vector<size_t>());
 
     for (size_t h = 0, offset = 0; h < nirrep_; ++h) {
@@ -127,9 +127,9 @@ SemiCanonical::idx_space(const Dimension& npi, const Dimension& bpi, const Dimen
     return out;
 }
 
-void SemiCanonical::set_actv_dims(const Dimension& actv_docc, const Dimension& actv_virt) {
+void SemiCanonical::set_actv_dims(const psi::Dimension& actv_docc, const psi::Dimension& actv_virt) {
     // test actv_docc and actv_virt
-    Dimension actv = actv_docc + actv_virt;
+    psi::Dimension actv = actv_docc + actv_virt;
     if (actv != actv_) {
         throw PSIEXCEPTION("ACTIVE_DOCC and ACTIVE_VIRT do not add up to ACTIVE!");
     }
@@ -199,8 +199,8 @@ void SemiCanonical::semicanonicalize(Reference& reference, const int& max_rdm_le
 void SemiCanonical::build_fock_matrix(Reference& reference) {
     // 1. Build the Fock matrix
 
-    SharedMatrix Da(new Matrix("Da", ncmo_, ncmo_));
-    SharedMatrix Db(new Matrix("Db", ncmo_, ncmo_));
+    psi::SharedMatrix Da(new Matrix("Da", ncmo_, ncmo_));
+    psi::SharedMatrix Db(new Matrix("Db", ncmo_, ncmo_));
 
     Matrix L1a = tensor_to_matrix(reference.L1a(), actv_);
     Matrix L1b = tensor_to_matrix(reference.L1b(), actv_);
@@ -253,11 +253,11 @@ bool SemiCanonical::check_fock_matrix() {
         std::string name = name_dim_pair.first;
         std::string name_a = "Fa " + name;
         std::string name_b = "Fb " + name;
-        Dimension npi = name_dim_pair.second;
+        psi::Dimension npi = name_dim_pair.second;
 
         // build Fock matrix of this diagonal block
-        SharedMatrix Fa(new Matrix(name_a, npi, npi));
-        SharedMatrix Fb(new Matrix(name_b, npi, npi));
+        psi::SharedMatrix Fa(new Matrix(name_a, npi, npi));
+        psi::SharedMatrix Fb(new Matrix(name_b, npi, npi));
 
         for (size_t h = 0; h < nirrep_; ++h) {
             // TODO: try omp here
@@ -311,7 +311,7 @@ void SemiCanonical::set_U_to_identity() {
         [&](const std::vector<size_t>& i, double& value) { value = (i[0] == i[1]) ? 1.0 : 0.0; });
 }
 
-void SemiCanonical::build_transformation_matrices(SharedMatrix& Ua, SharedMatrix& Ub,
+void SemiCanonical::build_transformation_matrices(psi::SharedMatrix& Ua, psi::SharedMatrix& Ub,
                                                   ambit::Tensor& Ua_t, ambit::Tensor& Ub_t) {
     // 2. Diagonalize the diagonal blocks of the Fock matrix
 
@@ -330,13 +330,13 @@ void SemiCanonical::build_transformation_matrices(SharedMatrix& Ua, SharedMatrix
         std::string name = name_dim_pair.first;
         std::string name_a = "Fock " + name + " alpha";
         std::string name_b = "Fock " + name + " beta";
-        Dimension npi = name_dim_pair.second;
+        psi::Dimension npi = name_dim_pair.second;
         bool FockDo = checked_results_[name];
 
         if (FockDo) {
             // build Fock matrix of this diagonal block
-            SharedMatrix Fa(new Matrix(name_a, npi, npi));
-            SharedMatrix Fb(new Matrix(name_b, npi, npi));
+            psi::SharedMatrix Fa(new Matrix(name_a, npi, npi));
+            psi::SharedMatrix Fb(new Matrix(name_b, npi, npi));
 
             for (size_t h = 0; h < nirrep_; ++h) {
                 // TODO: try omp here
@@ -351,8 +351,8 @@ void SemiCanonical::build_transformation_matrices(SharedMatrix& Ua, SharedMatrix
             }
 
             // diagonalize this Fock block
-            SharedMatrix UsubA(new Matrix("Ua " + name, npi, npi));
-            SharedMatrix UsubB(new Matrix("Ub " + name, npi, npi));
+            psi::SharedMatrix UsubA(new Matrix("Ua " + name, npi, npi));
+            psi::SharedMatrix UsubB(new Matrix("Ub " + name, npi, npi));
             SharedVector evalsA(new Vector("evals a " + name, npi));
             SharedVector evalsB(new Vector("evals b " + name, npi));
             Fa->diagonalize(UsubA, evalsA);
@@ -400,11 +400,11 @@ void SemiCanonical::build_transformation_matrices(SharedMatrix& Ua, SharedMatrix
     }
 }
 
-void SemiCanonical::transform_ints(SharedMatrix& Ua, SharedMatrix& Ub) {
-    SharedMatrix Ca = wfn_->Ca();
-    SharedMatrix Cb = wfn_->Cb();
-    SharedMatrix Ca_new(Ca->clone());
-    SharedMatrix Cb_new(Cb->clone());
+void SemiCanonical::transform_ints(psi::SharedMatrix& Ua, psi::SharedMatrix& Ub) {
+    psi::SharedMatrix Ca = wfn_->Ca();
+    psi::SharedMatrix Cb = wfn_->Cb();
+    psi::SharedMatrix Ca_new(Ca->clone());
+    psi::SharedMatrix Cb_new(Cb->clone());
     Ca_new->gemm(false, false, 1.0, Ca, Ua, 0.0);
     Cb_new->gemm(false, false, 1.0, Cb, Ub, 0.0);
     Ca->copy(Ca_new);
@@ -415,11 +415,11 @@ void SemiCanonical::transform_ints(SharedMatrix& Ua, SharedMatrix& Ub) {
     ints_->retransform_integrals();
 }
 
-void SemiCanonical::back_transform_ints(SharedMatrix& Ua, SharedMatrix& Ub) {
-    SharedMatrix Ca = wfn_->Ca();
-    SharedMatrix Cb = wfn_->Cb();
-    SharedMatrix Ca_new(Ca->clone());
-    SharedMatrix Cb_new(Cb->clone());
+void SemiCanonical::back_transform_ints(psi::SharedMatrix& Ua, psi::SharedMatrix& Ub) {
+    psi::SharedMatrix Ca = wfn_->Ca();
+    psi::SharedMatrix Cb = wfn_->Cb();
+    psi::SharedMatrix Ca_new(Ca->clone());
+    psi::SharedMatrix Cb_new(Cb->clone());
     Ca_new->gemm(false, true, 1.0, Ca, Ua, 0.0);
     Cb_new->gemm(false, true, 1.0, Cb, Ub, 0.0);
     Ca->copy(Ca_new);

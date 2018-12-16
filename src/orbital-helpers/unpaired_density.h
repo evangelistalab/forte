@@ -46,7 +46,7 @@ class UPDensity {
   public:
     UPDensity(std::shared_ptr<Wavefunction> wfn, std::shared_ptr<ForteIntegrals> ints, 
               std::shared_ptr<MOSpaceInfo> mo_space_info, 
-              Options& options, SharedMatrix Ua, SharedMatrix Ub);
+              Options& options, psi::SharedMatrix Ua, psi::SharedMatrix Ub);
 
     ~UPDensity();
 
@@ -57,8 +57,8 @@ class UPDensity {
     std::shared_ptr<ForteIntegrals> ints_;
     std::shared_ptr<Wavefunction> wfn_;
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
-    SharedMatrix Uas_;
-    SharedMatrix Ubs_;
+    psi::SharedMatrix Uas_;
+    psi::SharedMatrix Ubs_;
 };
 }
 } // End Namespaces

@@ -83,10 +83,10 @@ LOCALIZE::LOCALIZE(std::shared_ptr<Wavefunction> wfn, Options& options,
 }
 
 void LOCALIZE::split_localize() {
-    SharedMatrix Ca = wfn_->Ca();
-    SharedMatrix Cb = wfn_->Cb();
+    psi::SharedMatrix Ca = wfn_->Ca();
+    psi::SharedMatrix Cb = wfn_->Cb();
 
-    Dimension nsopi = wfn_->nsopi();
+    psi::Dimension nsopi = wfn_->nsopi();
     int nirrep = wfn_->nirrep();
     int off = 0;
     if (multiplicity_ == 3) {
@@ -95,9 +95,9 @@ void LOCALIZE::split_localize() {
         off = 2;
     }
 
-    SharedMatrix Caocc(new Matrix("Caocc", nsopi[0], naocc_));
-    SharedMatrix Cavir(new Matrix("Cavir", nsopi[0], navir_));
-    SharedMatrix Caact(new Matrix("Caact", nsopi[0], off));
+    psi::SharedMatrix Caocc(new Matrix("Caocc", nsopi[0], naocc_));
+    psi::SharedMatrix Cavir(new Matrix("Cavir", nsopi[0], navir_));
+    psi::SharedMatrix Caact(new Matrix("Caact", nsopi[0], off));
 
     for (int h = 0; h < nirrep; h++) {
         for (int mu = 0; mu < nsopi[h]; mu++) {
@@ -118,14 +118,14 @@ void LOCALIZE::split_localize() {
     std::shared_ptr<Localizer> loc_a = Localizer::build(local_type_, primary, Caocc);
     loc_a->localize();
 
-    SharedMatrix Laocc = loc_a->L();
+    psi::SharedMatrix Laocc = loc_a->L();
 
     std::shared_ptr<Localizer> loc_v = Localizer::build(local_type_, primary, Cavir);
     loc_v->localize();
 
-    SharedMatrix Lvir = loc_v->L();
+    psi::SharedMatrix Lvir = loc_v->L();
 
-    SharedMatrix Lact;
+    psi::SharedMatrix Lact;
     if (multiplicity_ == 3) {
         std::shared_ptr<Localizer> loc_c = Localizer::build(local_type_, primary, Caact);
         loc_c->localize();
@@ -167,14 +167,14 @@ void LOCALIZE::split_localize() {
 void LOCALIZE::full_localize() {
 
     // Build C matrices
-    SharedMatrix Ca = wfn_->Ca();
-    SharedMatrix Cb = wfn_->Cb();
-    Dimension nsopi = wfn_->nsopi();
+    psi::SharedMatrix Ca = wfn_->Ca();
+    psi::SharedMatrix Cb = wfn_->Cb();
+    psi::Dimension nsopi = wfn_->nsopi();
     int nirrep = wfn_->nirrep();
 
     size_t nact = abs_act_.size();
 
-    SharedMatrix Caact(new Matrix("Caact", nsopi[0], nact));
+    psi::SharedMatrix Caact(new Matrix("Caact", nsopi[0], nact));
     for (int h = 0; h < nirrep; h++) {
         for (int mu = 0; mu < nsopi[h]; mu++) {
             for (size_t i = 0; i < nact; i++) {
@@ -189,8 +189,8 @@ void LOCALIZE::full_localize() {
     std::shared_ptr<Localizer> loc_a = Localizer::build(local_type_, primary, Caact);
     loc_a->localize();
 
-    SharedMatrix U = loc_a->U();
-    SharedMatrix Laocc = loc_a->L();
+    psi::SharedMatrix U = loc_a->U();
+    psi::SharedMatrix Laocc = loc_a->L();
 
     for (int h = 0; h < nirrep; ++h) {
         for (size_t i = 0; i < nact; ++i) {
@@ -201,11 +201,11 @@ void LOCALIZE::full_localize() {
     }
     ints_->retransform_integrals();
 
-    U_ = SharedMatrix(new Matrix("U", nsopi[0], nact));
+    U_ = psi::SharedMatrix(new Matrix("U", nsopi[0], nact));
     U_->copy(U);
 }
 
-SharedMatrix LOCALIZE::get_U() { return U_; }
+psi::SharedMatrix LOCALIZE::get_U() { return U_; }
 
 LOCALIZE::~LOCALIZE() {}
 }

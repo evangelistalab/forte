@@ -43,7 +43,7 @@ class Tensor;
 class Options;
 class Matrix;
 class Wavefunction;
-class Dimension;
+class psi::Dimension;
 
 namespace forte {
 
@@ -118,12 +118,12 @@ class ForteIntegrals {
     int nirrep() const { return nirrep_; }
 
     /// Return the number of frozen core orbitals per irrep
-    Dimension& frzcpi() { return frzcpi_; }
+    psi::Dimension& frzcpi() { return frzcpi_; }
     /// Return the number of frozen virtual orbitals per irrep
-    Dimension& frzvpi() { return frzvpi_; }
+    psi::Dimension& frzvpi() { return frzvpi_; }
 
     /// The number of correlated MOs per irrep (non frozen).  This is nmopi - nfzcpi - nfzvpi.
-    Dimension& ncmopi() { return ncmopi_; }
+    psi::Dimension& ncmopi() { return ncmopi_; }
 
     /// Return the total number of correlated molecular orbitals (this number excludes frozen MOs)
     size_t ncmo() const { return ncmo_; }
@@ -243,7 +243,7 @@ class ForteIntegrals {
     void print_ints();
 
     /// Obtain AO dipole integrals [X, Y, Z]
-    /// Each direction is a SharedMatrix of dimension nmo * nmo
+    /// Each direction is a psi::SharedMatrix of dimension nmo * nmo
     std::vector<std::shared_ptr<Matrix>> AOdipole_ints() { return AOdipole_ints_; }
 
     /**
@@ -251,7 +251,7 @@ class ForteIntegrals {
      * @param alpha if true, compute MO dipole using Ca, else Cb
      * @param resort if true, MOdipole ints are sorted to Pitzer order, otherwise in C1 order
      * @return a vector of MOdipole ints in X, Y, Z order,
-     *         each of which is a nmo by nmo SharedMatrix
+     *         each of which is a nmo by nmo psi::SharedMatrix
      */
     std::vector<std::shared_ptr<Matrix>> compute_MOdipole_ints(const bool& alpha = true,
                                                                const bool& resort = false);
@@ -284,16 +284,16 @@ class ForteIntegrals {
     std::vector<size_t> cmotomo_;
 
     /// The number of symmetrized AOs per irrep.
-    Dimension nsopi_;
+    psi::Dimension nsopi_;
     /// The number of MOs per irrep.
-    Dimension nmopi_;
+    psi::Dimension nmopi_;
     /// The number of frozen core MOs per irrep.
-    Dimension frzcpi_;
+    psi::Dimension frzcpi_;
     /// The number of frozen unoccupied MOs per irrep.
-    Dimension frzvpi_;
+    psi::Dimension frzvpi_;
     /// The number of correlated MOs per irrep (non frozen).  This is nmopi -
     /// nfzcpi - nfzvpi.
-    Dimension ncmopi_;
+    psi::Dimension ncmopi_;
 
     /// The number of orbitals used in indexing routines (nmo or ncmo if core orbitals are frozen)
     /// The correct value is set by the integrals class

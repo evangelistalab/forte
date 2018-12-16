@@ -2331,7 +2331,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_AO_Slow() {
     double Ealpha = 0.0;
     double Emixed = 0.0;
     double Ebeta = 0.0;
-    SharedMatrix Cwfn = reference_wavefunction_->Ca();
+    psi::SharedMatrix Cwfn = reference_wavefunction_->Ca();
     if (Cwfn->nirrep() != 1)
         throw PSIEXCEPTION("AO-DSRGMPT2 does not work with symmetry");
 
@@ -2358,10 +2358,10 @@ double THREE_DSRG_MRPT2::E_VT2_2_AO_Slow() {
     ao_helper.Compute_AO_Screen(primary);
     ao_helper.Estimate_TransAO_Screen(primary, auxiliary);
     size_t weights = ao_helper.Weights();
-    SharedMatrix AO_Screen = ao_helper.AO_Screen();
-    SharedMatrix TransAO_Screen = ao_helper.TransAO_Screen();
-    SharedMatrix Occupied_Density = ao_helper.POcc();
-    SharedMatrix Virtual_Density = ao_helper.PVir();
+    psi::SharedMatrix AO_Screen = ao_helper.AO_Screen();
+    psi::SharedMatrix TransAO_Screen = ao_helper.TransAO_Screen();
+    psi::SharedMatrix Occupied_Density = ao_helper.POcc();
+    psi::SharedMatrix Virtual_Density = ao_helper.PVir();
     Occupied_Density->print();
     Virtual_Density->print();
     size_t nmo = static_cast<size_t>(nmo_);
@@ -2378,7 +2378,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_AO_Slow() {
     // ambit::Tensor E_weight_alpha = ambit::Tensor::build(tensor_type_, "Ew",
     // {weights});
     DFTensor df_tensor(primary, auxiliary, Cwfn, ncore_, nvirtual_);
-    SharedMatrix Qso = df_tensor.Qso();
+    psi::SharedMatrix Qso = df_tensor.Qso();
     DF_AO.iterate([&](const std::vector<size_t>& i, double& value) {
         value = Qso->get(i[0], i[1] * nmo + i[2]);
     });
@@ -3077,14 +3077,14 @@ void THREE_DSRG_MRPT2::form_Hbar() {
     }
 
     if (psi::Options_.get_bool("PRINT_1BODY_EVALS")) {
-        SharedMatrix Hb1 = std::make_shared<Matrix>("HB1", nactive_, nactive_);
+        psi::SharedMatrix Hb1 = std::make_shared<Matrix>("HB1", nactive_, nactive_);
         for (size_t p = 0; p < nactive_; ++p) {
             for (size_t q = 0; q < nactive_; ++q) {
                 Hb1->set(p, q, Hbar1_.block("aa").data()[p * nactive_ + q]);
             }
         }
 
-        SharedMatrix evecs = std::make_shared<Matrix>("evecs", nactive_, nactive_);
+        psi::SharedMatrix evecs = std::make_shared<Matrix>("evecs", nactive_, nactive_);
         SharedVector evals = std::make_shared<Vector>("Eigenvalues of Hbar1", nactive_);
         Hb1->diagonalize(evecs, evals);
 
@@ -3161,10 +3161,10 @@ void THREE_DSRG_MRPT2::relax_reference_once() {
     }
 }
 
-void THREE_DSRG_MRPT2::set_Ufull(SharedMatrix& Ua, SharedMatrix& Ub) {
+void THREE_DSRG_MRPT2::set_Ufull(psi::SharedMatrix& Ua, psi::SharedMatrix& Ub) {
     outfile->Printf("\n here");
 
-    Dimension nmopi = mo_space_info_->get_dimension("ALL");
+    psi::Dimension nmopi = mo_space_info_->get_dimension("ALL");
 
     Ua_full_.reset(new Matrix("Ua", nmopi, nmopi));
     Ub_full_.reset(new Matrix("Ub", nmopi, nmopi));
@@ -3486,7 +3486,7 @@ std::vector<double> THREE_DSRG_MRPT2::relaxed_energy(std::shared_ptr<FCIIntegral
 
         // common (SS and SA) setup of FCISolver
         int ntrial_per_root = options_.get_int("NTRIAL_PER_ROOT");
-        Dimension active_dim = mo_space_info_->get_dimension("ACTIVE");
+        psi::Dimension active_dim = mo_space_info_->get_dimension("ACTIVE");
         std::shared_ptr<Molecule> molecule = Process::environment.molecule();
         double Enuc = molecule->nuclear_repulsion_energy(
             reference_wavefunction_->get_dipole_field_strength());
@@ -3877,22 +3877,22 @@ std::vector<std::vector<double>> THREE_DSRG_MRPT2::diagonalize_Fock_diagblocks(B
     // diagonal blocks identifiers (C-A-V ordering)
     std::vector<std::string> blocks{"cc", "aa", "vv", "CC", "AA", "VV"};
 
-    // map MO space label to its Dimension
-    std::map<std::string, Dimension> MOlabel_to_dimension;
+    // map MO space label to its psi::Dimension
+    std::map<std::string, psi::Dimension> MOlabel_to_dimension;
     MOlabel_to_dimension["c"] = mo_space_info_->get_dimension("RESTRICTED_DOCC");
     MOlabel_to_dimension["a"] = mo_space_info_->get_dimension("ACTIVE");
     MOlabel_to_dimension["v"] = mo_space_info_->get_dimension("RESTRICTED_UOCC");
 
     // eigen values to be returned
     size_t ncmo = mo_space_info_->size("CORRELATED");
-    Dimension corr = mo_space_info_->get_dimension("CORRELATED");
+    psi::Dimension corr = mo_space_info_->get_dimension("CORRELATED");
     std::vector<double> eigenvalues_a(ncmo, 0.0);
     std::vector<double> eigenvalues_b(ncmo, 0.0);
 
-    // map MO space label to its offset Dimension
-    std::map<std::string, Dimension> MOlabel_to_offset_dimension;
+    // map MO space label to its offset psi::Dimension
+    std::map<std::string, psi::Dimension> MOlabel_to_offset_dimension;
     int nirrep = corr.n();
-    MOlabel_to_offset_dimension["c"] = Dimension(std::vector<int>(nirrep, 0));
+    MOlabel_to_offset_dimension["c"] = psi::Dimension(std::vector<int>(nirrep, 0));
     MOlabel_to_offset_dimension["a"] = mo_space_info_->get_dimension("RESTRICTED_DOCC");
     MOlabel_to_offset_dimension["v"] =
         mo_space_info_->get_dimension("RESTRICTED_DOCC") + mo_space_info_->get_dimension("ACTIVE");
@@ -3927,7 +3927,7 @@ std::vector<std::vector<double>> THREE_DSRG_MRPT2::diagonalize_Fock_diagblocks(B
             continue;
         } else {
             std::string label(1, tolower(block[0]));
-            Dimension space = MOlabel_to_dimension[label];
+            psi::Dimension space = MOlabel_to_dimension[label];
             int nirrep = space.n();
 
             // separate Fock with irrep
@@ -3962,7 +3962,7 @@ std::vector<std::vector<double>> THREE_DSRG_MRPT2::diagonalize_Fock_diagblocks(B
     return {eigenvalues_a, eigenvalues_b};
 }
 
-ambit::Tensor THREE_DSRG_MRPT2::separate_tensor(ambit::Tensor& tens, const Dimension& irrep,
+ambit::Tensor THREE_DSRG_MRPT2::separate_tensor(ambit::Tensor& tens, const psi::Dimension& irrep,
                                                 const int& h) {
     // test tens and irrep
     size_t tens_dim = tens.dim(0);
@@ -3997,7 +3997,7 @@ ambit::Tensor THREE_DSRG_MRPT2::separate_tensor(ambit::Tensor& tens, const Dimen
 }
 
 void THREE_DSRG_MRPT2::combine_tensor(ambit::Tensor& tens, ambit::Tensor& tens_h,
-                                      const Dimension& irrep, const int& h) {
+                                      const psi::Dimension& irrep, const int& h) {
     // test tens and irrep
     if (h >= irrep.n()) {
         throw PSIEXCEPTION("Ask for wrong irrep.");
@@ -4119,7 +4119,7 @@ ambit::BlockedTensor THREE_DSRG_MRPT2::get_T2(const std::vector<std::string>& bl
     return out;
 }
 
-void THREE_DSRG_MRPT2::rotate_amp(SharedMatrix Ua, SharedMatrix Ub, const bool& transpose,
+void THREE_DSRG_MRPT2::rotate_amp(psi::SharedMatrix Ua, psi::SharedMatrix Ub, const bool& transpose,
                                   const bool& t1eff) {
     ambit::BlockedTensor U = BTF_->build(tensor_type_, "Uorb", spin_cases({"gg"}));
 

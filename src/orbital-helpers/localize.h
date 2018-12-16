@@ -52,14 +52,14 @@ class LOCALIZE {
 
     void full_localize();
 
-    SharedMatrix get_U();
+    psi::SharedMatrix get_U();
 
   private:
     std::shared_ptr<Wavefunction> wfn_;
 
     std::shared_ptr<ForteIntegrals> ints_;
 
-    SharedMatrix U_;
+    psi::SharedMatrix U_;
 
     size_t nfrz_;
     size_t nrst_;

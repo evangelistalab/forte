@@ -90,14 +90,14 @@ void ACTIVE_DSRGPT2::startup() {
 
         int nirrep = this->nirrep();
         dominant_dets_ = std::vector<vector<Determinant>>(nirrep, std::vector<Determinant>());
-        ref_wfns_ = std::vector<SharedMatrix>(nirrep, SharedMatrix());
+        ref_wfns_ = std::vector<psi::SharedMatrix>(nirrep, psi::SharedMatrix());
 
         // determined absolute orbitals indices in C1 symmetry
-        Dimension nmopi = this->nmopi();
-        Dimension frzcpi = mo_space_info_->get_dimension("FROZEN_DOCC");
-        Dimension corepi = mo_space_info_->get_dimension("RESTRICTED_DOCC");
-        Dimension actvpi = mo_space_info_->get_dimension("ACTIVE");
-        Dimension virtpi = mo_space_info_->get_dimension("RESTRICTED_UOCC");
+        psi::Dimension nmopi = this->nmopi();
+        psi::Dimension frzcpi = mo_space_info_->get_dimension("FROZEN_DOCC");
+        psi::Dimension corepi = mo_space_info_->get_dimension("RESTRICTED_DOCC");
+        psi::Dimension actvpi = mo_space_info_->get_dimension("ACTIVE");
+        psi::Dimension virtpi = mo_space_info_->get_dimension("RESTRICTED_UOCC");
 
         coreIdxC1_ = std::vector<vector<size_t>>(nirrep, std::vector<size_t>());
         actvIdxC1_ = std::vector<vector<size_t>>(nirrep, std::vector<size_t>());
@@ -205,8 +205,8 @@ double ACTIVE_DSRGPT2::compute_energy() {
                                       "aCaV", "cAaA", "aCaA", "aAvA", "aAaV"};
 
     // save a copy of the original orbitals
-    SharedMatrix Ca0(this->Ca()->clone());
-    SharedMatrix Cb0(this->Cb()->clone());
+    psi::SharedMatrix Ca0(this->Ca()->clone());
+    psi::SharedMatrix Cb0(this->Cb()->clone());
 
     // compute MO dipole integrals assume equivalent alpha beta orbitals
     modipole_ints_.clear();
@@ -302,7 +302,7 @@ double ACTIVE_DSRGPT2::compute_energy() {
         // (from original to corresponding semicanonical basis)
 
         print_h2("Prepare Orbital Rotation Matrices");
-        std::vector<SharedMatrix> Uas, Ubs;
+        std::vector<psi::SharedMatrix> Uas, Ubs;
         std::vector<ambit::Tensor> Uas_t, Ubs_t;
 
         for (int i = 0; i < nroot; ++i) {
@@ -345,7 +345,7 @@ double ACTIVE_DSRGPT2::compute_energy() {
                             ref_type_.c_str(), irrep_symbol_[0].c_str(), irrep_symbol_[h].c_str());
 
             int dim = (eigen[0].first)->dim();
-            SharedMatrix evecs(new Matrix("evecs", dim, eigen_size));
+            psi::SharedMatrix evecs(new Matrix("evecs", dim, eigen_size));
             for (int i = 0; i < eigen_size; ++i) {
                 evecs->set_column(0, i, (eigen[i]).first);
             }
@@ -383,8 +383,8 @@ double ACTIVE_DSRGPT2::compute_energy() {
             // manually rotate the reference and integrals
             semi->transform_reference(Uas_t[i], Ubs_t[i], reference, max_cu_level);
             print_h2("Integral Transformation to Semicanonical Basis");
-            SharedMatrix Ca = reference_wavefunction_->Ca();
-            SharedMatrix Cb = reference_wavefunction_->Cb();
+            psi::SharedMatrix Ca = reference_wavefunction_->Ca();
+            psi::SharedMatrix Cb = reference_wavefunction_->Cb();
             Ca->gemm(false, false, 1.0, Ca0, Uas[i], 0.0);
             Cb->gemm(false, false, 1.0, Cb0, Ubs[i], 0.0);
             ints_->retransform_integrals();
@@ -489,7 +489,7 @@ double ACTIVE_DSRGPT2::compute_dsrg_mrpt2_energy(std::shared_ptr<MASTER_DSRG>& d
     return dsrg->compute_energy();
 }
 
-void ACTIVE_DSRGPT2::rotate_amp(SharedMatrix Ua, SharedMatrix Ub, ambit::BlockedTensor& T1,
+void ACTIVE_DSRGPT2::rotate_amp(psi::SharedMatrix Ua, psi::SharedMatrix Ub, ambit::BlockedTensor& T1,
                                 ambit::BlockedTensor& T2) {
     ambit::BlockedTensor U =
         ambit::BlockedTensor::build(ambit::CoreTensor, "Uorb", spin_cases({"gg"}));
@@ -563,7 +563,7 @@ void ACTIVE_DSRGPT2::compute_osc_ref(const int& irrep0, const int& irrep1,
     size_t nroot1 = eigen1.size();
     size_t nroot = nroot0;
     std::vector<double> evals(nroot, 0.0);
-    SharedMatrix evecs(new Matrix("combined evecs", ndet, nroot));
+    psi::SharedMatrix evecs(new Matrix("combined evecs", ndet, nroot));
 
     if (same) {
         for (size_t n = 0; n < nroot0; ++n) {
@@ -573,7 +573,7 @@ void ACTIVE_DSRGPT2::compute_osc_ref(const int& irrep0, const int& irrep1,
     } else {
         nroot += nroot1;
         evals = std::vector<double>(nroot, 0.0);
-        evecs = SharedMatrix(new Matrix("combined evecs", ndet, nroot));
+        evecs = psi::SharedMatrix(new Matrix("combined evecs", ndet, nroot));
 
         for (size_t n = 0; n < nroot0; ++n) {
             evals[n] = eigen0[n].second;
@@ -644,11 +644,11 @@ std::string ACTIVE_DSRGPT2::transition_type(const int& n0, const int& irrep0, co
 
 Vector4 ACTIVE_DSRGPT2::compute_td_ref_root(std::shared_ptr<FCIIntegrals> fci_ints,
                                             const std::vector<Determinant>& p_space,
-                                            SharedMatrix evecs, const int& root0,
+                                            psi::SharedMatrix evecs, const int& root0,
                                             const int& root1) {
     int nirrep = mo_space_info_->nirrep();
-    Dimension nmopi = this->nmopi();
-    Dimension actvpi = mo_space_info_->get_dimension("ACTIVE");
+    psi::Dimension nmopi = this->nmopi();
+    psi::Dimension actvpi = mo_space_info_->get_dimension("ACTIVE");
     size_t nactv = actvpi.sum();
     size_t nmo = nmopi.sum();
 
@@ -659,9 +659,9 @@ Vector4 ACTIVE_DSRGPT2::compute_td_ref_root(std::shared_ptr<FCIIntegrals> fci_in
     ci_rdms.compute_1rdm(opdm_a, opdm_b);
 
     // prepare MO transition density (spin summed)
-    SharedMatrix MOtransD(new Matrix("MO TransD", nmo, nmo));
+    psi::SharedMatrix MOtransD(new Matrix("MO TransD", nmo, nmo));
 
-    auto offset_irrep = [](const int& h, const Dimension& npi) -> size_t {
+    auto offset_irrep = [](const int& h, const psi::Dimension& npi) -> size_t {
         int h_local = h;
         size_t offset = 0;
         while ((--h_local) >= 0) {
@@ -707,7 +707,7 @@ void ACTIVE_DSRGPT2::compute_osc_pt2(const int& irrep, const int& root, const do
     // step 1: combine p_space and eigenvectors if needed
     int n = root;
     std::vector<Determinant> p_space(p_space_g_);
-    SharedMatrix evecs = ref_wfns_[0];
+    psi::SharedMatrix evecs = ref_wfns_[0];
 
     if (irrep != 0) {
         n += ref_wfns_[0]->ncol();
@@ -745,7 +745,7 @@ void ACTIVE_DSRGPT2::compute_osc_pt2(const int& irrep, const int& root, const do
     // step 3: compute TDeff from <ref_x| mu * A_g |ref_g>
     double fc_g = compute_TDeff(T1_g_, T2_g_, TD1, TD2, TD3, TDeff, false);
 
-    // put TDeff into SharedMatrix format
+    // put TDeff into psi::SharedMatrix format
     // step 1: setup orbital maps
     std::map<char, std::vector<std::pair<size_t, size_t>>> space_rel_idx;
     space_rel_idx['c'] = mo_space_info_->get_relative_mo("RESTRICTED_DOCC");
@@ -757,14 +757,14 @@ void ACTIVE_DSRGPT2::compute_osc_pt2(const int& irrep, const int& root, const do
     space_C1_idx['a'] = actvIdxC1_;
     space_C1_idx['v'] = virtIdxC1_;
 
-    std::map<char, Dimension> space_offsets;
+    std::map<char, psi::Dimension> space_offsets;
     space_offsets['c'] = mo_space_info_->get_dimension("FROZEN_DOCC");
     space_offsets['a'] = space_offsets['c'] + mo_space_info_->get_dimension("RESTRICTED_DOCC");
     space_offsets['v'] = space_offsets['a'] + mo_space_info_->get_dimension("ACTIVE");
 
-    // step 2: copy data to SharedMatrix
+    // step 2: copy data to psi::SharedMatrix
     size_t nmo = modipole_ints_[0]->nrow();
-    SharedMatrix MOtransD(new Matrix("MO TransD", nmo, nmo));
+    psi::SharedMatrix MOtransD(new Matrix("MO TransD", nmo, nmo));
     for (const std::string& block : TDeff.block_labels()) {
         char c0 = tolower(block[0]);
         char c1 = tolower(block[1]);
@@ -946,9 +946,9 @@ double ACTIVE_DSRGPT2::compute_TDeff(ambit::BlockedTensor& T1, ambit::BlockedTen
     return scalar;
 }
 
-SharedMatrix ACTIVE_DSRGPT2::combine_evecs(const int& h0, const int& h1) {
-    SharedMatrix evecs0 = ref_wfns_[h0];
-    SharedMatrix evecs1 = ref_wfns_[h1];
+psi::SharedMatrix ACTIVE_DSRGPT2::combine_evecs(const int& h0, const int& h1) {
+    psi::SharedMatrix evecs0 = ref_wfns_[h0];
+    psi::SharedMatrix evecs1 = ref_wfns_[h1];
 
     int nroot0 = evecs0->ncol();
     int nroot1 = evecs1->ncol();
@@ -958,7 +958,7 @@ SharedMatrix ACTIVE_DSRGPT2::combine_evecs(const int& h0, const int& h1) {
     size_t ndet1 = evecs1->nrow();
     size_t ndet = ndet0 + ndet1;
 
-    SharedMatrix evecs(new Matrix("combined evecs", ndet, nroot));
+    psi::SharedMatrix evecs(new Matrix("combined evecs", ndet, nroot));
 
     for (int n = 0; n < nroot0; ++n) {
         SharedVector evec0 = evecs0->get_column(0, n);
@@ -981,10 +981,10 @@ SharedMatrix ACTIVE_DSRGPT2::combine_evecs(const int& h0, const int& h1) {
     return evecs;
 }
 
-void ACTIVE_DSRGPT2::transform_integrals(SharedMatrix Ca0, SharedMatrix Cb0) {
+void ACTIVE_DSRGPT2::transform_integrals(psi::SharedMatrix Ca0, psi::SharedMatrix Cb0) {
     // copy to the wave function
-    SharedMatrix Ca = this->Ca();
-    SharedMatrix Cb = this->Cb();
+    psi::SharedMatrix Ca = this->Ca();
+    psi::SharedMatrix Cb = this->Cb();
     Ca->copy(Ca0);
     Cb->copy(Cb0);
 
@@ -1198,7 +1198,7 @@ void ACTIVE_DSRGPT2::print_summary() {
 }
 
 std::string ACTIVE_DSRGPT2::compute_ex_type(const Determinant& det, const Determinant& ref_det) {
-    Dimension active = mo_space_info_->get_dimension("ACTIVE");
+    psi::Dimension active = mo_space_info_->get_dimension("ACTIVE");
     size_t nact = mo_space_info_->size("ACTIVE");
     int nirrep = this->nirrep();
     std::vector<std::string> sym_active;
@@ -1600,7 +1600,7 @@ void ACTIVE_DSRGPT2::compute_osc_pt2_dets(const int& irrep, const int& root, con
 
     // step 3: combine eigen vectors
     size_t np = p_space.size();
-    SharedMatrix evecs(new Matrix("combined evecs", np, 2));
+    psi::SharedMatrix evecs(new Matrix("combined evecs", np, 2));
     for (size_t i = 0; i < offset; ++i) {
         evecs->set(i, 0, wfn0_g[p_space[i]]);
     }
@@ -1634,8 +1634,8 @@ void ACTIVE_DSRGPT2::compute_osc_pt2_dets(const int& irrep, const int& root, con
 
     // step 3: combine eigen vectors
     np = p_space.size();
-    evecs = SharedMatrix(new Matrix("combined evecs", np, 2));
-    //    SharedMatrix evecs(new Matrix("combined evecs", np, 2));
+    evecs = psi::SharedMatrix(new Matrix("combined evecs", np, 2));
+    //    psi::SharedMatrix evecs(new Matrix("combined evecs", np, 2));
     for (size_t i = 0; i < offset; ++i) {
         evecs->set(i, 0, wfn0_x[p_space[i]]);
     }
@@ -1670,7 +1670,7 @@ void ACTIVE_DSRGPT2::compute_osc_pt2_dets(const int& irrep, const int& root, con
 
     //    // step 3: combine eigen vectors
     //    np = p_space.size();
-    //    evecs = SharedMatrix(new Matrix("combined evecs", np, 2));
+    //    evecs = psi::SharedMatrix(new Matrix("combined evecs", np, 2));
     //    for (size_t i = 0; i < offset; ++i) {
     //        evecs->set(i, 0, wfn1_x[p_space[i]]);
     //    }
@@ -1689,7 +1689,7 @@ void ACTIVE_DSRGPT2::compute_osc_pt2_dets(const int& irrep, const int& root, con
     //    std::plus<double>());
 
     // translate tdm to C1 Pitzer ordering
-    Dimension nmopi = this->nmopi();
+    psi::Dimension nmopi = this->nmopi();
     std::vector<std::tuple<double, int, int>> order;
     int nirrep = this->nirrep();
     for (int h = 0; h < nirrep; ++h) {
@@ -1699,8 +1699,8 @@ void ACTIVE_DSRGPT2::compute_osc_pt2_dets(const int& irrep, const int& root, con
     }
     std::sort(order.begin(), order.end(), std::less<std::tuple<double, int, int>>());
 
-    Dimension frzcpi = mo_space_info_->get_dimension("FROZEN_DOCC");
-    Dimension ncmopi = mo_space_info_->get_dimension("CORRELATED");
+    psi::Dimension frzcpi = mo_space_info_->get_dimension("FROZEN_DOCC");
+    psi::Dimension ncmopi = mo_space_info_->get_dimension("CORRELATED");
     std::vector<size_t> indices(ncmo, 0);
     for (size_t idx = 0, si = order.size(); idx < si; ++idx) {
         int i = std::get<1>(order[idx]);
@@ -1719,7 +1719,7 @@ void ACTIVE_DSRGPT2::compute_osc_pt2_dets(const int& irrep, const int& root, con
     }
 
     size_t nmo = modipole_ints_[0]->nrow();
-    SharedMatrix MOtransD(new Matrix("MO TransD", nmo, nmo));
+    psi::SharedMatrix MOtransD(new Matrix("MO TransD", nmo, nmo));
     for (size_t i = 0; i < ncmo; ++i) {
         size_t ni = indices[i];
         for (size_t j = 0; j < ncmo; ++j) {
@@ -1826,7 +1826,7 @@ void ACTIVE_DSRGPT2::compute_osc_pt2_overlap(const int& irrep, const int& root,
     std::map<Determinant, double> wfn1_x = excited_wfn_1st(wfn0_x, T1_x, T2_x);
 
     // figure out C1 Pitzer ordering
-    Dimension nmopi = this->nmopi();
+    psi::Dimension nmopi = this->nmopi();
     std::vector<std::tuple<double, int, int>> order;
     int nirrep = this->nirrep();
     for (int h = 0; h < nirrep; ++h) {
@@ -1837,8 +1837,8 @@ void ACTIVE_DSRGPT2::compute_osc_pt2_overlap(const int& irrep, const int& root,
     std::sort(order.begin(), order.end(), std::less<std::tuple<double, int, int>>());
 
     size_t ncmo = mo_space_info_->size("CORRELATED");
-    Dimension frzcpi = mo_space_info_->get_dimension("FROZEN_DOCC");
-    Dimension ncmopi = mo_space_info_->get_dimension("CORRELATED");
+    psi::Dimension frzcpi = mo_space_info_->get_dimension("FROZEN_DOCC");
+    psi::Dimension ncmopi = mo_space_info_->get_dimension("CORRELATED");
     std::vector<size_t> indices(ncmo, 0);
     for (size_t idx = 0, si = order.size(); idx < si; ++idx) {
         int i = std::get<1>(order[idx]);
@@ -1857,7 +1857,7 @@ void ACTIVE_DSRGPT2::compute_osc_pt2_overlap(const int& irrep, const int& root,
     }
 
     size_t nmo = modipole_ints_[0]->nrow();
-    SharedMatrix MOtransD(new Matrix("MO TransD", nmo, nmo));
+    psi::SharedMatrix MOtransD(new Matrix("MO TransD", nmo, nmo));
     for (size_t i = 0; i < ncmo; ++i) {
         size_t ni = indices[i];
         for (size_t j = 0; j < ncmo; ++j) {

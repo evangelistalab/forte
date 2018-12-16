@@ -64,15 +64,15 @@ void DavidsonLiuSolver::startup(SharedVector diagonal) {
     iter_ = 0;
     converged_ = 0;
 
-    b_ = SharedMatrix(new Matrix("b", subspace_size_, size_));
+    b_ = psi::SharedMatrix(new Matrix("b", subspace_size_, size_));
     b_->zero();
-    bnew = SharedMatrix(new Matrix("bnew", subspace_size_, size_));
-    f = SharedMatrix(new Matrix("f", subspace_size_, size_));
-    sigma_ = SharedMatrix(new Matrix("sigma", size_, subspace_size_));
+    bnew = psi::SharedMatrix(new Matrix("bnew", subspace_size_, size_));
+    f = psi::SharedMatrix(new Matrix("f", subspace_size_, size_));
+    sigma_ = psi::SharedMatrix(new Matrix("sigma", size_, subspace_size_));
 
-    G = SharedMatrix(new Matrix("G", subspace_size_, subspace_size_));
-    S = SharedMatrix(new Matrix("S", subspace_size_, subspace_size_));
-    alpha = SharedMatrix(new Matrix("alpha", subspace_size_, subspace_size_));
+    G = psi::SharedMatrix(new Matrix("G", subspace_size_, subspace_size_));
+    S = psi::SharedMatrix(new Matrix("S", subspace_size_, subspace_size_));
+    alpha = psi::SharedMatrix(new Matrix("alpha", subspace_size_, subspace_size_));
 
     lambda = SharedVector(new Vector("lambda", subspace_size_));
     lambda_old = SharedVector(new Vector("lambda", subspace_size_));
@@ -127,7 +127,7 @@ void DavidsonLiuSolver::set_project_out(std::vector<sparse_vec> project_out) {
 
 SharedVector DavidsonLiuSolver::eigenvalues() const { return lambda; }
 
-SharedMatrix DavidsonLiuSolver::eigenvectors() const { return bnew; }
+psi::SharedMatrix DavidsonLiuSolver::eigenvectors() const { return bnew; }
 
 SharedVector DavidsonLiuSolver::eigenvector(size_t n) const {
     double** v = bnew->pointer();
@@ -179,7 +179,7 @@ SolverStatus DavidsonLiuSolver::update() {
     // form preconditioned residue vectors
     form_correction_vectors();
 
-    //    SharedMatrix old_f;
+    //    psi::SharedMatrix old_f;
     //    old_f = f->clone();
     // Step #3b: Project out undesired roots
     project_out_roots(f);
@@ -235,7 +235,7 @@ void DavidsonLiuSolver::form_correction_vectors() {
     }
 }
 
-void DavidsonLiuSolver::project_out_roots(SharedMatrix v) {
+void DavidsonLiuSolver::project_out_roots(psi::SharedMatrix v) {
     double** v_p = v->pointer();
     for (size_t k = 0; k < nroot_; k++) {
         for (auto& bad_root : project_out_) {
@@ -254,7 +254,7 @@ void DavidsonLiuSolver::project_out_roots(SharedMatrix v) {
     }
 }
 
-void DavidsonLiuSolver::normalize_vectors(SharedMatrix v, size_t n) {
+void DavidsonLiuSolver::normalize_vectors(psi::SharedMatrix v, size_t n) {
     // normalize each residual
     double** v_p = v->pointer();
     for (size_t k = 0; k < n; k++) {

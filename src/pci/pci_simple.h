@@ -117,11 +117,11 @@ class ProjectorCI_Simple : public Wavefunction {
     /// The number of frozen core orbitals
     int nfrzc_;
     /// The number of correlated molecular orbitals per irrep
-    Dimension ncmopi_;
+    psi::Dimension ncmopi_;
     /// The number of active orbitals
     size_t nact_;
     /// The number of active orbitals per irrep
-    Dimension nactpi_;
+    psi::Dimension nactpi_;
     /// The multiplicity of the wave function
     int wavefunction_multiplicity_;
     /// The nuclear repulsion energy

@@ -98,8 +98,8 @@ double DISKDFIntegrals::aptei_aa(size_t p, size_t q, size_t r, size_t s) {
     double vpqrsalphaC = 0.0;
     double vpqrsalphaE = 0.0;
 
-    SharedMatrix B1(new Matrix(1, nthree_));
-    SharedMatrix B2(new Matrix(1, nthree_));
+    psi::SharedMatrix B1(new Matrix(1, nthree_));
+    psi::SharedMatrix B2(new Matrix(1, nthree_));
 
     df_->fill_tensor("B", B1, A_range, p_range, r_range);
     df_->fill_tensor("B", B2, A_range, q_range, s_range);
@@ -137,8 +137,8 @@ double DISKDFIntegrals::aptei_ab(size_t p, size_t q, size_t r, size_t s) {
     std::vector<size_t> s_range = {sn, sn + 1};
 
     double vpqrsalphaC = 0.0;
-    SharedMatrix B1(new Matrix(1, nthree_));
-    SharedMatrix B2(new Matrix(1, nthree_));
+    psi::SharedMatrix B1(new Matrix(1, nthree_));
+    psi::SharedMatrix B2(new Matrix(1, nthree_));
 
     df_->fill_tensor("B", B1, A_range, p_range, r_range);
     df_->fill_tensor("B", B2, A_range, q_range, s_range);
@@ -171,8 +171,8 @@ double DISKDFIntegrals::aptei_bb(size_t p, size_t q, size_t r, size_t s) {
     double vpqrsalphaC = 0.0;
     double vpqrsalphaE = 0.0;
 
-    SharedMatrix B1(new Matrix(1, nthree_));
-    SharedMatrix B2(new Matrix(1, nthree_));
+    psi::SharedMatrix B1(new Matrix(1, nthree_));
+    psi::SharedMatrix B2(new Matrix(1, nthree_));
 
     df_->fill_tensor("B", B1, A_range, p_range, r_range);
     df_->fill_tensor("B", B2, A_range, q_range, s_range);
@@ -388,10 +388,10 @@ void DISKDFIntegrals::gather_integrals() {
                     (nprim * nprim * naux * sizeof(double) / 1073741824.0));
     int_mem_ = (nprim * nprim * naux * sizeof(double));
 
-    Dimension nsopi_ = wfn_->nsopi();
-    SharedMatrix aotoso = wfn_->aotoso();
-    SharedMatrix Ca = wfn_->Ca();
-    SharedMatrix Ca_ao(new Matrix("Ca_ao", nso_, nmopi_.sum()));
+    psi::Dimension nsopi_ = wfn_->nsopi();
+    psi::SharedMatrix aotoso = wfn_->aotoso();
+    psi::SharedMatrix Ca = wfn_->Ca();
+    psi::SharedMatrix Ca_ao(new Matrix("Ca_ao", nso_, nmopi_.sum()));
 
     // Transform from the SO to the AO basis
     for (int h = 0, index = 0; h < nirrep_; ++h) {
@@ -434,7 +434,7 @@ void DISKDFIntegrals::gather_integrals() {
     outfile->Printf("...Done. Timing %15.6f s", timer.get());
 }
 
-void DISKDFIntegrals::make_fock_matrix(SharedMatrix gamma_aM, SharedMatrix gamma_bM) {
+void DISKDFIntegrals::make_fock_matrix(psi::SharedMatrix gamma_aM, psi::SharedMatrix gamma_bM) {
     // Efficient calculation of fock matrix from disk
     // Since gamma_aM is very sparse (diagonal elements of core and active
     // block)

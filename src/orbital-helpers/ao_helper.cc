@@ -39,7 +39,7 @@
 
 namespace forte {
 
-AtomicOrbitalHelper::AtomicOrbitalHelper(SharedMatrix CMO, SharedVector eps_occ,
+AtomicOrbitalHelper::AtomicOrbitalHelper(psi::SharedMatrix CMO, SharedVector eps_occ,
                                          SharedVector eps_vir, double laplace_tolerance)
     : CMO_(CMO), eps_rdocc_(eps_occ), eps_virtual_(eps_vir), laplace_tolerance_(laplace_tolerance) {
     LaplaceDenominator laplace(eps_rdocc_, eps_virtual_, laplace_tolerance_);
@@ -51,7 +51,7 @@ AtomicOrbitalHelper::AtomicOrbitalHelper(SharedMatrix CMO, SharedVector eps_occ,
     nbf_ = CMO_->rowspi()[0];
     shift_ = 0;
 }
-AtomicOrbitalHelper::AtomicOrbitalHelper(SharedMatrix CMO, SharedVector eps_occ,
+AtomicOrbitalHelper::AtomicOrbitalHelper(psi::SharedMatrix CMO, SharedVector eps_occ,
                                          SharedVector eps_vir, double laplace_tolerance, int shift)
     : CMO_(CMO), eps_rdocc_(eps_occ), eps_virtual_(eps_vir), laplace_tolerance_(laplace_tolerance),
       shift_(shift) {
@@ -66,8 +66,8 @@ AtomicOrbitalHelper::AtomicOrbitalHelper(SharedMatrix CMO, SharedVector eps_occ,
 AtomicOrbitalHelper::~AtomicOrbitalHelper() { outfile->Printf("\n Done with AO helper class"); }
 void AtomicOrbitalHelper::Compute_Psuedo_Density() {
     int nmo_ = nbf_;
-    SharedMatrix Xocc(new Matrix("DensityOccupied", weights_, nbf_ * nbf_));
-    SharedMatrix Yvir(new Matrix("DensityVirtual", weights_, nmo_ * nmo_));
+    psi::SharedMatrix Xocc(new Matrix("DensityOccupied", weights_, nbf_ * nbf_));
+    psi::SharedMatrix Yvir(new Matrix("DensityVirtual", weights_, nmo_ * nmo_));
 
     double value_occ, value_vir = 0;
     for (int w = 0; w < weights_; w++) {
@@ -93,7 +93,7 @@ void AtomicOrbitalHelper::Compute_Psuedo_Density() {
 void AtomicOrbitalHelper::Compute_AO_Screen(std::shared_ptr<BasisSet>& primary) {
     ERISieve sieve(primary, 1e-10);
     std::vector<double> my_function_pair_values = sieve.function_pair_values();
-    SharedMatrix AO_Screen(new Matrix("Z", nbf_, nbf_));
+    psi::SharedMatrix AO_Screen(new Matrix("Z", nbf_, nbf_));
     for (int mu = 0; mu < nbf_; mu++)
         for (int nu = 0; nu < nbf_; nu++)
             AO_Screen->set(mu, nu, my_function_pair_values[mu * nbf_ + nu]);
@@ -107,11 +107,11 @@ void AtomicOrbitalHelper::Estimate_TransAO_Screen(std::shared_ptr<BasisSet>& pri
     std::shared_ptr<JK> jk(new MemDFJK(primary, auxiliary));
     jk->initialize();
     jk->compute();
-    SharedMatrix AO_Trans_Screen(new Matrix("AOTrans", weights_, nbf_ * nbf_));
+    psi::SharedMatrix AO_Trans_Screen(new Matrix("AOTrans", weights_, nbf_ * nbf_));
 
     for (int w = 0; w < weights_; w++) {
-        SharedMatrix COcc(new Matrix("COcc", nbf_, nbf_));
-        SharedMatrix CVir(new Matrix("COcc", nbf_, nbf_));
+        psi::SharedMatrix COcc(new Matrix("COcc", nbf_, nbf_));
+        psi::SharedMatrix CVir(new Matrix("COcc", nbf_, nbf_));
         for (int mu = 0; mu < nbf_; mu++)
             for (int nu = 0; nu < nbf_; nu++) {
                 COcc->set(mu, nu, POcc_->get(w, mu * nbf_ + nu));

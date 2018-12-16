@@ -47,7 +47,7 @@
 
 namespace forte {
 
-// MOSpaceInfo::MOSpaceInfo(Dimension& nmopi) : nirrep_(nmopi.n()), nmopi_(nmopi) {
+// MOSpaceInfo::MOSpaceInfo(psi::Dimension& nmopi) : nirrep_(nmopi.n()), nmopi_(nmopi) {
 //     // Add the elementary spaces to the list of composite spaces
 //     for (const std::string& es : elementary_spaces_) {
 //         composite_spaces_[es] = {es};
@@ -70,8 +70,8 @@ namespace forte {
 //     return s;
 // }
 //
-// Dimension MOSpaceInfo::get_dimension(const std::string& space) {
-//     Dimension result(nirrep_);
+// psi::Dimension MOSpaceInfo::get_dimension(const std::string& space) {
+//     psi::Dimension result(nirrep_);
 //     if (composite_spaces_.count(space) == 0) {
 //         std::string msg = "\n  MOSpaceInfo::size - composite space " + space + " is not defined.";
 //         throw PSIEXCEPTION(msg.c_str());
@@ -86,14 +86,14 @@ namespace forte {
 //
 // /// @return The Slice object for space in a given composite space
 // Slice MOSpaceInfo::get_slice(const std::string& space, const std::string& comp_space) {
-//     Dimension begin(nirrep_);
-//     Dimension end(nirrep_);
+//     psi::Dimension begin(nirrep_);
+//     psi::Dimension end(nirrep_);
 //
 //     return Slice(begin, end);
 // }
 //
 // std::vector<int> MOSpaceInfo::symmetry(const std::string& space) {
-//     Dimension dims = get_dimension(space);
+//     psi::Dimension dims = get_dimension(space);
 //     std::vector<int> result;
 //     for (int h = 0; h < dims.n(); ++h) {
 //         for (int i = 0; i < dims[h]; ++i) {
@@ -176,7 +176,7 @@ namespace forte {
 //     // Handle frozen core
 //
 //     // Count the assigned orbitals
-//     Dimension unassigned = nmopi_;
+//     psi::Dimension unassigned = nmopi_;
 //     for (auto& str_si : mo_spaces_) {
 //         unassigned -= str_si.second.first;
 //     }
@@ -260,7 +260,7 @@ namespace forte {
 //     outfile->Printf("\n  %s", std::string(banner_width, '-').c_str());
 //
 //     for (std::string space : elementary_spaces_) {
-//         Dimension& dim = mo_spaces_[space].first;
+//         psi::Dimension& dim = mo_spaces_[space].first;
 //         outfile->Printf("\n    %-*s", label_size, space.c_str());
 //         for (size_t h = 0; h < nirrep_; ++h) {
 //             outfile->Printf("%6d", dim[h]);
@@ -277,7 +277,7 @@ namespace forte {
 //
 // std::pair<SpaceInfo, bool> MOSpaceInfo::read_mo_space(const std::string& space, Options& options) {
 //     bool read = false;
-//     Dimension space_dim(nirrep_);
+//     psi::Dimension space_dim(nirrep_);
 //     std::vector<MOInfo> vec_mo_info;
 //     if ((psi::Options[space].has_changed()) && (psi::Options[space].size() == nirrep_)) {
 //         for (size_t h = 0; h < nirrep_; ++h) {
@@ -326,7 +326,7 @@ std::string get_ms_string(double twice_ms) {
     return ms_str;
 }
 
-Matrix tensor_to_matrix(ambit::Tensor t, Dimension dims) {
+Matrix tensor_to_matrix(ambit::Tensor t, psi::Dimension dims) {
     // Copy the tensor to a plain matrix
     size_t size = dims.sum();
     Matrix M("M", size, size);
@@ -346,10 +346,10 @@ Matrix tensor_to_matrix(ambit::Tensor t, Dimension dims) {
     return M_sym;
 }
 
-SharedMatrix tensor_to_matrix(ambit::Tensor t) {
+psi::SharedMatrix tensor_to_matrix(ambit::Tensor t) {
     size_t size1 = t.dim(0);
     size_t size2 = t.dim(1);
-    SharedMatrix M(new Matrix("M", size1, size2));
+    psi::SharedMatrix M(new Matrix("M", size1, size2));
     t.iterate([&](const std::vector<size_t>& i, double& value) { M->set(i[0], i[1], value); });
     return M;
 }

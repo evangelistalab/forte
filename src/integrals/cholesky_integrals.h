@@ -83,10 +83,10 @@ class CholeskyIntegrals : public ForteIntegrals {
     virtual void set_tei(size_t p, size_t q, size_t r, size_t s, double value, bool alpha1,
                          bool alpha2);
 
-    virtual void make_fock_matrix(SharedMatrix gamma_a, SharedMatrix gamma_b);
+    virtual void make_fock_matrix(psi::SharedMatrix gamma_a, psi::SharedMatrix gamma_b);
 
     virtual size_t nthree() const { return nthree_; }
-    SharedMatrix L_ao_;
+    psi::SharedMatrix L_ao_;
 
   private:
     // ==> Class data <==

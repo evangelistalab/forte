@@ -153,7 +153,7 @@ bool DeterminantHashVec::has_det(const Determinant& det) const {
 }
 
 double DeterminantHashVec::overlap(std::vector<double>& det1_evecs, DeterminantHashVec& det2,
-                                   SharedMatrix det2_evecs, int root) {
+                                   psi::SharedMatrix det2_evecs, int root) {
 
     double overlap = 0.0;
 
@@ -173,8 +173,8 @@ double DeterminantHashVec::overlap(std::vector<double>& det1_evecs, DeterminantH
     return overlap;
 }
 
-double DeterminantHashVec::overlap(SharedMatrix det1_evecs, int root1, DeterminantHashVec& det2,
-                                   SharedMatrix det2_evecs, int root2) {
+double DeterminantHashVec::overlap(psi::SharedMatrix det1_evecs, int root1, DeterminantHashVec& det2,
+                                   psi::SharedMatrix det2_evecs, int root2) {
     double overlap = 0.0;
     for (size_t i = 0, wfn_size = wfn_.size(); i < wfn_size; ++i) {
         if (det2.has_det(wfn_[i])) {
@@ -191,7 +191,7 @@ double DeterminantHashVec::overlap(SharedMatrix det1_evecs, int root1, Determina
     return overlap;
 }
 
-void DeterminantHashVec::subspace(DeterminantHashVec& dets, SharedMatrix evecs,
+void DeterminantHashVec::subspace(DeterminantHashVec& dets, psi::SharedMatrix evecs,
                                   std::vector<double>& new_evecs, size_t dim, int root) {
     // Clear current wfn
     this->clear();

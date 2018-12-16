@@ -88,7 +88,7 @@ double MRCI::compute_energy() {
     local_timer add;
     get_excited_determinants();
     outfile->Printf("\n  Excitations took %1.5f s", add.get());
-    outfile->Printf("\n  Dimension of model space: %zu", reference_.size());
+    outfile->Printf("\n  psi::Dimension of model space: %zu", reference_.size());
 
     std::string sigma_alg = options_.get_str("SIGMA_BUILD_TYPE");
 
@@ -102,7 +102,7 @@ double MRCI::compute_energy() {
     }
 
     // Diagonalize MR-CISD Hamiltonian
-    SharedMatrix evecs;
+    psi::SharedMatrix evecs;
     SharedVector evals;
 
     SparseCISolver sparse_solver(fci_ints_);
@@ -260,8 +260,8 @@ void MRCI::get_excited_determinants() {
 void MRCI::upcast_reference() {
     //    auto mo_sym = mo_space_info_->symmetry("GENERALIZED PARTICLE");
 
-    //    Dimension old_dim = mo_space_info_->get_dimension("ACTIVE");
-    //    Dimension new_dim = mo_space_info_->get_dimension("GENERALIZED PARTICLE");
+    //    psi::Dimension old_dim = mo_space_info_->get_dimension("ACTIVE");
+    //    psi::Dimension new_dim = mo_space_info_->get_dimension("GENERALIZED PARTICLE");
     //    size_t nact = mo_space_info_->size("ACTIVE");
     //    size_t ncorr = mo_space_info_->size("GENERALIZED PARTICLE");
     //    int n_irrep = old_dim.n();

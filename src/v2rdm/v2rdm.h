@@ -82,13 +82,13 @@ class V2RDM : public Wavefunction {
     /// Number of irrep
     size_t nirrep_;
     /// MO per irrep;
-    Dimension nmopi_;
+    psi::Dimension nmopi_;
     /// Frozen docc per irrep
-    Dimension fdoccpi_;
+    psi::Dimension fdoccpi_;
     /// Restricted docc per irrep
-    Dimension rdoccpi_;
+    psi::Dimension rdoccpi_;
     /// Active per irrep
-    Dimension active_;
+    psi::Dimension active_;
     /// Map active absolute index to relative index
     std::map<size_t, size_t> abs_to_rel_;
 

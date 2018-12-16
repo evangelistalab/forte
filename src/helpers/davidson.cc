@@ -87,7 +87,7 @@ void test_davidson() {
 
     int nroots = 4;
 
-    SharedMatrix evecs(new Matrix("U", ndets, nroots));
+    psi::SharedMatrix evecs(new Matrix("U", ndets, nroots));
     SharedVector evals(new Vector("e", nroots));
 
     david2(H.pointer(), H.nrow(), nroots, evals->pointer(), evecs->pointer(), 1.0e-10, 1);

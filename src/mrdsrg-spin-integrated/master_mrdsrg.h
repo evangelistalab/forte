@@ -329,7 +329,7 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     std::vector<ambit::BlockedTensor> dm_;
 
     /// Fill in bare MO dipole integrals
-    void fill_MOdm(std::vector<SharedMatrix>& dm_a, std::vector<SharedMatrix>& dm_b);
+    void fill_MOdm(std::vector<psi::SharedMatrix>& dm_a, std::vector<psi::SharedMatrix>& dm_b);
     /// Compute dipole moment of the reference
     void compute_dm_ref();
     /// Compute dipole for a certain direction or not

@@ -31,7 +31,7 @@
 namespace forte {
 
 IAOBuilder::IAOBuilder(std::shared_ptr<BasisSet> primary, std::shared_ptr<BasisSet> minao,
-                       SharedMatrix C)
+                       psi::SharedMatrix C)
     : C_(C), primary_(primary), minao_(minao) {
     if (C->nirrep() != 1) {
         throw PSIEXCEPTION("Localizer: C matrix is not C1");
@@ -56,7 +56,7 @@ void IAOBuilder::common_init() {
     stars_.clear();
 }
 std::shared_ptr<IAOBuilder> IAOBuilder::build(std::shared_ptr<BasisSet> primary,
-                                              std::shared_ptr<BasisSet> minao, SharedMatrix C,
+                                              std::shared_ptr<BasisSet> minao, psi::SharedMatrix C,
                                               Options& options) {
     //    Options& options = Process::environment.options;
 
@@ -85,7 +85,7 @@ std::shared_ptr<IAOBuilder> IAOBuilder::build(std::shared_ptr<BasisSet> primary,
     return local;
 }
 
-std::map<std::string, SharedMatrix> IAOBuilder::build_iaos() {
+std::map<std::string, psi::SharedMatrix> IAOBuilder::build_iaos() {
     // => Ghosting <= //
     std::shared_ptr<Molecule> mol = minao_->molecule();
     true_atoms_.clear();
@@ -120,9 +120,9 @@ std::map<std::string, SharedMatrix> IAOBuilder::build_iaos() {
     std::shared_ptr<OneBodyAOInt> ints12(fact12->ao_overlap());
     std::shared_ptr<OneBodyAOInt> ints22(fact22->ao_overlap());
 
-    SharedMatrix S11(new Matrix("S11", primary_->nbf(), primary_->nbf()));
-    SharedMatrix S12f(new Matrix("S12f", primary_->nbf(), minao_->nbf()));
-    SharedMatrix S22f(new Matrix("S22f", minao_->nbf(), minao_->nbf()));
+    psi::SharedMatrix S11(new Matrix("S11", primary_->nbf(), primary_->nbf()));
+    psi::SharedMatrix S12f(new Matrix("S12f", primary_->nbf(), minao_->nbf()));
+    psi::SharedMatrix S22f(new Matrix("S22f", minao_->nbf(), minao_->nbf()));
 
     ints11->compute(S11);
     ints12->compute(S12f);
@@ -138,8 +138,8 @@ std::map<std::string, SharedMatrix> IAOBuilder::build_iaos() {
 
     // => Ghosted Overlap Integrals <= //
 
-    SharedMatrix S12(new Matrix("S12", primary_->nbf(), true_iaos_.size()));
-    SharedMatrix S22(new Matrix("S22", true_iaos_.size(), true_iaos_.size()));
+    psi::SharedMatrix S12(new Matrix("S12", primary_->nbf(), true_iaos_.size()));
+    psi::SharedMatrix S22(new Matrix("S22", true_iaos_.size(), true_iaos_.size()));
 
     double** S12p = S12->pointer();
     double** S12fp = S12f->pointer();
@@ -159,8 +159,8 @@ std::map<std::string, SharedMatrix> IAOBuilder::build_iaos() {
 
     // => Metric Inverses <= //
 
-    SharedMatrix S11_m12(S11->clone());
-    SharedMatrix S22_m12(S22->clone());
+    psi::SharedMatrix S11_m12(S11->clone());
+    psi::SharedMatrix S22_m12(S22->clone());
     S11_m12->copy(S11);
     S22_m12->copy(S22);
     S11_m12->power(-1.0 / 2.0, condition_);
@@ -168,46 +168,46 @@ std::map<std::string, SharedMatrix> IAOBuilder::build_iaos() {
 
     // => Tilde C <= //
 
-    SharedMatrix C = C_;
-    SharedMatrix T1 = Matrix::doublet(S22_m12, S12, false, true);
-    SharedMatrix T2 =
+    psi::SharedMatrix C = C_;
+    psi::SharedMatrix T1 = Matrix::doublet(S22_m12, S12, false, true);
+    psi::SharedMatrix T2 =
         Matrix::doublet(S11_m12, Matrix::triplet(T1, T1, C, true, false, false), false, false);
-    SharedMatrix T3 = Matrix::doublet(T2, T2, true, false);
+    psi::SharedMatrix T3 = Matrix::doublet(T2, T2, true, false);
     T3->power(-1.0 / 2.0, condition_);
-    SharedMatrix Ctilde = Matrix::triplet(S11_m12, T2, T3, false, false, false);
+    psi::SharedMatrix Ctilde = Matrix::triplet(S11_m12, T2, T3, false, false, false);
 
     // => D and Tilde D <= //
 
-    SharedMatrix D = Matrix::doublet(C, C, false, true);
-    SharedMatrix Dtilde = Matrix::doublet(Ctilde, Ctilde, false, true);
+    psi::SharedMatrix D = Matrix::doublet(C, C, false, true);
+    psi::SharedMatrix Dtilde = Matrix::doublet(Ctilde, Ctilde, false, true);
 
     // => A (Before Orthogonalization) <= //
 
-    SharedMatrix DSDtilde = Matrix::triplet(D, S11, Dtilde, false, false, false);
+    psi::SharedMatrix DSDtilde = Matrix::triplet(D, S11, Dtilde, false, false, false);
     DSDtilde->scale(2.0);
 
-    SharedMatrix L = Matrix::doublet(S11_m12, S11_m12, false, false); // TODO: Possibly Unstable
+    psi::SharedMatrix L = Matrix::doublet(S11_m12, S11_m12, false, false); // TODO: Possibly Unstable
     L->add(DSDtilde);
     L->subtract(D);
     L->subtract(Dtilde);
 
-    SharedMatrix AN = Matrix::doublet(L, S12, false, false);
+    psi::SharedMatrix AN = Matrix::doublet(L, S12, false, false);
 
     // => A (After Orthogonalization) <= //
 
-    SharedMatrix V = Matrix::triplet(AN, S11, AN, true, false, false);
+    psi::SharedMatrix V = Matrix::triplet(AN, S11, AN, true, false, false);
     V->power(-1.0 / 2.0, condition_);
 
-    SharedMatrix A = Matrix::doublet(AN, V, false, false);
+    psi::SharedMatrix A = Matrix::doublet(AN, V, false, false);
 
     // => Assignment <= //
 
     S_ = S11;
     A_ = A;
 
-    SharedMatrix Acoeff(A->clone());
-    SharedMatrix S_min(S22->clone());
-    SharedMatrix L_clone(L->clone());
+    psi::SharedMatrix Acoeff(A->clone());
+    psi::SharedMatrix S_min(S22->clone());
+    psi::SharedMatrix L_clone(L->clone());
 
     std::vector<std::vector<int>> minao_inds;
     for (size_t A = 0; A < true_atoms_.size(); A++) {
@@ -239,11 +239,11 @@ std::map<std::string, SharedMatrix> IAOBuilder::build_iaos() {
 
     // Build projection matrix U
 
-    SharedMatrix Cinv(C->clone());
+    psi::SharedMatrix Cinv(C->clone());
     Cinv->invert();
-    SharedMatrix U = Matrix::doublet(Cinv, Ctilde, false, false);
+    psi::SharedMatrix U = Matrix::doublet(Cinv, Ctilde, false, false);
 
-    std::map<std::string, SharedMatrix> ret;
+    std::map<std::string, psi::SharedMatrix> ret;
     ret["A"] = Acoeff;
     ret["S_min"] = S_min;
     ret["U"] = U;
@@ -254,13 +254,13 @@ std::map<std::string, SharedMatrix> IAOBuilder::build_iaos() {
     return ret;
 }
 
-std::vector<std::string> IAOBuilder::print_IAO(SharedMatrix A_, int nmin, int nbf,
+std::vector<std::string> IAOBuilder::print_IAO(psi::SharedMatrix A_, int nmin, int nbf,
                                                psi::SharedWavefunction wfn_) {
     CubeProperties cube = CubeProperties(wfn_);
     std::shared_ptr<Molecule> mol = minao_->molecule();
     std::vector<int> iao_inds;
-    SharedMatrix A_nbf =
-        SharedMatrix(new Matrix("IAO coefficient matrix in nbf dimensions", nbf, nbf));
+    psi::SharedMatrix A_nbf =
+        psi::SharedMatrix(new Matrix("IAO coefficient matrix in nbf dimensions", nbf, nbf));
     for (int i = 0; i < nbf; ++i) {
         for (int j = 0; j < minao_->nbf(); ++j) {
             A_nbf->set(i, j, A_->get(i, j));
@@ -440,18 +440,18 @@ std::vector<std::string> IAOBuilder::print_IAO(SharedMatrix A_, int nmin, int nb
     return iao_labs;
 }
 
-std::map<std::string, SharedMatrix>
-IAOBuilder::ibo_localizer(SharedMatrix L, const std::vector<std::vector<int>>& minao_inds,
+std::map<std::string, psi::SharedMatrix>
+IAOBuilder::ibo_localizer(psi::SharedMatrix L, const std::vector<std::vector<int>>& minao_inds,
                           const std::vector<std::pair<int, int>>& rot_inds, double convergence,
                           int maxiter, int power) {
     int nmin = L->colspi()[0];
     int nocc = L->rowspi()[0];
 
-    SharedMatrix L2(L->clone());
+    psi::SharedMatrix L2(L->clone());
     L2->copy(L);
     double** Lp = L2->pointer();
 
-    SharedMatrix U(new Matrix("U", nocc, nocc));
+    psi::SharedMatrix U(new Matrix("U", nocc, nocc));
     U->identity();
     double** Up = U->pointer();
 
@@ -531,17 +531,17 @@ IAOBuilder::ibo_localizer(SharedMatrix L, const std::vector<std::vector<int>>& m
 
     U->transpose_this();
     // L2->transpose_this();
-    std::map<std::string, SharedMatrix> ret;
+    std::map<std::string, psi::SharedMatrix> ret;
     ret["U"] = U;
     ret["L"] = L2;
-    SharedMatrix L_local(L2->clone());
+    psi::SharedMatrix L_local(L2->clone());
     // ret["U"]->set_name("U");
     // ret["L"]->set_name("L");
 
     return ret;
 }
 
-std::map<std::string, SharedMatrix> IAOBuilder::localize(SharedMatrix Cocc, SharedMatrix Focc,
+std::map<std::string, psi::SharedMatrix> IAOBuilder::localize(psi::SharedMatrix Cocc, psi::SharedMatrix Focc,
                                                          const std::vector<int>& ranges2) {
     if (!A_)
         build_iaos();
@@ -574,19 +574,19 @@ std::map<std::string, SharedMatrix> IAOBuilder::localize(SharedMatrix Cocc, Shar
         }
     }
 
-    SharedMatrix L = Matrix::triplet(Cocc, S_, A_, true, false, false);
+    psi::SharedMatrix L = Matrix::triplet(Cocc, S_, A_, true, false, false);
     // L->set_name("L");
 
-    std::map<std::string, SharedMatrix> ret1 =
+    std::map<std::string, psi::SharedMatrix> ret1 =
         IAOBuilder::ibo_localizer(L, minao_inds, rot_inds, convergence_, maxiter_, power_);
     L = ret1["L"];
-    SharedMatrix L_local(L->clone());
+    psi::SharedMatrix L_local(L->clone());
     outfile->Printf("Localized Matrix from ibo code! \n");
     // L_local->print();
-    SharedMatrix U = ret1["U"];
+    psi::SharedMatrix U = ret1["U"];
 
     if (use_stars_) {
-        SharedMatrix Q = orbital_charges(L);
+        psi::SharedMatrix Q = orbital_charges(L);
         double** Qp = Q->pointer();
         int nocc = Q->colspi()[0];
         int natom = Q->rowspi()[0];
@@ -643,16 +643,16 @@ std::map<std::string, SharedMatrix> IAOBuilder::localize(SharedMatrix Cocc, Shar
         }
         outfile->Printf("\n\n");
 
-        std::map<std::string, SharedMatrix> ret2 =
+        std::map<std::string, psi::SharedMatrix> ret2 =
             IAOBuilder::ibo_localizer(L, minao_inds2, rot_inds2, convergence_, maxiter_, power_);
         L = ret2["L"];
-        SharedMatrix U3 = ret2["U"];
+        psi::SharedMatrix U3 = ret2["U"];
         U = Matrix::doublet(U, U3, false, false);
 
-        std::map<std::string, SharedMatrix> ret3 =
+        std::map<std::string, psi::SharedMatrix> ret3 =
             IAOBuilder::ibo_localizer(L, minao_inds, rot_inds, convergence_, maxiter_, power_);
         L = ret3["L"];
-        SharedMatrix U4 = ret3["U"];
+        psi::SharedMatrix U4 = ret3["U"];
         U = Matrix::doublet(U, U4, false, false);
 
         // => Analysis <= //
@@ -697,16 +697,16 @@ std::map<std::string, SharedMatrix> IAOBuilder::localize(SharedMatrix Cocc, Shar
         outfile->Printf("\n\n");
     }
 
-    SharedMatrix Focc2 = Matrix::triplet(U, Focc, U, true, false, false);
-    SharedMatrix U2 = IAOBuilder::reorder_orbitals(Focc2, ranges);
+    psi::SharedMatrix Focc2 = Matrix::triplet(U, Focc, U, true, false, false);
+    psi::SharedMatrix U2 = IAOBuilder::reorder_orbitals(Focc2, ranges);
 
-    SharedMatrix Uocc3 = Matrix::doublet(U, U2, false, false);
-    SharedMatrix Focc3 = Matrix::triplet(Uocc3, Focc, Uocc3, true, false, false);
-    SharedMatrix Locc3 = Matrix::doublet(Cocc, Uocc3, false, false);
+    psi::SharedMatrix Uocc3 = Matrix::doublet(U, U2, false, false);
+    psi::SharedMatrix Focc3 = Matrix::triplet(Uocc3, Focc, Uocc3, true, false, false);
+    psi::SharedMatrix Locc3 = Matrix::doublet(Cocc, Uocc3, false, false);
     L = Matrix::doublet(U2, L, true, false);
-    SharedMatrix Q = orbital_charges(L);
+    psi::SharedMatrix Q = orbital_charges(L);
 
-    std::map<std::string, SharedMatrix> ret;
+    std::map<std::string, psi::SharedMatrix> ret;
     ret["L"] = Locc3;
     ret["L_local"] = L_local;
     ret["U"] = Uocc3;
@@ -721,11 +721,11 @@ std::map<std::string, SharedMatrix> IAOBuilder::localize(SharedMatrix Cocc, Shar
     return ret;
 }
 
-SharedMatrix IAOBuilder::reorder_orbitals(SharedMatrix F, const std::vector<int>& ranges) {
+psi::SharedMatrix IAOBuilder::reorder_orbitals(psi::SharedMatrix F, const std::vector<int>& ranges) {
     int nmo = F->rowspi()[0];
     double** Fp = F->pointer();
 
-    SharedMatrix U(new Matrix("U", nmo, nmo));
+    psi::SharedMatrix U(new Matrix("U", nmo, nmo));
     double** Up = U->pointer();
 
     for (size_t ind = 0; ind < ranges.size() - 1; ind++) {
@@ -744,13 +744,13 @@ SharedMatrix IAOBuilder::reorder_orbitals(SharedMatrix F, const std::vector<int>
     return U;
 }
 
-SharedMatrix IAOBuilder::orbital_charges(SharedMatrix L) {
+psi::SharedMatrix IAOBuilder::orbital_charges(psi::SharedMatrix L) {
     double** Lp = L->pointer();
     int nocc = L->rowspi()[0];
     int nmin = L->colspi()[0];
     int natom = true_atoms_.size();
 
-    SharedMatrix Q(new Matrix("Q", natom, nocc));
+    psi::SharedMatrix Q(new Matrix("Q", natom, nocc));
     double** Qp = Q->pointer();
 
     for (int i = 0; i < nocc; i++) {

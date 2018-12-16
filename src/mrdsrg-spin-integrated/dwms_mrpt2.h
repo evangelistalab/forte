@@ -78,8 +78,8 @@ class DWMS_DSRGPT2 : public Wavefunction {
     bool do_semi_;
 
     /// save a copy of original orbitals
-    SharedMatrix Ca_copy_;
-    SharedMatrix Cb_copy_;
+    psi::SharedMatrix Ca_copy_;
+    psi::SharedMatrix Cb_copy_;
 
     /// transform integrals to original basis
     void transform_ints0();
@@ -109,7 +109,7 @@ class DWMS_DSRGPT2 : public Wavefunction {
     /// new_vecs - linear combinations of original states
     std::vector<std::pair<SharedVector, double>>
     compute_new_eigen(const std::vector<std::pair<SharedVector, double>>& old_eigen,
-                      SharedVector new_vals, SharedMatrix new_vecs);
+                      SharedVector new_vals, psi::SharedMatrix new_vecs);
 
     /// compute MS or XMS energies
     void compute_dwms_energy(std::shared_ptr<FCI_MO>& fci_mo);

@@ -367,7 +367,7 @@ void ConventionalIntegrals::resort_four(std::vector<double>& tei, std::vector<si
     temp_ints.swap(tei);
 }
 
-void ConventionalIntegrals::make_fock_matrix(SharedMatrix gamma_a, SharedMatrix gamma_b) {
+void ConventionalIntegrals::make_fock_matrix(psi::SharedMatrix gamma_a, psi::SharedMatrix gamma_b) {
     for (size_t p = 0; p < ncmo_; ++p) {
         for (size_t q = 0; q < ncmo_; ++q) {
             fock_matrix_a_[p * ncmo_ + q] = oei_a(p, q);

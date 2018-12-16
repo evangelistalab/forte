@@ -79,7 +79,7 @@ class ConventionalIntegrals : public ForteIntegrals {
                                                          const std::vector<size_t>&);
     virtual double** three_integral_pointer();
 
-    virtual void make_fock_matrix(SharedMatrix gamma_a, SharedMatrix gamma_b);
+    virtual void make_fock_matrix(psi::SharedMatrix gamma_a, psi::SharedMatrix gamma_b);
 
     virtual size_t nthree() const { throw PSIEXCEPTION("Wrong Int_Type"); }
 

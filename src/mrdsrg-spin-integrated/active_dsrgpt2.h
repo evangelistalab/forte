@@ -130,17 +130,17 @@ class ACTIVE_DSRGPT2 : public Wavefunction {
     void set_fcimo_params(int nroots, int root, int multiplicity);
 
     /// Rotate amplitudes
-    void rotate_amp(SharedMatrix Ua, SharedMatrix Ub, ambit::BlockedTensor& T1,
+    void rotate_amp(psi::SharedMatrix Ua, psi::SharedMatrix Ub, ambit::BlockedTensor& T1,
                     ambit::BlockedTensor& T2);
 
     /// Rotate to semicanonical orbitals and pass to this
-    void rotate_orbs(SharedMatrix Ca0, SharedMatrix Cb0, SharedMatrix Ua, SharedMatrix Ub);
+    void rotate_orbs(psi::SharedMatrix Ca0, psi::SharedMatrix Cb0, psi::SharedMatrix Ua, psi::SharedMatrix Ub);
 
     /// Transform integrals using the orbital coefficients
-    void transform_integrals(SharedMatrix Ca0, SharedMatrix Cb0);
+    void transform_integrals(psi::SharedMatrix Ca0, psi::SharedMatrix Cb0);
 
     /// MO dipole integrals in C1 Pitzer ordering in the original basis
-    std::vector<SharedMatrix> modipole_ints_;
+    std::vector<psi::SharedMatrix> modipole_ints_;
 
     /// Active indices in C1 symmetry per irrep
     std::vector<std::vector<size_t>> actvIdxC1_;
@@ -151,7 +151,7 @@ class ACTIVE_DSRGPT2 : public Wavefunction {
 
     /// Compute VCIS/VCISD transition dipole from root0 -> root1
     Vector4 compute_td_ref_root(std::shared_ptr<FCIIntegrals> fci_ints,
-                                const std::vector<Determinant>& p_space, SharedMatrix evecs,
+                                const std::vector<Determinant>& p_space, psi::SharedMatrix evecs,
                                 const int& root0, const int& root1);
     /// Compute VCIS/VCISD oscillator strength
     /// Only compute root_0 of eigen0 -> root_n of eigen0 or eigen1
@@ -176,12 +176,12 @@ class ACTIVE_DSRGPT2 : public Wavefunction {
     std::string transition_type(const int& n0, const int& irrep0, const int& n1, const int& irrep1);
 
     /// Combine reference wavefunction of different symmetry
-    SharedMatrix combine_evecs(const int& h0, const int& h1);
+    psi::SharedMatrix combine_evecs(const int& h0, const int& h1);
 
     /// Store a copy of the ground-state determinants
     std::vector<Determinant> p_space_g_;
     /// Store a copy of all reference wavefunctions in the original basis
-    std::vector<SharedMatrix> ref_wfns_;
+    std::vector<psi::SharedMatrix> ref_wfns_;
 
     /// Scalar term from T amplitudes de-normal-ordering of the ground state
     double Tde_g_;

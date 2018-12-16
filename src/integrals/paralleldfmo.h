@@ -39,7 +39,7 @@ class ParallelDFMO {
     int Q_PQ() { return GA_Q_PQ_; }
 
   protected:
-    SharedMatrix Ca_;
+    psi::SharedMatrix Ca_;
     /// (A | Q)^{-1/2}
     void J_one_half();
     /// Compute (A|mn) integrals (distribute via mn indices)

@@ -90,7 +90,7 @@ class DistDFIntegrals : public ForteIntegrals {
     }
     virtual ~DistDFIntegrals();
 
-    virtual void make_fock_matrix(SharedMatrix /*gamma_a*/, SharedMatrix /*gamma_b*/) {}
+    virtual void make_fock_matrix(psi::SharedMatrix /*gamma_a*/, psi::SharedMatrix /*gamma_b*/) {}
 
     /// Make a Fock matrix computed with respect to a given determinant
     virtual size_t nthree() const { return nthree_; }

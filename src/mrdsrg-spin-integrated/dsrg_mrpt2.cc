@@ -1493,8 +1493,8 @@ void DSRG_MRPT2::compute_dm1d_pt2(BlockedTensor& M, double& Mbar0, BlockedTensor
     //    D1["AB"] += 0.5 * T2_["MNBC"] * T2_["MNAC"];
     //    D1["AB"] += T2_["mNcB"] * T2_["mNcA"];
 
-    //    // transform D1 with a irrep SharedMatrix
-    //    SharedMatrix SOdens(new Matrix("SO density ", this->nmopi(), this->nmopi()));
+    //    // transform D1 with a irrep psi::SharedMatrix
+    //    psi::SharedMatrix SOdens(new Matrix("SO density ", this->nmopi(), this->nmopi()));
 
     //    for (const auto& pair: mo_space_info_->get_relative_mo("FROZEN_DOCC")) {
     //        size_t h = pair.first;
@@ -1527,12 +1527,12 @@ void DSRG_MRPT2::compute_dm1d_pt2(BlockedTensor& M, double& Mbar0, BlockedTensor
 
     //    SOdens->back_transform(this->Ca());
 
-    //    SharedMatrix sotoao(this->aotoso()->transpose());
+    //    psi::SharedMatrix sotoao(this->aotoso()->transpose());
     //    size_t nao = sotoao->coldim(0);
-    //    SharedMatrix AOdens(new Matrix("AO density ", nao, nao));
+    //    psi::SharedMatrix AOdens(new Matrix("AO density ", nao, nao));
     //    AOdens->remove_symmetry(SOdens, sotoao);
 
-    //    std::vector<SharedMatrix> aodipole_ints = ints_->AOdipole_ints();
+    //    std::vector<psi::SharedMatrix> aodipole_ints = ints_->AOdipole_ints();
     //    std::vector<double> de(4, 0.0);
     //    for (int i = 0; i < 3; ++i) {
     //        de[i] = 2.0 * AOdens->vector_dot(aodipole_ints[i]); // 2.0 for beta spin
@@ -2639,22 +2639,22 @@ std::vector<std::vector<double>> DSRG_MRPT2::diagonalize_Fock_diagblocks(Blocked
     // diagonal blocks identifiers (C-A-V ordering)
     std::vector<std::string> blocks{"cc", "aa", "vv", "CC", "AA", "VV"};
 
-    // map MO space label to its Dimension
-    std::map<std::string, Dimension> MOlabel_to_dimension;
+    // map MO space label to its psi::Dimension
+    std::map<std::string, psi::Dimension> MOlabel_to_dimension;
     MOlabel_to_dimension[acore_label_] = mo_space_info_->get_dimension("RESTRICTED_DOCC");
     MOlabel_to_dimension[aactv_label_] = mo_space_info_->get_dimension("ACTIVE");
     MOlabel_to_dimension[avirt_label_] = mo_space_info_->get_dimension("RESTRICTED_UOCC");
 
     // eigen values to be returned
     size_t ncmo = mo_space_info_->size("CORRELATED");
-    Dimension corr = mo_space_info_->get_dimension("CORRELATED");
+    psi::Dimension corr = mo_space_info_->get_dimension("CORRELATED");
     std::vector<double> eigenvalues_a(ncmo, 0.0);
     std::vector<double> eigenvalues_b(ncmo, 0.0);
 
-    // map MO space label to its offset Dimension
-    std::map<std::string, Dimension> MOlabel_to_offset_dimension;
+    // map MO space label to its offset psi::Dimension
+    std::map<std::string, psi::Dimension> MOlabel_to_offset_dimension;
     int nirrep = corr.n();
-    MOlabel_to_offset_dimension["c"] = Dimension(std::vector<int>(nirrep, 0));
+    MOlabel_to_offset_dimension["c"] = psi::Dimension(std::vector<int>(nirrep, 0));
     MOlabel_to_offset_dimension["a"] = mo_space_info_->get_dimension("RESTRICTED_DOCC");
     MOlabel_to_offset_dimension["v"] =
         mo_space_info_->get_dimension("RESTRICTED_DOCC") + mo_space_info_->get_dimension("ACTIVE");
@@ -2689,7 +2689,7 @@ std::vector<std::vector<double>> DSRG_MRPT2::diagonalize_Fock_diagblocks(Blocked
             continue;
         } else {
             std::string label(1, tolower(block[0]));
-            Dimension space = MOlabel_to_dimension[label];
+            psi::Dimension space = MOlabel_to_dimension[label];
             int nirrep = space.n();
 
             // separate Fock with irrep
@@ -2724,7 +2724,7 @@ std::vector<std::vector<double>> DSRG_MRPT2::diagonalize_Fock_diagblocks(Blocked
     return {eigenvalues_a, eigenvalues_b};
 }
 
-ambit::Tensor DSRG_MRPT2::separate_tensor(ambit::Tensor& tens, const Dimension& irrep,
+ambit::Tensor DSRG_MRPT2::separate_tensor(ambit::Tensor& tens, const psi::Dimension& irrep,
                                           const int& h) {
     // test tens and irrep
     size_t tens_dim = tens.dim(0);
@@ -2758,7 +2758,7 @@ ambit::Tensor DSRG_MRPT2::separate_tensor(ambit::Tensor& tens, const Dimension& 
     return T_h;
 }
 
-void DSRG_MRPT2::combine_tensor(ambit::Tensor& tens, ambit::Tensor& tens_h, const Dimension& irrep,
+void DSRG_MRPT2::combine_tensor(ambit::Tensor& tens, ambit::Tensor& tens_h, const psi::Dimension& irrep,
                                 const int& h) {
     // test tens and irrep
     if (h >= irrep.n()) {
@@ -2838,7 +2838,7 @@ ambit::BlockedTensor DSRG_MRPT2::get_RH1deGNO() {
     return RH1eff;
 }
 
-void DSRG_MRPT2::rotate_amp(SharedMatrix Ua, SharedMatrix Ub, const bool& transpose,
+void DSRG_MRPT2::rotate_amp(psi::SharedMatrix Ua, psi::SharedMatrix Ub, const bool& transpose,
                             const bool& t1eff) {
     ambit::BlockedTensor U = BTF_->build(tensor_type_, "Uorb", spin_cases({"gg"}));
 

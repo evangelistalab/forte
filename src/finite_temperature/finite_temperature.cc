@@ -68,7 +68,7 @@ void FiniteTemperatureHF::startup() {
     nirrep_ = this->nirrep();
 
     debug_ = options_.get_int("PRINT");
-    SharedMatrix C(this->Ca()->clone());
+    psi::SharedMatrix C(this->Ca()->clone());
 }
 
 double FiniteTemperatureHF::compute_energy() {
@@ -85,7 +85,7 @@ double FiniteTemperatureHF::compute_energy() {
 
     /// It seems that HF class does not actually copy Ca into
     /// Process::Environment
-    SharedMatrix Ca = this->Ca();
+    psi::SharedMatrix Ca = this->Ca();
     Ca->copy(Ca_);
     this->Cb()->copy(Ca);
 
@@ -112,11 +112,11 @@ void FiniteTemperatureHF::frac_occupation() {
         fermidirac_[active_array] = ni[active_array];
     }
 
-    Dimension nmopi = mo_space_info_->get_dimension("ALL");
+    psi::Dimension nmopi = mo_space_info_->get_dimension("ALL");
     SharedVector Dirac_sym(new Vector("Dirac_Symmetry", nirrep_, nmopi));
 
     int offset = 0;
-    Dimension occupation(nirrep_);
+    psi::Dimension occupation(nirrep_);
     for (int h = 0; h < nirrep_; h++) {
         int nonzero_occupation = 0;
         for (int p = 0; p < nmopi[h]; p++) {
@@ -130,12 +130,12 @@ void FiniteTemperatureHF::frac_occupation() {
         offset += nmopi[h];
     }
 
-    SharedMatrix C(new Matrix("C_matrix", this->nsopi(), occupation));
-    SharedMatrix Call(this->Ca()->clone());
+    psi::SharedMatrix C(new Matrix("C_matrix", this->nsopi(), occupation));
+    psi::SharedMatrix Call(this->Ca()->clone());
 
-    Dimension nsopi = this->nsopi();
-    SharedMatrix C_scaled(new Matrix("C_rdocc_active", nirrep_, nsopi, occupation));
-    SharedMatrix C_no_scale(new Matrix("C_nochange", nirrep_, nsopi, occupation));
+    psi::Dimension nsopi = this->nsopi();
+    psi::SharedMatrix C_scaled(new Matrix("C_rdocc_active", nirrep_, nsopi, occupation));
+    psi::SharedMatrix C_no_scale(new Matrix("C_nochange", nirrep_, nsopi, occupation));
     /// Scale the columns with the occupation.
     /// This C matrix will be passed to JK object for CLeft
     for (int h = 0; h < nirrep_; h++) {
@@ -156,7 +156,7 @@ void FiniteTemperatureHF::initialize_occupation_vector(std::vector<double>& dira
 }
 std::vector<std::pair<double, int>> FiniteTemperatureHF::get_active_orbital_energy() {
     int nirrep = this->nirrep();
-    Dimension nmopi = mo_space_info_->get_dimension("ALL");
+    psi::Dimension nmopi = mo_space_info_->get_dimension("ALL");
     std::vector<std::pair<double, int>> nmo_vec;
     int offset = 0;
     for (int h = 0; h < nirrep; h++) {
@@ -280,11 +280,11 @@ void FiniteTemperatureHF::form_G() {
 
     JK->compute();
 
-    SharedMatrix J_core = JK->J()[0];
-    SharedMatrix K_core = JK->K()[0];
+    psi::SharedMatrix J_core = JK->J()[0];
+    psi::SharedMatrix K_core = JK->K()[0];
 
     J_core->scale(2.0);
-    SharedMatrix F_core = J_core->clone();
+    psi::SharedMatrix F_core = J_core->clone();
     F_core->subtract(K_core);
     G_->copy(F_core);
 }

@@ -54,8 +54,8 @@ CI_Reference::CI_Reference(std::shared_ptr<Wavefunction> wfn, Options& options,
     nirrep_ = wfn_->nirrep();
 
     // Double and singly occupied MOs
-    Dimension doccpi = wfn_->doccpi();
-    Dimension soccpi = wfn_->soccpi();
+    psi::Dimension doccpi = wfn_->doccpi();
+    psi::Dimension soccpi = wfn_->soccpi();
 
     // Frozen DOCC + RDOCC
     size_t ninact = mo_space_info_->size("INACTIVE_DOCC");

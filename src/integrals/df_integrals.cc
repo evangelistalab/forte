@@ -184,11 +184,11 @@ void DFIntegrals::gather_integrals() {
                         mem_info.second.c_str());
     }
 
-    Dimension nsopi_ = wfn_->nsopi();
-    SharedMatrix aotoso = wfn_->aotoso();
-    SharedMatrix Ca = wfn_->Ca();
-    // SharedMatrix Ca_ao(new Matrix("Ca_ao",nso_,nmopi_.sum()));
-    SharedMatrix Ca_ao(new Matrix("Ca_ao", nso_, nmopi_.sum()));
+    psi::Dimension nsopi_ = wfn_->nsopi();
+    psi::SharedMatrix aotoso = wfn_->aotoso();
+    psi::SharedMatrix Ca = wfn_->Ca();
+    // psi::SharedMatrix Ca_ao(new Matrix("Ca_ao",nso_,nmopi_.sum()));
+    psi::SharedMatrix Ca_ao(new Matrix("Ca_ao", nso_, nmopi_.sum()));
 
     // Transform from the SO to the AO basis
     for (int h = 0, index = 0; h < nirrep_; ++h) {
@@ -238,7 +238,7 @@ void DFIntegrals::gather_integrals() {
         outfile->Printf("\n");
     }
 
-    SharedMatrix Bpq(new Matrix("Bpq", naux, nmo_ * nmo_));
+    psi::SharedMatrix Bpq(new Matrix("Bpq", naux, nmo_ * nmo_));
 
     Bpq = df->get_tensor("B");
 
@@ -246,7 +246,7 @@ void DFIntegrals::gather_integrals() {
     ThreeIntegral_ = Bpq->transpose()->clone();
 }
 
-void DFIntegrals::make_fock_matrix(SharedMatrix gamma_aM, SharedMatrix gamma_bM) {
+void DFIntegrals::make_fock_matrix(psi::SharedMatrix gamma_aM, psi::SharedMatrix gamma_bM) {
     TensorType tensor_type = ambit::CoreTensor;
     ambit::Tensor ThreeIntegralTensor =
         // ambit::Tensor::build(tensor_type, "ThreeIndex", {ncmo_, ncmo_, nthree_});
@@ -304,9 +304,9 @@ void DFIntegrals::make_fock_matrix(SharedMatrix gamma_aM, SharedMatrix gamma_bM)
     /// Form with JK builders
 }
 
-void DFIntegrals::resort_three(SharedMatrix& threeint, std::vector<size_t>& map) {
+void DFIntegrals::resort_three(psi::SharedMatrix& threeint, std::vector<size_t>& map) {
     // Create a temperature threeint matrix
-    SharedMatrix temp_threeint(new Matrix("tmp", ncmo_ * ncmo_, nthree_));
+    psi::SharedMatrix temp_threeint(new Matrix("tmp", ncmo_ * ncmo_, nthree_));
     temp_threeint->zero();
 
     // Borrwed from resort_four.

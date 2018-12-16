@@ -86,8 +86,8 @@ class WFNOperator {
     void add_doubles(DeterminantHashVec& wfn);
 
     /// Compute total spin expectation value <|S^2|>
-    double s2(DeterminantHashVec& wfn, SharedMatrix& evecs, int root);
-    double s2_direct(DeterminantHashVec& wfn, SharedMatrix& evecs, int root);
+    double s2(DeterminantHashVec& wfn, psi::SharedMatrix& evecs, int root);
+    double s2_direct(DeterminantHashVec& wfn, psi::SharedMatrix& evecs, int root);
 
     void build_strings(DeterminantHashVec& wfn);
 

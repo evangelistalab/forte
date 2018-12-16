@@ -74,13 +74,13 @@ class CI_Reference // : public Wavefunction
     int nact_;
 
     // Symmetry of each active MO
-    Dimension mo_symmetry_;
+    psi::Dimension mo_symmetry_;
 
     // Number of active MOs per irrep
-    Dimension nactpi_;
+    psi::Dimension nactpi_;
 
     // Number of frozen_docc + restriced_docc MOs
-    Dimension frzcpi_;
+    psi::Dimension frzcpi_;
 
     // Returns MO energies, symmetries, and indicies, sorted
     std::vector<std::tuple<double, int, int>> sym_labeled_orbitals(std::string type);
