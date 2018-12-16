@@ -54,7 +54,7 @@ DavidsonLiuSolver::DavidsonLiuSolver(size_t size, size_t nroot) : size_(size), n
         throw std::runtime_error("DavidsonLiuSolver called with space of dimension zero.");
 }
 
-void DavidsonLiuSolver::startup(SharedVector diagonal) {
+void DavidsonLiuSolver::startup(psi::SharedVector diagonal) {
     // set space size
     collapse_size_ = std::min(collapse_per_root_ * nroot_, size_);
     subspace_size_ = std::min(subspace_per_root_ * nroot_, size_);
@@ -74,9 +74,9 @@ void DavidsonLiuSolver::startup(SharedVector diagonal) {
     S = psi::SharedMatrix(new Matrix("S", subspace_size_, subspace_size_));
     alpha = psi::SharedMatrix(new Matrix("alpha", subspace_size_, subspace_size_));
 
-    lambda = SharedVector(new Vector("lambda", subspace_size_));
-    lambda_old = SharedVector(new Vector("lambda", subspace_size_));
-    h_diag = SharedVector(new Vector("lambda", size_));
+    lambda = psi::SharedVector(new Vector("lambda", subspace_size_));
+    lambda_old = psi::SharedVector(new Vector("lambda", subspace_size_));
+    h_diag = psi::SharedVector(new Vector("lambda", size_));
 
     h_diag->copy(*diagonal);
 }
@@ -95,7 +95,7 @@ void DavidsonLiuSolver::set_subspace_per_root(int value) { subspace_per_root_ = 
 
 size_t DavidsonLiuSolver::collapse_size() const { return collapse_size_; }
 
-void DavidsonLiuSolver::add_guess(SharedVector vec) {
+void DavidsonLiuSolver::add_guess(psi::SharedVector vec) {
     // Give the next b that does not have a sigma
     for (size_t j = 0; j < size_; ++j) {
         b_->set(basis_size_, j, vec->get(j));
@@ -103,7 +103,7 @@ void DavidsonLiuSolver::add_guess(SharedVector vec) {
     basis_size_++;
 }
 
-void DavidsonLiuSolver::get_b(SharedVector vec) {
+void DavidsonLiuSolver::get_b(psi::SharedVector vec) {
     PRINT_VARS("get_b")
     // Give the next b that does not have a sigma
     for (size_t j = 0; j < size_; ++j) {
@@ -111,7 +111,7 @@ void DavidsonLiuSolver::get_b(SharedVector vec) {
     }
 }
 
-bool DavidsonLiuSolver::add_sigma(SharedVector vec) {
+bool DavidsonLiuSolver::add_sigma(psi::SharedVector vec) {
     PRINT_VARS("add_sigma")
     // Place the new sigma vector at the end
     for (size_t j = 0; j < size_; ++j) {
@@ -125,14 +125,14 @@ void DavidsonLiuSolver::set_project_out(std::vector<sparse_vec> project_out) {
     project_out_ = project_out;
 }
 
-SharedVector DavidsonLiuSolver::eigenvalues() const { return lambda; }
+psi::SharedVector DavidsonLiuSolver::eigenvalues() const { return lambda; }
 
 psi::SharedMatrix DavidsonLiuSolver::eigenvectors() const { return bnew; }
 
-SharedVector DavidsonLiuSolver::eigenvector(size_t n) const {
+psi::SharedVector DavidsonLiuSolver::eigenvector(size_t n) const {
     double** v = bnew->pointer();
 
-    SharedVector evec(new Vector("V", size_));
+    psi::SharedVector evec(new Vector("V", size_));
     for (size_t I = 0; I < size_; I++) {
         evec->set(I, v[n][I]);
     }

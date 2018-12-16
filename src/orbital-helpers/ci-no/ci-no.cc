@@ -130,7 +130,7 @@ double CINO::compute_energy() {
             std::vector<Determinant> dets = build_dets(h);
 
             // 2. Diagonalize the Hamiltonian in this basis
-            std::pair<SharedVector, psi::SharedMatrix> evals_evecs =
+            std::pair<psi::SharedVector, psi::SharedMatrix> evals_evecs =
                 diagonalize_hamiltonian(dets, nsolutions);
 
             // 3. Build the density matrix
@@ -151,7 +151,7 @@ double CINO::compute_energy() {
     std::pair<psi::SharedMatrix, psi::SharedMatrix> avg_gamma = std::make_pair(Density_a, Density_b);
 
     // 4. Diagonalize the density matrix
-    std::tuple<SharedVector, psi::SharedMatrix, SharedVector, psi::SharedMatrix> no_U =
+    std::tuple<psi::SharedVector, psi::SharedMatrix, psi::SharedVector, psi::SharedMatrix> no_U =
         diagonalize_density_matrix(avg_gamma);
 
     // 5. Find optimal active space and transform the orbitals
@@ -325,9 +325,9 @@ std::vector<Determinant> CINO::build_dets(int irrep) {
     return dets;
 }
 /// Diagonalize the Hamiltonian in this basis
-std::pair<SharedVector, psi::SharedMatrix>
+std::pair<psi::SharedVector, psi::SharedMatrix>
 CINO::diagonalize_hamiltonian(const std::vector<Determinant>& dets, int nsolutions) {
-    std::pair<SharedVector, psi::SharedMatrix> evals_evecs;
+    std::pair<psi::SharedVector, psi::SharedMatrix> evals_evecs;
 
     SparseCISolver sparse_solver(fci_ints_);
     sparse_solver.set_parallel(true);
@@ -410,12 +410,12 @@ CINO::build_density_matrix(const std::vector<Determinant>& dets, psi::SharedMatr
 }
 
 /// Diagonalize the density matrix
-std::tuple<SharedVector, psi::SharedMatrix, SharedVector, psi::SharedMatrix>
+std::tuple<psi::SharedVector, psi::SharedMatrix, psi::SharedVector, psi::SharedMatrix>
 CINO::diagonalize_density_matrix(std::pair<psi::SharedMatrix, psi::SharedMatrix> gamma) {
-    std::pair<SharedVector, psi::SharedMatrix> no_U;
+    std::pair<psi::SharedVector, psi::SharedMatrix> no_U;
 
-    SharedVector OCC_A(new Vector("ALPHA OCCUPATION", actvpi_));
-    SharedVector OCC_B(new Vector("BETA OCCUPATION", actvpi_));
+    psi::SharedVector OCC_A(new Vector("ALPHA OCCUPATION", actvpi_));
+    psi::SharedVector OCC_B(new Vector("BETA OCCUPATION", actvpi_));
     psi::SharedMatrix NO_A(new Matrix(actvpi_, actvpi_));
     psi::SharedMatrix NO_B(new Matrix(actvpi_, actvpi_));
 
@@ -435,8 +435,8 @@ CINO::diagonalize_density_matrix(std::pair<psi::SharedMatrix, psi::SharedMatrix>
     // Diagonalize alpha density matrix
     psi::SharedMatrix NO_A_occ(new Matrix(aoccpi, aoccpi));
     psi::SharedMatrix NO_A_vir(new Matrix(avirpi, avirpi));
-    SharedVector OCC_A_occ(new Vector("Occupied ALPHA OCCUPATION", aoccpi));
-    SharedVector OCC_A_vir(new Vector("Virtual ALPHA OCCUPATION", avirpi));
+    psi::SharedVector OCC_A_occ(new Vector("Occupied ALPHA OCCUPATION", aoccpi));
+    psi::SharedVector OCC_A_vir(new Vector("Virtual ALPHA OCCUPATION", avirpi));
     gamma_a_occ->diagonalize(NO_A_occ, OCC_A_occ, descending);
     gamma_a_vir->diagonalize(NO_A_vir, OCC_A_vir, descending);
     //        OCC_A_occ->print();
@@ -478,8 +478,8 @@ CINO::diagonalize_density_matrix(std::pair<psi::SharedMatrix, psi::SharedMatrix>
     // Diagonalize beta density matrix
     psi::SharedMatrix NO_B_occ(new Matrix(boccpi, boccpi));
     psi::SharedMatrix NO_B_vir(new Matrix(bvirpi, bvirpi));
-    SharedVector OCC_B_occ(new Vector("Occupied BETA OCCUPATION", boccpi));
-    SharedVector OCC_B_vir(new Vector("Virtual BETA OCCUPATION", bvirpi));
+    psi::SharedVector OCC_B_occ(new Vector("Occupied BETA OCCUPATION", boccpi));
+    psi::SharedVector OCC_B_vir(new Vector("Virtual BETA OCCUPATION", bvirpi));
     gamma_b_occ->diagonalize(NO_B_occ, OCC_B_occ, descending);
     gamma_b_vir->diagonalize(NO_B_vir, OCC_B_vir, descending);
     //    OCC_B_occ->print();
@@ -515,7 +515,7 @@ CINO::diagonalize_density_matrix(std::pair<psi::SharedMatrix, psi::SharedMatrix>
 
 // Find optimal active space and transform the orbitals
 void CINO::find_active_space_and_transform(
-    std::tuple<SharedVector, psi::SharedMatrix, SharedVector, psi::SharedMatrix> no_U) {
+    std::tuple<psi::SharedVector, psi::SharedMatrix, psi::SharedVector, psi::SharedMatrix> no_U) {
 
     psi::SharedMatrix Ua = std::make_shared<Matrix>("U", nmopi_, nmopi_);
     psi::SharedMatrix NO_A = std::get<1>(no_U);
@@ -531,8 +531,8 @@ void CINO::find_active_space_and_transform(
     Ca_->copy(Ca_new);
     Cb_ = Ca_; // Fix this for unrestricted case
 
-    SharedVector OCC_A = std::get<0>(no_U);
-    SharedVector OCC_B = std::get<2>(no_U);
+    psi::SharedVector OCC_A = std::get<0>(no_U);
+    psi::SharedVector OCC_B = std::get<2>(no_U);
 
     std::vector<std::tuple<double, int, int>> sorted_aocc; // (non,irrep,index)
     double sum_o = 0.0;

@@ -291,7 +291,7 @@ double SA_FCISolver::compute_energy() {
         //        double Enuc =
         //        Process::environment.molecule()->nuclear_repulsion_energy();
         //        psi::SharedMatrix vecs = fcisolver.eigen_vecs();
-        //        SharedVector vals = fcisolver.eigen_vals();
+        //        psi::SharedVector vals = fcisolver.eigen_vals();
         //        for(int n = 0; n < nroot; ++n){
         //            // create new FCIWfn pointers
         //            std::shared_ptr<FCIWfn> fci_wfn = fcisolver.get_FCIWFN();
@@ -313,7 +313,7 @@ double SA_FCISolver::compute_energy() {
         //            casscf_energies.push_back(Ecas);
         //        }
 
-        SharedVector evals;
+        psi::SharedVector evals;
         double Enuc = Process::environment.molecule()->nuclear_repulsion_energy(
             wfn_->get_dipole_field_strength());
         for (int root_number = 0; root_number < nroot; root_number++) {

@@ -103,7 +103,7 @@ double MRCI::compute_energy() {
 
     // Diagonalize MR-CISD Hamiltonian
     psi::SharedMatrix evecs;
-    SharedVector evals;
+    psi::SharedVector evals;
 
     SparseCISolver sparse_solver(fci_ints_);
 

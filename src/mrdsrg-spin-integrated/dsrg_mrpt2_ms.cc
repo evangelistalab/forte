@@ -246,7 +246,7 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
 
                 // compute energy and fill in results
                 fcisolver.compute_energy();
-                SharedVector Ems = fcisolver.eigen_vals();
+                psi::SharedVector Ems = fcisolver.eigen_vals();
                 for (int i = 0; i < nstates; ++i) {
                     Edsrg_sa[n].push_back(Ems->get(i) + Enuc_);
                 }
@@ -323,7 +323,7 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
                 outfile->Printf("\n");
                 Heff->print();
                 psi::SharedMatrix U(new Matrix("U of Heff", nstates, nstates));
-                SharedVector Ems(new Vector("MS Energies", nstates));
+                psi::SharedVector Ems(new Vector("MS Energies", nstates));
                 Heff->diagonalize(U, Ems);
                 U->eivprint(Ems);
 
@@ -503,7 +503,7 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_xms() {
         Heff_sym->print();
 
         psi::SharedMatrix U(new Matrix("U of Heff (Symmetrized)", nstates, nstates));
-        SharedVector Ems(new Vector("MS Energies", nstates));
+        psi::SharedVector Ems(new Vector("MS Energies", nstates));
         Heff_sym->diagonalize(U, Ems);
         U->eivprint(Ems);
 
@@ -591,7 +591,7 @@ psi::SharedMatrix DSRG_MRPT2::xms_rotation(std::shared_ptr<FCIIntegrals> fci_int
 
     // diagonalize Fock
     psi::SharedMatrix Fevec(new Matrix("Fock Evec", nstates, nstates));
-    SharedVector Feval(new Vector("Fock Eval", nstates));
+    psi::SharedVector Feval(new Vector("Fock Eval", nstates));
     Fock->diagonalize(Fevec, Feval);
     Fevec->eivprint(Feval);
 

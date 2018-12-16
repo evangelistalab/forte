@@ -53,7 +53,7 @@ class MRPT2 : public Wavefunction {
     // Class constructor and destructor
     MRPT2(psi::SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
           std::shared_ptr<MOSpaceInfo> mo_space_info, DeterminantHashVec& reference,
-          psi::SharedMatrix evecs, SharedVector evals);
+          psi::SharedMatrix evecs, psi::SharedVector evals);
 
     ~MRPT2();
 
@@ -66,7 +66,7 @@ class MRPT2 : public Wavefunction {
     std::shared_ptr<FCIIntegrals> fci_ints_;
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
     psi::SharedMatrix evecs_;
-    SharedVector evals_;
+    psi::SharedVector evals_;
 
     void startup();
 

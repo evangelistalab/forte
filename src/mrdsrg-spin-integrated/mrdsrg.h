@@ -78,7 +78,7 @@ class MRDSRG : public MASTER_DSRG {
     double compute_energy_sa();
 
     /// Set CASCI eigen values and eigen vectors for state averaging
-    void set_eigens(std::vector<std::vector<std::pair<SharedVector, double>>> eigens) {
+    void set_eigens(std::vector<std::vector<std::pair<psi::SharedVector, double>>> eigens) {
         eigens_ = eigens;
     }
 
@@ -111,7 +111,7 @@ class MRDSRG : public MASTER_DSRG {
     bool nivo_;
 
     /// CASCI eigen values and eigen vectors for state averaging
-    std::vector<std::vector<std::pair<SharedVector, double>>> eigens_;
+    std::vector<std::vector<std::pair<psi::SharedVector, double>>> eigens_;
     /// Determinants in the model space
     std::vector<std::vector<forte::Determinant>> p_spaces_;
 

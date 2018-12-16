@@ -71,12 +71,12 @@ class SparseCISolver {
 
     SparseCISolver(std::shared_ptr<FCIIntegrals> fci_ints) { fci_ints_ = fci_ints; }
 
-    void diagonalize_hamiltonian(const std::vector<Determinant>& space, SharedVector& evals,
+    void diagonalize_hamiltonian(const std::vector<Determinant>& space, psi::SharedVector& evals,
                                  psi::SharedMatrix& evecs, int nroot, int multiplicity,
                                  DiagonalizationMethod diag_method);
 
     void diagonalize_hamiltonian_map(const DeterminantHashVec& space, WFNOperator& op,
-                                     SharedVector& evals, psi::SharedMatrix& evecs, int nroot,
+                                     psi::SharedVector& evals, psi::SharedMatrix& evecs, int nroot,
                                      int multiplicity, DiagonalizationMethod diag_method);
 
     /// Enable/disable the parallel algorithms
@@ -127,33 +127,33 @@ class SparseCISolver {
 
   private:
     /// Form the full Hamiltonian and diagonalize it (for debugging)
-    void diagonalize_full(const std::vector<Determinant>& space, SharedVector& evals,
+    void diagonalize_full(const std::vector<Determinant>& space, psi::SharedVector& evals,
                           psi::SharedMatrix& evecs, int nroot, int multiplicity);
 
-    void diagonalize_mpi(const DeterminantHashVec& space, WFNOperator& op, SharedVector& evals,
+    void diagonalize_mpi(const DeterminantHashVec& space, WFNOperator& op, psi::SharedVector& evals,
                          psi::SharedMatrix& evecs, int nroot, int multiplicity);
 
-    void diagonalize_dl(const DeterminantHashVec& space, WFNOperator& op, SharedVector& evals,
+    void diagonalize_dl(const DeterminantHashVec& space, WFNOperator& op, psi::SharedVector& evals,
                         psi::SharedMatrix& evecs, int nroot, int multiplicity);
 
     void diagonalize_dl_sparse(const DeterminantHashVec& space, WFNOperator& op,
-                               SharedVector& evals, psi::SharedMatrix& evecs, int nroot,
+                               psi::SharedVector& evals, psi::SharedMatrix& evecs, int nroot,
                                int multiplicity);
 
     /// Use a direct algorithm that does not require substitution lists
     void diagonalize_dl_direct(const DeterminantHashVec& space, WFNOperator& op,
-                               SharedVector& evals, psi::SharedMatrix& evecs, int nroot,
+                               psi::SharedVector& evals, psi::SharedMatrix& evecs, int nroot,
                                int multiplicity);
     /// Use a dynamic algorithm that does not require substitution lists
     void diagonalize_dl_dynamic(const DeterminantHashVec& space,
-                                SharedVector& evals, psi::SharedMatrix& evecs, int nroot,
+                                psi::SharedVector& evals, psi::SharedMatrix& evecs, int nroot,
                                 int multiplicity);
 
-    void diagonalize_davidson_liu_solver(const std::vector<Determinant>& space, SharedVector& evals,
+    void diagonalize_davidson_liu_solver(const std::vector<Determinant>& space, psi::SharedVector& evals,
                                          psi::SharedMatrix& evecs, int nroot, int multiplicity);
 
     //   void diagonalize_davidson_liu_string(
-    //       const std::vector<Determinant>& space, SharedVector& evals,
+    //       const std::vector<Determinant>& space, psi::SharedVector& evals,
     //       psi::SharedMatrix& evecs, int nroot, int multiplicity, bool disk);
     /// Build the full Hamiltonian matrix
 
@@ -165,11 +165,11 @@ class SparseCISolver {
 
     /// The Davidson-Liu algorithm
     bool davidson_liu_solver(const std::vector<Determinant>& space, SigmaVector* sigma_vector,
-                             SharedVector Eigenvalues, psi::SharedMatrix Eigenvectors, int nroot,
+                             psi::SharedVector Eigenvalues, psi::SharedMatrix Eigenvectors, int nroot,
                              int multiplicity);
 
     bool davidson_liu_solver_map(const DeterminantHashVec& space, SigmaVector* sigma_vector,
-                                 SharedVector Eigenvalues, psi::SharedMatrix Eigenvectors, int nroot,
+                                 psi::SharedVector Eigenvalues, psi::SharedMatrix Eigenvectors, int nroot,
                                  int multiplicity);
     /// Use a OMP parallel algorithm?
     bool parallel_ = false;

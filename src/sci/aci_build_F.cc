@@ -863,7 +863,7 @@ void AdaptiveCI::get_core_excited_determinants(psi::SharedMatrix evecs, Determin
 }
 
 double AdaptiveCI::get_excited_determinants_batch_old(
-    psi::SharedMatrix evecs, SharedVector evals, DeterminantHashVec& P_space,
+    psi::SharedMatrix evecs, psi::SharedVector evals, DeterminantHashVec& P_space,
     std::vector<std::pair<double, Determinant>>& F_space) {
     const size_t n_dets = P_space.size();
 
@@ -1150,7 +1150,7 @@ det_hash<double> AdaptiveCI::get_bin_F_space_old(int bin, int nbin, psi::SharedM
 
 // New threading strategy
 double AdaptiveCI::get_excited_determinants_batch_vecsort(
-    psi::SharedMatrix evecs, SharedVector evals, DeterminantHashVec& P_space,
+    psi::SharedMatrix evecs, psi::SharedVector evals, DeterminantHashVec& P_space,
     std::vector<std::pair<double, Determinant>>& F_space) {
     const size_t n_dets = P_space.size();
 
@@ -1367,7 +1367,7 @@ double AdaptiveCI::get_excited_determinants_batch_vecsort(
 
 // New threading strategy
 double
-AdaptiveCI::get_excited_determinants_batch(psi::SharedMatrix evecs, SharedVector evals,
+AdaptiveCI::get_excited_determinants_batch(psi::SharedMatrix evecs, psi::SharedVector evals,
                                            DeterminantHashVec& P_space,
                                            std::vector<std::pair<double, Determinant>>& F_space) {
     const size_t n_dets = P_space.size();

@@ -299,7 +299,7 @@ class AdaptiveCI : public Wavefunction {
     void startup();
 
     /// Compute an aci wavefunction
-    void compute_aci(DeterminantHashVec& PQ_space, psi::SharedMatrix& PQ_evecs, SharedVector& PQ_evals);
+    void compute_aci(DeterminantHashVec& PQ_space, psi::SharedMatrix& PQ_evecs, psi::SharedVector& PQ_evals);
 
     /// Print information about this calculation
     void print_info();
@@ -309,15 +309,15 @@ class AdaptiveCI : public Wavefunction {
 
     /// Batched version of find q space
     void find_q_space_batched(DeterminantHashVec& P_space, DeterminantHashVec& PQ_space,
-                              SharedVector evals, psi::SharedMatrix evecs);
+                              psi::SharedVector evals, psi::SharedMatrix evecs);
 
     /// Streamlined version of find q space
     void default_find_q_space(DeterminantHashVec& P_space, DeterminantHashVec& PQ_space,
-                              SharedVector evals, psi::SharedMatrix evecs);
+                              psi::SharedVector evals, psi::SharedMatrix evecs);
 
     /// Find all the relevant excitations out of the P space
     void find_q_space(DeterminantHashVec& P_space, DeterminantHashVec& PQ_space, int nroot,
-                      SharedVector evals, psi::SharedMatrix evecs);
+                      psi::SharedVector evals, psi::SharedMatrix evecs);
 
     /// Generate set of state-averaged q-criteria and determinants
     double average_q_values(int nroot, std::vector<double>& C1, std::vector<double>& E2);
@@ -327,7 +327,7 @@ class AdaptiveCI : public Wavefunction {
 
     /// Find all the relevant excitations out of the P space - single root
     /// version
-    void find_q_space_single_root(int nroot, SharedVector evals, psi::SharedMatrix evecs);
+    void find_q_space_single_root(int nroot, psi::SharedVector evals, psi::SharedMatrix evecs);
 
     /// Basic determinant generator (threaded, no batching, all determinants stored)
     void get_excited_determinants(int nroot, psi::SharedMatrix evecs, DeterminantHashVec& P_space,
@@ -345,19 +345,19 @@ class AdaptiveCI : public Wavefunction {
                                      det_hash<double>& V_hash);
 
     // Primitive batching algorithm, each thread does one bin, to be removed
-    double get_excited_determinants_batch_old(psi::SharedMatrix evecs, SharedVector evals,
+    double get_excited_determinants_batch_old(psi::SharedMatrix evecs, psi::SharedVector evals,
                                               DeterminantHashVec& P_space,
                                               std::vector<std::pair<double, Determinant>>& F_space);
 
     // (DEFAULT in batching) Optimized batching algorithm, prescreens the batches to significantly
     // reduce storage, based on hashes
-    double get_excited_determinants_batch(psi::SharedMatrix evecs, SharedVector evals,
+    double get_excited_determinants_batch(psi::SharedMatrix evecs, psi::SharedVector evals,
                                           DeterminantHashVec& P_space,
                                           std::vector<std::pair<double, Determinant>>& F_space);
 
     // Gets excited determinants using sorting of vectors
     double
-    get_excited_determinants_batch_vecsort(psi::SharedMatrix evecs, SharedVector evals,
+    get_excited_determinants_batch_vecsort(psi::SharedMatrix evecs, psi::SharedVector evals,
                                            DeterminantHashVec& P_space,
                                            std::vector<std::pair<double, Determinant>>& F_space);
 
@@ -383,10 +383,10 @@ class AdaptiveCI : public Wavefunction {
 
     /// Check if the procedure has converged
     bool check_convergence(std::vector<std::vector<double>>& energy_history,
-                           SharedVector new_energies);
+                           psi::SharedVector new_energies);
 
     /// Check if the procedure is stuck
-    bool check_stuck(std::vector<std::vector<double>>& energy_history, SharedVector evals);
+    bool check_stuck(std::vector<std::vector<double>>& energy_history, psi::SharedVector evals);
 
     /// Computes spin
     std::vector<std::pair<double, double>> compute_spin(DeterminantHashVec& space, WFNOperator& op,
@@ -407,14 +407,14 @@ class AdaptiveCI : public Wavefunction {
     void wfn_to_file(DeterminantHashVec& det_space, psi::SharedMatrix evecs, int root);
 
     /// Compute the Davidson correction
-    std::vector<double> davidson_correction(std::vector<Determinant>& P_dets, SharedVector P_evals,
+    std::vector<double> davidson_correction(std::vector<Determinant>& P_dets, psi::SharedVector P_evals,
                                             psi::SharedMatrix PQ_evecs,
                                             std::vector<Determinant>& PQ_dets,
-                                            SharedVector PQ_evals);
+                                            psi::SharedVector PQ_evals);
 
     //    void compute_H_expectation_val(const
     //    std::vector<Determinant>& space,
-    //                                    SharedVector& evals,
+    //                                    psi::SharedVector& evals,
     //                                    const psi::SharedMatrix evecs,
     //                                    int nroot,
     //                                    DiagonalizationMethod diag_method);
@@ -432,7 +432,7 @@ class AdaptiveCI : public Wavefunction {
 
     /// Project ACI wavefunction
     void project_determinant_space(DeterminantHashVec& space, psi::SharedMatrix evecs,
-                                   SharedVector evals, int nroot);
+                                   psi::SharedVector evals, int nroot);
 
     /// Compute the RDMs
     void compute_rdms(std::shared_ptr<FCIIntegrals> fci_ints, DeterminantHashVec& dets,
@@ -445,15 +445,15 @@ class AdaptiveCI : public Wavefunction {
     void add_bad_roots(DeterminantHashVec& dets);
 
     /// Print Summary
-    void print_final(DeterminantHashVec& dets, psi::SharedMatrix& PQ_evecs, SharedVector& PQ_evals);
+    void print_final(DeterminantHashVec& dets, psi::SharedMatrix& PQ_evecs, psi::SharedVector& PQ_evals);
 
-    void compute_multistate(SharedVector& PQ_evals);
+    void compute_multistate(psi::SharedVector& PQ_evals);
 
     void block_diagonalize_fock(const d2& Fa, const d2& Fb, psi::SharedMatrix& Ua, psi::SharedMatrix& Ub,
                                 const std::string& name);
 
     DeterminantHashVec approximate_wfn(DeterminantHashVec& PQ_space, psi::SharedMatrix& evecs,
-                                       SharedVector& PQ_evals, psi::SharedMatrix& new_evecs);
+                                       psi::SharedVector& PQ_evals, psi::SharedMatrix& new_evecs);
 
     std::vector<std::pair<size_t, double>> dl_initial_guess(std::vector<Determinant>& old_dets,
                                                             std::vector<Determinant>& dets,
@@ -464,12 +464,12 @@ class AdaptiveCI : public Wavefunction {
     //    int david2(double **A, int N, int M, double *eps, double **v,double
     //    cutoff, int print);
     //    /// Perform a Davidson-Liu diagonalization
-    //    void davidson_liu(psi::SharedMatrix H,SharedVector Eigenvalues,psi::SharedMatrix
+    //    void davidson_liu(psi::SharedMatrix H,psi::SharedVector Eigenvalues,psi::SharedMatrix
     //    Eigenvectors,int nroots);
 
     //    /// Perform a Davidson-Liu diagonalization on a sparse matrix
     //    bool davidson_liu_sparse(std::vector<std::vector<std::pair<int,double>
-    //    > > H_sparse,SharedVector Eigenvalues,psi::SharedMatrix Eigenvectors,int
+    //    > > H_sparse,psi::SharedVector Eigenvalues,psi::SharedMatrix Eigenvectors,int
     //    nroots);
 };
 

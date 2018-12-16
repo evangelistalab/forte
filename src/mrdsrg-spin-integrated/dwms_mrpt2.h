@@ -107,9 +107,9 @@ class DWMS_DSRGPT2 : public Wavefunction {
     /// old_eigen - original states
     /// new_vals - new energy
     /// new_vecs - linear combinations of original states
-    std::vector<std::pair<SharedVector, double>>
-    compute_new_eigen(const std::vector<std::pair<SharedVector, double>>& old_eigen,
-                      SharedVector new_vals, psi::SharedMatrix new_vecs);
+    std::vector<std::pair<psi::SharedVector, double>>
+    compute_new_eigen(const std::vector<std::pair<psi::SharedVector, double>>& old_eigen,
+                      psi::SharedVector new_vals, psi::SharedMatrix new_vecs);
 
     /// compute MS or XMS energies
     void compute_dwms_energy(std::shared_ptr<FCI_MO>& fci_mo);
@@ -132,7 +132,7 @@ class DWMS_DSRGPT2 : public Wavefunction {
     void compute_dwms_energy_separated_H(std::shared_ptr<FCI_MO>& fci_mo);
 
     /// initial guesses if separate diagonalizations and require orthogonalized final CI vectors
-    std::vector<std::vector<SharedVector>> initial_guesses_;
+    std::vector<std::vector<psi::SharedVector>> initial_guesses_;
 
     /// compute DWMS weights and return a new sa_info
     std::vector<std::tuple<int, int, int, std::vector<double>>>
@@ -182,7 +182,7 @@ class DWMS_DSRGPT2 : public Wavefunction {
                        const std::vector<std::tuple<int, int, int, std::vector<double>>>& sa_info);
 
     /// print overlap matrix between DWMS roots
-    void print_overlap(const std::vector<SharedVector>& evecs, const std::string& Sname);
+    void print_overlap(const std::vector<psi::SharedVector>& evecs, const std::string& Sname);
 
     /// print energy list summary
     void

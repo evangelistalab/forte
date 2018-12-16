@@ -125,19 +125,19 @@ class MRCINO : public Wavefunction {
 
     std::vector<Determinant> build_dets(int irrep, const std::vector<std::vector<Determinant> > &dets_cas);
 
-    std::pair<SharedVector, psi::SharedMatrix>
+    std::pair<psi::SharedVector, psi::SharedMatrix>
     diagonalize_hamiltonian(const std::vector<Determinant>& dets, int nsolutions);
 
     std::pair<psi::SharedMatrix, psi::SharedMatrix> build_density_matrix(const std::vector<Determinant>& dets,
                                                                psi::SharedMatrix evecs, int nroot_);
 
     /// Diagonalize the density matrix
-    std::tuple<SharedVector, psi::SharedMatrix, SharedVector, psi::SharedMatrix>
+    std::tuple<psi::SharedVector, psi::SharedMatrix, psi::SharedVector, psi::SharedMatrix>
     diagonalize_density_matrix(std::pair<psi::SharedMatrix, psi::SharedMatrix> gamma);
 
     /// Find optimal active space and transform the orbitals
     void find_active_space_and_transform(
-        std::tuple<SharedVector, psi::SharedMatrix, SharedVector, psi::SharedMatrix> no_U);
+        std::tuple<psi::SharedVector, psi::SharedMatrix, psi::SharedVector, psi::SharedMatrix> no_U);
 };
 }
 } // End Namespaces

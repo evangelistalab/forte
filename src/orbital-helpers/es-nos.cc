@@ -105,7 +105,7 @@ void ESNO::compute_nos() {
 
     // Diagonalize Hamiltonian
     psi::SharedMatrix evecs;
-    SharedVector evals;
+    psi::SharedVector evals;
 
     SparseCISolver sparse_solver(fci_ints_);
 
@@ -151,8 +151,8 @@ void ESNO::compute_nos() {
     }
     // diagonalize ordm
     outfile->Printf("\n  Diagonalizing 1RDM");
-    SharedVector OCC_A(new Vector("ALPHA NO OCC", nirrep_, ncmopi));
-    SharedVector OCC_B(new Vector("BETA NO OCC", nirrep_, ncmopi));
+    psi::SharedVector OCC_A(new Vector("ALPHA NO OCC", nirrep_, ncmopi));
+    psi::SharedVector OCC_B(new Vector("BETA NO OCC", nirrep_, ncmopi));
     psi::SharedMatrix NO_A(new Matrix(nirrep_, ncmopi, ncmopi));
     psi::SharedMatrix NO_B(new Matrix(nirrep_, ncmopi, ncmopi));
 

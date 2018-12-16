@@ -42,8 +42,8 @@ class AtomicOrbitalHelper {
     psi::SharedMatrix TransAO_Screen_;
 
     psi::SharedMatrix CMO_;
-    SharedVector eps_rdocc_;
-    SharedVector eps_virtual_;
+    psi::SharedVector eps_rdocc_;
+    psi::SharedVector eps_virtual_;
 
     psi::SharedMatrix POcc_;
     psi::SharedMatrix PVir_;
@@ -71,9 +71,9 @@ class AtomicOrbitalHelper {
     psi::SharedMatrix PVir() { return PVir_; }
     int Weights() { return weights_; }
 
-    AtomicOrbitalHelper(psi::SharedMatrix CMO, SharedVector eps_occ, SharedVector eps_vir,
+    AtomicOrbitalHelper(psi::SharedMatrix CMO, psi::SharedVector eps_occ, psi::SharedVector eps_vir,
                         double laplace_tolerance);
-    AtomicOrbitalHelper(psi::SharedMatrix CMO, SharedVector eps_occ, SharedVector eps_vir,
+    AtomicOrbitalHelper(psi::SharedMatrix CMO, psi::SharedVector eps_occ, psi::SharedVector eps_vir,
                         double laplace_tolerance, int shift);
     /// Compute (mu nu | mu nu)^{(1/2)}
     void Compute_AO_Screen(std::shared_ptr<BasisSet>& primary);

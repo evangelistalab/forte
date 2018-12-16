@@ -157,8 +157,8 @@ double FCISolver::compute_energy() {
     size_t fci_size = Hdiag.size();
     Hdiag.form_H_diagonal(fci_ints);
 
-    SharedVector b(new Vector("b", fci_size));
-    SharedVector sigma(new Vector("sigma", fci_size));
+    psi::SharedVector b(new Vector("b", fci_size));
+    psi::SharedVector sigma(new Vector("sigma", fci_size));
 
     Hdiag.copy_to(sigma);
 
@@ -359,7 +359,7 @@ void FCISolver::compute_rdms_root(int root) {
             throw PSIEXCEPTION(error);
         }
 
-        SharedVector evec(eigen_vecs_->get_row(0, root));
+        psi::SharedVector evec(eigen_vecs_->get_row(0, root));
         C_->copy(evec);
         if (print_) {
             std::string title_rdm = "Computing RDMs for Root No. " + std::to_string(root);

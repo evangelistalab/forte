@@ -353,8 +353,8 @@ void SemiCanonical::build_transformation_matrices(psi::SharedMatrix& Ua, psi::Sh
             // diagonalize this Fock block
             psi::SharedMatrix UsubA(new Matrix("Ua " + name, npi, npi));
             psi::SharedMatrix UsubB(new Matrix("Ub " + name, npi, npi));
-            SharedVector evalsA(new Vector("evals a " + name, npi));
-            SharedVector evalsB(new Vector("evals b " + name, npi));
+            psi::SharedVector evalsA(new Vector("evals a " + name, npi));
+            psi::SharedVector evalsB(new Vector("evals b " + name, npi));
             Fa->diagonalize(UsubA, evalsA);
             Fb->diagonalize(UsubB, evalsB);
 

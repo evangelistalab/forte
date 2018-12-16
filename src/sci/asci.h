@@ -180,7 +180,7 @@ class ASCI : public Wavefunction {
     void startup();
 
     /// Compute an aci wavefunction
-    void compute_aci(DeterminantHashVec& PQ_space, psi::SharedMatrix& PQ_evecs, SharedVector& PQ_evals);
+    void compute_aci(DeterminantHashVec& PQ_space, psi::SharedMatrix& PQ_evecs, psi::SharedVector& PQ_evals);
 
     /// Print information about this calculation
     void print_info();
@@ -190,7 +190,7 @@ class ASCI : public Wavefunction {
 
     /// Find all the relevant excitations out of the P space
     void find_q_space(DeterminantHashVec& P_space, DeterminantHashVec& PQ_space,
-                      SharedVector evals, psi::SharedMatrix evecs);
+                      psi::SharedVector evals, psi::SharedMatrix evecs);
 
     // Optimized for a single root
     void get_excited_determinants_sr(psi::SharedMatrix evecs, DeterminantHashVec& P_space,
@@ -202,7 +202,7 @@ class ASCI : public Wavefunction {
 
     /// Check if the procedure has converged
     bool check_convergence(std::vector<std::vector<double>>& energy_history,
-                           SharedVector new_energies);
+                           psi::SharedVector new_energies);
 
     /// Computes spin
     std::vector<std::pair<double, double>> compute_spin(DeterminantHashVec& space, WFNOperator& op,

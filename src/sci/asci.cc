@@ -207,17 +207,17 @@ double ASCI::compute_energy() {
 
     // The eigenvalues and eigenvectors
     psi::SharedMatrix PQ_evecs;
-    SharedVector PQ_evals;
+    psi::SharedVector PQ_evals;
 
     // Compute wavefunction and energy
     DeterminantHashVec full_space;
     std::vector<size_t> sizes(nroot_);
-    SharedVector energies(new Vector(nroot_));
+    psi::SharedVector energies(new Vector(nroot_));
 
     DeterminantHashVec PQ_space;
 
     psi::SharedMatrix P_evecs;
-    SharedVector P_evals;
+    psi::SharedVector P_evals;
 
     // Set the P space dets
     DeterminantHashVec P_ref;
@@ -369,7 +369,7 @@ double ASCI::compute_energy() {
 }
 
 void ASCI::find_q_space(DeterminantHashVec& P_space, DeterminantHashVec& PQ_space,
-                        SharedVector evals, psi::SharedMatrix evecs) {
+                        psi::SharedVector evals, psi::SharedMatrix evecs) {
     timer find_q("ASCI:Build Model Space");
     local_timer build;
 
@@ -426,7 +426,7 @@ void ASCI::find_q_space(DeterminantHashVec& P_space, DeterminantHashVec& PQ_spac
     outfile->Printf("\n  %s: %f s", "Time spent screening the model space", screen.get());
 }
 
-bool ASCI::check_convergence(std::vector<std::vector<double>>& energy_history, SharedVector evals) {
+bool ASCI::check_convergence(std::vector<std::vector<double>>& energy_history, psi::SharedVector evals) {
     int nroot = evals->dim();
 
     if (energy_history.size() == 0) {
@@ -582,8 +582,8 @@ void ASCI::print_nos() {
         }
         offset += nactpi_[h];
     }
-    SharedVector OCC_A(new Vector("ALPHA OCCUPATION", nirrep_, nactpi_));
-    SharedVector OCC_B(new Vector("BETA OCCUPATION", nirrep_, nactpi_));
+    psi::SharedVector OCC_A(new Vector("ALPHA OCCUPATION", nirrep_, nactpi_));
+    psi::SharedVector OCC_B(new Vector("BETA OCCUPATION", nirrep_, nactpi_));
     psi::SharedMatrix NO_A(new Matrix(nirrep_, nactpi_, nactpi_));
     psi::SharedMatrix NO_B(new Matrix(nirrep_, nactpi_, nactpi_));
 

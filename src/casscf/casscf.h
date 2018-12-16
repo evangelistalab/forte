@@ -138,7 +138,7 @@ class CASSCF : public Wavefunction {
     void overlap_coefficients();
     void write_orbitals_molden();
     /// Diagonalize F_I + F_A
-    std::pair<psi::SharedMatrix, SharedVector> casscf_canonicalize();
+    std::pair<psi::SharedMatrix, psi::SharedVector> casscf_canonicalize();
 
     /// DEBUG PRINTING
     bool casscf_debug_print_;

@@ -147,7 +147,7 @@ void FCIWfn::copy(FCIWfn& wfn) {
     }
 }
 
-void FCIWfn::copy(SharedVector vec) {
+void FCIWfn::copy(psi::SharedVector vec) {
     size_t I = 0;
     for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {
         int beta_sym = alfa_sym ^ symmetry_;
@@ -163,7 +163,7 @@ void FCIWfn::copy(SharedVector vec) {
     }
 }
 
-void FCIWfn::copy_to(SharedVector vec) {
+void FCIWfn::copy_to(psi::SharedVector vec) {
     size_t I = 0;
     for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {
         int beta_sym = alfa_sym ^ symmetry_;

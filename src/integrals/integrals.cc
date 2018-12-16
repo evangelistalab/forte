@@ -420,8 +420,8 @@ void ForteIntegrals::rotate_mos() {
     psi::SharedMatrix C_new(C_old->clone());
 
     for (auto mo_group : rotate_mo_list) {
-        SharedVector C_mo1 = C_old->get_column(mo_group[0], mo_group[1]);
-        SharedVector C_mo2 = C_old->get_column(mo_group[0], mo_group[2]);
+        psi::SharedVector C_mo1 = C_old->get_column(mo_group[0], mo_group[1]);
+        psi::SharedVector C_mo2 = C_old->get_column(mo_group[0], mo_group[2]);
         C_new->set_column(mo_group[0], mo_group[2], C_mo1);
         C_new->set_column(mo_group[0], mo_group[1], C_mo2);
     }
@@ -529,7 +529,7 @@ std::vector<psi::SharedMatrix> ForteIntegrals::compute_MOdipole_ints(const bool&
 }
 
 std::vector<psi::SharedMatrix>
-ForteIntegrals::MOdipole_ints_helper(psi::SharedMatrix Cao, SharedVector epsilon, const bool& resort) {
+ForteIntegrals::MOdipole_ints_helper(psi::SharedMatrix Cao, psi::SharedVector epsilon, const bool& resort) {
     std::vector<psi::SharedMatrix> MOdipole_ints;
     std::vector<std::string> names{"X", "Y", "Z"};
     for (int i = 0; i < 3; ++i) {

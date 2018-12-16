@@ -486,7 +486,7 @@ psi::SharedMatrix OrbitalOptimizer::AugmentedHessianSolve() {
     // AugmentedHessian->set(nhole * npart, nhole * npart, 0.0);
     // AugmentedHessian->print();
     psi::SharedMatrix HessianEvec(new Matrix("HessianEvec", nhole + npart + 1, nhole + npart + 1));
-    SharedVector HessianEval(new Vector("HessianEval", nhole + npart + 1));
+    psi::SharedVector HessianEval(new Vector("HessianEval", nhole + npart + 1));
     AugmentedHessian->diagonalize(HessianEvec, HessianEval);
     HessianEvec->print();
     // psi::SharedMatrix S_AH(new Matrix("AugmentedHessianLowestEigenvalue", nhole,

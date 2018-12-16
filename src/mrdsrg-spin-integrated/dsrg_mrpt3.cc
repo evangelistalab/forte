@@ -1442,7 +1442,7 @@ double DSRG_MRPT3::compute_energy_sa() {
 
                 // compute energy and fill in results
                 fcisolver.compute_energy();
-                SharedVector Ems = fcisolver.eigen_vals();
+                psi::SharedVector Ems = fcisolver.eigen_vals();
                 for (int i = 0; i < nstates; ++i) {
                     Edsrg_sa[n].push_back(Ems->get(i) + Enuc_);
                 }
@@ -1507,7 +1507,7 @@ double DSRG_MRPT3::compute_energy_sa() {
                 outfile->Printf("\n");
                 Heff->print();
                 psi::SharedMatrix U(new Matrix("U of Heff", nstates, nstates));
-                SharedVector Ems(new Vector("MS Energies", nstates));
+                psi::SharedVector Ems(new Vector("MS Energies", nstates));
                 Heff->diagonalize(U, Ems);
                 U->eivprint(Ems);
 

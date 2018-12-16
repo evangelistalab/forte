@@ -664,7 +664,7 @@ void DMRGSolver::print_natural_orbitals(double* opdm) {
         }
         offset += active_dim[h];
     }
-    SharedVector OCC_A(new Vector("ALPHA OCCUPATION", nirrep, active_dim));
+    psi::SharedVector OCC_A(new Vector("ALPHA OCCUPATION", nirrep, active_dim));
     psi::SharedMatrix NO_A(new Matrix(nirrep, active_dim, active_dim));
 
     opdm_a->diagonalize(NO_A, OCC_A, descending);

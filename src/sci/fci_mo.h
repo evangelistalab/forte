@@ -185,7 +185,7 @@ class FCI_MO : public Wavefunction {
     void set_sa_info(const std::vector<std::tuple<int, int, int, std::vector<double>>>& info);
 
     /// Set state-averaged eigen values and vectors
-    void set_eigens(const std::vector<std::vector<std::pair<SharedVector, double>>>& eigens);
+    void set_eigens(const std::vector<std::vector<std::pair<psi::SharedVector, double>>>& eigens);
 
     /// Return fci_int_ pointer
     std::shared_ptr<FCIIntegrals> fci_ints() { return fci_ints_; }
@@ -202,10 +202,10 @@ class FCI_MO : public Wavefunction {
     }
 
     /// Return the vector of eigen vectors and eigen values
-    std::vector<std::pair<SharedVector, double>> const eigen() { return eigen_; }
+    std::vector<std::pair<psi::SharedVector, double>> const eigen() { return eigen_; }
 
     /// Return the vector of eigen vectors and eigen values (used in state-average computation)
-    std::vector<std::vector<std::pair<SharedVector, double>>> const eigens() {
+    std::vector<std::vector<std::pair<psi::SharedVector, double>>> const eigens() {
         return eigens_;
     }
 
@@ -350,22 +350,22 @@ class FCI_MO : public Wavefunction {
     std::vector<std::pair<size_t, double>> initial_guess_;
 
     /// Eigen Values and Eigen Vectors of Certain Symmetry
-    std::vector<std::pair<SharedVector, double>> eigen_;
+    std::vector<std::pair<psi::SharedVector, double>> eigen_;
     /// A List of Eigen Values and Vectors for State Average
-    std::vector<std::vector<std::pair<SharedVector, double>>> eigens_;
+    std::vector<std::vector<std::pair<psi::SharedVector, double>>> eigens_;
     /// The algorithm for diagonalization
     std::string diag_algorithm_;
 
     /// Diagonalize the Hamiltonian
     void Diagonalize_H(const vecdet& P_space, const int& multi, const int& nroot,
-                       std::vector<std::pair<SharedVector, double>>& eigen);
+                       std::vector<std::pair<psi::SharedVector, double>>& eigen);
     /// Diagonalize the Hamiltonian without the HF determinant
     void Diagonalize_H_noHF(const vecdet& p_space, const int& multi, const int& nroot,
-                            std::vector<std::pair<SharedVector, double>>& eigen);
+                            std::vector<std::pair<psi::SharedVector, double>>& eigen);
 
     /// Print the CI Vectors and Configurations (figure out the dominant determinants)
     void print_CI(const int& nroot, const double& CI_threshold,
-                  const std::vector<std::pair<SharedVector, double>>& eigen, const vecdet& det);
+                  const std::vector<std::pair<psi::SharedVector, double>>& eigen, const vecdet& det);
 
     /// Density Matrix
     d2 Da_;

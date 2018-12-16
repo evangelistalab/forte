@@ -113,7 +113,7 @@ void FiniteTemperatureHF::frac_occupation() {
     }
 
     psi::Dimension nmopi = mo_space_info_->get_dimension("ALL");
-    SharedVector Dirac_sym(new Vector("Dirac_Symmetry", nirrep_, nmopi));
+    psi::SharedVector Dirac_sym(new Vector("Dirac_Symmetry", nirrep_, nmopi));
 
     int offset = 0;
     psi::Dimension occupation(nirrep_);

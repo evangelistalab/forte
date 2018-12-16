@@ -229,7 +229,7 @@ double ACTIVE_DSRGPT2::compute_energy() {
     }
 
     // some preps for oscillator strength
-    std::vector<std::pair<SharedVector, double>> eigen0;
+    std::vector<std::pair<psi::SharedVector, double>> eigen0;
     ref_wfns_.clear();
 
     // real computation
@@ -333,7 +333,7 @@ double ACTIVE_DSRGPT2::compute_energy() {
 
         // compute reference oscillator strength (only for singlet)
         if (multiplicity_ == 1) {
-            std::vector<std::pair<SharedVector, double>> eigen = fci_mo_->eigen();
+            std::vector<std::pair<psi::SharedVector, double>> eigen = fci_mo_->eigen();
             int eigen_size = eigen.size();
             if (eigen_size != nroot) {
                 outfile->Printf("\n  FCI_MO error from ACTIVE_DSRGPT2: Inconsistent nroot "
@@ -534,8 +534,8 @@ void ACTIVE_DSRGPT2::rotate_amp(psi::SharedMatrix Ua, psi::SharedMatrix Ub, ambi
 void ACTIVE_DSRGPT2::compute_osc_ref(const int& irrep0, const int& irrep1,
                                      const std::vector<Determinant>& p_space0,
                                      const std::vector<Determinant>& p_space1,
-                                     const std::vector<std::pair<SharedVector, double>>& eigen0,
-                                     const std::vector<std::pair<SharedVector, double>>& eigen1) {
+                                     const std::vector<std::pair<psi::SharedVector, double>>& eigen0,
+                                     const std::vector<std::pair<psi::SharedVector, double>>& eigen1) {
     // some basic test
     size_t ndet0 = p_space0.size();
     size_t ndet1 = p_space1.size();
@@ -578,8 +578,8 @@ void ACTIVE_DSRGPT2::compute_osc_ref(const int& irrep0, const int& irrep1,
         for (size_t n = 0; n < nroot0; ++n) {
             evals[n] = eigen0[n].second;
 
-            SharedVector evec0 = eigen0[n].first;
-            SharedVector evec(new Vector("combined evec0 " + std::to_string(n), ndet));
+            psi::SharedVector evec0 = eigen0[n].first;
+            psi::SharedVector evec(new Vector("combined evec0 " + std::to_string(n), ndet));
             for (size_t i = 0; i < ndet0; ++i) {
                 evec->set(i, evec0->get(i));
             }
@@ -589,8 +589,8 @@ void ACTIVE_DSRGPT2::compute_osc_ref(const int& irrep0, const int& irrep1,
         for (size_t n = 0; n < nroot1; ++n) {
             evals[n + nroot0] = eigen1[n].second;
 
-            SharedVector evec1 = eigen1[n].first;
-            SharedVector evec(new Vector("combined evec1 " + std::to_string(n), ndet));
+            psi::SharedVector evec1 = eigen1[n].first;
+            psi::SharedVector evec(new Vector("combined evec1 " + std::to_string(n), ndet));
             for (size_t i = 0; i < ndet1; ++i) {
                 evec->set(i + ndet0, evec1->get(i));
             }
@@ -961,8 +961,8 @@ psi::SharedMatrix ACTIVE_DSRGPT2::combine_evecs(const int& h0, const int& h1) {
     psi::SharedMatrix evecs(new Matrix("combined evecs", ndet, nroot));
 
     for (int n = 0; n < nroot0; ++n) {
-        SharedVector evec0 = evecs0->get_column(0, n);
-        SharedVector evec(new Vector("combined evec0 " + std::to_string(n), ndet));
+        psi::SharedVector evec0 = evecs0->get_column(0, n);
+        psi::SharedVector evec(new Vector("combined evec0 " + std::to_string(n), ndet));
         for (size_t i = 0; i < ndet0; ++i) {
             evec->set(i, evec0->get(i));
         }
@@ -970,8 +970,8 @@ psi::SharedMatrix ACTIVE_DSRGPT2::combine_evecs(const int& h0, const int& h1) {
     }
 
     for (int n = 0; n < nroot1; ++n) {
-        SharedVector evec1 = evecs1->get_column(0, n);
-        SharedVector evec(new Vector("combined evec1 " + std::to_string(n), ndet));
+        psi::SharedVector evec1 = evecs1->get_column(0, n);
+        psi::SharedVector evec(new Vector("combined evec1 " + std::to_string(n), ndet));
         for (size_t i = 0; i < ndet1; ++i) {
             evec->set(i + ndet0, evec1->get(i));
         }
@@ -1342,7 +1342,7 @@ std::string ACTIVE_DSRGPT2::format_double(const double& value, const int& width,
 }
 
 std::map<Determinant, double>
-ACTIVE_DSRGPT2::p_space_actv_to_nmo(const std::vector<Determinant>& p_space, SharedVector wfn) {
+ACTIVE_DSRGPT2::p_space_actv_to_nmo(const std::vector<Determinant>& p_space, psi::SharedVector wfn) {
     //    Determinant::reset_ints();
     std::map<Determinant, double> detsmap;
 

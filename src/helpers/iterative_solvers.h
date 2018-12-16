@@ -95,23 +95,23 @@ class DavidsonLiuSolver {
     size_t collapse_size() const;
 
     /// Add a guess basis vector
-    void add_guess(SharedVector vec);
+    void add_guess(psi::SharedVector vec);
     /// Get a basis vector
-    void get_b(SharedVector vec);
+    void get_b(psi::SharedVector vec);
     /// Add a sigma vector
-    bool add_sigma(SharedVector vec);
+    bool add_sigma(psi::SharedVector vec);
 
     void set_project_out(std::vector<sparse_vec> project_out);
 
     /// Return the eigenvalues
-    SharedVector eigenvalues() const;
+    psi::SharedVector eigenvalues() const;
     /// Return the eigenvectors
     psi::SharedMatrix eigenvectors() const;
     /// Return the n-th eigenvector
-    SharedVector eigenvector(size_t n) const;
+    psi::SharedVector eigenvector(size_t n) const;
 
     /// Initialize the object
-    void startup(SharedVector diagonal);
+    void startup(psi::SharedVector diagonal);
 
     /// Perform an update step
     SolverStatus update();
@@ -184,11 +184,11 @@ class DavidsonLiuSolver {
     psi::SharedMatrix alpha;
 
     /// Eigenvalues of the Davidson mini-Hamitonian
-    SharedVector lambda;
+    psi::SharedVector lambda;
     /// Old eigenvalues of the Davidson mini-Hamitonian
-    SharedVector lambda_old;
+    psi::SharedVector lambda_old;
     /// Diagonal elements of the Hamiltonian
-    SharedVector h_diag;
+    psi::SharedVector h_diag;
 
     /// Approximate eigenstates to project out
     std::vector<sparse_vec> project_out_;

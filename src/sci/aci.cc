@@ -476,7 +476,7 @@ double AdaptiveCI::compute_energy() {
 
     // The eigenvalues and eigenvectors
     psi::SharedMatrix PQ_evecs;
-    SharedVector PQ_evals;
+    psi::SharedVector PQ_evals;
 
     // Compute wavefunction and energy
     size_t dim;
@@ -492,7 +492,7 @@ double AdaptiveCI::compute_energy() {
 
     DeterminantHashVec full_space;
     std::vector<size_t> sizes(nroot_);
-    SharedVector energies(new Vector(nroot_));
+    psi::SharedVector energies(new Vector(nroot_));
     std::vector<double> pt2_energies(nroot_);
 
     DeterminantHashVec PQ_space;
@@ -762,7 +762,7 @@ void AdaptiveCI::diagonalize_final_and_compute_rdms() {
     //                        fci_ints_->scalar_energy());
 
     psi::SharedMatrix final_evecs;
-    SharedVector final_evals;
+    psi::SharedVector final_evals;
 
     if (build_lists_) {
         op_.clear_op_s_lists();
@@ -801,7 +801,7 @@ void AdaptiveCI::diagonalize_final_and_compute_rdms() {
 DeterminantHashVec AdaptiveCI::get_wavefunction() { return final_wfn_; }
 
 void AdaptiveCI::print_final(DeterminantHashVec& dets, psi::SharedMatrix& PQ_evecs,
-                             SharedVector& PQ_evals) {
+                             psi::SharedVector& PQ_evals) {
     size_t dim = dets.size();
     // Print a summary
     outfile->Printf("\n\n  ==> ACI Summary <==\n");
@@ -865,7 +865,7 @@ void AdaptiveCI::print_final(DeterminantHashVec& dets, psi::SharedMatrix& PQ_eve
 }
 
 void AdaptiveCI::find_q_space_batched(DeterminantHashVec& P_space, DeterminantHashVec& PQ_space,
-                                      SharedVector evals, psi::SharedMatrix evecs) {
+                                      psi::SharedVector evals, psi::SharedMatrix evecs) {
 
     timer find_q("ACI:Build Model Space");
     local_timer build;
@@ -939,7 +939,7 @@ void AdaptiveCI::find_q_space_batched(DeterminantHashVec& P_space, DeterminantHa
 }
 
 void AdaptiveCI::default_find_q_space(DeterminantHashVec& P_space, DeterminantHashVec& PQ_space,
-                                      SharedVector evals, psi::SharedMatrix evecs) {
+                                      psi::SharedVector evals, psi::SharedMatrix evecs) {
     timer find_q("ACI:Build Model Space");
     local_timer build;
 
@@ -1038,7 +1038,7 @@ void AdaptiveCI::default_find_q_space(DeterminantHashVec& P_space, DeterminantHa
 }
 
 void AdaptiveCI::find_q_space(DeterminantHashVec& P_space, DeterminantHashVec& PQ_space, int nroot,
-                              SharedVector evals, psi::SharedMatrix evecs) {
+                              psi::SharedVector evals, psi::SharedMatrix evecs) {
     timer find_q("ACI:Build Model Space");
     local_timer t_ms_build;
 
@@ -1263,7 +1263,7 @@ double AdaptiveCI::root_select(int nroot, std::vector<double>& C1, std::vector<d
 }
 
 bool AdaptiveCI::check_convergence(std::vector<std::vector<double>>& energy_history,
-                                   SharedVector evals) {
+                                   psi::SharedVector evals) {
     int nroot = evals->dim();
     int ref = 0;
 
@@ -1397,7 +1397,7 @@ void AdaptiveCI::prune_q_space(DeterminantHashVec& PQ_space, DeterminantHashVec&
     }
 }
 
-bool AdaptiveCI::check_stuck(std::vector<std::vector<double>>& energy_history, SharedVector evals) {
+bool AdaptiveCI::check_stuck(std::vector<std::vector<double>>& energy_history, psi::SharedVector evals) {
     bool stuck = false;
     int nroot = evals->dim();
     if (cycle_ < 4) {
@@ -1562,7 +1562,7 @@ void AdaptiveCI::print_wfn(DeterminantHashVec& space, WFNOperator& op, psi::Shar
     //
     //	//Diagonalize S^2, evals will be in ascending order
     //	psi::SharedMatrix T(new Matrix("T", det_size, det_size));
-    //	SharedVector evals(new Vector("evals", det_size));
+    //	psi::SharedVector evals(new Vector("evals", det_size));
     //	S2->diagonalize(T, evals);
     //
     //	//evals->print();
@@ -1625,9 +1625,9 @@ double AdaptiveCI::compute_spin_contamination(DeterminantHashVec& space, WFNOper
 }
 
 std::vector<double> AdaptiveCI::davidson_correction(std::vector<Determinant>& P_dets,
-                                                    SharedVector P_evals, psi::SharedMatrix PQ_evecs,
+                                                    psi::SharedVector P_evals, psi::SharedMatrix PQ_evecs,
                                                     std::vector<Determinant>& PQ_dets,
-                                                    SharedVector PQ_evals) {
+                                                    psi::SharedVector PQ_evals) {
     outfile->Printf("\n  There are %zu PQ dets.", PQ_dets.size());
     outfile->Printf("\n  There are %zu P dets.", P_dets.size());
 
@@ -1685,8 +1685,8 @@ void AdaptiveCI::print_nos() {
         }
         offset += nactpi_[h];
     }
-    SharedVector OCC_A(new Vector("ALPHA OCCUPATION", nirrep_, nactpi_));
-    SharedVector OCC_B(new Vector("BETA OCCUPATION", nirrep_, nactpi_));
+    psi::SharedVector OCC_A(new Vector("ALPHA OCCUPATION", nirrep_, nactpi_));
+    psi::SharedVector OCC_B(new Vector("BETA OCCUPATION", nirrep_, nactpi_));
     psi::SharedMatrix NO_A(new Matrix(nirrep_, nactpi_, nactpi_));
     psi::SharedMatrix NO_B(new Matrix(nirrep_, nactpi_, nactpi_));
 
@@ -1887,7 +1887,7 @@ int AdaptiveCI::root_follow(DeterminantHashVec& P_ref, std::vector<double>& P_re
 }
 
 void AdaptiveCI::compute_aci(DeterminantHashVec& PQ_space, psi::SharedMatrix& PQ_evecs,
-                             SharedVector& PQ_evals) {
+                             psi::SharedVector& PQ_evals) {
 
     bool print_refs = false;
     bool multi_root = false;
@@ -1908,7 +1908,7 @@ void AdaptiveCI::compute_aci(DeterminantHashVec& PQ_space, psi::SharedMatrix& PQ
     }
 
     psi::SharedMatrix P_evecs;
-    SharedVector P_evals;
+    psi::SharedVector P_evals;
 
     DeterminantHashVec P_ref;
     std::vector<double> P_ref_evecs;
@@ -2361,7 +2361,7 @@ void AdaptiveCI::save_old_root(DeterminantHashVec& dets, psi::SharedMatrix& PQ_e
     }
 }
 
-void AdaptiveCI::compute_multistate(SharedVector& PQ_evals) {
+void AdaptiveCI::compute_multistate(psi::SharedVector& PQ_evals) {
     outfile->Printf("\n  Computing multistate solution");
     int nroot = old_roots_.size();
 
@@ -2393,7 +2393,7 @@ void AdaptiveCI::compute_multistate(SharedVector& PQ_evals) {
     }
     // Diagonalize the overlap
     psi::SharedMatrix Sevecs(new Matrix(nroot, nroot));
-    SharedVector Sevals(new Vector(nroot));
+    psi::SharedVector Sevals(new Vector(nroot));
     S->diagonalize(Sevecs, Sevals);
 
     // Form symmetric orthogonalization matrix
@@ -2437,7 +2437,7 @@ void AdaptiveCI::compute_multistate(SharedVector& PQ_evals) {
     H->transform(Strans);
 
     psi::SharedMatrix Hevecs(new Matrix(nroot, nroot));
-    SharedVector Hevals(new Vector(nroot));
+    psi::SharedVector Hevals(new Vector(nroot));
 
     H->diagonalize(Hevecs, Hevals);
 
@@ -2450,7 +2450,7 @@ void AdaptiveCI::compute_multistate(SharedVector& PQ_evals) {
 }
 
 DeterminantHashVec AdaptiveCI::approximate_wfn(DeterminantHashVec& PQ_space, psi::SharedMatrix& evecs,
-                                               SharedVector& evals, psi::SharedMatrix& new_evecs) {
+                                               psi::SharedVector& evals, psi::SharedMatrix& new_evecs) {
     DeterminantHashVec new_wfn;
     new_wfn.copy(PQ_space);
 
@@ -2511,8 +2511,8 @@ void AdaptiveCI::compute_nos() {
         offset += nactpi_[h];
     }
 
-    SharedVector OCC_A(new Vector("ALPHA OCCUPATION", nirrep_, nactpi_));
-    SharedVector OCC_B(new Vector("BETA OCCUPATION", nirrep_, nactpi_));
+    psi::SharedVector OCC_A(new Vector("ALPHA OCCUPATION", nirrep_, nactpi_));
+    psi::SharedVector OCC_B(new Vector("BETA OCCUPATION", nirrep_, nactpi_));
     psi::SharedMatrix NO_A(new Matrix(nirrep_, nactpi_, nactpi_));
     psi::SharedMatrix NO_B(new Matrix(nirrep_, nactpi_, nactpi_));
 
@@ -3014,7 +3014,7 @@ void AdaptiveCI::add_external_excitations(DeterminantHashVec& ref) {
 
     // Then build the coupling lists
     psi::SharedMatrix final_evecs;
-    SharedVector final_evals;
+    psi::SharedVector final_evals;
 
     WFNOperator op(mo_symmetry_, fci_ints);
     if (diag_method_ != Dynamic) {
@@ -3158,8 +3158,8 @@ void AdaptiveCI::spin_analysis() {
 
         // psi::SharedMatrix NOa;
         // psi::SharedMatrix NOb;
-        SharedVector occa(new Vector(nact));
-        SharedVector occb(new Vector(nact));
+        psi::SharedVector occa(new Vector(nact));
+        psi::SharedVector occb(new Vector(nact));
 
         RDMa->diagonalize(UA, occa);
         RDMb->diagonalize(UB, occb);
@@ -3286,9 +3286,9 @@ void AdaptiveCI::spin_analysis() {
     spin_fluct->print();
     spin_z->print();
     psi::SharedMatrix spin_evecs(new Matrix(nact, nact));
-    SharedVector spin_evals(new Vector(nact));
+    psi::SharedVector spin_evals(new Vector(nact));
     psi::SharedMatrix spin_evecs2(new Matrix(nact, nact));
-    SharedVector spin_evals2(new Vector(nact));
+    psi::SharedVector spin_evals2(new Vector(nact));
 
     //    spin_corr->diagonalize(spin_evecs, spin_evals);
     //    spin_evals->print();
@@ -3320,7 +3320,7 @@ void AdaptiveCI::spin_analysis() {
         std::vector<size_t> actpi = mo_space_info_->get_absolute_mo("ACTIVE");
         psi::SharedMatrix Ca_copy = Ca->clone();
         for( int i = 0; i < nact; ++i ){
-            SharedVector vec = std::make_shared<Vector>(nmo_);
+            psi::SharedVector vec = std::make_shared<Vector>(nmo_);
             vec->zero();
             for( int j = 0; j < nact; ++j ){
                 auto col = Ca_copy->get_column(0,actpi[j]);

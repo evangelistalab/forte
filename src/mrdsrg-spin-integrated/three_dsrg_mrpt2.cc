@@ -2336,8 +2336,8 @@ double THREE_DSRG_MRPT2::E_VT2_2_AO_Slow() {
         throw PSIEXCEPTION("AO-DSRGMPT2 does not work with symmetry");
 
     /// Create the AtomicOrbitalHelper Class
-    SharedVector epsilon_rdocc(new Vector("EPS_RDOCC", ncore_));
-    SharedVector epsilon_virtual(new Vector("EPS_VIRTUAL", nvirtual_));
+    psi::SharedVector epsilon_rdocc(new Vector("EPS_RDOCC", ncore_));
+    psi::SharedVector epsilon_virtual(new Vector("EPS_VIRTUAL", nvirtual_));
     int core_count = 0;
     for (auto m : core_mos_) {
         epsilon_rdocc->set(core_count, Fa_[m]);
@@ -3085,7 +3085,7 @@ void THREE_DSRG_MRPT2::form_Hbar() {
         }
 
         psi::SharedMatrix evecs = std::make_shared<Matrix>("evecs", nactive_, nactive_);
-        SharedVector evals = std::make_shared<Vector>("Eigenvalues of Hbar1", nactive_);
+        psi::SharedVector evals = std::make_shared<Vector>("Eigenvalues of Hbar1", nactive_);
         Hb1->diagonalize(evecs, evals);
 
         evals->print();
@@ -3446,10 +3446,10 @@ std::vector<double> THREE_DSRG_MRPT2::relaxed_energy(std::shared_ptr<FCIIntegral
         if (!multi_state_) {
             Erelax.push_back(Eci);
         } else {
-            std::vector<std::vector<std::pair<SharedVector, double>>> eigens = fci_mo.eigens();
+            std::vector<std::vector<std::pair<psi::SharedVector, double>>> eigens = fci_mo.eigens();
             size_t nentry = eigens.size();
             for (size_t n = 0; n < nentry; ++n) {
-                std::vector<std::pair<SharedVector, double>> eigen = eigens[n];
+                std::vector<std::pair<psi::SharedVector, double>> eigen = eigens[n];
                 size_t ni = eigen.size();
                 for (size_t i = 0; i < ni; ++i) {
                     Erelax.push_back(eigen[i].second);
@@ -3564,7 +3564,7 @@ std::vector<double> THREE_DSRG_MRPT2::relaxed_energy(std::shared_ptr<FCIIntegral
 
                 // compute energy and fill in results
                 fcisolver.compute_energy();
-                SharedVector Ems = fcisolver.eigen_vals();
+                psi::SharedVector Ems = fcisolver.eigen_vals();
                 for (int i = 0; i < nstates; ++i) {
                     Erelax.push_back(Ems->get(i) + Enuc);
                 }

@@ -133,7 +133,7 @@ class FCISolver {
     /// Return eigen vectors
     psi::SharedMatrix eigen_vecs() { return eigen_vecs_; }
     /// Return eigen values
-    SharedVector eigen_vals() { return eigen_vals_; }
+    psi::SharedVector eigen_vals() { return eigen_vals_; }
     /// Return string lists
     std::shared_ptr<StringLists> lists() { return lists_; }
     /// Return symmetry
@@ -168,7 +168,7 @@ class FCISolver {
     /// Eigen vectors
     psi::SharedMatrix eigen_vecs_;
     /// Eigen values
-    SharedVector eigen_vals_;
+    psi::SharedVector eigen_vals_;
 
     /// The number of irreps
     int nirrep_;

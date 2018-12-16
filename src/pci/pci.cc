@@ -1158,7 +1158,7 @@ double ProjectorCI::compute_energy() {
         timer_on("PCI:Post_Diag");
         //        sparse_solver.diagonalize_hamiltonian(dets,apfci_evals,apfci_evecs,nroot_,DavidsonLiuList);
         psi::SharedMatrix apfci_evecs(new Matrix("Eigenvectors", C.size(), nroot_));
-        SharedVector apfci_evals(new Vector("Eigenvalues", nroot_));
+        psi::SharedVector apfci_evals(new Vector("Eigenvalues", nroot_));
 
         sparse_solver.diagonalize_hamiltonian(dets, apfci_evals, apfci_evecs, nroot_,
                                               wavefunction_multiplicity_, diag_method_);
@@ -1256,7 +1256,7 @@ double ProjectorCI::initial_guess(det_vec& dets, std::vector<double>& C) {
     sparse_solver.set_spin_project(true);
 
     psi::SharedMatrix evecs(new Matrix("Eigenvectors", guess_size, nroot_));
-    SharedVector evals(new Vector("Eigenvalues", nroot_));
+    psi::SharedVector evals(new Vector("Eigenvalues", nroot_));
     //  std::vector<DynamicBitsetDeterminant> dyn_dets;
     // for (auto& d : dets){
     //   DynamicBitsetDeterminant dbs = d.to_dynamic_bitset();
@@ -1448,7 +1448,7 @@ void ProjectorCI::propagate_Lanczos(det_vec& dets, std::vector<double>& C,
         }
     }
     psi::SharedMatrix evecs(new Matrix(current_order, current_order));
-    SharedVector eigs(new Vector(current_order));
+    psi::SharedVector eigs(new Vector(current_order));
     H->diagonalize(evecs, eigs);
 
     //    outfile -> Printf("\n  H:");
@@ -1554,7 +1554,7 @@ void ProjectorCI::propagate_Lanczos(det_vec& dets, std::vector<double>& C,
     //    B->print();
 
     //    psi::SharedMatrix evecs(new Matrix (krylov_order, krylov_order));
-    //    SharedVector evals(new Vector(krylov_order));
+    //    psi::SharedVector evals(new Vector(krylov_order));
     //    A->diagonalize(B, evecs, evals);
 
     //    evals -> print();
@@ -1600,7 +1600,7 @@ void ProjectorCI::propagate_Lanczos(det_vec& dets, std::vector<double>& C,
 
     //    int lwork = 3*krylov_order;
     //    double *work = new double[lwork];
-    //    SharedVector evals(new Vector(krylov_order));
+    //    psi::SharedVector evals(new Vector(krylov_order));
 
     //    int err = C_DSYGV(1, 'V', 'U',
     //                      krylov_order, t.get_pointer(0),
@@ -1733,7 +1733,7 @@ void ProjectorCI::propagate_DL(det_vec& dets, std::vector<double>& C, double spa
             }
         }
         psi::SharedMatrix evecs(new Matrix(current_order, current_order));
-        SharedVector eigs(new Vector(current_order));
+        psi::SharedVector eigs(new Vector(current_order));
         G->diagonalize(evecs, eigs);
 
         double e_gradiant = -lambda;

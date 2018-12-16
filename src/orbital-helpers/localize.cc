@@ -134,18 +134,18 @@ void LOCALIZE::split_localize() {
 
     for (int h = 0; h < nirrep; ++h) {
         for (int i = 0; i < naocc_; ++i) {
-            SharedVector vec = Laocc->get_column(h, i);
+            psi::SharedVector vec = Laocc->get_column(h, i);
             Ca->set_column(h, i + nfrz_ + nrst_, vec);
             Cb->set_column(h, i + nfrz_ + nrst_, vec);
         }
         for (int i = 0; i < navir_; ++i) {
-            SharedVector vec = Lvir->get_column(h, i);
+            psi::SharedVector vec = Lvir->get_column(h, i);
             Ca->set_column(h, i + nfrz_ + nrst_ + naocc_ + off, vec);
             Cb->set_column(h, i + nfrz_ + nrst_ + naocc_ + off, vec);
         }
 
         for (int i = 0; i < off; ++i) {
-            SharedVector vec = Lact->get_column(h, i);
+            psi::SharedVector vec = Lact->get_column(h, i);
             Ca->set_column(h, i + nfrz_ + nrst_ + naocc_, vec);
             Cb->set_column(h, i + nfrz_ + nrst_ + naocc_, vec);
         }
@@ -194,7 +194,7 @@ void LOCALIZE::full_localize() {
 
     for (int h = 0; h < nirrep; ++h) {
         for (size_t i = 0; i < nact; ++i) {
-            SharedVector vec = Laocc->get_column(h, i);
+            psi::SharedVector vec = Laocc->get_column(h, i);
             Ca->set_column(h, i + nfrz_ + nrst_, vec);
             Cb->set_column(h, i + nfrz_ + nrst_, vec);
         }

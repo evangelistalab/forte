@@ -632,7 +632,7 @@ ambit::Tensor CASSCF::transform_integrals() {
     outfile->Printf("\n CSO2SO takes %8.4f s.", CSO2AO.get());
 
     for (size_t v = 0; v < na_; v++) {
-        SharedVector Call_vec = Call->get_column(0, active_abs[v]);
+        psi::SharedVector Call_vec = Call->get_column(0, active_abs[v]);
         CAct->set_column(0, v, Call_vec);
     }
 
@@ -647,13 +647,13 @@ ambit::Tensor CASSCF::transform_integrals() {
     std::vector<std::pair<std::shared_ptr<Matrix>, std::vector<int>>> D_vec;
     local_timer c_dger;
     for (size_t i = 0; i < na_; i++) {
-        SharedVector C_i = CAct->get_column(0, i);
+        psi::SharedVector C_i = CAct->get_column(0, i);
         for (size_t j = i; j < na_; j++) {
             psi::SharedMatrix D(new Matrix("D", nso, nso));
             std::vector<int> ij(2);
             ij[0] = i;
             ij[1] = j;
-            SharedVector C_j = CAct->get_column(0, j);
+            psi::SharedVector C_j = CAct->get_column(0, j);
             /// D_{uv}^{ij} = C_i C_j^T
             C_DGER(nso, nso, 1.0, &(C_i->pointer()[0]), 1, &(C_j->pointer()[0]), 1, D->pointer()[0],
                    nso);
@@ -1107,7 +1107,7 @@ void CASSCF::set_up_fcimo() {
     E_casscf_ = cas_ref_.get_Eref();
 }
 void CASSCF::write_orbitals_molden() {
-    SharedVector occ_vector(new Vector(nirrep_, nmopi_));
+    psi::SharedVector occ_vector(new Vector(nirrep_, nmopi_));
     view_modified_orbitals(reference_wavefunction_, reference_wavefunction_->Ca(),
                            this->epsilon_a(), occ_vector);
 }

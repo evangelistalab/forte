@@ -798,7 +798,7 @@ double ProjectorCI_Simple::compute_energy() {
         timer_on("PCI:Post_Diag");
         //        sparse_solver.diagonalize_hamiltonian(dets,apfci_evals,apfci_evecs,nroot_,DavidsonLiuList);
         psi::SharedMatrix apfci_evecs(new Matrix("Eigenvectors", C.size(), nroot_));
-        SharedVector apfci_evals(new Vector("Eigenvalues", nroot_));
+        psi::SharedVector apfci_evals(new Vector("Eigenvalues", nroot_));
 
         sparse_solver.diagonalize_hamiltonian(dets, apfci_evals, apfci_evecs, nroot_,
                                               wavefunction_multiplicity_, diag_method_);
@@ -903,7 +903,7 @@ double ProjectorCI_Simple::initial_guess(det_vec& dets, std::vector<double>& C) 
     sparse_solver.set_spin_project(true);
 
     psi::SharedMatrix evecs(new Matrix("Eigenvectors", guess_size, nroot_));
-    SharedVector evals(new Vector("Eigenvalues", nroot_));
+    psi::SharedVector evals(new Vector("Eigenvalues", nroot_));
     //  std::vector<DynamicBitsetDeterminant> dyn_dets;
     // for (auto& d : dets){
     //   DynamicBitsetDeterminant dbs = d.to_dynamic_bitset();
@@ -1086,7 +1086,7 @@ void ProjectorCI_Simple::propagate_DL(det_vec& dets, std::vector<double>& C,
             }
         }
         psi::SharedMatrix evecs(new Matrix(current_order, current_order));
-        SharedVector eigs(new Vector(current_order));
+        psi::SharedVector eigs(new Vector(current_order));
         G->diagonalize(evecs, eigs);
 
         double e_gradiant = -lambda;

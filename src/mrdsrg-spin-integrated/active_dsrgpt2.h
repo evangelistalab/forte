@@ -159,8 +159,8 @@ class ACTIVE_DSRGPT2 : public Wavefunction {
     void compute_osc_ref(const int& irrep0, const int& irrep1,
                          const std::vector<Determinant>& p_space0,
                          const std::vector<Determinant>& p_space1,
-                         const std::vector<std::pair<SharedVector, double>>& eigen0,
-                         const std::vector<std::pair<SharedVector, double>>& eigen1);
+                         const std::vector<std::pair<psi::SharedVector, double>>& eigen0,
+                         const std::vector<std::pair<psi::SharedVector, double>>& eigen1);
 
     /// Transition dipole moment of reference in a.u.
     std::map<std::string, Vector4> tdipole_ref_;
@@ -241,7 +241,7 @@ class ACTIVE_DSRGPT2 : public Wavefunction {
 
     /// transform the reference determinants of size nactive to size nmo with Pitzer ordering
     std::map<Determinant, double> p_space_actv_to_nmo(const std::vector<Determinant>& p_space,
-                                                      SharedVector wfn);
+                                                      psi::SharedVector wfn);
 
     /// generate excited determinants from the reference
     std::map<Determinant, double> excited_wfn_1st(const std::map<Determinant, double>& ref,

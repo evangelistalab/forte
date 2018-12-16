@@ -109,7 +109,7 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     double compute_energy_multi_state();
 
     /// Set CASCI eigen values and eigen vectors for state averaging
-    void set_eigens(const std::vector<std::vector<std::pair<SharedVector, double>>>& eigens) {
+    void set_eigens(const std::vector<std::vector<std::pair<psi::SharedVector, double>>>& eigens) {
         eigens_ = eigens;
     }
 
@@ -147,7 +147,7 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     void print_options_summary();
 
     /// CASCI eigen values and eigen vectors for state averaging
-    std::vector<std::vector<std::pair<SharedVector, double>>> eigens_;
+    std::vector<std::vector<std::pair<psi::SharedVector, double>>> eigens_;
     /// Determinants with different symmetries in the model space
     std::vector<std::vector<forte::Determinant>> p_spaces_;
 

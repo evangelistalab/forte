@@ -58,7 +58,7 @@ namespace forte {
 SigmaVectorMPI::SigmaVectorMPI(const DeterminantHashVec& space, WFNOperator& op)
     : SigmaVector(space.size()), space_(space) {}
 
-void SigmaVectorMPI::compute_sigma(SharedVector sigma, SharedVector b) {}
+void SigmaVectorMPI::compute_sigma(psi::SharedVector sigma, psi::SharedVector b) {}
 
 #endif
 
@@ -376,7 +376,7 @@ SigmaVectorList::SigmaVectorList(const std::vector<Determinant>& space, bool pri
     }
 }
 
-void SigmaVectorList::compute_sigma(SharedVector sigma, SharedVector b) {
+void SigmaVectorList::compute_sigma(psi::SharedVector sigma, psi::SharedVector b) {
     sigma->zero();
     double* sigma_p = sigma->pointer();
     double* b_p = b->pointer();
@@ -556,7 +556,7 @@ void SigmaVectorWfn1::get_diagonal(Vector& diag) {
     }
 }
 
-void SigmaVectorWfn1::compute_sigma(SharedVector sigma, SharedVector b) {
+void SigmaVectorWfn1::compute_sigma(psi::SharedVector sigma, psi::SharedVector b) {
     sigma->zero();
     double* sigma_p = sigma->pointer();
     double* b_p = b->pointer();
@@ -724,7 +724,7 @@ void SigmaVectorWfn2::get_diagonal(Vector& diag) {
     }
 }
 
-void SigmaVectorWfn2::compute_sigma(SharedVector sigma, SharedVector b) {
+void SigmaVectorWfn2::compute_sigma(psi::SharedVector sigma, psi::SharedVector b) {
     sigma->zero();
 
     double* sigma_p = sigma->pointer();
@@ -997,7 +997,7 @@ void SigmaVectorWfn3::get_diagonal(Vector& diag) {
     }
 }
 
-void SigmaVectorWfn3::compute_sigma(SharedVector sigma, SharedVector b) {
+void SigmaVectorWfn3::compute_sigma(psi::SharedVector sigma, psi::SharedVector b) {
     sigma->zero();
 
     size_t ncmo = fci_ints_->nmo();
@@ -1217,7 +1217,7 @@ void SigmaVectorWfn3::compute_sigma(SharedVector sigma, SharedVector b) {
 
 /*  Sigma Vector Sparse functions */
 
-void SigmaVectorSparse::compute_sigma(SharedVector sigma, SharedVector b) {
+void SigmaVectorSparse::compute_sigma(psi::SharedVector sigma, psi::SharedVector b) {
     sigma->zero();
     double* sigma_p = sigma->pointer();
     double* b_p = b->pointer();

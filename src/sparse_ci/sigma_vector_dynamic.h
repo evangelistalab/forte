@@ -47,7 +47,7 @@ class SigmaVectorDynamic : public SigmaVector {
     SigmaVectorDynamic(const DeterminantHashVec& space, std::shared_ptr<FCIIntegrals> fci_ints,
                        size_t max_memory);
     ~SigmaVectorDynamic();
-    void compute_sigma(SharedVector sigma, SharedVector b);
+    void compute_sigma(psi::SharedVector sigma, psi::SharedVector b);
     void get_diagonal(Vector& diag);
     void add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& bad_states);
     std::vector<std::vector<std::pair<size_t, double>>> bad_states_;
@@ -92,13 +92,13 @@ class SigmaVectorDynamic : public SigmaVector {
 
     void print_thread_stats();
     /// Scalar contribution to sigma
-    void compute_sigma_scalar(SharedVector sigma, SharedVector b);
+    void compute_sigma_scalar(psi::SharedVector sigma, psi::SharedVector b);
     /// Alpha-alpha single and double excitation contributions to sigma
-    void compute_sigma_aa(SharedVector sigma, SharedVector b);
+    void compute_sigma_aa(psi::SharedVector sigma, psi::SharedVector b);
     /// Beta-beta single and double excitation contributions to sigma
-    void compute_sigma_bb(SharedVector sigma, SharedVector b);
+    void compute_sigma_bb(psi::SharedVector sigma, psi::SharedVector b);
     /// Alpha-beta double excitation contributions to sigma
-    void compute_sigma_abab(SharedVector sigma, SharedVector b);
+    void compute_sigma_abab(psi::SharedVector sigma, psi::SharedVector b);
 
     /// Task to compute sigma_aa. Computes sigma and stores part of the Hamiltonian
     void sigma_aa_store_task(size_t task_id, size_t num_tasks);

@@ -65,7 +65,7 @@ class FiniteTemperatureHF : public scf::RHF {
     /// Just the normal CMatrix
     psi::SharedMatrix C_occ_a_;
     /// A Vector of eigenvalues
-    SharedVector eps_;
+    psi::SharedVector eps_;
     /// The active orbital energies (fractionally occupied orbitals)
     std::vector<std::pair<double, int>> active_orb_energy_;
     /// The Fermi-Dirac distribution for occupation
