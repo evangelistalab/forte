@@ -49,7 +49,7 @@ namespace forte {
  * @brief The SOMRDSRG class
  * This class implements the MR-DSRG(2) using a spin orbital formalism
  */
-class SOMRDSRG : public Wavefunction {
+class SOMRDSRG : public psi::Wavefunction {
   protected:
     // => Class data <= //
 

@@ -40,7 +40,7 @@
 
 namespace forte {
 
-class CI_Reference // : public Wavefunction
+class CI_Reference // : public psi::Wavefunction
 {
   protected:
     // The wavefunction object
@@ -96,7 +96,7 @@ class CI_Reference // : public Wavefunction
 
   public:
     /// Default constructor
-    CI_Reference(std::shared_ptr<Wavefunction> wfn, psi::Options& options,
+    CI_Reference(std::shared_ptr<psi::Wavefunction> wfn, psi::Options& options,
                  std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<FCIIntegrals> fci_ints,
                  int multiplicity, double ms, int symmetry);
 

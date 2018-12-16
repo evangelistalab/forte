@@ -61,7 +61,7 @@ struct Vector4 {
     double x, y, z, t;
 };
 
-class ACTIVE_DSRGPT2 : public Wavefunction {
+class ACTIVE_DSRGPT2 : public psi::Wavefunction {
   public:
     /**
      * @brief ACTIVE_DSRGPT2 Constructor

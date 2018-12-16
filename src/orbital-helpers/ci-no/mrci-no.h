@@ -42,7 +42,7 @@ void set_MRCINO_options(ForteOptions& foptions);
  * @brief The MRCINO class
  * This class implements natural orbitals for CI wave functions
  */
-class MRCINO : public Wavefunction {
+class MRCINO : public psi::Wavefunction {
   public:
     // ==> Class Constructor and Destructor <==
 

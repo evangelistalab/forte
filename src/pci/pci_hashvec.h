@@ -75,7 +75,7 @@ using det_hashvec = HashVector<Determinant, Determinant::Hash>;
  * @brief The SparsePathIntegralCI class
  * This class implements an a sparse path-integral FCI algorithm
  */
-class ProjectorCI_HashVec : public Wavefunction {
+class ProjectorCI_HashVec : public psi::Wavefunction {
   public:
     // ==> Class Constructor and Destructor <==
 

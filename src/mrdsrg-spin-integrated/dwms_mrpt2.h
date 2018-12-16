@@ -13,7 +13,7 @@ namespace forte {
 
 void set_DWMS_options(ForteOptions& foptions);
 
-class DWMS_DSRGPT2 : public Wavefunction {
+class DWMS_DSRGPT2 : public psi::Wavefunction {
   public:
     /**
      * @brief DWMS_DSRGPT2 Constructor

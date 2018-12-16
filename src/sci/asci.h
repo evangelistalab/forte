@@ -60,7 +60,7 @@ void set_ASCI_options(ForteOptions& foptions);
  * @brief The AdaptiveCI class
  * This class implements an adaptive CI algorithm
  */
-class ASCI : public Wavefunction {
+class ASCI : public psi::Wavefunction {
   public:
     // ==> Class Constructor and Destructor <==
 

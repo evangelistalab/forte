@@ -44,7 +44,7 @@
 
 namespace forte {
 
-class ESNO : public Wavefunction {
+class ESNO : public psi::Wavefunction {
   public:
     // Class constructor and destructor
     ESNO(psi::SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,

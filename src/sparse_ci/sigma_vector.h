@@ -136,7 +136,7 @@ class SigmaVectorWfn1 : public SigmaVector {
 
     void compute_sigma(psi::SharedVector sigma, psi::SharedVector b);
     //   void compute_sigma(Matrix& sigma, Matrix& b, int nroot) {}
-    void get_diagonal(Vector& diag);
+    void get_diagonal(psi::Vector& diag);
     void add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& bad_states);
     std::vector<std::vector<std::pair<size_t, double>>> bad_states_;
 
@@ -169,7 +169,7 @@ class SigmaVectorWfn2 : public SigmaVector {
 
     void compute_sigma(psi::SharedVector sigma, psi::SharedVector b);
     // void compute_sigma(Matrix& sigma, Matrix& b, int nroot);
-    void get_diagonal(Vector& diag);
+    void get_diagonal(psi::Vector& diag);
     void add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& bad_states_);
 
     std::vector<std::vector<std::pair<size_t, double>>> bad_states_;
@@ -231,7 +231,7 @@ class SigmaVectorMPI : public SigmaVector {
 
     void compute_sigma(psi::SharedVector sigma, psi::SharedVector b);
     void compute_sigma(Matrix& sigma, Matrix& b, int nroot);
-    void get_diagonal(Vector& diag);
+    void get_diagonal(psi::Vector& diag);
     void add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& bad_states_);
 
     std::vector<std::vector<std::pair<size_t, double>>> bad_states_;

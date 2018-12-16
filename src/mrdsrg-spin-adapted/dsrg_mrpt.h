@@ -49,7 +49,7 @@ using namespace ambit;
 
 namespace forte {
 
-class DSRG_MRPT : public Wavefunction {
+class DSRG_MRPT : public psi::Wavefunction {
   public:
     /**
      * DSRG-MRPT Constructor

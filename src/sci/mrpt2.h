@@ -48,7 +48,7 @@ namespace forte {
 
 void set_PT2_options(ForteOptions& foptions);
 
-class MRPT2 : public Wavefunction {
+class MRPT2 : public psi::Wavefunction {
   public:
     // Class constructor and destructor
     MRPT2(psi::SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
@@ -80,7 +80,6 @@ class MRPT2 : public Wavefunction {
 
     double screen_thresh_;
 };
-}
 }
 
 #endif // _mrpt2_h_

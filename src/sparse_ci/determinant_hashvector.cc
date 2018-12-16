@@ -239,4 +239,3 @@ void DeterminantHashVec::swap(DeterminantHashVec& dets) { wfn_.swap(dets.wfn_); 
 
 void DeterminantHashVec::swap(det_hashvec& dets) { wfn_.swap(dets); }
 }
-}

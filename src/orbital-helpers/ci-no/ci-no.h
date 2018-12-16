@@ -43,7 +43,7 @@ void set_CINO_options(ForteOptions& foptions);
  * @brief The CINO class
  * This class implements natural orbitals for CI wave functions
  */
-class CINO : public Wavefunction {
+class CINO : public psi::Wavefunction {
   public:
     // ==> Class Constructor and Destructor <==
 

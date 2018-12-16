@@ -75,6 +75,5 @@ class LOCALIZE {
     std::string local_method_;
 };
 }
-} // End Namespaces
 
 #endif

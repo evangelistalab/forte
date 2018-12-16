@@ -71,7 +71,7 @@ enum GeneratorType {
  * @brief The SparsePathIntegralCI class
  * This class implements an a sparse path-integral FCI algorithm
  */
-class ProjectorCI : public Wavefunction {
+class ProjectorCI : public psi::Wavefunction {
   public:
     // ==> Class Constructor and Destructor <==
 

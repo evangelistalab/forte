@@ -61,7 +61,7 @@ class SA_FCISolver {
 
   private:
     /// Options from Psi4
-    Options options_;
+    psi::Options options_;
     /// The wavefunction object of Psi4
     std::shared_ptr<Wavefunction> wfn_;
     /// Integral objects (same for all SA computations)
@@ -85,7 +85,6 @@ class SA_FCISolver {
     /// Read options and fill in parsed_options_
     void read_options();
 };
-}
 }
 
 #endif // SA_FCISOLVER_H

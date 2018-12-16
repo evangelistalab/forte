@@ -92,6 +92,5 @@ class DSRG_TIME {
     bool test_code(const std::string& code);
 };
 }
-}
 
 #endif // DSRG_TIME_H

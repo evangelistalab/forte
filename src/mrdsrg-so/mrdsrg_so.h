@@ -45,7 +45,7 @@ using namespace ambit;
 
 namespace forte {
 
-class MRDSRG_SO : public Wavefunction {
+class MRDSRG_SO : public psi::Wavefunction {
   protected:
     // => Class initialization and termination <= //
 

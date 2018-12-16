@@ -49,7 +49,7 @@ using namespace ambit;
 
 namespace forte {
 
-class CC : public Wavefunction {
+class CC : public psi::Wavefunction {
   public:
     /**
      * CC Constructor

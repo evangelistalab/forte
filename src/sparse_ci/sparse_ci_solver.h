@@ -210,6 +210,5 @@ class SparseCISolver {
     SigmaVector* sigma_vec_ = nullptr;
 };
 }
-}
 
 #endif // _sparse_ci_h_

@@ -62,7 +62,7 @@ namespace forte {
 /// Set the FCI_MO options
 void set_FCI_MO_options(ForteOptions& foptions);
 
-class FCI_MO : public Wavefunction {
+class FCI_MO : public psi::Wavefunction {
 
   public:
     /**

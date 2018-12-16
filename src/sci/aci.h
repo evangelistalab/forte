@@ -73,7 +73,7 @@ void set_ACI_options(ForteOptions& foptions);
  * @brief The AdaptiveCI class
  * This class implements an adaptive CI algorithm
  */
-class AdaptiveCI : public Wavefunction {
+class AdaptiveCI : public psi::Wavefunction {
   public:
     // ==> Class Constructor and Destructor <==
 

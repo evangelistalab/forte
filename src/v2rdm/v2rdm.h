@@ -48,7 +48,7 @@ using namespace ambit;
 
 namespace forte {
 
-class V2RDM : public Wavefunction {
+class V2RDM : public psi::Wavefunction {
   public:
     /**
      * V2RDM Constructor
