@@ -76,9 +76,9 @@ class AtomicOrbitalHelper {
     AtomicOrbitalHelper(psi::SharedMatrix CMO, psi::SharedVector eps_occ, psi::SharedVector eps_vir,
                         double laplace_tolerance, int shift);
     /// Compute (mu nu | mu nu)^{(1/2)}
-    void Compute_AO_Screen(std::shared_ptr<BasisSet>& primary);
-    void Estimate_TransAO_Screen(std::shared_ptr<BasisSet>& primary,
-                                 std::shared_ptr<BasisSet>& auxiliary);
+    void Compute_AO_Screen(std::shared_ptr<psi::BasisSet>& primary);
+    void Estimate_TransAO_Screen(std::shared_ptr<psi::BasisSet>& primary,
+                                 std::shared_ptr<psi::BasisSet>& auxiliary);
 
     ~AtomicOrbitalHelper();
 };

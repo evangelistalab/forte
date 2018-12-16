@@ -173,6 +173,5 @@ class SemiCanonical {
                                        ambit::Tensor& Ub_t);
 };
 } // namespace forte
-} // namespace psi
 
 #endif // _mp2_nos_h_

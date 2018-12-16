@@ -134,10 +134,10 @@ class AOSubspace {
     // ==> Constructors <==
 
     // Simple constructor
-    AOSubspace(std::shared_ptr<Molecule> molecule, std::shared_ptr<BasisSet> basis);
+    AOSubspace(std::shared_ptr<Molecule> molecule, std::shared_ptr<psi::BasisSet> basis);
     // Constructor with list of subspaces
     AOSubspace(std::vector<std::string> subspace_str, std::shared_ptr<Molecule> molecule,
-               std::shared_ptr<BasisSet> basis);
+               std::shared_ptr<psi::BasisSet> basis);
 
     // ==> User's interface <==
 
@@ -152,8 +152,8 @@ class AOSubspace {
 
     psi::SharedMatrix build_projector(const std::vector<int>& subspace,
                                  std::shared_ptr<Molecule> molecule,
-                                 std::shared_ptr<BasisSet> min_basis,
-                                 std::shared_ptr<BasisSet> large_basis);
+                                 std::shared_ptr<psi::BasisSet> min_basis,
+                                 std::shared_ptr<psi::BasisSet> large_basis);
 
     /// Return a vector of labels for each atomic orbital.  This function
     /// accepts
@@ -179,7 +179,7 @@ class AOSubspace {
     /// The molecule
     std::shared_ptr<Molecule> molecule_;
     /// The AO basis set
-    std::shared_ptr<BasisSet> basis_;
+    std::shared_ptr<psi::BasisSet> basis_;
 
     /// The label of Cartesian atomic orbitals.
     /// lm_labels_cartesian_[l][m] returns the label for an orbital

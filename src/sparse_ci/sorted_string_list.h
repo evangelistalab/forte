@@ -67,6 +67,5 @@ class SortedStringList_UI64 {
     std::unordered_map<UI64Determinant::bit_t, std::pair<size_t, size_t>> first_string_range_;
 };
 }
-}
 
 #endif // _sigma_vector_direct_h_

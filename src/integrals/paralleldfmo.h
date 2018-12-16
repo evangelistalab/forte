@@ -33,7 +33,7 @@ namespace forte {
 
 class ParallelDFMO {
   public:
-    ParallelDFMO(std::shared_ptr<BasisSet> primary, std::shared_ptr<BasisSet> auxiliary);
+    ParallelDFMO(std::shared_ptr<psi::BasisSet> primary, std::shared_ptr<psi::BasisSet> auxiliary);
     void set_C(std::shared_ptr<Matrix> C) { Ca_ = C; }
     void compute_integrals();
     int Q_PQ() { return GA_Q_PQ_; }
@@ -46,8 +46,8 @@ class ParallelDFMO {
     void transform_integrals();
     /// (A | pq) (A | Q)^{-1/2}
 
-    std::shared_ptr<BasisSet> primary_;
-    std::shared_ptr<BasisSet> auxiliary_;
+    std::shared_ptr<psi::BasisSet> primary_;
+    std::shared_ptr<psi::BasisSet> auxiliary_;
 
     /// Distributed DF (Q | pq) integrals
     int GA_Q_PQ_;

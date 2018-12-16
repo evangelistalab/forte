@@ -188,8 +188,8 @@ void read_disk_vector_double(const std::string& filename, std::vector<double>& d
  * @param occupation -> occupation vector
  */
 void view_modified_orbitals(psi::SharedWavefunction wfn, const std::shared_ptr<Matrix>& Ca,
-                            const std::shared_ptr<Vector>& diag_F,
-                            const std::shared_ptr<Vector>& occupation);
+                            const std::shared_ptr<psi::Vector>& diag_F,
+                            const std::shared_ptr<psi::Vector>& occupation);
 
 /**
  * @brief print_h2 Print a header
@@ -308,6 +308,5 @@ void apply_permutation_in_place(std::vector<T>& vec, const std::vector<std::size
 //     bool running_ = true;
 // };
 }
-} // End Namespaces
 
 #endif // _helpers_h_

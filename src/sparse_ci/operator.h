@@ -162,6 +162,5 @@ class WFNOperator {
     std::shared_ptr<FCIIntegrals> fci_ints_;
 };
 }
-}
 
 #endif // _wfn_operator_h_

@@ -54,7 +54,7 @@
 
 namespace forte {
 
-ParallelDFMO::ParallelDFMO(std::shared_ptr<BasisSet> primary, std::shared_ptr<BasisSet> auxiliary)
+ParallelDFMO::ParallelDFMO(std::shared_ptr<psi::BasisSet> primary, std::shared_ptr<psi::BasisSet> auxiliary)
     : primary_(primary), auxiliary_(auxiliary) {
     memory_ = Process::environment.get_memory();
 }
@@ -186,7 +186,7 @@ void ParallelDFMO::transform_integrals() {
     // => ERI Objects <= //
 
     std::shared_ptr<IntegralFactory> factory(
-        new IntegralFactory(auxiliary_, BasisSet::zero_ao_basis_set(), primary_, primary_));
+        new IntegralFactory(auxiliary_, psi::BasisSet::zero_ao_basis_set(), primary_, primary_));
     std::vector<std::shared_ptr<TwoBodyAOInt>> eri;
     for (int thread = 0; thread < nthread; thread++) {
         eri.push_back(std::shared_ptr<TwoBodyAOInt>(factory->eri()));
@@ -366,7 +366,7 @@ void ParallelDFMO::J_one_half() {
     // if(GA_Nodeid() == 0)
     {
         std::shared_ptr<IntegralFactory> Jfactory(new IntegralFactory(
-            auxiliary_, BasisSet::zero_ao_basis_set(), auxiliary_, BasisSet::zero_ao_basis_set()));
+            auxiliary_, psi::BasisSet::zero_ao_basis_set(), auxiliary_, psi::BasisSet::zero_ao_basis_set()));
         std::vector<std::shared_ptr<TwoBodyAOInt>> Jeri;
         for (int thread = 0; thread < nthread; thread++) {
             Jeri.push_back(std::shared_ptr<TwoBodyAOInt>(Jfactory->eri()));

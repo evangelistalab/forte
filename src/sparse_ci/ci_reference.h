@@ -96,7 +96,7 @@ class CI_Reference // : public Wavefunction
 
   public:
     /// Default constructor
-    CI_Reference(std::shared_ptr<Wavefunction> wfn, Options& options,
+    CI_Reference(std::shared_ptr<Wavefunction> wfn, psi::Options& options,
                  std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<FCIIntegrals> fci_ints,
                  int multiplicity, double ms, int symmetry);
 
@@ -110,6 +110,5 @@ class CI_Reference // : public Wavefunction
     void set_ref_type(const std::string& ref_type) { ref_type_ = ref_type; }
 };
 }
-} // End Namespaces
 
 #endif // _ci_reference_h_

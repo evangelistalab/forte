@@ -90,7 +90,7 @@ void AtomicOrbitalHelper::Compute_Psuedo_Density() {
     POcc_ = Xocc->clone();
     PVir_ = Yvir->clone();
 }
-void AtomicOrbitalHelper::Compute_AO_Screen(std::shared_ptr<BasisSet>& primary) {
+void AtomicOrbitalHelper::Compute_AO_Screen(std::shared_ptr<psi::BasisSet>& primary) {
     ERISieve sieve(primary, 1e-10);
     std::vector<double> my_function_pair_values = sieve.function_pair_values();
     psi::SharedMatrix AO_Screen(new Matrix("Z", nbf_, nbf_));
@@ -101,8 +101,8 @@ void AtomicOrbitalHelper::Compute_AO_Screen(std::shared_ptr<BasisSet>& primary) 
     AO_Screen_ = AO_Screen;
     AO_Screen_->set_name("ScwartzAOInts");
 }
-void AtomicOrbitalHelper::Estimate_TransAO_Screen(std::shared_ptr<BasisSet>& primary,
-                                                  std::shared_ptr<BasisSet>& auxiliary) {
+void AtomicOrbitalHelper::Estimate_TransAO_Screen(std::shared_ptr<psi::BasisSet>& primary,
+                                                  std::shared_ptr<psi::BasisSet>& auxiliary) {
     Compute_Psuedo_Density();
     std::shared_ptr<JK> jk(new MemDFJK(primary, auxiliary));
     jk->initialize();

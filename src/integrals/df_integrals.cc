@@ -171,8 +171,8 @@ void DFIntegrals::gather_integrals() {
         outfile->Printf("\n  Computing Density fitted integrals \n");
     }
 
-    std::shared_ptr<BasisSet> primary = wfn_->basisset();
-    std::shared_ptr<BasisSet> auxiliary = wfn_->get_basisset("DF_BASIS_MP2");
+    std::shared_ptr<psi::BasisSet> primary = wfn_->basisset();
+    std::shared_ptr<psi::BasisSet> auxiliary = wfn_->get_basisset("DF_BASIS_MP2");
 
     size_t nprim = primary->nbf();
     size_t naux = auxiliary->nbf();

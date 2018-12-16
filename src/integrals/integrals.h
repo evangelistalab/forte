@@ -355,7 +355,7 @@ class ForteIntegrals {
     void build_AOdipole_ints();
     /// Compute MO dipole integrals
     std::vector<std::shared_ptr<psi::Matrix>>
-    MOdipole_ints_helper(std::shared_ptr<psi::Matrix> Cao, psi::psi::SharedVector epsilon, const bool& resort);
+    MOdipole_ints_helper(std::shared_ptr<psi::Matrix> Cao, psi::SharedVector epsilon, const bool& resort);
 
     // ==> Class private functions <==
 

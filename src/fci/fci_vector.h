@@ -56,9 +56,9 @@ class FCIWfn {
     /// Copy the wave function object
     void copy(FCIWfn& wfn);
     /// Copy the coefficient from a Vector object
-    void copy(SharedVector vec);
+    void copy(psi::SharedVector vec);
     /// Copy the wave function object
-    void copy_to(SharedVector vec);
+    void copy_to(psi::SharedVector vec);
 
     /// Form the diagonal part of the Hamiltonian
     void form_H_diagonal(std::shared_ptr<FCIIntegrals> fci_ints);
@@ -221,7 +221,6 @@ class FCIWfn {
     void compute_3rdm_aab(std::vector<double>& rdm);
     void compute_3rdm_abb(std::vector<double>& rdm);
 };
-}
 }
 
 #endif // _fci_vector_

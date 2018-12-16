@@ -286,6 +286,5 @@ class CI_RDMS {
                 std::vector<double>& tprdm_ab, std::vector<double>& tprdm_aab,std::vector<double>& tprdm_abb);
 };
 }
-} // End namepaces
 
 #endif // _ci_rdms_h_

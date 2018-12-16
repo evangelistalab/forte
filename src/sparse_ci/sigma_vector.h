@@ -56,7 +56,7 @@ class SigmaVector {
 
     virtual void compute_sigma(psi::SharedVector sigma, psi::SharedVector b) = 0;
     //    virtual void compute_sigma(Matrix& sigma, Matrix& b, int nroot) = 0;
-    virtual void get_diagonal(Vector& diag) = 0;
+    virtual void get_diagonal(psi::Vector& diag) = 0;
     virtual void add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& bad_states) = 0;
 
   protected:
@@ -76,7 +76,7 @@ class SigmaVectorSparse : public SigmaVector {
 
     void compute_sigma(psi::SharedVector sigma, psi::SharedVector b);
     //   void compute_sigma(Matrix& sigma, Matrix& b, int nroot) {}
-    void get_diagonal(Vector& diag);
+    void get_diagonal(psi::Vector& diag);
     void add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& bad_states);
 
     std::vector<std::vector<std::pair<size_t, double>>> bad_states_;
@@ -97,8 +97,8 @@ class SigmaVectorList : public SigmaVector {
 
     void compute_sigma(psi::SharedVector sigma, psi::SharedVector b);
     //  void compute_sigma(Matrix& sigma, Matrix& b, int nroot);
-    void get_diagonal(Vector& diag);
-    void get_hamiltonian(Matrix& H);
+    void get_diagonal(psi::Vector& diag);
+    void get_hamiltonian(psi::Matrix& H);
     std::vector<std::pair<std::vector<int>, std::vector<double>>> get_sparse_hamiltonian();
     void add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& bad_states);
 
@@ -198,7 +198,7 @@ class SigmaVectorWfn3 : public SigmaVector {
 
     void compute_sigma(psi::SharedVector sigma, psi::SharedVector b);
     // void compute_sigma(Matrix& sigma, Matrix& b, int nroot);
-    void get_diagonal(Vector& diag);
+    void get_diagonal(psi::Vector& diag);
     void add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& bad_states_);
 
     std::vector<std::vector<std::pair<size_t, double>>> bad_states_;
@@ -240,7 +240,6 @@ class SigmaVectorMPI : public SigmaVector {
     std::shared_ptr<FCIIntegrals> fci_ints_;
 };
 #endif
-}
 }
 
 #endif // _sigma_vector_h_

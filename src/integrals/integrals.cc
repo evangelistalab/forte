@@ -289,7 +289,7 @@ void ForteIntegrals::compute_frozen_one_body_operator() {
                                    "using a non-DF integral type");
             }
         } else {
-            JK_core = JK::build_JK(wfn_->basisset(), BasisSet::zero_ao_basis_set(), options_);
+            JK_core = JK::build_JK(wfn_->basisset(), psi::BasisSet::zero_ao_basis_set(), options_);
         }
     }
 
@@ -506,7 +506,7 @@ void ForteIntegrals::print_ints() {
 }
 
 void ForteIntegrals::build_AOdipole_ints() {
-    std::shared_ptr<BasisSet> basisset = wfn_->basisset();
+    std::shared_ptr<psi::BasisSet> basisset = wfn_->basisset();
     std::shared_ptr<IntegralFactory> ints_fac = std::make_shared<IntegralFactory>(basisset);
     int nbf = basisset->nbf();
 

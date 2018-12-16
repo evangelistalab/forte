@@ -92,18 +92,18 @@ DistDFIntegrals::~DistDFIntegrals() {}
 void DistDFIntegrals::test_distributed_integrals() {
     outfile->Printf("\n Computing Density fitted integrals \n");
 
-    std::shared_ptr<BasisSet> primary = wfn_->basisset();
+    std::shared_ptr<psi::BasisSet> primary = wfn_->basisset();
     if (psi::Options_.get_str("DF_BASIS_MP2").length() == 0) {
         outfile->Printf("\n Please set a DF_BASIS_MP2 option to a specified "
                         "auxiliary basis set");
         throw PSIEXCEPTION("Select a DF_BASIS_MP2 for use with DFIntegrals");
     }
 
-    // std::shared_ptr<BasisSet> auxiliary =
-    // BasisSet::pyconstruct_orbital(primary->molecule(),
+    // std::shared_ptr<psi::BasisSet> auxiliary =
+    // psi::BasisSet::pyconstruct_orbital(primary->molecule(),
     // "DF_BASIS_MP2",options_.get_str("DF_BASIS_MP2"));
 
-    std::shared_ptr<BasisSet> auxiliary = wfn_->get_basisset("DF_BASIS_MP2");
+    std::shared_ptr<psi::BasisSet> auxiliary = wfn_->get_basisset("DF_BASIS_MP2");
 
     size_t nprim = primary->nbf();
     size_t naux = auxiliary->nbf();
@@ -431,10 +431,10 @@ ambit::Tensor DistDFIntegrals::three_integral_block(const std::vector<size_t>& A
     }
 }
 void DistDFIntegrals::gather_integrals() {
-    // std::shared_ptr<BasisSet> auxiliary =
-    // BasisSet::pyconstruct_orbital(wfn_->molecule(),
+    // std::shared_ptr<psi::BasisSet> auxiliary =
+    // psi::BasisSet::pyconstruct_orbital(wfn_->molecule(),
     // "DF_BASIS_MP2",options_.get_str("DF_BASIS_MP2"));
-    std::shared_ptr<BasisSet> auxiliary = wfn_->get_basisset("DF_BASIS_MP2");
+    std::shared_ptr<psi::BasisSet> auxiliary = wfn_->get_basisset("DF_BASIS_MP2");
     psi::SharedMatrix Ca = wfn_->Ca();
     psi::SharedMatrix Ca_ao(new Matrix("CA_AO", wfn_->nso(), wfn_->nmo()));
     for (size_t h = 0, index = 0; h < wfn_->nirrep(); ++h) {

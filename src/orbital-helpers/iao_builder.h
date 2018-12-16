@@ -73,9 +73,9 @@ protected:
     /// Occupied orbitals, in primary basis
     psi::SharedMatrix C_;
     /// Primary orbital basis set
-    std::shared_ptr<BasisSet> primary_;
+    std::shared_ptr<psi::BasisSet> primary_;
     /// MinAO orbital baiss set
-    std::shared_ptr<BasisSet> minao_;
+    std::shared_ptr<psi::BasisSet> minao_;
 
     // => Stars Parameters <= //
     
@@ -110,16 +110,16 @@ public:
     // => Constructors <= //
 
     IAOBuilder(
-        std::shared_ptr<BasisSet> primary, 
-        std::shared_ptr<BasisSet> minao, 
+        std::shared_ptr<psi::BasisSet> primary,
+        std::shared_ptr<psi::BasisSet> minao,
         std::shared_ptr<Matrix> C);
     
     virtual ~IAOBuilder();
 
     /// Build IBO with defaults from Options object (including MINAO_BASIS)
     static std::shared_ptr<IAOBuilder> build(
-        std::shared_ptr<BasisSet> primary, 
-        std::shared_ptr<BasisSet> minao, 
+        std::shared_ptr<psi::BasisSet> primary,
+        std::shared_ptr<psi::BasisSet> minao,
         std::shared_ptr<Matrix> C,
         Options& options);
     /// Build the IAOs for exporting

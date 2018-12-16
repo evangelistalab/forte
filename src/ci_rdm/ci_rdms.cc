@@ -36,6 +36,7 @@
 #include "base_classes/reference.h"
 #include "sparse_ci/determinant.h"
 
+using namespace psi;
 
 namespace forte {
 

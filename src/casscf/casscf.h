@@ -45,7 +45,7 @@
 
 namespace forte {
 
-class CASSCF : public Wavefunction {
+class CASSCF : public psi::Wavefunction {
   public:
     /**
      * @brief CASSCF::CASSCF
@@ -87,7 +87,7 @@ class CASSCF : public Wavefunction {
     /// The energy computed in FCI with updates from CASSCF and CI
     double E_casscf_;
     /// The OPtions object
-    Options options_;
+    psi::Options options_;
     std::shared_ptr<ForteIntegrals> ints_;
     /// The mo_space_info
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
@@ -122,7 +122,7 @@ class CASSCF : public Wavefunction {
     /// The One Electron integrals (H = T + V)  (in AO basis)
     psi::SharedMatrix Hcore_;
     /// The JK object.  Built in constructor
-    std::shared_ptr<JK> JK_;
+    std::shared_ptr<psi::JK> JK_;
     /// Perform a CAS-CI with the updated MO coefficients
     void cas_ci();
     /// Sets up the FCISolver
@@ -179,7 +179,6 @@ class CASSCF : public Wavefunction {
     std::vector<std::vector<std::shared_ptr<FCIWfn>>> CISolutions_;
     std::shared_ptr<FCIIntegrals> get_ci_integrals();
 };
-}
 }
 
 #endif // CASSCF_H

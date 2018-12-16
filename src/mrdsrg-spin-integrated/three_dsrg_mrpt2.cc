@@ -2352,8 +2352,8 @@ double THREE_DSRG_MRPT2::E_VT2_2_AO_Slow() {
     epsilon_virtual->print();
 
     AtomicOrbitalHelper ao_helper(Cwfn, epsilon_rdocc, epsilon_virtual, 1e-6, nactive_);
-    std::shared_ptr<BasisSet> primary = reference_wavefunction_->basisset();
-    std::shared_ptr<BasisSet> auxiliary = reference_wavefunction_->get_basisset("DF_BASIS_MP2");
+    std::shared_ptr<psi::BasisSet> primary = reference_wavefunction_->basisset();
+    std::shared_ptr<psi::BasisSet> auxiliary = reference_wavefunction_->get_basisset("DF_BASIS_MP2");
 
     ao_helper.Compute_AO_Screen(primary);
     ao_helper.Estimate_TransAO_Screen(primary, auxiliary);

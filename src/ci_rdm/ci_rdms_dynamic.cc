@@ -37,6 +37,7 @@
 #include "base_classes/reference.h"
 #include "sparse_ci/determinant.h"
 
+using namespace psi;
 
 namespace forte {
 
@@ -833,5 +834,4 @@ void CI_RDMS::fill_3rdm(std::vector<double>& tprdm, double el, int p, int q, int
 //                                   std::vector<double>& tprdm_bbb){
 //
 //}
-}
 }

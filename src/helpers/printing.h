@@ -50,6 +50,5 @@ void print_method_banner(const std::vector<std::string>& text, const std::string
 void print_timing(const std::string& text, double seconds);
 
 }
-} // End Namespaces
 
 #endif // _helpers_h_

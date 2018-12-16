@@ -149,7 +149,7 @@ void CholeskyIntegrals::gather_integrals() {
     if (print_) {
         outfile->Printf("\n  Computing the Cholesky Vectors \n");
     }
-    std::shared_ptr<BasisSet> primary = wfn_->basisset();
+    std::shared_ptr<psi::BasisSet> primary = wfn_->basisset();
     size_t nbf = primary->nbf();
 
     /// Needed to generate sieve information

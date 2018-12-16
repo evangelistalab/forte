@@ -177,6 +177,5 @@ class MP2_SOURCE : public DSRG_SOURCE {
     virtual double compute_renormalized_denominator(const double& D) { return 1.0 / D; }
 };
 }
-}
 
 #endif // DSRG_SOURCE_H

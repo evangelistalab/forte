@@ -30,7 +30,7 @@
 
 namespace forte {
 
-IAOBuilder::IAOBuilder(std::shared_ptr<BasisSet> primary, std::shared_ptr<BasisSet> minao,
+IAOBuilder::IAOBuilder(std::shared_ptr<psi::BasisSet> primary, std::shared_ptr<psi::BasisSet> minao,
                        psi::SharedMatrix C)
     : C_(C), primary_(primary), minao_(minao) {
     if (C->nirrep() != 1) {
@@ -55,12 +55,12 @@ void IAOBuilder::common_init() {
     stars_completeness_ = 0.9;
     stars_.clear();
 }
-std::shared_ptr<IAOBuilder> IAOBuilder::build(std::shared_ptr<BasisSet> primary,
-                                              std::shared_ptr<BasisSet> minao, psi::SharedMatrix C,
+std::shared_ptr<IAOBuilder> IAOBuilder::build(std::shared_ptr<psi::BasisSet> primary,
+                                              std::shared_ptr<psi::BasisSet> minao, psi::SharedMatrix C,
                                               Options& options) {
     //    Options& options = Process::environment.options;
 
-    //  std::shared_ptr<BasisSet> minao = BasisSet::pyconstruct_orbital(primary->molecule(),
+    //  std::shared_ptr<psi::BasisSet> minao = psi::BasisSet::pyconstruct_orbital(primary->molecule(),
     //      "BASIS", options.get_str("MINAO_BASIS"));
 
     std::shared_ptr<IAOBuilder> local(new IAOBuilder(primary, minao, C));

@@ -1561,7 +1561,7 @@ void FCI_MO::compute_transition_dipole() {
     //        this->nsopi()) ));
     //    }
 
-    //    std::shared_ptr<BasisSet> basisset = this->basisset();
+    //    std::shared_ptr<psi::BasisSet> basisset = this->basisset();
     //    std::shared_ptr<IntegralFactory> ints =
     //    std::shared_ptr<IntegralFactory>(
     //                new IntegralFactory(basisset,basisset,basisset,basisset));
@@ -2170,7 +2170,7 @@ double FCI_MO::ref_relaxed_dm_helper(const double& dm0, BlockedTensor& dm1, Bloc
 d3 FCI_MO::compute_orbital_extents() {
 
     // compute AO quadrupole integrals
-    std::shared_ptr<BasisSet> basisset = this->basisset();
+    std::shared_ptr<psi::BasisSet> basisset = this->basisset();
     std::shared_ptr<IntegralFactory> ints = std::shared_ptr<IntegralFactory>(
         new IntegralFactory(basisset, basisset, basisset, basisset));
 

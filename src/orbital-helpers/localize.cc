@@ -113,7 +113,7 @@ void LOCALIZE::split_localize() {
         }
     }
 
-    std::shared_ptr<BasisSet> primary = wfn_->basisset();
+    std::shared_ptr<psi::BasisSet> primary = wfn_->basisset();
 
     std::shared_ptr<Localizer> loc_a = Localizer::build(local_type_, primary, Caocc);
     loc_a->localize();
@@ -184,7 +184,7 @@ void LOCALIZE::full_localize() {
     }
 
     // Localize all active together
-    std::shared_ptr<BasisSet> primary = wfn_->basisset();
+    std::shared_ptr<psi::BasisSet> primary = wfn_->basisset();
 
     std::shared_ptr<Localizer> loc_a = Localizer::build(local_type_, primary, Caact);
     loc_a->localize();

@@ -35,10 +35,11 @@
 
 #include <algorithm>
 
+using namespace psi;
 
 namespace forte {
 
-CI_Reference::CI_Reference(std::shared_ptr<Wavefunction> wfn, Options& options,
+CI_Reference::CI_Reference(std::shared_ptr<psi::Wavefunction> wfn, psi::Options& options,
                            std::shared_ptr<MOSpaceInfo> mo_space_info,
                            std::shared_ptr<FCIIntegrals> fci_ints, int multiplicity,
                            double twice_ms, int symmetry)
@@ -472,6 +473,5 @@ Determinant CI_Reference::get_occupation() {
 
     } // End loop over k
     return det;
-}
 }
 }

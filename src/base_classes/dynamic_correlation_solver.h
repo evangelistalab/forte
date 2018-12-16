@@ -12,7 +12,7 @@
 
 
 namespace forte {
-class DynamicCorrelationSolver : public Wavefunction {
+class DynamicCorrelationSolver : public psi::Wavefunction {
   public:
     /**
      * Constructor

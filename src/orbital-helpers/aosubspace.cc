@@ -69,7 +69,7 @@ psi::SharedMatrix create_aosubspace_projector(psi::SharedWavefunction wfn, Optio
 
         // Create a basis set parser object and read the minimal basis
         std::shared_ptr<Molecule> molecule = wfn->molecule();
-        std::shared_ptr<BasisSet> min_basis = wfn->get_basisset("MINAO_BASIS");
+        std::shared_ptr<psi::BasisSet> min_basis = wfn->get_basisset("MINAO_BASIS");
 
         // Create an AOSubspace object
         AOSubspace aosub(subspace_str, molecule, min_basis);
@@ -106,7 +106,7 @@ AOSubspace::AOSubspace(std::shared_ptr<Molecule> molecule, std::shared_ptr<Basis
 }
 
 AOSubspace::AOSubspace(std::vector<std::string> subspace_str, std::shared_ptr<Molecule> molecule,
-                       std::shared_ptr<BasisSet> basis)
+                       std::shared_ptr<psi::BasisSet> basis)
     : subspace_str_(subspace_str), molecule_(molecule), basis_(basis) {
     startup();
 }
@@ -153,8 +153,8 @@ void AOSubspace::startup() {
 
 psi::SharedMatrix AOSubspace::build_projector(const std::vector<int>& subspace,
                                          std::shared_ptr<Molecule> molecule,
-                                         std::shared_ptr<BasisSet> min_basis,
-                                         std::shared_ptr<BasisSet> large_basis) {
+                                         std::shared_ptr<psi::BasisSet> min_basis,
+                                         std::shared_ptr<psi::BasisSet> large_basis) {
 
     std::shared_ptr<IntegralFactory> integral_mm(
         new IntegralFactory(min_basis, min_basis, min_basis, min_basis));
