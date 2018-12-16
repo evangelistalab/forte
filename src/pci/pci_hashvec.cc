@@ -128,7 +128,7 @@ void ProjectorCI_HashVec::sortHashVecByCoefficient(det_hashvec& dets_hashvec,
 ProjectorCI_HashVec::ProjectorCI_HashVec(psi::SharedWavefunction ref_wfn, psi::Options& options,
                                          std::shared_ptr<ForteIntegrals> ints,
                                          std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : Wavefunction(psi::Options), ints_(ints), mo_space_info_(mo_space_info),
+    : Wavefunction(options), ints_(ints), mo_space_info_(mo_space_info),
       fast_variational_estimate_(false) {
     // Copy the wavefunction information
     shallow_copy(ref_wfn);

@@ -460,5 +460,5 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     void H2_G2_C2(BlockedTensor& H2, BlockedTensor& G2, const double& alpha, BlockedTensor& C2);
 };
 }
-}
+
 #endif // MASTER_MRDSRG_H

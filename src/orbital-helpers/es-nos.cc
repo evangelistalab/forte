@@ -40,7 +40,7 @@ namespace forte {
 
 ESNO::ESNO(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
            std::shared_ptr<MOSpaceInfo> mo_space_info, DeterminantHashVec& reference)
-    : Wavefunction(psi::Options), ints_(ints), reference_(reference), ref_wfn_(ref_wfn),
+    : Wavefunction(options), ints_(ints), reference_(reference), ref_wfn_(ref_wfn),
       mo_space_info_(mo_space_info) {
     shallow_copy(ref_wfn);
     print_method_banner({"External Singles Natural Orbitals", "Jeff Schriber"});

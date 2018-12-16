@@ -54,7 +54,7 @@ namespace forte {
 ACTIVE_DSRGPT2::ACTIVE_DSRGPT2(psi::SharedWavefunction ref_wfn, psi::Options& options,
                                std::shared_ptr<ForteIntegrals> ints,
                                std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : Wavefunction(psi::Options), ints_(ints), mo_space_info_(mo_space_info), total_nroots_(0) {
+    : Wavefunction(options), ints_(ints), mo_space_info_(mo_space_info), total_nroots_(0) {
     // Copy the wavefunction information
     shallow_copy(ref_wfn);
     reference_wavefunction_ = ref_wfn;

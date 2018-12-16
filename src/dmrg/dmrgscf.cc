@@ -68,7 +68,7 @@ namespace forte {
 
 DMRGSCF::DMRGSCF(psi::SharedWavefunction ref_wfn, psi::Options& options,
                  std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ForteIntegrals> ints)
-    : Wavefunction(psi::Options), mo_space_info_(mo_space_info), ints_(ints) {
+    : Wavefunction(options), mo_space_info_(mo_space_info), ints_(ints) {
     shallow_copy(ref_wfn);
     reference_wavefunction_ = ref_wfn;
     print_method_banner({"Density Matrix Renormalization Group SCF", "Sebastian Wouters"});

@@ -200,7 +200,7 @@ void print_vector(const std::vector<double>& C, std::string description) {
 ProjectorCI::ProjectorCI(psi::SharedWavefunction ref_wfn, psi::Options& options,
                          std::shared_ptr<ForteIntegrals> ints,
                          std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : Wavefunction(psi::Options), ints_(ints), mo_space_info_(mo_space_info),
+    : Wavefunction(options), ints_(ints), mo_space_info_(mo_space_info),
       prescreening_tollerance_factor_(1.5), fast_variational_estimate_(false) {
     // Copy the wavefunction information
     shallow_copy(ref_wfn);

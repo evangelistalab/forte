@@ -329,6 +329,5 @@ class DSRG_MRPT2 : public MASTER_DSRG {
                      ambit::Tensor& L3bbb);
 };
 }
-} // End Namespaces
 
 #endif // _dsrg_mrpt2_h_

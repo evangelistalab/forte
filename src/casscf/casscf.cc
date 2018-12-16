@@ -60,7 +60,7 @@ namespace forte {
 
 CASSCF::CASSCF(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
                std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : Wavefunction(psi::Options), options_(psi::Options), ints_(ints), mo_space_info_(mo_space_info) {
+    : Wavefunction(options), options_(psi::Options), ints_(ints), mo_space_info_(mo_space_info) {
     shallow_copy(ref_wfn);
     reference_wavefunction_ = ref_wfn;
     startup();
