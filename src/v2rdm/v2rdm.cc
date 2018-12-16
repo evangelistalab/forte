@@ -93,7 +93,7 @@ void V2RDM::startup() {
     build_opdm();
 
     // read 3-pdm
-    if (psi::Options_.get_str("THREEPDC") != "ZERO") {
+    if (options_.get_str("THREEPDC") != "ZERO") {
         read_3pdm();
     }
 
@@ -105,7 +105,7 @@ void V2RDM::startup() {
     actv_mos_ = mo_space_info_->get_corr_abs_mo("ACTIVE");
 
     // write density to files
-    if (psi::Options_.get_str("WRITE_DENSITY_TYPE") == "DENSITY") {
+    if (options_.get_str("WRITE_DENSITY_TYPE") == "DENSITY") {
         write_density_to_file();
     }
 }
@@ -487,7 +487,7 @@ Reference V2RDM::reference() {
     return_ref.set_L2bb(D2bb);
 
     // if 3-cumulants are needed
-    if (psi::Options_.get_str("THREEPDC") != "ZERO") {
+    if (options_.get_str("THREEPDC") != "ZERO") {
         // compute 3-cumulants
         ambit::Tensor& D3aaa = D3_[0];
         ambit::Tensor& D3aab = D3_[1];
@@ -567,7 +567,7 @@ Reference V2RDM::reference() {
         return_ref.set_L3bbb(D3bbb);
     }
 
-    if (psi::Options_.get_str("WRITE_DENSITY_TYPE") == "CUMULANT") {
+    if (options_.get_str("WRITE_DENSITY_TYPE") == "CUMULANT") {
         write_density_to_file();
     }
 
@@ -580,7 +580,7 @@ void V2RDM::write_density_to_file() {
     outfile->Printf("\n  %-45s ...", str.c_str());
 
     std::vector<std::string> filenames;
-    if (psi::Options_.get_str("WRITE_DENSITY_TYPE") == "DENSITY") {
+    if (options_.get_str("WRITE_DENSITY_TYPE") == "DENSITY") {
         for (const std::string& spin : {"a", "b"}) {
             filenames.push_back("file_opdm_" + spin);
         }
@@ -590,7 +590,7 @@ void V2RDM::write_density_to_file() {
         for (const std::string& spin : {"aaa", "aab", "abb", "bbb"}) {
             filenames.push_back("file_3pdm_" + spin);
         }
-    } else if (psi::Options_.get_str("WRITE_DENSITY_TYPE") == "CUMULANT") {
+    } else if (options_.get_str("WRITE_DENSITY_TYPE") == "CUMULANT") {
         for (const std::string& spin : {"a", "b"}) {
             filenames.push_back("file_opdc_" + spin);
         }
@@ -629,7 +629,7 @@ void V2RDM::write_density_to_file() {
         outfstr.clear();
     }
 
-    if (psi::Options_.get_str("THREEPDC") != "ZERO") {
+    if (options_.get_str("THREEPDC") != "ZERO") {
         for (int m = 0; m < 4; ++m) {
             outfstr.open(filenames[m + 5]);
 

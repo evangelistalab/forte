@@ -103,11 +103,11 @@ void ASCI::startup() {
     op_.initialize(mo_symmetry_, fci_ints_);
 
     wavefunction_symmetry_ = 0;
-    if (psi::Options_["ROOT_SYM"].has_changed()) {
+    if (options_["ROOT_SYM"].has_changed()) {
         wavefunction_symmetry_ = options_.get_int("ROOT_SYM");
     }
     multiplicity_ = 1;
-    if (psi::Options_["MULTIPLICITY"].has_changed()) {
+    if (options_["MULTIPLICITY"].has_changed()) {
         multiplicity_ = options_.get_int("MULTIPLICITY");
     }
 
@@ -119,7 +119,7 @@ void ASCI::startup() {
     nfrzc_ = mo_space_info_->size("INACTIVE_DOCC");
 
     twice_ms_ = multiplicity_ - 1;
-    if (psi::Options_["MS"].has_changed()) {
+    if (options_["MS"].has_changed()) {
         twice_ms_ = std::round(2.0 * options_.get_double("MS"));
     }
 
@@ -132,21 +132,21 @@ void ASCI::startup() {
     nroot_ = options_.get_int("NROOT");
 
     max_cycle_ = 20;
-    if (psi::Options_["ASCI_MAX_CYCLE"].has_changed()) {
+    if (options_["ASCI_MAX_CYCLE"].has_changed()) {
         max_cycle_ = options_.get_int("ASCI_MAX_CYCLE");
     }
 
     diag_method_ = DLSolver;
-    if (psi::Options_["DIAG_ALGORITHM"].has_changed()) {
-        if (psi::Options_.get_str("DIAG_ALGORITHM") == "FULL") {
+    if (options_["DIAG_ALGORITHM"].has_changed()) {
+        if (options_.get_str("DIAG_ALGORITHM") == "FULL") {
             diag_method_ = Full;
-        } else if (psi::Options_.get_str("DIAG_ALGORITHM") == "DLSTRING") {
+        } else if (options_.get_str("DIAG_ALGORITHM") == "DLSTRING") {
             diag_method_ = DLString;
-        } else if (psi::Options_.get_str("DIAG_ALGORITHM") == "SPARSE") {
+        } else if (options_.get_str("DIAG_ALGORITHM") == "SPARSE") {
             diag_method_ = Sparse;
-        } else if (psi::Options_.get_str("DIAG_ALGORITHM") == "SOLVER") {
+        } else if (options_.get_str("DIAG_ALGORITHM") == "SOLVER") {
             diag_method_ = DLSolver;
-        } else if (psi::Options_.get_str("DIAG_ALGORITHM") == "DYNAMIC") {
+        } else if (options_.get_str("DIAG_ALGORITHM") == "DYNAMIC") {
             diag_method_ = Dynamic;
         }
     }
@@ -492,7 +492,7 @@ ASCI::compute_spin(DeterminantHashVec& space, WFNOperator& op, psi::SharedMatrix
     // op.tp_lists(space);
 
     std::vector<std::pair<double, double>> spin_vec(nroot);
-    if (psi::Options_.get_str("SIGMA_BUILD_TYPE") == "HZ") {
+    if (options_.get_str("SIGMA_BUILD_TYPE") == "HZ") {
         op.clear_op_s_lists();
         op.clear_tp_s_lists();
         op.build_strings(space);
@@ -569,8 +569,8 @@ Reference ASCI::reference() {
 void ASCI::print_nos() {
     print_h2("NATURAL ORBITALS");
 
-    std::shared_ptr<psi::Matrix> opdm_a(new Matrix("OPDM_A", nirrep_, nactpi_, nactpi_));
-    std::shared_ptr<psi::Matrix> opdm_b(new Matrix("OPDM_B", nirrep_, nactpi_, nactpi_));
+    std::shared_ptr<psi::Matrix> opdm_a(new psi::Matrix("OPDM_A", nirrep_, nactpi_, nactpi_));
+    std::shared_ptr<psi::Matrix> opdm_b(new psi::Matrix("OPDM_B", nirrep_, nactpi_, nactpi_));
 
     int offset = 0;
     for (int h = 0; h < nirrep_; h++) {
@@ -584,8 +584,8 @@ void ASCI::print_nos() {
     }
     psi::SharedVector OCC_A(new Vector("ALPHA OCCUPATION", nirrep_, nactpi_));
     psi::SharedVector OCC_B(new Vector("BETA OCCUPATION", nirrep_, nactpi_));
-    psi::SharedMatrix NO_A(new Matrix(nirrep_, nactpi_, nactpi_));
-    psi::SharedMatrix NO_B(new Matrix(nirrep_, nactpi_, nactpi_));
+    psi::SharedMatrix NO_A(new psi::Matrix(nirrep_, nactpi_, nactpi_));
+    psi::SharedMatrix NO_B(new psi::Matrix(nirrep_, nactpi_, nactpi_));
 
     opdm_a->diagonalize(NO_A, OCC_A, descending);
     opdm_b->diagonalize(NO_B, OCC_B, descending);

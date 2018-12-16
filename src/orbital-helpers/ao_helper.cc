@@ -66,8 +66,8 @@ AtomicOrbitalHelper::AtomicOrbitalHelper(psi::SharedMatrix CMO, psi::SharedVecto
 AtomicOrbitalHelper::~AtomicOrbitalHelper() { outfile->Printf("\n Done with AO helper class"); }
 void AtomicOrbitalHelper::Compute_Psuedo_Density() {
     int nmo_ = nbf_;
-    psi::SharedMatrix Xocc(new Matrix("DensityOccupied", weights_, nbf_ * nbf_));
-    psi::SharedMatrix Yvir(new Matrix("DensityVirtual", weights_, nmo_ * nmo_));
+    psi::SharedMatrix Xocc(new psi::Matrix("DensityOccupied", weights_, nbf_ * nbf_));
+    psi::SharedMatrix Yvir(new psi::Matrix("DensityVirtual", weights_, nmo_ * nmo_));
 
     double value_occ, value_vir = 0;
     for (int w = 0; w < weights_; w++) {
@@ -93,7 +93,7 @@ void AtomicOrbitalHelper::Compute_Psuedo_Density() {
 void AtomicOrbitalHelper::Compute_AO_Screen(std::shared_ptr<psi::BasisSet>& primary) {
     ERISieve sieve(primary, 1e-10);
     std::vector<double> my_function_pair_values = sieve.function_pair_values();
-    psi::SharedMatrix AO_Screen(new Matrix("Z", nbf_, nbf_));
+    psi::SharedMatrix AO_Screen(new psi::Matrix("Z", nbf_, nbf_));
     for (int mu = 0; mu < nbf_; mu++)
         for (int nu = 0; nu < nbf_; nu++)
             AO_Screen->set(mu, nu, my_function_pair_values[mu * nbf_ + nu]);
@@ -107,11 +107,11 @@ void AtomicOrbitalHelper::Estimate_TransAO_Screen(std::shared_ptr<psi::BasisSet>
     std::shared_ptr<JK> jk(new MemDFJK(primary, auxiliary));
     jk->initialize();
     jk->compute();
-    psi::SharedMatrix AO_Trans_Screen(new Matrix("AOTrans", weights_, nbf_ * nbf_));
+    psi::SharedMatrix AO_Trans_Screen(new psi::Matrix("AOTrans", weights_, nbf_ * nbf_));
 
     for (int w = 0; w < weights_; w++) {
-        psi::SharedMatrix COcc(new Matrix("COcc", nbf_, nbf_));
-        psi::SharedMatrix CVir(new Matrix("COcc", nbf_, nbf_));
+        psi::SharedMatrix COcc(new psi::Matrix("COcc", nbf_, nbf_));
+        psi::SharedMatrix CVir(new psi::Matrix("COcc", nbf_, nbf_));
         for (int mu = 0; mu < nbf_; mu++)
             for (int nu = 0; nu < nbf_; nu++) {
                 COcc->set(mu, nu, POcc_->get(w, mu * nbf_ + nu));

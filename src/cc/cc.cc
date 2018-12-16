@@ -240,7 +240,7 @@ void CC::startup() {
 ////    });
 
 //    // prepare three-body density cumulants
-//    if(psi::Options_.get_str("THREEPDC") != "ZERO"){
+//    if(options_.get_str("THREEPDC") != "ZERO"){
 //        ambit::Tensor Lambda3_aaa = Lambda3_.block("aaaaaa");
 //        ambit::Tensor Lambda3_aaA = Lambda3_.block("aaAaaA");
 //        ambit::Tensor Lambda3_aAA = Lambda3_.block("aAAaAA");

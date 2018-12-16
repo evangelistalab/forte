@@ -112,7 +112,7 @@ void SparseCISolver::diagonalize_mpi(const DeterminantHashVec& space, WFNOperato
     }
 
     size_t dim_space = space.size();
-    evecs.reset(new Matrix("U", dim_space, nroot));
+    evecs.reset(new psi::Matrix("U", dim_space, nroot));
     evals.reset(new Vector("e", nroot));
 
     SigmaVectorMPI sv(space, op);
@@ -130,7 +130,7 @@ void SparseCISolver::diagonalize_dl(const DeterminantHashVec& space, WFNOperator
         outfile->Printf("\n  Using %s sigma builder", sigma_method_.c_str());
     }
     size_t dim_space = space.size();
-    evecs.reset(new Matrix("U", dim_space, nroot));
+    evecs.reset(new psi::Matrix("U", dim_space, nroot));
     evals.reset(new Vector("e", nroot));
     SigmaVector* sigma_vector = nullptr;
 
@@ -165,7 +165,7 @@ void SparseCISolver::diagonalize_dl_dynamic(const DeterminantHashVec& space,
         outfile->Printf("\n\n  Davidson-Liu solver algorithm with dynamic sigma builds");
     }
     size_t dim_space = space.size();
-    evecs.reset(new Matrix("U", dim_space, nroot));
+    evecs.reset(new psi::Matrix("U", dim_space, nroot));
     evals.reset(new Vector("e", nroot));
 
     SigmaVectorDynamic svd(space, fci_ints_, max_memory_);
@@ -178,7 +178,7 @@ void SparseCISolver::diagonalize_full(const std::vector<Determinant>& space, psi
                                       psi::SharedMatrix& evecs, int nroot, int multiplicity) {
 
     size_t dim_space = space.size();
-    evecs.reset(new Matrix("U", dim_space, nroot));
+    evecs.reset(new psi::Matrix("U", dim_space, nroot));
     evals.reset(new Vector("e", nroot));
 
     if (spin_project_full_) {
@@ -235,7 +235,7 @@ void SparseCISolver::diagonalize_full(const std::vector<Determinant>& space, psi
         }
 
         // Select sub eigen vectors of S^2 with correct multiplicity
-        psi::SharedMatrix S2vecs_sub(new Matrix("Spin Selected S^2 Eigen Vectors", dim_space, nfound));
+        psi::SharedMatrix S2vecs_sub(new psi::Matrix("Spin Selected S^2 Eigen Vectors", dim_space, nfound));
         for (int i = 0; i < nfound; ++i) {
             psi::SharedVector vec = S2vecs.get_column(0, multi_list[multiplicity][i]);
             S2vecs_sub->set_column(0, i, vec);
@@ -248,7 +248,7 @@ void SparseCISolver::diagonalize_full(const std::vector<Determinant>& space, psi
 
         // Obtain spin selected eigen values and vectors
         psi::SharedVector Hss_vals(new Vector("Hss Eigen Values", nfound));
-        psi::SharedMatrix Hss_vecs(new Matrix("Hss Eigen Vectors", nfound, nfound));
+        psi::SharedMatrix Hss_vecs(new psi::Matrix("Hss Eigen Vectors", nfound, nfound));
         Hss->diagonalize(Hss_vecs, Hss_vals);
 
         // Project Hss_vecs back to original manifold
@@ -264,7 +264,7 @@ void SparseCISolver::diagonalize_full(const std::vector<Determinant>& space, psi
         // Find all the eigenvalues and eigenvectors of the Hamiltonian
         psi::SharedMatrix H = build_full_hamiltonian(space);
 
-        evecs.reset(new Matrix("U", dim_space, dim_space));
+        evecs.reset(new psi::Matrix("U", dim_space, dim_space));
         evals.reset(new Vector("e", dim_space));
 
         // Diagonalize H
@@ -280,7 +280,7 @@ void SparseCISolver::diagonalize_davidson_liu_solver(const std::vector<Determina
     }
 
     size_t dim_space = space.size();
-    evecs.reset(new Matrix("U", dim_space, nroot));
+    evecs.reset(new psi::Matrix("U", dim_space, nroot));
     evals.reset(new Vector("e", nroot));
 
     // Diagonalize H
@@ -299,7 +299,7 @@ void SparseCISolver::diagonalize_davidson_liu_solver(const std::vector<Determina
 psi::SharedMatrix SparseCISolver::build_full_hamiltonian(const std::vector<Determinant>& space) {
     // Build the H matrix
     size_t dim_space = space.size();
-    psi::SharedMatrix H(new Matrix("H", dim_space, dim_space));
+    psi::SharedMatrix H(new psi::Matrix("H", dim_space, dim_space));
     // If you are using DiskDF, Kevin found that openmp does not like this!
     int threads = 0;
     if (fci_ints_->get_integral_type() == DiskDF) {
@@ -321,7 +321,7 @@ psi::SharedMatrix SparseCISolver::build_full_hamiltonian(const std::vector<Deter
     if (root_project_) {
         // Form the projection matrix
         for (int n = 0, max_n = bad_states_.size(); n < max_n; ++n) {
-            psi::SharedMatrix P(new Matrix("P", dim_space, dim_space));
+            psi::SharedMatrix P(new psi::Matrix("P", dim_space, dim_space));
             P->identity();
             std::vector<std::pair<size_t, double>>& bad_state = bad_states_[n];
             for (size_t det1 = 0, ndet = bad_state.size(); det1 < ndet; ++det1) {
@@ -978,7 +978,7 @@ void SparseCISolver::diagonalize_dl_sparse(const DeterminantHashVec& space, WFNO
     std::vector<std::pair<std::vector<size_t>, std::vector<double>>> H = op.build_H_sparse(space);
 
     size_t dim_space = space.size();
-    evecs.reset(new Matrix("U", dim_space, nroot));
+    evecs.reset(new psi::Matrix("U", dim_space, nroot));
     evals.reset(new Vector("e", nroot));
 
     // Diagonalize H

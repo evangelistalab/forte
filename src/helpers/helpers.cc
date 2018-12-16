@@ -350,7 +350,7 @@ Matrix tensor_to_matrix(ambit::Tensor t, psi::Dimension dims) {
 psi::SharedMatrix tensor_to_matrix(ambit::Tensor t) {
     size_t size1 = t.dim(0);
     size_t size2 = t.dim(1);
-    psi::SharedMatrix M(new Matrix("M", size1, size2));
+    psi::SharedMatrix M(new psi::Matrix("M", size1, size2));
     t.iterate([&](const std::vector<size_t>& i, double& value) { M->set(i[0], i[1], value); });
     return M;
 }

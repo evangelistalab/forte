@@ -142,12 +142,12 @@ void ElementwiseCI::startup() {
     mo_symmetry_ = mo_space_info_->symmetry("ACTIVE");
 
     wavefunction_symmetry_ = 0;
-    if (psi::Options_["ROOT_SYM"].has_changed()) {
+    if (options_["ROOT_SYM"].has_changed()) {
         wavefunction_symmetry_ = options_.get_int("ROOT_SYM");
     }
     // Read options
     wavefunction_multiplicity_ = 1;
-    if (psi::Options_["MULTIPLICITY"].has_changed()) {
+    if (options_["MULTIPLICITY"].has_changed()) {
         wavefunction_multiplicity_ = options_.get_int("MULTIPLICITY");
     }
 
@@ -180,12 +180,12 @@ void ElementwiseCI::startup() {
     current_root_ = -1;
     post_diagonalization_ = options_.get_bool("PCI_POST_DIAGONALIZE");
     diag_method_ = DLSolver;
-    if (psi::Options_["DIAG_ALGORITHM"].has_changed()) {
-        if (psi::Options_.get_str("DIAG_ALGORITHM") == "FULL") {
+    if (options_["DIAG_ALGORITHM"].has_changed()) {
+        if (options_.get_str("DIAG_ALGORITHM") == "FULL") {
             diag_method_ = Full;
-        } else if (psi::Options_.get_str("DIAG_ALGORITHM") == "DLSTRING") {
+        } else if (options_.get_str("DIAG_ALGORITHM") == "DLSTRING") {
             diag_method_ = DLString;
-        } else if (psi::Options_.get_str("DIAG_ALGORITHM") == "DLDISK") {
+        } else if (options_.get_str("DIAG_ALGORITHM") == "DLDISK") {
             diag_method_ = DLDisk;
         }
     }
@@ -222,7 +222,7 @@ void ElementwiseCI::startup() {
     approx_E_tau_ = 1.0;
     approx_E_S_ = 0.0;
 
-    if (psi::Options_.get_str("PCI_GENERATOR") == "WALL-CHEBYSHEV") {
+    if (options_.get_str("PCI_GENERATOR") == "WALL-CHEBYSHEV") {
         generator_ = WallChebyshevGenerator;
         generator_description_ = "Wall-Chebyshev";
         time_step_ = 1.0;
@@ -232,7 +232,7 @@ void ElementwiseCI::startup() {
                             chebyshev_order_);
             chebyshev_order_ = 5;
         }
-    } else if (psi::Options_.get_str("PCI_GENERATOR") == "DL") {
+    } else if (options_.get_str("PCI_GENERATOR") == "DL") {
         generator_ = DLGenerator;
         generator_description_ = "Davidson-Liu by Tianyuan";
         time_step_ = 1.0;
@@ -247,7 +247,7 @@ void ElementwiseCI::startup() {
         abort();
     }
 
-    if (psi::Options_.get_str("PCI_FUNCTIONAL") == "MAX") {
+    if (options_.get_str("PCI_FUNCTIONAL") == "MAX") {
         if (std::numeric_limits<double>::has_infinity) {
             functional_order_ = std::numeric_limits<double>::infinity();
         } else {
@@ -260,7 +260,7 @@ void ElementwiseCI::startup() {
             return true;
         };
         functional_description_ = "|Hij|*max(|Ci|,|Cj|)";
-    } else if (psi::Options_.get_str("PCI_FUNCTIONAL") == "SUM") {
+    } else if (options_.get_str("PCI_FUNCTIONAL") == "SUM") {
         functional_order_ = 1.0;
         prescreen_H_CI_ = [](double HJI, double CI, double spawning_threshold) {
             return std::fabs(HJI * CI) >= 0.5 * spawning_threshold;
@@ -269,7 +269,7 @@ void ElementwiseCI::startup() {
             return std::fabs(HJI * CI) + std::fabs(HJI * CJ) >= spawning_threshold;
         };
         functional_description_ = "|Hij|*(|Ci|+|Cj|)";
-    } else if (psi::Options_.get_str("PCI_FUNCTIONAL") == "SQUARE") {
+    } else if (options_.get_str("PCI_FUNCTIONAL") == "SQUARE") {
         functional_order_ = 2.0;
         prescreen_H_CI_ = [](double HJI, double CI, double spawning_threshold) {
             return std::fabs(HJI * CI) >= 1.4142135623730952 * spawning_threshold;
@@ -278,7 +278,7 @@ void ElementwiseCI::startup() {
             return std::fabs(HJI) * std::sqrt(CI * CI + CJ * CJ) >= spawning_threshold;
         };
         functional_description_ = "|Hij|*sqrt(Ci^2+Cj^2)";
-    } else if (psi::Options_.get_str("PCI_FUNCTIONAL") == "SQRT") {
+    } else if (options_.get_str("PCI_FUNCTIONAL") == "SQRT") {
         functional_order_ = 0.5;
         prescreen_H_CI_ = [](double HJI, double CI, double spawning_threshold) {
             return std::fabs(HJI * CI) >= 0.25 * spawning_threshold;
@@ -289,7 +289,7 @@ void ElementwiseCI::startup() {
                    spawning_threshold;
         };
         functional_description_ = "|Hij|*(sqrt(|Ci|)+sqrt(|Cj|))^2";
-    } else if (psi::Options_.get_str("PCI_FUNCTIONAL") == "SPECIFY-ORDER") {
+    } else if (options_.get_str("PCI_FUNCTIONAL") == "SPECIFY-ORDER") {
         functional_order_ = options_.get_double("PCI_FUNCTIONAL_ORDER");
         double factor = std::pow(2.0, 1.0 / functional_order_);
         prescreen_H_CI_ = [factor](double HJI, double CI, double spawning_threshold) {
@@ -815,7 +815,7 @@ double ElementwiseCI::compute_energy() {
     if (post_diagonalization_) {
         outfile->Printf("\n\n  ==> Post-Diagonalization <==\n");
         timer_on("EWCI:Post_Diag");
-        psi::SharedMatrix apfci_evecs(new Matrix("Eigenvectors", C.size(), nroot_));
+        psi::SharedMatrix apfci_evecs(new psi::Matrix("Eigenvectors", C.size(), nroot_));
         psi::SharedVector apfci_evals(new Vector("Eigenvalues", nroot_));
 
         WFNOperator op(mo_symmetry_, fci_ints_);
@@ -939,7 +939,7 @@ double ElementwiseCI::initial_guess(det_hashvec& dets_hashvec, std::vector<doubl
     sparse_solver.set_maxiter_davidson(psi::Options_.get_int("DL_MAXITER"));
     sparse_solver.set_spin_project(true);
 
-    psi::SharedMatrix evecs(new Matrix("Eigenvectors", guess_size, nroot_));
+    psi::SharedMatrix evecs(new psi::Matrix("Eigenvectors", guess_size, nroot_));
     psi::SharedVector evals(new Vector("Eigenvalues", nroot_));
     //  std::vector<DynamicBitsetDeterminant> dyn_dets;
     // for (auto& d : dets){
@@ -1030,7 +1030,7 @@ void ElementwiseCI::propagate_DL(det_hashvec& dets_hashvec, std::vector<double>&
     std::vector<std::vector<double>> b_vec(davidson_subspace_per_root_);
     std::vector<std::vector<double>> sigma_vec(davidson_subspace_per_root_);
     std::vector<double> alpha_vec(davidson_subspace_per_root_);
-    psi::SharedMatrix A(new Matrix(davidson_subspace_per_root_, davidson_subspace_per_root_));
+    psi::SharedMatrix A(new psi::Matrix(davidson_subspace_per_root_, davidson_subspace_per_root_));
     //    det_hash<> dets_C_hash;
     //    apply_tau_H_ref_C_symm(1.0, spawning_threshold, dets, b_vec[0], C,
     //                           dets_C_hash, 0.0);
@@ -1118,14 +1118,14 @@ void ElementwiseCI::propagate_DL(det_hashvec& dets_hashvec, std::vector<double>&
         A->set(current_order, current_order, dot(b_vec[current_order], sigma_vec[current_order]));
 
         current_order++;
-        psi::SharedMatrix G(new Matrix(current_order, current_order));
+        psi::SharedMatrix G(new psi::Matrix(current_order, current_order));
 
         for (size_t k = 0; k < current_order; k++) {
             for (size_t j = 0; j < current_order; j++) {
                 G->set(k, j, A->get(k, j));
             }
         }
-        psi::SharedMatrix evecs(new Matrix(current_order, current_order));
+        psi::SharedMatrix evecs(new psi::Matrix(current_order, current_order));
         psi::SharedVector eigs(new Vector(current_order));
         G->diagonalize(evecs, eigs);
 

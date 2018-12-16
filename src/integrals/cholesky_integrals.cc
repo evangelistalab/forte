@@ -162,7 +162,7 @@ void CholeskyIntegrals::gather_integrals() {
     std::shared_ptr<CholeskyERI> Ch(new CholeskyERI(std::shared_ptr<TwoBodyAOInt>(integral->eri()),
                                                     options_.get_double("INTS_TOLERANCE"), tol_cd,
                                                     Process::environment.get_memory()));
-    if (psi::Options_.get_str("DF_INTS_IO") == "LOAD") {
+    if (options_.get_str("DF_INTS_IO") == "LOAD") {
         std::shared_ptr<ERISieve> sieve(
             new ERISieve(primary, options_.get_double("INTS_TOLERANCE")));
         const std::vector<std::pair<int, int>>& function_pairs = sieve->function_pairs();
@@ -243,8 +243,8 @@ void CholeskyIntegrals::gather_integrals() {
 void CholeskyIntegrals::transform_integrals() {
     TensorType tensor_type = CoreTensor;
 
-    psi::SharedMatrix L(new Matrix("Lmo", nthree_, (nso_) * (nso_)));
-    psi::SharedMatrix Ca_ao(new Matrix("Ca_ao", nso_, nmopi_.sum()));
+    psi::SharedMatrix L(new psi::Matrix("Lmo", nthree_, (nso_) * (nso_)));
+    psi::SharedMatrix Ca_ao(new psi::Matrix("Ca_ao", nso_, nmopi_.sum()));
     psi::SharedMatrix Ca = wfn_->Ca();
     psi::SharedMatrix aotoso = wfn_->aotoso();
 
@@ -277,7 +277,7 @@ void CholeskyIntegrals::transform_integrals() {
     ThreeIntegral_ao.iterate([&](const std::vector<size_t>& i, double& value) {
         value = L_ao_->get(i[0], i[1] * nso_ + i[2]);
     });
-    psi::SharedMatrix ThreeInt(new Matrix("Lmo", (nmo_) * (nmo_), nthree_));
+    psi::SharedMatrix ThreeInt(new psi::Matrix("Lmo", (nmo_) * (nmo_), nthree_));
     ThreeIntegral_ = ThreeInt;
 
     ThreeIntegral("L,p,q") = ThreeIntegral_ao("L,m,n") * Cpq_tensor("m,p") * Cpq_tensor("n,q");

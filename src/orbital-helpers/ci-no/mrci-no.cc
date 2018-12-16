@@ -118,8 +118,8 @@ double MRCINO::compute_energy() {
 
     CharacterTable ct = molecule_->point_group()->char_table();
 
-    psi::SharedMatrix Density_a(new Matrix(corrpi_, corrpi_));
-    psi::SharedMatrix Density_b(new Matrix(corrpi_, corrpi_));
+    psi::SharedMatrix Density_a(new psi::Matrix(corrpi_, corrpi_));
+    psi::SharedMatrix Density_b(new psi::Matrix(corrpi_, corrpi_));
     int sum = 0;
 
     // Build CAS determinants
@@ -171,16 +171,16 @@ double MRCINO::compute_energy() {
 
 void MRCINO::startup() {
     wavefunction_multiplicity_ = 1;
-    if (psi::Options_["MULTIPLICITY"].has_changed()) {
+    if (options_["MULTIPLICITY"].has_changed()) {
         wavefunction_multiplicity_ = options_.get_int("MULTIPLICITY");
     }
     diag_method_ = DLSolver;
-    if (psi::Options_["DIAG_ALGORITHM"].has_changed()) {
-        if (psi::Options_.get_str("DIAG_ALGORITHM") == "FULL") {
+    if (options_["DIAG_ALGORITHM"].has_changed()) {
+        if (options_.get_str("DIAG_ALGORITHM") == "FULL") {
             diag_method_ = Full;
-        } else if (psi::Options_.get_str("DIAG_ALGORITHM") == "DLSTRING") {
+        } else if (options_.get_str("DIAG_ALGORITHM") == "DLSTRING") {
             diag_method_ = DLString;
-        } else if (psi::Options_.get_str("DIAG_ALGORITHM") == "DLDISK") {
+        } else if (options_.get_str("DIAG_ALGORITHM") == "DLDISK") {
             diag_method_ = DLDisk;
         }
     }
@@ -412,7 +412,7 @@ std::vector<Determinant> MRCINO::build_dets(int irrep,
         }
     }
 
-    if (psi::Options_.get_str("MRCINO_TYPE") == "CISD") {
+    if (options_.get_str("MRCINO_TYPE") == "CISD") {
         // alpha-alpha double excitation
         //        for (int i = 0; i < naocc_; ++i) {
         //            for (int j = i + 1; j < naocc_; ++j) {
@@ -544,8 +544,8 @@ MRCINO::build_density_matrix(const std::vector<Determinant>& dets, psi::SharedMa
     //    psi::Dimension nmopi = reference_wavefunction_->nmopi();
     //    psi::Dimension ncmopi = mo_space_info_->get_dimension("CORRELATED");
 
-    std::shared_ptr<psi::Matrix> opdm_a(new Matrix("OPDM_A", corrpi_, corrpi_));
-    std::shared_ptr<psi::Matrix> opdm_b(new Matrix("OPDM_B", corrpi_, corrpi_));
+    std::shared_ptr<psi::Matrix> opdm_a(new psi::Matrix("OPDM_A", corrpi_, corrpi_));
+    std::shared_ptr<psi::Matrix> opdm_b(new psi::Matrix("OPDM_B", corrpi_, corrpi_));
 
     int offset = 0;
     for (int h = 0; h < nirrep_; h++) {
@@ -568,8 +568,8 @@ MRCINO::diagonalize_density_matrix(std::pair<psi::SharedMatrix, psi::SharedMatri
 
     psi::SharedVector OCC_A(new Vector("ALPHA OCCUPATION", corrpi_));
     psi::SharedVector OCC_B(new Vector("BETA OCCUPATION", corrpi_));
-    psi::SharedMatrix NO_A(new Matrix(corrpi_, corrpi_));
-    psi::SharedMatrix NO_B(new Matrix(corrpi_, corrpi_));
+    psi::SharedMatrix NO_A(new psi::Matrix(corrpi_, corrpi_));
+    psi::SharedMatrix NO_B(new psi::Matrix(corrpi_, corrpi_));
 
     psi::Dimension zero_dim(nirrep_);
     psi::Dimension aoccpi = nalphapi_ - fdoccpi_;
@@ -585,8 +585,8 @@ MRCINO::diagonalize_density_matrix(std::pair<psi::SharedMatrix, psi::SharedMatri
     gamma_a_vir->set_name("Gamma alpha virtual");
 
     // Diagonalize alpha density matrix
-    psi::SharedMatrix NO_A_occ(new Matrix(aoccpi, aoccpi));
-    psi::SharedMatrix NO_A_vir(new Matrix(avirpi, avirpi));
+    psi::SharedMatrix NO_A_occ(new psi::Matrix(aoccpi, aoccpi));
+    psi::SharedMatrix NO_A_vir(new psi::Matrix(avirpi, avirpi));
     psi::SharedVector OCC_A_occ(new Vector("Occupied ALPHA OCCUPATION", aoccpi));
     psi::SharedVector OCC_A_vir(new Vector("Virtual ALPHA OCCUPATION", avirpi));
     gamma_a_occ->diagonalize(NO_A_occ, OCC_A_occ, descending);
@@ -613,8 +613,8 @@ MRCINO::diagonalize_density_matrix(std::pair<psi::SharedMatrix, psi::SharedMatri
     gamma_b_vir->set_name("Gamma beta virtual");
 
     // Diagonalize beta density matrix
-    psi::SharedMatrix NO_B_occ(new Matrix(boccpi, boccpi));
-    psi::SharedMatrix NO_B_vir(new Matrix(bvirpi, bvirpi));
+    psi::SharedMatrix NO_B_occ(new psi::Matrix(boccpi, boccpi));
+    psi::SharedMatrix NO_B_vir(new psi::Matrix(bvirpi, bvirpi));
     psi::SharedVector OCC_B_occ(new Vector("Occupied BETA OCCUPATION", boccpi));
     psi::SharedVector OCC_B_vir(new Vector("Virtual BETA OCCUPATION", bvirpi));
     gamma_b_occ->diagonalize(NO_B_occ, OCC_B_occ, descending);

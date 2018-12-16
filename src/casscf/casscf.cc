@@ -266,7 +266,7 @@ void CASSCF::startup() {
     print_ = options_.get_int("PRINT");
     nsopi_ = this->nsopi();
     nirrep_ = this->nirrep();
-    if (psi::Options_.get_str("SCF_TYPE") == "PK") {
+    if (options_.get_str("SCF_TYPE") == "PK") {
         outfile->Printf("\n\n CASSCF algorithm can not use PK");
         throw psi::PSIEXCEPTION("PK should not be used for CASSCF");
     }
@@ -322,7 +322,7 @@ void CASSCF::startup() {
     Hcore_->add(V);
 
     local_timer JK_initialize;
-    if (psi::Options_.get_str("SCF_TYPE") == "GTFOCK") {
+    if (options_.get_str("SCF_TYPE") == "GTFOCK") {
 #ifdef HAVE_JK_FACTORY
         Process::environment.set_legacy_molecule(this->molecule());
         JK_ = std::shared_ptr<JK>(new GTFockJK(this->basisset()));
@@ -330,7 +330,7 @@ void CASSCF::startup() {
         throw psi::PSIEXCEPTION("GTFock was not compiled in this version");
 #endif
     } else {
-        if (psi::Options_.get_str("SCF_TYPE") == "DF") {
+        if (options_.get_str("SCF_TYPE") == "DF") {
             //   JK_ = JK::build_JK(basisset(), get_basisset("DF_BASIS_SCF"), options_);
             JK_ = std::make_shared<DiskDFJK>(basisset(), get_basisset("DF_BASIS_SCF"));
         } else {
@@ -349,22 +349,22 @@ void CASSCF::cas_ci() {
     /// Calls francisco's FCI code and does a CAS-CI with the active given in
     /// the input
     // tei_paaa_ = transform_integrals();
-    psi::SharedMatrix gamma2_matrix(new Matrix("gamma2", na_ * na_, na_ * na_));
+    psi::SharedMatrix gamma2_matrix(new psi::Matrix("gamma2", na_ * na_, na_ * na_));
     bool quiet = true;
     if (print_ > 0) {
         quiet = false;
     }
 
-    if (psi::Options_.get_str("CASSCF_CI_SOLVER") == "FCI") {
+    if (options_.get_str("CASSCF_CI_SOLVER") == "FCI") {
         // Used to grab the computed energy and RDMs.
-        if (psi::Options_["AVG_STATE"].size() == 0) {
+        if (options_["AVG_STATE"].size() == 0) {
             set_up_fci();
         } else {
             set_up_sa_fci();
         }
-    } else if (psi::Options_.get_str("CASSCF_CI_SOLVER") == "CAS") {
+    } else if (options_.get_str("CASSCF_CI_SOLVER") == "CAS") {
         set_up_fcimo();
-    } else if (psi::Options_.get_str("CASSCF_CI_SOLVER") == "ACI") {
+    } else if (options_.get_str("CASSCF_CI_SOLVER") == "ACI") {
         // ints_->retransform_integrals();
         std::shared_ptr<FCIIntegrals> fci_ints = get_ci_integrals();
         AdaptiveCI aci(reference_wavefunction_, options_, ints_, mo_space_info_);
@@ -374,7 +374,7 @@ void CASSCF::cas_ci() {
         aci.compute_energy();
         cas_ref_ = aci.reference();
         E_casscf_ = cas_ref_.get_Eref();
-    } else if (psi::Options_.get_str("CASSCF_CI_SOLVER") == "DMRG") {
+    } else if (options_.get_str("CASSCF_CI_SOLVER") == "DMRG") {
 #ifdef HAVE_CHEMPS2
         DMRGSolver dmrg(reference_wavefunction_, options_, mo_space_info_, ints_);
         dmrg.set_max_rdm(2);
@@ -407,7 +407,7 @@ void CASSCF::cas_ci() {
 
     L2bb("pqrs") += L1b("pr") * L1b("qs");
     L2bb("pqrs") -= L1b("ps") * L1b("qr");
-    if (psi::Options_.get_str("CASSCF_CI_SOLVER") == "DMRG")
+    if (options_.get_str("CASSCF_CI_SOLVER") == "DMRG")
         L2aa.scale(0.5);
 
     ambit::Tensor gamma2 = ambit::Tensor::build(ambit::CoreTensor, "gamma2", {na_, na_, na_, na_});
@@ -430,7 +430,7 @@ void CASSCF::cas_ci() {
     gamma_no_spin("i,j") = (gamma1a("i,j") + gamma1b("i,j"));
 
     gamma1_ = gamma_no_spin;
-    if (psi::Options_.get_str("CASSCF_CI_SOLVER") == "DMRG") {
+    if (options_.get_str("CASSCF_CI_SOLVER") == "DMRG") {
         gamma2_ = cas_ref_.SFg2();
     }
 }
@@ -442,16 +442,16 @@ void CASSCF::cas_ci_final() {
     if (print_ > 0) {
         quiet = false;
     }
-    if (psi::Options_.get_str("CASSCF_CI_SOLVER") == "FCI") {
+    if (options_.get_str("CASSCF_CI_SOLVER") == "FCI") {
         // Used to grab the computed energy and RDMs.
-        if (psi::Options_["AVG_STATE"].size() == 0) {
+        if (options_["AVG_STATE"].size() == 0) {
             set_up_fci();
         } else {
             set_up_sa_fci();
         }
-    } else if (psi::Options_.get_str("CASSCF_CI_SOLVER") == "CAS") {
+    } else if (options_.get_str("CASSCF_CI_SOLVER") == "CAS") {
         set_up_fcimo();
-    } else if (psi::Options_.get_str("CASSCF_CI_SOLVER") == "ACI") {
+    } else if (options_.get_str("CASSCF_CI_SOLVER") == "ACI") {
         // ints_->retransform_integrals();
         //   std::shared_ptr<FCIIntegrals> fci_ints = get_ci_integrals();
         AdaptiveCI aci(reference_wavefunction_, options_, ints_, mo_space_info_);
@@ -461,7 +461,7 @@ void CASSCF::cas_ci_final() {
         aci.compute_energy();
         cas_ref_ = aci.reference();
         E_casscf_ = cas_ref_.get_Eref();
-    } else if (psi::Options_.get_str("CASSCF_CI_SOLVER") == "DMRG") {
+    } else if (options_.get_str("CASSCF_CI_SOLVER") == "DMRG") {
 #ifdef HAVE_CHEMPS2
         DMRGSolver dmrg(reference_wavefunction_, options_, mo_space_info_, ints_);
         dmrg.set_max_rdm(3);
@@ -554,7 +554,7 @@ std::shared_ptr<psi::Matrix> CASSCF::set_frozen_core_orbitals() {
     psi::SharedMatrix Ca = reference_wavefunction_->Ca();
     psi::Dimension nsopi = reference_wavefunction_->nsopi();
     psi::Dimension frozen_dim = mo_space_info_->get_dimension("FROZEN_DOCC");
-    psi::SharedMatrix C_core(new Matrix("C_core", nirrep_, nsopi, frozen_dim));
+    psi::SharedMatrix C_core(new psi::Matrix("C_core", nirrep_, nsopi, frozen_dim));
     // Need to get the frozen block of the C matrix
     for (size_t h = 0; h < nirrep_; h++) {
         for (int i = 0; i < frozen_dim[h]; i++) {
@@ -583,7 +583,7 @@ std::shared_ptr<psi::Matrix> CASSCF::set_frozen_core_orbitals() {
     return F_core;
 }
 ambit::Tensor CASSCF::transform_integrals() {
-    if (psi::Options_.get_str("SCF_TYPE") == "OUT_OF_CORE") {
+    if (options_.get_str("SCF_TYPE") == "OUT_OF_CORE") {
         outfile->Printf("\n To use Out_of_core for scf_type, I need to "
                         "implement integral transform with symmetry");
         throw psi::PSIEXCEPTION("Need to use scf_type direct for CASSCF if you want "
@@ -593,7 +593,7 @@ ambit::Tensor CASSCF::transform_integrals() {
     /// This was borrowed from Kevin Hannon's IntegralTransform Plugin
     size_t nmo_no_froze = mo_space_info_->size("ALL");
     size_t nmo_with_froze = mo_space_info_->size("CORRELATED");
-    psi::SharedMatrix CAct(new Matrix("CAct", nsopi_.sum(), na_));
+    psi::SharedMatrix CAct(new psi::Matrix("CAct", nsopi_.sum(), na_));
     auto active_abs = mo_space_info_->get_absolute_mo("ACTIVE");
 
     /// Step 1: Obtain guess MO coefficients C_{mup}
@@ -607,9 +607,9 @@ ambit::Tensor CASSCF::transform_integrals() {
     /// I want a C matrix in the C1 basis but symmetry aware
     size_t nso = this->nso();
     nirrep_ = this->nirrep();
-    psi::SharedMatrix Call(new Matrix(nso, nmo_no_froze));
+    psi::SharedMatrix Call(new psi::Matrix(nso, nmo_no_froze));
     psi::SharedMatrix Ca_sym = reference_wavefunction_->Ca();
-    psi::SharedMatrix Identity(new Matrix("I", nso, nso));
+    psi::SharedMatrix Identity(new psi::Matrix("I", nso, nso));
     Identity->identity();
 
     // Transform from the SO to the AO basis for the C matrix.
@@ -649,7 +649,7 @@ ambit::Tensor CASSCF::transform_integrals() {
     for (size_t i = 0; i < na_; i++) {
         psi::SharedVector C_i = CAct->get_column(0, i);
         for (size_t j = i; j < na_; j++) {
-            psi::SharedMatrix D(new Matrix("D", nso, nso));
+            psi::SharedMatrix D(new psi::Matrix("D", nso, nso));
             std::vector<int> ij(2);
             ij[0] = i;
             ij[1] = j;
@@ -682,7 +682,7 @@ ambit::Tensor CASSCF::transform_integrals() {
         outfile->Printf("\n JK builder takes %8.6f s", jk_build.get());
     }
 
-    psi::SharedMatrix half_trans(new Matrix("Trans", nmo_no_froze, na_));
+    psi::SharedMatrix half_trans(new psi::Matrix("Trans", nmo_no_froze, na_));
     int count = 0;
     auto absolute_all = mo_space_info_->get_absolute_mo("CORRELATED");
     auto corr_abs = mo_space_info_->get_corr_abs_mo("CORRELATED");
@@ -711,7 +711,7 @@ void CASSCF::set_up_fci() {
     std::vector<size_t> active = mo_space_info_->get_corr_abs_mo("ACTIVE");
 
     int charge = Process::environment.molecule()->molecular_charge();
-    if (psi::Options_["CHARGE"].has_changed()) {
+    if (options_["CHARGE"].has_changed()) {
         charge = options_.get_int("CHARGE");
     }
 
@@ -725,17 +725,17 @@ void CASSCF::set_up_fci() {
     nel -= charge;
 
     int multiplicity = Process::environment.molecule()->multiplicity();
-    if (psi::Options_["MULTIPLICITY"].has_changed()) {
+    if (options_["MULTIPLICITY"].has_changed()) {
         multiplicity = options_.get_int("MULTIPLICITY");
     }
-    if (psi::Options_["MULTIPLICITY"].has_changed() && options_["CASSCF_MULTIPLICITY"].has_changed()) {
+    if (options_["MULTIPLICITY"].has_changed() && options_["CASSCF_MULTIPLICITY"].has_changed()) {
         multiplicity = options_.get_int("CASSCF_MULTIPLICITY");
     }
 
     // Default: lowest spin solution
     int twice_ms = (multiplicity + 1) % 2;
 
-    if (psi::Options_["MS"].has_changed()) {
+    if (options_["MS"].has_changed()) {
         twice_ms = std::round(2.0 * options_.get_double("MS"));
     }
 
@@ -866,7 +866,7 @@ std::vector<std::vector<double>> CASSCF::compute_restricted_docc_operator() {
     int nirrep = this->nirrep();
     psi::Dimension nmopi = mo_space_info_->get_dimension("ALL");
 
-    psi::SharedMatrix Cdocc(new Matrix("C_RESTRICTED", nirrep, nsopi, restricted_docc_dim));
+    psi::SharedMatrix Cdocc(new psi::Matrix("C_RESTRICTED", nirrep, nsopi, restricted_docc_dim));
     psi::SharedMatrix Ca = reference_wavefunction_->Ca();
     for (int h = 0; h < nirrep; h++) {
         for (int i = 0; i < restricted_docc_dim[h]; i++) {
@@ -911,7 +911,7 @@ std::vector<std::vector<double>> CASSCF::compute_restricted_docc_operator() {
     Hcore->transform(Ca);
 
     size_t all_nmo = mo_space_info_->size("ALL");
-    psi::SharedMatrix F_restric_c1(new Matrix("F_restricted", all_nmo, all_nmo));
+    psi::SharedMatrix F_restric_c1(new psi::Matrix("F_restricted", all_nmo, all_nmo));
     size_t offset = 0;
     for (int h = 0; h < nirrep; h++) {
         for (int p = 0; p < nmopi[h]; p++) {
@@ -959,7 +959,7 @@ std::vector<std::vector<double>> CASSCF::compute_restricted_docc_operator() {
     return oei_container;
 }
 void CASSCF::overlap_orbitals(const psi::SharedMatrix& C_old, const psi::SharedMatrix& C_new) {
-    psi::SharedMatrix S_orbitals(new Matrix("Overlap", this->nsopi(), this->nsopi()));
+    psi::SharedMatrix S_orbitals(new psi::Matrix("Overlap", this->nsopi(), this->nsopi()));
     psi::SharedMatrix S_basis = this->S();
     S_orbitals = Matrix::triplet(C_old, S_basis, C_new, true, false, false);
     S_orbitals->set_name("C^T S C (Overlap)");

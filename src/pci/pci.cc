@@ -245,12 +245,12 @@ void ProjectorCI::startup() {
     mo_symmetry_ = mo_space_info_->symmetry("ACTIVE");
 
     wavefunction_symmetry_ = 0;
-    if (psi::Options_["ROOT_SYM"].has_changed()) {
+    if (options_["ROOT_SYM"].has_changed()) {
         wavefunction_symmetry_ = options_.get_int("ROOT_SYM");
     }
     // Read options
     wavefunction_multiplicity_ = 1;
-    if (psi::Options_["MULTIPLICITY"].has_changed()) {
+    if (options_["MULTIPLICITY"].has_changed()) {
         wavefunction_multiplicity_ = options_.get_int("MULTIPLICITY");
     }
 
@@ -283,12 +283,12 @@ void ProjectorCI::startup() {
     current_root_ = -1;
     post_diagonalization_ = options_.get_bool("PCI_POST_DIAGONALIZE");
     diag_method_ = DLSolver;
-    if (psi::Options_["DIAG_ALGORITHM"].has_changed()) {
-        if (psi::Options_.get_str("DIAG_ALGORITHM") == "FULL") {
+    if (options_["DIAG_ALGORITHM"].has_changed()) {
+        if (options_.get_str("DIAG_ALGORITHM") == "FULL") {
             diag_method_ = Full;
-        } else if (psi::Options_.get_str("DIAG_ALGORITHM") == "DLSTRING") {
+        } else if (options_.get_str("DIAG_ALGORITHM") == "DLSTRING") {
             diag_method_ = DLString;
-        } else if (psi::Options_.get_str("DIAG_ALGORITHM") == "DLDISK") {
+        } else if (options_.get_str("DIAG_ALGORITHM") == "DLDISK") {
             diag_method_ = DLDisk;
         }
     }
@@ -338,36 +338,36 @@ void ProjectorCI::startup() {
     approx_E_tau_ = 1.0;
     approx_E_S_ = 0.0;
 
-    if (psi::Options_.get_str("PCI_GENERATOR") == "LINEAR") {
+    if (options_.get_str("PCI_GENERATOR") == "LINEAR") {
         generator_ = LinearGenerator;
         generator_description_ = "Linear";
-    } else if (psi::Options_.get_str("PCI_GENERATOR") == "TROTTER") {
+    } else if (options_.get_str("PCI_GENERATOR") == "TROTTER") {
         generator_ = TrotterLinear;
         generator_description_ = "Trotter";
-    } else if (psi::Options_.get_str("PCI_GENERATOR") == "QUADRATIC") {
+    } else if (options_.get_str("PCI_GENERATOR") == "QUADRATIC") {
         generator_ = QuadraticGenerator;
         generator_description_ = "Quadratic";
-    } else if (psi::Options_.get_str("PCI_GENERATOR") == "CUBIC") {
+    } else if (options_.get_str("PCI_GENERATOR") == "CUBIC") {
         generator_ = CubicGenerator;
         generator_description_ = "Cubic";
-    } else if (psi::Options_.get_str("PCI_GENERATOR") == "QUARTIC") {
+    } else if (options_.get_str("PCI_GENERATOR") == "QUARTIC") {
         generator_ = QuarticGenerator;
         generator_description_ = "Quartic";
-    } else if (psi::Options_.get_str("PCI_GENERATOR") == "POWER") {
+    } else if (options_.get_str("PCI_GENERATOR") == "POWER") {
         generator_ = PowerGenerator;
         generator_description_ = "Power";
         time_step_ = 1.0;
-    } else if (psi::Options_.get_str("PCI_GENERATOR") == "OLSEN") {
+    } else if (options_.get_str("PCI_GENERATOR") == "OLSEN") {
         generator_ = OlsenGenerator;
         generator_description_ = "Olsen";
         // Make sure that do_shift_ is set to true
         do_shift_ = true;
-    } else if (psi::Options_.get_str("PCI_GENERATOR") == "DAVIDSON") {
+    } else if (options_.get_str("PCI_GENERATOR") == "DAVIDSON") {
         generator_ = DavidsonLiuGenerator;
         generator_description_ = "Davidson-Liu";
         // Make sure that do_shift_ is set to true
         do_shift_ = true;
-    } else if (psi::Options_.get_str("PCI_GENERATOR") == "EXP-CHEBYSHEV") {
+    } else if (options_.get_str("PCI_GENERATOR") == "EXP-CHEBYSHEV") {
         generator_ = ExpChebyshevGenerator;
         generator_description_ = "Exp-Chebyshev";
         if (chebyshev_order_ <= 0) {
@@ -376,7 +376,7 @@ void ProjectorCI::startup() {
                             chebyshev_order_);
             chebyshev_order_ = 5;
         }
-    } else if (psi::Options_.get_str("PCI_GENERATOR") == "CHEBYSHEV") {
+    } else if (options_.get_str("PCI_GENERATOR") == "CHEBYSHEV") {
         generator_ = ChebyshevGenerator;
         generator_description_ = "Chebyshev";
         time_step_ = 1.0;
@@ -386,7 +386,7 @@ void ProjectorCI::startup() {
                             chebyshev_order_);
             chebyshev_order_ = 5;
         }
-    } else if (psi::Options_.get_str("PCI_GENERATOR") == "WALL-CHEBYSHEV") {
+    } else if (options_.get_str("PCI_GENERATOR") == "WALL-CHEBYSHEV") {
         generator_ = WallChebyshevGenerator;
         generator_description_ = "Wall-Chebyshev";
         time_step_ = 1.0;
@@ -396,7 +396,7 @@ void ProjectorCI::startup() {
                             chebyshev_order_);
             chebyshev_order_ = 5;
         }
-    } else if (psi::Options_.get_str("PCI_GENERATOR") == "LANCZOS") {
+    } else if (options_.get_str("PCI_GENERATOR") == "LANCZOS") {
         generator_ = LanczosGenerator;
         generator_description_ = "Lanczos";
         time_step_ = 1.0;
@@ -406,7 +406,7 @@ void ProjectorCI::startup() {
                             krylov_order_);
             krylov_order_ = 5;
         }
-    } else if (psi::Options_.get_str("PCI_GENERATOR") == "DL") {
+    } else if (options_.get_str("PCI_GENERATOR") == "DL") {
         generator_ = DLGenerator;
         generator_description_ = "Davidson-Liu by Tianyuan";
         time_step_ = 1.0;
@@ -1157,7 +1157,7 @@ double ProjectorCI::compute_energy() {
         outfile->Printf("\n\n  ==> Post-Diagonalization <==\n");
         timer_on("PCI:Post_Diag");
         //        sparse_solver.diagonalize_hamiltonian(dets,apfci_evals,apfci_evecs,nroot_,DavidsonLiuList);
-        psi::SharedMatrix apfci_evecs(new Matrix("Eigenvectors", C.size(), nroot_));
+        psi::SharedMatrix apfci_evecs(new psi::Matrix("Eigenvectors", C.size(), nroot_));
         psi::SharedVector apfci_evals(new Vector("Eigenvalues", nroot_));
 
         sparse_solver.diagonalize_hamiltonian(dets, apfci_evals, apfci_evecs, nroot_,
@@ -1255,7 +1255,7 @@ double ProjectorCI::initial_guess(det_vec& dets, std::vector<double>& C) {
     sparse_solver.set_maxiter_davidson(psi::Options_.get_int("DL_MAXITER"));
     sparse_solver.set_spin_project(true);
 
-    psi::SharedMatrix evecs(new Matrix("Eigenvectors", guess_size, nroot_));
+    psi::SharedMatrix evecs(new psi::Matrix("Eigenvectors", guess_size, nroot_));
     psi::SharedVector evals(new Vector("Eigenvalues", nroot_));
     //  std::vector<DynamicBitsetDeterminant> dyn_dets;
     // for (auto& d : dets){
@@ -1440,14 +1440,14 @@ void ProjectorCI::propagate_Lanczos(det_vec& dets, std::vector<double>& C,
         outfile->Printf("\n  Near linear dependency spotted, reduced krylov_order to %d",
                         current_order);
 
-    psi::SharedMatrix H(new Matrix(current_order, current_order));
+    psi::SharedMatrix H(new psi::Matrix(current_order, current_order));
 
     for (size_t i = 0; i < current_order; i++) {
         for (size_t j = 0; j < current_order; j++) {
             H->set(i, j, A.get(i, j));
         }
     }
-    psi::SharedMatrix evecs(new Matrix(current_order, current_order));
+    psi::SharedMatrix evecs(new psi::Matrix(current_order, current_order));
     psi::SharedVector eigs(new Vector(current_order));
     H->diagonalize(evecs, eigs);
 
@@ -1469,13 +1469,13 @@ void ProjectorCI::propagate_Lanczos(det_vec& dets, std::vector<double>& C,
 
     while (ground_index != 0) {
         current_order -= ground_index;
-        H.reset(new Matrix(current_order, current_order));
+        H.reset(new psi::Matrix(current_order, current_order));
         for (size_t i = 0; i < current_order; i++) {
             for (size_t j = 0; j < current_order; j++) {
                 H->set(i, j, A.get(i, j));
             }
         }
-        evecs.reset(new Matrix(current_order, current_order));
+        evecs.reset(new psi::Matrix(current_order, current_order));
         eigs.reset(new Vector(current_order));
         H->diagonalize(evecs, eigs);
 
@@ -1532,8 +1532,8 @@ void ProjectorCI::propagate_Lanczos(det_vec& dets, std::vector<double>& C,
     //    outfile -> Printf("\n");
 
     //// Diagonalize overlap matrix BEGIN
-    //    psi::SharedMatrix A(new Matrix (krylov_order, krylov_order));
-    //    psi::SharedMatrix B(new Matrix (krylov_order, krylov_order));
+    //    psi::SharedMatrix A(new psi::Matrix (krylov_order, krylov_order));
+    //    psi::SharedMatrix B(new psi::Matrix (krylov_order, krylov_order));
 
     //    for (int i = 0; i < krylov_order; i++) {
     //        for (int j = i; j < krylov_order; j++) {
@@ -1553,7 +1553,7 @@ void ProjectorCI::propagate_Lanczos(det_vec& dets, std::vector<double>& C,
     //    A->print();
     //    B->print();
 
-    //    psi::SharedMatrix evecs(new Matrix (krylov_order, krylov_order));
+    //    psi::SharedMatrix evecs(new psi::Matrix (krylov_order, krylov_order));
     //    psi::SharedVector evals(new Vector(krylov_order));
     //    A->diagonalize(B, evecs, evals);
 
@@ -1642,7 +1642,7 @@ void ProjectorCI::propagate_DL(det_vec& dets, std::vector<double>& C, double spa
     std::vector<std::vector<double>> b_vec(davidson_subspace_per_root_);
     std::vector<std::vector<double>> sigma_vec(davidson_subspace_per_root_);
     std::vector<double> alpha_vec(davidson_subspace_per_root_);
-    psi::SharedMatrix A(new Matrix(davidson_subspace_per_root_, davidson_subspace_per_root_));
+    psi::SharedMatrix A(new psi::Matrix(davidson_subspace_per_root_, davidson_subspace_per_root_));
     b_vec[0] = C;
     det_hash<> dets_C_hash;
     if (reference_spawning_) {
@@ -1725,14 +1725,14 @@ void ProjectorCI::propagate_DL(det_vec& dets, std::vector<double>& C, double spa
         A->set(current_order, current_order, dot(b_vec[current_order], sigma_vec[current_order]));
 
         current_order++;
-        psi::SharedMatrix G(new Matrix(current_order, current_order));
+        psi::SharedMatrix G(new psi::Matrix(current_order, current_order));
 
         for (int k = 0; k < current_order; k++) {
             for (int j = 0; j < current_order; j++) {
                 G->set(k, j, A->get(k, j));
             }
         }
-        psi::SharedMatrix evecs(new Matrix(current_order, current_order));
+        psi::SharedMatrix evecs(new psi::Matrix(current_order, current_order));
         psi::SharedVector eigs(new Vector(current_order));
         G->diagonalize(evecs, eigs);
 

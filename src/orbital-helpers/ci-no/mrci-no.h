@@ -140,5 +140,5 @@ class MRCINO : public psi::Wavefunction {
         std::tuple<psi::SharedVector, psi::SharedMatrix, psi::SharedVector, psi::SharedMatrix> no_U);
 };
 }
-} // End Namespaces
+
 #endif // MRCISNO_H

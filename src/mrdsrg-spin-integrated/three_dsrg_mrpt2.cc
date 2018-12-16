@@ -1546,8 +1546,8 @@ double THREE_DSRG_MRPT2::E_VT2_6() {
     outfile->Printf("\n    %-40s  ...", "Computing [V, T2] λ3");
     double E = 0.0;
 
-    if (psi::Options_.get_str("THREEPDC") != "ZERO") {
-        if (psi::Options_.get_str("THREEPDC_ALGORITHM") == "CORE") {
+    if (options_.get_str("THREEPDC") != "ZERO") {
+        if (options_.get_str("THREEPDC_ALGORITHM") == "CORE") {
 
             /* Note: internal amplitudes are included already
                      because we use complex indices "i" and "a" */
@@ -1588,7 +1588,7 @@ double THREE_DSRG_MRPT2::E_VT2_6() {
 
             E += 0.50 * temp.block("aAAaAA")("uVWxYZ") * reference_.L3abb()("xYZuVW");
 
-        } else if (psi::Options_.get_str("THREEPDC_ALGORITHM") == "BATCH") {
+        } else if (options_.get_str("THREEPDC_ALGORITHM") == "BATCH") {
 
             outfile->Printf("\n  Temporarily disabled by York.");
 
@@ -2646,7 +2646,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_core() {
     v("MNEF") -= ThreeIntegral("gFM") * ThreeIntegral("gEN");
     v("mNeF") = ThreeIntegral("gem") * ThreeIntegral("gFN");
 
-    if (psi::Options_.get_str("CCVV_SOURCE") == "NORMAL") {
+    if (options_.get_str("CCVV_SOURCE") == "NORMAL") {
         BlockedTensor RD2_ccvv = BTF_->build(tensor_type_, "RDelta2ccvv", spin_cases({"ccvv"}));
         BlockedTensor RExp2ccvv = BTF_->build(tensor_type_, "RExp2ccvv", spin_cases({"ccvv"}));
         RD2_ccvv.iterate(
@@ -2689,7 +2689,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_core() {
         E2_core += 0.25 * T2ccvv["mnef"] * Rv["mnef"];
         E2_core += 0.25 * T2ccvv["MNEF"] * Rv["MNEF"];
         E2_core += T2ccvv["mNeF"] * Rv["mNeF"];
-    } else if (psi::Options_.get_str("CCVV_SOURCE") == "ZERO") {
+    } else if (options_.get_str("CCVV_SOURCE") == "ZERO") {
         BlockedTensor Denom = BTF_->build(tensor_type_, "Mp2Denom", spin_cases({"ccvv"}));
         Denom.iterate(
             [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
@@ -3114,7 +3114,7 @@ void THREE_DSRG_MRPT2::relax_reference_once() {
 
     std::vector<double> E_relaxed = relaxed_energy(fci_ints);
 
-    if (psi::Options_["AVG_STATE"].size() == 0) {
+    if (options_["AVG_STATE"].size() == 0) {
         double Erelax = E_relaxed[0];
 
         // printing
@@ -3166,8 +3166,8 @@ void THREE_DSRG_MRPT2::set_Ufull(psi::SharedMatrix& Ua, psi::SharedMatrix& Ub) {
 
     psi::Dimension nmopi = mo_space_info_->get_dimension("ALL");
 
-    Ua_full_.reset(new Matrix("Ua", nmopi, nmopi));
-    Ub_full_.reset(new Matrix("Ub", nmopi, nmopi));
+    Ua_full_.reset(new psi::Matrix("Ua", nmopi, nmopi));
+    Ub_full_.reset(new psi::Matrix("Ub", nmopi, nmopi));
 
     Ua_full_->copy(Ua);
     Ub_full_->copy(Ub);
@@ -3429,7 +3429,7 @@ std::vector<double> THREE_DSRG_MRPT2::relaxed_energy(std::shared_ptr<FCIIntegral
     std::vector<double> Erelax;
     std::string cas_type;
 
-    if (psi::Options_.get_str("CAS_TYPE") == "CASSCF") {
+    if (options_.get_str("CAS_TYPE") == "CASSCF") {
         cas_type = options_.get_str("CASSCF_CI_SOLVER");
     } else {
         cas_type = options_.get_str("CAS_TYPE");
@@ -3462,7 +3462,7 @@ std::vector<double> THREE_DSRG_MRPT2::relaxed_energy(std::shared_ptr<FCIIntegral
         // Only do ground state ACI for now
         AdaptiveCI aci(reference_wavefunction_, options_, ints_, mo_space_info_);
         aci.set_fci_ints(fci_ints);
-        if (psi::Options_["ACI_RELAX_SIGMA"].has_changed()) {
+        if (options_["ACI_RELAX_SIGMA"].has_changed()) {
             aci.update_sigma();
         }
 
@@ -3491,7 +3491,7 @@ std::vector<double> THREE_DSRG_MRPT2::relaxed_energy(std::shared_ptr<FCIIntegral
         double Enuc = molecule->nuclear_repulsion_energy(
             reference_wavefunction_->get_dipole_field_strength());
         int charge = molecule->molecular_charge();
-        if (psi::Options_["CHARGE"].has_changed()) {
+        if (options_["CHARGE"].has_changed()) {
             charge = options_.get_int("CHARGE");
         }
         auto nelec = 0;
@@ -3502,14 +3502,14 @@ std::vector<double> THREE_DSRG_MRPT2::relaxed_energy(std::shared_ptr<FCIIntegral
         nelec -= charge;
 
         // if state specific, read from fci_root and fci_nroot
-        if (psi::Options_["AVG_STATE"].size() == 0) {
+        if (options_["AVG_STATE"].size() == 0) {
             // setup for FCISolver
             int multi = Process::environment.molecule()->multiplicity();
-            if (psi::Options_["MULTIPLICITY"].has_changed()) {
+            if (options_["MULTIPLICITY"].has_changed()) {
                 multi = options_.get_int("MULTIPLICITY");
             }
             int twice_ms = (multi + 1) % 2;
-            if (psi::Options_["MS"].has_changed()) {
+            if (options_["MS"].has_changed()) {
                 twice_ms = std::round(2.0 * options_.get_double("MS"));
             }
             auto nelec_actv =

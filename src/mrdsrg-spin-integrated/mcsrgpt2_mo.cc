@@ -57,7 +57,7 @@ MCSRGPT2_MO::MCSRGPT2_MO(psi::SharedWavefunction ref_wfn, psi::Options& options,
     compute_ss_energy();
 
     // reference cumulants
-    int max_rdm_level = (psi::Options_.get_str("THREEPDC") != "ZERO") ? 3 : 2;
+    int max_rdm_level = (options_.get_str("THREEPDC") != "ZERO") ? 3 : 2;
     Reference ref = reference(max_rdm_level);
 
     // semicanonicalize orbitals
@@ -1687,7 +1687,7 @@ double MCSRGPT2_MO::compute_energy_dsrg() {
     E_VT2_2(E7);
     outfile->Printf("\t\t\t\t\tDone.");
 
-    if (psi::Options_.get_str("TWOPDC") != "ZERO") {
+    if (options_.get_str("TWOPDC") != "ZERO") {
         outfile->Printf("\n  Computing energy of [V, T2] C_2^2 * C_4 ...");
 
         E_VT2_4PP(E8_1);
@@ -1696,7 +1696,7 @@ double MCSRGPT2_MO::compute_energy_dsrg() {
         outfile->Printf("\t\t\t\tDone.");
     }
 
-    if (psi::Options_.get_str("THREEPDC") != "ZERO") {
+    if (options_.get_str("THREEPDC") != "ZERO") {
         outfile->Printf("\n  Computing energy of [V, T2] C_2 * C_6 ...");
 
         E_VT2_6(E10_1, E10_2);

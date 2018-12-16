@@ -120,9 +120,9 @@ std::map<std::string, psi::SharedMatrix> IAOBuilder::build_iaos() {
     std::shared_ptr<OneBodyAOInt> ints12(fact12->ao_overlap());
     std::shared_ptr<OneBodyAOInt> ints22(fact22->ao_overlap());
 
-    psi::SharedMatrix S11(new Matrix("S11", primary_->nbf(), primary_->nbf()));
-    psi::SharedMatrix S12f(new Matrix("S12f", primary_->nbf(), minao_->nbf()));
-    psi::SharedMatrix S22f(new Matrix("S22f", minao_->nbf(), minao_->nbf()));
+    psi::SharedMatrix S11(new psi::Matrix("S11", primary_->nbf(), primary_->nbf()));
+    psi::SharedMatrix S12f(new psi::Matrix("S12f", primary_->nbf(), minao_->nbf()));
+    psi::SharedMatrix S22f(new psi::Matrix("S22f", minao_->nbf(), minao_->nbf()));
 
     ints11->compute(S11);
     ints12->compute(S12f);
@@ -138,8 +138,8 @@ std::map<std::string, psi::SharedMatrix> IAOBuilder::build_iaos() {
 
     // => Ghosted Overlap Integrals <= //
 
-    psi::SharedMatrix S12(new Matrix("S12", primary_->nbf(), true_iaos_.size()));
-    psi::SharedMatrix S22(new Matrix("S22", true_iaos_.size(), true_iaos_.size()));
+    psi::SharedMatrix S12(new psi::Matrix("S12", primary_->nbf(), true_iaos_.size()));
+    psi::SharedMatrix S22(new psi::Matrix("S22", true_iaos_.size(), true_iaos_.size()));
 
     double** S12p = S12->pointer();
     double** S12fp = S12f->pointer();
@@ -451,7 +451,7 @@ IAOBuilder::ibo_localizer(psi::SharedMatrix L, const std::vector<std::vector<int
     L2->copy(L);
     double** Lp = L2->pointer();
 
-    psi::SharedMatrix U(new Matrix("U", nocc, nocc));
+    psi::SharedMatrix U(new psi::Matrix("U", nocc, nocc));
     U->identity();
     double** Up = U->pointer();
 
@@ -725,7 +725,7 @@ psi::SharedMatrix IAOBuilder::reorder_orbitals(psi::SharedMatrix F, const std::v
     int nmo = F->rowspi()[0];
     double** Fp = F->pointer();
 
-    psi::SharedMatrix U(new Matrix("U", nmo, nmo));
+    psi::SharedMatrix U(new psi::Matrix("U", nmo, nmo));
     double** Up = U->pointer();
 
     for (size_t ind = 0; ind < ranges.size() - 1; ind++) {
@@ -750,7 +750,7 @@ psi::SharedMatrix IAOBuilder::orbital_charges(psi::SharedMatrix L) {
     int nmin = L->colspi()[0];
     int natom = true_atoms_.size();
 
-    psi::SharedMatrix Q(new Matrix("Q", natom, nocc));
+    psi::SharedMatrix Q(new psi::Matrix("Q", natom, nocc));
     double** Qp = Q->pointer();
 
     for (int i = 0; i < nocc; i++) {

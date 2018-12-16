@@ -2061,7 +2061,7 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a, std::vector<double>& oprdm_
     }
     outfile->Printf("\n    ABAB 2-RDM Error :   %2.15f", error_2rdm_ab);
     // aaa aaa
-    // psi::SharedMatrix three_rdm(new Matrix("three", dim_space_, dim_space_));
+    // psi::SharedMatrix three_rdm(new psi::Matrix("three", dim_space_, dim_space_));
     // three_rdm->zero();
     double error_3rdm_aaa = 0.0;
     for (size_t p = 0; p < ncmo_; ++p) {

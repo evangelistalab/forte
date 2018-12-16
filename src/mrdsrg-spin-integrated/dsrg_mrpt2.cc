@@ -409,7 +409,7 @@ double DSRG_MRPT2::compute_energy() {
     EVT2 += Etemp;
     energy.push_back({"<[V, T2]> C_4 (C_2)^2 PH", Etemp});
 
-    if (psi::Options_.get_str("THREEPDC") != "ZERO") {
+    if (options_.get_str("THREEPDC") != "ZERO") {
         Etemp = E_VT2_6();
     } else {
         Etemp = 0.0;
@@ -1494,7 +1494,7 @@ void DSRG_MRPT2::compute_dm1d_pt2(BlockedTensor& M, double& Mbar0, BlockedTensor
     //    D1["AB"] += T2_["mNcB"] * T2_["mNcA"];
 
     //    // transform D1 with a irrep psi::SharedMatrix
-    //    psi::SharedMatrix SOdens(new Matrix("SO density ", this->nmopi(), this->nmopi()));
+    //    psi::SharedMatrix SOdens(new psi::Matrix("SO density ", this->nmopi(), this->nmopi()));
 
     //    for (const auto& pair: mo_space_info_->get_relative_mo("FROZEN_DOCC")) {
     //        size_t h = pair.first;
@@ -1529,7 +1529,7 @@ void DSRG_MRPT2::compute_dm1d_pt2(BlockedTensor& M, double& Mbar0, BlockedTensor
 
     //    psi::SharedMatrix sotoao(this->aotoso()->transpose());
     //    size_t nao = sotoao->coldim(0);
-    //    psi::SharedMatrix AOdens(new Matrix("AO density ", nao, nao));
+    //    psi::SharedMatrix AOdens(new psi::Matrix("AO density ", nao, nao));
     //    AOdens->remove_symmetry(SOdens, sotoao);
 
     //    std::vector<psi::SharedMatrix> aodipole_ints = ints_->AOdipole_ints();
@@ -1713,7 +1713,7 @@ double DSRG_MRPT2::compute_energy_relaxed() {
     auto fci_ints = compute_Heff_actv();
 
     // diagonalize Hbar depending on CAS_TYPE
-    if (psi::Options_.get_str("CAS_TYPE") == "CAS") {
+    if (options_.get_str("CAS_TYPE") == "CAS") {
         FCI_MO fci_mo(reference_wavefunction_, options_, ints_, mo_space_info_, fci_ints);
         fci_mo.set_localize_actv(false);
         Erelax = fci_mo.compute_energy();
@@ -1740,7 +1740,7 @@ double DSRG_MRPT2::compute_energy_relaxed() {
                 dm_relax = fci_mo.compute_ref_relaxed_dm(Mbar0_, Mbar1_, Mbar2_);
             }
         }
-    } else if (psi::Options_.get_str("CAS_TYPE") == "ACI") {
+    } else if (options_.get_str("CAS_TYPE") == "ACI") {
 
         AdaptiveCI aci(reference_wavefunction_, options_, ints_, mo_space_info_);
         aci.set_fci_ints(fci_ints);

@@ -74,12 +74,12 @@ ACTIVE_DSRGPT2::ACTIVE_DSRGPT2(psi::SharedWavefunction ref_wfn, psi::Options& op
 ACTIVE_DSRGPT2::~ACTIVE_DSRGPT2() {}
 
 void ACTIVE_DSRGPT2::startup() {
-    if (psi::Options_["NROOTPI"].size() == 0) {
+    if (options_["NROOTPI"].size() == 0) {
         throw psi::PSIEXCEPTION("Please specify NROOTPI for ACTIVE-DSRGPT2 jobs.");
     } else {
         std::shared_ptr<psi::Molecule> molecule = Process::environment.molecule();
         multiplicity_ = molecule->multiplicity();
-        if (psi::Options_["MULTIPLICITY"].has_changed()) {
+        if (options_["MULTIPLICITY"].has_changed()) {
             multiplicity_ = options_.get_int("MULTIPLICITY");
         }
 
@@ -140,7 +140,7 @@ void ACTIVE_DSRGPT2::startup() {
         }
 
         for (int h = 0; h < nirrep; ++h) {
-            nrootpi_.push_back(psi::Options_["NROOTPI"][h].to_integer());
+            nrootpi_.push_back(options_["NROOTPI"][h].to_integer());
             irrep_symbol_.push_back(std::string(ct.gamma(h).symbol()));
             total_nroots_ += nrootpi_[h];
         }
@@ -158,7 +158,7 @@ void ACTIVE_DSRGPT2::startup() {
         if (ipea != "NONE") {
             calculation_info_string.push_back({"IPEA type", ipea});
         }
-        bool internals = (psi::Options_.get_str("INTERNAL_AMP") != "NONE");
+        bool internals = (options_.get_str("INTERNAL_AMP") != "NONE");
         calculation_info_string.push_back(
             {"DSRG-MRPT2 internal amplitudes", options_.get_str("INTERNAL_AMP")});
         if (internals) {
@@ -345,7 +345,7 @@ double ACTIVE_DSRGPT2::compute_energy() {
                             ref_type_.c_str(), irrep_symbol_[0].c_str(), irrep_symbol_[h].c_str());
 
             int dim = (eigen[0].first)->dim();
-            psi::SharedMatrix evecs(new Matrix("evecs", dim, eigen_size));
+            psi::SharedMatrix evecs(new psi::Matrix("evecs", dim, eigen_size));
             for (int i = 0; i < eigen_size; ++i) {
                 evecs->set_column(0, i, (eigen[i]).first);
             }
@@ -563,7 +563,7 @@ void ACTIVE_DSRGPT2::compute_osc_ref(const int& irrep0, const int& irrep1,
     size_t nroot1 = eigen1.size();
     size_t nroot = nroot0;
     std::vector<double> evals(nroot, 0.0);
-    psi::SharedMatrix evecs(new Matrix("combined evecs", ndet, nroot));
+    psi::SharedMatrix evecs(new psi::Matrix("combined evecs", ndet, nroot));
 
     if (same) {
         for (size_t n = 0; n < nroot0; ++n) {
@@ -659,7 +659,7 @@ Vector4 ACTIVE_DSRGPT2::compute_td_ref_root(std::shared_ptr<FCIIntegrals> fci_in
     ci_rdms.compute_1rdm(opdm_a, opdm_b);
 
     // prepare MO transition density (spin summed)
-    psi::SharedMatrix MOtransD(new Matrix("MO TransD", nmo, nmo));
+    psi::SharedMatrix MOtransD(new psi::Matrix("MO TransD", nmo, nmo));
 
     auto offset_irrep = [](const int& h, const psi::Dimension& npi) -> size_t {
         int h_local = h;
@@ -764,7 +764,7 @@ void ACTIVE_DSRGPT2::compute_osc_pt2(const int& irrep, const int& root, const do
 
     // step 2: copy data to psi::SharedMatrix
     size_t nmo = modipole_ints_[0]->nrow();
-    psi::SharedMatrix MOtransD(new Matrix("MO TransD", nmo, nmo));
+    psi::SharedMatrix MOtransD(new psi::Matrix("MO TransD", nmo, nmo));
     for (const std::string& block : TDeff.block_labels()) {
         char c0 = tolower(block[0]);
         char c1 = tolower(block[1]);
@@ -958,7 +958,7 @@ psi::SharedMatrix ACTIVE_DSRGPT2::combine_evecs(const int& h0, const int& h1) {
     size_t ndet1 = evecs1->nrow();
     size_t ndet = ndet0 + ndet1;
 
-    psi::SharedMatrix evecs(new Matrix("combined evecs", ndet, nroot));
+    psi::SharedMatrix evecs(new psi::Matrix("combined evecs", ndet, nroot));
 
     for (int n = 0; n < nroot0; ++n) {
         psi::SharedVector evec0 = evecs0->get_column(0, n);
@@ -1600,7 +1600,7 @@ void ACTIVE_DSRGPT2::compute_osc_pt2_dets(const int& irrep, const int& root, con
 
     // step 3: combine eigen vectors
     size_t np = p_space.size();
-    psi::SharedMatrix evecs(new Matrix("combined evecs", np, 2));
+    psi::SharedMatrix evecs(new psi::Matrix("combined evecs", np, 2));
     for (size_t i = 0; i < offset; ++i) {
         evecs->set(i, 0, wfn0_g[p_space[i]]);
     }
@@ -1635,7 +1635,7 @@ void ACTIVE_DSRGPT2::compute_osc_pt2_dets(const int& irrep, const int& root, con
     // step 3: combine eigen vectors
     np = p_space.size();
     evecs = std::make_shared<psi::Matrix>("combined evecs", np, 2));
-    //    psi::SharedMatrix evecs(new Matrix("combined evecs", np, 2));
+    //    psi::SharedMatrix evecs(new psi::Matrix("combined evecs", np, 2));
     for (size_t i = 0; i < offset; ++i) {
         evecs->set(i, 0, wfn0_x[p_space[i]]);
     }
@@ -1719,7 +1719,7 @@ void ACTIVE_DSRGPT2::compute_osc_pt2_dets(const int& irrep, const int& root, con
     }
 
     size_t nmo = modipole_ints_[0]->nrow();
-    psi::SharedMatrix MOtransD(new Matrix("MO TransD", nmo, nmo));
+    psi::SharedMatrix MOtransD(new psi::Matrix("MO TransD", nmo, nmo));
     for (size_t i = 0; i < ncmo; ++i) {
         size_t ni = indices[i];
         for (size_t j = 0; j < ncmo; ++j) {
@@ -1857,7 +1857,7 @@ void ACTIVE_DSRGPT2::compute_osc_pt2_overlap(const int& irrep, const int& root,
     }
 
     size_t nmo = modipole_ints_[0]->nrow();
-    psi::SharedMatrix MOtransD(new Matrix("MO TransD", nmo, nmo));
+    psi::SharedMatrix MOtransD(new psi::Matrix("MO TransD", nmo, nmo));
     for (size_t i = 0; i < ncmo; ++i) {
         size_t ni = indices[i];
         for (size_t j = 0; j < ncmo; ++j) {

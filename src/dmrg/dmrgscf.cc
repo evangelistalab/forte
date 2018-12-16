@@ -525,9 +525,9 @@ double DMRGSCF::compute_energy() {
         psi::get_writer_file_prefix(this->molecule()->name()) + ".unitary.h5";
     const std::string diisname = psi::get_writer_file_prefix(this->molecule()->name()) + ".DIIS.h5";
     bool three_pdm = false;
-    if (psi::Options_.get_str("JOB_TYPE") == "DSRG-MRPT2" or
+    if (options_.get_str("JOB_TYPE") == "DSRG-MRPT2" or
         options_.get_str("JOB_TYPE") == "THREE-DSRG-MRPT2") {
-        if (psi::Options_.get_str("THREEPDC") != "ZERO")
+        if (options_.get_str("THREEPDC") != "ZERO")
             three_pdm = true;
     }
 
@@ -1192,8 +1192,8 @@ void DMRGSCF::compute_reference(double* one_rdm, double* two_rdm, double* three_
         dmrg_ref.set_L2ab(cumulant2_ab);
         dmrg_ref.set_L2bb(cumulant2_aa);
     }
-    if ((psi::Options_.get_str("THREEPDC") != "ZERO") &&
-        (psi::Options_.get_str("JOB_TYPE") == "DSRG-MRPT2" or
+    if ((options_.get_str("THREEPDC") != "ZERO") &&
+        (options_.get_str("JOB_TYPE") == "DSRG-MRPT2" or
          options_.get_str("JOB_TYPE") == "THREE-DSRG-MRPT2")) {
         ambit::Tensor gamma3_dmrg =
             ambit::Tensor::build(ambit::CoreTensor, "Gamma3_DMRG", {na, na, na, na, na, na});

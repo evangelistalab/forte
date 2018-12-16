@@ -98,8 +98,8 @@ double DISKDFIntegrals::aptei_aa(size_t p, size_t q, size_t r, size_t s) {
     double vpqrsalphaC = 0.0;
     double vpqrsalphaE = 0.0;
 
-    psi::SharedMatrix B1(new Matrix(1, nthree_));
-    psi::SharedMatrix B2(new Matrix(1, nthree_));
+    psi::SharedMatrix B1(new psi::Matrix(1, nthree_));
+    psi::SharedMatrix B2(new psi::Matrix(1, nthree_));
 
     df_->fill_tensor("B", B1, A_range, p_range, r_range);
     df_->fill_tensor("B", B2, A_range, q_range, s_range);
@@ -137,8 +137,8 @@ double DISKDFIntegrals::aptei_ab(size_t p, size_t q, size_t r, size_t s) {
     std::vector<size_t> s_range = {sn, sn + 1};
 
     double vpqrsalphaC = 0.0;
-    psi::SharedMatrix B1(new Matrix(1, nthree_));
-    psi::SharedMatrix B2(new Matrix(1, nthree_));
+    psi::SharedMatrix B1(new psi::Matrix(1, nthree_));
+    psi::SharedMatrix B2(new psi::Matrix(1, nthree_));
 
     df_->fill_tensor("B", B1, A_range, p_range, r_range);
     df_->fill_tensor("B", B2, A_range, q_range, s_range);
@@ -171,8 +171,8 @@ double DISKDFIntegrals::aptei_bb(size_t p, size_t q, size_t r, size_t s) {
     double vpqrsalphaC = 0.0;
     double vpqrsalphaE = 0.0;
 
-    psi::SharedMatrix B1(new Matrix(1, nthree_));
-    psi::SharedMatrix B2(new Matrix(1, nthree_));
+    psi::SharedMatrix B1(new psi::Matrix(1, nthree_));
+    psi::SharedMatrix B2(new psi::Matrix(1, nthree_));
 
     df_->fill_tensor("B", B1, A_range, p_range, r_range);
     df_->fill_tensor("B", B2, A_range, q_range, s_range);
@@ -303,7 +303,7 @@ ambit::Tensor DISKDFIntegrals::three_integral_block(const std::vector<size_t>& A
                 pn = p_block;
             }
 
-            std::shared_ptr<psi::Matrix> Aq(new Matrix("Aq", nthree_, nmo_));
+            std::shared_ptr<psi::Matrix> Aq(new psi::Matrix("Aq", nthree_, nmo_));
 
             std::vector<size_t> A_range = {A[0], A.back() + 1};
             std::vector<size_t> p_range = {pn, pn + 1};
@@ -391,7 +391,7 @@ void DISKDFIntegrals::gather_integrals() {
     psi::Dimension nsopi_ = wfn_->nsopi();
     psi::SharedMatrix aotoso = wfn_->aotoso();
     psi::SharedMatrix Ca = wfn_->Ca();
-    psi::SharedMatrix Ca_ao(new Matrix("Ca_ao", nso_, nmopi_.sum()));
+    psi::SharedMatrix Ca_ao(new psi::Matrix("Ca_ao", nso_, nmopi_.sum()));
 
     // Transform from the SO to the AO basis
     for (int h = 0, index = 0; h < nirrep_; ++h) {
@@ -614,7 +614,7 @@ ambit::Tensor DISKDFIntegrals::three_integral_block_two_index(const std::vector<
         std::vector<size_t> qrange = {0, nmo_};
         std::vector<size_t> prange = {p_min, p_max};
 
-        std::shared_ptr<psi::Matrix> Aq(new Matrix("Aq", nthree_, nmo_));
+        std::shared_ptr<psi::Matrix> Aq(new psi::Matrix("Aq", nthree_, nmo_));
         df_->fill_tensor("B", Aq, arange, prange, qrange);
 
         if (frozen_core) {

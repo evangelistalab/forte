@@ -150,7 +150,7 @@ void ForteIntegrals::startup() {
     /// If MO_ROTATE is set in option, call rotate_mos.
     /// Wasn't really sure where to put this function, but since, integrals is
     /// always called, this seems like a good spot.
-    if (psi::Options_["ROTATE_MOS"].size() > 0) {
+    if (options_["ROTATE_MOS"].size() > 0) {
         rotate_mos();
     }
 }
@@ -261,7 +261,7 @@ void ForteIntegrals::compute_frozen_one_body_operator() {
     // Need to get the inactive block of the C matrix
     psi::Dimension nsopi = wfn_->nsopi();
     psi::SharedMatrix Ca = wfn_->Ca();
-    psi::SharedMatrix C_core(new Matrix("C_core", nirrep_, nsopi, frozen_dim));
+    psi::SharedMatrix C_core(new psi::Matrix("C_core", nirrep_, nsopi, frozen_dim));
 
     for (int h = 0; h < nirrep_; h++) {
         for (int mu = 0; mu < nsopi[h]; mu++) {
@@ -272,7 +272,7 @@ void ForteIntegrals::compute_frozen_one_body_operator() {
     }
 
     std::shared_ptr<JK> JK_core;
-    if (psi::Options_.get_str("SCF_TYPE") == "GTFOCK") {
+    if (options_.get_str("SCF_TYPE") == "GTFOCK") {
 #ifdef HAVE_JK_FACTORY
         Process::environment.set_legacy_molecule(wfn_->molecule());
         JK_core = std::shared_ptr<JK>(new GTFockJK(wfn_->basisset()));
@@ -280,7 +280,7 @@ void ForteIntegrals::compute_frozen_one_body_operator() {
         throw psi::PSIEXCEPTION("GTFock was not compiled in this version");
 #endif
     } else {
-        if (psi::Options_.get_str("SCF_TYPE") == "DF") {
+        if (options_.get_str("SCF_TYPE") == "DF") {
             if ((integral_type_ == DF) or (integral_type_ == DiskDF)) {
                 JK_core = JK::build_JK(wfn_->basisset(), wfn_->get_basisset("DF_BASIS_MP2"),
                                        options_, "MEM_DF");
@@ -563,7 +563,7 @@ ForteIntegrals::MOdipole_ints_helper(psi::SharedMatrix Cao, psi::SharedVector ep
         }
 
         for (int i = 0; i < 3; ++i) {
-            psi::SharedMatrix modipole(new Matrix("MO Dipole " + names[i], (int)nmo_, (int)nmo_));
+            psi::SharedMatrix modipole(new psi::Matrix("MO Dipole " + names[i], (int)nmo_, (int)nmo_));
             for (int p = 0; p < (int)nmo_; ++p) {
                 int np = indices[p];
                 for (int q = 0; q < (int)nmo_; ++q) {

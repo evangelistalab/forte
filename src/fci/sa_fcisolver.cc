@@ -60,7 +60,7 @@ void SA_FCISolver::read_options() {
     nstates_ = 0;
     parsed_options_.clear();
 
-    if (psi::Options_["AVG_STATE"].has_changed()) {
+    if (options_["AVG_STATE"].has_changed()) {
         size_t nentry = options_["AVG_STATE"].size();
 
         // figure out total number of states
@@ -68,7 +68,7 @@ void SA_FCISolver::read_options() {
         std::vector<int> irreps;
         std::vector<int> multis;
         for (size_t i = 0; i < nentry; ++i) {
-            if (psi::Options_["AVG_STATE"][i].size() != 3) {
+            if (options_["AVG_STATE"][i].size() != 3) {
                 outfile->Printf("\n  Error: invalid input of AVG_STATE. Each "
                                 "entry should take an array of three numbers.");
                 throw psi::PSIEXCEPTION("Invalid input of AVG_STATE");
@@ -107,8 +107,8 @@ void SA_FCISolver::read_options() {
 
         // test input weights
         std::vector<std::vector<double>> weights;
-        if (psi::Options_["AVG_WEIGHT"].has_changed()) {
-            if (psi::Options_["AVG_WEIGHT"].size() != nentry) {
+        if (options_["AVG_WEIGHT"].has_changed()) {
+            if (options_["AVG_WEIGHT"].size() != nentry) {
                 outfile->Printf("\n  Error: mismatched number of entries in "
                                 "AVG_STATE (%d) and AVG_WEIGHT (%d).",
                                 nentry, options_["AVG_WEIGHT"].size());
@@ -216,7 +216,7 @@ double SA_FCISolver::compute_energy() {
         std::vector<size_t> active = mo_space_info_->get_corr_abs_mo("ACTIVE");
 
         int charge = Process::environment.molecule()->molecular_charge();
-        if (psi::Options_["CHARGE"].has_changed()) {
+        if (options_["CHARGE"].has_changed()) {
             charge = options_.get_int("CHARGE");
         }
 
@@ -232,7 +232,7 @@ double SA_FCISolver::compute_energy() {
         // Default: lowest spin solution
         int twice_ms = (multiplicity + 1) % 2;
 
-        if (psi::Options_["MS"].has_changed()) {
+        if (options_["MS"].has_changed()) {
             twice_ms = std::round(2.0 * options_.get_double("MS"));
         }
 

@@ -62,8 +62,8 @@ void UPDensity::compute_unpaired_density(std::vector<double>& oprdm_a,
     size_t nact = nactpi.sum();
 
     // First compute natural orbitals
-    std::shared_ptr<psi::Matrix> opdm_a(new Matrix("OPDM_A", nirrep, nactpi, nactpi));
-    std::shared_ptr<psi::Matrix> opdm_b(new Matrix("OPDM_B", nirrep, nactpi, nactpi));
+    std::shared_ptr<psi::Matrix> opdm_a(new psi::Matrix("OPDM_A", nirrep, nactpi, nactpi));
+    std::shared_ptr<psi::Matrix> opdm_b(new psi::Matrix("OPDM_B", nirrep, nactpi, nactpi));
 
     // Put 1-RDM into Shared matrix
     int offset = 0;
@@ -82,16 +82,16 @@ void UPDensity::compute_unpaired_density(std::vector<double>& oprdm_a,
     // Diagonalize the 1-RDMs
     psi::SharedVector OCC_A(new Vector("ALPHA NOCC", nirrep, nactpi));
     psi::SharedVector OCC_B(new Vector("BETA NOCC", nirrep, nactpi));
-    psi::SharedMatrix NO_A(new Matrix(nirrep, nactpi, nactpi));
-    psi::SharedMatrix NO_B(new Matrix(nirrep, nactpi, nactpi));
+    psi::SharedMatrix NO_A(new psi::Matrix(nirrep, nactpi, nactpi));
+    psi::SharedMatrix NO_B(new psi::Matrix(nirrep, nactpi, nactpi));
 
     opdm_a->diagonalize(NO_A, OCC_A, descending);
     opdm_b->diagonalize(NO_B, OCC_B, descending);
 
     // Build the transformation matrix
     // Only build density for active orbitals
-    psi::SharedMatrix Ua(new Matrix("Ua", nmopi, nmopi));
-    psi::SharedMatrix Ub(new Matrix("Ub", nmopi, nmopi));
+    psi::SharedMatrix Ua(new psi::Matrix("Ua", nmopi, nmopi));
+    psi::SharedMatrix Ub(new psi::Matrix("Ub", nmopi, nmopi));
 
     Ua->zero();
     Ub->zero();
@@ -113,7 +113,7 @@ void UPDensity::compute_unpaired_density(std::vector<double>& oprdm_a,
     // ** This will be done in a completely localized basis
     // ** This code has only been tested for pz (pi) orbitals, beware!
 
-    psi::SharedMatrix Ua_act(new Matrix(nact, nact));
+    psi::SharedMatrix Ua_act(new psi::Matrix(nact, nact));
 
     // relocalize to atoms
 
@@ -169,8 +169,8 @@ void UPDensity::compute_unpaired_density(std::vector<double>& oprdm_a,
     psi::SharedMatrix Da = wfn_->Da();
     psi::SharedMatrix Db = wfn_->Db();
 
-    psi::SharedMatrix Da_new(new Matrix("Da_new", nmopi, nmopi));
-    psi::SharedMatrix Db_new(new Matrix("Db_new", nmopi, nmopi));
+    psi::SharedMatrix Da_new(new psi::Matrix("Da_new", nmopi, nmopi));
+    psi::SharedMatrix Db_new(new psi::Matrix("Db_new", nmopi, nmopi));
 
     Da_new->gemm(false, true, 1.0, Ca_new, Ca_new, 0.0);
     Db_new->gemm(false, true, 1.0, Cb_new, Cb_new, 0.0);

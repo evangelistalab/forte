@@ -137,8 +137,8 @@ void ESNO::compute_nos() {
 
     ci_rdms.compute_1rdm(ordm_a, ordm_b, op);
 
-    psi::SharedMatrix ordm_a_mat(new Matrix("OPDM_A", nirrep_, ncmopi, ncmopi));
-    psi::SharedMatrix ordm_b_mat(new Matrix("OPDM_B", nirrep_, ncmopi, ncmopi));
+    psi::SharedMatrix ordm_a_mat(new psi::Matrix("OPDM_A", nirrep_, ncmopi, ncmopi));
+    psi::SharedMatrix ordm_b_mat(new psi::Matrix("OPDM_B", nirrep_, ncmopi, ncmopi));
     int offset = 0;
     for (int h = 0; h < nirrep_; ++h) {
         for (int u = 0; u < ncmopi[h]; ++u) {
@@ -153,15 +153,15 @@ void ESNO::compute_nos() {
     outfile->Printf("\n  Diagonalizing 1RDM");
     psi::SharedVector OCC_A(new Vector("ALPHA NO OCC", nirrep_, ncmopi));
     psi::SharedVector OCC_B(new Vector("BETA NO OCC", nirrep_, ncmopi));
-    psi::SharedMatrix NO_A(new Matrix(nirrep_, ncmopi, ncmopi));
-    psi::SharedMatrix NO_B(new Matrix(nirrep_, ncmopi, ncmopi));
+    psi::SharedMatrix NO_A(new psi::Matrix(nirrep_, ncmopi, ncmopi));
+    psi::SharedMatrix NO_B(new psi::Matrix(nirrep_, ncmopi, ncmopi));
 
     ordm_a_mat->diagonalize(NO_A, OCC_A, descending);
     ordm_b_mat->diagonalize(NO_B, OCC_B, descending);
 
     // Build the transformation matrix
-    psi::SharedMatrix Ua(new Matrix("Ua", nmopi, nmopi));
-    psi::SharedMatrix Ub(new Matrix("Ub", nmopi, nmopi));
+    psi::SharedMatrix Ua(new psi::Matrix("Ua", nmopi, nmopi));
+    psi::SharedMatrix Ub(new psi::Matrix("Ub", nmopi, nmopi));
 
     Ua->identity();
     Ub->identity();

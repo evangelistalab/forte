@@ -187,8 +187,8 @@ void DFIntegrals::gather_integrals() {
     psi::Dimension nsopi_ = wfn_->nsopi();
     psi::SharedMatrix aotoso = wfn_->aotoso();
     psi::SharedMatrix Ca = wfn_->Ca();
-    // psi::SharedMatrix Ca_ao(new Matrix("Ca_ao",nso_,nmopi_.sum()));
-    psi::SharedMatrix Ca_ao(new Matrix("Ca_ao", nso_, nmopi_.sum()));
+    // psi::SharedMatrix Ca_ao(new psi::Matrix("Ca_ao",nso_,nmopi_.sum()));
+    psi::SharedMatrix Ca_ao(new psi::Matrix("Ca_ao", nso_, nmopi_.sum()));
 
     // Transform from the SO to the AO basis
     for (int h = 0, index = 0; h < nirrep_; ++h) {
@@ -238,7 +238,7 @@ void DFIntegrals::gather_integrals() {
         outfile->Printf("\n");
     }
 
-    psi::SharedMatrix Bpq(new Matrix("Bpq", naux, nmo_ * nmo_));
+    psi::SharedMatrix Bpq(new psi::Matrix("Bpq", naux, nmo_ * nmo_));
 
     Bpq = df->get_tensor("B");
 
@@ -306,7 +306,7 @@ void DFIntegrals::make_fock_matrix(psi::SharedMatrix gamma_aM, psi::SharedMatrix
 
 void DFIntegrals::resort_three(psi::SharedMatrix& threeint, std::vector<size_t>& map) {
     // Create a temperature threeint matrix
-    psi::SharedMatrix temp_threeint(new Matrix("tmp", ncmo_ * ncmo_, nthree_));
+    psi::SharedMatrix temp_threeint(new psi::Matrix("tmp", ncmo_ * ncmo_, nthree_));
     temp_threeint->zero();
 
     // Borrwed from resort_four.

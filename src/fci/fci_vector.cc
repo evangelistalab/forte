@@ -110,7 +110,7 @@ void FCIWfn::startup() {
         //    outfile->Printf("\n\n  Block %d: allocate %d *
         //    %d",alfa_sym,(int)alfa_graph_->strpi(alfa_sym),(int)beta_graph_->strpi(beta_sym));
         C_.push_back(psi::SharedMatrix(
-            new Matrix("C", alfa_graph_->strpi(alfa_sym), beta_graph_->strpi(beta_sym))));
+            new psi::Matrix("C", alfa_graph_->strpi(alfa_sym), beta_graph_->strpi(beta_sym))));
     }
 }
 
@@ -331,7 +331,7 @@ void FCIWfn::print_natural_orbitals(std::shared_ptr<MOSpaceInfo> mo_space_info) 
     size_t na = alfa_graph_->nones();
     size_t nb = beta_graph_->nones();
 
-    auto opdm = std::make_shared<psi::Matrix>(new Matrix("OPDM", active_dim, active_dim));
+    auto opdm = std::make_shared<psi::Matrix>(new psi::Matrix("OPDM", active_dim, active_dim));
 
     int offset = 0;
     for (int h = 0; h < nirrep_; h++) {

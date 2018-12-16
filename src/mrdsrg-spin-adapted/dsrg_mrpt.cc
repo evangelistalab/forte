@@ -262,7 +262,7 @@ void DSRG_MRPT::startup() {
     L1_ = ambit::BlockedTensor::build(tensor_type_, "OPDC", {"aa"});
     Eta1_ = ambit::BlockedTensor::build(tensor_type_, "Eta1", {"aa"});
     L2_ = ambit::BlockedTensor::build(tensor_type_, "T2PDC", {"aaaa"});
-    if (psi::Options_.get_str("THREEPDC") != "ZERO") {
+    if (options_.get_str("THREEPDC") != "ZERO") {
         L3_ = ambit::BlockedTensor::build(tensor_type_, "T3PDC", {"aaaaaa"});
     }
     build_density();
@@ -364,7 +364,7 @@ void DSRG_MRPT::build_density() {
     L2aa("pqrs") -= 2.0 * reference_.L2ab()("pqsr");
 
     // T3PDC
-    if (psi::Options_.get_str("THREEPDC") != "ZERO") {
+    if (options_.get_str("THREEPDC") != "ZERO") {
         // test spin adaptation
         diff = ambit::Tensor::build(tensor_type_, "diff_L3", reference_.L3aaa().dims());
         diff("pqrstu") += reference_.L3aab()("pqrstu") - reference_.L3aab()("pqrsut") +
@@ -528,7 +528,7 @@ void DSRG_MRPT::test_memory(const size_t& c, const size_t& a, const size_t& v) {
     }
 
     // consider L3
-    if (psi::Options_.get_str("THREEPDC") != "ZERO") {
+    if (options_.get_str("THREEPDC") != "ZERO") {
         required += static_cast<size_t>(aaaa * aa);
         leftover -= static_cast<size_t>(aaaa * aa * sizeof(double));
     }
@@ -579,7 +579,7 @@ void DSRG_MRPT::test_memory(const size_t& c, const size_t& a, const size_t& v) {
         {"memory required", converter(required)},
         {"memory available", converter(total, true)},
         {"memory leftover", converter(leftover, true)}};
-    if (psi::Options_.get_str("THREEPDC") != "ZERO") {
+    if (options_.get_str("THREEPDC") != "ZERO") {
         mem_summary.insert(mem_summary.begin() + 6, {"L3", converter(aa * aaaa)});
     }
 

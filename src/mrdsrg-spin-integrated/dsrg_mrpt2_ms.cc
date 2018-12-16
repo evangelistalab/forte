@@ -210,13 +210,13 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
             // diagonalize which the second-order effective Hamiltonian
             // FULL: CASCI using determinants
             // AVG_STATES: H_AB = <A|H|B> where A and B are SA-CAS states
-            if (psi::Options_.get_str("DSRG_MULTI_STATE") == "SA_FULL") {
+            if (options_.get_str("DSRG_MULTI_STATE") == "SA_FULL") {
 
                 outfile->Printf("\n    Use string FCI code.");
 
                 // prepare FCISolver
                 int charge = Process::environment.molecule()->molecular_charge();
-                if (psi::Options_["CHARGE"].has_changed()) {
+                if (options_["CHARGE"].has_changed()) {
                     charge = options_.get_int("CHARGE");
                 }
                 auto nelec = 0;
@@ -257,13 +257,13 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
 
                 int dim = (eigens_[n][0].first)->dim();
                 size_t eigen_size = eigens_[n].size();
-                psi::SharedMatrix evecs(new Matrix("evecs", dim, eigen_size));
+                psi::SharedMatrix evecs(new psi::Matrix("evecs", dim, eigen_size));
                 for (size_t i = 0; i < eigen_size; ++i) {
                     evecs->set_column(0, i, (eigens_[n][i]).first);
                 }
 
                 psi::SharedMatrix Heff(
-                    new Matrix("Heff " + multi_label[multi - 1] + " " + irrep_symbol[irrep],
+                    new psi::Matrix("Heff " + multi_label[multi - 1] + " " + irrep_symbol[irrep],
                                nstates, nstates));
                 for (int A = 0; A < nstates; ++A) {
                     for (int B = A; B < nstates; ++B) {
@@ -322,7 +322,7 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
                 print_h2("Effective Hamiltonian Summary");
                 outfile->Printf("\n");
                 Heff->print();
-                psi::SharedMatrix U(new Matrix("U of Heff", nstates, nstates));
+                psi::SharedMatrix U(new psi::Matrix("U of Heff", nstates, nstates));
                 psi::SharedVector Ems(new Vector("MS Energies", nstates));
                 Heff->diagonalize(U, Ems);
                 U->eivprint(Ems);
@@ -386,13 +386,13 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_xms() {
 
         // fill in ci vectors
         int dim = (eigens_[n][0].first)->dim();
-        psi::SharedMatrix civecs(new Matrix("ci vecs", dim, nstates));
+        psi::SharedMatrix civecs(new psi::Matrix("ci vecs", dim, nstates));
         for (int i = 0; i < nstates; ++i) {
             civecs->set_column(0, i, (eigens_[n][i]).first);
         }
 
         // XMS rotaion if needed
-        if (psi::Options_.get_str("DSRG_MULTI_STATE") == "XMS") {
+        if (options_.get_str("DSRG_MULTI_STATE") == "XMS") {
             if (nentry > 1) {
                 // recompute state-averaged density
                 outfile->Printf("\n    Recompute SA density matrix of %s with equal weights.",
@@ -425,10 +425,10 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_xms() {
         }
 
         // prepare Heff
-        psi::SharedMatrix Heff(new Matrix("Heff " + multi_label[multi - 1] + " " + irrep_symbol[irrep],
+        psi::SharedMatrix Heff(new psi::Matrix("Heff " + multi_label[multi - 1] + " " + irrep_symbol[irrep],
                                      nstates, nstates));
         psi::SharedMatrix Heff_sym(
-            new Matrix("Heff (Symmetrized) " + multi_label[multi - 1] + " " + irrep_symbol[irrep],
+            new psi::Matrix("Heff (Symmetrized) " + multi_label[multi - 1] + " " + irrep_symbol[irrep],
                        nstates, nstates));
 
         // loop over states
@@ -502,7 +502,7 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_xms() {
         Heff->print();
         Heff_sym->print();
 
-        psi::SharedMatrix U(new Matrix("U of Heff (Symmetrized)", nstates, nstates));
+        psi::SharedMatrix U(new psi::Matrix("U of Heff (Symmetrized)", nstates, nstates));
         psi::SharedVector Ems(new Vector("MS Energies", nstates));
         Heff_sym->diagonalize(U, Ems);
         U->eivprint(Ems);
@@ -564,7 +564,7 @@ psi::SharedMatrix DSRG_MRPT2::xms_rotation(std::shared_ptr<FCIIntegrals> fci_int
 
     // build Fock matrix
     int nstates = civecs->ncol();
-    psi::SharedMatrix Fock(new Matrix("Fock", nstates, nstates));
+    psi::SharedMatrix Fock(new psi::Matrix("Fock", nstates, nstates));
 
     for (int M = 0; M < nstates; ++M) {
         for (int N = M; N < nstates; ++N) {
@@ -590,7 +590,7 @@ psi::SharedMatrix DSRG_MRPT2::xms_rotation(std::shared_ptr<FCIIntegrals> fci_int
     Fock->print();
 
     // diagonalize Fock
-    psi::SharedMatrix Fevec(new Matrix("Fock Evec", nstates, nstates));
+    psi::SharedMatrix Fevec(new psi::Matrix("Fock Evec", nstates, nstates));
     psi::SharedVector Feval(new Vector("Fock Eval", nstates));
     Fock->diagonalize(Fevec, Feval);
     Fevec->eivprint(Feval);
@@ -882,7 +882,7 @@ void DSRG_MRPT2::compute_cumulants(std::shared_ptr<FCIIntegrals> fci_ints,
     L2ab("pqrs") -= L1a("pr") * L1b("qs");
 
     // 3 cumulant
-    if (psi::Options_.get_str("THREEPDC") != "ZERO") {
+    if (options_.get_str("THREEPDC") != "ZERO") {
         ambit::Tensor L3aaa = reference_.L3aaa();
         ambit::Tensor L3aab = reference_.L3aab();
         ambit::Tensor L3abb = reference_.L3abb();

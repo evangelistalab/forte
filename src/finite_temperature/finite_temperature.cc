@@ -130,12 +130,12 @@ void FiniteTemperatureHF::frac_occupation() {
         offset += nmopi[h];
     }
 
-    psi::SharedMatrix C(new Matrix("C_matrix", this->nsopi(), occupation));
+    psi::SharedMatrix C(new psi::Matrix("C_matrix", this->nsopi(), occupation));
     psi::SharedMatrix Call(this->Ca()->clone());
 
     psi::Dimension nsopi = this->nsopi();
-    psi::SharedMatrix C_scaled(new Matrix("C_rdocc_active", nirrep_, nsopi, occupation));
-    psi::SharedMatrix C_no_scale(new Matrix("C_nochange", nirrep_, nsopi, occupation));
+    psi::SharedMatrix C_scaled(new psi::Matrix("C_rdocc_active", nirrep_, nsopi, occupation));
+    psi::SharedMatrix C_no_scale(new psi::Matrix("C_nochange", nirrep_, nsopi, occupation));
     /// Scale the columns with the occupation.
     /// This C matrix will be passed to JK object for CLeft
     for (int h = 0; h < nirrep_; h++) {

@@ -237,7 +237,7 @@ psi::SharedMatrix AOSubspace::build_projector(const std::vector<int>& subspace,
     std::shared_ptr<PetiteList> plist(new PetiteList(large_basis, integral_ll));
     psi::SharedMatrix AO2SO_ = plist->aotoso();
     psi::Dimension large_basis_so_dim = plist->SO_basisdim();
-    psi::SharedMatrix SXXS_ll_so(new Matrix("SXXS_ll_so", large_basis_so_dim, large_basis_so_dim));
+    psi::SharedMatrix SXXS_ll_so(new psi::Matrix("SXXS_ll_so", large_basis_so_dim, large_basis_so_dim));
     SXXS_ll_so->apply_symmetry(SXXS_ll, AO2SO_);
 #if _DEBUG_AOSUBSPACE_
     SXXS_ll_so->print();

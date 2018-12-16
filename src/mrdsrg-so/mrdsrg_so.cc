@@ -228,7 +228,7 @@ void MRDSRG_SO::startup() {
     outfile->Printf("\n    Norm of L2: %12.8f.", Lambda2.norm());
 
     // prepare three-body density cumulant
-    if (psi::Options_.get_str("THREEPDC") != "ZERO") {
+    if (options_.get_str("THREEPDC") != "ZERO") {
         Lambda3 = BTF->build(tensor_type_, "Lambda3", {"aaaaaa"});
         (reference_.L3aaa()).citerate([&](const std::vector<size_t>& i, const double& value) {
             if (std::fabs(value) > 1.0e-15) {
@@ -542,7 +542,7 @@ double MRDSRG_SO::compute_energy() {
 
     do {
         // compute hbar
-        if (psi::Options_.get_str("CORR_LEVEL") == "QDSRG2") {
+        if (options_.get_str("CORR_LEVEL") == "QDSRG2") {
             compute_qhbar();
         } else {
             // single-commutator by default
@@ -911,7 +911,7 @@ void MRDSRG_SO::H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const double& alp
     E += temp2["uvxy"] * Lambda2["xyuv"];
 
     // <[Hbar2, T2]> C_6 C_2
-    if (psi::Options_.get_str("THREEPDC") != "ZERO") {
+    if (options_.get_str("THREEPDC") != "ZERO") {
         temp1 = ambit::BlockedTensor::build(tensor_type_, "temp", {"aaaaaa"});
         temp1["uvwxyz"] += H2["uviz"] * T2["iwxy"];
         temp1["uvwxyz"] += H2["waxy"] * T2["uvaz"];

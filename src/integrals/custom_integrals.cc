@@ -330,7 +330,7 @@ void CustomIntegrals::custom_integrals_allocate(int norb,
     /// If MO_ROTATE is set in option, call rotate_mos.
     /// Wasn't really sure where to put this function, but since, integrals is
     /// always called, this seems like a good spot.
-    if (psi::Options_["ROTATE_MOS"].size() > 0) {
+    if (options_["ROTATE_MOS"].size() > 0) {
         outfile->Printf("\n  The option ROTATE_MOS is not supported with custom integrals\n");
         exit(1);
     }

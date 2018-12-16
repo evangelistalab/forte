@@ -119,21 +119,21 @@ void OrbitalOptimizer::startup() {
     nirrep_ = mo_space_info_->nirrep();
     nsopi_ = wfn_->nsopi();
 
-    if (psi::Options_.get_str("CASSCF_CI_SOLVER") == "FCI") {
+    if (options_.get_str("CASSCF_CI_SOLVER") == "FCI") {
         cas_ = true;
-    } else if (psi::Options_.get_str("CASSCF_CI_SOLVER") == "CAS") {
-        if (psi::Options_.get_str("FCIMO_ACTV_TYPE") != "COMPLETE") {
+    } else if (options_.get_str("CASSCF_CI_SOLVER") == "CAS") {
+        if (options_.get_str("FCIMO_ACTV_TYPE") != "COMPLETE") {
             cas_ = false;
         } else {
             cas_ = true;
         }
-    } else if (psi::Options_.get_str("CASSCF_CI_SOLVER") == "ACI") {
+    } else if (options_.get_str("CASSCF_CI_SOLVER") == "ACI") {
         if (psi::Options_.get_double("SIGMA") == 0.0) {
             cas_ = true;
         } else {
             cas_ = true;
         }
-    } else if (psi::Options_.get_str("CASSCF_CI_SOLVER") == "DMRG") {
+    } else if (options_.get_str("CASSCF_CI_SOLVER") == "DMRG") {
         cas_ = true;
     } else {
         outfile->Printf("\n\n Please set your CASSCF_CI_SOLVER to either FCI, CAS, ACI, or DMRG");
@@ -156,7 +156,7 @@ void OrbitalOptimizer::orbital_gradient() {
     }
     Y("p,t") = F_pu("p,u") * gamma1_("t, u");
 
-    psi::SharedMatrix Y_m(new Matrix("Y_m", nmo_, na_));
+    psi::SharedMatrix Y_m(new psi::Matrix("Y_m", nmo_, na_));
 
     Y.iterate([&](const std::vector<size_t>& i, double& value) {
         Y_m->set(nmo_abs_[i[0]], i[1], value);
@@ -186,7 +186,7 @@ void OrbitalOptimizer::orbital_gradient() {
                         gamma2_.norm(2));
     }
 
-    psi::SharedMatrix Zm(new Matrix("Zm", nmo_, na_));
+    psi::SharedMatrix Zm(new psi::Matrix("Zm", nmo_, na_));
     Z.iterate([&](const std::vector<size_t>& i, double& value) { Zm->set(i[0], i[1], value); });
 
     Z_ = Zm;
@@ -207,7 +207,7 @@ void OrbitalOptimizer::orbital_gradient() {
 
     size_t nhole = nrdocc_ + na_;
     size_t npart = na_ + nvir_;
-    psi::SharedMatrix Orb_grad(new Matrix("G_pq", nhole, npart));
+    psi::SharedMatrix Orb_grad(new psi::Matrix("G_pq", nhole, npart));
     Orb_grad->set_name("CASSCF Gradient");
 
     auto generalized_hole_abs = mo_space_info_->get_corr_abs_mo("GENERALIZED HOLE");
@@ -288,7 +288,7 @@ void OrbitalOptimizer::orbital_gradient() {
     /// The offset allows me to place the correct values with pitzer ordering
 
     /// The Fock matrix is computed as stated in Pg. 622 of Helgaker book
-    psi::SharedMatrix Fock(new Matrix("Generalized Fock", nmo_, nmo_));
+    psi::SharedMatrix Fock(new psi::Matrix("Generalized Fock", nmo_, nmo_));
     for (size_t q = 0; q < nmo_; q++) {
         int q_o = nmo_abs_[q];
         for (size_t i = 0; i < nrdocc_; i++) {
@@ -309,7 +309,7 @@ void OrbitalOptimizer::orbital_gradient() {
     if (casscf_debug_print_) {
         Fock->print();
     }
-    psi::SharedMatrix Orb_grad_Fock(new Matrix("G_pq", nhole, npart));
+    psi::SharedMatrix Orb_grad_Fock(new psi::Matrix("G_pq", nhole, npart));
     for (size_t h = 0; h < nhole; h++) {
         for (size_t p = 0; p < npart; p++) {
             size_t h_act = generalized_hole_abs[h];
@@ -341,7 +341,7 @@ void OrbitalOptimizer::orbital_gradient() {
 void OrbitalOptimizer::diagonal_hessian() {
     size_t nhole = nrdocc_ + na_;
     size_t npart = na_ + nvir_;
-    psi::SharedMatrix D(new Matrix("D_pq", nhole, npart));
+    psi::SharedMatrix D(new psi::Matrix("D_pq", nhole, npart));
     D->set_name("Diagonal Hessian");
 
     for (size_t ii = 0; ii < nrdocc_; ii++) {
@@ -398,8 +398,8 @@ psi::SharedMatrix OrbitalOptimizer::approx_solve() {
     psi::Dimension nhole_dim = restricted_docc_dim_ + active_dim_;
     psi::Dimension nvirt_dim = restricted_uocc_dim_ + active_dim_;
 
-    psi::SharedMatrix G_grad(new Matrix("GradientSym", nhole_dim, nvirt_dim));
-    psi::SharedMatrix D_grad(new Matrix("HessianSym", nhole_dim, nvirt_dim));
+    psi::SharedMatrix G_grad(new psi::Matrix("GradientSym", nhole_dim, nvirt_dim));
+    psi::SharedMatrix D_grad(new psi::Matrix("HessianSym", nhole_dim, nvirt_dim));
 
     int offset_hole = 0;
     int offset_part = 0;
@@ -454,7 +454,7 @@ psi::SharedMatrix OrbitalOptimizer::AugmentedHessianSolve() {
     size_t npart = mo_space_info_->size("GENERALIZED PARTICLE");
 
     psi::SharedMatrix AugmentedHessian(
-        new Matrix("Augmented Hessian", nhole + npart + 1, nhole + npart + 1));
+        new psi::Matrix("Augmented Hessian", nhole + npart + 1, nhole + npart + 1));
     for (size_t hol = 0; hol < nhole; hol++) {
         for (size_t part = 0; part < npart; part++) {
             AugmentedHessian->set(hol, part, d_->get(hol, part));
@@ -485,11 +485,11 @@ psi::SharedMatrix OrbitalOptimizer::AugmentedHessianSolve() {
 
     // AugmentedHessian->set(nhole * npart, nhole * npart, 0.0);
     // AugmentedHessian->print();
-    psi::SharedMatrix HessianEvec(new Matrix("HessianEvec", nhole + npart + 1, nhole + npart + 1));
+    psi::SharedMatrix HessianEvec(new psi::Matrix("HessianEvec", nhole + npart + 1, nhole + npart + 1));
     psi::SharedVector HessianEval(new Vector("HessianEval", nhole + npart + 1));
     AugmentedHessian->diagonalize(HessianEvec, HessianEval);
     HessianEvec->print();
-    // psi::SharedMatrix S_AH(new Matrix("AugmentedHessianLowestEigenvalue", nhole,
+    // psi::SharedMatrix S_AH(new psi::Matrix("AugmentedHessianLowestEigenvalue", nhole,
     // npart));
     // if(casscf_debug_print_)
     //{
@@ -505,7 +505,7 @@ psi::SharedMatrix OrbitalOptimizer::rotate_orbitals(psi::SharedMatrix C, psi::Sh
     /// Clone the C matrix
     psi::SharedMatrix C_rot(C->clone());
     psi::SharedMatrix S_mat(S->clone());
-    psi::SharedMatrix S_sym(new Matrix("Exp(K)", mo_space_info_->nirrep(),
+    psi::SharedMatrix S_sym(new psi::Matrix("Exp(K)", mo_space_info_->nirrep(),
                                   mo_space_info_->get_dimension("ALL"),
                                   mo_space_info_->get_dimension("ALL")));
     int offset_hole = 0;
@@ -543,13 +543,13 @@ psi::SharedMatrix OrbitalOptimizer::rotate_orbitals(psi::SharedMatrix C, psi::Sh
 }
 
 void OrbitalOptimizer::fill_shared_density_matrices() {
-    psi::SharedMatrix gamma_spin_free(new Matrix("Gamma", na_, na_));
+    psi::SharedMatrix gamma_spin_free(new psi::Matrix("Gamma", na_, na_));
     gamma1_.iterate([&](const std::vector<size_t>& i, double& value) {
         gamma_spin_free->set(i[0], i[1], value);
     });
     gamma1M_ = gamma_spin_free;
 
-    psi::SharedMatrix gamma2_matrix(new Matrix("Gamma2", na_ * na_, na_ * na_));
+    psi::SharedMatrix gamma2_matrix(new psi::Matrix("Gamma2", na_ * na_, na_ * na_));
     gamma2_.iterate([&](const std::vector<size_t>& i, double& value) {
         gamma2_matrix->set(i[0] * na_ + i[1], i[2] * na_ + i[3], value);
     });
@@ -573,7 +573,7 @@ std::shared_ptr<psi::Matrix> OrbitalOptimizer::make_c_sym_aware() {
     /// I want a C matrix in the C1 basis but symmetry aware
     size_t nso = wfn_->nso();
     nirrep_ = mo_space_info_->nirrep();
-    psi::SharedMatrix Call(new Matrix(nso, nmopi.sum()));
+    psi::SharedMatrix Call(new psi::Matrix(nso, nmopi.sum()));
 
     // Transform from the SO to the AO basis for the C matrix.
     // just transfroms the C_{mu_ao i} -> C_{mu_so i}
@@ -654,12 +654,12 @@ void CASSCFOrbitalOptimizer::form_fock_intermediates() {
     }
 
     /// Creating a C_core and C_active matrices
-    psi::SharedMatrix C_active(new Matrix("C_active", nirrep_, nsopi_, active_dim_));
-    psi::SharedMatrix C_core(new Matrix("C_core", nirrep_, nsopi_, restricted_docc_dim_));
+    psi::SharedMatrix C_active(new psi::Matrix("C_active", nirrep_, nsopi_, active_dim_));
+    psi::SharedMatrix C_core(new psi::Matrix("C_core", nirrep_, nsopi_, restricted_docc_dim_));
 
     // Need to get the inactive block of the C matrix
-    psi::SharedMatrix F_core_c1(new Matrix("F_core_no_sym", nmo_, nmo_));
-    psi::SharedMatrix F_core(new Matrix("InactiveTemp1", nirrep_, nsopi_, nsopi_));
+    psi::SharedMatrix F_core_c1(new psi::Matrix("F_core_no_sym", nmo_, nmo_));
+    psi::SharedMatrix F_core(new psi::Matrix("InactiveTemp1", nirrep_, nsopi_, nsopi_));
     F_core_c1->zero();
 
     for (size_t h = 0; h < nirrep_; h++) {
@@ -668,8 +668,8 @@ void CASSCFOrbitalOptimizer::form_fock_intermediates() {
                 h, i, Ca_sym_->get_column(h, i + frozen_docc_dim_[h] + restricted_docc_dim_[h]));
         }
     }
-    psi::SharedMatrix C_active_ao(new Matrix("C_active", nirrep_, nsopi_, nsopi_));
-    psi::SharedMatrix gamma1_sym(new Matrix("gamma1_sym", nirrep_, active_dim_, active_dim_));
+    psi::SharedMatrix C_active_ao(new psi::Matrix("C_active", nirrep_, nsopi_, nsopi_));
+    psi::SharedMatrix gamma1_sym(new psi::Matrix("gamma1_sym", nirrep_, active_dim_, active_dim_));
     size_t offset_active = 0;
     for (size_t h = 0; h < nirrep_; h++) {
         for (int u = 0; u < active_dim_[h]; u++) {
@@ -695,7 +695,7 @@ void CASSCFOrbitalOptimizer::form_fock_intermediates() {
     std::vector<std::shared_ptr<psi::Matrix>>& Cr = JK_->C_right();
 
     /// Since this is CASSCF this will always be an active fock matrix
-    psi::SharedMatrix Identity(new Matrix("I", nirrep_, nsopi_, nsopi_));
+    psi::SharedMatrix Identity(new psi::Matrix("I", nirrep_, nsopi_, nsopi_));
     Identity->identity();
     Cl.clear();
     Cr.clear();
@@ -760,7 +760,7 @@ void CASSCFOrbitalOptimizer::form_fock_intermediates() {
         }
         offset += nmopi_[h];
     }
-    psi::SharedMatrix F_active_c1(new Matrix("F_act", nmo_, nmo_));
+    psi::SharedMatrix F_active_c1(new psi::Matrix("F_act", nmo_, nmo_));
     int offset_nofroze = 0;
     int offset_froze = 0;
     psi::Dimension no_frozen_dim = mo_space_info_->get_dimension("ALL");
@@ -794,8 +794,8 @@ PostCASSCFOrbitalOptimizer::PostCASSCFOrbitalOptimizer(ambit::Tensor Gamma1, amb
     : OrbitalOptimizer(Gamma1, Gamma2, two_body_ab, options, mo_space_info) {}
 PostCASSCFOrbitalOptimizer::~PostCASSCFOrbitalOptimizer() {}
 void PostCASSCFOrbitalOptimizer::form_fock_intermediates() {
-    psi::SharedMatrix F_core_c1(new Matrix("F_core_no_sym", nmo_, nmo_));
-    psi::SharedMatrix F_active_c1(new Matrix("F_active_no_sym", nmo_, nmo_));
+    psi::SharedMatrix F_core_c1(new psi::Matrix("F_core_no_sym", nmo_, nmo_));
+    psi::SharedMatrix F_active_c1(new psi::Matrix("F_active_no_sym", nmo_, nmo_));
     ambit::Tensor F_core = ambit::Tensor::build(ambit::CoreTensor, "F_core", {nmo_, nmo_});
     ambit::Tensor F_active = ambit::Tensor::build(ambit::CoreTensor, "F_active", {nmo_, nmo_});
     H_->transform(Ca_sym_);

@@ -149,8 +149,8 @@ void DMRGSolver::compute_reference(double* one_rdm, double* two_rdm, double* thr
         dmrg_ref.set_L2ab(cumulant2_ab);
         dmrg_ref.set_L2bb(cumulant2_aa);
     }
-    // if((psi::Options_.get_str("THREEPDC") != "ZERO") &&
-    // (psi::Options_.get_str("JOB_TYPE") == "DSRG-MRPT2" or
+    // if((options_.get_str("THREEPDC") != "ZERO") &&
+    // (options_.get_str("JOB_TYPE") == "DSRG-MRPT2" or
     // options_.get_str("JOB_TYPE") == "THREE-DSRG-MRPT2"))
     if (max_rdm_ > 2 && !disk_3_rdm_) {
         ambit::Tensor gamma3_dmrg =
@@ -257,9 +257,9 @@ void DMRGSolver::compute_energy() {
         psi::get_writer_file_prefix(wfn_->molecule()->name()) + ".unitary.h5";
     const std::string diisname = psi::get_writer_file_prefix(wfn_->molecule()->name()) + ".DIIS.h5";
     bool three_pdm = false;
-    if (psi::Options_.get_str("JOB_TYPE") == "DSRG-MRPT2" or
+    if (options_.get_str("JOB_TYPE") == "DSRG-MRPT2" or
         options_.get_str("JOB_TYPE") == "THREE-DSRG-MRPT2") {
-        if (psi::Options_.get_str("THREEPDC") != "ZERO")
+        if (options_.get_str("THREEPDC") != "ZERO")
             three_pdm = true;
     }
     /****************************************
@@ -388,7 +388,7 @@ void DMRGSolver::compute_energy() {
         active_integrals_ =
             ints_->aptei_ab_block(active_array, active_array, active_array, active_array);
         /// SCF_TYPE CD tends to be slow.  Avoid it and use integral class
-        if (psi::Options_.get_str("SCF_TYPE") != "CD") {
+        if (options_.get_str("SCF_TYPE") != "CD") {
             local_timer one_body_timer;
             one_body_integrals_ = one_body_operator();
             outfile->Printf("\n OneBody integrals (though one_body_operator) takes %6.5f s",
@@ -550,7 +550,7 @@ std::vector<double> DMRGSolver::one_body_operator() {
     int nirrep = wfn_->nirrep();
     psi::Dimension nmopi = mo_space_info_->get_dimension("ALL");
 
-    psi::SharedMatrix Cdocc(new Matrix("C_RESTRICTED", nirrep, nsopi, restricted_docc_dim));
+    psi::SharedMatrix Cdocc(new psi::Matrix("C_RESTRICTED", nirrep, nsopi, restricted_docc_dim));
     psi::SharedMatrix Ca = wfn_->Ca();
     for (int h = 0; h < nirrep; h++) {
         for (int i = 0; i < restricted_docc_dim[h]; i++) {
@@ -600,7 +600,7 @@ std::vector<double> DMRGSolver::one_body_operator() {
     Hcore->transform(Ca);
 
     size_t all_nmo = mo_space_info_->size("ALL");
-    psi::SharedMatrix F_restric_c1(new Matrix("F_restricted", all_nmo, all_nmo));
+    psi::SharedMatrix F_restric_c1(new psi::Matrix("F_restricted", all_nmo, all_nmo));
     size_t offset = 0;
     for (int h = 0; h < nirrep; h++) {
         for (int p = 0; p < nmopi[h]; p++) {
@@ -653,7 +653,7 @@ void DMRGSolver::print_natural_orbitals(double* opdm) {
     int nirrep = wfn_->nirrep();
     size_t na_ = mo_space_info_->size("ACTIVE");
 
-    std::shared_ptr<psi::Matrix> opdm_a(new Matrix("OPDM_A", nirrep, active_dim, active_dim));
+    std::shared_ptr<psi::Matrix> opdm_a(new psi::Matrix("OPDM_A", nirrep, active_dim, active_dim));
 
     int offset = 0;
     for (int h = 0; h < nirrep; h++) {
@@ -665,7 +665,7 @@ void DMRGSolver::print_natural_orbitals(double* opdm) {
         offset += active_dim[h];
     }
     psi::SharedVector OCC_A(new Vector("ALPHA OCCUPATION", nirrep, active_dim));
-    psi::SharedMatrix NO_A(new Matrix(nirrep, active_dim, active_dim));
+    psi::SharedMatrix NO_A(new psi::Matrix(nirrep, active_dim, active_dim));
 
     opdm_a->diagonalize(NO_A, OCC_A, descending);
     std::vector<std::pair<double, std::pair<int, int>>> vec_irrep_occupation;

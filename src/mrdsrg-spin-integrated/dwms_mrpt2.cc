@@ -127,7 +127,7 @@ void DWMS_DSRGPT2::read_options() {
 
     do_hbar3_ = options_.get_bool("FORM_HBAR3");
     max_hbar_level_ = do_hbar3_ ? 3 : 2;
-    max_rdm_level_ = (psi::Options_.get_str("THREEPDC") == "ZERO") ? 2 : 3;
+    max_rdm_level_ = (options_.get_str("THREEPDC") == "ZERO") ? 2 : 3;
 
     IntegralType int_type = ints_->integral_type();
     eri_df_ = (int_type == Cholesky) || (int_type == DF) || (int_type == DiskDF);
@@ -586,7 +586,7 @@ void DWMS_DSRGPT2::compute_dwsa_energy(std::shared_ptr<FCI_MO>& fci_mo) {
         print_title(entry_title);
 
         // prepare Heff
-        psi::SharedMatrix Heff(new Matrix("Heff " + entry_name, nroots, nroots));
+        psi::SharedMatrix Heff(new psi::Matrix("Heff " + entry_name, nroots, nroots));
 
         // vector of T1, T2, and summed 1st-order Hbar
         std::vector<ambit::BlockedTensor> T1s, T2s, RH1s, RH2s;
@@ -657,7 +657,7 @@ void DWMS_DSRGPT2::compute_dwsa_energy(std::shared_ptr<FCI_MO>& fci_mo) {
         Heff->print();
 
         // diagonalize Heff and print eigen vectors
-        psi::SharedMatrix U(new Matrix("U of Heff", nroots, nroots));
+        psi::SharedMatrix U(new psi::Matrix("U of Heff", nroots, nroots));
         psi::SharedVector Ems(new Vector("MS Energies", nroots));
         Heff->diagonalize(U, Ems);
         U->eivprint(Ems);
@@ -775,8 +775,8 @@ void DWMS_DSRGPT2::compute_dwms_energy(std::shared_ptr<FCI_MO>& fci_mo) {
         print_title(entry_title);
 
         // prepare Heff
-        psi::SharedMatrix Heff(new Matrix("Heff " + entry_name, nroots, nroots));
-        psi::SharedMatrix Heff_sym(new Matrix("Symmetrized Heff " + entry_name, nroots, nroots));
+        psi::SharedMatrix Heff(new psi::Matrix("Heff " + entry_name, nroots, nroots));
+        psi::SharedMatrix Heff_sym(new psi::Matrix("Symmetrized Heff " + entry_name, nroots, nroots));
 
         // loop over states of current symmetry
         for (int M = 0; M < nroots; ++M) {
@@ -871,7 +871,7 @@ void DWMS_DSRGPT2::compute_dwms_energy(std::shared_ptr<FCI_MO>& fci_mo) {
         Heff_sym->print();
 
         // diagonalize Heff and print eigen vectors
-        psi::SharedMatrix U(new Matrix("U of Heff (Symmetrized)", nroots, nroots));
+        psi::SharedMatrix U(new psi::Matrix("U of Heff (Symmetrized)", nroots, nroots));
         psi::SharedVector Ems(new Vector("MS Energies", nroots));
         Heff_sym->diagonalize(U, Ems);
         U->eivprint(Ems);
@@ -1189,7 +1189,7 @@ void DWMS_DSRGPT2::print_overlap(const std::vector<psi::SharedVector>& evecs, co
     outfile->Printf("\n");
 
     int nroots = evecs.size();
-    psi::SharedMatrix S(new Matrix("S", nroots, nroots));
+    psi::SharedMatrix S(new psi::Matrix("S", nroots, nroots));
 
     for (int i = 0; i < nroots; ++i) {
         for (int j = i; j < nroots; ++j) {

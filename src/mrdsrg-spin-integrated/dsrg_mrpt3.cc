@@ -92,7 +92,7 @@ void DSRG_MRPT3::startup() {
 
     // number of elements stored in memory
     size_t nelement = 6 * sh * sh * sh * sh + 6 * sa * sa * sa * sa;
-    if (psi::Options_.get_str("THREEPDC") != "ZERO") {
+    if (options_.get_str("THREEPDC") != "ZERO") {
         nelement += 4 * sa * sa * sa * sa * sa * sa;
     }
 
@@ -1408,7 +1408,7 @@ double DSRG_MRPT3::compute_energy_sa() {
 
                 // prepare FCISolver
                 int charge = Process::environment.molecule()->molecular_charge();
-                if (psi::Options_["CHARGE"].has_changed()) {
+                if (options_["CHARGE"].has_changed()) {
                     charge = options_.get_int("CHARGE");
                 }
                 auto nelec = 0;
@@ -1455,13 +1455,13 @@ double DSRG_MRPT3::compute_energy_sa() {
 
                 int dim = (eigens_[n][0].first)->dim();
                 size_t eigen_size = eigens_[n].size();
-                psi::SharedMatrix evecs(new Matrix("evecs", dim, eigen_size));
+                psi::SharedMatrix evecs(new psi::Matrix("evecs", dim, eigen_size));
                 for (size_t i = 0; i < eigen_size; ++i) {
                     evecs->set_column(0, i, (eigens_[n][i]).first);
                 }
 
                 psi::SharedMatrix Heff(
-                    new Matrix("Heff " + multi_label[multi - 1] + " " + irrep_symbol[irrep],
+                    new psi::Matrix("Heff " + multi_label[multi - 1] + " " + irrep_symbol[irrep],
                                nstates, nstates));
                 for (int A = 0; A < nstates; ++A) {
                     for (int B = A; B < nstates; ++B) {
@@ -1506,7 +1506,7 @@ double DSRG_MRPT3::compute_energy_sa() {
                 print_h2("Effective Hamiltonian Summary");
                 outfile->Printf("\n");
                 Heff->print();
-                psi::SharedMatrix U(new Matrix("U of Heff", nstates, nstates));
+                psi::SharedMatrix U(new psi::Matrix("U of Heff", nstates, nstates));
                 psi::SharedVector Ems(new Vector("MS Energies", nstates));
                 Heff->diagonalize(U, Ems);
                 U->eivprint(Ems);
@@ -1559,7 +1559,7 @@ double DSRG_MRPT3::compute_energy_relaxed() {
     // obtain the all-active DSRG transformed Hamiltonian
     auto fci_ints = compute_Heff_actv();
 
-    if (psi::Options_.get_str("CAS_TYPE") == "CAS") {
+    if (options_.get_str("CAS_TYPE") == "CAS") {
         FCI_MO fci_mo(reference_wavefunction_, options_, ints_, mo_space_info_, fci_ints);
         fci_mo.set_localize_actv(false);
         Erelax = fci_mo.compute_energy();
@@ -1577,10 +1577,10 @@ double DSRG_MRPT3::compute_energy_relaxed() {
             // compute permanent dipoles
             dm_relax = fci_mo.compute_ref_relaxed_dm(Mbar0_, Mbar1_, Mbar2_);
         }
-    } else if (psi::Options_.get_str("CAS_TYPE") == "ACI") {
+    } else if (options_.get_str("CAS_TYPE") == "ACI") {
         AdaptiveCI aci(reference_wavefunction_, options_, ints_, mo_space_info_);
         aci.set_fci_ints(fci_ints);
-        if (psi::Options_["ACI_RELAX_SIGMA"].has_changed()) {
+        if (options_["ACI_RELAX_SIGMA"].has_changed()) {
             aci.update_sigma();
         }
         Erelax = aci.compute_energy();

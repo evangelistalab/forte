@@ -199,8 +199,8 @@ void SemiCanonical::semicanonicalize(Reference& reference, const int& max_rdm_le
 void SemiCanonical::build_fock_matrix(Reference& reference) {
     // 1. Build the Fock matrix
 
-    psi::SharedMatrix Da(new Matrix("Da", ncmo_, ncmo_));
-    psi::SharedMatrix Db(new Matrix("Db", ncmo_, ncmo_));
+    psi::SharedMatrix Da(new psi::Matrix("Da", ncmo_, ncmo_));
+    psi::SharedMatrix Db(new psi::Matrix("Db", ncmo_, ncmo_));
 
     Matrix L1a = tensor_to_matrix(reference.L1a(), actv_);
     Matrix L1b = tensor_to_matrix(reference.L1b(), actv_);
@@ -256,8 +256,8 @@ bool SemiCanonical::check_fock_matrix() {
         psi::Dimension npi = name_dim_pair.second;
 
         // build Fock matrix of this diagonal block
-        psi::SharedMatrix Fa(new Matrix(name_a, npi, npi));
-        psi::SharedMatrix Fb(new Matrix(name_b, npi, npi));
+        psi::SharedMatrix Fa(new psi::Matrix(name_a, npi, npi));
+        psi::SharedMatrix Fb(new psi::Matrix(name_b, npi, npi));
 
         for (size_t h = 0; h < nirrep_; ++h) {
             // TODO: try omp here
@@ -335,8 +335,8 @@ void SemiCanonical::build_transformation_matrices(psi::SharedMatrix& Ua, psi::Sh
 
         if (FockDo) {
             // build Fock matrix of this diagonal block
-            psi::SharedMatrix Fa(new Matrix(name_a, npi, npi));
-            psi::SharedMatrix Fb(new Matrix(name_b, npi, npi));
+            psi::SharedMatrix Fa(new psi::Matrix(name_a, npi, npi));
+            psi::SharedMatrix Fb(new psi::Matrix(name_b, npi, npi));
 
             for (size_t h = 0; h < nirrep_; ++h) {
                 // TODO: try omp here
@@ -351,8 +351,8 @@ void SemiCanonical::build_transformation_matrices(psi::SharedMatrix& Ua, psi::Sh
             }
 
             // diagonalize this Fock block
-            psi::SharedMatrix UsubA(new Matrix("Ua " + name, npi, npi));
-            psi::SharedMatrix UsubB(new Matrix("Ub " + name, npi, npi));
+            psi::SharedMatrix UsubA(new psi::Matrix("Ua " + name, npi, npi));
+            psi::SharedMatrix UsubB(new psi::Matrix("Ub " + name, npi, npi));
             psi::SharedVector evalsA(new Vector("evals a " + name, npi));
             psi::SharedVector evalsB(new Vector("evals b " + name, npi));
             Fa->diagonalize(UsubA, evalsA);

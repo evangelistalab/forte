@@ -95,9 +95,9 @@ void LOCALIZE::split_localize() {
         off = 2;
     }
 
-    psi::SharedMatrix Caocc(new Matrix("Caocc", nsopi[0], naocc_));
-    psi::SharedMatrix Cavir(new Matrix("Cavir", nsopi[0], navir_));
-    psi::SharedMatrix Caact(new Matrix("Caact", nsopi[0], off));
+    psi::SharedMatrix Caocc(new psi::Matrix("Caocc", nsopi[0], naocc_));
+    psi::SharedMatrix Cavir(new psi::Matrix("Cavir", nsopi[0], navir_));
+    psi::SharedMatrix Caact(new psi::Matrix("Caact", nsopi[0], off));
 
     for (int h = 0; h < nirrep; h++) {
         for (int mu = 0; mu < nsopi[h]; mu++) {
@@ -174,7 +174,7 @@ void LOCALIZE::full_localize() {
 
     size_t nact = abs_act_.size();
 
-    psi::SharedMatrix Caact(new Matrix("Caact", nsopi[0], nact));
+    psi::SharedMatrix Caact(new psi::Matrix("Caact", nsopi[0], nact));
     for (int h = 0; h < nirrep; h++) {
         for (int mu = 0; mu < nsopi[h]; mu++) {
             for (size_t i = 0; i < nact; i++) {

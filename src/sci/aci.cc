@@ -249,7 +249,7 @@ void AdaptiveCI::set_aci_ints(psi::SharedWavefunction ref_wfn, std::shared_ptr<F
 
 void AdaptiveCI::startup() {
     quiet_mode_ = false;
-    if (psi::Options_["ACI_QUIET_MODE"].has_changed()) {
+    if (options_["ACI_QUIET_MODE"].has_changed()) {
         quiet_mode_ = options_.get_bool("ACI_QUIET_MODE");
     }
 
@@ -260,11 +260,11 @@ void AdaptiveCI::startup() {
     op_.initialize(mo_symmetry_, fci_ints_);
 
     wavefunction_symmetry_ = 0;
-    if (psi::Options_["ROOT_SYM"].has_changed()) {
+    if (options_["ROOT_SYM"].has_changed()) {
         wavefunction_symmetry_ = options_.get_int("ROOT_SYM");
     }
     multiplicity_ = 1;
-    if (psi::Options_["MULTIPLICITY"].has_changed()) {
+    if (options_["MULTIPLICITY"].has_changed()) {
         multiplicity_ = options_.get_int("MULTIPLICITY");
     }
 
@@ -288,7 +288,7 @@ void AdaptiveCI::startup() {
     }
 
     twice_ms_ = multiplicity_ - 1;
-    if (psi::Options_["MS"].has_changed()) {
+    if (options_["MS"].has_changed()) {
         twice_ms_ = std::round(2.0 * options_.get_double("MS"));
     }
 
@@ -318,11 +318,11 @@ void AdaptiveCI::startup() {
     }
 
     max_cycle_ = 20;
-    if (psi::Options_["ACI_MAX_CYCLE"].has_changed()) {
+    if (options_["ACI_MAX_CYCLE"].has_changed()) {
         max_cycle_ = options_.get_int("ACI_MAX_CYCLE");
     }
     pre_iter_ = 0;
-    if (psi::Options_["ACI_PREITERATIONS"].has_changed()) {
+    if (options_["ACI_PREITERATIONS"].has_changed()) {
         pre_iter_ = options_.get_int("ACI_PREITERATIONS");
     }
 
@@ -346,31 +346,31 @@ void AdaptiveCI::startup() {
     hole_ = 0;
 
     diag_method_ = DLSolver;
-    if (psi::Options_["DIAG_ALGORITHM"].has_changed()) {
-        if (psi::Options_.get_str("DIAG_ALGORITHM") == "FULL") {
+    if (options_["DIAG_ALGORITHM"].has_changed()) {
+        if (options_.get_str("DIAG_ALGORITHM") == "FULL") {
             diag_method_ = Full;
-        } else if (psi::Options_.get_str("DIAG_ALGORITHM") == "DLSTRING") {
+        } else if (options_.get_str("DIAG_ALGORITHM") == "DLSTRING") {
             diag_method_ = DLString;
-        } else if (psi::Options_.get_str("DIAG_ALGORITHM") == "SPARSE") {
+        } else if (options_.get_str("DIAG_ALGORITHM") == "SPARSE") {
             diag_method_ = Sparse;
-        } else if (psi::Options_.get_str("DIAG_ALGORITHM") == "SOLVER") {
+        } else if (options_.get_str("DIAG_ALGORITHM") == "SOLVER") {
             diag_method_ = DLSolver;
-        } else if (psi::Options_.get_str("DIAG_ALGORITHM") == "DYNAMIC") {
+        } else if (options_.get_str("DIAG_ALGORITHM") == "DYNAMIC") {
             diag_method_ = Dynamic;
         }
     }
     aimed_selection_ = false;
     energy_selection_ = false;
-    if (psi::Options_.get_str("ACI_SELECT_TYPE") == "AIMED_AMP") {
+    if (options_.get_str("ACI_SELECT_TYPE") == "AIMED_AMP") {
         aimed_selection_ = true;
         energy_selection_ = false;
-    } else if (psi::Options_.get_str("ACI_SELECT_TYPE") == "AIMED_ENERGY") {
+    } else if (options_.get_str("ACI_SELECT_TYPE") == "AIMED_ENERGY") {
         aimed_selection_ = true;
         energy_selection_ = true;
-    } else if (psi::Options_.get_str("ACI_SELECT_TYPE") == "ENERGY") {
+    } else if (options_.get_str("ACI_SELECT_TYPE") == "ENERGY") {
         aimed_selection_ = false;
         energy_selection_ = true;
-    } else if (psi::Options_.get_str("ACI_SELECT_TYPE") == "AMP") {
+    } else if (options_.get_str("ACI_SELECT_TYPE") == "AMP") {
         aimed_selection_ = false;
         energy_selection_ = false;
     }
@@ -454,7 +454,7 @@ double AdaptiveCI::compute_energy() {
 
     startup();
 
-    if (psi::Options_["ACI_QUIET_MODE"].has_changed()) {
+    if (options_["ACI_QUIET_MODE"].has_changed()) {
         quiet_mode_ = options_.get_bool("ACI_QUIET_MODE");
     }
     print_method_banner({"Adaptive Configuration Interaction",
@@ -483,7 +483,7 @@ double AdaptiveCI::compute_energy() {
     int nrun = 1;
     bool multi_state = false;
 
-    if (psi::Options_.get_str("ACI_EXCITED_ALGORITHM") == "ROOT_COMBINE" or
+    if (options_.get_str("ACI_EXCITED_ALGORITHM") == "ROOT_COMBINE" or
         options_.get_str("ACI_EXCITED_ALGORITHM") == "MULTISTATE" or
         options_.get_str("ACI_EXCITED_ALGORITHM") == "ROOT_ORTHOGONALIZE") {
         nrun = nroot_;
@@ -497,7 +497,7 @@ double AdaptiveCI::compute_energy() {
 
     DeterminantHashVec PQ_space;
 
-    if (psi::Options_.get_str("ACI_EX_TYPE") == "CORE") {
+    if (options_.get_str("ACI_EX_TYPE") == "CORE") {
         ex_alg_ = "ROOT_ORTHOGONALIZE";
     }
 
@@ -511,7 +511,7 @@ double AdaptiveCI::compute_energy() {
             root_ = i;
         }
 
-        if ((psi::Options_.get_str("ACI_EX_TYPE") == "CORE") and (i > 0)) {
+        if ((options_.get_str("ACI_EX_TYPE") == "CORE") and (i > 0)) {
             ref_root_ = i - 1;
         }
 
@@ -696,7 +696,7 @@ double AdaptiveCI::compute_energy() {
     // }
 
     //	std::vector<double> davidson;
-    //	if(psi::Options_.get_str("SIZE_CORRECTION") == "DAVIDSON" ){
+    //	if(options_.get_str("SIZE_CORRECTION") == "DAVIDSON" ){
     //		davidson = davidson_correction( P_space_ , P_evals, PQ_evecs,
     // PQ_space_, PQ_evals );
     //	for( auto& i : davidson ){
@@ -743,8 +743,8 @@ void AdaptiveCI::unpaired_density(ambit::Tensor Ua, ambit::Tensor Ub) {
     Matrix am = tensor_to_matrix(Ua, nactpi_);
     Matrix bm = tensor_to_matrix(Ub, nactpi_);
 
-    psi::SharedMatrix Uam(new Matrix(nactpi_, nactpi_));
-    psi::SharedMatrix Ubm(new Matrix(nactpi_, nactpi_));
+    psi::SharedMatrix Uam(new psi::Matrix(nactpi_, nactpi_));
+    psi::SharedMatrix Ubm(new psi::Matrix(nactpi_, nactpi_));
 
     Uam->copy(am);
     Ubm->copy(bm);
@@ -820,7 +820,7 @@ void AdaptiveCI::print_final(DeterminantHashVec& dets, psi::SharedMatrix& PQ_eve
                         exc_energy +
                             pc_hartree2ev * (multistate_pt2_energy_correction_[i] -
                                              multistate_pt2_energy_correction_[0]));
-        //    	if(psi::Options_.get_str("SIZE_CORRECTION") == "DAVIDSON" ){
+        //    	if(options_.get_str("SIZE_CORRECTION") == "DAVIDSON" ){
         //        outfile->Printf("\n  * Adaptive-CI Energy Root %3d + D1   =
         //        %.12f Eh = %8.4f eV",i,abs_energy + davidson[i],
         //                exc_energy + pc_hartree2ev * (davidson[i] -
@@ -873,7 +873,7 @@ void AdaptiveCI::find_q_space_batched(DeterminantHashVec& P_space, DeterminantHa
 
     std::vector<std::pair<double, Determinant>> F_space;
     double remainder = 0.0;
-    if (psi::Options_.get_str("ACI_BATCH_ALG") == "HASH") {
+    if (options_.get_str("ACI_BATCH_ALG") == "HASH") {
         remainder = get_excited_determinants_batch(evecs, evals, P_space, F_space);
     } else {
         remainder = get_excited_determinants_batch_vecsort(evecs, evals, P_space, F_space);
@@ -1046,7 +1046,7 @@ void AdaptiveCI::find_q_space(DeterminantHashVec& P_space, DeterminantHashVec& P
     det_hash<std::vector<double>> V_hash;
     if (psi::Options_.get_bool("ACI_LOW_MEM_SCREENING")) {
         get_excited_determinants_seq(nroot_, evecs, P_space, V_hash);
-    } else if ((psi::Options_.get_str("ACI_EX_TYPE") == "CORE") and (root_ > 0)) {
+    } else if ((options_.get_str("ACI_EX_TYPE") == "CORE") and (root_ > 0)) {
         get_core_excited_determinants(evecs, P_space, V_hash);
     } else {
         get_excited_determinants(nroot_, evecs, P_space, V_hash);
@@ -1435,7 +1435,7 @@ std::vector<std::pair<double, double>> AdaptiveCI::compute_spin(DeterminantHashV
     // op.tp_lists(space);
 
     std::vector<std::pair<double, double>> spin_vec(nroot);
-    if (psi::Options_.get_str("SIGMA_BUILD_TYPE") == "HZ") {
+    if (options_.get_str("SIGMA_BUILD_TYPE") == "HZ") {
         op.clear_op_s_lists();
         op.clear_tp_s_lists();
         op.build_strings(space);
@@ -1551,7 +1551,7 @@ void AdaptiveCI::print_wfn(DeterminantHashVec& space, WFNOperator& op, psi::Shar
     //
     //	// Build the S^2 Matrix
     //	size_t det_size = det_space.size();
-    //	psi::SharedMatrix S2(new Matrix("S^2", det_size, det_size));
+    //	psi::SharedMatrix S2(new psi::Matrix("S^2", det_size, det_size));
     //
     //	for(size_t I = 0; I < det_size; ++I ){
     //		for(size_t J = 0; J <= I; ++J){
@@ -1561,7 +1561,7 @@ void AdaptiveCI::print_wfn(DeterminantHashVec& space, WFNOperator& op, psi::Shar
     //	}
     //
     //	//Diagonalize S^2, evals will be in ascending order
-    //	psi::SharedMatrix T(new Matrix("T", det_size, det_size));
+    //	psi::SharedMatrix T(new psi::Matrix("T", det_size, det_size));
     //	psi::SharedVector evals(new Vector("evals", det_size));
     //	S2->diagonalize(T, evals);
     //
@@ -1588,8 +1588,8 @@ void AdaptiveCI::print_wfn(DeterminantHashVec& space, WFNOperator& op, psi::Shar
     //
     //	// Perform the transformation wrt csf eigenvectors
     //	// CHECK FOR TRIPLET (SHOULD INCLUDE CSF_IDX
-    //	psi::SharedMatrix C_trans(new Matrix("C_trans", det_size, nroot));
-    //	psi::SharedMatrix C(new Matrix("C", det_size, nroot));
+    //	psi::SharedMatrix C_trans(new psi::Matrix("C_trans", det_size, nroot));
+    //	psi::SharedMatrix C(new psi::Matrix("C", det_size, nroot));
     //	C->gemm('t','n',csf_num,nroot,det_size,1.0,T,det_size,cI,nroot,0.0,nroot);
     //	C_trans->gemm('n','n',det_size,nroot, csf_num,
     // 1.0,T,det_size,C,nroot,0.0,nroot);
@@ -1603,7 +1603,7 @@ void AdaptiveCI::print_wfn(DeterminantHashVec& space, WFNOperator& op, psi::Shar
     //		denom = std::sqrt( 1.0/denom );
     //		C_trans->scale_column( 0, n, denom );
     //	}
-    //	PQ_spin_evecs_.reset(new Matrix("PQ SPIN EVECS", det_size, nroot));
+    //	PQ_spin_evecs_.reset(new psi::Matrix("PQ SPIN EVECS", det_size, nroot));
     //	PQ_spin_evecs_ = C_trans->clone();
     //
     //	outfile->Printf("\n  Time spent performing spin transformation: %6.6f",
@@ -1672,8 +1672,8 @@ Reference AdaptiveCI::reference() {
 void AdaptiveCI::print_nos() {
     print_h2("NATURAL ORBITALS");
 
-    std::shared_ptr<psi::Matrix> opdm_a(new Matrix("OPDM_A", nirrep_, nactpi_, nactpi_));
-    std::shared_ptr<psi::Matrix> opdm_b(new Matrix("OPDM_B", nirrep_, nactpi_, nactpi_));
+    std::shared_ptr<psi::Matrix> opdm_a(new psi::Matrix("OPDM_A", nirrep_, nactpi_, nactpi_));
+    std::shared_ptr<psi::Matrix> opdm_b(new psi::Matrix("OPDM_B", nirrep_, nactpi_, nactpi_));
 
     int offset = 0;
     for (int h = 0; h < nirrep_; h++) {
@@ -1687,8 +1687,8 @@ void AdaptiveCI::print_nos() {
     }
     psi::SharedVector OCC_A(new Vector("ALPHA OCCUPATION", nirrep_, nactpi_));
     psi::SharedVector OCC_B(new Vector("BETA OCCUPATION", nirrep_, nactpi_));
-    psi::SharedMatrix NO_A(new Matrix(nirrep_, nactpi_, nactpi_));
-    psi::SharedMatrix NO_B(new Matrix(nirrep_, nactpi_, nactpi_));
+    psi::SharedMatrix NO_A(new psi::Matrix(nirrep_, nactpi_, nactpi_));
+    psi::SharedMatrix NO_B(new psi::Matrix(nirrep_, nactpi_, nactpi_));
 
     opdm_a->diagonalize(NO_A, OCC_A, descending);
     opdm_b->diagonalize(NO_B, OCC_B, descending);
@@ -1892,15 +1892,15 @@ void AdaptiveCI::compute_aci(DeterminantHashVec& PQ_space, psi::SharedMatrix& PQ
     bool print_refs = false;
     bool multi_root = false;
 
-    if (psi::Options_["ACI_FIRST_ITER_ROOTS"].has_changed()) {
+    if (options_["ACI_FIRST_ITER_ROOTS"].has_changed()) {
         multi_root = options_.get_bool("ACI_FIRST_ITER_ROOTS");
     }
 
-    if (psi::Options_["ACI_PRINT_REFS"].has_changed()) {
+    if (options_["ACI_PRINT_REFS"].has_changed()) {
         print_refs = options_.get_bool("ACI_PRINT_REFS");
     }
 
-    if ((psi::Options_.get_str("ACI_EXCITED_ALGORITHM") == "ROOT_ORTHOGONALIZE" or
+    if ((options_.get_str("ACI_EXCITED_ALGORITHM") == "ROOT_ORTHOGONALIZE" or
          options_.get_str("ACI_EXCITED_ALGORITHM") == "MULTISTATE" or
          options_.get_str("ACI_EXCITED_ALGORITHM") == "ROOT_COMBINE") and
         root_ == 0 and !multi_root) {
@@ -1914,7 +1914,7 @@ void AdaptiveCI::compute_aci(DeterminantHashVec& PQ_space, psi::SharedMatrix& PQ
     std::vector<double> P_ref_evecs;
     DeterminantHashVec P_space(initial_reference_);
 
-    if ((psi::Options_.get_str("ACI_EX_TYPE") == "CORE") and (root_ > 0)) {
+    if ((options_.get_str("ACI_EX_TYPE") == "CORE") and (root_ > 0)) {
 
         int ncstate = options_.get_int("ACI_ROOTS_PER_CORE");
 
@@ -1978,7 +1978,7 @@ void AdaptiveCI::compute_aci(DeterminantHashVec& PQ_space, psi::SharedMatrix& PQ
     std::vector<Determinant> old_dets;
     psi::SharedMatrix old_evecs;
 
-    if (psi::Options_.get_str("ACI_EXCITED_ALGORITHM") == "ROOT_SELECT") {
+    if (options_.get_str("ACI_EXCITED_ALGORITHM") == "ROOT_SELECT") {
         ref_root_ = options_.get_int("ACI_ROOT");
     }
 
@@ -1995,7 +1995,7 @@ void AdaptiveCI::compute_aci(DeterminantHashVec& PQ_space, psi::SharedMatrix& PQ
         std::string cycle_h = "Cycle " + std::to_string(cycle_);
 
         bool follow = false;
-        if (psi::Options_.get_str("ACI_EXCITED_ALGORITHM") == "ROOT_SELECT" or
+        if (options_.get_str("ACI_EXCITED_ALGORITHM") == "ROOT_SELECT" or
             options_.get_str("ACI_EXCITED_ALGORITHM") == "ROOT_COMBINE" or
             options_.get_str("ACI_EXCITED_ALGORITHM") == "MULTISTATE" or
             options_.get_str("ACI_EXCITED_ALGORITHM") == "ROOT_ORTHOGONALIZE") {
@@ -2112,7 +2112,7 @@ void AdaptiveCI::compute_aci(DeterminantHashVec& PQ_space, psi::SharedMatrix& PQ
                                 PQ_space.size());
         }
 
-        if ((psi::Options_.get_str("ACI_EXCITED_ALGORITHM") == "ROOT_ORTHOGONALIZE") and (root_ > 0) and
+        if ((options_.get_str("ACI_EXCITED_ALGORITHM") == "ROOT_ORTHOGONALIZE") and (root_ > 0) and
             cycle >= pre_iter_) {
             sparse_solver.set_root_project(true);
             add_bad_roots(PQ_space);
@@ -2173,7 +2173,7 @@ void AdaptiveCI::compute_aci(DeterminantHashVec& PQ_space, psi::SharedMatrix& PQ
         // If doing root-following, grab the initial root
         if (follow and (cycle == (pre_iter_ - 1) or (pre_iter_ == 0 and cycle == 0))) {
 
-            if (psi::Options_.get_str("ACI_EXCITED_ALGORITHM") == "ROOT_SELECT") {
+            if (options_.get_str("ACI_EXCITED_ALGORITHM") == "ROOT_SELECT") {
                 ref_root_ = options_.get_int("ACI_ROOT");
             }
             size_t dim = std::min(static_cast<int>(PQ_space.size()), 1000);
@@ -2186,10 +2186,10 @@ void AdaptiveCI::compute_aci(DeterminantHashVec& PQ_space, psi::SharedMatrix& PQ
         }
 
         bool stuck = check_stuck(energy_history, PQ_evals);
-        if (stuck and (psi::Options_.get_str("ACI_EXCITED_ALGORITHM") != "COMPOSITE")) {
+        if (stuck and (options_.get_str("ACI_EXCITED_ALGORITHM") != "COMPOSITE")) {
             outfile->Printf("\n  Procedure is stuck! Quitting...");
             break;
-        } else if (stuck and (psi::Options_.get_str("ACI_EXCITED_ALGORITHM") == "COMPOSITE") and
+        } else if (stuck and (options_.get_str("ACI_EXCITED_ALGORITHM") == "COMPOSITE") and
                    ex_alg_ == "AVERAGE") {
             outfile->Printf("\n  Root averaging algorithm converged.");
             outfile->Printf("\n  Now optimizing PQ Space for root %d",
@@ -2367,7 +2367,7 @@ void AdaptiveCI::compute_multistate(psi::SharedVector& PQ_evals) {
 
     // Form the overlap matrix
 
-    psi::SharedMatrix S(new Matrix(nroot, nroot));
+    psi::SharedMatrix S(new psi::Matrix(nroot, nroot));
     S->identity();
     for (int A = 0; A < nroot; ++A) {
         std::vector<std::pair<Determinant, double>>& stateA = old_roots_[A];
@@ -2392,15 +2392,15 @@ void AdaptiveCI::compute_multistate(psi::SharedVector& PQ_evals) {
         }
     }
     // Diagonalize the overlap
-    psi::SharedMatrix Sevecs(new Matrix(nroot, nroot));
+    psi::SharedMatrix Sevecs(new psi::Matrix(nroot, nroot));
     psi::SharedVector Sevals(new Vector(nroot));
     S->diagonalize(Sevecs, Sevals);
 
     // Form symmetric orthogonalization matrix
 
-    psi::SharedMatrix Strans(new Matrix(nroot, nroot));
-    psi::SharedMatrix Sint(new Matrix(nroot, nroot));
-    psi::SharedMatrix Diag(new Matrix(nroot, nroot));
+    psi::SharedMatrix Strans(new psi::Matrix(nroot, nroot));
+    psi::SharedMatrix Sint(new psi::Matrix(nroot, nroot));
+    psi::SharedMatrix Diag(new psi::Matrix(nroot, nroot));
     Diag->identity();
     for (int n = 0; n < nroot; ++n) {
         Diag->set(n, n, 1.0 / sqrt(Sevals->get(n)));
@@ -2411,7 +2411,7 @@ void AdaptiveCI::compute_multistate(psi::SharedVector& PQ_evals) {
 
     // Form the Hamiltonian
 
-    psi::SharedMatrix H(new Matrix(nroot, nroot));
+    psi::SharedMatrix H(new psi::Matrix(nroot, nroot));
 
 #pragma omp parallel for
     for (int A = 0; A < nroot; ++A) {
@@ -2436,7 +2436,7 @@ void AdaptiveCI::compute_multistate(psi::SharedVector& PQ_evals) {
     //    H->print();
     H->transform(Strans);
 
-    psi::SharedMatrix Hevecs(new Matrix(nroot, nroot));
+    psi::SharedMatrix Hevecs(new psi::Matrix(nroot, nroot));
     psi::SharedVector Hevals(new Vector(nroot));
 
     H->diagonalize(Hevecs, Hevals);
@@ -2462,7 +2462,7 @@ DeterminantHashVec AdaptiveCI::approximate_wfn(DeterminantHashVec& PQ_space, psi
     size_t total_size = n_ref + n_external;
 
     outfile->Printf("\n  Size of external space: %zu", n_external);
-    new_evecs.reset(new Matrix("U", total_size, 1));
+    new_evecs.reset(new psi::Matrix("U", total_size, 1));
     double sum = 0.0;
 
     for (size_t I = 0; I < n_ref; ++I) {
@@ -2497,8 +2497,8 @@ void AdaptiveCI::compute_nos() {
     psi::Dimension rdocc = mo_space_info_->get_dimension("RESTRICTED_DOCC");
     psi::Dimension ruocc = mo_space_info_->get_dimension("RESTRICTED_UOCC");
 
-    std::shared_ptr<psi::Matrix> opdm_a(new Matrix("OPDM_A", nirrep_, nactpi_, nactpi_));
-    std::shared_ptr<psi::Matrix> opdm_b(new Matrix("OPDM_B", nirrep_, nactpi_, nactpi_));
+    std::shared_ptr<psi::Matrix> opdm_a(new psi::Matrix("OPDM_A", nirrep_, nactpi_, nactpi_));
+    std::shared_ptr<psi::Matrix> opdm_b(new psi::Matrix("OPDM_B", nirrep_, nactpi_, nactpi_));
 
     int offset = 0;
     for (int h = 0; h < nirrep_; h++) {
@@ -2513,8 +2513,8 @@ void AdaptiveCI::compute_nos() {
 
     psi::SharedVector OCC_A(new Vector("ALPHA OCCUPATION", nirrep_, nactpi_));
     psi::SharedVector OCC_B(new Vector("BETA OCCUPATION", nirrep_, nactpi_));
-    psi::SharedMatrix NO_A(new Matrix(nirrep_, nactpi_, nactpi_));
-    psi::SharedMatrix NO_B(new Matrix(nirrep_, nactpi_, nactpi_));
+    psi::SharedMatrix NO_A(new psi::Matrix(nirrep_, nactpi_, nactpi_));
+    psi::SharedMatrix NO_B(new psi::Matrix(nirrep_, nactpi_, nactpi_));
 
     opdm_a->diagonalize(NO_A, OCC_A, descending);
     opdm_b->diagonalize(NO_B, OCC_B, descending);
@@ -2694,7 +2694,7 @@ void AdaptiveCI::add_external_excitations(DeterminantHashVec& ref) {
         }
     }
 
-    if (psi::Options_.get_str("ACI_EXTERNAL_EXCITATION_TYPE") == "ALL") {
+    if (options_.get_str("ACI_EXTERNAL_EXCITATION_TYPE") == "ALL") {
         for (size_t I = 0; I < nref; ++I) {
             Determinant det = dets[I];
             // core -> vir
@@ -3036,7 +3036,7 @@ void AdaptiveCI::add_external_excitations(DeterminantHashVec& ref) {
     sparse_solver.set_spin_project_full(project_out_spin_contaminants_);
     sparse_solver.set_guess_dimension(psi::Options_.get_int("DL_GUESS_SIZE"));
     sparse_solver.set_num_vecs(psi::Options_.get_int("N_GUESS_VEC"));
-    sparse_solver.set_sigma_method(psi::Options_.get_str("SIGMA_BUILD_TYPE"));
+    sparse_solver.set_sigma_method(options_.get_str("SIGMA_BUILD_TYPE"));
     sparse_solver.set_max_memory(psi::Options_.get_int("SIGMA_VECTOR_MAX_MEMORY"));
 
     sparse_solver.diagonalize_hamiltonian_map(ref, op, final_evals, final_evecs, nroot_,
@@ -3054,7 +3054,7 @@ void AdaptiveCI::add_external_excitations(DeterminantHashVec& ref) {
         //                    exc_energy +
         //                        pc_hartree2ev * (multistate_pt2_energy_correction_[i] -
         //                                         multistate_pt2_energy_correction_[0]));
-        //    	if(psi::Options_.get_str("SIZE_CORRECTION") == "DAVIDSON" ){
+        //    	if(options_.get_str("SIZE_CORRECTION") == "DAVIDSON" ){
         //        outfile->Printf("\n  * Adaptive-CI Energy Root %3d + D1   =
         //        %.12f Eh = %8.4f eV",i,abs_energy + davidson[i],
         //                exc_energy + pc_hartree2ev * (davidson[i] -
@@ -3095,10 +3095,10 @@ void AdaptiveCI::spin_analysis() {
         value = trdm_bb_[i[0] * nact3 + i[1] * nact2 + i[2] * nact + i[3]];
     });
 
-    psi::SharedMatrix UA(new Matrix(nact, nact));
-    psi::SharedMatrix UB(new Matrix(nact, nact));
+    psi::SharedMatrix UA(new psi::Matrix(nact, nact));
+    psi::SharedMatrix UB(new psi::Matrix(nact, nact));
 
-    if (psi::Options_.get_str("SPIN_BASIS") == "IAO") {
+    if (options_.get_str("SPIN_BASIS") == "IAO") {
 
         outfile->Printf("\n  Computing spin correlation in IAO basis \n");
         psi::SharedMatrix Ca = reference_wavefunction_->Ca();
@@ -3143,11 +3143,11 @@ void AdaptiveCI::spin_analysis() {
         UB->copy(UA);
         outfile->Printf("\n");
 
-    } else if (psi::Options_.get_str("SPIN_BASIS") == "NO") {
+    } else if (options_.get_str("SPIN_BASIS") == "NO") {
 
         outfile->Printf("\n  Computing spin correlation in NO basis \n");
-        psi::SharedMatrix RDMa(new Matrix(nact, nact));
-        psi::SharedMatrix RDMb(new Matrix(nact, nact));
+        psi::SharedMatrix RDMa(new psi::Matrix(nact, nact));
+        psi::SharedMatrix RDMb(new psi::Matrix(nact, nact));
 
         for (size_t i = 0; i < nact; ++i) {
             for (size_t j = 0; j < nact; ++j) {
@@ -3165,8 +3165,8 @@ void AdaptiveCI::spin_analysis() {
         RDMb->diagonalize(UB, occb);
 
         int nmo = reference_wavefunction_->nmo();
-        psi::SharedMatrix Ua_full(new Matrix(nmo, nmo));
-        psi::SharedMatrix Ub_full(new Matrix(nmo, nmo));
+        psi::SharedMatrix Ua_full(new psi::Matrix(nmo, nmo));
+        psi::SharedMatrix Ub_full(new psi::Matrix(nmo, nmo));
 
         Ua_full->identity();
         Ub_full->identity();
@@ -3193,7 +3193,7 @@ void AdaptiveCI::spin_analysis() {
         CA->copy(Ca_new);
         CB->copy(Cb_new);
 
-    } else if (psi::Options_.get_str("SPIN_BASIS") == "LOCAL") {
+    } else if (options_.get_str("SPIN_BASIS") == "LOCAL") {
         outfile->Printf("\n  Computing spin correlation in local basis \n");
 
         auto loc =
@@ -3233,9 +3233,9 @@ void AdaptiveCI::spin_analysis() {
     L2bbT("pqrs") = Ub("ap") * Ub("bq") * L2bb("abcd") * Ub("cr") * Ub("ds");
 
     // Now form the spin correlation
-    psi::SharedMatrix spin_corr(new Matrix("Spin Correlation", nact, nact));
-    psi::SharedMatrix spin_fluct(new Matrix("Spin Fluctuation", nact, nact));
-    psi::SharedMatrix spin_z(new Matrix("Spin-z Correlation", nact, nact));
+    psi::SharedMatrix spin_corr(new psi::Matrix("Spin Correlation", nact, nact));
+    psi::SharedMatrix spin_fluct(new psi::Matrix("Spin Fluctuation", nact, nact));
+    psi::SharedMatrix spin_z(new psi::Matrix("Spin-z Correlation", nact, nact));
 
     std::vector<double> l1a(L1aT.data());
     std::vector<double> l1b(L1bT.data());
@@ -3285,9 +3285,9 @@ void AdaptiveCI::spin_analysis() {
     // spin_corr->print();
     spin_fluct->print();
     spin_z->print();
-    psi::SharedMatrix spin_evecs(new Matrix(nact, nact));
+    psi::SharedMatrix spin_evecs(new psi::Matrix(nact, nact));
     psi::SharedVector spin_evals(new Vector(nact));
-    psi::SharedMatrix spin_evecs2(new Matrix(nact, nact));
+    psi::SharedMatrix spin_evecs2(new psi::Matrix(nact, nact));
     psi::SharedVector spin_evals2(new Vector(nact));
 
     //    spin_corr->diagonalize(spin_evecs, spin_evals);

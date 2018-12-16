@@ -73,6 +73,7 @@ namespace py = pybind11;
 
 #include "forte.h"
 
+using namespace psi;
 
 namespace forte {
 
@@ -92,9 +93,9 @@ int read_options(psi::Options& options) {
     forte_options(foptions);
 
     // Old way (deprecated) to pass options to Psi4
-    forte_old_options(psi::Options);
+    forte_old_options(options);
     // New way to pass options to Psi4
-    foptions.add_psi4_options(psi::Options);
+    foptions.add_psi4_options(options);
 
     if (options.get_str("JOB_TYPE") == "DOCUMENTATION") {
         std::ofstream docs;
@@ -156,7 +157,7 @@ void cleanup() {
 std::shared_ptr<MOSpaceInfo> make_mo_space_info(psi::SharedWavefunction ref_wfn, psi::Options& options) {
     psi::Dimension nmopi = ref_wfn->nmopi();
     auto mo_space_info = std::make_shared<MOSpaceInfo>(nmopi);
-    mo_space_info->read_options(psi::Options);
+    mo_space_info->read_options(options);
     return mo_space_info;
 }
 
@@ -187,22 +188,22 @@ std::shared_ptr<ForteIntegrals> make_forte_integrals(psi::SharedWavefunction ref
     std::shared_ptr<ForteIntegrals> ints;
     if (options.get_str("INT_TYPE") == "CHOLESKY") {
         ints =
-            std::make_shared<CholeskyIntegrals>(psi::Options, ref_wfn, UnrestrictedMOs, mo_space_info);
+            std::make_shared<CholeskyIntegrals>(options, ref_wfn, UnrestrictedMOs, mo_space_info);
     } else if (options.get_str("INT_TYPE") == "DF") {
-        ints = std::make_shared<DFIntegrals>(psi::Options, ref_wfn, UnrestrictedMOs, mo_space_info);
+        ints = std::make_shared<DFIntegrals>(options, ref_wfn, UnrestrictedMOs, mo_space_info);
     } else if (options.get_str("INT_TYPE") == "DISKDF") {
-        ints = std::make_shared<DISKDFIntegrals>(psi::Options, ref_wfn, UnrestrictedMOs, mo_space_info);
+        ints = std::make_shared<DISKDFIntegrals>(options, ref_wfn, UnrestrictedMOs, mo_space_info);
     } else if (options.get_str("INT_TYPE") == "CONVENTIONAL") {
-        ints = std::make_shared<ConventionalIntegrals>(psi::Options, ref_wfn, UnrestrictedMOs,
+        ints = std::make_shared<ConventionalIntegrals>(options, ref_wfn, UnrestrictedMOs,
                                                        mo_space_info);
     } else if (options.get_str("INT_TYPE") == "DISTDF") {
 #ifdef HAVE_GA
-        ints = std::make_shared<DistDFIntegrals>(psi::Options, ref_wfn, UnrestrictedMOs, mo_space_info);
+        ints = std::make_shared<DistDFIntegrals>(options, ref_wfn, UnrestrictedMOs, mo_space_info);
 #endif
     } else if (options.get_str("INT_TYPE") == "CUSTOM") {
-        ints = std::make_shared<CustomIntegrals>(psi::Options, ref_wfn, UnrestrictedMOs, mo_space_info);
+        ints = std::make_shared<CustomIntegrals>(options, ref_wfn, UnrestrictedMOs, mo_space_info);
     } else if (options.get_str("INT_TYPE") == "OWNINTEGRALS") {
-        ints = std::make_shared<OwnIntegrals>(psi::Options, ref_wfn, UnrestrictedMOs, mo_space_info);
+        ints = std::make_shared<OwnIntegrals>(options, ref_wfn, UnrestrictedMOs, mo_space_info);
     } else {
         outfile->Printf("\n Please check your int_type. Choices are CHOLESKY, DF, DISKDF , "
                         "DISTRIBUTEDDF Effective, CONVENTIONAL or OwnIntegrals");

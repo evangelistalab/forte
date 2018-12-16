@@ -111,7 +111,7 @@ double FCI::solver_compute_energy() {
     std::vector<size_t> active = mo_space_info_->get_corr_abs_mo("ACTIVE");
 
     int charge = Process::environment.molecule()->molecular_charge();
-    if (psi::Options_["CHARGE"].has_changed()) {
+    if (options_["CHARGE"].has_changed()) {
         charge = options_.get_int("CHARGE");
     }
 
@@ -125,14 +125,14 @@ double FCI::solver_compute_energy() {
     nel -= charge;
 
     int multiplicity = Process::environment.molecule()->multiplicity();
-    if (psi::Options_["MULTIPLICITY"].has_changed()) {
+    if (options_["MULTIPLICITY"].has_changed()) {
         multiplicity = options_.get_int("MULTIPLICITY");
     }
 
     // If the user did not specify ms determine the value from the input or
     // take the lowest value consistent with the value of "MULTIPLICITY"
     if (not set_ms_) {
-        if (psi::Options_["MS"].has_changed()) {
+        if (options_["MS"].has_changed()) {
             twice_ms_ = std::round(2.0 * options_.get_double("MS"));
         } else {
             // Default: lowest spin solution

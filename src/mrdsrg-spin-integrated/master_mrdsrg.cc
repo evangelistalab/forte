@@ -239,8 +239,8 @@ void MASTER_DSRG::build_fock_from_ints(std::shared_ptr<ForteIntegrals> ints, Blo
     F = BTF_->build(tensor_type_, "Fock", spin_cases({"gg"}));
 
     // for convenience, directly call make_fock_matrix in ForteIntegral
-    psi::SharedMatrix D1a(new Matrix("D1a", ncmo, ncmo));
-    psi::SharedMatrix D1b(new Matrix("D1b", ncmo, ncmo));
+    psi::SharedMatrix D1a(new psi::Matrix("D1a", ncmo, ncmo));
+    psi::SharedMatrix D1b(new psi::Matrix("D1b", ncmo, ncmo));
     for (size_t m = 0, ncore = core_mos_.size(); m < ncore; m++) {
         D1a->set(core_mos_[m], core_mos_[m], 1.0);
         D1b->set(core_mos_[m], core_mos_[m], 1.0);
@@ -1006,7 +1006,7 @@ void MASTER_DSRG::H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const double& a
     E += temp["uVxY"] * Lambda2_["xYuV"];
 
     // <[Hbar2, T2]> C_6 C_2
-    if (psi::Options_.get_str("THREEPDC") != "ZERO") {
+    if (options_.get_str("THREEPDC") != "ZERO") {
         temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"aaaaaa"});
         temp["uvwxyz"] += H2["uviz"] * T2["iwxy"];
         temp["uvwxyz"] += H2["waxy"] * T2["uvaz"];
