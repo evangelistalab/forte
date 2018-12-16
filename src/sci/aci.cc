@@ -375,7 +375,7 @@ void AdaptiveCI::startup() {
         energy_selection_ = false;
     }
 
-    if (psi::Options_.get_bool("ACI_STREAMLINE_Q") == true) {
+    if (options_.get_bool("ACI_STREAMLINE_Q") == true) {
         streamline_qspace_ = true;
     } else {
         streamline_qspace_ = false;
@@ -437,7 +437,7 @@ void AdaptiveCI::print_info() {
     }
     outfile->Printf("\n  %s", std::string(65, '-').c_str());
 
-    if (psi::Options_.get_bool("PRINT_1BODY_EVALS")) {
+    if (options_.get_bool("PRINT_1BODY_EVALS")) {
         outfile->Printf("\n  Reference orbital energies:");
         std::shared_ptr<Vector> epsilon_a = reference_wavefunction_->epsilon_a();
 
@@ -569,13 +569,13 @@ double AdaptiveCI::compute_energy() {
 
         SparseCISolver sparse_solver(fci_ints_);
         sparse_solver.set_parallel(true);
-        sparse_solver.set_force_diag(psi::Options_.get_bool("FORCE_DIAG_METHOD"));
-        sparse_solver.set_e_convergence(psi::Options_.get_double("E_CONVERGENCE"));
-        sparse_solver.set_maxiter_davidson(psi::Options_.get_int("DL_MAXITER"));
+        sparse_solver.set_force_diag(options_.get_bool("FORCE_DIAG_METHOD"));
+        sparse_solver.set_e_convergence(options_.get_double("E_CONVERGENCE"));
+        sparse_solver.set_maxiter_davidson(options_.get_int("DL_MAXITER"));
         sparse_solver.set_spin_project_full(project_out_spin_contaminants_);
-        sparse_solver.set_guess_dimension(psi::Options_.get_int("DL_GUESS_SIZE"));
+        sparse_solver.set_guess_dimension(options_.get_int("DL_GUESS_SIZE"));
         // sparse_solver.set_spin_project_full(false);
-        sparse_solver.set_max_memory(psi::Options_.get_int("SIGMA_VECTOR_MAX_MEMORY"));
+        sparse_solver.set_max_memory(options_.get_int("SIGMA_VECTOR_MAX_MEMORY"));
         sparse_solver.diagonalize_hamiltonian_map(full_space, op_c, PQ_evals, PQ_evecs, nroot_,
                                                   multiplicity_, diag_method_);
     }
@@ -588,7 +588,7 @@ double AdaptiveCI::compute_energy() {
     }
 
     std::string sigma_method = options_.get_str("SIGMA_BUILD_TYPE");
-    if (psi::Options_.get_bool("ACI_ADD_SINGLES")) {
+    if (options_.get_bool("ACI_ADD_SINGLES")) {
 
         outfile->Printf("\n  Adding singles");
 
@@ -613,18 +613,18 @@ double AdaptiveCI::compute_energy() {
 
         SparseCISolver sparse_solver(fci_ints_);
         sparse_solver.set_parallel(true);
-        sparse_solver.set_force_diag(psi::Options_.get_bool("FORCE_DIAG_METHOD"));
-        sparse_solver.set_e_convergence(psi::Options_.get_double("E_CONVERGENCE"));
-        sparse_solver.set_maxiter_davidson(psi::Options_.get_int("DL_MAXITER"));
+        sparse_solver.set_force_diag(options_.get_bool("FORCE_DIAG_METHOD"));
+        sparse_solver.set_e_convergence(options_.get_double("E_CONVERGENCE"));
+        sparse_solver.set_maxiter_davidson(options_.get_int("DL_MAXITER"));
         sparse_solver.set_spin_project_full(project_out_spin_contaminants_);
-        sparse_solver.set_guess_dimension(psi::Options_.get_int("DL_GUESS_SIZE"));
-        sparse_solver.set_max_memory(psi::Options_.get_int("SIGMA_VECTOR_MAX_MEMORY"));
+        sparse_solver.set_guess_dimension(options_.get_int("DL_GUESS_SIZE"));
+        sparse_solver.set_max_memory(options_.get_int("SIGMA_VECTOR_MAX_MEMORY"));
         sparse_solver.diagonalize_hamiltonian_map(final_wfn_, op_, PQ_evals, PQ_evecs, nroot_,
                                                   multiplicity_, diag_method_);
     }
 
     //** Optionally compute full PT2 energy **//
-    if (psi::Options_.get_bool("MRPT2")) {
+    if (options_.get_bool("MRPT2")) {
         MRPT2 pt(reference_wavefunction_, options_, ints_, mo_space_info_, final_wfn_, PQ_evecs,
                  PQ_evals);
 
@@ -648,8 +648,8 @@ double AdaptiveCI::compute_energy() {
 
     //** Compute the RDMs **//
     double list_time = 0.0;
-    if ((psi::Options_.get_int("ACI_MAX_RDM") >= 3 or (rdm_level_ >= 3)) and
-        !(psi::Options_.get_bool("ACI_DIRECT_RDMS"))) {
+    if ((options_.get_int("ACI_MAX_RDM") >= 3 or (rdm_level_ >= 3)) and
+        !(options_.get_bool("ACI_DIRECT_RDMS"))) {
         outfile->Printf("\n  Computing 3-list...    ");
         local_timer l3;
         op_.three_s_lists(final_wfn_);
@@ -665,7 +665,7 @@ double AdaptiveCI::compute_energy() {
         DeterminantHashVec approx = approximate_wfn(final_wfn_, PQ_evecs, PQ_evals, new_evecs);
         //    WFNOperator op1(mo_space_info_);
         //    op1.op_lists(approx);
-        if (!(psi::Options_.get_bool("ACI_DIRECT_RDMS"))) {
+        if (!(options_.get_bool("ACI_DIRECT_RDMS"))) {
             op_.clear_op_lists();
             op_.clear_tp_lists();
             op_.build_strings(approx);
@@ -677,7 +677,7 @@ double AdaptiveCI::compute_energy() {
 
     } else {
         local_timer totaltt;
-        if (!(psi::Options_.get_bool("ACI_DIRECT_RDMS"))) {
+        if (!(options_.get_bool("ACI_DIRECT_RDMS"))) {
             op_.clear_op_s_lists();
             op_.clear_tp_s_lists();
             if (diag_method_ == Dynamic) {
@@ -712,25 +712,25 @@ double AdaptiveCI::compute_energy() {
     Process::environment.globals["ACI+PT2 ENERGY"] = root_energy_pt2;
 
     // printf( "\n%1.5f\n", aci_elapse.get());
-    if (psi::Options_.get_bool("ACI_SPIN_ANALYSIS") and !(psi::Options_.get_bool("ACI_RELAXED_SPIN"))) {
+    if (options_.get_bool("ACI_SPIN_ANALYSIS") and !(options_.get_bool("ACI_RELAXED_SPIN"))) {
         spin_analysis();
     }
 
     // Save final wave function to a file
-    if (psi::Options_.get_bool("ACI_SAVE_FINAL_WFN")) {
+    if (options_.get_bool("ACI_SAVE_FINAL_WFN")) {
         int root = options_.get_int("ACI_ROOT");
         outfile->Printf("\n  Saving final wave function for root %d", root);
         wfn_to_file(final_wfn_, PQ_evecs, root);
     }
 
-    //    if (psi::Options_.get_bool("UNPAIRED_DENSITY")) {
+    //    if (options_.get_bool("UNPAIRED_DENSITY")) {
     //        UPDensity density(reference_wavefunction_, mo_space_info_);
     //        density.compute_unpaired_density(ordm_a_, ordm_b_);
     //    }
 
     outfile->Printf("\n\n  %s: %f s", "Adaptive-CI ran in ", aci_elapse.get());
     outfile->Printf("\n\n  %s: %d", "Saving information for root", options_.get_int("ACI_ROOT"));
-    return PQ_evals->get(psi::Options_.get_int("ACI_ROOT")) + nuclear_repulsion_energy_ +
+    return PQ_evals->get(options_.get_int("ACI_ROOT")) + nuclear_repulsion_energy_ +
            fci_ints_->scalar_energy();
 }
 
@@ -774,20 +774,20 @@ void AdaptiveCI::diagonalize_final_and_compute_rdms() {
 
     SparseCISolver sparse_solver(fci_ints_);
     sparse_solver.set_parallel(true);
-    sparse_solver.set_force_diag(psi::Options_.get_bool("FORCE_DIAG_METHOD"));
-    sparse_solver.set_e_convergence(psi::Options_.get_double("E_CONVERGENCE"));
-    sparse_solver.set_maxiter_davidson(psi::Options_.get_int("DL_MAXITER"));
+    sparse_solver.set_force_diag(options_.get_bool("FORCE_DIAG_METHOD"));
+    sparse_solver.set_e_convergence(options_.get_double("E_CONVERGENCE"));
+    sparse_solver.set_maxiter_davidson(options_.get_int("DL_MAXITER"));
     sparse_solver.set_spin_project(project_out_spin_contaminants_);
     //   sparse_solver.set_spin_project_full(project_out_spin_contaminants_);
-    sparse_solver.set_guess_dimension(psi::Options_.get_int("DL_GUESS_SIZE"));
+    sparse_solver.set_guess_dimension(options_.get_int("DL_GUESS_SIZE"));
     sparse_solver.set_spin_project_full(false);
-    sparse_solver.set_max_memory(psi::Options_.get_int("SIGMA_VECTOR_MAX_MEMORY"));
+    sparse_solver.set_max_memory(options_.get_int("SIGMA_VECTOR_MAX_MEMORY"));
     sparse_solver.diagonalize_hamiltonian_map(final_wfn_, op_, final_evals, final_evecs, nroot_,
                                               multiplicity_, diag_method_);
 
     print_final(final_wfn_, final_evecs, final_evals);
 
-    if (psi::Options_.get_bool("ACI_DIRECT_RDMS") == false) {
+    if (options_.get_bool("ACI_DIRECT_RDMS") == false) {
         op_.clear_op_s_lists();
         op_.clear_tp_s_lists();
         op_.op_lists(final_wfn_);
@@ -850,7 +850,7 @@ void AdaptiveCI::print_final(DeterminantHashVec& dets, psi::SharedMatrix& PQ_eve
         //         wfn_analyzer(dets, PQ_evecs, nroot_);
     }
 
-    //   if(psi::Options_.get_bool("DETERMINANT_HISTORY")){
+    //   if(options_.get_bool("DETERMINANT_HISTORY")){
     //   	outfile->Printf("\n Det history (number,cycle,origin)");
     //   	size_t counter = 0;
     //   	for( auto &I : PQ_space_ ){
@@ -1044,7 +1044,7 @@ void AdaptiveCI::find_q_space(DeterminantHashVec& P_space, DeterminantHashVec& P
 
     // This hash saves the determinant coupling to the model space eigenfunction
     det_hash<std::vector<double>> V_hash;
-    if (psi::Options_.get_bool("ACI_LOW_MEM_SCREENING")) {
+    if (options_.get_bool("ACI_LOW_MEM_SCREENING")) {
         get_excited_determinants_seq(nroot_, evecs, P_space, V_hash);
     } else if ((options_.get_str("ACI_EX_TYPE") == "CORE") and (root_ > 0)) {
         get_core_excited_determinants(evecs, P_space, V_hash);
@@ -1956,16 +1956,16 @@ void AdaptiveCI::compute_aci(DeterminantHashVec& PQ_space, psi::SharedMatrix& PQ
         sparse_solver.set_print_details(false);
     }
     sparse_solver.set_parallel(true);
-    sparse_solver.set_force_diag(psi::Options_.get_bool("FORCE_DIAG_METHOD"));
-    sparse_solver.set_e_convergence(psi::Options_.get_double("E_CONVERGENCE"));
-    sparse_solver.set_maxiter_davidson(psi::Options_.get_int("DL_MAXITER"));
+    sparse_solver.set_force_diag(options_.get_bool("FORCE_DIAG_METHOD"));
+    sparse_solver.set_e_convergence(options_.get_double("E_CONVERGENCE"));
+    sparse_solver.set_maxiter_davidson(options_.get_int("DL_MAXITER"));
     sparse_solver.set_spin_project(project_out_spin_contaminants_);
     //    sparse_solver.set_spin_project_full(project_out_spin_contaminants_);
-    sparse_solver.set_guess_dimension(psi::Options_.get_int("DL_GUESS_SIZE"));
+    sparse_solver.set_guess_dimension(options_.get_int("DL_GUESS_SIZE"));
     sparse_solver.set_num_vecs(nvec);
     sparse_solver.set_sigma_method(sigma_method);
     sparse_solver.set_spin_project_full(false);
-    sparse_solver.set_max_memory(psi::Options_.get_int("SIGMA_VECTOR_MAX_MEMORY"));
+    sparse_solver.set_max_memory(options_.get_int("SIGMA_VECTOR_MAX_MEMORY"));
 
     // if (det_save_)
     //     det_list_.open("det_list.txt");
@@ -2096,7 +2096,7 @@ void AdaptiveCI::compute_aci(DeterminantHashVec& PQ_space, psi::SharedMatrix& PQ
 
         // Step 2. Find determinants in the Q space
         local_timer build_space;
-        if (psi::Options_.get_bool("ACI_BATCHED_SCREENING")) {
+        if (options_.get_bool("ACI_BATCHED_SCREENING")) {
             find_q_space_batched(P_space, PQ_space, P_evals, P_evecs);
         } else if (streamline_qspace_) {
             default_find_q_space(P_space, PQ_space, P_evals, P_evecs);
@@ -2273,7 +2273,7 @@ void AdaptiveCI::compute_rdms(std::shared_ptr<FCIIntegrals> fci_ints, Determinan
     //    double total_time = 0.0;
     ci_rdms_.set_max_rdm(rdm_level_);
 
-    if (psi::Options_.get_bool("ACI_DIRECT_RDMS")) {
+    if (options_.get_bool("ACI_DIRECT_RDMS")) {
         // local_timer dyn;
         //   CI_RDMS ci_rdms_(final_wfn_, fci_ints_, PQ_evecs, 0, 0);
         ci_rdms_.compute_rdms_dynamic(ordm_a_, ordm_b_, trdm_aa_, trdm_ab_, trdm_bb_, trdm_aaa_,
@@ -2287,7 +2287,7 @@ void AdaptiveCI::compute_rdms(std::shared_ptr<FCIIntegrals> fci_ints, Determinan
             ci_rdms_.compute_1rdm(ordm_a_, ordm_b_, op);
             outfile->Printf("\n  1-RDM  took %2.6f s (determinant)", one_r.get());
 
-            if (psi::Options_.get_bool("ACI_PRINT_NO")) {
+            if (options_.get_bool("ACI_PRINT_NO")) {
                 print_nos();
             }
         }
@@ -2302,7 +2302,7 @@ void AdaptiveCI::compute_rdms(std::shared_ptr<FCIIntegrals> fci_ints, Determinan
             outfile->Printf("\n  3-RDMs took %2.6f s (determinant)", tr.get());
         }
     }
-    if (psi::Options_.get_bool("ACI_TEST_RDMS")) {
+    if (options_.get_bool("ACI_TEST_RDMS")) {
         ci_rdms_.rdm_test(ordm_a_, ordm_b_, trdm_aa_, trdm_bb_, trdm_ab_, trdm_aaa_, trdm_aab_,
                           trdm_abb_, trdm_bbb_);
     }
@@ -3029,15 +3029,15 @@ void AdaptiveCI::add_external_excitations(DeterminantHashVec& ref) {
 
     SparseCISolver sparse_solver(fci_ints);
     sparse_solver.set_parallel(true);
-    sparse_solver.set_force_diag(psi::Options_.get_bool("FORCE_DIAG_METHOD"));
-    sparse_solver.set_e_convergence(psi::Options_.get_double("E_CONVERGENCE"));
-    sparse_solver.set_maxiter_davidson(psi::Options_.get_int("DL_MAXITER"));
+    sparse_solver.set_force_diag(options_.get_bool("FORCE_DIAG_METHOD"));
+    sparse_solver.set_e_convergence(options_.get_double("E_CONVERGENCE"));
+    sparse_solver.set_maxiter_davidson(options_.get_int("DL_MAXITER"));
     sparse_solver.set_spin_project(project_out_spin_contaminants_);
     sparse_solver.set_spin_project_full(project_out_spin_contaminants_);
-    sparse_solver.set_guess_dimension(psi::Options_.get_int("DL_GUESS_SIZE"));
-    sparse_solver.set_num_vecs(psi::Options_.get_int("N_GUESS_VEC"));
+    sparse_solver.set_guess_dimension(options_.get_int("DL_GUESS_SIZE"));
+    sparse_solver.set_num_vecs(options_.get_int("N_GUESS_VEC"));
     sparse_solver.set_sigma_method(options_.get_str("SIGMA_BUILD_TYPE"));
-    sparse_solver.set_max_memory(psi::Options_.get_int("SIGMA_VECTOR_MAX_MEMORY"));
+    sparse_solver.set_max_memory(options_.get_int("SIGMA_VECTOR_MAX_MEMORY"));
 
     sparse_solver.diagonalize_hamiltonian_map(ref, op, final_evals, final_evecs, nroot_,
                                               multiplicity_, diag_method_);
@@ -3111,13 +3111,13 @@ void AdaptiveCI::spin_analysis() {
 
         psi::SharedMatrix Cainv(Ca->clone());
         Cainv->invert();
-        psi::SharedMatrix iao_coeffs = Matrix::doublet(Cainv, iao_orbs, false, false);
+        psi::SharedMatrix iao_coeffs = psi::Matrix::doublet(Cainv, iao_orbs, false, false);
 
         size_t new_dim = iao_orbs->colspi()[0];
 
         auto labels = IAO->print_IAO(iao_orbs, new_dim, nmo_, reference_wavefunction_);
         std::vector<int> IAO_inds;
-        if (psi::Options_.get_bool("PI_ACTIVE_SPACE")) {
+        if (options_.get_bool("PI_ACTIVE_SPACE")) {
             for (size_t i = 0, maxi = labels.size(); i < maxi; ++i) {
                 std::string label = labels[i];
                 if (label.find("z") != std::string::npos) {
@@ -3187,8 +3187,8 @@ void AdaptiveCI::spin_analysis() {
         psi::SharedMatrix CA = reference_wavefunction_->Ca();
         psi::SharedMatrix CB = reference_wavefunction_->Cb();
 
-        psi::SharedMatrix Ca_new = Matrix::doublet(CA, Ua_full, false, false);
-        psi::SharedMatrix Cb_new = Matrix::doublet(CB, Ub_full, false, false);
+        psi::SharedMatrix Ca_new = psi::Matrix::doublet(CA, Ua_full, false, false);
+        psi::SharedMatrix Cb_new = psi::Matrix::doublet(CB, Ub_full, false, false);
 
         CA->copy(Ca_new);
         CB->copy(Cb_new);
@@ -3293,7 +3293,7 @@ void AdaptiveCI::spin_analysis() {
     //    spin_corr->diagonalize(spin_evecs, spin_evals);
     //    spin_evals->print();
 
-    if (psi::Options_.get_bool("SPIN_MAT_TO_FILE")) {
+    if (options_.get_bool("SPIN_MAT_TO_FILE")) {
         std::ofstream file;
         file.open("spin_mat.txt", std::ofstream::out | std::ofstream::trunc);
         for (size_t i = 0; i < nact; ++i) {

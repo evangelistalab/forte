@@ -188,7 +188,7 @@ void V2RDM::read_2pdm() {
     outfile->Printf("    Done.");
 
     // average Daa and Dbb
-    if (psi::Options_.get_bool("AVG_DENS_SPIN")) {
+    if (options_.get_bool("AVG_DENS_SPIN")) {
         // reference D2aa, D2ab, D2bb to D2_ element
         ambit::Tensor& D2aa = D2_[0];
         ambit::Tensor& D2bb = D2_[2];
@@ -248,7 +248,7 @@ void V2RDM::build_opdm() {
     outfile->Printf("    Done.");
 
     // average Da and Db
-    if (psi::Options_.get_bool("AVG_DENS_SPIN")) {
+    if (options_.get_bool("AVG_DENS_SPIN")) {
         str = "Averaging 1RDM A and B blocks";
         outfile->Printf("\n  %-45s ...", str.c_str());
         ambit::Tensor D = ambit::Tensor::build(ambit::CoreTensor, "D1avg", {nactv, nactv});
@@ -338,7 +338,7 @@ void V2RDM::read_3pdm() {
     outfile->Printf("    Done.");
 
     // average Daaa and Dbbb, Daab and Dabb
-    if (psi::Options_.get_bool("AVG_DENS_SPIN")) {
+    if (options_.get_bool("AVG_DENS_SPIN")) {
         // reference D3aaa, D3aab, D3abb, D3bbb to D3_ element
         ambit::Tensor& D3aaa = D3_[0];
         ambit::Tensor& D3aab = D3_[1];

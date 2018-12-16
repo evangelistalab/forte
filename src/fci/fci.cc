@@ -183,12 +183,12 @@ double FCI::solver_compute_energy() {
     //    outfile->Printf("\n  B");
     // tweak some options
     fcisolver_->set_max_rdm_level(max_rdm_level_);
-    fcisolver_->set_nroot(psi::Options_.get_int("FCI_NROOT"));
-    fcisolver_->set_root(psi::Options_.get_int("FCI_ROOT"));
-    fcisolver_->set_test_rdms(psi::Options_.get_bool("FCI_TEST_RDMS"));
-    fcisolver_->set_fci_iterations(psi::Options_.get_int("FCI_MAXITER"));
-    fcisolver_->set_collapse_per_root(psi::Options_.get_int("DL_COLLAPSE_PER_ROOT"));
-    fcisolver_->set_subspace_per_root(psi::Options_.get_int("DL_SUBSPACE_PER_ROOT"));
+    fcisolver_->set_nroot(options_.get_int("FCI_NROOT"));
+    fcisolver_->set_root(options_.get_int("FCI_ROOT"));
+    fcisolver_->set_test_rdms(options_.get_bool("FCI_TEST_RDMS"));
+    fcisolver_->set_fci_iterations(options_.get_int("FCI_MAXITER"));
+    fcisolver_->set_collapse_per_root(options_.get_int("DL_COLLAPSE_PER_ROOT"));
+    fcisolver_->set_subspace_per_root(options_.get_int("DL_SUBSPACE_PER_ROOT"));
     fcisolver_->set_print_no(print_no_);
     if (fci_ints_ != nullptr) {
         fcisolver_->use_user_integrals_and_restricted_docc(true);

@@ -135,7 +135,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga() {
         MPI_Bcast(&num_block, 1, MPI_INT, 0, MPI_COMM_WORLD);
         MPI_Bcast(&block_size, 1, MPI_INT, 0, MPI_COMM_WORLD);
     }
-    if (psi::Options_.get_int("CCVV_BATCH_NUMBER") != -1) {
+    if (options_.get_int("CCVV_BATCH_NUMBER") != -1) {
         if (my_proc == 0)
             num_block = options_.get_int("CCVV_BATCH_NUMBER");
         if (my_proc == 0)
@@ -609,7 +609,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_rep() {
     MPI_Bcast(&num_block, 1, MPI_INT, 0, MPI_COMM_WORLD);
     MPI_Bcast(&block_size, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
-    if (psi::Options_.get_int("CCVV_BATCH_NUMBER") != -1) {
+    if (options_.get_int("CCVV_BATCH_NUMBER") != -1) {
         if (my_proc == 0)
             num_block = options_.get_int("CCVV_BATCH_NUMBER");
         MPI_Bcast(&num_block, 1, MPI_INT, 0, MPI_COMM_WORLD);
@@ -955,7 +955,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_virtual_ga() {
     size_t memory_input = Process::environment.get_memory() * 0.75;
     size_t num_block = int_mem_int / memory_input < 1 ? 1 : int_mem_int / memory_input;
 
-    if (psi::Options_.get_int("CCVV_BATCH_NUMBER") != -1) {
+    if (options_.get_int("CCVV_BATCH_NUMBER") != -1) {
         num_block = options_.get_int("CCVV_BATCH_NUMBER");
     }
     size_t block_size = virtual_ / num_block;

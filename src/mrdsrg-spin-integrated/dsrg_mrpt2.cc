@@ -104,7 +104,7 @@ void DSRG_MRPT2::startup() {
         Hbar2_["uVxY"] = V_["uVxY"];
         Hbar2_["UVXY"] = V_["UVXY"];
 
-        if (psi::Options_.get_bool("FORM_HBAR3")) {
+        if (options_.get_bool("FORM_HBAR3")) {
             Hbar3_ = BTF_->build(tensor_type_, "3-body Hbar", spin_cases({"aaaaaa"}));
         }
     }
@@ -281,7 +281,7 @@ void DSRG_MRPT2::print_options_summary() {
         calculation_info_string.push_back({"internal_amp_select", internal_amp_select_});
     }
 
-    if (psi::Options_.get_bool("FORM_HBAR3")) {
+    if (options_.get_bool("FORM_HBAR3")) {
         calculation_info_string.push_back({"form Hbar3", "TRUE"});
     } else {
         calculation_info_string.push_back({"form Hbar3", "FALSE"});
@@ -299,7 +299,7 @@ void DSRG_MRPT2::print_options_summary() {
         outfile->Printf("\n    %-40s %15s", str_dim.first.c_str(), str_dim.second.c_str());
     }
 
-    if (psi::Options_.get_bool("MEMORY_SUMMARY")) {
+    if (options_.get_bool("MEMORY_SUMMARY")) {
         BTF_->print_memory_info();
     }
 }
@@ -359,7 +359,7 @@ double DSRG_MRPT2::compute_energy() {
     compute_t1();
 
     // Compute effective integrals
-    if (psi::Options_.get_bool("DSRGPT")) {
+    if (options_.get_bool("DSRGPT")) {
         renormalize_V();
         renormalize_F();
     } else {
@@ -481,7 +481,7 @@ double DSRG_MRPT2::compute_energy() {
         Hbar2_["IJKL"] += C2["IJKL"];
         Hbar2_["IJKL"] += C2["KLIJ"];
 
-        if (psi::Options_.get_bool("FORM_HBAR3")) {
+        if (options_.get_bool("FORM_HBAR3")) {
             BlockedTensor C3 = BTF_->build(tensor_type_, "C3", spin_cases({"aaaaaa"}));
             H2_T2_C3aaaaaa(V_, T2_, 0.5, C3);
 
@@ -511,7 +511,7 @@ double DSRG_MRPT2::compute_energy() {
             }
 
             if (do_dm_dirs_[i] || multi_state_) {
-                if (psi::Options_.get_bool("FORM_MBAR3")) {
+                if (options_.get_bool("FORM_MBAR3")) {
                     compute_dm1d_pt2(dm_[i], Mbar0_[i], Mbar1_[i], Mbar2_[i], Mbar3_[i]);
                 } else {
                     compute_dm1d_pt2(dm_[i], Mbar0_[i], Mbar1_[i], Mbar2_[i]);
@@ -1723,7 +1723,7 @@ double DSRG_MRPT2::compute_energy_relaxed() {
             for (int z = 0; z < 3; ++z) {
                 if (do_dm_dirs_[z]) {
                     std::string name = "Dipole " + dm_dirs_[z] + " Integrals";
-                    if (psi::Options_.get_bool("FORM_MBAR3")) {
+                    if (options_.get_bool("FORM_MBAR3")) {
                         deGNO_ints(name, Mbar0_[z], Mbar1_[z], Mbar2_[z], Mbar3_[z]);
                         rotate_ints_semi_to_origin(name, Mbar1_[z], Mbar2_[z], Mbar3_[z]);
                     } else {
@@ -1734,7 +1734,7 @@ double DSRG_MRPT2::compute_energy_relaxed() {
             }
 
             // compute permanent dipoles
-            if (psi::Options_.get_bool("FORM_MBAR3")) {
+            if (options_.get_bool("FORM_MBAR3")) {
                 dm_relax = fci_mo.compute_ref_relaxed_dm(Mbar0_, Mbar1_, Mbar2_, Mbar3_);
             } else {
                 dm_relax = fci_mo.compute_ref_relaxed_dm(Mbar0_, Mbar1_, Mbar2_);

@@ -1130,7 +1130,7 @@ double DMRGSCF::compute_energy() {
 }
 void DMRGSCF::compute_reference(double* one_rdm, double* two_rdm, double* three_rdm,
                                 CheMPS2::DMRGSCFindices* iHandler) {
-    // if(psi::Options_.get_int("MULTIPLICITY") != 1 &&
+    // if(options_.get_int("MULTIPLICITY") != 1 &&
     // options_.get_int("DMRG_WFN_MULTP") != 1)
     //{
     //    outfile->Printf("\n\n Spinadapted formalism requires spin-averaged

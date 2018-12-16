@@ -225,7 +225,7 @@ void CASSCF::compute_casscf() {
     //{
     //    overlap_orbitals(this->Ca(), C_start);
     //}
-    //    if (psi::Options_.get_bool("MONITOR_SA_SOLUTION")) {
+    //    if (options_.get_bool("MONITOR_SA_SOLUTION")) {
     //        overlap_coefficients();
     //    }
     diis_manager->delete_diis_file();
@@ -254,7 +254,7 @@ void CASSCF::compute_casscf() {
                         retrans_ints.get());
     }
 
-    // if (psi::Options_.get_bool("SEMI_CANONICAL")) {
+    // if (options_.get_bool("SEMI_CANONICAL")) {
     //     ints_->retransform_integrals();
     //     SemiCanonical semi(reference_wavefunction_, ints_, mo_space_info_);
     //     semi.semicanonicalize(cas_ref_, 0);
@@ -746,7 +746,7 @@ void CASSCF::set_up_fci() {
         throw psi::PSIEXCEPTION("Ms must be no less than 0. Check output for details.");
     }
 
-    if (psi::Options_.get_int("PRINT")) {
+    if (options_.get_int("PRINT")) {
         print_h2("FCI Summary");
         outfile->Printf("\n    Number of electrons: %d", nel);
         outfile->Printf("\n    Charge: %d", charge);
@@ -776,12 +776,12 @@ void CASSCF::set_up_fci() {
                         options_.get_int("NTRIAL_PER_ROOT"), options_.get_int("PRINT"), options_);
     // tweak some options
     fcisolver.set_max_rdm_level(3);
-    fcisolver.set_nroot(psi::Options_.get_int("NROOT"));
-    fcisolver.set_root(psi::Options_.get_int("ROOT"));
-    fcisolver.set_test_rdms(psi::Options_.get_bool("FCI_TEST_RDMS"));
-    fcisolver.set_fci_iterations(psi::Options_.get_int("FCI_MAXITER"));
-    fcisolver.set_collapse_per_root(psi::Options_.get_int("DL_COLLAPSE_PER_ROOT"));
-    fcisolver.set_subspace_per_root(psi::Options_.get_int("DL_SUBSPACE_PER_ROOT"));
+    fcisolver.set_nroot(options_.get_int("NROOT"));
+    fcisolver.set_root(options_.get_int("ROOT"));
+    fcisolver.set_test_rdms(options_.get_bool("FCI_TEST_RDMS"));
+    fcisolver.set_fci_iterations(options_.get_int("FCI_MAXITER"));
+    fcisolver.set_collapse_per_root(options_.get_int("DL_COLLAPSE_PER_ROOT"));
+    fcisolver.set_subspace_per_root(options_.get_int("DL_SUBSPACE_PER_ROOT"));
     fcisolver.set_print_no(false);
 
     std::shared_ptr<FCIIntegrals> fci_ints = get_ci_integrals();
@@ -801,7 +801,7 @@ std::shared_ptr<FCIIntegrals> CASSCF::get_ci_integrals() {
     std::vector<size_t> rdocc = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
     std::vector<size_t> active = mo_space_info_->get_corr_abs_mo("ACTIVE");
     std::shared_ptr<FCIIntegrals> fci_ints = std::make_shared<FCIIntegrals>(ints_, active, rdocc);
-    if (!(psi::Options_.get_bool("RESTRICTED_DOCC_JK"))) {
+    if (!(options_.get_bool("RESTRICTED_DOCC_JK"))) {
         ints_->retransform_integrals();
         fci_ints->set_active_integrals_and_restricted_docc();
     } else {
@@ -1032,7 +1032,7 @@ void CASSCF::set_up_sa_fci() {
 
     E_casscf_ = sa_fcisolver.compute_energy();
     cas_ref_ = sa_fcisolver.reference();
-    //    if (psi::Options_.get_bool("MONITOR_SA_SOLUTION")) {
+    //    if (options_.get_bool("MONITOR_SA_SOLUTION")) {
     //        std::vector<std::shared_ptr<FCIWfn>> StateAveragedFCISolver =
     //            sa_fcisolver.StateAveragedCISolution();
     //        CISolutions_.push_back(StateAveragedFCISolver);
@@ -1044,7 +1044,7 @@ void CASSCF::set_up_fcimo() {
     std::vector<size_t> active = mo_space_info_->get_corr_abs_mo("ACTIVE");
     std::shared_ptr<FCIIntegrals> fci_ints = std::make_shared<FCIIntegrals>(ints_, active, rdocc);
 
-    if (!(psi::Options_.get_bool("RESTRICTED_DOCC_JK"))) {
+    if (!(options_.get_bool("RESTRICTED_DOCC_JK"))) {
         ints_->retransform_integrals();
         fci_ints->set_active_integrals_and_restricted_docc();
     } else {

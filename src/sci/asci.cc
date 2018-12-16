@@ -229,15 +229,15 @@ double ASCI::compute_energy() {
     std::vector<std::vector<double>> energy_history;
     SparseCISolver sparse_solver(fci_ints_);
     sparse_solver.set_parallel(true);
-    sparse_solver.set_force_diag(psi::Options_.get_bool("FORCE_DIAG_METHOD"));
-    sparse_solver.set_e_convergence(psi::Options_.get_double("E_CONVERGENCE"));
-    sparse_solver.set_maxiter_davidson(psi::Options_.get_int("DL_MAXITER"));
+    sparse_solver.set_force_diag(options_.get_bool("FORCE_DIAG_METHOD"));
+    sparse_solver.set_e_convergence(options_.get_double("E_CONVERGENCE"));
+    sparse_solver.set_maxiter_davidson(options_.get_int("DL_MAXITER"));
     sparse_solver.set_spin_project(true);
-    sparse_solver.set_guess_dimension(psi::Options_.get_int("DL_GUESS_SIZE"));
+    sparse_solver.set_guess_dimension(options_.get_int("DL_GUESS_SIZE"));
     sparse_solver.set_num_vecs(nvec);
     sparse_solver.set_sigma_method(sigma_method);
     sparse_solver.set_spin_project_full(false);
-    sparse_solver.set_max_memory(psi::Options_.get_int("SIGMA_VECTOR_MAX_MEMORY"));
+    sparse_solver.set_max_memory(options_.get_int("SIGMA_VECTOR_MAX_MEMORY"));
 
     // Save the P_space energies to predict convergence
     std::vector<double> P_energies;
@@ -342,7 +342,7 @@ double ASCI::compute_energy() {
     outfile->Printf("\n\n  %s: %f s", "ASCI ran in ", asci_elapse.get());
 
     double pt2 = 0.0;
-    if (psi::Options_.get_bool("MRPT2")) {
+    if (options_.get_bool("MRPT2")) {
         MRPT2 pt(reference_wavefunction_, options_, ints_, mo_space_info_, PQ_space, PQ_evecs,
                  PQ_evals);
         pt2 = pt.compute_energy();
@@ -355,7 +355,7 @@ double ASCI::compute_energy() {
     outfile->Printf("\n  Iterations required:                         %zu", cycle);
     outfile->Printf("\n  psi::Dimension of optimized determinant space:    %zu\n", dim);
     outfile->Printf("\n  * AS-CI Energy Root 0        = %.12f Eh", root_energy);
-    if (psi::Options_.get_bool("MRPT2")) {
+    if (options_.get_bool("MRPT2")) {
         outfile->Printf("\n  * AS-CI+PT2 Energy Root 0    = %.12f Eh", root_energy + pt2);
     }
 

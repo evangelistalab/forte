@@ -252,7 +252,7 @@ void SparseCISolver::diagonalize_full(const std::vector<Determinant>& space, psi
         Hss->diagonalize(Hss_vecs, Hss_vals);
 
         // Project Hss_vecs back to original manifold
-        psi::SharedMatrix H_vecs = Matrix::doublet(S2vecs_sub, Hss_vecs);
+        psi::SharedMatrix H_vecs = psi::Matrix::doublet(S2vecs_sub, Hss_vecs);
         H_vecs->set_name("H Eigen Vectors");
 
         // Fill in results

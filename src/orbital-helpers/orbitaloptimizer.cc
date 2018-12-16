@@ -53,7 +53,7 @@ OrbitalOptimizer::OrbitalOptimizer(ambit::Tensor Gamma1, ambit::Tensor Gamma2,
                                    ambit::Tensor two_body_ab, psi::Options& options,
                                    std::shared_ptr<MOSpaceInfo> mo_space_info)
     : gamma1_(Gamma1), gamma2_(Gamma2), integral_(two_body_ab), mo_space_info_(mo_space_info),
-      options_(psi::Options) {}
+      options_(options) {}
 void OrbitalOptimizer::update() {
     startup();
     fill_shared_density_matrices();
@@ -99,12 +99,12 @@ void OrbitalOptimizer::startup() {
     restricted_uocc_abs_ = mo_space_info_->get_corr_abs_mo("RESTRICTED_UOCC");
     inactive_docc_abs_ = mo_space_info_->get_corr_abs_mo("INACTIVE_DOCC");
     nmo_abs_ = mo_space_info_->get_corr_abs_mo("CORRELATED");
-    if (frozen_docc_abs_.size() && !(psi::Options_.get_bool("OPTIMIZE_FROZEN_CORE"))) {
+    if (frozen_docc_abs_.size() && !(options_.get_bool("OPTIMIZE_FROZEN_CORE"))) {
         casscf_freeze_core_ = true;
     } else {
         casscf_freeze_core_ = false;
     }
-    if (psi::Options_.get_bool("OPTIMIZE_FROZEN_CORE")) {
+    if (options_.get_bool("OPTIMIZE_FROZEN_CORE")) {
         throw psi::PSIEXCEPTION("CASSCF can not handle optimization of frozen core, yet.");
     }
 
@@ -128,7 +128,7 @@ void OrbitalOptimizer::startup() {
             cas_ = true;
         }
     } else if (options_.get_str("CASSCF_CI_SOLVER") == "ACI") {
-        if (psi::Options_.get_double("SIGMA") == 0.0) {
+        if (options_.get_double("SIGMA") == 0.0) {
             cas_ = true;
         } else {
             cas_ = true;
@@ -532,7 +532,7 @@ psi::SharedMatrix OrbitalOptimizer::rotate_orbitals(psi::SharedMatrix C, psi::Sh
         }
     }
 
-    C_rot = Matrix::doublet(C, S_exp);
+    C_rot = psi::Matrix::doublet(C, S_exp);
     C_rot->set_name("ROTATED_ORBITAL");
     S_sym->set_name("Orbital Rotation (S = exp(x))");
     if (casscf_debug_print_) {
@@ -687,7 +687,7 @@ void CASSCFOrbitalOptimizer::form_fock_intermediates() {
         C_active_ao->print();
     // std::shared_ptr<JK> JK_fock = JK::build_JK(wfn_->basisset(),options_ );
     // JK_fock->set_memory(Process::environment.get_memory() * 0.8);
-    // JK_fock->set_cutoff(psi::Options_.get_double("INTEGRAL_SCREENING"));
+    // JK_fock->set_cutoff(options_.get_double("INTEGRAL_SCREENING"));
     // JK_fock->initialize();
     // JK_->set_allow_desymmetrization(true);
     JK_->set_do_K(true);

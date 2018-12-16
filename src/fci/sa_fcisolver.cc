@@ -43,7 +43,7 @@
 namespace forte {
 
 SA_FCISolver::SA_FCISolver(psi::Options& options, std::shared_ptr<Wavefunction> wfn)
-    : options_(psi::Options), wfn_(wfn) {
+    : options_(options), wfn_(wfn) {
     read_options();
 }
 
@@ -243,7 +243,7 @@ double SA_FCISolver::compute_energy() {
             throw psi::PSIEXCEPTION("Ms must be no less than 0. Check output for details.");
         }
 
-        if (psi::Options_.get_int("PRINT")) {
+        if (options_.get_int("PRINT")) {
             print_h2("FCI Solver Summary");
             outfile->Printf("\n  Number of electrons: %d", nel);
             outfile->Printf("\n  Charge: %d", charge);
@@ -271,10 +271,10 @@ double SA_FCISolver::compute_energy() {
                             mo_space_info_, options_.get_int("NTRIAL_PER_ROOT"),
                             options_.get_int("PRINT"), options_);
         fcisolver.set_max_rdm_level(2);
-        fcisolver.set_test_rdms(psi::Options_.get_bool("FCI_TEST_RDMS"));
-        fcisolver.set_fci_iterations(psi::Options_.get_int("FCI_MAXITER"));
-        fcisolver.set_collapse_per_root(psi::Options_.get_int("DL_COLLAPSE_PER_ROOT"));
-        fcisolver.set_subspace_per_root(psi::Options_.get_int("DL_SUBSPACE_PER_ROOT"));
+        fcisolver.set_test_rdms(options_.get_bool("FCI_TEST_RDMS"));
+        fcisolver.set_fci_iterations(options_.get_int("FCI_MAXITER"));
+        fcisolver.set_collapse_per_root(options_.get_int("DL_COLLAPSE_PER_ROOT"));
+        fcisolver.set_subspace_per_root(options_.get_int("DL_SUBSPACE_PER_ROOT"));
         fcisolver.set_print_no(false);
         fcisolver.use_user_integrals_and_restricted_docc(true);
         if (fci_ints_ == nullptr) {

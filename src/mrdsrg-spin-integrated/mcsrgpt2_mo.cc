@@ -82,7 +82,7 @@ MCSRGPT2_MO::MCSRGPT2_MO(psi::SharedWavefunction ref_wfn, psi::Options& options,
     print_method_banner({"Driven Similarity Renormalization Group",
                          "Second-Order Perturbative Analysis", "Chenyang Li"});
 
-    startup(psi::Options);
+    startup(options);
     if (options.get_str("CORR_LEVEL") == "SRG_PT2") {
         Process::environment.globals["CURRENT ENERGY"] = compute_energy_srg();
     } else {

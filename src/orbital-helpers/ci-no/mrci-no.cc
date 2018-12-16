@@ -482,10 +482,10 @@ MRCINO::diagonalize_hamiltonian(const std::vector<Determinant>& dets, int nsolut
 
     SparseCISolver sparse_solver(fci_ints_);
     sparse_solver.set_parallel(true);
-    sparse_solver.set_e_convergence(psi::Options_.get_double("E_CONVERGENCE"));
-    sparse_solver.set_maxiter_davidson(psi::Options_.get_int("DL_MAXITER"));
+    sparse_solver.set_e_convergence(options_.get_double("E_CONVERGENCE"));
+    sparse_solver.set_maxiter_davidson(options_.get_int("DL_MAXITER"));
     sparse_solver.set_spin_project(project_out_spin_contaminants_);
-    sparse_solver.set_guess_dimension(psi::Options_.get_int("DL_GUESS_SIZE"));
+    sparse_solver.set_guess_dimension(options_.get_int("DL_GUESS_SIZE"));
     sparse_solver.set_spin_project_full(true);
     sparse_solver.set_print_details(true);
 
@@ -648,7 +648,7 @@ void MRCINO::find_active_space_and_transform(
     Slice corr_slice(fdoccpi_, fdoccpi_ + corrpi_);
     Ua->set_block(corr_slice, corr_slice, NO_A);
 
-    psi::SharedMatrix Ca_new = Matrix::doublet(Ca_, Ua);
+    psi::SharedMatrix Ca_new = psi::Matrix::doublet(Ca_, Ua);
     Ca_->copy(Ca_new);
     Cb_ = Ca_; // Fix this for unrestricted case
 

@@ -132,7 +132,7 @@ void ACTIVE_DSRGPT2::startup() {
         std::string cisd_noHF;
         if (ref_type_ == "CISD") {
             t1_percentage_ = std::vector<vector<double>>(nirrep, std::vector<double>());
-            if (psi::Options_.get_bool("FCIMO_CISD_NOHF")) {
+            if (options_.get_bool("FCIMO_CISD_NOHF")) {
                 cisd_noHF = "TURE";
             } else {
                 cisd_noHF = "FALSE";

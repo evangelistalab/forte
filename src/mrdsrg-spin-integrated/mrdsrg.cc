@@ -464,7 +464,7 @@ double MRDSRG::compute_energy_relaxed() {
             Edelta_relax_vec.push_back(Edelta_relax);
 
             // semicanonicalize orbitals
-            if (psi::Options_.get_bool("SEMI_CANONICAL")) {
+            if (options_.get_bool("SEMI_CANONICAL")) {
                 print_h2("Semicanonicalize Orbitals");
 
                 // use semicanonicalize class
@@ -635,7 +635,7 @@ double MRDSRG::compute_energy_sa() {
         semiorb.transform_reference(Ua, Ub, reference_, max_rdm_level);
 
         // semicanonicalize orbitals
-        if (psi::Options_.get_bool("SEMI_CANONICAL")) {
+        if (options_.get_bool("SEMI_CANONICAL")) {
             print_h2("Semicanonicalize Orbitals");
 
             // use semicanonicalize class

@@ -74,17 +74,17 @@ namespace forte {
 DMRGSolver::DMRGSolver(psi::SharedWavefunction ref_wfn, psi::Options& options,
                        std::shared_ptr<MOSpaceInfo> mo_space_info,
                        std::shared_ptr<ForteIntegrals> ints)
-    : wfn_(ref_wfn), options_(psi::Options), mo_space_info_(mo_space_info), ints_(ints) {
+    : wfn_(ref_wfn), options_(options), mo_space_info_(mo_space_info), ints_(ints) {
     print_method_banner({"Density Matrix Renormalization Group SCF", "Sebastian Wouters"});
 }
 DMRGSolver::DMRGSolver(psi::SharedWavefunction ref_wfn, psi::Options& options,
                        std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : wfn_(ref_wfn), options_(psi::Options), mo_space_info_(mo_space_info) {
+    : wfn_(ref_wfn), options_(options), mo_space_info_(mo_space_info) {
     print_method_banner({"Density Matrix Renormalization Group", "Sebastian Wouters"});
 }
 void DMRGSolver::compute_reference(double* one_rdm, double* two_rdm, double* three_rdm,
                                    CheMPS2::DMRGSCFindices* iHandler) {
-    // if(psi::Options_.get_int("MULTIPLICITY") != 1 &&
+    // if(options_.get_int("MULTIPLICITY") != 1 &&
     // options_.get_int("DMRG_WFN_MULTP") != 1)
     //{
     //    outfile->Printf("\n\n Spinadapted formalism requires spin-averaged
@@ -506,7 +506,7 @@ void DMRGSolver::compute_energy() {
     }
 
     compute_reference(DMRG1DM, DMRG2DM, DMRG3DM, iHandler.get());
-    if (psi::Options_.get_bool("PRINT_NO")) {
+    if (options_.get_bool("PRINT_NO")) {
         print_natural_orbitals(DMRG1DM);
     }
     dmrg_ref_.set_Eref(Energy);

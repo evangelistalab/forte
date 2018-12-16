@@ -58,7 +58,7 @@ double CC::compute_energy() { return 0.0; }
 //               std::shared_ptr<ForteIntegrals> ints,
 //               std::shared_ptr<MOSpaceInfo> mo_space_info)
 //    : Wavefunction(options), reference_(reference), ints_(ints),
-//      mo_space_info_(mo_space_info), BTF_(new BlockedTensorFactory(psi::Options)),
+//      mo_space_info_(mo_space_info), BTF_(new BlockedTensorFactory(options)),
 //      tensor_type_(CoreTensor)
 //{
 //    shallow_copy(ref_wfn);

@@ -893,8 +893,8 @@ double ProjectorCI::compute_energy() {
 
     SparseCISolver sparse_solver(fci_ints_);
     sparse_solver.set_parallel(true);
-    sparse_solver.set_e_convergence(psi::Options_.get_double("E_CONVERGENCE"));
-    sparse_solver.set_maxiter_davidson(psi::Options_.get_int("DL_MAXITER"));
+    sparse_solver.set_e_convergence(options_.get_double("E_CONVERGENCE"));
+    sparse_solver.set_maxiter_davidson(options_.get_int("DL_MAXITER"));
     sparse_solver.set_spin_project(true);
 
     pqpq_aa_ = new double[nact_ * nact_];
@@ -1251,8 +1251,8 @@ double ProjectorCI::initial_guess(det_vec& dets, std::vector<double>& C) {
 
     SparseCISolver sparse_solver(fci_ints_);
     sparse_solver.set_parallel(true);
-    sparse_solver.set_e_convergence(psi::Options_.get_double("E_CONVERGENCE"));
-    sparse_solver.set_maxiter_davidson(psi::Options_.get_int("DL_MAXITER"));
+    sparse_solver.set_e_convergence(options_.get_double("E_CONVERGENCE"));
+    sparse_solver.set_maxiter_davidson(options_.get_int("DL_MAXITER"));
     sparse_solver.set_spin_project(true);
 
     psi::SharedMatrix evecs(new psi::Matrix("Eigenvectors", guess_size, nroot_));

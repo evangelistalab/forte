@@ -1133,8 +1133,8 @@ void FCI_MO::Diagonalize_H(const vecdet& p_space, const int& multi, const int& n
     string sigma_method = options_.get_str("SIGMA_BUILD_TYPE");
     sparse_solver.set_e_convergence(econv_);
     sparse_solver.set_spin_project(true);
-    sparse_solver.set_maxiter_davidson(psi::Options_.get_int("DL_MAXITER"));
-    sparse_solver.set_guess_dimension(psi::Options_.get_int("DL_GUESS_SIZE"));
+    sparse_solver.set_maxiter_davidson(options_.get_int("DL_MAXITER"));
+    sparse_solver.set_guess_dimension(options_.get_int("DL_GUESS_SIZE"));
     sparse_solver.set_sigma_method(sigma_method);
     if (projected_roots_.size() != 0) {
         sparse_solver.set_root_project(true);

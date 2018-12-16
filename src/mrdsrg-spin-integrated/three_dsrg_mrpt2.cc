@@ -109,7 +109,7 @@ THREE_DSRG_MRPT2::THREE_DSRG_MRPT2(Reference reference, psi::SharedWavefunction 
     outfile->Printf("\n      (pr-)DSRG-MRPT2:   J. Chem. Phys. 2017, 146, 124132.");
     outfile->Printf("\n");
 
-    if (psi::Options_.get_bool("MEMORY_SUMMARY")) {
+    if (options_.get_bool("MEMORY_SUMMARY")) {
         BTF_->print_memory_info();
     }
 
@@ -283,7 +283,7 @@ void THREE_DSRG_MRPT2::startup() {
             Hbar1_["uv"] = F_["uv"];
             Hbar1_["UV"] = F_["UV"];
 
-            if (psi::Options_.get_bool("FORM_HBAR3")) {
+            if (options_.get_bool("FORM_HBAR3")) {
                 Hbar3_ = BTF_->build(tensor_type_, "3-body Hbar", spin_cases({"aaaaaa"}));
             }
         }
@@ -319,7 +319,7 @@ void THREE_DSRG_MRPT2::print_options_summary() {
         calculation_info_string.push_back({"Internal_amp_select", internal_amp_select_});
     }
 
-    if (psi::Options_.get_bool("FORM_HBAR3")) {
+    if (options_.get_bool("FORM_HBAR3")) {
         calculation_info_string.push_back({"form Hbar3", "TRUE"});
     } else {
         calculation_info_string.push_back({"form Hbar3", "FALSE"});
@@ -463,7 +463,7 @@ double THREE_DSRG_MRPT2::compute_energy() {
     }
 
     if (my_proc == 0) {
-        if (psi::Options_.get_bool("PRINT_DENOM2")) {
+        if (options_.get_bool("PRINT_DENOM2")) {
             std::ofstream myfile;
             myfile.open("DENOM.txt");
             ambit::BlockedTensor Delta2 =
@@ -1334,7 +1334,7 @@ double THREE_DSRG_MRPT2::E_VT2_2() {
                            "other algorihm");
     }
 
-    if (psi::Options_.get_bool("AO_DSRG_MRPT2")) {
+    if (options_.get_bool("AO_DSRG_MRPT2")) {
         double Eccvv_ao = E_VT2_2_AO_Slow();
         Eccvv = Eccvv_ao;
         outfile->Printf("\n  Eccvv_ao: %8.10f", Eccvv_ao);
@@ -2079,7 +2079,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core() {
     size_t memory_input = Process::environment.get_memory() * 0.75;
     size_t num_block = int_mem_int / memory_input < 1 ? 1 : int_mem_int / memory_input;
 
-    if (psi::Options_.get_int("CCVV_BATCH_NUMBER") != -1) {
+    if (options_.get_int("CCVV_BATCH_NUMBER") != -1) {
         num_block = options_.get_int("CCVV_BATCH_NUMBER");
     }
     size_t block_size = ncore_ / num_block;
@@ -2432,7 +2432,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_virtual() {
     size_t memory_input = Process::environment.get_memory() * 0.75;
     size_t num_block = int_mem_int / memory_input < 1 ? 1 : int_mem_int / memory_input;
 
-    if (psi::Options_.get_int("CCVV_BATCH_NUMBER") != -1) {
+    if (options_.get_int("CCVV_BATCH_NUMBER") != -1) {
         num_block = options_.get_int("CCVV_BATCH_NUMBER");
     }
     size_t block_size = nvirtual_ / num_block;
@@ -3076,7 +3076,7 @@ void THREE_DSRG_MRPT2::form_Hbar() {
         Hbar1_["UV"] += 0.5 * C1["VU"];
     }
 
-    if (psi::Options_.get_bool("PRINT_1BODY_EVALS")) {
+    if (options_.get_bool("PRINT_1BODY_EVALS")) {
         psi::SharedMatrix Hb1 = std::make_shared<psi::Matrix>("HB1", nactive_, nactive_);
         for (size_t p = 0; p < nactive_; ++p) {
             for (size_t q = 0; q < nactive_; ++q) {
@@ -3091,7 +3091,7 @@ void THREE_DSRG_MRPT2::form_Hbar() {
         evals->print();
     }
 
-    if (psi::Options_.get_bool("FORM_HBAR3")) {
+    if (options_.get_bool("FORM_HBAR3")) {
         BlockedTensor C3 = BTF_->build(tensor_type_, "C3", spin_cases({"aaaaaa"}));
         H2_T2_C3(V_, T2_, 0.5, C3, true);
 
@@ -3470,14 +3470,14 @@ std::vector<double> THREE_DSRG_MRPT2::relaxed_energy(std::shared_ptr<FCIIntegral
         Erelax.push_back(relaxed_aci_en);
 
         // Compute relaxed NOs
-        if (psi::Options_.get_bool("ACI_NO")) {
+        if (options_.get_bool("ACI_NO")) {
             aci.compute_nos();
         }
-        if (psi::Options_.get_bool("ACI_SPIN_ANALYSIS")) {
+        if (options_.get_bool("ACI_SPIN_ANALYSIS")) {
             aci.spin_analysis();
         }
 
-        if (psi::Options_.get_bool("UNPAIRED_DENSITY")) {
+        if (options_.get_bool("UNPAIRED_DENSITY")) {
 
             aci.unpaired_density(Ua_full_, Ub_full_);
         }
@@ -3522,12 +3522,12 @@ std::vector<double> THREE_DSRG_MRPT2::relaxed_energy(std::shared_ptr<FCIIntegral
                                 options_.get_int("ROOT_SYM"), ints_, mo_space_info_,
                                 ntrial_per_root, print_, options_);
             fcisolver.set_max_rdm_level(1);
-            fcisolver.set_nroot(psi::Options_.get_int("FCI_NROOT"));
-            fcisolver.set_root(psi::Options_.get_int("FCI_ROOT"));
-            fcisolver.set_test_rdms(psi::Options_.get_bool("FCI_TEST_RDMS"));
-            fcisolver.set_fci_iterations(psi::Options_.get_int("FCI_MAXITER"));
-            fcisolver.set_collapse_per_root(psi::Options_.get_int("DL_COLLAPSE_PER_ROOT"));
-            fcisolver.set_subspace_per_root(psi::Options_.get_int("DL_SUBSPACE_PER_ROOT"));
+            fcisolver.set_nroot(options_.get_int("FCI_NROOT"));
+            fcisolver.set_root(options_.get_int("FCI_ROOT"));
+            fcisolver.set_test_rdms(options_.get_bool("FCI_TEST_RDMS"));
+            fcisolver.set_fci_iterations(options_.get_int("FCI_MAXITER"));
+            fcisolver.set_collapse_per_root(options_.get_int("DL_COLLAPSE_PER_ROOT"));
+            fcisolver.set_subspace_per_root(options_.get_int("DL_SUBSPACE_PER_ROOT"));
 
             // set integrals manually
             fcisolver.use_user_integrals_and_restricted_docc(true);
@@ -3554,9 +3554,9 @@ std::vector<double> THREE_DSRG_MRPT2::relaxed_energy(std::shared_ptr<FCIIntegral
                 fcisolver.set_max_rdm_level(1);
                 fcisolver.set_nroot(nstates);
                 fcisolver.set_root(nstates - 1);
-                fcisolver.set_fci_iterations(psi::Options_.get_int("FCI_MAXITER"));
-                fcisolver.set_collapse_per_root(psi::Options_.get_int("DL_COLLAPSE_PER_ROOT"));
-                fcisolver.set_subspace_per_root(psi::Options_.get_int("DL_SUBSPACE_PER_ROOT"));
+                fcisolver.set_fci_iterations(options_.get_int("FCI_MAXITER"));
+                fcisolver.set_collapse_per_root(options_.get_int("DL_COLLAPSE_PER_ROOT"));
+                fcisolver.set_subspace_per_root(options_.get_int("DL_SUBSPACE_PER_ROOT"));
 
                 // set integrals manually
                 fcisolver.use_user_integrals_and_restricted_docc(true);
