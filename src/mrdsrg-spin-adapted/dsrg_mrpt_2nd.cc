@@ -33,7 +33,7 @@
 
 #include "dsrg_mrpt.h"
 
-namespace psi {
+
 namespace forte {
 
 double DSRG_MRPT::compute_energy_pt2() {

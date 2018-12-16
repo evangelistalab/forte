@@ -40,7 +40,7 @@
 #include <tuple>
 #include <vector>
 
-namespace psi {
+
 namespace forte {
 
 BlockedTensorFactory::BlockedTensorFactory() {

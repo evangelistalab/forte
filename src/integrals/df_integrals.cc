@@ -52,7 +52,7 @@
 #include "df_integrals.h"
 
 using namespace ambit;
-namespace psi {
+
 namespace forte {
 
 DFIntegrals::DFIntegrals(psi::Options& options, SharedWavefunction ref_wfn,

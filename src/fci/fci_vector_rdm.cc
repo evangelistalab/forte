@@ -41,7 +41,7 @@
 
 extern int fci_debug_level;
 
-namespace psi {
+
 namespace forte {
 
 /**

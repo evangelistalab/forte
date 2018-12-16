@@ -34,7 +34,7 @@
 #include <string>
 #include "ui64_determinant.h"
 
-namespace psi {
+
 namespace forte {
 
 /**

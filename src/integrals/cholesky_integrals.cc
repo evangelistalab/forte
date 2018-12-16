@@ -47,7 +47,7 @@
 
 using namespace ambit;
 
-namespace psi {
+
 namespace forte {
 
 CholeskyIntegrals::CholeskyIntegrals(psi::Options& options, SharedWavefunction ref_wfn,

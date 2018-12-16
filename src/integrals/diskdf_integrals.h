@@ -33,7 +33,7 @@
 #include "psi4/lib3index/dfhelper.h"
 #include "integrals.h"
 
-namespace psi {
+
 
 class Tensor;
 

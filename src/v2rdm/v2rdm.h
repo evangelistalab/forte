@@ -45,7 +45,7 @@
 #define PSIF_V2RDM_D3BBB 276
 
 using namespace ambit;
-namespace psi {
+
 namespace forte {
 
 class V2RDM : public Wavefunction {

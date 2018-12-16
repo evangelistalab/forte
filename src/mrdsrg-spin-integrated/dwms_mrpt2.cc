@@ -13,7 +13,7 @@
 #include "orbital-helpers/semi_canonicalize.h"
 #include "helpers/printing.h"
 
-namespace psi {
+
 namespace forte {
 
 void set_DWMS_options(ForteOptions& foptions) {

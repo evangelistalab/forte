@@ -1,6 +1,6 @@
 #include "base_classes/dynamic_correlation_solver.h"
 
-namespace psi {
+
 namespace forte {
 DynamicCorrelationSolver::DynamicCorrelationSolver(Reference reference, SharedWavefunction ref_wfn,
                                                    Options& options,

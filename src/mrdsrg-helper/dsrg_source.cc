@@ -28,7 +28,7 @@
 
 #include "dsrg_source.h"
 
-namespace psi {
+
 namespace forte {
 
 DSRG_SOURCE::DSRG_SOURCE(double s, double taylor_threshold)

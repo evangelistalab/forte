@@ -68,7 +68,7 @@
 // This allows us to be lazy in getting the spaces in DPD calls
 #define ID(x) ints->DPD_ID(x)
 
-namespace psi {
+
 namespace forte {
 
 DMRGSolver::DMRGSolver(SharedWavefunction ref_wfn, Options& options,

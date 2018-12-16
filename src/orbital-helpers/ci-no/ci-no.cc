@@ -38,7 +38,7 @@
 #include "sparse_ci/determinant.h"
 #include "ci-no.h"
 
-namespace psi {
+
 namespace forte {
 
 #ifdef _OPENMP

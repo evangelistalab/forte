@@ -42,7 +42,7 @@
 #include "chemps2/Initialize.h"
 #include "chemps2/EdmistonRuedenberg.h"
 
-namespace psi {
+
 namespace forte {
 
 class DMRGSCF : public Wavefunction {

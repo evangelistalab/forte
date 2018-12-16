@@ -10,7 +10,7 @@
 #include "fci/fci_integrals.h"
 #include "base_classes/reference.h"
 
-namespace psi {
+
 namespace forte {
 class DynamicCorrelationSolver : public Wavefunction {
   public:

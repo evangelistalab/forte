@@ -36,7 +36,7 @@
 #include "helpers/printing.h"
 #include "dsrg_mrpt.h"
 
-namespace psi {
+
 namespace forte {
 
 DSRG_MRPT::DSRG_MRPT(Reference reference, SharedWavefunction ref_wfn, Options& options,

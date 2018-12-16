@@ -46,7 +46,7 @@
 #include "sparse_ci/determinant.h"
 
 using namespace ambit;
-namespace psi {
+
 namespace forte {
 
 class CC : public Wavefunction {

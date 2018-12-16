@@ -36,7 +36,7 @@
 #include "helpers/mo_space_info.h"
 #include "fci_vector.h"
 
-namespace psi {
+
 namespace forte {
 
 void FCIWfn::form_H_diagonal(std::shared_ptr<FCIIntegrals> fci_ints) {

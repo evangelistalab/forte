@@ -61,7 +61,7 @@
 using d1 = std::vector<double>;
 using d2 = std::vector<d1>;
 
-namespace psi {
+
 namespace forte {
 
 class Reference;

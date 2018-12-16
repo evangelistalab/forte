@@ -37,7 +37,7 @@
 #include "sparse_ci/determinant.h"
 #include "helpers/mo_space_info.h"
 
-namespace psi {
+
 namespace forte {
 
 class CI_Reference // : public Wavefunction

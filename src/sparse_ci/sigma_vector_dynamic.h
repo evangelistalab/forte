@@ -33,7 +33,7 @@
 #include "sigma_vector.h"
 #include "sorted_string_list.h"
 
-namespace psi {
+
 namespace forte {
 
 enum class SigmaVectorMode { Dynamic, OnTheFly };

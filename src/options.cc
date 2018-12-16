@@ -41,7 +41,7 @@
 #include "mrdsrg-helper/run_dsrg.h"
 #include "mrdsrg-spin-integrated/dwms_mrpt2.h"
 
-namespace psi {
+
 namespace forte {
 
 void forte_options(ForteOptions& foptions) {

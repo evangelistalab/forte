@@ -33,7 +33,7 @@
 #include "dsrg_mrpt.h"
 #include "helpers/timer.h"
 
-namespace psi {
+
 namespace forte {
 
 void DSRG_MRPT::compute_T_1st(BlockedTensor& V, BlockedTensor& T2, BlockedTensor& F,

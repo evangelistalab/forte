@@ -51,7 +51,7 @@
 #include <macdecls.h>
 #endif
 
-namespace psi {
+
 namespace forte {
 
 ParallelDFMO::ParallelDFMO(std::shared_ptr<BasisSet> primary, std::shared_ptr<BasisSet> auxiliary)

@@ -35,7 +35,7 @@
 #include "helpers/mo_space_info.h"
 #include "integrals/integrals.h"
 
-namespace psi {
+
 namespace forte {
 
 class ActiveSpaceSolver : public Wavefunction {

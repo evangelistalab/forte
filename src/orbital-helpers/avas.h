@@ -35,7 +35,7 @@
 
 #include "forte_options.h"
 
-namespace psi {
+
 namespace forte {
 
 void set_AVAS_options(ForteOptions& foptions);

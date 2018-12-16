@@ -46,7 +46,7 @@
 #include "helpers/helpers.h"
 
 using namespace ambit;
-namespace psi {
+
 namespace forte {
 
 class DSRG_MRPT : public Wavefunction {

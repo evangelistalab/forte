@@ -28,7 +28,7 @@
 
 #include "base_classes/reference.h"
 
-namespace psi {
+
 namespace forte {
 
 Reference::Reference() {}

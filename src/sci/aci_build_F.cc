@@ -30,7 +30,7 @@
 
 #include "aci.h"
 
-namespace psi {
+
 namespace forte {
 
 bool pair_comp(const std::pair<double, Determinant> E1, const std::pair<double, Determinant> E2) {

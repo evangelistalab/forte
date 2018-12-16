@@ -56,7 +56,7 @@
 #include "helpers/blockedtensorfactory.h"
 
 using namespace ambit;
-namespace psi {
+
 namespace forte {
 
 DistDFIntegrals::DistDFIntegrals(psi::Options& options, SharedWavefunction ref_wfn,

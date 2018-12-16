@@ -8,7 +8,7 @@
 #include "sci/fci_mo.h"
 #include "sparse_ci/determinant.h"
 
-namespace psi {
+
 namespace forte {
 
 void set_DWMS_options(ForteOptions& foptions);

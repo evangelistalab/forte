@@ -36,7 +36,7 @@
 #include "cc/cc.h"
 #include "helpers/mo_space_info.h"
 
-namespace psi {
+
 namespace forte {
 
 CC::CC(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,

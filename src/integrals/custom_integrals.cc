@@ -47,7 +47,7 @@
 #define PAIRINDEX(i, j) ((i > j) ? (IOFFINDEX(i) + (j)) : (IOFFINDEX(j) + (i)))
 #define four(i, j, k, l) PAIRINDEX(PAIRINDEX(i, j), PAIRINDEX(k, l))
 
-namespace psi {
+
 namespace forte {
 
 /**

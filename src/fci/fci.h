@@ -33,7 +33,7 @@
 #include "fci_solver.h"
 #include "base_classes/active_space_solver.h"
 
-namespace psi {
+
 namespace forte {
 
 class ForteOptions;
@@ -122,7 +122,6 @@ class FCI : public ActiveSpaceSolver {
     /// All that happens before we compute the energy
     void startup();
 };
-}
 }
 
 #endif // _fci_h_

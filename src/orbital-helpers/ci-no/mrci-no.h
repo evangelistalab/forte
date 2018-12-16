@@ -30,7 +30,7 @@
 
 #include "psi4/libmints/wavefunction.h"
 
-namespace psi {
+
 namespace forte {
 
 class ForteOptions;

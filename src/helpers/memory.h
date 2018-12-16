@@ -29,7 +29,7 @@
 #ifndef _memory_h_
 #define _memory_h_
 
-namespace psi {
+
 namespace forte {
 
 /**

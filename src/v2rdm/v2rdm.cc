@@ -41,7 +41,7 @@
 
 #include "v2rdm.h"
 
-namespace psi {
+
 namespace forte {
 
 struct tpdm {

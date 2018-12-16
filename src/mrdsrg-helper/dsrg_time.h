@@ -35,7 +35,7 @@
 
 #include "psi4/libtrans/integraltransform.h"
 
-namespace psi {
+
 namespace forte {
 
 class DSRG_TIME {

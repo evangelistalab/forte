@@ -55,7 +55,7 @@
 #include "psi4/libdiis/diismanager.h"
 #include "psi4/libmints/factory.h"
 
-namespace psi {
+
 namespace forte {
 
 CASSCF::CASSCF(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,

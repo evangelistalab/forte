@@ -38,7 +38,7 @@
 #include "boost/format.hpp"
 #include "mrdsrg.h"
 
-namespace psi {
+
 namespace forte {
 
 void MRDSRG::guess_t(BlockedTensor& V, BlockedTensor& T2, BlockedTensor& F, BlockedTensor& T1) {

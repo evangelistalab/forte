@@ -49,7 +49,7 @@
 #include "diskdf_integrals.h"
 
 using namespace ambit;
-namespace psi {
+
 namespace forte {
 
 DISKDFIntegrals::DISKDFIntegrals(psi::Options& options, SharedWavefunction ref_wfn,

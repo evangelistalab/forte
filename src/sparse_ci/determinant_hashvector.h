@@ -35,7 +35,7 @@
 #include "sparse_ci/determinant.h"
 #include "helpers/hash_vector.h"
 
-namespace psi {
+
 namespace forte {
 
 /**

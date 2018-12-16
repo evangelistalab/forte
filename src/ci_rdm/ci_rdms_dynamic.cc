@@ -37,7 +37,7 @@
 #include "base_classes/reference.h"
 #include "sparse_ci/determinant.h"
 
-namespace psi {
+
 namespace forte {
 
 void CI_RDMS::compute_rdms_dynamic(std::vector<double>& oprdm_a, std::vector<double>& oprdm_b,

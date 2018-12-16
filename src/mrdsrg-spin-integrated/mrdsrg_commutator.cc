@@ -38,7 +38,7 @@
 #include "helpers/timer.h"
 #include "mrdsrg.h"
 
-namespace psi {
+
 namespace forte {
 
 // void MRDSRG::H1_T1_C0(BlockedTensor& H1, BlockedTensor& T1, const double& alpha, double& C0) {

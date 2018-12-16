@@ -33,7 +33,7 @@
 #include "psi4/libmints/vector.h"
 #include "psi4/libmints/matrix.h"
 
-namespace psi {
+
 namespace forte {
 
 /// Result of the update step

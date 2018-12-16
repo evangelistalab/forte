@@ -44,7 +44,7 @@
 #include "helpers/timer.h"
 #include "semi_canonicalize.h"
 
-namespace psi {
+
 namespace forte {
 
 using namespace ambit;

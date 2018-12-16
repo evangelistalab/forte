@@ -43,7 +43,7 @@
 #include "fci/string_lists.h"
 #include "fci/fci_integrals.h"
 
-namespace psi {
+
 namespace forte {
 
 class CI_RDMS {

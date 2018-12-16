@@ -40,7 +40,7 @@
 
 #include "determinant_common.h"
 
-namespace psi {
+
 namespace forte {
 
 /**

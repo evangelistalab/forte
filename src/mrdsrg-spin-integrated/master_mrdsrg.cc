@@ -8,7 +8,7 @@
 #include "helpers/timer.h"
 #include "master_mrdsrg.h"
 
-namespace psi {
+
 namespace forte {
 
 MASTER_DSRG::MASTER_DSRG(Reference reference, SharedWavefunction ref_wfn, Options& options,

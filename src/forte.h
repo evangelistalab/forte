@@ -28,7 +28,7 @@
 
 #include "forte_options.h"
 
-namespace psi {
+
 namespace forte {
 
 void forte_options(ForteOptions& options);

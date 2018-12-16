@@ -31,7 +31,7 @@
 
 #include <cmath>
 
-namespace psi {
+
 namespace forte {
 
 class DSRG_SOURCE {

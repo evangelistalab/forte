@@ -41,7 +41,7 @@
 
 namespace py = pybind11;
 
-namespace psi {
+
 namespace forte {
 
 PYBIND11_MODULE(forte, m) {

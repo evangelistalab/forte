@@ -35,7 +35,7 @@
 #include "fci/fci_solver.h"
 #include "fci/fci_vector.h"
 
-namespace psi {
+
 namespace forte {
 
 /// SA_FCISolver seeks to call multiple instances of CAS-CI and combine all the

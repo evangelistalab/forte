@@ -32,7 +32,7 @@
 #include "psi4/psi4-dec.h"
 #include "psi4/lib3index/denominator.h"
 
-namespace psi {
+
 
 namespace forte {
 

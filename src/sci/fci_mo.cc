@@ -49,7 +49,7 @@
 #include "helpers/printing.h"
 #include "helpers/timer.h"
 
-namespace psi {
+
 namespace forte {
 
 void set_FCI_MO_options(ForteOptions& foptions) {

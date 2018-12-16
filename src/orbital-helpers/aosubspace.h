@@ -35,7 +35,7 @@
 
 #define _DEBUG_AOSUBSPACE_ 0
 
-namespace psi {
+
 namespace forte {
 
 /**

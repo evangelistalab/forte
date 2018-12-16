@@ -43,7 +43,7 @@
 #define omp_get_num_threads() 1
 #endif
 
-namespace psi {
+
 namespace forte {
 
 WFNOperator::WFNOperator(std::vector<int>& symmetry, std::shared_ptr<FCIIntegrals> fci_ints)

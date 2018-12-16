@@ -40,7 +40,7 @@
 
 #include "boost/format.hpp"
 
-namespace psi {
+
 namespace forte {
 
 class IAOBuilder {

@@ -37,7 +37,7 @@
 #include "helpers/timer.h"
 
 
-namespace psi {
+
 namespace forte {
 
 MRCI::MRCI(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,

@@ -36,7 +36,7 @@
 #include "base_classes/reference.h"
 #include "sparse_ci/determinant.h"
 
-namespace psi {
+
 namespace forte {
 
 // A class that takes the determinants and expansion

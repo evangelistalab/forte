@@ -42,7 +42,7 @@
 #include "helpers/blockedtensorfactory.h"
 
 using namespace ambit;
-namespace psi {
+
 namespace forte {
 
 class MRDSRG_SO : public Wavefunction {

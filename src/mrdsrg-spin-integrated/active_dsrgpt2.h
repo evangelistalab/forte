@@ -52,7 +52,7 @@
 #include "dsrg_mrpt2.h"
 #include "three_dsrg_mrpt2.h"
 
-namespace psi {
+
 namespace forte {
 
 class FCI_MO;

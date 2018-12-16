@@ -44,7 +44,7 @@
 
 #include "helpers/mo_space_info.h"
 
-namespace psi {
+
 namespace forte {
 
 // MOSpaceInfo::MOSpaceInfo(Dimension& nmopi) : nirrep_(nmopi.n()), nmopi_(nmopi) {

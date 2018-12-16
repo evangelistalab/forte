@@ -41,7 +41,7 @@
 #include "string_lists.h"
 #include "base_classes/reference.h"
 
-namespace psi {
+
 namespace forte {
 
 /**

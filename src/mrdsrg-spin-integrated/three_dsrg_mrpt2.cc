@@ -63,7 +63,7 @@
 
 using namespace ambit;
 
-namespace psi {
+
 namespace forte {
 
 #ifdef _OPENMP

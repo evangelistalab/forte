@@ -31,7 +31,7 @@
 #include "helpers/helpers.h"
 #include "sorted_string_list.h"
 
-namespace psi {
+
 namespace forte {
 
 SortedStringList_UI64::SortedStringList_UI64() {}

@@ -37,7 +37,7 @@
 #include "psi4/libmints/dimension.h"
 #include "ambit/blocked_tensor.h"
 
-namespace psi {
+
 
 class Tensor;
 class Options;

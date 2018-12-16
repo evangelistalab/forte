@@ -38,7 +38,7 @@
 
 using namespace psi;
 
-namespace psi {
+
 namespace forte {
 
 void set_ASCI_options(ForteOptions& foptions) {

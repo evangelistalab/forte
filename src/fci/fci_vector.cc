@@ -35,7 +35,7 @@
 #include "helpers/mo_space_info.h"
 #include "fci_vector.h"
 
-namespace psi {
+
 namespace forte {
 
 SharedMatrix FCIWfn::C1;

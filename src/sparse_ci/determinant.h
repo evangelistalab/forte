@@ -38,7 +38,7 @@
 #include "stl_bitset_determinant.h"
 #endif
 
-namespace psi {
+
 namespace forte {
 
 #ifdef SMALL_BITSET

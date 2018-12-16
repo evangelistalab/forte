@@ -39,7 +39,7 @@
 #define CAPRICCIO_USE_DAXPY 1
 #define CAPRICCIO_USE_UNROLL 0
 
-namespace psi {
+
 namespace forte {
 
 class FCIWfn {

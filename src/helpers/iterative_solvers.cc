@@ -46,7 +46,7 @@
 //        outfile->Printf("\n    %-30s  %zu",vk.second.c_str(),vk.first); \
 //    }
 
-namespace psi {
+
 namespace forte {
 
 DavidsonLiuSolver::DavidsonLiuSolver(size_t size, size_t nroot) : size_(size), nroot_(nroot) {

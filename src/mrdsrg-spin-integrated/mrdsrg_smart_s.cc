@@ -33,7 +33,7 @@
 #include "helpers/mo_space_info.h"
 #include "mrdsrg.h"
 
-namespace psi {
+
 namespace forte {
 
 double MRDSRG::make_s_smart() {

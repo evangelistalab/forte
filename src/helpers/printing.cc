@@ -34,7 +34,7 @@
 
 #include "printing.h"
 
-namespace psi {
+
 namespace forte {
 
 void print_method_banner(const std::vector<std::string>& text, const std::string& separator) {

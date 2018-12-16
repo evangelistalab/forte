@@ -32,7 +32,7 @@
 
 #include "integrals.h"
 
-namespace psi {
+
 
 class Tensor;
 

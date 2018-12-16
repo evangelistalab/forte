@@ -10,7 +10,7 @@
 #include "mrdsrg-spin-integrated/three_dsrg_mrpt2.h"
 #include "mrdsrg-spin-integrated/mrdsrg.h"
 
-namespace psi {
+
 namespace forte {
 
 /// Set the DSRG options

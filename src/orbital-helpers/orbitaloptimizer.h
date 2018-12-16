@@ -38,7 +38,7 @@
 
 using namespace psi;
 
-namespace psi {
+
 
 class Options;
 

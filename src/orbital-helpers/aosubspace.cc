@@ -52,7 +52,7 @@ std::vector<std::string> mysplit(const std::string& input, const std::string& re
     return {first, last};
 }
 
-namespace psi {
+
 namespace forte {
 
 SharedMatrix create_aosubspace_projector(SharedWavefunction wfn, Options& options) {

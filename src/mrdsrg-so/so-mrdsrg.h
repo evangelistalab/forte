@@ -41,7 +41,7 @@
 #include "base_classes/reference.h"
 #include "helpers/blockedtensorfactory.h"
 
-namespace psi {
+
 
 namespace forte {
 

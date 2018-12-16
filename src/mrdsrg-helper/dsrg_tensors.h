@@ -4,7 +4,7 @@
 #include "ambit/tensor.h"
 #include "ambit/blocked_tensor.h"
 
-namespace psi {
+
 namespace forte {
 
 class dsrg_tensors {

@@ -42,7 +42,7 @@
 #include "boost/format.hpp"
 #include "mrdsrg.h"
 
-namespace psi {
+
 namespace forte {
 
 void MRDSRG::compute_hbar() {

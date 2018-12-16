@@ -41,7 +41,7 @@
 #include "orbital-helpers/mp2_nos.h"
 #include "mrdsrg.h"
 
-namespace psi {
+
 namespace forte {
 
 MRDSRG::MRDSRG(Reference reference, SharedWavefunction ref_wfn, Options& options,

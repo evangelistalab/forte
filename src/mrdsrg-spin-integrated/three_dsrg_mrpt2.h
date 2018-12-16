@@ -43,7 +43,7 @@
 #include "mrdsrg-helper/dsrg_time.h"
 #include "master_mrdsrg.h"
 
-namespace psi {
+
 namespace forte {
 
 class THREE_DSRG_MRPT2 : public MASTER_DSRG {

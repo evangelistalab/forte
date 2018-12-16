@@ -42,7 +42,7 @@
 #include "psi4/libmints/vector.h"
 #include "psi4/libqt/qt.h"
 
-namespace psi {
+
 
 class Options;
 

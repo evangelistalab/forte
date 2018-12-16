@@ -38,7 +38,7 @@
 #include "base_classes/reference.h"
 #include "iao_builder.h"
 
-namespace psi {
+
 
 namespace forte {
 

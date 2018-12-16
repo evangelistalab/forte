@@ -43,7 +43,7 @@
 #define omp_get_num_threads() 1
 #endif
 
-namespace psi {
+
 namespace forte {
 
 void set_PT2_options(ForteOptions& foptions) {

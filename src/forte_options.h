@@ -33,7 +33,7 @@
 #include <string>
 #include <vector>
 
-namespace psi {
+
 namespace forte {
 
 // Types to store options

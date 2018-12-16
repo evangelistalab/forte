@@ -42,7 +42,7 @@
 
 #include "string_lists.h"
 
-namespace psi {
+
 namespace forte {
 
 /**

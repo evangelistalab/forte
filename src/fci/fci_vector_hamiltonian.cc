@@ -30,7 +30,7 @@
 
 #include "fci_vector.h"
 
-namespace psi {
+
 namespace forte {
 
 /**

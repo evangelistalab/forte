@@ -43,7 +43,7 @@
 
 #define ID(x) integral_transform_->DPD_ID(x)
 
-namespace psi {
+
 namespace forte {
 
 /**

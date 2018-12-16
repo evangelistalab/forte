@@ -4,7 +4,7 @@
 
 #include "psi4/libpsi4util/PsiOutStream.h"
 
-namespace psi {
+
 namespace forte {
 
 std::string rst_bold(const std::string& s);

@@ -48,7 +48,7 @@
 #define omp_get_num_threads() 1
 #endif
 
-namespace psi {
+
 namespace forte {
 
 class Reference;

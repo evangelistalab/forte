@@ -40,7 +40,7 @@
 #include "ci-no.h"
 //#include "hash_vector.h"
 
-namespace psi {
+
 namespace forte {
 
 #ifdef _OPENMP

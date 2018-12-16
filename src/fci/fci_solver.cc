@@ -48,7 +48,7 @@ using namespace psi;
 
 int fci_debug_level = 4;
 
-namespace psi {
+
 namespace forte {
 
 class MOSpaceInfo;

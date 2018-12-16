@@ -43,7 +43,7 @@
 #include "fci/fci_vector.h"
 #include "forte_options.h"
 
-namespace psi {
+
 namespace forte {
 
 /// Set the forte style options for the FCI method

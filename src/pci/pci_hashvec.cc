@@ -57,7 +57,7 @@ using namespace psi::forte::GeneratorType_HashVec;
 #define DO_STATS 0
 #define ENFORCE_SYM 1
 
-namespace psi {
+
 namespace forte {
 #ifdef _OPENMP
 #include <omp.h>

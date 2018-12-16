@@ -36,7 +36,7 @@
 #include "psi4/libfock/jk.h"
 #include "ao_helper.h"
 
-namespace psi {
+
 namespace forte {
 
 AtomicOrbitalHelper::AtomicOrbitalHelper(SharedMatrix CMO, SharedVector eps_occ,

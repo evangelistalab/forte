@@ -27,7 +27,7 @@
 
 #include "iao_builder.h"
 
-namespace psi {
+
 namespace forte {
 
 IAOBuilder::IAOBuilder(std::shared_ptr<BasisSet> primary, std::shared_ptr<BasisSet> minao,

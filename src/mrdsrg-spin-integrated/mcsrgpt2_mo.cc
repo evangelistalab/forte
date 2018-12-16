@@ -45,7 +45,7 @@
 
 #define Delta(i, j) ((i == j) ? 1 : 0)
 
-namespace psi {
+
 namespace forte {
 
 MCSRGPT2_MO::MCSRGPT2_MO(SharedWavefunction ref_wfn, Options& options,

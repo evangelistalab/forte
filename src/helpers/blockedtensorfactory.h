@@ -41,7 +41,7 @@
 
 #include "integrals/integrals.h"
 
-namespace psi {
+
 namespace forte {
 
 class BlockedTensorFactory {

@@ -49,7 +49,7 @@
 #define omp_get_num_threads() 1
 #endif
 
-namespace psi {
+
 namespace forte {
 
 #define SIGMA_VEC_DEBUG 0

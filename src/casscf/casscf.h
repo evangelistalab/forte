@@ -42,7 +42,7 @@
 #include "fci/fci_integrals.h"
 #include "orbital-helpers/semi_canonicalize.h"
 
-namespace psi {
+
 namespace forte {
 
 class CASSCF : public Wavefunction {

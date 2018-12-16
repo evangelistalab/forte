@@ -32,7 +32,7 @@
 #include <numeric>
 #include <cmath>
 
-namespace psi {
+
 namespace forte {
 
 DeterminantHashVec::DeterminantHashVec(std::vector<Determinant>& dets) {

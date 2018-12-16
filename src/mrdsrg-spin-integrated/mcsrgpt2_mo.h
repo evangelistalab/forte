@@ -46,7 +46,7 @@ using d4 = std::vector<d3>;
 using d5 = std::vector<d4>;
 using d6 = std::vector<d5>;
 
-namespace psi {
+
 namespace forte {
 
 class MCSRGPT2_MO : public FCI_MO {

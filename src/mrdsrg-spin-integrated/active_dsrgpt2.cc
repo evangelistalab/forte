@@ -48,7 +48,7 @@
 #include "boost/format.hpp"
 #include "helpers/printing.h"
 
-namespace psi {
+
 namespace forte {
 
 ACTIVE_DSRGPT2::ACTIVE_DSRGPT2(SharedWavefunction ref_wfn, Options& options,

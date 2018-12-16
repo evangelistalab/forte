@@ -38,7 +38,7 @@
 #include "fci/fci_integrals.h"
 #include "sparse_ci/sparse_ci_solver.h"
 
-namespace psi {
+
 namespace forte {
 
 class MRCI : public Wavefunction {

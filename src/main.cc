@@ -73,7 +73,7 @@ namespace py = pybind11;
 
 #include "forte.h"
 
-namespace psi {
+
 namespace forte {
 
 /// These functions replace the Memory Allocator in GA with C/C++ allocator.

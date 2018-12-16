@@ -34,7 +34,7 @@
 #include "sci/fci_mo.h"
 #include "dsrg_mrpt2.h"
 
-namespace psi {
+
 namespace forte {
 
 double DSRG_MRPT2::compute_energy_multi_state() {

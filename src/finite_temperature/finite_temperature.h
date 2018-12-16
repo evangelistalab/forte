@@ -38,7 +38,7 @@
 #include "helpers/mo_space_info.h"
 #include "psi4/libscf_solver/rhf.h"
 
-namespace psi {
+
 namespace forte {
 /// CASSCF can be expensive so many researchers have come up with different
 /// orbitals for CASSCF.

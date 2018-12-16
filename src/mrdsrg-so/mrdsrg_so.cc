@@ -37,7 +37,7 @@
 #include "helpers/timer.h"
 #include "mrdsrg_so.h"
 
-namespace psi {
+
 namespace forte {
 
 MRDSRG_SO::MRDSRG_SO(Reference reference, Options& options, std::shared_ptr<ForteIntegrals> ints,

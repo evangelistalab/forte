@@ -35,7 +35,7 @@
 
 #include "fci.h"
 
-namespace psi {
+
 namespace forte {
 
 void set_FCI_options(ForteOptions& foptions) {

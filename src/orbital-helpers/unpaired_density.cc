@@ -40,7 +40,7 @@
 #include "unpaired_density.h"
 #include "localize.h"
 
-namespace psi {
+
 namespace forte {
 
 UPDensity::UPDensity(std::shared_ptr<Wavefunction> wfn, std::shared_ptr<ForteIntegrals> ints,

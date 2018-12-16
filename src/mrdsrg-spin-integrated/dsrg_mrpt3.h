@@ -50,7 +50,7 @@
 #include "master_mrdsrg.h"
 
 using namespace ambit;
-namespace psi {
+
 namespace forte {
 
 class DSRG_MRPT3 : public MASTER_DSRG {

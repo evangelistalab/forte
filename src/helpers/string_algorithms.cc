@@ -31,7 +31,7 @@
 
 #include "string_algorithms.h"
 
-namespace psi {
+
 namespace forte {
 
 std::vector<std::string> split_string(const std::string& str, const std::string& delimiter) {

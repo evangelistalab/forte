@@ -34,7 +34,7 @@
 
 #include <chrono>
 
-namespace psi {
+
 namespace forte {
 
 /**

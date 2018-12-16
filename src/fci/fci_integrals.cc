@@ -30,7 +30,7 @@
 
 #include "fci_vector.h"
 
-namespace psi {
+
 namespace forte {
 
 FCIIntegrals::FCIIntegrals(std::shared_ptr<ForteIntegrals> ints, std::vector<size_t> active_mo,

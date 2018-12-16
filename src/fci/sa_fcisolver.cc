@@ -39,7 +39,7 @@
 #include "helpers/helpers.h"
 #include "sa_fcisolver.h"
 
-namespace psi {
+
 namespace forte {
 
 SA_FCISolver::SA_FCISolver(Options& options, std::shared_ptr<Wavefunction> wfn)

@@ -39,7 +39,7 @@
 #include "ui64_determinant.h"
 #include "stl_bitset_determinant.h"
 
-namespace psi {
+
 namespace forte {
 
 double slater_rules_single_alpha(uint64_t Ib, uint64_t Ia, uint64_t Ja,

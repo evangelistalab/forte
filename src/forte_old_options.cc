@@ -6,7 +6,7 @@
 #include "integrals/integrals.h"
 #include "pci/pci.h"
 
-namespace psi {
+
 namespace forte {
 
 void forte_old_options(Options& options) {

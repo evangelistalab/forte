@@ -49,7 +49,7 @@
 
 using namespace ambit;
 
-namespace psi {
+
 namespace forte {
 
 DSRG_MRPT3::DSRG_MRPT3(Reference reference, SharedWavefunction ref_wfn, Options& options,

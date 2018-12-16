@@ -46,7 +46,7 @@ struct PairHash {
     }
 };
 
-namespace psi {
+
 namespace forte {
 
 #ifdef _OPENMP

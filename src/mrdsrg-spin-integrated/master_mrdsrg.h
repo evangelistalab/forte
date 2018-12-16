@@ -19,7 +19,7 @@
 #include "mrdsrg-helper/dsrg_tensors.h"
 
 using namespace ambit;
-namespace psi {
+
 namespace forte {
 class MASTER_DSRG : public DynamicCorrelationSolver {
   public:

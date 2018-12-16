@@ -38,7 +38,7 @@
 
 #include "own_integrals.h"
 
-namespace psi {
+
 namespace forte {
 
 OwnIntegrals::OwnIntegrals(psi::Options& options, SharedWavefunction ref_wfn,

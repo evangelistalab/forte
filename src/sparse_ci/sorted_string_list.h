@@ -36,7 +36,7 @@
 #include "fci/fci_integrals.h"
 #include "sparse_ci/ui64_determinant.h"
 
-namespace psi {
+
 namespace forte {
 
 /**

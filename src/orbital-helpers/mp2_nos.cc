@@ -43,7 +43,7 @@
 
 using namespace ambit;
 
-namespace psi {
+
 namespace forte {
 
 MP2_NOS::MP2_NOS(std::shared_ptr<Wavefunction> wfn, Options& options,

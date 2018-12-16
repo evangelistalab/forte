@@ -41,7 +41,7 @@
 #include <mpi.h>
 #endif
 
-namespace psi {
+
 namespace forte {
 
 /**

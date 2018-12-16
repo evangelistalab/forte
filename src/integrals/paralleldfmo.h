@@ -28,7 +28,7 @@
 
 #include "psi4/libmints/basisset.h"
 #include "psi4/psi4-dec.h"
-namespace psi {
+
 namespace forte {
 
 class ParallelDFMO {

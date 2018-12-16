@@ -45,7 +45,7 @@
 #include "sparse_ci/sparse_ci_solver.h"
 #include "sparse_ci/determinant.h"
 
-namespace psi {
+
 namespace forte {
 
 /// Set the forte style options for the FCI method

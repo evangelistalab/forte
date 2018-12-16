@@ -29,7 +29,7 @@
 #ifndef _string_algorithms_h_
 #define _string_algorithms_h_
 
-namespace psi {
+
 namespace forte {
 
 std::vector<std::string> split_string(const std::string& str,

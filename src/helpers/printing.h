@@ -29,7 +29,7 @@
 #ifndef _printing_h_
 #define _printing_h_
 
-namespace psi {
+
 
 class Options;
 

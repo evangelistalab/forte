@@ -1,6 +1,6 @@
 #include "base_classes/active_space_solver.h"
 
-namespace psi {
+
 namespace forte {
 
 ActiveSpaceSolver::ActiveSpaceSolver(SharedWavefunction ref_wfn, Options& options,

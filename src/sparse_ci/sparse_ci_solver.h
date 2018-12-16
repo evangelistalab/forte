@@ -45,7 +45,7 @@
 #define BIGNUM 1E100
 #define MAXIT 100
 
-namespace psi {
+
 namespace forte {
 
 enum DiagonalizationMethod { Full, DLSolver, DLString, DLDisk, MPI, Sparse, Direct, Dynamic };

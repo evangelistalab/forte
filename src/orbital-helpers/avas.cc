@@ -35,7 +35,7 @@
 
 #include "avas.h"
 
-namespace psi {
+
 namespace forte {
 
 SharedMatrix semicanonicalize_block(SharedWavefunction ref_wfn, SharedMatrix C_tilde,

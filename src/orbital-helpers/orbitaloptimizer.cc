@@ -44,7 +44,7 @@
 #include "base_classes/reference.h"
 using namespace psi;
 
-namespace psi {
+
 namespace forte {
 
 OrbitalOptimizer::OrbitalOptimizer() {}

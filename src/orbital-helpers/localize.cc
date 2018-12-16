@@ -39,7 +39,7 @@
 
 #include "localize.h"
 
-namespace psi {
+
 namespace forte {
 
 LOCALIZE::LOCALIZE(std::shared_ptr<Wavefunction> wfn, Options& options,

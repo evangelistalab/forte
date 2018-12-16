@@ -35,7 +35,7 @@
 #include "helpers/printing.h"
 #include "es-nos.h"
 
-namespace psi {
+
 namespace forte {
 
 ESNO::ESNO(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,

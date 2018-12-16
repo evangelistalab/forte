@@ -39,7 +39,7 @@
 #include "sparse_ci/stl_bitset_string.h"
 #include "helpers/timer.h"
 
-namespace psi {
+
 namespace forte {
 
 struct DetAddress {

@@ -36,7 +36,7 @@
 #include "sparse_ci/sorted_string_list.h"
 #include "helpers/mo_space_info.h"
 
-namespace psi {
+
 namespace forte {
 
 /**

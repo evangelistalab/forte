@@ -31,7 +31,7 @@
 
 #include "string_lists.h"
 
-namespace psi {
+
 namespace forte {
 
 StringLists::StringLists(RequiredLists required_lists, Dimension cmopi, std::vector<size_t> core_mo,

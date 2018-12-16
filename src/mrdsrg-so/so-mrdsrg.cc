@@ -46,7 +46,7 @@
 
 using namespace ambit;
 
-namespace psi {
+
 namespace forte {
 
 SOMRDSRG::SOMRDSRG(Reference reference, SharedWavefunction ref_wfn, Options& options,

@@ -41,7 +41,7 @@
 #include "boost/format.hpp"
 #include "mrdsrg.h"
 
-namespace psi {
+
 namespace forte {
 
 double MRDSRG::compute_energy_pt2() {

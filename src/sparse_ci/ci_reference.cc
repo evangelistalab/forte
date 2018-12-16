@@ -35,7 +35,7 @@
 
 #include <algorithm>
 
-namespace psi {
+
 namespace forte {
 
 CI_Reference::CI_Reference(std::shared_ptr<Wavefunction> wfn, Options& options,

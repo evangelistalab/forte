@@ -39,7 +39,7 @@
 
 using namespace psi;
 
-namespace psi {
+
 namespace forte {
 
 void set_ACI_options(ForteOptions& foptions) {
