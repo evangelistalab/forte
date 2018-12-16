@@ -36,6 +36,7 @@
 #include "helpers/printing.h"
 #include "dsrg_mrpt.h"
 
+using namespace psi;
 
 namespace forte {
 
@@ -642,6 +643,5 @@ void DSRG_MRPT::print_citation() {
         outfile->Printf("\n    %-20s %-60s", str_dim.first.c_str(), str_dim.second.c_str());
     }
     outfile->Printf("\n");
-}
 }
 }

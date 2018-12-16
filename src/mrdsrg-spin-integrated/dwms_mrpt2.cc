@@ -13,6 +13,7 @@
 #include "orbital-helpers/semi_canonicalize.h"
 #include "helpers/printing.h"
 
+using namespace psi;
 
 namespace forte {
 
@@ -1200,6 +1201,5 @@ void DWMS_DSRGPT2::print_overlap(const std::vector<psi::SharedVector>& evecs, co
     }
 
     S->print();
-}
 }
 }

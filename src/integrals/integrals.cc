@@ -513,7 +513,7 @@ void ForteIntegrals::build_AOdipole_ints() {
     AOdipole_ints_.clear();
     for (const std::string& direction : {"X", "Y", "Z"}) {
         std::string name = "AO Dipole " + direction;
-        AOdipole_ints_.push_back(std::make_shared<psi::Matrix>(name, nbf, nbf)));
+        AOdipole_ints_.push_back(std::make_shared<psi::Matrix>(name, nbf, nbf));
     }
     std::shared_ptr<OneBodyAOInt> aodOBI(ints_fac->ao_dipole());
     aodOBI->compute(AOdipole_ints_);

@@ -35,6 +35,7 @@
 
 #include "fci.h"
 
+using namespace psi;
 
 namespace forte {
 
@@ -205,4 +206,4 @@ double FCI::solver_compute_energy() {
 
 Reference FCI::reference() { return fcisolver_->reference(); }
 }
-}
+

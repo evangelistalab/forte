@@ -63,6 +63,7 @@
 
 using namespace ambit;
 
+using namespace psi;
 
 namespace forte {
 
@@ -4191,4 +4192,3 @@ void THREE_DSRG_MRPT2::rotate_amp(psi::SharedMatrix Ua, psi::SharedMatrix Ub, co
     }
 }
 }
-} // End Namespaces

@@ -48,6 +48,7 @@
 #include "boost/format.hpp"
 #include "helpers/printing.h"
 
+using namespace psi;
 
 namespace forte {
 
@@ -573,7 +574,7 @@ void ACTIVE_DSRGPT2::compute_osc_ref(const int& irrep0, const int& irrep1,
     } else {
         nroot += nroot1;
         evals = std::vector<double>(nroot, 0.0);
-        evecs = std::make_shared<psi::Matrix>("combined evecs", ndet, nroot));
+        evecs = std::make_shared<psi::Matrix>("combined evecs", ndet, nroot);
 
         for (size_t n = 0; n < nroot0; ++n) {
             evals[n] = eigen0[n].second;
@@ -1634,7 +1635,7 @@ void ACTIVE_DSRGPT2::compute_osc_pt2_dets(const int& irrep, const int& root, con
 
     // step 3: combine eigen vectors
     np = p_space.size();
-    evecs = std::make_shared<psi::Matrix>("combined evecs", np, 2));
+    evecs = std::make_shared<psi::Matrix>("combined evecs", np, 2);
     //    psi::SharedMatrix evecs(new psi::Matrix("combined evecs", np, 2));
     for (size_t i = 0; i < offset; ++i) {
         evecs->set(i, 0, wfn0_x[p_space[i]]);
@@ -1896,6 +1897,5 @@ double ACTIVE_DSRGPT2::compute_overlap(std::map<Determinant, double> wfn1,
     }
 
     return value;
-}
 }
 }

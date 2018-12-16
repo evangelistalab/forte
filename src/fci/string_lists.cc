@@ -31,6 +31,7 @@
 
 #include "string_lists.h"
 
+using namespace psi;
 
 namespace forte {
 
@@ -343,4 +344,4 @@ void StringLists::print_string(bool* I, size_t n) {
 //  delete[] b;
 //*/
 }
-}
+

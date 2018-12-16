@@ -44,6 +44,7 @@
 #include "helpers/timer.h"
 #include "semi_canonicalize.h"
 
+using namespace psi;
 
 namespace forte {
 
@@ -76,8 +77,8 @@ void SemiCanonical::startup() {
     ruocc_ = mo_space_info_->get_dimension("RESTRICTED_UOCC");
 
     // Preapare orbital rotation matrix, which transforms all MOs
-    Ua_ = std::make_shared<psi::Matrix>("Ua", nmopi_, nmopi_));
-    Ub_ = std::make_shared<psi::Matrix>("Ub", nmopi_, nmopi_));
+    Ua_ = std::make_shared<psi::Matrix>("Ua", nmopi_, nmopi_);
+    Ub_ = std::make_shared<psi::Matrix>("Ub", nmopi_, nmopi_);
 
     Ua_->identity();
     Ub_->identity();
@@ -525,4 +526,3 @@ void SemiCanonical::transform_reference(ambit::Tensor& Ua, ambit::Tensor& Ub, Re
     }
 }
 } // namespace forte
-} // namespace psi

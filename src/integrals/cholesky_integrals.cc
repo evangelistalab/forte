@@ -46,14 +46,14 @@
 #include "cholesky_integrals.h"
 
 using namespace ambit;
-
+using namespace psi;
 
 namespace forte {
 
 CholeskyIntegrals::CholeskyIntegrals(psi::Options& options, psi::SharedWavefunction ref_wfn,
                                      IntegralSpinRestriction restricted,
                                      std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : ForteIntegrals(psi::Options, ref_wfn, restricted, mo_space_info) {
+    : ForteIntegrals(options, ref_wfn, restricted, mo_space_info) {
 
     integral_type_ = Cholesky;
     print_info();
@@ -61,7 +61,6 @@ CholeskyIntegrals::CholeskyIntegrals(psi::Options& options, psi::SharedWavefunct
     gather_integrals();
     freeze_core_orbitals();
     print_timing("computing Cholesky integrals", int_timer.get());
-
 }
 
 CholeskyIntegrals::~CholeskyIntegrals() {}
@@ -179,12 +178,12 @@ void CholeskyIntegrals::gather_integrals() {
         if (psio->exists(file_unit)) {
             psio->open(file_unit, PSIO_OPEN_OLD);
             psio->read_entry(file_unit, "length", (char*)&nthree_, sizeof(long int));
-            psi::SharedMatrix L_tri = std::make_shared<psi::Matrix>("Partial Cholesky", nthree_, ntri));
+            psi::SharedMatrix L_tri = std::make_shared<psi::Matrix>("Partial Cholesky", nthree_, ntri);
             double** Lp = L_tri->pointer();
             psio->read_entry(file_unit, "(Q|mn) Integrals", (char*)Lp[0],
                              sizeof(double) * nthree_ * ntri);
             psio->close(file_unit, 1);
-            psi::SharedMatrix L_ao = std::make_shared<psi::Matrix>("Partial Cholesky", nthree_, nbf * nbf));
+            psi::SharedMatrix L_ao = std::make_shared<psi::Matrix>("Partial Cholesky", nthree_, nbf * nbf);
             for (size_t mn = 0; mn < ntri; mn++) {
                 size_t m = function_pairs[mn].first;
                 size_t n = function_pairs[mn].second;
@@ -348,7 +347,8 @@ void CholeskyIntegrals::resort_integrals_after_freezing() {
     // Resort the three-index integrals
     resort_three(ThreeIntegral_, cmotomo_);
 }
-void CholeskyIntegrals::resort_three(std::shared_ptr<psi::Matrix>& threeint, std::vector<size_t>& map) {
+void CholeskyIntegrals::resort_three(std::shared_ptr<psi::Matrix>& threeint,
+                                     std::vector<size_t>& map) {
     // Create a temperature threeint matrix
     psi::SharedMatrix temp_threeint(threeint->clone());
     temp_threeint->zero();
@@ -376,4 +376,3 @@ void CholeskyIntegrals::set_tei(size_t, size_t, size_t, size_t, double, bool, bo
     throw psi::PSIEXCEPTION("Don't use DF/CD if you use set_tei");
 }
 } // namespace forte
-

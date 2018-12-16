@@ -38,13 +38,14 @@
 
 #include "own_integrals.h"
 
+using namespace psi;
 
 namespace forte {
 
 OwnIntegrals::OwnIntegrals(psi::Options& options, psi::SharedWavefunction ref_wfn,
                            IntegralSpinRestriction restricted,
                            std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : ForteIntegrals(psi::Options, ref_wfn, restricted, mo_space_info) {
+    : ForteIntegrals(options, ref_wfn, restricted, mo_space_info) {
     integral_type_ = Own;
     // If code calls constructor print things
     // But if someone calls retransform integrals do not print it

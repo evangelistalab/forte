@@ -38,6 +38,7 @@
 #include "sparse_ci/determinant.h"
 #include "ci-no.h"
 
+using namespace psi;
 
 namespace forte {
 

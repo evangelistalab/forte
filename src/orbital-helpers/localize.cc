@@ -40,6 +40,7 @@
 
 #include "localize.h"
 
+using namespace psi;
 
 namespace forte {
 
@@ -121,7 +122,7 @@ void LOCALIZE::split_localize() {
 
     psi::SharedMatrix Laocc = loc_a->L();
 
-    std::shared_ptr<Localizer> loc_v = Localizer::build(local_type_, primary, Cavir);
+    std::shared_ptr<psi::Localizer> loc_v = psi::Localizer::build(local_type_, primary, Cavir);
     loc_v->localize();
 
     psi::SharedMatrix Lvir = loc_v->L();
@@ -202,7 +203,7 @@ void LOCALIZE::full_localize() {
     }
     ints_->retransform_integrals();
 
-    U_ = std::make_shared<psi::Matrix>("U", nsopi[0], nact));
+    U_ = std::make_shared<psi::Matrix>("U", nsopi[0], nact);
     U_->copy(U);
 }
 
@@ -210,4 +211,3 @@ psi::SharedMatrix LOCALIZE::get_U() { return U_; }
 
 LOCALIZE::~LOCALIZE() {}
 }
-} // End Namespaces

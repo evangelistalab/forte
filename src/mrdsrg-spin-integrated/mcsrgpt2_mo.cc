@@ -45,6 +45,7 @@
 
 #define Delta(i, j) ((i == j) ? 1 : 0)
 
+using namespace psi;
 
 namespace forte {
 
@@ -131,7 +132,7 @@ void MCSRGPT2_MO::startup(psi::Options& options) {
     if (expo_delta_ <= 1.0) {
         throw psi::PSIEXCEPTION("DELTA_EXPONENT must be greater than 1.0.");
     }
-    double e_conv = -log10(psi::Options.get_double("E_CONVERGENCE"));
+    double e_conv = -log10(options.get_double("E_CONVERGENCE"));
     taylor_order_ = floor((e_conv / taylor_threshold_ + 1.0) / expo_delta_) + 1;
 
     // Print Original Orbital Indices
@@ -3273,6 +3274,5 @@ double MCSRGPT2_MO::compute_energy_srg() {
     }
 
     return Etotal;
-}
 }
 }

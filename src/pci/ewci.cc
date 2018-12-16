@@ -3203,4 +3203,3 @@ std::vector<std::tuple<double, int, int>> ElementwiseCI::sym_labeled_orbitals(st
     return labeled_orb;
 }
 }
-} // EndNamespaces

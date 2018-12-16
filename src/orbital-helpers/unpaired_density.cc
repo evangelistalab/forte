@@ -40,6 +40,7 @@
 #include "unpaired_density.h"
 #include "localize.h"
 
+using namespace psi;
 
 namespace forte {
 
@@ -80,8 +81,8 @@ void UPDensity::compute_unpaired_density(std::vector<double>& oprdm_a,
     //    opdm_b->transform(Ubs_);
 
     // Diagonalize the 1-RDMs
-    psi::SharedVector OCC_A(new Vector("ALPHA NOCC", nirrep, nactpi));
-    psi::SharedVector OCC_B(new Vector("BETA NOCC", nirrep, nactpi));
+    psi::SharedVector OCC_A(new psi::Vector("ALPHA NOCC", nirrep, nactpi));
+    psi::SharedVector OCC_B(new psi::Vector("BETA NOCC", nirrep, nactpi));
     psi::SharedMatrix NO_A(new psi::Matrix(nirrep, nactpi, nactpi));
     psi::SharedMatrix NO_B(new psi::Matrix(nirrep, nactpi, nactpi));
 
@@ -218,4 +219,3 @@ void UPDensity::compute_unpaired_density(std::vector<double>& oprdm_a,
 
 UPDensity::~UPDensity() {}
 }
-} // End Namespaces

@@ -41,6 +41,7 @@
 #include "boost/format.hpp"
 #include "mrdsrg.h"
 
+using namespace psi;
 
 namespace forte {
 
@@ -1419,6 +1420,5 @@ double MRDSRG::compute_energy_pt3() {
 
     Hbar0_ = Ecorr;
     return Ecorr;
-}
 }
 }

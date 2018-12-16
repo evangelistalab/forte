@@ -46,6 +46,7 @@
 
 using namespace ambit;
 
+using namespace psi;
 
 namespace forte {
 
@@ -979,4 +980,3 @@ double SOMRDSRG::renormalized_denominator(double D) {
     }
 }
 }
-} // End Namespaces

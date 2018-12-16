@@ -5407,4 +5407,3 @@ std::vector<std::tuple<double, int, int>> ProjectorCI::sym_labeled_orbitals(std:
     return labeled_orb;
 }
 }
-} // EndNamespaces

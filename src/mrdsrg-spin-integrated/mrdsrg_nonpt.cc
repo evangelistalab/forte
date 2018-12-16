@@ -42,6 +42,7 @@
 #include "boost/format.hpp"
 #include "mrdsrg.h"
 
+using namespace psi;
 
 namespace forte {
 

@@ -39,6 +39,7 @@
 #include "helpers/helpers.h"
 #include "sa_fcisolver.h"
 
+using namespace psi;
 
 namespace forte {
 

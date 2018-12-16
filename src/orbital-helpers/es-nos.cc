@@ -35,6 +35,7 @@
 #include "helpers/printing.h"
 #include "es-nos.h"
 
+using namespace psi;
 
 namespace forte {
 

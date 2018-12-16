@@ -8,6 +8,7 @@
 #include "helpers/timer.h"
 #include "master_mrdsrg.h"
 
+using namespace psi;
 
 namespace forte {
 
@@ -2145,6 +2146,5 @@ std::vector<std::string> MASTER_DSRG::re_two_labels() {
     }
 
     return labels;
-}
 }
 }

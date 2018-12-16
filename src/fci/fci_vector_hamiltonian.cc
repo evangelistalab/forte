@@ -30,6 +30,7 @@
 
 #include "fci_vector.h"
 
+using namespace psi;
 
 namespace forte {
 
@@ -366,6 +367,5 @@ void FCIWfn::H2_aabb(FCIWfn& result, std::shared_ptr<FCIIntegrals> fci_ints) {
             }
         }
     }
-}
 }
 }

@@ -36,6 +36,7 @@
 
 using namespace boost::numeric::odeint;
 
+using namespace psi;
 
 namespace forte {
 
@@ -527,6 +528,5 @@ double MRDSRG::compute_energy_srgpt2() {
     }
 
     return Hbar0_;
-}
 }
 }

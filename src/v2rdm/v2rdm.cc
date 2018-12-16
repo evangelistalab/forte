@@ -41,6 +41,7 @@
 
 #include "v2rdm.h"
 
+using namespace psi;
 
 namespace forte {
 
@@ -645,6 +646,5 @@ void V2RDM::write_density_to_file() {
     }
 
     outfile->Printf("    Done.");
-}
 }
 }

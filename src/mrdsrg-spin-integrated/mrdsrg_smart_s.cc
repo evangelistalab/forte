@@ -188,4 +188,3 @@ double MRDSRG::smart_s_davg_max_delta1() {
     return Edelta;
 }
 }
-}

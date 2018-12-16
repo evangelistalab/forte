@@ -43,6 +43,7 @@
 
 #define ID(x) integral_transform_->DPD_ID(x)
 
+using namespace psi;
 
 namespace forte {
 
@@ -55,7 +56,7 @@ namespace forte {
 ConventionalIntegrals::ConventionalIntegrals(psi::Options& options, psi::SharedWavefunction ref_wfn,
                                              IntegralSpinRestriction restricted,
                                              std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : ForteIntegrals(psi::Options, ref_wfn, restricted, mo_space_info) {
+    : ForteIntegrals(options, ref_wfn, restricted, mo_space_info) {
 
     integral_type_ = Conventional;
     print_info();
@@ -90,15 +91,15 @@ void ConventionalIntegrals::transform_integrals() {
     // Call IntegralTransform asking for integrals over restricted or
     // unrestricted orbitals
     if (restricted_) {
-        integral_transform_ = std::make_shared<IntegralTransform>(
-            wfn_, spaces, IntegralTransform::TransformationType::Restricted,
-            IntegralTransform::OutputType::DPDOnly, IntegralTransform::MOOrdering::PitzerOrder,
-            IntegralTransform::FrozenOrbitals::None);
+        integral_transform_ = std::make_shared<psi::IntegralTransform>(
+            wfn_, spaces, psi::IntegralTransform::TransformationType::Restricted,
+            psi::IntegralTransform::OutputType::DPDOnly, psi::IntegralTransform::MOOrdering::PitzerOrder,
+            psi::IntegralTransform::FrozenOrbitals::None);
     } else {
-        integral_transform_ = std::make_shared<IntegralTransform>(
-            wfn_, spaces, IntegralTransform::TransformationType::Unrestricted,
-            IntegralTransform::OutputType::DPDOnly, IntegralTransform::MOOrdering::PitzerOrder,
-            IntegralTransform::FrozenOrbitals::None);
+        integral_transform_ = std::make_shared<psi::IntegralTransform>(
+            wfn_, spaces, psi::IntegralTransform::TransformationType::Unrestricted,
+            psi::IntegralTransform::OutputType::DPDOnly, psi::IntegralTransform::MOOrdering::PitzerOrder,
+            psi::IntegralTransform::FrozenOrbitals::None);
     }
 
     // Keep the SO integrals on disk in case we want to retransform them

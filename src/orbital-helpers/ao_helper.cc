@@ -36,13 +36,14 @@
 #include "psi4/libfock/jk.h"
 #include "ao_helper.h"
 
+using namespace psi;
 
 namespace forte {
 
 AtomicOrbitalHelper::AtomicOrbitalHelper(psi::SharedMatrix CMO, psi::SharedVector eps_occ,
                                          psi::SharedVector eps_vir, double laplace_tolerance)
     : CMO_(CMO), eps_rdocc_(eps_occ), eps_virtual_(eps_vir), laplace_tolerance_(laplace_tolerance) {
-    LaplaceDenominator laplace(eps_rdocc_, eps_virtual_, laplace_tolerance_);
+    psi::LaplaceDenominator laplace(eps_rdocc_, eps_virtual_, laplace_tolerance_);
     Occupied_Laplace_ = laplace.denominator_occ();
     Virtual_Laplace_ = laplace.denominator_vir();
     weights_ = Occupied_Laplace_->rowspi()[0];
@@ -55,7 +56,7 @@ AtomicOrbitalHelper::AtomicOrbitalHelper(psi::SharedMatrix CMO, psi::SharedVecto
                                          psi::SharedVector eps_vir, double laplace_tolerance, int shift)
     : CMO_(CMO), eps_rdocc_(eps_occ), eps_virtual_(eps_vir), laplace_tolerance_(laplace_tolerance),
       shift_(shift) {
-    LaplaceDenominator laplace(eps_rdocc_, eps_virtual_, laplace_tolerance_);
+    psi::LaplaceDenominator laplace(eps_rdocc_, eps_virtual_, laplace_tolerance_);
     Occupied_Laplace_ = laplace.denominator_occ();
     Virtual_Laplace_ = laplace.denominator_vir();
     weights_ = Occupied_Laplace_->rowspi()[0];
@@ -125,6 +126,5 @@ void AtomicOrbitalHelper::Estimate_TransAO_Screen(std::shared_ptr<psi::BasisSet>
     }
     TransAO_Screen_ = AO_Trans_Screen;
     TransAO_Screen_->set_name("(u_b {b}^v | u_b {b}^v)");
-}
 }
 }

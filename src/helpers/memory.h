@@ -64,6 +64,5 @@ std::pair<double, std::string> to_xb2(size_t nele) {
 }
 
 }
-} // End Namespaces
 
 #endif // _memory_h_

@@ -35,7 +35,10 @@
 
 
 class Tensor;
-class IntegralTransform;
+
+namespace psi {
+  class IntegralTransform;
+}
 
 namespace forte {
 
@@ -89,7 +92,7 @@ class ConventionalIntegrals : public ForteIntegrals {
     // ==> Class data <==
 
     /// The IntegralTransform object used by this class
-    std::shared_ptr<IntegralTransform> integral_transform_;
+    std::shared_ptr<psi::IntegralTransform> integral_transform_;
 
     /// Two-electron integrals stored as a vector
     std::vector<double> aphys_tei_aa;

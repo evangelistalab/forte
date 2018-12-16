@@ -48,6 +48,7 @@
 
 using namespace ambit;
 
+using namespace psi;
 
 namespace forte {
 
@@ -3205,4 +3206,3 @@ void DSRG_MRPT2::print_intruder(const std::string& name,
     outfile->Printf("\n%s", output.c_str());
 }
 }
-} // End Namespaces

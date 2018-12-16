@@ -191,7 +191,7 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
     if (options.get_bool("USE_DMRGSCF")) {
 #ifdef HAVE_CHEMPS2
         auto dmrg = std::make_shared<DMRGSCF>(ref_wfn, options, mo_space_info, ints);
-        dmrg->set_iterations(psi::Options.get_int("DMRGSCF_MAX_ITER"));
+        dmrg->set_iterations(options.get_int("DMRGSCF_MAX_ITER"));
         dmrg->compute_energy();
 #else
         throw psi::PSIEXCEPTION("Did not compile with CHEMPS2 so DMRG will not work");

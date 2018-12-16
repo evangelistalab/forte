@@ -40,6 +40,7 @@
 #include <tuple>
 #include <vector>
 
+using namespace psi;
 
 namespace forte {
 
@@ -232,4 +233,3 @@ void BlockedTensorFactory::memory_summary_per_block(ambit::BlockedTensor& tensor
     }
 }
 } // namespace forte
-} // namespace psi

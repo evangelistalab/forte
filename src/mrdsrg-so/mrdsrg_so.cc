@@ -37,6 +37,7 @@
 #include "helpers/timer.h"
 #include "mrdsrg_so.h"
 
+using namespace psi;
 
 namespace forte {
 
@@ -1329,6 +1330,5 @@ void MRDSRG_SO::H3_T2_C2(BlockedTensor& H3, BlockedTensor& T2, const double& alp
     temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"ca"});
     temp["mx"] += 0.5 * T2["myuv"] * Lambda2["uvxy"];
     C2["toqr"] -= alpha * temp["mx"] * H3["xtomqr"];
-}
 }
 }

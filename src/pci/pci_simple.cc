@@ -2017,4 +2017,3 @@ ProjectorCI_Simple::sym_labeled_orbitals(std::string type) {
     return labeled_orb;
 }
 }
-} // EndNamespaces

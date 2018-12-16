@@ -43,6 +43,7 @@
 
 using namespace ambit;
 
+using namespace psi;
 
 namespace forte {
 
@@ -400,4 +401,4 @@ MP2_NOS::MP2_NOS(std::shared_ptr<psi::Wavefunction> wfn, psi::Options& options,
     BlockedTensor::reset_mo_spaces();
 }
 }
-}
+

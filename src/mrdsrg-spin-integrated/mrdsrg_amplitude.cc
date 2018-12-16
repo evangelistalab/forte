@@ -38,6 +38,7 @@
 #include "boost/format.hpp"
 #include "mrdsrg.h"
 
+using namespace psi;
 
 namespace forte {
 
@@ -1566,6 +1567,5 @@ void MRDSRG::print_intruder(const std::string& name,
         output = title + " NULL";
     }
     outfile->Printf("\n%s", output.c_str());
-}
 }
 }

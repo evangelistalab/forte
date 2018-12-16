@@ -49,6 +49,7 @@
 
 using namespace ambit;
 
+using namespace psi;
 
 namespace forte {
 
@@ -5740,4 +5741,3 @@ void DSRG_MRPT3::rotate_2rdm(ambit::Tensor& L2aa, ambit::Tensor& L2ab, ambit::Te
     L2bb("PQRS") = Ub("AP") * Ub("BQ") * temp("ABCD") * Ub("CR") * Ub("DS");
 }
 }
-} // End Namespaces

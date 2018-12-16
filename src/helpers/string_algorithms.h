@@ -36,6 +36,5 @@ std::vector<std::string> split_string(const std::string& str,
                                       const std::string& delimiter);
 
 }
-}
 
 #endif // _string_algorithms_h_

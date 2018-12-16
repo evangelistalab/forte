@@ -33,6 +33,7 @@
 
 #include "dsrg_mrpt.h"
 
+using namespace psi;
 
 namespace forte {
 

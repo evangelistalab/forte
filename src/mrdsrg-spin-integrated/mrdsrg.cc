@@ -41,6 +41,7 @@
 #include "orbital-helpers/mp2_nos.h"
 #include "mrdsrg.h"
 
+using namespace psi;
 
 namespace forte {
 
@@ -1253,6 +1254,5 @@ void MRDSRG::check_density(BlockedTensor& D, const std::string& name) {
         output += str(boost::format(" %12.6f") % norms[i]);
     output += indent + sep;
     outfile->Printf("%s", output.c_str());
-}
 }
 }

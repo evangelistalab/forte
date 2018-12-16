@@ -34,6 +34,7 @@
 
 #include "printing.h"
 
+using namespace psi;
 
 namespace forte {
 

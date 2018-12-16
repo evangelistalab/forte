@@ -231,4 +231,3 @@ void StringLists::make_3h_list(GraphPtr graph, GraphPtr graph_3h, H3List& list) 
     delete[] I;
 }
 }
-}

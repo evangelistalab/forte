@@ -34,6 +34,7 @@
 #include "sci/fci_mo.h"
 #include "dsrg_mrpt2.h"
 
+using namespace psi;
 
 namespace forte {
 
@@ -1033,6 +1034,5 @@ void DSRG_MRPT2::rotate_3rdm(ambit::Tensor& L3aaa, ambit::Tensor& L3aab, ambit::
     temp("pqrstu") = L3bbb("pqrstu");
     L3bbb("PQRSTU") =
         Ub("AP") * Ub("BQ") * Ub("CR") * temp("ABCIJK") * Ub("IS") * Ub("JT") * Ub("KU");
-}
 }
 }

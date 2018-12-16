@@ -36,6 +36,7 @@
 #include "helpers/mo_space_info.h"
 #include "fci_vector.h"
 
+using namespace psi;
 
 namespace forte {
 
@@ -245,5 +246,4 @@ double FCIWfn::determinant_energy(bool*& Ia,bool*& Ib,int n)
 }
 
 */
-}
 }

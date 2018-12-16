@@ -32,8 +32,6 @@
 #include "psi4/psi4-dec.h"
 #include "psi4/lib3index/denominator.h"
 
-
-
 namespace forte {
 
 class AtomicOrbitalHelper {
@@ -82,7 +80,6 @@ class AtomicOrbitalHelper {
 
     ~AtomicOrbitalHelper();
 };
-}
 }
 
 #endif
