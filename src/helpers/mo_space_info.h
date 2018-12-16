@@ -131,7 +131,7 @@ class MOSpaceInfo {
     size_t nirrep() { return nirrep_; }
 
   private:
-    std::pair<SpaceInfo, bool> read_mo_space(const std::string& space, Options& options);
+    std::pair<SpaceInfo, bool> read_mo_space(const std::string& space, psi::Options& options);
 
     /// The number of irreducible representations
     size_t nirrep_;

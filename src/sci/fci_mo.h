@@ -72,7 +72,7 @@ class FCI_MO : public psi::Wavefunction {
      * @param ints ForteInegrals
      * @param mo_space_info MOSpaceInfo
      */
-    FCI_MO(psi::SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
+    FCI_MO(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
            std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /**
@@ -83,7 +83,7 @@ class FCI_MO : public psi::Wavefunction {
      * @param mo_space_info MOSpaceInfo
      * @param fci_ints FCIInegrals
      */
-    FCI_MO(psi::SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
+    FCI_MO(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
            std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<FCIIntegrals> fci_ints);
 
     /// Destructor

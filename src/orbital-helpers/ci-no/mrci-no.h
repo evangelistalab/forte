@@ -53,7 +53,7 @@ class MRCINO : public psi::Wavefunction {
      * @param ints A pointer to an allocated integral object
      * @param mo_space_info A pointer to the MOSpaceInfo object
      */
-    MRCINO(psi::SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
+    MRCINO(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
          std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Destructor

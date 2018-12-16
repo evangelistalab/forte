@@ -38,21 +38,21 @@ void banner();
 void cleanup();
 
 int read_options(psi::Options& options);
-psi::SharedWavefunction run_forte(psi::SharedWavefunction ref_wfn, Options& options);
+psi::SharedWavefunction run_forte(psi::SharedWavefunction ref_wfn, psi::Options& options);
 
 
 
-std::shared_ptr<MOSpaceInfo> make_mo_space_info(psi::SharedWavefunction ref_wfn, Options& options);
+std::shared_ptr<MOSpaceInfo> make_mo_space_info(psi::SharedWavefunction ref_wfn, psi::Options& options);
 
-psi::SharedMatrix make_aosubspace_projector(psi::SharedWavefunction ref_wfn, Options& options);
+psi::SharedMatrix make_aosubspace_projector(psi::SharedWavefunction ref_wfn, psi::Options& options);
 
-std::shared_ptr<ForteIntegrals> make_forte_integrals(psi::SharedWavefunction ref_wfn, Options& options,
+std::shared_ptr<ForteIntegrals> make_forte_integrals(psi::SharedWavefunction ref_wfn, psi::Options& options,
                                                      std::shared_ptr<MOSpaceInfo> mo_space_info);
 
-void make_ci_nos(psi::SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
+void make_ci_nos(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
                  std::shared_ptr<MOSpaceInfo> mo_space_info);
 
-void forte_old_methods(psi::SharedWavefunction ref_wfn, Options& options,
+void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
                        std::shared_ptr<ForteIntegrals> ints,
                        std::shared_ptr<MOSpaceInfo> mo_space_info);
 

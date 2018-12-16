@@ -57,7 +57,7 @@ FCISolver::FCISolver(psi::Dimension active_dim, std::vector<size_t> core_mo,
                      std::vector<size_t> active_mo, size_t na, size_t nb, size_t multiplicity,
                      size_t symmetry, std::shared_ptr<ForteIntegrals> ints,
                      std::shared_ptr<MOSpaceInfo> mo_space_info, size_t ntrial_per_root, int print,
-                     Options& options)
+                     psi::Options& options)
     : active_dim_(active_dim), core_mo_(core_mo), active_mo_(active_mo), ints_(ints),
       nirrep_(active_dim.n()), symmetry_(symmetry), na_(na), nb_(nb), multiplicity_(multiplicity),
       nroot_(0), ntrial_per_root_(ntrial_per_root), print_(print), mo_space_info_(mo_space_info),
@@ -69,7 +69,7 @@ FCISolver::FCISolver(psi::Dimension active_dim, std::vector<size_t> core_mo,
 FCISolver::FCISolver(psi::Dimension active_dim, std::vector<size_t> core_mo,
                      std::vector<size_t> active_mo, size_t na, size_t nb, size_t multiplicity,
                      size_t symmetry, std::shared_ptr<ForteIntegrals> ints,
-                     std::shared_ptr<MOSpaceInfo> mo_space_info, Options& options)
+                     std::shared_ptr<MOSpaceInfo> mo_space_info, psi::Options& options)
     : active_dim_(active_dim), core_mo_(core_mo), active_mo_(active_mo), ints_(ints),
       nirrep_(active_dim.n()), symmetry_(symmetry), na_(na), nb_(nb), multiplicity_(multiplicity),
       nroot_(0), mo_space_info_(mo_space_info), options_(psi::Options) {

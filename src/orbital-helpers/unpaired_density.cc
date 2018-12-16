@@ -44,7 +44,7 @@
 namespace forte {
 
 UPDensity::UPDensity(std::shared_ptr<Wavefunction> wfn, std::shared_ptr<ForteIntegrals> ints,
-                     std::shared_ptr<MOSpaceInfo> mo_space_info, Options& options, psi::SharedMatrix Ua,
+                     std::shared_ptr<MOSpaceInfo> mo_space_info, psi::Options& options, psi::SharedMatrix Ua,
                      psi::SharedMatrix Ub)
     : options_(psi::Options), ints_(ints), wfn_(wfn), mo_space_info_(mo_space_info), Uas_(Ua), Ubs_(Ub) {
 }

@@ -71,13 +71,13 @@
 
 namespace forte {
 
-DMRGSolver::DMRGSolver(psi::SharedWavefunction ref_wfn, Options& options,
+DMRGSolver::DMRGSolver(psi::SharedWavefunction ref_wfn, psi::Options& options,
                        std::shared_ptr<MOSpaceInfo> mo_space_info,
                        std::shared_ptr<ForteIntegrals> ints)
     : wfn_(ref_wfn), options_(psi::Options), mo_space_info_(mo_space_info), ints_(ints) {
     print_method_banner({"Density Matrix Renormalization Group SCF", "Sebastian Wouters"});
 }
-DMRGSolver::DMRGSolver(psi::SharedWavefunction ref_wfn, Options& options,
+DMRGSolver::DMRGSolver(psi::SharedWavefunction ref_wfn, psi::Options& options,
                        std::shared_ptr<MOSpaceInfo> mo_space_info)
     : wfn_(ref_wfn), options_(psi::Options), mo_space_info_(mo_space_info) {
     print_method_banner({"Density Matrix Renormalization Group", "Sebastian Wouters"});

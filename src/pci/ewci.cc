@@ -103,7 +103,7 @@ void ElementwiseCI::sortHashVecByCoefficient(det_hashvec& dets_hashvec, std::vec
     C = std::move(new_C);
 }
 
-ElementwiseCI::ElementwiseCI(psi::SharedWavefunction ref_wfn, Options& options,
+ElementwiseCI::ElementwiseCI(psi::SharedWavefunction ref_wfn, psi::Options& options,
                              std::shared_ptr<ForteIntegrals> ints,
                              std::shared_ptr<MOSpaceInfo> mo_space_info)
     : Wavefunction(psi::Options), ints_(ints), mo_space_info_(mo_space_info),

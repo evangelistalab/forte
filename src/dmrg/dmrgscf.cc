@@ -66,7 +66,7 @@
 
 namespace forte {
 
-DMRGSCF::DMRGSCF(psi::SharedWavefunction ref_wfn, Options& options,
+DMRGSCF::DMRGSCF(psi::SharedWavefunction ref_wfn, psi::Options& options,
                  std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ForteIntegrals> ints)
     : Wavefunction(psi::Options), mo_space_info_(mo_space_info), ints_(ints) {
     shallow_copy(ref_wfn);

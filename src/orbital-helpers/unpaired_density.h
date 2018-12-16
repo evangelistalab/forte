@@ -46,14 +46,14 @@ class UPDensity {
   public:
     UPDensity(std::shared_ptr<Wavefunction> wfn, std::shared_ptr<ForteIntegrals> ints, 
               std::shared_ptr<MOSpaceInfo> mo_space_info, 
-              Options& options, psi::SharedMatrix Ua, psi::SharedMatrix Ub);
+              psi::Options& options, psi::SharedMatrix Ua, psi::SharedMatrix Ub);
 
     ~UPDensity();
 
     void compute_unpaired_density(std::vector<double>& ordm_a, std::vector<double>& ordm_b);
 
   private:
-    Options& options_;
+    psi::Options& options_;
     std::shared_ptr<ForteIntegrals> ints_;
     std::shared_ptr<Wavefunction> wfn_;
     std::shared_ptr<MOSpaceInfo> mo_space_info_;

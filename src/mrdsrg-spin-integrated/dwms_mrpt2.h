@@ -22,7 +22,7 @@ class DWMS_DSRGPT2 : public psi::Wavefunction {
      * @param ints ForteInegrals
      * @param mo_space_info MOSpaceInfo
      */
-    DWMS_DSRGPT2(psi::SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
+    DWMS_DSRGPT2(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
                  std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Destructor

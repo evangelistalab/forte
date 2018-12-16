@@ -43,7 +43,7 @@ namespace forte {
 
 class LOCALIZE {
   public:
-    LOCALIZE(std::shared_ptr<Wavefunction> wfn, Options& options,
+    LOCALIZE(std::shared_ptr<Wavefunction> wfn, psi::Options& options,
              std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     ~LOCALIZE();

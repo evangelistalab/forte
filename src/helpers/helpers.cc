@@ -275,7 +275,7 @@ namespace forte {
 //     outfile->Printf("\n  %s", std::string(banner_width, '-').c_str());
 // }
 //
-// std::pair<SpaceInfo, bool> MOSpaceInfo::read_mo_space(const std::string& space, Options& options) {
+// std::pair<SpaceInfo, bool> MOSpaceInfo::read_mo_space(const std::string& space, psi::Options& options) {
 //     bool read = false;
 //     psi::Dimension space_dim(nirrep_);
 //     std::vector<MOInfo> vec_mo_info;

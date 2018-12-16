@@ -40,7 +40,7 @@
 
 namespace forte {
 
-MRCI::MRCI(psi::SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
+MRCI::MRCI(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
            std::shared_ptr<MOSpaceInfo> mo_space_info, DeterminantHashVec& reference)
     : Wavefunction(psi::Options), ints_(ints),reference_(reference), mo_space_info_(mo_space_info) {
     shallow_copy(ref_wfn);

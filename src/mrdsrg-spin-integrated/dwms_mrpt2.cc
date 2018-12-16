@@ -69,7 +69,7 @@ void set_DWMS_options(ForteOptions& foptions) {
                         "Energy convergence criteria for DWMS iteration");
 }
 
-DWMS_DSRGPT2::DWMS_DSRGPT2(psi::SharedWavefunction ref_wfn, Options& options,
+DWMS_DSRGPT2::DWMS_DSRGPT2(psi::SharedWavefunction ref_wfn, psi::Options& options,
                            std::shared_ptr<ForteIntegrals> ints,
                            std::shared_ptr<MOSpaceInfo> mo_space_info)
     : Wavefunction(psi::Options), ints_(ints), mo_space_info_(mo_space_info) {

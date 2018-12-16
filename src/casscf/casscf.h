@@ -59,7 +59,7 @@ class CASSCF : public psi::Wavefunction {
      * This reference has a nice algorithmic flowchart.  Look it up
      *
      */
-    CASSCF(psi::SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
+    CASSCF(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
            std::shared_ptr<MOSpaceInfo> mo_space_info);
     /// Compute CASSCF given a 1RDM and 2RDM
     void compute_casscf();

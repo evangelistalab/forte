@@ -51,7 +51,7 @@ void set_PT2_options(ForteOptions& foptions);
 class MRPT2 : public psi::Wavefunction {
   public:
     // Class constructor and destructor
-    MRPT2(psi::SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
+    MRPT2(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
           std::shared_ptr<MOSpaceInfo> mo_space_info, DeterminantHashVec& reference,
           psi::SharedMatrix evecs, psi::SharedVector evals);
 

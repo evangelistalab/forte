@@ -206,7 +206,7 @@ bool pairComp(const std::pair<double, Determinant> E1, const std::pair<double, D
     return E1.first < E2.first;
 }
 
-AdaptiveCI::AdaptiveCI(psi::SharedWavefunction ref_wfn, Options& options,
+AdaptiveCI::AdaptiveCI(psi::SharedWavefunction ref_wfn, psi::Options& options,
                        std::shared_ptr<ForteIntegrals> ints,
                        std::shared_ptr<MOSpaceInfo> mo_space_info)
     : Wavefunction(psi::Options), ints_(ints), mo_space_info_(mo_space_info) {

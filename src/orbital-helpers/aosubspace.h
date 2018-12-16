@@ -227,7 +227,7 @@ class AOSubspace {
 };
 
 // Helper function to create a projector using info in wfn and options
-psi::SharedMatrix create_aosubspace_projector(psi::SharedWavefunction wfn, Options& options);
+psi::SharedMatrix create_aosubspace_projector(psi::SharedWavefunction wfn, psi::Options& options);
 }
 }
 

@@ -55,7 +55,7 @@ bool pairCompDescend(const std::pair<double, Determinant> E1,
     return E1.first > E2.first;
 }
 
-ASCI::ASCI(psi::SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
+ASCI::ASCI(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
            std::shared_ptr<MOSpaceInfo> mo_space_info)
     : Wavefunction(psi::Options), ints_(ints), mo_space_info_(mo_space_info) {
     // Copy the wavefunction information

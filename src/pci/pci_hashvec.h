@@ -85,7 +85,7 @@ class ProjectorCI_HashVec : public psi::Wavefunction {
      * @param options The main options object
      * @param ints A pointer to an allocated integral object
      */
-    ProjectorCI_HashVec(psi::SharedWavefunction ref_wfn, Options& options,
+    ProjectorCI_HashVec(psi::SharedWavefunction ref_wfn, psi::Options& options,
                         std::shared_ptr<ForteIntegrals> ints,
                         std::shared_ptr<MOSpaceInfo> mo_space_info);
 

@@ -51,7 +51,7 @@ using namespace ambit;
 
 namespace forte {
 
-DSRG_MRPT2::DSRG_MRPT2(Reference reference, psi::SharedWavefunction ref_wfn, Options& options,
+DSRG_MRPT2::DSRG_MRPT2(Reference reference, psi::SharedWavefunction ref_wfn, psi::Options& options,
                        std::shared_ptr<ForteIntegrals> ints,
                        std::shared_ptr<MOSpaceInfo> mo_space_info)
     : MASTER_DSRG(reference, ref_wfn, options, ints, mo_space_info) {

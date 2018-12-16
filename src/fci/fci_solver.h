@@ -70,7 +70,7 @@ class FCISolver {
     FCISolver(psi::Dimension active_dim, std::vector<size_t> core_mo, std::vector<size_t> active_mo,
               size_t na, size_t nb, size_t multiplicity, size_t symmetry,
               std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info,
-              size_t initial_guess_per_root, int print, Options& options);
+              size_t initial_guess_per_root, int print, psi::Options& options);
     /**
      * @brief FCISolver
      * @param active_dim The dimension of the active orbital space
@@ -87,7 +87,7 @@ class FCISolver {
     FCISolver(psi::Dimension active_dim, std::vector<size_t> core_mo, std::vector<size_t> active_mo,
               size_t na, size_t nb, size_t multiplicity, size_t symmetry,
               std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info,
-              Options& options);
+              psi::Options& options);
 
     ~FCISolver() {}
 
@@ -215,7 +215,7 @@ class FCISolver {
     std::vector<std::pair<int, std::vector<std::tuple<size_t, size_t, size_t, double>>>>
     initial_guess(FCIWfn& diag, size_t n, std::shared_ptr<FCIIntegrals> fci_ints);
     /// The options object
-    Options& options_;
+    psi::Options& options_;
 };
 } // namespace forte
 

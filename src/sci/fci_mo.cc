@@ -76,7 +76,7 @@ void set_FCI_MO_options(ForteOptions& foptions) {
     foptions.add_bool("FCIMO_LOCALIZE_ACTV", false, "Localize active orbitals before computation");
 }
 
-FCI_MO::FCI_MO(psi::SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
+FCI_MO::FCI_MO(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
                std::shared_ptr<MOSpaceInfo> mo_space_info)
     : Wavefunction(psi::Options), integral_(ints), mo_space_info_(mo_space_info) {
     shallow_copy(ref_wfn);
@@ -97,7 +97,7 @@ FCI_MO::FCI_MO(psi::SharedWavefunction ref_wfn, Options& options, std::shared_pt
     fci_ints_->compute_restricted_one_body_operator();
 }
 
-FCI_MO::FCI_MO(psi::SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
+FCI_MO::FCI_MO(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
                std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<FCIIntegrals> fci_ints)
     : Wavefunction(psi::Options), integral_(ints), mo_space_info_(mo_space_info) {
     shallow_copy(ref_wfn);

@@ -55,7 +55,7 @@ std::vector<std::string> mysplit(const std::string& input, const std::string& re
 
 namespace forte {
 
-psi::SharedMatrix create_aosubspace_projector(psi::SharedWavefunction wfn, Options& options) {
+psi::SharedMatrix create_aosubspace_projector(psi::SharedWavefunction wfn, psi::Options& options) {
     psi::SharedMatrix Ps;
 
     // Run this code only if user specified a subspace

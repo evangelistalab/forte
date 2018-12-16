@@ -85,7 +85,7 @@ void set_MRCINO_options(ForteOptions& foptions) {
                                             "or not");
 }
 
-MRCINO::MRCINO(psi::SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
+MRCINO::MRCINO(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
                std::shared_ptr<MOSpaceInfo> mo_space_info)
     : Wavefunction(psi::Options), ints_(ints), mo_space_info_(mo_space_info) {
     // Copy the wavefunction information

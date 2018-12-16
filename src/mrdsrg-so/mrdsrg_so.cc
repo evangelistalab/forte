@@ -40,7 +40,7 @@
 
 namespace forte {
 
-MRDSRG_SO::MRDSRG_SO(Reference reference, Options& options, std::shared_ptr<ForteIntegrals> ints,
+MRDSRG_SO::MRDSRG_SO(Reference reference, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
                      std::shared_ptr<MOSpaceInfo> mo_space_info)
     : Wavefunction(options), reference_(reference), ints_(ints), mo_space_info_(mo_space_info),
       tensor_type_(CoreTensor), BTF(new BlockedTensorFactory()) {

@@ -11,7 +11,7 @@
 
 namespace forte {
 
-MASTER_DSRG::MASTER_DSRG(Reference reference, psi::SharedWavefunction ref_wfn, Options& options,
+MASTER_DSRG::MASTER_DSRG(Reference reference, psi::SharedWavefunction ref_wfn, psi::Options& options,
                          std::shared_ptr<ForteIntegrals> ints,
                          std::shared_ptr<MOSpaceInfo> mo_space_info)
     : DynamicCorrelationSolver(reference, ref_wfn, options, ints, mo_space_info),

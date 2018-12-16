@@ -49,7 +49,7 @@ using namespace ambit;
 
 namespace forte {
 
-SOMRDSRG::SOMRDSRG(Reference reference, psi::SharedWavefunction ref_wfn, Options& options,
+SOMRDSRG::SOMRDSRG(Reference reference, psi::SharedWavefunction ref_wfn, psi::Options& options,
                    std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
     : Wavefunction(options), reference_(reference), ints_(ints), mo_space_info_(mo_space_info),
       tensor_type_(CoreTensor), BTF(new BlockedTensorFactory()) {

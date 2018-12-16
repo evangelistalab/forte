@@ -44,7 +44,7 @@
 
 namespace forte {
 
-MRDSRG::MRDSRG(Reference reference, psi::SharedWavefunction ref_wfn, Options& options,
+MRDSRG::MRDSRG(Reference reference, psi::SharedWavefunction ref_wfn, psi::Options& options,
                std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
     : MASTER_DSRG(reference, ref_wfn, options, ints, mo_space_info) {
 

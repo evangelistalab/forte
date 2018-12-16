@@ -48,7 +48,7 @@
 
 namespace forte {
 
-MCSRGPT2_MO::MCSRGPT2_MO(psi::SharedWavefunction ref_wfn, Options& options,
+MCSRGPT2_MO::MCSRGPT2_MO(psi::SharedWavefunction ref_wfn, psi::Options& options,
                          std::shared_ptr<ForteIntegrals> ints,
                          std::shared_ptr<MOSpaceInfo> mo_space_info)
     : FCI_MO(ref_wfn, options, ints, mo_space_info) {
@@ -839,7 +839,7 @@ inline bool ReverseSortT2(const tuple<double, size_t, size_t, size_t, size_t>& l
 }
 
 void MCSRGPT2_MO::Check_T2(const string& x, const d4& M, double& Norm, double& MaxT,
-                           Options& options) {
+                           psi::Options& options) {
     timer_on("Check T2");
     size_t ntamp = options.get_int("NTAMP");
     double intruder = options.get_double("INTRUDER_TAMP");
@@ -945,7 +945,7 @@ inline bool ReverseSortT1(const tuple<double, size_t, size_t>& lhs,
 }
 
 void MCSRGPT2_MO::Check_T1(const string& x, const d2& M, double& Norm, double& MaxT,
-                           Options& options) {
+                           psi::Options& options) {
     timer_on("Check T1");
     size_t ntamp = options.get_int("NTAMP");
     double intruder = options.get_double("INTRUDER_TAMP");

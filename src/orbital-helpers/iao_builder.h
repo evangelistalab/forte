@@ -121,7 +121,7 @@ public:
         std::shared_ptr<psi::BasisSet> primary,
         std::shared_ptr<psi::BasisSet> minao,
         std::shared_ptr<Matrix> C,
-        Options& options);
+        psi::Options& options);
     /// Build the IAOs for exporting
     std::map<std::string, psi::SharedMatrix> build_iaos();
 

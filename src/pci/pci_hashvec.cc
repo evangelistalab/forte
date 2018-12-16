@@ -125,7 +125,7 @@ void ProjectorCI_HashVec::sortHashVecByCoefficient(det_hashvec& dets_hashvec,
     dets_max_couplings_ = std::move(new_dets_max_couplings);
 }
 
-ProjectorCI_HashVec::ProjectorCI_HashVec(psi::SharedWavefunction ref_wfn, Options& options,
+ProjectorCI_HashVec::ProjectorCI_HashVec(psi::SharedWavefunction ref_wfn, psi::Options& options,
                                          std::shared_ptr<ForteIntegrals> ints,
                                          std::shared_ptr<MOSpaceInfo> mo_space_info)
     : Wavefunction(psi::Options), ints_(ints), mo_space_info_(mo_space_info),

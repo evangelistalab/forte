@@ -50,7 +50,7 @@ namespace forte {
 OrbitalOptimizer::OrbitalOptimizer() {}
 
 OrbitalOptimizer::OrbitalOptimizer(ambit::Tensor Gamma1, ambit::Tensor Gamma2,
-                                   ambit::Tensor two_body_ab, Options& options,
+                                   ambit::Tensor two_body_ab, psi::Options& options,
                                    std::shared_ptr<MOSpaceInfo> mo_space_info)
     : gamma1_(Gamma1), gamma2_(Gamma2), integral_(two_body_ab), mo_space_info_(mo_space_info),
       options_(psi::Options) {}
@@ -631,7 +631,7 @@ void OrbitalOptimizer::zero_redunant(psi::SharedMatrix& matrix) {
     }
 }
 CASSCFOrbitalOptimizer::CASSCFOrbitalOptimizer(ambit::Tensor Gamma1, ambit::Tensor Gamma2,
-                                               ambit::Tensor two_body_ab, Options& options,
+                                               ambit::Tensor two_body_ab, psi::Options& options,
                                                std::shared_ptr<MOSpaceInfo> mo_space_info)
     : OrbitalOptimizer(Gamma1, Gamma2, two_body_ab, options, mo_space_info) {}
 CASSCFOrbitalOptimizer::~CASSCFOrbitalOptimizer() {}
@@ -789,7 +789,7 @@ void CASSCFOrbitalOptimizer::form_fock_intermediates() {
     }
 }
 PostCASSCFOrbitalOptimizer::PostCASSCFOrbitalOptimizer(ambit::Tensor Gamma1, ambit::Tensor Gamma2,
-                                                       ambit::Tensor two_body_ab, Options& options,
+                                                       ambit::Tensor two_body_ab, psi::Options& options,
                                                        std::shared_ptr<MOSpaceInfo> mo_space_info)
     : OrbitalOptimizer(Gamma1, Gamma2, two_body_ab, options, mo_space_info) {}
 PostCASSCFOrbitalOptimizer::~PostCASSCFOrbitalOptimizer() {}
