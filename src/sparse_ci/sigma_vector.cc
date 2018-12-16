@@ -946,9 +946,9 @@ SigmaVectorWfn3::SigmaVectorWfn3(const DeterminantHashVec& space, WFNOperator& o
 
     size_t nact = fci_ints_->nmo();
     size_t nact2 = nact * nact;
-    aa_tei_ = psi::SharedMatrix(new Matrix("aa", nact2, nact2));
-    bb_tei_ = psi::SharedMatrix(new Matrix("aa", nact2, nact2));
-    ab_tei_ = psi::SharedMatrix(new Matrix("aa", nact2, nact2));
+    aa_tei_ = std::make_shared<psi::Matrix>("aa", nact2, nact2));
+    bb_tei_ = std::make_shared<psi::Matrix>("aa", nact2, nact2));
+    ab_tei_ = std::make_shared<psi::Matrix>("aa", nact2, nact2));
 
     outfile->Printf("\n  Building integral matrices");
     local_timer build;
@@ -1104,8 +1104,8 @@ void SigmaVectorWfn3::compute_sigma(psi::SharedVector sigma, psi::SharedVector b
     // AA doubles
     {
         size_t max_K = aa_list_.size();
-        psi::SharedMatrix B_pq = psi::SharedMatrix(new Matrix("B_pq", ncmo2, max_K));
-        psi::SharedMatrix C_rs = psi::SharedMatrix(new Matrix("C_rs", max_K, ncmo2));
+        psi::SharedMatrix B_pq = std::make_shared<psi::Matrix>("B_pq", ncmo2, max_K));
+        psi::SharedMatrix C_rs = std::make_shared<psi::Matrix>("C_rs", max_K, ncmo2));
         for (size_t K = 0; K < max_K; ++K) {
             const std::vector<std::tuple<size_t, short, short>>& c_dets = aa_list_[K];
             size_t maxI = c_dets.size();
@@ -1140,8 +1140,8 @@ void SigmaVectorWfn3::compute_sigma(psi::SharedVector sigma, psi::SharedVector b
     // BB doubles
     {
         size_t max_K = bb_list_.size();
-        psi::SharedMatrix B_pq = psi::SharedMatrix(new Matrix("B_pq", ncmo2, max_K));
-        psi::SharedMatrix C_rs = psi::SharedMatrix(new Matrix("C_rs", max_K, ncmo2));
+        psi::SharedMatrix B_pq = std::make_shared<psi::Matrix>("B_pq", ncmo2, max_K));
+        psi::SharedMatrix C_rs = std::make_shared<psi::Matrix>("C_rs", max_K, ncmo2));
         for (size_t K = 0; K < max_K; ++K) {
             const std::vector<std::tuple<size_t, short, short>>& c_dets = bb_list_[K];
             size_t maxI = c_dets.size();
@@ -1175,8 +1175,8 @@ void SigmaVectorWfn3::compute_sigma(psi::SharedVector sigma, psi::SharedVector b
     // AB doubles
     {
         size_t max_K = ab_list_.size();
-        psi::SharedMatrix B_pq = psi::SharedMatrix(new Matrix("B_pq", ncmo2, max_K));
-        psi::SharedMatrix C_rs = psi::SharedMatrix(new Matrix("C_rs", max_K, ncmo2));
+        psi::SharedMatrix B_pq = std::make_shared<psi::Matrix>("B_pq", ncmo2, max_K));
+        psi::SharedMatrix C_rs = std::make_shared<psi::Matrix>("C_rs", max_K, ncmo2));
 
         // local_timer AB;
         B_pq->zero();

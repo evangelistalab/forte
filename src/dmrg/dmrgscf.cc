@@ -121,11 +121,11 @@ void DMRGSCF::buildTmatrix(CheMPS2::DMRGSCFmatrix* theTmatrix, CheMPS2::DMRGSCFi
     delete[] work2;
 
     psi::SharedMatrix soOei;
-    soOei = psi::SharedMatrix(new Matrix("SO OEI", nirrep, sopi, sopi));
+    soOei = std::make_shared<psi::Matrix>("SO OEI", nirrep, sopi, sopi));
     psi::SharedMatrix half;
-    half = psi::SharedMatrix(new Matrix("Half", nirrep, mopi, sopi));
+    half = std::make_shared<psi::Matrix>("Half", nirrep, mopi, sopi));
     psi::SharedMatrix moOei;
-    moOei = psi::SharedMatrix(new Matrix("MO OEI", nirrep, mopi, mopi));
+    moOei = std::make_shared<psi::Matrix>("MO OEI", nirrep, mopi, mopi));
 
     soOei->set(work1);
     half->gemm(true, false, 1.0, Cmat, soOei, 0.0);
@@ -146,13 +146,13 @@ void DMRGSCF::buildJK(psi::SharedMatrix MO_RDM, psi::SharedMatrix MO_JK, psi::Sh
 
     // nso can be different from nmo
     psi::SharedMatrix SO_RDM;
-    SO_RDM = psi::SharedMatrix(new Matrix("SO RDM", nirrep, nsopi, nsopi));
+    SO_RDM = std::make_shared<psi::Matrix>("SO RDM", nirrep, nsopi, nsopi));
     psi::SharedMatrix Identity;
-    Identity = psi::SharedMatrix(new Matrix("Identity", nirrep, nsopi, nsopi));
+    Identity = std::make_shared<psi::Matrix>("Identity", nirrep, nsopi, nsopi));
     psi::SharedMatrix SO_JK;
-    SO_JK = psi::SharedMatrix(new Matrix("SO JK", nirrep, nsopi, nsopi));
+    SO_JK = std::make_shared<psi::Matrix>("SO JK", nirrep, nsopi, nsopi));
     psi::SharedMatrix work;
-    work = psi::SharedMatrix(new Matrix("work", nirrep, nsopi, nmopi));
+    work = std::make_shared<psi::Matrix>("work", nirrep, nsopi, nmopi));
 
     work->gemm(false, false, 1.0, Cmat, MO_RDM, 0.0);
     SO_RDM->gemm(false, true, 1.0, work, Cmat, 0.0);
@@ -346,11 +346,11 @@ void DMRGSCF::fillRotatedTEI_coulomb(std::shared_ptr<IntegralTransform> ints,
         delete[] work2;
 
         psi::SharedMatrix soOei;
-        soOei = psi::SharedMatrix(new Matrix("SO OEI", nirrep, sopi, sopi));
+        soOei = std::make_shared<psi::Matrix>("SO OEI", nirrep, sopi, sopi));
         psi::SharedMatrix half;
-        half = psi::SharedMatrix(new Matrix("Half", nirrep, mopi, sopi));
+        half = std::make_shared<psi::Matrix>("Half", nirrep, mopi, sopi));
         psi::SharedMatrix moOei;
-        moOei = psi::SharedMatrix(new Matrix("MO OEI", nirrep, mopi, mopi));
+        moOei = std::make_shared<psi::Matrix>("MO OEI", nirrep, mopi, mopi));
 
         soOei->set(work1);
         half->gemm(true, false, 1.0, this->Ca(), soOei, 0.0);
@@ -736,14 +736,14 @@ double DMRGSCF::compute_energy() {
      **************************************/
 
     psi::SharedMatrix work1;
-    work1 = psi::SharedMatrix(new Matrix("work1", nirrep, orbspi, orbspi));
+    work1 = std::make_shared<psi::Matrix>("work1", nirrep, orbspi, orbspi));
     psi::SharedMatrix work2;
-    work2 = psi::SharedMatrix(new Matrix("work2", nirrep, orbspi, orbspi));
+    work2 = std::make_shared<psi::Matrix>("work2", nirrep, orbspi, orbspi));
     std::shared_ptr<JK> myJK = std::shared_ptr<JK>(new DiskJK(this->basisset(), options_));
 
     myJK->set_cutoff(0.0);
     myJK->initialize();
-    psi::SharedMatrix Coeff_orig = psi::SharedMatrix(new Matrix(this->Ca()));
+    psi::SharedMatrix Coeff_orig = std::make_shared<psi::Matrix>(this->Ca()));
     // copyPSIMXtoCHEMPS2MX(this->Ca(), iHandler, );
 
     std::vector<int> OAorbs; // Occupied + active

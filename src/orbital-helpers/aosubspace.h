@@ -73,7 +73,7 @@ class AOInfo {
  *    std::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
  *
  *    std::vector<std::string> subspace_str;
- *    if (psi::Options["SUBSPACE"].size() > 0){
+ *    if (options["SUBSPACE"].size() > 0){
  *        for (int entry = 0; entry < (int)options["SUBSPACE"].size(); ++entry){
  *            std::string s = options["SUBSPACE"][entry].to_string();
  *            subspace_str.push_back(s);

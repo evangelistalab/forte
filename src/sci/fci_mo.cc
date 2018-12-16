@@ -1557,7 +1557,7 @@ void FCI_MO::compute_transition_dipole() {
     //    std::vector<psi::SharedMatrix> dipole_ints;
     //    for(const std::string& direction: {"X","Y","Z"}){
     //        std::string name = "SO Dipole" + direction;
-    //        dipole_ints.push_back(psi::SharedMatrix(new Matrix(name, this->nsopi(),
+    //        dipole_ints.push_back(std::make_shared<psi::Matrix>(name, this->nsopi(),
     //        this->nsopi()) ));
     //    }
 
@@ -2177,7 +2177,7 @@ d3 FCI_MO::compute_orbital_extents() {
     std::vector<psi::SharedMatrix> ao_Qpole;
     for (const std::string& direction : {"XX", "XY", "XZ", "YY", "YZ", "ZZ"}) {
         std::string name = "AO Quadrupole" + direction;
-        ao_Qpole.push_back(psi::SharedMatrix(new Matrix(name, basisset->nbf(), basisset->nbf())));
+        ao_Qpole.push_back(std::make_shared<psi::Matrix>(name, basisset->nbf(), basisset->nbf())));
     }
     std::shared_ptr<OneBodyAOInt> aoqOBI(ints->ao_quadrupole());
     aoqOBI->compute(ao_Qpole);

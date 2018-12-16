@@ -179,12 +179,12 @@ void CholeskyIntegrals::gather_integrals() {
         if (psio->exists(file_unit)) {
             psio->open(file_unit, PSIO_OPEN_OLD);
             psio->read_entry(file_unit, "length", (char*)&nthree_, sizeof(long int));
-            psi::SharedMatrix L_tri = psi::SharedMatrix(new Matrix("Partial Cholesky", nthree_, ntri));
+            psi::SharedMatrix L_tri = std::make_shared<psi::Matrix>("Partial Cholesky", nthree_, ntri));
             double** Lp = L_tri->pointer();
             psio->read_entry(file_unit, "(Q|mn) Integrals", (char*)Lp[0],
                              sizeof(double) * nthree_ * ntri);
             psio->close(file_unit, 1);
-            psi::SharedMatrix L_ao = psi::SharedMatrix(new Matrix("Partial Cholesky", nthree_, nbf * nbf));
+            psi::SharedMatrix L_ao = std::make_shared<psi::Matrix>("Partial Cholesky", nthree_, nbf * nbf));
             for (size_t mn = 0; mn < ntri; mn++) {
                 size_t m = function_pairs[mn].first;
                 size_t n = function_pairs[mn].second;

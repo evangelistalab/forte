@@ -59,7 +59,7 @@ psi::SharedMatrix create_aosubspace_projector(psi::SharedWavefunction wfn, psi::
     psi::SharedMatrix Ps;
 
     // Run this code only if user specified a subspace
-    if (psi::Options["SUBSPACE"].size() > 0) {
+    if (options["SUBSPACE"].size() > 0) {
         std::vector<std::string> subspace_str;
         for (int entry = 0; entry < (int)options["SUBSPACE"].size(); ++entry) {
             std::string s = options["SUBSPACE"][entry].to_string();
@@ -174,7 +174,7 @@ psi::SharedMatrix AOSubspace::build_projector(const std::vector<int>& subspace,
 
     // Compute the overlap integral in the minimal basis
     std::shared_ptr<OneBodyAOInt> sOBI_mm(integral_mm->ao_overlap());
-    psi::SharedMatrix S_mm = psi::SharedMatrix(new Matrix("S_mm", nbf_m, nbf_m));
+    psi::SharedMatrix S_mm = std::make_shared<psi::Matrix>("S_mm", nbf_m, nbf_m));
     sOBI_mm->compute(S_mm);
 
 #if _DEBUG_AOSUBSPACE_
@@ -182,7 +182,7 @@ psi::SharedMatrix AOSubspace::build_projector(const std::vector<int>& subspace,
 #endif
 
     // Extract the subspace block
-    psi::SharedMatrix S_ss = psi::SharedMatrix(new Matrix("S_ss", nbf_s, nbf_s));
+    psi::SharedMatrix S_ss = std::make_shared<psi::Matrix>("S_ss", nbf_s, nbf_s));
     for (int mu = 0; mu < nbf_s; mu++) {
         for (int nu = 0; nu < nbf_s; nu++) {
             S_ss->set(mu, nu, S_mm->get(subspace[mu], subspace[nu]));
@@ -193,7 +193,7 @@ psi::SharedMatrix AOSubspace::build_projector(const std::vector<int>& subspace,
 #endif
 
     // Orthogonalize the subspace
-    psi::SharedMatrix X_ss = psi::SharedMatrix(new Matrix("X", nbf_s, nbf_s));
+    psi::SharedMatrix X_ss = std::make_shared<psi::Matrix>("X", nbf_s, nbf_s));
     X_ss->copy(S_ss);
     X_ss->power(-0.5);
 
@@ -207,7 +207,7 @@ psi::SharedMatrix AOSubspace::build_projector(const std::vector<int>& subspace,
     S_ss->print();
 #endif
 
-    psi::SharedMatrix X_mm = psi::SharedMatrix(new Matrix("X_mm", nbf_m, nbf_m));
+    psi::SharedMatrix X_mm = std::make_shared<psi::Matrix>("X_mm", nbf_m, nbf_m));
     for (int mu = 0; mu < nbf_s; mu++) {
         for (int nu = 0; nu < nbf_s; nu++) {
             X_mm->set(subspace[mu], subspace[nu], X_ss->get(mu, nu));
@@ -219,14 +219,14 @@ psi::SharedMatrix AOSubspace::build_projector(const std::vector<int>& subspace,
 
     // Compute the overlap integral in the minimal/large basis
     std::shared_ptr<OneBodyAOInt> sOBI_ml(integral_ml->ao_overlap());
-    psi::SharedMatrix S_ml = psi::SharedMatrix(new Matrix("S_ml", nbf_m, nbf_l));
+    psi::SharedMatrix S_ml = std::make_shared<psi::Matrix>("S_ml", nbf_m, nbf_l));
     sOBI_ml->compute(S_ml);
 #if _DEBUG_AOSUBSPACE_
     S_ml->print();
 #endif
 
-    psi::SharedMatrix XS_ml = psi::SharedMatrix(new Matrix("XS_ml", nbf_m, nbf_l));
-    psi::SharedMatrix SXXS_ll = psi::SharedMatrix(new Matrix("SXXS_ll", nbf_l, nbf_l));
+    psi::SharedMatrix XS_ml = std::make_shared<psi::Matrix>("XS_ml", nbf_m, nbf_l));
+    psi::SharedMatrix SXXS_ll = std::make_shared<psi::Matrix>("SXXS_ll", nbf_l, nbf_l));
     XS_ml->gemm(false, false, 1.0, X_mm, S_ml, 0.0);
     SXXS_ll->gemm(true, false, 1.0, XS_ml, XS_ml, 0.0);
 #if _DEBUG_AOSUBSPACE_

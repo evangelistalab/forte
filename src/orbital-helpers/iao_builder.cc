@@ -78,7 +78,7 @@ std::shared_ptr<IAOBuilder> IAOBuilder::build(std::shared_ptr<psi::BasisSet> pri
 
     std::vector<int> stars;
     for (size_t ind = 0; ind < options["LOCAL_IBO_STARS"].size(); ind++) {
-        stars.push_back(psi::Options["LOCAL_IBO_STARS"][ind].to_integer() - 1);
+        stars.push_back(options["LOCAL_IBO_STARS"][ind].to_integer() - 1);
     }
     local->set_stars(stars);
 
@@ -260,7 +260,7 @@ std::vector<std::string> IAOBuilder::print_IAO(psi::SharedMatrix A_, int nmin, i
     std::shared_ptr<Molecule> mol = minao_->molecule();
     std::vector<int> iao_inds;
     psi::SharedMatrix A_nbf =
-        psi::SharedMatrix(new Matrix("IAO coefficient matrix in nbf dimensions", nbf, nbf));
+        std::make_shared<psi::Matrix>("IAO coefficient matrix in nbf dimensions", nbf, nbf));
     for (int i = 0; i < nbf; ++i) {
         for (int j = 0; j < minao_->nbf(); ++j) {
             A_nbf->set(i, j, A_->get(i, j));

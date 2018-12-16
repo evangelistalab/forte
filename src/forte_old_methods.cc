@@ -241,7 +241,7 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
                 std::make_shared<MRDSRG>(reference, ref_wfn, options, ints, mo_space_info);
             mrdsrg->set_Uactv(Ua, Ub);
 
-            if (psi::Options["AVG_STATE"].size() != 0) {
+            if (options["AVG_STATE"].size() != 0) {
                 mrdsrg->set_p_spaces(fci_mo.p_spaces());
                 mrdsrg->set_eigens(fci_mo.eigens());
                 mrdsrg->compute_energy_sa();
@@ -390,7 +390,7 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
             std::shared_ptr<DSRG_MRPT2> dsrg_mrpt2 =
                 std::make_shared<DSRG_MRPT2>(reference, ref_wfn, options, ints, mo_space_info);
             dsrg_mrpt2->set_Uactv(Ua, Ub);
-            if (psi::Options["AVG_STATE"].size() != 0) {
+            if (options["AVG_STATE"].size() != 0) {
                 dsrg_mrpt2->set_p_spaces(fci_mo->p_spaces());
                 dsrg_mrpt2->set_eigens(fci_mo->eigens());
                 dsrg_mrpt2->compute_energy_multi_state();
@@ -524,7 +524,7 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
 
         if (cas_type == "CAS") {
 
-            if (psi::Options["AVG_STATE"].size() != 0) {
+            if (options["AVG_STATE"].size() != 0) {
                 std::string ms_type = options.get_str("DSRG_MULTI_STATE");
                 if (ms_type != "SA_FULL") {
                     outfile->Printf("\n  SA_FULL is the ONLY available option "
@@ -713,7 +713,7 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
                 new DSRG_MRPT3(reference, ref_wfn, options, ints, mo_space_info));
             dsrg_mrpt3->set_Uactv(Ua, Ub);
 
-            if (psi::Options["AVG_STATE"].size() != 0) {
+            if (options["AVG_STATE"].size() != 0) {
                 dsrg_mrpt3->set_p_spaces(fci_mo->p_spaces());
                 dsrg_mrpt3->set_eigens(fci_mo->eigens());
                 dsrg_mrpt3->compute_energy_sa();

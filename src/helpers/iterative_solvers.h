@@ -194,6 +194,5 @@ class DavidsonLiuSolver {
     std::vector<sparse_vec> project_out_;
 };
 }
-}
 
 #endif // _iterative_solvers_h_

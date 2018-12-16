@@ -171,7 +171,7 @@ using SpaceInfo = std::pair<psi::Dimension, std::vector<MOInfo>>;
  * @param dims psi::Dimensions of the matrix extracted from the tensor
  * @return A copy of the tensor data in symmetry blocked form
  */
-Matrix tensor_to_matrix(ambit::Tensor t, psi::Dimension dims);
+psi::Matrix tensor_to_matrix(ambit::Tensor t, psi::Dimension dims);
 
 psi::SharedMatrix tensor_to_matrix(ambit::Tensor t);
 
@@ -187,7 +187,7 @@ void read_disk_vector_double(const std::string& filename, std::vector<double>& d
  * @param diag_F -> The Orbital energies (diagonal elements of Fock operator)
  * @param occupation -> occupation vector
  */
-void view_modified_orbitals(psi::SharedWavefunction wfn, const std::shared_ptr<Matrix>& Ca,
+void view_modified_orbitals(psi::SharedWavefunction wfn, const std::shared_ptr<psi::Matrix>& Ca,
                             const std::shared_ptr<psi::Vector>& diag_F,
                             const std::shared_ptr<psi::Vector>& occupation);
 

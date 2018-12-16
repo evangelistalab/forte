@@ -76,8 +76,8 @@ void SemiCanonical::startup() {
     ruocc_ = mo_space_info_->get_dimension("RESTRICTED_UOCC");
 
     // Preapare orbital rotation matrix, which transforms all MOs
-    Ua_ = psi::SharedMatrix(new Matrix("Ua", nmopi_, nmopi_));
-    Ub_ = psi::SharedMatrix(new Matrix("Ub", nmopi_, nmopi_));
+    Ua_ = std::make_shared<psi::Matrix>("Ua", nmopi_, nmopi_));
+    Ub_ = std::make_shared<psi::Matrix>("Ub", nmopi_, nmopi_));
 
     Ua_->identity();
     Ub_->identity();

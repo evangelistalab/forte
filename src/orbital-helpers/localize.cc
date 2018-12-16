@@ -201,7 +201,7 @@ void LOCALIZE::full_localize() {
     }
     ints_->retransform_integrals();
 
-    U_ = psi::SharedMatrix(new Matrix("U", nsopi[0], nact));
+    U_ = std::make_shared<psi::Matrix>("U", nsopi[0], nact));
     U_->copy(U);
 }
 

@@ -64,8 +64,8 @@ void FCIWfn::allocate_temp_space(std::shared_ptr<StringLists> lists_, int print_
     }
 
     // Allocate the temporary arrays C1 and Y1 with the largest sizes
-    C1 = psi::SharedMatrix(new Matrix("C1", maxC1, maxC1));
-    Y1 = psi::SharedMatrix(new Matrix("Y1", maxC1, maxC1));
+    C1 = std::make_shared<psi::Matrix>("C1", maxC1, maxC1));
+    Y1 = std::make_shared<psi::Matrix>("Y1", maxC1, maxC1));
 
     if (print_)
         outfile->Printf("\n  Allocating memory for the Hamiltonian algorithm. "

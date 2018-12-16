@@ -46,6 +46,7 @@
 //        outfile->Printf("\n    %-30s  %zu",vk.second.c_str(),vk.first); \
 //    }
 
+using namespace psi;
 
 namespace forte {
 
@@ -64,19 +65,19 @@ void DavidsonLiuSolver::startup(psi::SharedVector diagonal) {
     iter_ = 0;
     converged_ = 0;
 
-    b_ = psi::SharedMatrix(new Matrix("b", subspace_size_, size_));
+    b_ = std::make_shared<psi::Matrix>("b", subspace_size_, size_);
     b_->zero();
-    bnew = psi::SharedMatrix(new Matrix("bnew", subspace_size_, size_));
-    f = psi::SharedMatrix(new Matrix("f", subspace_size_, size_));
-    sigma_ = psi::SharedMatrix(new Matrix("sigma", size_, subspace_size_));
+    bnew = std::make_shared<psi::Matrix>("bnew", subspace_size_, size_);
+    f = std::make_shared<psi::Matrix>("f", subspace_size_, size_);
+    sigma_ = std::make_shared<psi::Matrix>("sigma", size_, subspace_size_);
 
-    G = psi::SharedMatrix(new Matrix("G", subspace_size_, subspace_size_));
-    S = psi::SharedMatrix(new Matrix("S", subspace_size_, subspace_size_));
-    alpha = psi::SharedMatrix(new Matrix("alpha", subspace_size_, subspace_size_));
+    G = std::make_shared<psi::Matrix>("G", subspace_size_, subspace_size_);
+    S = std::make_shared<psi::Matrix>("S", subspace_size_, subspace_size_);
+    alpha = std::make_shared<psi::Matrix>("alpha", subspace_size_, subspace_size_);
 
-    lambda = psi::SharedVector(new Vector("lambda", subspace_size_));
-    lambda_old = psi::SharedVector(new Vector("lambda", subspace_size_));
-    h_diag = psi::SharedVector(new Vector("lambda", size_));
+    lambda = std::make_shared<psi::Vector>("lambda", subspace_size_);
+    lambda_old = std::make_shared<psi::Vector>("lambda", subspace_size_);
+    h_diag = std::make_shared<psi::Vector>("lambda", size_);
 
     h_diag->copy(*diagonal);
 }
@@ -132,7 +133,7 @@ psi::SharedMatrix DavidsonLiuSolver::eigenvectors() const { return bnew; }
 psi::SharedVector DavidsonLiuSolver::eigenvector(size_t n) const {
     double** v = bnew->pointer();
 
-    psi::SharedVector evec(new Vector("V", size_));
+    psi::SharedVector evec(new psi::Vector("V", size_));
     for (size_t I = 0; I < size_; I++) {
         evec->set(I, v[n][I]);
     }
@@ -438,6 +439,5 @@ bool DavidsonLiuSolver::check_orthogonality() {
         }
     }
     return is_orthonormal;
-}
 }
 }

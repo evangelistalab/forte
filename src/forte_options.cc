@@ -4,6 +4,7 @@
 
 #include "psi4/libpsi4util/PsiOutStream.h"
 
+using namespace psi;
 
 namespace forte {
 
@@ -131,7 +132,7 @@ std::string ForteOptions::generate_documentation() const {
         options_lines.push_back(p.second);
     }
 
-    return to_string(psi::Options_lines, "\n");
+    return to_string(options_lines, "\n");
 }
 
 std::string rst_bold(const std::string& s) { return "**" + s + "**"; }

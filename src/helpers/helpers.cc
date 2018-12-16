@@ -44,6 +44,7 @@
 
 #include "helpers/mo_space_info.h"
 
+using namespace psi;
 
 namespace forte {
 
@@ -279,7 +280,7 @@ namespace forte {
 //     bool read = false;
 //     psi::Dimension space_dim(nirrep_);
 //     std::vector<MOInfo> vec_mo_info;
-//     if ((psi::Options[space].has_changed()) && (psi::Options[space].size() == nirrep_)) {
+//     if ((options[space].has_changed()) && (options[space].size() == nirrep_)) {
 //         for (size_t h = 0; h < nirrep_; ++h) {
 //             space_dim[h] = options[space][h].to_integer();
 //         }
