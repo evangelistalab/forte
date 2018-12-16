@@ -30,6 +30,7 @@
 
 #include "aci.h"
 
+using namespace psi;
 
 namespace forte {
 

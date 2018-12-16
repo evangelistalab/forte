@@ -37,13 +37,14 @@
 #include "psi4/libmints/dimension.h"
 #include "ambit/blocked_tensor.h"
 
-
-
 class Tensor;
-class Options;
-class Matrix;
-class Wavefunction;
-class Dimension;
+
+namespace psi {
+  class Options;
+  class Matrix;
+  class Wavefunction;
+  class Dimension;
+}
 
 namespace forte {
 

@@ -844,4 +844,3 @@ void ASCI::get_excited_determinants_sr(psi::SharedMatrix evecs, DeterminantHashV
     } // Close threads
 }
 }
-}

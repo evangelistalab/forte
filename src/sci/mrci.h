@@ -72,4 +72,3 @@ class MRCI : public psi::Wavefunction {
     void upcast_reference();
 };
 }
-}

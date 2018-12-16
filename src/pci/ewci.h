@@ -398,6 +398,5 @@ class ElementwiseCI : public psi::Wavefunction {
     void sortHashVecByCoefficient(det_hashvec& dets_hashvec, std::vector<double>& C);
 };
 }
-} // End Namespaces
 
 #endif // _ewci_h_

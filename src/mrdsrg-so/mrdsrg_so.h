@@ -293,5 +293,5 @@ class MRDSRG_SO : public psi::Wavefunction {
     double frozen_core_energy;
 };
 }
-}
+
 #endif // _mrdsrg_so_h_

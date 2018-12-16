@@ -390,6 +390,5 @@ class ProjectorCI_HashVec : public psi::Wavefunction {
     void sortHashVecByCoefficient(det_hashvec& dets_hashvec, std::vector<double>& C);
 };
 }
-} // End Namespaces
 
 #endif // _pci_h_

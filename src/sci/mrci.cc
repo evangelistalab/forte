@@ -36,7 +36,7 @@
 #include "mrci.h"
 #include "helpers/timer.h"
 
-
+using namespace psi;
 
 namespace forte {
 
@@ -310,6 +310,5 @@ void MRCI::upcast_reference() {
 
     //        reference_.add(det);
     //    }
-}
 }
 }

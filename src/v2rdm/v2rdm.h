@@ -124,5 +124,5 @@ class V2RDM : public psi::Wavefunction {
     void write_density_to_file();
 };
 }
-}
+
 #endif // V2RDM_H

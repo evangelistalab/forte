@@ -49,6 +49,7 @@
 #include "helpers/printing.h"
 #include "helpers/timer.h"
 
+using namespace psi;
 
 namespace forte {
 
@@ -2177,7 +2178,7 @@ d3 FCI_MO::compute_orbital_extents() {
     std::vector<psi::SharedMatrix> ao_Qpole;
     for (const std::string& direction : {"XX", "XY", "XZ", "YY", "YZ", "ZZ"}) {
         std::string name = "AO Quadrupole" + direction;
-        ao_Qpole.push_back(std::make_shared<psi::Matrix>(name, basisset->nbf(), basisset->nbf())));
+        ao_Qpole.push_back(std::make_shared<psi::Matrix>(name, basisset->nbf(), basisset->nbf()));
     }
     std::shared_ptr<OneBodyAOInt> aoqOBI(ints->ao_quadrupole());
     aoqOBI->compute(ao_Qpole);

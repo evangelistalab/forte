@@ -191,5 +191,5 @@ class DWMS_DSRGPT2 : public psi::Wavefunction {
                       bool pass_process = false);
 };
 }
-}
+
 #endif // DWMS_MRPT2_H

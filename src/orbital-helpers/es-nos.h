@@ -77,4 +77,4 @@ class ESNO : public psi::Wavefunction {
     std::vector<size_t> get_excitation_space();
 };
 }
-}
+

@@ -93,6 +93,7 @@
 #include <mpi.h>
 #endif
 
+using namespace psi;
 
 namespace forte {
 
@@ -837,4 +838,4 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
     }
 }
 }
-} // End Namespaces
+
