@@ -3212,4 +3212,3 @@ void FCI_MO::print_occupation_strings_perirrep(std::string name,
     }
 }
 }
-}

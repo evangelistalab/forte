@@ -311,4 +311,3 @@ double MRPT2::energy_kernel(int bin, int nbin) {
     return energy;
 }
 }
-}

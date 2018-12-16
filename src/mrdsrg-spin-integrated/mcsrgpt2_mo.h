@@ -225,6 +225,5 @@ class MCSRGPT2_MO : public FCI_MO {
     }
 };
 }
-}
 
 #endif // _mcsrgpt2_mo_h_
