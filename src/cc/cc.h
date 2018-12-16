@@ -144,5 +144,5 @@ class CC : public psi::Wavefunction {
     std::vector<double> Fb_;
 };
 }
-}
+
 #endif // _cc_h_

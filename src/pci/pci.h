@@ -470,6 +470,5 @@ class ProjectorCI : public psi::Wavefunction {
     std::vector<std::tuple<double, int, int>> sym_labeled_orbitals(std::string type);
 };
 }
-} // End Namespaces
 
 #endif // _pci_h_

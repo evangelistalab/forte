@@ -97,7 +97,7 @@ void CASSCF::compute_casscf() {
 
     psi::Dimension nhole_dim = mo_space_info_->get_dimension("GENERALIZED HOLE");
     psi::Dimension npart_dim = mo_space_info_->get_dimension("GENERALIZED PARTICLE");
-    psi::SharedMatrix S(new Matrix("Orbital Rotation", nirrep_, nhole_dim, npart_dim));
+    psi::SharedMatrix S(new psi::Matrix("Orbital Rotation", nirrep_, nhole_dim, npart_dim));
     psi::SharedMatrix Sstep;
 
     std::shared_ptr<DIISManager> diis_manager(

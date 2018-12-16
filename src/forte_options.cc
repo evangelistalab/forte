@@ -65,7 +65,7 @@ void ForteOptions::add_psi4_options(psi::Options& options) {
     }
 
     for (const auto& opt : array_opts_) {
-        options.add(std::get<0>(opt), new ArrayType());
+        options.add(std::get<0>(opt), new psi::ArrayType());
     }
 }
 

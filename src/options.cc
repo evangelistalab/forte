@@ -158,5 +158,5 @@ void forte_options(ForteOptions& foptions) {
 // *  ["C1-3(2s)"] - the 2s subsets of carbon atoms #1, #2, #3
 // *
 // * -*/
-//    options.add("SUBSPACE", new ArrayType());
+//    options.add("SUBSPACE", new psi::ArrayType());
 //}

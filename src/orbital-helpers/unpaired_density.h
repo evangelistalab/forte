@@ -61,6 +61,5 @@ class UPDensity {
     psi::SharedMatrix Ubs_;
 };
 }
-} // End Namespaces
 
 #endif
