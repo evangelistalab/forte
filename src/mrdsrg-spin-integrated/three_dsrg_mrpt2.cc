@@ -1329,7 +1329,7 @@ double THREE_DSRG_MRPT2::E_VT2_2() {
 #endif
     } else {
         outfile->Printf("\n Specify a correct algorithm string");
-        throw PSIEXCEPTION("Specify either CORE FLY_LOOP FLY_AMBIT BATCH_CORE "
+        throw psi::PSIEXCEPTION("Specify either CORE FLY_LOOP FLY_AMBIT BATCH_CORE "
                            "BATCH_VIRTUAL BATCH_CORE_MPI BATCH_VIRTUAL_MPI or "
                            "other algorihm");
     }
@@ -2087,11 +2087,11 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core() {
     if (block_size < 1) {
         outfile->Printf("\n\n  Block size is FUBAR.");
         outfile->Printf("\n  Block size is %d", block_size);
-        throw PSIEXCEPTION("Block size is either 0 or negative.  Fix this problem");
+        throw psi::PSIEXCEPTION("Block size is either 0 or negative.  Fix this problem");
     }
     if (num_block > ncore_) {
         outfile->Printf("\n  Number of blocks can not be larger than core_");
-        throw PSIEXCEPTION("Number of blocks is larger than core.  Fix "
+        throw psi::PSIEXCEPTION("Number of blocks is larger than core.  Fix "
                            "num_block or check source code");
     }
 
@@ -2333,7 +2333,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_AO_Slow() {
     double Ebeta = 0.0;
     psi::SharedMatrix Cwfn = reference_wavefunction_->Ca();
     if (Cwfn->nirrep() != 1)
-        throw PSIEXCEPTION("AO-DSRGMPT2 does not work with symmetry");
+        throw psi::PSIEXCEPTION("AO-DSRGMPT2 does not work with symmetry");
 
     /// Create the AtomicOrbitalHelper Class
     psi::SharedVector epsilon_rdocc(new Vector("EPS_RDOCC", ncore_));
@@ -2440,11 +2440,11 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_virtual() {
     if (block_size < 1) {
         outfile->Printf("\n\n  Block size is FUBAR.");
         outfile->Printf("\n  Block size is %d", block_size);
-        throw PSIEXCEPTION("Block size is either 0 or negative.  Fix this problem");
+        throw psi::PSIEXCEPTION("Block size is either 0 or negative.  Fix this problem");
     }
     if (num_block > nvirtual_) {
         outfile->Printf("\n  Number of blocks can not be larger than core_");
-        throw PSIEXCEPTION("Number of blocks is larger than core.  Fix "
+        throw psi::PSIEXCEPTION("Number of blocks is larger than core.  Fix "
                            "num_block or check source code");
     }
 
@@ -3869,7 +3869,7 @@ void THREE_DSRG_MRPT2::de_normal_order() {
     outfile->Printf("\n    %-35s = %22.15f", "Total Energy (before)", Eref_ + Hbar0_);
 
     if (std::fabs(Etest - Eref_ - Hbar0_) > 100.0 * options_.get_double("E_CONVERGENCE")) {
-        throw PSIEXCEPTION("De-normal-odering failed.");
+        throw psi::PSIEXCEPTION("De-normal-odering failed.");
     }
 }
 
@@ -3967,10 +3967,10 @@ ambit::Tensor THREE_DSRG_MRPT2::separate_tensor(ambit::Tensor& tens, const psi::
     // test tens and irrep
     size_t tens_dim = tens.dim(0);
     if (tens_dim != static_cast<size_t>(irrep.sum()) || tens_dim != tens.dim(1)) {
-        throw PSIEXCEPTION("Wrong dimension for the to-be-separated ambit Tensor.");
+        throw psi::PSIEXCEPTION("Wrong dimension for the to-be-separated ambit Tensor.");
     }
     if (h >= irrep.n()) {
-        throw PSIEXCEPTION("Ask for wrong irrep.");
+        throw psi::PSIEXCEPTION("Ask for wrong irrep.");
     }
 
     // from relative (blocks) to absolute (big tensor) index
@@ -4000,11 +4000,11 @@ void THREE_DSRG_MRPT2::combine_tensor(ambit::Tensor& tens, ambit::Tensor& tens_h
                                       const psi::Dimension& irrep, const int& h) {
     // test tens and irrep
     if (h >= irrep.n()) {
-        throw PSIEXCEPTION("Ask for wrong irrep.");
+        throw psi::PSIEXCEPTION("Ask for wrong irrep.");
     }
     size_t tens_h_dim = tens_h.dim(0), h_dim = irrep[h];
     if (tens_h_dim != h_dim || tens_h_dim != tens_h.dim(1)) {
-        throw PSIEXCEPTION("Wrong dimension for the to-be-combined ambit Tensor.");
+        throw psi::PSIEXCEPTION("Wrong dimension for the to-be-combined ambit Tensor.");
     }
 
     // from relative (blocks) to absolute (big tensor) index
@@ -4082,7 +4082,7 @@ ambit::BlockedTensor THREE_DSRG_MRPT2::get_T1deGNO(double& T0deGNO) {
 //    for (const std::string& block : blocks) {
 //        if (!T1_.is_block(block)) {
 //            std::string error = "Error from T1(blocks): cannot find block " + block;
-//            throw PSIEXCEPTION(error);
+//            throw psi::PSIEXCEPTION(error);
 //        }
 //    }
 //    ambit::BlockedTensor out = ambit::BlockedTensor::build(tensor_type_, "T1 selected", blocks);
@@ -4095,7 +4095,7 @@ ambit::BlockedTensor THREE_DSRG_MRPT2::get_T1deGNO(double& T0deGNO) {
 //    for (const std::string& block : blocks) {
 //        if (!T1eff_.is_block(block)) {
 //            std::string error = "Error from T1deGNO(blocks): cannot find block " + block;
-//            throw PSIEXCEPTION(error);
+//            throw psi::PSIEXCEPTION(error);
 //        }
 //    }
 //    ambit::BlockedTensor out =
@@ -4109,7 +4109,7 @@ ambit::BlockedTensor THREE_DSRG_MRPT2::get_T2(const std::vector<std::string>& bl
     for (const std::string& block : blocks) {
         if (!T2_.is_block(block)) {
             std::string error = "Error from T2(blocks): cannot find block " + block;
-            throw PSIEXCEPTION(error);
+            throw psi::PSIEXCEPTION(error);
         }
     }
     ambit::BlockedTensor out = ambit::BlockedTensor::build(tensor_type_, "T2 selected", blocks);

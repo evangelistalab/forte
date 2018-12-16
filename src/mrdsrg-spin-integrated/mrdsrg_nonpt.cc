@@ -840,7 +840,7 @@ double MRDSRG::compute_energy_ldsrg2() {
 
     // fail to converge
     if (failed) {
-        throw PSIEXCEPTION("The MR-LDSRG(2) computation does not converge.");
+        throw psi::PSIEXCEPTION("The MR-LDSRG(2) computation does not converge.");
     }
     final.stop();
 
@@ -1130,7 +1130,7 @@ double MRDSRG::compute_energy_ldsrg2_qc() {
 
     // fail to converge
     if (failed) {
-        throw PSIEXCEPTION("The MR-LDSRG(2)-QC computation does not converge.");
+        throw psi::PSIEXCEPTION("The MR-LDSRG(2)-QC computation does not converge.");
     }
 
     Hbar0_ = Ecorr;
@@ -1353,7 +1353,7 @@ void MRDSRG::return_amp_diis(BlockedTensor& T1, const std::vector<std::string>& 
     }
 
     if (data.size() != total_elements) {
-        throw PSIEXCEPTION("Number of elements in T1 and T2 do not match the bid data vector");
+        throw psi::PSIEXCEPTION("Number of elements in T1 and T2 do not match the bid data vector");
     }
 
     // transfer data

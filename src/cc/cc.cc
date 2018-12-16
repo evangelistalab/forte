@@ -86,13 +86,13 @@ double CC::compute_energy() { return 0.0; }
 //    s_ = options_.get_double("DSRG_S");
 //    if(s_ < 0){
 //        outfile->Printf("\n  S parameter for DSRG must >= 0!");
-//        throw PSIEXCEPTION("S parameter for DSRG must >= 0!");
+//        throw psi::PSIEXCEPTION("S parameter for DSRG must >= 0!");
 //    }
 //    taylor_threshold_ = options_.get_int("TAYLOR_THRESHOLD");
 //    if(taylor_threshold_ <= 0){
 //        outfile->Printf("\n  Threshold for Taylor expansion must be an integer
 //        greater than 0!");
-//        throw PSIEXCEPTION("Threshold for Taylor expansion must be an integer
+//        throw psi::PSIEXCEPTION("Threshold for Taylor expansion must be an integer
 //        greater than 0!");
 //    }
 

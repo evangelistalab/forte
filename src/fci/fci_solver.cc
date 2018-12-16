@@ -141,7 +141,7 @@ double FCISolver::compute_energy() {
     } else {
         if (fci_ints_ == nullptr) {
             outfile->Printf("\n You said you would specify integrals and restricted_docc");
-            throw PSIEXCEPTION("Need to set the fci_ints in your code");
+            throw psi::PSIEXCEPTION("Need to set the fci_ints in your code");
         } else {
             fci_ints = fci_ints_;
         }
@@ -182,7 +182,7 @@ double FCISolver::compute_energy() {
     size_t nguess = std::min(guess_list.size(), guess_size);
 
     if (nguess == 0) {
-        throw PSIEXCEPTION("\n\n  Found zero FCI guesses with the requested "
+        throw psi::PSIEXCEPTION("\n\n  Found zero FCI guesses with the requested "
                            "multiplicity.\n\n");
     }
 
@@ -265,7 +265,7 @@ double FCISolver::compute_energy() {
 
     if (converged == SolverStatus::NotConverged) {
         outfile->Printf("\n  FCI did not converge!");
-        throw PSIEXCEPTION("FCI did not converge. Try increasing FCI_ITERATIONS.");
+        throw psi::PSIEXCEPTION("FCI did not converge. Try increasing FCI_ITERATIONS.");
     }
 
     // Compute final eigenvectors
@@ -356,7 +356,7 @@ void FCISolver::compute_rdms_root(int root) {
         if (root >= nroot_) {
             std::string error = "Cannot compute RDMs of root " + std::to_string(root) +
                                 "(0-based) because nroot = " + std::to_string(nroot_);
-            throw PSIEXCEPTION(error);
+            throw psi::PSIEXCEPTION(error);
         }
 
         psi::SharedVector evec(eigen_vecs_->get_row(0, root));
@@ -377,7 +377,7 @@ void FCISolver::compute_rdms_root(int root) {
             C_->print_natural_orbitals(mo_space_info_);
         }
     } else {
-        throw PSIEXCEPTION("FCIWfn is not assigned. Cannot compute RDMs.");
+        throw psi::PSIEXCEPTION("FCIWfn is not assigned. Cannot compute RDMs.");
     }
 }
 

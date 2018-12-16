@@ -60,7 +60,7 @@ namespace forte {
 //     size_t s = 0;
 //     if (composite_spaces_.count(space) == 0) {
 //         std::string msg = "\n  MOSpaceInfo::size - composite space " + space + " is not defined.";
-//         throw PSIEXCEPTION(msg.c_str());
+//         throw psi::PSIEXCEPTION(msg.c_str());
 //     } else {
 //         for (const auto& el_space : composite_spaces_[space]) {
 //             if (mo_spaces_.count(el_space))
@@ -74,7 +74,7 @@ namespace forte {
 //     psi::Dimension result(nirrep_);
 //     if (composite_spaces_.count(space) == 0) {
 //         std::string msg = "\n  MOSpaceInfo::size - composite space " + space + " is not defined.";
-//         throw PSIEXCEPTION(msg.c_str());
+//         throw psi::PSIEXCEPTION(msg.c_str());
 //     } else {
 //         for (const auto& el_space : composite_spaces_[space]) {
 //             if (mo_spaces_.count(el_space))
@@ -107,7 +107,7 @@ namespace forte {
 //     std::vector<size_t> result;
 //     if (composite_spaces_.count(space) == 0) {
 //         std::string msg = "\n  MOSpaceInfo::size - composite space " + space + " is not defined.";
-//         throw PSIEXCEPTION(msg.c_str());
+//         throw psi::PSIEXCEPTION(msg.c_str());
 //     } else {
 //         for (const auto& el_space : composite_spaces_[space]) {
 //             if (mo_spaces_.count(el_space)) {
@@ -125,7 +125,7 @@ namespace forte {
 //     std::vector<size_t> result;
 //     if (composite_spaces_.count(space) == 0) {
 //         std::string msg = "\n  MOSpaceInfo::size - composite space " + space + " is not defined.";
-//         throw PSIEXCEPTION(msg.c_str());
+//         throw psi::PSIEXCEPTION(msg.c_str());
 //     } else {
 //         for (const auto& el_space : composite_spaces_[space]) {
 //             if (mo_spaces_.count(el_space)) {
@@ -146,7 +146,7 @@ namespace forte {
 //     std::vector<std::pair<size_t, size_t>> result;
 //     if (composite_spaces_.count(space) == 0) {
 //         std::string msg = "\n  MOSpaceInfo::size - composite space " + space + " is not defined.";
-//         throw PSIEXCEPTION(msg.c_str());
+//         throw psi::PSIEXCEPTION(msg.c_str());
 //     } else {
 //         for (const auto& el_space : composite_spaces_[space]) {
 //             if (mo_spaces_.count(el_space)) {
@@ -361,7 +361,7 @@ void write_disk_vector_double(const std::string& filename, const std::vector<dou
     if (exist) {
         std::stringstream error;
         error << "File " << filename << " already exists.";
-        throw PSIEXCEPTION(error.str().c_str());
+        throw psi::PSIEXCEPTION(error.str().c_str());
     }
 
     // write data to file
@@ -381,7 +381,7 @@ void read_disk_vector_double(const std::string& filename, std::vector<double>& d
     if (!in.good()) {
         std::stringstream error;
         error << "File " << filename << " does not exist.";
-        throw PSIEXCEPTION(error.str().c_str());
+        throw psi::PSIEXCEPTION(error.str().c_str());
     }
 
     // read file to data

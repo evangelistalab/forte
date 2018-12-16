@@ -75,7 +75,7 @@ ACTIVE_DSRGPT2::~ACTIVE_DSRGPT2() {}
 
 void ACTIVE_DSRGPT2::startup() {
     if (psi::Options_["NROOTPI"].size() == 0) {
-        throw PSIEXCEPTION("Please specify NROOTPI for ACTIVE-DSRGPT2 jobs.");
+        throw psi::PSIEXCEPTION("Please specify NROOTPI for ACTIVE-DSRGPT2 jobs.");
     } else {
         std::shared_ptr<Molecule> molecule = Process::environment.molecule();
         multiplicity_ = molecule->multiplicity();
@@ -238,7 +238,7 @@ double ACTIVE_DSRGPT2::compute_energy() {
             if (h == 0) {
                 outfile->Printf("\n  Please change the nroot of %s to 1 for the ground state.",
                                 irrep_symbol_[0].c_str());
-                throw PSIEXCEPTION("Please change NROOTPI to account for the ground state.");
+                throw psi::PSIEXCEPTION("Please change NROOTPI to account for the ground state.");
             } else {
                 continue;
             }
@@ -338,7 +338,7 @@ double ACTIVE_DSRGPT2::compute_energy() {
             if (eigen_size != nroot) {
                 outfile->Printf("\n  FCI_MO error from ACTIVE_DSRGPT2: Inconsistent nroot "
                                 "to eigen_size.");
-                throw PSIEXCEPTION("Inconsistent nroot to eigen_size.");
+                throw psi::PSIEXCEPTION("Inconsistent nroot to eigen_size.");
             }
 
             outfile->Printf("\n\n  Computing V%s reference oscillator strength 0%s -> n%s ... ",
@@ -481,7 +481,7 @@ double ACTIVE_DSRGPT2::compute_dsrg_mrpt2_energy(std::shared_ptr<MASTER_DSRG>& d
         dsrg = std::make_shared<THREE_DSRG_MRPT2>(reference, reference_wavefunction_, options_,
                                                   ints_, mo_space_info_);
     } else {
-        throw PSIEXCEPTION("Unknown integral type for DSRG.");
+        throw psi::PSIEXCEPTION("Unknown integral type for DSRG.");
     }
     dsrg->set_actv_occ(fci_mo_->actv_occ());
     dsrg->set_actv_uocc(fci_mo_->actv_uocc());
@@ -543,7 +543,7 @@ void ACTIVE_DSRGPT2::compute_osc_ref(const int& irrep0, const int& irrep1,
         std::string error = "Error from compute_ref_osc: size of p_space does not match the "
                             "dimension of eigen vector.";
         outfile->Printf("\n  %s", error.c_str());
-        throw PSIEXCEPTION(error);
+        throw psi::PSIEXCEPTION(error);
     }
 
     // determine if p_space0 and p_space1 are the same (even ordering)

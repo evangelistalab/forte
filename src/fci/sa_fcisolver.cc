@@ -71,7 +71,7 @@ void SA_FCISolver::read_options() {
             if (psi::Options_["AVG_STATE"][i].size() != 3) {
                 outfile->Printf("\n  Error: invalid input of AVG_STATE. Each "
                                 "entry should take an array of three numbers.");
-                throw PSIEXCEPTION("Invalid input of AVG_STATE");
+                throw psi::PSIEXCEPTION("Invalid input of AVG_STATE");
             }
 
             // irrep
@@ -81,7 +81,7 @@ void SA_FCISolver::read_options() {
                                 "check the input irrep (start from 0) not to "
                                 "exceed %d",
                                 nirrep - 1);
-                throw PSIEXCEPTION("Invalid irrep in AVG_STATE");
+                throw psi::PSIEXCEPTION("Invalid irrep in AVG_STATE");
             }
             irreps.push_back(irrep);
 
@@ -89,7 +89,7 @@ void SA_FCISolver::read_options() {
             int multi = options_["AVG_STATE"][i][1].to_integer();
             if (multi < 1) {
                 outfile->Printf("\n  Error: invalid multiplicity in AVG_STATE.");
-                throw PSIEXCEPTION("Invaid multiplicity in AVG_STATE");
+                throw psi::PSIEXCEPTION("Invaid multiplicity in AVG_STATE");
             }
             multis.push_back(multi);
 
@@ -99,7 +99,7 @@ void SA_FCISolver::read_options() {
                 outfile->Printf("\n  Error: invalid nstates in AVG_STATE. "
                                 "nstates of a certain irrep and multiplicity "
                                 "should greater than 0.");
-                throw PSIEXCEPTION("Invalid nstates in AVG_STATE.");
+                throw psi::PSIEXCEPTION("Invalid nstates in AVG_STATE.");
             }
             nstatespim.push_back(nstates_this);
             nstates_ += nstates_this;
@@ -112,7 +112,7 @@ void SA_FCISolver::read_options() {
                 outfile->Printf("\n  Error: mismatched number of entries in "
                                 "AVG_STATE (%d) and AVG_WEIGHT (%d).",
                                 nentry, options_["AVG_WEIGHT"].size());
-                throw PSIEXCEPTION("Mismatched number of entries in AVG_STATE "
+                throw psi::PSIEXCEPTION("Mismatched number of entries in AVG_STATE "
                                    "and AVG_WEIGHT.");
             }
 
@@ -124,7 +124,7 @@ void SA_FCISolver::read_options() {
                                     "in entry %d of AVG_WEIGHT. Asked for %d "
                                     "states but only %d weights.",
                                     i, nstatespim[i], nw);
-                    throw PSIEXCEPTION("Mismatched number of weights in AVG_WEIGHT.");
+                    throw psi::PSIEXCEPTION("Mismatched number of weights in AVG_WEIGHT.");
                 }
 
                 std::vector<double> weight;
@@ -132,7 +132,7 @@ void SA_FCISolver::read_options() {
                     double w = options_["AVG_WEIGHT"][i][n].to_double();
                     if (w < 0.0) {
                         outfile->Printf("\n  Error: negative weights in AVG_WEIGHT.");
-                        throw PSIEXCEPTION("Negative weights in AVG_WEIGHT.");
+                        throw psi::PSIEXCEPTION("Negative weights in AVG_WEIGHT.");
                     }
                     weight.push_back(w);
                     wsum += w;
@@ -143,7 +143,7 @@ void SA_FCISolver::read_options() {
                 outfile->Printf("\n  Error: AVG_WEIGHT entries do not add up "
                                 "to 1.0. Sum = %.10f",
                                 wsum);
-                throw PSIEXCEPTION("AVG_WEIGHT entries do not add up to 1.0.");
+                throw psi::PSIEXCEPTION("AVG_WEIGHT entries do not add up to 1.0.");
             }
 
         } else {
@@ -240,7 +240,7 @@ double SA_FCISolver::compute_energy() {
             outfile->Printf("\n  Ms must be no less than 0.");
             outfile->Printf("\n  Ms = %2d, MULTIPLICITY = %2d", twice_ms, multiplicity);
             outfile->Printf("\n  Check (specify) Ms value (component of multiplicity)! \n");
-            throw PSIEXCEPTION("Ms must be no less than 0. Check output for details.");
+            throw psi::PSIEXCEPTION("Ms must be no less than 0. Check output for details.");
         }
 
         if (psi::Options_.get_int("PRINT")) {
@@ -260,7 +260,7 @@ double SA_FCISolver::compute_energy() {
         }
 
         if (((nel - twice_ms) % 2) != 0)
-            throw PSIEXCEPTION("\n\n  FCI: Wrong value of M_s.\n\n");
+            throw psi::PSIEXCEPTION("\n\n  FCI: Wrong value of M_s.\n\n");
 
         // Adjust the number of for frozen and restricted doubly occupied
         size_t nactel = nel - 2 * nfdocc - 2 * rdocc.size();
@@ -279,7 +279,7 @@ double SA_FCISolver::compute_energy() {
         fcisolver.use_user_integrals_and_restricted_docc(true);
         if (fci_ints_ == nullptr) {
             outfile->Printf("\n\n You need to set fci_ints");
-            throw PSIEXCEPTION("Set FCI INTS");
+            throw psi::PSIEXCEPTION("Set FCI INTS");
         } else {
             fcisolver.set_integral_pointer(fci_ints_);
         }

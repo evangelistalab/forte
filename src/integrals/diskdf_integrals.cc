@@ -371,7 +371,7 @@ ambit::Tensor DISKDFIntegrals::three_integral_block(const std::vector<size_t>& A
 
 void DISKDFIntegrals::set_tei(size_t, size_t, size_t, size_t, double, bool, bool) {
     outfile->Printf("\n  DISKDFIntegrals::set_tei : DISKDF integrals are read only");
-    throw PSIEXCEPTION("DISKDFIntegrals::set_tei : DISKDF integrals are read only");
+    throw psi::PSIEXCEPTION("DISKDFIntegrals::set_tei : DISKDF integrals are read only");
 }
 
 void DISKDFIntegrals::gather_integrals() {
@@ -503,7 +503,7 @@ void DISKDFIntegrals::make_fock_matrix(psi::SharedMatrix gamma_aM, psi::SharedMa
     if (block_size < 1) {
         outfile->Printf("\n\n Block size is FUBAR.");
         outfile->Printf("\n Block size is %d", block_size);
-        throw PSIEXCEPTION("Block size is either 0 or negative.  Fix this problem");
+        throw psi::PSIEXCEPTION("Block size is either 0 or negative.  Fix this problem");
     }
     if (num_block >= 1) {
         outfile->Printf("\n---------Blocking Information-------\n");
@@ -628,7 +628,7 @@ ambit::Tensor DISKDFIntegrals::three_integral_block_two_index(const std::vector<
         }
     } else {
         outfile->Printf("\n Not implemened for variable size in A");
-        throw PSIEXCEPTION("Can only use if 2nd parameter is a size_t and A.size==nthree_");
+        throw psi::PSIEXCEPTION("Can only use if 2nd parameter is a size_t and A.size==nthree_");
     }
     return ReturnTensor;
 }
@@ -637,20 +637,20 @@ double DISKDFIntegrals::diag_aptei_aa(size_t, size_t) {
     outfile->Printf("\n Kevin seemed to find that nobody uses this function.  "
                     "It is quite slow in DISKDF");
     outfile->Printf("\n Bribe Kevin with things and he will implement it if it is needed");
-    throw PSIEXCEPTION("diag_aptei_aa is not implemented for DISKDF");
+    throw psi::PSIEXCEPTION("diag_aptei_aa is not implemented for DISKDF");
 }
 
 double DISKDFIntegrals::diag_aptei_ab(size_t, size_t) {
     outfile->Printf("\n Kevin seemed to find that nobody uses this function.  "
                     "It is quite slow in DISKDF");
     outfile->Printf("\n Bribe Kevin with things and he will implement it if it is needed");
-    throw PSIEXCEPTION("diag_aptei_ab is not implemented for DISKDF");
+    throw psi::PSIEXCEPTION("diag_aptei_ab is not implemented for DISKDF");
 }
 double DISKDFIntegrals::diag_aptei_bb(size_t, size_t) {
     outfile->Printf("\n Kevin seemed to find that nobody uses this function.  "
                     "It is quite slow in DISKDF");
     outfile->Printf("\n Bribe Kevin with things and he will implement it if it is needed");
-    throw PSIEXCEPTION("diag_aptei_bb is not implemented for DISKDF");
+    throw psi::PSIEXCEPTION("diag_aptei_bb is not implemented for DISKDF");
 }
 } // namespace forte
 

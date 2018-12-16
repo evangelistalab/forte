@@ -193,7 +193,7 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
         dmrg->set_iterations(psi::Options.get_int("DMRGSCF_MAX_ITER"));
         dmrg->compute_energy();
 #else
-        throw PSIEXCEPTION("Did not compile with CHEMPS2 so DMRG will not work");
+        throw psi::PSIEXCEPTION("Did not compile with CHEMPS2 so DMRG will not work");
 #endif
     }
     if (psi::Options.get_str("JOB_TYPE") == "DMRG") {
@@ -202,7 +202,7 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
         dmrg.set_max_rdm(2);
         dmrg.compute_energy();
 #else
-        throw PSIEXCEPTION("Did not compile with CHEMPS2 so DMRG will not work");
+        throw psi::PSIEXCEPTION("Did not compile with CHEMPS2 so DMRG will not work");
 #endif
     }
     if (psi::Options.get_str("JOB_TYPE") == "CAS") {
@@ -501,7 +501,7 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
 
         if (psi::Options.get_str("INT_TYPE") == "CONVENTIONAL") {
             outfile->Printf("\n THREE-DSRG-MRPT2 is designed for DF/CD integrals");
-            throw PSIEXCEPTION("Please set INT_TYPE  DF/CHOLESKY for THREE_DSRG");
+            throw psi::PSIEXCEPTION("Please set INT_TYPE  DF/CHOLESKY for THREE_DSRG");
         }
 
         bool multi_state = options["AVG_STATE"].size() != 0;

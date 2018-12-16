@@ -341,7 +341,7 @@ void CI_Reference::build_cas_reference(std::vector<Determinant>& ref_space) {
     }
 
     if (ref_space.size() == 0) {
-        throw PSIEXCEPTION("Unable to generate CASCI space. Try increasing ACTIVE_GUESS_SIZE");
+        throw psi::PSIEXCEPTION("Unable to generate CASCI space. Try increasing ACTIVE_GUESS_SIZE");
     }
 
     outfile->Printf("\n  Number of reference determinants: %zu", ref_space.size());

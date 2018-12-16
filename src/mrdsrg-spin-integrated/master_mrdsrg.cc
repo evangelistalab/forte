@@ -85,7 +85,7 @@ void MASTER_DSRG::read_options() {
 
     auto throw_error = [&](const std::string& message) -> void {
         outfile->Printf("\n  %s", message.c_str());
-        throw PSIEXCEPTION(message);
+        throw psi::PSIEXCEPTION(message);
     };
 
     print_ = options_.get_int("PRINT");
@@ -791,10 +791,10 @@ std::vector<ambit::Tensor> MASTER_DSRG::Hbar(int n) {
             out = {Hbar3_.block("aaaaaa"), Hbar3_.block("aaAaaA"), Hbar3_.block("aAAaAA"),
                    Hbar3_.block("AAAAAA")};
         } else {
-            throw PSIEXCEPTION("Hbar3 is not formed. Check your code.");
+            throw psi::PSIEXCEPTION("Hbar3 is not formed. Check your code.");
         }
     } else {
-        throw PSIEXCEPTION("Only 1, 2, and 3 Hbar are in Tensor format.");
+        throw psi::PSIEXCEPTION("Only 1, 2, and 3 Hbar are in Tensor format.");
     }
     return out;
 }
@@ -1908,7 +1908,7 @@ bool MASTER_DSRG::check_semi_orbs() {
         if ((job_type == "MRDSRG" || job_type == "DSRG-MRPT3") && fci_mo) {
             std::stringstream ss;
             ss << "Unsupported FCIMO_ACTV_TYPE for " << job_type << " code.";
-            throw PSIEXCEPTION(ss.str());
+            throw psi::PSIEXCEPTION(ss.str());
         }
 
         outfile->Printf("\n    Incomplete active space %s is detected.", actv_type.c_str());

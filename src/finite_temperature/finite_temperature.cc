@@ -226,7 +226,7 @@ double FiniteTemperatureHF::bisection(std::vector<double>& ni, double T) {
         outfile->Printf("\n Bisection gives %8.8f", sum);
         outfile->Printf("\n While it should be %d", naelec);
 
-        throw PSIEXCEPTION(" Bisection root finding method failed ");
+        throw psi::PSIEXCEPTION(" Bisection root finding method failed ");
     }
 
     sumef = 0.0;

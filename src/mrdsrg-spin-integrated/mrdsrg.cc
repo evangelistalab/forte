@@ -66,7 +66,7 @@ void MRDSRG::read_options() {
         std::stringstream ss;
         ss << "DSRG transformation type (" << dsrg_trans_type_
            << ") is not implemented yet. Please change to UNITARY";
-        throw PSIEXCEPTION(ss.str());
+        throw psi::PSIEXCEPTION(ss.str());
     }
 
     corrlv_string_ = options_.get_str("CORR_LEVEL");
@@ -560,7 +560,7 @@ double MRDSRG::compute_energy_relaxed() {
         outfile->Printf("\n");
 
         if (failed) {
-            throw PSIEXCEPTION("Reference relaxation process does not converge.");
+            throw psi::PSIEXCEPTION("Reference relaxation process does not converge.");
         }
 
         // set energies to psi4 environment
@@ -763,7 +763,7 @@ double MRDSRG::compute_energy_sa() {
     }
 
     if (failed) {
-        throw PSIEXCEPTION("Reference relaxation process does not converge.");
+        throw psi::PSIEXCEPTION("Reference relaxation process does not converge.");
     }
 
     Process::environment.globals["CURRENT ENERGY"] = Erelax_sa;
@@ -976,7 +976,7 @@ double MRDSRG::compute_energy_sa() {
 //    outfile->Printf("\n    %-30s = %22.15f", "Total Energy (before)", Eref_ + Hbar0_);
 
 //    if (std::fabs(Etest - Eref_ - Hbar0_) > 100.0 * options_.get_double("E_CONVERGENCE")) {
-//        throw PSIEXCEPTION("De-normal-odering failed.");
+//        throw psi::PSIEXCEPTION("De-normal-odering failed.");
 //    } else {
 //    //    ints_->update_integrals(false); <- this should not be here
 //    }
@@ -1097,10 +1097,10 @@ ambit::Tensor MRDSRG::separate_tensor(ambit::Tensor& tens, const psi::Dimension&
     // test tens and irrep
     int tens_dim = static_cast<int>(tens.dim(0));
     if (tens_dim != irrep.sum() || tens_dim != static_cast<int>(tens.dim(1))) {
-        throw PSIEXCEPTION("Wrong dimension for the to-be-separated ambit Tensor.");
+        throw psi::PSIEXCEPTION("Wrong dimension for the to-be-separated ambit Tensor.");
     }
     if (h >= irrep.n()) {
-        throw PSIEXCEPTION("Ask for wrong irrep.");
+        throw psi::PSIEXCEPTION("Ask for wrong irrep.");
     }
 
     // from relative (blocks) to absolute (big tensor) index
@@ -1130,11 +1130,11 @@ void MRDSRG::combine_tensor(ambit::Tensor& tens, ambit::Tensor& tens_h, const ps
                             const int& h) {
     // test tens and irrep
     if (h >= irrep.n()) {
-        throw PSIEXCEPTION("Ask for wrong irrep.");
+        throw psi::PSIEXCEPTION("Ask for wrong irrep.");
     }
     size_t tens_h_dim = tens_h.dim(0), h_dim = irrep[h];
     if (tens_h_dim != h_dim || tens_h_dim != tens_h.dim(1)) {
-        throw PSIEXCEPTION("Wrong dimension for the to-be-combined ambit Tensor.");
+        throw psi::PSIEXCEPTION("Wrong dimension for the to-be-combined ambit Tensor.");
     }
 
     // from relative (blocks) to absolute (big tensor) index

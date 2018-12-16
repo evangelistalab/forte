@@ -50,7 +50,7 @@ LOCALIZE::LOCALIZE(std::shared_ptr<Wavefunction> wfn, psi::Options& options,
     namo_ = mo_space_info->size("ACTIVE");
 
     if (wfn_->nirrep() > 1) {
-        throw PSIEXCEPTION("\n\n ERROR: Localizer only implemented for C1 symmetry!");
+        throw psi::PSIEXCEPTION("\n\n ERROR: Localizer only implemented for C1 symmetry!");
     }
 
     int nel = 0;

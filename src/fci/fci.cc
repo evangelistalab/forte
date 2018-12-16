@@ -146,7 +146,7 @@ double FCI::solver_compute_energy() {
     //        multiplicity);
     //        outfile->Printf("\n  Check (specify) Ms value (component of
     //        multiplicity)! \n");
-    //        throw PSIEXCEPTION("Ms must be no less than 0. Check output for
+    //        throw psi::PSIEXCEPTION("Ms must be no less than 0. Check output for
     //        details.");
     //    }
 
@@ -166,7 +166,7 @@ double FCI::solver_compute_energy() {
     }
 
     if (((nel - twice_ms_) % 2) != 0)
-        throw PSIEXCEPTION("\n\n  FCI: Wrong value of M_s.\n\n");
+        throw psi::PSIEXCEPTION("\n\n  FCI: Wrong value of M_s.\n\n");
 
     // Adjust the number of for frozen and restricted doubly occupied
     size_t nactel = nel - 2 * nfdocc - 2 * rdocc.size();

@@ -105,7 +105,7 @@ void OrbitalOptimizer::startup() {
         casscf_freeze_core_ = false;
     }
     if (psi::Options_.get_bool("OPTIMIZE_FROZEN_CORE")) {
-        throw PSIEXCEPTION("CASSCF can not handle optimization of frozen core, yet.");
+        throw psi::PSIEXCEPTION("CASSCF can not handle optimization of frozen core, yet.");
     }
 
     nmo_ = mo_space_info_->size("CORRELATED");
@@ -139,7 +139,7 @@ void OrbitalOptimizer::startup() {
         outfile->Printf("\n\n Please set your CASSCF_CI_SOLVER to either FCI, CAS, ACI, or DMRG");
         outfile->Printf("\n\n You set your CASSCF_CI_SOLVER to %s.",
                         options_.get_str("CASSCF_CI_SOLVER").c_str());
-        throw PSIEXCEPTION("You did not specify your CASSCF_CI_SOLVER correctly.");
+        throw psi::PSIEXCEPTION("You did not specify your CASSCF_CI_SOLVER correctly.");
     }
     cas_ = true;
 }
@@ -641,11 +641,11 @@ void CASSCFOrbitalOptimizer::form_fock_intermediates() {
 
     if (Ca_sym_ == nullptr) {
         outfile->Printf("\n\n Please give your OrbitalOptimize an Orbital");
-        throw PSIEXCEPTION("Please set CMatrix before you call orbital rotation casscf");
+        throw psi::PSIEXCEPTION("Please set CMatrix before you call orbital rotation casscf");
     }
     if (H_ == nullptr) {
         outfile->Printf("\n\n Please set the OneBody operator");
-        throw PSIEXCEPTION("Please set H before you call orbital rotation casscf");
+        throw psi::PSIEXCEPTION("Please set H before you call orbital rotation casscf");
     }
     H_->transform(Ca_sym_);
     if (casscf_debug_print_) {

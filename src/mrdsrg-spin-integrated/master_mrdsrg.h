@@ -48,7 +48,7 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     virtual void compute_Heff_2nd_coupling(double&, ambit::Tensor&, ambit::Tensor&, ambit::Tensor&,
                                            ambit::Tensor&, ambit::Tensor&, ambit::Tensor&,
                                            ambit::Tensor&, ambit::Tensor&, ambit::Tensor&) {
-        throw PSIEXCEPTION("Child class should override this function");
+        throw psi::PSIEXCEPTION("Child class should override this function");
     }
 
     /// Compute [H, T] without using MK-GNO
@@ -64,24 +64,24 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
 
     /// Return de-normal-ordered T1 amplitudes
     virtual ambit::BlockedTensor get_T1deGNO(double&) {
-        throw PSIEXCEPTION("Child class should override this function");
+        throw psi::PSIEXCEPTION("Child class should override this function");
     }
 
     /// Return T2 amplitudes
     virtual ambit::BlockedTensor get_T2(const std::vector<std::string>&) {
-        throw PSIEXCEPTION("Child class should override this function");
+        throw psi::PSIEXCEPTION("Child class should override this function");
     }
     virtual ambit::BlockedTensor get_T2() {
-        throw PSIEXCEPTION("Child class should override this function");
+        throw psi::PSIEXCEPTION("Child class should override this function");
     }
 
     /// Return de-normal-ordered 1-body renormalized 1st-order Hamiltonian
     virtual ambit::BlockedTensor get_RH1deGNO() {
-        throw PSIEXCEPTION("Only used in non-DF DSRG-MRPT2");
+        throw psi::PSIEXCEPTION("Only used in non-DF DSRG-MRPT2");
     }
 
     /// Return 2-body renormalized 1st-order Hamiltonian
-    virtual ambit::BlockedTensor get_RH2() { throw PSIEXCEPTION("Only used in non-DF DSRG-MRPT2"); }
+    virtual ambit::BlockedTensor get_RH2() { throw psi::PSIEXCEPTION("Only used in non-DF DSRG-MRPT2"); }
 
     /// Return the Hbar of a given order
     std::vector<ambit::Tensor> Hbar(int n);

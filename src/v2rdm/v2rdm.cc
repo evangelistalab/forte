@@ -124,7 +124,7 @@ void V2RDM::read_2pdm() {
     for (const auto& file : {PSIF_V2RDM_D2AA, PSIF_V2RDM_D2AB, PSIF_V2RDM_D2BB}) {
         if (!psio->exists(file)) {
             std::string error = "V2RDM file for " + filename[file] + " does not exist";
-            throw PSIEXCEPTION(error);
+            throw psi::PSIEXCEPTION(error);
         }
     }
     outfile->Printf("    OK.");
@@ -153,7 +153,7 @@ void V2RDM::read_2pdm() {
                             "V2RDM-CASSCF.");
             outfile->Printf("\n  Please check the input file and make the "
                             "active block consistent.");
-            throw PSIEXCEPTION("The active block of FORTE is different from V2RDM-CASSCF.");
+            throw psi::PSIEXCEPTION("The active block of FORTE is different from V2RDM-CASSCF.");
         }
     }
     psio->close(PSIF_V2RDM_D2AB, 1);
@@ -277,7 +277,7 @@ void V2RDM::read_3pdm() {
          {PSIF_V2RDM_D3AAA, PSIF_V2RDM_D3AAB, PSIF_V2RDM_D3BBA, PSIF_V2RDM_D3BBB}) {
         if (!psio->exists(file)) {
             std::string error = "V2RDM file for " + filename[file] + " does not exist";
-            throw PSIEXCEPTION(error);
+            throw psi::PSIEXCEPTION(error);
         }
     }
     outfile->Printf("    OK.");

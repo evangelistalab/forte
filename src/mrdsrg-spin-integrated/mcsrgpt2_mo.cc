@@ -108,7 +108,7 @@ void MCSRGPT2_MO::startup(psi::Options& options) {
             outfile->Printf("%s ", key.c_str());
         }
         outfile->Printf("\n");
-        throw PSIEXCEPTION("Source operator is not available.");
+        throw psi::PSIEXCEPTION("Source operator is not available.");
     }
 
     // Print Delta
@@ -121,15 +121,15 @@ void MCSRGPT2_MO::startup(psi::Options& options) {
     // DSRG Parameters
     s_ = options.get_double("DSRG_S");
     if (s_ < 0) {
-        throw PSIEXCEPTION("DSRG_S cannot be negative numbers.");
+        throw psi::PSIEXCEPTION("DSRG_S cannot be negative numbers.");
     }
     taylor_threshold_ = options.get_int("TAYLOR_THRESHOLD");
     if (taylor_threshold_ <= 0) {
-        throw PSIEXCEPTION("TAYLOR_THRESHOLD must be an integer greater than 0.");
+        throw psi::PSIEXCEPTION("TAYLOR_THRESHOLD must be an integer greater than 0.");
     }
     expo_delta_ = options.get_double("DSRG_POWER");
     if (expo_delta_ <= 1.0) {
-        throw PSIEXCEPTION("DELTA_EXPONENT must be greater than 1.0.");
+        throw psi::PSIEXCEPTION("DELTA_EXPONENT must be greater than 1.0.");
     }
     double e_conv = -log10(psi::Options.get_double("E_CONVERGENCE"));
     taylor_order_ = floor((e_conv / taylor_threshold_ + 1.0) / expo_delta_) + 1;

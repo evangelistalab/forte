@@ -1206,7 +1206,7 @@ double AdaptiveCI::average_q_values(int nroot, std::vector<double>& C1, std::vec
     if (nav == 0)
         nav = nroot;
     if ((off + nav) > nroot)
-        off = nroot - nav; // throw PSIEXCEPTION("\n  Your desired number of
+        off = nroot - nav; // throw psi::PSIEXCEPTION("\n  Your desired number of
                            // roots and the offset exceeds the maximum number of
                            // roots!");
 
@@ -1246,7 +1246,7 @@ double AdaptiveCI::root_select(int nroot, std::vector<double>& C1, std::vector<d
     double select_value;
 
     if (ref_root_ + 1 > nroot_) {
-        throw PSIEXCEPTION("\n  Your selection is not valid. Check ROOT in options.");
+        throw psi::PSIEXCEPTION("\n  Your selection is not valid. Check ROOT in options.");
     }
     int root = ref_root_;
     if (nroot == 1) {
@@ -1321,7 +1321,7 @@ void AdaptiveCI::prune_q_space(DeterminantHashVec& PQ_space, DeterminantHashVec&
     //  }
 
     if ((off + nav) > nroot)
-        off = nroot - nav; // throw PSIEXCEPTION("\n  Your desired number of
+        off = nroot - nav; // throw psi::PSIEXCEPTION("\n  Your desired number of
                            // roots and the offset exceeds the maximum number of
                            // roots!");
 

@@ -99,7 +99,7 @@ void ParallelDFMO::transform_integrals() {
     unsigned long int max_rows = (memory_ / per_row);
     // max_rows = 3L * auxiliary_->max_function_per_shell(); // Debug
     if (max_rows < auxiliary_->max_function_per_shell()) {
-        throw PSIEXCEPTION("Out of memory in DFERI.");
+        throw psi::PSIEXCEPTION("Out of memory in DFERI.");
     }
     max_rows = (max_rows > auxiliary_->nbf() ? auxiliary_->nbf() : max_rows);
     int shell_per_process = 0;
@@ -112,7 +112,7 @@ void ParallelDFMO::transform_integrals() {
     if (auxiliary_->nbf() == max_rows) {
         shell_per_process = auxiliary_->nshell() / num_proc;
     } else {
-        throw PSIEXCEPTION("Have not implemented memory bound df integrals");
+        throw psi::PSIEXCEPTION("Have not implemented memory bound df integrals");
     }
     /// Have first proc be from 0 to shell_per_process
     /// Last proc is shell_per_process * my_rank to naux
@@ -176,11 +176,11 @@ void ParallelDFMO::transform_integrals() {
     map[GA_Nnodes()] = 0;
     int Aia_ga = NGA_Create_irreg(C_DBL, 2, dims, (char*)"Aia_temp", chunk, map);
     if (not Aia_ga) {
-        throw PSIEXCEPTION("GA failed on creating Aia_ga");
+        throw psi::PSIEXCEPTION("GA failed on creating Aia_ga");
     }
     GA_Q_PQ_ = GA_Duplicate(Aia_ga, (char*)"(Q|pq)");
     if (not GA_Q_PQ_) {
-        throw PSIEXCEPTION("GA failed on creating GA_Q_PQ");
+        throw psi::PSIEXCEPTION("GA failed on creating GA_Q_PQ");
     }
 
     // => ERI Objects <= //
@@ -361,7 +361,7 @@ void ParallelDFMO::J_one_half() {
     chunk[1] = naux;
     GA_J_onehalf_ = NGA_Create(C_DBL, 2, dims, (char*)"J_1/2", chunk);
     if (not GA_J_onehalf_)
-        throw PSIEXCEPTION("Failure in creating J_^(-1/2) in GA");
+        throw psi::PSIEXCEPTION("Failure in creating J_^(-1/2) in GA");
 
     // if(GA_Nodeid() == 0)
     {

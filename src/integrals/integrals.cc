@@ -223,7 +223,7 @@ void ForteIntegrals::transform_one_electron_integrals() {
 void ForteIntegrals::set_fock_a(const std::vector<double>& fock_stl) {
     size_t fock_size = fock_stl.size();
     if (fock_size != ncmo_ * ncmo_) {
-        throw PSIEXCEPTION("Cannot fill in fock_matrix_a because the vector is out-of-range.");
+        throw psi::PSIEXCEPTION("Cannot fill in fock_matrix_a because the vector is out-of-range.");
     } else {
         fock_matrix_a_ = fock_stl;
     }
@@ -233,7 +233,7 @@ void ForteIntegrals::set_fock_a(const std::vector<double>& fock_stl) {
 void ForteIntegrals::set_fock_b(const std::vector<double>& fock_stl) {
     size_t fock_size = fock_stl.size();
     if (fock_size != ncmo_ * ncmo_) {
-        throw PSIEXCEPTION("Cannot fill in fock_matrix_b because the vector is out-of-range.");
+        throw psi::PSIEXCEPTION("Cannot fill in fock_matrix_b because the vector is out-of-range.");
     } else {
         fock_matrix_b_ = fock_stl;
     }
@@ -277,7 +277,7 @@ void ForteIntegrals::compute_frozen_one_body_operator() {
         Process::environment.set_legacy_molecule(wfn_->molecule());
         JK_core = std::shared_ptr<JK>(new GTFockJK(wfn_->basisset()));
 #else
-        throw PSIEXCEPTION("GTFock was not compiled in this version");
+        throw psi::PSIEXCEPTION("GTFock was not compiled in this version");
 #endif
     } else {
         if (psi::Options_.get_str("SCF_TYPE") == "DF") {
@@ -285,7 +285,7 @@ void ForteIntegrals::compute_frozen_one_body_operator() {
                 JK_core = JK::build_JK(wfn_->basisset(), wfn_->get_basisset("DF_BASIS_MP2"),
                                        options_, "MEM_DF");
             } else {
-                throw PSIEXCEPTION("Trying to compute the frozen one-body operator with MEM_DF but "
+                throw psi::PSIEXCEPTION("Trying to compute the frozen one-body operator with MEM_DF but "
                                    "using a non-DF integral type");
             }
         } else {
@@ -395,7 +395,7 @@ void ForteIntegrals::rotate_mos() {
         outfile->Printf("\n Check ROTATE_MOS array");
         outfile->Printf("\nFormat should be in group of 3s");
         outfile->Printf("\n Irrep, rotate_1, rotate_2, irrep, rotate_3, rotate_4");
-        throw PSIEXCEPTION("User specifed ROTATE_MOS incorrectly.  Check output for notes");
+        throw psi::PSIEXCEPTION("User specifed ROTATE_MOS incorrectly.  Check output for notes");
     }
     int orbital_rotate_group = (size_mo_rotate / 3);
     std::vector<std::vector<int>> rotate_mo_list;
@@ -407,7 +407,7 @@ void ForteIntegrals::rotate_mos() {
         if (rotate_mo_group[0] > nirrep_) {
             outfile->Printf("\n Irrep:%d does not match wfn_ symmetry:%d", rotate_mo_group[0],
                             nirrep_);
-            throw PSIEXCEPTION("Irrep does not match wavefunction symmetry");
+            throw psi::PSIEXCEPTION("Irrep does not match wavefunction symmetry");
         }
         rotate_mo_group[1] = options_["ROTATE_MOS"][offset_a + 1].to_integer() - 1;
         rotate_mo_group[2] = options_["ROTATE_MOS"][offset_a + 2].to_integer() - 1;

@@ -492,4 +492,3 @@ void forte_old_options(psi::Options& options) {
     options.add_str("CAS_TYPE", "FCI", "CAS FCI ACI DMRG V2RDM");
 }
 }
-} // End Namespaces

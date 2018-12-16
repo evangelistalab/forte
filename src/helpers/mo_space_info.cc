@@ -63,7 +63,7 @@ size_t MOSpaceInfo::size(const std::string &space) {
   if (composite_spaces_.count(space) == 0) {
     std::string msg =
         "\n  MOSpaceInfo::size - composite space " + space + " is not defined.";
-    throw PSIEXCEPTION(msg.c_str());
+    throw psi::PSIEXCEPTION(msg.c_str());
   } else {
     for (const auto &el_space : composite_spaces_[space]) {
       if (mo_spaces_.count(el_space))
@@ -78,7 +78,7 @@ psi::Dimension MOSpaceInfo::get_dimension(const std::string &space) {
   if (composite_spaces_.count(space) == 0) {
     std::string msg =
         "\n  MOSpaceInfo::size - composite space " + space + " is not defined.";
-    throw PSIEXCEPTION(msg.c_str());
+    throw psi::PSIEXCEPTION(msg.c_str());
   } else {
     for (const auto &el_space : composite_spaces_[space]) {
       if (mo_spaces_.count(el_space))
@@ -104,7 +104,7 @@ std::vector<size_t> MOSpaceInfo::get_absolute_mo(const std::string &space) {
   if (composite_spaces_.count(space) == 0) {
     std::string msg =
         "\n  MOSpaceInfo::size - composite space " + space + " is not defined.";
-    throw PSIEXCEPTION(msg.c_str());
+    throw psi::PSIEXCEPTION(msg.c_str());
   } else {
     for (const auto &el_space : composite_spaces_[space]) {
       if (mo_spaces_.count(el_space)) {
@@ -123,7 +123,7 @@ std::vector<size_t> MOSpaceInfo::get_corr_abs_mo(const std::string &space) {
   if (composite_spaces_.count(space) == 0) {
     std::string msg =
         "\n  MOSpaceInfo::size - composite space " + space + " is not defined.";
-    throw PSIEXCEPTION(msg.c_str());
+    throw psi::PSIEXCEPTION(msg.c_str());
   } else {
     for (const auto &el_space : composite_spaces_[space]) {
       if (mo_spaces_.count(el_space)) {
@@ -146,7 +146,7 @@ MOSpaceInfo::get_relative_mo(const std::string &space) {
   if (composite_spaces_.count(space) == 0) {
     std::string msg =
         "\n  MOSpaceInfo::size - composite space " + space + " is not defined.";
-    throw PSIEXCEPTION(msg.c_str());
+    throw psi::PSIEXCEPTION(msg.c_str());
   } else {
     for (const auto &el_space : composite_spaces_[space]) {
       if (mo_spaces_.count(el_space)) {

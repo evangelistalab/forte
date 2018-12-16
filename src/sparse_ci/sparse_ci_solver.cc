@@ -231,7 +231,7 @@ void SparseCISolver::diagonalize_full(const std::vector<Determinant>& space, psi
             outfile->Printf("\n  Error: ask for %d roots with 2S+1 = %d but only "
                             "%d were found!",
                             nroot, multiplicity, nfound);
-            throw PSIEXCEPTION("Too many roots of interest in full diag. of sparce_ci_solver.");
+            throw psi::PSIEXCEPTION("Too many roots of interest in full diag. of sparce_ci_solver.");
         }
 
         // Select sub eigen vectors of S^2 with correct multiplicity
@@ -729,7 +729,7 @@ bool SparseCISolver::davidson_liu_solver(const std::vector<Determinant>& space,
         size_t nguess = std::min(guess_list.size(), guess_size);
 
         if (nguess == 0) {
-            throw PSIEXCEPTION("\n\n  Found zero FCI guesses with the "
+            throw psi::PSIEXCEPTION("\n\n  Found zero FCI guesses with the "
                                "requested multiplicity.\n\n");
         }
 
@@ -863,7 +863,7 @@ bool SparseCISolver::davidson_liu_solver_map(const DeterminantHashVec& space,
         size_t nguess = std::min(guess_list.size(), guess_size);
 
         if (nguess == 0) {
-            throw PSIEXCEPTION("\n\n  Found zero FCI guesses with the "
+            throw psi::PSIEXCEPTION("\n\n  Found zero FCI guesses with the "
                                "requested multiplicity.\n\n");
         }
 

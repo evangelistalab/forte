@@ -165,13 +165,13 @@ void DSRG_MRPT::read_options() {
     s_ = options_.get_double("DSRG_S");
     if (s_ < 0) {
         outfile->Printf("\n  Error: S parameter for DSRG must >= 0!");
-        throw PSIEXCEPTION("S parameter for DSRG must >= 0!");
+        throw psi::PSIEXCEPTION("S parameter for DSRG must >= 0!");
     }
     taylor_threshold_ = options_.get_int("TAYLOR_THRESHOLD");
     if (taylor_threshold_ <= 0) {
         outfile->Printf("\n  Error: Threshold for Taylor expansion must be an "
                         "integer greater than 0!");
-        throw PSIEXCEPTION("Threshold for Taylor expansion must be an integer "
+        throw psi::PSIEXCEPTION("Threshold for Taylor expansion must be an integer "
                            "greater than 0!");
     }
 
@@ -334,7 +334,7 @@ void DSRG_MRPT::build_density() {
     if (diff.norm() > 1.0e-8) {
         outfile->Printf("\n  Error: one-particle density cumulant cannot be spin-adapted!");
         outfile->Printf("\n  |L1a - L1b| = %20.15f  <== This should be 0.0.", diff.norm());
-        throw PSIEXCEPTION("One-particle density cumulant cannot be spin-adapted!");
+        throw psi::PSIEXCEPTION("One-particle density cumulant cannot be spin-adapted!");
     }
 
     // fill spin-summed OPDC
@@ -355,7 +355,7 @@ void DSRG_MRPT::build_density() {
         outfile->Printf("\n  |L2[pqrs] - (L2[pQrS] - L2[pQsR])| = %20.15f  <== "
                         "This should be 0.0.",
                         diff.norm());
-        throw PSIEXCEPTION("Two-particle density cumulant cannot be spin-adapted!");
+        throw psi::PSIEXCEPTION("Two-particle density cumulant cannot be spin-adapted!");
     }
 
     // fill spin-summed T2PDC
@@ -381,7 +381,7 @@ void DSRG_MRPT::build_density() {
             outfile->Printf("\n  |L3aaa - 1/3 * P(L3aab)| = %20.15f  <== This "
                             "should be 0.0.",
                             diff.norm());
-            throw PSIEXCEPTION("Three-particle density cumulant cannot be spin-adapted!");
+            throw psi::PSIEXCEPTION("Three-particle density cumulant cannot be spin-adapted!");
         }
 
         // fill spin-summed T3PDC
@@ -594,7 +594,7 @@ void DSRG_MRPT::test_memory(const size_t& c, const size_t& a, const size_t& v) {
     if (leftover < 0) {
         outfile->Printf("\n  Error: Not enough memory! Need %s of memory.",
                         converter(required).c_str());
-        throw PSIEXCEPTION("Not enough memory!");
+        throw psi::PSIEXCEPTION("Not enough memory!");
     }
 
     if (nbatch_ > 1) {

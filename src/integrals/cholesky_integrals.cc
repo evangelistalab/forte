@@ -142,7 +142,7 @@ ambit::Tensor CholeskyIntegrals::three_integral_block(const std::vector<size_t>&
 ambit::Tensor CholeskyIntegrals::three_integral_block_two_index(const std::vector<size_t>&, size_t,
                                                                 const std::vector<size_t>&) {
     outfile->Printf("\n Oh no! this isn't here");
-    throw PSIEXCEPTION("INT_TYPE=DISKDF");
+    throw psi::PSIEXCEPTION("INT_TYPE=DISKDF");
 }
 
 void CholeskyIntegrals::gather_integrals() {
@@ -373,7 +373,7 @@ void CholeskyIntegrals::resort_three(std::shared_ptr<Matrix>& threeint, std::vec
 
 void CholeskyIntegrals::set_tei(size_t, size_t, size_t, size_t, double, bool, bool) {
     outfile->Printf("\n If you are using this, you are ruining the advantages of DF/CD");
-    throw PSIEXCEPTION("Don't use DF/CD if you use set_tei");
+    throw psi::PSIEXCEPTION("Don't use DF/CD if you use set_tei");
 }
 } // namespace forte
 

@@ -124,18 +124,18 @@ ambit::Tensor CustomIntegrals::three_integral_block(const std::vector<size_t>&,
                                                     const std::vector<size_t>&) {
     outfile->Printf("\n Oh no!, you tried to grab a ThreeIntegral but this "
                     "is not there!!");
-    throw PSIEXCEPTION("INT_TYPE=DF/CHOLESKY to use ThreeIntegral");
+    throw psi::PSIEXCEPTION("INT_TYPE=DF/CHOLESKY to use ThreeIntegral");
 }
 
 ambit::Tensor CustomIntegrals::three_integral_block_two_index(const std::vector<size_t>&, size_t,
                                                               const std::vector<size_t>&) {
     outfile->Printf("\n Oh no! this isn't here");
-    throw PSIEXCEPTION("INT_TYPE=DISKDF");
+    throw psi::PSIEXCEPTION("INT_TYPE=DISKDF");
 }
 
 double** CustomIntegrals::three_integral_pointer() {
     outfile->Printf("\n Doh! There is no Three_integral here.  Use DF/CD");
-    throw PSIEXCEPTION("INT_TYPE=DF/CHOLESKY to use ThreeIntegral!");
+    throw psi::PSIEXCEPTION("INT_TYPE=DF/CHOLESKY to use ThreeIntegral!");
 }
 
 void CustomIntegrals::set_tei(size_t p, size_t q, size_t r, size_t s, double value, bool alpha1,

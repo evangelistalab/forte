@@ -236,7 +236,7 @@ void DSRG_MRPT3::startup() {
         outfile->Printf("\n\n  Error: Not enough memory to compute DSRG-MRPT3 energy.");
         outfile->Printf("\n  Minimum memory required: %s\n",
                         to_XB(nele_larger, sizeof(double)).c_str());
-        throw PSIEXCEPTION("Not enough memory to compute DSRG-MRPT3 energy.");
+        throw psi::PSIEXCEPTION("Not enough memory to compute DSRG-MRPT3 energy.");
     }
 
     // Check memory for dipole moment
@@ -246,7 +246,7 @@ void DSRG_MRPT3::startup() {
     if (mem_total_ < mem_dipole && do_dm_) {
         outfile->Printf("\n\n  Error: Not enough memory to compute DSRG-MRPT3 dipole.");
         outfile->Printf("\n  Minimum memory required: %s\n", to_XB(mem_dipole, 1).c_str());
-        throw PSIEXCEPTION("Not enough memory to compute DSRG-MRPT3 dipole.");
+        throw psi::PSIEXCEPTION("Not enough memory to compute DSRG-MRPT3 dipole.");
     }
 }
 
@@ -597,7 +597,7 @@ double DSRG_MRPT3::compute_energy_pt3_1() {
     int64_t mem_min = sizeof(double) * (6 * (shp - saa) + 3 * (shp * shp - saa * saa));
 
     if (mem_total_ < mem_min) {
-        throw PSIEXCEPTION("Not enough memory for compute_energy_pt3_1 in DSRG-MRPT3.");
+        throw psi::PSIEXCEPTION("Not enough memory for compute_energy_pt3_1 in DSRG-MRPT3.");
     } else if (mem_total_ >= mem_max) {
 
         // compute -[H0th,A1st] = Delta * T and save to C1 and C2
@@ -1756,7 +1756,7 @@ void DSRG_MRPT3::transfer_integrals() {
     outfile->Printf("\n    %-35s = %22.15f", "Total Energy (before)", Eref_ + Hbar0_);
 
     if (std::fabs(Etest - Eref_ - Hbar0_) > 100.0 * options_.get_double("E_CONVERGENCE")) {
-        throw PSIEXCEPTION("De-normal-odering failed.");
+        throw psi::PSIEXCEPTION("De-normal-odering failed.");
     }
 }
 
@@ -2626,7 +2626,7 @@ void DSRG_MRPT3::V_T2_C2_DF(BlockedTensor& B, BlockedTensor& T2, const double& a
         (2 * (p * h - a * a) + 3 * (p * p * h * h - a * a * a * a)); // local memory used in pt3_2
     if (mem_total_ < 0 or static_cast<size_t>(mem_total_) < v * v * sizeof(double)) {
         outfile->Printf("\n    Not enough memory for batching.");
-        throw PSIEXCEPTION("Not enough memory for batching at DSRG-MRPT3 V_T2_C2_DF.");
+        throw psi::PSIEXCEPTION("Not enough memory for batching at DSRG-MRPT3 V_T2_C2_DF.");
     }
 
     // hole-hole contractions
@@ -3682,7 +3682,7 @@ void DSRG_MRPT3::V_T2_C2_DF_VV(BlockedTensor& B, BlockedTensor& T2, const double
                 outfile->Printf("\n    Not enough memory for batching tensor "
                                 "H2(%zu * %zu * %zu * %zu).",
                                 sh0, sh1, sv, sv);
-                throw PSIEXCEPTION("Not enough memory for batching at "
+                throw psi::PSIEXCEPTION("Not enough memory for batching at "
                                    "DSRG-MRPT3 V_T2_C2_DF_VV.");
             }
 
@@ -4064,7 +4064,7 @@ void DSRG_MRPT3::V_T2_C2_DF_VC_EX(BlockedTensor& B, BlockedTensor& T2, const dou
             outfile->Printf("\n    Not enough memory for batching tensor "
                             "H2(%zu * %zu * %zu * %zu).",
                             sq, ss, sc, sv);
-            throw PSIEXCEPTION("Not enough memory for batching at DSRG-MRPT3 "
+            throw psi::PSIEXCEPTION("Not enough memory for batching at DSRG-MRPT3 "
                                "V_T2_C2_DF_VC_EX.");
         }
 
@@ -4392,7 +4392,7 @@ void DSRG_MRPT3::V_T2_C2_DF_VA_EX(BlockedTensor& B, BlockedTensor& T2, const dou
             outfile->Printf("\n    Not enough memory for batching tensor "
                             "H2(%zu * %zu * %zu * %zu).",
                             sq, ss, sa, sv);
-            throw PSIEXCEPTION("Not enough memory for batching at DSRG-MRPT3 "
+            throw psi::PSIEXCEPTION("Not enough memory for batching at DSRG-MRPT3 "
                                "V_T2_C2_DF_VA_EX.");
         }
 
@@ -4763,7 +4763,7 @@ void DSRG_MRPT3::V_T2_C2_DF_VH_EX(BlockedTensor& B, BlockedTensor& T2, const dou
         outfile->Printf("\n    Not enough memory for batching tensor H2(%zu * "
                         "%zu * %zu * %zu).",
                         smax_q, smax_s, smax_hole, sv);
-        throw PSIEXCEPTION("Not enough memory for batching at DSRG-MRPT3 V_T2_C2_DF_VH_EX.");
+        throw psi::PSIEXCEPTION("Not enough memory for batching at DSRG-MRPT3 V_T2_C2_DF_VH_EX.");
     }
 
     // memory usage
@@ -5293,10 +5293,10 @@ ambit::Tensor DSRG_MRPT3::separate_tensor(ambit::Tensor& tens, const psi::Dimens
     // test tens and irrep
     size_t tens_dim = tens.dim(0);
     if (tens_dim != static_cast<size_t>(irrep.sum()) || tens_dim != tens.dim(1)) {
-        throw PSIEXCEPTION("Wrong dimension for the to-be-separated ambit Tensor.");
+        throw psi::PSIEXCEPTION("Wrong dimension for the to-be-separated ambit Tensor.");
     }
     if (h >= irrep.n()) {
-        throw PSIEXCEPTION("Ask for wrong irrep.");
+        throw psi::PSIEXCEPTION("Ask for wrong irrep.");
     }
 
     // from relative (blocks) to absolute (big tensor) index
@@ -5326,11 +5326,11 @@ void DSRG_MRPT3::combine_tensor(ambit::Tensor& tens, ambit::Tensor& tens_h, cons
                                 const int& h) {
     // test tens and irrep
     if (h >= irrep.n()) {
-        throw PSIEXCEPTION("Ask for wrong irrep.");
+        throw psi::PSIEXCEPTION("Ask for wrong irrep.");
     }
     size_t tens_h_dim = tens_h.dim(0), h_dim = irrep[h];
     if (tens_h_dim != h_dim || tens_h_dim != tens_h.dim(1)) {
-        throw PSIEXCEPTION("Wrong dimension for the to-be-combined ambit Tensor.");
+        throw psi::PSIEXCEPTION("Wrong dimension for the to-be-combined ambit Tensor.");
     }
 
     // from relative (blocks) to absolute (big tensor) index
@@ -5666,7 +5666,7 @@ ambit::Tensor DSRG_MRPT3::sub_block(ambit::Tensor& T,
             ss << "\n Invalid dimension index. Rank of " << T.name() << " is " << rank - 1
                << ". Asked index: " << idx << ".";
             ss << "\n Problem occured in DSRG_MRPT3 sub_block.";
-            throw PSIEXCEPTION(ss.str());
+            throw psi::PSIEXCEPTION(ss.str());
         }
 
         std::vector<size_t> mo = p.second;
@@ -5680,7 +5680,7 @@ ambit::Tensor DSRG_MRPT3::sub_block(ambit::Tensor& T,
             ss << "\n Invalid element index. The " << idx << " dimension index of " << T.name()
                << " is at most " << T.dim(idx) - 1 << ". Asked index: " << ele_max << ".";
             ss << "\n Problem occured in DSRG_MRPT3 sub_block.";
-            throw PSIEXCEPTION(ss.str());
+            throw psi::PSIEXCEPTION(ss.str());
         }
     }
 

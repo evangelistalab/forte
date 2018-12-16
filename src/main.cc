@@ -206,7 +206,7 @@ std::shared_ptr<ForteIntegrals> make_forte_integrals(psi::SharedWavefunction ref
     } else {
         outfile->Printf("\n Please check your int_type. Choices are CHOLESKY, DF, DISKDF , "
                         "DISTRIBUTEDDF Effective, CONVENTIONAL or OwnIntegrals");
-        throw PSIEXCEPTION("INT_TYPE is not correct.  Check options");
+        throw psi::PSIEXCEPTION("INT_TYPE is not correct.  Check options");
     }
 
     if (psi::Options.get_bool("PRINT_INTS")) {

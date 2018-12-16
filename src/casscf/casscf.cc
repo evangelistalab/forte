@@ -68,10 +68,10 @@ CASSCF::CASSCF(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shar
 void CASSCF::compute_casscf() {
     if (na_ == 0) {
         outfile->Printf("\n\n\n Please set the active space");
-        throw PSIEXCEPTION(" The active space is zero.  Set the active space");
+        throw psi::PSIEXCEPTION(" The active space is zero.  Set the active space");
     } else if (na_ == nmo_) {
         outfile->Printf("\n Your about to do an all active CASSCF");
-        throw PSIEXCEPTION("The active space is all the MOs.  Orbitals don't "
+        throw psi::PSIEXCEPTION("The active space is all the MOs.  Orbitals don't "
                            "matter at this point");
     }
 
@@ -233,7 +233,7 @@ void CASSCF::compute_casscf() {
 
     if (iter_con.size() == size_t(maxiter) && maxiter > 1) {
         outfile->Printf("\n CASSCF did not converge");
-        throw PSIEXCEPTION("CASSCF did not converge.");
+        throw psi::PSIEXCEPTION("CASSCF did not converge.");
     }
 
     // INSERT HERE
@@ -268,7 +268,7 @@ void CASSCF::startup() {
     nirrep_ = this->nirrep();
     if (psi::Options_.get_str("SCF_TYPE") == "PK") {
         outfile->Printf("\n\n CASSCF algorithm can not use PK");
-        throw PSIEXCEPTION("PK should not be used for CASSCF");
+        throw psi::PSIEXCEPTION("PK should not be used for CASSCF");
     }
 
     casscf_debug_print_ = options_.get_bool("CASSCF_DEBUG_PRINTING");
@@ -327,7 +327,7 @@ void CASSCF::startup() {
         Process::environment.set_legacy_molecule(this->molecule());
         JK_ = std::shared_ptr<JK>(new GTFockJK(this->basisset()));
 #else
-        throw PSIEXCEPTION("GTFock was not compiled in this version");
+        throw psi::PSIEXCEPTION("GTFock was not compiled in this version");
 #endif
     } else {
         if (psi::Options_.get_str("SCF_TYPE") == "DF") {
@@ -389,7 +389,7 @@ void CASSCF::cas_ci() {
         cas_ref_ = dmrg.reference();
         E_casscf_ = cas_ref_.get_Eref();
 #else
-        throw PSIEXCEPTION("Did not compile with CHEMPS2 so DMRG will not work");
+        throw psi::PSIEXCEPTION("Did not compile with CHEMPS2 so DMRG will not work");
 #endif
     }
 
@@ -476,7 +476,7 @@ void CASSCF::cas_ci_final() {
         cas_ref_ = dmrg.reference();
         E_casscf_ = cas_ref_.get_Eref();
 #else
-        throw PSIEXCEPTION("Did not compile with CHEMPS2 so DMRG will not work");
+        throw psi::PSIEXCEPTION("Did not compile with CHEMPS2 so DMRG will not work");
 #endif
     }
 }
@@ -586,7 +586,7 @@ ambit::Tensor CASSCF::transform_integrals() {
     if (psi::Options_.get_str("SCF_TYPE") == "OUT_OF_CORE") {
         outfile->Printf("\n To use Out_of_core for scf_type, I need to "
                         "implement integral transform with symmetry");
-        throw PSIEXCEPTION("Need to use scf_type direct for CASSCF if you want "
+        throw psi::PSIEXCEPTION("Need to use scf_type direct for CASSCF if you want "
                            "conventional integrals");
     }
     /// This function will do an integral transformation using the JK builder
@@ -743,7 +743,7 @@ void CASSCF::set_up_fci() {
         outfile->Printf("\n  Ms must be no less than 0.");
         outfile->Printf("\n  Ms = %2d, MULTIPLICITY = %2d", twice_ms, multiplicity);
         outfile->Printf("\n  Check (specify) Ms value (component of multiplicity)! \n");
-        throw PSIEXCEPTION("Ms must be no less than 0. Check output for details.");
+        throw psi::PSIEXCEPTION("Ms must be no less than 0. Check output for details.");
     }
 
     if (psi::Options_.get_int("PRINT")) {
@@ -763,7 +763,7 @@ void CASSCF::set_up_fci() {
     }
 
     if (((nel - twice_ms) % 2) != 0)
-        throw PSIEXCEPTION("\n\n  FCI: Wrong value of M_s.\n\n");
+        throw psi::PSIEXCEPTION("\n\n  FCI: Wrong value of M_s.\n\n");
 
     // Adjust the number of for frozen and restricted doubly occupied
     size_t nactel = nel - 2 * nfdocc - 2 * rdocc.size();

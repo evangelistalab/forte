@@ -96,7 +96,7 @@ int DMRGSCF::chemps2_groupnumber(const string SymmLabel) {
         for (int cnt = 0; cnt < magic_number_max_groups_chemps2; cnt++) {
             (*outfile) << "   <" << (CheMPS2::Irreps::getGroupName(cnt)).c_str() << ">" << endl;
         }
-        throw PSIEXCEPTION("CheMPS2 did not recognize the symmetry group name!");
+        throw psi::PSIEXCEPTION("CheMPS2 did not recognize the symmetry group name!");
     }
     return SyGroup;
 }
@@ -484,7 +484,7 @@ double DMRGSCF::compute_energy() {
     // std::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
     // // The reference (SCF) wavefunction
     if (!reference_wavefunction_) {
-        throw PSIEXCEPTION("SCF has not been run yet!");
+        throw psi::PSIEXCEPTION("SCF has not been run yet!");
     }
 
     /*************************
@@ -542,56 +542,56 @@ double DMRGSCF::compute_energy() {
     int* docc = this->doccpi();
     int* socc = this->soccpi();
     if (wfn_irrep < 0) {
-        throw PSIEXCEPTION("Option WFN_IRREP (integer) may not be smaller than zero!");
+        throw psi::PSIEXCEPTION("Option WFN_IRREP (integer) may not be smaller than zero!");
     }
     if (wfn_multp < 1) {
-        throw PSIEXCEPTION("Option WFN_MULTP (integer) should be larger or "
+        throw psi::PSIEXCEPTION("Option WFN_MULTP (integer) should be larger or "
                            "equal to one: WFN_MULTP = (2S+1) >= 1 !");
     }
     if (ndmrg_states == 0) {
-        throw PSIEXCEPTION("Option DMRG_STATES (integer array) should be set!");
+        throw psi::PSIEXCEPTION("Option DMRG_STATES (integer array) should be set!");
     }
     if (ndmrg_econv == 0) {
-        throw PSIEXCEPTION("Option DMRG_ECONV (double array) should be set!");
+        throw psi::PSIEXCEPTION("Option DMRG_ECONV (double array) should be set!");
     }
     if (ndmrg_maxsweeps == 0) {
-        throw PSIEXCEPTION("Option DMRG_MAXSWEEPS (integer array) should be set!");
+        throw psi::PSIEXCEPTION("Option DMRG_MAXSWEEPS (integer array) should be set!");
     }
     if (ndmrg_noiseprefactors == 0) {
-        throw PSIEXCEPTION("Option DMRG_NOISEPREFACTORS (double array) should be set!");
+        throw psi::PSIEXCEPTION("Option DMRG_NOISEPREFACTORS (double array) should be set!");
     }
     if (ndmrg_states != ndmrg_econv) {
-        throw PSIEXCEPTION("Options DMRG_STATES (integer array) and DMRG_ECONV "
+        throw psi::PSIEXCEPTION("Options DMRG_STATES (integer array) and DMRG_ECONV "
                            "(double array) should contain the same number of "
                            "elements!");
     }
     if (ndmrg_states != ndmrg_maxsweeps) {
-        throw PSIEXCEPTION("Options DMRG_STATES (integer array) and "
+        throw psi::PSIEXCEPTION("Options DMRG_STATES (integer array) and "
                            "DMRG_MAXSWEEPS (integer array) should contain the "
                            "same number of elements!");
     }
     if (ndmrg_states != ndmrg_noiseprefactors) {
-        throw PSIEXCEPTION("Options DMRG_STATES (integer array) and "
+        throw psi::PSIEXCEPTION("Options DMRG_STATES (integer array) and "
                            "DMRG_NOISEPREFACTORS (double array) should contain "
                            "the same number of elements!");
     }
     for (int cnt = 0; cnt < ndmrg_states; cnt++) {
         if (dmrg_states[cnt] < 2) {
-            throw PSIEXCEPTION("Entries in DMRG_STATES (integer array) should "
+            throw psi::PSIEXCEPTION("Entries in DMRG_STATES (integer array) should "
                                "be larger than 1!");
         }
     }
     if (dmrgscf_convergence <= 0.0) {
-        throw PSIEXCEPTION("Option D_CONVERGENCE (double) must be larger than zero!");
+        throw psi::PSIEXCEPTION("Option D_CONVERGENCE (double) must be larger than zero!");
     }
     if (dmrgscf_diis_branch <= 0.0) {
-        throw PSIEXCEPTION("Option DMRG_DIIS_BRANCH (double) must be larger than zero!");
+        throw psi::PSIEXCEPTION("Option DMRG_DIIS_BRANCH (double) must be larger than zero!");
     }
     if (dmrg_iterations_ < 1) {
-        throw PSIEXCEPTION("Option DMRG_MAX_ITER (integer) must be larger than zero!");
+        throw psi::PSIEXCEPTION("Option DMRG_MAX_ITER (integer) must be larger than zero!");
     }
     if (dmrgscf_which_root < 1) {
-        throw PSIEXCEPTION("Option DMRG_WHICH_ROOT (integer) must be larger than zero!");
+        throw psi::PSIEXCEPTION("Option DMRG_WHICH_ROOT (integer) must be larger than zero!");
     }
 
     /*******************************************
@@ -656,7 +656,7 @@ double DMRGSCF::compute_energy() {
     }
     (*outfile) << " ]" << endl;
     if (!virtualsOK) {
-        throw PSIEXCEPTION("For at least one irrep: frozen_docc[ irrep ] + "
+        throw psi::PSIEXCEPTION("For at least one irrep: frozen_docc[ irrep ] + "
                            "active[ irrep ] > numOrbitals[ irrep ]!");
     }
     (*outfile) << "DMRGSCF computation run with " << dmrg_iterations_ << "iterations" << endl;
@@ -725,7 +725,7 @@ double DMRGSCF::compute_energy() {
     CheMPS2::Problem* Prob =
         new CheMPS2::Problem(HamDMRG, wfn_multp - 1, nDMRGelectrons, wfn_irrep);
     if (!(Prob->checkConsistency())) {
-        throw PSIEXCEPTION("CheMPS2::Problem : No Hilbert state vector "
+        throw psi::PSIEXCEPTION("CheMPS2::Problem : No Hilbert state vector "
                            "compatible with all symmetry sectors!");
     }
     Prob->SetupReorderD2h(); // Does nothing if group not d2h
@@ -1135,7 +1135,7 @@ void DMRGSCF::compute_reference(double* one_rdm, double* two_rdm, double* three_
     //{
     //    outfile->Printf("\n\n Spinadapted formalism requires spin-averaged
     //    quantitities");
-    //    throw PSIEXCEPTION("You need to spin averaged things");
+    //    throw psi::PSIEXCEPTION("You need to spin averaged things");
     //}
     Reference dmrg_ref;
     size_t na = mo_space_info_->size("ACTIVE");

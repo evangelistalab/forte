@@ -96,7 +96,7 @@ void DistDFIntegrals::test_distributed_integrals() {
     if (psi::Options_.get_str("DF_BASIS_MP2").length() == 0) {
         outfile->Printf("\n Please set a DF_BASIS_MP2 option to a specified "
                         "auxiliary basis set");
-        throw PSIEXCEPTION("Select a DF_BASIS_MP2 for use with DFIntegrals");
+        throw psi::PSIEXCEPTION("Select a DF_BASIS_MP2 for use with DFIntegrals");
     }
 
     // std::shared_ptr<psi::BasisSet> auxiliary =
@@ -197,7 +197,7 @@ void DistDFIntegrals::test_distributed_integrals() {
     for (auto my_norm : my_df_norm) {
         outfile->Printf("\n ||SERIAL_DF - DistDF||_{\infinity} = %4.16f", my_norm);
         if (my_norm > 1e-4)
-            throw PSIEXCEPTION("DF and DistDF do not agree");
+            throw psi::PSIEXCEPTION("DF and DistDF do not agree");
     }
     /// Test getting entire three_integral_object
     std::vector<size_t> Avec(nthree_, 0);
@@ -213,7 +213,7 @@ void DistDFIntegrals::test_distributed_integrals() {
     entire_b_df("Q, p, q") -= entire_b_dist("Q, p, q");
     outfile->Printf("\n Test read entire A: %8.8f", entire_b_df.norm(2.0));
     if (entire_b_df.norm(2.0) > 1.0e-6)
-        throw PSIEXCEPTION("three_integral_block for all integrals does not work");
+        throw psi::PSIEXCEPTION("three_integral_block for all integrals does not work");
 
     /// Test partial nthree
     int block = nthree_ / 2;
@@ -224,7 +224,7 @@ void DistDFIntegrals::test_distributed_integrals() {
     partial_b_df("Q, p, q") -= partial_b_dist("Q, p, q");
     outfile->Printf("\n Test partial A: %8.8f", partial_b_df.norm(2.0));
     if (partial_b_df.norm(2.0) > 1.0e-6)
-        throw PSIEXCEPTION("three_integral_block for partial nthree integrals does not work");
+        throw psi::PSIEXCEPTION("three_integral_block for partial nthree integrals does not work");
     /// Test rdocc
 
     ambit::Tensor b_zero_df = test_int->three_integral_block(Avec, {0}, {0});
@@ -232,14 +232,14 @@ void DistDFIntegrals::test_distributed_integrals() {
     b_zero_df("Q, p, q") -= b_zero_dist("Q, p, q");
     outfile->Printf("\n Test Q_00: %8.8f", b_zero_df.norm(2.0));
     if (b_zero_df.norm(2.0) > 1.0e-6)
-        throw PSIEXCEPTION("three_integral_block for B_00");
+        throw psi::PSIEXCEPTION("three_integral_block for B_00");
 
     ambit::Tensor b_one_df = test_int->three_integral_block(Avec, {1}, {1});
     ambit::Tensor b_one_dist = three_integral_block(Avec, {1}, {1});
     b_one_df("Q, p, q") -= b_one_dist("Q, p, q");
     outfile->Printf("\n Test Q_{11}: %8.8f", b_one_df.norm(2.0));
     if (b_one_df.norm(2.0) > 1.0e-6)
-        throw PSIEXCEPTION("three_integral_block for B_11");
+        throw psi::PSIEXCEPTION("three_integral_block for B_11");
 
     auto rdocc = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
     auto active = mo_space_info_->get_corr_abs_mo("ACTIVE");
@@ -248,14 +248,14 @@ void DistDFIntegrals::test_distributed_integrals() {
     b_mn_df("Q, p, q") -= b_mn_dist("Q, p, q");
     outfile->Printf("\n Test Q_mn: %8.8f", b_mn_df.norm(2.0));
     if (b_mn_df.norm(2.0) > 1.0e-6)
-        throw PSIEXCEPTION("three_integral_block for B_mn");
+        throw psi::PSIEXCEPTION("three_integral_block for B_mn");
 
     ambit::Tensor b_mu_df = test_int->three_integral_block(Avec, rdocc, active);
     ambit::Tensor b_mu_dist = three_integral_block(Avec, rdocc, active);
     b_mu_df("Q, p, q") -= b_mu_dist("Q, p, q");
     outfile->Printf("\n Test Q_{mu}: %8.8f", b_mu_df.norm(2.0));
     if (b_mu_df.norm(2.0) > 1.0e-6)
-        throw PSIEXCEPTION("three_integral_block for B_11");
+        throw psi::PSIEXCEPTION("three_integral_block for B_11");
 
     delete test_int;
 }

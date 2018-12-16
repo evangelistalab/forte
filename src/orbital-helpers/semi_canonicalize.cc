@@ -131,7 +131,7 @@ void SemiCanonical::set_actv_dims(const psi::Dimension& actv_docc, const psi::Di
     // test actv_docc and actv_virt
     psi::Dimension actv = actv_docc + actv_virt;
     if (actv != actv_) {
-        throw PSIEXCEPTION("ACTIVE_DOCC and ACTIVE_VIRT do not add up to ACTIVE!");
+        throw psi::PSIEXCEPTION("ACTIVE_DOCC and ACTIVE_VIRT do not add up to ACTIVE!");
     }
 
     // delete original active maps

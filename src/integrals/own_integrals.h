@@ -85,7 +85,7 @@ class OwnIntegrals : public ForteIntegrals {
     virtual double diag_aptei_bb(size_t, size_t) { return 0.0; }
     virtual double three_integral(size_t, size_t, size_t) { return 0.0; }
     virtual double** three_integral_pointer() {
-        throw PSIEXCEPTION("Integrals are distributed.  Pointer does not exist");
+        throw psi::PSIEXCEPTION("Integrals are distributed.  Pointer does not exist");
     }
     /// Read a block of the DFIntegrals and return an Ambit tensor of size A by
     /// p by q

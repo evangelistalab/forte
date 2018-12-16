@@ -81,7 +81,7 @@ class ConventionalIntegrals : public ForteIntegrals {
 
     virtual void make_fock_matrix(psi::SharedMatrix gamma_a, psi::SharedMatrix gamma_b);
 
-    virtual size_t nthree() const { throw PSIEXCEPTION("Wrong Int_Type"); }
+    virtual size_t nthree() const { throw psi::PSIEXCEPTION("Wrong Int_Type"); }
 
     virtual void set_tei(size_t p, size_t q, size_t r, size_t s, double value, bool alpha1,
                          bool alpha2);

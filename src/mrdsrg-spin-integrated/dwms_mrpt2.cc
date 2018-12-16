@@ -153,31 +153,31 @@ void DWMS_DSRGPT2::print_options() {
 
 void DWMS_DSRGPT2::test_options() {
     if (zeta_ < 0.0) {
-        throw PSIEXCEPTION("DWMS_ZETA should be a value greater or equal than 0.0!");
+        throw psi::PSIEXCEPTION("DWMS_ZETA should be a value greater or equal than 0.0!");
     }
 
     std::string actv_type = options_.get_str("FCIMO_ACTV_TYPE");
     if (actv_type == "CIS" || actv_type == "CISD") {
-        throw PSIEXCEPTION("VCIS and VCISD are not supported for DWMS-DSRG-PT yet!");
+        throw psi::PSIEXCEPTION("VCIS and VCISD are not supported for DWMS-DSRG-PT yet!");
     }
 
     if (do_hbar3_ && (dwms_ref_ == "PT3" || dwms_corrlv_ == "PT3")) {
-        throw PSIEXCEPTION("DSRG-MRPT3 does not support FORM_HBAR3 yet!");
+        throw psi::PSIEXCEPTION("DSRG-MRPT3 does not support FORM_HBAR3 yet!");
     }
 
     if (dwms_corrlv_ == "PT3" && (algorithm_ == "MS" || algorithm_ == "XMS")) {
-        throw PSIEXCEPTION("DWMS-DSRG-PT3 does not support MS or XMS algorithm yet!");
+        throw psi::PSIEXCEPTION("DWMS-DSRG-PT3 does not support MS or XMS algorithm yet!");
     }
 
     if (do_delta_amp_) {
         if (eri_df_ && dwms_corrlv_ == "PT2") {
-            throw PSIEXCEPTION("DF-DSRG-MRPT2 does not support DWMS_DELTA_AMP = TRUE!");
+            throw psi::PSIEXCEPTION("DF-DSRG-MRPT2 does not support DWMS_DELTA_AMP = TRUE!");
         }
         if (dwms_corrlv_ == "PT3") {
-            throw PSIEXCEPTION("DSRG-MRPT3 does not support DWMS_DELTA_AMP = TRUE!");
+            throw psi::PSIEXCEPTION("DSRG-MRPT3 does not support DWMS_DELTA_AMP = TRUE!");
         }
         if (!do_hbar3_) {
-            throw PSIEXCEPTION("3-body terms should be included when DWMS_DELTA_AMP = TRUE!");
+            throw psi::PSIEXCEPTION("3-body terms should be included when DWMS_DELTA_AMP = TRUE!");
         }
     }
 }
@@ -547,7 +547,7 @@ void DWMS_DSRGPT2::compute_dwsa_energy_iterate(std::shared_ptr<FCI_MO>& fci_mo) 
         }
         print_energy_list("DW-DSRG" + dwms_corrlv_, Ept_, sa_info, true);
 
-        throw PSIEXCEPTION("DWMS iterations did not converge!");
+        throw psi::PSIEXCEPTION("DWMS iterations did not converge!");
     }
 }
 
@@ -1010,7 +1010,7 @@ void DWMS_DSRGPT2::print_energy_list(
     const std::vector<std::tuple<int, int, int, std::vector<double>>>& sa_info, bool pass_process) {
 
     if (sa_info.size() != energy.size()) {
-        throw PSIEXCEPTION("Mismatching sizes between energy list and sa_info list");
+        throw psi::PSIEXCEPTION("Mismatching sizes between energy list and sa_info list");
     }
 
     outfile->Printf("\n    Multi.  Irrep.  No.    %20s", name.c_str());
@@ -1124,7 +1124,7 @@ std::vector<std::tuple<int, int, int, std::vector<double>>> DWMS_DSRGPT2::comput
 
     size_t nentry = sa_info.size();
     if (nentry != energy.size()) {
-        throw PSIEXCEPTION("Mismatching sizes between energy list and sa_info list");
+        throw psi::PSIEXCEPTION("Mismatching sizes between energy list and sa_info list");
     }
 
     // new weights

@@ -199,7 +199,7 @@ void FCI_MO::read_options() {
         outfile->Printf("\n  Please specify the ACTIVE occupations.");
         outfile->Printf("\n  Single-reference computations should set ACTIVE to zeros.");
         outfile->Printf("\n  For example, ACTIVE [0,0,0,0] depending on the symmetry. \n");
-        throw PSIEXCEPTION("Please specify the ACTIVE occupations. Check output for details.");
+        throw psi::PSIEXCEPTION("Please specify the ACTIVE occupations. Check output for details.");
     }
     actv_dim_ = mo_space_info_->get_dimension("ACTIVE");
     nactv_ = actv_dim_.sum();
@@ -230,7 +230,7 @@ void FCI_MO::read_options() {
         outfile->Printf("\n  MULTIPLICITY must be no less than 1.");
         outfile->Printf("\n  MULTIPLICITY = %2d", multi_);
         outfile->Printf("\n  Check (specify) Multiplicity! \n");
-        throw PSIEXCEPTION("MULTIPLICITY must be no less than 1. Check output for details.");
+        throw psi::PSIEXCEPTION("MULTIPLICITY must be no less than 1. Check output for details.");
     }
     multi_symbols_ = std::vector<std::string>{"Singlet", "Doublet", "Triplet", "Quartet", "Quintet",
                                               "Sextet",  "Septet",  "Octet",   "Nonet",   "Decaet"};
@@ -240,7 +240,7 @@ void FCI_MO::read_options() {
         outfile->Printf("\n  Ms must be no less than 0.");
         outfile->Printf("\n  Ms = %2d, MULTIPLICITY = %2d", twice_ms_, multi_);
         outfile->Printf("\n  Check (specify) Ms value (component of multiplicity)! \n");
-        throw PSIEXCEPTION("Ms must be no less than 0. Check output for details.");
+        throw psi::PSIEXCEPTION("Ms must be no less than 0. Check output for details.");
     }
 
     nalfa_ = (nelec + twice_ms_) / 2;
@@ -252,7 +252,7 @@ void FCI_MO::read_options() {
                         twice_ms_);
         outfile->Printf("\n  Check the Charge, Multiplicity, and Ms! \n");
         outfile->Printf("\n  Note that Ms is 2 * Sz \n");
-        throw PSIEXCEPTION("Negative number of alpha electrons or beta "
+        throw psi::PSIEXCEPTION("Negative number of alpha electrons or beta "
                            "electrons. Check output for details.");
     }
     if (nalfa_ - ncore_ - nfrzc_ > nactv_) {
@@ -260,7 +260,7 @@ void FCI_MO::read_options() {
         outfile->Printf("\n  Number of orbitals: active = %5zu, core = %5zu", nactv_, ncore_);
         outfile->Printf("\n  Number of alpha electrons: Nalpha = %5ld", nalfa_);
         outfile->Printf("\n  Check core and active orbitals! \n");
-        throw PSIEXCEPTION("Not enough active orbitals to arrange electrons! "
+        throw psi::PSIEXCEPTION("Not enough active orbitals to arrange electrons! "
                            "Check output for details.");
     }
 
@@ -273,7 +273,7 @@ void FCI_MO::read_options() {
     if (root_ >= nroot_) {
         outfile->Printf("\n  NROOT = %3d, ROOT = %3d", nroot_, root_);
         outfile->Printf("\n  ROOT must be smaller than NROOT.");
-        throw PSIEXCEPTION("ROOT must be smaller than NROOT.");
+        throw psi::PSIEXCEPTION("ROOT must be smaller than NROOT.");
     }
 
     // setup symmetry index of active orbitals
@@ -344,7 +344,7 @@ void FCI_MO::read_options() {
             if (psi::Options_["AVG_STATE"][i].size() != 3) {
                 outfile->Printf("\n  Error: invalid input of AVG_STATE. Each "
                                 "entry should take an array of three numbers.");
-                throw PSIEXCEPTION("Invalid input of AVG_STATE");
+                throw psi::PSIEXCEPTION("Invalid input of AVG_STATE");
             }
 
             // irrep
@@ -354,7 +354,7 @@ void FCI_MO::read_options() {
                                 "check the input irrep (start from 0) not to "
                                 "exceed %d",
                                 nirrep_ - 1);
-                throw PSIEXCEPTION("Invalid irrep in AVG_STATE");
+                throw psi::PSIEXCEPTION("Invalid irrep in AVG_STATE");
             }
             irreps.push_back(irrep);
 
@@ -362,7 +362,7 @@ void FCI_MO::read_options() {
             int multi = options_["AVG_STATE"][i][1].to_integer();
             if (multi < 1) {
                 outfile->Printf("\n  Error: invalid multiplicity in AVG_STATE.");
-                throw PSIEXCEPTION("Invaid multiplicity in AVG_STATE");
+                throw psi::PSIEXCEPTION("Invaid multiplicity in AVG_STATE");
             }
             multis.push_back(multi);
 
@@ -372,7 +372,7 @@ void FCI_MO::read_options() {
                 outfile->Printf("\n  Error: invalid nstates in AVG_STATE. "
                                 "nstates of a certain irrep and multiplicity "
                                 "should greater than 0.");
-                throw PSIEXCEPTION("Invalid nstates in AVG_STATE.");
+                throw psi::PSIEXCEPTION("Invalid nstates in AVG_STATE.");
             }
             nstatespim.push_back(nstates_this);
             nstates += nstates_this;
@@ -385,7 +385,7 @@ void FCI_MO::read_options() {
                 outfile->Printf("\n  Error: mismatched number of entries in "
                                 "AVG_STATE (%d) and AVG_WEIGHT (%d).",
                                 nentry, options_["AVG_WEIGHT"].size());
-                throw PSIEXCEPTION("Mismatched number of entries in AVG_STATE "
+                throw psi::PSIEXCEPTION("Mismatched number of entries in AVG_STATE "
                                    "and AVG_WEIGHT.");
             }
 
@@ -397,7 +397,7 @@ void FCI_MO::read_options() {
                                     "in entry %d of AVG_WEIGHT. Asked for %d "
                                     "states but only %d weights.",
                                     i, nstatespim[i], nw);
-                    throw PSIEXCEPTION("Mismatched number of weights in AVG_WEIGHT.");
+                    throw psi::PSIEXCEPTION("Mismatched number of weights in AVG_WEIGHT.");
                 }
 
                 std::vector<double> weight;
@@ -405,7 +405,7 @@ void FCI_MO::read_options() {
                     double w = options_["AVG_WEIGHT"][i][n].to_double();
                     if (w < 0.0) {
                         outfile->Printf("\n  Error: negative weights in AVG_WEIGHT.");
-                        throw PSIEXCEPTION("Negative weights in AVG_WEIGHT.");
+                        throw psi::PSIEXCEPTION("Negative weights in AVG_WEIGHT.");
                     }
                     weight.push_back(w);
                     wsum += w;
@@ -416,7 +416,7 @@ void FCI_MO::read_options() {
                 outfile->Printf("\n  Error: AVG_WEIGHT entries do not add up "
                                 "to 1.0. Sum = %.10f",
                                 wsum);
-                throw PSIEXCEPTION("AVG_WEIGHT entries do not add up to 1.0.");
+                throw psi::PSIEXCEPTION("AVG_WEIGHT entries do not add up to 1.0.");
             }
 
         } else {
@@ -530,7 +530,7 @@ double FCI_MO::compute_energy() {
     // move to startup when run_dsrg is completed
     if (localize_actv_) {
         if (nirrep_ != 1) {
-            throw PSIEXCEPTION("Localizer does not support point group symmetry.");
+            throw psi::PSIEXCEPTION("Localizer does not support point group symmetry.");
         }
         localize_actv_orbs();
     }
@@ -568,7 +568,7 @@ double FCI_MO::compute_ss_energy() {
         outfile->Printf("\n  There %s only %3d %s that satisfy the condition!", be.c_str(),
                         eigen_size, plural.c_str());
         outfile->Printf("\n  Check root_sym, multi, and number of determinants.");
-        throw PSIEXCEPTION("Too many roots of interest.");
+        throw psi::PSIEXCEPTION("Too many roots of interest.");
     }
     print_CI(nroot_, options_.get_double("FCIMO_PRINT_CIVEC"), eigen_, determinant_);
 
@@ -626,7 +626,7 @@ void FCI_MO::form_p_space() {
     if (determinant_.size() == 0) {
         outfile->Printf("\n  There is no determinant matching the conditions!");
         outfile->Printf("\n  Check the wavefunction symmetry and multiplicity.");
-        throw PSIEXCEPTION("No determinant matching the conditions!");
+        throw psi::PSIEXCEPTION("No determinant matching the conditions!");
     }
 }
 
@@ -654,7 +654,7 @@ void FCI_MO::form_det() {
     if (actv_space_type_ == "DOCI") {
         if (root_sym_ != 0 || multi_ != 1) {
             outfile->Printf("\n  State must be totally symmetric for DOCI.");
-            throw PSIEXCEPTION("State must be totally symmetric for DOCI.");
+            throw psi::PSIEXCEPTION("State must be totally symmetric for DOCI.");
         } else {
             for (int i = 0; i != nirrep_; ++i) {
                 size_t sa = a_string[i].size();
@@ -1112,7 +1112,7 @@ void FCI_MO::Diagonalize_H_noHF(const vecdet& p_space, const int& multi, const i
     } else {
         outfile->Printf("\n  Error: RHF determinant NOT at the end of the determinant vector.");
         outfile->Printf("\n    Diagonalize_H_noHF only works for root_sym = 0.");
-        throw PSIEXCEPTION("RHF determinant NOT at the end of determinant vector. "
+        throw psi::PSIEXCEPTION("RHF determinant NOT at the end of determinant vector. "
                            "Problem at Diagonalize_H_noHF of FCI_MO.");
     }
 }
@@ -2114,7 +2114,7 @@ FCI_MO::compute_ref_relaxed_osc(std::vector<BlockedTensor>& dm1, std::vector<Blo
 
 ambit::BlockedTensor FCI_MO::compute_n_rdm(CI_RDMS& cirdm, const int& order) {
     if (order < 1 || order > 3) {
-        throw PSIEXCEPTION("Cannot compute RDMs except 1, 2, 3.");
+        throw psi::PSIEXCEPTION("Cannot compute RDMs except 1, 2, 3.");
     }
 
     ambit::BlockedTensor out;
@@ -2265,7 +2265,7 @@ d3 FCI_MO::compute_orbital_extents() {
         if (!found) {
             outfile->Printf("\n  Totally symmetric diffused orbital is not found.");
             outfile->Printf("\n  Make sure a diffused s function is added to the basis.");
-            throw PSIEXCEPTION("Totally symmetric diffused orbital is not found.");
+            throw psi::PSIEXCEPTION("Totally symmetric diffused orbital is not found.");
         }
     }
 
@@ -2642,7 +2642,7 @@ double FCI_MO::compute_sa_energy() {
             outfile->Printf("\n  There %s only %3d %s that satisfy the condition!", be.c_str(),
                             eigen_size, plural.c_str());
             outfile->Printf("\n  Check root_sym, multi, and number of determinants.");
-            throw PSIEXCEPTION("Too many roots of interest.");
+            throw psi::PSIEXCEPTION("Too many roots of interest.");
         }
         print_CI(nroot_, options_.get_double("FCIMO_PRINT_CIVEC"), eigen_, determinant_);
 
@@ -2671,7 +2671,7 @@ double FCI_MO::compute_sa_energy() {
 
 void FCI_MO::xms_rotate_civecs() {
     if (eigens_.size() != sa_info_.size()) {
-        throw PSIEXCEPTION("Cannot do XMS rotation due to inconsistent size. Is CASCI computed?");
+        throw psi::PSIEXCEPTION("Cannot do XMS rotation due to inconsistent size. Is CASCI computed?");
     }
     int nentry = eigens_.size();
 
@@ -2924,7 +2924,7 @@ std::vector<std::string> FCI_MO::density_filenames_generator(int rdm_level, int 
     } else if (rdm_level == 3) {
         spins = std::vector<std::string>{"aaa", "aab", "abb", "bbb"};
     } else {
-        throw PSIEXCEPTION("RDM level > 3 is not supported.");
+        throw psi::PSIEXCEPTION("RDM level > 3 is not supported.");
     }
 
     std::string path0 = PSIOManager::shared_object()->get_default_path() + "psi." +
@@ -2957,7 +2957,7 @@ void FCI_MO::remove_density_files(int rdm_level, int irrep, int multi, int root1
         if (remove(filename.c_str()) != 0) {
             std::stringstream ss;
             ss << "Error deleting file " << filename << ": No such file or directory";
-            throw PSIEXCEPTION(ss.str());
+            throw psi::PSIEXCEPTION(ss.str());
         }
     }
 
@@ -2972,7 +2972,7 @@ void FCI_MO::clean_all_density_files() {
         if (remove(filename.c_str()) != 0) {
             std::stringstream ss;
             ss << "Error deleting file " << filename << ": No such file or directory";
-            throw PSIEXCEPTION(ss.str());
+            throw psi::PSIEXCEPTION(ss.str());
         }
     }
     density_files_.clear();
@@ -3025,12 +3025,12 @@ void FCI_MO::set_sa_info(const std::vector<std::tuple<int, int, int, std::vector
             if (static_cast<size_t>(nroots) != weights.size()) {
                 outfile->Printf("\n  Irrep: %d, Multi: %d, Nroots: %d, Nweights: %d", irrep, multi,
                                 nroots, weights.size());
-                PSIEXCEPTION("Cannot set sa_info of FCI_MO: mismatching nroot and weights size.");
+                psi::PSIEXCEPTION("Cannot set sa_info of FCI_MO: mismatching nroot and weights size.");
             }
         }
         sa_info_ = info;
     } else {
-        throw PSIEXCEPTION("Cannot set sa_info of FCI_MO: mismatching number of SA entries.");
+        throw psi::PSIEXCEPTION("Cannot set sa_info of FCI_MO: mismatching number of SA entries.");
     }
 }
 
@@ -3047,7 +3047,7 @@ void FCI_MO::set_eigens(const std::vector<vector<pair<psi::SharedVector, double>
         safe_to_read_density_files_ = false;
         clean_all_density_files();
     } else {
-        throw PSIEXCEPTION("Cannot set eigens of FCI_MO: mismatching number of SA entries.");
+        throw psi::PSIEXCEPTION("Cannot set eigens of FCI_MO: mismatching number of SA entries.");
     }
 }
 
@@ -3055,7 +3055,7 @@ std::vector<ambit::Tensor> FCI_MO::compute_n_rdm(const vecdet& p_space, psi::Sha
                                                  int rdm_level, int root1, int root2, int irrep,
                                                  int multi, bool disk) {
     if (rdm_level > 3 || rdm_level < 1) {
-        throw PSIEXCEPTION("Incorrect RDM_LEVEL. Check your code!");
+        throw psi::PSIEXCEPTION("Incorrect RDM_LEVEL. Check your code!");
     }
 
     std::string job_name = root1 == root2 ? "RDM" : "TrDM";
@@ -3123,7 +3123,7 @@ std::vector<ambit::Tensor> FCI_MO::compute_n_rdm(const vecdet& p_space, psi::Sha
 Reference FCI_MO::transition_reference(int root1, int root2, bool multi_state, int entry,
                                        int max_level, bool do_cumulant, bool disk) {
     if (max_level > 3 || max_level < 1) {
-        throw PSIEXCEPTION("Max RDM level > 3 or < 1 is not available.");
+        throw psi::PSIEXCEPTION("Max RDM level > 3 or < 1 is not available.");
     }
 
     int irrep = root_sym_;
@@ -3132,7 +3132,7 @@ Reference FCI_MO::transition_reference(int root1, int root2, bool multi_state, i
         int nroots;
         std::tie(irrep, multi, nroots, std::ignore) = sa_info_[entry];
         if (root1 >= nroots || root2 >= nroots) {
-            throw PSIEXCEPTION("Root label overflows.");
+            throw psi::PSIEXCEPTION("Root label overflows.");
         }
     }
 
@@ -3140,7 +3140,7 @@ Reference FCI_MO::transition_reference(int root1, int root2, bool multi_state, i
     if (root1 != root2) {
         job_type = "TrDM";
         if (do_cumulant) {
-            throw PSIEXCEPTION("Cannot compute transition cumulants.");
+            throw psi::PSIEXCEPTION("Cannot compute transition cumulants.");
         }
     }
 

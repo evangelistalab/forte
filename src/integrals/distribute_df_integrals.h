@@ -72,7 +72,7 @@ class DistDFIntegrals : public ForteIntegrals {
     virtual double diag_aptei_bb(size_t, size_t) {}
     virtual double three_integral(size_t, size_t, size_t) {}
     virtual double** three_integral_pointer() {
-        throw PSIEXCEPTION("Integrals are distributed.  Pointer does not exist");
+        throw psi::PSIEXCEPTION("Integrals are distributed.  Pointer does not exist");
     }
     /// Read a block of the DFIntegrals and return an Ambit tensor of size A by
     /// p by q
@@ -86,7 +86,7 @@ class DistDFIntegrals : public ForteIntegrals {
 
     virtual void set_tei(size_t, size_t, size_t, size_t, double, bool, bool) {
         outfile->Printf("DistributedDF will not work with set_tei");
-        throw PSIEXCEPTION("DistDF can not use set_tei");
+        throw psi::PSIEXCEPTION("DistDF can not use set_tei");
     }
     virtual ~DistDFIntegrals();
 

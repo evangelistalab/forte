@@ -34,10 +34,10 @@ IAOBuilder::IAOBuilder(std::shared_ptr<psi::BasisSet> primary, std::shared_ptr<p
                        psi::SharedMatrix C)
     : C_(C), primary_(primary), minao_(minao) {
     if (C->nirrep() != 1) {
-        throw PSIEXCEPTION("Localizer: C matrix is not C1");
+        throw psi::PSIEXCEPTION("Localizer: C matrix is not C1");
     }
     if (C->rowspi()[0] != primary->nbf()) {
-        throw PSIEXCEPTION("Localizer: C matrix does not match basis");
+        throw psi::PSIEXCEPTION("Localizer: C matrix does not match basis");
     }
     common_init();
 }
@@ -458,7 +458,7 @@ IAOBuilder::ibo_localizer(psi::SharedMatrix L, const std::vector<std::vector<int
     bool converged = false;
 
     if (power != 2 && power != 4)
-        throw PSIEXCEPTION("IAO: Invalid metric power.");
+        throw psi::PSIEXCEPTION("IAO: Invalid metric power.");
 
     outfile->Printf("    @IBO %4s: %24s %14s\n", "Iter", "Metric", "Gradient");
 
