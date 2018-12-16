@@ -33,7 +33,6 @@
 #include <iostream>
 #include <vector>
 
-#include "psi4/libmints/typedefs.h"
 #include "psi4/libmints/dimension.h"
 #include "ambit/blocked_tensor.h"
 
@@ -42,6 +41,7 @@ class Tensor;
 namespace psi {
   class Options;
   class Matrix;
+  class Vector;
   class Wavefunction;
   class Dimension;
 }
@@ -201,8 +201,8 @@ class ForteIntegrals {
                                                          const std::vector<size_t>& q) = 0;
 
     /// Make a Fock matrix computed with respect to a given determinant
-    virtual void make_fock_matrix(psi::SharedMatrix gamma_a,
-                                  psi::SharedMatrix gamma_b) = 0;
+    virtual void make_fock_matrix(std::shared_ptr<psi::Matrix> gamma_a,
+                                  std::shared_ptr<psi::Matrix> gamma_b) = 0;
 
     /// Set the value of the scalar part of the Hamiltonian
     /// @param value the new value of the scalar part of the Hamiltonian
@@ -244,7 +244,7 @@ class ForteIntegrals {
     void print_ints();
 
     /// Obtain AO dipole integrals [X, Y, Z]
-    /// Each direction is a psi::SharedMatrix of dimension nmo * nmo
+    /// Each direction is a std::shared_ptr<psi::Matrix> of dimension nmo * nmo
     std::vector<std::shared_ptr<psi::Matrix>> AOdipole_ints() { return AOdipole_ints_; }
 
     /**
@@ -252,7 +252,7 @@ class ForteIntegrals {
      * @param alpha if true, compute MO dipole using Ca, else Cb
      * @param resort if true, MOdipole ints are sorted to Pitzer order, otherwise in C1 order
      * @return a vector of MOdipole ints in X, Y, Z order,
-     *         each of which is a nmo by nmo psi::SharedMatrix
+     *         each of which is a nmo by nmo std::shared_ptr<psi::Matrix>
      */
     std::vector<std::shared_ptr<psi::Matrix>> compute_MOdipole_ints(const bool& alpha = true,
                                                                const bool& resort = false);
@@ -264,7 +264,7 @@ class ForteIntegrals {
     psi::Options& options_;
 
     /// The Wavefunction object
-    psi::SharedWavefunction wfn_;
+    std::shared_ptr<psi::Wavefunction> wfn_;
 
     /// The integral_type
     IntegralType integral_type_;
@@ -356,7 +356,7 @@ class ForteIntegrals {
     void build_AOdipole_ints();
     /// Compute MO dipole integrals
     std::vector<std::shared_ptr<psi::Matrix>>
-    MOdipole_ints_helper(std::shared_ptr<psi::Matrix> Cao, psi::SharedVector epsilon, const bool& resort);
+    MOdipole_ints_helper(std::shared_ptr<psi::Matrix> Cao, std::shared_ptr<psi::Vector> epsilon, const bool& resort);
 
     // ==> Class private functions <==
 
