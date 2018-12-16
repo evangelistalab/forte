@@ -336,8 +336,8 @@ double ASCI::compute_energy() {
 
     double root_energy = PQ_evals->get(0) + nuclear_repulsion_energy_ + fci_ints_->scalar_energy();
 
-    Process::environment.globals["CURRENT ENERGY"] = root_energy;
-    Process::environment.globals["ASCI ENERGY"] = root_energy;
+    psi::Process::environment.globals["CURRENT ENERGY"] = root_energy;
+    psi::Process::environment.globals["ASCI ENERGY"] = root_energy;
 
     outfile->Printf("\n\n  %s: %f s", "ASCI ran in ", asci_elapse.get());
 
@@ -604,7 +604,7 @@ void ASCI::print_nos() {
     // file << endl;
     // file.close();
 
-    CharacterTable ct = Process::environment.molecule()->point_group()->char_table();
+    CharacterTable ct = psi::Process::environment.molecule()->point_group()->char_table();
     std::sort(vec_irrep_occupation.begin(), vec_irrep_occupation.end(),
               std::greater<std::pair<double, std::pair<int, int>>>());
 

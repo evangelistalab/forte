@@ -50,7 +50,7 @@ void MASTER_DSRG::startup() {
 
     // read commonly used energies
     Eref_ = reference_.get_Eref();
-    Enuc_ = Process::environment.molecule()->nuclear_repulsion_energy(
+    Enuc_ = psi::Process::environment.molecule()->nuclear_repulsion_energy(
         reference_wavefunction_->get_dipole_field_strength());
     Efrzc_ = ints_->frozen_core_energy();
 
@@ -296,7 +296,7 @@ void MASTER_DSRG::check_init_reference_energy() {
         Eref_ = E;
     }
 
-    Process::environment.globals["DSRG REFERENCE ENERGY"] = Eref_;
+    psi::Process::environment.globals["DSRG REFERENCE ENERGY"] = Eref_;
 }
 
 double MASTER_DSRG::compute_reference_energy_from_ints(std::shared_ptr<ForteIntegrals> ints) {
@@ -433,7 +433,7 @@ void MASTER_DSRG::init_dm_ints() {
     outfile->Printf("\n    Preparing ambit tensors for dipole moments ...... ");
     dm_.clear();
     dm_nuc_ = std::vector<double>(3, 0.0);
-    Vector3 dm_nuc = Process::environment.molecule()->nuclear_dipole(Vector3(0.0, 0.0, 0.0));
+    Vector3 dm_nuc = psi::Process::environment.molecule()->nuclear_dipole(psi::Vector3(0.0, 0.0, 0.0));
     for (int i = 0; i < 3; ++i) {
         dm_nuc_[i] = dm_nuc[i];
         BlockedTensor dm_i = BTF_->build(tensor_type_, "Dipole " + dm_dirs_[i], spin_cases({"gg"}));

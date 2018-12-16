@@ -261,7 +261,7 @@ void FiniteTemperatureHF::form_G() {
     frac_occupation();
     form_D();
     std::shared_ptr<JK> JK = JK::build_JK(this->basisset(), get_basisset("DF_BASIS_SCF"), options_);
-    JK->set_memory(Process::environment.get_memory() * 0.8);
+    JK->set_memory(psi::Process::environment.get_memory() * 0.8);
     JK->set_cutoff(options_.get_double("INTEGRAL_SCREENING"));
     JK->initialize();
 

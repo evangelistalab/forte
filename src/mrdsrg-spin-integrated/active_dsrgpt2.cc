@@ -77,7 +77,7 @@ void ACTIVE_DSRGPT2::startup() {
     if (options_["NROOTPI"].size() == 0) {
         throw psi::PSIEXCEPTION("Please specify NROOTPI for ACTIVE-DSRGPT2 jobs.");
     } else {
-        std::shared_ptr<psi::Molecule> molecule = Process::environment.molecule();
+        std::shared_ptr<psi::Molecule> molecule = psi::Process::environment.molecule();
         multiplicity_ = molecule->multiplicity();
         if (options_["MULTIPLICITY"].has_changed()) {
             multiplicity_ = options_.get_int("MULTIPLICITY");
@@ -128,7 +128,7 @@ void ACTIVE_DSRGPT2::startup() {
             }
         }
 
-        CharacterTable ct = Process::environment.molecule()->point_group()->char_table();
+        CharacterTable ct = psi::Process::environment.molecule()->point_group()->char_table();
         std::string cisd_noHF;
         if (ref_type_ == "CISD") {
             t1_percentage_ = std::vector<vector<double>>(nirrep, std::vector<double>());
@@ -190,7 +190,7 @@ double ACTIVE_DSRGPT2::compute_energy() {
     }
 
     int nirrep = this->nirrep();
-    CharacterTable ct = Process::environment.molecule()->point_group()->char_table();
+    CharacterTable ct = psi::Process::environment.molecule()->point_group()->char_table();
     std::vector<std::string> multi_label{"Singlet", "Doublet", "Triplet", "Quartet", "Quintet",
                                          "Sextet",  "Septet",  "Octet",   "Nonet",   "Decaet"};
 
@@ -451,18 +451,18 @@ double ACTIVE_DSRGPT2::compute_energy() {
     }
     print_summary();
 
-    // pass to Process::environment
+    // pass to psi::Process::environment
     for (int h = 0, counter = 0; h < nirrep; ++h) {
         for (int i = 0; i < nrootpi_[h]; ++i) {
             std::string str_counter = std::to_string(counter);
-            Process::environment.globals["ENERGY ROOT " + str_counter] = pt2_energies_[h][i];
-            Process::environment.globals["CURRENT ENERGY"] = pt2_energies_[h][i];
+            psi::Process::environment.globals["ENERGY ROOT " + str_counter] = pt2_energies_[h][i];
+            psi::Process::environment.globals["CURRENT ENERGY"] = pt2_energies_[h][i];
             ++counter;
         }
     }
 
     // return the last energy
-    return Process::environment.globals["CURRENT ENERGY"];
+    return psi::Process::environment.globals["CURRENT ENERGY"];
 }
 
 void ACTIVE_DSRGPT2::set_fcimo_params(int nroots, int root, int multiplicity) {
@@ -624,7 +624,7 @@ void ACTIVE_DSRGPT2::compute_osc_ref(const int& irrep0, const int& irrep1,
 
 std::string ACTIVE_DSRGPT2::transition_type(const int& n0, const int& irrep0, const int& n1,
                                             const int& irrep1) {
-    CharacterTable ct = Process::environment.molecule()->point_group()->char_table();
+    CharacterTable ct = psi::Process::environment.molecule()->point_group()->char_table();
     std::string symbol = ct.symbol();
     int width = 2;
     if (symbol == "cs" || symbol == "d2h") {

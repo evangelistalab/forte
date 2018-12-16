@@ -90,10 +90,10 @@ void DWMS_DSRGPT2::startup() {
 
     print_impl_note();
 
-    Enuc_ = Process::environment.molecule()->nuclear_repulsion_energy(
+    Enuc_ = psi::Process::environment.molecule()->nuclear_repulsion_energy(
         reference_wavefunction_->get_dipole_field_strength());
 
-    CharacterTable ct = Process::environment.molecule()->point_group()->char_table();
+    CharacterTable ct = psi::Process::environment.molecule()->point_group()->char_table();
     int nirrep = reference_wavefunction_->nirrep();
     irrep_symbol_.resize(nirrep);
     for (int h = 0; h < nirrep; ++h) {
@@ -517,7 +517,7 @@ void DWMS_DSRGPT2::compute_dwsa_energy_iterate(std::shared_ptr<FCI_MO>& fci_mo) 
 
                 std::stringstream ss;
                 ss << "ITER " << dwms_niter_ << " ENERGY ROOT " << counter;
-                Process::environment.globals[ss.str()] = Ept_[n][i];
+                psi::Process::environment.globals[ss.str()] = Ept_[n][i];
                 counter += 1;
             }
             outfile->Printf("\n    %s", dash.c_str());
@@ -1025,7 +1025,7 @@ void DWMS_DSRGPT2::print_energy_list(
             outfile->Printf("\n     %3d     %3s    %2d   %22.14f", multi,
                             irrep_symbol_[irrep].c_str(), i, energy[n][i]);
             if (pass_process) {
-                Process::environment.globals["ENERGY ROOT " + std::to_string(counter)] =
+                psi::Process::environment.globals["ENERGY ROOT " + std::to_string(counter)] =
                     energy[n][i];
             }
             counter += 1;

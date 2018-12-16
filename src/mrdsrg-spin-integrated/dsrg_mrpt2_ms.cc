@@ -47,7 +47,7 @@ double DSRG_MRPT2::compute_energy_multi_state() {
     }
 
     // get character table
-    CharacterTable ct = Process::environment.molecule()->point_group()->char_table();
+    CharacterTable ct = psi::Process::environment.molecule()->point_group()->char_table();
     std::vector<std::string> irrep_symbol;
     for (int h = 0; h < this->nirrep(); ++h) {
         irrep_symbol.push_back(std::string(ct.gamma(h).symbol()));
@@ -77,13 +77,13 @@ double DSRG_MRPT2::compute_energy_multi_state() {
         for (int i = 0; i < nstates; ++i) {
             outfile->Printf("\n     %3d     %3s    %2d   %20.12f", multi,
                             irrep_symbol[irrep].c_str(), i, Edsrg_ms[n][i]);
-            Process::environment.globals["ENERGY ROOT " + std::to_string(counter)] = Edsrg_ms[n][i];
+            psi::Process::environment.globals["ENERGY ROOT " + std::to_string(counter)] = Edsrg_ms[n][i];
             ++counter;
         }
         outfile->Printf("\n    %s", dash.c_str());
     }
 
-    Process::environment.globals["CURRENT ENERGY"] = Edsrg_ms[0][0];
+    psi::Process::environment.globals["CURRENT ENERGY"] = Edsrg_ms[0][0];
     return Edsrg_ms[0][0];
 }
 
@@ -92,7 +92,7 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
     compute_energy();
 
     // get character table
-    CharacterTable ct = Process::environment.molecule()->point_group()->char_table();
+    CharacterTable ct = psi::Process::environment.molecule()->point_group()->char_table();
     std::vector<std::string> irrep_symbol;
     for (int h = 0; h < this->nirrep(); ++h) {
         irrep_symbol.push_back(std::string(ct.gamma(h).symbol()));
@@ -215,14 +215,14 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
                 outfile->Printf("\n    Use string FCI code.");
 
                 // prepare FCISolver
-                int charge = Process::environment.molecule()->molecular_charge();
+                int charge = psi::Process::environment.molecule()->molecular_charge();
                 if (options_["CHARGE"].has_changed()) {
                     charge = options_.get_int("CHARGE");
                 }
                 auto nelec = 0;
-                int natom = Process::environment.molecule()->natom();
+                int natom = psi::Process::environment.molecule()->natom();
                 for (int i = 0; i < natom; ++i) {
-                    nelec += Process::environment.molecule()->fZ(i);
+                    nelec += psi::Process::environment.molecule()->fZ(i);
                 }
                 nelec -= charge;
                 int ms = (multi + 1) % 2;
@@ -308,13 +308,13 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
                             Heff->set(A, B, H_AB);
                             std::stringstream name;
                             name << "MS DIAGONAL ENERGY ENTRY " << n << " ROOT " << A;
-                            Process::environment.globals[name.str()] = H_AB;
+                            psi::Process::environment.globals[name.str()] = H_AB;
                         } else {
                             Heff->set(A, B, H_AB);
                             Heff->set(B, A, H_AB);
                             std::stringstream name;
                             name << "COUPLING ENTRY " << n << " ROOT " << A << ", " << B;
-                            Process::environment.globals[name.str()] = H_AB;
+                            psi::Process::environment.globals[name.str()] = H_AB;
                         }
                     }
                 } // end forming effective Hamiltonian
@@ -341,7 +341,7 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
 
 std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_xms() {
     // get character table
-    CharacterTable ct = Process::environment.molecule()->point_group()->char_table();
+    CharacterTable ct = psi::Process::environment.molecule()->point_group()->char_table();
     std::vector<std::string> irrep_symbol;
     for (int h = 0; h < this->nirrep(); ++h) {
         irrep_symbol.push_back(std::string(ct.gamma(h).symbol()));

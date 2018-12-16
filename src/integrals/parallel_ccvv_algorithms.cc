@@ -100,7 +100,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga() {
     if (my_proc == 0)
         int_mem_int = (nthree_ * core_ * virtual_) * sizeof(double);
     if (my_proc == 0)
-        memory_input = Process::environment.get_memory() * 0.75 * 1.0 / num_proc;
+        memory_input = psi::Process::environment.get_memory() * 0.75 * 1.0 / num_proc;
     if (my_proc == 0)
         num_block = int_mem_int / memory_input < 1 ? 1 : int_mem_int / memory_input;
     if (my_proc == 0)
@@ -600,7 +600,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_rep() {
     size_t block_size = 0;
     if (my_proc == 0) {
         int_mem_int = (nthree_ * core_ * virtual_) * sizeof(double);
-        memory_input = Process::environment.get_memory() * 0.75 * 1.0 / num_proc;
+        memory_input = psi::Process::environment.get_memory() * 0.75 * 1.0 / num_proc;
         num_block = int_mem_int / memory_input < 1 ? 1 : int_mem_int / memory_input;
         block_size = core_ / num_block;
     }
@@ -952,7 +952,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_virtual_ga() {
     /// be stored in core.
     outfile->Printf("\n\n====Blocking information==========\n");
     size_t int_mem_int = (nthree_ * core_ * virtual_) * sizeof(double);
-    size_t memory_input = Process::environment.get_memory() * 0.75;
+    size_t memory_input = psi::Process::environment.get_memory() * 0.75;
     size_t num_block = int_mem_int / memory_input < 1 ? 1 : int_mem_int / memory_input;
 
     if (options_.get_int("CCVV_BATCH_NUMBER") != -1) {

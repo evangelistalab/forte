@@ -150,7 +150,7 @@ void DistDFIntegrals::test_distributed_integrals() {
     df->add_space("ALL", 0, nmo_);
     // Does not add the pair_space, but says which one is should use
     df->add_pair_space("B", "ALL", "ALL");
-    df->set_memory(Process::environment.get_memory() / 8L);
+    df->set_memory(psi::Process::environment.get_memory() / 8L);
 
     // Finally computes the df integrals
     // Does the timings also

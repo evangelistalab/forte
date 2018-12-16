@@ -165,7 +165,7 @@ void FCI_MO::read_options() {
     fcheck_threshold_ = 100.0 * econv_;
 
     // nuclear repulsion
-    std::shared_ptr<psi::Molecule> molecule = Process::environment.molecule();
+    std::shared_ptr<psi::Molecule> molecule = psi::Process::environment.molecule();
     e_nuc_ =
         molecule->nuclear_repulsion_energy(reference_wavefunction_->get_dipole_field_strength());
 
@@ -177,7 +177,7 @@ void FCI_MO::read_options() {
 
     // number of Irrep
     nirrep_ = this->nirrep();
-    CharacterTable ct = Process::environment.molecule()->point_group()->char_table();
+    CharacterTable ct = psi::Process::environment.molecule()->point_group()->char_table();
     irrep_symbols_.clear();
     for (int h = 0; h < nirrep_; ++h) {
         irrep_symbols_.push_back(ct.gamma(h).symbol());
@@ -472,7 +472,7 @@ void FCI_MO::print_options() {
     if (nentry != 0) {
         print_h2("State Averaging Summary");
 
-        CharacterTable ct = Process::environment.molecule()->point_group()->char_table();
+        CharacterTable ct = psi::Process::environment.molecule()->point_group()->char_table();
         std::vector<std::string> irrep_symbol;
         for (int h = 0; h < nirrep_; ++h) {
             irrep_symbol.push_back(std::string(ct.gamma(h).symbol()));
@@ -542,8 +542,8 @@ double FCI_MO::compute_energy() {
         Eref_ = compute_ss_energy();
     }
 
-    Process::environment.globals["CURRENT ENERGY"] = Eref_;
-    Process::environment.globals["FCI_MO ENERGY"] = Eref_;
+    psi::Process::environment.globals["CURRENT ENERGY"] = Eref_;
+    psi::Process::environment.globals["FCI_MO ENERGY"] = Eref_;
     return Eref_;
 }
 
@@ -584,7 +584,7 @@ double FCI_MO::compute_ss_energy() {
 
     double Eref = eigen_[root_].second;
     Eref_ = Eref;
-    Process::environment.globals["CURRENT ENERGY"] = Eref;
+    psi::Process::environment.globals["CURRENT ENERGY"] = Eref;
     return Eref;
 }
 
@@ -1443,7 +1443,7 @@ void FCI_MO::compute_Fock_ints() {
 
 void FCI_MO::compute_permanent_dipole() {
 
-    CharacterTable ct = Process::environment.molecule()->point_group()->char_table();
+    CharacterTable ct = psi::Process::environment.molecule()->point_group()->char_table();
     std::string irrep_symbol = ct.gamma(root_sym_).symbol();
     std::string title = "Permanent Dipole Moments (" + irrep_symbol + ")";
     print_h2(title);
@@ -1453,8 +1453,8 @@ void FCI_MO::compute_permanent_dipole() {
     std::vector<psi::SharedMatrix> aodipole_ints = integral_->AOdipole_ints();
 
     // Nuclear dipole contribution
-    Vector3 ndip = Process::environment.molecule()->nuclear_dipole(Vector3(0.0, 0.0, 0.0));
-    //        DipoleInt::nuclear_contribution(Process::environment.molecule(), );
+    Vector3 ndip = psi::Process::environment.molecule()->nuclear_dipole(psi::Vector3(0.0, 0.0, 0.0));
+    //        DipoleInt::nuclear_contribution(psi::Process::environment.molecule(), );
 
     // SO to AO transformer
     psi::SharedMatrix sotoao(this->aotoso()->transpose());
@@ -1541,7 +1541,7 @@ psi::SharedMatrix FCI_MO::reformat_1rdm(const std::string& name, const std::vect
 }
 
 void FCI_MO::compute_transition_dipole() {
-    CharacterTable ct = Process::environment.molecule()->point_group()->char_table();
+    CharacterTable ct = psi::Process::environment.molecule()->point_group()->char_table();
     std::string irrep_symbol = ct.gamma(root_sym_).symbol();
     std::stringstream title;
     title << "Transition Dipole Moments (" << irrep_symbol << " -> " << irrep_symbol << ")";
@@ -1646,7 +1646,7 @@ void FCI_MO::compute_transition_dipole() {
 
 void FCI_MO::compute_oscillator_strength() {
 
-    CharacterTable ct = Process::environment.molecule()->point_group()->char_table();
+    CharacterTable ct = psi::Process::environment.molecule()->point_group()->char_table();
     std::string irrep_symbol = ct.gamma(root_sym_).symbol();
     std::stringstream title;
     title << "Oscillator Strength (" << irrep_symbol << " -> " << irrep_symbol << ")";
@@ -1692,7 +1692,7 @@ FCI_MO::compute_ref_relaxed_dm(const std::vector<double>& dm0, std::vector<Block
         do_dm.push_back(std::fabs(dm0[z]) > 1.0e-12 ? true : false);
     }
 
-    std::string pg = (Process::environment.molecule()->point_group()->char_table()).symbol();
+    std::string pg = (psi::Process::environment.molecule()->point_group()->char_table()).symbol();
     int width = 2;
     if (pg == "cs" || pg == "d2h") {
         width = 3;
@@ -1789,7 +1789,7 @@ FCI_MO::compute_ref_relaxed_dm(const std::vector<double>& dm0, std::vector<Block
         do_dm.push_back(std::fabs(dm0[z]) > 1.0e-12 ? true : false);
     }
 
-    std::string pg = (Process::environment.molecule()->point_group()->char_table()).symbol();
+    std::string pg = (psi::Process::environment.molecule()->point_group()->char_table()).symbol();
     int width = 2;
     if (pg == "cs" || pg == "d2h") {
         width = 3;
@@ -1882,7 +1882,7 @@ std::map<std::string, std::vector<double>>
 FCI_MO::compute_ref_relaxed_osc(std::vector<BlockedTensor>& dm1, std::vector<BlockedTensor>& dm2) {
     std::map<std::string, std::vector<double>> out;
 
-    std::string pg = (Process::environment.molecule()->point_group()->char_table()).symbol();
+    std::string pg = (psi::Process::environment.molecule()->point_group()->char_table()).symbol();
     int width = 2;
     if (pg == "cs" || pg == "d2h") {
         width = 3;
@@ -1999,7 +1999,7 @@ FCI_MO::compute_ref_relaxed_osc(std::vector<BlockedTensor>& dm1, std::vector<Blo
                                 std::vector<BlockedTensor>& dm3) {
     std::map<std::string, std::vector<double>> out;
 
-    std::string pg = (Process::environment.molecule()->point_group()->char_table()).symbol();
+    std::string pg = (psi::Process::environment.molecule()->point_group()->char_table()).symbol();
     int width = 2;
     if (pg == "cs" || pg == "d2h") {
         width = 3;
@@ -2666,7 +2666,7 @@ double FCI_MO::compute_sa_energy() {
     outfile->Printf("\n  Total Energy (averaged over %d states): %20.15f\n", nstates, Ecas_sa);
 
     Eref_ = Ecas_sa;
-    Process::environment.globals["CURRENT ENERGY"] = Ecas_sa;
+    psi::Process::environment.globals["CURRENT ENERGY"] = Ecas_sa;
     return Ecas_sa;
 }
 
@@ -2929,7 +2929,7 @@ std::vector<std::string> FCI_MO::density_filenames_generator(int rdm_level, int 
     }
 
     std::string path0 = PSIOManager::shared_object()->get_default_path() + "psi." +
-                        std::to_string(getpid()) + "." + Process::environment.molecule()->name();
+                        std::to_string(getpid()) + "." + psi::Process::environment.molecule()->name();
     std::string level = std::to_string(rdm_level);
     std::string name0 = (root1 == root2) ? level + "RDM" : level + "TrDM";
 

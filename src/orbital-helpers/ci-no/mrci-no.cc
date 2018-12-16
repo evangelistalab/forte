@@ -40,6 +40,7 @@
 #include "ci-no.h"
 //#include "hash_vector.h"
 
+using namespace psi;
 
 namespace forte {
 

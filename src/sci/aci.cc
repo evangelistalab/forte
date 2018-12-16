@@ -707,9 +707,9 @@ double AdaptiveCI::compute_energy() {
         PQ_evals->get(froot) + nuclear_repulsion_energy_ + fci_ints_->scalar_energy();
     double root_energy_pt2 = root_energy + multistate_pt2_energy_correction_[froot];
 
-    Process::environment.globals["CURRENT ENERGY"] = root_energy;
-    Process::environment.globals["ACI ENERGY"] = root_energy;
-    Process::environment.globals["ACI+PT2 ENERGY"] = root_energy_pt2;
+    psi::Process::environment.globals["CURRENT ENERGY"] = root_energy;
+    psi::Process::environment.globals["ACI ENERGY"] = root_energy;
+    psi::Process::environment.globals["ACI+PT2 ENERGY"] = root_energy_pt2;
 
     // printf( "\n%1.5f\n", aci_elapse.get());
     if (options_.get_bool("ACI_SPIN_ANALYSIS") and !(options_.get_bool("ACI_RELAXED_SPIN"))) {
@@ -1707,7 +1707,7 @@ void AdaptiveCI::print_nos() {
     // file << endl;
     // file.close();
 
-    CharacterTable ct = Process::environment.molecule()->point_group()->char_table();
+    CharacterTable ct = psi::Process::environment.molecule()->point_group()->char_table();
     std::sort(vec_irrep_occupation.begin(), vec_irrep_occupation.end(),
               std::greater<std::pair<double, std::pair<int, int>>>());
 

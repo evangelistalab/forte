@@ -502,8 +502,8 @@ double THREE_DSRG_MRPT2::compute_energy() {
     MPI_Bcast(&Hbar0_, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 #endif
 
-    Process::environment.globals["UNRELAXED ENERGY"] = Etotal;
-    Process::environment.globals["CURRENT ENERGY"] = Etotal;
+    psi::Process::environment.globals["UNRELAXED ENERGY"] = Etotal;
+    psi::Process::environment.globals["CURRENT ENERGY"] = Etotal;
 
     // use relaxation code to do SA_FULL
     if (relax_ref_ != "NONE" || multi_state_) {
@@ -2076,7 +2076,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core() {
     // stored in core.
     outfile->Printf("\n\n====Blocking information==========\n");
     size_t int_mem_int = (nthree_ * ncore_ * nvirtual_) * sizeof(double);
-    size_t memory_input = Process::environment.get_memory() * 0.75;
+    size_t memory_input = psi::Process::environment.get_memory() * 0.75;
     size_t num_block = int_mem_int / memory_input < 1 ? 1 : int_mem_int / memory_input;
 
     if (options_.get_int("CCVV_BATCH_NUMBER") != -1) {
@@ -2429,7 +2429,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_virtual() {
     // stored in core.
     outfile->Printf("\n\n====Blocking information==========\n");
     size_t int_mem_int = (nthree_ * ncore_ * nvirtual_) * sizeof(double);
-    size_t memory_input = Process::environment.get_memory() * 0.75;
+    size_t memory_input = psi::Process::environment.get_memory() * 0.75;
     size_t num_block = int_mem_int / memory_input < 1 ? 1 : int_mem_int / memory_input;
 
     if (options_.get_int("CCVV_BATCH_NUMBER") != -1) {
@@ -3123,11 +3123,11 @@ void THREE_DSRG_MRPT2::relax_reference_once() {
                         Hbar0_ + Eref_);
         outfile->Printf("\n    %-37s = %22.15f", "CD/DF DSRG-MRPT2 Total Energy (relaxed)", Erelax);
 
-        Process::environment.globals["PARTIALLY RELAXED ENERGY"] = Erelax;
-        Process::environment.globals["CURRENT ENERGY"] = Erelax;
+        psi::Process::environment.globals["PARTIALLY RELAXED ENERGY"] = Erelax;
+        psi::Process::environment.globals["CURRENT ENERGY"] = Erelax;
     } else {
         // get character table
-        CharacterTable ct = Process::environment.molecule()->point_group()->char_table();
+        CharacterTable ct = psi::Process::environment.molecule()->point_group()->char_table();
         std::vector<std::string> irrep_symbol;
         for (int h = 0; h < this->nirrep(); ++h) {
             irrep_symbol.push_back(std::string(ct.gamma(h).symbol()));
@@ -3150,14 +3150,14 @@ void THREE_DSRG_MRPT2::relax_reference_once() {
                 int ni = i + offset;
                 outfile->Printf("\n     %3d     %3s    %2d   %20.12f", multi,
                                 irrep_symbol[irrep].c_str(), i, E_relaxed[ni]);
-                Process::environment.globals["ENERGY ROOT " + std::to_string(ni)] = E_relaxed[ni];
+                psi::Process::environment.globals["ENERGY ROOT " + std::to_string(ni)] = E_relaxed[ni];
             }
             outfile->Printf("\n    %s", dash.c_str());
 
             offset += nstates;
         }
 
-        Process::environment.globals["CURRENT ENERGY"] = E_relaxed[0];
+        psi::Process::environment.globals["CURRENT ENERGY"] = E_relaxed[0];
     }
 }
 
@@ -3487,7 +3487,7 @@ std::vector<double> THREE_DSRG_MRPT2::relaxed_energy(std::shared_ptr<FCIIntegral
         // common (SS and SA) setup of FCISolver
         int ntrial_per_root = options_.get_int("NTRIAL_PER_ROOT");
         psi::Dimension active_dim = mo_space_info_->get_dimension("ACTIVE");
-        std::shared_ptr<psi::Molecule> molecule = Process::environment.molecule();
+        std::shared_ptr<psi::Molecule> molecule = psi::Process::environment.molecule();
         double Enuc = molecule->nuclear_repulsion_energy(
             reference_wavefunction_->get_dipole_field_strength());
         int charge = molecule->molecular_charge();
@@ -3504,7 +3504,7 @@ std::vector<double> THREE_DSRG_MRPT2::relaxed_energy(std::shared_ptr<FCIIntegral
         // if state specific, read from fci_root and fci_nroot
         if (options_["AVG_STATE"].size() == 0) {
             // setup for FCISolver
-            int multi = Process::environment.molecule()->multiplicity();
+            int multi = psi::Process::environment.molecule()->multiplicity();
             if (options_["MULTIPLICITY"].has_changed()) {
                 multi = options_.get_int("MULTIPLICITY");
             }

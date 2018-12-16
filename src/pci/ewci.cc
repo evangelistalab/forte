@@ -796,7 +796,7 @@ double ElementwiseCI::compute_energy() {
     }
     timer_off("EWCI:<E>end_v");
 
-    Process::environment.globals["EWCI ENERGY"] = var_energy;
+    psi::Process::environment.globals["EWCI ENERGY"] = var_energy;
 
     outfile->Printf("\n  * ElementwiseCI Variational Energy    = %18.12f Eh", 1, var_energy);
     outfile->Printf("\n  * ElementwiseCI Var. Corr.  Energy    = %18.12f Eh", 1,
@@ -838,7 +838,7 @@ double ElementwiseCI::compute_energy() {
 
         double post_diag_energy = apfci_evals->get(current_root_) + nuclear_repulsion_energy_ +
                                   fci_ints_->scalar_energy();
-        Process::environment.globals["EWCI POST DIAG ENERGY"] = post_diag_energy;
+        psi::Process::environment.globals["EWCI POST DIAG ENERGY"] = post_diag_energy;
 
         outfile->Printf("\n\n  * ElementwiseCI Post-diag   Energy    = %18.12f Eh", 1,
                         post_diag_energy);

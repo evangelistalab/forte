@@ -104,7 +104,7 @@ double FCIWfn::energy_from_rdms(std::shared_ptr<FCIIntegrals> fci_ints) {
     size_t nb = beta_graph_->nones();
 
     double nuclear_repulsion_energy =
-        Process::environment.molecule()->nuclear_repulsion_energy({{0, 0, 0}});
+        psi::Process::environment.molecule()->nuclear_repulsion_energy({{0, 0, 0}});
 
     double scalar_energy = fci_ints->frozen_core_energy() + fci_ints->scalar_energy();
     double energy_1rdm = 0.0;
@@ -667,7 +667,7 @@ void FCIWfn::rdm_test() {
                 }
             }
         }
-        Process::environment.globals["AAAA 2-RDM ERROR"] = error_2rdm_aa;
+        psi::Process::environment.globals["AAAA 2-RDM ERROR"] = error_2rdm_aa;
         outfile->Printf("\n    AAAA 2-RDM Error :   %+e", error_2rdm_aa);
     }
 
@@ -703,7 +703,7 @@ void FCIWfn::rdm_test() {
                 }
             }
         }
-        Process::environment.globals["BBBB 2-RDM ERROR"] = error_2rdm_bb;
+        psi::Process::environment.globals["BBBB 2-RDM ERROR"] = error_2rdm_bb;
         outfile->Printf("\n    BBBB 2-RDM Error :   %+e", error_2rdm_bb);
     }
 
@@ -739,7 +739,7 @@ void FCIWfn::rdm_test() {
                 }
             }
         }
-        Process::environment.globals["ABAB 2-RDM ERROR"] = error_2rdm_ab;
+        psi::Process::environment.globals["ABAB 2-RDM ERROR"] = error_2rdm_ab;
         outfile->Printf("\n    ABAB 2-RDM Error :   %+e", error_2rdm_ab);
     }
 
@@ -784,7 +784,7 @@ void FCIWfn::rdm_test() {
                 }
             }
         }
-        Process::environment.globals["AABAAB 3-RDM ERROR"] = error_3rdm_aab;
+        psi::Process::environment.globals["AABAAB 3-RDM ERROR"] = error_3rdm_aab;
         outfile->Printf("\n    AABAAB 3-RDM Error : %+e", error_3rdm_aab);
     }
 
@@ -829,7 +829,7 @@ void FCIWfn::rdm_test() {
                 }
             }
         }
-        Process::environment.globals["ABBABB 3-RDM ERROR"] = error_3rdm_abb;
+        psi::Process::environment.globals["ABBABB 3-RDM ERROR"] = error_3rdm_abb;
         outfile->Printf("\n    ABBABB 3-RDM Error : %+e", error_3rdm_abb);
     }
 
@@ -875,7 +875,7 @@ void FCIWfn::rdm_test() {
                 }
             }
         }
-        Process::environment.globals["AAAAAA 3-RDM ERROR"] = error_3rdm_aaa;
+        psi::Process::environment.globals["AAAAAA 3-RDM ERROR"] = error_3rdm_aaa;
         outfile->Printf("\n    AAAAAA 3-RDM Error : %+e", error_3rdm_aaa);
     }
 
@@ -921,7 +921,7 @@ void FCIWfn::rdm_test() {
                 }
             }
         }
-        Process::environment.globals["BBBBBB 3-RDM ERROR"] = error_3rdm_bbb;
+        psi::Process::environment.globals["BBBBBB 3-RDM ERROR"] = error_3rdm_bbb;
         outfile->Printf("\n    BBBBBB 3-RDM Error : %+e", error_3rdm_bbb);
     }
     delete[] Ia;

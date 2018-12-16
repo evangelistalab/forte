@@ -240,4 +240,3 @@ template <> UI64Determinant make_det<UI64Determinant, UI64Determinant>(const UI6
     return d;
 }
 }
-}

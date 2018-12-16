@@ -401,7 +401,7 @@ void DMRGSolver::compute_energy() {
             fci_ints->set_active_integrals_and_restricted_docc();
             one_body_integrals_ = fci_ints->oei_a_vector();
             scalar_energy_ = fci_ints->scalar_energy();
-            scalar_energy_ += Process::environment.molecule()->nuclear_repulsion_energy(
+            scalar_energy_ += psi::Process::environment.molecule()->nuclear_repulsion_energy(
                                   wfn_->get_dipole_field_strength()) +
                               ints_->frozen_core_energy();
             outfile->Printf("\n OneBody integrals (fci_ints) takes %6.5f s",
@@ -464,7 +464,7 @@ void DMRGSolver::compute_energy() {
         DMRGCI->calc_rdms_and_correlations(max_rdm_ > 2 ? true : false, disk_3_rdm_);
         outfile->Printf("\n Overall DMRG RDM computation took %6.5f s.", DMRGRDMs.get());
         outfile->Printf("\n @DMRG Energy = %8.12f", Energy);
-        Process::environment.globals["CURRENT ENERGY"] = Energy;
+        psi::Process::environment.globals["CURRENT ENERGY"] = Energy;
         // if(dmrgscf_state_avg)
         //{
         //    DMRGCI->calc_rdms_and_correlations(max_rdm_ > 2 ? true : false);
@@ -567,7 +567,7 @@ std::vector<double> DMRGSolver::one_body_operator() {
 
     std::shared_ptr<JK> JK_inactive = JK::build_JK(wfn_->basisset(), wfn_->options());
 
-    JK_inactive->set_memory(Process::environment.get_memory() * 0.8);
+    JK_inactive->set_memory(psi::Process::environment.get_memory() * 0.8);
     JK_inactive->initialize();
 
     std::vector<std::shared_ptr<psi::Matrix>>& Cl = JK_inactive->C_left();
@@ -629,7 +629,7 @@ std::vector<double> DMRGSolver::one_body_operator() {
     }
     psi::Dimension restricted_docc = mo_space_info_->get_dimension("INACTIVE_DOCC");
     double E_restricted =
-        Process::environment.molecule()->nuclear_repulsion_energy(wfn->get_dipole_field_strength());
+        psi::Process::environment.molecule()->nuclear_repulsion_energy(wfn->get_dipole_field_strength());
     for (int h = 0; h < nirrep; h++) {
         for (int rd = 0; rd < restricted_docc[h]; rd++) {
             E_restricted += Hcore->get(h, rd, rd) + F_restricted->get(h, rd, rd);
@@ -675,7 +675,7 @@ void DMRGSolver::print_natural_orbitals(double* opdm) {
             vec_irrep_occupation.push_back(irrep_occ);
         }
     }
-    CharacterTable ct = Process::environment.molecule()->point_group()->char_table();
+    CharacterTable ct = psi::Process::environment.molecule()->point_group()->char_table();
     std::sort(vec_irrep_occupation.begin(), vec_irrep_occupation.end(),
               std::greater<std::pair<double, std::pair<int, int>>>());
 

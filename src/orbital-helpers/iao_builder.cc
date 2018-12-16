@@ -58,7 +58,7 @@ void IAOBuilder::common_init() {
 std::shared_ptr<IAOBuilder> IAOBuilder::build(std::shared_ptr<psi::BasisSet> primary,
                                               std::shared_ptr<psi::BasisSet> minao, psi::SharedMatrix C,
                                               psi::Options& options) {
-    //    psi::Options& options = Process::environment.options;
+    //    psi::Options& options = psi::Process::environment.options;
 
     //  std::shared_ptr<psi::BasisSet> minao = psi::BasisSet::pyconstruct_orbital(primary->molecule(),
     //      "BASIS", options.get_str("MINAO_BASIS"));

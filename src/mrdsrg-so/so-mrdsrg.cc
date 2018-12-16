@@ -762,8 +762,8 @@ double SOMRDSRG::compute_energy() {
     outfile->Printf("\n  * SO-MR-DSRG total energy            = %25.15f\n", old_energy);
 
     // Set some environment variables
-    Process::environment.globals["CURRENT ENERGY"] = old_energy;
-    Process::environment.globals["SO-MR-DSRG ENERGY"] = old_energy;
+    psi::Process::environment.globals["CURRENT ENERGY"] = old_energy;
+    psi::Process::environment.globals["SO-MR-DSRG ENERGY"] = old_energy;
 
     return old_energy;
 }

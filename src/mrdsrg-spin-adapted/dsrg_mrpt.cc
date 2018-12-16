@@ -311,7 +311,7 @@ double DSRG_MRPT::compute_energy() {
         //        Etotal += compute_energy_pt3();
     }
 
-    Process::environment.globals["CURRENT ENERGY"] = Etotal;
+    psi::Process::environment.globals["CURRENT ENERGY"] = Etotal;
     return Etotal;
 }
 
@@ -516,7 +516,7 @@ void DSRG_MRPT::test_memory(const size_t& c, const size_t& a, const size_t& v) {
     // hp* does not include aa block.
     // hhpp_ depends on if ccvv can be stored or not
 
-    size_t total = Process::environment.get_memory();
+    size_t total = psi::Process::environment.get_memory();
     size_t required;        // number of elements
     long long int leftover; // in bytes
     if (ref_relax_ == "NONE") {

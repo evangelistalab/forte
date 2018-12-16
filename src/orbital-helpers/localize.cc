@@ -28,6 +28,7 @@
 
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libmints/molecule.h"
+#include "psi4/libmints/wavefunction.h"
 #include "psi4/libpsio/psio.h"
 #include "psi4/libpsio/psio.hpp"
 
@@ -54,9 +55,9 @@ LOCALIZE::LOCALIZE(std::shared_ptr<psi::Wavefunction> wfn, psi::Options& options
     }
 
     int nel = 0;
-    int natom = Process::environment.molecule()->natom();
+    int natom = psi::Process::environment.molecule()->natom();
     for (int i = 0; i < natom; i++) {
-        nel += static_cast<int>(Process::environment.molecule()->Z(i));
+        nel += static_cast<int>(psi::Process::environment.molecule()->Z(i));
     }
     nel -= options.get_int("CHARGE");
 

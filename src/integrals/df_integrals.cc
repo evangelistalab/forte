@@ -222,7 +222,7 @@ void DFIntegrals::gather_integrals() {
     // This assumes that everything is correlated.
     // Does not add the pair_space, but says which one is should use
     df->add_transformation("B", "ALL", "ALL", "Qpq");
-    df->set_memory(Process::environment.get_memory() / 8L);
+    df->set_memory(psi::Process::environment.get_memory() / 8L);
 
     // Finally computes the df integrals
     // Does the timings also

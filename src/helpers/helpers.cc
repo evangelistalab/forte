@@ -252,7 +252,7 @@ namespace forte {
 //     }
 //
 //     int banner_width = label_size + 4 + 6 * (nirrep_ + 1);
-//     CharacterTable ct = Process::environment.molecule()->point_group()->char_table();
+//     CharacterTable ct = psi::Process::environment.molecule()->point_group()->char_table();
 //     outfile->Printf("\n  %s", std::string(banner_width, '-').c_str());
 //     outfile->Printf("\n    %s", std::string(label_size, ' ').c_str());
 //     for (size_t h = 0; h < nirrep_; ++h)

@@ -747,7 +747,7 @@ double ProjectorCI_HashVec::compute_energy() {
     }
     timer_off("PCI:<E>end_v");
 
-    Process::environment.globals["PCI ENERGY"] = var_energy;
+    psi::Process::environment.globals["PCI ENERGY"] = var_energy;
 
     outfile->Printf("\n  * Projector-CI Variational Energy     = %18.12f Eh", 1, var_energy);
     outfile->Printf("\n  * Projector-CI Var. Corr.  Energy     = %18.12f Eh", 1,
@@ -789,7 +789,7 @@ double ProjectorCI_HashVec::compute_energy() {
 
         double post_diag_energy = apfci_evals->get(current_root_) + nuclear_repulsion_energy_ +
                                   fci_ints_->scalar_energy();
-        Process::environment.globals["PCI POST DIAG ENERGY"] = post_diag_energy;
+        psi::Process::environment.globals["PCI POST DIAG ENERGY"] = post_diag_energy;
 
         outfile->Printf("\n\n  * Projector-CI Post-diag   Energy     = %18.12f Eh", 1,
                         post_diag_energy);

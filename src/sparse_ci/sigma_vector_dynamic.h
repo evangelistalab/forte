@@ -48,7 +48,7 @@ class SigmaVectorDynamic : public SigmaVector {
                        size_t max_memory);
     ~SigmaVectorDynamic();
     void compute_sigma(psi::SharedVector sigma, psi::SharedVector b);
-    void get_diagonal(Vector& diag);
+    void get_diagonal(psi::Vector& diag);
     void add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& bad_states);
     std::vector<std::vector<std::pair<size_t, double>>> bad_states_;
 
@@ -126,7 +126,6 @@ class SigmaVectorDynamic : public SigmaVector {
     void compute_bb_coupling(const UI64Determinant::bit_t& detIa, const std::vector<double>& b);
     void compute_abab_coupling(const UI64Determinant::bit_t& detIa, const std::vector<double>& b);
 };
-}
 }
 
 #endif // _sigma_vector_dynamic_h_

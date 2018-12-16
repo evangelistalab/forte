@@ -86,7 +86,7 @@ void DSRG_MRPT3::startup() {
     size_t sg = sc + sp;
 
     // memory usage
-    mem_total_ = static_cast<int64_t>(0.98 * Process::environment.get_memory());
+    mem_total_ = static_cast<int64_t>(0.98 * psi::Process::environment.get_memory());
     std::vector<std::pair<std::string, std::string>> mem_info{
         {"Memory asigned", to_XB(mem_total_, 1)}};
 
@@ -498,8 +498,8 @@ double DSRG_MRPT3::compute_energy() {
     outfile->Printf("\n      Hbar1st = H1st + [H0th, A1st]");
     outfile->Printf("\n      Hbar2nd = 0.5 * [H1st + Hbar1st, A1st] + [H0th, A2nd]");
 
-    Process::environment.globals["UNRELAXED ENERGY"] = Etotal;
-    Process::environment.globals["CURRENT ENERGY"] = Etotal;
+    psi::Process::environment.globals["UNRELAXED ENERGY"] = Etotal;
+    psi::Process::environment.globals["CURRENT ENERGY"] = Etotal;
 
     // compute DSRG dipole integrals part 2
     if (do_dm_) {
@@ -1303,7 +1303,7 @@ double DSRG_MRPT3::compute_energy_sa() {
     //    }
 
     // get character table
-    CharacterTable ct = Process::environment.molecule()->point_group()->char_table();
+    CharacterTable ct = psi::Process::environment.molecule()->point_group()->char_table();
     std::vector<std::string> irrep_symbol;
     for (int h = 0; h < this->nirrep(); ++h) {
         irrep_symbol.push_back(std::string(ct.gamma(h).symbol()));
@@ -1407,14 +1407,14 @@ double DSRG_MRPT3::compute_energy_sa() {
                 outfile->Printf("    Use string FCI code.");
 
                 // prepare FCISolver
-                int charge = Process::environment.molecule()->molecular_charge();
+                int charge = psi::Process::environment.molecule()->molecular_charge();
                 if (options_["CHARGE"].has_changed()) {
                     charge = options_.get_int("CHARGE");
                 }
                 auto nelec = 0;
-                int natom = Process::environment.molecule()->natom();
+                int natom = psi::Process::environment.molecule()->natom();
                 for (int i = 0; i < natom; ++i) {
-                    nelec += Process::environment.molecule()->fZ(i);
+                    nelec += psi::Process::environment.molecule()->fZ(i);
                 }
                 nelec -= charge;
                 int ms = (multi + 1) % 2;
@@ -1535,13 +1535,13 @@ double DSRG_MRPT3::compute_energy_sa() {
         for (int i = 0; i < nstates; ++i) {
             outfile->Printf("\n     %3d     %3s    %2d   %20.12f", multi,
                             irrep_symbol[irrep].c_str(), i, Edsrg_sa[n][i]);
-            Process::environment.globals["ENERGY ROOT " + std::to_string(counter)] = Edsrg_sa[n][i];
+            psi::Process::environment.globals["ENERGY ROOT " + std::to_string(counter)] = Edsrg_sa[n][i];
             ++counter;
         }
         outfile->Printf("\n    %s", dash.c_str());
     }
 
-    Process::environment.globals["CURRENT ENERGY"] = Edsrg_sa[0][0];
+    psi::Process::environment.globals["CURRENT ENERGY"] = Edsrg_sa[0][0];
     return Edsrg_sa[0][0];
 }
 
@@ -1609,7 +1609,7 @@ double DSRG_MRPT3::compute_energy_relaxed() {
         double t = std::sqrt(x * x + y * y + z * z);
         outfile->Printf("\n    DSRG-MRPT3 unrelaxed dipole moment:");
         outfile->Printf("\n      X: %10.6f  Y: %10.6f  Z: %10.6f  Total: %10.6f\n", x, y, z, t);
-        Process::environment.globals["UNRELAXED DIPOLE"] = t;
+        psi::Process::environment.globals["UNRELAXED DIPOLE"] = t;
 
         // there should be only one entry for state-specific computations
         if (dm_relax.size() == 1) {
@@ -1621,13 +1621,13 @@ double DSRG_MRPT3::compute_energy_relaxed() {
             }
             outfile->Printf("\n    DSRG-MRPT3 partially relaxed dipole moment:");
             outfile->Printf("\n      X: %10.6f  Y: %10.6f  Z: %10.6f  Total: %10.6f\n", x, y, z, t);
-            Process::environment.globals["PARTIALLY RELAXED DIPOLE"] = t;
+            psi::Process::environment.globals["PARTIALLY RELAXED DIPOLE"] = t;
         }
     }
 
-    Process::environment.globals["UNRELAXED ENERGY"] = Edsrg;
-    Process::environment.globals["PARTIALLY RELAXED ENERGY"] = Erelax;
-    Process::environment.globals["CURRENT ENERGY"] = Erelax;
+    psi::Process::environment.globals["UNRELAXED ENERGY"] = Edsrg;
+    psi::Process::environment.globals["PARTIALLY RELAXED ENERGY"] = Erelax;
+    psi::Process::environment.globals["CURRENT ENERGY"] = Erelax;
     return Erelax;
 }
 
@@ -1792,7 +1792,7 @@ void DSRG_MRPT3::print_dm_pt3() {
     print_vector4("DSRG-MRPT2 (2nd-order complete)", Mbar0_pt2c_);
     double t = print_vector4("DSRG-MRPT3", Mbar0_);
 
-    Process::environment.globals["UNRELAXED DIPOLE"] = t;
+    psi::Process::environment.globals["UNRELAXED DIPOLE"] = t;
 }
 
 void DSRG_MRPT3::compute_dm1d_pt3_1(BlockedTensor& M, double& Mbar0, double& Mbar0_pt2,

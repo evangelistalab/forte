@@ -423,7 +423,7 @@ void DISKDFIntegrals::gather_integrals() {
     df_->add_space("ALL", Ca_ao);
     // Does not add the pair_space, but says which one is should use
     df_->add_transformation("B", "ALL", "ALL", "Qpq");
-    df_->set_memory(Process::environment.get_memory() / 8L);
+    df_->set_memory(psi::Process::environment.get_memory() / 8L);
 
     // Finally computes the df integrals
     // Does the timings also
@@ -496,7 +496,7 @@ void DISKDFIntegrals::make_fock_matrix(psi::SharedMatrix gamma_aM, psi::SharedMa
 
     //====Blocking information==========
     size_t int_mem_int = (nthree_ * ncmo_ * ncmo_) * sizeof(double);
-    size_t memory_input = Process::environment.get_memory() * 0.75;
+    size_t memory_input = psi::Process::environment.get_memory() * 0.75;
     size_t num_block = int_mem_int / memory_input < 1 ? 1 : int_mem_int / memory_input;
 
     int block_size = nthree_ / num_block;

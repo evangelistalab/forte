@@ -127,7 +127,7 @@ std::pair<int, int> startup() {
     GA_Register_stack_memory(replace_malloc, replace_free);
     n_nodes = GA_Nnodes();
     my_proc = GA_Nodeid();
-    size_t memory = Process::environment.get_memory() / n_nodes;
+    size_t memory = psi::Process::environment.get_memory() / n_nodes;
 #endif
 
 #ifdef HAVE_MPI

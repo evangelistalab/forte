@@ -56,7 +56,7 @@ namespace forte {
 
 ParallelDFMO::ParallelDFMO(std::shared_ptr<psi::BasisSet> primary, std::shared_ptr<psi::BasisSet> auxiliary)
     : primary_(primary), auxiliary_(auxiliary) {
-    memory_ = Process::environment.get_memory();
+    memory_ = psi::Process::environment.get_memory();
 }
 void ParallelDFMO::compute_integrals() {
     local_timer compute_integrals_time;

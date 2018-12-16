@@ -44,7 +44,7 @@
 namespace forte {
 
 BlockedTensorFactory::BlockedTensorFactory() {
-    memory_ = Process::environment.get_memory() / 1073741824.0;
+    memory_ = psi::Process::environment.get_memory() / 1073741824.0;
     number_of_tensors_ = 0;
 }
 

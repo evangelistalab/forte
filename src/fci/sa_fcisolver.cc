@@ -50,7 +50,7 @@ SA_FCISolver::SA_FCISolver(psi::Options& options, std::shared_ptr<psi::Wavefunct
 void SA_FCISolver::read_options() {
     // irrep symbol
     int nirrep = wfn_->nirrep();
-    CharacterTable ct = Process::environment.molecule()->point_group()->char_table();
+    CharacterTable ct = psi::Process::environment.molecule()->point_group()->char_table();
     std::vector<std::string> irrep_symbol;
     for (int h = 0; h < nirrep; ++h) {
         irrep_symbol.push_back(std::string(ct.gamma(h).symbol()));
@@ -215,15 +215,15 @@ double SA_FCISolver::compute_energy() {
         std::vector<size_t> rdocc = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
         std::vector<size_t> active = mo_space_info_->get_corr_abs_mo("ACTIVE");
 
-        int charge = Process::environment.molecule()->molecular_charge();
+        int charge = psi::Process::environment.molecule()->molecular_charge();
         if (options_["CHARGE"].has_changed()) {
             charge = options_.get_int("CHARGE");
         }
 
         int nel = 0;
-        int natom = Process::environment.molecule()->natom();
+        int natom = psi::Process::environment.molecule()->natom();
         for (int i = 0; i < natom; i++) {
-            nel += static_cast<int>(Process::environment.molecule()->Z(i));
+            nel += static_cast<int>(psi::Process::environment.molecule()->Z(i));
         }
         // If the charge has changed, recompute the number of electrons
         // Or if you cannot find the number of electrons
@@ -289,7 +289,7 @@ double SA_FCISolver::compute_energy() {
         //        fcisolver.set_test_rdms(false);
         //        fcisolver.compute_energy();
         //        double Enuc =
-        //        Process::environment.molecule()->nuclear_repulsion_energy();
+        //        psi::Process::environment.molecule()->nuclear_repulsion_energy();
         //        psi::SharedMatrix vecs = fcisolver.eigen_vecs();
         //        psi::SharedVector vals = fcisolver.eigen_vals();
         //        for(int n = 0; n < nroot; ++n){
@@ -314,7 +314,7 @@ double SA_FCISolver::compute_energy() {
         //        }
 
         psi::SharedVector evals;
-        double Enuc = Process::environment.molecule()->nuclear_repulsion_energy(
+        double Enuc = psi::Process::environment.molecule()->nuclear_repulsion_energy(
             wfn_->get_dipole_field_strength());
         for (int root_number = 0; root_number < nroot; root_number++) {
             fcisolver.set_root(root_number);

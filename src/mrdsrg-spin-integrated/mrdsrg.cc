@@ -353,8 +353,8 @@ double MRDSRG::compute_energy() {
     default: { Etotal += compute_energy_pt2(); }
     }
 
-    Process::environment.globals["UNRELAXED ENERGY"] = Etotal;
-    Process::environment.globals["CURRENT ENERGY"] = Etotal;
+    psi::Process::environment.globals["UNRELAXED ENERGY"] = Etotal;
+    psi::Process::environment.globals["CURRENT ENERGY"] = Etotal;
     return Etotal;
 }
 
@@ -394,8 +394,8 @@ double MRDSRG::compute_energy_relaxed() {
         outfile->Printf("\n    %-30s = %22.15f", "MRDSRG Total Energy (relaxed)", Erelax);
         outfile->Printf("\n");
 
-        Process::environment.globals["UNRELAXED ENERGY"] = Edsrg;
-        Process::environment.globals["PARTIALLY RELAXED ENERGY"] = Erelax;
+        psi::Process::environment.globals["UNRELAXED ENERGY"] = Edsrg;
+        psi::Process::environment.globals["PARTIALLY RELAXED ENERGY"] = Erelax;
 
     } else if (relax_ref_ == "ITERATE" || relax_ref_ == "TWICE") {
 
@@ -520,7 +520,7 @@ double MRDSRG::compute_energy_relaxed() {
             // test convergence
             if (std::fabs(Edelta_dsrg) < e_conv && std::fabs(Edelta_relax) < e_conv) {
                 converged = true;
-                Process::environment.globals["FULLY RELAXED ENERGY"] = Erelax;
+                psi::Process::environment.globals["FULLY RELAXED ENERGY"] = Erelax;
             }
             if (cycle > maxiter) {
                 outfile->Printf("\n\n    The reference relaxation does not "
@@ -564,14 +564,14 @@ double MRDSRG::compute_energy_relaxed() {
         }
 
         // set energies to psi4 environment
-        Process::environment.globals["UNRELAXED ENERGY"] = Edsrg_vec[0];
-        Process::environment.globals["PARTIALLY RELAXED ENERGY"] = Erelax_vec[0];
+        psi::Process::environment.globals["UNRELAXED ENERGY"] = Edsrg_vec[0];
+        psi::Process::environment.globals["PARTIALLY RELAXED ENERGY"] = Erelax_vec[0];
         if (cycle > 1) {
-            Process::environment.globals["RELAXED ENERGY"] = Edsrg_vec[1];
+            psi::Process::environment.globals["RELAXED ENERGY"] = Edsrg_vec[1];
         }
     }
 
-    Process::environment.globals["CURRENT ENERGY"] = Erelax;
+    psi::Process::environment.globals["CURRENT ENERGY"] = Erelax;
     return Erelax;
 }
 
@@ -720,7 +720,7 @@ double MRDSRG::compute_energy_sa() {
     outfile->Printf("\n    %s", dash.c_str());
 
     // get character table
-    CharacterTable ct = Process::environment.molecule()->point_group()->char_table();
+    CharacterTable ct = psi::Process::environment.molecule()->point_group()->char_table();
     std::vector<std::string> irrep_symbol;
     for (int h = 0; h < this->nirrep(); ++h) {
         irrep_symbol.push_back(std::string(ct.gamma(h).symbol()));
@@ -756,7 +756,7 @@ double MRDSRG::compute_energy_sa() {
         for (int i = 0; i < nstates; ++i) {
             outfile->Printf("\n     %3d     %3s    %2d   %20.12f*", multi,
                             irrep_symbol[irrep].c_str(), i, Esa[n][i]);
-            Process::environment.globals["ENERGY ROOT " + std::to_string(counter)] = Esa[n][i];
+            psi::Process::environment.globals["ENERGY ROOT " + std::to_string(counter)] = Esa[n][i];
             ++counter;
         }
         outfile->Printf("\n    %s", dash1.c_str());
@@ -766,7 +766,7 @@ double MRDSRG::compute_energy_sa() {
         throw psi::PSIEXCEPTION("Reference relaxation process does not converge.");
     }
 
-    Process::environment.globals["CURRENT ENERGY"] = Erelax_sa;
+    psi::Process::environment.globals["CURRENT ENERGY"] = Erelax_sa;
     return Erelax_sa;
 }
 

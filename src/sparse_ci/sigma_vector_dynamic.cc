@@ -49,6 +49,7 @@
 #define omp_get_num_threads() 1
 #endif
 
+using namespace psi;
 
 namespace forte {
 
@@ -177,7 +178,7 @@ void SigmaVectorDynamic::add_bad_roots(std::vector<std::vector<std::pair<size_t,
     bad_states_ = roots;
 }
 
-void SigmaVectorDynamic::get_diagonal(Vector& diag) {
+void SigmaVectorDynamic::get_diagonal(psi::Vector& diag) {
     for (size_t I = 0; I < diag_.size(); ++I) {
         diag.set(I, diag_[I]);
     }
@@ -773,6 +774,5 @@ void SigmaVectorDynamic::compute_abab_coupling(const UI64Determinant::bit_t& det
             }
         }
     }
-}
 }
 }

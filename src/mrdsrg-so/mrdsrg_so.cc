@@ -612,7 +612,7 @@ double MRDSRG_SO::compute_energy() {
     outfile->Printf("\n\n\n    MR-DSRG(2) correlation energy      = %25.15f", Etotal - Eref);
     outfile->Printf("\n  * MR-DSRG(2) total energy            = %25.15f\n", Etotal);
 
-    Process::environment.globals["CURRENT ENERGY"] = Etotal;
+    psi::Process::environment.globals["CURRENT ENERGY"] = Etotal;
 
     return Etotal;
 }

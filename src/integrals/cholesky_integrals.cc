@@ -161,7 +161,7 @@ void CholeskyIntegrals::gather_integrals() {
     local_timer timer;
     std::shared_ptr<CholeskyERI> Ch(new CholeskyERI(std::shared_ptr<TwoBodyAOInt>(integral->eri()),
                                                     options_.get_double("INTS_TOLERANCE"), tol_cd,
-                                                    Process::environment.get_memory()));
+                                                    psi::Process::environment.get_memory()));
     if (options_.get_str("DF_INTS_IO") == "LOAD") {
         std::shared_ptr<ERISieve> sieve(
             new ERISieve(primary, options_.get_double("INTS_TOLERANCE")));

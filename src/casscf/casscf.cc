@@ -243,8 +243,8 @@ void CASSCF::compute_casscf() {
     ints_->retransform_integrals();
     cas_ci_final();
     outfile->Printf("\n @E(CASSCF) = %18.12f \n", E_casscf_);
-    Process::environment.globals["CURRENT ENERGY"] = E_casscf_;
-    Process::environment.globals["CASSCF_ENERGY"] = E_casscf_;
+    psi::Process::environment.globals["CURRENT ENERGY"] = E_casscf_;
+    psi::Process::environment.globals["CASSCF_ENERGY"] = E_casscf_;
 
     //    reference_wavefunction_->Ca()->print();
     local_timer retrans_ints;
@@ -324,7 +324,7 @@ void CASSCF::startup() {
     local_timer JK_initialize;
     if (options_.get_str("SCF_TYPE") == "GTFOCK") {
 #ifdef HAVE_JK_FACTORY
-        Process::environment.set_legacy_molecule(this->molecule());
+        psi::Process::environment.set_legacy_molecule(this->molecule());
         JK_ = std::shared_ptr<JK>(new GTFockJK(this->basisset()));
 #else
         throw psi::PSIEXCEPTION("GTFock was not compiled in this version");
@@ -337,7 +337,7 @@ void CASSCF::startup() {
             JK_ = JK::build_JK(basisset(), psi::BasisSet::zero_ao_basis_set(), options_);
         }
     }
-    JK_->set_memory(Process::environment.get_memory() * 0.8);
+    JK_->set_memory(psi::Process::environment.get_memory() * 0.8);
     JK_->initialize();
     JK_->C_left().clear();
     JK_->C_right().clear();
@@ -382,7 +382,7 @@ void CASSCF::cas_ci() {
         std::pair<ambit::Tensor, std::vector<double>> integral_pair = CI_Integrals();
         dmrg.set_up_integrals(integral_pair.first, integral_pair.second);
         dmrg.set_scalar(scalar_energy_ + ints_->frozen_core_energy() +
-                        Process::environment.molecule()->nuclear_repulsion_energy(
+                        psi::Process::environment.molecule()->nuclear_repulsion_energy(
                             reference_wavefunction_->get_dipole_field_strength()));
         dmrg.compute_energy();
 
@@ -469,7 +469,7 @@ void CASSCF::cas_ci_final() {
         std::pair<ambit::Tensor, std::vector<double>> integral_pair = CI_Integrals();
         dmrg.set_up_integrals(integral_pair.first, integral_pair.second);
         dmrg.set_scalar(scalar_energy_ + ints_->frozen_core_energy() +
-                        Process::environment.molecule()->nuclear_repulsion_energy(
+                        psi::Process::environment.molecule()->nuclear_repulsion_energy(
                             reference_wavefunction_->get_dipole_field_strength()));
         dmrg.compute_energy();
 
@@ -542,7 +542,7 @@ double CASSCF::cas_check(Reference cas_ref) {
     Frozen = ints_->frozen_core_energy();
     E_casscf += fci_ints->scalar_energy();
     fci_ints_scalar = fci_ints->scalar_energy();
-    E_casscf += Process::environment.molecule()->nuclear_repulsion_energy(
+    E_casscf += psi::Process::environment.molecule()->nuclear_repulsion_energy(
         reference_wavefunction_->get_dipole_field_strength());
     outfile->Printf("\n\n OneBody: %8.8f TwoBody: %8.8f Frozen: %8.8f "
                     "fci_ints_scalar: %8.8f",
@@ -664,7 +664,7 @@ ambit::Tensor CASSCF::transform_integrals() {
     if (print_ > 1) {
         outfile->Printf("\n C_DGER takes %8.5f", c_dger.get());
     }
-    JK_->set_memory(Process::environment.get_memory() * 0.8);
+    JK_->set_memory(psi::Process::environment.get_memory() * 0.8);
     //    JK_->set_allow_desymmetrization(false);
     JK_->set_do_K(false);
     // JK_->initialize();
@@ -710,21 +710,21 @@ void CASSCF::set_up_fci() {
     std::vector<size_t> rdocc = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
     std::vector<size_t> active = mo_space_info_->get_corr_abs_mo("ACTIVE");
 
-    int charge = Process::environment.molecule()->molecular_charge();
+    int charge = psi::Process::environment.molecule()->molecular_charge();
     if (options_["CHARGE"].has_changed()) {
         charge = options_.get_int("CHARGE");
     }
 
     int nel = 0;
-    int natom = Process::environment.molecule()->natom();
+    int natom = psi::Process::environment.molecule()->natom();
     for (int i = 0; i < natom; i++) {
-        nel += static_cast<int>(Process::environment.molecule()->Z(i));
+        nel += static_cast<int>(psi::Process::environment.molecule()->Z(i));
     }
     // If the charge has changed, recompute the number of electrons
     // Or if you cannot find the number of electrons
     nel -= charge;
 
-    int multiplicity = Process::environment.molecule()->multiplicity();
+    int multiplicity = psi::Process::environment.molecule()->multiplicity();
     if (options_["MULTIPLICITY"].has_changed()) {
         multiplicity = options_.get_int("MULTIPLICITY");
     }
@@ -884,7 +884,7 @@ std::vector<std::vector<double>> CASSCF::compute_restricted_docc_operator() {
     //    std::shared_ptr<JK> JK_inactive = JK::build_JK(this->basisset(),
     //    this->options_);
     //
-    //    JK_inactive->set_memory(Process::environment.get_memory() * 0.8);
+    //    JK_inactive->set_memory(psi::Process::environment.get_memory() * 0.8);
     //    JK_inactive->initialize();
     //
     std::vector<std::shared_ptr<psi::Matrix>>& Cl = JK_->C_left();

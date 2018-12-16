@@ -84,9 +84,9 @@ MCSRGPT2_MO::MCSRGPT2_MO(psi::SharedWavefunction ref_wfn, psi::Options& options,
 
     startup(options);
     if (options.get_str("CORR_LEVEL") == "SRG_PT2") {
-        Process::environment.globals["CURRENT ENERGY"] = compute_energy_srg();
+        psi::Process::environment.globals["CURRENT ENERGY"] = compute_energy_srg();
     } else {
-        Process::environment.globals["CURRENT ENERGY"] = compute_energy_dsrg();
+        psi::Process::environment.globals["CURRENT ENERGY"] = compute_energy_dsrg();
     }
 }
 

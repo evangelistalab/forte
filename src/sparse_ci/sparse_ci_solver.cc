@@ -46,6 +46,7 @@ struct PairHash {
     }
 };
 
+using namespace psi;
 
 namespace forte {
 
@@ -992,6 +993,5 @@ void SparseCISolver::diagonalize_dl_sparse(const DeterminantHashVec& space, WFNO
     SigmaVector* sigma_vector = &svs;
     sigma_vector->add_bad_roots(bad_states_);
     davidson_liu_solver_map(space, sigma_vector, evals, evecs, nroot, multiplicity);
-}
 }
 }

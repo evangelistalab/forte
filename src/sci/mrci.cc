@@ -129,7 +129,7 @@ double MRCI::compute_energy() {
         outfile->Printf("\n  MR-CISD energy root %d: %1.13f Eh", n, energy[n]);
     }
 
-    Process::environment.globals["MRCISD ENERGY"] = energy[0];
+    psi::Process::environment.globals["MRCISD ENERGY"] = energy[0];
 
     return energy[0];
 }

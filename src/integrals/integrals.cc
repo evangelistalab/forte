@@ -274,7 +274,7 @@ void ForteIntegrals::compute_frozen_one_body_operator() {
     std::shared_ptr<JK> JK_core;
     if (options_.get_str("SCF_TYPE") == "GTFOCK") {
 #ifdef HAVE_JK_FACTORY
-        Process::environment.set_legacy_molecule(wfn_->molecule());
+        psi::Process::environment.set_legacy_molecule(wfn_->molecule());
         JK_core = std::shared_ptr<JK>(new GTFockJK(wfn_->basisset()));
 #else
         throw psi::PSIEXCEPTION("GTFock was not compiled in this version");
@@ -293,7 +293,7 @@ void ForteIntegrals::compute_frozen_one_body_operator() {
         }
     }
 
-    JK_core->set_memory(Process::environment.get_memory() * 0.8);
+    JK_core->set_memory(psi::Process::environment.get_memory() * 0.8);
     /// Already transform everything to C1 so make sure JK does not do this.
 
     // JK_core->set_cutoff(options_.get_double("INTEGRAL_SCREENING"));

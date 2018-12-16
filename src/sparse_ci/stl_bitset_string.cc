@@ -154,4 +154,3 @@ double STLBitsetString::SlaterSign(int n) {
     return (sign);
 }
 }
-} // end namespace

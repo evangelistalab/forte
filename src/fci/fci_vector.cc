@@ -361,7 +361,7 @@ void FCIWfn::print_natural_orbitals(std::shared_ptr<MOSpaceInfo> mo_space_info) 
             vec_irrep_occupation.push_back(irrep_occ);
         }
     }
-    CharacterTable ct = Process::environment.molecule()->point_group()->char_table();
+    CharacterTable ct = psi::Process::environment.molecule()->point_group()->char_table();
     std::sort(vec_irrep_occupation.begin(), vec_irrep_occupation.end(),
               std::greater<std::pair<double, std::pair<int, int>>>());
 

@@ -126,7 +126,7 @@ double FCISolver::compute_energy() {
     local_timer t;
 
     double nuclear_repulsion_energy =
-        Process::environment.molecule()->nuclear_repulsion_energy({{0, 0, 0}});
+        psi::Process::environment.molecule()->nuclear_repulsion_energy({{0, 0, 0}});
     std::shared_ptr<FCIIntegrals> fci_ints;
     if (!provide_integrals_and_restricted_docc_) {
         fci_ints = std::make_shared<FCIIntegrals>(ints_, active_mo_, core_mo_);
@@ -386,7 +386,7 @@ FCISolver::initial_guess(FCIWfn& diag, size_t n, std::shared_ptr<FCIIntegrals> f
     local_timer t;
 
     double nuclear_repulsion_energy =
-        Process::environment.molecule()->nuclear_repulsion_energy({{0, 0, 0}});
+        psi::Process::environment.molecule()->nuclear_repulsion_energy({{0, 0, 0}});
     double scalar_energy = fci_ints->scalar_energy();
 
     size_t ntrial = n * ntrial_per_root_;

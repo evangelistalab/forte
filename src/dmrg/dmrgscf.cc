@@ -252,7 +252,7 @@ void DMRGSCF::buildHamDMRG(std::shared_ptr<IntegralTransform> ints,
 
     // Econstant and one-electron integrals
     {
-        double Econstant = Process::environment.molecule()->nuclear_repulsion_energy(
+        double Econstant = psi::Process::environment.molecule()->nuclear_repulsion_energy(
             reference_wavefunction_->get_dipole_field_strength());
         for (int h = 0; h < iHandler->getNirreps(); h++) {
             const int NOCC = iHandler->getNOCC(h);
@@ -481,7 +481,7 @@ double DMRGSCF::compute_energy() {
      *******************************/
     std::shared_ptr<PSIO> psio(_default_psio_lib_); // Grab the global (default)
                                                     // PSIO object, for file I/O
-    // std::shared_ptr<psi::Wavefunction> wfn = Process::environment.wavefunction();
+    // std::shared_ptr<psi::Wavefunction> wfn = psi::Process::environment.wavefunction();
     // // The reference (SCF) wavefunction
     if (!reference_wavefunction_) {
         throw psi::PSIEXCEPTION("SCF has not been run yet!");
@@ -535,7 +535,7 @@ double DMRGSCF::compute_energy() {
      *   Check if the input is consistent   *
      ****************************************/
 
-    const int SyGroup = chemps2_groupnumber(Process::environment.molecule()->sym_label());
+    const int SyGroup = chemps2_groupnumber(psi::Process::environment.molecule()->sym_label());
     const int nmo = this->nmo();
     const int nirrep = this->nirrep();
     int* orbspi = this->nmopi();
@@ -1123,8 +1123,8 @@ double DMRGSCF::compute_energy() {
     delete HamDMRG;
 
     outfile->Printf("The DMRG-SCF energy = %3.10f \n", Energy);
-    Process::environment.globals["CURRENT ENERGY"] = Energy;
-    Process::environment.globals["DMRGSCF ENERGY"] = Energy;
+    psi::Process::environment.globals["CURRENT ENERGY"] = Energy;
+    psi::Process::environment.globals["DMRGSCF ENERGY"] = Energy;
     dmrg_ref_.set_Eref(Energy);
     return Energy;
 }

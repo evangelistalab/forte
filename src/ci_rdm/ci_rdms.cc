@@ -102,7 +102,7 @@ void CI_RDMS::set_max_rdm(int rdm) { max_rdm_ = rdm; }
 double CI_RDMS::get_energy(std::vector<double>& oprdm_a, std::vector<double>& oprdm_b,
                            std::vector<double>& tprdm_aa, std::vector<double>& tprdm_bb,
                            std::vector<double>& tprdm_ab) {
-    double nuc_rep = Process::environment.molecule()->nuclear_repulsion_energy({0, 0, 0});
+    double nuc_rep = psi::Process::environment.molecule()->nuclear_repulsion_energy({0, 0, 0});
     double scalar_energy = fci_ints_->frozen_core_energy() + fci_ints_->scalar_energy();
     double energy_1rdm = 0.0;
     double energy_2rdm = 0.0;
@@ -2108,7 +2108,7 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a, std::vector<double>& oprdm_
             }
         }
     }
-    Process::environment.globals["AAAAAA 3-RDM ERROR"] = error_3rdm_aaa;
+    psi::Process::environment.globals["AAAAAA 3-RDM ERROR"] = error_3rdm_aaa;
     outfile->Printf("\n    AAAAAA 3-RDM Error : %2.15f", error_3rdm_aaa);
     // aab aab
     double error_3rdm_aab = 0.0;
@@ -2156,7 +2156,7 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a, std::vector<double>& oprdm_
             }
         }
     }
-    Process::environment.globals["AABAAB 3-RDM ERROR"] = error_3rdm_aab;
+    psi::Process::environment.globals["AABAAB 3-RDM ERROR"] = error_3rdm_aab;
     outfile->Printf("\n    AABAAB 3-RDM Error : %+e", error_3rdm_aab);
 
     // abb abb
@@ -2205,7 +2205,7 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a, std::vector<double>& oprdm_
             }
         }
     }
-    Process::environment.globals["ABBABB 3-RDM ERROR"] = error_3rdm_abb;
+    psi::Process::environment.globals["ABBABB 3-RDM ERROR"] = error_3rdm_abb;
     outfile->Printf("\n    ABBABB 3-RDM Error : %+e", error_3rdm_abb);
 
     // bbb bbb
@@ -2254,7 +2254,7 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a, std::vector<double>& oprdm_
             }
         }
     }
-    Process::environment.globals["BBBBBB 3-RDM ERROR"] = error_3rdm_bbb;
+    psi::Process::environment.globals["BBBBBB 3-RDM ERROR"] = error_3rdm_bbb;
     outfile->Printf("\n    BBBBBB 3-RDM Error : %2.15f", error_3rdm_bbb);
 }
 }

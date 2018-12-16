@@ -453,8 +453,8 @@ double DSRG_MRPT2::compute_energy() {
         outfile->Printf("\n    %-30s = %22.15f", str_dim.first.c_str(), str_dim.second);
     }
 
-    Process::environment.globals["UNRELAXED ENERGY"] = Etotal;
-    Process::environment.globals["CURRENT ENERGY"] = Etotal;
+    psi::Process::environment.globals["UNRELAXED ENERGY"] = Etotal;
+    psi::Process::environment.globals["CURRENT ENERGY"] = Etotal;
     outfile->Printf("\n\n  Energy took %10.3f s", DSRG_energy.get());
     outfile->Printf("\n");
 
@@ -1465,7 +1465,7 @@ void DSRG_MRPT2::print_dm_pt2() {
     outfile->Printf("\n    DSRG-MRPT2 dipole moment:");
     outfile->Printf("\n      X: %10.6f  Y: %10.6f  Z: %10.6f  Total: %10.6f\n", x, y, z, t);
 
-    Process::environment.globals["UNRELAXED DIPOLE"] = t;
+    psi::Process::environment.globals["UNRELAXED DIPOLE"] = t;
 }
 
 void DSRG_MRPT2::compute_dm1d_pt2(BlockedTensor& M, double& Mbar0, BlockedTensor& Mbar1,
@@ -1770,7 +1770,7 @@ double DSRG_MRPT2::compute_energy_relaxed() {
         double t = std::sqrt(x * x + y * y + z * z);
         outfile->Printf("\n    DSRG-MRPT2 unrelaxed dipole moment:");
         outfile->Printf("\n      X: %10.6f  Y: %10.6f  Z: %10.6f  Total: %10.6f\n", x, y, z, t);
-        Process::environment.globals["UNRELAXED DIPOLE"] = t;
+        psi::Process::environment.globals["UNRELAXED DIPOLE"] = t;
 
         // there should be only one entry for state-specific computations
         if (dm_relax.size() == 1) {
@@ -1782,13 +1782,13 @@ double DSRG_MRPT2::compute_energy_relaxed() {
             }
             outfile->Printf("\n    DSRG-MRPT2 partially relaxed dipole moment:");
             outfile->Printf("\n      X: %10.6f  Y: %10.6f  Z: %10.6f  Total: %10.6f\n", x, y, z, t);
-            Process::environment.globals["PARTIALLY RELAXED DIPOLE"] = t;
+            psi::Process::environment.globals["PARTIALLY RELAXED DIPOLE"] = t;
         }
     }
 
-    Process::environment.globals["UNRELAXED ENERGY"] = Edsrg;
-    Process::environment.globals["PARTIALLY RELAXED ENERGY"] = Erelax;
-    Process::environment.globals["CURRENT ENERGY"] = Erelax;
+    psi::Process::environment.globals["UNRELAXED ENERGY"] = Edsrg;
+    psi::Process::environment.globals["PARTIALLY RELAXED ENERGY"] = Erelax;
+    psi::Process::environment.globals["CURRENT ENERGY"] = Erelax;
     return Erelax;
 }
 

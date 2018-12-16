@@ -110,21 +110,21 @@ double FCI::solver_compute_energy() {
     std::vector<size_t> rdocc = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
     std::vector<size_t> active = mo_space_info_->get_corr_abs_mo("ACTIVE");
 
-    int charge = Process::environment.molecule()->molecular_charge();
+    int charge = psi::Process::environment.molecule()->molecular_charge();
     if (options_["CHARGE"].has_changed()) {
         charge = options_.get_int("CHARGE");
     }
 
     int nel = 0;
-    int natom = Process::environment.molecule()->natom();
+    int natom = psi::Process::environment.molecule()->natom();
     for (int i = 0; i < natom; i++) {
-        nel += static_cast<int>(Process::environment.molecule()->Z(i));
+        nel += static_cast<int>(psi::Process::environment.molecule()->Z(i));
     }
     // If the charge has changed, recompute the number of electrons
     // Or if you cannot find the number of electrons
     nel -= charge;
 
-    int multiplicity = Process::environment.molecule()->multiplicity();
+    int multiplicity = psi::Process::environment.molecule()->multiplicity();
     if (options_["MULTIPLICITY"].has_changed()) {
         multiplicity = options_.get_int("MULTIPLICITY");
     }
@@ -197,8 +197,8 @@ double FCI::solver_compute_energy() {
 
     double fci_energy = fcisolver_->compute_energy();
 
-    Process::environment.globals["CURRENT ENERGY"] = fci_energy;
-    Process::environment.globals["FCI ENERGY"] = fci_energy;
+    psi::Process::environment.globals["CURRENT ENERGY"] = fci_energy;
+    psi::Process::environment.globals["FCI ENERGY"] = fci_energy;
 
     return fci_energy;
 }
