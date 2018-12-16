@@ -42,7 +42,7 @@ namespace forte {
 /// RDMS and average them
 class SA_FCISolver {
   public:
-    SA_FCISolver(psi::Options& options, std::shared_ptr<Wavefunction> wfn);
+    SA_FCISolver(psi::Options& options, std::shared_ptr<psi::Wavefunction> wfn);
 
     /// E_{sa-casscf} = gamma_{avg} h_{pq} + Gamma_{avg} g_{pqrs}
     double compute_energy();
@@ -63,7 +63,7 @@ class SA_FCISolver {
     /// Options from Psi4
     psi::Options options_;
     /// The wavefunction object of Psi4
-    std::shared_ptr<Wavefunction> wfn_;
+    std::shared_ptr<psi::Wavefunction> wfn_;
     /// Integral objects (same for all SA computations)
     std::shared_ptr<ForteIntegrals> ints_;
     std::shared_ptr<FCIIntegrals> fci_ints_;

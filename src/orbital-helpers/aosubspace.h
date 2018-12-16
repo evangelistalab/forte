@@ -70,7 +70,7 @@ class AOInfo {
  * Typical usage:
  *
  *    // Find the AO subset
- *    std::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
+ *    std::shared_ptr<psi::Wavefunction> wfn = Process::environment.wavefunction();
  *
  *    std::vector<std::string> subspace_str;
  *    if (options["SUBSPACE"].size() > 0){

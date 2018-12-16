@@ -92,7 +92,7 @@ class CASSCF : public psi::Wavefunction {
     /// The mo_space_info
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
 
-    std::shared_ptr<Wavefunction> reference_wavefunction_;
+    std::shared_ptr<psi::Wavefunction> reference_wavefunction_;
 
     /// The dimension for number of molecular orbitals (CORRELATED or ALL)
     psi::Dimension nmopi_;

@@ -207,7 +207,7 @@ void DistDFIntegrals::test_distributed_integrals() {
 
     /// Test whether DFIntegrals is same as DistributedDF
     ForteIntegrals* test_int =
-        new DFIntegrals(psi::Options_, wfn_, UnrestrictedMOs, RemoveFrozenMOs, mo_space_info_);
+        new DFIntegrals(options_, wfn_, UnrestrictedMOs, RemoveFrozenMOs, mo_space_info_);
     ambit::Tensor entire_b_df = test_int->three_integral_block(Avec, p, p);
     ambit::Tensor entire_b_dist = three_integral_block(Avec, p, p);
     entire_b_df("Q, p, q") -= entire_b_dist("Q, p, q");

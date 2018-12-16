@@ -49,7 +49,7 @@ namespace forte {
 
 using namespace ambit;
 
-SemiCanonical::SemiCanonical(std::shared_ptr<Wavefunction> wfn,
+SemiCanonical::SemiCanonical(std::shared_ptr<psi::Wavefunction> wfn,
                              std::shared_ptr<ForteIntegrals> ints,
                              std::shared_ptr<MOSpaceInfo> mo_space_info, bool quiet_banner)
     : mo_space_info_(mo_space_info), ints_(ints), wfn_(wfn) {

@@ -63,11 +63,11 @@ PYBIND11_MODULE(forte, m) {
 
     // export Localize
     py::class_<LOCALIZE, std::shared_ptr<LOCALIZE>>(m, "LOCALIZE")
-        .def(py::init<std::shared_ptr<Wavefunction>, Options&, std::shared_ptr<ForteIntegrals>,
+        .def(py::init<std::shared_ptr<psi::Wavefunction>, Options&, std::shared_ptr<ForteIntegrals>,
                       std::shared_ptr<MOSpaceInfo>>())
         .def("split_localize", &LOCALIZE::split_localize)
         .def("full_localize", &LOCALIZE::split_localize);
 }
 }
-}
+
 #endif // _python_api_h_

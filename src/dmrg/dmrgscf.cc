@@ -481,7 +481,7 @@ double DMRGSCF::compute_energy() {
      *******************************/
     std::shared_ptr<PSIO> psio(_default_psio_lib_); // Grab the global (default)
                                                     // PSIO object, for file I/O
-    // std::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
+    // std::shared_ptr<psi::Wavefunction> wfn = Process::environment.wavefunction();
     // // The reference (SCF) wavefunction
     if (!reference_wavefunction_) {
         throw psi::PSIEXCEPTION("SCF has not been run yet!");

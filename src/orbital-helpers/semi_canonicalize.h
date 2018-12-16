@@ -57,7 +57,7 @@ class SemiCanonical {
      * @param mo_space_info MOSpaceInfo
      * @param quiet_banner Method banner is not printed if set to true
      */
-    SemiCanonical(std::shared_ptr<Wavefunction> wfn, std::shared_ptr<ForteIntegrals> ints,
+    SemiCanonical(std::shared_ptr<psi::Wavefunction> wfn, std::shared_ptr<ForteIntegrals> ints,
                   std::shared_ptr<MOSpaceInfo> mo_space_info, bool quiet_banner = false);
 
     /// Transforms integrals and reference
@@ -100,7 +100,7 @@ class SemiCanonical {
 
     std::shared_ptr<ForteIntegrals> ints_;
 
-    std::shared_ptr<Wavefunction> wfn_;
+    std::shared_ptr<psi::Wavefunction> wfn_;
 
     // All orbitals
     psi::Dimension nmopi_;

@@ -95,7 +95,7 @@ void set_INT_options(ForteOptions& foptions) {
     foptions.add_bool("PRINT_INTS", false, "Print the one- and two-electron integrals?");
 }
 
-ForteIntegrals::ForteIntegrals(psi::Options& options, std::shared_ptr<Wavefunction> ref_wfn,
+ForteIntegrals::ForteIntegrals(psi::Options& options, std::shared_ptr<psi::Wavefunction> ref_wfn,
                                IntegralSpinRestriction restricted,
                                std::shared_ptr<MOSpaceInfo> mo_space_info)
     : options_(options), wfn_(ref_wfn), restricted_(restricted), frozen_core_energy_(0.0),

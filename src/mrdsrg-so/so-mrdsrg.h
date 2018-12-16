@@ -218,6 +218,5 @@ class SOMRDSRG : public psi::Wavefunction {
     double frozen_core_energy;
 };
 }
-} // End Namespaces
 
 #endif // _so_mrdsrg_h_

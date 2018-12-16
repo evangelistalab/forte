@@ -243,7 +243,7 @@ void SparseCISolver::diagonalize_full(const std::vector<Determinant>& space, psi
 
         // Build spin selected Hamiltonian
         psi::SharedMatrix H = build_full_hamiltonian(space);
-        psi::SharedMatrix Hss = Matrix::triplet(S2vecs_sub, H, S2vecs_sub, true, false, false);
+        psi::SharedMatrix Hss = psi::Matrix::triplet(S2vecs_sub, H, S2vecs_sub, true, false, false);
         Hss->set_name("Hss");
 
         // Obtain spin selected eigen values and vectors

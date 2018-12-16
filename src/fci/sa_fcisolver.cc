@@ -42,7 +42,7 @@
 
 namespace forte {
 
-SA_FCISolver::SA_FCISolver(psi::Options& options, std::shared_ptr<Wavefunction> wfn)
+SA_FCISolver::SA_FCISolver(psi::Options& options, std::shared_ptr<psi::Wavefunction> wfn)
     : options_(options), wfn_(wfn) {
     read_options();
 }

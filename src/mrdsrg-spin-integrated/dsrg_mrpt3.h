@@ -297,6 +297,5 @@ class DSRG_MRPT3 : public MASTER_DSRG {
     std::vector<double> Mbar0_pt2c_;
 };
 }
-} // End Namespaces
 
 #endif // _dsrg_mrpt3_h_

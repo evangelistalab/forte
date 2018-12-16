@@ -322,7 +322,7 @@ psi::SharedMatrix semicanonicalize_block(psi::SharedWavefunction ref_wfn, psi::S
         mo_count += 1;
     }
     // compute (C_block)^T F C_block
-    auto Foi = Matrix::triplet(C_block, ref_wfn->Fa(), C_block, true, false, false);
+    auto Foi = psi::Matrix::triplet(C_block, ref_wfn->Fa(), C_block, true, false, false);
 
     auto U_block = std::make_shared<psi::Matrix>("U block", nmo_block, nmo_block);
     auto epsilon_block = std::make_shared<Vector>("epsilon block", nmo_block);

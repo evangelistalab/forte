@@ -102,7 +102,7 @@ class ForteIntegrals {
      * @param restricted Select a restricted or unrestricted transformation
      * @param mo_space_info The MOSpaceInfo object
      */
-    ForteIntegrals(psi::Options& options, std::shared_ptr<Wavefunction> ref_wfn,
+    ForteIntegrals(psi::Options& options, std::shared_ptr<psi::Wavefunction> ref_wfn,
                    IntegralSpinRestriction restricted, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Destructor

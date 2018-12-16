@@ -42,7 +42,7 @@
 
 namespace forte {
 
-LOCALIZE::LOCALIZE(std::shared_ptr<Wavefunction> wfn, psi::Options& options,
+LOCALIZE::LOCALIZE(std::shared_ptr<psi::Wavefunction> wfn, psi::Options& options,
                    std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
     : wfn_(wfn), ints_(ints) {
     nfrz_ = mo_space_info->size("FROZEN_DOCC");

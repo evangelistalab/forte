@@ -443,5 +443,5 @@ class MRSRG_Print {
     std::vector<double> energies_;
 };
 }
-}
+
 #endif // _mrdsrg_h_

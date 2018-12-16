@@ -171,10 +171,10 @@ std::map<std::string, psi::SharedMatrix> IAOBuilder::build_iaos() {
     psi::SharedMatrix C = C_;
     psi::SharedMatrix T1 = psi::Matrix::doublet(S22_m12, S12, false, true);
     psi::SharedMatrix T2 =
-        psi::Matrix::doublet(S11_m12, Matrix::triplet(T1, T1, C, true, false, false), false, false);
+        psi::Matrix::doublet(S11_m12, psi::Matrix::triplet(T1, T1, C, true, false, false), false, false);
     psi::SharedMatrix T3 = psi::Matrix::doublet(T2, T2, true, false);
     T3->power(-1.0 / 2.0, condition_);
-    psi::SharedMatrix Ctilde = Matrix::triplet(S11_m12, T2, T3, false, false, false);
+    psi::SharedMatrix Ctilde = psi::Matrix::triplet(S11_m12, T2, T3, false, false, false);
 
     // => D and Tilde D <= //
 
@@ -183,7 +183,7 @@ std::map<std::string, psi::SharedMatrix> IAOBuilder::build_iaos() {
 
     // => A (Before Orthogonalization) <= //
 
-    psi::SharedMatrix DSDtilde = Matrix::triplet(D, S11, Dtilde, false, false, false);
+    psi::SharedMatrix DSDtilde = psi::Matrix::triplet(D, S11, Dtilde, false, false, false);
     DSDtilde->scale(2.0);
 
     psi::SharedMatrix L = psi::Matrix::doublet(S11_m12, S11_m12, false, false); // TODO: Possibly Unstable
@@ -195,7 +195,7 @@ std::map<std::string, psi::SharedMatrix> IAOBuilder::build_iaos() {
 
     // => A (After Orthogonalization) <= //
 
-    psi::SharedMatrix V = Matrix::triplet(AN, S11, AN, true, false, false);
+    psi::SharedMatrix V = psi::Matrix::triplet(AN, S11, AN, true, false, false);
     V->power(-1.0 / 2.0, condition_);
 
     psi::SharedMatrix A = psi::Matrix::doublet(AN, V, false, false);
@@ -574,7 +574,7 @@ std::map<std::string, psi::SharedMatrix> IAOBuilder::localize(psi::SharedMatrix 
         }
     }
 
-    psi::SharedMatrix L = Matrix::triplet(Cocc, S_, A_, true, false, false);
+    psi::SharedMatrix L = psi::Matrix::triplet(Cocc, S_, A_, true, false, false);
     // L->set_name("L");
 
     std::map<std::string, psi::SharedMatrix> ret1 =
@@ -697,11 +697,11 @@ std::map<std::string, psi::SharedMatrix> IAOBuilder::localize(psi::SharedMatrix 
         outfile->Printf("\n\n");
     }
 
-    psi::SharedMatrix Focc2 = Matrix::triplet(U, Focc, U, true, false, false);
+    psi::SharedMatrix Focc2 = psi::Matrix::triplet(U, Focc, U, true, false, false);
     psi::SharedMatrix U2 = IAOBuilder::reorder_orbitals(Focc2, ranges);
 
     psi::SharedMatrix Uocc3 = psi::Matrix::doublet(U, U2, false, false);
-    psi::SharedMatrix Focc3 = Matrix::triplet(Uocc3, Focc, Uocc3, true, false, false);
+    psi::SharedMatrix Focc3 = psi::Matrix::triplet(Uocc3, Focc, Uocc3, true, false, false);
     psi::SharedMatrix Locc3 = psi::Matrix::doublet(Cocc, Uocc3, false, false);
     L = psi::Matrix::doublet(U2, L, true, false);
     psi::SharedMatrix Q = orbital_charges(L);

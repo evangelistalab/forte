@@ -691,7 +691,7 @@ ambit::Tensor CASSCF::transform_integrals() {
         int j = d.second[1];
         psi::SharedMatrix J = JK_->J()[count];
         half_trans->zero();
-        half_trans = Matrix::triplet(Call, J, CAct, true, false, false);
+        half_trans = psi::Matrix::triplet(Call, J, CAct, true, false, false);
         count++;
         for (size_t p = 0; p < nmo_with_froze; p++) {
             for (size_t q = 0; q < na_; q++) {
@@ -961,7 +961,7 @@ std::vector<std::vector<double>> CASSCF::compute_restricted_docc_operator() {
 void CASSCF::overlap_orbitals(const psi::SharedMatrix& C_old, const psi::SharedMatrix& C_new) {
     psi::SharedMatrix S_orbitals(new psi::Matrix("Overlap", this->nsopi(), this->nsopi()));
     psi::SharedMatrix S_basis = this->S();
-    S_orbitals = Matrix::triplet(C_old, S_basis, C_new, true, false, false);
+    S_orbitals = psi::Matrix::triplet(C_old, S_basis, C_new, true, false, false);
     S_orbitals->set_name("C^T S C (Overlap)");
     for (size_t h = 0; h < nirrep_; h++) {
         for (int i = 0; i < S_basis->rowspi(h); i++) {
@@ -972,7 +972,7 @@ void CASSCF::overlap_orbitals(const psi::SharedMatrix& C_old, const psi::SharedM
     }
 }
 void CASSCF::set_up_sa_fci() {
-    SA_FCISolver sa_fcisolver(psi::Options_, reference_wavefunction_);
+    SA_FCISolver sa_fcisolver(options_, reference_wavefunction_);
     sa_fcisolver.set_mo_space_info(mo_space_info_);
     sa_fcisolver.set_integrals(ints_);
     std::vector<size_t> rdocc = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");

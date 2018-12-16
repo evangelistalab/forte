@@ -46,7 +46,7 @@ using namespace ambit;
 
 namespace forte {
 
-MP2_NOS::MP2_NOS(std::shared_ptr<Wavefunction> wfn, psi::Options& options,
+MP2_NOS::MP2_NOS(std::shared_ptr<psi::Wavefunction> wfn, psi::Options& options,
                  std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info) {
     print_method_banner(
         {"Second-Order Moller-Plesset Natural Orbitals", "written by Francesco A. Evangelista"});
