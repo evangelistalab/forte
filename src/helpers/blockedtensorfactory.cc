@@ -43,12 +43,11 @@
 namespace psi {
 namespace forte {
 
-BlockedTensorFactory::BlockedTensorFactory(Options& options)
-
-{
+BlockedTensorFactory::BlockedTensorFactory() {
     memory_ = Process::environment.get_memory() / 1073741824.0;
     number_of_tensors_ = 0;
 }
+
 BlockedTensorFactory::~BlockedTensorFactory() {
     if (print_memory_) {
         memory_summary();
@@ -73,15 +72,18 @@ ambit::BlockedTensor BlockedTensorFactory::build(ambit::TensorType storage, cons
 
     return BT;
 }
+
 void BlockedTensorFactory::add_mo_space(const std::string& name, const std::string& mo_indices,
                                         std::vector<size_t> mos, ambit::SpinType spin) {
     ambit::BlockedTensor::add_mo_space(name, mo_indices, mos, spin);
     molabel_to_index_[name] = mos;
 }
+
 void BlockedTensorFactory::add_mo_space(const std::string& name, const std::string& mo_indices,
                                         std::vector<std::pair<size_t, ambit::SpinType>> mo_spin) {
     ambit::BlockedTensor::add_mo_space(name, mo_indices, mo_spin);
 }
+
 void BlockedTensorFactory::add_composite_mo_space(const std::string& name,
                                                   const std::string& mo_indices,
                                                   const std::vector<std::string>& subspaces) {
@@ -162,6 +164,7 @@ std::vector<std::string> BlockedTensorFactory::generate_indices(const std::strin
 
     return return_string;
 }
+
 void BlockedTensorFactory::memory_information(ambit::BlockedTensor BT, bool is_local_variable) {
     double size_of_tensor = 0.0;
     std::vector<std::string> BTblocks = BT.block_labels();
@@ -191,6 +194,7 @@ void BlockedTensorFactory::memory_summary() {
     }
     outfile->Printf("\n Memory left over: %8.6f GB\n", memory_);
 }
+
 std::vector<std::string>
 BlockedTensorFactory::spin_cases_avoid(const std::vector<std::string>& in_str_vec,
                                        int how_many_active) {
@@ -217,6 +221,7 @@ BlockedTensorFactory::spin_cases_avoid(const std::vector<std::string>& in_str_ve
     }
     return out_str_vec;
 }
+
 void BlockedTensorFactory::memory_summary_per_block(ambit::BlockedTensor& tensor) {
 
     std::vector<std::string> Tensor_label = tensor.block_labels();
@@ -226,5 +231,5 @@ void BlockedTensorFactory::memory_summary_per_block(ambit::BlockedTensor& tensor
         outfile->Printf("\n %s   %8.8f GB", block.c_str(), memory_per_block);
     }
 }
-}
-}
+} // namespace forte
+} // namespace psi

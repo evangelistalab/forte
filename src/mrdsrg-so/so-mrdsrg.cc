@@ -52,7 +52,7 @@ namespace forte {
 SOMRDSRG::SOMRDSRG(Reference reference, SharedWavefunction ref_wfn, Options& options,
                    std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
     : Wavefunction(options), reference_(reference), ints_(ints), mo_space_info_(mo_space_info),
-      tensor_type_(CoreTensor), BTF(new BlockedTensorFactory(options)) {
+      tensor_type_(CoreTensor), BTF(new BlockedTensorFactory()) {
     // Copy the wavefunction information
     shallow_copy(ref_wfn);
     reference_wavefunction_ = ref_wfn;

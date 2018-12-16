@@ -15,7 +15,7 @@ MASTER_DSRG::MASTER_DSRG(Reference reference, SharedWavefunction ref_wfn, Option
                          std::shared_ptr<ForteIntegrals> ints,
                          std::shared_ptr<MOSpaceInfo> mo_space_info)
     : DynamicCorrelationSolver(reference, ref_wfn, options, ints, mo_space_info),
-      BTF_(new BlockedTensorFactory(options)), tensor_type_(ambit::CoreTensor) {
+      BTF_(new BlockedTensorFactory()), tensor_type_(ambit::CoreTensor) {
     reference_wavefunction_ = ref_wfn;
     startup();
 }

@@ -51,10 +51,10 @@ using namespace ambit;
 
 SemiCanonical::SemiCanonical(std::shared_ptr<Wavefunction> wfn,
                              std::shared_ptr<ForteIntegrals> ints,
-                             std::shared_ptr<MOSpaceInfo> mo_space_info, const bool& quiet)
-    : mo_space_info_(mo_space_info), ints_(ints), wfn_(wfn), quiet_(quiet) {
+                             std::shared_ptr<MOSpaceInfo> mo_space_info, bool quiet_banner)
+    : mo_space_info_(mo_space_info), ints_(ints), wfn_(wfn) {
 
-    if (!quiet) {
+    if (!quiet_banner) {
         print_method_banner({"Semi-Canonical Orbitals",
                              "Chenyang Li, Jeffrey B. Schriber and Francesco A. Evangelista"});
     }
@@ -524,5 +524,5 @@ void SemiCanonical::transform_reference(ambit::Tensor& Ua, ambit::Tensor& Ub, Re
         }
     }
 }
-}
-} // End Namespaces
+} // namespace forte
+} // namespace psi
