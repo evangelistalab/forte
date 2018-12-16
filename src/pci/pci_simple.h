@@ -81,7 +81,7 @@ class ProjectorCI_Simple : public Wavefunction {
      * @param options The main options object
      * @param ints A pointer to an allocated integral object
      */
-    ProjectorCI_Simple(SharedWavefunction ref_wfn, Options& options,
+    ProjectorCI_Simple(psi::SharedWavefunction ref_wfn, Options& options,
                        std::shared_ptr<ForteIntegrals> ints,
                        std::shared_ptr<MOSpaceInfo> mo_space_info);
 

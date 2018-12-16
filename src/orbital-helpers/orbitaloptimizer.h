@@ -116,7 +116,7 @@ class OrbitalOptimizer {
     void one_body(SharedMatrix H) { H_ = H; }
     /// Print a summary of timings
     void set_print_timings(bool timing) { timings_ = timing; }
-    void set_wavefunction(SharedWavefunction wfn) { wfn_ = wfn; }
+    void set_wavefunction(psi::SharedWavefunction wfn) { wfn_ = wfn; }
     void set_jk(std::shared_ptr<JK>& JK) { JK_ = JK; }
 
   protected:
@@ -134,7 +134,7 @@ class OrbitalOptimizer {
 
     Options options_;
     /// The ForteIntegrals pointer
-    SharedWavefunction wfn_;
+    psi::SharedWavefunction wfn_;
     /// The mo_space_info
     /// The MO Coefficient matrix in Pfitzer ordering in whatever symmetry
     /// this matrix is ao by nmo

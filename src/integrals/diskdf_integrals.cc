@@ -52,7 +52,7 @@ using namespace ambit;
 
 namespace forte {
 
-DISKDFIntegrals::DISKDFIntegrals(psi::Options& options, SharedWavefunction ref_wfn,
+DISKDFIntegrals::DISKDFIntegrals(psi::Options& options, psi::SharedWavefunction ref_wfn,
                                  IntegralSpinRestriction restricted,
                                  std::shared_ptr<MOSpaceInfo> mo_space_info)
     : ForteIntegrals(options, ref_wfn, restricted, mo_space_info) {

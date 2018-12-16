@@ -39,7 +39,7 @@
 
 namespace forte {
 
-CC::CC(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
+CC::CC(psi::SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
        std::shared_ptr<MOSpaceInfo> mo_space_info)
     : Wavefunction(options), ints_(ints), mo_space_info_(mo_space_info),
       BTF_(new BlockedTensorFactory()), tensor_type_(CoreTensor) {
@@ -53,7 +53,7 @@ CC::~CC() {}
 /// Compute the corr_level energy with fixed reference
 double CC::compute_energy() { return 0.0; }
 
-// MRDSRG::MRDSRG(Reference reference, SharedWavefunction ref_wfn, Options&
+// MRDSRG::MRDSRG(Reference reference, psi::SharedWavefunction ref_wfn, Options&
 // options,
 //               std::shared_ptr<ForteIntegrals> ints,
 //               std::shared_ptr<MOSpaceInfo> mo_space_info)

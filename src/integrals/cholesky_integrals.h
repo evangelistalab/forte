@@ -49,7 +49,7 @@ class MOSpaceInfo;
  */
 class CholeskyIntegrals : public ForteIntegrals {
   public:
-    CholeskyIntegrals(psi::Options& options, SharedWavefunction ref_wfn,
+    CholeskyIntegrals(psi::Options& options, psi::SharedWavefunction ref_wfn,
                       IntegralSpinRestriction restricted,
                       std::shared_ptr<MOSpaceInfo> mo_space_info);
     virtual ~CholeskyIntegrals();

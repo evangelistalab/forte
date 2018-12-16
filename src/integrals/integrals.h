@@ -263,7 +263,7 @@ class ForteIntegrals {
     psi::Options& options_;
 
     /// The Wavefunction object
-    SharedWavefunction wfn_;
+    psi::SharedWavefunction wfn_;
 
     /// The integral_type
     IntegralType integral_type_;

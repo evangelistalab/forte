@@ -38,7 +38,7 @@
 
 namespace forte {
 
-ESNO::ESNO(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
+ESNO::ESNO(psi::SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
            std::shared_ptr<MOSpaceInfo> mo_space_info, DeterminantHashVec& reference)
     : Wavefunction(options), ints_(ints), reference_(reference), ref_wfn_(ref_wfn),
       mo_space_info_(mo_space_info) {

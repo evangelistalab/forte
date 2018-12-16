@@ -48,7 +48,7 @@
 
 namespace forte {
 
-MCSRGPT2_MO::MCSRGPT2_MO(SharedWavefunction ref_wfn, Options& options,
+MCSRGPT2_MO::MCSRGPT2_MO(psi::SharedWavefunction ref_wfn, Options& options,
                          std::shared_ptr<ForteIntegrals> ints,
                          std::shared_ptr<MOSpaceInfo> mo_space_info)
     : FCI_MO(ref_wfn, options, ints, mo_space_info) {

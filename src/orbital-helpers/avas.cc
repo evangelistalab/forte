@@ -38,7 +38,7 @@
 
 namespace forte {
 
-SharedMatrix semicanonicalize_block(SharedWavefunction ref_wfn, SharedMatrix C_tilde,
+SharedMatrix semicanonicalize_block(psi::SharedWavefunction ref_wfn, SharedMatrix C_tilde,
                                     std::vector<int>& mos, int offset);
 
 void set_AVAS_options(ForteOptions& foptions) {
@@ -62,7 +62,7 @@ void set_AVAS_options(ForteOptions& foptions) {
                                                 "threshold based selection.");
 }
 
-void make_avas(SharedWavefunction ref_wfn, Options& options, SharedMatrix Ps) {
+void make_avas(psi::SharedWavefunction ref_wfn, Options& options, SharedMatrix Ps) {
     if (Ps) {
         outfile->Printf("\n  Generating AVAS orbitals\n");
 
@@ -306,7 +306,7 @@ void make_avas(SharedWavefunction ref_wfn, Options& options, SharedMatrix Ps) {
     }
 }
 
-SharedMatrix semicanonicalize_block(SharedWavefunction ref_wfn, SharedMatrix C_tilde,
+SharedMatrix semicanonicalize_block(psi::SharedWavefunction ref_wfn, SharedMatrix C_tilde,
                                     std::vector<int>& mos, int offset) {
     int nso = ref_wfn->nso();
     int nmo_block = mos.size();

@@ -100,7 +100,7 @@ void print_vector(const std::vector<double>& C, std::string description);
 
 void print_hash(det_hash<>& C, std::string description, bool print_det = false);
 
-ProjectorCI_Simple::ProjectorCI_Simple(SharedWavefunction ref_wfn, Options& options,
+ProjectorCI_Simple::ProjectorCI_Simple(psi::SharedWavefunction ref_wfn, Options& options,
                                        std::shared_ptr<ForteIntegrals> ints,
                                        std::shared_ptr<MOSpaceInfo> mo_space_info)
     : Wavefunction(options), ints_(ints), mo_space_info_(mo_space_info),

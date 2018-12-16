@@ -125,7 +125,7 @@ class FiniteTemperatureHF : public scf::RHF {
     int debug_ = 0;
 
   public:
-    FiniteTemperatureHF(SharedWavefunction ref_wfn, Options& Options,
+    FiniteTemperatureHF(psi::SharedWavefunction ref_wfn, Options& Options,
                         std::shared_ptr<MOSpaceInfo> mo_space);
     /// Get the SCF ENERGY for the complete iteration
     double get_scf_energy() { return scf_energy_; }

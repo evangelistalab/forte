@@ -187,7 +187,7 @@ void read_disk_vector_double(const std::string& filename, std::vector<double>& d
  * @param diag_F -> The Orbital energies (diagonal elements of Fock operator)
  * @param occupation -> occupation vector
  */
-void view_modified_orbitals(SharedWavefunction wfn, const std::shared_ptr<Matrix>& Ca,
+void view_modified_orbitals(psi::SharedWavefunction wfn, const std::shared_ptr<Matrix>& Ca,
                             const std::shared_ptr<Vector>& diag_F,
                             const std::shared_ptr<Vector>& occupation);
 

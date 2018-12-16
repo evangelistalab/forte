@@ -44,7 +44,7 @@ class CI_Reference // : public Wavefunction
 {
   protected:
     // The wavefunction object
-    SharedWavefunction wfn_;
+    psi::SharedWavefunction wfn_;
 
     // Multiplicity of the reference
     int multiplicity_;

@@ -48,7 +48,7 @@
 
 namespace forte {
 
-FiniteTemperatureHF::FiniteTemperatureHF(SharedWavefunction ref_wfn, Options& options,
+FiniteTemperatureHF::FiniteTemperatureHF(psi::SharedWavefunction ref_wfn, Options& options,
                                          std::shared_ptr<MOSpaceInfo> mo_space)
     : RHF(ref_wfn, std::make_shared<SuperFunctional>(), options, _default_psio_lib_),
       mo_space_info_(mo_space), options_(options) {

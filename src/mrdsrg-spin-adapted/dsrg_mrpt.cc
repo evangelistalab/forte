@@ -39,7 +39,7 @@
 
 namespace forte {
 
-DSRG_MRPT::DSRG_MRPT(Reference reference, SharedWavefunction ref_wfn, Options& options,
+DSRG_MRPT::DSRG_MRPT(Reference reference, psi::SharedWavefunction ref_wfn, Options& options,
                      std::shared_ptr<ForteIntegrals> ints,
                      std::shared_ptr<MOSpaceInfo> mo_space_info)
     : Wavefunction(options), reference_(reference), ints_(ints), mo_space_info_(mo_space_info),

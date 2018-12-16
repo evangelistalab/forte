@@ -48,7 +48,7 @@ class MOSpaceInfo;
  */
 class DFIntegrals : public ForteIntegrals {
   public:
-    DFIntegrals(psi::Options& options, SharedWavefunction ref_wfn,
+    DFIntegrals(psi::Options& options, psi::SharedWavefunction ref_wfn,
                 IntegralSpinRestriction restricted, std::shared_ptr<MOSpaceInfo> mo_space_info);
     virtual double aptei_aa(size_t p, size_t q, size_t r, size_t s);
     virtual double aptei_ab(size_t p, size_t q, size_t r, size_t s);

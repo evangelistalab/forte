@@ -84,7 +84,7 @@ class AdaptiveCI : public Wavefunction {
      * @param ints A pointer to an allocated integral object
      * @param mo_space_info A pointer to the MOSpaceInfo object
      */
-    AdaptiveCI(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
+    AdaptiveCI(psi::SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
                std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Destructor
@@ -111,7 +111,7 @@ class AdaptiveCI : public Wavefunction {
 
     void diagonalize_final_and_compute_rdms();
 
-    void set_aci_ints(SharedWavefunction ref_Wfn, std::shared_ptr<ForteIntegrals> ints);
+    void set_aci_ints(psi::SharedWavefunction ref_Wfn, std::shared_ptr<ForteIntegrals> ints);
 
     void semi_canonicalize();
     void set_fci_ints(std::shared_ptr<FCIIntegrals> fci_ints);

@@ -44,7 +44,7 @@ namespace forte {
 class MRCI : public Wavefunction {
   public:
     // Class constructor and destructor
-    MRCI(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
+    MRCI(psi::SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
          std::shared_ptr<MOSpaceInfo> mo_space_info, DeterminantHashVec& reference);
 
     ~MRCI();
@@ -55,7 +55,7 @@ class MRCI : public Wavefunction {
     double compute_energy();
 
   private:
-    SharedWavefunction ref_wfn_;
+    psi::SharedWavefunction ref_wfn_;
     
     std::shared_ptr<FCIIntegrals> fci_ints_;
     std::shared_ptr<MOSpaceInfo> mo_space_info_;

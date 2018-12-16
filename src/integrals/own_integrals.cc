@@ -41,7 +41,7 @@
 
 namespace forte {
 
-OwnIntegrals::OwnIntegrals(psi::Options& options, SharedWavefunction ref_wfn,
+OwnIntegrals::OwnIntegrals(psi::Options& options, psi::SharedWavefunction ref_wfn,
                            IntegralSpinRestriction restricted,
                            std::shared_ptr<MOSpaceInfo> mo_space_info)
     : ForteIntegrals(options, ref_wfn, restricted, mo_space_info) {

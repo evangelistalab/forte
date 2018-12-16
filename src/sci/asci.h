@@ -71,7 +71,7 @@ class ASCI : public Wavefunction {
      * @param ints A pointer to an allocated integral object
      * @param mo_space_info A pointer to the MOSpaceInfo object
      */
-    ASCI(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
+    ASCI(psi::SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
                std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Destructor
@@ -92,7 +92,7 @@ class ASCI : public Wavefunction {
     void compute_nos();
 
 
-    void set_asci_ints(SharedWavefunction ref_Wfn, std::shared_ptr<ForteIntegrals> ints);
+    void set_asci_ints(psi::SharedWavefunction ref_Wfn, std::shared_ptr<ForteIntegrals> ints);
 
     void set_fci_ints(std::shared_ptr<FCIIntegrals> fci_ints);
 

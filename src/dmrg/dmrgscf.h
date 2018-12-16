@@ -47,7 +47,7 @@ namespace forte {
 
 class DMRGSCF : public Wavefunction {
   public:
-    DMRGSCF(SharedWavefunction ref_wfn, Options& options,
+    DMRGSCF(psi::SharedWavefunction ref_wfn, Options& options,
             std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ForteIntegrals> ints);
     double compute_energy();
 

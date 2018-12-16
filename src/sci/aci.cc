@@ -206,7 +206,7 @@ bool pairComp(const std::pair<double, Determinant> E1, const std::pair<double, D
     return E1.first < E2.first;
 }
 
-AdaptiveCI::AdaptiveCI(SharedWavefunction ref_wfn, Options& options,
+AdaptiveCI::AdaptiveCI(psi::SharedWavefunction ref_wfn, Options& options,
                        std::shared_ptr<ForteIntegrals> ints,
                        std::shared_ptr<MOSpaceInfo> mo_space_info)
     : Wavefunction(options), ints_(ints), mo_space_info_(mo_space_info) {
@@ -227,7 +227,7 @@ void AdaptiveCI::set_fci_ints(std::shared_ptr<FCIIntegrals> fci_ints) {
     set_ints_ = true;
 }
 
-void AdaptiveCI::set_aci_ints(SharedWavefunction ref_wfn, std::shared_ptr<ForteIntegrals> ints) {
+void AdaptiveCI::set_aci_ints(psi::SharedWavefunction ref_wfn, std::shared_ptr<ForteIntegrals> ints) {
     timer int_timer("ACI:Form Integrals");
     ints_ = ints;
     shallow_copy(ref_wfn);

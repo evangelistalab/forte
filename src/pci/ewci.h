@@ -86,7 +86,7 @@ class ElementwiseCI : public Wavefunction {
      * @param options The main options object
      * @param ints A pointer to an allocated integral object
      */
-    ElementwiseCI(SharedWavefunction ref_wfn, Options& options,
+    ElementwiseCI(psi::SharedWavefunction ref_wfn, Options& options,
                   std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     // ==> Class Interface <==

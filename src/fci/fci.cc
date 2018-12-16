@@ -49,7 +49,7 @@ void set_FCI_options(ForteOptions& foptions) {
                      "The number of trial guess vectors to generate per root");
 }
 
-FCI::FCI(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
+FCI::FCI(psi::SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
          std::shared_ptr<MOSpaceInfo> mo_space_info)
     : ActiveSpaceSolver(ref_wfn, options, ints, mo_space_info) {
     // Copy the wavefunction information
@@ -57,7 +57,7 @@ FCI::FCI(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteInte
     startup();
 }
 
-FCI::FCI(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
+FCI::FCI(psi::SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
          std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<FCIIntegrals> fci_ints)
     : ActiveSpaceSolver(ref_wfn, options, ints, mo_space_info) {
     // Copy the wavefunction information
@@ -66,7 +66,7 @@ FCI::FCI(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteInte
     fci_ints_ = fci_ints;
 }
 
-// FCI::FCI(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
+// FCI::FCI(psi::SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
 //         std::shared_ptr<MOSpaceInfo> mo_space_info)
 //    : Wavefunction(options), ints_(ints), mo_space_info_(mo_space_info) {
 //    // Copy the wavefunction information

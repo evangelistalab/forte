@@ -55,7 +55,7 @@ bool pairCompDescend(const std::pair<double, Determinant> E1,
     return E1.first > E2.first;
 }
 
-ASCI::ASCI(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
+ASCI::ASCI(psi::SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
            std::shared_ptr<MOSpaceInfo> mo_space_info)
     : Wavefunction(options), ints_(ints), mo_space_info_(mo_space_info) {
     // Copy the wavefunction information
@@ -74,7 +74,7 @@ void ASCI::set_fci_ints(std::shared_ptr<FCIIntegrals> fci_ints) {
     set_ints_ = true;
 }
 
-void ASCI::set_asci_ints(SharedWavefunction ref_wfn, std::shared_ptr<ForteIntegrals> ints) {
+void ASCI::set_asci_ints(psi::SharedWavefunction ref_wfn, std::shared_ptr<ForteIntegrals> ints) {
     timer int_timer("ASCI:Form Integrals");
     ints_ = ints;
     shallow_copy(ref_wfn);

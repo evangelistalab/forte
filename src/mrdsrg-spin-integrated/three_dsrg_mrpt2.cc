@@ -75,7 +75,7 @@ bool THREE_DSRG_MRPT2::have_omp_ = true;
 bool THREE_DSRG_MRPT2::have_omp_ = false;
 #endif
 
-THREE_DSRG_MRPT2::THREE_DSRG_MRPT2(Reference reference, SharedWavefunction ref_wfn,
+THREE_DSRG_MRPT2::THREE_DSRG_MRPT2(Reference reference, psi::SharedWavefunction ref_wfn,
                                    Options& options, std::shared_ptr<ForteIntegrals> ints,
                                    std::shared_ptr<MOSpaceInfo> mo_space_info)
     : MASTER_DSRG(reference, ref_wfn, options, ints, mo_space_info) {

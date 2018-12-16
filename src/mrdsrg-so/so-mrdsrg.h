@@ -203,7 +203,7 @@ class SOMRDSRG : public Wavefunction {
   public:
     // => Constructors <= //
 
-    SOMRDSRG(Reference reference, SharedWavefunction ref_wfn, Options& options,
+    SOMRDSRG(Reference reference, psi::SharedWavefunction ref_wfn, Options& options,
              std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     ~SOMRDSRG();

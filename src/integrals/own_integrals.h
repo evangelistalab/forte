@@ -49,7 +49,7 @@ class MOSpaceInfo;
 /// AO-DSRG-MRPT2
 class OwnIntegrals : public ForteIntegrals {
   public:
-    OwnIntegrals(psi::Options& options, SharedWavefunction ref_wfn,
+    OwnIntegrals(psi::Options& options, psi::SharedWavefunction ref_wfn,
                  IntegralSpinRestriction restricted, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     virtual void retransform_integrals() {}

@@ -66,7 +66,7 @@ class DSRG_MRPT2 : public MASTER_DSRG {
      * @param ints A pointer to an allocated integral object
      * @param mo_space_info A pointer to the MOSpaceInfo object
      */
-    DSRG_MRPT2(Reference reference, SharedWavefunction ref_wfn, Options& options,
+    DSRG_MRPT2(Reference reference, psi::SharedWavefunction ref_wfn, Options& options,
                std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Destructor

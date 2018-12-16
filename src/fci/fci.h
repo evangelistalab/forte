@@ -61,7 +61,7 @@ class FCI : public ActiveSpaceSolver {
      * @param ints A pointer to an allocated integral object
      * @param mo_space_info A pointer to the MOSpaceInfo object
      */
-    FCI(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
+    FCI(psi::SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
         std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /**
@@ -72,7 +72,7 @@ class FCI : public ActiveSpaceSolver {
      * @param mo_space_info A pointer to the MOSpaceInfo object
      * @param fci_ints A pointer to FCIIntegrals
      */
-    FCI(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
+    FCI(psi::SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
         std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<FCIIntegrals> fci_ints);
 
     virtual ~FCI();

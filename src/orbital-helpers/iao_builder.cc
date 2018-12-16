@@ -255,7 +255,7 @@ std::map<std::string, SharedMatrix> IAOBuilder::build_iaos() {
 }
 
 std::vector<std::string> IAOBuilder::print_IAO(SharedMatrix A_, int nmin, int nbf,
-                                               SharedWavefunction wfn_) {
+                                               psi::SharedWavefunction wfn_) {
     CubeProperties cube = CubeProperties(wfn_);
     std::shared_ptr<Molecule> mol = minao_->molecule();
     std::vector<int> iao_inds;
