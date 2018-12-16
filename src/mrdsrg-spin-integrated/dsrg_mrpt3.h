@@ -84,7 +84,7 @@ class DSRG_MRPT3 : public MASTER_DSRG {
     }
 
     /// Set determinants in the model space
-    void set_p_spaces(std::vector<std::vector<psi::forte::Determinant>> p_spaces) {
+    void set_p_spaces(std::vector<std::vector<forte::Determinant>> p_spaces) {
         p_spaces_ = p_spaces;
     }
 
@@ -112,7 +112,7 @@ class DSRG_MRPT3 : public MASTER_DSRG {
     /// CASCI eigen values and eigen vectors for state averaging
     std::vector<std::vector<std::pair<SharedVector, double>>> eigens_;
     /// Determinants in the model space
-    std::vector<std::vector<psi::forte::Determinant>> p_spaces_;
+    std::vector<std::vector<forte::Determinant>> p_spaces_;
 
     /// Total memory left
     int64_t mem_total_;

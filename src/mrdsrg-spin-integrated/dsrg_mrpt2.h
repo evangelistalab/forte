@@ -114,7 +114,7 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     }
 
     /// Set determinants in the model space
-    void set_p_spaces(const std::vector<std::vector<psi::forte::Determinant>>& p_spaces) {
+    void set_p_spaces(const std::vector<std::vector<forte::Determinant>>& p_spaces) {
         p_spaces_ = p_spaces;
     }
 
@@ -149,7 +149,7 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     /// CASCI eigen values and eigen vectors for state averaging
     std::vector<std::vector<std::pair<SharedVector, double>>> eigens_;
     /// Determinants with different symmetries in the model space
-    std::vector<std::vector<psi::forte::Determinant>> p_spaces_;
+    std::vector<std::vector<forte::Determinant>> p_spaces_;
 
     /// Fill up two-electron integrals
     void build_ints();
@@ -309,7 +309,7 @@ class DSRG_MRPT2 : public MASTER_DSRG {
 
     /// Compute density cumulants
     void compute_cumulants(std::shared_ptr<FCIIntegrals> fci_ints,
-                           std::vector<psi::forte::Determinant>& p_space, SharedMatrix evecs,
+                           std::vector<forte::Determinant>& p_space, SharedMatrix evecs,
                            const int& root1, const int& root2);
     /// Compute denisty matrices and puts in Gamma1_, Lambda2_, and Lambda3_
     void compute_densities(std::shared_ptr<FCIIntegrals> fci_ints,

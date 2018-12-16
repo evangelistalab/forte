@@ -144,7 +144,7 @@ class UI64Determinant {
     std::string str(int n = num_str_bits) const;
 
     struct Hash {
-        std::size_t operator()(const psi::forte::UI64Determinant& bs) const {
+        std::size_t operator()(const forte::UI64Determinant& bs) const {
             return ((bs.a_ * 13466917) + bs.b_) % 1405695061;
         }
     };

@@ -187,7 +187,7 @@ class STLBitsetDeterminant {
     double double_excitation_bb(int i, int j, int a, int b);
 
     struct Hash {
-        std::size_t operator()(const psi::forte::STLBitsetDeterminant& bs) const {
+        std::size_t operator()(const forte::STLBitsetDeterminant& bs) const {
             return std::hash<bit_t>()(bs.bits_);
         }
     };

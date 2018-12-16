@@ -54,7 +54,7 @@ using d3 = std::vector<d2>;
 using d4 = std::vector<d3>;
 using d5 = std::vector<d4>;
 using d6 = std::vector<d5>;
-using vecdet = std::vector<psi::forte::Determinant>;
+using vecdet = std::vector<forte::Determinant>;
 
 
 namespace forte {

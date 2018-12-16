@@ -48,7 +48,7 @@
 #include "sparse_ci/ci_reference.h"
 
 using namespace psi;
-using namespace psi::forte::GeneratorType_Simple;
+using namespace forte::GeneratorType_Simple;
 
 #define USE_HASH 1
 #define DO_STATS 0

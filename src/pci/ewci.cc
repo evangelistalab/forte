@@ -53,7 +53,7 @@
 #include "sparse_ci/ci_reference.h"
 
 using namespace psi;
-using namespace psi::forte::GeneratorType_EWCI;
+using namespace forte::GeneratorType_EWCI;
 
 #define USE_HASH 1
 #define DO_STATS 0

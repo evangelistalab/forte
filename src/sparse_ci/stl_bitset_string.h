@@ -114,7 +114,7 @@ class STLBitsetString {
     double get_nocc();
 
     struct Hash {
-        std::size_t operator()(const psi::forte::STLBitsetString& bs) const {
+        std::size_t operator()(const forte::STLBitsetString& bs) const {
             return std::hash<bit_t>()(bs.bits_);
         }
     };
