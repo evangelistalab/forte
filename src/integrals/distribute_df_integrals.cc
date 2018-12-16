@@ -480,6 +480,6 @@ void DistDFIntegrals::retransform_integrals() {
     freeze_core_orbitals();
 }
 } // namespace forte
-} // namespace psi
+
 
 #endif // HAVE_GA

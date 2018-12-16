@@ -369,4 +369,4 @@ void DSRG_MRPT::print_intruder(const std::string& name,
     outfile->Printf("\n%s", output.c_str());
 }
 } // namespace forte
-} // namespace psi
+

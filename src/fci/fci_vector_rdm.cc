@@ -928,4 +928,4 @@ void FCIWfn::rdm_test() {
     delete[] Ib;
 }
 } // namespace forte
-} // namespace psi
+

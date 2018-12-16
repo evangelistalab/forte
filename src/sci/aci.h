@@ -474,6 +474,6 @@ class AdaptiveCI : public Wavefunction {
 };
 
 } // namespace forte
-} // namespace psi
+
 
 #endif // _adaptive_ci_h_

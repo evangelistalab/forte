@@ -107,6 +107,6 @@ class DISKDFIntegrals : public ForteIntegrals {
 };
 
 } // namespace forte
-} // namespace psi
+
 
 #endif // _diskdf_integrals_h_

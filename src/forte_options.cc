@@ -153,4 +153,4 @@ std::string option_formatter(const std::string& type, const std::string& label,
 }
 
 } // namespace forte
-} // namespace psi
+

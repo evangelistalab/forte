@@ -376,4 +376,4 @@ void CholeskyIntegrals::set_tei(size_t, size_t, size_t, size_t, double, bool, bo
     throw PSIEXCEPTION("Don't use DF/CD if you use set_tei");
 }
 } // namespace forte
-} // namespace psi
+

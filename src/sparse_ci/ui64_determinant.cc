@@ -562,4 +562,4 @@ double spin2(const UI64Determinant& lhs, const UI64Determinant& rhs) {
     return (matrix_element);
 }
 } // namespace forte
-} // namespace psi
+

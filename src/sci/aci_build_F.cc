@@ -2375,4 +2375,4 @@ AdaptiveCI::get_bin_F_space_vecsort(int bin, int nbin, SharedMatrix evecs,
 }
 
 } // namespace forte
-} // namespace psi
+

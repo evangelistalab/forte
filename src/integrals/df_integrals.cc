@@ -340,4 +340,4 @@ void DFIntegrals::resort_integrals_after_freezing() {
     }
 }
 } // namespace forte
-} // namespace psi
+

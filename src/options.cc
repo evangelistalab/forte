@@ -107,7 +107,7 @@ void forte_options(ForteOptions& foptions) {
     foptions.add_str("ACTIVE_REF_TYPE", "CAS", "Initial guess for active space wave functions");
 }
 } // namespace forte
-} // namespace psi
+
 
 // if (name == "FORTE" || options.read_globals()) {
 

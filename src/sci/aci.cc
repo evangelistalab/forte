@@ -3339,4 +3339,4 @@ void AdaptiveCI::spin_analysis() {
 
 void AdaptiveCI::update_sigma() { sigma_ = options_.get_double("ACI_RELAX_SIGMA"); }
 } // namespace forte
-} // namespace psi
+

@@ -1371,4 +1371,4 @@ void MRDSRG::return_amp_diis(BlockedTensor& T1, const std::vector<std::string>& 
     }
 }
 } // namespace forte
-} // namespace psi
+

@@ -404,4 +404,4 @@ void ConventionalIntegrals::make_fock_matrix(SharedMatrix gamma_a, SharedMatrix 
     }
 }
 } // namespace forte
-} // namespace psi
+

@@ -222,4 +222,4 @@ void DSRG_MRPT::BT_scaled_by_RD(BlockedTensor& BT) {
     }
 }
 } // namespace forte
-} // namespace psi
+

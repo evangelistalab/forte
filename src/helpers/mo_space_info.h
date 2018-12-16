@@ -164,6 +164,6 @@ class MOSpaceInfo {
 };
 
 } // namespace forte
-} // namespace psi
+
 
 #endif // _mo_space_info_h_

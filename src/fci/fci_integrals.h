@@ -212,6 +212,6 @@ class FCIIntegrals {
     void startup();
 };
 } // namespace forte
-} // namespace psi
+
 
 #endif // _fci_integrals_

@@ -351,4 +351,4 @@ std::vector<size_t> ESNO::get_excitation_space() {
     return ex_space;
 }
 } // namespace forte
-} // namespace psi
+

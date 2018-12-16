@@ -299,4 +299,4 @@ std::pair<SpaceInfo, bool> MOSpaceInfo::read_mo_space(const std::string &space,
 }
 
 } // namespace forte
-} // namespace psi
+

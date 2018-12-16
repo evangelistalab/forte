@@ -10,4 +10,4 @@ DynamicCorrelationSolver::DynamicCorrelationSolver(Reference reference, psi::Sha
     shallow_copy(ref_wfn);
 }
 } // namespace forte
-} // namespace psi
+

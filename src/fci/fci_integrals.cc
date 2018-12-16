@@ -637,4 +637,4 @@ double FCIIntegrals::slater_rules_single_beta_abs(const Determinant& det, int i,
     return matrix_element;
 }
 } // namespace forte
-} // namespace psi
+

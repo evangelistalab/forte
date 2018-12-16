@@ -388,6 +388,6 @@ class ForteIntegrals {
 };
 
 } // namespace forte
-} // namespace psi
+
 
 #endif // _integrals_h_

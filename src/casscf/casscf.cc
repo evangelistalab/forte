@@ -1145,4 +1145,4 @@ std::pair<ambit::Tensor, std::vector<double>> CASSCF::CI_Integrals() {
 Reference CASSCF::casscf_reference() { return cas_ref_; }
 
 } // namespace forte
-} // namespace psi
+

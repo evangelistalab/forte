@@ -124,6 +124,6 @@ class ForteOptions {
     std::vector<array_opt_t> array_opts_;
 };
 } // namespace forte
-} // namespace psi
+
 
 #endif // _forte_options_h_

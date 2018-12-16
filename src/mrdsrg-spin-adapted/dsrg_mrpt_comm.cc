@@ -426,4 +426,4 @@ void DSRG_MRPT::H2_T2_C0_L3(BlockedTensor& H2, BlockedTensor& T2, const double& 
     dsrg_time_.add("220", timer.get());
 }
 } // namespace forte
-} // namespace psi
+

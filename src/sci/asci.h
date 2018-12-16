@@ -222,6 +222,6 @@ class ASCI : public Wavefunction {
 };
 
 } // namespace forte
-} // namespace psi
+
 
 #endif // _as_ci_h_

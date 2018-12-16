@@ -101,6 +101,6 @@ class DFIntegrals : public ForteIntegrals {
 };
 
 } // namespace forte
-} // namespace psi
+
 
 #endif // _df_integrals_h_

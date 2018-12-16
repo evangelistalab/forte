@@ -116,6 +116,6 @@ class ConventionalIntegrals : public ForteIntegrals {
 };
 
 } // namespace forte
-} // namespace psi
+
 
 #endif // _conventional_integrals_h_

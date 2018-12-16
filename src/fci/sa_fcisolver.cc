@@ -386,4 +386,4 @@ double SA_FCISolver::compute_energy() {
     return E_sa_casscf;
 }
 } // namespace forte
-} // namespace psi
+

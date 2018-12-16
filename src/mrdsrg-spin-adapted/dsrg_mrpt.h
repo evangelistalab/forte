@@ -348,5 +348,5 @@ class DSRG_MRPT : public Wavefunction {
     void print_cumulant_summary();
 };
 } // namespace forte
-} // namespace psi
+
 #endif // DSRG_MRPT_H

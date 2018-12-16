@@ -218,6 +218,6 @@ class FCISolver {
     Options& options_;
 };
 } // namespace forte
-} // namespace psi
+
 
 #endif // _fci_solver_h_

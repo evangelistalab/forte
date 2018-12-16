@@ -727,4 +727,4 @@ void MRCINO::find_active_space_and_transform(
     }
 }
 } // namespace forte
-} // namespace psi
+

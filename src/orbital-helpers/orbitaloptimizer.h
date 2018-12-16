@@ -275,5 +275,5 @@ class PostCASSCFOrbitalOptimizer : public OrbitalOptimizer {
     virtual void form_fock_intermediates();
 };
 } // namespace forte
-} // namespace psi
+
 #endif // _orbital_optimizer_h_

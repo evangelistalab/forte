@@ -652,4 +652,4 @@ void enforce_spin_completeness(std::vector<STLBitsetDeterminant>& det_space, int
     //}
 }
 } // namespace forte
-} // namespace psi
+

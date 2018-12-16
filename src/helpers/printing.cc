@@ -70,4 +70,4 @@ void print_timing(const std::string& text, double seconds) {
 }
 
 } // namespace forte
-} // namespace psi
+

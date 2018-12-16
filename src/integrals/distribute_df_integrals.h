@@ -116,6 +116,6 @@ class DistDFIntegrals : public ForteIntegrals {
 #endif
 
 } // namespace forte
-} // namespace psi
+
 
 #endif // _conventional_integrals_h_

@@ -454,4 +454,4 @@ std::pair<std::vector<size_t>, std::vector<size_t>> split_up_tasks(size_t size_o
 }
 
 } // namespace forte
-} // namespace psi
+

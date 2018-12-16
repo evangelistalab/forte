@@ -233,7 +233,7 @@ void banner() {
 }
 
 } // namespace forte
-} // namespace psi
+
 
 ///**
 // * @brief The main forte function.

@@ -10,4 +10,4 @@ ActiveSpaceSolver::ActiveSpaceSolver(psi::SharedWavefunction ref_wfn, Options& o
     shallow_copy(ref_wfn);
 }
 } // namespace forte
-} // namespace psi
+

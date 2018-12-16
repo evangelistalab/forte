@@ -425,6 +425,6 @@ void ParallelDFMO::J_one_half() {
     }
 }
 } // namespace forte
-} // namespace psi
+
 
 #endif

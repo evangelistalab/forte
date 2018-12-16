@@ -578,4 +578,4 @@ ForteIntegrals::MOdipole_ints_helper(SharedMatrix Cao, SharedVector epsilon, con
     return MOdipole_ints;
 }
 } // namespace forte
-} // namespace psi
+

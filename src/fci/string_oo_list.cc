@@ -128,4 +128,4 @@ void StringLists::make_oo(GraphPtr graph, OOList& list, int pq_sym, size_t pq) {
     }
 }
 } // namespace forte
-} // namespace psi
+

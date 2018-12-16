@@ -653,4 +653,4 @@ double DISKDFIntegrals::diag_aptei_bb(size_t, size_t) {
     throw PSIEXCEPTION("diag_aptei_bb is not implemented for DISKDF");
 }
 } // namespace forte
-} // namespace psi
+

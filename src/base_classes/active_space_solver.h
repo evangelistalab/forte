@@ -62,6 +62,6 @@ class ActiveSpaceSolver : public Wavefunction {
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
 };
 } // namespace forte
-} // namespace psi
+
 
 #endif // _active_space_solver_h_

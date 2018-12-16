@@ -119,6 +119,6 @@ class OwnIntegrals : public ForteIntegrals {
 };
 
 } // namespace forte
-} // namespace psi
+
 
 #endif // _own_integrals_h_

@@ -1150,6 +1150,6 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_virtual_ga() {
 }
 #endif
 } // namespace forte
-} // namespace psi
+
 
 #endif

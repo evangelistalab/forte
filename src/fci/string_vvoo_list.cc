@@ -314,4 +314,4 @@ std::vector<StringSubstitution>& StringLists::get_beta_vovo_list(size_t p, size_
     return beta_vovo_list[pqrs_pair];
 }
 } // namespace forte
-} // namespace psi
+

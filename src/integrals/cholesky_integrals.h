@@ -106,6 +106,6 @@ class CholeskyIntegrals : public ForteIntegrals {
 };
 
 } // namespace forte
-} // namespace psi
+
 
 #endif // _cholesky_integrals_h_

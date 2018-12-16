@@ -745,4 +745,4 @@ Reference FCISolver::reference() {
     return fci_ref;
 }
 } // namespace forte
-} // namespace psi
+
