@@ -87,7 +87,7 @@ void set_MRCINO_options(ForteOptions& foptions) {
 
 MRCINO::MRCINO(psi::SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
                std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : Wavefunction(options), ints_(ints), mo_space_info_(mo_space_info) {
+    : Wavefunction(psi::Options), ints_(ints), mo_space_info_(mo_space_info) {
     // Copy the wavefunction information
     shallow_copy(ref_wfn);
     reference_wavefunction_ = ref_wfn;
@@ -171,16 +171,16 @@ double MRCINO::compute_energy() {
 
 void MRCINO::startup() {
     wavefunction_multiplicity_ = 1;
-    if (options_["MULTIPLICITY"].has_changed()) {
+    if (psi::Options_["MULTIPLICITY"].has_changed()) {
         wavefunction_multiplicity_ = options_.get_int("MULTIPLICITY");
     }
     diag_method_ = DLSolver;
-    if (options_["DIAG_ALGORITHM"].has_changed()) {
-        if (options_.get_str("DIAG_ALGORITHM") == "FULL") {
+    if (psi::Options_["DIAG_ALGORITHM"].has_changed()) {
+        if (psi::Options_.get_str("DIAG_ALGORITHM") == "FULL") {
             diag_method_ = Full;
-        } else if (options_.get_str("DIAG_ALGORITHM") == "DLSTRING") {
+        } else if (psi::Options_.get_str("DIAG_ALGORITHM") == "DLSTRING") {
             diag_method_ = DLString;
-        } else if (options_.get_str("DIAG_ALGORITHM") == "DLDISK") {
+        } else if (psi::Options_.get_str("DIAG_ALGORITHM") == "DLDISK") {
             diag_method_ = DLDisk;
         }
     }
@@ -412,7 +412,7 @@ std::vector<Determinant> MRCINO::build_dets(int irrep,
         }
     }
 
-    if (options_.get_str("MRCINO_TYPE") == "CISD") {
+    if (psi::Options_.get_str("MRCINO_TYPE") == "CISD") {
         // alpha-alpha double excitation
         //        for (int i = 0; i < naocc_; ++i) {
         //            for (int j = i + 1; j < naocc_; ++j) {
@@ -482,10 +482,10 @@ MRCINO::diagonalize_hamiltonian(const std::vector<Determinant>& dets, int nsolut
 
     SparseCISolver sparse_solver(fci_ints_);
     sparse_solver.set_parallel(true);
-    sparse_solver.set_e_convergence(options_.get_double("E_CONVERGENCE"));
-    sparse_solver.set_maxiter_davidson(options_.get_int("DL_MAXITER"));
+    sparse_solver.set_e_convergence(psi::Options_.get_double("E_CONVERGENCE"));
+    sparse_solver.set_maxiter_davidson(psi::Options_.get_int("DL_MAXITER"));
     sparse_solver.set_spin_project(project_out_spin_contaminants_);
-    sparse_solver.set_guess_dimension(options_.get_int("DL_GUESS_SIZE"));
+    sparse_solver.set_guess_dimension(psi::Options_.get_int("DL_GUESS_SIZE"));
     sparse_solver.set_spin_project_full(true);
     sparse_solver.set_print_details(true);
 

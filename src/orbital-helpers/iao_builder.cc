@@ -65,20 +65,20 @@ std::shared_ptr<IAOBuilder> IAOBuilder::build(std::shared_ptr<BasisSet> primary,
 
     std::shared_ptr<IAOBuilder> local(new IAOBuilder(primary, minao, C));
 
-    local->set_print(options.get_int("PRINT"));
-    local->set_debug(options.get_int("DEBUG"));
-    local->set_bench(options.get_int("BENCH"));
-    local->set_convergence(options.get_double("LOCAL_CONVERGENCE"));
-    local->set_maxiter(options.get_int("LOCAL_MAXITER"));
-    local->set_use_ghosts(options.get_bool("LOCAL_USE_GHOSTS"));
-    local->set_condition(options.get_double("LOCAL_IBO_CONDITION"));
-    local->set_power(options.get_double("LOCAL_IBO_POWER"));
-    local->set_use_stars(options.get_bool("LOCAL_IBO_USE_STARS"));
-    local->set_stars_completeness(options.get_double("LOCAL_IBO_STARS_COMPLETENESS"));
+    local->set_print(psi::Options.get_int("PRINT"));
+    local->set_debug(psi::Options.get_int("DEBUG"));
+    local->set_bench(psi::Options.get_int("BENCH"));
+    local->set_convergence(psi::Options.get_double("LOCAL_CONVERGENCE"));
+    local->set_maxiter(psi::Options.get_int("LOCAL_MAXITER"));
+    local->set_use_ghosts(psi::Options.get_bool("LOCAL_USE_GHOSTS"));
+    local->set_condition(psi::Options.get_double("LOCAL_IBO_CONDITION"));
+    local->set_power(psi::Options.get_double("LOCAL_IBO_POWER"));
+    local->set_use_stars(psi::Options.get_bool("LOCAL_IBO_USE_STARS"));
+    local->set_stars_completeness(psi::Options.get_double("LOCAL_IBO_STARS_COMPLETENESS"));
 
     std::vector<int> stars;
     for (size_t ind = 0; ind < options["LOCAL_IBO_STARS"].size(); ind++) {
-        stars.push_back(options["LOCAL_IBO_STARS"][ind].to_integer() - 1);
+        stars.push_back(psi::Options["LOCAL_IBO_STARS"][ind].to_integer() - 1);
     }
     local->set_stars(stars);
 

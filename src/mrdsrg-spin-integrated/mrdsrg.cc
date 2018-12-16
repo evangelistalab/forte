@@ -377,7 +377,7 @@ double MRDSRG::compute_energy_relaxed() {
         } else if (cas_type == "ACI") {
             AdaptiveCI aci(reference_wavefunction_, options_, ints_, mo_space_info_);
             aci.set_fci_ints(fci_ints);
-            if (options_["ACI_RELAX_SIGMA"].has_changed()) {
+            if (psi::Options_["ACI_RELAX_SIGMA"].has_changed()) {
                 aci.update_sigma();
             }
             Erelax = aci.compute_energy();
@@ -442,7 +442,7 @@ double MRDSRG::compute_energy_relaxed() {
             } else if (cas_type == "ACI") {
                 AdaptiveCI aci(reference_wavefunction_, options_, ints_, mo_space_info_);
                 aci.set_fci_ints(fci_ints);
-                if (options_["ACI_RELAX_SIGMA"].has_changed()) {
+                if (psi::Options_["ACI_RELAX_SIGMA"].has_changed()) {
                     aci.update_sigma();
                 }
                 Erelax = aci.compute_energy();
@@ -464,7 +464,7 @@ double MRDSRG::compute_energy_relaxed() {
             Edelta_relax_vec.push_back(Edelta_relax);
 
             // semicanonicalize orbitals
-            if (options_.get_bool("SEMI_CANONICAL")) {
+            if (psi::Options_.get_bool("SEMI_CANONICAL")) {
                 print_h2("Semicanonicalize Orbitals");
 
                 // use semicanonicalize class
@@ -635,7 +635,7 @@ double MRDSRG::compute_energy_sa() {
         semiorb.transform_reference(Ua, Ub, reference_, max_rdm_level);
 
         // semicanonicalize orbitals
-        if (options_.get_bool("SEMI_CANONICAL")) {
+        if (psi::Options_.get_bool("SEMI_CANONICAL")) {
             print_h2("Semicanonicalize Orbitals");
 
             // use semicanonicalize class
@@ -1199,7 +1199,7 @@ void MRDSRG::print_cumulant_summary() {
     outfile->Printf("\n    %s", dash.c_str());
 
     //    check_density(Lambda2_, "2-body");
-    //    if (options_.get_str("THREEPDC") != "ZERO") {
+    //    if (psi::Options_.get_str("THREEPDC") != "ZERO") {
     //        check_density(Lambda3_, "3-body");
     //    }
 }

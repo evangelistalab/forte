@@ -63,7 +63,7 @@ DistDFIntegrals::DistDFIntegrals(psi::Options& options, psi::SharedWavefunction 
                                  IntegralSpinRestriction restricted,
                                  IntegralFrozenCore resort_frozen_core,
                                  std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : ForteIntegrals(options, ref_wfn, restricted, resort_frozen_core, mo_space_info) {
+    : ForteIntegrals(psi::Options, ref_wfn, restricted, resort_frozen_core, mo_space_info) {
 
     wfn_ = ref_wfn;
 
@@ -93,7 +93,7 @@ void DistDFIntegrals::test_distributed_integrals() {
     outfile->Printf("\n Computing Density fitted integrals \n");
 
     std::shared_ptr<BasisSet> primary = wfn_->basisset();
-    if (options_.get_str("DF_BASIS_MP2").length() == 0) {
+    if (psi::Options_.get_str("DF_BASIS_MP2").length() == 0) {
         outfile->Printf("\n Please set a DF_BASIS_MP2 option to a specified "
                         "auxiliary basis set");
         throw PSIEXCEPTION("Select a DF_BASIS_MP2 for use with DFIntegrals");
@@ -207,7 +207,7 @@ void DistDFIntegrals::test_distributed_integrals() {
 
     /// Test whether DFIntegrals is same as DistributedDF
     ForteIntegrals* test_int =
-        new DFIntegrals(options_, wfn_, UnrestrictedMOs, RemoveFrozenMOs, mo_space_info_);
+        new DFIntegrals(psi::Options_, wfn_, UnrestrictedMOs, RemoveFrozenMOs, mo_space_info_);
     ambit::Tensor entire_b_df = test_int->three_integral_block(Avec, p, p);
     ambit::Tensor entire_b_dist = three_integral_block(Avec, p, p);
     entire_b_df("Q, p, q") -= entire_b_dist("Q, p, q");

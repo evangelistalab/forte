@@ -134,7 +134,7 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
             // de-normal-order DSRG dipole integrals
             for (int z = 0; z < 3; ++z) {
                 std::string name = "Dipole " + dm_dirs_[z] + " Integrals";
-                if (options_.get_bool("FORM_MBAR3")) {
+                if (psi::Options_.get_bool("FORM_MBAR3")) {
                     deGNO_ints(name, Mbar0_[z], Mbar1_[z], Mbar2_[z], Mbar3_[z]);
                     rotate_ints_semi_to_origin(name, Mbar1_[z], Mbar2_[z], Mbar3_[z]);
                 } else {
@@ -145,7 +145,7 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
 
             // compute permanent dipoles
             std::map<std::string, std::vector<double>> dm_relax;
-            if (options_.get_bool("FORM_MBAR3")) {
+            if (psi::Options_.get_bool("FORM_MBAR3")) {
                 dm_relax = fci_mo.compute_ref_relaxed_dm(Mbar0_, Mbar1_, Mbar2_, Mbar3_);
             } else {
                 dm_relax = fci_mo.compute_ref_relaxed_dm(Mbar0_, Mbar1_, Mbar2_);
@@ -168,7 +168,7 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
 
             // oscillator strength
             std::map<std::string, std::vector<double>> osc;
-            if (options_.get_bool("FORM_MBAR3")) {
+            if (psi::Options_.get_bool("FORM_MBAR3")) {
                 osc = fci_mo.compute_ref_relaxed_osc(Mbar1_, Mbar2_, Mbar3_);
             } else {
                 osc = fci_mo.compute_ref_relaxed_osc(Mbar1_, Mbar2_);
@@ -210,13 +210,13 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
             // diagonalize which the second-order effective Hamiltonian
             // FULL: CASCI using determinants
             // AVG_STATES: H_AB = <A|H|B> where A and B are SA-CAS states
-            if (options_.get_str("DSRG_MULTI_STATE") == "SA_FULL") {
+            if (psi::Options_.get_str("DSRG_MULTI_STATE") == "SA_FULL") {
 
                 outfile->Printf("\n    Use string FCI code.");
 
                 // prepare FCISolver
                 int charge = Process::environment.molecule()->molecular_charge();
-                if (options_["CHARGE"].has_changed()) {
+                if (psi::Options_["CHARGE"].has_changed()) {
                     charge = options_.get_int("CHARGE");
                 }
                 auto nelec = 0;
@@ -239,9 +239,9 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
                 fcisolver.set_max_rdm_level(1);
                 fcisolver.set_nroot(nstates);
                 fcisolver.set_root(nstates - 1);
-                fcisolver.set_fci_iterations(options_.get_int("FCI_MAXITER"));
-                fcisolver.set_collapse_per_root(options_.get_int("DL_COLLAPSE_PER_ROOT"));
-                fcisolver.set_subspace_per_root(options_.get_int("DL_SUBSPACE_PER_ROOT"));
+                fcisolver.set_fci_iterations(psi::Options_.get_int("FCI_MAXITER"));
+                fcisolver.set_collapse_per_root(psi::Options_.get_int("DL_COLLAPSE_PER_ROOT"));
+                fcisolver.set_subspace_per_root(psi::Options_.get_int("DL_SUBSPACE_PER_ROOT"));
                 fcisolver.set_integral_pointer(fci_ints);
 
                 // compute energy and fill in results
@@ -290,7 +290,7 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
                         H_AB += 0.25 * Hbar2_["UVXY"] * D2["XYUV"];
                         H_AB += Hbar2_["uVxY"] * D2["xYuV"];
 
-                        if (options_.get_bool("FORM_HBAR3")) {
+                        if (psi::Options_.get_bool("FORM_HBAR3")) {
                             BlockedTensor D3 =
                                 BTF_->build(tensor_type_, "D3", spin_cases({"aaaaaa"}), true);
                             ci_rdms.compute_3rdm(
@@ -392,7 +392,7 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_xms() {
         }
 
         // XMS rotaion if needed
-        if (options_.get_str("DSRG_MULTI_STATE") == "XMS") {
+        if (psi::Options_.get_str("DSRG_MULTI_STATE") == "XMS") {
             if (nentry > 1) {
                 // recompute state-averaged density
                 outfile->Printf("\n    Recompute SA density matrix of %s with equal weights.",
@@ -882,7 +882,7 @@ void DSRG_MRPT2::compute_cumulants(std::shared_ptr<FCIIntegrals> fci_ints,
     L2ab("pqrs") -= L1a("pr") * L1b("qs");
 
     // 3 cumulant
-    if (options_.get_str("THREEPDC") != "ZERO") {
+    if (psi::Options_.get_str("THREEPDC") != "ZERO") {
         ambit::Tensor L3aaa = reference_.L3aaa();
         ambit::Tensor L3aab = reference_.L3aab();
         ambit::Tensor L3abb = reference_.L3abb();

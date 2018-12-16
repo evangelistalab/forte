@@ -59,7 +59,7 @@ namespace forte {
 CustomIntegrals::CustomIntegrals(psi::Options& options, psi::SharedWavefunction ref_wfn,
                                  IntegralSpinRestriction restricted,
                                  std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : ForteIntegrals(options, ref_wfn, restricted, mo_space_info) {
+    : ForteIntegrals(psi::Options, ref_wfn, restricted, mo_space_info) {
     integral_type_ = Custom;
     print_info();
     outfile->Printf("\n  Using Custom integrals\n\n");
@@ -330,7 +330,7 @@ void CustomIntegrals::custom_integrals_allocate(int norb,
     /// If MO_ROTATE is set in option, call rotate_mos.
     /// Wasn't really sure where to put this function, but since, integrals is
     /// always called, this seems like a good spot.
-    if (options_["ROTATE_MOS"].size() > 0) {
+    if (psi::Options_["ROTATE_MOS"].size() > 0) {
         outfile->Printf("\n  The option ROTATE_MOS is not supported with custom integrals\n");
         exit(1);
     }

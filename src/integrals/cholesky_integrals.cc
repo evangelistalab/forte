@@ -53,7 +53,7 @@ namespace forte {
 CholeskyIntegrals::CholeskyIntegrals(psi::Options& options, psi::SharedWavefunction ref_wfn,
                                      IntegralSpinRestriction restricted,
                                      std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : ForteIntegrals(options, ref_wfn, restricted, mo_space_info) {
+    : ForteIntegrals(psi::Options, ref_wfn, restricted, mo_space_info) {
 
     integral_type_ = Cholesky;
     print_info();
@@ -162,7 +162,7 @@ void CholeskyIntegrals::gather_integrals() {
     std::shared_ptr<CholeskyERI> Ch(new CholeskyERI(std::shared_ptr<TwoBodyAOInt>(integral->eri()),
                                                     options_.get_double("INTS_TOLERANCE"), tol_cd,
                                                     Process::environment.get_memory()));
-    if (options_.get_str("DF_INTS_IO") == "LOAD") {
+    if (psi::Options_.get_str("DF_INTS_IO") == "LOAD") {
         std::shared_ptr<ERISieve> sieve(
             new ERISieve(primary, options_.get_double("INTS_TOLERANCE")));
         const std::vector<std::pair<int, int>>& function_pairs = sieve->function_pairs();

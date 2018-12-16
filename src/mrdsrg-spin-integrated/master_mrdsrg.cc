@@ -458,7 +458,7 @@ void MASTER_DSRG::init_dm_ints() {
             BlockedTensor Mbar2 =
                 BTF_->build(tensor_type_, "DSRG DM2 " + dm_dirs_[i], spin_cases({"aaaa"}));
             Mbar2_.emplace_back(Mbar2);
-            if (options_.get_bool("FORM_MBAR3")) {
+            if (psi::Options_.get_bool("FORM_MBAR3")) {
                 BlockedTensor Mbar3 =
                     BTF_->build(tensor_type_, "DSRG DM3 " + dm_dirs_[i], spin_cases({"aaaaaa"}));
                 Mbar3_.emplace_back(Mbar3);
@@ -531,7 +531,7 @@ void MASTER_DSRG::compute_dm_ref() {
 std::shared_ptr<FCIIntegrals> MASTER_DSRG::compute_Heff_actv() {
     // de-normal-order DSRG transformed Hamiltonian
     double Edsrg = Eref_ + Hbar0_;
-    if (options_.get_bool("FORM_HBAR3")) {
+    if (psi::Options_.get_bool("FORM_HBAR3")) {
         deGNO_ints("Hamiltonian", Edsrg, Hbar1_, Hbar2_, Hbar3_);
         rotate_ints_semi_to_origin("Hamiltonian", Hbar1_, Hbar2_, Hbar3_);
     } else {
@@ -787,7 +787,7 @@ std::vector<ambit::Tensor> MASTER_DSRG::Hbar(int n) {
     } else if (n == 2) {
         out = {Hbar2_.block("aaaa"), Hbar2_.block("aAaA"), Hbar2_.block("AAAA")};
     } else if (n == 3) {
-        if (options_.get_bool("FORM_HBAR3")) {
+        if (psi::Options_.get_bool("FORM_HBAR3")) {
             out = {Hbar3_.block("aaaaaa"), Hbar3_.block("aaAaaA"), Hbar3_.block("aAAaAA"),
                    Hbar3_.block("AAAAAA")};
         } else {
@@ -1006,7 +1006,7 @@ void MASTER_DSRG::H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const double& a
     E += temp["uVxY"] * Lambda2_["xYuV"];
 
     // <[Hbar2, T2]> C_6 C_2
-    if (options_.get_str("THREEPDC") != "ZERO") {
+    if (psi::Options_.get_str("THREEPDC") != "ZERO") {
         temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"aaaaaa"});
         temp["uvwxyz"] += H2["uviz"] * T2["iwxy"];
         temp["uvwxyz"] += H2["waxy"] * T2["uvaz"];

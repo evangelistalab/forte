@@ -68,7 +68,7 @@ namespace forte {
 
 DMRGSCF::DMRGSCF(psi::SharedWavefunction ref_wfn, Options& options,
                  std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ForteIntegrals> ints)
-    : Wavefunction(options), mo_space_info_(mo_space_info), ints_(ints) {
+    : Wavefunction(psi::Options), mo_space_info_(mo_space_info), ints_(ints) {
     shallow_copy(ref_wfn);
     reference_wavefunction_ = ref_wfn;
     print_method_banner({"Density Matrix Renormalization Group SCF", "Sebastian Wouters"});
@@ -525,9 +525,9 @@ double DMRGSCF::compute_energy() {
         psi::get_writer_file_prefix(this->molecule()->name()) + ".unitary.h5";
     const std::string diisname = psi::get_writer_file_prefix(this->molecule()->name()) + ".DIIS.h5";
     bool three_pdm = false;
-    if (options_.get_str("JOB_TYPE") == "DSRG-MRPT2" or
+    if (psi::Options_.get_str("JOB_TYPE") == "DSRG-MRPT2" or
         options_.get_str("JOB_TYPE") == "THREE-DSRG-MRPT2") {
-        if (options_.get_str("THREEPDC") != "ZERO")
+        if (psi::Options_.get_str("THREEPDC") != "ZERO")
             three_pdm = true;
     }
 
@@ -1130,7 +1130,7 @@ double DMRGSCF::compute_energy() {
 }
 void DMRGSCF::compute_reference(double* one_rdm, double* two_rdm, double* three_rdm,
                                 CheMPS2::DMRGSCFindices* iHandler) {
-    // if(options_.get_int("MULTIPLICITY") != 1 &&
+    // if(psi::Options_.get_int("MULTIPLICITY") != 1 &&
     // options_.get_int("DMRG_WFN_MULTP") != 1)
     //{
     //    outfile->Printf("\n\n Spinadapted formalism requires spin-averaged
@@ -1192,8 +1192,8 @@ void DMRGSCF::compute_reference(double* one_rdm, double* two_rdm, double* three_
         dmrg_ref.set_L2ab(cumulant2_ab);
         dmrg_ref.set_L2bb(cumulant2_aa);
     }
-    if ((options_.get_str("THREEPDC") != "ZERO") &&
-        (options_.get_str("JOB_TYPE") == "DSRG-MRPT2" or
+    if ((psi::Options_.get_str("THREEPDC") != "ZERO") &&
+        (psi::Options_.get_str("JOB_TYPE") == "DSRG-MRPT2" or
          options_.get_str("JOB_TYPE") == "THREE-DSRG-MRPT2")) {
         ambit::Tensor gamma3_dmrg =
             ambit::Tensor::build(ambit::CoreTensor, "Gamma3_DMRG", {na, na, na, na, na, na});

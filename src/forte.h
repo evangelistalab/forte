@@ -37,7 +37,7 @@ std::pair<int, int> startup();
 void banner();
 void cleanup();
 
-int read_options(Options& options);
+int read_options(psi::Options& options);
 psi::SharedWavefunction run_forte(psi::SharedWavefunction ref_wfn, Options& options);
 
 
@@ -56,6 +56,6 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, Options& options,
                        std::shared_ptr<ForteIntegrals> ints,
                        std::shared_ptr<MOSpaceInfo> mo_space_info);
 
-void forte_old_options(Options& options);
+void forte_old_options(psi::Options& options);
 }
 } // End Namespaces

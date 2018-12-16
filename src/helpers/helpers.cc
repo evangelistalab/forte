@@ -162,7 +162,7 @@ namespace forte {
 //     return result;
 // }
 //
-// void MOSpaceInfo::read_options(Options& options) {
+// void MOSpaceInfo::read_options(psi::Options& options) {
 //     outfile->Printf("\n\n  ==> MO Space Information <==\n");
 //
 //     // Read the elementary spaces
@@ -279,7 +279,7 @@ namespace forte {
 //     bool read = false;
 //     Dimension space_dim(nirrep_);
 //     std::vector<MOInfo> vec_mo_info;
-//     if ((options[space].has_changed()) && (options[space].size() == nirrep_)) {
+//     if ((psi::Options[space].has_changed()) && (psi::Options[space].size() == nirrep_)) {
 //         for (size_t h = 0; h < nirrep_; ++h) {
 //             space_dim[h] = options[space][h].to_integer();
 //         }

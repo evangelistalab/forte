@@ -9,7 +9,7 @@
 
 namespace forte {
 
-void forte_old_options(Options& options) {
+void forte_old_options(psi::Options& options) {
 
     /*- MODULEDESCRIPTION Forte */
 

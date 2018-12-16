@@ -74,17 +74,17 @@ namespace forte {
 DMRGSolver::DMRGSolver(psi::SharedWavefunction ref_wfn, Options& options,
                        std::shared_ptr<MOSpaceInfo> mo_space_info,
                        std::shared_ptr<ForteIntegrals> ints)
-    : wfn_(ref_wfn), options_(options), mo_space_info_(mo_space_info), ints_(ints) {
+    : wfn_(ref_wfn), options_(psi::Options), mo_space_info_(mo_space_info), ints_(ints) {
     print_method_banner({"Density Matrix Renormalization Group SCF", "Sebastian Wouters"});
 }
 DMRGSolver::DMRGSolver(psi::SharedWavefunction ref_wfn, Options& options,
                        std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : wfn_(ref_wfn), options_(options), mo_space_info_(mo_space_info) {
+    : wfn_(ref_wfn), options_(psi::Options), mo_space_info_(mo_space_info) {
     print_method_banner({"Density Matrix Renormalization Group", "Sebastian Wouters"});
 }
 void DMRGSolver::compute_reference(double* one_rdm, double* two_rdm, double* three_rdm,
                                    CheMPS2::DMRGSCFindices* iHandler) {
-    // if(options_.get_int("MULTIPLICITY") != 1 &&
+    // if(psi::Options_.get_int("MULTIPLICITY") != 1 &&
     // options_.get_int("DMRG_WFN_MULTP") != 1)
     //{
     //    outfile->Printf("\n\n Spinadapted formalism requires spin-averaged
@@ -149,8 +149,8 @@ void DMRGSolver::compute_reference(double* one_rdm, double* two_rdm, double* thr
         dmrg_ref.set_L2ab(cumulant2_ab);
         dmrg_ref.set_L2bb(cumulant2_aa);
     }
-    // if((options_.get_str("THREEPDC") != "ZERO") &&
-    // (options_.get_str("JOB_TYPE") == "DSRG-MRPT2" or
+    // if((psi::Options_.get_str("THREEPDC") != "ZERO") &&
+    // (psi::Options_.get_str("JOB_TYPE") == "DSRG-MRPT2" or
     // options_.get_str("JOB_TYPE") == "THREE-DSRG-MRPT2"))
     if (max_rdm_ > 2 && !disk_3_rdm_) {
         ambit::Tensor gamma3_dmrg =
@@ -257,9 +257,9 @@ void DMRGSolver::compute_energy() {
         psi::get_writer_file_prefix(wfn_->molecule()->name()) + ".unitary.h5";
     const std::string diisname = psi::get_writer_file_prefix(wfn_->molecule()->name()) + ".DIIS.h5";
     bool three_pdm = false;
-    if (options_.get_str("JOB_TYPE") == "DSRG-MRPT2" or
+    if (psi::Options_.get_str("JOB_TYPE") == "DSRG-MRPT2" or
         options_.get_str("JOB_TYPE") == "THREE-DSRG-MRPT2") {
-        if (options_.get_str("THREEPDC") != "ZERO")
+        if (psi::Options_.get_str("THREEPDC") != "ZERO")
             three_pdm = true;
     }
     /****************************************
@@ -388,7 +388,7 @@ void DMRGSolver::compute_energy() {
         active_integrals_ =
             ints_->aptei_ab_block(active_array, active_array, active_array, active_array);
         /// SCF_TYPE CD tends to be slow.  Avoid it and use integral class
-        if (options_.get_str("SCF_TYPE") != "CD") {
+        if (psi::Options_.get_str("SCF_TYPE") != "CD") {
             local_timer one_body_timer;
             one_body_integrals_ = one_body_operator();
             outfile->Printf("\n OneBody integrals (though one_body_operator) takes %6.5f s",
@@ -506,7 +506,7 @@ void DMRGSolver::compute_energy() {
     }
 
     compute_reference(DMRG1DM, DMRG2DM, DMRG3DM, iHandler.get());
-    if (options_.get_bool("PRINT_NO")) {
+    if (psi::Options_.get_bool("PRINT_NO")) {
         print_natural_orbitals(DMRG1DM);
     }
     dmrg_ref_.set_Eref(Energy);

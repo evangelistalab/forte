@@ -126,7 +126,7 @@ class MOSpaceInfo {
     /// @return The list of the relative index (h,p_rel) of the molecular
     /// orbitals in space
     std::vector<std::pair<size_t, size_t>> get_relative_mo(const std::string& space);
-    void read_options(Options& options);
+    void read_options(psi::Options& options);
     /// @return The number of irreps
     size_t nirrep() { return nirrep_; }
 

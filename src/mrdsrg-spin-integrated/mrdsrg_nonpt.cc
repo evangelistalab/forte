@@ -115,13 +115,13 @@ void MRDSRG::compute_hbar() {
         } else {
             H2_T1_C1(O2_, T1_, factor, C1_);
         }
-        if (options_.get_str("SRG_COMM") == "STANDARD") {
+        if (psi::Options_.get_str("SRG_COMM") == "STANDARD") {
             if (n == 1 && eri_df_) {
                 H2_T2_C1_DF(B_, T2_, factor, C1_);
             } else {
                 H2_T2_C1(O2_, T2_, factor, C1_);
             }
-        } else if (options_.get_str("SRG_COMM") == "FO") {
+        } else if (psi::Options_.get_str("SRG_COMM") == "FO") {
             BlockedTensor C1p = BTF_->build(tensor_type_, "C1p", spin_cases({"gg"}));
             if (n == 1 && eri_df_) {
                 H2_T2_C1_DF(B_, T2_, factor, C1p);
@@ -138,9 +138,9 @@ void MRDSRG::compute_hbar() {
             C1_["PQ"] += C1p["PQ"];
         }
         // two-body
-        if ((options_.get_str("SRG_COMM") == "STANDARD") or n < 2) {
+        if ((psi::Options_.get_str("SRG_COMM") == "STANDARD") or n < 2) {
             H1_T2_C2(O1_, T2_, factor, C2_);
-        } else if (options_.get_str("SRG_COMM") == "FO2") {
+        } else if (psi::Options_.get_str("SRG_COMM") == "FO2") {
             O1_.block("cc").scale(2.0);
             O1_.block("aa").scale(2.0);
             O1_.block("vv").scale(2.0);
@@ -671,7 +671,7 @@ double MRDSRG::compute_energy_ldsrg2() {
 
     timer ldsrg2("Energy_ldsrg2");
 
-    if (options_.get_str("THREEPDC") == "ZERO") {
+    if (psi::Options_.get_str("THREEPDC") == "ZERO") {
         outfile->Printf("\n    Skip Lambda3 contributions in [Hbar2, T2].");
     }
     std::string indent(4, ' ');
@@ -804,7 +804,7 @@ double MRDSRG::compute_energy_ldsrg2() {
             converged = true;
 
             // rebuild Hbar because it is destroyed when updating amplitudes
-            if (options_.get_str("RELAX_REF") != "NONE" || options_["AVG_STATE"].size() != 0) {
+            if (psi::Options_.get_str("RELAX_REF") != "NONE" || options_["AVG_STATE"].size() != 0) {
                 if (sequential_Hbar_) {
                     compute_hbar_sequential_rotation();
                 } else {
@@ -1099,7 +1099,7 @@ double MRDSRG::compute_energy_ldsrg2_qc() {
             converged = true;
 
             // rebuild Hbar because it is destroyed when updating amplitudes
-            if (options_.get_str("RELAX_REF") != "NONE" || options_["AVG_STATE"].size() != 0) {
+            if (psi::Options_.get_str("RELAX_REF") != "NONE" || options_["AVG_STATE"].size() != 0) {
                 compute_hbar_qc();
             }
         }

@@ -166,7 +166,7 @@ double MRDSRG::compute_energy_lsrg2() {
     outfile->Printf("\n\n  ==> Computing MR-LSRG(2) Energy <==\n");
     outfile->Printf("\n    Reference:");
     outfile->Printf("\n      J. Chem. Phys. 2016 (in preparation)\n");
-    if (options_.get_str("THREEPDC") == "ZERO") {
+    if (psi::Options_.get_str("THREEPDC") == "ZERO") {
         outfile->Printf("\n    Skip Lambda3 contributions in [O2, T2].");
     }
 
@@ -377,7 +377,7 @@ double MRDSRG::compute_energy_srgpt2() {
     outfile->Printf("\n\n  ==> Computing SRG-MRPT2 Energy <==\n");
     outfile->Printf("\n    Reference:");
     outfile->Printf("\n      J. Chem. Phys. 2016 (in preparation)\n");
-    if (options_.get_str("THREEPDC") == "ZERO") {
+    if (psi::Options_.get_str("THREEPDC") == "ZERO") {
         outfile->Printf("\n    Skip Lambda3 contributions in [O2, T2].");
     }
 

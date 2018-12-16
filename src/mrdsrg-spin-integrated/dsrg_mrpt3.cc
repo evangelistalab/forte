@@ -92,7 +92,7 @@ void DSRG_MRPT3::startup() {
 
     // number of elements stored in memory
     size_t nelement = 6 * sh * sh * sh * sh + 6 * sa * sa * sa * sa;
-    if (options_.get_str("THREEPDC") != "ZERO") {
+    if (psi::Options_.get_str("THREEPDC") != "ZERO") {
         nelement += 4 * sa * sa * sa * sa * sa * sa;
     }
 
@@ -1408,7 +1408,7 @@ double DSRG_MRPT3::compute_energy_sa() {
 
                 // prepare FCISolver
                 int charge = Process::environment.molecule()->molecular_charge();
-                if (options_["CHARGE"].has_changed()) {
+                if (psi::Options_["CHARGE"].has_changed()) {
                     charge = options_.get_int("CHARGE");
                 }
                 auto nelec = 0;
@@ -1431,9 +1431,9 @@ double DSRG_MRPT3::compute_energy_sa() {
                 fcisolver.set_max_rdm_level(1);
                 fcisolver.set_nroot(nstates);
                 fcisolver.set_root(nstates - 1);
-                fcisolver.set_fci_iterations(options_.get_int("FCI_MAXITER"));
-                fcisolver.set_collapse_per_root(options_.get_int("DL_COLLAPSE_PER_ROOT"));
-                fcisolver.set_subspace_per_root(options_.get_int("DL_SUBSPACE_PER_ROOT"));
+                fcisolver.set_fci_iterations(psi::Options_.get_int("FCI_MAXITER"));
+                fcisolver.set_collapse_per_root(psi::Options_.get_int("DL_COLLAPSE_PER_ROOT"));
+                fcisolver.set_subspace_per_root(psi::Options_.get_int("DL_SUBSPACE_PER_ROOT"));
 
                 if (eri_df_) {
                     fcisolver.use_user_integrals_and_restricted_docc(true);
@@ -1559,7 +1559,7 @@ double DSRG_MRPT3::compute_energy_relaxed() {
     // obtain the all-active DSRG transformed Hamiltonian
     auto fci_ints = compute_Heff_actv();
 
-    if (options_.get_str("CAS_TYPE") == "CAS") {
+    if (psi::Options_.get_str("CAS_TYPE") == "CAS") {
         FCI_MO fci_mo(reference_wavefunction_, options_, ints_, mo_space_info_, fci_ints);
         fci_mo.set_localize_actv(false);
         Erelax = fci_mo.compute_energy();
@@ -1577,10 +1577,10 @@ double DSRG_MRPT3::compute_energy_relaxed() {
             // compute permanent dipoles
             dm_relax = fci_mo.compute_ref_relaxed_dm(Mbar0_, Mbar1_, Mbar2_);
         }
-    } else if (options_.get_str("CAS_TYPE") == "ACI") {
+    } else if (psi::Options_.get_str("CAS_TYPE") == "ACI") {
         AdaptiveCI aci(reference_wavefunction_, options_, ints_, mo_space_info_);
         aci.set_fci_ints(fci_ints);
-        if (options_["ACI_RELAX_SIGMA"].has_changed()) {
+        if (psi::Options_["ACI_RELAX_SIGMA"].has_changed()) {
             aci.update_sigma();
         }
         Erelax = aci.compute_energy();

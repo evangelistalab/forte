@@ -41,7 +41,7 @@ void ForteOptions::add_array(const std::string& label, const std::string& descri
     array_opts_.push_back(std::make_tuple(label, description));
 }
 
-void ForteOptions::add_psi4_options(Options& options) {
+void ForteOptions::add_psi4_options(psi::Options& options) {
     for (const auto& opt : bool_opts_) {
         options.add_bool(std::get<0>(opt), std::get<1>(opt));
     }
@@ -131,7 +131,7 @@ std::string ForteOptions::generate_documentation() const {
         options_lines.push_back(p.second);
     }
 
-    return to_string(options_lines, "\n");
+    return to_string(psi::Options_lines, "\n");
 }
 
 std::string rst_bold(const std::string& s) { return "**" + s + "**"; }

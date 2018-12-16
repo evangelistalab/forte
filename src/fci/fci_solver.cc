@@ -61,7 +61,7 @@ FCISolver::FCISolver(Dimension active_dim, std::vector<size_t> core_mo,
     : active_dim_(active_dim), core_mo_(core_mo), active_mo_(active_mo), ints_(ints),
       nirrep_(active_dim.n()), symmetry_(symmetry), na_(na), nb_(nb), multiplicity_(multiplicity),
       nroot_(0), ntrial_per_root_(ntrial_per_root), print_(print), mo_space_info_(mo_space_info),
-      options_(options) {
+      options_(psi::Options) {
     nroot_ = options_.get_int("NROOT");
     startup();
 }
@@ -72,7 +72,7 @@ FCISolver::FCISolver(Dimension active_dim, std::vector<size_t> core_mo,
                      std::shared_ptr<MOSpaceInfo> mo_space_info, Options& options)
     : active_dim_(active_dim), core_mo_(core_mo), active_mo_(active_mo), ints_(ints),
       nirrep_(active_dim.n()), symmetry_(symmetry), na_(na), nb_(nb), multiplicity_(multiplicity),
-      nroot_(0), mo_space_info_(mo_space_info), options_(options) {
+      nroot_(0), mo_space_info_(mo_space_info), options_(psi::Options) {
     ntrial_per_root_ = options_.get_int("NTRIAL_PER_ROOT");
     print_ = options_.get_int("PRINT");
     startup();
@@ -163,7 +163,7 @@ double FCISolver::compute_energy() {
     Hdiag.copy_to(sigma);
 
     DavidsonLiuSolver dls(fci_size, nroot_);
-    dls.set_e_convergence(options_.get_double("E_CONVERGENCE"));
+    dls.set_e_convergence(psi::Options_.get_double("E_CONVERGENCE"));
     dls.set_print_level(print_);
     dls.set_collapse_per_root(collapse_per_root_);
     dls.set_subspace_per_root(subspace_per_root_);

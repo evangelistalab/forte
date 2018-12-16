@@ -55,7 +55,7 @@ namespace forte {
 ConventionalIntegrals::ConventionalIntegrals(psi::Options& options, psi::SharedWavefunction ref_wfn,
                                              IntegralSpinRestriction restricted,
                                              std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : ForteIntegrals(options, ref_wfn, restricted, mo_space_info) {
+    : ForteIntegrals(psi::Options, ref_wfn, restricted, mo_space_info) {
 
     integral_type_ = Conventional;
     print_info();

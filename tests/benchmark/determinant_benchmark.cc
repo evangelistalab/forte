@@ -6,7 +6,7 @@
 
 #include "../../src/sparse_ci/ui64_determinant.h"
 
-using namespace psi::forte;
+using namespace forte;
 
 int main(int argc, char* argv[]) {
     std::filebuf fb;

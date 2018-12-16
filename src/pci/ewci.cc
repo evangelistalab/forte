@@ -106,7 +106,7 @@ void ElementwiseCI::sortHashVecByCoefficient(det_hashvec& dets_hashvec, std::vec
 ElementwiseCI::ElementwiseCI(psi::SharedWavefunction ref_wfn, Options& options,
                              std::shared_ptr<ForteIntegrals> ints,
                              std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : Wavefunction(options), ints_(ints), mo_space_info_(mo_space_info),
+    : Wavefunction(psi::Options), ints_(ints), mo_space_info_(mo_space_info),
       fast_variational_estimate_(false) {
     // Copy the wavefunction information
     shallow_copy(ref_wfn);
@@ -142,12 +142,12 @@ void ElementwiseCI::startup() {
     mo_symmetry_ = mo_space_info_->symmetry("ACTIVE");
 
     wavefunction_symmetry_ = 0;
-    if (options_["ROOT_SYM"].has_changed()) {
+    if (psi::Options_["ROOT_SYM"].has_changed()) {
         wavefunction_symmetry_ = options_.get_int("ROOT_SYM");
     }
     // Read options
     wavefunction_multiplicity_ = 1;
-    if (options_["MULTIPLICITY"].has_changed()) {
+    if (psi::Options_["MULTIPLICITY"].has_changed()) {
         wavefunction_multiplicity_ = options_.get_int("MULTIPLICITY");
     }
 
@@ -180,12 +180,12 @@ void ElementwiseCI::startup() {
     current_root_ = -1;
     post_diagonalization_ = options_.get_bool("PCI_POST_DIAGONALIZE");
     diag_method_ = DLSolver;
-    if (options_["DIAG_ALGORITHM"].has_changed()) {
-        if (options_.get_str("DIAG_ALGORITHM") == "FULL") {
+    if (psi::Options_["DIAG_ALGORITHM"].has_changed()) {
+        if (psi::Options_.get_str("DIAG_ALGORITHM") == "FULL") {
             diag_method_ = Full;
-        } else if (options_.get_str("DIAG_ALGORITHM") == "DLSTRING") {
+        } else if (psi::Options_.get_str("DIAG_ALGORITHM") == "DLSTRING") {
             diag_method_ = DLString;
-        } else if (options_.get_str("DIAG_ALGORITHM") == "DLDISK") {
+        } else if (psi::Options_.get_str("DIAG_ALGORITHM") == "DLDISK") {
             diag_method_ = DLDisk;
         }
     }
@@ -222,7 +222,7 @@ void ElementwiseCI::startup() {
     approx_E_tau_ = 1.0;
     approx_E_S_ = 0.0;
 
-    if (options_.get_str("PCI_GENERATOR") == "WALL-CHEBYSHEV") {
+    if (psi::Options_.get_str("PCI_GENERATOR") == "WALL-CHEBYSHEV") {
         generator_ = WallChebyshevGenerator;
         generator_description_ = "Wall-Chebyshev";
         time_step_ = 1.0;
@@ -232,7 +232,7 @@ void ElementwiseCI::startup() {
                             chebyshev_order_);
             chebyshev_order_ = 5;
         }
-    } else if (options_.get_str("PCI_GENERATOR") == "DL") {
+    } else if (psi::Options_.get_str("PCI_GENERATOR") == "DL") {
         generator_ = DLGenerator;
         generator_description_ = "Davidson-Liu by Tianyuan";
         time_step_ = 1.0;
@@ -247,7 +247,7 @@ void ElementwiseCI::startup() {
         abort();
     }
 
-    if (options_.get_str("PCI_FUNCTIONAL") == "MAX") {
+    if (psi::Options_.get_str("PCI_FUNCTIONAL") == "MAX") {
         if (std::numeric_limits<double>::has_infinity) {
             functional_order_ = std::numeric_limits<double>::infinity();
         } else {
@@ -260,7 +260,7 @@ void ElementwiseCI::startup() {
             return true;
         };
         functional_description_ = "|Hij|*max(|Ci|,|Cj|)";
-    } else if (options_.get_str("PCI_FUNCTIONAL") == "SUM") {
+    } else if (psi::Options_.get_str("PCI_FUNCTIONAL") == "SUM") {
         functional_order_ = 1.0;
         prescreen_H_CI_ = [](double HJI, double CI, double spawning_threshold) {
             return std::fabs(HJI * CI) >= 0.5 * spawning_threshold;
@@ -269,7 +269,7 @@ void ElementwiseCI::startup() {
             return std::fabs(HJI * CI) + std::fabs(HJI * CJ) >= spawning_threshold;
         };
         functional_description_ = "|Hij|*(|Ci|+|Cj|)";
-    } else if (options_.get_str("PCI_FUNCTIONAL") == "SQUARE") {
+    } else if (psi::Options_.get_str("PCI_FUNCTIONAL") == "SQUARE") {
         functional_order_ = 2.0;
         prescreen_H_CI_ = [](double HJI, double CI, double spawning_threshold) {
             return std::fabs(HJI * CI) >= 1.4142135623730952 * spawning_threshold;
@@ -278,7 +278,7 @@ void ElementwiseCI::startup() {
             return std::fabs(HJI) * std::sqrt(CI * CI + CJ * CJ) >= spawning_threshold;
         };
         functional_description_ = "|Hij|*sqrt(Ci^2+Cj^2)";
-    } else if (options_.get_str("PCI_FUNCTIONAL") == "SQRT") {
+    } else if (psi::Options_.get_str("PCI_FUNCTIONAL") == "SQRT") {
         functional_order_ = 0.5;
         prescreen_H_CI_ = [](double HJI, double CI, double spawning_threshold) {
             return std::fabs(HJI * CI) >= 0.25 * spawning_threshold;
@@ -289,7 +289,7 @@ void ElementwiseCI::startup() {
                    spawning_threshold;
         };
         functional_description_ = "|Hij|*(sqrt(|Ci|)+sqrt(|Cj|))^2";
-    } else if (options_.get_str("PCI_FUNCTIONAL") == "SPECIFY-ORDER") {
+    } else if (psi::Options_.get_str("PCI_FUNCTIONAL") == "SPECIFY-ORDER") {
         functional_order_ = options_.get_double("PCI_FUNCTIONAL_ORDER");
         double factor = std::pow(2.0, 1.0 / functional_order_);
         prescreen_H_CI_ = [factor](double HJI, double CI, double spawning_threshold) {
@@ -580,8 +580,8 @@ double ElementwiseCI::compute_energy() {
 
     SparseCISolver sparse_solver(fci_ints_);
     sparse_solver.set_parallel(true);
-    sparse_solver.set_e_convergence(options_.get_double("E_CONVERGENCE"));
-    sparse_solver.set_maxiter_davidson(options_.get_int("DL_MAXITER"));
+    sparse_solver.set_e_convergence(psi::Options_.get_double("E_CONVERGENCE"));
+    sparse_solver.set_maxiter_davidson(psi::Options_.get_int("DL_MAXITER"));
     sparse_solver.set_spin_project(true);
 
     pqpq_aa_ = new double[nact_ * nact_];
@@ -935,8 +935,8 @@ double ElementwiseCI::initial_guess(det_hashvec& dets_hashvec, std::vector<doubl
 
     SparseCISolver sparse_solver(fci_ints_);
     sparse_solver.set_parallel(true);
-    sparse_solver.set_e_convergence(options_.get_double("E_CONVERGENCE"));
-    sparse_solver.set_maxiter_davidson(options_.get_int("DL_MAXITER"));
+    sparse_solver.set_e_convergence(psi::Options_.get_double("E_CONVERGENCE"));
+    sparse_solver.set_maxiter_davidson(psi::Options_.get_int("DL_MAXITER"));
     sparse_solver.set_spin_project(true);
 
     SharedMatrix evecs(new Matrix("Eigenvectors", guess_size, nroot_));

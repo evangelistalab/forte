@@ -57,8 +57,8 @@ double CC::compute_energy() { return 0.0; }
 // options,
 //               std::shared_ptr<ForteIntegrals> ints,
 //               std::shared_ptr<MOSpaceInfo> mo_space_info)
-//    : Wavefunction(options), reference_(reference), ints_(ints),
-//      mo_space_info_(mo_space_info), BTF_(new BlockedTensorFactory(options)),
+//    : Wavefunction(psi::Options), reference_(reference), ints_(ints),
+//      mo_space_info_(mo_space_info), BTF_(new BlockedTensorFactory(psi::Options)),
 //      tensor_type_(CoreTensor)
 //{
 //    shallow_copy(ref_wfn);
@@ -240,7 +240,7 @@ void CC::startup() {
 ////    });
 
 //    // prepare three-body density cumulants
-//    if(options_.get_str("THREEPDC") != "ZERO"){
+//    if(psi::Options_.get_str("THREEPDC") != "ZERO"){
 //        ambit::Tensor Lambda3_aaa = Lambda3_.block("aaaaaa");
 //        ambit::Tensor Lambda3_aaA = Lambda3_.block("aaAaaA");
 //        ambit::Tensor Lambda3_aAA = Lambda3_.block("aAAaAA");

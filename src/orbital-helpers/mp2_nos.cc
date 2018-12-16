@@ -248,7 +248,7 @@ MP2_NOS::MP2_NOS(std::shared_ptr<Wavefunction> wfn, Options& options,
     D1VV.diagonalize(D1VV_evecs, D1VV_evals);
 
     // Print natural orbitals
-    if (options.get_bool("NAT_ORBS_PRINT"))
+    if (psi::Options.get_bool("NAT_ORBS_PRINT"))
 
     {
         D1oo_evals.print();
@@ -258,7 +258,7 @@ MP2_NOS::MP2_NOS(std::shared_ptr<Wavefunction> wfn, Options& options,
     }
     // This will suggested a restricted_docc and a active
     // Does not take in account frozen_docc
-    if (options.get_bool("NAT_ACT")) {
+    if (psi::Options.get_bool("NAT_ACT")) {
         std::vector<size_t> restricted_docc(nirrep);
         std::vector<size_t> active(nirrep);
         double occupied = options.get_double("OCC_NATURAL");

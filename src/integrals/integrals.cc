@@ -98,7 +98,7 @@ void set_INT_options(ForteOptions& foptions) {
 ForteIntegrals::ForteIntegrals(psi::Options& options, std::shared_ptr<Wavefunction> ref_wfn,
                                IntegralSpinRestriction restricted,
                                std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : options_(options), wfn_(ref_wfn), restricted_(restricted), frozen_core_energy_(0.0),
+    : options_(psi::Options), wfn_(ref_wfn), restricted_(restricted), frozen_core_energy_(0.0),
       scalar_(0.0), mo_space_info_(mo_space_info) {
 
     startup();
@@ -150,7 +150,7 @@ void ForteIntegrals::startup() {
     /// If MO_ROTATE is set in option, call rotate_mos.
     /// Wasn't really sure where to put this function, but since, integrals is
     /// always called, this seems like a good spot.
-    if (options_["ROTATE_MOS"].size() > 0) {
+    if (psi::Options_["ROTATE_MOS"].size() > 0) {
         rotate_mos();
     }
 }
@@ -272,7 +272,7 @@ void ForteIntegrals::compute_frozen_one_body_operator() {
     }
 
     std::shared_ptr<JK> JK_core;
-    if (options_.get_str("SCF_TYPE") == "GTFOCK") {
+    if (psi::Options_.get_str("SCF_TYPE") == "GTFOCK") {
 #ifdef HAVE_JK_FACTORY
         Process::environment.set_legacy_molecule(wfn_->molecule());
         JK_core = std::shared_ptr<JK>(new GTFockJK(wfn_->basisset()));
@@ -280,7 +280,7 @@ void ForteIntegrals::compute_frozen_one_body_operator() {
         throw PSIEXCEPTION("GTFock was not compiled in this version");
 #endif
     } else {
-        if (options_.get_str("SCF_TYPE") == "DF") {
+        if (psi::Options_.get_str("SCF_TYPE") == "DF") {
             if ((integral_type_ == DF) or (integral_type_ == DiskDF)) {
                 JK_core = JK::build_JK(wfn_->basisset(), wfn_->get_basisset("DF_BASIS_MP2"),
                                        options_, "MEM_DF");
@@ -296,8 +296,8 @@ void ForteIntegrals::compute_frozen_one_body_operator() {
     JK_core->set_memory(Process::environment.get_memory() * 0.8);
     /// Already transform everything to C1 so make sure JK does not do this.
 
-    // JK_core->set_cutoff(options_.get_double("INTEGRAL_SCREENING"));
-    JK_core->set_cutoff(options_.get_double("INTEGRAL_SCREENING"));
+    // JK_core->set_cutoff(psi::Options_.get_double("INTEGRAL_SCREENING"));
+    JK_core->set_cutoff(psi::Options_.get_double("INTEGRAL_SCREENING"));
     JK_core->initialize();
     JK_core->set_do_J(true);
     // JK_core->set_allow_desymmetrization(true);

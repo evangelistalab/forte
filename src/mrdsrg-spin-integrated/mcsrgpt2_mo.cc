@@ -57,7 +57,7 @@ MCSRGPT2_MO::MCSRGPT2_MO(psi::SharedWavefunction ref_wfn, Options& options,
     compute_ss_energy();
 
     // reference cumulants
-    int max_rdm_level = (options_.get_str("THREEPDC") != "ZERO") ? 3 : 2;
+    int max_rdm_level = (psi::Options_.get_str("THREEPDC") != "ZERO") ? 3 : 2;
     Reference ref = reference(max_rdm_level);
 
     // semicanonicalize orbitals
@@ -82,8 +82,8 @@ MCSRGPT2_MO::MCSRGPT2_MO(psi::SharedWavefunction ref_wfn, Options& options,
     print_method_banner({"Driven Similarity Renormalization Group",
                          "Second-Order Perturbative Analysis", "Chenyang Li"});
 
-    startup(options);
-    if (options.get_str("CORR_LEVEL") == "SRG_PT2") {
+    startup(psi::Options);
+    if (psi::Options.get_str("CORR_LEVEL") == "SRG_PT2") {
         Process::environment.globals["CURRENT ENERGY"] = compute_energy_srg();
     } else {
         Process::environment.globals["CURRENT ENERGY"] = compute_energy_dsrg();
@@ -96,7 +96,7 @@ void MCSRGPT2_MO::cleanup() {
     //    delete integral_;
 }
 
-void MCSRGPT2_MO::startup(Options& options) {
+void MCSRGPT2_MO::startup(psi::Options& options) {
 
     // Source Operator
     source_ = options.get_str("SOURCE");
@@ -131,7 +131,7 @@ void MCSRGPT2_MO::startup(Options& options) {
     if (expo_delta_ <= 1.0) {
         throw PSIEXCEPTION("DELTA_EXPONENT must be greater than 1.0.");
     }
-    double e_conv = -log10(options.get_double("E_CONVERGENCE"));
+    double e_conv = -log10(psi::Options.get_double("E_CONVERGENCE"));
     taylor_order_ = floor((e_conv / taylor_threshold_ + 1.0) / expo_delta_) + 1;
 
     // Print Original Orbital Indices
@@ -167,7 +167,7 @@ void MCSRGPT2_MO::startup(Options& options) {
         L2bb_ = d4(nactv_, d3(nactv_, d2(nactv_, d1(nactv_))));
     }
 
-    if (options.get_str("CORR_LEVEL") == "SRG_PT2") {
+    if (psi::Options.get_str("CORR_LEVEL") == "SRG_PT2") {
         // compute [1 - exp(-s * x^2)] / x^2
         srg_source_ = std::make_shared<LABS_SOURCE>(s_, taylor_threshold_);
 
@@ -1687,7 +1687,7 @@ double MCSRGPT2_MO::compute_energy_dsrg() {
     E_VT2_2(E7);
     outfile->Printf("\t\t\t\t\tDone.");
 
-    if (options_.get_str("TWOPDC") != "ZERO") {
+    if (psi::Options_.get_str("TWOPDC") != "ZERO") {
         outfile->Printf("\n  Computing energy of [V, T2] C_2^2 * C_4 ...");
 
         E_VT2_4PP(E8_1);
@@ -1696,7 +1696,7 @@ double MCSRGPT2_MO::compute_energy_dsrg() {
         outfile->Printf("\t\t\t\tDone.");
     }
 
-    if (options_.get_str("THREEPDC") != "ZERO") {
+    if (psi::Options_.get_str("THREEPDC") != "ZERO") {
         outfile->Printf("\n  Computing energy of [V, T2] C_2 * C_6 ...");
 
         E_VT2_6(E10_1, E10_2);

@@ -138,7 +138,7 @@ void SOMRDSRG::startup() {
     Gamma1 = BTF->build(tensor_type_, "Gamma1", {"hh"});
     Eta1 = BTF->build(tensor_type_, "Eta1", {"pp"});
     Lambda2 = BTF->build(tensor_type_, "Lambda2", {"aaaa"});
-    if (options_.get_str("THREEPDC") != "ZERO") {
+    if (psi::Options_.get_str("THREEPDC") != "ZERO") {
         Lambda3 = BTF->build(tensor_type_, "Lambda3", {"aaaaaa"});
     }
     F = BTF->build(tensor_type_, "Fock", {"gg"});
@@ -293,7 +293,7 @@ void SOMRDSRG::startup() {
         }
     });
 
-    if (options_.get_str("THREEPDC") != "ZERO") {
+    if (psi::Options_.get_str("THREEPDC") != "ZERO") {
         ambit::Tensor Lambda3_aaa = Lambda3.block("aaaaaa");
 
         Matrix lambda3_aaa("Lambda3_aaa", nactv * nactv * nactv, nactv * nactv * nactv);
@@ -867,7 +867,7 @@ void SOMRDSRG::H_eq_commutator_C_T(double factor, BlockedTensor& F, BlockedTenso
           T2["h2,h3,a2,a3"] * V["a0,a1,h0,h1"];
     H0 += 1.000000 * Eta1["p1,p0"] * Gamma1["h0,h1"] * Lambda2["a0,a2,a3,a1"] * T2["h1,a3,p1,a2"] *
           V["a1,p0,h0,a0"];
-    if (options_.get_str("THREEPDC") != "ZERO") {
+    if (psi::Options_.get_str("THREEPDC") != "ZERO") {
         H0 += 0.250000 * Lambda3["a3,a4,a0,a1,a2,a5"] * T2["h0,a5,a3,a4"] * V["a1,a2,h0,a0"];
         H0 += 0.250000 * Lambda3["a0,a1,a3,a4,a5,a2"] * T2["a4,a5,p0,a3"] * V["a2,p0,a0,a1"];
     }

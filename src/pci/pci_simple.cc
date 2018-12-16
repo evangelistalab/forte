@@ -103,7 +103,7 @@ void print_hash(det_hash<>& C, std::string description, bool print_det = false);
 ProjectorCI_Simple::ProjectorCI_Simple(psi::SharedWavefunction ref_wfn, Options& options,
                                        std::shared_ptr<ForteIntegrals> ints,
                                        std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : Wavefunction(options), ints_(ints), mo_space_info_(mo_space_info),
+    : Wavefunction(psi::Options), ints_(ints), mo_space_info_(mo_space_info),
       prescreening_tollerance_factor_(1.5), fast_variational_estimate_(false) {
     // Copy the wavefunction information
     shallow_copy(ref_wfn);
@@ -139,12 +139,12 @@ void ProjectorCI_Simple::startup() {
     mo_symmetry_ = mo_space_info_->symmetry("ACTIVE");
 
     wavefunction_symmetry_ = 0;
-    if (options_["ROOT_SYM"].has_changed()) {
+    if (psi::Options_["ROOT_SYM"].has_changed()) {
         wavefunction_symmetry_ = options_.get_int("ROOT_SYM");
     }
     // Read options
     wavefunction_multiplicity_ = 1;
-    if (options_["MULTIPLICITY"].has_changed()) {
+    if (psi::Options_["MULTIPLICITY"].has_changed()) {
         wavefunction_multiplicity_ = options_.get_int("MULTIPLICITY");
     }
 
@@ -177,12 +177,12 @@ void ProjectorCI_Simple::startup() {
     current_root_ = -1;
     post_diagonalization_ = options_.get_bool("PCI_POST_DIAGONALIZE");
     diag_method_ = DLSolver;
-    if (options_["DIAG_ALGORITHM"].has_changed()) {
-        if (options_.get_str("DIAG_ALGORITHM") == "FULL") {
+    if (psi::Options_["DIAG_ALGORITHM"].has_changed()) {
+        if (psi::Options_.get_str("DIAG_ALGORITHM") == "FULL") {
             diag_method_ = Full;
-        } else if (options_.get_str("DIAG_ALGORITHM") == "DLSTRING") {
+        } else if (psi::Options_.get_str("DIAG_ALGORITHM") == "DLSTRING") {
             diag_method_ = DLString;
-        } else if (options_.get_str("DIAG_ALGORITHM") == "DLDISK") {
+        } else if (psi::Options_.get_str("DIAG_ALGORITHM") == "DLDISK") {
             diag_method_ = DLDisk;
         }
     }
@@ -232,7 +232,7 @@ void ProjectorCI_Simple::startup() {
     approx_E_tau_ = 1.0;
     approx_E_S_ = 0.0;
 
-    if (options_.get_str("PCI_GENERATOR") == "WALL-CHEBYSHEV") {
+    if (psi::Options_.get_str("PCI_GENERATOR") == "WALL-CHEBYSHEV") {
         generator_ = WallChebyshevGenerator;
         generator_description_ = "Wall-Chebyshev";
         time_step_ = 1.0;
@@ -242,7 +242,7 @@ void ProjectorCI_Simple::startup() {
                             chebyshev_order_);
             chebyshev_order_ = 5;
         }
-    } else if (options_.get_str("PCI_GENERATOR") == "DL") {
+    } else if (psi::Options_.get_str("PCI_GENERATOR") == "DL") {
         generator_ = DLGenerator;
         generator_description_ = "Davidson-Liu by Tianyuan";
         time_step_ = 1.0;
@@ -560,8 +560,8 @@ double ProjectorCI_Simple::compute_energy() {
 
     SparseCISolver sparse_solver(fci_ints_);
     sparse_solver.set_parallel(true);
-    sparse_solver.set_e_convergence(options_.get_double("E_CONVERGENCE"));
-    sparse_solver.set_maxiter_davidson(options_.get_int("DL_MAXITER"));
+    sparse_solver.set_e_convergence(psi::Options_.get_double("E_CONVERGENCE"));
+    sparse_solver.set_maxiter_davidson(psi::Options_.get_int("DL_MAXITER"));
     sparse_solver.set_spin_project(true);
 
     pqpq_aa_ = new double[nact_ * nact_];
@@ -898,8 +898,8 @@ double ProjectorCI_Simple::initial_guess(det_vec& dets, std::vector<double>& C) 
 
     SparseCISolver sparse_solver(fci_ints_);
     sparse_solver.set_parallel(true);
-    sparse_solver.set_e_convergence(options_.get_double("E_CONVERGENCE"));
-    sparse_solver.set_maxiter_davidson(options_.get_int("DL_MAXITER"));
+    sparse_solver.set_e_convergence(psi::Options_.get_double("E_CONVERGENCE"));
+    sparse_solver.set_maxiter_davidson(psi::Options_.get_int("DL_MAXITER"));
     sparse_solver.set_spin_project(true);
 
     SharedMatrix evecs(new Matrix("Eigenvectors", guess_size, nroot_));

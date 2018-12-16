@@ -73,7 +73,7 @@ CI_Reference::CI_Reference(std::shared_ptr<Wavefunction> wfn, Options& options,
 
     // Reference type
     ref_type_ = "CAS";
-    if (options["ACTIVE_REF_TYPE"].has_changed()) {
+    if (psi::Options["ACTIVE_REF_TYPE"].has_changed()) {
         ref_type_ = options.get_str("ACTIVE_REF_TYPE");
     }
 

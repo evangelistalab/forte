@@ -894,7 +894,7 @@ double AdaptiveCI::get_excited_determinants_batch_old(
             }
         }
 
-        if (options_["ACI_NBATCH"].has_changed()) {
+        if (psi::Options_["ACI_NBATCH"].has_changed()) {
             nbin = options_.get_int("ACI_NBATCH");
             if (thread_id == 0) {
                 outfile->Printf("\n  Overwriting nbin to %d based on user input", nbin);
@@ -1180,7 +1180,7 @@ double AdaptiveCI::get_excited_determinants_batch_vecsort(
     int nbin = nruns;
     outfile->Printf("\n  Setting nbin to %d based on estimated memory (%6.3f MB)", nbin, guess_mem);
 
-    if (options_["ACI_NBATCH"].has_changed()) {
+    if (psi::Options_["ACI_NBATCH"].has_changed()) {
         nbin = options_.get_int("ACI_NBATCH");
         outfile->Printf("\n  Overwriting nbin to %d based on user input", nbin);
     }
@@ -1388,7 +1388,7 @@ AdaptiveCI::get_excited_determinants_batch(SharedMatrix evecs, SharedVector eval
     int nbin = nruns;
     outfile->Printf("\n  Setting nbin to %d based on estimated memory (%6.3f MB)", nbin, guess_mem);
 
-    if (options_["ACI_NBATCH"].has_changed()) {
+    if (psi::Options_["ACI_NBATCH"].has_changed()) {
         nbin = options_.get_int("ACI_NBATCH");
         outfile->Printf("\n  Overwriting nbin to %d based on user input", nbin);
     }

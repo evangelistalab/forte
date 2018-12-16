@@ -54,7 +54,7 @@ namespace forte {
 ACTIVE_DSRGPT2::ACTIVE_DSRGPT2(psi::SharedWavefunction ref_wfn, Options& options,
                                std::shared_ptr<ForteIntegrals> ints,
                                std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : Wavefunction(options), ints_(ints), mo_space_info_(mo_space_info), total_nroots_(0) {
+    : Wavefunction(psi::Options), ints_(ints), mo_space_info_(mo_space_info), total_nroots_(0) {
     // Copy the wavefunction information
     shallow_copy(ref_wfn);
     reference_wavefunction_ = ref_wfn;
@@ -74,12 +74,12 @@ ACTIVE_DSRGPT2::ACTIVE_DSRGPT2(psi::SharedWavefunction ref_wfn, Options& options
 ACTIVE_DSRGPT2::~ACTIVE_DSRGPT2() {}
 
 void ACTIVE_DSRGPT2::startup() {
-    if (options_["NROOTPI"].size() == 0) {
+    if (psi::Options_["NROOTPI"].size() == 0) {
         throw PSIEXCEPTION("Please specify NROOTPI for ACTIVE-DSRGPT2 jobs.");
     } else {
         std::shared_ptr<Molecule> molecule = Process::environment.molecule();
         multiplicity_ = molecule->multiplicity();
-        if (options_["MULTIPLICITY"].has_changed()) {
+        if (psi::Options_["MULTIPLICITY"].has_changed()) {
             multiplicity_ = options_.get_int("MULTIPLICITY");
         }
 
@@ -132,7 +132,7 @@ void ACTIVE_DSRGPT2::startup() {
         std::string cisd_noHF;
         if (ref_type_ == "CISD") {
             t1_percentage_ = std::vector<vector<double>>(nirrep, std::vector<double>());
-            if (options_.get_bool("FCIMO_CISD_NOHF")) {
+            if (psi::Options_.get_bool("FCIMO_CISD_NOHF")) {
                 cisd_noHF = "TURE";
             } else {
                 cisd_noHF = "FALSE";
@@ -140,7 +140,7 @@ void ACTIVE_DSRGPT2::startup() {
         }
 
         for (int h = 0; h < nirrep; ++h) {
-            nrootpi_.push_back(options_["NROOTPI"][h].to_integer());
+            nrootpi_.push_back(psi::Options_["NROOTPI"][h].to_integer());
             irrep_symbol_.push_back(std::string(ct.gamma(h).symbol()));
             total_nroots_ += nrootpi_[h];
         }
@@ -158,7 +158,7 @@ void ACTIVE_DSRGPT2::startup() {
         if (ipea != "NONE") {
             calculation_info_string.push_back({"IPEA type", ipea});
         }
-        bool internals = (options_.get_str("INTERNAL_AMP") != "NONE");
+        bool internals = (psi::Options_.get_str("INTERNAL_AMP") != "NONE");
         calculation_info_string.push_back(
             {"DSRG-MRPT2 internal amplitudes", options_.get_str("INTERNAL_AMP")});
         if (internals) {

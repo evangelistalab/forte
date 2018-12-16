@@ -42,8 +42,8 @@
 
 namespace forte {
 
-SA_FCISolver::SA_FCISolver(Options& options, std::shared_ptr<Wavefunction> wfn)
-    : options_(options), wfn_(wfn) {
+SA_FCISolver::SA_FCISolver(psi::Options& options, std::shared_ptr<Wavefunction> wfn)
+    : options_(psi::Options), wfn_(wfn) {
     read_options();
 }
 
@@ -60,7 +60,7 @@ void SA_FCISolver::read_options() {
     nstates_ = 0;
     parsed_options_.clear();
 
-    if (options_["AVG_STATE"].has_changed()) {
+    if (psi::Options_["AVG_STATE"].has_changed()) {
         size_t nentry = options_["AVG_STATE"].size();
 
         // figure out total number of states
@@ -68,7 +68,7 @@ void SA_FCISolver::read_options() {
         std::vector<int> irreps;
         std::vector<int> multis;
         for (size_t i = 0; i < nentry; ++i) {
-            if (options_["AVG_STATE"][i].size() != 3) {
+            if (psi::Options_["AVG_STATE"][i].size() != 3) {
                 outfile->Printf("\n  Error: invalid input of AVG_STATE. Each "
                                 "entry should take an array of three numbers.");
                 throw PSIEXCEPTION("Invalid input of AVG_STATE");
@@ -107,8 +107,8 @@ void SA_FCISolver::read_options() {
 
         // test input weights
         std::vector<std::vector<double>> weights;
-        if (options_["AVG_WEIGHT"].has_changed()) {
-            if (options_["AVG_WEIGHT"].size() != nentry) {
+        if (psi::Options_["AVG_WEIGHT"].has_changed()) {
+            if (psi::Options_["AVG_WEIGHT"].size() != nentry) {
                 outfile->Printf("\n  Error: mismatched number of entries in "
                                 "AVG_STATE (%d) and AVG_WEIGHT (%d).",
                                 nentry, options_["AVG_WEIGHT"].size());
@@ -216,7 +216,7 @@ double SA_FCISolver::compute_energy() {
         std::vector<size_t> active = mo_space_info_->get_corr_abs_mo("ACTIVE");
 
         int charge = Process::environment.molecule()->molecular_charge();
-        if (options_["CHARGE"].has_changed()) {
+        if (psi::Options_["CHARGE"].has_changed()) {
             charge = options_.get_int("CHARGE");
         }
 
@@ -232,7 +232,7 @@ double SA_FCISolver::compute_energy() {
         // Default: lowest spin solution
         int twice_ms = (multiplicity + 1) % 2;
 
-        if (options_["MS"].has_changed()) {
+        if (psi::Options_["MS"].has_changed()) {
             twice_ms = std::round(2.0 * options_.get_double("MS"));
         }
 
@@ -243,7 +243,7 @@ double SA_FCISolver::compute_energy() {
             throw PSIEXCEPTION("Ms must be no less than 0. Check output for details.");
         }
 
-        if (options_.get_int("PRINT")) {
+        if (psi::Options_.get_int("PRINT")) {
             print_h2("FCI Solver Summary");
             outfile->Printf("\n  Number of electrons: %d", nel);
             outfile->Printf("\n  Charge: %d", charge);
@@ -271,10 +271,10 @@ double SA_FCISolver::compute_energy() {
                             mo_space_info_, options_.get_int("NTRIAL_PER_ROOT"),
                             options_.get_int("PRINT"), options_);
         fcisolver.set_max_rdm_level(2);
-        fcisolver.set_test_rdms(options_.get_bool("FCI_TEST_RDMS"));
-        fcisolver.set_fci_iterations(options_.get_int("FCI_MAXITER"));
-        fcisolver.set_collapse_per_root(options_.get_int("DL_COLLAPSE_PER_ROOT"));
-        fcisolver.set_subspace_per_root(options_.get_int("DL_SUBSPACE_PER_ROOT"));
+        fcisolver.set_test_rdms(psi::Options_.get_bool("FCI_TEST_RDMS"));
+        fcisolver.set_fci_iterations(psi::Options_.get_int("FCI_MAXITER"));
+        fcisolver.set_collapse_per_root(psi::Options_.get_int("DL_COLLAPSE_PER_ROOT"));
+        fcisolver.set_subspace_per_root(psi::Options_.get_int("DL_SUBSPACE_PER_ROOT"));
         fcisolver.set_print_no(false);
         fcisolver.use_user_integrals_and_restricted_docc(true);
         if (fci_ints_ == nullptr) {

@@ -56,7 +56,7 @@ struct dm3 {
 
 V2RDM::V2RDM(psi::SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
              std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : Wavefunction(options), ints_(ints), mo_space_info_(mo_space_info) {
+    : Wavefunction(psi::Options), ints_(ints), mo_space_info_(mo_space_info) {
     shallow_copy(ref_wfn);
     reference_wavefunction_ = ref_wfn;
 
@@ -93,7 +93,7 @@ void V2RDM::startup() {
     build_opdm();
 
     // read 3-pdm
-    if (options_.get_str("THREEPDC") != "ZERO") {
+    if (psi::Options_.get_str("THREEPDC") != "ZERO") {
         read_3pdm();
     }
 
@@ -105,7 +105,7 @@ void V2RDM::startup() {
     actv_mos_ = mo_space_info_->get_corr_abs_mo("ACTIVE");
 
     // write density to files
-    if (options_.get_str("WRITE_DENSITY_TYPE") == "DENSITY") {
+    if (psi::Options_.get_str("WRITE_DENSITY_TYPE") == "DENSITY") {
         write_density_to_file();
     }
 }
@@ -188,7 +188,7 @@ void V2RDM::read_2pdm() {
     outfile->Printf("    Done.");
 
     // average Daa and Dbb
-    if (options_.get_bool("AVG_DENS_SPIN")) {
+    if (psi::Options_.get_bool("AVG_DENS_SPIN")) {
         // reference D2aa, D2ab, D2bb to D2_ element
         ambit::Tensor& D2aa = D2_[0];
         ambit::Tensor& D2bb = D2_[2];
@@ -248,7 +248,7 @@ void V2RDM::build_opdm() {
     outfile->Printf("    Done.");
 
     // average Da and Db
-    if (options_.get_bool("AVG_DENS_SPIN")) {
+    if (psi::Options_.get_bool("AVG_DENS_SPIN")) {
         str = "Averaging 1RDM A and B blocks";
         outfile->Printf("\n  %-45s ...", str.c_str());
         ambit::Tensor D = ambit::Tensor::build(ambit::CoreTensor, "D1avg", {nactv, nactv});
@@ -338,7 +338,7 @@ void V2RDM::read_3pdm() {
     outfile->Printf("    Done.");
 
     // average Daaa and Dbbb, Daab and Dabb
-    if (options_.get_bool("AVG_DENS_SPIN")) {
+    if (psi::Options_.get_bool("AVG_DENS_SPIN")) {
         // reference D3aaa, D3aab, D3abb, D3bbb to D3_ element
         ambit::Tensor& D3aaa = D3_[0];
         ambit::Tensor& D3aab = D3_[1];
@@ -487,7 +487,7 @@ Reference V2RDM::reference() {
     return_ref.set_L2bb(D2bb);
 
     // if 3-cumulants are needed
-    if (options_.get_str("THREEPDC") != "ZERO") {
+    if (psi::Options_.get_str("THREEPDC") != "ZERO") {
         // compute 3-cumulants
         ambit::Tensor& D3aaa = D3_[0];
         ambit::Tensor& D3aab = D3_[1];
@@ -567,7 +567,7 @@ Reference V2RDM::reference() {
         return_ref.set_L3bbb(D3bbb);
     }
 
-    if (options_.get_str("WRITE_DENSITY_TYPE") == "CUMULANT") {
+    if (psi::Options_.get_str("WRITE_DENSITY_TYPE") == "CUMULANT") {
         write_density_to_file();
     }
 
@@ -580,7 +580,7 @@ void V2RDM::write_density_to_file() {
     outfile->Printf("\n  %-45s ...", str.c_str());
 
     std::vector<std::string> filenames;
-    if (options_.get_str("WRITE_DENSITY_TYPE") == "DENSITY") {
+    if (psi::Options_.get_str("WRITE_DENSITY_TYPE") == "DENSITY") {
         for (const std::string& spin : {"a", "b"}) {
             filenames.push_back("file_opdm_" + spin);
         }
@@ -590,7 +590,7 @@ void V2RDM::write_density_to_file() {
         for (const std::string& spin : {"aaa", "aab", "abb", "bbb"}) {
             filenames.push_back("file_3pdm_" + spin);
         }
-    } else if (options_.get_str("WRITE_DENSITY_TYPE") == "CUMULANT") {
+    } else if (psi::Options_.get_str("WRITE_DENSITY_TYPE") == "CUMULANT") {
         for (const std::string& spin : {"a", "b"}) {
             filenames.push_back("file_opdc_" + spin);
         }
@@ -629,7 +629,7 @@ void V2RDM::write_density_to_file() {
         outfstr.clear();
     }
 
-    if (options_.get_str("THREEPDC") != "ZERO") {
+    if (psi::Options_.get_str("THREEPDC") != "ZERO") {
         for (int m = 0; m < 4; ++m) {
             outfstr.open(filenames[m + 5]);
 

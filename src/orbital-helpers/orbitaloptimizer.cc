@@ -53,7 +53,7 @@ OrbitalOptimizer::OrbitalOptimizer(ambit::Tensor Gamma1, ambit::Tensor Gamma2,
                                    ambit::Tensor two_body_ab, Options& options,
                                    std::shared_ptr<MOSpaceInfo> mo_space_info)
     : gamma1_(Gamma1), gamma2_(Gamma2), integral_(two_body_ab), mo_space_info_(mo_space_info),
-      options_(options) {}
+      options_(psi::Options) {}
 void OrbitalOptimizer::update() {
     startup();
     fill_shared_density_matrices();
@@ -99,12 +99,12 @@ void OrbitalOptimizer::startup() {
     restricted_uocc_abs_ = mo_space_info_->get_corr_abs_mo("RESTRICTED_UOCC");
     inactive_docc_abs_ = mo_space_info_->get_corr_abs_mo("INACTIVE_DOCC");
     nmo_abs_ = mo_space_info_->get_corr_abs_mo("CORRELATED");
-    if (frozen_docc_abs_.size() && !(options_.get_bool("OPTIMIZE_FROZEN_CORE"))) {
+    if (frozen_docc_abs_.size() && !(psi::Options_.get_bool("OPTIMIZE_FROZEN_CORE"))) {
         casscf_freeze_core_ = true;
     } else {
         casscf_freeze_core_ = false;
     }
-    if (options_.get_bool("OPTIMIZE_FROZEN_CORE")) {
+    if (psi::Options_.get_bool("OPTIMIZE_FROZEN_CORE")) {
         throw PSIEXCEPTION("CASSCF can not handle optimization of frozen core, yet.");
     }
 
@@ -119,21 +119,21 @@ void OrbitalOptimizer::startup() {
     nirrep_ = mo_space_info_->nirrep();
     nsopi_ = wfn_->nsopi();
 
-    if (options_.get_str("CASSCF_CI_SOLVER") == "FCI") {
+    if (psi::Options_.get_str("CASSCF_CI_SOLVER") == "FCI") {
         cas_ = true;
-    } else if (options_.get_str("CASSCF_CI_SOLVER") == "CAS") {
-        if (options_.get_str("FCIMO_ACTV_TYPE") != "COMPLETE") {
+    } else if (psi::Options_.get_str("CASSCF_CI_SOLVER") == "CAS") {
+        if (psi::Options_.get_str("FCIMO_ACTV_TYPE") != "COMPLETE") {
             cas_ = false;
         } else {
             cas_ = true;
         }
-    } else if (options_.get_str("CASSCF_CI_SOLVER") == "ACI") {
-        if (options_.get_double("SIGMA") == 0.0) {
+    } else if (psi::Options_.get_str("CASSCF_CI_SOLVER") == "ACI") {
+        if (psi::Options_.get_double("SIGMA") == 0.0) {
             cas_ = true;
         } else {
             cas_ = true;
         }
-    } else if (options_.get_str("CASSCF_CI_SOLVER") == "DMRG") {
+    } else if (psi::Options_.get_str("CASSCF_CI_SOLVER") == "DMRG") {
         cas_ = true;
     } else {
         outfile->Printf("\n\n Please set your CASSCF_CI_SOLVER to either FCI, CAS, ACI, or DMRG");
@@ -687,7 +687,7 @@ void CASSCFOrbitalOptimizer::form_fock_intermediates() {
         C_active_ao->print();
     // std::shared_ptr<JK> JK_fock = JK::build_JK(wfn_->basisset(),options_ );
     // JK_fock->set_memory(Process::environment.get_memory() * 0.8);
-    // JK_fock->set_cutoff(options_.get_double("INTEGRAL_SCREENING"));
+    // JK_fock->set_cutoff(psi::Options_.get_double("INTEGRAL_SCREENING"));
     // JK_fock->initialize();
     // JK_->set_allow_desymmetrization(true);
     JK_->set_do_K(true);

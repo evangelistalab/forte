@@ -40,7 +40,7 @@ namespace forte {
 
 ESNO::ESNO(psi::SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
            std::shared_ptr<MOSpaceInfo> mo_space_info, DeterminantHashVec& reference)
-    : Wavefunction(options), ints_(ints), reference_(reference), ref_wfn_(ref_wfn),
+    : Wavefunction(psi::Options), ints_(ints), reference_(reference), ref_wfn_(ref_wfn),
       mo_space_info_(mo_space_info) {
     shallow_copy(ref_wfn);
     print_method_banner({"External Singles Natural Orbitals", "Jeff Schriber"});
@@ -112,10 +112,10 @@ void ESNO::compute_nos() {
     // set options
     sparse_solver.set_sigma_method(sigma_alg);
     sparse_solver.set_parallel(true);
-    sparse_solver.set_e_convergence(options_.get_double("E_CONVERGENCE"));
-    sparse_solver.set_maxiter_davidson(options_.get_int("DL_MAXITER"));
+    sparse_solver.set_e_convergence(psi::Options_.get_double("E_CONVERGENCE"));
+    sparse_solver.set_maxiter_davidson(psi::Options_.get_int("DL_MAXITER"));
     sparse_solver.set_spin_project(true);
-    sparse_solver.set_guess_dimension(options_.get_int("DL_GUESS_SIZE"));
+    sparse_solver.set_guess_dimension(psi::Options_.get_int("DL_GUESS_SIZE"));
     sparse_solver.set_spin_project_full(false);
 
     sparse_solver.diagonalize_hamiltonian_map(reference_, op, evals, evecs, nroot_, multiplicity_,

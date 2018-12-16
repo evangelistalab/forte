@@ -59,7 +59,7 @@ SharedMatrix create_aosubspace_projector(psi::SharedWavefunction wfn, Options& o
     SharedMatrix Ps;
 
     // Run this code only if user specified a subspace
-    if (options["SUBSPACE"].size() > 0) {
+    if (psi::Options["SUBSPACE"].size() > 0) {
         std::vector<std::string> subspace_str;
         for (int entry = 0; entry < (int)options["SUBSPACE"].size(); ++entry) {
             std::string s = options["SUBSPACE"][entry].to_string();

@@ -68,7 +68,7 @@ FCI::FCI(psi::SharedWavefunction ref_wfn, Options& options, std::shared_ptr<Fort
 
 // FCI::FCI(psi::SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
 //         std::shared_ptr<MOSpaceInfo> mo_space_info)
-//    : Wavefunction(options), ints_(ints), mo_space_info_(mo_space_info) {
+//    : Wavefunction(psi::Options), ints_(ints), mo_space_info_(mo_space_info) {
 //    // Copy the wavefunction information
 //    shallow_copy(ref_wfn);
 //    reference_wavefunction_ = ref_wfn;
@@ -111,7 +111,7 @@ double FCI::solver_compute_energy() {
     std::vector<size_t> active = mo_space_info_->get_corr_abs_mo("ACTIVE");
 
     int charge = Process::environment.molecule()->molecular_charge();
-    if (options_["CHARGE"].has_changed()) {
+    if (psi::Options_["CHARGE"].has_changed()) {
         charge = options_.get_int("CHARGE");
     }
 
@@ -125,14 +125,14 @@ double FCI::solver_compute_energy() {
     nel -= charge;
 
     int multiplicity = Process::environment.molecule()->multiplicity();
-    if (options_["MULTIPLICITY"].has_changed()) {
+    if (psi::Options_["MULTIPLICITY"].has_changed()) {
         multiplicity = options_.get_int("MULTIPLICITY");
     }
 
     // If the user did not specify ms determine the value from the input or
     // take the lowest value consistent with the value of "MULTIPLICITY"
     if (not set_ms_) {
-        if (options_["MS"].has_changed()) {
+        if (psi::Options_["MS"].has_changed()) {
             twice_ms_ = std::round(2.0 * options_.get_double("MS"));
         } else {
             // Default: lowest spin solution
@@ -183,12 +183,12 @@ double FCI::solver_compute_energy() {
     //    outfile->Printf("\n  B");
     // tweak some options
     fcisolver_->set_max_rdm_level(max_rdm_level_);
-    fcisolver_->set_nroot(options_.get_int("FCI_NROOT"));
-    fcisolver_->set_root(options_.get_int("FCI_ROOT"));
-    fcisolver_->set_test_rdms(options_.get_bool("FCI_TEST_RDMS"));
-    fcisolver_->set_fci_iterations(options_.get_int("FCI_MAXITER"));
-    fcisolver_->set_collapse_per_root(options_.get_int("DL_COLLAPSE_PER_ROOT"));
-    fcisolver_->set_subspace_per_root(options_.get_int("DL_SUBSPACE_PER_ROOT"));
+    fcisolver_->set_nroot(psi::Options_.get_int("FCI_NROOT"));
+    fcisolver_->set_root(psi::Options_.get_int("FCI_ROOT"));
+    fcisolver_->set_test_rdms(psi::Options_.get_bool("FCI_TEST_RDMS"));
+    fcisolver_->set_fci_iterations(psi::Options_.get_int("FCI_MAXITER"));
+    fcisolver_->set_collapse_per_root(psi::Options_.get_int("DL_COLLAPSE_PER_ROOT"));
+    fcisolver_->set_subspace_per_root(psi::Options_.get_int("DL_SUBSPACE_PER_ROOT"));
     fcisolver_->set_print_no(print_no_);
     if (fci_ints_ != nullptr) {
         fcisolver_->use_user_integrals_and_restricted_docc(true);

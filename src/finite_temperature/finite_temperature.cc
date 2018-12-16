@@ -51,7 +51,7 @@ namespace forte {
 FiniteTemperatureHF::FiniteTemperatureHF(psi::SharedWavefunction ref_wfn, Options& options,
                                          std::shared_ptr<MOSpaceInfo> mo_space)
     : RHF(ref_wfn, std::make_shared<SuperFunctional>(), options, _default_psio_lib_),
-      mo_space_info_(mo_space), options_(options) {
+      mo_space_info_(mo_space), options_(psi::Options) {
     shallow_copy(ref_wfn);
     reference_wavefunction_ = ref_wfn;
     startup();
@@ -262,7 +262,7 @@ void FiniteTemperatureHF::form_G() {
     form_D();
     std::shared_ptr<JK> JK = JK::build_JK(this->basisset(), get_basisset("DF_BASIS_SCF"), options_);
     JK->set_memory(Process::environment.get_memory() * 0.8);
-    JK->set_cutoff(options_.get_double("INTEGRAL_SCREENING"));
+    JK->set_cutoff(psi::Options_.get_double("INTEGRAL_SCREENING"));
     JK->initialize();
 
     std::vector<std::shared_ptr<Matrix>>& Cl = JK->C_left();

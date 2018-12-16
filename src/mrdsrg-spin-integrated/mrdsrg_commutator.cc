@@ -249,7 +249,7 @@ namespace forte {
 //    E += temp["uVxY"] * Lambda2_["xYuV"];
 
 //    // <[Hbar2, T2]> C_6 C_2
-//    if (options_.get_str("THREEPDC") != "ZERO") {
+//    if (psi::Options_.get_str("THREEPDC") != "ZERO") {
 //        temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"aaaaaa"});
 //        temp["uvwxyz"] += H2["uviz"] * T2["iwxy"]; //  aaaaaa from hole
 //        temp["uvwxyz"] += H2["waxy"] * T2["uvaz"]; //  aaaaaa from particle
@@ -549,7 +549,7 @@ void MRDSRG::H2_T2_C0_DF(BlockedTensor& B, BlockedTensor& T2, const double& alph
     E += temp["uVxY"] * Lambda2_["xYuV"];
 
     // <[Hbar2, T2]> C_6 C_2
-    if (options_.get_str("THREEPDC") != "ZERO") {
+    if (psi::Options_.get_str("THREEPDC") != "ZERO") {
         temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"aaaaaa"});
         temp["uvwxyz"] += B["gui"] * B["gvz"] * T2["iwxy"]; //  aaaaaa from hole
         temp["uvwxyz"] -= B["guz"] * B["gvi"] * T2["iwxy"]; //  aaaaaa from hole
@@ -1540,7 +1540,7 @@ void MRDSRG::H2_G2_C0(BlockedTensor& H2, BlockedTensor& G2, const double& alpha,
     E += temp["xYuV"] * Lambda2_["xYuV"];
 
     // <[Hbar2, T2]> C_6 C_2
-    if (options_.get_str("THREEPDC") != "ZERO") {
+    if (psi::Options_.get_str("THREEPDC") != "ZERO") {
         temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"aaaaaa"});
         temp["xyzuvw"] += H2["yzpu"] * G2["pxvw"];
         temp["xyzuvw"] -= H2["zpuv"] * G2["xywp"];

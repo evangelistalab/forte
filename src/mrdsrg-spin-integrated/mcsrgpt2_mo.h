@@ -71,7 +71,7 @@ class MCSRGPT2_MO : public FCI_MO {
         "AMP", AMP)("EMP2", EMP2)("LAMP", LAMP)("LEMP2", LEMP2);
 
     /// Basis preparation
-    void startup(Options& options);
+    void startup(psi::Options& options);
 
     void cleanup();
 

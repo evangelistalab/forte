@@ -57,7 +57,7 @@ bool pairCompDescend(const std::pair<double, Determinant> E1,
 
 ASCI::ASCI(psi::SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
            std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : Wavefunction(options), ints_(ints), mo_space_info_(mo_space_info) {
+    : Wavefunction(psi::Options), ints_(ints), mo_space_info_(mo_space_info) {
     // Copy the wavefunction information
     shallow_copy(ref_wfn);
     reference_wavefunction_ = ref_wfn;
@@ -103,11 +103,11 @@ void ASCI::startup() {
     op_.initialize(mo_symmetry_, fci_ints_);
 
     wavefunction_symmetry_ = 0;
-    if (options_["ROOT_SYM"].has_changed()) {
+    if (psi::Options_["ROOT_SYM"].has_changed()) {
         wavefunction_symmetry_ = options_.get_int("ROOT_SYM");
     }
     multiplicity_ = 1;
-    if (options_["MULTIPLICITY"].has_changed()) {
+    if (psi::Options_["MULTIPLICITY"].has_changed()) {
         multiplicity_ = options_.get_int("MULTIPLICITY");
     }
 
@@ -119,7 +119,7 @@ void ASCI::startup() {
     nfrzc_ = mo_space_info_->size("INACTIVE_DOCC");
 
     twice_ms_ = multiplicity_ - 1;
-    if (options_["MS"].has_changed()) {
+    if (psi::Options_["MS"].has_changed()) {
         twice_ms_ = std::round(2.0 * options_.get_double("MS"));
     }
 
@@ -132,21 +132,21 @@ void ASCI::startup() {
     nroot_ = options_.get_int("NROOT");
 
     max_cycle_ = 20;
-    if (options_["ASCI_MAX_CYCLE"].has_changed()) {
+    if (psi::Options_["ASCI_MAX_CYCLE"].has_changed()) {
         max_cycle_ = options_.get_int("ASCI_MAX_CYCLE");
     }
 
     diag_method_ = DLSolver;
-    if (options_["DIAG_ALGORITHM"].has_changed()) {
-        if (options_.get_str("DIAG_ALGORITHM") == "FULL") {
+    if (psi::Options_["DIAG_ALGORITHM"].has_changed()) {
+        if (psi::Options_.get_str("DIAG_ALGORITHM") == "FULL") {
             diag_method_ = Full;
-        } else if (options_.get_str("DIAG_ALGORITHM") == "DLSTRING") {
+        } else if (psi::Options_.get_str("DIAG_ALGORITHM") == "DLSTRING") {
             diag_method_ = DLString;
-        } else if (options_.get_str("DIAG_ALGORITHM") == "SPARSE") {
+        } else if (psi::Options_.get_str("DIAG_ALGORITHM") == "SPARSE") {
             diag_method_ = Sparse;
-        } else if (options_.get_str("DIAG_ALGORITHM") == "SOLVER") {
+        } else if (psi::Options_.get_str("DIAG_ALGORITHM") == "SOLVER") {
             diag_method_ = DLSolver;
-        } else if (options_.get_str("DIAG_ALGORITHM") == "DYNAMIC") {
+        } else if (psi::Options_.get_str("DIAG_ALGORITHM") == "DYNAMIC") {
             diag_method_ = Dynamic;
         }
     }
@@ -229,15 +229,15 @@ double ASCI::compute_energy() {
     std::vector<std::vector<double>> energy_history;
     SparseCISolver sparse_solver(fci_ints_);
     sparse_solver.set_parallel(true);
-    sparse_solver.set_force_diag(options_.get_bool("FORCE_DIAG_METHOD"));
-    sparse_solver.set_e_convergence(options_.get_double("E_CONVERGENCE"));
-    sparse_solver.set_maxiter_davidson(options_.get_int("DL_MAXITER"));
+    sparse_solver.set_force_diag(psi::Options_.get_bool("FORCE_DIAG_METHOD"));
+    sparse_solver.set_e_convergence(psi::Options_.get_double("E_CONVERGENCE"));
+    sparse_solver.set_maxiter_davidson(psi::Options_.get_int("DL_MAXITER"));
     sparse_solver.set_spin_project(true);
-    sparse_solver.set_guess_dimension(options_.get_int("DL_GUESS_SIZE"));
+    sparse_solver.set_guess_dimension(psi::Options_.get_int("DL_GUESS_SIZE"));
     sparse_solver.set_num_vecs(nvec);
     sparse_solver.set_sigma_method(sigma_method);
     sparse_solver.set_spin_project_full(false);
-    sparse_solver.set_max_memory(options_.get_int("SIGMA_VECTOR_MAX_MEMORY"));
+    sparse_solver.set_max_memory(psi::Options_.get_int("SIGMA_VECTOR_MAX_MEMORY"));
 
     // Save the P_space energies to predict convergence
     std::vector<double> P_energies;
@@ -342,7 +342,7 @@ double ASCI::compute_energy() {
     outfile->Printf("\n\n  %s: %f s", "ASCI ran in ", asci_elapse.get());
 
     double pt2 = 0.0;
-    if (options_.get_bool("MRPT2")) {
+    if (psi::Options_.get_bool("MRPT2")) {
         MRPT2 pt(reference_wavefunction_, options_, ints_, mo_space_info_, PQ_space, PQ_evecs,
                  PQ_evals);
         pt2 = pt.compute_energy();
@@ -355,7 +355,7 @@ double ASCI::compute_energy() {
     outfile->Printf("\n  Iterations required:                         %zu", cycle);
     outfile->Printf("\n  Dimension of optimized determinant space:    %zu\n", dim);
     outfile->Printf("\n  * AS-CI Energy Root 0        = %.12f Eh", root_energy);
-    if (options_.get_bool("MRPT2")) {
+    if (psi::Options_.get_bool("MRPT2")) {
         outfile->Printf("\n  * AS-CI+PT2 Energy Root 0    = %.12f Eh", root_energy + pt2);
     }
 
@@ -492,7 +492,7 @@ ASCI::compute_spin(DeterminantHashVec& space, WFNOperator& op, SharedMatrix evec
     // op.tp_lists(space);
 
     std::vector<std::pair<double, double>> spin_vec(nroot);
-    if (options_.get_str("SIGMA_BUILD_TYPE") == "HZ") {
+    if (psi::Options_.get_str("SIGMA_BUILD_TYPE") == "HZ") {
         op.clear_op_s_lists();
         op.clear_tp_s_lists();
         op.build_strings(space);

@@ -78,7 +78,7 @@ void set_FCI_MO_options(ForteOptions& foptions) {
 
 FCI_MO::FCI_MO(psi::SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
                std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : Wavefunction(options), integral_(ints), mo_space_info_(mo_space_info) {
+    : Wavefunction(psi::Options), integral_(ints), mo_space_info_(mo_space_info) {
     shallow_copy(ref_wfn);
     reference_wavefunction_ = ref_wfn;
     print_method_banner({"Complete Active Space Configuration Interaction", "Chenyang Li"});
@@ -99,7 +99,7 @@ FCI_MO::FCI_MO(psi::SharedWavefunction ref_wfn, Options& options, std::shared_pt
 
 FCI_MO::FCI_MO(psi::SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
                std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<FCIIntegrals> fci_ints)
-    : Wavefunction(options), integral_(ints), mo_space_info_(mo_space_info) {
+    : Wavefunction(psi::Options), integral_(ints), mo_space_info_(mo_space_info) {
     shallow_copy(ref_wfn);
     reference_wavefunction_ = ref_wfn;
     print_method_banner({"Complete Active Space Configuration Interaction", "Chenyang Li"});
@@ -195,7 +195,7 @@ void FCI_MO::read_options() {
     nfrzv_ = mo_space_info_->size("FROZEN_UOCC");
 
     // obtain active orbitals
-    if (options_["ACTIVE"].size() == 0) {
+    if (psi::Options_["ACTIVE"].size() == 0) {
         outfile->Printf("\n  Please specify the ACTIVE occupations.");
         outfile->Printf("\n  Single-reference computations should set ACTIVE to zeros.");
         outfile->Printf("\n  For example, ACTIVE [0,0,0,0] depending on the symmetry. \n");
@@ -217,13 +217,13 @@ void FCI_MO::read_options() {
         nelec += molecule->fZ(i);
     }
     int charge = molecule->molecular_charge();
-    if (options_["CHARGE"].has_changed()) {
+    if (psi::Options_["CHARGE"].has_changed()) {
         charge = options_.get_int("CHARGE");
     }
     nelec -= charge;
 
     multi_ = molecule->multiplicity();
-    if (options_["MULTIPLICITY"].has_changed()) {
+    if (psi::Options_["MULTIPLICITY"].has_changed()) {
         multi_ = options_.get_int("MULTIPLICITY");
     }
     if (multi_ < 1) {
@@ -332,7 +332,7 @@ void FCI_MO::read_options() {
     }
 
     // state averaging
-    if (options_["AVG_STATE"].size() != 0) {
+    if (psi::Options_["AVG_STATE"].size() != 0) {
         size_t nstates = 0;
         size_t nentry = options_["AVG_STATE"].size();
 
@@ -341,7 +341,7 @@ void FCI_MO::read_options() {
         std::vector<int> irreps;
         std::vector<int> multis;
         for (size_t i = 0; i < nentry; ++i) {
-            if (options_["AVG_STATE"][i].size() != 3) {
+            if (psi::Options_["AVG_STATE"][i].size() != 3) {
                 outfile->Printf("\n  Error: invalid input of AVG_STATE. Each "
                                 "entry should take an array of three numbers.");
                 throw PSIEXCEPTION("Invalid input of AVG_STATE");
@@ -380,8 +380,8 @@ void FCI_MO::read_options() {
 
         // test input weights
         std::vector<std::vector<double>> weights;
-        if (options_["AVG_WEIGHT"].has_changed()) {
-            if (options_["AVG_WEIGHT"].size() != nentry) {
+        if (psi::Options_["AVG_WEIGHT"].has_changed()) {
+            if (psi::Options_["AVG_WEIGHT"].size() != nentry) {
                 outfile->Printf("\n  Error: mismatched number of entries in "
                                 "AVG_STATE (%d) and AVG_WEIGHT (%d).",
                                 nentry, options_["AVG_WEIGHT"].size());
@@ -535,7 +535,7 @@ double FCI_MO::compute_energy() {
         localize_actv_orbs();
     }
 
-    if (options_["AVG_STATE"].size() != 0) {
+    if (psi::Options_["AVG_STATE"].size() != 0) {
         Eref_ = compute_sa_energy();
     } else {
         Eref_ = compute_ss_energy();
@@ -1133,8 +1133,8 @@ void FCI_MO::Diagonalize_H(const vecdet& p_space, const int& multi, const int& n
     string sigma_method = options_.get_str("SIGMA_BUILD_TYPE");
     sparse_solver.set_e_convergence(econv_);
     sparse_solver.set_spin_project(true);
-    sparse_solver.set_maxiter_davidson(options_.get_int("DL_MAXITER"));
-    sparse_solver.set_guess_dimension(options_.get_int("DL_GUESS_SIZE"));
+    sparse_solver.set_maxiter_davidson(psi::Options_.get_int("DL_MAXITER"));
+    sparse_solver.set_guess_dimension(psi::Options_.get_int("DL_GUESS_SIZE"));
     sparse_solver.set_sigma_method(sigma_method);
     if (projected_roots_.size() != 0) {
         sparse_solver.set_root_project(true);
@@ -2275,7 +2275,7 @@ d3 FCI_MO::compute_orbital_extents() {
 Reference FCI_MO::reference(const int& level) {
     Reference ref;
 
-    if (options_["AVG_STATE"].size() != 0) {
+    if (psi::Options_["AVG_STATE"].size() != 0) {
         compute_sa_ref(level);
     } else {
         compute_ref(level);
@@ -2294,7 +2294,7 @@ Reference FCI_MO::reference(const int& level) {
         ref.set_L2bb(L2bb);
     }
 
-    if (level > 2 && (options_.get_str("THREEPDC") != "ZERO")) {
+    if (level > 2 && (psi::Options_.get_str("THREEPDC") != "ZERO")) {
         ref.set_L3aaa(L3aaa);
         ref.set_L3aab(L3aab);
         ref.set_L3abb(L3abb);
@@ -2993,7 +2993,7 @@ void FCI_MO::localize_actv_orbs() {
     }
 
     std::shared_ptr<Localizer> localizer =
-        Localizer::build(options_.get_str("LOCALIZE_TYPE"), this->basisset(), Ca_actv);
+        Localizer::build(psi::Options_.get_str("LOCALIZE_TYPE"), this->basisset(), Ca_actv);
     localizer->localize();
     SharedMatrix Lorbs = localizer->L();
 
