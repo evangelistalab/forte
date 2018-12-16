@@ -164,7 +164,7 @@ void FCI_MO::read_options() {
     fcheck_threshold_ = 100.0 * econv_;
 
     // nuclear repulsion
-    std::shared_ptr<Molecule> molecule = Process::environment.molecule();
+    std::shared_ptr<psi::Molecule> molecule = Process::environment.molecule();
     e_nuc_ =
         molecule->nuclear_repulsion_energy(reference_wavefunction_->get_dipole_field_strength());
 

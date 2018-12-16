@@ -70,10 +70,10 @@ std::shared_ptr<IAOBuilder> IAOBuilder::build(std::shared_ptr<psi::BasisSet> pri
     local->set_bench(psi::Options.get_int("BENCH"));
     local->set_convergence(psi::Options.get_double("LOCAL_CONVERGENCE"));
     local->set_maxiter(psi::Options.get_int("LOCAL_MAXITER"));
-    local->set_use_ghosts(psi::Options.get_bool("LOCAL_USE_GHOSTS"));
+    local->set_use_ghosts(options.get_bool("LOCAL_USE_GHOSTS"));
     local->set_condition(psi::Options.get_double("LOCAL_IBO_CONDITION"));
     local->set_power(psi::Options.get_double("LOCAL_IBO_POWER"));
-    local->set_use_stars(psi::Options.get_bool("LOCAL_IBO_USE_STARS"));
+    local->set_use_stars(options.get_bool("LOCAL_IBO_USE_STARS"));
     local->set_stars_completeness(psi::Options.get_double("LOCAL_IBO_STARS_COMPLETENESS"));
 
     std::vector<int> stars;
@@ -87,7 +87,7 @@ std::shared_ptr<IAOBuilder> IAOBuilder::build(std::shared_ptr<psi::BasisSet> pri
 
 std::map<std::string, psi::SharedMatrix> IAOBuilder::build_iaos() {
     // => Ghosting <= //
-    std::shared_ptr<Molecule> mol = minao_->molecule();
+    std::shared_ptr<psi::Molecule> mol = minao_->molecule();
     true_atoms_.clear();
     true_iaos_.clear();
     iaos_to_atoms_.clear();
@@ -257,7 +257,7 @@ std::map<std::string, psi::SharedMatrix> IAOBuilder::build_iaos() {
 std::vector<std::string> IAOBuilder::print_IAO(psi::SharedMatrix A_, int nmin, int nbf,
                                                psi::SharedWavefunction wfn_) {
     CubeProperties cube = CubeProperties(wfn_);
-    std::shared_ptr<Molecule> mol = minao_->molecule();
+    std::shared_ptr<psi::Molecule> mol = minao_->molecule();
     std::vector<int> iao_inds;
     psi::SharedMatrix A_nbf =
         std::make_shared<psi::Matrix>("IAO coefficient matrix in nbf dimensions", nbf, nbf));

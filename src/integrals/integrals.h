@@ -200,8 +200,8 @@ class ForteIntegrals {
                                                          const std::vector<size_t>& q) = 0;
 
     /// Make a Fock matrix computed with respect to a given determinant
-    virtual void make_fock_matrix(std::shared_ptr<Matrix> gamma_a,
-                                  std::shared_ptr<Matrix> gamma_b) = 0;
+    virtual void make_fock_matrix(psi::SharedMatrix gamma_a,
+                                  psi::SharedMatrix gamma_b) = 0;
 
     /// Set the value of the scalar part of the Hamiltonian
     /// @param value the new value of the scalar part of the Hamiltonian

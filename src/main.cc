@@ -209,7 +209,7 @@ std::shared_ptr<ForteIntegrals> make_forte_integrals(psi::SharedWavefunction ref
         throw psi::PSIEXCEPTION("INT_TYPE is not correct.  Check options");
     }
 
-    if (psi::Options.get_bool("PRINT_INTS")) {
+    if (options.get_bool("PRINT_INTS")) {
         ints->print_ints();
     }
 
@@ -263,7 +263,7 @@ void banner() {
 //    }
 
 //    if (((psi::Options.get_str("DIAG_ALGORITHM") == "DYNAMIC") or
-//         (psi::Options.get_bool("ACI_DIRECT_RDMS") == true)) and
+//         (options.get_bool("ACI_DIRECT_RDMS") == true)) and
 //        (mo_space_info->size("ACTIVE") > 64)) {
 
 //        outfile->Printf("\n  FATAL:  Dynamic diagonalization or dynamic RDM builds cannot be used

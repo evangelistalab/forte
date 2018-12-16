@@ -264,6 +264,5 @@ class ACTIVE_DSRGPT2 : public psi::Wavefunction {
                                  ambit::BlockedTensor& T2_x);
 };
 }
-}
 
 #endif // ACTIVE_DSRGPT2_H

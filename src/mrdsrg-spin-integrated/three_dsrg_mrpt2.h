@@ -292,6 +292,5 @@ class THREE_DSRG_MRPT2 : public MASTER_DSRG {
     static bool have_mpi_;
 };
 }
-} // End Namespaces
 
 #endif // _three_dsrg_mrpt2_h_

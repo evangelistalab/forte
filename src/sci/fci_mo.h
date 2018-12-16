@@ -500,6 +500,5 @@ class FCI_MO : public psi::Wavefunction {
                                       const std::vector<std::vector<std::vector<bool>>>& string);
 };
 }
-}
 
 #endif // _fci_mo_h_

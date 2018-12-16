@@ -68,7 +68,7 @@ psi::SharedMatrix create_aosubspace_projector(psi::SharedWavefunction wfn, psi::
         }
 
         // Create a basis set parser object and read the minimal basis
-        std::shared_ptr<Molecule> molecule = wfn->molecule();
+        std::shared_ptr<psi::Molecule> molecule = wfn->molecule();
         std::shared_ptr<psi::BasisSet> min_basis = wfn->get_basisset("MINAO_BASIS");
 
         // Create an AOSubspace object
@@ -105,7 +105,7 @@ AOSubspace::AOSubspace(std::shared_ptr<Molecule> molecule, std::shared_ptr<Basis
     startup();
 }
 
-AOSubspace::AOSubspace(std::vector<std::string> subspace_str, std::shared_ptr<Molecule> molecule,
+AOSubspace::AOSubspace(std::vector<std::string> subspace_str, std::shared_ptr<psi::Molecule> molecule,
                        std::shared_ptr<psi::BasisSet> basis)
     : subspace_str_(subspace_str), molecule_(molecule), basis_(basis) {
     startup();
@@ -152,7 +152,7 @@ void AOSubspace::startup() {
 }
 
 psi::SharedMatrix AOSubspace::build_projector(const std::vector<int>& subspace,
-                                         std::shared_ptr<Molecule> molecule,
+                                         std::shared_ptr<psi::Molecule> molecule,
                                          std::shared_ptr<psi::BasisSet> min_basis,
                                          std::shared_ptr<psi::BasisSet> large_basis) {
 

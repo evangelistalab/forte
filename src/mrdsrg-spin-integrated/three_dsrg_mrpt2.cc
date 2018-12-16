@@ -3487,7 +3487,7 @@ std::vector<double> THREE_DSRG_MRPT2::relaxed_energy(std::shared_ptr<FCIIntegral
         // common (SS and SA) setup of FCISolver
         int ntrial_per_root = options_.get_int("NTRIAL_PER_ROOT");
         psi::Dimension active_dim = mo_space_info_->get_dimension("ACTIVE");
-        std::shared_ptr<Molecule> molecule = Process::environment.molecule();
+        std::shared_ptr<psi::Molecule> molecule = Process::environment.molecule();
         double Enuc = molecule->nuclear_repulsion_energy(
             reference_wavefunction_->get_dipole_field_strength());
         int charge = molecule->molecular_charge();

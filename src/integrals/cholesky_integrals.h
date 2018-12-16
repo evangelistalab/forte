@@ -32,8 +32,6 @@
 
 #include "integrals.h"
 
-
-
 class Tensor;
 
 namespace forte {

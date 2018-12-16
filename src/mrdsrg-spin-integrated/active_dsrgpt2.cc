@@ -77,7 +77,7 @@ void ACTIVE_DSRGPT2::startup() {
     if (psi::Options_["NROOTPI"].size() == 0) {
         throw psi::PSIEXCEPTION("Please specify NROOTPI for ACTIVE-DSRGPT2 jobs.");
     } else {
-        std::shared_ptr<Molecule> molecule = Process::environment.molecule();
+        std::shared_ptr<psi::Molecule> molecule = Process::environment.molecule();
         multiplicity_ = molecule->multiplicity();
         if (psi::Options_["MULTIPLICITY"].has_changed()) {
             multiplicity_ = options_.get_int("MULTIPLICITY");

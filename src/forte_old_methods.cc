@@ -106,22 +106,22 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
     //        ints->retransform_integrals();
     //    }
 
-    if (psi::Options.get_bool("CASSCF_REFERENCE") == true or options.get_str("JOB_TYPE") == "CASSCF") {
+    if (options.get_bool("CASSCF_REFERENCE") == true or options.get_str("JOB_TYPE") == "CASSCF") {
         auto casscf = std::make_shared<CASSCF>(ref_wfn, options, ints, mo_space_info);
         casscf->compute_casscf();
     }
-    if (psi::Options.get_bool("MP2_NOS")) {
+    if (options.get_bool("MP2_NOS")) {
         auto mp2_nos = std::make_shared<MP2_NOS>(ref_wfn, options, ints, mo_space_info);
     }
-    if (psi::Options.get_bool("CINO")) {
+    if (options.get_bool("CINO")) {
         auto cino = std::make_shared<CINO>(ref_wfn, options, ints, mo_space_info);
         cino->compute_energy();
     }
-    if (psi::Options.get_bool("MRCINO")) {
+    if (options.get_bool("MRCINO")) {
         auto mrcino = std::make_shared<MRCINO>(ref_wfn, options, ints, mo_space_info);
         mrcino->compute_energy();
     }
-    if (psi::Options.get_bool("LOCALIZE")) {
+    if (options.get_bool("LOCALIZE")) {
         auto localize = std::make_shared<LOCALIZE>(ref_wfn, options, ints, mo_space_info);
         localize->split_localize();
     }
@@ -136,15 +136,15 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
     if (psi::Options.get_str("JOB_TYPE") == "ACI") {
         auto aci = std::make_shared<AdaptiveCI>(ref_wfn, options, ints, mo_space_info);
         aci->compute_energy();
-        if (psi::Options.get_bool("ACI_NO")) {
+        if (options.get_bool("ACI_NO")) {
             aci->compute_nos();
         }
-        if (psi::Options.get_bool("ACI_ADD_EXTERNAL_EXCITATIONS")) {
+        if (options.get_bool("ACI_ADD_EXTERNAL_EXCITATIONS")) {
             DeterminantHashVec wfn = aci->get_wavefunction();
             aci->upcast_reference(wfn);
             aci->add_external_excitations(wfn);
         }
-        if (psi::Options.get_bool("UNPAIRED_DENSITY")) {
+        if (options.get_bool("UNPAIRED_DENSITY")) {
             psi::SharedMatrix Ua;
             psi::SharedMatrix Ub;
 
@@ -187,7 +187,7 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
         auto fci = std::make_shared<FCI>(ref_wfn, options, ints, mo_space_info);
         fci->compute_energy();
     }
-    if (psi::Options.get_bool("USE_DMRGSCF")) {
+    if (options.get_bool("USE_DMRGSCF")) {
 #ifdef HAVE_CHEMPS2
         auto dmrg = std::make_shared<DMRGSCF>(ref_wfn, options, mo_space_info, ints);
         dmrg->set_iterations(psi::Options.get_int("DMRGSCF_MAX_ITER"));
@@ -230,7 +230,7 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
             fci_mo.compute_energy();
             Reference reference = fci_mo.reference(max_rdm_level);
 
-            if (psi::Options.get_bool("SEMI_CANONICAL")) {
+            if (options.get_bool("SEMI_CANONICAL")) {
                 SemiCanonical semi(ref_wfn, ints, mo_space_info);
                 semi.semicanonicalize(reference, max_rdm_level);
                 Ua = semi.Ua_t();
@@ -257,7 +257,7 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
             fci->set_max_rdm_level(max_rdm_level);
             fci->compute_energy();
             Reference reference = fci->reference();
-            if (psi::Options.get_bool("SEMI_CANONICAL")) {
+            if (options.get_bool("SEMI_CANONICAL")) {
                 SemiCanonical semi(ref_wfn, ints, mo_space_info);
                 semi.semicanonicalize(reference, max_rdm_level);
                 Ua = semi.Ua_t();
@@ -279,7 +279,7 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
             aci->set_max_rdm(max_rdm_level);
             aci->compute_energy();
             Reference aci_reference = aci->reference();
-            if (psi::Options.get_bool("ACI_NO")) {
+            if (options.get_bool("ACI_NO")) {
                 aci->compute_nos();
             }
             SemiCanonical semi(ref_wfn, ints, mo_space_info);
@@ -300,7 +300,7 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
         FCI_MO fci_mo(ref_wfn, options, ints, mo_space_info);
         fci_mo.compute_energy();
         Reference reference = fci_mo.reference();
-        if (psi::Options.get_bool("SEMI_CANONICAL")) {
+        if (options.get_bool("SEMI_CANONICAL")) {
             SemiCanonical semi(ref_wfn, ints, mo_space_info);
             semi.semicanonicalize(reference);
         }
@@ -324,7 +324,7 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
             fci_mo.compute_energy();
             Reference reference = fci_mo.reference(max_rdm_level);
 
-            if (psi::Options.get_bool("SEMI_CANONICAL")) {
+            if (options.get_bool("SEMI_CANONICAL")) {
                 SemiCanonical semi(ref_wfn, ints, mo_space_info);
                 semi.semicanonicalize(reference, max_rdm_level);
             }
@@ -341,7 +341,7 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
             fci->set_max_rdm_level(max_rdm_level);
             fci->compute_energy();
             Reference reference = fci->reference();
-            if (psi::Options.get_bool("SEMI_CANONICAL")) {
+            if (options.get_bool("SEMI_CANONICAL")) {
                 SemiCanonical semi(ref_wfn, ints, mo_space_info);
                 semi.semicanonicalize(reference, max_rdm_level);
             }
@@ -377,7 +377,7 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
             fci_mo->compute_energy();
             Reference reference = fci_mo->reference(max_rdm_level);
 
-            if (psi::Options.get_bool("SEMI_CANONICAL")) {
+            if (options.get_bool("SEMI_CANONICAL")) {
                 SemiCanonical semi(ref_wfn, ints, mo_space_info);
                 if (actv_type == "CIS" || actv_type == "CISD") {
                     semi.set_actv_dims(fci_mo->actv_docc(), fci_mo->actv_virt());
@@ -411,7 +411,7 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
             fci->set_max_rdm_level(max_rdm_level);
             fci->compute_energy();
             Reference reference = fci->reference();
-            if (psi::Options.get_bool("SEMI_CANONICAL")) {
+            if (options.get_bool("SEMI_CANONICAL")) {
                 SemiCanonical semi(ref_wfn, ints, mo_space_info);
                 semi.semicanonicalize(reference, max_rdm_level);
                 Ua = semi.Ua_t();
@@ -441,7 +441,7 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
             aci->set_max_rdm(max_rdm_level);
             aci->compute_energy();
             Reference aci_reference = aci->reference();
-            if (psi::Options.get_bool("ACI_NO")) {
+            if (options.get_bool("ACI_NO")) {
                 aci->compute_nos();
             }
 
@@ -466,8 +466,8 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
             dmrg.set_max_rdm(max_rdm_level);
             dmrg.compute_energy();
             Reference dmrg_reference = dmrg.reference();
-            // if (psi::Options.get_bool("SEMI_CANONICAL") and !options.get_bool("CASSCF_REFERENCE")) {
-            if (psi::Options.get_bool("SEMI_CANONICAL")) {
+            // if (options.get_bool("SEMI_CANONICAL") and !options.get_bool("CASSCF_REFERENCE")) {
+            if (options.get_bool("SEMI_CANONICAL")) {
                 SemiCanonical semi(ref_wfn, options, ints, mo_space_info, dmrg_reference);
                 semi.semicanonicalize(dmrg_reference, max_rdm_level);
             }
@@ -536,7 +536,7 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
             fci_mo.compute_energy();
             Reference reference = fci_mo.reference(max_rdm_level);
 
-            if (psi::Options.get_bool("SEMI_CANONICAL")) {
+            if (options.get_bool("SEMI_CANONICAL")) {
                 SemiCanonical semi(ref_wfn, ints, mo_space_info);
                 if (actv_type == "CIS" || actv_type == "CISD") {
                     semi.set_actv_dims(fci_mo.actv_docc(), fci_mo.actv_virt());
@@ -575,14 +575,14 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
             aci->set_max_rdm(max_rdm_level);
             aci->compute_energy();
             aci_reference = aci->reference();
-            if (psi::Options.get_bool("ACI_NO")) {
+            if (options.get_bool("ACI_NO")) {
                 aci->compute_nos();
             }
-            if (psi::Options.get_bool("ACI_ADD_EXTERNAL_EXCITATIONS")) {
+            if (options.get_bool("ACI_ADD_EXTERNAL_EXCITATIONS")) {
                 DeterminantHashVec wfn = aci->get_wavefunction();
                 aci->upcast_reference(wfn);
             }
-            if (psi::Options.get_bool("ESNOS")) {
+            if (options.get_bool("ESNOS")) {
                 auto aci_wfn = aci->get_wavefunction();
                 ESNO esno(ref_wfn, options, ints, mo_space_info, aci_wfn);
                 esno.compute_nos();
@@ -605,7 +605,7 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
             three_dsrg_mrpt2->set_Uactv(Ua, Ub);
             three_dsrg_mrpt2->compute_energy();
             if (ref_relax || multi_state) {
-                if (psi::Options.get_bool("UNPAIRED_DENSITY")) {
+                if (options.get_bool("UNPAIRED_DENSITY")) {
                     psi::SharedMatrix Ua_f = semi.Ua();
                     psi::SharedMatrix Ub_f = semi.Ub();
                     three_dsrg_mrpt2->set_Ufull(Ua_f, Ub_f);
@@ -624,7 +624,7 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
             fci->set_max_rdm_level(max_rdm_level);
             fci->compute_energy();
             Reference reference = fci->reference();
-            if (psi::Options.get_bool("SEMI_CANONICAL")) {
+            if (options.get_bool("SEMI_CANONICAL")) {
                 SemiCanonical semi(ref_wfn, ints, mo_space_info);
                 semi.semicanonicalize(reference, max_rdm_level);
                 Ua = semi.Ua_t();
@@ -646,7 +646,7 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
             dmrg.compute_energy();
 
             Reference dmrg_reference = dmrg.reference();
-            if (psi::Options.get_bool("SEMI_CANONICAL")) {
+            if (options.get_bool("SEMI_CANONICAL")) {
                 SemiCanonical semi(ref_wfn, options, ints, mo_space_info, dmrg_reference);
                 semi.semicanonicalize(dmrg_reference, max_rdm_level);
             }
@@ -663,7 +663,7 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
             casscf->compute_casscf();
             Reference casscf_reference = casscf->casscf_reference();
 
-            if (psi::Options.get_bool("SEMI_CANONICAL")) {
+            if (options.get_bool("SEMI_CANONICAL")) {
                 SemiCanonical semi(ref_wfn, ints, mo_space_info);
                 semi.semicanonicalize(casscf_reference, max_rdm_level);
                 Ua = semi.Ua_t();
@@ -702,7 +702,7 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
             fci_mo->compute_energy();
             Reference reference = fci_mo->reference(max_rdm_level);
 
-            if (psi::Options.get_bool("SEMI_CANONICAL")) {
+            if (options.get_bool("SEMI_CANONICAL")) {
                 SemiCanonical semi(ref_wfn, ints, mo_space_info);
                 semi.semicanonicalize(reference, max_rdm_level);
                 Ua = semi.Ua_t();
@@ -733,14 +733,14 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
                 aci->set_max_rdm(max_rdm_level);
                 aci->compute_energy();
                 aci_reference = aci->reference();
-                if (psi::Options.get_bool("ACI_NO")) {
+                if (options.get_bool("ACI_NO")) {
                     aci->compute_nos();
                 }
-                if (psi::Options.get_bool("ACI_ADD_EXTERNAL_EXCITATIONS")) {
+                if (options.get_bool("ACI_ADD_EXTERNAL_EXCITATIONS")) {
                     DeterminantHashVec wfn = aci->get_wavefunction();
                     aci->upcast_reference(wfn);
                 }
-                if (psi::Options.get_bool("ESNOS")) {
+                if (options.get_bool("ESNOS")) {
                     auto aci_wfn = aci->get_wavefunction();
                     ESNO esno(ref_wfn, options, ints, mo_space_info, aci_wfn);
                     esno.compute_nos();
@@ -770,7 +770,7 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
             fci->set_max_rdm_level(max_rdm_level);
             fci->compute_energy();
             Reference reference = fci->reference();
-            if (psi::Options.get_bool("SEMI_CANONICAL")) {
+            if (options.get_bool("SEMI_CANONICAL")) {
                 SemiCanonical semi(ref_wfn, ints, mo_space_info);
                 semi.semicanonicalize(reference, max_rdm_level);
                 Ua = semi.Ua_t();
@@ -794,7 +794,7 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
         if (psi::Options.get_str("CAS_TYPE") == "CAS") {
             FCI_MO fci_mo(ref_wfn, options, ints, mo_space_info);
             Reference reference = fci_mo.reference(max_rdm_level);
-            if (psi::Options.get_bool("SEMI_CANONICAL")) {
+            if (options.get_bool("SEMI_CANONICAL")) {
                 SemiCanonical semi(ref_wfn, ints, mo_space_info);
                 semi.semicanonicalize(reference, max_rdm_level);
             }
@@ -807,7 +807,7 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
             fci->set_max_rdm_level(max_rdm_level);
             fci->compute_energy();
             Reference reference = fci->reference();
-            if (psi::Options.get_bool("SEMI_CANONICAL")) {
+            if (options.get_bool("SEMI_CANONICAL")) {
                 SemiCanonical semi(ref_wfn, ints, mo_space_info);
                 semi.semicanonicalize(reference, max_rdm_level);
             }
@@ -823,7 +823,7 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
     }
 
     if (psi::Options.get_str("JOB_TYPE") == "MRCISD") {
-        if (psi::Options.get_bool("ACI_NO")) {
+        if (options.get_bool("ACI_NO")) {
             auto aci = std::make_shared<AdaptiveCI>(ref_wfn, options, ints, mo_space_info);
             aci->compute_energy();
             aci->compute_nos();

@@ -43,6 +43,7 @@
 #define omp_get_num_threads() 1
 #endif
 
+using namespace psi;
 
 namespace forte {
 
@@ -1861,5 +1862,4 @@ void WFNOperator::three_lists(DeterminantHashVec& wfn) {
 //
 //
 //}
-}
 }
