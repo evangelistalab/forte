@@ -95,8 +95,8 @@ class DISKDFIntegrals : public ForteIntegrals {
   private:
     // ==> Class data <==
 
-    std::shared_ptr<DFHelper> df_;
-    std::shared_ptr<Matrix> ThreeIntegral_;
+    std::shared_ptr<psi::DFHelper> df_;
+    std::shared_ptr<psi::Matrix> ThreeIntegral_;
     size_t nthree_ = 0;
 
     // ==> Class private virtual functions <==

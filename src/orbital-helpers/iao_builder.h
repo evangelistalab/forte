@@ -112,7 +112,7 @@ public:
     IAOBuilder(
         std::shared_ptr<psi::BasisSet> primary,
         std::shared_ptr<psi::BasisSet> minao,
-        std::shared_ptr<Matrix> C);
+        std::shared_ptr<psi::Matrix> C);
     
     virtual ~IAOBuilder();
 
@@ -120,7 +120,7 @@ public:
     static std::shared_ptr<IAOBuilder> build(
         std::shared_ptr<psi::BasisSet> primary,
         std::shared_ptr<psi::BasisSet> minao,
-        std::shared_ptr<Matrix> C,
+        std::shared_ptr<psi::Matrix> C,
         psi::Options& options);
     /// Build the IAOs for exporting
     std::map<std::string, psi::SharedMatrix> build_iaos();

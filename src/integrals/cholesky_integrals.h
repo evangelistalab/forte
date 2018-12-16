@@ -89,12 +89,12 @@ class CholeskyIntegrals : public ForteIntegrals {
   private:
     // ==> Class data <==
 
-    std::shared_ptr<Matrix> ThreeIntegral_;
+    std::shared_ptr<psi::Matrix> ThreeIntegral_;
     size_t nthree_ = 0;
 
     // ==> Class private functions <==
 
-    void resort_three(std::shared_ptr<Matrix>& threeint, std::vector<size_t>& map);
+    void resort_three(std::shared_ptr<psi::Matrix>& threeint, std::vector<size_t>& map);
     void transform_integrals();
 
     // ==> Class private virtual functions <==

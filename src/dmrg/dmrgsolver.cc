@@ -570,7 +570,7 @@ std::vector<double> DMRGSolver::one_body_operator() {
     JK_inactive->set_memory(Process::environment.get_memory() * 0.8);
     JK_inactive->initialize();
 
-    std::vector<std::shared_ptr<Matrix>>& Cl = JK_inactive->C_left();
+    std::vector<std::shared_ptr<psi::Matrix>>& Cl = JK_inactive->C_left();
     Cl.clear();
     Cl.push_back(Cdocc);
     JK_inactive->compute();
@@ -653,7 +653,7 @@ void DMRGSolver::print_natural_orbitals(double* opdm) {
     int nirrep = wfn_->nirrep();
     size_t na_ = mo_space_info_->size("ACTIVE");
 
-    std::shared_ptr<Matrix> opdm_a(new Matrix("OPDM_A", nirrep, active_dim, active_dim));
+    std::shared_ptr<psi::Matrix> opdm_a(new Matrix("OPDM_A", nirrep, active_dim, active_dim));
 
     int offset = 0;
     for (int h = 0; h < nirrep; h++) {

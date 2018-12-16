@@ -348,7 +348,7 @@ void CholeskyIntegrals::resort_integrals_after_freezing() {
     // Resort the three-index integrals
     resort_three(ThreeIntegral_, cmotomo_);
 }
-void CholeskyIntegrals::resort_three(std::shared_ptr<Matrix>& threeint, std::vector<size_t>& map) {
+void CholeskyIntegrals::resort_three(std::shared_ptr<psi::Matrix>& threeint, std::vector<size_t>& map) {
     // Create a temperature threeint matrix
     psi::SharedMatrix temp_threeint(threeint->clone());
     temp_threeint->zero();

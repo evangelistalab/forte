@@ -331,7 +331,7 @@ void FCIWfn::print_natural_orbitals(std::shared_ptr<MOSpaceInfo> mo_space_info) 
     size_t na = alfa_graph_->nones();
     size_t nb = beta_graph_->nones();
 
-    auto opdm = std::make_shared<Matrix>(new Matrix("OPDM", active_dim, active_dim));
+    auto opdm = std::make_shared<psi::Matrix>(new Matrix("OPDM", active_dim, active_dim));
 
     int offset = 0;
     for (int h = 0; h < nirrep_; h++) {
@@ -351,7 +351,7 @@ void FCIWfn::print_natural_orbitals(std::shared_ptr<MOSpaceInfo> mo_space_info) 
     }
 
     auto OCC = std::make_shared<Vector>("Occupation numbers", active_dim);
-    auto NO = std::make_shared<Matrix>("MO -> NO transformation", active_dim, active_dim);
+    auto NO = std::make_shared<psi::Matrix>("MO -> NO transformation", active_dim, active_dim);
 
     opdm->diagonalize(NO, OCC, descending);
     std::vector<std::pair<double, std::pair<int, int>>> vec_irrep_occupation;

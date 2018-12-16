@@ -83,7 +83,7 @@ MCSRGPT2_MO::MCSRGPT2_MO(psi::SharedWavefunction ref_wfn, psi::Options& options,
                          "Second-Order Perturbative Analysis", "Chenyang Li"});
 
     startup(psi::Options);
-    if (psi::Options.get_str("CORR_LEVEL") == "SRG_PT2") {
+    if (options.get_str("CORR_LEVEL") == "SRG_PT2") {
         Process::environment.globals["CURRENT ENERGY"] = compute_energy_srg();
     } else {
         Process::environment.globals["CURRENT ENERGY"] = compute_energy_dsrg();
@@ -167,7 +167,7 @@ void MCSRGPT2_MO::startup(psi::Options& options) {
         L2bb_ = d4(nactv_, d3(nactv_, d2(nactv_, d1(nactv_))));
     }
 
-    if (psi::Options.get_str("CORR_LEVEL") == "SRG_PT2") {
+    if (options.get_str("CORR_LEVEL") == "SRG_PT2") {
         // compute [1 - exp(-s * x^2)] / x^2
         srg_source_ = std::make_shared<LABS_SOURCE>(s_, taylor_threshold_);
 

@@ -58,4 +58,3 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
 
 void forte_old_options(psi::Options& options);
 }
-} // End Namespaces

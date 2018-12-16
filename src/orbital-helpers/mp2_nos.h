@@ -52,6 +52,5 @@ class MP2_NOS {
     //  => Destructor <= //
 };
 }
-} // End Namespaces
 
 #endif // _mp2_nos_h_

@@ -561,7 +561,7 @@ void OrbitalOptimizer::fill_shared_density_matrices() {
         gamma2M_->print();
     }
 }
-std::shared_ptr<Matrix> OrbitalOptimizer::make_c_sym_aware() {
+std::shared_ptr<psi::Matrix> OrbitalOptimizer::make_c_sym_aware() {
     /// Step 1: Obtain guess MO coefficients C_{mup}
     /// Since I want to use these in a symmetry aware basis,
     /// I will move the C matrix into a Pfitzer ordering
@@ -691,8 +691,8 @@ void CASSCFOrbitalOptimizer::form_fock_intermediates() {
     // JK_fock->initialize();
     // JK_->set_allow_desymmetrization(true);
     JK_->set_do_K(true);
-    std::vector<std::shared_ptr<Matrix>>& Cl = JK_->C_left();
-    std::vector<std::shared_ptr<Matrix>>& Cr = JK_->C_right();
+    std::vector<std::shared_ptr<psi::Matrix>>& Cl = JK_->C_left();
+    std::vector<std::shared_ptr<psi::Matrix>>& Cr = JK_->C_right();
 
     /// Since this is CASSCF this will always be an active fock matrix
     psi::SharedMatrix Identity(new Matrix("I", nirrep_, nsopi_, nsopi_));

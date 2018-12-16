@@ -1672,8 +1672,8 @@ Reference AdaptiveCI::reference() {
 void AdaptiveCI::print_nos() {
     print_h2("NATURAL ORBITALS");
 
-    std::shared_ptr<Matrix> opdm_a(new Matrix("OPDM_A", nirrep_, nactpi_, nactpi_));
-    std::shared_ptr<Matrix> opdm_b(new Matrix("OPDM_B", nirrep_, nactpi_, nactpi_));
+    std::shared_ptr<psi::Matrix> opdm_a(new Matrix("OPDM_A", nirrep_, nactpi_, nactpi_));
+    std::shared_ptr<psi::Matrix> opdm_b(new Matrix("OPDM_B", nirrep_, nactpi_, nactpi_));
 
     int offset = 0;
     for (int h = 0; h < nirrep_; h++) {
@@ -2497,8 +2497,8 @@ void AdaptiveCI::compute_nos() {
     psi::Dimension rdocc = mo_space_info_->get_dimension("RESTRICTED_DOCC");
     psi::Dimension ruocc = mo_space_info_->get_dimension("RESTRICTED_UOCC");
 
-    std::shared_ptr<Matrix> opdm_a(new Matrix("OPDM_A", nirrep_, nactpi_, nactpi_));
-    std::shared_ptr<Matrix> opdm_b(new Matrix("OPDM_B", nirrep_, nactpi_, nactpi_));
+    std::shared_ptr<psi::Matrix> opdm_a(new Matrix("OPDM_A", nirrep_, nactpi_, nactpi_));
+    std::shared_ptr<psi::Matrix> opdm_b(new Matrix("OPDM_B", nirrep_, nactpi_, nactpi_));
 
     int offset = 0;
     for (int h = 0; h < nirrep_; h++) {
@@ -2520,8 +2520,8 @@ void AdaptiveCI::compute_nos() {
     opdm_b->diagonalize(NO_B, OCC_B, descending);
 
     // Build full transformation matrices from e-vecs
-    psi::SharedMatrix Ua = std::make_shared<Matrix>("Ua", nmopi, nmopi);
-    psi::SharedMatrix Ub = std::make_shared<Matrix>("Ub", nmopi, nmopi);
+    psi::SharedMatrix Ua = std::make_shared<psi::Matrix>("Ua", nmopi, nmopi);
+    psi::SharedMatrix Ub = std::make_shared<psi::Matrix>("Ub", nmopi, nmopi);
 
     Ua->identity();
     Ub->identity();

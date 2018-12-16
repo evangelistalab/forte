@@ -303,8 +303,8 @@ void ForteIntegrals::compute_frozen_one_body_operator() {
     // JK_core->set_allow_desymmetrization(true);
     JK_core->set_do_K(true);
 
-    std::vector<std::shared_ptr<Matrix>>& Cl = JK_core->C_left();
-    std::vector<std::shared_ptr<Matrix>>& Cr = JK_core->C_right();
+    std::vector<std::shared_ptr<psi::Matrix>>& Cl = JK_core->C_left();
+    std::vector<std::shared_ptr<psi::Matrix>>& Cr = JK_core->C_right();
 
     Cl.clear();
     Cr.clear();

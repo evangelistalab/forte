@@ -132,7 +132,7 @@ class OrbitalOptimizer {
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
     std::shared_ptr<JK> JK_;
 
-    Options options_;
+    psi::Options options_;
     /// The ForteIntegrals pointer
     psi::SharedWavefunction wfn_;
     /// The mo_space_info

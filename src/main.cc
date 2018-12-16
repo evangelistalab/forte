@@ -96,7 +96,7 @@ int read_options(psi::Options& options) {
     // New way to pass options to Psi4
     foptions.add_psi4_options(psi::Options);
 
-    if (psi::Options.get_str("JOB_TYPE") == "DOCUMENTATION") {
+    if (options.get_str("JOB_TYPE") == "DOCUMENTATION") {
         std::ofstream docs;
         docs.open("options.rst");
         docs << foptions.generate_documentation();
@@ -185,23 +185,23 @@ std::shared_ptr<ForteIntegrals> make_forte_integrals(psi::SharedWavefunction ref
                                                      std::shared_ptr<MOSpaceInfo> mo_space_info) {
     timer int_timer("Integrals");
     std::shared_ptr<ForteIntegrals> ints;
-    if (psi::Options.get_str("INT_TYPE") == "CHOLESKY") {
+    if (options.get_str("INT_TYPE") == "CHOLESKY") {
         ints =
             std::make_shared<CholeskyIntegrals>(psi::Options, ref_wfn, UnrestrictedMOs, mo_space_info);
-    } else if (psi::Options.get_str("INT_TYPE") == "DF") {
+    } else if (options.get_str("INT_TYPE") == "DF") {
         ints = std::make_shared<DFIntegrals>(psi::Options, ref_wfn, UnrestrictedMOs, mo_space_info);
-    } else if (psi::Options.get_str("INT_TYPE") == "DISKDF") {
+    } else if (options.get_str("INT_TYPE") == "DISKDF") {
         ints = std::make_shared<DISKDFIntegrals>(psi::Options, ref_wfn, UnrestrictedMOs, mo_space_info);
-    } else if (psi::Options.get_str("INT_TYPE") == "CONVENTIONAL") {
+    } else if (options.get_str("INT_TYPE") == "CONVENTIONAL") {
         ints = std::make_shared<ConventionalIntegrals>(psi::Options, ref_wfn, UnrestrictedMOs,
                                                        mo_space_info);
-    } else if (psi::Options.get_str("INT_TYPE") == "DISTDF") {
+    } else if (options.get_str("INT_TYPE") == "DISTDF") {
 #ifdef HAVE_GA
         ints = std::make_shared<DistDFIntegrals>(psi::Options, ref_wfn, UnrestrictedMOs, mo_space_info);
 #endif
-    } else if (psi::Options.get_str("INT_TYPE") == "CUSTOM") {
+    } else if (options.get_str("INT_TYPE") == "CUSTOM") {
         ints = std::make_shared<CustomIntegrals>(psi::Options, ref_wfn, UnrestrictedMOs, mo_space_info);
-    } else if (psi::Options.get_str("INT_TYPE") == "OWNINTEGRALS") {
+    } else if (options.get_str("INT_TYPE") == "OWNINTEGRALS") {
         ints = std::make_shared<OwnIntegrals>(psi::Options, ref_wfn, UnrestrictedMOs, mo_space_info);
     } else {
         outfile->Printf("\n Please check your int_type. Choices are CHOLESKY, DF, DISKDF , "
@@ -262,7 +262,7 @@ void banner() {
 //        exit(1);
 //    }
 
-//    if (((psi::Options.get_str("DIAG_ALGORITHM") == "DYNAMIC") or
+//    if (((options.get_str("DIAG_ALGORITHM") == "DYNAMIC") or
 //         (options.get_bool("ACI_DIRECT_RDMS") == true)) and
 //        (mo_space_info->size("ACTIVE") > 64)) {
 

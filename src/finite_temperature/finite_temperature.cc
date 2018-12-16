@@ -265,8 +265,8 @@ void FiniteTemperatureHF::form_G() {
     JK->set_cutoff(psi::Options_.get_double("INTEGRAL_SCREENING"));
     JK->initialize();
 
-    std::vector<std::shared_ptr<Matrix>>& Cl = JK->C_left();
-    std::vector<std::shared_ptr<Matrix>>& Cr = JK->C_right();
+    std::vector<std::shared_ptr<psi::Matrix>>& Cl = JK->C_left();
+    std::vector<std::shared_ptr<psi::Matrix>>& Cr = JK->C_right();
 
     Cl.clear();
     if (nmo_ > 0) {

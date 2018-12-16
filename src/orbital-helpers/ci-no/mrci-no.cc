@@ -544,8 +544,8 @@ MRCINO::build_density_matrix(const std::vector<Determinant>& dets, psi::SharedMa
     //    psi::Dimension nmopi = reference_wavefunction_->nmopi();
     //    psi::Dimension ncmopi = mo_space_info_->get_dimension("CORRELATED");
 
-    std::shared_ptr<Matrix> opdm_a(new Matrix("OPDM_A", corrpi_, corrpi_));
-    std::shared_ptr<Matrix> opdm_b(new Matrix("OPDM_B", corrpi_, corrpi_));
+    std::shared_ptr<psi::Matrix> opdm_a(new Matrix("OPDM_A", corrpi_, corrpi_));
+    std::shared_ptr<psi::Matrix> opdm_b(new Matrix("OPDM_B", corrpi_, corrpi_));
 
     int offset = 0;
     for (int h = 0; h < nirrep_; h++) {
@@ -638,7 +638,7 @@ MRCINO::diagonalize_density_matrix(std::pair<psi::SharedMatrix, psi::SharedMatri
 void MRCINO::find_active_space_and_transform(
     std::tuple<psi::SharedVector, psi::SharedMatrix, psi::SharedVector, psi::SharedMatrix> no_U) {
 
-    psi::SharedMatrix Ua = std::make_shared<Matrix>("U", nmopi_, nmopi_);
+    psi::SharedMatrix Ua = std::make_shared<psi::Matrix>("U", nmopi_, nmopi_);
     psi::SharedMatrix NO_A = std::get<1>(no_U);
     for (int h = 0; h < nirrep_; h++) {
         for (int p = 0; p < nmopi_[h]; p++) {

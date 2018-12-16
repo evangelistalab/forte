@@ -103,7 +103,7 @@ class DistDFIntegrals : public ForteIntegrals {
     /// This is the handle for GA
     int DistDF_ga_;
 
-    std::shared_ptr<Matrix> ThreeIntegral_;
+    std::shared_ptr<psi::Matrix> ThreeIntegral_;
     size_t nthree_ = 0;
     /// Assuming integrals are stored on disk
     /// Reads the block of integrals present for each process

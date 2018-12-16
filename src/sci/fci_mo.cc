@@ -2983,7 +2983,7 @@ void FCI_MO::localize_actv_orbs() {
     print_h2("Localizing active orbitals");
 
     psi::SharedMatrix Ca = this->Ca();
-    auto Ca_actv = std::make_shared<Matrix>("Ca active", Ca->rowspi(), actv_dim_);
+    auto Ca_actv = std::make_shared<psi::Matrix>("Ca active", Ca->rowspi(), actv_dim_);
 
     for (int h = 0; h < nirrep_; ++h) {
         for (int u = 0; u < actv_dim_[h]; ++u) {

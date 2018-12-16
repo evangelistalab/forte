@@ -231,9 +231,9 @@ class ForteIntegrals {
     /// Return the type of integral used
     IntegralType integral_type() { return integral_type_; }
     /// Return the one-body symmetry integrals
-    std::shared_ptr<Matrix> OneBody_symm() { return OneBody_symm_; }
+    std::shared_ptr<psi::Matrix> OneBody_symm() { return OneBody_symm_; }
     /// Return the one-body AO integrals
-    std::shared_ptr<Matrix> OneBodyAO() { return OneIntsAO_; }
+    std::shared_ptr<psi::Matrix> OneBodyAO() { return OneIntsAO_; }
 
     virtual int ga_handle() { return 0; }
 
@@ -244,7 +244,7 @@ class ForteIntegrals {
 
     /// Obtain AO dipole integrals [X, Y, Z]
     /// Each direction is a psi::SharedMatrix of dimension nmo * nmo
-    std::vector<std::shared_ptr<Matrix>> AOdipole_ints() { return AOdipole_ints_; }
+    std::vector<std::shared_ptr<psi::Matrix>> AOdipole_ints() { return AOdipole_ints_; }
 
     /**
      * Compute MO dipole integrals
@@ -253,7 +253,7 @@ class ForteIntegrals {
      * @return a vector of MOdipole ints in X, Y, Z order,
      *         each of which is a nmo by nmo psi::SharedMatrix
      */
-    std::vector<std::shared_ptr<Matrix>> compute_MOdipole_ints(const bool& alpha = true,
+    std::vector<std::shared_ptr<psi::Matrix>> compute_MOdipole_ints(const bool& alpha = true,
                                                                const bool& resort = false);
 
   protected:
@@ -346,11 +346,11 @@ class ForteIntegrals {
     /// Control printing of timings
     int print_;
     /// The One Electron Integrals (T + V) in SO Basis
-    std::shared_ptr<Matrix> OneBody_symm_;
-    std::shared_ptr<Matrix> OneIntsAO_;
+    std::shared_ptr<psi::Matrix> OneBody_symm_;
+    std::shared_ptr<psi::Matrix> OneIntsAO_;
 
     /// AO dipole integrals
-    std::vector<std::shared_ptr<Matrix>> AOdipole_ints_;
+    std::vector<std::shared_ptr<psi::Matrix>> AOdipole_ints_;
     /// Compute AO dipole integrals
     void build_AOdipole_ints();
     /// Compute MO dipole integrals

@@ -62,8 +62,8 @@ void UPDensity::compute_unpaired_density(std::vector<double>& oprdm_a,
     size_t nact = nactpi.sum();
 
     // First compute natural orbitals
-    std::shared_ptr<Matrix> opdm_a(new Matrix("OPDM_A", nirrep, nactpi, nactpi));
-    std::shared_ptr<Matrix> opdm_b(new Matrix("OPDM_B", nirrep, nactpi, nactpi));
+    std::shared_ptr<psi::Matrix> opdm_a(new Matrix("OPDM_A", nirrep, nactpi, nactpi));
+    std::shared_ptr<psi::Matrix> opdm_b(new Matrix("OPDM_B", nirrep, nactpi, nactpi));
 
     // Put 1-RDM into Shared matrix
     int offset = 0;

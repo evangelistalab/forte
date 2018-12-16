@@ -210,7 +210,7 @@ void DFIntegrals::gather_integrals() {
 
     // Constructs the DF function
     // assume a RHF/UHF reference
-    std::shared_ptr<DFHelper> df(new DFHelper(primary, auxiliary));
+    std::shared_ptr<psi::DFHelper> df(new DFHelper(primary, auxiliary));
     df->initialize();
     // Pushes a C matrix that is ordered in pitzer ordering
     // into the C_matrix object

@@ -105,7 +105,7 @@ class FiniteTemperatureHF : public scf::RHF {
     double ef_ = 0.0;
     double scf_energy_ = 0.0;
     /// A function for computing the SCF iterations
-    void scf_iteration(const std::shared_ptr<Matrix> C_left);
+    void scf_iteration(const std::shared_ptr<psi::Matrix> C_left);
     /// Function used to get all the SCF prelims
     void startup();
     /// Initialize the occupation vector
@@ -129,7 +129,7 @@ class FiniteTemperatureHF : public scf::RHF {
                         std::shared_ptr<MOSpaceInfo> mo_space);
     /// Get the SCF ENERGY for the complete iteration
     double get_scf_energy() { return scf_energy_; }
-    std::shared_ptr<Matrix> get_mo_coefficient() { return CMatrix_; }
+    std::shared_ptr<psi::Matrix> get_mo_coefficient() { return CMatrix_; }
     double compute_energy();
 };
 }

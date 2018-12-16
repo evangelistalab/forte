@@ -295,7 +295,7 @@ ambit::Tensor DISKDFIntegrals::three_integral_block(const std::vector<size_t>& A
 
     size_t pn, qn;
     if (nthree_ == A.size()) {
-        std::vector<std::shared_ptr<Matrix>> p_by_Aq;
+        std::vector<std::shared_ptr<psi::Matrix>> p_by_Aq;
         for (auto p_block : p) {
             if (frozen_core) {
                 pn = cmotomo_[p_block];
@@ -303,7 +303,7 @@ ambit::Tensor DISKDFIntegrals::three_integral_block(const std::vector<size_t>& A
                 pn = p_block;
             }
 
-            std::shared_ptr<Matrix> Aq(new Matrix("Aq", nthree_, nmo_));
+            std::shared_ptr<psi::Matrix> Aq(new Matrix("Aq", nthree_, nmo_));
 
             std::vector<size_t> A_range = {A[0], A.back() + 1};
             std::vector<size_t> p_range = {pn, pn + 1};
@@ -414,7 +414,7 @@ void DISKDFIntegrals::gather_integrals() {
     // Constructs the DF function
     // I used this version of build as this doesn't build all the apces and
     // assume a RHF/UHF reference
-    df_ = std::make_shared<DFHelper>(primary, auxiliary);
+    df_ = std::make_shared<psi::DFHelper>(primary, auxiliary);
     df_->initialize();
     df_->set_MO_core(false);
     // set_C clears all the orbital spaces, so this creates the space
@@ -614,7 +614,7 @@ ambit::Tensor DISKDFIntegrals::three_integral_block_two_index(const std::vector<
         std::vector<size_t> qrange = {0, nmo_};
         std::vector<size_t> prange = {p_min, p_max};
 
-        std::shared_ptr<Matrix> Aq(new Matrix("Aq", nthree_, nmo_));
+        std::shared_ptr<psi::Matrix> Aq(new Matrix("Aq", nthree_, nmo_));
         df_->fill_tensor("B", Aq, arange, prange, qrange);
 
         if (frozen_core) {

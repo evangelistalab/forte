@@ -144,7 +144,7 @@ class CASSCF : public psi::Wavefunction {
     bool casscf_debug_print_;
     /// Freeze the core and leave them unchanged
     /// set frozen_core_orbitals
-    std::shared_ptr<Matrix> set_frozen_core_orbitals();
+    std::shared_ptr<psi::Matrix> set_frozen_core_orbitals();
     /// Compute the restricted_one_body operator for FCI(done also in
     /// OrbitalOptimizer)
 

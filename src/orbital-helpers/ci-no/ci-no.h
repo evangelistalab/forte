@@ -139,6 +139,5 @@ class CINO : public psi::Wavefunction {
 };
 std::string dimension_to_string(psi::Dimension dim);
 }
-} // End Namespaces
 
 #endif // _ci_no_h_

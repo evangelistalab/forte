@@ -60,7 +60,7 @@ namespace forte {
 
 CASSCF::CASSCF(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
                std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : Wavefunction(options), options_(psi::Options), ints_(ints), mo_space_info_(mo_space_info) {
+    : Wavefunction(options), options_(options), ints_(ints), mo_space_info_(mo_space_info) {
     shallow_copy(ref_wfn);
     reference_wavefunction_ = ref_wfn;
     startup();
@@ -550,7 +550,7 @@ double CASSCF::cas_check(Reference cas_ref) {
 
     return E_casscf;
 }
-std::shared_ptr<Matrix> CASSCF::set_frozen_core_orbitals() {
+std::shared_ptr<psi::Matrix> CASSCF::set_frozen_core_orbitals() {
     psi::SharedMatrix Ca = reference_wavefunction_->Ca();
     psi::Dimension nsopi = reference_wavefunction_->nsopi();
     psi::Dimension frozen_dim = mo_space_info_->get_dimension("FROZEN_DOCC");
@@ -564,8 +564,8 @@ std::shared_ptr<Matrix> CASSCF::set_frozen_core_orbitals() {
 
     //    JK_->set_allow_desymmetrization(true);
     JK_->set_do_K(true);
-    std::vector<std::shared_ptr<Matrix>>& Cl = JK_->C_left();
-    std::vector<std::shared_ptr<Matrix>>& Cr = JK_->C_right();
+    std::vector<std::shared_ptr<psi::Matrix>>& Cl = JK_->C_left();
+    std::vector<std::shared_ptr<psi::Matrix>>& Cr = JK_->C_right();
 
     Cl.clear();
     Cl.push_back(C_core);
@@ -644,7 +644,7 @@ ambit::Tensor CASSCF::transform_integrals() {
     ///         = C_{Mp}C_{Nu}J(D_{MN})^{xy})
     ///         = C_{Mp}^{T} D_{MN}^{xy} C_{Nu}
 
-    std::vector<std::pair<std::shared_ptr<Matrix>, std::vector<int>>> D_vec;
+    std::vector<std::pair<std::shared_ptr<psi::Matrix>, std::vector<int>>> D_vec;
     local_timer c_dger;
     for (size_t i = 0; i < na_; i++) {
         psi::SharedVector C_i = CAct->get_column(0, i);
@@ -668,8 +668,8 @@ ambit::Tensor CASSCF::transform_integrals() {
     //    JK_->set_allow_desymmetrization(false);
     JK_->set_do_K(false);
     // JK_->initialize();
-    std::vector<std::shared_ptr<Matrix>>& Cl = JK_->C_left();
-    std::vector<std::shared_ptr<Matrix>>& Cr = JK_->C_right();
+    std::vector<std::shared_ptr<psi::Matrix>>& Cl = JK_->C_left();
+    std::vector<std::shared_ptr<psi::Matrix>>& Cr = JK_->C_right();
     Cl.clear();
     Cr.clear();
     for (size_t d = 0; d < D_vec.size(); d++) {
@@ -887,8 +887,8 @@ std::vector<std::vector<double>> CASSCF::compute_restricted_docc_operator() {
     //    JK_inactive->set_memory(Process::environment.get_memory() * 0.8);
     //    JK_inactive->initialize();
     //
-    std::vector<std::shared_ptr<Matrix>>& Cl = JK_->C_left();
-    std::vector<std::shared_ptr<Matrix>>& Cr = JK_->C_right();
+    std::vector<std::shared_ptr<psi::Matrix>>& Cl = JK_->C_left();
+    std::vector<std::shared_ptr<psi::Matrix>>& Cr = JK_->C_right();
     //    JK_->set_allow_desymmetrization(true);
     JK_->set_do_K(true);
     Cl.clear();

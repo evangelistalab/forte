@@ -3077,14 +3077,14 @@ void THREE_DSRG_MRPT2::form_Hbar() {
     }
 
     if (psi::Options_.get_bool("PRINT_1BODY_EVALS")) {
-        psi::SharedMatrix Hb1 = std::make_shared<Matrix>("HB1", nactive_, nactive_);
+        psi::SharedMatrix Hb1 = std::make_shared<psi::Matrix>("HB1", nactive_, nactive_);
         for (size_t p = 0; p < nactive_; ++p) {
             for (size_t q = 0; q < nactive_; ++q) {
                 Hb1->set(p, q, Hbar1_.block("aa").data()[p * nactive_ + q]);
             }
         }
 
-        psi::SharedMatrix evecs = std::make_shared<Matrix>("evecs", nactive_, nactive_);
+        psi::SharedMatrix evecs = std::make_shared<psi::Matrix>("evecs", nactive_, nactive_);
         psi::SharedVector evals = std::make_shared<Vector>("Eigenvalues of Hbar1", nactive_);
         Hb1->diagonalize(evecs, evals);
 

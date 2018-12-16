@@ -417,7 +417,7 @@ std::pair<double, std::string> to_xb(size_t nele, size_t type_size) {
     return out;
 }
 
-void view_modified_orbitals(psi::SharedWavefunction wfn, const std::shared_ptr<Matrix>& Ca,
+void view_modified_orbitals(psi::SharedWavefunction wfn, const std::shared_ptr<psi::Matrix>& Ca,
                             const std::shared_ptr<Vector>& diag_F,
                             const std::shared_ptr<Vector>& occupation) {
     std::shared_ptr<MoldenWriter> molden(new MoldenWriter(wfn));
