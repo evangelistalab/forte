@@ -218,6 +218,5 @@ void enforce_spin_completeness(std::vector<STLBitsetDeterminant>& det_space, int
 /// Compute the matrix element of the S^2 operator between two determinants
 double spin2(const STLBitsetDeterminant& lhs, const STLBitsetDeterminant& rhs);
 }
-} // End Namespaces
 
 #endif // _bitset_determinant_h_

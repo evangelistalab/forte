@@ -127,6 +127,5 @@ class DeterminantHashVec {
     det_hashvec wfn_;
 };
 }
-}
 
 #endif // _determinant_hashvector_h_

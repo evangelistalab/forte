@@ -38,10 +38,10 @@
 
 namespace forte {
 
-class ActiveSpaceSolver : public Wavefunction {
+class ActiveSpaceSolver : public psi::Wavefunction {
   public:
     // non-virtual interface
-    ActiveSpaceSolver(psi::SharedWavefunction ref_wfn, Options& options,
+    ActiveSpaceSolver(psi::SharedWavefunction ref_wfn, psi::Options& options,
                       std::shared_ptr<ForteIntegrals> ints,
                       std::shared_ptr<MOSpaceInfo> mo_space_info);
 

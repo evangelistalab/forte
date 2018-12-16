@@ -52,5 +52,5 @@ template <typename T = double>
 using det_hash = std::unordered_map<Determinant, T, Determinant::Hash>;
 using det_hash_it = std::unordered_map<Determinant, double, Determinant::Hash>::iterator;
 }
-}
+
 #endif // _determinant_h_

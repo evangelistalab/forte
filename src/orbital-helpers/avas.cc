@@ -331,7 +331,6 @@ psi::SharedMatrix semicanonicalize_block(psi::SharedWavefunction ref_wfn, psi::S
     return C_block_prime;
 }
 }
-}
 
 // outfile->Printf("\n  Orbital overlap with ao subspace:\n");
 // outfile->Printf("    ========================\n");

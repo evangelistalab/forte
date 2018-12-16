@@ -293,5 +293,5 @@ class StringLists {
     void print_string(bool* I, size_t n);
 };
 }
-}
+
 #endif // _string_lists_

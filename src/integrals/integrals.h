@@ -43,7 +43,7 @@ class Tensor;
 class Options;
 class Matrix;
 class Wavefunction;
-class psi::Dimension;
+class Dimension;
 
 namespace forte {
 
@@ -354,8 +354,8 @@ class ForteIntegrals {
     /// Compute AO dipole integrals
     void build_AOdipole_ints();
     /// Compute MO dipole integrals
-    std::vector<std::shared_ptr<Matrix>>
-    MOdipole_ints_helper(std::shared_ptr<Matrix> Cao, SharedVector epsilon, const bool& resort);
+    std::vector<std::shared_ptr<psi::Matrix>>
+    MOdipole_ints_helper(std::shared_ptr<psi::Matrix> Cao, psi::SharedVector epsilon, const bool& resort);
 
     // ==> Class private functions <==
 

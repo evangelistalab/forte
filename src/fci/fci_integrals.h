@@ -34,7 +34,7 @@
 #include "string_lists.h"
 
 
-class psi::Dimension;
+class Dimension;
 
 namespace forte {
 

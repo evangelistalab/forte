@@ -125,6 +125,5 @@ template <typename T = double>
 using string_hash = std::unordered_map<STLBitsetString, T, STLBitsetString::Hash>;
 using string_hash_it = std::unordered_map<STLBitsetString, double, STLBitsetString::Hash>::iterator;
 }
-} // End Namespaces
 
 #endif // _bitset_string_h_

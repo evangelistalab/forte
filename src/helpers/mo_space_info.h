@@ -53,7 +53,7 @@ namespace forte {
 using MOInfo = std::tuple<size_t, size_t, size_t>;
 
 /// SpaceInfo stores information about a MO space: (psi::Dimension,vector of MOInfo)
-using SpaceInfo = std::pair<psi::psi::Dimension, std::vector<MOInfo>>;
+using SpaceInfo = std::pair<psi::Dimension, std::vector<MOInfo>>;
 
 /**
  * @brief The MOSpaceInfo class
