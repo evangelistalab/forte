@@ -48,7 +48,6 @@ using namespace psi;
 
 int fci_debug_level = 4;
 
-
 namespace forte {
 
 class MOSpaceInfo;
@@ -75,6 +74,19 @@ FCISolver::FCISolver(psi::Dimension active_dim, std::vector<size_t> core_mo,
       nroot_(0), mo_space_info_(mo_space_info), options_(options) {
     ntrial_per_root_ = options_.get_int("NTRIAL_PER_ROOT");
     print_ = options_.get_int("PRINT");
+    startup();
+}
+
+FCISolver::FCISolver(psi::Dimension active_dim, std::vector<size_t> core_mo,
+                     std::vector<size_t> active_mo, StateInfo state,
+                     std::shared_ptr<ForteIntegrals> ints,
+                     std::shared_ptr<MOSpaceInfo> mo_space_info, size_t initial_guess_per_root,
+                     int print, psi::Options& options)
+    : active_dim_(active_dim), core_mo_(core_mo), active_mo_(active_mo), ints_(ints),
+      nirrep_(active_dim.n()), symmetry_(state.irrep()), na_(state.na()), nb_(state.nb()),
+      multiplicity_(state.multiplicity()), nroot_(1), ntrial_per_root_(initial_guess_per_root),
+      print_(print), mo_space_info_(mo_space_info), options_(options) {
+    nroot_ = options_.get_int("NROOT");
     startup();
 }
 
@@ -183,7 +195,7 @@ double FCISolver::compute_energy() {
 
     if (nguess == 0) {
         throw psi::PSIEXCEPTION("\n\n  Found zero FCI guesses with the requested "
-                           "multiplicity.\n\n");
+                                "multiplicity.\n\n");
     }
 
     for (size_t n = 0; n < nguess; ++n) {
@@ -745,4 +757,3 @@ Reference FCISolver::reference() {
     return fci_ref;
 }
 } // namespace forte
-

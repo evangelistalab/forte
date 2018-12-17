@@ -30,6 +30,7 @@
 #define _python_api_h_
 
 #include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libmints/wavefunction.h"
@@ -38,9 +39,10 @@
 #include "integrals/integrals.h"
 #include "orbital-helpers/localize.h"
 #include "forte.h"
+#include "fci/fci_solver.h"
+#include "base_classes/state_info.h"
 
 namespace py = pybind11;
-
 
 namespace forte {
 
@@ -63,10 +65,25 @@ PYBIND11_MODULE(forte, m) {
 
     // export Localize
     py::class_<LOCALIZE, std::shared_ptr<LOCALIZE>>(m, "LOCALIZE")
-        .def(py::init<std::shared_ptr<psi::Wavefunction>, psi::Options&, std::shared_ptr<ForteIntegrals>,
-                      std::shared_ptr<MOSpaceInfo>>())
+        .def(py::init<std::shared_ptr<psi::Wavefunction>, psi::Options&,
+                      std::shared_ptr<ForteIntegrals>, std::shared_ptr<MOSpaceInfo>>())
         .def("split_localize", &LOCALIZE::split_localize)
         .def("full_localize", &LOCALIZE::split_localize);
+
+    // export StateInfo
+    py::class_<StateInfo, std::shared_ptr<StateInfo>>(m, "StateInfo")
+        .def(py::init<int, int, int, int, int>());
+
+    // export FCIIntegrals
+    py::class_<FCIIntegrals, std::shared_ptr<FCIIntegrals>>(m, "FCIIntegrals")
+        .def(py::init<std::shared_ptr<ForteIntegrals>, std::shared_ptr<MOSpaceInfo>>());
+
+    // export FCISolver
+    py::class_<FCISolver, std::shared_ptr<FCISolver>>(m, "FCISolver")
+        .def(py::init<psi::Dimension, std::vector<size_t>, std::vector<size_t>, StateInfo,
+                        std::shared_ptr<ForteIntegrals>, std::shared_ptr<MOSpaceInfo>, size_t, int,
+                        psi::Options&>())
+        .def("compute_energy", &FCISolver::compute_energy);
 }
 }
 

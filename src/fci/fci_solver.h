@@ -89,10 +89,26 @@ class FCISolver : public ActiveSpaceSolver {
               std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info,
               psi::Options& options);
 
+    /**
+     * @brief FCISolver
+     * @param active_dim The dimension of the active orbital space
+     * @param core_mo A vector of doubly occupied orbitals
+     * @param active_mo A vector of active orbitals
+     * @param state_ state information including na, nb, multiplicity and symmetry
+     * @param ints An integral object
+     * @param mo_space_info -> MOSpaceInfo
+     * @param initial_guess_per_root get from options object
+     * @param print Control printing of FCISolver
+     */
+    FCISolver(psi::Dimension active_dim, std::vector<size_t> core_mo, std::vector<size_t> active_mo,
+              StateInfo state, std::shared_ptr<ForteIntegrals> ints,
+              std::shared_ptr<MOSpaceInfo> mo_space_info, size_t initial_guess_per_root, int print,
+              psi::Options& options);
+
     ~FCISolver() {}
 
     /// Implements ActiveSpaceSolver pure virtual interface
-    double solver_compute_energy() { return 0.0; }
+    double solver_compute_energy() { return compute_energy(); }
 
     /// Compute the FCI energy
     double compute_energy();
