@@ -41,14 +41,13 @@
 #include "string_lists.h"
 #include "base_classes/reference.h"
 
-
 namespace forte {
 
 /**
  * @brief The FCISolver class
  * This class performs Full CI calculations.
  */
-class FCISolver {
+class FCISolver : public ActiveSpaceSolver {
   public:
     // ==> Class Constructor and Destructor <==
 
@@ -218,6 +217,5 @@ class FCISolver {
     psi::Options& options_;
 };
 } // namespace forte
-
 
 #endif // _fci_solver_h_
