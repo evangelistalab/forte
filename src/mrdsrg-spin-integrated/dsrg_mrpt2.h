@@ -53,7 +53,7 @@
 #include "master_mrdsrg.h"
 
 using namespace ambit;
-namespace psi {
+
 namespace forte {
 
 class DSRG_MRPT2 : public MASTER_DSRG {
@@ -66,7 +66,7 @@ class DSRG_MRPT2 : public MASTER_DSRG {
      * @param ints A pointer to an allocated integral object
      * @param mo_space_info A pointer to the MOSpaceInfo object
      */
-    DSRG_MRPT2(Reference reference, SharedWavefunction ref_wfn, Options& options,
+    DSRG_MRPT2(Reference reference, psi::SharedWavefunction ref_wfn, psi::Options& options,
                std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Destructor
@@ -109,12 +109,12 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     double compute_energy_multi_state();
 
     /// Set CASCI eigen values and eigen vectors for state averaging
-    void set_eigens(const std::vector<std::vector<std::pair<SharedVector, double>>>& eigens) {
+    void set_eigens(const std::vector<std::vector<std::pair<psi::SharedVector, double>>>& eigens) {
         eigens_ = eigens;
     }
 
     /// Set determinants in the model space
-    void set_p_spaces(const std::vector<std::vector<psi::forte::Determinant>>& p_spaces) {
+    void set_p_spaces(const std::vector<std::vector<forte::Determinant>>& p_spaces) {
         p_spaces_ = p_spaces;
     }
 
@@ -133,7 +133,7 @@ class DSRG_MRPT2 : public MASTER_DSRG {
 
     /// Rotate orbital basis for amplitudes according to unitary matrix U
     /// @param U unitary matrix from FCI_MO (INCLUDES frozen orbitals)
-    void rotate_amp(SharedMatrix Ua, SharedMatrix Ub, const bool& transpose = false,
+    void rotate_amp(psi::SharedMatrix Ua, psi::SharedMatrix Ub, const bool& transpose = false,
                     const bool& t1eff = false);
 
   protected:
@@ -147,9 +147,9 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     void print_options_summary();
 
     /// CASCI eigen values and eigen vectors for state averaging
-    std::vector<std::vector<std::pair<SharedVector, double>>> eigens_;
+    std::vector<std::vector<std::pair<psi::SharedVector, double>>> eigens_;
     /// Determinants with different symmetries in the model space
-    std::vector<std::vector<psi::forte::Determinant>> p_spaces_;
+    std::vector<std::vector<forte::Determinant>> p_spaces_;
 
     /// Fill up two-electron integrals
     void build_ints();
@@ -289,9 +289,9 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     /// Diagonalize the diagonal blocks of the Fock matrix
     std::vector<std::vector<double>> diagonalize_Fock_diagblocks(BlockedTensor& U);
     /// Separate an 2D ambit::Tensor according to its irrep
-    ambit::Tensor separate_tensor(ambit::Tensor& tens, const Dimension& irrep, const int& h);
+    ambit::Tensor separate_tensor(ambit::Tensor& tens, const psi::Dimension& irrep, const int& h);
     /// Combine a separated 2D ambit::Tensor
-    void combine_tensor(ambit::Tensor& tens, ambit::Tensor& tens_h, const Dimension& irrep,
+    void combine_tensor(ambit::Tensor& tens, ambit::Tensor& tens_h, const psi::Dimension& irrep,
                         const int& h);
 
     // => Multi-state energy <= //
@@ -301,19 +301,19 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     /// Compute multi-state energy in the MS/XMS way
     std::vector<std::vector<double>> compute_energy_xms();
     /// XMS rotation for the reference states
-    SharedMatrix xms_rotation(std::shared_ptr<FCIIntegrals> fci_ints,
-                              std::vector<Determinant>& p_space, SharedMatrix civecs);
+    psi::SharedMatrix xms_rotation(std::shared_ptr<FCIIntegrals> fci_ints,
+                              std::vector<Determinant>& p_space, psi::SharedMatrix civecs);
 
     /// Build effective singles: T_{ia} -= T_{iu,av} * Gamma_{vu}
     void build_T1eff_deGNO();
 
     /// Compute density cumulants
     void compute_cumulants(std::shared_ptr<FCIIntegrals> fci_ints,
-                           std::vector<psi::forte::Determinant>& p_space, SharedMatrix evecs,
+                           std::vector<forte::Determinant>& p_space, psi::SharedMatrix evecs,
                            const int& root1, const int& root2);
     /// Compute denisty matrices and puts in Gamma1_, Lambda2_, and Lambda3_
     void compute_densities(std::shared_ptr<FCIIntegrals> fci_ints,
-                           std::vector<Determinant>& p_space, SharedMatrix evecs, const int& root1,
+                           std::vector<Determinant>& p_space, psi::SharedMatrix evecs, const int& root1,
                            const int& root2);
 
     /// Compute MS coupling <M|H|N>
@@ -329,6 +329,5 @@ class DSRG_MRPT2 : public MASTER_DSRG {
                      ambit::Tensor& L3bbb);
 };
 }
-} // End Namespaces
 
 #endif // _dsrg_mrpt2_h_

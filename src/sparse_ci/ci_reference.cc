@@ -35,10 +35,11 @@
 
 #include <algorithm>
 
-namespace psi {
+using namespace psi;
+
 namespace forte {
 
-CI_Reference::CI_Reference(std::shared_ptr<Wavefunction> wfn, Options& options,
+CI_Reference::CI_Reference(std::shared_ptr<psi::Wavefunction> wfn, psi::Options& options,
                            std::shared_ptr<MOSpaceInfo> mo_space_info,
                            std::shared_ptr<FCIIntegrals> fci_ints, int multiplicity,
                            double twice_ms, int symmetry)
@@ -54,8 +55,8 @@ CI_Reference::CI_Reference(std::shared_ptr<Wavefunction> wfn, Options& options,
     nirrep_ = wfn_->nirrep();
 
     // Double and singly occupied MOs
-    Dimension doccpi = wfn_->doccpi();
-    Dimension soccpi = wfn_->soccpi();
+    psi::Dimension doccpi = wfn_->doccpi();
+    psi::Dimension soccpi = wfn_->soccpi();
 
     // Frozen DOCC + RDOCC
     size_t ninact = mo_space_info_->size("INACTIVE_DOCC");
@@ -340,7 +341,7 @@ void CI_Reference::build_cas_reference(std::vector<Determinant>& ref_space) {
     }
 
     if (ref_space.size() == 0) {
-        throw PSIEXCEPTION("Unable to generate CASCI space. Try increasing ACTIVE_GUESS_SIZE");
+        throw psi::PSIEXCEPTION("Unable to generate CASCI space. Try increasing ACTIVE_GUESS_SIZE");
     }
 
     outfile->Printf("\n  Number of reference determinants: %zu", ref_space.size());
@@ -472,6 +473,5 @@ Determinant CI_Reference::get_occupation() {
 
     } // End loop over k
     return det;
-}
 }
 }

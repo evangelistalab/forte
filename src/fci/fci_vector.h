@@ -39,7 +39,7 @@
 #define CAPRICCIO_USE_DAXPY 1
 #define CAPRICCIO_USE_UNROLL 0
 
-namespace psi {
+
 namespace forte {
 
 class FCIWfn {
@@ -56,9 +56,9 @@ class FCIWfn {
     /// Copy the wave function object
     void copy(FCIWfn& wfn);
     /// Copy the coefficient from a Vector object
-    void copy(SharedVector vec);
+    void copy(psi::SharedVector vec);
     /// Copy the wave function object
-    void copy_to(SharedVector vec);
+    void copy_to(psi::SharedVector vec);
 
     /// Form the diagonal part of the Hamiltonian
     void form_H_diagonal(std::shared_ptr<FCIIntegrals> fci_ints);
@@ -131,7 +131,7 @@ class FCIWfn {
     /// The total number of correlated molecular orbitals
     size_t ncmo_;
     /// The number of correlated molecular orbitals per irrep
-    Dimension cmopi_;
+    psi::Dimension cmopi_;
     /// The offset array for cmopi_
     std::vector<size_t> cmopi_offset_;
     //    /// The mapping between correlated molecular orbitals and all orbitals
@@ -151,7 +151,7 @@ class FCIWfn {
     /// The beta string graph
     GraphPtr beta_graph_;
     /// Coefficient matrix stored in block-matrix form
-    std::vector<SharedMatrix> C_;
+    std::vector<psi::SharedMatrix> C_;
     std::vector<double> opdm_a_;
     std::vector<double> opdm_b_;
     std::vector<double> tpdm_aa_;
@@ -164,8 +164,8 @@ class FCIWfn {
 
     // ==> Class Static Data <==
 
-    static SharedMatrix C1;
-    static SharedMatrix Y1;
+    static psi::SharedMatrix C1;
+    static psi::SharedMatrix Y1;
     static size_t sizeC1;
     //    static FCIWfn* tmp_wfn1;
     //    static FCIWfn* tmp_wfn2;
@@ -221,7 +221,6 @@ class FCIWfn {
     void compute_3rdm_aab(std::vector<double>& rdm);
     void compute_3rdm_abb(std::vector<double>& rdm);
 };
-}
 }
 
 #endif // _fci_vector_

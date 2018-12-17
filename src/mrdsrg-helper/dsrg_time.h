@@ -35,7 +35,7 @@
 
 #include "psi4/libtrans/integraltransform.h"
 
-namespace psi {
+
 namespace forte {
 
 class DSRG_TIME {
@@ -91,7 +91,6 @@ class DSRG_TIME {
     /// Test code
     bool test_code(const std::string& code);
 };
-}
 }
 
 #endif // DSRG_TIME_H

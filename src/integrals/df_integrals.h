@@ -32,7 +32,7 @@
 
 #include "integrals.h"
 
-namespace psi {
+
 
 class Tensor;
 
@@ -48,7 +48,7 @@ class MOSpaceInfo;
  */
 class DFIntegrals : public ForteIntegrals {
   public:
-    DFIntegrals(psi::Options& options, SharedWavefunction ref_wfn,
+    DFIntegrals(psi::Options& options, psi::SharedWavefunction ref_wfn,
                 IntegralSpinRestriction restricted, std::shared_ptr<MOSpaceInfo> mo_space_info);
     virtual double aptei_aa(size_t p, size_t q, size_t r, size_t s);
     virtual double aptei_ab(size_t p, size_t q, size_t r, size_t s);
@@ -80,19 +80,19 @@ class DFIntegrals : public ForteIntegrals {
                          bool alpha2);
     virtual ~DFIntegrals();
 
-    virtual void make_fock_matrix(SharedMatrix gamma_a, SharedMatrix gamma_b);
+    virtual void make_fock_matrix(psi::SharedMatrix gamma_a, psi::SharedMatrix gamma_b);
 
     virtual size_t nthree() const { return nthree_; }
 
   private:
     // ==> Class data <==
 
-    std::shared_ptr<Matrix> ThreeIntegral_;
+    std::shared_ptr<psi::Matrix> ThreeIntegral_;
     size_t nthree_ = 0;
 
     // ==> Class private functions <==
 
-    void resort_three(std::shared_ptr<Matrix>& threeint, std::vector<size_t>& map);
+    void resort_three(std::shared_ptr<psi::Matrix>& threeint, std::vector<size_t>& map);
 
     // ==> Class private virtual functions <==
 
@@ -101,6 +101,6 @@ class DFIntegrals : public ForteIntegrals {
 };
 
 } // namespace forte
-} // namespace psi
+
 
 #endif // _df_integrals_h_

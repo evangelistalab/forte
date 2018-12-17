@@ -33,7 +33,7 @@
 #include "psi4/lib3index/dfhelper.h"
 #include "integrals.h"
 
-namespace psi {
+
 
 class Tensor;
 
@@ -49,7 +49,7 @@ class MOSpaceInfo;
 /// Reading individual elements is slow
 class DISKDFIntegrals : public ForteIntegrals {
   public:
-    DISKDFIntegrals(psi::Options& options, SharedWavefunction ref_wfn,
+    DISKDFIntegrals(psi::Options& options, psi::SharedWavefunction ref_wfn,
                     IntegralSpinRestriction restricted, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// aptei_xy functions are slow.  try to use three_integral_block
@@ -87,7 +87,7 @@ class DISKDFIntegrals : public ForteIntegrals {
                          bool alpha2);
     virtual ~DISKDFIntegrals();
 
-    virtual void make_fock_matrix(SharedMatrix gamma_a, SharedMatrix gamma_b);
+    virtual void make_fock_matrix(psi::SharedMatrix gamma_a, psi::SharedMatrix gamma_b);
 
     /// Make a Fock matrix computed with respect to a given determinant
     virtual size_t nthree() const { return nthree_; }
@@ -95,8 +95,8 @@ class DISKDFIntegrals : public ForteIntegrals {
   private:
     // ==> Class data <==
 
-    std::shared_ptr<DFHelper> df_;
-    std::shared_ptr<Matrix> ThreeIntegral_;
+    std::shared_ptr<psi::DFHelper> df_;
+    std::shared_ptr<psi::Matrix> ThreeIntegral_;
     size_t nthree_ = 0;
 
     // ==> Class private virtual functions <==
@@ -107,6 +107,6 @@ class DISKDFIntegrals : public ForteIntegrals {
 };
 
 } // namespace forte
-} // namespace psi
+
 
 #endif // _diskdf_integrals_h_

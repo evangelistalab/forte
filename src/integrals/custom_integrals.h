@@ -32,7 +32,7 @@
 
 #include "integrals.h"
 
-namespace psi {
+
 
 class Tensor;
 
@@ -48,7 +48,7 @@ class CustomIntegrals : public ForteIntegrals {
   public:
     /// Contructor of the class.  Calls std::shared_ptr<ForteIntegrals> ints
     /// constructor
-    CustomIntegrals(psi::Options& options, SharedWavefunction ref_wfn,
+    CustomIntegrals(psi::Options& options, psi::SharedWavefunction ref_wfn,
                     IntegralSpinRestriction restricted, std::shared_ptr<MOSpaceInfo> mo_space_info);
     virtual ~CustomIntegrals();
 
@@ -75,9 +75,9 @@ class CustomIntegrals : public ForteIntegrals {
                                                          const std::vector<size_t>&);
     virtual double** three_integral_pointer();
 
-    virtual void make_fock_matrix(SharedMatrix gamma_a, SharedMatrix gamma_b);
+    virtual void make_fock_matrix(psi::SharedMatrix gamma_a, psi::SharedMatrix gamma_b);
 
-    virtual size_t nthree() const { throw PSIEXCEPTION("Wrong Integral type"); }
+    virtual size_t nthree() const { throw psi::PSIEXCEPTION("Wrong Integral type"); }
 
     virtual void set_tei(size_t p, size_t q, size_t r, size_t s, double value, bool alpha1,
                          bool alpha2);
@@ -110,6 +110,6 @@ class CustomIntegrals : public ForteIntegrals {
 };
 
 } // namespace forte
-} // namespace psi
+
 
 #endif // _integrals_h_

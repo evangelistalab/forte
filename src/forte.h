@@ -28,7 +28,7 @@
 
 #include "forte_options.h"
 
-namespace psi {
+
 namespace forte {
 
 void forte_options(ForteOptions& options);
@@ -37,25 +37,24 @@ std::pair<int, int> startup();
 void banner();
 void cleanup();
 
-int read_options(Options& options);
-SharedWavefunction run_forte(SharedWavefunction ref_wfn, Options& options);
+int read_options(psi::Options& options);
+psi::SharedWavefunction run_forte(psi::SharedWavefunction ref_wfn, psi::Options& options);
 
 
 
-std::shared_ptr<MOSpaceInfo> make_mo_space_info(SharedWavefunction ref_wfn, Options& options);
+std::shared_ptr<MOSpaceInfo> make_mo_space_info(psi::SharedWavefunction ref_wfn, psi::Options& options);
 
-SharedMatrix make_aosubspace_projector(SharedWavefunction ref_wfn, Options& options);
+psi::SharedMatrix make_aosubspace_projector(psi::SharedWavefunction ref_wfn, psi::Options& options);
 
-std::shared_ptr<ForteIntegrals> make_forte_integrals(SharedWavefunction ref_wfn, Options& options,
+std::shared_ptr<ForteIntegrals> make_forte_integrals(psi::SharedWavefunction ref_wfn, psi::Options& options,
                                                      std::shared_ptr<MOSpaceInfo> mo_space_info);
 
-void make_ci_nos(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
+void make_ci_nos(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
                  std::shared_ptr<MOSpaceInfo> mo_space_info);
 
-void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
+void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
                        std::shared_ptr<ForteIntegrals> ints,
                        std::shared_ptr<MOSpaceInfo> mo_space_info);
 
-void forte_old_options(Options& options);
+void forte_old_options(psi::Options& options);
 }
-} // End Namespaces

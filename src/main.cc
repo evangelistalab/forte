@@ -73,7 +73,8 @@ namespace py = pybind11;
 
 #include "forte.h"
 
-namespace psi {
+using namespace psi;
+
 namespace forte {
 
 /// These functions replace the Memory Allocator in GA with C/C++ allocator.
@@ -83,7 +84,7 @@ void replace_free(void* ptr) { free(ptr); }
 /**
  * @brief Read options from the input file. Called by psi4 before everything else.
  */
-int read_options(Options& options) {
+int read_options(psi::Options& options) {
 
     options.set_current_module("FORTE");
 
@@ -126,7 +127,7 @@ std::pair<int, int> startup() {
     GA_Register_stack_memory(replace_malloc, replace_free);
     n_nodes = GA_Nnodes();
     my_proc = GA_Nodeid();
-    size_t memory = Process::environment.get_memory() / n_nodes;
+    size_t memory = psi::Process::environment.get_memory() / n_nodes;
 #endif
 
 #ifdef HAVE_MPI
@@ -153,19 +154,19 @@ void cleanup() {
 #endif
 }
 
-std::shared_ptr<MOSpaceInfo> make_mo_space_info(SharedWavefunction ref_wfn, Options& options) {
-    Dimension nmopi = ref_wfn->nmopi();
+std::shared_ptr<MOSpaceInfo> make_mo_space_info(psi::SharedWavefunction ref_wfn, psi::Options& options) {
+    psi::Dimension nmopi = ref_wfn->nmopi();
     auto mo_space_info = std::make_shared<MOSpaceInfo>(nmopi);
     mo_space_info->read_options(options);
     return mo_space_info;
 }
 
-SharedMatrix make_aosubspace_projector(SharedWavefunction ref_wfn, Options& options) {
-    // Ps is a SharedMatrix Ps = S^{BA} X X^+ S^{AB}
+psi::SharedMatrix make_aosubspace_projector(psi::SharedWavefunction ref_wfn, psi::Options& options) {
+    // Ps is a psi::SharedMatrix Ps = S^{BA} X X^+ S^{AB}
     auto Ps = create_aosubspace_projector(ref_wfn, options);
     if (Ps) {
 
-        SharedMatrix CPsC = Ps->clone();
+        psi::SharedMatrix CPsC = Ps->clone();
         CPsC->transform(ref_wfn->Ca());
         outfile->Printf("\n  Orbital overlap with ao subspace:\n");
         outfile->Printf("    ========================\n");
@@ -181,7 +182,7 @@ SharedMatrix make_aosubspace_projector(SharedWavefunction ref_wfn, Options& opti
     return Ps;
 }
 
-std::shared_ptr<ForteIntegrals> make_forte_integrals(SharedWavefunction ref_wfn, Options& options,
+std::shared_ptr<ForteIntegrals> make_forte_integrals(psi::SharedWavefunction ref_wfn, psi::Options& options,
                                                      std::shared_ptr<MOSpaceInfo> mo_space_info) {
     timer int_timer("Integrals");
     std::shared_ptr<ForteIntegrals> ints;
@@ -206,7 +207,7 @@ std::shared_ptr<ForteIntegrals> make_forte_integrals(SharedWavefunction ref_wfn,
     } else {
         outfile->Printf("\n Please check your int_type. Choices are CHOLESKY, DF, DISKDF , "
                         "DISTRIBUTEDDF Effective, CONVENTIONAL or OwnIntegrals");
-        throw PSIEXCEPTION("INT_TYPE is not correct.  Check options");
+        throw psi::PSIEXCEPTION("INT_TYPE is not correct.  Check options");
     }
 
     if (options.get_bool("PRINT_INTS")) {
@@ -233,12 +234,12 @@ void banner() {
 }
 
 } // namespace forte
-} // namespace psi
+
 
 ///**
 // * @brief The main forte function.
 // */
-// SharedWavefunction run_forte(SharedWavefunction ref_wfn, Options& options) {
+// psi::SharedWavefunction run_forte(psi::SharedWavefunction ref_wfn, psi::Options& options) {
 //    // Start a timer
 //    timer total_time("Forte");
 
@@ -274,7 +275,7 @@ void banner() {
 //    }
 
 //    // Make a subspace object
-//    SharedMatrix Ps = make_aosubspace_projector(ref_wfn, options);
+//    psi::SharedMatrix Ps = make_aosubspace_projector(ref_wfn, options);
 
 //    // Transform the orbitals
 //    make_avas(ref_wfn, options, Ps);

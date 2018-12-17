@@ -8,10 +8,11 @@
 #include "helpers/timer.h"
 #include "master_mrdsrg.h"
 
-namespace psi {
+using namespace psi;
+
 namespace forte {
 
-MASTER_DSRG::MASTER_DSRG(Reference reference, SharedWavefunction ref_wfn, Options& options,
+MASTER_DSRG::MASTER_DSRG(Reference reference, psi::SharedWavefunction ref_wfn, psi::Options& options,
                          std::shared_ptr<ForteIntegrals> ints,
                          std::shared_ptr<MOSpaceInfo> mo_space_info)
     : DynamicCorrelationSolver(reference, ref_wfn, options, ints, mo_space_info),
@@ -50,7 +51,7 @@ void MASTER_DSRG::startup() {
 
     // read commonly used energies
     Eref_ = reference_.get_Eref();
-    Enuc_ = Process::environment.molecule()->nuclear_repulsion_energy(
+    Enuc_ = psi::Process::environment.molecule()->nuclear_repulsion_energy(
         reference_wavefunction_->get_dipole_field_strength());
     Efrzc_ = ints_->frozen_core_energy();
 
@@ -85,7 +86,7 @@ void MASTER_DSRG::read_options() {
 
     auto throw_error = [&](const std::string& message) -> void {
         outfile->Printf("\n  %s", message.c_str());
-        throw PSIEXCEPTION(message);
+        throw psi::PSIEXCEPTION(message);
     };
 
     print_ = options_.get_int("PRINT");
@@ -239,8 +240,8 @@ void MASTER_DSRG::build_fock_from_ints(std::shared_ptr<ForteIntegrals> ints, Blo
     F = BTF_->build(tensor_type_, "Fock", spin_cases({"gg"}));
 
     // for convenience, directly call make_fock_matrix in ForteIntegral
-    SharedMatrix D1a(new Matrix("D1a", ncmo, ncmo));
-    SharedMatrix D1b(new Matrix("D1b", ncmo, ncmo));
+    psi::SharedMatrix D1a(new psi::Matrix("D1a", ncmo, ncmo));
+    psi::SharedMatrix D1b(new psi::Matrix("D1b", ncmo, ncmo));
     for (size_t m = 0, ncore = core_mos_.size(); m < ncore; m++) {
         D1a->set(core_mos_[m], core_mos_[m], 1.0);
         D1b->set(core_mos_[m], core_mos_[m], 1.0);
@@ -296,7 +297,7 @@ void MASTER_DSRG::check_init_reference_energy() {
         Eref_ = E;
     }
 
-    Process::environment.globals["DSRG REFERENCE ENERGY"] = Eref_;
+    psi::Process::environment.globals["DSRG REFERENCE ENERGY"] = Eref_;
 }
 
 double MASTER_DSRG::compute_reference_energy_from_ints(std::shared_ptr<ForteIntegrals> ints) {
@@ -433,15 +434,15 @@ void MASTER_DSRG::init_dm_ints() {
     outfile->Printf("\n    Preparing ambit tensors for dipole moments ...... ");
     dm_.clear();
     dm_nuc_ = std::vector<double>(3, 0.0);
-    Vector3 dm_nuc = Process::environment.molecule()->nuclear_dipole(Vector3(0.0, 0.0, 0.0));
+    Vector3 dm_nuc = psi::Process::environment.molecule()->nuclear_dipole(psi::Vector3(0.0, 0.0, 0.0));
     for (int i = 0; i < 3; ++i) {
         dm_nuc_[i] = dm_nuc[i];
         BlockedTensor dm_i = BTF_->build(tensor_type_, "Dipole " + dm_dirs_[i], spin_cases({"gg"}));
         dm_.emplace_back(dm_i);
     }
 
-    std::vector<SharedMatrix> dm_a = ints_->compute_MOdipole_ints(true, true);
-    std::vector<SharedMatrix> dm_b = ints_->compute_MOdipole_ints(false, true);
+    std::vector<psi::SharedMatrix> dm_a = ints_->compute_MOdipole_ints(true, true);
+    std::vector<psi::SharedMatrix> dm_b = ints_->compute_MOdipole_ints(false, true);
     fill_MOdm(dm_a, dm_b);
     compute_dm_ref();
 
@@ -469,7 +470,7 @@ void MASTER_DSRG::init_dm_ints() {
     outfile->Printf("Done");
 }
 
-void MASTER_DSRG::fill_MOdm(std::vector<SharedMatrix>& dm_a, std::vector<SharedMatrix>& dm_b) {
+void MASTER_DSRG::fill_MOdm(std::vector<psi::SharedMatrix>& dm_a, std::vector<psi::SharedMatrix>& dm_b) {
     // consider frozen-core part
     dm_frzc_ = std::vector<double>(3, 0.0);
     std::vector<size_t> frzc_mos = mo_space_info_->get_absolute_mo("FROZEN_DOCC");
@@ -484,9 +485,9 @@ void MASTER_DSRG::fill_MOdm(std::vector<SharedMatrix>& dm_a, std::vector<SharedM
 
     // find out correspondance between ncmo and nmo
     std::vector<size_t> cmo_to_mo;
-    Dimension frzcpi = mo_space_info_->get_dimension("FROZEN_DOCC");
-    Dimension frzvpi = mo_space_info_->get_dimension("FROZEN_UOCC");
-    Dimension ncmopi = mo_space_info_->get_dimension("CORRELATED");
+    psi::Dimension frzcpi = mo_space_info_->get_dimension("FROZEN_DOCC");
+    psi::Dimension frzvpi = mo_space_info_->get_dimension("FROZEN_UOCC");
+    psi::Dimension ncmopi = mo_space_info_->get_dimension("CORRELATED");
     for (int h = 0, p = 0; h < nirrep_; ++h) {
         p += frzcpi[h];
         for (int r = 0; r < ncmopi[h]; ++r) {
@@ -791,10 +792,10 @@ std::vector<ambit::Tensor> MASTER_DSRG::Hbar(int n) {
             out = {Hbar3_.block("aaaaaa"), Hbar3_.block("aaAaaA"), Hbar3_.block("aAAaAA"),
                    Hbar3_.block("AAAAAA")};
         } else {
-            throw PSIEXCEPTION("Hbar3 is not formed. Check your code.");
+            throw psi::PSIEXCEPTION("Hbar3 is not formed. Check your code.");
         }
     } else {
-        throw PSIEXCEPTION("Only 1, 2, and 3 Hbar are in Tensor format.");
+        throw psi::PSIEXCEPTION("Only 1, 2, and 3 Hbar are in Tensor format.");
     }
     return out;
 }
@@ -1908,7 +1909,7 @@ bool MASTER_DSRG::check_semi_orbs() {
         if ((job_type == "MRDSRG" || job_type == "DSRG-MRPT3") && fci_mo) {
             std::stringstream ss;
             ss << "Unsupported FCIMO_ACTV_TYPE for " << job_type << " code.";
-            throw PSIEXCEPTION(ss.str());
+            throw psi::PSIEXCEPTION(ss.str());
         }
 
         outfile->Printf("\n    Incomplete active space %s is detected.", actv_type.c_str());
@@ -2145,6 +2146,5 @@ std::vector<std::string> MASTER_DSRG::re_two_labels() {
     }
 
     return labels;
-}
 }
 }

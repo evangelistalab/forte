@@ -33,7 +33,7 @@
 #include "psi4/libmints/vector.h"
 #include "psi4/libmints/matrix.h"
 
-namespace psi {
+
 namespace forte {
 
 /// Result of the update step
@@ -95,23 +95,23 @@ class DavidsonLiuSolver {
     size_t collapse_size() const;
 
     /// Add a guess basis vector
-    void add_guess(SharedVector vec);
+    void add_guess(psi::SharedVector vec);
     /// Get a basis vector
-    void get_b(SharedVector vec);
+    void get_b(psi::SharedVector vec);
     /// Add a sigma vector
-    bool add_sigma(SharedVector vec);
+    bool add_sigma(psi::SharedVector vec);
 
     void set_project_out(std::vector<sparse_vec> project_out);
 
     /// Return the eigenvalues
-    SharedVector eigenvalues() const;
+    psi::SharedVector eigenvalues() const;
     /// Return the eigenvectors
-    SharedMatrix eigenvectors() const;
+    psi::SharedMatrix eigenvectors() const;
     /// Return the n-th eigenvector
-    SharedVector eigenvector(size_t n) const;
+    psi::SharedVector eigenvector(size_t n) const;
 
     /// Initialize the object
-    void startup(SharedVector diagonal);
+    void startup(psi::SharedVector diagonal);
 
     /// Perform an update step
     SolverStatus update();
@@ -129,9 +129,9 @@ class DavidsonLiuSolver {
     /// Build the correction vectors
     void form_correction_vectors();
     /// Project out undesired roots
-    void project_out_roots(SharedMatrix v);
+    void project_out_roots(psi::SharedMatrix v);
     /// Normalize the correction vectors
-    void normalize_vectors(SharedMatrix v, size_t n);
+    void normalize_vectors(psi::SharedMatrix v, size_t n);
     /// Perform subspace collapse
     bool subspace_collapse();
     /// Collapse the vectors
@@ -169,31 +169,30 @@ class DavidsonLiuSolver {
     bool last_update_collapsed_ = false;
 
     /// Current set of guess vectors stored by row
-    SharedMatrix b_;
+    psi::SharedMatrix b_;
     /// Guess vectors formed from old vectors, stored by row
-    SharedMatrix bnew;
+    psi::SharedMatrix bnew;
     /// Residual eigenvectors, stored by row
-    SharedMatrix f;
+    psi::SharedMatrix f;
     /// Sigma vectors, stored by column
-    SharedMatrix sigma_;
+    psi::SharedMatrix sigma_;
     /// Davidson-Liu mini-Hamitonian
-    SharedMatrix G;
+    psi::SharedMatrix G;
     /// Davidson-Liu mini-metric
-    SharedMatrix S;
+    psi::SharedMatrix S;
     /// Eigenvectors of the Davidson mini-Hamitonian
-    SharedMatrix alpha;
+    psi::SharedMatrix alpha;
 
     /// Eigenvalues of the Davidson mini-Hamitonian
-    SharedVector lambda;
+    psi::SharedVector lambda;
     /// Old eigenvalues of the Davidson mini-Hamitonian
-    SharedVector lambda_old;
+    psi::SharedVector lambda_old;
     /// Diagonal elements of the Hamiltonian
-    SharedVector h_diag;
+    psi::SharedVector h_diag;
 
     /// Approximate eigenstates to project out
     std::vector<sparse_vec> project_out_;
 };
-}
 }
 
 #endif // _iterative_solvers_h_

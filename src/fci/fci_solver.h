@@ -41,7 +41,7 @@
 #include "string_lists.h"
 #include "base_classes/reference.h"
 
-namespace psi {
+
 namespace forte {
 
 /**
@@ -67,10 +67,10 @@ class FCISolver {
      * @param initial_guess_per_root get from options object
      * @param print Control printing of FCISolver
      */
-    FCISolver(Dimension active_dim, std::vector<size_t> core_mo, std::vector<size_t> active_mo,
+    FCISolver(psi::Dimension active_dim, std::vector<size_t> core_mo, std::vector<size_t> active_mo,
               size_t na, size_t nb, size_t multiplicity, size_t symmetry,
               std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info,
-              size_t initial_guess_per_root, int print, Options& options);
+              size_t initial_guess_per_root, int print, psi::Options& options);
     /**
      * @brief FCISolver
      * @param active_dim The dimension of the active orbital space
@@ -84,10 +84,10 @@ class FCISolver {
      * @param mo_space_info -> mo_space_info object
      * @param options object
      */
-    FCISolver(Dimension active_dim, std::vector<size_t> core_mo, std::vector<size_t> active_mo,
+    FCISolver(psi::Dimension active_dim, std::vector<size_t> core_mo, std::vector<size_t> active_mo,
               size_t na, size_t nb, size_t multiplicity, size_t symmetry,
               std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info,
-              Options& options);
+              psi::Options& options);
 
     ~FCISolver() {}
 
@@ -131,9 +131,9 @@ class FCISolver {
     std::shared_ptr<FCIWfn> get_FCIWFN() { return C_; }
 
     /// Return eigen vectors
-    SharedMatrix eigen_vecs() { return eigen_vecs_; }
+    psi::SharedMatrix eigen_vecs() { return eigen_vecs_; }
     /// Return eigen values
-    SharedVector eigen_vals() { return eigen_vals_; }
+    psi::SharedVector eigen_vals() { return eigen_vals_; }
     /// Return string lists
     std::shared_ptr<StringLists> lists() { return lists_; }
     /// Return symmetry
@@ -142,8 +142,8 @@ class FCISolver {
   private:
     // ==> Class Data <==
 
-    /// The Dimension object for the active space
-    Dimension active_dim_;
+    /// The psi::Dimension object for the active space
+    psi::Dimension active_dim_;
 
     /// The orbitals frozen at the CI level
     std::vector<size_t> core_mo_;
@@ -166,9 +166,9 @@ class FCISolver {
     std::shared_ptr<FCIWfn> C_;
 
     /// Eigen vectors
-    SharedMatrix eigen_vecs_;
+    psi::SharedMatrix eigen_vecs_;
     /// Eigen values
-    SharedVector eigen_vals_;
+    psi::SharedVector eigen_vals_;
 
     /// The number of irreps
     int nirrep_;
@@ -215,9 +215,9 @@ class FCISolver {
     std::vector<std::pair<int, std::vector<std::tuple<size_t, size_t, size_t, double>>>>
     initial_guess(FCIWfn& diag, size_t n, std::shared_ptr<FCIIntegrals> fci_ints);
     /// The options object
-    Options& options_;
+    psi::Options& options_;
 };
 } // namespace forte
-} // namespace psi
+
 
 #endif // _fci_solver_h_

@@ -30,7 +30,7 @@
 
 #include "fci_vector.h"
 
-namespace psi {
+
 namespace forte {
 
 FCIIntegrals::FCIIntegrals(std::shared_ptr<ForteIntegrals> ints, std::vector<size_t> active_mo,
@@ -637,4 +637,4 @@ double FCIIntegrals::slater_rules_single_beta_abs(const Determinant& det, int i,
     return matrix_element;
 }
 } // namespace forte
-} // namespace psi
+

@@ -41,13 +41,13 @@
 #include "sparse_ci/operator.h"
 #include "sparse_ci/sparse_ci_solver.h"
 
-namespace psi {
+
 namespace forte {
 
-class ESNO : public Wavefunction {
+class ESNO : public psi::Wavefunction {
   public:
     // Class constructor and destructor
-    ESNO(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
+    ESNO(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
          std::shared_ptr<MOSpaceInfo> mo_space_info, DeterminantHashVec& reference);
 
     ~ESNO();
@@ -60,7 +60,7 @@ class ESNO : public Wavefunction {
 
   private:
     std::shared_ptr<FCIIntegrals> fci_ints_;
-	std::shared_ptr<Wavefunction> ref_wfn_;
+	std::shared_ptr<psi::Wavefunction> ref_wfn_;
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
 
     void startup();
@@ -77,4 +77,4 @@ class ESNO : public Wavefunction {
     std::vector<size_t> get_excitation_space();
 };
 }
-}
+

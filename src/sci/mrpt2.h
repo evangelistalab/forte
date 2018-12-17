@@ -43,17 +43,17 @@
 #include "sparse_ci/operator.h"
 #include "sparse_ci/sparse_ci_solver.h"
 
-namespace psi {
+
 namespace forte {
 
 void set_PT2_options(ForteOptions& foptions);
 
-class MRPT2 : public Wavefunction {
+class MRPT2 : public psi::Wavefunction {
   public:
     // Class constructor and destructor
-    MRPT2(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
+    MRPT2(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
           std::shared_ptr<MOSpaceInfo> mo_space_info, DeterminantHashVec& reference,
-          SharedMatrix evecs, SharedVector evals);
+          psi::SharedMatrix evecs, psi::SharedVector evals);
 
     ~MRPT2();
 
@@ -65,8 +65,8 @@ class MRPT2 : public Wavefunction {
   private:
     std::shared_ptr<FCIIntegrals> fci_ints_;
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
-    SharedMatrix evecs_;
-    SharedVector evals_;
+    psi::SharedMatrix evecs_;
+    psi::SharedVector evals_;
 
     void startup();
 
@@ -80,7 +80,6 @@ class MRPT2 : public Wavefunction {
 
     double screen_thresh_;
 };
-}
 }
 
 #endif // _mrpt2_h_

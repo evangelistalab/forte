@@ -38,7 +38,7 @@
 #include "helpers/mo_space_info.h"
 #include "psi4/libscf_solver/rhf.h"
 
-namespace psi {
+
 namespace forte {
 /// CASSCF can be expensive so many researchers have come up with different
 /// orbitals for CASSCF.
@@ -55,17 +55,17 @@ namespace forte {
 class FiniteTemperatureHF : public scf::RHF {
   protected:
     /// Core Hamiltonian Matrix
-    SharedMatrix hMat_;
+    psi::SharedMatrix hMat_;
     /// The Overlap Matrix
-    SharedMatrix sMat_;
+    psi::SharedMatrix sMat_;
     /// The converged CMatrix from SCF
-    SharedMatrix CMatrix_;
+    psi::SharedMatrix CMatrix_;
     /// C = n_i * C_{mu, i}
-    SharedMatrix C_occ_folded_;
+    psi::SharedMatrix C_occ_folded_;
     /// Just the normal CMatrix
-    SharedMatrix C_occ_a_;
+    psi::SharedMatrix C_occ_a_;
     /// A Vector of eigenvalues
-    SharedVector eps_;
+    psi::SharedVector eps_;
     /// The active orbital energies (fractionally occupied orbitals)
     std::vector<std::pair<double, int>> active_orb_energy_;
     /// The Fermi-Dirac distribution for occupation
@@ -74,12 +74,12 @@ class FiniteTemperatureHF : public scf::RHF {
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
     /// The options object
     Options options_;
-    /// The Dimension for restricted docc
-    Dimension rdocc_dim_;
-    /// The Dimension object for active
-    Dimension active_dim_;
-    /// The Dimension object for restricted_docc + active
-    Dimension rdocc_p_active_;
+    /// The psi::Dimension for restricted docc
+    psi::Dimension rdocc_dim_;
+    /// The psi::Dimension object for active
+    psi::Dimension active_dim_;
+    /// The psi::Dimension object for restricted_docc + active
+    psi::Dimension rdocc_p_active_;
 
     /// General variables for use in SCF code
     /// The irrep
@@ -105,7 +105,7 @@ class FiniteTemperatureHF : public scf::RHF {
     double ef_ = 0.0;
     double scf_energy_ = 0.0;
     /// A function for computing the SCF iterations
-    void scf_iteration(const std::shared_ptr<Matrix> C_left);
+    void scf_iteration(const std::shared_ptr<psi::Matrix> C_left);
     /// Function used to get all the SCF prelims
     void startup();
     /// Initialize the occupation vector
@@ -125,11 +125,11 @@ class FiniteTemperatureHF : public scf::RHF {
     int debug_ = 0;
 
   public:
-    FiniteTemperatureHF(SharedWavefunction ref_wfn, Options& Options,
+    FiniteTemperatureHF(psi::SharedWavefunction ref_wfn, Options& Options,
                         std::shared_ptr<MOSpaceInfo> mo_space);
     /// Get the SCF ENERGY for the complete iteration
     double get_scf_energy() { return scf_energy_; }
-    std::shared_ptr<Matrix> get_mo_coefficient() { return CMatrix_; }
+    std::shared_ptr<psi::Matrix> get_mo_coefficient() { return CMatrix_; }
     double compute_energy();
 };
 }

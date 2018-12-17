@@ -41,7 +41,8 @@
 #include "boost/format.hpp"
 #include "mrdsrg.h"
 
-namespace psi {
+using namespace psi;
+
 namespace forte {
 
 double MRDSRG::compute_energy_pt2() {
@@ -60,7 +61,7 @@ double MRDSRG::compute_energy_pt2() {
         outfile->Printf("\n  If DF/CD is insisted, please uncomment lines 62-69 of mrdsrg_pt.cc "
                         "and recompile FORTE.");
         outfile->Printf("\n  However, this will result in building a full set of 2e integrals.");
-        throw PSIEXCEPTION(ss.str() + "\nPlease advise the output file.");
+        throw psi::PSIEXCEPTION(ss.str() + "\nPlease advise the output file.");
 
         //        V_ = BTF_->build(tensor_type_, "V", spin_cases({"gggg"}));
         //        V_["pqrs"] = B_["gpr"] * B_["gqs"];
@@ -357,7 +358,7 @@ std::vector<std::pair<std::string, double>> MRDSRG::compute_energy_pt2_FdiagV() 
 
     // fail to converge
     if (failed) {
-        throw PSIEXCEPTION("First-order amplitudes do not converge in DSRG-MRPT2.");
+        throw psi::PSIEXCEPTION("First-order amplitudes do not converge in DSRG-MRPT2.");
     }
 
     // reset Hbar to 1st-order H
@@ -596,7 +597,7 @@ std::vector<std::pair<std::string, double>> MRDSRG::compute_energy_pt2_FdiagVdia
 
     // fail to converge
     if (failed) {
-        throw PSIEXCEPTION("First-order amplitudes do not converge in DSRG-MRPT2.");
+        throw psi::PSIEXCEPTION("First-order amplitudes do not converge in DSRG-MRPT2.");
     }
 
     // reset Hbar to 1st-order Hamiltonian
@@ -797,7 +798,7 @@ std::vector<std::pair<std::string, double>> MRDSRG::compute_energy_pt2_FdiagVdia
 
         // fail to converge
         if (failed) {
-            throw PSIEXCEPTION("Second-order amplitudes do not converge in DSRG-MRPT2.");
+            throw psi::PSIEXCEPTION("Second-order amplitudes do not converge in DSRG-MRPT2.");
         }
 
         // build Hbar correct till 2nd order
@@ -973,7 +974,7 @@ std::vector<std::pair<std::string, double>> MRDSRG::compute_energy_pt2_Ffull() {
 
     // fail to converge
     if (failed) {
-        throw PSIEXCEPTION("First-order amplitudes do not converge in DSRG-MRPT2.");
+        throw psi::PSIEXCEPTION("First-order amplitudes do not converge in DSRG-MRPT2.");
     }
 
     E1st = Ecorr;
@@ -1137,7 +1138,7 @@ std::vector<std::pair<std::string, double>> MRDSRG::compute_energy_pt2_Ffull() {
 
     // fail to converge
     if (failed) {
-        throw PSIEXCEPTION("First-order amplitudes do not converge in DSRG-MRPT2.");
+        throw psi::PSIEXCEPTION("First-order amplitudes do not converge in DSRG-MRPT2.");
     }
 
     E2nd += Ecorr;
@@ -1195,7 +1196,7 @@ double MRDSRG::compute_energy_pt3() {
         outfile->Printf("\n  If DF/CD is insisted, please uncomment lines 1198-1205 of "
                         "mrdsrg_pt.cc and recompile FORTE.");
         outfile->Printf("\n  However, this will result in building a full set of 2e integrals.");
-        throw PSIEXCEPTION(ss.str() + "\nPlease advise the output file.");
+        throw psi::PSIEXCEPTION(ss.str() + "\nPlease advise the output file.");
 
         //        V_ = BTF_->build(tensor_type_, "V", spin_cases({"gggg"}));
         //        V_["pqrs"] = B_["gpr"] * B_["gqs"];
@@ -1419,6 +1420,5 @@ double MRDSRG::compute_energy_pt3() {
 
     Hbar0_ = Ecorr;
     return Ecorr;
-}
 }
 }

@@ -41,7 +41,7 @@
 
 #include "string_lists.h"
 
-namespace psi {
+
 namespace forte {
 
 std::vector<H1StringSubstitution>& StringLists::get_alfa_1h_list(int h_I, size_t add_I, int h_J) {
@@ -229,6 +229,5 @@ void StringLists::make_3h_list(GraphPtr graph, GraphPtr graph_3h, H3List& list) 
     }
     delete[] J;
     delete[] I;
-}
 }
 }

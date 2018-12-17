@@ -45,10 +45,10 @@
 #define PSIF_V2RDM_D3BBB 276
 
 using namespace ambit;
-namespace psi {
+
 namespace forte {
 
-class V2RDM : public Wavefunction {
+class V2RDM : public psi::Wavefunction {
   public:
     /**
      * V2RDM Constructor
@@ -57,7 +57,7 @@ class V2RDM : public Wavefunction {
      * @param ints A pointer to an allocated integral object
      * @param mo_space_info The MOSpaceInfo object
      */
-    V2RDM(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
+    V2RDM(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
           std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Destructor
@@ -82,13 +82,13 @@ class V2RDM : public Wavefunction {
     /// Number of irrep
     size_t nirrep_;
     /// MO per irrep;
-    Dimension nmopi_;
+    psi::Dimension nmopi_;
     /// Frozen docc per irrep
-    Dimension fdoccpi_;
+    psi::Dimension fdoccpi_;
     /// Restricted docc per irrep
-    Dimension rdoccpi_;
+    psi::Dimension rdoccpi_;
     /// Active per irrep
-    Dimension active_;
+    psi::Dimension active_;
     /// Map active absolute index to relative index
     std::map<size_t, size_t> abs_to_rel_;
 
@@ -124,5 +124,5 @@ class V2RDM : public Wavefunction {
     void write_density_to_file();
 };
 }
-}
+
 #endif // V2RDM_H

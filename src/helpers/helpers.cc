@@ -44,10 +44,11 @@
 
 #include "helpers/mo_space_info.h"
 
-namespace psi {
+using namespace psi;
+
 namespace forte {
 
-// MOSpaceInfo::MOSpaceInfo(Dimension& nmopi) : nirrep_(nmopi.n()), nmopi_(nmopi) {
+// MOSpaceInfo::MOSpaceInfo(psi::Dimension& nmopi) : nirrep_(nmopi.n()), nmopi_(nmopi) {
 //     // Add the elementary spaces to the list of composite spaces
 //     for (const std::string& es : elementary_spaces_) {
 //         composite_spaces_[es] = {es};
@@ -60,7 +61,7 @@ namespace forte {
 //     size_t s = 0;
 //     if (composite_spaces_.count(space) == 0) {
 //         std::string msg = "\n  MOSpaceInfo::size - composite space " + space + " is not defined.";
-//         throw PSIEXCEPTION(msg.c_str());
+//         throw psi::PSIEXCEPTION(msg.c_str());
 //     } else {
 //         for (const auto& el_space : composite_spaces_[space]) {
 //             if (mo_spaces_.count(el_space))
@@ -70,11 +71,11 @@ namespace forte {
 //     return s;
 // }
 //
-// Dimension MOSpaceInfo::get_dimension(const std::string& space) {
-//     Dimension result(nirrep_);
+// psi::Dimension MOSpaceInfo::get_dimension(const std::string& space) {
+//     psi::Dimension result(nirrep_);
 //     if (composite_spaces_.count(space) == 0) {
 //         std::string msg = "\n  MOSpaceInfo::size - composite space " + space + " is not defined.";
-//         throw PSIEXCEPTION(msg.c_str());
+//         throw psi::PSIEXCEPTION(msg.c_str());
 //     } else {
 //         for (const auto& el_space : composite_spaces_[space]) {
 //             if (mo_spaces_.count(el_space))
@@ -86,14 +87,14 @@ namespace forte {
 //
 // /// @return The Slice object for space in a given composite space
 // Slice MOSpaceInfo::get_slice(const std::string& space, const std::string& comp_space) {
-//     Dimension begin(nirrep_);
-//     Dimension end(nirrep_);
+//     psi::Dimension begin(nirrep_);
+//     psi::Dimension end(nirrep_);
 //
 //     return Slice(begin, end);
 // }
 //
 // std::vector<int> MOSpaceInfo::symmetry(const std::string& space) {
-//     Dimension dims = get_dimension(space);
+//     psi::Dimension dims = get_dimension(space);
 //     std::vector<int> result;
 //     for (int h = 0; h < dims.n(); ++h) {
 //         for (int i = 0; i < dims[h]; ++i) {
@@ -107,7 +108,7 @@ namespace forte {
 //     std::vector<size_t> result;
 //     if (composite_spaces_.count(space) == 0) {
 //         std::string msg = "\n  MOSpaceInfo::size - composite space " + space + " is not defined.";
-//         throw PSIEXCEPTION(msg.c_str());
+//         throw psi::PSIEXCEPTION(msg.c_str());
 //     } else {
 //         for (const auto& el_space : composite_spaces_[space]) {
 //             if (mo_spaces_.count(el_space)) {
@@ -125,7 +126,7 @@ namespace forte {
 //     std::vector<size_t> result;
 //     if (composite_spaces_.count(space) == 0) {
 //         std::string msg = "\n  MOSpaceInfo::size - composite space " + space + " is not defined.";
-//         throw PSIEXCEPTION(msg.c_str());
+//         throw psi::PSIEXCEPTION(msg.c_str());
 //     } else {
 //         for (const auto& el_space : composite_spaces_[space]) {
 //             if (mo_spaces_.count(el_space)) {
@@ -146,7 +147,7 @@ namespace forte {
 //     std::vector<std::pair<size_t, size_t>> result;
 //     if (composite_spaces_.count(space) == 0) {
 //         std::string msg = "\n  MOSpaceInfo::size - composite space " + space + " is not defined.";
-//         throw PSIEXCEPTION(msg.c_str());
+//         throw psi::PSIEXCEPTION(msg.c_str());
 //     } else {
 //         for (const auto& el_space : composite_spaces_[space]) {
 //             if (mo_spaces_.count(el_space)) {
@@ -162,7 +163,7 @@ namespace forte {
 //     return result;
 // }
 //
-// void MOSpaceInfo::read_options(Options& options) {
+// void MOSpaceInfo::read_options(psi::Options& options) {
 //     outfile->Printf("\n\n  ==> MO Space Information <==\n");
 //
 //     // Read the elementary spaces
@@ -176,7 +177,7 @@ namespace forte {
 //     // Handle frozen core
 //
 //     // Count the assigned orbitals
-//     Dimension unassigned = nmopi_;
+//     psi::Dimension unassigned = nmopi_;
 //     for (auto& str_si : mo_spaces_) {
 //         unassigned -= str_si.second.first;
 //     }
@@ -251,7 +252,7 @@ namespace forte {
 //     }
 //
 //     int banner_width = label_size + 4 + 6 * (nirrep_ + 1);
-//     CharacterTable ct = Process::environment.molecule()->point_group()->char_table();
+//     CharacterTable ct = psi::Process::environment.molecule()->point_group()->char_table();
 //     outfile->Printf("\n  %s", std::string(banner_width, '-').c_str());
 //     outfile->Printf("\n    %s", std::string(label_size, ' ').c_str());
 //     for (size_t h = 0; h < nirrep_; ++h)
@@ -260,7 +261,7 @@ namespace forte {
 //     outfile->Printf("\n  %s", std::string(banner_width, '-').c_str());
 //
 //     for (std::string space : elementary_spaces_) {
-//         Dimension& dim = mo_spaces_[space].first;
+//         psi::Dimension& dim = mo_spaces_[space].first;
 //         outfile->Printf("\n    %-*s", label_size, space.c_str());
 //         for (size_t h = 0; h < nirrep_; ++h) {
 //             outfile->Printf("%6d", dim[h]);
@@ -275,9 +276,9 @@ namespace forte {
 //     outfile->Printf("\n  %s", std::string(banner_width, '-').c_str());
 // }
 //
-// std::pair<SpaceInfo, bool> MOSpaceInfo::read_mo_space(const std::string& space, Options& options) {
+// std::pair<SpaceInfo, bool> MOSpaceInfo::read_mo_space(const std::string& space, psi::Options& options) {
 //     bool read = false;
-//     Dimension space_dim(nirrep_);
+//     psi::Dimension space_dim(nirrep_);
 //     std::vector<MOInfo> vec_mo_info;
 //     if ((options[space].has_changed()) && (options[space].size() == nirrep_)) {
 //         for (size_t h = 0; h < nirrep_; ++h) {
@@ -326,7 +327,7 @@ std::string get_ms_string(double twice_ms) {
     return ms_str;
 }
 
-Matrix tensor_to_matrix(ambit::Tensor t, Dimension dims) {
+Matrix tensor_to_matrix(ambit::Tensor t, psi::Dimension dims) {
     // Copy the tensor to a plain matrix
     size_t size = dims.sum();
     Matrix M("M", size, size);
@@ -346,10 +347,10 @@ Matrix tensor_to_matrix(ambit::Tensor t, Dimension dims) {
     return M_sym;
 }
 
-SharedMatrix tensor_to_matrix(ambit::Tensor t) {
+psi::SharedMatrix tensor_to_matrix(ambit::Tensor t) {
     size_t size1 = t.dim(0);
     size_t size2 = t.dim(1);
-    SharedMatrix M(new Matrix("M", size1, size2));
+    psi::SharedMatrix M(new psi::Matrix("M", size1, size2));
     t.iterate([&](const std::vector<size_t>& i, double& value) { M->set(i[0], i[1], value); });
     return M;
 }
@@ -361,7 +362,7 @@ void write_disk_vector_double(const std::string& filename, const std::vector<dou
     if (exist) {
         std::stringstream error;
         error << "File " << filename << " already exists.";
-        throw PSIEXCEPTION(error.str().c_str());
+        throw psi::PSIEXCEPTION(error.str().c_str());
     }
 
     // write data to file
@@ -381,7 +382,7 @@ void read_disk_vector_double(const std::string& filename, std::vector<double>& d
     if (!in.good()) {
         std::stringstream error;
         error << "File " << filename << " does not exist.";
-        throw PSIEXCEPTION(error.str().c_str());
+        throw psi::PSIEXCEPTION(error.str().c_str());
     }
 
     // read file to data
@@ -416,7 +417,7 @@ std::pair<double, std::string> to_xb(size_t nele, size_t type_size) {
     return out;
 }
 
-void view_modified_orbitals(SharedWavefunction wfn, const std::shared_ptr<Matrix>& Ca,
+void view_modified_orbitals(psi::SharedWavefunction wfn, const std::shared_ptr<psi::Matrix>& Ca,
                             const std::shared_ptr<Vector>& diag_F,
                             const std::shared_ptr<Vector>& occupation) {
     std::shared_ptr<MoldenWriter> molden(new MoldenWriter(wfn));
@@ -454,4 +455,4 @@ std::pair<std::vector<size_t>, std::vector<size_t>> split_up_tasks(size_t size_o
 }
 
 } // namespace forte
-} // namespace psi
+

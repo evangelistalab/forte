@@ -33,7 +33,8 @@
 
 #include "dsrg_mrpt.h"
 
-namespace psi {
+using namespace psi;
+
 namespace forte {
 
 double DSRG_MRPT::compute_energy_pt2() {
@@ -164,7 +165,7 @@ void DSRG_MRPT::BT_scaled_by_D(BlockedTensor& BT) {
         outfile->Printf("\n  Wrong rank when using function BT_scaled_by_D for "
                         "BlockedTensor %s",
                         BT.name().c_str());
-        throw PSIEXCEPTION("Wrong rank when using function BT_scaled_by_D!");
+        throw psi::PSIEXCEPTION("Wrong rank when using function BT_scaled_by_D!");
     }
 }
 
@@ -191,7 +192,7 @@ void DSRG_MRPT::BT_scaled_by_Rplus1(BlockedTensor& BT) {
         outfile->Printf("\n  Wrong rank when using function BT_scaled_by_R for "
                         "BlockedTensor %s",
                         BT.name().c_str());
-        throw PSIEXCEPTION("Wrong rank when using function BT_scaled_by_R!");
+        throw psi::PSIEXCEPTION("Wrong rank when using function BT_scaled_by_R!");
     }
 }
 
@@ -218,8 +219,8 @@ void DSRG_MRPT::BT_scaled_by_RD(BlockedTensor& BT) {
         outfile->Printf("\n  Wrong rank when using function BT_scaled_by_RD "
                         "for BlockedTensor %s",
                         BT.name().c_str());
-        throw PSIEXCEPTION("Wrong rank when using function BT_scaled_by_RD!");
+        throw psi::PSIEXCEPTION("Wrong rank when using function BT_scaled_by_RD!");
     }
 }
 } // namespace forte
-} // namespace psi
+

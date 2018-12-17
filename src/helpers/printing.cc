@@ -34,7 +34,8 @@
 
 #include "printing.h"
 
-namespace psi {
+using namespace psi;
+
 namespace forte {
 
 void print_method_banner(const std::vector<std::string>& text, const std::string& separator) {
@@ -70,4 +71,4 @@ void print_timing(const std::string& text, double seconds) {
 }
 
 } // namespace forte
-} // namespace psi
+

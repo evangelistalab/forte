@@ -36,7 +36,7 @@
 #include "integrals/integrals.h"
 #include "base_classes/reference.h"
 
-namespace psi {
+
 
 namespace forte {
 
@@ -47,11 +47,10 @@ namespace forte {
 class MP2_NOS {
   public:
     // => Constructor <= //
-    MP2_NOS(std::shared_ptr<Wavefunction> wfn, Options& options,
+    MP2_NOS(std::shared_ptr<psi::Wavefunction> wfn, psi::Options& options,
             std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
     //  => Destructor <= //
 };
 }
-} // End Namespaces
 
 #endif // _mp2_nos_h_

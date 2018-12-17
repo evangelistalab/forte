@@ -56,14 +56,14 @@
 #include "helpers/blockedtensorfactory.h"
 
 using namespace ambit;
-namespace psi {
+
 namespace forte {
 
-DistDFIntegrals::DistDFIntegrals(psi::Options& options, SharedWavefunction ref_wfn,
+DistDFIntegrals::DistDFIntegrals(psi::Options& options, psi::SharedWavefunction ref_wfn,
                                  IntegralSpinRestriction restricted,
                                  IntegralFrozenCore resort_frozen_core,
                                  std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : ForteIntegrals(options, ref_wfn, restricted, resort_frozen_core, mo_space_info) {
+    : ForteIntegrals(psi::Options, ref_wfn, restricted, resort_frozen_core, mo_space_info) {
 
     wfn_ = ref_wfn;
 
@@ -92,18 +92,18 @@ DistDFIntegrals::~DistDFIntegrals() {}
 void DistDFIntegrals::test_distributed_integrals() {
     outfile->Printf("\n Computing Density fitted integrals \n");
 
-    std::shared_ptr<BasisSet> primary = wfn_->basisset();
+    std::shared_ptr<psi::BasisSet> primary = wfn_->basisset();
     if (options_.get_str("DF_BASIS_MP2").length() == 0) {
         outfile->Printf("\n Please set a DF_BASIS_MP2 option to a specified "
                         "auxiliary basis set");
-        throw PSIEXCEPTION("Select a DF_BASIS_MP2 for use with DFIntegrals");
+        throw psi::PSIEXCEPTION("Select a DF_BASIS_MP2 for use with DFIntegrals");
     }
 
-    // std::shared_ptr<BasisSet> auxiliary =
-    // BasisSet::pyconstruct_orbital(primary->molecule(),
+    // std::shared_ptr<psi::BasisSet> auxiliary =
+    // psi::BasisSet::pyconstruct_orbital(primary->molecule(),
     // "DF_BASIS_MP2",options_.get_str("DF_BASIS_MP2"));
 
-    std::shared_ptr<BasisSet> auxiliary = wfn_->get_basisset("DF_BASIS_MP2");
+    std::shared_ptr<psi::BasisSet> auxiliary = wfn_->get_basisset("DF_BASIS_MP2");
 
     size_t nprim = primary->nbf();
     size_t naux = auxiliary->nbf();
@@ -113,10 +113,10 @@ void DistDFIntegrals::test_distributed_integrals() {
                     (nprim * nprim * naux * sizeof(double) / 1073741824.0));
     int_mem_ = (nprim * nprim * naux * sizeof(double));
 
-    Dimension nsopi_ = wfn_->nsopi();
-    SharedMatrix aotoso = wfn_->aotoso();
-    SharedMatrix Ca = wfn_->Ca();
-    SharedMatrix Ca_ao(new Matrix("Ca_ao", nso_, nmopi_.sum()));
+    psi::Dimension nsopi_ = wfn_->nsopi();
+    psi::SharedMatrix aotoso = wfn_->aotoso();
+    psi::SharedMatrix Ca = wfn_->Ca();
+    psi::SharedMatrix Ca_ao(new psi::Matrix("Ca_ao", nso_, nmopi_.sum()));
 
     // Transform from the SO to the AO basis
     for (int h = 0, index = 0; h < nirrep_; ++h) {
@@ -150,7 +150,7 @@ void DistDFIntegrals::test_distributed_integrals() {
     df->add_space("ALL", 0, nmo_);
     // Does not add the pair_space, but says which one is should use
     df->add_pair_space("B", "ALL", "ALL");
-    df->set_memory(Process::environment.get_memory() / 8L);
+    df->set_memory(psi::Process::environment.get_memory() / 8L);
 
     // Finally computes the df integrals
     // Does the timings also
@@ -197,7 +197,7 @@ void DistDFIntegrals::test_distributed_integrals() {
     for (auto my_norm : my_df_norm) {
         outfile->Printf("\n ||SERIAL_DF - DistDF||_{\infinity} = %4.16f", my_norm);
         if (my_norm > 1e-4)
-            throw PSIEXCEPTION("DF and DistDF do not agree");
+            throw psi::PSIEXCEPTION("DF and DistDF do not agree");
     }
     /// Test getting entire three_integral_object
     std::vector<size_t> Avec(nthree_, 0);
@@ -213,7 +213,7 @@ void DistDFIntegrals::test_distributed_integrals() {
     entire_b_df("Q, p, q") -= entire_b_dist("Q, p, q");
     outfile->Printf("\n Test read entire A: %8.8f", entire_b_df.norm(2.0));
     if (entire_b_df.norm(2.0) > 1.0e-6)
-        throw PSIEXCEPTION("three_integral_block for all integrals does not work");
+        throw psi::PSIEXCEPTION("three_integral_block for all integrals does not work");
 
     /// Test partial nthree
     int block = nthree_ / 2;
@@ -224,7 +224,7 @@ void DistDFIntegrals::test_distributed_integrals() {
     partial_b_df("Q, p, q") -= partial_b_dist("Q, p, q");
     outfile->Printf("\n Test partial A: %8.8f", partial_b_df.norm(2.0));
     if (partial_b_df.norm(2.0) > 1.0e-6)
-        throw PSIEXCEPTION("three_integral_block for partial nthree integrals does not work");
+        throw psi::PSIEXCEPTION("three_integral_block for partial nthree integrals does not work");
     /// Test rdocc
 
     ambit::Tensor b_zero_df = test_int->three_integral_block(Avec, {0}, {0});
@@ -232,14 +232,14 @@ void DistDFIntegrals::test_distributed_integrals() {
     b_zero_df("Q, p, q") -= b_zero_dist("Q, p, q");
     outfile->Printf("\n Test Q_00: %8.8f", b_zero_df.norm(2.0));
     if (b_zero_df.norm(2.0) > 1.0e-6)
-        throw PSIEXCEPTION("three_integral_block for B_00");
+        throw psi::PSIEXCEPTION("three_integral_block for B_00");
 
     ambit::Tensor b_one_df = test_int->three_integral_block(Avec, {1}, {1});
     ambit::Tensor b_one_dist = three_integral_block(Avec, {1}, {1});
     b_one_df("Q, p, q") -= b_one_dist("Q, p, q");
     outfile->Printf("\n Test Q_{11}: %8.8f", b_one_df.norm(2.0));
     if (b_one_df.norm(2.0) > 1.0e-6)
-        throw PSIEXCEPTION("three_integral_block for B_11");
+        throw psi::PSIEXCEPTION("three_integral_block for B_11");
 
     auto rdocc = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
     auto active = mo_space_info_->get_corr_abs_mo("ACTIVE");
@@ -248,14 +248,14 @@ void DistDFIntegrals::test_distributed_integrals() {
     b_mn_df("Q, p, q") -= b_mn_dist("Q, p, q");
     outfile->Printf("\n Test Q_mn: %8.8f", b_mn_df.norm(2.0));
     if (b_mn_df.norm(2.0) > 1.0e-6)
-        throw PSIEXCEPTION("three_integral_block for B_mn");
+        throw psi::PSIEXCEPTION("three_integral_block for B_mn");
 
     ambit::Tensor b_mu_df = test_int->three_integral_block(Avec, rdocc, active);
     ambit::Tensor b_mu_dist = three_integral_block(Avec, rdocc, active);
     b_mu_df("Q, p, q") -= b_mu_dist("Q, p, q");
     outfile->Printf("\n Test Q_{mu}: %8.8f", b_mu_df.norm(2.0));
     if (b_mu_df.norm(2.0) > 1.0e-6)
-        throw PSIEXCEPTION("three_integral_block for B_11");
+        throw psi::PSIEXCEPTION("three_integral_block for B_11");
 
     delete test_int;
 }
@@ -431,12 +431,12 @@ ambit::Tensor DistDFIntegrals::three_integral_block(const std::vector<size_t>& A
     }
 }
 void DistDFIntegrals::gather_integrals() {
-    // std::shared_ptr<BasisSet> auxiliary =
-    // BasisSet::pyconstruct_orbital(wfn_->molecule(),
+    // std::shared_ptr<psi::BasisSet> auxiliary =
+    // psi::BasisSet::pyconstruct_orbital(wfn_->molecule(),
     // "DF_BASIS_MP2",options_.get_str("DF_BASIS_MP2"));
-    std::shared_ptr<BasisSet> auxiliary = wfn_->get_basisset("DF_BASIS_MP2");
-    SharedMatrix Ca = wfn_->Ca();
-    SharedMatrix Ca_ao(new Matrix("CA_AO", wfn_->nso(), wfn_->nmo()));
+    std::shared_ptr<psi::BasisSet> auxiliary = wfn_->get_basisset("DF_BASIS_MP2");
+    psi::SharedMatrix Ca = wfn_->Ca();
+    psi::SharedMatrix Ca_ao(new psi::Matrix("CA_AO", wfn_->nso(), wfn_->nmo()));
     for (size_t h = 0, index = 0; h < wfn_->nirrep(); ++h) {
         for (size_t i = 0; i < wfn_->nmopi()[h]; ++i) {
             size_t nao = wfn_->nso();
@@ -480,6 +480,6 @@ void DistDFIntegrals::retransform_integrals() {
     freeze_core_orbitals();
 }
 } // namespace forte
-} // namespace psi
+
 
 #endif // HAVE_GA

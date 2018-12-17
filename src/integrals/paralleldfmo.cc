@@ -51,12 +51,12 @@
 #include <macdecls.h>
 #endif
 
-namespace psi {
+
 namespace forte {
 
-ParallelDFMO::ParallelDFMO(std::shared_ptr<BasisSet> primary, std::shared_ptr<BasisSet> auxiliary)
+ParallelDFMO::ParallelDFMO(std::shared_ptr<psi::BasisSet> primary, std::shared_ptr<psi::BasisSet> auxiliary)
     : primary_(primary), auxiliary_(auxiliary) {
-    memory_ = Process::environment.get_memory();
+    memory_ = psi::Process::environment.get_memory();
 }
 void ParallelDFMO::compute_integrals() {
     local_timer compute_integrals_time;
@@ -99,7 +99,7 @@ void ParallelDFMO::transform_integrals() {
     unsigned long int max_rows = (memory_ / per_row);
     // max_rows = 3L * auxiliary_->max_function_per_shell(); // Debug
     if (max_rows < auxiliary_->max_function_per_shell()) {
-        throw PSIEXCEPTION("Out of memory in DFERI.");
+        throw psi::PSIEXCEPTION("Out of memory in DFERI.");
     }
     max_rows = (max_rows > auxiliary_->nbf() ? auxiliary_->nbf() : max_rows);
     int shell_per_process = 0;
@@ -112,7 +112,7 @@ void ParallelDFMO::transform_integrals() {
     if (auxiliary_->nbf() == max_rows) {
         shell_per_process = auxiliary_->nshell() / num_proc;
     } else {
-        throw PSIEXCEPTION("Have not implemented memory bound df integrals");
+        throw psi::PSIEXCEPTION("Have not implemented memory bound df integrals");
     }
     /// Have first proc be from 0 to shell_per_process
     /// Last proc is shell_per_process * my_rank to naux
@@ -176,17 +176,17 @@ void ParallelDFMO::transform_integrals() {
     map[GA_Nnodes()] = 0;
     int Aia_ga = NGA_Create_irreg(C_DBL, 2, dims, (char*)"Aia_temp", chunk, map);
     if (not Aia_ga) {
-        throw PSIEXCEPTION("GA failed on creating Aia_ga");
+        throw psi::PSIEXCEPTION("GA failed on creating Aia_ga");
     }
     GA_Q_PQ_ = GA_Duplicate(Aia_ga, (char*)"(Q|pq)");
     if (not GA_Q_PQ_) {
-        throw PSIEXCEPTION("GA failed on creating GA_Q_PQ");
+        throw psi::PSIEXCEPTION("GA failed on creating GA_Q_PQ");
     }
 
     // => ERI Objects <= //
 
     std::shared_ptr<IntegralFactory> factory(
-        new IntegralFactory(auxiliary_, BasisSet::zero_ao_basis_set(), primary_, primary_));
+        new IntegralFactory(auxiliary_, psi::BasisSet::zero_ao_basis_set(), primary_, primary_));
     std::vector<std::shared_ptr<TwoBodyAOInt>> eri;
     for (int thread = 0; thread < nthread; thread++) {
         eri.push_back(std::shared_ptr<TwoBodyAOInt>(factory->eri()));
@@ -201,9 +201,9 @@ void ParallelDFMO::transform_integrals() {
     // => Temporary Tensors <= //
 
     // > Three-index buffers < //
-    std::shared_ptr<Matrix> Amn(new Matrix("(A|mn)", max_rows, nso * (unsigned long int)nso));
-    std::shared_ptr<Matrix> Ami(new Matrix("(A|mi)", max_rows, nso * (unsigned long int)max1));
-    std::shared_ptr<Matrix> Aia(new Matrix("(A|ia)", naux, max12));
+    std::shared_ptr<psi::Matrix> Amn(new psi::Matrix("(A|mn)", max_rows, nso * (unsigned long int)nso));
+    std::shared_ptr<psi::Matrix> Ami(new psi::Matrix("(A|mi)", max_rows, nso * (unsigned long int)max1));
+    std::shared_ptr<psi::Matrix> Aia(new psi::Matrix("(A|ia)", naux, max12));
     double** Amnp = Amn->pointer();
     double** Amip = Ami->pointer();
     double** Aiap = Aia->pointer();
@@ -350,7 +350,7 @@ void ParallelDFMO::J_one_half() {
 
     int naux = auxiliary_->nbf();
 
-    std::shared_ptr<Matrix> J(new Matrix("J", naux, naux));
+    std::shared_ptr<psi::Matrix> J(new psi::Matrix("J", naux, naux));
     double** Jp = J->pointer();
 
     int dims[2];
@@ -361,12 +361,12 @@ void ParallelDFMO::J_one_half() {
     chunk[1] = naux;
     GA_J_onehalf_ = NGA_Create(C_DBL, 2, dims, (char*)"J_1/2", chunk);
     if (not GA_J_onehalf_)
-        throw PSIEXCEPTION("Failure in creating J_^(-1/2) in GA");
+        throw psi::PSIEXCEPTION("Failure in creating J_^(-1/2) in GA");
 
     // if(GA_Nodeid() == 0)
     {
         std::shared_ptr<IntegralFactory> Jfactory(new IntegralFactory(
-            auxiliary_, BasisSet::zero_ao_basis_set(), auxiliary_, BasisSet::zero_ao_basis_set()));
+            auxiliary_, psi::BasisSet::zero_ao_basis_set(), auxiliary_, psi::BasisSet::zero_ao_basis_set()));
         std::vector<std::shared_ptr<TwoBodyAOInt>> Jeri;
         for (int thread = 0; thread < nthread; thread++) {
             Jeri.push_back(std::shared_ptr<TwoBodyAOInt>(Jfactory->eri()));
@@ -425,6 +425,6 @@ void ParallelDFMO::J_one_half() {
     }
 }
 } // namespace forte
-} // namespace psi
+
 
 #endif

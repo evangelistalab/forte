@@ -36,11 +36,11 @@
 #include "mrci.h"
 #include "helpers/timer.h"
 
+using namespace psi;
 
-namespace psi {
 namespace forte {
 
-MRCI::MRCI(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
+MRCI::MRCI(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
            std::shared_ptr<MOSpaceInfo> mo_space_info, DeterminantHashVec& reference)
     : Wavefunction(options), ints_(ints),reference_(reference), mo_space_info_(mo_space_info) {
     shallow_copy(ref_wfn);
@@ -88,7 +88,7 @@ double MRCI::compute_energy() {
     local_timer add;
     get_excited_determinants();
     outfile->Printf("\n  Excitations took %1.5f s", add.get());
-    outfile->Printf("\n  Dimension of model space: %zu", reference_.size());
+    outfile->Printf("\n  psi::Dimension of model space: %zu", reference_.size());
 
     std::string sigma_alg = options_.get_str("SIGMA_BUILD_TYPE");
 
@@ -102,8 +102,8 @@ double MRCI::compute_energy() {
     }
 
     // Diagonalize MR-CISD Hamiltonian
-    SharedMatrix evecs;
-    SharedVector evals;
+    psi::SharedMatrix evecs;
+    psi::SharedVector evals;
 
     SparseCISolver sparse_solver(fci_ints_);
 
@@ -129,7 +129,7 @@ double MRCI::compute_energy() {
         outfile->Printf("\n  MR-CISD energy root %d: %1.13f Eh", n, energy[n]);
     }
 
-    Process::environment.globals["MRCISD ENERGY"] = energy[0];
+    psi::Process::environment.globals["MRCISD ENERGY"] = energy[0];
 
     return energy[0];
 }
@@ -260,8 +260,8 @@ void MRCI::get_excited_determinants() {
 void MRCI::upcast_reference() {
     //    auto mo_sym = mo_space_info_->symmetry("GENERALIZED PARTICLE");
 
-    //    Dimension old_dim = mo_space_info_->get_dimension("ACTIVE");
-    //    Dimension new_dim = mo_space_info_->get_dimension("GENERALIZED PARTICLE");
+    //    psi::Dimension old_dim = mo_space_info_->get_dimension("ACTIVE");
+    //    psi::Dimension new_dim = mo_space_info_->get_dimension("GENERALIZED PARTICLE");
     //    size_t nact = mo_space_info_->size("ACTIVE");
     //    size_t ncorr = mo_space_info_->size("GENERALIZED PARTICLE");
     //    int n_irrep = old_dim.n();
@@ -310,6 +310,5 @@ void MRCI::upcast_reference() {
 
     //        reference_.add(det);
     //    }
-}
 }
 }

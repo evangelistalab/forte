@@ -29,7 +29,7 @@
 #ifndef _printing_h_
 #define _printing_h_
 
-namespace psi {
+
 
 class Options;
 
@@ -50,6 +50,5 @@ void print_method_banner(const std::vector<std::string>& text, const std::string
 void print_timing(const std::string& text, double seconds);
 
 }
-} // End Namespaces
 
 #endif // _helpers_h_

@@ -46,7 +46,7 @@
 #include "sparse_ci/sparse_ci_solver.h"
 #include "sparse_ci/determinant.h"
 
-namespace psi {
+
 namespace forte {
 
 /// Set the forte style options for the FCI method
@@ -76,7 +76,7 @@ using det_hashvec = HashVector<Determinant, Determinant::Hash>;
  * @brief The SparsePathIntegralCI class
  * This class implements an a sparse path-integral FCI algorithm
  */
-class ElementwiseCI : public Wavefunction {
+class ElementwiseCI : public psi::Wavefunction {
   public:
     // ==> Class Constructor and Destructor <==
 
@@ -86,7 +86,7 @@ class ElementwiseCI : public Wavefunction {
      * @param options The main options object
      * @param ints A pointer to an allocated integral object
      */
-    ElementwiseCI(SharedWavefunction ref_wfn, Options& options,
+    ElementwiseCI(psi::SharedWavefunction ref_wfn, psi::Options& options,
                   std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     // ==> Class Interface <==
@@ -129,11 +129,11 @@ class ElementwiseCI : public Wavefunction {
     /// The number of frozen core orbitals
     int nfrzc_;
     /// The number of correlated molecular orbitals per irrep
-    Dimension ncmopi_;
+    psi::Dimension ncmopi_;
     /// The number of active orbitals
     size_t nact_;
     /// The number of active orbitals per irrep
-    Dimension nactpi_;
+    psi::Dimension nactpi_;
     /// The multiplicity of the wave function
     int wavefunction_multiplicity_;
     /// The nuclear repulsion energy
@@ -398,6 +398,5 @@ class ElementwiseCI : public Wavefunction {
     void sortHashVecByCoefficient(det_hashvec& dets_hashvec, std::vector<double>& C);
 };
 }
-} // End Namespaces
 
 #endif // _ewci_h_

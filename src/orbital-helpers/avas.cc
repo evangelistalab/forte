@@ -35,10 +35,11 @@
 
 #include "avas.h"
 
-namespace psi {
+using namespace psi;
+
 namespace forte {
 
-SharedMatrix semicanonicalize_block(SharedWavefunction ref_wfn, SharedMatrix C_tilde,
+psi::SharedMatrix semicanonicalize_block(psi::SharedWavefunction ref_wfn, psi::SharedMatrix C_tilde,
                                     std::vector<int>& mos, int offset);
 
 void set_AVAS_options(ForteOptions& foptions) {
@@ -62,7 +63,7 @@ void set_AVAS_options(ForteOptions& foptions) {
                                                 "threshold based selection.");
 }
 
-void make_avas(SharedWavefunction ref_wfn, Options& options, SharedMatrix Ps) {
+void make_avas(psi::SharedWavefunction ref_wfn, psi::Options& options, psi::SharedMatrix Ps) {
     if (Ps) {
         outfile->Printf("\n  Generating AVAS orbitals\n");
 
@@ -75,21 +76,21 @@ void make_avas(SharedWavefunction ref_wfn, Options& options, SharedMatrix Ps) {
         outfile->Printf("\n  Number of virtual MOs:  %6d", nvir);
         outfile->Printf("\n");
 
-        auto Socc = std::make_shared<Matrix>("S occupied block", nocc, nocc);
-        auto Svir = std::make_shared<Matrix>("S virtual block", nvir, nvir);
+        auto Socc = std::make_shared<psi::Matrix>("S occupied block", nocc, nocc);
+        auto Svir = std::make_shared<psi::Matrix>("S virtual block", nvir, nvir);
 
-        SharedMatrix CPsC = Ps->clone();
+        psi::SharedMatrix CPsC = Ps->clone();
         CPsC->transform(ref_wfn->Ca());
         // No diagonalization Socc and Svir
         bool diagonalize_s = options.get_bool("AVAS_DIAGONALIZE");
 
-        auto Uocc = std::make_shared<Matrix>("U occupied block", nocc, nocc);
+        auto Uocc = std::make_shared<psi::Matrix>("U occupied block", nocc, nocc);
         auto sigmaocc = std::make_shared<Vector>("sigma occupied block", nocc);
 
-        auto Uvir = std::make_shared<Matrix>("U virtual block", nvir, nvir);
+        auto Uvir = std::make_shared<psi::Matrix>("U virtual block", nvir, nvir);
         auto sigmavir = std::make_shared<Vector>("sigma virtual block", nvir);
 
-        auto U = std::make_shared<Matrix>("U", nmo, nmo);
+        auto U = std::make_shared<psi::Matrix>("U", nmo, nmo);
 
         // diagnolize S
         if (diagonalize_s) {
@@ -158,7 +159,7 @@ void make_avas(SharedWavefunction ref_wfn, Options& options, SharedMatrix Ps) {
             }
         } // end options of dia
 
-        auto Ca_tilde = Matrix::doublet(ref_wfn->Ca(), U);
+        auto Ca_tilde = psi::Matrix::doublet(ref_wfn->Ca(), U);
 
         // sum of the eigenvalues (occ + vir)
         double s_sum = 0.0;
@@ -280,7 +281,7 @@ void make_avas(SharedWavefunction ref_wfn, Options& options, SharedMatrix Ps) {
         auto Cvi = semicanonicalize_block(ref_wfn, Ca_tilde, vir_inact, nocc);
         auto Cva = semicanonicalize_block(ref_wfn, Ca_tilde, vir_act, nocc);
 
-        auto Ca_tilde_prime = std::make_shared<Matrix>("C tilde prime", nso, nmo);
+        auto Ca_tilde_prime = std::make_shared<psi::Matrix>("C tilde prime", nso, nmo);
 
         int offset = 0;
         for (auto& C_block : {Coi, Coa, Cva, Cvi}) {
@@ -294,8 +295,8 @@ void make_avas(SharedWavefunction ref_wfn, Options& options, SharedMatrix Ps) {
             }
         }
 
-        SharedMatrix Fa = ref_wfn->Fa(); // get Fock matrix
-        SharedMatrix Fa_mo = Fa->clone();
+        psi::SharedMatrix Fa = ref_wfn->Fa(); // get Fock matrix
+        psi::SharedMatrix Fa_mo = Fa->clone();
         Fa_mo->transform(Ca_tilde_prime);
 
         // Update both the alpha and beta orbitals
@@ -306,11 +307,11 @@ void make_avas(SharedWavefunction ref_wfn, Options& options, SharedMatrix Ps) {
     }
 }
 
-SharedMatrix semicanonicalize_block(SharedWavefunction ref_wfn, SharedMatrix C_tilde,
+psi::SharedMatrix semicanonicalize_block(psi::SharedWavefunction ref_wfn, psi::SharedMatrix C_tilde,
                                     std::vector<int>& mos, int offset) {
     int nso = ref_wfn->nso();
     int nmo_block = mos.size();
-    auto C_block = std::make_shared<Matrix>("C block", nso, nmo_block);
+    auto C_block = std::make_shared<psi::Matrix>("C block", nso, nmo_block);
 
     int mo_count = 0;
     for (int i : mos) {
@@ -321,14 +322,13 @@ SharedMatrix semicanonicalize_block(SharedWavefunction ref_wfn, SharedMatrix C_t
         mo_count += 1;
     }
     // compute (C_block)^T F C_block
-    auto Foi = Matrix::triplet(C_block, ref_wfn->Fa(), C_block, true, false, false);
+    auto Foi = psi::Matrix::triplet(C_block, ref_wfn->Fa(), C_block, true, false, false);
 
-    auto U_block = std::make_shared<Matrix>("U block", nmo_block, nmo_block);
+    auto U_block = std::make_shared<psi::Matrix>("U block", nmo_block, nmo_block);
     auto epsilon_block = std::make_shared<Vector>("epsilon block", nmo_block);
     Foi->diagonalize(U_block, epsilon_block);
-    auto C_block_prime = Matrix::doublet(C_block, U_block);
+    auto C_block_prime = psi::Matrix::doublet(C_block, U_block);
     return C_block_prime;
-}
 }
 }
 

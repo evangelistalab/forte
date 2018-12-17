@@ -43,7 +43,8 @@
 #define omp_get_num_threads() 1
 #endif
 
-namespace psi {
+using namespace psi;
+
 namespace forte {
 
 WFNOperator::WFNOperator(std::vector<int>& symmetry, std::shared_ptr<FCIIntegrals> fci_ints)
@@ -357,7 +358,7 @@ WFNOperator::build_H_sparse(const DeterminantHashVec& wfn) {
     return H_sparse;
 }
 
-double WFNOperator::s2(DeterminantHashVec& wfn, SharedMatrix& evecs, int root) {
+double WFNOperator::s2(DeterminantHashVec& wfn, psi::SharedMatrix& evecs, int root) {
     double S2 = 0.0;
     const det_hashvec& wfn_map = wfn.wfn_hash();
 
@@ -405,7 +406,7 @@ double WFNOperator::s2(DeterminantHashVec& wfn, SharedMatrix& evecs, int root) {
     return S2;
 }
 
-double WFNOperator::s2_direct(DeterminantHashVec& wfn, SharedMatrix& evecs, int root) {
+double WFNOperator::s2_direct(DeterminantHashVec& wfn, psi::SharedMatrix& evecs, int root) {
     double S2 = 0.0;
     const det_hashvec& wfn_map = wfn.wfn_hash();
 
@@ -1861,5 +1862,4 @@ void WFNOperator::three_lists(DeterminantHashVec& wfn) {
 //
 //
 //}
-}
 }

@@ -42,10 +42,10 @@
 #include "helpers/blockedtensorfactory.h"
 
 using namespace ambit;
-namespace psi {
+
 namespace forte {
 
-class MRDSRG_SO : public Wavefunction {
+class MRDSRG_SO : public psi::Wavefunction {
   protected:
     // => Class initialization and termination <= //
 
@@ -278,7 +278,7 @@ class MRDSRG_SO : public Wavefunction {
   public:
     // => Constructors <= //
 
-    MRDSRG_SO(Reference reference, Options& options, std::shared_ptr<ForteIntegrals> ints,
+    MRDSRG_SO(Reference reference, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
               std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     ~MRDSRG_SO();
@@ -293,5 +293,5 @@ class MRDSRG_SO : public Wavefunction {
     double frozen_core_energy;
 };
 }
-}
+
 #endif // _mrdsrg_so_h_

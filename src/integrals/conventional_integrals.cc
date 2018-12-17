@@ -43,7 +43,8 @@
 
 #define ID(x) integral_transform_->DPD_ID(x)
 
-namespace psi {
+using namespace psi;
+
 namespace forte {
 
 /**
@@ -52,7 +53,7 @@ namespace forte {
  * @param restricted - type of integral transformation
  * @param resort_frozen_core -
  */
-ConventionalIntegrals::ConventionalIntegrals(psi::Options& options, SharedWavefunction ref_wfn,
+ConventionalIntegrals::ConventionalIntegrals(psi::Options& options, psi::SharedWavefunction ref_wfn,
                                              IntegralSpinRestriction restricted,
                                              std::shared_ptr<MOSpaceInfo> mo_space_info)
     : ForteIntegrals(options, ref_wfn, restricted, mo_space_info) {
@@ -90,15 +91,15 @@ void ConventionalIntegrals::transform_integrals() {
     // Call IntegralTransform asking for integrals over restricted or
     // unrestricted orbitals
     if (restricted_) {
-        integral_transform_ = std::make_shared<IntegralTransform>(
-            wfn_, spaces, IntegralTransform::TransformationType::Restricted,
-            IntegralTransform::OutputType::DPDOnly, IntegralTransform::MOOrdering::PitzerOrder,
-            IntegralTransform::FrozenOrbitals::None);
+        integral_transform_ = std::make_shared<psi::IntegralTransform>(
+            wfn_, spaces, psi::IntegralTransform::TransformationType::Restricted,
+            psi::IntegralTransform::OutputType::DPDOnly, psi::IntegralTransform::MOOrdering::PitzerOrder,
+            psi::IntegralTransform::FrozenOrbitals::None);
     } else {
-        integral_transform_ = std::make_shared<IntegralTransform>(
-            wfn_, spaces, IntegralTransform::TransformationType::Unrestricted,
-            IntegralTransform::OutputType::DPDOnly, IntegralTransform::MOOrdering::PitzerOrder,
-            IntegralTransform::FrozenOrbitals::None);
+        integral_transform_ = std::make_shared<psi::IntegralTransform>(
+            wfn_, spaces, psi::IntegralTransform::TransformationType::Unrestricted,
+            psi::IntegralTransform::OutputType::DPDOnly, psi::IntegralTransform::MOOrdering::PitzerOrder,
+            psi::IntegralTransform::FrozenOrbitals::None);
     }
 
     // Keep the SO integrals on disk in case we want to retransform them
@@ -165,19 +166,19 @@ ambit::Tensor ConventionalIntegrals::three_integral_block(const std::vector<size
                                                           const std::vector<size_t>&) {
     outfile->Printf("\n Oh no!, you tried to grab a ThreeIntegral but this "
                     "is not there!!");
-    throw PSIEXCEPTION("INT_TYPE=DF/CHOLESKY to use ThreeIntegral");
+    throw psi::PSIEXCEPTION("INT_TYPE=DF/CHOLESKY to use ThreeIntegral");
 }
 
 ambit::Tensor ConventionalIntegrals::three_integral_block_two_index(const std::vector<size_t>&,
                                                                     size_t,
                                                                     const std::vector<size_t>&) {
     outfile->Printf("\n Oh no! this isn't here");
-    throw PSIEXCEPTION("INT_TYPE=DISKDF");
+    throw psi::PSIEXCEPTION("INT_TYPE=DISKDF");
 }
 
 double** ConventionalIntegrals::three_integral_pointer() {
     outfile->Printf("\n Doh! There is no Three_integral here.  Use DF/CD");
-    throw PSIEXCEPTION("INT_TYPE=DF/CHOLESKY to use ThreeIntegral!");
+    throw psi::PSIEXCEPTION("INT_TYPE=DF/CHOLESKY to use ThreeIntegral!");
 }
 
 void ConventionalIntegrals::set_tei(size_t p, size_t q, size_t r, size_t s, double value,
@@ -255,7 +256,7 @@ void ConventionalIntegrals::gather_integrals() {
         }
     } else {
         outfile->Printf("\n  Unrestricted orbitals are currently disabled");
-        throw PSIEXCEPTION("Unrestricted orbitals are currently disabled in "
+        throw psi::PSIEXCEPTION("Unrestricted orbitals are currently disabled in "
                            "ConventionalIntegrals");
 
         //        std::vector<double> two_electron_integrals(num_tei_, 0.0);
@@ -367,7 +368,7 @@ void ConventionalIntegrals::resort_four(std::vector<double>& tei, std::vector<si
     temp_ints.swap(tei);
 }
 
-void ConventionalIntegrals::make_fock_matrix(SharedMatrix gamma_a, SharedMatrix gamma_b) {
+void ConventionalIntegrals::make_fock_matrix(psi::SharedMatrix gamma_a, psi::SharedMatrix gamma_b) {
     for (size_t p = 0; p < ncmo_; ++p) {
         for (size_t q = 0; q < ncmo_; ++q) {
             fock_matrix_a_[p * ncmo_ + q] = oei_a(p, q);
@@ -404,4 +405,4 @@ void ConventionalIntegrals::make_fock_matrix(SharedMatrix gamma_a, SharedMatrix 
     }
 }
 } // namespace forte
-} // namespace psi
+

@@ -36,20 +36,21 @@
 #include "base_classes/reference.h"
 #include "sparse_ci/determinant.h"
 
-namespace psi {
+using namespace psi;
+
 namespace forte {
 
 // A class that takes the determinants and expansion
 // coefficients and computes reduced density matrices.
 
 CI_RDMS::CI_RDMS(std::shared_ptr<FCIIntegrals> fci_ints, const std::vector<Determinant>& det_space,
-                 SharedMatrix evecs, int root1, int root2)
+                 psi::SharedMatrix evecs, int root1, int root2)
     : fci_ints_(fci_ints), det_space_(det_space), evecs_(evecs), root1_(root1), root2_(root2) {
     startup();
 }
 
 CI_RDMS::CI_RDMS(DeterminantHashVec& wfn, std::shared_ptr<FCIIntegrals> fci_ints,
-                 SharedMatrix evecs, int root1, int root2)
+                 psi::SharedMatrix evecs, int root1, int root2)
     : wfn_(wfn), fci_ints_(fci_ints), evecs_(evecs), root1_(root1), root2_(root2) {
 
     Determinant det(wfn_.get_det(0));
@@ -81,7 +82,7 @@ void CI_RDMS::startup() {
     na_ = det_space_[0].count_alfa();
     nb_ = det_space_[0].count_beta();
 
-    // Dimension of the determinant space
+    // psi::Dimension of the determinant space
     dim_space_ = det_space_.size();
 
     print_ = false;
@@ -101,7 +102,7 @@ void CI_RDMS::set_max_rdm(int rdm) { max_rdm_ = rdm; }
 double CI_RDMS::get_energy(std::vector<double>& oprdm_a, std::vector<double>& oprdm_b,
                            std::vector<double>& tprdm_aa, std::vector<double>& tprdm_bb,
                            std::vector<double>& tprdm_ab) {
-    double nuc_rep = Process::environment.molecule()->nuclear_repulsion_energy({0, 0, 0});
+    double nuc_rep = psi::Process::environment.molecule()->nuclear_repulsion_energy({0, 0, 0});
     double scalar_energy = fci_ints_->frozen_core_energy() + fci_ints_->scalar_energy();
     double energy_1rdm = 0.0;
     double energy_2rdm = 0.0;
@@ -2060,7 +2061,7 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a, std::vector<double>& oprdm_
     }
     outfile->Printf("\n    ABAB 2-RDM Error :   %2.15f", error_2rdm_ab);
     // aaa aaa
-    // SharedMatrix three_rdm(new Matrix("three", dim_space_, dim_space_));
+    // psi::SharedMatrix three_rdm(new psi::Matrix("three", dim_space_, dim_space_));
     // three_rdm->zero();
     double error_3rdm_aaa = 0.0;
     for (size_t p = 0; p < ncmo_; ++p) {
@@ -2107,7 +2108,7 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a, std::vector<double>& oprdm_
             }
         }
     }
-    Process::environment.globals["AAAAAA 3-RDM ERROR"] = error_3rdm_aaa;
+    psi::Process::environment.globals["AAAAAA 3-RDM ERROR"] = error_3rdm_aaa;
     outfile->Printf("\n    AAAAAA 3-RDM Error : %2.15f", error_3rdm_aaa);
     // aab aab
     double error_3rdm_aab = 0.0;
@@ -2155,7 +2156,7 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a, std::vector<double>& oprdm_
             }
         }
     }
-    Process::environment.globals["AABAAB 3-RDM ERROR"] = error_3rdm_aab;
+    psi::Process::environment.globals["AABAAB 3-RDM ERROR"] = error_3rdm_aab;
     outfile->Printf("\n    AABAAB 3-RDM Error : %+e", error_3rdm_aab);
 
     // abb abb
@@ -2204,7 +2205,7 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a, std::vector<double>& oprdm_
             }
         }
     }
-    Process::environment.globals["ABBABB 3-RDM ERROR"] = error_3rdm_abb;
+    psi::Process::environment.globals["ABBABB 3-RDM ERROR"] = error_3rdm_abb;
     outfile->Printf("\n    ABBABB 3-RDM Error : %+e", error_3rdm_abb);
 
     // bbb bbb
@@ -2253,8 +2254,7 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a, std::vector<double>& oprdm_
             }
         }
     }
-    Process::environment.globals["BBBBBB 3-RDM ERROR"] = error_3rdm_bbb;
+    psi::Process::environment.globals["BBBBBB 3-RDM ERROR"] = error_3rdm_bbb;
     outfile->Printf("\n    BBBBBB 3-RDM Error : %2.15f", error_3rdm_bbb);
 }
 }
-} // End Namespaces

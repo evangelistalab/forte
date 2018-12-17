@@ -35,7 +35,7 @@
 
 #define _DEBUG_AOSUBSPACE_ 0
 
-namespace psi {
+
 namespace forte {
 
 /**
@@ -70,7 +70,7 @@ class AOInfo {
  * Typical usage:
  *
  *    // Find the AO subset
- *    std::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
+ *    std::shared_ptr<psi::Wavefunction> wfn = psi::Process::environment.wavefunction();
  *
  *    std::vector<std::string> subspace_str;
  *    if (options["SUBSPACE"].size() > 0){
@@ -90,7 +90,7 @@ class AOInfo {
  *    std::vector<int> subspace = aosub.subspace();
  *
  *    // Build a projector
- *    SharedMatrix Ps =
+ *    psi::SharedMatrix Ps =
  * aosub.build_projector(subspace,molecule,min_basis,basis);
  *
  *  Syntax:
@@ -134,10 +134,10 @@ class AOSubspace {
     // ==> Constructors <==
 
     // Simple constructor
-    AOSubspace(std::shared_ptr<Molecule> molecule, std::shared_ptr<BasisSet> basis);
+    AOSubspace(std::shared_ptr<psi::Molecule> molecule, std::shared_ptr<psi::BasisSet> basis);
     // Constructor with list of subspaces
-    AOSubspace(std::vector<std::string> subspace_str, std::shared_ptr<Molecule> molecule,
-               std::shared_ptr<BasisSet> basis);
+    AOSubspace(std::vector<std::string> subspace_str, std::shared_ptr<psi::Molecule> molecule,
+               std::shared_ptr<psi::BasisSet> basis);
 
     // ==> User's interface <==
 
@@ -150,10 +150,10 @@ class AOSubspace {
     // Return the index of the AOs that span the subspace selected
     const std::vector<int>& subspace();
 
-    SharedMatrix build_projector(const std::vector<int>& subspace,
-                                 std::shared_ptr<Molecule> molecule,
-                                 std::shared_ptr<BasisSet> min_basis,
-                                 std::shared_ptr<BasisSet> large_basis);
+    psi::SharedMatrix build_projector(const std::vector<int>& subspace,
+                                 std::shared_ptr<psi::Molecule> molecule,
+                                 std::shared_ptr<psi::BasisSet> min_basis,
+                                 std::shared_ptr<psi::BasisSet> large_basis);
 
     /// Return a vector of labels for each atomic orbital.  This function
     /// accepts
@@ -177,9 +177,9 @@ class AOSubspace {
     /// The vector of subspace descriptors passed by the user
     std::vector<std::string> subspace_str_;
     /// The molecule
-    std::shared_ptr<Molecule> molecule_;
+    std::shared_ptr<psi::Molecule> molecule_;
     /// The AO basis set
-    std::shared_ptr<BasisSet> basis_;
+    std::shared_ptr<psi::BasisSet> basis_;
 
     /// The label of Cartesian atomic orbitals.
     /// lm_labels_cartesian_[l][m] returns the label for an orbital
@@ -227,8 +227,7 @@ class AOSubspace {
 };
 
 // Helper function to create a projector using info in wfn and options
-SharedMatrix create_aosubspace_projector(SharedWavefunction wfn, Options& options);
-}
+psi::SharedMatrix create_aosubspace_projector(psi::SharedWavefunction wfn, psi::Options& options);
 }
 
 #endif // _aosubspace_h_

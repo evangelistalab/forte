@@ -41,7 +41,7 @@
 #include <mpi.h>
 #endif
 
-namespace psi {
+
 namespace forte {
 
 /**
@@ -54,9 +54,9 @@ class SigmaVector {
 
     size_t size() { return size_; }
 
-    virtual void compute_sigma(SharedVector sigma, SharedVector b) = 0;
+    virtual void compute_sigma(psi::SharedVector sigma, psi::SharedVector b) = 0;
     //    virtual void compute_sigma(Matrix& sigma, Matrix& b, int nroot) = 0;
-    virtual void get_diagonal(Vector& diag) = 0;
+    virtual void get_diagonal(psi::Vector& diag) = 0;
     virtual void add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& bad_states) = 0;
 
   protected:
@@ -74,9 +74,9 @@ class SigmaVectorSparse : public SigmaVector {
                       std::shared_ptr<FCIIntegrals> fci_ints)
         : SigmaVector(H.size()), H_(H), fci_ints_(fci_ints){};
 
-    void compute_sigma(SharedVector sigma, SharedVector b);
+    void compute_sigma(psi::SharedVector sigma, psi::SharedVector b);
     //   void compute_sigma(Matrix& sigma, Matrix& b, int nroot) {}
-    void get_diagonal(Vector& diag);
+    void get_diagonal(psi::Vector& diag);
     void add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& bad_states);
 
     std::vector<std::vector<std::pair<size_t, double>>> bad_states_;
@@ -95,10 +95,10 @@ class SigmaVectorList : public SigmaVector {
     SigmaVectorList(const std::vector<Determinant>& space, bool print_detail,
                     std::shared_ptr<FCIIntegrals> fci_ints);
 
-    void compute_sigma(SharedVector sigma, SharedVector b);
+    void compute_sigma(psi::SharedVector sigma, psi::SharedVector b);
     //  void compute_sigma(Matrix& sigma, Matrix& b, int nroot);
-    void get_diagonal(Vector& diag);
-    void get_hamiltonian(Matrix& H);
+    void get_diagonal(psi::Vector& diag);
+    void get_hamiltonian(psi::Matrix& H);
     std::vector<std::pair<std::vector<int>, std::vector<double>>> get_sparse_hamiltonian();
     void add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& bad_states);
 
@@ -134,9 +134,9 @@ class SigmaVectorWfn1 : public SigmaVector {
     SigmaVectorWfn1(const DeterminantHashVec& space, WFNOperator& op,
                     std::shared_ptr<FCIIntegrals> fci_ints);
 
-    void compute_sigma(SharedVector sigma, SharedVector b);
+    void compute_sigma(psi::SharedVector sigma, psi::SharedVector b);
     //   void compute_sigma(Matrix& sigma, Matrix& b, int nroot) {}
-    void get_diagonal(Vector& diag);
+    void get_diagonal(psi::Vector& diag);
     void add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& bad_states);
     std::vector<std::vector<std::pair<size_t, double>>> bad_states_;
 
@@ -167,9 +167,9 @@ class SigmaVectorWfn2 : public SigmaVector {
     SigmaVectorWfn2(const DeterminantHashVec& space, WFNOperator& op,
                     std::shared_ptr<FCIIntegrals> fci_ints);
 
-    void compute_sigma(SharedVector sigma, SharedVector b);
+    void compute_sigma(psi::SharedVector sigma, psi::SharedVector b);
     // void compute_sigma(Matrix& sigma, Matrix& b, int nroot);
-    void get_diagonal(Vector& diag);
+    void get_diagonal(psi::Vector& diag);
     void add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& bad_states_);
 
     std::vector<std::vector<std::pair<size_t, double>>> bad_states_;
@@ -196,9 +196,9 @@ class SigmaVectorWfn3 : public SigmaVector {
     SigmaVectorWfn3(const DeterminantHashVec& space, WFNOperator& op,
                     std::shared_ptr<FCIIntegrals> fci_ints);
 
-    void compute_sigma(SharedVector sigma, SharedVector b);
+    void compute_sigma(psi::SharedVector sigma, psi::SharedVector b);
     // void compute_sigma(Matrix& sigma, Matrix& b, int nroot);
-    void get_diagonal(Vector& diag);
+    void get_diagonal(psi::Vector& diag);
     void add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& bad_states_);
 
     std::vector<std::vector<std::pair<size_t, double>>> bad_states_;
@@ -218,9 +218,9 @@ class SigmaVectorWfn3 : public SigmaVector {
 
     std::vector<double> diag_;
 
-    SharedMatrix aa_tei_;
-    SharedMatrix ab_tei_;
-    SharedMatrix bb_tei_;
+    psi::SharedMatrix aa_tei_;
+    psi::SharedMatrix ab_tei_;
+    psi::SharedMatrix bb_tei_;
 };
 
 #ifdef HAVE_MPI
@@ -229,9 +229,9 @@ class SigmaVectorMPI : public SigmaVector {
     SigmaVectorMPI(const DeterminantHashVec& space, WFNOperator& op,
                    std::shared_ptr<FCIIntegrals> fci_ints);
 
-    void compute_sigma(SharedVector sigma, SharedVector b);
+    void compute_sigma(psi::SharedVector sigma, psi::SharedVector b);
     void compute_sigma(Matrix& sigma, Matrix& b, int nroot);
-    void get_diagonal(Vector& diag);
+    void get_diagonal(psi::Vector& diag);
     void add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& bad_states_);
 
     std::vector<std::vector<std::pair<size_t, double>>> bad_states_;
@@ -240,7 +240,6 @@ class SigmaVectorMPI : public SigmaVector {
     std::shared_ptr<FCIIntegrals> fci_ints_;
 };
 #endif
-}
 }
 
 #endif // _sigma_vector_h_

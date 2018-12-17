@@ -38,7 +38,8 @@
 #include "boost/format.hpp"
 #include "mrdsrg.h"
 
-namespace psi {
+using namespace psi;
+
 namespace forte {
 
 void MRDSRG::guess_t(BlockedTensor& V, BlockedTensor& T2, BlockedTensor& F, BlockedTensor& T1) {
@@ -1566,6 +1567,5 @@ void MRDSRG::print_intruder(const std::string& name,
         output = title + " NULL";
     }
     outfile->Printf("\n%s", output.c_str());
-}
 }
 }

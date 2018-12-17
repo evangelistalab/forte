@@ -42,7 +42,7 @@
 #include "psi4/libmints/vector.h"
 #include "psi4/libqt/qt.h"
 
-namespace psi {
+
 
 class Options;
 
@@ -52,8 +52,8 @@ namespace forte {
 /// index in irrep)
 using MOInfo = std::tuple<size_t, size_t, size_t>;
 
-/// SpaceInfo stores information about a MO space: (Dimension,vector of MOInfo)
-using SpaceInfo = std::pair<Dimension, std::vector<MOInfo>>;
+/// SpaceInfo stores information about a MO space: (psi::Dimension,vector of MOInfo)
+using SpaceInfo = std::pair<psi::Dimension, std::vector<MOInfo>>;
 
 /**
  * @brief The MOSpaceInfo class
@@ -105,15 +105,15 @@ using SpaceInfo = std::pair<Dimension, std::vector<MOInfo>>;
  */
 // class MOSpaceInfo {
 //   public:
-//     MOSpaceInfo(Dimension& nmopi);
+//     MOSpaceInfo(psi::Dimension& nmopi);
 //     ~MOSpaceInfo();
 //
 //     /// @return The names of orbital spaces
 //     std::vector<std::string> space_names() const { return space_names_; }
 //     /// @return The number of orbitals in space
 //     size_t size(const std::string& space);
-//     /// @return The Dimension object for space
-//     Dimension get_dimension(const std::string& space);
+//     /// @return The psi::Dimension object for space
+//     psi::Dimension get_dimension(const std::string& space);
 //     /// @return The Slice object for space in a given composite space
 //     Slice get_slice(const std::string& space, const std::string& comp_space);
 //     /// @return The symmetry of each orbital
@@ -128,17 +128,17 @@ using SpaceInfo = std::pair<Dimension, std::vector<MOInfo>>;
 //     /// @return The list of the relative index (h,p_rel) of the molecular
 //     /// orbitals in space
 //     std::vector<std::pair<size_t, size_t>> get_relative_mo(const std::string& space);
-//     void read_options(Options& options);
+//     void read_options(psi::Options& options);
 //     /// @return The number of irreps
 //     size_t nirrep() { return nirrep_; }
 //
 //   private:
-//     std::pair<SpaceInfo, bool> read_mo_space(const std::string& space, Options& options);
+//     std::pair<SpaceInfo, bool> read_mo_space(const std::string& space, psi::Options& options);
 //
 //     /// The number of irreducible representations
 //     size_t nirrep_;
 //     /// The number of molecular orbitals per irrep
-//     Dimension nmopi_;
+//     psi::Dimension nmopi_;
 //     /// The mo space info
 //     std::map<std::string, SpaceInfo> mo_spaces_;
 //
@@ -168,12 +168,12 @@ using SpaceInfo = std::pair<Dimension, std::vector<MOInfo>>;
 /**
  * @brief tensor_to_matrix
  * @param t The input tensor
- * @param dims Dimensions of the matrix extracted from the tensor
+ * @param dims psi::Dimensions of the matrix extracted from the tensor
  * @return A copy of the tensor data in symmetry blocked form
  */
-Matrix tensor_to_matrix(ambit::Tensor t, Dimension dims);
+psi::Matrix tensor_to_matrix(ambit::Tensor t, psi::Dimension dims);
 
-SharedMatrix tensor_to_matrix(ambit::Tensor t);
+psi::SharedMatrix tensor_to_matrix(ambit::Tensor t);
 
 /// Save a vector of double to file
 void write_disk_vector_double(const std::string& filename, const std::vector<double>& data);
@@ -187,9 +187,9 @@ void read_disk_vector_double(const std::string& filename, std::vector<double>& d
  * @param diag_F -> The Orbital energies (diagonal elements of Fock operator)
  * @param occupation -> occupation vector
  */
-void view_modified_orbitals(SharedWavefunction wfn, const std::shared_ptr<Matrix>& Ca,
-                            const std::shared_ptr<Vector>& diag_F,
-                            const std::shared_ptr<Vector>& occupation);
+void view_modified_orbitals(psi::SharedWavefunction wfn, const std::shared_ptr<psi::Matrix>& Ca,
+                            const std::shared_ptr<psi::Vector>& diag_F,
+                            const std::shared_ptr<psi::Vector>& occupation);
 
 /**
  * @brief print_h2 Print a header
@@ -308,6 +308,5 @@ void apply_permutation_in_place(std::vector<T>& vec, const std::vector<std::size
 //     bool running_ = true;
 // };
 }
-} // End Namespaces
 
 #endif // _helpers_h_

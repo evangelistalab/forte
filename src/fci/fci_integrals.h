@@ -33,7 +33,7 @@
 #include "sparse_ci/determinant.h"
 #include "string_lists.h"
 
-namespace psi {
+
 class Dimension;
 
 namespace forte {
@@ -212,6 +212,6 @@ class FCIIntegrals {
     void startup();
 };
 } // namespace forte
-} // namespace psi
+
 
 #endif // _fci_integrals_

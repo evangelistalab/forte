@@ -32,10 +32,13 @@
 
 #include "integrals.h"
 
-namespace psi {
+
 
 class Tensor;
-class IntegralTransform;
+
+namespace psi {
+  class IntegralTransform;
+}
 
 namespace forte {
 
@@ -51,7 +54,7 @@ class ConventionalIntegrals : public ForteIntegrals {
   public:
     /// Contructor of the class.  Calls std::shared_ptr<ForteIntegrals> ints
     /// constructor
-    ConventionalIntegrals(psi::Options& options, SharedWavefunction ref_wfn,
+    ConventionalIntegrals(psi::Options& options, psi::SharedWavefunction ref_wfn,
                           IntegralSpinRestriction restricted,
                           std::shared_ptr<MOSpaceInfo> mo_space_info);
     virtual ~ConventionalIntegrals();
@@ -79,9 +82,9 @@ class ConventionalIntegrals : public ForteIntegrals {
                                                          const std::vector<size_t>&);
     virtual double** three_integral_pointer();
 
-    virtual void make_fock_matrix(SharedMatrix gamma_a, SharedMatrix gamma_b);
+    virtual void make_fock_matrix(psi::SharedMatrix gamma_a, psi::SharedMatrix gamma_b);
 
-    virtual size_t nthree() const { throw PSIEXCEPTION("Wrong Int_Type"); }
+    virtual size_t nthree() const { throw psi::PSIEXCEPTION("Wrong Int_Type"); }
 
     virtual void set_tei(size_t p, size_t q, size_t r, size_t s, double value, bool alpha1,
                          bool alpha2);
@@ -89,7 +92,7 @@ class ConventionalIntegrals : public ForteIntegrals {
     // ==> Class data <==
 
     /// The IntegralTransform object used by this class
-    std::shared_ptr<IntegralTransform> integral_transform_;
+    std::shared_ptr<psi::IntegralTransform> integral_transform_;
 
     /// Two-electron integrals stored as a vector
     std::vector<double> aphys_tei_aa;
@@ -116,6 +119,6 @@ class ConventionalIntegrals : public ForteIntegrals {
 };
 
 } // namespace forte
-} // namespace psi
+
 
 #endif // _conventional_integrals_h_

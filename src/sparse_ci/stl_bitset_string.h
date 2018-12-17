@@ -36,7 +36,7 @@
 #include "fci/fci_integrals.h"
 #include "sparse_ci/determinant.h"
 
-namespace psi {
+
 namespace forte {
 
 /**
@@ -114,7 +114,7 @@ class STLBitsetString {
     double get_nocc();
 
     struct Hash {
-        std::size_t operator()(const psi::forte::STLBitsetString& bs) const {
+        std::size_t operator()(const forte::STLBitsetString& bs) const {
             return std::hash<bit_t>()(bs.bits_);
         }
     };
@@ -125,6 +125,5 @@ template <typename T = double>
 using string_hash = std::unordered_map<STLBitsetString, T, STLBitsetString::Hash>;
 using string_hash_it = std::unordered_map<STLBitsetString, double, STLBitsetString::Hash>::iterator;
 }
-} // End Namespaces
 
 #endif // _bitset_string_h_

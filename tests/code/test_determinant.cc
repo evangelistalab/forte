@@ -7,7 +7,7 @@
 
 #include "../../src/sparse_ci/ui64_determinant.h"
 
-using namespace psi::forte;
+using namespace forte;
 
 UI64Determinant make_det_from_string(std::string s) {
     UI64Determinant d;

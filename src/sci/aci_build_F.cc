@@ -30,7 +30,8 @@
 
 #include "aci.h"
 
-namespace psi {
+using namespace psi;
+
 namespace forte {
 
 bool pair_comp(const std::pair<double, Determinant> E1, const std::pair<double, Determinant> E2) {
@@ -43,7 +44,7 @@ bool pair_compd(const std::pair<Determinant, double> E1, const std::pair<Determi
     return E1.first < E2.first;
 }
 
-void AdaptiveCI::get_excited_determinants_sr(SharedMatrix evecs, DeterminantHashVec& P_space,
+void AdaptiveCI::get_excited_determinants_sr(psi::SharedMatrix evecs, DeterminantHashVec& P_space,
                                              det_hash<double>& V_hash) {
     local_timer build;
     size_t max_P = P_space.size();
@@ -192,7 +193,7 @@ void AdaptiveCI::get_excited_determinants_sr(SharedMatrix evecs, DeterminantHash
     } // Close threads
 }
 
-void AdaptiveCI::get_excited_determinants_seq(int nroot, SharedMatrix evecs,
+void AdaptiveCI::get_excited_determinants_seq(int nroot, psi::SharedMatrix evecs,
                                               DeterminantHashVec& P_space,
                                               det_hash<std::vector<double>>& V_hash) {
     const size_t n_dets = P_space.size();
@@ -436,7 +437,7 @@ void AdaptiveCI::get_excited_determinants_seq(int nroot, SharedMatrix evecs,
     }
 }
 
-void AdaptiveCI::get_excited_determinants(int nroot, SharedMatrix evecs,
+void AdaptiveCI::get_excited_determinants(int nroot, psi::SharedMatrix evecs,
                                           DeterminantHashVec& P_space,
                                           det_hash<std::vector<double>>& V_hash) {
     size_t max_P = P_space.size();
@@ -647,7 +648,7 @@ void AdaptiveCI::get_excited_determinants(int nroot, SharedMatrix evecs,
     } // Close threads
 }
 
-void AdaptiveCI::get_core_excited_determinants(SharedMatrix evecs, DeterminantHashVec& P_space,
+void AdaptiveCI::get_core_excited_determinants(psi::SharedMatrix evecs, DeterminantHashVec& P_space,
                                                det_hash<std::vector<double>>& V_hash) {
     size_t max_P = P_space.size();
     const det_hashvec& P_dets = P_space.wfn_hash();
@@ -863,7 +864,7 @@ void AdaptiveCI::get_core_excited_determinants(SharedMatrix evecs, DeterminantHa
 }
 
 double AdaptiveCI::get_excited_determinants_batch_old(
-    SharedMatrix evecs, SharedVector evals, DeterminantHashVec& P_space,
+    psi::SharedMatrix evecs, psi::SharedVector evals, DeterminantHashVec& P_space,
     std::vector<std::pair<double, Determinant>>& F_space) {
     const size_t n_dets = P_space.size();
 
@@ -973,7 +974,7 @@ double AdaptiveCI::get_excited_determinants_batch_old(
     return total_excluded;
 }
 
-det_hash<double> AdaptiveCI::get_bin_F_space_old(int bin, int nbin, SharedMatrix evecs,
+det_hash<double> AdaptiveCI::get_bin_F_space_old(int bin, int nbin, psi::SharedMatrix evecs,
                                                  DeterminantHashVec& P_space) {
 
     const size_t n_dets = P_space.size();
@@ -1150,7 +1151,7 @@ det_hash<double> AdaptiveCI::get_bin_F_space_old(int bin, int nbin, SharedMatrix
 
 // New threading strategy
 double AdaptiveCI::get_excited_determinants_batch_vecsort(
-    SharedMatrix evecs, SharedVector evals, DeterminantHashVec& P_space,
+    psi::SharedMatrix evecs, psi::SharedVector evals, DeterminantHashVec& P_space,
     std::vector<std::pair<double, Determinant>>& F_space) {
     const size_t n_dets = P_space.size();
 
@@ -1367,7 +1368,7 @@ double AdaptiveCI::get_excited_determinants_batch_vecsort(
 
 // New threading strategy
 double
-AdaptiveCI::get_excited_determinants_batch(SharedMatrix evecs, SharedVector evals,
+AdaptiveCI::get_excited_determinants_batch(psi::SharedMatrix evecs, psi::SharedVector evals,
                                            DeterminantHashVec& P_space,
                                            std::vector<std::pair<double, Determinant>>& F_space) {
     const size_t n_dets = P_space.size();
@@ -1466,7 +1467,7 @@ AdaptiveCI::get_excited_determinants_batch(SharedMatrix evecs, SharedVector eval
 }
 
 /*
-double AdaptiveCI::prescreen_F(int bin, int nbin, double E0, SharedMatrix evecs,DeterminantHashVec&
+double AdaptiveCI::prescreen_F(int bin, int nbin, double E0, psi::SharedMatrix evecs,DeterminantHashVec&
 P_space) {
 
     det_hash<double> ex_f_space;
@@ -1730,7 +1731,7 @@ P_space) {
 }
 
 */
-det_hash<double> AdaptiveCI::get_bin_F_space(int bin, int nbin, SharedMatrix evecs,
+det_hash<double> AdaptiveCI::get_bin_F_space(int bin, int nbin, psi::SharedMatrix evecs,
                                              DeterminantHashVec& P_space) {
 
     det_hash<double> bin_f_space;
@@ -1997,7 +1998,7 @@ det_hash<double> AdaptiveCI::get_bin_F_space(int bin, int nbin, SharedMatrix eve
 }
 
 std::pair<std::vector<std::vector<std::pair<Determinant, double>>>, std::vector<size_t>>
-AdaptiveCI::get_bin_F_space_vecsort(int bin, int nbin, SharedMatrix evecs,
+AdaptiveCI::get_bin_F_space_vecsort(int bin, int nbin, psi::SharedMatrix evecs,
                                     DeterminantHashVec& P_space) {
 
     det_hash<double> bin_f_space;
@@ -2375,4 +2376,4 @@ AdaptiveCI::get_bin_F_space_vecsort(int bin, int nbin, SharedMatrix evecs,
 }
 
 } // namespace forte
-} // namespace psi
+

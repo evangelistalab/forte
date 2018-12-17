@@ -31,7 +31,8 @@
 #include "dsrg_mrpt.h"
 #include "helpers/timer.h"
 
-namespace psi {
+using namespace psi;
+
 namespace forte {
 
 void DSRG_MRPT::H1_T1_C0(BlockedTensor& H1, BlockedTensor& T1, const double& alpha, double& C0) {
@@ -426,4 +427,4 @@ void DSRG_MRPT::H2_T2_C0_L3(BlockedTensor& H2, BlockedTensor& T2, const double& 
     dsrg_time_.add("220", timer.get());
 }
 } // namespace forte
-} // namespace psi
+

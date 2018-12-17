@@ -10,9 +10,9 @@
 #include "fci/fci_integrals.h"
 #include "base_classes/reference.h"
 
-namespace psi {
+
 namespace forte {
-class DynamicCorrelationSolver : public Wavefunction {
+class DynamicCorrelationSolver : public psi::Wavefunction {
   public:
     /**
      * Constructor
@@ -21,7 +21,7 @@ class DynamicCorrelationSolver : public Wavefunction {
      * @param ints A pointer to an allocated integral object
      * @param mo_space_info The MOSpaceInfo object
      */
-    DynamicCorrelationSolver(Reference reference, SharedWavefunction ref_wfn, Options& options,
+    DynamicCorrelationSolver(Reference reference, psi::SharedWavefunction ref_wfn, psi::Options& options,
                              std::shared_ptr<ForteIntegrals> ints,
                              std::shared_ptr<MOSpaceInfo> mo_space_info);
 
@@ -45,5 +45,5 @@ class DynamicCorrelationSolver : public Wavefunction {
     Reference reference_;
 };
 } // namespace forte
-} // namespace psi
+
 #endif // DYNAMIC_CORRELATION_SOLVER_H

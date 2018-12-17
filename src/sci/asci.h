@@ -48,7 +48,7 @@
 #define omp_get_num_threads() 1
 #endif
 
-namespace psi {
+
 namespace forte {
 
 class Reference;
@@ -60,7 +60,7 @@ void set_ASCI_options(ForteOptions& foptions);
  * @brief The AdaptiveCI class
  * This class implements an adaptive CI algorithm
  */
-class ASCI : public Wavefunction {
+class ASCI : public psi::Wavefunction {
   public:
     // ==> Class Constructor and Destructor <==
 
@@ -71,7 +71,7 @@ class ASCI : public Wavefunction {
      * @param ints A pointer to an allocated integral object
      * @param mo_space_info A pointer to the MOSpaceInfo object
      */
-    ASCI(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
+    ASCI(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
                std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Destructor
@@ -92,7 +92,7 @@ class ASCI : public Wavefunction {
     void compute_nos();
 
 
-    void set_asci_ints(SharedWavefunction ref_Wfn, std::shared_ptr<ForteIntegrals> ints);
+    void set_asci_ints(psi::SharedWavefunction ref_Wfn, std::shared_ptr<ForteIntegrals> ints);
 
     void set_fci_ints(std::shared_ptr<FCIIntegrals> fci_ints);
 
@@ -120,7 +120,7 @@ class ASCI : public Wavefunction {
     /// The number of frozen core orbitals
     int nfrzc_;
     /// The number of active orbitals per irrep
-    Dimension nactpi_;
+    psi::Dimension nactpi_;
     /// The number of active orbitals
     size_t nact_;
     /// The nuclear repulsion energy
@@ -146,7 +146,7 @@ class ASCI : public Wavefunction {
     /// Compute 1-RDM?
     bool compute_rdms_;
     /// The CI coeffiecients
-    SharedMatrix evecs_;
+    psi::SharedMatrix evecs_;
 
     bool build_lists_;
     bool print_weights_ = false;
@@ -180,48 +180,48 @@ class ASCI : public Wavefunction {
     void startup();
 
     /// Compute an aci wavefunction
-    void compute_aci(DeterminantHashVec& PQ_space, SharedMatrix& PQ_evecs, SharedVector& PQ_evals);
+    void compute_aci(DeterminantHashVec& PQ_space, psi::SharedMatrix& PQ_evecs, psi::SharedVector& PQ_evals);
 
     /// Print information about this calculation
     void print_info();
 
     /// Print a wave function
-    void print_wfn(DeterminantHashVec& space, WFNOperator& op, SharedMatrix evecs, int nroot);
+    void print_wfn(DeterminantHashVec& space, WFNOperator& op, psi::SharedMatrix evecs, int nroot);
 
     /// Find all the relevant excitations out of the P space
     void find_q_space(DeterminantHashVec& P_space, DeterminantHashVec& PQ_space,
-                      SharedVector evals, SharedMatrix evecs);
+                      psi::SharedVector evals, psi::SharedMatrix evecs);
 
     // Optimized for a single root
-    void get_excited_determinants_sr(SharedMatrix evecs, DeterminantHashVec& P_space,
+    void get_excited_determinants_sr(psi::SharedMatrix evecs, DeterminantHashVec& P_space,
                                      det_hash<double>& V_hash);
 
     /// Prune the space of determinants
     void prune_q_space(DeterminantHashVec& PQ_space, DeterminantHashVec& P_space,
-                       SharedMatrix evecs);
+                       psi::SharedMatrix evecs);
 
     /// Check if the procedure has converged
     bool check_convergence(std::vector<std::vector<double>>& energy_history,
-                           SharedVector new_energies);
+                           psi::SharedVector new_energies);
 
     /// Computes spin
     std::vector<std::pair<double, double>> compute_spin(DeterminantHashVec& space, WFNOperator& op,
-                                                        SharedMatrix evecs, int nroot);
+                                                        psi::SharedMatrix evecs, int nroot);
 
     /// Check for spin contamination
     double compute_spin_contamination(DeterminantHashVec& space, WFNOperator& op,
-                                      SharedMatrix evecs, int nroot);
+                                      psi::SharedMatrix evecs, int nroot);
 
     /// Print natural orbitals
     void print_nos();
 
     /// Compute the RDMs
     void compute_rdms(std::shared_ptr<FCIIntegrals> fci_ints, DeterminantHashVec& dets,
-                      WFNOperator& op, SharedMatrix& PQ_evecs, int root1, int root2);
+                      WFNOperator& op, psi::SharedMatrix& PQ_evecs, int root1, int root2);
 
 };
 
 } // namespace forte
-} // namespace psi
+
 
 #endif // _as_ci_h_

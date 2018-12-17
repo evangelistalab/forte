@@ -37,7 +37,7 @@
 
 #include "run_dsrg.h"
 
-namespace psi {
+
 namespace forte {
 
 void set_DSRG_options(ForteOptions& foptions) {
@@ -194,5 +194,4 @@ void set_DSRG_options(ForteOptions& foptions) {
 
 /// A uniformed function to run DSRG related jobs
 // void run_dsrg() {}
-}
 }

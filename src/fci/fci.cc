@@ -35,7 +35,8 @@
 
 #include "fci.h"
 
-namespace psi {
+using namespace psi;
+
 namespace forte {
 
 void set_FCI_options(ForteOptions& foptions) {
@@ -49,7 +50,7 @@ void set_FCI_options(ForteOptions& foptions) {
                      "The number of trial guess vectors to generate per root");
 }
 
-FCI::FCI(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
+FCI::FCI(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
          std::shared_ptr<MOSpaceInfo> mo_space_info)
     : ActiveSpaceSolver(ref_wfn, options, ints, mo_space_info) {
     // Copy the wavefunction information
@@ -57,7 +58,7 @@ FCI::FCI(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteInte
     startup();
 }
 
-FCI::FCI(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
+FCI::FCI(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
          std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<FCIIntegrals> fci_ints)
     : ActiveSpaceSolver(ref_wfn, options, ints, mo_space_info) {
     // Copy the wavefunction information
@@ -66,7 +67,7 @@ FCI::FCI(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteInte
     fci_ints_ = fci_ints;
 }
 
-// FCI::FCI(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
+// FCI::FCI(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
 //         std::shared_ptr<MOSpaceInfo> mo_space_info)
 //    : Wavefunction(options), ints_(ints), mo_space_info_(mo_space_info) {
 //    // Copy the wavefunction information
@@ -105,26 +106,26 @@ void FCI::startup() {
 
 double FCI::solver_compute_energy() {
     timer method_timer("FCI:energy");
-    Dimension active_dim = mo_space_info_->get_dimension("ACTIVE");
+    psi::Dimension active_dim = mo_space_info_->get_dimension("ACTIVE");
     size_t nfdocc = mo_space_info_->size("FROZEN_DOCC");
     std::vector<size_t> rdocc = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
     std::vector<size_t> active = mo_space_info_->get_corr_abs_mo("ACTIVE");
 
-    int charge = Process::environment.molecule()->molecular_charge();
+    int charge = psi::Process::environment.molecule()->molecular_charge();
     if (options_["CHARGE"].has_changed()) {
         charge = options_.get_int("CHARGE");
     }
 
     int nel = 0;
-    int natom = Process::environment.molecule()->natom();
+    int natom = psi::Process::environment.molecule()->natom();
     for (int i = 0; i < natom; i++) {
-        nel += static_cast<int>(Process::environment.molecule()->Z(i));
+        nel += static_cast<int>(psi::Process::environment.molecule()->Z(i));
     }
     // If the charge has changed, recompute the number of electrons
     // Or if you cannot find the number of electrons
     nel -= charge;
 
-    int multiplicity = Process::environment.molecule()->multiplicity();
+    int multiplicity = psi::Process::environment.molecule()->multiplicity();
     if (options_["MULTIPLICITY"].has_changed()) {
         multiplicity = options_.get_int("MULTIPLICITY");
     }
@@ -146,7 +147,7 @@ double FCI::solver_compute_energy() {
     //        multiplicity);
     //        outfile->Printf("\n  Check (specify) Ms value (component of
     //        multiplicity)! \n");
-    //        throw PSIEXCEPTION("Ms must be no less than 0. Check output for
+    //        throw psi::PSIEXCEPTION("Ms must be no less than 0. Check output for
     //        details.");
     //    }
 
@@ -166,7 +167,7 @@ double FCI::solver_compute_energy() {
     }
 
     if (((nel - twice_ms_) % 2) != 0)
-        throw PSIEXCEPTION("\n\n  FCI: Wrong value of M_s.\n\n");
+        throw psi::PSIEXCEPTION("\n\n  FCI: Wrong value of M_s.\n\n");
 
     // Adjust the number of for frozen and restricted doubly occupied
     size_t nactel = nel - 2 * nfdocc - 2 * rdocc.size();
@@ -197,12 +198,12 @@ double FCI::solver_compute_energy() {
 
     double fci_energy = fcisolver_->compute_energy();
 
-    Process::environment.globals["CURRENT ENERGY"] = fci_energy;
-    Process::environment.globals["FCI ENERGY"] = fci_energy;
+    psi::Process::environment.globals["CURRENT ENERGY"] = fci_energy;
+    psi::Process::environment.globals["FCI ENERGY"] = fci_energy;
 
     return fci_energy;
 }
 
 Reference FCI::reference() { return fcisolver_->reference(); }
 }
-}
+

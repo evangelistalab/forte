@@ -8,12 +8,12 @@
 #include "sci/fci_mo.h"
 #include "sparse_ci/determinant.h"
 
-namespace psi {
+
 namespace forte {
 
 void set_DWMS_options(ForteOptions& foptions);
 
-class DWMS_DSRGPT2 : public Wavefunction {
+class DWMS_DSRGPT2 : public psi::Wavefunction {
   public:
     /**
      * @brief DWMS_DSRGPT2 Constructor
@@ -22,7 +22,7 @@ class DWMS_DSRGPT2 : public Wavefunction {
      * @param ints ForteInegrals
      * @param mo_space_info MOSpaceInfo
      */
-    DWMS_DSRGPT2(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
+    DWMS_DSRGPT2(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
                  std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Destructor
@@ -78,8 +78,8 @@ class DWMS_DSRGPT2 : public Wavefunction {
     bool do_semi_;
 
     /// save a copy of original orbitals
-    SharedMatrix Ca_copy_;
-    SharedMatrix Cb_copy_;
+    psi::SharedMatrix Ca_copy_;
+    psi::SharedMatrix Cb_copy_;
 
     /// transform integrals to original basis
     void transform_ints0();
@@ -107,9 +107,9 @@ class DWMS_DSRGPT2 : public Wavefunction {
     /// old_eigen - original states
     /// new_vals - new energy
     /// new_vecs - linear combinations of original states
-    std::vector<std::pair<SharedVector, double>>
-    compute_new_eigen(const std::vector<std::pair<SharedVector, double>>& old_eigen,
-                      SharedVector new_vals, SharedMatrix new_vecs);
+    std::vector<std::pair<psi::SharedVector, double>>
+    compute_new_eigen(const std::vector<std::pair<psi::SharedVector, double>>& old_eigen,
+                      psi::SharedVector new_vals, psi::SharedMatrix new_vecs);
 
     /// compute MS or XMS energies
     void compute_dwms_energy(std::shared_ptr<FCI_MO>& fci_mo);
@@ -132,7 +132,7 @@ class DWMS_DSRGPT2 : public Wavefunction {
     void compute_dwms_energy_separated_H(std::shared_ptr<FCI_MO>& fci_mo);
 
     /// initial guesses if separate diagonalizations and require orthogonalized final CI vectors
-    std::vector<std::vector<SharedVector>> initial_guesses_;
+    std::vector<std::vector<psi::SharedVector>> initial_guesses_;
 
     /// compute DWMS weights and return a new sa_info
     std::vector<std::tuple<int, int, int, std::vector<double>>>
@@ -182,7 +182,7 @@ class DWMS_DSRGPT2 : public Wavefunction {
                        const std::vector<std::tuple<int, int, int, std::vector<double>>>& sa_info);
 
     /// print overlap matrix between DWMS roots
-    void print_overlap(const std::vector<SharedVector>& evecs, const std::string& Sname);
+    void print_overlap(const std::vector<psi::SharedVector>& evecs, const std::string& Sname);
 
     /// print energy list summary
     void
@@ -191,5 +191,5 @@ class DWMS_DSRGPT2 : public Wavefunction {
                       bool pass_process = false);
 };
 }
-}
+
 #endif // DWMS_MRPT2_H

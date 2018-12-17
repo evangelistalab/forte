@@ -34,7 +34,8 @@
 #include "sci/fci_mo.h"
 #include "dsrg_mrpt2.h"
 
-namespace psi {
+using namespace psi;
+
 namespace forte {
 
 double DSRG_MRPT2::compute_energy_multi_state() {
@@ -47,7 +48,7 @@ double DSRG_MRPT2::compute_energy_multi_state() {
     }
 
     // get character table
-    CharacterTable ct = Process::environment.molecule()->point_group()->char_table();
+    CharacterTable ct = psi::Process::environment.molecule()->point_group()->char_table();
     std::vector<std::string> irrep_symbol;
     for (int h = 0; h < this->nirrep(); ++h) {
         irrep_symbol.push_back(std::string(ct.gamma(h).symbol()));
@@ -77,13 +78,13 @@ double DSRG_MRPT2::compute_energy_multi_state() {
         for (int i = 0; i < nstates; ++i) {
             outfile->Printf("\n     %3d     %3s    %2d   %20.12f", multi,
                             irrep_symbol[irrep].c_str(), i, Edsrg_ms[n][i]);
-            Process::environment.globals["ENERGY ROOT " + std::to_string(counter)] = Edsrg_ms[n][i];
+            psi::Process::environment.globals["ENERGY ROOT " + std::to_string(counter)] = Edsrg_ms[n][i];
             ++counter;
         }
         outfile->Printf("\n    %s", dash.c_str());
     }
 
-    Process::environment.globals["CURRENT ENERGY"] = Edsrg_ms[0][0];
+    psi::Process::environment.globals["CURRENT ENERGY"] = Edsrg_ms[0][0];
     return Edsrg_ms[0][0];
 }
 
@@ -92,7 +93,7 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
     compute_energy();
 
     // get character table
-    CharacterTable ct = Process::environment.molecule()->point_group()->char_table();
+    CharacterTable ct = psi::Process::environment.molecule()->point_group()->char_table();
     std::vector<std::string> irrep_symbol;
     for (int h = 0; h < this->nirrep(); ++h) {
         irrep_symbol.push_back(std::string(ct.gamma(h).symbol()));
@@ -199,7 +200,7 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
             int irrep = options_["AVG_STATE"][n][0].to_integer();
             int multi = options_["AVG_STATE"][n][1].to_integer();
             int nstates = options_["AVG_STATE"][n][2].to_integer();
-            std::vector<psi::forte::Determinant> p_space = p_spaces_[n];
+            std::vector<forte::Determinant> p_space = p_spaces_[n];
 
             // print current symmetry
             std::stringstream ss;
@@ -215,14 +216,14 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
                 outfile->Printf("\n    Use string FCI code.");
 
                 // prepare FCISolver
-                int charge = Process::environment.molecule()->molecular_charge();
+                int charge = psi::Process::environment.molecule()->molecular_charge();
                 if (options_["CHARGE"].has_changed()) {
                     charge = options_.get_int("CHARGE");
                 }
                 auto nelec = 0;
-                int natom = Process::environment.molecule()->natom();
+                int natom = psi::Process::environment.molecule()->natom();
                 for (int i = 0; i < natom; ++i) {
-                    nelec += Process::environment.molecule()->fZ(i);
+                    nelec += psi::Process::environment.molecule()->fZ(i);
                 }
                 nelec -= charge;
                 int ms = (multi + 1) % 2;
@@ -231,7 +232,7 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
                 auto na = (nelec_actv + ms) / 2;
                 auto nb = nelec_actv - na;
 
-                Dimension active_dim = mo_space_info_->get_dimension("ACTIVE");
+                psi::Dimension active_dim = mo_space_info_->get_dimension("ACTIVE");
                 int ntrial_per_root = options_.get_int("NTRIAL_PER_ROOT");
 
                 FCISolver fcisolver(active_dim, core_mos_, actv_mos_, na, nb, multi, irrep, ints_,
@@ -246,7 +247,7 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
 
                 // compute energy and fill in results
                 fcisolver.compute_energy();
-                SharedVector Ems = fcisolver.eigen_vals();
+                psi::SharedVector Ems = fcisolver.eigen_vals();
                 for (int i = 0; i < nstates; ++i) {
                     Edsrg_sa[n].push_back(Ems->get(i) + Enuc_);
                 }
@@ -257,13 +258,13 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
 
                 int dim = (eigens_[n][0].first)->dim();
                 size_t eigen_size = eigens_[n].size();
-                SharedMatrix evecs(new Matrix("evecs", dim, eigen_size));
+                psi::SharedMatrix evecs(new psi::Matrix("evecs", dim, eigen_size));
                 for (size_t i = 0; i < eigen_size; ++i) {
                     evecs->set_column(0, i, (eigens_[n][i]).first);
                 }
 
-                SharedMatrix Heff(
-                    new Matrix("Heff " + multi_label[multi - 1] + " " + irrep_symbol[irrep],
+                psi::SharedMatrix Heff(
+                    new psi::Matrix("Heff " + multi_label[multi - 1] + " " + irrep_symbol[irrep],
                                nstates, nstates));
                 for (int A = 0; A < nstates; ++A) {
                     for (int B = A; B < nstates; ++B) {
@@ -308,13 +309,13 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
                             Heff->set(A, B, H_AB);
                             std::stringstream name;
                             name << "MS DIAGONAL ENERGY ENTRY " << n << " ROOT " << A;
-                            Process::environment.globals[name.str()] = H_AB;
+                            psi::Process::environment.globals[name.str()] = H_AB;
                         } else {
                             Heff->set(A, B, H_AB);
                             Heff->set(B, A, H_AB);
                             std::stringstream name;
                             name << "COUPLING ENTRY " << n << " ROOT " << A << ", " << B;
-                            Process::environment.globals[name.str()] = H_AB;
+                            psi::Process::environment.globals[name.str()] = H_AB;
                         }
                     }
                 } // end forming effective Hamiltonian
@@ -322,8 +323,8 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
                 print_h2("Effective Hamiltonian Summary");
                 outfile->Printf("\n");
                 Heff->print();
-                SharedMatrix U(new Matrix("U of Heff", nstates, nstates));
-                SharedVector Ems(new Vector("MS Energies", nstates));
+                psi::SharedMatrix U(new psi::Matrix("U of Heff", nstates, nstates));
+                psi::SharedVector Ems(new Vector("MS Energies", nstates));
                 Heff->diagonalize(U, Ems);
                 U->eivprint(Ems);
 
@@ -341,7 +342,7 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
 
 std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_xms() {
     // get character table
-    CharacterTable ct = Process::environment.molecule()->point_group()->char_table();
+    CharacterTable ct = psi::Process::environment.molecule()->point_group()->char_table();
     std::vector<std::string> irrep_symbol;
     for (int h = 0; h < this->nirrep(); ++h) {
         irrep_symbol.push_back(std::string(ct.gamma(h).symbol()));
@@ -376,7 +377,7 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_xms() {
         int irrep = options_["AVG_STATE"][n][0].to_integer();
         int multi = options_["AVG_STATE"][n][1].to_integer();
         int nstates = eigens_[n].size();
-        std::vector<psi::forte::Determinant> p_space = p_spaces_[n];
+        std::vector<forte::Determinant> p_space = p_spaces_[n];
 
         // print current status
         std::stringstream ss;
@@ -386,7 +387,7 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_xms() {
 
         // fill in ci vectors
         int dim = (eigens_[n][0].first)->dim();
-        SharedMatrix civecs(new Matrix("ci vecs", dim, nstates));
+        psi::SharedMatrix civecs(new psi::Matrix("ci vecs", dim, nstates));
         for (int i = 0; i < nstates; ++i) {
             civecs->set_column(0, i, (eigens_[n][i]).first);
         }
@@ -425,10 +426,10 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_xms() {
         }
 
         // prepare Heff
-        SharedMatrix Heff(new Matrix("Heff " + multi_label[multi - 1] + " " + irrep_symbol[irrep],
+        psi::SharedMatrix Heff(new psi::Matrix("Heff " + multi_label[multi - 1] + " " + irrep_symbol[irrep],
                                      nstates, nstates));
-        SharedMatrix Heff_sym(
-            new Matrix("Heff (Symmetrized) " + multi_label[multi - 1] + " " + irrep_symbol[irrep],
+        psi::SharedMatrix Heff_sym(
+            new psi::Matrix("Heff (Symmetrized) " + multi_label[multi - 1] + " " + irrep_symbol[irrep],
                        nstates, nstates));
 
         // loop over states
@@ -502,8 +503,8 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_xms() {
         Heff->print();
         Heff_sym->print();
 
-        SharedMatrix U(new Matrix("U of Heff (Symmetrized)", nstates, nstates));
-        SharedVector Ems(new Vector("MS Energies", nstates));
+        psi::SharedMatrix U(new psi::Matrix("U of Heff (Symmetrized)", nstates, nstates));
+        psi::SharedVector Ems(new Vector("MS Energies", nstates));
         Heff_sym->diagonalize(U, Ems);
         U->eivprint(Ems);
 
@@ -556,15 +557,15 @@ void DSRG_MRPT2::build_eff_oei() {
     }
 }
 
-SharedMatrix DSRG_MRPT2::xms_rotation(std::shared_ptr<FCIIntegrals> fci_ints,
-                                      std::vector<psi::forte::Determinant>& p_space,
-                                      SharedMatrix civecs) {
+psi::SharedMatrix DSRG_MRPT2::xms_rotation(std::shared_ptr<FCIIntegrals> fci_ints,
+                                      std::vector<forte::Determinant>& p_space,
+                                      psi::SharedMatrix civecs) {
     print_h2("Perform XMS Rotation to Reference States");
     outfile->Printf("\n");
 
     // build Fock matrix
     int nstates = civecs->ncol();
-    SharedMatrix Fock(new Matrix("Fock", nstates, nstates));
+    psi::SharedMatrix Fock(new psi::Matrix("Fock", nstates, nstates));
 
     for (int M = 0; M < nstates; ++M) {
         for (int N = M; N < nstates; ++N) {
@@ -590,13 +591,13 @@ SharedMatrix DSRG_MRPT2::xms_rotation(std::shared_ptr<FCIIntegrals> fci_ints,
     Fock->print();
 
     // diagonalize Fock
-    SharedMatrix Fevec(new Matrix("Fock Evec", nstates, nstates));
-    SharedVector Feval(new Vector("Fock Eval", nstates));
+    psi::SharedMatrix Fevec(new psi::Matrix("Fock Evec", nstates, nstates));
+    psi::SharedVector Feval(new Vector("Fock Eval", nstates));
     Fock->diagonalize(Fevec, Feval);
     Fevec->eivprint(Feval);
 
     // Rotate ci vecs
-    SharedMatrix rcivecs(civecs->clone());
+    psi::SharedMatrix rcivecs(civecs->clone());
     rcivecs->zero();
     rcivecs->gemm(false, false, 1.0, civecs, Fevec, 0.0);
 
@@ -847,7 +848,7 @@ void DSRG_MRPT2::compute_Heff_2nd_coupling(double& H0, ambit::Tensor& H1a, ambit
 }
 
 void DSRG_MRPT2::compute_cumulants(std::shared_ptr<FCIIntegrals> fci_ints,
-                                   std::vector<Determinant>& p_space, SharedMatrix evecs,
+                                   std::vector<Determinant>& p_space, psi::SharedMatrix evecs,
                                    const int& root1, const int& root2) {
     CI_RDMS ci_rdms(fci_ints, p_space, evecs, root1, root2);
 
@@ -959,8 +960,8 @@ void DSRG_MRPT2::compute_cumulants(std::shared_ptr<FCIIntegrals> fci_ints,
 }
 
 void DSRG_MRPT2::compute_densities(std::shared_ptr<FCIIntegrals> fci_ints,
-                                   std::vector<psi::forte::Determinant>& p_space,
-                                   SharedMatrix evecs, const int& root1, const int& root2) {
+                                   std::vector<forte::Determinant>& p_space,
+                                   psi::SharedMatrix evecs, const int& root1, const int& root2) {
     CI_RDMS ci_rdms(fci_ints, p_space, evecs, root1, root2);
 
     // 1 density
@@ -1033,6 +1034,5 @@ void DSRG_MRPT2::rotate_3rdm(ambit::Tensor& L3aaa, ambit::Tensor& L3aab, ambit::
     temp("pqrstu") = L3bbb("pqrstu");
     L3bbb("PQRSTU") =
         Ub("AP") * Ub("BQ") * Ub("CR") * temp("ABCIJK") * Ub("IS") * Ub("JT") * Ub("KU");
-}
 }
 }

@@ -35,7 +35,7 @@
 #include "sparse_ci/determinant.h"
 #include "helpers/hash_vector.h"
 
-namespace psi {
+
 namespace forte {
 
 /**
@@ -100,14 +100,14 @@ class DeterminantHashVec {
 
     // Compute overlap between this and input wfn
     double overlap(std::vector<double>& det1_evecs, DeterminantHashVec& det2,
-                   SharedMatrix det2_evecs, int root);
+                   psi::SharedMatrix det2_evecs, int root);
 
     // Compute overlap between this and input wfn
-    double overlap(SharedMatrix det1_evecs, int root1, DeterminantHashVec& det2,
-                   SharedMatrix det2_evecs, int root2);
+    double overlap(psi::SharedMatrix det1_evecs, int root1, DeterminantHashVec& det2,
+                   psi::SharedMatrix det2_evecs, int root2);
 
     // Save most important subspace as this
-    void subspace(DeterminantHashVec& dets, SharedMatrix evecs, std::vector<double>& new_evecs,
+    void subspace(DeterminantHashVec& dets, psi::SharedMatrix evecs, std::vector<double>& new_evecs,
                   size_t dim, int root);
 
     // Merge a wavefunction into this
@@ -126,7 +126,6 @@ class DeterminantHashVec {
     /// A hashvector of determinants
     det_hashvec wfn_;
 };
-}
 }
 
 #endif // _determinant_hashvector_h_

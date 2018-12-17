@@ -53,7 +53,7 @@
 #endif
 using namespace ambit;
 
-namespace psi {
+
 namespace forte {
 
 #ifdef HAVE_GA
@@ -100,7 +100,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga() {
     if (my_proc == 0)
         int_mem_int = (nthree_ * core_ * virtual_) * sizeof(double);
     if (my_proc == 0)
-        memory_input = Process::environment.get_memory() * 0.75 * 1.0 / num_proc;
+        memory_input = psi::Process::environment.get_memory() * 0.75 * 1.0 / num_proc;
     if (my_proc == 0)
         num_block = int_mem_int / memory_input < 1 ? 1 : int_mem_int / memory_input;
     if (my_proc == 0)
@@ -148,19 +148,19 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga() {
         printf("\n P%d found this", my_proc);
         printf("\n\n Block size is FUBAR.");
         printf("\n Block size is %d with P%d", block_size, my_proc);
-        throw PSIEXCEPTION("Block size is either 0 or negative.  Fix this problem");
+        throw psi::PSIEXCEPTION("Block size is either 0 or negative.  Fix this problem");
     }
     if (num_block > core_) {
         printf("\n Number of blocks can not be larger than core_ on P%d", my_proc);
         printf("\n num_block: %d core_: %d on P%d", num_block, core_, my_proc);
-        throw PSIEXCEPTION("Number of blocks is larger than core.  Fix "
+        throw psi::PSIEXCEPTION("Number of blocks is larger than core.  Fix "
                            "num_block or check source code");
     }
     if (num_block < num_proc) {
         outfile->Printf("\n Set number of processors larger");
         outfile->Printf("\n This algorithm uses P processors to block DF tensors");
         printf("\n num_block = %d and num_proc = %d with P%d", num_block, num_proc, my_proc);
-        throw PSIEXCEPTION("Set number of processors larger.  See output for details.");
+        throw psi::PSIEXCEPTION("Set number of processors larger.  See output for details.");
     }
     if (num_block >= 1) {
         outfile->Printf("\n  %lu / %lu = %lu", int_mem_int, memory_input,
@@ -197,7 +197,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga() {
     int mBe = NGA_Create_irreg(C_DBL, 2, dims, (char*)"mBe", dim_chunk, map);
     if (not mBe) {
         GA_Error((char*)"Create mBe failed", 0);
-        throw PSIEXCEPTION("Error in creating GA for B");
+        throw psi::PSIEXCEPTION("Error in creating GA for B");
     }
     if (debug_print)
         GA_Print_distribution(mBe);
@@ -407,12 +407,12 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga() {
             printf("\n my_proc: %d block_size: %d m_blocks: %d", my_proc, block_size, m_blocks);
             // for(int i = 0; i < num_proc; i++)
             //    printf("\n PL[%d] = %d", i, proc_list[i]);
-            throw PSIEXCEPTION("GA could not locate region of B_m^{Qe}");
+            throw psi::PSIEXCEPTION("GA could not locate region of B_m^{Qe}");
         }
 
         ambit::Tensor BmQe =
             ambit::Tensor::build(tensor_type_, "BmQE", {m_batch.size(), nthree_, virtual_});
-        // SharedMatrix BmQe_mat(new Matrix("BmQe_mat", m_batch.size() *
+        // psi::SharedMatrix BmQe_mat(new psi::Matrix("BmQe_mat", m_batch.size() *
         // nthree_, virtual_));
         int begin_offset[2];
         int end_offset[2];
@@ -444,7 +444,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga() {
         ambit::Tensor BnQf =
             ambit::Tensor::build(tensor_type_, "BnQf", {n_batch.size(), nthree_, virtual_});
         // ambit::Tensor BnQf;
-        // SharedMatrix BnQf_mat(new Matrix("BnQf", n_batch.size() * nthree_,
+        // psi::SharedMatrix BnQf_mat(new psi::Matrix("BnQf", n_batch.size() * nthree_,
         // virtual_));
         // std::vector<double> BnQf(n_batch.size() * nthree_ * virtual_, 0);
 
@@ -463,7 +463,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga() {
                 printf("\n Could not locate block of mBe");
                 printf("\n locate_offset[0]: %d", locate_offset[0]);
                 printf("\n nblocks: %d block_size: %d", n_blocks, block_size);
-                throw PSIEXCEPTION("GA could not locate region of B_m^{Qe}");
+                throw psi::PSIEXCEPTION("GA could not locate region of B_m^{Qe}");
             }
             int begin_offset_n[2];
             int end_offset_n[2];
@@ -583,7 +583,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_rep() {
     size_t dim = nthree_ * virtual_;
     if (dim > 1e9) {
         printf("\n dim is %lu on P%d", dim, my_proc);
-        throw PSIEXCEPTION("DIM is much too large for memory");
+        throw psi::PSIEXCEPTION("DIM is much too large for memory");
     }
     int nthread = 1;
 #ifdef _OPENMP
@@ -600,7 +600,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_rep() {
     size_t block_size = 0;
     if (my_proc == 0) {
         int_mem_int = (nthree_ * core_ * virtual_) * sizeof(double);
-        memory_input = Process::environment.get_memory() * 0.75 * 1.0 / num_proc;
+        memory_input = psi::Process::environment.get_memory() * 0.75 * 1.0 / num_proc;
         num_block = int_mem_int / memory_input < 1 ? 1 : int_mem_int / memory_input;
         block_size = core_ / num_block;
     }
@@ -637,12 +637,12 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_rep() {
                my_proc);
         printf("\n  Block_size = %lu num_block = %lu P%d", block_size, num_block, my_proc);
         printf("\n Core_: %d virtual_: %d nthree_: %d", core_, virtual_, nthree_);
-        throw PSIEXCEPTION("Block size is either 0 or negative.  Fix this problem");
+        throw psi::PSIEXCEPTION("Block size is either 0 or negative.  Fix this problem");
     }
     if (num_block > core_) {
         printf("\n P%d says that num_block is %d", my_proc, num_block);
         outfile->Printf("\n Number of blocks can not be larger than core_");
-        throw PSIEXCEPTION("Number of blocks is larger than core.  Fix "
+        throw psi::PSIEXCEPTION("Number of blocks is larger than core.  Fix "
                            "num_block or check source code");
     }
 
@@ -650,7 +650,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_rep() {
         outfile->Printf("\n Set number of processors larger");
         outfile->Printf("\n This algorithm uses P processors to block DF tensors");
         outfile->Printf("\n num_block = %d and num_proc = %d", num_block, num_proc);
-        throw PSIEXCEPTION("Set number of processors larger.  See output for details.");
+        throw psi::PSIEXCEPTION("Set number of processors larger.  See output for details.");
     }
     if (debug_print) {
         printf("\n P%d is complete with all block information", my_proc);
@@ -952,7 +952,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_virtual_ga() {
     /// be stored in core.
     outfile->Printf("\n\n====Blocking information==========\n");
     size_t int_mem_int = (nthree_ * core_ * virtual_) * sizeof(double);
-    size_t memory_input = Process::environment.get_memory() * 0.75;
+    size_t memory_input = psi::Process::environment.get_memory() * 0.75;
     size_t num_block = int_mem_int / memory_input < 1 ? 1 : int_mem_int / memory_input;
 
     if (options_.get_int("CCVV_BATCH_NUMBER") != -1) {
@@ -963,11 +963,11 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_virtual_ga() {
     if (block_size < 1) {
         outfile->Printf("\n\n Block size is FUBAR.");
         outfile->Printf("\n Block size is %d", block_size);
-        throw PSIEXCEPTION("Block size is either 0 or negative.  Fix this problem");
+        throw psi::PSIEXCEPTION("Block size is either 0 or negative.  Fix this problem");
     }
     if (num_block > virtual_) {
         outfile->Printf("\n Number of blocks can not be larger than core_");
-        throw PSIEXCEPTION("Number of blocks is larger than core.  Fix "
+        throw psi::PSIEXCEPTION("Number of blocks is larger than core.  Fix "
                            "num_block or check source code");
     }
 
@@ -1150,6 +1150,6 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_virtual_ga() {
 }
 #endif
 } // namespace forte
-} // namespace psi
+
 
 #endif

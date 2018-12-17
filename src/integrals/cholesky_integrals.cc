@@ -46,11 +46,11 @@
 #include "cholesky_integrals.h"
 
 using namespace ambit;
+using namespace psi;
 
-namespace psi {
 namespace forte {
 
-CholeskyIntegrals::CholeskyIntegrals(psi::Options& options, SharedWavefunction ref_wfn,
+CholeskyIntegrals::CholeskyIntegrals(psi::Options& options, psi::SharedWavefunction ref_wfn,
                                      IntegralSpinRestriction restricted,
                                      std::shared_ptr<MOSpaceInfo> mo_space_info)
     : ForteIntegrals(options, ref_wfn, restricted, mo_space_info) {
@@ -61,7 +61,6 @@ CholeskyIntegrals::CholeskyIntegrals(psi::Options& options, SharedWavefunction r
     gather_integrals();
     freeze_core_orbitals();
     print_timing("computing Cholesky integrals", int_timer.get());
-
 }
 
 CholeskyIntegrals::~CholeskyIntegrals() {}
@@ -142,14 +141,14 @@ ambit::Tensor CholeskyIntegrals::three_integral_block(const std::vector<size_t>&
 ambit::Tensor CholeskyIntegrals::three_integral_block_two_index(const std::vector<size_t>&, size_t,
                                                                 const std::vector<size_t>&) {
     outfile->Printf("\n Oh no! this isn't here");
-    throw PSIEXCEPTION("INT_TYPE=DISKDF");
+    throw psi::PSIEXCEPTION("INT_TYPE=DISKDF");
 }
 
 void CholeskyIntegrals::gather_integrals() {
     if (print_) {
         outfile->Printf("\n  Computing the Cholesky Vectors \n");
     }
-    std::shared_ptr<BasisSet> primary = wfn_->basisset();
+    std::shared_ptr<psi::BasisSet> primary = wfn_->basisset();
     size_t nbf = primary->nbf();
 
     /// Needed to generate sieve information
@@ -161,7 +160,7 @@ void CholeskyIntegrals::gather_integrals() {
     local_timer timer;
     std::shared_ptr<CholeskyERI> Ch(new CholeskyERI(std::shared_ptr<TwoBodyAOInt>(integral->eri()),
                                                     options_.get_double("INTS_TOLERANCE"), tol_cd,
-                                                    Process::environment.get_memory()));
+                                                    psi::Process::environment.get_memory()));
     if (options_.get_str("DF_INTS_IO") == "LOAD") {
         std::shared_ptr<ERISieve> sieve(
             new ERISieve(primary, options_.get_double("INTS_TOLERANCE")));
@@ -179,12 +178,12 @@ void CholeskyIntegrals::gather_integrals() {
         if (psio->exists(file_unit)) {
             psio->open(file_unit, PSIO_OPEN_OLD);
             psio->read_entry(file_unit, "length", (char*)&nthree_, sizeof(long int));
-            SharedMatrix L_tri = SharedMatrix(new Matrix("Partial Cholesky", nthree_, ntri));
+            psi::SharedMatrix L_tri = std::make_shared<psi::Matrix>("Partial Cholesky", nthree_, ntri);
             double** Lp = L_tri->pointer();
             psio->read_entry(file_unit, "(Q|mn) Integrals", (char*)Lp[0],
                              sizeof(double) * nthree_ * ntri);
             psio->close(file_unit, 1);
-            SharedMatrix L_ao = SharedMatrix(new Matrix("Partial Cholesky", nthree_, nbf * nbf));
+            psi::SharedMatrix L_ao = std::make_shared<psi::Matrix>("Partial Cholesky", nthree_, nbf * nbf);
             for (size_t mn = 0; mn < ntri; mn++) {
                 size_t m = function_pairs[mn].first;
                 size_t n = function_pairs[mn].second;
@@ -243,13 +242,13 @@ void CholeskyIntegrals::gather_integrals() {
 void CholeskyIntegrals::transform_integrals() {
     TensorType tensor_type = CoreTensor;
 
-    SharedMatrix L(new Matrix("Lmo", nthree_, (nso_) * (nso_)));
-    SharedMatrix Ca_ao(new Matrix("Ca_ao", nso_, nmopi_.sum()));
-    SharedMatrix Ca = wfn_->Ca();
-    SharedMatrix aotoso = wfn_->aotoso();
+    psi::SharedMatrix L(new psi::Matrix("Lmo", nthree_, (nso_) * (nso_)));
+    psi::SharedMatrix Ca_ao(new psi::Matrix("Ca_ao", nso_, nmopi_.sum()));
+    psi::SharedMatrix Ca = wfn_->Ca();
+    psi::SharedMatrix aotoso = wfn_->aotoso();
 
     // Transform from the SO to the AO basis
-    Dimension nsopi_ = wfn_->nsopi();
+    psi::Dimension nsopi_ = wfn_->nsopi();
     for (int h = 0, index = 0; h < nirrep_; ++h) {
         for (int i = 0; i < nmopi_[h]; ++i) {
             int nao = nso_;
@@ -277,7 +276,7 @@ void CholeskyIntegrals::transform_integrals() {
     ThreeIntegral_ao.iterate([&](const std::vector<size_t>& i, double& value) {
         value = L_ao_->get(i[0], i[1] * nso_ + i[2]);
     });
-    SharedMatrix ThreeInt(new Matrix("Lmo", (nmo_) * (nmo_), nthree_));
+    psi::SharedMatrix ThreeInt(new psi::Matrix("Lmo", (nmo_) * (nmo_), nthree_));
     ThreeIntegral_ = ThreeInt;
 
     ThreeIntegral("L,p,q") = ThreeIntegral_ao("L,m,n") * Cpq_tensor("m,p") * Cpq_tensor("n,q");
@@ -287,7 +286,7 @@ void CholeskyIntegrals::transform_integrals() {
     });
 }
 
-void CholeskyIntegrals::make_fock_matrix(SharedMatrix gamma_aM, SharedMatrix gamma_bM) {
+void CholeskyIntegrals::make_fock_matrix(psi::SharedMatrix gamma_aM, psi::SharedMatrix gamma_bM) {
     TensorType tensor_type = CoreTensor;
     ambit::Tensor ThreeIntegralTensor =
         ambit::Tensor::build(tensor_type, "ThreeIndex", {ncmo_, ncmo_, nthree_});
@@ -348,9 +347,10 @@ void CholeskyIntegrals::resort_integrals_after_freezing() {
     // Resort the three-index integrals
     resort_three(ThreeIntegral_, cmotomo_);
 }
-void CholeskyIntegrals::resort_three(std::shared_ptr<Matrix>& threeint, std::vector<size_t>& map) {
+void CholeskyIntegrals::resort_three(std::shared_ptr<psi::Matrix>& threeint,
+                                     std::vector<size_t>& map) {
     // Create a temperature threeint matrix
-    SharedMatrix temp_threeint(threeint->clone());
+    psi::SharedMatrix temp_threeint(threeint->clone());
     temp_threeint->zero();
 
     // Borrwed from resort_four.
@@ -373,7 +373,6 @@ void CholeskyIntegrals::resort_three(std::shared_ptr<Matrix>& threeint, std::vec
 
 void CholeskyIntegrals::set_tei(size_t, size_t, size_t, size_t, double, bool, bool) {
     outfile->Printf("\n If you are using this, you are ruining the advantages of DF/CD");
-    throw PSIEXCEPTION("Don't use DF/CD if you use set_tei");
+    throw psi::PSIEXCEPTION("Don't use DF/CD if you use set_tei");
 }
 } // namespace forte
-} // namespace psi

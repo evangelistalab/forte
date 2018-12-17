@@ -53,13 +53,13 @@
 #include "sparse_ci/ci_reference.h"
 
 using namespace psi;
-using namespace psi::forte::GeneratorType_EWCI;
+using namespace forte::GeneratorType_EWCI;
 
 #define USE_HASH 1
 #define DO_STATS 0
 #define ENFORCE_SYM 1
 
-namespace psi {
+
 namespace forte {
 #ifdef _OPENMP
 #include <omp.h>
@@ -103,7 +103,7 @@ void ElementwiseCI::sortHashVecByCoefficient(det_hashvec& dets_hashvec, std::vec
     C = std::move(new_C);
 }
 
-ElementwiseCI::ElementwiseCI(SharedWavefunction ref_wfn, Options& options,
+ElementwiseCI::ElementwiseCI(psi::SharedWavefunction ref_wfn, psi::Options& options,
                              std::shared_ptr<ForteIntegrals> ints,
                              std::shared_ptr<MOSpaceInfo> mo_space_info)
     : Wavefunction(options), ints_(ints), mo_space_info_(mo_space_info),
@@ -796,7 +796,7 @@ double ElementwiseCI::compute_energy() {
     }
     timer_off("EWCI:<E>end_v");
 
-    Process::environment.globals["EWCI ENERGY"] = var_energy;
+    psi::Process::environment.globals["EWCI ENERGY"] = var_energy;
 
     outfile->Printf("\n  * ElementwiseCI Variational Energy    = %18.12f Eh", 1, var_energy);
     outfile->Printf("\n  * ElementwiseCI Var. Corr.  Energy    = %18.12f Eh", 1,
@@ -815,8 +815,8 @@ double ElementwiseCI::compute_energy() {
     if (post_diagonalization_) {
         outfile->Printf("\n\n  ==> Post-Diagonalization <==\n");
         timer_on("EWCI:Post_Diag");
-        SharedMatrix apfci_evecs(new Matrix("Eigenvectors", C.size(), nroot_));
-        SharedVector apfci_evals(new Vector("Eigenvalues", nroot_));
+        psi::SharedMatrix apfci_evecs(new psi::Matrix("Eigenvectors", C.size(), nroot_));
+        psi::SharedVector apfci_evals(new Vector("Eigenvalues", nroot_));
 
         WFNOperator op(mo_symmetry_, fci_ints_);
         DeterminantHashVec det_map(std::move(dets_hashvec));
@@ -838,7 +838,7 @@ double ElementwiseCI::compute_energy() {
 
         double post_diag_energy = apfci_evals->get(current_root_) + nuclear_repulsion_energy_ +
                                   fci_ints_->scalar_energy();
-        Process::environment.globals["EWCI POST DIAG ENERGY"] = post_diag_energy;
+        psi::Process::environment.globals["EWCI POST DIAG ENERGY"] = post_diag_energy;
 
         outfile->Printf("\n\n  * ElementwiseCI Post-diag   Energy    = %18.12f Eh", 1,
                         post_diag_energy);
@@ -939,8 +939,8 @@ double ElementwiseCI::initial_guess(det_hashvec& dets_hashvec, std::vector<doubl
     sparse_solver.set_maxiter_davidson(options_.get_int("DL_MAXITER"));
     sparse_solver.set_spin_project(true);
 
-    SharedMatrix evecs(new Matrix("Eigenvectors", guess_size, nroot_));
-    SharedVector evals(new Vector("Eigenvalues", nroot_));
+    psi::SharedMatrix evecs(new psi::Matrix("Eigenvectors", guess_size, nroot_));
+    psi::SharedVector evals(new Vector("Eigenvalues", nroot_));
     //  std::vector<DynamicBitsetDeterminant> dyn_dets;
     // for (auto& d : dets){
     //   DynamicBitsetDeterminant dbs = d.to_dynamic_bitset();
@@ -1030,7 +1030,7 @@ void ElementwiseCI::propagate_DL(det_hashvec& dets_hashvec, std::vector<double>&
     std::vector<std::vector<double>> b_vec(davidson_subspace_per_root_);
     std::vector<std::vector<double>> sigma_vec(davidson_subspace_per_root_);
     std::vector<double> alpha_vec(davidson_subspace_per_root_);
-    SharedMatrix A(new Matrix(davidson_subspace_per_root_, davidson_subspace_per_root_));
+    psi::SharedMatrix A(new psi::Matrix(davidson_subspace_per_root_, davidson_subspace_per_root_));
     //    det_hash<> dets_C_hash;
     //    apply_tau_H_ref_C_symm(1.0, spawning_threshold, dets, b_vec[0], C,
     //                           dets_C_hash, 0.0);
@@ -1118,15 +1118,15 @@ void ElementwiseCI::propagate_DL(det_hashvec& dets_hashvec, std::vector<double>&
         A->set(current_order, current_order, dot(b_vec[current_order], sigma_vec[current_order]));
 
         current_order++;
-        SharedMatrix G(new Matrix(current_order, current_order));
+        psi::SharedMatrix G(new psi::Matrix(current_order, current_order));
 
         for (size_t k = 0; k < current_order; k++) {
             for (size_t j = 0; j < current_order; j++) {
                 G->set(k, j, A->get(k, j));
             }
         }
-        SharedMatrix evecs(new Matrix(current_order, current_order));
-        SharedVector eigs(new Vector(current_order));
+        psi::SharedMatrix evecs(new psi::Matrix(current_order, current_order));
+        psi::SharedVector eigs(new Vector(current_order));
         G->diagonalize(evecs, eigs);
 
         double e_gradiant = -lambda;
@@ -2304,8 +2304,8 @@ double ElementwiseCI::estimate_var_energy_within_error_sigma(const det_hashvec& 
     SigmaVectorWfn2 svs(det_map, op, fci_ints_);
     size_t sub_size = svs.size();
     // allocate vectors
-    SharedVector b(new Vector("b", sub_size));
-    SharedVector sigma(new Vector("sigma", sub_size));
+    psi::SharedVector b(new Vector("b", sub_size));
+    psi::SharedVector sigma(new Vector("sigma", sub_size));
     for (size_t i = 0; i < sub_size; ++i) {
         b->set(i, C[i]);
     }
@@ -3203,4 +3203,3 @@ std::vector<std::tuple<double, int, int>> ElementwiseCI::sym_labeled_orbitals(st
     return labeled_orb;
 }
 }
-} // EndNamespaces

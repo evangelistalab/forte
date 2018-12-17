@@ -46,7 +46,7 @@
 #include "master_mrdsrg.h"
 
 using namespace ambit;
-namespace psi {
+
 namespace forte {
 
 class MRDSRG : public MASTER_DSRG {
@@ -62,7 +62,7 @@ class MRDSRG : public MASTER_DSRG {
      * @param ints A pointer to an allocated integral object
      * @param mo_space_info The MOSpaceInfo object
      */
-    MRDSRG(Reference reference, SharedWavefunction ref_wfn, Options& options,
+    MRDSRG(Reference reference, psi::SharedWavefunction ref_wfn, psi::Options& options,
            std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Destructor
@@ -78,12 +78,12 @@ class MRDSRG : public MASTER_DSRG {
     double compute_energy_sa();
 
     /// Set CASCI eigen values and eigen vectors for state averaging
-    void set_eigens(std::vector<std::vector<std::pair<SharedVector, double>>> eigens) {
+    void set_eigens(std::vector<std::vector<std::pair<psi::SharedVector, double>>> eigens) {
         eigens_ = eigens;
     }
 
     /// Set determinants in the model space
-    void set_p_spaces(std::vector<std::vector<psi::forte::Determinant>> p_spaces) {
+    void set_p_spaces(std::vector<std::vector<forte::Determinant>> p_spaces) {
         p_spaces_ = p_spaces;
     }
 
@@ -111,9 +111,9 @@ class MRDSRG : public MASTER_DSRG {
     bool nivo_;
 
     /// CASCI eigen values and eigen vectors for state averaging
-    std::vector<std::vector<std::pair<SharedVector, double>>> eigens_;
+    std::vector<std::vector<std::pair<psi::SharedVector, double>>> eigens_;
     /// Determinants in the model space
-    std::vector<std::vector<psi::forte::Determinant>> p_spaces_;
+    std::vector<std::vector<forte::Determinant>> p_spaces_;
 
     /// Fill up integrals
     void build_ints();
@@ -383,9 +383,9 @@ class MRDSRG : public MASTER_DSRG {
     /// Diagonalize the diagonal blocks of the Fock matrix
     std::vector<std::vector<double>> diagonalize_Fock_diagblocks(BlockedTensor& U);
     /// Separate an 2D ambit::Tensor according to its irrep
-    ambit::Tensor separate_tensor(ambit::Tensor& tens, const Dimension& irrep, const int& h);
+    ambit::Tensor separate_tensor(ambit::Tensor& tens, const psi::Dimension& irrep, const int& h);
     /// Combine a separated 2D ambit::Tensor
-    void combine_tensor(ambit::Tensor& tens, ambit::Tensor& tens_h, const Dimension& irrep,
+    void combine_tensor(ambit::Tensor& tens, ambit::Tensor& tens_h, const psi::Dimension& irrep,
                         const int& h);
 
     // => Useful printings <= //
@@ -443,5 +443,5 @@ class MRSRG_Print {
     std::vector<double> energies_;
 };
 }
-}
+
 #endif // _mrdsrg_h_

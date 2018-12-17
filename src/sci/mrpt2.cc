@@ -43,7 +43,8 @@
 #define omp_get_num_threads() 1
 #endif
 
-namespace psi {
+using namespace psi;
+
 namespace forte {
 
 void set_PT2_options(ForteOptions& foptions) {
@@ -51,9 +52,9 @@ void set_PT2_options(ForteOptions& foptions) {
     foptions.add_double("PT2_MAX_MEM", 1.0, " Maximum size of the determinant hash (GB)");
 }
 
-MRPT2::MRPT2(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
+MRPT2::MRPT2(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
              std::shared_ptr<MOSpaceInfo> mo_space_info, DeterminantHashVec& reference,
-             SharedMatrix evecs, SharedVector evals)
+             psi::SharedMatrix evecs, psi::SharedVector evals)
     : Wavefunction(options), ints_(ints), reference_(reference), mo_space_info_(mo_space_info),
       evecs_(evecs), evals_(evals) {
     shallow_copy(ref_wfn);
@@ -308,6 +309,5 @@ double MRPT2::energy_kernel(int bin, int nbin) {
         energy += (det.second * det.second) / (E_0 - fci_ints_->energy(det.first));
     }
     return energy;
-}
 }
 }

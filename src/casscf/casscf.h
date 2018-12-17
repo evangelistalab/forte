@@ -42,10 +42,10 @@
 #include "fci/fci_integrals.h"
 #include "orbital-helpers/semi_canonicalize.h"
 
-namespace psi {
+
 namespace forte {
 
-class CASSCF : public Wavefunction {
+class CASSCF : public psi::Wavefunction {
   public:
     /**
      * @brief CASSCF::CASSCF
@@ -59,7 +59,7 @@ class CASSCF : public Wavefunction {
      * This reference has a nice algorithmic flowchart.  Look it up
      *
      */
-    CASSCF(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
+    CASSCF(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
            std::shared_ptr<MOSpaceInfo> mo_space_info);
     /// Compute CASSCF given a 1RDM and 2RDM
     void compute_casscf();
@@ -87,15 +87,15 @@ class CASSCF : public Wavefunction {
     /// The energy computed in FCI with updates from CASSCF and CI
     double E_casscf_;
     /// The OPtions object
-    Options options_;
+    psi::Options options_;
     std::shared_ptr<ForteIntegrals> ints_;
     /// The mo_space_info
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
 
-    std::shared_ptr<Wavefunction> reference_wavefunction_;
+    std::shared_ptr<psi::Wavefunction> reference_wavefunction_;
 
     /// The dimension for number of molecular orbitals (CORRELATED or ALL)
-    Dimension nmopi_;
+    psi::Dimension nmopi_;
     /// The number of correlated molecular orbitals (Restricted Core + Active +
     /// Restricted_UOCC + Frozen_Virt
     size_t nmo_;
@@ -104,7 +104,7 @@ class CASSCF : public Wavefunction {
     /// The number of irreps
     size_t nirrep_;
     /// The number of SO (AO for C matrices)
-    Dimension nsopi_;
+    psi::Dimension nsopi_;
     /// the number of restricted_docc
     size_t nrdocc_;
     /// The number of frozen_docc
@@ -118,11 +118,11 @@ class CASSCF : public Wavefunction {
     /// Equation 9
 
     /// The Fock matrix due to Frozen core orbitals
-    SharedMatrix F_froze_;
+    psi::SharedMatrix F_froze_;
     /// The One Electron integrals (H = T + V)  (in AO basis)
-    SharedMatrix Hcore_;
+    psi::SharedMatrix Hcore_;
     /// The JK object.  Built in constructor
-    std::shared_ptr<JK> JK_;
+    std::shared_ptr<psi::JK> JK_;
     /// Perform a CAS-CI with the updated MO coefficients
     void cas_ci();
     /// Sets up the FCISolver
@@ -134,17 +134,17 @@ class CASSCF : public Wavefunction {
     /// Read all the mospace info and assign correct dimensions
     void startup();
     /// Compute overlap between old_c and new_c
-    void overlap_orbitals(const SharedMatrix& C_old, const SharedMatrix& C_new);
+    void overlap_orbitals(const psi::SharedMatrix& C_old, const psi::SharedMatrix& C_new);
     void overlap_coefficients();
     void write_orbitals_molden();
     /// Diagonalize F_I + F_A
-    std::pair<SharedMatrix, SharedVector> casscf_canonicalize();
+    std::pair<psi::SharedMatrix, psi::SharedVector> casscf_canonicalize();
 
     /// DEBUG PRINTING
     bool casscf_debug_print_;
     /// Freeze the core and leave them unchanged
     /// set frozen_core_orbitals
-    std::shared_ptr<Matrix> set_frozen_core_orbitals();
+    std::shared_ptr<psi::Matrix> set_frozen_core_orbitals();
     /// Compute the restricted_one_body operator for FCI(done also in
     /// OrbitalOptimizer)
 
@@ -154,14 +154,14 @@ class CASSCF : public Wavefunction {
     std::vector<std::vector<double>> compute_restricted_docc_operator();
 
     double scalar_energy_ = 0.0;
-    /// The Dimensions for the major orbitals spaces involved in CASSCF
+    /// The psi::Dimensions for the major orbitals spaces involved in CASSCF
     /// Trying to get these all in the startup, so I can use them repeatly
     /// rather than create them in different places
-    Dimension frozen_docc_dim_;
-    Dimension restricted_docc_dim_;
-    Dimension active_dim_;
-    Dimension restricted_uocc_dim_;
-    Dimension inactive_docc_dim_;
+    psi::Dimension frozen_docc_dim_;
+    psi::Dimension restricted_docc_dim_;
+    psi::Dimension active_dim_;
+    psi::Dimension restricted_uocc_dim_;
+    psi::Dimension inactive_docc_dim_;
 
     std::vector<size_t> frozen_docc_abs_;
     std::vector<size_t> restricted_docc_abs_;
@@ -179,7 +179,6 @@ class CASSCF : public Wavefunction {
     std::vector<std::vector<std::shared_ptr<FCIWfn>>> CISolutions_;
     std::shared_ptr<FCIIntegrals> get_ci_integrals();
 };
-}
 }
 
 #endif // CASSCF_H

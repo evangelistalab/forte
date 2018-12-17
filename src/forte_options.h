@@ -33,7 +33,7 @@
 #include <string>
 #include <vector>
 
-namespace psi {
+
 namespace forte {
 
 // Types to store options
@@ -108,7 +108,7 @@ class ForteOptions {
     void add_array(const std::string& label, const std::string& description);
 
     /// Add the options to psi4's options class
-    void add_psi4_options(Options& options);
+    void add_psi4_options(psi::Options& options);
 
     /**
      * @brief Generate documentation for the options registered with this object
@@ -124,6 +124,6 @@ class ForteOptions {
     std::vector<array_opt_t> array_opts_;
 };
 } // namespace forte
-} // namespace psi
+
 
 #endif // _forte_options_h_

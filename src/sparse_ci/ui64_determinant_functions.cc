@@ -39,7 +39,7 @@
 #include "ui64_determinant.h"
 #include "stl_bitset_determinant.h"
 
-namespace psi {
+
 namespace forte {
 
 double slater_rules_single_alpha(uint64_t Ib, uint64_t Ia, uint64_t Ja,
@@ -238,6 +238,5 @@ UI64Determinant make_det<UI64Determinant, STLBitsetDeterminant>(const STLBitsetD
 
 template <> UI64Determinant make_det<UI64Determinant, UI64Determinant>(const UI64Determinant& d) {
     return d;
-}
 }
 }

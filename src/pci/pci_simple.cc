@@ -48,13 +48,13 @@
 #include "sparse_ci/ci_reference.h"
 
 using namespace psi;
-using namespace psi::forte::GeneratorType_Simple;
+using namespace forte::GeneratorType_Simple;
 
 #define USE_HASH 1
 #define DO_STATS 0
 #define ENFORCE_SYM 1
 
-namespace psi {
+
 namespace forte {
 #ifdef _OPENMP
 #include <omp.h>
@@ -100,7 +100,7 @@ void print_vector(const std::vector<double>& C, std::string description);
 
 void print_hash(det_hash<>& C, std::string description, bool print_det = false);
 
-ProjectorCI_Simple::ProjectorCI_Simple(SharedWavefunction ref_wfn, Options& options,
+ProjectorCI_Simple::ProjectorCI_Simple(psi::SharedWavefunction ref_wfn, psi::Options& options,
                                        std::shared_ptr<ForteIntegrals> ints,
                                        std::shared_ptr<MOSpaceInfo> mo_space_info)
     : Wavefunction(options), ints_(ints), mo_space_info_(mo_space_info),
@@ -765,7 +765,7 @@ double ProjectorCI_Simple::compute_energy() {
     }
     timer_off("PCI:<E>end_v");
 
-    Process::environment.globals["PCI ENERGY"] = var_energy;
+    psi::Process::environment.globals["PCI ENERGY"] = var_energy;
 
     outfile->Printf("\n\n  ==> Post-Iterations <==\n");
     outfile->Printf("\n  * Projector-CI Variational Energy     = %18.12f Eh", 1, var_energy);
@@ -797,8 +797,8 @@ double ProjectorCI_Simple::compute_energy() {
         outfile->Printf("\n\n  ==> Post-Diagonalization <==\n");
         timer_on("PCI:Post_Diag");
         //        sparse_solver.diagonalize_hamiltonian(dets,apfci_evals,apfci_evecs,nroot_,DavidsonLiuList);
-        SharedMatrix apfci_evecs(new Matrix("Eigenvectors", C.size(), nroot_));
-        SharedVector apfci_evals(new Vector("Eigenvalues", nroot_));
+        psi::SharedMatrix apfci_evecs(new psi::Matrix("Eigenvectors", C.size(), nroot_));
+        psi::SharedVector apfci_evals(new Vector("Eigenvalues", nroot_));
 
         sparse_solver.diagonalize_hamiltonian(dets, apfci_evals, apfci_evecs, nroot_,
                                               wavefunction_multiplicity_, diag_method_);
@@ -807,7 +807,7 @@ double ProjectorCI_Simple::compute_energy() {
 
         double post_diag_energy = apfci_evals->get(current_root_) + nuclear_repulsion_energy_ +
                                   fci_ints_->scalar_energy();
-        Process::environment.globals["PCI POST DIAG ENERGY"] = post_diag_energy;
+        psi::Process::environment.globals["PCI POST DIAG ENERGY"] = post_diag_energy;
 
         outfile->Printf("\n\n  * Projector-CI Post-diag   Energy     = %18.12f Eh", 1,
                         post_diag_energy);
@@ -902,8 +902,8 @@ double ProjectorCI_Simple::initial_guess(det_vec& dets, std::vector<double>& C) 
     sparse_solver.set_maxiter_davidson(options_.get_int("DL_MAXITER"));
     sparse_solver.set_spin_project(true);
 
-    SharedMatrix evecs(new Matrix("Eigenvectors", guess_size, nroot_));
-    SharedVector evals(new Vector("Eigenvalues", nroot_));
+    psi::SharedMatrix evecs(new psi::Matrix("Eigenvectors", guess_size, nroot_));
+    psi::SharedVector evals(new Vector("Eigenvalues", nroot_));
     //  std::vector<DynamicBitsetDeterminant> dyn_dets;
     // for (auto& d : dets){
     //   DynamicBitsetDeterminant dbs = d.to_dynamic_bitset();
@@ -1007,7 +1007,7 @@ void ProjectorCI_Simple::propagate_DL(det_vec& dets, std::vector<double>& C,
     std::vector<std::vector<double>> b_vec(davidson_subspace_per_root_);
     std::vector<std::vector<double>> sigma_vec(davidson_subspace_per_root_);
     std::vector<double> alpha_vec(davidson_subspace_per_root_);
-    SharedMatrix A(new Matrix(davidson_subspace_per_root_, davidson_subspace_per_root_));
+    psi::SharedMatrix A(new psi::Matrix(davidson_subspace_per_root_, davidson_subspace_per_root_));
     b_vec[0] = C;
     det_hash<> dets_C_hash;
     apply_tau_H_ref_C_symm(1.0, spawning_threshold, dets, b_vec[0], C, dets_C_hash, 0.0);
@@ -1078,15 +1078,15 @@ void ProjectorCI_Simple::propagate_DL(det_vec& dets, std::vector<double>& C,
         A->set(current_order, current_order, dot(b_vec[current_order], sigma_vec[current_order]));
 
         current_order++;
-        SharedMatrix G(new Matrix(current_order, current_order));
+        psi::SharedMatrix G(new psi::Matrix(current_order, current_order));
 
         for (size_t k = 0; k < current_order; k++) {
             for (size_t j = 0; j < current_order; j++) {
                 G->set(k, j, A->get(k, j));
             }
         }
-        SharedMatrix evecs(new Matrix(current_order, current_order));
-        SharedVector eigs(new Vector(current_order));
+        psi::SharedMatrix evecs(new psi::Matrix(current_order, current_order));
+        psi::SharedVector eigs(new Vector(current_order));
         G->diagonalize(evecs, eigs);
 
         double e_gradiant = -lambda;
@@ -2017,4 +2017,3 @@ ProjectorCI_Simple::sym_labeled_orbitals(std::string type) {
     return labeled_orb;
 }
 }
-} // EndNamespaces

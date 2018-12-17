@@ -35,10 +35,11 @@
 #include "helpers/printing.h"
 #include "es-nos.h"
 
-namespace psi {
+using namespace psi;
+
 namespace forte {
 
-ESNO::ESNO(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
+ESNO::ESNO(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
            std::shared_ptr<MOSpaceInfo> mo_space_info, DeterminantHashVec& reference)
     : Wavefunction(options), ints_(ints), reference_(reference), ref_wfn_(ref_wfn),
       mo_space_info_(mo_space_info) {
@@ -90,7 +91,7 @@ void ESNO::compute_nos() {
     local_timer add;
     get_excited_determinants();
     outfile->Printf("\n  Excitations took %1.5f s", add.get());
-    outfile->Printf("\n  Dimension of full space: %zu", reference_.size());
+    outfile->Printf("\n  psi::Dimension of full space: %zu", reference_.size());
 
     std::string sigma_alg = options_.get_str("SIGMA_BUILD_TYPE");
 
@@ -104,8 +105,8 @@ void ESNO::compute_nos() {
     }
 
     // Diagonalize Hamiltonian
-    SharedMatrix evecs;
-    SharedVector evals;
+    psi::SharedMatrix evecs;
+    psi::SharedVector evals;
 
     SparseCISolver sparse_solver(fci_ints_);
 
@@ -128,17 +129,17 @@ void ESNO::compute_nos() {
     ci_rdms.set_max_rdm(1);
 
     size_t ncmo = mo_space_info_->size("GENERALIZED PARTICLE");
-    Dimension ncmopi = mo_space_info_->get_dimension("GENERALIZED PARTICLE");
-    Dimension fdocc = mo_space_info_->get_dimension("FROZEN_DOCC");
-    Dimension nmopi = mo_space_info_->get_dimension("ALL");
+    psi::Dimension ncmopi = mo_space_info_->get_dimension("GENERALIZED PARTICLE");
+    psi::Dimension fdocc = mo_space_info_->get_dimension("FROZEN_DOCC");
+    psi::Dimension nmopi = mo_space_info_->get_dimension("ALL");
 
     std::vector<double> ordm_a(ncmo * ncmo, 0.0);
     std::vector<double> ordm_b(ncmo * ncmo, 0.0);
 
     ci_rdms.compute_1rdm(ordm_a, ordm_b, op);
 
-    SharedMatrix ordm_a_mat(new Matrix("OPDM_A", nirrep_, ncmopi, ncmopi));
-    SharedMatrix ordm_b_mat(new Matrix("OPDM_B", nirrep_, ncmopi, ncmopi));
+    psi::SharedMatrix ordm_a_mat(new psi::Matrix("OPDM_A", nirrep_, ncmopi, ncmopi));
+    psi::SharedMatrix ordm_b_mat(new psi::Matrix("OPDM_B", nirrep_, ncmopi, ncmopi));
     int offset = 0;
     for (int h = 0; h < nirrep_; ++h) {
         for (int u = 0; u < ncmopi[h]; ++u) {
@@ -151,17 +152,17 @@ void ESNO::compute_nos() {
     }
     // diagonalize ordm
     outfile->Printf("\n  Diagonalizing 1RDM");
-    SharedVector OCC_A(new Vector("ALPHA NO OCC", nirrep_, ncmopi));
-    SharedVector OCC_B(new Vector("BETA NO OCC", nirrep_, ncmopi));
-    SharedMatrix NO_A(new Matrix(nirrep_, ncmopi, ncmopi));
-    SharedMatrix NO_B(new Matrix(nirrep_, ncmopi, ncmopi));
+    psi::SharedVector OCC_A(new Vector("ALPHA NO OCC", nirrep_, ncmopi));
+    psi::SharedVector OCC_B(new Vector("BETA NO OCC", nirrep_, ncmopi));
+    psi::SharedMatrix NO_A(new psi::Matrix(nirrep_, ncmopi, ncmopi));
+    psi::SharedMatrix NO_B(new psi::Matrix(nirrep_, ncmopi, ncmopi));
 
     ordm_a_mat->diagonalize(NO_A, OCC_A, descending);
     ordm_b_mat->diagonalize(NO_B, OCC_B, descending);
 
     // Build the transformation matrix
-    SharedMatrix Ua(new Matrix("Ua", nmopi, nmopi));
-    SharedMatrix Ub(new Matrix("Ub", nmopi, nmopi));
+    psi::SharedMatrix Ua(new psi::Matrix("Ua", nmopi, nmopi));
+    psi::SharedMatrix Ub(new psi::Matrix("Ub", nmopi, nmopi));
 
     Ua->identity();
     Ub->identity();
@@ -181,10 +182,10 @@ void ESNO::compute_nos() {
     }
 
     // Transform C matrix
-    SharedMatrix Ca = ref_wfn_->Ca();
-    SharedMatrix Cb = ref_wfn_->Cb();
-    SharedMatrix Ca_new(Ca->clone());
-    SharedMatrix Cb_new(Cb->clone());
+    psi::SharedMatrix Ca = ref_wfn_->Ca();
+    psi::SharedMatrix Cb = ref_wfn_->Cb();
+    psi::SharedMatrix Ca_new(Ca->clone());
+    psi::SharedMatrix Cb_new(Cb->clone());
 
     Ca_new->gemm(false, false, 1.0, Ca, Ua, 0.0);
     Cb_new->gemm(false, false, 1.0, Cb, Ub, 0.0);
@@ -198,7 +199,7 @@ void ESNO::get_excited_determinants() {
     // Only excite into the restricted uocc
 
     auto ruocc = mo_space_info_->get_corr_abs_mo("RESTRICTED_UOCC");
-    Dimension rdoccpi = mo_space_info_->get_dimension("RESTRICTED_DOCC");
+    psi::Dimension rdoccpi = mo_space_info_->get_dimension("RESTRICTED_DOCC");
     size_t nrdo = mo_space_info_->size("RESTRICTED_DOCC");
     size_t nact = mo_space_info_->size("ACTIVE");
 
@@ -258,8 +259,8 @@ void ESNO::get_excited_determinants() {
 void ESNO::upcast_reference() {
     auto mo_sym = mo_space_info_->symmetry("GENERALIZED PARTICLE");
 
-    Dimension old_dim = mo_space_info_->get_dimension("ACTIVE");
-    Dimension new_dim = mo_space_info_->get_dimension("GENERALIZED PARTICLE");
+    psi::Dimension old_dim = mo_space_info_->get_dimension("ACTIVE");
+    psi::Dimension new_dim = mo_space_info_->get_dimension("GENERALIZED PARTICLE");
     size_t nact = mo_space_info_->size("ACTIVE");
     int n_irrep = old_dim.n();
 
@@ -309,7 +310,7 @@ std::vector<size_t> ESNO::get_excitation_space() {
 
     // First get a list of absolute position of RUOCC
     std::vector<size_t> ruocc = mo_space_info_->get_corr_abs_mo("RESTRICTED_UOCC");
-    Dimension rdocc_dim = mo_space_info_->get_dimension("RESTRICTED_DOCC");
+    psi::Dimension rdocc_dim = mo_space_info_->get_dimension("RESTRICTED_DOCC");
     std::vector<int> c_sym = mo_space_info_->symmetry("CORRELATED");
 
     int max_n = ruocc.size();
@@ -351,4 +352,4 @@ std::vector<size_t> ESNO::get_excitation_space() {
     return ex_space;
 }
 } // namespace forte
-} // namespace psi
+

@@ -58,7 +58,7 @@
 using namespace psi;
 using namespace ambit;
 
-namespace psi {
+
 namespace forte {
 
 #ifdef _OPENMP
@@ -95,7 +95,7 @@ void set_INT_options(ForteOptions& foptions) {
     foptions.add_bool("PRINT_INTS", false, "Print the one- and two-electron integrals?");
 }
 
-ForteIntegrals::ForteIntegrals(psi::Options& options, std::shared_ptr<Wavefunction> ref_wfn,
+ForteIntegrals::ForteIntegrals(psi::Options& options, std::shared_ptr<psi::Wavefunction> ref_wfn,
                                IntegralSpinRestriction restricted,
                                std::shared_ptr<MOSpaceInfo> mo_space_info)
     : options_(options), wfn_(ref_wfn), restricted_(restricted), frozen_core_energy_(0.0),
@@ -171,18 +171,18 @@ void ForteIntegrals::transform_one_electron_integrals() {
     // Now we want the reference (SCF) wavefunction
     std::shared_ptr<PSIO> psio_ = PSIO::shared_object();
 
-    SharedMatrix T = SharedMatrix(wfn_->matrix_factory()->create_matrix(PSIF_SO_T));
-    SharedMatrix V = SharedMatrix(wfn_->matrix_factory()->create_matrix(PSIF_SO_V));
+    psi::SharedMatrix T = psi::SharedMatrix(wfn_->matrix_factory()->create_matrix(PSIF_SO_T));
+    psi::SharedMatrix V = psi::SharedMatrix(wfn_->matrix_factory()->create_matrix(PSIF_SO_V));
 
     MintsHelper mints(wfn_->basisset(), options_, 0); // 0 here is to avoid printing of basis info
     T = mints.so_kinetic();
     V = mints.so_potential();
 
-    SharedMatrix Ca = wfn_->Ca();
-    SharedMatrix Cb = wfn_->Cb();
+    psi::SharedMatrix Ca = wfn_->Ca();
+    psi::SharedMatrix Cb = wfn_->Cb();
 
-    SharedMatrix Ha = T->clone();
-    SharedMatrix Hb = T->clone();
+    psi::SharedMatrix Ha = T->clone();
+    psi::SharedMatrix Hb = T->clone();
     Ha->add(V);
     Hb->add(V);
 
@@ -223,7 +223,7 @@ void ForteIntegrals::transform_one_electron_integrals() {
 void ForteIntegrals::set_fock_a(const std::vector<double>& fock_stl) {
     size_t fock_size = fock_stl.size();
     if (fock_size != ncmo_ * ncmo_) {
-        throw PSIEXCEPTION("Cannot fill in fock_matrix_a because the vector is out-of-range.");
+        throw psi::PSIEXCEPTION("Cannot fill in fock_matrix_a because the vector is out-of-range.");
     } else {
         fock_matrix_a_ = fock_stl;
     }
@@ -233,7 +233,7 @@ void ForteIntegrals::set_fock_a(const std::vector<double>& fock_stl) {
 void ForteIntegrals::set_fock_b(const std::vector<double>& fock_stl) {
     size_t fock_size = fock_stl.size();
     if (fock_size != ncmo_ * ncmo_) {
-        throw PSIEXCEPTION("Cannot fill in fock_matrix_b because the vector is out-of-range.");
+        throw psi::PSIEXCEPTION("Cannot fill in fock_matrix_b because the vector is out-of-range.");
     } else {
         fock_matrix_b_ = fock_stl;
     }
@@ -256,12 +256,12 @@ void ForteIntegrals::set_oei(size_t p, size_t q, double value, bool alpha) {
 void ForteIntegrals::compute_frozen_one_body_operator() {
     local_timer timer_frozen_one_body;
 
-    Dimension frozen_dim = mo_space_info_->get_dimension("FROZEN_DOCC");
-    Dimension nmopi = mo_space_info_->get_dimension("ALL");
+    psi::Dimension frozen_dim = mo_space_info_->get_dimension("FROZEN_DOCC");
+    psi::Dimension nmopi = mo_space_info_->get_dimension("ALL");
     // Need to get the inactive block of the C matrix
-    Dimension nsopi = wfn_->nsopi();
-    SharedMatrix Ca = wfn_->Ca();
-    SharedMatrix C_core(new Matrix("C_core", nirrep_, nsopi, frozen_dim));
+    psi::Dimension nsopi = wfn_->nsopi();
+    psi::SharedMatrix Ca = wfn_->Ca();
+    psi::SharedMatrix C_core(new psi::Matrix("C_core", nirrep_, nsopi, frozen_dim));
 
     for (int h = 0; h < nirrep_; h++) {
         for (int mu = 0; mu < nsopi[h]; mu++) {
@@ -274,10 +274,10 @@ void ForteIntegrals::compute_frozen_one_body_operator() {
     std::shared_ptr<JK> JK_core;
     if (options_.get_str("SCF_TYPE") == "GTFOCK") {
 #ifdef HAVE_JK_FACTORY
-        Process::environment.set_legacy_molecule(wfn_->molecule());
+        psi::Process::environment.set_legacy_molecule(wfn_->molecule());
         JK_core = std::shared_ptr<JK>(new GTFockJK(wfn_->basisset()));
 #else
-        throw PSIEXCEPTION("GTFock was not compiled in this version");
+        throw psi::PSIEXCEPTION("GTFock was not compiled in this version");
 #endif
     } else {
         if (options_.get_str("SCF_TYPE") == "DF") {
@@ -285,15 +285,15 @@ void ForteIntegrals::compute_frozen_one_body_operator() {
                 JK_core = JK::build_JK(wfn_->basisset(), wfn_->get_basisset("DF_BASIS_MP2"),
                                        options_, "MEM_DF");
             } else {
-                throw PSIEXCEPTION("Trying to compute the frozen one-body operator with MEM_DF but "
+                throw psi::PSIEXCEPTION("Trying to compute the frozen one-body operator with MEM_DF but "
                                    "using a non-DF integral type");
             }
         } else {
-            JK_core = JK::build_JK(wfn_->basisset(), BasisSet::zero_ao_basis_set(), options_);
+            JK_core = JK::build_JK(wfn_->basisset(), psi::BasisSet::zero_ao_basis_set(), options_);
         }
     }
 
-    JK_core->set_memory(Process::environment.get_memory() * 0.8);
+    JK_core->set_memory(psi::Process::environment.get_memory() * 0.8);
     /// Already transform everything to C1 so make sure JK does not do this.
 
     // JK_core->set_cutoff(options_.get_double("INTEGRAL_SCREENING"));
@@ -303,8 +303,8 @@ void ForteIntegrals::compute_frozen_one_body_operator() {
     // JK_core->set_allow_desymmetrization(true);
     JK_core->set_do_K(true);
 
-    std::vector<std::shared_ptr<Matrix>>& Cl = JK_core->C_left();
-    std::vector<std::shared_ptr<Matrix>>& Cr = JK_core->C_right();
+    std::vector<std::shared_ptr<psi::Matrix>>& Cl = JK_core->C_left();
+    std::vector<std::shared_ptr<psi::Matrix>>& Cr = JK_core->C_right();
 
     Cl.clear();
     Cr.clear();
@@ -313,8 +313,8 @@ void ForteIntegrals::compute_frozen_one_body_operator() {
 
     JK_core->compute();
 
-    SharedMatrix F_core = JK_core->J()[0];
-    SharedMatrix K_core = JK_core->K()[0];
+    psi::SharedMatrix F_core = JK_core->J()[0];
+    psi::SharedMatrix K_core = JK_core->K()[0];
 
     F_core->scale(2.0);
     F_core->subtract(K_core);
@@ -395,7 +395,7 @@ void ForteIntegrals::rotate_mos() {
         outfile->Printf("\n Check ROTATE_MOS array");
         outfile->Printf("\nFormat should be in group of 3s");
         outfile->Printf("\n Irrep, rotate_1, rotate_2, irrep, rotate_3, rotate_4");
-        throw PSIEXCEPTION("User specifed ROTATE_MOS incorrectly.  Check output for notes");
+        throw psi::PSIEXCEPTION("User specifed ROTATE_MOS incorrectly.  Check output for notes");
     }
     int orbital_rotate_group = (size_mo_rotate / 3);
     std::vector<std::vector<int>> rotate_mo_list;
@@ -407,7 +407,7 @@ void ForteIntegrals::rotate_mos() {
         if (rotate_mo_group[0] > nirrep_) {
             outfile->Printf("\n Irrep:%d does not match wfn_ symmetry:%d", rotate_mo_group[0],
                             nirrep_);
-            throw PSIEXCEPTION("Irrep does not match wavefunction symmetry");
+            throw psi::PSIEXCEPTION("Irrep does not match wavefunction symmetry");
         }
         rotate_mo_group[1] = options_["ROTATE_MOS"][offset_a + 1].to_integer() - 1;
         rotate_mo_group[2] = options_["ROTATE_MOS"][offset_a + 2].to_integer() - 1;
@@ -416,18 +416,18 @@ void ForteIntegrals::rotate_mos() {
         outfile->Printf("   %d   %d   %d\n", rotate_mo_group[0], rotate_mo_group[1],
                         rotate_mo_group[2]);
     }
-    SharedMatrix C_old = wfn_->Ca();
-    SharedMatrix C_new(C_old->clone());
+    psi::SharedMatrix C_old = wfn_->Ca();
+    psi::SharedMatrix C_new(C_old->clone());
 
     for (auto mo_group : rotate_mo_list) {
-        SharedVector C_mo1 = C_old->get_column(mo_group[0], mo_group[1]);
-        SharedVector C_mo2 = C_old->get_column(mo_group[0], mo_group[2]);
+        psi::SharedVector C_mo1 = C_old->get_column(mo_group[0], mo_group[1]);
+        psi::SharedVector C_mo2 = C_old->get_column(mo_group[0], mo_group[2]);
         C_new->set_column(mo_group[0], mo_group[2], C_mo1);
         C_new->set_column(mo_group[0], mo_group[1], C_mo2);
     }
     C_old->copy(C_new);
 
-    SharedMatrix Cb_old = wfn_->Cb();
+    psi::SharedMatrix Cb_old = wfn_->Cb();
     Cb_old->copy(C_new);
 }
 
@@ -506,20 +506,20 @@ void ForteIntegrals::print_ints() {
 }
 
 void ForteIntegrals::build_AOdipole_ints() {
-    std::shared_ptr<BasisSet> basisset = wfn_->basisset();
+    std::shared_ptr<psi::BasisSet> basisset = wfn_->basisset();
     std::shared_ptr<IntegralFactory> ints_fac = std::make_shared<IntegralFactory>(basisset);
     int nbf = basisset->nbf();
 
     AOdipole_ints_.clear();
     for (const std::string& direction : {"X", "Y", "Z"}) {
         std::string name = "AO Dipole " + direction;
-        AOdipole_ints_.push_back(SharedMatrix(new Matrix(name, nbf, nbf)));
+        AOdipole_ints_.push_back(std::make_shared<psi::Matrix>(name, nbf, nbf));
     }
     std::shared_ptr<OneBodyAOInt> aodOBI(ints_fac->ao_dipole());
     aodOBI->compute(AOdipole_ints_);
 }
 
-std::vector<SharedMatrix> ForteIntegrals::compute_MOdipole_ints(const bool& alpha,
+std::vector<psi::SharedMatrix> ForteIntegrals::compute_MOdipole_ints(const bool& alpha,
                                                                 const bool& resort) {
     if (alpha) {
         return MOdipole_ints_helper(wfn_->Ca_subset("AO"), wfn_->epsilon_a(), resort);
@@ -528,12 +528,12 @@ std::vector<SharedMatrix> ForteIntegrals::compute_MOdipole_ints(const bool& alph
     }
 }
 
-std::vector<SharedMatrix>
-ForteIntegrals::MOdipole_ints_helper(SharedMatrix Cao, SharedVector epsilon, const bool& resort) {
-    std::vector<SharedMatrix> MOdipole_ints;
+std::vector<psi::SharedMatrix>
+ForteIntegrals::MOdipole_ints_helper(psi::SharedMatrix Cao, psi::SharedVector epsilon, const bool& resort) {
+    std::vector<psi::SharedMatrix> MOdipole_ints;
     std::vector<std::string> names{"X", "Y", "Z"};
     for (int i = 0; i < 3; ++i) {
-        SharedMatrix modipole(AOdipole_ints_[i]->clone());
+        psi::SharedMatrix modipole(AOdipole_ints_[i]->clone());
         modipole->set_name("MO Dipole " + names[i]);
         modipole->transform(Cao);
         MOdipole_ints.push_back(modipole);
@@ -563,7 +563,7 @@ ForteIntegrals::MOdipole_ints_helper(SharedMatrix Cao, SharedVector epsilon, con
         }
 
         for (int i = 0; i < 3; ++i) {
-            SharedMatrix modipole(new Matrix("MO Dipole " + names[i], (int)nmo_, (int)nmo_));
+            psi::SharedMatrix modipole(new psi::Matrix("MO Dipole " + names[i], (int)nmo_, (int)nmo_));
             for (int p = 0; p < (int)nmo_; ++p) {
                 int np = indices[p];
                 for (int q = 0; q < (int)nmo_; ++q) {
@@ -578,4 +578,4 @@ ForteIntegrals::MOdipole_ints_helper(SharedMatrix Cao, SharedVector epsilon, con
     return MOdipole_ints;
 }
 } // namespace forte
-} // namespace psi
+

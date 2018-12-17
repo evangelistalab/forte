@@ -42,7 +42,8 @@
 #include "boost/format.hpp"
 #include "mrdsrg.h"
 
-namespace psi {
+using namespace psi;
+
 namespace forte {
 
 void MRDSRG::compute_hbar() {
@@ -425,8 +426,8 @@ void MRDSRG::compute_hbar_sequential_rotation() {
 
     size_t ncmo = core_mos_.size() + actv_mos_.size() + virt_mos_.size();
 
-    SharedMatrix aA1_m(new Matrix("A1 alpha", ncmo, ncmo));
-    SharedMatrix bA1_m(new Matrix("A1 beta", ncmo, ncmo));
+    psi::SharedMatrix aA1_m(new psi::Matrix("A1 alpha", ncmo, ncmo));
+    psi::SharedMatrix bA1_m(new psi::Matrix("A1 beta", ncmo, ncmo));
     A1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
         if (spin[0] == AlphaSpin)
             aA1_m->set(i[0], i[1], value);
@@ -840,7 +841,7 @@ double MRDSRG::compute_energy_ldsrg2() {
 
     // fail to converge
     if (failed) {
-        throw PSIEXCEPTION("The MR-LDSRG(2) computation does not converge.");
+        throw psi::PSIEXCEPTION("The MR-LDSRG(2) computation does not converge.");
     }
     final.stop();
 
@@ -1130,7 +1131,7 @@ double MRDSRG::compute_energy_ldsrg2_qc() {
 
     // fail to converge
     if (failed) {
-        throw PSIEXCEPTION("The MR-LDSRG(2)-QC computation does not converge.");
+        throw psi::PSIEXCEPTION("The MR-LDSRG(2)-QC computation does not converge.");
     }
 
     Hbar0_ = Ecorr;
@@ -1353,7 +1354,7 @@ void MRDSRG::return_amp_diis(BlockedTensor& T1, const std::vector<std::string>& 
     }
 
     if (data.size() != total_elements) {
-        throw PSIEXCEPTION("Number of elements in T1 and T2 do not match the bid data vector");
+        throw psi::PSIEXCEPTION("Number of elements in T1 and T2 do not match the bid data vector");
     }
 
     // transfer data
@@ -1371,4 +1372,4 @@ void MRDSRG::return_amp_diis(BlockedTensor& T1, const std::vector<std::string>& 
     }
 }
 } // namespace forte
-} // namespace psi
+

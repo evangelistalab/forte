@@ -36,10 +36,10 @@
 #include "cc/cc.h"
 #include "helpers/mo_space_info.h"
 
-namespace psi {
+
 namespace forte {
 
-CC::CC(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
+CC::CC(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
        std::shared_ptr<MOSpaceInfo> mo_space_info)
     : Wavefunction(options), ints_(ints), mo_space_info_(mo_space_info),
       BTF_(new BlockedTensorFactory()), tensor_type_(CoreTensor) {
@@ -53,7 +53,7 @@ CC::~CC() {}
 /// Compute the corr_level energy with fixed reference
 double CC::compute_energy() { return 0.0; }
 
-// MRDSRG::MRDSRG(Reference reference, SharedWavefunction ref_wfn, Options&
+// MRDSRG::MRDSRG(Reference reference, psi::SharedWavefunction ref_wfn, Options&
 // options,
 //               std::shared_ptr<ForteIntegrals> ints,
 //               std::shared_ptr<MOSpaceInfo> mo_space_info)
@@ -86,13 +86,13 @@ double CC::compute_energy() { return 0.0; }
 //    s_ = options_.get_double("DSRG_S");
 //    if(s_ < 0){
 //        outfile->Printf("\n  S parameter for DSRG must >= 0!");
-//        throw PSIEXCEPTION("S parameter for DSRG must >= 0!");
+//        throw psi::PSIEXCEPTION("S parameter for DSRG must >= 0!");
 //    }
 //    taylor_threshold_ = options_.get_int("TAYLOR_THRESHOLD");
 //    if(taylor_threshold_ <= 0){
 //        outfile->Printf("\n  Threshold for Taylor expansion must be an integer
 //        greater than 0!");
-//        throw PSIEXCEPTION("Threshold for Taylor expansion must be an integer
+//        throw psi::PSIEXCEPTION("Threshold for Taylor expansion must be an integer
 //        greater than 0!");
 //    }
 
@@ -318,5 +318,4 @@ void CC::startup() {
 //    outfile->Printf("\n");
 //
 //}
-}
 }

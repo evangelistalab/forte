@@ -37,14 +37,14 @@
 #include "sparse_ci/determinant.h"
 #include "helpers/mo_space_info.h"
 
-namespace psi {
+
 namespace forte {
 
-class CI_Reference // : public Wavefunction
+class CI_Reference // : public psi::Wavefunction
 {
   protected:
     // The wavefunction object
-    SharedWavefunction wfn_;
+    psi::SharedWavefunction wfn_;
 
     // Multiplicity of the reference
     int multiplicity_;
@@ -74,13 +74,13 @@ class CI_Reference // : public Wavefunction
     int nact_;
 
     // Symmetry of each active MO
-    Dimension mo_symmetry_;
+    psi::Dimension mo_symmetry_;
 
     // Number of active MOs per irrep
-    Dimension nactpi_;
+    psi::Dimension nactpi_;
 
     // Number of frozen_docc + restriced_docc MOs
-    Dimension frzcpi_;
+    psi::Dimension frzcpi_;
 
     // Returns MO energies, symmetries, and indicies, sorted
     std::vector<std::tuple<double, int, int>> sym_labeled_orbitals(std::string type);
@@ -96,7 +96,7 @@ class CI_Reference // : public Wavefunction
 
   public:
     /// Default constructor
-    CI_Reference(std::shared_ptr<Wavefunction> wfn, Options& options,
+    CI_Reference(std::shared_ptr<psi::Wavefunction> wfn, psi::Options& options,
                  std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<FCIIntegrals> fci_ints,
                  int multiplicity, double ms, int symmetry);
 
@@ -110,6 +110,5 @@ class CI_Reference // : public Wavefunction
     void set_ref_type(const std::string& ref_type) { ref_type_ = ref_type; }
 };
 }
-} // End Namespaces
 
 #endif // _ci_reference_h_

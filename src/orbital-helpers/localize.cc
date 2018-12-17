@@ -28,6 +28,7 @@
 
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libmints/molecule.h"
+#include "psi4/libmints/wavefunction.h"
 #include "psi4/libpsio/psio.h"
 #include "psi4/libpsio/psio.hpp"
 
@@ -39,10 +40,11 @@
 
 #include "localize.h"
 
-namespace psi {
+using namespace psi;
+
 namespace forte {
 
-LOCALIZE::LOCALIZE(std::shared_ptr<Wavefunction> wfn, Options& options,
+LOCALIZE::LOCALIZE(std::shared_ptr<psi::Wavefunction> wfn, psi::Options& options,
                    std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
     : wfn_(wfn), ints_(ints) {
     nfrz_ = mo_space_info->size("FROZEN_DOCC");
@@ -50,13 +52,13 @@ LOCALIZE::LOCALIZE(std::shared_ptr<Wavefunction> wfn, Options& options,
     namo_ = mo_space_info->size("ACTIVE");
 
     if (wfn_->nirrep() > 1) {
-        throw PSIEXCEPTION("\n\n ERROR: Localizer only implemented for C1 symmetry!");
+        throw psi::PSIEXCEPTION("\n\n ERROR: Localizer only implemented for C1 symmetry!");
     }
 
     int nel = 0;
-    int natom = Process::environment.molecule()->natom();
+    int natom = psi::Process::environment.molecule()->natom();
     for (int i = 0; i < natom; i++) {
-        nel += static_cast<int>(Process::environment.molecule()->Z(i));
+        nel += static_cast<int>(psi::Process::environment.molecule()->Z(i));
     }
     nel -= options.get_int("CHARGE");
 
@@ -83,10 +85,10 @@ LOCALIZE::LOCALIZE(std::shared_ptr<Wavefunction> wfn, Options& options,
 }
 
 void LOCALIZE::split_localize() {
-    SharedMatrix Ca = wfn_->Ca();
-    SharedMatrix Cb = wfn_->Cb();
+    psi::SharedMatrix Ca = wfn_->Ca();
+    psi::SharedMatrix Cb = wfn_->Cb();
 
-    Dimension nsopi = wfn_->nsopi();
+    psi::Dimension nsopi = wfn_->nsopi();
     int nirrep = wfn_->nirrep();
     int off = 0;
     if (multiplicity_ == 3) {
@@ -95,9 +97,9 @@ void LOCALIZE::split_localize() {
         off = 2;
     }
 
-    SharedMatrix Caocc(new Matrix("Caocc", nsopi[0], naocc_));
-    SharedMatrix Cavir(new Matrix("Cavir", nsopi[0], navir_));
-    SharedMatrix Caact(new Matrix("Caact", nsopi[0], off));
+    psi::SharedMatrix Caocc(new psi::Matrix("Caocc", nsopi[0], naocc_));
+    psi::SharedMatrix Cavir(new psi::Matrix("Cavir", nsopi[0], navir_));
+    psi::SharedMatrix Caact(new psi::Matrix("Caact", nsopi[0], off));
 
     for (int h = 0; h < nirrep; h++) {
         for (int mu = 0; mu < nsopi[h]; mu++) {
@@ -113,19 +115,19 @@ void LOCALIZE::split_localize() {
         }
     }
 
-    std::shared_ptr<BasisSet> primary = wfn_->basisset();
+    std::shared_ptr<psi::BasisSet> primary = wfn_->basisset();
 
     std::shared_ptr<Localizer> loc_a = Localizer::build(local_type_, primary, Caocc);
     loc_a->localize();
 
-    SharedMatrix Laocc = loc_a->L();
+    psi::SharedMatrix Laocc = loc_a->L();
 
-    std::shared_ptr<Localizer> loc_v = Localizer::build(local_type_, primary, Cavir);
+    std::shared_ptr<psi::Localizer> loc_v = psi::Localizer::build(local_type_, primary, Cavir);
     loc_v->localize();
 
-    SharedMatrix Lvir = loc_v->L();
+    psi::SharedMatrix Lvir = loc_v->L();
 
-    SharedMatrix Lact;
+    psi::SharedMatrix Lact;
     if (multiplicity_ == 3) {
         std::shared_ptr<Localizer> loc_c = Localizer::build(local_type_, primary, Caact);
         loc_c->localize();
@@ -134,18 +136,18 @@ void LOCALIZE::split_localize() {
 
     for (int h = 0; h < nirrep; ++h) {
         for (int i = 0; i < naocc_; ++i) {
-            SharedVector vec = Laocc->get_column(h, i);
+            psi::SharedVector vec = Laocc->get_column(h, i);
             Ca->set_column(h, i + nfrz_ + nrst_, vec);
             Cb->set_column(h, i + nfrz_ + nrst_, vec);
         }
         for (int i = 0; i < navir_; ++i) {
-            SharedVector vec = Lvir->get_column(h, i);
+            psi::SharedVector vec = Lvir->get_column(h, i);
             Ca->set_column(h, i + nfrz_ + nrst_ + naocc_ + off, vec);
             Cb->set_column(h, i + nfrz_ + nrst_ + naocc_ + off, vec);
         }
 
         for (int i = 0; i < off; ++i) {
-            SharedVector vec = Lact->get_column(h, i);
+            psi::SharedVector vec = Lact->get_column(h, i);
             Ca->set_column(h, i + nfrz_ + nrst_ + naocc_, vec);
             Cb->set_column(h, i + nfrz_ + nrst_ + naocc_, vec);
         }
@@ -167,14 +169,14 @@ void LOCALIZE::split_localize() {
 void LOCALIZE::full_localize() {
 
     // Build C matrices
-    SharedMatrix Ca = wfn_->Ca();
-    SharedMatrix Cb = wfn_->Cb();
-    Dimension nsopi = wfn_->nsopi();
+    psi::SharedMatrix Ca = wfn_->Ca();
+    psi::SharedMatrix Cb = wfn_->Cb();
+    psi::Dimension nsopi = wfn_->nsopi();
     int nirrep = wfn_->nirrep();
 
     size_t nact = abs_act_.size();
 
-    SharedMatrix Caact(new Matrix("Caact", nsopi[0], nact));
+    psi::SharedMatrix Caact(new psi::Matrix("Caact", nsopi[0], nact));
     for (int h = 0; h < nirrep; h++) {
         for (int mu = 0; mu < nsopi[h]; mu++) {
             for (size_t i = 0; i < nact; i++) {
@@ -184,29 +186,28 @@ void LOCALIZE::full_localize() {
     }
 
     // Localize all active together
-    std::shared_ptr<BasisSet> primary = wfn_->basisset();
+    std::shared_ptr<psi::BasisSet> primary = wfn_->basisset();
 
     std::shared_ptr<Localizer> loc_a = Localizer::build(local_type_, primary, Caact);
     loc_a->localize();
 
-    SharedMatrix U = loc_a->U();
-    SharedMatrix Laocc = loc_a->L();
+    psi::SharedMatrix U = loc_a->U();
+    psi::SharedMatrix Laocc = loc_a->L();
 
     for (int h = 0; h < nirrep; ++h) {
         for (size_t i = 0; i < nact; ++i) {
-            SharedVector vec = Laocc->get_column(h, i);
+            psi::SharedVector vec = Laocc->get_column(h, i);
             Ca->set_column(h, i + nfrz_ + nrst_, vec);
             Cb->set_column(h, i + nfrz_ + nrst_, vec);
         }
     }
     ints_->retransform_integrals();
 
-    U_ = SharedMatrix(new Matrix("U", nsopi[0], nact));
+    U_ = std::make_shared<psi::Matrix>("U", nsopi[0], nact);
     U_->copy(U);
 }
 
-SharedMatrix LOCALIZE::get_U() { return U_; }
+psi::SharedMatrix LOCALIZE::get_U() { return U_; }
 
 LOCALIZE::~LOCALIZE() {}
 }
-} // End Namespaces

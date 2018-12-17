@@ -49,13 +49,13 @@
 #include "sparse_ci/ci_reference.h"
 
 using namespace psi;
-using namespace psi::forte::GeneratorType_;
+using namespace forte::GeneratorType_;
 
 #define USE_HASH 1
 #define DO_STATS 0
 #define ENFORCE_SYM 1
 
-namespace psi {
+
 namespace forte {
 #ifdef _OPENMP
 #include <omp.h>
@@ -197,7 +197,7 @@ void print_vector(const std::vector<double>& C, std::string description) {
     outfile->Printf("\n");
 }
 
-ProjectorCI::ProjectorCI(SharedWavefunction ref_wfn, Options& options,
+ProjectorCI::ProjectorCI(psi::SharedWavefunction ref_wfn, psi::Options& options,
                          std::shared_ptr<ForteIntegrals> ints,
                          std::shared_ptr<MOSpaceInfo> mo_space_info)
     : Wavefunction(options), ints_(ints), mo_space_info_(mo_space_info),
@@ -1107,7 +1107,7 @@ double ProjectorCI::compute_energy() {
     }
     timer_off("PCI:<E>end_v");
 
-    Process::environment.globals["PCI ENERGY"] = var_energy;
+    psi::Process::environment.globals["PCI ENERGY"] = var_energy;
 
     outfile->Printf("\n\n  ==> Post-Iterations <==\n");
     outfile->Printf("\n  * Projector-CI Variational Energy     = %18.12f Eh", 1, var_energy);
@@ -1157,8 +1157,8 @@ double ProjectorCI::compute_energy() {
         outfile->Printf("\n\n  ==> Post-Diagonalization <==\n");
         timer_on("PCI:Post_Diag");
         //        sparse_solver.diagonalize_hamiltonian(dets,apfci_evals,apfci_evecs,nroot_,DavidsonLiuList);
-        SharedMatrix apfci_evecs(new Matrix("Eigenvectors", C.size(), nroot_));
-        SharedVector apfci_evals(new Vector("Eigenvalues", nroot_));
+        psi::SharedMatrix apfci_evecs(new psi::Matrix("Eigenvectors", C.size(), nroot_));
+        psi::SharedVector apfci_evals(new Vector("Eigenvalues", nroot_));
 
         sparse_solver.diagonalize_hamiltonian(dets, apfci_evals, apfci_evecs, nroot_,
                                               wavefunction_multiplicity_, diag_method_);
@@ -1167,7 +1167,7 @@ double ProjectorCI::compute_energy() {
 
         double post_diag_energy = apfci_evals->get(current_root_) + nuclear_repulsion_energy_ +
                                   fci_ints_->scalar_energy();
-        Process::environment.globals["PCI POST DIAG ENERGY"] = post_diag_energy;
+        psi::Process::environment.globals["PCI POST DIAG ENERGY"] = post_diag_energy;
 
         outfile->Printf("\n\n  * Projector-CI Post-diag   Energy     = %18.12f Eh", 1,
                         post_diag_energy);
@@ -1255,8 +1255,8 @@ double ProjectorCI::initial_guess(det_vec& dets, std::vector<double>& C) {
     sparse_solver.set_maxiter_davidson(options_.get_int("DL_MAXITER"));
     sparse_solver.set_spin_project(true);
 
-    SharedMatrix evecs(new Matrix("Eigenvectors", guess_size, nroot_));
-    SharedVector evals(new Vector("Eigenvalues", nroot_));
+    psi::SharedMatrix evecs(new psi::Matrix("Eigenvectors", guess_size, nroot_));
+    psi::SharedVector evals(new Vector("Eigenvalues", nroot_));
     //  std::vector<DynamicBitsetDeterminant> dyn_dets;
     // for (auto& d : dets){
     //   DynamicBitsetDeterminant dbs = d.to_dynamic_bitset();
@@ -1440,15 +1440,15 @@ void ProjectorCI::propagate_Lanczos(det_vec& dets, std::vector<double>& C,
         outfile->Printf("\n  Near linear dependency spotted, reduced krylov_order to %d",
                         current_order);
 
-    SharedMatrix H(new Matrix(current_order, current_order));
+    psi::SharedMatrix H(new psi::Matrix(current_order, current_order));
 
     for (size_t i = 0; i < current_order; i++) {
         for (size_t j = 0; j < current_order; j++) {
             H->set(i, j, A.get(i, j));
         }
     }
-    SharedMatrix evecs(new Matrix(current_order, current_order));
-    SharedVector eigs(new Vector(current_order));
+    psi::SharedMatrix evecs(new psi::Matrix(current_order, current_order));
+    psi::SharedVector eigs(new Vector(current_order));
     H->diagonalize(evecs, eigs);
 
     //    outfile -> Printf("\n  H:");
@@ -1469,13 +1469,13 @@ void ProjectorCI::propagate_Lanczos(det_vec& dets, std::vector<double>& C,
 
     while (ground_index != 0) {
         current_order -= ground_index;
-        H.reset(new Matrix(current_order, current_order));
+        H.reset(new psi::Matrix(current_order, current_order));
         for (size_t i = 0; i < current_order; i++) {
             for (size_t j = 0; j < current_order; j++) {
                 H->set(i, j, A.get(i, j));
             }
         }
-        evecs.reset(new Matrix(current_order, current_order));
+        evecs.reset(new psi::Matrix(current_order, current_order));
         eigs.reset(new Vector(current_order));
         H->diagonalize(evecs, eigs);
 
@@ -1532,8 +1532,8 @@ void ProjectorCI::propagate_Lanczos(det_vec& dets, std::vector<double>& C,
     //    outfile -> Printf("\n");
 
     //// Diagonalize overlap matrix BEGIN
-    //    SharedMatrix A(new Matrix (krylov_order, krylov_order));
-    //    SharedMatrix B(new Matrix (krylov_order, krylov_order));
+    //    psi::SharedMatrix A(new psi::Matrix (krylov_order, krylov_order));
+    //    psi::SharedMatrix B(new psi::Matrix (krylov_order, krylov_order));
 
     //    for (int i = 0; i < krylov_order; i++) {
     //        for (int j = i; j < krylov_order; j++) {
@@ -1553,8 +1553,8 @@ void ProjectorCI::propagate_Lanczos(det_vec& dets, std::vector<double>& C,
     //    A->print();
     //    B->print();
 
-    //    SharedMatrix evecs(new Matrix (krylov_order, krylov_order));
-    //    SharedVector evals(new Vector(krylov_order));
+    //    psi::SharedMatrix evecs(new psi::Matrix (krylov_order, krylov_order));
+    //    psi::SharedVector evals(new Vector(krylov_order));
     //    A->diagonalize(B, evecs, evals);
 
     //    evals -> print();
@@ -1600,7 +1600,7 @@ void ProjectorCI::propagate_Lanczos(det_vec& dets, std::vector<double>& C,
 
     //    int lwork = 3*krylov_order;
     //    double *work = new double[lwork];
-    //    SharedVector evals(new Vector(krylov_order));
+    //    psi::SharedVector evals(new Vector(krylov_order));
 
     //    int err = C_DSYGV(1, 'V', 'U',
     //                      krylov_order, t.get_pointer(0),
@@ -1642,7 +1642,7 @@ void ProjectorCI::propagate_DL(det_vec& dets, std::vector<double>& C, double spa
     std::vector<std::vector<double>> b_vec(davidson_subspace_per_root_);
     std::vector<std::vector<double>> sigma_vec(davidson_subspace_per_root_);
     std::vector<double> alpha_vec(davidson_subspace_per_root_);
-    SharedMatrix A(new Matrix(davidson_subspace_per_root_, davidson_subspace_per_root_));
+    psi::SharedMatrix A(new psi::Matrix(davidson_subspace_per_root_, davidson_subspace_per_root_));
     b_vec[0] = C;
     det_hash<> dets_C_hash;
     if (reference_spawning_) {
@@ -1725,15 +1725,15 @@ void ProjectorCI::propagate_DL(det_vec& dets, std::vector<double>& C, double spa
         A->set(current_order, current_order, dot(b_vec[current_order], sigma_vec[current_order]));
 
         current_order++;
-        SharedMatrix G(new Matrix(current_order, current_order));
+        psi::SharedMatrix G(new psi::Matrix(current_order, current_order));
 
         for (int k = 0; k < current_order; k++) {
             for (int j = 0; j < current_order; j++) {
                 G->set(k, j, A->get(k, j));
             }
         }
-        SharedMatrix evecs(new Matrix(current_order, current_order));
-        SharedVector eigs(new Vector(current_order));
+        psi::SharedMatrix evecs(new psi::Matrix(current_order, current_order));
+        psi::SharedVector eigs(new Vector(current_order));
         G->diagonalize(evecs, eigs);
 
         double e_gradiant = -lambda;
@@ -5407,4 +5407,3 @@ std::vector<std::tuple<double, int, int>> ProjectorCI::sym_labeled_orbitals(std:
     return labeled_orb;
 }
 }
-} // EndNamespaces

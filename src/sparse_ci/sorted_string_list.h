@@ -36,7 +36,7 @@
 #include "fci/fci_integrals.h"
 #include "sparse_ci/ui64_determinant.h"
 
-namespace psi {
+
 namespace forte {
 
 /**
@@ -66,7 +66,6 @@ class SortedStringList_UI64 {
     std::vector<size_t> map_to_hashdets_;
     std::unordered_map<UI64Determinant::bit_t, std::pair<size_t, size_t>> first_string_range_;
 };
-}
 }
 
 #endif // _sigma_vector_direct_h_

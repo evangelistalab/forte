@@ -13,7 +13,8 @@
 #include "orbital-helpers/semi_canonicalize.h"
 #include "helpers/printing.h"
 
-namespace psi {
+using namespace psi;
+
 namespace forte {
 
 void set_DWMS_options(ForteOptions& foptions) {
@@ -69,7 +70,7 @@ void set_DWMS_options(ForteOptions& foptions) {
                         "Energy convergence criteria for DWMS iteration");
 }
 
-DWMS_DSRGPT2::DWMS_DSRGPT2(SharedWavefunction ref_wfn, Options& options,
+DWMS_DSRGPT2::DWMS_DSRGPT2(psi::SharedWavefunction ref_wfn, psi::Options& options,
                            std::shared_ptr<ForteIntegrals> ints,
                            std::shared_ptr<MOSpaceInfo> mo_space_info)
     : Wavefunction(options), ints_(ints), mo_space_info_(mo_space_info) {
@@ -90,10 +91,10 @@ void DWMS_DSRGPT2::startup() {
 
     print_impl_note();
 
-    Enuc_ = Process::environment.molecule()->nuclear_repulsion_energy(
+    Enuc_ = psi::Process::environment.molecule()->nuclear_repulsion_energy(
         reference_wavefunction_->get_dipole_field_strength());
 
-    CharacterTable ct = Process::environment.molecule()->point_group()->char_table();
+    CharacterTable ct = psi::Process::environment.molecule()->point_group()->char_table();
     int nirrep = reference_wavefunction_->nirrep();
     irrep_symbol_.resize(nirrep);
     for (int h = 0; h < nirrep; ++h) {
@@ -153,31 +154,31 @@ void DWMS_DSRGPT2::print_options() {
 
 void DWMS_DSRGPT2::test_options() {
     if (zeta_ < 0.0) {
-        throw PSIEXCEPTION("DWMS_ZETA should be a value greater or equal than 0.0!");
+        throw psi::PSIEXCEPTION("DWMS_ZETA should be a value greater or equal than 0.0!");
     }
 
     std::string actv_type = options_.get_str("FCIMO_ACTV_TYPE");
     if (actv_type == "CIS" || actv_type == "CISD") {
-        throw PSIEXCEPTION("VCIS and VCISD are not supported for DWMS-DSRG-PT yet!");
+        throw psi::PSIEXCEPTION("VCIS and VCISD are not supported for DWMS-DSRG-PT yet!");
     }
 
     if (do_hbar3_ && (dwms_ref_ == "PT3" || dwms_corrlv_ == "PT3")) {
-        throw PSIEXCEPTION("DSRG-MRPT3 does not support FORM_HBAR3 yet!");
+        throw psi::PSIEXCEPTION("DSRG-MRPT3 does not support FORM_HBAR3 yet!");
     }
 
     if (dwms_corrlv_ == "PT3" && (algorithm_ == "MS" || algorithm_ == "XMS")) {
-        throw PSIEXCEPTION("DWMS-DSRG-PT3 does not support MS or XMS algorithm yet!");
+        throw psi::PSIEXCEPTION("DWMS-DSRG-PT3 does not support MS or XMS algorithm yet!");
     }
 
     if (do_delta_amp_) {
         if (eri_df_ && dwms_corrlv_ == "PT2") {
-            throw PSIEXCEPTION("DF-DSRG-MRPT2 does not support DWMS_DELTA_AMP = TRUE!");
+            throw psi::PSIEXCEPTION("DF-DSRG-MRPT2 does not support DWMS_DELTA_AMP = TRUE!");
         }
         if (dwms_corrlv_ == "PT3") {
-            throw PSIEXCEPTION("DSRG-MRPT3 does not support DWMS_DELTA_AMP = TRUE!");
+            throw psi::PSIEXCEPTION("DSRG-MRPT3 does not support DWMS_DELTA_AMP = TRUE!");
         }
         if (!do_hbar3_) {
-            throw PSIEXCEPTION("3-body terms should be included when DWMS_DELTA_AMP = TRUE!");
+            throw psi::PSIEXCEPTION("3-body terms should be included when DWMS_DELTA_AMP = TRUE!");
         }
     }
 }
@@ -517,7 +518,7 @@ void DWMS_DSRGPT2::compute_dwsa_energy_iterate(std::shared_ptr<FCI_MO>& fci_mo) 
 
                 std::stringstream ss;
                 ss << "ITER " << dwms_niter_ << " ENERGY ROOT " << counter;
-                Process::environment.globals[ss.str()] = Ept_[n][i];
+                psi::Process::environment.globals[ss.str()] = Ept_[n][i];
                 counter += 1;
             }
             outfile->Printf("\n    %s", dash.c_str());
@@ -547,7 +548,7 @@ void DWMS_DSRGPT2::compute_dwsa_energy_iterate(std::shared_ptr<FCI_MO>& fci_mo) 
         }
         print_energy_list("DW-DSRG" + dwms_corrlv_, Ept_, sa_info, true);
 
-        throw PSIEXCEPTION("DWMS iterations did not converge!");
+        throw psi::PSIEXCEPTION("DWMS iterations did not converge!");
     }
 }
 
@@ -558,7 +559,7 @@ void DWMS_DSRGPT2::compute_dwsa_energy(std::shared_ptr<FCI_MO>& fci_mo) {
     Ept_.resize(nentry);
 
     // eigens for iterative procedure
-    std::vector<std::vector<std::pair<SharedVector, double>>> eigens_new;
+    std::vector<std::vector<std::pair<psi::SharedVector, double>>> eigens_new;
     // old eigens
     auto eigens = fci_mo->eigens();
 
@@ -586,7 +587,7 @@ void DWMS_DSRGPT2::compute_dwsa_energy(std::shared_ptr<FCI_MO>& fci_mo) {
         print_title(entry_title);
 
         // prepare Heff
-        SharedMatrix Heff(new Matrix("Heff " + entry_name, nroots, nroots));
+        psi::SharedMatrix Heff(new psi::Matrix("Heff " + entry_name, nroots, nroots));
 
         // vector of T1, T2, and summed 1st-order Hbar
         std::vector<ambit::BlockedTensor> T1s, T2s, RH1s, RH2s;
@@ -657,8 +658,8 @@ void DWMS_DSRGPT2::compute_dwsa_energy(std::shared_ptr<FCI_MO>& fci_mo) {
         Heff->print();
 
         // diagonalize Heff and print eigen vectors
-        SharedMatrix U(new Matrix("U of Heff", nroots, nroots));
-        SharedVector Ems(new Vector("MS Energies", nroots));
+        psi::SharedMatrix U(new psi::Matrix("U of Heff", nroots, nroots));
+        psi::SharedVector Ems(new Vector("MS Energies", nroots));
         Heff->diagonalize(U, Ems);
         U->eivprint(Ems);
 
@@ -723,19 +724,19 @@ void DWMS_DSRGPT2::compute_dwsa_energy(std::shared_ptr<FCI_MO>& fci_mo) {
     }
 }
 
-std::vector<std::pair<SharedVector, double>>
-DWMS_DSRGPT2::compute_new_eigen(const std::vector<std::pair<SharedVector, double>>& old_eigen,
-                                SharedVector new_vals, SharedMatrix new_vecs) {
+std::vector<std::pair<psi::SharedVector, double>>
+DWMS_DSRGPT2::compute_new_eigen(const std::vector<std::pair<psi::SharedVector, double>>& old_eigen,
+                                psi::SharedVector new_vals, psi::SharedMatrix new_vecs) {
     int nroots = new_vals->dim();
     int ndets = (old_eigen[0].first)->dim();
-    std::vector<std::pair<SharedVector, double>> out;
+    std::vector<std::pair<psi::SharedVector, double>> out;
     out.reserve(nroots);
 
     for (int i = 0; i < nroots; ++i) {
-        SharedVector vec(new Vector("New Eigen Vector State " + std::to_string(i), ndets));
-        SharedVector vec_root = new_vecs->get_column(0, i);
+        psi::SharedVector vec(new Vector("New Eigen Vector State " + std::to_string(i), ndets));
+        psi::SharedVector vec_root = new_vecs->get_column(0, i);
         for (int j = 0; j < nroots; ++j) {
-            SharedVector temp((old_eigen[j].first)->clone());
+            psi::SharedVector temp((old_eigen[j].first)->clone());
             temp->scale(vec_root->get(j));
             vec->add(temp);
         }
@@ -775,8 +776,8 @@ void DWMS_DSRGPT2::compute_dwms_energy(std::shared_ptr<FCI_MO>& fci_mo) {
         print_title(entry_title);
 
         // prepare Heff
-        SharedMatrix Heff(new Matrix("Heff " + entry_name, nroots, nroots));
-        SharedMatrix Heff_sym(new Matrix("Symmetrized Heff " + entry_name, nroots, nroots));
+        psi::SharedMatrix Heff(new psi::Matrix("Heff " + entry_name, nroots, nroots));
+        psi::SharedMatrix Heff_sym(new psi::Matrix("Symmetrized Heff " + entry_name, nroots, nroots));
 
         // loop over states of current symmetry
         for (int M = 0; M < nroots; ++M) {
@@ -871,8 +872,8 @@ void DWMS_DSRGPT2::compute_dwms_energy(std::shared_ptr<FCI_MO>& fci_mo) {
         Heff_sym->print();
 
         // diagonalize Heff and print eigen vectors
-        SharedMatrix U(new Matrix("U of Heff (Symmetrized)", nroots, nroots));
-        SharedVector Ems(new Vector("MS Energies", nroots));
+        psi::SharedMatrix U(new psi::Matrix("U of Heff (Symmetrized)", nroots, nroots));
+        psi::SharedVector Ems(new Vector("MS Energies", nroots));
         Heff_sym->diagonalize(U, Ems);
         U->eivprint(Ems);
 
@@ -1010,7 +1011,7 @@ void DWMS_DSRGPT2::print_energy_list(
     const std::vector<std::tuple<int, int, int, std::vector<double>>>& sa_info, bool pass_process) {
 
     if (sa_info.size() != energy.size()) {
-        throw PSIEXCEPTION("Mismatching sizes between energy list and sa_info list");
+        throw psi::PSIEXCEPTION("Mismatching sizes between energy list and sa_info list");
     }
 
     outfile->Printf("\n    Multi.  Irrep.  No.    %20s", name.c_str());
@@ -1025,7 +1026,7 @@ void DWMS_DSRGPT2::print_energy_list(
             outfile->Printf("\n     %3d     %3s    %2d   %22.14f", multi,
                             irrep_symbol_[irrep].c_str(), i, energy[n][i]);
             if (pass_process) {
-                Process::environment.globals["ENERGY ROOT " + std::to_string(counter)] =
+                psi::Process::environment.globals["ENERGY ROOT " + std::to_string(counter)] =
                     energy[n][i];
             }
             counter += 1;
@@ -1048,7 +1049,7 @@ void DWMS_DSRGPT2::compute_dwms_energy_separated_H(std::shared_ptr<FCI_MO>& fci_
         Ept_[n].resize(nroots);
 
         // save the re-diagonalized eigen vectors
-        std::vector<SharedVector> evecs_new;
+        std::vector<psi::SharedVector> evecs_new;
         evecs_new.resize(nroots);
 
         // save the previous projected roots
@@ -1124,7 +1125,7 @@ std::vector<std::tuple<int, int, int, std::vector<double>>> DWMS_DSRGPT2::comput
 
     size_t nentry = sa_info.size();
     if (nentry != energy.size()) {
-        throw PSIEXCEPTION("Mismatching sizes between energy list and sa_info list");
+        throw psi::PSIEXCEPTION("Mismatching sizes between energy list and sa_info list");
     }
 
     // new weights
@@ -1184,12 +1185,12 @@ void DWMS_DSRGPT2::print_title(const std::string& title) {
     outfile->Printf("\n  %s\n", std::string(title_size, '=').c_str());
 }
 
-void DWMS_DSRGPT2::print_overlap(const std::vector<SharedVector>& evecs, const std::string& Sname) {
+void DWMS_DSRGPT2::print_overlap(const std::vector<psi::SharedVector>& evecs, const std::string& Sname) {
     print_h2(Sname);
     outfile->Printf("\n");
 
     int nroots = evecs.size();
-    SharedMatrix S(new Matrix("S", nroots, nroots));
+    psi::SharedMatrix S(new psi::Matrix("S", nroots, nroots));
 
     for (int i = 0; i < nroots; ++i) {
         for (int j = i; j < nroots; ++j) {
@@ -1200,6 +1201,5 @@ void DWMS_DSRGPT2::print_overlap(const std::vector<SharedVector>& evecs, const s
     }
 
     S->print();
-}
 }
 }

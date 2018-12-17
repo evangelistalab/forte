@@ -46,10 +46,11 @@
 
 using namespace ambit;
 
-namespace psi {
+using namespace psi;
+
 namespace forte {
 
-SOMRDSRG::SOMRDSRG(Reference reference, SharedWavefunction ref_wfn, Options& options,
+SOMRDSRG::SOMRDSRG(Reference reference, psi::SharedWavefunction ref_wfn, psi::Options& options,
                    std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
     : Wavefunction(options), reference_(reference), ints_(ints), mo_space_info_(mo_space_info),
       tensor_type_(CoreTensor), BTF(new BlockedTensorFactory()) {
@@ -762,8 +763,8 @@ double SOMRDSRG::compute_energy() {
     outfile->Printf("\n  * SO-MR-DSRG total energy            = %25.15f\n", old_energy);
 
     // Set some environment variables
-    Process::environment.globals["CURRENT ENERGY"] = old_energy;
-    Process::environment.globals["SO-MR-DSRG ENERGY"] = old_energy;
+    psi::Process::environment.globals["CURRENT ENERGY"] = old_energy;
+    psi::Process::environment.globals["SO-MR-DSRG ENERGY"] = old_energy;
 
     return old_energy;
 }
@@ -979,4 +980,3 @@ double SOMRDSRG::renormalized_denominator(double D) {
     }
 }
 }
-} // End Namespaces

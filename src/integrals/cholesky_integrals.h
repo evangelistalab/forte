@@ -32,8 +32,6 @@
 
 #include "integrals.h"
 
-namespace psi {
-
 class Tensor;
 
 namespace forte {
@@ -49,7 +47,7 @@ class MOSpaceInfo;
  */
 class CholeskyIntegrals : public ForteIntegrals {
   public:
-    CholeskyIntegrals(psi::Options& options, SharedWavefunction ref_wfn,
+    CholeskyIntegrals(psi::Options& options, psi::SharedWavefunction ref_wfn,
                       IntegralSpinRestriction restricted,
                       std::shared_ptr<MOSpaceInfo> mo_space_info);
     virtual ~CholeskyIntegrals();
@@ -83,20 +81,20 @@ class CholeskyIntegrals : public ForteIntegrals {
     virtual void set_tei(size_t p, size_t q, size_t r, size_t s, double value, bool alpha1,
                          bool alpha2);
 
-    virtual void make_fock_matrix(SharedMatrix gamma_a, SharedMatrix gamma_b);
+    virtual void make_fock_matrix(psi::SharedMatrix gamma_a, psi::SharedMatrix gamma_b);
 
     virtual size_t nthree() const { return nthree_; }
-    SharedMatrix L_ao_;
+    psi::SharedMatrix L_ao_;
 
   private:
     // ==> Class data <==
 
-    std::shared_ptr<Matrix> ThreeIntegral_;
+    std::shared_ptr<psi::Matrix> ThreeIntegral_;
     size_t nthree_ = 0;
 
     // ==> Class private functions <==
 
-    void resort_three(std::shared_ptr<Matrix>& threeint, std::vector<size_t>& map);
+    void resort_three(std::shared_ptr<psi::Matrix>& threeint, std::vector<size_t>& map);
     void transform_integrals();
 
     // ==> Class private virtual functions <==
@@ -106,6 +104,6 @@ class CholeskyIntegrals : public ForteIntegrals {
 };
 
 } // namespace forte
-} // namespace psi
+
 
 #endif // _cholesky_integrals_h_

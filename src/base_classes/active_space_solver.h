@@ -35,13 +35,13 @@
 #include "helpers/mo_space_info.h"
 #include "integrals/integrals.h"
 
-namespace psi {
+
 namespace forte {
 
-class ActiveSpaceSolver : public Wavefunction {
+class ActiveSpaceSolver : public psi::Wavefunction {
   public:
     // non-virtual interface
-    ActiveSpaceSolver(SharedWavefunction ref_wfn, Options& options,
+    ActiveSpaceSolver(psi::SharedWavefunction ref_wfn, psi::Options& options,
                       std::shared_ptr<ForteIntegrals> ints,
                       std::shared_ptr<MOSpaceInfo> mo_space_info);
 
@@ -62,6 +62,6 @@ class ActiveSpaceSolver : public Wavefunction {
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
 };
 } // namespace forte
-} // namespace psi
+
 
 #endif // _active_space_solver_h_

@@ -40,7 +40,7 @@
 
 #include "boost/format.hpp"
 
-namespace psi {
+
 namespace forte {
 
 class IAOBuilder {
@@ -71,11 +71,11 @@ protected:
     double condition_;
     
     /// Occupied orbitals, in primary basis
-    SharedMatrix C_;
+    psi::SharedMatrix C_;
     /// Primary orbital basis set
-    std::shared_ptr<BasisSet> primary_;
+    std::shared_ptr<psi::BasisSet> primary_;
     /// MinAO orbital baiss set
-    std::shared_ptr<BasisSet> minao_;
+    std::shared_ptr<psi::BasisSet> minao_;
 
     // => Stars Parameters <= //
     
@@ -96,9 +96,9 @@ protected:
     std::vector<int> iaos_to_atoms_;
 
     /// Overlap matrix in full basis
-    SharedMatrix S_;
+    psi::SharedMatrix S_;
     /// Non-ghosted IAOs in full basis
-    SharedMatrix A_;
+    psi::SharedMatrix A_;
     
     
     /// Set defaults
@@ -110,37 +110,37 @@ public:
     // => Constructors <= //
 
     IAOBuilder(
-        std::shared_ptr<BasisSet> primary, 
-        std::shared_ptr<BasisSet> minao, 
-        std::shared_ptr<Matrix> C);
+        std::shared_ptr<psi::BasisSet> primary,
+        std::shared_ptr<psi::BasisSet> minao,
+        std::shared_ptr<psi::Matrix> C);
     
     virtual ~IAOBuilder();
 
     /// Build IBO with defaults from Options object (including MINAO_BASIS)
     static std::shared_ptr<IAOBuilder> build(
-        std::shared_ptr<BasisSet> primary, 
-        std::shared_ptr<BasisSet> minao, 
-        std::shared_ptr<Matrix> C,
-        Options& options);
+        std::shared_ptr<psi::BasisSet> primary,
+        std::shared_ptr<psi::BasisSet> minao,
+        std::shared_ptr<psi::Matrix> C,
+        psi::Options& options);
     /// Build the IAOs for exporting
-    std::map<std::string, SharedMatrix> build_iaos();
+    std::map<std::string, psi::SharedMatrix> build_iaos();
 
-    std::vector<std::string> print_IAO(SharedMatrix A, int nmin, int nbf, SharedWavefunction wfn_);
+    std::vector<std::string> print_IAO(psi::SharedMatrix A, int nmin, int nbf, psi::SharedWavefunction wfn_);
 
-    std::map<std::string, SharedMatrix> ibo_localizer(SharedMatrix L, 
+    std::map<std::string, psi::SharedMatrix> ibo_localizer(psi::SharedMatrix L, 
                                                   const std::vector<std::vector<int> >& minao_inds, 
                                                   const std::vector<std::pair<int, int> >& rot_inds, 
                                                   double convergence,int maxiter, int power);
 
-    std::map<std::string, SharedMatrix > localize(
-        SharedMatrix Cocc,
-        SharedMatrix Focc,
+    std::map<std::string, psi::SharedMatrix > localize(
+        psi::SharedMatrix Cocc,
+        psi::SharedMatrix Focc,
         const std::vector<int>& ranges2
         );
 
-    SharedMatrix reorder_orbitals(SharedMatrix F, const std::vector<int>& ranges);
+    psi::SharedMatrix reorder_orbitals(psi::SharedMatrix F, const std::vector<int>& ranges);
 
-    SharedMatrix orbital_charges(SharedMatrix L);
+    psi::SharedMatrix orbital_charges(psi::SharedMatrix L);
 
     // => Knobs <= //
 
@@ -159,6 +159,6 @@ public:
 };
 
 }
-} // Namespaces
+
 
 #endif

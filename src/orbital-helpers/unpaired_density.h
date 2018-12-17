@@ -38,29 +38,28 @@
 #include "base_classes/reference.h"
 #include "iao_builder.h"
 
-namespace psi {
+
 
 namespace forte {
 
 class UPDensity {
   public:
-    UPDensity(std::shared_ptr<Wavefunction> wfn, std::shared_ptr<ForteIntegrals> ints, 
+    UPDensity(std::shared_ptr<psi::Wavefunction> wfn, std::shared_ptr<ForteIntegrals> ints, 
               std::shared_ptr<MOSpaceInfo> mo_space_info, 
-              Options& options, SharedMatrix Ua, SharedMatrix Ub);
+              psi::Options& options, psi::SharedMatrix Ua, psi::SharedMatrix Ub);
 
     ~UPDensity();
 
     void compute_unpaired_density(std::vector<double>& ordm_a, std::vector<double>& ordm_b);
 
   private:
-    Options& options_;
+    psi::Options& options_;
     std::shared_ptr<ForteIntegrals> ints_;
-    std::shared_ptr<Wavefunction> wfn_;
+    std::shared_ptr<psi::Wavefunction> wfn_;
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
-    SharedMatrix Uas_;
-    SharedMatrix Ubs_;
+    psi::SharedMatrix Uas_;
+    psi::SharedMatrix Ubs_;
 };
 }
-} // End Namespaces
 
 #endif

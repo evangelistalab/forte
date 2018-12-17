@@ -49,10 +49,11 @@
 #include "diskdf_integrals.h"
 
 using namespace ambit;
-namespace psi {
+using namespace psi;
+
 namespace forte {
 
-DISKDFIntegrals::DISKDFIntegrals(psi::Options& options, SharedWavefunction ref_wfn,
+DISKDFIntegrals::DISKDFIntegrals(psi::Options& options, psi::SharedWavefunction ref_wfn,
                                  IntegralSpinRestriction restricted,
                                  std::shared_ptr<MOSpaceInfo> mo_space_info)
     : ForteIntegrals(options, ref_wfn, restricted, mo_space_info) {
@@ -98,8 +99,8 @@ double DISKDFIntegrals::aptei_aa(size_t p, size_t q, size_t r, size_t s) {
     double vpqrsalphaC = 0.0;
     double vpqrsalphaE = 0.0;
 
-    SharedMatrix B1(new Matrix(1, nthree_));
-    SharedMatrix B2(new Matrix(1, nthree_));
+    psi::SharedMatrix B1(new psi::Matrix(1, nthree_));
+    psi::SharedMatrix B2(new psi::Matrix(1, nthree_));
 
     df_->fill_tensor("B", B1, A_range, p_range, r_range);
     df_->fill_tensor("B", B2, A_range, q_range, s_range);
@@ -137,8 +138,8 @@ double DISKDFIntegrals::aptei_ab(size_t p, size_t q, size_t r, size_t s) {
     std::vector<size_t> s_range = {sn, sn + 1};
 
     double vpqrsalphaC = 0.0;
-    SharedMatrix B1(new Matrix(1, nthree_));
-    SharedMatrix B2(new Matrix(1, nthree_));
+    psi::SharedMatrix B1(new psi::Matrix(1, nthree_));
+    psi::SharedMatrix B2(new psi::Matrix(1, nthree_));
 
     df_->fill_tensor("B", B1, A_range, p_range, r_range);
     df_->fill_tensor("B", B2, A_range, q_range, s_range);
@@ -171,8 +172,8 @@ double DISKDFIntegrals::aptei_bb(size_t p, size_t q, size_t r, size_t s) {
     double vpqrsalphaC = 0.0;
     double vpqrsalphaE = 0.0;
 
-    SharedMatrix B1(new Matrix(1, nthree_));
-    SharedMatrix B2(new Matrix(1, nthree_));
+    psi::SharedMatrix B1(new psi::Matrix(1, nthree_));
+    psi::SharedMatrix B2(new psi::Matrix(1, nthree_));
 
     df_->fill_tensor("B", B1, A_range, p_range, r_range);
     df_->fill_tensor("B", B2, A_range, q_range, s_range);
@@ -295,7 +296,7 @@ ambit::Tensor DISKDFIntegrals::three_integral_block(const std::vector<size_t>& A
 
     size_t pn, qn;
     if (nthree_ == A.size()) {
-        std::vector<std::shared_ptr<Matrix>> p_by_Aq;
+        std::vector<std::shared_ptr<psi::Matrix>> p_by_Aq;
         for (auto p_block : p) {
             if (frozen_core) {
                 pn = cmotomo_[p_block];
@@ -303,7 +304,7 @@ ambit::Tensor DISKDFIntegrals::three_integral_block(const std::vector<size_t>& A
                 pn = p_block;
             }
 
-            std::shared_ptr<Matrix> Aq(new Matrix("Aq", nthree_, nmo_));
+            std::shared_ptr<psi::Matrix> Aq(new psi::Matrix("Aq", nthree_, nmo_));
 
             std::vector<size_t> A_range = {A[0], A.back() + 1};
             std::vector<size_t> p_range = {pn, pn + 1};
@@ -371,14 +372,14 @@ ambit::Tensor DISKDFIntegrals::three_integral_block(const std::vector<size_t>& A
 
 void DISKDFIntegrals::set_tei(size_t, size_t, size_t, size_t, double, bool, bool) {
     outfile->Printf("\n  DISKDFIntegrals::set_tei : DISKDF integrals are read only");
-    throw PSIEXCEPTION("DISKDFIntegrals::set_tei : DISKDF integrals are read only");
+    throw psi::PSIEXCEPTION("DISKDFIntegrals::set_tei : DISKDF integrals are read only");
 }
 
 void DISKDFIntegrals::gather_integrals() {
     outfile->Printf("\n Computing Density fitted integrals \n");
 
-    std::shared_ptr<BasisSet> primary = wfn_->basisset();
-    std::shared_ptr<BasisSet> auxiliary = wfn_->get_basisset("DF_BASIS_MP2");
+    std::shared_ptr<psi::BasisSet> primary = wfn_->basisset();
+    std::shared_ptr<psi::BasisSet> auxiliary = wfn_->get_basisset("DF_BASIS_MP2");
 
     size_t nprim = primary->nbf();
     size_t naux = auxiliary->nbf();
@@ -388,10 +389,10 @@ void DISKDFIntegrals::gather_integrals() {
                     (nprim * nprim * naux * sizeof(double) / 1073741824.0));
     int_mem_ = (nprim * nprim * naux * sizeof(double));
 
-    Dimension nsopi_ = wfn_->nsopi();
-    SharedMatrix aotoso = wfn_->aotoso();
-    SharedMatrix Ca = wfn_->Ca();
-    SharedMatrix Ca_ao(new Matrix("Ca_ao", nso_, nmopi_.sum()));
+    psi::Dimension nsopi_ = wfn_->nsopi();
+    psi::SharedMatrix aotoso = wfn_->aotoso();
+    psi::SharedMatrix Ca = wfn_->Ca();
+    psi::SharedMatrix Ca_ao(new psi::Matrix("Ca_ao", nso_, nmopi_.sum()));
 
     // Transform from the SO to the AO basis
     for (int h = 0, index = 0; h < nirrep_; ++h) {
@@ -414,7 +415,7 @@ void DISKDFIntegrals::gather_integrals() {
     // Constructs the DF function
     // I used this version of build as this doesn't build all the apces and
     // assume a RHF/UHF reference
-    df_ = std::make_shared<DFHelper>(primary, auxiliary);
+    df_ = std::make_shared<psi::DFHelper>(primary, auxiliary);
     df_->initialize();
     df_->set_MO_core(false);
     // set_C clears all the orbital spaces, so this creates the space
@@ -423,7 +424,7 @@ void DISKDFIntegrals::gather_integrals() {
     df_->add_space("ALL", Ca_ao);
     // Does not add the pair_space, but says which one is should use
     df_->add_transformation("B", "ALL", "ALL", "Qpq");
-    df_->set_memory(Process::environment.get_memory() / 8L);
+    df_->set_memory(psi::Process::environment.get_memory() / 8L);
 
     // Finally computes the df integrals
     // Does the timings also
@@ -434,7 +435,7 @@ void DISKDFIntegrals::gather_integrals() {
     outfile->Printf("...Done. Timing %15.6f s", timer.get());
 }
 
-void DISKDFIntegrals::make_fock_matrix(SharedMatrix gamma_aM, SharedMatrix gamma_bM) {
+void DISKDFIntegrals::make_fock_matrix(psi::SharedMatrix gamma_aM, psi::SharedMatrix gamma_bM) {
     // Efficient calculation of fock matrix from disk
     // Since gamma_aM is very sparse (diagonal elements of core and active
     // block)
@@ -496,14 +497,14 @@ void DISKDFIntegrals::make_fock_matrix(SharedMatrix gamma_aM, SharedMatrix gamma
 
     //====Blocking information==========
     size_t int_mem_int = (nthree_ * ncmo_ * ncmo_) * sizeof(double);
-    size_t memory_input = Process::environment.get_memory() * 0.75;
+    size_t memory_input = psi::Process::environment.get_memory() * 0.75;
     size_t num_block = int_mem_int / memory_input < 1 ? 1 : int_mem_int / memory_input;
 
     int block_size = nthree_ / num_block;
     if (block_size < 1) {
         outfile->Printf("\n\n Block size is FUBAR.");
         outfile->Printf("\n Block size is %d", block_size);
-        throw PSIEXCEPTION("Block size is either 0 or negative.  Fix this problem");
+        throw psi::PSIEXCEPTION("Block size is either 0 or negative.  Fix this problem");
     }
     if (num_block >= 1) {
         outfile->Printf("\n---------Blocking Information-------\n");
@@ -614,7 +615,7 @@ ambit::Tensor DISKDFIntegrals::three_integral_block_two_index(const std::vector<
         std::vector<size_t> qrange = {0, nmo_};
         std::vector<size_t> prange = {p_min, p_max};
 
-        std::shared_ptr<Matrix> Aq(new Matrix("Aq", nthree_, nmo_));
+        std::shared_ptr<psi::Matrix> Aq(new psi::Matrix("Aq", nthree_, nmo_));
         df_->fill_tensor("B", Aq, arange, prange, qrange);
 
         if (frozen_core) {
@@ -628,7 +629,7 @@ ambit::Tensor DISKDFIntegrals::three_integral_block_two_index(const std::vector<
         }
     } else {
         outfile->Printf("\n Not implemened for variable size in A");
-        throw PSIEXCEPTION("Can only use if 2nd parameter is a size_t and A.size==nthree_");
+        throw psi::PSIEXCEPTION("Can only use if 2nd parameter is a size_t and A.size==nthree_");
     }
     return ReturnTensor;
 }
@@ -637,20 +638,20 @@ double DISKDFIntegrals::diag_aptei_aa(size_t, size_t) {
     outfile->Printf("\n Kevin seemed to find that nobody uses this function.  "
                     "It is quite slow in DISKDF");
     outfile->Printf("\n Bribe Kevin with things and he will implement it if it is needed");
-    throw PSIEXCEPTION("diag_aptei_aa is not implemented for DISKDF");
+    throw psi::PSIEXCEPTION("diag_aptei_aa is not implemented for DISKDF");
 }
 
 double DISKDFIntegrals::diag_aptei_ab(size_t, size_t) {
     outfile->Printf("\n Kevin seemed to find that nobody uses this function.  "
                     "It is quite slow in DISKDF");
     outfile->Printf("\n Bribe Kevin with things and he will implement it if it is needed");
-    throw PSIEXCEPTION("diag_aptei_ab is not implemented for DISKDF");
+    throw psi::PSIEXCEPTION("diag_aptei_ab is not implemented for DISKDF");
 }
 double DISKDFIntegrals::diag_aptei_bb(size_t, size_t) {
     outfile->Printf("\n Kevin seemed to find that nobody uses this function.  "
                     "It is quite slow in DISKDF");
     outfile->Printf("\n Bribe Kevin with things and he will implement it if it is needed");
-    throw PSIEXCEPTION("diag_aptei_bb is not implemented for DISKDF");
+    throw psi::PSIEXCEPTION("diag_aptei_bb is not implemented for DISKDF");
 }
 } // namespace forte
-} // namespace psi
+

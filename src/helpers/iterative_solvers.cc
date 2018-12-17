@@ -46,7 +46,8 @@
 //        outfile->Printf("\n    %-30s  %zu",vk.second.c_str(),vk.first); \
 //    }
 
-namespace psi {
+using namespace psi;
+
 namespace forte {
 
 DavidsonLiuSolver::DavidsonLiuSolver(size_t size, size_t nroot) : size_(size), nroot_(nroot) {
@@ -54,7 +55,7 @@ DavidsonLiuSolver::DavidsonLiuSolver(size_t size, size_t nroot) : size_(size), n
         throw std::runtime_error("DavidsonLiuSolver called with space of dimension zero.");
 }
 
-void DavidsonLiuSolver::startup(SharedVector diagonal) {
+void DavidsonLiuSolver::startup(psi::SharedVector diagonal) {
     // set space size
     collapse_size_ = std::min(collapse_per_root_ * nroot_, size_);
     subspace_size_ = std::min(subspace_per_root_ * nroot_, size_);
@@ -64,19 +65,19 @@ void DavidsonLiuSolver::startup(SharedVector diagonal) {
     iter_ = 0;
     converged_ = 0;
 
-    b_ = SharedMatrix(new Matrix("b", subspace_size_, size_));
+    b_ = std::make_shared<psi::Matrix>("b", subspace_size_, size_);
     b_->zero();
-    bnew = SharedMatrix(new Matrix("bnew", subspace_size_, size_));
-    f = SharedMatrix(new Matrix("f", subspace_size_, size_));
-    sigma_ = SharedMatrix(new Matrix("sigma", size_, subspace_size_));
+    bnew = std::make_shared<psi::Matrix>("bnew", subspace_size_, size_);
+    f = std::make_shared<psi::Matrix>("f", subspace_size_, size_);
+    sigma_ = std::make_shared<psi::Matrix>("sigma", size_, subspace_size_);
 
-    G = SharedMatrix(new Matrix("G", subspace_size_, subspace_size_));
-    S = SharedMatrix(new Matrix("S", subspace_size_, subspace_size_));
-    alpha = SharedMatrix(new Matrix("alpha", subspace_size_, subspace_size_));
+    G = std::make_shared<psi::Matrix>("G", subspace_size_, subspace_size_);
+    S = std::make_shared<psi::Matrix>("S", subspace_size_, subspace_size_);
+    alpha = std::make_shared<psi::Matrix>("alpha", subspace_size_, subspace_size_);
 
-    lambda = SharedVector(new Vector("lambda", subspace_size_));
-    lambda_old = SharedVector(new Vector("lambda", subspace_size_));
-    h_diag = SharedVector(new Vector("lambda", size_));
+    lambda = std::make_shared<psi::Vector>("lambda", subspace_size_);
+    lambda_old = std::make_shared<psi::Vector>("lambda", subspace_size_);
+    h_diag = std::make_shared<psi::Vector>("lambda", size_);
 
     h_diag->copy(*diagonal);
 }
@@ -95,7 +96,7 @@ void DavidsonLiuSolver::set_subspace_per_root(int value) { subspace_per_root_ = 
 
 size_t DavidsonLiuSolver::collapse_size() const { return collapse_size_; }
 
-void DavidsonLiuSolver::add_guess(SharedVector vec) {
+void DavidsonLiuSolver::add_guess(psi::SharedVector vec) {
     // Give the next b that does not have a sigma
     for (size_t j = 0; j < size_; ++j) {
         b_->set(basis_size_, j, vec->get(j));
@@ -103,7 +104,7 @@ void DavidsonLiuSolver::add_guess(SharedVector vec) {
     basis_size_++;
 }
 
-void DavidsonLiuSolver::get_b(SharedVector vec) {
+void DavidsonLiuSolver::get_b(psi::SharedVector vec) {
     PRINT_VARS("get_b")
     // Give the next b that does not have a sigma
     for (size_t j = 0; j < size_; ++j) {
@@ -111,7 +112,7 @@ void DavidsonLiuSolver::get_b(SharedVector vec) {
     }
 }
 
-bool DavidsonLiuSolver::add_sigma(SharedVector vec) {
+bool DavidsonLiuSolver::add_sigma(psi::SharedVector vec) {
     PRINT_VARS("add_sigma")
     // Place the new sigma vector at the end
     for (size_t j = 0; j < size_; ++j) {
@@ -125,14 +126,14 @@ void DavidsonLiuSolver::set_project_out(std::vector<sparse_vec> project_out) {
     project_out_ = project_out;
 }
 
-SharedVector DavidsonLiuSolver::eigenvalues() const { return lambda; }
+psi::SharedVector DavidsonLiuSolver::eigenvalues() const { return lambda; }
 
-SharedMatrix DavidsonLiuSolver::eigenvectors() const { return bnew; }
+psi::SharedMatrix DavidsonLiuSolver::eigenvectors() const { return bnew; }
 
-SharedVector DavidsonLiuSolver::eigenvector(size_t n) const {
+psi::SharedVector DavidsonLiuSolver::eigenvector(size_t n) const {
     double** v = bnew->pointer();
 
-    SharedVector evec(new Vector("V", size_));
+    psi::SharedVector evec(new psi::Vector("V", size_));
     for (size_t I = 0; I < size_; I++) {
         evec->set(I, v[n][I]);
     }
@@ -179,7 +180,7 @@ SolverStatus DavidsonLiuSolver::update() {
     // form preconditioned residue vectors
     form_correction_vectors();
 
-    //    SharedMatrix old_f;
+    //    psi::SharedMatrix old_f;
     //    old_f = f->clone();
     // Step #3b: Project out undesired roots
     project_out_roots(f);
@@ -235,7 +236,7 @@ void DavidsonLiuSolver::form_correction_vectors() {
     }
 }
 
-void DavidsonLiuSolver::project_out_roots(SharedMatrix v) {
+void DavidsonLiuSolver::project_out_roots(psi::SharedMatrix v) {
     double** v_p = v->pointer();
     for (size_t k = 0; k < nroot_; k++) {
         for (auto& bad_root : project_out_) {
@@ -254,7 +255,7 @@ void DavidsonLiuSolver::project_out_roots(SharedMatrix v) {
     }
 }
 
-void DavidsonLiuSolver::normalize_vectors(SharedMatrix v, size_t n) {
+void DavidsonLiuSolver::normalize_vectors(psi::SharedMatrix v, size_t n) {
     // normalize each residual
     double** v_p = v->pointer();
     for (size_t k = 0; k < n; k++) {
@@ -438,6 +439,5 @@ bool DavidsonLiuSolver::check_orthogonality() {
         }
     }
     return is_orthonormal;
-}
 }
 }

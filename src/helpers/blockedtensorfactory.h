@@ -41,7 +41,7 @@
 
 #include "integrals/integrals.h"
 
-namespace psi {
+
 namespace forte {
 
 class BlockedTensorFactory {
@@ -119,7 +119,6 @@ class BlockedTensorFactory {
                                               int how_many_active);
     std::map<std::string, std::vector<size_t>> get_mo_to_index() { return molabel_to_index_; }
 };
-}
 }
 
 #endif // BLOCKEDTENSORFACTORY_H

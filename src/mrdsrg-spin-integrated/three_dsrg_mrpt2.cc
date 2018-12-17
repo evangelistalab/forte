@@ -63,7 +63,8 @@
 
 using namespace ambit;
 
-namespace psi {
+using namespace psi;
+
 namespace forte {
 
 #ifdef _OPENMP
@@ -75,8 +76,8 @@ bool THREE_DSRG_MRPT2::have_omp_ = true;
 bool THREE_DSRG_MRPT2::have_omp_ = false;
 #endif
 
-THREE_DSRG_MRPT2::THREE_DSRG_MRPT2(Reference reference, SharedWavefunction ref_wfn,
-                                   Options& options, std::shared_ptr<ForteIntegrals> ints,
+THREE_DSRG_MRPT2::THREE_DSRG_MRPT2(Reference reference, psi::SharedWavefunction ref_wfn,
+                                   psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
                                    std::shared_ptr<MOSpaceInfo> mo_space_info)
     : MASTER_DSRG(reference, ref_wfn, options, ints, mo_space_info) {
 
@@ -502,8 +503,8 @@ double THREE_DSRG_MRPT2::compute_energy() {
     MPI_Bcast(&Hbar0_, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 #endif
 
-    Process::environment.globals["UNRELAXED ENERGY"] = Etotal;
-    Process::environment.globals["CURRENT ENERGY"] = Etotal;
+    psi::Process::environment.globals["UNRELAXED ENERGY"] = Etotal;
+    psi::Process::environment.globals["CURRENT ENERGY"] = Etotal;
 
     // use relaxation code to do SA_FULL
     if (relax_ref_ != "NONE" || multi_state_) {
@@ -1329,7 +1330,7 @@ double THREE_DSRG_MRPT2::E_VT2_2() {
 #endif
     } else {
         outfile->Printf("\n Specify a correct algorithm string");
-        throw PSIEXCEPTION("Specify either CORE FLY_LOOP FLY_AMBIT BATCH_CORE "
+        throw psi::PSIEXCEPTION("Specify either CORE FLY_LOOP FLY_AMBIT BATCH_CORE "
                            "BATCH_VIRTUAL BATCH_CORE_MPI BATCH_VIRTUAL_MPI or "
                            "other algorihm");
     }
@@ -2076,7 +2077,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core() {
     // stored in core.
     outfile->Printf("\n\n====Blocking information==========\n");
     size_t int_mem_int = (nthree_ * ncore_ * nvirtual_) * sizeof(double);
-    size_t memory_input = Process::environment.get_memory() * 0.75;
+    size_t memory_input = psi::Process::environment.get_memory() * 0.75;
     size_t num_block = int_mem_int / memory_input < 1 ? 1 : int_mem_int / memory_input;
 
     if (options_.get_int("CCVV_BATCH_NUMBER") != -1) {
@@ -2087,11 +2088,11 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core() {
     if (block_size < 1) {
         outfile->Printf("\n\n  Block size is FUBAR.");
         outfile->Printf("\n  Block size is %d", block_size);
-        throw PSIEXCEPTION("Block size is either 0 or negative.  Fix this problem");
+        throw psi::PSIEXCEPTION("Block size is either 0 or negative.  Fix this problem");
     }
     if (num_block > ncore_) {
         outfile->Printf("\n  Number of blocks can not be larger than core_");
-        throw PSIEXCEPTION("Number of blocks is larger than core.  Fix "
+        throw psi::PSIEXCEPTION("Number of blocks is larger than core.  Fix "
                            "num_block or check source code");
     }
 
@@ -2331,13 +2332,13 @@ double THREE_DSRG_MRPT2::E_VT2_2_AO_Slow() {
     double Ealpha = 0.0;
     double Emixed = 0.0;
     double Ebeta = 0.0;
-    SharedMatrix Cwfn = reference_wavefunction_->Ca();
+    psi::SharedMatrix Cwfn = reference_wavefunction_->Ca();
     if (Cwfn->nirrep() != 1)
-        throw PSIEXCEPTION("AO-DSRGMPT2 does not work with symmetry");
+        throw psi::PSIEXCEPTION("AO-DSRGMPT2 does not work with symmetry");
 
     /// Create the AtomicOrbitalHelper Class
-    SharedVector epsilon_rdocc(new Vector("EPS_RDOCC", ncore_));
-    SharedVector epsilon_virtual(new Vector("EPS_VIRTUAL", nvirtual_));
+    psi::SharedVector epsilon_rdocc(new Vector("EPS_RDOCC", ncore_));
+    psi::SharedVector epsilon_virtual(new Vector("EPS_VIRTUAL", nvirtual_));
     int core_count = 0;
     for (auto m : core_mos_) {
         epsilon_rdocc->set(core_count, Fa_[m]);
@@ -2352,16 +2353,16 @@ double THREE_DSRG_MRPT2::E_VT2_2_AO_Slow() {
     epsilon_virtual->print();
 
     AtomicOrbitalHelper ao_helper(Cwfn, epsilon_rdocc, epsilon_virtual, 1e-6, nactive_);
-    std::shared_ptr<BasisSet> primary = reference_wavefunction_->basisset();
-    std::shared_ptr<BasisSet> auxiliary = reference_wavefunction_->get_basisset("DF_BASIS_MP2");
+    std::shared_ptr<psi::BasisSet> primary = reference_wavefunction_->basisset();
+    std::shared_ptr<psi::BasisSet> auxiliary = reference_wavefunction_->get_basisset("DF_BASIS_MP2");
 
     ao_helper.Compute_AO_Screen(primary);
     ao_helper.Estimate_TransAO_Screen(primary, auxiliary);
     size_t weights = ao_helper.Weights();
-    SharedMatrix AO_Screen = ao_helper.AO_Screen();
-    SharedMatrix TransAO_Screen = ao_helper.TransAO_Screen();
-    SharedMatrix Occupied_Density = ao_helper.POcc();
-    SharedMatrix Virtual_Density = ao_helper.PVir();
+    psi::SharedMatrix AO_Screen = ao_helper.AO_Screen();
+    psi::SharedMatrix TransAO_Screen = ao_helper.TransAO_Screen();
+    psi::SharedMatrix Occupied_Density = ao_helper.POcc();
+    psi::SharedMatrix Virtual_Density = ao_helper.PVir();
     Occupied_Density->print();
     Virtual_Density->print();
     size_t nmo = static_cast<size_t>(nmo_);
@@ -2378,7 +2379,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_AO_Slow() {
     // ambit::Tensor E_weight_alpha = ambit::Tensor::build(tensor_type_, "Ew",
     // {weights});
     DFTensor df_tensor(primary, auxiliary, Cwfn, ncore_, nvirtual_);
-    SharedMatrix Qso = df_tensor.Qso();
+    psi::SharedMatrix Qso = df_tensor.Qso();
     DF_AO.iterate([&](const std::vector<size_t>& i, double& value) {
         value = Qso->get(i[0], i[1] * nmo + i[2]);
     });
@@ -2429,7 +2430,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_virtual() {
     // stored in core.
     outfile->Printf("\n\n====Blocking information==========\n");
     size_t int_mem_int = (nthree_ * ncore_ * nvirtual_) * sizeof(double);
-    size_t memory_input = Process::environment.get_memory() * 0.75;
+    size_t memory_input = psi::Process::environment.get_memory() * 0.75;
     size_t num_block = int_mem_int / memory_input < 1 ? 1 : int_mem_int / memory_input;
 
     if (options_.get_int("CCVV_BATCH_NUMBER") != -1) {
@@ -2440,11 +2441,11 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_virtual() {
     if (block_size < 1) {
         outfile->Printf("\n\n  Block size is FUBAR.");
         outfile->Printf("\n  Block size is %d", block_size);
-        throw PSIEXCEPTION("Block size is either 0 or negative.  Fix this problem");
+        throw psi::PSIEXCEPTION("Block size is either 0 or negative.  Fix this problem");
     }
     if (num_block > nvirtual_) {
         outfile->Printf("\n  Number of blocks can not be larger than core_");
-        throw PSIEXCEPTION("Number of blocks is larger than core.  Fix "
+        throw psi::PSIEXCEPTION("Number of blocks is larger than core.  Fix "
                            "num_block or check source code");
     }
 
@@ -3077,15 +3078,15 @@ void THREE_DSRG_MRPT2::form_Hbar() {
     }
 
     if (options_.get_bool("PRINT_1BODY_EVALS")) {
-        SharedMatrix Hb1 = std::make_shared<Matrix>("HB1", nactive_, nactive_);
+        psi::SharedMatrix Hb1 = std::make_shared<psi::Matrix>("HB1", nactive_, nactive_);
         for (size_t p = 0; p < nactive_; ++p) {
             for (size_t q = 0; q < nactive_; ++q) {
                 Hb1->set(p, q, Hbar1_.block("aa").data()[p * nactive_ + q]);
             }
         }
 
-        SharedMatrix evecs = std::make_shared<Matrix>("evecs", nactive_, nactive_);
-        SharedVector evals = std::make_shared<Vector>("Eigenvalues of Hbar1", nactive_);
+        psi::SharedMatrix evecs = std::make_shared<psi::Matrix>("evecs", nactive_, nactive_);
+        psi::SharedVector evals = std::make_shared<Vector>("Eigenvalues of Hbar1", nactive_);
         Hb1->diagonalize(evecs, evals);
 
         evals->print();
@@ -3123,11 +3124,11 @@ void THREE_DSRG_MRPT2::relax_reference_once() {
                         Hbar0_ + Eref_);
         outfile->Printf("\n    %-37s = %22.15f", "CD/DF DSRG-MRPT2 Total Energy (relaxed)", Erelax);
 
-        Process::environment.globals["PARTIALLY RELAXED ENERGY"] = Erelax;
-        Process::environment.globals["CURRENT ENERGY"] = Erelax;
+        psi::Process::environment.globals["PARTIALLY RELAXED ENERGY"] = Erelax;
+        psi::Process::environment.globals["CURRENT ENERGY"] = Erelax;
     } else {
         // get character table
-        CharacterTable ct = Process::environment.molecule()->point_group()->char_table();
+        CharacterTable ct = psi::Process::environment.molecule()->point_group()->char_table();
         std::vector<std::string> irrep_symbol;
         for (int h = 0; h < this->nirrep(); ++h) {
             irrep_symbol.push_back(std::string(ct.gamma(h).symbol()));
@@ -3150,24 +3151,24 @@ void THREE_DSRG_MRPT2::relax_reference_once() {
                 int ni = i + offset;
                 outfile->Printf("\n     %3d     %3s    %2d   %20.12f", multi,
                                 irrep_symbol[irrep].c_str(), i, E_relaxed[ni]);
-                Process::environment.globals["ENERGY ROOT " + std::to_string(ni)] = E_relaxed[ni];
+                psi::Process::environment.globals["ENERGY ROOT " + std::to_string(ni)] = E_relaxed[ni];
             }
             outfile->Printf("\n    %s", dash.c_str());
 
             offset += nstates;
         }
 
-        Process::environment.globals["CURRENT ENERGY"] = E_relaxed[0];
+        psi::Process::environment.globals["CURRENT ENERGY"] = E_relaxed[0];
     }
 }
 
-void THREE_DSRG_MRPT2::set_Ufull(SharedMatrix& Ua, SharedMatrix& Ub) {
+void THREE_DSRG_MRPT2::set_Ufull(psi::SharedMatrix& Ua, psi::SharedMatrix& Ub) {
     outfile->Printf("\n here");
 
-    Dimension nmopi = mo_space_info_->get_dimension("ALL");
+    psi::Dimension nmopi = mo_space_info_->get_dimension("ALL");
 
-    Ua_full_.reset(new Matrix("Ua", nmopi, nmopi));
-    Ub_full_.reset(new Matrix("Ub", nmopi, nmopi));
+    Ua_full_.reset(new psi::Matrix("Ua", nmopi, nmopi));
+    Ub_full_.reset(new psi::Matrix("Ub", nmopi, nmopi));
 
     Ua_full_->copy(Ua);
     Ub_full_->copy(Ub);
@@ -3446,10 +3447,10 @@ std::vector<double> THREE_DSRG_MRPT2::relaxed_energy(std::shared_ptr<FCIIntegral
         if (!multi_state_) {
             Erelax.push_back(Eci);
         } else {
-            std::vector<std::vector<std::pair<SharedVector, double>>> eigens = fci_mo.eigens();
+            std::vector<std::vector<std::pair<psi::SharedVector, double>>> eigens = fci_mo.eigens();
             size_t nentry = eigens.size();
             for (size_t n = 0; n < nentry; ++n) {
-                std::vector<std::pair<SharedVector, double>> eigen = eigens[n];
+                std::vector<std::pair<psi::SharedVector, double>> eigen = eigens[n];
                 size_t ni = eigen.size();
                 for (size_t i = 0; i < ni; ++i) {
                     Erelax.push_back(eigen[i].second);
@@ -3486,8 +3487,8 @@ std::vector<double> THREE_DSRG_MRPT2::relaxed_energy(std::shared_ptr<FCIIntegral
 
         // common (SS and SA) setup of FCISolver
         int ntrial_per_root = options_.get_int("NTRIAL_PER_ROOT");
-        Dimension active_dim = mo_space_info_->get_dimension("ACTIVE");
-        std::shared_ptr<Molecule> molecule = Process::environment.molecule();
+        psi::Dimension active_dim = mo_space_info_->get_dimension("ACTIVE");
+        std::shared_ptr<psi::Molecule> molecule = psi::Process::environment.molecule();
         double Enuc = molecule->nuclear_repulsion_energy(
             reference_wavefunction_->get_dipole_field_strength());
         int charge = molecule->molecular_charge();
@@ -3504,7 +3505,7 @@ std::vector<double> THREE_DSRG_MRPT2::relaxed_energy(std::shared_ptr<FCIIntegral
         // if state specific, read from fci_root and fci_nroot
         if (options_["AVG_STATE"].size() == 0) {
             // setup for FCISolver
-            int multi = Process::environment.molecule()->multiplicity();
+            int multi = psi::Process::environment.molecule()->multiplicity();
             if (options_["MULTIPLICITY"].has_changed()) {
                 multi = options_.get_int("MULTIPLICITY");
             }
@@ -3564,7 +3565,7 @@ std::vector<double> THREE_DSRG_MRPT2::relaxed_energy(std::shared_ptr<FCIIntegral
 
                 // compute energy and fill in results
                 fcisolver.compute_energy();
-                SharedVector Ems = fcisolver.eigen_vals();
+                psi::SharedVector Ems = fcisolver.eigen_vals();
                 for (int i = 0; i < nstates; ++i) {
                     Erelax.push_back(Ems->get(i) + Enuc);
                 }
@@ -3869,7 +3870,7 @@ void THREE_DSRG_MRPT2::de_normal_order() {
     outfile->Printf("\n    %-35s = %22.15f", "Total Energy (before)", Eref_ + Hbar0_);
 
     if (std::fabs(Etest - Eref_ - Hbar0_) > 100.0 * options_.get_double("E_CONVERGENCE")) {
-        throw PSIEXCEPTION("De-normal-odering failed.");
+        throw psi::PSIEXCEPTION("De-normal-odering failed.");
     }
 }
 
@@ -3877,22 +3878,22 @@ std::vector<std::vector<double>> THREE_DSRG_MRPT2::diagonalize_Fock_diagblocks(B
     // diagonal blocks identifiers (C-A-V ordering)
     std::vector<std::string> blocks{"cc", "aa", "vv", "CC", "AA", "VV"};
 
-    // map MO space label to its Dimension
-    std::map<std::string, Dimension> MOlabel_to_dimension;
+    // map MO space label to its psi::Dimension
+    std::map<std::string, psi::Dimension> MOlabel_to_dimension;
     MOlabel_to_dimension["c"] = mo_space_info_->get_dimension("RESTRICTED_DOCC");
     MOlabel_to_dimension["a"] = mo_space_info_->get_dimension("ACTIVE");
     MOlabel_to_dimension["v"] = mo_space_info_->get_dimension("RESTRICTED_UOCC");
 
     // eigen values to be returned
     size_t ncmo = mo_space_info_->size("CORRELATED");
-    Dimension corr = mo_space_info_->get_dimension("CORRELATED");
+    psi::Dimension corr = mo_space_info_->get_dimension("CORRELATED");
     std::vector<double> eigenvalues_a(ncmo, 0.0);
     std::vector<double> eigenvalues_b(ncmo, 0.0);
 
-    // map MO space label to its offset Dimension
-    std::map<std::string, Dimension> MOlabel_to_offset_dimension;
+    // map MO space label to its offset psi::Dimension
+    std::map<std::string, psi::Dimension> MOlabel_to_offset_dimension;
     int nirrep = corr.n();
-    MOlabel_to_offset_dimension["c"] = Dimension(std::vector<int>(nirrep, 0));
+    MOlabel_to_offset_dimension["c"] = psi::Dimension(std::vector<int>(nirrep, 0));
     MOlabel_to_offset_dimension["a"] = mo_space_info_->get_dimension("RESTRICTED_DOCC");
     MOlabel_to_offset_dimension["v"] =
         mo_space_info_->get_dimension("RESTRICTED_DOCC") + mo_space_info_->get_dimension("ACTIVE");
@@ -3927,7 +3928,7 @@ std::vector<std::vector<double>> THREE_DSRG_MRPT2::diagonalize_Fock_diagblocks(B
             continue;
         } else {
             std::string label(1, tolower(block[0]));
-            Dimension space = MOlabel_to_dimension[label];
+            psi::Dimension space = MOlabel_to_dimension[label];
             int nirrep = space.n();
 
             // separate Fock with irrep
@@ -3962,15 +3963,15 @@ std::vector<std::vector<double>> THREE_DSRG_MRPT2::diagonalize_Fock_diagblocks(B
     return {eigenvalues_a, eigenvalues_b};
 }
 
-ambit::Tensor THREE_DSRG_MRPT2::separate_tensor(ambit::Tensor& tens, const Dimension& irrep,
+ambit::Tensor THREE_DSRG_MRPT2::separate_tensor(ambit::Tensor& tens, const psi::Dimension& irrep,
                                                 const int& h) {
     // test tens and irrep
     size_t tens_dim = tens.dim(0);
     if (tens_dim != static_cast<size_t>(irrep.sum()) || tens_dim != tens.dim(1)) {
-        throw PSIEXCEPTION("Wrong dimension for the to-be-separated ambit Tensor.");
+        throw psi::PSIEXCEPTION("Wrong dimension for the to-be-separated ambit Tensor.");
     }
     if (h >= irrep.n()) {
-        throw PSIEXCEPTION("Ask for wrong irrep.");
+        throw psi::PSIEXCEPTION("Ask for wrong irrep.");
     }
 
     // from relative (blocks) to absolute (big tensor) index
@@ -3997,14 +3998,14 @@ ambit::Tensor THREE_DSRG_MRPT2::separate_tensor(ambit::Tensor& tens, const Dimen
 }
 
 void THREE_DSRG_MRPT2::combine_tensor(ambit::Tensor& tens, ambit::Tensor& tens_h,
-                                      const Dimension& irrep, const int& h) {
+                                      const psi::Dimension& irrep, const int& h) {
     // test tens and irrep
     if (h >= irrep.n()) {
-        throw PSIEXCEPTION("Ask for wrong irrep.");
+        throw psi::PSIEXCEPTION("Ask for wrong irrep.");
     }
     size_t tens_h_dim = tens_h.dim(0), h_dim = irrep[h];
     if (tens_h_dim != h_dim || tens_h_dim != tens_h.dim(1)) {
-        throw PSIEXCEPTION("Wrong dimension for the to-be-combined ambit Tensor.");
+        throw psi::PSIEXCEPTION("Wrong dimension for the to-be-combined ambit Tensor.");
     }
 
     // from relative (blocks) to absolute (big tensor) index
@@ -4082,7 +4083,7 @@ ambit::BlockedTensor THREE_DSRG_MRPT2::get_T1deGNO(double& T0deGNO) {
 //    for (const std::string& block : blocks) {
 //        if (!T1_.is_block(block)) {
 //            std::string error = "Error from T1(blocks): cannot find block " + block;
-//            throw PSIEXCEPTION(error);
+//            throw psi::PSIEXCEPTION(error);
 //        }
 //    }
 //    ambit::BlockedTensor out = ambit::BlockedTensor::build(tensor_type_, "T1 selected", blocks);
@@ -4095,7 +4096,7 @@ ambit::BlockedTensor THREE_DSRG_MRPT2::get_T1deGNO(double& T0deGNO) {
 //    for (const std::string& block : blocks) {
 //        if (!T1eff_.is_block(block)) {
 //            std::string error = "Error from T1deGNO(blocks): cannot find block " + block;
-//            throw PSIEXCEPTION(error);
+//            throw psi::PSIEXCEPTION(error);
 //        }
 //    }
 //    ambit::BlockedTensor out =
@@ -4109,7 +4110,7 @@ ambit::BlockedTensor THREE_DSRG_MRPT2::get_T2(const std::vector<std::string>& bl
     for (const std::string& block : blocks) {
         if (!T2_.is_block(block)) {
             std::string error = "Error from T2(blocks): cannot find block " + block;
-            throw PSIEXCEPTION(error);
+            throw psi::PSIEXCEPTION(error);
         }
     }
     ambit::BlockedTensor out = ambit::BlockedTensor::build(tensor_type_, "T2 selected", blocks);
@@ -4119,7 +4120,7 @@ ambit::BlockedTensor THREE_DSRG_MRPT2::get_T2(const std::vector<std::string>& bl
     return out;
 }
 
-void THREE_DSRG_MRPT2::rotate_amp(SharedMatrix Ua, SharedMatrix Ub, const bool& transpose,
+void THREE_DSRG_MRPT2::rotate_amp(psi::SharedMatrix Ua, psi::SharedMatrix Ub, const bool& transpose,
                                   const bool& t1eff) {
     ambit::BlockedTensor U = BTF_->build(tensor_type_, "Uorb", spin_cases({"gg"}));
 
@@ -4191,4 +4192,3 @@ void THREE_DSRG_MRPT2::rotate_amp(SharedMatrix Ua, SharedMatrix Ub, const bool& 
     }
 }
 }
-} // End Namespaces

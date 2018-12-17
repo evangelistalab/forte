@@ -45,10 +45,11 @@
 
 #define Delta(i, j) ((i == j) ? 1 : 0)
 
-namespace psi {
+using namespace psi;
+
 namespace forte {
 
-MCSRGPT2_MO::MCSRGPT2_MO(SharedWavefunction ref_wfn, Options& options,
+MCSRGPT2_MO::MCSRGPT2_MO(psi::SharedWavefunction ref_wfn, psi::Options& options,
                          std::shared_ptr<ForteIntegrals> ints,
                          std::shared_ptr<MOSpaceInfo> mo_space_info)
     : FCI_MO(ref_wfn, options, ints, mo_space_info) {
@@ -84,9 +85,9 @@ MCSRGPT2_MO::MCSRGPT2_MO(SharedWavefunction ref_wfn, Options& options,
 
     startup(options);
     if (options.get_str("CORR_LEVEL") == "SRG_PT2") {
-        Process::environment.globals["CURRENT ENERGY"] = compute_energy_srg();
+        psi::Process::environment.globals["CURRENT ENERGY"] = compute_energy_srg();
     } else {
-        Process::environment.globals["CURRENT ENERGY"] = compute_energy_dsrg();
+        psi::Process::environment.globals["CURRENT ENERGY"] = compute_energy_dsrg();
     }
 }
 
@@ -96,7 +97,7 @@ void MCSRGPT2_MO::cleanup() {
     //    delete integral_;
 }
 
-void MCSRGPT2_MO::startup(Options& options) {
+void MCSRGPT2_MO::startup(psi::Options& options) {
 
     // Source Operator
     source_ = options.get_str("SOURCE");
@@ -108,7 +109,7 @@ void MCSRGPT2_MO::startup(Options& options) {
             outfile->Printf("%s ", key.c_str());
         }
         outfile->Printf("\n");
-        throw PSIEXCEPTION("Source operator is not available.");
+        throw psi::PSIEXCEPTION("Source operator is not available.");
     }
 
     // Print Delta
@@ -121,15 +122,15 @@ void MCSRGPT2_MO::startup(Options& options) {
     // DSRG Parameters
     s_ = options.get_double("DSRG_S");
     if (s_ < 0) {
-        throw PSIEXCEPTION("DSRG_S cannot be negative numbers.");
+        throw psi::PSIEXCEPTION("DSRG_S cannot be negative numbers.");
     }
     taylor_threshold_ = options.get_int("TAYLOR_THRESHOLD");
     if (taylor_threshold_ <= 0) {
-        throw PSIEXCEPTION("TAYLOR_THRESHOLD must be an integer greater than 0.");
+        throw psi::PSIEXCEPTION("TAYLOR_THRESHOLD must be an integer greater than 0.");
     }
     expo_delta_ = options.get_double("DSRG_POWER");
     if (expo_delta_ <= 1.0) {
-        throw PSIEXCEPTION("DELTA_EXPONENT must be greater than 1.0.");
+        throw psi::PSIEXCEPTION("DELTA_EXPONENT must be greater than 1.0.");
     }
     double e_conv = -log10(options.get_double("E_CONVERGENCE"));
     taylor_order_ = floor((e_conv / taylor_threshold_ + 1.0) / expo_delta_) + 1;
@@ -839,7 +840,7 @@ inline bool ReverseSortT2(const tuple<double, size_t, size_t, size_t, size_t>& l
 }
 
 void MCSRGPT2_MO::Check_T2(const string& x, const d4& M, double& Norm, double& MaxT,
-                           Options& options) {
+                           psi::Options& options) {
     timer_on("Check T2");
     size_t ntamp = options.get_int("NTAMP");
     double intruder = options.get_double("INTRUDER_TAMP");
@@ -945,7 +946,7 @@ inline bool ReverseSortT1(const tuple<double, size_t, size_t>& lhs,
 }
 
 void MCSRGPT2_MO::Check_T1(const string& x, const d2& M, double& Norm, double& MaxT,
-                           Options& options) {
+                           psi::Options& options) {
     timer_on("Check T1");
     size_t ntamp = options.get_int("NTAMP");
     double intruder = options.get_double("INTRUDER_TAMP");
@@ -3273,6 +3274,5 @@ double MCSRGPT2_MO::compute_energy_srg() {
     }
 
     return Etotal;
-}
 }
 }

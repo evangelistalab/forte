@@ -40,7 +40,8 @@
 #include "ci-no.h"
 //#include "hash_vector.h"
 
-namespace psi {
+using namespace psi;
+
 namespace forte {
 
 #ifdef _OPENMP
@@ -52,7 +53,7 @@ namespace forte {
 #define omp_get_num_threads() 1
 #endif
 
-// std::string dimension_to_string(Dimension dim) {
+// std::string dimension_to_string(psi::Dimension dim) {
 //    std::string s = "[";
 //    int nirrep = dim.n();
 //    for (int h = 0; h < nirrep; h++) {
@@ -85,7 +86,7 @@ void set_MRCINO_options(ForteOptions& foptions) {
                                             "or not");
 }
 
-MRCINO::MRCINO(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
+MRCINO::MRCINO(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
                std::shared_ptr<MOSpaceInfo> mo_space_info)
     : Wavefunction(options), ints_(ints), mo_space_info_(mo_space_info) {
     // Copy the wavefunction information
@@ -118,8 +119,8 @@ double MRCINO::compute_energy() {
 
     CharacterTable ct = molecule_->point_group()->char_table();
 
-    SharedMatrix Density_a(new Matrix(corrpi_, corrpi_));
-    SharedMatrix Density_b(new Matrix(corrpi_, corrpi_));
+    psi::SharedMatrix Density_a(new psi::Matrix(corrpi_, corrpi_));
+    psi::SharedMatrix Density_b(new psi::Matrix(corrpi_, corrpi_));
     int sum = 0;
 
     // Build CAS determinants
@@ -137,11 +138,11 @@ double MRCINO::compute_energy() {
             //           // std::vector<Determinant> dets = build_dets(h);
 
             // 2. Diagonalize the Hamiltonian in this basis
-            std::pair<SharedVector, SharedMatrix> evals_evecs =
+            std::pair<psi::SharedVector, psi::SharedMatrix> evals_evecs =
                 diagonalize_hamiltonian(dets, nsolutions);
 
             // 3. Build the density matrix
-            std::pair<SharedMatrix, SharedMatrix> gamma =
+            std::pair<psi::SharedMatrix, psi::SharedMatrix> gamma =
                 build_density_matrix(dets, evals_evecs.second, nsolutions);
 
             // Add density matrix to avg_gamma;
@@ -157,10 +158,10 @@ double MRCINO::compute_energy() {
 
     // Density_a->print();
 
-    std::pair<SharedMatrix, SharedMatrix> avg_gamma = std::make_pair(Density_a, Density_b);
+    std::pair<psi::SharedMatrix, psi::SharedMatrix> avg_gamma = std::make_pair(Density_a, Density_b);
 
     // 4. Diagonalize the density matrix
-    std::tuple<SharedVector, SharedMatrix, SharedVector, SharedMatrix> no_U =
+    std::tuple<psi::SharedVector, psi::SharedMatrix, psi::SharedVector, psi::SharedMatrix> no_U =
         diagonalize_density_matrix(avg_gamma);
 
     //    // 5. Find optimal active space and transform the orbitals
@@ -469,7 +470,7 @@ std::vector<Determinant> MRCINO::build_dets(int irrep,
     return dets_irrep;
 }
 /// Diagonalize the Hamiltonian in this basis
-std::pair<SharedVector, SharedMatrix>
+std::pair<psi::SharedVector, psi::SharedMatrix>
 MRCINO::diagonalize_hamiltonian(const std::vector<Determinant>& dets, int nsolutions) {
 
     /// TODO: remove
@@ -478,7 +479,7 @@ MRCINO::diagonalize_hamiltonian(const std::vector<Determinant>& dets, int nsolut
     //        outfile->Printf("  Energy: %20.15f", fci_ints_->energy(d));
     //    }
 
-    std::pair<SharedVector, SharedMatrix> evals_evecs;
+    std::pair<psi::SharedVector, psi::SharedMatrix> evals_evecs;
 
     SparseCISolver sparse_solver(fci_ints_);
     sparse_solver.set_parallel(true);
@@ -505,8 +506,8 @@ MRCINO::diagonalize_hamiltonian(const std::vector<Determinant>& dets, int nsolut
     return evals_evecs;
 }
 /// Build the density matrix
-std::pair<SharedMatrix, SharedMatrix>
-MRCINO::build_density_matrix(const std::vector<Determinant>& dets, SharedMatrix evecs, int n) {
+std::pair<psi::SharedMatrix, psi::SharedMatrix>
+MRCINO::build_density_matrix(const std::vector<Determinant>& dets, psi::SharedMatrix evecs, int n) {
     std::vector<double> average_a_(ncmo2_);
     std::vector<double> average_b_(ncmo2_);
     std::vector<double> template_a_;
@@ -541,11 +542,11 @@ MRCINO::build_density_matrix(const std::vector<Determinant>& dets, SharedMatrix 
         ordm_b_[i] = average_b_[i] / n;
     }
     // Invert vector to matrix
-    //    Dimension nmopi = reference_wavefunction_->nmopi();
-    //    Dimension ncmopi = mo_space_info_->get_dimension("CORRELATED");
+    //    psi::Dimension nmopi = reference_wavefunction_->nmopi();
+    //    psi::Dimension ncmopi = mo_space_info_->get_dimension("CORRELATED");
 
-    std::shared_ptr<Matrix> opdm_a(new Matrix("OPDM_A", corrpi_, corrpi_));
-    std::shared_ptr<Matrix> opdm_b(new Matrix("OPDM_B", corrpi_, corrpi_));
+    std::shared_ptr<psi::Matrix> opdm_a(new psi::Matrix("OPDM_A", corrpi_, corrpi_));
+    std::shared_ptr<psi::Matrix> opdm_b(new psi::Matrix("OPDM_B", corrpi_, corrpi_));
 
     int offset = 0;
     for (int h = 0; h < nirrep_; h++) {
@@ -562,33 +563,33 @@ MRCINO::build_density_matrix(const std::vector<Determinant>& dets, SharedMatrix 
 }
 
 /// Diagonalize the density matrix
-std::tuple<SharedVector, SharedMatrix, SharedVector, SharedMatrix>
-MRCINO::diagonalize_density_matrix(std::pair<SharedMatrix, SharedMatrix> gamma) {
-    std::pair<SharedVector, SharedMatrix> no_U;
+std::tuple<psi::SharedVector, psi::SharedMatrix, psi::SharedVector, psi::SharedMatrix>
+MRCINO::diagonalize_density_matrix(std::pair<psi::SharedMatrix, psi::SharedMatrix> gamma) {
+    std::pair<psi::SharedVector, psi::SharedMatrix> no_U;
 
-    SharedVector OCC_A(new Vector("ALPHA OCCUPATION", corrpi_));
-    SharedVector OCC_B(new Vector("BETA OCCUPATION", corrpi_));
-    SharedMatrix NO_A(new Matrix(corrpi_, corrpi_));
-    SharedMatrix NO_B(new Matrix(corrpi_, corrpi_));
+    psi::SharedVector OCC_A(new Vector("ALPHA OCCUPATION", corrpi_));
+    psi::SharedVector OCC_B(new Vector("BETA OCCUPATION", corrpi_));
+    psi::SharedMatrix NO_A(new psi::Matrix(corrpi_, corrpi_));
+    psi::SharedMatrix NO_B(new psi::Matrix(corrpi_, corrpi_));
 
-    Dimension zero_dim(nirrep_);
-    Dimension aoccpi = nalphapi_ - fdoccpi_;
-    Dimension avirpi = corrpi_ - aoccpi;
+    psi::Dimension zero_dim(nirrep_);
+    psi::Dimension aoccpi = nalphapi_ - fdoccpi_;
+    psi::Dimension avirpi = corrpi_ - aoccpi;
 
     // Grab the alpha occupied/virtual block of the density matrix
     Slice aocc_slice(zero_dim, aoccpi);
-    SharedMatrix gamma_a_occ = gamma.first->get_block(aocc_slice, aocc_slice);
+    psi::SharedMatrix gamma_a_occ = gamma.first->get_block(aocc_slice, aocc_slice);
     gamma_a_occ->set_name("Gamma alpha occupied");
 
     Slice avir_slice(aoccpi, corrpi_);
-    SharedMatrix gamma_a_vir = gamma.first->get_block(avir_slice, avir_slice);
+    psi::SharedMatrix gamma_a_vir = gamma.first->get_block(avir_slice, avir_slice);
     gamma_a_vir->set_name("Gamma alpha virtual");
 
     // Diagonalize alpha density matrix
-    SharedMatrix NO_A_occ(new Matrix(aoccpi, aoccpi));
-    SharedMatrix NO_A_vir(new Matrix(avirpi, avirpi));
-    SharedVector OCC_A_occ(new Vector("Occupied ALPHA OCCUPATION", aoccpi));
-    SharedVector OCC_A_vir(new Vector("Virtual ALPHA OCCUPATION", avirpi));
+    psi::SharedMatrix NO_A_occ(new psi::Matrix(aoccpi, aoccpi));
+    psi::SharedMatrix NO_A_vir(new psi::Matrix(avirpi, avirpi));
+    psi::SharedVector OCC_A_occ(new Vector("Occupied ALPHA OCCUPATION", aoccpi));
+    psi::SharedVector OCC_A_vir(new Vector("Virtual ALPHA OCCUPATION", avirpi));
     gamma_a_occ->diagonalize(NO_A_occ, OCC_A_occ, descending);
     gamma_a_vir->diagonalize(NO_A_vir, OCC_A_vir, descending);
     //    OCC_A_occ->print();
@@ -600,23 +601,23 @@ MRCINO::diagonalize_density_matrix(std::pair<SharedMatrix, SharedMatrix> gamma) 
     NO_A->set_block(avir_slice, avir_slice, NO_A_vir);
 
     /// Diagonalize Beta density matrix
-    Dimension boccpi = nbetapi_ - fdoccpi_;
-    Dimension bvirpi = corrpi_ - boccpi;
+    psi::Dimension boccpi = nbetapi_ - fdoccpi_;
+    psi::Dimension bvirpi = corrpi_ - boccpi;
 
     // Grab the beta occupied/virtual block of the density matrix
     Slice bocc_slice(zero_dim, boccpi);
-    SharedMatrix gamma_b_occ = gamma.second->get_block(bocc_slice, bocc_slice);
+    psi::SharedMatrix gamma_b_occ = gamma.second->get_block(bocc_slice, bocc_slice);
     gamma_b_occ->set_name("Gamma beta occupied");
 
     Slice bvir_slice(boccpi, corrpi_);
-    SharedMatrix gamma_b_vir = gamma.second->get_block(bvir_slice, bvir_slice);
+    psi::SharedMatrix gamma_b_vir = gamma.second->get_block(bvir_slice, bvir_slice);
     gamma_b_vir->set_name("Gamma beta virtual");
 
     // Diagonalize beta density matrix
-    SharedMatrix NO_B_occ(new Matrix(boccpi, boccpi));
-    SharedMatrix NO_B_vir(new Matrix(bvirpi, bvirpi));
-    SharedVector OCC_B_occ(new Vector("Occupied BETA OCCUPATION", boccpi));
-    SharedVector OCC_B_vir(new Vector("Virtual BETA OCCUPATION", bvirpi));
+    psi::SharedMatrix NO_B_occ(new psi::Matrix(boccpi, boccpi));
+    psi::SharedMatrix NO_B_vir(new psi::Matrix(bvirpi, bvirpi));
+    psi::SharedVector OCC_B_occ(new Vector("Occupied BETA OCCUPATION", boccpi));
+    psi::SharedVector OCC_B_vir(new Vector("Virtual BETA OCCUPATION", bvirpi));
     gamma_b_occ->diagonalize(NO_B_occ, OCC_B_occ, descending);
     gamma_b_vir->diagonalize(NO_B_vir, OCC_B_vir, descending);
     //        OCC_B_occ->print();
@@ -636,10 +637,10 @@ MRCINO::diagonalize_density_matrix(std::pair<SharedMatrix, SharedMatrix> gamma) 
 
 // Find optimal active space and transform the orbitals
 void MRCINO::find_active_space_and_transform(
-    std::tuple<SharedVector, SharedMatrix, SharedVector, SharedMatrix> no_U) {
+    std::tuple<psi::SharedVector, psi::SharedMatrix, psi::SharedVector, psi::SharedMatrix> no_U) {
 
-    SharedMatrix Ua = std::make_shared<Matrix>("U", nmopi_, nmopi_);
-    SharedMatrix NO_A = std::get<1>(no_U);
+    psi::SharedMatrix Ua = std::make_shared<psi::Matrix>("U", nmopi_, nmopi_);
+    psi::SharedMatrix NO_A = std::get<1>(no_U);
     for (int h = 0; h < nirrep_; h++) {
         for (int p = 0; p < nmopi_[h]; p++) {
             Ua->set(h, p, p, 1.0);
@@ -648,12 +649,12 @@ void MRCINO::find_active_space_and_transform(
     Slice corr_slice(fdoccpi_, fdoccpi_ + corrpi_);
     Ua->set_block(corr_slice, corr_slice, NO_A);
 
-    SharedMatrix Ca_new = Matrix::doublet(Ca_, Ua);
+    psi::SharedMatrix Ca_new = psi::Matrix::doublet(Ca_, Ua);
     Ca_->copy(Ca_new);
     Cb_ = Ca_; // Fix this for unrestricted case
 
-    SharedVector OCC_A = std::get<0>(no_U);
-    SharedVector OCC_B = std::get<2>(no_U);
+    psi::SharedVector OCC_A = std::get<0>(no_U);
+    psi::SharedVector OCC_B = std::get<2>(no_U);
 
     std::vector<std::tuple<double, int, int>> sorted_aocc; // (non,irrep,index)
     double sum_o = 0.0;
@@ -679,7 +680,7 @@ void MRCINO::find_active_space_and_transform(
 
     double mrcino_threshold = options_.get_double("MRCINO_THRESHOLD");
 
-    Dimension nactv_occ(nirrep_);
+    psi::Dimension nactv_occ(nirrep_);
     double partial_sum_o = 0.0;
     for (auto& non_h_p : sorted_aocc) {
         double w = std::get<0>(non_h_p);
@@ -690,7 +691,7 @@ void MRCINO::find_active_space_and_transform(
             break;
     }
 
-    Dimension nactv_vir(nirrep_);
+    psi::Dimension nactv_vir(nirrep_);
     double partial_sum_v = 0.0;
     for (auto& non_h_p : sorted_avir) {
         double w = std::get<0>(non_h_p);
@@ -706,10 +707,10 @@ void MRCINO::find_active_space_and_transform(
     outfile->Printf("\n  Number of active virtual MOs per irrep:  %s",
                     dimension_to_string(nactv_vir).c_str());
 
-    Dimension noci_fdocc = fdoccpi_;
-    Dimension noci_actv = nactv_occ + nactv_vir;
-    Dimension noci_rdocc = aoccpi_ - nactv_occ;
-    // Dimension noci_rducc = corrpi_ - aoccpi_ - nactv_vir;
+    psi::Dimension noci_fdocc = fdoccpi_;
+    psi::Dimension noci_actv = nactv_occ + nactv_vir;
+    psi::Dimension noci_rdocc = aoccpi_ - nactv_occ;
+    // psi::Dimension noci_rducc = corrpi_ - aoccpi_ - nactv_vir;
 
     outfile->Printf("\n  FROZEN_DOCC     = %s", dimension_to_string(noci_fdocc).c_str());
     outfile->Printf("\n  RESTRICTED_DOCC = %s", dimension_to_string(noci_rdocc).c_str());
@@ -727,4 +728,4 @@ void MRCINO::find_active_space_and_transform(
     }
 }
 } // namespace forte
-} // namespace psi
+

@@ -36,10 +36,11 @@
 #include "helpers/printing.h"
 #include "dsrg_mrpt.h"
 
-namespace psi {
+using namespace psi;
+
 namespace forte {
 
-DSRG_MRPT::DSRG_MRPT(Reference reference, SharedWavefunction ref_wfn, Options& options,
+DSRG_MRPT::DSRG_MRPT(Reference reference, psi::SharedWavefunction ref_wfn, psi::Options& options,
                      std::shared_ptr<ForteIntegrals> ints,
                      std::shared_ptr<MOSpaceInfo> mo_space_info)
     : Wavefunction(options), reference_(reference), ints_(ints), mo_space_info_(mo_space_info),
@@ -165,13 +166,13 @@ void DSRG_MRPT::read_options() {
     s_ = options_.get_double("DSRG_S");
     if (s_ < 0) {
         outfile->Printf("\n  Error: S parameter for DSRG must >= 0!");
-        throw PSIEXCEPTION("S parameter for DSRG must >= 0!");
+        throw psi::PSIEXCEPTION("S parameter for DSRG must >= 0!");
     }
     taylor_threshold_ = options_.get_int("TAYLOR_THRESHOLD");
     if (taylor_threshold_ <= 0) {
         outfile->Printf("\n  Error: Threshold for Taylor expansion must be an "
                         "integer greater than 0!");
-        throw PSIEXCEPTION("Threshold for Taylor expansion must be an integer "
+        throw psi::PSIEXCEPTION("Threshold for Taylor expansion must be an integer "
                            "greater than 0!");
     }
 
@@ -311,7 +312,7 @@ double DSRG_MRPT::compute_energy() {
         //        Etotal += compute_energy_pt3();
     }
 
-    Process::environment.globals["CURRENT ENERGY"] = Etotal;
+    psi::Process::environment.globals["CURRENT ENERGY"] = Etotal;
     return Etotal;
 }
 
@@ -334,7 +335,7 @@ void DSRG_MRPT::build_density() {
     if (diff.norm() > 1.0e-8) {
         outfile->Printf("\n  Error: one-particle density cumulant cannot be spin-adapted!");
         outfile->Printf("\n  |L1a - L1b| = %20.15f  <== This should be 0.0.", diff.norm());
-        throw PSIEXCEPTION("One-particle density cumulant cannot be spin-adapted!");
+        throw psi::PSIEXCEPTION("One-particle density cumulant cannot be spin-adapted!");
     }
 
     // fill spin-summed OPDC
@@ -355,7 +356,7 @@ void DSRG_MRPT::build_density() {
         outfile->Printf("\n  |L2[pqrs] - (L2[pQrS] - L2[pQsR])| = %20.15f  <== "
                         "This should be 0.0.",
                         diff.norm());
-        throw PSIEXCEPTION("Two-particle density cumulant cannot be spin-adapted!");
+        throw psi::PSIEXCEPTION("Two-particle density cumulant cannot be spin-adapted!");
     }
 
     // fill spin-summed T2PDC
@@ -381,7 +382,7 @@ void DSRG_MRPT::build_density() {
             outfile->Printf("\n  |L3aaa - 1/3 * P(L3aab)| = %20.15f  <== This "
                             "should be 0.0.",
                             diff.norm());
-            throw PSIEXCEPTION("Three-particle density cumulant cannot be spin-adapted!");
+            throw psi::PSIEXCEPTION("Three-particle density cumulant cannot be spin-adapted!");
         }
 
         // fill spin-summed T3PDC
@@ -516,7 +517,7 @@ void DSRG_MRPT::test_memory(const size_t& c, const size_t& a, const size_t& v) {
     // hp* does not include aa block.
     // hhpp_ depends on if ccvv can be stored or not
 
-    size_t total = Process::environment.get_memory();
+    size_t total = psi::Process::environment.get_memory();
     size_t required;        // number of elements
     long long int leftover; // in bytes
     if (ref_relax_ == "NONE") {
@@ -594,7 +595,7 @@ void DSRG_MRPT::test_memory(const size_t& c, const size_t& a, const size_t& v) {
     if (leftover < 0) {
         outfile->Printf("\n  Error: Not enough memory! Need %s of memory.",
                         converter(required).c_str());
-        throw PSIEXCEPTION("Not enough memory!");
+        throw psi::PSIEXCEPTION("Not enough memory!");
     }
 
     if (nbatch_ > 1) {
@@ -642,6 +643,5 @@ void DSRG_MRPT::print_citation() {
         outfile->Printf("\n    %-20s %-60s", str_dim.first.c_str(), str_dim.second.c_str());
     }
     outfile->Printf("\n");
-}
 }
 }

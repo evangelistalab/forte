@@ -33,10 +33,10 @@
 #include "integrals/integrals.h"
 #include "helpers/mo_space_info.h"
 
-namespace psi {
+
 namespace forte {
 
-class Reference // : public Wavefunction
+class Reference // : public psi::Wavefunction
 {
   public:
     /// Default constructor
@@ -169,6 +169,6 @@ class Reference // : public Wavefunction
     ambit::Tensor g3bbb_;
 };
 } // namespace forte
-} // namespace psi
+
 
 #endif // _reference_h_

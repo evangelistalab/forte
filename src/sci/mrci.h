@@ -38,13 +38,13 @@
 #include "fci/fci_integrals.h"
 #include "sparse_ci/sparse_ci_solver.h"
 
-namespace psi {
+
 namespace forte {
 
-class MRCI : public Wavefunction {
+class MRCI : public psi::Wavefunction {
   public:
     // Class constructor and destructor
-    MRCI(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
+    MRCI(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
          std::shared_ptr<MOSpaceInfo> mo_space_info, DeterminantHashVec& reference);
 
     ~MRCI();
@@ -55,7 +55,7 @@ class MRCI : public Wavefunction {
     double compute_energy();
 
   private:
-    SharedWavefunction ref_wfn_;
+    psi::SharedWavefunction ref_wfn_;
     
     std::shared_ptr<FCIIntegrals> fci_ints_;
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
@@ -71,5 +71,4 @@ class MRCI : public Wavefunction {
     void get_excited_determinants();
     void upcast_reference();
 };
-}
 }

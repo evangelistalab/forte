@@ -37,10 +37,11 @@
 #include "helpers/timer.h"
 #include "mrdsrg_so.h"
 
-namespace psi {
+using namespace psi;
+
 namespace forte {
 
-MRDSRG_SO::MRDSRG_SO(Reference reference, Options& options, std::shared_ptr<ForteIntegrals> ints,
+MRDSRG_SO::MRDSRG_SO(Reference reference, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
                      std::shared_ptr<MOSpaceInfo> mo_space_info)
     : Wavefunction(options), reference_(reference), ints_(ints), mo_space_info_(mo_space_info),
       tensor_type_(CoreTensor), BTF(new BlockedTensorFactory()) {
@@ -64,13 +65,13 @@ void MRDSRG_SO::startup() {
     s_ = options_.get_double("DSRG_S");
     if (s_ < 0) {
         outfile->Printf("\n  S parameter for DSRG must >= 0!");
-        throw PSIEXCEPTION("S parameter for DSRG must >= 0!");
+        throw psi::PSIEXCEPTION("S parameter for DSRG must >= 0!");
     }
     taylor_threshold_ = options_.get_int("TAYLOR_THRESHOLD");
     if (taylor_threshold_ <= 0) {
         outfile->Printf("\n  Threshold for Taylor expansion must be an integer "
                         "greater than 0!");
-        throw PSIEXCEPTION("Threshold for Taylor expansion must be an integer "
+        throw psi::PSIEXCEPTION("Threshold for Taylor expansion must be an integer "
                            "greater than 0!");
     }
     taylor_order_ = int(0.5 * (15.0 / taylor_threshold_ + 1)) + 1;
@@ -612,7 +613,7 @@ double MRDSRG_SO::compute_energy() {
     outfile->Printf("\n\n\n    MR-DSRG(2) correlation energy      = %25.15f", Etotal - Eref);
     outfile->Printf("\n  * MR-DSRG(2) total energy            = %25.15f\n", Etotal);
 
-    Process::environment.globals["CURRENT ENERGY"] = Etotal;
+    psi::Process::environment.globals["CURRENT ENERGY"] = Etotal;
 
     return Etotal;
 }
@@ -1329,6 +1330,5 @@ void MRDSRG_SO::H3_T2_C2(BlockedTensor& H3, BlockedTensor& T2, const double& alp
     temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"ca"});
     temp["mx"] += 0.5 * T2["myuv"] * Lambda2["uvxy"];
     C2["toqr"] -= alpha * temp["mx"] * H3["xtomqr"];
-}
 }
 }

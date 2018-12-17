@@ -30,7 +30,8 @@
 
 #include "fci_vector.h"
 
-namespace psi {
+using namespace psi;
+
 namespace forte {
 
 /**
@@ -95,8 +96,8 @@ void FCIWfn::H1(FCIWfn& result, std::shared_ptr<FCIIntegrals> fci_ints, bool alf
     for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {
         int beta_sym = alfa_sym ^ symmetry_;
         if (detpi_[alfa_sym] > 0) {
-            SharedMatrix C = alfa ? C_[alfa_sym] : C1;
-            SharedMatrix Y = alfa ? result.C_[alfa_sym] : Y1;
+            psi::SharedMatrix C = alfa ? C_[alfa_sym] : C1;
+            psi::SharedMatrix Y = alfa ? result.C_[alfa_sym] : Y1;
             double** Ch = C->pointer();
             double** Yh = Y->pointer();
 
@@ -172,8 +173,8 @@ void FCIWfn::H2_aaaa2(FCIWfn& result, std::shared_ptr<FCIIntegrals> fci_ints, bo
     for (int ha = 0; ha < nirrep_; ++ha) {
         int hb = ha ^ symmetry_;
         if (detpi_[ha] > 0) {
-            SharedMatrix C = alfa ? C_[ha] : C1;
-            SharedMatrix Y = alfa ? result.C_[ha] : Y1;
+            psi::SharedMatrix C = alfa ? C_[ha] : C1;
+            psi::SharedMatrix Y = alfa ? result.C_[ha] : Y1;
             double** Ch = C->pointer();
             double** Yh = Y->pointer();
 
@@ -366,6 +367,5 @@ void FCIWfn::H2_aabb(FCIWfn& result, std::shared_ptr<FCIIntegrals> fci_ints) {
             }
         }
     }
-}
 }
 }

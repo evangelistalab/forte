@@ -43,7 +43,8 @@ struct PairHash {
     }
 };
 
-namespace psi {
+using namespace psi;
+
 namespace forte {
 
 #ifdef _OPENMP
@@ -58,7 +59,7 @@ namespace forte {
 SigmaVectorMPI::SigmaVectorMPI(const DeterminantHashVec& space, WFNOperator& op)
     : SigmaVector(space.size()), space_(space) {}
 
-void SigmaVectorMPI::compute_sigma(SharedVector sigma, SharedVector b) {}
+void SigmaVectorMPI::compute_sigma(psi::SharedVector sigma, psi::SharedVector b) {}
 
 #endif
 
@@ -376,7 +377,7 @@ SigmaVectorList::SigmaVectorList(const std::vector<Determinant>& space, bool pri
     }
 }
 
-void SigmaVectorList::compute_sigma(SharedVector sigma, SharedVector b) {
+void SigmaVectorList::compute_sigma(psi::SharedVector sigma, psi::SharedVector b) {
     sigma->zero();
     double* sigma_p = sigma->pointer();
     double* b_p = b->pointer();
@@ -523,7 +524,7 @@ void SigmaVectorList::add_bad_roots(std::vector<std::vector<std::pair<size_t, do
     }
 }
 
-void SigmaVectorList::get_diagonal(Vector& diag) {
+void SigmaVectorList::get_diagonal(psi::Vector& diag) {
     for (size_t I = 0; I < diag_.size(); ++I) {
         diag.set(I, diag_[I]);
     }
@@ -550,13 +551,13 @@ void SigmaVectorWfn1::add_bad_roots(std::vector<std::vector<std::pair<size_t, do
     }
 }
 
-void SigmaVectorWfn1::get_diagonal(Vector& diag) {
+void SigmaVectorWfn1::get_diagonal(psi::Vector& diag) {
     for (size_t I = 0; I < diag_.size(); ++I) {
         diag.set(I, diag_[I]);
     }
 }
 
-void SigmaVectorWfn1::compute_sigma(SharedVector sigma, SharedVector b) {
+void SigmaVectorWfn1::compute_sigma(psi::SharedVector sigma, psi::SharedVector b) {
     sigma->zero();
     double* sigma_p = sigma->pointer();
     double* b_p = b->pointer();
@@ -718,13 +719,13 @@ void SigmaVectorWfn2::add_bad_roots(std::vector<std::vector<std::pair<size_t, do
     }
 }
 
-void SigmaVectorWfn2::get_diagonal(Vector& diag) {
+void SigmaVectorWfn2::get_diagonal(psi::Vector& diag) {
     for (size_t I = 0; I < diag_.size(); ++I) {
         diag.set(I, diag_[I]);
     }
 }
 
-void SigmaVectorWfn2::compute_sigma(SharedVector sigma, SharedVector b) {
+void SigmaVectorWfn2::compute_sigma(psi::SharedVector sigma, psi::SharedVector b) {
     sigma->zero();
 
     double* sigma_p = sigma->pointer();
@@ -946,9 +947,9 @@ SigmaVectorWfn3::SigmaVectorWfn3(const DeterminantHashVec& space, WFNOperator& o
 
     size_t nact = fci_ints_->nmo();
     size_t nact2 = nact * nact;
-    aa_tei_ = SharedMatrix(new Matrix("aa", nact2, nact2));
-    bb_tei_ = SharedMatrix(new Matrix("aa", nact2, nact2));
-    ab_tei_ = SharedMatrix(new Matrix("aa", nact2, nact2));
+    aa_tei_ = std::make_shared<psi::Matrix>("aa", nact2, nact2);
+    bb_tei_ = std::make_shared<psi::Matrix>("aa", nact2, nact2);
+    ab_tei_ = std::make_shared<psi::Matrix>("aa", nact2, nact2);
 
     outfile->Printf("\n  Building integral matrices");
     local_timer build;
@@ -991,13 +992,13 @@ void SigmaVectorWfn3::add_bad_roots(std::vector<std::vector<std::pair<size_t, do
     }
 }
 
-void SigmaVectorWfn3::get_diagonal(Vector& diag) {
+void SigmaVectorWfn3::get_diagonal(psi::Vector& diag) {
     for (size_t I = 0; I < diag_.size(); ++I) {
         diag.set(I, diag_[I]);
     }
 }
 
-void SigmaVectorWfn3::compute_sigma(SharedVector sigma, SharedVector b) {
+void SigmaVectorWfn3::compute_sigma(psi::SharedVector sigma, psi::SharedVector b) {
     sigma->zero();
 
     size_t ncmo = fci_ints_->nmo();
@@ -1104,8 +1105,8 @@ void SigmaVectorWfn3::compute_sigma(SharedVector sigma, SharedVector b) {
     // AA doubles
     {
         size_t max_K = aa_list_.size();
-        SharedMatrix B_pq = SharedMatrix(new Matrix("B_pq", ncmo2, max_K));
-        SharedMatrix C_rs = SharedMatrix(new Matrix("C_rs", max_K, ncmo2));
+        psi::SharedMatrix B_pq = std::make_shared<psi::Matrix>("B_pq", ncmo2, max_K);
+        psi::SharedMatrix C_rs = std::make_shared<psi::Matrix>("C_rs", max_K, ncmo2);
         for (size_t K = 0; K < max_K; ++K) {
             const std::vector<std::tuple<size_t, short, short>>& c_dets = aa_list_[K];
             size_t maxI = c_dets.size();
@@ -1140,8 +1141,8 @@ void SigmaVectorWfn3::compute_sigma(SharedVector sigma, SharedVector b) {
     // BB doubles
     {
         size_t max_K = bb_list_.size();
-        SharedMatrix B_pq = SharedMatrix(new Matrix("B_pq", ncmo2, max_K));
-        SharedMatrix C_rs = SharedMatrix(new Matrix("C_rs", max_K, ncmo2));
+        psi::SharedMatrix B_pq = std::make_shared<psi::Matrix>("B_pq", ncmo2, max_K);
+        psi::SharedMatrix C_rs = std::make_shared<psi::Matrix>("C_rs", max_K, ncmo2);
         for (size_t K = 0; K < max_K; ++K) {
             const std::vector<std::tuple<size_t, short, short>>& c_dets = bb_list_[K];
             size_t maxI = c_dets.size();
@@ -1175,8 +1176,8 @@ void SigmaVectorWfn3::compute_sigma(SharedVector sigma, SharedVector b) {
     // AB doubles
     {
         size_t max_K = ab_list_.size();
-        SharedMatrix B_pq = SharedMatrix(new Matrix("B_pq", ncmo2, max_K));
-        SharedMatrix C_rs = SharedMatrix(new Matrix("C_rs", max_K, ncmo2));
+        psi::SharedMatrix B_pq = std::make_shared<psi::Matrix>("B_pq", ncmo2, max_K);
+        psi::SharedMatrix C_rs = std::make_shared<psi::Matrix>("C_rs", max_K, ncmo2);
 
         // local_timer AB;
         B_pq->zero();
@@ -1217,7 +1218,7 @@ void SigmaVectorWfn3::compute_sigma(SharedVector sigma, SharedVector b) {
 
 /*  Sigma Vector Sparse functions */
 
-void SigmaVectorSparse::compute_sigma(SharedVector sigma, SharedVector b) {
+void SigmaVectorSparse::compute_sigma(psi::SharedVector sigma, psi::SharedVector b) {
     sigma->zero();
     double* sigma_p = sigma->pointer();
     double* b_p = b->pointer();
@@ -1271,7 +1272,7 @@ void SigmaVectorSparse::compute_sigma(SharedVector sigma, SharedVector b) {
         }
     }
 }
-void SigmaVectorSparse::get_diagonal(Vector& diag) {
+void SigmaVectorSparse::get_diagonal(psi::Vector& diag) {
     for (size_t I = 0; I < size_; ++I) {
         diag.set(I, H_[I].second[0]);
     }
@@ -1282,6 +1283,5 @@ void SigmaVectorSparse::add_bad_roots(std::vector<std::vector<std::pair<size_t, 
     for (int i = 0, max_i = roots.size(); i < max_i; ++i) {
         bad_states_.push_back(roots[i]);
     }
-}
 }
 }

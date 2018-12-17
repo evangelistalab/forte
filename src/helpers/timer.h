@@ -34,7 +34,7 @@
 
 #include <chrono>
 
-namespace psi {
+
 namespace forte {
 
 /**
@@ -60,14 +60,14 @@ class local_timer {
   */
 class timer {
   public:
-    timer(const std::string& name) : name_(name) { timer_on(name_); }
+    timer(const std::string& name) : name_(name) { psi::timer_on(name_); }
     ~timer() { stop(); }
 
     /// Return the elapsed time in seconds
     void stop() {
         if (running_) {
             running_ = false;
-            timer_off(name_);
+            psi::timer_off(name_);
         }
     }
 
@@ -82,7 +82,7 @@ class timer {
 class parallel_timer {
   public:
     parallel_timer(const std::string& name, int rank) : name_(name), rank_(rank) {
-        parallel_timer_on(name_, rank_);
+        psi::parallel_timer_on(name_, rank_);
     }
     ~parallel_timer() { stop(); }
 
@@ -90,7 +90,7 @@ class parallel_timer {
     void stop() {
         if (running_) {
             running_ = false;
-            parallel_timer_off(name_, rank_);
+            psi::parallel_timer_off(name_, rank_);
         }
     }
 
@@ -100,6 +100,5 @@ class parallel_timer {
     bool running_ = true;
 };
 }
-} // End Namespaces
 
 #endif // _helpers_timer_h_

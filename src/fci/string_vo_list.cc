@@ -42,7 +42,7 @@
 
 #include "string_lists.h"
 
-namespace psi {
+
 namespace forte {
 
 /**
@@ -142,7 +142,7 @@ void StringLists::make_vo(GraphPtr graph, VOList& list, int p, int q) {
     }
 }
 } // namespace forte
-} // namespace psi
+
 
 ///**
 // * Generate all the pairs of strings I,J connected by a^{+}_p a_q

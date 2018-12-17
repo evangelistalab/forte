@@ -52,10 +52,11 @@
 #include "df_integrals.h"
 
 using namespace ambit;
-namespace psi {
+using namespace psi;
+
 namespace forte {
 
-DFIntegrals::DFIntegrals(psi::Options& options, SharedWavefunction ref_wfn,
+DFIntegrals::DFIntegrals(psi::Options& options, psi::SharedWavefunction ref_wfn,
                          IntegralSpinRestriction restricted,
                          std::shared_ptr<MOSpaceInfo> mo_space_info)
     : ForteIntegrals(options, ref_wfn, restricted, mo_space_info) {
@@ -157,12 +158,12 @@ ambit::Tensor DFIntegrals::three_integral_block(const std::vector<size_t>& A,
 ambit::Tensor DFIntegrals::three_integral_block_two_index(const std::vector<size_t>&, size_t,
                                                           const std::vector<size_t>&) {
     outfile->Printf("\n Oh no! this isn't here");
-    throw PSIEXCEPTION("INT_TYPE=DISKDF");
+    throw psi::PSIEXCEPTION("INT_TYPE=DISKDF");
 }
 
 void DFIntegrals::set_tei(size_t, size_t, size_t, size_t, double, bool, bool) {
     outfile->Printf("\n If you are using this, you are ruining the advantages of DF/CD");
-    throw PSIEXCEPTION("Don't use DF/CD if you use set_tei");
+    throw psi::PSIEXCEPTION("Don't use DF/CD if you use set_tei");
 }
 
 void DFIntegrals::gather_integrals() {
@@ -171,8 +172,8 @@ void DFIntegrals::gather_integrals() {
         outfile->Printf("\n  Computing Density fitted integrals \n");
     }
 
-    std::shared_ptr<BasisSet> primary = wfn_->basisset();
-    std::shared_ptr<BasisSet> auxiliary = wfn_->get_basisset("DF_BASIS_MP2");
+    std::shared_ptr<psi::BasisSet> primary = wfn_->basisset();
+    std::shared_ptr<psi::BasisSet> auxiliary = wfn_->get_basisset("DF_BASIS_MP2");
 
     size_t nprim = primary->nbf();
     size_t naux = auxiliary->nbf();
@@ -184,11 +185,11 @@ void DFIntegrals::gather_integrals() {
                         mem_info.second.c_str());
     }
 
-    Dimension nsopi_ = wfn_->nsopi();
-    SharedMatrix aotoso = wfn_->aotoso();
-    SharedMatrix Ca = wfn_->Ca();
-    // SharedMatrix Ca_ao(new Matrix("Ca_ao",nso_,nmopi_.sum()));
-    SharedMatrix Ca_ao(new Matrix("Ca_ao", nso_, nmopi_.sum()));
+    psi::Dimension nsopi_ = wfn_->nsopi();
+    psi::SharedMatrix aotoso = wfn_->aotoso();
+    psi::SharedMatrix Ca = wfn_->Ca();
+    // psi::SharedMatrix Ca_ao(new psi::Matrix("Ca_ao",nso_,nmopi_.sum()));
+    psi::SharedMatrix Ca_ao(new psi::Matrix("Ca_ao", nso_, nmopi_.sum()));
 
     // Transform from the SO to the AO basis
     for (int h = 0, index = 0; h < nirrep_; ++h) {
@@ -210,7 +211,7 @@ void DFIntegrals::gather_integrals() {
 
     // Constructs the DF function
     // assume a RHF/UHF reference
-    std::shared_ptr<DFHelper> df(new DFHelper(primary, auxiliary));
+    std::shared_ptr<psi::DFHelper> df(new DFHelper(primary, auxiliary));
     df->initialize();
     // Pushes a C matrix that is ordered in pitzer ordering
     // into the C_matrix object
@@ -222,7 +223,7 @@ void DFIntegrals::gather_integrals() {
     // This assumes that everything is correlated.
     // Does not add the pair_space, but says which one is should use
     df->add_transformation("B", "ALL", "ALL", "Qpq");
-    df->set_memory(Process::environment.get_memory() / 8L);
+    df->set_memory(psi::Process::environment.get_memory() / 8L);
 
     // Finally computes the df integrals
     // Does the timings also
@@ -238,7 +239,7 @@ void DFIntegrals::gather_integrals() {
         outfile->Printf("\n");
     }
 
-    SharedMatrix Bpq(new Matrix("Bpq", naux, nmo_ * nmo_));
+    psi::SharedMatrix Bpq(new psi::Matrix("Bpq", naux, nmo_ * nmo_));
 
     Bpq = df->get_tensor("B");
 
@@ -246,7 +247,7 @@ void DFIntegrals::gather_integrals() {
     ThreeIntegral_ = Bpq->transpose()->clone();
 }
 
-void DFIntegrals::make_fock_matrix(SharedMatrix gamma_aM, SharedMatrix gamma_bM) {
+void DFIntegrals::make_fock_matrix(psi::SharedMatrix gamma_aM, psi::SharedMatrix gamma_bM) {
     TensorType tensor_type = ambit::CoreTensor;
     ambit::Tensor ThreeIntegralTensor =
         // ambit::Tensor::build(tensor_type, "ThreeIndex", {ncmo_, ncmo_, nthree_});
@@ -304,9 +305,9 @@ void DFIntegrals::make_fock_matrix(SharedMatrix gamma_aM, SharedMatrix gamma_bM)
     /// Form with JK builders
 }
 
-void DFIntegrals::resort_three(SharedMatrix& threeint, std::vector<size_t>& map) {
+void DFIntegrals::resort_three(psi::SharedMatrix& threeint, std::vector<size_t>& map) {
     // Create a temperature threeint matrix
-    SharedMatrix temp_threeint(new Matrix("tmp", ncmo_ * ncmo_, nthree_));
+    psi::SharedMatrix temp_threeint(new psi::Matrix("tmp", ncmo_ * ncmo_, nthree_));
     temp_threeint->zero();
 
     // Borrwed from resort_four.
@@ -340,4 +341,4 @@ void DFIntegrals::resort_integrals_after_freezing() {
     }
 }
 } // namespace forte
-} // namespace psi
+

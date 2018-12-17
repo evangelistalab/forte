@@ -41,10 +41,11 @@
 #include "orbital-helpers/mp2_nos.h"
 #include "mrdsrg.h"
 
-namespace psi {
+using namespace psi;
+
 namespace forte {
 
-MRDSRG::MRDSRG(Reference reference, SharedWavefunction ref_wfn, Options& options,
+MRDSRG::MRDSRG(Reference reference, psi::SharedWavefunction ref_wfn, psi::Options& options,
                std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
     : MASTER_DSRG(reference, ref_wfn, options, ints, mo_space_info) {
 
@@ -66,7 +67,7 @@ void MRDSRG::read_options() {
         std::stringstream ss;
         ss << "DSRG transformation type (" << dsrg_trans_type_
            << ") is not implemented yet. Please change to UNITARY";
-        throw PSIEXCEPTION(ss.str());
+        throw psi::PSIEXCEPTION(ss.str());
     }
 
     corrlv_string_ = options_.get_str("CORR_LEVEL");
@@ -353,8 +354,8 @@ double MRDSRG::compute_energy() {
     default: { Etotal += compute_energy_pt2(); }
     }
 
-    Process::environment.globals["UNRELAXED ENERGY"] = Etotal;
-    Process::environment.globals["CURRENT ENERGY"] = Etotal;
+    psi::Process::environment.globals["UNRELAXED ENERGY"] = Etotal;
+    psi::Process::environment.globals["CURRENT ENERGY"] = Etotal;
     return Etotal;
 }
 
@@ -394,8 +395,8 @@ double MRDSRG::compute_energy_relaxed() {
         outfile->Printf("\n    %-30s = %22.15f", "MRDSRG Total Energy (relaxed)", Erelax);
         outfile->Printf("\n");
 
-        Process::environment.globals["UNRELAXED ENERGY"] = Edsrg;
-        Process::environment.globals["PARTIALLY RELAXED ENERGY"] = Erelax;
+        psi::Process::environment.globals["UNRELAXED ENERGY"] = Edsrg;
+        psi::Process::environment.globals["PARTIALLY RELAXED ENERGY"] = Erelax;
 
     } else if (relax_ref_ == "ITERATE" || relax_ref_ == "TWICE") {
 
@@ -520,7 +521,7 @@ double MRDSRG::compute_energy_relaxed() {
             // test convergence
             if (std::fabs(Edelta_dsrg) < e_conv && std::fabs(Edelta_relax) < e_conv) {
                 converged = true;
-                Process::environment.globals["FULLY RELAXED ENERGY"] = Erelax;
+                psi::Process::environment.globals["FULLY RELAXED ENERGY"] = Erelax;
             }
             if (cycle > maxiter) {
                 outfile->Printf("\n\n    The reference relaxation does not "
@@ -560,18 +561,18 @@ double MRDSRG::compute_energy_relaxed() {
         outfile->Printf("\n");
 
         if (failed) {
-            throw PSIEXCEPTION("Reference relaxation process does not converge.");
+            throw psi::PSIEXCEPTION("Reference relaxation process does not converge.");
         }
 
         // set energies to psi4 environment
-        Process::environment.globals["UNRELAXED ENERGY"] = Edsrg_vec[0];
-        Process::environment.globals["PARTIALLY RELAXED ENERGY"] = Erelax_vec[0];
+        psi::Process::environment.globals["UNRELAXED ENERGY"] = Edsrg_vec[0];
+        psi::Process::environment.globals["PARTIALLY RELAXED ENERGY"] = Erelax_vec[0];
         if (cycle > 1) {
-            Process::environment.globals["RELAXED ENERGY"] = Edsrg_vec[1];
+            psi::Process::environment.globals["RELAXED ENERGY"] = Edsrg_vec[1];
         }
     }
 
-    Process::environment.globals["CURRENT ENERGY"] = Erelax;
+    psi::Process::environment.globals["CURRENT ENERGY"] = Erelax;
     return Erelax;
 }
 
@@ -720,7 +721,7 @@ double MRDSRG::compute_energy_sa() {
     outfile->Printf("\n    %s", dash.c_str());
 
     // get character table
-    CharacterTable ct = Process::environment.molecule()->point_group()->char_table();
+    CharacterTable ct = psi::Process::environment.molecule()->point_group()->char_table();
     std::vector<std::string> irrep_symbol;
     for (int h = 0; h < this->nirrep(); ++h) {
         irrep_symbol.push_back(std::string(ct.gamma(h).symbol()));
@@ -756,17 +757,17 @@ double MRDSRG::compute_energy_sa() {
         for (int i = 0; i < nstates; ++i) {
             outfile->Printf("\n     %3d     %3s    %2d   %20.12f*", multi,
                             irrep_symbol[irrep].c_str(), i, Esa[n][i]);
-            Process::environment.globals["ENERGY ROOT " + std::to_string(counter)] = Esa[n][i];
+            psi::Process::environment.globals["ENERGY ROOT " + std::to_string(counter)] = Esa[n][i];
             ++counter;
         }
         outfile->Printf("\n    %s", dash1.c_str());
     }
 
     if (failed) {
-        throw PSIEXCEPTION("Reference relaxation process does not converge.");
+        throw psi::PSIEXCEPTION("Reference relaxation process does not converge.");
     }
 
-    Process::environment.globals["CURRENT ENERGY"] = Erelax_sa;
+    psi::Process::environment.globals["CURRENT ENERGY"] = Erelax_sa;
     return Erelax_sa;
 }
 
@@ -976,7 +977,7 @@ double MRDSRG::compute_energy_sa() {
 //    outfile->Printf("\n    %-30s = %22.15f", "Total Energy (before)", Eref_ + Hbar0_);
 
 //    if (std::fabs(Etest - Eref_ - Hbar0_) > 100.0 * options_.get_double("E_CONVERGENCE")) {
-//        throw PSIEXCEPTION("De-normal-odering failed.");
+//        throw psi::PSIEXCEPTION("De-normal-odering failed.");
 //    } else {
 //    //    ints_->update_integrals(false); <- this should not be here
 //    }
@@ -1008,22 +1009,22 @@ std::vector<std::vector<double>> MRDSRG::diagonalize_Fock_diagblocks(BlockedTens
     // diagonal blocks identifiers (C-A-V ordering)
     std::vector<std::string> blocks = diag_one_labels();
 
-    // map MO space label to its Dimension
-    std::map<std::string, Dimension> MOlabel_to_dimension;
+    // map MO space label to its psi::Dimension
+    std::map<std::string, psi::Dimension> MOlabel_to_dimension;
     MOlabel_to_dimension[acore_label_] = mo_space_info_->get_dimension("RESTRICTED_DOCC");
     MOlabel_to_dimension[aactv_label_] = mo_space_info_->get_dimension("ACTIVE");
     MOlabel_to_dimension[avirt_label_] = mo_space_info_->get_dimension("RESTRICTED_UOCC");
 
     // eigen values to be returned
     size_t ncmo = mo_space_info_->size("CORRELATED");
-    Dimension corr = mo_space_info_->get_dimension("CORRELATED");
+    psi::Dimension corr = mo_space_info_->get_dimension("CORRELATED");
     std::vector<double> eigenvalues_a(ncmo, 0.0);
     std::vector<double> eigenvalues_b(ncmo, 0.0);
 
-    // map MO space label to its offset Dimension
-    std::map<std::string, Dimension> MOlabel_to_offset_dimension;
+    // map MO space label to its offset psi::Dimension
+    std::map<std::string, psi::Dimension> MOlabel_to_offset_dimension;
     int nirrep = corr.n();
-    MOlabel_to_offset_dimension[acore_label_] = Dimension(std::vector<int>(nirrep, 0));
+    MOlabel_to_offset_dimension[acore_label_] = psi::Dimension(std::vector<int>(nirrep, 0));
     MOlabel_to_offset_dimension[aactv_label_] = mo_space_info_->get_dimension("RESTRICTED_DOCC");
     MOlabel_to_offset_dimension[avirt_label_] =
         mo_space_info_->get_dimension("RESTRICTED_DOCC") + mo_space_info_->get_dimension("ACTIVE");
@@ -1058,7 +1059,7 @@ std::vector<std::vector<double>> MRDSRG::diagonalize_Fock_diagblocks(BlockedTens
             continue;
         } else {
             std::string label(1, tolower(block[0]));
-            Dimension space = MOlabel_to_dimension[label];
+            psi::Dimension space = MOlabel_to_dimension[label];
             int nirrep = space.n();
 
             // separate Fock with irrep
@@ -1093,14 +1094,14 @@ std::vector<std::vector<double>> MRDSRG::diagonalize_Fock_diagblocks(BlockedTens
     return {eigenvalues_a, eigenvalues_b};
 }
 
-ambit::Tensor MRDSRG::separate_tensor(ambit::Tensor& tens, const Dimension& irrep, const int& h) {
+ambit::Tensor MRDSRG::separate_tensor(ambit::Tensor& tens, const psi::Dimension& irrep, const int& h) {
     // test tens and irrep
     int tens_dim = static_cast<int>(tens.dim(0));
     if (tens_dim != irrep.sum() || tens_dim != static_cast<int>(tens.dim(1))) {
-        throw PSIEXCEPTION("Wrong dimension for the to-be-separated ambit Tensor.");
+        throw psi::PSIEXCEPTION("Wrong dimension for the to-be-separated ambit Tensor.");
     }
     if (h >= irrep.n()) {
-        throw PSIEXCEPTION("Ask for wrong irrep.");
+        throw psi::PSIEXCEPTION("Ask for wrong irrep.");
     }
 
     // from relative (blocks) to absolute (big tensor) index
@@ -1126,15 +1127,15 @@ ambit::Tensor MRDSRG::separate_tensor(ambit::Tensor& tens, const Dimension& irre
     return T_h;
 }
 
-void MRDSRG::combine_tensor(ambit::Tensor& tens, ambit::Tensor& tens_h, const Dimension& irrep,
+void MRDSRG::combine_tensor(ambit::Tensor& tens, ambit::Tensor& tens_h, const psi::Dimension& irrep,
                             const int& h) {
     // test tens and irrep
     if (h >= irrep.n()) {
-        throw PSIEXCEPTION("Ask for wrong irrep.");
+        throw psi::PSIEXCEPTION("Ask for wrong irrep.");
     }
     size_t tens_h_dim = tens_h.dim(0), h_dim = irrep[h];
     if (tens_h_dim != h_dim || tens_h_dim != tens_h.dim(1)) {
-        throw PSIEXCEPTION("Wrong dimension for the to-be-combined ambit Tensor.");
+        throw psi::PSIEXCEPTION("Wrong dimension for the to-be-combined ambit Tensor.");
     }
 
     // from relative (blocks) to absolute (big tensor) index
@@ -1253,6 +1254,5 @@ void MRDSRG::check_density(BlockedTensor& D, const std::string& name) {
         output += str(boost::format(" %12.6f") % norms[i]);
     output += indent + sep;
     outfile->Printf("%s", output.c_str());
-}
 }
 }

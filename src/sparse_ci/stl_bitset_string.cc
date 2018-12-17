@@ -34,7 +34,7 @@
 
 using namespace psi;
 
-namespace psi {
+
 namespace forte {
 
 // Static members
@@ -154,4 +154,3 @@ double STLBitsetString::SlaterSign(int n) {
     return (sign);
 }
 }
-} // end namespace

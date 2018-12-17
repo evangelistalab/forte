@@ -38,7 +38,8 @@
 #include "helpers/timer.h"
 #include "mrdsrg.h"
 
-namespace psi {
+using namespace psi;
+
 namespace forte {
 
 // void MRDSRG::H1_T1_C0(BlockedTensor& H1, BlockedTensor& T1, const double& alpha, double& C0) {
@@ -1964,6 +1965,5 @@ void MRDSRG::H2_G2_C2(BlockedTensor& H2, BlockedTensor& G2, const double& alpha,
     C2["PQRS"] -= alpha * G2["TQSU"] * H2["VPRT"] * Gamma1_["UV"];
 
     dsrg_time_.add("222", timer.get());
-}
 }
 }

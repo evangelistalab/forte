@@ -41,7 +41,8 @@
 
 #include "v2rdm.h"
 
-namespace psi {
+using namespace psi;
+
 namespace forte {
 
 struct tpdm {
@@ -54,7 +55,7 @@ struct dm3 {
     double val;
 };
 
-V2RDM::V2RDM(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
+V2RDM::V2RDM(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
              std::shared_ptr<MOSpaceInfo> mo_space_info)
     : Wavefunction(options), ints_(ints), mo_space_info_(mo_space_info) {
     shallow_copy(ref_wfn);
@@ -124,7 +125,7 @@ void V2RDM::read_2pdm() {
     for (const auto& file : {PSIF_V2RDM_D2AA, PSIF_V2RDM_D2AB, PSIF_V2RDM_D2BB}) {
         if (!psio->exists(file)) {
             std::string error = "V2RDM file for " + filename[file] + " does not exist";
-            throw PSIEXCEPTION(error);
+            throw psi::PSIEXCEPTION(error);
         }
     }
     outfile->Printf("    OK.");
@@ -153,7 +154,7 @@ void V2RDM::read_2pdm() {
                             "V2RDM-CASSCF.");
             outfile->Printf("\n  Please check the input file and make the "
                             "active block consistent.");
-            throw PSIEXCEPTION("The active block of FORTE is different from V2RDM-CASSCF.");
+            throw psi::PSIEXCEPTION("The active block of FORTE is different from V2RDM-CASSCF.");
         }
     }
     psio->close(PSIF_V2RDM_D2AB, 1);
@@ -277,7 +278,7 @@ void V2RDM::read_3pdm() {
          {PSIF_V2RDM_D3AAA, PSIF_V2RDM_D3AAB, PSIF_V2RDM_D3BBA, PSIF_V2RDM_D3BBB}) {
         if (!psio->exists(file)) {
             std::string error = "V2RDM file for " + filename[file] + " does not exist";
-            throw PSIEXCEPTION(error);
+            throw psi::PSIEXCEPTION(error);
         }
     }
     outfile->Printf("    OK.");
@@ -645,6 +646,5 @@ void V2RDM::write_density_to_file() {
     }
 
     outfile->Printf("    Done.");
-}
 }
 }

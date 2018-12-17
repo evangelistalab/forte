@@ -35,7 +35,8 @@
 #include "boost/format.hpp"
 #include "dsrg_time.h"
 
-namespace psi {
+using namespace psi;
+
 namespace forte {
 
 DSRG_TIME::DSRG_TIME() {
@@ -186,4 +187,4 @@ bool DSRG_TIME::test_code(const std::string& code) {
     return out;
 }
 }
-}
+

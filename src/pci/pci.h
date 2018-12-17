@@ -43,7 +43,7 @@
 #include "fci/fci_vector.h"
 #include "forte_options.h"
 
-namespace psi {
+
 namespace forte {
 
 /// Set the forte style options for the FCI method
@@ -71,7 +71,7 @@ enum GeneratorType {
  * @brief The SparsePathIntegralCI class
  * This class implements an a sparse path-integral FCI algorithm
  */
-class ProjectorCI : public Wavefunction {
+class ProjectorCI : public psi::Wavefunction {
   public:
     // ==> Class Constructor and Destructor <==
 
@@ -81,7 +81,7 @@ class ProjectorCI : public Wavefunction {
      * @param options The main options object
      * @param ints A pointer to an allocated integral object
      */
-    ProjectorCI(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
+    ProjectorCI(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
                 std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     // ==> Class Interface <==
@@ -118,11 +118,11 @@ class ProjectorCI : public Wavefunction {
     /// The number of frozen core orbitals
     int nfrzc_;
     /// The number of correlated molecular orbitals per irrep
-    Dimension ncmopi_;
+    psi::Dimension ncmopi_;
     /// The number of active orbitals
     size_t nact_;
     /// The number of active orbitals per irrep
-    Dimension nactpi_;
+    psi::Dimension nactpi_;
     /// The multiplicity of the wave function
     int wavefunction_multiplicity_;
     /// The nuclear repulsion energy
@@ -470,6 +470,5 @@ class ProjectorCI : public Wavefunction {
     std::vector<std::tuple<double, int, int>> sym_labeled_orbitals(std::string type);
 };
 }
-} // End Namespaces
 
 #endif // _pci_h_

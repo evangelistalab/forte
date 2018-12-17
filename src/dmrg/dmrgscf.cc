@@ -37,7 +37,7 @@
 #include "psi4/psi4-dec.h"
 #include "psi4/psifiles.h"
 // Header above this comment contains typedef std::shared_ptr<psi::Matrix>
-// SharedMatrix;
+// psi::SharedMatrix;
 #include "psi4/libciomr/libciomr.h"
 #include "psi4/libfock/jk.h"
 #include "psi4/libmints/writer_file_prefix.h"
@@ -63,10 +63,10 @@
 // This allows us to be lazy in getting the spaces in DPD calls
 #define ID(x) ints->DPD_ID(x)
 
-namespace psi {
+
 namespace forte {
 
-DMRGSCF::DMRGSCF(SharedWavefunction ref_wfn, Options& options,
+DMRGSCF::DMRGSCF(psi::SharedWavefunction ref_wfn, psi::Options& options,
                  std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ForteIntegrals> ints)
     : Wavefunction(options), mo_space_info_(mo_space_info), ints_(ints) {
     shallow_copy(ref_wfn);
@@ -96,13 +96,13 @@ int DMRGSCF::chemps2_groupnumber(const string SymmLabel) {
         for (int cnt = 0; cnt < magic_number_max_groups_chemps2; cnt++) {
             (*outfile) << "   <" << (CheMPS2::Irreps::getGroupName(cnt)).c_str() << ">" << endl;
         }
-        throw PSIEXCEPTION("CheMPS2 did not recognize the symmetry group name!");
+        throw psi::PSIEXCEPTION("CheMPS2 did not recognize the symmetry group name!");
     }
     return SyGroup;
 }
 
 void DMRGSCF::buildTmatrix(CheMPS2::DMRGSCFmatrix* theTmatrix, CheMPS2::DMRGSCFindices* iHandler,
-                           std::shared_ptr<PSIO> psio, SharedMatrix Cmat) {
+                           std::shared_ptr<PSIO> psio, psi::SharedMatrix Cmat) {
 
     const int nirrep = this->nirrep();
     const int nmo = this->nmo();
@@ -120,12 +120,12 @@ void DMRGSCF::buildTmatrix(CheMPS2::DMRGSCFmatrix* theTmatrix, CheMPS2::DMRGSCFi
     }
     delete[] work2;
 
-    SharedMatrix soOei;
-    soOei = SharedMatrix(new Matrix("SO OEI", nirrep, sopi, sopi));
-    SharedMatrix half;
-    half = SharedMatrix(new Matrix("Half", nirrep, mopi, sopi));
-    SharedMatrix moOei;
-    moOei = SharedMatrix(new Matrix("MO OEI", nirrep, mopi, mopi));
+    psi::SharedMatrix soOei;
+    soOei = std::make_shared<psi::Matrix>("SO OEI", nirrep, sopi, sopi));
+    psi::SharedMatrix half;
+    half = std::make_shared<psi::Matrix>("Half", nirrep, mopi, sopi));
+    psi::SharedMatrix moOei;
+    moOei = std::make_shared<psi::Matrix>("MO OEI", nirrep, mopi, mopi));
 
     soOei->set(work1);
     half->gemm(true, false, 1.0, Cmat, soOei, 0.0);
@@ -135,7 +135,7 @@ void DMRGSCF::buildTmatrix(CheMPS2::DMRGSCFmatrix* theTmatrix, CheMPS2::DMRGSCFi
     copyPSIMXtoCHEMPS2MX(moOei, iHandler, theTmatrix);
 }
 
-void DMRGSCF::buildJK(SharedMatrix MO_RDM, SharedMatrix MO_JK, SharedMatrix Cmat,
+void DMRGSCF::buildJK(psi::SharedMatrix MO_RDM, psi::SharedMatrix MO_JK, psi::SharedMatrix Cmat,
                       std::shared_ptr<JK> myJK) {
 
     const int nso = this->nso();
@@ -145,23 +145,23 @@ void DMRGSCF::buildJK(SharedMatrix MO_RDM, SharedMatrix MO_JK, SharedMatrix Cmat
     const int nirrep = this->nirrep();
 
     // nso can be different from nmo
-    SharedMatrix SO_RDM;
-    SO_RDM = SharedMatrix(new Matrix("SO RDM", nirrep, nsopi, nsopi));
-    SharedMatrix Identity;
-    Identity = SharedMatrix(new Matrix("Identity", nirrep, nsopi, nsopi));
-    SharedMatrix SO_JK;
-    SO_JK = SharedMatrix(new Matrix("SO JK", nirrep, nsopi, nsopi));
-    SharedMatrix work;
-    work = SharedMatrix(new Matrix("work", nirrep, nsopi, nmopi));
+    psi::SharedMatrix SO_RDM;
+    SO_RDM = std::make_shared<psi::Matrix>("SO RDM", nirrep, nsopi, nsopi));
+    psi::SharedMatrix Identity;
+    Identity = std::make_shared<psi::Matrix>("Identity", nirrep, nsopi, nsopi));
+    psi::SharedMatrix SO_JK;
+    SO_JK = std::make_shared<psi::Matrix>("SO JK", nirrep, nsopi, nsopi));
+    psi::SharedMatrix work;
+    work = std::make_shared<psi::Matrix>("work", nirrep, nsopi, nmopi));
 
     work->gemm(false, false, 1.0, Cmat, MO_RDM, 0.0);
     SO_RDM->gemm(false, true, 1.0, work, Cmat, 0.0);
 
-    std::vector<SharedMatrix>& CL = myJK->C_left();
+    std::vector<psi::SharedMatrix>& CL = myJK->C_left();
     CL.clear();
     CL.push_back(SO_RDM);
 
-    std::vector<SharedMatrix>& CR = myJK->C_right();
+    std::vector<psi::SharedMatrix>& CR = myJK->C_right();
     CR.clear();
     Identity->identity();
     CR.push_back(Identity);
@@ -179,7 +179,7 @@ void DMRGSCF::buildJK(SharedMatrix MO_RDM, SharedMatrix MO_JK, SharedMatrix Cmat
     MO_JK->gemm(true, false, 1.0, Cmat, work, 0.0);
 }
 
-void DMRGSCF::copyPSIMXtoCHEMPS2MX(SharedMatrix source, CheMPS2::DMRGSCFindices* iHandler,
+void DMRGSCF::copyPSIMXtoCHEMPS2MX(psi::SharedMatrix source, CheMPS2::DMRGSCFindices* iHandler,
                                    CheMPS2::DMRGSCFmatrix* target) {
 
     for (int irrep = 0; irrep < iHandler->getNirreps(); irrep++) {
@@ -192,7 +192,7 @@ void DMRGSCF::copyPSIMXtoCHEMPS2MX(SharedMatrix source, CheMPS2::DMRGSCFindices*
 }
 
 void DMRGSCF::copyCHEMPS2MXtoPSIMX(CheMPS2::DMRGSCFmatrix* source,
-                                   CheMPS2::DMRGSCFindices* iHandler, SharedMatrix target) {
+                                   CheMPS2::DMRGSCFindices* iHandler, psi::SharedMatrix target) {
 
     for (int irrep = 0; irrep < iHandler->getNirreps(); irrep++) {
         for (int orb1 = 0; orb1 < iHandler->getNORB(irrep); orb1++) {
@@ -204,7 +204,7 @@ void DMRGSCF::copyCHEMPS2MXtoPSIMX(CheMPS2::DMRGSCFmatrix* source,
 }
 
 void DMRGSCF::buildQmatOCC(CheMPS2::DMRGSCFmatrix* theQmatOCC, CheMPS2::DMRGSCFindices* iHandler,
-                           SharedMatrix MO_RDM, SharedMatrix MO_JK, SharedMatrix Cmat,
+                           psi::SharedMatrix MO_RDM, psi::SharedMatrix MO_JK, psi::SharedMatrix Cmat,
                            std::shared_ptr<JK> myJK) {
 
     MO_RDM->zero();
@@ -218,8 +218,8 @@ void DMRGSCF::buildQmatOCC(CheMPS2::DMRGSCFmatrix* theQmatOCC, CheMPS2::DMRGSCFi
 }
 
 void DMRGSCF::buildQmatACT(CheMPS2::DMRGSCFmatrix* theQmatACT, CheMPS2::DMRGSCFindices* iHandler,
-                           double* DMRG1DM, SharedMatrix MO_RDM, SharedMatrix MO_JK,
-                           SharedMatrix Cmat, std::shared_ptr<JK> myJK) {
+                           double* DMRG1DM, psi::SharedMatrix MO_RDM, psi::SharedMatrix MO_JK,
+                           psi::SharedMatrix Cmat, std::shared_ptr<JK> myJK) {
 
     MO_RDM->zero();
     const int nOrbDMRG = iHandler->getDMRGcumulative(iHandler->getNirreps());
@@ -252,7 +252,7 @@ void DMRGSCF::buildHamDMRG(std::shared_ptr<IntegralTransform> ints,
 
     // Econstant and one-electron integrals
     {
-        double Econstant = Process::environment.molecule()->nuclear_repulsion_energy(
+        double Econstant = psi::Process::environment.molecule()->nuclear_repulsion_energy(
             reference_wavefunction_->get_dipole_field_strength());
         for (int h = 0; h < iHandler->getNirreps(); h++) {
             const int NOCC = iHandler->getNOCC(h);
@@ -345,12 +345,12 @@ void DMRGSCF::fillRotatedTEI_coulomb(std::shared_ptr<IntegralTransform> ints,
         }
         delete[] work2;
 
-        SharedMatrix soOei;
-        soOei = SharedMatrix(new Matrix("SO OEI", nirrep, sopi, sopi));
-        SharedMatrix half;
-        half = SharedMatrix(new Matrix("Half", nirrep, mopi, sopi));
-        SharedMatrix moOei;
-        moOei = SharedMatrix(new Matrix("MO OEI", nirrep, mopi, mopi));
+        psi::SharedMatrix soOei;
+        soOei = std::make_shared<psi::Matrix>("SO OEI", nirrep, sopi, sopi));
+        psi::SharedMatrix half;
+        half = std::make_shared<psi::Matrix>("Half", nirrep, mopi, sopi));
+        psi::SharedMatrix moOei;
+        moOei = std::make_shared<psi::Matrix>("MO OEI", nirrep, mopi, mopi));
 
         soOei->set(work1);
         half->gemm(true, false, 1.0, this->Ca(), soOei, 0.0);
@@ -450,7 +450,7 @@ void DMRGSCF::fillRotatedTEI_exchange(std::shared_ptr<IntegralTransform> ints,
 }
 
 void DMRGSCF::copyUNITARYtoPSIMX(CheMPS2::DMRGSCFunitary* unitary,
-                                 CheMPS2::DMRGSCFindices* iHandler, SharedMatrix target) {
+                                 CheMPS2::DMRGSCFindices* iHandler, psi::SharedMatrix target) {
 
     for (int irrep = 0; irrep < iHandler->getNirreps(); irrep++) {
         for (int orb1 = 0; orb1 < iHandler->getNORB(irrep); orb1++) {
@@ -462,9 +462,9 @@ void DMRGSCF::copyUNITARYtoPSIMX(CheMPS2::DMRGSCFunitary* unitary,
     }
 }
 
-void DMRGSCF::update_WFNco(SharedMatrix Coeff_orig, CheMPS2::DMRGSCFindices* iHandler,
-                           CheMPS2::DMRGSCFunitary* unitary, SharedMatrix work1,
-                           SharedMatrix work2) {
+void DMRGSCF::update_WFNco(psi::SharedMatrix Coeff_orig, CheMPS2::DMRGSCFindices* iHandler,
+                           CheMPS2::DMRGSCFunitary* unitary, psi::SharedMatrix work1,
+                           psi::SharedMatrix work2) {
 
     // copyCHEMPS2MXtoPSIMX( Coeff_orig, iHandler, work1 );
     copyUNITARYtoPSIMX(unitary, iHandler, work2);
@@ -481,10 +481,10 @@ double DMRGSCF::compute_energy() {
      *******************************/
     std::shared_ptr<PSIO> psio(_default_psio_lib_); // Grab the global (default)
                                                     // PSIO object, for file I/O
-    // std::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
+    // std::shared_ptr<psi::Wavefunction> wfn = psi::Process::environment.wavefunction();
     // // The reference (SCF) wavefunction
     if (!reference_wavefunction_) {
-        throw PSIEXCEPTION("SCF has not been run yet!");
+        throw psi::PSIEXCEPTION("SCF has not been run yet!");
     }
 
     /*************************
@@ -510,7 +510,7 @@ double DMRGSCF::compute_energy() {
     // int * active                      = options_.get_int_array("ACTIVE");
     /// Sebastian optimizes the frozen_docc
     int* frozen_docc = options_.get_int_array("DMRG_FROZEN_DOCC");
-    Dimension active = mo_space_info_->get_dimension("ACTIVE");
+    psi::Dimension active = mo_space_info_->get_dimension("ACTIVE");
     const double dmrgscf_convergence = options_.get_double("D_CONVERGENCE");
     const bool dmrgscf_store_unit = options_.get_bool("DMRG_STORE_UNIT");
     const bool dmrgscf_do_diis = options_.get_bool("DMRG_DO_DIIS");
@@ -535,63 +535,63 @@ double DMRGSCF::compute_energy() {
      *   Check if the input is consistent   *
      ****************************************/
 
-    const int SyGroup = chemps2_groupnumber(Process::environment.molecule()->sym_label());
+    const int SyGroup = chemps2_groupnumber(psi::Process::environment.molecule()->sym_label());
     const int nmo = this->nmo();
     const int nirrep = this->nirrep();
     int* orbspi = this->nmopi();
     int* docc = this->doccpi();
     int* socc = this->soccpi();
     if (wfn_irrep < 0) {
-        throw PSIEXCEPTION("Option WFN_IRREP (integer) may not be smaller than zero!");
+        throw psi::PSIEXCEPTION("Option WFN_IRREP (integer) may not be smaller than zero!");
     }
     if (wfn_multp < 1) {
-        throw PSIEXCEPTION("Option WFN_MULTP (integer) should be larger or "
+        throw psi::PSIEXCEPTION("Option WFN_MULTP (integer) should be larger or "
                            "equal to one: WFN_MULTP = (2S+1) >= 1 !");
     }
     if (ndmrg_states == 0) {
-        throw PSIEXCEPTION("Option DMRG_STATES (integer array) should be set!");
+        throw psi::PSIEXCEPTION("Option DMRG_STATES (integer array) should be set!");
     }
     if (ndmrg_econv == 0) {
-        throw PSIEXCEPTION("Option DMRG_ECONV (double array) should be set!");
+        throw psi::PSIEXCEPTION("Option DMRG_ECONV (double array) should be set!");
     }
     if (ndmrg_maxsweeps == 0) {
-        throw PSIEXCEPTION("Option DMRG_MAXSWEEPS (integer array) should be set!");
+        throw psi::PSIEXCEPTION("Option DMRG_MAXSWEEPS (integer array) should be set!");
     }
     if (ndmrg_noiseprefactors == 0) {
-        throw PSIEXCEPTION("Option DMRG_NOISEPREFACTORS (double array) should be set!");
+        throw psi::PSIEXCEPTION("Option DMRG_NOISEPREFACTORS (double array) should be set!");
     }
     if (ndmrg_states != ndmrg_econv) {
-        throw PSIEXCEPTION("Options DMRG_STATES (integer array) and DMRG_ECONV "
+        throw psi::PSIEXCEPTION("Options DMRG_STATES (integer array) and DMRG_ECONV "
                            "(double array) should contain the same number of "
                            "elements!");
     }
     if (ndmrg_states != ndmrg_maxsweeps) {
-        throw PSIEXCEPTION("Options DMRG_STATES (integer array) and "
+        throw psi::PSIEXCEPTION("Options DMRG_STATES (integer array) and "
                            "DMRG_MAXSWEEPS (integer array) should contain the "
                            "same number of elements!");
     }
     if (ndmrg_states != ndmrg_noiseprefactors) {
-        throw PSIEXCEPTION("Options DMRG_STATES (integer array) and "
+        throw psi::PSIEXCEPTION("Options DMRG_STATES (integer array) and "
                            "DMRG_NOISEPREFACTORS (double array) should contain "
                            "the same number of elements!");
     }
     for (int cnt = 0; cnt < ndmrg_states; cnt++) {
         if (dmrg_states[cnt] < 2) {
-            throw PSIEXCEPTION("Entries in DMRG_STATES (integer array) should "
+            throw psi::PSIEXCEPTION("Entries in DMRG_STATES (integer array) should "
                                "be larger than 1!");
         }
     }
     if (dmrgscf_convergence <= 0.0) {
-        throw PSIEXCEPTION("Option D_CONVERGENCE (double) must be larger than zero!");
+        throw psi::PSIEXCEPTION("Option D_CONVERGENCE (double) must be larger than zero!");
     }
     if (dmrgscf_diis_branch <= 0.0) {
-        throw PSIEXCEPTION("Option DMRG_DIIS_BRANCH (double) must be larger than zero!");
+        throw psi::PSIEXCEPTION("Option DMRG_DIIS_BRANCH (double) must be larger than zero!");
     }
     if (dmrg_iterations_ < 1) {
-        throw PSIEXCEPTION("Option DMRG_MAX_ITER (integer) must be larger than zero!");
+        throw psi::PSIEXCEPTION("Option DMRG_MAX_ITER (integer) must be larger than zero!");
     }
     if (dmrgscf_which_root < 1) {
-        throw PSIEXCEPTION("Option DMRG_WHICH_ROOT (integer) must be larger than zero!");
+        throw psi::PSIEXCEPTION("Option DMRG_WHICH_ROOT (integer) must be larger than zero!");
     }
 
     /*******************************************
@@ -656,7 +656,7 @@ double DMRGSCF::compute_energy() {
     }
     (*outfile) << " ]" << endl;
     if (!virtualsOK) {
-        throw PSIEXCEPTION("For at least one irrep: frozen_docc[ irrep ] + "
+        throw psi::PSIEXCEPTION("For at least one irrep: frozen_docc[ irrep ] + "
                            "active[ irrep ] > numOrbitals[ irrep ]!");
     }
     (*outfile) << "DMRGSCF computation run with " << dmrg_iterations_ << "iterations" << endl;
@@ -725,7 +725,7 @@ double DMRGSCF::compute_energy() {
     CheMPS2::Problem* Prob =
         new CheMPS2::Problem(HamDMRG, wfn_multp - 1, nDMRGelectrons, wfn_irrep);
     if (!(Prob->checkConsistency())) {
-        throw PSIEXCEPTION("CheMPS2::Problem : No Hilbert state vector "
+        throw psi::PSIEXCEPTION("CheMPS2::Problem : No Hilbert state vector "
                            "compatible with all symmetry sectors!");
     }
     Prob->SetupReorderD2h(); // Does nothing if group not d2h
@@ -735,15 +735,15 @@ double DMRGSCF::compute_energy() {
      *   Start with DMRGSCF               *
      **************************************/
 
-    SharedMatrix work1;
-    work1 = SharedMatrix(new Matrix("work1", nirrep, orbspi, orbspi));
-    SharedMatrix work2;
-    work2 = SharedMatrix(new Matrix("work2", nirrep, orbspi, orbspi));
+    psi::SharedMatrix work1;
+    work1 = std::make_shared<psi::Matrix>("work1", nirrep, orbspi, orbspi));
+    psi::SharedMatrix work2;
+    work2 = std::make_shared<psi::Matrix>("work2", nirrep, orbspi, orbspi));
     std::shared_ptr<JK> myJK = std::shared_ptr<JK>(new DiskJK(this->basisset(), options_));
 
     myJK->set_cutoff(0.0);
     myJK->initialize();
-    SharedMatrix Coeff_orig = SharedMatrix(new Matrix(this->Ca()));
+    psi::SharedMatrix Coeff_orig = std::make_shared<psi::Matrix>(this->Ca()));
     // copyPSIMXtoCHEMPS2MX(this->Ca(), iHandler, );
 
     std::vector<int> OAorbs; // Occupied + active
@@ -1123,8 +1123,8 @@ double DMRGSCF::compute_energy() {
     delete HamDMRG;
 
     outfile->Printf("The DMRG-SCF energy = %3.10f \n", Energy);
-    Process::environment.globals["CURRENT ENERGY"] = Energy;
-    Process::environment.globals["DMRGSCF ENERGY"] = Energy;
+    psi::Process::environment.globals["CURRENT ENERGY"] = Energy;
+    psi::Process::environment.globals["DMRGSCF ENERGY"] = Energy;
     dmrg_ref_.set_Eref(Energy);
     return Energy;
 }
@@ -1135,7 +1135,7 @@ void DMRGSCF::compute_reference(double* one_rdm, double* two_rdm, double* three_
     //{
     //    outfile->Printf("\n\n Spinadapted formalism requires spin-averaged
     //    quantitities");
-    //    throw PSIEXCEPTION("You need to spin averaged things");
+    //    throw psi::PSIEXCEPTION("You need to spin averaged things");
     //}
     Reference dmrg_ref;
     size_t na = mo_space_info_->size("ACTIVE");

@@ -40,7 +40,7 @@
 
 #include "determinant_common.h"
 
-namespace psi {
+
 namespace forte {
 
 /**
@@ -129,13 +129,13 @@ class STLBitsetDeterminant {
     /// Return a vector of virtual beta orbitals
     std::vector<int> get_beta_vir(int norb) const;
 
-    /// Return a Dimension object for occupied alpha orbitals
+    /// Return a psi::Dimension object for occupied alpha orbitals
     std::vector<std::vector<int>> get_asym_occ(std::vector<int> act_mo) const;
-    /// Return a Dimension object for occupied beta orbital
+    /// Return a psi::Dimension object for occupied beta orbital
     std::vector<std::vector<int>> get_bsym_occ(std::vector<int> act_mo) const;
-    /// Return a Dimension object for virtual alpha orbital
+    /// Return a psi::Dimension object for virtual alpha orbital
     std::vector<std::vector<int>> get_asym_vir(std::vector<int> act_mo) const;
-    /// Return a Dimension object for virtual beta orbitals
+    /// Return a psi::Dimension object for virtual beta orbitals
     std::vector<std::vector<int>> get_bsym_vir(std::vector<int> act_mo) const;
 
     //    /// Return a vector of occupied alpha orbitals
@@ -187,7 +187,7 @@ class STLBitsetDeterminant {
     double double_excitation_bb(int i, int j, int a, int b);
 
     struct Hash {
-        std::size_t operator()(const psi::forte::STLBitsetDeterminant& bs) const {
+        std::size_t operator()(const forte::STLBitsetDeterminant& bs) const {
             return std::hash<bit_t>()(bs.bits_);
         }
     };
@@ -218,6 +218,5 @@ void enforce_spin_completeness(std::vector<STLBitsetDeterminant>& det_space, int
 /// Compute the matrix element of the S^2 operator between two determinants
 double spin2(const STLBitsetDeterminant& lhs, const STLBitsetDeterminant& rhs);
 }
-} // End Namespaces
 
 #endif // _bitset_determinant_h_

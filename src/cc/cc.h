@@ -46,10 +46,10 @@
 #include "sparse_ci/determinant.h"
 
 using namespace ambit;
-namespace psi {
+
 namespace forte {
 
-class CC : public Wavefunction {
+class CC : public psi::Wavefunction {
   public:
     /**
      * CC Constructor
@@ -58,7 +58,7 @@ class CC : public Wavefunction {
      * @param ints A pointer to an allocated integral object
      * @param mo_space_info The MOSpaceInfo object
      */
-    CC(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
+    CC(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
        std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Destructor
@@ -144,5 +144,5 @@ class CC : public Wavefunction {
     std::vector<double> Fb_;
 };
 }
-}
+
 #endif // _cc_h_

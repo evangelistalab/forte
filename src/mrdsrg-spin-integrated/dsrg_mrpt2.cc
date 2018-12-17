@@ -48,10 +48,11 @@
 
 using namespace ambit;
 
-namespace psi {
+using namespace psi;
+
 namespace forte {
 
-DSRG_MRPT2::DSRG_MRPT2(Reference reference, SharedWavefunction ref_wfn, Options& options,
+DSRG_MRPT2::DSRG_MRPT2(Reference reference, psi::SharedWavefunction ref_wfn, psi::Options& options,
                        std::shared_ptr<ForteIntegrals> ints,
                        std::shared_ptr<MOSpaceInfo> mo_space_info)
     : MASTER_DSRG(reference, ref_wfn, options, ints, mo_space_info) {
@@ -453,8 +454,8 @@ double DSRG_MRPT2::compute_energy() {
         outfile->Printf("\n    %-30s = %22.15f", str_dim.first.c_str(), str_dim.second);
     }
 
-    Process::environment.globals["UNRELAXED ENERGY"] = Etotal;
-    Process::environment.globals["CURRENT ENERGY"] = Etotal;
+    psi::Process::environment.globals["UNRELAXED ENERGY"] = Etotal;
+    psi::Process::environment.globals["CURRENT ENERGY"] = Etotal;
     outfile->Printf("\n\n  Energy took %10.3f s", DSRG_energy.get());
     outfile->Printf("\n");
 
@@ -1465,7 +1466,7 @@ void DSRG_MRPT2::print_dm_pt2() {
     outfile->Printf("\n    DSRG-MRPT2 dipole moment:");
     outfile->Printf("\n      X: %10.6f  Y: %10.6f  Z: %10.6f  Total: %10.6f\n", x, y, z, t);
 
-    Process::environment.globals["UNRELAXED DIPOLE"] = t;
+    psi::Process::environment.globals["UNRELAXED DIPOLE"] = t;
 }
 
 void DSRG_MRPT2::compute_dm1d_pt2(BlockedTensor& M, double& Mbar0, BlockedTensor& Mbar1,
@@ -1493,8 +1494,8 @@ void DSRG_MRPT2::compute_dm1d_pt2(BlockedTensor& M, double& Mbar0, BlockedTensor
     //    D1["AB"] += 0.5 * T2_["MNBC"] * T2_["MNAC"];
     //    D1["AB"] += T2_["mNcB"] * T2_["mNcA"];
 
-    //    // transform D1 with a irrep SharedMatrix
-    //    SharedMatrix SOdens(new Matrix("SO density ", this->nmopi(), this->nmopi()));
+    //    // transform D1 with a irrep psi::SharedMatrix
+    //    psi::SharedMatrix SOdens(new psi::Matrix("SO density ", this->nmopi(), this->nmopi()));
 
     //    for (const auto& pair: mo_space_info_->get_relative_mo("FROZEN_DOCC")) {
     //        size_t h = pair.first;
@@ -1527,12 +1528,12 @@ void DSRG_MRPT2::compute_dm1d_pt2(BlockedTensor& M, double& Mbar0, BlockedTensor
 
     //    SOdens->back_transform(this->Ca());
 
-    //    SharedMatrix sotoao(this->aotoso()->transpose());
+    //    psi::SharedMatrix sotoao(this->aotoso()->transpose());
     //    size_t nao = sotoao->coldim(0);
-    //    SharedMatrix AOdens(new Matrix("AO density ", nao, nao));
+    //    psi::SharedMatrix AOdens(new psi::Matrix("AO density ", nao, nao));
     //    AOdens->remove_symmetry(SOdens, sotoao);
 
-    //    std::vector<SharedMatrix> aodipole_ints = ints_->AOdipole_ints();
+    //    std::vector<psi::SharedMatrix> aodipole_ints = ints_->AOdipole_ints();
     //    std::vector<double> de(4, 0.0);
     //    for (int i = 0; i < 3; ++i) {
     //        de[i] = 2.0 * AOdens->vector_dot(aodipole_ints[i]); // 2.0 for beta spin
@@ -1770,7 +1771,7 @@ double DSRG_MRPT2::compute_energy_relaxed() {
         double t = std::sqrt(x * x + y * y + z * z);
         outfile->Printf("\n    DSRG-MRPT2 unrelaxed dipole moment:");
         outfile->Printf("\n      X: %10.6f  Y: %10.6f  Z: %10.6f  Total: %10.6f\n", x, y, z, t);
-        Process::environment.globals["UNRELAXED DIPOLE"] = t;
+        psi::Process::environment.globals["UNRELAXED DIPOLE"] = t;
 
         // there should be only one entry for state-specific computations
         if (dm_relax.size() == 1) {
@@ -1782,13 +1783,13 @@ double DSRG_MRPT2::compute_energy_relaxed() {
             }
             outfile->Printf("\n    DSRG-MRPT2 partially relaxed dipole moment:");
             outfile->Printf("\n      X: %10.6f  Y: %10.6f  Z: %10.6f  Total: %10.6f\n", x, y, z, t);
-            Process::environment.globals["PARTIALLY RELAXED DIPOLE"] = t;
+            psi::Process::environment.globals["PARTIALLY RELAXED DIPOLE"] = t;
         }
     }
 
-    Process::environment.globals["UNRELAXED ENERGY"] = Edsrg;
-    Process::environment.globals["PARTIALLY RELAXED ENERGY"] = Erelax;
-    Process::environment.globals["CURRENT ENERGY"] = Erelax;
+    psi::Process::environment.globals["UNRELAXED ENERGY"] = Edsrg;
+    psi::Process::environment.globals["PARTIALLY RELAXED ENERGY"] = Erelax;
+    psi::Process::environment.globals["CURRENT ENERGY"] = Erelax;
     return Erelax;
 }
 
@@ -2196,7 +2197,7 @@ void DSRG_MRPT2::transfer_integrals() {
     outfile->Printf("\n    %-30s = %22.15f", "Total Energy (before)", Eref_ + Hbar0_);
 
     if (std::fabs(Etest - Eref_ - Hbar0_) > 100.0 * options_.get_double("E_CONVERGENCE")) {
-        throw PSIEXCEPTION("De-normal-odering failed.");
+        throw psi::PSIEXCEPTION("De-normal-odering failed.");
     }
 }
 
@@ -2639,22 +2640,22 @@ std::vector<std::vector<double>> DSRG_MRPT2::diagonalize_Fock_diagblocks(Blocked
     // diagonal blocks identifiers (C-A-V ordering)
     std::vector<std::string> blocks{"cc", "aa", "vv", "CC", "AA", "VV"};
 
-    // map MO space label to its Dimension
-    std::map<std::string, Dimension> MOlabel_to_dimension;
+    // map MO space label to its psi::Dimension
+    std::map<std::string, psi::Dimension> MOlabel_to_dimension;
     MOlabel_to_dimension[acore_label_] = mo_space_info_->get_dimension("RESTRICTED_DOCC");
     MOlabel_to_dimension[aactv_label_] = mo_space_info_->get_dimension("ACTIVE");
     MOlabel_to_dimension[avirt_label_] = mo_space_info_->get_dimension("RESTRICTED_UOCC");
 
     // eigen values to be returned
     size_t ncmo = mo_space_info_->size("CORRELATED");
-    Dimension corr = mo_space_info_->get_dimension("CORRELATED");
+    psi::Dimension corr = mo_space_info_->get_dimension("CORRELATED");
     std::vector<double> eigenvalues_a(ncmo, 0.0);
     std::vector<double> eigenvalues_b(ncmo, 0.0);
 
-    // map MO space label to its offset Dimension
-    std::map<std::string, Dimension> MOlabel_to_offset_dimension;
+    // map MO space label to its offset psi::Dimension
+    std::map<std::string, psi::Dimension> MOlabel_to_offset_dimension;
     int nirrep = corr.n();
-    MOlabel_to_offset_dimension["c"] = Dimension(std::vector<int>(nirrep, 0));
+    MOlabel_to_offset_dimension["c"] = psi::Dimension(std::vector<int>(nirrep, 0));
     MOlabel_to_offset_dimension["a"] = mo_space_info_->get_dimension("RESTRICTED_DOCC");
     MOlabel_to_offset_dimension["v"] =
         mo_space_info_->get_dimension("RESTRICTED_DOCC") + mo_space_info_->get_dimension("ACTIVE");
@@ -2689,7 +2690,7 @@ std::vector<std::vector<double>> DSRG_MRPT2::diagonalize_Fock_diagblocks(Blocked
             continue;
         } else {
             std::string label(1, tolower(block[0]));
-            Dimension space = MOlabel_to_dimension[label];
+            psi::Dimension space = MOlabel_to_dimension[label];
             int nirrep = space.n();
 
             // separate Fock with irrep
@@ -2724,15 +2725,15 @@ std::vector<std::vector<double>> DSRG_MRPT2::diagonalize_Fock_diagblocks(Blocked
     return {eigenvalues_a, eigenvalues_b};
 }
 
-ambit::Tensor DSRG_MRPT2::separate_tensor(ambit::Tensor& tens, const Dimension& irrep,
+ambit::Tensor DSRG_MRPT2::separate_tensor(ambit::Tensor& tens, const psi::Dimension& irrep,
                                           const int& h) {
     // test tens and irrep
     size_t tens_dim = tens.dim(0);
     if (tens_dim != static_cast<size_t>(irrep.sum()) || tens_dim != tens.dim(1)) {
-        throw PSIEXCEPTION("Wrong dimension for the to-be-separated ambit Tensor.");
+        throw psi::PSIEXCEPTION("Wrong dimension for the to-be-separated ambit Tensor.");
     }
     if (h >= irrep.n()) {
-        throw PSIEXCEPTION("Ask for wrong irrep.");
+        throw psi::PSIEXCEPTION("Ask for wrong irrep.");
     }
 
     // from relative (blocks) to absolute (big tensor) index
@@ -2758,15 +2759,15 @@ ambit::Tensor DSRG_MRPT2::separate_tensor(ambit::Tensor& tens, const Dimension& 
     return T_h;
 }
 
-void DSRG_MRPT2::combine_tensor(ambit::Tensor& tens, ambit::Tensor& tens_h, const Dimension& irrep,
+void DSRG_MRPT2::combine_tensor(ambit::Tensor& tens, ambit::Tensor& tens_h, const psi::Dimension& irrep,
                                 const int& h) {
     // test tens and irrep
     if (h >= irrep.n()) {
-        throw PSIEXCEPTION("Ask for wrong irrep.");
+        throw psi::PSIEXCEPTION("Ask for wrong irrep.");
     }
     size_t tens_h_dim = tens_h.dim(0), h_dim = irrep[h];
     if (tens_h_dim != h_dim || tens_h_dim != tens_h.dim(1)) {
-        throw PSIEXCEPTION("Wrong dimension for the to-be-combined ambit Tensor.");
+        throw psi::PSIEXCEPTION("Wrong dimension for the to-be-combined ambit Tensor.");
     }
 
     // from relative (blocks) to absolute (big tensor) index
@@ -2814,7 +2815,7 @@ ambit::BlockedTensor DSRG_MRPT2::get_T2(const std::vector<std::string>& blocks) 
     for (const std::string& block : blocks) {
         if (!T2_.is_block(block)) {
             std::string error = "Error from T2(blocks): cannot find block " + block;
-            throw PSIEXCEPTION(error);
+            throw psi::PSIEXCEPTION(error);
         }
     }
     ambit::BlockedTensor out = ambit::BlockedTensor::build(tensor_type_, "T2 selected", blocks);
@@ -2838,7 +2839,7 @@ ambit::BlockedTensor DSRG_MRPT2::get_RH1deGNO() {
     return RH1eff;
 }
 
-void DSRG_MRPT2::rotate_amp(SharedMatrix Ua, SharedMatrix Ub, const bool& transpose,
+void DSRG_MRPT2::rotate_amp(psi::SharedMatrix Ua, psi::SharedMatrix Ub, const bool& transpose,
                             const bool& t1eff) {
     ambit::BlockedTensor U = BTF_->build(tensor_type_, "Uorb", spin_cases({"gg"}));
 
@@ -3205,4 +3206,3 @@ void DSRG_MRPT2::print_intruder(const std::string& name,
     outfile->Printf("\n%s", output.c_str());
 }
 }
-} // End Namespaces

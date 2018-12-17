@@ -47,7 +47,8 @@
 #define PAIRINDEX(i, j) ((i > j) ? (IOFFINDEX(i) + (j)) : (IOFFINDEX(j) + (i)))
 #define four(i, j, k, l) PAIRINDEX(PAIRINDEX(i, j), PAIRINDEX(k, l))
 
-namespace psi {
+using namespace psi;
+
 namespace forte {
 
 /**
@@ -56,7 +57,7 @@ namespace forte {
  * @param restricted - type of integral transformation
  * @param resort_frozen_core -
  */
-CustomIntegrals::CustomIntegrals(psi::Options& options, SharedWavefunction ref_wfn,
+CustomIntegrals::CustomIntegrals(psi::Options& options, psi::SharedWavefunction ref_wfn,
                                  IntegralSpinRestriction restricted,
                                  std::shared_ptr<MOSpaceInfo> mo_space_info)
     : ForteIntegrals(options, ref_wfn, restricted, mo_space_info) {
@@ -124,18 +125,18 @@ ambit::Tensor CustomIntegrals::three_integral_block(const std::vector<size_t>&,
                                                     const std::vector<size_t>&) {
     outfile->Printf("\n Oh no!, you tried to grab a ThreeIntegral but this "
                     "is not there!!");
-    throw PSIEXCEPTION("INT_TYPE=DF/CHOLESKY to use ThreeIntegral");
+    throw psi::PSIEXCEPTION("INT_TYPE=DF/CHOLESKY to use ThreeIntegral");
 }
 
 ambit::Tensor CustomIntegrals::three_integral_block_two_index(const std::vector<size_t>&, size_t,
                                                               const std::vector<size_t>&) {
     outfile->Printf("\n Oh no! this isn't here");
-    throw PSIEXCEPTION("INT_TYPE=DISKDF");
+    throw psi::PSIEXCEPTION("INT_TYPE=DISKDF");
 }
 
 double** CustomIntegrals::three_integral_pointer() {
     outfile->Printf("\n Doh! There is no Three_integral here.  Use DF/CD");
-    throw PSIEXCEPTION("INT_TYPE=DF/CHOLESKY to use ThreeIntegral!");
+    throw psi::PSIEXCEPTION("INT_TYPE=DF/CHOLESKY to use ThreeIntegral!");
 }
 
 void CustomIntegrals::set_tei(size_t p, size_t q, size_t r, size_t s, double value, bool alpha1,
@@ -379,7 +380,7 @@ void CustomIntegrals::resort_four(std::vector<double>& tei, std::vector<size_t>&
     temp_ints.swap(tei);
 }
 
-void CustomIntegrals::make_fock_matrix(SharedMatrix gamma_a, SharedMatrix gamma_b) {
+void CustomIntegrals::make_fock_matrix(psi::SharedMatrix gamma_a, psi::SharedMatrix gamma_b) {
     for (size_t p = 0; p < ncmo_; ++p) {
         for (size_t q = 0; q < ncmo_; ++q) {
             fock_matrix_a_[p * ncmo_ + q] = oei_a(p, q);
@@ -416,4 +417,4 @@ void CustomIntegrals::make_fock_matrix(SharedMatrix gamma_a, SharedMatrix gamma_
     }
 }
 } // namespace forte
-} // namespace psi
+

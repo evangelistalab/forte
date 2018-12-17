@@ -32,7 +32,7 @@
 
 #include "integrals.h"
 
-namespace psi {
+
 
 class Tensor;
 
@@ -45,7 +45,7 @@ class MOSpaceInfo;
 #ifdef HAVE_GA
 class DistDFIntegrals : public ForteIntegrals {
   public:
-    DistDFIntegrals(psi::Options& options, SharedWavefunction ref_wfn,
+    DistDFIntegrals(psi::Options& options, psi::SharedWavefunction ref_wfn,
                     IntegralSpinRestriction restricted, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     virtual void retransform_integrals();
@@ -72,7 +72,7 @@ class DistDFIntegrals : public ForteIntegrals {
     virtual double diag_aptei_bb(size_t, size_t) {}
     virtual double three_integral(size_t, size_t, size_t) {}
     virtual double** three_integral_pointer() {
-        throw PSIEXCEPTION("Integrals are distributed.  Pointer does not exist");
+        throw psi::PSIEXCEPTION("Integrals are distributed.  Pointer does not exist");
     }
     /// Read a block of the DFIntegrals and return an Ambit tensor of size A by
     /// p by q
@@ -86,11 +86,11 @@ class DistDFIntegrals : public ForteIntegrals {
 
     virtual void set_tei(size_t, size_t, size_t, size_t, double, bool, bool) {
         outfile->Printf("DistributedDF will not work with set_tei");
-        throw PSIEXCEPTION("DistDF can not use set_tei");
+        throw psi::PSIEXCEPTION("DistDF can not use set_tei");
     }
     virtual ~DistDFIntegrals();
 
-    virtual void make_fock_matrix(SharedMatrix /*gamma_a*/, SharedMatrix /*gamma_b*/) {}
+    virtual void make_fock_matrix(psi::SharedMatrix /*gamma_a*/, psi::SharedMatrix /*gamma_b*/) {}
 
     /// Make a Fock matrix computed with respect to a given determinant
     virtual size_t nthree() const { return nthree_; }
@@ -103,7 +103,7 @@ class DistDFIntegrals : public ForteIntegrals {
     /// This is the handle for GA
     int DistDF_ga_;
 
-    std::shared_ptr<Matrix> ThreeIntegral_;
+    std::shared_ptr<psi::Matrix> ThreeIntegral_;
     size_t nthree_ = 0;
     /// Assuming integrals are stored on disk
     /// Reads the block of integrals present for each process
@@ -116,6 +116,6 @@ class DistDFIntegrals : public ForteIntegrals {
 #endif
 
 } // namespace forte
-} // namespace psi
+
 
 #endif // _conventional_integrals_h_

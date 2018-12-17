@@ -45,10 +45,10 @@
 #include "finite_temperature/finite_temperature.h"
 #include "helpers/mo_space_info.h"
 
-namespace psi {
+
 namespace forte {
 
-FiniteTemperatureHF::FiniteTemperatureHF(SharedWavefunction ref_wfn, Options& options,
+FiniteTemperatureHF::FiniteTemperatureHF(psi::SharedWavefunction ref_wfn, psi::Options& options,
                                          std::shared_ptr<MOSpaceInfo> mo_space)
     : RHF(ref_wfn, std::make_shared<SuperFunctional>(), options, _default_psio_lib_),
       mo_space_info_(mo_space), options_(options) {
@@ -68,7 +68,7 @@ void FiniteTemperatureHF::startup() {
     nirrep_ = this->nirrep();
 
     debug_ = options_.get_int("PRINT");
-    SharedMatrix C(this->Ca()->clone());
+    psi::SharedMatrix C(this->Ca()->clone());
 }
 
 double FiniteTemperatureHF::compute_energy() {
@@ -85,7 +85,7 @@ double FiniteTemperatureHF::compute_energy() {
 
     /// It seems that HF class does not actually copy Ca into
     /// Process::Environment
-    SharedMatrix Ca = this->Ca();
+    psi::SharedMatrix Ca = this->Ca();
     Ca->copy(Ca_);
     this->Cb()->copy(Ca);
 
@@ -112,11 +112,11 @@ void FiniteTemperatureHF::frac_occupation() {
         fermidirac_[active_array] = ni[active_array];
     }
 
-    Dimension nmopi = mo_space_info_->get_dimension("ALL");
-    SharedVector Dirac_sym(new Vector("Dirac_Symmetry", nirrep_, nmopi));
+    psi::Dimension nmopi = mo_space_info_->get_dimension("ALL");
+    psi::SharedVector Dirac_sym(new Vector("Dirac_Symmetry", nirrep_, nmopi));
 
     int offset = 0;
-    Dimension occupation(nirrep_);
+    psi::Dimension occupation(nirrep_);
     for (int h = 0; h < nirrep_; h++) {
         int nonzero_occupation = 0;
         for (int p = 0; p < nmopi[h]; p++) {
@@ -130,12 +130,12 @@ void FiniteTemperatureHF::frac_occupation() {
         offset += nmopi[h];
     }
 
-    SharedMatrix C(new Matrix("C_matrix", this->nsopi(), occupation));
-    SharedMatrix Call(this->Ca()->clone());
+    psi::SharedMatrix C(new psi::Matrix("C_matrix", this->nsopi(), occupation));
+    psi::SharedMatrix Call(this->Ca()->clone());
 
-    Dimension nsopi = this->nsopi();
-    SharedMatrix C_scaled(new Matrix("C_rdocc_active", nirrep_, nsopi, occupation));
-    SharedMatrix C_no_scale(new Matrix("C_nochange", nirrep_, nsopi, occupation));
+    psi::Dimension nsopi = this->nsopi();
+    psi::SharedMatrix C_scaled(new psi::Matrix("C_rdocc_active", nirrep_, nsopi, occupation));
+    psi::SharedMatrix C_no_scale(new psi::Matrix("C_nochange", nirrep_, nsopi, occupation));
     /// Scale the columns with the occupation.
     /// This C matrix will be passed to JK object for CLeft
     for (int h = 0; h < nirrep_; h++) {
@@ -156,7 +156,7 @@ void FiniteTemperatureHF::initialize_occupation_vector(std::vector<double>& dira
 }
 std::vector<std::pair<double, int>> FiniteTemperatureHF::get_active_orbital_energy() {
     int nirrep = this->nirrep();
-    Dimension nmopi = mo_space_info_->get_dimension("ALL");
+    psi::Dimension nmopi = mo_space_info_->get_dimension("ALL");
     std::vector<std::pair<double, int>> nmo_vec;
     int offset = 0;
     for (int h = 0; h < nirrep; h++) {
@@ -226,7 +226,7 @@ double FiniteTemperatureHF::bisection(std::vector<double>& ni, double T) {
         outfile->Printf("\n Bisection gives %8.8f", sum);
         outfile->Printf("\n While it should be %d", naelec);
 
-        throw PSIEXCEPTION(" Bisection root finding method failed ");
+        throw psi::PSIEXCEPTION(" Bisection root finding method failed ");
     }
 
     sumef = 0.0;
@@ -261,12 +261,12 @@ void FiniteTemperatureHF::form_G() {
     frac_occupation();
     form_D();
     std::shared_ptr<JK> JK = JK::build_JK(this->basisset(), get_basisset("DF_BASIS_SCF"), options_);
-    JK->set_memory(Process::environment.get_memory() * 0.8);
+    JK->set_memory(psi::Process::environment.get_memory() * 0.8);
     JK->set_cutoff(options_.get_double("INTEGRAL_SCREENING"));
     JK->initialize();
 
-    std::vector<std::shared_ptr<Matrix>>& Cl = JK->C_left();
-    std::vector<std::shared_ptr<Matrix>>& Cr = JK->C_right();
+    std::vector<std::shared_ptr<psi::Matrix>>& Cl = JK->C_left();
+    std::vector<std::shared_ptr<psi::Matrix>>& Cr = JK->C_right();
 
     Cl.clear();
     if (nmo_ > 0) {
@@ -280,15 +280,15 @@ void FiniteTemperatureHF::form_G() {
 
     JK->compute();
 
-    SharedMatrix J_core = JK->J()[0];
-    SharedMatrix K_core = JK->K()[0];
+    psi::SharedMatrix J_core = JK->J()[0];
+    psi::SharedMatrix K_core = JK->K()[0];
 
     J_core->scale(2.0);
-    SharedMatrix F_core = J_core->clone();
+    psi::SharedMatrix F_core = J_core->clone();
     F_core->subtract(K_core);
     G_->copy(F_core);
 }
-void FiniteTemperatureHF::form_D() { D_ = Matrix::doublet(C_occ_folded_, C_occ_a_, false, true); }
+void FiniteTemperatureHF::form_D() { D_ = psi::Matrix::doublet(C_occ_folded_, C_occ_a_, false, true); }
 }
 }
 */

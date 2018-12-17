@@ -38,7 +38,7 @@ using namespace psi;
 #define ALFA(n) bits_[n]
 #define BETA(n) bits_[num_str_bits + n]
 
-namespace psi {
+
 namespace forte {
 
 STLBitsetDeterminant::bit_t make_mask(int nstr_bits, bool shift) {
@@ -652,4 +652,4 @@ void enforce_spin_completeness(std::vector<STLBitsetDeterminant>& det_space, int
     //}
 }
 } // namespace forte
-} // namespace psi
+

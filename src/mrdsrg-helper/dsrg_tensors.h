@@ -4,7 +4,7 @@
 #include "ambit/tensor.h"
 #include "ambit/blocked_tensor.h"
 
-namespace psi {
+
 namespace forte {
 
 class dsrg_tensors {
@@ -27,5 +27,5 @@ struct dsrgHeff {
     ambit::Tensor H3aaa, H3aab, H3abb, H3bbb;
 };
 }
-}
+
 #endif // DSRG_TENSORS_H

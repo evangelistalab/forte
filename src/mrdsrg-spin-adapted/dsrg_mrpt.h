@@ -46,10 +46,10 @@
 #include "helpers/helpers.h"
 
 using namespace ambit;
-namespace psi {
+
 namespace forte {
 
-class DSRG_MRPT : public Wavefunction {
+class DSRG_MRPT : public psi::Wavefunction {
   public:
     /**
      * DSRG-MRPT Constructor
@@ -58,7 +58,7 @@ class DSRG_MRPT : public Wavefunction {
      * @param ints A pointer to an allocated integral object
      * @param mo_space_info The MOSpaceInfo object
      */
-    DSRG_MRPT(Reference reference, SharedWavefunction ref_wfn, Options& options,
+    DSRG_MRPT(Reference reference, psi::SharedWavefunction ref_wfn, psi::Options& options,
               std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Destructor
@@ -324,9 +324,9 @@ class DSRG_MRPT : public Wavefunction {
     /// Diagonalize the diagonal blocks of the Fock matrix
     std::vector<std::vector<double>> diagonalize_Fock_diagblocks(BlockedTensor& U);
     /// Separate an 2D ambit::Tensor according to its irrep
-    ambit::Tensor separate_tensor(ambit::Tensor& tens, const Dimension& irrep, const int& h);
+    ambit::Tensor separate_tensor(ambit::Tensor& tens, const psi::Dimension& irrep, const int& h);
     /// Combine a separated 2D ambit::Tensor
-    void combine_tensor(ambit::Tensor& tens, ambit::Tensor& tens_h, const Dimension& irrep,
+    void combine_tensor(ambit::Tensor& tens, ambit::Tensor& tens_h, const psi::Dimension& irrep,
                         const int& h);
 
     // => Useful printings <= //
@@ -348,5 +348,5 @@ class DSRG_MRPT : public Wavefunction {
     void print_cumulant_summary();
 };
 } // namespace forte
-} // namespace psi
+
 #endif // DSRG_MRPT_H

@@ -40,30 +40,31 @@
 #include "unpaired_density.h"
 #include "localize.h"
 
-namespace psi {
+using namespace psi;
+
 namespace forte {
 
-UPDensity::UPDensity(std::shared_ptr<Wavefunction> wfn, std::shared_ptr<ForteIntegrals> ints,
-                     std::shared_ptr<MOSpaceInfo> mo_space_info, Options& options, SharedMatrix Ua,
-                     SharedMatrix Ub)
+UPDensity::UPDensity(std::shared_ptr<psi::Wavefunction> wfn, std::shared_ptr<ForteIntegrals> ints,
+                     std::shared_ptr<MOSpaceInfo> mo_space_info, psi::Options& options, psi::SharedMatrix Ua,
+                     psi::SharedMatrix Ub)
     : options_(options), ints_(ints), wfn_(wfn), mo_space_info_(mo_space_info), Uas_(Ua), Ubs_(Ub) {
 }
 
 void UPDensity::compute_unpaired_density(std::vector<double>& oprdm_a,
                                          std::vector<double>& oprdm_b) {
 
-    Dimension nactpi = mo_space_info_->get_dimension("ACTIVE");
-    Dimension nmopi = wfn_->nmopi();
-    Dimension ncmopi = mo_space_info_->get_dimension("CORRELATED");
+    psi::Dimension nactpi = mo_space_info_->get_dimension("ACTIVE");
+    psi::Dimension nmopi = wfn_->nmopi();
+    psi::Dimension ncmopi = mo_space_info_->get_dimension("CORRELATED");
     size_t nirrep = wfn_->nirrep();
-    Dimension rdocc = mo_space_info_->get_dimension("RESTRICTED_DOCC");
-    Dimension fdocc = mo_space_info_->get_dimension("FROZEN_DOCC");
+    psi::Dimension rdocc = mo_space_info_->get_dimension("RESTRICTED_DOCC");
+    psi::Dimension fdocc = mo_space_info_->get_dimension("FROZEN_DOCC");
 
     size_t nact = nactpi.sum();
 
     // First compute natural orbitals
-    std::shared_ptr<Matrix> opdm_a(new Matrix("OPDM_A", nirrep, nactpi, nactpi));
-    std::shared_ptr<Matrix> opdm_b(new Matrix("OPDM_B", nirrep, nactpi, nactpi));
+    std::shared_ptr<psi::Matrix> opdm_a(new psi::Matrix("OPDM_A", nirrep, nactpi, nactpi));
+    std::shared_ptr<psi::Matrix> opdm_b(new psi::Matrix("OPDM_B", nirrep, nactpi, nactpi));
 
     // Put 1-RDM into Shared matrix
     int offset = 0;
@@ -80,18 +81,18 @@ void UPDensity::compute_unpaired_density(std::vector<double>& oprdm_a,
     //    opdm_b->transform(Ubs_);
 
     // Diagonalize the 1-RDMs
-    SharedVector OCC_A(new Vector("ALPHA NOCC", nirrep, nactpi));
-    SharedVector OCC_B(new Vector("BETA NOCC", nirrep, nactpi));
-    SharedMatrix NO_A(new Matrix(nirrep, nactpi, nactpi));
-    SharedMatrix NO_B(new Matrix(nirrep, nactpi, nactpi));
+    psi::SharedVector OCC_A(new psi::Vector("ALPHA NOCC", nirrep, nactpi));
+    psi::SharedVector OCC_B(new psi::Vector("BETA NOCC", nirrep, nactpi));
+    psi::SharedMatrix NO_A(new psi::Matrix(nirrep, nactpi, nactpi));
+    psi::SharedMatrix NO_B(new psi::Matrix(nirrep, nactpi, nactpi));
 
     opdm_a->diagonalize(NO_A, OCC_A, descending);
     opdm_b->diagonalize(NO_B, OCC_B, descending);
 
     // Build the transformation matrix
     // Only build density for active orbitals
-    SharedMatrix Ua(new Matrix("Ua", nmopi, nmopi));
-    SharedMatrix Ub(new Matrix("Ub", nmopi, nmopi));
+    psi::SharedMatrix Ua(new psi::Matrix("Ua", nmopi, nmopi));
+    psi::SharedMatrix Ub(new psi::Matrix("Ub", nmopi, nmopi));
 
     Ua->zero();
     Ub->zero();
@@ -113,7 +114,7 @@ void UPDensity::compute_unpaired_density(std::vector<double>& oprdm_a,
     // ** This will be done in a completely localized basis
     // ** This code has only been tested for pz (pi) orbitals, beware!
 
-    SharedMatrix Ua_act(new Matrix(nact, nact));
+    psi::SharedMatrix Ua_act(new psi::Matrix(nact, nact));
 
     // relocalize to atoms
 
@@ -121,9 +122,9 @@ void UPDensity::compute_unpaired_density(std::vector<double>& oprdm_a,
     auto loc = std::make_shared<LOCALIZE>(wfn_, options_, ints_, mo_space_info_);
     loc->full_localize();
     Ua_act = loc->get_U()->clone();
-    SharedMatrix Noinv(NO_A->clone());
+    psi::SharedMatrix Noinv(NO_A->clone());
     Noinv->invert();
-    SharedMatrix Ua_act_r = Matrix::doublet(Noinv, Ua_act, false, false);
+    psi::SharedMatrix Ua_act_r = psi::Matrix::doublet(Noinv, Ua_act, false, false);
 
     // Compute sum(p,i) n_i * ( 1 - n_i ) * (U_p,i)^2
     double total = 0.0;
@@ -147,11 +148,11 @@ void UPDensity::compute_unpaired_density(std::vector<double>& oprdm_a,
 
     // Build the density using scaled columns of C
 
-    SharedMatrix Ca = wfn_->Ca();
-    SharedMatrix Cb = wfn_->Cb();
+    psi::SharedMatrix Ca = wfn_->Ca();
+    psi::SharedMatrix Cb = wfn_->Cb();
 
-    SharedMatrix Ca_new = Matrix::doublet(Ca->clone(), Ua, false, false);
-    SharedMatrix Cb_new = Matrix::doublet(Cb->clone(), Ub, false, false);
+    psi::SharedMatrix Ca_new = psi::Matrix::doublet(Ca->clone(), Ua, false, false);
+    psi::SharedMatrix Cb_new = psi::Matrix::doublet(Cb->clone(), Ub, false, false);
 
     for (size_t h = 0; h < nirrep; ++h) {
         int offset = fdocc[h] + rdocc[h];
@@ -166,11 +167,11 @@ void UPDensity::compute_unpaired_density(std::vector<double>& oprdm_a,
         }
     }
 
-    SharedMatrix Da = wfn_->Da();
-    SharedMatrix Db = wfn_->Db();
+    psi::SharedMatrix Da = wfn_->Da();
+    psi::SharedMatrix Db = wfn_->Db();
 
-    SharedMatrix Da_new(new Matrix("Da_new", nmopi, nmopi));
-    SharedMatrix Db_new(new Matrix("Db_new", nmopi, nmopi));
+    psi::SharedMatrix Da_new(new psi::Matrix("Da_new", nmopi, nmopi));
+    psi::SharedMatrix Db_new(new psi::Matrix("Db_new", nmopi, nmopi));
 
     Da_new->gemm(false, true, 1.0, Ca_new, Ca_new, 0.0);
     Db_new->gemm(false, true, 1.0, Cb_new, Cb_new, 0.0);
@@ -183,12 +184,12 @@ void UPDensity::compute_unpaired_density(std::vector<double>& oprdm_a,
     //            IAOBuilder::build(wfn_->basisset(),
     //                              wfn_->get_basisset("MINAO_BASIS"), Ca, options_);
     //    outfile->Printf("\n  Computing IAOs\n");
-    //    std::map<std::string, SharedMatrix> iao_info = IAO->build_iaos();
-    //    SharedMatrix iao_orbs(iao_info["A"]->clone());
+    //    std::map<std::string, psi::SharedMatrix> iao_info = IAO->build_iaos();
+    //    psi::SharedMatrix iao_orbs(iao_info["A"]->clone());
     //
-    //    SharedMatrix Cainv(Ca->clone());
+    //    psi::SharedMatrix Cainv(Ca->clone());
     //    Cainv->invert();
-    //    SharedMatrix iao_coeffs = Matrix::doublet(Cainv, iao_orbs, false, false);
+    //    psi::SharedMatrix iao_coeffs = psi::Matrix::doublet(Cainv, iao_orbs, false, false);
     //
     //    size_t new_dim = iao_orbs->colspi()[0];
     //    size_t new_dim2 = new_dim * new_dim;
@@ -218,4 +219,3 @@ void UPDensity::compute_unpaired_density(std::vector<double>& oprdm_a,
 
 UPDensity::~UPDensity() {}
 }
-} // End Namespaces

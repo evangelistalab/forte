@@ -4,7 +4,8 @@
 
 #include "psi4/libpsi4util/PsiOutStream.h"
 
-namespace psi {
+using namespace psi;
+
 namespace forte {
 
 std::string rst_bold(const std::string& s);
@@ -41,7 +42,7 @@ void ForteOptions::add_array(const std::string& label, const std::string& descri
     array_opts_.push_back(std::make_tuple(label, description));
 }
 
-void ForteOptions::add_psi4_options(Options& options) {
+void ForteOptions::add_psi4_options(psi::Options& options) {
     for (const auto& opt : bool_opts_) {
         options.add_bool(std::get<0>(opt), std::get<1>(opt));
     }
@@ -65,7 +66,7 @@ void ForteOptions::add_psi4_options(Options& options) {
     }
 
     for (const auto& opt : array_opts_) {
-        options.add(std::get<0>(opt), new ArrayType());
+        options.add(std::get<0>(opt), new psi::ArrayType());
     }
 }
 
@@ -153,4 +154,4 @@ std::string option_formatter(const std::string& type, const std::string& label,
 }
 
 } // namespace forte
-} // namespace psi
+

@@ -48,16 +48,16 @@ using namespace psi;
 
 int fci_debug_level = 4;
 
-namespace psi {
+
 namespace forte {
 
 class MOSpaceInfo;
 
-FCISolver::FCISolver(Dimension active_dim, std::vector<size_t> core_mo,
+FCISolver::FCISolver(psi::Dimension active_dim, std::vector<size_t> core_mo,
                      std::vector<size_t> active_mo, size_t na, size_t nb, size_t multiplicity,
                      size_t symmetry, std::shared_ptr<ForteIntegrals> ints,
                      std::shared_ptr<MOSpaceInfo> mo_space_info, size_t ntrial_per_root, int print,
-                     Options& options)
+                     psi::Options& options)
     : active_dim_(active_dim), core_mo_(core_mo), active_mo_(active_mo), ints_(ints),
       nirrep_(active_dim.n()), symmetry_(symmetry), na_(na), nb_(nb), multiplicity_(multiplicity),
       nroot_(0), ntrial_per_root_(ntrial_per_root), print_(print), mo_space_info_(mo_space_info),
@@ -66,10 +66,10 @@ FCISolver::FCISolver(Dimension active_dim, std::vector<size_t> core_mo,
     startup();
 }
 
-FCISolver::FCISolver(Dimension active_dim, std::vector<size_t> core_mo,
+FCISolver::FCISolver(psi::Dimension active_dim, std::vector<size_t> core_mo,
                      std::vector<size_t> active_mo, size_t na, size_t nb, size_t multiplicity,
                      size_t symmetry, std::shared_ptr<ForteIntegrals> ints,
-                     std::shared_ptr<MOSpaceInfo> mo_space_info, Options& options)
+                     std::shared_ptr<MOSpaceInfo> mo_space_info, psi::Options& options)
     : active_dim_(active_dim), core_mo_(core_mo), active_mo_(active_mo), ints_(ints),
       nirrep_(active_dim.n()), symmetry_(symmetry), na_(na), nb_(nb), multiplicity_(multiplicity),
       nroot_(0), mo_space_info_(mo_space_info), options_(options) {
@@ -126,7 +126,7 @@ double FCISolver::compute_energy() {
     local_timer t;
 
     double nuclear_repulsion_energy =
-        Process::environment.molecule()->nuclear_repulsion_energy({{0, 0, 0}});
+        psi::Process::environment.molecule()->nuclear_repulsion_energy({{0, 0, 0}});
     std::shared_ptr<FCIIntegrals> fci_ints;
     if (!provide_integrals_and_restricted_docc_) {
         fci_ints = std::make_shared<FCIIntegrals>(ints_, active_mo_, core_mo_);
@@ -141,7 +141,7 @@ double FCISolver::compute_energy() {
     } else {
         if (fci_ints_ == nullptr) {
             outfile->Printf("\n You said you would specify integrals and restricted_docc");
-            throw PSIEXCEPTION("Need to set the fci_ints in your code");
+            throw psi::PSIEXCEPTION("Need to set the fci_ints in your code");
         } else {
             fci_ints = fci_ints_;
         }
@@ -157,8 +157,8 @@ double FCISolver::compute_energy() {
     size_t fci_size = Hdiag.size();
     Hdiag.form_H_diagonal(fci_ints);
 
-    SharedVector b(new Vector("b", fci_size));
-    SharedVector sigma(new Vector("sigma", fci_size));
+    psi::SharedVector b(new Vector("b", fci_size));
+    psi::SharedVector sigma(new Vector("sigma", fci_size));
 
     Hdiag.copy_to(sigma);
 
@@ -182,7 +182,7 @@ double FCISolver::compute_energy() {
     size_t nguess = std::min(guess_list.size(), guess_size);
 
     if (nguess == 0) {
-        throw PSIEXCEPTION("\n\n  Found zero FCI guesses with the requested "
+        throw psi::PSIEXCEPTION("\n\n  Found zero FCI guesses with the requested "
                            "multiplicity.\n\n");
     }
 
@@ -265,7 +265,7 @@ double FCISolver::compute_energy() {
 
     if (converged == SolverStatus::NotConverged) {
         outfile->Printf("\n  FCI did not converge!");
-        throw PSIEXCEPTION("FCI did not converge. Try increasing FCI_ITERATIONS.");
+        throw psi::PSIEXCEPTION("FCI did not converge. Try increasing FCI_ITERATIONS.");
     }
 
     // Compute final eigenvectors
@@ -283,7 +283,7 @@ double FCISolver::compute_energy() {
             C_->copy(dls.eigenvector(r));
             std::vector<std::tuple<double, double, size_t, size_t, size_t>> dets_config =
                 C_->max_abs_elements(guess_size * ntrial_per_root_);
-            Dimension nactvpi = mo_space_info_->get_dimension("ACTIVE");
+            psi::Dimension nactvpi = mo_space_info_->get_dimension("ACTIVE");
 
             for (auto& det_config : dets_config) {
                 double ci_abs, ci;
@@ -356,10 +356,10 @@ void FCISolver::compute_rdms_root(int root) {
         if (root >= nroot_) {
             std::string error = "Cannot compute RDMs of root " + std::to_string(root) +
                                 "(0-based) because nroot = " + std::to_string(nroot_);
-            throw PSIEXCEPTION(error);
+            throw psi::PSIEXCEPTION(error);
         }
 
-        SharedVector evec(eigen_vecs_->get_row(0, root));
+        psi::SharedVector evec(eigen_vecs_->get_row(0, root));
         C_->copy(evec);
         if (print_) {
             std::string title_rdm = "Computing RDMs for Root No. " + std::to_string(root);
@@ -377,7 +377,7 @@ void FCISolver::compute_rdms_root(int root) {
             C_->print_natural_orbitals(mo_space_info_);
         }
     } else {
-        throw PSIEXCEPTION("FCIWfn is not assigned. Cannot compute RDMs.");
+        throw psi::PSIEXCEPTION("FCIWfn is not assigned. Cannot compute RDMs.");
     }
 }
 
@@ -386,7 +386,7 @@ FCISolver::initial_guess(FCIWfn& diag, size_t n, std::shared_ptr<FCIIntegrals> f
     local_timer t;
 
     double nuclear_repulsion_energy =
-        Process::environment.molecule()->nuclear_repulsion_energy({{0, 0, 0}});
+        psi::Process::environment.molecule()->nuclear_repulsion_energy({{0, 0, 0}});
     double scalar_energy = fci_ints->scalar_energy();
 
     size_t ntrial = n * ntrial_per_root_;
@@ -745,4 +745,4 @@ Reference FCISolver::reference() {
     return fci_ref;
 }
 } // namespace forte
-} // namespace psi
+

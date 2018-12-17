@@ -39,10 +39,11 @@
 #include "helpers/helpers.h"
 #include "sa_fcisolver.h"
 
-namespace psi {
+using namespace psi;
+
 namespace forte {
 
-SA_FCISolver::SA_FCISolver(Options& options, std::shared_ptr<Wavefunction> wfn)
+SA_FCISolver::SA_FCISolver(psi::Options& options, std::shared_ptr<psi::Wavefunction> wfn)
     : options_(options), wfn_(wfn) {
     read_options();
 }
@@ -50,7 +51,7 @@ SA_FCISolver::SA_FCISolver(Options& options, std::shared_ptr<Wavefunction> wfn)
 void SA_FCISolver::read_options() {
     // irrep symbol
     int nirrep = wfn_->nirrep();
-    CharacterTable ct = Process::environment.molecule()->point_group()->char_table();
+    CharacterTable ct = psi::Process::environment.molecule()->point_group()->char_table();
     std::vector<std::string> irrep_symbol;
     for (int h = 0; h < nirrep; ++h) {
         irrep_symbol.push_back(std::string(ct.gamma(h).symbol()));
@@ -71,7 +72,7 @@ void SA_FCISolver::read_options() {
             if (options_["AVG_STATE"][i].size() != 3) {
                 outfile->Printf("\n  Error: invalid input of AVG_STATE. Each "
                                 "entry should take an array of three numbers.");
-                throw PSIEXCEPTION("Invalid input of AVG_STATE");
+                throw psi::PSIEXCEPTION("Invalid input of AVG_STATE");
             }
 
             // irrep
@@ -81,7 +82,7 @@ void SA_FCISolver::read_options() {
                                 "check the input irrep (start from 0) not to "
                                 "exceed %d",
                                 nirrep - 1);
-                throw PSIEXCEPTION("Invalid irrep in AVG_STATE");
+                throw psi::PSIEXCEPTION("Invalid irrep in AVG_STATE");
             }
             irreps.push_back(irrep);
 
@@ -89,7 +90,7 @@ void SA_FCISolver::read_options() {
             int multi = options_["AVG_STATE"][i][1].to_integer();
             if (multi < 1) {
                 outfile->Printf("\n  Error: invalid multiplicity in AVG_STATE.");
-                throw PSIEXCEPTION("Invaid multiplicity in AVG_STATE");
+                throw psi::PSIEXCEPTION("Invaid multiplicity in AVG_STATE");
             }
             multis.push_back(multi);
 
@@ -99,7 +100,7 @@ void SA_FCISolver::read_options() {
                 outfile->Printf("\n  Error: invalid nstates in AVG_STATE. "
                                 "nstates of a certain irrep and multiplicity "
                                 "should greater than 0.");
-                throw PSIEXCEPTION("Invalid nstates in AVG_STATE.");
+                throw psi::PSIEXCEPTION("Invalid nstates in AVG_STATE.");
             }
             nstatespim.push_back(nstates_this);
             nstates_ += nstates_this;
@@ -112,7 +113,7 @@ void SA_FCISolver::read_options() {
                 outfile->Printf("\n  Error: mismatched number of entries in "
                                 "AVG_STATE (%d) and AVG_WEIGHT (%d).",
                                 nentry, options_["AVG_WEIGHT"].size());
-                throw PSIEXCEPTION("Mismatched number of entries in AVG_STATE "
+                throw psi::PSIEXCEPTION("Mismatched number of entries in AVG_STATE "
                                    "and AVG_WEIGHT.");
             }
 
@@ -124,7 +125,7 @@ void SA_FCISolver::read_options() {
                                     "in entry %d of AVG_WEIGHT. Asked for %d "
                                     "states but only %d weights.",
                                     i, nstatespim[i], nw);
-                    throw PSIEXCEPTION("Mismatched number of weights in AVG_WEIGHT.");
+                    throw psi::PSIEXCEPTION("Mismatched number of weights in AVG_WEIGHT.");
                 }
 
                 std::vector<double> weight;
@@ -132,7 +133,7 @@ void SA_FCISolver::read_options() {
                     double w = options_["AVG_WEIGHT"][i][n].to_double();
                     if (w < 0.0) {
                         outfile->Printf("\n  Error: negative weights in AVG_WEIGHT.");
-                        throw PSIEXCEPTION("Negative weights in AVG_WEIGHT.");
+                        throw psi::PSIEXCEPTION("Negative weights in AVG_WEIGHT.");
                     }
                     weight.push_back(w);
                     wsum += w;
@@ -143,7 +144,7 @@ void SA_FCISolver::read_options() {
                 outfile->Printf("\n  Error: AVG_WEIGHT entries do not add up "
                                 "to 1.0. Sum = %.10f",
                                 wsum);
-                throw PSIEXCEPTION("AVG_WEIGHT entries do not add up to 1.0.");
+                throw psi::PSIEXCEPTION("AVG_WEIGHT entries do not add up to 1.0.");
             }
 
         } else {
@@ -210,20 +211,20 @@ double SA_FCISolver::compute_energy() {
         int nroot;
         std::tie(symmetry, multiplicity, nroot, std::ignore) = cas_solutions;
 
-        Dimension active_dim = mo_space_info_->get_dimension("ACTIVE");
+        psi::Dimension active_dim = mo_space_info_->get_dimension("ACTIVE");
         size_t nfdocc = mo_space_info_->size("FROZEN_DOCC");
         std::vector<size_t> rdocc = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
         std::vector<size_t> active = mo_space_info_->get_corr_abs_mo("ACTIVE");
 
-        int charge = Process::environment.molecule()->molecular_charge();
+        int charge = psi::Process::environment.molecule()->molecular_charge();
         if (options_["CHARGE"].has_changed()) {
             charge = options_.get_int("CHARGE");
         }
 
         int nel = 0;
-        int natom = Process::environment.molecule()->natom();
+        int natom = psi::Process::environment.molecule()->natom();
         for (int i = 0; i < natom; i++) {
-            nel += static_cast<int>(Process::environment.molecule()->Z(i));
+            nel += static_cast<int>(psi::Process::environment.molecule()->Z(i));
         }
         // If the charge has changed, recompute the number of electrons
         // Or if you cannot find the number of electrons
@@ -240,7 +241,7 @@ double SA_FCISolver::compute_energy() {
             outfile->Printf("\n  Ms must be no less than 0.");
             outfile->Printf("\n  Ms = %2d, MULTIPLICITY = %2d", twice_ms, multiplicity);
             outfile->Printf("\n  Check (specify) Ms value (component of multiplicity)! \n");
-            throw PSIEXCEPTION("Ms must be no less than 0. Check output for details.");
+            throw psi::PSIEXCEPTION("Ms must be no less than 0. Check output for details.");
         }
 
         if (options_.get_int("PRINT")) {
@@ -260,7 +261,7 @@ double SA_FCISolver::compute_energy() {
         }
 
         if (((nel - twice_ms) % 2) != 0)
-            throw PSIEXCEPTION("\n\n  FCI: Wrong value of M_s.\n\n");
+            throw psi::PSIEXCEPTION("\n\n  FCI: Wrong value of M_s.\n\n");
 
         // Adjust the number of for frozen and restricted doubly occupied
         size_t nactel = nel - 2 * nfdocc - 2 * rdocc.size();
@@ -279,7 +280,7 @@ double SA_FCISolver::compute_energy() {
         fcisolver.use_user_integrals_and_restricted_docc(true);
         if (fci_ints_ == nullptr) {
             outfile->Printf("\n\n You need to set fci_ints");
-            throw PSIEXCEPTION("Set FCI INTS");
+            throw psi::PSIEXCEPTION("Set FCI INTS");
         } else {
             fcisolver.set_integral_pointer(fci_ints_);
         }
@@ -289,9 +290,9 @@ double SA_FCISolver::compute_energy() {
         //        fcisolver.set_test_rdms(false);
         //        fcisolver.compute_energy();
         //        double Enuc =
-        //        Process::environment.molecule()->nuclear_repulsion_energy();
-        //        SharedMatrix vecs = fcisolver.eigen_vecs();
-        //        SharedVector vals = fcisolver.eigen_vals();
+        //        psi::Process::environment.molecule()->nuclear_repulsion_energy();
+        //        psi::SharedMatrix vecs = fcisolver.eigen_vecs();
+        //        psi::SharedVector vals = fcisolver.eigen_vals();
         //        for(int n = 0; n < nroot; ++n){
         //            // create new FCIWfn pointers
         //            std::shared_ptr<FCIWfn> fci_wfn = fcisolver.get_FCIWFN();
@@ -313,8 +314,8 @@ double SA_FCISolver::compute_energy() {
         //            casscf_energies.push_back(Ecas);
         //        }
 
-        SharedVector evals;
-        double Enuc = Process::environment.molecule()->nuclear_repulsion_energy(
+        psi::SharedVector evals;
+        double Enuc = psi::Process::environment.molecule()->nuclear_repulsion_energy(
             wfn_->get_dipole_field_strength());
         for (int root_number = 0; root_number < nroot; root_number++) {
             fcisolver.set_root(root_number);
@@ -386,4 +387,4 @@ double SA_FCISolver::compute_energy() {
     return E_sa_casscf;
 }
 } // namespace forte
-} // namespace psi
+

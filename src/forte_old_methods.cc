@@ -93,10 +93,11 @@
 #include <mpi.h>
 #endif
 
-namespace psi {
+using namespace psi;
+
 namespace forte {
 
-void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
+void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
                        std::shared_ptr<ForteIntegrals> ints,
                        std::shared_ptr<MOSpaceInfo> mo_space_info) {
     timer method_timer("Method");
@@ -145,8 +146,8 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
             aci->add_external_excitations(wfn);
         }
         if (options.get_bool("UNPAIRED_DENSITY")) {
-            SharedMatrix Ua;
-            SharedMatrix Ub;
+            psi::SharedMatrix Ua;
+            psi::SharedMatrix Ub;
 
             Ua = ref_wfn->Ca()->clone();
             Ub = ref_wfn->Ca()->clone();
@@ -193,7 +194,7 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
         dmrg->set_iterations(options.get_int("DMRGSCF_MAX_ITER"));
         dmrg->compute_energy();
 #else
-        throw PSIEXCEPTION("Did not compile with CHEMPS2 so DMRG will not work");
+        throw psi::PSIEXCEPTION("Did not compile with CHEMPS2 so DMRG will not work");
 #endif
     }
     if (options.get_str("JOB_TYPE") == "DMRG") {
@@ -202,7 +203,7 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
         dmrg.set_max_rdm(2);
         dmrg.compute_energy();
 #else
-        throw PSIEXCEPTION("Did not compile with CHEMPS2 so DMRG will not work");
+        throw psi::PSIEXCEPTION("Did not compile with CHEMPS2 so DMRG will not work");
 #endif
     }
     if (options.get_str("JOB_TYPE") == "CAS") {
@@ -501,7 +502,7 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
 
         if (options.get_str("INT_TYPE") == "CONVENTIONAL") {
             outfile->Printf("\n THREE-DSRG-MRPT2 is designed for DF/CD integrals");
-            throw PSIEXCEPTION("Please set INT_TYPE  DF/CHOLESKY for THREE_DSRG");
+            throw psi::PSIEXCEPTION("Please set INT_TYPE  DF/CHOLESKY for THREE_DSRG");
         }
 
         bool multi_state = options["AVG_STATE"].size() != 0;
@@ -606,16 +607,16 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
             three_dsrg_mrpt2->compute_energy();
             if (ref_relax || multi_state) {
                 if (options.get_bool("UNPAIRED_DENSITY")) {
-                    SharedMatrix Ua_f = semi.Ua();
-                    SharedMatrix Ub_f = semi.Ub();
+                    psi::SharedMatrix Ua_f = semi.Ua();
+                    psi::SharedMatrix Ub_f = semi.Ub();
                     three_dsrg_mrpt2->set_Ufull(Ua_f, Ub_f);
                 }
                 three_dsrg_mrpt2->relax_reference_once();
             }
 
             //  if( options.get_bool("UNPAIRED_DENSITY")){
-            //      SharedMatrix Uam = semi.Ua();
-            //      SharedMatrix Ubm = semi.Ub();
+            //      psi::SharedMatrix Uam = semi.Ua();
+            //      psi::SharedMatrix Ubm = semi.Ub();
             //      aci->unpaired_density(Uam, Ubm);
             //  }
 
@@ -837,4 +838,4 @@ void forte_old_methods(SharedWavefunction ref_wfn, Options& options,
     }
 }
 }
-} // End Namespaces
+

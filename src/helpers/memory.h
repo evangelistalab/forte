@@ -29,7 +29,7 @@
 #ifndef _memory_h_
 #define _memory_h_
 
-namespace psi {
+
 namespace forte {
 
 /**
@@ -64,6 +64,5 @@ std::pair<double, std::string> to_xb2(size_t nele) {
 }
 
 }
-} // End Namespaces
 
 #endif // _memory_h_

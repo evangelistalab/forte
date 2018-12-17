@@ -41,7 +41,7 @@
 #include "base_classes/reference.h"
 #include "helpers/blockedtensorfactory.h"
 
-namespace psi {
+
 
 namespace forte {
 
@@ -49,7 +49,7 @@ namespace forte {
  * @brief The SOMRDSRG class
  * This class implements the MR-DSRG(2) using a spin orbital formalism
  */
-class SOMRDSRG : public Wavefunction {
+class SOMRDSRG : public psi::Wavefunction {
   protected:
     // => Class data <= //
 
@@ -64,13 +64,13 @@ class SOMRDSRG : public Wavefunction {
 
     /// The number of correlated orbitals per irrep (excluding frozen core and
     /// virtuals)
-    Dimension ncmopi_;
+    psi::Dimension ncmopi_;
     /// The number of restricted doubly occupied orbitals per irrep (core)
-    Dimension rdoccpi_;
+    psi::Dimension rdoccpi_;
     /// The number of active orbitals per irrep (active)
-    Dimension actvpi_;
+    psi::Dimension actvpi_;
     /// The number of restricted unoccupied orbitals per irrep (virtual)
-    Dimension ruoccpi_;
+    psi::Dimension ruoccpi_;
 
     /// List of spin orbital core MOs
     std::vector<size_t> core_mos;
@@ -203,7 +203,7 @@ class SOMRDSRG : public Wavefunction {
   public:
     // => Constructors <= //
 
-    SOMRDSRG(Reference reference, SharedWavefunction ref_wfn, Options& options,
+    SOMRDSRG(Reference reference, psi::SharedWavefunction ref_wfn, psi::Options& options,
              std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     ~SOMRDSRG();
@@ -218,6 +218,5 @@ class SOMRDSRG : public Wavefunction {
     double frozen_core_energy;
 };
 }
-} // End Namespaces
 
 #endif // _so_mrdsrg_h_

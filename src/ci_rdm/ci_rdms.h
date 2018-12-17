@@ -43,7 +43,7 @@
 #include "fci/string_lists.h"
 #include "fci/fci_integrals.h"
 
-namespace psi {
+
 namespace forte {
 
 class CI_RDMS {
@@ -53,11 +53,11 @@ class CI_RDMS {
 
     // Class constructor and destructor
     CI_RDMS(std::shared_ptr<FCIIntegrals> fci_ints,
-            const std::vector<Determinant>& det_space, SharedMatrix evecs, int root1,
+            const std::vector<Determinant>& det_space, psi::SharedMatrix evecs, int root1,
             int root2);
 
     CI_RDMS(DeterminantHashVec& wfn, std::shared_ptr<FCIIntegrals> fci_ints,
-            SharedMatrix evecs, int root1, int root2);
+            psi::SharedMatrix evecs, int root1, int root2);
 
     ~CI_RDMS();
 
@@ -158,7 +158,7 @@ class CI_RDMS {
     const std::vector<Determinant> det_space_;
 
     // The CI coefficients
-    SharedMatrix evecs_;
+    psi::SharedMatrix evecs_;
 
     // Buffer to access cre_list
     std::vector<std::vector<size_t>> cre_list_buffer_;
@@ -181,7 +181,7 @@ class CI_RDMS {
     size_t ncmo5_;
 
     // The correlated mos per irrep
-    Dimension active_dim_;
+    psi::Dimension active_dim_;
 
     std::vector<size_t> active_mo_;
 
@@ -286,6 +286,5 @@ class CI_RDMS {
                 std::vector<double>& tprdm_ab, std::vector<double>& tprdm_aab,std::vector<double>& tprdm_abb);
 };
 }
-} // End namepaces
 
 #endif // _ci_rdms_h_

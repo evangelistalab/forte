@@ -35,11 +35,12 @@
 #include "helpers/mo_space_info.h"
 #include "fci_vector.h"
 
-namespace psi {
+using namespace psi;
+
 namespace forte {
 
-SharedMatrix FCIWfn::C1;
-SharedMatrix FCIWfn::Y1;
+psi::SharedMatrix FCIWfn::C1;
+psi::SharedMatrix FCIWfn::Y1;
 size_t FCIWfn::sizeC1 = 0;
 // FCIWfn* FCIWfn::tmp_wfn1 = nullptr;
 // FCIWfn* FCIWfn::tmp_wfn2 = nullptr;
@@ -64,8 +65,8 @@ void FCIWfn::allocate_temp_space(std::shared_ptr<StringLists> lists_, int print_
     }
 
     // Allocate the temporary arrays C1 and Y1 with the largest sizes
-    C1 = SharedMatrix(new Matrix("C1", maxC1, maxC1));
-    Y1 = SharedMatrix(new Matrix("Y1", maxC1, maxC1));
+    C1 = std::make_shared<psi::Matrix>("C1", maxC1, maxC1);
+    Y1 = std::make_shared<psi::Matrix>("Y1", maxC1, maxC1);
 
     if (print_)
         outfile->Printf("\n  Allocating memory for the Hamiltonian algorithm. "
@@ -109,8 +110,8 @@ void FCIWfn::startup() {
         int beta_sym = alfa_sym ^ symmetry_;
         //    outfile->Printf("\n\n  Block %d: allocate %d *
         //    %d",alfa_sym,(int)alfa_graph_->strpi(alfa_sym),(int)beta_graph_->strpi(beta_sym));
-        C_.push_back(SharedMatrix(
-            new Matrix("C", alfa_graph_->strpi(alfa_sym), beta_graph_->strpi(beta_sym))));
+        C_.push_back(psi::SharedMatrix(
+            new psi::Matrix("C", alfa_graph_->strpi(alfa_sym), beta_graph_->strpi(beta_sym))));
     }
 }
 
@@ -147,7 +148,7 @@ void FCIWfn::copy(FCIWfn& wfn) {
     }
 }
 
-void FCIWfn::copy(SharedVector vec) {
+void FCIWfn::copy(psi::SharedVector vec) {
     size_t I = 0;
     for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {
         int beta_sym = alfa_sym ^ symmetry_;
@@ -163,7 +164,7 @@ void FCIWfn::copy(SharedVector vec) {
     }
 }
 
-void FCIWfn::copy_to(SharedVector vec) {
+void FCIWfn::copy_to(psi::SharedVector vec) {
     size_t I = 0;
     for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {
         int beta_sym = alfa_sym ^ symmetry_;
@@ -319,19 +320,19 @@ void FCIWfn::normalize() {
  * Zero the wave function
  */
 void FCIWfn::zero() {
-    for (SharedMatrix C_h : C_) {
+    for (psi::SharedMatrix C_h : C_) {
         C_h->zero();
     }
 }
 
 void FCIWfn::print_natural_orbitals(std::shared_ptr<MOSpaceInfo> mo_space_info) {
     print_h2("NATURAL ORBITALS");
-    Dimension active_dim = mo_space_info->get_dimension("ACTIVE");
+    psi::Dimension active_dim = mo_space_info->get_dimension("ACTIVE");
 
     size_t na = alfa_graph_->nones();
     size_t nb = beta_graph_->nones();
 
-    auto opdm = std::make_shared<Matrix>(new Matrix("OPDM", active_dim, active_dim));
+    auto opdm = std::make_shared<psi::Matrix>(new psi::Matrix("OPDM", active_dim, active_dim));
 
     int offset = 0;
     for (int h = 0; h < nirrep_; h++) {
@@ -351,7 +352,7 @@ void FCIWfn::print_natural_orbitals(std::shared_ptr<MOSpaceInfo> mo_space_info) 
     }
 
     auto OCC = std::make_shared<Vector>("Occupation numbers", active_dim);
-    auto NO = std::make_shared<Matrix>("MO -> NO transformation", active_dim, active_dim);
+    auto NO = std::make_shared<psi::Matrix>("MO -> NO transformation", active_dim, active_dim);
 
     opdm->diagonalize(NO, OCC, descending);
     std::vector<std::pair<double, std::pair<int, int>>> vec_irrep_occupation;
@@ -361,7 +362,7 @@ void FCIWfn::print_natural_orbitals(std::shared_ptr<MOSpaceInfo> mo_space_info) 
             vec_irrep_occupation.push_back(irrep_occ);
         }
     }
-    CharacterTable ct = Process::environment.molecule()->point_group()->char_table();
+    CharacterTable ct = psi::Process::environment.molecule()->point_group()->char_table();
     std::sort(vec_irrep_occupation.begin(), vec_irrep_occupation.end(),
               std::greater<std::pair<double, std::pair<int, int>>>());
 
@@ -727,5 +728,4 @@ void FCIWfn::print() {
 //    }
 //  } // End loop over h
 //}
-}
 }

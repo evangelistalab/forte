@@ -31,7 +31,7 @@
 #include "helpers/helpers.h"
 #include "sorted_string_list.h"
 
-namespace psi {
+
 namespace forte {
 
 SortedStringList_UI64::SortedStringList_UI64() {}
@@ -123,4 +123,4 @@ SortedStringList_UI64::range(const UI64Determinant::bit_t& d) const {
 
 size_t SortedStringList_UI64::add(size_t pos) const { return map_to_hashdets_[pos]; }
 }
-}
+

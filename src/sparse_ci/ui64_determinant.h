@@ -36,7 +36,7 @@
 
 #include "determinant_common.h"
 
-namespace psi {
+
 namespace forte {
 
 class FCIIntegrals;
@@ -144,7 +144,7 @@ class UI64Determinant {
     std::string str(int n = num_str_bits) const;
 
     struct Hash {
-        std::size_t operator()(const psi::forte::UI64Determinant& bs) const {
+        std::size_t operator()(const forte::UI64Determinant& bs) const {
             return ((bs.a_ * 13466917) + bs.b_) % 1405695061;
         }
     };
@@ -193,7 +193,6 @@ UI64Determinant union_occupation(const UI64Determinant& lhs, const UI64Determina
 void enforce_spin_completeness(std::vector<UI64Determinant>& det_space, int nmo);
 
 template <typename T1, typename T2> T1 make_det(const T2& d);
-}
 }
 
 #endif // _ui64_determinant_h_

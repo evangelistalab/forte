@@ -49,10 +49,11 @@
 
 using namespace ambit;
 
-namespace psi {
+using namespace psi;
+
 namespace forte {
 
-DSRG_MRPT3::DSRG_MRPT3(Reference reference, SharedWavefunction ref_wfn, Options& options,
+DSRG_MRPT3::DSRG_MRPT3(Reference reference, psi::SharedWavefunction ref_wfn, psi::Options& options,
                        std::shared_ptr<ForteIntegrals> ints,
                        std::shared_ptr<MOSpaceInfo> mo_space_info)
     : MASTER_DSRG(reference, ref_wfn, options, ints, mo_space_info) {
@@ -86,7 +87,7 @@ void DSRG_MRPT3::startup() {
     size_t sg = sc + sp;
 
     // memory usage
-    mem_total_ = static_cast<int64_t>(0.98 * Process::environment.get_memory());
+    mem_total_ = static_cast<int64_t>(0.98 * psi::Process::environment.get_memory());
     std::vector<std::pair<std::string, std::string>> mem_info{
         {"Memory asigned", to_XB(mem_total_, 1)}};
 
@@ -236,7 +237,7 @@ void DSRG_MRPT3::startup() {
         outfile->Printf("\n\n  Error: Not enough memory to compute DSRG-MRPT3 energy.");
         outfile->Printf("\n  Minimum memory required: %s\n",
                         to_XB(nele_larger, sizeof(double)).c_str());
-        throw PSIEXCEPTION("Not enough memory to compute DSRG-MRPT3 energy.");
+        throw psi::PSIEXCEPTION("Not enough memory to compute DSRG-MRPT3 energy.");
     }
 
     // Check memory for dipole moment
@@ -246,7 +247,7 @@ void DSRG_MRPT3::startup() {
     if (mem_total_ < mem_dipole && do_dm_) {
         outfile->Printf("\n\n  Error: Not enough memory to compute DSRG-MRPT3 dipole.");
         outfile->Printf("\n  Minimum memory required: %s\n", to_XB(mem_dipole, 1).c_str());
-        throw PSIEXCEPTION("Not enough memory to compute DSRG-MRPT3 dipole.");
+        throw psi::PSIEXCEPTION("Not enough memory to compute DSRG-MRPT3 dipole.");
     }
 }
 
@@ -498,8 +499,8 @@ double DSRG_MRPT3::compute_energy() {
     outfile->Printf("\n      Hbar1st = H1st + [H0th, A1st]");
     outfile->Printf("\n      Hbar2nd = 0.5 * [H1st + Hbar1st, A1st] + [H0th, A2nd]");
 
-    Process::environment.globals["UNRELAXED ENERGY"] = Etotal;
-    Process::environment.globals["CURRENT ENERGY"] = Etotal;
+    psi::Process::environment.globals["UNRELAXED ENERGY"] = Etotal;
+    psi::Process::environment.globals["CURRENT ENERGY"] = Etotal;
 
     // compute DSRG dipole integrals part 2
     if (do_dm_) {
@@ -597,7 +598,7 @@ double DSRG_MRPT3::compute_energy_pt3_1() {
     int64_t mem_min = sizeof(double) * (6 * (shp - saa) + 3 * (shp * shp - saa * saa));
 
     if (mem_total_ < mem_min) {
-        throw PSIEXCEPTION("Not enough memory for compute_energy_pt3_1 in DSRG-MRPT3.");
+        throw psi::PSIEXCEPTION("Not enough memory for compute_energy_pt3_1 in DSRG-MRPT3.");
     } else if (mem_total_ >= mem_max) {
 
         // compute -[H0th,A1st] = Delta * T and save to C1 and C2
@@ -1303,7 +1304,7 @@ double DSRG_MRPT3::compute_energy_sa() {
     //    }
 
     // get character table
-    CharacterTable ct = Process::environment.molecule()->point_group()->char_table();
+    CharacterTable ct = psi::Process::environment.molecule()->point_group()->char_table();
     std::vector<std::string> irrep_symbol;
     for (int h = 0; h < this->nirrep(); ++h) {
         irrep_symbol.push_back(std::string(ct.gamma(h).symbol()));
@@ -1391,7 +1392,7 @@ double DSRG_MRPT3::compute_energy_sa() {
             int irrep = options_["AVG_STATE"][n][0].to_integer();
             int multi = options_["AVG_STATE"][n][1].to_integer();
             int nstates = options_["AVG_STATE"][n][2].to_integer();
-            std::vector<psi::forte::Determinant> p_space = p_spaces_[n];
+            std::vector<forte::Determinant> p_space = p_spaces_[n];
 
             // print current symmetry
             std::stringstream ss;
@@ -1407,14 +1408,14 @@ double DSRG_MRPT3::compute_energy_sa() {
                 outfile->Printf("    Use string FCI code.");
 
                 // prepare FCISolver
-                int charge = Process::environment.molecule()->molecular_charge();
+                int charge = psi::Process::environment.molecule()->molecular_charge();
                 if (options_["CHARGE"].has_changed()) {
                     charge = options_.get_int("CHARGE");
                 }
                 auto nelec = 0;
-                int natom = Process::environment.molecule()->natom();
+                int natom = psi::Process::environment.molecule()->natom();
                 for (int i = 0; i < natom; ++i) {
-                    nelec += Process::environment.molecule()->fZ(i);
+                    nelec += psi::Process::environment.molecule()->fZ(i);
                 }
                 nelec -= charge;
                 int ms = (multi + 1) % 2;
@@ -1423,7 +1424,7 @@ double DSRG_MRPT3::compute_energy_sa() {
                 auto na = (nelec_actv + ms) / 2;
                 auto nb = nelec_actv - na;
 
-                Dimension active_dim = mo_space_info_->get_dimension("ACTIVE");
+                psi::Dimension active_dim = mo_space_info_->get_dimension("ACTIVE");
                 int ntrial_per_root = options_.get_int("NTRIAL_PER_ROOT");
 
                 FCISolver fcisolver(active_dim, core_mos_, actv_mos_, na, nb, multi, irrep, ints_,
@@ -1442,7 +1443,7 @@ double DSRG_MRPT3::compute_energy_sa() {
 
                 // compute energy and fill in results
                 fcisolver.compute_energy();
-                SharedVector Ems = fcisolver.eigen_vals();
+                psi::SharedVector Ems = fcisolver.eigen_vals();
                 for (int i = 0; i < nstates; ++i) {
                     Edsrg_sa[n].push_back(Ems->get(i) + Enuc_);
                 }
@@ -1455,13 +1456,13 @@ double DSRG_MRPT3::compute_energy_sa() {
 
                 int dim = (eigens_[n][0].first)->dim();
                 size_t eigen_size = eigens_[n].size();
-                SharedMatrix evecs(new Matrix("evecs", dim, eigen_size));
+                psi::SharedMatrix evecs(new psi::Matrix("evecs", dim, eigen_size));
                 for (size_t i = 0; i < eigen_size; ++i) {
                     evecs->set_column(0, i, (eigens_[n][i]).first);
                 }
 
-                SharedMatrix Heff(
-                    new Matrix("Heff " + multi_label[multi - 1] + " " + irrep_symbol[irrep],
+                psi::SharedMatrix Heff(
+                    new psi::Matrix("Heff " + multi_label[multi - 1] + " " + irrep_symbol[irrep],
                                nstates, nstates));
                 for (int A = 0; A < nstates; ++A) {
                     for (int B = A; B < nstates; ++B) {
@@ -1506,8 +1507,8 @@ double DSRG_MRPT3::compute_energy_sa() {
                 print_h2("Effective Hamiltonian Summary");
                 outfile->Printf("\n");
                 Heff->print();
-                SharedMatrix U(new Matrix("U of Heff", nstates, nstates));
-                SharedVector Ems(new Vector("MS Energies", nstates));
+                psi::SharedMatrix U(new psi::Matrix("U of Heff", nstates, nstates));
+                psi::SharedVector Ems(new Vector("MS Energies", nstates));
                 Heff->diagonalize(U, Ems);
                 U->eivprint(Ems);
 
@@ -1535,13 +1536,13 @@ double DSRG_MRPT3::compute_energy_sa() {
         for (int i = 0; i < nstates; ++i) {
             outfile->Printf("\n     %3d     %3s    %2d   %20.12f", multi,
                             irrep_symbol[irrep].c_str(), i, Edsrg_sa[n][i]);
-            Process::environment.globals["ENERGY ROOT " + std::to_string(counter)] = Edsrg_sa[n][i];
+            psi::Process::environment.globals["ENERGY ROOT " + std::to_string(counter)] = Edsrg_sa[n][i];
             ++counter;
         }
         outfile->Printf("\n    %s", dash.c_str());
     }
 
-    Process::environment.globals["CURRENT ENERGY"] = Edsrg_sa[0][0];
+    psi::Process::environment.globals["CURRENT ENERGY"] = Edsrg_sa[0][0];
     return Edsrg_sa[0][0];
 }
 
@@ -1609,7 +1610,7 @@ double DSRG_MRPT3::compute_energy_relaxed() {
         double t = std::sqrt(x * x + y * y + z * z);
         outfile->Printf("\n    DSRG-MRPT3 unrelaxed dipole moment:");
         outfile->Printf("\n      X: %10.6f  Y: %10.6f  Z: %10.6f  Total: %10.6f\n", x, y, z, t);
-        Process::environment.globals["UNRELAXED DIPOLE"] = t;
+        psi::Process::environment.globals["UNRELAXED DIPOLE"] = t;
 
         // there should be only one entry for state-specific computations
         if (dm_relax.size() == 1) {
@@ -1621,13 +1622,13 @@ double DSRG_MRPT3::compute_energy_relaxed() {
             }
             outfile->Printf("\n    DSRG-MRPT3 partially relaxed dipole moment:");
             outfile->Printf("\n      X: %10.6f  Y: %10.6f  Z: %10.6f  Total: %10.6f\n", x, y, z, t);
-            Process::environment.globals["PARTIALLY RELAXED DIPOLE"] = t;
+            psi::Process::environment.globals["PARTIALLY RELAXED DIPOLE"] = t;
         }
     }
 
-    Process::environment.globals["UNRELAXED ENERGY"] = Edsrg;
-    Process::environment.globals["PARTIALLY RELAXED ENERGY"] = Erelax;
-    Process::environment.globals["CURRENT ENERGY"] = Erelax;
+    psi::Process::environment.globals["UNRELAXED ENERGY"] = Edsrg;
+    psi::Process::environment.globals["PARTIALLY RELAXED ENERGY"] = Erelax;
+    psi::Process::environment.globals["CURRENT ENERGY"] = Erelax;
     return Erelax;
 }
 
@@ -1756,7 +1757,7 @@ void DSRG_MRPT3::transfer_integrals() {
     outfile->Printf("\n    %-35s = %22.15f", "Total Energy (before)", Eref_ + Hbar0_);
 
     if (std::fabs(Etest - Eref_ - Hbar0_) > 100.0 * options_.get_double("E_CONVERGENCE")) {
-        throw PSIEXCEPTION("De-normal-odering failed.");
+        throw psi::PSIEXCEPTION("De-normal-odering failed.");
     }
 }
 
@@ -1792,7 +1793,7 @@ void DSRG_MRPT3::print_dm_pt3() {
     print_vector4("DSRG-MRPT2 (2nd-order complete)", Mbar0_pt2c_);
     double t = print_vector4("DSRG-MRPT3", Mbar0_);
 
-    Process::environment.globals["UNRELAXED DIPOLE"] = t;
+    psi::Process::environment.globals["UNRELAXED DIPOLE"] = t;
 }
 
 void DSRG_MRPT3::compute_dm1d_pt3_1(BlockedTensor& M, double& Mbar0, double& Mbar0_pt2,
@@ -2626,7 +2627,7 @@ void DSRG_MRPT3::V_T2_C2_DF(BlockedTensor& B, BlockedTensor& T2, const double& a
         (2 * (p * h - a * a) + 3 * (p * p * h * h - a * a * a * a)); // local memory used in pt3_2
     if (mem_total_ < 0 or static_cast<size_t>(mem_total_) < v * v * sizeof(double)) {
         outfile->Printf("\n    Not enough memory for batching.");
-        throw PSIEXCEPTION("Not enough memory for batching at DSRG-MRPT3 V_T2_C2_DF.");
+        throw psi::PSIEXCEPTION("Not enough memory for batching at DSRG-MRPT3 V_T2_C2_DF.");
     }
 
     // hole-hole contractions
@@ -3682,7 +3683,7 @@ void DSRG_MRPT3::V_T2_C2_DF_VV(BlockedTensor& B, BlockedTensor& T2, const double
                 outfile->Printf("\n    Not enough memory for batching tensor "
                                 "H2(%zu * %zu * %zu * %zu).",
                                 sh0, sh1, sv, sv);
-                throw PSIEXCEPTION("Not enough memory for batching at "
+                throw psi::PSIEXCEPTION("Not enough memory for batching at "
                                    "DSRG-MRPT3 V_T2_C2_DF_VV.");
             }
 
@@ -4064,7 +4065,7 @@ void DSRG_MRPT3::V_T2_C2_DF_VC_EX(BlockedTensor& B, BlockedTensor& T2, const dou
             outfile->Printf("\n    Not enough memory for batching tensor "
                             "H2(%zu * %zu * %zu * %zu).",
                             sq, ss, sc, sv);
-            throw PSIEXCEPTION("Not enough memory for batching at DSRG-MRPT3 "
+            throw psi::PSIEXCEPTION("Not enough memory for batching at DSRG-MRPT3 "
                                "V_T2_C2_DF_VC_EX.");
         }
 
@@ -4392,7 +4393,7 @@ void DSRG_MRPT3::V_T2_C2_DF_VA_EX(BlockedTensor& B, BlockedTensor& T2, const dou
             outfile->Printf("\n    Not enough memory for batching tensor "
                             "H2(%zu * %zu * %zu * %zu).",
                             sq, ss, sa, sv);
-            throw PSIEXCEPTION("Not enough memory for batching at DSRG-MRPT3 "
+            throw psi::PSIEXCEPTION("Not enough memory for batching at DSRG-MRPT3 "
                                "V_T2_C2_DF_VA_EX.");
         }
 
@@ -4763,7 +4764,7 @@ void DSRG_MRPT3::V_T2_C2_DF_VH_EX(BlockedTensor& B, BlockedTensor& T2, const dou
         outfile->Printf("\n    Not enough memory for batching tensor H2(%zu * "
                         "%zu * %zu * %zu).",
                         smax_q, smax_s, smax_hole, sv);
-        throw PSIEXCEPTION("Not enough memory for batching at DSRG-MRPT3 V_T2_C2_DF_VH_EX.");
+        throw psi::PSIEXCEPTION("Not enough memory for batching at DSRG-MRPT3 V_T2_C2_DF_VH_EX.");
     }
 
     // memory usage
@@ -5203,22 +5204,22 @@ std::vector<std::vector<double>> DSRG_MRPT3::diagonalize_Fock_diagblocks(Blocked
     // diagonal blocks identifiers (C-A-V ordering)
     std::vector<std::string> blocks{"cc", "aa", "vv", "CC", "AA", "VV"};
 
-    // map MO space label to its Dimension
-    std::map<std::string, Dimension> MOlabel_to_dimension;
+    // map MO space label to its psi::Dimension
+    std::map<std::string, psi::Dimension> MOlabel_to_dimension;
     MOlabel_to_dimension[acore_label_] = mo_space_info_->get_dimension("RESTRICTED_DOCC");
     MOlabel_to_dimension[aactv_label_] = mo_space_info_->get_dimension("ACTIVE");
     MOlabel_to_dimension[avirt_label_] = mo_space_info_->get_dimension("RESTRICTED_UOCC");
 
     // eigen values to be returned
     size_t ncmo = mo_space_info_->size("CORRELATED");
-    Dimension corr = mo_space_info_->get_dimension("CORRELATED");
+    psi::Dimension corr = mo_space_info_->get_dimension("CORRELATED");
     std::vector<double> eigenvalues_a(ncmo, 0.0);
     std::vector<double> eigenvalues_b(ncmo, 0.0);
 
-    // map MO space label to its offset Dimension
-    std::map<std::string, Dimension> MOlabel_to_offset_dimension;
+    // map MO space label to its offset psi::Dimension
+    std::map<std::string, psi::Dimension> MOlabel_to_offset_dimension;
     int nirrep = corr.n();
-    MOlabel_to_offset_dimension["c"] = Dimension(std::vector<int>(nirrep, 0));
+    MOlabel_to_offset_dimension["c"] = psi::Dimension(std::vector<int>(nirrep, 0));
     MOlabel_to_offset_dimension["a"] = mo_space_info_->get_dimension("RESTRICTED_DOCC");
     MOlabel_to_offset_dimension["v"] =
         mo_space_info_->get_dimension("RESTRICTED_DOCC") + mo_space_info_->get_dimension("ACTIVE");
@@ -5253,7 +5254,7 @@ std::vector<std::vector<double>> DSRG_MRPT3::diagonalize_Fock_diagblocks(Blocked
             continue;
         } else {
             std::string label(1, tolower(block[0]));
-            Dimension space = MOlabel_to_dimension[label];
+            psi::Dimension space = MOlabel_to_dimension[label];
             int nirrep = space.n();
 
             // separate Fock with irrep
@@ -5288,15 +5289,15 @@ std::vector<std::vector<double>> DSRG_MRPT3::diagonalize_Fock_diagblocks(Blocked
     return {eigenvalues_a, eigenvalues_b};
 }
 
-ambit::Tensor DSRG_MRPT3::separate_tensor(ambit::Tensor& tens, const Dimension& irrep,
+ambit::Tensor DSRG_MRPT3::separate_tensor(ambit::Tensor& tens, const psi::Dimension& irrep,
                                           const int& h) {
     // test tens and irrep
     size_t tens_dim = tens.dim(0);
     if (tens_dim != static_cast<size_t>(irrep.sum()) || tens_dim != tens.dim(1)) {
-        throw PSIEXCEPTION("Wrong dimension for the to-be-separated ambit Tensor.");
+        throw psi::PSIEXCEPTION("Wrong dimension for the to-be-separated ambit Tensor.");
     }
     if (h >= irrep.n()) {
-        throw PSIEXCEPTION("Ask for wrong irrep.");
+        throw psi::PSIEXCEPTION("Ask for wrong irrep.");
     }
 
     // from relative (blocks) to absolute (big tensor) index
@@ -5322,15 +5323,15 @@ ambit::Tensor DSRG_MRPT3::separate_tensor(ambit::Tensor& tens, const Dimension& 
     return T_h;
 }
 
-void DSRG_MRPT3::combine_tensor(ambit::Tensor& tens, ambit::Tensor& tens_h, const Dimension& irrep,
+void DSRG_MRPT3::combine_tensor(ambit::Tensor& tens, ambit::Tensor& tens_h, const psi::Dimension& irrep,
                                 const int& h) {
     // test tens and irrep
     if (h >= irrep.n()) {
-        throw PSIEXCEPTION("Ask for wrong irrep.");
+        throw psi::PSIEXCEPTION("Ask for wrong irrep.");
     }
     size_t tens_h_dim = tens_h.dim(0), h_dim = irrep[h];
     if (tens_h_dim != h_dim || tens_h_dim != tens_h.dim(1)) {
-        throw PSIEXCEPTION("Wrong dimension for the to-be-combined ambit Tensor.");
+        throw psi::PSIEXCEPTION("Wrong dimension for the to-be-combined ambit Tensor.");
     }
 
     // from relative (blocks) to absolute (big tensor) index
@@ -5666,7 +5667,7 @@ ambit::Tensor DSRG_MRPT3::sub_block(ambit::Tensor& T,
             ss << "\n Invalid dimension index. Rank of " << T.name() << " is " << rank - 1
                << ". Asked index: " << idx << ".";
             ss << "\n Problem occured in DSRG_MRPT3 sub_block.";
-            throw PSIEXCEPTION(ss.str());
+            throw psi::PSIEXCEPTION(ss.str());
         }
 
         std::vector<size_t> mo = p.second;
@@ -5680,7 +5681,7 @@ ambit::Tensor DSRG_MRPT3::sub_block(ambit::Tensor& T,
             ss << "\n Invalid element index. The " << idx << " dimension index of " << T.name()
                << " is at most " << T.dim(idx) - 1 << ". Asked index: " << ele_max << ".";
             ss << "\n Problem occured in DSRG_MRPT3 sub_block.";
-            throw PSIEXCEPTION(ss.str());
+            throw psi::PSIEXCEPTION(ss.str());
         }
     }
 
@@ -5740,4 +5741,3 @@ void DSRG_MRPT3::rotate_2rdm(ambit::Tensor& L2aa, ambit::Tensor& L2ab, ambit::Te
     L2bb("PQRS") = Ub("AP") * Ub("BQ") * temp("ABCD") * Ub("CR") * Ub("DS");
 }
 }
-} // End Namespaces

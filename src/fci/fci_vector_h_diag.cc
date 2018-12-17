@@ -36,7 +36,8 @@
 #include "helpers/mo_space_info.h"
 #include "fci_vector.h"
 
-namespace psi {
+using namespace psi;
+
 namespace forte {
 
 void FCIWfn::form_H_diagonal(std::shared_ptr<FCIIntegrals> fci_ints) {
@@ -245,5 +246,4 @@ double FCIWfn::determinant_energy(bool*& Ia,bool*& Ib,int n)
 }
 
 */
-}
 }

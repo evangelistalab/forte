@@ -33,17 +33,18 @@
 #include <iostream>
 #include <vector>
 
-#include "psi4/libmints/typedefs.h"
 #include "psi4/libmints/dimension.h"
 #include "ambit/blocked_tensor.h"
 
-namespace psi {
-
 class Tensor;
-class Options;
-class Matrix;
-class Wavefunction;
-class Dimension;
+
+namespace psi {
+  class Options;
+  class Matrix;
+  class Vector;
+  class Wavefunction;
+  class Dimension;
+}
 
 namespace forte {
 
@@ -102,7 +103,7 @@ class ForteIntegrals {
      * @param restricted Select a restricted or unrestricted transformation
      * @param mo_space_info The MOSpaceInfo object
      */
-    ForteIntegrals(psi::Options& options, std::shared_ptr<Wavefunction> ref_wfn,
+    ForteIntegrals(psi::Options& options, std::shared_ptr<psi::Wavefunction> ref_wfn,
                    IntegralSpinRestriction restricted, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Destructor
@@ -118,12 +119,12 @@ class ForteIntegrals {
     int nirrep() const { return nirrep_; }
 
     /// Return the number of frozen core orbitals per irrep
-    Dimension& frzcpi() { return frzcpi_; }
+    psi::Dimension& frzcpi() { return frzcpi_; }
     /// Return the number of frozen virtual orbitals per irrep
-    Dimension& frzvpi() { return frzvpi_; }
+    psi::Dimension& frzvpi() { return frzvpi_; }
 
     /// The number of correlated MOs per irrep (non frozen).  This is nmopi - nfzcpi - nfzvpi.
-    Dimension& ncmopi() { return ncmopi_; }
+    psi::Dimension& ncmopi() { return ncmopi_; }
 
     /// Return the total number of correlated molecular orbitals (this number excludes frozen MOs)
     size_t ncmo() const { return ncmo_; }
@@ -200,8 +201,8 @@ class ForteIntegrals {
                                                          const std::vector<size_t>& q) = 0;
 
     /// Make a Fock matrix computed with respect to a given determinant
-    virtual void make_fock_matrix(std::shared_ptr<Matrix> gamma_a,
-                                  std::shared_ptr<Matrix> gamma_b) = 0;
+    virtual void make_fock_matrix(std::shared_ptr<psi::Matrix> gamma_a,
+                                  std::shared_ptr<psi::Matrix> gamma_b) = 0;
 
     /// Set the value of the scalar part of the Hamiltonian
     /// @param value the new value of the scalar part of the Hamiltonian
@@ -231,9 +232,9 @@ class ForteIntegrals {
     /// Return the type of integral used
     IntegralType integral_type() { return integral_type_; }
     /// Return the one-body symmetry integrals
-    std::shared_ptr<Matrix> OneBody_symm() { return OneBody_symm_; }
+    std::shared_ptr<psi::Matrix> OneBody_symm() { return OneBody_symm_; }
     /// Return the one-body AO integrals
-    std::shared_ptr<Matrix> OneBodyAO() { return OneIntsAO_; }
+    std::shared_ptr<psi::Matrix> OneBodyAO() { return OneIntsAO_; }
 
     virtual int ga_handle() { return 0; }
 
@@ -243,17 +244,17 @@ class ForteIntegrals {
     void print_ints();
 
     /// Obtain AO dipole integrals [X, Y, Z]
-    /// Each direction is a SharedMatrix of dimension nmo * nmo
-    std::vector<std::shared_ptr<Matrix>> AOdipole_ints() { return AOdipole_ints_; }
+    /// Each direction is a std::shared_ptr<psi::Matrix> of dimension nmo * nmo
+    std::vector<std::shared_ptr<psi::Matrix>> AOdipole_ints() { return AOdipole_ints_; }
 
     /**
      * Compute MO dipole integrals
      * @param alpha if true, compute MO dipole using Ca, else Cb
      * @param resort if true, MOdipole ints are sorted to Pitzer order, otherwise in C1 order
      * @return a vector of MOdipole ints in X, Y, Z order,
-     *         each of which is a nmo by nmo SharedMatrix
+     *         each of which is a nmo by nmo std::shared_ptr<psi::Matrix>
      */
-    std::vector<std::shared_ptr<Matrix>> compute_MOdipole_ints(const bool& alpha = true,
+    std::vector<std::shared_ptr<psi::Matrix>> compute_MOdipole_ints(const bool& alpha = true,
                                                                const bool& resort = false);
 
   protected:
@@ -263,7 +264,7 @@ class ForteIntegrals {
     psi::Options& options_;
 
     /// The Wavefunction object
-    SharedWavefunction wfn_;
+    std::shared_ptr<psi::Wavefunction> wfn_;
 
     /// The integral_type
     IntegralType integral_type_;
@@ -284,16 +285,16 @@ class ForteIntegrals {
     std::vector<size_t> cmotomo_;
 
     /// The number of symmetrized AOs per irrep.
-    Dimension nsopi_;
+    psi::Dimension nsopi_;
     /// The number of MOs per irrep.
-    Dimension nmopi_;
+    psi::Dimension nmopi_;
     /// The number of frozen core MOs per irrep.
-    Dimension frzcpi_;
+    psi::Dimension frzcpi_;
     /// The number of frozen unoccupied MOs per irrep.
-    Dimension frzvpi_;
+    psi::Dimension frzvpi_;
     /// The number of correlated MOs per irrep (non frozen).  This is nmopi -
     /// nfzcpi - nfzvpi.
-    Dimension ncmopi_;
+    psi::Dimension ncmopi_;
 
     /// The number of orbitals used in indexing routines (nmo or ncmo if core orbitals are frozen)
     /// The correct value is set by the integrals class
@@ -346,16 +347,16 @@ class ForteIntegrals {
     /// Control printing of timings
     int print_;
     /// The One Electron Integrals (T + V) in SO Basis
-    std::shared_ptr<Matrix> OneBody_symm_;
-    std::shared_ptr<Matrix> OneIntsAO_;
+    std::shared_ptr<psi::Matrix> OneBody_symm_;
+    std::shared_ptr<psi::Matrix> OneIntsAO_;
 
     /// AO dipole integrals
-    std::vector<std::shared_ptr<Matrix>> AOdipole_ints_;
+    std::vector<std::shared_ptr<psi::Matrix>> AOdipole_ints_;
     /// Compute AO dipole integrals
     void build_AOdipole_ints();
     /// Compute MO dipole integrals
-    std::vector<std::shared_ptr<Matrix>>
-    MOdipole_ints_helper(std::shared_ptr<Matrix> Cao, SharedVector epsilon, const bool& resort);
+    std::vector<std::shared_ptr<psi::Matrix>>
+    MOdipole_ints_helper(std::shared_ptr<psi::Matrix> Cao, std::shared_ptr<psi::Vector> epsilon, const bool& resort);
 
     // ==> Class private functions <==
 
@@ -388,6 +389,6 @@ class ForteIntegrals {
 };
 
 } // namespace forte
-} // namespace psi
+
 
 #endif // _integrals_h_

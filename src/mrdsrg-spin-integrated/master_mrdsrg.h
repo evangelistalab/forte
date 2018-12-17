@@ -19,7 +19,7 @@
 #include "mrdsrg-helper/dsrg_tensors.h"
 
 using namespace ambit;
-namespace psi {
+
 namespace forte {
 class MASTER_DSRG : public DynamicCorrelationSolver {
   public:
@@ -30,7 +30,7 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
      * @param ints A pointer to an allocated integral object
      * @param mo_space_info The MOSpaceInfo object
      */
-    MASTER_DSRG(Reference reference, SharedWavefunction ref_wfn, Options& options,
+    MASTER_DSRG(Reference reference, psi::SharedWavefunction ref_wfn, psi::Options& options,
                 std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Destructor
@@ -48,7 +48,7 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     virtual void compute_Heff_2nd_coupling(double&, ambit::Tensor&, ambit::Tensor&, ambit::Tensor&,
                                            ambit::Tensor&, ambit::Tensor&, ambit::Tensor&,
                                            ambit::Tensor&, ambit::Tensor&, ambit::Tensor&) {
-        throw PSIEXCEPTION("Child class should override this function");
+        throw psi::PSIEXCEPTION("Child class should override this function");
     }
 
     /// Compute [H, T] without using MK-GNO
@@ -64,24 +64,24 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
 
     /// Return de-normal-ordered T1 amplitudes
     virtual ambit::BlockedTensor get_T1deGNO(double&) {
-        throw PSIEXCEPTION("Child class should override this function");
+        throw psi::PSIEXCEPTION("Child class should override this function");
     }
 
     /// Return T2 amplitudes
     virtual ambit::BlockedTensor get_T2(const std::vector<std::string>&) {
-        throw PSIEXCEPTION("Child class should override this function");
+        throw psi::PSIEXCEPTION("Child class should override this function");
     }
     virtual ambit::BlockedTensor get_T2() {
-        throw PSIEXCEPTION("Child class should override this function");
+        throw psi::PSIEXCEPTION("Child class should override this function");
     }
 
     /// Return de-normal-ordered 1-body renormalized 1st-order Hamiltonian
     virtual ambit::BlockedTensor get_RH1deGNO() {
-        throw PSIEXCEPTION("Only used in non-DF DSRG-MRPT2");
+        throw psi::PSIEXCEPTION("Only used in non-DF DSRG-MRPT2");
     }
 
     /// Return 2-body renormalized 1st-order Hamiltonian
-    virtual ambit::BlockedTensor get_RH2() { throw PSIEXCEPTION("Only used in non-DF DSRG-MRPT2"); }
+    virtual ambit::BlockedTensor get_RH2() { throw psi::PSIEXCEPTION("Only used in non-DF DSRG-MRPT2"); }
 
     /// Return the Hbar of a given order
     std::vector<ambit::Tensor> Hbar(int n);
@@ -329,7 +329,7 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     std::vector<ambit::BlockedTensor> dm_;
 
     /// Fill in bare MO dipole integrals
-    void fill_MOdm(std::vector<SharedMatrix>& dm_a, std::vector<SharedMatrix>& dm_b);
+    void fill_MOdm(std::vector<psi::SharedMatrix>& dm_a, std::vector<psi::SharedMatrix>& dm_b);
     /// Compute dipole moment of the reference
     void compute_dm_ref();
     /// Compute dipole for a certain direction or not
@@ -460,5 +460,5 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     void H2_G2_C2(BlockedTensor& H2, BlockedTensor& G2, const double& alpha, BlockedTensor& C2);
 };
 }
-}
+
 #endif // MASTER_MRDSRG_H

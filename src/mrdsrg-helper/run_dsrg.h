@@ -10,7 +10,7 @@
 #include "mrdsrg-spin-integrated/three_dsrg_mrpt2.h"
 #include "mrdsrg-spin-integrated/mrdsrg.h"
 
-namespace psi {
+
 namespace forte {
 
 /// Set the DSRG options
@@ -28,7 +28,7 @@ void set_DSRG_options(ForteOptions& foptions);
 //     * @param ints A pointer to an allocated integral object
 //     * @param mo_space_info The MOSpaceInfo object
 //     */
-//    RUN_DSRG(Reference reference, SharedWavefunction ref_wfn, Options& options,
+//    RUN_DSRG(Reference reference, psi::SharedWavefunction ref_wfn, psi::Options& options,
 //             std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
 //    /// Compute DSRG energy
@@ -44,5 +44,5 @@ void set_DSRG_options(ForteOptions& foptions);
 
 //};
 }
-}
+
 #endif // RUN_DSRG_H

@@ -40,7 +40,7 @@
 #include "psi4/psi4-dec.h"
 #include "psi4/psifiles.h"
 // Header above this comment contains typedef std::shared_ptr<psi::Matrix>
-// SharedMatrix;
+// psi::SharedMatrix;
 #include "psi4/libciomr/libciomr.h"
 #include "psi4/libfock/jk.h"
 #include "psi4/libmints/writer_file_prefix.h"
@@ -68,16 +68,16 @@
 // This allows us to be lazy in getting the spaces in DPD calls
 #define ID(x) ints->DPD_ID(x)
 
-namespace psi {
+
 namespace forte {
 
-DMRGSolver::DMRGSolver(SharedWavefunction ref_wfn, Options& options,
+DMRGSolver::DMRGSolver(psi::SharedWavefunction ref_wfn, psi::Options& options,
                        std::shared_ptr<MOSpaceInfo> mo_space_info,
                        std::shared_ptr<ForteIntegrals> ints)
     : wfn_(ref_wfn), options_(options), mo_space_info_(mo_space_info), ints_(ints) {
     print_method_banner({"Density Matrix Renormalization Group SCF", "Sebastian Wouters"});
 }
-DMRGSolver::DMRGSolver(SharedWavefunction ref_wfn, Options& options,
+DMRGSolver::DMRGSolver(psi::SharedWavefunction ref_wfn, psi::Options& options,
                        std::shared_ptr<MOSpaceInfo> mo_space_info)
     : wfn_(ref_wfn), options_(options), mo_space_info_(mo_space_info) {
     print_method_banner({"Density Matrix Renormalization Group", "Sebastian Wouters"});
@@ -89,7 +89,7 @@ void DMRGSolver::compute_reference(double* one_rdm, double* two_rdm, double* thr
     //{
     //    outfile->Printf("\n\n Spinadapted formalism requires spin-averaged
     //    quantitities");
-    //    throw PSIEXCEPTION("You need to spin averaged things");
+    //    throw psi::PSIEXCEPTION("You need to spin averaged things");
     //}
     Reference dmrg_ref;
     size_t na = mo_space_info_->size("ACTIVE");
@@ -237,9 +237,9 @@ void DMRGSolver::compute_energy() {
     double* dmrg_noiseprefactors = options_.get_double_array("DMRG_NOISEPREFACTORS");
     const int ndmrg_noiseprefactors = options_["DMRG_NOISEPREFACTORS"].size();
     const bool dmrg_print_corr = options_.get_bool("DMRG_PRINT_CORR");
-    Dimension frozen_docc = mo_space_info_->get_dimension("INACTIVE_DOCC");
-    Dimension active = mo_space_info_->get_dimension("ACTIVE");
-    Dimension virtual_orbs = mo_space_info_->get_dimension("RESTRICTED_UOCC");
+    psi::Dimension frozen_docc = mo_space_info_->get_dimension("INACTIVE_DOCC");
+    psi::Dimension active = mo_space_info_->get_dimension("ACTIVE");
+    psi::Dimension virtual_orbs = mo_space_info_->get_dimension("RESTRICTED_UOCC");
     const double dmrgscf_convergence = options_.get_double("D_CONVERGENCE");
     const bool dmrgscf_store_unit = options_.get_bool("DMRG_STORE_UNIT");
     const bool dmrgscf_do_diis = options_.get_bool("DMRG_DO_DIIS");
@@ -269,60 +269,60 @@ void DMRGSolver::compute_energy() {
     const int SyGroup = chemps2_groupnumber(wfn_->molecule()->sym_label());
     const int nmo = mo_space_info_->size("ALL");
     const int nirrep = mo_space_info_->nirrep();
-    Dimension orbspi = mo_space_info_->get_dimension("ALL");
+    psi::Dimension orbspi = mo_space_info_->get_dimension("ALL");
     int* docc = wfn_->doccpi();
     int* socc = wfn_->soccpi();
     if (wfn_irrep < 0) {
-        throw PSIEXCEPTION("Option ROOT_SYM (integer) may not be smaller than zero!");
+        throw psi::PSIEXCEPTION("Option ROOT_SYM (integer) may not be smaller than zero!");
     }
     if (wfn_multp < 1) {
-        throw PSIEXCEPTION("Option MULTIPLICTY (integer) should be larger or "
+        throw psi::PSIEXCEPTION("Option MULTIPLICTY (integer) should be larger or "
                            "equal to one: WFN_MULTP = (2S+1) >= 1 !");
     }
     if (ndmrg_states == 0) {
-        throw PSIEXCEPTION("Option DMRG_STATES (integer array) should be set!");
+        throw psi::PSIEXCEPTION("Option DMRG_STATES (integer array) should be set!");
     }
     if (ndmrg_econv == 0) {
-        throw PSIEXCEPTION("Option DMRG_ECONV (double array) should be set!");
+        throw psi::PSIEXCEPTION("Option DMRG_ECONV (double array) should be set!");
     }
     if (ndmrg_maxsweeps == 0) {
-        throw PSIEXCEPTION("Option DMRG_MAXSWEEPS (integer array) should be set!");
+        throw psi::PSIEXCEPTION("Option DMRG_MAXSWEEPS (integer array) should be set!");
     }
     if (ndmrg_noiseprefactors == 0) {
-        throw PSIEXCEPTION("Option DMRG_NOISEPREFACTORS (double array) should be set!");
+        throw psi::PSIEXCEPTION("Option DMRG_NOISEPREFACTORS (double array) should be set!");
     }
     if (ndmrg_states != ndmrg_econv) {
-        throw PSIEXCEPTION("Options DMRG_STATES (integer array) and DMRG_ECONV "
+        throw psi::PSIEXCEPTION("Options DMRG_STATES (integer array) and DMRG_ECONV "
                            "(double array) should contain the same number of "
                            "elements!");
     }
     if (ndmrg_states != ndmrg_maxsweeps) {
-        throw PSIEXCEPTION("Options DMRG_STATES (integer array) and "
+        throw psi::PSIEXCEPTION("Options DMRG_STATES (integer array) and "
                            "DMRG_MAXSWEEPS (integer array) should contain the "
                            "same number of elements!");
     }
     if (ndmrg_states != ndmrg_noiseprefactors) {
-        throw PSIEXCEPTION("Options DMRG_STATES (integer array) and "
+        throw psi::PSIEXCEPTION("Options DMRG_STATES (integer array) and "
                            "DMRG_NOISEPREFACTORS (double array) should contain "
                            "the same number of elements!");
     }
     for (int cnt = 0; cnt < ndmrg_states; cnt++) {
         if (dmrg_states[cnt] < 2) {
-            throw PSIEXCEPTION("Entries in DMRG_STATES (integer array) should "
+            throw psi::PSIEXCEPTION("Entries in DMRG_STATES (integer array) should "
                                "be larger than 1!");
         }
     }
     if (dmrgscf_convergence <= 0.0) {
-        throw PSIEXCEPTION("Option D_CONVERGENCE (double) must be larger than zero!");
+        throw psi::PSIEXCEPTION("Option D_CONVERGENCE (double) must be larger than zero!");
     }
     if (dmrgscf_diis_branch <= 0.0) {
-        throw PSIEXCEPTION("Option DMRG_DIIS_BRANCH (double) must be larger than zero!");
+        throw psi::PSIEXCEPTION("Option DMRG_DIIS_BRANCH (double) must be larger than zero!");
     }
     if (dmrgscf_max_iter < 1) {
-        throw PSIEXCEPTION("Option DMRG_MAX_ITER (integer) must be larger than zero!");
+        throw psi::PSIEXCEPTION("Option DMRG_MAX_ITER (integer) must be larger than zero!");
     }
     if (dmrgscf_which_root < 1) {
-        throw PSIEXCEPTION("Option DMRG_WHICH_ROOT (integer) must be larger than zero!");
+        throw psi::PSIEXCEPTION("Option DMRG_WHICH_ROOT (integer) must be larger than zero!");
     }
 
     /*******************************************
@@ -376,7 +376,7 @@ void DMRGSolver::compute_energy() {
         std::make_shared<CheMPS2::Problem>(Ham.get(), wfn_multp - 1, nDMRGelectrons, wfn_irrep);
 
     if (!(Prob->checkConsistency())) {
-        throw PSIEXCEPTION("CheMPS2::Problem : No Hilbert state vector "
+        throw psi::PSIEXCEPTION("CheMPS2::Problem : No Hilbert state vector "
                            "compatible with all symmetry sectors!");
     }
     Prob->SetupReorderD2h();
@@ -401,7 +401,7 @@ void DMRGSolver::compute_energy() {
             fci_ints->set_active_integrals_and_restricted_docc();
             one_body_integrals_ = fci_ints->oei_a_vector();
             scalar_energy_ = fci_ints->scalar_energy();
-            scalar_energy_ += Process::environment.molecule()->nuclear_repulsion_energy(
+            scalar_energy_ += psi::Process::environment.molecule()->nuclear_repulsion_energy(
                                   wfn_->get_dipole_field_strength()) +
                               ints_->frozen_core_energy();
             outfile->Printf("\n OneBody integrals (fci_ints) takes %6.5f s",
@@ -464,7 +464,7 @@ void DMRGSolver::compute_energy() {
         DMRGCI->calc_rdms_and_correlations(max_rdm_ > 2 ? true : false, disk_3_rdm_);
         outfile->Printf("\n Overall DMRG RDM computation took %6.5f s.", DMRGRDMs.get());
         outfile->Printf("\n @DMRG Energy = %8.12f", Energy);
-        Process::environment.globals["CURRENT ENERGY"] = Energy;
+        psi::Process::environment.globals["CURRENT ENERGY"] = Energy;
         // if(dmrgscf_state_avg)
         //{
         //    DMRGCI->calc_rdms_and_correlations(max_rdm_ > 2 ? true : false);
@@ -539,19 +539,19 @@ int DMRGSolver::chemps2_groupnumber(const string SymmLabel) {
         for (int cnt = 0; cnt < magic_number_max_groups_chemps2; cnt++) {
             (*outfile) << "   <" << (CheMPS2::Irreps::getGroupName(cnt)).c_str() << ">" << endl;
         }
-        throw PSIEXCEPTION("CheMPS2 did not recognize the symmetry group name!");
+        throw psi::PSIEXCEPTION("CheMPS2 did not recognize the symmetry group name!");
     }
     return SyGroup;
 }
 std::vector<double> DMRGSolver::one_body_operator() {
     ///
-    Dimension restricted_docc_dim = mo_space_info_->get_dimension("INACTIVE_DOCC");
-    Dimension nsopi = wfn_->nsopi();
+    psi::Dimension restricted_docc_dim = mo_space_info_->get_dimension("INACTIVE_DOCC");
+    psi::Dimension nsopi = wfn_->nsopi();
     int nirrep = wfn_->nirrep();
-    Dimension nmopi = mo_space_info_->get_dimension("ALL");
+    psi::Dimension nmopi = mo_space_info_->get_dimension("ALL");
 
-    SharedMatrix Cdocc(new Matrix("C_RESTRICTED", nirrep, nsopi, restricted_docc_dim));
-    SharedMatrix Ca = wfn_->Ca();
+    psi::SharedMatrix Cdocc(new psi::Matrix("C_RESTRICTED", nirrep, nsopi, restricted_docc_dim));
+    psi::SharedMatrix Ca = wfn_->Ca();
     for (int h = 0; h < nirrep; h++) {
         for (int i = 0; i < restricted_docc_dim[h]; i++) {
             Cdocc->set_column(h, i, Ca->get_column(h, i));
@@ -567,40 +567,40 @@ std::vector<double> DMRGSolver::one_body_operator() {
 
     std::shared_ptr<JK> JK_inactive = JK::build_JK(wfn_->basisset(), wfn_->options());
 
-    JK_inactive->set_memory(Process::environment.get_memory() * 0.8);
+    JK_inactive->set_memory(psi::Process::environment.get_memory() * 0.8);
     JK_inactive->initialize();
 
-    std::vector<std::shared_ptr<Matrix>>& Cl = JK_inactive->C_left();
+    std::vector<std::shared_ptr<psi::Matrix>>& Cl = JK_inactive->C_left();
     Cl.clear();
     Cl.push_back(Cdocc);
     JK_inactive->compute();
-    SharedMatrix J_restricted = JK_inactive->J()[0];
-    SharedMatrix K_restricted = JK_inactive->K()[0];
+    psi::SharedMatrix J_restricted = JK_inactive->J()[0];
+    psi::SharedMatrix K_restricted = JK_inactive->K()[0];
 
     J_restricted->scale(2.0);
-    SharedMatrix F_restricted = J_restricted->clone();
+    psi::SharedMatrix F_restricted = J_restricted->clone();
     F_restricted->subtract(K_restricted);
 
     /// Just create the OneInt integrals from scratch
     std::shared_ptr<PSIO> psio_ = PSIO::shared_object();
-    SharedMatrix T = SharedMatrix(wfn_->matrix_factory()->create_matrix(PSIF_SO_T));
-    SharedMatrix V = SharedMatrix(wfn_->matrix_factory()->create_matrix(PSIF_SO_V));
-    SharedMatrix OneInt = T;
+    psi::SharedMatrix T = psi::SharedMatrix(wfn_->matrix_factory()->create_matrix(PSIF_SO_T));
+    psi::SharedMatrix V = psi::SharedMatrix(wfn_->matrix_factory()->create_matrix(PSIF_SO_V));
+    psi::SharedMatrix OneInt = T;
     OneInt->zero();
 
     T->load(psio_, PSIF_OEI);
     V->load(psio_, PSIF_OEI);
-    SharedMatrix Hcore_ = wfn_->matrix_factory()->create_shared_matrix("Core Hamiltonian");
+    psi::SharedMatrix Hcore_ = wfn_->matrix_factory()->create_shared_matrix("Core Hamiltonian");
     Hcore_->add(T);
     Hcore_->add(V);
 
-    SharedMatrix Hcore(Hcore_->clone());
+    psi::SharedMatrix Hcore(Hcore_->clone());
     F_restricted->add(Hcore);
     F_restricted->transform(Ca);
     Hcore->transform(Ca);
 
     size_t all_nmo = mo_space_info_->size("ALL");
-    SharedMatrix F_restric_c1(new Matrix("F_restricted", all_nmo, all_nmo));
+    psi::SharedMatrix F_restric_c1(new psi::Matrix("F_restricted", all_nmo, all_nmo));
     size_t offset = 0;
     for (int h = 0; h < nirrep; h++) {
         for (int p = 0; p < nmopi[h]; p++) {
@@ -627,9 +627,9 @@ std::vector<double> DMRGSolver::one_body_operator() {
                 outfile->Printf("\n oei(%d, %d) = %8.8f", u, v, value);
         }
     }
-    Dimension restricted_docc = mo_space_info_->get_dimension("INACTIVE_DOCC");
+    psi::Dimension restricted_docc = mo_space_info_->get_dimension("INACTIVE_DOCC");
     double E_restricted =
-        Process::environment.molecule()->nuclear_repulsion_energy(wfn->get_dipole_field_strength());
+        psi::Process::environment.molecule()->nuclear_repulsion_energy(wfn->get_dipole_field_strength());
     for (int h = 0; h < nirrep; h++) {
         for (int rd = 0; rd < restricted_docc[h]; rd++) {
             E_restricted += Hcore->get(h, rd, rd) + F_restricted->get(h, rd, rd);
@@ -649,11 +649,11 @@ std::vector<double> DMRGSolver::one_body_operator() {
 }
 void DMRGSolver::print_natural_orbitals(double* opdm) {
     print_h2("NATURAL ORBITALS");
-    Dimension active_dim = mo_space_info_->get_dimension("ACTIVE");
+    psi::Dimension active_dim = mo_space_info_->get_dimension("ACTIVE");
     int nirrep = wfn_->nirrep();
     size_t na_ = mo_space_info_->size("ACTIVE");
 
-    std::shared_ptr<Matrix> opdm_a(new Matrix("OPDM_A", nirrep, active_dim, active_dim));
+    std::shared_ptr<psi::Matrix> opdm_a(new psi::Matrix("OPDM_A", nirrep, active_dim, active_dim));
 
     int offset = 0;
     for (int h = 0; h < nirrep; h++) {
@@ -664,8 +664,8 @@ void DMRGSolver::print_natural_orbitals(double* opdm) {
         }
         offset += active_dim[h];
     }
-    SharedVector OCC_A(new Vector("ALPHA OCCUPATION", nirrep, active_dim));
-    SharedMatrix NO_A(new Matrix(nirrep, active_dim, active_dim));
+    psi::SharedVector OCC_A(new Vector("ALPHA OCCUPATION", nirrep, active_dim));
+    psi::SharedMatrix NO_A(new psi::Matrix(nirrep, active_dim, active_dim));
 
     opdm_a->diagonalize(NO_A, OCC_A, descending);
     std::vector<std::pair<double, std::pair<int, int>>> vec_irrep_occupation;
@@ -675,7 +675,7 @@ void DMRGSolver::print_natural_orbitals(double* opdm) {
             vec_irrep_occupation.push_back(irrep_occ);
         }
     }
-    CharacterTable ct = Process::environment.molecule()->point_group()->char_table();
+    CharacterTable ct = psi::Process::environment.molecule()->point_group()->char_table();
     std::sort(vec_irrep_occupation.begin(), vec_irrep_occupation.end(),
               std::greater<std::pair<double, std::pair<int, int>>>());
 

@@ -46,10 +46,11 @@
 #include "helpers/mo_space_info.h"
 #include "mo_space_info.h"
 
-namespace psi {
+using namespace psi;
+
 namespace forte {
 
-MOSpaceInfo::MOSpaceInfo(Dimension &nmopi) : nirrep_(nmopi.n()), nmopi_(nmopi) {
+MOSpaceInfo::MOSpaceInfo(psi::Dimension &nmopi) : nirrep_(nmopi.n()), nmopi_(nmopi) {
   // Add the elementary spaces to the list of composite spaces
   for (const std::string &es : elementary_spaces_) {
     composite_spaces_[es] = {es};
@@ -63,7 +64,7 @@ size_t MOSpaceInfo::size(const std::string &space) {
   if (composite_spaces_.count(space) == 0) {
     std::string msg =
         "\n  MOSpaceInfo::size - composite space " + space + " is not defined.";
-    throw PSIEXCEPTION(msg.c_str());
+    throw psi::PSIEXCEPTION(msg.c_str());
   } else {
     for (const auto &el_space : composite_spaces_[space]) {
       if (mo_spaces_.count(el_space))
@@ -73,12 +74,12 @@ size_t MOSpaceInfo::size(const std::string &space) {
   return s;
 }
 
-Dimension MOSpaceInfo::get_dimension(const std::string &space) {
-  Dimension result(nirrep_);
+psi::Dimension MOSpaceInfo::get_dimension(const std::string &space) {
+  psi::Dimension result(nirrep_);
   if (composite_spaces_.count(space) == 0) {
     std::string msg =
         "\n  MOSpaceInfo::size - composite space " + space + " is not defined.";
-    throw PSIEXCEPTION(msg.c_str());
+    throw psi::PSIEXCEPTION(msg.c_str());
   } else {
     for (const auto &el_space : composite_spaces_[space]) {
       if (mo_spaces_.count(el_space))
@@ -89,7 +90,7 @@ Dimension MOSpaceInfo::get_dimension(const std::string &space) {
 }
 
 std::vector<int> MOSpaceInfo::symmetry(const std::string &space) {
-  Dimension dims = get_dimension(space);
+  psi::Dimension dims = get_dimension(space);
   std::vector<int> result;
   for (int h = 0; h < dims.n(); ++h) {
     for (int i = 0; i < dims[h]; ++i) {
@@ -104,7 +105,7 @@ std::vector<size_t> MOSpaceInfo::get_absolute_mo(const std::string &space) {
   if (composite_spaces_.count(space) == 0) {
     std::string msg =
         "\n  MOSpaceInfo::size - composite space " + space + " is not defined.";
-    throw PSIEXCEPTION(msg.c_str());
+    throw psi::PSIEXCEPTION(msg.c_str());
   } else {
     for (const auto &el_space : composite_spaces_[space]) {
       if (mo_spaces_.count(el_space)) {
@@ -123,7 +124,7 @@ std::vector<size_t> MOSpaceInfo::get_corr_abs_mo(const std::string &space) {
   if (composite_spaces_.count(space) == 0) {
     std::string msg =
         "\n  MOSpaceInfo::size - composite space " + space + " is not defined.";
-    throw PSIEXCEPTION(msg.c_str());
+    throw psi::PSIEXCEPTION(msg.c_str());
   } else {
     for (const auto &el_space : composite_spaces_[space]) {
       if (mo_spaces_.count(el_space)) {
@@ -146,7 +147,7 @@ MOSpaceInfo::get_relative_mo(const std::string &space) {
   if (composite_spaces_.count(space) == 0) {
     std::string msg =
         "\n  MOSpaceInfo::size - composite space " + space + " is not defined.";
-    throw PSIEXCEPTION(msg.c_str());
+    throw psi::PSIEXCEPTION(msg.c_str());
   } else {
     for (const auto &el_space : composite_spaces_[space]) {
       if (mo_spaces_.count(el_space)) {
@@ -162,7 +163,7 @@ MOSpaceInfo::get_relative_mo(const std::string &space) {
   return result;
 }
 
-void MOSpaceInfo::read_options(Options &options) {
+void MOSpaceInfo::read_options(psi::Options &options) {
   outfile->Printf("\n\n  ==> MO Space Information <==\n");
 
   // Read the elementary spaces
@@ -176,7 +177,7 @@ void MOSpaceInfo::read_options(Options &options) {
   // Handle frozen core
 
   // Count the assigned orbitals
-  Dimension unassigned = nmopi_;
+  psi::Dimension unassigned = nmopi_;
   for (auto &str_si : mo_spaces_) {
     unassigned -= str_si.second.first;
   }
@@ -254,7 +255,7 @@ void MOSpaceInfo::read_options(Options &options) {
 
   int banner_width = label_size + 4 + 6 * (nirrep_ + 1);
   CharacterTable ct =
-      Process::environment.molecule()->point_group()->char_table();
+      psi::Process::environment.molecule()->point_group()->char_table();
   outfile->Printf("\n  %s", std::string(banner_width, '-').c_str());
   outfile->Printf("\n    %s", std::string(label_size, ' ').c_str());
   for (size_t h = 0; h < nirrep_; ++h)
@@ -263,7 +264,7 @@ void MOSpaceInfo::read_options(Options &options) {
   outfile->Printf("\n  %s", std::string(banner_width, '-').c_str());
 
   for (std::string space : elementary_spaces_) {
-    Dimension &dim = mo_spaces_[space].first;
+    psi::Dimension &dim = mo_spaces_[space].first;
     outfile->Printf("\n    %-*s", label_size, space.c_str());
     for (size_t h = 0; h < nirrep_; ++h) {
       outfile->Printf("%6d", dim[h]);
@@ -279,9 +280,9 @@ void MOSpaceInfo::read_options(Options &options) {
 }
 
 std::pair<SpaceInfo, bool> MOSpaceInfo::read_mo_space(const std::string &space,
-                                                      Options &options) {
+                                                      psi::Options &options) {
   bool read = false;
-  Dimension space_dim(nirrep_);
+  psi::Dimension space_dim(nirrep_);
   std::vector<MOInfo> vec_mo_info;
   if ((options[space].has_changed()) && (options[space].size() == nirrep_)) {
     for (size_t h = 0; h < nirrep_; ++h) {
@@ -299,4 +300,4 @@ std::pair<SpaceInfo, bool> MOSpaceInfo::read_mo_space(const std::string &space,
 }
 
 } // namespace forte
-} // namespace psi
+
