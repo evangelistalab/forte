@@ -436,8 +436,6 @@ SparseCISolver::initial_guess(const std::vector<Determinant>& space, int nroot, 
         nguess = guess_dets_pos.size();
     }
 
-    outfile->Printf("\n reached here");
-
     // Form the S^2 operator matrix and diagonalize it
     Matrix S2("S^2", nguess, nguess);
     for (size_t I = 0; I < nguess; I++) {
