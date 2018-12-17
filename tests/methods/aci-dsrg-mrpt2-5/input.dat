@@ -3,8 +3,8 @@ import forte
 memory 2 gb
 
 escf = -304.9057795504940600
-efix = -305.389272899777779 
-eaci = -305.397732409345565
+efix = -305.389273128877335 
+eaci = -305.397758374564773
 
 molecule ene2{
 0 1
@@ -39,9 +39,9 @@ set {
   scf_type df
   guess sad
   maxiter 500
-  e_convergence 10
-  d_convergence 10
-  r_convergence 10
+  e_convergence 12
+  d_convergence 12
+  r_convergence 12
   reference rhf
 }
 

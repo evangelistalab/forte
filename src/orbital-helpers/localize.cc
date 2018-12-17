@@ -51,30 +51,11 @@ LOCALIZE::LOCALIZE(StateInfo state, std::shared_ptr<SCFInfo> scf_info,
         throw psi::PSIEXCEPTION("\n\n ERROR: Localizer only implemented for C1 symmetry!");
     }
 
-    // The wavefunction multiplicity
-    multiplicity_ = options->get_int("MULTIPLICITY");
-
-    // double occupied active
-    naocc_ = scf_info_->doccpi().n() - nfrz_ - nrst_;
-
-    // virtual active
-    navir_ = namo_ - naocc_;
-    abs_act_ = mo_space_info->get_absolute_mo("ACTIVE");
-
-    local_type_ = options->get_str("LOCALIZE_TYPE");
-}
-
-void LOCALIZE::compute_transformation() {
-    std::string loc = options_->get_str("LOCALIZE");
-    if (loc == "SPLIT") {
-        split_localize();
-    } else {
-        full_localize();
-    }
+    orbital_spaces_ = options.get_int_vector("LOCALIZE_SPACE");
+    outfile->Printf("\n\n");
 }
 
 void LOCALIZE::set_orbital_space(std::vector<int>& orbital_spaces){
-    // Split localization defined by input    
     orbital_spaces_ = orbital_spaces;
 }
 
@@ -83,7 +64,7 @@ void LOCALIZE::localize() {
     if( orbital_spaces_.size() == 0 ){
         outfile->Printf("\n  Error: Orbital space for localization is not set!");
         exit(1);
-    } else if ( (orbital_spaces_.size() & 2 ) != 0 ) {
+    } else if ( (orbital_spaces_.size() % 2 ) != 0 ) {
         outfile->Printf("\n  Error: Orbital space for localization not properly set!");
         exit(1);
     } 
@@ -94,8 +75,8 @@ void LOCALIZE::localize() {
 
     size_t nmo = Ca->rowdim();
    
-    U_ = std::make_shared<Matrix>("U", nmo, orbital_spaces_.back() + 1);
-    // Allocate rotation matrix
+    U_ = std::make_shared<Matrix>("U", nmo, nmo);
+    U_->identity();
 
     // loop through each space
     for( size_t f_idx = 0, max = orbital_spaces_.size(); f_idx < max - 1; f_idx += 2 ){
@@ -103,6 +84,12 @@ void LOCALIZE::localize() {
         // indices are INCLUSIVE
         size_t first = orbital_spaces_[f_idx]; 
         size_t last  = orbital_spaces_[f_idx+1]; 
+
+        //print
+        outfile->Printf("\n  Localizing orbitals:");
+        for( size_t orb = first; orb <= last; ++orb){
+            outfile->Printf(" %d", orb);
+        }
         
         if( last < first ){
             outfile->Printf("\n  Error: Orbital space for localization not properly set!");
