@@ -31,8 +31,8 @@
 
 #include "psi4/physconst.h"
 #include "fci_solver.h"
+#include "base_classes/state_info.h"
 #include "base_classes/active_space_solver.h"
-
 
 namespace forte {
 
@@ -61,7 +61,7 @@ class FCI : public ActiveSpaceSolver {
      * @param ints A pointer to an allocated integral object
      * @param mo_space_info A pointer to the MOSpaceInfo object
      */
-    FCI(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
+    FCI(StateInfo state, std::shared_ptr<ForteIntegrals> ints,
         std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /**
@@ -72,7 +72,7 @@ class FCI : public ActiveSpaceSolver {
      * @param mo_space_info A pointer to the MOSpaceInfo object
      * @param fci_ints A pointer to FCIIntegrals
      */
-    FCI(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
+    FCI(StateInfo state, std::shared_ptr<ForteIntegrals> ints,
         std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<FCIIntegrals> fci_ints);
 
     virtual ~FCI();
@@ -122,6 +122,6 @@ class FCI : public ActiveSpaceSolver {
     /// All that happens before we compute the energy
     void startup();
 };
-}
+} // namespace forte
 
 #endif // _fci_h_

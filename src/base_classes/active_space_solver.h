@@ -29,19 +29,20 @@
 #ifndef _active_space_solver_h_
 #define _active_space_solver_h_
 
-#include "psi4/libmints/wavefunction.h"
-#include "psi4/liboptions/liboptions.h"
-
-#include "helpers/mo_space_info.h"
-#include "integrals/integrals.h"
-
+#include "base_classes/state_info.h"
 
 namespace forte {
 
-class ActiveSpaceSolver : public psi::Wavefunction {
+class ForteIntegrals;
+class MOSpaceInfo;
+
+class ActiveSpaceSolver {
   public:
-    // non-virtual interface
-    ActiveSpaceSolver(psi::SharedWavefunction ref_wfn, psi::Options& options,
+    // Constructor for a single state computation
+    ActiveSpaceSolver(StateInfo state, std::shared_ptr<ForteIntegrals> ints,
+                      std::shared_ptr<MOSpaceInfo> mo_space_info);
+    // Constructor for a multi-state computation
+    ActiveSpaceSolver(const std::vector<std::pair<StateInfo, double>>& states_weights,
                       std::shared_ptr<ForteIntegrals> ints,
                       std::shared_ptr<MOSpaceInfo> mo_space_info);
 
@@ -50,18 +51,18 @@ class ActiveSpaceSolver : public psi::Wavefunction {
 
     // enable deletion of a Derived* through a Base*
     virtual ~ActiveSpaceSolver() = default;
-    //    virtual ~ActiveSpaceSolver() {};
 
   protected:
     // pure virtual implementation
     virtual double solver_compute_energy() = 0;
 
+    /// Psi's wavefunction object
+    std::vector<std::pair<StateInfo, double>> states_weights_;
     /// The molecular integrals object
     std::shared_ptr<ForteIntegrals> ints_;
     /// The MOSpaceInfo object
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
 };
 } // namespace forte
-
 
 #endif // _active_space_solver_h_

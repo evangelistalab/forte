@@ -700,9 +700,8 @@ void DSRG_MRPT2::compute_t2() {
             if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)) {
                 double D = dsrg_source_->compute_renormalized_denominator(Fa_[i[0]] + Fa_[i[1]] -
                                                                           Fa_[i[2]] - Fa_[i[3]]);
-                D *= 1.0 +
-                     dsrg_source_->compute_renormalized(Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] -
-                                                        Fa_[i[3]]);
+                D *= 1.0 + dsrg_source_->compute_renormalized(Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] -
+                                                              Fa_[i[3]]);
                 myfile << i[0] << " " << i[1] << " " << i[2] << " " << i[3] << " " << D << " \n";
             }
         });
@@ -857,17 +856,14 @@ void DSRG_MRPT2::renormalize_V() {
     V_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
         if (std::fabs(value) > 1.0e-15) {
             if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)) {
-                value *= 1.0 +
-                         dsrg_source_->compute_renormalized(Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] -
-                                                            Fa_[i[3]]);
+                value *= 1.0 + dsrg_source_->compute_renormalized(Fa_[i[0]] + Fa_[i[1]] -
+                                                                  Fa_[i[2]] - Fa_[i[3]]);
             } else if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin)) {
-                value *= 1.0 +
-                         dsrg_source_->compute_renormalized(Fa_[i[0]] + Fb_[i[1]] - Fa_[i[2]] -
-                                                            Fb_[i[3]]);
+                value *= 1.0 + dsrg_source_->compute_renormalized(Fa_[i[0]] + Fb_[i[1]] -
+                                                                  Fa_[i[2]] - Fb_[i[3]]);
             } else if ((spin[0] == BetaSpin) and (spin[1] == BetaSpin)) {
-                value *= 1.0 +
-                         dsrg_source_->compute_renormalized(Fb_[i[0]] + Fb_[i[1]] - Fb_[i[2]] -
-                                                            Fb_[i[3]]);
+                value *= 1.0 + dsrg_source_->compute_renormalized(Fb_[i[0]] + Fb_[i[1]] -
+                                                                  Fb_[i[2]] - Fb_[i[3]]);
             }
         } else {
             value = 0.0;
@@ -1749,7 +1745,7 @@ double DSRG_MRPT2::compute_energy_relaxed() {
         Erelax = aci.compute_energy();
     } else {
         // it is simpler here to call FCI instead of FCISolver
-        FCI fci(reference_wavefunction_, options_, ints_, mo_space_info_, fci_ints);
+        FCI fci(reference_wavefunction_, ints_, mo_space_info_, fci_ints);
         fci.set_max_rdm_level(1);
         Erelax = fci.compute_energy();
     }
@@ -2145,9 +2141,8 @@ void DSRG_MRPT2::transfer_integrals() {
 
     // test if de-normal-ordering is correct
     print_h2("Test De-Normal-Ordered Hamiltonian");
-    double Etest =
-        scalar_include_fc +
-        molecule_->nuclear_repulsion_energy(reference_wavefunction_->get_dipole_field_strength());
+    double Etest = scalar_include_fc + molecule_->nuclear_repulsion_energy(
+                                           reference_wavefunction_->get_dipole_field_strength());
 
     double Etest1 = 0.0;
     if (!form_hbar3) {
@@ -2759,8 +2754,8 @@ ambit::Tensor DSRG_MRPT2::separate_tensor(ambit::Tensor& tens, const psi::Dimens
     return T_h;
 }
 
-void DSRG_MRPT2::combine_tensor(ambit::Tensor& tens, ambit::Tensor& tens_h, const psi::Dimension& irrep,
-                                const int& h) {
+void DSRG_MRPT2::combine_tensor(ambit::Tensor& tens, ambit::Tensor& tens_h,
+                                const psi::Dimension& irrep, const int& h) {
     // test tens and irrep
     if (h >= irrep.n()) {
         throw psi::PSIEXCEPTION("Ask for wrong irrep.");
@@ -3189,9 +3184,10 @@ void DSRG_MRPT2::print_intruder(const std::string& name,
             double down = fi + fj - fa - fb;
             double v = datapair.second;
 
-            output += "\n" + indent + str(boost::format("[%3d %3d %3d %3d] %13.8f (%10.6f + "
-                                                        "%10.6f - %10.6f - %10.6f = %10.6f)") %
-                                          i % j % a % b % v % fi % fj % fa % fb % down);
+            output += "\n" + indent +
+                      str(boost::format("[%3d %3d %3d %3d] %13.8f (%10.6f + "
+                                        "%10.6f - %10.6f - %10.6f = %10.6f)") %
+                          i % j % a % b % v % fi % fj % fa % fb % down);
         }
     } else {
         outfile->Printf("\n    Printing of amplitude is implemented only for T1 and T2!");
@@ -3205,4 +3201,4 @@ void DSRG_MRPT2::print_intruder(const std::string& name,
     }
     outfile->Printf("\n%s", output.c_str());
 }
-}
+} // namespace forte

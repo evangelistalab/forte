@@ -26,23 +26,40 @@
  * @END LICENSE
  */
 
+#ifndef _state_info_h_
+#define _state_info_h_
+
 #include "psi4/libmints/wavefunction.h"
 
-#include "base_classes/state_info.h"
-#include "helpers/mo_space_info.h"
-#include "integrals/integrals.h"
+class StateInfo {
+  public:
+    /// Constructor
+    StateInfo(int na, int nb, int multiplicity, int twice_ms, int irrep);
+    /// Constructor based on Psi4 Wavefunction
+    StateInfo(psi::SharedWavefunction wfn);
 
-#include "base_classes/active_space_solver.h"
+    /// return the number of alpha electrons
+    int na() const;
+    /// return the number of beta electrons
+    int nb() const;
+    /// return the multiplicity
+    int multiplicity() const;
+    /// return twice Ms
+    int twice_ms() const;
+    /// return the irrep
+    int irrep() const;
 
-namespace forte {
+  private:
+    // number of alpha electrons (including core, excludes ecp)
+    int na_;
+    // numebr of beta electrons (including core, excludes ecp)
+    int nb_;
+    // 2S + 1
+    int multiplicity_;
+    // 2Ms
+    int twice_ms_;
+    // Irrep
+    int irrep_;
+};
 
-ActiveSpaceSolver::ActiveSpaceSolver(StateInfo state, std::shared_ptr<ForteIntegrals> ints,
-                                     std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : states_weights_({{state, 1.0}}), ints_(ints), mo_space_info_(mo_space_info) {}
-
-ActiveSpaceSolver::ActiveSpaceSolver(
-    const std::vector<std::pair<StateInfo, double>>& states_weights,
-    std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : states_weights_(states_weights), ints_(ints), mo_space_info_(mo_space_info) {}
-
-} // namespace forte
+#endif // STATE_INFO_H

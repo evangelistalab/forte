@@ -36,7 +36,7 @@
 
 namespace forte {
 
-class Reference // : public psi::Wavefunction
+class Reference
 {
   public:
     /// Default constructor
