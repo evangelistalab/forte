@@ -60,7 +60,7 @@ class LOCALIZE : public OrbitalTransform {
 
     // Returns unitary matrix that transforms
     // RHF -> local basis
-    SharedMatrix get_U();
+    psi::SharedMatrix get_U();
 
     void compute_transformation();
 

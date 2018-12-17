@@ -70,12 +70,12 @@ void LOCALIZE::localize() {
     } 
 
     // Get references to C matrices
-    SharedMatrix Ca = wfn_->Ca();
-    SharedMatrix Cb = wfn_->Cb();
+    psi::SharedMatrix Ca = wfn_->Ca();
+    psi::SharedMatrix Cb = wfn_->Cb();
 
     size_t nmo = Ca->rowdim();
    
-    U_ = std::make_shared<Matrix>("U", nmo, nmo);
+    U_ = std::make_shared<psi::Matrix>("U", nmo, nmo);
     U_->identity();
 
     // loop through each space
@@ -100,26 +100,26 @@ void LOCALIZE::localize() {
         size_t orb_dim = last - first + 1;
 
         // Build C matrix to localize
-        SharedMatrix Ca_loc = std::make_shared<Matrix>("Caact", nmo, orb_dim);
+        psi::SharedMatrix Ca_loc = std::make_shared<psi::Matrix>("Caact", nmo, orb_dim);
 
         for( size_t i = 0; i < orb_dim; ++i ){
-            SharedVector col = Ca->get_column(0, first + i);
+            psi::SharedVector col = Ca->get_column(0, first + i);
             Ca_loc->set_column(0, i, col); 
         }
     
         // localize
-        std::shared_ptr<BasisSet> primary = wfn_->basisset();
-        std::shared_ptr<Localizer> loc_a = Localizer::build(local_method_, primary, Ca_loc);
+        std::shared_ptr<psi::BasisSet> primary = wfn_->basisset();
+        std::shared_ptr<psi::Localizer> loc_a = psi::Localizer::build(local_method_, primary, Ca_loc);
         loc_a->localize();
         
         // Grab the transformation and localized matrices
-        SharedMatrix U = loc_a->U();
-        SharedMatrix Laocc = loc_a->L();
+        psi::SharedMatrix U = loc_a->U();
+        psi::SharedMatrix Laocc = loc_a->L();
 
         //Set Ca, Cb, and U
         for( size_t i = 0; i < orb_dim; ++i ){
-            SharedVector C_col = Laocc->get_column(0, i);
-            SharedVector U_col = U->get_column(0,i);
+            psi::SharedVector C_col = Laocc->get_column(0, i);
+            psi::SharedVector U_col = U->get_column(0,i);
             
             Ca->set_column(0, i+first, C_col);
             Cb->set_column(0, i+first, C_col);
