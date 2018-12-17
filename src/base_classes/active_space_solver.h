@@ -46,6 +46,9 @@ class ActiveSpaceSolver {
                       std::shared_ptr<ForteIntegrals> ints,
                       std::shared_ptr<MOSpaceInfo> mo_space_info);
 
+    // Default constructor
+    ActiveSpaceSolver() {}
+
     // equivalent to "this->solver_compute_energy()"
     double compute_energy() { return solver_compute_energy(); }
 

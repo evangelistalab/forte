@@ -40,6 +40,7 @@
 #include "integrals/integrals.h"
 #include "string_lists.h"
 #include "base_classes/reference.h"
+#include "base_classes/active_space_solver.h"
 
 namespace forte {
 
@@ -89,6 +90,9 @@ class FCISolver : public ActiveSpaceSolver {
               psi::Options& options);
 
     ~FCISolver() {}
+
+    /// Implements ActiveSpaceSolver pure virtual interface
+    double solver_compute_energy() { return 0.0; }
 
     /// Compute the FCI energy
     double compute_energy();

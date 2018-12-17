@@ -185,7 +185,7 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
         }
     }
     if (options.get_str("JOB_TYPE") == "FCI") {
-        auto fci = std::make_shared<FCI>(ref_wfn, ints, mo_space_info);
+        auto fci = std::make_shared<FCI>(ref_wfn, options, ints, mo_space_info);
         fci->compute_energy();
     }
     if (options.get_bool("USE_DMRGSCF")) {
@@ -254,7 +254,7 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
                 }
             }
         } else if (cas_type == "FCI") {
-            auto fci = std::make_shared<FCI>(ref_wfn, ints, mo_space_info);
+            auto fci = std::make_shared<FCI>(ref_wfn, options, ints, mo_space_info);
             fci->set_max_rdm_level(max_rdm_level);
             fci->compute_energy();
             Reference reference = fci->reference();
@@ -338,7 +338,7 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
                 //                dsrg->compute_energy_relaxed();
             }
         } else if (cas_type == "FCI") {
-            auto fci = std::make_shared<FCI>(ref_wfn, ints, mo_space_info);
+            auto fci = std::make_shared<FCI>(ref_wfn, options, ints, mo_space_info);
             fci->set_max_rdm_level(max_rdm_level);
             fci->compute_energy();
             Reference reference = fci->reference();
@@ -408,7 +408,7 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
             }
 
         } else if (cas_type == "FCI") {
-            std::shared_ptr<FCI> fci = std::make_shared<FCI>(ref_wfn, ints, mo_space_info);
+            std::shared_ptr<FCI> fci = std::make_shared<FCI>(ref_wfn, options, ints, mo_space_info);
             fci->set_max_rdm_level(max_rdm_level);
             fci->compute_energy();
             Reference reference = fci->reference();
@@ -621,7 +621,7 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
             //  }
 
         } else if (cas_type == "FCI") {
-            auto fci = std::make_shared<FCI>(ref_wfn, ints, mo_space_info);
+            auto fci = std::make_shared<FCI>(ref_wfn, options, ints, mo_space_info);
             fci->set_max_rdm_level(max_rdm_level);
             fci->compute_energy();
             Reference reference = fci->reference();
@@ -767,7 +767,7 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
             }
         }
         if (cas_type == "FCI") {
-            auto fci = std::make_shared<FCI>(ref_wfn, ints, mo_space_info);
+            auto fci = std::make_shared<FCI>(ref_wfn, options, ints, mo_space_info);
             fci->set_max_rdm_level(max_rdm_level);
             fci->compute_energy();
             Reference reference = fci->reference();
@@ -804,7 +804,7 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
             somrdsrg->compute_energy();
         }
         if (options.get_str("CAS_TYPE") == "FCI") {
-            std::shared_ptr<FCI> fci = std::make_shared<FCI>(ref_wfn, ints, mo_space_info);
+            std::shared_ptr<FCI> fci = std::make_shared<FCI>(ref_wfn, options, ints, mo_space_info);
             fci->set_max_rdm_level(max_rdm_level);
             fci->compute_energy();
             Reference reference = fci->reference();

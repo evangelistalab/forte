@@ -603,9 +603,8 @@ double DSRG_MRPT3::compute_energy_pt3_1() {
 
         // compute -[H0th,A1st] = Delta * T and save to C1 and C2
         C1 = BTF_->build(tensor_type_, "C1", spin_cases({"cp", "av", "pc", "va"}));
-        C2 = BTF_->build(
-            tensor_type_, "C2",
-            spin_cases({"chpp", "acpp", "aavp", "aaav", "ppch", "ppac", "vpaa", "avaa"}));
+        C2 = BTF_->build(tensor_type_, "C2", spin_cases({"chpp", "acpp", "aavp", "aaav", "ppch",
+                                                         "ppac", "vpaa", "avaa"}));
         H1_T1_C1(F0th_, T1_, -1.0, C1);
         H1_T2_C1(F0th_, T2_, -1.0, C1);
         H1_T2_C2(F0th_, T2_, -1.0, C2);
@@ -1141,14 +1140,17 @@ void DSRG_MRPT3::renormalize_V(const bool& plusone) {
             [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
                 if (std::fabs(value) > 1.0e-15) {
                     if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)) {
-                        value *= 1.0 + dsrg_source_->compute_renormalized(Fa_[i[0]] + Fa_[i[1]] -
-                                                                          Fa_[i[2]] - Fa_[i[3]]);
+                        value *= 1.0 +
+                                 dsrg_source_->compute_renormalized(Fa_[i[0]] + Fa_[i[1]] -
+                                                                    Fa_[i[2]] - Fa_[i[3]]);
                     } else if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin)) {
-                        value *= 1.0 + dsrg_source_->compute_renormalized(Fa_[i[0]] + Fb_[i[1]] -
-                                                                          Fa_[i[2]] - Fb_[i[3]]);
+                        value *= 1.0 +
+                                 dsrg_source_->compute_renormalized(Fa_[i[0]] + Fb_[i[1]] -
+                                                                    Fa_[i[2]] - Fb_[i[3]]);
                     } else if ((spin[0] == BetaSpin) and (spin[1] == BetaSpin)) {
-                        value *= 1.0 + dsrg_source_->compute_renormalized(Fb_[i[0]] + Fb_[i[1]] -
-                                                                          Fb_[i[2]] - Fb_[i[3]]);
+                        value *= 1.0 +
+                                 dsrg_source_->compute_renormalized(Fb_[i[0]] + Fb_[i[1]] -
+                                                                    Fb_[i[2]] - Fb_[i[3]]);
                     }
                 } else {
                     value = 0.0;
@@ -1461,7 +1463,7 @@ double DSRG_MRPT3::compute_energy_sa() {
 
                 psi::SharedMatrix Heff(
                     new psi::Matrix("Heff " + multi_label[multi - 1] + " " + irrep_symbol[irrep],
-                                    nstates, nstates));
+                               nstates, nstates));
                 for (int A = 0; A < nstates; ++A) {
                     for (int B = A; B < nstates; ++B) {
 
@@ -1534,8 +1536,7 @@ double DSRG_MRPT3::compute_energy_sa() {
         for (int i = 0; i < nstates; ++i) {
             outfile->Printf("\n     %3d     %3s    %2d   %20.12f", multi,
                             irrep_symbol[irrep].c_str(), i, Edsrg_sa[n][i]);
-            psi::Process::environment.globals["ENERGY ROOT " + std::to_string(counter)] =
-                Edsrg_sa[n][i];
+            psi::Process::environment.globals["ENERGY ROOT " + std::to_string(counter)] = Edsrg_sa[n][i];
             ++counter;
         }
         outfile->Printf("\n    %s", dash.c_str());
@@ -1587,7 +1588,7 @@ double DSRG_MRPT3::compute_energy_relaxed() {
 
     } else {
         // it is simpler here to call FCI instead of FCISolver
-        FCI fci(reference_wavefunction_, ints_, mo_space_info_, fci_ints);
+        FCI fci(reference_wavefunction_, options_, ints_, mo_space_info_, fci_ints);
         fci.set_max_rdm_level(1);
         Erelax = fci.compute_energy();
     }
@@ -3683,7 +3684,7 @@ void DSRG_MRPT3::V_T2_C2_DF_VV(BlockedTensor& B, BlockedTensor& T2, const double
                                 "H2(%zu * %zu * %zu * %zu).",
                                 sh0, sh1, sv, sv);
                 throw psi::PSIEXCEPTION("Not enough memory for batching at "
-                                        "DSRG-MRPT3 V_T2_C2_DF_VV.");
+                                   "DSRG-MRPT3 V_T2_C2_DF_VV.");
             }
 
             // 1st virtual index
@@ -4065,7 +4066,7 @@ void DSRG_MRPT3::V_T2_C2_DF_VC_EX(BlockedTensor& B, BlockedTensor& T2, const dou
                             "H2(%zu * %zu * %zu * %zu).",
                             sq, ss, sc, sv);
             throw psi::PSIEXCEPTION("Not enough memory for batching at DSRG-MRPT3 "
-                                    "V_T2_C2_DF_VC_EX.");
+                               "V_T2_C2_DF_VC_EX.");
         }
 
         // fill the indices of sub virtuals
@@ -4393,7 +4394,7 @@ void DSRG_MRPT3::V_T2_C2_DF_VA_EX(BlockedTensor& B, BlockedTensor& T2, const dou
                             "H2(%zu * %zu * %zu * %zu).",
                             sq, ss, sa, sv);
             throw psi::PSIEXCEPTION("Not enough memory for batching at DSRG-MRPT3 "
-                                    "V_T2_C2_DF_VA_EX.");
+                               "V_T2_C2_DF_VA_EX.");
         }
 
         // fill the indices of sub virtuals
@@ -4901,6 +4902,7 @@ void DSRG_MRPT3::V_T2_C2_DF_VH_EX(BlockedTensor& B, BlockedTensor& T2, const dou
 
                     // adding O2sub to C2 with permutations
                     O2s.iterate([&](const std::vector<size_t>& i, double& value) {
+
                         if (is_C2label_P0) {
                             size_t idx = i[0] * sj * ss * sb + i[1] * ss * sb + i[2] * sb + i[3];
                             C2.block(C2label_P0).data()[idx] += value;
@@ -5321,8 +5323,8 @@ ambit::Tensor DSRG_MRPT3::separate_tensor(ambit::Tensor& tens, const psi::Dimens
     return T_h;
 }
 
-void DSRG_MRPT3::combine_tensor(ambit::Tensor& tens, ambit::Tensor& tens_h,
-                                const psi::Dimension& irrep, const int& h) {
+void DSRG_MRPT3::combine_tensor(ambit::Tensor& tens, ambit::Tensor& tens_h, const psi::Dimension& irrep,
+                                const int& h) {
     // test tens and irrep
     if (h >= irrep.n()) {
         throw psi::PSIEXCEPTION("Ask for wrong irrep.");
@@ -5631,10 +5633,9 @@ void DSRG_MRPT3::print_intruder(const std::string& name,
             double down = fi + fj - fa - fb;
             double v = datapair.second;
 
-            output += "\n" + indent +
-                      str(boost::format("[%3d %3d %3d %3d] %13.8f (%10.6f + "
-                                        "%10.6f - %10.6f - %10.6f = %10.6f)") %
-                          i % j % a % b % v % fi % fj % fa % fb % down);
+            output += "\n" + indent + str(boost::format("[%3d %3d %3d %3d] %13.8f (%10.6f + "
+                                                        "%10.6f - %10.6f - %10.6f = %10.6f)") %
+                                          i % j % a % b % v % fi % fj % fa % fb % down);
         }
     } else {
         outfile->Printf("\n    Printing of amplitude is implemented only for T1 and T2!");
@@ -5739,4 +5740,4 @@ void DSRG_MRPT3::rotate_2rdm(ambit::Tensor& L2aa, ambit::Tensor& L2ab, ambit::Te
     temp("pqrs") = L2bb("pqrs");
     L2bb("PQRS") = Ub("AP") * Ub("BQ") * temp("ABCD") * Ub("CR") * Ub("DS");
 }
-} // namespace forte
+}

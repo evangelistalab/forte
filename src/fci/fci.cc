@@ -50,18 +50,34 @@ void set_FCI_options(ForteOptions& foptions) {
                      "The number of trial guess vectors to generate per root");
 }
 
-FCI::FCI(StateInfo state, std::shared_ptr<ForteIntegrals> ints,
+FCI::FCI(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
          std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : ActiveSpaceSolver(state, ints, mo_space_info) {
+    : ActiveSpaceSolver(StateInfo(ref_wfn), ints, mo_space_info), options_(options) {
+    // Copy the wavefunction information
+    reference_wavefunction_ = ref_wfn;
     startup();
 }
 
-FCI::FCI(StateInfo state, std::shared_ptr<ForteIntegrals> ints,
+FCI::FCI(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
          std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<FCIIntegrals> fci_ints)
-    : ActiveSpaceSolver(state, ints, mo_space_info) {
+    : ActiveSpaceSolver(StateInfo(ref_wfn), ints, mo_space_info), options_(options) {
+    // Copy the wavefunction information
+    reference_wavefunction_ = ref_wfn;
     startup();
     fci_ints_ = fci_ints;
 }
+
+// FCI::FCI(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
+//         std::shared_ptr<MOSpaceInfo> mo_space_info)
+//    : Wavefunction(options), ints_(ints), mo_space_info_(mo_space_info) {
+//    // Copy the wavefunction information
+//    shallow_copy(ref_wfn);
+//    reference_wavefunction_ = ref_wfn;
+
+//    print_ = options_.get_int("PRINT");
+
+//    startup();
+//}
 
 FCI::~FCI() {}
 
@@ -76,22 +92,16 @@ void FCI::set_ms(int ms) {
     twice_ms_ = ms;
 }
 
-// Where should this live?
-// charge
-// nel
-// multiplicity
-// ms
-// na, nb
-
 void FCI::startup() {
-    print_ = ref_wfn_->options().get_int("PRINT");
-    max_rdm_level_ = ref_wfn_->options().get_int("FCI_MAX_RDM");
-    fci_iterations_ = ref_wfn_->options().get_int("FCI_MAXITER");
-    print_no_ = ref_wfn_->options().get_bool("FCI_PRINT_NO");
+    print_ = options_.get_int("PRINT");
 
     if (print_)
         print_method_banner(
             {"String-based Full Configuration Interaction", "by Francesco A. Evangelista"});
+
+    max_rdm_level_ = options_.get_int("FCI_MAX_RDM");
+    fci_iterations_ = options_.get_int("FCI_MAXITER");
+    print_no_ = options_.get_bool("FCI_PRINT_NO");
 }
 
 double FCI::solver_compute_energy() {
@@ -101,14 +111,54 @@ double FCI::solver_compute_energy() {
     std::vector<size_t> rdocc = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
     std::vector<size_t> active = mo_space_info_->get_corr_abs_mo("ACTIVE");
 
+    int charge = psi::Process::environment.molecule()->molecular_charge();
+    if (options_["CHARGE"].has_changed()) {
+        charge = options_.get_int("CHARGE");
+    }
+
+    int nel = 0;
+    int natom = psi::Process::environment.molecule()->natom();
+    for (int i = 0; i < natom; i++) {
+        nel += static_cast<int>(psi::Process::environment.molecule()->Z(i));
+    }
+    // If the charge has changed, recompute the number of electrons
+    // Or if you cannot find the number of electrons
+    nel -= charge;
+
+    int multiplicity = psi::Process::environment.molecule()->multiplicity();
+    if (options_["MULTIPLICITY"].has_changed()) {
+        multiplicity = options_.get_int("MULTIPLICITY");
+    }
+
+    // If the user did not specify ms determine the value from the input or
+    // take the lowest value consistent with the value of "MULTIPLICITY"
+    if (not set_ms_) {
+        if (options_["MS"].has_changed()) {
+            twice_ms_ = std::round(2.0 * options_.get_double("MS"));
+        } else {
+            // Default: lowest spin solution
+            twice_ms_ = (multiplicity + 1) % 2;
+        }
+    }
+
+    //    if(ms < 0){
+    //        outfile->Printf("\n  Ms must be no less than 0.");
+    //        outfile->Printf("\n  Ms = %2d, MULTIPLICITY = %2d", ms,
+    //        multiplicity);
+    //        outfile->Printf("\n  Check (specify) Ms value (component of
+    //        multiplicity)! \n");
+    //        throw psi::PSIEXCEPTION("Ms must be no less than 0. Check output for
+    //        details.");
+    //    }
+
     if (print_) {
         outfile->Printf("\n  Number of electrons: %d", nel);
         outfile->Printf("\n  Charge: %d", charge);
         outfile->Printf("\n  Multiplicity: %d", multiplicity);
         outfile->Printf("\n  Davidson subspace max dim: %d",
-                        wfn->options().get_int("DL_SUBSPACE_PER_ROOT"));
+                        options_.get_int("DL_SUBSPACE_PER_ROOT"));
         outfile->Printf("\n  Davidson subspace min dim: %d",
-                        wfn->options().get_int("DL_COLLAPSE_PER_ROOT"));
+                        options_.get_int("DL_COLLAPSE_PER_ROOT"));
         if (twice_ms_ % 2 == 0) {
             outfile->Printf("\n  M_s: %d", twice_ms_ / 2);
         } else {
@@ -116,20 +166,30 @@ double FCI::solver_compute_energy() {
         }
     }
 
+    if (((nel - twice_ms_) % 2) != 0)
+        throw psi::PSIEXCEPTION("\n\n  FCI: Wrong value of M_s.\n\n");
+
+    // Adjust the number of for frozen and restricted doubly occupied
+    size_t nactel = nel - 2 * nfdocc - 2 * rdocc.size();
+
+    size_t na = (nactel + twice_ms_) / 2;
+    size_t nb = nactel - na;
+
+    //    outfile->Printf("\n  A");
+
     fcisolver_ = std::unique_ptr<FCISolver>(new FCISolver(
-        active_dim, rdocc, active, na_, nb_, multiplicity_, ref_wfn_->options().get_int("ROOT_SYM"),
-        ints_, mo_space_info_, ref_wfn_->options().get_int("FCI_NTRIAL_PER_ROOT"), print_,
-        ref_wfn_->options()));
+        active_dim, rdocc, active, na, nb, multiplicity, options_.get_int("ROOT_SYM"), ints_,
+        mo_space_info_, options_.get_int("FCI_NTRIAL_PER_ROOT"), print_, options_));
 
     //    outfile->Printf("\n  B");
     // tweak some options
     fcisolver_->set_max_rdm_level(max_rdm_level_);
-    fcisolver_->set_nroot(ref_wfn_->options().get_int("FCI_NROOT"));
-    fcisolver_->set_root(ref_wfn_->options().get_int("FCI_ROOT"));
-    fcisolver_->set_test_rdms(ref_wfn_->options().get_bool("FCI_TEST_RDMS"));
-    fcisolver_->set_fci_iterations(ref_wfn_->options().get_int("FCI_MAXITER"));
-    fcisolver_->set_collapse_per_root(ref_wfn_->options().get_int("DL_COLLAPSE_PER_ROOT"));
-    fcisolver_->set_subspace_per_root(ref_wfn_->options().get_int("DL_SUBSPACE_PER_ROOT"));
+    fcisolver_->set_nroot(options_.get_int("FCI_NROOT"));
+    fcisolver_->set_root(options_.get_int("FCI_ROOT"));
+    fcisolver_->set_test_rdms(options_.get_bool("FCI_TEST_RDMS"));
+    fcisolver_->set_fci_iterations(options_.get_int("FCI_MAXITER"));
+    fcisolver_->set_collapse_per_root(options_.get_int("DL_COLLAPSE_PER_ROOT"));
+    fcisolver_->set_subspace_per_root(options_.get_int("DL_SUBSPACE_PER_ROOT"));
     fcisolver_->set_print_no(print_no_);
     if (fci_ints_ != nullptr) {
         fcisolver_->use_user_integrals_and_restricted_docc(true);
@@ -145,4 +205,4 @@ double FCI::solver_compute_energy() {
 }
 
 Reference FCI::reference() { return fcisolver_->reference(); }
-} // namespace forte
+}
