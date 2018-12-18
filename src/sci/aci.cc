@@ -227,11 +227,9 @@ void AdaptiveCI::set_fci_ints(std::shared_ptr<FCIIntegrals> fci_ints) {
     set_ints_ = true;
 }
 
-void AdaptiveCI::set_aci_ints(psi::SharedWavefunction ref_wfn, std::shared_ptr<ForteIntegrals> ints) {
+void AdaptiveCI::set_aci_ints(std::shared_ptr<ForteIntegrals> ints) {
     timer int_timer("ACI:Form Integrals");
     ints_ = ints;
-    shallow_copy(ref_wfn);
-    reference_wavefunction_ = ref_wfn;
 
     fci_ints_ = std::make_shared<FCIIntegrals>(ints, mo_space_info_->get_corr_abs_mo("ACTIVE"),
                                                mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
@@ -254,7 +252,7 @@ void AdaptiveCI::startup() {
     }
 
     if (!set_ints_) {
-        set_aci_ints(reference_wavefunction_, ints_);
+        set_aci_ints(ints_);
     }
 
     op_.initialize(mo_symmetry_, fci_ints_);
@@ -308,10 +306,6 @@ void AdaptiveCI::startup() {
     add_aimed_degenerate_ = options_.get_bool("ACI_ADD_AIMED_DEGENERATE");
     project_out_spin_contaminants_ = options_.get_bool("ACI_PROJECT_OUT_SPIN_CONTAMINANTS");
     spin_complete_ = options_.get_bool("ACI_ENFORCE_SPIN_COMPLETE");
-
-    // if( options_.get_str("ACI_EX_TYPE") == "CORE" ){
-    //     spin_complete_ = false;
-    // }
 
     if (!set_rdm_) {
         rdm_level_ = options_.get_int("ACI_MAX_RDM");

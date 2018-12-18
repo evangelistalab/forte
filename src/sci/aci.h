@@ -111,7 +111,7 @@ class AdaptiveCI : public psi::Wavefunction {
 
     void diagonalize_final_and_compute_rdms();
 
-    void set_aci_ints(psi::SharedWavefunction ref_Wfn, std::shared_ptr<ForteIntegrals> ints);
+    void set_aci_ints(std::shared_ptr<ForteIntegrals> ints);
 
     void semi_canonicalize();
     void set_fci_ints(std::shared_ptr<FCIIntegrals> fci_ints);
