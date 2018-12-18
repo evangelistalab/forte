@@ -14,6 +14,9 @@ std::string option_formatter(const std::string& type, const std::string& label,
                              const std::string& default_value, const std::string& description,
                              const std::string& allowed_values);
 
+ForteOptions::ForteOptions() {}
+ForteOptions::ForteOptions(psi::Options& options) {}
+
 void ForteOptions::add_bool(const std::string& label, bool value, const std::string& description) {
     bool_opts_.push_back(std::make_tuple(label, value, description));
 }
@@ -41,6 +44,14 @@ void ForteOptions::add_str(const std::string& label, const std::string& value,
 void ForteOptions::add_array(const std::string& label, const std::string& description) {
     array_opts_.push_back(std::make_tuple(label, description));
 }
+
+bool ForteOptions::get_bool(const std::string& label) const { return psi_options_.get_bool(label); }
+
+int ForteOptions::get_int(const std::string& label) const { return psi_options_.get_int(label); }
+
+double ForteOptions::get_double(const std::string& label) const;
+
+const std::string& ForteOptions::get_str(const std::string& label) const;
 
 void ForteOptions::add_psi4_options(psi::Options& options) {
     for (const auto& opt : bool_opts_) {
@@ -154,4 +165,3 @@ std::string option_formatter(const std::string& type, const std::string& label,
 }
 
 } // namespace forte
-

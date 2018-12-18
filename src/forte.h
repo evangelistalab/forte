@@ -37,7 +37,7 @@ std::pair<int, int> startup();
 void banner();
 void cleanup();
 
-int read_options(psi::Options& options);
+ForteOptions read_options(psi::Options& options);
 psi::SharedWavefunction run_forte(psi::SharedWavefunction ref_wfn, psi::Options& options);
 
 

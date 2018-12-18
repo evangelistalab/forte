@@ -50,34 +50,26 @@ void set_FCI_options(ForteOptions& foptions) {
                      "The number of trial guess vectors to generate per root");
 }
 
-FCI::FCI(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
-         std::shared_ptr<MOSpaceInfo> mo_space_info)
+FCI::FCI(psi::SharedWavefunction ref_wfn, psi::Options& options,
+         std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
     : ActiveSpaceSolver(StateInfo(ref_wfn), ints, mo_space_info), options_(options) {
-    // Copy the wavefunction information
-    reference_wavefunction_ = ref_wfn;
     startup();
 }
 
-FCI::FCI(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
-         std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<FCIIntegrals> fci_ints)
+FCI::FCI(psi::SharedWavefunction ref_wfn, psi::Options& options,
+         std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info,
+         std::shared_ptr<FCIIntegrals> fci_ints)
     : ActiveSpaceSolver(StateInfo(ref_wfn), ints, mo_space_info), options_(options) {
-    // Copy the wavefunction information
-    reference_wavefunction_ = ref_wfn;
     startup();
     fci_ints_ = fci_ints;
 }
 
-// FCI::FCI(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
-//         std::shared_ptr<MOSpaceInfo> mo_space_info)
-//    : Wavefunction(options), ints_(ints), mo_space_info_(mo_space_info) {
-//    // Copy the wavefunction information
-//    shallow_copy(ref_wfn);
-//    reference_wavefunction_ = ref_wfn;
-
-//    print_ = options_.get_int("PRINT");
-
-//    startup();
-//}
+FCI::FCI(StateInfo state, std::shared_ptr<ForteOptions> options,
+         std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
+    : ActiveSpaceSolver(state, ints, mo_space_info), options_(options) {
+    // Copy the wavefunction information
+    startup();
+}
 
 FCI::~FCI() {}
 
@@ -205,4 +197,4 @@ double FCI::solver_compute_energy() {
 }
 
 Reference FCI::reference() { return fcisolver_->reference(); }
-}
+} // namespace forte

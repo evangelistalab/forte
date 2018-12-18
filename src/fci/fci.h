@@ -33,7 +33,6 @@
 #include "fci_solver.h"
 #include "base_classes/active_space_solver.h"
 
-
 namespace forte {
 
 class ForteOptions;
@@ -61,8 +60,8 @@ class FCI : public ActiveSpaceSolver {
      * @param ints A pointer to an allocated integral object
      * @param mo_space_info A pointer to the MOSpaceInfo object
      */
-    FCI(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
-        std::shared_ptr<MOSpaceInfo> mo_space_info);
+    FCI(psi::SharedWavefunction ref_wfn, psi::Options& options,
+        std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /**
      * Constructor
@@ -72,8 +71,20 @@ class FCI : public ActiveSpaceSolver {
      * @param mo_space_info A pointer to the MOSpaceInfo object
      * @param fci_ints A pointer to FCIIntegrals
      */
-    FCI(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
-        std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<FCIIntegrals> fci_ints);
+    FCI(psi::SharedWavefunction ref_wfn, psi::Options& options,
+        std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info,
+        std::shared_ptr<FCIIntegrals> fci_ints);
+
+    /**
+     * Constructor
+     * @param ref_wfn The reference wavefunction object
+     * @param options The main options object
+     * @param ints A pointer to an allocated integral object
+     * @param mo_space_info A pointer to the MOSpaceInfo object
+     * @param fci_ints A pointer to FCIIntegrals
+     */
+    FCI(StateInfo state, std::shared_ptr<ForteOptions> options,
+        std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     virtual ~FCI();
 
@@ -118,15 +129,16 @@ class FCI : public ActiveSpaceSolver {
     bool set_ms_ = false;
 
     /// reference_wavefunction
-    psi::SharedWavefunction reference_wavefunction_;
+    //    psi::SharedWavefunction reference_wavefunction_;
     /// options object
-    psi::Options& options_;
+    //    psi::Options& options_;
+    std::shared_ptr<ForteOptions> options_;
 
     // ==> Class functions <==
 
     /// All that happens before we compute the energy
     void startup();
 };
-}
+} // namespace forte
 
 #endif // _fci_h_

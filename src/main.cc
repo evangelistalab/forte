@@ -84,7 +84,7 @@ void replace_free(void* ptr) { free(ptr); }
 /**
  * @brief Read options from the input file. Called by psi4 before everything else.
  */
-int read_options(psi::Options& options) {
+ForteOptions read_options(psi::Options& options) {
 
     options.set_current_module("FORTE");
 
@@ -104,7 +104,7 @@ int read_options(psi::Options& options) {
         docs.close();
     }
 
-    return true;
+    return foptions;
 }
 
 /**

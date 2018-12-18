@@ -37,11 +37,10 @@ __author__  = 'Forte Developers'
 from .pymodule import *
 
 # Load C++ plugin
-#import os
 import psi4
 from .forte import *
 
 # Register options with psi
 options = psi4.core.get_options()
 options.set_current_module('FORTE')
-forte.read_options(psi4.core.get_options())
+forte_options = forte.read_options(psi4.core.get_options())

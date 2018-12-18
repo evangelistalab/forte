@@ -33,7 +33,6 @@
 #include <string>
 #include <vector>
 
-
 namespace forte {
 
 // Types to store options
@@ -57,6 +56,9 @@ using array_opt_t = std::tuple<std::string, std::string>;
  */
 class ForteOptions {
   public:
+    ForteOptions();
+    ForteOptions(psi::Options& options);
+
     /**
      * @brief Add a boolean option
      * @param label Option label
@@ -107,6 +109,30 @@ class ForteOptions {
      */
     void add_array(const std::string& label, const std::string& description);
 
+    /**
+     * @brief Get a boolean option
+     * @param label Option label
+     */
+    bool get_bool(const std::string& label) const;
+
+    /**
+     * @brief Get a integer option
+     * @param label Option label
+     */
+    int get_int(const std::string& label) const;
+
+    /**
+     * @brief Get a double option
+     * @param label Option label
+     */
+    double get_double(const std::string& label) const;
+
+    /**
+     * @brief Get a string option
+     * @param label Option label
+     */
+    const std::string& get_str(const std::string& label) const;
+
     /// Add the options to psi4's options class
     void add_psi4_options(psi::Options& options);
 
@@ -124,6 +150,5 @@ class ForteOptions {
     std::vector<array_opt_t> array_opts_;
 };
 } // namespace forte
-
 
 #endif // _forte_options_h_
