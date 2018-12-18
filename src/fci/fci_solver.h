@@ -1,4 +1,4 @@
-/*
+  /*
  * @BEGIN LICENSE
  *
  * Forte: an open-source plugin to Psi4 (https://github.com/psi4/psi4)
@@ -204,13 +204,13 @@ class FCISolver : public ActiveSpaceSolver {
     /// The root used to compute properties (zero based, default = 0)
     int root_ = 0;
     /// The number of trial guess vectors to generate per root
-    size_t ntrial_per_root_;
+    size_t ntrial_per_root_ = 1;
     /// The number of collapse vectors for each root
     size_t collapse_per_root_ = 2;
     /// The maximum subspace size for each root
     size_t subspace_per_root_ = 4;
     /// The maximum RDM computed (0 - 3)
-    int max_rdm_level_;
+    int max_rdm_level_ = 1;
     /// Iterations for FCI
     int fci_iterations_ = 30;
     /// Test the RDMs?
