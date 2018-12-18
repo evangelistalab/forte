@@ -53,7 +53,6 @@ if 'psi4' in sys.modules:
     forte_options.push_options_to_psi4(psi4.core.get_options())
 
 #    /*- Number of frozen occupied orbitals per irrep (in Cotton order) -*/
-    options.add_int("PRINT",0)
     options.add_array("FROZEN_DOCC");
 
 #    /*- Number of restricted doubly occupied orbitals per irrep (in Cotton

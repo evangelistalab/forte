@@ -63,6 +63,7 @@ PYBIND11_MODULE(forte, m) {
     // export ForteOptions
     py::class_<ForteOptions, std::shared_ptr<ForteOptions>>(m, "ForteOptions")
         .def(py::init<>())
+        .def(py::init<psi::Options&>())
         .def("push_options_to_psi4", &ForteOptions::push_options_to_psi4)
         .def("generate_documentation", &ForteOptions::generate_documentation);
 
