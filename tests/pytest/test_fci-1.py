@@ -2,9 +2,14 @@
 # -*- coding: utf-8 -*-
 
 def test_fci1():
+    import math
     import psi4
     import forte
     from forte import forte_options
+
+    ref_fci = -75.01315470154653
+    rel_tol = 1e-9
+    abs_tol = 1e-8
 
     h2o = psi4.geometry("""
      O
@@ -24,12 +29,13 @@ def test_fci1():
     forte.banner()
     mo_space_info = forte.make_mo_space_info(wfn, options)    
     ints = forte.make_forte_integrals(wfn, options, mo_space_info)
-#    solver = forte.FCI(state,forte_options,ints,mo_space_info)
     forte_options = forte.ForteOptions(options)
     solver = forte.make_active_space_solver('FCI',state,forte_options,ints,mo_space_info)
     energy = solver.compute_energy()
 
-    print(energy)
+    assert math.isclose(energy,ref_fci,abs_tol=abs_tol, rel_tol=rel_tol)
+
+    print("\n\nFCI Energy = {}".format(energy))
     forte.cleanup()
 
 test_fci1()
