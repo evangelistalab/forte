@@ -87,6 +87,8 @@ void ForteOptions::push_options_to_psi4(psi::Options& options) {
     }
 }
 
+void ForteOptions::update_psi_options(psi::Options& options) { psi_options_ = options; }
+
 std::string ForteOptions::generate_documentation() const {
     std::vector<std::pair<std::string, std::string>> option_docs_list;
 

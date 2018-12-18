@@ -157,6 +157,11 @@ class ForteOptions {
      */
     std::string generate_documentation() const;
 
+    /**
+     * @brief Update the local copy of psi_options_
+     */
+    void update_psi_options(psi::Options& options);
+
   private:
     std::vector<bool_opt_t> bool_opts_;
     std::vector<int_opt_t> int_opts_;

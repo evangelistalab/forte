@@ -65,6 +65,7 @@ PYBIND11_MODULE(forte, m) {
         .def(py::init<>())
         .def(py::init<psi::Options&>())
         .def("push_options_to_psi4", &ForteOptions::push_options_to_psi4)
+        .def("update_psi_options", &ForteOptions::update_psi_options)
         .def("generate_documentation", &ForteOptions::generate_documentation);
 
     // export MOSpaceInfo
