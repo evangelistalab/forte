@@ -33,6 +33,7 @@
 #include "integrals/integrals.h"
 
 #include "base_classes/active_space_solver.h"
+#include "fci/fci.h"
 
 namespace forte {
 
@@ -44,5 +45,16 @@ ActiveSpaceSolver::ActiveSpaceSolver(
     const std::vector<std::pair<StateInfo, double>>& states_weights,
     std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
     : states_weights_(states_weights), ints_(ints), mo_space_info_(mo_space_info) {}
+
+std::shared_ptr<ActiveSpaceSolver>
+make_active_space_solver(const std::string& type, StateInfo state, std::shared_ptr<ForteOptions> options,
+                         std::shared_ptr<ForteIntegrals> ints,
+                         std::shared_ptr<MOSpaceInfo> mo_space_info) {
+    if (type == "FCI") {
+        return std::make_shared<FCI>(state, options, ints, mo_space_info);
+    }
+    throw psi::PSIEXCEPTION("make_active_space_solver: type = " + type + " was not recognized");
+    return std::shared_ptr<ActiveSpaceSolver>();
+}
 
 } // namespace forte

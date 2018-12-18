@@ -22,9 +22,10 @@ def test_fci1():
 
     forte.startup()
     forte.banner()
-    mo_space_info = forte.make_mo_space_info(wfn, options)
+    mo_space_info = forte.make_mo_space_info(wfn, options)    
     ints = forte.make_forte_integrals(wfn, options, mo_space_info)
-    solver = forte.FCI(state,forte_options,ints,mo_space_info)
+#    solver = forte.FCI(state,forte_options,ints,mo_space_info)
+    solver = forte.make_active_space_solver('FCI',state,forte_options,ints,mo_space_info)
     energy = solver.compute_energy()
     print(energy)
     forte.cleanup()

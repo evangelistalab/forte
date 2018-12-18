@@ -66,6 +66,11 @@ class ActiveSpaceSolver {
     /// The MOSpaceInfo object
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
 };
+
+std::shared_ptr<ActiveSpaceSolver> make_active_space_solver(
+    const std::string& type, StateInfo state, std::shared_ptr<ForteOptions> options,
+    std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
+
 } // namespace forte
 
 #endif // _active_space_solver_h_

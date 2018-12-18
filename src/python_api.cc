@@ -58,6 +58,7 @@ PYBIND11_MODULE(forte, m) {
     m.def("make_aosubspace_projector", &make_aosubspace_projector, "Make a AOSubspace projector");
     m.def("make_forte_integrals", &make_forte_integrals, "Make Forte integrals");
     m.def("forte_old_methods", &forte_old_methods, "Run Forte methods");
+    m.def("make_active_space_solver", &make_active_space_solver, "Make an active space solver");
 
     // export ForteOptions
     py::class_<ForteOptions, std::shared_ptr<ForteOptions>>(m, "ForteOptions")
@@ -82,6 +83,9 @@ PYBIND11_MODULE(forte, m) {
         .def(py::init<int, int, int, int, int>(), "na"_a, "nb"_a, "multiplicity"_a, "twice_ms"_a,
              "irrep"_a)
         .def(py::init<psi::SharedWavefunction>());
+
+    py::class_<ActiveSpaceSolver, std::shared_ptr<ActiveSpaceSolver>>(m, "ActiveSpaceSolver")
+        .def("compute_energy", &ActiveSpaceSolver::compute_energy);
 
     // export FCIIntegrals
     py::class_<FCIIntegrals, std::shared_ptr<FCIIntegrals>>(m, "FCIIntegrals")
