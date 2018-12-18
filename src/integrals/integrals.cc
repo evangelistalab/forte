@@ -30,6 +30,8 @@
 #include <cmath>
 #include <numeric>
 
+#include "psi4/libmints/molecule.h"
+#include "psi4/libpsi4util/process.h"
 #include "psi4/libfock/jk.h"
 #include "psi4/libmints/basisset.h"
 #include "psi4/libmints/factory.h"
@@ -99,8 +101,7 @@ ForteIntegrals::ForteIntegrals(psi::Options& options, std::shared_ptr<psi::Wavef
                                IntegralSpinRestriction restricted,
                                std::shared_ptr<MOSpaceInfo> mo_space_info)
     : options_(options), wfn_(ref_wfn), restricted_(restricted), frozen_core_energy_(0.0),
-      scalar_(0.0), mo_space_info_(mo_space_info) {
-
+      scalar_(0.0), mo_space_info_(mo_space_info), Ca_(wfn_->Ca()->clone()), Cb_(wfn_->Cb()->clone()) {
     startup();
     allocate();
     transform_one_electron_integrals();
@@ -117,6 +118,8 @@ void ForteIntegrals::startup() {
         outfile->Printf("\n  No wave function object found!  Run a scf calculation first!\n");
         exit(1);
     }
+
+    nucrep_ = psi::Process::environment.molecule()->nuclear_repulsion_energy(wfn_->get_dipole_field_strength()); 
 
     nirrep_ = wfn_->nirrep();
     nso_ = wfn_->nso();

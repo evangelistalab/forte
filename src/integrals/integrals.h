@@ -110,7 +110,19 @@ class ForteIntegrals {
     virtual ~ForteIntegrals();
 
   public:
+
+    // ==> Parts of psi's wave function that we want <== 
+
+
     // ==> Class Interface <==
+
+    // Return Ca
+    std::shared_ptr<psi::Matrix> Ca() const { return Ca_; }; 
+    // Return Cb
+    std::shared_ptr<psi::Matrix> Cb() const { return Cb_; }; 
+    // Return nuclear repulsion energy 
+    double nuclear_repulsion_energy() const { return nucrep_; }
+
 
     /// Return the total number of molecular orbitals (this number includes frozen MOs)
     size_t nmo() const { return nmo_; }
@@ -271,6 +283,15 @@ class ForteIntegrals {
 
     /// Are we doing a spin-restricted computation?
     IntegralSpinRestriction restricted_;
+
+    // Ca matrix from psi
+    std::shared_ptr<psi::Matrix> Ca_; 
+
+    // Cb matrix from psi
+    std::shared_ptr<psi::Matrix> Cb_; 
+
+    // Nuclear repulsion energy
+    double nucrep_;
 
     /// Number of irreps
     int nirrep_;

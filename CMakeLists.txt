@@ -89,6 +89,7 @@ src/orbital-helpers/orbitaloptimizer.cc
 src/python_api.cc
 src/base_classes/reference.cc
 src/base_classes/state_info.cc
+src/base_classes/scf_info.cc
 src/sci/aci.cc
 src/sci/aci_build_F.cc
 src/sci/asci.cc
