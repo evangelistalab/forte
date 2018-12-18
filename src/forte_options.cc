@@ -52,6 +52,8 @@ double ForteOptions::get_double(const std::string& label) const { return psi_opt
 
 const std::string& ForteOptions::get_str(const std::string& label) const { return psi_options_.get_str(label); }
 
+bool ForteOptions::has_changed(const std::string& label) const { return psi_options_[label].has_changed(); }
+
 void ForteOptions::add_psi4_options(psi::Options& options) {
     for (const auto& opt : bool_opts_) {
         options.add_bool(std::get<0>(opt), std::get<1>(opt));

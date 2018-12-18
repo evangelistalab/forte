@@ -132,6 +132,12 @@ class ForteOptions {
      */
     const std::string& get_str(const std::string& label) const;
 
+    /**
+     * @brief If an option is changed
+     * @param label Option label
+     */
+    bool has_changed(const std::string& label) const;
+
     /// Add the options to psi4's options class
     void add_psi4_options(psi::Options& options);
 
