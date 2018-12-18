@@ -189,7 +189,7 @@ void ProjectorCI_HashVec::startup() {
 
     // Build the reference determinant and compute its energy
     std::vector<Determinant> reference_vec;
-    CI_Reference ref(std::make_shared<SCFInfo>(reference_wavefunction_), options_, mo_space_info_, fci_ints_,
+    CI_Reference ref(std::make_shared<SCFInfo>(reference_wavefunction_), std::make_shared<ForteOptions>(options_), mo_space_info_, fci_ints_,
                      wavefunction_multiplicity_, ms, wavefunction_symmetry_);
     ref.set_ref_type("HF");
     ref.build_reference(reference_vec);

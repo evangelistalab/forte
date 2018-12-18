@@ -95,7 +95,7 @@ class CI_Reference // : public psi::Wavefunction
 
   public:
     /// Default constructor
-    CI_Reference(std::shared_ptr<SCFInfo> scf_info, psi::Options& options,
+    CI_Reference(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
                  std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<FCIIntegrals> fci_ints,
                  int multiplicity, double ms, int symmetry);
 
