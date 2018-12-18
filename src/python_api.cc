@@ -43,6 +43,7 @@
 #include "base_classes/state_info.h"
 
 namespace py = pybind11;
+using namespace pybind11::literals;
 
 namespace forte {
 
@@ -72,7 +73,8 @@ PYBIND11_MODULE(forte, m) {
 
     // export StateInfo
     py::class_<StateInfo, std::shared_ptr<StateInfo>>(m, "StateInfo")
-        .def(py::init<int, int, int, int, int>())
+        .def(py::init<int, int, int, int, int>(), "na"_a, "nb"_a, "multiplicity"_a, "twice_ms"_a,
+             "irrep"_a)
         .def(py::init<psi::SharedWavefunction>());
 
     // export FCIIntegrals
