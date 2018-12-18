@@ -29,13 +29,12 @@
 #ifndef _ci_reference_h_
 #define _ci_reference_h_
 
-#include "psi4/libmints/molecule.h"
-#include "psi4/libmints/wavefunction.h"
 #include "psi4/liboptions/liboptions.h"
 
 #include "fci/fci_integrals.h"
 #include "sparse_ci/determinant.h"
 #include "helpers/mo_space_info.h"
+#include "base_classes/scf_info.h"
 
 
 namespace forte {
@@ -44,7 +43,7 @@ class CI_Reference // : public psi::Wavefunction
 {
   protected:
     // The wavefunction object
-    psi::SharedWavefunction wfn_;
+    std::shared_ptr<SCFInfo> wfn_;
 
     // Multiplicity of the reference
     int multiplicity_;
@@ -96,7 +95,7 @@ class CI_Reference // : public psi::Wavefunction
 
   public:
     /// Default constructor
-    CI_Reference(std::shared_ptr<psi::Wavefunction> wfn, psi::Options& options,
+    CI_Reference(std::shared_ptr<SCFInfo> scf_info, psi::Options& options,
                  std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<FCIIntegrals> fci_ints,
                  int multiplicity, double ms, int symmetry);
 

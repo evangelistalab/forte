@@ -32,7 +32,7 @@
 #include "psi4/libmints/dimension.h"
 #include "psi4/libmints/wavefunction.h"
 
-class Vector;
+//class Vector;
 
 namespace forte {
 

@@ -1107,7 +1107,7 @@ void CASSCF::set_up_fcimo() {
     E_casscf_ = cas_ref_.get_Eref();
 }
 void CASSCF::write_orbitals_molden() {
-    psi::SharedVector occ_vector(new Vector(nirrep_, nmopi_));
+    psi::SharedVector occ_vector(new psi::Vector(nirrep_, nmopi_));
     view_modified_orbitals(reference_wavefunction_, reference_wavefunction_->Ca(),
                            this->epsilon_a(), occ_vector);
 }

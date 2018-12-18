@@ -39,11 +39,11 @@ using namespace psi;
 
 namespace forte {
 
-CI_Reference::CI_Reference(std::shared_ptr<psi::Wavefunction> wfn, psi::Options& options,
+CI_Reference::CI_Reference(std::shared_ptr<SCFInfo> scf_info, psi::Options& options,
                            std::shared_ptr<MOSpaceInfo> mo_space_info,
                            std::shared_ptr<FCIIntegrals> fci_ints, int multiplicity,
                            double twice_ms, int symmetry)
-    : wfn_(wfn), mo_space_info_(mo_space_info), fci_ints_(fci_ints) {
+    : wfn_(scf_info), mo_space_info_(mo_space_info), fci_ints_(fci_ints) {
     // Get the mutlilicity and twice M_s
     multiplicity_ = multiplicity;
     twice_ms_ = twice_ms;
@@ -51,12 +51,13 @@ CI_Reference::CI_Reference(std::shared_ptr<psi::Wavefunction> wfn, psi::Options&
     // State symmetry
     root_sym_ = symmetry;
 
-    // Number of irreps
-    nirrep_ = wfn_->nirrep();
 
     // Double and singly occupied MOs
     psi::Dimension doccpi = wfn_->doccpi();
     psi::Dimension soccpi = wfn_->soccpi();
+
+    // Number of irreps
+    nirrep_ = doccpi.n();
 
     // Frozen DOCC + RDOCC
     size_t ninact = mo_space_info_->size("INACTIVE_DOCC");
