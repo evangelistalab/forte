@@ -32,8 +32,6 @@
 #include <cmath>
 #include "boost/assign.hpp"
 
-#include "psi4/liboptions/liboptions.h"
-#include "psi4/libmints/wavefunction.h"
 #include "psi4/libpsio/psio.hpp"
 #include "psi4/libpsio/psio.h"
 #include "ambit/blocked_tensor.h"
@@ -49,16 +47,15 @@ using namespace ambit;
 
 namespace forte {
 
-class CC : public psi::Wavefunction {
+class CC {
   public:
     /**
      * CC Constructor
-     * @param ref_wfn The reference wavefunction object
      * @param options The main options object
      * @param ints A pointer to an allocated integral object
      * @param mo_space_info The MOSpaceInfo object
      */
-    CC(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
+    CC(std::shared_ptr<ForteIntegrals> ints,
        std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Destructor

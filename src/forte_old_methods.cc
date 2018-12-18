@@ -819,7 +819,7 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
     }
 
     if (options.get_str("JOB_TYPE") == "CC") {
-        auto cc = std::make_shared<CC>(ref_wfn, options, ints, mo_space_info);
+        auto cc = std::make_shared<CC>(ints, mo_space_info);
         cc->compute_energy();
     }
 
