@@ -56,6 +56,15 @@ using array_opt_t = std::tuple<std::string, std::string>;
  */
 class ForteOptions {
   public:
+    /**
+     * @brief ForteOptions
+     */
+    ForteOptions();
+
+    /**
+     * @brief ForteOptions
+     * @param options a psi4 Options object
+     */
     ForteOptions(psi::Options& options);
 
     /**
@@ -64,7 +73,7 @@ class ForteOptions {
      * @param value Default value of the option
      * @param description Description of the option
      */
-    void add_bool(const std::string& label, bool value, const std::string& description);
+    void add_bool(const std::string& label, bool value, const std::string& description = "");
 
     /**
      * @brief Add a integer option
@@ -72,7 +81,7 @@ class ForteOptions {
      * @param value Default value of the option
      * @param description Description of the option
      */
-    void add_int(const std::string& label, int value, const std::string& description);
+    void add_int(const std::string& label, int value, const std::string& description = "");
 
     /**
      * @brief Add a double option
@@ -80,7 +89,7 @@ class ForteOptions {
      * @param value Default value of the option
      * @param description Description of the option
      */
-    void add_double(const std::string& label, double value, const std::string& description);
+    void add_double(const std::string& label, double value, const std::string& description = "");
 
     /**
      * @brief Add a string option
@@ -89,7 +98,7 @@ class ForteOptions {
      * @param description Description of the option
      */
     void add_str(const std::string& label, const std::string& value,
-                 const std::string& description);
+                 const std::string& description = "");
 
     /**
      * @brief Add a string option and provide a list of allowed option values
@@ -99,47 +108,48 @@ class ForteOptions {
      * @param allowed_values An array of allowed option values
      */
     void add_str(const std::string& label, const std::string& value,
-                 const std::vector<std::string>& allowed_values, const std::string& description);
+                 const std::vector<std::string>& allowed_values,
+                 const std::string& description = "");
 
     /**
      * @brief Add an array option
      * @param label Option label
      * @param description Description of the option
      */
-    void add_array(const std::string& label, const std::string& description);
+    void add_array(const std::string& label, const std::string& description = "");
 
     /**
      * @brief Get a boolean option
      * @param label Option label
      */
-    bool get_bool(const std::string& label) const;
+    bool get_bool(const std::string& label);
 
     /**
      * @brief Get a integer option
      * @param label Option label
      */
-    int get_int(const std::string& label) const;
+    int get_int(const std::string& label);
 
     /**
      * @brief Get a double option
      * @param label Option label
      */
-    double get_double(const std::string& label) const;
+    double get_double(const std::string& label);
 
     /**
      * @brief Get a string option
      * @param label Option label
      */
-    const std::string& get_str(const std::string& label) const;
+    const std::string& get_str(const std::string& label);
 
     /**
      * @brief If an option is changed
      * @param label Option label
      */
-    bool has_changed(const std::string& label) const;
+    bool has_changed(const std::string& label);
 
     /// Add the options to psi4's options class
-    void add_psi4_options(psi::Options& options);
+    void push_options_to_psi4(psi::Options& options);
 
     /**
      * @brief Generate documentation for the options registered with this object
@@ -153,7 +163,7 @@ class ForteOptions {
     std::vector<double_opt_t> double_opts_;
     std::vector<str_opt_t> str_opts_;
     std::vector<array_opt_t> array_opts_;
-    psi::Options& psi_options_;
+    psi::Options psi_options_;
 };
 } // namespace forte
 

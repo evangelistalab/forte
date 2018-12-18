@@ -33,14 +33,63 @@
 __version__ = '1.0'
 __author__  = 'Forte Developers'
 
+import sys
+
 # Load Python modules
 from .pymodule import *
 
 # Load C++ plugin
-import psi4
 from .forte import *
 
-# Register options with psi
-options = psi4.core.get_options()
-options.set_current_module('FORTE')
-forte_options = forte.read_options(psi4.core.get_options())
+
+forte_options = forte.ForteOptions();
+#forte_options.add_int()
+
+if 'psi4' in sys.modules:
+    # Register options with psi
+    options = psi4.core.get_options()
+    options.set_current_module('FORTE')
+    forte.read_options(forte_options)
+    forte_options.push_options_to_psi4(psi4.core.get_options())
+
+#    /*- Number of frozen occupied orbitals per irrep (in Cotton order) -*/
+    options.add_int("PRINT",0)
+    options.add_array("FROZEN_DOCC");
+
+#    /*- Number of restricted doubly occupied orbitals per irrep (in Cotton
+#     * order) -*/
+    options.add_array("RESTRICTED_DOCC");
+
+#    /*- Number of active orbitals per irrep (in Cotton order) -*/
+    options.add_array("ACTIVE");
+
+#    /*- Number of restricted unoccupied orbitals per irrep (in Cotton order)
+#     * -*/
+    options.add_array("RESTRICTED_UOCC");
+
+#    /*- Number of frozen unoccupied orbitals per irrep (in Cotton order) -*/
+#    options.add_array("FROZEN_UOCC");
+#    /*- Molecular orbitals to swap -
+#     *  Swap mo_1 with mo_2 in irrep symmetry
+#     *  Swap mo_3 with mo_4 in irrep symmetry
+#     *  Format: [irrep, mo_1, mo_2, irrep, mo_3, mo_4]
+#     *          Irrep and MO indices are 1-based (NOT 0-based)!
+#    -*/
+    options.add_array("ROTATE_MOS");
+
+#    //////////////////////////////////////////////////////////////
+#    /// OPTIONS FOR STATE-AVERAGE CASCI/CASSCF
+#    //////////////////////////////////////////////////////////////
+#    /*- An array of states [[irrep1, multi1, nstates1], [irrep2, multi2, nstates2], ...] -*/
+    options.add_array("AVG_STATE");
+#    /*- An array of weights [[w1_1, w1_2, ..., w1_n], [w2_1, w2_2, ..., w2_n], ...] -*/
+    options.add_array("AVG_WEIGHT");
+#    /*- Number of roots per irrep (in Cotton order) -*/
+    options.add_array("NROOTPI");
+
+#    # forte -> psi4
+
+
+
+
+

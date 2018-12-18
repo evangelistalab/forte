@@ -27,6 +27,7 @@ def test_fci1():
 #    solver = forte.FCI(state,forte_options,ints,mo_space_info)
     solver = forte.make_active_space_solver('FCI',state,forte_options,ints,mo_space_info)
     energy = solver.compute_energy()
+
     print(energy)
     forte.cleanup()
 

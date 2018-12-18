@@ -94,8 +94,7 @@ void forte_options(ForteOptions& foptions) {
                       "DSRG_MRPT",
                       "TASKS",
                       "CC",
-                      "NOJOB",
-                      "DOCUMENTATION"},
+                      "NOJOB"},
                      "Specify the job type");
 
     foptions.add_str("MINAO_BASIS", "STO-3G", "The basis used to define an orbital subspace");

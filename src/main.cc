@@ -84,27 +84,9 @@ void replace_free(void* ptr) { free(ptr); }
 /**
  * @brief Read options from the input file. Called by psi4 before everything else.
  */
-ForteOptions read_options(psi::Options& options) {
-
-    options.set_current_module("FORTE");
-
-    ForteOptions foptions(options); // <<
-
-    forte_options(foptions);
-
-    // Old way (deprecated) to pass options to Psi4
+void read_options(ForteOptions& options) {
+    forte_options(options);
     forte_old_options(options);
-    // New way to pass options to Psi4
-    foptions.add_psi4_options(options);
-
-    if (options.get_str("JOB_TYPE") == "DOCUMENTATION") {
-        std::ofstream docs;
-        docs.open("options.rst");
-        docs << foptions.generate_documentation();
-        docs.close();
-    }
-
-    return foptions;
 }
 
 /**
