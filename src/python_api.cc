@@ -72,7 +72,8 @@ PYBIND11_MODULE(forte, m) {
 
     // export StateInfo
     py::class_<StateInfo, std::shared_ptr<StateInfo>>(m, "StateInfo")
-        .def(py::init<int, int, int, int, int>());
+        .def(py::init<int, int, int, int, int>())
+        .def(py::init<psi::SharedWavefunction>());
 
     // export FCIIntegrals
     py::class_<FCIIntegrals, std::shared_ptr<FCIIntegrals>>(m, "FCIIntegrals")
@@ -81,10 +82,10 @@ PYBIND11_MODULE(forte, m) {
     // export FCISolver
     py::class_<FCISolver, std::shared_ptr<FCISolver>>(m, "FCISolver")
         .def(py::init<psi::Dimension, std::vector<size_t>, std::vector<size_t>, StateInfo,
-                        std::shared_ptr<ForteIntegrals>, std::shared_ptr<MOSpaceInfo>, size_t, int,
-                        psi::Options&>())
+                      std::shared_ptr<ForteIntegrals>, std::shared_ptr<MOSpaceInfo>, size_t, int,
+                      psi::Options&>())
         .def("compute_energy", &FCISolver::compute_energy);
 }
-}
+} // namespace forte
 
 #endif // _python_api_h_

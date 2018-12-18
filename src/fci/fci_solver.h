@@ -57,13 +57,12 @@ class FCISolver : public ActiveSpaceSolver {
      * @param active_dim The dimension of the active orbital space
      * @param core_mo A vector of doubly occupied orbitals
      * @param active_mo A vector of active orbitals
-     * @param na Number of alpha electrons
-     * @param nb Number of beta electrons
-     * @param multiplicity The spin multiplicity (2S + 1).  1 = singlet, 2 =
-     * doublet, ...
+     * @param na Number of alpha active electrons
+     * @param nb Number of active beta electrons
+     * @param multiplicity The spin multiplicity (2S + 1).  1 = singlet, 2 = doublet, ...
      * @param symmetry The irrep of the FCI wave function
      * @param ints An integral object
-     * @param mo_space_info -> MOSpaceInfo
+     * @param mo_space_info Information about molecular orbital spaces
      * @param initial_guess_per_root get from options object
      * @param print Control printing of FCISolver
      */
@@ -76,12 +75,12 @@ class FCISolver : public ActiveSpaceSolver {
      * @param active_dim The dimension of the active orbital space
      * @param core_mo A Vector of doubly occupied orbitals
      * @param active_mo A vector of active orbitals
-     * @param na Number of alpha electrons
-     * @param nb Number of beta electrons
+     * @param na Number of alpha active electrons
+     * @param nb Number of active beta electrons
      * @param multiplicity The spin multiplicity (2S + 1)
      * @param symmetry The Irrep of the FCI wave function
      * @param ints An integral object
-     * @param mo_space_info -> mo_space_info object
+     * @param mo_space_info Information about molecular orbital spaces
      * @param options object
      */
     FCISolver(psi::Dimension active_dim, std::vector<size_t> core_mo, std::vector<size_t> active_mo,
@@ -96,7 +95,7 @@ class FCISolver : public ActiveSpaceSolver {
      * @param active_mo A vector of active orbitals
      * @param state_ state information including na, nb, multiplicity and symmetry
      * @param ints An integral object
-     * @param mo_space_info -> MOSpaceInfo
+     * @param mo_space_info Information about molecular orbital spaces
      * @param initial_guess_per_root get from options object
      * @param print Control printing of FCISolver
      */

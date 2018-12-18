@@ -1,7 +1,10 @@
 #include "psi4/libpsi4util/process.h"
+#include "psi4/libmints/wavefunction.h"
 #include "psi4/libmints/molecule.h"
 
 #include "state_info.h"
+
+namespace forte {
 
 StateInfo::StateInfo(int na, int nb, int multiplicity, int twice_ms, int irrep)
     : na_(na), nb_(nb), multiplicity_(multiplicity), twice_ms_(twice_ms), irrep_(irrep) {}
@@ -51,3 +54,5 @@ int StateInfo::multiplicity() const { return multiplicity_; }
 int StateInfo::twice_ms() const { return twice_ms_; }
 
 int StateInfo::irrep() const { return irrep_; }
+
+} // namespace forte

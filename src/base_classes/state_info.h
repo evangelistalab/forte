@@ -29,7 +29,7 @@
 #ifndef _state_info_h_
 #define _state_info_h_
 
-#include "psi4/libmints/wavefunction.h"
+namespace forte {
 
 class StateInfo {
   public:
@@ -62,4 +62,6 @@ class StateInfo {
     int irrep_;
 };
 
-#endif // STATE_INFO_H
+} // namespace forte
+
+#endif // _state_info_h_
