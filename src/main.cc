@@ -88,7 +88,7 @@ ForteOptions read_options(psi::Options& options) {
 
     options.set_current_module("FORTE");
 
-    ForteOptions foptions; // <<
+    ForteOptions foptions(options); // <<
 
     forte_options(foptions);
 

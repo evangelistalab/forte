@@ -132,7 +132,7 @@ class FCI : public ActiveSpaceSolver {
     //    psi::SharedWavefunction reference_wavefunction_;
     /// options object
     //    psi::Options& options_;
-    std::shared_ptr<ForteOptions> options_;
+    ForteOptions options_;
 
     // ==> Class functions <==
 

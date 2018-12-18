@@ -14,8 +14,7 @@ std::string option_formatter(const std::string& type, const std::string& label,
                              const std::string& default_value, const std::string& description,
                              const std::string& allowed_values);
 
-ForteOptions::ForteOptions() {}
-ForteOptions::ForteOptions(psi::Options& options) {}
+ForteOptions::ForteOptions(psi::Options& options): psi_options_(options) {}
 
 void ForteOptions::add_bool(const std::string& label, bool value, const std::string& description) {
     bool_opts_.push_back(std::make_tuple(label, value, description));
@@ -49,9 +48,9 @@ bool ForteOptions::get_bool(const std::string& label) const { return psi_options
 
 int ForteOptions::get_int(const std::string& label) const { return psi_options_.get_int(label); }
 
-double ForteOptions::get_double(const std::string& label) const;
+double ForteOptions::get_double(const std::string& label) const { return psi_options_.get_double(label); }
 
-const std::string& ForteOptions::get_str(const std::string& label) const;
+const std::string& ForteOptions::get_str(const std::string& label) const { return psi_options_.get_str(label); }
 
 void ForteOptions::add_psi4_options(psi::Options& options) {
     for (const auto& opt : bool_opts_) {

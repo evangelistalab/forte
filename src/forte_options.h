@@ -56,7 +56,6 @@ using array_opt_t = std::tuple<std::string, std::string>;
  */
 class ForteOptions {
   public:
-    ForteOptions();
     ForteOptions(psi::Options& options);
 
     /**
@@ -148,6 +147,7 @@ class ForteOptions {
     std::vector<double_opt_t> double_opts_;
     std::vector<str_opt_t> str_opts_;
     std::vector<array_opt_t> array_opts_;
+    psi::Options& psi_options_;
 };
 } // namespace forte
 
