@@ -66,7 +66,7 @@ FCI::FCI(psi::SharedWavefunction ref_wfn, psi::Options& options,
 
 FCI::FCI(StateInfo state, std::shared_ptr<ForteOptions> options,
          std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : ActiveSpaceSolver(state, ints, mo_space_info), options_(options) {
+    : ActiveSpaceSolver(state, ints, mo_space_info), options_(*options) {
     // Copy the wavefunction information
     startup();
 }
@@ -104,7 +104,7 @@ double FCI::solver_compute_energy() {
     std::vector<size_t> active = mo_space_info_->get_corr_abs_mo("ACTIVE");
 
     int charge = psi::Process::environment.molecule()->molecular_charge();
-    if (options_["CHARGE"].has_changed()) {
+    if (options_.has_changed("CHARGE")) {
         charge = options_.get_int("CHARGE");
     }
 
@@ -118,14 +118,14 @@ double FCI::solver_compute_energy() {
     nel -= charge;
 
     int multiplicity = psi::Process::environment.molecule()->multiplicity();
-    if (options_["MULTIPLICITY"].has_changed()) {
+    if (options_.has_changed("MULTIPLICITY")) {
         multiplicity = options_.get_int("MULTIPLICITY");
     }
 
     // If the user did not specify ms determine the value from the input or
     // take the lowest value consistent with the value of "MULTIPLICITY"
     if (not set_ms_) {
-        if (options_["MS"].has_changed()) {
+        if (options_.has_changed("MS")) {
             twice_ms_ = std::round(2.0 * options_.get_double("MS"));
         } else {
             // Default: lowest spin solution
