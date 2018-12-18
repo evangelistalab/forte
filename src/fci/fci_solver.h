@@ -1,4 +1,4 @@
-  /*
+/*
  * @BEGIN LICENSE
  *
  * Forte: an open-source plugin to Psi4 (https://github.com/psi4/psi4)
@@ -30,7 +30,6 @@
 #define _fci_solver_h_
 
 #include "psi4/libmints/wavefunction.h"
-#include "psi4/liboptions/liboptions.h"
 #include "psi4/physconst.h"
 
 #include "fci_vector.h"
@@ -41,6 +40,7 @@
 #include "string_lists.h"
 #include "base_classes/reference.h"
 #include "base_classes/active_space_solver.h"
+#include "forte_options.h"
 
 namespace forte {
 
@@ -69,7 +69,7 @@ class FCISolver : public ActiveSpaceSolver {
     FCISolver(psi::Dimension active_dim, std::vector<size_t> core_mo, std::vector<size_t> active_mo,
               size_t na, size_t nb, size_t multiplicity, size_t symmetry,
               std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info,
-              size_t initial_guess_per_root, int print, psi::Options& options);
+              size_t initial_guess_per_root, int print, ForteOptions options);
     /**
      * @brief FCISolver
      * @param active_dim The dimension of the active orbital space
@@ -86,7 +86,7 @@ class FCISolver : public ActiveSpaceSolver {
     FCISolver(psi::Dimension active_dim, std::vector<size_t> core_mo, std::vector<size_t> active_mo,
               size_t na, size_t nb, size_t multiplicity, size_t symmetry,
               std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info,
-              psi::Options& options);
+              ForteOptions options);
 
     /**
      * @brief FCISolver
@@ -102,7 +102,7 @@ class FCISolver : public ActiveSpaceSolver {
     FCISolver(psi::Dimension active_dim, std::vector<size_t> core_mo, std::vector<size_t> active_mo,
               StateInfo state, std::shared_ptr<ForteIntegrals> ints,
               std::shared_ptr<MOSpaceInfo> mo_space_info, size_t initial_guess_per_root, int print,
-              psi::Options& options);
+              ForteOptions options);
 
     ~FCISolver() {}
 
@@ -233,7 +233,7 @@ class FCISolver : public ActiveSpaceSolver {
     std::vector<std::pair<int, std::vector<std::tuple<size_t, size_t, size_t, double>>>>
     initial_guess(FCIWfn& diag, size_t n, std::shared_ptr<FCIIntegrals> fci_ints);
     /// The options object
-    psi::Options& options_;
+    ForteOptions options_;
 };
 } // namespace forte
 
