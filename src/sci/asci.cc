@@ -124,7 +124,7 @@ void ASCI::startup() {
     }
 
     // Build the reference determinant and compute its energy
-    CI_Reference ref(reference_wavefunction_, options_, mo_space_info_, fci_ints_, multiplicity_,
+    CI_Reference ref(std::make_shared<SCFInfo>(reference_wavefunction_), options_, mo_space_info_, fci_ints_, multiplicity_,
                      twice_ms_, wavefunction_symmetry_);
     ref.build_reference(initial_reference_);
 
