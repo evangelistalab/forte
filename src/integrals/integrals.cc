@@ -370,29 +370,21 @@ void ForteIntegrals::rotate_orbitals(std::shared_ptr<psi::Matrix> Ua,
     // 1. Rotate the orbital coefficients and store them in the ForteIntegral object
     auto Ca_rotated = psi::Matrix::doublet(Ca_, Ua);
     auto Cb_rotated = psi::Matrix::doublet(Cb_, Ub);
-    Ca_->copy(Ca_rotated);
-    Cb_->copy(Cb_rotated);
 
+    update_orbitals(Ca_rotated, Cb_rotated);
+}
+
+void ForteIntegrals::update_orbitals(std::shared_ptr<psi::Matrix> Ca,
+                                     std::shared_ptr<psi::Matrix> Cb) {
+
+    // 1. Copy orbitals
+    Ca_->copy(Ca);
+    Cb_->copy(Cb);
     // 2. Send a copy to psi::Wavefunction
     wfn_->Ca()->copy(Ca_);
     wfn_->Cb()->copy(Cb_);
 
     // 3. Re-transform the integrals
-    aptei_idx_ = nmo_;
-    transform_one_electron_integrals();
-    int my_proc = 0;
-#ifdef HAVE_GA
-    my_proc = GA_Nodeid();
-#endif
-    if (my_proc == 0) {
-        outfile->Printf("\n Integrals are about to be computed.");
-        gather_integrals();
-        outfile->Printf("\n Integrals are about to be updated.");
-        freeze_core_orbitals();
-    }
-}
-
-void ForteIntegrals::retransform_integrals() {
     aptei_idx_ = nmo_;
     transform_one_electron_integrals();
     int my_proc = 0;

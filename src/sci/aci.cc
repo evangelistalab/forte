@@ -2483,21 +2483,8 @@ void AdaptiveCI::compute_nos() {
             }
         }
     }
-
-    // Transform the orbital coefficients
-    psi::SharedMatrix Ca = ints_->Ca();
-    psi::SharedMatrix Cb = ints_->Cb();
-    psi::SharedMatrix Ca_new(Ca->clone());
-    psi::SharedMatrix Cb_new(Cb->clone());
-
-    Ca_new->gemm(false, false, 1.0, Ca, Ua, 0.0);
-    Cb_new->gemm(false, false, 1.0, Cb, Ub, 0.0);
-
-    Ca->copy(Ca_new);
-    Cb->copy(Cb_new);
-
     // Retransform the integarms in the new basis
-    ints_->retransform_integrals();
+    ints_->rotate_orbitals(Ua, Ub);
 }
 
 void AdaptiveCI::upcast_reference(DeterminantHashVec& ref) {
@@ -3116,7 +3103,7 @@ void AdaptiveCI::spin_analysis() {
 
         auto actpi = mo_space_info_->get_absolute_mo("ACTIVE");
         auto nactpi = mo_space_info_->get_dimension("ACTIVE");
-        for (int h = 0; h < nirrep_; ++h) {
+        for (size_t h = 0; h < nirrep_; ++h) {
             // skip frozen/restricted docc
             int nact = nactpi[h];
             for (int i = 0; i < nact; ++i) {

@@ -182,17 +182,7 @@ void ESNO::compute_nos() {
     }
 
     // Transform C matrix
-    psi::SharedMatrix Ca = ref_wfn_->Ca();
-    psi::SharedMatrix Cb = ref_wfn_->Cb();
-    psi::SharedMatrix Ca_new(Ca->clone());
-    psi::SharedMatrix Cb_new(Cb->clone());
-
-    Ca_new->gemm(false, false, 1.0, Ca, Ua, 0.0);
-    Cb_new->gemm(false, false, 1.0, Cb, Ub, 0.0);
-
-    Ca->copy(Ca_new);
-    Cb->copy(Cb_new);
-    ints_->retransform_integrals();
+    ints_->rotate_orbitals(Ua, Ub);
 }
 
 void ESNO::get_excited_determinants() {

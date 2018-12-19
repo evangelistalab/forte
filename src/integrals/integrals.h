@@ -244,13 +244,16 @@ class ForteIntegrals {
     virtual void set_tei(size_t p, size_t q, size_t r, size_t s, double value, bool alpha1,
                          bool alpha2) = 0;
 
-    /// Rotate the MO coefficients and transform the intregrals
+    /// Rotate the MO coefficients
     /// @param Ua the alpha unitary transformation matrix
     /// @param Ub the alpha unitary transformation matrix
     void rotate_orbitals(std::shared_ptr<psi::Matrix> Ua, std::shared_ptr<psi::Matrix> Ub);
 
-    /// Update the integrals with a new set of MO coefficients
-    void retransform_integrals();
+    /// Copy these MO coeffs to class variable, update psi::Wavefunction, and re-transform integrals
+    /// @param Ca the alpha MO coefficients
+    /// @param Cb the betaa MO coefficients
+    void update_orbitals(std::shared_ptr<psi::Matrix> Ca,std::shared_ptr<psi::Matrix> Cb);
+
     /// Expert Option: just try and use three_integral
     virtual double** three_integral_pointer() = 0;
 

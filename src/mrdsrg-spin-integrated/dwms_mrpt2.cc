@@ -109,8 +109,8 @@ void DWMS_DSRGPT2::startup() {
         Ub_.data()[u * na + u] = 1.0;
     }
 
-    Ca_copy_ = ints_->Ca_()->clone();
-    Cb_copy_ = ints_->Cb_()->clone();
+    Ca_copy_ = ints_->Ca()->clone();
+    Cb_copy_ = ints_->Cb()->clone();
 }
 
 void DWMS_DSRGPT2::read_options() {
@@ -1170,9 +1170,7 @@ std::vector<std::tuple<int, int, int, std::vector<double>>> DWMS_DSRGPT2::comput
 
 void DWMS_DSRGPT2::transform_ints0() {
     print_h2("Transformation Integrals Back to Original");
-    ints_->Ca_()->copy(Ca_copy_);
-    ints_->Cb_()->copy(Cb_copy_);
-    ints_->retransform_integrals();
+    ints_->update_orbitals(Ca_copy_, Cb_copy_);
 }
 
 void DWMS_DSRGPT2::print_title(const std::string& title) {

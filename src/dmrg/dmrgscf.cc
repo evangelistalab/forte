@@ -298,7 +298,6 @@ void DMRGSCF::buildHamDMRGForte(CheMPS2::DMRGSCFmatrix* theQmatOCC,
                                 std::shared_ptr<ForteIntegrals> ints) {
     /// Retransform all the integrals for now (TODO:  CASSCF-like integral
     /// transformation)
-    ints->retransform_integrals();
     size_t na = mo_space_info_->size("ACTIVE");
     std::vector<size_t> active_orbs = mo_space_info_->get_corr_abs_mo("ACTIVE");
     ambit::Tensor VMat = ints_->aptei_ab_block(active_orbs, active_orbs, active_orbs, active_orbs);

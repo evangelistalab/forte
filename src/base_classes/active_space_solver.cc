@@ -29,11 +29,13 @@
 #include "psi4/libmints/wavefunction.h"
 
 #include "base_classes/state_info.h"
+#include "base_classes/scf_info.h"
 #include "helpers/mo_space_info.h"
 #include "integrals/integrals.h"
 
 #include "base_classes/active_space_solver.h"
 #include "fci/fci.h"
+#include "sci/aci.h"
 
 namespace forte {
 
@@ -47,11 +49,14 @@ ActiveSpaceSolver::ActiveSpaceSolver(
     : states_weights_(states_weights), ints_(ints), mo_space_info_(mo_space_info) {}
 
 std::shared_ptr<ActiveSpaceSolver>
-make_active_space_solver(const std::string& type, StateInfo state, std::shared_ptr<ForteOptions> options,
+make_active_space_solver(const std::string& type, StateInfo state, std::shared_ptr<SCFInfo> scf_info,std::shared_ptr<ForteOptions> options,
                          std::shared_ptr<ForteIntegrals> ints,
                          std::shared_ptr<MOSpaceInfo> mo_space_info) {
     if (type == "FCI") {
         return std::make_shared<FCI>(state, options, ints, mo_space_info);
+    }
+    if (type == "ACI") {
+        return std::make_shared<AdaptiveCI>(scf_info, options, ints, mo_space_info);
     }
     throw psi::PSIEXCEPTION("make_active_space_solver: type = " + type + " was not recognized");
     return std::shared_ptr<ActiveSpaceSolver>();

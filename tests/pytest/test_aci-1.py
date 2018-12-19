@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-def test_fci1():
+def test_aci1():
     import math
     import psi4
     import forte
     from forte import forte_options
 
-    ref_fci = -75.01315470154653
+    ref_aci = -75.010199198896
     rel_tol = 1e-9
     abs_tol = 1e-8
 
@@ -30,14 +30,16 @@ def test_fci1():
     forte.banner()
     mo_space_info = forte.make_mo_space_info(wfn, options)    
     ints = forte.make_forte_integrals(wfn, options, mo_space_info)
+
     scf_info = forte.SCFInfo(wfn)
+
 #    solver = forte.FCI(state,forte_options,ints,mo_space_info)
-    solver = forte.make_active_space_solver('FCI',state,scf_info,forte_options,ints,mo_space_info)
+    solver = forte.make_active_space_solver('ACI',state,scf_info,forte_options,ints,mo_space_info)
     energy = solver.compute_energy()
 
-    assert math.isclose(energy,ref_fci,abs_tol=abs_tol, rel_tol=rel_tol)
+    assert math.isclose(energy,ref_aci,abs_tol=abs_tol, rel_tol=rel_tol)
 
-    print("\n\nFCI Energy = {}".format(energy))
+    print("\n\nACI Energy = {}".format(energy))
     forte.cleanup()
 
-test_fci1()
+test_aci1()
