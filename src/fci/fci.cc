@@ -39,17 +39,6 @@ using namespace psi;
 
 namespace forte {
 
-void set_FCI_options(ForteOptions& foptions) {
-    foptions.add_int("FCI_NROOT", 1, "The number of roots computed");
-    foptions.add_int("FCI_ROOT", 0, "The root selected for state-specific computations");
-    foptions.add_int("FCI_MAXITER", 30, "Maximum number of iterations for FCI code");
-    foptions.add_int("FCI_MAX_RDM", 1, "The number of trial guess vectors to generate per root");
-    foptions.add_bool("FCI_TEST_RDMS", false, "Test the FCI reduced density matrices?");
-    foptions.add_bool("FCI_PRINT_NO", false, "Print the NO from the rdm of FCI");
-    foptions.add_int("FCI_NTRIAL_PER_ROOT", 10,
-                     "The number of trial guess vectors to generate per root");
-}
-
 FCI::FCI(psi::SharedWavefunction ref_wfn, psi::Options& options,
          std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
     : ActiveSpaceSolver(StateInfo(ref_wfn), ints, mo_space_info), options_(options) {

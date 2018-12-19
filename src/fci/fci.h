@@ -42,9 +42,6 @@ class Reference;
 class FCISolver;
 class FCIWfn;
 
-/// Set the options for the FCI method
-void set_FCI_options(ForteOptions& foptions);
-
 /**
  * @brief The FCI class
  * This class implements a FCI wave function and calls FCISolver
