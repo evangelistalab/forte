@@ -366,7 +366,7 @@ void CASSCF::cas_ci() {
         set_up_fcimo();
     } else if (options_->get_str("CASSCF_CI_SOLVER") == "ACI") {
         std::shared_ptr<FCIIntegrals> fci_ints = get_ci_integrals();
-        AdaptiveCI aci(scf_info_, options_, ints_, mo_space_info_);
+        AdaptiveCI aci(state_, scf_info_, options_, ints_, mo_space_info_);
         aci.set_fci_ints(fci_ints);
         aci.set_max_rdm(2);
         aci.set_quiet(quiet);
@@ -451,7 +451,7 @@ void CASSCF::cas_ci_final() {
     } else if (options_->get_str("CASSCF_CI_SOLVER") == "CAS") {
         set_up_fcimo();
     } else if (options_->get_str("CASSCF_CI_SOLVER") == "ACI") {
-        AdaptiveCI aci(scf_info_, options_, ints_, mo_space_info_);
+        AdaptiveCI aci(state_, scf_info_, options_, ints_, mo_space_info_);
         aci.set_max_rdm(3);
         aci.set_quiet(quiet);
         aci.compute_energy();
@@ -763,7 +763,7 @@ void CASSCF::set_up_fci() {
     size_t nactel = nel - 2 * nfdocc - 2 * rdocc.size();
 
     size_t na = (nactel + twice_ms) / 2;
-    size_t nb = nactel - na;
+//    size_t nb = nactel - na;
 
     FCISolver fcisolver(active_dim, rdocc, active, *state_,
                         ints_, mo_space_info_,
