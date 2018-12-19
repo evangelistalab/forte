@@ -51,7 +51,7 @@ class SCFInfo {
     psi::Dimension nsopi();
 
     /// return nso
-    psi::Dimension nso();
+    int nso();
 
     /// return energy
     double reference_energy();

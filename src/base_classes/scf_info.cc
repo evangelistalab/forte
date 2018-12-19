@@ -16,7 +16,7 @@ psi::Dimension SCFInfo::soccpi() { return soccpi_; }
 
 psi::Dimension SCFInfo::nsopi() { return nsopi_; }
 
-psi::Dimension SCFInfo::nso() {
+int SCFInfo::nso() {
     return nsopi_.sum();
 }
 
