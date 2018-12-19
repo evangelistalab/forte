@@ -388,7 +388,7 @@ double ACTIVE_DSRGPT2::compute_energy() {
             psi::SharedMatrix Cb = reference_wavefunction_->Cb();
             Ca->gemm(false, false, 1.0, Ca0, Uas[i], 0.0);
             Cb->gemm(false, false, 1.0, Cb0, Ubs[i], 0.0);
-            ints_->retransform_integrals();
+            ints_->update_orbitals(Ca, Cb);
 
             // obtain the name of transition type
             std::string trans_name = transition_type(0, 0, i_real, h);
@@ -992,7 +992,7 @@ void ACTIVE_DSRGPT2::transform_integrals(psi::SharedMatrix Ca0, psi::SharedMatri
     // transform integrals
     outfile->Printf("\n\n");
     std::vector<size_t> idx_a = mo_space_info_->get_corr_abs_mo("ACTIVE");
-    ints_->retransform_integrals();
+    ints_->update_orbitals(Ca, Cb);
     ambit::Tensor tei_active_aa = ints_->aptei_aa_block(idx_a, idx_a, idx_a, idx_a);
     ambit::Tensor tei_active_ab = ints_->aptei_ab_block(idx_a, idx_a, idx_a, idx_a);
     ambit::Tensor tei_active_bb = ints_->aptei_bb_block(idx_a, idx_a, idx_a, idx_a);

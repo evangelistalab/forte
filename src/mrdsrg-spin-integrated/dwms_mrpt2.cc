@@ -1175,7 +1175,7 @@ void DWMS_DSRGPT2::transform_ints0() {
     print_h2("Transformation Integrals Back to Original");
     Ca_->copy(Ca_copy_);
     Cb_->copy(Cb_copy_);
-    ints_->retransform_integrals();
+    ints_->update_orbitals(Ca_, Cb_);
 }
 
 void DWMS_DSRGPT2::print_title(const std::string& title) {

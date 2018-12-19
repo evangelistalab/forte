@@ -113,6 +113,8 @@ void CASSCF::compute_casscf() {
     double econv = options_.get_double("CASSCF_E_CONVERGENCE");
     double gconv = options_.get_double("CASSCF_G_CONVERGENCE");
 
+    psi::SharedMatrix Ca = reference_wavefunction_->Ca();
+    psi::SharedMatrix Cb = reference_wavefunction_->Cb();
     print_h2("CASSCF Iteration");
     outfile->Printf("\n iter    ||g||           Delta_E            E_CASSCF       CONV_TYPE");
 
@@ -149,8 +151,8 @@ void CASSCF::compute_casscf() {
         if (print_ > 0) {
             outfile->Printf("\n\n CAS took %8.6f seconds.", cas_timer.get());
         }
-        psi::SharedMatrix Ca = reference_wavefunction_->Ca();
-        psi::SharedMatrix Cb = reference_wavefunction_->Cb();
+        Ca = reference_wavefunction_->Ca();
+        Cb = reference_wavefunction_->Cb();
 
         CASSCFOrbitalOptimizer orbital_optimizer(gamma1_, gamma2_, tei_paaa_, options_,
                                                  mo_space_info_);
@@ -240,7 +242,7 @@ void CASSCF::compute_casscf() {
     // restransform integrals using DF_BASIS_MP2 for
     // consistent energies in correlation treatment
 
-    ints_->retransform_integrals();
+    ints_->update_orbitals(Ca, Cb);
     cas_ci_final();
     outfile->Printf("\n @E(CASSCF) = %18.12f \n", E_casscf_);
     psi::Process::environment.globals["CURRENT ENERGY"] = E_casscf_;
@@ -802,7 +804,7 @@ std::shared_ptr<FCIIntegrals> CASSCF::get_ci_integrals() {
     std::vector<size_t> active = mo_space_info_->get_corr_abs_mo("ACTIVE");
     std::shared_ptr<FCIIntegrals> fci_ints = std::make_shared<FCIIntegrals>(ints_, active, rdocc);
     if (!(options_.get_bool("RESTRICTED_DOCC_JK"))) {
-        ints_->retransform_integrals();
+     //   ints_->retransform_integrals();
         fci_ints->set_active_integrals_and_restricted_docc();
     } else {
         auto na_array = mo_space_info_->get_corr_abs_mo("ACTIVE");
@@ -1045,7 +1047,7 @@ void CASSCF::set_up_fcimo() {
     std::shared_ptr<FCIIntegrals> fci_ints = std::make_shared<FCIIntegrals>(ints_, active, rdocc);
 
     if (!(options_.get_bool("RESTRICTED_DOCC_JK"))) {
-        ints_->retransform_integrals();
+       // ints_->retransform_integrals();
         fci_ints->set_active_integrals_and_restricted_docc();
     } else {
         auto na_array = mo_space_info_->get_corr_abs_mo("ACTIVE");
