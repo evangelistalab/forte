@@ -10,7 +10,6 @@
 #include "fci/fci_integrals.h"
 #include "base_classes/reference.h"
 
-
 namespace forte {
 class DynamicCorrelationSolver : public psi::Wavefunction {
   public:
@@ -21,8 +20,8 @@ class DynamicCorrelationSolver : public psi::Wavefunction {
      * @param ints A pointer to an allocated integral object
      * @param mo_space_info The MOSpaceInfo object
      */
-    DynamicCorrelationSolver(Reference reference, psi::SharedWavefunction ref_wfn, psi::Options& options,
-                             std::shared_ptr<ForteIntegrals> ints,
+    DynamicCorrelationSolver(Reference reference, psi::SharedWavefunction ref_wfn,
+                             psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
                              std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Compute energy
@@ -44,6 +43,12 @@ class DynamicCorrelationSolver : public psi::Wavefunction {
     /// The reference object (cumulants)
     Reference reference_;
 };
+
+std::shared_ptr<DynamicCorrelationSolver>
+make_dynamic_correlation_solver(const std::string& type, std::shared_ptr<ForteOptions> options,
+                                std::shared_ptr<ForteIntegrals> ints,
+                                std::shared_ptr<MOSpaceInfo> mo_space_info);
+
 } // namespace forte
 
 #endif // DYNAMIC_CORRELATION_SOLVER_H

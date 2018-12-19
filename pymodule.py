@@ -34,6 +34,17 @@ import forte
 import psi4.driver.p4util as p4util
 from psi4.driver.procrouting import proc_util
 
+def new_driver(scf_info, options, ints, mo_space_info):
+    # Create an active space solver object
+    active_space_solver = options.get_str('ACTIVE_SPACE_SOLVER')
+    solver = forte.make_active_space_solver(active_space_solver,state,scf_info,forte_options,ints,mo_space_info)
+    energy = active_space_solver.compute_energy()
+#    reference = solver.reference()
+
+    # Create a dynamical correlation solver object
+#    dyncorr_solver = options.get_str('DYNCORR_SOLVER')
+#    solver = forte.make_dynamical_solver(dyncorr_solver,state,scf_info,forte_options,ints,mo_space_info)
+
 def run_forte(name, **kwargs):
     r"""Function encoding sequence of PSI module and plugin calls so that
     forte can be called via :py:func:`~driver.energy`. For post-scf plugins.
@@ -90,8 +101,11 @@ def run_forte(name, **kwargs):
         if options.get_bool("LOCALIZE"):
             forte.LOCALIZE(ref_wfn,options,ints,mo_space_info)
 
-        # Run a method
-        forte.forte_old_methods(ref_wfn, options, ints, mo_space_info)
+        if (job_type == 'NEWDRIVER'):
+            new_driver(ref_wfn, options, ints, mo_space_info)
+        else:
+            # Run a method
+            forte.forte_old_methods(ref_wfn, options, ints, mo_space_info)
 
         end = timeit.timeit()
         #print('\n\n  Your calculation took ', (end - start), ' seconds');
