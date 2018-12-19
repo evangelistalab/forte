@@ -93,12 +93,14 @@ void ConventionalIntegrals::transform_integrals() {
     if (restricted_) {
         integral_transform_ = std::make_shared<psi::IntegralTransform>(
             wfn_, spaces, psi::IntegralTransform::TransformationType::Restricted,
-            psi::IntegralTransform::OutputType::DPDOnly, psi::IntegralTransform::MOOrdering::PitzerOrder,
+            psi::IntegralTransform::OutputType::DPDOnly,
+            psi::IntegralTransform::MOOrdering::PitzerOrder,
             psi::IntegralTransform::FrozenOrbitals::None);
     } else {
         integral_transform_ = std::make_shared<psi::IntegralTransform>(
             wfn_, spaces, psi::IntegralTransform::TransformationType::Unrestricted,
-            psi::IntegralTransform::OutputType::DPDOnly, psi::IntegralTransform::MOOrdering::PitzerOrder,
+            psi::IntegralTransform::OutputType::DPDOnly,
+            psi::IntegralTransform::MOOrdering::PitzerOrder,
             psi::IntegralTransform::FrozenOrbitals::None);
     }
 
@@ -257,7 +259,7 @@ void ConventionalIntegrals::gather_integrals() {
     } else {
         outfile->Printf("\n  Unrestricted orbitals are currently disabled");
         throw psi::PSIEXCEPTION("Unrestricted orbitals are currently disabled in "
-                           "ConventionalIntegrals");
+                                "ConventionalIntegrals");
 
         //        std::vector<double> two_electron_integrals(num_tei_, 0.0);
         //        // Alpha-alpha integrals
@@ -405,4 +407,3 @@ void ConventionalIntegrals::make_fock_matrix(psi::SharedMatrix gamma_a, psi::Sha
     }
 }
 } // namespace forte
-
