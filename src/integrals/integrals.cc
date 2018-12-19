@@ -399,21 +399,6 @@ void ForteIntegrals::update_orbitals(std::shared_ptr<psi::Matrix> Ca,
     }
 }
 
-void ForteIntegrals::retransform_integrals() {
-    aptei_idx_ = nmo_;
-    transform_one_electron_integrals();
-    int my_proc = 0;
-#ifdef HAVE_GA
-    my_proc = GA_Nodeid();
-#endif
-    if (my_proc == 0) {
-        outfile->Printf("\n Integrals are about to be computed.");
-        gather_integrals();
-        outfile->Printf("\n Integrals are about to be updated.");
-        freeze_core_orbitals();
-    }
-}
-
 void ForteIntegrals::freeze_core_orbitals() {
     local_timer freeze_timer;
     if (ncmo_ < nmo_) {
