@@ -3448,7 +3448,7 @@ std::vector<double> THREE_DSRG_MRPT2::relaxed_energy(std::shared_ptr<FCIIntegral
     } else if (cas_type == "ACI") {
 
         // Only do ground state ACI for now
-        AdaptiveCI aci(scf_info_, foptions_, ints_, mo_space_info_);
+        AdaptiveCI aci(std::make_shared<StateInfo>(ints_->wfn()),scf_info_, foptions_, ints_, mo_space_info_);
         aci.set_fci_ints(fci_ints);
         if ((foptions_->psi_options())["ACI_RELAX_SIGMA"].has_changed()) {
             aci.update_sigma();

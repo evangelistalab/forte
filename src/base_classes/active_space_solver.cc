@@ -56,7 +56,7 @@ make_active_space_solver(const std::string& type, StateInfo state, std::shared_p
         return std::make_shared<FCI>(state, options, ints, mo_space_info);
     }
     if (type == "ACI") {
-        return std::make_shared<AdaptiveCI>(scf_info, options, ints, mo_space_info);
+        return std::make_shared<AdaptiveCI>(std::make_shared<StateInfo>(state), scf_info, options, ints, mo_space_info);
     }
     throw psi::PSIEXCEPTION("make_active_space_solver: type = " + type + " was not recognized");
     return std::shared_ptr<ActiveSpaceSolver>();

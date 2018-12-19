@@ -85,7 +85,7 @@ class AdaptiveCI : public ActiveSpaceSolver {
      * @param ints A pointer to an allocated integral object
      * @param mo_space_info A pointer to the MOSpaceInfo object
      */
-    AdaptiveCI(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
+    AdaptiveCI(std::shared_ptr<StateInfo> state_, std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
                std::shared_ptr<MOSpaceInfo> mo_space_info);
 
 //    AdaptiveCI(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
@@ -135,6 +135,8 @@ class AdaptiveCI : public ActiveSpaceSolver {
 
     WFNOperator op_;
 
+    /// State info
+    std::shared_ptr<StateInfo> state_;
     /// Some HF info
     std::shared_ptr<SCFInfo> scf_info_;
     /// Forte options

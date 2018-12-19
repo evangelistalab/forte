@@ -377,7 +377,7 @@ double MRDSRG::compute_energy_relaxed() {
             fci_mo.set_localize_actv(false);
             Erelax = fci_mo.solver_compute_energy();
         } else if (cas_type == "ACI") {
-            AdaptiveCI aci(scf_info_, foptions_, ints_, mo_space_info_);
+            AdaptiveCI aci(std::make_shared<StateInfo>(ints_->wfn()),scf_info_, foptions_, ints_, mo_space_info_);
             aci.set_fci_ints(fci_ints);
             if (foptions_->has_changed("ACI_RELAX_SIGMA")) {
                 aci.update_sigma();
@@ -442,7 +442,7 @@ double MRDSRG::compute_energy_relaxed() {
 
                 reference_ = fci_mo.reference(max_rdm_level);
             } else if (cas_type == "ACI") {
-                AdaptiveCI aci(scf_info_, foptions_, ints_, mo_space_info_);
+                AdaptiveCI aci(std::make_shared<StateInfo>(ints_->wfn()),scf_info_, foptions_, ints_, mo_space_info_);
                 aci.set_fci_ints(fci_ints);
                 if (foptions_->has_changed("ACI_RELAX_SIGMA")) {
                     aci.update_sigma();
