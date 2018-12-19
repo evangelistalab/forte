@@ -31,19 +31,16 @@
 #include <map>
 #include <vector>
 
-#include "psi4/libmints/molecule.h"
-
 #include "cc/cc.h"
 #include "helpers/mo_space_info.h"
 
 
 namespace forte {
 
-CC::CC(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
+CC::CC(std::shared_ptr<ForteIntegrals> ints,
        std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : Wavefunction(options), ints_(ints), mo_space_info_(mo_space_info),
+    : ints_(ints), mo_space_info_(mo_space_info),
       BTF_(new BlockedTensorFactory()), tensor_type_(CoreTensor) {
-    set_reference_wavefunction(ref_wfn);
     startup();
 }
 

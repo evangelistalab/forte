@@ -160,27 +160,27 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
         }
     }
     if (options.get_str("JOB_TYPE") == "PCI") {
-        auto pci = std::make_shared<ProjectorCI>(ref_wfn, options, ints, mo_space_info);
+        auto pci = std::make_shared<ProjectorCI>(std::make_shared<StateInfo>(ref_wfn), std::make_shared<SCFInfo>(ref_wfn), std::make_shared<ForteOptions>(options), ints, mo_space_info);
         for (int n = 0; n < options.get_int("NROOT"); ++n) {
             pci->compute_energy();
         }
     }
     if (options.get_str("JOB_TYPE") == "PCI_HASHVEC") {
         auto pci_hashvec =
-            std::make_shared<ProjectorCI_HashVec>(ref_wfn, options, ints, mo_space_info);
+            std::make_shared<ProjectorCI_HashVec>(std::make_shared<StateInfo>(ref_wfn), std::make_shared<SCFInfo>(ref_wfn), std::make_shared<ForteOptions>(options), ints, mo_space_info);
         for (int n = 0; n < options.get_int("NROOT"); ++n) {
             pci_hashvec->compute_energy();
         }
     }
     if (options.get_str("JOB_TYPE") == "PCI_SIMPLE") {
         auto pci_simple =
-            std::make_shared<ProjectorCI_Simple>(ref_wfn, options, ints, mo_space_info);
+            std::make_shared<ProjectorCI_Simple>(std::make_shared<StateInfo>(ref_wfn), std::make_shared<SCFInfo>(ref_wfn), std::make_shared<ForteOptions>(options), ints, mo_space_info);
         for (int n = 0; n < options.get_int("NROOT"); ++n) {
             pci_simple->compute_energy();
         }
     }
     if (options.get_str("JOB_TYPE") == "EWCI") {
-        auto ewci = std::make_shared<ElementwiseCI>(ref_wfn, options, ints, mo_space_info);
+        auto ewci = std::make_shared<ElementwiseCI>(std::make_shared<StateInfo>(ref_wfn), std::make_shared<SCFInfo>(ref_wfn), std::make_shared<ForteOptions>(options), ints, mo_space_info);
         for (int n = 0; n < options.get_int("NROOT"); ++n) {
             ewci->compute_energy();
         }
@@ -840,7 +840,7 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
     }
 
     if (options.get_str("JOB_TYPE") == "CC") {
-        auto cc = std::make_shared<CC>(ref_wfn, options, ints, mo_space_info);
+        auto cc = std::make_shared<CC>(ints, mo_space_info);
         cc->compute_energy();
     }
 

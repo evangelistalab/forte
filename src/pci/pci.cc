@@ -47,6 +47,7 @@
 #include "pci.h"
 #include "helpers/timer.h"
 #include "sparse_ci/ci_reference.h"
+#include "base_classes/state_info.h"
 
 using namespace psi;
 using namespace forte::GeneratorType_;
@@ -197,14 +198,12 @@ void print_vector(const std::vector<double>& C, std::string description) {
     outfile->Printf("\n");
 }
 
-ProjectorCI::ProjectorCI(psi::SharedWavefunction ref_wfn, psi::Options& options,
+ProjectorCI::ProjectorCI(std::shared_ptr<StateInfo> state, std::shared_ptr<forte::SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
                          std::shared_ptr<ForteIntegrals> ints,
                          std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : Wavefunction(options), ints_(ints), mo_space_info_(mo_space_info),
+    : state_(state), scf_info_(scf_info), ints_(ints), mo_space_info_(mo_space_info), options_(options),
       prescreening_tollerance_factor_(1.5), fast_variational_estimate_(false) {
     // Copy the wavefunction information
-    shallow_copy(ref_wfn);
-    reference_wavefunction_ = ref_wfn;
     startup();
 }
 
@@ -239,29 +238,26 @@ void ProjectorCI::startup() {
     frzcpi_ = mo_space_info_->get_dimension("INACTIVE_DOCC");
     nfrzc_ = mo_space_info_->size("INACTIVE_DOCC");
 
-    nuclear_repulsion_energy_ =
-        molecule_->nuclear_repulsion_energy(reference_wavefunction_->get_dipole_field_strength());
+    nuclear_repulsion_energy_ = ints_-> nuclear_repulsion_energy();
 
     mo_symmetry_ = mo_space_info_->symmetry("ACTIVE");
 
     wavefunction_symmetry_ = 0;
-    if (options_["ROOT_SYM"].has_changed()) {
-        wavefunction_symmetry_ = options_.get_int("ROOT_SYM");
+    if (options_->has_changed("ROOT_SYM")) {
+        wavefunction_symmetry_ = options_->get_int("ROOT_SYM");
     }
     // Read options
     wavefunction_multiplicity_ = 1;
-    if (options_["MULTIPLICITY"].has_changed()) {
-        wavefunction_multiplicity_ = options_.get_int("MULTIPLICITY");
+    if (options_->has_changed("MULTIPLICITY")) {
+        wavefunction_multiplicity_ = options_->get_int("MULTIPLICITY");
     }
 
     // Number of correlated electrons
     nactel_ = 0;
     nalpha_ = 0;
     nbeta_ = 0;
-    int nel = 0;
-    for (int h = 0; h < nirrep_; ++h) {
-        nel += 2 * doccpi_[h] + soccpi_[h];
-    }
+    int nel = state_->na() + state_->nb();
+    nirrep_ = mo_space_info_->nirrep();
 
     int ms = wavefunction_multiplicity_ - 1;
     nactel_ = nel - 2 * nfrzc_;
@@ -270,7 +266,7 @@ void ProjectorCI::startup() {
 
     // Build the reference determinant and compute its energy
     std::vector<Determinant> reference_vec;
-    CI_Reference ref(std::make_shared<SCFInfo>(reference_wavefunction_), options_, mo_space_info_, fci_ints_,
+    CI_Reference ref(scf_info_, options_, mo_space_info_, fci_ints_,
                      wavefunction_multiplicity_, ms, wavefunction_symmetry_);
     ref.set_ref_type("HF");
     ref.build_reference(reference_vec);
@@ -279,95 +275,95 @@ void ProjectorCI::startup() {
     //    outfile->Printf("\n  The reference determinant is:\n");
     //    reference_determinant_.print();
 
-    nroot_ = options_.get_int("PCI_NROOT");
+    nroot_ = options_->get_int("PCI_NROOT");
     current_root_ = -1;
-    post_diagonalization_ = options_.get_bool("PCI_POST_DIAGONALIZE");
+    post_diagonalization_ = options_->get_bool("PCI_POST_DIAGONALIZE");
     diag_method_ = DLSolver;
-    if (options_["DIAG_ALGORITHM"].has_changed()) {
-        if (options_.get_str("DIAG_ALGORITHM") == "FULL") {
+    if (options_->has_changed("DIAG_ALGORITHM")) {
+        if (options_->get_str("DIAG_ALGORITHM") == "FULL") {
             diag_method_ = Full;
-        } else if (options_.get_str("DIAG_ALGORITHM") == "DLSTRING") {
+        } else if (options_->get_str("DIAG_ALGORITHM") == "DLSTRING") {
             diag_method_ = DLString;
-        } else if (options_.get_str("DIAG_ALGORITHM") == "DLDISK") {
+        } else if (options_->get_str("DIAG_ALGORITHM") == "DLDISK") {
             diag_method_ = DLDisk;
         }
     }
     //    /-> Define appropriate variable: post_diagonalization_ =
-    //    options_.get_bool("EX_ALGORITHM");
+    //    options_->get_bool("EX_ALGORITHM");
 
-    spawning_threshold_ = options_.get_double("PCI_SPAWNING_THRESHOLD");
-    initial_guess_spawning_threshold_ = options_.get_double("PCI_GUESS_SPAWNING_THRESHOLD");
+    spawning_threshold_ = options_->get_double("PCI_SPAWNING_THRESHOLD");
+    initial_guess_spawning_threshold_ = options_->get_double("PCI_GUESS_SPAWNING_THRESHOLD");
     if (initial_guess_spawning_threshold_ < 0.0)
         initial_guess_spawning_threshold_ = 10.0 * spawning_threshold_;
-    time_step_ = options_.get_double("PCI_TAU");
-    maxiter_ = options_.get_int("PCI_MAXBETA") / time_step_;
-    max_Davidson_iter_ = options_.get_int("PCI_MAX_DAVIDSON_ITER");
-    davidson_collapse_per_root_ = options_.get_int("PCI_DL_COLLAPSE_PER_ROOT");
-    davidson_subspace_per_root_ = options_.get_int("PCI_DL_SUBSPACE_PER_ROOT");
-    e_convergence_ = options_.get_double("PCI_E_CONVERGENCE");
-    energy_estimate_threshold_ = options_.get_double("PCI_ENERGY_ESTIMATE_THRESHOLD");
-    initiator_approx_factor_ = options_.get_double("PCI_INITIATOR_APPROX_FACTOR");
-    colinear_threshold_ = options_.get_double("PCI_COLINEAR_THRESHOLD");
+    time_step_ = options_->get_double("PCI_TAU");
+    maxiter_ = options_->get_int("PCI_MAXBETA") / time_step_;
+    max_Davidson_iter_ = options_->get_int("PCI_MAX_DAVIDSON_ITER");
+    davidson_collapse_per_root_ = options_->get_int("PCI_DL_COLLAPSE_PER_ROOT");
+    davidson_subspace_per_root_ = options_->get_int("PCI_DL_SUBSPACE_PER_ROOT");
+    e_convergence_ = options_->get_double("PCI_E_CONVERGENCE");
+    energy_estimate_threshold_ = options_->get_double("PCI_ENERGY_ESTIMATE_THRESHOLD");
+    initiator_approx_factor_ = options_->get_double("PCI_INITIATOR_APPROX_FACTOR");
+    colinear_threshold_ = options_->get_double("PCI_COLINEAR_THRESHOLD");
 
-    max_guess_size_ = options_.get_int("PCI_MAX_GUESS_SIZE");
-    energy_estimate_freq_ = options_.get_int("PCI_ENERGY_ESTIMATE_FREQ");
+    max_guess_size_ = options_->get_int("PCI_MAX_GUESS_SIZE");
+    energy_estimate_freq_ = options_->get_int("PCI_ENERGY_ESTIMATE_FREQ");
 
-    adaptive_beta_ = options_.get_bool("PCI_ADAPTIVE_BETA");
-    fast_variational_estimate_ = options_.get_bool("PCI_FAST_EVAR");
-    do_shift_ = options_.get_bool("PCI_USE_SHIFT");
-    use_inter_norm_ = options_.get_bool("PCI_USE_INTER_NORM");
-    do_simple_prescreening_ = options_.get_bool("PCI_SIMPLE_PRESCREENING");
-    do_dynamic_prescreening_ = options_.get_bool("PCI_DYNAMIC_PRESCREENING");
-    do_schwarz_prescreening_ = options_.get_bool("PCI_SCHWARZ_PRESCREENING");
-    do_initiator_approx_ = options_.get_bool("PCI_INITIATOR_APPROX");
-    do_perturb_analysis_ = options_.get_bool("PCI_PERTURB_ANALYSIS");
-    stop_higher_new_low_ = options_.get_bool("PCI_STOP_HIGHER_NEW_LOW");
-    chebyshev_order_ = options_.get_int("PCI_CHEBYSHEV_ORDER");
-    krylov_order_ = options_.get_int("PCI_KRYLOV_ORDER");
-    symm_approx_H_ = options_.get_bool("PCI_SYMM_APPROX_H");
-    reference_spawning_ = options_.get_bool("PCI_REFERENCE_SPAWNING");
+    adaptive_beta_ = options_->get_bool("PCI_ADAPTIVE_BETA");
+    fast_variational_estimate_ = options_->get_bool("PCI_FAST_EVAR");
+    do_shift_ = options_->get_bool("PCI_USE_SHIFT");
+    use_inter_norm_ = options_->get_bool("PCI_USE_INTER_NORM");
+    do_simple_prescreening_ = options_->get_bool("PCI_SIMPLE_PRESCREENING");
+    do_dynamic_prescreening_ = options_->get_bool("PCI_DYNAMIC_PRESCREENING");
+    do_schwarz_prescreening_ = options_->get_bool("PCI_SCHWARZ_PRESCREENING");
+    do_initiator_approx_ = options_->get_bool("PCI_INITIATOR_APPROX");
+    do_perturb_analysis_ = options_->get_bool("PCI_PERTURB_ANALYSIS");
+    stop_higher_new_low_ = options_->get_bool("PCI_STOP_HIGHER_NEW_LOW");
+    chebyshev_order_ = options_->get_int("PCI_CHEBYSHEV_ORDER");
+    krylov_order_ = options_->get_int("PCI_KRYLOV_ORDER");
+    symm_approx_H_ = options_->get_bool("PCI_SYMM_APPROX_H");
+    reference_spawning_ = options_->get_bool("PCI_REFERENCE_SPAWNING");
     if (reference_spawning_ && !symm_approx_H_) {
         symm_approx_H_ = true;
         outfile->Printf("\n\n  Warning! Use of symmetric approximated "
                         "Hamiltonian is enforced by using reference spawning.");
     }
 
-    variational_estimate_ = options_.get_bool("PCI_VAR_ESTIMATE");
-    print_full_wavefunction_ = options_.get_bool("PCI_PRINT_FULL_WAVEFUNCTION");
+    variational_estimate_ = options_->get_bool("PCI_VAR_ESTIMATE");
+    print_full_wavefunction_ = options_->get_bool("PCI_PRINT_FULL_WAVEFUNCTION");
 
     approx_E_tau_ = 1.0;
     approx_E_S_ = 0.0;
 
-    if (options_.get_str("PCI_GENERATOR") == "LINEAR") {
+    if (options_->get_str("PCI_GENERATOR") == "LINEAR") {
         generator_ = LinearGenerator;
         generator_description_ = "Linear";
-    } else if (options_.get_str("PCI_GENERATOR") == "TROTTER") {
+    } else if (options_->get_str("PCI_GENERATOR") == "TROTTER") {
         generator_ = TrotterLinear;
         generator_description_ = "Trotter";
-    } else if (options_.get_str("PCI_GENERATOR") == "QUADRATIC") {
+    } else if (options_->get_str("PCI_GENERATOR") == "QUADRATIC") {
         generator_ = QuadraticGenerator;
         generator_description_ = "Quadratic";
-    } else if (options_.get_str("PCI_GENERATOR") == "CUBIC") {
+    } else if (options_->get_str("PCI_GENERATOR") == "CUBIC") {
         generator_ = CubicGenerator;
         generator_description_ = "Cubic";
-    } else if (options_.get_str("PCI_GENERATOR") == "QUARTIC") {
+    } else if (options_->get_str("PCI_GENERATOR") == "QUARTIC") {
         generator_ = QuarticGenerator;
         generator_description_ = "Quartic";
-    } else if (options_.get_str("PCI_GENERATOR") == "POWER") {
+    } else if (options_->get_str("PCI_GENERATOR") == "POWER") {
         generator_ = PowerGenerator;
         generator_description_ = "Power";
         time_step_ = 1.0;
-    } else if (options_.get_str("PCI_GENERATOR") == "OLSEN") {
+    } else if (options_->get_str("PCI_GENERATOR") == "OLSEN") {
         generator_ = OlsenGenerator;
         generator_description_ = "Olsen";
         // Make sure that do_shift_ is set to true
         do_shift_ = true;
-    } else if (options_.get_str("PCI_GENERATOR") == "DAVIDSON") {
+    } else if (options_->get_str("PCI_GENERATOR") == "DAVIDSON") {
         generator_ = DavidsonLiuGenerator;
         generator_description_ = "Davidson-Liu";
         // Make sure that do_shift_ is set to true
         do_shift_ = true;
-    } else if (options_.get_str("PCI_GENERATOR") == "EXP-CHEBYSHEV") {
+    } else if (options_->get_str("PCI_GENERATOR") == "EXP-CHEBYSHEV") {
         generator_ = ExpChebyshevGenerator;
         generator_description_ = "Exp-Chebyshev";
         if (chebyshev_order_ <= 0) {
@@ -376,7 +372,7 @@ void ProjectorCI::startup() {
                             chebyshev_order_);
             chebyshev_order_ = 5;
         }
-    } else if (options_.get_str("PCI_GENERATOR") == "CHEBYSHEV") {
+    } else if (options_->get_str("PCI_GENERATOR") == "CHEBYSHEV") {
         generator_ = ChebyshevGenerator;
         generator_description_ = "Chebyshev";
         time_step_ = 1.0;
@@ -386,7 +382,7 @@ void ProjectorCI::startup() {
                             chebyshev_order_);
             chebyshev_order_ = 5;
         }
-    } else if (options_.get_str("PCI_GENERATOR") == "WALL-CHEBYSHEV") {
+    } else if (options_->get_str("PCI_GENERATOR") == "WALL-CHEBYSHEV") {
         generator_ = WallChebyshevGenerator;
         generator_description_ = "Wall-Chebyshev";
         time_step_ = 1.0;
@@ -396,7 +392,7 @@ void ProjectorCI::startup() {
                             chebyshev_order_);
             chebyshev_order_ = 5;
         }
-    } else if (options_.get_str("PCI_GENERATOR") == "LANCZOS") {
+    } else if (options_->get_str("PCI_GENERATOR") == "LANCZOS") {
         generator_ = LanczosGenerator;
         generator_description_ = "Lanczos";
         time_step_ = 1.0;
@@ -406,7 +402,7 @@ void ProjectorCI::startup() {
                             krylov_order_);
             krylov_order_ = 5;
         }
-    } else if (options_.get_str("PCI_GENERATOR") == "DL") {
+    } else if (options_->get_str("PCI_GENERATOR") == "DL") {
         generator_ = DLGenerator;
         generator_description_ = "Davidson-Liu by Tianyuan";
         time_step_ = 1.0;
@@ -427,7 +423,7 @@ void ProjectorCI::print_info() {
         {"Symmetry", wavefunction_symmetry_},
         {"Multiplicity", wavefunction_multiplicity_},
         {"Number of roots", nroot_},
-        {"Root used for properties", options_.get_int("ROOT")},
+        {"Root used for properties", options_->get_int("ROOT")},
         {"Maximum number of iterations", maxiter_},
         {"Energy estimation frequency", energy_estimate_freq_},
         {"Number of threads", num_threads_}};
@@ -893,8 +889,8 @@ double ProjectorCI::compute_energy() {
 
     SparseCISolver sparse_solver(fci_ints_);
     sparse_solver.set_parallel(true);
-    sparse_solver.set_e_convergence(options_.get_double("E_CONVERGENCE"));
-    sparse_solver.set_maxiter_davidson(options_.get_int("DL_MAXITER"));
+    sparse_solver.set_e_convergence(options_->get_double("E_CONVERGENCE"));
+    sparse_solver.set_maxiter_davidson(options_->get_int("DL_MAXITER"));
     sparse_solver.set_spin_project(true);
 
     pqpq_aa_ = new double[nact_ * nact_];
@@ -1251,8 +1247,8 @@ double ProjectorCI::initial_guess(det_vec& dets, std::vector<double>& C) {
 
     SparseCISolver sparse_solver(fci_ints_);
     sparse_solver.set_parallel(true);
-    sparse_solver.set_e_convergence(options_.get_double("E_CONVERGENCE"));
-    sparse_solver.set_maxiter_davidson(options_.get_int("DL_MAXITER"));
+    sparse_solver.set_e_convergence(options_->get_double("E_CONVERGENCE"));
+    sparse_solver.set_maxiter_davidson(options_->get_int("DL_MAXITER"));
     sparse_solver.set_spin_project(true);
 
     psi::SharedMatrix evecs(new psi::Matrix("Eigenvectors", guess_size, nroot_));
@@ -5373,7 +5369,7 @@ std::vector<std::tuple<double, int, int>> ProjectorCI::sym_labeled_orbitals(std:
         int cumidx = 0;
         for (int h = 0; h < nirrep_; ++h) {
             for (int a = 0; a < nactpi_[h]; ++a) {
-                orb_e.push_back(std::make_pair(epsilon_a_->get(h, frzcpi_[h] + a), a + cumidx));
+                orb_e.push_back(std::make_pair(scf_info_->epsilon_a()->get(h, frzcpi_[h] + a), a + cumidx));
             }
             cumidx += nactpi_[h];
         }
@@ -5392,7 +5388,7 @@ std::vector<std::tuple<double, int, int>> ProjectorCI::sym_labeled_orbitals(std:
         int cumidx = 0;
         for (int h = 0; h < nirrep_; ++h) {
             for (size_t a = 0, max = nactpi_[h]; a < max; ++a) {
-                orb_e.push_back(std::make_pair(epsilon_b_->get(h, frzcpi_[h] + a), a + cumidx));
+                orb_e.push_back(std::make_pair(scf_info_->epsilon_b()->get(h, frzcpi_[h] + a), a + cumidx));
             }
             cumidx += nactpi_[h];
         }

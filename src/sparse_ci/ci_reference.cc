@@ -26,12 +26,10 @@
  * @END LICENSE
  */
 
-#include "psi4/libmints/molecule.h"
-#include "psi4/libmints/wavefunction.h"
-#include "psi4/liboptions/liboptions.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
 
 #include "ci_reference.h"
+#include "forte_options.h"
 
 #include <algorithm>
 
@@ -39,7 +37,7 @@ using namespace psi;
 
 namespace forte {
 
-CI_Reference::CI_Reference(std::shared_ptr<SCFInfo> scf_info, psi::Options& options,
+CI_Reference::CI_Reference(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
                            std::shared_ptr<MOSpaceInfo> mo_space_info,
                            std::shared_ptr<FCIIntegrals> fci_ints, int multiplicity,
                            double twice_ms, int symmetry)
@@ -71,12 +69,12 @@ CI_Reference::CI_Reference(std::shared_ptr<SCFInfo> scf_info, psi::Options& opti
     nactpi_ = mo_space_info_->get_dimension("ACTIVE");
 
     // Size of subspace
-    subspace_size_ = options.get_int("ACTIVE_GUESS_SIZE");
+    subspace_size_ = options->get_int("ACTIVE_GUESS_SIZE");
 
     // Reference type
     ref_type_ = "CAS";
-    if (options["ACTIVE_REF_TYPE"].has_changed()) {
-        ref_type_ = options.get_str("ACTIVE_REF_TYPE");
+    if (options->has_changed("ACTIVE_REF_TYPE")) {
+        ref_type_ = options->get_str("ACTIVE_REF_TYPE");
     }
 
     // First determine number of alpha and beta electrons
