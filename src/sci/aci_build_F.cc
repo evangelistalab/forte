@@ -199,7 +199,7 @@ void AdaptiveCI::get_excited_determinants_seq(int nroot, psi::SharedMatrix evecs
     const size_t n_dets = P_space.size();
 
     int nmo = fci_ints_->nmo();
-    double max_mem = options_.get_double("PT2_MAX_MEM");
+    double max_mem = options_->get_double("PT2_MAX_MEM");
 
     size_t guess_size = n_dets * nmo * nmo;
     double nbyte = (1073741824 * max_mem) / (sizeof(double));
@@ -869,8 +869,8 @@ double AdaptiveCI::get_excited_determinants_batch_old(
     const size_t n_dets = P_space.size();
 
     int nmo = fci_ints_->nmo();
-    double max_mem = options_.get_double("ACI_MAX_MEM");
-    double aci_scale = options_.get_double("ACI_SCALE_SIGMA");
+    double max_mem = options_->get_double("ACI_MAX_MEM");
+    double aci_scale = options_->get_double("ACI_SCALE_SIGMA");
 
     size_t guess_size = n_dets * nmo * nmo;
     double guess_mem = guess_size * 400.0e-7; // Est of map size in MB
@@ -895,8 +895,8 @@ double AdaptiveCI::get_excited_determinants_batch_old(
             }
         }
 
-        if (options_["ACI_NBATCH"].has_changed()) {
-            nbin = options_.get_int("ACI_NBATCH");
+        if (options_->has_changed("ACI_NBATCH")) {
+            nbin = options_->get_int("ACI_NBATCH");
             if (thread_id == 0) {
                 outfile->Printf("\n  Overwriting nbin to %d based on user input", nbin);
             }
@@ -993,7 +993,7 @@ det_hash<double> AdaptiveCI::get_bin_F_space_old(int bin, int nbin, psi::SharedM
 
         Determinant new_det(det);
         // Generate alpha excitations
-        for (int h = 0; h < nirrep_; ++h) {
+        for (size_t h = 0; h < nirrep_; ++h) {
 
             // Precompute indices
             const auto& noalpha_h = noalpha[h];
@@ -1032,9 +1032,9 @@ det_hash<double> AdaptiveCI::get_bin_F_space_old(int bin, int nbin, psi::SharedM
                 }
             }
         }
-        for (int p = 0; p < nirrep_; ++p) {
+        for (size_t p = 0; p < nirrep_; ++p) {
             for (int q = p; q < nirrep_; ++q) {
-                for (int r = 0; r < nirrep_; ++r) {
+                for (size_t r = 0; r < nirrep_; ++r) {
                     int sp = p ^ q ^ r;
                     if (sp < r)
                         continue;
@@ -1110,9 +1110,9 @@ det_hash<double> AdaptiveCI::get_bin_F_space_old(int bin, int nbin, psi::SharedM
                 }
             }
         }
-        for (int p = 0; p < nirrep_; ++p) {
-            for (int q = 0; q < nirrep_; ++q) {
-                for (int r = 0; r < nirrep_; ++r) {
+        for (size_t p = 0; p < nirrep_; ++p) {
+            for (size_t q = 0; q < nirrep_; ++q) {
+                for (size_t r = 0; r < nirrep_; ++r) {
                     int sp = p ^ q ^ r;
                     const auto& noalpha_p = noalpha[p];
                     const auto& nobeta_q = nobeta[q];
@@ -1156,8 +1156,8 @@ double AdaptiveCI::get_excited_determinants_batch_vecsort(
     const size_t n_dets = P_space.size();
 
     int nmo = fci_ints_->nmo();
-    double max_mem = options_.get_double("ACI_MAX_MEM");
-    double aci_scale = options_.get_double("ACI_SCALE_SIGMA");
+    double max_mem = options_->get_double("ACI_MAX_MEM");
+    double aci_scale = options_->get_double("ACI_SCALE_SIGMA");
 
     // Guess the total memory needed to store all singles and doubles out of all dets
     //    size_t nsingle_a = nalpha_ * (ncmo_ - nalpha_);
@@ -1181,8 +1181,8 @@ double AdaptiveCI::get_excited_determinants_batch_vecsort(
     int nbin = nruns;
     outfile->Printf("\n  Setting nbin to %d based on estimated memory (%6.3f MB)", nbin, guess_mem);
 
-    if (options_["ACI_NBATCH"].has_changed()) {
-        nbin = options_.get_int("ACI_NBATCH");
+    if (options_->has_changed("ACI_NBATCH")) {
+        nbin = options_->get_int("ACI_NBATCH");
         outfile->Printf("\n  Overwriting nbin to %d based on user input", nbin);
     }
 
@@ -1374,8 +1374,8 @@ AdaptiveCI::get_excited_determinants_batch(psi::SharedMatrix evecs, psi::SharedV
     const size_t n_dets = P_space.size();
 
     int nmo = fci_ints_->nmo();
-    double max_mem = options_.get_double("ACI_MAX_MEM");
-    double aci_scale = options_.get_double("ACI_SCALE_SIGMA");
+    double max_mem = options_->get_double("ACI_MAX_MEM");
+    double aci_scale = options_->get_double("ACI_SCALE_SIGMA");
 
     size_t nocc2 = nalpha_ * nalpha_;
     size_t nvir2 = (nmo - nalpha_) * (nmo - nalpha_);
@@ -1389,8 +1389,8 @@ AdaptiveCI::get_excited_determinants_batch(psi::SharedMatrix evecs, psi::SharedV
     int nbin = nruns;
     outfile->Printf("\n  Setting nbin to %d based on estimated memory (%6.3f MB)", nbin, guess_mem);
 
-    if (options_["ACI_NBATCH"].has_changed()) {
-        nbin = options_.get_int("ACI_NBATCH");
+    if (options_->has_changed("ACI_NBATCH")) {
+        nbin = options_->get_int("ACI_NBATCH");
         outfile->Printf("\n  Overwriting nbin to %d based on user input", nbin);
     }
 
@@ -1519,7 +1519,7 @@ P_space) {
 
             Determinant new_det(det);
             // Generate alpha excitations
-            for (int h = 0; h < nirrep_; ++h) {
+            for (size_t h = 0; h < nirrep_; ++h) {
                 // Precompute indices
                 const auto& noalpha_h = noalpha[h];
                 const auto& nvalpha_h = nvalpha[h];
@@ -1559,11 +1559,11 @@ P_space) {
                     new_det.set_beta_bit(ii, true);
                 }
             }
-            for (int p = 0; p < nirrep_; ++p) {
+            for (size_t p = 0; p < nirrep_; ++p) {
                 const auto& noalpha_p = noalpha[p];
                 for (int q = p; q < nirrep_; ++q) {
                     const auto& noalpha_q = noalpha[q];
-                    for (int r = 0; r < nirrep_; ++r) {
+                    for (size_t r = 0; r < nirrep_; ++r) {
                         int sp = p ^ q ^ r;
                         if (sp < r)
                             continue;
@@ -1651,11 +1651,11 @@ P_space) {
                     }
                 }
             }
-            for (int p = 0; p < nirrep_; ++p) {
+            for (size_t p = 0; p < nirrep_; ++p) {
                 const auto& noalpha_p = noalpha[p];
-                for (int q = 0; q < nirrep_; ++q) {
+                for (size_t q = 0; q < nirrep_; ++q) {
                     const auto& nobeta_q = nobeta[q];
-                    for (int r = 0; r < nirrep_; ++r) {
+                    for (size_t r = 0; r < nirrep_; ++r) {
                         int sp = p ^ q ^ r;
                         const auto& nvalpha_r = nvalpha[r];
                         const auto& nvbeta_s = nvbeta[sp];
@@ -1784,7 +1784,7 @@ det_hash<double> AdaptiveCI::get_bin_F_space(int bin, int nbin, psi::SharedMatri
 
             Determinant new_det(det);
             // Generate alpha excitations
-            for (int h = 0; h < nirrep_; ++h) {
+            for (size_t h = 0; h < nirrep_; ++h) {
                 // Precompute indices
                 const auto& noalpha_h = noalpha[h];
                 const auto& nvalpha_h = nvalpha[h];
@@ -1827,11 +1827,11 @@ det_hash<double> AdaptiveCI::get_bin_F_space(int bin, int nbin, psi::SharedMatri
                     new_det.set_beta_bit(ii, true);
                 }
             }
-            for (int p = 0; p < nirrep_; ++p) {
+            for (size_t p = 0; p < nirrep_; ++p) {
                 const auto& noalpha_p = noalpha[p];
                 for (int q = p; q < nirrep_; ++q) {
                     const auto& noalpha_q = noalpha[q];
-                    for (int r = 0; r < nirrep_; ++r) {
+                    for (size_t r = 0; r < nirrep_; ++r) {
                         int sp = p ^ q ^ r;
                         if (sp < r)
                             continue;
@@ -1923,11 +1923,11 @@ det_hash<double> AdaptiveCI::get_bin_F_space(int bin, int nbin, psi::SharedMatri
                     }
                 }
             }
-            for (int p = 0; p < nirrep_; ++p) {
+            for (size_t p = 0; p < nirrep_; ++p) {
                 const auto& noalpha_p = noalpha[p];
-                for (int q = 0; q < nirrep_; ++q) {
+                for (size_t q = 0; q < nirrep_; ++q) {
                     const auto& nobeta_q = nobeta[q];
-                    for (int r = 0; r < nirrep_; ++r) {
+                    for (size_t r = 0; r < nirrep_; ++r) {
                         int sp = p ^ q ^ r;
                         const auto& nvalpha_r = nvalpha[r];
                         const auto& nvbeta_s = nvbeta[sp];
@@ -2057,7 +2057,7 @@ AdaptiveCI::get_bin_F_space_vecsort(int bin, int nbin, psi::SharedMatrix evecs,
             Determinant new_det(det);
 
             // Generate alpha excitations
-            for (int h = 0; h < nirrep_; ++h) {
+            for (size_t h = 0; h < nirrep_; ++h) {
 
                 // Precompute indices
                 const auto& noalpha_h = noalpha[h];
@@ -2097,11 +2097,11 @@ AdaptiveCI::get_bin_F_space_vecsort(int bin, int nbin, psi::SharedMatrix evecs,
                     new_det.set_beta_bit(ii, true);
                 }
             }
-            for (int p = 0; p < nirrep_; ++p) {
+            for (size_t p = 0; p < nirrep_; ++p) {
                 const auto& noalpha_p = noalpha[p];
                 for (int q = p; q < nirrep_; ++q) {
                     const auto& noalpha_q = noalpha[q];
-                    for (int r = 0; r < nirrep_; ++r) {
+                    for (size_t r = 0; r < nirrep_; ++r) {
                         int sp = p ^ q ^ r;
                         if (sp < r)
                             continue;
@@ -2190,11 +2190,11 @@ AdaptiveCI::get_bin_F_space_vecsort(int bin, int nbin, psi::SharedMatrix evecs,
                 }
             }
 
-            for (int p = 0; p < nirrep_; ++p) {
+            for (size_t p = 0; p < nirrep_; ++p) {
                 const auto& noalpha_p = noalpha[p];
-                for (int q = 0; q < nirrep_; ++q) {
+                for (size_t q = 0; q < nirrep_; ++q) {
                     const auto& nobeta_q = nobeta[q];
-                    for (int r = 0; r < nirrep_; ++r) {
+                    for (size_t r = 0; r < nirrep_; ++r) {
                         int sp = p ^ q ^ r;
                         const auto& nvalpha_r = nvalpha[r];
                         const auto& nvbeta_s = nvbeta[sp];

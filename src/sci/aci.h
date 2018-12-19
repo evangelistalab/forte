@@ -88,8 +88,8 @@ class AdaptiveCI : public ActiveSpaceSolver {
     AdaptiveCI(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
                std::shared_ptr<MOSpaceInfo> mo_space_info);
 
-    AdaptiveCI(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
-               std::shared_ptr<MOSpaceInfo> mo_space_info);
+//    AdaptiveCI(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
+//               std::shared_ptr<MOSpaceInfo> mo_space_info);
     /// Destructor
     ~AdaptiveCI();
 
@@ -105,7 +105,6 @@ class AdaptiveCI : public ActiveSpaceSolver {
     void set_max_rdm(int rdm);
     /// Set the printing level
     void set_quiet(bool quiet) { quiet_mode_ = quiet; }
-
     /// Get the wavefunction
     DeterminantHashVec get_wavefunction();
 
@@ -139,7 +138,7 @@ class AdaptiveCI : public ActiveSpaceSolver {
     /// Some HF info
     std::shared_ptr<SCFInfo> scf_info_;
     /// Forte options
-    ForteOptions options_;
+    std::shared_ptr<ForteOptions> options_;
     /// The molecular integrals required by Explorer
     std::shared_ptr<ForteIntegrals> ints_;
     /// Pointer to FCI integrals
