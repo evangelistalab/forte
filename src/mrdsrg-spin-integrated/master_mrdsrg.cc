@@ -258,9 +258,9 @@ void MASTER_DSRG::build_fock_from_ints(std::shared_ptr<ForteIntegrals> ints, Blo
 
     F.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
         if (spin[0] == AlphaSpin) {
-            value = ints_->get_fock_a(i[0], i[1]);
+            value = ints->get_fock_a(i[0], i[1]);
         } else {
-            value = ints_->get_fock_b(i[0], i[1]);
+            value = ints->get_fock_b(i[0], i[1]);
         }
     });
 }

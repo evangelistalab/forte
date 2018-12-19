@@ -43,6 +43,7 @@ set forte{
    restricted_docc       [2]
    active                [2]
    int_type             conventional
+   job_type              casscf
    cas_type              CAS
    print                  0
    CASSCF_DO_DIIS         true
