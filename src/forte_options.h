@@ -140,7 +140,7 @@ class ForteOptions {
      * @brief Get a string option
      * @param label Option label
      */
-    const std::string& get_str(const std::string& label);
+    const std::string get_str(const std::string& label);
 
     /**
      * @brief If an option is changed
