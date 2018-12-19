@@ -380,6 +380,7 @@ void ForteIntegrals::update_orbitals(std::shared_ptr<psi::Matrix> Ca,
     // 1. Copy orbitals
     Ca_->copy(Ca);
     Cb_->copy(Cb);
+
     // 2. Send a copy to psi::Wavefunction
     wfn_->Ca()->copy(Ca_);
     wfn_->Cb()->copy(Cb_);
