@@ -1998,7 +1998,7 @@ ProjectorCI_Simple::sym_labeled_orbitals(std::string type) {
         int cumidx = 0;
         for (int h = 0; h < nirrep_; ++h) {
             for (size_t a = 0, max = nactpi_[h]; a < max; ++a) {
-                orb_e.push_back(std::make_pair(scf_info_->epsilon_a()->get(h, frzcpi_[h] + a), a + cumidx));
+                orb_e.push_back(std::make_pair(scf_info_->epsilon_b()->get(h, frzcpi_[h] + a), a + cumidx));
             }
             cumidx += nactpi_[h];
         }

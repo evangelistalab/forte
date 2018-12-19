@@ -159,7 +159,7 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
         }
     }
     if (options.get_str("JOB_TYPE") == "PCI") {
-        auto pci = std::make_shared<ProjectorCI>(ref_wfn, options, ints, mo_space_info);
+        auto pci = std::make_shared<ProjectorCI>(std::make_shared<StateInfo>(ref_wfn), std::make_shared<SCFInfo>(ref_wfn), std::make_shared<ForteOptions>(options), ints, mo_space_info);
         for (int n = 0; n < options.get_int("NROOT"); ++n) {
             pci->compute_energy();
         }
