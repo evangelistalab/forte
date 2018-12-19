@@ -55,11 +55,10 @@
 #include "psi4/libdiis/diismanager.h"
 #include "psi4/libmints/factory.h"
 
-
 namespace forte {
 
-CASSCF::CASSCF(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
-               std::shared_ptr<MOSpaceInfo> mo_space_info)
+CASSCF::CASSCF(psi::SharedWavefunction ref_wfn, psi::Options& options,
+               std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
     : Wavefunction(options), options_(options), ints_(ints), mo_space_info_(mo_space_info) {
     shallow_copy(ref_wfn);
     reference_wavefunction_ = ref_wfn;
@@ -72,7 +71,7 @@ void CASSCF::compute_casscf() {
     } else if (na_ == nmo_) {
         outfile->Printf("\n Your about to do an all active CASSCF");
         throw psi::PSIEXCEPTION("The active space is all the MOs.  Orbitals don't "
-                           "matter at this point");
+                                "matter at this point");
     }
 
     int maxiter = options_.get_int("CASSCF_ITERATIONS");
@@ -354,7 +353,8 @@ void CASSCF::cas_ci() {
         set_up_fcimo();
     } else if (options_.get_str("CASSCF_CI_SOLVER") == "ACI") {
         std::shared_ptr<FCIIntegrals> fci_ints = get_ci_integrals();
-        AdaptiveCI aci(std::make_shared<SCFInfo>(reference_wavefunction_), std::make_shared<ForteOptions>(options_), ints_, mo_space_info_);
+        AdaptiveCI aci(std::make_shared<SCFInfo>(reference_wavefunction_),
+                       std::make_shared<ForteOptions>(options_), ints_, mo_space_info_);
         aci.set_fci_ints(fci_ints);
         aci.set_max_rdm(2);
         aci.set_quiet(quiet);
@@ -439,7 +439,8 @@ void CASSCF::cas_ci_final() {
     } else if (options_.get_str("CASSCF_CI_SOLVER") == "CAS") {
         set_up_fcimo();
     } else if (options_.get_str("CASSCF_CI_SOLVER") == "ACI") {
-        AdaptiveCI aci(std::make_shared<SCFInfo>(reference_wavefunction_), std::make_shared<ForteOptions>(options_), ints_, mo_space_info_);
+        AdaptiveCI aci(std::make_shared<SCFInfo>(reference_wavefunction_),
+                       std::make_shared<ForteOptions>(options_), ints_, mo_space_info_);
         aci.set_max_rdm(3);
         aci.set_quiet(quiet);
         aci.compute_energy();
@@ -570,7 +571,7 @@ ambit::Tensor CASSCF::transform_integrals() {
         outfile->Printf("\n To use Out_of_core for scf_type, I need to "
                         "implement integral transform with symmetry");
         throw psi::PSIEXCEPTION("Need to use scf_type direct for CASSCF if you want "
-                           "conventional integrals");
+                                "conventional integrals");
     }
     /// This function will do an integral transformation using the JK builder
     /// This was borrowed from Kevin Hannon's IntegralTransform Plugin
@@ -1021,82 +1022,82 @@ void CASSCF::set_up_sa_fci() {
     //    }
 }
 void CASSCF::set_up_fcimo() {
-    throw PSIEXCEPTION("Using FCI_MO is Disabled by York");
+    // setup FCIIntegrals for FCI_MO
+    std::vector<size_t> rdocc = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
+    std::vector<size_t> active = mo_space_info_->get_corr_abs_mo("ACTIVE");
+    std::shared_ptr<FCIIntegrals> fci_ints = std::make_shared<FCIIntegrals>(ints_, active, rdocc);
 
-//    // setup FCIIntegrals for FCI_MO
-//    std::vector<size_t> rdocc = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
-//    std::vector<size_t> active = mo_space_info_->get_corr_abs_mo("ACTIVE");
-//    std::shared_ptr<FCIIntegrals> fci_ints = std::make_shared<FCIIntegrals>(ints_, active, rdocc);
+    if (!(options_.get_bool("RESTRICTED_DOCC_JK"))) {
+        fci_ints->set_active_integrals_and_restricted_docc();
+    } else {
+        auto na_array = mo_space_info_->get_corr_abs_mo("ACTIVE");
 
-//    if (!(options_.get_bool("RESTRICTED_DOCC_JK"))) {
-//        fci_ints->set_active_integrals_and_restricted_docc();
-//    } else {
-//        auto na_array = mo_space_info_->get_corr_abs_mo("ACTIVE");
+        ambit::Tensor active_aa =
+            ambit::Tensor::build(ambit::CoreTensor, "ActiveIntegralsAA", {na_, na_, na_, na_});
+        ambit::Tensor active_ab =
+            ambit::Tensor::build(ambit::CoreTensor, "ActiveIntegralsAB", {na_, na_, na_, na_});
+        ambit::Tensor active_bb =
+            ambit::Tensor::build(ambit::CoreTensor, "ActiveIntegralsBB", {na_, na_, na_, na_});
+        const std::vector<double>& tei_paaa_data = tei_paaa_.data();
 
-//        ambit::Tensor active_aa =
-//            ambit::Tensor::build(ambit::CoreTensor, "ActiveIntegralsAA", {na_, na_, na_, na_});
-//        ambit::Tensor active_ab =
-//            ambit::Tensor::build(ambit::CoreTensor, "ActiveIntegralsAB", {na_, na_, na_, na_});
-//        ambit::Tensor active_bb =
-//            ambit::Tensor::build(ambit::CoreTensor, "ActiveIntegralsBB", {na_, na_, na_, na_});
-//        const std::vector<double>& tei_paaa_data = tei_paaa_.data();
+        active_ab.iterate([&](const std::vector<size_t>& i, double& value) {
+            value = tei_paaa_data[na_array[i[0]] * na_ * na_ * na_ + i[1] * na_ * na_ + i[2] * na_ +
+                                  i[3]];
+        });
 
-//        active_ab.iterate([&](const std::vector<size_t>& i, double& value) {
-//            value = tei_paaa_data[na_array[i[0]] * na_ * na_ * na_ + i[1] * na_ * na_ + i[2] * na_ +
-//                                  i[3]];
-//        });
+        active_aa.copy(active_ab);
+        active_bb.copy(active_ab);
+        active_aa("u,v,x,y") -= active_ab("u, v, y, x");
+        active_bb.copy(active_aa);
 
-//        active_aa.copy(active_ab);
-//        active_bb.copy(active_ab);
-//        active_aa("u,v,x,y") -= active_ab("u, v, y, x");
-//        active_bb.copy(active_aa);
+        fci_ints->set_active_integrals(active_aa, active_ab, active_bb);
+        if (casscf_debug_print_) {
+            outfile->Printf("\n\n tei_active_aa: %8.8f tei_active_ab: %8.8f", active_aa.norm(2),
+                            active_ab.norm(2));
+        }
 
-//        fci_ints->set_active_integrals(active_aa, active_ab, active_bb);
-//        if (casscf_debug_print_) {
-//            outfile->Printf("\n\n tei_active_aa: %8.8f tei_active_ab: %8.8f", active_aa.norm(2),
-//                            active_ab.norm(2));
-//        }
+        std::vector<std::vector<double>> oei_vector;
+        if ((nrdocc_ + nfrozen_) > 0) {
+            oei_vector = compute_restricted_docc_operator();
+            fci_ints->set_restricted_one_body_operator(oei_vector[0], oei_vector[1]);
+            fci_ints->set_scalar_energy(scalar_energy_);
+        } else {
+            std::vector<double> oei_a(na_ * na_);
+            std::vector<double> oei_b(na_ * na_);
 
-//        std::vector<std::vector<double>> oei_vector;
-//        if ((nrdocc_ + nfrozen_) > 0) {
-//            oei_vector = compute_restricted_docc_operator();
-//            fci_ints->set_restricted_one_body_operator(oei_vector[0], oei_vector[1]);
-//            fci_ints->set_scalar_energy(scalar_energy_);
-//        } else {
-//            std::vector<double> oei_a(na_ * na_);
-//            std::vector<double> oei_b(na_ * na_);
+            std::vector<std::vector<double>> oei_vector;
+            if ((nrdocc_ + nfrozen_) > 0) {
+                oei_vector = compute_restricted_docc_operator();
+                fci_ints->set_restricted_one_body_operator(oei_vector[0], oei_vector[1]);
+                fci_ints->set_scalar_energy(scalar_energy_);
+            } else {
+                std::vector<double> oei_a(na_ * na_);
+                std::vector<double> oei_b(na_ * na_);
 
-//        std::vector<std::vector<double>> oei_vector;
-//        if ((nrdocc_ + nfrozen_) > 0) {
-//            oei_vector = compute_restricted_docc_operator();
-//            fci_ints->set_restricted_one_body_operator(oei_vector[0], oei_vector[1]);
-//            fci_ints->set_scalar_energy(scalar_energy_);
-//        } else {
-//            std::vector<double> oei_a(na_ * na_);
-//            std::vector<double> oei_b(na_ * na_);
+                for (size_t p = 0; p < na_; ++p) {
+                    size_t pp = active[p];
+                    for (size_t q = 0; q < na_; ++q) {
+                        size_t qq = active[q];
+                        size_t idx = na_ * p + q;
+                        oei_a[idx] = ints_->oei_a(pp, qq);
+                        oei_b[idx] = ints_->oei_b(pp, qq);
+                    }
+                }
+                oei_vector.push_back(oei_a);
+                oei_vector.push_back(oei_b);
+                scalar_energy_ = 0.00;
+                fci_ints->set_restricted_one_body_operator(oei_vector[0], oei_vector[1]);
+                fci_ints->set_scalar_energy(scalar_energy_);
+            }
+        }
 
-//            for (size_t p = 0; p < na_; ++p) {
-//                size_t pp = active[p];
-//                for (size_t q = 0; q < na_; ++q) {
-//                    size_t qq = active[q];
-//                    size_t idx = na_ * p + q;
-//                    oei_a[idx] = ints_->oei_a(pp, qq);
-//                    oei_b[idx] = ints_->oei_b(pp, qq);
-//                }
-//            }
-//            oei_vector.push_back(oei_a);
-//            oei_vector.push_back(oei_b);
-//            scalar_energy_ = 0.00;
-//            fci_ints->set_restricted_one_body_operator(oei_vector[0], oei_vector[1]);
-//            fci_ints->set_scalar_energy(scalar_energy_);
-//        }
-//    }
-
-//    FCI_MO cas(reference_wavefunction_, options_, ints_, mo_space_info_, fci_ints);
-//    cas.set_quite_mode(print_ > 0 ? false : true);
-//    cas.solver_compute_energy();
-//    cas_ref_ = cas.reference(2);
-//    E_casscf_ = cas_ref_.get_Eref();
+        FCI_MO cas(std::make_shared<SCFInfo>(reference_wavefunction_),
+                   std::make_shared<ForteOptions>(options_), ints_, mo_space_info_, fci_ints);
+        cas.set_quite_mode(print_ > 0 ? false : true);
+        cas.solver_compute_energy();
+        cas_ref_ = cas.reference(2);
+        E_casscf_ = cas_ref_.get_Eref();
+    }
 }
 void CASSCF::write_orbitals_molden() {
     psi::SharedVector occ_vector(new psi::Vector(nirrep_, nmopi_));
@@ -1137,4 +1138,3 @@ std::pair<ambit::Tensor, std::vector<double>> CASSCF::CI_Integrals() {
 Reference CASSCF::casscf_reference() { return cas_ref_; }
 
 } // namespace forte
-
