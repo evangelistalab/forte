@@ -247,20 +247,6 @@ void CASSCF::compute_casscf() {
     outfile->Printf("\n @E(CASSCF) = %18.12f \n", E_casscf_);
     psi::Process::environment.globals["CURRENT ENERGY"] = E_casscf_;
     psi::Process::environment.globals["CASSCF_ENERGY"] = E_casscf_;
-
-    //    reference_wavefunction_->Ca()->print();
-    local_timer retrans_ints;
-    //    ints_->retransform_integrals();
-    if (print_ > 0) {
-        outfile->Printf("\n Overall retranformation of integrals takes %6.4f s.\n",
-                        retrans_ints.get());
-    }
-
-    // if (options_.get_bool("SEMI_CANONICAL")) {
-    //     ints_->retransform_integrals();
-    //     SemiCanonical semi(reference_wavefunction_, ints_, mo_space_info_);
-    //     semi.semicanonicalize(cas_ref_, 0);
-    // }
 }
 void CASSCF::startup() {
     print_method_banner({"Complete Active Space Self Consistent Field", "Kevin Hannon"});
@@ -367,7 +353,6 @@ void CASSCF::cas_ci() {
     } else if (options_.get_str("CASSCF_CI_SOLVER") == "CAS") {
         set_up_fcimo();
     } else if (options_.get_str("CASSCF_CI_SOLVER") == "ACI") {
-        // ints_->retransform_integrals();
         std::shared_ptr<FCIIntegrals> fci_ints = get_ci_integrals();
         AdaptiveCI aci(std::make_shared<SCFInfo>(reference_wavefunction_), std::make_shared<ForteOptions>(options_), ints_, mo_space_info_);
         aci.set_fci_ints(fci_ints);
@@ -454,10 +439,7 @@ void CASSCF::cas_ci_final() {
     } else if (options_.get_str("CASSCF_CI_SOLVER") == "CAS") {
         set_up_fcimo();
     } else if (options_.get_str("CASSCF_CI_SOLVER") == "ACI") {
-        // ints_->retransform_integrals();
-        //   std::shared_ptr<FCIIntegrals> fci_ints = get_ci_integrals();
         AdaptiveCI aci(std::make_shared<SCFInfo>(reference_wavefunction_), std::make_shared<ForteOptions>(options_), ints_, mo_space_info_);
-        //   aci.set_fci_ints(fci_ints);
         aci.set_max_rdm(3);
         aci.set_quiet(quiet);
         aci.compute_energy();
@@ -486,7 +468,6 @@ void CASSCF::cas_ci_final() {
 double CASSCF::cas_check(Reference cas_ref) {
     ambit::Tensor gamma1 = ambit::Tensor::build(ambit::CoreTensor, "Gamma1", {na_, na_});
     ambit::Tensor gamma2 = ambit::Tensor::build(ambit::CoreTensor, "Gamma2", {na_, na_, na_, na_});
-    // ints_->retransform_integrals();
     std::shared_ptr<FCIIntegrals> fci_ints =
         std::make_shared<FCIIntegrals>(ints_, mo_space_info_->get_corr_abs_mo("ACTIVE"),
                                        mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
@@ -804,7 +785,6 @@ std::shared_ptr<FCIIntegrals> CASSCF::get_ci_integrals() {
     std::vector<size_t> active = mo_space_info_->get_corr_abs_mo("ACTIVE");
     std::shared_ptr<FCIIntegrals> fci_ints = std::make_shared<FCIIntegrals>(ints_, active, rdocc);
     if (!(options_.get_bool("RESTRICTED_DOCC_JK"))) {
-     //   ints_->retransform_integrals();
         fci_ints->set_active_integrals_and_restricted_docc();
     } else {
         auto na_array = mo_space_info_->get_corr_abs_mo("ACTIVE");
@@ -1047,7 +1027,6 @@ void CASSCF::set_up_fcimo() {
     std::shared_ptr<FCIIntegrals> fci_ints = std::make_shared<FCIIntegrals>(ints_, active, rdocc);
 
     if (!(options_.get_bool("RESTRICTED_DOCC_JK"))) {
-       // ints_->retransform_integrals();
         fci_ints->set_active_integrals_and_restricted_docc();
     } else {
         auto na_array = mo_space_info_->get_corr_abs_mo("ACTIVE");
