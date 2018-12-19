@@ -30,6 +30,7 @@
 #define _active_space_solver_h_
 
 #include "base_classes/state_info.h"
+#include "base_classes/scf_info.h"
 
 namespace forte {
 
@@ -68,7 +69,7 @@ class ActiveSpaceSolver {
 };
 
 std::shared_ptr<ActiveSpaceSolver> make_active_space_solver(
-    const std::string& type, StateInfo state, std::shared_ptr<ForteOptions> options,
+    const std::string& type, StateInfo state, std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
     std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
 } // namespace forte

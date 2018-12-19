@@ -42,6 +42,7 @@
 #include "fci/fci.h"
 #include "fci/fci_solver.h"
 #include "base_classes/state_info.h"
+#include "base_classes/scf_info.h"
 
 namespace py = pybind11;
 using namespace pybind11::literals;
@@ -93,6 +94,10 @@ PYBIND11_MODULE(forte, m) {
     py::class_<StateInfo, std::shared_ptr<StateInfo>>(m, "StateInfo")
         .def(py::init<int, int, int, int, int>(), "na"_a, "nb"_a, "multiplicity"_a, "twice_ms"_a,
              "irrep"_a)
+        .def(py::init<psi::SharedWavefunction>());
+
+    // export SCFInfo
+    py::class_<SCFInfo, std::shared_ptr<SCFInfo>>(m, "SCFInfo")
         .def(py::init<psi::SharedWavefunction>());
 
     py::class_<ActiveSpaceSolver, std::shared_ptr<ActiveSpaceSolver>>(m, "ActiveSpaceSolver")
