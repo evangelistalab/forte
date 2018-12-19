@@ -52,10 +52,10 @@ using namespace psi;
 
 namespace forte {
 
-DSRG_MRPT2::DSRG_MRPT2(Reference reference, psi::SharedWavefunction ref_wfn, psi::Options& options,
-                       std::shared_ptr<ForteIntegrals> ints,
+DSRG_MRPT2::DSRG_MRPT2(Reference reference, std::shared_ptr<SCFInfo> scf_info,
+                       std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
                        std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : MASTER_DSRG(reference, ref_wfn, options, ints, mo_space_info) {
+    : MASTER_DSRG(reference, scf_info, options, ints, mo_space_info) {
 
     print_method_banner({"MR-DSRG Second-Order Perturbation Theory",
                          "Chenyang Li, Kevin Hannon, Francesco Evangelista"});
@@ -71,8 +71,8 @@ DSRG_MRPT2::~DSRG_MRPT2() { cleanup(); }
 
 void DSRG_MRPT2::startup() {
     // options for internal
-    internal_amp_ = options_.get_str("INTERNAL_AMP") != "NONE";
-    internal_amp_select_ = options_.get_str("INTERNAL_AMP_SELECT");
+    internal_amp_ = foptions_->get_str("INTERNAL_AMP") != "NONE";
+    internal_amp_select_ = foptions_->get_str("INTERNAL_AMP_SELECT");
 
     // prepare integrals
     V_ = BTF_->build(tensor_type_, "V", spin_cases({"pphh"}));
@@ -105,7 +105,7 @@ void DSRG_MRPT2::startup() {
         Hbar2_["uVxY"] = V_["uVxY"];
         Hbar2_["UVXY"] = V_["UVXY"];
 
-        if (options_.get_bool("FORM_HBAR3")) {
+        if (foptions_->get_bool("FORM_HBAR3")) {
             Hbar3_ = BTF_->build(tensor_type_, "3-body Hbar", spin_cases({"aaaaaa"}));
         }
     }
@@ -278,11 +278,11 @@ void DSRG_MRPT2::print_options_summary() {
     }
 
     if (internal_amp_) {
-        calculation_info_string.push_back({"internal_amp", options_.get_str("INTERNAL_AMP")});
+        calculation_info_string.push_back({"internal_amp", foptions_->get_str("INTERNAL_AMP")});
         calculation_info_string.push_back({"internal_amp_select", internal_amp_select_});
     }
 
-    if (options_.get_bool("FORM_HBAR3")) {
+    if (foptions_->get_bool("FORM_HBAR3")) {
         calculation_info_string.push_back({"form Hbar3", "TRUE"});
     } else {
         calculation_info_string.push_back({"form Hbar3", "FALSE"});
@@ -300,7 +300,7 @@ void DSRG_MRPT2::print_options_summary() {
         outfile->Printf("\n    %-40s %15s", str_dim.first.c_str(), str_dim.second.c_str());
     }
 
-    if (options_.get_bool("MEMORY_SUMMARY")) {
+    if (foptions_->get_bool("MEMORY_SUMMARY")) {
         BTF_->print_memory_info();
     }
 }
@@ -360,7 +360,7 @@ double DSRG_MRPT2::compute_energy() {
     compute_t1();
 
     // Compute effective integrals
-    if (options_.get_bool("DSRGPT")) {
+    if (foptions_->get_bool("DSRGPT")) {
         renormalize_V();
         renormalize_F();
     } else {
@@ -410,7 +410,7 @@ double DSRG_MRPT2::compute_energy() {
     EVT2 += Etemp;
     energy.push_back({"<[V, T2]> C_4 (C_2)^2 PH", Etemp});
 
-    if (options_.get_str("THREEPDC") != "ZERO") {
+    if (foptions_->get_str("THREEPDC") != "ZERO") {
         Etemp = E_VT2_6();
     } else {
         Etemp = 0.0;
@@ -482,7 +482,7 @@ double DSRG_MRPT2::compute_energy() {
         Hbar2_["IJKL"] += C2["IJKL"];
         Hbar2_["IJKL"] += C2["KLIJ"];
 
-        if (options_.get_bool("FORM_HBAR3")) {
+        if (foptions_->get_bool("FORM_HBAR3")) {
             BlockedTensor C3 = BTF_->build(tensor_type_, "C3", spin_cases({"aaaaaa"}));
             H2_T2_C3aaaaaa(V_, T2_, 0.5, C3);
 
@@ -512,7 +512,7 @@ double DSRG_MRPT2::compute_energy() {
             }
 
             if (do_dm_dirs_[i] || multi_state_) {
-                if (options_.get_bool("FORM_MBAR3")) {
+                if (foptions_->get_bool("FORM_MBAR3")) {
                     compute_dm1d_pt2(dm_[i], Mbar0_[i], Mbar1_[i], Mbar2_[i], Mbar3_[i]);
                 } else {
                     compute_dm1d_pt2(dm_[i], Mbar0_[i], Mbar1_[i], Mbar2_[i]);
@@ -579,7 +579,7 @@ void DSRG_MRPT2::compute_t2() {
     }
 
     // internal amplitudes (AA->AA)
-    std::string internal_amp = options_.get_str("INTERNAL_AMP");
+    std::string internal_amp = foptions_->get_str("INTERNAL_AMP");
     if (internal_amp.find("DOUBLES") != string::npos) {
         size_t nactv1 = mo_space_info_->size("ACTIVE");
         size_t nactv2 = nactv1 * nactv1;
@@ -688,7 +688,7 @@ void DSRG_MRPT2::compute_t2() {
 
     // This is used to print the tensor out for further analysis.
     // Only used as a test for some future tensor factorizations and other
-    bool print_denom = options_.get_bool("PRINT_DENOM2");
+    bool print_denom = foptions_->get_bool("PRINT_DENOM2");
 
     if (print_denom) {
         std::ofstream myfile;
@@ -788,7 +788,7 @@ void DSRG_MRPT2::compute_t1() {
     }
 
     // internal amplitudes (A->A)
-    std::string internal_amp = options_.get_str("INTERNAL_AMP");
+    std::string internal_amp = foptions_->get_str("INTERNAL_AMP");
     if (internal_amp.find("SINGLES") != std::string::npos) {
         size_t nactv = mo_space_info_->size("ACTIVE");
 
@@ -1710,7 +1710,7 @@ double DSRG_MRPT2::compute_energy_relaxed() {
     auto fci_ints = compute_Heff_actv();
 
     // diagonalize Hbar depending on CAS_TYPE
-    if (options_.get_str("CAS_TYPE") == "CAS") {
+    if (foptions_->get_str("CAS_TYPE") == "CAS") {
         FCI_MO fci_mo(reference_wavefunction_, options_, ints_, mo_space_info_, fci_ints);
         fci_mo.set_localize_actv(false);
         Erelax = fci_mo.compute_energy();
@@ -1720,7 +1720,7 @@ double DSRG_MRPT2::compute_energy_relaxed() {
             for (int z = 0; z < 3; ++z) {
                 if (do_dm_dirs_[z]) {
                     std::string name = "Dipole " + dm_dirs_[z] + " Integrals";
-                    if (options_.get_bool("FORM_MBAR3")) {
+                    if (foptions_->get_bool("FORM_MBAR3")) {
                         deGNO_ints(name, Mbar0_[z], Mbar1_[z], Mbar2_[z], Mbar3_[z]);
                         rotate_ints_semi_to_origin(name, Mbar1_[z], Mbar2_[z], Mbar3_[z]);
                     } else {
@@ -1731,13 +1731,13 @@ double DSRG_MRPT2::compute_energy_relaxed() {
             }
 
             // compute permanent dipoles
-            if (options_.get_bool("FORM_MBAR3")) {
+            if (foptions_->get_bool("FORM_MBAR3")) {
                 dm_relax = fci_mo.compute_ref_relaxed_dm(Mbar0_, Mbar1_, Mbar2_, Mbar3_);
             } else {
                 dm_relax = fci_mo.compute_ref_relaxed_dm(Mbar0_, Mbar1_, Mbar2_);
             }
         }
-    } else if (options_.get_str("CAS_TYPE") == "ACI") {
+    } else if (foptions_->get_str("CAS_TYPE") == "ACI") {
 
         AdaptiveCI aci(reference_wavefunction_, options_, ints_, mo_space_info_);
         aci.set_fci_ints(fci_ints);
@@ -1980,7 +1980,7 @@ void DSRG_MRPT2::transfer_integrals() {
 
     double scalar = scalar0 + scalar1 + scalar2;
 
-    bool form_hbar3 = options_.get_bool("FORM_HBAR3");
+    bool form_hbar3 = foptions_->get_bool("FORM_HBAR3");
     double scalar3 = 0.0;
     if (form_hbar3) {
         scalar3 -= (1.0 / 36) * Hbar3_.block("aaaaaa")("xyzuvw") * reference_.L3aaa()("xyzuvw");
@@ -2141,8 +2141,7 @@ void DSRG_MRPT2::transfer_integrals() {
 
     // test if de-normal-ordering is correct
     print_h2("Test De-Normal-Ordered Hamiltonian");
-    double Etest = scalar_include_fc + molecule_->nuclear_repulsion_energy(
-                                           reference_wavefunction_->get_dipole_field_strength());
+    double Etest = scalar_include_fc + Enuc_;
 
     double Etest1 = 0.0;
     if (!form_hbar3) {
@@ -2191,7 +2190,7 @@ void DSRG_MRPT2::transfer_integrals() {
     outfile->Printf("\n    %-30s = %22.15f", "Total Energy (after)", Etest);
     outfile->Printf("\n    %-30s = %22.15f", "Total Energy (before)", Eref_ + Hbar0_);
 
-    if (std::fabs(Etest - Eref_ - Hbar0_) > 100.0 * options_.get_double("E_CONVERGENCE")) {
+    if (std::fabs(Etest - Eref_ - Hbar0_) > 100.0 * foptions_->get_double("E_CONVERGENCE")) {
         throw psi::PSIEXCEPTION("De-normal-odering failed.");
     }
 }

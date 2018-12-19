@@ -45,9 +45,10 @@ using namespace psi;
 
 namespace forte {
 
-MRDSRG::MRDSRG(Reference reference, psi::SharedWavefunction ref_wfn, psi::Options& options,
-               std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : MASTER_DSRG(reference, ref_wfn, options, ints, mo_space_info) {
+MRDSRG::MRDSRG(Reference reference, std::shared_ptr<SCFInfo> scf_info,
+               std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
+               std::shared_ptr<MOSpaceInfo> mo_space_info)
+    : MASTER_DSRG(reference, scf_info, options, ints, mo_space_info) {
 
     print_method_banner({"Multireference Driven Similarity Renormalization Group", "Chenyang Li"});
     outfile->Printf("\n  Additional contributions by: Tianyuan Zhang");
@@ -62,7 +63,7 @@ MRDSRG::~MRDSRG() { cleanup(); }
 void MRDSRG::cleanup() {}
 
 void MRDSRG::read_options() {
-    dsrg_trans_type_ = options_.get_str("DSRG_TRANS_TYPE");
+    dsrg_trans_type_ = foptions_->get_str("DSRG_TRANS_TYPE");
     if (dsrg_trans_type_ != "UNITARY") {
         std::stringstream ss;
         ss << "DSRG transformation type (" << dsrg_trans_type_
@@ -70,7 +71,7 @@ void MRDSRG::read_options() {
         throw psi::PSIEXCEPTION(ss.str());
     }
 
-    corrlv_string_ = options_.get_str("CORR_LEVEL");
+    corrlv_string_ = foptions_->get_str("CORR_LEVEL");
     std::vector<std::string> available{"PT2", "PT3", "LDSRG2", "LDSRG2_QC", "LSRG2", "SRG_PT2"};
     if (std::find(available.begin(), available.end(), corrlv_string_) == available.end()) {
         outfile->Printf("\n  Warning: CORR_LEVEL option %s is not implemented.",
@@ -82,8 +83,8 @@ void MRDSRG::read_options() {
                                             "Change options in input.dat"));
     }
 
-    sequential_Hbar_ = options_.get_bool("DSRG_HBAR_SEQ");
-    nivo_ = options_.get_bool("DSRG_NIVO");
+    sequential_Hbar_ = foptions_->get_bool("DSRG_HBAR_SEQ");
+    nivo_ = foptions_->get_bool("DSRG_NIVO");
 }
 
 void MRDSRG::startup() {
@@ -127,8 +128,8 @@ void MRDSRG::print_options() {
     // fill in information
     std::vector<std::pair<std::string, int>> calculation_info{
         {"ntamp", ntamp_},
-        {"diis_min_vecs", options_.get_int("DIIS_MIN_VECS")},
-        {"diis_max_vecs", options_.get_int("DIIS_MAX_VECS")}};
+        {"diis_min_vecs", foptions_->get_int("DIIS_MIN_VECS")},
+        {"diis_max_vecs", foptions_->get_int("DIIS_MAX_VECS")}};
 
     std::vector<std::pair<std::string, double>> calculation_info_double{
         {"flow parameter", s_},
@@ -139,10 +140,10 @@ void MRDSRG::print_options() {
         {"corr_level", corrlv_string_},
         {"int_type", ints_type_},
         {"source operator", source_},
-        {"smart_dsrg_s", options_.get_str("SMART_DSRG_S")},
+        {"smart_dsrg_s", foptions_->get_str("SMART_DSRG_S")},
         {"reference relaxation", relax_ref_},
         {"dsrg transformation type", dsrg_trans_type_},
-        {"core virtual source type", options_.get_str("CCVV_SOURCE")}};
+        {"core virtual source type", foptions_->get_str("CCVV_SOURCE")}};
 
     auto true_false_string = [](bool x) {
         if (x) {
@@ -362,7 +363,7 @@ double MRDSRG::compute_energy() {
 double MRDSRG::compute_energy_relaxed() {
     // reference relaxation
     double Edsrg = 0.0, Erelax = 0.0;
-    std::string cas_type = options_.get_str("CAS_TYPE");
+    std::string cas_type = foptions_->get_str("CAS_TYPE");
 
     if (relax_ref_ == "ONCE") {
         // compute energy with fixed ref.
@@ -378,7 +379,7 @@ double MRDSRG::compute_energy_relaxed() {
         } else if (cas_type == "ACI") {
             AdaptiveCI aci(reference_wavefunction_, options_, ints_, mo_space_info_);
             aci.set_fci_ints(fci_ints);
-            if (options_["ACI_RELAX_SIGMA"].has_changed()) {
+            if (foptions_->has_changed("ACI_RELAX_SIGMA")) {
                 aci.update_sigma();
             }
             Erelax = aci.compute_energy();
@@ -400,12 +401,12 @@ double MRDSRG::compute_energy_relaxed() {
 
     } else if (relax_ref_ == "ITERATE" || relax_ref_ == "TWICE") {
 
-        int max_rdm_level = options_.get_str("THREEPDC") == "ZERO" ? 2 : 3;
+        int max_rdm_level = foptions_->get_str("THREEPDC") == "ZERO" ? 2 : 3;
         SemiCanonical semiorb(reference_wavefunction_, ints_, mo_space_info_, true);
 
         // iteration variables
-        int cycle = 0, maxiter = options_.get_int("MAXITER_RELAX_REF");
-        double e_conv = options_.get_double("RELAX_E_CONVERGENCE");
+        int cycle = 0, maxiter = foptions_->get_int("MAXITER_RELAX_REF");
+        double e_conv = foptions_->get_double("RELAX_E_CONVERGENCE");
         std::vector<double> Edsrg_vec, Erelax_vec;
         std::vector<double> Edelta_dsrg_vec, Edelta_relax_vec;
         bool converged = false, failed = false;
@@ -443,7 +444,7 @@ double MRDSRG::compute_energy_relaxed() {
             } else if (cas_type == "ACI") {
                 AdaptiveCI aci(reference_wavefunction_, options_, ints_, mo_space_info_);
                 aci.set_fci_ints(fci_ints);
-                if (options_["ACI_RELAX_SIGMA"].has_changed()) {
+                if (foptions_->has_changed("ACI_RELAX_SIGMA")) {
                     aci.update_sigma();
                 }
                 Erelax = aci.compute_energy();
@@ -465,7 +466,7 @@ double MRDSRG::compute_energy_relaxed() {
             Edelta_relax_vec.push_back(Edelta_relax);
 
             // semicanonicalize orbitals
-            if (options_.get_bool("SEMI_CANONICAL")) {
+            if (foptions_->get_bool("SEMI_CANONICAL")) {
                 print_h2("Semicanonicalize Orbitals");
 
                 // use semicanonicalize class
@@ -580,12 +581,12 @@ double MRDSRG::compute_energy_sa() {
     int nentry = eigens_.size();
     std::vector<std::vector<std::vector<double>>> Edsrg_vec;
     SemiCanonical semiorb(reference_wavefunction_, ints_, mo_space_info_, true);
-    int max_rdm_level = options_.get_str("THREEPDC") == "ZERO" ? 2 : 3;
+    int max_rdm_level = foptions_->get_str("THREEPDC") == "ZERO" ? 2 : 3;
 
     // iteration variables
     double Edsrg_sa = 0.0, Erelax_sa = 0.0;
-    int cycle = 0, maxiter = options_.get_int("MAXITER_RELAX_REF");
-    double e_conv = options_.get_double("RELAX_E_CONVERGENCE");
+    int cycle = 0, maxiter = foptions_->get_int("MAXITER_RELAX_REF");
+    double e_conv = foptions_->get_double("RELAX_E_CONVERGENCE");
     std::vector<double> Edsrg_sa_vec, Erelax_sa_vec;
     std::vector<double> Edelta_dsrg_sa_vec, Edelta_relax_sa_vec;
     bool converged = false, failed = false;
@@ -618,7 +619,7 @@ double MRDSRG::compute_energy_sa() {
         // copy energy
         std::vector<std::vector<double>> Evec(nentry, std::vector<double>());
         for (int n = 0; n < nentry; ++n) {
-            int nstates = options_["AVG_STATE"][n][2].to_integer();
+            int nstates = (foptions_->psi_options())["AVG_STATE"][n][2].to_integer();
 
             for (int i = 0; i < nstates; ++i) {
                 Evec[n].push_back(fci_mo->eigens()[n][i].second);
@@ -636,7 +637,7 @@ double MRDSRG::compute_energy_sa() {
         semiorb.transform_reference(Ua, Ub, reference_, max_rdm_level);
 
         // semicanonicalize orbitals
-        if (options_.get_bool("SEMI_CANONICAL")) {
+        if (foptions_->get_bool("SEMI_CANONICAL")) {
             print_h2("Semicanonicalize Orbitals");
 
             // use semicanonicalize class
@@ -723,7 +724,7 @@ double MRDSRG::compute_energy_sa() {
     // get character table
     CharacterTable ct = psi::Process::environment.molecule()->point_group()->char_table();
     std::vector<std::string> irrep_symbol;
-    for (int h = 0; h < this->nirrep(); ++h) {
+    for (int h = 0, nirrep = mo_space_info_->nirrep(); h < nirrep; ++h) {
         irrep_symbol.push_back(std::string(ct.gamma(h).symbol()));
     }
 
@@ -733,9 +734,9 @@ double MRDSRG::compute_energy_sa() {
     std::string dash1(41, '-');
     outfile->Printf("\n    %s", dash1.c_str());
     for (int n = 0; n < nentry; ++n) {
-        int irrep = options_["AVG_STATE"][n][0].to_integer();
-        int multi = options_["AVG_STATE"][n][1].to_integer();
-        int nstates = options_["AVG_STATE"][n][2].to_integer();
+        int irrep = (foptions_->psi_options())["AVG_STATE"][n][0].to_integer();
+        int multi = (foptions_->psi_options())["AVG_STATE"][n][1].to_integer();
+        int nstates = (foptions_->psi_options())["AVG_STATE"][n][2].to_integer();
 
         for (int i = 0; i < nstates; ++i) {
             outfile->Printf("\n     %3d     %3s    %2d   %20.12f", multi,
@@ -750,9 +751,9 @@ double MRDSRG::compute_energy_sa() {
     outfile->Printf("\n    %s", dash1.c_str());
     auto& Esa = Edsrg_vec[Edsrg_vec.size() - 1];
     for (int n = 0, counter = 0; n < nentry; ++n) {
-        int irrep = options_["AVG_STATE"][n][0].to_integer();
-        int multi = options_["AVG_STATE"][n][1].to_integer();
-        int nstates = options_["AVG_STATE"][n][2].to_integer();
+        int irrep = (foptions_->psi_options())["AVG_STATE"][n][0].to_integer();
+        int multi = (foptions_->psi_options())["AVG_STATE"][n][1].to_integer();
+        int nstates = (foptions_->psi_options())["AVG_STATE"][n][2].to_integer();
 
         for (int i = 0; i < nstates; ++i) {
             outfile->Printf("\n     %3d     %3s    %2d   %20.12f*", multi,
@@ -976,7 +977,7 @@ double MRDSRG::compute_energy_sa() {
 //    outfile->Printf("\n    %-30s = %22.15f", "Total Energy (after)", Etest);
 //    outfile->Printf("\n    %-30s = %22.15f", "Total Energy (before)", Eref_ + Hbar0_);
 
-//    if (std::fabs(Etest - Eref_ - Hbar0_) > 100.0 * options_.get_double("E_CONVERGENCE")) {
+//    if (std::fabs(Etest - Eref_ - Hbar0_) > 100.0 * foptions_->get_double("E_CONVERGENCE")) {
 //        throw psi::PSIEXCEPTION("De-normal-odering failed.");
 //    } else {
 //    //    ints_->update_integrals(false); <- this should not be here
@@ -1094,7 +1095,8 @@ std::vector<std::vector<double>> MRDSRG::diagonalize_Fock_diagblocks(BlockedTens
     return {eigenvalues_a, eigenvalues_b};
 }
 
-ambit::Tensor MRDSRG::separate_tensor(ambit::Tensor& tens, const psi::Dimension& irrep, const int& h) {
+ambit::Tensor MRDSRG::separate_tensor(ambit::Tensor& tens, const psi::Dimension& irrep,
+                                      const int& h) {
     // test tens and irrep
     int tens_dim = static_cast<int>(tens.dim(0));
     if (tens_dim != irrep.sum() || tens_dim != static_cast<int>(tens.dim(1))) {
@@ -1200,7 +1202,7 @@ void MRDSRG::print_cumulant_summary() {
     outfile->Printf("\n    %s", dash.c_str());
 
     //    check_density(Lambda2_, "2-body");
-    //    if (options_.get_str("THREEPDC") != "ZERO") {
+    //    if (foptions_->get_str("THREEPDC") != "ZERO") {
     //        check_density(Lambda3_, "3-body");
     //    }
 }
@@ -1255,4 +1257,4 @@ void MRDSRG::check_density(BlockedTensor& D, const std::string& name) {
     output += indent + sep;
     outfile->Printf("%s", output.c_str());
 }
-}
+} // namespace forte

@@ -111,15 +111,12 @@ class ForteIntegrals {
 
   public:
 
-    // ==> Parts of psi's wave function that we want <== 
-
-
     // ==> Class Interface <==
 
     // Return Ca
-    std::shared_ptr<psi::Matrix> Ca() const { return Ca_; }; 
+    std::shared_ptr<psi::Matrix> Ca() const { return Ca_; }
     // Return Cb
-    std::shared_ptr<psi::Matrix> Cb() const { return Cb_; }; 
+    std::shared_ptr<psi::Matrix> Cb() const { return Cb_; }
     // Return nuclear repulsion energy 
     double nuclear_repulsion_energy() const { return nucrep_; }
 

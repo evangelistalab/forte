@@ -66,8 +66,9 @@ class DSRG_MRPT2 : public MASTER_DSRG {
      * @param ints A pointer to an allocated integral object
      * @param mo_space_info A pointer to the MOSpaceInfo object
      */
-    DSRG_MRPT2(Reference reference, psi::SharedWavefunction ref_wfn, psi::Options& options,
-               std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
+    DSRG_MRPT2(Reference reference, std::shared_ptr<SCFInfo> scf_info,
+               std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
+               std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Destructor
     virtual ~DSRG_MRPT2();
@@ -302,7 +303,7 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     std::vector<std::vector<double>> compute_energy_xms();
     /// XMS rotation for the reference states
     psi::SharedMatrix xms_rotation(std::shared_ptr<FCIIntegrals> fci_ints,
-                              std::vector<Determinant>& p_space, psi::SharedMatrix civecs);
+                                   std::vector<Determinant>& p_space, psi::SharedMatrix civecs);
 
     /// Build effective singles: T_{ia} -= T_{iu,av} * Gamma_{vu}
     void build_T1eff_deGNO();
@@ -313,8 +314,8 @@ class DSRG_MRPT2 : public MASTER_DSRG {
                            const int& root1, const int& root2);
     /// Compute denisty matrices and puts in Gamma1_, Lambda2_, and Lambda3_
     void compute_densities(std::shared_ptr<FCIIntegrals> fci_ints,
-                           std::vector<Determinant>& p_space, psi::SharedMatrix evecs, const int& root1,
-                           const int& root2);
+                           std::vector<Determinant>& p_space, psi::SharedMatrix evecs,
+                           const int& root1, const int& root2);
 
     /// Compute MS coupling <M|H|N>
     double compute_ms_1st_coupling(const std::string& name);
@@ -328,6 +329,6 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     void rotate_3rdm(ambit::Tensor& L3aaa, ambit::Tensor& L3aab, ambit::Tensor& L3abb,
                      ambit::Tensor& L3bbb);
 };
-}
+} // namespace forte
 
 #endif // _dsrg_mrpt2_h_

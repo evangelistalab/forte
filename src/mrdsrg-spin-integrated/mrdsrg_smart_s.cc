@@ -38,7 +38,7 @@ namespace forte {
 
 double MRDSRG::make_s_smart() {
     double Edelta = 0.0, dsrg_s = 0.0;
-    switch (smartsmap[options_.get_str("SMART_DSRG_S")]) {
+    switch (smartsmap[foptions_->get_str("SMART_DSRG_S")]) {
     case SMART_S::MIN_DELTA1: {
         Edelta = smart_s_min_delta1();
         break;

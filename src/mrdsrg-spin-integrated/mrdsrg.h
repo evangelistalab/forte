@@ -62,8 +62,9 @@ class MRDSRG : public MASTER_DSRG {
      * @param ints A pointer to an allocated integral object
      * @param mo_space_info The MOSpaceInfo object
      */
-    MRDSRG(Reference reference, psi::SharedWavefunction ref_wfn, psi::Options& options,
-           std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
+    MRDSRG(Reference reference, std::shared_ptr<SCFInfo> scf_info,
+           std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
+           std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Destructor
     virtual ~MRDSRG();
@@ -271,38 +272,45 @@ class MRDSRG : public MASTER_DSRG {
     /// Norm of off-diagonal Hbar1
     double Hbar1od_norm(const std::vector<std::string>& blocks);
 
-//    /// Compute zero-body term of commutator [H1, T1]
-//    void H1_T1_C0(BlockedTensor& H1, BlockedTensor& T1, const double& alpha, double& C0);
-//    /// Compute zero-body term of commutator [H1, T2]
-//    void H1_T2_C0(BlockedTensor& H1, BlockedTensor& T2, const double& alpha, double& C0);
-//    /// Compute zero-body term of commutator [H2, T1]
-//    void H2_T1_C0(BlockedTensor& H2, BlockedTensor& T1, const double& alpha, double& C0);
-//    /// Compute zero-body term of commutator [H2, T2]
-//    void H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, double& C0);
+    //    /// Compute zero-body term of commutator [H1, T1]
+    //    void H1_T1_C0(BlockedTensor& H1, BlockedTensor& T1, const double& alpha, double& C0);
+    //    /// Compute zero-body term of commutator [H1, T2]
+    //    void H1_T2_C0(BlockedTensor& H1, BlockedTensor& T2, const double& alpha, double& C0);
+    //    /// Compute zero-body term of commutator [H2, T1]
+    //    void H2_T1_C0(BlockedTensor& H2, BlockedTensor& T1, const double& alpha, double& C0);
+    //    /// Compute zero-body term of commutator [H2, T2]
+    //    void H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, double& C0);
     /// Compute zero-body term of commutator [H2, T1]
     void H2_T1_C0_DF(BlockedTensor& B, BlockedTensor& T1, const double& alpha, double& C0);
     /// Compute zero-body term of commutator [H2, T2] with density fitting
     void H2_T2_C0_DF(BlockedTensor& B, BlockedTensor& T2, const double& alpha, double& C0);
 
-//    /// Compute one-body term of commutator [H1, T1]
-//    void H1_T1_C1(BlockedTensor& H1, BlockedTensor& T1, const double& alpha, BlockedTensor& C1);
-//    /// Compute one-body term of commutator [H1, T2]
-//    void H1_T2_C1(BlockedTensor& H1, BlockedTensor& T2, const double& alpha, BlockedTensor& C1);
-//    /// Compute one-body term of commutator [H2, T1]
-//    void H2_T1_C1(BlockedTensor& H2, BlockedTensor& T1, const double& alpha, BlockedTensor& C1);
-//    /// Compute one-body term of commutator [H2, T2]
-//    void H2_T2_C1(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, BlockedTensor& C1);
+    //    /// Compute one-body term of commutator [H1, T1]
+    //    void H1_T1_C1(BlockedTensor& H1, BlockedTensor& T1, const double& alpha, BlockedTensor&
+    //    C1);
+    //    /// Compute one-body term of commutator [H1, T2]
+    //    void H1_T2_C1(BlockedTensor& H1, BlockedTensor& T2, const double& alpha, BlockedTensor&
+    //    C1);
+    //    /// Compute one-body term of commutator [H2, T1]
+    //    void H2_T1_C1(BlockedTensor& H2, BlockedTensor& T1, const double& alpha, BlockedTensor&
+    //    C1);
+    //    /// Compute one-body term of commutator [H2, T2]
+    //    void H2_T2_C1(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, BlockedTensor&
+    //    C1);
     /// Compute one-body term of commutator [H2, T1]
     void H2_T1_C1_DF(BlockedTensor& B, BlockedTensor& T1, const double& alpha, BlockedTensor& C1);
     /// Compute one-body term of commutator [H2, T2] with density fitting
     void H2_T2_C1_DF(BlockedTensor& B, BlockedTensor& T2, const double& alpha, BlockedTensor& C1);
 
-//    /// Compute two-body term of commutator [H2, T1]
-//    void H2_T1_C2(BlockedTensor& H2, BlockedTensor& T1, const double& alpha, BlockedTensor& C2);
-//    /// Compute two-body term of commutator [H1, T2]
-//    void H1_T2_C2(BlockedTensor& H1, BlockedTensor& T2, const double& alpha, BlockedTensor& C2);
-//    /// Compute two-body term of commutator [H2, T2]
-//    void H2_T2_C2(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, BlockedTensor& C2);
+    //    /// Compute two-body term of commutator [H2, T1]
+    //    void H2_T1_C2(BlockedTensor& H2, BlockedTensor& T1, const double& alpha, BlockedTensor&
+    //    C2);
+    //    /// Compute two-body term of commutator [H1, T2]
+    //    void H1_T2_C2(BlockedTensor& H1, BlockedTensor& T2, const double& alpha, BlockedTensor&
+    //    C2);
+    //    /// Compute two-body term of commutator [H2, T2]
+    //    void H2_T2_C2(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, BlockedTensor&
+    //    C2);
     /// Compute two-body term of commutator [H2, T1]
     void H2_T1_C2_DF(BlockedTensor& B, BlockedTensor& T1, const double& alpha, BlockedTensor& C2);
     /// Compute two-body term of commutator [H2, T2] with density fitting
@@ -442,6 +450,6 @@ class MRSRG_Print {
     MRDSRG& mrdsrg_obj_;
     std::vector<double> energies_;
 };
-}
+} // namespace forte
 
 #endif // _mrdsrg_h_

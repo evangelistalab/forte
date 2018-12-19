@@ -60,7 +60,6 @@
 using namespace psi;
 using namespace ambit;
 
-
 namespace forte {
 
 #ifdef _OPENMP
@@ -100,8 +99,9 @@ void set_INT_options(ForteOptions& foptions) {
 ForteIntegrals::ForteIntegrals(psi::Options& options, std::shared_ptr<psi::Wavefunction> ref_wfn,
                                IntegralSpinRestriction restricted,
                                std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : options_(options), wfn_(ref_wfn), restricted_(restricted), frozen_core_energy_(0.0),
-      scalar_(0.0), mo_space_info_(mo_space_info), Ca_(wfn_->Ca()->clone()), Cb_(wfn_->Cb()->clone()) {
+    : options_(options), wfn_(ref_wfn), restricted_(restricted), Ca_(wfn_->Ca()->clone()),
+      Cb_(wfn_->Cb()->clone()), frozen_core_energy_(0.0), scalar_(0.0),
+      mo_space_info_(mo_space_info) {
     startup();
     allocate();
     transform_one_electron_integrals();
@@ -119,7 +119,8 @@ void ForteIntegrals::startup() {
         exit(1);
     }
 
-    nucrep_ = psi::Process::environment.molecule()->nuclear_repulsion_energy(wfn_->get_dipole_field_strength()); 
+    nucrep_ = psi::Process::environment.molecule()->nuclear_repulsion_energy(
+        wfn_->get_dipole_field_strength());
 
     nirrep_ = wfn_->nirrep();
     nso_ = wfn_->nso();
@@ -288,8 +289,9 @@ void ForteIntegrals::compute_frozen_one_body_operator() {
                 JK_core = JK::build_JK(wfn_->basisset(), wfn_->get_basisset("DF_BASIS_MP2"),
                                        options_, "MEM_DF");
             } else {
-                throw psi::PSIEXCEPTION("Trying to compute the frozen one-body operator with MEM_DF but "
-                                   "using a non-DF integral type");
+                throw psi::PSIEXCEPTION(
+                    "Trying to compute the frozen one-body operator with MEM_DF but "
+                    "using a non-DF integral type");
             }
         } else {
             JK_core = JK::build_JK(wfn_->basisset(), psi::BasisSet::zero_ao_basis_set(), options_);
@@ -523,7 +525,7 @@ void ForteIntegrals::build_AOdipole_ints() {
 }
 
 std::vector<psi::SharedMatrix> ForteIntegrals::compute_MOdipole_ints(const bool& alpha,
-                                                                const bool& resort) {
+                                                                     const bool& resort) {
     if (alpha) {
         return MOdipole_ints_helper(wfn_->Ca_subset("AO"), wfn_->epsilon_a(), resort);
     } else {
@@ -531,8 +533,9 @@ std::vector<psi::SharedMatrix> ForteIntegrals::compute_MOdipole_ints(const bool&
     }
 }
 
-std::vector<psi::SharedMatrix>
-ForteIntegrals::MOdipole_ints_helper(psi::SharedMatrix Cao, psi::SharedVector epsilon, const bool& resort) {
+std::vector<psi::SharedMatrix> ForteIntegrals::MOdipole_ints_helper(psi::SharedMatrix Cao,
+                                                                    psi::SharedVector epsilon,
+                                                                    const bool& resort) {
     std::vector<psi::SharedMatrix> MOdipole_ints;
     std::vector<std::string> names{"X", "Y", "Z"};
     for (int i = 0; i < 3; ++i) {
@@ -566,7 +569,8 @@ ForteIntegrals::MOdipole_ints_helper(psi::SharedMatrix Cao, psi::SharedVector ep
         }
 
         for (int i = 0; i < 3; ++i) {
-            psi::SharedMatrix modipole(new psi::Matrix("MO Dipole " + names[i], (int)nmo_, (int)nmo_));
+            psi::SharedMatrix modipole(
+                new psi::Matrix("MO Dipole " + names[i], (int)nmo_, (int)nmo_));
             for (int p = 0; p < (int)nmo_; ++p) {
                 int np = indices[p];
                 for (int q = 0; q < (int)nmo_; ++q) {
@@ -581,4 +585,3 @@ ForteIntegrals::MOdipole_ints_helper(psi::SharedMatrix Cao, psi::SharedVector ep
     return MOdipole_ints;
 }
 } // namespace forte
-

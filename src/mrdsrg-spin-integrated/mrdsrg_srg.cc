@@ -167,19 +167,19 @@ double MRDSRG::compute_energy_lsrg2() {
     outfile->Printf("\n\n  ==> Computing MR-LSRG(2) Energy <==\n");
     outfile->Printf("\n    Reference:");
     outfile->Printf("\n      J. Chem. Phys. 2016 (in preparation)\n");
-    if (options_.get_str("THREEPDC") == "ZERO") {
+    if (foptions_->get_str("THREEPDC") == "ZERO") {
         outfile->Printf("\n    Skip Lambda3 contributions in [O2, T2].");
     }
 
     double start_time = 0.0;
-    double end_time = options_.get_double("DSRG_S");
+    double end_time = foptions_->get_double("DSRG_S");
     if (end_time > 1000.0) {
         end_time = 1000.0;
         outfile->Printf("\n    Set max s to 1000.");
     }
 
-    double initial_step = options_.get_double("SRG_DT");
-    std::string srg_odeint = options_.get_str("SRG_ODEINT");
+    double initial_step = foptions_->get_double("SRG_DT");
+    std::string srg_odeint = foptions_->get_str("SRG_ODEINT");
     outfile->Printf("\n    Max s:             %10.6f", end_time);
     outfile->Printf("\n    ODE algorithm:     %10s", srg_odeint.c_str());
     outfile->Printf("\n    Initial time step: %10.6f", initial_step);
@@ -220,8 +220,8 @@ double MRDSRG::compute_energy_lsrg2() {
         x.push_back(value);
     });
 
-    double absolute_error = options_.get_double("SRG_ODEINT_ABSERR");
-    double relative_error = options_.get_double("SRG_ODEINT_RELERR");
+    double absolute_error = foptions_->get_double("SRG_ODEINT_ABSERR");
+    double relative_error = foptions_->get_double("SRG_ODEINT_RELERR");
     srg_time_ = 0.0;
     MRSRG_ODEInt mrsrg_flow_computer(*this);
     MRSRG_Print mrsrg_printer(*this);
@@ -378,19 +378,19 @@ double MRDSRG::compute_energy_srgpt2() {
     outfile->Printf("\n\n  ==> Computing SRG-MRPT2 Energy <==\n");
     outfile->Printf("\n    Reference:");
     outfile->Printf("\n      J. Chem. Phys. 2016 (in preparation)\n");
-    if (options_.get_str("THREEPDC") == "ZERO") {
+    if (foptions_->get_str("THREEPDC") == "ZERO") {
         outfile->Printf("\n    Skip Lambda3 contributions in [O2, T2].");
     }
 
     double start_time = 0.0;
-    double end_time = options_.get_double("DSRG_S");
+    double end_time = foptions_->get_double("DSRG_S");
     if (end_time > 1000.0) {
         end_time = 1000.0;
         outfile->Printf("\n    Set max s to 1000.");
     }
 
-    double initial_step = options_.get_double("SRG_DT");
-    std::string srg_odeint = options_.get_str("SRG_ODEINT");
+    double initial_step = foptions_->get_double("SRG_DT");
+    std::string srg_odeint = foptions_->get_str("SRG_ODEINT");
     outfile->Printf("\n    Max s:             %10.6f", end_time);
     outfile->Printf("\n    ODE algorithm:     %10s", srg_odeint.c_str());
     outfile->Printf("\n    Initial time step: %10.6f", initial_step);
@@ -409,8 +409,9 @@ double MRDSRG::compute_energy_srgpt2() {
     outfile->Printf("\n%s", title.c_str());
 
     // some options
-    std::string Hzero = options_.get_str("H0TH");
-    bool relax_ref = options_.get_str("RELAX_REF") != "NONE" || options_["AVG_STATE"].size() != 0;
+    std::string Hzero = foptions_->get_str("H0TH");
+    bool relax_ref = foptions_->get_str("RELAX_REF") != "NONE" ||
+                     (foptions_->psi_options())["AVG_STATE"].size() != 0;
 
     // initialize tensors
     BlockedTensor::set_expert_mode(true);
@@ -472,8 +473,8 @@ double MRDSRG::compute_energy_srgpt2() {
         });
     }
 
-    double absolute_error = options_.get_double("SRG_ODEINT_ABSERR");
-    double relative_error = options_.get_double("SRG_ODEINT_RELERR");
+    double absolute_error = foptions_->get_double("SRG_ODEINT_ABSERR");
+    double relative_error = foptions_->get_double("SRG_ODEINT_RELERR");
     srg_time_ = 0.0;
     SRGPT2_ODEInt mrsrg_flow_computer(*this, Hzero, relax_ref);
     MRSRG_Print mrsrg_printer(*this);
@@ -529,4 +530,4 @@ double MRDSRG::compute_energy_srgpt2() {
 
     return Hbar0_;
 }
-}
+} // namespace forte

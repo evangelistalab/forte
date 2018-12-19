@@ -76,10 +76,11 @@ bool THREE_DSRG_MRPT2::have_omp_ = true;
 bool THREE_DSRG_MRPT2::have_omp_ = false;
 #endif
 
-THREE_DSRG_MRPT2::THREE_DSRG_MRPT2(Reference reference, psi::SharedWavefunction ref_wfn,
-                                   psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
+THREE_DSRG_MRPT2::THREE_DSRG_MRPT2(Reference reference, std::shared_ptr<SCFInfo> scf_info,
+                                   std::shared_ptr<ForteOptions> options,
+                                   std::shared_ptr<ForteIntegrals> ints,
                                    std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : MASTER_DSRG(reference, ref_wfn, options, ints, mo_space_info) {
+    : MASTER_DSRG(reference, scf_info, options, ints, mo_space_info) {
 
     num_threads_ = omp_get_max_threads();
     /// Get processor number
@@ -110,7 +111,7 @@ THREE_DSRG_MRPT2::THREE_DSRG_MRPT2(Reference reference, psi::SharedWavefunction 
     outfile->Printf("\n      (pr-)DSRG-MRPT2:   J. Chem. Phys. 2017, 146, 124132.");
     outfile->Printf("\n");
 
-    if (options_.get_bool("MEMORY_SUMMARY")) {
+    if (foptions_->get_bool("MEMORY_SUMMARY")) {
         BTF_->print_memory_info();
     }
 
@@ -135,15 +136,15 @@ void THREE_DSRG_MRPT2::startup() {
     // GA_Sync();
     // printf("\n P%d integral_type", my_proc);
 
-    ref_type_ = options_.get_str("REFERENCE");
-    detail_time_ = options_.get_bool("THREE_MRPT2_TIMINGS");
+    ref_type_ = foptions_->get_str("REFERENCE");
+    detail_time_ = foptions_->get_bool("THREE_MRPT2_TIMINGS");
 
     ncmopi_ = mo_space_info_->get_dimension("CORRELATED");
     ncmo_ = mo_space_info_->size("CORRELATED");
 
     // include internal amplitudes or not
-    internal_amp_ = options_.get_str("INTERNAL_AMP") != "NONE";
-    internal_amp_select_ = options_.get_str("INTERNAL_AMP_SELECT");
+    internal_amp_ = foptions_->get_str("INTERNAL_AMP") != "NONE";
+    internal_amp_select_ = foptions_->get_str("INTERNAL_AMP_SELECT");
 
     rdoccpi_ = mo_space_info_->get_dimension("RESTRICTED_DOCC");
     actvpi_ = mo_space_info_->get_dimension("ACTIVE");
@@ -284,7 +285,7 @@ void THREE_DSRG_MRPT2::startup() {
             Hbar1_["uv"] = F_["uv"];
             Hbar1_["UV"] = F_["UV"];
 
-            if (options_.get_bool("FORM_HBAR3")) {
+            if (foptions_->get_bool("FORM_HBAR3")) {
                 Hbar3_ = BTF_->build(tensor_type_, "3-body Hbar", spin_cases({"aaaaaa"}));
             }
         }
@@ -298,14 +299,14 @@ void THREE_DSRG_MRPT2::print_options_summary() {
     std::vector<std::pair<std::string, double>> calculation_info_double{
         {"Flow parameter", s_},
         {"Taylor expansion threshold", std::pow(10.0, -double(taylor_threshold_))},
-        {"Cholesky tolerance", options_.get_double("CHOLESKY_TOLERANCE")}};
+        {"Cholesky tolerance", foptions_->get_double("CHOLESKY_TOLERANCE")}};
 
     std::vector<std::pair<std::string, std::string>> calculation_info_string{
         {"Psi4 ref_type", ref_type_},
         {"Integral type", ints_type_},
         {"Source operator", source_},
-        {"CCVV algorithm", options_.get_str("CCVV_ALGORITHM")},
-        {"CCVV source", options_.get_str("CCVV_SOURCE")},
+        {"CCVV algorithm", foptions_->get_str("CCVV_ALGORITHM")},
+        {"CCVV source", foptions_->get_str("CCVV_SOURCE")},
         {"Reference relaxation", relax_ref_}};
 
     if (multi_state_) {
@@ -316,11 +317,11 @@ void THREE_DSRG_MRPT2::print_options_summary() {
     }
 
     if (internal_amp_) {
-        calculation_info_string.push_back({"Internal_amp", options_.get_str("INTERNAL_AMP")});
+        calculation_info_string.push_back({"Internal_amp", foptions_->get_str("INTERNAL_AMP")});
         calculation_info_string.push_back({"Internal_amp_select", internal_amp_select_});
     }
 
-    if (options_.get_bool("FORM_HBAR3")) {
+    if (foptions_->get_bool("FORM_HBAR3")) {
         calculation_info_string.push_back({"form Hbar3", "TRUE"});
     } else {
         calculation_info_string.push_back({"form Hbar3", "FALSE"});
@@ -464,7 +465,7 @@ double THREE_DSRG_MRPT2::compute_energy() {
     }
 
     if (my_proc == 0) {
-        if (options_.get_bool("PRINT_DENOM2")) {
+        if (foptions_->get_bool("PRINT_DENOM2")) {
             std::ofstream myfile;
             myfile.open("DENOM.txt");
             ambit::BlockedTensor Delta2 =
@@ -566,7 +567,7 @@ void THREE_DSRG_MRPT2::compute_t2() {
         });
 
     // internal amplitudes (AA->AA)
-    std::string internal_amp = options_.get_str("INTERNAL_AMP");
+    std::string internal_amp = foptions_->get_str("INTERNAL_AMP");
     if (internal_amp.find("DOUBLES") != string::npos) {
         size_t nactv1 = mo_space_info_->size("ACTIVE");
         size_t nactv2 = nactv1 * nactv1;
@@ -712,7 +713,7 @@ THREE_DSRG_MRPT2::compute_T2_minimal(const std::vector<std::string>& t2_spaces) 
         outfile->Printf("\n T2 iteration takes %8.4f s", t2_iterate.get());
 
     // internal amplitudes (AA->AA)
-    std::string internal_amp = options_.get_str("INTERNAL_AMP");
+    std::string internal_amp = foptions_->get_str("INTERNAL_AMP");
 
     for (const std::string& block : {"aaaa", "aAaA", "AAAA"}) {
         if (std::find(t2_spaces.begin(), t2_spaces.end(), block) != t2_spaces.end()) {
@@ -844,25 +845,19 @@ ambit::BlockedTensor THREE_DSRG_MRPT2::compute_V_minimal(const std::vector<std::
 
     if (renormalize) {
         local_timer RenormV;
-        Vmin.iterate(
-            [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
-                if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)) {
-                    value = (value +
-                             value *
-                                 dsrg_source_->compute_renormalized(Fa_[i[0]] + Fa_[i[1]] -
-                                                                    Fa_[i[2]] - Fa_[i[3]]));
-                } else if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin)) {
-                    value = (value +
-                             value *
-                                 dsrg_source_->compute_renormalized(Fa_[i[0]] + Fb_[i[1]] -
-                                                                    Fa_[i[2]] - Fb_[i[3]]));
-                } else if ((spin[0] == BetaSpin) and (spin[1] == BetaSpin)) {
-                    value = (value +
-                             value *
-                                 dsrg_source_->compute_renormalized(Fb_[i[0]] + Fb_[i[1]] -
-                                                                    Fb_[i[2]] - Fb_[i[3]]));
-                }
-            });
+        Vmin.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin,
+                         double& value) {
+            if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)) {
+                value = (value + value * dsrg_source_->compute_renormalized(Fa_[i[0]] + Fa_[i[1]] -
+                                                                            Fa_[i[2]] - Fa_[i[3]]));
+            } else if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin)) {
+                value = (value + value * dsrg_source_->compute_renormalized(Fa_[i[0]] + Fb_[i[1]] -
+                                                                            Fa_[i[2]] - Fb_[i[3]]));
+            } else if ((spin[0] == BetaSpin) and (spin[1] == BetaSpin)) {
+                value = (value + value * dsrg_source_->compute_renormalized(Fb_[i[0]] + Fb_[i[1]] -
+                                                                            Fb_[i[2]] - Fb_[i[3]]));
+            }
+        });
         if (detail_time_) {
             outfile->Printf("\n  RenormalizeV takes %8.6f s.", RenormV.get());
         }
@@ -964,8 +959,8 @@ void THREE_DSRG_MRPT2::compute_t1() {
     T1_["IA"] = N["IA"] * RDelta1_["IA"];
 
     // internal amplitudes (A->A)
-    std::string internal_amp = options_.get_str("INTERNAL_AMP");
-    std::string internal_amp_select = options_.get_str("INTERNAL_AMP_SELECT");
+    std::string internal_amp = foptions_->get_str("INTERNAL_AMP");
+    std::string internal_amp_select = foptions_->get_str("INTERNAL_AMP_SELECT");
     if (internal_amp.find("SINGLES") != std::string::npos) {
         size_t nactv = mo_space_info_->size("ACTIVE");
 
@@ -1025,17 +1020,14 @@ void THREE_DSRG_MRPT2::renormalize_V() {
 
     V_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
         if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)) {
-            value *=
-                1.0 +
-                dsrg_source_->compute_renormalized(Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]]);
+            value *= 1.0 + dsrg_source_->compute_renormalized(Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] -
+                                                              Fa_[i[3]]);
         } else if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin)) {
-            value *=
-                1.0 +
-                dsrg_source_->compute_renormalized(Fa_[i[0]] + Fb_[i[1]] - Fa_[i[2]] - Fb_[i[3]]);
+            value *= 1.0 + dsrg_source_->compute_renormalized(Fa_[i[0]] + Fb_[i[1]] - Fa_[i[2]] -
+                                                              Fb_[i[3]]);
         } else if ((spin[0] == BetaSpin) and (spin[1] == BetaSpin)) {
-            value *=
-                1.0 +
-                dsrg_source_->compute_renormalized(Fb_[i[0]] + Fb_[i[1]] - Fb_[i[2]] - Fb_[i[3]]);
+            value *= 1.0 + dsrg_source_->compute_renormalized(Fb_[i[0]] + Fb_[i[1]] - Fb_[i[2]] -
+                                                              Fb_[i[3]]);
         }
     });
 
@@ -1280,7 +1272,7 @@ double THREE_DSRG_MRPT2::E_VT2_2() {
 
     // Calculates all but ccvv, cCvV, and CCVV energies
     double Eccvv = 0.0;
-    std::string ccvv_algorithm = options_.get_str("ccvv_algorithm");
+    std::string ccvv_algorithm = foptions_->get_str("ccvv_algorithm");
     local_timer ccvv_timer;
     if (my_proc == 0) {
         outfile->Printf("\n    %-40s ...", "Computing <[V, T2]> (C_2)^4 ccvv");
@@ -1331,11 +1323,11 @@ double THREE_DSRG_MRPT2::E_VT2_2() {
     } else {
         outfile->Printf("\n Specify a correct algorithm string");
         throw psi::PSIEXCEPTION("Specify either CORE FLY_LOOP FLY_AMBIT BATCH_CORE "
-                           "BATCH_VIRTUAL BATCH_CORE_MPI BATCH_VIRTUAL_MPI or "
-                           "other algorihm");
+                                "BATCH_VIRTUAL BATCH_CORE_MPI BATCH_VIRTUAL_MPI or "
+                                "other algorihm");
     }
 
-    if (options_.get_bool("AO_DSRG_MRPT2")) {
+    if (foptions_->get_bool("AO_DSRG_MRPT2")) {
         double Eccvv_ao = E_VT2_2_AO_Slow();
         Eccvv = Eccvv_ao;
         outfile->Printf("\n  Eccvv_ao: %8.10f", Eccvv_ao);
@@ -1547,8 +1539,8 @@ double THREE_DSRG_MRPT2::E_VT2_6() {
     outfile->Printf("\n    %-40s  ...", "Computing [V, T2] λ3");
     double E = 0.0;
 
-    if (options_.get_str("THREEPDC") != "ZERO") {
-        if (options_.get_str("THREEPDC_ALGORITHM") == "CORE") {
+    if (foptions_->get_str("THREEPDC") != "ZERO") {
+        if (foptions_->get_str("THREEPDC_ALGORITHM") == "CORE") {
 
             /* Note: internal amplitudes are included already
                      because we use complex indices "i" and "a" */
@@ -1589,7 +1581,7 @@ double THREE_DSRG_MRPT2::E_VT2_6() {
 
             E += 0.50 * temp.block("aAAaAA")("uVWxYZ") * reference_.L3abb()("xYZuVW");
 
-        } else if (options_.get_str("THREEPDC_ALGORITHM") == "BATCH") {
+        } else if (foptions_->get_str("THREEPDC_ALGORITHM") == "BATCH") {
 
             outfile->Printf("\n  Temporarily disabled by York.");
 
@@ -1597,7 +1589,7 @@ double THREE_DSRG_MRPT2::E_VT2_6() {
              * 3-cumulant files: handled by reference codes (FCI, CAS)
              * 3-cumulant files: cirdm code should NOT return full spin cases
              * temp tensor should also be written to files
-            **/
+             **/
 
             //            BlockedTensor Lambda3 = BTF_->build(tensor_type_, "Lambda3_",
             //            spin_cases({"aaaaaa"}));
@@ -1777,28 +1769,22 @@ double THREE_DSRG_MRPT2::E_VT2_2_fly_openmp() {
                     vmnefbeta = vmnefbetaC - vmnefbetaE;
                     vmnefmixed = vmnefmixedC;
 
-                    t2alpha = vmnefalpha *
-                              dsrg_source_->compute_renormalized_denominator(Fa_[m] + Fa_[n] -
-                                                                             Fa_[e] - Fa_[f]);
-                    t2beta = vmnefbeta *
-                             dsrg_source_->compute_renormalized_denominator(Fb_[m] + Fb_[n] -
-                                                                            Fb_[e] - Fb_[f]);
-                    t2mixed = vmnefmixed *
-                              dsrg_source_->compute_renormalized_denominator(Fa_[m] + Fb_[n] -
-                                                                             Fa_[e] - Fb_[f]);
+                    t2alpha = vmnefalpha * dsrg_source_->compute_renormalized_denominator(
+                                               Fa_[m] + Fa_[n] - Fa_[e] - Fa_[f]);
+                    t2beta = vmnefbeta * dsrg_source_->compute_renormalized_denominator(
+                                             Fb_[m] + Fb_[n] - Fb_[e] - Fb_[f]);
+                    t2mixed = vmnefmixed * dsrg_source_->compute_renormalized_denominator(
+                                               Fa_[m] + Fb_[n] - Fa_[e] - Fb_[f]);
 
                     vmnefalphaR = vmnefalpha;
                     vmnefbetaR = vmnefbeta;
                     vmnefmixedR = vmnefmixed;
-                    vmnefalphaR +=
-                        vmnefalpha *
-                        dsrg_source_->compute_renormalized(Fa_[m] + Fa_[n] - Fa_[e] - Fa_[f]);
-                    vmnefbetaR +=
-                        vmnefbeta *
-                        dsrg_source_->compute_renormalized(Fb_[m] + Fb_[n] - Fb_[e] - Fb_[f]);
-                    vmnefmixedR +=
-                        vmnefmixed *
-                        dsrg_source_->compute_renormalized(Fa_[m] + Fb_[n] - Fa_[e] - Fb_[f]);
+                    vmnefalphaR += vmnefalpha * dsrg_source_->compute_renormalized(Fa_[m] + Fa_[n] -
+                                                                                   Fa_[e] - Fa_[f]);
+                    vmnefbetaR += vmnefbeta * dsrg_source_->compute_renormalized(Fb_[m] + Fb_[n] -
+                                                                                 Fb_[e] - Fb_[f]);
+                    vmnefmixedR += vmnefmixed * dsrg_source_->compute_renormalized(Fa_[m] + Fb_[n] -
+                                                                                   Fa_[e] - Fb_[f]);
 
                     Eflyalpha += 0.25 * vmnefalphaR * t2alpha;
                     Eflybeta += 0.25 * vmnefbetaR * t2beta;
@@ -1863,7 +1849,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_ambit() {
             BefJKVec.push_back(ambit::Tensor::build(tensor_type_, "BefJK", {nvirtual_, nvirtual_}));
             RDVec.push_back(ambit::Tensor::build(tensor_type_, "RDVec", {nvirtual_, nvirtual_}));
         }
-        bool ao_dsrg_check = options_.get_bool("AO_DSRG_MRPT2");
+        bool ao_dsrg_check = foptions_->get_bool("AO_DSRG_MRPT2");
 
 #pragma omp parallel for num_threads(num_threads_) reduction(+ : Ealpha, Ebeta, Emixed)
         for (size_t m = 0; m < ncore_; ++m) {
@@ -1974,7 +1960,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_ambit() {
             BefJKVec.push_back(ambit::Tensor::build(tensor_type_, "BefJK", {nvirtual_, nvirtual_}));
             RDVec.push_back(ambit::Tensor::build(tensor_type_, "RD", {nvirtual_, nvirtual_}));
         }
-        bool ao_dsrg_check = options_.get_bool("AO_DSRG_MRPT2");
+        bool ao_dsrg_check = foptions_->get_bool("AO_DSRG_MRPT2");
 #pragma omp parallel for num_threads(num_threads_) schedule(dynamic)                               \
     reduction(+ : Ealpha, Ebeta, Emixed) shared(Ba, Bb)
 
@@ -2058,7 +2044,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_ambit() {
 }
 
 double THREE_DSRG_MRPT2::E_VT2_2_batch_core() {
-    bool debug_print = options_.get_bool("DSRG_MRPT2_DEBUG");
+    bool debug_print = foptions_->get_bool("DSRG_MRPT2_DEBUG");
     double Ealpha = 0.0;
     double Emixed = 0.0;
     double Ebeta = 0.0;
@@ -2080,8 +2066,8 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core() {
     size_t memory_input = psi::Process::environment.get_memory() * 0.75;
     size_t num_block = int_mem_int / memory_input < 1 ? 1 : int_mem_int / memory_input;
 
-    if (options_.get_int("CCVV_BATCH_NUMBER") != -1) {
-        num_block = options_.get_int("CCVV_BATCH_NUMBER");
+    if (foptions_->get_int("CCVV_BATCH_NUMBER") != -1) {
+        num_block = foptions_->get_int("CCVV_BATCH_NUMBER");
     }
     size_t block_size = ncore_ / num_block;
 
@@ -2093,7 +2079,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core() {
     if (num_block > ncore_) {
         outfile->Printf("\n  Number of blocks can not be larger than core_");
         throw psi::PSIEXCEPTION("Number of blocks is larger than core.  Fix "
-                           "num_block or check source code");
+                                "num_block or check source code");
     }
 
     if (num_block >= 1) {
@@ -2332,8 +2318,8 @@ double THREE_DSRG_MRPT2::E_VT2_2_AO_Slow() {
     double Ealpha = 0.0;
     double Emixed = 0.0;
     double Ebeta = 0.0;
-    psi::SharedMatrix Cwfn = reference_wavefunction_->Ca();
-    if (Cwfn->nirrep() != 1)
+    psi::SharedMatrix Cwfn = ints_->Ca();
+    if (mo_space_info_->nirrep() != 1)
         throw psi::PSIEXCEPTION("AO-DSRGMPT2 does not work with symmetry");
 
     /// Create the AtomicOrbitalHelper Class
@@ -2354,7 +2340,8 @@ double THREE_DSRG_MRPT2::E_VT2_2_AO_Slow() {
 
     AtomicOrbitalHelper ao_helper(Cwfn, epsilon_rdocc, epsilon_virtual, 1e-6, nactive_);
     std::shared_ptr<psi::BasisSet> primary = reference_wavefunction_->basisset();
-    std::shared_ptr<psi::BasisSet> auxiliary = reference_wavefunction_->get_basisset("DF_BASIS_MP2");
+    std::shared_ptr<psi::BasisSet> auxiliary =
+        reference_wavefunction_->get_basisset("DF_BASIS_MP2");
 
     ao_helper.Compute_AO_Screen(primary);
     ao_helper.Estimate_TransAO_Screen(primary, auxiliary);
@@ -2365,7 +2352,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_AO_Slow() {
     psi::SharedMatrix Virtual_Density = ao_helper.PVir();
     Occupied_Density->print();
     Virtual_Density->print();
-    size_t nmo = static_cast<size_t>(nmo_);
+    size_t nmo = mo_space_info_->get_dimension("ALL").sum();
 
     ambit::Tensor POcc = ambit::Tensor::build(tensor_type_, "POcc", {weights, nmo, nmo});
     ambit::Tensor PVir = ambit::Tensor::build(tensor_type_, "Pvir", {weights, nmo, nmo});
@@ -2411,7 +2398,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_AO_Slow() {
     return (0.25 * Ealpha + 0.25 * Ebeta + Emixed);
 }
 double THREE_DSRG_MRPT2::E_VT2_2_batch_virtual() {
-    bool debug_print = options_.get_bool("DSRG_MRPT2_DEBUG");
+    bool debug_print = foptions_->get_bool("DSRG_MRPT2_DEBUG");
     double Ealpha = 0.0;
     double Emixed = 0.0;
     double Ebeta = 0.0;
@@ -2433,8 +2420,8 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_virtual() {
     size_t memory_input = psi::Process::environment.get_memory() * 0.75;
     size_t num_block = int_mem_int / memory_input < 1 ? 1 : int_mem_int / memory_input;
 
-    if (options_.get_int("CCVV_BATCH_NUMBER") != -1) {
-        num_block = options_.get_int("CCVV_BATCH_NUMBER");
+    if (foptions_->get_int("CCVV_BATCH_NUMBER") != -1) {
+        num_block = foptions_->get_int("CCVV_BATCH_NUMBER");
     }
     size_t block_size = nvirtual_ / num_block;
 
@@ -2446,7 +2433,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_virtual() {
     if (num_block > nvirtual_) {
         outfile->Printf("\n  Number of blocks can not be larger than core_");
         throw psi::PSIEXCEPTION("Number of blocks is larger than core.  Fix "
-                           "num_block or check source code");
+                                "num_block or check source code");
     }
 
     if (num_block >= 1) {
@@ -2647,7 +2634,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_core() {
     v("MNEF") -= ThreeIntegral("gFM") * ThreeIntegral("gEN");
     v("mNeF") = ThreeIntegral("gem") * ThreeIntegral("gFN");
 
-    if (options_.get_str("CCVV_SOURCE") == "NORMAL") {
+    if (foptions_->get_str("CCVV_SOURCE") == "NORMAL") {
         BlockedTensor RD2_ccvv = BTF_->build(tensor_type_, "RDelta2ccvv", spin_cases({"ccvv"}));
         BlockedTensor RExp2ccvv = BTF_->build(tensor_type_, "RExp2ccvv", spin_cases({"ccvv"}));
         RD2_ccvv.iterate(
@@ -2690,7 +2677,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_core() {
         E2_core += 0.25 * T2ccvv["mnef"] * Rv["mnef"];
         E2_core += 0.25 * T2ccvv["MNEF"] * Rv["MNEF"];
         E2_core += T2ccvv["mNeF"] * Rv["mNeF"];
-    } else if (options_.get_str("CCVV_SOURCE") == "ZERO") {
+    } else if (foptions_->get_str("CCVV_SOURCE") == "ZERO") {
         BlockedTensor Denom = BTF_->build(tensor_type_, "Mp2Denom", spin_cases({"ccvv"}));
         Denom.iterate(
             [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
@@ -3077,7 +3064,7 @@ void THREE_DSRG_MRPT2::form_Hbar() {
         Hbar1_["UV"] += 0.5 * C1["VU"];
     }
 
-    if (options_.get_bool("PRINT_1BODY_EVALS")) {
+    if (foptions_->get_bool("PRINT_1BODY_EVALS")) {
         psi::SharedMatrix Hb1 = std::make_shared<psi::Matrix>("HB1", nactive_, nactive_);
         for (size_t p = 0; p < nactive_; ++p) {
             for (size_t q = 0; q < nactive_; ++q) {
@@ -3092,7 +3079,7 @@ void THREE_DSRG_MRPT2::form_Hbar() {
         evals->print();
     }
 
-    if (options_.get_bool("FORM_HBAR3")) {
+    if (foptions_->get_bool("FORM_HBAR3")) {
         BlockedTensor C3 = BTF_->build(tensor_type_, "C3", spin_cases({"aaaaaa"}));
         H2_T2_C3(V_, T2_, 0.5, C3, true);
 
@@ -3115,7 +3102,7 @@ void THREE_DSRG_MRPT2::relax_reference_once() {
 
     std::vector<double> E_relaxed = relaxed_energy(fci_ints);
 
-    if (options_["AVG_STATE"].size() == 0) {
+    if ((foptions_->psi_options())["AVG_STATE"].size() == 0) {
         double Erelax = E_relaxed[0];
 
         // printing
@@ -3130,7 +3117,7 @@ void THREE_DSRG_MRPT2::relax_reference_once() {
         // get character table
         CharacterTable ct = psi::Process::environment.molecule()->point_group()->char_table();
         std::vector<std::string> irrep_symbol;
-        for (int h = 0; h < this->nirrep(); ++h) {
+        for (int h = 0, nirrep = mo_space_info_->nirrep(); h < nirrep; ++h) {
             irrep_symbol.push_back(std::string(ct.gamma(h).symbol()));
         }
 
@@ -3141,17 +3128,18 @@ void THREE_DSRG_MRPT2::relax_reference_once() {
         std::string dash(41, '-');
         outfile->Printf("\n    %s", dash.c_str());
 
-        int nentry = options_["AVG_STATE"].size();
+        int nentry = (foptions_->psi_options())["AVG_STATE"].size();
         for (int n = 0, offset = 0; n < nentry; ++n) {
-            int irrep = options_["AVG_STATE"][n][0].to_integer();
-            int multi = options_["AVG_STATE"][n][1].to_integer();
-            int nstates = options_["AVG_STATE"][n][2].to_integer();
+            int irrep = (foptions_->psi_options())["AVG_STATE"][n][0].to_integer();
+            int multi = (foptions_->psi_options())["AVG_STATE"][n][1].to_integer();
+            int nstates = (foptions_->psi_options())["AVG_STATE"][n][2].to_integer();
 
             for (int i = 0; i < nstates; ++i) {
                 int ni = i + offset;
                 outfile->Printf("\n     %3d     %3s    %2d   %20.12f", multi,
                                 irrep_symbol[irrep].c_str(), i, E_relaxed[ni]);
-                psi::Process::environment.globals["ENERGY ROOT " + std::to_string(ni)] = E_relaxed[ni];
+                psi::Process::environment.globals["ENERGY ROOT " + std::to_string(ni)] =
+                    E_relaxed[ni];
             }
             outfile->Printf("\n    %s", dash.c_str());
 
@@ -3430,10 +3418,10 @@ std::vector<double> THREE_DSRG_MRPT2::relaxed_energy(std::shared_ptr<FCIIntegral
     std::vector<double> Erelax;
     std::string cas_type;
 
-    if (options_.get_str("CAS_TYPE") == "CASSCF") {
-        cas_type = options_.get_str("CASSCF_CI_SOLVER");
+    if (foptions_->get_str("CAS_TYPE") == "CASSCF") {
+        cas_type = foptions_->get_str("CASSCF_CI_SOLVER");
     } else {
-        cas_type = options_.get_str("CAS_TYPE");
+        cas_type = foptions_->get_str("CAS_TYPE");
     }
 
     // check CAS_TYPE to decide diagonalization code
@@ -3463,7 +3451,7 @@ std::vector<double> THREE_DSRG_MRPT2::relaxed_energy(std::shared_ptr<FCIIntegral
         // Only do ground state ACI for now
         AdaptiveCI aci(reference_wavefunction_, options_, ints_, mo_space_info_);
         aci.set_fci_ints(fci_ints);
-        if (options_["ACI_RELAX_SIGMA"].has_changed()) {
+        if ((foptions_->psi_options())["ACI_RELAX_SIGMA"].has_changed()) {
             aci.update_sigma();
         }
 
@@ -3471,14 +3459,14 @@ std::vector<double> THREE_DSRG_MRPT2::relaxed_energy(std::shared_ptr<FCIIntegral
         Erelax.push_back(relaxed_aci_en);
 
         // Compute relaxed NOs
-        if (options_.get_bool("ACI_NO")) {
+        if (foptions_->get_bool("ACI_NO")) {
             aci.compute_nos();
         }
-        if (options_.get_bool("ACI_SPIN_ANALYSIS")) {
+        if (foptions_->get_bool("ACI_SPIN_ANALYSIS")) {
             aci.spin_analysis();
         }
 
-        if (options_.get_bool("UNPAIRED_DENSITY")) {
+        if (foptions_->get_bool("UNPAIRED_DENSITY")) {
 
             aci.unpaired_density(Ua_full_, Ub_full_);
         }
@@ -3486,14 +3474,14 @@ std::vector<double> THREE_DSRG_MRPT2::relaxed_energy(std::shared_ptr<FCIIntegral
     } else {
 
         // common (SS and SA) setup of FCISolver
-        int ntrial_per_root = options_.get_int("NTRIAL_PER_ROOT");
+        int ntrial_per_root = foptions_->get_int("NTRIAL_PER_ROOT");
         psi::Dimension active_dim = mo_space_info_->get_dimension("ACTIVE");
         std::shared_ptr<psi::Molecule> molecule = psi::Process::environment.molecule();
         double Enuc = molecule->nuclear_repulsion_energy(
             reference_wavefunction_->get_dipole_field_strength());
         int charge = molecule->molecular_charge();
-        if (options_["CHARGE"].has_changed()) {
-            charge = options_.get_int("CHARGE");
+        if ((foptions_->psi_options())["CHARGE"].has_changed()) {
+            charge = foptions_->get_int("CHARGE");
         }
         auto nelec = 0;
         int natom = molecule->natom();
@@ -3503,15 +3491,15 @@ std::vector<double> THREE_DSRG_MRPT2::relaxed_energy(std::shared_ptr<FCIIntegral
         nelec -= charge;
 
         // if state specific, read from fci_root and fci_nroot
-        if (options_["AVG_STATE"].size() == 0) {
+        if ((foptions_->psi_options())["AVG_STATE"].size() == 0) {
             // setup for FCISolver
             int multi = psi::Process::environment.molecule()->multiplicity();
-            if (options_["MULTIPLICITY"].has_changed()) {
-                multi = options_.get_int("MULTIPLICITY");
+            if ((foptions_->psi_options())["MULTIPLICITY"].has_changed()) {
+                multi = foptions_->get_int("MULTIPLICITY");
             }
             int twice_ms = (multi + 1) % 2;
-            if (options_["MS"].has_changed()) {
-                twice_ms = std::round(2.0 * options_.get_double("MS"));
+            if ((foptions_->psi_options())["MS"].has_changed()) {
+                twice_ms = std::round(2.0 * foptions_->get_double("MS"));
             }
             auto nelec_actv =
                 nelec - 2 * mo_space_info_->size("FROZEN_DOCC") - 2 * core_mos_.size();
@@ -3520,15 +3508,15 @@ std::vector<double> THREE_DSRG_MRPT2::relaxed_energy(std::shared_ptr<FCIIntegral
 
             // diagonalize the Hamiltonian
             FCISolver fcisolver(active_dim, core_mos_, actv_mos_, na, nb, multi,
-                                options_.get_int("ROOT_SYM"), ints_, mo_space_info_,
+                                foptions_->get_int("ROOT_SYM"), ints_, mo_space_info_,
                                 ntrial_per_root, print_, options_);
             fcisolver.set_max_rdm_level(1);
-            fcisolver.set_nroot(options_.get_int("FCI_NROOT"));
-            fcisolver.set_root(options_.get_int("FCI_ROOT"));
-            fcisolver.set_test_rdms(options_.get_bool("FCI_TEST_RDMS"));
-            fcisolver.set_fci_iterations(options_.get_int("FCI_MAXITER"));
-            fcisolver.set_collapse_per_root(options_.get_int("DL_COLLAPSE_PER_ROOT"));
-            fcisolver.set_subspace_per_root(options_.get_int("DL_SUBSPACE_PER_ROOT"));
+            fcisolver.set_nroot(foptions_->get_int("FCI_NROOT"));
+            fcisolver.set_root(foptions_->get_int("FCI_ROOT"));
+            fcisolver.set_test_rdms(foptions_->get_bool("FCI_TEST_RDMS"));
+            fcisolver.set_fci_iterations(foptions_->get_int("FCI_MAXITER"));
+            fcisolver.set_collapse_per_root(foptions_->get_int("DL_COLLAPSE_PER_ROOT"));
+            fcisolver.set_subspace_per_root(foptions_->get_int("DL_SUBSPACE_PER_ROOT"));
 
             // set integrals manually
             fcisolver.use_user_integrals_and_restricted_docc(true);
@@ -3536,12 +3524,12 @@ std::vector<double> THREE_DSRG_MRPT2::relaxed_energy(std::shared_ptr<FCIIntegral
 
             Erelax.push_back(fcisolver.compute_energy());
         } else {
-            int nentry = options_["AVG_STATE"].size();
+            int nentry = (foptions_->psi_options())["AVG_STATE"].size();
 
             for (int n = 0; n < nentry; ++n) {
-                int irrep = options_["AVG_STATE"][n][0].to_integer();
-                int multi = options_["AVG_STATE"][n][1].to_integer();
-                int nstates = options_["AVG_STATE"][n][2].to_integer();
+                int irrep = (foptions_->psi_options())["AVG_STATE"][n][0].to_integer();
+                int multi = (foptions_->psi_options())["AVG_STATE"][n][1].to_integer();
+                int nstates = (foptions_->psi_options())["AVG_STATE"][n][2].to_integer();
 
                 // prepare FCISolver
                 int ms = (multi + 1) % 2;
@@ -3555,9 +3543,9 @@ std::vector<double> THREE_DSRG_MRPT2::relaxed_energy(std::shared_ptr<FCIIntegral
                 fcisolver.set_max_rdm_level(1);
                 fcisolver.set_nroot(nstates);
                 fcisolver.set_root(nstates - 1);
-                fcisolver.set_fci_iterations(options_.get_int("FCI_MAXITER"));
-                fcisolver.set_collapse_per_root(options_.get_int("DL_COLLAPSE_PER_ROOT"));
-                fcisolver.set_subspace_per_root(options_.get_int("DL_SUBSPACE_PER_ROOT"));
+                fcisolver.set_fci_iterations(foptions_->get_int("FCI_MAXITER"));
+                fcisolver.set_collapse_per_root(foptions_->get_int("DL_COLLAPSE_PER_ROOT"));
+                fcisolver.set_subspace_per_root(foptions_->get_int("DL_SUBSPACE_PER_ROOT"));
 
                 // set integrals manually
                 fcisolver.use_user_integrals_and_restricted_docc(true);
@@ -3846,9 +3834,8 @@ void THREE_DSRG_MRPT2::de_normal_order() {
 
     // test if de-normal-ordering is correct
     print_h2("Test De-Normal-Ordered Hamiltonian");
-    double Etest =
-        scalar_include_fc +
-        molecule_->nuclear_repulsion_energy(reference_wavefunction_->get_dipole_field_strength());
+    double Etest = scalar_include_fc + molecule_->nuclear_repulsion_energy(
+                                           reference_wavefunction_->get_dipole_field_strength());
 
     double Etest1 = 0.0;
     Etest1 += temp1["uv"] * Gamma1_["vu"];
@@ -3869,7 +3856,7 @@ void THREE_DSRG_MRPT2::de_normal_order() {
     outfile->Printf("\n    %-35s = %22.15f", "Total Energy (after)", Etest);
     outfile->Printf("\n    %-35s = %22.15f", "Total Energy (before)", Eref_ + Hbar0_);
 
-    if (std::fabs(Etest - Eref_ - Hbar0_) > 100.0 * options_.get_double("E_CONVERGENCE")) {
+    if (std::fabs(Etest - Eref_ - Hbar0_) > 100.0 * foptions_->get_double("E_CONVERGENCE")) {
         throw psi::PSIEXCEPTION("De-normal-odering failed.");
     }
 }
@@ -4191,4 +4178,4 @@ void THREE_DSRG_MRPT2::rotate_amp(psi::SharedMatrix Ua, psi::SharedMatrix Ub, co
         T1eff_["IA"] = temp["IA"];
     }
 }
-}
+} // namespace forte

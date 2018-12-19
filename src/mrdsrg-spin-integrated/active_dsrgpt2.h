@@ -52,16 +52,17 @@
 #include "dsrg_mrpt2.h"
 #include "three_dsrg_mrpt2.h"
 
-
 namespace forte {
 
 class FCI_MO;
+class SCFInfo;
+class ForteOptions;
 
 struct Vector4 {
     double x, y, z, t;
 };
 
-class ACTIVE_DSRGPT2 : public psi::Wavefunction {
+class ACTIVE_DSRGPT2 {
   public:
     /**
      * @brief ACTIVE_DSRGPT2 Constructor
@@ -70,7 +71,7 @@ class ACTIVE_DSRGPT2 : public psi::Wavefunction {
      * @param ints ForteInegrals
      * @param mo_space_info MOSpaceInfo
      */
-    ACTIVE_DSRGPT2(psi::SharedWavefunction ref_wfn, psi::Options& options,
+    ACTIVE_DSRGPT2(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
                    std::shared_ptr<ForteIntegrals> ints,
                    std::shared_ptr<MOSpaceInfo> mo_space_info);
 
@@ -89,6 +90,12 @@ class ACTIVE_DSRGPT2 : public psi::Wavefunction {
 
     /// MO space info
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
+
+    /// SCF info
+    std::shared_ptr<SCFInfo> scf_info_;
+
+    /// ForteOptions
+    std::shared_ptr<ForteOptions> foptions_;
 
     /// Multiplicity
     int multiplicity_;
@@ -134,7 +141,8 @@ class ACTIVE_DSRGPT2 : public psi::Wavefunction {
                     ambit::BlockedTensor& T2);
 
     /// Rotate to semicanonical orbitals and pass to this
-    void rotate_orbs(psi::SharedMatrix Ca0, psi::SharedMatrix Cb0, psi::SharedMatrix Ua, psi::SharedMatrix Ub);
+    void rotate_orbs(psi::SharedMatrix Ca0, psi::SharedMatrix Cb0, psi::SharedMatrix Ua,
+                     psi::SharedMatrix Ub);
 
     /// Transform integrals using the orbital coefficients
     void transform_integrals(psi::SharedMatrix Ca0, psi::SharedMatrix Cb0);
@@ -237,7 +245,7 @@ class ACTIVE_DSRGPT2 : public psi::Wavefunction {
      * IMPORTANT NOTE:
      *   1) All blocks of T should be stored
      *   2) Number of basis function should not exceed 128
-    */
+     */
 
     /// transform the reference determinants of size nactive to size nmo with Pitzer ordering
     std::map<Determinant, double> p_space_actv_to_nmo(const std::vector<Determinant>& p_space,
@@ -263,6 +271,6 @@ class ACTIVE_DSRGPT2 : public psi::Wavefunction {
     void compute_osc_pt2_overlap(const int& irrep, const int& root, ambit::BlockedTensor& T1_x,
                                  ambit::BlockedTensor& T2_x);
 };
-}
+} // namespace forte
 
 #endif // ACTIVE_DSRGPT2_H

@@ -8,12 +8,14 @@
 #include "sci/fci_mo.h"
 #include "sparse_ci/determinant.h"
 
-
 namespace forte {
+
+class ForteOptions;
+class SCFInfo;
 
 void set_DWMS_options(ForteOptions& foptions);
 
-class DWMS_DSRGPT2 : public psi::Wavefunction {
+class DWMS_DSRGPT2 {
   public:
     /**
      * @brief DWMS_DSRGPT2 Constructor
@@ -22,8 +24,8 @@ class DWMS_DSRGPT2 : public psi::Wavefunction {
      * @param ints ForteInegrals
      * @param mo_space_info MOSpaceInfo
      */
-    DWMS_DSRGPT2(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
-                 std::shared_ptr<MOSpaceInfo> mo_space_info);
+    DWMS_DSRGPT2(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
+                 std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Destructor
     ~DWMS_DSRGPT2();
@@ -37,6 +39,12 @@ class DWMS_DSRGPT2 : public psi::Wavefunction {
 
     /// The MO space info
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
+
+    /// The SCF info
+    std::shared_ptr<SCFInfo> scf_info_;
+
+    /// The ForteOptions
+    std::shared_ptr<ForteOptions> foptions_;
 
     /// preparation
     void startup();
@@ -190,6 +198,6 @@ class DWMS_DSRGPT2 : public psi::Wavefunction {
                       const std::vector<std::tuple<int, int, int, std::vector<double>>>& sa_info,
                       bool pass_process = false);
 };
-}
+} // namespace forte
 
 #endif // DWMS_MRPT2_H

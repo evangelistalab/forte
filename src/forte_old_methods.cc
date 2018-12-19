@@ -44,6 +44,7 @@
 #include "sci/aci.h"
 #include "sci/asci.h"
 #include "base_classes/reference.h"
+#include "base_classes/scf_info.h"
 #include "helpers/blockedtensorfactory.h"
 #include "casscf/casscf.h"
 #include "cc/cc.h"
@@ -238,8 +239,9 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
                 Ub = semi.Ub_t();
             }
 
-            auto mrdsrg =
-                std::make_shared<MRDSRG>(reference, ref_wfn, options, ints, mo_space_info);
+            auto mrdsrg = std::make_shared<MRDSRG>(reference, std::make_shared<SCFInfo>(ref_wfn),
+                                                   std::make_shared<ForteOptions>(options), ints,
+                                                   mo_space_info);
             mrdsrg->set_Uactv(Ua, Ub);
 
             if (options["AVG_STATE"].size() != 0) {
@@ -265,8 +267,9 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
                 Ub = semi.Ub_t();
             }
 
-            auto mrdsrg =
-                std::make_shared<MRDSRG>(reference, ref_wfn, options, ints, mo_space_info);
+            auto mrdsrg = std::make_shared<MRDSRG>(reference, std::make_shared<SCFInfo>(ref_wfn),
+                                                   std::make_shared<ForteOptions>(options), ints,
+                                                   mo_space_info);
             mrdsrg->set_Uactv(Ua, Ub);
 
             if (options.get_str("RELAX_REF") == "NONE") {
@@ -287,8 +290,9 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
             semi.semicanonicalize(aci_reference, max_rdm_level);
             Ua = semi.Ua_t();
             Ub = semi.Ub_t();
-            auto mrdsrg =
-                std::make_shared<MRDSRG>(aci_reference, ref_wfn, options, ints, mo_space_info);
+            auto mrdsrg = std::make_shared<MRDSRG>(
+                aci_reference, std::make_shared<SCFInfo>(ref_wfn),
+                std::make_shared<ForteOptions>(options), ints, mo_space_info);
             mrdsrg->set_Uactv(Ua, Ub);
             if (options.get_str("RELAX_REF") == "NONE") {
                 mrdsrg->compute_energy();
@@ -309,11 +313,13 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
         mrdsrg->compute_energy();
     }
     if (options.get_str("JOB_TYPE") == "ACTIVE-DSRGPT2") {
-        ACTIVE_DSRGPT2 pt(ref_wfn, options, ints, mo_space_info);
+        ACTIVE_DSRGPT2 pt(std::make_shared<SCFInfo>(ref_wfn),
+                          std::make_shared<ForteOptions>(options), ints, mo_space_info);
         pt.compute_energy();
     }
     if (options.get_str("JOB_TYPE") == "DWMS-DSRGPT2") {
-        DWMS_DSRGPT2 dwms(ref_wfn, options, ints, mo_space_info);
+        DWMS_DSRGPT2 dwms(std::make_shared<SCFInfo>(ref_wfn),
+                          std::make_shared<ForteOptions>(options), ints, mo_space_info);
         dwms.compute_energy();
     }
     if (options.get_str("JOB_TYPE") == "DSRG_MRPT") {
@@ -388,8 +394,9 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
                 Ub = semi.Ub_t();
             }
 
-            std::shared_ptr<DSRG_MRPT2> dsrg_mrpt2 =
-                std::make_shared<DSRG_MRPT2>(reference, ref_wfn, options, ints, mo_space_info);
+            auto dsrg_mrpt2 = std::make_shared<DSRG_MRPT2>(
+                reference, std::make_shared<SCFInfo>(ref_wfn),
+                std::make_shared<ForteOptions>(options), ints, mo_space_info);
             dsrg_mrpt2->set_Uactv(Ua, Ub);
             if (options["AVG_STATE"].size() != 0) {
                 dsrg_mrpt2->set_p_spaces(fci_mo->p_spaces());
@@ -418,8 +425,9 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
                 Ua = semi.Ua_t();
                 Ub = semi.Ub_t();
             }
-            std::shared_ptr<DSRG_MRPT2> dsrg_mrpt2 =
-                std::make_shared<DSRG_MRPT2>(reference, ref_wfn, options, ints, mo_space_info);
+            std::shared_ptr<DSRG_MRPT2> dsrg_mrpt2 = std::make_shared<DSRG_MRPT2>(
+                reference, std::make_shared<SCFInfo>(ref_wfn),
+                std::make_shared<ForteOptions>(options), ints, mo_space_info);
             dsrg_mrpt2->set_Uactv(Ua, Ub);
             if (options.get_str("RELAX_REF") != "NONE") {
                 dsrg_mrpt2->compute_energy_relaxed();
@@ -431,8 +439,9 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
             std::shared_ptr<V2RDM> v2rdm =
                 std::make_shared<V2RDM>(ref_wfn, options, ints, mo_space_info);
             Reference reference = v2rdm->reference();
-            std::shared_ptr<DSRG_MRPT2> dsrg_mrpt2 =
-                std::make_shared<DSRG_MRPT2>(reference, ref_wfn, options, ints, mo_space_info);
+            std::shared_ptr<DSRG_MRPT2> dsrg_mrpt2 = std::make_shared<DSRG_MRPT2>(
+                reference, std::make_shared<SCFInfo>(ref_wfn),
+                std::make_shared<ForteOptions>(options), ints, mo_space_info);
             dsrg_mrpt2->compute_energy();
 
         } else if (cas_type == "ACI") {
@@ -452,8 +461,9 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
             Ua = semi.Ua_t();
             Ub = semi.Ub_t();
 
-            std::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(
-                new DSRG_MRPT2(aci_reference, ref_wfn, options, ints, mo_space_info));
+            auto dsrg_mrpt2 = std::make_shared<DSRG_MRPT2>(
+                aci_reference, std::make_shared<SCFInfo>(ref_wfn),
+                std::make_shared<ForteOptions>(options), ints, mo_space_info);
             dsrg_mrpt2->set_Uactv(Ua, Ub);
             if (options.get_str("RELAX_REF") != "NONE") {
                 dsrg_mrpt2->compute_energy_relaxed();
@@ -473,7 +483,8 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
                 semi.semicanonicalize(dmrg_reference, max_rdm_level);
             }
             std::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(
-                new DSRG_MRPT2(dmrg_reference, ref_wfn, options, ints, mo_space_info));
+                new DSRG_MRPT2(dmrg_reference, std::make_shared<SCFInfo>(ref_wfn),
+                               std::make_shared<ForteOptions>(options), ints, mo_space_info));
             dsrg_mrpt2->compute_energy();
 #endif
         } else if (cas_type == "CASSCF") {
@@ -487,8 +498,9 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
             Ua = semi.Ua_t();
             Ub = semi.Ub_t();
 
-            std::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(
-                new DSRG_MRPT2(casscf_reference, ref_wfn, options, ints, mo_space_info));
+            auto dsrg_mrpt2 = std::make_shared<DSRG_MRPT2>(
+                casscf_reference, std::make_shared<SCFInfo>(ref_wfn),
+                std::make_shared<ForteOptions>(options), ints, mo_space_info);
             dsrg_mrpt2->set_Uactv(Ua, Ub);
             if (options.get_str("RELAX_REF") != "NONE") {
                 dsrg_mrpt2->compute_energy_relaxed();
@@ -547,8 +559,9 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
                 Ub = semi.Ub_t();
             }
 
-            std::shared_ptr<THREE_DSRG_MRPT2> three_dsrg_mrpt2(
-                new THREE_DSRG_MRPT2(reference, ref_wfn, options, ints, mo_space_info));
+            auto three_dsrg_mrpt2 = std::make_shared<THREE_DSRG_MRPT2>(
+                reference, std::make_shared<SCFInfo>(ref_wfn),
+                std::make_shared<ForteOptions>(options), ints, mo_space_info);
             three_dsrg_mrpt2->set_Uactv(Ua, Ub);
 
             if (actv_type == "CIS" || actv_type == "CISD") {
@@ -564,8 +577,9 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
             std::shared_ptr<V2RDM> v2rdm =
                 std::make_shared<V2RDM>(ref_wfn, options, ints, mo_space_info);
             Reference reference = v2rdm->reference();
-            std::shared_ptr<THREE_DSRG_MRPT2> dsrg_mrpt2 = std::make_shared<THREE_DSRG_MRPT2>(
-                reference, ref_wfn, options, ints, mo_space_info);
+            auto dsrg_mrpt2 = std::make_shared<THREE_DSRG_MRPT2>(
+                reference, std::make_shared<SCFInfo>(ref_wfn),
+                std::make_shared<ForteOptions>(options), ints, mo_space_info);
             dsrg_mrpt2->compute_energy();
 
         } else if (cas_type == "ACI") {
@@ -600,8 +614,9 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
             semi.semicanonicalize(aci_reference, max_rdm_level);
             Ua = semi.Ua_t();
             Ub = semi.Ub_t();
-            std::shared_ptr<THREE_DSRG_MRPT2> three_dsrg_mrpt2(
-                new THREE_DSRG_MRPT2(aci_reference, ref_wfn, options, ints, mo_space_info));
+            auto three_dsrg_mrpt2 = std::make_shared<THREE_DSRG_MRPT2>(
+                aci_reference, std::make_shared<SCFInfo>(ref_wfn),
+                std::make_shared<ForteOptions>(options), ints, mo_space_info);
 
             three_dsrg_mrpt2->set_Uactv(Ua, Ub);
             three_dsrg_mrpt2->compute_energy();
@@ -632,8 +647,9 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
                 Ub = semi.Ub_t();
             }
 
-            std::shared_ptr<THREE_DSRG_MRPT2> three_dsrg_mrpt2(
-                new THREE_DSRG_MRPT2(reference, ref_wfn, options, ints, mo_space_info));
+            auto three_dsrg_mrpt2 = std::make_shared<THREE_DSRG_MRPT2>(
+                reference, std::make_shared<SCFInfo>(ref_wfn),
+                std::make_shared<ForteOptions>(options), ints, mo_space_info);
             three_dsrg_mrpt2->set_Uactv(Ua, Ub);
             three_dsrg_mrpt2->compute_energy();
             if (ref_relax || multi_state) {
@@ -653,7 +669,8 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
             }
 
             std::shared_ptr<THREE_DSRG_MRPT2> three_dsrg_mrpt2(
-                new THREE_DSRG_MRPT2(dmrg_reference, ref_wfn, options, ints, mo_space_info));
+                new THREE_DSRG_MRPT2(dmrg_reference, std::make_shared<SCFInfo>(ref_wfn),
+                                     std::make_shared<ForteOptions>(options), ints, mo_space_info));
             three_dsrg_mrpt2->compute_energy();
             if (ref_relax || multi_state) {
                 three_dsrg_mrpt2->relax_reference_once();
@@ -671,8 +688,9 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
                 Ub = semi.Ub_t();
             }
 
-            std::shared_ptr<THREE_DSRG_MRPT2> three_dsrg_mrpt2(
-                new THREE_DSRG_MRPT2(casscf_reference, ref_wfn, options, ints, mo_space_info));
+            auto three_dsrg_mrpt2 = std::make_shared<THREE_DSRG_MRPT2>(
+                casscf_reference, std::make_shared<SCFInfo>(ref_wfn),
+                std::make_shared<ForteOptions>(options), ints, mo_space_info);
             three_dsrg_mrpt2->set_Uactv(Ua, Ub);
             three_dsrg_mrpt2->compute_energy();
             if (ref_relax || multi_state) {
@@ -710,8 +728,9 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
                 Ub = semi.Ub_t();
             }
 
-            std::shared_ptr<DSRG_MRPT3> dsrg_mrpt3(
-                new DSRG_MRPT3(reference, ref_wfn, options, ints, mo_space_info));
+            auto dsrg_mrpt3 = std::make_shared<DSRG_MRPT3>(
+                reference, std::make_shared<SCFInfo>(ref_wfn),
+                std::make_shared<ForteOptions>(options), ints, mo_space_info);
             dsrg_mrpt3->set_Uactv(Ua, Ub);
 
             if (options["AVG_STATE"].size() != 0) {
@@ -756,8 +775,9 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
             semi.semicanonicalize(aci_reference, max_rdm_level);
             Ua = semi.Ua_t();
             Ub = semi.Ub_t();
-            auto dsrg_mrpt3 =
-                std::make_shared<DSRG_MRPT3>(aci_reference, ref_wfn, options, ints, mo_space_info);
+            auto dsrg_mrpt3 = std::make_shared<DSRG_MRPT3>(
+                aci_reference, std::make_shared<SCFInfo>(ref_wfn),
+                std::make_shared<ForteOptions>(options), ints, mo_space_info);
             dsrg_mrpt3->set_Uactv(Ua, Ub);
 
             if (options.get_str("RELAX_REF") != "NONE") {
@@ -778,8 +798,9 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
                 Ub = semi.Ub_t();
             }
 
-            auto dsrg_mrpt3 =
-                std::make_shared<DSRG_MRPT3>(reference, ref_wfn, options, ints, mo_space_info);
+            auto dsrg_mrpt3 = std::make_shared<DSRG_MRPT3>(
+                reference, std::make_shared<SCFInfo>(ref_wfn),
+                std::make_shared<ForteOptions>(options), ints, mo_space_info);
             dsrg_mrpt3->set_Uactv(Ua, Ub);
 
             if (options.get_str("RELAX_REF") != "NONE") {
@@ -837,5 +858,4 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
         mrci->compute_energy();
     }
 }
-}
-
+} // namespace forte

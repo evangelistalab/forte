@@ -78,9 +78,9 @@ void MRDSRG::compute_hbar() {
 
     // iteration variables
     bool converged = false;
-    int maxn = options_.get_int("DSRG_RSC_NCOMM");
-    double ct_threshold = options_.get_double("SRG_RSC_THRESHOLD");
-    std::string dsrg_op = options_.get_str("DSRG_TRANS_TYPE");
+    int maxn = foptions_->get_int("DSRG_RSC_NCOMM");
+    double ct_threshold = foptions_->get_double("SRG_RSC_THRESHOLD");
+    std::string dsrg_op = foptions_->get_str("DSRG_TRANS_TYPE");
 
     // compute Hbar recursively
     for (int n = 1; n <= maxn; ++n) {
@@ -116,13 +116,13 @@ void MRDSRG::compute_hbar() {
         } else {
             H2_T1_C1(O2_, T1_, factor, C1_);
         }
-        if (options_.get_str("SRG_COMM") == "STANDARD") {
+        if (foptions_->get_str("SRG_COMM") == "STANDARD") {
             if (n == 1 && eri_df_) {
                 H2_T2_C1_DF(B_, T2_, factor, C1_);
             } else {
                 H2_T2_C1(O2_, T2_, factor, C1_);
             }
-        } else if (options_.get_str("SRG_COMM") == "FO") {
+        } else if (foptions_->get_str("SRG_COMM") == "FO") {
             BlockedTensor C1p = BTF_->build(tensor_type_, "C1p", spin_cases({"gg"}));
             if (n == 1 && eri_df_) {
                 H2_T2_C1_DF(B_, T2_, factor, C1p);
@@ -139,9 +139,9 @@ void MRDSRG::compute_hbar() {
             C1_["PQ"] += C1p["PQ"];
         }
         // two-body
-        if ((options_.get_str("SRG_COMM") == "STANDARD") or n < 2) {
+        if ((foptions_->get_str("SRG_COMM") == "STANDARD") or n < 2) {
             H1_T2_C2(O1_, T2_, factor, C2_);
-        } else if (options_.get_str("SRG_COMM") == "FO2") {
+        } else if (foptions_->get_str("SRG_COMM") == "FO2") {
             O1_.block("cc").scale(2.0);
             O1_.block("aa").scale(2.0);
             O1_.block("vv").scale(2.0);
@@ -240,9 +240,9 @@ void MRDSRG::compute_hbar_sequential() {
 
     // iteration variables
     bool converged = false;
-    int maxn = options_.get_int("DSRG_RSC_NCOMM");
-    double ct_threshold = options_.get_double("SRG_RSC_THRESHOLD");
-    std::string dsrg_op = options_.get_str("DSRG_TRANS_TYPE");
+    int maxn = foptions_->get_int("DSRG_RSC_NCOMM");
+    double ct_threshold = foptions_->get_double("SRG_RSC_THRESHOLD");
+    std::string dsrg_op = foptions_->get_str("DSRG_TRANS_TYPE");
 
     // compute Hbar recursively
     for (int n = 1; n <= maxn; ++n) {
@@ -548,8 +548,8 @@ void MRDSRG::compute_hbar_sequential_rotation() {
 
     // iteration variables
     bool converged = false;
-    int maxn = options_.get_int("DSRG_RSC_NCOMM");
-    double ct_threshold = options_.get_double("SRG_RSC_THRESHOLD");
+    int maxn = foptions_->get_int("DSRG_RSC_NCOMM");
+    double ct_threshold = foptions_->get_double("SRG_RSC_THRESHOLD");
 
     timer comm("Hbar T2 commutator");
 
@@ -672,7 +672,7 @@ double MRDSRG::compute_energy_ldsrg2() {
 
     timer ldsrg2("Energy_ldsrg2");
 
-    if (options_.get_str("THREEPDC") == "ZERO") {
+    if (foptions_->get_str("THREEPDC") == "ZERO") {
         outfile->Printf("\n    Skip Lambda3 contributions in [Hbar2, T2].");
     }
     std::string indent(4, ' ');
@@ -723,9 +723,9 @@ double MRDSRG::compute_energy_ldsrg2() {
 
     // iteration variables
     double Ecorr = 0.0;
-    int cycle = 0, maxiter = options_.get_int("MAXITER");
-    double e_conv = options_.get_double("E_CONVERGENCE");
-    double r_conv = options_.get_double("R_CONVERGENCE");
+    int cycle = 0, maxiter = foptions_->get_int("MAXITER");
+    double e_conv = foptions_->get_double("E_CONVERGENCE");
+    double r_conv = foptions_->get_double("R_CONVERGENCE");
     bool converged = false, failed = false;
     Hbar1_ = BTF_->build(tensor_type_, "Hbar1", spin_cases({"gg"}));
     O1_ = BTF_->build(tensor_type_, "O1", spin_cases({"gg"}));
@@ -737,8 +737,8 @@ double MRDSRG::compute_energy_ldsrg2() {
 
     // setup DIIS
     std::shared_ptr<DIISManager> diis_manager;
-    int max_diis_vectors = options_.get_int("DIIS_MAX_VECS");
-    int min_diis_vectors = options_.get_int("DIIS_MIN_VECS");
+    int max_diis_vectors = foptions_->get_int("DIIS_MAX_VECS");
+    int min_diis_vectors = foptions_->get_int("DIIS_MIN_VECS");
     if (max_diis_vectors > 0) {
         diis_manager = std::shared_ptr<DIISManager>(new DIISManager(
             max_diis_vectors, "LDSRG2 DIIS T", DIISManager::LargestError, DIISManager::InCore));
@@ -805,7 +805,8 @@ double MRDSRG::compute_energy_ldsrg2() {
             converged = true;
 
             // rebuild Hbar because it is destroyed when updating amplitudes
-            if (options_.get_str("RELAX_REF") != "NONE" || options_["AVG_STATE"].size() != 0) {
+            if (foptions_->get_str("RELAX_REF") != "NONE" ||
+                (foptions_->psi_options())["AVG_STATE"].size() != 0) {
                 if (sequential_Hbar_) {
                     compute_hbar_sequential_rotation();
                 } else {
@@ -850,7 +851,7 @@ double MRDSRG::compute_energy_ldsrg2() {
 }
 
 void MRDSRG::compute_hbar_qc() {
-    std::string dsrg_op = options_.get_str("DSRG_TRANS_TYPE");
+    std::string dsrg_op = foptions_->get_str("DSRG_TRANS_TYPE");
 
     // initialize Hbar with bare H
     Hbar0_ = 0.0;
@@ -1014,9 +1015,9 @@ double MRDSRG::compute_energy_ldsrg2_qc() {
 
     // iteration variables
     double Ecorr = 0.0;
-    int cycle = 0, maxiter = options_.get_int("MAXITER");
-    double e_conv = options_.get_double("E_CONVERGENCE");
-    double r_conv = options_.get_double("R_CONVERGENCE");
+    int cycle = 0, maxiter = foptions_->get_int("MAXITER");
+    double e_conv = foptions_->get_double("E_CONVERGENCE");
+    double r_conv = foptions_->get_double("R_CONVERGENCE");
     bool converged = false, failed = false;
     Hbar1_ = BTF_->build(tensor_type_, "Hbar1", spin_cases({"hp"}));
     Hbar2_ = BTF_->build(tensor_type_, "Hbar2", spin_cases({"hhpp"}));
@@ -1042,8 +1043,8 @@ double MRDSRG::compute_energy_ldsrg2_qc() {
 
     // setup DIIS
     std::shared_ptr<DIISManager> diis_manager;
-    int max_diis_vectors = options_.get_int("DIIS_MAX_VECS");
-    int min_diis_vectors = options_.get_int("DIIS_MIN_VECS");
+    int max_diis_vectors = foptions_->get_int("DIIS_MAX_VECS");
+    int min_diis_vectors = foptions_->get_int("DIIS_MIN_VECS");
     if (max_diis_vectors > 0) {
         diis_manager = std::shared_ptr<DIISManager>(new DIISManager(
             max_diis_vectors, "LDSRG2 DIIS T", DIISManager::LargestError, DIISManager::InCore));
@@ -1100,7 +1101,8 @@ double MRDSRG::compute_energy_ldsrg2_qc() {
             converged = true;
 
             // rebuild Hbar because it is destroyed when updating amplitudes
-            if (options_.get_str("RELAX_REF") != "NONE" || options_["AVG_STATE"].size() != 0) {
+            if (foptions_->get_str("RELAX_REF") != "NONE" ||
+                (foptions_->psi_options())["AVG_STATE"].size() != 0) {
                 compute_hbar_qc();
             }
         }
@@ -1372,4 +1374,3 @@ void MRDSRG::return_amp_diis(BlockedTensor& T1, const std::vector<std::string>& 
     }
 }
 } // namespace forte
-

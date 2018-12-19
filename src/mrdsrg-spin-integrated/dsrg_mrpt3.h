@@ -63,8 +63,9 @@ class DSRG_MRPT3 : public MASTER_DSRG {
      * @param ints A pointer to an allocated integral object
      * @param mo_space_info The MOSpaceInfo object
      */
-    DSRG_MRPT3(Reference reference, psi::SharedWavefunction ref_wfn, psi::Options& options,
-               std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
+    DSRG_MRPT3(Reference reference, std::shared_ptr<SCFInfo> scf_info,
+               std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
+               std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Destructor
     virtual ~DSRG_MRPT3();
@@ -296,6 +297,6 @@ class DSRG_MRPT3 : public MASTER_DSRG {
     /// DSRG-MRPT2 (2nd-order complete) transformed dipole scalar
     std::vector<double> Mbar0_pt2c_;
 };
-}
+} // namespace forte
 
 #endif // _dsrg_mrpt3_h_

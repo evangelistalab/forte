@@ -50,7 +50,7 @@ double DSRG_MRPT2::compute_energy_multi_state() {
     // get character table
     CharacterTable ct = psi::Process::environment.molecule()->point_group()->char_table();
     std::vector<std::string> irrep_symbol;
-    for (int h = 0; h < this->nirrep(); ++h) {
+    for (int h = 0, nirrep = mo_space_info_->nirrep(); h < nirrep; ++h) {
         irrep_symbol.push_back(std::string(ct.gamma(h).symbol()));
     }
 
@@ -71,9 +71,9 @@ double DSRG_MRPT2::compute_energy_multi_state() {
     outfile->Printf("\n    %s", dash.c_str());
 
     for (int n = 0, counter = 0; n < nentry; ++n) {
-        int irrep = options_["AVG_STATE"][n][0].to_integer();
-        int multi = options_["AVG_STATE"][n][1].to_integer();
-        int nstates = options_["AVG_STATE"][n][2].to_integer();
+        int irrep = (foptions_->psi_options())["AVG_STATE"][n][0].to_integer();
+        int multi = (foptions_->psi_options())["AVG_STATE"][n][1].to_integer();
+        int nstates = (foptions_->psi_options())["AVG_STATE"][n][2].to_integer();
 
         for (int i = 0; i < nstates; ++i) {
             outfile->Printf("\n     %3d     %3s    %2d   %20.12f", multi,
@@ -95,7 +95,7 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
     // get character table
     CharacterTable ct = psi::Process::environment.molecule()->point_group()->char_table();
     std::vector<std::string> irrep_symbol;
-    for (int h = 0; h < this->nirrep(); ++h) {
+    for (int h = 0, nirrep = mo_space_info_->nirrep(); h < nirrep; ++h) {
         irrep_symbol.push_back(std::string(ct.gamma(h).symbol()));
     }
 
@@ -118,7 +118,7 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
     std::vector<std::vector<double>> Edsrg_sa(nentry, std::vector<double>());
 
     // call FCI_MO if SA_FULL and CAS_TYPE == CAS
-    if (multi_state_algorithm_ == "SA_FULL" && options_.get_str("CAS_TYPE") == "CAS") {
+    if (multi_state_algorithm_ == "SA_FULL" && foptions_->get_str("CAS_TYPE") == "CAS") {
         FCI_MO fci_mo(reference_wavefunction_, options_, ints_, mo_space_info_, fci_ints);
         fci_mo.set_localize_actv(false);
         fci_mo.compute_energy();
@@ -135,7 +135,7 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
             // de-normal-order DSRG dipole integrals
             for (int z = 0; z < 3; ++z) {
                 std::string name = "Dipole " + dm_dirs_[z] + " Integrals";
-                if (options_.get_bool("FORM_MBAR3")) {
+                if (foptions_->get_bool("FORM_MBAR3")) {
                     deGNO_ints(name, Mbar0_[z], Mbar1_[z], Mbar2_[z], Mbar3_[z]);
                     rotate_ints_semi_to_origin(name, Mbar1_[z], Mbar2_[z], Mbar3_[z]);
                 } else {
@@ -146,7 +146,7 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
 
             // compute permanent dipoles
             std::map<std::string, std::vector<double>> dm_relax;
-            if (options_.get_bool("FORM_MBAR3")) {
+            if (foptions_->get_bool("FORM_MBAR3")) {
                 dm_relax = fci_mo.compute_ref_relaxed_dm(Mbar0_, Mbar1_, Mbar2_, Mbar3_);
             } else {
                 dm_relax = fci_mo.compute_ref_relaxed_dm(Mbar0_, Mbar1_, Mbar2_);
@@ -169,7 +169,7 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
 
             // oscillator strength
             std::map<std::string, std::vector<double>> osc;
-            if (options_.get_bool("FORM_MBAR3")) {
+            if (foptions_->get_bool("FORM_MBAR3")) {
                 osc = fci_mo.compute_ref_relaxed_osc(Mbar1_, Mbar2_, Mbar3_);
             } else {
                 osc = fci_mo.compute_ref_relaxed_osc(Mbar1_, Mbar2_);
@@ -197,9 +197,9 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
     } else {
 
         for (int n = 0; n < nentry; ++n) {
-            int irrep = options_["AVG_STATE"][n][0].to_integer();
-            int multi = options_["AVG_STATE"][n][1].to_integer();
-            int nstates = options_["AVG_STATE"][n][2].to_integer();
+            int irrep = (foptions_->psi_options())["AVG_STATE"][n][0].to_integer();
+            int multi = (foptions_->psi_options())["AVG_STATE"][n][1].to_integer();
+            int nstates = (foptions_->psi_options())["AVG_STATE"][n][2].to_integer();
             std::vector<forte::Determinant> p_space = p_spaces_[n];
 
             // print current symmetry
@@ -211,14 +211,14 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
             // diagonalize which the second-order effective Hamiltonian
             // FULL: CASCI using determinants
             // AVG_STATES: H_AB = <A|H|B> where A and B are SA-CAS states
-            if (options_.get_str("DSRG_MULTI_STATE") == "SA_FULL") {
+            if (foptions_->get_str("DSRG_MULTI_STATE") == "SA_FULL") {
 
                 outfile->Printf("\n    Use string FCI code.");
 
                 // prepare FCISolver
                 int charge = psi::Process::environment.molecule()->molecular_charge();
-                if (options_["CHARGE"].has_changed()) {
-                    charge = options_.get_int("CHARGE");
+                if (foptions_->has_changed("CHARGE")) {
+                    charge = foptions_->get_int("CHARGE");
                 }
                 auto nelec = 0;
                 int natom = psi::Process::environment.molecule()->natom();
@@ -233,16 +233,16 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
                 auto nb = nelec_actv - na;
 
                 psi::Dimension active_dim = mo_space_info_->get_dimension("ACTIVE");
-                int ntrial_per_root = options_.get_int("NTRIAL_PER_ROOT");
+                int ntrial_per_root = foptions_->get_int("NTRIAL_PER_ROOT");
 
                 FCISolver fcisolver(active_dim, core_mos_, actv_mos_, na, nb, multi, irrep, ints_,
                                     mo_space_info_, ntrial_per_root, print_, options_);
                 fcisolver.set_max_rdm_level(1);
                 fcisolver.set_nroot(nstates);
                 fcisolver.set_root(nstates - 1);
-                fcisolver.set_fci_iterations(options_.get_int("FCI_MAXITER"));
-                fcisolver.set_collapse_per_root(options_.get_int("DL_COLLAPSE_PER_ROOT"));
-                fcisolver.set_subspace_per_root(options_.get_int("DL_SUBSPACE_PER_ROOT"));
+                fcisolver.set_fci_iterations(foptions_->get_int("FCI_MAXITER"));
+                fcisolver.set_collapse_per_root(foptions_->get_int("DL_COLLAPSE_PER_ROOT"));
+                fcisolver.set_subspace_per_root(foptions_->get_int("DL_SUBSPACE_PER_ROOT"));
                 fcisolver.set_integral_pointer(fci_ints);
 
                 // compute energy and fill in results
@@ -291,7 +291,7 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
                         H_AB += 0.25 * Hbar2_["UVXY"] * D2["XYUV"];
                         H_AB += Hbar2_["uVxY"] * D2["xYuV"];
 
-                        if (options_.get_bool("FORM_HBAR3")) {
+                        if (foptions_->get_bool("FORM_HBAR3")) {
                             BlockedTensor D3 =
                                 BTF_->build(tensor_type_, "D3", spin_cases({"aaaaaa"}), true);
                             ci_rdms.compute_3rdm(
@@ -344,7 +344,7 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_xms() {
     // get character table
     CharacterTable ct = psi::Process::environment.molecule()->point_group()->char_table();
     std::vector<std::string> irrep_symbol;
-    for (int h = 0; h < this->nirrep(); ++h) {
+    for (int h = 0, nirrep = mo_space_info_->nirrep(); h < nirrep; ++h) {
         irrep_symbol.push_back(std::string(ct.gamma(h).symbol()));
     }
 
@@ -374,8 +374,8 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_xms() {
     std::vector<std::vector<double>> Edsrg_ms(nentry, std::vector<double>());
 
     for (int n = 0; n < nentry; ++n) {
-        int irrep = options_["AVG_STATE"][n][0].to_integer();
-        int multi = options_["AVG_STATE"][n][1].to_integer();
+        int irrep = (foptions_->psi_options())["AVG_STATE"][n][0].to_integer();
+        int multi = (foptions_->psi_options())["AVG_STATE"][n][1].to_integer();
         int nstates = eigens_[n].size();
         std::vector<forte::Determinant> p_space = p_spaces_[n];
 
@@ -393,7 +393,7 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_xms() {
         }
 
         // XMS rotaion if needed
-        if (options_.get_str("DSRG_MULTI_STATE") == "XMS") {
+        if (foptions_->get_str("DSRG_MULTI_STATE") == "XMS") {
             if (nentry > 1) {
                 // recompute state-averaged density
                 outfile->Printf("\n    Recompute SA density matrix of %s with equal weights.",
@@ -883,7 +883,7 @@ void DSRG_MRPT2::compute_cumulants(std::shared_ptr<FCIIntegrals> fci_ints,
     L2ab("pqrs") -= L1a("pr") * L1b("qs");
 
     // 3 cumulant
-    if (options_.get_str("THREEPDC") != "ZERO") {
+    if (foptions_->get_str("THREEPDC") != "ZERO") {
         ambit::Tensor L3aaa = reference_.L3aaa();
         ambit::Tensor L3aab = reference_.L3aab();
         ambit::Tensor L3abb = reference_.L3abb();

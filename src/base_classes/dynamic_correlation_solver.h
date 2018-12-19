@@ -4,15 +4,17 @@
 #include <memory>
 
 #include "psi4/liboptions/liboptions.h"
-#include "psi4/libmints/wavefunction.h"
 
 #include "integrals/integrals.h"
 #include "fci/fci_integrals.h"
 #include "base_classes/reference.h"
 
-
 namespace forte {
-class DynamicCorrelationSolver : public psi::Wavefunction {
+
+class SCFInfo;
+class ForteOptions;
+
+class DynamicCorrelationSolver {
   public:
     /**
      * Constructor
@@ -21,7 +23,8 @@ class DynamicCorrelationSolver : public psi::Wavefunction {
      * @param ints A pointer to an allocated integral object
      * @param mo_space_info The MOSpaceInfo object
      */
-    DynamicCorrelationSolver(Reference reference, psi::SharedWavefunction ref_wfn, psi::Options& options,
+    DynamicCorrelationSolver(Reference reference, std::shared_ptr<SCFInfo> scf_info,
+                             std::shared_ptr<ForteOptions> options,
                              std::shared_ptr<ForteIntegrals> ints,
                              std::shared_ptr<MOSpaceInfo> mo_space_info);
 
@@ -43,6 +46,12 @@ class DynamicCorrelationSolver : public psi::Wavefunction {
 
     /// The reference object (cumulants)
     Reference reference_;
+
+    /// The SCFInfo
+    std::shared_ptr<SCFInfo> scf_info_;
+
+    /// The ForteOptions
+    std::shared_ptr<ForteOptions> foptions_;
 };
 } // namespace forte
 

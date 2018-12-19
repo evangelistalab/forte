@@ -140,7 +140,7 @@ class ForteOptions {
      * @brief Get a string option
      * @param label Option label
      */
-    const std::string& get_str(const std::string& label);
+    std::string get_str(const std::string& label);
 
     /**
      * @brief If an option is changed
@@ -161,6 +161,9 @@ class ForteOptions {
      * @brief Update the local copy of psi_options_
      */
     void update_psi_options(psi::Options& options);
+
+    /// temporary solution for the option array problem
+    psi::Options& psi_options() { return psi_options_; }
 
   private:
     std::vector<bool_opt_t> bool_opts_;

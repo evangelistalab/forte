@@ -44,7 +44,7 @@ namespace forte {
 
 void MRDSRG::guess_t(BlockedTensor& V, BlockedTensor& T2, BlockedTensor& F, BlockedTensor& T1) {
     // if fully decouple core-core-virtual-virtual block
-    std::string ccvv_source = options_.get_str("CCVV_SOURCE");
+    std::string ccvv_source = foptions_->get_str("CCVV_SOURCE");
 
     if (ccvv_source == "ZERO") {
         guess_t2_noccvv(V, T2);
@@ -57,7 +57,7 @@ void MRDSRG::guess_t(BlockedTensor& V, BlockedTensor& T2, BlockedTensor& F, Bloc
 
 void MRDSRG::guess_t_df(BlockedTensor& B, BlockedTensor& T2, BlockedTensor& F, BlockedTensor& T1) {
     // if fully decouple core-core-virtual-virtual block
-    std::string ccvv_source = options_.get_str("CCVV_SOURCE");
+    std::string ccvv_source = foptions_->get_str("CCVV_SOURCE");
 
     if (ccvv_source == "ZERO") {
         guess_t2_noccvv_df(B, T2);
@@ -70,7 +70,7 @@ void MRDSRG::guess_t_df(BlockedTensor& B, BlockedTensor& T2, BlockedTensor& F, B
 
 void MRDSRG::update_t() {
     // if fully decouple core-core-virtual-virtual block
-    std::string ccvv_source = options_.get_str("CCVV_SOURCE");
+    std::string ccvv_source = foptions_->get_str("CCVV_SOURCE");
     if (ccvv_source == "ZERO") {
         update_t2_noccvv();
         update_t1_nocv();

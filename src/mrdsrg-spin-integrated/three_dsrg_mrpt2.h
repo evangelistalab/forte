@@ -43,7 +43,6 @@
 #include "mrdsrg-helper/dsrg_time.h"
 #include "master_mrdsrg.h"
 
-
 namespace forte {
 
 class THREE_DSRG_MRPT2 : public MASTER_DSRG {
@@ -56,8 +55,8 @@ class THREE_DSRG_MRPT2 : public MASTER_DSRG {
      * @param ints A pointer to an allocated integral object
      * @param mo_space_info A pointer to the MOSpaceInfo object
      */
-    THREE_DSRG_MRPT2(Reference reference, psi::SharedWavefunction ref_wfn, psi::Options& options,
-                     std::shared_ptr<ForteIntegrals> ints,
+    THREE_DSRG_MRPT2(Reference reference, std::shared_ptr<SCFInfo> scf_info,
+                     std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
                      std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Destructor
@@ -101,7 +100,8 @@ class THREE_DSRG_MRPT2 : public MASTER_DSRG {
     void rotate_amp(psi::SharedMatrix Ua, psi::SharedMatrix Ub, const bool& transpose = false,
                     const bool& t1eff = false);
 
-    void set_Ufull( psi::SharedMatrix& Ua, psi::SharedMatrix& Ub );
+    void set_Ufull(psi::SharedMatrix& Ua, psi::SharedMatrix& Ub);
+
   protected:
     // => Class data <= //
 
@@ -238,9 +238,9 @@ class THREE_DSRG_MRPT2 : public MASTER_DSRG {
     void form_Hbar();
 
     /// Compute Hbar1 from core contraction when doing DiskDF
-    void compute_Hbar1C_diskDF(ambit::BlockedTensor& Hbar1, bool scaleV=true);
+    void compute_Hbar1C_diskDF(ambit::BlockedTensor& Hbar1, bool scaleV = true);
     /// Compute Hbar1 from virtual contraction when doing DiskDF
-    void compute_Hbar1V_diskDF(ambit::BlockedTensor& Hbar1, bool scaleV=true);
+    void compute_Hbar1V_diskDF(ambit::BlockedTensor& Hbar1, bool scaleV = true);
 
     std::vector<double> relaxed_energy(std::shared_ptr<FCIIntegrals> fci_ints);
 
@@ -291,6 +291,6 @@ class THREE_DSRG_MRPT2 : public MASTER_DSRG {
     /// Do we have MPI (actually use GA)
     static bool have_mpi_;
 };
-}
+} // namespace forte
 
 #endif // _three_dsrg_mrpt2_h_

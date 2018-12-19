@@ -51,7 +51,7 @@ int ForteOptions::get_int(const std::string& label) { return psi_options_.get_in
 
 double ForteOptions::get_double(const std::string& label) { return psi_options_.get_double(label); }
 
-const std::string& ForteOptions::get_str(const std::string& label) {
+std::string ForteOptions::get_str(const std::string& label) {
     return psi_options_.get_str(label);
 }
 

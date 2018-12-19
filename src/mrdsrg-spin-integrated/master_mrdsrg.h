@@ -8,6 +8,7 @@
 #include "ambit/tensor.h"
 #include "ambit/blocked_tensor.h"
 
+#include "forte_options.h"
 #include "base_classes/dynamic_correlation_solver.h"
 #include "integrals/integrals.h"
 #include "fci/fci_integrals.h"
@@ -30,8 +31,9 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
      * @param ints A pointer to an allocated integral object
      * @param mo_space_info The MOSpaceInfo object
      */
-    MASTER_DSRG(Reference reference, psi::SharedWavefunction ref_wfn, psi::Options& options,
-                std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
+    MASTER_DSRG(Reference reference, std::shared_ptr<SCFInfo> scf_info,
+                std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
+                std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Destructor
     virtual ~MASTER_DSRG();
@@ -81,7 +83,9 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     }
 
     /// Return 2-body renormalized 1st-order Hamiltonian
-    virtual ambit::BlockedTensor get_RH2() { throw psi::PSIEXCEPTION("Only used in non-DF DSRG-MRPT2"); }
+    virtual ambit::BlockedTensor get_RH2() {
+        throw psi::PSIEXCEPTION("Only used in non-DF DSRG-MRPT2");
+    }
 
     /// Return the Hbar of a given order
     std::vector<ambit::Tensor> Hbar(int n);
@@ -346,14 +350,14 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
 
     // ==> commutators <==
     /**
-      * H1, C1, G1: a rank 2 tensor of all MOs in general
-      * H2, C2, G2: a rank 4 tensor of all MOs in general
-      * C3: a rank 6 tensor of all MOs in general
-      * T1: a rank 2 tensor of hole-particle
-      * T2: a rank 4 tensor of hole-hole-particle-particle
-      * V: antisymmetrized 2-electron integrals
-      * B: 3-index integrals from DF/CD
-      */
+     * H1, C1, G1: a rank 2 tensor of all MOs in general
+     * H2, C2, G2: a rank 4 tensor of all MOs in general
+     * C3: a rank 6 tensor of all MOs in general
+     * T1: a rank 2 tensor of hole-particle
+     * T2: a rank 4 tensor of hole-hole-particle-particle
+     * V: antisymmetrized 2-electron integrals
+     * B: 3-index integrals from DF/CD
+     */
 
     /// Compute zero-body term of commutator [H1, T1]
     void H1_T1_C0(BlockedTensor& H1, BlockedTensor& T1, const double& alpha, double& C0);
@@ -459,6 +463,6 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     /// Compute two-body term of commutator [H2, G2]
     void H2_G2_C2(BlockedTensor& H2, BlockedTensor& G2, const double& alpha, BlockedTensor& C2);
 };
-}
+} // namespace forte
 
 #endif // MASTER_MRDSRG_H

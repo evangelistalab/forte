@@ -57,8 +57,9 @@ void set_DWMS_options(ForteOptions& foptions) {
                       "algorithm, testing in non-DF DSRG-MRPT2");
 
     /*- Iteratively update the states coefficients -*/
-    foptions.add_bool("DWMS_ITERATE", false, "Iterative update the reference CI coefficients in SA "
-                                             "algorithm, testing in non-DF DSRG-MRPT2");
+    foptions.add_bool("DWMS_ITERATE", false,
+                      "Iterative update the reference CI coefficients in SA "
+                      "algorithm, testing in non-DF DSRG-MRPT2");
 
     /*- Max number of iteration for the update of reference CI coefficients -*/
     foptions.add_int("DWMS_MAXITER", 10,
@@ -70,13 +71,10 @@ void set_DWMS_options(ForteOptions& foptions) {
                         "Energy convergence criteria for DWMS iteration");
 }
 
-DWMS_DSRGPT2::DWMS_DSRGPT2(psi::SharedWavefunction ref_wfn, psi::Options& options,
+DWMS_DSRGPT2::DWMS_DSRGPT2(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
                            std::shared_ptr<ForteIntegrals> ints,
                            std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : Wavefunction(options), ints_(ints), mo_space_info_(mo_space_info) {
-    shallow_copy(ref_wfn);
-    reference_wavefunction_ = ref_wfn;
-
+    : ints_(ints), mo_space_info_(mo_space_info), scf_info_(scf_info), foptions_(options) {
     print_method_banner({"Dynamically Weighted Driven Similarity Renormalization Group",
                          "Multi-State Perturbation Theory", "Chenyang Li"});
     startup();
@@ -117,18 +115,18 @@ void DWMS_DSRGPT2::startup() {
 }
 
 void DWMS_DSRGPT2::read_options() {
-    dwms_corrlv_ = options_.get_str("DWMS_CORRLV");
-    zeta_ = options_.get_double("DWMS_ZETA");
-    algorithm_ = options_.get_str("DWMS_ALGORITHM");
-    dwms_ref_ = options_.get_str("DWMS_REFERENCE");
-    do_delta_amp_ = options_.get_bool("DWMS_DELTA_AMP");
-    dwms_iterate_ = options_.get_bool("DWMS_ITERATE");
-    dwms_maxiter_ = options_.get_int("DWMS_MAXITER");
-    dwms_e_convergence_ = options_.get_double("DWMS_E_CONVERGENCE");
+    dwms_corrlv_ = foptions_->get_str("DWMS_CORRLV");
+    zeta_ = foptions_->get_double("DWMS_ZETA");
+    algorithm_ = foptions_->get_str("DWMS_ALGORITHM");
+    dwms_ref_ = foptions_->get_str("DWMS_REFERENCE");
+    do_delta_amp_ = foptions_->get_bool("DWMS_DELTA_AMP");
+    dwms_iterate_ = foptions_->get_bool("DWMS_ITERATE");
+    dwms_maxiter_ = foptions_->get_int("DWMS_MAXITER");
+    dwms_e_convergence_ = foptions_->get_double("DWMS_E_CONVERGENCE");
 
-    do_hbar3_ = options_.get_bool("FORM_HBAR3");
+    do_hbar3_ = foptions_->get_bool("FORM_HBAR3");
     max_hbar_level_ = do_hbar3_ ? 3 : 2;
-    max_rdm_level_ = (options_.get_str("THREEPDC") == "ZERO") ? 2 : 3;
+    max_rdm_level_ = (foptions_->get_str("THREEPDC") == "ZERO") ? 2 : 3;
 
     IntegralType int_type = ints_->integral_type();
     eri_df_ = (int_type == Cholesky) || (int_type == DF) || (int_type == DiskDF);
@@ -157,7 +155,7 @@ void DWMS_DSRGPT2::test_options() {
         throw psi::PSIEXCEPTION("DWMS_ZETA should be a value greater or equal than 0.0!");
     }
 
-    std::string actv_type = options_.get_str("FCIMO_ACTV_TYPE");
+    std::string actv_type = foptions_->get_str("FCIMO_ACTV_TYPE");
     if (actv_type == "CIS" || actv_type == "CISD") {
         throw psi::PSIEXCEPTION("VCIS and VCISD are not supported for DWMS-DSRG-PT yet!");
     }
@@ -441,15 +439,15 @@ std::shared_ptr<FCIIntegrals> DWMS_DSRGPT2::compute_dsrg_pt(std::shared_ptr<MAST
         Ua_ = semi.Ua_t();
         Ub_ = semi.Ub_t();
 
-        dsrg_pt = std::make_shared<THREE_DSRG_MRPT2>(reference, reference_wavefunction_, options_,
+        dsrg_pt = std::make_shared<THREE_DSRG_MRPT2>(reference, scf_info_, foptions_,
                                                      ints_, mo_space_info_);
         dsrg_pt->set_Uactv(Ua_, Ub_);
     } else {
         if (level == "PT3") {
-            dsrg_pt = std::make_shared<DSRG_MRPT3>(reference, reference_wavefunction_, options_,
+            dsrg_pt = std::make_shared<DSRG_MRPT3>(reference, scf_info_, foptions_,
                                                    ints_, mo_space_info_);
         } else {
-            dsrg_pt = std::make_shared<DSRG_MRPT2>(reference, reference_wavefunction_, options_,
+            dsrg_pt = std::make_shared<DSRG_MRPT2>(reference, scf_info_, foptions_,
                                                    ints_, mo_space_info_);
         }
     }
@@ -777,7 +775,8 @@ void DWMS_DSRGPT2::compute_dwms_energy(std::shared_ptr<FCI_MO>& fci_mo) {
 
         // prepare Heff
         psi::SharedMatrix Heff(new psi::Matrix("Heff " + entry_name, nroots, nroots));
-        psi::SharedMatrix Heff_sym(new psi::Matrix("Symmetrized Heff " + entry_name, nroots, nroots));
+        psi::SharedMatrix Heff_sym(
+            new psi::Matrix("Symmetrized Heff " + entry_name, nroots, nroots));
 
         // loop over states of current symmetry
         for (int M = 0; M < nroots; ++M) {
@@ -1185,7 +1184,8 @@ void DWMS_DSRGPT2::print_title(const std::string& title) {
     outfile->Printf("\n  %s\n", std::string(title_size, '=').c_str());
 }
 
-void DWMS_DSRGPT2::print_overlap(const std::vector<psi::SharedVector>& evecs, const std::string& Sname) {
+void DWMS_DSRGPT2::print_overlap(const std::vector<psi::SharedVector>& evecs,
+                                 const std::string& Sname) {
     print_h2(Sname);
     outfile->Printf("\n");
 
@@ -1202,4 +1202,4 @@ void DWMS_DSRGPT2::print_overlap(const std::vector<psi::SharedVector>& evecs, co
 
     S->print();
 }
-}
+} // namespace forte

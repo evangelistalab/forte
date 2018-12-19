@@ -66,10 +66,10 @@ SemiCanonical::SemiCanonical(std::shared_ptr<psi::Wavefunction> wfn,
 
 void SemiCanonical::startup() {
     // some basics
-    nirrep_ = wfn_->nirrep();
+    nirrep_ = mo_space_info_->nirrep();
     ncmo_ = mo_space_info_->size("CORRELATED");
     nact_ = mo_space_info_->size("ACTIVE");
-    nmopi_ = wfn_->nmopi();
+    nmopi_ = mo_space_info_->get_dimension("ALL");
     ncmopi_ = mo_space_info_->get_dimension("CORRELATED");
     fdocc_ = mo_space_info_->get_dimension("FROZEN_DOCC");
     rdocc_ = mo_space_info_->get_dimension("RESTRICTED_DOCC");
