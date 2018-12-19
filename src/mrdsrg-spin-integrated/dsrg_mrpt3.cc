@@ -1577,8 +1577,8 @@ double DSRG_MRPT3::compute_energy_relaxed() {
             // compute permanent dipoles
             dm_relax = fci_mo.compute_ref_relaxed_dm(Mbar0_, Mbar1_, Mbar2_);
         }
-    } else if (foptions_->get_str("CAS_TYPE") == "ACI") {
-        AdaptiveCI aci(reference_wavefunction_, options_, ints_, mo_space_info_);
+    } else if (foptions_.get_str("CAS_TYPE") == "ACI") {
+        AdaptiveCI aci(std::make_shared<SCFInfo>(reference_wavefunction_), std::make_shared<ForteOptions>(options_), ints_, mo_space_info_);
         aci.set_fci_ints(fci_ints);
         if ((foptions_->psi_options())["ACI_RELAX_SIGMA"].has_changed()) {
             aci.update_sigma();

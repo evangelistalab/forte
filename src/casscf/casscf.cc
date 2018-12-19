@@ -367,7 +367,7 @@ void CASSCF::cas_ci() {
     } else if (options_.get_str("CASSCF_CI_SOLVER") == "ACI") {
         // ints_->retransform_integrals();
         std::shared_ptr<FCIIntegrals> fci_ints = get_ci_integrals();
-        AdaptiveCI aci(reference_wavefunction_, options_, ints_, mo_space_info_);
+        AdaptiveCI aci(std::make_shared<SCFInfo>(reference_wavefunction_), std::make_shared<ForteOptions>(options_), ints_, mo_space_info_);
         aci.set_fci_ints(fci_ints);
         aci.set_max_rdm(2);
         aci.set_quiet(quiet);
@@ -454,7 +454,7 @@ void CASSCF::cas_ci_final() {
     } else if (options_.get_str("CASSCF_CI_SOLVER") == "ACI") {
         // ints_->retransform_integrals();
         //   std::shared_ptr<FCIIntegrals> fci_ints = get_ci_integrals();
-        AdaptiveCI aci(reference_wavefunction_, options_, ints_, mo_space_info_);
+        AdaptiveCI aci(std::make_shared<SCFInfo>(reference_wavefunction_), std::make_shared<ForteOptions>(options_), ints_, mo_space_info_);
         //   aci.set_fci_ints(fci_ints);
         aci.set_max_rdm(3);
         aci.set_quiet(quiet);

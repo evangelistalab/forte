@@ -59,10 +59,13 @@ using vecdet = std::vector<forte::Determinant>;
 
 namespace forte {
 
+class ForteOptions;
+class SCFInfo;
+
 /// Set the FCI_MO options
 void set_FCI_MO_options(ForteOptions& foptions);
 
-class FCI_MO : public psi::Wavefunction {
+class FCI_MO {
 
   public:
     /**

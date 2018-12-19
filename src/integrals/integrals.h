@@ -39,12 +39,12 @@
 class Tensor;
 
 namespace psi {
-  class Options;
-  class Matrix;
-  class Vector;
-  class Wavefunction;
-  class Dimension;
-}
+class Options;
+class Matrix;
+class Vector;
+class Wavefunction;
+class Dimension;
+} // namespace psi
 
 namespace forte {
 
@@ -113,13 +113,12 @@ class ForteIntegrals {
 
     // ==> Class Interface <==
 
-    // Return Ca
+    /// Return Ca
     std::shared_ptr<psi::Matrix> Ca() const { return Ca_; }
-    // Return Cb
+    /// Return Cb
     std::shared_ptr<psi::Matrix> Cb() const { return Cb_; }
-    // Return nuclear repulsion energy 
+    /// Return nuclear repulsion energy
     double nuclear_repulsion_energy() const { return nucrep_; }
-
 
     /// Return the total number of molecular orbitals (this number includes frozen MOs)
     size_t nmo() const { return nmo_; }
@@ -233,8 +232,13 @@ class ForteIntegrals {
     virtual void set_tei(size_t p, size_t q, size_t r, size_t s, double value, bool alpha1,
                          bool alpha2) = 0;
 
+    /// Rotate the MO coefficients and transform the intregrals
+    /// @param Ua the alpha unitary transformation matrix
+    /// @param Ub the alpha unitary transformation matrix
+    void rotate_orbitals(std::shared_ptr<psi::Matrix> Ua, std::shared_ptr<psi::Matrix> Ub);
+
     /// Update the integrals with a new set of MO coefficients
-    virtual void retransform_integrals();
+    void retransform_integrals();
     /// Expert Option: just try and use three_integral
     virtual double** three_integral_pointer() = 0;
 
@@ -264,7 +268,7 @@ class ForteIntegrals {
      *         each of which is a nmo by nmo std::shared_ptr<psi::Matrix>
      */
     std::vector<std::shared_ptr<psi::Matrix>> compute_MOdipole_ints(const bool& alpha = true,
-                                                               const bool& resort = false);
+                                                                    const bool& resort = false);
 
   protected:
     // ==> Class data <==
@@ -282,10 +286,10 @@ class ForteIntegrals {
     IntegralSpinRestriction restricted_;
 
     // Ca matrix from psi
-    std::shared_ptr<psi::Matrix> Ca_; 
+    std::shared_ptr<psi::Matrix> Ca_;
 
     // Cb matrix from psi
-    std::shared_ptr<psi::Matrix> Cb_; 
+    std::shared_ptr<psi::Matrix> Cb_;
 
     // Nuclear repulsion energy
     double nucrep_;
@@ -374,7 +378,8 @@ class ForteIntegrals {
     void build_AOdipole_ints();
     /// Compute MO dipole integrals
     std::vector<std::shared_ptr<psi::Matrix>>
-    MOdipole_ints_helper(std::shared_ptr<psi::Matrix> Cao, std::shared_ptr<psi::Vector> epsilon, const bool& resort);
+    MOdipole_ints_helper(std::shared_ptr<psi::Matrix> Cao, std::shared_ptr<psi::Vector> epsilon,
+                         const bool& resort);
 
     // ==> Class private functions <==
 
@@ -407,6 +412,5 @@ class ForteIntegrals {
 };
 
 } // namespace forte
-
 
 #endif // _integrals_h_

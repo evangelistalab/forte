@@ -49,6 +49,7 @@
 #include "orbital-helpers/iao_builder.h"
 #include "orbital-helpers/localize.h"
 #include "helpers/timer.h"
+#include "base_classes/active_space_solver.h"
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -73,7 +74,7 @@ void set_ACI_options(ForteOptions& foptions);
  * @brief The AdaptiveCI class
  * This class implements an adaptive CI algorithm
  */
-class AdaptiveCI : public psi::Wavefunction {
+class AdaptiveCI : public ActiveSpaceSolver {
   public:
     // ==> Class Constructor and Destructor <==
 
@@ -84,16 +85,18 @@ class AdaptiveCI : public psi::Wavefunction {
      * @param ints A pointer to an allocated integral object
      * @param mo_space_info A pointer to the MOSpaceInfo object
      */
-    AdaptiveCI(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
+    AdaptiveCI(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
                std::shared_ptr<MOSpaceInfo> mo_space_info);
 
+//    AdaptiveCI(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
+//               std::shared_ptr<MOSpaceInfo> mo_space_info);
     /// Destructor
     ~AdaptiveCI();
 
     // ==> Class Interface <==
 
     /// Compute the energy
-    double compute_energy();
+    double solver_compute_energy();
 
     /// Update the reference file
     Reference reference();
@@ -102,7 +105,6 @@ class AdaptiveCI : public psi::Wavefunction {
     void set_max_rdm(int rdm);
     /// Set the printing level
     void set_quiet(bool quiet) { quiet_mode_ = quiet; }
-
     /// Get the wavefunction
     DeterminantHashVec get_wavefunction();
 
@@ -133,6 +135,10 @@ class AdaptiveCI : public psi::Wavefunction {
 
     WFNOperator op_;
 
+    /// Some HF info
+    std::shared_ptr<SCFInfo> scf_info_;
+    /// Forte options
+    std::shared_ptr<ForteOptions> options_;
     /// The molecular integrals required by Explorer
     std::shared_ptr<ForteIntegrals> ints_;
     /// Pointer to FCI integrals
@@ -157,6 +163,7 @@ class AdaptiveCI : public psi::Wavefunction {
     int nbeta_;
     /// The number of frozen core orbitals
     int nfrzc_;
+    psi::Dimension frzcpi_;
     /// The number of correlated molecular orbitals per irrep
     psi::Dimension ncmopi_;
     /// The number of restricted docc orbitals per irrep
@@ -171,6 +178,9 @@ class AdaptiveCI : public psi::Wavefunction {
     size_t rvir_;
     /// The number of frozen virtual
     size_t fvir_;
+    /// The number of irreps
+    size_t nirrep_;
+    
 
     /// The nuclear repulsion energy
     double nuclear_repulsion_energy_;
@@ -459,7 +469,6 @@ class AdaptiveCI : public psi::Wavefunction {
                                                             std::vector<Determinant>& dets,
                                                             psi::SharedMatrix& evecs, int nroot);
 
-    std::vector<std::tuple<double, int, int>> sym_labeled_orbitals(std::string type);
 
     //    int david2(double **A, int N, int M, double *eps, double **v,double
     //    cutoff, int print);

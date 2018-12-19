@@ -182,8 +182,8 @@ void ForteIntegrals::transform_one_electron_integrals() {
     T = mints.so_kinetic();
     V = mints.so_potential();
 
-    psi::SharedMatrix Ca = wfn_->Ca();
-    psi::SharedMatrix Cb = wfn_->Cb();
+    // psi::SharedMatrix Ca = wfn_->Ca();
+    // psi::SharedMatrix Cb = wfn_->Cb();
 
     psi::SharedMatrix Ha = T->clone();
     psi::SharedMatrix Hb = T->clone();
@@ -192,8 +192,8 @@ void ForteIntegrals::transform_one_electron_integrals() {
 
     OneIntsAO_ = Ha->clone();
 
-    Ha->transform(Ca);
-    Hb->transform(Cb);
+    Ha->transform(Ca_);
+    Hb->transform(Cb_);
 
     OneBody_symm_ = Ha;
 
@@ -264,13 +264,12 @@ void ForteIntegrals::compute_frozen_one_body_operator() {
     psi::Dimension nmopi = mo_space_info_->get_dimension("ALL");
     // Need to get the inactive block of the C matrix
     psi::Dimension nsopi = wfn_->nsopi();
-    psi::SharedMatrix Ca = wfn_->Ca();
     psi::SharedMatrix C_core(new psi::Matrix("C_core", nirrep_, nsopi, frozen_dim));
 
     for (int h = 0; h < nirrep_; h++) {
         for (int mu = 0; mu < nsopi[h]; mu++) {
             for (int i = 0; i < frozen_dim[h]; i++) {
-                C_core->set(h, mu, i, Ca->get(h, mu, i));
+                C_core->set(h, mu, i, Ca_->get(h, mu, i));
             }
         }
     }
@@ -323,7 +322,7 @@ void ForteIntegrals::compute_frozen_one_body_operator() {
 
     F_core->scale(2.0);
     F_core->subtract(K_core);
-    F_core->transform(Ca);
+    F_core->transform(Ca_);
 
     // This loop grabs only the correlated part of the correction
     int full_offset = 0;
@@ -363,6 +362,33 @@ void ForteIntegrals::compute_frozen_one_body_operator() {
         print_timing("frozen one-body operator", timer_frozen_one_body.get());
         //        outfile->Printf("\n  Timing for the frozen one-body operator  %9.3f s.",
         //        timer_frozen_one_body.get());
+    }
+}
+
+void ForteIntegrals::rotate_orbitals(std::shared_ptr<psi::Matrix> Ua,
+                                     std::shared_ptr<psi::Matrix> Ub) {
+    // 1. Rotate the orbital coefficients and store them in the ForteIntegral object
+    auto Ca_rotated = psi::Matrix::doublet(Ca_, Ua);
+    auto Cb_rotated = psi::Matrix::doublet(Cb_, Ub);
+    Ca_->copy(Ca_rotated);
+    Cb_->copy(Cb_rotated);
+
+    // 2. Send a copy to psi::Wavefunction
+    wfn_->Ca()->copy(Ca_);
+    wfn_->Cb()->copy(Cb_);
+
+    // 3. Re-transform the integrals
+    aptei_idx_ = nmo_;
+    transform_one_electron_integrals();
+    int my_proc = 0;
+#ifdef HAVE_GA
+    my_proc = GA_Nodeid();
+#endif
+    if (my_proc == 0) {
+        outfile->Printf("\n Integrals are about to be computed.");
+        gather_integrals();
+        outfile->Printf("\n Integrals are about to be updated.");
+        freeze_core_orbitals();
     }
 }
 
@@ -421,7 +447,8 @@ void ForteIntegrals::rotate_mos() {
         outfile->Printf("   %d   %d   %d\n", rotate_mo_group[0], rotate_mo_group[1],
                         rotate_mo_group[2]);
     }
-    psi::SharedMatrix C_old = wfn_->Ca();
+    // psi::SharedMatrix C_old = wfn_->Ca();
+    psi::SharedMatrix C_old = Ca_;
     psi::SharedMatrix C_new(C_old->clone());
 
     for (auto mo_group : rotate_mo_list) {
@@ -432,7 +459,8 @@ void ForteIntegrals::rotate_mos() {
     }
     C_old->copy(C_new);
 
-    psi::SharedMatrix Cb_old = wfn_->Cb();
+    // psi::SharedMatrix Cb_old = wfn_->Cb();
+    psi::SharedMatrix Cb_old = Cb_;
     Cb_old->copy(C_new);
 }
 
@@ -448,8 +476,8 @@ void ForteIntegrals::print_info() {
 
 void ForteIntegrals::print_ints() {
 
-    wfn_->Ca()->print();
-    wfn_->Cb()->print();
+    Ca_->print();
+    Cb_->print();
 
     outfile->Printf("\n  Alpha one-electron integrals (T + V_{en})");
     Matrix ha(" Alpha one-electron integrals (T + V_{en})", nmo_, nmo_);
