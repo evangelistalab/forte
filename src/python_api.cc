@@ -78,6 +78,10 @@ PYBIND11_MODULE(forte, m) {
                                      const std::vector<std::string>&, const std::string&)) &
                  ForteOptions::add_str,
              "Add a string option")
+        .def("get_bool", &ForteOptions::get_bool, "Get a boolean option")
+        .def("get_int", &ForteOptions::get_int, "Get an integer option")
+        .def("get_double", &ForteOptions::add_double, "Get a double option")
+        .def("get_str", &ForteOptions::get_str, "Get a string option")
         .def("push_options_to_psi4", &ForteOptions::push_options_to_psi4)
         .def("update_psi_options", &ForteOptions::update_psi_options)
         .def("generate_documentation", &ForteOptions::generate_documentation);
