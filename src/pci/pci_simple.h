@@ -45,6 +45,8 @@
 
 
 namespace forte {
+class SCFInfo;
+class StateInfo;
 
 /// Set the forte style options for the FCI method
 // void set_PCI_Simple_options(ForteOptions& foptions);
@@ -71,7 +73,7 @@ enum GeneratorType {
  * @brief The SparsePathIntegralCI class
  * This class implements an a sparse path-integral FCI algorithm
  */
-class ProjectorCI_Simple : public psi::Wavefunction {
+class ProjectorCI_Simple {
   public:
     // ==> Class Constructor and Destructor <==
 
@@ -81,7 +83,7 @@ class ProjectorCI_Simple : public psi::Wavefunction {
      * @param options The main options object
      * @param ints A pointer to an allocated integral object
      */
-    ProjectorCI_Simple(psi::SharedWavefunction ref_wfn, psi::Options& options,
+    ProjectorCI_Simple(std::shared_ptr<StateInfo> state, std::shared_ptr<forte::SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
                        std::shared_ptr<ForteIntegrals> ints,
                        std::shared_ptr<MOSpaceInfo> mo_space_info);
 
@@ -94,10 +96,16 @@ class ProjectorCI_Simple : public psi::Wavefunction {
     // ==> Class data <==
 
     // * Calculation data
+    /// The state to calculate
+    std::shared_ptr<StateInfo> state_;
     /// The molecular integrals required by Explorer
     std::shared_ptr<ForteIntegrals> ints_;
     /// Store all the integrals locally
     static std::shared_ptr<FCIIntegrals> fci_ints_;
+    /// The options
+    std::shared_ptr<ForteOptions> options_;
+    /// SCF information
+    std::shared_ptr<SCFInfo> scf_info_;
     /// The maximum number of threads
     int num_threads_;
     /// The type of Generator used
@@ -108,6 +116,8 @@ class ProjectorCI_Simple : public psi::Wavefunction {
     int wavefunction_symmetry_;
     /// The symmetry of each orbital in Pitzer ordering
     std::vector<int> mo_symmetry_;
+    /// The number of irrep
+    int nirrep_;
     /// The number of active electrons
     int nactel_;
     /// The number of correlated alpha electrons
@@ -116,6 +126,8 @@ class ProjectorCI_Simple : public psi::Wavefunction {
     int nbeta_;
     /// The number of frozen core orbitals
     int nfrzc_;
+    /// The number of frozen core orbitals per irrep
+    psi::Dimension frzcpi_;
     /// The number of correlated molecular orbitals per irrep
     psi::Dimension ncmopi_;
     /// The number of active orbitals
