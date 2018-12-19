@@ -164,7 +164,7 @@ void FCI_MO::read_options() {
     fcheck_threshold_ = 100.0 * econv_;
 
     // nuclear repulsion
-    e_nuc_ = ints_->nuclear_repulsion_energy();
+    e_nuc_ = integral_->nuclear_repulsion_energy();
 
     // digonalization algorithm
     diag_algorithm_ = options_->get_str("DIAG_ALGORITHM");
@@ -1457,7 +1457,7 @@ void FCI_MO::compute_permanent_dipole() {
     //        DipoleInt::nuclear_contribution(psi::Process::environment.molecule(), );
 
     // SO to AO transformer
-    psi::SharedMatrix sotoao(ints_->aotoso()->transpose());
+    psi::SharedMatrix sotoao(integral_->aotoso()->transpose());
 
     // prepare eigen vectors for ci_rdm
     int dim = (eigen_[0].first)->dim();
@@ -1476,7 +1476,7 @@ void FCI_MO::compute_permanent_dipole() {
         ci_rdms.compute_1rdm(opdm_a, opdm_b);
 
         psi::SharedMatrix SOdens = reformat_1rdm("SO density " + trans_name, opdm_a, false);
-        SOdens->back_transform(ints_->Ca());
+        SOdens->back_transform(integral_->Ca());
 
         size_t nao = sotoao->coldim(0);
         psi::SharedMatrix AOdens(new psi::Matrix("AO density " + trans_name, nao, nao));
@@ -1552,7 +1552,7 @@ void FCI_MO::compute_transition_dipole() {
     std::vector<psi::SharedMatrix> aodipole_ints = integral_->AOdipole_ints();
 
     // SO to AO transformer
-    psi::SharedMatrix sotoao(ints_->aotoso()->transpose());
+    psi::SharedMatrix sotoao(integral_->aotoso()->transpose());
 
     //    // obtain SO dipole from libmints
     //    std::vector<psi::SharedMatrix> dipole_ints;
@@ -1597,7 +1597,7 @@ void FCI_MO::compute_transition_dipole() {
 
             psi::SharedMatrix SOtransD =
                 reformat_1rdm("SO transition density " + trans_name, opdm_a, true);
-            SOtransD->back_transform(ints_->Ca());
+            SOtransD->back_transform(integral_->Ca());
 
             size_t nao = sotoao->coldim(0);
             psi::SharedMatrix AOtransD(
@@ -2172,7 +2172,7 @@ double FCI_MO::ref_relaxed_dm_helper(const double& dm0, BlockedTensor& dm1, Bloc
 d3 FCI_MO::compute_orbital_extents() {
 
     // compute AO quadrupole integrals
-    std::shared_ptr<psi::BasisSet> basisset = ints_->basisset();
+    std::shared_ptr<psi::BasisSet> basisset = integral_->basisset();
     std::shared_ptr<IntegralFactory> ints = std::shared_ptr<IntegralFactory>(
         new IntegralFactory(basisset, basisset, basisset, basisset));
 
@@ -2185,7 +2185,7 @@ d3 FCI_MO::compute_orbital_extents() {
     aoqOBI->compute(ao_Qpole);
 
     // orbital coefficients arranged by orbital energies
-    psi::SharedMatrix Ca_ao = ints_->Ca_subset("AO");
+    psi::SharedMatrix Ca_ao = integral_->Ca_subset("AO");
     int nao = Ca_ao->nrow();
     int nmo = Ca_ao->ncol();
 
@@ -2998,7 +2998,7 @@ void FCI_MO::localize_actv_orbs() {
     }
 
     std::shared_ptr<Localizer> localizer =
-        Localizer::build(options_->get_str("LOCALIZE_TYPE"), ints_->basisset(), Ca_actv);
+        Localizer::build(options_->get_str("LOCALIZE_TYPE"), integral_->basisset(), Ca_actv);
     localizer->localize();
     psi::SharedMatrix Lorbs = localizer->L();
 
