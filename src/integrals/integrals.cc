@@ -60,7 +60,6 @@
 using namespace psi;
 using namespace ambit;
 
-
 namespace forte {
 
 #ifdef _OPENMP
@@ -101,7 +100,8 @@ ForteIntegrals::ForteIntegrals(psi::Options& options, std::shared_ptr<psi::Wavef
                                IntegralSpinRestriction restricted,
                                std::shared_ptr<MOSpaceInfo> mo_space_info)
     : options_(options), wfn_(ref_wfn), restricted_(restricted), frozen_core_energy_(0.0),
-      scalar_(0.0), mo_space_info_(mo_space_info), Ca_(wfn_->Ca()->clone()), Cb_(wfn_->Cb()->clone()) {
+      scalar_(0.0), mo_space_info_(mo_space_info), Ca_(wfn_->Ca()->clone()),
+      Cb_(wfn_->Cb()->clone()) {
     startup();
     allocate();
     transform_one_electron_integrals();
@@ -119,7 +119,8 @@ void ForteIntegrals::startup() {
         exit(1);
     }
 
-    nucrep_ = psi::Process::environment.molecule()->nuclear_repulsion_energy(wfn_->get_dipole_field_strength()); 
+    nucrep_ = psi::Process::environment.molecule()->nuclear_repulsion_energy(
+        wfn_->get_dipole_field_strength());
 
     nirrep_ = wfn_->nirrep();
     nso_ = wfn_->nso();
@@ -181,8 +182,8 @@ void ForteIntegrals::transform_one_electron_integrals() {
     T = mints.so_kinetic();
     V = mints.so_potential();
 
-   // psi::SharedMatrix Ca = wfn_->Ca();
-   // psi::SharedMatrix Cb = wfn_->Cb();
+    // psi::SharedMatrix Ca = wfn_->Ca();
+    // psi::SharedMatrix Cb = wfn_->Cb();
 
     psi::SharedMatrix Ha = T->clone();
     psi::SharedMatrix Hb = T->clone();
@@ -263,7 +264,6 @@ void ForteIntegrals::compute_frozen_one_body_operator() {
     psi::Dimension nmopi = mo_space_info_->get_dimension("ALL");
     // Need to get the inactive block of the C matrix
     psi::Dimension nsopi = wfn_->nsopi();
-  //  psi::SharedMatrix Ca = wfn_->Ca();
     psi::SharedMatrix C_core(new psi::Matrix("C_core", nirrep_, nsopi, frozen_dim));
 
     for (int h = 0; h < nirrep_; h++) {
@@ -288,8 +288,9 @@ void ForteIntegrals::compute_frozen_one_body_operator() {
                 JK_core = JK::build_JK(wfn_->basisset(), wfn_->get_basisset("DF_BASIS_MP2"),
                                        options_, "MEM_DF");
             } else {
-                throw psi::PSIEXCEPTION("Trying to compute the frozen one-body operator with MEM_DF but "
-                                   "using a non-DF integral type");
+                throw psi::PSIEXCEPTION(
+                    "Trying to compute the frozen one-body operator with MEM_DF but "
+                    "using a non-DF integral type");
             }
         } else {
             JK_core = JK::build_JK(wfn_->basisset(), psi::BasisSet::zero_ao_basis_set(), options_);
@@ -364,6 +365,33 @@ void ForteIntegrals::compute_frozen_one_body_operator() {
     }
 }
 
+void ForteIntegrals::rotate_orbitals(std::shared_ptr<psi::Matrix> Ua,
+                                     std::shared_ptr<psi::Matrix> Ub) {
+    // 1. Rotate the orbital coefficients and store them in the ForteIntegral object
+    auto Ca_rotated = psi::Matrix::doublet(Ca_, Ua);
+    auto Cb_rotated = psi::Matrix::doublet(Cb_, Ub);
+    Ca_->copy(Ca_rotated);
+    Cb_->copy(Cb_rotated);
+
+    // 2. Send a copy to psi::Wavefunction
+    wfn_->Ca()->copy(Ca_);
+    wfn_->Cb()->copy(Cb_);
+
+    // 3. Re-transform the integrals
+    aptei_idx_ = nmo_;
+    transform_one_electron_integrals();
+    int my_proc = 0;
+#ifdef HAVE_GA
+    my_proc = GA_Nodeid();
+#endif
+    if (my_proc == 0) {
+        outfile->Printf("\n Integrals are about to be computed.");
+        gather_integrals();
+        outfile->Printf("\n Integrals are about to be updated.");
+        freeze_core_orbitals();
+    }
+}
+
 void ForteIntegrals::retransform_integrals() {
     aptei_idx_ = nmo_;
     transform_one_electron_integrals();
@@ -419,7 +447,7 @@ void ForteIntegrals::rotate_mos() {
         outfile->Printf("   %d   %d   %d\n", rotate_mo_group[0], rotate_mo_group[1],
                         rotate_mo_group[2]);
     }
-    //psi::SharedMatrix C_old = wfn_->Ca();
+    // psi::SharedMatrix C_old = wfn_->Ca();
     psi::SharedMatrix C_old = Ca_;
     psi::SharedMatrix C_new(C_old->clone());
 
@@ -431,7 +459,7 @@ void ForteIntegrals::rotate_mos() {
     }
     C_old->copy(C_new);
 
-    //psi::SharedMatrix Cb_old = wfn_->Cb();
+    // psi::SharedMatrix Cb_old = wfn_->Cb();
     psi::SharedMatrix Cb_old = Cb_;
     Cb_old->copy(C_new);
 }
@@ -525,7 +553,7 @@ void ForteIntegrals::build_AOdipole_ints() {
 }
 
 std::vector<psi::SharedMatrix> ForteIntegrals::compute_MOdipole_ints(const bool& alpha,
-                                                                const bool& resort) {
+                                                                     const bool& resort) {
     if (alpha) {
         return MOdipole_ints_helper(wfn_->Ca_subset("AO"), wfn_->epsilon_a(), resort);
     } else {
@@ -533,8 +561,9 @@ std::vector<psi::SharedMatrix> ForteIntegrals::compute_MOdipole_ints(const bool&
     }
 }
 
-std::vector<psi::SharedMatrix>
-ForteIntegrals::MOdipole_ints_helper(psi::SharedMatrix Cao, psi::SharedVector epsilon, const bool& resort) {
+std::vector<psi::SharedMatrix> ForteIntegrals::MOdipole_ints_helper(psi::SharedMatrix Cao,
+                                                                    psi::SharedVector epsilon,
+                                                                    const bool& resort) {
     std::vector<psi::SharedMatrix> MOdipole_ints;
     std::vector<std::string> names{"X", "Y", "Z"};
     for (int i = 0; i < 3; ++i) {
@@ -568,7 +597,8 @@ ForteIntegrals::MOdipole_ints_helper(psi::SharedMatrix Cao, psi::SharedVector ep
         }
 
         for (int i = 0; i < 3; ++i) {
-            psi::SharedMatrix modipole(new psi::Matrix("MO Dipole " + names[i], (int)nmo_, (int)nmo_));
+            psi::SharedMatrix modipole(
+                new psi::Matrix("MO Dipole " + names[i], (int)nmo_, (int)nmo_));
             for (int p = 0; p < (int)nmo_; ++p) {
                 int np = indices[p];
                 for (int q = 0; q < (int)nmo_; ++q) {
@@ -583,4 +613,3 @@ ForteIntegrals::MOdipole_ints_helper(psi::SharedMatrix Cao, psi::SharedVector ep
     return MOdipole_ints;
 }
 } // namespace forte
-
