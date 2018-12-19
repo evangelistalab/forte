@@ -32,6 +32,7 @@
 #include "psi4/libmints/pointgrp.h"
 #include "psi4/libpsio/psio.hpp"
 
+#include "forte_options.h"
 #include "helpers/printing.h"
 #include "helpers/helpers.h"
 #include "aci.h"
@@ -206,24 +207,28 @@ bool pairComp(const std::pair<double, Determinant> E1, const std::pair<double, D
     return E1.first < E2.first;
 }
 
-AdaptiveCI::AdaptiveCI(psi::SharedWavefunction ref_wfn, psi::Options& options,
+AdaptiveCI::AdaptiveCI(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
                        std::shared_ptr<ForteIntegrals> ints,
                        std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : Wavefunction(options), ints_(ints), mo_space_info_(mo_space_info) {
-    // Copy the wavefunction information
-    shallow_copy(ref_wfn);
-    reference_wavefunction_ = ref_wfn;
+    : scf_info_(scf_info), options_(*options), ints_(ints), mo_space_info_(mo_space_info) {
 
     mo_symmetry_ = mo_space_info_->symmetry("ACTIVE");
     sigma_ = options_.get_double("SIGMA");
 }
 
+AdaptiveCI::AdaptiveCI(psi::SharedWavefunction ref_wfn, psi::Options& options,
+                       std::shared_ptr<ForteIntegrals> ints,
+                       std::shared_ptr<MOSpaceInfo> mo_space_info)
+    : scf_info_(std::make_shared<SCFInfo>(ref_wfn)), options_(options), ints_(ints), mo_space_info_(mo_space_info) {
+
+    mo_symmetry_ = mo_space_info_->symmetry("ACTIVE");
+    sigma_ = options_.get_double("SIGMA");
+}
 AdaptiveCI::~AdaptiveCI() {}
 
 void AdaptiveCI::set_fci_ints(std::shared_ptr<FCIIntegrals> fci_ints) {
     fci_ints_ = fci_ints;
-    nuclear_repulsion_energy_ =
-        molecule_->nuclear_repulsion_energy(reference_wavefunction_->get_dipole_field_strength());
+    nuclear_repulsion_energy_ = ints_->nuclear_repulsion_energy();
     set_ints_ = true;
 }
 
@@ -241,13 +246,12 @@ void AdaptiveCI::set_aci_ints(std::shared_ptr<ForteIntegrals> ints) {
     fci_ints_->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
     fci_ints_->compute_restricted_one_body_operator();
 
-    nuclear_repulsion_energy_ =
-        molecule_->nuclear_repulsion_energy(reference_wavefunction_->get_dipole_field_strength());
+    nuclear_repulsion_energy_ = ints_->nuclear_repulsion_energy();
 }
 
 void AdaptiveCI::startup() {
     quiet_mode_ = false;
-    if (options_["ACI_QUIET_MODE"].has_changed()) {
+    if (options_.has_changed("ACI_QUIET_MODE")) {
         quiet_mode_ = options_.get_bool("ACI_QUIET_MODE");
     }
 
@@ -258,11 +262,11 @@ void AdaptiveCI::startup() {
     op_.initialize(mo_symmetry_, fci_ints_);
 
     wavefunction_symmetry_ = 0;
-    if (options_["ROOT_SYM"].has_changed()) {
+    if (options_.has_changed("ROOT_SYM")) {
         wavefunction_symmetry_ = options_.get_int("ROOT_SYM");
     }
     multiplicity_ = 1;
-    if (options_["MULTIPLICITY"].has_changed()) {
+    if (options_.has_changed("MULTIPLICITY")) {
         multiplicity_ = options_.get_int("MULTIPLICITY");
     }
 
@@ -276,26 +280,15 @@ void AdaptiveCI::startup() {
     // "Correlated" includes restricted_docc
     ncmo_ = mo_space_info_->size("CORRELATED");
 
-    // Number of correlated electrons
-    nactel_ = 0;
-    nalpha_ = 0;
-    nbeta_ = 0;
-    int nel = 0;
-    for (int h = 0; h < nirrep_; ++h) {
-        nel += 2 * doccpi_[h] + soccpi_[h];
-    }
+    nirrep_ = ints_->nirrep();
 
     twice_ms_ = multiplicity_ - 1;
-    if (options_["MS"].has_changed()) {
+    if (options_.has_changed("MS")) {
         twice_ms_ = std::round(2.0 * options_.get_double("MS"));
     }
 
-    nactel_ = nel - 2 * nfrzc_;
-    nalpha_ = (nactel_ + twice_ms_) / 2;
-    nbeta_ = nactel_ - nalpha_;
-
     // Build the reference determinant and compute its energy
-    CI_Reference ref(std::make_shared<SCFInfo>(reference_wavefunction_), std::make_shared<ForteOptions>(options_), mo_space_info_, fci_ints_, multiplicity_,
+    CI_Reference ref(scf_info_, options_, mo_space_info_, fci_ints_, multiplicity_,
                      twice_ms_, wavefunction_symmetry_);
     ref.build_reference(initial_reference_);
 
@@ -312,11 +305,11 @@ void AdaptiveCI::startup() {
     }
 
     max_cycle_ = 20;
-    if (options_["ACI_MAX_CYCLE"].has_changed()) {
+    if (options_.has_changed("ACI_MAX_CYCLE")) {
         max_cycle_ = options_.get_int("ACI_MAX_CYCLE");
     }
     pre_iter_ = 0;
-    if (options_["ACI_PREITERATIONS"].has_changed()) {
+    if (options_.has_changed("ACI_PREITERATIONS")) {
         pre_iter_ = options_.get_int("ACI_PREITERATIONS");
     }
 
@@ -340,7 +333,7 @@ void AdaptiveCI::startup() {
     hole_ = 0;
 
     diag_method_ = DLSolver;
-    if (options_["DIAG_ALGORITHM"].has_changed()) {
+    if (options_.has_changed("DIAG_ALGORITHM")) {
         if (options_.get_str("DIAG_ALGORITHM") == "FULL") {
             diag_method_ = Full;
         } else if (options_.get_str("DIAG_ALGORITHM") == "DLSTRING") {
@@ -433,7 +426,7 @@ void AdaptiveCI::print_info() {
 
     if (options_.get_bool("PRINT_1BODY_EVALS")) {
         outfile->Printf("\n  Reference orbital energies:");
-        std::shared_ptr<Vector> epsilon_a = reference_wavefunction_->epsilon_a();
+        std::shared_ptr<Vector> epsilon_a = scf_info_->epsilon_a();
 
         auto actmo = mo_space_info_->get_absolute_mo("ACTIVE");
 
@@ -443,12 +436,12 @@ void AdaptiveCI::print_info() {
     }
 }
 
-double AdaptiveCI::compute_energy() {
+double AdaptiveCI::solver_compute_energy() {
     timer energy_timer("ACI:Energy");
 
     startup();
 
-    if (options_["ACI_QUIET_MODE"].has_changed()) {
+    if (options_.has_changed("ACI_QUIET_MODE")) {
         quiet_mode_ = options_.get_bool("ACI_QUIET_MODE");
     }
     print_method_banner({"Adaptive Configuration Interaction",
@@ -618,12 +611,12 @@ double AdaptiveCI::compute_energy() {
     }
 
     //** Optionally compute full PT2 energy **//
-    if (options_.get_bool("MRPT2")) {
-        MRPT2 pt(reference_wavefunction_, options_, ints_, mo_space_info_, final_wfn_, PQ_evecs,
-                 PQ_evals);
+ //   if (options_.get_bool("MRPT2")) {
+ //       MRPT2 pt(reference_wavefunction_, options_, ints_, mo_space_info_, final_wfn_, PQ_evecs,
+ //                PQ_evals);
 
-        multistate_pt2_energy_correction_[0] = pt.compute_energy();
-    }
+ //       multistate_pt2_energy_correction_[0] = pt.compute_energy();
+ //   }
 
     // if (!quiet_mode_) {
     if (ex_alg_ == "ROOT_COMBINE") {
@@ -729,7 +722,7 @@ double AdaptiveCI::compute_energy() {
 }
 
 void AdaptiveCI::unpaired_density(psi::SharedMatrix Ua, psi::SharedMatrix Ub) {
-    UPDensity density(reference_wavefunction_, ints_, mo_space_info_, options_, Ua, Ub);
+    UPDensity density(ints_, mo_space_info_, options_, Ua, Ub);
     density.compute_unpaired_density(ordm_a_, ordm_b_);
 }
 void AdaptiveCI::unpaired_density(ambit::Tensor Ua, ambit::Tensor Ub) {
@@ -743,7 +736,7 @@ void AdaptiveCI::unpaired_density(ambit::Tensor Ua, ambit::Tensor Ub) {
     Uam->copy(am);
     Ubm->copy(bm);
 
-    UPDensity density(reference_wavefunction_, ints_, mo_space_info_, options_, Uam, Ubm);
+    UPDensity density(ints_, mo_space_info_, options_, Uam, Ubm);
     density.compute_unpaired_density(ordm_a_, ordm_b_);
 }
 
@@ -1465,50 +1458,6 @@ void AdaptiveCI::wfn_to_file(DeterminantHashVec& det_space, psi::SharedMatrix ev
     final_wfn.close();
 }
 
-std::vector<std::tuple<double, int, int>> AdaptiveCI::sym_labeled_orbitals(std::string type) {
-    std::vector<std::tuple<double, int, int>> labeled_orb;
-
-    if (type == "RHF" or type == "ROHF" or type == "ALFA") {
-
-        // Create a vector of orbital energy and index pairs
-        std::vector<std::pair<double, int>> orb_e;
-        int cumidx = 0;
-        for (int h = 0; h < nirrep_; ++h) {
-            for (int a = 0; a < nactpi_[h]; ++a) {
-                orb_e.push_back(std::make_pair(epsilon_a_->get(h, frzcpi_[h] + a), a + cumidx));
-            }
-            cumidx += nactpi_[h];
-        }
-
-        // Create a vector that stores the orbital energy, symmetry, and idx
-        for (size_t a = 0; a < nact_; ++a) {
-            labeled_orb.push_back(
-                std::make_tuple(orb_e[a].first, mo_symmetry_[a], orb_e[a].second));
-        }
-        // Order by energy, low to high
-        std::sort(labeled_orb.begin(), labeled_orb.end());
-    }
-    if (type == "BETA") {
-        // Create a vector of orbital energies and index pairs
-        std::vector<std::pair<double, int>> orb_e;
-        int cumidx = 0;
-        for (int h = 0; h < nirrep_; ++h) {
-            for (size_t a = 0, max = nactpi_[h]; a < max; ++a) {
-                orb_e.push_back(std::make_pair(epsilon_b_->get(h, frzcpi_[h] + a), a + cumidx));
-            }
-            cumidx += nactpi_[h];
-        }
-
-        // Create a vector that stores the orbital energy, sym, and idx
-        for (size_t a = 0; a < nact_; ++a) {
-            labeled_orb.push_back(
-                std::make_tuple(orb_e[a].first, mo_symmetry_[a], orb_e[a].second));
-        }
-        std::sort(labeled_orb.begin(), labeled_orb.end());
-    }
-    return labeled_orb;
-}
-
 void AdaptiveCI::print_wfn(DeterminantHashVec& space, WFNOperator& op, psi::SharedMatrix evecs,
                            int nroot) {
     std::string state_label;
@@ -1886,11 +1835,11 @@ void AdaptiveCI::compute_aci(DeterminantHashVec& PQ_space, psi::SharedMatrix& PQ
     bool print_refs = false;
     bool multi_root = false;
 
-    if (options_["ACI_FIRST_ITER_ROOTS"].has_changed()) {
+    if (options_.has_changed("ACI_FIRST_ITER_ROOTS")) {
         multi_root = options_.get_bool("ACI_FIRST_ITER_ROOTS");
     }
 
-    if (options_["ACI_PRINT_REFS"].has_changed()) {
+    if (options_.has_changed("ACI_PRINT_REFS")) {
         print_refs = options_.get_bool("ACI_PRINT_REFS");
     }
 
@@ -1918,7 +1867,6 @@ void AdaptiveCI::compute_aci(DeterminantHashVec& PQ_space, psi::SharedMatrix& PQ
         int particle = (root_ - 1) - (hole_ * ncstate);
 
         P_space.clear();
-        auto orbs = sym_labeled_orbitals("RHF");
         Determinant det = initial_reference_[0];
         Determinant detb(det);
         std::vector<int> avir = det.get_alfa_vir(nact_); // TODO check this
@@ -2525,7 +2473,6 @@ void AdaptiveCI::compute_nos() {
 
         // Frozen core and Restricted docc are unchanged
         irrep_offset += fdocc[h] + rdocc[h];
-        ;
         // Only change the active block
         for (int p = 0; p < nactpi_[h]; ++p) {
             for (int q = 0; q < nactpi_[h]; ++q) {
