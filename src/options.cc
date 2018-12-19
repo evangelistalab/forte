@@ -47,7 +47,6 @@ namespace forte {
 void forte_options(ForteOptions& foptions) {
 
     // Method-specific options
-    set_FCI_options(foptions);
     set_ACI_options(foptions);
     set_ASCI_options(foptions);
     set_PCI_options(foptions);

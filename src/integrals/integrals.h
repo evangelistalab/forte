@@ -244,7 +244,7 @@ class ForteIntegrals {
     void update_orbitals(std::shared_ptr<psi::Matrix> Ca,std::shared_ptr<psi::Matrix> Cb);
 
     /// Update the integrals with a new set of MO coefficients
-    void retransform_integrals();
+    [[deprecated("Switch to the rotate_orbitals function")]] void retransform_integrals();
     /// Expert Option: just try and use three_integral
     virtual double** three_integral_pointer() = 0;
 
