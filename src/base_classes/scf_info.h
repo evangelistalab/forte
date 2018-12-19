@@ -47,6 +47,12 @@ class SCFInfo {
     /// return soccpi
     psi::Dimension soccpi();
 
+    /// return nsopi
+    psi::Dimension nsopi();
+
+    /// return nso
+    psi::Dimension nso();
+
     /// return energy
     double reference_energy();
 
@@ -55,6 +61,9 @@ class SCFInfo {
 
     /// beta orbital energy
     std::shared_ptr<psi::Vector> epsilon_b();
+
+    /// return AO2SO
+    std::shared_ptr<psi::Matrix> aotoso();
 
 
   private:
@@ -65,6 +74,9 @@ class SCFInfo {
     // Singly occupied in RHF
     psi::Dimension soccpi_;
 
+    /// The number of SO (AO for C matrices)
+    psi::Dimension nsopi_;
+
     // SCF energy
     double energy_;
 
@@ -73,6 +85,9 @@ class SCFInfo {
 
     /// beta orbital energy
     std::shared_ptr<psi::Vector> epsilon_b_;
+
+    /// AO2SO conversion matrix (AO in rows, SO in cols)
+    std::shared_ptr<psi::Matrix> AO2SO_;
     
 };
 

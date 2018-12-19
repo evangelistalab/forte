@@ -42,6 +42,7 @@
 #include "orbitaloptimizer.h"
 
 #include "base_classes/reference.h"
+#include "base_classes/scf_info.h"
 using namespace psi;
 
 
@@ -50,7 +51,7 @@ namespace forte {
 OrbitalOptimizer::OrbitalOptimizer() {}
 
 OrbitalOptimizer::OrbitalOptimizer(ambit::Tensor Gamma1, ambit::Tensor Gamma2,
-                                   ambit::Tensor two_body_ab, psi::Options& options,
+                                   ambit::Tensor two_body_ab, std::shared_ptr<ForteOptions> options,
                                    std::shared_ptr<MOSpaceInfo> mo_space_info)
     : gamma1_(Gamma1), gamma2_(Gamma2), integral_(two_body_ab), mo_space_info_(mo_space_info),
       options_(options) {}
@@ -99,12 +100,12 @@ void OrbitalOptimizer::startup() {
     restricted_uocc_abs_ = mo_space_info_->get_corr_abs_mo("RESTRICTED_UOCC");
     inactive_docc_abs_ = mo_space_info_->get_corr_abs_mo("INACTIVE_DOCC");
     nmo_abs_ = mo_space_info_->get_corr_abs_mo("CORRELATED");
-    if (frozen_docc_abs_.size() && !(options_.get_bool("OPTIMIZE_FROZEN_CORE"))) {
+    if (frozen_docc_abs_.size() && !(options_->get_bool("OPTIMIZE_FROZEN_CORE"))) {
         casscf_freeze_core_ = true;
     } else {
         casscf_freeze_core_ = false;
     }
-    if (options_.get_bool("OPTIMIZE_FROZEN_CORE")) {
+    if (options_->get_bool("OPTIMIZE_FROZEN_CORE")) {
         throw psi::PSIEXCEPTION("CASSCF can not handle optimization of frozen core, yet.");
     }
 
@@ -115,30 +116,30 @@ void OrbitalOptimizer::startup() {
     nfrozen_ = frozen_docc_abs_.size();
     na_ = active_abs_.size();
     nvir_ = restricted_uocc_abs_.size();
-    casscf_debug_print_ = options_.get_bool("CASSCF_DEBUG_PRINTING");
+    casscf_debug_print_ = options_->get_bool("CASSCF_DEBUG_PRINTING");
     nirrep_ = mo_space_info_->nirrep();
-    nsopi_ = wfn_->nsopi();
+    nsopi_ = scf_info_->nsopi();
 
-    if (options_.get_str("CASSCF_CI_SOLVER") == "FCI") {
+    if (options_->get_str("CASSCF_CI_SOLVER") == "FCI") {
         cas_ = true;
-    } else if (options_.get_str("CASSCF_CI_SOLVER") == "CAS") {
-        if (options_.get_str("FCIMO_ACTV_TYPE") != "COMPLETE") {
+    } else if (options_->get_str("CASSCF_CI_SOLVER") == "CAS") {
+        if (options_->get_str("FCIMO_ACTV_TYPE") != "COMPLETE") {
             cas_ = false;
         } else {
             cas_ = true;
         }
-    } else if (options_.get_str("CASSCF_CI_SOLVER") == "ACI") {
-        if (options_.get_double("SIGMA") == 0.0) {
+    } else if (options_->get_str("CASSCF_CI_SOLVER") == "ACI") {
+        if (options_->get_double("SIGMA") == 0.0) {
             cas_ = true;
         } else {
             cas_ = true;
         }
-    } else if (options_.get_str("CASSCF_CI_SOLVER") == "DMRG") {
+    } else if (options_->get_str("CASSCF_CI_SOLVER") == "DMRG") {
         cas_ = true;
     } else {
         outfile->Printf("\n\n Please set your CASSCF_CI_SOLVER to either FCI, CAS, ACI, or DMRG");
         outfile->Printf("\n\n You set your CASSCF_CI_SOLVER to %s.",
-                        options_.get_str("CASSCF_CI_SOLVER").c_str());
+                        options_->get_str("CASSCF_CI_SOLVER").c_str());
         throw psi::PSIEXCEPTION("You did not specify your CASSCF_CI_SOLVER correctly.");
     }
     cas_ = true;
@@ -568,10 +569,10 @@ std::shared_ptr<psi::Matrix> OrbitalOptimizer::make_c_sym_aware() {
 
     psi::Dimension nmopi = mo_space_info_->get_dimension("ALL");
 
-    psi::SharedMatrix aotoso = wfn_->aotoso();
+    psi::SharedMatrix aotoso = scf_info_->aotoso();
 
     /// I want a C matrix in the C1 basis but symmetry aware
-    size_t nso = wfn_->nso();
+    size_t nso = scf_info_->nso();
     nirrep_ = mo_space_info_->nirrep();
     psi::SharedMatrix Call(new psi::Matrix(nso, nmopi.sum()));
 
@@ -631,7 +632,7 @@ void OrbitalOptimizer::zero_redunant(psi::SharedMatrix& matrix) {
     }
 }
 CASSCFOrbitalOptimizer::CASSCFOrbitalOptimizer(ambit::Tensor Gamma1, ambit::Tensor Gamma2,
-                                               ambit::Tensor two_body_ab, psi::Options& options,
+                                               ambit::Tensor two_body_ab, std::shared_ptr<ForteOptions> options,
                                                std::shared_ptr<MOSpaceInfo> mo_space_info)
     : OrbitalOptimizer(Gamma1, Gamma2, two_body_ab, options, mo_space_info) {}
 CASSCFOrbitalOptimizer::~CASSCFOrbitalOptimizer() {}
@@ -687,7 +688,7 @@ void CASSCFOrbitalOptimizer::form_fock_intermediates() {
         C_active_ao->print();
     // std::shared_ptr<JK> JK_fock = JK::build_JK(wfn_->basisset(),options_ );
     // JK_fock->set_memory(psi::Process::environment.get_memory() * 0.8);
-    // JK_fock->set_cutoff(options_.get_double("INTEGRAL_SCREENING"));
+    // JK_fock->set_cutoff(options_->get_double("INTEGRAL_SCREENING"));
     // JK_fock->initialize();
     // JK_->set_allow_desymmetrization(true);
     JK_->set_do_K(true);
@@ -789,7 +790,7 @@ void CASSCFOrbitalOptimizer::form_fock_intermediates() {
     }
 }
 PostCASSCFOrbitalOptimizer::PostCASSCFOrbitalOptimizer(ambit::Tensor Gamma1, ambit::Tensor Gamma2,
-                                                       ambit::Tensor two_body_ab, psi::Options& options,
+                                                       ambit::Tensor two_body_ab, std::shared_ptr<ForteOptions> options,
                                                        std::shared_ptr<MOSpaceInfo> mo_space_info)
     : OrbitalOptimizer(Gamma1, Gamma2, two_body_ab, options, mo_space_info) {}
 PostCASSCFOrbitalOptimizer::~PostCASSCFOrbitalOptimizer() {}

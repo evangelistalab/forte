@@ -44,8 +44,10 @@
 
 
 namespace forte {
+class SCFInfo;
+class StateInfo;
 
-class CASSCF : public psi::Wavefunction {
+class CASSCF {
   public:
     /**
      * @brief CASSCF::CASSCF
@@ -59,7 +61,7 @@ class CASSCF : public psi::Wavefunction {
      * This reference has a nice algorithmic flowchart.  Look it up
      *
      */
-    CASSCF(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
+    CASSCF(std::shared_ptr<StateInfo> state, std::shared_ptr<forte::SCFInfo> scf_info, std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
            std::shared_ptr<MOSpaceInfo> mo_space_info);
     /// Compute CASSCF given a 1RDM and 2RDM
     void compute_casscf();
@@ -77,6 +79,13 @@ class CASSCF : public psi::Wavefunction {
     /// check the cas_ci energy with spin-free RDM
     double cas_check(Reference cas);
   private:
+    /// The state to calculate
+    std::shared_ptr<StateInfo> state_;
+    /// SCF information
+    std::shared_ptr<SCFInfo> scf_info_;
+    /// The options
+    std::shared_ptr<ForteOptions> options_;
+
     /// The active one RDM in the MO basis
     ambit::Tensor gamma1_;
 
@@ -86,13 +95,9 @@ class CASSCF : public psi::Wavefunction {
     Reference cas_ref_;
     /// The energy computed in FCI with updates from CASSCF and CI
     double E_casscf_;
-    /// The OPtions object
-    psi::Options options_;
     std::shared_ptr<ForteIntegrals> ints_;
     /// The mo_space_info
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
-
-    std::shared_ptr<psi::Wavefunction> reference_wavefunction_;
 
     /// The dimension for number of molecular orbitals (CORRELATED or ALL)
     psi::Dimension nmopi_;

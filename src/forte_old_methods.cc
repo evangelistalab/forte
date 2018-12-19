@@ -109,7 +109,7 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
     //    }
 
     if (options.get_bool("CASSCF_REFERENCE") == true or options.get_str("JOB_TYPE") == "CASSCF") {
-        auto casscf = std::make_shared<CASSCF>(ref_wfn, options, ints, mo_space_info);
+        auto casscf = std::make_shared<CASSCF>(std::make_shared<StateInfo>(ref_wfn), std::make_shared<SCFInfo>(ref_wfn), std::make_shared<ForteOptions>(options), ints, mo_space_info);
         casscf->compute_casscf();
     }
     if (options.get_bool("MP2_NOS")) {
@@ -510,7 +510,7 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
             dsrg_mrpt2->compute_energy();
 #endif
         } else if (cas_type == "CASSCF") {
-            auto casscf = std::make_shared<CASSCF>(ref_wfn, options, ints, mo_space_info);
+            auto casscf = std::make_shared<CASSCF>(std::make_shared<StateInfo>(ref_wfn), std::make_shared<SCFInfo>(ref_wfn), std::make_shared<ForteOptions>(options), ints, mo_space_info);
             casscf->compute_casscf();
             Reference casscf_reference = casscf->casscf_reference();
 
@@ -707,7 +707,7 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
             }
 #endif
         } else if (cas_type == "CASSCF") {
-            auto casscf = std::make_shared<CASSCF>(ref_wfn, options, ints, mo_space_info);
+            auto casscf = std::make_shared<CASSCF>(std::make_shared<StateInfo>(ref_wfn), std::make_shared<SCFInfo>(ref_wfn), std::make_shared<ForteOptions>(options), ints, mo_space_info);
             casscf->compute_casscf();
             Reference casscf_reference = casscf->casscf_reference();
 
