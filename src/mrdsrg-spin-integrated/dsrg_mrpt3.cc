@@ -1325,9 +1325,9 @@ double DSRG_MRPT3::compute_energy_sa() {
 
     // call FCI_MO if SA_FULL and CAS_TYPE == CAS
     if (multi_state_algorithm_ == "SA_FULL" && foptions_->get_str("CAS_TYPE") == "CAS") {
-        FCI_MO fci_mo(reference_wavefunction_, options_, ints_, mo_space_info_, fci_ints);
+        FCI_MO fci_mo(scf_info_, foptions_, ints_, mo_space_info_, fci_ints);
         fci_mo.set_localize_actv(false);
-        fci_mo.compute_energy();
+        fci_mo.solver_compute_energy();
         auto eigens = fci_mo.eigens();
         for (int n = 0; n < nentry; ++n) {
             auto eigen = eigens[n];
@@ -1426,7 +1426,7 @@ double DSRG_MRPT3::compute_energy_sa() {
                 int ntrial_per_root = foptions_->get_int("NTRIAL_PER_ROOT");
 
                 FCISolver fcisolver(active_dim, core_mos_, actv_mos_, na, nb, multi, irrep, ints_,
-                                    mo_space_info_, ntrial_per_root, print_, options_);
+                                    mo_space_info_, ntrial_per_root, print_, foptions_->psi_options());
                 fcisolver.set_max_rdm_level(1);
                 fcisolver.set_nroot(nstates);
                 fcisolver.set_root(nstates - 1);
@@ -1560,9 +1560,9 @@ double DSRG_MRPT3::compute_energy_relaxed() {
     auto fci_ints = compute_Heff_actv();
 
     if (foptions_->get_str("CAS_TYPE") == "CAS") {
-        FCI_MO fci_mo(reference_wavefunction_, options_, ints_, mo_space_info_, fci_ints);
+        FCI_MO fci_mo(scf_info_, foptions_, ints_, mo_space_info_, fci_ints);
         fci_mo.set_localize_actv(false);
-        Erelax = fci_mo.compute_energy();
+        Erelax = fci_mo.solver_compute_energy();
 
         if (do_dm_) {
             // de-normal-order DSRG dipole integrals
@@ -1577,8 +1577,8 @@ double DSRG_MRPT3::compute_energy_relaxed() {
             // compute permanent dipoles
             dm_relax = fci_mo.compute_ref_relaxed_dm(Mbar0_, Mbar1_, Mbar2_);
         }
-    } else if (foptions_.get_str("CAS_TYPE") == "ACI") {
-        AdaptiveCI aci(std::make_shared<SCFInfo>(reference_wavefunction_), std::make_shared<ForteOptions>(options_), ints_, mo_space_info_);
+    } else if (foptions_->get_str("CAS_TYPE") == "ACI") {
+        AdaptiveCI aci(scf_info_, foptions_, ints_, mo_space_info_);
         aci.set_fci_ints(fci_ints);
         if ((foptions_->psi_options())["ACI_RELAX_SIGMA"].has_changed()) {
             aci.update_sigma();
@@ -1587,7 +1587,7 @@ double DSRG_MRPT3::compute_energy_relaxed() {
 
     } else {
         // it is simpler here to call FCI instead of FCISolver
-        FCI fci(reference_wavefunction_, options_, ints_, mo_space_info_, fci_ints);
+        FCI fci(ints_->wfn(), foptions_->psi_options(), ints_, mo_space_info_, fci_ints);
         fci.set_max_rdm_level(1);
         Erelax = fci.compute_energy();
     }

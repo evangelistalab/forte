@@ -99,8 +99,6 @@ class SemiCanonical {
 
     std::shared_ptr<ForteIntegrals> ints_;
 
-//    std::shared_ptr<psi::Wavefunction> wfn_;
-
     // All orbitals
     psi::Dimension nmopi_;
     // Correlated MOs

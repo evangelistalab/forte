@@ -214,7 +214,7 @@ double ACTIVE_DSRGPT2::compute_energy() {
     modipole_ints_ = ints_->compute_MOdipole_ints();
 
     // FCI_MO object
-    fci_mo_ = std::make_shared<FCI_MO>(reference_wavefunction_, options_, ints_, mo_space_info_);
+    fci_mo_ = std::make_shared<FCI_MO>(scf_info_, foptions_, ints_, mo_space_info_);
 
     // max cumulant level
     int max_cu_level = foptions_->get_str("THREEPDC") == "ZERO" ? 2 : 3;

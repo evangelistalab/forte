@@ -77,11 +77,10 @@ void set_FCI_MO_options(ForteOptions& foptions) {
     foptions.add_bool("FCIMO_LOCALIZE_ACTV", false, "Localize active orbitals before computation");
 }
 
-FCI_MO::FCI_MO(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
-               std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : Wavefunction(options), integral_(ints), mo_space_info_(mo_space_info) {
-    shallow_copy(ref_wfn);
-    reference_wavefunction_ = ref_wfn;
+FCI_MO::FCI_MO(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
+               std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
+    : integral_(ints), mo_space_info_(mo_space_info), scf_info_(scf_info), options_(options) {
+
     print_method_banner({"Complete Active Space Configuration Interaction", "Chenyang Li"});
     startup();
 
@@ -98,11 +97,11 @@ FCI_MO::FCI_MO(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shar
     fci_ints_->compute_restricted_one_body_operator();
 }
 
-FCI_MO::FCI_MO(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
-               std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<FCIIntegrals> fci_ints)
-    : Wavefunction(options), integral_(ints), mo_space_info_(mo_space_info) {
-    shallow_copy(ref_wfn);
-    reference_wavefunction_ = ref_wfn;
+FCI_MO::FCI_MO(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
+               std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info,
+               std::shared_ptr<FCIIntegrals> fci_ints)
+    : integral_(ints), mo_space_info_(mo_space_info), scf_info_(scf_info), options_(options) {
+
     print_method_banner({"Complete Active Space Configuration Interaction", "Chenyang Li"});
     startup();
 
@@ -145,38 +144,36 @@ void FCI_MO::startup() {
 
 void FCI_MO::read_options() {
     // test reference type
-    ref_type_ = options_.get_str("REFERENCE");
+    ref_type_ = options_->get_str("REFERENCE");
     if (ref_type_ == "UHF" || ref_type_ == "UKS" || ref_type_ == "CUHF") {
         outfile->Printf("\n  Unrestricted reference is detected.");
         outfile->Printf("\n  We suggest using unrestricted natural orbitals.");
     }
 
     // active space type
-    actv_space_type_ = options_.get_str("FCIMO_ACTV_TYPE");
+    actv_space_type_ = options_->get_str("FCIMO_ACTV_TYPE");
 
     // IP / EA
-    ipea_ = options_.get_str("FCIMO_IPEA");
+    ipea_ = options_->get_str("FCIMO_IPEA");
 
     // print level
-    print_ = options_.get_int("PRINT");
+    print_ = options_->get_int("PRINT");
 
     // energy convergence
-    econv_ = options_.get_double("E_CONVERGENCE");
+    econv_ = options_->get_double("E_CONVERGENCE");
     fcheck_threshold_ = 100.0 * econv_;
 
     // nuclear repulsion
-    std::shared_ptr<psi::Molecule> molecule = psi::Process::environment.molecule();
-    e_nuc_ =
-        molecule->nuclear_repulsion_energy(reference_wavefunction_->get_dipole_field_strength());
+    e_nuc_ = ints_->nuclear_repulsion_energy();
 
     // digonalization algorithm
-    diag_algorithm_ = options_.get_str("DIAG_ALGORITHM");
+    diag_algorithm_ = options_->get_str("DIAG_ALGORITHM");
 
     // orbitals
-    localize_actv_ = options_.get_bool("FCIMO_LOCALIZE_ACTV");
+    localize_actv_ = options_->get_bool("FCIMO_LOCALIZE_ACTV");
 
     // number of Irrep
-    nirrep_ = this->nirrep();
+    nirrep_ = mo_space_info_->nirrep();
     CharacterTable ct = psi::Process::environment.molecule()->point_group()->char_table();
     irrep_symbols_.clear();
     for (int h = 0; h < nirrep_; ++h) {
@@ -184,8 +181,8 @@ void FCI_MO::read_options() {
     }
 
     // obtain MOs
-    nmo_ = this->nmo();
-    nmopi_ = this->nmopi();
+    nmo_ = mo_space_info_->size("ALL");
+    nmopi_ = mo_space_info_->get_dimension("ALL");
     ncmo_ = mo_space_info_->size("CORRELATED");
     ncmopi_ = mo_space_info_->get_dimension("CORRELATED");
 
@@ -196,7 +193,7 @@ void FCI_MO::read_options() {
     nfrzv_ = mo_space_info_->size("FROZEN_UOCC");
 
     // obtain active orbitals
-    if (options_["ACTIVE"].size() == 0) {
+    if ((options_->psi_options())["ACTIVE"].size() == 0) {
         outfile->Printf("\n  Please specify the ACTIVE occupations.");
         outfile->Printf("\n  Single-reference computations should set ACTIVE to zeros.");
         outfile->Printf("\n  For example, ACTIVE [0,0,0,0] depending on the symmetry. \n");
@@ -212,20 +209,21 @@ void FCI_MO::read_options() {
     nvirt_ = virt_dim_.sum();
 
     // compute number of electrons
+    std::shared_ptr<psi::Molecule> molecule = psi::Process::environment.molecule();
     int natom = molecule->natom();
     int nelec = 0;
     for (int i = 0; i < natom; ++i) {
         nelec += molecule->fZ(i);
     }
     int charge = molecule->molecular_charge();
-    if (options_["CHARGE"].has_changed()) {
-        charge = options_.get_int("CHARGE");
+    if (options_->has_changed("CHARGE")) {
+        charge = options_->get_int("CHARGE");
     }
     nelec -= charge;
 
     multi_ = molecule->multiplicity();
-    if (options_["MULTIPLICITY"].has_changed()) {
-        multi_ = options_.get_int("MULTIPLICITY");
+    if (options_->has_changed("MULTIPLICITY")) {
+        multi_ = options_->get_int("MULTIPLICITY");
     }
     if (multi_ < 1) {
         outfile->Printf("\n  MULTIPLICITY must be no less than 1.");
@@ -236,7 +234,7 @@ void FCI_MO::read_options() {
     multi_symbols_ = std::vector<std::string>{"Singlet", "Doublet", "Triplet", "Quartet", "Quintet",
                                               "Sextet",  "Septet",  "Octet",   "Nonet",   "Decaet"};
 
-    twice_ms_ = std::round(2.0 * options_.get_double("MS"));
+    twice_ms_ = std::round(2.0 * options_->get_double("MS"));
     if (twice_ms_ < 0) {
         outfile->Printf("\n  Ms must be no less than 0.");
         outfile->Printf("\n  Ms = %2d, MULTIPLICITY = %2d", twice_ms_, multi_);
@@ -254,7 +252,7 @@ void FCI_MO::read_options() {
         outfile->Printf("\n  Check the Charge, Multiplicity, and Ms! \n");
         outfile->Printf("\n  Note that Ms is 2 * Sz \n");
         throw psi::PSIEXCEPTION("Negative number of alpha electrons or beta "
-                           "electrons. Check output for details.");
+                                "electrons. Check output for details.");
     }
     if (nalfa_ - ncore_ - nfrzc_ > nactv_) {
         outfile->Printf("\n  Not enough active orbitals to arrange electrons!");
@@ -262,15 +260,15 @@ void FCI_MO::read_options() {
         outfile->Printf("\n  Number of alpha electrons: Nalpha = %5ld", nalfa_);
         outfile->Printf("\n  Check core and active orbitals! \n");
         throw psi::PSIEXCEPTION("Not enough active orbitals to arrange electrons! "
-                           "Check output for details.");
+                                "Check output for details.");
     }
 
     // obtain root symmetry
-    root_sym_ = options_.get_int("ROOT_SYM");
+    root_sym_ = options_->get_int("ROOT_SYM");
 
     // obtain number of roots and roots of interest
-    nroot_ = options_.get_int("NROOT");
-    root_ = options_.get_int("ROOT");
+    nroot_ = options_->get_int("NROOT");
+    root_ = options_->get_int("ROOT");
     if (root_ >= nroot_) {
         outfile->Printf("\n  NROOT = %3d, ROOT = %3d", nroot_, root_);
         outfile->Printf("\n  ROOT must be smaller than NROOT.");
@@ -306,7 +304,7 @@ void FCI_MO::read_options() {
 
     // active hole and active particle indices
     if (actv_space_type_ == "CIS" || actv_space_type_ == "CISD") {
-        psi::Dimension docc_dim(this->doccpi());
+        psi::Dimension docc_dim(scf_info_->doccpi());
         if (ipea_ == "EA") {
             docc_dim[0] += 1;
         }
@@ -333,23 +331,23 @@ void FCI_MO::read_options() {
     }
 
     // state averaging
-    if (options_["AVG_STATE"].size() != 0) {
+    if ((options_->psi_options())["AVG_STATE"].size() != 0) {
         size_t nstates = 0;
-        size_t nentry = options_["AVG_STATE"].size();
+        size_t nentry = (options_->psi_options())["AVG_STATE"].size();
 
         // figure out total number of states
         std::vector<int> nstatespim;
         std::vector<int> irreps;
         std::vector<int> multis;
         for (size_t i = 0; i < nentry; ++i) {
-            if (options_["AVG_STATE"][i].size() != 3) {
+            if ((options_->psi_options())["AVG_STATE"][i].size() != 3) {
                 outfile->Printf("\n  Error: invalid input of AVG_STATE. Each "
                                 "entry should take an array of three numbers.");
                 throw psi::PSIEXCEPTION("Invalid input of AVG_STATE");
             }
 
             // irrep
-            int irrep = options_["AVG_STATE"][i][0].to_integer();
+            int irrep = (options_->psi_options())["AVG_STATE"][i][0].to_integer();
             if (irrep >= nirrep_ || irrep < 0) {
                 outfile->Printf("\n  Error: invalid irrep in AVG_STATE. Please "
                                 "check the input irrep (start from 0) not to "
@@ -360,7 +358,7 @@ void FCI_MO::read_options() {
             irreps.push_back(irrep);
 
             // multiplicity
-            int multi = options_["AVG_STATE"][i][1].to_integer();
+            int multi = (options_->psi_options())["AVG_STATE"][i][1].to_integer();
             if (multi < 1) {
                 outfile->Printf("\n  Error: invalid multiplicity in AVG_STATE.");
                 throw psi::PSIEXCEPTION("Invaid multiplicity in AVG_STATE");
@@ -368,7 +366,7 @@ void FCI_MO::read_options() {
             multis.push_back(multi);
 
             // number of states of irrep and multiplicity
-            int nstates_this = options_["AVG_STATE"][i][2].to_integer();
+            int nstates_this = (options_->psi_options())["AVG_STATE"][i][2].to_integer();
             if (nstates_this < 1) {
                 outfile->Printf("\n  Error: invalid nstates in AVG_STATE. "
                                 "nstates of a certain irrep and multiplicity "
@@ -381,18 +379,18 @@ void FCI_MO::read_options() {
 
         // test input weights
         std::vector<std::vector<double>> weights;
-        if (options_["AVG_WEIGHT"].has_changed()) {
-            if (options_["AVG_WEIGHT"].size() != nentry) {
+        if ((options_->psi_options())["AVG_WEIGHT"].has_changed()) {
+            if ((options_->psi_options())["AVG_WEIGHT"].size() != nentry) {
                 outfile->Printf("\n  Error: mismatched number of entries in "
                                 "AVG_STATE (%d) and AVG_WEIGHT (%d).",
-                                nentry, options_["AVG_WEIGHT"].size());
+                                nentry, (options_->psi_options())["AVG_WEIGHT"].size());
                 throw psi::PSIEXCEPTION("Mismatched number of entries in AVG_STATE "
-                                   "and AVG_WEIGHT.");
+                                        "and AVG_WEIGHT.");
             }
 
             double wsum = 0.0;
             for (size_t i = 0; i < nentry; ++i) {
-                int nw = options_["AVG_WEIGHT"][i].size();
+                int nw = (options_->psi_options())["AVG_WEIGHT"][i].size();
                 if (nw != nstatespim[i]) {
                     outfile->Printf("\n  Error: mismatched number of weights "
                                     "in entry %d of AVG_WEIGHT. Asked for %d "
@@ -403,7 +401,7 @@ void FCI_MO::read_options() {
 
                 std::vector<double> weight;
                 for (int n = 0; n < nw; ++n) {
-                    double w = options_["AVG_WEIGHT"][i][n].to_double();
+                    double w = (options_->psi_options())["AVG_WEIGHT"][i][n].to_double();
                     if (w < 0.0) {
                         outfile->Printf("\n  Error: negative weights in AVG_WEIGHT.");
                         throw psi::PSIEXCEPTION("Negative weights in AVG_WEIGHT.");
@@ -526,7 +524,7 @@ void FCI_MO::print_options() {
     }
 }
 
-double FCI_MO::compute_energy() {
+double FCI_MO::solver_compute_energy() {
     // temporarily put localizer here
     // move to startup when run_dsrg is completed
     if (localize_actv_) {
@@ -536,7 +534,7 @@ double FCI_MO::compute_energy() {
         localize_actv_orbs();
     }
 
-    if (options_["AVG_STATE"].size() != 0) {
+    if ((options_->psi_options())["AVG_STATE"].size() != 0) {
         Eref_ = compute_sa_energy();
     } else {
         Eref_ = compute_ss_energy();
@@ -552,7 +550,7 @@ double FCI_MO::compute_ss_energy() {
     form_p_space();
 
     // diagonalize the CASCI Hamiltonian
-    bool noHF = options_.get_bool("FCIMO_CISD_NOHF");
+    bool noHF = options_->get_bool("FCIMO_CISD_NOHF");
     if (multi_ == 1 && root_sym_ == 0 &&
         (actv_space_type_ == "CIS" || (actv_space_type_ == "CISD" && noHF))) {
         Diagonalize_H_noHF(determinant_, multi_, nroot_, eigen_);
@@ -571,7 +569,7 @@ double FCI_MO::compute_ss_energy() {
         outfile->Printf("\n  Check root_sym, multi, and number of determinants.");
         throw psi::PSIEXCEPTION("Too many roots of interest.");
     }
-    print_CI(nroot_, options_.get_double("FCIMO_PRINT_CIVEC"), eigen_, determinant_);
+    print_CI(nroot_, options_->get_double("FCIMO_PRINT_CIVEC"), eigen_, determinant_);
 
     // compute dipole moments
     compute_permanent_dipole();
@@ -1114,7 +1112,7 @@ void FCI_MO::Diagonalize_H_noHF(const vecdet& p_space, const int& multi, const i
         outfile->Printf("\n  Error: RHF determinant NOT at the end of the determinant vector.");
         outfile->Printf("\n    Diagonalize_H_noHF only works for root_sym = 0.");
         throw psi::PSIEXCEPTION("RHF determinant NOT at the end of determinant vector. "
-                           "Problem at Diagonalize_H_noHF of FCI_MO.");
+                                "Problem at Diagonalize_H_noHF of FCI_MO.");
     }
 }
 
@@ -1131,11 +1129,11 @@ void FCI_MO::Diagonalize_H(const vecdet& p_space, const int& multi, const int& n
     // DL solver
     SparseCISolver sparse_solver(fci_ints_);
     DiagonalizationMethod diag_method = DLSolver;
-    string sigma_method = options_.get_str("SIGMA_BUILD_TYPE");
+    string sigma_method = options_->get_str("SIGMA_BUILD_TYPE");
     sparse_solver.set_e_convergence(econv_);
     sparse_solver.set_spin_project(true);
-    sparse_solver.set_maxiter_davidson(options_.get_int("DL_MAXITER"));
-    sparse_solver.set_guess_dimension(options_.get_int("DL_GUESS_SIZE"));
+    sparse_solver.set_maxiter_davidson(options_->get_int("DL_MAXITER"));
+    sparse_solver.set_guess_dimension(options_->get_int("DL_GUESS_SIZE"));
     sparse_solver.set_sigma_method(sigma_method);
     if (projected_roots_.size() != 0) {
         sparse_solver.set_root_project(true);
@@ -1191,7 +1189,8 @@ void FCI_MO::Diagonalize_H(const vecdet& p_space, const int& multi, const int& n
 }
 
 void FCI_MO::print_CI(const int& nroot, const double& CI_threshold,
-                      const std::vector<pair<psi::SharedVector, double>>& eigen, const vecdet& det) {
+                      const std::vector<pair<psi::SharedVector, double>>& eigen,
+                      const vecdet& det) {
     timer_on("Print CI Vectors");
     if (!quiet_) {
         outfile->Printf("\n\n  * * * * * * * * * * * * * * * * *");
@@ -1453,11 +1452,12 @@ void FCI_MO::compute_permanent_dipole() {
     std::vector<psi::SharedMatrix> aodipole_ints = integral_->AOdipole_ints();
 
     // Nuclear dipole contribution
-    Vector3 ndip = psi::Process::environment.molecule()->nuclear_dipole(psi::Vector3(0.0, 0.0, 0.0));
+    Vector3 ndip =
+        psi::Process::environment.molecule()->nuclear_dipole(psi::Vector3(0.0, 0.0, 0.0));
     //        DipoleInt::nuclear_contribution(psi::Process::environment.molecule(), );
 
     // SO to AO transformer
-    psi::SharedMatrix sotoao(this->aotoso()->transpose());
+    psi::SharedMatrix sotoao(ints_->aotoso()->transpose());
 
     // prepare eigen vectors for ci_rdm
     int dim = (eigen_[0].first)->dim();
@@ -1476,7 +1476,7 @@ void FCI_MO::compute_permanent_dipole() {
         ci_rdms.compute_1rdm(opdm_a, opdm_b);
 
         psi::SharedMatrix SOdens = reformat_1rdm("SO density " + trans_name, opdm_a, false);
-        SOdens->back_transform(this->Ca());
+        SOdens->back_transform(ints_->Ca());
 
         size_t nao = sotoao->coldim(0);
         psi::SharedMatrix AOdens(new psi::Matrix("AO density " + trans_name, nao, nao));
@@ -1500,7 +1500,7 @@ void FCI_MO::compute_permanent_dipole() {
 }
 
 psi::SharedMatrix FCI_MO::reformat_1rdm(const std::string& name, const std::vector<double>& data,
-                                   bool TrD) {
+                                        bool TrD) {
     psi::SharedMatrix rdm(new psi::Matrix(name, nmopi_, nmopi_));
 
     // active
@@ -1552,7 +1552,7 @@ void FCI_MO::compute_transition_dipole() {
     std::vector<psi::SharedMatrix> aodipole_ints = integral_->AOdipole_ints();
 
     // SO to AO transformer
-    psi::SharedMatrix sotoao(this->aotoso()->transpose());
+    psi::SharedMatrix sotoao(ints_->aotoso()->transpose());
 
     //    // obtain SO dipole from libmints
     //    std::vector<psi::SharedMatrix> dipole_ints;
@@ -1574,7 +1574,7 @@ void FCI_MO::compute_transition_dipole() {
 
     //    // transform SO dipole to MO dipole
     //    for(psi::SharedMatrix& dipole: dipole_ints){
-    //        dipole->transform(this->Ca());
+    //        dipole->transform(ints_->Ca());
     //    }
 
     // prepare eigen vectors for ci_rdm
@@ -1597,10 +1597,11 @@ void FCI_MO::compute_transition_dipole() {
 
             psi::SharedMatrix SOtransD =
                 reformat_1rdm("SO transition density " + trans_name, opdm_a, true);
-            SOtransD->back_transform(this->Ca());
+            SOtransD->back_transform(ints_->Ca());
 
             size_t nao = sotoao->coldim(0);
-            psi::SharedMatrix AOtransD(new psi::Matrix("AO transition density " + trans_name, nao, nao));
+            psi::SharedMatrix AOtransD(
+                new psi::Matrix("AO transition density " + trans_name, nao, nao));
             AOtransD->remove_symmetry(SOtransD, sotoao);
 
             std::vector<double> de(4, 0.0);
@@ -1632,7 +1633,7 @@ void FCI_MO::compute_transition_dipole() {
     //        psi::SharedMatrix transD (new psi::Matrix("MO transition density 0 -> " +
     //        std::to_string(A), nmopi_, nmopi_));
     //        symmetrize_density(opdm_a, transD);
-    //        transD->back_transform(this->Ca());
+    //        transD->back_transform(ints_->Ca());
 
     //        boost::shared_ptr<OEProp> oe(new OEProp(reference_wavefunction_));
     //        oe->set_title("CAS TRANSITION");
@@ -2171,7 +2172,7 @@ double FCI_MO::ref_relaxed_dm_helper(const double& dm0, BlockedTensor& dm1, Bloc
 d3 FCI_MO::compute_orbital_extents() {
 
     // compute AO quadrupole integrals
-    std::shared_ptr<psi::BasisSet> basisset = this->basisset();
+    std::shared_ptr<psi::BasisSet> basisset = ints_->basisset();
     std::shared_ptr<IntegralFactory> ints = std::shared_ptr<IntegralFactory>(
         new IntegralFactory(basisset, basisset, basisset, basisset));
 
@@ -2184,7 +2185,7 @@ d3 FCI_MO::compute_orbital_extents() {
     aoqOBI->compute(ao_Qpole);
 
     // orbital coefficients arranged by orbital energies
-    psi::SharedMatrix Ca_ao = this->Ca_subset("AO");
+    psi::SharedMatrix Ca_ao = ints_->Ca_subset("AO");
     int nao = Ca_ao->nrow();
     int nmo = Ca_ao->ncol();
 
@@ -2209,7 +2210,7 @@ d3 FCI_MO::compute_orbital_extents() {
         quadrupole[2]->set(0, i, std::fabs(sumz));
     }
 
-    psi::SharedVector epsilon_a = this->epsilon_a();
+    psi::SharedVector epsilon_a = scf_info_->epsilon_a();
     std::vector<std::tuple<double, int, int>> metric;
     for (int h = 0; h < epsilon_a->nirrep(); ++h) {
         for (int i = 0; i < epsilon_a->dimpi()[h]; ++i) {
@@ -2276,7 +2277,7 @@ d3 FCI_MO::compute_orbital_extents() {
 Reference FCI_MO::reference(const int& level) {
     Reference ref;
 
-    if (options_["AVG_STATE"].size() != 0) {
+    if ((options_->psi_options())["AVG_STATE"].size() != 0) {
         compute_sa_ref(level);
     } else {
         compute_ref(level);
@@ -2295,7 +2296,7 @@ Reference FCI_MO::reference(const int& level) {
         ref.set_L2bb(L2bb);
     }
 
-    if (level > 2 && (options_.get_str("THREEPDC") != "ZERO")) {
+    if (level > 2 && (options_->get_str("THREEPDC") != "ZERO")) {
         ref.set_L3aaa(L3aaa);
         ref.set_L3aab(L3aab);
         ref.set_L3abb(L3abb);
@@ -2333,7 +2334,7 @@ void FCI_MO::compute_ref(const int& level) {
     }
 
     // compute 3-RDM
-    std::string threepdc = options_.get_str("THREEPDC");
+    std::string threepdc = options_->get_str("THREEPDC");
     if (threepdc != "ZERO" && level >= 3) {
         if (threepdc == "MK") {
             auto D3 = compute_n_rdm(determinant_, evecs, 3, root_, root_, root_sym_, multi_, false);
@@ -2645,7 +2646,7 @@ double FCI_MO::compute_sa_energy() {
             outfile->Printf("\n  Check root_sym, multi, and number of determinants.");
             throw psi::PSIEXCEPTION("Too many roots of interest.");
         }
-        print_CI(nroot_, options_.get_double("FCIMO_PRINT_CIVEC"), eigen_, determinant_);
+        print_CI(nroot_, options_->get_double("FCIMO_PRINT_CIVEC"), eigen_, determinant_);
 
         // weight energies
         for (int i = 0; i < nroots; ++i) {
@@ -2672,7 +2673,8 @@ double FCI_MO::compute_sa_energy() {
 
 void FCI_MO::xms_rotate_civecs() {
     if (eigens_.size() != sa_info_.size()) {
-        throw psi::PSIEXCEPTION("Cannot do XMS rotation due to inconsistent size. Is CASCI computed?");
+        throw psi::PSIEXCEPTION(
+            "Cannot do XMS rotation due to inconsistent size. Is CASCI computed?");
     }
     int nentry = eigens_.size();
 
@@ -2764,13 +2766,14 @@ void FCI_MO::xms_rotate_civecs() {
 
         // put in eigens_
         for (int i = 0; i < nroots; ++i) {
-            eigens_[n][i] = std::make_pair<psi::SharedVector, double>(rcivecs->get_column(0, i), 0.0);
+            eigens_[n][i] =
+                std::make_pair<psi::SharedVector, double>(rcivecs->get_column(0, i), 0.0);
         }
     }
 }
 
 psi::SharedMatrix FCI_MO::xms_rotate_this_civecs(const det_vec& p_space, psi::SharedMatrix civecs,
-                                            ambit::Tensor Fa, ambit::Tensor Fb) {
+                                                 ambit::Tensor Fa, ambit::Tensor Fb) {
     int nroots = civecs->ncol();
     outfile->Printf("\n");
     psi::SharedMatrix Fock(new psi::Matrix("Fock <M|F|N>", nroots, nroots));
@@ -2826,7 +2829,7 @@ void FCI_MO::compute_sa_ref(const int& level) {
         L2bb = ambit::Tensor::build(ambit::CoreTensor, "L2bb", {nactv_, nactv_, nactv_, nactv_});
     }
 
-    std::string threepdc = options_.get_str("THREEPDC");
+    std::string threepdc = options_->get_str("THREEPDC");
     if (level >= 3 && threepdc != "ZERO") {
         L3aaa = ambit::Tensor::build(ambit::CoreTensor, "L3aaa", std::vector<size_t>(6, nactv_));
         L3aab = ambit::Tensor::build(ambit::CoreTensor, "L3aab", std::vector<size_t>(6, nactv_));
@@ -2842,7 +2845,7 @@ void FCI_MO::compute_sa_ref(const int& level) {
     };
 
     // save state-specific density to disk for DWMS-DSRG-PT
-    bool do_disk = options_.get_str("JOB_TYPE") == "DWMS-DSRGPT2";
+    bool do_disk = options_->get_str("JOB_TYPE") == "DWMS-DSRGPT2";
 
     for (size_t n = 0, nentry = sa_info_.size(); n < nentry; ++n) {
         // get current nroots and weights
@@ -2929,7 +2932,8 @@ std::vector<std::string> FCI_MO::density_filenames_generator(int rdm_level, int 
     }
 
     std::string path0 = PSIOManager::shared_object()->get_default_path() + "psi." +
-                        std::to_string(getpid()) + "." + psi::Process::environment.molecule()->name();
+                        std::to_string(getpid()) + "." +
+                        psi::Process::environment.molecule()->name();
     std::string level = std::to_string(rdm_level);
     std::string name0 = (root1 == root2) ? level + "RDM" : level + "TrDM";
 
@@ -2983,7 +2987,7 @@ void FCI_MO::localize_actv_orbs() {
     // modified from localize.cc
     print_h2("Localizing active orbitals");
 
-    psi::SharedMatrix Ca = this->Ca();
+    psi::SharedMatrix Ca = ints_->Ca();
     auto Ca_actv = std::make_shared<psi::Matrix>("Ca active", Ca->rowspi(), actv_dim_);
 
     for (int h = 0; h < nirrep_; ++h) {
@@ -2994,7 +2998,7 @@ void FCI_MO::localize_actv_orbs() {
     }
 
     std::shared_ptr<Localizer> localizer =
-        Localizer::build(options_.get_str("LOCALIZE_TYPE"), this->basisset(), Ca_actv);
+        Localizer::build(options_->get_str("LOCALIZE_TYPE"), ints_->basisset(), Ca_actv);
     localizer->localize();
     psi::SharedMatrix Lorbs = localizer->L();
 
@@ -3026,7 +3030,8 @@ void FCI_MO::set_sa_info(const std::vector<std::tuple<int, int, int, std::vector
             if (static_cast<size_t>(nroots) != weights.size()) {
                 outfile->Printf("\n  Irrep: %d, Multi: %d, Nroots: %d, Nweights: %d", irrep, multi,
                                 nroots, weights.size());
-                psi::PSIEXCEPTION("Cannot set sa_info of FCI_MO: mismatching nroot and weights size.");
+                psi::PSIEXCEPTION(
+                    "Cannot set sa_info of FCI_MO: mismatching nroot and weights size.");
             }
         }
         sa_info_ = info;
@@ -3040,7 +3045,7 @@ void FCI_MO::set_eigens(const std::vector<vector<pair<psi::SharedVector, double>
     if (eigens.size() == nentry) {
         for (size_t n = 0; n < nentry; ++n) {
             int ne = std::get<2>(sa_info_[n]);
-            if (eigens[n].size() != static_cast<size_t>(ne) ) {
+            if (eigens[n].size() != static_cast<size_t>(ne)) {
                 outfile->Printf("\n  Entry %d: expected size %d, got %d", n, ne, eigens[n].size());
             }
         }
@@ -3211,4 +3216,4 @@ void FCI_MO::print_occupation_strings_perirrep(std::string name,
         }
     }
 }
-}
+} // namespace forte

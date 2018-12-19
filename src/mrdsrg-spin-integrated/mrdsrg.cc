@@ -373,11 +373,11 @@ double MRDSRG::compute_energy_relaxed() {
         auto fci_ints = compute_Heff_actv();
 
         if (cas_type == "CAS") {
-            FCI_MO fci_mo(reference_wavefunction_, options_, ints_, mo_space_info_, fci_ints);
+            FCI_MO fci_mo(scf_info_, foptions_, ints_, mo_space_info_, fci_ints);
             fci_mo.set_localize_actv(false);
-            Erelax = fci_mo.compute_energy();
+            Erelax = fci_mo.solver_compute_energy();
         } else if (cas_type == "ACI") {
-            AdaptiveCI aci(std::make_shared<SCFInfo>(reference_wavefunction_), std::make_shared<ForteOptions>(options_), ints_, mo_space_info_);
+            AdaptiveCI aci(scf_info_, foptions_, ints_, mo_space_info_);
             aci.set_fci_ints(fci_ints);
             if (foptions_->has_changed("ACI_RELAX_SIGMA")) {
                 aci.update_sigma();
@@ -385,7 +385,7 @@ double MRDSRG::compute_energy_relaxed() {
             Erelax = aci.compute_energy();
 
         } else {
-            FCI fci(reference_wavefunction_, options_, ints_, mo_space_info_, fci_ints);
+            FCI fci(ints_->wfn(), foptions_->psi_options(), ints_, mo_space_info_, fci_ints);
             fci.set_max_rdm_level(1);
             Erelax = fci.compute_energy();
         }
@@ -436,13 +436,13 @@ double MRDSRG::compute_energy_relaxed() {
             // diagonalize the Hamiltonian using fci_ints
             Etemp = Erelax;
             if (cas_type == "CAS") {
-                FCI_MO fci_mo(reference_wavefunction_, options_, ints_, mo_space_info_, fci_ints);
+                FCI_MO fci_mo(scf_info_, foptions_, ints_, mo_space_info_, fci_ints);
                 fci_mo.set_localize_actv(false);
-                Erelax = fci_mo.compute_energy();
+                Erelax = fci_mo.solver_compute_energy();
 
                 reference_ = fci_mo.reference(max_rdm_level);
             } else if (cas_type == "ACI") {
-                AdaptiveCI aci(std::make_shared<SCFInfo>(reference_wavefunction_), std::make_shared<ForteOptions>(options_), ints_, mo_space_info_);
+                AdaptiveCI aci(scf_info_, foptions_, ints_, mo_space_info_);
                 aci.set_fci_ints(fci_ints);
                 if (foptions_->has_changed("ACI_RELAX_SIGMA")) {
                     aci.update_sigma();
@@ -450,7 +450,7 @@ double MRDSRG::compute_energy_relaxed() {
                 Erelax = aci.compute_energy();
                 reference_ = aci.reference();
             } else {
-                FCI fci(reference_wavefunction_, options_, ints_, mo_space_info_, fci_ints);
+                FCI fci(ints_->wfn(), foptions_->psi_options(), ints_, mo_space_info_, fci_ints);
                 fci.set_max_rdm_level(max_rdm_level);
                 Erelax = fci.compute_energy();
 
@@ -607,8 +607,8 @@ double MRDSRG::compute_energy_sa() {
         auto fci_ints = compute_Heff_actv();
 
         // diagonalize the Hamiltonian
-        auto fci_mo = std::make_shared<FCI_MO>(reference_wavefunction_, options_, ints_,
-                                               mo_space_info_, fci_ints);
+        auto fci_mo =
+            std::make_shared<FCI_MO>(scf_info_, foptions_, ints_, mo_space_info_, fci_ints);
         Etemp = Erelax_sa;
         fci_mo->set_localize_actv(false);
         Erelax_sa = fci_mo->compute_energy();

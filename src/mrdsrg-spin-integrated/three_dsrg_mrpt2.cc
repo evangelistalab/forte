@@ -2339,9 +2339,8 @@ double THREE_DSRG_MRPT2::E_VT2_2_AO_Slow() {
     epsilon_virtual->print();
 
     AtomicOrbitalHelper ao_helper(Cwfn, epsilon_rdocc, epsilon_virtual, 1e-6, nactive_);
-    std::shared_ptr<psi::BasisSet> primary = reference_wavefunction_->basisset();
-    std::shared_ptr<psi::BasisSet> auxiliary =
-        reference_wavefunction_->get_basisset("DF_BASIS_MP2");
+    std::shared_ptr<psi::BasisSet> primary = ints_->basisset();
+    std::shared_ptr<psi::BasisSet> auxiliary = ints_->get_basisset("DF_BASIS_MP2");
 
     ao_helper.Compute_AO_Screen(primary);
     ao_helper.Estimate_TransAO_Screen(primary, auxiliary);
@@ -3427,9 +3426,9 @@ std::vector<double> THREE_DSRG_MRPT2::relaxed_energy(std::shared_ptr<FCIIntegral
     // check CAS_TYPE to decide diagonalization code
     if (cas_type == "CAS") {
 
-        FCI_MO fci_mo(reference_wavefunction_, options_, ints_, mo_space_info_, fci_ints);
+        FCI_MO fci_mo(scf_info_, foptions_, ints_, mo_space_info_, fci_ints);
         fci_mo.set_localize_actv(false);
-        double Eci = fci_mo.compute_energy();
+        double Eci = fci_mo.solver_compute_energy();
 
         // test state specific or state average
         if (!multi_state_) {
@@ -3449,7 +3448,7 @@ std::vector<double> THREE_DSRG_MRPT2::relaxed_energy(std::shared_ptr<FCIIntegral
     } else if (cas_type == "ACI") {
 
         // Only do ground state ACI for now
-        AdaptiveCI aci(std::make_shared<SCFInfo>(reference_wavefunction_), std::make_shared<ForteOptions>(options_), ints_, mo_space_info_);
+        AdaptiveCI aci(scf_info_, foptions_, ints_, mo_space_info_);
         aci.set_fci_ints(fci_ints);
         if ((foptions_->psi_options())["ACI_RELAX_SIGMA"].has_changed()) {
             aci.update_sigma();
@@ -3477,8 +3476,7 @@ std::vector<double> THREE_DSRG_MRPT2::relaxed_energy(std::shared_ptr<FCIIntegral
         int ntrial_per_root = foptions_->get_int("NTRIAL_PER_ROOT");
         psi::Dimension active_dim = mo_space_info_->get_dimension("ACTIVE");
         std::shared_ptr<psi::Molecule> molecule = psi::Process::environment.molecule();
-        double Enuc = molecule->nuclear_repulsion_energy(
-            reference_wavefunction_->get_dipole_field_strength());
+        double Enuc = ints_->nuclear_repulsion_energy();
         int charge = molecule->molecular_charge();
         if ((foptions_->psi_options())["CHARGE"].has_changed()) {
             charge = foptions_->get_int("CHARGE");
@@ -3509,7 +3507,7 @@ std::vector<double> THREE_DSRG_MRPT2::relaxed_energy(std::shared_ptr<FCIIntegral
             // diagonalize the Hamiltonian
             FCISolver fcisolver(active_dim, core_mos_, actv_mos_, na, nb, multi,
                                 foptions_->get_int("ROOT_SYM"), ints_, mo_space_info_,
-                                ntrial_per_root, print_, options_);
+                                ntrial_per_root, print_, foptions_->psi_options());
             fcisolver.set_max_rdm_level(1);
             fcisolver.set_nroot(foptions_->get_int("FCI_NROOT"));
             fcisolver.set_root(foptions_->get_int("FCI_ROOT"));
@@ -3539,7 +3537,7 @@ std::vector<double> THREE_DSRG_MRPT2::relaxed_energy(std::shared_ptr<FCIIntegral
                 auto nb = nelec_actv - na;
 
                 FCISolver fcisolver(active_dim, core_mos_, actv_mos_, na, nb, multi, irrep, ints_,
-                                    mo_space_info_, ntrial_per_root, print_, options_);
+                                    mo_space_info_, ntrial_per_root, print_, foptions_->psi_options());
                 fcisolver.set_max_rdm_level(1);
                 fcisolver.set_nroot(nstates);
                 fcisolver.set_root(nstates - 1);
@@ -3834,8 +3832,7 @@ void THREE_DSRG_MRPT2::de_normal_order() {
 
     // test if de-normal-ordering is correct
     print_h2("Test De-Normal-Ordered Hamiltonian");
-    double Etest = scalar_include_fc + molecule_->nuclear_repulsion_energy(
-                                           reference_wavefunction_->get_dipole_field_strength());
+    double Etest = scalar_include_fc + ints_->nuclear_repulsion_energy();
 
     double Etest1 = 0.0;
     Etest1 += temp1["uv"] * Gamma1_["vu"];

@@ -34,6 +34,7 @@
 #include <vector>
 
 #include "psi4/libmints/dimension.h"
+#include "psi4/libmints/wavefunction.h"
 #include "ambit/blocked_tensor.h"
 
 class Tensor;
@@ -44,6 +45,7 @@ class Matrix;
 class Vector;
 class Wavefunction;
 class Dimension;
+class BasisSet;
 } // namespace psi
 
 namespace forte {
@@ -110,7 +112,6 @@ class ForteIntegrals {
     virtual ~ForteIntegrals();
 
   public:
-
     // ==> Class Interface <==
 
     /// Return Ca
@@ -119,6 +120,17 @@ class ForteIntegrals {
     std::shared_ptr<psi::Matrix> Cb() const { return Cb_; }
     /// Return nuclear repulsion energy
     double nuclear_repulsion_energy() const { return nucrep_; }
+
+    /// temporary solution for not having a Wavefunction
+    std::shared_ptr<psi::Wavefunction> wfn() { return wfn_; }
+    /// temporary solution for basisset
+    std::shared_ptr<psi::BasisSet> basisset() { return wfn_->basisset(); }
+    /// temporary solution for get_basisset
+    std::shared_ptr<psi::BasisSet> get_basisset(std::string str) { return wfn_->get_basisset(str); }
+    /// temporary solution for aotoso
+    std::shared_ptr<psi::Matrix> aotoso() { return wfn_->aotoso(); }
+    /// temporary solution for Ca_subset
+    std::shared_ptr<psi::Matrix> Ca_subset(std::string str) { return wfn_->Ca_subset(str); }
 
     /// Return the total number of molecular orbitals (this number includes frozen MOs)
     size_t nmo() const { return nmo_; }

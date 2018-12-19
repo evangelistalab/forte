@@ -89,11 +89,10 @@ void DWMS_DSRGPT2::startup() {
 
     print_impl_note();
 
-    Enuc_ = psi::Process::environment.molecule()->nuclear_repulsion_energy(
-        reference_wavefunction_->get_dipole_field_strength());
+    Enuc_ = ints_->nuclear_repulsion_energy();
 
     CharacterTable ct = psi::Process::environment.molecule()->point_group()->char_table();
-    int nirrep = reference_wavefunction_->nirrep();
+    int nirrep = mo_space_info_->nirrep();
     irrep_symbol_.resize(nirrep);
     for (int h = 0; h < nirrep; ++h) {
         irrep_symbol_[h] = std::string(ct.gamma(h).symbol());
@@ -110,8 +109,8 @@ void DWMS_DSRGPT2::startup() {
         Ub_.data()[u * na + u] = 1.0;
     }
 
-    Ca_copy_ = Ca_->clone();
-    Cb_copy_ = Cb_->clone();
+    Ca_copy_ = ints_->Ca_()->clone();
+    Cb_copy_ = ints_->Cb_()->clone();
 }
 
 void DWMS_DSRGPT2::read_options() {
@@ -312,8 +311,7 @@ double DWMS_DSRGPT2::compute_energy() {
 
 std::shared_ptr<FCI_MO> DWMS_DSRGPT2::precompute_energy() {
     // perform CASCI using user-defined weights
-    auto fci_mo =
-        std::make_shared<FCI_MO>(reference_wavefunction_, options_, ints_, mo_space_info_);
+    auto fci_mo = std::make_shared<FCI_MO>(scf_info_, foptions_, ints_, mo_space_info_);
     fci_mo->compute_energy();
     auto eigens = fci_mo->eigens();
     fci_ints_ = fci_mo->fci_ints();
@@ -1172,8 +1170,8 @@ std::vector<std::tuple<int, int, int, std::vector<double>>> DWMS_DSRGPT2::comput
 
 void DWMS_DSRGPT2::transform_ints0() {
     print_h2("Transformation Integrals Back to Original");
-    Ca_->copy(Ca_copy_);
-    Cb_->copy(Cb_copy_);
+    ints_->Ca_()->copy(Ca_copy_);
+    ints_->Cb_()->copy(Cb_copy_);
     ints_->retransform_integrals();
 }
 
