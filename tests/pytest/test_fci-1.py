@@ -25,7 +25,6 @@ def test_fci1():
     options = psi4.core.get_options()
     options.set_current_module('FORTE')
     forte_options.update_psi_options(options)
-    options.print_module_options()
 
     forte.startup()
     forte.banner()
