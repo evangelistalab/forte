@@ -166,7 +166,7 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
     }
     if (options.get_str("JOB_TYPE") == "PCI_HASHVEC") {
         auto pci_hashvec =
-            std::make_shared<ProjectorCI_HashVec>(ref_wfn, options, ints, mo_space_info);
+            std::make_shared<ProjectorCI_HashVec>(std::make_shared<StateInfo>(ref_wfn), std::make_shared<SCFInfo>(ref_wfn), std::make_shared<ForteOptions>(options), ints, mo_space_info);
         for (int n = 0; n < options.get_int("NROOT"); ++n) {
             pci_hashvec->compute_energy();
         }
@@ -179,7 +179,7 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
         }
     }
     if (options.get_str("JOB_TYPE") == "EWCI") {
-        auto ewci = std::make_shared<ElementwiseCI>(std::make_shared<SCFInfo>(ref_wfn), std::make_shared<ForteOptions>(options), ints, mo_space_info);
+        auto ewci = std::make_shared<ElementwiseCI>(std::make_shared<StateInfo>(ref_wfn), std::make_shared<SCFInfo>(ref_wfn), std::make_shared<ForteOptions>(options), ints, mo_space_info);
         for (int n = 0; n < options.get_int("NROOT"); ++n) {
             ewci->compute_energy();
         }

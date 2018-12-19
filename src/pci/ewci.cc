@@ -51,6 +51,7 @@
 #include "ewci.h"
 #include "helpers/timer.h"
 #include "sparse_ci/ci_reference.h"
+#include "base_classes/state_info.h"
 
 using namespace psi;
 using namespace forte::GeneratorType_EWCI;
@@ -103,10 +104,10 @@ void ElementwiseCI::sortHashVecByCoefficient(det_hashvec& dets_hashvec, std::vec
     C = std::move(new_C);
 }
 
-ElementwiseCI::ElementwiseCI(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
+ElementwiseCI::ElementwiseCI(std::shared_ptr<StateInfo> state, std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
                              std::shared_ptr<ForteIntegrals> ints,
                              std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : scf_info_(scf_info), ints_(ints), mo_space_info_(mo_space_info), options_(options),
+    : state_(state), scf_info_(scf_info), ints_(ints), mo_space_info_(mo_space_info), options_(options),
       fast_variational_estimate_(false) {
     // Copy the wavefunction information
     startup();
@@ -152,13 +153,8 @@ void ElementwiseCI::startup() {
     nactel_ = 0;
     nalpha_ = 0;
     nbeta_ = 0;
-    int nel = 0;
+    int nel = state_->na() + state_->nb();
     nirrep_ = mo_space_info_->nirrep();
-    doccpi_ = scf_info_->doccpi();
-    soccpi_ = scf_info_->soccpi();
-    for (int h = 0; h < nirrep_; ++h) {
-        nel += 2 * doccpi_[h] + soccpi_[h];
-    }
 
     int ms = wavefunction_multiplicity_ - 1;
     nactel_ = nel - 2 * nfrzc_;

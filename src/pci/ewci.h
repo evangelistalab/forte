@@ -49,6 +49,7 @@
 
 namespace forte {
 class SCFInfo;
+class StateInfo;
 
 /// Set the forte style options for the FCI method
 // void set_PCI_HashVec_options(ForteOptions& foptions);
@@ -87,7 +88,7 @@ class ElementwiseCI {
      * @param options The main options object
      * @param ints A pointer to an allocated integral object
      */
-    ElementwiseCI(std::shared_ptr<forte::SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
+    ElementwiseCI(std::shared_ptr<StateInfo> state, std::shared_ptr<forte::SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
                   std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     // ==> Class Interface <==
@@ -99,13 +100,15 @@ class ElementwiseCI {
     // ==> Class data <==
 
     // * Calculation data
+    /// The state to calculate
+    std::shared_ptr<StateInfo> state_;
     /// The molecular integrals required by Explorer
     std::shared_ptr<ForteIntegrals> ints_;
     /// Store all the integrals locally
     static std::shared_ptr<FCIIntegrals> fci_ints_;
     /// The options
     std::shared_ptr<ForteOptions> options_;
-    ///
+    /// SCF information
     std::shared_ptr<SCFInfo> scf_info_;
     /// The maximum number of threads
     int num_threads_;
@@ -127,10 +130,6 @@ class ElementwiseCI {
     std::vector<int> mo_symmetry_;
     /// The number of irrep
     int nirrep_;
-    /// The number of doubly occupied orbitals per irrep
-    psi::Dimension doccpi_;
-    /// The number of singly occupied orbitals per irrep
-    psi::Dimension soccpi_;
     /// The number of active electrons
     int nactel_;
     /// The number of correlated alpha electrons
