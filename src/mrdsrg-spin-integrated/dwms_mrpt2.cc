@@ -434,21 +434,21 @@ std::shared_ptr<FCIIntegrals> DWMS_DSRGPT2::compute_dsrg_pt(std::shared_ptr<MAST
 
     // compute dsrg-pt2/3 energy
     if (do_semi_) {
-        SemiCanonical semi(reference_wavefunction_, ints_, mo_space_info_);
+        SemiCanonical semi(foptions_, ints_, mo_space_info_);
         semi.semicanonicalize(reference, max_rdm_level_);
         Ua_ = semi.Ua_t();
         Ub_ = semi.Ub_t();
 
-        dsrg_pt = std::make_shared<THREE_DSRG_MRPT2>(reference, scf_info_, foptions_,
-                                                     ints_, mo_space_info_);
+        dsrg_pt = std::make_shared<THREE_DSRG_MRPT2>(reference, scf_info_, foptions_, ints_,
+                                                     mo_space_info_);
         dsrg_pt->set_Uactv(Ua_, Ub_);
     } else {
         if (level == "PT3") {
-            dsrg_pt = std::make_shared<DSRG_MRPT3>(reference, scf_info_, foptions_,
-                                                   ints_, mo_space_info_);
+            dsrg_pt = std::make_shared<DSRG_MRPT3>(reference, scf_info_, foptions_, ints_,
+                                                   mo_space_info_);
         } else {
-            dsrg_pt = std::make_shared<DSRG_MRPT2>(reference, scf_info_, foptions_,
-                                                   ints_, mo_space_info_);
+            dsrg_pt = std::make_shared<DSRG_MRPT2>(reference, scf_info_, foptions_, ints_,
+                                                   mo_space_info_);
         }
     }
 

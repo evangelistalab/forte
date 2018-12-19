@@ -32,14 +32,13 @@
 
 #include "psi4/libpsio/psio.h"
 #include "psi4/libpsio/psio.hpp"
-
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/vector.h"
-
 #include "psi4/libpsi4util/PsiOutStream.h"
-#include "helpers/helpers.h"
 
+#include "forte_options.h"
 #include "helpers/blockedtensorfactory.h"
+#include "helpers/helpers.h"
 #include "helpers/printing.h"
 #include "helpers/timer.h"
 #include "semi_canonicalize.h"
@@ -50,10 +49,10 @@ namespace forte {
 
 using namespace ambit;
 
-SemiCanonical::SemiCanonical(std::shared_ptr<psi::Wavefunction> wfn,
+SemiCanonical::SemiCanonical(std::shared_ptr<ForteOptions> foptions,
                              std::shared_ptr<ForteIntegrals> ints,
                              std::shared_ptr<MOSpaceInfo> mo_space_info, bool quiet_banner)
-    : mo_space_info_(mo_space_info), ints_(ints), wfn_(wfn) {
+    : mo_space_info_(mo_space_info), ints_(ints) {
 
     if (!quiet_banner) {
         print_method_banner({"Semi-Canonical Orbitals",
@@ -62,6 +61,14 @@ SemiCanonical::SemiCanonical(std::shared_ptr<psi::Wavefunction> wfn,
 
     // 0. initialize the dimension objects
     startup();
+
+    // compute thresholds from options
+    threshold_tight_ = foptions->get_double("E_CONVERGENCE");
+    if (ints_->integral_type() == Cholesky) {
+        double cd_tlr = foptions->get_double("CHOLESKY_TOLERANCE");
+        threshold_tight_ = (threshold_tight_ < 0.5 * cd_tlr) ? 0.5 * cd_tlr : threshold_tight_;
+    }
+    threshold_loose_ = 10.0 * threshold_tight_;
 }
 
 void SemiCanonical::startup() {
@@ -113,8 +120,9 @@ void SemiCanonical::startup() {
     actv_offsets_["actv"] = actv_off;
 }
 
-std::vector<std::vector<size_t>>
-SemiCanonical::idx_space(const psi::Dimension& npi, const psi::Dimension& bpi, const psi::Dimension& tpi) {
+std::vector<std::vector<size_t>> SemiCanonical::idx_space(const psi::Dimension& npi,
+                                                          const psi::Dimension& bpi,
+                                                          const psi::Dimension& tpi) {
     std::vector<std::vector<size_t>> out(nirrep_, std::vector<size_t>());
 
     for (size_t h = 0, offset = 0; h < nirrep_; ++h) {
@@ -128,7 +136,8 @@ SemiCanonical::idx_space(const psi::Dimension& npi, const psi::Dimension& bpi, c
     return out;
 }
 
-void SemiCanonical::set_actv_dims(const psi::Dimension& actv_docc, const psi::Dimension& actv_virt) {
+void SemiCanonical::set_actv_dims(const psi::Dimension& actv_docc,
+                                  const psi::Dimension& actv_virt) {
     // test actv_docc and actv_virt
     psi::Dimension actv = actv_docc + actv_virt;
     if (actv != actv_) {
@@ -241,14 +250,6 @@ bool SemiCanonical::check_fock_matrix() {
                     "2-Norm");
     outfile->Printf("\n    %s", dash.c_str());
 
-    // universial threshold
-    double e_conv = (wfn_->options()).get_double("E_CONVERGENCE");
-    if (ints_->integral_type() == Cholesky) {
-        double threshold_cd = (wfn_->options()).get_double("CHOLESKY_TOLERANCE");
-        e_conv = (e_conv < 0.5 * threshold_cd) ? 0.5 * threshold_cd : e_conv;
-    }
-    double threshold_max = 10.0 * e_conv;
-
     // loop over orbital spaces
     for (const auto& name_dim_pair : mo_dims_) {
         std::string name = name_dim_pair.first;
@@ -288,9 +289,9 @@ bool SemiCanonical::check_fock_matrix() {
         outfile->Printf("\n    %s", dash.c_str());
 
         // check threshold
-        double threshold_norm = npi.sum() * (npi.sum() - 1) * e_conv;
-        bool FaDo = (Famax <= threshold_max && Fanorm <= threshold_norm) ? false : true;
-        bool FbDo = (Fbmax <= threshold_max && Fbnorm <= threshold_norm) ? false : true;
+        double threshold_norm = npi.sum() * (npi.sum() - 1) * threshold_tight_;
+        bool FaDo = (Famax <= threshold_loose_ && Fanorm <= threshold_norm) ? false : true;
+        bool FbDo = (Fbmax <= threshold_loose_ && Fbnorm <= threshold_norm) ? false : true;
         bool FDo = FaDo && FbDo;
         checked_results_[name] = FDo;
         if (FDo) {
@@ -402,8 +403,8 @@ void SemiCanonical::build_transformation_matrices(psi::SharedMatrix& Ua, psi::Sh
 }
 
 void SemiCanonical::transform_ints(psi::SharedMatrix& Ua, psi::SharedMatrix& Ub) {
-    psi::SharedMatrix Ca = wfn_->Ca();
-    psi::SharedMatrix Cb = wfn_->Cb();
+    psi::SharedMatrix Ca = ints_->Ca();
+    psi::SharedMatrix Cb = ints_->Cb();
     psi::SharedMatrix Ca_new(Ca->clone());
     psi::SharedMatrix Cb_new(Cb->clone());
     Ca_new->gemm(false, false, 1.0, Ca, Ua, 0.0);
@@ -417,8 +418,8 @@ void SemiCanonical::transform_ints(psi::SharedMatrix& Ua, psi::SharedMatrix& Ub)
 }
 
 void SemiCanonical::back_transform_ints(psi::SharedMatrix& Ua, psi::SharedMatrix& Ub) {
-    psi::SharedMatrix Ca = wfn_->Ca();
-    psi::SharedMatrix Cb = wfn_->Cb();
+    psi::SharedMatrix Ca = ints_->Ca();
+    psi::SharedMatrix Cb = ints_->Cb();
     psi::SharedMatrix Ca_new(Ca->clone());
     psi::SharedMatrix Cb_new(Cb->clone());
     Ca_new->gemm(false, true, 1.0, Ca, Ua, 0.0);

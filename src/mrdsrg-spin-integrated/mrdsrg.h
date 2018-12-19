@@ -57,8 +57,8 @@ class MRDSRG : public MASTER_DSRG {
   public:
     /**
      * MRDSRG Constructor
-     * @param ref_wfn The reference wavefunction object
-     * @param options The main options object
+     * @param scf_info The SCFInfo
+     * @param options The ForteOption
      * @param ints A pointer to an allocated integral object
      * @param mo_space_info The MOSpaceInfo object
      */

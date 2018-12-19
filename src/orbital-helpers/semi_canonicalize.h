@@ -39,9 +39,9 @@
 #include "integrals/integrals.h"
 #include "base_classes/reference.h"
 
-
-
 namespace forte {
+
+class ForteOptions;
 
 /**
  * @brief The SemiCanonical class
@@ -51,13 +51,12 @@ class SemiCanonical {
   public:
     /**
      * @brief SemiCanonical Constructor
-     * @param ref_wfn The reference wavefunction object
+     * @param options ForteOptions
      * @param ints ForteInegrals
-     * @param options PSI4 and FORTE options
      * @param mo_space_info MOSpaceInfo
      * @param quiet_banner Method banner is not printed if set to true
      */
-    SemiCanonical(std::shared_ptr<psi::Wavefunction> wfn, std::shared_ptr<ForteIntegrals> ints,
+    SemiCanonical(std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
                   std::shared_ptr<MOSpaceInfo> mo_space_info, bool quiet_banner = false);
 
     /// Transforms integrals and reference
@@ -100,7 +99,7 @@ class SemiCanonical {
 
     std::shared_ptr<ForteIntegrals> ints_;
 
-    std::shared_ptr<psi::Wavefunction> wfn_;
+//    std::shared_ptr<psi::Wavefunction> wfn_;
 
     // All orbitals
     psi::Dimension nmopi_;
@@ -160,6 +159,9 @@ class SemiCanonical {
 
     /// Check Fock matrix, return true if semicanonicalized
     bool check_fock_matrix();
+    /// Thresholds for Fock matrix testing
+    double threshold_tight_;
+    double threshold_loose_;
 
     /// If certain Fock blocks need to be diagonalized
     std::map<std::string, bool> checked_results_;

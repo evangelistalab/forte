@@ -402,7 +402,7 @@ double MRDSRG::compute_energy_relaxed() {
     } else if (relax_ref_ == "ITERATE" || relax_ref_ == "TWICE") {
 
         int max_rdm_level = foptions_->get_str("THREEPDC") == "ZERO" ? 2 : 3;
-        SemiCanonical semiorb(reference_wavefunction_, ints_, mo_space_info_, true);
+        SemiCanonical semiorb(foptions_, ints_, mo_space_info_, true);
 
         // iteration variables
         int cycle = 0, maxiter = foptions_->get_int("MAXITER_RELAX_REF");
@@ -580,7 +580,7 @@ double MRDSRG::compute_energy_relaxed() {
 double MRDSRG::compute_energy_sa() {
     int nentry = eigens_.size();
     std::vector<std::vector<std::vector<double>>> Edsrg_vec;
-    SemiCanonical semiorb(reference_wavefunction_, ints_, mo_space_info_, true);
+    SemiCanonical semiorb(foptions_, ints_, mo_space_info_, true);
     int max_rdm_level = foptions_->get_str("THREEPDC") == "ZERO" ? 2 : 3;
 
     // iteration variables

@@ -66,8 +66,8 @@ class ACTIVE_DSRGPT2 {
   public:
     /**
      * @brief ACTIVE_DSRGPT2 Constructor
-     * @param ref_wfn The reference wavefunction object
-     * @param options PSI4 and FORTE options
+     * @param scf_info The SCFInfo
+     * @param options The ForteOptions
      * @param ints ForteInegrals
      * @param mo_space_info MOSpaceInfo
      */

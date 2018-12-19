@@ -105,7 +105,8 @@ void ACTIVE_DSRGPT2::startup() {
         std::vector<std::tuple<double, int, int>> order;
         for (int h = 0; h < nirrep; ++h) {
             for (int i = 0; i < nmopi[h]; ++i) {
-                order.push_back(std::tuple<double, int, int>(scf_info_->epsilon_a()->get(h, i), i, h));
+                order.push_back(
+                    std::tuple<double, int, int>(scf_info_->epsilon_a()->get(h, i), i, h));
             }
         }
         std::sort(order.begin(), order.end(), std::less<std::tuple<double, int, int>>());
@@ -222,8 +223,7 @@ double ACTIVE_DSRGPT2::compute_energy() {
     orb_extents_ = flatten_fci_orbextents(fci_mo_->orb_extents());
 
     // semicanonicalzer
-    std::shared_ptr<SemiCanonical> semi =
-        std::make_shared<SemiCanonical>(reference_wavefunction_, ints_, mo_space_info_, true);
+    auto semi = std::make_shared<SemiCanonical>(foptions_, ints_, mo_space_info_, true);
     if (ref_type_ == "CIS" || ref_type_ == "CISD") {
         semi->set_actv_dims(fci_mo_->actv_docc(), fci_mo_->actv_virt());
     }
@@ -475,11 +475,10 @@ double ACTIVE_DSRGPT2::compute_dsrg_mrpt2_energy(std::shared_ptr<MASTER_DSRG>& d
                                                  Reference& reference) {
     IntegralType int_type = ints_->integral_type();
     if (int_type == Conventional) {
-        dsrg = std::make_shared<DSRG_MRPT2>(reference, scf_info_, foptions_, ints_,
-                                            mo_space_info_);
+        dsrg = std::make_shared<DSRG_MRPT2>(reference, scf_info_, foptions_, ints_, mo_space_info_);
     } else if (int_type == Cholesky || int_type == DF || int_type == DiskDF) {
-        dsrg = std::make_shared<THREE_DSRG_MRPT2>(reference, scf_info_, foptions_,
-                                                  ints_, mo_space_info_);
+        dsrg = std::make_shared<THREE_DSRG_MRPT2>(reference, scf_info_, foptions_, ints_,
+                                                  mo_space_info_);
     } else {
         throw psi::PSIEXCEPTION("Unknown integral type for DSRG.");
     }
