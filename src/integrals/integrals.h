@@ -236,7 +236,7 @@ class ForteIntegrals {
     /// Rotate the MO coefficients and transform the intregrals
     /// @param Ua the alpha unitary transformation matrix
     /// @param Ub the alpha unitary transformation matrix
-    void rotate_integrals(std::shared_ptr<psi::Matrix> Ua, std::shared_ptr<psi::Matrix> Ub);
+    void rotate_orbitals(std::shared_ptr<psi::Matrix> Ua, std::shared_ptr<psi::Matrix> Ub);
 
     /// Update the integrals with a new set of MO coefficients
     void retransform_integrals();
