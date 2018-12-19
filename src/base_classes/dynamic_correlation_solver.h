@@ -53,6 +53,12 @@ class DynamicCorrelationSolver {
     /// The ForteOptions
     std::shared_ptr<ForteOptions> foptions_;
 };
+
+std::shared_ptr<DynamicCorrelationSolver>
+make_dynamic_correlation_solver(const std::string& type, std::shared_ptr<ForteOptions> options,
+                                std::shared_ptr<ForteIntegrals> ints,
+                                std::shared_ptr<MOSpaceInfo> mo_space_info);
+
 } // namespace forte
 
 #endif // DYNAMIC_CORRELATION_SOLVER_H

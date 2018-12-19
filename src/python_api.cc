@@ -41,6 +41,7 @@
 #include "forte.h"
 #include "fci/fci.h"
 #include "fci/fci_solver.h"
+#include "base_classes/dynamic_correlation_solver.h"
 #include "base_classes/state_info.h"
 #include "base_classes/scf_info.h"
 
@@ -72,6 +73,11 @@ PYBIND11_MODULE(forte, m) {
              (void (ForteOptions::*)(const std::string&, const std::string&, const std::string&)) &
                  ForteOptions::add_str,
              "Add a string option")
+        .def("add_str",
+             (void (ForteOptions::*)(const std::string&, const std::string&,
+                                     const std::vector<std::string>&, const std::string&)) &
+                 ForteOptions::add_str,
+             "Add a string option")
         .def("push_options_to_psi4", &ForteOptions::push_options_to_psi4)
         .def("update_psi_options", &ForteOptions::update_psi_options)
         .def("generate_documentation", &ForteOptions::generate_documentation);
@@ -100,8 +106,14 @@ PYBIND11_MODULE(forte, m) {
     py::class_<SCFInfo, std::shared_ptr<SCFInfo>>(m, "SCFInfo")
         .def(py::init<psi::SharedWavefunction>());
 
+    // export ActiveSpaceSolver
     py::class_<ActiveSpaceSolver, std::shared_ptr<ActiveSpaceSolver>>(m, "ActiveSpaceSolver")
         .def("compute_energy", &ActiveSpaceSolver::compute_energy);
+
+    // export DynamicCorrelationSolver
+    py::class_<DynamicCorrelationSolver, std::shared_ptr<DynamicCorrelationSolver>>(
+        m, "DynamicCorrelationSolver")
+        .def("compute_energy", &DynamicCorrelationSolver::compute_energy);
 
     // export FCIIntegrals
     py::class_<FCIIntegrals, std::shared_ptr<FCIIntegrals>>(m, "FCIIntegrals")
