@@ -34,11 +34,11 @@ import forte
 import psi4.driver.p4util as p4util
 from psi4.driver.procrouting import proc_util
 
-def new_driver(scf_info, options, ints, mo_space_info):
+def new_driver(state, scf_info, options, ints, mo_space_info):
     # Create an active space solver object
-    active_space_solver = options.get_str('ACTIVE_SPACE_SOLVER')
-    solver = forte.make_active_space_solver(active_space_solver,state,scf_info,forte_options,ints,mo_space_info)
-    energy = active_space_solver.compute_energy()
+    as_solver_type = options.get_str('ACTIVE_SPACE_SOLVER')
+    as_solver = forte.make_active_space_solver(as_solver_type,state,scf_info,options,ints,mo_space_info)
+    energy = as_solver.compute_energy()
 #    reference = solver.reference()
 
     # Create a dynamical correlation solver object
@@ -64,6 +64,7 @@ def run_forte(name, **kwargs):
     # Get the option object
     options = psi4.core.get_options()
     options.set_current_module('FORTE')
+    forte.forte_options.update_psi_options(options)
 
     if ('DF' in options.get_str('INT_TYPE')):
         aux_basis = psi4.core.BasisSet.build(ref_wfn.molecule(), 'DF_BASIS_MP2',
@@ -89,6 +90,9 @@ def run_forte(name, **kwargs):
     # Create the AO subspace projector
     ps = forte.make_aosubspace_projector(ref_wfn, options)
 
+    state = forte.StateInfo(ref_wfn)
+    scf_info = forte.SCFInfo(ref_wfn)
+
     # Run a method
     job_type = options.get_str('JOB_TYPE')
 #    job_type = psi4.core.get_option('FORTE','JOB_TYPE')
@@ -102,7 +106,7 @@ def run_forte(name, **kwargs):
             forte.LOCALIZE(ref_wfn,options,ints,mo_space_info)
 
         if (job_type == 'NEWDRIVER'):
-            new_driver(ref_wfn, options, ints, mo_space_info)
+            new_driver(state, scf_info, forte.forte_options, ints, mo_space_info)
         else:
             # Run a method
             forte.forte_old_methods(ref_wfn, options, ints, mo_space_info)
