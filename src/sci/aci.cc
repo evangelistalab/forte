@@ -397,17 +397,17 @@ void AdaptiveCI::print_info() {
         {"Convergence threshold", options_->get_double("ACI_CONVERGENCE")}};
     std::vector<std::pair<std::string, std::string>> calculation_info_string{
         {"Ms", get_ms_string(twice_ms_)},
-   //     {"Diagonalization algorithm", options_->get_str("DIAG_ALGORITHM")},
+        {"Diagonalization algorithm", options_->get_str("DIAG_ALGORITHM")},
         {"Determinant selection criterion",
          energy_selection_ ? "Second-order Energy" : "First-order Coefficients"},
         {"Selection criterion", aimed_selection_ ? "Aimed selection" : "Threshold"},
-    //    {"Excited Algorithm", options_->get_str("ACI_EXCITED_ALGORITHM")},
-    //    //        {"Q Type", q_rel_ ? "Relative Energy" : "Absolute Energy"},
-    //    //        {"PT2 Parameters", options_->get_bool("PERTURB_SELECT") ?
-    //    //        "True" : "False"},
-    //    {"Project out spin contaminants", project_out_spin_contaminants_ ? "True" : "False"},
-    //    {"Enforce spin completeness of basis", spin_complete_ ? "True" : "False"},
-    //    {"Enforce complete aimed selection", add_aimed_degenerate_ ? "True" : "False"}
+        {"Excited Algorithm", options_->get_str("ACI_EXCITED_ALGORITHM")},
+        //        {"Q Type", q_rel_ ? "Relative Energy" : "Absolute Energy"},
+        //        {"PT2 Parameters", options_->get_bool("PERTURB_SELECT") ?
+        //        "True" : "False"},
+        {"Project out spin contaminants", project_out_spin_contaminants_ ? "True" : "False"},
+        {"Enforce spin completeness of basis", spin_complete_ ? "True" : "False"},
+        {"Enforce complete aimed selection", add_aimed_degenerate_ ? "True" : "False"}
             };
 
     // Print some information
@@ -434,7 +434,6 @@ void AdaptiveCI::print_info() {
             outfile->Printf("\n   %da: %1.6f ", n, epsilon_a->get(actmo[n]));
         }
     }
-    outfile->Printf("Here");
 }
 
 double AdaptiveCI::solver_compute_energy() {
