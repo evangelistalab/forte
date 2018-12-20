@@ -43,7 +43,7 @@ class CI_Reference // : public psi::Wavefunction
 {
   protected:
     // The wavefunction object
-    std::shared_ptr<SCFInfo> wfn_;
+    std::shared_ptr<SCFInfo> scf_info_;
 
     // Multiplicity of the reference
     int multiplicity_;

@@ -165,4 +165,10 @@ if nfailed > 0:
     failed_log.write("# %s\n" % now)
     failed_log.write("\n".join(failed))
     failed_log.close()
+
+    for failed_test in failed:
+        print("\n\n==> %s FAILED TEST OUTPUT <==\n" % failed_test)
+        subprocess.call("cat %s/output.dat" % failed_test, shell=True)
+        print("\n")
+
     exit(1)

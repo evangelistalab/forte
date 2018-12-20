@@ -65,7 +65,7 @@ class CI_RDMS {
     // All rdms are stored in spin-labeled vector format.
     // They are accessed in the standard way. E.g., for the alpha/alpha 2-RDM,
     // the element corresponding to p,q,r,s would be accessed with:
-    // tp2rdm_aa[p*ncmo^(3) + q*nmco^(2) + r*ncmo + s], where ncmo is the number
+    // tp2rdm_aa[p*ncmo^(3) + q*ncmo^(2) + r*ncmo + s], where ncmo is the number
     // of active orbitals.
 
     // The most efficient algorithms use coupling lists to fill the
