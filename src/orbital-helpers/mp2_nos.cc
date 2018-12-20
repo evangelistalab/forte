@@ -384,7 +384,7 @@ MP2_NOS::MP2_NOS(std::shared_ptr<psi::Wavefunction> wfn, psi::Options& options,
     }
 
     // Retransform the integrals in the new basis
-    ints->rotate_orbitals(Ua, Ub);
+    ints->rotate_orbitals(Ua, Ua); // TODO: be careful here
 
     BlockedTensor::set_expert_mode(false);
     // Erase all mo_space information

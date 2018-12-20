@@ -133,8 +133,11 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
                                 std::make_shared<ForteOptions>(options), ints, mo_space_info);
     }
     if (options.get_str("JOB_TYPE") == "ASCI") {
-        auto asci = std::make_shared<ASCI>(ref_wfn, options, ints, mo_space_info);
-        asci->compute_energy();
+        auto asci = std::make_shared<ASCI>(std::make_shared<StateInfo>(ref_wfn),
+                                           std::make_shared<SCFInfo>(ref_wfn),
+                                           std::make_shared<ForteOptions>(options), ints,
+                                           mo_space_info);
+        asci->solver_compute_energy();
     }
     if (options.get_str("JOB_TYPE") == "ACI") {
         auto aci = std::make_shared<AdaptiveCI>(std::make_shared<StateInfo>(ref_wfn),

@@ -1033,9 +1033,9 @@ det_hash<double> AdaptiveCI::get_bin_F_space_old(int bin, int nbin, psi::SharedM
             }
         }
         for (size_t p = 0; p < nirrep_; ++p) {
-            for (int q = p; q < nirrep_; ++q) {
+            for (size_t q = p; q < nirrep_; ++q) {
                 for (size_t r = 0; r < nirrep_; ++r) {
-                    int sp = p ^ q ^ r;
+                    size_t sp = p ^ q ^ r;
                     if (sp < r)
                         continue;
 
@@ -1045,19 +1045,19 @@ det_hash<double> AdaptiveCI::get_bin_F_space_old(int bin, int nbin, psi::SharedM
                     const auto& nvalpha_r = nvalpha[r];
                     const auto& nvalpha_s = nvalpha[sp];
 
-                    int max_i = noalpha_p.size();
-                    int max_j = noalpha_q.size();
-                    int max_a = nvalpha_r.size();
-                    int max_b = nvalpha_s.size();
+                    size_t max_i = noalpha_p.size();
+                    size_t max_j = noalpha_q.size();
+                    size_t max_a = nvalpha_r.size();
+                    size_t max_b = nvalpha_s.size();
 
                     // Generate aa excitations
-                    for (int i = 0; i < max_i; ++i) {
+                    for (size_t i = 0; i < max_i; ++i) {
                         int ii = noalpha_p[i];
-                        for (int j = (p == q ? i + 1 : 0); j < max_j; ++j) {
+                        for (size_t j = (p == q ? i + 1 : 0); j < max_j; ++j) {
                             int jj = noalpha_q[j];
-                            for (int a = 0; a < max_a; ++a) {
+                            for (size_t a = 0; a < max_a; ++a) {
                                 int aa = nvalpha_r[a];
-                                for (int b = (r == sp ? a + 1 : 0); b < max_b; ++b) {
+                                for (size_t b = (r == sp ? a + 1 : 0); b < max_b; ++b) {
                                     int bb = nvalpha_s[b];
 
                                     // Check if the determinant goes in this bin
@@ -1085,13 +1085,13 @@ det_hash<double> AdaptiveCI::get_bin_F_space_old(int bin, int nbin, psi::SharedM
                     max_a = nvbeta_r.size();
                     max_b = nvbeta_s.size();
 
-                    for (int i = 0; i < max_i; ++i) {
+                    for (size_t i = 0; i < max_i; ++i) {
                         int ii = nobeta_p[i];
-                        for (int j = (p == q ? i + 1 : 0); j < max_j; ++j) {
+                        for (size_t j = (p == q ? i + 1 : 0); j < max_j; ++j) {
                             int jj = nobeta_q[j];
-                            for (int a = 0; a < max_a; ++a) {
+                            for (size_t a = 0; a < max_a; ++a) {
                                 int aa = nvbeta_r[a];
-                                for (int b = (r == sp ? a + 1 : 0); b < max_b; ++b) {
+                                for (size_t b = (r == sp ? a + 1 : 0); b < max_b; ++b) {
                                     int bb = nvbeta_s[b];
                                     // Check if the determinant goes in this bin
                                     new_det = det;
@@ -1113,7 +1113,7 @@ det_hash<double> AdaptiveCI::get_bin_F_space_old(int bin, int nbin, psi::SharedM
         for (size_t p = 0; p < nirrep_; ++p) {
             for (size_t q = 0; q < nirrep_; ++q) {
                 for (size_t r = 0; r < nirrep_; ++r) {
-                    int sp = p ^ q ^ r;
+                    size_t sp = p ^ q ^ r;
                     const auto& noalpha_p = noalpha[p];
                     const auto& nobeta_q = nobeta[q];
                     const auto& nvalpha_r = nvalpha[r];
@@ -1829,10 +1829,10 @@ det_hash<double> AdaptiveCI::get_bin_F_space(int bin, int nbin, psi::SharedMatri
             }
             for (size_t p = 0; p < nirrep_; ++p) {
                 const auto& noalpha_p = noalpha[p];
-                for (int q = p; q < nirrep_; ++q) {
+                for (size_t q = p; q < nirrep_; ++q) {
                     const auto& noalpha_q = noalpha[q];
                     for (size_t r = 0; r < nirrep_; ++r) {
-                        int sp = p ^ q ^ r;
+                        size_t sp = p ^ q ^ r;
                         if (sp < r)
                             continue;
 
@@ -1840,22 +1840,22 @@ det_hash<double> AdaptiveCI::get_bin_F_space(int bin, int nbin, psi::SharedMatri
                         const auto& nvalpha_r = nvalpha[r];
                         const auto& nvalpha_s = nvalpha[sp];
 
-                        int max_i = noalpha_p.size();
-                        int max_j = noalpha_q.size();
-                        int max_a = nvalpha_r.size();
-                        int max_b = nvalpha_s.size();
+                        size_t max_i = noalpha_p.size();
+                        size_t max_j = noalpha_q.size();
+                        size_t max_a = nvalpha_r.size();
+                        size_t max_b = nvalpha_s.size();
 
                         // Generate aa excitations
-                        for (int i = 0; i < max_i; ++i) {
+                        for (size_t i = 0; i < max_i; ++i) {
                             int ii = noalpha_p[i];
                             new_det.set_alfa_bit(ii, false);
-                            for (int j = (p == q ? i + 1 : 0); j < max_j; ++j) {
+                            for (size_t j = (p == q ? i + 1 : 0); j < max_j; ++j) {
                                 int jj = noalpha_q[j];
                                 new_det.set_alfa_bit(jj, false);
-                                for (int a = 0; a < max_a; ++a) {
+                                for (size_t a = 0; a < max_a; ++a) {
                                     int aa = nvalpha_r[a];
                                     new_det.set_alfa_bit(aa, true);
-                                    for (int b = (r == sp ? a + 1 : 0); b < max_b; ++b) {
+                                    for (size_t b = (r == sp ? a + 1 : 0); b < max_b; ++b) {
                                         int bb = nvalpha_s[b];
                                         new_det.set_alfa_bit(bb, true);
                                         size_t hash_val = Determinant::Hash()(new_det);
@@ -1888,16 +1888,16 @@ det_hash<double> AdaptiveCI::get_bin_F_space(int bin, int nbin, psi::SharedMatri
                         max_a = nvbeta_r.size();
                         max_b = nvbeta_s.size();
 
-                        for (int i = 0; i < max_i; ++i) {
+                        for (size_t i = 0; i < max_i; ++i) {
                             int ii = nobeta_p[i];
                             new_det.set_beta_bit(ii, false);
-                            for (int j = (p == q ? i + 1 : 0); j < max_j; ++j) {
+                            for (size_t j = (p == q ? i + 1 : 0); j < max_j; ++j) {
                                 int jj = nobeta_q[j];
                                 new_det.set_beta_bit(jj, false);
-                                for (int a = 0; a < max_a; ++a) {
+                                for (size_t a = 0; a < max_a; ++a) {
                                     int aa = nvbeta_r[a];
                                     new_det.set_beta_bit(aa, true);
-                                    for (int b = (r == sp ? a + 1 : 0); b < max_b; ++b) {
+                                    for (size_t b = (r == sp ? a + 1 : 0); b < max_b; ++b) {
                                         int bb = nvbeta_s[b];
                                         new_det.set_beta_bit(bb, true);
                                         // Check if the determinant goes in this bin
@@ -2099,10 +2099,10 @@ AdaptiveCI::get_bin_F_space_vecsort(int bin, int nbin, psi::SharedMatrix evecs,
             }
             for (size_t p = 0; p < nirrep_; ++p) {
                 const auto& noalpha_p = noalpha[p];
-                for (int q = p; q < nirrep_; ++q) {
+                for (size_t q = p; q < nirrep_; ++q) {
                     const auto& noalpha_q = noalpha[q];
                     for (size_t r = 0; r < nirrep_; ++r) {
-                        int sp = p ^ q ^ r;
+                        size_t sp = p ^ q ^ r;
                         if (sp < r)
                             continue;
 
@@ -2110,22 +2110,22 @@ AdaptiveCI::get_bin_F_space_vecsort(int bin, int nbin, psi::SharedMatrix evecs,
                         const auto& nvalpha_r = nvalpha[r];
                         const auto& nvalpha_s = nvalpha[sp];
 
-                        int max_i = noalpha_p.size();
-                        int max_j = noalpha_q.size();
-                        int max_a = nvalpha_r.size();
-                        int max_b = nvalpha_s.size();
+                        size_t max_i = noalpha_p.size();
+                        size_t max_j = noalpha_q.size();
+                        size_t max_a = nvalpha_r.size();
+                        size_t max_b = nvalpha_s.size();
 
                         // Generate aa excitations
-                        for (int i = 0; i < max_i; ++i) {
+                        for (size_t i = 0; i < max_i; ++i) {
                             int ii = noalpha_p[i];
                             new_det.set_alfa_bit(ii, false);
-                            for (int j = (p == q ? i + 1 : 0); j < max_j; ++j) {
+                            for (size_t j = (p == q ? i + 1 : 0); j < max_j; ++j) {
                                 int jj = noalpha_q[j];
                                 new_det.set_alfa_bit(jj, false);
-                                for (int a = 0; a < max_a; ++a) {
+                                for (size_t a = 0; a < max_a; ++a) {
                                     int aa = nvalpha_r[a];
                                     new_det.set_alfa_bit(aa, true);
-                                    for (int b = (r == sp ? a + 1 : 0); b < max_b; ++b) {
+                                    for (size_t b = (r == sp ? a + 1 : 0); b < max_b; ++b) {
                                         int bb = nvalpha_s[b];
                                         new_det.set_alfa_bit(bb, true);
                                         size_t hash_val = Determinant::Hash()(new_det);
@@ -2156,16 +2156,16 @@ AdaptiveCI::get_bin_F_space_vecsort(int bin, int nbin, psi::SharedMatrix evecs,
                         max_a = nvbeta_r.size();
                         max_b = nvbeta_s.size();
 
-                        for (int i = 0; i < max_i; ++i) {
+                        for (size_t i = 0; i < max_i; ++i) {
                             int ii = nobeta_p[i];
                             new_det.set_beta_bit(ii, false);
-                            for (int j = (p == q ? i + 1 : 0); j < max_j; ++j) {
+                            for (size_t j = (p == q ? i + 1 : 0); j < max_j; ++j) {
                                 int jj = nobeta_q[j];
                                 new_det.set_beta_bit(jj, false);
-                                for (int a = 0; a < max_a; ++a) {
+                                for (size_t a = 0; a < max_a; ++a) {
                                     int aa = nvbeta_r[a];
                                     new_det.set_beta_bit(aa, true);
-                                    for (int b = (r == sp ? a + 1 : 0); b < max_b; ++b) {
+                                    for (size_t b = (r == sp ? a + 1 : 0); b < max_b; ++b) {
                                         int bb = nvbeta_s[b];
                                         new_det.set_beta_bit(bb, true);
                                         // Check if the determinant goes in this bin
@@ -2195,7 +2195,7 @@ AdaptiveCI::get_bin_F_space_vecsort(int bin, int nbin, psi::SharedMatrix evecs,
                 for (size_t q = 0; q < nirrep_; ++q) {
                     const auto& nobeta_q = nobeta[q];
                     for (size_t r = 0; r < nirrep_; ++r) {
-                        int sp = p ^ q ^ r;
+                        size_t sp = p ^ q ^ r;
                         const auto& nvalpha_r = nvalpha[r];
                         const auto& nvbeta_s = nvbeta[sp];
                         // Generate ab excitations
