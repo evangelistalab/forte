@@ -36,6 +36,7 @@
 #include "base_classes/active_space_solver.h"
 #include "fci/fci.h"
 #include "sci/aci.h"
+#include "sci/asci.h"
 #include "sci/fci_mo.h"
 
 namespace forte {
@@ -61,6 +62,9 @@ make_active_space_solver(const std::string& type, StateInfo state, std::shared_p
     }
     if (type == "CAS") {
         return std::make_shared<FCI_MO>(scf_info, options, ints, mo_space_info);
+    }
+    if (type == "ASCI") {
+        return std::make_shared<ASCI>(std::make_shared<StateInfo>(state), scf_info, options, ints, mo_space_info);
     }
     throw psi::PSIEXCEPTION("make_active_space_solver: type = " + type + " was not recognized");
     return std::shared_ptr<ActiveSpaceSolver>();
