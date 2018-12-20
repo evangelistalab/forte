@@ -49,6 +49,9 @@ class StateInfo {
     /// return the irrep
     int irrep() const;
 
+    /// Return the name of the molecule (needed for DMRG)
+    std::string name() const;
+
   private:
     // number of alpha electrons (including core, excludes ecp)
     int na_;
@@ -60,6 +63,9 @@ class StateInfo {
     int twice_ms_;
     // Irrep
     int irrep_;
+    // Name
+    std::string name_ = "";
+    
 };
 
 } // namespace forte

@@ -31,7 +31,6 @@
 #include "psi4/libdpd/dpd.h"
 #include "psi4/libiwl/iwl.hpp"
 #include "psi4/libmints/typedefs.h"
-#include "psi4/libmints/wavefunction.h"
 #include "psi4/libpsio/psio.hpp"
 #include "psi4/libtrans/integraltransform.h"
 #include "psi4/psi4-dec.h"
@@ -66,11 +65,9 @@
 
 namespace forte {
 
-DMRGSCF::DMRGSCF(psi::SharedWavefunction ref_wfn, psi::Options& options,
-                 std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ForteIntegrals> ints)
-    : Wavefunction(options), mo_space_info_(mo_space_info), ints_(ints) {
-    shallow_copy(ref_wfn);
-    reference_wavefunction_ = ref_wfn;
+DMRGSCF::DMRGSCF(std::shared_ptr<StateInfo> state, std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
+            std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info) 
+    : state_(state), scf_info_(scf_info), options_(options),ints_(ints), mo_space_info_(mo_space_info) {
     print_method_banner({"Density Matrix Renormalization Group SCF", "Sebastian Wouters"});
     const int dmrg_iterations_ = options_.get_int("DMRGSCF_MAX_ITER");
 }
@@ -104,13 +101,13 @@ int DMRGSCF::chemps2_groupnumber(const string SymmLabel) {
 void DMRGSCF::buildTmatrix(CheMPS2::DMRGSCFmatrix* theTmatrix, CheMPS2::DMRGSCFindices* iHandler,
                            std::shared_ptr<PSIO> psio, psi::SharedMatrix Cmat) {
 
-    const int nirrep = this->nirrep();
-    const int nmo = this->nmo();
+    const int nirrep = ints_->nirrep();
+    const int nmo = mo_space_info_->size("ALL");
     const int nTriMo = nmo * (nmo + 1) / 2;
-    const int nso = this->nso();
+    int* mopi = mo_space_info_->dimension("ALL");
+    int* sopi = scf_info_->nsopi();
+    const int nso = scf_info_->nso();
     const int nTriSo = nso * (nso + 1) / 2;
-    int* mopi = this->nmopi();
-    int* sopi = this->nsopi();
     double* work1 = new double[nTriSo];
     double* work2 = new double[nTriSo];
     IWL::read_one(psio.get(), PSIF_OEI, PSIF_SO_T, work1, nTriSo, 0, 0, "outfile");
@@ -121,11 +118,11 @@ void DMRGSCF::buildTmatrix(CheMPS2::DMRGSCFmatrix* theTmatrix, CheMPS2::DMRGSCFi
     delete[] work2;
 
     psi::SharedMatrix soOei;
-    soOei = std::make_shared<psi::Matrix>("SO OEI", nirrep, sopi, sopi));
+    soOei = std::make_shared<psi::Matrix>("SO OEI", nirrep, sopi, sopi);
     psi::SharedMatrix half;
-    half = std::make_shared<psi::Matrix>("Half", nirrep, mopi, sopi));
+    half = std::make_shared<psi::Matrix>("Half", nirrep, mopi, sopi);
     psi::SharedMatrix moOei;
-    moOei = std::make_shared<psi::Matrix>("MO OEI", nirrep, mopi, mopi));
+    moOei = std::make_shared<psi::Matrix>("MO OEI", nirrep, mopi, mopi);
 
     soOei->set(work1);
     half->gemm(true, false, 1.0, Cmat, soOei, 0.0);
@@ -138,21 +135,21 @@ void DMRGSCF::buildTmatrix(CheMPS2::DMRGSCFmatrix* theTmatrix, CheMPS2::DMRGSCFi
 void DMRGSCF::buildJK(psi::SharedMatrix MO_RDM, psi::SharedMatrix MO_JK, psi::SharedMatrix Cmat,
                       std::shared_ptr<JK> myJK) {
 
-    const int nso = this->nso();
-    int* nsopi = this->nsopi();
-    const int nmo = this->nmo();
-    int* nmopi = this->nmopi();
-    const int nirrep = this->nirrep();
+    const int nso = scf_info_->nso();
+    int* nsopi = scf_info_->nsopi();
+    const int nmo = mo_space_info_->size("ALL");
+    int* nmopi = mo_space_info_->dimension("ALL");
+    const int nirrep = ints_->nirrep();
 
     // nso can be different from nmo
     psi::SharedMatrix SO_RDM;
-    SO_RDM = std::make_shared<psi::Matrix>("SO RDM", nirrep, nsopi, nsopi));
+    SO_RDM = std::make_shared<psi::Matrix>("SO RDM", nirrep, nsopi, nsopi);
     psi::SharedMatrix Identity;
-    Identity = std::make_shared<psi::Matrix>("Identity", nirrep, nsopi, nsopi));
+    Identity = std::make_shared<psi::Matrix>("Identity", nirrep, nsopi, nsopi);
     psi::SharedMatrix SO_JK;
-    SO_JK = std::make_shared<psi::Matrix>("SO JK", nirrep, nsopi, nsopi));
+    SO_JK = std::make_shared<psi::Matrix>("SO JK", nirrep, nsopi, nsopi);
     psi::SharedMatrix work;
-    work = std::make_shared<psi::Matrix>("work", nirrep, nsopi, nmopi));
+    work = std::make_shared<psi::Matrix>("work", nirrep, nsopi, nmopi);
 
     work->gemm(false, false, 1.0, Cmat, MO_RDM, 0.0);
     SO_RDM->gemm(false, true, 1.0, work, Cmat, 0.0);
@@ -471,7 +468,7 @@ void DMRGSCF::update_WFNco(psi::SharedMatrix Coeff_orig, CheMPS2::DMRGSCFindices
     this->Cb()->copy(this->Ca());
 }
 
-double DMRGSCF::compute_energy() {
+double DMRGSCF::solver_compute_energy() {
     /* This plugin is able to perform a DMRGSCF calculation in a molecular
      * orbital active space. */
 
@@ -533,7 +530,7 @@ double DMRGSCF::compute_energy() {
     /****************************************
      *   Check if the input is consistent   *
      ****************************************/
-
+daf
     const int SyGroup = chemps2_groupnumber(psi::Process::environment.molecule()->sym_label());
     const int nmo = this->nmo();
     const int nirrep = this->nirrep();
@@ -735,14 +732,14 @@ double DMRGSCF::compute_energy() {
      **************************************/
 
     psi::SharedMatrix work1;
-    work1 = std::make_shared<psi::Matrix>("work1", nirrep, orbspi, orbspi));
+    work1 = std::make_shared<psi::Matrix>("work1", nirrep, orbspi, orbspi);
     psi::SharedMatrix work2;
-    work2 = std::make_shared<psi::Matrix>("work2", nirrep, orbspi, orbspi));
-    std::shared_ptr<JK> myJK = std::shared_ptr<JK>(new DiskJK(this->basisset(), options_));
+    work2 = std::make_shared<psi::Matrix>("work2", nirrep, orbspi, orbspi);
+    std::shared_ptr<JK> myJK = std::shared_ptr<JK>(new DiskJK(ints_->basisset(), options_));
 
     myJK->set_cutoff(0.0);
     myJK->initialize();
-    psi::SharedMatrix Coeff_orig = std::make_shared<psi::Matrix>(this->Ca()));
+    psi::SharedMatrix Coeff_orig = std::make_shared<psi::Matrix>(ints_->Ca());
     // copyPSIMXtoCHEMPS2MX(this->Ca(), iHandler, );
 
     std::vector<int> OAorbs; // Occupied + active
@@ -913,8 +910,8 @@ double DMRGSCF::compute_energy() {
 
         // Fill HamDMRG
         update_WFNco(Coeff_orig, iHandler, unitary, work1, work2);
-        buildTmatrix(theTmatrix, iHandler, psio, this->Ca());
-        buildQmatOCC(theQmatOCC, iHandler, work1, work2, this->Ca(), myJK);
+        buildTmatrix(theTmatrix, iHandler, psio, ints_->Ca());
+        buildQmatOCC(theQmatOCC, iHandler, work1, work2, ints_->Ca(), myJK);
         buildHamDMRG(ints, Aorbs_ptr, theTmatrix, theQmatOCC, iHandler, HamDMRG, psio);
 
         // Localize the active space and reorder the orbitals within each irrep
@@ -950,8 +947,8 @@ double DMRGSCF::compute_energy() {
             system(("rm " + chemps2filename).c_str());
 
             update_WFNco(Coeff_orig, iHandler, unitary, work1, work2);
-            buildTmatrix(theTmatrix, iHandler, psio, this->Ca());
-            buildQmatOCC(theQmatOCC, iHandler, work1, work2, this->Ca(), myJK);
+            buildTmatrix(theTmatrix, iHandler, psio, ints_->Ca());
+            buildQmatOCC(theQmatOCC, iHandler, work1, work2, ints_->Ca(), myJK);
             buildHamDMRG(ints, Aorbs_ptr, theTmatrix, theQmatOCC, iHandler, HamDMRG, psio);
             (*outfile) << "Rotated the active space to localized orbitals, "
                           "sorted according to the exchange matrix."
@@ -1034,8 +1031,8 @@ double DMRGSCF::compute_energy() {
             CheMPS2::CASSCF::setDMRG1DM(nDMRGelectrons, nOrbDMRG, DMRG1DM, DMRG2DM);
             update_WFNco(Coeff_orig, iHandler, unitary, work1, work2);
             wfn_co_updated = true;
-            buildTmatrix(theTmatrix, iHandler, psio, this->Ca());
-            buildQmatOCC(theQmatOCC, iHandler, work1, work2, this->Ca(), myJK);
+            buildTmatrix(theTmatrix, iHandler, psio, ints_->Ca());
+            buildQmatOCC(theQmatOCC, iHandler, work1, work2, ints_->Ca(), myJK);
             (*outfile) << "Rotated the active space to natural orbitals, "
                           "sorted according to the NOON."
                        << endl;
@@ -1051,7 +1048,7 @@ double DMRGSCF::compute_energy() {
         if (!wfn_co_updated) {
             update_WFNco(Coeff_orig, iHandler, unitary, work1, work2);
         }
-        buildQmatACT(theQmatACT, iHandler, DMRG1DM, work1, work2, this->Ca(), myJK);
+        buildQmatACT(theQmatACT, iHandler, DMRG1DM, work1, work2, ints_->Ca(), myJK);
         fillRotatedTEI_coulomb(ints, OAorbs_ptr, theTmatrix, theRotatedTEI, iHandler,
                                psio); // Also fills the T-matrix
         fillRotatedTEI_exchange(ints, OAorbs_ptr, Vorbs_ptr, theRotatedTEI, iHandler, psio);

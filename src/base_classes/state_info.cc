@@ -43,6 +43,8 @@ StateInfo::StateInfo(psi::SharedWavefunction wfn) {
 
     na_ = (nel + twice_ms_) / 2;
     nb_ = nel - na_;
+
+    name_ = wfn->molecule()->name();
 }
 
 int StateInfo::na() const { return na_; }
@@ -54,5 +56,7 @@ int StateInfo::multiplicity() const { return multiplicity_; }
 int StateInfo::twice_ms() const { return twice_ms_; }
 
 int StateInfo::irrep() const { return irrep_; }
+
+std::string StateInfo::name() const { return name_; }
 
 } // namespace forte

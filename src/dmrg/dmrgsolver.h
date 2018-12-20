@@ -91,5 +91,4 @@ class DMRGSolver {
     void print_natural_orbitals(double* one_rdm);
 };
 }
-}
 #endif // DMRG_H
