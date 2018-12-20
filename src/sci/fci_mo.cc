@@ -2987,7 +2987,7 @@ void FCI_MO::localize_actv_orbs() {
     // modified from localize.cc
     print_h2("Localizing active orbitals");
 
-    psi::SharedMatrix Ca = integral_->Ca();
+    psi::SharedMatrix Ca = integral_->Ca()->clone();
     auto Ca_actv = std::make_shared<psi::Matrix>("Ca active", Ca->rowspi(), actv_dim_);
 
     for (int h = 0; h < nirrep_; ++h) {
@@ -2997,23 +2997,19 @@ void FCI_MO::localize_actv_orbs() {
         }
     }
 
-    std::shared_ptr<Localizer> localizer =
-        Localizer::build(options_->get_str("LOCALIZE_TYPE"), integral_->basisset(), Ca_actv);
+    std::shared_ptr<psi::Localizer> localizer =
+        psi::Localizer::build(options_->get_str("LOCALIZE_TYPE"), integral_->basisset(), Ca_actv);
     localizer->localize();
     psi::SharedMatrix Lorbs = localizer->L();
-
-    psi::SharedMatrix U_act = localizer->U();
-    auto U = std::make_shared<psi::Matrix>("U full", Ca->rowspi(), Ca->colspi());
-    U->identity();
 
     for (int h = 0; h < nirrep_; ++h) {
         for (int u = 0; u < actv_dim_[h]; ++u) {
             int nu = u + frzc_dim_[h] + core_dim_[h];
-            U->set_column(h, nu, U_act->get_column(h,u));
+            Ca->set_column(h, nu, Lorbs->get_column(h, u));
         }
     }
 
-    integral_->rotate_orbitals(U,U);
+    integral_->update_orbitals(Ca, Ca);
     ambit::Tensor tei_active_aa =
         integral_->aptei_aa_block(actv_mos_, actv_mos_, actv_mos_, actv_mos_);
     ambit::Tensor tei_active_ab =
