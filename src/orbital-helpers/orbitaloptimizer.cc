@@ -562,14 +562,12 @@ void OrbitalOptimizer::fill_shared_density_matrices() {
         gamma2M_->print();
     }
 }
-std::shared_ptr<psi::Matrix> OrbitalOptimizer::make_c_sym_aware() {
+std::shared_ptr<psi::Matrix> OrbitalOptimizer::make_c_sym_aware(psi::SharedMatrix aotoso) {
     /// Step 1: Obtain guess MO coefficients C_{mup}
     /// Since I want to use these in a symmetry aware basis,
     /// I will move the C matrix into a Pfitzer ordering
 
     psi::Dimension nmopi = mo_space_info_->get_dimension("ALL");
-
-    psi::SharedMatrix aotoso = scf_info_->aotoso();
 
     /// I want a C matrix in the C1 basis but symmetry aware
     size_t nso = scf_info_->nso();

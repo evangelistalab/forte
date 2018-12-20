@@ -62,9 +62,6 @@ class SCFInfo {
     /// beta orbital energy
     std::shared_ptr<psi::Vector> epsilon_b();
 
-    /// return AO2SO
-    std::shared_ptr<psi::Matrix> aotoso();
-
 
   private:
     
@@ -85,9 +82,6 @@ class SCFInfo {
 
     /// beta orbital energy
     std::shared_ptr<psi::Vector> epsilon_b_;
-
-    /// AO2SO conversion matrix (AO in rows, SO in cols)
-    std::shared_ptr<psi::Matrix> AO2SO_;
     
 };
 

@@ -55,14 +55,16 @@
 #include "psi4/libdiis/diismanager.h"
 #include "psi4/libmints/factory.h"
 
+
+
 namespace forte {
 
-CASSCF::CASSCF(std::shared_ptr<StateInfo> state, std::shared_ptr<forte::SCFInfo> scf_info, std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
+CASSCF::CASSCF(std::shared_ptr<StateInfo> state, std::shared_ptr<SCFInfo> scf_info,
+               std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
                std::shared_ptr<MOSpaceInfo> mo_space_info)
     : state_(state), scf_info_(scf_info), options_(options), ints_(ints), mo_space_info_(mo_space_info) {
     startup();
 }
-
 void CASSCF::compute_casscf() {
     if (na_ == 0) {
         outfile->Printf("\n\n\n Please set the active space");
@@ -214,6 +216,8 @@ void CASSCF::compute_casscf() {
         Ca->copy(Cp);
         Cb->copy(Cp);
 
+        ints_->update_orbitals(Ca, Cb); // Perhaps slow down code.
+
         std::string diis_start_label = "";
         if (iter >= diis_start && do_diis == true && g_norm < diis_gradient_norm) {
             diis_start_label = "DIIS";
@@ -240,25 +244,11 @@ void CASSCF::compute_casscf() {
     // restransform integrals using DF_BASIS_MP2 for
     // consistent energies in correlation treatment
 
-    local_timer retrans_ints;
     ints_->update_orbitals(Ca, Cb);
-    if (print_ > 0) {
-        outfile->Printf("\n Overall retranformation of integrals takes %6.4f s.\n",
-                        retrans_ints.get());
-    }
     cas_ci_final();
     outfile->Printf("\n @E(CASSCF) = %18.12f \n", E_casscf_);
     psi::Process::environment.globals["CURRENT ENERGY"] = E_casscf_;
     psi::Process::environment.globals["CASSCF_ENERGY"] = E_casscf_;
-
-    //    reference_wavefunction_->Ca()->print();
-    //    ints_->retransform_integrals();
-
-    // if (options_->get_bool("SEMI_CANONICAL")) {
-    //     ints_->retransform_integrals();
-    //     SemiCanonical semi(reference_wavefunction_, ints_, mo_space_info_);
-    //     semi.semicanonicalize(cas_ref_, 0);
-    // }
 }
 void CASSCF::startup() {
     print_method_banner({"Complete Active Space Self Consistent Field", "Kevin Hannon"});
@@ -324,8 +314,8 @@ void CASSCF::startup() {
     local_timer JK_initialize;
     if (options_->get_str("SCF_TYPE") == "GTFOCK") {
 #ifdef HAVE_JK_FACTORY
-        psi::Process::environment.set_legacy_molecule(this->molecule());
-        JK_ = std::shared_ptr<JK>(new GTFockJK(this->basisset()));
+        psi::Process::environment.set_legacy_molecule(ints_->wfn()->molecule());
+        JK_ = std::shared_ptr<JK>(new GTFockJK(ints_->basisset()));
 #else
         throw psi::PSIEXCEPTION("GTFock was not compiled in this version");
 #endif
@@ -375,14 +365,13 @@ void CASSCF::cas_ci() {
         E_casscf_ = cas_ref_.get_Eref();
     } else if (options_->get_str("CASSCF_CI_SOLVER") == "DMRG") {
 #ifdef HAVE_CHEMPS2
-        DMRGSolver dmrg(reference_wavefunction_, options_, mo_space_info_, ints_);
+        DMRGSolver dmrg(ints_->wfn(), options_->psi_options(), mo_space_info_, ints_);
         dmrg.set_max_rdm(2);
         dmrg.spin_free_rdm(true);
         std::pair<ambit::Tensor, std::vector<double>> integral_pair = CI_Integrals();
         dmrg.set_up_integrals(integral_pair.first, integral_pair.second);
         dmrg.set_scalar(scalar_energy_ + ints_->frozen_core_energy() +
-                        psi::Process::environment.molecule()->nuclear_repulsion_energy(
-                            reference_wavefunction_->get_dipole_field_strength()));
+                        ints_->nuclear_repulsion_energy());
         dmrg.compute_energy();
 
         cas_ref_ = dmrg.reference();
@@ -459,14 +448,13 @@ void CASSCF::cas_ci_final() {
         E_casscf_ = cas_ref_.get_Eref();
     } else if (options_->get_str("CASSCF_CI_SOLVER") == "DMRG") {
 #ifdef HAVE_CHEMPS2
-        DMRGSolver dmrg(reference_wavefunction_, options_, mo_space_info_, ints_);
+        DMRGSolver dmrg(ints_->wfn(), options_->psi_options(), mo_space_info_, ints_);
         dmrg.set_max_rdm(3);
         dmrg.spin_free_rdm(true);
         std::pair<ambit::Tensor, std::vector<double>> integral_pair = CI_Integrals();
         dmrg.set_up_integrals(integral_pair.first, integral_pair.second);
         dmrg.set_scalar(scalar_energy_ + ints_->frozen_core_energy() +
-                        psi::Process::environment.molecule()->nuclear_repulsion_energy(
-                            reference_wavefunction_->get_dipole_field_strength()));
+                        ints_->nuclear_repulsion_energy());
         dmrg.compute_energy();
 
         cas_ref_ = dmrg.reference();
@@ -596,7 +584,7 @@ ambit::Tensor CASSCF::transform_integrals() {
 
     psi::Dimension nmopi = mo_space_info_->get_dimension("ALL");
 
-    psi::SharedMatrix aotoso = scf_info_->aotoso();
+    psi::SharedMatrix aotoso = ints_->aotoso();
 
     /// I want a C matrix in the C1 basis but symmetry aware
     size_t nso = scf_info_->nso();
@@ -763,11 +751,15 @@ void CASSCF::set_up_fci() {
     size_t nactel = nel - 2 * nfdocc - 2 * rdocc.size();
 
     size_t na = (nactel + twice_ms) / 2;
-//    size_t nb = nactel - na;
+    size_t nb = nactel - na;
 
-    FCISolver fcisolver(active_dim, rdocc, active, *state_,
-                        ints_, mo_space_info_,
-                        options_->get_int("NTRIAL_PER_ROOT"), options_->get_int("PRINT"), *options_);
+    FCISolver fcisolver(active_dim, rdocc, active, na, nb, multiplicity,
+                        options_->get_int("ROOT_SYM"), ints_, mo_space_info_,
+                        options_->get_int("NTRIAL_PER_ROOT"), options_->get_int("PRINT"), options_->psi_options());
+//  Cannot be changed to:
+//    FCISolver fcisolver(active_dim, rdocc, active, *state_,
+//                        ints_, mo_space_info_,
+//                        options_->get_int("NTRIAL_PER_ROOT"), options_->get_int("PRINT"), *options_);
     // tweak some options
     fcisolver.set_max_rdm_level(3);
     fcisolver.set_nroot(options_->get_int("NROOT"));

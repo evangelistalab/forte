@@ -207,7 +207,7 @@ class OrbitalOptimizer {
     /// Diagonalize an augmented Hessian and take lowest eigenvector as solution
     psi::SharedMatrix AugmentedHessianSolve();
 
-    psi::SharedMatrix make_c_sym_aware();
+    psi::SharedMatrix make_c_sym_aware(psi::SharedMatrix aotoso);
 
     void startup();
 
