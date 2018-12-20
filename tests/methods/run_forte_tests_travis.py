@@ -124,6 +124,13 @@ for d in tests:
     elif test_results[d] == "FAILED":
         msg = bcolors.FAIL + "FAILED" + bcolors.ENDC
         failed.append(d)
+
+        # print the failed jobs on screen
+        print ("output for {}".format(d))
+        with open(d + '/output.dat') as r:
+            lines = r.readlines()
+            print ("".join(lines))
+
     duration = test_time[d]
     total_time += duration
     filler = "." * max(0,67 - len(d + msg))
