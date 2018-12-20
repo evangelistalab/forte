@@ -55,12 +55,10 @@ bool pairCompDescend(const std::pair<double, Determinant> E1,
     return E1.first > E2.first;
 }
 
-ASCI::ASCI(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
-           std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : Wavefunction(options), ints_(ints), mo_space_info_(mo_space_info) {
-    // Copy the wavefunction information
-    shallow_copy(ref_wfn);
-    reference_wavefunction_ = ref_wfn;
+ASCI::ASCI(std::shared_ptr<StateInfo> state, std::shared_ptr<SCFInfo> scf_info,
+         std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
+         std::shared_ptr<MOSpaceInfo> mo_space_info)
+    : state_(state), scf_info_(scf_info), options_(options), ints_(ints), mo_space_info_(mo_space_info) {
 
     mo_symmetry_ = mo_space_info_->symmetry("ACTIVE");
 }
@@ -69,16 +67,13 @@ ASCI::~ASCI() {}
 
 void ASCI::set_fci_ints(std::shared_ptr<FCIIntegrals> fci_ints) {
     fci_ints_ = fci_ints;
-    nuclear_repulsion_energy_ =
-        molecule_->nuclear_repulsion_energy(reference_wavefunction_->get_dipole_field_strength());
+    nuclear_repulsion_energy_ = ints_->nuclear_repulsion_energy();
     set_ints_ = true;
 }
 
-void ASCI::set_asci_ints(psi::SharedWavefunction ref_wfn, std::shared_ptr<ForteIntegrals> ints) {
+void ASCI::set_asci_ints(std::shared_ptr<ForteIntegrals> ints) {
     timer int_timer("ASCI:Form Integrals");
     ints_ = ints;
-    shallow_copy(ref_wfn);
-    reference_wavefunction_ = ref_wfn;
 
     fci_ints_ = std::make_shared<FCIIntegrals>(ints, mo_space_info_->get_corr_abs_mo("ACTIVE"),
                                                mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
@@ -90,63 +85,63 @@ void ASCI::set_asci_ints(psi::SharedWavefunction ref_wfn, std::shared_ptr<ForteI
     fci_ints_->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
     fci_ints_->compute_restricted_one_body_operator();
 
-    nuclear_repulsion_energy_ =
-        molecule_->nuclear_repulsion_energy(reference_wavefunction_->get_dipole_field_strength());
+    nuclear_repulsion_energy_ = ints_->nuclear_repulsion_energy();
 }
 
 void ASCI::startup() {
 
     if (!set_ints_) {
-        set_asci_ints(reference_wavefunction_, ints_);
+        set_asci_ints(ints_);
     }
 
     op_.initialize(mo_symmetry_, fci_ints_);
 
-    wavefunction_symmetry_ = 0;
-    if (options_["ROOT_SYM"].has_changed()) {
-        wavefunction_symmetry_ = options_.get_int("ROOT_SYM");
+    wavefunction_symmetry_ = state_->irrep();
+    if (options_->has_changed("ROOT_SYM")) {
+        wavefunction_symmetry_ = options_->get_int("ROOT_SYM");
     }
-    multiplicity_ = 1;
-    if (options_["MULTIPLICITY"].has_changed()) {
-        multiplicity_ = options_.get_int("MULTIPLICITY");
+    multiplicity_ = state_->multiplicity();
+    if (options_->has_changed("MULTIPLICITY")) {
+        multiplicity_ = options_->get_int("MULTIPLICITY");
     }
 
     nact_ = mo_space_info_->size("ACTIVE");
     nactpi_ = mo_space_info_->get_dimension("ACTIVE");
-
+    
+    nirrep_ = nactpi_.n();
     // Include frozen_docc and restricted_docc
     frzcpi_ = mo_space_info_->get_dimension("INACTIVE_DOCC");
     nfrzc_ = mo_space_info_->size("INACTIVE_DOCC");
 
     twice_ms_ = multiplicity_ - 1;
-    if (options_["MS"].has_changed()) {
-        twice_ms_ = std::round(2.0 * options_.get_double("MS"));
+    if (options_->has_changed("MS")) {
+        twice_ms_ = std::round(2.0 * options_->get_double("MS"));
     }
 
     // Build the reference determinant and compute its energy
-    CI_Reference ref(std::make_shared<SCFInfo>(reference_wavefunction_), std::make_shared<ForteOptions>(options_), mo_space_info_, fci_ints_, multiplicity_,
+    CI_Reference ref(scf_info_, options_, mo_space_info_, fci_ints_, multiplicity_,
                      twice_ms_, wavefunction_symmetry_);
     ref.build_reference(initial_reference_);
 
     // Read options
-    nroot_ = options_.get_int("NROOT");
+    nroot_ = options_->get_int("NROOT");
 
     max_cycle_ = 20;
-    if (options_["ASCI_MAX_CYCLE"].has_changed()) {
-        max_cycle_ = options_.get_int("ASCI_MAX_CYCLE");
+    if (options_->has_changed("ASCI_MAX_CYCLE")) {
+        max_cycle_ = options_->get_int("ASCI_MAX_CYCLE");
     }
 
     diag_method_ = DLSolver;
-    if (options_["DIAG_ALGORITHM"].has_changed()) {
-        if (options_.get_str("DIAG_ALGORITHM") == "FULL") {
+    if (options_->has_changed("DIAG_ALGORITHM")) {
+        if (options_->get_str("DIAG_ALGORITHM") == "FULL") {
             diag_method_ = Full;
-        } else if (options_.get_str("DIAG_ALGORITHM") == "DLSTRING") {
+        } else if (options_->get_str("DIAG_ALGORITHM") == "DLSTRING") {
             diag_method_ = DLString;
-        } else if (options_.get_str("DIAG_ALGORITHM") == "SPARSE") {
+        } else if (options_->get_str("DIAG_ALGORITHM") == "SPARSE") {
             diag_method_ = Sparse;
-        } else if (options_.get_str("DIAG_ALGORITHM") == "SOLVER") {
+        } else if (options_->get_str("DIAG_ALGORITHM") == "SOLVER") {
             diag_method_ = DLSolver;
-        } else if (options_.get_str("DIAG_ALGORITHM") == "DYNAMIC") {
+        } else if (options_->get_str("DIAG_ALGORITHM") == "DYNAMIC") {
             diag_method_ = Dynamic;
         }
     }
@@ -156,8 +151,8 @@ void ASCI::startup() {
         build_lists_ = false;
     }
 
-    t_det_ = options_.get_int("ASCI_TDET");
-    c_det_ = options_.get_int("ASCI_CDET");
+    t_det_ = options_->get_int("ASCI_TDET");
+    c_det_ = options_->get_int("ASCI_CDET");
     root_spin_vec_.resize(nroot_);
 }
 
@@ -171,11 +166,11 @@ void ASCI::print_info() {
                                                               {"TDet", t_det_}};
 
     std::vector<std::pair<std::string, double>> calculation_info_double{
-        {"Convergence threshold", options_.get_double("ASCI_E_CONVERGENCE")}};
+        {"Convergence threshold", options_->get_double("ASCI_E_CONVERGENCE")}};
 
     std::vector<std::pair<std::string, std::string>> calculation_info_string{
         {"Ms", get_ms_string(twice_ms_)},
-        {"Diagonalization algorithm", options_.get_str("DIAG_ALGORITHM")}};
+        {"Diagonalization algorithm", options_->get_str("DIAG_ALGORITHM")}};
 
     // Print some information
     outfile->Printf("\n  ==> Calculation Information <==\n");
@@ -192,7 +187,7 @@ void ASCI::print_info() {
     outfile->Printf("\n  %s", std::string(65, '-').c_str());
 }
 
-double ASCI::compute_energy() {
+double ASCI::solver_compute_energy() {
     timer energy_timer("ASCI:Energy");
 
     startup();
@@ -224,20 +219,20 @@ double ASCI::compute_energy() {
     std::vector<double> P_ref_evecs;
     DeterminantHashVec P_space(initial_reference_);
 
-    size_t nvec = options_.get_int("N_GUESS_VEC");
-    std::string sigma_method = options_.get_str("SIGMA_BUILD_TYPE");
+    size_t nvec = options_->get_int("N_GUESS_VEC");
+    std::string sigma_method = options_->get_str("SIGMA_BUILD_TYPE");
     std::vector<std::vector<double>> energy_history;
     SparseCISolver sparse_solver(fci_ints_);
     sparse_solver.set_parallel(true);
-    sparse_solver.set_force_diag(options_.get_bool("FORCE_DIAG_METHOD"));
-    sparse_solver.set_e_convergence(options_.get_double("E_CONVERGENCE"));
-    sparse_solver.set_maxiter_davidson(options_.get_int("DL_MAXITER"));
+    sparse_solver.set_force_diag(options_->get_bool("FORCE_DIAG_METHOD"));
+    sparse_solver.set_e_convergence(options_->get_double("E_CONVERGENCE"));
+    sparse_solver.set_maxiter_davidson(options_->get_int("DL_MAXITER"));
     sparse_solver.set_spin_project(true);
-    sparse_solver.set_guess_dimension(options_.get_int("DL_GUESS_SIZE"));
+    sparse_solver.set_guess_dimension(options_->get_int("DL_GUESS_SIZE"));
     sparse_solver.set_num_vecs(nvec);
     sparse_solver.set_sigma_method(sigma_method);
     sparse_solver.set_spin_project_full(false);
-    sparse_solver.set_max_memory(options_.get_int("SIGMA_VECTOR_MAX_MEMORY"));
+    sparse_solver.set_max_memory(options_->get_int("SIGMA_VECTOR_MAX_MEMORY"));
 
     // Save the P_space energies to predict convergence
     std::vector<double> P_energies;
@@ -342,11 +337,11 @@ double ASCI::compute_energy() {
     outfile->Printf("\n\n  %s: %f s", "ASCI ran in ", asci_elapse.get());
 
     double pt2 = 0.0;
-    if (options_.get_bool("MRPT2")) {
-        MRPT2 pt(reference_wavefunction_, options_, ints_, mo_space_info_, PQ_space, PQ_evecs,
-                 PQ_evals);
-        pt2 = pt.compute_energy();
-    }
+  //  if (options_->get_bool("MRPT2")) {
+  //      MRPT2 pt(reference_wavefunction_, options_, ints_, mo_space_info_, PQ_space, PQ_evecs,
+  //               PQ_evals);
+  //      pt2 = pt.compute_energy();
+  //  }
 
     size_t dim = PQ_space.size();
     // Print a summary
@@ -355,7 +350,7 @@ double ASCI::compute_energy() {
     outfile->Printf("\n  Iterations required:                         %zu", cycle);
     outfile->Printf("\n  psi::Dimension of optimized determinant space:    %zu\n", dim);
     outfile->Printf("\n  * AS-CI Energy Root 0        = %.12f Eh", root_energy);
-    if (options_.get_bool("MRPT2")) {
+    if (options_->get_bool("MRPT2")) {
         outfile->Printf("\n  * AS-CI+PT2 Energy Root 0    = %.12f Eh", root_energy + pt2);
     }
 
@@ -372,7 +367,6 @@ void ASCI::find_q_space(DeterminantHashVec& P_space, DeterminantHashVec& PQ_spac
                         psi::SharedVector evals, psi::SharedMatrix evecs) {
     timer find_q("ASCI:Build Model Space");
     local_timer build;
-
     det_hash<double> V_hash;
     get_excited_determinants_sr(evecs, P_space, V_hash);
 
@@ -453,7 +447,7 @@ bool ASCI::check_convergence(std::vector<std::vector<double>>& energy_history, p
     energy_history.push_back(new_energies);
 
     // Check for convergence
-    return (std::fabs(new_avg_energy - old_avg_energy) < options_.get_double("ASCI_E_CONVERGENCE"));
+    return (std::fabs(new_avg_energy - old_avg_energy) < options_->get_double("ASCI_E_CONVERGENCE"));
 }
 
 void ASCI::prune_q_space(DeterminantHashVec& PQ_space, DeterminantHashVec& P_space,
@@ -492,7 +486,7 @@ ASCI::compute_spin(DeterminantHashVec& space, WFNOperator& op, psi::SharedMatrix
     // op.tp_lists(space);
 
     std::vector<std::pair<double, double>> spin_vec(nroot);
-    if (options_.get_str("SIGMA_BUILD_TYPE") == "HZ") {
+    if (options_->get_str("SIGMA_BUILD_TYPE") == "HZ") {
         op.clear_op_s_lists();
         op.clear_tp_s_lists();
         op.build_strings(space);
@@ -573,7 +567,7 @@ void ASCI::print_nos() {
     std::shared_ptr<psi::Matrix> opdm_b(new psi::Matrix("OPDM_B", nirrep_, nactpi_, nactpi_));
 
     int offset = 0;
-    for (int h = 0; h < nirrep_; h++) {
+    for (size_t h = 0; h < nirrep_; h++) {
         for (int u = 0; u < nactpi_[h]; u++) {
             for (int v = 0; v < nactpi_[h]; v++) {
                 opdm_a->set(h, u, v, ordm_a_[(u + offset) * nact_ + v + offset]);
@@ -593,7 +587,7 @@ void ASCI::print_nos() {
     // std::ofstream file;
     // file.open("nos.txt",std::ios_base::app);
     std::vector<std::pair<double, std::pair<int, int>>> vec_irrep_occupation;
-    for (int h = 0; h < nirrep_; h++) {
+    for (size_t h = 0; h < nirrep_; h++) {
         for (int u = 0; u < nactpi_[h]; u++) {
             auto irrep_occ =
                 std::make_pair(OCC_A->get(h, u) + OCC_B->get(h, u), std::make_pair(h, u + 1));
@@ -620,14 +614,14 @@ void ASCI::print_nos() {
 
     // Compute active space weights
     if (print_weights_) {
-        double no_thresh = options_.get_double("ACI_NO_THRESHOLD");
+        double no_thresh = options_->get_double("ACI_NO_THRESHOLD");
 
         std::vector<int> active(nirrep_, 0);
         std::vector<std::vector<int>> active_idx(nirrep_);
         std::vector<int> docc(nirrep_, 0);
 
         print_h2("Active Space Weights");
-        for (int h = 0; h < nirrep_; ++h) {
+        for (size_t h = 0; h < nirrep_; ++h) {
             std::vector<double> weights(nactpi_[h], 0.0);
             std::vector<double> oshell(nactpi_[h], 0.0);
             for (int p = 0; p < nactpi_[h]; ++p) {
@@ -699,7 +693,7 @@ void ASCI::get_excited_determinants_sr(psi::SharedMatrix evecs, DeterminantHashV
     local_timer build;
     size_t max_P = P_space.size();
     const det_hashvec& P_dets = P_space.wfn_hash();
-    double screen_thresh_ = options_.get_double("ASCI_PRESCREEN_THRESHOLD");
+    double screen_thresh_ = options_->get_double("ASCI_PRESCREEN_THRESHOLD");
 
 // Loop over reference determinants
 #pragma omp parallel

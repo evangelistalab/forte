@@ -62,7 +62,6 @@
 using d1 = std::vector<double>;
 using d2 = std::vector<d1>;
 
-
 namespace forte {
 
 class Reference;
@@ -85,11 +84,13 @@ class AdaptiveCI : public ActiveSpaceSolver {
      * @param ints A pointer to an allocated integral object
      * @param mo_space_info A pointer to the MOSpaceInfo object
      */
-    AdaptiveCI(std::shared_ptr<StateInfo> state_, std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
+    AdaptiveCI(std::shared_ptr<StateInfo> state_, std::shared_ptr<SCFInfo> scf_info,
+               std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
                std::shared_ptr<MOSpaceInfo> mo_space_info);
 
-//    AdaptiveCI(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
-//               std::shared_ptr<MOSpaceInfo> mo_space_info);
+    //    AdaptiveCI(psi::SharedWavefunction ref_wfn, psi::Options& options,
+    //    std::shared_ptr<ForteIntegrals> ints,
+    //               std::shared_ptr<MOSpaceInfo> mo_space_info);
     /// Destructor
     ~AdaptiveCI();
 
@@ -182,7 +183,6 @@ class AdaptiveCI : public ActiveSpaceSolver {
     size_t fvir_;
     /// The number of irreps
     size_t nirrep_;
-    
 
     /// The nuclear repulsion energy
     double nuclear_repulsion_energy_;
@@ -311,7 +311,8 @@ class AdaptiveCI : public ActiveSpaceSolver {
     void startup();
 
     /// Compute an aci wavefunction
-    void compute_aci(DeterminantHashVec& PQ_space, psi::SharedMatrix& PQ_evecs, psi::SharedVector& PQ_evals);
+    void compute_aci(DeterminantHashVec& PQ_space, psi::SharedMatrix& PQ_evecs,
+                     psi::SharedVector& PQ_evals);
 
     /// Print information about this calculation
     void print_info();
@@ -346,7 +347,8 @@ class AdaptiveCI : public ActiveSpaceSolver {
                                   det_hash<std::vector<double>>& V_hash);
 
     /// Alternate/experimental determinant generator (threaded, each thread builds part of F)
-    void get_excited_determinants_seq(int nroot, psi::SharedMatrix evecs, DeterminantHashVec& P_space,
+    void get_excited_determinants_seq(int nroot, psi::SharedMatrix evecs,
+                                      DeterminantHashVec& P_space,
                                       det_hash<std::vector<double>>& V_hash);
     /// Get excited determinants with a specified hole
     void get_core_excited_determinants(psi::SharedMatrix evecs, DeterminantHashVec& P_space,
@@ -383,7 +385,8 @@ class AdaptiveCI : public ActiveSpaceSolver {
 
     /// Builds excited determinants in batch using sorting of vectors
     std::pair<std::vector<std::vector<std::pair<Determinant, double>>>, std::vector<size_t>>
-    get_bin_F_space_vecsort(int bin, int nbin, psi::SharedMatrix evecs, DeterminantHashVec& P_space);
+    get_bin_F_space_vecsort(int bin, int nbin, psi::SharedMatrix evecs,
+                            DeterminantHashVec& P_space);
 
     /// Prescreening algorithm, aware of sigma, very experimental
     // double prescreen_F(int bin, int nbin, double E0, psi::SharedMatrix evecs,DeterminantHashVec&
@@ -409,7 +412,7 @@ class AdaptiveCI : public ActiveSpaceSolver {
                       psi::SharedMatrix evecs, int nroot);
 
     /// Compute full S^2 matrix and diagonalize it
-    //void full_spin_transform(DeterminantHashVec& det_space, psi::SharedMatrix cI, int nroot);
+    // void full_spin_transform(DeterminantHashVec& det_space, psi::SharedMatrix cI, int nroot);
 
     /// Check for spin contamination
     double compute_spin_contamination(DeterminantHashVec& space, WFNOperator& op,
@@ -419,8 +422,8 @@ class AdaptiveCI : public ActiveSpaceSolver {
     void wfn_to_file(DeterminantHashVec& det_space, psi::SharedMatrix evecs, int root);
 
     /// Compute the Davidson correction
-    std::vector<double> davidson_correction(std::vector<Determinant>& P_dets, psi::SharedVector P_evals,
-                                            psi::SharedMatrix PQ_evecs,
+    std::vector<double> davidson_correction(std::vector<Determinant>& P_dets,
+                                            psi::SharedVector P_evals, psi::SharedMatrix PQ_evecs,
                                             std::vector<Determinant>& PQ_dets,
                                             psi::SharedVector PQ_evals);
 
@@ -457,12 +460,13 @@ class AdaptiveCI : public ActiveSpaceSolver {
     void add_bad_roots(DeterminantHashVec& dets);
 
     /// Print Summary
-    void print_final(DeterminantHashVec& dets, psi::SharedMatrix& PQ_evecs, psi::SharedVector& PQ_evals);
+    void print_final(DeterminantHashVec& dets, psi::SharedMatrix& PQ_evecs,
+                     psi::SharedVector& PQ_evals);
 
     void compute_multistate(psi::SharedVector& PQ_evals);
 
-    void block_diagonalize_fock(const d2& Fa, const d2& Fb, psi::SharedMatrix& Ua, psi::SharedMatrix& Ub,
-                                const std::string& name);
+    void block_diagonalize_fock(const d2& Fa, const d2& Fb, psi::SharedMatrix& Ua,
+                                psi::SharedMatrix& Ub, const std::string& name);
 
     DeterminantHashVec approximate_wfn(DeterminantHashVec& PQ_space, psi::SharedMatrix& evecs,
                                        psi::SharedVector& PQ_evals, psi::SharedMatrix& new_evecs);
@@ -470,7 +474,6 @@ class AdaptiveCI : public ActiveSpaceSolver {
     std::vector<std::pair<size_t, double>> dl_initial_guess(std::vector<Determinant>& old_dets,
                                                             std::vector<Determinant>& dets,
                                                             psi::SharedMatrix& evecs, int nroot);
-
 
     //    int david2(double **A, int N, int M, double *eps, double **v,double
     //    cutoff, int print);
@@ -485,6 +488,5 @@ class AdaptiveCI : public ActiveSpaceSolver {
 };
 
 } // namespace forte
-
 
 #endif // _adaptive_ci_h_
