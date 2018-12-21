@@ -43,12 +43,16 @@ namespace forte {
 
 ActiveSpaceSolver::ActiveSpaceSolver(StateInfo state, std::shared_ptr<ForteIntegrals> ints,
                                      std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : states_weights_({{state, 1.0}}), ints_(ints), mo_space_info_(mo_space_info) {}
+    : states_weights_({{state, 1.0}}), ints_(ints), mo_space_info_(mo_space_info) {
+    make_active_space_ints();
+}
 
 ActiveSpaceSolver::ActiveSpaceSolver(
     const std::vector<std::pair<StateInfo, double>>& states_weights,
     std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : states_weights_(states_weights), ints_(ints), mo_space_info_(mo_space_info) {}
+    : states_weights_(states_weights), ints_(ints), mo_space_info_(mo_space_info) {
+    make_active_space_ints();
+}
 
 void ActiveSpaceSolver::make_active_space_ints() {
     active_mo_ = mo_space_info_->get_corr_abs_mo("ACTIVE");

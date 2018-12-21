@@ -1418,7 +1418,8 @@ double DSRG_MRPT3::compute_energy_sa() {
                 nelec -= charge;
                 int ms = (multi + 1) % 2;
                 auto nelec_actv =
-                    nelec - 2 * mo_space_info_->size("FROZEN_DOCC") - 2 * core_mos_.size();
+                    nelec;
+//                - 2 * mo_space_info_->size("FROZEN_DOCC") - 2 * core_mos_.size();
                 auto na = (nelec_actv + ms) / 2;
                 auto nb = nelec_actv - na;
 

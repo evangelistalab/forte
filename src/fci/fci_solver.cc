@@ -115,11 +115,8 @@ void FCISolver::startup() {
 double FCISolver::compute_energy() {
     local_timer t;
 
-
     double nuclear_repulsion_energy =
         psi::Process::environment.molecule()->nuclear_repulsion_energy({{0, 0, 0}});
-
-    make_active_space_ints();
 
     FCIWfn::allocate_temp_space(lists_, print_);
 
@@ -437,6 +434,7 @@ FCISolver::initial_guess(FCIWfn& diag, size_t n, std::shared_ptr<ActiveSpaceInte
             H.set(J, I, HIJ);
         }
     }
+
     H.diagonalize(evecs, evals);
 
     std::vector<std::pair<int, std::vector<std::tuple<size_t, size_t, size_t, double>>>> guess;

@@ -62,6 +62,7 @@ compare_values(refcasscf, variable("CURRENT ENERGY"), 10, "CASSCF energy (natura
 
 set forte {
   cas_type           fci
+  print 1
 }
 Eforte, wfn = energy('forte', ref_wfn=wfn_cas, return_wfn=True)
 compare_values(refpt2_relax, variable("CURRENT ENERGY"), 6,

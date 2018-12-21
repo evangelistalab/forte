@@ -68,11 +68,6 @@ void FCI::set_fci_iterations(int value) { fci_iterations_ = value; }
 
 void FCI::print_no(bool value) { print_no_ = value; }
 
-void FCI::set_ms(int ms) {
-    set_ms_ = true;
-    twice_ms_ = ms;
-}
-
 void FCI::startup() {
     print_ = options_.get_int("PRINT");
 
@@ -101,10 +96,10 @@ double FCI::solver_compute_energy() {
                         options_.get_int("DL_SUBSPACE_PER_ROOT"));
         outfile->Printf("\n  Davidson subspace min dim: %d",
                         options_.get_int("DL_COLLAPSE_PER_ROOT"));
-        if (twice_ms_ % 2 == 0) {
-            outfile->Printf("\n  M_s: %d", twice_ms_ / 2);
+        if (state.twice_ms() % 2 == 0) {
+            outfile->Printf("\n  M_s: %d", state.twice_ms() / 2);
         } else {
-            outfile->Printf("\n  M_s: %d/2", twice_ms_);
+            outfile->Printf("\n  M_s: %d/2", state.twice_ms());
         }
     }
 
@@ -116,7 +111,8 @@ double FCI::solver_compute_energy() {
         new FCISolver(active_dim, rdocc, active, states_weights_[0].first, ints_, mo_space_info_,
                       options_.get_int("FCI_NTRIAL_PER_ROOT"), print_, options_));
 
-    //    outfile->Printf("\n  B");
+    if (as_ints_)
+      fcisolver_->set_active_space_integrals(as_ints_);
     // tweak some options
     fcisolver_->set_max_rdm_level(max_rdm_level_);
     fcisolver_->set_nroot(options_.get_int("FCI_NROOT"));

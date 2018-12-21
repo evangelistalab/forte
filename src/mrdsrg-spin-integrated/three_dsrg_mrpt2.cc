@@ -3411,7 +3411,8 @@ void THREE_DSRG_MRPT2::compute_Hbar1V_diskDF(ambit::BlockedTensor& Hbar1, bool s
     }
 }
 
-std::vector<double> THREE_DSRG_MRPT2::relaxed_energy(std::shared_ptr<ActiveSpaceIntegrals> fci_ints) {
+std::vector<double>
+THREE_DSRG_MRPT2::relaxed_energy(std::shared_ptr<ActiveSpaceIntegrals> fci_ints) {
 
     // reference relaxation
     std::vector<double> Erelax;
@@ -3448,7 +3449,8 @@ std::vector<double> THREE_DSRG_MRPT2::relaxed_energy(std::shared_ptr<ActiveSpace
     } else if (cas_type == "ACI") {
 
         // Only do ground state ACI for now
-        AdaptiveCI aci(std::make_shared<StateInfo>(ints_->wfn()),scf_info_, foptions_, ints_, mo_space_info_);
+        AdaptiveCI aci(std::make_shared<StateInfo>(ints_->wfn()), scf_info_, foptions_, ints_,
+                       mo_space_info_);
         aci.set_fci_ints(fci_ints);
         if ((foptions_->psi_options())["ACI_RELAX_SIGMA"].has_changed()) {
             aci.update_sigma();
@@ -3499,20 +3501,20 @@ std::vector<double> THREE_DSRG_MRPT2::relaxed_energy(std::shared_ptr<ActiveSpace
             if ((foptions_->psi_options())["MS"].has_changed()) {
                 twice_ms = std::round(2.0 * foptions_->get_double("MS"));
             }
-            auto nelec_actv =
-                nelec - 2 * mo_space_info_->size("FROZEN_DOCC") - 2 * core_mos_.size();
+            auto nelec_actv = nelec;
             auto na = (nelec_actv + twice_ms) / 2;
             auto nb = nelec_actv - na;
 
             // diagonalize the Hamiltonian
-//            FCISolver fcisolver(active_dim, core_mos_, actv_mos_, na, nb, multi,
-//                                foptions_->get_int("ROOT_SYM"), ints_, mo_space_info_,
-//                                ntrial_per_root, print_, foptions_->psi_options());
+            //            FCISolver fcisolver(active_dim, core_mos_, actv_mos_, na, nb, multi,
+            //                                foptions_->get_int("ROOT_SYM"), ints_, mo_space_info_,
+            //                                ntrial_per_root, print_, foptions_->psi_options());
 
-            StateInfo state(na, nb, multi, multi - 1, foptions_->get_int("ROOT_SYM")); //assumes highes Ms
+            StateInfo state(na, nb, multi, multi - 1,
+                            foptions_->get_int("ROOT_SYM")); // assumes highest Ms
             // TODO use base class info
-            FCISolver fcisolver(active_dim, core_mos_, actv_mos_, state, ints_,
-                                mo_space_info_, ntrial_per_root, print_, foptions_->psi_options());
+            FCISolver fcisolver(active_dim, core_mos_, actv_mos_, state, ints_, mo_space_info_,
+                                ntrial_per_root, print_, *foptions_);
 
             fcisolver.set_max_rdm_level(1);
             fcisolver.set_nroot(foptions_->get_int("FCI_NROOT"));
@@ -3537,18 +3539,19 @@ std::vector<double> THREE_DSRG_MRPT2::relaxed_energy(std::shared_ptr<ActiveSpace
                 // prepare FCISolver
                 int ms = (multi + 1) % 2;
                 auto nelec_actv =
-                    nelec - 2 * mo_space_info_->size("FROZEN_DOCC") - 2 * core_mos_.size();
+                    nelec;
+//                - 2 * mo_space_info_->size("FROZEN_DOCC") - 2 * core_mos_.size();
                 auto na = (nelec_actv + ms) / 2;
                 auto nb = nelec_actv - na;
 
-//                FCISolver fcisolver(active_dim, core_mos_, actv_mos_, na, nb, multi, irrep, ints_,
-//                                    mo_space_info_, ntrial_per_root, print_, *foptions_);
-                StateInfo state(na, nb, multi, multi - 1, irrep); //assumes highes Ms
+                //                FCISolver fcisolver(active_dim, core_mos_, actv_mos_, na, nb,
+                //                multi, irrep, ints_,
+                //                                    mo_space_info_, ntrial_per_root, print_,
+                //                                    *foptions_);
+                StateInfo state(na, nb, multi, multi - 1, irrep); // assumes highes Ms
                 // TODO use base class info
-                FCISolver fcisolver(active_dim, core_mos_, actv_mos_, state, ints_,
-                                    mo_space_info_, ntrial_per_root, print_, *foptions_);
-
-
+                FCISolver fcisolver(active_dim, core_mos_, actv_mos_, state, ints_, mo_space_info_,
+                                    ntrial_per_root, print_, *foptions_);
 
                 fcisolver.set_max_rdm_level(1);
                 fcisolver.set_nroot(nstates);
@@ -3557,7 +3560,7 @@ std::vector<double> THREE_DSRG_MRPT2::relaxed_energy(std::shared_ptr<ActiveSpace
                 fcisolver.set_collapse_per_root(foptions_->get_int("DL_COLLAPSE_PER_ROOT"));
                 fcisolver.set_subspace_per_root(foptions_->get_int("DL_SUBSPACE_PER_ROOT"));
 
-                // set integrals manually               
+                // set integrals manually
                 fcisolver.set_active_space_integrals(fci_ints);
 
                 // compute energy and fill in results

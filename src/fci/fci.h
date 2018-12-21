@@ -87,8 +87,6 @@ class FCI : public ActiveSpaceSolver {
     void set_fci_iterations(int value);
     /// Print the NO from the 1RDM
     void print_no(bool value);
-    /// Set Ms value
-    void set_ms(int ms);
 
   private:
     // ==> Class data <==
@@ -106,10 +104,6 @@ class FCI : public ActiveSpaceSolver {
     int fci_iterations_;
     /// Print the Natural Orbitals from the 1-RDM
     bool print_no_;
-    /// twice the z component of spin (i.e. 2 * M_S)
-    int twice_ms_;
-    /// Did the user set ms?
-    bool set_ms_ = false;
 
     /// reference_wavefunction
     //    psi::SharedWavefunction reference_wavefunction_;

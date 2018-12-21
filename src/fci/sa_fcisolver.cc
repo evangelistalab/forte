@@ -264,7 +264,7 @@ double SA_FCISolver::compute_energy() {
             throw psi::PSIEXCEPTION("\n\n  FCI: Wrong value of M_s.\n\n");
 
         // Adjust the number of for frozen and restricted doubly occupied
-        size_t nactel = nel - 2 * nfdocc - 2 * rdocc.size();
+        size_t nactel = nel;
 
         size_t na = (nactel + twice_ms) / 2;
         size_t nb = nactel - na;
