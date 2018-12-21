@@ -43,6 +43,11 @@ StateInfo::StateInfo(psi::SharedWavefunction wfn) {
 
     na_ = (nel + twice_ms_) / 2;
     nb_ = nel - na_;
+
+    irrep_ = 0;
+    if (wfn->options()["ROOT_SYM"].has_changed()) {
+        irrep_ = wfn->options().get_int("ROOT_SYM");
+    }
 }
 
 int StateInfo::na() const { return na_; }

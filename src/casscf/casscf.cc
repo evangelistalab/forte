@@ -776,7 +776,6 @@ void CASSCF::set_up_fci() {
     fcisolver.set_print_no(false);
 
     std::shared_ptr<ActiveSpaceIntegrals> fci_ints = get_ci_integrals();
-    fcisolver.use_user_integrals_and_restricted_docc(true);
     fcisolver.set_active_space_integrals(fci_ints);
     E_casscf_ = fcisolver.compute_energy();
     /// Get the CIVector for each iteration

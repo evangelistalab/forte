@@ -94,13 +94,6 @@ class FCISolver : public ActiveSpaceSolver {
     void set_collapse_per_root(int value);
     /// Set the maximum subspace size for each root
     void set_subspace_per_root(int value);
-
-    /// If you actually change the integrals in your code, you should set this
-    /// to false.
-    void use_user_integrals_and_restricted_docc(bool user_provide_integrals) {
-        provide_integrals_and_restricted_docc_ = user_provide_integrals;
-    }
-
     /// When set to true before calling compute_energy(), it will test the
     /// reduce density matrices.  Watch out, this function is very slow!
     void set_test_rdms(bool value) { test_rdms_ = value; }
@@ -178,8 +171,6 @@ class FCISolver : public ActiveSpaceSolver {
     bool print_no_ = false;
     /// A variable to control printing information
     int print_ = 0;
-    /// Use the user specified integrals and restricted_docc_operator
-    bool provide_integrals_and_restricted_docc_ = false;
 
     // ==> Class functions <==
 

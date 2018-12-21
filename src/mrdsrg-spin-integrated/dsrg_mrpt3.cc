@@ -1441,7 +1441,6 @@ double DSRG_MRPT3::compute_energy_sa() {
                 fcisolver.set_subspace_per_root(foptions_->get_int("DL_SUBSPACE_PER_ROOT"));
 
                 if (eri_df_) {
-                    fcisolver.use_user_integrals_and_restricted_docc(true);
                     fcisolver.set_active_space_integrals(fci_ints);
                 }
 

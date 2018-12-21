@@ -279,7 +279,6 @@ double SA_FCISolver::compute_energy() {
         fcisolver.set_collapse_per_root(options_.get_int("DL_COLLAPSE_PER_ROOT"));
         fcisolver.set_subspace_per_root(options_.get_int("DL_SUBSPACE_PER_ROOT"));
         fcisolver.set_print_no(false);
-        fcisolver.use_user_integrals_and_restricted_docc(true);
         if (fci_ints_ == nullptr) {
             outfile->Printf("\n\n You need to set fci_ints");
             throw psi::PSIEXCEPTION("Set FCI INTS");

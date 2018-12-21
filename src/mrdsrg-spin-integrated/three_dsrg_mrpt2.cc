@@ -3523,7 +3523,6 @@ std::vector<double> THREE_DSRG_MRPT2::relaxed_energy(std::shared_ptr<ActiveSpace
             fcisolver.set_subspace_per_root(foptions_->get_int("DL_SUBSPACE_PER_ROOT"));
 
             // set integrals manually
-            fcisolver.use_user_integrals_and_restricted_docc(true);
             fcisolver.set_active_space_integrals(fci_ints);
 
             Erelax.push_back(fcisolver.compute_energy());
@@ -3558,8 +3557,7 @@ std::vector<double> THREE_DSRG_MRPT2::relaxed_energy(std::shared_ptr<ActiveSpace
                 fcisolver.set_collapse_per_root(foptions_->get_int("DL_COLLAPSE_PER_ROOT"));
                 fcisolver.set_subspace_per_root(foptions_->get_int("DL_SUBSPACE_PER_ROOT"));
 
-                // set integrals manually
-                fcisolver.use_user_integrals_and_restricted_docc(true);
+                // set integrals manually               
                 fcisolver.set_active_space_integrals(fci_ints);
 
                 // compute energy and fill in results
