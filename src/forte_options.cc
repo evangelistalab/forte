@@ -55,6 +55,14 @@ std::string ForteOptions::get_str(const std::string& label) {
     return psi_options_.get_str(label);
 }
 
+std::vector<int> ForteOptions::get_int_vec(const std::string& label) {
+    return psi_options_.get_int_vector(label);
+}
+
+std::vector<double> ForteOptions::get_double_vec(const std::string& label) {
+    return psi_options_.get_double_vector(label);
+}
+
 bool ForteOptions::has_changed(const std::string& label) {
     return psi_options_[label].has_changed();
 }

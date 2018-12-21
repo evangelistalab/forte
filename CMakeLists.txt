@@ -175,6 +175,7 @@ src/v2rdm/v2rdm.cc
 target_link_libraries(forte PRIVATE ambit::ambit)
 if(TARGET CheMPS2::chemps2)
     target_link_libraries(forte PRIVATE CheMPS2::chemps2)
+    add_definitions(-DHAVE_CHEMPS2)
 endif()
 
 target_include_directories(forte PRIVATE src)

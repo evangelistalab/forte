@@ -35,6 +35,9 @@
 #include "base_classes/reference.h"
 #include "integrals/integrals.h"
 #include "helpers/mo_space_info.h"
+#include "base_classes/state_info.h"
+#include "base_classes/scf_info.h"
+#include "forte_options.h"
 
 #include "chemps2/Irreps.h"
 #include "chemps2/Problem.h"
@@ -47,10 +50,13 @@ namespace forte {
 
 class DMRGSolver {
   public:
-    DMRGSolver(psi::SharedWavefunction ref_wfn, psi::Options& options,
-               std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ForteIntegrals> ints);
-    DMRGSolver(psi::SharedWavefunction ref_wfn, psi::Options& options,
+    DMRGSolver(std::shared_ptr<StateInfo> state, 
+               std::shared_ptr<SCFInfo> scf_info,
+               std::shared_ptr<ForteOptions> options,
+               std::shared_ptr<ForteIntegrals> ints,
                std::shared_ptr<MOSpaceInfo> mo_space_info);
+//    DMRGSolver(psi::SharedWavefunction ref_wfn, psi::Options& options,
+//               std::shared_ptr<MOSpaceInfo> mo_space_info);
     void compute_energy();
 
     Reference reference() { return dmrg_ref_; }
@@ -67,10 +73,12 @@ class DMRGSolver {
 
   private:
     Reference dmrg_ref_;
-    psi::SharedWavefunction wfn_;
-    psi::Options& options_;
-    std::shared_ptr<MOSpaceInfo> mo_space_info_;
+
+    std::shared_ptr<StateInfo> state_;
+    std::shared_ptr<SCFInfo> scf_info_;
+    std::shared_ptr<ForteOptions> options_;
     std::shared_ptr<ForteIntegrals> ints_;
+    std::shared_ptr<MOSpaceInfo> mo_space_info_;
     bool disk_3_rdm_ = false;
     /// Form CAS-CI Hamiltonian stuff
 

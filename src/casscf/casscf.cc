@@ -365,7 +365,7 @@ void CASSCF::cas_ci() {
         E_casscf_ = cas_ref_.get_Eref();
     } else if (options_->get_str("CASSCF_CI_SOLVER") == "DMRG") {
 #ifdef HAVE_CHEMPS2
-        DMRGSolver dmrg(ints_->wfn(), options_->psi_options(), mo_space_info_, ints_);
+        DMRGSolver dmrg(state_, scf_info_, options_, ints_, mo_space_info_);
         dmrg.set_max_rdm(2);
         dmrg.spin_free_rdm(true);
         std::pair<ambit::Tensor, std::vector<double>> integral_pair = CI_Integrals();
@@ -448,7 +448,7 @@ void CASSCF::cas_ci_final() {
         E_casscf_ = cas_ref_.get_Eref();
     } else if (options_->get_str("CASSCF_CI_SOLVER") == "DMRG") {
 #ifdef HAVE_CHEMPS2
-        DMRGSolver dmrg(ints_->wfn(), options_->psi_options(), mo_space_info_, ints_);
+        DMRGSolver dmrg(state_, scf_info_, options_, ints_, mo_space_info_);
         dmrg.set_max_rdm(3);
         dmrg.spin_free_rdm(true);
         std::pair<ambit::Tensor, std::vector<double>> integral_pair = CI_Integrals();

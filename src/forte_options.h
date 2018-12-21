@@ -143,6 +143,18 @@ class ForteOptions {
     std::string get_str(const std::string& label);
 
     /**
+     * @brief Get a vector of int option
+     * @param label Option label
+     */
+    std::vector<int> get_int_vec(const std::string& label);
+
+    /**
+     * @brief Get a vector of int option
+     * @param label Option label
+     */
+    std::vector<double> get_double_vec(const std::string& label);
+
+    /**
      * @brief If an option is changed
      * @param label Option label
      */

@@ -63,9 +63,6 @@ class StateInfo {
     int twice_ms_;
     // Irrep
     int irrep_;
-    // Name
-    std::string name_ = "";
-    
 };
 
 } // namespace forte

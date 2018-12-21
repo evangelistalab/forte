@@ -204,7 +204,10 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
     }
     if (options.get_bool("USE_DMRGSCF")) {
 #ifdef HAVE_CHEMPS2
-        auto dmrg = std::make_shared<DMRGSCF>(ref_wfn, options, mo_space_info, ints);
+        auto dmrg = std::make_shared<DMRGSCF>(std::make_shared<StateInfo>(ref_wfn),
+                                              std::make_shared<SCFInfo>(ref_wfn),
+                                              std::make_shared<ForteOptions>(options), ints,
+                                              mo_space_info);
         dmrg->set_iterations(options.get_int("DMRGSCF_MAX_ITER"));
         dmrg->compute_energy();
 #else
@@ -213,9 +216,12 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
     }
     if (options.get_str("JOB_TYPE") == "DMRG") {
 #ifdef HAVE_CHEMPS2
-        DMRGSolver dmrg(ref_wfn, options, mo_space_info, ints);
-        dmrg.set_max_rdm(2);
-        dmrg.compute_energy();
+        auto dmrg = std::make_shared<DMRGSolver>(std::make_shared<StateInfo>(ref_wfn),
+                                              std::make_shared<SCFInfo>(ref_wfn),
+                                              std::make_shared<ForteOptions>(options), ints,
+                                              mo_space_info);
+        dmrg->set_max_rdm(2);
+        dmrg->compute_energy();
 #else
         throw psi::PSIEXCEPTION("Did not compile with CHEMPS2 so DMRG will not work");
 #endif
@@ -497,14 +503,16 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
 
         } else if (cas_type == "DMRG") {
 #ifdef HAVE_CHEMPS2
-            DMRGSolver dmrg(ref_wfn, options, mo_space_info, ints);
-            dmrg.set_max_rdm(max_rdm_level);
-            dmrg.compute_energy();
-            Reference dmrg_reference = dmrg.reference();
+            auto dmrg = std::make_shared<DMRGSolver>(std::make_shared<StateInfo>(ref_wfn),
+                                                  std::make_shared<SCFInfo>(ref_wfn),
+                                                  std::make_shared<ForteOptions>(options), ints,
+                                                  mo_space_info);
+            dmrg->set_max_rdm(max_rdm_level);
+            dmrg->compute_energy();
+            Reference dmrg_reference = dmrg->reference();
             // if (options.get_bool("SEMI_CANONICAL") and !options.get_bool("CASSCF_REFERENCE")) {
             if (options.get_bool("SEMI_CANONICAL")) {
-                SemiCanonical semi(std::make_shared<ForteOptions>(options), options, ints,
-                                   mo_space_info, dmrg_reference);
+                SemiCanonical semi(std::make_shared<ForteOptions>(options), ints, mo_space_info);
                 semi.semicanonicalize(dmrg_reference, max_rdm_level);
             }
             std::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(
@@ -690,14 +698,16 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
 
         } else if (cas_type == "DMRG") {
 #ifdef HAVE_CHEMPS2
-            DMRGSolver dmrg(ref_wfn, options, mo_space_info, ints);
-            dmrg.set_max_rdm(max_rdm_level);
-            dmrg.compute_energy();
+            auto dmrg = std::make_shared<DMRGSolver>(std::make_shared<StateInfo>(ref_wfn),
+                                                  std::make_shared<SCFInfo>(ref_wfn),
+                                                  std::make_shared<ForteOptions>(options), ints,
+                                                  mo_space_info);
+            dmrg->set_max_rdm(max_rdm_level);
+            dmrg->compute_energy();
 
-            Reference dmrg_reference = dmrg.reference();
+            Reference dmrg_reference = dmrg->reference();
             if (options.get_bool("SEMI_CANONICAL")) {
-                SemiCanonical semi(std::make_shared<ForteOptions>(options), options, ints,
-                                   mo_space_info, dmrg_reference);
+                SemiCanonical semi(std::make_shared<ForteOptions>(options), ints, mo_space_info);
                 semi.semicanonicalize(dmrg_reference, max_rdm_level);
             }
 
