@@ -242,7 +242,7 @@ class THREE_DSRG_MRPT2 : public MASTER_DSRG {
     /// Compute Hbar1 from virtual contraction when doing DiskDF
     void compute_Hbar1V_diskDF(ambit::BlockedTensor& Hbar1, bool scaleV = true);
 
-    std::vector<double> relaxed_energy(std::shared_ptr<FCIIntegrals> fci_ints);
+    std::vector<double> relaxed_energy(std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
 
     /// Print detailed timings
     bool detail_time_ = false;

@@ -29,6 +29,8 @@
 #ifndef _active_space_solver_h_
 #define _active_space_solver_h_
 
+#include <vector>
+
 #include "base_classes/state_info.h"
 #include "base_classes/scf_info.h"
 #include "base_classes/reference.h"
@@ -36,6 +38,7 @@
 namespace forte {
 
 class ForteIntegrals;
+class ActiveSpaceIntegrals;
 class MOSpaceInfo;
 
 class ActiveSpaceSolver {
@@ -50,6 +53,10 @@ class ActiveSpaceSolver {
 
     // Default constructor
     ActiveSpaceSolver() {}
+
+    /// Pass a set of ActiveSpaceIntegrals to the solver (e.g. an effective Hamiltonian from
+    /// MR-DSRG)
+    void set_active_space_integrals(std::shared_ptr<ActiveSpaceIntegrals> as_ints) { as_ints_ = as_ints; }
 
     // equivalent to "this->solver_compute_energy()"
     double compute_energy() { return solver_compute_energy(); }
@@ -67,17 +74,29 @@ class ActiveSpaceSolver {
     // pure virtual implementation
     virtual Reference solver_get_reference() = 0;
 
+    /// Make the ActiveSpaceIntegrals object
+    void make_active_space_ints();
+
+    /// The list of active orbitals (in absolute ordering)
+    std::vector<size_t> active_mo_;
+    /// The list of doubly occupied orbitals (in absolute ordering)
+    std::vector<size_t> core_mo_;
+
     /// Psi's wavefunction object
     std::vector<std::pair<StateInfo, double>> states_weights_;
     /// The molecular integrals object
     std::shared_ptr<ForteIntegrals> ints_;
+    /// The molecular integrals for the active space
+    std::shared_ptr<ActiveSpaceIntegrals> as_ints_;
     /// The MOSpaceInfo object
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
 };
 
-std::shared_ptr<ActiveSpaceSolver> make_active_space_solver(
-    const std::string& type, StateInfo state, std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
-    std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
+std::shared_ptr<ActiveSpaceSolver>
+make_active_space_solver(const std::string& type, StateInfo state,
+                         std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
+                         std::shared_ptr<ForteIntegrals> ints,
+                         std::shared_ptr<MOSpaceInfo> mo_space_info);
 
 } // namespace forte
 

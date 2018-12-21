@@ -32,7 +32,7 @@
 #include "forte_options.h"
 #include "ci_rdm/ci_rdms.h"
 #include "sparse_ci/ci_reference.h"
-#include "fci/fci_integrals.h"
+#include "integrals/active_space_integrals.h"
 #include "mrpt2.h"
 #include "orbital-helpers/unpaired_density.h"
 #include "sparse_ci/determinant_hashvector.h"
@@ -94,7 +94,7 @@ class ASCI : public ActiveSpaceSolver {
 
     void set_asci_ints(std::shared_ptr<ForteIntegrals> ints);
 
-    void set_fci_ints(std::shared_ptr<FCIIntegrals> fci_ints);
+    void set_fci_ints(std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
 
   private:
     // ==> Class data <==
@@ -112,7 +112,7 @@ class ASCI : public ActiveSpaceSolver {
     /// The molecular integrals required by Explorer
     std::shared_ptr<ForteIntegrals> ints_;
     /// Pointer to FCI integrals
-    std::shared_ptr<FCIIntegrals> fci_ints_;
+    std::shared_ptr<ActiveSpaceIntegrals> fci_ints_;
     /// The MOSpaceInfo object
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
     /// The wave function symmetry
@@ -227,7 +227,7 @@ class ASCI : public ActiveSpaceSolver {
     void print_nos();
 
     /// Compute the RDMs
-    void compute_rdms(std::shared_ptr<FCIIntegrals> fci_ints, DeterminantHashVec& dets,
+    void compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints, DeterminantHashVec& dets,
                       WFNOperator& op, psi::SharedMatrix& PQ_evecs, int root1, int root2);
 };
 

@@ -11,7 +11,7 @@
 #include "forte_options.h"
 #include "base_classes/dynamic_correlation_solver.h"
 #include "integrals/integrals.h"
-#include "fci/fci_integrals.h"
+#include "integrals/active_space_integrals.h"
 #include "base_classes/reference.h"
 #include "helpers/mo_space_info.h"
 #include "helpers/blockedtensorfactory.h"
@@ -42,7 +42,7 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     virtual double compute_energy() = 0;
 
     /// Compute DSRG transformed Hamiltonian
-    virtual std::shared_ptr<FCIIntegrals> compute_Heff_actv();
+    virtual std::shared_ptr<ActiveSpaceIntegrals> compute_Heff_actv();
 
     /// Compute second-order effective Hamiltonian couplings (child class overrides)
     /// <M|H + HA(N)|N> = Heff1 * TrD1 + Heff2 * TrD2 + Heff3 * TrD3 if CAS

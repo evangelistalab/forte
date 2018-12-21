@@ -49,7 +49,7 @@ class SA_FCISolver {
 
     Reference reference() { return sa_ref_; }
 
-    void set_integral_pointer(std::shared_ptr<FCIIntegrals> fci_ints) { fci_ints_ = fci_ints; }
+    void set_integral_pointer(std::shared_ptr<ActiveSpaceIntegrals> fci_ints) { fci_ints_ = fci_ints; }
 
     void set_mo_space_info(std::shared_ptr<MOSpaceInfo> mo_space_info) {
         mo_space_info_ = mo_space_info;
@@ -66,7 +66,7 @@ class SA_FCISolver {
     std::shared_ptr<psi::Wavefunction> wfn_;
     /// Integral objects (same for all SA computations)
     std::shared_ptr<ForteIntegrals> ints_;
-    std::shared_ptr<FCIIntegrals> fci_ints_;
+    std::shared_ptr<ActiveSpaceIntegrals> fci_ints_;
     /// MO space information of FORTE
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
 

@@ -1284,14 +1284,14 @@ double DSRG_MRPT3::compute_energy_sa() {
     compute_energy();
 
     // obtain active-only transformed intergals
-    std::shared_ptr<FCIIntegrals> fci_ints = compute_Heff_actv();
+    std::shared_ptr<ActiveSpaceIntegrals> fci_ints = compute_Heff_actv();
 
     //    // transfer integrals
     //    transfer_integrals();
 
     //    // prepare FCI integrals
-    //    std::shared_ptr<FCIIntegrals> fci_ints =
-    //        std::make_shared<FCIIntegrals>(ints_, actv_mos_, core_mos_);
+    //    std::shared_ptr<ActiveSpaceIntegrals> fci_ints =
+    //        std::make_shared<ActiveSpaceIntegrals>(ints_, actv_mos_, core_mos_);
     //    fci_ints->set_active_integrals(Hbar2_.block("aaaa"), Hbar2_.block("aAaA"),
     //                                   Hbar2_.block("AAAA"));
     //    if (eri_df_) {
@@ -1436,7 +1436,7 @@ double DSRG_MRPT3::compute_energy_sa() {
 
                 if (eri_df_) {
                     fcisolver.use_user_integrals_and_restricted_docc(true);
-                    fcisolver.set_integral_pointer(fci_ints);
+                    fcisolver.set_active_space_integrals(fci_ints);
                 }
 
                 // compute energy and fill in results
@@ -1587,7 +1587,8 @@ double DSRG_MRPT3::compute_energy_relaxed() {
 
     } else {
         // it is simpler here to call FCI instead of FCISolver
-        FCI fci(ints_->wfn(), foptions_->psi_options(), ints_, mo_space_info_, fci_ints);
+        FCI fci(ints_->wfn(), foptions_->psi_options(), ints_, mo_space_info_);
+        fci.set_active_space_integrals(fci_ints);
         fci.set_max_rdm_level(1);
         Erelax = fci.compute_energy();
     }

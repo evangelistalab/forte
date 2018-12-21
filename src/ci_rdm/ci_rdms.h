@@ -41,7 +41,7 @@
 #include "sparse_ci/determinant.h"
 #include "sparse_ci/sorted_string_list.h"
 #include "fci/string_lists.h"
-#include "fci/fci_integrals.h"
+#include "integrals/active_space_integrals.h"
 
 
 namespace forte {
@@ -52,11 +52,11 @@ class CI_RDMS {
     using det_hash_it = det_hash::iterator;
 
     // Class constructor and destructor
-    CI_RDMS(std::shared_ptr<FCIIntegrals> fci_ints,
+    CI_RDMS(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
             const std::vector<Determinant>& det_space, psi::SharedMatrix evecs, int root1,
             int root2);
 
-    CI_RDMS(DeterminantHashVec& wfn, std::shared_ptr<FCIIntegrals> fci_ints,
+    CI_RDMS(DeterminantHashVec& wfn, std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
             psi::SharedMatrix evecs, int root1, int root2);
 
     ~CI_RDMS();
@@ -151,7 +151,7 @@ class CI_RDMS {
     // The Wavefunction
     DeterminantHashVec wfn_;
     // The FCI integrals
-    std::shared_ptr<FCIIntegrals> fci_ints_;
+    std::shared_ptr<ActiveSpaceIntegrals> fci_ints_;
 
 
     // The Determinant Space

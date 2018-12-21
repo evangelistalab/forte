@@ -53,7 +53,7 @@
 #include "sparse_ci/determinant_hashvector.h"
 #include "fci/fci.h"
 #include "fci/fci_solver.h"
-#include "fci/fci_integrals.h"
+#include "integrals/active_space_integrals.h"
 #include "sci/fci_mo.h"
 #include "finite_temperature/finite_temperature.h"
 #include "helpers/mo_space_info.h"

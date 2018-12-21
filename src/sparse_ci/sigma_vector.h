@@ -33,7 +33,7 @@
 #include "helpers/timer.h"
 
 #include "sparse_ci/determinant_hashvector.h"
-#include "fci/fci_integrals.h"
+#include "integrals/active_space_integrals.h"
 #include "sparse_ci/operator.h"
 #include "determinant.h"
 
@@ -71,7 +71,7 @@ class SigmaVector {
 class SigmaVectorSparse : public SigmaVector {
   public:
     SigmaVectorSparse(std::vector<std::pair<std::vector<size_t>, std::vector<double>>>& H,
-                      std::shared_ptr<FCIIntegrals> fci_ints)
+                      std::shared_ptr<ActiveSpaceIntegrals> fci_ints)
         : SigmaVector(H.size()), H_(H), fci_ints_(fci_ints){};
 
     void compute_sigma(psi::SharedVector sigma, psi::SharedVector b);
@@ -83,7 +83,7 @@ class SigmaVectorSparse : public SigmaVector {
 
   protected:
     std::vector<std::pair<std::vector<size_t>, std::vector<double>>>& H_;
-    std::shared_ptr<FCIIntegrals> fci_ints_;
+    std::shared_ptr<ActiveSpaceIntegrals> fci_ints_;
 };
 
 /**
@@ -93,7 +93,7 @@ class SigmaVectorSparse : public SigmaVector {
 class SigmaVectorList : public SigmaVector {
   public:
     SigmaVectorList(const std::vector<Determinant>& space, bool print_detail,
-                    std::shared_ptr<FCIIntegrals> fci_ints);
+                    std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
 
     void compute_sigma(psi::SharedVector sigma, psi::SharedVector b);
     //  void compute_sigma(Matrix& sigma, Matrix& b, int nroot);
@@ -106,7 +106,7 @@ class SigmaVectorList : public SigmaVector {
 
   protected:
     const std::vector<Determinant>& space_;
-    std::shared_ptr<FCIIntegrals> fci_ints_;
+    std::shared_ptr<ActiveSpaceIntegrals> fci_ints_;
 
     // Create the list of a_p|N>
     std::vector<std::vector<std::pair<size_t, short>>> a_ann_list;
@@ -132,7 +132,7 @@ class SigmaVectorList : public SigmaVector {
 class SigmaVectorWfn1 : public SigmaVector {
   public:
     SigmaVectorWfn1(const DeterminantHashVec& space, WFNOperator& op,
-                    std::shared_ptr<FCIIntegrals> fci_ints);
+                    std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
 
     void compute_sigma(psi::SharedVector sigma, psi::SharedVector b);
     //   void compute_sigma(Matrix& sigma, Matrix& b, int nroot) {}
@@ -142,7 +142,7 @@ class SigmaVectorWfn1 : public SigmaVector {
 
   protected:
     const DeterminantHashVec& space_;
-    std::shared_ptr<FCIIntegrals> fci_ints_;
+    std::shared_ptr<ActiveSpaceIntegrals> fci_ints_;
     // Create the list of a_p|N>
     // Create the list of a+_q |N-1>
     std::vector<std::vector<std::pair<size_t, short>>>& a_ann_list_;
@@ -165,7 +165,7 @@ class SigmaVectorWfn1 : public SigmaVector {
 class SigmaVectorWfn2 : public SigmaVector {
   public:
     SigmaVectorWfn2(const DeterminantHashVec& space, WFNOperator& op,
-                    std::shared_ptr<FCIIntegrals> fci_ints);
+                    std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
 
     void compute_sigma(psi::SharedVector sigma, psi::SharedVector b);
     // void compute_sigma(Matrix& sigma, Matrix& b, int nroot);
@@ -183,7 +183,7 @@ class SigmaVectorWfn2 : public SigmaVector {
     // size_t nobeta_;
 
     std::vector<double> diag_;
-    std::shared_ptr<FCIIntegrals> fci_ints_;
+    std::shared_ptr<ActiveSpaceIntegrals> fci_ints_;
     std::vector<std::vector<std::pair<size_t, short>>>& a_list_;
     std::vector<std::vector<std::pair<size_t, short>>>& b_list_;
     std::vector<std::vector<std::tuple<size_t, short, short>>>& aa_list_;
@@ -194,7 +194,7 @@ class SigmaVectorWfn2 : public SigmaVector {
 class SigmaVectorWfn3 : public SigmaVector {
   public:
     SigmaVectorWfn3(const DeterminantHashVec& space, WFNOperator& op,
-                    std::shared_ptr<FCIIntegrals> fci_ints);
+                    std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
 
     void compute_sigma(psi::SharedVector sigma, psi::SharedVector b);
     // void compute_sigma(Matrix& sigma, Matrix& b, int nroot);
@@ -208,7 +208,7 @@ class SigmaVectorWfn3 : public SigmaVector {
     bool use_disk_ = false;
 
     const DeterminantHashVec& space_;
-    std::shared_ptr<FCIIntegrals> fci_ints_;
+    std::shared_ptr<ActiveSpaceIntegrals> fci_ints_;
 
     std::vector<std::vector<std::pair<size_t, short>>>& a_list_;
     std::vector<std::vector<std::pair<size_t, short>>>& b_list_;
@@ -227,7 +227,7 @@ class SigmaVectorWfn3 : public SigmaVector {
 class SigmaVectorMPI : public SigmaVector {
   public:
     SigmaVectorMPI(const DeterminantHashVec& space, WFNOperator& op,
-                   std::shared_ptr<FCIIntegrals> fci_ints);
+                   std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
 
     void compute_sigma(psi::SharedVector sigma, psi::SharedVector b);
     void compute_sigma(Matrix& sigma, Matrix& b, int nroot);
@@ -237,7 +237,7 @@ class SigmaVectorMPI : public SigmaVector {
     std::vector<std::vector<std::pair<size_t, double>>> bad_states_;
 
   protected:
-    std::shared_ptr<FCIIntegrals> fci_ints_;
+    std::shared_ptr<ActiveSpaceIntegrals> fci_ints_;
 };
 #endif
 }

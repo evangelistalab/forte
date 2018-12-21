@@ -6,7 +6,7 @@
 #include "psi4/liboptions/liboptions.h"
 
 #include "integrals/integrals.h"
-#include "fci/fci_integrals.h"
+#include "integrals/active_space_integrals.h"
 #include "base_classes/reference.h"
 
 namespace forte {
@@ -32,7 +32,7 @@ class DynamicCorrelationSolver {
     virtual double compute_energy() = 0;
 
     /// Compute dressed Hamiltonian
-    virtual std::shared_ptr<FCIIntegrals> compute_Heff_actv() = 0;
+    virtual std::shared_ptr<ActiveSpaceIntegrals> compute_Heff_actv() = 0;
 
     /// Destructor
     virtual ~DynamicCorrelationSolver() = default;

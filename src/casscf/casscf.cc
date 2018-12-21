@@ -355,7 +355,7 @@ void CASSCF::cas_ci() {
     } else if (options_->get_str("CASSCF_CI_SOLVER") == "CAS") {
         set_up_fcimo();
     } else if (options_->get_str("CASSCF_CI_SOLVER") == "ACI") {
-        std::shared_ptr<FCIIntegrals> fci_ints = get_ci_integrals();
+        std::shared_ptr<ActiveSpaceIntegrals> fci_ints = get_ci_integrals();
         AdaptiveCI aci(state_, scf_info_, options_, ints_, mo_space_info_);
         aci.set_fci_ints(fci_ints);
         aci.set_max_rdm(2);
@@ -468,8 +468,8 @@ void CASSCF::cas_ci_final() {
 double CASSCF::cas_check(Reference cas_ref) {
     ambit::Tensor gamma1 = ambit::Tensor::build(ambit::CoreTensor, "Gamma1", {na_, na_});
     ambit::Tensor gamma2 = ambit::Tensor::build(ambit::CoreTensor, "Gamma2", {na_, na_, na_, na_});
-    std::shared_ptr<FCIIntegrals> fci_ints =
-        std::make_shared<FCIIntegrals>(ints_, mo_space_info_->get_corr_abs_mo("ACTIVE"),
+    std::shared_ptr<ActiveSpaceIntegrals> fci_ints =
+        std::make_shared<ActiveSpaceIntegrals>(ints_, mo_space_info_->get_corr_abs_mo("ACTIVE"),
                                        mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
     fci_ints->set_active_integrals_and_restricted_docc();
 
@@ -770,9 +770,9 @@ void CASSCF::set_up_fci() {
     fcisolver.set_subspace_per_root(options_->get_int("DL_SUBSPACE_PER_ROOT"));
     fcisolver.set_print_no(false);
 
-    std::shared_ptr<FCIIntegrals> fci_ints = get_ci_integrals();
+    std::shared_ptr<ActiveSpaceIntegrals> fci_ints = get_ci_integrals();
     fcisolver.use_user_integrals_and_restricted_docc(true);
-    fcisolver.set_integral_pointer(fci_ints);
+    fcisolver.set_active_space_integrals(fci_ints);
     E_casscf_ = fcisolver.compute_energy();
     /// Get the CIVector for each iteration
     std::vector<std::shared_ptr<FCIWfn>> FCIWfnSolution(1);
@@ -782,11 +782,11 @@ void CASSCF::set_up_fci() {
     cas_ref_ = fcisolver.solver_get_reference();
 }
 
-std::shared_ptr<FCIIntegrals> CASSCF::get_ci_integrals() {
+std::shared_ptr<ActiveSpaceIntegrals> CASSCF::get_ci_integrals() {
 
     std::vector<size_t> rdocc = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
     std::vector<size_t> active = mo_space_info_->get_corr_abs_mo("ACTIVE");
-    std::shared_ptr<FCIIntegrals> fci_ints = std::make_shared<FCIIntegrals>(ints_, active, rdocc);
+    std::shared_ptr<ActiveSpaceIntegrals> fci_ints = std::make_shared<ActiveSpaceIntegrals>(ints_, active, rdocc);
     if (!(options_->get_bool("RESTRICTED_DOCC_JK"))) {
         fci_ints->set_active_integrals_and_restricted_docc();
     } else {
@@ -962,7 +962,7 @@ void CASSCF::set_up_sa_fci() {
     sa_fcisolver.set_integrals(ints_);
     std::vector<size_t> rdocc = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
     std::vector<size_t> active = mo_space_info_->get_corr_abs_mo("ACTIVE");
-    std::shared_ptr<FCIIntegrals> fci_ints = std::make_shared<FCIIntegrals>(ints_, active, rdocc);
+    std::shared_ptr<ActiveSpaceIntegrals> fci_ints = std::make_shared<ActiveSpaceIntegrals>(ints_, active, rdocc);
     auto na_array = mo_space_info_->get_corr_abs_mo("ACTIVE");
 
     ambit::Tensor active_aa =
@@ -1024,10 +1024,10 @@ void CASSCF::set_up_sa_fci() {
     //    }
 }
 void CASSCF::set_up_fcimo() {
-    // setup FCIIntegrals for FCI_MO
+    // setup ActiveSpaceIntegrals for FCI_MO
     std::vector<size_t> rdocc = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
     std::vector<size_t> active = mo_space_info_->get_corr_abs_mo("ACTIVE");
-    std::shared_ptr<FCIIntegrals> fci_ints = std::make_shared<FCIIntegrals>(ints_, active, rdocc);
+    std::shared_ptr<ActiveSpaceIntegrals> fci_ints = std::make_shared<ActiveSpaceIntegrals>(ints_, active, rdocc);
 
     if (!(options_->get_bool("RESTRICTED_DOCC_JK"))) {
         fci_ints->set_active_integrals_and_restricted_docc();

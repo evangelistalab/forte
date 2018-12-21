@@ -33,7 +33,7 @@
 #include <bitset>
 
 #include "integrals/integrals.h"
-#include "fci/fci_integrals.h"
+#include "integrals/active_space_integrals.h"
 #include "sparse_ci/determinant.h"
 
 

@@ -1745,7 +1745,8 @@ double DSRG_MRPT2::compute_energy_relaxed() {
         Erelax = aci.compute_energy();
     } else {
         // it is simpler here to call FCI instead of FCISolver
-        FCI fci(ints_->wfn(), foptions_->psi_options(), ints_, mo_space_info_, fci_ints);
+        FCI fci(ints_->wfn(), foptions_->psi_options(), ints_, mo_space_info_);
+        fci.set_active_space_integrals(fci_ints);
         fci.set_max_rdm_level(1);
         Erelax = fci.compute_energy();
     }

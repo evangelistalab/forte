@@ -32,7 +32,7 @@
 #include "psi4/libmints/pointgrp.h"
 #include "helpers/timer.h"
 #include "ci_rdm/ci_rdms.h"
-#include "fci/fci_integrals.h"
+#include "integrals/active_space_integrals.h"
 #include "forte_options.h"
 #include "sparse_ci/sparse_ci_solver.h"
 #include "sparse_ci/determinant.h"
@@ -91,7 +91,7 @@ CINO::CINO(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shared_p
     shallow_copy(ref_wfn);
     reference_wavefunction_ = ref_wfn;
 
-    fci_ints_ = std::make_shared<FCIIntegrals>(ints, mo_space_info_->get_corr_abs_mo("ACTIVE"),
+    fci_ints_ = std::make_shared<ActiveSpaceIntegrals>(ints, mo_space_info_->get_corr_abs_mo("ACTIVE"),
                                                mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
 
     auto active_mo = mo_space_info_->get_corr_abs_mo("ACTIVE");

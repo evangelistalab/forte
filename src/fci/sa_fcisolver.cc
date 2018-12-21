@@ -282,7 +282,7 @@ double SA_FCISolver::compute_energy() {
             outfile->Printf("\n\n You need to set fci_ints");
             throw psi::PSIEXCEPTION("Set FCI INTS");
         } else {
-            fcisolver.set_integral_pointer(fci_ints_);
+            fcisolver.set_active_space_integrals(fci_ints_);
         }
         fcisolver.set_nroot(nroot);
 

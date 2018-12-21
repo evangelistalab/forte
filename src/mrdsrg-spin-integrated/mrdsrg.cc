@@ -385,7 +385,8 @@ double MRDSRG::compute_energy_relaxed() {
             Erelax = aci.compute_energy();
 
         } else {
-            FCI fci(ints_->wfn(), foptions_->psi_options(), ints_, mo_space_info_, fci_ints);
+            FCI fci(ints_->wfn(), foptions_->psi_options(), ints_, mo_space_info_);
+            fci.set_active_space_integrals(fci_ints);
             fci.set_max_rdm_level(1);
             Erelax = fci.compute_energy();
         }
@@ -452,7 +453,8 @@ double MRDSRG::compute_energy_relaxed() {
                 Erelax = aci.compute_energy();
                 reference_ = aci.solver_get_reference();
             } else {
-                FCI fci(ints_->wfn(), foptions_->psi_options(), ints_, mo_space_info_, fci_ints);
+                FCI fci(ints_->wfn(), foptions_->psi_options(), ints_, mo_space_info_);
+                fci.set_active_space_integrals(fci_ints);
                 fci.set_max_rdm_level(max_rdm_level);
                 Erelax = fci.solver_compute_energy();
 

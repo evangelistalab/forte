@@ -32,7 +32,7 @@
 #include <vector>
 
 #include "psi4/libmints/matrix.h"
-#include "fci_integrals.h"
+#include "integrals/active_space_integrals.h"
 #include "integrals/integrals.h"
 #include "string_lists.h"
 
@@ -61,7 +61,7 @@ class FCIWfn {
     void copy_to(psi::SharedVector vec);
 
     /// Form the diagonal part of the Hamiltonian
-    void form_H_diagonal(std::shared_ptr<FCIIntegrals> fci_ints);
+    void form_H_diagonal(std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
 
     //    double approximate_spin(double )
 
@@ -97,10 +97,10 @@ class FCIWfn {
     //    std::vector<int> get_important(double alpha);
 
     // Operations on the wave function
-    void Hamiltonian(FCIWfn& result, std::shared_ptr<FCIIntegrals> fci_ints,
+    void Hamiltonian(FCIWfn& result, std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
                      RequiredLists required_lists);
 
-    double energy_from_rdms(std::shared_ptr<FCIIntegrals> fci_ints);
+    double energy_from_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
 
     void compute_rdms(int max_order = 2);
     void rdm_test();
@@ -184,7 +184,7 @@ class FCIWfn {
     void cleanup();
 
     /// Compute the energy of a determinant
-    double determinant_energy(bool*& Ia, bool*& Ib, int n, std::shared_ptr<FCIIntegrals> fci_ints);
+    double determinant_energy(bool*& Ia, bool*& Ib, int n, std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
 
     // ==> Class Private Functions <==
 
@@ -209,10 +209,10 @@ class FCIWfn {
     //    double tei_bbbb(size_t p, size_t q, size_t r, size_t s) const {return
     //    fci_ints_->tei_ab(tei_index(p,q,r,s));}
 
-    void H0(FCIWfn& result, std::shared_ptr<FCIIntegrals> fci_ints);
-    void H1(FCIWfn& result, std::shared_ptr<FCIIntegrals> fci_ints, bool alfa);
-    void H2_aabb(FCIWfn& result, std::shared_ptr<FCIIntegrals> fci_ints);
-    void H2_aaaa2(FCIWfn& result, std::shared_ptr<FCIIntegrals> fci_ints, bool alfa);
+    void H0(FCIWfn& result, std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
+    void H1(FCIWfn& result, std::shared_ptr<ActiveSpaceIntegrals> fci_ints, bool alfa);
+    void H2_aabb(FCIWfn& result, std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
+    void H2_aaaa2(FCIWfn& result, std::shared_ptr<ActiveSpaceIntegrals> fci_ints, bool alfa);
 
     void compute_1rdm(std::vector<double>& rdm, bool alfa);
     void compute_2rdm_aa(std::vector<double>& rdm, bool alfa);

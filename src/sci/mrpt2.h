@@ -38,7 +38,7 @@
 #include "base_classes/reference.h"
 #include "sparse_ci/determinant.h"
 #include "integrals/integrals.h"
-#include "fci/fci_integrals.h"
+#include "integrals/active_space_integrals.h"
 #include "sparse_ci/determinant_hashvector.h"
 #include "sparse_ci/operator.h"
 #include "sparse_ci/sparse_ci_solver.h"
@@ -63,7 +63,7 @@ class MRPT2 : public psi::Wavefunction {
     double compute_energy();
 
   private:
-    std::shared_ptr<FCIIntegrals> fci_ints_;
+    std::shared_ptr<ActiveSpaceIntegrals> fci_ints_;
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
     psi::SharedMatrix evecs_;
     psi::SharedVector evals_;

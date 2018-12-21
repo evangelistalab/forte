@@ -40,7 +40,7 @@
 #include "helpers/timer.h"
 #include "psi4/physconst.h"
 
-#include "fci/fci_integrals.h"
+#include "integrals/active_space_integrals.h"
 #include "sci/fci_mo.h"
 #include "orbital-helpers/semi_canonicalize.h"
 #include "master_mrdsrg.h"
@@ -644,7 +644,7 @@ std::string ACTIVE_DSRGPT2::transition_type(const int& n0, const int& irrep0, co
     return name_ss.str();
 }
 
-Vector4 ACTIVE_DSRGPT2::compute_td_ref_root(std::shared_ptr<FCIIntegrals> fci_ints,
+Vector4 ACTIVE_DSRGPT2::compute_td_ref_root(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
                                             const std::vector<Determinant>& p_space,
                                             psi::SharedMatrix evecs, const int& root0,
                                             const int& root1) {
@@ -998,7 +998,7 @@ void ACTIVE_DSRGPT2::transform_integrals(psi::SharedMatrix Ca0, psi::SharedMatri
     ambit::Tensor tei_active_ab = ints_->aptei_ab_block(idx_a, idx_a, idx_a, idx_a);
     ambit::Tensor tei_active_bb = ints_->aptei_bb_block(idx_a, idx_a, idx_a, idx_a);
     auto fci_ints =
-        std::make_shared<FCIIntegrals>(ints_, mo_space_info_->get_corr_abs_mo("ACTIVE"),
+        std::make_shared<ActiveSpaceIntegrals>(ints_, mo_space_info_->get_corr_abs_mo("ACTIVE"),
                                        mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
     fci_ints->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
     fci_ints->compute_restricted_one_body_operator();

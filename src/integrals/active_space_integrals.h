@@ -26,31 +26,29 @@
  * @END LICENSE
  */
 
-#ifndef _fci_integrals_
-#define _fci_integrals_
+#ifndef _active_space_integrals_
+#define _active_space_integrals_
 
 #include "integrals/integrals.h"
 #include "sparse_ci/determinant.h"
-#include "string_lists.h"
-
 
 class Dimension;
 
 namespace forte {
 
 /**
- * @brief The FCIIntegrals class stores integrals necessary for FCI calculations
+ * @brief The ActiveSpaceIntegrals class stores integrals necessary for FCI calculations
  */
-class FCIIntegrals {
+class ActiveSpaceIntegrals {
   public:
     // ==> Class Constructors <==
 
     /// Generating a contructor to create the active integrals
-    FCIIntegrals(std::shared_ptr<ForteIntegrals> ints, std::vector<size_t> active_mo,
+    ActiveSpaceIntegrals(std::shared_ptr<ForteIntegrals> ints, std::vector<size_t> active_mo,
                  std::vector<size_t> rdocc_mo);
 
     /// Constructor that needs to be deleted
-    FCIIntegrals(std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mospace_info);
+    ActiveSpaceIntegrals(std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mospace_info);
 
     // ==> Class Interface <==
 
@@ -62,12 +60,6 @@ class FCIIntegrals {
     double scalar_energy() const { return scalar_energy_; }
     /// Set scalar_energy();
     void set_scalar_energy(double scalar_energy) { scalar_energy_ = scalar_energy; }
-
-    //    /// Initialize a determinant
-    //    Determinant determinant(const Determinant::bit_t& bits);
-    //    Determinant determinant(const std::vector<int>& bits);
-    //    Determinant determinant(const std::vector<bool>& bits);
-    //    Determinant determinant();
 
     /// Compute a determinant's energy
     double energy(const Determinant& det) const;
@@ -214,4 +206,4 @@ class FCIIntegrals {
 } // namespace forte
 
 
-#endif // _fci_integrals_
+#endif // _active_space_integrals_

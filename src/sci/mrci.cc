@@ -58,7 +58,7 @@ void MRCI::startup() {
     auto correlated_mo = mo_space_info_->get_corr_abs_mo("GENERALIZED PARTICLE");
     std::sort(correlated_mo.begin(), correlated_mo.end());
 
-    fci_ints_ = std::make_shared<FCIIntegrals>(ints_, correlated_mo,
+    fci_ints_ = std::make_shared<ActiveSpaceIntegrals>(ints_, correlated_mo,
                                                mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
 
     // Set the integrals

@@ -99,7 +99,7 @@ void FCIWfn::compute_rdms(int max_order) {
     }
 }
 
-double FCIWfn::energy_from_rdms(std::shared_ptr<FCIIntegrals> fci_ints) {
+double FCIWfn::energy_from_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints) {
     // Compute the energy from the 1-RDM and 2-RDM
     size_t na = alfa_graph_->nones();
     size_t nb = beta_graph_->nones();

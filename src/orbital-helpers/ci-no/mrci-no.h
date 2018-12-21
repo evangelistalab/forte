@@ -72,7 +72,7 @@ class MRCINO : public psi::Wavefunction {
     /// The MOSpaceInfo object
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
     /// Pointer to FCI integrals
-    std::shared_ptr<FCIIntegrals> fci_ints_;
+    std::shared_ptr<ActiveSpaceIntegrals> fci_ints_;
     /// The number of correlated orbitals
     size_t corr_;
     /// The number of active orbitals

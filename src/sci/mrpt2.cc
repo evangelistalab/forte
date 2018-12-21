@@ -71,7 +71,7 @@ void MRPT2::startup() {
     // Define the correlated space
     auto active_mo = mo_space_info_->get_corr_abs_mo("ACTIVE");
 
-    fci_ints_ = std::make_shared<FCIIntegrals>(ints_, active_mo,
+    fci_ints_ = std::make_shared<ActiveSpaceIntegrals>(ints_, active_mo,
                                                mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
 
     // Set the integrals

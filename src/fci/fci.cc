@@ -45,13 +45,13 @@ FCI::FCI(psi::SharedWavefunction ref_wfn, psi::Options& options,
     startup();
 }
 
-FCI::FCI(psi::SharedWavefunction ref_wfn, psi::Options& options,
-         std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info,
-         std::shared_ptr<FCIIntegrals> fci_ints)
-    : ActiveSpaceSolver(StateInfo(ref_wfn), ints, mo_space_info), options_(options) {
-    startup();
-    fci_ints_ = fci_ints;
-}
+//FCI::FCI(psi::SharedWavefunction ref_wfn, psi::Options& options,
+//         std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info,
+//         std::shared_ptr<ActiveSpaceIntegrals> fci_ints)
+//    : ActiveSpaceSolver(StateInfo(ref_wfn), ints, mo_space_info), options_(options) {
+//    startup();
+//    fci_ints_ = fci_ints;
+//}
 
 FCI::FCI(StateInfo state, std::shared_ptr<ForteOptions> options,
          std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
@@ -172,10 +172,6 @@ double FCI::solver_compute_energy() {
     fcisolver_->set_collapse_per_root(options_.get_int("DL_COLLAPSE_PER_ROOT"));
     fcisolver_->set_subspace_per_root(options_.get_int("DL_SUBSPACE_PER_ROOT"));
     fcisolver_->set_print_no(print_no_);
-    if (fci_ints_ != nullptr) {
-        fcisolver_->use_user_integrals_and_restricted_docc(true);
-        fcisolver_->set_integral_pointer(fci_ints_);
-    }
 
     double fci_energy = fcisolver_->compute_energy();
 

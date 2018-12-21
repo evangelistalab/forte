@@ -119,8 +119,8 @@ PYBIND11_MODULE(forte, m) {
         m, "DynamicCorrelationSolver")
         .def("compute_energy", &DynamicCorrelationSolver::compute_energy);
 
-    // export FCIIntegrals
-    py::class_<FCIIntegrals, std::shared_ptr<FCIIntegrals>>(m, "FCIIntegrals")
+    // export ActiveSpaceIntegrals
+    py::class_<ActiveSpaceIntegrals, std::shared_ptr<ActiveSpaceIntegrals>>(m, "ActiveSpaceIntegrals")
         .def(py::init<std::shared_ptr<ForteIntegrals>, std::shared_ptr<MOSpaceInfo>>());
 
     // export FCISolver

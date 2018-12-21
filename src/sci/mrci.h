@@ -35,7 +35,7 @@
 #include "helpers/mo_space_info.h"
 #include "integrals/integrals.h"
 #include "sparse_ci/determinant_hashvector.h"
-#include "fci/fci_integrals.h"
+#include "integrals/active_space_integrals.h"
 #include "sparse_ci/sparse_ci_solver.h"
 
 
@@ -57,7 +57,7 @@ class MRCI : public psi::Wavefunction {
   private:
     psi::SharedWavefunction ref_wfn_;
     
-    std::shared_ptr<FCIIntegrals> fci_ints_;
+    std::shared_ptr<ActiveSpaceIntegrals> fci_ints_;
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
 
     void startup();

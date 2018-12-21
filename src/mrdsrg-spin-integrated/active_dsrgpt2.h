@@ -158,7 +158,7 @@ class ACTIVE_DSRGPT2 {
     std::vector<std::vector<size_t>> virtIdxC1_;
 
     /// Compute VCIS/VCISD transition dipole from root0 -> root1
-    Vector4 compute_td_ref_root(std::shared_ptr<FCIIntegrals> fci_ints,
+    Vector4 compute_td_ref_root(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
                                 const std::vector<Determinant>& p_space, psi::SharedMatrix evecs,
                                 const int& root0, const int& root1);
     /// Compute VCIS/VCISD oscillator strength

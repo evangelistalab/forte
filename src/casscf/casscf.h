@@ -39,7 +39,7 @@
 #include "helpers/mo_space_info.h"
 #include "helpers/blockedtensorfactory.h"
 #include "fci/fci_vector.h"
-#include "fci/fci_integrals.h"
+#include "integrals/active_space_integrals.h"
 #include "orbital-helpers/semi_canonicalize.h"
 
 
@@ -182,7 +182,7 @@ class CASSCF {
     int print_;
     /// The CISolutions per iteration
     std::vector<std::vector<std::shared_ptr<FCIWfn>>> CISolutions_;
-    std::shared_ptr<FCIIntegrals> get_ci_integrals();
+    std::shared_ptr<ActiveSpaceIntegrals> get_ci_integrals();
 };
 }
 

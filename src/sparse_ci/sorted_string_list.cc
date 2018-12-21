@@ -37,7 +37,7 @@ namespace forte {
 SortedStringList_UI64::SortedStringList_UI64() {}
 
 SortedStringList_UI64::SortedStringList_UI64(const DeterminantHashVec& space,
-                                             std::shared_ptr<FCIIntegrals> fci_ints,
+                                             std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
                                              DetSpinType sorted_string_spin) {
     nmo_ = fci_ints->nmo();
     // Copy and sort the determinants

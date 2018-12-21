@@ -136,9 +136,6 @@ class FCISolver : public ActiveSpaceSolver {
     void use_user_integrals_and_restricted_docc(bool user_provide_integrals) {
         provide_integrals_and_restricted_docc_ = user_provide_integrals;
     }
-    /// If you want to use your own integrals need to set FCIIntegrals (This is
-    /// normally not set)
-    void set_integral_pointer(std::shared_ptr<FCIIntegrals> fci_ints) { fci_ints_ = fci_ints; }
 
     /// When set to true before calling compute_energy(), it will test the
     /// reduce density matrices.  Watch out, this function is very slow!
@@ -174,8 +171,6 @@ class FCISolver : public ActiveSpaceSolver {
 
     /// The molecular integrals
     std::shared_ptr<ForteIntegrals> ints_;
-
-    std::shared_ptr<FCIIntegrals> fci_ints_;
 
     /// The FCI energy
     double energy_;
@@ -231,7 +226,7 @@ class FCISolver : public ActiveSpaceSolver {
 
     /// Initial CI wave function guess
     std::vector<std::pair<int, std::vector<std::tuple<size_t, size_t, size_t, double>>>>
-    initial_guess(FCIWfn& diag, size_t n, std::shared_ptr<FCIIntegrals> fci_ints);
+    initial_guess(FCIWfn& diag, size_t n, std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
     /// The options object
     ForteOptions options_;
 };

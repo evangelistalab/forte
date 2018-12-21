@@ -27,19 +27,17 @@
  */
 
 #include "helpers/mo_space_info.h"
-
-#include "fci_vector.h"
-
+#include "integrals/active_space_integrals.h"
 
 namespace forte {
 
-FCIIntegrals::FCIIntegrals(std::shared_ptr<ForteIntegrals> ints, std::vector<size_t> active_mo,
+ActiveSpaceIntegrals::ActiveSpaceIntegrals(std::shared_ptr<ForteIntegrals> ints, std::vector<size_t> active_mo,
                            std::vector<size_t> restricted_docc_mo)
     : ints_(ints), active_mo_(active_mo), restricted_docc_mo_(restricted_docc_mo) {
     nmo_ = active_mo_.size();
     startup();
 }
-void FCIIntegrals::RestrictedOneBodyOperator(std::vector<double>& oei_a,
+void ActiveSpaceIntegrals::RestrictedOneBodyOperator(std::vector<double>& oei_a,
                                              std::vector<double>& oei_b) {
 
     std::vector<double> tei_rdocc_aa;
@@ -107,7 +105,7 @@ void FCIIntegrals::RestrictedOneBodyOperator(std::vector<double>& oei_a,
     }
 }
 
-FCIIntegrals::FCIIntegrals(std::shared_ptr<ForteIntegrals> ints,
+ActiveSpaceIntegrals::ActiveSpaceIntegrals(std::shared_ptr<ForteIntegrals> ints,
                            std::shared_ptr<MOSpaceInfo> mospace_info)
     : ints_(ints) {
     std::vector<size_t> cmo_to_mo;
@@ -116,7 +114,8 @@ FCIIntegrals::FCIIntegrals(std::shared_ptr<ForteIntegrals> ints,
     nmo_ = mospace_info->size("ACTIVE");
     cmo_to_mo = mospace_info->get_corr_abs_mo("ACTIVE");
     fomo_to_mo = mospace_info->get_corr_abs_mo("RESTRICTED_DOCC");
-    std::vector<size_t> ncmo_to_mo = mospace_info->get_corr_abs_mo("GENERALIZED HOLE");
+
+    // TODO: rewrite using other constructor above
 
     nmo2_ = nmo_ * nmo_;
     nmo3_ = nmo_ * nmo_ * nmo_;
@@ -148,7 +147,7 @@ FCIIntegrals::FCIIntegrals(std::shared_ptr<ForteIntegrals> ints,
 
     RestrictedOneBodyOperator(oei_a_, oei_b_);
 }
-void FCIIntegrals::startup() {
+void ActiveSpaceIntegrals::startup() {
 
     nmo2_ = nmo_ * nmo_;
     nmo3_ = nmo_ * nmo_ * nmo_;
@@ -164,20 +163,20 @@ void FCIIntegrals::startup() {
     diag_tei_bb_.resize(nmo2_);
     frozen_core_energy_ = ints_->frozen_core_energy();
 }
-void FCIIntegrals::set_active_integrals(const ambit::Tensor& act_aa, const ambit::Tensor& act_ab,
+void ActiveSpaceIntegrals::set_active_integrals(const ambit::Tensor& act_aa, const ambit::Tensor& act_ab,
                                         const ambit::Tensor& act_bb) {
     tei_aa_ = act_aa.data();
     tei_ab_ = act_ab.data();
     tei_bb_ = act_bb.data();
 }
-void FCIIntegrals::compute_restricted_one_body_operator() {
+void ActiveSpaceIntegrals::compute_restricted_one_body_operator() {
     nmo2_ = nmo_ * nmo_;
     oei_a_.resize(nmo2_);
     oei_b_.resize(nmo2_);
     RestrictedOneBodyOperator(oei_a_, oei_b_);
 }
 
-void FCIIntegrals::set_active_integrals_and_restricted_docc() {
+void ActiveSpaceIntegrals::set_active_integrals_and_restricted_docc() {
     ambit::Tensor act_aa = ints_->aptei_aa_block(active_mo_, active_mo_, active_mo_, active_mo_);
     ambit::Tensor act_ab = ints_->aptei_ab_block(active_mo_, active_mo_, active_mo_, active_mo_);
     ambit::Tensor act_bb = ints_->aptei_bb_block(active_mo_, active_mo_, active_mo_, active_mo_);
@@ -188,7 +187,7 @@ void FCIIntegrals::set_active_integrals_and_restricted_docc() {
     RestrictedOneBodyOperator(oei_a_, oei_b_);
 }
 
-double FCIIntegrals::energy(const Determinant& det) const {
+double ActiveSpaceIntegrals::energy(const Determinant& det) const {
     double energy = frozen_core_energy_;
 
 #ifdef SMALL_BITSET
@@ -258,7 +257,7 @@ double FCIIntegrals::energy(const Determinant& det) const {
     return energy;
 }
 
-double FCIIntegrals::slater_rules(const Determinant& lhs, const Determinant& rhs) const {
+double ActiveSpaceIntegrals::slater_rules(const Determinant& lhs, const Determinant& rhs) const {
     int nadiff = 0;
     int nbdiff = 0;
     // Count how many differences in mos are there
@@ -421,7 +420,7 @@ double FCIIntegrals::slater_rules(const Determinant& lhs, const Determinant& rhs
     return (matrix_element);
 }
 
-double FCIIntegrals::slater_rules_single_alpha(const Determinant& lhs,
+double ActiveSpaceIntegrals::slater_rules_single_alpha(const Determinant& lhs,
                                                const Determinant& rhs) const {
     // Slater rule 2 PhiI = j_a^+ i_a PhiJ
     size_t i = 0;
@@ -446,7 +445,7 @@ double FCIIntegrals::slater_rules_single_alpha(const Determinant& lhs,
     return (sign * matrix_element);
 }
 
-double FCIIntegrals::slater_rules_single_beta(const Determinant& lhs,
+double ActiveSpaceIntegrals::slater_rules_single_beta(const Determinant& lhs,
                                               const Determinant& rhs) const {
     // Slater rule 2 PhiI = j_b^+ i_b PhiJ
     size_t i = 0;
@@ -472,7 +471,7 @@ double FCIIntegrals::slater_rules_single_beta(const Determinant& lhs,
     return (sign * matrix_element);
 }
 
-double FCIIntegrals::slater_rules_double_alpha_alpha(const Determinant& lhs,
+double ActiveSpaceIntegrals::slater_rules_double_alpha_alpha(const Determinant& lhs,
                                                      const Determinant& rhs) const {
     // Slater rule 3 PhiI = k_a^+ l_a^+ j_a i_a PhiJ
     // Diagonal contribution
@@ -499,7 +498,7 @@ double FCIIntegrals::slater_rules_double_alpha_alpha(const Determinant& lhs,
     return (sign * tei_aa_[i * nmo3_ + j * nmo2_ + k * nmo_ + l]);
 }
 
-double FCIIntegrals::slater_rules_double_beta_beta(const Determinant& lhs,
+double ActiveSpaceIntegrals::slater_rules_double_beta_beta(const Determinant& lhs,
                                                    const Determinant& rhs) const {
     // Slater rule 3 PhiI = k_a^+ l_a^+ j_a i_a PhiJ
     // Diagonal contribution
@@ -527,7 +526,7 @@ double FCIIntegrals::slater_rules_double_beta_beta(const Determinant& lhs,
     return sign * tei_bb_[i * nmo3_ + j * nmo2_ + k * nmo_ + l];
 }
 
-double FCIIntegrals::slater_rules_double_alpha_beta(const Determinant& lhs,
+double ActiveSpaceIntegrals::slater_rules_double_alpha_beta(const Determinant& lhs,
                                                     const Determinant& rhs) const {
     // Slater rule 3 PhiI = j_a^+ i_a PhiJ
     int i, j, k, l;
@@ -559,7 +558,7 @@ double FCIIntegrals::slater_rules_double_alpha_beta(const Determinant& lhs,
     return sign * tei_ab_[i * nmo3_ + j * nmo2_ + k * nmo_ + l];
 }
 
-double FCIIntegrals::slater_rules_double_alpha_beta_pre(const Determinant& lhs,
+double ActiveSpaceIntegrals::slater_rules_double_alpha_beta_pre(const Determinant& lhs,
                                                         const Determinant& rhs, int i,
                                                         int k) const {
     // Slater rule 3 PhiI = j_a^+ i_a PhiJ
@@ -579,7 +578,7 @@ double FCIIntegrals::slater_rules_double_alpha_beta_pre(const Determinant& lhs,
     return lhs.slater_sign_bb(j, l) * tei_ab_[i * nmo3_ + j * nmo2_ + k * nmo_ + l];
 }
 
-double FCIIntegrals::slater_rules_single_alpha(const Determinant& det, int i, int a) const {
+double ActiveSpaceIntegrals::slater_rules_single_alpha(const Determinant& det, int i, int a) const {
     // Slater rule 2 PhiI = j_a^+ i_a PhiJ
     double sign = det.slater_sign_aa(i, a);
     double matrix_element = oei_a_[i * nmo_ + a];
@@ -594,7 +593,7 @@ double FCIIntegrals::slater_rules_single_alpha(const Determinant& det, int i, in
     return sign * matrix_element;
 }
 
-double FCIIntegrals::slater_rules_single_alpha_abs(const Determinant& det, int i, int a) const {
+double ActiveSpaceIntegrals::slater_rules_single_alpha_abs(const Determinant& det, int i, int a) const {
     // Slater rule 2 PhiI = j_a^+ i_a PhiJ
     double matrix_element = oei_a_[i * nmo_ + a];
     for (size_t p = 0; p < nmo_; ++p) {
@@ -608,7 +607,7 @@ double FCIIntegrals::slater_rules_single_alpha_abs(const Determinant& det, int i
     return matrix_element;
 }
 
-double FCIIntegrals::slater_rules_single_beta(const Determinant& det, int i, int a) const {
+double ActiveSpaceIntegrals::slater_rules_single_beta(const Determinant& det, int i, int a) const {
     // Slater rule 2 PhiI = j_a^+ i_a PhiJ
     double sign = det.slater_sign_bb(i, a);
     double matrix_element = oei_b_[i * nmo_ + a];
@@ -623,7 +622,7 @@ double FCIIntegrals::slater_rules_single_beta(const Determinant& det, int i, int
     return sign * matrix_element;
 }
 
-double FCIIntegrals::slater_rules_single_beta_abs(const Determinant& det, int i, int a) const {
+double ActiveSpaceIntegrals::slater_rules_single_beta_abs(const Determinant& det, int i, int a) const {
     // Slater rule 2 PhiI = j_a^+ i_a PhiJ
     double matrix_element = oei_b_[i * nmo_ + a];
     for (size_t p = 0; p < nmo_; ++p) {

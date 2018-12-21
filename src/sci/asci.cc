@@ -65,7 +65,7 @@ ASCI::ASCI(std::shared_ptr<StateInfo> state, std::shared_ptr<SCFInfo> scf_info,
 
 ASCI::~ASCI() {}
 
-void ASCI::set_fci_ints(std::shared_ptr<FCIIntegrals> fci_ints) {
+void ASCI::set_fci_ints(std::shared_ptr<ActiveSpaceIntegrals> fci_ints) {
     fci_ints_ = fci_ints;
     nuclear_repulsion_energy_ = ints_->nuclear_repulsion_energy();
     set_ints_ = true;
@@ -75,7 +75,7 @@ void ASCI::set_asci_ints(std::shared_ptr<ForteIntegrals> ints) {
     timer int_timer("ASCI:Form Integrals");
     ints_ = ints;
 
-    fci_ints_ = std::make_shared<FCIIntegrals>(ints, mo_space_info_->get_corr_abs_mo("ACTIVE"),
+    fci_ints_ = std::make_shared<ActiveSpaceIntegrals>(ints, mo_space_info_->get_corr_abs_mo("ACTIVE"),
                                                mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
 
     auto active_mo = mo_space_info_->get_corr_abs_mo("ACTIVE");
@@ -649,7 +649,7 @@ void ASCI::print_nos() {
     }
 }
 
-void ASCI::compute_rdms(std::shared_ptr<FCIIntegrals> fci_ints, DeterminantHashVec& dets,
+void ASCI::compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints, DeterminantHashVec& dets,
                         WFNOperator& op, psi::SharedMatrix& PQ_evecs, int root1, int root2) {
 
     ordm_a_.clear();

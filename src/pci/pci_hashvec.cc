@@ -135,11 +135,11 @@ ProjectorCI_HashVec::ProjectorCI_HashVec(std::shared_ptr<StateInfo> state, std::
     startup();
 }
 
-std::shared_ptr<FCIIntegrals> ProjectorCI_HashVec::fci_ints_ = nullptr;
+std::shared_ptr<ActiveSpaceIntegrals> ProjectorCI_HashVec::fci_ints_ = nullptr;
 
 void ProjectorCI_HashVec::startup() {
     // Connect the integrals to the determinant class
-    fci_ints_ = std::make_shared<FCIIntegrals>(ints_, mo_space_info_->get_corr_abs_mo("ACTIVE"),
+    fci_ints_ = std::make_shared<ActiveSpaceIntegrals>(ints_, mo_space_info_->get_corr_abs_mo("ACTIVE"),
                                                mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
 
     auto active_mo = mo_space_info_->get_corr_abs_mo("ACTIVE");

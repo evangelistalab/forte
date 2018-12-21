@@ -39,7 +39,7 @@ namespace forte {
 
 CI_Reference::CI_Reference(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
                            std::shared_ptr<MOSpaceInfo> mo_space_info,
-                           std::shared_ptr<FCIIntegrals> fci_ints, int multiplicity,
+                           std::shared_ptr<ActiveSpaceIntegrals> fci_ints, int multiplicity,
                            double twice_ms, int symmetry)
     : scf_info_(scf_info), mo_space_info_(mo_space_info), fci_ints_(fci_ints) {
     // Get the mutlilicity and twice M_s

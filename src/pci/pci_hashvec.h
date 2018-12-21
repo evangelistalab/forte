@@ -104,7 +104,7 @@ class ProjectorCI_HashVec {
     /// The molecular integrals required by Explorer
     std::shared_ptr<ForteIntegrals> ints_;
     /// Store all the integrals locally
-    static std::shared_ptr<FCIIntegrals> fci_ints_;
+    static std::shared_ptr<ActiveSpaceIntegrals> fci_ints_;
     /// The options
     std::shared_ptr<ForteOptions> options_;
     /// SCF information

@@ -66,19 +66,7 @@ class FCI : public ActiveSpaceSolver {
      * @param options The main options object
      * @param ints A pointer to an allocated integral object
      * @param mo_space_info A pointer to the MOSpaceInfo object
-     * @param fci_ints A pointer to FCIIntegrals
-     */
-    FCI(psi::SharedWavefunction ref_wfn, psi::Options& options,
-        std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info,
-        std::shared_ptr<FCIIntegrals> fci_ints);
-
-    /**
-     * Constructor
-     * @param ref_wfn The reference wavefunction object
-     * @param options The main options object
-     * @param ints A pointer to an allocated integral object
-     * @param mo_space_info A pointer to the MOSpaceInfo object
-     * @param fci_ints A pointer to FCIIntegrals
+     * @param fci_ints A pointer to ActiveSpaceIntegrals
      */
     FCI(StateInfo state, std::shared_ptr<ForteOptions> options,
         std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
@@ -88,9 +76,9 @@ class FCI : public ActiveSpaceSolver {
     // ==> Class Interface <==
 
     /// Compute the energy
-    virtual double solver_compute_energy();
+    virtual double solver_compute_energy() override;
     /// Return a reference object
-    Reference solver_get_reference();
+    virtual Reference solver_get_reference() override;
     /// Set the print level
     void set_print(int value) { print_ = value; }
     /// Set the maximum RDM computed (0 - 3)
@@ -105,8 +93,6 @@ class FCI : public ActiveSpaceSolver {
   private:
     // ==> Class data <==
 
-    /// A pointer of FCIIntegral
-    std::shared_ptr<FCIIntegrals> fci_ints_;
     /// A pointer to the FCISolver object
     std::unique_ptr<FCISolver> fcisolver_;
     /// Print level

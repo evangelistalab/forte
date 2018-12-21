@@ -38,6 +38,7 @@
 #include "psi4/libmints/molecule.h"
 #include "psi4/libqt/qt.h"
 
+#include "helpers/timer.h"
 #include "helpers/mo_space_info.h"
 #include "boost/format.hpp"
 #include "mrdsrg.h"

@@ -45,7 +45,7 @@
 #include "base_classes/active_space_solver.h"
 #include "base_classes/reference.h"
 #include "sparse_ci/sparse_ci_solver.h"
-#include "fci/fci_integrals.h"
+#include "integrals/active_space_integrals.h"
 #include "sparse_ci/determinant.h"
 #include "mrdsrg-spin-integrated/active_dsrgpt2.h"
 
@@ -88,7 +88,7 @@ class FCI_MO : public ActiveSpaceSolver {
      */
     FCI_MO(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
            std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info,
-           std::shared_ptr<FCIIntegrals> fci_ints);
+           std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
 
     /// Destructor
     ~FCI_MO();
@@ -156,7 +156,7 @@ class FCI_MO : public ActiveSpaceSolver {
     void set_safe_to_read_density_files(bool safe) { safe_to_read_density_files_ = safe; }
 
     /// Set fci_int_ pointer
-    void set_fci_int(std::shared_ptr<FCIIntegrals> fci_ints) { fci_ints_ = fci_ints; }
+    void set_fci_int(std::shared_ptr<ActiveSpaceIntegrals> fci_ints) { fci_ints_ = fci_ints; }
 
     /// Set multiplicity
     void set_multiplicity(int multiplicity) { multi_ = multiplicity; }
@@ -196,7 +196,7 @@ class FCI_MO : public ActiveSpaceSolver {
     void set_eigens(const std::vector<std::vector<std::pair<psi::SharedVector, double>>>& eigens);
 
     /// Return fci_int_ pointer
-    std::shared_ptr<FCIIntegrals> fci_ints() { return fci_ints_; }
+    std::shared_ptr<ActiveSpaceIntegrals> fci_ints() { return fci_ints_; }
 
     /// Return the vector of determinants
     vecdet p_space() { return determinant_; }
@@ -248,7 +248,7 @@ class FCI_MO : public ActiveSpaceSolver {
     /// Integrals
     std::shared_ptr<ForteIntegrals> integral_;
     std::string int_type_;
-    std::shared_ptr<FCIIntegrals> fci_ints_;
+    std::shared_ptr<ActiveSpaceIntegrals> fci_ints_;
 
     /// Reference Type
     std::string ref_type_;

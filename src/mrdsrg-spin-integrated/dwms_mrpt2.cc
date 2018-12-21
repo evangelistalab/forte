@@ -425,7 +425,7 @@ std::shared_ptr<FCI_MO> DWMS_DSRGPT2::precompute_energy() {
     return fci_mo;
 }
 
-std::shared_ptr<FCIIntegrals> DWMS_DSRGPT2::compute_dsrg_pt(std::shared_ptr<MASTER_DSRG>& dsrg_pt,
+std::shared_ptr<ActiveSpaceIntegrals> DWMS_DSRGPT2::compute_dsrg_pt(std::shared_ptr<MASTER_DSRG>& dsrg_pt,
                                                             Reference& reference,
                                                             std::string level) {
     // use semicanonical orbitals only for THREE-DSRG-MRPT2
@@ -457,7 +457,7 @@ std::shared_ptr<FCIIntegrals> DWMS_DSRGPT2::compute_dsrg_pt(std::shared_ptr<MAST
     return fci_ints;
 }
 
-std::shared_ptr<FCIIntegrals>
+std::shared_ptr<ActiveSpaceIntegrals>
 DWMS_DSRGPT2::compute_macro_dsrg_pt(std::shared_ptr<MASTER_DSRG>& dsrg_pt,
                                     std::shared_ptr<FCI_MO> fci_mo, int entry, int root) {
     auto sa_info = fci_mo->sa_info();
@@ -562,7 +562,7 @@ void DWMS_DSRGPT2::compute_dwsa_energy(std::shared_ptr<FCI_MO>& fci_mo) {
     auto eigens = fci_mo->eigens();
 
     std::shared_ptr<MASTER_DSRG> dsrg_pt;
-    std::shared_ptr<FCIIntegrals> fci_ints;
+    std::shared_ptr<ActiveSpaceIntegrals> fci_ints;
 
     // if zeta == 0, just transform Hamiltonian once
     if (zeta_ == 0.0) {
@@ -751,7 +751,7 @@ void DWMS_DSRGPT2::compute_dwms_energy(std::shared_ptr<FCI_MO>& fci_mo) {
     Ept_.resize(nentry);
 
     std::shared_ptr<MASTER_DSRG> dsrg_pt2;
-    std::shared_ptr<FCIIntegrals> fci_ints;
+    std::shared_ptr<ActiveSpaceIntegrals> fci_ints;
 
     // if zeta == 0, just transform Hamiltonian once
     if (zeta_ == 0.0) {

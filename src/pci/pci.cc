@@ -207,11 +207,11 @@ ProjectorCI::ProjectorCI(std::shared_ptr<StateInfo> state, std::shared_ptr<forte
     startup();
 }
 
-std::shared_ptr<FCIIntegrals> ProjectorCI::fci_ints_ = nullptr;
+std::shared_ptr<ActiveSpaceIntegrals> ProjectorCI::fci_ints_ = nullptr;
 
 void ProjectorCI::startup() {
     // Connect the integrals to the determinant class
-    fci_ints_ = std::make_shared<FCIIntegrals>(ints_, mo_space_info_->get_corr_abs_mo("ACTIVE"),
+    fci_ints_ = std::make_shared<ActiveSpaceIntegrals>(ints_, mo_space_info_->get_corr_abs_mo("ACTIVE"),
                                                mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
 
     auto active_mo = mo_space_info_->get_corr_abs_mo("ACTIVE");

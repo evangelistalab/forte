@@ -226,7 +226,7 @@ AdaptiveCI::AdaptiveCI(std::shared_ptr<StateInfo> state, std::shared_ptr<SCFInfo
 //}
 AdaptiveCI::~AdaptiveCI() {}
 
-void AdaptiveCI::set_fci_ints(std::shared_ptr<FCIIntegrals> fci_ints) {
+void AdaptiveCI::set_fci_ints(std::shared_ptr<ActiveSpaceIntegrals> fci_ints) {
     fci_ints_ = fci_ints;
     nuclear_repulsion_energy_ = ints_->nuclear_repulsion_energy();
     set_ints_ = true;
@@ -236,7 +236,7 @@ void AdaptiveCI::set_aci_ints(std::shared_ptr<ForteIntegrals> ints) {
     timer int_timer("ACI:Form Integrals");
     ints_ = ints;
 
-    fci_ints_ = std::make_shared<FCIIntegrals>(ints, mo_space_info_->get_corr_abs_mo("ACTIVE"),
+    fci_ints_ = std::make_shared<ActiveSpaceIntegrals>(ints, mo_space_info_->get_corr_abs_mo("ACTIVE"),
                                                mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
 
     auto active_mo = mo_space_info_->get_corr_abs_mo("ACTIVE");
@@ -2200,7 +2200,7 @@ AdaptiveCI::dl_initial_guess(std::vector<Determinant>& old_dets, std::vector<Det
     return guess;
 }
 
-void AdaptiveCI::compute_rdms(std::shared_ptr<FCIIntegrals> fci_ints, DeterminantHashVec& dets,
+void AdaptiveCI::compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints, DeterminantHashVec& dets,
                               WFNOperator& op, psi::SharedMatrix& PQ_evecs, int root1, int root2) {
 
     ordm_a_.clear();
@@ -2920,7 +2920,7 @@ void AdaptiveCI::add_external_excitations(DeterminantHashVec& ref) {
     outfile->Printf("\n  Building integrals");
     std::vector<size_t> empty(0);
     auto fci_ints =
-        std::make_shared<FCIIntegrals>(ints_, mo_space_info_->get_corr_abs_mo("CORRELATED"), empty);
+        std::make_shared<ActiveSpaceIntegrals>(ints_, mo_space_info_->get_corr_abs_mo("CORRELATED"), empty);
 
     auto active_mo = mo_space_info_->get_corr_abs_mo("CORRELATED");
 

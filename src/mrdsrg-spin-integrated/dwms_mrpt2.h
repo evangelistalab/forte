@@ -99,11 +99,11 @@ class DWMS_DSRGPT2 {
     std::shared_ptr<FCI_MO> precompute_energy();
 
     /// perform DSRG-PT2/3 computation and return the dressed integrals within active space
-    std::shared_ptr<FCIIntegrals> compute_dsrg_pt(std::shared_ptr<MASTER_DSRG>& dsrg_pt,
+    std::shared_ptr<ActiveSpaceIntegrals> compute_dsrg_pt(std::shared_ptr<MASTER_DSRG>& dsrg_pt,
                                                   Reference& reference, std::string level = "PT2");
 
     /// perform a macro DSRG-PT2/3 computation
-    std::shared_ptr<FCIIntegrals> compute_macro_dsrg_pt(std::shared_ptr<MASTER_DSRG>& dsrg_pt,
+    std::shared_ptr<ActiveSpaceIntegrals> compute_macro_dsrg_pt(std::shared_ptr<MASTER_DSRG>& dsrg_pt,
                                                         std::shared_ptr<FCI_MO> fci_mo, int entry,
                                                         int root);
 
@@ -153,8 +153,8 @@ class DWMS_DSRGPT2 {
     /// if using factorized integrals
     bool eri_df_;
 
-    /// a shared_ptr of FCIIntegrals (mostly used in CI_RDMS)
-    std::shared_ptr<FCIIntegrals> fci_ints_;
+    /// a shared_ptr of ActiveSpaceIntegrals (mostly used in CI_RDMS)
+    std::shared_ptr<ActiveSpaceIntegrals> fci_ints_;
 
     /// energy of original CASCI
     std::vector<std::vector<double>> Eref_0_;

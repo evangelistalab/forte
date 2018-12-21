@@ -109,7 +109,6 @@ src/orbital-helpers/ci-no/ci-no.cc
 src/orbital-helpers/ci-no/mrci-no.cc
 src/fci/binary_graph.cc
 src/fci/fci.cc
-src/fci/fci_integrals.cc
 src/fci/sa_fcisolver.cc
 src/fci/fci_solver.cc
 src/fci/fci_vector.cc
@@ -134,6 +133,7 @@ src/integrals/integrals.cc
 src/integrals/own_integrals.cc
 src/integrals/parallel_ccvv_algorithms.cc
 src/integrals/paralleldfmo.cc
+src/integrals/active_space_integrals.cc
 src/mrdsrg-helper/dsrg_source.cc
 src/mrdsrg-helper/dsrg_time.cc
 src/mrdsrg-helper/run_dsrg.cc

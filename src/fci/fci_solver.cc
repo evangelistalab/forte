@@ -139,25 +139,25 @@ double FCISolver::compute_energy() {
 
     double nuclear_repulsion_energy =
         psi::Process::environment.molecule()->nuclear_repulsion_energy({{0, 0, 0}});
-    std::shared_ptr<FCIIntegrals> fci_ints;
-    if (!provide_integrals_and_restricted_docc_) {
-        fci_ints = std::make_shared<FCIIntegrals>(ints_, active_mo_, core_mo_);
-        ambit::Tensor tei_active_aa =
-            ints_->aptei_aa_block(active_mo_, active_mo_, active_mo_, active_mo_);
-        ambit::Tensor tei_active_ab =
-            ints_->aptei_ab_block(active_mo_, active_mo_, active_mo_, active_mo_);
-        ambit::Tensor tei_active_bb =
-            ints_->aptei_bb_block(active_mo_, active_mo_, active_mo_, active_mo_);
-        fci_ints->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
-        fci_ints->compute_restricted_one_body_operator();
-    } else {
-        if (fci_ints_ == nullptr) {
-            outfile->Printf("\n You said you would specify integrals and restricted_docc");
-            throw psi::PSIEXCEPTION("Need to set the fci_ints in your code");
-        } else {
-            fci_ints = fci_ints_;
-        }
-    }
+//    std::shared_ptr<ActiveSpaceIntegrals> fci_ints;
+//    if (!provide_integrals_and_restricted_docc_) {
+//        fci_ints = std::make_shared<ActiveSpaceIntegrals>(ints_, active_mo_, core_mo_);
+//        ambit::Tensor tei_active_aa =
+//            ints_->aptei_aa_block(active_mo_, active_mo_, active_mo_, active_mo_);
+//        ambit::Tensor tei_active_ab =
+//            ints_->aptei_ab_block(active_mo_, active_mo_, active_mo_, active_mo_);
+//        ambit::Tensor tei_active_bb =
+//            ints_->aptei_bb_block(active_mo_, active_mo_, active_mo_, active_mo_);
+//        fci_ints->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
+//        fci_ints->compute_restricted_one_body_operator();
+//    } else {
+//        if (fci_ints_ == nullptr) {
+//            outfile->Printf("\n You said you would specify integrals and restricted_docc");
+//            throw psi::PSIEXCEPTION("Need to set the fci_ints in your code");
+//        } else {
+//            fci_ints = fci_ints_;
+//        }
+//    }
 
     FCIWfn::allocate_temp_space(lists_, print_);
 
@@ -167,7 +167,7 @@ double FCISolver::compute_energy() {
     C_->set_print(print_);
 
     size_t fci_size = Hdiag.size();
-    Hdiag.form_H_diagonal(fci_ints);
+    Hdiag.form_H_diagonal(as_ints_);
 
     psi::SharedVector b(new Vector("b", fci_size));
     psi::SharedVector sigma(new Vector("sigma", fci_size));
@@ -182,7 +182,7 @@ double FCISolver::compute_energy() {
     dls.startup(sigma);
 
     size_t guess_size = dls.collapse_size();
-    auto guess = initial_guess(Hdiag, guess_size, fci_ints);
+    auto guess = initial_guess(Hdiag, guess_size, as_ints_);
 
     std::vector<int> guess_list;
     for (size_t g = 0; g < guess.size(); ++g) {
@@ -242,7 +242,7 @@ double FCISolver::compute_energy() {
         do {
             dls.get_b(b);
             C_->copy(b);
-            C_->Hamiltonian(HC, fci_ints, twoSubstituitionVVOO);
+            C_->Hamiltonian(HC, as_ints_, twoSubstituitionVVOO);
             HC.copy_to(sigma);
             add_sigma = dls.add_sigma(sigma);
         } while (add_sigma);
@@ -344,7 +344,7 @@ double FCISolver::compute_energy() {
     //    C_->compute_rdms(max_rdm_level_);
 
     if (print_ > 1 && max_rdm_level_ > 1) {
-        C_->energy_from_rdms(fci_ints);
+        C_->energy_from_rdms(as_ints_);
     }
 
     //    // Optionally, test the RDMs
@@ -394,7 +394,7 @@ void FCISolver::compute_rdms_root(int root) {
 }
 
 std::vector<std::pair<int, std::vector<std::tuple<size_t, size_t, size_t, double>>>>
-FCISolver::initial_guess(FCIWfn& diag, size_t n, std::shared_ptr<FCIIntegrals> fci_ints) {
+FCISolver::initial_guess(FCIWfn& diag, size_t n, std::shared_ptr<ActiveSpaceIntegrals> fci_ints) {
     local_timer t;
 
     double nuclear_repulsion_energy =

@@ -29,7 +29,7 @@
 #ifndef _sparse_ci_h_
 #define _sparse_ci_h_
 
-#include "fci/fci_integrals.h"
+#include "integrals/active_space_integrals.h"
 #include "sparse_ci/determinant_hashvector.h"
 #include "operator.h"
 #include "sparse_ci/operator.h"
@@ -69,7 +69,7 @@ class SparseCISolver {
      * singlet, 2 = doublet, ...
      */
 
-    SparseCISolver(std::shared_ptr<FCIIntegrals> fci_ints) { fci_ints_ = fci_ints; }
+    SparseCISolver(std::shared_ptr<ActiveSpaceIntegrals> fci_ints) { fci_ints_ = fci_ints; }
 
     void diagonalize_hamiltonian(const std::vector<Determinant>& space, psi::SharedVector& evals,
                                  psi::SharedMatrix& evecs, int nroot, int multiplicity,
@@ -204,7 +204,7 @@ class SparseCISolver {
     std::vector<std::pair<size_t, double>> guess_;
     // Number of guess vectors
     size_t nvec_ = 10;
-    std::shared_ptr<FCIIntegrals> fci_ints_;
+    std::shared_ptr<ActiveSpaceIntegrals> fci_ints_;
 
     /// The SigmaVector object for Davidson-Liu algorithm
     SigmaVector* sigma_vec_ = nullptr;

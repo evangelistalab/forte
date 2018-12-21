@@ -40,7 +40,7 @@ using namespace psi;
 
 namespace forte {
 
-void FCIWfn::form_H_diagonal(std::shared_ptr<FCIIntegrals> fci_ints) {
+void FCIWfn::form_H_diagonal(std::shared_ptr<ActiveSpaceIntegrals> fci_ints) {
     local_timer t;
 
     int wfn_sym = symmetry_;
@@ -94,7 +94,7 @@ void FCIWfn::form_H_diagonal(std::shared_ptr<FCIIntegrals> fci_ints) {
 }
 
 double FCIWfn::determinant_energy(bool*& Ia, bool*& Ib, int n,
-                                  std::shared_ptr<FCIIntegrals> fci_ints) {
+                                  std::shared_ptr<ActiveSpaceIntegrals> fci_ints) {
     double energy(fci_ints->scalar_energy() + fci_ints->frozen_core_energy());
 
     for (int p = 0; p < n; ++p) {

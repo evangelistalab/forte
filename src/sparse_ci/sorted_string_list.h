@@ -33,7 +33,7 @@
 #include "stl_bitset_string.h"
 #include "determinant.h"
 #include "sparse_ci/determinant_hashvector.h"
-#include "fci/fci_integrals.h"
+#include "integrals/active_space_integrals.h"
 #include "sparse_ci/ui64_determinant.h"
 
 
@@ -45,7 +45,7 @@ namespace forte {
  */
 class SortedStringList_UI64 {
   public:
-    SortedStringList_UI64(const DeterminantHashVec& space, std::shared_ptr<FCIIntegrals> fci_ints,
+    SortedStringList_UI64(const DeterminantHashVec& space, std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
                           DetSpinType sorted_string_spin);
 
     SortedStringList_UI64();

@@ -49,7 +49,7 @@
 #include "mrdsrg-helper/dsrg_time.h"
 #include "mrdsrg-helper/dsrg_source.h"
 #include "sparse_ci/determinant.h"
-#include "fci/fci_integrals.h"
+#include "integrals/active_space_integrals.h"
 #include "master_mrdsrg.h"
 
 using namespace ambit;
@@ -302,18 +302,18 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     /// Compute multi-state energy in the MS/XMS way
     std::vector<std::vector<double>> compute_energy_xms();
     /// XMS rotation for the reference states
-    psi::SharedMatrix xms_rotation(std::shared_ptr<FCIIntegrals> fci_ints,
+    psi::SharedMatrix xms_rotation(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
                                    std::vector<Determinant>& p_space, psi::SharedMatrix civecs);
 
     /// Build effective singles: T_{ia} -= T_{iu,av} * Gamma_{vu}
     void build_T1eff_deGNO();
 
     /// Compute density cumulants
-    void compute_cumulants(std::shared_ptr<FCIIntegrals> fci_ints,
+    void compute_cumulants(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
                            std::vector<forte::Determinant>& p_space, psi::SharedMatrix evecs,
                            const int& root1, const int& root2);
     /// Compute denisty matrices and puts in Gamma1_, Lambda2_, and Lambda3_
-    void compute_densities(std::shared_ptr<FCIIntegrals> fci_ints,
+    void compute_densities(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
                            std::vector<Determinant>& p_space, psi::SharedMatrix evecs,
                            const int& root1, const int& root2);
 

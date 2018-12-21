@@ -243,7 +243,7 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
                 fcisolver.set_fci_iterations(foptions_->get_int("FCI_MAXITER"));
                 fcisolver.set_collapse_per_root(foptions_->get_int("DL_COLLAPSE_PER_ROOT"));
                 fcisolver.set_subspace_per_root(foptions_->get_int("DL_SUBSPACE_PER_ROOT"));
-                fcisolver.set_integral_pointer(fci_ints);
+                fcisolver.set_active_space_integrals(fci_ints);
 
                 // compute energy and fill in results
                 fcisolver.compute_energy();
@@ -355,8 +355,8 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_xms() {
         "17-et",   "18-et",   "19-et",   "20-et",   "21-et",   "22-et",  "23-et",  "24-et"};
 
     // prepare FCI integrals (a fake one)
-    std::shared_ptr<FCIIntegrals> fci_ints =
-        std::make_shared<FCIIntegrals>(ints_, actv_mos_, core_mos_);
+    std::shared_ptr<ActiveSpaceIntegrals> fci_ints =
+        std::make_shared<ActiveSpaceIntegrals>(ints_, actv_mos_, core_mos_);
     //    ambit::Tensor actv_aa = ints_->aptei_aa_block(aactv_mos_, aactv_mos_,
     //    aactv_mos_, aactv_mos_);
     //    ambit::Tensor actv_ab = ints_->aptei_ab_block(aactv_mos_, aactv_mos_,
@@ -557,7 +557,7 @@ void DSRG_MRPT2::build_eff_oei() {
     }
 }
 
-psi::SharedMatrix DSRG_MRPT2::xms_rotation(std::shared_ptr<FCIIntegrals> fci_ints,
+psi::SharedMatrix DSRG_MRPT2::xms_rotation(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
                                       std::vector<forte::Determinant>& p_space,
                                       psi::SharedMatrix civecs) {
     print_h2("Perform XMS Rotation to Reference States");
@@ -847,7 +847,7 @@ void DSRG_MRPT2::compute_Heff_2nd_coupling(double& H0, ambit::Tensor& H1a, ambit
     H3bbb = H3.block("AAAAAA");
 }
 
-void DSRG_MRPT2::compute_cumulants(std::shared_ptr<FCIIntegrals> fci_ints,
+void DSRG_MRPT2::compute_cumulants(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
                                    std::vector<Determinant>& p_space, psi::SharedMatrix evecs,
                                    const int& root1, const int& root2) {
     CI_RDMS ci_rdms(fci_ints, p_space, evecs, root1, root2);
@@ -959,7 +959,7 @@ void DSRG_MRPT2::compute_cumulants(std::shared_ptr<FCIIntegrals> fci_ints,
     }
 }
 
-void DSRG_MRPT2::compute_densities(std::shared_ptr<FCIIntegrals> fci_ints,
+void DSRG_MRPT2::compute_densities(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
                                    std::vector<forte::Determinant>& p_space,
                                    psi::SharedMatrix evecs, const int& root1, const int& root2) {
     CI_RDMS ci_rdms(fci_ints, p_space, evecs, root1, root2);

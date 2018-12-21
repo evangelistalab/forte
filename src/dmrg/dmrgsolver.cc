@@ -395,8 +395,8 @@ void DMRGSolver::compute_energy() {
                             one_body_timer.get());
         } else {
             local_timer one_body_fci_ints;
-            std::shared_ptr<FCIIntegrals> fci_ints =
-                std::make_shared<FCIIntegrals>(ints_, mo_space_info_->get_corr_abs_mo("ACTIVE"),
+            std::shared_ptr<ActiveSpaceIntegrals> fci_ints =
+                std::make_shared<ActiveSpaceIntegrals>(ints_, mo_space_info_->get_corr_abs_mo("ACTIVE"),
                                                mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
             fci_ints->set_active_integrals_and_restricted_docc();
             one_body_integrals_ = fci_ints->oei_a_vector();

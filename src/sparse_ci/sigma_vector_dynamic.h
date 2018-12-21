@@ -44,7 +44,7 @@ enum class SigmaVectorMode { Dynamic, OnTheFly };
  */
 class SigmaVectorDynamic : public SigmaVector {
   public:
-    SigmaVectorDynamic(const DeterminantHashVec& space, std::shared_ptr<FCIIntegrals> fci_ints,
+    SigmaVectorDynamic(const DeterminantHashVec& space, std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
                        size_t max_memory);
     ~SigmaVectorDynamic();
     void compute_sigma(psi::SharedVector sigma, psi::SharedVector b);
@@ -68,7 +68,7 @@ class SigmaVectorDynamic : public SigmaVector {
     /// A temporary sigma vector of size N_det
     std::vector<double> temp_sigma_;
     const DeterminantHashVec& space_;
-    std::shared_ptr<FCIIntegrals> fci_ints_;
+    std::shared_ptr<ActiveSpaceIntegrals> fci_ints_;
     SortedStringList_UI64 a_sorted_string_list_;
     SortedStringList_UI64 b_sorted_string_list_;
 

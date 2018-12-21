@@ -30,7 +30,7 @@
 #define _wfn_operator_h_
 
 #include "psi4/libpsi4util/process.h"
-#include "fci/fci_integrals.h"
+#include "integrals/active_space_integrals.h"
 #include "sparse_ci/determinant_hashvector.h"
 #include "sparse_ci/determinant.h"
 #include "sparse_ci/sorted_string_list.h"
@@ -49,13 +49,13 @@ using wfn_hash = det_hash<double>;
 class WFNOperator {
   public:
     /// Default constructor
-    WFNOperator(std::vector<int>& symmetry, std::shared_ptr<FCIIntegrals> fci_ints);
+    WFNOperator(std::vector<int>& symmetry, std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
 
     /// Empty constructor
     WFNOperator();
 
     /// Initializer
-    void initialize(std::vector<int>& symmetry, std::shared_ptr<FCIIntegrals> fci_ints);
+    void initialize(std::vector<int>& symmetry, std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
 
     /// Set print level
     void set_quiet_mode(bool mode);
@@ -159,7 +159,7 @@ class WFNOperator {
     bool quiet_ = false;
 
     /// The integrals
-    std::shared_ptr<FCIIntegrals> fci_ints_;
+    std::shared_ptr<ActiveSpaceIntegrals> fci_ints_;
 };
 }
 

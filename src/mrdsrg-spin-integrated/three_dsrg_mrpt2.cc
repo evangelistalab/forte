@@ -3411,7 +3411,7 @@ void THREE_DSRG_MRPT2::compute_Hbar1V_diskDF(ambit::BlockedTensor& Hbar1, bool s
     }
 }
 
-std::vector<double> THREE_DSRG_MRPT2::relaxed_energy(std::shared_ptr<FCIIntegrals> fci_ints) {
+std::vector<double> THREE_DSRG_MRPT2::relaxed_energy(std::shared_ptr<ActiveSpaceIntegrals> fci_ints) {
 
     // reference relaxation
     std::vector<double> Erelax;
@@ -3518,7 +3518,7 @@ std::vector<double> THREE_DSRG_MRPT2::relaxed_energy(std::shared_ptr<FCIIntegral
 
             // set integrals manually
             fcisolver.use_user_integrals_and_restricted_docc(true);
-            fcisolver.set_integral_pointer(fci_ints);
+            fcisolver.set_active_space_integrals(fci_ints);
 
             Erelax.push_back(fcisolver.compute_energy());
         } else {
@@ -3547,7 +3547,7 @@ std::vector<double> THREE_DSRG_MRPT2::relaxed_energy(std::shared_ptr<FCIIntegral
 
                 // set integrals manually
                 fcisolver.use_user_integrals_and_restricted_docc(true);
-                fcisolver.set_integral_pointer(fci_ints);
+                fcisolver.set_active_space_integrals(fci_ints);
 
                 // compute energy and fill in results
                 fcisolver.compute_energy();
