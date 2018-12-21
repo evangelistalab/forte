@@ -61,7 +61,7 @@ MCSRGPT2_MO::MCSRGPT2_MO(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<Fort
     //int max_rdm_level = (options->get_str("THREEPDC") != "ZERO") ? 3 : 2;
     max_rdm_ = (options->get_str("THREEPDC") != "ZERO") ? 3 : 2;
     //Reference ref = reference(max_rdm_level);
-    Reference ref = solver_get_reference();
+    Reference ref = get_reference();
 
     // semicanonicalize orbitals
     SemiCanonical semi(options, integral_, mo_space_info_);

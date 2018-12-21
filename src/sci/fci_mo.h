@@ -94,17 +94,18 @@ class FCI_MO : public ActiveSpaceSolver {
     ~FCI_MO();
 
     /// Compute state-specific or state-averaged energy
-    double solver_compute_energy();
+    double compute_energy() override;
 
     /// Compute state-specific CASCI energy
     double compute_ss_energy();
     /// Compute state-averaged CASCI energy
     double compute_sa_energy();
 
-
     /// Return the reference object
     /// Return averaged cumulants if AVG_STATE is not empty
-    Reference solver_get_reference();
+    Reference get_reference() override;
+
+    void set_options(std::shared_ptr<ForteOptions> options) override{}; // TODO implement
 
     /// Compute densities or transition densities
     /// root1, root2 -- the ket and bra roots of p_space and eigen
@@ -182,7 +183,7 @@ class FCI_MO : public ActiveSpaceSolver {
     }
 
     /// Set maximum RDM to compute
-    void set_max_rdm_level(int level) { max_rdm_ = level; } 
+    void set_max_rdm_level(int level) { max_rdm_ = level; }
 
     /// Set initial guess
     void set_initial_guess(std::vector<std::pair<size_t, double>>& guess) {

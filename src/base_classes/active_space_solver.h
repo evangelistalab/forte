@@ -44,36 +44,34 @@ class MOSpaceInfo;
 class ActiveSpaceSolver {
   public:
     // Constructor for a single state computation
-    ActiveSpaceSolver(StateInfo state, std::shared_ptr<ForteIntegrals> ints,
-                      std::shared_ptr<MOSpaceInfo> mo_space_info);
+    ActiveSpaceSolver(StateInfo state, std::shared_ptr<MOSpaceInfo> mo_space_info,
+                      std::shared_ptr<ForteIntegrals> ints);
     // Constructor for a multi-state computation
     ActiveSpaceSolver(const std::vector<std::pair<StateInfo, double>>& states_weights,
-                      std::shared_ptr<ForteIntegrals> ints,
-                      std::shared_ptr<MOSpaceInfo> mo_space_info);
+                      std::shared_ptr<MOSpaceInfo> mo_space_info,
+                      std::shared_ptr<ForteIntegrals> ints);
 
     // Default constructor
-    ActiveSpaceSolver() {}
-
-    /// Pass a set of ActiveSpaceIntegrals to the solver (e.g. an effective Hamiltonian from
-    /// MR-DSRG)
-    void set_active_space_integrals(std::shared_ptr<ActiveSpaceIntegrals> as_ints) { as_ints_ = as_ints; }
-
-    // equivalent to "this->solver_compute_energy()"
-    double compute_energy() { return solver_compute_energy(); }
-
-    // Returns the reference
-    Reference get_reference() { return solver_get_reference(); }
+    ActiveSpaceSolver() = default;
 
     // enable deletion of a Derived* through a Base*
     virtual ~ActiveSpaceSolver() = default;
 
+    /// Compute the energy and return it
+    virtual double compute_energy() = 0;
+
+    /// Returns the reference
+    virtual Reference get_reference() = 0;
+
+    virtual void set_options(std::shared_ptr<ForteOptions> options) = 0;
+
+    /// Pass a set of ActiveSpaceIntegrals to the solver (e.g. an effective Hamiltonian from
+    /// MR-DSRG)
+    void set_active_space_integrals(std::shared_ptr<ActiveSpaceIntegrals> as_ints) {
+        as_ints_ = as_ints;
+    }
+
   protected:
-    // pure virtual implementation
-    virtual double solver_compute_energy() = 0;
-
-    // pure virtual implementation
-    virtual Reference solver_get_reference() = 0;
-
     /// Make the ActiveSpaceIntegrals object
     void make_active_space_ints();
 
@@ -82,14 +80,14 @@ class ActiveSpaceSolver {
     /// The list of doubly occupied orbitals (in absolute ordering)
     std::vector<size_t> core_mo_;
 
-    /// Psi's wavefunction object
+    /// A list of electronic states and their weights
     std::vector<std::pair<StateInfo, double>> states_weights_;
+    /// The MOSpaceInfo object
+    std::shared_ptr<MOSpaceInfo> mo_space_info_;
     /// The molecular integrals object
     std::shared_ptr<ForteIntegrals> ints_;
     /// The molecular integrals for the active space
     std::shared_ptr<ActiveSpaceIntegrals> as_ints_;
-    /// The MOSpaceInfo object
-    std::shared_ptr<MOSpaceInfo> mo_space_info_;
 };
 
 std::shared_ptr<ActiveSpaceSolver>

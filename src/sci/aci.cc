@@ -439,7 +439,7 @@ void AdaptiveCI::print_info() {
     }
 }
 
-double AdaptiveCI::solver_compute_energy() {
+double AdaptiveCI::compute_energy() {
     timer energy_timer("ACI:Energy");
 
     startup();
@@ -1607,7 +1607,7 @@ void AdaptiveCI::set_max_rdm(int rdm) {
     set_rdm_ = true;
 }
 
-Reference AdaptiveCI::solver_get_reference() {
+Reference AdaptiveCI::get_reference() {
     // const std::vector<Determinant>& final_wfn =
     //     final_wfn_.determinants();
     CI_RDMS ci_rdms(final_wfn_, fci_ints_, evecs_, 0, 0);

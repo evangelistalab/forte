@@ -187,7 +187,7 @@ void ASCI::print_info() {
     outfile->Printf("\n  %s", std::string(65, '-').c_str());
 }
 
-double ASCI::solver_compute_energy() {
+double ASCI::compute_energy() {
     timer energy_timer("ASCI:Energy");
 
     startup();
@@ -550,7 +550,7 @@ double ASCI::compute_spin_contamination(DeterminantHashVec& space, WFNOperator& 
     return spin_contam;
 }
 
-Reference ASCI::solver_get_reference() {
+Reference ASCI::get_reference() {
     // const std::vector<Determinant>& final_wfn =
     //     final_wfn_.determinants();
     CI_RDMS ci_rdms(final_wfn_, fci_ints_, evecs_, 0, 0);

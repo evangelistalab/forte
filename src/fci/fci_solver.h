@@ -63,31 +63,39 @@ class FCISolver : public ActiveSpaceSolver {
      * @param initial_guess_per_root get from options object
      * @param print Control printing of FCISolver
      */
-    FCISolver(psi::Dimension active_dim, std::vector<size_t> core_mo, std::vector<size_t> active_mo,
-              StateInfo state, std::shared_ptr<ForteIntegrals> ints,
-              std::shared_ptr<MOSpaceInfo> mo_space_info, size_t initial_guess_per_root, int print,
-              ForteOptions options);
+    //    FCISolver(psi::Dimension active_dim, std::vector<size_t> core_mo, std::vector<size_t>
+    //    active_mo,
+    //              StateInfo state, std::shared_ptr<ForteIntegrals> ints,
+    //              std::shared_ptr<MOSpaceInfo> mo_space_info, size_t initial_guess_per_root, int
+    //              print, ForteOptions options);
+
+    FCISolver(StateInfo state, std::shared_ptr<MOSpaceInfo> mo_space_info,
+              std::shared_ptr<ForteIntegrals> ints);
 
     ~FCISolver() {}
 
-    /// Implements ActiveSpaceSolver pure virtual interface
-    double solver_compute_energy() { return compute_energy(); }
-
     /// Compute the FCI energy
-    double compute_energy();
+    double compute_energy() override;
+
+    /// Return a reference object
+    Reference get_reference() override;
+
+    /// Set the options
+    void set_options(std::shared_ptr<ForteOptions> options) override;
 
     /// Compute RDMs on a given root
     void compute_rdms_root(int root);
-
-    /// Return a reference object
-    Reference solver_get_reference();
 
     /// Set the number of desired roots
     void set_nroot(int value);
     /// Set the root that will be used to compute the properties
     void set_root(int value);
+    /// Set the number of trial vectors per root
+    void set_ntrial_per_root(int value);
     /// Set the maximum RDM computed (0 - 3)
     void set_max_rdm_level(int value);
+    /// Set the energy convergence threshold
+    void set_e_convergence(double value);
     /// Set the convergence for FCI
     void set_fci_iterations(int value);
     /// Set the number of collapse vectors for each root
@@ -99,6 +107,8 @@ class FCISolver : public ActiveSpaceSolver {
     void set_test_rdms(bool value) { test_rdms_ = value; }
     /// Print the Natural Orbitals
     void set_print_no(bool value) { print_no_ = value; }
+    /// Set the print level
+    void set_print(int level) { print_ = level; }
     /// Return a FCIWfn
     std::shared_ptr<FCIWfn> get_FCIWFN() { return C_; }
 
@@ -117,17 +127,8 @@ class FCISolver : public ActiveSpaceSolver {
     /// The psi::Dimension object for the active space
     psi::Dimension active_dim_;
 
-    /// The orbitals frozen at the CI level
-    std::vector<size_t> core_mo_;
-
-    /// The orbitals treated at the CI level
-    std::vector<size_t> active_mo_;
-
     /// A object that stores string information
     std::shared_ptr<StringLists> lists_;
-
-    /// The molecular integrals
-    std::shared_ptr<ForteIntegrals> ints_;
 
     /// The FCI energy
     double energy_;
@@ -151,6 +152,7 @@ class FCISolver : public ActiveSpaceSolver {
     /// The multiplicity (2S + 1) of the state to target.
     /// (1 = singlet, 2 = doublet, 3 = triplet, ...)
     int multiplicity_;
+
     /// The number of roots (default = 1)
     int nroot_ = 1;
     /// The root used to compute properties (zero based, default = 0)
@@ -163,6 +165,8 @@ class FCISolver : public ActiveSpaceSolver {
     size_t subspace_per_root_ = 4;
     /// The maximum RDM computed (0 - 3)
     int max_rdm_level_ = 1;
+    /// The energy convergence criterion
+    double e_convergence_ = 1.0e-12;
     /// Iterations for FCI
     int fci_iterations_ = 30;
     /// Test the RDMs?
@@ -182,8 +186,6 @@ class FCISolver : public ActiveSpaceSolver {
     /// Initial CI wave function guess
     std::vector<std::pair<int, std::vector<std::tuple<size_t, size_t, size_t, double>>>>
     initial_guess(FCIWfn& diag, size_t n, std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
-    /// The options object
-    ForteOptions options_;
 };
 } // namespace forte
 

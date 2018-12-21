@@ -472,7 +472,7 @@ void DMRGSCF::update_WFNco(psi::SharedMatrix Coeff_orig, CheMPS2::DMRGSCFindices
     ints_->Cb()->copy(ints_->Ca());
 }
 
-double DMRGSCF::solver_compute_energy() {
+double DMRGSCF::compute_energy() {
     /* This plugin is able to perform a DMRGSCF calculation in a molecular
      * orbital active space. */
 

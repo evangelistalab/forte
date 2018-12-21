@@ -364,7 +364,7 @@ void CASSCF::cas_ci() {
         aci.set_max_rdm(2);
         aci.set_quiet(quiet);
         aci.compute_energy();
-        cas_ref_ = aci.solver_get_reference();
+        cas_ref_ = aci.get_reference();
         E_casscf_ = cas_ref_.get_Eref();
     } else if (options_->get_str("CASSCF_CI_SOLVER") == "DMRG") {
 #ifdef HAVE_CHEMPS2
@@ -447,7 +447,7 @@ void CASSCF::cas_ci_final() {
         aci.set_max_rdm(3);
         aci.set_quiet(quiet);
         aci.compute_energy();
-        cas_ref_ = aci.solver_get_reference();
+        cas_ref_ = aci.get_reference();
         E_casscf_ = cas_ref_.get_Eref();
     } else if (options_->get_str("CASSCF_CI_SOLVER") == "DMRG") {
 #ifdef HAVE_CHEMPS2
@@ -756,14 +756,13 @@ void CASSCF::set_up_fci() {
     size_t na = (nactel + twice_ms) / 2;
     size_t nb = nactel - na;
 
-//    FCISolver fcisolver(active_dim, rdocc, active, na, nb, multiplicity,
-//                        options_->get_int("ROOT_SYM"), ints_, mo_space_info_,
-//                        options_->get_int("NTRIAL_PER_ROOT"), options_->get_int("PRINT"),
-//                        options_->psi_options());
+    //    FCISolver fcisolver(active_dim, rdocc, active, na, nb, multiplicity,
+    //                        options_->get_int("ROOT_SYM"), ints_, mo_space_info_,
+    //                        options_->get_int("NTRIAL_PER_ROOT"), options_->get_int("PRINT"),
+    //                        options_->psi_options());
     //  Cannot be changed to:
-    FCISolver fcisolver(active_dim, rdocc, active, *state_, ints_, mo_space_info_,
-                        options_->get_int("NTRIAL_PER_ROOT"), options_->get_int("PRINT"),
-                        *options_);
+    FCISolver fcisolver(*state_, mo_space_info_, ints_);
+    fcisolver.set_options(options_);
 
     // tweak some options
     fcisolver.set_max_rdm_level(3);
@@ -783,7 +782,7 @@ void CASSCF::set_up_fci() {
     FCIWfnSolution.push_back(fcisolver.get_FCIWFN());
     CISolutions_.push_back(FCIWfnSolution);
 
-    cas_ref_ = fcisolver.solver_get_reference();
+    cas_ref_ = fcisolver.get_reference();
 }
 
 std::shared_ptr<ActiveSpaceIntegrals> CASSCF::get_ci_integrals() {
@@ -1103,9 +1102,9 @@ void CASSCF::set_up_fcimo() {
 
         FCI_MO cas(scf_info_, options_, ints_, mo_space_info_, fci_ints);
         cas.set_quite_mode(print_ > 0 ? false : true);
-        cas.solver_compute_energy();
+        cas.compute_energy();
         cas.set_max_rdm_level(2);
-        cas_ref_ = cas.solver_get_reference();
+        cas_ref_ = cas.get_reference();
         E_casscf_ = cas_ref_.get_Eref();
     }
 }

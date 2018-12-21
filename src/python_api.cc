@@ -120,20 +120,14 @@ PYBIND11_MODULE(forte, m) {
         .def("compute_energy", &DynamicCorrelationSolver::compute_energy);
 
     // export ActiveSpaceIntegrals
-    py::class_<ActiveSpaceIntegrals, std::shared_ptr<ActiveSpaceIntegrals>>(m, "ActiveSpaceIntegrals")
+    py::class_<ActiveSpaceIntegrals, std::shared_ptr<ActiveSpaceIntegrals>>(m,
+                                                                            "ActiveSpaceIntegrals")
         .def(py::init<std::shared_ptr<ForteIntegrals>, std::shared_ptr<MOSpaceInfo>>());
 
     // export FCISolver
     py::class_<FCISolver, std::shared_ptr<FCISolver>>(m, "FCISolver")
-        .def(py::init<psi::Dimension, std::vector<size_t>, std::vector<size_t>, StateInfo,
-                      std::shared_ptr<ForteIntegrals>, std::shared_ptr<MOSpaceInfo>, size_t, int,
-                      psi::Options&>())
+        .def(py::init<StateInfo, std::shared_ptr<MOSpaceInfo>, std::shared_ptr<ForteIntegrals>>())
         .def("compute_energy", &FCISolver::compute_energy);
-
-    py::class_<FCI, std::shared_ptr<FCI>>(m, "FCI")
-        .def(py::init<StateInfo, std::shared_ptr<ForteOptions>, std::shared_ptr<ForteIntegrals>,
-                      std::shared_ptr<MOSpaceInfo>>())
-        .def("compute_energy", &FCI::compute_energy);
 }
 } // namespace forte
 

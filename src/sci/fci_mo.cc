@@ -524,7 +524,7 @@ void FCI_MO::print_options() {
     }
 }
 
-double FCI_MO::solver_compute_energy() {
+double FCI_MO::compute_energy() {
     // temporarily put localizer here
     // move to startup when run_dsrg is completed
     if (localize_actv_) {
@@ -2274,7 +2274,7 @@ d3 FCI_MO::compute_orbital_extents() {
     return orb_extents;
 }
 
-Reference FCI_MO::solver_get_reference() {
+Reference FCI_MO::get_reference() {
     Reference ref;
 
     if ((options_->psi_options())["AVG_STATE"].size() != 0) {

@@ -81,10 +81,12 @@ class ASCI : public ActiveSpaceSolver {
     // ==> Class Interface <==
 
     /// Compute the energy
-    double solver_compute_energy();
+    double compute_energy() override;
 
     /// Update the reference file
-    Reference solver_get_reference();
+    Reference get_reference() override;
+
+    void set_options(std::shared_ptr<ForteOptions> options) override{}; // TODO : define
 
     /// Get the wavefunction
     DeterminantHashVec get_wavefunction();

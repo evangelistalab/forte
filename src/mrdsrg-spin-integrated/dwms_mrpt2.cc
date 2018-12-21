@@ -337,7 +337,7 @@ std::shared_ptr<FCI_MO> DWMS_DSRGPT2::precompute_energy() {
     // perform SA-DSRG-PT2/3 if needed
     if (dwms_ref_ != "CASCI") {
         fci_mo->set_max_rdm_level(max_rdm_level_);
-        Reference reference = fci_mo->solver_get_reference();
+        Reference reference = fci_mo->get_reference();
 
         std::shared_ptr<MASTER_DSRG> dsrg_pt;
         fci_ints_ = compute_dsrg_pt(dsrg_pt, reference, dwms_ref_);
@@ -474,7 +474,7 @@ DWMS_DSRGPT2::compute_macro_dsrg_pt(std::shared_ptr<MASTER_DSRG>& dsrg_pt,
     // compute Reference
     fci_mo->set_sa_info(sa_info_new);
     fci_mo->set_max_rdm_level(max_rdm_level_);
-    Reference reference = fci_mo->solver_get_reference();
+    Reference reference = fci_mo->get_reference();
 
     // update MK vacuum energy
     reference.update_Eref(ints_, mo_space_info_, Enuc_);

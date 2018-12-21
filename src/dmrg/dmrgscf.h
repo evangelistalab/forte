@@ -50,9 +50,9 @@ class DMRGSCF : public ActiveSpaceSolver {
     DMRGSCF(std::shared_ptr<StateInfo> state, std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
             std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
-    double solver_compute_energy();
+    double compute_energy();
 
-    Reference solver_get_reference() { return dmrg_ref_; }
+    Reference get_reference() { return dmrg_ref_; }
     void set_iterations(int dmrg_iterations) { dmrg_iterations_ = dmrg_iterations; }
 
   private:

@@ -121,7 +121,7 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
     if (multi_state_algorithm_ == "SA_FULL" && foptions_->get_str("CAS_TYPE") == "CAS") {
         FCI_MO fci_mo(scf_info_, foptions_, ints_, mo_space_info_, fci_ints);
         fci_mo.set_localize_actv(false);
-        fci_mo.solver_compute_energy();
+        fci_mo.compute_energy();
         auto eigens = fci_mo.eigens();
         for (int n = 0; n < nentry; ++n) {
             auto eigen = eigens[n];
@@ -238,8 +238,7 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
 
                 StateInfo state(na, nb, multi, multi - 1, irrep); //assumes highes Ms
                 // TODO use base class info
-                FCISolver fcisolver(active_dim, core_mos_, actv_mos_, state, ints_,
-                                    mo_space_info_, ntrial_per_root, print_, *foptions_);
+                FCISolver fcisolver(state, mo_space_info_, ints_);
 
                 fcisolver.set_max_rdm_level(1);
                 fcisolver.set_nroot(nstates);

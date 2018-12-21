@@ -108,8 +108,13 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
     //        ints->retransform_integrals();
     //    }
 
+    StateInfo state(ref_wfn); // TODO move py-side
+    auto forte_options = std::make_shared<ForteOptions>(options);
+
     if (options.get_bool("CASSCF_REFERENCE") == true or options.get_str("JOB_TYPE") == "CASSCF") {
-        auto casscf = std::make_shared<CASSCF>(std::make_shared<StateInfo>(ref_wfn), std::make_shared<SCFInfo>(ref_wfn), std::make_shared<ForteOptions>(options), ints, mo_space_info);
+        auto casscf = std::make_shared<CASSCF>(
+            std::make_shared<StateInfo>(ref_wfn), std::make_shared<SCFInfo>(ref_wfn),
+            std::make_shared<ForteOptions>(options), ints, mo_space_info);
         casscf->compute_casscf();
     }
     if (options.get_bool("MP2_NOS")) {
@@ -133,18 +138,16 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
                                 std::make_shared<ForteOptions>(options), ints, mo_space_info);
     }
     if (options.get_str("JOB_TYPE") == "ASCI") {
-        auto asci = std::make_shared<ASCI>(std::make_shared<StateInfo>(ref_wfn),
-                                           std::make_shared<SCFInfo>(ref_wfn),
-                                           std::make_shared<ForteOptions>(options), ints,
-                                           mo_space_info);
-        asci->solver_compute_energy();
+        auto asci = std::make_shared<ASCI>(
+            std::make_shared<StateInfo>(ref_wfn), std::make_shared<SCFInfo>(ref_wfn),
+            std::make_shared<ForteOptions>(options), ints, mo_space_info);
+        asci->compute_energy();
     }
     if (options.get_str("JOB_TYPE") == "ACI") {
-        auto aci = std::make_shared<AdaptiveCI>(std::make_shared<StateInfo>(ref_wfn),
-                                                std::make_shared<SCFInfo>(ref_wfn),
-                                                std::make_shared<ForteOptions>(options), ints,
-                                                mo_space_info);
-        aci->solver_compute_energy();
+        auto aci = std::make_shared<AdaptiveCI>(
+            std::make_shared<StateInfo>(ref_wfn), std::make_shared<SCFInfo>(ref_wfn),
+            std::make_shared<ForteOptions>(options), ints, mo_space_info);
+        aci->compute_energy();
         if (options.get_bool("ACI_NO")) {
             aci->compute_nos();
         }
@@ -199,15 +202,15 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
         }
     }
     if (options.get_str("JOB_TYPE") == "FCI") {
-        auto fci = std::make_shared<FCI>(ref_wfn, options, ints, mo_space_info);
+        auto fci = std::make_shared<FCISolver>(state, mo_space_info, ints);
+        fci->set_options(forte_options);
         fci->compute_energy();
     }
     if (options.get_bool("USE_DMRGSCF")) {
 #ifdef HAVE_CHEMPS2
-        auto dmrg = std::make_shared<DMRGSCF>(std::make_shared<StateInfo>(ref_wfn),
-                                              std::make_shared<SCFInfo>(ref_wfn),
-                                              std::make_shared<ForteOptions>(options), ints,
-                                              mo_space_info);
+        auto dmrg = std::make_shared<DMRGSCF>(
+            std::make_shared<StateInfo>(ref_wfn), std::make_shared<SCFInfo>(ref_wfn),
+            std::make_shared<ForteOptions>(options), ints, mo_space_info);
         dmrg->set_iterations(options.get_int("DMRGSCF_MAX_ITER"));
         dmrg->compute_energy();
 #else
@@ -216,10 +219,9 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
     }
     if (options.get_str("JOB_TYPE") == "DMRG") {
 #ifdef HAVE_CHEMPS2
-        auto dmrg = std::make_shared<DMRGSolver>(std::make_shared<StateInfo>(ref_wfn),
-                                              std::make_shared<SCFInfo>(ref_wfn),
-                                              std::make_shared<ForteOptions>(options), ints,
-                                              mo_space_info);
+        auto dmrg = std::make_shared<DMRGSolver>(
+            std::make_shared<StateInfo>(ref_wfn), std::make_shared<SCFInfo>(ref_wfn),
+            std::make_shared<ForteOptions>(options), ints, mo_space_info);
         dmrg->set_max_rdm(2);
         dmrg->compute_energy();
 #else
@@ -229,7 +231,7 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
     if (options.get_str("JOB_TYPE") == "CAS") {
         FCI_MO fci_mo(std::make_shared<SCFInfo>(ref_wfn), std::make_shared<ForteOptions>(options),
                       ints, mo_space_info);
-        fci_mo.solver_compute_energy();
+        fci_mo.compute_energy();
     }
     if (options.get_str("JOB_TYPE") == "MRDSRG") {
         std::string cas_type = options.get_str("CAS_TYPE");
@@ -251,8 +253,8 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
             FCI_MO fci_mo(std::make_shared<SCFInfo>(ref_wfn),
                           std::make_shared<ForteOptions>(options), ints, mo_space_info);
             fci_mo.set_max_rdm_level(max_rdm_level);
-            fci_mo.solver_compute_energy();
-            Reference reference = fci_mo.solver_get_reference();
+            fci_mo.compute_energy();
+            Reference reference = fci_mo.get_reference();
 
             if (options.get_bool("SEMI_CANONICAL")) {
                 SemiCanonical semi(std::make_shared<ForteOptions>(options), ints, mo_space_info);
@@ -278,10 +280,11 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
                 }
             }
         } else if (cas_type == "FCI") {
-            auto fci = std::make_shared<FCI>(ref_wfn, options, ints, mo_space_info);
+            auto fci = std::make_shared<FCISolver>(state, mo_space_info, ints);
+            fci->set_options(forte_options);
             fci->set_max_rdm_level(max_rdm_level);
             fci->compute_energy();
-            Reference reference = fci->solver_get_reference();
+            Reference reference = fci->get_reference();
             if (options.get_bool("SEMI_CANONICAL")) {
                 SemiCanonical semi(std::make_shared<ForteOptions>(options), ints, mo_space_info);
                 semi.semicanonicalize(reference, max_rdm_level);
@@ -301,13 +304,12 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
             }
         } else if (cas_type == "ACI") {
 
-            auto aci = std::make_shared<AdaptiveCI>(std::make_shared<StateInfo>(ref_wfn),
-                                                    std::make_shared<SCFInfo>(ref_wfn),
-                                                    std::make_shared<ForteOptions>(options), ints,
-                                                    mo_space_info);
+            auto aci = std::make_shared<AdaptiveCI>(
+                std::make_shared<StateInfo>(ref_wfn), std::make_shared<SCFInfo>(ref_wfn),
+                std::make_shared<ForteOptions>(options), ints, mo_space_info);
             aci->set_max_rdm(max_rdm_level);
-            aci->solver_compute_energy();
-            Reference aci_reference = aci->solver_get_reference();
+            aci->compute_energy();
+            Reference aci_reference = aci->get_reference();
             if (options.get_bool("ACI_NO")) {
                 aci->compute_nos();
             }
@@ -329,8 +331,8 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
     if (options.get_str("JOB_TYPE") == "MRDSRG_SO") {
         FCI_MO fci_mo(std::make_shared<SCFInfo>(ref_wfn), std::make_shared<ForteOptions>(options),
                       ints, mo_space_info);
-        fci_mo.solver_compute_energy();
-        Reference reference = fci_mo.solver_get_reference();
+        fci_mo.compute_energy();
+        Reference reference = fci_mo.get_reference();
         if (options.get_bool("SEMI_CANONICAL")) {
             SemiCanonical semi(std::make_shared<ForteOptions>(options), ints, mo_space_info);
             semi.semicanonicalize(reference);
@@ -356,8 +358,8 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
             FCI_MO fci_mo(std::make_shared<SCFInfo>(ref_wfn),
                           std::make_shared<ForteOptions>(options), ints, mo_space_info);
             fci_mo.set_max_rdm_level(max_rdm_level);
-            fci_mo.solver_compute_energy();
-            Reference reference = fci_mo.solver_get_reference();
+            fci_mo.compute_energy();
+            Reference reference = fci_mo.get_reference();
 
             if (options.get_bool("SEMI_CANONICAL")) {
                 SemiCanonical semi(std::make_shared<ForteOptions>(options), ints, mo_space_info);
@@ -372,10 +374,11 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
                 //                dsrg->compute_energy_relaxed();
             }
         } else if (cas_type == "FCI") {
-            auto fci = std::make_shared<FCI>(ref_wfn, options, ints, mo_space_info);
+            auto fci = std::make_shared<FCISolver>(state, mo_space_info, ints);
+            fci->set_options(forte_options);
             fci->set_max_rdm_level(max_rdm_level);
             fci->compute_energy();
-            Reference reference = fci->solver_get_reference();
+            Reference reference = fci->get_reference();
             if (options.get_bool("SEMI_CANONICAL")) {
                 SemiCanonical semi(std::make_shared<ForteOptions>(options), ints, mo_space_info);
                 semi.semicanonicalize(reference, max_rdm_level);
@@ -411,8 +414,8 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
                 std::make_shared<SCFInfo>(ref_wfn), std::make_shared<ForteOptions>(options), ints,
                 mo_space_info);
             fci_mo->set_max_rdm_level(max_rdm_level);
-            fci_mo->solver_compute_energy();
-            Reference reference = fci_mo->solver_get_reference();
+            fci_mo->compute_energy();
+            Reference reference = fci_mo->get_reference();
 
             if (options.get_bool("SEMI_CANONICAL")) {
                 SemiCanonical semi(std::make_shared<ForteOptions>(options), ints, mo_space_info);
@@ -445,10 +448,12 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
             }
 
         } else if (cas_type == "FCI") {
-            std::shared_ptr<FCI> fci = std::make_shared<FCI>(ref_wfn, options, ints, mo_space_info);
+            std::shared_ptr<FCISolver> fci =
+                std::make_shared<FCISolver>(state, mo_space_info, ints);
+            fci->set_options(forte_options);
             fci->set_max_rdm_level(max_rdm_level);
             fci->compute_energy();
-            Reference reference = fci->solver_get_reference();
+            Reference reference = fci->get_reference();
             if (options.get_bool("SEMI_CANONICAL")) {
                 SemiCanonical semi(std::make_shared<ForteOptions>(options), ints, mo_space_info);
                 semi.semicanonicalize(reference, max_rdm_level);
@@ -476,14 +481,13 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
 
         } else if (cas_type == "ACI") {
             // Compute ACI wfn
-            auto aci = std::make_shared<AdaptiveCI>(std::make_shared<StateInfo>(ref_wfn),
-                                                    std::make_shared<SCFInfo>(ref_wfn),
-                                                    std::make_shared<ForteOptions>(options), ints,
-                                                    mo_space_info);
+            auto aci = std::make_shared<AdaptiveCI>(
+                std::make_shared<StateInfo>(ref_wfn), std::make_shared<SCFInfo>(ref_wfn),
+                std::make_shared<ForteOptions>(options), ints, mo_space_info);
             aci->set_quiet(true);
             aci->set_max_rdm(max_rdm_level);
-            aci->solver_compute_energy();
-            Reference aci_reference = aci->solver_get_reference();
+            aci->compute_energy();
+            Reference aci_reference = aci->get_reference();
             if (options.get_bool("ACI_NO")) {
                 aci->compute_nos();
             }
@@ -506,10 +510,9 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
 
         } else if (cas_type == "DMRG") {
 #ifdef HAVE_CHEMPS2
-            auto dmrg = std::make_shared<DMRGSolver>(std::make_shared<StateInfo>(ref_wfn),
-                                                  std::make_shared<SCFInfo>(ref_wfn),
-                                                  std::make_shared<ForteOptions>(options), ints,
-                                                  mo_space_info);
+            auto dmrg = std::make_shared<DMRGSolver>(
+                std::make_shared<StateInfo>(ref_wfn), std::make_shared<SCFInfo>(ref_wfn),
+                std::make_shared<ForteOptions>(options), ints, mo_space_info);
             dmrg->set_max_rdm(max_rdm_level);
             dmrg->compute_energy();
             Reference dmrg_reference = dmrg->reference();
@@ -524,7 +527,9 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
             dsrg_mrpt2->compute_energy();
 #endif
         } else if (cas_type == "CASSCF") {
-            auto casscf = std::make_shared<CASSCF>(std::make_shared<StateInfo>(ref_wfn), std::make_shared<SCFInfo>(ref_wfn), std::make_shared<ForteOptions>(options), ints, mo_space_info);
+            auto casscf = std::make_shared<CASSCF>(
+                std::make_shared<StateInfo>(ref_wfn), std::make_shared<SCFInfo>(ref_wfn),
+                std::make_shared<ForteOptions>(options), ints, mo_space_info);
             casscf->compute_casscf();
             Reference casscf_reference = casscf->casscf_reference();
 
@@ -584,8 +589,8 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
             FCI_MO fci_mo(std::make_shared<SCFInfo>(ref_wfn),
                           std::make_shared<ForteOptions>(options), ints, mo_space_info);
             fci_mo.set_max_rdm_level(max_rdm_level);
-            fci_mo.solver_compute_energy();
-            Reference reference = fci_mo.solver_get_reference();
+            fci_mo.compute_energy();
+            Reference reference = fci_mo.get_reference();
 
             if (options.get_bool("SEMI_CANONICAL")) {
                 SemiCanonical semi(std::make_shared<ForteOptions>(options), ints, mo_space_info);
@@ -623,14 +628,13 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
         } else if (cas_type == "ACI") {
 
             Reference aci_reference;
-            auto aci = std::make_shared<AdaptiveCI>(std::make_shared<StateInfo>(ref_wfn),
-                                                    std::make_shared<SCFInfo>(ref_wfn),
-                                                    std::make_shared<ForteOptions>(options), ints,
-                                                    mo_space_info);
+            auto aci = std::make_shared<AdaptiveCI>(
+                std::make_shared<StateInfo>(ref_wfn), std::make_shared<SCFInfo>(ref_wfn),
+                std::make_shared<ForteOptions>(options), ints, mo_space_info);
             aci->set_quiet(true);
             aci->set_max_rdm(max_rdm_level);
-            aci->solver_compute_energy();
-            aci_reference = aci->solver_get_reference();
+            aci->compute_energy();
+            aci_reference = aci->get_reference();
             if (options.get_bool("ACI_NO")) {
                 aci->compute_nos();
             }
@@ -642,14 +646,13 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
                 auto aci_wfn = aci->get_wavefunction();
                 ESNO esno(ref_wfn, options, ints, mo_space_info, aci_wfn);
                 esno.compute_nos();
-                auto aci2 = std::make_shared<AdaptiveCI>(std::make_shared<StateInfo>(ref_wfn),
-                                                         std::make_shared<SCFInfo>(ref_wfn),
-                                                         std::make_shared<ForteOptions>(options),
-                                                         ints, mo_space_info);
+                auto aci2 = std::make_shared<AdaptiveCI>(
+                    std::make_shared<StateInfo>(ref_wfn), std::make_shared<SCFInfo>(ref_wfn),
+                    std::make_shared<ForteOptions>(options), ints, mo_space_info);
                 aci2->set_quiet(true);
                 aci2->set_max_rdm(max_rdm_level);
                 aci2->compute_energy();
-                aci_reference = aci2->solver_get_reference();
+                aci_reference = aci2->get_reference();
             }
             // if( options.get_bool("UNPAIRED_DENSITY")){
             //    aci->unpaired_density();
@@ -680,10 +683,11 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
             //  }
 
         } else if (cas_type == "FCI") {
-            auto fci = std::make_shared<FCI>(ref_wfn, options, ints, mo_space_info);
+            auto fci = std::make_shared<FCISolver>(state, mo_space_info, ints);
+            fci->set_options(forte_options);
             fci->set_max_rdm_level(max_rdm_level);
             fci->compute_energy();
-            Reference reference = fci->solver_get_reference();
+            Reference reference = fci->get_reference();
             if (options.get_bool("SEMI_CANONICAL")) {
                 SemiCanonical semi(std::make_shared<ForteOptions>(options), ints, mo_space_info);
                 semi.semicanonicalize(reference, max_rdm_level);
@@ -702,10 +706,9 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
 
         } else if (cas_type == "DMRG") {
 #ifdef HAVE_CHEMPS2
-            auto dmrg = std::make_shared<DMRGSolver>(std::make_shared<StateInfo>(ref_wfn),
-                                                  std::make_shared<SCFInfo>(ref_wfn),
-                                                  std::make_shared<ForteOptions>(options), ints,
-                                                  mo_space_info);
+            auto dmrg = std::make_shared<DMRGSolver>(
+                std::make_shared<StateInfo>(ref_wfn), std::make_shared<SCFInfo>(ref_wfn),
+                std::make_shared<ForteOptions>(options), ints, mo_space_info);
             dmrg->set_max_rdm(max_rdm_level);
             dmrg->compute_energy();
 
@@ -724,7 +727,9 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
             }
 #endif
         } else if (cas_type == "CASSCF") {
-            auto casscf = std::make_shared<CASSCF>(std::make_shared<StateInfo>(ref_wfn), std::make_shared<SCFInfo>(ref_wfn), std::make_shared<ForteOptions>(options), ints, mo_space_info);
+            auto casscf = std::make_shared<CASSCF>(
+                std::make_shared<StateInfo>(ref_wfn), std::make_shared<SCFInfo>(ref_wfn),
+                std::make_shared<ForteOptions>(options), ints, mo_space_info);
             casscf->compute_casscf();
             Reference casscf_reference = casscf->casscf_reference();
 
@@ -769,7 +774,7 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
                                                    mo_space_info);
             fci_mo->set_max_rdm_level(max_rdm_level);
             fci_mo->compute_energy();
-            Reference reference = fci_mo->solver_get_reference();
+            Reference reference = fci_mo->get_reference();
 
             if (options.get_bool("SEMI_CANONICAL")) {
                 SemiCanonical semi(std::make_shared<ForteOptions>(options), ints, mo_space_info);
@@ -798,14 +803,13 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
 
             Reference aci_reference;
             {
-                auto aci = std::make_shared<AdaptiveCI>(std::make_shared<StateInfo>(ref_wfn),
-                                                        std::make_shared<SCFInfo>(ref_wfn),
-                                                        std::make_shared<ForteOptions>(options),
-                                                        ints, mo_space_info);
+                auto aci = std::make_shared<AdaptiveCI>(
+                    std::make_shared<StateInfo>(ref_wfn), std::make_shared<SCFInfo>(ref_wfn),
+                    std::make_shared<ForteOptions>(options), ints, mo_space_info);
                 aci->set_quiet(true);
                 aci->set_max_rdm(max_rdm_level);
-                aci->solver_compute_energy();
-                aci_reference = aci->solver_get_reference();
+                aci->compute_energy();
+                aci_reference = aci->get_reference();
                 if (options.get_bool("ACI_NO")) {
                     aci->compute_nos();
                 }
@@ -817,13 +821,13 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
                     auto aci_wfn = aci->get_wavefunction();
                     ESNO esno(ref_wfn, options, ints, mo_space_info, aci_wfn);
                     esno.compute_nos();
-                    auto aci2 = std::make_shared<AdaptiveCI>(std::make_shared<StateInfo>(ref_wfn),
-                        std::make_shared<SCFInfo>(ref_wfn), std::make_shared<ForteOptions>(options),
-                        ints, mo_space_info);
+                    auto aci2 = std::make_shared<AdaptiveCI>(
+                        std::make_shared<StateInfo>(ref_wfn), std::make_shared<SCFInfo>(ref_wfn),
+                        std::make_shared<ForteOptions>(options), ints, mo_space_info);
                     aci2->set_quiet(true);
                     aci2->set_max_rdm(max_rdm_level);
                     aci2->compute_energy();
-                    aci_reference = aci2->solver_get_reference();
+                    aci_reference = aci2->get_reference();
                 }
             }
             SemiCanonical semi(std::make_shared<ForteOptions>(options), ints, mo_space_info);
@@ -842,10 +846,11 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
             }
         }
         if (cas_type == "FCI") {
-            auto fci = std::make_shared<FCI>(ref_wfn, options, ints, mo_space_info);
+            auto fci = std::make_shared<FCISolver>(state, mo_space_info, ints);
+            fci->set_options(forte_options);
             fci->set_max_rdm_level(max_rdm_level);
             fci->compute_energy();
-            Reference reference = fci->solver_get_reference();
+            Reference reference = fci->get_reference();
             if (options.get_bool("SEMI_CANONICAL")) {
                 SemiCanonical semi(std::make_shared<ForteOptions>(options), ints, mo_space_info);
                 semi.semicanonicalize(reference, max_rdm_level);
@@ -872,7 +877,7 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
             FCI_MO fci_mo(std::make_shared<SCFInfo>(ref_wfn),
                           std::make_shared<ForteOptions>(options), ints, mo_space_info);
             fci_mo.set_max_rdm_level(max_rdm_level);
-            Reference reference = fci_mo.solver_get_reference();
+            Reference reference = fci_mo.get_reference();
             if (options.get_bool("SEMI_CANONICAL")) {
                 SemiCanonical semi(std::make_shared<ForteOptions>(options), ints, mo_space_info);
                 semi.semicanonicalize(reference, max_rdm_level);
@@ -882,10 +887,11 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
             somrdsrg->compute_energy();
         }
         if (options.get_str("CAS_TYPE") == "FCI") {
-            std::shared_ptr<FCI> fci = std::make_shared<FCI>(ref_wfn, options, ints, mo_space_info);
+            auto fci = std::make_shared<FCISolver>(state, mo_space_info, ints);
+            fci->set_options(forte_options);
             fci->set_max_rdm_level(max_rdm_level);
             fci->compute_energy();
-            Reference reference = fci->solver_get_reference();
+            Reference reference = fci->get_reference();
             if (options.get_bool("SEMI_CANONICAL")) {
                 SemiCanonical semi(std::make_shared<ForteOptions>(options), ints, mo_space_info);
                 semi.semicanonicalize(reference, max_rdm_level);
@@ -903,17 +909,15 @@ void forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
 
     if (options.get_str("JOB_TYPE") == "MRCISD") {
         if (options.get_bool("ACI_NO")) {
-            auto aci = std::make_shared<AdaptiveCI>(std::make_shared<StateInfo>(ref_wfn),
-                                                    std::make_shared<SCFInfo>(ref_wfn),
-                                                    std::make_shared<ForteOptions>(options), ints,
-                                                    mo_space_info);
+            auto aci = std::make_shared<AdaptiveCI>(
+                std::make_shared<StateInfo>(ref_wfn), std::make_shared<SCFInfo>(ref_wfn),
+                std::make_shared<ForteOptions>(options), ints, mo_space_info);
             aci->compute_energy();
             aci->compute_nos();
         }
-        auto aci = std::make_shared<AdaptiveCI>(std::make_shared<StateInfo>(ref_wfn),
-                                                std::make_shared<SCFInfo>(ref_wfn),
-                                                std::make_shared<ForteOptions>(options), ints,
-                                                mo_space_info);
+        auto aci = std::make_shared<AdaptiveCI>(
+            std::make_shared<StateInfo>(ref_wfn), std::make_shared<SCFInfo>(ref_wfn),
+            std::make_shared<ForteOptions>(options), ints, mo_space_info);
         aci->compute_energy();
 
         DeterminantHashVec reference = aci->get_wavefunction();

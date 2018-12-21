@@ -1713,7 +1713,7 @@ double DSRG_MRPT2::compute_energy_relaxed() {
     if (foptions_->get_str("CAS_TYPE") == "CAS") {
         FCI_MO fci_mo(scf_info_, foptions_, ints_, mo_space_info_, fci_ints);
         fci_mo.set_localize_actv(false);
-        Erelax = fci_mo.solver_compute_energy();
+        Erelax = fci_mo.compute_energy();
 
         if (do_dm_) {
             // de-normal-order DSRG dipole integrals
@@ -1739,13 +1739,16 @@ double DSRG_MRPT2::compute_energy_relaxed() {
         }
     } else if (foptions_->get_str("CAS_TYPE") == "ACI") {
 
-        AdaptiveCI aci(std::make_shared<StateInfo>(ints_->wfn()),scf_info_, foptions_, ints_, mo_space_info_);
+        AdaptiveCI aci(std::make_shared<StateInfo>(ints_->wfn()), scf_info_, foptions_, ints_,
+                       mo_space_info_);
         aci.set_fci_ints(fci_ints);
 
         Erelax = aci.compute_energy();
     } else {
         // it is simpler here to call FCI instead of FCISolver
-        FCI fci(ints_->wfn(), foptions_->psi_options(), ints_, mo_space_info_);
+        StateInfo state(ints_->wfn());
+        FCISolver fci(state, mo_space_info_, ints_);
+        fci.set_options(foptions_);
         fci.set_active_space_integrals(fci_ints);
         fci.set_max_rdm_level(1);
         Erelax = fci.compute_energy();

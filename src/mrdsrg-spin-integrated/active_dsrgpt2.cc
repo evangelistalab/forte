@@ -271,7 +271,7 @@ double ACTIVE_DSRGPT2::compute_energy() {
 
             // compute cumultans
             fci_mo_->set_max_rdm_level(max_cu_level);
-            Reference reference = fci_mo_->solver_get_reference();
+            Reference reference = fci_mo_->get_reference();
 
             // semicanonicalize integrals and cumulants
             semi->semicanonicalize(reference, max_cu_level);
@@ -310,7 +310,7 @@ double ACTIVE_DSRGPT2::compute_energy() {
             outfile->Printf("\n\n  Computing semicanonical orbitals for root %d.", i);
             fci_mo_->set_root(i);
             fci_mo_->set_max_rdm_level(1);
-            Reference reference = fci_mo_->solver_get_reference();
+            Reference reference = fci_mo_->get_reference();
             semi->semicanonicalize(reference, 1, true, false);
 
             Uas.emplace_back(semi->Ua()->clone());
@@ -380,7 +380,7 @@ double ACTIVE_DSRGPT2::compute_energy() {
             // compute cumulants
             fci_mo_->set_root(i);
             fci_mo_->set_max_rdm_level(max_cu_level);
-            Reference reference = fci_mo_->solver_get_reference();
+            Reference reference = fci_mo_->get_reference();
             reference.set_Eref(Eref);
 
             // manually rotate the reference and integrals

@@ -270,9 +270,8 @@ double SA_FCISolver::compute_energy() {
         size_t nb = nactel - na;
         StateInfo state(na, nb, multiplicity, twice_ms, symmetry);
         // TODO use base class info
-        FCISolver fcisolver(active_dim, rdocc, active, state, ints_, mo_space_info_,
-                            options_.get_int("NTRIAL_PER_ROOT"), options_.get_int("PRINT"),
-                            options_);
+        FCISolver fcisolver(state, mo_space_info_, ints_);
+        fcisolver.set_options(std::make_shared<ForteOptions>(options_));
         fcisolver.set_max_rdm_level(2);
         fcisolver.set_test_rdms(options_.get_bool("FCI_TEST_RDMS"));
         fcisolver.set_fci_iterations(options_.get_int("FCI_MAXITER"));
@@ -333,7 +332,7 @@ double SA_FCISolver::compute_energy() {
             //            SA_C_.push_back(fcisolver.get_FCIWFN());
             double Ecasscf = evals->get(root_number) + Enuc;
             casscf_energies.push_back(Ecasscf);
-            sa_cas_ref.push_back(fcisolver.solver_get_reference());
+            sa_cas_ref.push_back(fcisolver.get_reference());
             sa_cas_ref[root_number].set_Eref(Ecasscf);
         }
     }

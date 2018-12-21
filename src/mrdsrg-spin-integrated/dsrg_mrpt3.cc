@@ -41,7 +41,7 @@
 
 #include "helpers/timer.h"
 #include "helpers/blockedtensorfactory.h"
-#include "fci/fci.h"
+#include "fci/fci_solver.h"
 #include "sci/fci_mo.h"
 #include "boost/format.hpp"
 #include "helpers/printing.h"
@@ -1327,7 +1327,7 @@ double DSRG_MRPT3::compute_energy_sa() {
     if (multi_state_algorithm_ == "SA_FULL" && foptions_->get_str("CAS_TYPE") == "CAS") {
         FCI_MO fci_mo(scf_info_, foptions_, ints_, mo_space_info_, fci_ints);
         fci_mo.set_localize_actv(false);
-        fci_mo.solver_compute_energy();
+        fci_mo.compute_energy();
         auto eigens = fci_mo.eigens();
         for (int n = 0; n < nentry; ++n) {
             auto eigen = eigens[n];
@@ -1417,22 +1417,22 @@ double DSRG_MRPT3::compute_energy_sa() {
                 }
                 nelec -= charge;
                 int ms = (multi + 1) % 2;
-                auto nelec_actv =
-                    nelec;
-//                - 2 * mo_space_info_->size("FROZEN_DOCC") - 2 * core_mos_.size();
+                auto nelec_actv = nelec;
+                //                - 2 * mo_space_info_->size("FROZEN_DOCC") - 2 * core_mos_.size();
                 auto na = (nelec_actv + ms) / 2;
                 auto nb = nelec_actv - na;
 
                 psi::Dimension active_dim = mo_space_info_->get_dimension("ACTIVE");
                 int ntrial_per_root = foptions_->get_int("NTRIAL_PER_ROOT");
 
-//                FCISolver fcisolver(active_dim, core_mos_, actv_mos_, na, nb, multi, irrep, ints_,
-//                                    mo_space_info_, ntrial_per_root, print_, foptions_->psi_options());
+                //                FCISolver fcisolver(active_dim, core_mos_, actv_mos_, na, nb,
+                //                multi, irrep, ints_,
+                //                                    mo_space_info_, ntrial_per_root, print_,
+                //                                    foptions_->psi_options());
 
-                StateInfo state(na, nb, multi, multi - 1, irrep); //assumes highes Ms
+                StateInfo state(na, nb, multi, multi - 1, irrep); // assumes highes Ms
                 // TODO use base class info
-                FCISolver fcisolver(active_dim, core_mos_, actv_mos_, state, ints_,
-                                    mo_space_info_, ntrial_per_root, print_, *foptions_);
+                FCISolver fcisolver(state, mo_space_info_, ints_);
 
                 fcisolver.set_max_rdm_level(1);
                 fcisolver.set_nroot(nstates);
@@ -1568,7 +1568,7 @@ double DSRG_MRPT3::compute_energy_relaxed() {
     if (foptions_->get_str("CAS_TYPE") == "CAS") {
         FCI_MO fci_mo(scf_info_, foptions_, ints_, mo_space_info_, fci_ints);
         fci_mo.set_localize_actv(false);
-        Erelax = fci_mo.solver_compute_energy();
+        Erelax = fci_mo.compute_energy();
 
         if (do_dm_) {
             // de-normal-order DSRG dipole integrals
@@ -1584,7 +1584,8 @@ double DSRG_MRPT3::compute_energy_relaxed() {
             dm_relax = fci_mo.compute_ref_relaxed_dm(Mbar0_, Mbar1_, Mbar2_);
         }
     } else if (foptions_->get_str("CAS_TYPE") == "ACI") {
-        AdaptiveCI aci(std::make_shared<StateInfo>(ints_->wfn()),scf_info_, foptions_, ints_, mo_space_info_);
+        AdaptiveCI aci(std::make_shared<StateInfo>(ints_->wfn()), scf_info_, foptions_, ints_,
+                       mo_space_info_);
         aci.set_fci_ints(fci_ints);
         if ((foptions_->psi_options())["ACI_RELAX_SIGMA"].has_changed()) {
             aci.update_sigma();
@@ -1592,11 +1593,12 @@ double DSRG_MRPT3::compute_energy_relaxed() {
         Erelax = aci.compute_energy();
 
     } else {
-        // it is simpler here to call FCI instead of FCISolver
-        FCI fci(ints_->wfn(), foptions_->psi_options(), ints_, mo_space_info_);
-        fci.set_active_space_integrals(fci_ints);
-        fci.set_max_rdm_level(1);
-        Erelax = fci.compute_energy();
+        StateInfo state(ints_->wfn());
+        FCISolver fcisolver(state, mo_space_info_, ints_);
+        fcisolver.set_options(foptions_);
+        fcisolver.set_active_space_integrals(fci_ints);
+        fcisolver.set_max_rdm_level(1);
+        Erelax = fcisolver.compute_energy();
     }
 
     // printing

@@ -34,23 +34,23 @@
 #include "integrals/integrals.h"
 
 #include "base_classes/active_space_solver.h"
-#include "fci/fci.h"
+#include "fci/fci_solver.h"
 #include "sci/aci.h"
 #include "sci/asci.h"
 #include "sci/fci_mo.h"
 
 namespace forte {
 
-ActiveSpaceSolver::ActiveSpaceSolver(StateInfo state, std::shared_ptr<ForteIntegrals> ints,
-                                     std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : states_weights_({{state, 1.0}}), ints_(ints), mo_space_info_(mo_space_info) {
+ActiveSpaceSolver::ActiveSpaceSolver(StateInfo state, std::shared_ptr<MOSpaceInfo> mo_space_info,
+                                     std::shared_ptr<ForteIntegrals> ints)
+    : states_weights_({{state, 1.0}}), mo_space_info_(mo_space_info), ints_(ints) {
     make_active_space_ints();
 }
 
 ActiveSpaceSolver::ActiveSpaceSolver(
     const std::vector<std::pair<StateInfo, double>>& states_weights,
-    std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : states_weights_(states_weights), ints_(ints), mo_space_info_(mo_space_info) {
+    std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ForteIntegrals> ints)
+    : states_weights_(states_weights), mo_space_info_(mo_space_info), ints_(ints) {
     make_active_space_ints();
 }
 
@@ -73,22 +73,23 @@ make_active_space_solver(const std::string& type, StateInfo state,
                          std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
                          std::shared_ptr<ForteIntegrals> ints,
                          std::shared_ptr<MOSpaceInfo> mo_space_info) {
+
+    std::shared_ptr<ActiveSpaceSolver> solver;
     if (type == "FCI") {
-        return std::make_shared<FCI>(state, options, ints, mo_space_info);
+        solver = std::make_shared<FCISolver>(state, mo_space_info, ints);
+    } else if (type == "ACI") {
+        solver = std::make_shared<AdaptiveCI>(std::make_shared<StateInfo>(state), scf_info, options,
+                                              ints, mo_space_info);
+    } else if (type == "CAS") {
+        solver = std::make_shared<FCI_MO>(scf_info, options, ints, mo_space_info);
+    } else if (type == "ASCI") {
+        solver = std::make_shared<ASCI>(std::make_shared<StateInfo>(state), scf_info, options, ints,
+                                        mo_space_info);
+    } else {
+        throw psi::PSIEXCEPTION("make_active_space_solver: type = " + type + " was not recognized");
     }
-    if (type == "ACI") {
-        return std::make_shared<AdaptiveCI>(std::make_shared<StateInfo>(state), scf_info, options,
-                                            ints, mo_space_info);
-    }
-    if (type == "CAS") {
-        return std::make_shared<FCI_MO>(scf_info, options, ints, mo_space_info);
-    }
-    if (type == "ASCI") {
-        return std::make_shared<ASCI>(std::make_shared<StateInfo>(state), scf_info, options, ints,
-                                      mo_space_info);
-    }
-    throw psi::PSIEXCEPTION("make_active_space_solver: type = " + type + " was not recognized");
-    return std::shared_ptr<ActiveSpaceSolver>();
+    solver->set_options(options);
+    return solver;
 }
 
 } // namespace forte

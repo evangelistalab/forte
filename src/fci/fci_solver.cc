@@ -52,19 +52,16 @@ namespace forte {
 
 class MOSpaceInfo;
 
-FCISolver::FCISolver(psi::Dimension active_dim, std::vector<size_t> core_mo,
-                     std::vector<size_t> active_mo, StateInfo state,
-                     std::shared_ptr<ForteIntegrals> ints,
-                     std::shared_ptr<MOSpaceInfo> mo_space_info, size_t initial_guess_per_root,
-                     int print, ForteOptions options)
-    : ActiveSpaceSolver(state, ints, mo_space_info), active_dim_(active_dim), core_mo_(core_mo), active_mo_(active_mo), ints_(ints),
-      nirrep_(active_dim.n()), symmetry_(state.irrep()),
-      multiplicity_(state.multiplicity()), nroot_(1), ntrial_per_root_(initial_guess_per_root),
-      print_(print), mo_space_info_(mo_space_info), options_(options) {
-    na_ = state.na() - core_mo.size() - mo_space_info->size("FROZEN_DOCC");
-    nb_ = state.nb() - core_mo.size() - mo_space_info->size("FROZEN_DOCC");
+// nroot_(1), ntrial_per_root_(initial_guess_per_root), print_(print),
+
+FCISolver::FCISolver(StateInfo state, std::shared_ptr<MOSpaceInfo> mo_space_info,
+                     std::shared_ptr<ForteIntegrals> ints)
+    : ActiveSpaceSolver(state, mo_space_info, ints),
+      active_dim_(mo_space_info->get_dimension("ACTIVE")), nirrep_(ints->nirrep()),
+      symmetry_(state.irrep()), multiplicity_(state.multiplicity()) {
     // TODO: read this info from the base class
-    nroot_ = options_.get_int("NROOT");
+    na_ = state.na() - core_mo_.size() - mo_space_info->size("FROZEN_DOCC");
+    nb_ = state.nb() - core_mo_.size() - mo_space_info->size("FROZEN_DOCC");
     startup();
 }
 
@@ -74,11 +71,15 @@ void FCISolver::set_nroot(int value) { nroot_ = value; }
 
 void FCISolver::set_root(int value) { root_ = value; }
 
+void FCISolver::set_ntrial_per_root(int value) { ntrial_per_root_ = value; }
+
 void FCISolver::set_fci_iterations(int value) { fci_iterations_ = value; }
 
 void FCISolver::set_collapse_per_root(int value) { collapse_per_root_ = value; }
 
 void FCISolver::set_subspace_per_root(int value) { subspace_per_root_ = value; }
+
+void FCISolver::set_e_convergence(double value) { e_convergence_ = value; }
 
 void FCISolver::startup() {
     // Create the string lists
@@ -109,6 +110,19 @@ void FCISolver::startup() {
     }
 }
 
+void FCISolver::set_options(std::shared_ptr<ForteOptions> options) {
+    set_nroot(options->get_int("FCI_NROOT"));
+    set_root(options->get_int("FCI_ROOT"));
+    set_test_rdms(options->get_bool("FCI_TEST_RDMS"));
+    set_fci_iterations(options->get_int("FCI_MAXITER"));
+    set_collapse_per_root(options->get_int("DL_COLLAPSE_PER_ROOT"));
+    set_subspace_per_root(options->get_int("DL_SUBSPACE_PER_ROOT"));
+    set_print(options->get_int("PRINT"));
+    set_ntrial_per_root(options->get_int("NTRIAL_PER_ROOT"));
+    set_print(options->get_int("PRINT"));
+    set_e_convergence(options->get_double("E_CONVERGENCE"));
+}
+
 /*
  * See Appendix A in J. Comput. Chem. 2001 vol. 22 (13) pp. 1574-1589
  */
@@ -134,7 +148,7 @@ double FCISolver::compute_energy() {
     Hdiag.copy_to(sigma);
 
     DavidsonLiuSolver dls(fci_size, nroot_);
-    dls.set_e_convergence(options_.get_double("E_CONVERGENCE"));
+    dls.set_e_convergence(e_convergence_);
     dls.set_print_level(print_);
     dls.set_collapse_per_root(collapse_per_root_);
     dls.set_subspace_per_root(subspace_per_root_);
@@ -487,7 +501,7 @@ FCISolver::initial_guess(FCIWfn& diag, size_t n, std::shared_ptr<ActiveSpaceInte
     return guess;
 }
 
-Reference FCISolver::solver_get_reference() {
+Reference FCISolver::get_reference() {
     size_t nact = active_dim_.sum();
     size_t nact2 = nact * nact;
     size_t nact3 = nact2 * nact;

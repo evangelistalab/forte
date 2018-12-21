@@ -3429,7 +3429,7 @@ THREE_DSRG_MRPT2::relaxed_energy(std::shared_ptr<ActiveSpaceIntegrals> fci_ints)
 
         FCI_MO fci_mo(scf_info_, foptions_, ints_, mo_space_info_, fci_ints);
         fci_mo.set_localize_actv(false);
-        double Eci = fci_mo.solver_compute_energy();
+        double Eci = fci_mo.compute_energy();
 
         // test state specific or state average
         if (!multi_state_) {
@@ -3513,8 +3513,7 @@ THREE_DSRG_MRPT2::relaxed_energy(std::shared_ptr<ActiveSpaceIntegrals> fci_ints)
             StateInfo state(na, nb, multi, multi - 1,
                             foptions_->get_int("ROOT_SYM")); // assumes highest Ms
             // TODO use base class info
-            FCISolver fcisolver(active_dim, core_mos_, actv_mos_, state, ints_, mo_space_info_,
-                                ntrial_per_root, print_, *foptions_);
+            FCISolver fcisolver(state, mo_space_info_, ints_);
 
             fcisolver.set_max_rdm_level(1);
             fcisolver.set_nroot(foptions_->get_int("FCI_NROOT"));
@@ -3523,6 +3522,8 @@ THREE_DSRG_MRPT2::relaxed_energy(std::shared_ptr<ActiveSpaceIntegrals> fci_ints)
             fcisolver.set_fci_iterations(foptions_->get_int("FCI_MAXITER"));
             fcisolver.set_collapse_per_root(foptions_->get_int("DL_COLLAPSE_PER_ROOT"));
             fcisolver.set_subspace_per_root(foptions_->get_int("DL_SUBSPACE_PER_ROOT"));
+            fcisolver.set_print(print_);
+            fcisolver.set_ntrial_per_root(ntrial_per_root);
 
             // set integrals manually
             fcisolver.set_active_space_integrals(fci_ints);
@@ -3538,9 +3539,8 @@ THREE_DSRG_MRPT2::relaxed_energy(std::shared_ptr<ActiveSpaceIntegrals> fci_ints)
 
                 // prepare FCISolver
                 int ms = (multi + 1) % 2;
-                auto nelec_actv =
-                    nelec;
-//                - 2 * mo_space_info_->size("FROZEN_DOCC") - 2 * core_mos_.size();
+                auto nelec_actv = nelec;
+                //                - 2 * mo_space_info_->size("FROZEN_DOCC") - 2 * core_mos_.size();
                 auto na = (nelec_actv + ms) / 2;
                 auto nb = nelec_actv - na;
 
@@ -3550,8 +3550,7 @@ THREE_DSRG_MRPT2::relaxed_energy(std::shared_ptr<ActiveSpaceIntegrals> fci_ints)
                 //                                    *foptions_);
                 StateInfo state(na, nb, multi, multi - 1, irrep); // assumes highes Ms
                 // TODO use base class info
-                FCISolver fcisolver(active_dim, core_mos_, actv_mos_, state, ints_, mo_space_info_,
-                                    ntrial_per_root, print_, *foptions_);
+                FCISolver fcisolver(state, mo_space_info_, ints_);
 
                 fcisolver.set_max_rdm_level(1);
                 fcisolver.set_nroot(nstates);
