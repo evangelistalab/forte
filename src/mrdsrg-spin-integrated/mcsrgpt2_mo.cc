@@ -58,18 +58,20 @@ MCSRGPT2_MO::MCSRGPT2_MO(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<Fort
     compute_ss_energy();
 
     // reference cumulants
-    int max_rdm_level = (options->get_str("THREEPDC") != "ZERO") ? 3 : 2;
-    Reference ref = reference(max_rdm_level);
+    //int max_rdm_level = (options->get_str("THREEPDC") != "ZERO") ? 3 : 2;
+    max_rdm_ = (options->get_str("THREEPDC") != "ZERO") ? 3 : 2;
+    //Reference ref = reference(max_rdm_level);
+    Reference ref = solver_get_reference();
 
     // semicanonicalize orbitals
     SemiCanonical semi(options, integral_, mo_space_info_);
     if (actv_space_type_ == "CIS" || actv_space_type_ == "CISD") {
         semi.set_actv_dims(actv_hole_dim_, actv_part_dim_);
     }
-    semi.semicanonicalize(ref, max_rdm_level);
+    semi.semicanonicalize(ref, max_rdm_);
 
     // fill in non-tensor based cumulants
-    fill_naive_cumulants(ref, max_rdm_level);
+    fill_naive_cumulants(ref, max_rdm_);
 
     // build Fock matrix using semicanonicalized densities
     Fa_ = d2(ncmo_, d1(ncmo_));

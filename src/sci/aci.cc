@@ -1607,7 +1607,7 @@ void AdaptiveCI::set_max_rdm(int rdm) {
     set_rdm_ = true;
 }
 
-Reference AdaptiveCI::reference() {
+Reference AdaptiveCI::solver_get_reference() {
     // const std::vector<Determinant>& final_wfn =
     //     final_wfn_.determinants();
     CI_RDMS ci_rdms(final_wfn_, fci_ints_, evecs_, 0, 0);

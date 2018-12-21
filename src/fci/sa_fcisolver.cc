@@ -332,7 +332,7 @@ double SA_FCISolver::compute_energy() {
             //            SA_C_.push_back(fcisolver.get_FCIWFN());
             double Ecasscf = evals->get(root_number) + Enuc;
             casscf_energies.push_back(Ecasscf);
-            sa_cas_ref.push_back(fcisolver.reference());
+            sa_cas_ref.push_back(fcisolver.solver_get_reference());
             sa_cas_ref[root_number].set_Eref(Ecasscf);
         }
     }

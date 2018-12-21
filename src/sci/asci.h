@@ -84,7 +84,7 @@ class ASCI : public ActiveSpaceSolver {
     double solver_compute_energy();
 
     /// Update the reference file
-    Reference reference();
+    Reference solver_get_reference();
 
     /// Get the wavefunction
     DeterminantHashVec get_wavefunction();

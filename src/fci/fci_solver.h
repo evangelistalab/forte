@@ -116,7 +116,7 @@ class FCISolver : public ActiveSpaceSolver {
     void compute_rdms_root(int root);
 
     /// Return a reference object
-    Reference reference();
+    Reference solver_get_reference();
 
     /// Set the number of desired roots
     void set_nroot(int value);

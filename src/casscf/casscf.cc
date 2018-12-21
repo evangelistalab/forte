@@ -361,7 +361,7 @@ void CASSCF::cas_ci() {
         aci.set_max_rdm(2);
         aci.set_quiet(quiet);
         aci.compute_energy();
-        cas_ref_ = aci.reference();
+        cas_ref_ = aci.solver_get_reference();
         E_casscf_ = cas_ref_.get_Eref();
     } else if (options_->get_str("CASSCF_CI_SOLVER") == "DMRG") {
 #ifdef HAVE_CHEMPS2
@@ -444,7 +444,7 @@ void CASSCF::cas_ci_final() {
         aci.set_max_rdm(3);
         aci.set_quiet(quiet);
         aci.compute_energy();
-        cas_ref_ = aci.reference();
+        cas_ref_ = aci.solver_get_reference();
         E_casscf_ = cas_ref_.get_Eref();
     } else if (options_->get_str("CASSCF_CI_SOLVER") == "DMRG") {
 #ifdef HAVE_CHEMPS2
@@ -779,7 +779,7 @@ void CASSCF::set_up_fci() {
     FCIWfnSolution.push_back(fcisolver.get_FCIWFN());
     CISolutions_.push_back(FCIWfnSolution);
 
-    cas_ref_ = fcisolver.reference();
+    cas_ref_ = fcisolver.solver_get_reference();
 }
 
 std::shared_ptr<FCIIntegrals> CASSCF::get_ci_integrals() {
@@ -1096,7 +1096,8 @@ void CASSCF::set_up_fcimo() {
         FCI_MO cas(scf_info_, options_, ints_, mo_space_info_, fci_ints);
         cas.set_quite_mode(print_ > 0 ? false : true);
         cas.solver_compute_energy();
-        cas_ref_ = cas.reference(2);
+        cas.set_max_rdm_level(2);
+        cas_ref_ = cas.solver_get_reference();
         E_casscf_ = cas_ref_.get_Eref();
     }
 }

@@ -31,6 +31,7 @@
 
 #include "base_classes/state_info.h"
 #include "base_classes/scf_info.h"
+#include "base_classes/reference.h"
 
 namespace forte {
 
@@ -53,12 +54,18 @@ class ActiveSpaceSolver {
     // equivalent to "this->solver_compute_energy()"
     double compute_energy() { return solver_compute_energy(); }
 
+    // Returns the reference
+    Reference get_reference() { return solver_get_reference(); }
+
     // enable deletion of a Derived* through a Base*
     virtual ~ActiveSpaceSolver() = default;
 
   protected:
     // pure virtual implementation
     virtual double solver_compute_energy() = 0;
+
+    // pure virtual implementation
+    virtual Reference solver_get_reference() = 0;
 
     /// Psi's wavefunction object
     std::vector<std::pair<StateInfo, double>> states_weights_;

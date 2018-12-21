@@ -101,9 +101,10 @@ class FCI_MO : public ActiveSpaceSolver {
     /// Compute state-averaged CASCI energy
     double compute_sa_energy();
 
+
     /// Return the reference object
     /// Return averaged cumulants if AVG_STATE is not empty
-    Reference reference(const int& level = 3);
+    Reference solver_get_reference();
 
     /// Compute densities or transition densities
     /// root1, root2 -- the ket and bra roots of p_space and eigen
@@ -179,6 +180,9 @@ class FCI_MO : public ActiveSpaceSolver {
     void project_roots(std::vector<std::vector<std::pair<size_t, double>>>& projected) {
         projected_roots_ = projected;
     }
+
+    /// Set maximum RDM to compute
+    void set_max_rdm_level(int level) { max_rdm_ = level; } 
 
     /// Set initial guess
     void set_initial_guess(std::vector<std::pair<size_t, double>>& guess) {
@@ -345,6 +349,9 @@ class FCI_MO : public ActiveSpaceSolver {
                                                                const bool& print = false);
     std::vector<std::vector<std::vector<bool>>> Form_String_EA(const std::vector<bool>& ref_string,
                                                                const bool& print = false);
+
+    /// Max RDM to compute
+    int max_rdm_ = 3;
 
     /// Choice of Roots
     int nroot_; // number of roots

@@ -185,5 +185,5 @@ double FCI::solver_compute_energy() {
     return fci_energy;
 }
 
-Reference FCI::reference() { return fcisolver_->reference(); }
+Reference FCI::solver_get_reference() { return fcisolver_->solver_get_reference(); }
 } // namespace forte

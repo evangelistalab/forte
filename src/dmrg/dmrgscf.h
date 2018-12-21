@@ -52,7 +52,7 @@ class DMRGSCF : public ActiveSpaceSolver {
 
     double solver_compute_energy();
 
-    Reference reference() { return dmrg_ref_; }
+    Reference solver_get_reference() { return dmrg_ref_; }
     void set_iterations(int dmrg_iterations) { dmrg_iterations_ = dmrg_iterations; }
 
   private:

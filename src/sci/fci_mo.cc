@@ -2274,29 +2274,29 @@ d3 FCI_MO::compute_orbital_extents() {
     return orb_extents;
 }
 
-Reference FCI_MO::reference(const int& level) {
+Reference FCI_MO::solver_get_reference() {
     Reference ref;
 
     if ((options_->psi_options())["AVG_STATE"].size() != 0) {
-        compute_sa_ref(level);
+        compute_sa_ref(max_rdm_);
     } else {
-        compute_ref(level);
+        compute_ref(max_rdm_);
     }
 
     ref.set_Eref(Eref_);
 
-    if (level > 0) {
+    if (max_rdm_ > 0) {
         ref.set_L1a(L1a);
         ref.set_L1b(L1b);
     }
 
-    if (level > 1) {
+    if (max_rdm_> 1) {
         ref.set_L2aa(L2aa);
         ref.set_L2ab(L2ab);
         ref.set_L2bb(L2bb);
     }
 
-    if (level > 2 && (options_->get_str("THREEPDC") != "ZERO")) {
+    if (max_rdm_ > 2 && (options_->get_str("THREEPDC") != "ZERO")) {
         ref.set_L3aaa(L3aaa);
         ref.set_L3aab(L3aab);
         ref.set_L3abb(L3abb);

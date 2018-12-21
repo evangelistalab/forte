@@ -438,9 +438,11 @@ double MRDSRG::compute_energy_relaxed() {
             if (cas_type == "CAS") {
                 FCI_MO fci_mo(scf_info_, foptions_, ints_, mo_space_info_, fci_ints);
                 fci_mo.set_localize_actv(false);
+
+                fci_mo.set_max_rdm_level(max_rdm_level);
                 Erelax = fci_mo.solver_compute_energy();
 
-                reference_ = fci_mo.reference(max_rdm_level);
+                reference_ = fci_mo.solver_get_reference();
             } else if (cas_type == "ACI") {
                 AdaptiveCI aci(std::make_shared<StateInfo>(ints_->wfn()),scf_info_, foptions_, ints_, mo_space_info_);
                 aci.set_fci_ints(fci_ints);
@@ -448,13 +450,13 @@ double MRDSRG::compute_energy_relaxed() {
                     aci.update_sigma();
                 }
                 Erelax = aci.compute_energy();
-                reference_ = aci.reference();
+                reference_ = aci.solver_get_reference();
             } else {
                 FCI fci(ints_->wfn(), foptions_->psi_options(), ints_, mo_space_info_, fci_ints);
                 fci.set_max_rdm_level(max_rdm_level);
-                Erelax = fci.compute_energy();
+                Erelax = fci.solver_compute_energy();
 
-                reference_ = fci.reference();
+                reference_ = fci.solver_get_reference();
             }
             outfile->Printf("\n  The following reference rotation will make the new reference and "
                             "integrals in the same basis.");
@@ -611,6 +613,7 @@ double MRDSRG::compute_energy_sa() {
             std::make_shared<FCI_MO>(scf_info_, foptions_, ints_, mo_space_info_, fci_ints);
         Etemp = Erelax_sa;
         fci_mo->set_localize_actv(false);
+        fci_mo->set_max_rdm_level(max_rdm_level);
         Erelax_sa = fci_mo->compute_energy();
         Erelax_sa_vec.push_back(Erelax_sa);
         double Edelta_relax = Erelax_sa - Etemp;
@@ -629,7 +632,7 @@ double MRDSRG::compute_energy_sa() {
         }
 
         // obtain new reference
-        reference_ = fci_mo->reference(max_rdm_level);
+        reference_ = fci_mo->solver_get_reference();
 
         outfile->Printf("\n  The following reference rotation will make the new reference and "
                         "integrals in the same basis.");

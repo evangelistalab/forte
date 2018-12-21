@@ -527,7 +527,7 @@ FCISolver::initial_guess(FCIWfn& diag, size_t n, std::shared_ptr<FCIIntegrals> f
     return guess;
 }
 
-Reference FCISolver::reference() {
+Reference FCISolver::solver_get_reference() {
     size_t nact = active_dim_.sum();
     size_t nact2 = nact * nact;
     size_t nact3 = nact2 * nact;

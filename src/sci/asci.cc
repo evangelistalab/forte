@@ -550,7 +550,7 @@ double ASCI::compute_spin_contamination(DeterminantHashVec& space, WFNOperator& 
     return spin_contam;
 }
 
-Reference ASCI::reference() {
+Reference ASCI::solver_get_reference() {
     // const std::vector<Determinant>& final_wfn =
     //     final_wfn_.determinants();
     CI_RDMS ci_rdms(final_wfn_, fci_ints_, evecs_, 0, 0);
