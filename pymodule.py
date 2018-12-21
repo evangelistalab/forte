@@ -44,8 +44,9 @@ def new_driver(state, scf_info, options, ints, mo_space_info):
     # Create a dynamical correlation solver object
 #    dyncorr_solver = options.get_str('DYNCORR_SOLVER')
 #    solver = forte.make_dynamical_solver(dyncorr_solver,state,scf_info,forte_options,ints,mo_space_info)
+    return energy
 
-def run_forte(name, **kwargs):
+def run_forte(name, return_wfn=False, **kwargs):
     r"""Function encoding sequence of PSI module and plugin calls so that
     forte can be called via :py:func:`~driver.energy`. For post-scf plugins.
 
@@ -96,6 +97,8 @@ def run_forte(name, **kwargs):
     # Run a method
     job_type = options.get_str('JOB_TYPE')
 #    job_type = psi4.core.get_option('FORTE','JOB_TYPE')
+
+    energy = 0.0
     if job_type != 'NONE':
         start = timeit.timeit()
 
@@ -106,17 +109,19 @@ def run_forte(name, **kwargs):
             forte.LOCALIZE(ref_wfn,options,ints,mo_space_info)
 
         if (job_type == 'NEWDRIVER'):
-            new_driver(state, scf_info, forte.forte_options, ints, mo_space_info)
+            energy = new_driver(state, scf_info, forte.forte_options, ints, mo_space_info)
         else:
             # Run a method
-            forte.forte_old_methods(ref_wfn, options, ints, mo_space_info)
+            energy = forte.forte_old_methods(ref_wfn, options, ints, mo_space_info)
 
         end = timeit.timeit()
         #print('\n\n  Your calculation took ', (end - start), ' seconds');
-
     # Close ambit, etc.
     forte.cleanup()
-    return ref_wfn
+    if return_wfn == True:
+        return energy, ref_wfn
+    else:
+        return energy
 
 # Integration with driver routines
 psi4.driver.procedures['energy']['forte'] = run_forte

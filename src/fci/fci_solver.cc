@@ -62,7 +62,6 @@ FCISolver::FCISolver(StateInfo state, std::shared_ptr<MOSpaceInfo> mo_space_info
     // TODO: read this info from the base class
     na_ = state.na() - core_mo_.size() - mo_space_info->size("FROZEN_DOCC");
     nb_ = state.nb() - core_mo_.size() - mo_space_info->size("FROZEN_DOCC");
-    startup();
 }
 
 void FCISolver::set_max_rdm_level(int value) { max_rdm_level_ = value; }
@@ -128,6 +127,7 @@ void FCISolver::set_options(std::shared_ptr<ForteOptions> options) {
  */
 double FCISolver::compute_energy() {
     local_timer t;
+    startup();
 
     double nuclear_repulsion_energy =
         psi::Process::environment.molecule()->nuclear_repulsion_energy({{0, 0, 0}});
@@ -268,7 +268,7 @@ double FCISolver::compute_energy() {
             C_->copy(dls.eigenvector(r));
             std::vector<std::tuple<double, double, size_t, size_t, size_t>> dets_config =
                 C_->max_abs_elements(guess_size * ntrial_per_root_);
-            psi::Dimension nactvpi = mo_space_info_->get_dimension("ACTIVE");
+           // psi::Dimension nactvpi = mo_space_info_->get_dimension("ACTIVE");
 
             for (auto& det_config : dets_config) {
                 double ci_abs, ci;
@@ -285,7 +285,7 @@ double FCISolver::compute_energy() {
                 outfile->Printf("\n    ");
                 size_t offset = 0;
                 for (int h = 0; h < nirrep_; ++h) {
-                    for (int k = 0; k < nactvpi[h]; ++k) {
+                    for (int k = 0; k < active_dim_[h]; ++k) {
                         size_t i = k + offset;
                         bool a = Ia_v[i];
                         bool b = Ib_v[i];
@@ -295,14 +295,15 @@ double FCISolver::compute_energy() {
                             outfile->Printf("%c", a ? 'a' : 'b');
                         }
                     }
-                    if (nactvpi[h] != 0)
+                    if (active_dim_[h] != 0)
                         outfile->Printf(" ");
-                    offset += nactvpi[h];
+                    offset += active_dim_[h];
                 }
                 outfile->Printf("%15.8f", ci);
             }
 
             double root_energy = dls.eigenvalues()->get(r) + nuclear_repulsion_energy;
+
             outfile->Printf("\n\n    Total Energy: %25.15f", root_energy);
         }
     }
@@ -330,7 +331,10 @@ double FCISolver::compute_energy() {
     //        C_->print_natural_orbitals(mo_space_info_);
     //    }
 
+
     energy_ = dls.eigenvalues()->get(root_) + nuclear_repulsion_energy;
+    psi::Process::environment.globals["CURRENT ENERGY"] = energy_;
+    psi::Process::environment.globals["FCI ENERGY"] = energy_;
 
     return energy_;
 }

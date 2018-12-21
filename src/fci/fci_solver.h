@@ -180,8 +180,6 @@ class FCISolver : public ActiveSpaceSolver {
 
     /// All that happens before we compute the energy
     void startup();
-    /// The mo_space_info object
-    std::shared_ptr<MOSpaceInfo> mo_space_info_;
 
     /// Initial CI wave function guess
     std::vector<std::pair<int, std::vector<std::tuple<size_t, size_t, size_t, double>>>>
