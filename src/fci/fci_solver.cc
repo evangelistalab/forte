@@ -113,6 +113,7 @@ void FCISolver::set_options(std::shared_ptr<ForteOptions> options) {
     set_nroot(options->get_int("FCI_NROOT"));
     set_root(options->get_int("FCI_ROOT"));
     set_test_rdms(options->get_bool("FCI_TEST_RDMS"));
+    set_max_rdm_level(options->get_int("FCI_MAX_RDM"));
     set_fci_iterations(options->get_int("FCI_MAXITER"));
     set_collapse_per_root(options->get_int("DL_COLLAPSE_PER_ROOT"));
     set_subspace_per_root(options->get_int("DL_SUBSPACE_PER_ROOT"));
