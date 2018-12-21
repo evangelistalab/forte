@@ -45,7 +45,7 @@ FCI::FCI(psi::SharedWavefunction ref_wfn, psi::Options& options,
     startup();
 }
 
-//FCI::FCI(psi::SharedWavefunction ref_wfn, psi::Options& options,
+// FCI::FCI(psi::SharedWavefunction ref_wfn, psi::Options& options,
 //         std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info,
 //         std::shared_ptr<ActiveSpaceIntegrals> fci_ints)
 //    : ActiveSpaceSolver(StateInfo(ref_wfn), ints, mo_space_info), options_(options) {
@@ -92,50 +92,11 @@ double FCI::solver_compute_energy() {
     std::vector<size_t> rdocc = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
     std::vector<size_t> active = mo_space_info_->get_corr_abs_mo("ACTIVE");
 
-    int charge = psi::Process::environment.molecule()->molecular_charge();
-    if (options_.has_changed("CHARGE")) {
-        charge = options_.get_int("CHARGE");
-    }
-
-    int nel = 0;
-    int natom = psi::Process::environment.molecule()->natom();
-    for (int i = 0; i < natom; i++) {
-        nel += static_cast<int>(psi::Process::environment.molecule()->Z(i));
-    }
-    // If the charge has changed, recompute the number of electrons
-    // Or if you cannot find the number of electrons
-    nel -= charge;
-
-    int multiplicity = psi::Process::environment.molecule()->multiplicity();
-    if (options_.has_changed("MULTIPLICITY")) {
-        multiplicity = options_.get_int("MULTIPLICITY");
-    }
-
-    // If the user did not specify ms determine the value from the input or
-    // take the lowest value consistent with the value of "MULTIPLICITY"
-    if (not set_ms_) {
-        if (options_.has_changed("MS")) {
-            twice_ms_ = std::round(2.0 * options_.get_double("MS"));
-        } else {
-            // Default: lowest spin solution
-            twice_ms_ = (multiplicity + 1) % 2;
-        }
-    }
-
-    //    if(ms < 0){
-    //        outfile->Printf("\n  Ms must be no less than 0.");
-    //        outfile->Printf("\n  Ms = %2d, MULTIPLICITY = %2d", ms,
-    //        multiplicity);
-    //        outfile->Printf("\n  Check (specify) Ms value (component of
-    //        multiplicity)! \n");
-    //        throw psi::PSIEXCEPTION("Ms must be no less than 0. Check output for
-    //        details.");
-    //    }
-
+    StateInfo& state = states_weights_[0].first;
     if (print_) {
-        outfile->Printf("\n  Number of electrons: %d", nel);
-        outfile->Printf("\n  Charge: %d", charge);
-        outfile->Printf("\n  Multiplicity: %d", multiplicity);
+        outfile->Printf("\n  Number of electrons: %d", state.na() + state.nb());
+//        outfile->Printf("\n  Charge: %d", state.charge());
+        outfile->Printf("\n  Multiplicity: %d", state.multiplicity());
         outfile->Printf("\n  Davidson subspace max dim: %d",
                         options_.get_int("DL_SUBSPACE_PER_ROOT"));
         outfile->Printf("\n  Davidson subspace min dim: %d",
@@ -147,20 +108,13 @@ double FCI::solver_compute_energy() {
         }
     }
 
-    if (((nel - twice_ms_) % 2) != 0)
-        throw psi::PSIEXCEPTION("\n\n  FCI: Wrong value of M_s.\n\n");
+    //    if (((nel - twice_ms_) % 2) != 0)
+    //        throw psi::PSIEXCEPTION("\n\n  FCI: Wrong value of M_s.\n\n");
+    // TODO make sure this exception is somewhere
 
-    // Adjust the number of for frozen and restricted doubly occupied
-    size_t nactel = nel - 2 * nfdocc - 2 * rdocc.size();
-
-    size_t na = (nactel + twice_ms_) / 2;
-    size_t nb = nactel - na;
-
-    //    outfile->Printf("\n  A");
-
-    fcisolver_ = std::unique_ptr<FCISolver>(new FCISolver(
-        active_dim, rdocc, active, na, nb, multiplicity, options_.get_int("ROOT_SYM"), ints_,
-        mo_space_info_, options_.get_int("FCI_NTRIAL_PER_ROOT"), print_, options_));
+    fcisolver_ = std::unique_ptr<FCISolver>(
+        new FCISolver(active_dim, rdocc, active, states_weights_[0].first, ints_, mo_space_info_,
+                      options_.get_int("FCI_NTRIAL_PER_ROOT"), print_, options_));
 
     //    outfile->Printf("\n  B");
     // tweak some options

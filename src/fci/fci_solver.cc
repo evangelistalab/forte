@@ -53,39 +53,17 @@ namespace forte {
 class MOSpaceInfo;
 
 FCISolver::FCISolver(psi::Dimension active_dim, std::vector<size_t> core_mo,
-                     std::vector<size_t> active_mo, size_t na, size_t nb, size_t multiplicity,
-                     size_t symmetry, std::shared_ptr<ForteIntegrals> ints,
-                     std::shared_ptr<MOSpaceInfo> mo_space_info, size_t ntrial_per_root, int print,
-                     ForteOptions options)
-    : active_dim_(active_dim), core_mo_(core_mo), active_mo_(active_mo), ints_(ints),
-      nirrep_(active_dim.n()), symmetry_(symmetry), na_(na), nb_(nb), multiplicity_(multiplicity),
-      nroot_(0), ntrial_per_root_(ntrial_per_root), print_(print), mo_space_info_(mo_space_info),
-      options_(options) {
-    nroot_ = options_.get_int("NROOT");
-    startup();
-}
-
-FCISolver::FCISolver(psi::Dimension active_dim, std::vector<size_t> core_mo,
-                     std::vector<size_t> active_mo, size_t na, size_t nb, size_t multiplicity,
-                     size_t symmetry, std::shared_ptr<ForteIntegrals> ints,
-                     std::shared_ptr<MOSpaceInfo> mo_space_info, ForteOptions options)
-    : active_dim_(active_dim), core_mo_(core_mo), active_mo_(active_mo), ints_(ints),
-      nirrep_(active_dim.n()), symmetry_(symmetry), na_(na), nb_(nb), multiplicity_(multiplicity),
-      nroot_(0), mo_space_info_(mo_space_info), options_(options) {
-    ntrial_per_root_ = options_.get_int("NTRIAL_PER_ROOT");
-    print_ = options_.get_int("PRINT");
-    startup();
-}
-
-FCISolver::FCISolver(psi::Dimension active_dim, std::vector<size_t> core_mo,
                      std::vector<size_t> active_mo, StateInfo state,
                      std::shared_ptr<ForteIntegrals> ints,
                      std::shared_ptr<MOSpaceInfo> mo_space_info, size_t initial_guess_per_root,
                      int print, ForteOptions options)
-    : active_dim_(active_dim), core_mo_(core_mo), active_mo_(active_mo), ints_(ints),
-      nirrep_(active_dim.n()), symmetry_(state.irrep()), na_(state.na()), nb_(state.nb()),
+    : ActiveSpaceSolver(state, ints, mo_space_info), active_dim_(active_dim), core_mo_(core_mo), active_mo_(active_mo), ints_(ints),
+      nirrep_(active_dim.n()), symmetry_(state.irrep()),
       multiplicity_(state.multiplicity()), nroot_(1), ntrial_per_root_(initial_guess_per_root),
       print_(print), mo_space_info_(mo_space_info), options_(options) {
+    na_ = state.na() - core_mo.size() - mo_space_info->size("FROZEN_DOCC");
+    nb_ = state.nb() - core_mo.size() - mo_space_info->size("FROZEN_DOCC");
+    // TODO: read this info from the base class
     nroot_ = options_.get_int("NROOT");
     startup();
 }
@@ -137,27 +115,11 @@ void FCISolver::startup() {
 double FCISolver::compute_energy() {
     local_timer t;
 
+
     double nuclear_repulsion_energy =
         psi::Process::environment.molecule()->nuclear_repulsion_energy({{0, 0, 0}});
-//    std::shared_ptr<ActiveSpaceIntegrals> fci_ints;
-//    if (!provide_integrals_and_restricted_docc_) {
-//        fci_ints = std::make_shared<ActiveSpaceIntegrals>(ints_, active_mo_, core_mo_);
-//        ambit::Tensor tei_active_aa =
-//            ints_->aptei_aa_block(active_mo_, active_mo_, active_mo_, active_mo_);
-//        ambit::Tensor tei_active_ab =
-//            ints_->aptei_ab_block(active_mo_, active_mo_, active_mo_, active_mo_);
-//        ambit::Tensor tei_active_bb =
-//            ints_->aptei_bb_block(active_mo_, active_mo_, active_mo_, active_mo_);
-//        fci_ints->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
-//        fci_ints->compute_restricted_one_body_operator();
-//    } else {
-//        if (fci_ints_ == nullptr) {
-//            outfile->Printf("\n You said you would specify integrals and restricted_docc");
-//            throw psi::PSIEXCEPTION("Need to set the fci_ints in your code");
-//        } else {
-//            fci_ints = fci_ints_;
-//        }
-//    }
+
+    make_active_space_ints();
 
     FCIWfn::allocate_temp_space(lists_, print_);
 

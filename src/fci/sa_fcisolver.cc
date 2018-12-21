@@ -114,7 +114,7 @@ void SA_FCISolver::read_options() {
                                 "AVG_STATE (%d) and AVG_WEIGHT (%d).",
                                 nentry, options_["AVG_WEIGHT"].size());
                 throw psi::PSIEXCEPTION("Mismatched number of entries in AVG_STATE "
-                                   "and AVG_WEIGHT.");
+                                        "and AVG_WEIGHT.");
             }
 
             double wsum = 0.0;
@@ -268,9 +268,11 @@ double SA_FCISolver::compute_energy() {
 
         size_t na = (nactel + twice_ms) / 2;
         size_t nb = nactel - na;
-        FCISolver fcisolver(active_dim, rdocc, active, na, nb, multiplicity, symmetry, ints_,
-                            mo_space_info_, options_.get_int("NTRIAL_PER_ROOT"),
-                            options_.get_int("PRINT"), options_);
+        StateInfo state(na, nb, multiplicity, twice_ms, symmetry);
+        // TODO use base class info
+        FCISolver fcisolver(active_dim, rdocc, active, state, ints_, mo_space_info_,
+                            options_.get_int("NTRIAL_PER_ROOT"), options_.get_int("PRINT"),
+                            options_);
         fcisolver.set_max_rdm_level(2);
         fcisolver.set_test_rdms(options_.get_bool("FCI_TEST_RDMS"));
         fcisolver.set_fci_iterations(options_.get_int("FCI_MAXITER"));
@@ -387,4 +389,3 @@ double SA_FCISolver::compute_energy() {
     return E_sa_casscf;
 }
 } // namespace forte
-

@@ -3505,9 +3505,15 @@ std::vector<double> THREE_DSRG_MRPT2::relaxed_energy(std::shared_ptr<ActiveSpace
             auto nb = nelec_actv - na;
 
             // diagonalize the Hamiltonian
-            FCISolver fcisolver(active_dim, core_mos_, actv_mos_, na, nb, multi,
-                                foptions_->get_int("ROOT_SYM"), ints_, mo_space_info_,
-                                ntrial_per_root, print_, foptions_->psi_options());
+//            FCISolver fcisolver(active_dim, core_mos_, actv_mos_, na, nb, multi,
+//                                foptions_->get_int("ROOT_SYM"), ints_, mo_space_info_,
+//                                ntrial_per_root, print_, foptions_->psi_options());
+
+            StateInfo state(na, nb, multi, multi - 1, foptions_->get_int("ROOT_SYM")); //assumes highes Ms
+            // TODO use base class info
+            FCISolver fcisolver(active_dim, core_mos_, actv_mos_, state, ints_,
+                                mo_space_info_, ntrial_per_root, print_, foptions_->psi_options());
+
             fcisolver.set_max_rdm_level(1);
             fcisolver.set_nroot(foptions_->get_int("FCI_NROOT"));
             fcisolver.set_root(foptions_->get_int("FCI_ROOT"));
@@ -3536,8 +3542,15 @@ std::vector<double> THREE_DSRG_MRPT2::relaxed_energy(std::shared_ptr<ActiveSpace
                 auto na = (nelec_actv + ms) / 2;
                 auto nb = nelec_actv - na;
 
-                FCISolver fcisolver(active_dim, core_mos_, actv_mos_, na, nb, multi, irrep, ints_,
-                                    mo_space_info_, ntrial_per_root, print_, foptions_->psi_options());
+//                FCISolver fcisolver(active_dim, core_mos_, actv_mos_, na, nb, multi, irrep, ints_,
+//                                    mo_space_info_, ntrial_per_root, print_, *foptions_);
+                StateInfo state(na, nb, multi, multi - 1, irrep); //assumes highes Ms
+                // TODO use base class info
+                FCISolver fcisolver(active_dim, core_mos_, actv_mos_, state, ints_,
+                                    mo_space_info_, ntrial_per_root, print_, *foptions_);
+
+
+
                 fcisolver.set_max_rdm_level(1);
                 fcisolver.set_nroot(nstates);
                 fcisolver.set_root(nstates - 1);

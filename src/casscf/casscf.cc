@@ -55,14 +55,13 @@
 #include "psi4/libdiis/diismanager.h"
 #include "psi4/libmints/factory.h"
 
-
-
 namespace forte {
 
 CASSCF::CASSCF(std::shared_ptr<StateInfo> state, std::shared_ptr<SCFInfo> scf_info,
                std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
                std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : state_(state), scf_info_(scf_info), options_(options), ints_(ints), mo_space_info_(mo_space_info) {
+    : state_(state), scf_info_(scf_info), options_(options), ints_(ints),
+      mo_space_info_(mo_space_info) {
     startup();
 }
 void CASSCF::compute_casscf() {
@@ -300,8 +299,10 @@ void CASSCF::startup() {
         }
     }
     std::shared_ptr<PSIO> psio_ = PSIO::shared_object();
-    psi::SharedMatrix T = psi::SharedMatrix(ints_->wfn()->matrix_factory()->create_matrix(PSIF_SO_T));
-    psi::SharedMatrix V = psi::SharedMatrix(ints_->wfn()->matrix_factory()->create_matrix(PSIF_SO_V));
+    psi::SharedMatrix T =
+        psi::SharedMatrix(ints_->wfn()->matrix_factory()->create_matrix(PSIF_SO_T));
+    psi::SharedMatrix V =
+        psi::SharedMatrix(ints_->wfn()->matrix_factory()->create_matrix(PSIF_SO_V));
     psi::SharedMatrix OneInt = T;
     OneInt->zero();
 
@@ -322,9 +323,11 @@ void CASSCF::startup() {
     } else {
         if (options_->get_str("SCF_TYPE") == "DF") {
             //   JK_ = JK::build_JK(basisset(), get_basisset("DF_BASIS_SCF"), options_);
-            JK_ = std::make_shared<DiskDFJK>(ints_->basisset(), ints_->get_basisset("DF_BASIS_SCF"));
+            JK_ =
+                std::make_shared<DiskDFJK>(ints_->basisset(), ints_->get_basisset("DF_BASIS_SCF"));
         } else {
-            JK_ = JK::build_JK(ints_->basisset(), psi::BasisSet::zero_ao_basis_set(), options_->psi_options());
+            JK_ = JK::build_JK(ints_->basisset(), psi::BasisSet::zero_ao_basis_set(),
+                               options_->psi_options());
         }
     }
     JK_->set_memory(psi::Process::environment.get_memory() * 0.8);
@@ -470,7 +473,7 @@ double CASSCF::cas_check(Reference cas_ref) {
     ambit::Tensor gamma2 = ambit::Tensor::build(ambit::CoreTensor, "Gamma2", {na_, na_, na_, na_});
     std::shared_ptr<ActiveSpaceIntegrals> fci_ints =
         std::make_shared<ActiveSpaceIntegrals>(ints_, mo_space_info_->get_corr_abs_mo("ACTIVE"),
-                                       mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
+                                               mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
     fci_ints->set_active_integrals_and_restricted_docc();
 
     /// Spin-free ORDM = gamma1_a + gamma1_b
@@ -753,13 +756,15 @@ void CASSCF::set_up_fci() {
     size_t na = (nactel + twice_ms) / 2;
     size_t nb = nactel - na;
 
-    FCISolver fcisolver(active_dim, rdocc, active, na, nb, multiplicity,
-                        options_->get_int("ROOT_SYM"), ints_, mo_space_info_,
-                        options_->get_int("NTRIAL_PER_ROOT"), options_->get_int("PRINT"), options_->psi_options());
-//  Cannot be changed to:
-//    FCISolver fcisolver(active_dim, rdocc, active, *state_,
-//                        ints_, mo_space_info_,
-//                        options_->get_int("NTRIAL_PER_ROOT"), options_->get_int("PRINT"), *options_);
+//    FCISolver fcisolver(active_dim, rdocc, active, na, nb, multiplicity,
+//                        options_->get_int("ROOT_SYM"), ints_, mo_space_info_,
+//                        options_->get_int("NTRIAL_PER_ROOT"), options_->get_int("PRINT"),
+//                        options_->psi_options());
+    //  Cannot be changed to:
+    FCISolver fcisolver(active_dim, rdocc, active, *state_, ints_, mo_space_info_,
+                        options_->get_int("NTRIAL_PER_ROOT"), options_->get_int("PRINT"),
+                        *options_);
+
     // tweak some options
     fcisolver.set_max_rdm_level(3);
     fcisolver.set_nroot(options_->get_int("NROOT"));
@@ -786,7 +791,8 @@ std::shared_ptr<ActiveSpaceIntegrals> CASSCF::get_ci_integrals() {
 
     std::vector<size_t> rdocc = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
     std::vector<size_t> active = mo_space_info_->get_corr_abs_mo("ACTIVE");
-    std::shared_ptr<ActiveSpaceIntegrals> fci_ints = std::make_shared<ActiveSpaceIntegrals>(ints_, active, rdocc);
+    std::shared_ptr<ActiveSpaceIntegrals> fci_ints =
+        std::make_shared<ActiveSpaceIntegrals>(ints_, active, rdocc);
     if (!(options_->get_bool("RESTRICTED_DOCC_JK"))) {
         fci_ints->set_active_integrals_and_restricted_docc();
     } else {
@@ -944,7 +950,8 @@ std::vector<std::vector<double>> CASSCF::compute_restricted_docc_operator() {
     return oei_container;
 }
 void CASSCF::overlap_orbitals(const psi::SharedMatrix& C_old, const psi::SharedMatrix& C_new) {
-    psi::SharedMatrix S_orbitals(new psi::Matrix("Overlap", scf_info_->nsopi(), scf_info_->nsopi()));
+    psi::SharedMatrix S_orbitals(
+        new psi::Matrix("Overlap", scf_info_->nsopi(), scf_info_->nsopi()));
     psi::SharedMatrix S_basis = ints_->wfn()->S();
     S_orbitals = psi::Matrix::triplet(C_old, S_basis, C_new, true, false, false);
     S_orbitals->set_name("C^T S C (Overlap)");
@@ -962,7 +969,8 @@ void CASSCF::set_up_sa_fci() {
     sa_fcisolver.set_integrals(ints_);
     std::vector<size_t> rdocc = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
     std::vector<size_t> active = mo_space_info_->get_corr_abs_mo("ACTIVE");
-    std::shared_ptr<ActiveSpaceIntegrals> fci_ints = std::make_shared<ActiveSpaceIntegrals>(ints_, active, rdocc);
+    std::shared_ptr<ActiveSpaceIntegrals> fci_ints =
+        std::make_shared<ActiveSpaceIntegrals>(ints_, active, rdocc);
     auto na_array = mo_space_info_->get_corr_abs_mo("ACTIVE");
 
     ambit::Tensor active_aa =
@@ -1027,7 +1035,8 @@ void CASSCF::set_up_fcimo() {
     // setup ActiveSpaceIntegrals for FCI_MO
     std::vector<size_t> rdocc = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
     std::vector<size_t> active = mo_space_info_->get_corr_abs_mo("ACTIVE");
-    std::shared_ptr<ActiveSpaceIntegrals> fci_ints = std::make_shared<ActiveSpaceIntegrals>(ints_, active, rdocc);
+    std::shared_ptr<ActiveSpaceIntegrals> fci_ints =
+        std::make_shared<ActiveSpaceIntegrals>(ints_, active, rdocc);
 
     if (!(options_->get_bool("RESTRICTED_DOCC_JK"))) {
         fci_ints->set_active_integrals_and_restricted_docc();
@@ -1103,8 +1112,7 @@ void CASSCF::set_up_fcimo() {
 }
 void CASSCF::write_orbitals_molden() {
     psi::SharedVector occ_vector(new psi::Vector(nirrep_, nmopi_));
-    view_modified_orbitals(ints_->wfn(), ints_->Ca(),
-                           scf_info_->epsilon_a(), occ_vector);
+    view_modified_orbitals(ints_->wfn(), ints_->Ca(), scf_info_->epsilon_a(), occ_vector);
 }
 // void CASSCF::overlap_coefficients() {
 //    outfile->Printf("\n iter  Overlap_{i-1} Overlap_{i}");

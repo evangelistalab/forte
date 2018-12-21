@@ -235,8 +235,11 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
                 psi::Dimension active_dim = mo_space_info_->get_dimension("ACTIVE");
                 int ntrial_per_root = foptions_->get_int("NTRIAL_PER_ROOT");
 
-                FCISolver fcisolver(active_dim, core_mos_, actv_mos_, na, nb, multi, irrep, ints_,
-                                    mo_space_info_, ntrial_per_root, print_, foptions_->psi_options());
+                StateInfo state(na, nb, multi, multi - 1, irrep); //assumes highes Ms
+                // TODO use base class info
+                FCISolver fcisolver(active_dim, core_mos_, actv_mos_, state, ints_,
+                                    mo_space_info_, ntrial_per_root, print_, *foptions_);
+
                 fcisolver.set_max_rdm_level(1);
                 fcisolver.set_nroot(nstates);
                 fcisolver.set_root(nstates - 1);
