@@ -42,11 +42,11 @@
 #include "helpers/mo_space_info.h"
 #include "fci/fci_vector.h"
 #include "forte_options.h"
+#include "base_classes/state_info.h"
 
 
 namespace forte {
 class SCFInfo;
-class StateInfo;
 
 /// Set the forte style options for the FCI method
 // void set_PCI_Simple_options(ForteOptions& foptions);
@@ -83,7 +83,7 @@ class ProjectorCI_Simple {
      * @param options The main options object
      * @param ints A pointer to an allocated integral object
      */
-    ProjectorCI_Simple(std::shared_ptr<StateInfo> state, std::shared_ptr<forte::SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
+    ProjectorCI_Simple(StateInfo state, std::shared_ptr<forte::SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
                        std::shared_ptr<ForteIntegrals> ints,
                        std::shared_ptr<MOSpaceInfo> mo_space_info);
 
@@ -97,7 +97,7 @@ class ProjectorCI_Simple {
 
     // * Calculation data
     /// The state to calculate
-    std::shared_ptr<StateInfo> state_;
+    StateInfo state_;
     /// The molecular integrals required by Explorer
     std::shared_ptr<ForteIntegrals> ints_;
     /// Store all the integrals locally

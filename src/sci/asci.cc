@@ -55,7 +55,7 @@ bool pairCompDescend(const std::pair<double, Determinant> E1,
     return E1.first > E2.first;
 }
 
-ASCI::ASCI(std::shared_ptr<StateInfo> state, std::shared_ptr<SCFInfo> scf_info,
+ASCI::ASCI(StateInfo state, std::shared_ptr<SCFInfo> scf_info,
          std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
          std::shared_ptr<MOSpaceInfo> mo_space_info)
     : state_(state), scf_info_(scf_info), options_(options), ints_(ints), mo_space_info_(mo_space_info) {
@@ -96,11 +96,11 @@ void ASCI::startup() {
 
     op_.initialize(mo_symmetry_, fci_ints_);
 
-    wavefunction_symmetry_ = state_->irrep();
+    wavefunction_symmetry_ = state_.irrep();
     if (options_->has_changed("ROOT_SYM")) {
         wavefunction_symmetry_ = options_->get_int("ROOT_SYM");
     }
-    multiplicity_ = state_->multiplicity();
+    multiplicity_ = state_.multiplicity();
     if (options_->has_changed("MULTIPLICITY")) {
         multiplicity_ = options_->get_int("MULTIPLICITY");
     }

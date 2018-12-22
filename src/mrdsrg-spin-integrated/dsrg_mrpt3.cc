@@ -1584,8 +1584,8 @@ double DSRG_MRPT3::compute_energy_relaxed() {
             dm_relax = fci_mo.compute_ref_relaxed_dm(Mbar0_, Mbar1_, Mbar2_);
         }
     } else if (foptions_->get_str("CAS_TYPE") == "ACI") {
-        AdaptiveCI aci(std::make_shared<StateInfo>(ints_->wfn()), scf_info_, foptions_, ints_,
-                       mo_space_info_);
+        AdaptiveCI aci(ints_->wfn(), scf_info_, foptions_, ints_,
+                       mo_space_info_); // ints_->wfn() is implicitly converted to StateInfo
         aci.set_fci_ints(fci_ints);
         if ((foptions_->psi_options())["ACI_RELAX_SIGMA"].has_changed()) {
             aci.update_sigma();

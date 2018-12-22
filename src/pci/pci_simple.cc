@@ -46,7 +46,6 @@
 #include "pci_simple.h"
 #include "helpers/timer.h"
 #include "sparse_ci/ci_reference.h"
-#include "base_classes/state_info.h"
 
 using namespace psi;
 using namespace forte::GeneratorType_Simple;
@@ -101,7 +100,7 @@ void print_vector(const std::vector<double>& C, std::string description);
 
 void print_hash(det_hash<>& C, std::string description, bool print_det = false);
 
-ProjectorCI_Simple::ProjectorCI_Simple(std::shared_ptr<StateInfo> state, std::shared_ptr<forte::SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
+ProjectorCI_Simple::ProjectorCI_Simple(StateInfo state, std::shared_ptr<forte::SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
                                        std::shared_ptr<ForteIntegrals> ints,
                                        std::shared_ptr<MOSpaceInfo> mo_space_info)
     : state_(state), scf_info_(scf_info), ints_(ints), mo_space_info_(mo_space_info), options_(options),
@@ -150,7 +149,7 @@ void ProjectorCI_Simple::startup() {
     nactel_ = 0;
     nalpha_ = 0;
     nbeta_ = 0;
-    int nel = state_->na() + state_->nb();
+    int nel = state_.na() + state_.nb();
     nirrep_ = mo_space_info_->nirrep();
 
     int ms = wavefunction_multiplicity_ - 1;

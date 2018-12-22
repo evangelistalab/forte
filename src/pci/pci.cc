@@ -198,7 +198,7 @@ void print_vector(const std::vector<double>& C, std::string description) {
     outfile->Printf("\n");
 }
 
-ProjectorCI::ProjectorCI(std::shared_ptr<StateInfo> state, std::shared_ptr<forte::SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
+ProjectorCI::ProjectorCI(StateInfo state, std::shared_ptr<forte::SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
                          std::shared_ptr<ForteIntegrals> ints,
                          std::shared_ptr<MOSpaceInfo> mo_space_info)
     : state_(state), scf_info_(scf_info), ints_(ints), mo_space_info_(mo_space_info), options_(options),
@@ -256,7 +256,7 @@ void ProjectorCI::startup() {
     nactel_ = 0;
     nalpha_ = 0;
     nbeta_ = 0;
-    int nel = state_->na() + state_->nb();
+    int nel = state_.na() + state_.nb();
     nirrep_ = mo_space_info_->nirrep();
 
     int ms = wavefunction_multiplicity_ - 1;

@@ -115,7 +115,7 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
 
     if (options.get_bool("CASSCF_REFERENCE") == true or options.get_str("JOB_TYPE") == "CASSCF") {
         auto casscf = std::make_shared<CASSCF>(
-            std::make_shared<StateInfo>(ref_wfn), std::make_shared<SCFInfo>(ref_wfn),
+            state, std::make_shared<SCFInfo>(ref_wfn),
             std::make_shared<ForteOptions>(options), ints, mo_space_info);
             casscf->compute_casscf();
     }
@@ -141,13 +141,13 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
     }
     if (options.get_str("JOB_TYPE") == "ASCI") {
         auto asci = std::make_shared<ASCI>(
-            std::make_shared<StateInfo>(ref_wfn), std::make_shared<SCFInfo>(ref_wfn),
+            state, std::make_shared<SCFInfo>(ref_wfn),
             std::make_shared<ForteOptions>(options), ints, mo_space_info);
             final_energy = asci->compute_energy();
     }
     if (options.get_str("JOB_TYPE") == "ACI") {
         auto aci = std::make_shared<AdaptiveCI>(
-            std::make_shared<StateInfo>(ref_wfn), std::make_shared<SCFInfo>(ref_wfn),
+            state, std::make_shared<SCFInfo>(ref_wfn),
             std::make_shared<ForteOptions>(options), ints, mo_space_info);
             final_energy = aci->compute_energy();
         if (options.get_bool("ACI_NO")) {
@@ -173,7 +173,7 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
     }
     if (options.get_str("JOB_TYPE") == "PCI") {
         auto pci = std::make_shared<ProjectorCI>(
-            std::make_shared<StateInfo>(ref_wfn), std::make_shared<SCFInfo>(ref_wfn),
+            state, std::make_shared<SCFInfo>(ref_wfn),
             std::make_shared<ForteOptions>(options), ints, mo_space_info);
         for (int n = 0; n < options.get_int("NROOT"); ++n) {
             final_energy = pci->compute_energy();
@@ -181,7 +181,7 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
     }
     if (options.get_str("JOB_TYPE") == "PCI_HASHVEC") {
         auto pci_hashvec = std::make_shared<ProjectorCI_HashVec>(
-            std::make_shared<StateInfo>(ref_wfn), std::make_shared<SCFInfo>(ref_wfn),
+            state, std::make_shared<SCFInfo>(ref_wfn),
             std::make_shared<ForteOptions>(options), ints, mo_space_info);
         for (int n = 0; n < options.get_int("NROOT"); ++n) {
             final_energy = pci_hashvec->compute_energy();
@@ -189,7 +189,7 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
     }
     if (options.get_str("JOB_TYPE") == "PCI_SIMPLE") {
         auto pci_simple = std::make_shared<ProjectorCI_Simple>(
-            std::make_shared<StateInfo>(ref_wfn), std::make_shared<SCFInfo>(ref_wfn),
+            state, std::make_shared<SCFInfo>(ref_wfn),
             std::make_shared<ForteOptions>(options), ints, mo_space_info);
         for (int n = 0; n < options.get_int("NROOT"); ++n) {
             final_energy = pci_simple->compute_energy();
@@ -197,7 +197,7 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
     }
     if (options.get_str("JOB_TYPE") == "EWCI") {
         auto ewci = std::make_shared<ElementwiseCI>(
-            std::make_shared<StateInfo>(ref_wfn), std::make_shared<SCFInfo>(ref_wfn),
+            state, std::make_shared<SCFInfo>(ref_wfn),
             std::make_shared<ForteOptions>(options), ints, mo_space_info);
         for (int n = 0; n < options.get_int("NROOT"); ++n) {
             final_energy = ewci->compute_energy();
@@ -211,7 +211,7 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
     if (options.get_bool("USE_DMRGSCF")) {
 #ifdef HAVE_CHEMPS2
         auto dmrg = std::make_shared<DMRGSCF>(
-            std::make_shared<StateInfo>(ref_wfn), std::make_shared<SCFInfo>(ref_wfn),
+            state, std::make_shared<SCFInfo>(ref_wfn),
             std::make_shared<ForteOptions>(options), ints, mo_space_info);
         dmrg->set_iterations(options.get_int("DMRGSCF_MAX_ITER"));
         final_energy = dmrg->compute_energy();
@@ -222,7 +222,7 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
     if (options.get_str("JOB_TYPE") == "DMRG") {
 #ifdef HAVE_CHEMPS2
         auto dmrg = std::make_shared<DMRGSolver>(
-            std::make_shared<StateInfo>(ref_wfn), std::make_shared<SCFInfo>(ref_wfn),
+            state, std::make_shared<SCFInfo>(ref_wfn),
             std::make_shared<ForteOptions>(options), ints, mo_space_info);
         dmrg->set_max_rdm(2);
         final_energy = dmrg->compute_energy();
@@ -307,7 +307,7 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
         } else if (cas_type == "ACI") {
 
             auto aci = std::make_shared<AdaptiveCI>(
-                std::make_shared<StateInfo>(ref_wfn), std::make_shared<SCFInfo>(ref_wfn),
+                state, std::make_shared<SCFInfo>(ref_wfn),
                 std::make_shared<ForteOptions>(options), ints, mo_space_info);
             aci->set_max_rdm(max_rdm_level);
             aci->compute_energy();
@@ -484,7 +484,7 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
         } else if (cas_type == "ACI") {
             // Compute ACI wfn
             auto aci = std::make_shared<AdaptiveCI>(
-                std::make_shared<StateInfo>(ref_wfn), std::make_shared<SCFInfo>(ref_wfn),
+                state, std::make_shared<SCFInfo>(ref_wfn),
                 std::make_shared<ForteOptions>(options), ints, mo_space_info);
             aci->set_quiet(true);
             aci->set_max_rdm(max_rdm_level);
@@ -513,7 +513,7 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
         } else if (cas_type == "DMRG") {
 #ifdef HAVE_CHEMPS2
             auto dmrg = std::make_shared<DMRGSolver>(
-                std::make_shared<StateInfo>(ref_wfn), std::make_shared<SCFInfo>(ref_wfn),
+                state, std::make_shared<SCFInfo>(ref_wfn),
                 std::make_shared<ForteOptions>(options), ints, mo_space_info);
             dmrg->set_max_rdm(max_rdm_level);
             dmrg->compute_energy();
@@ -530,7 +530,7 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
 #endif
         } else if (cas_type == "CASSCF") {
             auto casscf = std::make_shared<CASSCF>(
-                std::make_shared<StateInfo>(ref_wfn), std::make_shared<SCFInfo>(ref_wfn),
+                state, std::make_shared<SCFInfo>(ref_wfn),
                 std::make_shared<ForteOptions>(options), ints, mo_space_info);
             casscf->compute_casscf();
             Reference casscf_reference = casscf->casscf_reference();
@@ -631,7 +631,7 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
 
             Reference aci_reference;
             auto aci = std::make_shared<AdaptiveCI>(
-                std::make_shared<StateInfo>(ref_wfn), std::make_shared<SCFInfo>(ref_wfn),
+                state, std::make_shared<SCFInfo>(ref_wfn),
                 std::make_shared<ForteOptions>(options), ints, mo_space_info);
             aci->set_quiet(true);
             aci->set_max_rdm(max_rdm_level);
@@ -649,7 +649,7 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
                 ESNO esno(ref_wfn, options, ints, mo_space_info, aci_wfn);
                 esno.compute_nos();
                 auto aci2 = std::make_shared<AdaptiveCI>(
-                    std::make_shared<StateInfo>(ref_wfn), std::make_shared<SCFInfo>(ref_wfn),
+                    state, std::make_shared<SCFInfo>(ref_wfn),
                     std::make_shared<ForteOptions>(options), ints, mo_space_info);
                 aci2->set_quiet(true);
                 aci2->set_max_rdm(max_rdm_level);
@@ -709,7 +709,7 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
         } else if (cas_type == "DMRG") {
 #ifdef HAVE_CHEMPS2
             auto dmrg = std::make_shared<DMRGSolver>(
-                std::make_shared<StateInfo>(ref_wfn), std::make_shared<SCFInfo>(ref_wfn),
+                state, std::make_shared<SCFInfo>(ref_wfn),
                 std::make_shared<ForteOptions>(options), ints, mo_space_info);
             dmrg->set_max_rdm(max_rdm_level);
             dmrg->compute_energy();
@@ -730,7 +730,7 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
 #endif
         } else if (cas_type == "CASSCF") {
             auto casscf = std::make_shared<CASSCF>(
-                std::make_shared<StateInfo>(ref_wfn), std::make_shared<SCFInfo>(ref_wfn),
+                state, std::make_shared<SCFInfo>(ref_wfn),
                 std::make_shared<ForteOptions>(options), ints, mo_space_info);
             casscf->compute_casscf();
             Reference casscf_reference = casscf->casscf_reference();
@@ -806,7 +806,7 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
             Reference aci_reference;
             {
                 auto aci = std::make_shared<AdaptiveCI>(
-                    std::make_shared<StateInfo>(ref_wfn), std::make_shared<SCFInfo>(ref_wfn),
+                    state, std::make_shared<SCFInfo>(ref_wfn),
                     std::make_shared<ForteOptions>(options), ints, mo_space_info);
                 aci->set_quiet(true);
                 aci->set_max_rdm(max_rdm_level);
@@ -824,7 +824,7 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
                     ESNO esno(ref_wfn, options, ints, mo_space_info, aci_wfn);
                     esno.compute_nos();
                     auto aci2 = std::make_shared<AdaptiveCI>(
-                        std::make_shared<StateInfo>(ref_wfn), std::make_shared<SCFInfo>(ref_wfn),
+                        state, std::make_shared<SCFInfo>(ref_wfn),
                         std::make_shared<ForteOptions>(options), ints, mo_space_info);
                     aci2->set_quiet(true);
                     aci2->set_max_rdm(max_rdm_level);
@@ -912,13 +912,13 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
     if (options.get_str("JOB_TYPE") == "MRCISD") {
         if (options.get_bool("ACI_NO")) {
             auto aci = std::make_shared<AdaptiveCI>(
-                std::make_shared<StateInfo>(ref_wfn), std::make_shared<SCFInfo>(ref_wfn),
+                state, std::make_shared<SCFInfo>(ref_wfn),
                 std::make_shared<ForteOptions>(options), ints, mo_space_info);
             aci->compute_energy();
             aci->compute_nos();
         }
         auto aci = std::make_shared<AdaptiveCI>(
-            std::make_shared<StateInfo>(ref_wfn), std::make_shared<SCFInfo>(ref_wfn),
+            state, std::make_shared<SCFInfo>(ref_wfn),
             std::make_shared<ForteOptions>(options), ints, mo_space_info);
         aci->compute_energy();
 

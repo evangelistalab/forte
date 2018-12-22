@@ -47,7 +47,7 @@ namespace forte {
 
 class DMRGSCF : public ActiveSpaceSolver {
   public:
-    DMRGSCF(std::shared_ptr<StateInfo> state, std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
+    DMRGSCF(StateInfo state, std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
             std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     double compute_energy();
@@ -59,7 +59,7 @@ class DMRGSCF : public ActiveSpaceSolver {
     Reference dmrg_ref_;
     int dmrg_iterations_ = 1;
 
-    std::shared_ptr<StateInfo> state_;
+    StateInfo state_;
     std::shared_ptr<SCFInfo> scf_info_;
     std::shared_ptr<ForteOptions> options_;
     std::shared_ptr<ForteIntegrals> ints_;

@@ -72,7 +72,7 @@ class ASCI : public ActiveSpaceSolver {
      * @param mo_space_info A pointer to the MOSpaceInfo object
      */
 
-    ASCI(std::shared_ptr<StateInfo> state_, std::shared_ptr<SCFInfo> scf_info,
+    ASCI(StateInfo state, std::shared_ptr<SCFInfo> scf_info,
          std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
          std::shared_ptr<MOSpaceInfo> mo_space_info);
     /// Destructor
@@ -106,7 +106,7 @@ class ASCI : public ActiveSpaceSolver {
     WFNOperator op_;
 
     /// Info on the electronic state
-    std::shared_ptr<StateInfo> state_;
+    StateInfo state_;
     /// HF info
     std::shared_ptr<SCFInfo> scf_info_;
     /// Options

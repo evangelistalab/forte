@@ -45,11 +45,11 @@
 #include "integrals/integrals.h"
 #include "sparse_ci/sparse_ci_solver.h"
 #include "sparse_ci/determinant.h"
+#include "base_classes/state_info.h"
 
 
 namespace forte {
 class SCFInfo;
-class StateInfo;
 
 /// Set the forte style options for the FCI method
 // void set_PCI_HashVec_options(ForteOptions& foptions);
@@ -88,7 +88,7 @@ class ElementwiseCI {
      * @param options The main options object
      * @param ints A pointer to an allocated integral object
      */
-    ElementwiseCI(std::shared_ptr<StateInfo> state, std::shared_ptr<forte::SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
+    ElementwiseCI(StateInfo state, std::shared_ptr<forte::SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
                   std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     // ==> Class Interface <==
@@ -101,7 +101,7 @@ class ElementwiseCI {
 
     // * Calculation data
     /// The state to calculate
-    std::shared_ptr<StateInfo> state_;
+    StateInfo state_;
     /// The molecular integrals required by Explorer
     std::shared_ptr<ForteIntegrals> ints_;
     /// Store all the integrals locally

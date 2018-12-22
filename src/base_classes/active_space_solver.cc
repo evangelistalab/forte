@@ -84,12 +84,12 @@ std::shared_ptr<ActiveSpaceSolver> make_active_space_solver(
     if (type == "FCI") {
         solver = std::make_shared<FCISolver>(state, mo_space_info, ints);
     } else if (type == "ACI") {
-        solver = std::make_shared<AdaptiveCI>(std::make_shared<StateInfo>(state), scf_info, options,
+        solver = std::make_shared<AdaptiveCI>(state, scf_info, options,
                                               ints, mo_space_info);
     } else if (type == "CAS") {
         solver = std::make_shared<FCI_MO>(scf_info, options, ints, mo_space_info);
     } else if (type == "ASCI") {
-        solver = std::make_shared<ASCI>(std::make_shared<StateInfo>(state), scf_info, options, ints,
+        solver = std::make_shared<ASCI>(state, scf_info, options, ints,
                                         mo_space_info);
     } else {
         throw psi::PSIEXCEPTION("make_active_space_solver: type = " + type + " was not recognized");

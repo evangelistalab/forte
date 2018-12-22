@@ -72,7 +72,7 @@ using namespace psi;
 
 namespace forte {
 
-DMRGSCF::DMRGSCF(std::shared_ptr<StateInfo> state, std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
+DMRGSCF::DMRGSCF(StateInfo state, std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
             std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info) 
     : state_(state), scf_info_(scf_info), options_(options),ints_(ints), mo_space_info_(mo_space_info) {
     print_method_banner({"Density Matrix Renormalization Group SCF", "Sebastian Wouters"});
@@ -529,8 +529,8 @@ double DMRGSCF::compute_energy() {
     /****************************************
      *   Check if the input is consistent   *
      ****************************************/
-    //const int SyGroup = chemps2_groupnumber(state_->irrep());
-    const int SyGroup = state_->irrep();
+    //const int SyGroup = chemps2_groupnumber(state_.irrep());
+    const int SyGroup = state_.irrep();
     const int nmo = mo_space_info_->size("ALL");
     const int nirrep = ints_->nirrep();
     int* orbspi = mo_space_info_->get_dimension("ALL");

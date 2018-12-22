@@ -57,7 +57,7 @@
 
 namespace forte {
 
-CASSCF::CASSCF(std::shared_ptr<StateInfo> state, std::shared_ptr<SCFInfo> scf_info,
+CASSCF::CASSCF(StateInfo state, std::shared_ptr<SCFInfo> scf_info,
                std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
                std::shared_ptr<MOSpaceInfo> mo_space_info)
     : state_(state), scf_info_(scf_info), options_(options), ints_(ints),
@@ -750,18 +750,12 @@ void CASSCF::set_up_fci() {
     if (((nel - twice_ms) % 2) != 0)
         throw psi::PSIEXCEPTION("\n\n  FCI: Wrong value of M_s.\n\n");
 
-    // Adjust the number of for frozen and restricted doubly occupied
-    size_t nactel = nel - 2 * nfdocc - 2 * rdocc.size();
-
-    size_t na = (nactel + twice_ms) / 2;
-    size_t nb = nactel - na;
-
     //    FCISolver fcisolver(active_dim, rdocc, active, na, nb, multiplicity,
     //                        options_->get_int("ROOT_SYM"), ints_, mo_space_info_,
     //                        options_->get_int("NTRIAL_PER_ROOT"), options_->get_int("PRINT"),
     //                        options_->psi_options());
     //  Cannot be changed to:
-    FCISolver fcisolver(*state_, mo_space_info_, ints_);
+    FCISolver fcisolver(state_, mo_space_info_, ints_);
     fcisolver.set_options(options_);
 
     // tweak some options

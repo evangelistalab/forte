@@ -1739,8 +1739,8 @@ double DSRG_MRPT2::compute_energy_relaxed() {
         }
     } else if (foptions_->get_str("CAS_TYPE") == "ACI") {
 
-        AdaptiveCI aci(std::make_shared<StateInfo>(ints_->wfn()), scf_info_, foptions_, ints_,
-                       mo_space_info_);
+        AdaptiveCI aci(ints_->wfn(), scf_info_, foptions_, ints_,
+                       mo_space_info_); // ints_->wfn() is implicitly converted to StateInfo
         aci.set_fci_ints(fci_ints);
 
         Erelax = aci.compute_energy();

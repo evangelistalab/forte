@@ -126,7 +126,7 @@ void ProjectorCI_HashVec::sortHashVecByCoefficient(det_hashvec& dets_hashvec,
     dets_max_couplings_ = std::move(new_dets_max_couplings);
 }
 
-ProjectorCI_HashVec::ProjectorCI_HashVec(std::shared_ptr<StateInfo> state, std::shared_ptr<forte::SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
+ProjectorCI_HashVec::ProjectorCI_HashVec(StateInfo state, std::shared_ptr<forte::SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
                                          std::shared_ptr<ForteIntegrals> ints,
                                          std::shared_ptr<MOSpaceInfo> mo_space_info)
     : state_(state), scf_info_(scf_info), ints_(ints), mo_space_info_(mo_space_info), options_(options),
@@ -175,7 +175,7 @@ void ProjectorCI_HashVec::startup() {
     nactel_ = 0;
     nalpha_ = 0;
     nbeta_ = 0;
-    int nel = state_->na() + state_->nb();
+    int nel = state_.na() + state_.nb();
     nirrep_ = mo_space_info_->nirrep();
 
     int ms = wavefunction_multiplicity_ - 1;

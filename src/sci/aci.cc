@@ -207,7 +207,7 @@ bool pairComp(const std::pair<double, Determinant> E1, const std::pair<double, D
     return E1.first < E2.first;
 }
 
-AdaptiveCI::AdaptiveCI(std::shared_ptr<StateInfo> state, std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
+AdaptiveCI::AdaptiveCI(StateInfo state, std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
                        std::shared_ptr<ForteIntegrals> ints,
                        std::shared_ptr<MOSpaceInfo> mo_space_info)
     : state_(state), scf_info_(scf_info), options_(options), ints_(ints), mo_space_info_(mo_space_info) {
@@ -277,8 +277,8 @@ void AdaptiveCI::startup() {
     frzcpi_ = mo_space_info_->get_dimension("INACTIVE_DOCC");
     nfrzc_ = mo_space_info_->size("INACTIVE_DOCC");
 
-    nalpha_ = state_->na() - nfrzc_;
-    nbeta_ = state_->nb() - nfrzc_;
+    nalpha_ = state_.na() - nfrzc_;
+    nbeta_ = state_.nb() - nfrzc_;
 
     // "Correlated" includes restricted_docc
     ncmo_ = mo_space_info_->size("CORRELATED");

@@ -41,11 +41,10 @@
 #include "fci/fci_vector.h"
 #include "integrals/active_space_integrals.h"
 #include "orbital-helpers/semi_canonicalize.h"
-
+#include "base_classes/active_space_solver.h"
 
 namespace forte {
 class SCFInfo;
-class StateInfo;
 
 class CASSCF {
   public:
@@ -61,7 +60,7 @@ class CASSCF {
      * This reference has a nice algorithmic flowchart.  Look it up
      *
      */
-    CASSCF(std::shared_ptr<StateInfo> state, std::shared_ptr<forte::SCFInfo> scf_info, std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
+    CASSCF(StateInfo state, std::shared_ptr<forte::SCFInfo> scf_info, std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
            std::shared_ptr<MOSpaceInfo> mo_space_info);
     /// Compute CASSCF given a 1RDM and 2RDM
     void compute_casscf();
@@ -80,7 +79,7 @@ class CASSCF {
     double cas_check(Reference cas);
   private:
     /// The state to calculate
-    std::shared_ptr<StateInfo> state_;
+    StateInfo state_;
     /// SCF information
     std::shared_ptr<SCFInfo> scf_info_;
     /// The options

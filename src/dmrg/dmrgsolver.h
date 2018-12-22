@@ -50,7 +50,7 @@ namespace forte {
 
 class DMRGSolver {
   public:
-    DMRGSolver(std::shared_ptr<StateInfo> state, 
+    DMRGSolver(StateInfo state,
                std::shared_ptr<SCFInfo> scf_info,
                std::shared_ptr<ForteOptions> options,
                std::shared_ptr<ForteIntegrals> ints,
@@ -74,7 +74,7 @@ class DMRGSolver {
   private:
     Reference dmrg_ref_;
 
-    std::shared_ptr<StateInfo> state_;
+    StateInfo state_;
     std::shared_ptr<SCFInfo> scf_info_;
     std::shared_ptr<ForteOptions> options_;
     std::shared_ptr<ForteIntegrals> ints_;

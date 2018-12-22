@@ -76,7 +76,7 @@ using namespace psi;
 
 namespace forte {
 
-DMRGSolver::DMRGSolver(std::shared_ptr<StateInfo> state, 
+DMRGSolver::DMRGSolver(StateInfo state,
                        std::shared_ptr<SCFInfo> scf_info,
                        std::shared_ptr<ForteOptions> options,
                        std::shared_ptr<ForteIntegrals> ints,
@@ -346,7 +346,7 @@ void DMRGSolver::compute_energy() {
     // CheMPS2::DMRGSCFindices * iHandler = new ChemP
     std::shared_ptr<CheMPS2::DMRGSCFindices> iHandler =
         std::make_shared<CheMPS2::DMRGSCFindices>(nmo, SyGroup, frozen_docc, active, virtual_orbs);
-    int nElectrons = state_->na() + state_->nb();
+    int nElectrons = state_.na() + state_.nb();
     outfile->Printf("\n  nElectrons  = %d", nElectrons);
 
     // Number of electrons in the active space
