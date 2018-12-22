@@ -45,19 +45,23 @@ class ActiveSpaceIntegrals {
 
     /// Generating a contructor to create the active integrals
     ActiveSpaceIntegrals(std::shared_ptr<ForteIntegrals> ints, std::vector<size_t> active_mo,
-                 std::vector<size_t> rdocc_mo);
+                         std::vector<size_t> rdocc_mo);
 
     /// Constructor that needs to be deleted
-    ActiveSpaceIntegrals(std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mospace_info);
+    ActiveSpaceIntegrals(std::shared_ptr<ForteIntegrals> ints,
+                         std::shared_ptr<MOSpaceInfo> mospace_info);
 
     // ==> Class Interface <==
 
     /// Return the number of MOs
     size_t nmo() const { return nmo_; }
+
     /// Return the frozen core energy (contribution from FROZEN_DOCC)
     double frozen_core_energy() const { return frozen_core_energy_; }
+
     /// Return the scalar_energy energy (contribution from RESTRICTED_DOCC)
     double scalar_energy() const { return scalar_energy_; }
+
     /// Set scalar_energy();
     void set_scalar_energy(double scalar_energy) { scalar_energy_ = scalar_energy; }
 
@@ -204,6 +208,5 @@ class ActiveSpaceIntegrals {
     void startup();
 };
 } // namespace forte
-
 
 #endif // _active_space_integrals_

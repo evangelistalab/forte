@@ -37,7 +37,7 @@ from psi4.driver.procrouting import proc_util
 def new_driver(state, scf_info, options, ints, mo_space_info):
     # Create an active space solver object
     as_solver_type = options.get_str('ACTIVE_SPACE_SOLVER')
-    as_solver = forte.make_active_space_solver(as_solver_type,state,scf_info,options,ints,mo_space_info)
+    as_solver = forte.make_active_space_solver(as_solver_type,state,scf_info,mo_space_info,ints,options)
     energy = as_solver.compute_energy()
 #    reference = solver.reference()
 

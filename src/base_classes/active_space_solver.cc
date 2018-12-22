@@ -44,6 +44,7 @@ namespace forte {
 ActiveSpaceSolver::ActiveSpaceSolver(StateInfo state, std::shared_ptr<MOSpaceInfo> mo_space_info,
                                      std::shared_ptr<ForteIntegrals> ints)
     : states_weights_({{state, 1.0}}), mo_space_info_(mo_space_info), ints_(ints) {
+    // Allocate and compute active space integrals
     make_active_space_ints();
 }
 
@@ -51,13 +52,19 @@ ActiveSpaceSolver::ActiveSpaceSolver(
     const std::vector<std::pair<StateInfo, double>>& states_weights,
     std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ForteIntegrals> ints)
     : states_weights_(states_weights), mo_space_info_(mo_space_info), ints_(ints) {
+    // Allocate and compute active space integrals
     make_active_space_ints();
 }
 
 void ActiveSpaceSolver::make_active_space_ints() {
-    active_mo_ = mo_space_info_->get_corr_abs_mo("ACTIVE");
-    core_mo_ = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
+    // get the active/core vectors
+    active_mo_ = mo_space_info_->get_corr_abs_mo(active_mo_space_);
+    core_mo_ = mo_space_info_->get_corr_abs_mo(core_mo_space_);
+
+    // allocate the active space integral object
     as_ints_ = std::make_shared<ActiveSpaceIntegrals>(ints_, active_mo_, core_mo_);
+
+    // grab the integrals from the ForteIntegrals object
     ambit::Tensor tei_active_aa =
         ints_->aptei_aa_block(active_mo_, active_mo_, active_mo_, active_mo_);
     ambit::Tensor tei_active_ab =
@@ -68,11 +75,10 @@ void ActiveSpaceSolver::make_active_space_ints() {
     as_ints_->compute_restricted_one_body_operator();
 }
 
-std::shared_ptr<ActiveSpaceSolver>
-make_active_space_solver(const std::string& type, StateInfo state,
-                         std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
-                         std::shared_ptr<ForteIntegrals> ints,
-                         std::shared_ptr<MOSpaceInfo> mo_space_info) {
+std::shared_ptr<ActiveSpaceSolver> make_active_space_solver(
+    const std::string& type, StateInfo state, std::shared_ptr<SCFInfo> scf_info,
+    std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ForteIntegrals> ints,
+    std::shared_ptr<ForteOptions> options) {
 
     std::shared_ptr<ActiveSpaceSolver> solver;
     if (type == "FCI") {

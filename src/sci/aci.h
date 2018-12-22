@@ -103,7 +103,7 @@ class AdaptiveCI : public ActiveSpaceSolver {
     Reference get_reference() override;
 
     // Set the options
-    void set_options(std::shared_ptr<ForteOptions> options) override{};
+    void set_options(std::shared_ptr<ForteOptions>) override{};
 
     /// Set the RDM
     void set_max_rdm(int rdm);

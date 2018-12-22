@@ -86,7 +86,7 @@ class ASCI : public ActiveSpaceSolver {
     /// Update the reference file
     Reference get_reference() override;
 
-    void set_options(std::shared_ptr<ForteOptions> options) override{}; // TODO : define
+    void set_options(std::shared_ptr<ForteOptions>) override{}; // TODO : define
 
     /// Get the wavefunction
     DeterminantHashVec get_wavefunction();
