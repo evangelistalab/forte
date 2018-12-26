@@ -55,9 +55,9 @@ class MOSpaceInfo;
 // nroot_(1), ntrial_per_root_(initial_guess_per_root), print_(print),
 
 FCISolver::FCISolver(StateInfo state, std::shared_ptr<MOSpaceInfo> mo_space_info,
-                     std::shared_ptr<ForteIntegrals> ints)
-    : ActiveSpaceSolver(state, mo_space_info, ints),
-      active_dim_(mo_space_info->get_dimension("ACTIVE")), nirrep_(ints->nirrep()),
+                     std::shared_ptr<ActiveSpaceIntegrals> as_ints)
+    : ActiveSpaceSolver(state, mo_space_info, as_ints),
+      active_dim_(mo_space_info->get_dimension("ACTIVE")), nirrep_(as_ints->ints()->nirrep()),
       symmetry_(state.irrep()), multiplicity_(state.multiplicity()) {
     // TODO: read this info from the base class
     na_ = state.na() - core_mo_.size() - mo_space_info->size("FROZEN_DOCC");
@@ -252,7 +252,7 @@ double FCISolver::compute_energy() {
     dls.get_results();
 
     // Copy eigen values and eigen vectors
-    eigen_vals_ = dls.eigenvalues();
+    evals_ = dls.eigenvalues();
     eigen_vecs_ = dls.eigenvectors();
 
     // Print determinants
@@ -263,7 +263,7 @@ double FCISolver::compute_energy() {
             C_->copy(dls.eigenvector(r));
             std::vector<std::tuple<double, double, size_t, size_t, size_t>> dets_config =
                 C_->max_abs_elements(guess_size * ntrial_per_root_);
-           // psi::Dimension nactvpi = mo_space_info_->get_dimension("ACTIVE");
+            // psi::Dimension nactvpi = mo_space_info_->get_dimension("ACTIVE");
 
             for (auto& det_config : dets_config) {
                 double ci_abs, ci;
@@ -325,7 +325,6 @@ double FCISolver::compute_energy() {
     //    if (print_no_ || print_ > 0) {
     //        C_->print_natural_orbitals(mo_space_info_);
     //    }
-
 
     energy_ = dls.eigenvalues()->get(root_) + nuclear_repulsion_energy;
     psi::Process::environment.globals["CURRENT ENERGY"] = energy_;

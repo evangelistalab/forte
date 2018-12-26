@@ -125,7 +125,8 @@ PYBIND11_MODULE(forte, m) {
 
     // export FCISolver
     py::class_<FCISolver, std::shared_ptr<FCISolver>>(m, "FCISolver")
-        .def(py::init<StateInfo, std::shared_ptr<MOSpaceInfo>, std::shared_ptr<ForteIntegrals>>())
+        .def(py::init<StateInfo, std::shared_ptr<MOSpaceInfo>,
+                      std::shared_ptr<ActiveSpaceIntegrals>>())
         .def("compute_energy", &FCISolver::compute_energy);
 }
 } // namespace forte

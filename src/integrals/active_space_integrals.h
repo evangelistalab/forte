@@ -53,8 +53,15 @@ class ActiveSpaceIntegrals {
 
     // ==> Class Interface <==
 
+    /// Return the
+    std::shared_ptr<ForteIntegrals> ints() { return ints_; }
+
     /// Return the number of MOs
     size_t nmo() const { return nmo_; }
+
+    std::vector<size_t> active_mo() const;
+
+    std::vector<size_t> restricted_docc_mo() const;
 
     /// Return the frozen core energy (contribution from FROZEN_DOCC)
     double frozen_core_energy() const { return frozen_core_energy_; }
@@ -207,6 +214,12 @@ class ActiveSpaceIntegrals {
     void RestrictedOneBodyOperator(std::vector<double>& oei_a, std::vector<double>& oei_b);
     void startup();
 };
+
+std::shared_ptr<ActiveSpaceIntegrals>
+make_active_space_ints(std::shared_ptr<forte::MOSpaceInfo> mo_space_info,
+                       std::shared_ptr<ForteIntegrals> ints, const std::string& active_space,
+                       const std::vector<std::string>& core_spaces);
+
 } // namespace forte
 
 #endif // _active_space_integrals_

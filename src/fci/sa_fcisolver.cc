@@ -270,7 +270,9 @@ double SA_FCISolver::compute_energy() {
         size_t nb = nactel - na;
         StateInfo state(na, nb, multiplicity, twice_ms, symmetry);
         // TODO use base class info
-        FCISolver fcisolver(state, mo_space_info_, ints_);
+        auto as_ints =
+            make_active_space_ints(mo_space_info_, ints_, "ACTIVE", {{"RESTRICTED_DOCC"}});
+        FCISolver fcisolver(state, mo_space_info_, as_ints);
         fcisolver.set_options(std::make_shared<ForteOptions>(options_));
         fcisolver.set_max_rdm_level(2);
         fcisolver.set_test_rdms(options_.get_bool("FCI_TEST_RDMS"));
@@ -324,7 +326,7 @@ double SA_FCISolver::compute_energy() {
             // note: compute_energy of FCISolver computes energy (all roots) and RDMs (given root)
             if (root_number == 0) {
                 fcisolver.compute_energy();
-                evals = fcisolver.eigen_vals();
+                evals = fcisolver.evals();
             } else {
                 fcisolver.compute_rdms_root(root_number);
             }

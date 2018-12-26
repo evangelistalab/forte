@@ -1738,19 +1738,16 @@ double DSRG_MRPT2::compute_energy_relaxed() {
         }
     } else if (foptions_->get_str("CAS_TYPE") == "ACI") {
 
-        AdaptiveCI aci(ints_->wfn(), scf_info_, foptions_, ints_,
-                       mo_space_info_); // ints_->wfn() is implicitly converted to StateInfo
-        aci.set_fci_ints(fci_ints);
+        AdaptiveCI aci(ints_->wfn(), scf_info_, foptions_, mo_space_info_, fci_ints);
 
         Erelax = aci.compute_energy();
     } else {
-        // it is simpler here to call FCI instead of FCISolver
         StateInfo state(ints_->wfn());
-        FCISolver fci(state, mo_space_info_, ints_);
-        fci.set_options(foptions_);
-        fci.set_active_space_integrals(fci_ints);
-        fci.set_max_rdm_level(1);
-        Erelax = fci.compute_energy();
+        auto fci =
+            make_active_space_solver("FCI", state, scf_info_, mo_space_info_, ints_, foptions_);
+        fci->set_max_rdm_level(1);
+        fci->set_active_space_integrals(fci_ints);
+        Erelax = fci->compute_energy();
     }
 
     // printing

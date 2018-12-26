@@ -37,6 +37,7 @@
 #include "helpers/mo_space_info.h"
 #include "helpers/timer.h"
 #include "integrals/integrals.h"
+#include "integrals/active_space_integrals.h"
 #include "string_lists.h"
 #include "base_classes/reference.h"
 #include "base_classes/active_space_solver.h"
@@ -63,14 +64,8 @@ class FCISolver : public ActiveSpaceSolver {
      * @param initial_guess_per_root get from options object
      * @param print Control printing of FCISolver
      */
-    //    FCISolver(psi::Dimension active_dim, std::vector<size_t> core_mo, std::vector<size_t>
-    //    active_mo,
-    //              StateInfo state, std::shared_ptr<ForteIntegrals> ints,
-    //              std::shared_ptr<MOSpaceInfo> mo_space_info, size_t initial_guess_per_root, int
-    //              print, ForteOptions options);
-
     FCISolver(StateInfo state, std::shared_ptr<MOSpaceInfo> mo_space_info,
-              std::shared_ptr<ForteIntegrals> ints);
+              std::shared_ptr<ActiveSpaceIntegrals> as_ints);
 
     ~FCISolver() {}
 
@@ -101,15 +96,10 @@ class FCISolver : public ActiveSpaceSolver {
     void set_test_rdms(bool value) { test_rdms_ = value; }
     /// Print the Natural Orbitals
     void set_print_no(bool value) { print_no_ = value; }
-    /// Set the print level
-    void set_print(int level) { print_ = level; }
     /// Return a FCIWfn
     std::shared_ptr<FCIWfn> get_FCIWFN() { return C_; }
-
     /// Return eigen vectors
-    psi::SharedMatrix eigen_vecs() { return eigen_vecs_; }
-    /// Return eigen values
-    psi::SharedVector eigen_vals() { return eigen_vals_; }
+    psi::SharedMatrix evecs() { return eigen_vecs_; }
     /// Return string lists
     std::shared_ptr<StringLists> lists() { return lists_; }
     /// Return symmetry
@@ -132,8 +122,6 @@ class FCISolver : public ActiveSpaceSolver {
 
     /// Eigen vectors
     psi::SharedMatrix eigen_vecs_;
-    /// Eigen values
-    psi::SharedVector eigen_vals_;
 
     /// The number of irreps
     int nirrep_;
@@ -160,8 +148,6 @@ class FCISolver : public ActiveSpaceSolver {
     bool test_rdms_ = false;
     /// Print the NO from the 1-RDM
     bool print_no_ = false;
-    /// A variable to control printing information
-    int print_ = 0;
 
     // ==> Class functions <==
 

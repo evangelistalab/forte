@@ -1405,7 +1405,6 @@ double DSRG_MRPT3::compute_energy_sa() {
 
                 outfile->Printf("    Use string FCI code.");
 
-                // prepare FCISolver
                 int charge = psi::Process::environment.molecule()->molecular_charge();
                 if ((foptions_->psi_options())["CHARGE"].has_changed()) {
                     charge = foptions_->get_int("CHARGE");
@@ -1423,31 +1422,20 @@ double DSRG_MRPT3::compute_energy_sa() {
                 auto nb = nelec_actv - na;
 
                 psi::Dimension active_dim = mo_space_info_->get_dimension("ACTIVE");
-                int ntrial_per_root = foptions_->get_int("NTRIAL_PER_ROOT");
-
-                //                FCISolver fcisolver(active_dim, core_mos_, actv_mos_, na, nb,
-                //                multi, irrep, ints_,
-                //                                    mo_space_info_, ntrial_per_root, print_,
-                //                                    foptions_->psi_options());
-
                 StateInfo state(na, nb, multi, multi - 1, irrep); // assumes highes Ms
                 // TODO use base class info
-                FCISolver fcisolver(state, mo_space_info_, ints_);
-
-                fcisolver.set_max_rdm_level(1);
-                fcisolver.set_nroot(nstates);
-                fcisolver.set_root(nstates - 1);
-                fcisolver.set_fci_iterations(foptions_->get_int("FCI_MAXITER"));
-                fcisolver.set_collapse_per_root(foptions_->get_int("DL_COLLAPSE_PER_ROOT"));
-                fcisolver.set_subspace_per_root(foptions_->get_int("DL_SUBSPACE_PER_ROOT"));
-
+                auto fci = make_active_space_solver("FCI", state, scf_info_, mo_space_info_, ints_,
+                                                    foptions_);
+                fci->set_max_rdm_level(1);
+                fci->set_nroot(nstates);
+                fci->set_root(nstates - 1);
                 if (eri_df_) {
-                    fcisolver.set_active_space_integrals(fci_ints);
+                    fci->set_active_space_integrals(fci_ints);
                 }
 
                 // compute energy and fill in results
-                fcisolver.compute_energy();
-                psi::SharedVector Ems = fcisolver.eigen_vals();
+                fci->compute_energy();
+                psi::SharedVector Ems = fci->evals();
                 for (int i = 0; i < nstates; ++i) {
                     Edsrg_sa[n].push_back(Ems->get(i) + Enuc_);
                 }
@@ -1584,8 +1572,8 @@ double DSRG_MRPT3::compute_energy_relaxed() {
             dm_relax = fci_mo.compute_ref_relaxed_dm(Mbar0_, Mbar1_, Mbar2_);
         }
     } else if (foptions_->get_str("CAS_TYPE") == "ACI") {
-        AdaptiveCI aci(ints_->wfn(), scf_info_, foptions_, ints_,
-                       mo_space_info_); // ints_->wfn() is implicitly converted to StateInfo
+        AdaptiveCI aci(ints_->wfn(), scf_info_, foptions_, mo_space_info_,
+                       fci_ints); // ints_->wfn() is implicitly converted to StateInfo
         aci.set_fci_ints(fci_ints);
         if ((foptions_->psi_options())["ACI_RELAX_SIGMA"].has_changed()) {
             aci.update_sigma();
@@ -1594,11 +1582,11 @@ double DSRG_MRPT3::compute_energy_relaxed() {
 
     } else {
         StateInfo state(ints_->wfn());
-        FCISolver fcisolver(state, mo_space_info_, ints_);
-        fcisolver.set_options(foptions_);
-        fcisolver.set_active_space_integrals(fci_ints);
-        fcisolver.set_max_rdm_level(1);
-        Erelax = fcisolver.compute_energy();
+        auto fci =
+            make_active_space_solver("FCI", state, scf_info_, mo_space_info_, ints_, foptions_);
+        fci->set_max_rdm_level(1);
+        fci->set_active_space_integrals(fci_ints);
+        Erelax = fci->compute_energy();
     }
 
     // printing

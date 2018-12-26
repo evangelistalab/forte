@@ -38,7 +38,6 @@
 
 using namespace psi;
 
-
 namespace forte {
 
 void set_ASCI_options(ForteOptions& foptions) {
@@ -56,9 +55,9 @@ bool pairCompDescend(const std::pair<double, Determinant> E1,
 }
 
 ASCI::ASCI(StateInfo state, std::shared_ptr<SCFInfo> scf_info,
-         std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
-         std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : state_(state), scf_info_(scf_info), options_(options), ints_(ints), mo_space_info_(mo_space_info) {
+           std::shared_ptr<ForteOptions> options, std::shared_ptr<MOSpaceInfo> mo_space_info,
+           std::shared_ptr<ActiveSpaceIntegrals> as_ints)
+    : ActiveSpaceSolver(state, mo_space_info, as_ints), scf_info_(scf_info), options_(options), state_(state) {
 
     mo_symmetry_ = mo_space_info_->symmetry("ACTIVE");
 }
@@ -66,35 +65,18 @@ ASCI::ASCI(StateInfo state, std::shared_ptr<SCFInfo> scf_info,
 ASCI::~ASCI() {}
 
 void ASCI::set_fci_ints(std::shared_ptr<ActiveSpaceIntegrals> fci_ints) {
-    fci_ints_ = fci_ints;
-    nuclear_repulsion_energy_ = ints_->nuclear_repulsion_energy();
+    as_ints_ = fci_ints;
+    nuclear_repulsion_energy_ = as_ints_->ints()->nuclear_repulsion_energy();
     set_ints_ = true;
-}
-
-void ASCI::set_asci_ints(std::shared_ptr<ForteIntegrals> ints) {
-    timer int_timer("ASCI:Form Integrals");
-    ints_ = ints;
-
-    fci_ints_ = std::make_shared<ActiveSpaceIntegrals>(ints, mo_space_info_->get_corr_abs_mo("ACTIVE"),
-                                               mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
-
-    auto active_mo = mo_space_info_->get_corr_abs_mo("ACTIVE");
-    ambit::Tensor tei_active_aa = ints->aptei_aa_block(active_mo, active_mo, active_mo, active_mo);
-    ambit::Tensor tei_active_ab = ints->aptei_ab_block(active_mo, active_mo, active_mo, active_mo);
-    ambit::Tensor tei_active_bb = ints->aptei_bb_block(active_mo, active_mo, active_mo, active_mo);
-    fci_ints_->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
-    fci_ints_->compute_restricted_one_body_operator();
-
-    nuclear_repulsion_energy_ = ints_->nuclear_repulsion_energy();
 }
 
 void ASCI::startup() {
 
-    if (!set_ints_) {
-        set_asci_ints(ints_);
-    }
+//    if (!set_ints_) {
+//        set_asci_ints(ints_); // TODO: maybe a BUG?
+//    }
 
-    op_.initialize(mo_symmetry_, fci_ints_);
+    op_.initialize(mo_symmetry_, as_ints_);
 
     wavefunction_symmetry_ = state_.irrep();
     if (options_->has_changed("ROOT_SYM")) {
@@ -107,7 +89,7 @@ void ASCI::startup() {
 
     nact_ = mo_space_info_->size("ACTIVE");
     nactpi_ = mo_space_info_->get_dimension("ACTIVE");
-    
+
     nirrep_ = nactpi_.n();
     // Include frozen_docc and restricted_docc
     frzcpi_ = mo_space_info_->get_dimension("INACTIVE_DOCC");
@@ -119,8 +101,8 @@ void ASCI::startup() {
     }
 
     // Build the reference determinant and compute its energy
-    CI_Reference ref(scf_info_, options_, mo_space_info_, fci_ints_, multiplicity_,
-                     twice_ms_, wavefunction_symmetry_);
+    CI_Reference ref(scf_info_, options_, mo_space_info_, as_ints_, multiplicity_, twice_ms_,
+                     wavefunction_symmetry_);
     ref.build_reference(initial_reference_);
 
     // Read options
@@ -222,7 +204,7 @@ double ASCI::compute_energy() {
     size_t nvec = options_->get_int("N_GUESS_VEC");
     std::string sigma_method = options_->get_str("SIGMA_BUILD_TYPE");
     std::vector<std::vector<double>> energy_history;
-    SparseCISolver sparse_solver(fci_ints_);
+    SparseCISolver sparse_solver(as_ints_);
     sparse_solver.set_parallel(true);
     sparse_solver.set_force_diag(options_->get_bool("FORCE_DIAG_METHOD"));
     sparse_solver.set_e_convergence(options_->get_double("E_CONVERGENCE"));
@@ -271,7 +253,7 @@ double ASCI::compute_energy() {
         // Print the energy
         outfile->Printf("\n");
         double P_abs_energy =
-            P_evals->get(0) + nuclear_repulsion_energy_ + fci_ints_->scalar_energy();
+            P_evals->get(0) + nuclear_repulsion_energy_ + as_ints_->scalar_energy();
         outfile->Printf("\n    P-space  CI Energy Root 0       = "
                         "%.12f ",
                         P_abs_energy);
@@ -308,7 +290,7 @@ double ASCI::compute_energy() {
         // Print the energy
         outfile->Printf("\n");
         double abs_energy =
-            PQ_evals->get(0) + nuclear_repulsion_energy_ + fci_ints_->scalar_energy();
+            PQ_evals->get(0) + nuclear_repulsion_energy_ + as_ints_->scalar_energy();
         outfile->Printf("\n    PQ-space CI Energy Root 0        = "
                         "%.12f Eh",
                         abs_energy);
@@ -329,7 +311,7 @@ double ASCI::compute_energy() {
         outfile->Printf("\n  Cycle %d took: %1.6f s", cycle, cycle_time.get());
     } // end iterations
 
-    double root_energy = PQ_evals->get(0) + nuclear_repulsion_energy_ + fci_ints_->scalar_energy();
+    double root_energy = PQ_evals->get(0) + nuclear_repulsion_energy_ + as_ints_->scalar_energy();
 
     psi::Process::environment.globals["CURRENT ENERGY"] = root_energy;
     psi::Process::environment.globals["ASCI ENERGY"] = root_energy;
@@ -337,11 +319,11 @@ double ASCI::compute_energy() {
     outfile->Printf("\n\n  %s: %f s", "ASCI ran in ", asci_elapse.get());
 
     double pt2 = 0.0;
-  //  if (options_->get_bool("MRPT2")) {
-  //      MRPT2 pt(reference_wavefunction_, options_, ints_, mo_space_info_, PQ_space, PQ_evecs,
-  //               PQ_evals);
-  //      pt2 = pt.compute_energy();
-  //  }
+    //  if (options_->get_bool("MRPT2")) {
+    //      MRPT2 pt(reference_wavefunction_, options_, ints_, mo_space_info_, PQ_space, PQ_evecs,
+    //               PQ_evals);
+    //      pt2 = pt.compute_energy();
+    //  }
 
     size_t dim = PQ_space.size();
     // Print a summary
@@ -358,7 +340,7 @@ double ASCI::compute_energy() {
 
     print_wfn(PQ_space, op_, PQ_evecs, nroot_);
 
-    compute_rdms(fci_ints_, PQ_space, op_, PQ_evecs, 0, 0);
+    compute_rdms(as_ints_, PQ_space, op_, PQ_evecs, 0, 0);
 
     return root_energy;
 }
@@ -379,7 +361,8 @@ void ASCI::find_q_space(DeterminantHashVec& P_space, DeterminantHashVec& PQ_spac
     }
     //  PQ_space.swap(P_space);
 
-    outfile->Printf("\n  %s: %zu determinants", "psi::Dimension of the Ref + SD space", V_hash.size());
+    outfile->Printf("\n  %s: %zu determinants", "psi::Dimension of the Ref + SD space",
+                    V_hash.size());
     outfile->Printf("\n  %s: %f s\n", "Time spent building the external space (default)",
                     build.get());
 
@@ -392,7 +375,7 @@ void ASCI::find_q_space(DeterminantHashVec& P_space, DeterminantHashVec& PQ_spac
     local_timer build_sort;
     size_t N = 0;
     for (const auto& I : V_hash) {
-        double delta = fci_ints_->energy(I.first) - evals->get(0);
+        double delta = as_ints_->energy(I.first) - evals->get(0);
         double V = I.second;
 
         double criteria = V / delta;
@@ -416,11 +399,13 @@ void ASCI::find_q_space(DeterminantHashVec& P_space, DeterminantHashVec& PQ_spac
         PQ_space.add(pair.second);
     }
     outfile->Printf("\n  Time spent selecting: %1.6f", select.get());
-    outfile->Printf("\n  %s: %zu determinants", "psi::Dimension of the P + Q space", PQ_space.size());
+    outfile->Printf("\n  %s: %zu determinants", "psi::Dimension of the P + Q space",
+                    PQ_space.size());
     outfile->Printf("\n  %s: %f s", "Time spent screening the model space", screen.get());
 }
 
-bool ASCI::check_convergence(std::vector<std::vector<double>>& energy_history, psi::SharedVector evals) {
+bool ASCI::check_convergence(std::vector<std::vector<double>>& energy_history,
+                             psi::SharedVector evals) {
     int nroot = evals->dim();
 
     if (energy_history.size() == 0) {
@@ -447,7 +432,8 @@ bool ASCI::check_convergence(std::vector<std::vector<double>>& energy_history, p
     energy_history.push_back(new_energies);
 
     // Check for convergence
-    return (std::fabs(new_avg_energy - old_avg_energy) < options_->get_double("ASCI_E_CONVERGENCE"));
+    return (std::fabs(new_avg_energy - old_avg_energy) <
+            options_->get_double("ASCI_E_CONVERGENCE"));
 }
 
 void ASCI::prune_q_space(DeterminantHashVec& PQ_space, DeterminantHashVec& P_space,
@@ -510,7 +496,8 @@ ASCI::compute_spin(DeterminantHashVec& space, WFNOperator& op, psi::SharedMatrix
     return spin_vec;
 }
 
-void ASCI::print_wfn(DeterminantHashVec& space, WFNOperator& op, psi::SharedMatrix evecs, int nroot) {
+void ASCI::print_wfn(DeterminantHashVec& space, WFNOperator& op, psi::SharedMatrix evecs,
+                     int nroot) {
     std::string state_label;
     std::vector<std::string> s2_labels({"singlet", "doublet", "triplet", "quartet", "quintet",
                                         "sextet", "septet", "octet", "nonet", "decatet"});
@@ -553,7 +540,7 @@ double ASCI::compute_spin_contamination(DeterminantHashVec& space, WFNOperator& 
 Reference ASCI::get_reference() {
     // const std::vector<Determinant>& final_wfn =
     //     final_wfn_.determinants();
-    CI_RDMS ci_rdms(final_wfn_, fci_ints_, evecs_, 0, 0);
+    CI_RDMS ci_rdms(final_wfn_, as_ints_, evecs_, 0, 0);
     ci_rdms.set_max_rdm(rdm_level_);
     Reference aci_ref = ci_rdms.reference(ordm_a_, ordm_b_, trdm_aa_, trdm_ab_, trdm_bb_, trdm_aaa_,
                                           trdm_aab_, trdm_abb_, trdm_bbb_);
@@ -729,7 +716,7 @@ void ASCI::get_excited_determinants_sr(psi::SharedMatrix evecs, DeterminantHashV
                 for (int a = 0; a < nvalpha; ++a) {
                     int aa = avir[a];
                     if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0) {
-                        double HIJ = fci_ints_->slater_rules_single_alpha(det, ii, aa) * Cp;
+                        double HIJ = as_ints_->slater_rules_single_alpha(det, ii, aa) * Cp;
                         if (std::abs(HIJ) >= screen_thresh_) {
                             new_det = det;
                             new_det.set_alfa_bit(ii, false);
@@ -745,7 +732,7 @@ void ASCI::get_excited_determinants_sr(psi::SharedMatrix evecs, DeterminantHashV
                 for (int a = 0; a < nvbeta; ++a) {
                     int aa = bvir[a];
                     if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0) {
-                        double HIJ = fci_ints_->slater_rules_single_beta(det, ii, aa) * Cp;
+                        double HIJ = as_ints_->slater_rules_single_beta(det, ii, aa) * Cp;
                         if (std::abs(HIJ) >= screen_thresh_) {
                             new_det = det;
                             new_det.set_beta_bit(ii, false);
@@ -766,7 +753,7 @@ void ASCI::get_excited_determinants_sr(psi::SharedMatrix evecs, DeterminantHashV
                             int bb = avir[b];
                             if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^
                                  mo_symmetry_[bb]) == 0) {
-                                double HIJ = fci_ints_->tei_aa(ii, jj, aa, bb) * Cp;
+                                double HIJ = as_ints_->tei_aa(ii, jj, aa, bb) * Cp;
                                 if (std::abs(HIJ) >= screen_thresh_) {
                                     new_det = det;
                                     HIJ *= new_det.double_excitation_aa(ii, jj, aa, bb);
@@ -788,7 +775,7 @@ void ASCI::get_excited_determinants_sr(psi::SharedMatrix evecs, DeterminantHashV
                             int bb = bvir[b];
                             if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^
                                  mo_symmetry_[bb]) == 0) {
-                                double HIJ = fci_ints_->tei_ab(ii, jj, aa, bb) * Cp;
+                                double HIJ = as_ints_->tei_ab(ii, jj, aa, bb) * Cp;
                                 if (std::abs(HIJ) >= screen_thresh_) {
                                     new_det = det;
                                     HIJ *= new_det.double_excitation_ab(ii, jj, aa, bb);
@@ -811,7 +798,7 @@ void ASCI::get_excited_determinants_sr(psi::SharedMatrix evecs, DeterminantHashV
                             int bb = bvir[b];
                             if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^
                                  mo_symmetry_[bb]) == 0) {
-                                double HIJ = fci_ints_->tei_bb(ii, jj, aa, bb) * Cp;
+                                double HIJ = as_ints_->tei_bb(ii, jj, aa, bb) * Cp;
                                 if (std::abs(HIJ) >= screen_thresh_) {
                                     new_det = det;
                                     HIJ *= new_det.double_excitation_bb(ii, jj, aa, bb);
@@ -837,4 +824,4 @@ void ASCI::get_excited_determinants_sr(psi::SharedMatrix evecs, DeterminantHashV
             outfile->Printf("\n  Time spent merging thread F spaces: %20.6f", merge_t.get());
     } // Close threads
 }
-}
+} // namespace forte

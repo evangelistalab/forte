@@ -359,8 +359,7 @@ void CASSCF::cas_ci() {
         set_up_fcimo();
     } else if (options_->get_str("CASSCF_CI_SOLVER") == "ACI") {
         std::shared_ptr<ActiveSpaceIntegrals> fci_ints = get_ci_integrals();
-        AdaptiveCI aci(state_, scf_info_, options_, ints_, mo_space_info_);
-        aci.set_fci_ints(fci_ints);
+        AdaptiveCI aci(state_, scf_info_, options_, mo_space_info_, fci_ints);
         aci.set_max_rdm(2);
         aci.set_quiet(quiet);
         aci.compute_energy();
@@ -443,7 +442,9 @@ void CASSCF::cas_ci_final() {
     } else if (options_->get_str("CASSCF_CI_SOLVER") == "CAS") {
         set_up_fcimo();
     } else if (options_->get_str("CASSCF_CI_SOLVER") == "ACI") {
-        AdaptiveCI aci(state_, scf_info_, options_, ints_, mo_space_info_);
+        auto as_ints =
+            make_active_space_ints(mo_space_info_, ints_, "ACTIVE", {{"RESTRICTED_DOCC"}});
+        AdaptiveCI aci(state_, scf_info_, options_, mo_space_info_, as_ints);
         aci.set_max_rdm(3);
         aci.set_quiet(quiet);
         aci.compute_energy();
@@ -765,9 +766,6 @@ void CASSCF::set_up_fci() {
     fcisolver->set_active_space_integrals(fci_ints);
     E_casscf_ = fcisolver->compute_energy();
 
-    //    FCISolver fcisolver(state_, mo_space_info_, ints_);
-    //    fcisolver.set_options(options_);
-
     // tweak some options
     //    fcisolver.set_max_rdm_level(3);
     //    fcisolver.set_nroot(options_->get_int("NROOT"));
@@ -778,10 +776,10 @@ void CASSCF::set_up_fci() {
     //    fcisolver.set_subspace_per_root(options_->get_int("DL_SUBSPACE_PER_ROOT"));
     //    fcisolver.set_print_no(false);
 
-//    / Get the CIVector for each iteration
-//    std::vector<std::shared_ptr<FCIWfn>> FCIWfnSolution(1);
-//    FCIWfnSolution.push_back(fcisolver->get_FCIWFN());
-//    CISolutions_.push_back(FCIWfnSolution); // TODO: disabled since it is not used
+    //    / Get the CIVector for each iteration
+    //    std::vector<std::shared_ptr<FCIWfn>> FCIWfnSolution(1);
+    //    FCIWfnSolution.push_back(fcisolver->get_FCIWFN());
+    //    CISolutions_.push_back(FCIWfnSolution); // TODO: disabled since it is not used
 
     cas_ref_ = fcisolver->get_reference();
 }

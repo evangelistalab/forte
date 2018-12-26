@@ -85,12 +85,8 @@ class AdaptiveCI : public ActiveSpaceSolver {
      * @param mo_space_info A pointer to the MOSpaceInfo object
      */
     AdaptiveCI(StateInfo state, std::shared_ptr<SCFInfo> scf_info,
-               std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
-               std::shared_ptr<MOSpaceInfo> mo_space_info);
-
-    //    AdaptiveCI(psi::SharedWavefunction ref_wfn, psi::Options& options,
-    //    std::shared_ptr<ForteIntegrals> ints,
-    //               std::shared_ptr<MOSpaceInfo> mo_space_info);
+               std::shared_ptr<ForteOptions> options, std::shared_ptr<MOSpaceInfo> mo_space_info,
+               std::shared_ptr<ActiveSpaceIntegrals> as_ints);
     /// Destructor
     ~AdaptiveCI();
 
@@ -117,8 +113,6 @@ class AdaptiveCI : public ActiveSpaceSolver {
 
     void diagonalize_final_and_compute_rdms();
 
-    void set_aci_ints(std::shared_ptr<ForteIntegrals> ints);
-
     void semi_canonicalize();
     void set_fci_ints(std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
 
@@ -139,18 +133,11 @@ class AdaptiveCI : public ActiveSpaceSolver {
 
     WFNOperator op_;
 
-    /// State info
-    StateInfo state_;
     /// Some HF info
     std::shared_ptr<SCFInfo> scf_info_;
+    StateInfo state_;
     /// Forte options
     std::shared_ptr<ForteOptions> options_;
-    /// The molecular integrals required by Explorer
-    std::shared_ptr<ForteIntegrals> ints_;
-    /// Pointer to FCI integrals
-    std::shared_ptr<ActiveSpaceIntegrals> fci_ints_;
-    /// The MOSpaceInfo object
-    std::shared_ptr<MOSpaceInfo> mo_space_info_;
     /// The wave function symmetry
     int wavefunction_symmetry_;
     /// The symmetry of each orbital in Pitzer ordering

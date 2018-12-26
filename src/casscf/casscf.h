@@ -129,7 +129,7 @@ class CASSCF {
     std::shared_ptr<psi::JK> JK_;
     /// Perform a CAS-CI with the updated MO coefficients
     void cas_ci();
-    /// Sets up the FCISolver
+    /// Sets up the FCI
     void set_up_fci();
     /// Set up a SA-FCI
     void set_up_sa_fci();

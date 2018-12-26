@@ -379,8 +379,8 @@ double MRDSRG::compute_energy_relaxed() {
             fci_mo.set_localize_actv(false);
             Erelax = fci_mo.compute_energy();
         } else if (cas_type == "ACI") {
-            AdaptiveCI aci(ints_->wfn(), scf_info_, foptions_, ints_,
-                           mo_space_info_);  // ints_->wfn() is implicitly converted to StateInfo
+            AdaptiveCI aci(ints_->wfn(), scf_info_, foptions_, mo_space_info_,
+                           fci_ints); // ints_->wfn() is implicitly converted to StateInfo
             aci.set_fci_ints(fci_ints);
             if (foptions_->has_changed("ACI_RELAX_SIGMA")) {
                 aci.update_sigma();
@@ -389,10 +389,11 @@ double MRDSRG::compute_energy_relaxed() {
 
         } else {
             StateInfo state(ints_->wfn());
-            FCISolver fci(state, mo_space_info_, ints_);
-            fci.set_active_space_integrals(fci_ints);
-            fci.set_max_rdm_level(1);
-            Erelax = fci.compute_energy();
+            auto fci =
+                make_active_space_solver("FCI", state, scf_info_, mo_space_info_, ints_, foptions_);
+            fci->set_max_rdm_level(1);
+            fci->set_active_space_integrals(fci_ints);
+            Erelax = fci->compute_energy();
         }
 
         // printing
@@ -449,8 +450,8 @@ double MRDSRG::compute_energy_relaxed() {
 
                 reference_ = fci_mo.get_reference();
             } else if (cas_type == "ACI") {
-                AdaptiveCI aci(ints_->wfn(), scf_info_, foptions_,
-                               ints_, mo_space_info_); // ints_->wfn() is implicitly converted to StateInfo
+                AdaptiveCI aci(ints_->wfn(), scf_info_, foptions_, mo_space_info_,
+                               fci_ints); // ints_->wfn() is implicitly converted to StateInfo
                 aci.set_fci_ints(fci_ints);
                 if (foptions_->has_changed("ACI_RELAX_SIGMA")) {
                     aci.update_sigma();
@@ -459,13 +460,12 @@ double MRDSRG::compute_energy_relaxed() {
                 reference_ = aci.get_reference();
             } else {
                 StateInfo state(ints_->wfn());
-                FCISolver fci(state, mo_space_info_, ints_);
-                fci.set_options(foptions_);
-                fci.set_active_space_integrals(fci_ints);
-                fci.set_max_rdm_level(max_rdm_level);
-                Erelax = fci.compute_energy();
-
-                reference_ = fci.get_reference();
+                auto fci = make_active_space_solver("FCI", state, scf_info_, mo_space_info_, ints_,
+                                                    foptions_);
+                fci->set_max_rdm_level(max_rdm_level);
+                fci->set_active_space_integrals(fci_ints);
+                Erelax = fci->compute_energy();
+                reference_ = fci->get_reference();
             }
             outfile->Printf("\n  The following reference rotation will make the new reference and "
                             "integrals in the same basis.");

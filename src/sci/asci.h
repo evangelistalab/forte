@@ -72,9 +72,8 @@ class ASCI : public ActiveSpaceSolver {
      * @param mo_space_info A pointer to the MOSpaceInfo object
      */
 
-    ASCI(StateInfo state, std::shared_ptr<SCFInfo> scf_info,
-         std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
-         std::shared_ptr<MOSpaceInfo> mo_space_info);
+    ASCI(StateInfo state, std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
+         std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ActiveSpaceIntegrals> as_ints);
     /// Destructor
     ~ASCI();
 
@@ -94,8 +93,6 @@ class ASCI : public ActiveSpaceSolver {
     /// Compute the ACI-NOs
     void compute_nos();
 
-    void set_asci_ints(std::shared_ptr<ForteIntegrals> ints);
-
     void set_fci_ints(std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
 
   private:
@@ -105,18 +102,11 @@ class ASCI : public ActiveSpaceSolver {
 
     WFNOperator op_;
 
-    /// Info on the electronic state
-    StateInfo state_;
     /// HF info
     std::shared_ptr<SCFInfo> scf_info_;
+    StateInfo state_;
     /// Options
     std::shared_ptr<ForteOptions> options_;
-    /// The molecular integrals required by Explorer
-    std::shared_ptr<ForteIntegrals> ints_;
-    /// Pointer to FCI integrals
-    std::shared_ptr<ActiveSpaceIntegrals> fci_ints_;
-    /// The MOSpaceInfo object
-    std::shared_ptr<MOSpaceInfo> mo_space_info_;
     /// The wave function symmetry
     int wavefunction_symmetry_;
     /// The symmetry of each orbital in Pitzer ordering

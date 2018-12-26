@@ -215,7 +215,6 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
 
                 outfile->Printf("\n    Use string FCI code.");
 
-                // prepare FCISolver
                 int charge = psi::Process::environment.molecule()->molecular_charge();
                 if (foptions_->has_changed("CHARGE")) {
                     charge = foptions_->get_int("CHARGE");
@@ -238,19 +237,16 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
 
                 StateInfo state(na, nb, multi, multi - 1, irrep); //assumes highes Ms
                 // TODO use base class info
-                FCISolver fcisolver(state, mo_space_info_, ints_);
-
-                fcisolver.set_max_rdm_level(1);
-                fcisolver.set_nroot(nstates);
-                fcisolver.set_root(nstates - 1);
-                fcisolver.set_fci_iterations(foptions_->get_int("FCI_MAXITER"));
-                fcisolver.set_collapse_per_root(foptions_->get_int("DL_COLLAPSE_PER_ROOT"));
-                fcisolver.set_subspace_per_root(foptions_->get_int("DL_SUBSPACE_PER_ROOT"));
-                fcisolver.set_active_space_integrals(fci_ints);
+                auto fci =
+                    make_active_space_solver("FCI", state, scf_info_, mo_space_info_, ints_, foptions_);
+                fci->set_max_rdm_level(1);
+                fci->set_nroot(nstates);
+                fci->set_root(nstates - 1);
+                fci->set_active_space_integrals(fci_ints);
 
                 // compute energy and fill in results
-                fcisolver.compute_energy();
-                psi::SharedVector Ems = fcisolver.eigen_vals();
+                fci->compute_energy();
+                psi::SharedVector Ems = fci->evals();
                 for (int i = 0; i < nstates; ++i) {
                     Edsrg_sa[n].push_back(Ems->get(i) + Enuc_);
                 }

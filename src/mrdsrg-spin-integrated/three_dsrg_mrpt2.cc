@@ -3449,9 +3449,8 @@ THREE_DSRG_MRPT2::relaxed_energy(std::shared_ptr<ActiveSpaceIntegrals> fci_ints)
     } else if (cas_type == "ACI") {
 
         // Only do ground state ACI for now
-        AdaptiveCI aci(ints_->wfn(), scf_info_, foptions_, ints_,
-                       mo_space_info_); // ints_->wfn() is implicitly converted to StateInfo
-        aci.set_fci_ints(fci_ints);
+        AdaptiveCI aci(ints_->wfn(), scf_info_, foptions_, mo_space_info_,
+                       fci_ints); // ints_->wfn() is implicitly converted to StateInfo
         if ((foptions_->psi_options())["ACI_RELAX_SIGMA"].has_changed()) {
             aci.update_sigma();
         }
@@ -3474,8 +3473,7 @@ THREE_DSRG_MRPT2::relaxed_energy(std::shared_ptr<ActiveSpaceIntegrals> fci_ints)
 
     } else {
 
-        // common (SS and SA) setup of FCISolver
-        int ntrial_per_root = foptions_->get_int("NTRIAL_PER_ROOT");
+        // common (SS and SA) setup
         psi::Dimension active_dim = mo_space_info_->get_dimension("ACTIVE");
         std::shared_ptr<psi::Molecule> molecule = psi::Process::environment.molecule();
         double Enuc = ints_->nuclear_repulsion_energy();
@@ -3492,7 +3490,7 @@ THREE_DSRG_MRPT2::relaxed_energy(std::shared_ptr<ActiveSpaceIntegrals> fci_ints)
 
         // if state specific, read from fci_root and fci_nroot
         if ((foptions_->psi_options())["AVG_STATE"].size() == 0) {
-            // setup for FCISolver
+            // TODO: update this code to use the State object
             int multi = psi::Process::environment.molecule()->multiplicity();
             if ((foptions_->psi_options())["MULTIPLICITY"].has_changed()) {
                 multi = foptions_->get_int("MULTIPLICITY");
@@ -3505,30 +3503,15 @@ THREE_DSRG_MRPT2::relaxed_energy(std::shared_ptr<ActiveSpaceIntegrals> fci_ints)
             auto na = (nelec_actv + twice_ms) / 2;
             auto nb = nelec_actv - na;
 
-            // diagonalize the Hamiltonian
-            //            FCISolver fcisolver(active_dim, core_mos_, actv_mos_, na, nb, multi,
-            //                                foptions_->get_int("ROOT_SYM"), ints_, mo_space_info_,
-            //                                ntrial_per_root, print_, foptions_->psi_options());
-
             StateInfo state(na, nb, multi, multi - 1,
                             foptions_->get_int("ROOT_SYM")); // assumes highest Ms
             // TODO use base class info
-            FCISolver fcisolver(state, mo_space_info_, ints_);
-
-            fcisolver.set_max_rdm_level(1);
-            fcisolver.set_nroot(foptions_->get_int("FCI_NROOT"));
-            fcisolver.set_root(foptions_->get_int("FCI_ROOT"));
-            fcisolver.set_test_rdms(foptions_->get_bool("FCI_TEST_RDMS"));
-            fcisolver.set_fci_iterations(foptions_->get_int("FCI_MAXITER"));
-            fcisolver.set_collapse_per_root(foptions_->get_int("DL_COLLAPSE_PER_ROOT"));
-            fcisolver.set_subspace_per_root(foptions_->get_int("DL_SUBSPACE_PER_ROOT"));
-            fcisolver.set_print(print_);
-            fcisolver.set_ntrial_per_root(ntrial_per_root);
-
-            // set integrals manually
-            fcisolver.set_active_space_integrals(fci_ints);
-
-            Erelax.push_back(fcisolver.compute_energy());
+            auto fci =
+                make_active_space_solver("FCI", state, scf_info_, mo_space_info_, ints_, foptions_);
+            fci->set_max_rdm_level(1);
+            fci->set_active_space_integrals(fci_ints);
+            fci->set_print(print_);
+            Erelax.push_back(fci->compute_energy());
         } else {
             int nentry = (foptions_->psi_options())["AVG_STATE"].size();
 
@@ -3537,34 +3520,26 @@ THREE_DSRG_MRPT2::relaxed_energy(std::shared_ptr<ActiveSpaceIntegrals> fci_ints)
                 int multi = (foptions_->psi_options())["AVG_STATE"][n][1].to_integer();
                 int nstates = (foptions_->psi_options())["AVG_STATE"][n][2].to_integer();
 
-                // prepare FCISolver
+                // TODO: remove this code in
                 int ms = (multi + 1) % 2;
                 auto nelec_actv = nelec;
                 //                - 2 * mo_space_info_->size("FROZEN_DOCC") - 2 * core_mos_.size();
                 auto na = (nelec_actv + ms) / 2;
                 auto nb = nelec_actv - na;
 
-                //                FCISolver fcisolver(active_dim, core_mos_, actv_mos_, na, nb,
-                //                multi, irrep, ints_,
-                //                                    mo_space_info_, ntrial_per_root, print_,
-                //                                    *foptions_);
                 StateInfo state(na, nb, multi, multi - 1, irrep); // assumes highes Ms
                 // TODO use base class info
-                FCISolver fcisolver(state, mo_space_info_, ints_);
-
-                fcisolver.set_max_rdm_level(1);
-                fcisolver.set_nroot(nstates);
-                fcisolver.set_root(nstates - 1);
-                fcisolver.set_fci_iterations(foptions_->get_int("FCI_MAXITER"));
-                fcisolver.set_collapse_per_root(foptions_->get_int("DL_COLLAPSE_PER_ROOT"));
-                fcisolver.set_subspace_per_root(foptions_->get_int("DL_SUBSPACE_PER_ROOT"));
-
+                auto fci = make_active_space_solver("FCI", state, scf_info_, mo_space_info_, ints_,
+                                                    foptions_);
+                fci->set_max_rdm_level(1);
+                fci->set_nroot(nstates);
+                fci->set_root(nstates - 1);
                 // set integrals manually
-                fcisolver.set_active_space_integrals(fci_ints);
+                fci->set_active_space_integrals(fci_ints);
 
                 // compute energy and fill in results
-                fcisolver.compute_energy();
-                psi::SharedVector Ems = fcisolver.eigen_vals();
+                fci->compute_energy();
+                psi::SharedVector Ems = fci->evals();
                 for (int i = 0; i < nstates; ++i) {
                     Erelax.push_back(Ems->get(i) + Enuc);
                 }

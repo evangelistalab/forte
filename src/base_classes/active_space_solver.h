@@ -66,11 +66,11 @@ class ActiveSpaceSolver {
      * @param ints
      */
     ActiveSpaceSolver(StateInfo state, std::shared_ptr<MOSpaceInfo> mo_space_info,
-                      std::shared_ptr<ForteIntegrals> ints);
+                      std::shared_ptr<ActiveSpaceIntegrals> as_ints);
     // Constructor for a multi-state computation
     ActiveSpaceSolver(const std::vector<std::pair<StateInfo, double>>& states_weights,
                       std::shared_ptr<MOSpaceInfo> mo_space_info,
-                      std::shared_ptr<ForteIntegrals> ints);
+                      std::shared_ptr<ActiveSpaceIntegrals> as_ints);
 
     // Default constructor
     ActiveSpaceSolver() = default;
@@ -94,6 +94,11 @@ class ActiveSpaceSolver {
         as_ints_ = as_ints;
     }
 
+    //    /// Return eigen vectors
+    //    psi::SharedMatrix evecs() { return evecs_; }
+    /// Return eigen values
+    psi::SharedVector evals() { return evals_; }
+
     /// Set the number of desired roots
     /// @param value the number of desired roots
     void set_nroot(int value);
@@ -103,14 +108,11 @@ class ActiveSpaceSolver {
     /// Set the maximum RDM computed (0 - 3)
     /// @param value the rank of the RDM
     void set_max_rdm_level(int value);
+    /// Set the print level
+    /// @param level the print level (0 = no printing, 1 default)
+    void set_print(int level) { print_ = level; }
 
   protected:
-    /// The orbital space held in MOSpaceInfo that defines the active orbitals
-    std::string active_mo_space_ = "ACTIVE";
-
-    /// The orbital space held in MOSpaceInfo that defines the core orbitals (doubly occupied)
-    std::string core_mo_space_ = "RESTRICTED_DOCC";
-
     /// The list of active orbitals (absolute ordering)
     std::vector<size_t> active_mo_;
 
@@ -122,9 +124,6 @@ class ActiveSpaceSolver {
 
     /// The MOSpaceInfo object
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
-
-    /// The molecular integrals object
-    std::shared_ptr<ForteIntegrals> ints_;
 
     /// The molecular integrals for the active space
     /// This object holds only the integrals for the orbital contained in the active_mo_ vector.
@@ -138,6 +137,12 @@ class ActiveSpaceSolver {
     int root_ = 0;
     /// The maximum RDM computed (0 - 3)
     int max_rdm_level_ = 1;
+
+    /// Eigenvalues
+    psi::SharedVector evals_;
+
+    /// A variable to control printing information
+    int print_ = 0;
 
     /// Allocates an ActiveSpaceIntegrals object and fills it with integrals stored in ints_
     void make_active_space_ints();

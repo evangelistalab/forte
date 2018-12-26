@@ -115,7 +115,7 @@ for d in tests:
             test_results[d] = "PASSED"
         else:
             test_results[d] = "FAILED"
-        print(out)
+        print(out.decode("utf-8"))
     os.chdir(maindir)
 
 
