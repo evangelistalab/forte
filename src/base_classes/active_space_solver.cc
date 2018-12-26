@@ -56,6 +56,12 @@ ActiveSpaceSolver::ActiveSpaceSolver(
     make_active_space_ints();
 }
 
+void ActiveSpaceSolver::set_nroot(int value) { nroot_ = value; }
+
+void ActiveSpaceSolver::set_root(int value) { root_ = value; }
+
+void ActiveSpaceSolver::set_max_rdm_level(int value) { max_rdm_level_ = value; }
+
 void ActiveSpaceSolver::make_active_space_ints() {
     // get the active/core vectors
     active_mo_ = mo_space_info_->get_corr_abs_mo(active_mo_space_);
@@ -84,16 +90,15 @@ std::shared_ptr<ActiveSpaceSolver> make_active_space_solver(
     if (type == "FCI") {
         solver = std::make_shared<FCISolver>(state, mo_space_info, ints);
     } else if (type == "ACI") {
-        solver = std::make_shared<AdaptiveCI>(state, scf_info, options,
-                                              ints, mo_space_info);
+        solver = std::make_shared<AdaptiveCI>(state, scf_info, options, ints, mo_space_info);
     } else if (type == "CAS") {
         solver = std::make_shared<FCI_MO>(scf_info, options, ints, mo_space_info);
     } else if (type == "ASCI") {
-        solver = std::make_shared<ASCI>(state, scf_info, options, ints,
-                                        mo_space_info);
+        solver = std::make_shared<ASCI>(state, scf_info, options, ints, mo_space_info);
     } else {
         throw psi::PSIEXCEPTION("make_active_space_solver: type = " + type + " was not recognized");
     }
+    // read options
     solver->set_options(options);
     return solver;
 }

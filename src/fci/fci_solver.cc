@@ -64,12 +64,6 @@ FCISolver::FCISolver(StateInfo state, std::shared_ptr<MOSpaceInfo> mo_space_info
     nb_ = state.nb() - core_mo_.size() - mo_space_info->size("FROZEN_DOCC");
 }
 
-void FCISolver::set_max_rdm_level(int value) { max_rdm_level_ = value; }
-
-void FCISolver::set_nroot(int value) { nroot_ = value; }
-
-void FCISolver::set_root(int value) { root_ = value; }
-
 void FCISolver::set_ntrial_per_root(int value) { ntrial_per_root_ = value; }
 
 void FCISolver::set_fci_iterations(int value) { fci_iterations_ = value; }

@@ -94,6 +94,16 @@ class ActiveSpaceSolver {
         as_ints_ = as_ints;
     }
 
+    /// Set the number of desired roots
+    /// @param value the number of desired roots
+    void set_nroot(int value);
+    /// Set the root that will be used to compute the properties
+    /// @param the root (root = 0, 1, 2, ...)
+    void set_root(int value);
+    /// Set the maximum RDM computed (0 - 3)
+    /// @param value the rank of the RDM
+    void set_max_rdm_level(int value);
+
   protected:
     /// The orbital space held in MOSpaceInfo that defines the active orbitals
     std::string active_mo_space_ = "ACTIVE";
@@ -121,6 +131,13 @@ class ActiveSpaceSolver {
     /// The one-electron integrals and scalar energy contains contributions from the
     /// doubly occupied orbitals specified by the core_mo_ vector.
     std::shared_ptr<ActiveSpaceIntegrals> as_ints_;
+
+    /// The number of roots (default = 1)
+    int nroot_ = 1;
+    /// The root used to compute properties (zero based, default = 0)
+    int root_ = 0;
+    /// The maximum RDM computed (0 - 3)
+    int max_rdm_level_ = 1;
 
     /// Allocates an ActiveSpaceIntegrals object and fills it with integrals stored in ints_
     void make_active_space_ints();

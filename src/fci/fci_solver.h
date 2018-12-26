@@ -86,14 +86,8 @@ class FCISolver : public ActiveSpaceSolver {
     /// Compute RDMs on a given root
     void compute_rdms_root(int root);
 
-    /// Set the number of desired roots
-    void set_nroot(int value);
-    /// Set the root that will be used to compute the properties
-    void set_root(int value);
     /// Set the number of trial vectors per root
     void set_ntrial_per_root(int value);
-    /// Set the maximum RDM computed (0 - 3)
-    void set_max_rdm_level(int value);
     /// Set the energy convergence threshold
     void set_e_convergence(double value);
     /// Set the convergence for FCI
@@ -152,19 +146,12 @@ class FCISolver : public ActiveSpaceSolver {
     /// The multiplicity (2S + 1) of the state to target.
     /// (1 = singlet, 2 = doublet, 3 = triplet, ...)
     int multiplicity_;
-
-    /// The number of roots (default = 1)
-    int nroot_ = 1;
-    /// The root used to compute properties (zero based, default = 0)
-    int root_ = 0;
     /// The number of trial guess vectors to generate per root
     size_t ntrial_per_root_ = 1;
     /// The number of collapse vectors for each root
     size_t collapse_per_root_ = 2;
     /// The maximum subspace size for each root
     size_t subspace_per_root_ = 4;
-    /// The maximum RDM computed (0 - 3)
-    int max_rdm_level_ = 1;
     /// The energy convergence criterion
     double e_convergence_ = 1.0e-12;
     /// Iterations for FCI

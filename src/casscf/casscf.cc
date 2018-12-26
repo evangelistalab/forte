@@ -750,33 +750,39 @@ void CASSCF::set_up_fci() {
     if (((nel - twice_ms) % 2) != 0)
         throw psi::PSIEXCEPTION("\n\n  FCI: Wrong value of M_s.\n\n");
 
+    // TODO: cleanup
     //    FCISolver fcisolver(active_dim, rdocc, active, na, nb, multiplicity,
     //                        options_->get_int("ROOT_SYM"), ints_, mo_space_info_,
     //                        options_->get_int("NTRIAL_PER_ROOT"), options_->get_int("PRINT"),
     //                        options_->psi_options());
     //  Cannot be changed to:
-    FCISolver fcisolver(state_, mo_space_info_, ints_);
-    fcisolver.set_options(options_);
+    auto fcisolver =
+        make_active_space_solver("FCI", state_, scf_info_, mo_space_info_, ints_, options_);
+    fcisolver->set_nroot(options_->get_int("NROOT"));
+    fcisolver->set_root(options_->get_int("ROOT"));
+    std::shared_ptr<ActiveSpaceIntegrals> fci_ints = get_ci_integrals();
+    fcisolver->set_active_space_integrals(fci_ints);
+    E_casscf_ = fcisolver->compute_energy();
+
+    //    FCISolver fcisolver(state_, mo_space_info_, ints_);
+    //    fcisolver.set_options(options_);
 
     // tweak some options
-    fcisolver.set_max_rdm_level(3);
-    fcisolver.set_nroot(options_->get_int("NROOT"));
-    fcisolver.set_root(options_->get_int("ROOT"));
-    fcisolver.set_test_rdms(options_->get_bool("FCI_TEST_RDMS"));
-    fcisolver.set_fci_iterations(options_->get_int("FCI_MAXITER"));
-    fcisolver.set_collapse_per_root(options_->get_int("DL_COLLAPSE_PER_ROOT"));
-    fcisolver.set_subspace_per_root(options_->get_int("DL_SUBSPACE_PER_ROOT"));
-    fcisolver.set_print_no(false);
+    //    fcisolver.set_max_rdm_level(3);
+    //    fcisolver.set_nroot(options_->get_int("NROOT"));
+    //    fcisolver.set_root(options_->get_int("ROOT"));
+    //    fcisolver.set_test_rdms(options_->get_bool("FCI_TEST_RDMS"));
+    //    fcisolver.set_fci_iterations(options_->get_int("FCI_MAXITER"));
+    //    fcisolver.set_collapse_per_root(options_->get_int("DL_COLLAPSE_PER_ROOT"));
+    //    fcisolver.set_subspace_per_root(options_->get_int("DL_SUBSPACE_PER_ROOT"));
+    //    fcisolver.set_print_no(false);
 
-    std::shared_ptr<ActiveSpaceIntegrals> fci_ints = get_ci_integrals();
-    fcisolver.set_active_space_integrals(fci_ints);
-    E_casscf_ = fcisolver.compute_energy();
-    /// Get the CIVector for each iteration
-    std::vector<std::shared_ptr<FCIWfn>> FCIWfnSolution(1);
-    FCIWfnSolution.push_back(fcisolver.get_FCIWFN());
-    CISolutions_.push_back(FCIWfnSolution);
+//    / Get the CIVector for each iteration
+//    std::vector<std::shared_ptr<FCIWfn>> FCIWfnSolution(1);
+//    FCIWfnSolution.push_back(fcisolver->get_FCIWFN());
+//    CISolutions_.push_back(FCIWfnSolution); // TODO: disabled since it is not used
 
-    cas_ref_ = fcisolver.get_reference();
+    cas_ref_ = fcisolver->get_reference();
 }
 
 std::shared_ptr<ActiveSpaceIntegrals> CASSCF::get_ci_integrals() {
