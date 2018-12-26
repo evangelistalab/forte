@@ -204,7 +204,8 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
         }
     }
     if (options.get_str("JOB_TYPE") == "FCI") {
-        auto fci = make_active_space_solver("FCI", state, scf_info, mo_space_info, ints, forte_options);
+        auto fci =
+            make_active_space_solver("FCI", state, scf_info, mo_space_info, ints, forte_options);
         final_energy = fci->compute_energy();
     }
     if (options.get_bool("USE_DMRGSCF")) {
@@ -281,8 +282,8 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
                 }
             }
         } else if (cas_type == "FCI") {
-            auto fci = std::make_shared<FCISolver>(state, mo_space_info, ints);
-            fci->set_options(forte_options);
+            auto fci = make_active_space_solver("FCI", state, scf_info, mo_space_info, ints,
+                                                forte_options);
             fci->set_max_rdm_level(max_rdm_level);
             fci->compute_energy();
             Reference reference = fci->get_reference();
@@ -375,8 +376,8 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
                 //                dsrg->compute_energy_relaxed();
             }
         } else if (cas_type == "FCI") {
-            auto fci = std::make_shared<FCISolver>(state, mo_space_info, ints);
-            fci->set_options(forte_options);
+            auto fci = make_active_space_solver("FCI", state, scf_info, mo_space_info, ints,
+                                                forte_options);
             fci->set_max_rdm_level(max_rdm_level);
             fci->compute_energy();
             Reference reference = fci->get_reference();
@@ -449,9 +450,8 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
             }
 
         } else if (cas_type == "FCI") {
-            std::shared_ptr<FCISolver> fci =
-                std::make_shared<FCISolver>(state, mo_space_info, ints);
-            fci->set_options(forte_options);
+            auto fci = make_active_space_solver("FCI", state, scf_info, mo_space_info, ints,
+                                                forte_options);
             fci->set_max_rdm_level(max_rdm_level);
             fci->compute_energy();
             Reference reference = fci->get_reference();
@@ -684,8 +684,8 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
             //  }
 
         } else if (cas_type == "FCI") {
-            auto fci = std::make_shared<FCISolver>(state, mo_space_info, ints);
-            fci->set_options(forte_options);
+            auto fci = make_active_space_solver("FCI", state, scf_info, mo_space_info, ints,
+                                                forte_options);
             fci->set_max_rdm_level(max_rdm_level);
             fci->compute_energy();
             Reference reference = fci->get_reference();
@@ -847,8 +847,7 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
             }
         }
         if (cas_type == "FCI") {
-            auto fci = std::make_shared<FCISolver>(state, mo_space_info, ints);
-            fci->set_options(forte_options);
+            auto fci = make_active_space_solver("FCI", state, scf_info, mo_space_info, ints, forte_options);
             fci->set_max_rdm_level(max_rdm_level);
             fci->compute_energy();
             Reference reference = fci->get_reference();
@@ -888,8 +887,7 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
             final_energy = somrdsrg->compute_energy();
         }
         if (options.get_str("CAS_TYPE") == "FCI") {
-            auto fci = std::make_shared<FCISolver>(state, mo_space_info, ints);
-            fci->set_options(forte_options);
+            auto fci = make_active_space_solver("FCI", state, scf_info, mo_space_info, ints, forte_options);
             fci->set_max_rdm_level(max_rdm_level);
             fci->compute_energy();
             Reference reference = fci->get_reference();
