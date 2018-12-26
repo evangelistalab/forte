@@ -57,9 +57,11 @@ bool pairCompDescend(const std::pair<double, Determinant> E1,
 ASCI::ASCI(StateInfo state, std::shared_ptr<SCFInfo> scf_info,
            std::shared_ptr<ForteOptions> options, std::shared_ptr<MOSpaceInfo> mo_space_info,
            std::shared_ptr<ActiveSpaceIntegrals> as_ints)
-    : ActiveSpaceSolver(state, mo_space_info, as_ints), scf_info_(scf_info), options_(options), state_(state) {
+    : ActiveSpaceSolver(state, mo_space_info, as_ints), scf_info_(scf_info), options_(options),
+      state_(state) {
 
     mo_symmetry_ = mo_space_info_->symmetry("ACTIVE");
+    nuclear_repulsion_energy_ = as_ints->ints()->nuclear_repulsion_energy();
 }
 
 ASCI::~ASCI() {}
@@ -72,9 +74,9 @@ void ASCI::set_fci_ints(std::shared_ptr<ActiveSpaceIntegrals> fci_ints) {
 
 void ASCI::startup() {
 
-//    if (!set_ints_) {
-//        set_asci_ints(ints_); // TODO: maybe a BUG?
-//    }
+    //    if (!set_ints_) {
+    //        set_asci_ints(ints_); // TODO: maybe a BUG?
+    //    }
 
     op_.initialize(mo_symmetry_, as_ints_);
 

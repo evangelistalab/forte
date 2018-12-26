@@ -214,6 +214,7 @@ AdaptiveCI::AdaptiveCI(StateInfo state, std::shared_ptr<SCFInfo> scf_info,
 
     mo_symmetry_ = mo_space_info_->symmetry("ACTIVE");
     sigma_ = options_->get_double("SIGMA");
+    nuclear_repulsion_energy_ = as_ints->ints()->nuclear_repulsion_energy();
 }
 
 // AdaptiveCI::AdaptiveCI(psi::SharedWavefunction ref_wfn, psi::Options& options,
