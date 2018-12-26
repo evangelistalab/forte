@@ -64,7 +64,7 @@ CASSCF::CASSCF(StateInfo state, std::shared_ptr<SCFInfo> scf_info,
       mo_space_info_(mo_space_info) {
     startup();
 }
-void CASSCF::compute_casscf() {
+double CASSCF::compute_energy() {
     if (na_ == 0) {
         outfile->Printf("\n\n\n Please set the active space");
         throw psi::PSIEXCEPTION(" The active space is zero.  Set the active space");
@@ -248,6 +248,8 @@ void CASSCF::compute_casscf() {
     outfile->Printf("\n @E(CASSCF) = %18.12f \n", E_casscf_);
     psi::Process::environment.globals["CURRENT ENERGY"] = E_casscf_;
     psi::Process::environment.globals["CASSCF_ENERGY"] = E_casscf_;
+
+    return E_casscf_;
 }
 void CASSCF::startup() {
     print_method_banner({"Complete Active Space Self Consistent Field", "Kevin Hannon"});
@@ -1141,6 +1143,6 @@ std::pair<ambit::Tensor, std::vector<double>> CASSCF::CI_Integrals() {
     return pair_return;
 }
 
-Reference CASSCF::casscf_reference() { return cas_ref_; }
+Reference CASSCF::get_reference() { return cas_ref_; }
 
 } // namespace forte
