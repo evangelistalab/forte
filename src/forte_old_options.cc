@@ -2,7 +2,6 @@
 
 #include "sci/aci.h"
 #include "fci/fci_solver.h"
-#include "fci/fci.h"
 #include "integrals/integrals.h"
 #include "pci/pci.h"
 

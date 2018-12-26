@@ -39,7 +39,6 @@
 
 #include "helpers/timer.h"
 #include "ci_rdm/ci_rdms.h"
-#include "fci/fci.h"
 #include "boost/format.hpp"
 #include "sci/fci_mo.h"
 #include "fci/fci_solver.h"

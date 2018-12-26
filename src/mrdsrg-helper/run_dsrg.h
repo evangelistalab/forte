@@ -3,7 +3,6 @@
 
 #include "forte_options.h"
 #include "sci/fci_mo.h"
-#include "fci/fci.h"
 #include "mrdsrg-spin-integrated/dsrg_mrpt2.h"
 #include "mrdsrg-spin-integrated/dsrg_mrpt3.h"
 #include "mrdsrg-spin-integrated/master_mrdsrg.h"

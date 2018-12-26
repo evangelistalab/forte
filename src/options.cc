@@ -32,7 +32,6 @@
 #include "orbital-helpers/ci-no/ci-no.h"
 #include "orbital-helpers/ci-no/mrci-no.h"
 #include "fci/fci_solver.h"
-#include "fci/fci.h"
 #include "sci/fci_mo.h"
 #include "forte_options.h"
 #include "integrals/integrals.h"

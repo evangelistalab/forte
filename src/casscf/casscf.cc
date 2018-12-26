@@ -758,6 +758,7 @@ void CASSCF::set_up_fci() {
     //  Cannot be changed to:
     auto fcisolver =
         make_active_space_solver("FCI", state_, scf_info_, mo_space_info_, ints_, options_);
+    fcisolver->set_max_rdm_level(3);
     fcisolver->set_nroot(options_->get_int("NROOT"));
     fcisolver->set_root(options_->get_int("ROOT"));
     std::shared_ptr<ActiveSpaceIntegrals> fci_ints = get_ci_integrals();

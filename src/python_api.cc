@@ -39,7 +39,6 @@
 #include "integrals/integrals.h"
 #include "orbital-helpers/localize.h"
 #include "forte.h"
-#include "fci/fci.h"
 #include "fci/fci_solver.h"
 #include "base_classes/dynamic_correlation_solver.h"
 #include "base_classes/state_info.h"
