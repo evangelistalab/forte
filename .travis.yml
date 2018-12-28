@@ -136,6 +136,7 @@ install:
 - python -V
 - pyenv global system 3.6
 - pip install deepdiff
+- pip install pyyaml
 #- python -c 'import numpy; print(numpy.version.version)'
 - cd ${TRAVIS_BUILD_DIR}
 - export CXX=${CXX_COMPILER}
