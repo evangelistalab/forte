@@ -49,7 +49,7 @@ run_forte_tests.py --group fci
 After running the tests, the test script will write out a list of all the test that failed in the file `failed_tests.yaml`. To run only the tests contained in this file call `run_forte_tests.py` with the option `--failed`.
 
 ## Test script options
-There are other optional arguments that can be used to modify the behavior of the test script. To list them just run `python run_forte_tests.py --help`. Here is the otput of this command:
+There are other optional arguments that can be used to modify the behavior of the test script. To list them just run `python run_forte_tests.py --help`. Here is the output of this command:
 ```
 > python run_forte_tests.py --help
 
