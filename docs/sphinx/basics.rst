@@ -14,4 +14,4 @@ This is a good place to start if you are new to Forte.
 After compiling and setting up ``PYTHONPATH``, you can run the test cases::
 
     cd tests/methods
-    python run_forte_tests_travis.py
+    python run_forte_tests.py
