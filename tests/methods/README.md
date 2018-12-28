@@ -2,6 +2,19 @@
 
 To run the test suite that checks the implementation of all Forte methods use the python script `run_forte_tests.py` found in this directory.
 
+```
+> python run_forte_tests.py
+
+Running forte tests using the psi4 executable found in:
+  /Users/fevange/Source/psi4/objdir-Debug-llvm/stage/bin/psi4
+
+Test group ACI
+    Running test ACI-1
+	ACI energy........................................................PASSED
+	ACI+PT2 energy....................................................PASSED
+...
+```    
+
 ## Test file
 The list of all tests is found in the file `tests.yaml`. This file looks like this:
 ```
@@ -20,10 +33,17 @@ actv-dsrg:
   short:
    ...
 ```
-The first level in this list indicates the test group (aci, actv-dsrg). At the second level, the tests are divided into different types (short, long, unused).
+The first level in this list indicates the test group (aci, actv-dsrg). At the second level, the tests are divided into different types according to duration and use (short, long, unused).
 
 ## Selecting different test types/groups
-By default `run_forte_tests.py` runs only the tests in the group **short**. To run all tests run `run_forte_tests.py --type all`. It is also possible to run tests in a certan group by passing the option `--group`. For example, to run only the full CI tests call `run_forte_tests.py --group fci`.
+By default `run_forte_tests.py` runs only the tests in the group **short**. To run all tests call
+```
+run_forte_tests.py --type all
+```
+It is also possible to run tests in a certan group by passing the option `--group`. For example, to run only the full CI tests call
+```
+run_forte_tests.py --group fci
+```
 
 ## Executing only the test the previously failed
 After running the tests, the test script will write out a list of all the test that failed in the file `failed_tests.yaml`. To run only the tests contained in this file call `run_forte_tests.py` with the option `--failed`.
