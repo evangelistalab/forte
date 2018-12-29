@@ -1,10 +1,20 @@
 #!/usr/bin/env python
 
-import sys
-import os
-import subprocess
-import re
+import argparse
 import datetime
+import os
+import shutil
+import subprocess
+import sys
+import re
+import time
+import yaml
+
+MAINDIR = os.getcwd()
+
+TIMING_RE = re.compile(r'Psi4 exiting successfully. Buy a developer a beer!')
+
+TEST_LEVELS = {'short': ['short'], 'long': ['long'], 'all': ['short', 'long']}
 
 class bcolors:
     HEADER = '\033[95m'
@@ -14,106 +24,43 @@ class bcolors:
     FAIL = '\033[91m'
     ENDC = '\033[0m'
 
-timing_re = re.compile(r"Your calculation took (\d+.\d+) seconds")
-timing_re = re.compile(r"Psi4 exiting successfully. Buy a developer a beer!")
 
-psi4command = ""
-
-
-print("Running forte tests using the psi4 executable found in:\n  %s\n" % psi4command)
-
-fci_tests = ["fci-1","fci-2","fci-3","fci-4","fci-5","fci-6","fci-7","fci-rdms-1","fci-rdms-2","fci-one-electron","fci-ex-1"]
-
-lambda_ci_tests = ["casci-1","casci-2","casci-3","casci-4",
-                     "casci-5-fc","casci-6-fc","casci-7-fc","casci-8-fc",
-                     "lambda+sd-ci-1","lambda+sd-ci-2"]
-
-adaptive_ci_tests = ["aci-1","aci-2","aci-3",
-                     "aci-4","aci-5","aci-6",
-                     "aci-7","aci-8","aci-9",
-                     "aci-10","aci-11","aci-12",
-                     "aci-13","aci-14","aci-15","aci-16","aci-17","aci_scf-1","cis-aci-1",
-                     "aci-mrcisd-1","aci-mrcisd-2"]
-
-pci_tests = ["pci-1","pci-2","pci-3","pci-4","pci-5", "pci-6", "pci-7", "pci-8","pci-9"]
-pci_hashvec_tests = ["pci_hashvec-1","pci_hashvec-2","pci_hashvec-3","pci_hashvec-4","pci_hashvec-5", "pci_hashvec-6"]
-fciqmc_tests = ["fciqmc"]
-ct_tests = ["ct-1","ct-2","ct-3","ct-4","ct-5","ct-6","ct-7-fc"]
-dsrg_tests = ["dsrg-1","dsrg-2"]
-mrdsrg_tests = ["mrdsrg-pt2-1","mrdsrg-pt2-2","mrdsrg-pt2-3","mrdsrg-pt2-4",
-                "mrdsrg-ldsrg2-qc-1","mrdsrg-ldsrg2-qc-2",
-                "mrdsrg-srgpt2-1","mrdsrg-srgpt2-2"]
-mrdsrg_df_tests = ["mrdsrg-ldsrg2-df-seq-1","mrdsrg-ldsrg2-df-seq-2","mrdsrg-ldsrg2-df-seq-3",
-                   "mrdsrg-ldsrg2-df-seq-nivo-1","mrdsrg-ldsrg2-df-seq-nivo-2","mrdsrg-ldsrg2-df-seq-nivo-3"]
-dsrg_mrpt3_tests = ["dsrg-mrpt3-1","dsrg-mrpt3-2","dsrg-mrpt3-3","dsrg-mrpt3-4","dsrg-mrpt3-5",
-                    "dsrg-mrpt3-6-sa","dsrg-mrpt3-7-CO","dsrg-mrpt3-8-sa-C2H4"]
-dsrg_mrpt2_tests = ["mr-dsrg-pt2-1","mr-dsrg-pt2-2","mr-dsrg-pt2-3","mr-dsrg-pt2-4",
-                    "dsrg-mrpt2-1","dsrg-mrpt2-2","dsrg-mrpt2-3","dsrg-mrpt2-4","dsrg-mrpt2-5",
-                    "dsrg-mrpt2-6","dsrg-mrpt2-7-casscf-natorbs","dsrg-mrpt2-8-sa",
-                    "dsrg-mrpt2-9-xms","dsrg-mrpt2-10-CO","dsrg-mrpt2-11-sa-C2H4",
-                    "dsrg-mrpt2-12-localized-actv",
-                    "cd-dsrg-mrpt2-1","cd-dsrg-mrpt2-2","cd-dsrg-mrpt2-3","cd-dsrg-mrpt2-4",
-                    "cd-dsrg-mrpt2-5","cd-dsrg-mrpt2-6","cd-dsrg-mrpt2-7-sa",
-                    "df-dsrg-mrpt2-1","df-dsrg-mrpt2-2","df-dsrg-mrpt2-3","df-dsrg-mrpt2-4",
-                    "df-dsrg-mrpt2-5","df-dsrg-mrpt2-6","df-dsrg-mrpt2-7-localized-actv",
-                    "df-dsrg-mrpt2-threading1","df-dsrg-mrpt2-threading2","df-dsrg-mrpt2-threading4",
-                    "diskdf-dsrg-mrpt2-threading1","diskdf-dsrg-mrpt2-threading4",
-                    "diskdf-dsrg-mrpt2-1","diskdf-dsrg-mrpt2-2","diskdf-dsrg-mrpt2-3",
-                    "diskdf-dsrg-mrpt2-4", "diskdf-dsrg-mrpt2-5",
-                    "aci-dsrg-mrpt2-1","aci-dsrg-mrpt2-2","df-aci-dsrg-mrpt2-1","df-aci-dsrg-mrpt2-2"]
-active_dsrgpt2_tests = ["actv-dsrg-1-C2H4-cis", "actv-dsrg-2-C2H4-cisd", "actv-dsrg-3-C4H6-cisd",
-                        "actv-dsrg-4-C4H6-triplet", "actv-dsrg-5-actv-independence",
-                        "actv-dsrg-size-intensive", "actv-dsrg-ipea-1", "actv-dsrg-ipea-2"]
-dwms_dsrgpt_tests = ["dwms-dsrgpt-1-sa", "dwms-dsrgpt-2-sa", "dwms-dsrgpt-3-sa", "dwms-dsrgpt-4-sa",
-                     "dwms-dsrgpt-5-ms", "dwms-dsrgpt-6-ms", "dwms-dsrgpt-7-ms",
-                     "dwms-dsrgpt-8-separated", "dwms-dsrgpt-9-sa-C6H6"]
-
-casscf_tests = ["casscf", "casscf-2","casscf-3", "casscf-4", "casscf-5", "casscf-6", "casscf-7",
-                "df-casscf-1"]
-dmrg_tests = ["dmrgscf-1", "df-dmrgscf-1", "cd-dmrgscf-1", "dmrg-dsrg-mrpt2-1", "dmrg-dsrg-mrpt2-2"]
-
-#tests =  fci_tests + casscf_tests + dsrg_mrpt2_tests + adaptive_ci_tests + pci_tests + fciqmc_tests + ct_tests + dsrg_tests
-tests = fci_tests + casscf_tests + dsrg_mrpt2_tests + dsrg_mrpt3_tests + mrdsrg_tests + mrdsrg_df_tests + adaptive_ci_tests + pci_tests + pci_hashvec_tests
-tests += active_dsrgpt2_tests + dwms_dsrgpt_tests
-
-maindir = os.getcwd()
-if len(sys.argv) == 1:
-    cmd = ["which","psi4"]
-    p = subprocess.Popen(cmd, stdout=subprocess.PIPE)
-    res = p.stdout.readlines()
-    if len(res) == 0:
-        print("Could not detect your PSI4 executable.  Please specify its location.")
-        exit(1)
-    psi4command = res[0][:-1]
-elif len(sys.argv) == 2:
-    psi4command = sys.argv[1]
-#elif len(sys.argv) == 3:
-#    tests = sys.argv[2]
-
-print("Running forte tests using the psi4 executable found in:\n  %s\n" % psi4command)
-
-
-test_results = {}
-for d in tests:
-    print("Running test %s" % d.upper())
-
-    os.chdir(d)
+def run_job(jobdir, psi4command, test_results, test_time):
+    """Run a test in jobdir using the psi4command"""
+    start = time.time()
+    os.chdir(jobdir)
     successful = True
-    # Run psi
+    # Run Psi4
     try:
         out = subprocess.check_output([psi4command])
     except:
         # something went wrong
         successful = False
-        test_results[d] = "DOES NOT MATCH"
+        test_results[jobdir] = 'FAILED'
 
+    # check if Forte ended successfully
     if successful:
-        # Check if FORTE ended successfully
-        timing = open("output.dat").read()
-        m = timing_re.search(timing)
+        timing = open('output.dat').read()
+        m = TIMING_RE.search(timing)
         if m:
-            test_results[d] = "PASSED"
+            test_results[jobdir] = 'PASSED'
         else:
+            test_results[jobdir] = 'FAILED'
+            successful = False
+        print(out.decode('utf-8'))
+    os.chdir(MAINDIR)
+    end = time.time()
+    test_time[jobdir] = end - start
+    return successful
+
+
+def prepare_summary(jobdir, test_results, test_time, summary, color):
+    """Append the result of a computation to a summary"""
+    if test_results[jobdir] == 'PASSED':
+        if color:
+            msg = bcolors.OKGREEN + 'PASSED' + bcolors.ENDC
+        else:
+<<<<<<< HEAD
             test_results[d] = "FAILED"
         print(out.decode("utf-8"))
     os.chdir(maindir)
@@ -160,3 +107,167 @@ else:
         nomatch_log = open("nomatch_tests","w+")
         nomatch_log.write("# %s\n" % now)
         nomatch_log.write("\n".join(nomatch))
+=======
+            msg = 'PASSED'
+    elif test_results[jobdir] == 'FAILED':
+        if color:
+            msg = bcolors.FAIL + 'FAILED' + bcolors.ENDC
+        else:
+            msg = 'FAILED'
+    duration = test_time[jobdir]
+    if color:
+        filler = '.' * max(0, 76 - len(jobdir + msg))
+    else:
+        filler = '.' * max(0, 67 - len(jobdir + msg))
+    summary.append('    {0}{1}{2}{3:7.1f}'.format(jobdir.upper(), filler, msg,
+                                                  duration))
+    return duration
+
+
+def setup_argument_parser():
+    """Setup an ArgumentParser object to deal with user input."""
+    parser = argparse.ArgumentParser(description='Run Forte tests.')
+    parser.add_argument(
+        '--psi4_exec', help='the location of the psi4 executable')
+    parser.add_argument(
+        '--file',
+        help='the yaml file containing the list of tests (default: tests.yaml)',
+        default='tests.yaml')
+    parser.add_argument(
+        '--failed',
+        help='run only failed tests (listed in the file failed_tests)',
+        action='store_true')
+    parser.add_argument(
+        '--bw',
+        help='print the summary in black and white? (default: color)',
+        action='store_true')
+    parser.add_argument(
+        '--failed_dump',
+        help='dump the output of the failed tests to stdout?',
+        action='store_true')
+    parser.add_argument(
+        '--type',
+        help='which type of test to run? (default: short)',
+        choices={'short', 'all'},
+        default='short')
+    parser.add_argument(
+        '--group',
+        help='which group of tests to run? (default: all)',
+        default=None)
+    return parser.parse_args()
+
+
+def find_psi4(args):
+    """Find the psi4 executable or use value provided by the user."""
+    psi4command = None
+    # if not provided try to detect psi4
+    if args.psi4_exec == None:
+        psi4command = shutil.which('psi4')
+    else:
+        psi4command = args.psi4_exec
+
+    if psi4command == None:
+        print(
+            'Could not detect your PSI4 executable.  Please specify its location.'
+        )
+        exit(1)
+
+    return psi4command
+
+
+def main():
+    psi4command = ''
+    total_time = 0.0
+    summary = []
+    test_results = {}
+    test_time = {}
+    failed_tests = {}
+
+    args = setup_argument_parser()
+    psi4command = find_psi4(args)
+
+    print('Running forte tests using the psi4 executable found in:\n  %s\n' %
+          psi4command)
+
+    # default is to run tests listed in tests.yaml
+    test_dict_file = args.file
+
+    # optionally, run only tests that previously failed
+    if args.failed:
+        print('Running only failed tests')
+        test_dict_file = 'failed_tests.yaml'
+    # read the yaml file
+    with open(test_dict_file, 'rt') as infile:
+        test_dict = yaml.load(infile)
+
+    tested_groups = test_dict.keys()
+    if args.group != None:
+        tested_groups = [args.group]
+
+    ntests = 0
+    nfailed = 0
+    # loop over group tests
+    for test_group, test_levels in test_dict.items():
+        if test_group in tested_groups:
+            failed_tests[test_group] = {}
+            print('Test group {}'.format(test_group.upper()))
+            for test_level, tests in test_levels.items():
+                local_failed_tests = []
+                if test_level in TEST_LEVELS[args.type]:
+                    for test in tests:
+                        print('    Running test {}'.format(test.upper()))
+                        successful = run_job(test, psi4command, test_results,
+                                             test_time)
+                        if not successful:
+                            local_failed_tests.append(test)
+                            nfailed += 1
+                        total_time += prepare_summary(test, test_results,
+                                                      test_time, summary,
+                                                      not args.bw)
+                    ntests += len(tests)
+                    if len(local_failed_tests) > 0:
+                        failed_tests[test_group][
+                            test_level] = local_failed_tests
+
+    # print a summary of the tests
+    print('Summary:')
+    print(' ' * 4 + '=' * 76)
+    print('    TEST' + ' ' * 57 + 'RESULT TIME (s)')
+    print(' ' * 4 + '-' * 76)
+    print('\n'.join(summary))
+    print(' ' * 4 + '=' * 76)
+
+    print('\nTotal time: %6.1f s\n' % total_time)
+
+    # save the list of failed tests
+    with open('failed_tests.yaml', 'w') as outfile:
+        yaml.dump(failed_tests, outfile, default_flow_style=False)
+
+    if nfailed == 0:
+        print('Tests: All passed ({} tests)\n'.format(ntests))
+    else:
+        print('Tests: {} passed and {} failed\n'.format(ntests - nfailed, nfailed))
+        # Get the current date and time
+        dt = datetime.datetime.now()
+        now = dt.strftime('%Y-%m-%d-%H:%M')
+
+        print('The following tests failed:')
+        for test_group, test_levels in failed_tests.items():
+            print('Test group {}'.format(test_group.upper()))
+            for test_level, tests in test_levels.items():
+                for test in tests:
+                    print('    {}'.format(test.upper()))
+
+        if args.failed_dump:
+            for test_group, test_levels in failed_tests.items():
+                for test_level, tests in test_levels.items():
+                    for test in tests:
+                        print('\n\n==> %s TEST OUTPUT <==\n' % test.upper())
+                        subprocess.call('cat %s/output.dat' % test, shell=True)
+                        print('\n')
+        exit(1)
+
+
+if __name__ == '__main__':
+    main()
+>>>>>>> master
