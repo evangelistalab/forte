@@ -24,7 +24,7 @@ class bcolors:
     FAIL = '\033[91m'
     ENDC = '\033[0m'
 
-
+    
 def run_job(jobdir, psi4command, test_results, test_time):
     """Run a test in jobdir using the psi4command"""
     start = time.time()
