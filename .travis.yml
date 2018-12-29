@@ -136,6 +136,7 @@ install:
 - python -V
 - pyenv global system 3.6
 - pip install deepdiff
+- pip install pyyaml
 #- python -c 'import numpy; print(numpy.version.version)'
 - cd ${TRAVIS_BUILD_DIR}
 - export CXX=${CXX_COMPILER}
@@ -187,7 +188,7 @@ install:
 - hash -r
 script:
 - cd ${HOME}/build/evangelistalab/forte/tests/methods
-- python run_forte_tests_travis.py 
+- python run_forte_tests.py --bw --failed_dump
 - grep 'Size of Determinant class' aci-1/output.dat
 - if [ "$MAX_DET_ORB" -ge "128" ]; then
     cd ${HOME}/build/evangelistalab/forte/tests/large_det;
