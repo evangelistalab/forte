@@ -33,6 +33,7 @@
 #include <numeric>
 #include <sstream>
 
+#include "psi4/libmints/vector.h"
 #include "psi4/libmints/dipole.h"
 #include "psi4/libmints/oeprop.h"
 #include "psi4/libmints/petitelist.h"
@@ -85,7 +86,8 @@ FCI_MO::FCI_MO(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> 
     startup();
 
     // setup integrals
-    fci_ints_ = std::make_shared<ActiveSpaceIntegrals>(integral_, mo_space_info_->get_corr_abs_mo("ACTIVE"),
+    fci_ints_ =
+        std::make_shared<ActiveSpaceIntegrals>(integral_, mo_space_info_->get_corr_abs_mo("ACTIVE"),
                                                mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
     ambit::Tensor tei_active_aa =
         integral_->aptei_aa_block(actv_mos_, actv_mos_, actv_mos_, actv_mos_);
@@ -109,9 +111,9 @@ FCI_MO::FCI_MO(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> 
     if (fci_ints != nullptr) {
         fci_ints_ = fci_ints;
     } else {
-        fci_ints_ =
-            std::make_shared<ActiveSpaceIntegrals>(integral_, mo_space_info_->get_corr_abs_mo("ACTIVE"),
-                                           mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
+        fci_ints_ = std::make_shared<ActiveSpaceIntegrals>(
+            integral_, mo_space_info_->get_corr_abs_mo("ACTIVE"),
+            mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
         ambit::Tensor tei_active_aa =
             integral_->aptei_aa_block(actv_mos_, actv_mos_, actv_mos_, actv_mos_);
         ambit::Tensor tei_active_ab =
@@ -1079,7 +1081,7 @@ void FCI_MO::Diagonalize_H_noHF(const vecdet& p_space, const int& multi, const i
         outfile->Printf("\n  Isolate RHF determinant to the rest determinants.");
         outfile->Printf("\n  Recompute RHF energy ... ");
         double Erhf = fci_ints_->energy(rhf) + fci_ints_->scalar_energy() + e_nuc_;
-        psi::SharedVector rhf_vec(new Vector("RHF Eigen Vector", det_size));
+        psi::SharedVector rhf_vec(new psi::Vector("RHF Eigen Vector", det_size));
         rhf_vec->set(det_size - 1, 1.0);
         eigen.push_back(std::make_pair(rhf_vec, Erhf));
         outfile->Printf("Done.");
@@ -1099,7 +1101,7 @@ void FCI_MO::Diagonalize_H_noHF(const vecdet& p_space, const int& multi, const i
                 double Ethis = eigen_noHF[i].second;
 
                 string name = "Root " + std::to_string(i) + " Eigen Vector";
-                psi::SharedVector vec(new Vector(name, det_size));
+                psi::SharedVector vec(new psi::Vector(name, det_size));
                 for (size_t n = 0; n < det_size - 1; ++n) {
                     vec->set(n, vec_noHF->get(n));
                 }
@@ -1331,7 +1333,7 @@ void FCI_MO::print_Fock(const string& spin, const d2& Fock) {
         size_t dim2 = idx2.size();
         string bname = name1 + "-" + name2;
 
-        Matrix F(bname, dim1, dim2);
+        psi::Matrix F(bname, dim1, dim2);
         for (size_t i = 0; i < dim1; ++i) {
             size_t ni = idx1[i];
             for (size_t j = 0; j < dim2; ++j) {
@@ -1344,7 +1346,7 @@ void FCI_MO::print_Fock(const string& spin, const d2& Fock) {
 
         if (dim1 != dim2) {
             string bnamer = name2 + "-" + name1;
-            Matrix Fr(bnamer, dim2, dim1);
+            psi::Matrix Fr(bnamer, dim2, dim1);
             for (size_t i = 0; i < dim2; ++i) {
                 size_t ni = idx2[i];
                 for (size_t j = 0; j < dim1; ++j) {
@@ -1948,7 +1950,7 @@ FCI_MO::compute_ref_relaxed_osc(std::vector<BlockedTensor>& dm1, std::vector<Blo
 
             for (int n = 0; n < nroots0; ++n) {
                 psi::SharedVector evec0 = evecs0->get_column(0, n);
-                psi::SharedVector evec(new Vector("combined evec0 " + std::to_string(n), ndets));
+                psi::SharedVector evec(new psi::Vector("combined evec0 " + std::to_string(n), ndets));
                 for (size_t i = 0; i < ndets0; ++i) {
                     evec->set(i, evec0->get(i));
                 }
@@ -1957,7 +1959,7 @@ FCI_MO::compute_ref_relaxed_osc(std::vector<BlockedTensor>& dm1, std::vector<Blo
 
             for (int n = 0; n < nroots1; ++n) {
                 psi::SharedVector evec1 = eigens_[B][n].first;
-                psi::SharedVector evec(new Vector("combined evec1 " + std::to_string(n), ndets));
+                psi::SharedVector evec(new psi::Vector("combined evec1 " + std::to_string(n), ndets));
                 for (size_t i = 0; i < ndets1; ++i) {
                     evec->set(i + ndets0, evec1->get(i));
                 }
@@ -2066,7 +2068,7 @@ FCI_MO::compute_ref_relaxed_osc(std::vector<BlockedTensor>& dm1, std::vector<Blo
 
             for (int n = 0; n < nroots0; ++n) {
                 psi::SharedVector evec0 = evecs0->get_column(0, n);
-                psi::SharedVector evec(new Vector("combined evec0 " + std::to_string(n), ndets));
+                psi::SharedVector evec(new psi::Vector("combined evec0 " + std::to_string(n), ndets));
                 for (size_t i = 0; i < ndets0; ++i) {
                     evec->set(i, evec0->get(i));
                 }
@@ -2075,7 +2077,7 @@ FCI_MO::compute_ref_relaxed_osc(std::vector<BlockedTensor>& dm1, std::vector<Blo
 
             for (int n = 0; n < nroots1; ++n) {
                 psi::SharedVector evec1 = eigens_[B][n].first;
-                psi::SharedVector evec(new Vector("combined evec1 " + std::to_string(n), ndets));
+                psi::SharedVector evec(new psi::Vector("combined evec1 " + std::to_string(n), ndets));
                 for (size_t i = 0; i < ndets1; ++i) {
                     evec->set(i + ndets0, evec1->get(i));
                 }
@@ -2190,9 +2192,9 @@ d3 FCI_MO::compute_orbital_extents() {
     int nmo = Ca_ao->ncol();
 
     std::vector<psi::SharedVector> quadrupole;
-    quadrupole.push_back(psi::SharedVector(new Vector("Orbital Quadrupole XX", nmo)));
-    quadrupole.push_back(psi::SharedVector(new Vector("Orbital Quadrupole YY", nmo)));
-    quadrupole.push_back(psi::SharedVector(new Vector("Orbital Quadrupole ZZ", nmo)));
+    quadrupole.push_back(psi::SharedVector(new psi::Vector("Orbital Quadrupole XX", nmo)));
+    quadrupole.push_back(psi::SharedVector(new psi::Vector("Orbital Quadrupole YY", nmo)));
+    quadrupole.push_back(psi::SharedVector(new psi::Vector("Orbital Quadrupole ZZ", nmo)));
 
     for (int i = 0; i < nmo; ++i) {
         double sumx = 0.0, sumy = 0.0, sumz = 0.0;
@@ -2290,7 +2292,7 @@ Reference FCI_MO::get_reference() {
         ref.set_L1b(L1b);
     }
 
-    if (max_rdm_> 1) {
+    if (max_rdm_ > 1) {
         ref.set_L2aa(L2aa);
         ref.set_L2ab(L2ab);
         ref.set_L2bb(L2bb);
@@ -2801,7 +2803,7 @@ psi::SharedMatrix FCI_MO::xms_rotate_this_civecs(const det_vec& p_space, psi::Sh
 
     // diagonalize Fock
     psi::SharedMatrix Fevec(new psi::Matrix("Fock Evec", nroots, nroots));
-    psi::SharedVector Feval(new Vector("Fock Eval", nroots));
+    psi::SharedVector Feval(new psi::Vector("Fock Eval", nroots));
     Fock->diagonalize(Fevec, Feval);
     Fevec->eivprint(Feval);
 

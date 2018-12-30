@@ -180,7 +180,7 @@ class CASSCF {
     ambit::Tensor tei_paaa_;
     int print_;
     /// The CISolutions per iteration
-    std::vector<std::vector<std::shared_ptr<FCIWfn>>> CISolutions_;
+    std::vector<std::vector<std::shared_ptr<FCIVector>>> CISolutions_;
     std::shared_ptr<ActiveSpaceIntegrals> get_ci_integrals();
 };
 }

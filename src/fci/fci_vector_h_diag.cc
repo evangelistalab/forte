@@ -33,14 +33,17 @@
 #include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/psi4-dec.h"
 
+#include "helpers/timer.h"
 #include "base_classes/mo_space_info.h"
+#include "integrals/active_space_integrals.h"
 #include "fci_vector.h"
+#include "binary_graph.hpp"
 
 using namespace psi;
 
 namespace forte {
 
-void FCIWfn::form_H_diagonal(std::shared_ptr<ActiveSpaceIntegrals> fci_ints) {
+void FCIVector::form_H_diagonal(std::shared_ptr<ActiveSpaceIntegrals> fci_ints) {
     local_timer t;
 
     int wfn_sym = symmetry_;
@@ -93,8 +96,8 @@ void FCIWfn::form_H_diagonal(std::shared_ptr<ActiveSpaceIntegrals> fci_ints) {
     }
 }
 
-double FCIWfn::determinant_energy(bool*& Ia, bool*& Ib, int n,
-                                  std::shared_ptr<ActiveSpaceIntegrals> fci_ints) {
+double FCIVector::determinant_energy(bool*& Ia, bool*& Ib, int n,
+                                     std::shared_ptr<ActiveSpaceIntegrals> fci_ints) {
     double energy(fci_ints->scalar_energy() + fci_ints->frozen_core_energy());
 
     for (int p = 0; p < n; ++p) {
@@ -114,7 +117,7 @@ double FCIWfn::determinant_energy(bool*& Ia, bool*& Ib, int n,
     return (energy);
 }
 
-std::vector<std::tuple<double, size_t, size_t, size_t>> FCIWfn::min_elements(size_t num_dets) {
+std::vector<std::tuple<double, size_t, size_t, size_t>> FCIVector::min_elements(size_t num_dets) {
     num_dets = std::min(num_dets, ndet_);
 
     double emax = std::numeric_limits<double>::max();
@@ -152,7 +155,7 @@ std::vector<std::tuple<double, size_t, size_t, size_t>> FCIWfn::min_elements(siz
 }
 
 std::vector<std::tuple<double, double, size_t, size_t, size_t>>
-FCIWfn::max_abs_elements(size_t num_dets) {
+FCIVector::max_abs_elements(size_t num_dets) {
     num_dets = std::min(num_dets, ndet_);
 
     std::vector<std::tuple<double, double, size_t, size_t, size_t>> dets(num_dets);
@@ -209,7 +212,7 @@ FCIWfn::max_abs_elements(size_t num_dets) {
     return(energy);
 }
 
-double FCIWfn::determinant_energy(bool*& Ia,bool*& Ib,int n)
+double FCIVector::determinant_energy(bool*& Ia,bool*& Ib,int n)
 {
 //    outfile->Printf("\n  Determinant: ");
 //    for(int p = 0; p < n; ++p){
@@ -246,4 +249,4 @@ double FCIWfn::determinant_energy(bool*& Ia,bool*& Ib,int n)
 }
 
 */
-}
+} // namespace forte

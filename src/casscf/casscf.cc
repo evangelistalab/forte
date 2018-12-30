@@ -776,9 +776,9 @@ void CASSCF::set_up_fci() {
     //    fcisolver.set_print_no(false);
 
     //    / Get the CIVector for each iteration
-    //    std::vector<std::shared_ptr<FCIWfn>> FCIWfnSolution(1);
-    //    FCIWfnSolution.push_back(fcisolver->get_FCIWFN());
-    //    CISolutions_.push_back(FCIWfnSolution); // TODO: disabled since it is not used
+    //    std::vector<std::shared_ptr<FCIVector>> FCIVectorSolution(1);
+    //    FCIVectorSolution.push_back(fcisolver->get_FCIWFN());
+    //    CISolutions_.push_back(FCIVectorSolution); // TODO: disabled since it is not used
 
     cas_ref_ = fcisolver->get_reference();
 }
@@ -1022,7 +1022,7 @@ void CASSCF::set_up_sa_fci() {
     E_casscf_ = sa_fcisolver.compute_energy();
     cas_ref_ = sa_fcisolver.reference();
     //    if (options_->get_bool("MONITOR_SA_SOLUTION")) {
-    //        std::vector<std::shared_ptr<FCIWfn>> StateAveragedFCISolver =
+    //        std::vector<std::shared_ptr<FCIVector>> StateAveragedFCISolver =
     //            sa_fcisolver.StateAveragedCISolution();
     //        CISolutions_.push_back(StateAveragedFCISolver);
     //    }

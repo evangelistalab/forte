@@ -38,6 +38,7 @@
 
 #include "base_classes/forte_options.h"
 #include "base_classes/mo_space_info.h"
+#include "integrals/active_space_integrals.h"
 #include "helpers/helpers.h"
 #include "sa_fcisolver.h"
 
@@ -298,14 +299,14 @@ double SA_FCISolver::compute_energy() {
         //        psi::SharedMatrix vecs = fcisolver.eigen_vecs();
         //        psi::SharedVector vals = fcisolver.eigen_vals();
         //        for(int n = 0; n < nroot; ++n){
-        //            // create new FCIWfn pointers
-        //            std::shared_ptr<FCIWfn> fci_wfn = fcisolver.get_FCIWFN();
+        //            // create new FCIVector pointers
+        //            std::shared_ptr<FCIVector> fci_wfn = fcisolver.get_FCIWFN();
         //            fci_wfn->copy(vecs->get_column(0,n));
         //            fci_wfn->print();
         //            SA_C_.push_back(fci_wfn); // this line probably would not
         //            work
 
-        //            // use the FCIWfn in FCISolver to compute RDM and obtain
+        //            // use the FCIVector in FCISolver to compute RDM and obtain
         //            the reference
         //            fci_wfn->compute_rdms(2);
         //            for(double x: fci_wfn->opdm_a()){

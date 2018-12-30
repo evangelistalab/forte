@@ -30,18 +30,11 @@
 #define _fci_solver_h_
 
 #include "base_classes/active_space_solver.h"
-//#include "psi4/libmints/wavefunction.h"
-//#include "psi4/physconst.h"
-//#include "base_classes/mo_space_info.h"
-//#include "helpers/timer.h"
-//#include "integrals/integrals.h"
-//#include "integrals/active_space_integrals.h"
-//#include "string_lists.h"
-//#include "base_classes/forte_options.h"
-
-#include "fci_vector.h"
 
 namespace forte {
+
+class FCIVector;
+class StringLists;
 
 /**
  * @brief The FCISolver class
@@ -91,8 +84,8 @@ class FCISolver : public ActiveSpaceSolver {
     void set_test_rdms(bool value) { test_rdms_ = value; }
     /// Print the Natural Orbitals
     void set_print_no(bool value) { print_no_ = value; }
-    /// Return a FCIWfn
-    std::shared_ptr<FCIWfn> get_FCIWFN() { return C_; }
+    /// Return a FCIVector
+    std::shared_ptr<FCIVector> get_FCIWFN() { return C_; }
     /// Return eigen vectors
     psi::SharedMatrix evecs() { return eigen_vecs_; }
     /// Return string lists
@@ -113,7 +106,7 @@ class FCISolver : public ActiveSpaceSolver {
     double energy_;
 
     /// The FCI wave function
-    std::shared_ptr<FCIWfn> C_;
+    std::shared_ptr<FCIVector> C_;
 
     /// Eigen vectors
     psi::SharedMatrix eigen_vecs_;
@@ -149,7 +142,7 @@ class FCISolver : public ActiveSpaceSolver {
 
     /// Initial CI wave function guess
     std::vector<std::pair<int, std::vector<std::tuple<size_t, size_t, size_t, double>>>>
-    initial_guess(FCIWfn& diag, size_t n, std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
+    initial_guess(FCIVector& diag, size_t n, std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
 };
 } // namespace forte
 

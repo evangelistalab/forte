@@ -23,6 +23,8 @@ bool test_string(std::vector<bool>& string, int nones, int nbits);
 bool test_string(bool* string, int nones, int nbits);
 #endif
 
+namespace forte {
+
 /**
  * Compute the address of a string of bits.  Strings are grouped by
  * symmetry.
@@ -30,12 +32,12 @@ bool test_string(bool* string, int nones, int nbits);
 class BinaryGraph {
   public:
     /*
-   * Constructor which takes a vector with symmetry of each orbital
-   * @param n lenght of the string
-   * @param k number of 1s
-   * @param symm symmetry of each orbital
-   * @param nirr number of irreps
-   */
+     * Constructor which takes a vector with symmetry of each orbital
+     * @param n lenght of the string
+     * @param k number of 1s
+     * @param symm symmetry of each orbital
+     * @param nirr number of irreps
+     */
     BinaryGraph(int n, int k, std::vector<int> symm, int nirr)
         : nbits_(n), nones_(k), nirrep_(nirr), symmetry(symm) {
         startup();
@@ -43,12 +45,12 @@ class BinaryGraph {
     }
 
     /*
-   * Constructor which takes a vector with size of each irrep
-   * @param n lenght of the string
-   * @param k number of 1s
-   * @param symm symmetry of each orbital
-   * @param nirr number of irreps
-   */
+     * Constructor which takes a vector with size of each irrep
+     * @param n lenght of the string
+     * @param k number of 1s
+     * @param symm symmetry of each orbital
+     * @param nirr number of irreps
+     */
     BinaryGraph(int n, int k, std::vector<int>& irrep_size)
         : nbits_(n), nones_(k), nirrep_(irrep_size.size()) {
         for (int h = 0; h < static_cast<int>(irrep_size.size()); ++h) {
@@ -306,4 +308,5 @@ class BinaryGraph {
     size_t*** weight1;         // weights of 0 vertices
 };
 
+} // namespace forte
 #endif // _binary_graph_hpp_

@@ -32,13 +32,16 @@
 #include "boost/format.hpp"
 
 #include "base_classes/reference.h"
-
 #include "base_classes/forte_options.h"
 #include "base_classes/mo_space_info.h"
+
+#include "integrals/active_space_integrals.h"
 #include "sparse_ci/determinant.h"
 #include "helpers/iterative_solvers.h"
 
 #include "fci_solver.h"
+#include "fci_vector.h"
+#include "string_lists.h"
 #include "helpers/helpers.h"
 
 #ifdef HAVE_GA
@@ -127,11 +130,11 @@ double FCISolver::compute_energy() {
     double nuclear_repulsion_energy =
         psi::Process::environment.molecule()->nuclear_repulsion_energy({{0, 0, 0}});
 
-    FCIWfn::allocate_temp_space(lists_, print_);
+    FCIVector::allocate_temp_space(lists_, print_);
 
-    FCIWfn Hdiag(lists_, symmetry_);
-    C_ = std::make_shared<FCIWfn>(lists_, symmetry_);
-    FCIWfn HC(lists_, symmetry_);
+    FCIVector Hdiag(lists_, symmetry_);
+    C_ = std::make_shared<FCIVector>(lists_, symmetry_);
+    FCIVector HC(lists_, symmetry_);
     C_->set_print(print_);
 
     size_t fci_size = Hdiag.size();
@@ -360,12 +363,13 @@ void FCISolver::compute_rdms_root(int root) {
             C_->print_natural_orbitals(mo_space_info_);
         }
     } else {
-        throw psi::PSIEXCEPTION("FCIWfn is not assigned. Cannot compute RDMs.");
+        throw psi::PSIEXCEPTION("FCIVector is not assigned. Cannot compute RDMs.");
     }
 }
 
 std::vector<std::pair<int, std::vector<std::tuple<size_t, size_t, size_t, double>>>>
-FCISolver::initial_guess(FCIWfn& diag, size_t n, std::shared_ptr<ActiveSpaceIntegrals> fci_ints) {
+FCISolver::initial_guess(FCIVector& diag, size_t n,
+                         std::shared_ptr<ActiveSpaceIntegrals> fci_ints) {
     local_timer t;
 
     double nuclear_repulsion_energy =
