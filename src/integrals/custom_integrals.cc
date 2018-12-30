@@ -380,7 +380,7 @@ void CustomIntegrals::resort_four(std::vector<double>& tei, std::vector<size_t>&
     temp_ints.swap(tei);
 }
 
-void CustomIntegrals::make_fock_matrix(psi::SharedMatrix gamma_a, psi::SharedMatrix gamma_b) {
+void CustomIntegrals::make_fock_matrix(std::shared_ptr<psi::Matrix> gamma_a, std::shared_ptr<psi::Matrix> gamma_b) {
     for (size_t p = 0; p < ncmo_; ++p) {
         for (size_t q = 0; q < ncmo_; ++q) {
             fock_matrix_a_[p * ncmo_ + q] = oei_a(p, q);

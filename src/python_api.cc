@@ -37,6 +37,7 @@
 
 #include "base_classes/mo_space_info.h"
 #include "integrals/integrals.h"
+#include "integrals/make_integrals.h"
 #include "orbital-helpers/localize.h"
 #include "forte.h"
 #include "fci/fci_solver.h"
@@ -49,20 +50,8 @@ using namespace pybind11::literals;
 
 namespace forte {
 
-PYBIND11_MODULE(forte, m) {
-    m.doc() = "pybind11 Forte module"; // module docstring
-    m.def("read_options", &read_options, "Read Forte options");
-    m.def("startup", &startup);
-    m.def("cleanup", &cleanup);
-    m.def("banner", &banner, "Print forte banner");
-    m.def("make_mo_space_info", &make_mo_space_info, "Make a MOSpaceInfo object");
-    m.def("make_aosubspace_projector", &make_aosubspace_projector, "Make a AOSubspace projector");
-    m.def("make_forte_integrals", &make_forte_integrals, "Make Forte integrals");
-    m.def("forte_old_methods", &forte_old_methods, "Run Forte methods");
-    m.def("make_active_space_solver", &make_active_space_solver, "Make an active space solver");
-    m.def("make_state_info_from_psi_wfn", &make_state_info_from_psi_wfn,
-          "Make a state info object from a psi4 Wavefunction");
-    // export ForteOptions
+/// Export the ForteOptions class
+void export_ForteOptions(py::module& m) {
     py::class_<ForteOptions, std::shared_ptr<ForteOptions>>(m, "ForteOptions")
         .def(py::init<>())
         .def(py::init<psi::Options&>())
@@ -85,6 +74,42 @@ PYBIND11_MODULE(forte, m) {
         .def("push_options_to_psi4", &ForteOptions::push_options_to_psi4)
         .def("update_psi_options", &ForteOptions::update_psi_options)
         .def("generate_documentation", &ForteOptions::generate_documentation);
+}
+
+/// Export the ActiveSpaceSolver class
+void export_ActiveSpaceSolver(py::module& m) {
+    py::class_<ActiveSpaceSolver, std::shared_ptr<ActiveSpaceSolver>>(m, "ActiveSpaceSolver")
+        .def("compute_energy", &ActiveSpaceSolver::compute_energy);
+}
+
+/// Export the FCISolver class
+void export_FCISolver(py::module& m) {
+    py::class_<FCISolver, std::shared_ptr<FCISolver>>(m, "FCISolver")
+        .def(py::init<StateInfo, std::shared_ptr<MOSpaceInfo>,
+                      std::shared_ptr<ActiveSpaceIntegrals>>())
+        .def("compute_energy", &FCISolver::compute_energy);
+}
+
+// TODO: export more classes using the function above
+PYBIND11_MODULE(forte, m) {
+    m.doc() = "pybind11 Forte module"; // module docstring
+    m.def("read_options", &read_options, "Read Forte options");
+    m.def("startup", &startup);
+    m.def("cleanup", &cleanup);
+    m.def("banner", &banner, "Print forte banner");
+    m.def("make_mo_space_info", &make_mo_space_info, "Make a MOSpaceInfo object");
+    m.def("make_aosubspace_projector", &make_aosubspace_projector, "Make a AOSubspace projector");
+    m.def("make_forte_integrals", &make_forte_integrals, "Make Forte integrals");
+    m.def("forte_old_methods", &forte_old_methods, "Run Forte methods");
+    m.def("make_active_space_solver", &make_active_space_solver, "Make an active space solver");
+    m.def("make_state_info_from_psi_wfn", &make_state_info_from_psi_wfn,
+          "Make a state info object from a psi4 Wavefunction");
+
+    export_ForteOptions(m);
+
+    export_ActiveSpaceSolver(m);
+
+    export_FCISolver(m);
 
     // export MOSpaceInfo
     py::class_<MOSpaceInfo, std::shared_ptr<MOSpaceInfo>>(m, "MOSpaceInfo")
@@ -109,10 +134,6 @@ PYBIND11_MODULE(forte, m) {
     py::class_<SCFInfo, std::shared_ptr<SCFInfo>>(m, "SCFInfo")
         .def(py::init<psi::SharedWavefunction>());
 
-    // export ActiveSpaceSolver
-    py::class_<ActiveSpaceSolver, std::shared_ptr<ActiveSpaceSolver>>(m, "ActiveSpaceSolver")
-        .def("compute_energy", &ActiveSpaceSolver::compute_energy);
-
     // export DynamicCorrelationSolver
     py::class_<DynamicCorrelationSolver, std::shared_ptr<DynamicCorrelationSolver>>(
         m, "DynamicCorrelationSolver")
@@ -122,13 +143,8 @@ PYBIND11_MODULE(forte, m) {
     py::class_<ActiveSpaceIntegrals, std::shared_ptr<ActiveSpaceIntegrals>>(m,
                                                                             "ActiveSpaceIntegrals")
         .def(py::init<std::shared_ptr<ForteIntegrals>, std::shared_ptr<MOSpaceInfo>>());
-
-    // export FCISolver
-    py::class_<FCISolver, std::shared_ptr<FCISolver>>(m, "FCISolver")
-        .def(py::init<StateInfo, std::shared_ptr<MOSpaceInfo>,
-                      std::shared_ptr<ActiveSpaceIntegrals>>())
-        .def("compute_energy", &FCISolver::compute_energy);
 }
+
 } // namespace forte
 
 #endif // _python_api_h_

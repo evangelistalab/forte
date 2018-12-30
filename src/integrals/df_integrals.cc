@@ -144,6 +144,13 @@ ambit::Tensor DFIntegrals::aptei_bb_block(const std::vector<size_t>& p,
     });
     return ReturnTensor;
 }
+
+double DFIntegrals::three_integral(size_t A, size_t p, size_t q) {
+    return ThreeIntegral_->get(p * aptei_idx_ + q, A);
+}
+
+double** DFIntegrals::three_integral_pointer() { return ThreeIntegral_->pointer(); }
+
 ambit::Tensor DFIntegrals::three_integral_block(const std::vector<size_t>& A,
                                                 const std::vector<size_t>& p,
                                                 const std::vector<size_t>& q) {
@@ -186,10 +193,10 @@ void DFIntegrals::gather_integrals() {
     }
 
     psi::Dimension nsopi_ = wfn_->nsopi();
-    psi::SharedMatrix aotoso = wfn_->aotoso();
-    psi::SharedMatrix Ca = wfn_->Ca();
-    // psi::SharedMatrix Ca_ao(new psi::Matrix("Ca_ao",nso_,nmopi_.sum()));
-    psi::SharedMatrix Ca_ao(new psi::Matrix("Ca_ao", nso_, nmopi_.sum()));
+    std::shared_ptr<psi::Matrix> aotoso = wfn_->aotoso();
+    std::shared_ptr<psi::Matrix> Ca = wfn_->Ca();
+    // std::shared_ptr<psi::Matrix> Ca_ao(new psi::Matrix("Ca_ao",nso_,nmopi_.sum()));
+    std::shared_ptr<psi::Matrix> Ca_ao(new psi::Matrix("Ca_ao", nso_, nmopi_.sum()));
 
     // Transform from the SO to the AO basis
     for (int h = 0, index = 0; h < nirrep_; ++h) {
@@ -239,7 +246,7 @@ void DFIntegrals::gather_integrals() {
         outfile->Printf("\n");
     }
 
-    psi::SharedMatrix Bpq(new psi::Matrix("Bpq", naux, nmo_ * nmo_));
+    std::shared_ptr<psi::Matrix> Bpq(new psi::Matrix("Bpq", naux, nmo_ * nmo_));
 
     Bpq = df->get_tensor("B");
 
@@ -247,7 +254,8 @@ void DFIntegrals::gather_integrals() {
     ThreeIntegral_ = Bpq->transpose()->clone();
 }
 
-void DFIntegrals::make_fock_matrix(psi::SharedMatrix gamma_aM, psi::SharedMatrix gamma_bM) {
+void DFIntegrals::make_fock_matrix(std::shared_ptr<psi::Matrix> gamma_aM,
+                                   std::shared_ptr<psi::Matrix> gamma_bM) {
     TensorType tensor_type = ambit::CoreTensor;
     ambit::Tensor ThreeIntegralTensor =
         // ambit::Tensor::build(tensor_type, "ThreeIndex", {ncmo_, ncmo_, nthree_});
@@ -305,9 +313,9 @@ void DFIntegrals::make_fock_matrix(psi::SharedMatrix gamma_aM, psi::SharedMatrix
     /// Form with JK builders
 }
 
-void DFIntegrals::resort_three(psi::SharedMatrix& threeint, std::vector<size_t>& map) {
+void DFIntegrals::resort_three(std::shared_ptr<psi::Matrix>& threeint, std::vector<size_t>& map) {
     // Create a temperature threeint matrix
-    psi::SharedMatrix temp_threeint(new psi::Matrix("tmp", ncmo_ * ncmo_, nthree_));
+    std::shared_ptr<psi::Matrix> temp_threeint(new psi::Matrix("tmp", ncmo_ * ncmo_, nthree_));
     temp_threeint->zero();
 
     // Borrwed from resort_four.
@@ -341,4 +349,3 @@ void DFIntegrals::resort_integrals_after_freezing() {
     }
 }
 } // namespace forte
-

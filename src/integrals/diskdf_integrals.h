@@ -33,8 +33,6 @@
 #include "psi4/lib3index/dfhelper.h"
 #include "integrals.h"
 
-
-
 class Tensor;
 
 namespace forte {
@@ -74,7 +72,7 @@ class DISKDFIntegrals : public ForteIntegrals {
     virtual double diag_aptei_aa(size_t p, size_t q);
     virtual double diag_aptei_ab(size_t p, size_t q);
     virtual double diag_aptei_bb(size_t p, size_t q);
-    virtual double** three_integral_pointer() { return (ThreeIntegral_->pointer()); }
+    virtual double** three_integral_pointer();
     /// Read a block of the DFIntegrals and return an Ambit tensor of size A by p by q
     virtual ambit::Tensor three_integral_block(const std::vector<size_t>& A,
                                                const std::vector<size_t>& p,
@@ -87,7 +85,8 @@ class DISKDFIntegrals : public ForteIntegrals {
                          bool alpha2);
     virtual ~DISKDFIntegrals();
 
-    virtual void make_fock_matrix(psi::SharedMatrix gamma_a, psi::SharedMatrix gamma_b);
+    virtual void make_fock_matrix(std::shared_ptr<psi::Matrix> gamma_a,
+                                  std::shared_ptr<psi::Matrix> gamma_b);
 
     /// Make a Fock matrix computed with respect to a given determinant
     virtual size_t nthree() const { return nthree_; }
@@ -103,10 +102,8 @@ class DISKDFIntegrals : public ForteIntegrals {
 
     virtual void gather_integrals();
     virtual void resort_integrals_after_freezing();
-
 };
 
 } // namespace forte
-
 
 #endif // _diskdf_integrals_h_

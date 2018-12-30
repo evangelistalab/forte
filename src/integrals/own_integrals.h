@@ -104,7 +104,7 @@ class OwnIntegrals : public ForteIntegrals {
     virtual void set_tei(size_t, size_t, size_t, size_t, double, bool, bool) {}
     virtual ~OwnIntegrals();
 
-    virtual void make_fock_matrix(psi::SharedMatrix /*gamma_a*/, psi::SharedMatrix /*gamma_b*/) {}
+    virtual void make_fock_matrix(std::shared_ptr<psi::Matrix> /*gamma_a*/, std::shared_ptr<psi::Matrix> /*gamma_b*/) {}
     virtual size_t nthree() const { return 1; }
 
   private:

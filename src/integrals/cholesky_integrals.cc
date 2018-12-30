@@ -127,6 +127,13 @@ ambit::Tensor CholeskyIntegrals::aptei_bb_block(const std::vector<size_t>& p,
     });
     return ReturnTensor;
 }
+
+double CholeskyIntegrals::three_integral(size_t A, size_t p, size_t q) {
+    return ThreeIntegral_->get(p * aptei_idx_ + q, A);
+}
+
+double** CholeskyIntegrals::three_integral_pointer() { return ThreeIntegral_->pointer(); }
+
 ambit::Tensor CholeskyIntegrals::three_integral_block(const std::vector<size_t>& A,
                                                       const std::vector<size_t>& p,
                                                       const std::vector<size_t>& q) {
@@ -178,12 +185,14 @@ void CholeskyIntegrals::gather_integrals() {
         if (psio->exists(file_unit)) {
             psio->open(file_unit, PSIO_OPEN_OLD);
             psio->read_entry(file_unit, "length", (char*)&nthree_, sizeof(long int));
-            psi::SharedMatrix L_tri = std::make_shared<psi::Matrix>("Partial Cholesky", nthree_, ntri);
+            std::shared_ptr<psi::Matrix> L_tri =
+                std::make_shared<psi::Matrix>("Partial Cholesky", nthree_, ntri);
             double** Lp = L_tri->pointer();
             psio->read_entry(file_unit, "(Q|mn) Integrals", (char*)Lp[0],
                              sizeof(double) * nthree_ * ntri);
             psio->close(file_unit, 1);
-            psi::SharedMatrix L_ao = std::make_shared<psi::Matrix>("Partial Cholesky", nthree_, nbf * nbf);
+            std::shared_ptr<psi::Matrix> L_ao =
+                std::make_shared<psi::Matrix>("Partial Cholesky", nthree_, nbf * nbf);
             for (size_t mn = 0; mn < ntri; mn++) {
                 size_t m = function_pairs[mn].first;
                 size_t n = function_pairs[mn].second;
@@ -242,10 +251,10 @@ void CholeskyIntegrals::gather_integrals() {
 void CholeskyIntegrals::transform_integrals() {
     TensorType tensor_type = CoreTensor;
 
-    psi::SharedMatrix L(new psi::Matrix("Lmo", nthree_, (nso_) * (nso_)));
-    psi::SharedMatrix Ca_ao(new psi::Matrix("Ca_ao", nso_, nmopi_.sum()));
-    psi::SharedMatrix Ca = wfn_->Ca();
-    psi::SharedMatrix aotoso = wfn_->aotoso();
+    std::shared_ptr<psi::Matrix> L(new psi::Matrix("Lmo", nthree_, (nso_) * (nso_)));
+    std::shared_ptr<psi::Matrix> Ca_ao(new psi::Matrix("Ca_ao", nso_, nmopi_.sum()));
+    std::shared_ptr<psi::Matrix> Ca = wfn_->Ca();
+    std::shared_ptr<psi::Matrix> aotoso = wfn_->aotoso();
 
     // Transform from the SO to the AO basis
     psi::Dimension nsopi_ = wfn_->nsopi();
@@ -276,7 +285,7 @@ void CholeskyIntegrals::transform_integrals() {
     ThreeIntegral_ao.iterate([&](const std::vector<size_t>& i, double& value) {
         value = L_ao_->get(i[0], i[1] * nso_ + i[2]);
     });
-    psi::SharedMatrix ThreeInt(new psi::Matrix("Lmo", (nmo_) * (nmo_), nthree_));
+    std::shared_ptr<psi::Matrix> ThreeInt(new psi::Matrix("Lmo", (nmo_) * (nmo_), nthree_));
     ThreeIntegral_ = ThreeInt;
 
     ThreeIntegral("L,p,q") = ThreeIntegral_ao("L,m,n") * Cpq_tensor("m,p") * Cpq_tensor("n,q");
@@ -286,7 +295,8 @@ void CholeskyIntegrals::transform_integrals() {
     });
 }
 
-void CholeskyIntegrals::make_fock_matrix(psi::SharedMatrix gamma_aM, psi::SharedMatrix gamma_bM) {
+void CholeskyIntegrals::make_fock_matrix(std::shared_ptr<psi::Matrix> gamma_aM,
+                                         std::shared_ptr<psi::Matrix> gamma_bM) {
     TensorType tensor_type = CoreTensor;
     ambit::Tensor ThreeIntegralTensor =
         ambit::Tensor::build(tensor_type, "ThreeIndex", {ncmo_, ncmo_, nthree_});
@@ -350,7 +360,7 @@ void CholeskyIntegrals::resort_integrals_after_freezing() {
 void CholeskyIntegrals::resort_three(std::shared_ptr<psi::Matrix>& threeint,
                                      std::vector<size_t>& map) {
     // Create a temperature threeint matrix
-    psi::SharedMatrix temp_threeint(threeint->clone());
+    std::shared_ptr<psi::Matrix> temp_threeint(threeint->clone());
     temp_threeint->zero();
 
     // Borrwed from resort_four.

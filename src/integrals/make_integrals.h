@@ -5,7 +5,8 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER,
+ * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -26,36 +27,14 @@
  * @END LICENSE
  */
 
-#include "psi4/libmints/basisset.h"
-#include "psi4/psi4-dec.h"
+#ifndef _make_integrals_h_
+#define _make_integrals_h_
 
 namespace forte {
+std::shared_ptr<ForteIntegrals> make_forte_integrals(psi::SharedWavefunction ref_wfn,
+                                                     psi::Options& options,
+                                                     std::shared_ptr<MOSpaceInfo> mo_space_info);
 
-class ParallelDFMO {
-  public:
-    ParallelDFMO(std::shared_ptr<psi::BasisSet> primary, std::shared_ptr<psi::BasisSet> auxiliary);
-    void set_C(std::shared_ptr<psi::Matrix> C) { Ca_ = C; }
-    void compute_integrals();
-    int Q_PQ() { return GA_Q_PQ_; }
-
-  protected:
-    std::shared_ptr<psi::Matrix> Ca_;
-    /// (A | Q)^{-1/2}
-    void J_one_half();
-    /// Compute (A|mn) integrals (distribute via mn indices)
-    void transform_integrals();
-    /// (A | pq) (A | Q)^{-1/2}
-
-    std::shared_ptr<psi::BasisSet> primary_;
-    std::shared_ptr<psi::BasisSet> auxiliary_;
-
-    /// Distributed DF (Q | pq) integrals
-    int GA_Q_PQ_;
-    /// GA for J^{-1/2}
-    int GA_J_onehalf_;
-
-    size_t memory_;
-    size_t nmo_;
-};
 }
-}
+
+#endif // _make_integrals_h_

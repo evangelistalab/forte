@@ -42,9 +42,10 @@
 #include "psi4/libmints/vector.h"
 #include "psi4/libqt/qt.h"
 
-
-
+namespace psi {
+class Wavefunction;
 class Options;
+} // namespace psi
 
 namespace forte {
 
@@ -163,7 +164,9 @@ class MOSpaceInfo {
     std::vector<size_t> mo_to_cmo_;
 };
 
-} // namespace forte
+std::shared_ptr<MOSpaceInfo> make_mo_space_info(std::shared_ptr<psi::Wavefunction> ref_wfn,
+                                                psi::Options& options);
 
+} // namespace forte
 
 #endif // _mo_space_info_h_

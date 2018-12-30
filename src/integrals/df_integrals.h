@@ -67,20 +67,19 @@ class DFIntegrals : public ForteIntegrals {
                                          const std::vector<size_t>& r,
                                          const std::vector<size_t>& s);
 
-    double three_integral(size_t A, size_t p, size_t q) {
-        return ThreeIntegral_->get(p * aptei_idx_ + q, A);
-    }
+    double three_integral(size_t A, size_t p, size_t q);
+
     virtual ambit::Tensor three_integral_block(const std::vector<size_t>& A,
                                                const std::vector<size_t>& p,
                                                const std::vector<size_t>& q);
     virtual ambit::Tensor three_integral_block_two_index(const std::vector<size_t>&, size_t,
                                                          const std::vector<size_t>&);
-    virtual double** three_integral_pointer() { return ThreeIntegral_->pointer(); }
+    virtual double** three_integral_pointer();
     virtual void set_tei(size_t p, size_t q, size_t r, size_t s, double value, bool alpha1,
                          bool alpha2);
     virtual ~DFIntegrals();
 
-    virtual void make_fock_matrix(psi::SharedMatrix gamma_a, psi::SharedMatrix gamma_b);
+    virtual void make_fock_matrix(std::shared_ptr<psi::Matrix> gamma_a, std::shared_ptr<psi::Matrix> gamma_b);
 
     virtual size_t nthree() const { return nthree_; }
 

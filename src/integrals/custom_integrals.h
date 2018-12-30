@@ -75,7 +75,7 @@ class CustomIntegrals : public ForteIntegrals {
                                                          const std::vector<size_t>&);
     virtual double** three_integral_pointer();
 
-    virtual void make_fock_matrix(psi::SharedMatrix gamma_a, psi::SharedMatrix gamma_b);
+    virtual void make_fock_matrix(std::shared_ptr<psi::Matrix> gamma_a, std::shared_ptr<psi::Matrix> gamma_b);
 
     virtual size_t nthree() const { throw psi::PSIEXCEPTION("Wrong Integral type"); }
 

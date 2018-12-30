@@ -50,6 +50,7 @@ class CholeskyIntegrals : public ForteIntegrals {
     CholeskyIntegrals(psi::Options& options, psi::SharedWavefunction ref_wfn,
                       IntegralSpinRestriction restricted,
                       std::shared_ptr<MOSpaceInfo> mo_space_info);
+    /// Destructor
     virtual ~CholeskyIntegrals();
     /// aptei_x will grab antisymmetriced integrals and creates DF/CD integrals
     /// on the fly
@@ -68,10 +69,9 @@ class CholeskyIntegrals : public ForteIntegrals {
                                          const std::vector<size_t>& r,
                                          const std::vector<size_t>& s);
 
-    double three_integral(size_t A, size_t p, size_t q) {
-        return ThreeIntegral_->get(p * aptei_idx_ + q, A);
-    }
-    virtual double** three_integral_pointer() { return ThreeIntegral_->pointer(); }
+    double three_integral(size_t A, size_t p, size_t q);
+
+    virtual double** three_integral_pointer();
     virtual ambit::Tensor three_integral_block(const std::vector<size_t>& A,
                                                const std::vector<size_t>& p,
                                                const std::vector<size_t>& q);
@@ -81,10 +81,11 @@ class CholeskyIntegrals : public ForteIntegrals {
     virtual void set_tei(size_t p, size_t q, size_t r, size_t s, double value, bool alpha1,
                          bool alpha2);
 
-    virtual void make_fock_matrix(psi::SharedMatrix gamma_a, psi::SharedMatrix gamma_b);
+    virtual void make_fock_matrix(std::shared_ptr<psi::Matrix> gamma_a,
+                                  std::shared_ptr<psi::Matrix> gamma_b);
 
     virtual size_t nthree() const { return nthree_; }
-    psi::SharedMatrix L_ao_;
+    std::shared_ptr<psi::Matrix> L_ao_;
 
   private:
     // ==> Class data <==
@@ -104,6 +105,5 @@ class CholeskyIntegrals : public ForteIntegrals {
 };
 
 } // namespace forte
-
 
 #endif // _cholesky_integrals_h_

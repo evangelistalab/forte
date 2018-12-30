@@ -175,18 +175,18 @@ void ForteIntegrals::transform_one_electron_integrals() {
     // Now we want the reference (SCF) wavefunction
     std::shared_ptr<PSIO> psio_ = PSIO::shared_object();
 
-    psi::SharedMatrix T = psi::SharedMatrix(wfn_->matrix_factory()->create_matrix(PSIF_SO_T));
-    psi::SharedMatrix V = psi::SharedMatrix(wfn_->matrix_factory()->create_matrix(PSIF_SO_V));
+    std::shared_ptr<psi::Matrix> T = std::shared_ptr<psi::Matrix>(wfn_->matrix_factory()->create_matrix(PSIF_SO_T));
+    std::shared_ptr<psi::Matrix> V = std::shared_ptr<psi::Matrix>(wfn_->matrix_factory()->create_matrix(PSIF_SO_V));
 
     MintsHelper mints(wfn_->basisset(), options_, 0); // 0 here is to avoid printing of basis info
     T = mints.so_kinetic();
     V = mints.so_potential();
 
-    // psi::SharedMatrix Ca = wfn_->Ca();
-    // psi::SharedMatrix Cb = wfn_->Cb();
+    // std::shared_ptr<psi::Matrix> Ca = wfn_->Ca();
+    // std::shared_ptr<psi::Matrix> Cb = wfn_->Cb();
 
-    psi::SharedMatrix Ha = T->clone();
-    psi::SharedMatrix Hb = T->clone();
+    std::shared_ptr<psi::Matrix> Ha = T->clone();
+    std::shared_ptr<psi::Matrix> Hb = T->clone();
     Ha->add(V);
     Hb->add(V);
 
@@ -264,7 +264,7 @@ void ForteIntegrals::compute_frozen_one_body_operator() {
     psi::Dimension nmopi = mo_space_info_->get_dimension("ALL");
     // Need to get the inactive block of the C matrix
     psi::Dimension nsopi = wfn_->nsopi();
-    psi::SharedMatrix C_core(new psi::Matrix("C_core", nirrep_, nsopi, frozen_dim));
+    std::shared_ptr<psi::Matrix> C_core(new psi::Matrix("C_core", nirrep_, nsopi, frozen_dim));
 
     for (int h = 0; h < nirrep_; h++) {
         for (int mu = 0; mu < nsopi[h]; mu++) {
@@ -317,8 +317,8 @@ void ForteIntegrals::compute_frozen_one_body_operator() {
 
     JK_core->compute();
 
-    psi::SharedMatrix F_core = JK_core->J()[0];
-    psi::SharedMatrix K_core = JK_core->K()[0];
+    std::shared_ptr<psi::Matrix> F_core = JK_core->J()[0];
+    std::shared_ptr<psi::Matrix> K_core = JK_core->K()[0];
 
     F_core->scale(2.0);
     F_core->subtract(K_core);
@@ -440,9 +440,9 @@ void ForteIntegrals::rotate_mos() {
         outfile->Printf("   %d   %d   %d\n", rotate_mo_group[0], rotate_mo_group[1],
                         rotate_mo_group[2]);
     }
-    // psi::SharedMatrix C_old = wfn_->Ca();
-    psi::SharedMatrix C_old = Ca_;
-    psi::SharedMatrix C_new(C_old->clone());
+    // std::shared_ptr<psi::Matrix> C_old = wfn_->Ca();
+    std::shared_ptr<psi::Matrix> C_old = Ca_;
+    std::shared_ptr<psi::Matrix> C_new(C_old->clone());
 
     for (auto mo_group : rotate_mo_list) {
         psi::SharedVector C_mo1 = C_old->get_column(mo_group[0], mo_group[1]);
@@ -452,8 +452,8 @@ void ForteIntegrals::rotate_mos() {
     }
     C_old->copy(C_new);
 
-    // psi::SharedMatrix Cb_old = wfn_->Cb();
-    psi::SharedMatrix Cb_old = Cb_;
+    // std::shared_ptr<psi::Matrix> Cb_old = wfn_->Cb();
+    std::shared_ptr<psi::Matrix> Cb_old = Cb_;
     Cb_old->copy(C_new);
 }
 
@@ -545,7 +545,7 @@ void ForteIntegrals::build_AOdipole_ints() {
     aodOBI->compute(AOdipole_ints_);
 }
 
-std::vector<psi::SharedMatrix> ForteIntegrals::compute_MOdipole_ints(const bool& alpha,
+std::vector<std::shared_ptr<psi::Matrix>> ForteIntegrals::compute_MOdipole_ints(const bool& alpha,
                                                                      const bool& resort) {
     if (alpha) {
         return MOdipole_ints_helper(wfn_->Ca_subset("AO"), wfn_->epsilon_a(), resort);
@@ -554,13 +554,13 @@ std::vector<psi::SharedMatrix> ForteIntegrals::compute_MOdipole_ints(const bool&
     }
 }
 
-std::vector<psi::SharedMatrix> ForteIntegrals::MOdipole_ints_helper(psi::SharedMatrix Cao,
+std::vector<std::shared_ptr<psi::Matrix>> ForteIntegrals::MOdipole_ints_helper(std::shared_ptr<psi::Matrix> Cao,
                                                                     psi::SharedVector epsilon,
                                                                     const bool& resort) {
-    std::vector<psi::SharedMatrix> MOdipole_ints;
+    std::vector<std::shared_ptr<psi::Matrix>> MOdipole_ints;
     std::vector<std::string> names{"X", "Y", "Z"};
     for (int i = 0; i < 3; ++i) {
-        psi::SharedMatrix modipole(AOdipole_ints_[i]->clone());
+        std::shared_ptr<psi::Matrix> modipole(AOdipole_ints_[i]->clone());
         modipole->set_name("MO Dipole " + names[i]);
         modipole->transform(Cao);
         MOdipole_ints.push_back(modipole);
@@ -590,7 +590,7 @@ std::vector<psi::SharedMatrix> ForteIntegrals::MOdipole_ints_helper(psi::SharedM
         }
 
         for (int i = 0; i < 3; ++i) {
-            psi::SharedMatrix modipole(
+            std::shared_ptr<psi::Matrix> modipole(
                 new psi::Matrix("MO Dipole " + names[i], (int)nmo_, (int)nmo_));
             for (int p = 0; p < (int)nmo_; ++p) {
                 int np = indices[p];

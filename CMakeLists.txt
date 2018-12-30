@@ -132,6 +132,7 @@ src/integrals/integrals.cc
 src/integrals/own_integrals.cc
 src/integrals/parallel_ccvv_algorithms.cc
 src/integrals/paralleldfmo.cc
+src/integrals/make_integrals.cc
 src/integrals/active_space_integrals.cc
 src/mrdsrg-helper/dsrg_source.cc
 src/mrdsrg-helper/dsrg_time.cc
