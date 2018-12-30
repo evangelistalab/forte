@@ -692,7 +692,6 @@ ambit::Tensor CASSCF::transform_integrals() {
 }
 void CASSCF::set_up_fci() {
     psi::Dimension active_dim = mo_space_info_->get_dimension("ACTIVE");
-    size_t nfdocc = mo_space_info_->size("FROZEN_DOCC");
     std::vector<size_t> rdocc = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
     std::vector<size_t> active = mo_space_info_->get_corr_abs_mo("ACTIVE");
 

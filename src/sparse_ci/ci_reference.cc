@@ -29,7 +29,7 @@
 #include "psi4/libpsi4util/PsiOutStream.h"
 
 #include "ci_reference.h"
-#include "forte_options.h"
+#include "base_classes/forte_options.h"
 
 #include <algorithm>
 

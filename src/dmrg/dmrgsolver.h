@@ -34,10 +34,10 @@
 #include "psi4/libfock/jk.h"
 #include "base_classes/reference.h"
 #include "integrals/integrals.h"
-#include "helpers/mo_space_info.h"
+#include "base_classes/mo_space_info.h"
 #include "base_classes/state_info.h"
 #include "base_classes/scf_info.h"
-#include "forte_options.h"
+#include "base_classes/forte_options.h"
 
 #include "chemps2/Irreps.h"
 #include "chemps2/Problem.h"

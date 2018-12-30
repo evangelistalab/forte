@@ -29,19 +29,17 @@
 #ifndef _fci_solver_h_
 #define _fci_solver_h_
 
-#include "psi4/libmints/wavefunction.h"
-#include "psi4/physconst.h"
+#include "base_classes/active_space_solver.h"
+//#include "psi4/libmints/wavefunction.h"
+//#include "psi4/physconst.h"
+//#include "base_classes/mo_space_info.h"
+//#include "helpers/timer.h"
+//#include "integrals/integrals.h"
+//#include "integrals/active_space_integrals.h"
+//#include "string_lists.h"
+//#include "base_classes/forte_options.h"
 
 #include "fci_vector.h"
-
-#include "helpers/mo_space_info.h"
-#include "helpers/timer.h"
-#include "integrals/integrals.h"
-#include "integrals/active_space_integrals.h"
-#include "string_lists.h"
-#include "base_classes/reference.h"
-#include "base_classes/active_space_solver.h"
-#include "forte_options.h"
 
 namespace forte {
 
@@ -54,20 +52,17 @@ class FCISolver : public ActiveSpaceSolver {
     // ==> Class Constructor and Destructor <==
 
     /**
-     * @brief FCISolver
-     * @param active_dim The dimension of the active orbital space
-     * @param core_mo A vector of doubly occupied orbitals
-     * @param active_mo A vector of active orbitals
-     * @param state_ state information including na, nb, multiplicity and symmetry
-     * @param ints An integral object
-     * @param mo_space_info Information about molecular orbital spaces
-     * @param initial_guess_per_root get from options object
-     * @param print Control printing of FCISolver
+     * @brief FCISolver A class that performs a FCI computation in an active space
+     * @param state the electronic state to compute
+     * @param mo_space_info a MOSpaceInfo object that defines the orbital spaces
+     * @param as_ints integrals for the active space integrals
      */
     FCISolver(StateInfo state, std::shared_ptr<MOSpaceInfo> mo_space_info,
               std::shared_ptr<ActiveSpaceIntegrals> as_ints);
 
-    ~FCISolver() {}
+    ~FCISolver() = default;
+
+    // ==> Class Interface <==
 
     /// Compute the FCI energy
     double compute_energy() override;
@@ -140,8 +135,6 @@ class FCISolver : public ActiveSpaceSolver {
     size_t collapse_per_root_ = 2;
     /// The maximum subspace size for each root
     size_t subspace_per_root_ = 4;
-    /// The energy convergence criterion
-    double e_convergence_ = 1.0e-12;
     /// Iterations for FCI
     int fci_iterations_ = 30;
     /// Test the RDMs?

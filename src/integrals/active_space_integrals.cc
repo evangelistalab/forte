@@ -26,7 +26,7 @@
  * @END LICENSE
  */
 
-#include "helpers/mo_space_info.h"
+#include "base_classes/mo_space_info.h"
 #include "integrals/active_space_integrals.h"
 
 namespace forte {

@@ -4,7 +4,7 @@
 #include "psi4/liboptions/liboptions.h"
 
 #include "integrals/integrals.h"
-#include "helpers/mo_space_info.h"
+#include "base_classes/mo_space_info.h"
 #include "sci/fci_mo.h"
 #include "sparse_ci/determinant.h"
 

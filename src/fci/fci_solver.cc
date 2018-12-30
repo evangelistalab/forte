@@ -31,6 +31,10 @@
 
 #include "boost/format.hpp"
 
+#include "base_classes/reference.h"
+
+#include "base_classes/forte_options.h"
+#include "base_classes/mo_space_info.h"
 #include "sparse_ci/determinant.h"
 #include "helpers/iterative_solvers.h"
 
@@ -52,8 +56,6 @@ namespace forte {
 
 class MOSpaceInfo;
 
-// nroot_(1), ntrial_per_root_(initial_guess_per_root), print_(print),
-
 FCISolver::FCISolver(StateInfo state, std::shared_ptr<MOSpaceInfo> mo_space_info,
                      std::shared_ptr<ActiveSpaceIntegrals> as_ints)
     : ActiveSpaceSolver(state, mo_space_info, as_ints),
@@ -71,8 +73,6 @@ void FCISolver::set_fci_iterations(int value) { fci_iterations_ = value; }
 void FCISolver::set_collapse_per_root(int value) { collapse_per_root_ = value; }
 
 void FCISolver::set_subspace_per_root(int value) { subspace_per_root_ = value; }
-
-void FCISolver::set_e_convergence(double value) { e_convergence_ = value; }
 
 void FCISolver::startup() {
     // Create the string lists
@@ -210,7 +210,7 @@ double FCISolver::compute_energy() {
         do {
             dls.get_b(b);
             C_->copy(b);
-            C_->Hamiltonian(HC, as_ints_, twoSubstituitionVVOO);
+            C_->Hamiltonian(HC, as_ints_);
             HC.copy_to(sigma);
             add_sigma = dls.add_sigma(sigma);
         } while (add_sigma);

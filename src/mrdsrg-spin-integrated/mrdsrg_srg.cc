@@ -29,7 +29,7 @@
 
 #include "psi4/libpsi4util/PsiOutStream.h"
 
-#include "helpers/mo_space_info.h"
+#include "base_classes/mo_space_info.h"
 #include "boost/format.hpp"
 #include "boost/numeric/odeint.hpp"
 #include "mrdsrg.h"

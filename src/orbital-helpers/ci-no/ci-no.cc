@@ -33,7 +33,7 @@
 #include "helpers/timer.h"
 #include "ci_rdm/ci_rdms.h"
 #include "integrals/active_space_integrals.h"
-#include "forte_options.h"
+#include "base_classes/forte_options.h"
 #include "sparse_ci/sparse_ci_solver.h"
 #include "sparse_ci/determinant.h"
 #include "ci-no.h"

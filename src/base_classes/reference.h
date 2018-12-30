@@ -30,34 +30,14 @@
 #define _reference_h_
 
 #include <ambit/tensor.h>
-#include "integrals/integrals.h"
-#include "helpers/mo_space_info.h"
-
 
 namespace forte {
 
-class Reference
-{
+class ForteIntegrals;
+class MOSpaceInfo;
+
+class Reference {
   public:
-    /// Default constructor
-    Reference();
-
-    /// Destructor
-    ~Reference();
-
-    /// Recompute reference energy using ints and L1a_, L1b_, L2aa_, L2ab_, L2bb_
-    /// ints          -- pointer to ForteIntegrals
-    /// mo_space_info -- pointer to MOSpaceInfo
-    /// Enuc          -- nuclear repulsion energy
-    double compute_Eref(std::shared_ptr<ForteIntegrals> ints,
-                        std::shared_ptr<MOSpaceInfo> mo_space_info, double Enuc);
-
-    /// Update Eref_ (referene energy) by recomputing it
-    void update_Eref(std::shared_ptr<ForteIntegrals> ints,
-                     std::shared_ptr<MOSpaceInfo> mo_space_info, double Enuc) {
-        Eref_ = compute_Eref(ints, mo_space_info, Enuc);
-    }
-
     /// Obtain reference energy
     double get_Eref() { return Eref_; }
 
@@ -145,7 +125,7 @@ class Reference
 
   protected:
     /// Reference energy (include frozen-core and nuclear repulsion)
-    double Eref_;
+    double Eref_ = 0.0;
 
     /// Density cumulants
     ambit::Tensor L1a_ = ambit::Tensor::build(ambit::CoreTensor, "L1a", {0, 0});
@@ -168,7 +148,9 @@ class Reference
     ambit::Tensor g3abb_;
     ambit::Tensor g3bbb_;
 };
-} // namespace forte
 
+double compute_Eref_from_reference(Reference &ref, std::shared_ptr<ForteIntegrals> ints,
+                                   std::shared_ptr<MOSpaceInfo> mo_space_info, double Enuc);
+} // namespace forte
 
 #endif // _reference_h_

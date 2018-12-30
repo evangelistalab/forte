@@ -125,7 +125,7 @@ THREE_DSRG_MRPT2::THREE_DSRG_MRPT2(Reference reference, std::shared_ptr<SCFInfo>
 THREE_DSRG_MRPT2::~THREE_DSRG_MRPT2() { cleanup(); }
 
 void THREE_DSRG_MRPT2::startup() {
-    int nproc = 1;
+//    int nproc = 1;
     int my_proc = 0;
 #ifdef HAVE_MPI
     nproc = MPI::COMM_WORLD.Get_size();
@@ -344,7 +344,7 @@ void THREE_DSRG_MRPT2::cleanup() {}
 
 double THREE_DSRG_MRPT2::compute_energy() {
     int my_proc = 0;
-    int nproc = 1;
+//    int nproc = 1;
 #ifdef HAVE_MPI
     MPI_Comm_rank(MPI_COMM_WORLD, &my_proc);
     MPI_Comm_size(MPI_COMM_WORLD, &nproc);
@@ -2703,7 +2703,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_one_active() {
     double Eccva = 0;
     double Eacvv = 0;
     int nthread = 1;
-    int thread = 0;
+//    int thread = 0;
 #ifdef _OPENMP
     nthread = omp_get_max_threads();
     thread = omp_get_thread_num();
@@ -3449,7 +3449,8 @@ THREE_DSRG_MRPT2::relaxed_energy(std::shared_ptr<ActiveSpaceIntegrals> fci_ints)
     } else if (cas_type == "ACI") {
 
         // Only do ground state ACI for now
-        AdaptiveCI aci(ints_->wfn(), scf_info_, foptions_, mo_space_info_,
+        auto state = make_state_info_from_psi_wfn(ints_->wfn());
+        AdaptiveCI aci(state, scf_info_, foptions_, mo_space_info_,
                        fci_ints); // ints_->wfn() is implicitly converted to StateInfo
         if ((foptions_->psi_options())["ACI_RELAX_SIGMA"].has_changed()) {
             aci.update_sigma();

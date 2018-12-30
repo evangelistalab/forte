@@ -32,15 +32,14 @@
 #include <vector>
 
 #include "psi4/libmints/matrix.h"
-#include "integrals/active_space_integrals.h"
-#include "integrals/integrals.h"
 #include "string_lists.h"
 
 #define CAPRICCIO_USE_DAXPY 1
 #define CAPRICCIO_USE_UNROLL 0
 
-
 namespace forte {
+
+class ActiveSpaceIntegrals;
 
 class FCIWfn {
   public:
@@ -89,16 +88,8 @@ class FCIWfn {
     std::vector<double>& tpdm_abb() { return tpdm_abb_; }
     std::vector<double>& tpdm_bbb() { return tpdm_bbb_; }
 
-    //    void randomize();
-    ////    double get_coefficient(Determinant& det);
-    //    double norm2();
-    //    double min_element();
-    //    double max_element();
-    //    std::vector<int> get_important(double alpha);
-
     // Operations on the wave function
-    void Hamiltonian(FCIWfn& result, std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
-                     RequiredLists required_lists);
+    void Hamiltonian(FCIWfn& result, std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
 
     double energy_from_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
 
@@ -184,7 +175,8 @@ class FCIWfn {
     void cleanup();
 
     /// Compute the energy of a determinant
-    double determinant_energy(bool*& Ia, bool*& Ib, int n, std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
+    double determinant_energy(bool*& Ia, bool*& Ib, int n,
+                              std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
 
     // ==> Class Private Functions <==
 
@@ -221,7 +213,7 @@ class FCIWfn {
     void compute_3rdm_aab(std::vector<double>& rdm);
     void compute_3rdm_abb(std::vector<double>& rdm);
 };
-}
+} // namespace forte
 
 #endif // _fci_vector_
 

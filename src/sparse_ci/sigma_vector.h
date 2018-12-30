@@ -29,7 +29,7 @@
 #ifndef _sigma_vector_h_
 #define _sigma_vector_h_
 
-#include "helpers/mo_space_info.h"
+#include "base_classes/mo_space_info.h"
 #include "helpers/timer.h"
 
 #include "sparse_ci/determinant_hashvector.h"

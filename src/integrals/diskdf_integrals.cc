@@ -36,7 +36,7 @@
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/libqt/qt.h"
 
-#include "helpers/mo_space_info.h"
+#include "base_classes/mo_space_info.h"
 
 #ifdef HAVE_GA
 #include <ga.h>

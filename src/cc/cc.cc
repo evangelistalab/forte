@@ -32,7 +32,7 @@
 #include <vector>
 
 #include "cc/cc.h"
-#include "helpers/mo_space_info.h"
+#include "base_classes/mo_space_info.h"
 
 
 namespace forte {

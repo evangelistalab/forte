@@ -36,7 +36,7 @@
 #include "psi4/libdiis/diismanager.h"
 #include "helpers/helpers.h"
 
-#include "helpers/mo_space_info.h"
+#include "base_classes/mo_space_info.h"
 #include "helpers/timer.h"
 #include "boost/format.hpp"
 #include "mrdsrg.h"

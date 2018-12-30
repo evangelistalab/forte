@@ -35,6 +35,7 @@
 #include "ci_rdms.h"
 #include "base_classes/reference.h"
 #include "sparse_ci/determinant.h"
+//#include "integrals/integrals.h"
 
 using namespace psi;
 

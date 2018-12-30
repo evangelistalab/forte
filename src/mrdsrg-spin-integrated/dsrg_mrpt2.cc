@@ -1738,11 +1738,12 @@ double DSRG_MRPT2::compute_energy_relaxed() {
         }
     } else if (foptions_->get_str("CAS_TYPE") == "ACI") {
 
-        AdaptiveCI aci(ints_->wfn(), scf_info_, foptions_, mo_space_info_, fci_ints);
+        auto state = make_state_info_from_psi_wfn(ints_->wfn());
+        AdaptiveCI aci(state, scf_info_, foptions_, mo_space_info_, fci_ints);
 
         Erelax = aci.compute_energy();
     } else {
-        StateInfo state(ints_->wfn());
+        auto state = make_state_info_from_psi_wfn(ints_->wfn());
         auto fci =
             make_active_space_solver("FCI", state, scf_info_, mo_space_info_, ints_, foptions_);
         fci->set_max_rdm_level(1);

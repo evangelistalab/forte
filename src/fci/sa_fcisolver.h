@@ -32,9 +32,10 @@
 #include "psi4/liboptions/liboptions.h"
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/libmints/wavefunction.h"
+
+#include "base_classes/reference.h"
 #include "fci/fci_solver.h"
 #include "fci/fci_vector.h"
-
 
 namespace forte {
 
@@ -49,7 +50,9 @@ class SA_FCISolver {
 
     Reference reference() { return sa_ref_; }
 
-    void set_integral_pointer(std::shared_ptr<ActiveSpaceIntegrals> fci_ints) { fci_ints_ = fci_ints; }
+    void set_integral_pointer(std::shared_ptr<ActiveSpaceIntegrals> fci_ints) {
+        fci_ints_ = fci_ints;
+    }
 
     void set_mo_space_info(std::shared_ptr<MOSpaceInfo> mo_space_info) {
         mo_space_info_ = mo_space_info;
@@ -85,6 +88,6 @@ class SA_FCISolver {
     /// Read options and fill in parsed_options_
     void read_options();
 };
-}
+} // namespace forte
 
 #endif // SA_FCISOLVER_H

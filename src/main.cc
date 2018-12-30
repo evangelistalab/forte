@@ -42,8 +42,8 @@ namespace py = pybind11;
 
 #include "orbital-helpers/aosubspace.h"
 #include "orbital-helpers/avas.h"
-#include "forte_options.h"
-#include "helpers/mo_space_info.h"
+#include "base_classes/forte_options.h"
+#include "base_classes/mo_space_info.h"
 #include "helpers/timer.h"
 #include "integrals/integrals.h"
 #include "integrals/cholesky_integrals.h"

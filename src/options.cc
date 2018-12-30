@@ -33,7 +33,7 @@
 #include "orbital-helpers/ci-no/mrci-no.h"
 #include "fci/fci_solver.h"
 #include "sci/fci_mo.h"
-#include "forte_options.h"
+#include "base_classes/forte_options.h"
 #include "integrals/integrals.h"
 #include "pci/pci.h"
 #include "base_classes/reference.h"

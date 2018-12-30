@@ -34,7 +34,7 @@
 #include "base_classes/reference.h"
 #include "base_classes/active_space_solver.h"
 #include "integrals/integrals.h"
-#include "helpers/mo_space_info.h"
+#include "base_classes/mo_space_info.h"
 
 #include "chemps2/Irreps.h"
 #include "chemps2/Problem.h"

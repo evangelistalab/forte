@@ -27,7 +27,7 @@
  * @END LICENSE
  */
 
-#include "helpers/mo_space_info.h"
+#include "base_classes/mo_space_info.h"
 #include "helpers/helpers.h"
 #include "sorted_string_list.h"
 

@@ -29,7 +29,7 @@
 #ifndef _as_ci_h_
 #define _as_ci_h_
 
-#include "forte_options.h"
+#include "base_classes/forte_options.h"
 #include "ci_rdm/ci_rdms.h"
 #include "sparse_ci/ci_reference.h"
 #include "integrals/active_space_integrals.h"

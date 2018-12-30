@@ -1,7 +1,7 @@
 #ifndef _run_dsrg_h_
 #define _run_dsrg_h_
 
-#include "forte_options.h"
+#include "base_classes/forte_options.h"
 #include "sci/fci_mo.h"
 #include "mrdsrg-spin-integrated/dsrg_mrpt2.h"
 #include "mrdsrg-spin-integrated/dsrg_mrpt3.h"

@@ -41,7 +41,7 @@
 #include "sparse_ci/determinant_hashvector.h"
 #include "fci/fci_vector.h"
 #include "fci_mo.h"
-#include "forte_options.h"
+#include "base_classes/forte_options.h"
 #include "boost/algorithm/string/predicate.hpp"
 #include "sparse_ci/operator.h"
 #include "orbital-helpers/semi_canonicalize.h"

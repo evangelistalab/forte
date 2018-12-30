@@ -26,25 +26,28 @@
  * @END LICENSE
  */
 
-#include "psi4/liboptions/liboptions.h"
 #include "ambit/blocked_tensor.h"
-#include "fci/fci_solver.h"
-#include "helpers/mo_space_info.h"
-#include "helpers/helpers.h"
-#include "integrals/integrals.h"
+
+#include "psi4/liboptions/liboptions.h"
 #include "psi4/lib3index/cholesky.h"
 #include "psi4/libfock/jk.h"
 #include "psi4/libmints/matrix.h"
 #include "psi4/libqt/qt.h"
 #include "psi4/psifiles.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
+
+#include "base_classes/forte_options.h"
+#include "fci/fci_solver.h"
+#include "base_classes/mo_space_info.h"
+#include "helpers/helpers.h"
+#include "integrals/integrals.h"
 #include "helpers/timer.h"
 #include "orbitaloptimizer.h"
 
 #include "base_classes/reference.h"
 #include "base_classes/scf_info.h"
-using namespace psi;
 
+using namespace psi;
 
 namespace forte {
 

@@ -1,5 +1,5 @@
-#include "forte_options.h"
-#include "helpers/mo_space_info.h"
+#include "base_classes/forte_options.h"
+#include "base_classes/mo_space_info.h"
 #include "helpers/helpers.h"
 
 #include "psi4/libpsi4util/PsiOutStream.h"

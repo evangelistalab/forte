@@ -28,16 +28,14 @@
 
 #include "psi4/libmints/wavefunction.h"
 
-#include "base_classes/state_info.h"
-#include "base_classes/scf_info.h"
-#include "helpers/mo_space_info.h"
-#include "integrals/integrals.h"
-
-#include "base_classes/active_space_solver.h"
+#include "base_classes/mo_space_info.h"
+#include "base_classes/forte_options.h"
 #include "fci/fci_solver.h"
 #include "sci/aci.h"
 #include "sci/asci.h"
 #include "sci/fci_mo.h"
+
+#include "base_classes/active_space_solver.h"
 
 namespace forte {
 
@@ -53,11 +51,21 @@ ActiveSpaceSolver::ActiveSpaceSolver(
     std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ActiveSpaceIntegrals> as_ints)
     : states_weights_(states_weights), mo_space_info_(mo_space_info), as_ints_(as_ints) {}
 
+void ActiveSpaceSolver::set_active_space_integrals(std::shared_ptr<ActiveSpaceIntegrals> as_ints) {
+    as_ints_ = as_ints;
+}
+
+psi::SharedVector ActiveSpaceSolver::evals() { return evals_; }
+
+void ActiveSpaceSolver::set_e_convergence(double value) { e_convergence_ = value; }
+
 void ActiveSpaceSolver::set_nroot(int value) { nroot_ = value; }
 
 void ActiveSpaceSolver::set_root(int value) { root_ = value; }
 
 void ActiveSpaceSolver::set_max_rdm_level(int value) { max_rdm_level_ = value; }
+
+void ActiveSpaceSolver::set_print(int level) { print_ = level; }
 
 std::shared_ptr<ActiveSpaceSolver> make_active_space_solver(
     const std::string& type, StateInfo state, std::shared_ptr<SCFInfo> scf_info,

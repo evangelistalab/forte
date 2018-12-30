@@ -1572,8 +1572,8 @@ double DSRG_MRPT3::compute_energy_relaxed() {
             dm_relax = fci_mo.compute_ref_relaxed_dm(Mbar0_, Mbar1_, Mbar2_);
         }
     } else if (foptions_->get_str("CAS_TYPE") == "ACI") {
-        AdaptiveCI aci(ints_->wfn(), scf_info_, foptions_, mo_space_info_,
-                       fci_ints); // ints_->wfn() is implicitly converted to StateInfo
+        auto state = make_state_info_from_psi_wfn(ints_->wfn());
+        AdaptiveCI aci(state, scf_info_, foptions_, mo_space_info_, fci_ints);
         aci.set_fci_ints(fci_ints);
         if ((foptions_->psi_options())["ACI_RELAX_SIGMA"].has_changed()) {
             aci.update_sigma();
@@ -1581,7 +1581,7 @@ double DSRG_MRPT3::compute_energy_relaxed() {
         Erelax = aci.compute_energy();
 
     } else {
-        StateInfo state(ints_->wfn());
+        auto state = make_state_info_from_psi_wfn(ints_->wfn());
         auto fci =
             make_active_space_solver("FCI", state, scf_info_, mo_space_info_, ints_, foptions_);
         fci->set_max_rdm_level(1);

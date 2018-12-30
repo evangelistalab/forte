@@ -32,7 +32,7 @@
 #include "psi4/libmints/pointgrp.h"
 #include "helpers/helpers.h"
 
-#include "helpers/mo_space_info.h"
+#include "base_classes/mo_space_info.h"
 #include "fci_vector.h"
 
 using namespace psi;
@@ -366,7 +366,7 @@ void FCIWfn::print_natural_orbitals(std::shared_ptr<MOSpaceInfo> mo_space_info) 
     std::sort(vec_irrep_occupation.begin(), vec_irrep_occupation.end(),
               std::greater<std::pair<double, std::pair<int, int>>>());
 
-    int count = 0;
+    size_t count = 0;
     outfile->Printf("\n    ");
     for (auto vec : vec_irrep_occupation) {
         outfile->Printf(" %4d%-4s%11.6f  ", vec.second.second, ct.gamma(vec.second.first).symbol(),

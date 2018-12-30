@@ -55,7 +55,7 @@
 #include "integrals/active_space_integrals.h"
 #include "sci/fci_mo.h"
 #include "finite_temperature/finite_temperature.h"
-#include "helpers/mo_space_info.h"
+#include "base_classes/mo_space_info.h"
 #include "sci/mrci.h"
 #include "mrdsrg-so/mrdsrg_so.h"
 #include "mrdsrg-so/so-mrdsrg.h"
@@ -109,7 +109,7 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
 
     double final_energy = 0.0;
 
-    StateInfo state(ref_wfn); // TODO move py-side
+    StateInfo state = make_state_info_from_psi_wfn(ref_wfn); // TODO move py-side
     auto scf_info = std::make_shared<SCFInfo>(ref_wfn);
     auto forte_options = std::make_shared<ForteOptions>(options);
 

@@ -44,7 +44,7 @@
 #include "sci/aci.h"
 #include "integrals/integrals.h"
 #include "base_classes/reference.h"
-#include "helpers/mo_space_info.h"
+#include "base_classes/mo_space_info.h"
 #include "helpers/blockedtensorfactory.h"
 #include "mrdsrg-helper/dsrg_time.h"
 #include "mrdsrg-helper/dsrg_source.h"

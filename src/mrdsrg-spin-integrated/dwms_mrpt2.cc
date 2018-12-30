@@ -425,9 +425,9 @@ std::shared_ptr<FCI_MO> DWMS_DSRGPT2::precompute_energy() {
     return fci_mo;
 }
 
-std::shared_ptr<ActiveSpaceIntegrals> DWMS_DSRGPT2::compute_dsrg_pt(std::shared_ptr<MASTER_DSRG>& dsrg_pt,
-                                                            Reference& reference,
-                                                            std::string level) {
+std::shared_ptr<ActiveSpaceIntegrals>
+DWMS_DSRGPT2::compute_dsrg_pt(std::shared_ptr<MASTER_DSRG>& dsrg_pt, Reference& reference,
+                              std::string level) {
     // use semicanonical orbitals only for THREE-DSRG-MRPT2
     do_semi_ = (level.find("PT2") != std::string::npos) && eri_df_;
 
@@ -477,7 +477,8 @@ DWMS_DSRGPT2::compute_macro_dsrg_pt(std::shared_ptr<MASTER_DSRG>& dsrg_pt,
     Reference reference = fci_mo->get_reference();
 
     // update MK vacuum energy
-    reference.update_Eref(ints_, mo_space_info_, Enuc_);
+    double new_Eref = compute_Eref_from_reference(reference, ints_, mo_space_info_, Enuc_);
+    reference.set_Eref(new_Eref); // TODO: ?why do this here this way?
 
     // compute DSRG-PT2/3 energies and Hbar
     return compute_dsrg_pt(dsrg_pt, reference, dwms_corrlv_);

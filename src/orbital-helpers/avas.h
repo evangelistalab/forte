@@ -33,7 +33,7 @@
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/liboptions/liboptions.h"
 
-#include "forte_options.h"
+#include "base_classes/forte_options.h"
 
 
 namespace forte {

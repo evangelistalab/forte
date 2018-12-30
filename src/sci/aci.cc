@@ -32,7 +32,7 @@
 #include "psi4/libmints/pointgrp.h"
 #include "psi4/libpsio/psio.hpp"
 
-#include "forte_options.h"
+#include "base_classes/forte_options.h"
 #include "helpers/printing.h"
 #include "helpers/helpers.h"
 #include "aci.h"

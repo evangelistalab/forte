@@ -38,8 +38,7 @@ namespace forte {
  * Apply the Hamiltonian to the wave function
  * @param result Wave function object which stores the resulting vector
  */
-void FCIWfn::Hamiltonian(FCIWfn& result, std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
-                         RequiredLists required_lists) {
+void FCIWfn::Hamiltonian(FCIWfn& result, std::shared_ptr<ActiveSpaceIntegrals> fci_ints) {
     //    check_temp_space();
     result.zero();
 

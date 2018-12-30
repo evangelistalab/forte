@@ -36,6 +36,8 @@
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/pointgrp.h"
 
+#include "base_classes/forte_options.h"
+#include "base_classes/mo_space_info.h"
 #include "helpers/helpers.h"
 #include "sa_fcisolver.h"
 
@@ -212,7 +214,6 @@ double SA_FCISolver::compute_energy() {
         std::tie(symmetry, multiplicity, nroot, std::ignore) = cas_solutions;
 
         psi::Dimension active_dim = mo_space_info_->get_dimension("ACTIVE");
-        size_t nfdocc = mo_space_info_->size("FROZEN_DOCC");
         std::vector<size_t> rdocc = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
         std::vector<size_t> active = mo_space_info_->get_corr_abs_mo("ACTIVE");
 
@@ -273,6 +274,7 @@ double SA_FCISolver::compute_energy() {
         auto as_ints =
             make_active_space_ints(mo_space_info_, ints_, "ACTIVE", {{"RESTRICTED_DOCC"}});
         FCISolver fcisolver(state, mo_space_info_, as_ints);
+
         fcisolver.set_options(std::make_shared<ForteOptions>(options_));
         fcisolver.set_max_rdm_level(2);
         fcisolver.set_test_rdms(options_.get_bool("FCI_TEST_RDMS"));

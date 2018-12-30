@@ -31,7 +31,7 @@
 
 #include "ambit/blocked_tensor.h"
 #include "base_classes/reference.h"
-#include "helpers/mo_space_info.h"
+#include "base_classes/mo_space_info.h"
 #include "helpers/blockedtensorfactory.h"
 #include "psi4/libmints/matrix.h"
 #include "psi4/libfock/jk.h"

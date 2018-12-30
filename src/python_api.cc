@@ -35,7 +35,7 @@
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libmints/wavefunction.h"
 
-#include "helpers/mo_space_info.h"
+#include "base_classes/mo_space_info.h"
 #include "integrals/integrals.h"
 #include "orbital-helpers/localize.h"
 #include "forte.h"
@@ -102,8 +102,7 @@ PYBIND11_MODULE(forte, m) {
     // export StateInfo
     py::class_<StateInfo, std::shared_ptr<StateInfo>>(m, "StateInfo")
         .def(py::init<int, int, int, int, int>(), "na"_a, "nb"_a, "multiplicity"_a, "twice_ms"_a,
-             "irrep"_a)
-        .def(py::init<psi::SharedWavefunction>());
+             "irrep"_a);
 
     // export SCFInfo
     py::class_<SCFInfo, std::shared_ptr<SCFInfo>>(m, "SCFInfo")

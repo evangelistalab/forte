@@ -39,7 +39,7 @@
 #include "ambit/tensor.h"
 
 #include "ci_rdm/ci_rdms.h"
-#include "helpers/mo_space_info.h"
+#include "base_classes/mo_space_info.h"
 #include "helpers/helpers.h"
 #include "integrals/integrals.h"
 #include "base_classes/active_space_solver.h"
@@ -105,7 +105,7 @@ class FCI_MO : public ActiveSpaceSolver {
     /// Return averaged cumulants if AVG_STATE is not empty
     Reference get_reference() override;
 
-    void set_options(std::shared_ptr<ForteOptions> options) override{}; // TODO implement
+    void set_options(std::shared_ptr<ForteOptions>) override{}; // TODO implement
 
     /// Compute densities or transition densities
     /// root1, root2 -- the ket and bra roots of p_space and eigen

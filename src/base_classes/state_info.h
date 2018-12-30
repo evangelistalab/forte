@@ -29,14 +29,14 @@
 #ifndef _state_info_h_
 #define _state_info_h_
 
+#include "psi4/libmints/wavefunction.h"
+
 namespace forte {
 
 class StateInfo {
   public:
     /// Constructor
     StateInfo(int na, int nb, int multiplicity, int twice_ms, int irrep);
-    /// Constructor based on Psi4 Wavefunction
-    StateInfo(psi::SharedWavefunction wfn);
 
     /// return the number of alpha electrons
     int na() const;
@@ -64,6 +64,14 @@ class StateInfo {
     // Irrep
     int irrep_;
 };
+
+/**
+ * @brief make_state_info_from_psi_wfn Make a StateInfo object by reading variables set in a psi4
+ *        Wavefunction object
+ * @param wfn the psi wave function object
+ * @return a StateInfo object
+ */
+StateInfo make_state_info_from_psi_wfn(std::shared_ptr<psi::Wavefunction> wfn);
 
 } // namespace forte
 

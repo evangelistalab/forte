@@ -34,7 +34,7 @@
 
 #include "psi4/libpsi4util/PsiOutStream.h"
 
-#include "helpers/mo_space_info.h"
+#include "base_classes/mo_space_info.h"
 #include "helpers/timer.h"
 #include "mrdsrg.h"
 

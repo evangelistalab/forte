@@ -36,7 +36,7 @@
 #include "integrals/integrals.h"
 #include "ambit/blocked_tensor.h"
 #include "base_classes/reference.h"
-#include "helpers/mo_space_info.h"
+#include "base_classes/mo_space_info.h"
 #include "helpers/blockedtensorfactory.h"
 #include "fci/fci_vector.h"
 #include "integrals/active_space_integrals.h"

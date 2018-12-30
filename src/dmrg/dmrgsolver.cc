@@ -62,7 +62,7 @@
 #include "ambit/blocked_tensor.h"
 #include "dmrgsolver.h"
 #include "fci/fci_vector.h"
-#include "helpers/mo_space_info.h"
+#include "base_classes/mo_space_info.h"
 #include "helpers/timer.h"
 #include "helpers/helpers.h"
 #include "helpers/printing.h"

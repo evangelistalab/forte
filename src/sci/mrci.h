@@ -32,7 +32,7 @@
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/liboptions/liboptions.h"
 
-#include "helpers/mo_space_info.h"
+#include "base_classes/mo_space_info.h"
 #include "integrals/integrals.h"
 #include "sparse_ci/determinant_hashvector.h"
 #include "integrals/active_space_integrals.h"

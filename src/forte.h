@@ -26,7 +26,7 @@
  * @END LICENSE
  */
 
-#include "forte_options.h"
+#include "base_classes/forte_options.h"
 
 namespace forte {
 

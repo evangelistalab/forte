@@ -33,7 +33,7 @@
 #include "sparse_ci/determinant_hashvector.h"
 #include "operator.h"
 #include "sparse_ci/operator.h"
-#include "helpers/mo_space_info.h"
+#include "base_classes/mo_space_info.h"
 
 #include "determinant.h"
 #include "sigma_vector.h"

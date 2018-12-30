@@ -43,7 +43,7 @@
 #include "psi4/libpsio/psio.hpp"
 
 #include "finite_temperature/finite_temperature.h"
-#include "helpers/mo_space_info.h"
+#include "base_classes/mo_space_info.h"
 
 
 namespace forte {

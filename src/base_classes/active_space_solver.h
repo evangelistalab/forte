@@ -32,15 +32,15 @@
 #include <vector>
 
 #include "base_classes/state_info.h"
-#include "base_classes/scf_info.h"
-//#include "base_classes/reference.h"
 
 namespace forte {
 
 class ActiveSpaceIntegrals;
 class ForteIntegrals;
+class ForteOptions;
 class MOSpaceInfo;
 class Reference;
+class SCFInfo;
 
 /**
  * @class ActiveSpaceSolver
@@ -58,25 +58,33 @@ class Reference;
  */
 class ActiveSpaceSolver {
   public:
-    // Constructor for a single state computation
+    // ==> Class Constructor and Destructor <==
     /**
-     * @brief ActiveSpaceSolver
+     * @brief ActiveSpaceSolver Constructor for a single state computation
      * @param state information about the electronic state
      * @param mo_space_info a MOSpaceInfo object
-     * @param ints
+     * @param as_ints integrals for active space
      */
     ActiveSpaceSolver(StateInfo state, std::shared_ptr<MOSpaceInfo> mo_space_info,
                       std::shared_ptr<ActiveSpaceIntegrals> as_ints);
-    // Constructor for a multi-state computation
+
+    /**
+     * @brief ActiveSpaceSolver Constructor for a multi-state computation
+     * @param state information about the electronic state
+     * @param mo_space_info a MOSpaceInfo object
+     * @param as_ints integrals for active space
+     */
     ActiveSpaceSolver(const std::vector<std::pair<StateInfo, double>>& states_weights,
                       std::shared_ptr<MOSpaceInfo> mo_space_info,
                       std::shared_ptr<ActiveSpaceIntegrals> as_ints);
 
-    // Default constructor
+    /// Default constructor
     ActiveSpaceSolver() = default;
 
     /// Virtual destructor to enable deletion of a Derived* through a Base*
     virtual ~ActiveSpaceSolver() = default;
+
+    // ==> Class Interface <==
 
     /// Compute the energy and return it
     virtual double compute_energy() = 0;
@@ -88,29 +96,36 @@ class ActiveSpaceSolver {
     /// @param options the options passed in
     virtual void set_options(std::shared_ptr<ForteOptions> options) = 0;
 
+    // ==> Base Class Functionality (inherited by derived classes) <==
+
     /// Pass a set of ActiveSpaceIntegrals to the solver (e.g. an effective Hamiltonian)
     /// @param as_ints the integrals passed in
-    void set_active_space_integrals(std::shared_ptr<ActiveSpaceIntegrals> as_ints) {
-        as_ints_ = as_ints;
-    }
+    void set_active_space_integrals(std::shared_ptr<ActiveSpaceIntegrals> as_ints);
 
-    //    /// Return eigen vectors
-    //    psi::SharedMatrix evecs() { return evecs_; }
-    /// Return eigen values
-    psi::SharedVector evals() { return evals_; }
+    /// Return the eigenvalues
+    psi::SharedVector evals();
+
+    // ==> Base Class Handles Set Functions <==
+
+    /// Set the energy convergence criterion
+    /// @param value the convergence criterion in a.u.
+    void set_e_convergence(double value);
 
     /// Set the number of desired roots
     /// @param value the number of desired roots
     void set_nroot(int value);
+
     /// Set the root that will be used to compute the properties
     /// @param the root (root = 0, 1, 2, ...)
     void set_root(int value);
+
     /// Set the maximum RDM computed (0 - 3)
     /// @param value the rank of the RDM
     void set_max_rdm_level(int value);
+
     /// Set the print level
     /// @param level the print level (0 = no printing, 1 default)
-    void set_print(int level) { print_ = level; }
+    void set_print(int level);
 
   protected:
     /// The list of active orbitals (absolute ordering)
@@ -131,18 +146,25 @@ class ActiveSpaceSolver {
     /// doubly occupied orbitals specified by the core_mo_ vector.
     std::shared_ptr<ActiveSpaceIntegrals> as_ints_;
 
+    // ==> Base Class Handles [can be changed before running compute_energy()]  <==
+
+    /// The energy convergence criterion
+    double e_convergence_ = 1.0e-12;
+
     /// The number of roots (default = 1)
     int nroot_ = 1;
+
     /// The root used to compute properties (zero based, default = 0)
     int root_ = 0;
+
     /// The maximum RDM computed (0 - 3)
     int max_rdm_level_ = 1;
 
-    /// Eigenvalues
-    psi::SharedVector evals_;
-
     /// A variable to control printing information
     int print_ = 0;
+
+    /// Eigenvalues
+    psi::SharedVector evals_;
 
     /// Allocates an ActiveSpaceIntegrals object and fills it with integrals stored in ints_
     void make_active_space_ints();
@@ -153,9 +175,9 @@ class ActiveSpaceSolver {
  * @param type a string that specifies the type (e.g. "FCI", "ACI", ...)
  * @param state information about the elecronic state
  * @param scf_info information about a previous SCF computation
- * @param options user-provided options
+ * @param mo_space_info orbital space information
  * @param ints an integral object
- * @param mo_space_info
+ * @param options user-provided options
  * @return a shared pointer for the base class ActiveSpaceSolver
  */
 std::shared_ptr<ActiveSpaceSolver> make_active_space_solver(

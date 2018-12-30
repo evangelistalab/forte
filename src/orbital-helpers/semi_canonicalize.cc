@@ -36,7 +36,7 @@
 #include "psi4/libmints/vector.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
 
-#include "forte_options.h"
+#include "base_classes/forte_options.h"
 #include "helpers/blockedtensorfactory.h"
 #include "helpers/helpers.h"
 #include "helpers/printing.h"
