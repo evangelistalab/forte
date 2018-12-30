@@ -60,7 +60,8 @@ PYBIND11_MODULE(forte, m) {
     m.def("make_forte_integrals", &make_forte_integrals, "Make Forte integrals");
     m.def("forte_old_methods", &forte_old_methods, "Run Forte methods");
     m.def("make_active_space_solver", &make_active_space_solver, "Make an active space solver");
-
+    m.def("make_state_info_from_psi_wfn", &make_state_info_from_psi_wfn,
+          "Make a state info object from a psi4 Wavefunction");
     // export ForteOptions
     py::class_<ForteOptions, std::shared_ptr<ForteOptions>>(m, "ForteOptions")
         .def(py::init<>())

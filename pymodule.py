@@ -91,7 +91,7 @@ def run_forte(name, return_wfn=False, **kwargs):
     # Create the AO subspace projector
     ps = forte.make_aosubspace_projector(ref_wfn, options)
 
-    state = forte.StateInfo(ref_wfn)
+    state = forte.make_state_info_from_psi_wfn(ref_wfn)
     scf_info = forte.SCFInfo(ref_wfn)
 
     # Run a method

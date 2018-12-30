@@ -71,8 +71,6 @@ class FCISolver : public ActiveSpaceSolver {
 
     /// Set the number of trial vectors per root
     void set_ntrial_per_root(int value);
-    /// Set the energy convergence threshold
-    void set_e_convergence(double value);
     /// Set the convergence for FCI
     void set_fci_iterations(int value);
     /// Set the number of collapse vectors for each root
