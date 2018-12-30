@@ -34,7 +34,7 @@ import forte
 import psi4.driver.p4util as p4util
 from psi4.driver.procrouting import proc_util
 
-def new_driver(state, scf_info, options, ints, mo_space_info):
+def forte_driver(state, scf_info, options, ints, mo_space_info):
     # Create an active space solver object
     as_solver_type = options.get_str('ACTIVE_SPACE_SOLVER')
     as_solver = forte.make_active_space_solver(as_solver_type,state,scf_info,mo_space_info,ints,options)
@@ -46,7 +46,7 @@ def new_driver(state, scf_info, options, ints, mo_space_info):
 #    solver = forte.make_dynamical_solver(dyncorr_solver,state,scf_info,forte_options,ints,mo_space_info)
     return energy
 
-def run_forte(name, return_wfn=False, **kwargs):
+def run_forte(name, **kwargs):
     r"""Function encoding sequence of PSI module and plugin calls so that
     forte can be called via :py:func:`~driver.energy`. For post-scf plugins.
 
@@ -96,7 +96,6 @@ def run_forte(name, return_wfn=False, **kwargs):
 
     # Run a method
     job_type = options.get_str('JOB_TYPE')
-#    job_type = psi4.core.get_option('FORTE','JOB_TYPE')
 
     energy = 0.0
     if job_type != 'NONE':
@@ -109,19 +108,19 @@ def run_forte(name, return_wfn=False, **kwargs):
             forte.LOCALIZE(ref_wfn,options,ints,mo_space_info)
 
         if (job_type == 'NEWDRIVER'):
-            energy = new_driver(state, scf_info, forte.forte_options, ints, mo_space_info)
+            energy = forte_driver(state, scf_info, forte.forte_options, ints, mo_space_info)
         else:
             # Run a method
             energy = forte.forte_old_methods(ref_wfn, options, ints, mo_space_info)
 
         end = timeit.timeit()
         #print('\n\n  Your calculation took ', (end - start), ' seconds');
+
     # Close ambit, etc.
     forte.cleanup()
-    if return_wfn == True:
-        return energy, ref_wfn
-    else:
-        return energy
+
+    psi4.core.set_scalar_variable('CURRENT ENERGY', energy)
+    return ref_wfn
 
 # Integration with driver routines
 psi4.driver.procedures['energy']['forte'] = run_forte

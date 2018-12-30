@@ -118,6 +118,7 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
             std::make_shared<CASSCF>(state, std::make_shared<SCFInfo>(ref_wfn),
                                      std::make_shared<ForteOptions>(options), ints, mo_space_info);
         casscf->compute_casscf();
+        final_energy = casscf->compute_energy();
     }
     if (options.get_bool("MP2_NOS")) {
         auto mp2_nos = std::make_shared<MP2_NOS>(ref_wfn, options, ints, mo_space_info);
@@ -128,7 +129,7 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
     }
     if (options.get_bool("MRCINO")) {
         auto mrcino = std::make_shared<MRCINO>(ref_wfn, options, ints, mo_space_info);
-        mrcino->compute_energy();
+        final_energy = mrcino->compute_energy();
     }
     if (options.get_bool("LOCALIZE")) {
         auto localize = std::make_shared<LOCALIZE>(ref_wfn, options, ints, mo_space_info);
