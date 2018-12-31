@@ -3093,7 +3093,7 @@ void THREE_DSRG_MRPT2::form_Hbar() {
     }
 }
 
-void THREE_DSRG_MRPT2::relax_reference_once() {
+double THREE_DSRG_MRPT2::relax_reference_once() {
 
     outfile->Printf("\n Computing ints for Heff");
     auto fci_ints = compute_Heff_actv();
@@ -3147,6 +3147,7 @@ void THREE_DSRG_MRPT2::relax_reference_once() {
 
         psi::Process::environment.globals["CURRENT ENERGY"] = E_relaxed[0];
     }
+    return E_relaxed[0];
 }
 
 void THREE_DSRG_MRPT2::set_Ufull(psi::SharedMatrix& Ua, psi::SharedMatrix& Ub) {

@@ -80,7 +80,7 @@ class THREE_DSRG_MRPT2 : public MASTER_DSRG {
     virtual ambit::BlockedTensor get_T2(const std::vector<std::string>& blocks);
 
     /// Allow the reference to relax
-    void relax_reference_once();
+    double relax_reference_once();
 
     //    /// Compute de-normal-ordered amplitudes and return the scalar term
     //    double Tamp_deGNO();

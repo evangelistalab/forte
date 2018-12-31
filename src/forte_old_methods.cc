@@ -618,7 +618,7 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
             }
             final_energy = three_dsrg_mrpt2->compute_energy();
             if (ref_relax || multi_state) {
-                three_dsrg_mrpt2->relax_reference_once();
+                final_energy = three_dsrg_mrpt2->relax_reference_once();
             }
 
         } else if (cas_type == "V2RDM") {
@@ -682,7 +682,7 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
                     psi::SharedMatrix Ub_f = semi.Ub();
                     three_dsrg_mrpt2->set_Ufull(Ua_f, Ub_f);
                 }
-                three_dsrg_mrpt2->relax_reference_once();
+                final_energy = three_dsrg_mrpt2->relax_reference_once();
             }
 
             //  if( options.get_bool("UNPAIRED_DENSITY")){
@@ -710,7 +710,7 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
             three_dsrg_mrpt2->set_Uactv(Ua, Ub);
             final_energy = three_dsrg_mrpt2->compute_energy();
             if (ref_relax || multi_state) {
-                three_dsrg_mrpt2->relax_reference_once();
+                final_energy = three_dsrg_mrpt2->relax_reference_once();
             }
 
         } else if (cas_type == "DMRG") {
@@ -732,7 +732,7 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
                                      std::make_shared<ForteOptions>(options), ints, mo_space_info));
             final_energy = three_dsrg_mrpt2->compute_energy();
             if (ref_relax || multi_state) {
-                three_dsrg_mrpt2->relax_reference_once();
+                final_energy = three_dsrg_mrpt2->relax_reference_once();
             }
 #endif
         } else if (cas_type == "CASSCF") {
@@ -755,7 +755,7 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
             three_dsrg_mrpt2->set_Uactv(Ua, Ub);
             final_energy = three_dsrg_mrpt2->compute_energy();
             if (ref_relax || multi_state) {
-                three_dsrg_mrpt2->relax_reference_once();
+                final_energy = three_dsrg_mrpt2->relax_reference_once();
             }
         }
 
