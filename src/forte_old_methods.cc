@@ -139,6 +139,7 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
     if (options.get_str("JOB_TYPE") == "MR-DSRG-PT2") {
         MCSRGPT2_MO mcsrgpt2_mo(std::make_shared<SCFInfo>(ref_wfn),
                                 std::make_shared<ForteOptions>(options), ints, mo_space_info);
+        final_energy = psi::Process::environment.globals["CURRENT ENERGY"];
     }
     if (options.get_str("JOB_TYPE") == "ASCI") {
         auto asci =
