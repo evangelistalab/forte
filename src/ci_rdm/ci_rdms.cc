@@ -35,7 +35,6 @@
 #include "ci_rdms.h"
 #include "base_classes/reference.h"
 #include "sparse_ci/determinant.h"
-//#include "integrals/integrals.h"
 
 using namespace psi;
 
@@ -44,8 +43,9 @@ namespace forte {
 // A class that takes the determinants and expansion
 // coefficients and computes reduced density matrices.
 
-CI_RDMS::CI_RDMS(std::shared_ptr<ActiveSpaceIntegrals> fci_ints, const std::vector<Determinant>& det_space,
-                 psi::SharedMatrix evecs, int root1, int root2)
+CI_RDMS::CI_RDMS(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
+                 const std::vector<Determinant>& det_space, psi::SharedMatrix evecs, int root1,
+                 int root2)
     : fci_ints_(fci_ints), det_space_(det_space), evecs_(evecs), root1_(root1), root2_(root2) {
     startup();
 }
@@ -103,8 +103,7 @@ void CI_RDMS::set_max_rdm(int rdm) { max_rdm_ = rdm; }
 double CI_RDMS::get_energy(std::vector<double>& oprdm_a, std::vector<double>& oprdm_b,
                            std::vector<double>& tprdm_aa, std::vector<double>& tprdm_bb,
                            std::vector<double>& tprdm_ab) {
-    double nuc_rep =
-        psi::Process::environment.molecule()->nuclear_repulsion_energy({{0.0, 0.0, 0.0}});
+    double nuc_rep = fci_ints_->ints()->nuclear_repulsion_energy();
     double scalar_energy = fci_ints_->frozen_core_energy() + fci_ints_->scalar_energy();
     double energy_1rdm = 0.0;
     double energy_2rdm = 0.0;
