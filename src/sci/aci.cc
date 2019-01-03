@@ -235,6 +235,7 @@ void AdaptiveCI::set_fci_ints(std::shared_ptr<ActiveSpaceIntegrals> fci_ints) {
 }
 
 void AdaptiveCI::startup() {
+    outfile->Printf("\n  max rdm = %d", max_rdm_level_);
     quiet_mode_ = false;
     if (options_->has_changed("ACI_QUIET_MODE")) {
         quiet_mode_ = options_->get_bool("ACI_QUIET_MODE");
@@ -253,6 +254,10 @@ void AdaptiveCI::startup() {
     multiplicity_ = 1;
     if (options_->has_changed("MULTIPLICITY")) {
         multiplicity_ = options_->get_int("MULTIPLICITY");
+    }
+
+    if( max_rdm_level_ <= 1 ){
+        max_rdm_level_ = options_->get_int("ACI_MAX_RDM");
     }
 
     nact_ = mo_space_info_->size("ACTIVE");
@@ -287,10 +292,6 @@ void AdaptiveCI::startup() {
     add_aimed_degenerate_ = options_->get_bool("ACI_ADD_AIMED_DEGENERATE");
     project_out_spin_contaminants_ = options_->get_bool("ACI_PROJECT_OUT_SPIN_CONTAMINANTS");
     spin_complete_ = options_->get_bool("ACI_ENFORCE_SPIN_COMPLETE");
-
-    if (!set_rdm_) {
-        rdm_level_ = options_->get_int("ACI_MAX_RDM");
-    }
 
     max_cycle_ = 20;
     if (options_->has_changed("ACI_MAX_CYCLE")) {
@@ -623,7 +624,7 @@ double AdaptiveCI::compute_energy() {
 
     //** Compute the RDMs **//
     double list_time = 0.0;
-    if ((options_->get_int("ACI_MAX_RDM") >= 3 or (rdm_level_ >= 3)) and
+    if ((options_->get_int("ACI_MAX_RDM") >= 3 or (max_rdm_level_ >= 3)) and
         !(options_->get_bool("ACI_DIRECT_RDMS"))) {
         outfile->Printf("\n  Computing 3-list...    ");
         local_timer l3;
@@ -1589,7 +1590,7 @@ std::vector<double> AdaptiveCI::davidson_correction(std::vector<Determinant>& P_
 }
 
 void AdaptiveCI::set_max_rdm(int rdm) {
-    rdm_level_ = rdm;
+    max_rdm_level_ = rdm;
     set_rdm_ = true;
 }
 
@@ -1597,7 +1598,7 @@ Reference AdaptiveCI::get_reference() {
     // const std::vector<Determinant>& final_wfn =
     //     final_wfn_.determinants();
     CI_RDMS ci_rdms(final_wfn_, as_ints_, evecs_, 0, 0);
-    ci_rdms.set_max_rdm(rdm_level_);
+    ci_rdms.set_max_rdm(max_rdm_level_);
     Reference aci_ref = ci_rdms.reference(ordm_a_, ordm_b_, trdm_aa_, trdm_ab_, trdm_bb_, trdm_aaa_,
                                           trdm_aab_, trdm_abb_, trdm_bbb_);
     return aci_ref;
@@ -2205,7 +2206,7 @@ void AdaptiveCI::compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
     CI_RDMS ci_rdms_(dets, fci_ints, PQ_evecs, root1, root2);
 
     //    double total_time = 0.0;
-    ci_rdms_.set_max_rdm(rdm_level_);
+    ci_rdms_.set_max_rdm(max_rdm_level_);
 
     if (options_->get_bool("ACI_DIRECT_RDMS")) {
         // local_timer dyn;
@@ -2216,7 +2217,7 @@ void AdaptiveCI::compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
         // double dt = dyn.get();
         // outfile->Printf("\n  RDMS (bits) took           %1.6f", dt);
     } else {
-        if (rdm_level_ >= 1) {
+        if (max_rdm_level_ >= 1) {
             local_timer one_r;
             ci_rdms_.compute_1rdm(ordm_a_, ordm_b_, op);
             outfile->Printf("\n  1-RDM  took %2.6f s (determinant)", one_r.get());
@@ -2225,12 +2226,12 @@ void AdaptiveCI::compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
                 print_nos();
             }
         }
-        if (rdm_level_ >= 2) {
+        if (max_rdm_level_ >= 2) {
             local_timer two_r;
             ci_rdms_.compute_2rdm(trdm_aa_, trdm_ab_, trdm_bb_, op);
             outfile->Printf("\n  2-RDMS took %2.6f s (determinant)", two_r.get());
         }
-        if (rdm_level_ >= 3) {
+        if (max_rdm_level_ >= 3) {
             local_timer tr;
             ci_rdms_.compute_3rdm(trdm_aaa_, trdm_aab_, trdm_abb_, trdm_bbb_, op);
             outfile->Printf("\n  3-RDMs took %2.6f s (determinant)", tr.get());
@@ -2241,7 +2242,7 @@ void AdaptiveCI::compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
                           trdm_abb_, trdm_bbb_);
     }
 
-    if (approx_rdm_ and (rdm_level_ >= 2)) {
+    if (approx_rdm_ and (max_rdm_level_ >= 2)) {
         outfile->Printf("\n  Computing energy with new RDMs");
 
         double en = ci_rdms_.get_energy(ordm_a_, ordm_b_, trdm_aa_, trdm_bb_, trdm_ab_);
@@ -2984,7 +2985,7 @@ void AdaptiveCI::add_external_excitations(DeterminantHashVec& ref) {
     }
 
     print_wfn(ref, op, final_evecs, nroot_);
-    rdm_level_ = 1;
+    max_rdm_level_ = 1;
     compute_rdms(fci_ints, ref, op, final_evecs, 0, 0);
 }
 

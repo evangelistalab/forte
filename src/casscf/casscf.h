@@ -44,6 +44,8 @@
 #include "base_classes/active_space_solver.h"
 
 namespace forte {
+
+//class ActiveSpaceIntegrals;
 class SCFInfo;
 
 class CASSCF : public ActiveSpaceSolver {
@@ -60,8 +62,8 @@ class CASSCF : public ActiveSpaceSolver {
      * This reference has a nice algorithmic flowchart.  Look it up
      *
      */
-    CASSCF(StateInfo state, std::shared_ptr<forte::SCFInfo> scf_info, std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
-           std::shared_ptr<MOSpaceInfo> mo_space_info);
+    CASSCF(StateInfo state, std::shared_ptr<forte::SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
+           std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ActiveSpaceIntegrals> as_ints);
     /// Use daniels code to compute Orbital optimization
     // void compute_casscf_soscf();
     /// Return the final gamma1

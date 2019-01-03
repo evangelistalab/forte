@@ -58,9 +58,9 @@
 namespace forte {
 
 CASSCF::CASSCF(StateInfo state, std::shared_ptr<SCFInfo> scf_info,
-               std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
-               std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : state_(state), scf_info_(scf_info), options_(options), ints_(ints),
+               std::shared_ptr<ForteOptions> options,
+               std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ActiveSpaceIntegrals> as_ints )
+    : state_(state), scf_info_(scf_info), options_(options), ints_(as_ints->ints()),
       mo_space_info_(mo_space_info) {
     startup();
 }
@@ -242,8 +242,8 @@ double CASSCF::compute_energy() {
     // INSERT HERE
     // restransform integrals using DF_BASIS_MP2 for
     // consistent energies in correlation treatment
-
     ints_->update_orbitals(Ca, Cb);
+
     cas_ci_final();
     outfile->Printf("\n @E(CASSCF) = %18.12f \n", E_casscf_);
     psi::Process::environment.globals["CURRENT ENERGY"] = E_casscf_;
@@ -444,8 +444,7 @@ void CASSCF::cas_ci_final() {
     } else if (options_->get_str("CASSCF_CI_SOLVER") == "CAS") {
         set_up_fcimo();
     } else if (options_->get_str("CASSCF_CI_SOLVER") == "ACI") {
-        auto as_ints =
-            make_active_space_ints(mo_space_info_, ints_, "ACTIVE", {{"RESTRICTED_DOCC"}});
+        std::shared_ptr<ActiveSpaceIntegrals> as_ints = get_ci_integrals();
         AdaptiveCI aci(state_, scf_info_, options_, mo_space_info_, as_ints);
         aci.set_max_rdm(3);
         aci.set_quiet(quiet);
