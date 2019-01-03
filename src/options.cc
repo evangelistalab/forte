@@ -28,6 +28,7 @@
 
 #include "sci/aci.h"
 #include "sci/asci.h"
+#include "sci/tdaci.h"
 #include "orbital-helpers/avas.h"
 #include "orbital-helpers/ci-no/ci-no.h"
 #include "orbital-helpers/ci-no/mrci-no.h"

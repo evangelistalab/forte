@@ -37,19 +37,18 @@
 #include "psi4/libpsi4util/libpsi4util.h"
 #include "psi4/physconst.h"
 
-#include "../forte_options.h"
-#include "../ci_rdm/ci_rdms.h"
-#include "../ci_reference.h"
-#include "../fci/fci_integrals.h"
-#include "../mrpt2.h"
-#include "../orbital-helper/unpaired_density.h"
-#include "../determinant_hashvector.h"
-#include "../reference.h"
-#include "../sparse_ci/sparse_ci_solver.h"
-#include "../sparse_ci/determinant.h"
-#include "../orbital-helper/iao_builder.h"
-#include "../orbital-helper/localize.h"
-#include "aci.h"
+#include "forte_options.h"
+#include "ci_rdm/ci_rdms.h"
+#include "sparse_ci/ci_reference.h"
+#include "fci/fci_integrals.h"
+#include "orbital-helpers/unpaired_density.h"
+#include "sparse_ci/determinant_hashvector.h"
+#include "base_classes/reference.h"
+#include "sparse_ci/sparse_ci_solver.h"
+#include "sparse_ci/determinant.h"
+#include "orbital-helpers/iao_builder.h"
+#include "orbital-helpers/localize.h"
+#include "sci/aci.h"
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -59,7 +58,6 @@
 #define omp_get_num_threads() 1
 #endif
 
-namespace psi {
 namespace forte {
 
 class Reference;
@@ -71,7 +69,7 @@ void set_TDACI_options(ForteOptions& foptions);
  * @brief The TDACI class
  * This class implements an adaptive CI algorithm
  */
-class TDACI : public Wavefunction {
+class TDACI : public psi::Wavefunction {
   public:
     // ==> Class Constructor and Destructor <==
 
@@ -82,7 +80,7 @@ class TDACI : public Wavefunction {
      * @param ints A pointer to an allocated integral object
      * @param mo_space_info A pointer to the MOSpaceInfo object
      */
-    TDACI(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<ForteIntegrals> ints,
+    TDACI(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
                std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Destructor
@@ -95,7 +93,7 @@ class TDACI : public Wavefunction {
 
   private:
     std::shared_ptr<ForteIntegrals> ints_;
-    SharedWavefunction wfn_;      
+    psi::SharedWavefunction wfn_;      
     std::shared_ptr<MOSpaceInfo> mo_space_info_; 
     std::shared_ptr<FCIIntegrals> fci_ints_;
 
@@ -103,21 +101,21 @@ class TDACI : public Wavefunction {
 
     void renormalize_wfn( std::vector<double>& acoeffs );
 
-    void save_matrix(SharedMatrix mat, std::string str);
-    void save_vector(SharedVector vec, std::string str);
+    void save_matrix(psi::SharedMatrix mat, std::string str);
+    void save_vector(psi::SharedVector vec, std::string str);
     void save_vector(std::vector<double>& vec, std::string str);
     void save_vector(std::vector<size_t>& vec, std::string str);
     void save_vector(std::vector<std::string>& vec, std::string str);
 
-    void propogate_exact( SharedVector C0, SharedMatrix H);
-    void propogate_cn( SharedVector C0, SharedMatrix H);
-    void propogate_taylor1( SharedVector C0, SharedMatrix H);
-    void propogate_taylor2( SharedVector C0, SharedMatrix H);
-    void propogate_RK4( SharedVector C0, SharedMatrix H);
-    void propogate_QCN( SharedVector C0, SharedMatrix H);
-    void propogate_lanczos( SharedVector C0, SharedMatrix H);
+    void propogate_exact(psi::SharedVector C0, psi::SharedMatrix H);
+    void propogate_cn( psi::SharedVector C0, psi::SharedMatrix H);
+    void propogate_taylor1( psi::SharedVector C0, psi::SharedMatrix H);
+    void propogate_taylor2( psi::SharedVector C0, psi::SharedMatrix H);
+    void propogate_RK4( psi::SharedVector C0, psi::SharedMatrix H);
+    void propogate_QCN( psi::SharedVector C0, psi::SharedMatrix H);
+    void propogate_lanczos( psi::SharedVector C0, psi::SharedMatrix H);
 
-    void compute_tdaci_select(SharedVector C0, SharedMatrix H);
+    void compute_tdaci_select(psi::SharedVector C0, psi::SharedMatrix H);
     
     void propagate_exact_select( std::vector<double>& PQ_coeffs_r,std::vector<double>& PQ_coeffs_i, 
                                                             DeterminantHashVec& PQ_space, double dt);
@@ -127,7 +125,7 @@ class TDACI : public Wavefunction {
     // The core state determinant space
     DeterminantHashVec core_dets_;
     DeterminantHashVec ann_dets_;
-    std::vector<double> compute_occupation( SharedVector Cr, SharedVector Ci, std::vector<int>& orb);
+    std::vector<double> compute_occupation( psi::SharedVector Cr, psi::SharedVector Ci, std::vector<int>& orb);
     std::vector<double> compute_occupation( DeterminantHashVec& dets, std::vector<double>& Cr, std::vector<double>& Ci, std::vector<int>& orb);
 
     void get_PQ_space( DeterminantHashVec& P_space, std::vector<double>& P_coeffs_r, std::vector<double>& P_coeffs_i,
@@ -138,6 +136,5 @@ class TDACI : public Wavefunction {
 };
 
 } // namespace forte
-} // namespace psi
 
 #endif // _tdaci_h_

@@ -37,7 +37,8 @@
 #include "psi4/libmints/pointgrp.h"
 #include "psi4/libpsio/psio.hpp"
 
-#include "../helpers/printing.h"
+#include "helpers/printing.h"
+#include "helpers/helpers.h"
 #include "tdaci.h"
 
 using namespace psi;
@@ -52,7 +53,6 @@ extern void zheev( char* jobz, char* uplo, int* n, dcomplex* a, int* lda,
                 double* w, dcomplex* work, int* lwork, double* rwork, int* info );
 }
 
-namespace psi {
 namespace forte {
 
 //#ifdef _OPENMP
@@ -82,7 +82,7 @@ void set_TDACI_options(ForteOptions& foptions) {
     foptions.add_double("TDACI_PRESCREEN_THRESH", 1e-12, "Prescreening threshold");
 }
 
-TDACI::TDACI(SharedWavefunction ref_wfn, Options& options,
+TDACI::TDACI(psi::SharedWavefunction ref_wfn, psi::Options& options,
                        std::shared_ptr<ForteIntegrals> ints,
                        std::shared_ptr<MOSpaceInfo> mo_space_info)
     : Wavefunction(options), ints_(ints), mo_space_info_(mo_space_info) {
@@ -2052,4 +2052,4 @@ void TDACI::propagate_RK4_select(std::vector<double>& PQ_coeffs_r,std::vector<do
     //outfile->Printf("\n  Time spent propogating (RK4): %1.6f", total.get());
 }
 
-}}
+}
