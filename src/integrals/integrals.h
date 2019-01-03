@@ -108,6 +108,9 @@ class ForteIntegrals {
     ForteIntegrals(psi::Options& options, std::shared_ptr<psi::Wavefunction> ref_wfn,
                    std::shared_ptr<MOSpaceInfo> mo_space_info, IntegralSpinRestriction restricted);
 
+    /// Virtual destructor to enable deletion of a Derived* through a Base*
+    virtual ~ForteIntegrals() = default;
+
   public:
     // ==> Class Interface <==
 
