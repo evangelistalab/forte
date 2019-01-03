@@ -31,6 +31,7 @@
 #include <memory>
 
 #include "boost/format.hpp"
+
 #include <ambit/tensor.h>
 
 #include "psi4/libdpd/dpd.h"
@@ -41,41 +42,45 @@
 #include "psi4/psi4-dec.h"
 #include "psi4/psifiles.h"
 
-#include "sci/aci.h"
-#include "sci/asci.h"
 #include "base_classes/reference.h"
 #include "base_classes/scf_info.h"
-#include "helpers/blockedtensorfactory.h"
-#include "casscf/casscf.h"
-#include "cc/cc.h"
-#include "orbital-helpers/ci-no/ci-no.h"
-#include "orbital-helpers/ci-no/mrci-no.h"
-#include "sparse_ci/determinant_hashvector.h"
-#include "fci/fci_solver.h"
-#include "integrals/active_space_integrals.h"
-#include "sci/fci_mo.h"
-#include "finite_temperature/finite_temperature.h"
 #include "base_classes/mo_space_info.h"
-#include "sci/mrci.h"
-#include "mrdsrg-so/mrdsrg_so.h"
-#include "mrdsrg-so/so-mrdsrg.h"
-#include "mrdsrg-spin-adapted/dsrg_mrpt.h"
-#include "mrdsrg-spin-integrated/active_dsrgpt2.h"
-#include "mrdsrg-spin-integrated/dsrg_mrpt2.h"
-#include "mrdsrg-spin-integrated/dsrg_mrpt3.h"
-#include "mrdsrg-spin-integrated/mcsrgpt2_mo.h"
-#include "mrdsrg-spin-integrated/mrdsrg.h"
-#include "mrdsrg-spin-integrated/three_dsrg_mrpt2.h"
-#include "mrdsrg-spin-integrated/active_dsrgpt2.h"
-#include "mrdsrg-spin-integrated/dwms_mrpt2.h"
+#include "base_classes/state_info.h"
+
+#include "integrals/integrals.h"
+#include "integrals/active_space_integrals.h"
+
+#include "casscf/casscf.h"
+
 #include "orbital-helpers/localize.h"
 #include "orbital-helpers/es-nos.h"
 #include "orbital-helpers/mp2_nos.h"
 #include "orbital-helpers/semi_canonicalize.h"
+
+#include "sci/aci.h"
+#include "sci/asci.h"
+#include "sci/mrci.h"
+
+#include "cc/cc.h"
+#include "orbital-helpers/ci-no/ci-no.h"
+#include "orbital-helpers/ci-no/mrci-no.h"
+#include "mrdsrg-so/mrdsrg_so.h"
+#include "mrdsrg-so/so-mrdsrg.h"
+#include "mrdsrg-spin-adapted/dsrg_mrpt.h"
+#include "mrdsrg-spin-integrated/active_dsrgpt2.h"
+#include "mrdsrg-spin-integrated/dsrg_mrpt3.h"
+#include "mrdsrg-spin-integrated/mcsrgpt2_mo.h"
+#include "mrdsrg-spin-integrated/mrdsrg.h"
+#include "mrdsrg-spin-integrated/dwms_mrpt2.h"
+//#include "mrdsrg-spin-integrated/dsrg_mrpt2.h"
+//#include "mrdsrg-spin-integrated/three_dsrg_mrpt2.h"
+//#include "mrdsrg-spin-integrated/active_dsrgpt2.h"
+
 #include "pci/ewci.h"
 #include "pci/pci.h"
 #include "pci/pci_hashvec.h"
 #include "pci/pci_simple.h"
+
 #include "v2rdm/v2rdm.h"
 #include "helpers/timer.h"
 
@@ -115,9 +120,9 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
 
     if (options.get_bool("CASSCF_REFERENCE") == true or options.get_str("JOB_TYPE") == "CASSCF") {
         auto as_ints = make_active_space_ints(mo_space_info, ints, "ACTIVE", {{"RESTRICTED_DOCC"}});
-        auto casscf =
-            std::make_shared<CASSCF>(state, std::make_shared<SCFInfo>(ref_wfn),
-                                     std::make_shared<ForteOptions>(options), mo_space_info, as_ints);
+        auto casscf = std::make_shared<CASSCF>(state, std::make_shared<SCFInfo>(ref_wfn),
+                                               std::make_shared<ForteOptions>(options),
+                                               mo_space_info, as_ints);
         final_energy = casscf->compute_energy();
     }
     if (options.get_bool("MP2_NOS")) {
@@ -334,9 +339,9 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
     if (options.get_str("JOB_TYPE") == "DSRG_MRPT") {
         std::string cas_type = options.get_str("CAS_TYPE");
         int max_rdm_level = (options.get_str("THREEPDC") == "ZERO") ? 2 : 3;
-        
-        auto ci = make_active_space_solver(cas_type, state, scf_info, mo_space_info, ints,
-                                           forte_options);
+
+        auto ci =
+            make_active_space_solver(cas_type, state, scf_info, mo_space_info, ints, forte_options);
         ci->compute_energy();
         Reference reference = ci->get_reference();
 
@@ -457,9 +462,9 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
             if (i[0] == i[1])
                 value = 1.0;
         });
-    
+
         Reference reference;
-        
+
         if (cas_type == "CAS") {
 
             if (options["AVG_STATE"].size() != 0) {
@@ -508,7 +513,6 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
             ci->compute_energy();
             reference = ci->get_reference();
 
-            
             SemiCanonical semi(std::make_shared<ForteOptions>(options), ints, mo_space_info);
             semi.semicanonicalize(reference, max_rdm_level);
             Ua = semi.Ua_t();
@@ -602,8 +606,8 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
     if (options.get_str("JOB_TYPE") == "SOMRDSRG") {
         std::string cas_type = options.get_str("CAS_TYPE");
         int max_rdm_level = (options.get_str("THREEPDC") == "ZERO") ? 2 : 3;
-        auto ci = make_active_space_solver(cas_type, state, scf_info, mo_space_info, ints,
-                                           forte_options);
+        auto ci =
+            make_active_space_solver(cas_type, state, scf_info, mo_space_info, ints, forte_options);
         ci->set_max_rdm_level(max_rdm_level);
         ci->compute_energy();
         Reference reference = ci->get_reference();

@@ -58,8 +58,8 @@
 namespace forte {
 
 CASSCF::CASSCF(StateInfo state, std::shared_ptr<SCFInfo> scf_info,
-               std::shared_ptr<ForteOptions> options,
-               std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ActiveSpaceIntegrals> as_ints )
+               std::shared_ptr<ForteOptions> options, std::shared_ptr<MOSpaceInfo> mo_space_info,
+               std::shared_ptr<ActiveSpaceIntegrals> as_ints)
     : state_(state), scf_info_(scf_info), options_(options), ints_(as_ints->ints()),
       mo_space_info_(mo_space_info) {
     startup();

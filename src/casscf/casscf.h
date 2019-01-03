@@ -45,7 +45,7 @@
 
 namespace forte {
 
-//class ActiveSpaceIntegrals;
+// class ActiveSpaceIntegrals;
 class SCFInfo;
 
 class CASSCF : public ActiveSpaceSolver {
@@ -62,8 +62,9 @@ class CASSCF : public ActiveSpaceSolver {
      * This reference has a nice algorithmic flowchart.  Look it up
      *
      */
-    CASSCF(StateInfo state, std::shared_ptr<forte::SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
-           std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ActiveSpaceIntegrals> as_ints);
+    CASSCF(StateInfo state, std::shared_ptr<forte::SCFInfo> scf_info,
+           std::shared_ptr<ForteOptions> options, std::shared_ptr<MOSpaceInfo> mo_space_info,
+           std::shared_ptr<ActiveSpaceIntegrals> as_ints);
     /// Use daniels code to compute Orbital optimization
     // void compute_casscf_soscf();
     /// Return the final gamma1
@@ -72,13 +73,14 @@ class CASSCF : public ActiveSpaceSolver {
     ambit::Tensor gamma2() { return gamma2_; }
     double compute_energy() override;
 
-    void set_options( std::shared_ptr<ForteOptions> options) override{};
+    void set_options(std::shared_ptr<ForteOptions>) override{};
 
     /// Return a reference object
     Reference get_reference() override;
 
     /// check the cas_ci energy with spin-free RDM
     double cas_check(Reference cas);
+
   private:
     /// The state to calculate
     StateInfo state_;
@@ -185,6 +187,6 @@ class CASSCF : public ActiveSpaceSolver {
     std::vector<std::vector<std::shared_ptr<FCIVector>>> CISolutions_;
     std::shared_ptr<ActiveSpaceIntegrals> get_ci_integrals();
 };
-}
+} // namespace forte
 
 #endif // CASSCF_H
