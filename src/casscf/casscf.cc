@@ -242,7 +242,7 @@ double CASSCF::compute_energy() {
     // INSERT HERE
     // restransform integrals using DF_BASIS_MP2 for
     // consistent energies in correlation treatment
-    ints_->update_orbitals(Ca, Cb);
+    //    ints_->update_orbitals(Ca, Cb);
 
     cas_ci_final();
     outfile->Printf("\n @E(CASSCF) = %18.12f \n", E_casscf_);
@@ -360,8 +360,8 @@ void CASSCF::cas_ci() {
     } else if (options_->get_str("CASSCF_CI_SOLVER") == "CAS") {
         set_up_fcimo();
     } else if (options_->get_str("CASSCF_CI_SOLVER") == "ACI") {
-        std::shared_ptr<ActiveSpaceIntegrals> fci_ints = get_ci_integrals();
-        AdaptiveCI aci(state_, scf_info_, options_, mo_space_info_, fci_ints);
+        as_ints_ = get_ci_integrals();
+        AdaptiveCI aci(state_, scf_info_, options_, mo_space_info_, as_ints_);
         aci.set_max_rdm(2);
         aci.set_quiet(quiet);
         aci.compute_energy();
@@ -444,8 +444,8 @@ void CASSCF::cas_ci_final() {
     } else if (options_->get_str("CASSCF_CI_SOLVER") == "CAS") {
         set_up_fcimo();
     } else if (options_->get_str("CASSCF_CI_SOLVER") == "ACI") {
-        std::shared_ptr<ActiveSpaceIntegrals> as_ints = get_ci_integrals();
-        AdaptiveCI aci(state_, scf_info_, options_, mo_space_info_, as_ints);
+        as_ints_ = get_ci_integrals();
+        AdaptiveCI aci(state_, scf_info_, options_, mo_space_info_, as_ints_);
         aci.set_max_rdm(3);
         aci.set_quiet(quiet);
         aci.compute_energy();
@@ -692,71 +692,6 @@ ambit::Tensor CASSCF::transform_integrals() {
     return active_int;
 }
 void CASSCF::set_up_fci() {
-    psi::Dimension active_dim = mo_space_info_->get_dimension("ACTIVE");
-    std::vector<size_t> rdocc = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
-    std::vector<size_t> active = mo_space_info_->get_corr_abs_mo("ACTIVE");
-
-    int charge = psi::Process::environment.molecule()->molecular_charge();
-    if (options_->has_changed("CHARGE")) {
-        charge = options_->get_int("CHARGE");
-    }
-
-    int nel = 0;
-    int natom = psi::Process::environment.molecule()->natom();
-    for (int i = 0; i < natom; i++) {
-        nel += static_cast<int>(psi::Process::environment.molecule()->Z(i));
-    }
-    // If the charge has changed, recompute the number of electrons
-    // Or if you cannot find the number of electrons
-    nel -= charge;
-
-    int multiplicity = psi::Process::environment.molecule()->multiplicity();
-    if (options_->has_changed("MULTIPLICITY")) {
-        multiplicity = options_->get_int("MULTIPLICITY");
-    }
-    if (options_->has_changed("MULTIPLICITY") && options_->has_changed("CASSCF_MULTIPLICITY")) {
-        multiplicity = options_->get_int("CASSCF_MULTIPLICITY");
-    }
-
-    // Default: lowest spin solution
-    int twice_ms = (multiplicity + 1) % 2;
-
-    if (options_->has_changed("MS")) {
-        twice_ms = std::round(2.0 * options_->get_double("MS"));
-    }
-
-    if (twice_ms < 0) {
-        outfile->Printf("\n  Ms must be no less than 0.");
-        outfile->Printf("\n  Ms = %2d, MULTIPLICITY = %2d", twice_ms, multiplicity);
-        outfile->Printf("\n  Check (specify) Ms value (component of multiplicity)! \n");
-        throw psi::PSIEXCEPTION("Ms must be no less than 0. Check output for details.");
-    }
-
-    if (options_->get_int("PRINT")) {
-        print_h2("FCI Summary");
-        outfile->Printf("\n    Number of electrons: %d", nel);
-        outfile->Printf("\n    Charge: %d", charge);
-        outfile->Printf("\n    Multiplicity: %d", multiplicity);
-        outfile->Printf("\n    Davidson subspace max dim: %d",
-                        options_->get_int("DL_SUBSPACE_PER_ROOT"));
-        outfile->Printf("\n    Davidson subspace min dim: %d",
-                        options_->get_int("DL_COLLAPSE_PER_ROOT"));
-        if (twice_ms % 2 == 0) {
-            outfile->Printf("\n    M_s: %d", twice_ms / 2);
-        } else {
-            outfile->Printf("\n    M_s: %d/2", twice_ms);
-        }
-    }
-
-    if (((nel - twice_ms) % 2) != 0)
-        throw psi::PSIEXCEPTION("\n\n  FCI: Wrong value of M_s.\n\n");
-
-    // TODO: cleanup
-    //    FCISolver fcisolver(active_dim, rdocc, active, na, nb, multiplicity,
-    //                        options_->get_int("ROOT_SYM"), ints_, mo_space_info_,
-    //                        options_->get_int("NTRIAL_PER_ROOT"), options_->get_int("PRINT"),
-    //                        options_->psi_options());
-    //  Cannot be changed to:
     auto fcisolver =
         make_active_space_solver("FCI", state_, scf_info_, mo_space_info_, ints_, options_);
     fcisolver->set_max_rdm_level(3);
@@ -765,21 +700,6 @@ void CASSCF::set_up_fci() {
     std::shared_ptr<ActiveSpaceIntegrals> fci_ints = get_ci_integrals();
     fcisolver->set_active_space_integrals(fci_ints);
     E_casscf_ = fcisolver->compute_energy();
-
-    // tweak some options
-    //    fcisolver.set_max_rdm_level(3);
-    //    fcisolver.set_nroot(options_->get_int("NROOT"));
-    //    fcisolver.set_root(options_->get_int("ROOT"));
-    //    fcisolver.set_test_rdms(options_->get_bool("FCI_TEST_RDMS"));
-    //    fcisolver.set_fci_iterations(options_->get_int("FCI_MAXITER"));
-    //    fcisolver.set_collapse_per_root(options_->get_int("DL_COLLAPSE_PER_ROOT"));
-    //    fcisolver.set_subspace_per_root(options_->get_int("DL_SUBSPACE_PER_ROOT"));
-    //    fcisolver.set_print_no(false);
-
-    //    / Get the CIVector for each iteration
-    //    std::vector<std::shared_ptr<FCIVector>> FCIVectorSolution(1);
-    //    FCIVectorSolution.push_back(fcisolver->get_FCIWFN());
-    //    CISolutions_.push_back(FCIVectorSolution); // TODO: disabled since it is not used
 
     cas_ref_ = fcisolver->get_reference();
 }
