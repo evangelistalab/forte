@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -46,8 +46,6 @@ MOSpaceInfo::MOSpaceInfo(psi::Dimension& nmopi) : nirrep_(nmopi.n()), nmopi_(nmo
         composite_spaces_[es] = {es};
     }
 }
-
-MOSpaceInfo::~MOSpaceInfo() {}
 
 size_t MOSpaceInfo::size(const std::string& space) {
     size_t s = 0;

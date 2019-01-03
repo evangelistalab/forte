@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -106,8 +106,10 @@ using SpaceInfo = std::pair<psi::Dimension, std::vector<MOInfo>>;
  */
 class MOSpaceInfo {
   public:
+    // ==> Class Constructor <==
     MOSpaceInfo(psi::Dimension& nmopi);
-    ~MOSpaceInfo();
+
+    // ==> Class Interface <==
 
     /// @return The names of orbital spaces
     std::vector<std::string> space_names() const { return space_names_; }
@@ -132,13 +134,13 @@ class MOSpaceInfo {
     size_t nirrep() { return nirrep_; }
 
   private:
-    std::pair<SpaceInfo, bool> read_mo_space(const std::string& space, psi::Options& options);
+    // ==> Class Data <==
 
     /// The number of irreducible representations
     size_t nirrep_;
     /// The number of molecular orbitals per irrep
     psi::Dimension nmopi_;
-    /// The mo space info
+    /// Information about each elementary space stored in a map
     std::map<std::string, SpaceInfo> mo_spaces_;
 
     std::vector<std::string> elementary_spaces_{"FROZEN_DOCC", "RESTRICTED_DOCC", "ACTIVE",
@@ -158,10 +160,16 @@ class MOSpaceInfo {
         {"GENERALIZED PARTICLE", {"ACTIVE", "RESTRICTED_UOCC"}},
         {"CORE", {"RESTRICTED_DOCC"}},
         {"VIRTUAL", {"RESTRICTED_UOCC"}}};
+
     /// The names of the orbital spaces
     std::vector<std::string> space_names_;
+
     /// The map from all MO to the correlated MOs (excludes frozen core/virtual)
     std::vector<size_t> mo_to_cmo_;
+
+    // ==> Class functions <==
+    /// Read information about each elementary space from the psi Options object
+    std::pair<SpaceInfo, bool> read_mo_space(const std::string& space, psi::Options& options);
 };
 
 std::shared_ptr<MOSpaceInfo> make_mo_space_info(std::shared_ptr<psi::Wavefunction> ref_wfn,

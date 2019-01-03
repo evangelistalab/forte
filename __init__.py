@@ -50,22 +50,20 @@ forte_options = forte.ForteOptions();
 register_forte_options(forte_options) # py-side
 forte.read_options(forte_options) # c++-side
 
-# If we are running psi4, puths the options defined in forte_options to psi
+# If we are running psi4, push the options defined in forte_options to psi
 if 'psi4' in sys.modules:
     psi_options = psi4.core.get_options()
     psi_options.set_current_module('FORTE')
     forte_options.push_options_to_psi4(psi_options)
 
+    # Here we add array options since they are not yet supporte in the ForteOptions class
 #    /*- Number of frozen occupied orbitals per irrep (in Cotton order) -*/
     psi_options.add_array("FROZEN_DOCC");
-
 #    /*- Number of restricted doubly occupied orbitals per irrep (in Cotton
 #     * order) -*/
     psi_options.add_array("RESTRICTED_DOCC");
-
 #    /*- Number of active orbitals per irrep (in Cotton order) -*/
     psi_options.add_array("ACTIVE");
-
 #    /*- Number of restricted unoccupied orbitals per irrep (in Cotton order)
 #     * -*/
     psi_options.add_array("RESTRICTED_UOCC");
@@ -80,15 +78,10 @@ if 'psi4' in sys.modules:
 #    -*/
     psi_options.add_array("ROTATE_MOS");
 
-#    //////////////////////////////////////////////////////////////
 #    /// OPTIONS FOR STATE-AVERAGE CASCI/CASSCF
-#    //////////////////////////////////////////////////////////////
 #    /*- An array of states [[irrep1, multi1, nstates1], [irrep2, multi2, nstates2], ...] -*/
     psi_options.add_array("AVG_STATE");
 #    /*- An array of weights [[w1_1, w1_2, ..., w1_n], [w2_1, w2_2, ..., w2_n], ...] -*/
     psi_options.add_array("AVG_WEIGHT");
 #    /*- Number of roots per irrep (in Cotton order) -*/
     psi_options.add_array("NROOTPI");
-
-
-

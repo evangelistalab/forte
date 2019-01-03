@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -209,8 +209,8 @@ AdaptiveCI::AdaptiveCI(StateInfo state, std::shared_ptr<SCFInfo> scf_info,
                        std::shared_ptr<ForteOptions> options,
                        std::shared_ptr<MOSpaceInfo> mo_space_info,
                        std::shared_ptr<ActiveSpaceIntegrals> as_ints)
-    : ActiveSpaceSolver(state, mo_space_info, as_ints), scf_info_(scf_info), options_(options),
-      state_(state) {
+    : ActiveSpaceSolver(state, mo_space_info, as_ints), scf_info_(scf_info), state_(state),
+      options_(options) {
 
     mo_symmetry_ = mo_space_info_->symmetry("ACTIVE");
     sigma_ = options_->get_double("SIGMA");
