@@ -31,6 +31,7 @@
 #include "base_classes/mo_space_info.h"
 #include "base_classes/forte_options.h"
 #include "fci/fci_solver.h"
+#include "casscf/casscf.h"
 #include "sci/aci.h"
 #include "sci/asci.h"
 #include "sci/fci_mo.h"
@@ -83,6 +84,8 @@ std::unique_ptr<ActiveSpaceSolver> make_active_space_solver(
         solver = std::make_unique<FCI_MO>(scf_info, options, ints, mo_space_info, as_ints);
     } else if (type == "ASCI") {
         solver = std::make_unique<ASCI>(state, scf_info, options, mo_space_info, as_ints);
+    } else if (type == "CASSCF") {
+        solver = std::make_unique<CASSCF>(state, scf_info, options, mo_space_info, as_ints);
     } else {
         throw psi::PSIEXCEPTION("make_active_space_solver: type = " + type + " was not recognized");
     }
