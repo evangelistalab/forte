@@ -78,13 +78,13 @@ void export_ForteOptions(py::module& m) {
 
 /// Export the ActiveSpaceSolver class
 void export_ActiveSpaceSolver(py::module& m) {
-    py::class_<ActiveSpaceSolver, std::shared_ptr<ActiveSpaceSolver>>(m, "ActiveSpaceSolver")
+    py::class_<ActiveSpaceSolver>(m, "ActiveSpaceSolver")
         .def("compute_energy", &ActiveSpaceSolver::compute_energy);
 }
 
 /// Export the FCISolver class
 void export_FCISolver(py::module& m) {
-    py::class_<FCISolver, std::shared_ptr<FCISolver>>(m, "FCISolver")
+    py::class_<FCISolver>(m, "FCISolver")
         .def(py::init<StateInfo, std::shared_ptr<MOSpaceInfo>,
                       std::shared_ptr<ActiveSpaceIntegrals>>())
         .def("compute_energy", &FCISolver::compute_energy);

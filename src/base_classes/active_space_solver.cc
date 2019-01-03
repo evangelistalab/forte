@@ -67,22 +67,22 @@ void ActiveSpaceSolver::set_max_rdm_level(int value) { max_rdm_level_ = value; }
 
 void ActiveSpaceSolver::set_print(int level) { print_ = level; }
 
-std::shared_ptr<ActiveSpaceSolver> make_active_space_solver(
+std::unique_ptr<ActiveSpaceSolver> make_active_space_solver(
     const std::string& type, StateInfo state, std::shared_ptr<SCFInfo> scf_info,
     std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ForteIntegrals> ints,
     std::shared_ptr<ForteOptions> options) {
 
     auto as_ints = make_active_space_ints(mo_space_info, ints, "ACTIVE", {{"RESTRICTED_DOCC"}});
 
-    std::shared_ptr<ActiveSpaceSolver> solver;
+    std::unique_ptr<ActiveSpaceSolver> solver;
     if (type == "FCI") {
-        solver = std::make_shared<FCISolver>(state, mo_space_info, as_ints);
+        solver = std::make_unique<FCISolver>(state, mo_space_info, as_ints);
     } else if (type == "ACI") {
-        solver = std::make_shared<AdaptiveCI>(state, scf_info, options, mo_space_info, as_ints);
+        solver = std::make_unique<AdaptiveCI>(state, scf_info, options, mo_space_info, as_ints);
     } else if (type == "CAS") {
-        solver = std::make_shared<FCI_MO>(scf_info, options, ints, mo_space_info, as_ints);
+        solver = std::make_unique<FCI_MO>(scf_info, options, ints, mo_space_info, as_ints);
     } else if (type == "ASCI") {
-        solver = std::make_shared<ASCI>(state, scf_info, options, mo_space_info, as_ints);
+        solver = std::make_unique<ASCI>(state, scf_info, options, mo_space_info, as_ints);
     } else {
         throw psi::PSIEXCEPTION("make_active_space_solver: type = " + type + " was not recognized");
     }
