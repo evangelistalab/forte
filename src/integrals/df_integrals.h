@@ -32,8 +32,6 @@
 
 #include "integrals.h"
 
-
-
 class Tensor;
 
 namespace forte {
@@ -48,8 +46,8 @@ class MOSpaceInfo;
  */
 class DFIntegrals : public ForteIntegrals {
   public:
-    DFIntegrals(psi::Options& options, psi::SharedWavefunction ref_wfn,
-                IntegralSpinRestriction restricted, std::shared_ptr<MOSpaceInfo> mo_space_info);
+    DFIntegrals(psi::Options& options, std::shared_ptr<psi::Wavefunction> ref_wfn,
+                std::shared_ptr<MOSpaceInfo> mo_space_info, IntegralSpinRestriction restricted);
     virtual double aptei_aa(size_t p, size_t q, size_t r, size_t s);
     virtual double aptei_ab(size_t p, size_t q, size_t r, size_t s);
     virtual double aptei_bb(size_t p, size_t q, size_t r, size_t s);
@@ -79,7 +77,8 @@ class DFIntegrals : public ForteIntegrals {
                          bool alpha2);
     virtual ~DFIntegrals();
 
-    virtual void make_fock_matrix(std::shared_ptr<psi::Matrix> gamma_a, std::shared_ptr<psi::Matrix> gamma_b);
+    virtual void make_fock_matrix(std::shared_ptr<psi::Matrix> gamma_a,
+                                  std::shared_ptr<psi::Matrix> gamma_b);
 
     virtual size_t nthree() const { return nthree_; }
 
@@ -100,6 +99,5 @@ class DFIntegrals : public ForteIntegrals {
 };
 
 } // namespace forte
-
 
 #endif // _df_integrals_h_

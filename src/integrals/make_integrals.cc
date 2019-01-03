@@ -43,29 +43,34 @@
 
 namespace forte {
 
-std::shared_ptr<ForteIntegrals> make_forte_integrals(psi::SharedWavefunction ref_wfn,
+std::shared_ptr<ForteIntegrals> make_forte_integrals(std::shared_ptr<psi::Wavefunction> ref_wfn,
                                                      psi::Options& options,
                                                      std::shared_ptr<MOSpaceInfo> mo_space_info) {
     timer int_timer("Integrals");
     std::shared_ptr<ForteIntegrals> ints;
     if (options.get_str("INT_TYPE") == "CHOLESKY") {
-        ints =
-            std::make_shared<CholeskyIntegrals>(options, ref_wfn, UnrestrictedMOs, mo_space_info);
+        ints = std::make_shared<CholeskyIntegrals>(options, ref_wfn, mo_space_info,
+                                                   IntegralSpinRestriction::Restricted);
     } else if (options.get_str("INT_TYPE") == "DF") {
-        ints = std::make_shared<DFIntegrals>(options, ref_wfn, UnrestrictedMOs, mo_space_info);
+        ints = std::make_shared<DFIntegrals>(options, ref_wfn, mo_space_info,
+                                             IntegralSpinRestriction::Restricted);
     } else if (options.get_str("INT_TYPE") == "DISKDF") {
-        ints = std::make_shared<DISKDFIntegrals>(options, ref_wfn, UnrestrictedMOs, mo_space_info);
+        ints = std::make_shared<DISKDFIntegrals>(options, ref_wfn, mo_space_info,
+                                                 IntegralSpinRestriction::Restricted);
     } else if (options.get_str("INT_TYPE") == "CONVENTIONAL") {
-        ints = std::make_shared<ConventionalIntegrals>(options, ref_wfn, UnrestrictedMOs,
-                                                       mo_space_info);
+        ints = std::make_shared<ConventionalIntegrals>(options, ref_wfn, mo_space_info,
+                                                       IntegralSpinRestriction::Restricted);
     } else if (options.get_str("INT_TYPE") == "DISTDF") {
 #ifdef HAVE_GA
-        ints = std::make_shared<DistDFIntegrals>(options, ref_wfn, UnrestrictedMOs, mo_space_info);
+        ints = std::make_shared<DistDFIntegrals>(options, ref_wfn, mo_space_info,
+                                                 IntegralSpinRestriction::Restricted);
 #endif
     } else if (options.get_str("INT_TYPE") == "CUSTOM") {
-        ints = std::make_shared<CustomIntegrals>(options, ref_wfn, UnrestrictedMOs, mo_space_info);
+        ints = std::make_shared<CustomIntegrals>(options, ref_wfn, mo_space_info,
+                                                 IntegralSpinRestriction::Restricted);
     } else if (options.get_str("INT_TYPE") == "OWNINTEGRALS") {
-        ints = std::make_shared<OwnIntegrals>(options, ref_wfn, UnrestrictedMOs, mo_space_info);
+        ints = std::make_shared<OwnIntegrals>(options, ref_wfn, mo_space_info,
+                                              IntegralSpinRestriction::Restricted);
     } else {
         psi::outfile->Printf("\n Please check your int_type. Choices are CHOLESKY, DF, DISKDF , "
                              "DISTRIBUTEDDF Effective, CONVENTIONAL or OwnIntegrals");

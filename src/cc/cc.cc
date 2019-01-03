@@ -31,6 +31,8 @@
 #include <map>
 #include <vector>
 
+#include "psi4/libmints/wavefunction.h"
+
 #include "cc/cc.h"
 #include "base_classes/mo_space_info.h"
 

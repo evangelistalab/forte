@@ -154,7 +154,7 @@ MP2_NOS::MP2_NOS(std::shared_ptr<psi::Wavefunction> wfn, psi::Options& options,
             value = ints->oei_b(i[0], i[1]);
     });
 
-    G1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& , double& value) {
+    G1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
         value = i[0] == i[1] ? 1.0 : 0.0;
     });
 
@@ -384,11 +384,17 @@ MP2_NOS::MP2_NOS(std::shared_ptr<psi::Wavefunction> wfn, psi::Options& options,
     }
 
     // Retransform the integrals in the new basis
-    ints->rotate_orbitals(Ua, Ua); // TODO: be careful here
+    // TODO: this class should read this information (ints->spin_restriction()) early and compute
+    // only one set of MOs
+    auto spin_restriction = ints->spin_restriction();
+    if (spin_restriction == IntegralSpinRestriction::Restricted) {
+        ints->rotate_orbitals(Ua, Ua);
+    } else {
+        ints->rotate_orbitals(Ua, Ub);
+    }
 
     BlockedTensor::set_expert_mode(false);
     // Erase all mo_space information
     BlockedTensor::reset_mo_spaces();
 }
-}
-
+} // namespace forte

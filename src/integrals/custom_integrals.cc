@@ -26,7 +26,6 @@
  * @END LICENSE
  */
 
-
 #include <cmath>
 #include <fstream>
 
@@ -57,10 +56,10 @@ namespace forte {
  * @param restricted - type of integral transformation
  * @param resort_frozen_core -
  */
-CustomIntegrals::CustomIntegrals(psi::Options& options, psi::SharedWavefunction ref_wfn,
-                                 IntegralSpinRestriction restricted,
-                                 std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : ForteIntegrals(options, ref_wfn, restricted, mo_space_info) {
+CustomIntegrals::CustomIntegrals(psi::Options& options, std::shared_ptr<psi::Wavefunction> ref_wfn,
+                                 std::shared_ptr<MOSpaceInfo> mo_space_info,
+                                 IntegralSpinRestriction restricted)
+    : ForteIntegrals(options, ref_wfn, mo_space_info, restricted) {
     integral_type_ = Custom;
     print_info();
     outfile->Printf("\n  Using Custom integrals\n\n");
@@ -291,8 +290,7 @@ void CustomIntegrals::gather_integrals() {
     //    }
 }
 
-void CustomIntegrals::custom_integrals_allocate(int norb,
-                                                const std::vector<int>& orbsym) {
+void CustomIntegrals::custom_integrals_allocate(int norb, const std::vector<int>& orbsym) {
     auto result = std::max_element(orbsym.begin(), orbsym.end());
     nirrep_ = *result; // set the number of irreps
     nso_ = norb;
@@ -380,7 +378,8 @@ void CustomIntegrals::resort_four(std::vector<double>& tei, std::vector<size_t>&
     temp_ints.swap(tei);
 }
 
-void CustomIntegrals::make_fock_matrix(std::shared_ptr<psi::Matrix> gamma_a, std::shared_ptr<psi::Matrix> gamma_b) {
+void CustomIntegrals::make_fock_matrix(std::shared_ptr<psi::Matrix> gamma_a,
+                                       std::shared_ptr<psi::Matrix> gamma_b) {
     for (size_t p = 0; p < ncmo_; ++p) {
         for (size_t q = 0; q < ncmo_; ++q) {
             fock_matrix_a_[p * ncmo_ + q] = oei_a(p, q);
@@ -417,4 +416,3 @@ void CustomIntegrals::make_fock_matrix(std::shared_ptr<psi::Matrix> gamma_a, std
     }
 }
 } // namespace forte
-

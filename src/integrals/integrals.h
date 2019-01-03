@@ -30,11 +30,11 @@
 #ifndef _integrals_h_
 #define _integrals_h_
 
-#include <iostream>
+//#include <iostream>
 #include <vector>
 
 #include "psi4/libmints/dimension.h"
-#include "psi4/libmints/wavefunction.h"
+//#include "psi4/libmints/wavefunction.h"
 #include "ambit/blocked_tensor.h"
 
 class Tensor;
@@ -58,7 +58,7 @@ class MOSpaceInfo;
  *
  * This is used to distinguish between restricted/unrestricted computations
  */
-enum IntegralSpinRestriction { RestrictedMOs, UnrestrictedMOs };
+enum class IntegralSpinRestriction { Restricted, Unrestricted };
 
 /**
  * @brief The IntegralType enum
@@ -66,12 +66,6 @@ enum IntegralSpinRestriction { RestrictedMOs, UnrestrictedMOs };
  * This decides the type of integral used in a Forte computation
  */
 enum IntegralType { Conventional, DF, Cholesky, DiskDF, DistDF, Own, Custom };
-
-/**
- * @brief Add the options that control the integral class
- * @param foptions
- */
-void set_INT_options(ForteOptions& foptions);
 
 /**
  * @brief The ForteIntegrals class is a base class for transforming and storing MO integrals
@@ -106,7 +100,7 @@ class ForteIntegrals {
      * @param mo_space_info The MOSpaceInfo object
      */
     ForteIntegrals(psi::Options& options, std::shared_ptr<psi::Wavefunction> ref_wfn,
-                   IntegralSpinRestriction restricted, std::shared_ptr<MOSpaceInfo> mo_space_info);
+                   std::shared_ptr<MOSpaceInfo> mo_space_info, IntegralSpinRestriction restricted);
 
     /// Destructor
     virtual ~ForteIntegrals();
@@ -115,69 +109,69 @@ class ForteIntegrals {
     // ==> Class Interface <==
 
     /// Return Ca
-    std::shared_ptr<psi::Matrix> Ca() const { return Ca_; }
+    std::shared_ptr<psi::Matrix> Ca() const;
     /// Return Cb
-    std::shared_ptr<psi::Matrix> Cb() const { return Cb_; }
+    std::shared_ptr<psi::Matrix> Cb() const;
     /// Return nuclear repulsion energy
-    double nuclear_repulsion_energy() const { return nucrep_; }
+    double nuclear_repulsion_energy() const;
 
     /// temporary solution for not having a Wavefunction
-    std::shared_ptr<psi::Wavefunction> wfn() { return wfn_; }
+    std::shared_ptr<psi::Wavefunction> wfn();
     /// temporary solution for basisset
-    std::shared_ptr<psi::BasisSet> basisset() { return wfn_->basisset(); }
+    std::shared_ptr<psi::BasisSet> basisset();
     /// temporary solution for get_basisset
-    std::shared_ptr<psi::BasisSet> get_basisset(std::string str) { return wfn_->get_basisset(str); }
+    std::shared_ptr<psi::BasisSet> get_basisset(std::string str);
     /// temporary solution for aotoso
-    std::shared_ptr<psi::Matrix> aotoso() { return wfn_->aotoso(); }
+    std::shared_ptr<psi::Matrix> aotoso();
     /// temporary solution for Ca_subset
-    std::shared_ptr<psi::Matrix> Ca_subset(std::string str) { return wfn_->Ca_subset(str); }
+    std::shared_ptr<psi::Matrix> Ca_subset(std::string str);
 
     /// Return the total number of molecular orbitals (this number includes frozen MOs)
-    size_t nmo() const { return nmo_; }
+    size_t nmo() const;
 
     /// Return the number of irreducible representations
-    int nirrep() const { return nirrep_; }
+    int nirrep() const;
 
     /// Return the number of frozen core orbitals per irrep
-    psi::Dimension& frzcpi() { return frzcpi_; }
+    psi::Dimension& frzcpi();
     /// Return the number of frozen virtual orbitals per irrep
-    psi::Dimension& frzvpi() { return frzvpi_; }
+    psi::Dimension& frzvpi();
 
     /// The number of correlated MOs per irrep (non frozen).  This is nmopi - nfzcpi - nfzvpi.
-    psi::Dimension& ncmopi() { return ncmopi_; }
+    psi::Dimension& ncmopi();
 
     /// Return the total number of correlated molecular orbitals (this number excludes frozen MOs)
-    size_t ncmo() const { return ncmo_; }
+    size_t ncmo() const;
 
     /// Set printing level
-    void set_print(int print) { print_ = print; }
+    void set_print(int print);
 
     /// Return the number of auxiliary functions
     virtual size_t nthree() const = 0;
 
     /// Return the frozen core energy
-    double frozen_core_energy() { return frozen_core_energy_; }
+    double frozen_core_energy();
 
     /// Scalar component of the Hamiltonian
-    double scalar() const { return scalar_; }
+    double scalar() const;
 
     /// The alpha one-electron integrals
-    double oei_a(size_t p, size_t q) { return one_electron_integrals_a_[p * aptei_idx_ + q]; }
+    double oei_a(size_t p, size_t q) const;
 
     /// The beta one-electron integrals
-    double oei_b(size_t p, size_t q) { return one_electron_integrals_b_[p * aptei_idx_ + q]; }
+    double oei_b(size_t p, size_t q) const;
 
     /// Get the alpha fock matrix elements
-    double get_fock_a(size_t p, size_t q) { return fock_matrix_a_[p * aptei_idx_ + q]; }
+    double get_fock_a(size_t p, size_t q) const;
 
     /// Get the beta fock matrix elements
-    double get_fock_b(size_t p, size_t q) { return fock_matrix_b_[p * aptei_idx_ + q]; }
+    double get_fock_b(size_t p, size_t q) const;
 
     /// Get the alpha fock matrix in std::vector format
-    std::vector<double> get_fock_a() const { return fock_matrix_a_; }
+    std::vector<double> get_fock_a() const;
 
     /// Get the beta fock matrix in std::vector format
-    std::vector<double> get_fock_b() const { return fock_matrix_b_; }
+    std::vector<double> get_fock_b() const;
 
     /// Set the alpha fock matrix
     void set_fock_a(const std::vector<double>& fock_stl);
@@ -226,7 +220,7 @@ class ForteIntegrals {
 
     /// Set the value of the scalar part of the Hamiltonian
     /// @param value the new value of the scalar part of the Hamiltonian
-    void set_scalar(double value) { scalar_ = value; }
+    void set_scalar(double value);
 
     /// Set the value of the one-electron integrals
     /// @param ints pointer to the integrals
@@ -249,22 +243,25 @@ class ForteIntegrals {
     /// @param Ub the alpha unitary transformation matrix
     void rotate_orbitals(std::shared_ptr<psi::Matrix> Ua, std::shared_ptr<psi::Matrix> Ub);
 
-    /// Copy these MO coeffs to class variables, update psi::Wavefunction, and re-transform integrals
+    /// Copy these MO coeffs to class variables, update psi::Wavefunction, and re-transform
+    /// integrals
     /// @param Ca the alpha MO coefficients
     /// @param Cb the betaa MO coefficients
-    void update_orbitals(std::shared_ptr<psi::Matrix> Ca,std::shared_ptr<psi::Matrix> Cb);
+    void update_orbitals(std::shared_ptr<psi::Matrix> Ca, std::shared_ptr<psi::Matrix> Cb);
 
     /// Expert Option: just try and use three_integral
     virtual double** three_integral_pointer() = 0;
 
+    /// Return the type of spin restriction enforced
+    IntegralSpinRestriction spin_restriction() const;
     /// Return the type of integral used
-    IntegralType integral_type() { return integral_type_; }
+    IntegralType integral_type() const;
     /// Return the one-body symmetry integrals
-    std::shared_ptr<psi::Matrix> OneBody_symm() { return OneBody_symm_; }
+    std::shared_ptr<psi::Matrix> OneBody_symm() const;
     /// Return the one-body AO integrals
-    std::shared_ptr<psi::Matrix> OneBodyAO() { return OneIntsAO_; }
+    std::shared_ptr<psi::Matrix> OneBodyAO() const;
 
-    virtual int ga_handle() { return 0; }
+    virtual int ga_handle();
 
     /// Print the details of the integral transformation
     void print_info();
@@ -273,7 +270,7 @@ class ForteIntegrals {
 
     /// Obtain AO dipole integrals [X, Y, Z]
     /// Each direction is a std::shared_ptr<psi::Matrix> of dimension nmo * nmo
-    std::vector<std::shared_ptr<psi::Matrix>> AOdipole_ints() { return AOdipole_ints_; }
+    std::vector<std::shared_ptr<psi::Matrix>> AOdipole_ints() const;
 
     /**
      * Compute MO dipole integrals
@@ -298,7 +295,7 @@ class ForteIntegrals {
     IntegralType integral_type_;
 
     /// Are we doing a spin-restricted computation?
-    IntegralSpinRestriction restricted_;
+    IntegralSpinRestriction spin_restriction_;
 
     // Ca matrix from psi
     std::shared_ptr<psi::Matrix> Ca_;
@@ -415,6 +412,10 @@ class ForteIntegrals {
 
     /// Function used to rotate MOs during contructor
     void rotate_mos();
+
+    /// Test if two matrices are approximately identical
+    bool test_orbital_spin_restriction(std::shared_ptr<psi::Matrix> A,
+                                       std::shared_ptr<psi::Matrix> B) const;
 
     // ==> Class private virtual functions <==
 

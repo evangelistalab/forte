@@ -32,12 +32,10 @@
 
 #include "integrals.h"
 
-
-
 class Tensor;
 
 namespace psi {
-  class IntegralTransform;
+class IntegralTransform;
 }
 
 namespace forte {
@@ -46,7 +44,8 @@ class ForteOptions;
 class MOSpaceInfo;
 
 /**
- * @brief The ConventionalIntegrals class computes and transforms conventional two-electron integrals.
+ * @brief The ConventionalIntegrals class computes and transforms conventional two-electron
+ * integrals.
  *
  * This class assumes the two-electron integrals can be stored in memory.
  */
@@ -54,9 +53,9 @@ class ConventionalIntegrals : public ForteIntegrals {
   public:
     /// Contructor of the class.  Calls std::shared_ptr<ForteIntegrals> ints
     /// constructor
-    ConventionalIntegrals(psi::Options& options, psi::SharedWavefunction ref_wfn,
-                          IntegralSpinRestriction restricted,
-                          std::shared_ptr<MOSpaceInfo> mo_space_info);
+    ConventionalIntegrals(psi::Options& options, std::shared_ptr<psi::Wavefunction> ref_wfn,
+                          std::shared_ptr<MOSpaceInfo> mo_space_info,
+                          IntegralSpinRestriction restricted);
     virtual ~ConventionalIntegrals();
 
     /// Grabs the antisymmetriced TEI - assumes storage in aphy_tei_*
@@ -82,12 +81,14 @@ class ConventionalIntegrals : public ForteIntegrals {
                                                          const std::vector<size_t>&);
     virtual double** three_integral_pointer();
 
-    virtual void make_fock_matrix(std::shared_ptr<psi::Matrix> gamma_a, std::shared_ptr<psi::Matrix> gamma_b);
+    virtual void make_fock_matrix(std::shared_ptr<psi::Matrix> gamma_a,
+                                  std::shared_ptr<psi::Matrix> gamma_b);
 
     virtual size_t nthree() const { throw psi::PSIEXCEPTION("Wrong Int_Type"); }
 
     virtual void set_tei(size_t p, size_t q, size_t r, size_t s, double value, bool alpha1,
                          bool alpha2);
+
   private:
     // ==> Class data <==
 
@@ -119,6 +120,5 @@ class ConventionalIntegrals : public ForteIntegrals {
 };
 
 } // namespace forte
-
 
 #endif // _conventional_integrals_h_

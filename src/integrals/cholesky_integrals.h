@@ -47,9 +47,9 @@ class MOSpaceInfo;
  */
 class CholeskyIntegrals : public ForteIntegrals {
   public:
-    CholeskyIntegrals(psi::Options& options, psi::SharedWavefunction ref_wfn,
-                      IntegralSpinRestriction restricted,
-                      std::shared_ptr<MOSpaceInfo> mo_space_info);
+    CholeskyIntegrals(psi::Options& options, std::shared_ptr<psi::Wavefunction> ref_wfn,
+                      std::shared_ptr<MOSpaceInfo> mo_space_info,
+                      IntegralSpinRestriction restricted);
     /// Destructor
     virtual ~CholeskyIntegrals();
     /// aptei_x will grab antisymmetriced integrals and creates DF/CD integrals

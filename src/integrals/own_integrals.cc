@@ -42,10 +42,10 @@ using namespace psi;
 
 namespace forte {
 
-OwnIntegrals::OwnIntegrals(psi::Options& options, psi::SharedWavefunction ref_wfn,
-                           IntegralSpinRestriction restricted,
-                           std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : ForteIntegrals(options, ref_wfn, restricted, mo_space_info) {
+OwnIntegrals::OwnIntegrals(psi::Options& options, std::shared_ptr<psi::Wavefunction> ref_wfn,
+                           std::shared_ptr<MOSpaceInfo> mo_space_info,
+                           IntegralSpinRestriction restricted)
+    : ForteIntegrals(options, ref_wfn, mo_space_info, restricted) {
     integral_type_ = Own;
     // If code calls constructor print things
     // But if someone calls retransform integrals do not print it
@@ -55,7 +55,5 @@ OwnIntegrals::OwnIntegrals(psi::Options& options, psi::SharedWavefunction ref_wf
     //    freeze_core_orbitals();
 }
 
-
 OwnIntegrals::~OwnIntegrals() {}
 } // namespace forte
-

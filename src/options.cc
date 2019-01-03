@@ -49,7 +49,6 @@ void forte_options(ForteOptions& foptions) {
     set_ACI_options(foptions);
     set_ASCI_options(foptions);
     set_PCI_options(foptions);
-    set_INT_options(foptions);
     set_PT2_options(foptions);
     set_AVAS_options(foptions);
     set_CINO_options(foptions);

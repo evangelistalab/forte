@@ -32,8 +32,6 @@
 
 #include "integrals.h"
 
-
-
 class Tensor;
 
 namespace forte {
@@ -49,8 +47,8 @@ class MOSpaceInfo;
 /// AO-DSRG-MRPT2
 class OwnIntegrals : public ForteIntegrals {
   public:
-    OwnIntegrals(psi::Options& options, psi::SharedWavefunction ref_wfn,
-                 IntegralSpinRestriction restricted, std::shared_ptr<MOSpaceInfo> mo_space_info);
+    OwnIntegrals(psi::Options& options, std::shared_ptr<psi::Wavefunction> ref_wfn,
+                 std::shared_ptr<MOSpaceInfo> mo_space_info, IntegralSpinRestriction restricted);
 
     virtual void retransform_integrals() {}
     /// aptei_xy functions are slow.  try to use three_integral_block
@@ -104,7 +102,8 @@ class OwnIntegrals : public ForteIntegrals {
     virtual void set_tei(size_t, size_t, size_t, size_t, double, bool, bool) {}
     virtual ~OwnIntegrals();
 
-    virtual void make_fock_matrix(std::shared_ptr<psi::Matrix> /*gamma_a*/, std::shared_ptr<psi::Matrix> /*gamma_b*/) {}
+    virtual void make_fock_matrix(std::shared_ptr<psi::Matrix> /*gamma_a*/,
+                                  std::shared_ptr<psi::Matrix> /*gamma_b*/) {}
     virtual size_t nthree() const { return 1; }
 
   private:
@@ -119,6 +118,5 @@ class OwnIntegrals : public ForteIntegrals {
 };
 
 } // namespace forte
-
 
 #endif // _own_integrals_h_

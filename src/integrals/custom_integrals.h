@@ -32,8 +32,6 @@
 
 #include "integrals.h"
 
-
-
 class Tensor;
 
 namespace forte {
@@ -48,8 +46,8 @@ class CustomIntegrals : public ForteIntegrals {
   public:
     /// Contructor of the class.  Calls std::shared_ptr<ForteIntegrals> ints
     /// constructor
-    CustomIntegrals(psi::Options& options, psi::SharedWavefunction ref_wfn,
-                    IntegralSpinRestriction restricted, std::shared_ptr<MOSpaceInfo> mo_space_info);
+    CustomIntegrals(psi::Options& options, std::shared_ptr<psi::Wavefunction> ref_wfn,
+                    std::shared_ptr<MOSpaceInfo> mo_space_info, IntegralSpinRestriction restricted);
     virtual ~CustomIntegrals();
 
     /// Grabs the antisymmetriced TEI - assumes storage in aphy_tei_*
@@ -75,7 +73,8 @@ class CustomIntegrals : public ForteIntegrals {
                                                          const std::vector<size_t>&);
     virtual double** three_integral_pointer();
 
-    virtual void make_fock_matrix(std::shared_ptr<psi::Matrix> gamma_a, std::shared_ptr<psi::Matrix> gamma_b);
+    virtual void make_fock_matrix(std::shared_ptr<psi::Matrix> gamma_a,
+                                  std::shared_ptr<psi::Matrix> gamma_b);
 
     virtual size_t nthree() const { throw psi::PSIEXCEPTION("Wrong Integral type"); }
 
@@ -110,6 +109,5 @@ class CustomIntegrals : public ForteIntegrals {
 };
 
 } // namespace forte
-
 
 #endif // _integrals_h_
