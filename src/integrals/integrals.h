@@ -30,11 +30,9 @@
 #ifndef _integrals_h_
 #define _integrals_h_
 
-//#include <iostream>
 #include <vector>
 
 #include "psi4/libmints/dimension.h"
-//#include "psi4/libmints/wavefunction.h"
 #include "ambit/blocked_tensor.h"
 
 class Tensor;
