@@ -58,42 +58,6 @@ void forte_options(ForteOptions& foptions) {
     set_DWMS_options(foptions);
 
     // General options
-
-    /*- The job type
-     *  - NONE Do not run methods (may transform orbitals)
-     *  - FCI Full configuration interaction (Francesco's code)
-     *  - CAS Full configuration interaction (York's code)
-     *  - ACI Adaptive configuration interaction
-     *  - PCI Projector CI
-     *  - DSRG-MRPT2 Tensor-based DSRG-MRPT2 code
-     *  - THREE-DSRG-MRPT2 A DF/CD based DSRG-MRPT2 code.  Very fast
-     *  - CASSCF A AO based CASSCF code by Kevin Hannon
-    -*/
-//    foptions.add_str("JOB_TYPE", "NONE",
-//                     {"NONE",
-//                      "ACI",
-//                      "PCI",
-//                      "CAS",
-//                      "DMRG",
-//                      "SR-DSRG",
-//                      "SR-DSRG-ACI",
-//                      "SR-DSRG-PCI",
-//                      "DSRG-MRPT2",
-//                      "DSRG-MRPT3",
-//                      "MR-DSRG-PT2",
-//                      "THREE-DSRG-MRPT2",
-//                      "SOMRDSRG",
-//                      "MRDSRG",
-//                      "MRDSRG_SO",
-//                      "CASSCF",
-//                      "ACTIVE-DSRGPT2",
-//                      "DWMS-DSRGPT2",
-//                      "DSRG_MRPT",
-//                      "TASKS",
-//                      "CC",
-//                      "NOJOB"},
-//                     "Specify the job type");
-
     foptions.add_str("MINAO_BASIS", "STO-3G", "The basis used to define an orbital subspace");
 
     foptions.add_array("SUBSPACE", "A list of orbital subspaces");
