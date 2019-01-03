@@ -67,6 +67,7 @@ void export_ForteOptions(py::module& m) {
                                      const std::vector<std::string>&, const std::string&)) &
                  ForteOptions::add_str,
              "Add a string option")
+        .def("add_array", &ForteOptions::add_array, "Add an array option")
         .def("get_bool", &ForteOptions::get_bool, "Get a boolean option")
         .def("get_int", &ForteOptions::get_int, "Get an integer option")
         .def("get_double", &ForteOptions::add_double, "Get a double option")
