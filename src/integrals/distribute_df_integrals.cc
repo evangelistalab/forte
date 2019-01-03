@@ -88,7 +88,6 @@ DistDFIntegrals::DistDFIntegrals(psi::Options& options, std::shared_ptr<psi::Wav
     outfile->Printf("\n  DistDFIntegrals take %15.8f s", DFInt.get());
 }
 
-DistDFIntegrals::~DistDFIntegrals() {}
 void DistDFIntegrals::test_distributed_integrals() {
     outfile->Printf("\n Computing Density fitted integrals \n");
 
@@ -480,6 +479,5 @@ void DistDFIntegrals::retransform_integrals() {
     freeze_core_orbitals();
 }
 } // namespace forte
-
 
 #endif // HAVE_GA

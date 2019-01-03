@@ -54,6 +54,4 @@ OwnIntegrals::OwnIntegrals(psi::Options& options, std::shared_ptr<psi::Wavefunct
     outfile->Printf("\n Avoiding Generation of Integrals");
     //    freeze_core_orbitals();
 }
-
-OwnIntegrals::~OwnIntegrals() {}
 } // namespace forte

@@ -77,8 +77,6 @@ DFIntegrals::DFIntegrals(psi::Options& options, std::shared_ptr<psi::Wavefunctio
     print_timing("computing density-fitted integrals", int_timer.get());
 }
 
-DFIntegrals::~DFIntegrals() {}
-
 double DFIntegrals::aptei_aa(size_t p, size_t q, size_t r, size_t s) {
     double vpqrsalphaC = 0.0;
     double vpqrsalphaE = 0.0;
@@ -348,4 +346,7 @@ void DFIntegrals::resort_integrals_after_freezing() {
         print_timing("resorting DF integrals", timer_resort.get());
     }
 }
+
+size_t DFIntegrals::nthree() const { return nthree_; }
+
 } // namespace forte

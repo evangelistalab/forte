@@ -75,8 +75,6 @@ ConventionalIntegrals::ConventionalIntegrals(psi::Options& options,
     outfile->Printf("\n  Conventional integrals take %8.8f s", ConvTime.get());
 }
 
-ConventionalIntegrals::~ConventionalIntegrals() {}
-
 void ConventionalIntegrals::transform_integrals() {
 
     // For now, we'll just transform for closed shells and generate all
@@ -184,6 +182,8 @@ double** ConventionalIntegrals::three_integral_pointer() {
     outfile->Printf("\n Doh! There is no Three_integral here.  Use DF/CD");
     throw psi::PSIEXCEPTION("INT_TYPE=DF/CHOLESKY to use ThreeIntegral!");
 }
+
+size_t ConventionalIntegrals::nthree() const { throw psi::PSIEXCEPTION("Wrong Int_Type"); }
 
 void ConventionalIntegrals::set_tei(size_t p, size_t q, size_t r, size_t s, double value,
                                     bool alpha1, bool alpha2) {

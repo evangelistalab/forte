@@ -50,7 +50,8 @@ using namespace psi;
 
 namespace forte {
 
-CholeskyIntegrals::CholeskyIntegrals(psi::Options& options, std::shared_ptr<psi::Wavefunction> ref_wfn,
+CholeskyIntegrals::CholeskyIntegrals(psi::Options& options,
+                                     std::shared_ptr<psi::Wavefunction> ref_wfn,
                                      std::shared_ptr<MOSpaceInfo> mo_space_info,
                                      IntegralSpinRestriction restricted)
     : ForteIntegrals(options, ref_wfn, mo_space_info, restricted) {
@@ -62,8 +63,6 @@ CholeskyIntegrals::CholeskyIntegrals(psi::Options& options, std::shared_ptr<psi:
     freeze_core_orbitals();
     print_timing("computing Cholesky integrals", int_timer.get());
 }
-
-CholeskyIntegrals::~CholeskyIntegrals() {}
 
 double CholeskyIntegrals::aptei_aa(size_t p, size_t q, size_t r, size_t s) {
     double vpqrsalphaC = 0.0;
@@ -128,7 +127,7 @@ ambit::Tensor CholeskyIntegrals::aptei_bb_block(const std::vector<size_t>& p,
     return ReturnTensor;
 }
 
-double CholeskyIntegrals::three_integral(size_t A, size_t p, size_t q) {
+double CholeskyIntegrals::three_integral(size_t A, size_t p, size_t q) const {
     return ThreeIntegral_->get(p * aptei_idx_ + q, A);
 }
 
@@ -385,4 +384,6 @@ void CholeskyIntegrals::set_tei(size_t, size_t, size_t, size_t, double, bool, bo
     outfile->Printf("\n If you are using this, you are ruining the advantages of DF/CD");
     throw psi::PSIEXCEPTION("Don't use DF/CD if you use set_tei");
 }
+
+size_t CholeskyIntegrals::nthree() const { return nthree_; }
 } // namespace forte

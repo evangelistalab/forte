@@ -68,7 +68,7 @@ enum IntegralType { Conventional, DF, Cholesky, DiskDF, DistDF, Own, Custom };
 /**
  * @brief The ForteIntegrals class is a base class for transforming and storing MO integrals
  *
- * ForteIntegrals provides a common interface for reading one- and two-electron integrals
+ * ForteIntegrals provides a common interface for using one- and two-electron integrals
  * in the MO basis.
  * This class also takes care of removing frozen core and virtual orbitals (excluded from
  * any treatment of correlation energy) and forming the modified one-electron operator,
@@ -85,6 +85,14 @@ enum IntegralType { Conventional, DF, Cholesky, DiskDF, DistDF, Own, Custom };
  *     aptei(p,q,r,s) = <pq||rs> = <pq|rs> - <pq|sr> = (pr|qs) - (ps|qr),
  *
  * where (pr|qs) is a two electron integral in chemist notation.
+ *
+ * There are several classes that derive from ForteIntegrals (Convetional, DF, ...) and these
+ * are best created via the helper function
+ *
+ *     std::shared_ptr<ForteIntegrals> make_forte_integrals(...)
+ *
+ * defined in 'make_integrals.h'
+ *
  */
 class ForteIntegrals {
   public:
@@ -99,9 +107,6 @@ class ForteIntegrals {
      */
     ForteIntegrals(psi::Options& options, std::shared_ptr<psi::Wavefunction> ref_wfn,
                    std::shared_ptr<MOSpaceInfo> mo_space_info, IntegralSpinRestriction restricted);
-
-    /// Destructor
-    virtual ~ForteIntegrals();
 
   public:
     // ==> Class Interface <==

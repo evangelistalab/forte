@@ -88,8 +88,6 @@ ForteIntegrals::ForteIntegrals(psi::Options& options, std::shared_ptr<psi::Wavef
     build_AOdipole_ints();
 }
 
-ForteIntegrals::~ForteIntegrals() {}
-
 void ForteIntegrals::startup() {
     // Grab the global (default) PSIO object, for file I/O
     std::shared_ptr<PSIO> psio(_default_psio_lib_);

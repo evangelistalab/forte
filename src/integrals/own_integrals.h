@@ -32,12 +32,7 @@
 
 #include "integrals.h"
 
-class Tensor;
-
 namespace forte {
-
-class ForteOptions;
-class MOSpaceInfo;
 
 /// This class is used if the user wants to generate their own integrals for
 /// their method.
@@ -50,61 +45,52 @@ class OwnIntegrals : public ForteIntegrals {
     OwnIntegrals(psi::Options& options, std::shared_ptr<psi::Wavefunction> ref_wfn,
                  std::shared_ptr<MOSpaceInfo> mo_space_info, IntegralSpinRestriction restricted);
 
-    virtual void retransform_integrals() {}
+    void retransform_integrals() {}
     /// aptei_xy functions are slow.  try to use three_integral_block
 
-    virtual double aptei_aa(size_t /*p*/, size_t /*q*/, size_t /*r*/, size_t /*s*/) { return 0.0; }
-    virtual double aptei_ab(size_t /*p*/, size_t /*q*/, size_t /*r*/, size_t /*s*/) { return 0.0; }
-    virtual double aptei_bb(size_t /*p*/, size_t /*q*/, size_t /*r*/, size_t /*s*/) { return 0.0; }
+    double aptei_aa(size_t /*p*/, size_t /*q*/, size_t /*r*/, size_t /*s*/) override { return 0.0; }
+    double aptei_ab(size_t /*p*/, size_t /*q*/, size_t /*r*/, size_t /*s*/) override { return 0.0; }
+    double aptei_bb(size_t /*p*/, size_t /*q*/, size_t /*r*/, size_t /*s*/) override { return 0.0; }
 
     /// Reads the antisymmetrized alpha-alpha chunck and returns an
     /// ambit::Tensor
-    virtual ambit::Tensor aptei_aa_block(const std::vector<size_t>& /*p*/,
-                                         const std::vector<size_t>& /*q*/,
-                                         const std::vector<size_t>& /*r*/,
-                                         const std::vector<size_t>& /*s*/) {
+    ambit::Tensor aptei_aa_block(const std::vector<size_t>& /*p*/, const std::vector<size_t>& /*q*/,
+                                 const std::vector<size_t>& /*r*/,
+                                 const std::vector<size_t>& /*s*/) override {
         return blank_tensor_;
     }
-    virtual ambit::Tensor aptei_ab_block(const std::vector<size_t>& /*p*/,
-                                         const std::vector<size_t>& /*q*/,
-                                         const std::vector<size_t>& /*r*/,
-                                         const std::vector<size_t>& /*s*/) {
+    ambit::Tensor aptei_ab_block(const std::vector<size_t>& /*p*/, const std::vector<size_t>& /*q*/,
+                                 const std::vector<size_t>& /*r*/,
+                                 const std::vector<size_t>& /*s*/) override {
         return blank_tensor_;
     }
-    virtual ambit::Tensor aptei_bb_block(const std::vector<size_t>& /*p*/,
-                                         const std::vector<size_t>& /*q*/,
-                                         const std::vector<size_t>& /*r*/,
-                                         const std::vector<size_t>& /*s*/) {
+    ambit::Tensor aptei_bb_block(const std::vector<size_t>& /*p*/, const std::vector<size_t>& /*q*/,
+                                 const std::vector<size_t>& /*r*/,
+                                 const std::vector<size_t>& /*s*/) override {
         return blank_tensor_;
     }
 
-    virtual double diag_aptei_aa(size_t, size_t) { return 0.0; }
-    virtual double diag_aptei_ab(size_t, size_t) { return 0.0; }
-    virtual double diag_aptei_bb(size_t, size_t) { return 0.0; }
-    virtual double three_integral(size_t, size_t, size_t) { return 0.0; }
-    virtual double** three_integral_pointer() {
+    double** three_integral_pointer() override {
         throw psi::PSIEXCEPTION("Integrals are distributed.  Pointer does not exist");
     }
     /// Read a block of the DFIntegrals and return an Ambit tensor of size A by
     /// p by q
-    virtual ambit::Tensor three_integral_block(const std::vector<size_t>& /*A*/,
-                                               const std::vector<size_t>& /*p*/,
-                                               const std::vector<size_t>& /*q*/) {
+    ambit::Tensor three_integral_block(const std::vector<size_t>& /*A*/,
+                                       const std::vector<size_t>& /*p*/,
+                                       const std::vector<size_t>& /*q*/) override {
         return blank_tensor_;
     }
     /// return ambit tensor of size A by q
-    virtual ambit::Tensor three_integral_block_two_index(const std::vector<size_t>& /*A*/,
-                                                         size_t /*p*/,
-                                                         const std::vector<size_t>& /*q*/) {
+    ambit::Tensor three_integral_block_two_index(const std::vector<size_t>& /*A*/, size_t /*p*/,
+                                                 const std::vector<size_t>& /*q*/) override {
         return blank_tensor_;
     }
 
-    virtual void set_tei(size_t, size_t, size_t, size_t, double, bool, bool) {}
-    virtual ~OwnIntegrals();
+    void set_tei(size_t, size_t, size_t, size_t, double, bool, bool) override {}
 
-    virtual void make_fock_matrix(std::shared_ptr<psi::Matrix> /*gamma_a*/,
-                                  std::shared_ptr<psi::Matrix> /*gamma_b*/) {}
-    virtual size_t nthree() const { return 1; }
+    void make_fock_matrix(std::shared_ptr<psi::Matrix> /*gamma_a*/,
+                          std::shared_ptr<psi::Matrix> /*gamma_b*/) override {}
+    size_t nthree() const override { return 1; }
 
   private:
     // ==> Class data <==
@@ -113,8 +99,8 @@ class OwnIntegrals : public ForteIntegrals {
 
     // ==> Class private virtual functions <==
 
-    virtual void gather_integrals() {}
-    virtual void resort_integrals_after_freezing() {}
+    void gather_integrals() override {}
+    void resort_integrals_after_freezing() override {}
 };
 
 } // namespace forte

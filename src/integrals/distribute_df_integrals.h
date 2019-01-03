@@ -32,15 +32,7 @@
 
 #include "integrals.h"
 
-
-
-class Tensor;
-
 namespace forte {
-
-class ForteOptions;
-class MOSpaceInfo;
-
 
 #ifdef HAVE_GA
 class DistDFIntegrals : public ForteIntegrals {
@@ -88,9 +80,9 @@ class DistDFIntegrals : public ForteIntegrals {
         outfile->Printf("DistributedDF will not work with set_tei");
         throw psi::PSIEXCEPTION("DistDF can not use set_tei");
     }
-    virtual ~DistDFIntegrals();
 
-    virtual void make_fock_matrix(std::shared_ptr<psi::Matrix> /*gamma_a*/, std::shared_ptr<psi::Matrix> /*gamma_b*/) {}
+    virtual void make_fock_matrix(std::shared_ptr<psi::Matrix> /*gamma_a*/,
+                                  std::shared_ptr<psi::Matrix> /*gamma_b*/) {}
 
     /// Make a Fock matrix computed with respect to a given determinant
     virtual size_t nthree() const { return nthree_; }
@@ -116,6 +108,5 @@ class DistDFIntegrals : public ForteIntegrals {
 #endif
 
 } // namespace forte
-
 
 #endif // _conventional_integrals_h_

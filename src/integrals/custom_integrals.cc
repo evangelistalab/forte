@@ -69,8 +69,6 @@ CustomIntegrals::CustomIntegrals(psi::Options& options, std::shared_ptr<psi::Wav
     freeze_core_orbitals();
 }
 
-CustomIntegrals::~CustomIntegrals() {}
-
 double CustomIntegrals::aptei_aa(size_t p, size_t q, size_t r, size_t s) {
     return aphys_tei_aa[aptei_index(p, q, r, s)];
 }
