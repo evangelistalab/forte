@@ -32,7 +32,7 @@
 
 namespace forte {
 
-double compute_Eref_from_reference(Reference& ref, std::shared_ptr<ForteIntegrals> ints,
+double compute_Eref_from_reference(const Reference& ref, std::shared_ptr<ForteIntegrals> ints,
                                    std::shared_ptr<MOSpaceInfo> mo_space_info, double Enuc) {
     // similar to MASTER_DSRG::compute_reference_energy_from_ints (use Fock and cumulants)
     // here I form two density and directly use bare Hamiltonian

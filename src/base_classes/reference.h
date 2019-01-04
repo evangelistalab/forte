@@ -44,27 +44,27 @@ class Reference {
     double get_Eref() { return Eref_; }
 
     /// Obtain density cumulants
-    ambit::Tensor L1a() { return L1a_; }
-    ambit::Tensor L1b() { return L1b_; }
-    ambit::Tensor L2aa() { return L2aa_; }
-    ambit::Tensor L2ab() { return L2ab_; }
-    ambit::Tensor L2bb() { return L2bb_; }
-    ambit::Tensor L3aaa() { return L3aaa_; }
-    ambit::Tensor L3aab() { return L3aab_; }
-    ambit::Tensor L3abb() { return L3abb_; }
-    ambit::Tensor L3bbb() { return L3bbb_; }
+    ambit::Tensor L1a() const { return L1a_; }
+    ambit::Tensor L1b() const { return L1b_; }
+    ambit::Tensor L2aa() const { return L2aa_; }
+    ambit::Tensor L2ab() const { return L2ab_; }
+    ambit::Tensor L2bb() const { return L2bb_; }
+    ambit::Tensor L3aaa() const { return L3aaa_; }
+    ambit::Tensor L3aab() const { return L3aab_; }
+    ambit::Tensor L3abb() const { return L3abb_; }
+    ambit::Tensor L3bbb() const { return L3bbb_; }
 
     /// Obtain 2-RDMs
-    ambit::Tensor g2aa() { return g2aa_; }
-    ambit::Tensor g2ab() { return g2ab_; }
-    ambit::Tensor g2bb() { return g2bb_; }
-    ambit::Tensor SFg2() { return SFg2_; }
+    ambit::Tensor g2aa() const { return g2aa_; }
+    ambit::Tensor g2ab() const { return g2ab_; }
+    ambit::Tensor g2bb() const { return g2bb_; }
+    ambit::Tensor SFg2() const { return SFg2_; }
 
     /// Obtain 3-RDMs
-    ambit::Tensor g3aaa() { return g3aaa_; }
-    ambit::Tensor g3aab() { return g3aab_; }
-    ambit::Tensor g3abb() { return g3abb_; }
-    ambit::Tensor g3bbb() { return g3bbb_; }
+    ambit::Tensor g3aaa() const { return g3aaa_; }
+    ambit::Tensor g3aab() const { return g3aab_; }
+    ambit::Tensor g3abb() const { return g3abb_; }
+    ambit::Tensor g3bbb() const { return g3bbb_; }
 
     // => Set functions <=
 
@@ -153,7 +153,7 @@ class Reference {
     ambit::Tensor g3bbb_;
 };
 
-double compute_Eref_from_reference(Reference& ref, std::shared_ptr<ForteIntegrals> ints,
+double compute_Eref_from_reference(const Reference& ref, std::shared_ptr<ForteIntegrals> ints,
                                    std::shared_ptr<MOSpaceInfo> mo_space_info, double Enuc);
 } // namespace forte
 
