@@ -199,7 +199,7 @@ void SemiCanonical::semicanonicalize(Reference& reference, const int& max_rdm_le
 
         // 3. Retransform integrals and cumulants/RDMs
         if (transform) {
-            transform_ints(Ua_, Ua_); // note only Ua is used
+            ints_->rotate_orbitals(Ua_, Ua_);
             transform_reference(Ua_t_, Ua_t_, reference, max_rdm_level);
         }
 
@@ -401,17 +401,6 @@ void SemiCanonical::build_transformation_matrices(psi::SharedMatrix& Ua, psi::Sh
         Ua_t.data() = UaData;
         Ub_t.data() = UbData;
     }
-}
-
-void SemiCanonical::transform_ints(psi::SharedMatrix& Ua, psi::SharedMatrix& Ub) {
-    // Transform the integrals in the new basis
-    print_h2("Integral Transformation to Semicanonical Basis");
-    ints_->rotate_orbitals(Ua, Ub);
-}
-
-void SemiCanonical::back_transform_ints(psi::SharedMatrix& Ua, psi::SharedMatrix& Ub) {
-    print_h2("Back Transformation of Semicanonical Integrals");
-    ints_->rotate_orbitals(Ua->transpose(), Ub->transpose());
 }
 
 void SemiCanonical::transform_reference(ambit::Tensor& Ua, ambit::Tensor& Ub, Reference& reference,
