@@ -28,13 +28,12 @@ def test_aci1():
 
     forte.startup()
     forte.banner()
-    mo_space_info = forte.make_mo_space_info(wfn, options)    
+    mo_space_info = forte.make_mo_space_info(wfn, forte_options)    
     ints = forte.make_forte_integrals(wfn, options, mo_space_info)
 
     scf_info = forte.SCFInfo(wfn)
 
-#    solver = forte.FCI(state,forte_options,ints,mo_space_info)
-    solver = forte.make_active_space_solver('ACI',state,scf_info,forte_options,ints,mo_space_info)
+    solver = forte.make_active_space_solver('ACI',state,scf_info,mo_space_info, ints, forte_options)
     energy = solver.compute_energy()
 
     assert math.isclose(energy,ref_aci,abs_tol=abs_tol, rel_tol=rel_tol)

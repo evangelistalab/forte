@@ -145,7 +145,7 @@ std::vector<std::pair<size_t, size_t>> MOSpaceInfo::get_relative_mo(const std::s
     return result;
 }
 
-void MOSpaceInfo::read_options(psi::Options& options) {
+void MOSpaceInfo::read_options(std::shared_ptr<ForteOptions> options) {
     outfile->Printf("\n\n  ==> MO Space Information <==\n");
 
     // Read the elementary spaces
@@ -259,13 +259,13 @@ void MOSpaceInfo::read_options(psi::Options& options) {
 }
 
 std::pair<SpaceInfo, bool> MOSpaceInfo::read_mo_space(const std::string& space,
-                                                      psi::Options& options) {
+                                                      std::shared_ptr<ForteOptions> options) {
     bool read = false;
     psi::Dimension space_dim(nirrep_);
     std::vector<MOInfo> vec_mo_info;
-    if ((options[space].has_changed()) && (options[space].size() == nirrep_)) {
+    if ((options->has_changed(space)) && (options->get_int_vec(space).size() == nirrep_)) {
         for (size_t h = 0; h < nirrep_; ++h) {
-            space_dim[h] = options[space][h].to_integer();
+            space_dim[h] = options->get_int_vec(space)[h];
         }
         read = true;
         outfile->Printf("\n  Read options for space %s", space.c_str());
@@ -279,7 +279,7 @@ std::pair<SpaceInfo, bool> MOSpaceInfo::read_mo_space(const std::string& space,
 }
 
 std::shared_ptr<MOSpaceInfo> make_mo_space_info(psi::SharedWavefunction ref_wfn,
-                                                psi::Options& options) {
+                                                std::shared_ptr<ForteOptions> options) {
     psi::Dimension nmopi = ref_wfn->nmopi();
     auto mo_space_info = std::make_shared<MOSpaceInfo>(nmopi);
     mo_space_info->read_options(options);

@@ -42,7 +42,7 @@ void read_options(ForteOptions& options);
 psi::SharedWavefunction run_forte(psi::SharedWavefunction ref_wfn, psi::Options& options);
 
 std::shared_ptr<MOSpaceInfo> make_mo_space_info(psi::SharedWavefunction ref_wfn,
-                                                psi::Options& options);
+                                                std::shared_ptr<ForteOptions> options);
 
 psi::SharedMatrix make_aosubspace_projector(psi::SharedWavefunction ref_wfn, psi::Options& options);
 

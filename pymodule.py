@@ -86,7 +86,7 @@ def run_forte(name, **kwargs):
     forte.banner()
 
     # Create the MOSpaceInfo object
-    mo_space_info = forte.make_mo_space_info(ref_wfn, options)
+    mo_space_info = forte.make_mo_space_info(ref_wfn, forte.forte_options)
 
     # Create the AO subspace projector
     ps = forte.make_aosubspace_projector(ref_wfn, options)

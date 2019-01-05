@@ -41,6 +41,7 @@
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/vector.h"
 #include "psi4/libqt/qt.h"
+#include "base_classes/forte_options.h"
 
 namespace psi {
 class Wavefunction;
@@ -129,7 +130,7 @@ class MOSpaceInfo {
     /// @return The list of the relative index (h,p_rel) of the molecular
     /// orbitals in space
     std::vector<std::pair<size_t, size_t>> get_relative_mo(const std::string& space);
-    void read_options(psi::Options& options);
+    void read_options(std::shared_ptr<ForteOptions> options);
     /// @return The number of irreps
     size_t nirrep() { return nirrep_; }
 
@@ -169,11 +170,11 @@ class MOSpaceInfo {
 
     // ==> Class functions <==
     /// Read information about each elementary space from the psi Options object
-    std::pair<SpaceInfo, bool> read_mo_space(const std::string& space, psi::Options& options);
+    std::pair<SpaceInfo, bool> read_mo_space(const std::string& space, std::shared_ptr<ForteOptions> options);
 };
 
 std::shared_ptr<MOSpaceInfo> make_mo_space_info(std::shared_ptr<psi::Wavefunction> ref_wfn,
-                                                psi::Options& options);
+                                                std::shared_ptr<ForteOptions> options);
 
 } // namespace forte
 
