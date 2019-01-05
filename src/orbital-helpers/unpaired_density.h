@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -33,7 +33,7 @@
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/libmints/local.h"
 
-#include "helpers/mo_space_info.h"
+#include "base_classes/mo_space_info.h"
 #include "integrals/integrals.h"
 #include "base_classes/reference.h"
 #include "iao_builder.h"
@@ -44,18 +44,17 @@ namespace forte {
 
 class UPDensity {
   public:
-    UPDensity(std::shared_ptr<psi::Wavefunction> wfn, std::shared_ptr<ForteIntegrals> ints, 
+    UPDensity(std::shared_ptr<ForteIntegrals> ints, 
               std::shared_ptr<MOSpaceInfo> mo_space_info, 
-              psi::Options& options, psi::SharedMatrix Ua, psi::SharedMatrix Ub);
+              std::shared_ptr<ForteOptions> options, psi::SharedMatrix Ua, psi::SharedMatrix Ub);
 
     ~UPDensity();
 
     void compute_unpaired_density(std::vector<double>& ordm_a, std::vector<double>& ordm_b);
 
   private:
-    psi::Options& options_;
+    std::shared_ptr<ForteOptions> options_;
     std::shared_ptr<ForteIntegrals> ints_;
-    std::shared_ptr<psi::Wavefunction> wfn_;
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
     psi::SharedMatrix Uas_;
     psi::SharedMatrix Ubs_;

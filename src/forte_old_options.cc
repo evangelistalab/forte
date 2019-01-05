@@ -2,14 +2,13 @@
 
 #include "sci/aci.h"
 #include "fci/fci_solver.h"
-#include "fci/fci.h"
 #include "integrals/integrals.h"
 #include "pci/pci.h"
 
 
 namespace forte {
 
-void forte_old_options(psi::Options& options) {
+void forte_old_options(ForteOptions& options) {
 
     /*- MODULEDESCRIPTION Forte */
 
@@ -61,29 +60,7 @@ void forte_old_options(psi::Options& options) {
      * electrons) -*/
     options.add_int("MAX_EXC_LEVEL", 0);
 
-    /*- Number of frozen occupied orbitals per irrep (in Cotton order) -*/
-    options.add("FROZEN_DOCC", new psi::ArrayType());
 
-    /*- Number of restricted doubly occupied orbitals per irrep (in Cotton
-     * order) -*/
-    options.add("RESTRICTED_DOCC", new psi::ArrayType());
-
-    /*- Number of active orbitals per irrep (in Cotton order) -*/
-    options.add("ACTIVE", new psi::ArrayType());
-
-    /*- Number of restricted unoccupied orbitals per irrep (in Cotton order)
-     * -*/
-    options.add("RESTRICTED_UOCC", new psi::ArrayType());
-
-    /*- Number of frozen unoccupied orbitals per irrep (in Cotton order) -*/
-    options.add("FROZEN_UOCC", new psi::ArrayType());
-    /*- Molecular orbitals to swap -
-     *  Swap mo_1 with mo_2 in irrep symmetry
-     *  Swap mo_3 with mo_4 in irrep symmetry
-     *  Format: [irrep, mo_1, mo_2, irrep, mo_3, mo_4]
-     *          Irrep and MO indices are 1-based (NOT 0-based)!
-    -*/
-    options.add("ROTATE_MOS", new psi::ArrayType());
 
     /*- The algorithm used to screen the determinant
      *  - DENOMINATORS uses the MP denominators to screen strings
@@ -294,13 +271,7 @@ void forte_old_options(psi::Options& options) {
     /// When to start skipping CI steps
     options.add_int("CASSCF_CI_STEP_START", -1);
 
-    //////////////////////////////////////////////////////////////
-    /// OPTIONS FOR STATE-AVERAGE CASCI/CASSCF
-    //////////////////////////////////////////////////////////////
-    /*- An array of states [[irrep1, multi1, nstates1], [irrep2, multi2, nstates2], ...] -*/
-    options.add("AVG_STATE", new psi::ArrayType());
-    /*- An array of weights [[w1_1, w1_2, ..., w1_n], [w2_1, w2_2, ..., w2_n], ...] -*/
-    options.add("AVG_WEIGHT", new psi::ArrayType());
+
     /*- Monitor the CAS-CI solutions through iterations -*/
     options.add_bool("MONITOR_SA_SOLUTION", false);
 
@@ -467,8 +438,6 @@ void forte_old_options(psi::Options& options) {
     options.add_str("TWOPDC", "MK", "MK ZERO");
     /*- Three-particle density cumulant -*/
     options.add_str("THREEPDC", "MK", "MK MK_DECOMP ZERO");
-    /*- Number of roots per irrep (in Cotton order) -*/
-    options.add("NROOTPI", new psi::ArrayType());
     /*- The density convergence criterion -*/
     options.add_double("D_CONVERGENCE", 1.0e-8);
 

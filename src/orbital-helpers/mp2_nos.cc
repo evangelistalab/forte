@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -154,7 +154,7 @@ MP2_NOS::MP2_NOS(std::shared_ptr<psi::Wavefunction> wfn, psi::Options& options,
             value = ints->oei_b(i[0], i[1]);
     });
 
-    G1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& , double& value) {
+    G1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
         value = i[0] == i[1] ? 1.0 : 0.0;
     });
 
@@ -313,14 +313,14 @@ MP2_NOS::MP2_NOS(std::shared_ptr<psi::Wavefunction> wfn, psi::Options& options,
         outfile->Printf("]\n");
     }
 
-    Matrix Ua("Ua", nmopi, nmopi);
+    std::shared_ptr<psi::Matrix> Ua = std::make_shared<psi::Matrix>("Ua", nmopi, nmopi);
     // Patch together the transformation matrices
     for (int h = 0; h < nirrep; ++h) {
         size_t irrep_offset = 0;
 
         // Frozen core orbitals are unchanged
         for (int p = 0; p < frzcpi[h]; ++p) {
-            Ua.set(h, p, p, 1.0);
+            Ua->set(h, p, p, 1.0);
         }
         irrep_offset += frzcpi[h];
 
@@ -328,7 +328,7 @@ MP2_NOS::MP2_NOS(std::shared_ptr<psi::Wavefunction> wfn, psi::Options& options,
         for (int p = 0; p < aoccpi[h]; ++p) {
             for (int q = 0; q < aoccpi[h]; ++q) {
                 double value = D1oo_evecs.get(h, p, q);
-                Ua.set(h, p + irrep_offset, q + irrep_offset, value);
+                Ua->set(h, p + irrep_offset, q + irrep_offset, value);
             }
         }
         irrep_offset += aoccpi[h];
@@ -337,25 +337,25 @@ MP2_NOS::MP2_NOS(std::shared_ptr<psi::Wavefunction> wfn, psi::Options& options,
         for (int p = 0; p < avirpi[h]; ++p) {
             for (int q = 0; q < avirpi[h]; ++q) {
                 double value = D1vv_evecs.get(h, p, q);
-                Ua.set(h, p + irrep_offset, q + irrep_offset, value);
+                Ua->set(h, p + irrep_offset, q + irrep_offset, value);
             }
         }
         irrep_offset += avirpi[h];
 
         // Frozen virtual orbitals are unchanged
         for (int p = 0; p < frzvpi[h]; ++p) {
-            Ua.set(h, p + irrep_offset, p + irrep_offset, 1.0);
+            Ua->set(h, p + irrep_offset, p + irrep_offset, 1.0);
         }
     }
 
-    Matrix Ub("Ub", nmopi, nmopi);
+    std::shared_ptr<psi::Matrix> Ub = std::make_shared<psi::Matrix>("Ub", nmopi, nmopi);
     // Patch together the transformation matrices
     for (int h = 0; h < nirrep; ++h) {
         size_t irrep_offset = 0;
 
         // Frozen core orbitals are unchanged
         for (int p = 0; p < frzcpi[h]; ++p) {
-            Ub.set(h, p, p, 1.0);
+            Ub->set(h, p, p, 1.0);
         }
         irrep_offset += frzcpi[h];
 
@@ -363,7 +363,7 @@ MP2_NOS::MP2_NOS(std::shared_ptr<psi::Wavefunction> wfn, psi::Options& options,
         for (int p = 0; p < boccpi[h]; ++p) {
             for (int q = 0; q < boccpi[h]; ++q) {
                 double value = D1OO_evecs.get(h, p, q);
-                Ub.set(h, p + irrep_offset, q + irrep_offset, value);
+                Ub->set(h, p + irrep_offset, q + irrep_offset, value);
             }
         }
         irrep_offset += boccpi[h];
@@ -372,33 +372,29 @@ MP2_NOS::MP2_NOS(std::shared_ptr<psi::Wavefunction> wfn, psi::Options& options,
         for (int p = 0; p < bvirpi[h]; ++p) {
             for (int q = 0; q < bvirpi[h]; ++q) {
                 double value = D1VV_evecs.get(h, p, q);
-                Ub.set(h, p + irrep_offset, q + irrep_offset, value);
+                Ub->set(h, p + irrep_offset, q + irrep_offset, value);
             }
         }
         irrep_offset += bvirpi[h];
 
         // Frozen virtual orbitals are unchanged
         for (int p = 0; p < frzvpi[h]; ++p) {
-            Ub.set(h, p + irrep_offset, p + irrep_offset, 1.0);
+            Ub->set(h, p + irrep_offset, p + irrep_offset, 1.0);
         }
     }
 
-    // Modify the orbital coefficients
-    psi::SharedMatrix Ca = wfn->Ca();
-    psi::SharedMatrix Cb = wfn->Cb();
-    psi::SharedMatrix Ca_new(Ca->clone());
-    psi::SharedMatrix Cb_new(Cb->clone());
-    Ca_new->gemm(false, false, 1.0, Ca, Ua, 0.0);
-    Cb_new->gemm(false, false, 1.0, Cb, Ub, 0.0);
-    Ca->copy(Ca_new);
-    Cb->copy(Cb_new);
-
     // Retransform the integrals in the new basis
-    ints->retransform_integrals();
+    // TODO: this class should read this information (ints->spin_restriction()) early and compute
+    // only one set of MOs
+    auto spin_restriction = ints->spin_restriction();
+    if (spin_restriction == IntegralSpinRestriction::Restricted) {
+        ints->rotate_orbitals(Ua, Ua);
+    } else {
+        ints->rotate_orbitals(Ua, Ub);
+    }
 
     BlockedTensor::set_expert_mode(false);
     // Erase all mo_space information
     BlockedTensor::reset_mo_spaces();
 }
-}
-
+} // namespace forte

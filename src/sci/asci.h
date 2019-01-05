@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -29,14 +29,15 @@
 #ifndef _as_ci_h_
 #define _as_ci_h_
 
-#include "forte_options.h"
+#include "base_classes/forte_options.h"
 #include "ci_rdm/ci_rdms.h"
 #include "sparse_ci/ci_reference.h"
-#include "fci/fci_integrals.h"
+#include "integrals/active_space_integrals.h"
 #include "mrpt2.h"
 #include "orbital-helpers/unpaired_density.h"
 #include "sparse_ci/determinant_hashvector.h"
 #include "base_classes/reference.h"
+#include "base_classes/active_space_solver.h"
 #include "sparse_ci/sparse_ci_solver.h"
 #include "orbital-helpers/localize.h"
 
@@ -47,7 +48,6 @@
 #define omp_get_thread_num() 0
 #define omp_get_num_threads() 1
 #endif
-
 
 namespace forte {
 
@@ -60,7 +60,7 @@ void set_ASCI_options(ForteOptions& foptions);
  * @brief The AdaptiveCI class
  * This class implements an adaptive CI algorithm
  */
-class ASCI : public psi::Wavefunction {
+class ASCI : public ActiveSpaceSolver {
   public:
     // ==> Class Constructor and Destructor <==
 
@@ -71,19 +71,21 @@ class ASCI : public psi::Wavefunction {
      * @param ints A pointer to an allocated integral object
      * @param mo_space_info A pointer to the MOSpaceInfo object
      */
-    ASCI(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
-               std::shared_ptr<MOSpaceInfo> mo_space_info);
 
+    ASCI(StateInfo state, std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
+         std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ActiveSpaceIntegrals> as_ints);
     /// Destructor
     ~ASCI();
 
     // ==> Class Interface <==
 
     /// Compute the energy
-    double compute_energy();
+    double compute_energy() override;
 
     /// Update the reference file
-    Reference reference();
+    Reference get_reference() override;
+
+    void set_options(std::shared_ptr<ForteOptions>) override{}; // TODO : define
 
     /// Get the wavefunction
     DeterminantHashVec get_wavefunction();
@@ -91,10 +93,7 @@ class ASCI : public psi::Wavefunction {
     /// Compute the ACI-NOs
     void compute_nos();
 
-
-    void set_asci_ints(psi::SharedWavefunction ref_Wfn, std::shared_ptr<ForteIntegrals> ints);
-
-    void set_fci_ints(std::shared_ptr<FCIIntegrals> fci_ints);
+    void set_fci_ints(std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
 
   private:
     // ==> Class data <==
@@ -103,12 +102,11 @@ class ASCI : public psi::Wavefunction {
 
     WFNOperator op_;
 
-    /// The molecular integrals required by Explorer
-    std::shared_ptr<ForteIntegrals> ints_;
-    /// Pointer to FCI integrals
-    std::shared_ptr<FCIIntegrals> fci_ints_;
-    /// The MOSpaceInfo object
-    std::shared_ptr<MOSpaceInfo> mo_space_info_;
+    /// HF info
+    std::shared_ptr<SCFInfo> scf_info_;
+    StateInfo state_;
+    /// Options
+    std::shared_ptr<ForteOptions> options_;
     /// The wave function symmetry
     int wavefunction_symmetry_;
     /// The symmetry of each orbital in Pitzer ordering
@@ -117,8 +115,12 @@ class ASCI : public psi::Wavefunction {
     int multiplicity_;
     /// M_s of the reference
     int twice_ms_;
+    /// Number of irreps
+    size_t nirrep_;
     /// The number of frozen core orbitals
     int nfrzc_;
+    /// The number of frozen core orbital per irrets
+    psi::Dimension frzcpi_;
     /// The number of active orbitals per irrep
     psi::Dimension nactpi_;
     /// The number of active orbitals
@@ -180,7 +182,8 @@ class ASCI : public psi::Wavefunction {
     void startup();
 
     /// Compute an aci wavefunction
-    void compute_aci(DeterminantHashVec& PQ_space, psi::SharedMatrix& PQ_evecs, psi::SharedVector& PQ_evals);
+    void compute_aci(DeterminantHashVec& PQ_space, psi::SharedMatrix& PQ_evecs,
+                     psi::SharedVector& PQ_evals);
 
     /// Print information about this calculation
     void print_info();
@@ -216,12 +219,10 @@ class ASCI : public psi::Wavefunction {
     void print_nos();
 
     /// Compute the RDMs
-    void compute_rdms(std::shared_ptr<FCIIntegrals> fci_ints, DeterminantHashVec& dets,
+    void compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints, DeterminantHashVec& dets,
                       WFNOperator& op, psi::SharedMatrix& PQ_evecs, int root1, int root2);
-
 };
 
 } // namespace forte
-
 
 #endif // _as_ci_h_

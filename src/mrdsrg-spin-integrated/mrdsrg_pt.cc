@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -36,7 +36,7 @@
 #include "psi4/libdiis/diismanager.h"
 #include "helpers/helpers.h"
 
-#include "helpers/mo_space_info.h"
+#include "base_classes/mo_space_info.h"
 #include "helpers/timer.h"
 #include "boost/format.hpp"
 #include "mrdsrg.h"
@@ -81,7 +81,7 @@ double MRDSRG::compute_energy_pt2() {
 
     // compute MRPT2 energy and Hbar
     std::vector<std::pair<std::string, double>> energy;
-    std::string H0th = options_.get_str("H0TH");
+    std::string H0th = foptions_->get_str("H0TH");
     if (H0th == "FFULL") {
         energy = compute_energy_pt2_Ffull();
     } else if (H0th == "FDIAG_VACTV" || H0th == "FDIAG_VDIAG") {
@@ -165,7 +165,8 @@ std::vector<std::pair<std::string, double>> MRDSRG::compute_energy_pt2_Fdiag() {
     energy.push_back({"DSRG-MRPT2 total energy", Eref_ + Ecorr});
 
     // reference relaxation
-    if (options_.get_str("RELAX_REF") != "NONE" || options_["AVG_STATE"].size() != 0) {
+    if (foptions_->get_str("RELAX_REF") != "NONE" ||
+        (foptions_->psi_options())["AVG_STATE"].size() != 0) {
         O1_.zero();
         O2_.zero();
 
@@ -208,8 +209,8 @@ std::vector<std::pair<std::string, double>> MRDSRG::compute_energy_pt2_FdiagV() 
     std::vector<std::string> blocks2 = od_two_labels_hhpp();
 
     // solve first-order amplitudes
-    int cycle = 0, maxiter = options_.get_int("MAXITER");
-    double r_conv = options_.get_double("R_CONVERGENCE");
+    int cycle = 0, maxiter = foptions_->get_int("MAXITER");
+    double r_conv = foptions_->get_double("R_CONVERGENCE");
     bool converged = false, failed = false;
 
     Hbar1_ = BTF_->build(tensor_type_, "Hbar1", spin_cases({"gg"}));
@@ -223,8 +224,8 @@ std::vector<std::pair<std::string, double>> MRDSRG::compute_energy_pt2_FdiagV() 
 
     // setup DIIS
     std::shared_ptr<DIISManager> diis_manager;
-    int max_diis_vectors = options_.get_int("DIIS_MAX_VECS");
-    int min_diis_vectors = options_.get_int("DIIS_MIN_VECS");
+    int max_diis_vectors = foptions_->get_int("DIIS_MAX_VECS");
+    int min_diis_vectors = foptions_->get_int("DIIS_MIN_VECS");
     if (max_diis_vectors > 0) {
         diis_manager = std::shared_ptr<DIISManager>(new DIISManager(
             max_diis_vectors, "MRPT2 DIIS T", DIISManager::LargestError, DIISManager::InCore));
@@ -237,7 +238,7 @@ std::vector<std::pair<std::string, double>> MRDSRG::compute_energy_pt2_FdiagV() 
 
     // two-body zeroth-order Hamiltonian
     BlockedTensor V0th;
-    std::string H0th_string = options_.get_str("H0TH");
+    std::string H0th_string = foptions_->get_str("H0TH");
     if (H0th_string == "FDIAG_VACTV") {
         V0th = BTF_->build(tensor_type_, "V0th", spin_cases({"aaaa"}));
     } else if (H0th_string == "FDIAG_VDIAG") {
@@ -415,7 +416,8 @@ std::vector<std::pair<std::string, double>> MRDSRG::compute_energy_pt2_FdiagV() 
     energy.push_back({"DSRG-MRPT2 total energy", Eref_ + Ecorr});
 
     // reference relaxation
-    if (options_.get_str("RELAX_REF") != "NONE" || options_["AVG_STATE"].size() != 0) {
+    if (foptions_->get_str("RELAX_REF") != "NONE" ||
+        (foptions_->psi_options())["AVG_STATE"].size() != 0) {
         O1_ = BTF_->build(tensor_type_, "O1", spin_cases({"hh"}));
         O2_ = BTF_->build(tensor_type_, "O2", spin_cases({"hhhh"}));
 
@@ -457,8 +459,8 @@ std::vector<std::pair<std::string, double>> MRDSRG::compute_energy_pt2_FdiagVdia
     // solve first-order amplitudes
     double Ecorr = 0.0;
     std::vector<std::pair<std::string, double>> energy;
-    int cycle = 0, maxiter = options_.get_int("MAXITER");
-    double r_conv = options_.get_double("R_CONVERGENCE");
+    int cycle = 0, maxiter = foptions_->get_int("MAXITER");
+    double r_conv = foptions_->get_double("R_CONVERGENCE");
     bool converged = false, failed = false;
 
     Hbar1_ = BTF_->build(tensor_type_, "Hbar1", spin_cases({"gg"}));
@@ -472,8 +474,8 @@ std::vector<std::pair<std::string, double>> MRDSRG::compute_energy_pt2_FdiagVdia
 
     // setup DIIS
     std::shared_ptr<DIISManager> diis_manager;
-    int max_diis_vectors = options_.get_int("DIIS_MAX_VECS");
-    int min_diis_vectors = options_.get_int("DIIS_MIN_VECS");
+    int max_diis_vectors = foptions_->get_int("DIIS_MAX_VECS");
+    int min_diis_vectors = foptions_->get_int("DIIS_MIN_VECS");
     if (max_diis_vectors > 0) {
         diis_manager = std::shared_ptr<DIISManager>(new DIISManager(
             max_diis_vectors, "MRPT2 DIIS T", DIISManager::LargestError, DIISManager::InCore));
@@ -653,7 +655,8 @@ std::vector<std::pair<std::string, double>> MRDSRG::compute_energy_pt2_FdiagVdia
     energy.push_back({"DSRG-MRPT2 total energy", Eref_ + Ecorr});
 
     // reference relaxation
-    if (options_.get_str("RELAX_REF") != "NONE" || options_["AVG_STATE"].size() != 0) {
+    if (foptions_->get_str("RELAX_REF") != "NONE" ||
+        (foptions_->psi_options())["AVG_STATE"].size() != 0) {
         // save the hole part of [H^0th, A^1st]
         BlockedTensor H0A1_1 = BTF_->build(tensor_type_, "H0A1_1", spin_cases({"gg"}));
         BlockedTensor H0A1_2 = BTF_->build(tensor_type_, "H0A1_2", spin_cases({"gggg"}));
@@ -843,9 +846,9 @@ std::vector<std::pair<std::string, double>> MRDSRG::compute_energy_pt2_Ffull() {
     // solve first-order amplitudes
     double Ecorr = 0.0, E1st = 0.0;
     std::vector<std::pair<std::string, double>> energy;
-    int cycle = 0, maxiter = options_.get_int("MAXITER");
-    double e_conv = options_.get_double("E_CONVERGENCE");
-    double r_conv = options_.get_double("R_CONVERGENCE");
+    int cycle = 0, maxiter = foptions_->get_int("MAXITER");
+    double e_conv = foptions_->get_double("E_CONVERGENCE");
+    double r_conv = foptions_->get_double("R_CONVERGENCE");
     bool converged = false, failed = false;
     Hbar1_ = BTF_->build(tensor_type_, "Hbar1", spin_cases({"gg"}));
     Hbar2_ = BTF_->build(tensor_type_, "Hbar2", spin_cases({"gggg"}));
@@ -860,8 +863,8 @@ std::vector<std::pair<std::string, double>> MRDSRG::compute_energy_pt2_Ffull() {
 
     // setup DIIS
     std::shared_ptr<DIISManager> diis_manager;
-    int max_diis_vectors = options_.get_int("DIIS_MAX_VECS");
-    int min_diis_vectors = options_.get_int("DIIS_MIN_VECS");
+    int max_diis_vectors = foptions_->get_int("DIIS_MAX_VECS");
+    int min_diis_vectors = foptions_->get_int("DIIS_MIN_VECS");
     if (max_diis_vectors > 0) {
         diis_manager = std::shared_ptr<DIISManager>(new DIISManager(
             max_diis_vectors, "MRPT2 DIIS T", DIISManager::LargestError, DIISManager::InCore));
@@ -1150,7 +1153,8 @@ std::vector<std::pair<std::string, double>> MRDSRG::compute_energy_pt2_Ffull() {
     energy.push_back({"DSRG-MRPT2 total energy", Eref_ + Ecorr});
 
     // reference relaxation
-    if (options_.get_str("RELAX_REF") != "NONE" || options_["AVG_STATE"].size() != 0) {
+    if (foptions_->get_str("RELAX_REF") != "NONE" ||
+        (foptions_->psi_options())["AVG_STATE"].size() != 0) {
         Hbar1_["pq"] += F_["pq"];
         Hbar1_["PQ"] += F_["PQ"];
         Hbar2_["pqrs"] += V_["pqrs"];
@@ -1372,7 +1376,8 @@ double MRDSRG::compute_energy_pt3() {
         outfile->Printf("\n    %-30s = %22.15f", str_dim.first.c_str(), str_dim.second);
     }
 
-    if (options_.get_str("RELAX_REF") != "NONE" || options_["AVG_STATE"].size() != 0) {
+    if (foptions_->get_str("RELAX_REF") != "NONE" ||
+        (foptions_->psi_options())["AVG_STATE"].size() != 0) {
         O1_.zero();
         O2_.zero();
 
@@ -1421,4 +1426,4 @@ double MRDSRG::compute_energy_pt3() {
     Hbar0_ = Ecorr;
     return Ecorr;
 }
-}
+} // namespace forte

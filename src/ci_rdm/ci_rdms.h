@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -41,7 +41,7 @@
 #include "sparse_ci/determinant.h"
 #include "sparse_ci/sorted_string_list.h"
 #include "fci/string_lists.h"
-#include "fci/fci_integrals.h"
+#include "integrals/active_space_integrals.h"
 
 
 namespace forte {
@@ -52,11 +52,11 @@ class CI_RDMS {
     using det_hash_it = det_hash::iterator;
 
     // Class constructor and destructor
-    CI_RDMS(std::shared_ptr<FCIIntegrals> fci_ints,
+    CI_RDMS(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
             const std::vector<Determinant>& det_space, psi::SharedMatrix evecs, int root1,
             int root2);
 
-    CI_RDMS(DeterminantHashVec& wfn, std::shared_ptr<FCIIntegrals> fci_ints,
+    CI_RDMS(DeterminantHashVec& wfn, std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
             psi::SharedMatrix evecs, int root1, int root2);
 
     ~CI_RDMS();
@@ -65,7 +65,7 @@ class CI_RDMS {
     // All rdms are stored in spin-labeled vector format.
     // They are accessed in the standard way. E.g., for the alpha/alpha 2-RDM,
     // the element corresponding to p,q,r,s would be accessed with:
-    // tp2rdm_aa[p*ncmo^(3) + q*nmco^(2) + r*ncmo + s], where ncmo is the number
+    // tp2rdm_aa[p*ncmo^(3) + q*ncmo^(2) + r*ncmo + s], where ncmo is the number
     // of active orbitals.
 
     // The most efficient algorithms use coupling lists to fill the
@@ -151,7 +151,7 @@ class CI_RDMS {
     // The Wavefunction
     DeterminantHashVec wfn_;
     // The FCI integrals
-    std::shared_ptr<FCIIntegrals> fci_ints_;
+    std::shared_ptr<ActiveSpaceIntegrals> fci_ints_;
 
 
     // The Determinant Space

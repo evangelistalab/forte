@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -31,10 +31,17 @@
 
 #include "boost/format.hpp"
 
+#include "base_classes/reference.h"
+#include "base_classes/forte_options.h"
+#include "base_classes/mo_space_info.h"
+
+#include "integrals/active_space_integrals.h"
 #include "sparse_ci/determinant.h"
 #include "helpers/iterative_solvers.h"
 
 #include "fci_solver.h"
+#include "fci_vector.h"
+#include "string_lists.h"
 #include "helpers/helpers.h"
 
 #ifdef HAVE_GA
@@ -48,41 +55,21 @@ using namespace psi;
 
 int fci_debug_level = 4;
 
-
 namespace forte {
 
 class MOSpaceInfo;
 
-FCISolver::FCISolver(psi::Dimension active_dim, std::vector<size_t> core_mo,
-                     std::vector<size_t> active_mo, size_t na, size_t nb, size_t multiplicity,
-                     size_t symmetry, std::shared_ptr<ForteIntegrals> ints,
-                     std::shared_ptr<MOSpaceInfo> mo_space_info, size_t ntrial_per_root, int print,
-                     psi::Options& options)
-    : active_dim_(active_dim), core_mo_(core_mo), active_mo_(active_mo), ints_(ints),
-      nirrep_(active_dim.n()), symmetry_(symmetry), na_(na), nb_(nb), multiplicity_(multiplicity),
-      nroot_(0), ntrial_per_root_(ntrial_per_root), print_(print), mo_space_info_(mo_space_info),
-      options_(options) {
-    nroot_ = options_.get_int("NROOT");
-    startup();
+FCISolver::FCISolver(StateInfo state, std::shared_ptr<MOSpaceInfo> mo_space_info,
+                     std::shared_ptr<ActiveSpaceIntegrals> as_ints)
+    : ActiveSpaceSolver(state, mo_space_info, as_ints),
+      active_dim_(mo_space_info->get_dimension("ACTIVE")), nirrep_(as_ints->ints()->nirrep()),
+      symmetry_(state.irrep()), multiplicity_(state.multiplicity()) {
+    // TODO: read this info from the base class
+    na_ = state.na() - core_mo_.size() - mo_space_info->size("FROZEN_DOCC");
+    nb_ = state.nb() - core_mo_.size() - mo_space_info->size("FROZEN_DOCC");
 }
 
-FCISolver::FCISolver(psi::Dimension active_dim, std::vector<size_t> core_mo,
-                     std::vector<size_t> active_mo, size_t na, size_t nb, size_t multiplicity,
-                     size_t symmetry, std::shared_ptr<ForteIntegrals> ints,
-                     std::shared_ptr<MOSpaceInfo> mo_space_info, psi::Options& options)
-    : active_dim_(active_dim), core_mo_(core_mo), active_mo_(active_mo), ints_(ints),
-      nirrep_(active_dim.n()), symmetry_(symmetry), na_(na), nb_(nb), multiplicity_(multiplicity),
-      nroot_(0), mo_space_info_(mo_space_info), options_(options) {
-    ntrial_per_root_ = options_.get_int("NTRIAL_PER_ROOT");
-    print_ = options_.get_int("PRINT");
-    startup();
-}
-
-void FCISolver::set_max_rdm_level(int value) { max_rdm_level_ = value; }
-
-void FCISolver::set_nroot(int value) { nroot_ = value; }
-
-void FCISolver::set_root(int value) { root_ = value; }
+void FCISolver::set_ntrial_per_root(int value) { ntrial_per_root_ = value; }
 
 void FCISolver::set_fci_iterations(int value) { fci_iterations_ = value; }
 
@@ -119,43 +106,39 @@ void FCISolver::startup() {
     }
 }
 
+void FCISolver::set_options(std::shared_ptr<ForteOptions> options) {
+    set_nroot(options->get_int("FCI_NROOT"));
+    set_root(options->get_int("FCI_ROOT"));
+    set_test_rdms(options->get_bool("FCI_TEST_RDMS"));
+    set_max_rdm_level(options->get_int("FCI_MAX_RDM"));
+    set_fci_iterations(options->get_int("FCI_MAXITER"));
+    set_collapse_per_root(options->get_int("DL_COLLAPSE_PER_ROOT"));
+    set_subspace_per_root(options->get_int("DL_SUBSPACE_PER_ROOT"));
+    set_print(options->get_int("PRINT"));
+    set_ntrial_per_root(options->get_int("NTRIAL_PER_ROOT"));
+    set_print(options->get_int("PRINT"));
+    set_e_convergence(options->get_double("E_CONVERGENCE"));
+}
+
 /*
  * See Appendix A in J. Comput. Chem. 2001 vol. 22 (13) pp. 1574-1589
  */
 double FCISolver::compute_energy() {
     local_timer t;
+    startup();
 
     double nuclear_repulsion_energy =
         psi::Process::environment.molecule()->nuclear_repulsion_energy({{0, 0, 0}});
-    std::shared_ptr<FCIIntegrals> fci_ints;
-    if (!provide_integrals_and_restricted_docc_) {
-        fci_ints = std::make_shared<FCIIntegrals>(ints_, active_mo_, core_mo_);
-        ambit::Tensor tei_active_aa =
-            ints_->aptei_aa_block(active_mo_, active_mo_, active_mo_, active_mo_);
-        ambit::Tensor tei_active_ab =
-            ints_->aptei_ab_block(active_mo_, active_mo_, active_mo_, active_mo_);
-        ambit::Tensor tei_active_bb =
-            ints_->aptei_bb_block(active_mo_, active_mo_, active_mo_, active_mo_);
-        fci_ints->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
-        fci_ints->compute_restricted_one_body_operator();
-    } else {
-        if (fci_ints_ == nullptr) {
-            outfile->Printf("\n You said you would specify integrals and restricted_docc");
-            throw psi::PSIEXCEPTION("Need to set the fci_ints in your code");
-        } else {
-            fci_ints = fci_ints_;
-        }
-    }
 
-    FCIWfn::allocate_temp_space(lists_, print_);
+    FCIVector::allocate_temp_space(lists_, print_);
 
-    FCIWfn Hdiag(lists_, symmetry_);
-    C_ = std::make_shared<FCIWfn>(lists_, symmetry_);
-    FCIWfn HC(lists_, symmetry_);
+    FCIVector Hdiag(lists_, symmetry_);
+    C_ = std::make_shared<FCIVector>(lists_, symmetry_);
+    FCIVector HC(lists_, symmetry_);
     C_->set_print(print_);
 
     size_t fci_size = Hdiag.size();
-    Hdiag.form_H_diagonal(fci_ints);
+    Hdiag.form_H_diagonal(as_ints_);
 
     psi::SharedVector b(new Vector("b", fci_size));
     psi::SharedVector sigma(new Vector("sigma", fci_size));
@@ -163,14 +146,14 @@ double FCISolver::compute_energy() {
     Hdiag.copy_to(sigma);
 
     DavidsonLiuSolver dls(fci_size, nroot_);
-    dls.set_e_convergence(options_.get_double("E_CONVERGENCE"));
+    dls.set_e_convergence(e_convergence_);
     dls.set_print_level(print_);
     dls.set_collapse_per_root(collapse_per_root_);
     dls.set_subspace_per_root(subspace_per_root_);
     dls.startup(sigma);
 
     size_t guess_size = dls.collapse_size();
-    auto guess = initial_guess(Hdiag, guess_size, fci_ints);
+    auto guess = initial_guess(Hdiag, guess_size, as_ints_);
 
     std::vector<int> guess_list;
     for (size_t g = 0; g < guess.size(); ++g) {
@@ -183,7 +166,7 @@ double FCISolver::compute_energy() {
 
     if (nguess == 0) {
         throw psi::PSIEXCEPTION("\n\n  Found zero FCI guesses with the requested "
-                           "multiplicity.\n\n");
+                                "multiplicity.\n\n");
     }
 
     for (size_t n = 0; n < nguess; ++n) {
@@ -230,7 +213,7 @@ double FCISolver::compute_energy() {
         do {
             dls.get_b(b);
             C_->copy(b);
-            C_->Hamiltonian(HC, fci_ints, twoSubstituitionVVOO);
+            C_->Hamiltonian(HC, as_ints_);
             HC.copy_to(sigma);
             add_sigma = dls.add_sigma(sigma);
         } while (add_sigma);
@@ -272,7 +255,7 @@ double FCISolver::compute_energy() {
     dls.get_results();
 
     // Copy eigen values and eigen vectors
-    eigen_vals_ = dls.eigenvalues();
+    evals_ = dls.eigenvalues();
     eigen_vecs_ = dls.eigenvectors();
 
     // Print determinants
@@ -283,7 +266,7 @@ double FCISolver::compute_energy() {
             C_->copy(dls.eigenvector(r));
             std::vector<std::tuple<double, double, size_t, size_t, size_t>> dets_config =
                 C_->max_abs_elements(guess_size * ntrial_per_root_);
-            psi::Dimension nactvpi = mo_space_info_->get_dimension("ACTIVE");
+            // psi::Dimension nactvpi = mo_space_info_->get_dimension("ACTIVE");
 
             for (auto& det_config : dets_config) {
                 double ci_abs, ci;
@@ -300,7 +283,7 @@ double FCISolver::compute_energy() {
                 outfile->Printf("\n    ");
                 size_t offset = 0;
                 for (int h = 0; h < nirrep_; ++h) {
-                    for (int k = 0; k < nactvpi[h]; ++k) {
+                    for (int k = 0; k < active_dim_[h]; ++k) {
                         size_t i = k + offset;
                         bool a = Ia_v[i];
                         bool b = Ib_v[i];
@@ -310,14 +293,15 @@ double FCISolver::compute_energy() {
                             outfile->Printf("%c", a ? 'a' : 'b');
                         }
                     }
-                    if (nactvpi[h] != 0)
+                    if (active_dim_[h] != 0)
                         outfile->Printf(" ");
-                    offset += nactvpi[h];
+                    offset += active_dim_[h];
                 }
                 outfile->Printf("%15.8f", ci);
             }
 
             double root_energy = dls.eigenvalues()->get(r) + nuclear_repulsion_energy;
+
             outfile->Printf("\n\n    Total Energy: %25.15f", root_energy);
         }
     }
@@ -332,7 +316,7 @@ double FCISolver::compute_energy() {
     //    C_->compute_rdms(max_rdm_level_);
 
     if (print_ > 1 && max_rdm_level_ > 1) {
-        C_->energy_from_rdms(fci_ints);
+        C_->energy_from_rdms(as_ints_);
     }
 
     //    // Optionally, test the RDMs
@@ -346,6 +330,8 @@ double FCISolver::compute_energy() {
     //    }
 
     energy_ = dls.eigenvalues()->get(root_) + nuclear_repulsion_energy;
+    psi::Process::environment.globals["CURRENT ENERGY"] = energy_;
+    psi::Process::environment.globals["FCI ENERGY"] = energy_;
 
     return energy_;
 }
@@ -377,12 +363,13 @@ void FCISolver::compute_rdms_root(int root) {
             C_->print_natural_orbitals(mo_space_info_);
         }
     } else {
-        throw psi::PSIEXCEPTION("FCIWfn is not assigned. Cannot compute RDMs.");
+        throw psi::PSIEXCEPTION("FCIVector is not assigned. Cannot compute RDMs.");
     }
 }
 
 std::vector<std::pair<int, std::vector<std::tuple<size_t, size_t, size_t, double>>>>
-FCISolver::initial_guess(FCIWfn& diag, size_t n, std::shared_ptr<FCIIntegrals> fci_ints) {
+FCISolver::initial_guess(FCIVector& diag, size_t n,
+                         std::shared_ptr<ActiveSpaceIntegrals> fci_ints) {
     local_timer t;
 
     double nuclear_repulsion_energy =
@@ -463,6 +450,7 @@ FCISolver::initial_guess(FCIWfn& diag, size_t n, std::shared_ptr<FCIIntegrals> f
             H.set(J, I, HIJ);
         }
     }
+
     H.diagonalize(evecs, evals);
 
     std::vector<std::pair<int, std::vector<std::tuple<size_t, size_t, size_t, double>>>> guess;
@@ -515,7 +503,7 @@ FCISolver::initial_guess(FCIWfn& diag, size_t n, std::shared_ptr<FCIIntegrals> f
     return guess;
 }
 
-Reference FCISolver::reference() {
+Reference FCISolver::get_reference() {
     size_t nact = active_dim_.sum();
     size_t nact2 = nact * nact;
     size_t nact3 = nact2 * nact;
@@ -745,4 +733,3 @@ Reference FCISolver::reference() {
     return fci_ref;
 }
 } // namespace forte
-

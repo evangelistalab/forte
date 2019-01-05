@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -36,7 +36,7 @@
 #include "psi4/libtrans/integraltransform.h"
 
 #include "helpers/blockedtensorfactory.h"
-#include "helpers/mo_space_info.h"
+#include "base_classes/mo_space_info.h"
 #include "helpers/timer.h"
 
 #include "conventional_integrals.h"
@@ -53,10 +53,11 @@ namespace forte {
  * @param restricted - type of integral transformation
  * @param resort_frozen_core -
  */
-ConventionalIntegrals::ConventionalIntegrals(psi::Options& options, psi::SharedWavefunction ref_wfn,
-                                             IntegralSpinRestriction restricted,
-                                             std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : ForteIntegrals(options, ref_wfn, restricted, mo_space_info) {
+ConventionalIntegrals::ConventionalIntegrals(psi::Options& options,
+                                             std::shared_ptr<psi::Wavefunction> ref_wfn,
+                                             std::shared_ptr<MOSpaceInfo> mo_space_info,
+                                             IntegralSpinRestriction restricted)
+    : ForteIntegrals(options, ref_wfn, mo_space_info, restricted) {
 
     integral_type_ = Conventional;
     print_info();
@@ -74,8 +75,6 @@ ConventionalIntegrals::ConventionalIntegrals(psi::Options& options, psi::SharedW
     outfile->Printf("\n  Conventional integrals take %8.8f s", ConvTime.get());
 }
 
-ConventionalIntegrals::~ConventionalIntegrals() {}
-
 void ConventionalIntegrals::transform_integrals() {
 
     // For now, we'll just transform for closed shells and generate all
@@ -88,17 +87,20 @@ void ConventionalIntegrals::transform_integrals() {
         integral_transform_.reset();
     }
 
-    // Call IntegralTransform asking for integrals over restricted or
-    // unrestricted orbitals
-    if (restricted_) {
+    if (spin_restriction_ == IntegralSpinRestriction::Restricted) {
         integral_transform_ = std::make_shared<psi::IntegralTransform>(
             wfn_, spaces, psi::IntegralTransform::TransformationType::Restricted,
-            psi::IntegralTransform::OutputType::DPDOnly, psi::IntegralTransform::MOOrdering::PitzerOrder,
+            psi::IntegralTransform::OutputType::DPDOnly,
+            psi::IntegralTransform::MOOrdering::PitzerOrder,
             psi::IntegralTransform::FrozenOrbitals::None);
     } else {
+        outfile->Printf("\n  Unrestricted orbitals are currently disabled");
+        throw psi::PSIEXCEPTION("Unrestricted orbitals are currently disabled in "
+                                "ConventionalIntegrals");
         integral_transform_ = std::make_shared<psi::IntegralTransform>(
             wfn_, spaces, psi::IntegralTransform::TransformationType::Unrestricted,
-            psi::IntegralTransform::OutputType::DPDOnly, psi::IntegralTransform::MOOrdering::PitzerOrder,
+            psi::IntegralTransform::OutputType::DPDOnly,
+            psi::IntegralTransform::MOOrdering::PitzerOrder,
             psi::IntegralTransform::FrozenOrbitals::None);
     }
 
@@ -181,6 +183,8 @@ double** ConventionalIntegrals::three_integral_pointer() {
     throw psi::PSIEXCEPTION("INT_TYPE=DF/CHOLESKY to use ThreeIntegral!");
 }
 
+size_t ConventionalIntegrals::nthree() const { throw psi::PSIEXCEPTION("Wrong Int_Type"); }
+
 void ConventionalIntegrals::set_tei(size_t p, size_t q, size_t r, size_t s, double value,
                                     bool alpha1, bool alpha2) {
     size_t index = aptei_index(p, q, r, s);
@@ -210,7 +214,7 @@ void ConventionalIntegrals::gather_integrals() {
     for (size_t pqrs = 0; pqrs < num_aptei_; ++pqrs)
         aphys_tei_bb[pqrs] = 0.0;
 
-    if (restricted_) {
+    if (spin_restriction_ == IntegralSpinRestriction::Restricted) {
         std::vector<double> two_electron_integrals(num_tei_, 0.0);
 
         // Read the integrals
@@ -257,7 +261,7 @@ void ConventionalIntegrals::gather_integrals() {
     } else {
         outfile->Printf("\n  Unrestricted orbitals are currently disabled");
         throw psi::PSIEXCEPTION("Unrestricted orbitals are currently disabled in "
-                           "ConventionalIntegrals");
+                                "ConventionalIntegrals");
 
         //        std::vector<double> two_electron_integrals(num_tei_, 0.0);
         //        // Alpha-alpha integrals
@@ -368,7 +372,8 @@ void ConventionalIntegrals::resort_four(std::vector<double>& tei, std::vector<si
     temp_ints.swap(tei);
 }
 
-void ConventionalIntegrals::make_fock_matrix(psi::SharedMatrix gamma_a, psi::SharedMatrix gamma_b) {
+void ConventionalIntegrals::make_fock_matrix(std::shared_ptr<psi::Matrix> gamma_a,
+                                             std::shared_ptr<psi::Matrix> gamma_b) {
     for (size_t p = 0; p < ncmo_; ++p) {
         for (size_t q = 0; q < ncmo_; ++q) {
             fock_matrix_a_[p * ncmo_ + q] = oei_a(p, q);
@@ -405,4 +410,3 @@ void ConventionalIntegrals::make_fock_matrix(psi::SharedMatrix gamma_a, psi::Sha
     }
 }
 } // namespace forte
-

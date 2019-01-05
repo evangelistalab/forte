@@ -43,4 +43,4 @@ Escf, wfn = energy('scf', return_wfn=True)
 compare_values(refrhf,Escf,10,"SCF energy")
 
 energy('forte', ref_wfn=wfn)
-compare_values(refdsrgpt2_ref_relax,variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")
+compare_values(refdsrgpt2_ref_relax,variable("CURRENT ENERGY"),9,"DSRG-MRPT2 energy")

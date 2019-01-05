@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -26,12 +26,10 @@
  * @END LICENSE
  */
 
-#include "psi4/libmints/molecule.h"
-#include "psi4/libmints/wavefunction.h"
-#include "psi4/liboptions/liboptions.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
 
 #include "ci_reference.h"
+#include "base_classes/forte_options.h"
 
 #include <algorithm>
 
@@ -39,11 +37,11 @@ using namespace psi;
 
 namespace forte {
 
-CI_Reference::CI_Reference(std::shared_ptr<psi::Wavefunction> wfn, psi::Options& options,
+CI_Reference::CI_Reference(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
                            std::shared_ptr<MOSpaceInfo> mo_space_info,
-                           std::shared_ptr<FCIIntegrals> fci_ints, int multiplicity,
+                           std::shared_ptr<ActiveSpaceIntegrals> fci_ints, int multiplicity,
                            double twice_ms, int symmetry)
-    : wfn_(wfn), mo_space_info_(mo_space_info), fci_ints_(fci_ints) {
+    : scf_info_(scf_info), mo_space_info_(mo_space_info), fci_ints_(fci_ints) {
     // Get the mutlilicity and twice M_s
     multiplicity_ = multiplicity;
     twice_ms_ = twice_ms;
@@ -51,12 +49,13 @@ CI_Reference::CI_Reference(std::shared_ptr<psi::Wavefunction> wfn, psi::Options&
     // State symmetry
     root_sym_ = symmetry;
 
-    // Number of irreps
-    nirrep_ = wfn_->nirrep();
 
     // Double and singly occupied MOs
-    psi::Dimension doccpi = wfn_->doccpi();
-    psi::Dimension soccpi = wfn_->soccpi();
+    psi::Dimension doccpi = scf_info_->doccpi();
+    psi::Dimension soccpi = scf_info_->soccpi();
+
+    // Number of irreps
+    nirrep_ = doccpi.n();
 
     // Frozen DOCC + RDOCC
     size_t ninact = mo_space_info_->size("INACTIVE_DOCC");
@@ -70,12 +69,12 @@ CI_Reference::CI_Reference(std::shared_ptr<psi::Wavefunction> wfn, psi::Options&
     nactpi_ = mo_space_info_->get_dimension("ACTIVE");
 
     // Size of subspace
-    subspace_size_ = options.get_int("ACTIVE_GUESS_SIZE");
+    subspace_size_ = options->get_int("ACTIVE_GUESS_SIZE");
 
     // Reference type
     ref_type_ = "CAS";
-    if (options["ACTIVE_REF_TYPE"].has_changed()) {
-        ref_type_ = options.get_str("ACTIVE_REF_TYPE");
+    if (options->has_changed("ACTIVE_REF_TYPE")) {
+        ref_type_ = options->get_str("ACTIVE_REF_TYPE");
     }
 
     // First determine number of alpha and beta electrons
@@ -353,7 +352,7 @@ std::vector<std::tuple<double, int, int>> CI_Reference::sym_labeled_orbitals(std
 
     std::vector<std::tuple<double, int, int>> labeled_orb;
 
-    std::shared_ptr<Vector> epsilon_a = wfn_->epsilon_a();
+    std::shared_ptr<Vector> epsilon_a = scf_info_->epsilon_a();
 
     if (type == "RHF" or type == "ROHF" or type == "ALFA") {
 
@@ -377,7 +376,7 @@ std::vector<std::tuple<double, int, int>> CI_Reference::sym_labeled_orbitals(std
     }
     if (type == "BETA") {
         // Create a vector of orbital energies and index pairs
-        std::shared_ptr<Vector> epsilon_b = wfn_->epsilon_b();
+        std::shared_ptr<Vector> epsilon_b = scf_info_->epsilon_b();
         std::vector<std::pair<double, int>> orb_e;
         int cumidx = 0;
         for (int h = 0; h < nirrep_; ++h) {

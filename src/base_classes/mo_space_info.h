@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -41,10 +41,12 @@
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/vector.h"
 #include "psi4/libqt/qt.h"
+#include "base_classes/forte_options.h"
 
-
-
+namespace psi {
+class Wavefunction;
 class Options;
+} // namespace psi
 
 namespace forte {
 
@@ -105,8 +107,10 @@ using SpaceInfo = std::pair<psi::Dimension, std::vector<MOInfo>>;
  */
 class MOSpaceInfo {
   public:
+    // ==> Class Constructor <==
     MOSpaceInfo(psi::Dimension& nmopi);
-    ~MOSpaceInfo();
+
+    // ==> Class Interface <==
 
     /// @return The names of orbital spaces
     std::vector<std::string> space_names() const { return space_names_; }
@@ -126,18 +130,18 @@ class MOSpaceInfo {
     /// @return The list of the relative index (h,p_rel) of the molecular
     /// orbitals in space
     std::vector<std::pair<size_t, size_t>> get_relative_mo(const std::string& space);
-    void read_options(psi::Options& options);
+    void read_options(std::shared_ptr<ForteOptions> options);
     /// @return The number of irreps
     size_t nirrep() { return nirrep_; }
 
   private:
-    std::pair<SpaceInfo, bool> read_mo_space(const std::string& space, psi::Options& options);
+    // ==> Class Data <==
 
     /// The number of irreducible representations
     size_t nirrep_;
     /// The number of molecular orbitals per irrep
     psi::Dimension nmopi_;
-    /// The mo space info
+    /// Information about each elementary space stored in a map
     std::map<std::string, SpaceInfo> mo_spaces_;
 
     std::vector<std::string> elementary_spaces_{"FROZEN_DOCC", "RESTRICTED_DOCC", "ACTIVE",
@@ -157,13 +161,21 @@ class MOSpaceInfo {
         {"GENERALIZED PARTICLE", {"ACTIVE", "RESTRICTED_UOCC"}},
         {"CORE", {"RESTRICTED_DOCC"}},
         {"VIRTUAL", {"RESTRICTED_UOCC"}}};
+
     /// The names of the orbital spaces
     std::vector<std::string> space_names_;
+
     /// The map from all MO to the correlated MOs (excludes frozen core/virtual)
     std::vector<size_t> mo_to_cmo_;
+
+    // ==> Class functions <==
+    /// Read information about each elementary space from the psi Options object
+    std::pair<SpaceInfo, bool> read_mo_space(const std::string& space, std::shared_ptr<ForteOptions> options);
 };
 
-} // namespace forte
+std::shared_ptr<MOSpaceInfo> make_mo_space_info(std::shared_ptr<psi::Wavefunction> ref_wfn,
+                                                std::shared_ptr<ForteOptions> options);
 
+} // namespace forte
 
 #endif // _mo_space_info_h_

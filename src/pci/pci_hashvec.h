@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -38,15 +38,17 @@
 
 #include "fci/fci_vector.h"
 #include "forte-def.h"
-#include "forte_options.h"
+#include "base_classes/forte_options.h"
 #include "helpers/hash_vector.h"
-#include "helpers/mo_space_info.h"
+#include "base_classes/mo_space_info.h"
 #include "integrals/integrals.h"
 #include "sparse_ci/sparse_ci_solver.h"
 #include "sparse_ci/determinant.h"
+#include "base_classes/state_info.h"
 
 
 namespace forte {
+class SCFInfo;
 
 /// Set the forte style options for the FCI method
 // void set_PCI_HashVec_options(ForteOptions& foptions);
@@ -75,7 +77,7 @@ using det_hashvec = HashVector<Determinant, Determinant::Hash>;
  * @brief The SparsePathIntegralCI class
  * This class implements an a sparse path-integral FCI algorithm
  */
-class ProjectorCI_HashVec : public psi::Wavefunction {
+class ProjectorCI_HashVec {
   public:
     // ==> Class Constructor and Destructor <==
 
@@ -85,9 +87,8 @@ class ProjectorCI_HashVec : public psi::Wavefunction {
      * @param options The main options object
      * @param ints A pointer to an allocated integral object
      */
-    ProjectorCI_HashVec(psi::SharedWavefunction ref_wfn, psi::Options& options,
-                        std::shared_ptr<ForteIntegrals> ints,
-                        std::shared_ptr<MOSpaceInfo> mo_space_info);
+    ProjectorCI_HashVec(StateInfo state, std::shared_ptr<forte::SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
+                        std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     // ==> Class Interface <==
 
@@ -98,10 +99,16 @@ class ProjectorCI_HashVec : public psi::Wavefunction {
     // ==> Class data <==
 
     // * Calculation data
+    /// The state to calculate
+    StateInfo state_;
     /// The molecular integrals required by Explorer
     std::shared_ptr<ForteIntegrals> ints_;
     /// Store all the integrals locally
-    static std::shared_ptr<FCIIntegrals> fci_ints_;
+    static std::shared_ptr<ActiveSpaceIntegrals> fci_ints_;
+    /// The options
+    std::shared_ptr<ForteOptions> options_;
+    /// SCF information
+    std::shared_ptr<SCFInfo> scf_info_;
     /// The maximum number of threads
     int num_threads_;
     /// The type of Generator used
@@ -112,6 +119,8 @@ class ProjectorCI_HashVec : public psi::Wavefunction {
     int wavefunction_symmetry_;
     /// The symmetry of each orbital in Pitzer ordering
     std::vector<int> mo_symmetry_;
+    /// The number of irrep
+    int nirrep_;
     /// The number of active electrons
     int nactel_;
     /// The number of correlated alpha electrons
@@ -120,6 +129,8 @@ class ProjectorCI_HashVec : public psi::Wavefunction {
     int nbeta_;
     /// The number of frozen core orbitals
     int nfrzc_;
+    /// The number of frozen core orbitals per irrep
+    psi::Dimension frzcpi_;
     /// The number of correlated molecular orbitals per irrep
     psi::Dimension ncmopi_;
     /// The number of active orbitals

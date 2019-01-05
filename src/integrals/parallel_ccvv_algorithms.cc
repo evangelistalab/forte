@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -412,7 +412,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga() {
 
         ambit::Tensor BmQe =
             ambit::Tensor::build(tensor_type_, "BmQE", {m_batch.size(), nthree_, virtual_});
-        // psi::SharedMatrix BmQe_mat(new psi::Matrix("BmQe_mat", m_batch.size() *
+        // std::shared_ptr<psi::Matrix> BmQe_mat(new psi::Matrix("BmQe_mat", m_batch.size() *
         // nthree_, virtual_));
         int begin_offset[2];
         int end_offset[2];
@@ -444,7 +444,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga() {
         ambit::Tensor BnQf =
             ambit::Tensor::build(tensor_type_, "BnQf", {n_batch.size(), nthree_, virtual_});
         // ambit::Tensor BnQf;
-        // psi::SharedMatrix BnQf_mat(new psi::Matrix("BnQf", n_batch.size() * nthree_,
+        // std::shared_ptr<psi::Matrix> BnQf_mat(new psi::Matrix("BnQf", n_batch.size() * nthree_,
         // virtual_));
         // std::vector<double> BnQf(n_batch.size() * nthree_ * virtual_, 0);
 

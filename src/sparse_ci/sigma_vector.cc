@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -64,7 +64,7 @@ void SigmaVectorMPI::compute_sigma(psi::SharedVector sigma, psi::SharedVector b)
 #endif
 
 SigmaVectorList::SigmaVectorList(const std::vector<Determinant>& space, bool print_details,
-                                 std::shared_ptr<FCIIntegrals> fci_ints)
+                                 std::shared_ptr<ActiveSpaceIntegrals> fci_ints)
     : SigmaVector(space.size()), space_(space), fci_ints_(fci_ints) {
     using det_hash = std::unordered_map<Determinant, size_t, Determinant::Hash>;
     using bstmap_it = det_hash::iterator;
@@ -531,7 +531,7 @@ void SigmaVectorList::get_diagonal(psi::Vector& diag) {
 }
 
 SigmaVectorWfn1::SigmaVectorWfn1(const DeterminantHashVec& space, WFNOperator& op,
-                                 std::shared_ptr<FCIIntegrals> fci_ints)
+                                 std::shared_ptr<ActiveSpaceIntegrals> fci_ints)
     : SigmaVector(space.size()), space_(space), fci_ints_(fci_ints), a_ann_list_(op.a_ann_list_),
       a_cre_list_(op.a_cre_list_), b_ann_list_(op.b_ann_list_), b_cre_list_(op.b_cre_list_),
       aa_ann_list_(op.aa_ann_list_), aa_cre_list_(op.aa_cre_list_), ab_ann_list_(op.ab_ann_list_),
@@ -701,7 +701,7 @@ void SigmaVectorWfn1::compute_sigma(psi::SharedVector sigma, psi::SharedVector b
 }
 
 SigmaVectorWfn2::SigmaVectorWfn2(const DeterminantHashVec& space, WFNOperator& op,
-                                 std::shared_ptr<FCIIntegrals> fci_ints)
+                                 std::shared_ptr<ActiveSpaceIntegrals> fci_ints)
     : SigmaVector(space.size()), space_(space), fci_ints_(fci_ints), a_list_(op.a_list_),
       b_list_(op.b_list_), aa_list_(op.aa_list_), ab_list_(op.ab_list_), bb_list_(op.bb_list_) {
 
@@ -935,7 +935,7 @@ void SigmaVectorWfn2::compute_sigma(psi::SharedVector sigma, psi::SharedVector b
 }
 
 SigmaVectorWfn3::SigmaVectorWfn3(const DeterminantHashVec& space, WFNOperator& op,
-                                 std::shared_ptr<FCIIntegrals> fci_ints)
+                                 std::shared_ptr<ActiveSpaceIntegrals> fci_ints)
     : SigmaVector(space.size()), space_(space), fci_ints_(fci_ints), a_list_(op.a_list_),
       b_list_(op.b_list_), aa_list_(op.aa_list_), ab_list_(op.ab_list_), bb_list_(op.bb_list_) {
 

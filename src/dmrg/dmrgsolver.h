@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -34,7 +34,10 @@
 #include "psi4/libfock/jk.h"
 #include "base_classes/reference.h"
 #include "integrals/integrals.h"
-#include "helpers/mo_space_info.h"
+#include "base_classes/mo_space_info.h"
+#include "base_classes/state_info.h"
+#include "base_classes/scf_info.h"
+#include "base_classes/forte_options.h"
 
 #include "chemps2/Irreps.h"
 #include "chemps2/Problem.h"
@@ -47,10 +50,13 @@ namespace forte {
 
 class DMRGSolver {
   public:
-    DMRGSolver(psi::SharedWavefunction ref_wfn, psi::Options& options,
-               std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ForteIntegrals> ints);
-    DMRGSolver(psi::SharedWavefunction ref_wfn, psi::Options& options,
+    DMRGSolver(StateInfo state,
+               std::shared_ptr<SCFInfo> scf_info,
+               std::shared_ptr<ForteOptions> options,
+               std::shared_ptr<ForteIntegrals> ints,
                std::shared_ptr<MOSpaceInfo> mo_space_info);
+//    DMRGSolver(psi::SharedWavefunction ref_wfn, psi::Options& options,
+//               std::shared_ptr<MOSpaceInfo> mo_space_info);
     void compute_energy();
 
     Reference reference() { return dmrg_ref_; }
@@ -67,10 +73,12 @@ class DMRGSolver {
 
   private:
     Reference dmrg_ref_;
-    psi::SharedWavefunction wfn_;
-    psi::Options& options_;
-    std::shared_ptr<MOSpaceInfo> mo_space_info_;
+
+    StateInfo state_;
+    std::shared_ptr<SCFInfo> scf_info_;
+    std::shared_ptr<ForteOptions> options_;
     std::shared_ptr<ForteIntegrals> ints_;
+    std::shared_ptr<MOSpaceInfo> mo_space_info_;
     bool disk_3_rdm_ = false;
     /// Form CAS-CI Hamiltonian stuff
 
@@ -90,6 +98,5 @@ class DMRGSolver {
     bool use_user_integrals_ = false;
     void print_natural_orbitals(double* one_rdm);
 };
-}
 }
 #endif // DMRG_H

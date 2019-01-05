@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -39,12 +39,13 @@
 #include "ambit/tensor.h"
 
 #include "ci_rdm/ci_rdms.h"
-#include "helpers/mo_space_info.h"
+#include "base_classes/mo_space_info.h"
 #include "helpers/helpers.h"
 #include "integrals/integrals.h"
+#include "base_classes/active_space_solver.h"
 #include "base_classes/reference.h"
 #include "sparse_ci/sparse_ci_solver.h"
-#include "fci/fci_integrals.h"
+#include "integrals/active_space_integrals.h"
 #include "sparse_ci/determinant.h"
 #include "mrdsrg-spin-integrated/active_dsrgpt2.h"
 
@@ -56,13 +57,15 @@ using d5 = std::vector<d4>;
 using d6 = std::vector<d5>;
 using vecdet = std::vector<forte::Determinant>;
 
-
 namespace forte {
+
+class ForteOptions;
+class SCFInfo;
 
 /// Set the FCI_MO options
 void set_FCI_MO_options(ForteOptions& foptions);
 
-class FCI_MO : public psi::Wavefunction {
+class FCI_MO : public ActiveSpaceSolver {
 
   public:
     /**
@@ -72,8 +75,8 @@ class FCI_MO : public psi::Wavefunction {
      * @param ints ForteInegrals
      * @param mo_space_info MOSpaceInfo
      */
-    FCI_MO(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
-           std::shared_ptr<MOSpaceInfo> mo_space_info);
+    FCI_MO(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
+           std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /**
      * @brief FCI_MO Constructor
@@ -83,14 +86,15 @@ class FCI_MO : public psi::Wavefunction {
      * @param mo_space_info MOSpaceInfo
      * @param fci_ints FCIInegrals
      */
-    FCI_MO(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
-           std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<FCIIntegrals> fci_ints);
+    FCI_MO(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
+           std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info,
+           std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
 
     /// Destructor
     ~FCI_MO();
 
     /// Compute state-specific or state-averaged energy
-    double compute_energy();
+    double compute_energy() override;
 
     /// Compute state-specific CASCI energy
     double compute_ss_energy();
@@ -99,7 +103,9 @@ class FCI_MO : public psi::Wavefunction {
 
     /// Return the reference object
     /// Return averaged cumulants if AVG_STATE is not empty
-    Reference reference(const int& level = 3);
+    Reference get_reference() override;
+
+    void set_options(std::shared_ptr<ForteOptions>) override{}; // TODO implement
 
     /// Compute densities or transition densities
     /// root1, root2 -- the ket and bra roots of p_space and eigen
@@ -151,7 +157,7 @@ class FCI_MO : public psi::Wavefunction {
     void set_safe_to_read_density_files(bool safe) { safe_to_read_density_files_ = safe; }
 
     /// Set fci_int_ pointer
-    void set_fci_int(std::shared_ptr<FCIIntegrals> fci_ints) { fci_ints_ = fci_ints; }
+    void set_fci_int(std::shared_ptr<ActiveSpaceIntegrals> fci_ints) { fci_ints_ = fci_ints; }
 
     /// Set multiplicity
     void set_multiplicity(int multiplicity) { multi_ = multiplicity; }
@@ -176,6 +182,9 @@ class FCI_MO : public psi::Wavefunction {
         projected_roots_ = projected;
     }
 
+    /// Set maximum RDM to compute
+    void set_max_rdm_level(int level) { max_rdm_ = level; }
+
     /// Set initial guess
     void set_initial_guess(std::vector<std::pair<size_t, double>>& guess) {
         initial_guess_ = guess;
@@ -188,7 +197,7 @@ class FCI_MO : public psi::Wavefunction {
     void set_eigens(const std::vector<std::vector<std::pair<psi::SharedVector, double>>>& eigens);
 
     /// Return fci_int_ pointer
-    std::shared_ptr<FCIIntegrals> fci_ints() { return fci_ints_; }
+    std::shared_ptr<ActiveSpaceIntegrals> fci_ints() { return fci_ints_; }
 
     /// Return the vector of determinants
     vecdet p_space() { return determinant_; }
@@ -240,13 +249,19 @@ class FCI_MO : public psi::Wavefunction {
     /// Integrals
     std::shared_ptr<ForteIntegrals> integral_;
     std::string int_type_;
-    std::shared_ptr<FCIIntegrals> fci_ints_;
+    std::shared_ptr<ActiveSpaceIntegrals> fci_ints_;
 
     /// Reference Type
     std::string ref_type_;
 
     /// MO space info
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
+
+    /// SCF info
+    std::shared_ptr<SCFInfo> scf_info_;
+
+    /// ForteOptions
+    std::shared_ptr<ForteOptions> options_;
 
     /// Print Levels
     int print_;
@@ -336,6 +351,9 @@ class FCI_MO : public psi::Wavefunction {
     std::vector<std::vector<std::vector<bool>>> Form_String_EA(const std::vector<bool>& ref_string,
                                                                const bool& print = false);
 
+    /// Max RDM to compute
+    int max_rdm_ = 3;
+
     /// Choice of Roots
     int nroot_; // number of roots
     int root_;  // which root in nroot
@@ -365,7 +383,8 @@ class FCI_MO : public psi::Wavefunction {
 
     /// Print the CI Vectors and Configurations (figure out the dominant determinants)
     void print_CI(const int& nroot, const double& CI_threshold,
-                  const std::vector<std::pair<psi::SharedVector, double>>& eigen, const vecdet& det);
+                  const std::vector<std::pair<psi::SharedVector, double>>& eigen,
+                  const vecdet& det);
 
     /// Density Matrix
     d2 Da_;
@@ -394,10 +413,10 @@ class FCI_MO : public psi::Wavefunction {
     /// File Names of Densities Stored on Disk
     std::unordered_set<std::string> density_files_;
     bool safe_to_read_density_files_ = false;
-//    std::vector<std::string> density_filenames_generator(int rdm_level, int irrep, int multi,
-//                                                         int root1, int root2);
-//    bool check_density_files(int rdm_level, int irrep, int multi, int root1, int root2);
-//    void remove_density_files(int rdm_level, int irrep, int multi, int root1, int root2);
+    //    std::vector<std::string> density_filenames_generator(int rdm_level, int irrep, int multi,
+    //                                                         int root1, int root2);
+    //    bool check_density_files(int rdm_level, int irrep, int multi, int root1, int root2);
+    //    void remove_density_files(int rdm_level, int irrep, int multi, int root1, int root2);
     void clean_all_density_files();
 
     std::vector<ambit::Tensor> compute_n_rdm(const vecdet& p_space, psi::SharedMatrix evecs,
@@ -440,7 +459,7 @@ class FCI_MO : public psi::Wavefunction {
 
     /// Rotate the given CI vectors by XMS
     psi::SharedMatrix xms_rotate_this_civecs(const det_vec& p_space, psi::SharedMatrix civecs,
-                                        ambit::Tensor Fa, ambit::Tensor Fb);
+                                             ambit::Tensor Fa, ambit::Tensor Fb);
 
     /// Reference Energy
     double Eref_;
@@ -460,7 +479,8 @@ class FCI_MO : public psi::Wavefunction {
     void compute_permanent_dipole();
 
     /// Reformat 1RDM from nactv x nactv vector to N x N psi::SharedMatrix
-    psi::SharedMatrix reformat_1rdm(const std::string& name, const std::vector<double>& data, bool TrD);
+    psi::SharedMatrix reformat_1rdm(const std::string& name, const std::vector<double>& data,
+                                    bool TrD);
 
     /// Transition dipoles
     std::map<std::string, std::vector<double>> trans_dipole_;
@@ -499,6 +519,6 @@ class FCI_MO : public psi::Wavefunction {
     print_occupation_strings_perirrep(std::string name,
                                       const std::vector<std::vector<std::vector<bool>>>& string);
 };
-}
+} // namespace forte
 
 #endif // _fci_mo_h_

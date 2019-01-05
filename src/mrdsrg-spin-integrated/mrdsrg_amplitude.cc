@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -33,7 +33,7 @@
 #include "psi4/psi4-dec.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
 
-#include "helpers/mo_space_info.h"
+#include "base_classes/mo_space_info.h"
 #include "helpers/timer.h"
 #include "boost/format.hpp"
 #include "mrdsrg.h"
@@ -44,7 +44,7 @@ namespace forte {
 
 void MRDSRG::guess_t(BlockedTensor& V, BlockedTensor& T2, BlockedTensor& F, BlockedTensor& T1) {
     // if fully decouple core-core-virtual-virtual block
-    std::string ccvv_source = options_.get_str("CCVV_SOURCE");
+    std::string ccvv_source = foptions_->get_str("CCVV_SOURCE");
 
     if (ccvv_source == "ZERO") {
         guess_t2_noccvv(V, T2);
@@ -57,7 +57,7 @@ void MRDSRG::guess_t(BlockedTensor& V, BlockedTensor& T2, BlockedTensor& F, Bloc
 
 void MRDSRG::guess_t_df(BlockedTensor& B, BlockedTensor& T2, BlockedTensor& F, BlockedTensor& T1) {
     // if fully decouple core-core-virtual-virtual block
-    std::string ccvv_source = options_.get_str("CCVV_SOURCE");
+    std::string ccvv_source = foptions_->get_str("CCVV_SOURCE");
 
     if (ccvv_source == "ZERO") {
         guess_t2_noccvv_df(B, T2);
@@ -70,7 +70,7 @@ void MRDSRG::guess_t_df(BlockedTensor& B, BlockedTensor& T2, BlockedTensor& F, B
 
 void MRDSRG::update_t() {
     // if fully decouple core-core-virtual-virtual block
-    std::string ccvv_source = options_.get_str("CCVV_SOURCE");
+    std::string ccvv_source = foptions_->get_str("CCVV_SOURCE");
     if (ccvv_source == "ZERO") {
         update_t2_noccvv();
         update_t1_nocv();

@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -40,7 +40,7 @@
 #include "helpers/timer.h"
 #include "psi4/physconst.h"
 
-#include "fci/fci_integrals.h"
+#include "integrals/active_space_integrals.h"
 #include "sci/fci_mo.h"
 #include "orbital-helpers/semi_canonicalize.h"
 #include "master_mrdsrg.h"
@@ -52,13 +52,12 @@ using namespace psi;
 
 namespace forte {
 
-ACTIVE_DSRGPT2::ACTIVE_DSRGPT2(psi::SharedWavefunction ref_wfn, psi::Options& options,
+ACTIVE_DSRGPT2::ACTIVE_DSRGPT2(std::shared_ptr<SCFInfo> scf_info,
+                               std::shared_ptr<ForteOptions> options,
                                std::shared_ptr<ForteIntegrals> ints,
                                std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : Wavefunction(options), ints_(ints), mo_space_info_(mo_space_info), total_nroots_(0) {
-    // Copy the wavefunction information
-    shallow_copy(ref_wfn);
-    reference_wavefunction_ = ref_wfn;
+    : ints_(ints), mo_space_info_(mo_space_info), scf_info_(scf_info), foptions_(options),
+      total_nroots_(0) {
 
     std::string description = "Wrapper for Multiple SS-DSRG-MRPT2 Computations";
     print_method_banner({"ACTIVE-DSRG-MRPT2", description, "Chenyang Li"});
@@ -75,26 +74,26 @@ ACTIVE_DSRGPT2::ACTIVE_DSRGPT2(psi::SharedWavefunction ref_wfn, psi::Options& op
 ACTIVE_DSRGPT2::~ACTIVE_DSRGPT2() {}
 
 void ACTIVE_DSRGPT2::startup() {
-    if (options_["NROOTPI"].size() == 0) {
+    if ((foptions_->psi_options())["NROOTPI"].size() == 0) {
         throw psi::PSIEXCEPTION("Please specify NROOTPI for ACTIVE-DSRGPT2 jobs.");
     } else {
         std::shared_ptr<psi::Molecule> molecule = psi::Process::environment.molecule();
         multiplicity_ = molecule->multiplicity();
-        if (options_["MULTIPLICITY"].has_changed()) {
-            multiplicity_ = options_.get_int("MULTIPLICITY");
+        if (foptions_->has_changed("MULTIPLICITY")) {
+            multiplicity_ = foptions_->get_int("MULTIPLICITY");
         }
 
-        ref_type_ = options_.get_str("FCIMO_ACTV_TYPE");
+        ref_type_ = foptions_->get_str("FCIMO_ACTV_TYPE");
         if (ref_type_ == "COMPLETE") {
             ref_type_ = "CAS";
         }
 
-        int nirrep = this->nirrep();
+        int nirrep = mo_space_info_->nirrep();
         dominant_dets_ = std::vector<vector<Determinant>>(nirrep, std::vector<Determinant>());
         ref_wfns_ = std::vector<psi::SharedMatrix>(nirrep, psi::SharedMatrix());
 
         // determined absolute orbitals indices in C1 symmetry
-        psi::Dimension nmopi = this->nmopi();
+        psi::Dimension nmopi = mo_space_info_->get_dimension("ALL");
         psi::Dimension frzcpi = mo_space_info_->get_dimension("FROZEN_DOCC");
         psi::Dimension corepi = mo_space_info_->get_dimension("RESTRICTED_DOCC");
         psi::Dimension actvpi = mo_space_info_->get_dimension("ACTIVE");
@@ -106,7 +105,8 @@ void ACTIVE_DSRGPT2::startup() {
         std::vector<std::tuple<double, int, int>> order;
         for (int h = 0; h < nirrep; ++h) {
             for (int i = 0; i < nmopi[h]; ++i) {
-                order.push_back(std::tuple<double, int, int>(this->epsilon_a()->get(h, i), i, h));
+                order.push_back(
+                    std::tuple<double, int, int>(scf_info_->epsilon_a()->get(h, i), i, h));
             }
         }
         std::sort(order.begin(), order.end(), std::less<std::tuple<double, int, int>>());
@@ -133,7 +133,7 @@ void ACTIVE_DSRGPT2::startup() {
         std::string cisd_noHF;
         if (ref_type_ == "CISD") {
             t1_percentage_ = std::vector<vector<double>>(nirrep, std::vector<double>());
-            if (options_.get_bool("FCIMO_CISD_NOHF")) {
+            if (foptions_->get_bool("FCIMO_CISD_NOHF")) {
                 cisd_noHF = "TURE";
             } else {
                 cisd_noHF = "FALSE";
@@ -141,7 +141,7 @@ void ACTIVE_DSRGPT2::startup() {
         }
 
         for (int h = 0; h < nirrep; ++h) {
-            nrootpi_.push_back(options_["NROOTPI"][h].to_integer());
+            nrootpi_.push_back((foptions_->psi_options())["NROOTPI"][h].to_integer());
             irrep_symbol_.push_back(std::string(ct.gamma(h).symbol()));
             total_nroots_ += nrootpi_[h];
         }
@@ -155,16 +155,16 @@ void ACTIVE_DSRGPT2::startup() {
         if (ref_type_ == "CISD") {
             calculation_info_string.push_back({"separate HF in CISD", cisd_noHF});
         }
-        std::string ipea = options_.get_str("FCIMO_IPEA");
+        std::string ipea = foptions_->get_str("FCIMO_IPEA");
         if (ipea != "NONE") {
             calculation_info_string.push_back({"IPEA type", ipea});
         }
-        bool internals = (options_.get_str("INTERNAL_AMP") != "NONE");
+        bool internals = (foptions_->get_str("INTERNAL_AMP") != "NONE");
         calculation_info_string.push_back(
-            {"DSRG-MRPT2 internal amplitudes", options_.get_str("INTERNAL_AMP")});
+            {"DSRG-MRPT2 internal amplitudes", foptions_->get_str("INTERNAL_AMP")});
         if (internals) {
             calculation_info_string.push_back(
-                {"DSRG-MRPT2 internal type", options_.get_str("INTERNAL_AMP_SELECT")});
+                {"DSRG-MRPT2 internal type", foptions_->get_str("INTERNAL_AMP_SELECT")});
         }
         for (const auto& str_dim : calculation_info_string) {
             outfile->Printf("\n    %-40s %15s", str_dim.first.c_str(), str_dim.second.c_str());
@@ -190,7 +190,7 @@ double ACTIVE_DSRGPT2::compute_energy() {
         return 0.0;
     }
 
-    int nirrep = this->nirrep();
+    int nirrep = mo_space_info_->nirrep();
     CharacterTable ct = psi::Process::environment.molecule()->point_group()->char_table();
     std::vector<std::string> multi_label{"Singlet", "Doublet", "Triplet", "Quartet", "Quintet",
                                          "Sextet",  "Septet",  "Octet",   "Nonet",   "Decaet"};
@@ -206,25 +206,24 @@ double ACTIVE_DSRGPT2::compute_energy() {
                                       "aCaV", "cAaA", "aCaA", "aAvA", "aAaV"};
 
     // save a copy of the original orbitals
-    psi::SharedMatrix Ca0(this->Ca()->clone());
-    psi::SharedMatrix Cb0(this->Cb()->clone());
+    psi::SharedMatrix Ca0(ints_->Ca()->clone());
+    psi::SharedMatrix Cb0(ints_->Cb()->clone());
 
     // compute MO dipole integrals assume equivalent alpha beta orbitals
     modipole_ints_.clear();
     modipole_ints_ = ints_->compute_MOdipole_ints();
 
     // FCI_MO object
-    fci_mo_ = std::make_shared<FCI_MO>(reference_wavefunction_, options_, ints_, mo_space_info_);
+    fci_mo_ = std::make_shared<FCI_MO>(scf_info_, foptions_, ints_, mo_space_info_);
 
     // max cumulant level
-    int max_cu_level = options_.get_str("THREEPDC") == "ZERO" ? 2 : 3;
+    int max_cu_level = foptions_->get_str("THREEPDC") == "ZERO" ? 2 : 3;
 
     // compute orbital extent
     orb_extents_ = flatten_fci_orbextents(fci_mo_->orb_extents());
 
     // semicanonicalzer
-    std::shared_ptr<SemiCanonical> semi =
-        std::make_shared<SemiCanonical>(reference_wavefunction_, ints_, mo_space_info_, true);
+    auto semi = std::make_shared<SemiCanonical>(foptions_, ints_, mo_space_info_, true);
     if (ref_type_ == "CIS" || ref_type_ == "CISD") {
         semi->set_actv_dims(fci_mo_->actv_docc(), fci_mo_->actv_virt());
     }
@@ -271,7 +270,8 @@ double ACTIVE_DSRGPT2::compute_energy() {
             }
 
             // compute cumultans
-            Reference reference = fci_mo_->reference(max_cu_level);
+            fci_mo_->set_max_rdm_level(max_cu_level);
+            Reference reference = fci_mo_->get_reference();
 
             // semicanonicalize integrals and cumulants
             semi->semicanonicalize(reference, max_cu_level);
@@ -309,7 +309,8 @@ double ACTIVE_DSRGPT2::compute_energy() {
         for (int i = 0; i < nroot; ++i) {
             outfile->Printf("\n\n  Computing semicanonical orbitals for root %d.", i);
             fci_mo_->set_root(i);
-            Reference reference = fci_mo_->reference(1);
+            fci_mo_->set_max_rdm_level(1);
+            Reference reference = fci_mo_->get_reference();
             semi->semicanonicalize(reference, 1, true, false);
 
             Uas.emplace_back(semi->Ua()->clone());
@@ -378,17 +379,18 @@ double ACTIVE_DSRGPT2::compute_energy() {
 
             // compute cumulants
             fci_mo_->set_root(i);
-            Reference reference = fci_mo_->reference(max_cu_level);
+            fci_mo_->set_max_rdm_level(max_cu_level);
+            Reference reference = fci_mo_->get_reference();
             reference.set_Eref(Eref);
 
             // manually rotate the reference and integrals
             semi->transform_reference(Uas_t[i], Ubs_t[i], reference, max_cu_level);
             print_h2("Integral Transformation to Semicanonical Basis");
-            psi::SharedMatrix Ca = reference_wavefunction_->Ca();
-            psi::SharedMatrix Cb = reference_wavefunction_->Cb();
+            psi::SharedMatrix Ca = ints_->Ca();
+            psi::SharedMatrix Cb = ints_->Cb();
             Ca->gemm(false, false, 1.0, Ca0, Uas[i], 0.0);
             Cb->gemm(false, false, 1.0, Cb0, Ubs[i], 0.0);
-            ints_->retransform_integrals();
+            ints_->update_orbitals(Ca, Cb);
 
             // obtain the name of transition type
             std::string trans_name = transition_type(0, 0, i_real, h);
@@ -476,11 +478,10 @@ double ACTIVE_DSRGPT2::compute_dsrg_mrpt2_energy(std::shared_ptr<MASTER_DSRG>& d
                                                  Reference& reference) {
     IntegralType int_type = ints_->integral_type();
     if (int_type == Conventional) {
-        dsrg = std::make_shared<DSRG_MRPT2>(reference, reference_wavefunction_, options_, ints_,
-                                            mo_space_info_);
+        dsrg = std::make_shared<DSRG_MRPT2>(reference, scf_info_, foptions_, ints_, mo_space_info_);
     } else if (int_type == Cholesky || int_type == DF || int_type == DiskDF) {
-        dsrg = std::make_shared<THREE_DSRG_MRPT2>(reference, reference_wavefunction_, options_,
-                                                  ints_, mo_space_info_);
+        dsrg = std::make_shared<THREE_DSRG_MRPT2>(reference, scf_info_, foptions_, ints_,
+                                                  mo_space_info_);
     } else {
         throw psi::PSIEXCEPTION("Unknown integral type for DSRG.");
     }
@@ -490,8 +491,8 @@ double ACTIVE_DSRGPT2::compute_dsrg_mrpt2_energy(std::shared_ptr<MASTER_DSRG>& d
     return dsrg->compute_energy();
 }
 
-void ACTIVE_DSRGPT2::rotate_amp(psi::SharedMatrix Ua, psi::SharedMatrix Ub, ambit::BlockedTensor& T1,
-                                ambit::BlockedTensor& T2) {
+void ACTIVE_DSRGPT2::rotate_amp(psi::SharedMatrix Ua, psi::SharedMatrix Ub,
+                                ambit::BlockedTensor& T1, ambit::BlockedTensor& T2) {
     ambit::BlockedTensor U =
         ambit::BlockedTensor::build(ambit::CoreTensor, "Uorb", spin_cases({"gg"}));
 
@@ -532,11 +533,11 @@ void ACTIVE_DSRGPT2::rotate_amp(psi::SharedMatrix Ua, psi::SharedMatrix Ub, ambi
     T1["IA"] = temp["IA"];
 }
 
-void ACTIVE_DSRGPT2::compute_osc_ref(const int& irrep0, const int& irrep1,
-                                     const std::vector<Determinant>& p_space0,
-                                     const std::vector<Determinant>& p_space1,
-                                     const std::vector<std::pair<psi::SharedVector, double>>& eigen0,
-                                     const std::vector<std::pair<psi::SharedVector, double>>& eigen1) {
+void ACTIVE_DSRGPT2::compute_osc_ref(
+    const int& irrep0, const int& irrep1, const std::vector<Determinant>& p_space0,
+    const std::vector<Determinant>& p_space1,
+    const std::vector<std::pair<psi::SharedVector, double>>& eigen0,
+    const std::vector<std::pair<psi::SharedVector, double>>& eigen1) {
     // some basic test
     size_t ndet0 = p_space0.size();
     size_t ndet1 = p_space1.size();
@@ -643,12 +644,12 @@ std::string ACTIVE_DSRGPT2::transition_type(const int& n0, const int& irrep0, co
     return name_ss.str();
 }
 
-Vector4 ACTIVE_DSRGPT2::compute_td_ref_root(std::shared_ptr<FCIIntegrals> fci_ints,
+Vector4 ACTIVE_DSRGPT2::compute_td_ref_root(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
                                             const std::vector<Determinant>& p_space,
                                             psi::SharedMatrix evecs, const int& root0,
                                             const int& root1) {
     int nirrep = mo_space_info_->nirrep();
-    psi::Dimension nmopi = this->nmopi();
+    psi::Dimension nmopi = mo_space_info_->get_dimension("ALL");
     psi::Dimension actvpi = mo_space_info_->get_dimension("ACTIVE");
     size_t nactv = actvpi.sum();
     size_t nmo = nmopi.sum();
@@ -843,7 +844,7 @@ double ACTIVE_DSRGPT2::compute_TDeff(ambit::BlockedTensor& T1, ambit::BlockedTen
                                      const bool& transpose) {
     // initialization
     double scalar = 0.0;
-    bool internal_amp = options_.get_str("INTERNAL_AMP") != "NONE";
+    bool internal_amp = foptions_->get_str("INTERNAL_AMP") != "NONE";
 
     std::string uv = "uv", UV = "UV";
     std::string uvxy = "uvxy", uVxY = "uVxY", vUyX = "vUyX", UVXY = "UVXY";
@@ -984,20 +985,20 @@ psi::SharedMatrix ACTIVE_DSRGPT2::combine_evecs(const int& h0, const int& h1) {
 
 void ACTIVE_DSRGPT2::transform_integrals(psi::SharedMatrix Ca0, psi::SharedMatrix Cb0) {
     // copy to the wave function
-    psi::SharedMatrix Ca = this->Ca();
-    psi::SharedMatrix Cb = this->Cb();
+    psi::SharedMatrix Ca = ints_->Ca();
+    psi::SharedMatrix Cb = ints_->Cb();
     Ca->copy(Ca0);
     Cb->copy(Cb0);
 
     // transform integrals
     outfile->Printf("\n\n");
     std::vector<size_t> idx_a = mo_space_info_->get_corr_abs_mo("ACTIVE");
-    ints_->retransform_integrals();
+    ints_->update_orbitals(Ca, Cb);
     ambit::Tensor tei_active_aa = ints_->aptei_aa_block(idx_a, idx_a, idx_a, idx_a);
     ambit::Tensor tei_active_ab = ints_->aptei_ab_block(idx_a, idx_a, idx_a, idx_a);
     ambit::Tensor tei_active_bb = ints_->aptei_bb_block(idx_a, idx_a, idx_a, idx_a);
     auto fci_ints =
-        std::make_shared<FCIIntegrals>(ints_, mo_space_info_->get_corr_abs_mo("ACTIVE"),
+        std::make_shared<ActiveSpaceIntegrals>(ints_, mo_space_info_->get_corr_abs_mo("ACTIVE"),
                                        mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
     fci_ints->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
     fci_ints->compute_restricted_one_body_operator();
@@ -1054,7 +1055,7 @@ void ACTIVE_DSRGPT2::print_osc() {
 }
 
 void ACTIVE_DSRGPT2::print_summary() {
-    int nirrep = this->nirrep();
+    int nirrep = mo_space_info_->nirrep();
 
     // print raw data
     std::string title = "  ==> ACTIVE-DSRG-MRPT2 Summary <==";
@@ -1201,7 +1202,7 @@ void ACTIVE_DSRGPT2::print_summary() {
 std::string ACTIVE_DSRGPT2::compute_ex_type(const Determinant& det, const Determinant& ref_det) {
     psi::Dimension active = mo_space_info_->get_dimension("ACTIVE");
     size_t nact = mo_space_info_->size("ACTIVE");
-    int nirrep = this->nirrep();
+    int nirrep = mo_space_info_->nirrep();
     std::vector<std::string> sym_active;
     for (int h = 0; h < nirrep; ++h) {
         for (int i = 0; i < active[h]; ++i) {
@@ -1343,7 +1344,8 @@ std::string ACTIVE_DSRGPT2::format_double(const double& value, const int& width,
 }
 
 std::map<Determinant, double>
-ACTIVE_DSRGPT2::p_space_actv_to_nmo(const std::vector<Determinant>& p_space, psi::SharedVector wfn) {
+ACTIVE_DSRGPT2::p_space_actv_to_nmo(const std::vector<Determinant>& p_space,
+                                    psi::SharedVector wfn) {
     //    Determinant::reset_ints();
     std::map<Determinant, double> detsmap;
 
@@ -1575,7 +1577,7 @@ void ACTIVE_DSRGPT2::compute_osc_pt2_dets(const int& irrep, const int& root, con
      * IMPORTANT NOTE:
      *   1) All blocks of T should be stored
      *   2) Number of basis function should not exceed 128
-    */
+     */
 
     // form determinants for ground and excited states
     std::map<Determinant, double> wfn0_g =
@@ -1690,12 +1692,12 @@ void ACTIVE_DSRGPT2::compute_osc_pt2_dets(const int& irrep, const int& root, con
     //    std::plus<double>());
 
     // translate tdm to C1 Pitzer ordering
-    psi::Dimension nmopi = this->nmopi();
+    psi::Dimension nmopi = mo_space_info_->get_dimension("ALL");
     std::vector<std::tuple<double, int, int>> order;
-    int nirrep = this->nirrep();
+    int nirrep = mo_space_info_->nirrep();
     for (int h = 0; h < nirrep; ++h) {
         for (int i = 0; i < nmopi[h]; ++i) {
-            order.push_back(std::tuple<double, int, int>(this->epsilon_a()->get(h, i), i, h));
+            order.push_back(std::tuple<double, int, int>(scf_info_->epsilon_a()->get(h, i), i, h));
         }
     }
     std::sort(order.begin(), order.end(), std::less<std::tuple<double, int, int>>());
@@ -1827,12 +1829,12 @@ void ACTIVE_DSRGPT2::compute_osc_pt2_overlap(const int& irrep, const int& root,
     std::map<Determinant, double> wfn1_x = excited_wfn_1st(wfn0_x, T1_x, T2_x);
 
     // figure out C1 Pitzer ordering
-    psi::Dimension nmopi = this->nmopi();
+    psi::Dimension nmopi = mo_space_info_->get_dimension("ALL");
     std::vector<std::tuple<double, int, int>> order;
-    int nirrep = this->nirrep();
+    int nirrep = mo_space_info_->nirrep();
     for (int h = 0; h < nirrep; ++h) {
         for (int i = 0; i < nmopi[h]; ++i) {
-            order.push_back(std::tuple<double, int, int>(this->epsilon_a()->get(h, i), i, h));
+            order.push_back(std::tuple<double, int, int>(scf_info_->epsilon_a()->get(h, i), i, h));
         }
     }
     std::sort(order.begin(), order.end(), std::less<std::tuple<double, int, int>>());
@@ -1898,4 +1900,4 @@ double ACTIVE_DSRGPT2::compute_overlap(std::map<Determinant, double> wfn1,
 
     return value;
 }
-}
+} // namespace forte

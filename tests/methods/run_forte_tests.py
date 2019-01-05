@@ -16,7 +16,6 @@ TIMING_RE = re.compile(r'Psi4 exiting successfully. Buy a developer a beer!')
 
 TEST_LEVELS = {'short': ['short'], 'long': ['long'], 'all': ['short', 'long']}
 
-
 class bcolors:
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'
@@ -25,16 +24,7 @@ class bcolors:
     FAIL = '\033[91m'
     ENDC = '\033[0m'
 
-
-class bnocolors:
-    HEADER = ''
-    OKBLUE = ''
-    OKGREEN = ''
-    WARNING = ''
-    FAIL = ''
-    ENDC = ''
-
-
+    
 def run_job(jobdir, psi4command, test_results, test_time):
     """Run a test in jobdir using the psi4command"""
     start = time.time()

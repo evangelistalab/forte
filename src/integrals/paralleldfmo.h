@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -39,7 +39,7 @@ class ParallelDFMO {
     int Q_PQ() { return GA_Q_PQ_; }
 
   protected:
-    psi::SharedMatrix Ca_;
+    std::shared_ptr<psi::Matrix> Ca_;
     /// (A | Q)^{-1/2}
     void J_one_half();
     /// Compute (A|mn) integrals (distribute via mn indices)

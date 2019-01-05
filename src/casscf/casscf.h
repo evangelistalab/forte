@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -36,16 +36,19 @@
 #include "integrals/integrals.h"
 #include "ambit/blocked_tensor.h"
 #include "base_classes/reference.h"
-#include "helpers/mo_space_info.h"
+#include "base_classes/mo_space_info.h"
 #include "helpers/blockedtensorfactory.h"
 #include "fci/fci_vector.h"
-#include "fci/fci_integrals.h"
+#include "integrals/active_space_integrals.h"
 #include "orbital-helpers/semi_canonicalize.h"
-
+#include "base_classes/active_space_solver.h"
 
 namespace forte {
 
-class CASSCF : public psi::Wavefunction {
+// class ActiveSpaceIntegrals;
+class SCFInfo;
+
+class CASSCF : public ActiveSpaceSolver {
   public:
     /**
      * @brief CASSCF::CASSCF
@@ -59,24 +62,33 @@ class CASSCF : public psi::Wavefunction {
      * This reference has a nice algorithmic flowchart.  Look it up
      *
      */
-    CASSCF(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
-           std::shared_ptr<MOSpaceInfo> mo_space_info);
-    /// Compute CASSCF given a 1RDM and 2RDM
-    void compute_casscf();
+    CASSCF(StateInfo state, std::shared_ptr<forte::SCFInfo> scf_info,
+           std::shared_ptr<ForteOptions> options, std::shared_ptr<MOSpaceInfo> mo_space_info,
+           std::shared_ptr<ActiveSpaceIntegrals> as_ints);
     /// Use daniels code to compute Orbital optimization
     // void compute_casscf_soscf();
     /// Return the final gamma1
     ambit::Tensor gamma1() { return gamma1_; }
     /// Return the final gamma2;
     ambit::Tensor gamma2() { return gamma2_; }
-    double compute_energy() { return E_casscf_; }
+    double compute_energy() override;
+
+    void set_options(std::shared_ptr<ForteOptions>) override{};
 
     /// Return a reference object
-    Reference casscf_reference();
+    Reference get_reference() override;
 
     /// check the cas_ci energy with spin-free RDM
     double cas_check(Reference cas);
+
   private:
+    /// The state to calculate
+    StateInfo state_;
+    /// SCF information
+    std::shared_ptr<SCFInfo> scf_info_;
+    /// The options
+    std::shared_ptr<ForteOptions> options_;
+
     /// The active one RDM in the MO basis
     ambit::Tensor gamma1_;
 
@@ -86,13 +98,9 @@ class CASSCF : public psi::Wavefunction {
     Reference cas_ref_;
     /// The energy computed in FCI with updates from CASSCF and CI
     double E_casscf_;
-    /// The OPtions object
-    psi::Options options_;
     std::shared_ptr<ForteIntegrals> ints_;
     /// The mo_space_info
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
-
-    std::shared_ptr<psi::Wavefunction> reference_wavefunction_;
 
     /// The dimension for number of molecular orbitals (CORRELATED or ALL)
     psi::Dimension nmopi_;
@@ -125,7 +133,7 @@ class CASSCF : public psi::Wavefunction {
     std::shared_ptr<psi::JK> JK_;
     /// Perform a CAS-CI with the updated MO coefficients
     void cas_ci();
-    /// Sets up the FCISolver
+    /// Sets up the FCI
     void set_up_fci();
     /// Set up a SA-FCI
     void set_up_sa_fci();
@@ -176,9 +184,9 @@ class CASSCF : public psi::Wavefunction {
     ambit::Tensor tei_paaa_;
     int print_;
     /// The CISolutions per iteration
-    std::vector<std::vector<std::shared_ptr<FCIWfn>>> CISolutions_;
-    std::shared_ptr<FCIIntegrals> get_ci_integrals();
+    std::vector<std::vector<std::shared_ptr<FCIVector>>> CISolutions_;
+    std::shared_ptr<ActiveSpaceIntegrals> get_ci_integrals();
 };
-}
+} // namespace forte
 
 #endif // CASSCF_H

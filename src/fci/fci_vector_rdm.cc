@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -33,11 +33,15 @@
 #include "psi4/libmints/molecule.h"
 #include "psi4/libqt/qt.h"
 
-#include "helpers/mo_space_info.h"
+#include "base_classes/mo_space_info.h"
+#include "integrals/active_space_integrals.h"
+#include "helpers/timer.h"
 #include "sparse_ci/determinant.h"
 
 #include "fci_vector.h"
 #include "fci_solver.h"
+#include "binary_graph.hpp"
+#include "string_lists.h"
 
 extern int fci_debug_level;
 
@@ -49,7 +53,7 @@ namespace forte {
  * Compute the one-particle density matrix for a given wave function
  * @param alfa flag for alfa or beta component, true = alfa, false = beta
  */
-void FCIWfn::compute_rdms(int max_order) {
+void FCIVector::compute_rdms(int max_order) {
     std::vector<double> rdm_timing;
 
     size_t na = alfa_graph_->nones();
@@ -99,7 +103,7 @@ void FCIWfn::compute_rdms(int max_order) {
     }
 }
 
-double FCIWfn::energy_from_rdms(std::shared_ptr<FCIIntegrals> fci_ints) {
+double FCIVector::energy_from_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints) {
     // Compute the energy from the 1-RDM and 2-RDM
     size_t na = alfa_graph_->nones();
     size_t nb = beta_graph_->nones();
@@ -148,7 +152,7 @@ double FCIWfn::energy_from_rdms(std::shared_ptr<FCIIntegrals> fci_ints) {
  * Compute the one-particle density matrix for a given wave function
  * @param alfa flag for alfa or beta component, true = alfa, false = beta
  */
-void FCIWfn::compute_1rdm(std::vector<double>& rdm, bool alfa) {
+void FCIVector::compute_1rdm(std::vector<double>& rdm, bool alfa) {
     rdm.assign(ncmo_ * ncmo_, 0.0);
 
     for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {
@@ -211,7 +215,7 @@ void FCIWfn::compute_1rdm(std::vector<double>& rdm, bool alfa) {
  * Compute the aa/bb two-particle density matrix for a given wave function
  * @param alfa flag for alfa or beta component, true = aa, false = bb
  */
-void FCIWfn::compute_2rdm_aa(std::vector<double>& rdm, bool alfa) {
+void FCIVector::compute_2rdm_aa(std::vector<double>& rdm, bool alfa) {
     rdm.assign(ncmo_ * ncmo_ * ncmo_ * ncmo_, 0.0);
     // Notation
     // ha - symmetry of alpha strings
@@ -326,7 +330,7 @@ void FCIWfn::compute_2rdm_aa(std::vector<double>& rdm, bool alfa) {
  * Compute the ab two-particle density matrix for a given wave function
  * @param alfa flag for alfa or beta component, true = aa, false = bb
  */
-void FCIWfn::compute_2rdm_ab(std::vector<double>& rdm) {
+void FCIVector::compute_2rdm_ab(std::vector<double>& rdm) {
     rdm.assign(ncmo_ * ncmo_ * ncmo_ * ncmo_, 0.0);
 
     // Loop over blocks of matrix C
@@ -403,7 +407,7 @@ void FCIWfn::compute_2rdm_ab(std::vector<double>& rdm) {
 #endif
 }
 
-void FCIWfn::compute_3rdm_aaa(std::vector<double>& rdm, bool alfa) {
+void FCIVector::compute_3rdm_aaa(std::vector<double>& rdm, bool alfa) {
     rdm.assign(ncmo_ * ncmo_ * ncmo_ * ncmo_ * ncmo_ * ncmo_, 0.0);
 
     for (int h_K = 0; h_K < nirrep_; ++h_K) {
@@ -460,7 +464,7 @@ void FCIWfn::compute_3rdm_aaa(std::vector<double>& rdm, bool alfa) {
     }
 }
 
-void FCIWfn::compute_3rdm_aab(std::vector<double>& rdm) {
+void FCIVector::compute_3rdm_aab(std::vector<double>& rdm) {
     rdm.assign(ncmo_ * ncmo_ * ncmo_ * ncmo_ * ncmo_ * ncmo_, 0.0);
 
     for (int h_K = 0; h_K < nirrep_; ++h_K) {
@@ -513,7 +517,7 @@ void FCIWfn::compute_3rdm_aab(std::vector<double>& rdm) {
     }
 }
 
-void FCIWfn::compute_3rdm_abb(std::vector<double>& rdm) {
+void FCIVector::compute_3rdm_abb(std::vector<double>& rdm) {
     rdm.assign(ncmo_ * ncmo_ * ncmo_ * ncmo_ * ncmo_ * ncmo_, 0.0);
 
     for (int h_K = 0; h_K < nirrep_; ++h_K) {
@@ -573,7 +577,7 @@ void FCIWfn::compute_3rdm_abb(std::vector<double>& rdm) {
     }
 }
 
-void FCIWfn::rdm_test() {
+void FCIVector::rdm_test() {
     bool* Ia = new bool[ncmo_];
     bool* Ib = new bool[ncmo_];
 

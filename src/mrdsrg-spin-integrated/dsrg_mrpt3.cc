@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -41,7 +41,7 @@
 
 #include "helpers/timer.h"
 #include "helpers/blockedtensorfactory.h"
-#include "fci/fci.h"
+#include "fci/fci_solver.h"
 #include "sci/fci_mo.h"
 #include "boost/format.hpp"
 #include "helpers/printing.h"
@@ -53,10 +53,10 @@ using namespace psi;
 
 namespace forte {
 
-DSRG_MRPT3::DSRG_MRPT3(Reference reference, psi::SharedWavefunction ref_wfn, psi::Options& options,
-                       std::shared_ptr<ForteIntegrals> ints,
+DSRG_MRPT3::DSRG_MRPT3(Reference reference, std::shared_ptr<SCFInfo> scf_info,
+                       std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
                        std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : MASTER_DSRG(reference, ref_wfn, options, ints, mo_space_info) {
+    : MASTER_DSRG(reference, scf_info, options, ints, mo_space_info) {
 
     print_method_banner({"MR-DSRG Third-Order Perturbation Theory", "Chenyang Li"});
     outfile->Printf("\n    Reference:");
@@ -93,7 +93,7 @@ void DSRG_MRPT3::startup() {
 
     // number of elements stored in memory
     size_t nelement = 6 * sh * sh * sh * sh + 6 * sa * sa * sa * sa;
-    if (options_.get_str("THREEPDC") != "ZERO") {
+    if (foptions_->get_str("THREEPDC") != "ZERO") {
         nelement += 4 * sa * sa * sa * sa * sa * sa;
     }
 
@@ -199,7 +199,7 @@ void DSRG_MRPT3::startup() {
     if (print_ > 3) {
         V_.print(stdout);
     }
-    profile_print_ = options_.get_bool("PRINT_TIME_PROFILE");
+    profile_print_ = foptions_->get_bool("PRINT_TIME_PROFILE");
 
     // print calculation summary
     print_options_summary();
@@ -603,8 +603,9 @@ double DSRG_MRPT3::compute_energy_pt3_1() {
 
         // compute -[H0th,A1st] = Delta * T and save to C1 and C2
         C1 = BTF_->build(tensor_type_, "C1", spin_cases({"cp", "av", "pc", "va"}));
-        C2 = BTF_->build(tensor_type_, "C2", spin_cases({"chpp", "acpp", "aavp", "aaav", "ppch",
-                                                         "ppac", "vpaa", "avaa"}));
+        C2 = BTF_->build(
+            tensor_type_, "C2",
+            spin_cases({"chpp", "acpp", "aavp", "aaav", "ppch", "ppac", "vpaa", "avaa"}));
         H1_T1_C1(F0th_, T1_, -1.0, C1);
         H1_T2_C1(F0th_, T2_, -1.0, C1);
         H1_T2_C2(F0th_, T2_, -1.0, C2);
@@ -1140,17 +1141,14 @@ void DSRG_MRPT3::renormalize_V(const bool& plusone) {
             [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
                 if (std::fabs(value) > 1.0e-15) {
                     if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)) {
-                        value *= 1.0 +
-                                 dsrg_source_->compute_renormalized(Fa_[i[0]] + Fa_[i[1]] -
-                                                                    Fa_[i[2]] - Fa_[i[3]]);
+                        value *= 1.0 + dsrg_source_->compute_renormalized(Fa_[i[0]] + Fa_[i[1]] -
+                                                                          Fa_[i[2]] - Fa_[i[3]]);
                     } else if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin)) {
-                        value *= 1.0 +
-                                 dsrg_source_->compute_renormalized(Fa_[i[0]] + Fb_[i[1]] -
-                                                                    Fa_[i[2]] - Fb_[i[3]]);
+                        value *= 1.0 + dsrg_source_->compute_renormalized(Fa_[i[0]] + Fb_[i[1]] -
+                                                                          Fa_[i[2]] - Fb_[i[3]]);
                     } else if ((spin[0] == BetaSpin) and (spin[1] == BetaSpin)) {
-                        value *= 1.0 +
-                                 dsrg_source_->compute_renormalized(Fb_[i[0]] + Fb_[i[1]] -
-                                                                    Fb_[i[2]] - Fb_[i[3]]);
+                        value *= 1.0 + dsrg_source_->compute_renormalized(Fb_[i[0]] + Fb_[i[1]] -
+                                                                          Fb_[i[2]] - Fb_[i[3]]);
                     }
                 } else {
                     value = 0.0;
@@ -1286,14 +1284,14 @@ double DSRG_MRPT3::compute_energy_sa() {
     compute_energy();
 
     // obtain active-only transformed intergals
-    std::shared_ptr<FCIIntegrals> fci_ints = compute_Heff_actv();
+    std::shared_ptr<ActiveSpaceIntegrals> fci_ints = compute_Heff_actv();
 
     //    // transfer integrals
     //    transfer_integrals();
 
     //    // prepare FCI integrals
-    //    std::shared_ptr<FCIIntegrals> fci_ints =
-    //        std::make_shared<FCIIntegrals>(ints_, actv_mos_, core_mos_);
+    //    std::shared_ptr<ActiveSpaceIntegrals> fci_ints =
+    //        std::make_shared<ActiveSpaceIntegrals>(ints_, actv_mos_, core_mos_);
     //    fci_ints->set_active_integrals(Hbar2_.block("aaaa"), Hbar2_.block("aAaA"),
     //                                   Hbar2_.block("AAAA"));
     //    if (eri_df_) {
@@ -1306,7 +1304,7 @@ double DSRG_MRPT3::compute_energy_sa() {
     // get character table
     CharacterTable ct = psi::Process::environment.molecule()->point_group()->char_table();
     std::vector<std::string> irrep_symbol;
-    for (int h = 0; h < this->nirrep(); ++h) {
+    for (int h = 0, nirrep = mo_space_info_->nirrep(); h < nirrep; ++h) {
         irrep_symbol.push_back(std::string(ct.gamma(h).symbol()));
     }
 
@@ -1326,8 +1324,8 @@ double DSRG_MRPT3::compute_energy_sa() {
     std::vector<std::vector<double>> Edsrg_sa(nentry, std::vector<double>());
 
     // call FCI_MO if SA_FULL and CAS_TYPE == CAS
-    if (multi_state_algorithm_ == "SA_FULL" && options_.get_str("CAS_TYPE") == "CAS") {
-        FCI_MO fci_mo(reference_wavefunction_, options_, ints_, mo_space_info_, fci_ints);
+    if (multi_state_algorithm_ == "SA_FULL" && foptions_->get_str("CAS_TYPE") == "CAS") {
+        FCI_MO fci_mo(scf_info_, foptions_, ints_, mo_space_info_, fci_ints);
         fci_mo.set_localize_actv(false);
         fci_mo.compute_energy();
         auto eigens = fci_mo.eigens();
@@ -1389,9 +1387,9 @@ double DSRG_MRPT3::compute_energy_sa() {
         }
     } else {
         for (int n = 0; n < nentry; ++n) {
-            int irrep = options_["AVG_STATE"][n][0].to_integer();
-            int multi = options_["AVG_STATE"][n][1].to_integer();
-            int nstates = options_["AVG_STATE"][n][2].to_integer();
+            int irrep = (foptions_->psi_options())["AVG_STATE"][n][0].to_integer();
+            int multi = (foptions_->psi_options())["AVG_STATE"][n][1].to_integer();
+            int nstates = (foptions_->psi_options())["AVG_STATE"][n][2].to_integer();
             std::vector<forte::Determinant> p_space = p_spaces_[n];
 
             // print current symmetry
@@ -1407,10 +1405,9 @@ double DSRG_MRPT3::compute_energy_sa() {
 
                 outfile->Printf("    Use string FCI code.");
 
-                // prepare FCISolver
                 int charge = psi::Process::environment.molecule()->molecular_charge();
-                if (options_["CHARGE"].has_changed()) {
-                    charge = options_.get_int("CHARGE");
+                if ((foptions_->psi_options())["CHARGE"].has_changed()) {
+                    charge = foptions_->get_int("CHARGE");
                 }
                 auto nelec = 0;
                 int natom = psi::Process::environment.molecule()->natom();
@@ -1419,31 +1416,26 @@ double DSRG_MRPT3::compute_energy_sa() {
                 }
                 nelec -= charge;
                 int ms = (multi + 1) % 2;
-                auto nelec_actv =
-                    nelec - 2 * mo_space_info_->size("FROZEN_DOCC") - 2 * core_mos_.size();
+                auto nelec_actv = nelec;
+                //                - 2 * mo_space_info_->size("FROZEN_DOCC") - 2 * core_mos_.size();
                 auto na = (nelec_actv + ms) / 2;
                 auto nb = nelec_actv - na;
 
                 psi::Dimension active_dim = mo_space_info_->get_dimension("ACTIVE");
-                int ntrial_per_root = options_.get_int("NTRIAL_PER_ROOT");
-
-                FCISolver fcisolver(active_dim, core_mos_, actv_mos_, na, nb, multi, irrep, ints_,
-                                    mo_space_info_, ntrial_per_root, print_, options_);
-                fcisolver.set_max_rdm_level(1);
-                fcisolver.set_nroot(nstates);
-                fcisolver.set_root(nstates - 1);
-                fcisolver.set_fci_iterations(options_.get_int("FCI_MAXITER"));
-                fcisolver.set_collapse_per_root(options_.get_int("DL_COLLAPSE_PER_ROOT"));
-                fcisolver.set_subspace_per_root(options_.get_int("DL_SUBSPACE_PER_ROOT"));
-
+                StateInfo state(na, nb, multi, multi - 1, irrep); // assumes highes Ms
+                // TODO use base class info
+                auto fci = make_active_space_solver("FCI", state, scf_info_, mo_space_info_, ints_,
+                                                    foptions_);
+                fci->set_max_rdm_level(1);
+                fci->set_nroot(nstates);
+                fci->set_root(nstates - 1);
                 if (eri_df_) {
-                    fcisolver.use_user_integrals_and_restricted_docc(true);
-                    fcisolver.set_integral_pointer(fci_ints);
+                    fci->set_active_space_integrals(fci_ints);
                 }
 
                 // compute energy and fill in results
-                fcisolver.compute_energy();
-                psi::SharedVector Ems = fcisolver.eigen_vals();
+                fci->compute_energy();
+                psi::SharedVector Ems = fci->evals();
                 for (int i = 0; i < nstates; ++i) {
                     Edsrg_sa[n].push_back(Ems->get(i) + Enuc_);
                 }
@@ -1463,7 +1455,7 @@ double DSRG_MRPT3::compute_energy_sa() {
 
                 psi::SharedMatrix Heff(
                     new psi::Matrix("Heff " + multi_label[multi - 1] + " " + irrep_symbol[irrep],
-                               nstates, nstates));
+                                    nstates, nstates));
                 for (int A = 0; A < nstates; ++A) {
                     for (int B = A; B < nstates; ++B) {
 
@@ -1529,14 +1521,15 @@ double DSRG_MRPT3::compute_energy_sa() {
     outfile->Printf("\n    %s", dash.c_str());
 
     for (int n = 0, counter = 0; n < nentry; ++n) {
-        int irrep = options_["AVG_STATE"][n][0].to_integer();
-        int multi = options_["AVG_STATE"][n][1].to_integer();
-        int nstates = options_["AVG_STATE"][n][2].to_integer();
+        int irrep = (foptions_->psi_options())["AVG_STATE"][n][0].to_integer();
+        int multi = (foptions_->psi_options())["AVG_STATE"][n][1].to_integer();
+        int nstates = (foptions_->psi_options())["AVG_STATE"][n][2].to_integer();
 
         for (int i = 0; i < nstates; ++i) {
             outfile->Printf("\n     %3d     %3s    %2d   %20.12f", multi,
                             irrep_symbol[irrep].c_str(), i, Edsrg_sa[n][i]);
-            psi::Process::environment.globals["ENERGY ROOT " + std::to_string(counter)] = Edsrg_sa[n][i];
+            psi::Process::environment.globals["ENERGY ROOT " + std::to_string(counter)] =
+                Edsrg_sa[n][i];
             ++counter;
         }
         outfile->Printf("\n    %s", dash.c_str());
@@ -1560,8 +1553,8 @@ double DSRG_MRPT3::compute_energy_relaxed() {
     // obtain the all-active DSRG transformed Hamiltonian
     auto fci_ints = compute_Heff_actv();
 
-    if (options_.get_str("CAS_TYPE") == "CAS") {
-        FCI_MO fci_mo(reference_wavefunction_, options_, ints_, mo_space_info_, fci_ints);
+    if (foptions_->get_str("CAS_TYPE") == "CAS") {
+        FCI_MO fci_mo(scf_info_, foptions_, ints_, mo_space_info_, fci_ints);
         fci_mo.set_localize_actv(false);
         Erelax = fci_mo.compute_energy();
 
@@ -1578,19 +1571,22 @@ double DSRG_MRPT3::compute_energy_relaxed() {
             // compute permanent dipoles
             dm_relax = fci_mo.compute_ref_relaxed_dm(Mbar0_, Mbar1_, Mbar2_);
         }
-    } else if (options_.get_str("CAS_TYPE") == "ACI") {
-        AdaptiveCI aci(reference_wavefunction_, options_, ints_, mo_space_info_);
+    } else if (foptions_->get_str("CAS_TYPE") == "ACI") {
+        auto state = make_state_info_from_psi_wfn(ints_->wfn());
+        AdaptiveCI aci(state, scf_info_, foptions_, mo_space_info_, fci_ints);
         aci.set_fci_ints(fci_ints);
-        if (options_["ACI_RELAX_SIGMA"].has_changed()) {
+        if ((foptions_->psi_options())["ACI_RELAX_SIGMA"].has_changed()) {
             aci.update_sigma();
         }
         Erelax = aci.compute_energy();
 
     } else {
-        // it is simpler here to call FCI instead of FCISolver
-        FCI fci(reference_wavefunction_, options_, ints_, mo_space_info_, fci_ints);
-        fci.set_max_rdm_level(1);
-        Erelax = fci.compute_energy();
+        auto state = make_state_info_from_psi_wfn(ints_->wfn());
+        auto fci =
+            make_active_space_solver("FCI", state, scf_info_, mo_space_info_, ints_, foptions_);
+        fci->set_max_rdm_level(1);
+        fci->set_active_space_integrals(fci_ints);
+        Erelax = fci->compute_energy();
     }
 
     // printing
@@ -1756,7 +1752,7 @@ void DSRG_MRPT3::transfer_integrals() {
     outfile->Printf("\n    %-35s = %22.15f", "Total Energy (after)", Etest);
     outfile->Printf("\n    %-35s = %22.15f", "Total Energy (before)", Eref_ + Hbar0_);
 
-    if (std::fabs(Etest - Eref_ - Hbar0_) > 100.0 * options_.get_double("E_CONVERGENCE")) {
+    if (std::fabs(Etest - Eref_ - Hbar0_) > 100.0 * foptions_->get_double("E_CONVERGENCE")) {
         throw psi::PSIEXCEPTION("De-normal-odering failed.");
     }
 }
@@ -3684,7 +3680,7 @@ void DSRG_MRPT3::V_T2_C2_DF_VV(BlockedTensor& B, BlockedTensor& T2, const double
                                 "H2(%zu * %zu * %zu * %zu).",
                                 sh0, sh1, sv, sv);
                 throw psi::PSIEXCEPTION("Not enough memory for batching at "
-                                   "DSRG-MRPT3 V_T2_C2_DF_VV.");
+                                        "DSRG-MRPT3 V_T2_C2_DF_VV.");
             }
 
             // 1st virtual index
@@ -4066,7 +4062,7 @@ void DSRG_MRPT3::V_T2_C2_DF_VC_EX(BlockedTensor& B, BlockedTensor& T2, const dou
                             "H2(%zu * %zu * %zu * %zu).",
                             sq, ss, sc, sv);
             throw psi::PSIEXCEPTION("Not enough memory for batching at DSRG-MRPT3 "
-                               "V_T2_C2_DF_VC_EX.");
+                                    "V_T2_C2_DF_VC_EX.");
         }
 
         // fill the indices of sub virtuals
@@ -4394,7 +4390,7 @@ void DSRG_MRPT3::V_T2_C2_DF_VA_EX(BlockedTensor& B, BlockedTensor& T2, const dou
                             "H2(%zu * %zu * %zu * %zu).",
                             sq, ss, sa, sv);
             throw psi::PSIEXCEPTION("Not enough memory for batching at DSRG-MRPT3 "
-                               "V_T2_C2_DF_VA_EX.");
+                                    "V_T2_C2_DF_VA_EX.");
         }
 
         // fill the indices of sub virtuals
@@ -4902,7 +4898,6 @@ void DSRG_MRPT3::V_T2_C2_DF_VH_EX(BlockedTensor& B, BlockedTensor& T2, const dou
 
                     // adding O2sub to C2 with permutations
                     O2s.iterate([&](const std::vector<size_t>& i, double& value) {
-
                         if (is_C2label_P0) {
                             size_t idx = i[0] * sj * ss * sb + i[1] * ss * sb + i[2] * sb + i[3];
                             C2.block(C2label_P0).data()[idx] += value;
@@ -5323,8 +5318,8 @@ ambit::Tensor DSRG_MRPT3::separate_tensor(ambit::Tensor& tens, const psi::Dimens
     return T_h;
 }
 
-void DSRG_MRPT3::combine_tensor(ambit::Tensor& tens, ambit::Tensor& tens_h, const psi::Dimension& irrep,
-                                const int& h) {
+void DSRG_MRPT3::combine_tensor(ambit::Tensor& tens, ambit::Tensor& tens_h,
+                                const psi::Dimension& irrep, const int& h) {
     // test tens and irrep
     if (h >= irrep.n()) {
         throw psi::PSIEXCEPTION("Ask for wrong irrep.");
@@ -5633,9 +5628,10 @@ void DSRG_MRPT3::print_intruder(const std::string& name,
             double down = fi + fj - fa - fb;
             double v = datapair.second;
 
-            output += "\n" + indent + str(boost::format("[%3d %3d %3d %3d] %13.8f (%10.6f + "
-                                                        "%10.6f - %10.6f - %10.6f = %10.6f)") %
-                                          i % j % a % b % v % fi % fj % fa % fb % down);
+            output += "\n" + indent +
+                      str(boost::format("[%3d %3d %3d %3d] %13.8f (%10.6f + "
+                                        "%10.6f - %10.6f - %10.6f = %10.6f)") %
+                          i % j % a % b % v % fi % fj % fa % fb % down);
         }
     } else {
         outfile->Printf("\n    Printing of amplitude is implemented only for T1 and T2!");
@@ -5740,4 +5736,4 @@ void DSRG_MRPT3::rotate_2rdm(ambit::Tensor& L2aa, ambit::Tensor& L2ab, ambit::Te
     temp("pqrs") = L2bb("pqrs");
     L2bb("PQRS") = Ub("AP") * Ub("BQ") * temp("ABCD") * Ub("CR") * Ub("DS");
 }
-}
+} // namespace forte

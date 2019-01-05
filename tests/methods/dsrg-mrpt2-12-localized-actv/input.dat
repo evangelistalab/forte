@@ -47,6 +47,7 @@ set forte{
   avg_state           [[0,1,6]]
   rotate_mos          [1,17,20]
   dsrg_dipole         true
+  print               1
   semi_canonical      false # a trick to make  ForteIntegral
                             # and FCIIntegral in the same basis
                             # for re-diagonalization

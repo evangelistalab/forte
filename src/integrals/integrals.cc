@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -30,6 +30,8 @@
 #include <cmath>
 #include <numeric>
 
+#include "psi4/libmints/molecule.h"
+#include "psi4/libpsi4util/process.h"
 #include "psi4/libfock/jk.h"
 #include "psi4/libmints/basisset.h"
 #include "psi4/libmints/factory.h"
@@ -43,8 +45,8 @@
 #include "psi4/psifiles.h"
 
 #include "helpers/blockedtensorfactory.h"
-#include "forte_options.h"
-#include "helpers/mo_space_info.h"
+#include "base_classes/forte_options.h"
+#include "base_classes/mo_space_info.h"
 #include "helpers/printing.h"
 #include "helpers/timer.h"
 #include "integrals.h"
@@ -57,7 +59,6 @@
 
 using namespace psi;
 using namespace ambit;
-
 
 namespace forte {
 
@@ -76,38 +77,16 @@ std::map<IntegralType, std::string> int_type_label{{Conventional, "Conventional"
                                                    {Own, "Own"},
                                                    {Custom, "Custom"}};
 
-void set_INT_options(ForteOptions& foptions) {
-    /*- The algorithm used to screen the determinant
-     *  - CONVENTIONAL Conventional two-electron integrals
-     *  - DF Density fitted two-electron integrals
-     *  - CHOLESKY Cholesky decomposed two-electron integrals -*/
-    foptions.add_str("INT_TYPE", "CONVENTIONAL",
-                     {"CONVENTIONAL", "DF", "CHOLESKY", "DISKDF", "DISTDF", "OWNINTEGRALS"},
-                     "The integral type");
-
-    /*- The screening for JK builds and DF libraries -*/
-    foptions.add_double("INTEGRAL_SCREENING", 1e-12,
-                        "The screening for JK builds and DF libraries");
-
-    /* - The tolerance for cholesky integrals */
-    foptions.add_double("CHOLESKY_TOLERANCE", 1e-6, "The tolerance for cholesky integrals");
-
-    foptions.add_bool("PRINT_INTS", false, "Print the one- and two-electron integrals?");
-}
-
 ForteIntegrals::ForteIntegrals(psi::Options& options, std::shared_ptr<psi::Wavefunction> ref_wfn,
-                               IntegralSpinRestriction restricted,
-                               std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : options_(options), wfn_(ref_wfn), restricted_(restricted), frozen_core_energy_(0.0),
+                               std::shared_ptr<MOSpaceInfo> mo_space_info,
+                               IntegralSpinRestriction restricted)
+    : options_(options), wfn_(ref_wfn), spin_restriction_(restricted), frozen_core_energy_(0.0),
       scalar_(0.0), mo_space_info_(mo_space_info) {
-
     startup();
     allocate();
     transform_one_electron_integrals();
     build_AOdipole_ints();
 }
-
-ForteIntegrals::~ForteIntegrals() {}
 
 void ForteIntegrals::startup() {
     // Grab the global (default) PSIO object, for file I/O
@@ -117,6 +96,14 @@ void ForteIntegrals::startup() {
         outfile->Printf("\n  No wave function object found!  Run a scf calculation first!\n");
         exit(1);
     }
+
+    // Grab the MO coefficients from psi and enforce spin restriction if necessary
+    Ca_ = wfn_->Ca()->clone();
+    Cb_ = (spin_restriction_ == IntegralSpinRestriction::Restricted ? wfn_->Ca()->clone()
+                                                                    : wfn_->Cb()->clone());
+
+    nucrep_ = psi::Process::environment.molecule()->nuclear_repulsion_energy(
+        wfn_->get_dipole_field_strength());
 
     nirrep_ = wfn_->nirrep();
     nso_ = wfn_->nso();
@@ -167,29 +154,102 @@ void ForteIntegrals::allocate() {
     fock_matrix_b_.assign(ncmo_ * ncmo_, 0.0);
 }
 
+std::shared_ptr<psi::Matrix> ForteIntegrals::Ca() const { return Ca_; }
+
+std::shared_ptr<psi::Matrix> ForteIntegrals::Cb() const { return Cb_; }
+
+double ForteIntegrals::nuclear_repulsion_energy() const { return nucrep_; }
+
+std::shared_ptr<psi::Wavefunction> ForteIntegrals::wfn() { return wfn_; }
+
+std::shared_ptr<psi::BasisSet> ForteIntegrals::basisset() { return wfn_->basisset(); }
+
+std::shared_ptr<psi::BasisSet> ForteIntegrals::get_basisset(std::string str) {
+    return wfn_->get_basisset(str);
+}
+
+std::shared_ptr<psi::Matrix> ForteIntegrals::aotoso() { return wfn_->aotoso(); }
+
+std::shared_ptr<psi::Matrix> ForteIntegrals::Ca_subset(std::string str) {
+    return wfn_->Ca_subset(str);
+}
+
+size_t ForteIntegrals::nmo() const { return nmo_; }
+
+int ForteIntegrals::nirrep() const { return nirrep_; }
+
+psi::Dimension& ForteIntegrals::frzcpi() { return frzcpi_; }
+
+psi::Dimension& ForteIntegrals::frzvpi() { return frzvpi_; }
+
+psi::Dimension& ForteIntegrals::ncmopi() { return ncmopi_; }
+
+size_t ForteIntegrals::ncmo() const { return ncmo_; }
+
+void ForteIntegrals::set_print(int print) { print_ = print; }
+
+double ForteIntegrals::frozen_core_energy() { return frozen_core_energy_; }
+
+double ForteIntegrals::scalar() const { return scalar_; }
+
+double ForteIntegrals::oei_a(size_t p, size_t q) const {
+    return one_electron_integrals_a_[p * aptei_idx_ + q];
+}
+
+double ForteIntegrals::oei_b(size_t p, size_t q) const {
+    return one_electron_integrals_b_[p * aptei_idx_ + q];
+}
+
+double ForteIntegrals::get_fock_a(size_t p, size_t q) const {
+    return fock_matrix_a_[p * aptei_idx_ + q];
+}
+
+double ForteIntegrals::get_fock_b(size_t p, size_t q) const {
+    return fock_matrix_b_[p * aptei_idx_ + q];
+}
+
+std::vector<double> ForteIntegrals::get_fock_a() const { return fock_matrix_a_; }
+
+std::vector<double> ForteIntegrals::get_fock_b() const { return fock_matrix_b_; }
+
+void ForteIntegrals::set_scalar(double value) { scalar_ = value; }
+
+IntegralSpinRestriction ForteIntegrals::spin_restriction() const { return spin_restriction_; }
+
+IntegralType ForteIntegrals::integral_type() const { return integral_type_; }
+
+std::shared_ptr<psi::Matrix> ForteIntegrals::OneBody_symm() const { return OneBody_symm_; }
+
+std::shared_ptr<psi::Matrix> ForteIntegrals::OneBodyAO() const { return OneIntsAO_; }
+
+int ForteIntegrals::ga_handle() { return 0; }
+
+std::vector<std::shared_ptr<psi::Matrix>> ForteIntegrals::AOdipole_ints() const {
+    return AOdipole_ints_;
+}
+
 void ForteIntegrals::transform_one_electron_integrals() {
     // Now we want the reference (SCF) wavefunction
     std::shared_ptr<PSIO> psio_ = PSIO::shared_object();
 
-    psi::SharedMatrix T = psi::SharedMatrix(wfn_->matrix_factory()->create_matrix(PSIF_SO_T));
-    psi::SharedMatrix V = psi::SharedMatrix(wfn_->matrix_factory()->create_matrix(PSIF_SO_V));
+    std::shared_ptr<psi::Matrix> T =
+        std::shared_ptr<psi::Matrix>(wfn_->matrix_factory()->create_matrix(PSIF_SO_T));
+    std::shared_ptr<psi::Matrix> V =
+        std::shared_ptr<psi::Matrix>(wfn_->matrix_factory()->create_matrix(PSIF_SO_V));
 
     MintsHelper mints(wfn_->basisset(), options_, 0); // 0 here is to avoid printing of basis info
     T = mints.so_kinetic();
     V = mints.so_potential();
 
-    psi::SharedMatrix Ca = wfn_->Ca();
-    psi::SharedMatrix Cb = wfn_->Cb();
-
-    psi::SharedMatrix Ha = T->clone();
-    psi::SharedMatrix Hb = T->clone();
+    std::shared_ptr<psi::Matrix> Ha = T->clone();
+    std::shared_ptr<psi::Matrix> Hb = T->clone();
     Ha->add(V);
     Hb->add(V);
 
     OneIntsAO_ = Ha->clone();
 
-    Ha->transform(Ca);
-    Hb->transform(Cb);
+    Ha->transform(Ca_);
+    Hb->transform(Cb_);
 
     OneBody_symm_ = Ha;
 
@@ -260,13 +320,12 @@ void ForteIntegrals::compute_frozen_one_body_operator() {
     psi::Dimension nmopi = mo_space_info_->get_dimension("ALL");
     // Need to get the inactive block of the C matrix
     psi::Dimension nsopi = wfn_->nsopi();
-    psi::SharedMatrix Ca = wfn_->Ca();
-    psi::SharedMatrix C_core(new psi::Matrix("C_core", nirrep_, nsopi, frozen_dim));
+    std::shared_ptr<psi::Matrix> C_core(new psi::Matrix("C_core", nirrep_, nsopi, frozen_dim));
 
     for (int h = 0; h < nirrep_; h++) {
         for (int mu = 0; mu < nsopi[h]; mu++) {
             for (int i = 0; i < frozen_dim[h]; i++) {
-                C_core->set(h, mu, i, Ca->get(h, mu, i));
+                C_core->set(h, mu, i, Ca_->get(h, mu, i));
             }
         }
     }
@@ -285,8 +344,9 @@ void ForteIntegrals::compute_frozen_one_body_operator() {
                 JK_core = JK::build_JK(wfn_->basisset(), wfn_->get_basisset("DF_BASIS_MP2"),
                                        options_, "MEM_DF");
             } else {
-                throw psi::PSIEXCEPTION("Trying to compute the frozen one-body operator with MEM_DF but "
-                                   "using a non-DF integral type");
+                throw psi::PSIEXCEPTION(
+                    "Trying to compute the frozen one-body operator with MEM_DF but "
+                    "using a non-DF integral type");
             }
         } else {
             JK_core = JK::build_JK(wfn_->basisset(), psi::BasisSet::zero_ao_basis_set(), options_);
@@ -313,12 +373,12 @@ void ForteIntegrals::compute_frozen_one_body_operator() {
 
     JK_core->compute();
 
-    psi::SharedMatrix F_core = JK_core->J()[0];
-    psi::SharedMatrix K_core = JK_core->K()[0];
+    std::shared_ptr<psi::Matrix> F_core = JK_core->J()[0];
+    std::shared_ptr<psi::Matrix> K_core = JK_core->K()[0];
 
     F_core->scale(2.0);
     F_core->subtract(K_core);
-    F_core->transform(Ca);
+    F_core->transform(Ca_);
 
     // This loop grabs only the correlated part of the correction
     int full_offset = 0;
@@ -356,12 +416,40 @@ void ForteIntegrals::compute_frozen_one_body_operator() {
     if (print_ > 0) {
         outfile->Printf("\n  Frozen-core energy        %20.12f a.u.", frozen_core_energy_);
         print_timing("frozen one-body operator", timer_frozen_one_body.get());
-        //        outfile->Printf("\n  Timing for the frozen one-body operator  %9.3f s.",
-        //        timer_frozen_one_body.get());
     }
 }
 
-void ForteIntegrals::retransform_integrals() {
+void ForteIntegrals::rotate_orbitals(std::shared_ptr<psi::Matrix> Ua,
+                                     std::shared_ptr<psi::Matrix> Ub) {
+    // 1. Rotate the orbital coefficients and store them in the ForteIntegral object
+    auto Ca_rotated = psi::Matrix::doublet(Ca_, Ua);
+    auto Cb_rotated = psi::Matrix::doublet(Cb_, Ub);
+
+    update_orbitals(Ca_rotated, Cb_rotated);
+}
+
+void ForteIntegrals::update_orbitals(std::shared_ptr<psi::Matrix> Ca,
+                                     std::shared_ptr<psi::Matrix> Cb) {
+
+    // 1. Copy orbitals and, if necessary, test they meet the spin restriction condition
+    Ca_->copy(Ca);
+    Cb_->copy(Cb);
+
+    if (spin_restriction_ == IntegralSpinRestriction::Restricted) {
+        if (not test_orbital_spin_restriction(Ca, Cb)) {
+            Ca->print();
+            Cb->print();
+            auto msg = "ForteIntegrals::update_orbitals was passed two different sets of orbitals"
+                       "\n  but the integral object assumes restricted orbitals";
+            throw std::runtime_error(msg);
+        }
+    }
+
+    // 2. Send a copy to psi::Wavefunction
+    wfn_->Ca()->copy(Ca_);
+    wfn_->Cb()->copy(Cb_);
+
+    // 3. Re-transform the integrals
     aptei_idx_ = nmo_;
     transform_one_electron_integrals();
     int my_proc = 0;
@@ -374,6 +462,13 @@ void ForteIntegrals::retransform_integrals() {
         outfile->Printf("\n Integrals are about to be updated.");
         freeze_core_orbitals();
     }
+}
+
+bool ForteIntegrals::test_orbital_spin_restriction(std::shared_ptr<psi::Matrix> A,
+                                                   std::shared_ptr<psi::Matrix> B) const {
+    std::shared_ptr<psi::Matrix> A_minus_B = A->clone();
+    A_minus_B->subtract(B);
+    return (A_minus_B->absmax() < 1.0e-7 ? true : false);
 }
 
 void ForteIntegrals::freeze_core_orbitals() {
@@ -416,8 +511,9 @@ void ForteIntegrals::rotate_mos() {
         outfile->Printf("   %d   %d   %d\n", rotate_mo_group[0], rotate_mo_group[1],
                         rotate_mo_group[2]);
     }
-    psi::SharedMatrix C_old = wfn_->Ca();
-    psi::SharedMatrix C_new(C_old->clone());
+    // std::shared_ptr<psi::Matrix> C_old = wfn_->Ca();
+    std::shared_ptr<psi::Matrix> C_old = Ca_;
+    std::shared_ptr<psi::Matrix> C_new(C_old->clone());
 
     for (auto mo_group : rotate_mo_list) {
         psi::SharedVector C_mo1 = C_old->get_column(mo_group[0], mo_group[1]);
@@ -427,7 +523,8 @@ void ForteIntegrals::rotate_mos() {
     }
     C_old->copy(C_new);
 
-    psi::SharedMatrix Cb_old = wfn_->Cb();
+    // std::shared_ptr<psi::Matrix> Cb_old = wfn_->Cb();
+    std::shared_ptr<psi::Matrix> Cb_old = Cb_;
     Cb_old->copy(C_new);
 }
 
@@ -443,8 +540,8 @@ void ForteIntegrals::print_info() {
 
 void ForteIntegrals::print_ints() {
 
-    wfn_->Ca()->print();
-    wfn_->Cb()->print();
+    Ca_->print();
+    Cb_->print();
 
     outfile->Printf("\n  Alpha one-electron integrals (T + V_{en})");
     Matrix ha(" Alpha one-electron integrals (T + V_{en})", nmo_, nmo_);
@@ -519,8 +616,8 @@ void ForteIntegrals::build_AOdipole_ints() {
     aodOBI->compute(AOdipole_ints_);
 }
 
-std::vector<psi::SharedMatrix> ForteIntegrals::compute_MOdipole_ints(const bool& alpha,
-                                                                const bool& resort) {
+std::vector<std::shared_ptr<psi::Matrix>>
+ForteIntegrals::compute_MOdipole_ints(const bool& alpha, const bool& resort) {
     if (alpha) {
         return MOdipole_ints_helper(wfn_->Ca_subset("AO"), wfn_->epsilon_a(), resort);
     } else {
@@ -528,12 +625,13 @@ std::vector<psi::SharedMatrix> ForteIntegrals::compute_MOdipole_ints(const bool&
     }
 }
 
-std::vector<psi::SharedMatrix>
-ForteIntegrals::MOdipole_ints_helper(psi::SharedMatrix Cao, psi::SharedVector epsilon, const bool& resort) {
-    std::vector<psi::SharedMatrix> MOdipole_ints;
+std::vector<std::shared_ptr<psi::Matrix>>
+ForteIntegrals::MOdipole_ints_helper(std::shared_ptr<psi::Matrix> Cao, psi::SharedVector epsilon,
+                                     const bool& resort) {
+    std::vector<std::shared_ptr<psi::Matrix>> MOdipole_ints;
     std::vector<std::string> names{"X", "Y", "Z"};
     for (int i = 0; i < 3; ++i) {
-        psi::SharedMatrix modipole(AOdipole_ints_[i]->clone());
+        std::shared_ptr<psi::Matrix> modipole(AOdipole_ints_[i]->clone());
         modipole->set_name("MO Dipole " + names[i]);
         modipole->transform(Cao);
         MOdipole_ints.push_back(modipole);
@@ -563,7 +661,8 @@ ForteIntegrals::MOdipole_ints_helper(psi::SharedMatrix Cao, psi::SharedVector ep
         }
 
         for (int i = 0; i < 3; ++i) {
-            psi::SharedMatrix modipole(new psi::Matrix("MO Dipole " + names[i], (int)nmo_, (int)nmo_));
+            std::shared_ptr<psi::Matrix> modipole(
+                new psi::Matrix("MO Dipole " + names[i], (int)nmo_, (int)nmo_));
             for (int p = 0; p < (int)nmo_; ++p) {
                 int np = indices[p];
                 for (int q = 0; q < (int)nmo_; ++q) {
@@ -578,4 +677,3 @@ ForteIntegrals::MOdipole_ints_helper(psi::SharedMatrix Cao, psi::SharedVector ep
     return MOdipole_ints;
 }
 } // namespace forte
-

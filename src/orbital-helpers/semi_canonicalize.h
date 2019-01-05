@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -34,14 +34,14 @@
 #include "psi4/liboptions/liboptions.h"
 #include "psi4/libmints/wavefunction.h"
 
-#include "helpers/mo_space_info.h"
+#include "base_classes/mo_space_info.h"
 #include "helpers/blockedtensorfactory.h"
 #include "integrals/integrals.h"
 #include "base_classes/reference.h"
 
-
-
 namespace forte {
+
+class ForteOptions;
 
 /**
  * @brief The SemiCanonical class
@@ -51,32 +51,21 @@ class SemiCanonical {
   public:
     /**
      * @brief SemiCanonical Constructor
-     * @param ref_wfn The reference wavefunction object
+     * @param options ForteOptions
      * @param ints ForteInegrals
-     * @param options PSI4 and FORTE options
      * @param mo_space_info MOSpaceInfo
      * @param quiet_banner Method banner is not printed if set to true
      */
-    SemiCanonical(std::shared_ptr<psi::Wavefunction> wfn, std::shared_ptr<ForteIntegrals> ints,
+    SemiCanonical(std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
                   std::shared_ptr<MOSpaceInfo> mo_space_info, bool quiet_banner = false);
 
     /// Transforms integrals and reference
     void semicanonicalize(Reference& reference, const int& max_rdm_level = 3,
                           const bool& build_fock = true, const bool& transform = true);
 
-    /// Transform integrals
-    void transform_ints(psi::SharedMatrix& Ua, psi::SharedMatrix& Ub);
-
     /// Transform all cumulants, rebuild 2-RDMs using 2-cumulants
     void transform_reference(ambit::Tensor& Ua, ambit::Tensor& Ub, Reference& reference,
                              const int& max_rdm_level);
-
-    /// Back transform integrals
-    /// Ua and Ub rotate non-semicanonical to semicanonical
-    void back_transform_ints(psi::SharedMatrix& Ua, psi::SharedMatrix& Ub);
-
-    /// Back transform integrals
-    void back_transform_ints() { back_transform_ints(Ua_, Ub_); }
 
     /// Set active hole and particle dimensions
     void set_actv_dims(const psi::Dimension& actv_docc, const psi::Dimension& actv_virt);
@@ -99,8 +88,6 @@ class SemiCanonical {
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
 
     std::shared_ptr<ForteIntegrals> ints_;
-
-    std::shared_ptr<psi::Wavefunction> wfn_;
 
     // All orbitals
     psi::Dimension nmopi_;
@@ -160,6 +147,9 @@ class SemiCanonical {
 
     /// Check Fock matrix, return true if semicanonicalized
     bool check_fock_matrix();
+    /// Thresholds for Fock matrix testing
+    double threshold_tight_;
+    double threshold_loose_;
 
     /// If certain Fock blocks need to be diagonalized
     std::map<std::string, bool> checked_results_;

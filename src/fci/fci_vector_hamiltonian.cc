@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -27,8 +27,13 @@
  */
 
 #include "psi4/libqt/qt.h"
+#include "psi4/libmints/matrix.h"
 
+#include "integrals/active_space_integrals.h"
+#include "helpers/timer.h"
 #include "fci_vector.h"
+#include "binary_graph.hpp"
+#include "string_lists.h"
 
 using namespace psi;
 
@@ -38,8 +43,7 @@ namespace forte {
  * Apply the Hamiltonian to the wave function
  * @param result Wave function object which stores the resulting vector
  */
-void FCIWfn::Hamiltonian(FCIWfn& result, std::shared_ptr<FCIIntegrals> fci_ints,
-                         RequiredLists required_lists) {
+void FCIVector::Hamiltonian(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_ints) {
     //    check_temp_space();
     result.zero();
 
@@ -80,7 +84,7 @@ void FCIWfn::Hamiltonian(FCIWfn& result, std::shared_ptr<FCIIntegrals> fci_ints,
 /**
  * Apply the scalar part of the Hamiltonian to the wave function
  */
-void FCIWfn::H0(FCIWfn& result, std::shared_ptr<FCIIntegrals> fci_ints) {
+void FCIVector::H0(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_ints) {
     double core_energy = fci_ints->scalar_energy() + fci_ints->frozen_core_energy();
     for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {
         result.C_[alfa_sym]->copy(C_[alfa_sym]);
@@ -92,7 +96,7 @@ void FCIWfn::H0(FCIWfn& result, std::shared_ptr<FCIIntegrals> fci_ints) {
  * Apply the one-particle Hamiltonian to the wave function
  * @param alfa flag for alfa or beta component, true = alfa, false = beta
  */
-void FCIWfn::H1(FCIWfn& result, std::shared_ptr<FCIIntegrals> fci_ints, bool alfa) {
+void FCIVector::H1(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_ints, bool alfa) {
     for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {
         int beta_sym = alfa_sym ^ symmetry_;
         if (detpi_[alfa_sym] > 0) {
@@ -166,7 +170,8 @@ void FCIWfn::H1(FCIWfn& result, std::shared_ptr<FCIIntegrals> fci_ints, bool alf
  * Apply the same-spin two-particle Hamiltonian to the wave function
  * @param alfa flag for alfa or beta component, true = alfa, false = beta
  */
-void FCIWfn::H2_aaaa2(FCIWfn& result, std::shared_ptr<FCIIntegrals> fci_ints, bool alfa) {
+void FCIVector::H2_aaaa2(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
+                         bool alfa) {
     // Notation
     // ha - symmetry of alpha strings
     // hb - symmetry of beta strings
@@ -272,7 +277,7 @@ void FCIWfn::H2_aaaa2(FCIWfn& result, std::shared_ptr<FCIIntegrals> fci_ints, bo
  * Apply the different-spin component of two-particle Hamiltonian to the wave
  * function
  */
-void FCIWfn::H2_aabb(FCIWfn& result, std::shared_ptr<FCIIntegrals> fci_ints) {
+void FCIVector::H2_aabb(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_ints) {
     // Loop over blocks of matrix C
     for (int Ia_sym = 0; Ia_sym < nirrep_; ++Ia_sym) {
         size_t maxIa = alfa_graph_->strpi(Ia_sym);
@@ -368,4 +373,4 @@ void FCIWfn::H2_aabb(FCIWfn& result, std::shared_ptr<FCIIntegrals> fci_ints) {
         }
     }
 }
-}
+} // namespace forte

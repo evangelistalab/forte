@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -46,7 +46,6 @@ using d4 = std::vector<d3>;
 using d5 = std::vector<d4>;
 using d6 = std::vector<d5>;
 
-
 namespace forte {
 
 class MCSRGPT2_MO : public FCI_MO {
@@ -58,8 +57,8 @@ class MCSRGPT2_MO : public FCI_MO {
      * @param ints A pointer to an allocated integral object
      * @param mo_space_info The MOSpaceInfo object
      */
-    MCSRGPT2_MO(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
-                std::shared_ptr<MOSpaceInfo> mo_space_info);
+    MCSRGPT2_MO(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
+                std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Destructor
     ~MCSRGPT2_MO();
@@ -71,7 +70,7 @@ class MCSRGPT2_MO : public FCI_MO {
         "AMP", AMP)("EMP2", EMP2)("LAMP", LAMP)("LEMP2", LEMP2);
 
     /// Basis preparation
-    void startup(psi::Options& options);
+    void startup(std::shared_ptr<ForteOptions> options);
 
     void cleanup();
 
@@ -119,8 +118,10 @@ class MCSRGPT2_MO : public FCI_MO {
     void Form_T2_SELEC(d4& AA, d4& AB, d4& BB);
 
     /// Check T Amplitudes
-    void Check_T1(const string& x, const d2& M, double& Norm, double& MaxT, psi::Options& options);
-    void Check_T2(const string& x, const d4& M, double& Norm, double& MaxT, psi::Options& options);
+    void Check_T1(const string& x, const d2& M, double& Norm, double& MaxT,
+                  std::shared_ptr<ForteOptions> options);
+    void Check_T2(const string& x, const d4& M, double& Norm, double& MaxT,
+                  std::shared_ptr<ForteOptions> options);
 
     /// Effective Fock Matrix
     d2 Fa_dsrg_;
@@ -224,6 +225,6 @@ class MCSRGPT2_MO : public FCI_MO {
         }
     }
 };
-}
+} // namespace forte
 
 #endif // _mcsrgpt2_mo_h_

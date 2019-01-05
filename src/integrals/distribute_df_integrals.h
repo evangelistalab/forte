@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -32,20 +32,12 @@
 
 #include "integrals.h"
 
-
-
-class Tensor;
-
 namespace forte {
-
-class ForteOptions;
-class MOSpaceInfo;
-
 
 #ifdef HAVE_GA
 class DistDFIntegrals : public ForteIntegrals {
   public:
-    DistDFIntegrals(psi::Options& options, psi::SharedWavefunction ref_wfn,
+    DistDFIntegrals(psi::Options& options, std::shared_ptr<psi::Wavefunction> ref_wfn,
                     IntegralSpinRestriction restricted, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     virtual void retransform_integrals();
@@ -88,9 +80,9 @@ class DistDFIntegrals : public ForteIntegrals {
         outfile->Printf("DistributedDF will not work with set_tei");
         throw psi::PSIEXCEPTION("DistDF can not use set_tei");
     }
-    virtual ~DistDFIntegrals();
 
-    virtual void make_fock_matrix(psi::SharedMatrix /*gamma_a*/, psi::SharedMatrix /*gamma_b*/) {}
+    virtual void make_fock_matrix(std::shared_ptr<psi::Matrix> /*gamma_a*/,
+                                  std::shared_ptr<psi::Matrix> /*gamma_b*/) {}
 
     /// Make a Fock matrix computed with respect to a given determinant
     virtual size_t nthree() const { return nthree_; }
@@ -116,6 +108,5 @@ class DistDFIntegrals : public ForteIntegrals {
 #endif
 
 } // namespace forte
-
 
 #endif // _conventional_integrals_h_

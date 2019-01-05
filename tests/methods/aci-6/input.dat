@@ -23,7 +23,6 @@ set {
   e_convergence 11
   d_convergence 11
   r_convergence 11
-  multiplicity 1
   docc [2,0,2,0]
   guess gwh
 }

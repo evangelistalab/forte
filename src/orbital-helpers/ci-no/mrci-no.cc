@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -32,8 +32,8 @@
 #include "psi4/libmints/pointgrp.h"
 #include "helpers/timer.h"
 #include "ci_rdm/ci_rdms.h"
-#include "fci/fci_integrals.h"
-#include "forte_options.h"
+#include "integrals/active_space_integrals.h"
+#include "base_classes/forte_options.h"
 #include "sparse_ci/sparse_ci_solver.h"
 #include "sparse_ci/determinant.h"
 #include "mrci-no.h"
@@ -96,7 +96,7 @@ MRCINO::MRCINO(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shar
     std::vector<size_t> active_mo(mo_space_info_->size("CORRELATED"));
     std::iota(active_mo.begin(), active_mo.end(), 0);
 
-    fci_ints_ = std::make_shared<FCIIntegrals>(ints, active_mo, std::vector<size_t>());
+    fci_ints_ = std::make_shared<ActiveSpaceIntegrals>(ints, active_mo, std::vector<size_t>());
 
     //    for (auto& i: active_mo){
     //        outfile->Printf("\n %zu", i);

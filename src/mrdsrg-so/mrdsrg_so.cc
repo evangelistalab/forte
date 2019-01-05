@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -33,6 +33,7 @@
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libmints/molecule.h"
 
+#include "base_classes/mo_space_info.h"
 #include "helpers/printing.h"
 #include "helpers/timer.h"
 #include "mrdsrg_so.h"
@@ -41,7 +42,8 @@ using namespace psi;
 
 namespace forte {
 
-MRDSRG_SO::MRDSRG_SO(Reference reference, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
+MRDSRG_SO::MRDSRG_SO(Reference reference, psi::Options& options,
+                     std::shared_ptr<ForteIntegrals> ints,
                      std::shared_ptr<MOSpaceInfo> mo_space_info)
     : Wavefunction(options), reference_(reference), ints_(ints), mo_space_info_(mo_space_info),
       tensor_type_(CoreTensor), BTF(new BlockedTensorFactory()) {
@@ -72,7 +74,7 @@ void MRDSRG_SO::startup() {
         outfile->Printf("\n  Threshold for Taylor expansion must be an integer "
                         "greater than 0!");
         throw psi::PSIEXCEPTION("Threshold for Taylor expansion must be an integer "
-                           "greater than 0!");
+                                "greater than 0!");
     }
     taylor_order_ = int(0.5 * (15.0 / taylor_threshold_ + 1)) + 1;
 
@@ -1331,4 +1333,4 @@ void MRDSRG_SO::H3_T2_C2(BlockedTensor& H3, BlockedTensor& T2, const double& alp
     temp["mx"] += 0.5 * T2["myuv"] * Lambda2["uvxy"];
     C2["toqr"] -= alpha * temp["mx"] * H3["xtomqr"];
 }
-}
+} // namespace forte

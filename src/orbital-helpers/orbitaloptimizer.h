@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -31,18 +31,17 @@
 
 #include "ambit/blocked_tensor.h"
 #include "base_classes/reference.h"
-#include "helpers/mo_space_info.h"
+#include "base_classes/mo_space_info.h"
 #include "helpers/blockedtensorfactory.h"
 #include "psi4/libmints/matrix.h"
 #include "psi4/libfock/jk.h"
 
 using namespace psi;
 
-
-
-class Options;
+class ForteOptions;
 
 namespace forte {
+class SCFInfo;
 
 /**
 * @brief OrbitalOptimizer does an orbital optimization given an RDM-1, RDM-2,
@@ -95,7 +94,7 @@ class OrbitalOptimizer {
      */
 
     OrbitalOptimizer(ambit::Tensor Gamma1, ambit::Tensor Gamma2, ambit::Tensor two_body_ab,
-                     psi::Options& options, std::shared_ptr<MOSpaceInfo> mo_space_info);
+                     std::shared_ptr<ForteOptions> options, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// You have to set these at the start of the computation
     /// The MO Coefficient you get from wfn_->Ca()
@@ -116,10 +115,14 @@ class OrbitalOptimizer {
     void one_body(psi::SharedMatrix H) { H_ = H; }
     /// Print a summary of timings
     void set_print_timings(bool timing) { timings_ = timing; }
-    void set_wavefunction(psi::SharedWavefunction wfn) { wfn_ = wfn; }
+    /// Set SCF information object.
+    void set_scf_info(std::shared_ptr<SCFInfo> scf_info) { scf_info_ = scf_info; }
     void set_jk(std::shared_ptr<JK>& JK) { JK_ = JK; }
 
   protected:
+    /// SCF information
+    std::shared_ptr<SCFInfo> scf_info_;
+
     /// The 1-RDM (usually of size na_^2)
     ambit::Tensor gamma1_;
     /// The 1-RDM psi::SharedMatrix
@@ -132,9 +135,7 @@ class OrbitalOptimizer {
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
     std::shared_ptr<JK> JK_;
 
-    psi::Options options_;
-    /// The ForteIntegrals pointer
-    psi::SharedWavefunction wfn_;
+    std::shared_ptr<ForteOptions> options_;
     /// The mo_space_info
     /// The MO Coefficient matrix in Pfitzer ordering in whatever symmetry
     /// this matrix is ao by nmo
@@ -206,7 +207,7 @@ class OrbitalOptimizer {
     /// Diagonalize an augmented Hessian and take lowest eigenvector as solution
     psi::SharedMatrix AugmentedHessianSolve();
 
-    psi::SharedMatrix make_c_sym_aware();
+    psi::SharedMatrix make_c_sym_aware(psi::SharedMatrix aotoso);
 
     void startup();
 
@@ -246,7 +247,7 @@ class OrbitalOptimizer {
 class CASSCFOrbitalOptimizer : public OrbitalOptimizer {
   public:
     CASSCFOrbitalOptimizer(ambit::Tensor Gamma1, ambit::Tensor Gamma2, ambit::Tensor two_body_ab,
-                           psi::Options& options, std::shared_ptr<MOSpaceInfo> mo_space_info);
+                           std::shared_ptr<ForteOptions> options, std::shared_ptr<MOSpaceInfo> mo_space_info);
     virtual ~CASSCFOrbitalOptimizer();
 
   private:
@@ -258,7 +259,7 @@ class CASSCFOrbitalOptimizer : public OrbitalOptimizer {
 class PostCASSCFOrbitalOptimizer : public OrbitalOptimizer {
   public:
     PostCASSCFOrbitalOptimizer(ambit::Tensor Gamma1, ambit::Tensor Gamma2,
-                               ambit::Tensor two_body_ab, psi::Options& options,
+                               ambit::Tensor two_body_ab, std::shared_ptr<ForteOptions> options,
                                std::shared_ptr<MOSpaceInfo> mo_space_info);
     virtual ~PostCASSCFOrbitalOptimizer();
 

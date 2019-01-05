@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -32,12 +32,7 @@
 
 #include "integrals.h"
 
-class Tensor;
-
 namespace forte {
-
-class ForteOptions;
-class MOSpaceInfo;
 
 /// Class written by Kevin Hannon
 /**
@@ -47,44 +42,43 @@ class MOSpaceInfo;
  */
 class CholeskyIntegrals : public ForteIntegrals {
   public:
-    CholeskyIntegrals(psi::Options& options, psi::SharedWavefunction ref_wfn,
-                      IntegralSpinRestriction restricted,
-                      std::shared_ptr<MOSpaceInfo> mo_space_info);
-    virtual ~CholeskyIntegrals();
+    CholeskyIntegrals(psi::Options& options, std::shared_ptr<psi::Wavefunction> ref_wfn,
+                      std::shared_ptr<MOSpaceInfo> mo_space_info,
+                      IntegralSpinRestriction restricted);
+
     /// aptei_x will grab antisymmetriced integrals and creates DF/CD integrals
     /// on the fly
-    virtual double aptei_aa(size_t p, size_t q, size_t r, size_t s);
-    virtual double aptei_ab(size_t p, size_t q, size_t r, size_t s);
-    virtual double aptei_bb(size_t p, size_t q, size_t r, size_t s);
+    double aptei_aa(size_t p, size_t q, size_t r, size_t s) override;
+    double aptei_ab(size_t p, size_t q, size_t r, size_t s) override;
+    double aptei_bb(size_t p, size_t q, size_t r, size_t s) override;
 
     /// Grabs the antisymmetrized TEI - assumes storage of ambit tensor
-    virtual ambit::Tensor aptei_aa_block(const std::vector<size_t>& p, const std::vector<size_t>& q,
-                                         const std::vector<size_t>& r,
-                                         const std::vector<size_t>& s);
-    virtual ambit::Tensor aptei_ab_block(const std::vector<size_t>& p, const std::vector<size_t>& q,
-                                         const std::vector<size_t>& r,
-                                         const std::vector<size_t>& s);
-    virtual ambit::Tensor aptei_bb_block(const std::vector<size_t>& p, const std::vector<size_t>& q,
-                                         const std::vector<size_t>& r,
-                                         const std::vector<size_t>& s);
+    ambit::Tensor aptei_aa_block(const std::vector<size_t>& p, const std::vector<size_t>& q,
+                                 const std::vector<size_t>& r,
+                                 const std::vector<size_t>& s) override;
+    ambit::Tensor aptei_ab_block(const std::vector<size_t>& p, const std::vector<size_t>& q,
+                                 const std::vector<size_t>& r,
+                                 const std::vector<size_t>& s) override;
+    ambit::Tensor aptei_bb_block(const std::vector<size_t>& p, const std::vector<size_t>& q,
+                                 const std::vector<size_t>& r,
+                                 const std::vector<size_t>& s) override;
 
-    double three_integral(size_t A, size_t p, size_t q) {
-        return ThreeIntegral_->get(p * aptei_idx_ + q, A);
-    }
-    virtual double** three_integral_pointer() { return ThreeIntegral_->pointer(); }
-    virtual ambit::Tensor three_integral_block(const std::vector<size_t>& A,
-                                               const std::vector<size_t>& p,
-                                               const std::vector<size_t>& q);
-    virtual ambit::Tensor three_integral_block_two_index(const std::vector<size_t>&, size_t,
-                                                         const std::vector<size_t>&);
+    double three_integral(size_t A, size_t p, size_t q) const;
+
+    double** three_integral_pointer() override;
+    ambit::Tensor three_integral_block(const std::vector<size_t>& A, const std::vector<size_t>& p,
+                                       const std::vector<size_t>& q) override;
+    ambit::Tensor three_integral_block_two_index(const std::vector<size_t>&, size_t,
+                                                 const std::vector<size_t>&) override;
     /// Do not use this if you are using CD/DF integrals
-    virtual void set_tei(size_t p, size_t q, size_t r, size_t s, double value, bool alpha1,
-                         bool alpha2);
+    void set_tei(size_t p, size_t q, size_t r, size_t s, double value, bool alpha1,
+                 bool alpha2) override;
 
-    virtual void make_fock_matrix(psi::SharedMatrix gamma_a, psi::SharedMatrix gamma_b);
+    void make_fock_matrix(std::shared_ptr<psi::Matrix> gamma_a,
+                          std::shared_ptr<psi::Matrix> gamma_b) override;
 
-    virtual size_t nthree() const { return nthree_; }
-    psi::SharedMatrix L_ao_;
+    size_t nthree() const override;
+    std::shared_ptr<psi::Matrix> L_ao_;
 
   private:
     // ==> Class data <==
@@ -99,11 +93,10 @@ class CholeskyIntegrals : public ForteIntegrals {
 
     // ==> Class private virtual functions <==
 
-    virtual void gather_integrals();
-    virtual void resort_integrals_after_freezing();
+    void gather_integrals() override;
+    void resort_integrals_after_freezing() override;
 };
 
 } // namespace forte
-
 
 #endif // _cholesky_integrals_h_

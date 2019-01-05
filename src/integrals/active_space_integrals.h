@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -26,48 +26,51 @@
  * @END LICENSE
  */
 
-#ifndef _fci_integrals_
-#define _fci_integrals_
+#ifndef _active_space_integrals_
+#define _active_space_integrals_
 
 #include "integrals/integrals.h"
 #include "sparse_ci/determinant.h"
-#include "string_lists.h"
-
 
 class Dimension;
 
 namespace forte {
 
 /**
- * @brief The FCIIntegrals class stores integrals necessary for FCI calculations
+ * @brief The ActiveSpaceIntegrals class stores integrals necessary for FCI calculations
  */
-class FCIIntegrals {
+class ActiveSpaceIntegrals {
   public:
     // ==> Class Constructors <==
 
     /// Generating a contructor to create the active integrals
-    FCIIntegrals(std::shared_ptr<ForteIntegrals> ints, std::vector<size_t> active_mo,
-                 std::vector<size_t> rdocc_mo);
+    ActiveSpaceIntegrals(std::shared_ptr<ForteIntegrals> ints, std::vector<size_t> active_mo,
+                         std::vector<size_t> rdocc_mo);
 
     /// Constructor that needs to be deleted
-    FCIIntegrals(std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mospace_info);
+    ActiveSpaceIntegrals(std::shared_ptr<ForteIntegrals> ints,
+                         std::shared_ptr<MOSpaceInfo> mospace_info);
 
     // ==> Class Interface <==
 
+    /// Return the
+    std::shared_ptr<ForteIntegrals> ints() { return ints_; }
+
     /// Return the number of MOs
     size_t nmo() const { return nmo_; }
+
+    std::vector<size_t> active_mo() const;
+
+    std::vector<size_t> restricted_docc_mo() const;
+
     /// Return the frozen core energy (contribution from FROZEN_DOCC)
     double frozen_core_energy() const { return frozen_core_energy_; }
+
     /// Return the scalar_energy energy (contribution from RESTRICTED_DOCC)
     double scalar_energy() const { return scalar_energy_; }
+
     /// Set scalar_energy();
     void set_scalar_energy(double scalar_energy) { scalar_energy_ = scalar_energy; }
-
-    //    /// Initialize a determinant
-    //    Determinant determinant(const Determinant::bit_t& bits);
-    //    Determinant determinant(const std::vector<int>& bits);
-    //    Determinant determinant(const std::vector<bool>& bits);
-    //    Determinant determinant();
 
     /// Compute a determinant's energy
     double energy(const Determinant& det) const;
@@ -211,7 +214,12 @@ class FCIIntegrals {
     void RestrictedOneBodyOperator(std::vector<double>& oei_a, std::vector<double>& oei_b);
     void startup();
 };
+
+std::shared_ptr<ActiveSpaceIntegrals>
+make_active_space_ints(std::shared_ptr<forte::MOSpaceInfo> mo_space_info,
+                       std::shared_ptr<ForteIntegrals> ints, const std::string& active_space,
+                       const std::vector<std::string>& core_spaces);
+
 } // namespace forte
 
-
-#endif // _fci_integrals_
+#endif // _active_space_integrals_

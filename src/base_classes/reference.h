@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -30,59 +30,41 @@
 #define _reference_h_
 
 #include <ambit/tensor.h>
-#include "integrals/integrals.h"
-#include "helpers/mo_space_info.h"
-
 
 namespace forte {
 
-class Reference // : public psi::Wavefunction
-{
+class ForteIntegrals;
+class MOSpaceInfo;
+
+class Reference {
   public:
-    /// Default constructor
-    Reference();
-
-    /// Destructor
-    ~Reference();
-
-    /// Recompute reference energy using ints and L1a_, L1b_, L2aa_, L2ab_, L2bb_
-    /// ints          -- pointer to ForteIntegrals
-    /// mo_space_info -- pointer to MOSpaceInfo
-    /// Enuc          -- nuclear repulsion energy
-    double compute_Eref(std::shared_ptr<ForteIntegrals> ints,
-                        std::shared_ptr<MOSpaceInfo> mo_space_info, double Enuc);
-
-    /// Update Eref_ (referene energy) by recomputing it
-    void update_Eref(std::shared_ptr<ForteIntegrals> ints,
-                     std::shared_ptr<MOSpaceInfo> mo_space_info, double Enuc) {
-        Eref_ = compute_Eref(ints, mo_space_info, Enuc);
-    }
+    // ==> Class Interface <==
 
     /// Obtain reference energy
     double get_Eref() { return Eref_; }
 
     /// Obtain density cumulants
-    ambit::Tensor L1a() { return L1a_; }
-    ambit::Tensor L1b() { return L1b_; }
-    ambit::Tensor L2aa() { return L2aa_; }
-    ambit::Tensor L2ab() { return L2ab_; }
-    ambit::Tensor L2bb() { return L2bb_; }
-    ambit::Tensor L3aaa() { return L3aaa_; }
-    ambit::Tensor L3aab() { return L3aab_; }
-    ambit::Tensor L3abb() { return L3abb_; }
-    ambit::Tensor L3bbb() { return L3bbb_; }
+    ambit::Tensor L1a() const { return L1a_; }
+    ambit::Tensor L1b() const { return L1b_; }
+    ambit::Tensor L2aa() const { return L2aa_; }
+    ambit::Tensor L2ab() const { return L2ab_; }
+    ambit::Tensor L2bb() const { return L2bb_; }
+    ambit::Tensor L3aaa() const { return L3aaa_; }
+    ambit::Tensor L3aab() const { return L3aab_; }
+    ambit::Tensor L3abb() const { return L3abb_; }
+    ambit::Tensor L3bbb() const { return L3bbb_; }
 
     /// Obtain 2-RDMs
-    ambit::Tensor g2aa() { return g2aa_; }
-    ambit::Tensor g2ab() { return g2ab_; }
-    ambit::Tensor g2bb() { return g2bb_; }
-    ambit::Tensor SFg2() { return SFg2_; }
+    ambit::Tensor g2aa() const { return g2aa_; }
+    ambit::Tensor g2ab() const { return g2ab_; }
+    ambit::Tensor g2bb() const { return g2bb_; }
+    ambit::Tensor SFg2() const { return SFg2_; }
 
     /// Obtain 3-RDMs
-    ambit::Tensor g3aaa() { return g3aaa_; }
-    ambit::Tensor g3aab() { return g3aab_; }
-    ambit::Tensor g3abb() { return g3abb_; }
-    ambit::Tensor g3bbb() { return g3bbb_; }
+    ambit::Tensor g3aaa() const { return g3aaa_; }
+    ambit::Tensor g3aab() const { return g3aab_; }
+    ambit::Tensor g3abb() const { return g3abb_; }
+    ambit::Tensor g3bbb() const { return g3bbb_; }
 
     // => Set functions <=
 
@@ -144,8 +126,10 @@ class Reference // : public psi::Wavefunction
     }
 
   protected:
+    // ==> Class Data <==
+
     /// Reference energy (include frozen-core and nuclear repulsion)
-    double Eref_;
+    double Eref_ = 0.0;
 
     /// Density cumulants
     ambit::Tensor L1a_ = ambit::Tensor::build(ambit::CoreTensor, "L1a", {0, 0});
@@ -168,7 +152,9 @@ class Reference // : public psi::Wavefunction
     ambit::Tensor g3abb_;
     ambit::Tensor g3bbb_;
 };
-} // namespace forte
 
+double compute_Eref_from_reference(const Reference& ref, std::shared_ptr<ForteIntegrals> ints,
+                                   std::shared_ptr<MOSpaceInfo> mo_space_info, double Enuc);
+} // namespace forte
 
 #endif // _reference_h_

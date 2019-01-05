@@ -26,6 +26,7 @@ set forte {
   job_type asci                          
   frozen_docc [1,0,0,0,0,1,0,0]
   charge 0                               
+  root_sym 0
   nroot 1
   active_ref_type hf
   dl_maxiter 500

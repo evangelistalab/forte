@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -42,10 +42,10 @@ using namespace psi;
 
 namespace forte {
 
-OwnIntegrals::OwnIntegrals(psi::Options& options, psi::SharedWavefunction ref_wfn,
-                           IntegralSpinRestriction restricted,
-                           std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : ForteIntegrals(options, ref_wfn, restricted, mo_space_info) {
+OwnIntegrals::OwnIntegrals(psi::Options& options, std::shared_ptr<psi::Wavefunction> ref_wfn,
+                           std::shared_ptr<MOSpaceInfo> mo_space_info,
+                           IntegralSpinRestriction restricted)
+    : ForteIntegrals(options, ref_wfn, mo_space_info, restricted) {
     integral_type_ = Own;
     // If code calls constructor print things
     // But if someone calls retransform integrals do not print it
@@ -54,8 +54,4 @@ OwnIntegrals::OwnIntegrals(psi::Options& options, psi::SharedWavefunction ref_wf
     outfile->Printf("\n Avoiding Generation of Integrals");
     //    freeze_core_orbitals();
 }
-
-
-OwnIntegrals::~OwnIntegrals() {}
 } // namespace forte
-

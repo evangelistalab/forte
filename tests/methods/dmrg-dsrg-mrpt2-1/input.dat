@@ -23,7 +23,7 @@ set forte {
     #casscf_iterations        1
 }
 dsrg_fci = energy('forte')
-print dsrg_fci
+#print( dsrg_fci)
 
 energy('scf')
 

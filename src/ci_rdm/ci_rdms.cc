@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -43,13 +43,14 @@ namespace forte {
 // A class that takes the determinants and expansion
 // coefficients and computes reduced density matrices.
 
-CI_RDMS::CI_RDMS(std::shared_ptr<FCIIntegrals> fci_ints, const std::vector<Determinant>& det_space,
-                 psi::SharedMatrix evecs, int root1, int root2)
+CI_RDMS::CI_RDMS(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
+                 const std::vector<Determinant>& det_space, psi::SharedMatrix evecs, int root1,
+                 int root2)
     : fci_ints_(fci_ints), det_space_(det_space), evecs_(evecs), root1_(root1), root2_(root2) {
     startup();
 }
 
-CI_RDMS::CI_RDMS(DeterminantHashVec& wfn, std::shared_ptr<FCIIntegrals> fci_ints,
+CI_RDMS::CI_RDMS(DeterminantHashVec& wfn, std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
                  psi::SharedMatrix evecs, int root1, int root2)
     : wfn_(wfn), fci_ints_(fci_ints), evecs_(evecs), root1_(root1), root2_(root2) {
 
@@ -102,7 +103,7 @@ void CI_RDMS::set_max_rdm(int rdm) { max_rdm_ = rdm; }
 double CI_RDMS::get_energy(std::vector<double>& oprdm_a, std::vector<double>& oprdm_b,
                            std::vector<double>& tprdm_aa, std::vector<double>& tprdm_bb,
                            std::vector<double>& tprdm_ab) {
-    double nuc_rep = psi::Process::environment.molecule()->nuclear_repulsion_energy({0, 0, 0});
+    double nuc_rep = fci_ints_->ints()->nuclear_repulsion_energy();
     double scalar_energy = fci_ints_->frozen_core_energy() + fci_ints_->scalar_energy();
     double energy_1rdm = 0.0;
     double energy_2rdm = 0.0;
@@ -1782,19 +1783,39 @@ Reference CI_RDMS::reference(std::vector<double>& oprdm_a, std::vector<double>& 
         // Form the 3-RCMs
         ambit::Tensor L3aaa = ambit::Tensor::build(ambit::CoreTensor, "L3aaa",
                                                    {
-                                                       ncmo_, ncmo_, ncmo_, ncmo_, ncmo_, ncmo_,
+                                                       ncmo_,
+                                                       ncmo_,
+                                                       ncmo_,
+                                                       ncmo_,
+                                                       ncmo_,
+                                                       ncmo_,
                                                    });
         ambit::Tensor L3aab = ambit::Tensor::build(ambit::CoreTensor, "L3aab",
                                                    {
-                                                       ncmo_, ncmo_, ncmo_, ncmo_, ncmo_, ncmo_,
+                                                       ncmo_,
+                                                       ncmo_,
+                                                       ncmo_,
+                                                       ncmo_,
+                                                       ncmo_,
+                                                       ncmo_,
                                                    });
         ambit::Tensor L3abb = ambit::Tensor::build(ambit::CoreTensor, "L3abb",
                                                    {
-                                                       ncmo_, ncmo_, ncmo_, ncmo_, ncmo_, ncmo_,
+                                                       ncmo_,
+                                                       ncmo_,
+                                                       ncmo_,
+                                                       ncmo_,
+                                                       ncmo_,
+                                                       ncmo_,
                                                    });
         ambit::Tensor L3bbb = ambit::Tensor::build(ambit::CoreTensor, "L3bbb",
                                                    {
-                                                       ncmo_, ncmo_, ncmo_, ncmo_, ncmo_, ncmo_,
+                                                       ncmo_,
+                                                       ncmo_,
+                                                       ncmo_,
+                                                       ncmo_,
+                                                       ncmo_,
+                                                       ncmo_,
                                                    });
 
         // First copy the RDMs
@@ -1920,9 +1941,9 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a, std::vector<double>& oprdm_
             }
             if (std::fabs(rdm) > 1.0e-12) {
                 error_1rdm_a += std::fabs(rdm - oprdm_a[q * ncmo_ + p]);
-            //     outfile->Printf("\n  D1(a)[%3lu][%3lu] = %18.12lf
-            //     (%18.12lf,%18.12lf)", p,q,
-            //     rdm-oprdm_a[p*ncmo_+q],rdm,oprdm_a[p*ncmo_+q]);
+                //     outfile->Printf("\n  D1(a)[%3lu][%3lu] = %18.12lf
+                //     (%18.12lf,%18.12lf)", p,q,
+                //     rdm-oprdm_a[p*ncmo_+q],rdm,oprdm_a[p*ncmo_+q]);
             }
         }
     }
@@ -2257,4 +2278,4 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a, std::vector<double>& oprdm_
     psi::Process::environment.globals["BBBBBB 3-RDM ERROR"] = error_3rdm_bbb;
     outfile->Printf("\n    BBBBBB 3-RDM Error : %2.15f", error_3rdm_bbb);
 }
-}
+} // namespace forte

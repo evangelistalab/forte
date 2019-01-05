@@ -4,16 +4,18 @@
 #include "psi4/liboptions/liboptions.h"
 
 #include "integrals/integrals.h"
-#include "helpers/mo_space_info.h"
+#include "base_classes/mo_space_info.h"
 #include "sci/fci_mo.h"
 #include "sparse_ci/determinant.h"
 
-
 namespace forte {
+
+class ForteOptions;
+class SCFInfo;
 
 void set_DWMS_options(ForteOptions& foptions);
 
-class DWMS_DSRGPT2 : public psi::Wavefunction {
+class DWMS_DSRGPT2 {
   public:
     /**
      * @brief DWMS_DSRGPT2 Constructor
@@ -22,8 +24,8 @@ class DWMS_DSRGPT2 : public psi::Wavefunction {
      * @param ints ForteInegrals
      * @param mo_space_info MOSpaceInfo
      */
-    DWMS_DSRGPT2(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
-                 std::shared_ptr<MOSpaceInfo> mo_space_info);
+    DWMS_DSRGPT2(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
+                 std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Destructor
     ~DWMS_DSRGPT2();
@@ -37,6 +39,12 @@ class DWMS_DSRGPT2 : public psi::Wavefunction {
 
     /// The MO space info
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
+
+    /// The SCF info
+    std::shared_ptr<SCFInfo> scf_info_;
+
+    /// The ForteOptions
+    std::shared_ptr<ForteOptions> foptions_;
 
     /// preparation
     void startup();
@@ -91,11 +99,11 @@ class DWMS_DSRGPT2 : public psi::Wavefunction {
     std::shared_ptr<FCI_MO> precompute_energy();
 
     /// perform DSRG-PT2/3 computation and return the dressed integrals within active space
-    std::shared_ptr<FCIIntegrals> compute_dsrg_pt(std::shared_ptr<MASTER_DSRG>& dsrg_pt,
+    std::shared_ptr<ActiveSpaceIntegrals> compute_dsrg_pt(std::shared_ptr<MASTER_DSRG>& dsrg_pt,
                                                   Reference& reference, std::string level = "PT2");
 
     /// perform a macro DSRG-PT2/3 computation
-    std::shared_ptr<FCIIntegrals> compute_macro_dsrg_pt(std::shared_ptr<MASTER_DSRG>& dsrg_pt,
+    std::shared_ptr<ActiveSpaceIntegrals> compute_macro_dsrg_pt(std::shared_ptr<MASTER_DSRG>& dsrg_pt,
                                                         std::shared_ptr<FCI_MO> fci_mo, int entry,
                                                         int root);
 
@@ -145,8 +153,8 @@ class DWMS_DSRGPT2 : public psi::Wavefunction {
     /// if using factorized integrals
     bool eri_df_;
 
-    /// a shared_ptr of FCIIntegrals (mostly used in CI_RDMS)
-    std::shared_ptr<FCIIntegrals> fci_ints_;
+    /// a shared_ptr of ActiveSpaceIntegrals (mostly used in CI_RDMS)
+    std::shared_ptr<ActiveSpaceIntegrals> fci_ints_;
 
     /// energy of original CASCI
     std::vector<std::vector<double>> Eref_0_;
@@ -190,6 +198,6 @@ class DWMS_DSRGPT2 : public psi::Wavefunction {
                       const std::vector<std::tuple<int, int, int, std::vector<double>>>& sa_info,
                       bool pass_process = false);
 };
-}
+} // namespace forte
 
 #endif // DWMS_MRPT2_H

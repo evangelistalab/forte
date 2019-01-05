@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -44,7 +44,7 @@
 #include "ambit/blocked_tensor.h"
 #include "ambit/tensor.h"
 
-#include "helpers/mo_space_info.h"
+#include "base_classes/mo_space_info.h"
 #include "integrals/integrals.h"
 #include "base_classes/reference.h"
 #include "sparse_ci/determinant.h"
@@ -52,25 +52,26 @@
 #include "dsrg_mrpt2.h"
 #include "three_dsrg_mrpt2.h"
 
-
 namespace forte {
 
 class FCI_MO;
+class SCFInfo;
+class ForteOptions;
 
 struct Vector4 {
     double x, y, z, t;
 };
 
-class ACTIVE_DSRGPT2 : public psi::Wavefunction {
+class ACTIVE_DSRGPT2 {
   public:
     /**
      * @brief ACTIVE_DSRGPT2 Constructor
-     * @param ref_wfn The reference wavefunction object
-     * @param options PSI4 and FORTE options
+     * @param scf_info The SCFInfo
+     * @param options The ForteOptions
      * @param ints ForteInegrals
      * @param mo_space_info MOSpaceInfo
      */
-    ACTIVE_DSRGPT2(psi::SharedWavefunction ref_wfn, psi::Options& options,
+    ACTIVE_DSRGPT2(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
                    std::shared_ptr<ForteIntegrals> ints,
                    std::shared_ptr<MOSpaceInfo> mo_space_info);
 
@@ -89,6 +90,12 @@ class ACTIVE_DSRGPT2 : public psi::Wavefunction {
 
     /// MO space info
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
+
+    /// SCF info
+    std::shared_ptr<SCFInfo> scf_info_;
+
+    /// ForteOptions
+    std::shared_ptr<ForteOptions> foptions_;
 
     /// Multiplicity
     int multiplicity_;
@@ -134,7 +141,8 @@ class ACTIVE_DSRGPT2 : public psi::Wavefunction {
                     ambit::BlockedTensor& T2);
 
     /// Rotate to semicanonical orbitals and pass to this
-    void rotate_orbs(psi::SharedMatrix Ca0, psi::SharedMatrix Cb0, psi::SharedMatrix Ua, psi::SharedMatrix Ub);
+    void rotate_orbs(psi::SharedMatrix Ca0, psi::SharedMatrix Cb0, psi::SharedMatrix Ua,
+                     psi::SharedMatrix Ub);
 
     /// Transform integrals using the orbital coefficients
     void transform_integrals(psi::SharedMatrix Ca0, psi::SharedMatrix Cb0);
@@ -150,7 +158,7 @@ class ACTIVE_DSRGPT2 : public psi::Wavefunction {
     std::vector<std::vector<size_t>> virtIdxC1_;
 
     /// Compute VCIS/VCISD transition dipole from root0 -> root1
-    Vector4 compute_td_ref_root(std::shared_ptr<FCIIntegrals> fci_ints,
+    Vector4 compute_td_ref_root(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
                                 const std::vector<Determinant>& p_space, psi::SharedMatrix evecs,
                                 const int& root0, const int& root1);
     /// Compute VCIS/VCISD oscillator strength
@@ -237,7 +245,7 @@ class ACTIVE_DSRGPT2 : public psi::Wavefunction {
      * IMPORTANT NOTE:
      *   1) All blocks of T should be stored
      *   2) Number of basis function should not exceed 128
-    */
+     */
 
     /// transform the reference determinants of size nactive to size nmo with Pitzer ordering
     std::map<Determinant, double> p_space_actv_to_nmo(const std::vector<Determinant>& p_space,
@@ -263,6 +271,6 @@ class ACTIVE_DSRGPT2 : public psi::Wavefunction {
     void compute_osc_pt2_overlap(const int& irrep, const int& root, ambit::BlockedTensor& T1_x,
                                  ambit::BlockedTensor& T2_x);
 };
-}
+} // namespace forte
 
 #endif // ACTIVE_DSRGPT2_H

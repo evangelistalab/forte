@@ -20,7 +20,7 @@ set ints_tolerance 0.0
 
 set forte{
     dmrg_wfn_irrep            0
-    dmrg_wfn_multp            1
+    multiplicity            1
     frozen_docc          [ 1 , 0 , 0 , 0 ]
     active               [ 3 , 0 , 4 , 2 ]
 

@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -44,12 +44,12 @@
 #include "sci/aci.h"
 #include "integrals/integrals.h"
 #include "base_classes/reference.h"
-#include "helpers/mo_space_info.h"
+#include "base_classes/mo_space_info.h"
 #include "helpers/blockedtensorfactory.h"
 #include "mrdsrg-helper/dsrg_time.h"
 #include "mrdsrg-helper/dsrg_source.h"
 #include "sparse_ci/determinant.h"
-#include "fci/fci_integrals.h"
+#include "integrals/active_space_integrals.h"
 #include "master_mrdsrg.h"
 
 using namespace ambit;
@@ -66,8 +66,9 @@ class DSRG_MRPT2 : public MASTER_DSRG {
      * @param ints A pointer to an allocated integral object
      * @param mo_space_info A pointer to the MOSpaceInfo object
      */
-    DSRG_MRPT2(Reference reference, psi::SharedWavefunction ref_wfn, psi::Options& options,
-               std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
+    DSRG_MRPT2(Reference reference, std::shared_ptr<SCFInfo> scf_info,
+               std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
+               std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Destructor
     virtual ~DSRG_MRPT2();
@@ -301,20 +302,20 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     /// Compute multi-state energy in the MS/XMS way
     std::vector<std::vector<double>> compute_energy_xms();
     /// XMS rotation for the reference states
-    psi::SharedMatrix xms_rotation(std::shared_ptr<FCIIntegrals> fci_ints,
-                              std::vector<Determinant>& p_space, psi::SharedMatrix civecs);
+    psi::SharedMatrix xms_rotation(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
+                                   std::vector<Determinant>& p_space, psi::SharedMatrix civecs);
 
     /// Build effective singles: T_{ia} -= T_{iu,av} * Gamma_{vu}
     void build_T1eff_deGNO();
 
     /// Compute density cumulants
-    void compute_cumulants(std::shared_ptr<FCIIntegrals> fci_ints,
+    void compute_cumulants(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
                            std::vector<forte::Determinant>& p_space, psi::SharedMatrix evecs,
                            const int& root1, const int& root2);
     /// Compute denisty matrices and puts in Gamma1_, Lambda2_, and Lambda3_
-    void compute_densities(std::shared_ptr<FCIIntegrals> fci_ints,
-                           std::vector<Determinant>& p_space, psi::SharedMatrix evecs, const int& root1,
-                           const int& root2);
+    void compute_densities(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
+                           std::vector<Determinant>& p_space, psi::SharedMatrix evecs,
+                           const int& root1, const int& root2);
 
     /// Compute MS coupling <M|H|N>
     double compute_ms_1st_coupling(const std::string& name);
@@ -328,6 +329,6 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     void rotate_3rdm(ambit::Tensor& L3aaa, ambit::Tensor& L3aab, ambit::Tensor& L3abb,
                      ambit::Tensor& L3bbb);
 };
-}
+} // namespace forte
 
 #endif // _dsrg_mrpt2_h_

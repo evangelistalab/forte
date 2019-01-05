@@ -3,21 +3,22 @@
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/dipole.h"
-#include "helpers/helpers.h"
 
+#include "helpers/helpers.h"
 #include "helpers/timer.h"
+
 #include "master_mrdsrg.h"
 
 using namespace psi;
 
 namespace forte {
 
-MASTER_DSRG::MASTER_DSRG(Reference reference, psi::SharedWavefunction ref_wfn, psi::Options& options,
+MASTER_DSRG::MASTER_DSRG(Reference reference, std::shared_ptr<SCFInfo> scf_info,
+                         std::shared_ptr<ForteOptions> options,
                          std::shared_ptr<ForteIntegrals> ints,
                          std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : DynamicCorrelationSolver(reference, ref_wfn, options, ints, mo_space_info),
+    : DynamicCorrelationSolver(reference, scf_info, options, ints, mo_space_info),
       BTF_(new BlockedTensorFactory()), tensor_type_(ambit::CoreTensor) {
-    reference_wavefunction_ = ref_wfn;
     startup();
 }
 
@@ -51,8 +52,7 @@ void MASTER_DSRG::startup() {
 
     // read commonly used energies
     Eref_ = reference_.get_Eref();
-    Enuc_ = psi::Process::environment.molecule()->nuclear_repulsion_energy(
-        reference_wavefunction_->get_dipole_field_strength());
+    Enuc_ = ints_->nuclear_repulsion_energy();
     Efrzc_ = ints_->frozen_core_energy();
 
     // initialize timer for commutator
@@ -89,18 +89,18 @@ void MASTER_DSRG::read_options() {
         throw psi::PSIEXCEPTION(message);
     };
 
-    print_ = options_.get_int("PRINT");
+    print_ = foptions_->get_int("PRINT");
 
-    s_ = options_.get_double("DSRG_S");
+    s_ = foptions_->get_double("DSRG_S");
     if (s_ < 0) {
         throw_error("S parameter for DSRG must >= 0!");
     }
-    taylor_threshold_ = options_.get_int("TAYLOR_THRESHOLD");
+    taylor_threshold_ = foptions_->get_int("TAYLOR_THRESHOLD");
     if (taylor_threshold_ <= 0) {
         throw_error("Threshold for Taylor expansion must be an integer greater than 0!");
     }
 
-    source_ = options_.get_str("SOURCE");
+    source_ = foptions_->get_str("SOURCE");
     if (source_ != "STANDARD" && source_ != "LABS" && source_ != "DYSON") {
         outfile->Printf("\n  Warning: SOURCE option %s is not implemented.", source_.c_str());
         outfile->Printf("\n  Changed SOURCE option to STANDARD");
@@ -117,21 +117,21 @@ void MASTER_DSRG::read_options() {
         dsrg_source_ = std::make_shared<DYSON_SOURCE>(s_, taylor_threshold_);
     }
 
-    ntamp_ = options_.get_int("NTAMP");
-    intruder_tamp_ = options_.get_double("INTRUDER_TAMP");
+    ntamp_ = foptions_->get_int("NTAMP");
+    intruder_tamp_ = foptions_->get_double("INTRUDER_TAMP");
 
-    relax_ref_ = options_.get_str("RELAX_REF");
+    relax_ref_ = foptions_->get_str("RELAX_REF");
 
     eri_df_ = false;
-    ints_type_ = options_.get_str("INT_TYPE");
+    ints_type_ = foptions_->get_str("INT_TYPE");
     if (ints_type_ == "CHOLESKY" || ints_type_ == "DF" || ints_type_ == "DISKDF") {
         eri_df_ = true;
     }
 
-    multi_state_ = options_["AVG_STATE"].size() != 0;
-    multi_state_algorithm_ = options_.get_str("DSRG_MULTI_STATE");
+    multi_state_ = (foptions_->psi_options())["AVG_STATE"].size() != 0;
+    multi_state_algorithm_ = foptions_->get_str("DSRG_MULTI_STATE");
 
-    do_dm_ = options_.get_bool("DSRG_DIPOLE");
+    do_dm_ = foptions_->get_bool("DSRG_DIPOLE");
     if (multi_state_ && do_dm_) {
         if (multi_state_algorithm_ != "SA_FULL") {
             do_dm_ = false;
@@ -258,9 +258,9 @@ void MASTER_DSRG::build_fock_from_ints(std::shared_ptr<ForteIntegrals> ints, Blo
 
     F.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
         if (spin[0] == AlphaSpin) {
-            value = ints_->get_fock_a(i[0], i[1]);
+            value = ints->get_fock_a(i[0], i[1]);
         } else {
-            value = ints_->get_fock_b(i[0], i[1]);
+            value = ints->get_fock_b(i[0], i[1]);
         }
     });
 }
@@ -284,7 +284,7 @@ void MASTER_DSRG::check_init_reference_energy() {
     double E = compute_reference_energy_from_ints(ints_);
     outfile->Printf("Done");
 
-    double econv = options_.get_double("E_CONVERGENCE");
+    double econv = foptions_->get_double("E_CONVERGENCE");
     econv = econv < 1.0e-12 ? 1.0e-12 : econv;
     if (fabs(E - Eref_) > 10.0 * econv) {
         outfile->Printf("\n    Warning! Inconsistent reference energy!");
@@ -434,7 +434,8 @@ void MASTER_DSRG::init_dm_ints() {
     outfile->Printf("\n    Preparing ambit tensors for dipole moments ...... ");
     dm_.clear();
     dm_nuc_ = std::vector<double>(3, 0.0);
-    Vector3 dm_nuc = psi::Process::environment.molecule()->nuclear_dipole(psi::Vector3(0.0, 0.0, 0.0));
+    Vector3 dm_nuc =
+        psi::Process::environment.molecule()->nuclear_dipole(psi::Vector3(0.0, 0.0, 0.0));
     for (int i = 0; i < 3; ++i) {
         dm_nuc_[i] = dm_nuc[i];
         BlockedTensor dm_i = BTF_->build(tensor_type_, "Dipole " + dm_dirs_[i], spin_cases({"gg"}));
@@ -459,7 +460,7 @@ void MASTER_DSRG::init_dm_ints() {
             BlockedTensor Mbar2 =
                 BTF_->build(tensor_type_, "DSRG DM2 " + dm_dirs_[i], spin_cases({"aaaa"}));
             Mbar2_.emplace_back(Mbar2);
-            if (options_.get_bool("FORM_MBAR3")) {
+            if (foptions_->get_bool("FORM_MBAR3")) {
                 BlockedTensor Mbar3 =
                     BTF_->build(tensor_type_, "DSRG DM3 " + dm_dirs_[i], spin_cases({"aaaaaa"}));
                 Mbar3_.emplace_back(Mbar3);
@@ -470,7 +471,8 @@ void MASTER_DSRG::init_dm_ints() {
     outfile->Printf("Done");
 }
 
-void MASTER_DSRG::fill_MOdm(std::vector<psi::SharedMatrix>& dm_a, std::vector<psi::SharedMatrix>& dm_b) {
+void MASTER_DSRG::fill_MOdm(std::vector<psi::SharedMatrix>& dm_a,
+                            std::vector<psi::SharedMatrix>& dm_b) {
     // consider frozen-core part
     dm_frzc_ = std::vector<double>(3, 0.0);
     std::vector<size_t> frzc_mos = mo_space_info_->get_absolute_mo("FROZEN_DOCC");
@@ -488,7 +490,7 @@ void MASTER_DSRG::fill_MOdm(std::vector<psi::SharedMatrix>& dm_a, std::vector<ps
     psi::Dimension frzcpi = mo_space_info_->get_dimension("FROZEN_DOCC");
     psi::Dimension frzvpi = mo_space_info_->get_dimension("FROZEN_UOCC");
     psi::Dimension ncmopi = mo_space_info_->get_dimension("CORRELATED");
-    for (int h = 0, p = 0; h < nirrep_; ++h) {
+    for (int h = 0, p = 0, nirrep = mo_space_info_->nirrep(); h < nirrep; ++h) {
         p += frzcpi[h];
         for (int r = 0; r < ncmopi[h]; ++r) {
             cmo_to_mo.push_back((size_t)p);
@@ -529,10 +531,10 @@ void MASTER_DSRG::compute_dm_ref() {
     }
 }
 
-std::shared_ptr<FCIIntegrals> MASTER_DSRG::compute_Heff_actv() {
+std::shared_ptr<ActiveSpaceIntegrals> MASTER_DSRG::compute_Heff_actv() {
     // de-normal-order DSRG transformed Hamiltonian
     double Edsrg = Eref_ + Hbar0_;
-    if (options_.get_bool("FORM_HBAR3")) {
+    if (foptions_->get_bool("FORM_HBAR3")) {
         deGNO_ints("Hamiltonian", Edsrg, Hbar1_, Hbar2_, Hbar3_);
         rotate_ints_semi_to_origin("Hamiltonian", Hbar1_, Hbar2_, Hbar3_);
     } else {
@@ -541,8 +543,8 @@ std::shared_ptr<FCIIntegrals> MASTER_DSRG::compute_Heff_actv() {
     }
 
     // create FCIIntegral shared_ptr
-    std::shared_ptr<FCIIntegrals> fci_ints =
-        std::make_shared<FCIIntegrals>(ints_, actv_mos_, core_mos_);
+    std::shared_ptr<ActiveSpaceIntegrals> fci_ints =
+        std::make_shared<ActiveSpaceIntegrals>(ints_, actv_mos_, core_mos_);
     fci_ints->set_active_integrals(Hbar2_.block("aaaa"), Hbar2_.block("aAaA"),
                                    Hbar2_.block("AAAA"));
     fci_ints->set_restricted_one_body_operator(Hbar1_.block("aa").data(),
@@ -788,7 +790,7 @@ std::vector<ambit::Tensor> MASTER_DSRG::Hbar(int n) {
     } else if (n == 2) {
         out = {Hbar2_.block("aaaa"), Hbar2_.block("aAaA"), Hbar2_.block("AAAA")};
     } else if (n == 3) {
-        if (options_.get_bool("FORM_HBAR3")) {
+        if (foptions_->get_bool("FORM_HBAR3")) {
             out = {Hbar3_.block("aaaaaa"), Hbar3_.block("aaAaaA"), Hbar3_.block("aAAaAA"),
                    Hbar3_.block("AAAAAA")};
         } else {
@@ -1007,7 +1009,7 @@ void MASTER_DSRG::H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const double& a
     E += temp["uVxY"] * Lambda2_["xYuV"];
 
     // <[Hbar2, T2]> C_6 C_2
-    if (options_.get_str("THREEPDC") != "ZERO") {
+    if (foptions_->get_str("THREEPDC") != "ZERO") {
         temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"aaaaaa"});
         temp["uvwxyz"] += H2["uviz"] * T2["iwxy"];
         temp["uvwxyz"] += H2["waxy"] * T2["uvaz"];
@@ -1902,10 +1904,10 @@ dsrgHeff MASTER_DSRG::commutator_HT_noGNO(ambit::BlockedTensor H1, ambit::Blocke
 bool MASTER_DSRG::check_semi_orbs() {
     print_h2("Checking Semicanonical Orbitals");
 
-    std::string actv_type = options_.get_str("FCIMO_ACTV_TYPE");
+    std::string actv_type = foptions_->get_str("FCIMO_ACTV_TYPE");
     if (actv_type == "CIS" || actv_type == "CISD") {
-        std::string job_type = options_.get_str("JOB_TYPE");
-        bool fci_mo = options_.get_str("CAS_TYPE") == "CAS";
+        std::string job_type = foptions_->get_str("JOB_TYPE");
+        bool fci_mo = foptions_->get_str("CAS_TYPE") == "CAS";
         if ((job_type == "MRDSRG" || job_type == "DSRG-MRPT3") && fci_mo) {
             std::stringstream ss;
             ss << "Unsupported FCIMO_ACTV_TYPE for " << job_type << " code.";
@@ -1930,8 +1932,8 @@ bool MASTER_DSRG::check_semi_orbs() {
 
     bool semi = true;
     std::vector<double> Fmax, Fnorm;
-    double e_conv = options_.get_double("E_CONVERGENCE");
-    double cd = options_.get_double("CHOLESKY_TOLERANCE");
+    double e_conv = foptions_->get_double("E_CONVERGENCE");
+    double cd = foptions_->get_double("CHOLESKY_TOLERANCE");
     e_conv = cd < e_conv ? e_conv : cd * 0.1;
     e_conv = e_conv < 1.0e-12 ? 1.0e-12 : e_conv;
     double threshold_max = 10.0 * e_conv;
@@ -2147,4 +2149,4 @@ std::vector<std::string> MASTER_DSRG::re_two_labels() {
 
     return labels;
 }
-}
+} // namespace forte

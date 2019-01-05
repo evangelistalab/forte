@@ -6,7 +6,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -59,7 +59,7 @@ void ESNO::startup() {
     auto correlated_mo = mo_space_info_->get_corr_abs_mo("GENERALIZED PARTICLE");
     std::sort(correlated_mo.begin(), correlated_mo.end());
 
-    fci_ints_ = std::make_shared<FCIIntegrals>(ints_, correlated_mo,
+    fci_ints_ = std::make_shared<ActiveSpaceIntegrals>(ints_, correlated_mo,
                                                mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
 
     // Set the integrals
@@ -182,17 +182,7 @@ void ESNO::compute_nos() {
     }
 
     // Transform C matrix
-    psi::SharedMatrix Ca = ref_wfn_->Ca();
-    psi::SharedMatrix Cb = ref_wfn_->Cb();
-    psi::SharedMatrix Ca_new(Ca->clone());
-    psi::SharedMatrix Cb_new(Cb->clone());
-
-    Ca_new->gemm(false, false, 1.0, Ca, Ua, 0.0);
-    Cb_new->gemm(false, false, 1.0, Cb, Ub, 0.0);
-
-    Ca->copy(Ca_new);
-    Cb->copy(Cb_new);
-    ints_->retransform_integrals();
+    ints_->rotate_orbitals(Ua, Ub);
 }
 
 void ESNO::get_excited_determinants() {

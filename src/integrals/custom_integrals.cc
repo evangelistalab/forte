@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -26,7 +26,6 @@
  * @END LICENSE
  */
 
-
 #include <cmath>
 #include <fstream>
 
@@ -37,7 +36,7 @@
 #include "psi4/psi4-dec.h"
 #include "psi4/psifiles.h"
 
-#include "helpers/mo_space_info.h"
+#include "base_classes/mo_space_info.h"
 #include "helpers/blockedtensorfactory.h"
 #include "helpers/string_algorithms.h"
 
@@ -57,10 +56,10 @@ namespace forte {
  * @param restricted - type of integral transformation
  * @param resort_frozen_core -
  */
-CustomIntegrals::CustomIntegrals(psi::Options& options, psi::SharedWavefunction ref_wfn,
-                                 IntegralSpinRestriction restricted,
-                                 std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : ForteIntegrals(options, ref_wfn, restricted, mo_space_info) {
+CustomIntegrals::CustomIntegrals(psi::Options& options, std::shared_ptr<psi::Wavefunction> ref_wfn,
+                                 std::shared_ptr<MOSpaceInfo> mo_space_info,
+                                 IntegralSpinRestriction restricted)
+    : ForteIntegrals(options, ref_wfn, mo_space_info, restricted) {
     integral_type_ = Custom;
     print_info();
     outfile->Printf("\n  Using Custom integrals\n\n");
@@ -69,8 +68,6 @@ CustomIntegrals::CustomIntegrals(psi::Options& options, psi::SharedWavefunction 
 
     freeze_core_orbitals();
 }
-
-CustomIntegrals::~CustomIntegrals() {}
 
 double CustomIntegrals::aptei_aa(size_t p, size_t q, size_t r, size_t s) {
     return aphys_tei_aa[aptei_index(p, q, r, s)];
@@ -291,8 +288,7 @@ void CustomIntegrals::gather_integrals() {
     //    }
 }
 
-void CustomIntegrals::custom_integrals_allocate(int norb,
-                                                const std::vector<int>& orbsym) {
+void CustomIntegrals::custom_integrals_allocate(int norb, const std::vector<int>& orbsym) {
     auto result = std::max_element(orbsym.begin(), orbsym.end());
     nirrep_ = *result; // set the number of irreps
     nso_ = norb;
@@ -380,7 +376,8 @@ void CustomIntegrals::resort_four(std::vector<double>& tei, std::vector<size_t>&
     temp_ints.swap(tei);
 }
 
-void CustomIntegrals::make_fock_matrix(psi::SharedMatrix gamma_a, psi::SharedMatrix gamma_b) {
+void CustomIntegrals::make_fock_matrix(std::shared_ptr<psi::Matrix> gamma_a,
+                                       std::shared_ptr<psi::Matrix> gamma_b) {
     for (size_t p = 0; p < ncmo_; ++p) {
         for (size_t q = 0; q < ncmo_; ++q) {
             fock_matrix_a_[p * ncmo_ + q] = oei_a(p, q);
@@ -417,4 +414,3 @@ void CustomIntegrals::make_fock_matrix(psi::SharedMatrix gamma_a, psi::SharedMat
     }
 }
 } // namespace forte
-

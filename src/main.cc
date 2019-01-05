@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -30,28 +30,16 @@
 
 #include <pybind11/pybind11.h>
 
-//#include "psi4/libpsi4util/process.h"
-//#include "psi4/libmints/wavefunction.h"
-
-//#include "integrals/integrals.h"
-//#include "forte.h"
-
 namespace py = pybind11;
 
 #include "psi4/libpsi4util/process.h"
 
 #include "orbital-helpers/aosubspace.h"
 #include "orbital-helpers/avas.h"
-#include "forte_options.h"
-#include "helpers/mo_space_info.h"
+#include "base_classes/forte_options.h"
+#include "base_classes/mo_space_info.h"
 #include "helpers/timer.h"
-#include "integrals/integrals.h"
-#include "integrals/cholesky_integrals.h"
-#include "integrals/custom_integrals.h"
-#include "integrals/df_integrals.h"
-#include "integrals/diskdf_integrals.h"
-#include "integrals/conventional_integrals.h"
-#include "integrals/own_integrals.h"
+
 #include "sparse_ci/determinant.h"
 #include "version.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
@@ -84,27 +72,9 @@ void replace_free(void* ptr) { free(ptr); }
 /**
  * @brief Read options from the input file. Called by psi4 before everything else.
  */
-int read_options(psi::Options& options) {
-
-    options.set_current_module("FORTE");
-
-    ForteOptions foptions; // <<
-
-    forte_options(foptions);
-
-    // Old way (deprecated) to pass options to Psi4
+void read_options(ForteOptions& options) {
+    forte_options(options);
     forte_old_options(options);
-    // New way to pass options to Psi4
-    foptions.add_psi4_options(options);
-
-    if (options.get_str("JOB_TYPE") == "DOCUMENTATION") {
-        std::ofstream docs;
-        docs.open("options.rst");
-        docs << foptions.generate_documentation();
-        docs.close();
-    }
-
-    return true;
 }
 
 /**
@@ -154,13 +124,6 @@ void cleanup() {
 #endif
 }
 
-std::shared_ptr<MOSpaceInfo> make_mo_space_info(psi::SharedWavefunction ref_wfn, psi::Options& options) {
-    psi::Dimension nmopi = ref_wfn->nmopi();
-    auto mo_space_info = std::make_shared<MOSpaceInfo>(nmopi);
-    mo_space_info->read_options(options);
-    return mo_space_info;
-}
-
 psi::SharedMatrix make_aosubspace_projector(psi::SharedWavefunction ref_wfn, psi::Options& options) {
     // Ps is a psi::SharedMatrix Ps = S^{BA} X X^+ S^{AB}
     auto Ps = create_aosubspace_projector(ref_wfn, options);
@@ -180,41 +143,6 @@ psi::SharedMatrix make_aosubspace_projector(psi::SharedWavefunction ref_wfn, psi
         outfile->Printf("    ========================\n");
     }
     return Ps;
-}
-
-std::shared_ptr<ForteIntegrals> make_forte_integrals(psi::SharedWavefunction ref_wfn, psi::Options& options,
-                                                     std::shared_ptr<MOSpaceInfo> mo_space_info) {
-    timer int_timer("Integrals");
-    std::shared_ptr<ForteIntegrals> ints;
-    if (options.get_str("INT_TYPE") == "CHOLESKY") {
-        ints =
-            std::make_shared<CholeskyIntegrals>(options, ref_wfn, UnrestrictedMOs, mo_space_info);
-    } else if (options.get_str("INT_TYPE") == "DF") {
-        ints = std::make_shared<DFIntegrals>(options, ref_wfn, UnrestrictedMOs, mo_space_info);
-    } else if (options.get_str("INT_TYPE") == "DISKDF") {
-        ints = std::make_shared<DISKDFIntegrals>(options, ref_wfn, UnrestrictedMOs, mo_space_info);
-    } else if (options.get_str("INT_TYPE") == "CONVENTIONAL") {
-        ints = std::make_shared<ConventionalIntegrals>(options, ref_wfn, UnrestrictedMOs,
-                                                       mo_space_info);
-    } else if (options.get_str("INT_TYPE") == "DISTDF") {
-#ifdef HAVE_GA
-        ints = std::make_shared<DistDFIntegrals>(options, ref_wfn, UnrestrictedMOs, mo_space_info);
-#endif
-    } else if (options.get_str("INT_TYPE") == "CUSTOM") {
-        ints = std::make_shared<CustomIntegrals>(options, ref_wfn, UnrestrictedMOs, mo_space_info);
-    } else if (options.get_str("INT_TYPE") == "OWNINTEGRALS") {
-        ints = std::make_shared<OwnIntegrals>(options, ref_wfn, UnrestrictedMOs, mo_space_info);
-    } else {
-        outfile->Printf("\n Please check your int_type. Choices are CHOLESKY, DF, DISKDF , "
-                        "DISTRIBUTEDDF Effective, CONVENTIONAL or OwnIntegrals");
-        throw psi::PSIEXCEPTION("INT_TYPE is not correct.  Check options");
-    }
-
-    if (options.get_bool("PRINT_INTS")) {
-        ints->print_ints();
-    }
-
-    return ints;
 }
 
 void banner() {

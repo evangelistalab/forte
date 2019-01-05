@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -27,7 +27,7 @@
  * @END LICENSE
  */
 
-#include "helpers/mo_space_info.h"
+#include "base_classes/mo_space_info.h"
 #include "helpers/helpers.h"
 #include "sorted_string_list.h"
 
@@ -37,7 +37,7 @@ namespace forte {
 SortedStringList_UI64::SortedStringList_UI64() {}
 
 SortedStringList_UI64::SortedStringList_UI64(const DeterminantHashVec& space,
-                                             std::shared_ptr<FCIIntegrals> fci_ints,
+                                             std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
                                              DetSpinType sorted_string_spin) {
     nmo_ = fci_ints->nmo();
     // Copy and sort the determinants

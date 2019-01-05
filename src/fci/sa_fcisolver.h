@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -32,9 +32,10 @@
 #include "psi4/liboptions/liboptions.h"
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/libmints/wavefunction.h"
+
+#include "base_classes/reference.h"
 #include "fci/fci_solver.h"
 #include "fci/fci_vector.h"
-
 
 namespace forte {
 
@@ -49,7 +50,9 @@ class SA_FCISolver {
 
     Reference reference() { return sa_ref_; }
 
-    void set_integral_pointer(std::shared_ptr<FCIIntegrals> fci_ints) { fci_ints_ = fci_ints; }
+    void set_integral_pointer(std::shared_ptr<ActiveSpaceIntegrals> fci_ints) {
+        fci_ints_ = fci_ints;
+    }
 
     void set_mo_space_info(std::shared_ptr<MOSpaceInfo> mo_space_info) {
         mo_space_info_ = mo_space_info;
@@ -57,7 +60,7 @@ class SA_FCISolver {
 
     void set_integrals(std::shared_ptr<ForteIntegrals> ints) { ints_ = ints; }
 
-    std::vector<std::shared_ptr<FCIWfn>> StateAveragedCISolution() { return SA_C_; }
+    std::vector<std::shared_ptr<FCIVector>> StateAveragedCISolution() { return SA_C_; }
 
   private:
     /// Options from Psi4
@@ -66,12 +69,12 @@ class SA_FCISolver {
     std::shared_ptr<psi::Wavefunction> wfn_;
     /// Integral objects (same for all SA computations)
     std::shared_ptr<ForteIntegrals> ints_;
-    std::shared_ptr<FCIIntegrals> fci_ints_;
+    std::shared_ptr<ActiveSpaceIntegrals> fci_ints_;
     /// MO space information of FORTE
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
 
     /// A vector of the averaged FCI solutions
-    std::vector<std::shared_ptr<FCIWfn>> SA_C_;
+    std::vector<std::shared_ptr<FCIVector>> SA_C_;
 
     /// The vector that contains states and weights information
     std::vector<std::tuple<int, int, int, std::vector<double>>> parsed_options_;
@@ -85,6 +88,6 @@ class SA_FCISolver {
     /// Read options and fill in parsed_options_
     void read_options();
 };
-}
+} // namespace forte
 
 #endif // SA_FCISOLVER_H

@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -29,13 +29,12 @@
 #ifndef _ci_reference_h_
 #define _ci_reference_h_
 
-#include "psi4/libmints/molecule.h"
-#include "psi4/libmints/wavefunction.h"
 #include "psi4/liboptions/liboptions.h"
 
-#include "fci/fci_integrals.h"
+#include "integrals/active_space_integrals.h"
 #include "sparse_ci/determinant.h"
-#include "helpers/mo_space_info.h"
+#include "base_classes/mo_space_info.h"
+#include "base_classes/scf_info.h"
 
 
 namespace forte {
@@ -44,7 +43,7 @@ class CI_Reference // : public psi::Wavefunction
 {
   protected:
     // The wavefunction object
-    psi::SharedWavefunction wfn_;
+    std::shared_ptr<SCFInfo> scf_info_;
 
     // Multiplicity of the reference
     int multiplicity_;
@@ -92,12 +91,12 @@ class CI_Reference // : public psi::Wavefunction
 
     Determinant get_occupation();
 
-    std::shared_ptr<FCIIntegrals> fci_ints_;
+    std::shared_ptr<ActiveSpaceIntegrals> fci_ints_;
 
   public:
     /// Default constructor
-    CI_Reference(std::shared_ptr<psi::Wavefunction> wfn, psi::Options& options,
-                 std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<FCIIntegrals> fci_ints,
+    CI_Reference(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
+                 std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
                  int multiplicity, double ms, int symmetry);
 
     /// Destructor

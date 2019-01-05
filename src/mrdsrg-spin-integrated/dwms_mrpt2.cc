@@ -57,8 +57,9 @@ void set_DWMS_options(ForteOptions& foptions) {
                       "algorithm, testing in non-DF DSRG-MRPT2");
 
     /*- Iteratively update the states coefficients -*/
-    foptions.add_bool("DWMS_ITERATE", false, "Iterative update the reference CI coefficients in SA "
-                                             "algorithm, testing in non-DF DSRG-MRPT2");
+    foptions.add_bool("DWMS_ITERATE", false,
+                      "Iterative update the reference CI coefficients in SA "
+                      "algorithm, testing in non-DF DSRG-MRPT2");
 
     /*- Max number of iteration for the update of reference CI coefficients -*/
     foptions.add_int("DWMS_MAXITER", 10,
@@ -70,13 +71,10 @@ void set_DWMS_options(ForteOptions& foptions) {
                         "Energy convergence criteria for DWMS iteration");
 }
 
-DWMS_DSRGPT2::DWMS_DSRGPT2(psi::SharedWavefunction ref_wfn, psi::Options& options,
+DWMS_DSRGPT2::DWMS_DSRGPT2(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
                            std::shared_ptr<ForteIntegrals> ints,
                            std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : Wavefunction(options), ints_(ints), mo_space_info_(mo_space_info) {
-    shallow_copy(ref_wfn);
-    reference_wavefunction_ = ref_wfn;
-
+    : ints_(ints), mo_space_info_(mo_space_info), scf_info_(scf_info), foptions_(options) {
     print_method_banner({"Dynamically Weighted Driven Similarity Renormalization Group",
                          "Multi-State Perturbation Theory", "Chenyang Li"});
     startup();
@@ -91,11 +89,10 @@ void DWMS_DSRGPT2::startup() {
 
     print_impl_note();
 
-    Enuc_ = psi::Process::environment.molecule()->nuclear_repulsion_energy(
-        reference_wavefunction_->get_dipole_field_strength());
+    Enuc_ = ints_->nuclear_repulsion_energy();
 
     CharacterTable ct = psi::Process::environment.molecule()->point_group()->char_table();
-    int nirrep = reference_wavefunction_->nirrep();
+    int nirrep = mo_space_info_->nirrep();
     irrep_symbol_.resize(nirrep);
     for (int h = 0; h < nirrep; ++h) {
         irrep_symbol_[h] = std::string(ct.gamma(h).symbol());
@@ -112,23 +109,23 @@ void DWMS_DSRGPT2::startup() {
         Ub_.data()[u * na + u] = 1.0;
     }
 
-    Ca_copy_ = Ca_->clone();
-    Cb_copy_ = Cb_->clone();
+    Ca_copy_ = ints_->Ca()->clone();
+    Cb_copy_ = ints_->Cb()->clone();
 }
 
 void DWMS_DSRGPT2::read_options() {
-    dwms_corrlv_ = options_.get_str("DWMS_CORRLV");
-    zeta_ = options_.get_double("DWMS_ZETA");
-    algorithm_ = options_.get_str("DWMS_ALGORITHM");
-    dwms_ref_ = options_.get_str("DWMS_REFERENCE");
-    do_delta_amp_ = options_.get_bool("DWMS_DELTA_AMP");
-    dwms_iterate_ = options_.get_bool("DWMS_ITERATE");
-    dwms_maxiter_ = options_.get_int("DWMS_MAXITER");
-    dwms_e_convergence_ = options_.get_double("DWMS_E_CONVERGENCE");
+    dwms_corrlv_ = foptions_->get_str("DWMS_CORRLV");
+    zeta_ = foptions_->get_double("DWMS_ZETA");
+    algorithm_ = foptions_->get_str("DWMS_ALGORITHM");
+    dwms_ref_ = foptions_->get_str("DWMS_REFERENCE");
+    do_delta_amp_ = foptions_->get_bool("DWMS_DELTA_AMP");
+    dwms_iterate_ = foptions_->get_bool("DWMS_ITERATE");
+    dwms_maxiter_ = foptions_->get_int("DWMS_MAXITER");
+    dwms_e_convergence_ = foptions_->get_double("DWMS_E_CONVERGENCE");
 
-    do_hbar3_ = options_.get_bool("FORM_HBAR3");
+    do_hbar3_ = foptions_->get_bool("FORM_HBAR3");
     max_hbar_level_ = do_hbar3_ ? 3 : 2;
-    max_rdm_level_ = (options_.get_str("THREEPDC") == "ZERO") ? 2 : 3;
+    max_rdm_level_ = (foptions_->get_str("THREEPDC") == "ZERO") ? 2 : 3;
 
     IntegralType int_type = ints_->integral_type();
     eri_df_ = (int_type == Cholesky) || (int_type == DF) || (int_type == DiskDF);
@@ -157,7 +154,7 @@ void DWMS_DSRGPT2::test_options() {
         throw psi::PSIEXCEPTION("DWMS_ZETA should be a value greater or equal than 0.0!");
     }
 
-    std::string actv_type = options_.get_str("FCIMO_ACTV_TYPE");
+    std::string actv_type = foptions_->get_str("FCIMO_ACTV_TYPE");
     if (actv_type == "CIS" || actv_type == "CISD") {
         throw psi::PSIEXCEPTION("VCIS and VCISD are not supported for DWMS-DSRG-PT yet!");
     }
@@ -314,8 +311,7 @@ double DWMS_DSRGPT2::compute_energy() {
 
 std::shared_ptr<FCI_MO> DWMS_DSRGPT2::precompute_energy() {
     // perform CASCI using user-defined weights
-    auto fci_mo =
-        std::make_shared<FCI_MO>(reference_wavefunction_, options_, ints_, mo_space_info_);
+    auto fci_mo = std::make_shared<FCI_MO>(scf_info_, foptions_, ints_, mo_space_info_);
     fci_mo->compute_energy();
     auto eigens = fci_mo->eigens();
     fci_ints_ = fci_mo->fci_ints();
@@ -340,7 +336,8 @@ std::shared_ptr<FCI_MO> DWMS_DSRGPT2::precompute_energy() {
 
     // perform SA-DSRG-PT2/3 if needed
     if (dwms_ref_ != "CASCI") {
-        Reference reference = fci_mo->reference(max_rdm_level_);
+        fci_mo->set_max_rdm_level(max_rdm_level_);
+        Reference reference = fci_mo->get_reference();
 
         std::shared_ptr<MASTER_DSRG> dsrg_pt;
         fci_ints_ = compute_dsrg_pt(dsrg_pt, reference, dwms_ref_);
@@ -428,29 +425,29 @@ std::shared_ptr<FCI_MO> DWMS_DSRGPT2::precompute_energy() {
     return fci_mo;
 }
 
-std::shared_ptr<FCIIntegrals> DWMS_DSRGPT2::compute_dsrg_pt(std::shared_ptr<MASTER_DSRG>& dsrg_pt,
-                                                            Reference& reference,
-                                                            std::string level) {
+std::shared_ptr<ActiveSpaceIntegrals>
+DWMS_DSRGPT2::compute_dsrg_pt(std::shared_ptr<MASTER_DSRG>& dsrg_pt, Reference& reference,
+                              std::string level) {
     // use semicanonical orbitals only for THREE-DSRG-MRPT2
     do_semi_ = (level.find("PT2") != std::string::npos) && eri_df_;
 
     // compute dsrg-pt2/3 energy
     if (do_semi_) {
-        SemiCanonical semi(reference_wavefunction_, ints_, mo_space_info_);
+        SemiCanonical semi(foptions_, ints_, mo_space_info_);
         semi.semicanonicalize(reference, max_rdm_level_);
         Ua_ = semi.Ua_t();
         Ub_ = semi.Ub_t();
 
-        dsrg_pt = std::make_shared<THREE_DSRG_MRPT2>(reference, reference_wavefunction_, options_,
-                                                     ints_, mo_space_info_);
+        dsrg_pt = std::make_shared<THREE_DSRG_MRPT2>(reference, scf_info_, foptions_, ints_,
+                                                     mo_space_info_);
         dsrg_pt->set_Uactv(Ua_, Ub_);
     } else {
         if (level == "PT3") {
-            dsrg_pt = std::make_shared<DSRG_MRPT3>(reference, reference_wavefunction_, options_,
-                                                   ints_, mo_space_info_);
+            dsrg_pt = std::make_shared<DSRG_MRPT3>(reference, scf_info_, foptions_, ints_,
+                                                   mo_space_info_);
         } else {
-            dsrg_pt = std::make_shared<DSRG_MRPT2>(reference, reference_wavefunction_, options_,
-                                                   ints_, mo_space_info_);
+            dsrg_pt = std::make_shared<DSRG_MRPT2>(reference, scf_info_, foptions_, ints_,
+                                                   mo_space_info_);
         }
     }
 
@@ -460,7 +457,7 @@ std::shared_ptr<FCIIntegrals> DWMS_DSRGPT2::compute_dsrg_pt(std::shared_ptr<MAST
     return fci_ints;
 }
 
-std::shared_ptr<FCIIntegrals>
+std::shared_ptr<ActiveSpaceIntegrals>
 DWMS_DSRGPT2::compute_macro_dsrg_pt(std::shared_ptr<MASTER_DSRG>& dsrg_pt,
                                     std::shared_ptr<FCI_MO> fci_mo, int entry, int root) {
     auto sa_info = fci_mo->sa_info();
@@ -476,10 +473,12 @@ DWMS_DSRGPT2::compute_macro_dsrg_pt(std::shared_ptr<MASTER_DSRG>& dsrg_pt,
 
     // compute Reference
     fci_mo->set_sa_info(sa_info_new);
-    Reference reference = fci_mo->reference(max_rdm_level_);
+    fci_mo->set_max_rdm_level(max_rdm_level_);
+    Reference reference = fci_mo->get_reference();
 
     // update MK vacuum energy
-    reference.update_Eref(ints_, mo_space_info_, Enuc_);
+    double new_Eref = compute_Eref_from_reference(reference, ints_, mo_space_info_, Enuc_);
+    reference.set_Eref(new_Eref); // TODO: ?why do this here this way?
 
     // compute DSRG-PT2/3 energies and Hbar
     return compute_dsrg_pt(dsrg_pt, reference, dwms_corrlv_);
@@ -564,7 +563,7 @@ void DWMS_DSRGPT2::compute_dwsa_energy(std::shared_ptr<FCI_MO>& fci_mo) {
     auto eigens = fci_mo->eigens();
 
     std::shared_ptr<MASTER_DSRG> dsrg_pt;
-    std::shared_ptr<FCIIntegrals> fci_ints;
+    std::shared_ptr<ActiveSpaceIntegrals> fci_ints;
 
     // if zeta == 0, just transform Hamiltonian once
     if (zeta_ == 0.0) {
@@ -753,7 +752,7 @@ void DWMS_DSRGPT2::compute_dwms_energy(std::shared_ptr<FCI_MO>& fci_mo) {
     Ept_.resize(nentry);
 
     std::shared_ptr<MASTER_DSRG> dsrg_pt2;
-    std::shared_ptr<FCIIntegrals> fci_ints;
+    std::shared_ptr<ActiveSpaceIntegrals> fci_ints;
 
     // if zeta == 0, just transform Hamiltonian once
     if (zeta_ == 0.0) {
@@ -777,7 +776,8 @@ void DWMS_DSRGPT2::compute_dwms_energy(std::shared_ptr<FCI_MO>& fci_mo) {
 
         // prepare Heff
         psi::SharedMatrix Heff(new psi::Matrix("Heff " + entry_name, nroots, nroots));
-        psi::SharedMatrix Heff_sym(new psi::Matrix("Symmetrized Heff " + entry_name, nroots, nroots));
+        psi::SharedMatrix Heff_sym(
+            new psi::Matrix("Symmetrized Heff " + entry_name, nroots, nroots));
 
         // loop over states of current symmetry
         for (int M = 0; M < nroots; ++M) {
@@ -1173,9 +1173,7 @@ std::vector<std::tuple<int, int, int, std::vector<double>>> DWMS_DSRGPT2::comput
 
 void DWMS_DSRGPT2::transform_ints0() {
     print_h2("Transformation Integrals Back to Original");
-    Ca_->copy(Ca_copy_);
-    Cb_->copy(Cb_copy_);
-    ints_->retransform_integrals();
+    ints_->update_orbitals(Ca_copy_, Cb_copy_);
 }
 
 void DWMS_DSRGPT2::print_title(const std::string& title) {
@@ -1185,7 +1183,8 @@ void DWMS_DSRGPT2::print_title(const std::string& title) {
     outfile->Printf("\n  %s\n", std::string(title_size, '=').c_str());
 }
 
-void DWMS_DSRGPT2::print_overlap(const std::vector<psi::SharedVector>& evecs, const std::string& Sname) {
+void DWMS_DSRGPT2::print_overlap(const std::vector<psi::SharedVector>& evecs,
+                                 const std::string& Sname) {
     print_h2(Sname);
     outfile->Printf("\n");
 
@@ -1202,4 +1201,4 @@ void DWMS_DSRGPT2::print_overlap(const std::vector<psi::SharedVector>& evecs, co
 
     S->print();
 }
-}
+} // namespace forte

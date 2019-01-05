@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -32,8 +32,8 @@
 #include "psi4/libmints/pointgrp.h"
 #include "helpers/timer.h"
 #include "ci_rdm/ci_rdms.h"
-#include "fci/fci_integrals.h"
-#include "forte_options.h"
+#include "integrals/active_space_integrals.h"
+#include "base_classes/forte_options.h"
 #include "sparse_ci/sparse_ci_solver.h"
 #include "sparse_ci/determinant.h"
 #include "ci-no.h"
@@ -91,7 +91,7 @@ CINO::CINO(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shared_p
     shallow_copy(ref_wfn);
     reference_wavefunction_ = ref_wfn;
 
-    fci_ints_ = std::make_shared<FCIIntegrals>(ints, mo_space_info_->get_corr_abs_mo("ACTIVE"),
+    fci_ints_ = std::make_shared<ActiveSpaceIntegrals>(ints, mo_space_info_->get_corr_abs_mo("ACTIVE"),
                                                mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
 
     auto active_mo = mo_space_info_->get_corr_abs_mo("ACTIVE");

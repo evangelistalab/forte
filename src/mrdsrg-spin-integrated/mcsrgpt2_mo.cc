@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -49,27 +49,29 @@ using namespace psi;
 
 namespace forte {
 
-MCSRGPT2_MO::MCSRGPT2_MO(psi::SharedWavefunction ref_wfn, psi::Options& options,
+MCSRGPT2_MO::MCSRGPT2_MO(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
                          std::shared_ptr<ForteIntegrals> ints,
                          std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : FCI_MO(ref_wfn, options, ints, mo_space_info) {
+    : FCI_MO(scf_info, options, ints, mo_space_info) {
 
     // compute CI energy
     compute_ss_energy();
 
     // reference cumulants
-    int max_rdm_level = (options_.get_str("THREEPDC") != "ZERO") ? 3 : 2;
-    Reference ref = reference(max_rdm_level);
+    //int max_rdm_level = (options->get_str("THREEPDC") != "ZERO") ? 3 : 2;
+    max_rdm_ = (options->get_str("THREEPDC") != "ZERO") ? 3 : 2;
+    //Reference ref = reference(max_rdm_level);
+    Reference ref = get_reference();
 
     // semicanonicalize orbitals
-    SemiCanonical semi(reference_wavefunction_, integral_, mo_space_info_);
+    SemiCanonical semi(options, integral_, mo_space_info_);
     if (actv_space_type_ == "CIS" || actv_space_type_ == "CISD") {
         semi.set_actv_dims(actv_hole_dim_, actv_part_dim_);
     }
-    semi.semicanonicalize(ref, max_rdm_level);
+    semi.semicanonicalize(ref, max_rdm_);
 
     // fill in non-tensor based cumulants
-    fill_naive_cumulants(ref, max_rdm_level);
+    fill_naive_cumulants(ref, max_rdm_);
 
     // build Fock matrix using semicanonicalized densities
     Fa_ = d2(ncmo_, d1(ncmo_));
@@ -84,7 +86,7 @@ MCSRGPT2_MO::MCSRGPT2_MO(psi::SharedWavefunction ref_wfn, psi::Options& options,
                          "Second-Order Perturbative Analysis", "Chenyang Li"});
 
     startup(options);
-    if (options.get_str("CORR_LEVEL") == "SRG_PT2") {
+    if (options->get_str("CORR_LEVEL") == "SRG_PT2") {
         psi::Process::environment.globals["CURRENT ENERGY"] = compute_energy_srg();
     } else {
         psi::Process::environment.globals["CURRENT ENERGY"] = compute_energy_dsrg();
@@ -97,10 +99,10 @@ void MCSRGPT2_MO::cleanup() {
     //    delete integral_;
 }
 
-void MCSRGPT2_MO::startup(psi::Options& options) {
+void MCSRGPT2_MO::startup(std::shared_ptr<ForteOptions> options) {
 
     // Source Operator
-    source_ = options.get_str("SOURCE");
+    source_ = options->get_str("SOURCE");
     if (sourcemap.find(source_) == sourcemap.end()) {
         outfile->Printf("\n  Source operator %s is not available.", source_.c_str());
         outfile->Printf("\n  Only these source operators are available: ");
@@ -120,19 +122,19 @@ void MCSRGPT2_MO::startup(psi::Options& options) {
     }
 
     // DSRG Parameters
-    s_ = options.get_double("DSRG_S");
+    s_ = options->get_double("DSRG_S");
     if (s_ < 0) {
         throw psi::PSIEXCEPTION("DSRG_S cannot be negative numbers.");
     }
-    taylor_threshold_ = options.get_int("TAYLOR_THRESHOLD");
+    taylor_threshold_ = options->get_int("TAYLOR_THRESHOLD");
     if (taylor_threshold_ <= 0) {
         throw psi::PSIEXCEPTION("TAYLOR_THRESHOLD must be an integer greater than 0.");
     }
-    expo_delta_ = options.get_double("DSRG_POWER");
+    expo_delta_ = options->get_double("DSRG_POWER");
     if (expo_delta_ <= 1.0) {
         throw psi::PSIEXCEPTION("DELTA_EXPONENT must be greater than 1.0.");
     }
-    double e_conv = -log10(options.get_double("E_CONVERGENCE"));
+    double e_conv = -log10(options->get_double("E_CONVERGENCE"));
     taylor_order_ = floor((e_conv / taylor_threshold_ + 1.0) / expo_delta_) + 1;
 
     // Print Original Orbital Indices
@@ -161,14 +163,14 @@ void MCSRGPT2_MO::startup(psi::Options& options) {
     outfile->Printf("\t\t\tDone.");
 
     // 2-Particle Density Cumulant
-    string twopdc = options.get_str("TWOPDC");
+    string twopdc = options->get_str("TWOPDC");
     if (twopdc == "ZERO") {
         L2aa_ = d4(nactv_, d3(nactv_, d2(nactv_, d1(nactv_))));
         L2ab_ = d4(nactv_, d3(nactv_, d2(nactv_, d1(nactv_))));
         L2bb_ = d4(nactv_, d3(nactv_, d2(nactv_, d1(nactv_))));
     }
 
-    if (options.get_str("CORR_LEVEL") == "SRG_PT2") {
+    if (options->get_str("CORR_LEVEL") == "SRG_PT2") {
         // compute [1 - exp(-s * x^2)] / x^2
         srg_source_ = std::make_shared<LABS_SOURCE>(s_, taylor_threshold_);
 
@@ -203,8 +205,8 @@ void MCSRGPT2_MO::startup(psi::Options& options) {
         T1a_ = d2(nhole_, d1(npart_));
         T1b_ = d2(nhole_, d1(npart_));
 
-        string t_algorithm = options.get_str("T_ALGORITHM");
-        t1_amp_ = options.get_str("T1_AMP");
+        string t_algorithm = options->get_str("T_ALGORITHM");
+        t1_amp_ = options->get_str("T1_AMP");
         bool t1_zero = t1_amp_ == "ZERO";
         outfile->Printf("\n");
         outfile->Printf("\n  Computing MR-DSRG-PT2 T amplitudes ...");
@@ -229,7 +231,7 @@ void MCSRGPT2_MO::startup(psi::Options& options) {
         } else if (t_algorithm == "ISA") {
             outfile->Printf("\n  Form T amplitudes using intruder state "
                             "avoidance (ISA) formalism.");
-            double b = options.get_double("ISA_B");
+            double b = options->get_double("ISA_B");
             Form_T2_ISA(T2aa_, T2ab_, T2bb_, b);
             if (!t1_zero) {
                 Form_T1_ISA(T1a_, T1b_, b);
@@ -251,7 +253,7 @@ void MCSRGPT2_MO::startup(psi::Options& options) {
         Check_T1("A", T1a_, T1Na_, T1Maxa_, options);
         Check_T1("B", T1b_, T1Nb_, T1Maxb_, options);
 
-        bool dsrgpt = options.get_bool("DSRGPT");
+        bool dsrgpt = options->get_bool("DSRGPT");
 
         // Effective Fock Matrix
         Fa_dsrg_ = d2(ncmo_, d1(ncmo_));
@@ -840,10 +842,10 @@ inline bool ReverseSortT2(const tuple<double, size_t, size_t, size_t, size_t>& l
 }
 
 void MCSRGPT2_MO::Check_T2(const string& x, const d4& M, double& Norm, double& MaxT,
-                           psi::Options& options) {
+                           std::shared_ptr<ForteOptions> options) {
     timer_on("Check T2");
-    size_t ntamp = options.get_int("NTAMP");
-    double intruder = options.get_double("INTRUDER_TAMP");
+    size_t ntamp = options->get_int("NTAMP");
+    double intruder = options->get_double("INTRUDER_TAMP");
     std::vector<std::tuple<double, size_t, size_t, size_t, size_t>> Max;
     std::vector<std::tuple<double, size_t, size_t, size_t, size_t>> Large(
         ntamp, std::make_tuple(0.0, 0, 0, 0, 0));
@@ -866,7 +868,7 @@ void MCSRGPT2_MO::Check_T2(const string& x, const d4& M, double& Norm, double& M
                     if (std::fabs(m) > intruder)
                         Max.push_back(std::make_tuple(m, ni, nj, na, nb));
                     sort(Max.begin(), Max.end(), ReverseSortT2);
-                    if (std::fabs(m) > options.get_double("E_CONVERGENCE"))
+                    if (std::fabs(m) > options->get_double("E_CONVERGENCE"))
                         ++count;
                 }
             }
@@ -946,10 +948,10 @@ inline bool ReverseSortT1(const tuple<double, size_t, size_t>& lhs,
 }
 
 void MCSRGPT2_MO::Check_T1(const string& x, const d2& M, double& Norm, double& MaxT,
-                           psi::Options& options) {
+                           std::shared_ptr<ForteOptions> options) {
     timer_on("Check T1");
-    size_t ntamp = options.get_int("NTAMP");
-    double intruder = options.get_double("INTRUDER_TAMP");
+    size_t ntamp = options->get_int("NTAMP");
+    double intruder = options->get_double("INTRUDER_TAMP");
     std::vector<std::tuple<double, size_t, size_t>> Max;
     std::vector<std::tuple<double, size_t, size_t>> Large(ntamp, std::make_tuple(0.0, 0, 0));
     double value = 0.0;
@@ -967,7 +969,7 @@ void MCSRGPT2_MO::Check_T1(const string& x, const d2& M, double& Norm, double& M
             if (std::fabs(m) > intruder)
                 Max.push_back(std::make_tuple(m, ni, na));
             sort(Max.begin(), Max.end(), ReverseSortT1);
-            if (std::fabs(m) > options.get_double("E_CONVERGENCE"))
+            if (std::fabs(m) > options->get_double("E_CONVERGENCE"))
                 ++count;
         }
     }
@@ -1130,8 +1132,9 @@ void MCSRGPT2_MO::test_D1_RE() {
     } else {
         std::string indent(4, ' ');
         std::string dash(47, '-');
-        std::string title = indent + str(boost::format("%=9s    %=15s    %=15s\n") % "Indices" %
-                                         "Denominator" % "Original Denom.") +
+        std::string title = indent +
+                            str(boost::format("%=9s    %=15s    %=15s\n") % "Indices" %
+                                "Denominator" % "Original Denom.") +
                             indent + dash;
         outfile->Printf("\n%s", title.c_str());
         for (const auto& pair : smallD1) {
@@ -1266,8 +1269,9 @@ void MCSRGPT2_MO::test_D2_RE() {
     } else {
         std::string indent(4, ' ');
         std::string dash(57, '-');
-        std::string title = indent + str(boost::format("%=19s    %=15s    %=15s\n") % "Indices" %
-                                         "Denominator" % "Original Denom.") +
+        std::string title = indent +
+                            str(boost::format("%=19s    %=15s    %=15s\n") % "Indices" %
+                                "Denominator" % "Original Denom.") +
                             indent + dash;
         outfile->Printf("\n%s", title.c_str());
         for (const auto& pair : smallD2aa) {
@@ -1288,8 +1292,9 @@ void MCSRGPT2_MO::test_D2_RE() {
     } else {
         std::string indent(4, ' ');
         std::string dash(57, '-');
-        std::string title = indent + str(boost::format("%=19s    %=15s    %=15s\n") % "Indices" %
-                                         "Denominator" % "Original Denom.") +
+        std::string title = indent +
+                            str(boost::format("%=19s    %=15s    %=15s\n") % "Indices" %
+                                "Denominator" % "Original Denom.") +
                             indent + dash;
         outfile->Printf("\n%s", title.c_str());
         for (const auto& pair : smallD2ab) {
@@ -1538,8 +1543,9 @@ void MCSRGPT2_MO::test_D2_Dyall() {
     } else {
         std::string indent(4, ' ');
         std::string dash(57, '-');
-        std::string title = indent + str(boost::format("%=19s    %=15s    %=15s\n") % "Indices" %
-                                         "Denominator" % "Original Denom.") +
+        std::string title = indent +
+                            str(boost::format("%=19s    %=15s    %=15s\n") % "Indices" %
+                                "Denominator" % "Original Denom.") +
                             indent + dash;
         outfile->Printf("\n%s", title.c_str());
         for (const auto& pair : smallD2aa) {
@@ -1560,8 +1566,9 @@ void MCSRGPT2_MO::test_D2_Dyall() {
     } else {
         std::string indent(4, ' ');
         std::string dash(57, '-');
-        std::string title = indent + str(boost::format("%=19s    %=15s    %=15s\n") % "Indices" %
-                                         "Denominator" % "Original Denom.") +
+        std::string title = indent +
+                            str(boost::format("%=19s    %=15s    %=15s\n") % "Indices" %
+                                "Denominator" % "Original Denom.") +
                             indent + dash;
         outfile->Printf("\n%s", title.c_str());
         for (const auto& pair : smallD2ab) {
@@ -1688,7 +1695,7 @@ double MCSRGPT2_MO::compute_energy_dsrg() {
     E_VT2_2(E7);
     outfile->Printf("\t\t\t\t\tDone.");
 
-    if (options_.get_str("TWOPDC") != "ZERO") {
+    if (options_->get_str("TWOPDC") != "ZERO") {
         outfile->Printf("\n  Computing energy of [V, T2] C_2^2 * C_4 ...");
 
         E_VT2_4PP(E8_1);
@@ -1697,7 +1704,7 @@ double MCSRGPT2_MO::compute_energy_dsrg() {
         outfile->Printf("\t\t\t\tDone.");
     }
 
-    if (options_.get_str("THREEPDC") != "ZERO") {
+    if (options_->get_str("THREEPDC") != "ZERO") {
         outfile->Printf("\n  Computing energy of [V, T2] C_2 * C_6 ...");
 
         E_VT2_6(E10_1, E10_2);
@@ -3275,4 +3282,4 @@ double MCSRGPT2_MO::compute_energy_srg() {
 
     return Etotal;
 }
-}
+} // namespace forte

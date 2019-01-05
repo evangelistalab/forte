@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -85,8 +85,8 @@ LOCALIZE::LOCALIZE(std::shared_ptr<psi::Wavefunction> wfn, psi::Options& options
 }
 
 void LOCALIZE::split_localize() {
-    psi::SharedMatrix Ca = wfn_->Ca();
-    psi::SharedMatrix Cb = wfn_->Cb();
+    psi::SharedMatrix Ca = ints_->Ca();
+    psi::SharedMatrix Cb = ints_->Cb();
 
     psi::Dimension nsopi = wfn_->nsopi();
     int nirrep = wfn_->nirrep();
@@ -127,29 +127,39 @@ void LOCALIZE::split_localize() {
 
     psi::SharedMatrix Lvir = loc_v->L();
 
+    std::shared_ptr<psi::Matrix> U = std::make_shared<psi::Matrix>("U",Ca->rowspi(), Ca->colspi()); 
+    U->identity();
+
     psi::SharedMatrix Lact;
+    psi::SharedMatrix Uact;
     if (multiplicity_ == 3) {
         std::shared_ptr<Localizer> loc_c = Localizer::build(local_type_, primary, Caact);
         loc_c->localize();
         Lact = loc_c->L();
+        Uact = loc_c->U();
     }
+    psi::SharedMatrix Uocc = loc_a->U();
+    psi::SharedMatrix Uvir = loc_v->U();
 
     for (int h = 0; h < nirrep; ++h) {
         for (int i = 0; i < naocc_; ++i) {
             psi::SharedVector vec = Laocc->get_column(h, i);
             Ca->set_column(h, i + nfrz_ + nrst_, vec);
             Cb->set_column(h, i + nfrz_ + nrst_, vec);
+            U->set_column(h, i + nfrz_ + nrst_, Uocc->get_column(h,i));
         }
         for (int i = 0; i < navir_; ++i) {
             psi::SharedVector vec = Lvir->get_column(h, i);
             Ca->set_column(h, i + nfrz_ + nrst_ + naocc_ + off, vec);
             Cb->set_column(h, i + nfrz_ + nrst_ + naocc_ + off, vec);
+            U->set_column(h, i + nfrz_ + nrst_+ naocc_ + off, Uvir->get_column(h,i));
         }
 
         for (int i = 0; i < off; ++i) {
             psi::SharedVector vec = Lact->get_column(h, i);
             Ca->set_column(h, i + nfrz_ + nrst_ + naocc_, vec);
             Cb->set_column(h, i + nfrz_ + nrst_ + naocc_, vec);
+            U->set_column(h, i + nfrz_ + nrst_+ naocc_ + off, Uact->get_column(h,i));
         }
     }
 
@@ -163,7 +173,7 @@ void LOCALIZE::split_localize() {
     }
     outfile->Printf("\n  ||Ca - Cb||_[1] = %1.5f", value);
 
-    ints_->retransform_integrals();
+    ints_->rotate_orbitals(U,U);
 }
 
 void LOCALIZE::full_localize() {
@@ -191,20 +201,24 @@ void LOCALIZE::full_localize() {
     std::shared_ptr<Localizer> loc_a = Localizer::build(local_type_, primary, Caact);
     loc_a->localize();
 
-    psi::SharedMatrix U = loc_a->U();
+    psi::SharedMatrix Ua = loc_a->U();
     psi::SharedMatrix Laocc = loc_a->L();
+
+    std::shared_ptr<psi::Matrix> U = std::make_shared<psi::Matrix>("U", Ca->colspi(), Ca->rowspi());
+    U->identity();
 
     for (int h = 0; h < nirrep; ++h) {
         for (size_t i = 0; i < nact; ++i) {
             psi::SharedVector vec = Laocc->get_column(h, i);
             Ca->set_column(h, i + nfrz_ + nrst_, vec);
             Cb->set_column(h, i + nfrz_ + nrst_, vec);
+            U->set_column(h, i + nfrz_ + nrst_, Ua->get_column(h,i));
         }
     }
-    ints_->retransform_integrals();
+    ints_->rotate_orbitals(U,U);
 
     U_ = std::make_shared<psi::Matrix>("U", nsopi[0], nact);
-    U_->copy(U);
+    U_->copy(Ua);
 }
 
 psi::SharedMatrix LOCALIZE::get_U() { return U_; }

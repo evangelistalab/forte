@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -39,7 +39,7 @@
 
 namespace forte {
 
-class FCIIntegrals;
+class ActiveSpaceIntegrals;
 // class STLBitsetDeterminant;
 
 class UI64Determinant {
@@ -168,15 +168,15 @@ double ui64_slater_sign(uint64_t x, int m);
 std::tuple<double, size_t, size_t> ui64_slater_sign_single(uint64_t l, uint64_t r);
 
 double slater_rules_single_alpha(uint64_t Ib, uint64_t Ia, uint64_t Ja,
-                                 const std::shared_ptr<FCIIntegrals>& ints);
+                                 const std::shared_ptr<ActiveSpaceIntegrals>& ints);
 double slater_rules_double_alpha_alpha(uint64_t Ia, uint64_t Ja,
-                                       const std::shared_ptr<FCIIntegrals>& ints);
+                                       const std::shared_ptr<ActiveSpaceIntegrals>& ints);
 double slater_rules_single_beta(uint64_t Ia, uint64_t Ib, uint64_t Jb,
-                                const std::shared_ptr<FCIIntegrals>& ints);
+                                const std::shared_ptr<ActiveSpaceIntegrals>& ints);
 double slater_rules_double_beta_beta(uint64_t Ib, uint64_t Jb,
-                                     const std::shared_ptr<FCIIntegrals>& ints);
+                                     const std::shared_ptr<ActiveSpaceIntegrals>& ints);
 double slater_rules_double_alpha_beta_pre(int i, int a, uint64_t Ib, uint64_t Jb,
-                                          const std::shared_ptr<FCIIntegrals>& ints);
+                                          const std::shared_ptr<ActiveSpaceIntegrals>& ints);
 
 double spin2(const UI64Determinant& lhs, const UI64Determinant& rhs);
 

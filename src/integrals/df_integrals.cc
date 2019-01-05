@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -56,10 +56,10 @@ using namespace psi;
 
 namespace forte {
 
-DFIntegrals::DFIntegrals(psi::Options& options, psi::SharedWavefunction ref_wfn,
-                         IntegralSpinRestriction restricted,
-                         std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : ForteIntegrals(options, ref_wfn, restricted, mo_space_info) {
+DFIntegrals::DFIntegrals(psi::Options& options, std::shared_ptr<psi::Wavefunction> ref_wfn,
+                         std::shared_ptr<MOSpaceInfo> mo_space_info,
+                         IntegralSpinRestriction restricted)
+    : ForteIntegrals(options, ref_wfn, mo_space_info, restricted) {
     integral_type_ = DF;
     // If code calls constructor print things
     // But if someone calls retransform integrals do not print it
@@ -76,8 +76,6 @@ DFIntegrals::DFIntegrals(psi::Options& options, psi::SharedWavefunction ref_wfn,
     }
     print_timing("computing density-fitted integrals", int_timer.get());
 }
-
-DFIntegrals::~DFIntegrals() {}
 
 double DFIntegrals::aptei_aa(size_t p, size_t q, size_t r, size_t s) {
     double vpqrsalphaC = 0.0;
@@ -144,6 +142,13 @@ ambit::Tensor DFIntegrals::aptei_bb_block(const std::vector<size_t>& p,
     });
     return ReturnTensor;
 }
+
+double DFIntegrals::three_integral(size_t A, size_t p, size_t q) {
+    return ThreeIntegral_->get(p * aptei_idx_ + q, A);
+}
+
+double** DFIntegrals::three_integral_pointer() { return ThreeIntegral_->pointer(); }
+
 ambit::Tensor DFIntegrals::three_integral_block(const std::vector<size_t>& A,
                                                 const std::vector<size_t>& p,
                                                 const std::vector<size_t>& q) {
@@ -186,10 +191,10 @@ void DFIntegrals::gather_integrals() {
     }
 
     psi::Dimension nsopi_ = wfn_->nsopi();
-    psi::SharedMatrix aotoso = wfn_->aotoso();
-    psi::SharedMatrix Ca = wfn_->Ca();
-    // psi::SharedMatrix Ca_ao(new psi::Matrix("Ca_ao",nso_,nmopi_.sum()));
-    psi::SharedMatrix Ca_ao(new psi::Matrix("Ca_ao", nso_, nmopi_.sum()));
+    std::shared_ptr<psi::Matrix> aotoso = wfn_->aotoso();
+    std::shared_ptr<psi::Matrix> Ca = wfn_->Ca();
+    // std::shared_ptr<psi::Matrix> Ca_ao(new psi::Matrix("Ca_ao",nso_,nmopi_.sum()));
+    std::shared_ptr<psi::Matrix> Ca_ao(new psi::Matrix("Ca_ao", nso_, nmopi_.sum()));
 
     // Transform from the SO to the AO basis
     for (int h = 0, index = 0; h < nirrep_; ++h) {
@@ -239,7 +244,7 @@ void DFIntegrals::gather_integrals() {
         outfile->Printf("\n");
     }
 
-    psi::SharedMatrix Bpq(new psi::Matrix("Bpq", naux, nmo_ * nmo_));
+    std::shared_ptr<psi::Matrix> Bpq(new psi::Matrix("Bpq", naux, nmo_ * nmo_));
 
     Bpq = df->get_tensor("B");
 
@@ -247,7 +252,8 @@ void DFIntegrals::gather_integrals() {
     ThreeIntegral_ = Bpq->transpose()->clone();
 }
 
-void DFIntegrals::make_fock_matrix(psi::SharedMatrix gamma_aM, psi::SharedMatrix gamma_bM) {
+void DFIntegrals::make_fock_matrix(std::shared_ptr<psi::Matrix> gamma_aM,
+                                   std::shared_ptr<psi::Matrix> gamma_bM) {
     TensorType tensor_type = ambit::CoreTensor;
     ambit::Tensor ThreeIntegralTensor =
         // ambit::Tensor::build(tensor_type, "ThreeIndex", {ncmo_, ncmo_, nthree_});
@@ -305,9 +311,9 @@ void DFIntegrals::make_fock_matrix(psi::SharedMatrix gamma_aM, psi::SharedMatrix
     /// Form with JK builders
 }
 
-void DFIntegrals::resort_three(psi::SharedMatrix& threeint, std::vector<size_t>& map) {
+void DFIntegrals::resort_three(std::shared_ptr<psi::Matrix>& threeint, std::vector<size_t>& map) {
     // Create a temperature threeint matrix
-    psi::SharedMatrix temp_threeint(new psi::Matrix("tmp", ncmo_ * ncmo_, nthree_));
+    std::shared_ptr<psi::Matrix> temp_threeint(new psi::Matrix("tmp", ncmo_ * ncmo_, nthree_));
     temp_threeint->zero();
 
     // Borrwed from resort_four.
@@ -340,5 +346,7 @@ void DFIntegrals::resort_integrals_after_freezing() {
         print_timing("resorting DF integrals", timer_resort.get());
     }
 }
-} // namespace forte
 
+size_t DFIntegrals::nthree() const { return nthree_; }
+
+} // namespace forte

@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -36,6 +36,9 @@
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/pointgrp.h"
 
+#include "base_classes/forte_options.h"
+#include "base_classes/mo_space_info.h"
+#include "integrals/active_space_integrals.h"
 #include "helpers/helpers.h"
 #include "sa_fcisolver.h"
 
@@ -114,7 +117,7 @@ void SA_FCISolver::read_options() {
                                 "AVG_STATE (%d) and AVG_WEIGHT (%d).",
                                 nentry, options_["AVG_WEIGHT"].size());
                 throw psi::PSIEXCEPTION("Mismatched number of entries in AVG_STATE "
-                                   "and AVG_WEIGHT.");
+                                        "and AVG_WEIGHT.");
             }
 
             double wsum = 0.0;
@@ -212,7 +215,6 @@ double SA_FCISolver::compute_energy() {
         std::tie(symmetry, multiplicity, nroot, std::ignore) = cas_solutions;
 
         psi::Dimension active_dim = mo_space_info_->get_dimension("ACTIVE");
-        size_t nfdocc = mo_space_info_->size("FROZEN_DOCC");
         std::vector<size_t> rdocc = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
         std::vector<size_t> active = mo_space_info_->get_corr_abs_mo("ACTIVE");
 
@@ -264,25 +266,28 @@ double SA_FCISolver::compute_energy() {
             throw psi::PSIEXCEPTION("\n\n  FCI: Wrong value of M_s.\n\n");
 
         // Adjust the number of for frozen and restricted doubly occupied
-        size_t nactel = nel - 2 * nfdocc - 2 * rdocc.size();
+        size_t nactel = nel;
 
         size_t na = (nactel + twice_ms) / 2;
         size_t nb = nactel - na;
-        FCISolver fcisolver(active_dim, rdocc, active, na, nb, multiplicity, symmetry, ints_,
-                            mo_space_info_, options_.get_int("NTRIAL_PER_ROOT"),
-                            options_.get_int("PRINT"), options_);
+        StateInfo state(na, nb, multiplicity, twice_ms, symmetry);
+        // TODO use base class info
+        auto as_ints =
+            make_active_space_ints(mo_space_info_, ints_, "ACTIVE", {{"RESTRICTED_DOCC"}});
+        FCISolver fcisolver(state, mo_space_info_, as_ints);
+
+        fcisolver.set_options(std::make_shared<ForteOptions>(options_));
         fcisolver.set_max_rdm_level(2);
         fcisolver.set_test_rdms(options_.get_bool("FCI_TEST_RDMS"));
         fcisolver.set_fci_iterations(options_.get_int("FCI_MAXITER"));
         fcisolver.set_collapse_per_root(options_.get_int("DL_COLLAPSE_PER_ROOT"));
         fcisolver.set_subspace_per_root(options_.get_int("DL_SUBSPACE_PER_ROOT"));
         fcisolver.set_print_no(false);
-        fcisolver.use_user_integrals_and_restricted_docc(true);
         if (fci_ints_ == nullptr) {
             outfile->Printf("\n\n You need to set fci_ints");
             throw psi::PSIEXCEPTION("Set FCI INTS");
         } else {
-            fcisolver.set_integral_pointer(fci_ints_);
+            fcisolver.set_active_space_integrals(fci_ints_);
         }
         fcisolver.set_nroot(nroot);
 
@@ -294,14 +299,14 @@ double SA_FCISolver::compute_energy() {
         //        psi::SharedMatrix vecs = fcisolver.eigen_vecs();
         //        psi::SharedVector vals = fcisolver.eigen_vals();
         //        for(int n = 0; n < nroot; ++n){
-        //            // create new FCIWfn pointers
-        //            std::shared_ptr<FCIWfn> fci_wfn = fcisolver.get_FCIWFN();
+        //            // create new FCIVector pointers
+        //            std::shared_ptr<FCIVector> fci_wfn = fcisolver.get_FCIWFN();
         //            fci_wfn->copy(vecs->get_column(0,n));
         //            fci_wfn->print();
         //            SA_C_.push_back(fci_wfn); // this line probably would not
         //            work
 
-        //            // use the FCIWfn in FCISolver to compute RDM and obtain
+        //            // use the FCIVector in FCISolver to compute RDM and obtain
         //            the reference
         //            fci_wfn->compute_rdms(2);
         //            for(double x: fci_wfn->opdm_a()){
@@ -324,7 +329,7 @@ double SA_FCISolver::compute_energy() {
             // note: compute_energy of FCISolver computes energy (all roots) and RDMs (given root)
             if (root_number == 0) {
                 fcisolver.compute_energy();
-                evals = fcisolver.eigen_vals();
+                evals = fcisolver.evals();
             } else {
                 fcisolver.compute_rdms_root(root_number);
             }
@@ -332,7 +337,7 @@ double SA_FCISolver::compute_energy() {
             //            SA_C_.push_back(fcisolver.get_FCIWFN());
             double Ecasscf = evals->get(root_number) + Enuc;
             casscf_energies.push_back(Ecasscf);
-            sa_cas_ref.push_back(fcisolver.reference());
+            sa_cas_ref.push_back(fcisolver.get_reference());
             sa_cas_ref[root_number].set_Eref(Ecasscf);
         }
     }
@@ -387,4 +392,3 @@ double SA_FCISolver::compute_energy() {
     return E_sa_casscf;
 }
 } // namespace forte
-

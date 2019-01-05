@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -34,7 +34,7 @@
 
 #include "psi4/libpsi4util/PsiOutStream.h"
 
-#include "helpers/mo_space_info.h"
+#include "base_classes/mo_space_info.h"
 #include "helpers/timer.h"
 #include "mrdsrg.h"
 
@@ -250,7 +250,7 @@ namespace forte {
 //    E += temp["uVxY"] * Lambda2_["xYuV"];
 
 //    // <[Hbar2, T2]> C_6 C_2
-//    if (options_.get_str("THREEPDC") != "ZERO") {
+//    if (foptions_->get_str("THREEPDC") != "ZERO") {
 //        temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"aaaaaa"});
 //        temp["uvwxyz"] += H2["uviz"] * T2["iwxy"]; //  aaaaaa from hole
 //        temp["uvwxyz"] += H2["waxy"] * T2["uvaz"]; //  aaaaaa from particle
@@ -550,7 +550,7 @@ void MRDSRG::H2_T2_C0_DF(BlockedTensor& B, BlockedTensor& T2, const double& alph
     E += temp["uVxY"] * Lambda2_["xYuV"];
 
     // <[Hbar2, T2]> C_6 C_2
-    if (options_.get_str("THREEPDC") != "ZERO") {
+    if (foptions_->get_str("THREEPDC") != "ZERO") {
         temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"aaaaaa"});
         temp["uvwxyz"] += B["gui"] * B["gvz"] * T2["iwxy"]; //  aaaaaa from hole
         temp["uvwxyz"] -= B["guz"] * B["gvi"] * T2["iwxy"]; //  aaaaaa from hole
@@ -1541,7 +1541,7 @@ void MRDSRG::H2_G2_C0(BlockedTensor& H2, BlockedTensor& G2, const double& alpha,
     E += temp["xYuV"] * Lambda2_["xYuV"];
 
     // <[Hbar2, T2]> C_6 C_2
-    if (options_.get_str("THREEPDC") != "ZERO") {
+    if (foptions_->get_str("THREEPDC") != "ZERO") {
         temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"aaaaaa"});
         temp["xyzuvw"] += H2["yzpu"] * G2["pxvw"];
         temp["xyzuvw"] -= H2["zpuv"] * G2["xywp"];
@@ -1966,4 +1966,4 @@ void MRDSRG::H2_G2_C2(BlockedTensor& H2, BlockedTensor& G2, const double& alpha,
 
     dsrg_time_.add("222", timer.get());
 }
-}
+} // namespace forte

@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -31,19 +31,18 @@
 #include <map>
 #include <vector>
 
-#include "psi4/libmints/molecule.h"
+#include "psi4/libmints/wavefunction.h"
 
 #include "cc/cc.h"
-#include "helpers/mo_space_info.h"
+#include "base_classes/mo_space_info.h"
 
 
 namespace forte {
 
-CC::CC(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
+CC::CC(std::shared_ptr<ForteIntegrals> ints,
        std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : Wavefunction(options), ints_(ints), mo_space_info_(mo_space_info),
+    : ints_(ints), mo_space_info_(mo_space_info),
       BTF_(new BlockedTensorFactory()), tensor_type_(CoreTensor) {
-    set_reference_wavefunction(ref_wfn);
     startup();
 }
 

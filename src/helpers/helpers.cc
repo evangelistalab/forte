@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -42,7 +42,7 @@
 #include "psi4/libpsio/psio.hpp"
 #include "psi4/libpsio/psio.h"
 
-#include "helpers/mo_space_info.h"
+#include "base_classes/mo_space_info.h"
 
 using namespace psi;
 
@@ -427,10 +427,9 @@ void view_modified_orbitals(psi::SharedWavefunction wfn, const std::shared_ptr<p
         outfile->Printf("\n  Remove previous molden file named %s.", filename.c_str());
     }
     outfile->Printf("\n  Write molden file to %s.", filename.c_str());
-    /* PORTTODO: re-enable this block
-    molden->write(filename, Ca, Ca, diag_F, diag_F, occupation, occupation);
-    */
+    molden->write(filename, Ca, Ca, diag_F, diag_F, occupation, occupation,true);
 }
+
 std::pair<std::vector<size_t>, std::vector<size_t>> split_up_tasks(size_t size_of_tasks, size_t nproc) {
     size_t mystart = 0;
     size_t nbatch = 0;

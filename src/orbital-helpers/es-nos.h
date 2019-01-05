@@ -7,7 +7,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -36,7 +36,7 @@
 #include "base_classes/reference.h"
 #include "sparse_ci/determinant.h"
 #include "integrals/integrals.h"
-#include "fci/fci_integrals.h"
+#include "integrals/active_space_integrals.h"
 #include "sparse_ci/determinant_hashvector.h"
 #include "sparse_ci/operator.h"
 #include "sparse_ci/sparse_ci_solver.h"
@@ -59,7 +59,7 @@ class ESNO : public psi::Wavefunction {
     void transform(Reference& reference);
 
   private:
-    std::shared_ptr<FCIIntegrals> fci_ints_;
+    std::shared_ptr<ActiveSpaceIntegrals> fci_ints_;
 	std::shared_ptr<psi::Wavefunction> ref_wfn_;
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
 

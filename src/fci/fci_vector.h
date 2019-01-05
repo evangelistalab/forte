@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -31,21 +31,27 @@
 
 #include <vector>
 
-#include "psi4/libmints/matrix.h"
-#include "fci_integrals.h"
-#include "integrals/integrals.h"
-#include "string_lists.h"
+//#include "psi4/libmints/matrix.h"
+#include "psi4/libmints/dimension.h"
 
 #define CAPRICCIO_USE_DAXPY 1
 #define CAPRICCIO_USE_UNROLL 0
 
+namespace psi {
+class Matrix;
+class Vector;
+} // namespace psi
 
 namespace forte {
+class ActiveSpaceIntegrals;
+class BinaryGraph;
+class MOSpaceInfo;
+class StringLists;
 
-class FCIWfn {
+class FCIVector {
   public:
-    FCIWfn(std::shared_ptr<StringLists> lists, size_t symmetry);
-    ~FCIWfn();
+    FCIVector(std::shared_ptr<StringLists> lists, size_t symmetry);
+    ~FCIVector();
 
     //    // Simple operation
     void print();
@@ -54,30 +60,30 @@ class FCIWfn {
     size_t size() const { return ndet_; }
 
     /// Copy the wave function object
-    void copy(FCIWfn& wfn);
+    void copy(FCIVector& wfn);
     /// Copy the coefficient from a Vector object
-    void copy(psi::SharedVector vec);
+    void copy(std::shared_ptr<psi::Vector> vec);
     /// Copy the wave function object
-    void copy_to(psi::SharedVector vec);
+    void copy_to(std::shared_ptr<psi::Vector> vec);
 
     /// Form the diagonal part of the Hamiltonian
-    void form_H_diagonal(std::shared_ptr<FCIIntegrals> fci_ints);
+    void form_H_diagonal(std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
 
     //    double approximate_spin(double )
 
     //    /// Initial guess
-    //    void initial_guess(FCIWfn& diag, size_t num_dets = 100);
+    //    void initial_guess(FCIVector& diag, size_t num_dets = 100);
 
     ////    void set_to(Determinant& det);
     void set(std::vector<std::tuple<size_t, size_t, size_t, double>>& sparse_vec);
     //    double get(int n);
-    //    void plus_equal(double factor,FCIWfn& wfn);
+    //    void plus_equal(double factor,FCIVector& wfn);
     //    void scale(double factor);
     double norm(double power = 2.0);
     ////    void normalize_wrt(Determinant& det);
     void normalize();
-    double dot(FCIWfn& wfn);
-    double dot(std::shared_ptr<FCIWfn>& wfn);
+    double dot(FCIVector& wfn);
+    double dot(std::shared_ptr<FCIVector>& wfn);
 
     std::vector<double>& opdm_a() { return opdm_a_; }
     std::vector<double>& opdm_b() { return opdm_b_; }
@@ -89,18 +95,10 @@ class FCIWfn {
     std::vector<double>& tpdm_abb() { return tpdm_abb_; }
     std::vector<double>& tpdm_bbb() { return tpdm_bbb_; }
 
-    //    void randomize();
-    ////    double get_coefficient(Determinant& det);
-    //    double norm2();
-    //    double min_element();
-    //    double max_element();
-    //    std::vector<int> get_important(double alpha);
-
     // Operations on the wave function
-    void Hamiltonian(FCIWfn& result, std::shared_ptr<FCIIntegrals> fci_ints,
-                     RequiredLists required_lists);
+    void Hamiltonian(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
 
-    double energy_from_rdms(std::shared_ptr<FCIIntegrals> fci_ints);
+    double energy_from_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
 
     void compute_rdms(int max_order = 2);
     void rdm_test();
@@ -147,11 +145,11 @@ class FCIWfn {
     std::shared_ptr<StringLists> lists_;
     // Graphs
     /// The alpha string graph
-    GraphPtr alfa_graph_;
+    std::shared_ptr<BinaryGraph> alfa_graph_;
     /// The beta string graph
-    GraphPtr beta_graph_;
+    std::shared_ptr<BinaryGraph> beta_graph_;
     /// Coefficient matrix stored in block-matrix form
-    std::vector<psi::SharedMatrix> C_;
+    std::vector<std::shared_ptr<psi::Matrix>> C_;
     std::vector<double> opdm_a_;
     std::vector<double> opdm_b_;
     std::vector<double> tpdm_aa_;
@@ -164,11 +162,11 @@ class FCIWfn {
 
     // ==> Class Static Data <==
 
-    static psi::SharedMatrix C1;
-    static psi::SharedMatrix Y1;
+    static std::shared_ptr<psi::Matrix> C1;
+    static std::shared_ptr<psi::Matrix> Y1;
     static size_t sizeC1;
-    //    static FCIWfn* tmp_wfn1;
-    //    static FCIWfn* tmp_wfn2;
+    //    static FCIVector* tmp_wfn1;
+    //    static FCIVector* tmp_wfn2;
 
     // Timers
     static double hdiag_timer;
@@ -184,7 +182,8 @@ class FCIWfn {
     void cleanup();
 
     /// Compute the energy of a determinant
-    double determinant_energy(bool*& Ia, bool*& Ib, int n, std::shared_ptr<FCIIntegrals> fci_ints);
+    double determinant_energy(bool*& Ia, bool*& Ib, int n,
+                              std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
 
     // ==> Class Private Functions <==
 
@@ -209,10 +208,10 @@ class FCIWfn {
     //    double tei_bbbb(size_t p, size_t q, size_t r, size_t s) const {return
     //    fci_ints_->tei_ab(tei_index(p,q,r,s));}
 
-    void H0(FCIWfn& result, std::shared_ptr<FCIIntegrals> fci_ints);
-    void H1(FCIWfn& result, std::shared_ptr<FCIIntegrals> fci_ints, bool alfa);
-    void H2_aabb(FCIWfn& result, std::shared_ptr<FCIIntegrals> fci_ints);
-    void H2_aaaa2(FCIWfn& result, std::shared_ptr<FCIIntegrals> fci_ints, bool alfa);
+    void H0(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
+    void H1(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_ints, bool alfa);
+    void H2_aabb(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
+    void H2_aaaa2(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_ints, bool alfa);
 
     void compute_1rdm(std::vector<double>& rdm, bool alfa);
     void compute_2rdm_aa(std::vector<double>& rdm, bool alfa);
@@ -221,7 +220,7 @@ class FCIWfn {
     void compute_3rdm_aab(std::vector<double>& rdm);
     void compute_3rdm_abb(std::vector<double>& rdm);
 };
-}
+} // namespace forte
 
 #endif // _fci_vector_
 

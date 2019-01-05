@@ -78,9 +78,7 @@ src/base_classes/dynamic_correlation_solver.cc
 src/finite_temperature/finite_temperature.cc
 src/forte_old_methods.cc
 src/forte_old_options.cc
-src/forte_options.cc
 src/helpers/iterative_solvers.cc
-src/helpers/mo_space_info.cc
 src/helpers/helpers.cc
 src/main.cc
 src/sparse_ci/operator.cc
@@ -88,6 +86,10 @@ src/options.cc
 src/orbital-helpers/orbitaloptimizer.cc
 src/python_api.cc
 src/base_classes/reference.cc
+src/base_classes/state_info.cc
+src/base_classes/scf_info.cc
+src/base_classes/forte_options.cc
+src/base_classes/mo_space_info.cc
 src/sci/aci.cc
 src/sci/aci_build_F.cc
 src/sci/asci.cc
@@ -106,8 +108,6 @@ src/orbital-helpers/aosubspace.cc
 src/orbital-helpers/ci-no/ci-no.cc
 src/orbital-helpers/ci-no/mrci-no.cc
 src/fci/binary_graph.cc
-src/fci/fci.cc
-src/fci/fci_integrals.cc
 src/fci/sa_fcisolver.cc
 src/fci/fci_solver.cc
 src/fci/fci_vector.cc
@@ -132,6 +132,8 @@ src/integrals/integrals.cc
 src/integrals/own_integrals.cc
 src/integrals/parallel_ccvv_algorithms.cc
 src/integrals/paralleldfmo.cc
+src/integrals/make_integrals.cc
+src/integrals/active_space_integrals.cc
 src/mrdsrg-helper/dsrg_source.cc
 src/mrdsrg-helper/dsrg_time.cc
 src/mrdsrg-helper/run_dsrg.cc
@@ -173,6 +175,7 @@ src/v2rdm/v2rdm.cc
 target_link_libraries(forte PRIVATE ambit::ambit)
 if(TARGET CheMPS2::chemps2)
     target_link_libraries(forte PRIVATE CheMPS2::chemps2)
+    add_definitions(-DHAVE_CHEMPS2)
 endif()
 
 target_include_directories(forte PRIVATE src)

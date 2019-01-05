@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2017 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -34,7 +34,7 @@
 #include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/psi4-dec.h"
 
-#include "fci/fci_integrals.h"
+#include "integrals/active_space_integrals.h"
 
 #include "ui64_determinant.h"
 #include "stl_bitset_determinant.h"
@@ -43,7 +43,7 @@
 namespace forte {
 
 double slater_rules_single_alpha(uint64_t Ib, uint64_t Ia, uint64_t Ja,
-                                 const std::shared_ptr<FCIIntegrals>& ints) {
+                                 const std::shared_ptr<ActiveSpaceIntegrals>& ints) {
     uint64_t IJa = Ia ^ Ja;
     uint64_t i = lowest_one_idx(IJa);
     IJa = clear_lowest_one(IJa);
@@ -65,7 +65,7 @@ double slater_rules_single_alpha(uint64_t Ib, uint64_t Ia, uint64_t Ja,
 }
 
 double slater_rules_single_beta(uint64_t Ia, uint64_t Ib, uint64_t Jb,
-                                const std::shared_ptr<FCIIntegrals>& ints) {
+                                const std::shared_ptr<ActiveSpaceIntegrals>& ints) {
     uint64_t IJb = Ib ^ Jb;
     uint64_t i = lowest_one_idx(IJb);
     IJb = clear_lowest_one(IJb);
@@ -87,7 +87,7 @@ double slater_rules_single_beta(uint64_t Ia, uint64_t Ib, uint64_t Jb,
 }
 
 double slater_rules_double_alpha_alpha(uint64_t Ia, uint64_t Ja,
-                                       const std::shared_ptr<FCIIntegrals>& ints) {
+                                       const std::shared_ptr<ActiveSpaceIntegrals>& ints) {
     uint64_t IJb = Ia ^ Ja;
 
     uint64_t Ia_sub = Ia & IJb;
@@ -104,7 +104,7 @@ double slater_rules_double_alpha_alpha(uint64_t Ia, uint64_t Ja,
 }
 
 double slater_rules_double_beta_beta(uint64_t Ib, uint64_t Jb,
-                                     const std::shared_ptr<FCIIntegrals>& ints) {
+                                     const std::shared_ptr<ActiveSpaceIntegrals>& ints) {
     uint64_t IJb = Ib ^ Jb;
 
     uint64_t Ib_sub = Ib & IJb;
@@ -121,7 +121,7 @@ double slater_rules_double_beta_beta(uint64_t Ib, uint64_t Jb,
 }
 
 double slater_rules_double_alpha_beta_pre(int i, int a, uint64_t Ib, uint64_t Jb,
-                                          const std::shared_ptr<FCIIntegrals>& ints) {
+                                          const std::shared_ptr<ActiveSpaceIntegrals>& ints) {
     //    outfile->Printf("\n %zu %zu", Ib, Jb);
     uint64_t Ib_xor_Jb = Ib ^ Jb;
     uint64_t j = lowest_one_idx(Ib_xor_Jb);
