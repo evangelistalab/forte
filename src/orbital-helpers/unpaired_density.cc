@@ -169,9 +169,9 @@ void UPDensity::compute_unpaired_density(std::vector<double>& oprdm_a,
     //    }
 
     psi::Dimension nactpi = mo_space_info_->get_dimension("ACTIVE");
-    psi::Dimension nmopi = wfn_->nmopi();
+    psi::Dimension nmopi = mo_space_info_->get_dimension("ALL");
     psi::Dimension ncmopi = mo_space_info_->get_dimension("CORRELATED");
-    size_t nirrep = wfn_->nirrep();
+    size_t nirrep = ints_->nirrep();
     psi::Dimension rdocc = mo_space_info_->get_dimension("RESTRICTED_DOCC");
     psi::Dimension fdocc = mo_space_info_->get_dimension("FROZEN_DOCC");
 
@@ -234,7 +234,7 @@ void UPDensity::compute_unpaired_density(std::vector<double>& oprdm_a,
     // relocalize to atoms
 
     // Grab matrix that takes the transforms from the NO basis to our local basis
-    auto loc = std::make_shared<LOCALIZE>(wfn_, options_, ints_);
+    auto loc = std::make_shared<LOCALIZE>(options_, ints_);
 
     std::vector<size_t> actmo = mo_space_info_->get_absolute_mo("ACTIVE");
     std::vector<int> loc_mo(2);        
@@ -270,8 +270,8 @@ void UPDensity::compute_unpaired_density(std::vector<double>& oprdm_a,
 
     // Build the density using scaled columns of C
 
-    psi::SharedMatrix Ca = wfn_->Ca();
-    psi::SharedMatrix Cb = wfn_->Cb();
+    psi::SharedMatrix Ca = ints_->Ca();
+    psi::SharedMatrix Cb = ints_->Cb();
 
     psi::SharedMatrix Ca_new = psi::Matrix::doublet(Ca->clone(), Ua, false, false);
     psi::SharedMatrix Cb_new = psi::Matrix::doublet(Cb->clone(), Ub, false, false);
@@ -289,8 +289,8 @@ void UPDensity::compute_unpaired_density(std::vector<double>& oprdm_a,
         }
     }
 
-    psi::SharedMatrix Da = wfn_->Da();
-    psi::SharedMatrix Db = wfn_->Db();
+    psi::SharedMatrix Da = ints_->wfn()->Da();
+    psi::SharedMatrix Db = ints_->wfn()->Db();
 
     // psi::SharedMatrix Da_new(new psi::Matrix("Da_new", nmopi, nmopi));
     // psi::SharedMatrix Db_new(new psi::Matrix("Db_new", nmopi, nmopi));

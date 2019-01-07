@@ -29,7 +29,10 @@
 #include "psi4/libpsio/psio.h"
 #include "psi4/libpsio/psio.hpp"
 #include "psi4/libmints/local.h"
-#include "psi4/liboptions/liboptions.h"
+#include "psi4/libqt/qt.h"
+#include "psi4/libmints/matrix.h"
+#include "psi4/libmints/vector.h"
+
 #include "base_classes/reference.h"
 
 #include "localize.h"
@@ -51,7 +54,8 @@ LOCALIZE::LOCALIZE(StateInfo state, std::shared_ptr<SCFInfo> scf_info,
         throw psi::PSIEXCEPTION("\n\n ERROR: Localizer only implemented for C1 symmetry!");
     }
 
-    orbital_spaces_ = options.get_int_vector("LOCALIZE_SPACE");
+    
+    orbital_spaces_ = options->get_int_vec("LOCALIZE_SPACE");
     outfile->Printf("\n\n");
 }
 
@@ -70,8 +74,8 @@ void LOCALIZE::localize() {
     } 
 
     // Get references to C matrices
-    psi::SharedMatrix Ca = wfn_->Ca();
-    psi::SharedMatrix Cb = wfn_->Cb();
+    psi::SharedMatrix Ca = ints_->Ca();
+    psi::SharedMatrix Cb = ints_->Cb();
 
     size_t nmo = Ca->rowdim();
    
@@ -108,29 +112,27 @@ void LOCALIZE::localize() {
         }
     
         // localize
-        std::shared_ptr<psi::BasisSet> primary = wfn_->basisset();
+        std::shared_ptr<psi::BasisSet> primary = ints_->wfn()->basisset();
         std::shared_ptr<psi::Localizer> loc_a = psi::Localizer::build(local_method_, primary, Ca_loc);
         loc_a->localize();
         
         // Grab the transformation and localized matrices
-        psi::SharedMatrix U = loc_a->U();
         psi::SharedMatrix Laocc = loc_a->L();
 
         //Set Ca, Cb, and U
         for( size_t i = 0; i < orb_dim; ++i ){
             psi::SharedVector C_col = Laocc->get_column(0, i);
-            psi::SharedVector U_col = U->get_column(0,i);
             
             Ca->set_column(0, i+first, C_col);
             Cb->set_column(0, i+first, C_col);
-            U_->set_column(0, i+first, U_col);
         }
     }
 
-    ints_->retransform_integrals();
+    ints_->update_orbitals(Ca, Cb);
 }
 
 psi::SharedMatrix LOCALIZE::get_Ua() { return Ua_; }
 psi::SharedMatrix LOCALIZE::get_Ub() { return Ub_; }
 
 } // namespace forte
+

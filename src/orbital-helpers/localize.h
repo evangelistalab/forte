@@ -33,7 +33,10 @@
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/libmints/local.h"
 
+#include "psi4/libpsio/psio.h"
+#include "psi4/libpsio/psio.hpp"
 #include "integrals/integrals.h"
+#include "base_classes/forte_options.h"
 #include "base_classes/reference.h"
 #include "base_classes/state_info.h"
 #include "base_classes/scf_info.h"

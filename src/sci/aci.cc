@@ -2932,7 +2932,7 @@ void AdaptiveCI::spin_analysis() {
         outfile->Printf("\n  Computing spin correlation in local basis \n");
 
         auto loc =
-            std::make_shared<LOCALIZE>(reference_wavefunction_, options_, ints_);
+            std::make_shared<LOCALIZE>(options_, as_ints_->ints());
 
         std::vector<size_t> actmo = mo_space_info_->get_absolute_mo("ACTIVE");
         std::vector<int> loc_mo(2);        
