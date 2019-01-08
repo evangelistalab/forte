@@ -1325,7 +1325,7 @@ double DSRG_MRPT3::compute_energy_sa() {
 
     // call FCI_MO if SA_FULL and CAS_TYPE == CAS
     if (multi_state_algorithm_ == "SA_FULL" && foptions_->get_str("CAS_TYPE") == "CAS") {
-        FCI_MO fci_mo(scf_info_, foptions_, ints_, mo_space_info_, fci_ints);
+        FCI_MO fci_mo(state, nroot, scf_info_, foptions_, ints_, mo_space_info_, fci_ints);
         fci_mo.set_localize_actv(false);
         fci_mo.compute_energy();
         auto eigens = fci_mo.eigens();

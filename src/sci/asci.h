@@ -72,8 +72,9 @@ class ASCI : public ActiveSpaceSolver {
      * @param mo_space_info A pointer to the MOSpaceInfo object
      */
 
-    ASCI(StateInfo state, std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
-         std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ActiveSpaceIntegrals> as_ints);
+    ASCI(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
+         std::shared_ptr<ForteOptions> options, std::shared_ptr<MOSpaceInfo> mo_space_info,
+         std::shared_ptr<ActiveSpaceIntegrals> as_ints);
     /// Destructor
     ~ASCI();
 
@@ -104,7 +105,6 @@ class ASCI : public ActiveSpaceSolver {
 
     /// HF info
     std::shared_ptr<SCFInfo> scf_info_;
-    StateInfo state_;
     /// Options
     std::shared_ptr<ForteOptions> options_;
     /// The wave function symmetry

@@ -57,13 +57,14 @@
 
 namespace forte {
 
-CASSCF::CASSCF(StateInfo state, std::shared_ptr<SCFInfo> scf_info,
+CASSCF::CASSCF(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
                std::shared_ptr<ForteOptions> options, std::shared_ptr<MOSpaceInfo> mo_space_info,
                std::shared_ptr<ActiveSpaceIntegrals> as_ints)
-    : state_(state), scf_info_(scf_info), options_(options), ints_(as_ints->ints()),
-      mo_space_info_(mo_space_info) {
+    : ActiveSpaceSolver(state, nroot, mo_space_info, as_ints), scf_info_(scf_info),
+      options_(options), ints_(as_ints->ints()) {
     startup();
 }
+
 double CASSCF::compute_energy() {
     if (na_ == 0) {
         outfile->Printf("\n\n\n Please set the active space");
@@ -361,7 +362,7 @@ void CASSCF::cas_ci() {
         set_up_fcimo();
     } else if (options_->get_str("CASSCF_CI_SOLVER") == "ACI") {
         as_ints_ = get_ci_integrals();
-        AdaptiveCI aci(state_, scf_info_, options_, mo_space_info_, as_ints_);
+        AdaptiveCI aci(state_, nroot_, scf_info_, options_, mo_space_info_, as_ints_);
         aci.set_max_rdm(2);
         aci.set_quiet(quiet);
         aci.compute_energy();
@@ -428,7 +429,8 @@ void CASSCF::cas_ci() {
 }
 
 void CASSCF::cas_ci_final() {
-    /// Calls francisco's FCI code and does a CAS-CI with the active given in
+
+    /// Calls Francesco's FCI code and does a CAS-CI with the active given in
     /// the input
     bool quiet = true;
     if (print_ > 0) {
@@ -445,7 +447,7 @@ void CASSCF::cas_ci_final() {
         set_up_fcimo();
     } else if (options_->get_str("CASSCF_CI_SOLVER") == "ACI") {
         as_ints_ = get_ci_integrals();
-        AdaptiveCI aci(state_, scf_info_, options_, mo_space_info_, as_ints_);
+        AdaptiveCI aci(state_, nroot_, scf_info_, options_, mo_space_info_, as_ints_);
         aci.set_max_rdm(3);
         aci.set_quiet(quiet);
         aci.compute_energy();
@@ -693,9 +695,9 @@ ambit::Tensor CASSCF::transform_integrals() {
 }
 void CASSCF::set_up_fci() {
     auto fcisolver =
-        make_active_space_solver("FCI", state_, scf_info_, mo_space_info_, ints_, options_);
+        make_active_space_solver("FCI", state_, nroot_, scf_info_, mo_space_info_, ints_, options_);
     fcisolver->set_max_rdm_level(3);
-    fcisolver->set_nroot(options_->get_int("NROOT"));
+
     fcisolver->set_root(options_->get_int("ROOT"));
     std::shared_ptr<ActiveSpaceIntegrals> fci_ints = get_ci_integrals();
     fcisolver->set_active_space_integrals(fci_ints);
@@ -1019,7 +1021,7 @@ void CASSCF::set_up_fcimo() {
             }
         }
 
-        FCI_MO cas(scf_info_, options_, ints_, mo_space_info_, fci_ints);
+        FCI_MO cas(state_, nroot_, scf_info_, options_, mo_space_info_, fci_ints);
         cas.set_quite_mode(print_ > 0 ? false : true);
         cas.compute_energy();
         cas.set_max_rdm_level(2);

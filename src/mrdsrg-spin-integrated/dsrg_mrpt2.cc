@@ -1708,9 +1708,12 @@ double DSRG_MRPT2::compute_energy_relaxed() {
     // obtain the all-active DSRG transformed Hamiltonian
     auto fci_ints = compute_Heff_actv();
 
+    size_t nroot = foptions_->get_int("NROOT");
+
     // diagonalize Hbar depending on CAS_TYPE
     if (foptions_->get_str("CAS_TYPE") == "CAS") {
-        FCI_MO fci_mo(scf_info_, foptions_, ints_, mo_space_info_, fci_ints);
+        auto state = make_state_info_from_psi_wfn(ints_->wfn());
+        FCI_MO fci_mo(state, nroot, scf_info_, foptions_, mo_space_info_, fci_ints);
         fci_mo.set_localize_actv(false);
         Erelax = fci_mo.compute_energy();
 
@@ -1739,13 +1742,13 @@ double DSRG_MRPT2::compute_energy_relaxed() {
     } else if (foptions_->get_str("CAS_TYPE") == "ACI") {
 
         auto state = make_state_info_from_psi_wfn(ints_->wfn());
-        AdaptiveCI aci(state, scf_info_, foptions_, mo_space_info_, fci_ints);
+        AdaptiveCI aci(state, nroot, scf_info_, foptions_, mo_space_info_, fci_ints);
 
         Erelax = aci.compute_energy();
     } else {
         auto state = make_state_info_from_psi_wfn(ints_->wfn());
-        auto fci =
-            make_active_space_solver("FCI", state, scf_info_, mo_space_info_, ints_, foptions_);
+        auto fci = make_active_space_solver("FCI", state, nroot, scf_info_, mo_space_info_, ints_,
+                                            foptions_);
         fci->set_max_rdm_level(1);
         fci->set_active_space_integrals(fci_ints);
         Erelax = fci->compute_energy();

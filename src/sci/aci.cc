@@ -205,28 +205,16 @@ bool pairComp(const std::pair<double, Determinant> E1, const std::pair<double, D
     return E1.first < E2.first;
 }
 
-AdaptiveCI::AdaptiveCI(StateInfo state, std::shared_ptr<SCFInfo> scf_info,
+AdaptiveCI::AdaptiveCI(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
                        std::shared_ptr<ForteOptions> options,
                        std::shared_ptr<MOSpaceInfo> mo_space_info,
                        std::shared_ptr<ActiveSpaceIntegrals> as_ints)
-    : ActiveSpaceSolver(state, mo_space_info, as_ints), scf_info_(scf_info), state_(state),
+    : ActiveSpaceSolver(state, nroot, mo_space_info, as_ints), scf_info_(scf_info),
       options_(options) {
-
     mo_symmetry_ = mo_space_info_->symmetry("ACTIVE");
     sigma_ = options_->get_double("SIGMA");
     nuclear_repulsion_energy_ = as_ints->ints()->nuclear_repulsion_energy();
 }
-
-// AdaptiveCI::AdaptiveCI(psi::SharedWavefunction ref_wfn, psi::Options& options,
-//                       std::shared_ptr<ForteIntegrals> ints,
-//                       std::shared_ptr<MOSpaceInfo> mo_space_info)
-//    : scf_info_(std::make_shared<SCFInfo>(ref_wfn)), options_->options), ints_(ints),
-//    mo_space_info_(mo_space_info) {
-//
-//    mo_symmetry_ = mo_space_info_->symmetry("ACTIVE");
-//    sigma_ = options_->get_double("SIGMA");
-//}
-AdaptiveCI::~AdaptiveCI() {}
 
 void AdaptiveCI::set_fci_ints(std::shared_ptr<ActiveSpaceIntegrals> fci_ints) {
     as_ints_ = fci_ints;
@@ -256,7 +244,7 @@ void AdaptiveCI::startup() {
         multiplicity_ = options_->get_int("MULTIPLICITY");
     }
 
-    if( max_rdm_level_ <= 1 ){
+    if (max_rdm_level_ <= 1) {
         max_rdm_level_ = options_->get_int("ACI_MAX_RDM");
     }
 

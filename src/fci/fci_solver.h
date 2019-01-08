@@ -48,10 +48,11 @@ class FCISolver : public ActiveSpaceSolver {
     /**
      * @brief FCISolver A class that performs a FCI computation in an active space
      * @param state the electronic state to compute
+     * @param nroot the number of roots
      * @param mo_space_info a MOSpaceInfo object that defines the orbital spaces
-     * @param as_ints integrals for the active space integrals
+     * @param as_ints molecular integrals defined only for the active space orbitals
      */
-    FCISolver(StateInfo state, std::shared_ptr<MOSpaceInfo> mo_space_info,
+    FCISolver(StateInfo state, size_t nroot, std::shared_ptr<MOSpaceInfo> mo_space_info,
               std::shared_ptr<ActiveSpaceIntegrals> as_ints);
 
     ~FCISolver() = default;

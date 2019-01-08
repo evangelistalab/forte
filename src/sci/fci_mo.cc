@@ -78,38 +78,42 @@ void set_FCI_MO_options(ForteOptions& foptions) {
     foptions.add_bool("FCIMO_LOCALIZE_ACTV", false, "Localize active orbitals before computation");
 }
 
-FCI_MO::FCI_MO(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
-               std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : integral_(ints), mo_space_info_(mo_space_info), scf_info_(scf_info), options_(options) {
+// FCI_MO::FCI_MO(StateInfo state, std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions>
+// options,
+//               std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
+//    : ActiveSpaceSolver(state, mo_space_info, as_ints), integral_(ints), scf_info_(scf_info),
+//      options_(options) {
+
+//    print_method_banner({"Complete Active Space Configuration Interaction", "Chenyang Li"});
+//    startup();
+
+//    // setup integrals
+//    fci_ints_ =
+//        std::make_shared<ActiveSpaceIntegrals>(integral_,
+//        mo_space_info_->get_corr_abs_mo("ACTIVE"),
+//                                               mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
+//    ambit::Tensor tei_active_aa =
+//        integral_->aptei_aa_block(actv_mos_, actv_mos_, actv_mos_, actv_mos_);
+//    ambit::Tensor tei_active_ab =
+//        integral_->aptei_ab_block(actv_mos_, actv_mos_, actv_mos_, actv_mos_);
+//    ambit::Tensor tei_active_bb =
+//        integral_->aptei_bb_block(actv_mos_, actv_mos_, actv_mos_, actv_mos_);
+//    fci_ints_->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
+//    fci_ints_->compute_restricted_one_body_operator();
+//}
+
+FCI_MO::FCI_MO(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
+               std::shared_ptr<ForteOptions> options, std::shared_ptr<MOSpaceInfo> mo_space_info,
+               std::shared_ptr<ActiveSpaceIntegrals> as_ints)
+    : ActiveSpaceSolver(state, nroot, mo_space_info, as_ints), integral_(as_ints->ints()),
+      mo_space_info_(mo_space_info), scf_info_(scf_info), options_(options) {
 
     print_method_banner({"Complete Active Space Configuration Interaction", "Chenyang Li"});
     startup();
 
     // setup integrals
-    fci_ints_ =
-        std::make_shared<ActiveSpaceIntegrals>(integral_, mo_space_info_->get_corr_abs_mo("ACTIVE"),
-                                               mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
-    ambit::Tensor tei_active_aa =
-        integral_->aptei_aa_block(actv_mos_, actv_mos_, actv_mos_, actv_mos_);
-    ambit::Tensor tei_active_ab =
-        integral_->aptei_ab_block(actv_mos_, actv_mos_, actv_mos_, actv_mos_);
-    ambit::Tensor tei_active_bb =
-        integral_->aptei_bb_block(actv_mos_, actv_mos_, actv_mos_, actv_mos_);
-    fci_ints_->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
-    fci_ints_->compute_restricted_one_body_operator();
-}
-
-FCI_MO::FCI_MO(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
-               std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info,
-               std::shared_ptr<ActiveSpaceIntegrals> fci_ints)
-    : integral_(ints), mo_space_info_(mo_space_info), scf_info_(scf_info), options_(options) {
-
-    print_method_banner({"Complete Active Space Configuration Interaction", "Chenyang Li"});
-    startup();
-
-    // setup integrals
-    if (fci_ints != nullptr) {
-        fci_ints_ = fci_ints;
+    if (as_ints != nullptr) {
+        fci_ints_ = as_ints;
     } else {
         fci_ints_ = std::make_shared<ActiveSpaceIntegrals>(
             integral_, mo_space_info_->get_corr_abs_mo("ACTIVE"),
@@ -1950,7 +1954,8 @@ FCI_MO::compute_ref_relaxed_osc(std::vector<BlockedTensor>& dm1, std::vector<Blo
 
             for (int n = 0; n < nroots0; ++n) {
                 psi::SharedVector evec0 = evecs0->get_column(0, n);
-                psi::SharedVector evec(new psi::Vector("combined evec0 " + std::to_string(n), ndets));
+                psi::SharedVector evec(
+                    new psi::Vector("combined evec0 " + std::to_string(n), ndets));
                 for (size_t i = 0; i < ndets0; ++i) {
                     evec->set(i, evec0->get(i));
                 }
@@ -1959,7 +1964,8 @@ FCI_MO::compute_ref_relaxed_osc(std::vector<BlockedTensor>& dm1, std::vector<Blo
 
             for (int n = 0; n < nroots1; ++n) {
                 psi::SharedVector evec1 = eigens_[B][n].first;
-                psi::SharedVector evec(new psi::Vector("combined evec1 " + std::to_string(n), ndets));
+                psi::SharedVector evec(
+                    new psi::Vector("combined evec1 " + std::to_string(n), ndets));
                 for (size_t i = 0; i < ndets1; ++i) {
                     evec->set(i + ndets0, evec1->get(i));
                 }
@@ -2068,7 +2074,8 @@ FCI_MO::compute_ref_relaxed_osc(std::vector<BlockedTensor>& dm1, std::vector<Blo
 
             for (int n = 0; n < nroots0; ++n) {
                 psi::SharedVector evec0 = evecs0->get_column(0, n);
-                psi::SharedVector evec(new psi::Vector("combined evec0 " + std::to_string(n), ndets));
+                psi::SharedVector evec(
+                    new psi::Vector("combined evec0 " + std::to_string(n), ndets));
                 for (size_t i = 0; i < ndets0; ++i) {
                     evec->set(i, evec0->get(i));
                 }
@@ -2077,7 +2084,8 @@ FCI_MO::compute_ref_relaxed_osc(std::vector<BlockedTensor>& dm1, std::vector<Blo
 
             for (int n = 0; n < nroots1; ++n) {
                 psi::SharedVector evec1 = eigens_[B][n].first;
-                psi::SharedVector evec(new psi::Vector("combined evec1 " + std::to_string(n), ndets));
+                psi::SharedVector evec(
+                    new psi::Vector("combined evec1 " + std::to_string(n), ndets));
                 for (size_t i = 0; i < ndets1; ++i) {
                     evec->set(i + ndets0, evec1->get(i));
                 }

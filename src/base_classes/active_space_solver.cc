@@ -40,17 +40,13 @@
 
 namespace forte {
 
-ActiveSpaceSolver::ActiveSpaceSolver(StateInfo state, std::shared_ptr<MOSpaceInfo> mo_space_info,
+ActiveSpaceSolver::ActiveSpaceSolver(StateInfo state, size_t nroot,
+                                     std::shared_ptr<MOSpaceInfo> mo_space_info,
                                      std::shared_ptr<ActiveSpaceIntegrals> as_ints)
-    : states_weights_({{state, 1.0}}), mo_space_info_(mo_space_info), as_ints_(as_ints) {
+    : state_(state), nroot_(nroot), mo_space_info_(mo_space_info), as_ints_(as_ints) {
     active_mo_ = as_ints_->active_mo();
     core_mo_ = as_ints_->restricted_docc_mo();
 }
-
-ActiveSpaceSolver::ActiveSpaceSolver(
-    const std::vector<std::pair<StateInfo, double>>& states_weights,
-    std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ActiveSpaceIntegrals> as_ints)
-    : states_weights_(states_weights), mo_space_info_(mo_space_info), as_ints_(as_ints) {}
 
 void ActiveSpaceSolver::set_active_space_integrals(std::shared_ptr<ActiveSpaceIntegrals> as_ints) {
     as_ints_ = as_ints;
@@ -60,8 +56,6 @@ psi::SharedVector ActiveSpaceSolver::evals() { return evals_; }
 
 void ActiveSpaceSolver::set_e_convergence(double value) { e_convergence_ = value; }
 
-void ActiveSpaceSolver::set_nroot(int value) { nroot_ = value; }
-
 void ActiveSpaceSolver::set_root(int value) { root_ = value; }
 
 void ActiveSpaceSolver::set_max_rdm_level(int value) { max_rdm_level_ = value; }
@@ -69,7 +63,7 @@ void ActiveSpaceSolver::set_max_rdm_level(int value) { max_rdm_level_ = value; }
 void ActiveSpaceSolver::set_print(int level) { print_ = level; }
 
 std::unique_ptr<ActiveSpaceSolver> make_active_space_solver(
-    const std::string& type, StateInfo state, std::shared_ptr<SCFInfo> scf_info,
+    const std::string& type, StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
     std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ForteIntegrals> ints,
     std::shared_ptr<ForteOptions> options) {
 
@@ -77,15 +71,17 @@ std::unique_ptr<ActiveSpaceSolver> make_active_space_solver(
 
     std::unique_ptr<ActiveSpaceSolver> solver;
     if (type == "FCI") {
-        solver = std::make_unique<FCISolver>(state, mo_space_info, as_ints);
+        solver = std::make_unique<FCISolver>(state, nroot, mo_space_info, as_ints);
     } else if (type == "ACI") {
-        solver = std::make_unique<AdaptiveCI>(state, scf_info, options, mo_space_info, as_ints);
+        solver =
+            std::make_unique<AdaptiveCI>(state, nroot, scf_info, options, mo_space_info, as_ints);
     } else if (type == "CAS") {
-        solver = std::make_unique<FCI_MO>(scf_info, options, ints, mo_space_info, as_ints);
+        solver =
+            std::make_unique<FCI_MO>(state, nroot, scf_info, options, ints, mo_space_info, as_ints);
     } else if (type == "ASCI") {
-        solver = std::make_unique<ASCI>(state, scf_info, options, mo_space_info, as_ints);
+        solver = std::make_unique<ASCI>(state, nroot, scf_info, options, mo_space_info, as_ints);
     } else if (type == "CASSCF") {
-        solver = std::make_unique<CASSCF>(state, scf_info, options, mo_space_info, as_ints);
+        solver = std::make_unique<CASSCF>(state, nroot, scf_info, options, mo_space_info, as_ints);
     } else {
         throw psi::PSIEXCEPTION("make_active_space_solver: type = " + type + " was not recognized");
     }

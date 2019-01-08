@@ -61,21 +61,12 @@ class ActiveSpaceSolver {
     // ==> Class Constructor and Destructor <==
     /**
      * @brief ActiveSpaceSolver Constructor for a single state computation
-     * @param state information about the electronic state
-     * @param mo_space_info a MOSpaceInfo object
-     * @param as_ints integrals for active space
+     * @param state the electronic state to compute
+     * @param nroot the number of roots
+     * @param mo_space_info a MOSpaceInfo object that defines the orbital spaces
+     * @param as_ints molecular integrals defined only for the active space orbitals
      */
-    ActiveSpaceSolver(StateInfo state, std::shared_ptr<MOSpaceInfo> mo_space_info,
-                      std::shared_ptr<ActiveSpaceIntegrals> as_ints);
-
-    /**
-     * @brief ActiveSpaceSolver Constructor for a multi-state computation
-     * @param state information about the electronic state
-     * @param mo_space_info a MOSpaceInfo object
-     * @param as_ints integrals for active space
-     */
-    ActiveSpaceSolver(const std::vector<std::pair<StateInfo, double>>& states_weights,
-                      std::shared_ptr<MOSpaceInfo> mo_space_info,
+    ActiveSpaceSolver(StateInfo state, size_t nroot, std::shared_ptr<MOSpaceInfo> mo_space_info,
                       std::shared_ptr<ActiveSpaceIntegrals> as_ints);
 
     /// Default constructor
@@ -111,10 +102,6 @@ class ActiveSpaceSolver {
     /// @param value the convergence criterion in a.u.
     void set_e_convergence(double value);
 
-    /// Set the number of desired roots
-    /// @param value the number of desired roots
-    void set_nroot(int value);
-
     /// Set the root that will be used to compute the properties
     /// @param the root (root = 0, 1, 2, ...)
     void set_root(int value);
@@ -134,8 +121,11 @@ class ActiveSpaceSolver {
     /// The list of doubly occupied orbitals (absolute ordering)
     std::vector<size_t> core_mo_;
 
-    /// A list of electronic states and their weights
-    std::vector<std::pair<StateInfo, double>> states_weights_;
+    /// The state to calculate
+    StateInfo state_;
+
+    /// The number of roots (default = 1)
+    size_t nroot_ = 1;
 
     /// The MOSpaceInfo object
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
@@ -150,9 +140,6 @@ class ActiveSpaceSolver {
 
     /// The energy convergence criterion
     double e_convergence_ = 1.0e-12;
-
-    /// The number of roots (default = 1)
-    int nroot_ = 1;
 
     /// The root used to compute properties (zero based, default = 0)
     int root_ = 0;
@@ -181,7 +168,7 @@ class ActiveSpaceSolver {
  * @return a shared pointer for the base class ActiveSpaceSolver
  */
 std::unique_ptr<ActiveSpaceSolver> make_active_space_solver(
-    const std::string& type, StateInfo state, std::shared_ptr<SCFInfo> scf_info,
+    const std::string& type, StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
     std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ForteIntegrals> ints,
     std::shared_ptr<ForteOptions> options);
 

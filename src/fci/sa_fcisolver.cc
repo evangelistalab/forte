@@ -274,7 +274,7 @@ double SA_FCISolver::compute_energy() {
         // TODO use base class info
         auto as_ints =
             make_active_space_ints(mo_space_info_, ints_, "ACTIVE", {{"RESTRICTED_DOCC"}});
-        FCISolver fcisolver(state, mo_space_info_, as_ints);
+        FCISolver fcisolver(state, nroot, mo_space_info_, as_ints);
 
         fcisolver.set_options(std::make_shared<ForteOptions>(options_));
         fcisolver.set_max_rdm_level(2);
@@ -289,7 +289,6 @@ double SA_FCISolver::compute_energy() {
         } else {
             fcisolver.set_active_space_integrals(fci_ints_);
         }
-        fcisolver.set_nroot(nroot);
 
         //        fcisolver.set_root(0);
         //        fcisolver.set_test_rdms(false);

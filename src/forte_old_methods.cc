@@ -114,6 +114,7 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
 
     double final_energy = 0.0;
 
+    size_t nroot = options.get_int("NROOT");
     StateInfo state = make_state_info_from_psi_wfn(ref_wfn); // TODO move py-side
     auto scf_info = std::make_shared<SCFInfo>(ref_wfn);
     auto forte_options = std::make_shared<ForteOptions>(options);
@@ -141,19 +142,19 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
         localize->split_localize();
     }
 
-    if (options.get_str("JOB_TYPE") == "MR-DSRG-PT2") {
-        MCSRGPT2_MO mcsrgpt2_mo(std::make_shared<SCFInfo>(ref_wfn),
-                                std::make_shared<ForteOptions>(options), ints, mo_space_info);
-        final_energy = psi::Process::environment.globals["CURRENT ENERGY"];
-    }
+    //    if (options.get_str("JOB_TYPE") == "MR-DSRG-PT2") {
+    //        MCSRGPT2_MO mcsrgpt2_mo(std::make_shared<SCFInfo>(ref_wfn),
+    //                                std::make_shared<ForteOptions>(options), ints, mo_space_info);
+    //        final_energy = psi::Process::environment.globals["CURRENT ENERGY"];
+    //    }
     if (options.get_str("JOB_TYPE") == "ASCI") {
-        auto asci =
-            make_active_space_solver("ASCI", state, scf_info, mo_space_info, ints, forte_options);
+        auto asci = make_active_space_solver("ASCI", state, nroot, scf_info, mo_space_info, ints,
+                                             forte_options);
         final_energy = asci->compute_energy();
     }
     if (options.get_str("JOB_TYPE") == "ACI") {
         auto as_ints = make_active_space_ints(mo_space_info, ints, "ACTIVE", {{"RESTRICTED_DOCC"}});
-        auto aci = std::make_shared<AdaptiveCI>(state, std::make_shared<SCFInfo>(ref_wfn),
+        auto aci = std::make_shared<AdaptiveCI>(state, nroot, std::make_shared<SCFInfo>(ref_wfn),
                                                 std::make_shared<ForteOptions>(options),
                                                 mo_space_info, as_ints);
         final_energy = aci->compute_energy();
@@ -211,8 +212,8 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
         }
     }
     if (options.get_str("JOB_TYPE") == "FCI") {
-        auto fci =
-            make_active_space_solver("FCI", state, scf_info, mo_space_info, ints, forte_options);
+        auto fci = make_active_space_solver("FCI", state, nroot, scf_info, mo_space_info, ints,
+                                            forte_options);
         final_energy = fci->compute_energy();
     }
     if (options.get_bool("USE_DMRGSCF")) {
@@ -237,11 +238,11 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
         throw psi::PSIEXCEPTION("Did not compile with CHEMPS2 so DMRG will not work");
 #endif
     }
-    if (options.get_str("JOB_TYPE") == "CAS") {
-        FCI_MO fci_mo(std::make_shared<SCFInfo>(ref_wfn), std::make_shared<ForteOptions>(options),
-                      ints, mo_space_info);
-        final_energy = fci_mo.compute_energy();
-    }
+    //    if (options.get_str("JOB_TYPE") == "CAS") {
+    //        FCI_MO fci_mo(state, nroot, std::make_shared<SCFInfo>(ref_wfn),
+    //                      std::make_shared<ForteOptions>(options), mo_space_info, as_ints);
+    //        final_energy = fci_mo.compute_energy();
+    //    }
     if (options.get_str("JOB_TYPE") == "MRDSRG") {
         std::string cas_type = options.get_str("CAS_TYPE");
         int max_rdm_level = (options.get_str("THREEPDC") == "ZERO") ? 2 : 3;
@@ -259,8 +260,11 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
         });
 
         if (cas_type == "CAS") {
-            FCI_MO fci_mo(std::make_shared<SCFInfo>(ref_wfn),
-                          std::make_shared<ForteOptions>(options), ints, mo_space_info);
+            auto as_ints =
+                make_active_space_ints(mo_space_info, ints, "ACTIVE", {{"RESTRICTED_DOCC"}});
+
+            FCI_MO fci_mo(state, nroot, std::make_shared<SCFInfo>(ref_wfn),
+                          std::make_shared<ForteOptions>(options), mo_space_info, as_ints);
             fci_mo.set_max_rdm_level(max_rdm_level);
             fci_mo.compute_energy();
             Reference reference = fci_mo.get_reference();
@@ -289,8 +293,8 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
                 }
             }
         } else {
-            auto ci = make_active_space_solver(cas_type, state, scf_info, mo_space_info, ints,
-                                               forte_options);
+            auto ci = make_active_space_solver(cas_type, state, nroot, scf_info, mo_space_info,
+                                               ints, forte_options);
             ci->set_max_rdm_level(3);
             ci->compute_energy();
             Reference reference = ci->get_reference();

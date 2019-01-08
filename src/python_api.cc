@@ -83,13 +83,13 @@ void export_ActiveSpaceSolver(py::module& m) {
         .def("compute_energy", &ActiveSpaceSolver::compute_energy);
 }
 
-/// Export the FCISolver class
-void export_FCISolver(py::module& m) {
-    py::class_<FCISolver>(m, "FCISolver")
-        .def(py::init<StateInfo, std::shared_ptr<MOSpaceInfo>,
-                      std::shared_ptr<ActiveSpaceIntegrals>>())
-        .def("compute_energy", &FCISolver::compute_energy);
-}
+///// Export the FCISolver class
+//void export_FCISolver(py::module& m) {
+//    py::class_<FCISolver>(m, "FCISolver")
+//        .def(py::init<StateInfo, std::shared_ptr<MOSpaceInfo>,
+//                      std::shared_ptr<ActiveSpaceIntegrals>>())
+//        .def("compute_energy", &FCISolver::compute_energy);
+//}
 
 // TODO: export more classes using the function above
 PYBIND11_MODULE(forte, m) {
@@ -110,7 +110,7 @@ PYBIND11_MODULE(forte, m) {
 
     export_ActiveSpaceSolver(m);
 
-    export_FCISolver(m);
+//    export_FCISolver(m);
 
     // export MOSpaceInfo
     py::class_<MOSpaceInfo, std::shared_ptr<MOSpaceInfo>>(m, "MOSpaceInfo")

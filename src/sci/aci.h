@@ -84,11 +84,9 @@ class AdaptiveCI : public ActiveSpaceSolver {
      * @param ints A pointer to an allocated integral object
      * @param mo_space_info A pointer to the MOSpaceInfo object
      */
-    AdaptiveCI(StateInfo state, std::shared_ptr<SCFInfo> scf_info,
+    AdaptiveCI(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
                std::shared_ptr<ForteOptions> options, std::shared_ptr<MOSpaceInfo> mo_space_info,
                std::shared_ptr<ActiveSpaceIntegrals> as_ints);
-    /// Destructor
-    ~AdaptiveCI();
 
     // ==> Class Interface <==
 
@@ -135,7 +133,6 @@ class AdaptiveCI : public ActiveSpaceSolver {
 
     /// Some HF info
     std::shared_ptr<SCFInfo> scf_info_;
-    StateInfo state_;
     /// Forte options
     std::shared_ptr<ForteOptions> options_;
     /// The wave function symmetry
@@ -237,7 +234,7 @@ class AdaptiveCI : public ActiveSpaceSolver {
     /// Save dets to file?
     bool det_save_;
     /// Order of RDM to compute
-//    int rdm_level_;
+    //    int rdm_level_;
     /// Control amount of printing
     bool quiet_mode_;
     /// Control streamlining

@@ -59,9 +59,9 @@ namespace forte {
 
 class MOSpaceInfo;
 
-FCISolver::FCISolver(StateInfo state, std::shared_ptr<MOSpaceInfo> mo_space_info,
+FCISolver::FCISolver(StateInfo state, size_t nroot, std::shared_ptr<MOSpaceInfo> mo_space_info,
                      std::shared_ptr<ActiveSpaceIntegrals> as_ints)
-    : ActiveSpaceSolver(state, mo_space_info, as_ints),
+    : ActiveSpaceSolver(state, nroot, mo_space_info, as_ints),
       active_dim_(mo_space_info->get_dimension("ACTIVE")), nirrep_(as_ints->ints()->nirrep()),
       symmetry_(state.irrep()), multiplicity_(state.multiplicity()) {
     // TODO: read this info from the base class
@@ -107,7 +107,6 @@ void FCISolver::startup() {
 }
 
 void FCISolver::set_options(std::shared_ptr<ForteOptions> options) {
-    set_nroot(options->get_int("FCI_NROOT"));
     set_root(options->get_int("FCI_ROOT"));
     set_test_rdms(options->get_bool("FCI_TEST_RDMS"));
     set_max_rdm_level(options->get_int("FCI_MAX_RDM"));
@@ -222,7 +221,7 @@ double FCISolver::compute_energy() {
 
         if (converged != SolverStatus::Collapse) {
             double avg_energy = 0.0;
-            for (int r = 0; r < nroot_; ++r) {
+            for (size_t r = 0; r < nroot_; ++r) {
                 avg_energy += dls.eigenvalues()->get(r) + nuclear_repulsion_energy;
             }
             avg_energy /= static_cast<double>(nroot_);
@@ -260,7 +259,7 @@ double FCISolver::compute_energy() {
 
     // Print determinants
     if (print_) {
-        for (int r = 0; r < nroot_; ++r) {
+        for (size_t r = 0; r < nroot_; ++r) {
             outfile->Printf("\n\n  ==> Root No. %d <==\n", r);
 
             C_->copy(dls.eigenvector(r));

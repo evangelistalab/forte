@@ -78,7 +78,8 @@ double DSRG_MRPT2::compute_energy_multi_state() {
         for (int i = 0; i < nstates; ++i) {
             outfile->Printf("\n     %3d     %3s    %2d   %20.12f", multi,
                             irrep_symbol[irrep].c_str(), i, Edsrg_ms[n][i]);
-            psi::Process::environment.globals["ENERGY ROOT " + std::to_string(counter)] = Edsrg_ms[n][i];
+            psi::Process::environment.globals["ENERGY ROOT " + std::to_string(counter)] =
+                Edsrg_ms[n][i];
             ++counter;
         }
         outfile->Printf("\n    %s", dash.c_str());
@@ -117,83 +118,87 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
     int nentry = eigens_.size();
     std::vector<std::vector<double>> Edsrg_sa(nentry, std::vector<double>());
 
+    size_t nroot = foptions_->get_int("NROOT");
+
     // call FCI_MO if SA_FULL and CAS_TYPE == CAS
     if (multi_state_algorithm_ == "SA_FULL" && foptions_->get_str("CAS_TYPE") == "CAS") {
-        FCI_MO fci_mo(scf_info_, foptions_, ints_, mo_space_info_, fci_ints);
-        fci_mo.set_localize_actv(false);
-        fci_mo.compute_energy();
-        auto eigens = fci_mo.eigens();
-        for (int n = 0; n < nentry; ++n) {
-            auto eigen = eigens[n];
-            int ni = eigen.size();
-            for (int i = 0; i < ni; ++i) {
-                Edsrg_sa[n].push_back(eigen[i].second);
-            }
-        }
+        throw std::runtime_error("DSRG_MRPT2::compute_energy_sa() is temporarily disabled");
 
-        if (do_dm_) {
-            // de-normal-order DSRG dipole integrals
-            for (int z = 0; z < 3; ++z) {
-                std::string name = "Dipole " + dm_dirs_[z] + " Integrals";
-                if (foptions_->get_bool("FORM_MBAR3")) {
-                    deGNO_ints(name, Mbar0_[z], Mbar1_[z], Mbar2_[z], Mbar3_[z]);
-                    rotate_ints_semi_to_origin(name, Mbar1_[z], Mbar2_[z], Mbar3_[z]);
-                } else {
-                    deGNO_ints(name, Mbar0_[z], Mbar1_[z], Mbar2_[z]);
-                    rotate_ints_semi_to_origin(name, Mbar1_[z], Mbar2_[z]);
-                }
-            }
+        //        FCI_MO fci_mo(state, scf_info_, nroot, foptions_, ints_, mo_space_info_,
+        //        fci_ints); fci_mo.set_localize_actv(false); fci_mo.compute_energy(); auto eigens =
+        //        fci_mo.eigens(); for (int n = 0; n < nentry; ++n) {
+        //            auto eigen = eigens[n];
+        //            int ni = eigen.size();
+        //            for (int i = 0; i < ni; ++i) {
+        //                Edsrg_sa[n].push_back(eigen[i].second);
+        //            }
+        //        }
 
-            // compute permanent dipoles
-            std::map<std::string, std::vector<double>> dm_relax;
-            if (foptions_->get_bool("FORM_MBAR3")) {
-                dm_relax = fci_mo.compute_ref_relaxed_dm(Mbar0_, Mbar1_, Mbar2_, Mbar3_);
-            } else {
-                dm_relax = fci_mo.compute_ref_relaxed_dm(Mbar0_, Mbar1_, Mbar2_);
-            }
+        //        if (do_dm_) {
+        //            // de-normal-order DSRG dipole integrals
+        //            for (int z = 0; z < 3; ++z) {
+        //                std::string name = "Dipole " + dm_dirs_[z] + " Integrals";
+        //                if (foptions_->get_bool("FORM_MBAR3")) {
+        //                    deGNO_ints(name, Mbar0_[z], Mbar1_[z], Mbar2_[z], Mbar3_[z]);
+        //                    rotate_ints_semi_to_origin(name, Mbar1_[z], Mbar2_[z], Mbar3_[z]);
+        //                } else {
+        //                    deGNO_ints(name, Mbar0_[z], Mbar1_[z], Mbar2_[z]);
+        //                    rotate_ints_semi_to_origin(name, Mbar1_[z], Mbar2_[z]);
+        //                }
+        //            }
 
-            print_h2("SA-DSRG-PT2 Dipole Moment (in a.u.) Summary");
-            outfile->Printf("\n    %14s  %10s  %10s  %10s", "State", "X", "Y", "Z");
-            std::string dash(50, '-');
-            outfile->Printf("\n    %s", dash.c_str());
-            for (const auto& p : dm_relax) {
-                std::stringstream ss;
-                ss << std::setw(14) << p.first;
-                for (int i = 0; i < 3; ++i) {
-                    ss << "  " << std::setw(10) << std::fixed << std::right << std::setprecision(6)
-                       << p.second[i] + dm_nuc_[i];
-                }
-                outfile->Printf("\n    %s", ss.str().c_str());
-            }
-            outfile->Printf("\n    %s", dash.c_str());
+        //            // compute permanent dipoles
+        //            std::map<std::string, std::vector<double>> dm_relax;
+        //            if (foptions_->get_bool("FORM_MBAR3")) {
+        //                dm_relax = fci_mo.compute_ref_relaxed_dm(Mbar0_, Mbar1_, Mbar2_, Mbar3_);
+        //            } else {
+        //                dm_relax = fci_mo.compute_ref_relaxed_dm(Mbar0_, Mbar1_, Mbar2_);
+        //            }
 
-            // oscillator strength
-            std::map<std::string, std::vector<double>> osc;
-            if (foptions_->get_bool("FORM_MBAR3")) {
-                osc = fci_mo.compute_ref_relaxed_osc(Mbar1_, Mbar2_, Mbar3_);
-            } else {
-                osc = fci_mo.compute_ref_relaxed_osc(Mbar1_, Mbar2_);
-            }
+        //            print_h2("SA-DSRG-PT2 Dipole Moment (in a.u.) Summary");
+        //            outfile->Printf("\n    %14s  %10s  %10s  %10s", "State", "X", "Y", "Z");
+        //            std::string dash(50, '-');
+        //            outfile->Printf("\n    %s", dash.c_str());
+        //            for (const auto& p : dm_relax) {
+        //                std::stringstream ss;
+        //                ss << std::setw(14) << p.first;
+        //                for (int i = 0; i < 3; ++i) {
+        //                    ss << "  " << std::setw(10) << std::fixed << std::right <<
+        //                    std::setprecision(6)
+        //                       << p.second[i] + dm_nuc_[i];
+        //                }
+        //                outfile->Printf("\n    %s", ss.str().c_str());
+        //            }
+        //            outfile->Printf("\n    %s", dash.c_str());
 
-            print_h2("SA-DSRG-PT2 Oscillator Strength (in a.u.) Summary");
-            outfile->Printf("\n    %32s  %10s  %10s  %10s  %10s", "State", "X", "Y", "Z", "Total");
-            dash = std::string(80, '-');
-            outfile->Printf("\n    %s", dash.c_str());
-            for (const auto& p : osc) {
-                std::stringstream ss;
-                ss << std::setw(32) << p.first;
-                double total = 0.0;
-                for (int i = 0; i < 3; ++i) {
-                    ss << "  " << std::setw(10) << std::fixed << std::right << std::setprecision(6)
-                       << p.second[i];
-                    total += p.second[i];
-                }
-                ss << "  " << std::setw(10) << std::fixed << std::right << std::setprecision(6)
-                   << total;
-                outfile->Printf("\n    %s", ss.str().c_str());
-            }
-            outfile->Printf("\n    %s", dash.c_str());
-        }
+        //            // oscillator strength
+        //            std::map<std::string, std::vector<double>> osc;
+        //            if (foptions_->get_bool("FORM_MBAR3")) {
+        //                osc = fci_mo.compute_ref_relaxed_osc(Mbar1_, Mbar2_, Mbar3_);
+        //            } else {
+        //                osc = fci_mo.compute_ref_relaxed_osc(Mbar1_, Mbar2_);
+        //            }
+
+        //            print_h2("SA-DSRG-PT2 Oscillator Strength (in a.u.) Summary");
+        //            outfile->Printf("\n    %32s  %10s  %10s  %10s  %10s", "State", "X", "Y", "Z",
+        //            "Total"); dash = std::string(80, '-'); outfile->Printf("\n    %s",
+        //            dash.c_str()); for (const auto& p : osc) {
+        //                std::stringstream ss;
+        //                ss << std::setw(32) << p.first;
+        //                double total = 0.0;
+        //                for (int i = 0; i < 3; ++i) {
+        //                    ss << "  " << std::setw(10) << std::fixed << std::right <<
+        //                    std::setprecision(6)
+        //                       << p.second[i];
+        //                    total += p.second[i];
+        //                }
+        //                ss << "  " << std::setw(10) << std::fixed << std::right <<
+        //                std::setprecision(6)
+        //                   << total;
+        //                outfile->Printf("\n    %s", ss.str().c_str());
+        //            }
+        //            outfile->Printf("\n    %s", dash.c_str());
+        //        }
     } else {
 
         for (int n = 0; n < nentry; ++n) {
@@ -226,21 +231,19 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
                 }
                 nelec -= charge;
                 int ms = (multi + 1) % 2;
-                auto nelec_actv =
-                    nelec;
-//                - 2 * mo_space_info_->size("FROZEN_DOCC") - 2 * core_mos_.size();
+                auto nelec_actv = nelec;
+                //                - 2 * mo_space_info_->size("FROZEN_DOCC") - 2 * core_mos_.size();
                 auto na = (nelec_actv + ms) / 2;
                 auto nb = nelec_actv - na;
 
                 psi::Dimension active_dim = mo_space_info_->get_dimension("ACTIVE");
                 int ntrial_per_root = foptions_->get_int("NTRIAL_PER_ROOT");
 
-                StateInfo state(na, nb, multi, multi - 1, irrep); //assumes highes Ms
+                StateInfo state(na, nb, multi, multi - 1, irrep); // assumes highes Ms
                 // TODO use base class info
-                auto fci =
-                    make_active_space_solver("FCI", state, scf_info_, mo_space_info_, ints_, foptions_);
+                auto fci = make_active_space_solver("FCI", state, nstates, scf_info_,
+                                                    mo_space_info_, ints_, foptions_);
                 fci->set_max_rdm_level(1);
-                fci->set_nroot(nstates);
                 fci->set_root(nstates - 1);
                 fci->set_active_space_integrals(fci_ints);
 
@@ -264,7 +267,7 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
 
                 psi::SharedMatrix Heff(
                     new psi::Matrix("Heff " + multi_label[multi - 1] + " " + irrep_symbol[irrep],
-                               nstates, nstates));
+                                    nstates, nstates));
                 for (int A = 0; A < nstates; ++A) {
                     for (int B = A; B < nstates; ++B) {
 
@@ -425,11 +428,11 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_xms() {
         }
 
         // prepare Heff
-        psi::SharedMatrix Heff(new psi::Matrix("Heff " + multi_label[multi - 1] + " " + irrep_symbol[irrep],
-                                     nstates, nstates));
-        psi::SharedMatrix Heff_sym(
-            new psi::Matrix("Heff (Symmetrized) " + multi_label[multi - 1] + " " + irrep_symbol[irrep],
-                       nstates, nstates));
+        psi::SharedMatrix Heff(new psi::Matrix(
+            "Heff " + multi_label[multi - 1] + " " + irrep_symbol[irrep], nstates, nstates));
+        psi::SharedMatrix Heff_sym(new psi::Matrix("Heff (Symmetrized) " + multi_label[multi - 1] +
+                                                       " " + irrep_symbol[irrep],
+                                                   nstates, nstates));
 
         // loop over states
         for (int M = 0; M < nstates; ++M) {
@@ -557,8 +560,8 @@ void DSRG_MRPT2::build_eff_oei() {
 }
 
 psi::SharedMatrix DSRG_MRPT2::xms_rotation(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
-                                      std::vector<forte::Determinant>& p_space,
-                                      psi::SharedMatrix civecs) {
+                                           std::vector<forte::Determinant>& p_space,
+                                           psi::SharedMatrix civecs) {
     print_h2("Perform XMS Rotation to Reference States");
     outfile->Printf("\n");
 
@@ -1034,4 +1037,4 @@ void DSRG_MRPT2::rotate_3rdm(ambit::Tensor& L3aaa, ambit::Tensor& L3aab, ambit::
     L3bbb("PQRSTU") =
         Ub("AP") * Ub("BQ") * Ub("CR") * temp("ABCIJK") * Ub("IS") * Ub("JT") * Ub("KU");
 }
-}
+} // namespace forte

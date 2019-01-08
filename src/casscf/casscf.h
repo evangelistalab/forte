@@ -62,7 +62,7 @@ class CASSCF : public ActiveSpaceSolver {
      * This reference has a nice algorithmic flowchart.  Look it up
      *
      */
-    CASSCF(StateInfo state, std::shared_ptr<forte::SCFInfo> scf_info,
+    CASSCF(StateInfo state, size_t nroot, std::shared_ptr<forte::SCFInfo> scf_info,
            std::shared_ptr<ForteOptions> options, std::shared_ptr<MOSpaceInfo> mo_space_info,
            std::shared_ptr<ActiveSpaceIntegrals> as_ints);
     /// Use daniels code to compute Orbital optimization
@@ -82,8 +82,6 @@ class CASSCF : public ActiveSpaceSolver {
     double cas_check(Reference cas);
 
   private:
-    /// The state to calculate
-    StateInfo state_;
     /// SCF information
     std::shared_ptr<SCFInfo> scf_info_;
     /// The options
@@ -99,8 +97,6 @@ class CASSCF : public ActiveSpaceSolver {
     /// The energy computed in FCI with updates from CASSCF and CI
     double E_casscf_;
     std::shared_ptr<ForteIntegrals> ints_;
-    /// The mo_space_info
-    std::shared_ptr<MOSpaceInfo> mo_space_info_;
 
     /// The dimension for number of molecular orbitals (CORRELATED or ALL)
     psi::Dimension nmopi_;
