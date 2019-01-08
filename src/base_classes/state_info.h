@@ -40,6 +40,8 @@ class StateInfo {
     /// Constructor
     StateInfo(int na, int nb, int multiplicity, int twice_ms, int irrep);
 
+    StateInfo() = default;
+
     /// return the number of alpha electrons
     int na() const;
     /// return the number of beta electrons

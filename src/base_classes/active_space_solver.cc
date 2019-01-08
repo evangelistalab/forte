@@ -76,8 +76,7 @@ std::unique_ptr<ActiveSpaceSolver> make_active_space_solver(
         solver =
             std::make_unique<AdaptiveCI>(state, nroot, scf_info, options, mo_space_info, as_ints);
     } else if (type == "CAS") {
-        solver =
-            std::make_unique<FCI_MO>(state, nroot, scf_info, options, ints, mo_space_info, as_ints);
+        solver = std::make_unique<FCI_MO>(state, nroot, scf_info, options, mo_space_info, as_ints);
     } else if (type == "ASCI") {
         solver = std::make_unique<ASCI>(state, nroot, scf_info, options, mo_space_info, as_ints);
     } else if (type == "CASSCF") {

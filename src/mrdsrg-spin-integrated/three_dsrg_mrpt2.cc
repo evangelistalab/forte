@@ -125,7 +125,7 @@ THREE_DSRG_MRPT2::THREE_DSRG_MRPT2(Reference reference, std::shared_ptr<SCFInfo>
 THREE_DSRG_MRPT2::~THREE_DSRG_MRPT2() { cleanup(); }
 
 void THREE_DSRG_MRPT2::startup() {
-//    int nproc = 1;
+    //    int nproc = 1;
     int my_proc = 0;
 #ifdef HAVE_MPI
     nproc = MPI::COMM_WORLD.Get_size();
@@ -3449,9 +3449,10 @@ THREE_DSRG_MRPT2::relaxed_energy(std::shared_ptr<ActiveSpaceIntegrals> fci_ints)
 
     } else if (cas_type == "ACI") {
 
+        size_t nroot = foptions_->get_int("NROOT");
         // Only do ground state ACI for now
         auto state = make_state_info_from_psi_wfn(ints_->wfn());
-        AdaptiveCI aci(state, scf_info_, foptions_, mo_space_info_,
+        AdaptiveCI aci(state, nroot, scf_info_, foptions_, mo_space_info_,
                        fci_ints); // ints_->wfn() is implicitly converted to StateInfo
         if ((foptions_->psi_options())["ACI_RELAX_SIGMA"].has_changed()) {
             aci.update_sigma();
@@ -3507,9 +3508,11 @@ THREE_DSRG_MRPT2::relaxed_energy(std::shared_ptr<ActiveSpaceIntegrals> fci_ints)
 
             StateInfo state(na, nb, multi, multi - 1,
                             foptions_->get_int("ROOT_SYM")); // assumes highest Ms
-            // TODO use base class info
-            auto fci =
-                make_active_space_solver("FCI", state, scf_info_, mo_space_info_, ints_, foptions_);
+                                                             // TODO use base class info
+            size_t nroot = foptions_->get_int("NROOT");
+
+            auto fci = make_active_space_solver("FCI", state, nroot, scf_info_, mo_space_info_,
+                                                ints_, foptions_);
             fci->set_max_rdm_level(1);
             fci->set_active_space_integrals(fci_ints);
             fci->set_print(print_);
@@ -3531,10 +3534,9 @@ THREE_DSRG_MRPT2::relaxed_energy(std::shared_ptr<ActiveSpaceIntegrals> fci_ints)
 
                 StateInfo state(na, nb, multi, multi - 1, irrep); // assumes highes Ms
                 // TODO use base class info
-                auto fci = make_active_space_solver("FCI", state, scf_info_, mo_space_info_, ints_,
-                                                    foptions_);
+                auto fci = make_active_space_solver("FCI", state, nstates, scf_info_,
+                                                    mo_space_info_, ints_, foptions_);
                 fci->set_max_rdm_level(1);
-                fci->set_nroot(nstates);
                 fci->set_root(nstates - 1);
                 // set integrals manually
                 fci->set_active_space_integrals(fci_ints);

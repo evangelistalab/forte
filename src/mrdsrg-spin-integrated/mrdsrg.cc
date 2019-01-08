@@ -367,6 +367,8 @@ double MRDSRG::compute_energy_relaxed() {
     double Edsrg = 0.0, Erelax = 0.0;
     std::string cas_type = foptions_->get_str("CAS_TYPE");
 
+    size_t nroot = foptions_->get_int("NROOT");
+
     if (relax_ref_ == "ONCE") {
         // compute energy with fixed ref.
         Edsrg = compute_energy();
@@ -380,7 +382,7 @@ double MRDSRG::compute_energy_relaxed() {
             Erelax = fci_mo.compute_energy();
         } else if (cas_type == "ACI") {
             auto state = make_state_info_from_psi_wfn(ints_->wfn());
-            AdaptiveCI aci(state, scf_info_, foptions_, mo_space_info_,
+            AdaptiveCI aci(state, nroot, scf_info_, foptions_, mo_space_info_,
                            fci_ints); // ints_->wfn() is implicitly converted to StateInfo
             aci.set_fci_ints(fci_ints);
             if (foptions_->has_changed("ACI_RELAX_SIGMA")) {
@@ -390,8 +392,8 @@ double MRDSRG::compute_energy_relaxed() {
 
         } else {
             auto state = make_state_info_from_psi_wfn(ints_->wfn());
-            auto fci =
-                make_active_space_solver("FCI", state, scf_info_, mo_space_info_, ints_, foptions_);
+            auto fci = make_active_space_solver("FCI", state, nroot, scf_info_, mo_space_info_,
+                                                ints_, foptions_);
             fci->set_max_rdm_level(1);
             fci->set_active_space_integrals(fci_ints);
             Erelax = fci->compute_energy();
@@ -453,7 +455,7 @@ double MRDSRG::compute_energy_relaxed() {
             } else if (cas_type == "ACI") {
                 auto state = make_state_info_from_psi_wfn(ints_->wfn());
 
-                AdaptiveCI aci(state, scf_info_, foptions_, mo_space_info_,
+                AdaptiveCI aci(state, nroot, scf_info_, foptions_, mo_space_info_,
                                fci_ints); // ints_->wfn() is implicitly converted to StateInfo
                 aci.set_fci_ints(fci_ints);
                 if (foptions_->has_changed("ACI_RELAX_SIGMA")) {
@@ -463,8 +465,8 @@ double MRDSRG::compute_energy_relaxed() {
                 reference_ = aci.get_reference();
             } else {
                 auto state = make_state_info_from_psi_wfn(ints_->wfn());
-                auto fci = make_active_space_solver("FCI", state, scf_info_, mo_space_info_, ints_,
-                                                    foptions_);
+                auto fci = make_active_space_solver("FCI", state, nroot, scf_info_, mo_space_info_,
+                                                    ints_, foptions_);
                 fci->set_max_rdm_level(max_rdm_level);
                 fci->set_active_space_integrals(fci_ints);
                 Erelax = fci->compute_energy();

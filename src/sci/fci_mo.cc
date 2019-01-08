@@ -129,6 +129,54 @@ FCI_MO::FCI_MO(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
     }
 }
 
+FCI_MO::FCI_MO(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
+               std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
+    : ActiveSpaceSolver(), integral_(ints), mo_space_info_(mo_space_info), scf_info_(scf_info),
+      options_(options) {
+
+    print_method_banner({"Complete Active Space Configuration Interaction", "Chenyang Li"});
+    startup();
+
+    // setup integrals
+    fci_ints_ =
+        std::make_shared<ActiveSpaceIntegrals>(integral_, mo_space_info_->get_corr_abs_mo("ACTIVE"),
+                                               mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
+    ambit::Tensor tei_active_aa =
+        integral_->aptei_aa_block(actv_mos_, actv_mos_, actv_mos_, actv_mos_);
+    ambit::Tensor tei_active_ab =
+        integral_->aptei_ab_block(actv_mos_, actv_mos_, actv_mos_, actv_mos_);
+    ambit::Tensor tei_active_bb =
+        integral_->aptei_bb_block(actv_mos_, actv_mos_, actv_mos_, actv_mos_);
+    fci_ints_->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
+    fci_ints_->compute_restricted_one_body_operator();
+}
+
+FCI_MO::FCI_MO(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
+               std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info,
+               std::shared_ptr<ActiveSpaceIntegrals> fci_ints)
+    : integral_(ints), mo_space_info_(mo_space_info), scf_info_(scf_info), options_(options) {
+
+    print_method_banner({"Complete Active Space Configuration Interaction", "Chenyang Li"});
+    startup();
+
+    // setup integrals
+    if (fci_ints != nullptr) {
+        fci_ints_ = fci_ints;
+    } else {
+        fci_ints_ = std::make_shared<ActiveSpaceIntegrals>(
+            integral_, mo_space_info_->get_corr_abs_mo("ACTIVE"),
+            mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
+        ambit::Tensor tei_active_aa =
+            integral_->aptei_aa_block(actv_mos_, actv_mos_, actv_mos_, actv_mos_);
+        ambit::Tensor tei_active_ab =
+            integral_->aptei_ab_block(actv_mos_, actv_mos_, actv_mos_, actv_mos_);
+        ambit::Tensor tei_active_bb =
+            integral_->aptei_bb_block(actv_mos_, actv_mos_, actv_mos_, actv_mos_);
+        fci_ints_->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
+        fci_ints_->compute_restricted_one_body_operator();
+    }
+}
+
 FCI_MO::~FCI_MO() { cleanup(); }
 
 void FCI_MO::cleanup() { clean_all_density_files(); }

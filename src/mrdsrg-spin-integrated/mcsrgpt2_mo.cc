@@ -52,7 +52,7 @@ namespace forte {
 MCSRGPT2_MO::MCSRGPT2_MO(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
                          std::shared_ptr<ForteIntegrals> ints,
                          std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : FCI_MO(state, nroot, scf_info, options, ints, mo_space_info) {
+    : FCI_MO(scf_info, options, ints, mo_space_info) {
 
     // compute CI energy
     compute_ss_energy();
