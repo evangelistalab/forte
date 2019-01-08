@@ -239,7 +239,7 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
 
                 StateInfo state(na, nb, multi, multi - 1, irrep); // assumes highes Ms
                 // TODO use base class info
-                auto fci = make_active_space_solver("FCI", state, nstates, scf_info_,
+                auto fci = make_active_space_method("FCI", state, nstates, scf_info_,
                                                     mo_space_info_, ints_, foptions_);
                 fci->set_max_rdm_level(1);
                 fci->set_root(nstates - 1);

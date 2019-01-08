@@ -62,15 +62,15 @@ void ActiveSpaceMethod::set_max_rdm_level(int value) { max_rdm_level_ = value; }
 
 void ActiveSpaceMethod::set_print(int level) { print_ = level; }
 
-std::unique_ptr<ActiveSpaceMethod> make_active_space_solver(
+std::unique_ptr<ActiveSpaceMethod> make_active_space_method(
     const std::string& type, StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
     std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ForteIntegrals> ints,
     std::shared_ptr<ForteOptions> options) {
     auto as_ints = make_active_space_ints(mo_space_info, ints, "ACTIVE", {{"RESTRICTED_DOCC"}});
-    return make_active_space_solver2(type, state, nroot, scf_info, mo_space_info, as_ints, options);
+    return make_active_space_method2(type, state, nroot, scf_info, mo_space_info, as_ints, options);
 }
 
-std::unique_ptr<ActiveSpaceMethod> make_active_space_solver2(
+std::unique_ptr<ActiveSpaceMethod> make_active_space_method2(
     const std::string& type, StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
     std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ActiveSpaceIntegrals> as_ints,
     std::shared_ptr<ForteOptions> options) {
@@ -88,7 +88,7 @@ std::unique_ptr<ActiveSpaceMethod> make_active_space_solver2(
     } else if (type == "CASSCF") {
         solver = std::make_unique<CASSCF>(state, nroot, scf_info, options, mo_space_info, as_ints);
     } else {
-        throw psi::PSIEXCEPTION("make_active_space_solver: type = " + type + " was not recognized");
+        throw psi::PSIEXCEPTION("make_active_space_method: type = " + type + " was not recognized");
     }
     // read options
     solver->set_options(options);

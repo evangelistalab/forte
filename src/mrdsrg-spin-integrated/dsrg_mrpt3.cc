@@ -1424,7 +1424,7 @@ double DSRG_MRPT3::compute_energy_sa() {
                 psi::Dimension active_dim = mo_space_info_->get_dimension("ACTIVE");
                 StateInfo state(na, nb, multi, multi - 1, irrep); // assumes highes Ms
                 // TODO use base class info
-                auto fci = make_active_space_solver("FCI", state, nstates, scf_info_,
+                auto fci = make_active_space_method("FCI", state, nstates, scf_info_,
                                                     mo_space_info_, ints_, foptions_);
                 fci->set_max_rdm_level(1);
                 fci->set_root(nstates - 1);
@@ -1584,7 +1584,7 @@ double DSRG_MRPT3::compute_energy_relaxed() {
         size_t nroot = foptions_->get_int("NROOT");
 
         auto state = make_state_info_from_psi_wfn(ints_->wfn());
-        auto fci = make_active_space_solver("FCI", state, nroot, scf_info_, mo_space_info_, ints_,
+        auto fci = make_active_space_method("FCI", state, nroot, scf_info_, mo_space_info_, ints_,
                                             foptions_);
         fci->set_max_rdm_level(1);
         fci->set_active_space_integrals(fci_ints);

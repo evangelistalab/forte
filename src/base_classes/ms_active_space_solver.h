@@ -72,65 +72,23 @@ class MSGodzilla {
      * @param mo_space_info a MOSpaceInfo object
      * @param as_ints integrals for active space
      */
-    MSGodzilla(const std::string& type,
-                        std::vector<std::pair<StateInfo, std::vector<double>>>& state_weights_list,
-                        std::shared_ptr<SCFInfo> scf_info,
-                        std::shared_ptr<MOSpaceInfo> mo_space_info,
-                        std::shared_ptr<ActiveSpaceIntegrals> as_ints,
-                        std::shared_ptr<ForteOptions> options);
+    MSGodzilla(const std::string& method,
+               std::vector<std::pair<StateInfo, std::vector<double>>>& state_weights_list,
+               std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<MOSpaceInfo> mo_space_info,
+               std::shared_ptr<ActiveSpaceIntegrals> as_ints,
+               std::shared_ptr<ForteOptions> options);
 
     //    // ==> Class Interface <==
 
     /// Compute the energy and return it
     double compute_energy();
 
+    /// Print a summary of the computation information
     void print_options();
 
-    //    /// Returns the reference
-    //    Reference get_reference() = 0;
-
-    //    /// Set options from an option object
-    //    /// @param options the options passed in
-    //    void set_options(std::shared_ptr<ForteOptions> options) = 0;
-
-    //    // ==> Base Class Functionality (inherited by derived classes) <==
-
-    //    /// Pass a set of ActiveSpaceIntegrals to the solver (e.g. an effective Hamiltonian)
-    //    /// @param as_ints the integrals passed in
-    //    void set_active_space_integrals(std::shared_ptr<ActiveSpaceIntegrals> as_ints);
-
-    //    /// Return the eigenvalues
-    //    psi::SharedVector evals();
-
-    //    // ==> Base Class Handles Set Functions <==
-
-    //    /// Set the energy convergence criterion
-    //    /// @param value the convergence criterion in a.u.
-    //    void set_e_convergence(double value);
-
-    //    /// Set the number of desired roots
-    //    /// @param value the number of desired roots
-    //    void set_nroot(int value);
-
-    //    /// Set the root that will be used to compute the properties
-    //    /// @param the root (root = 0, 1, 2, ...)
-    //    void set_root(int value);
-
-    //    /// Set the maximum RDM computed (0 - 3)
-    //    /// @param value the rank of the RDM
-    //    void set_max_rdm_level(int value);
-
-    //    /// Set the print level
-    //    /// @param level the print level (0 = no printing, 1 default)
-    //    void set_print(int level);
-
   protected:
-    std::string type_;
-    //    /// The list of active orbitals (absolute ordering)
-    //    std::vector<size_t> active_mo_;
-
-    //    /// The list of doubly occupied orbitals (absolute ordering)
-    //    std::vector<size_t> core_mo_;
+    // a string that specifies the method used (e.g. "FCI", "ACI", ...)
+    std::string method_;
 
     /// A list of electronic states and their weights stored as vector of pairs
     ///   [(state_1, [w_11, w_12, ..., w_1m]), (state_2, [w_21, w_22, ..., w_n]), ...]
@@ -182,7 +140,7 @@ class MSGodzilla {
 };
 
 ///**
-// * @brief make_active_space_solver Make an active space solver object
+// * @brief make_active_space_method Make an active space solver object
 // * @param type a string that specifies the type (e.g. "FCI", "ACI", ...)
 // * @param state information about the elecronic state
 // * @param scf_info information about a previous SCF computation
@@ -191,7 +149,7 @@ class MSGodzilla {
 // * @param options user-provided options
 // * @return a shared pointer for the base class ActiveSpaceMethod
 // */
-// std::unique_ptr<ActiveSpaceMethod> make_active_space_solver(
+// std::unique_ptr<ActiveSpaceMethod> make_active_space_method(
 //    const std::string& type, StateInfo state, std::shared_ptr<SCFInfo> scf_info,
 //    std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ForteIntegrals> ints,
 //    std::shared_ptr<ForteOptions> options);

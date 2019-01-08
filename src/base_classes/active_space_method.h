@@ -158,7 +158,7 @@ class ActiveSpaceMethod {
 };
 
 /**
- * @brief make_active_space_solver Make an active space solver object
+ * @brief make_active_space_method Make an active space method object
  * @param type a string that specifies the type (e.g. "FCI", "ACI", ...)
  * @param state information about the elecronic state
  * @param scf_info information about a previous SCF computation
@@ -167,13 +167,13 @@ class ActiveSpaceMethod {
  * @param options user-provided options
  * @return a shared pointer for the base class ActiveSpaceMethod
  */
-std::unique_ptr<ActiveSpaceMethod> make_active_space_solver(
+std::unique_ptr<ActiveSpaceMethod> make_active_space_method(
     const std::string& type, StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
     std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ForteIntegrals> ints,
     std::shared_ptr<ForteOptions> options);
 
 /**
- * @brief make_active_space_solver Make an active space solver object
+ * @brief make_active_space_method Make an active space method object
  * @param type a string that specifies the type (e.g. "FCI", "ACI", ...)
  * @param state information about the elecronic state
  * @param scf_info information about a previous SCF computation
@@ -182,7 +182,7 @@ std::unique_ptr<ActiveSpaceMethod> make_active_space_solver(
  * @param options user-provided options
  * @return a shared pointer for the base class ActiveSpaceMethod
  */
-std::unique_ptr<ActiveSpaceMethod> make_active_space_solver2(
+std::unique_ptr<ActiveSpaceMethod> make_active_space_method2(
     const std::string& type, StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
     std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ActiveSpaceIntegrals> as_ints,
     std::shared_ptr<ForteOptions> options);

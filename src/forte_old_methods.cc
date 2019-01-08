@@ -148,7 +148,7 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
     //        final_energy = psi::Process::environment.globals["CURRENT ENERGY"];
     //    }
     if (options.get_str("JOB_TYPE") == "ASCI") {
-        auto asci = make_active_space_solver("ASCI", state, nroot, scf_info, mo_space_info, ints,
+        auto asci = make_active_space_method("ASCI", state, nroot, scf_info, mo_space_info, ints,
                                              forte_options);
         final_energy = asci->compute_energy();
     }
@@ -207,7 +207,7 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
         }
     }
     if (options.get_str("JOB_TYPE") == "FCI") {
-        auto fci = make_active_space_solver("FCI", state, nroot, scf_info, mo_space_info, ints,
+        auto fci = make_active_space_method("FCI", state, nroot, scf_info, mo_space_info, ints,
                                             forte_options);
         final_energy = fci->compute_energy();
     }
@@ -285,7 +285,7 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
                 }
             }
         } else {
-            auto ci = make_active_space_solver(cas_type, state, nroot, scf_info, mo_space_info,
+            auto ci = make_active_space_method(cas_type, state, nroot, scf_info, mo_space_info,
                                                ints, forte_options);
             ci->set_max_rdm_level(3);
             ci->compute_energy();
@@ -332,7 +332,7 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
         std::string cas_type = options.get_str("CAS_TYPE");
         int max_rdm_level = (options.get_str("THREEPDC") == "ZERO") ? 2 : 3;
 
-        auto ci = make_active_space_solver(cas_type, state, nroot, scf_info, mo_space_info, ints,
+        auto ci = make_active_space_method(cas_type, state, nroot, scf_info, mo_space_info, ints,
                                            forte_options);
         ci->compute_energy();
         Reference reference = ci->get_reference();
@@ -404,7 +404,7 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
             }
         } else {
 
-            auto ci = make_active_space_solver(cas_type, state, nroot, scf_info, mo_space_info,
+            auto ci = make_active_space_method(cas_type, state, nroot, scf_info, mo_space_info,
                                                ints, forte_options);
             ci->set_max_rdm_level(3);
             ci->compute_energy();
@@ -494,7 +494,7 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
 
         } else {
 
-            auto ci = make_active_space_solver(cas_type, state, nroot, scf_info, mo_space_info,
+            auto ci = make_active_space_method(cas_type, state, nroot, scf_info, mo_space_info,
                                                ints, forte_options);
             ci->set_max_rdm_level(3);
             ci->compute_energy();
@@ -591,7 +591,7 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
             }
         } else {
 
-            auto ci = make_active_space_solver(cas_type, state, nroot, scf_info, mo_space_info,
+            auto ci = make_active_space_method(cas_type, state, nroot, scf_info, mo_space_info,
                                                ints, forte_options);
             ci->set_max_rdm_level(3);
             ci->compute_energy();
@@ -616,7 +616,7 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
     if (options.get_str("JOB_TYPE") == "SOMRDSRG") {
         std::string cas_type = options.get_str("CAS_TYPE");
         int max_rdm_level = (options.get_str("THREEPDC") == "ZERO") ? 2 : 3;
-        auto ci = make_active_space_solver(cas_type, state, nroot, scf_info, mo_space_info, ints,
+        auto ci = make_active_space_method(cas_type, state, nroot, scf_info, mo_space_info, ints,
                                            forte_options);
         ci->set_max_rdm_level(max_rdm_level);
         ci->compute_energy();

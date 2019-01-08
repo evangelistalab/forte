@@ -695,7 +695,7 @@ ambit::Tensor CASSCF::transform_integrals() {
 }
 void CASSCF::set_up_fci() {
     auto fcisolver =
-        make_active_space_solver("FCI", state_, nroot_, scf_info_, mo_space_info_, ints_, options_);
+        make_active_space_method("FCI", state_, nroot_, scf_info_, mo_space_info_, ints_, options_);
     fcisolver->set_max_rdm_level(3);
 
     fcisolver->set_root(options_->get_int("ROOT"));
