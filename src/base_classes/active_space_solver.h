@@ -182,7 +182,7 @@ std::unique_ptr<ActiveSpaceSolver> make_active_space_solver(
  * @param options user-provided options
  * @return a shared pointer for the base class ActiveSpaceSolver
  */
-std::unique_ptr<ActiveSpaceSolver> make_active_space_solver(
+std::unique_ptr<ActiveSpaceSolver> make_active_space_solver2(
     const std::string& type, StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
     std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ActiveSpaceIntegrals> as_ints,
     std::shared_ptr<ForteOptions> options);

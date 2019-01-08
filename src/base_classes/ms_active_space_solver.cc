@@ -38,6 +38,7 @@
 
 #include "base_classes/forte_options.h"
 #include "helpers/helpers.h"
+#include "integrals/active_space_integrals.h"
 #include "active_space_solver.h"
 
 #include "ms_active_space_solver.h"
@@ -59,7 +60,7 @@ double MSActiveSpaceSolver::compute_energy() {
     for (const auto& [state, weights] : state_weights_list_) {
         // compute the energy of state and save it
         size_t nroot = weights.size();
-        std::shared_ptr<ActiveSpaceSolver> solver = make_active_space_solver(
+        std::shared_ptr<ActiveSpaceSolver> solver = make_active_space_solver2(
             type_, state, nroot, scf_info_, mo_space_info_, as_ints_, options_);
         // TODO: need to pass information on how many states are computed
         solver->compute_energy();
@@ -69,7 +70,7 @@ double MSActiveSpaceSolver::compute_energy() {
         }
         solvers_.push_back(solver);
     }
-    return energy;
+    return energy + as_ints_->ints()->nuclear_repulsion_energy();
 }
 
 void MSActiveSpaceSolver::print_options() {
