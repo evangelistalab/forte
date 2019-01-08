@@ -107,7 +107,7 @@ void FCISolver::startup() {
 }
 
 void FCISolver::set_options(std::shared_ptr<ForteOptions> options) {
-    set_root(options->get_int("FCI_ROOT"));
+    set_root(options->get_int("ROOT"));
     set_test_rdms(options->get_bool("FCI_TEST_RDMS"));
     set_max_rdm_level(options->get_int("FCI_MAX_RDM"));
     set_fci_iterations(options->get_int("FCI_MAXITER"));

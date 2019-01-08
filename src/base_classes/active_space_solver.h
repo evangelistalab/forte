@@ -172,6 +172,21 @@ std::unique_ptr<ActiveSpaceSolver> make_active_space_solver(
     std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ForteIntegrals> ints,
     std::shared_ptr<ForteOptions> options);
 
+/**
+ * @brief make_active_space_solver Make an active space solver object
+ * @param type a string that specifies the type (e.g. "FCI", "ACI", ...)
+ * @param state information about the elecronic state
+ * @param scf_info information about a previous SCF computation
+ * @param mo_space_info orbital space information
+ * @param as_ints an active space integral object
+ * @param options user-provided options
+ * @return a shared pointer for the base class ActiveSpaceSolver
+ */
+std::unique_ptr<ActiveSpaceSolver> make_active_space_solver(
+    const std::string& type, StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
+    std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ActiveSpaceIntegrals> as_ints,
+    std::shared_ptr<ForteOptions> options);
+
 } // namespace forte
 
 #endif // _active_space_solver_h_

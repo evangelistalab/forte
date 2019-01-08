@@ -122,83 +122,81 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
 
     // call FCI_MO if SA_FULL and CAS_TYPE == CAS
     if (multi_state_algorithm_ == "SA_FULL" && foptions_->get_str("CAS_TYPE") == "CAS") {
-        throw std::runtime_error("DSRG_MRPT2::compute_energy_sa() is temporarily disabled");
+        FCI_MO fci_mo(scf_info_, foptions_, ints_, mo_space_info_, fci_ints);
+        fci_mo.set_localize_actv(false);
+        fci_mo.compute_energy();
+        auto eigens = fci_mo.eigens();
+        for (int n = 0; n < nentry; ++n) {
+            auto eigen = eigens[n];
+            int ni = eigen.size();
+            for (int i = 0; i < ni; ++i) {
+                Edsrg_sa[n].push_back(eigen[i].second);
+            }
+        }
 
-        //        FCI_MO fci_mo(state, scf_info_, nroot, foptions_, ints_, mo_space_info_,
-        //        fci_ints); fci_mo.set_localize_actv(false); fci_mo.compute_energy(); auto eigens =
-        //        fci_mo.eigens(); for (int n = 0; n < nentry; ++n) {
-        //            auto eigen = eigens[n];
-        //            int ni = eigen.size();
-        //            for (int i = 0; i < ni; ++i) {
-        //                Edsrg_sa[n].push_back(eigen[i].second);
-        //            }
-        //        }
+        if (do_dm_) {
+            // de-normal-order DSRG dipole integrals
+            for (int z = 0; z < 3; ++z) {
+                std::string name = "Dipole " + dm_dirs_[z] + " Integrals";
+                if (foptions_->get_bool("FORM_MBAR3")) {
+                    deGNO_ints(name, Mbar0_[z], Mbar1_[z], Mbar2_[z], Mbar3_[z]);
+                    rotate_ints_semi_to_origin(name, Mbar1_[z], Mbar2_[z], Mbar3_[z]);
+                } else {
+                    deGNO_ints(name, Mbar0_[z], Mbar1_[z], Mbar2_[z]);
+                    rotate_ints_semi_to_origin(name, Mbar1_[z], Mbar2_[z]);
+                }
+            }
 
-        //        if (do_dm_) {
-        //            // de-normal-order DSRG dipole integrals
-        //            for (int z = 0; z < 3; ++z) {
-        //                std::string name = "Dipole " + dm_dirs_[z] + " Integrals";
-        //                if (foptions_->get_bool("FORM_MBAR3")) {
-        //                    deGNO_ints(name, Mbar0_[z], Mbar1_[z], Mbar2_[z], Mbar3_[z]);
-        //                    rotate_ints_semi_to_origin(name, Mbar1_[z], Mbar2_[z], Mbar3_[z]);
-        //                } else {
-        //                    deGNO_ints(name, Mbar0_[z], Mbar1_[z], Mbar2_[z]);
-        //                    rotate_ints_semi_to_origin(name, Mbar1_[z], Mbar2_[z]);
-        //                }
-        //            }
+            // compute permanent dipoles
+            std::map<std::string, std::vector<double>> dm_relax;
+            if (foptions_->get_bool("FORM_MBAR3")) {
+                dm_relax = fci_mo.compute_ref_relaxed_dm(Mbar0_, Mbar1_, Mbar2_, Mbar3_);
+            } else {
+                dm_relax = fci_mo.compute_ref_relaxed_dm(Mbar0_, Mbar1_, Mbar2_);
+            }
 
-        //            // compute permanent dipoles
-        //            std::map<std::string, std::vector<double>> dm_relax;
-        //            if (foptions_->get_bool("FORM_MBAR3")) {
-        //                dm_relax = fci_mo.compute_ref_relaxed_dm(Mbar0_, Mbar1_, Mbar2_, Mbar3_);
-        //            } else {
-        //                dm_relax = fci_mo.compute_ref_relaxed_dm(Mbar0_, Mbar1_, Mbar2_);
-        //            }
+            print_h2("SA-DSRG-PT2 Dipole Moment (in a.u.) Summary");
+            outfile->Printf("\n    %14s  %10s  %10s  %10s", "State", "X", "Y", "Z");
+            std::string dash(50, '-');
+            outfile->Printf("\n    %s", dash.c_str());
+            for (const auto& p : dm_relax) {
+                std::stringstream ss;
+                ss << std::setw(14) << p.first;
+                for (int i = 0; i < 3; ++i) {
+                    ss << "  " << std::setw(10) << std::fixed << std::right << std::setprecision(6)
+                       << p.second[i] + dm_nuc_[i];
+                }
+                outfile->Printf("\n    %s", ss.str().c_str());
+            }
+            outfile->Printf("\n    %s", dash.c_str());
 
-        //            print_h2("SA-DSRG-PT2 Dipole Moment (in a.u.) Summary");
-        //            outfile->Printf("\n    %14s  %10s  %10s  %10s", "State", "X", "Y", "Z");
-        //            std::string dash(50, '-');
-        //            outfile->Printf("\n    %s", dash.c_str());
-        //            for (const auto& p : dm_relax) {
-        //                std::stringstream ss;
-        //                ss << std::setw(14) << p.first;
-        //                for (int i = 0; i < 3; ++i) {
-        //                    ss << "  " << std::setw(10) << std::fixed << std::right <<
-        //                    std::setprecision(6)
-        //                       << p.second[i] + dm_nuc_[i];
-        //                }
-        //                outfile->Printf("\n    %s", ss.str().c_str());
-        //            }
-        //            outfile->Printf("\n    %s", dash.c_str());
+            // oscillator strength
+            std::map<std::string, std::vector<double>> osc;
+            if (foptions_->get_bool("FORM_MBAR3")) {
+                osc = fci_mo.compute_ref_relaxed_osc(Mbar1_, Mbar2_, Mbar3_);
+            } else {
+                osc = fci_mo.compute_ref_relaxed_osc(Mbar1_, Mbar2_);
+            }
 
-        //            // oscillator strength
-        //            std::map<std::string, std::vector<double>> osc;
-        //            if (foptions_->get_bool("FORM_MBAR3")) {
-        //                osc = fci_mo.compute_ref_relaxed_osc(Mbar1_, Mbar2_, Mbar3_);
-        //            } else {
-        //                osc = fci_mo.compute_ref_relaxed_osc(Mbar1_, Mbar2_);
-        //            }
-
-        //            print_h2("SA-DSRG-PT2 Oscillator Strength (in a.u.) Summary");
-        //            outfile->Printf("\n    %32s  %10s  %10s  %10s  %10s", "State", "X", "Y", "Z",
-        //            "Total"); dash = std::string(80, '-'); outfile->Printf("\n    %s",
-        //            dash.c_str()); for (const auto& p : osc) {
-        //                std::stringstream ss;
-        //                ss << std::setw(32) << p.first;
-        //                double total = 0.0;
-        //                for (int i = 0; i < 3; ++i) {
-        //                    ss << "  " << std::setw(10) << std::fixed << std::right <<
-        //                    std::setprecision(6)
-        //                       << p.second[i];
-        //                    total += p.second[i];
-        //                }
-        //                ss << "  " << std::setw(10) << std::fixed << std::right <<
-        //                std::setprecision(6)
-        //                   << total;
-        //                outfile->Printf("\n    %s", ss.str().c_str());
-        //            }
-        //            outfile->Printf("\n    %s", dash.c_str());
-        //        }
+            print_h2("SA-DSRG-PT2 Oscillator Strength (in a.u.) Summary");
+            outfile->Printf("\n    %32s  %10s  %10s  %10s  %10s", "State", "X", "Y", "Z", "Total");
+            dash = std::string(80, '-');
+            outfile->Printf("\n    %s", dash.c_str());
+            for (const auto& p : osc) {
+                std::stringstream ss;
+                ss << std::setw(32) << p.first;
+                double total = 0.0;
+                for (int i = 0; i < 3; ++i) {
+                    ss << "  " << std::setw(10) << std::fixed << std::right << std::setprecision(6)
+                       << p.second[i];
+                    total += p.second[i];
+                }
+                ss << "  " << std::setw(10) << std::fixed << std::right << std::setprecision(6)
+                   << total;
+                outfile->Printf("\n    %s", ss.str().c_str());
+            }
+            outfile->Printf("\n    %s", dash.c_str());
+        }
     } else {
 
         for (int n = 0; n < nentry; ++n) {

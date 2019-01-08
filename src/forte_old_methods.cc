@@ -46,6 +46,7 @@
 #include "base_classes/scf_info.h"
 #include "base_classes/mo_space_info.h"
 #include "base_classes/state_info.h"
+#include "base_classes/ms_active_space_solver.h"
 
 #include "integrals/integrals.h"
 #include "integrals/active_space_integrals.h"
@@ -122,8 +123,7 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
     if (options.get_bool("CASSCF_REFERENCE") == true or options.get_str("JOB_TYPE") == "CASSCF") {
         auto as_ints = make_active_space_ints(mo_space_info, ints, "ACTIVE", {{"RESTRICTED_DOCC"}});
         auto casscf = std::make_shared<CASSCF>(state, nroot, std::make_shared<SCFInfo>(ref_wfn),
-                                               std::make_shared<ForteOptions>(options),
-                                               mo_space_info, as_ints);
+                                               forte_options, mo_space_info, as_ints);
         final_energy = casscf->compute_energy();
     }
     if (options.get_bool("MP2_NOS")) {
@@ -144,7 +144,7 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
 
     //    if (options.get_str("JOB_TYPE") == "MR-DSRG-PT2") {
     //        MCSRGPT2_MO mcsrgpt2_mo(std::make_shared<SCFInfo>(ref_wfn),
-    //                                std::make_shared<ForteOptions>(options), ints, mo_space_info);
+    //                                forte_options, ints, mo_space_info);
     //        final_energy = psi::Process::environment.globals["CURRENT ENERGY"];
     //    }
     if (options.get_str("JOB_TYPE") == "ASCI") {
@@ -155,8 +155,7 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
     if (options.get_str("JOB_TYPE") == "ACI") {
         auto as_ints = make_active_space_ints(mo_space_info, ints, "ACTIVE", {{"RESTRICTED_DOCC"}});
         auto aci = std::make_shared<AdaptiveCI>(state, nroot, std::make_shared<SCFInfo>(ref_wfn),
-                                                std::make_shared<ForteOptions>(options),
-                                                mo_space_info, as_ints);
+                                                forte_options, mo_space_info, as_ints);
         final_energy = aci->compute_energy();
         if (options.get_bool("ACI_NO")) {
             aci->compute_nos();
@@ -181,32 +180,28 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
     }
     if (options.get_str("JOB_TYPE") == "PCI") {
         auto pci = std::make_shared<ProjectorCI>(state, std::make_shared<SCFInfo>(ref_wfn),
-                                                 std::make_shared<ForteOptions>(options), ints,
-                                                 mo_space_info);
+                                                 forte_options, ints, mo_space_info);
         for (int n = 0; n < options.get_int("NROOT"); ++n) {
             final_energy = pci->compute_energy();
         }
     }
     if (options.get_str("JOB_TYPE") == "PCI_HASHVEC") {
         auto pci_hashvec = std::make_shared<ProjectorCI_HashVec>(
-            state, std::make_shared<SCFInfo>(ref_wfn), std::make_shared<ForteOptions>(options),
-            ints, mo_space_info);
+            state, std::make_shared<SCFInfo>(ref_wfn), forte_options, ints, mo_space_info);
         for (int n = 0; n < options.get_int("NROOT"); ++n) {
             final_energy = pci_hashvec->compute_energy();
         }
     }
     if (options.get_str("JOB_TYPE") == "PCI_SIMPLE") {
         auto pci_simple = std::make_shared<ProjectorCI_Simple>(
-            state, std::make_shared<SCFInfo>(ref_wfn), std::make_shared<ForteOptions>(options),
-            ints, mo_space_info);
+            state, std::make_shared<SCFInfo>(ref_wfn), forte_options, ints, mo_space_info);
         for (int n = 0; n < options.get_int("NROOT"); ++n) {
             final_energy = pci_simple->compute_energy();
         }
     }
     if (options.get_str("JOB_TYPE") == "EWCI") {
         auto ewci = std::make_shared<ElementwiseCI>(state, std::make_shared<SCFInfo>(ref_wfn),
-                                                    std::make_shared<ForteOptions>(options), ints,
-                                                    mo_space_info);
+                                                    forte_options, ints, mo_space_info);
         for (int n = 0; n < options.get_int("NROOT"); ++n) {
             final_energy = ewci->compute_energy();
         }
@@ -218,9 +213,8 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
     }
     if (options.get_bool("USE_DMRGSCF")) {
 #ifdef HAVE_CHEMPS2
-        auto dmrg =
-            std::make_shared<DMRGSCF>(state, std::make_shared<SCFInfo>(ref_wfn),
-                                      std::make_shared<ForteOptions>(options), ints, mo_space_info);
+        auto dmrg = std::make_shared<DMRGSCF>(state, std::make_shared<SCFInfo>(ref_wfn),
+                                              forte_options, ints, mo_space_info);
         dmrg->set_iterations(options.get_int("DMRGSCF_MAX_ITER"));
         final_energy = dmrg->compute_energy();
 #else
@@ -230,8 +224,7 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
     if (options.get_str("JOB_TYPE") == "DMRG") {
 #ifdef HAVE_CHEMPS2
         auto dmrg = std::make_shared<DMRGSolver>(state, std::make_shared<SCFInfo>(ref_wfn),
-                                                 std::make_shared<ForteOptions>(options), ints,
-                                                 mo_space_info);
+                                                 forte_options, ints, mo_space_info);
         dmrg->set_max_rdm(2);
         final_energy = dmrg->compute_energy();
 #else
@@ -240,7 +233,7 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
     }
     //    if (options.get_str("JOB_TYPE") == "CAS") {
     //        FCI_MO fci_mo(state, nroot, std::make_shared<SCFInfo>(ref_wfn),
-    //                      std::make_shared<ForteOptions>(options), mo_space_info, as_ints);
+    //                      forte_options, mo_space_info, as_ints);
     //        final_energy = fci_mo.compute_energy();
     //    }
     if (options.get_str("JOB_TYPE") == "MRDSRG") {
@@ -263,22 +256,21 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
             auto as_ints =
                 make_active_space_ints(mo_space_info, ints, "ACTIVE", {{"RESTRICTED_DOCC"}});
 
-            FCI_MO fci_mo(state, nroot, std::make_shared<SCFInfo>(ref_wfn),
-                          std::make_shared<ForteOptions>(options), mo_space_info, as_ints);
+            FCI_MO fci_mo(state, nroot, std::make_shared<SCFInfo>(ref_wfn), forte_options,
+                          mo_space_info, as_ints);
             fci_mo.set_max_rdm_level(max_rdm_level);
             fci_mo.compute_energy();
             Reference reference = fci_mo.get_reference();
 
             if (options.get_bool("SEMI_CANONICAL")) {
-                SemiCanonical semi(std::make_shared<ForteOptions>(options), ints, mo_space_info);
+                SemiCanonical semi(forte_options, ints, mo_space_info);
                 semi.semicanonicalize(reference, max_rdm_level);
                 Ua = semi.Ua_t();
                 Ub = semi.Ub_t();
             }
 
             auto mrdsrg = std::make_shared<MRDSRG>(reference, std::make_shared<SCFInfo>(ref_wfn),
-                                                   std::make_shared<ForteOptions>(options), ints,
-                                                   mo_space_info);
+                                                   forte_options, ints, mo_space_info);
             mrdsrg->set_Uactv(Ua, Ub);
 
             if (options["AVG_STATE"].size() != 0) {
@@ -300,15 +292,14 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
             Reference reference = ci->get_reference();
 
             if (options.get_bool("SEMI_CANONICAL")) {
-                SemiCanonical semi(std::make_shared<ForteOptions>(options), ints, mo_space_info);
+                SemiCanonical semi(forte_options, ints, mo_space_info);
                 semi.semicanonicalize(reference, max_rdm_level);
                 Ua = semi.Ua_t();
                 Ub = semi.Ub_t();
             }
 
             auto mrdsrg = std::make_shared<MRDSRG>(reference, std::make_shared<SCFInfo>(ref_wfn),
-                                                   std::make_shared<ForteOptions>(options), ints,
-                                                   mo_space_info);
+                                                   forte_options, ints, mo_space_info);
             mrdsrg->set_Uactv(Ua, Ub);
 
             if (options.get_str("RELAX_REF") == "NONE") {
@@ -319,25 +310,22 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
         }
     }
     if (options.get_str("JOB_TYPE") == "MRDSRG_SO") {
-        FCI_MO fci_mo(std::make_shared<SCFInfo>(ref_wfn), std::make_shared<ForteOptions>(options),
-                      ints, mo_space_info);
+        FCI_MO fci_mo(std::make_shared<SCFInfo>(ref_wfn), forte_options, ints, mo_space_info);
         fci_mo.compute_energy();
         Reference reference = fci_mo.get_reference();
         if (options.get_bool("SEMI_CANONICAL")) {
-            SemiCanonical semi(std::make_shared<ForteOptions>(options), ints, mo_space_info);
+            SemiCanonical semi(forte_options, ints, mo_space_info);
             semi.semicanonicalize(reference);
         }
         std::shared_ptr<MRDSRG_SO> mrdsrg(new MRDSRG_SO(reference, options, ints, mo_space_info));
         final_energy = mrdsrg->compute_energy();
     }
     if (options.get_str("JOB_TYPE") == "ACTIVE-DSRGPT2") {
-        ACTIVE_DSRGPT2 pt(std::make_shared<SCFInfo>(ref_wfn),
-                          std::make_shared<ForteOptions>(options), ints, mo_space_info);
+        ACTIVE_DSRGPT2 pt(std::make_shared<SCFInfo>(ref_wfn), forte_options, ints, mo_space_info);
         final_energy = pt.compute_energy();
     }
     if (options.get_str("JOB_TYPE") == "DWMS-DSRGPT2") {
-        DWMS_DSRGPT2 dwms(std::make_shared<SCFInfo>(ref_wfn),
-                          std::make_shared<ForteOptions>(options), ints, mo_space_info);
+        DWMS_DSRGPT2 dwms(std::make_shared<SCFInfo>(ref_wfn), forte_options, ints, mo_space_info);
         final_energy = dwms.compute_energy();
     }
     if (options.get_str("JOB_TYPE") == "DSRG_MRPT") {
@@ -350,7 +338,7 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
         Reference reference = ci->get_reference();
 
         if (options.get_bool("SEMI_CANONICAL")) {
-            SemiCanonical semi(std::make_shared<ForteOptions>(options), ints, mo_space_info);
+            SemiCanonical semi(forte_options, ints, mo_space_info);
             semi.semicanonicalize(reference, max_rdm_level);
         }
 
@@ -382,14 +370,13 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
         Reference reference;
         if (cas_type == "CAS") {
             std::shared_ptr<FCI_MO> fci_mo = std::make_shared<FCI_MO>(
-                std::make_shared<SCFInfo>(ref_wfn), std::make_shared<ForteOptions>(options), ints,
-                mo_space_info);
+                std::make_shared<SCFInfo>(ref_wfn), forte_options, ints, mo_space_info);
             fci_mo->set_max_rdm_level(max_rdm_level);
             fci_mo->compute_energy();
             reference = fci_mo->get_reference();
 
             if (options.get_bool("SEMI_CANONICAL")) {
-                SemiCanonical semi(std::make_shared<ForteOptions>(options), ints, mo_space_info);
+                SemiCanonical semi(forte_options, ints, mo_space_info);
                 if (actv_type == "CIS" || actv_type == "CISD") {
                     semi.set_actv_dims(fci_mo->actv_docc(), fci_mo->actv_virt());
                 }
@@ -398,8 +385,7 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
                 Ub = semi.Ub_t();
             }
             auto dsrg_mrpt2 = std::make_shared<DSRG_MRPT2>(
-                reference, std::make_shared<SCFInfo>(ref_wfn),
-                std::make_shared<ForteOptions>(options), ints, mo_space_info);
+                reference, std::make_shared<SCFInfo>(ref_wfn), forte_options, ints, mo_space_info);
             dsrg_mrpt2->set_Uactv(Ua, Ub);
             if (options["AVG_STATE"].size() != 0) {
                 dsrg_mrpt2->set_p_spaces(fci_mo->p_spaces());
@@ -425,14 +411,13 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
             reference = ci->get_reference();
 
             if (options.get_bool("SEMI_CANONICAL")) {
-                SemiCanonical semi(std::make_shared<ForteOptions>(options), ints, mo_space_info);
+                SemiCanonical semi(forte_options, ints, mo_space_info);
                 semi.semicanonicalize(reference, max_rdm_level);
                 Ua = semi.Ua_t();
                 Ub = semi.Ub_t();
             }
             std::shared_ptr<DSRG_MRPT2> dsrg_mrpt2 = std::make_shared<DSRG_MRPT2>(
-                reference, std::make_shared<SCFInfo>(ref_wfn),
-                std::make_shared<ForteOptions>(options), ints, mo_space_info);
+                reference, std::make_shared<SCFInfo>(ref_wfn), forte_options, ints, mo_space_info);
             dsrg_mrpt2->set_Uactv(Ua, Ub);
             if (options.get_str("RELAX_REF") != "NONE") {
                 final_energy = dsrg_mrpt2->compute_energy_relaxed();
@@ -479,14 +464,13 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
                 }
             }
 
-            FCI_MO fci_mo(std::make_shared<SCFInfo>(ref_wfn),
-                          std::make_shared<ForteOptions>(options), ints, mo_space_info);
+            FCI_MO fci_mo(std::make_shared<SCFInfo>(ref_wfn), forte_options, ints, mo_space_info);
             fci_mo.set_max_rdm_level(max_rdm_level);
             fci_mo.compute_energy();
             reference = fci_mo.get_reference();
 
             if (options.get_bool("SEMI_CANONICAL")) {
-                SemiCanonical semi(std::make_shared<ForteOptions>(options), ints, mo_space_info);
+                SemiCanonical semi(forte_options, ints, mo_space_info);
                 if (actv_type == "CIS" || actv_type == "CISD") {
                     semi.set_actv_dims(fci_mo.actv_docc(), fci_mo.actv_virt());
                 }
@@ -496,8 +480,7 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
             }
 
             auto three_dsrg_mrpt2 = std::make_shared<THREE_DSRG_MRPT2>(
-                reference, std::make_shared<SCFInfo>(ref_wfn),
-                std::make_shared<ForteOptions>(options), ints, mo_space_info);
+                reference, std::make_shared<SCFInfo>(ref_wfn), forte_options, ints, mo_space_info);
             three_dsrg_mrpt2->set_Uactv(Ua, Ub);
 
             if (actv_type == "CIS" || actv_type == "CISD") {
@@ -517,19 +500,29 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
             ci->compute_energy();
             reference = ci->get_reference();
 
-            SemiCanonical semi(std::make_shared<ForteOptions>(options), ints, mo_space_info);
+            SemiCanonical semi(forte_options, ints, mo_space_info);
             semi.semicanonicalize(reference, max_rdm_level);
             Ua = semi.Ua_t();
             Ub = semi.Ub_t();
 
             auto three_dsrg_mrpt2 = std::make_shared<THREE_DSRG_MRPT2>(
-                reference, std::make_shared<SCFInfo>(ref_wfn),
-                std::make_shared<ForteOptions>(options), ints, mo_space_info);
+                reference, std::make_shared<SCFInfo>(ref_wfn), forte_options, ints, mo_space_info);
 
             three_dsrg_mrpt2->set_Uactv(Ua, Ub);
             final_energy = three_dsrg_mrpt2->compute_energy();
+
             if (ref_relax || multi_state) {
-                final_energy = three_dsrg_mrpt2->relax_reference_once();
+                auto fci_ints = three_dsrg_mrpt2->compute_Heff_actv();
+                auto state_weights_list = make_state_weights_list(forte_options, ref_wfn);
+
+                auto ms_solver = MSActiveSpaceSolver(cas_type, state_weights_list, scf_info,
+                                                     mo_space_info, fci_ints, forte_options);
+                final_energy = ms_solver.compute_energy();
+
+                //                std::vector<std::pair<StateInfo, std::vector<double>>>
+                //                state_weights_list; { std::pair(state, {1.0}) }
+
+                //                final_energy = three_dsrg_mrpt2->relax_reference_once();
             }
         }
 
@@ -553,22 +546,20 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
 
         if (cas_type == "CAS") {
             auto fci_mo = std::make_shared<FCI_MO>(std::make_shared<SCFInfo>(ref_wfn),
-                                                   std::make_shared<ForteOptions>(options), ints,
-                                                   mo_space_info);
+                                                   forte_options, ints, mo_space_info);
             fci_mo->set_max_rdm_level(max_rdm_level);
             fci_mo->compute_energy();
             Reference reference = fci_mo->get_reference();
 
             if (options.get_bool("SEMI_CANONICAL")) {
-                SemiCanonical semi(std::make_shared<ForteOptions>(options), ints, mo_space_info);
+                SemiCanonical semi(forte_options, ints, mo_space_info);
                 semi.semicanonicalize(reference, max_rdm_level);
                 Ua = semi.Ua_t();
                 Ub = semi.Ub_t();
             }
 
             auto dsrg_mrpt3 = std::make_shared<DSRG_MRPT3>(
-                reference, std::make_shared<SCFInfo>(ref_wfn),
-                std::make_shared<ForteOptions>(options), ints, mo_space_info);
+                reference, std::make_shared<SCFInfo>(ref_wfn), forte_options, ints, mo_space_info);
             dsrg_mrpt3->set_Uactv(Ua, Ub);
 
             if (options["AVG_STATE"].size() != 0) {
@@ -590,13 +581,12 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
             ci->compute_energy();
             Reference reference = ci->get_reference();
 
-            SemiCanonical semi(std::make_shared<ForteOptions>(options), ints, mo_space_info);
+            SemiCanonical semi(forte_options, ints, mo_space_info);
             semi.semicanonicalize(reference, max_rdm_level);
             Ua = semi.Ua_t();
             Ub = semi.Ub_t();
             auto dsrg_mrpt3 = std::make_shared<DSRG_MRPT3>(
-                reference, std::make_shared<SCFInfo>(ref_wfn),
-                std::make_shared<ForteOptions>(options), ints, mo_space_info);
+                reference, std::make_shared<SCFInfo>(ref_wfn), forte_options, ints, mo_space_info);
             dsrg_mrpt3->set_Uactv(Ua, Ub);
 
             if (options.get_str("RELAX_REF") != "NONE") {
@@ -617,7 +607,7 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
         Reference reference = ci->get_reference();
 
         if (options.get_bool("SEMI_CANONICAL")) {
-            SemiCanonical semi(std::make_shared<ForteOptions>(options), ints, mo_space_info);
+            SemiCanonical semi(forte_options, ints, mo_space_info);
             semi.semicanonicalize(reference, max_rdm_level);
         }
         std::shared_ptr<SOMRDSRG> somrdsrg(
@@ -635,16 +625,15 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
             auto as_ints =
                 make_active_space_ints(mo_space_info, ints, "ACTIVE", {{"RESTRICTED_DOCC"}});
 
-            auto aci = std::make_shared<AdaptiveCI>(
-                state, nroot, std::make_shared<SCFInfo>(ref_wfn),
-                std::make_shared<ForteOptions>(options), mo_space_info, as_ints);
+            auto aci =
+                std::make_shared<AdaptiveCI>(state, nroot, std::make_shared<SCFInfo>(ref_wfn),
+                                             forte_options, mo_space_info, as_ints);
             aci->compute_energy();
             aci->compute_nos();
         }
         auto as_ints = make_active_space_ints(mo_space_info, ints, "ACTIVE", {{"RESTRICTED_DOCC"}});
         auto aci = std::make_shared<AdaptiveCI>(state, nroot, std::make_shared<SCFInfo>(ref_wfn),
-                                                std::make_shared<ForteOptions>(options),
-                                                mo_space_info, as_ints);
+                                                forte_options, mo_space_info, as_ints);
         aci->compute_energy();
 
         DeterminantHashVec reference = aci->get_wavefunction();

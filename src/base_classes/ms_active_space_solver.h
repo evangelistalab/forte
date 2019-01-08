@@ -76,13 +76,15 @@ class MSActiveSpaceSolver {
                         std::vector<std::pair<StateInfo, std::vector<double>>>& state_weights_list,
                         std::shared_ptr<SCFInfo> scf_info,
                         std::shared_ptr<MOSpaceInfo> mo_space_info,
-                        std::shared_ptr<ForteIntegrals> ints,
+                        std::shared_ptr<ActiveSpaceIntegrals> as_ints,
                         std::shared_ptr<ForteOptions> options);
 
     //    // ==> Class Interface <==
 
     /// Compute the energy and return it
     double compute_energy();
+
+    void print_options();
 
     //    /// Returns the reference
     //    Reference get_reference() = 0;
@@ -142,7 +144,7 @@ class MSActiveSpaceSolver {
     /// The MOSpaceInfo object
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
 
-    std::shared_ptr<ForteIntegrals> ints_;
+    std::shared_ptr<ActiveSpaceIntegrals> as_ints_;
 
     std::shared_ptr<ForteOptions> options_;
 
@@ -193,6 +195,10 @@ class MSActiveSpaceSolver {
 //    const std::string& type, StateInfo state, std::shared_ptr<SCFInfo> scf_info,
 //    std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ForteIntegrals> ints,
 //    std::shared_ptr<ForteOptions> options);
+
+std::vector<std::pair<StateInfo, std::vector<double>>>
+make_state_weights_list(std::shared_ptr<ForteOptions> options,
+                        std::shared_ptr<psi::Wavefunction> wfn);
 
 } // namespace forte
 

@@ -5,7 +5,7 @@ def register_forte_options(forte_options):
     register_mo_space_info_options(forte_options)
     register_integral_options(forte_options)
     register_fci_options(forte_options)
-
+    register_active_space_solver_options(forte_options)
 
 def register_driver_options(forte_options):
     forte_options.add_str('JOB_TYPE', 'NEWDRIVER', [
@@ -62,10 +62,12 @@ def register_mo_space_info_options(forte_options):
                             "Number of roots per irrep (in Cotton order)")
 
 
-def register_fci_options(forte_options):
-    forte_options.add_int('FCI_NROOT', 1, 'The number of roots computed')
-    forte_options.add_int('FCI_ROOT', 0,
+def register_active_space_solver_options(forte_options):
+    forte_options.add_int('NROOT', 1, 'The number of roots computed')
+    forte_options.add_int('ROOT', 0,
                           'The root selected for state-specific computations')
+
+def register_fci_options(forte_options):
     forte_options.add_int('FCI_MAXITER', 30,
                           'Maximum number of iterations for FCI code')
     forte_options.add_int(

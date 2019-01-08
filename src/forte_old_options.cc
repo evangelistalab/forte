@@ -149,12 +149,6 @@ void forte_old_options(ForteOptions& options) {
     /*- The energy relaxation convergence criterion -*/
     options.add_double("RELAX_E_CONVERGENCE", 1.0e-8);
 
-    /*- The number of roots computed -*/
-    options.add_int("NROOT", 1);
-
-    /*- The root selected for state-specific computations -*/
-    options.add_int("ROOT", 0);
-
     // Options for the Cartographer class //
     /*- Density of determinants format -*/
     options.add_str("DOD_FORMAT", "HISTOGRAM", "GAUSSIAN HISTOGRAM");

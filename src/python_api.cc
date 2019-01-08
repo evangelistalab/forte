@@ -84,7 +84,7 @@ void export_ActiveSpaceSolver(py::module& m) {
 }
 
 ///// Export the FCISolver class
-//void export_FCISolver(py::module& m) {
+// void export_FCISolver(py::module& m) {
 //    py::class_<FCISolver>(m, "FCISolver")
 //        .def(py::init<StateInfo, std::shared_ptr<MOSpaceInfo>,
 //                      std::shared_ptr<ActiveSpaceIntegrals>>())
@@ -110,7 +110,7 @@ PYBIND11_MODULE(forte, m) {
 
     export_ActiveSpaceSolver(m);
 
-//    export_FCISolver(m);
+    //    export_FCISolver(m);
 
     // export MOSpaceInfo
     py::class_<MOSpaceInfo, std::shared_ptr<MOSpaceInfo>>(m, "MOSpaceInfo")

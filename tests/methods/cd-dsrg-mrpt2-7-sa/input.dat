@@ -82,7 +82,7 @@ set forte{
   maxiter            50
   e_convergence      10
   cas_type           cas
-  avg_state          [[0,1,2]]
+  avg_state          [[0,1,2]] # 2 states of symmetry A1 (irrep = 0) and multiplicity = 1
   dsrg_multi_state   sa_full
 }
 

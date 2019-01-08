@@ -76,10 +76,9 @@ class FCI_MO : public ActiveSpaceSolver {
      * @param mo_space_info MOSpaceInfo
      * @param fci_ints FCIInegrals
      */
-    [[deprecated("Using a deprecated constructor that does not take state and nroot")]] FCI_MO(
-        StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
-        std::shared_ptr<ForteOptions> options, std::shared_ptr<MOSpaceInfo> mo_space_info,
-        std::shared_ptr<ActiveSpaceIntegrals> as_ints);
+    FCI_MO(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
+           std::shared_ptr<ForteOptions> options, std::shared_ptr<MOSpaceInfo> mo_space_info,
+           std::shared_ptr<ActiveSpaceIntegrals> as_ints);
 
     /**
      * @brief FCI_MO Constructor
@@ -100,9 +99,10 @@ class FCI_MO : public ActiveSpaceSolver {
      * @param mo_space_info MOSpaceInfo
      * @param fci_ints FCIInegrals
      */
-    FCI_MO(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
-           std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info,
-           std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
+    [[deprecated("Using a deprecated constructor that does not take state and nroot")]] FCI_MO(
+        std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
+        std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info,
+        std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
 
     /// Destructor
     ~FCI_MO();
