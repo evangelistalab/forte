@@ -81,7 +81,7 @@ void set_FCI_MO_options(ForteOptions& foptions) {
 // FCI_MO::FCI_MO(StateInfo state, std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions>
 // options,
 //               std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
-//    : ActiveSpaceSolver(state, mo_space_info, as_ints), integral_(ints), scf_info_(scf_info),
+//    : ActiveSpaceMethod(state, mo_space_info, as_ints), integral_(ints), scf_info_(scf_info),
 //      options_(options) {
 
 //    print_method_banner({"Complete Active Space Configuration Interaction", "Chenyang Li"});
@@ -105,7 +105,7 @@ void set_FCI_MO_options(ForteOptions& foptions) {
 FCI_MO::FCI_MO(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
                std::shared_ptr<ForteOptions> options, std::shared_ptr<MOSpaceInfo> mo_space_info,
                std::shared_ptr<ActiveSpaceIntegrals> as_ints)
-    : ActiveSpaceSolver(state, nroot, mo_space_info, as_ints), integral_(as_ints->ints()),
+    : ActiveSpaceMethod(state, nroot, mo_space_info, as_ints), integral_(as_ints->ints()),
       mo_space_info_(mo_space_info), scf_info_(scf_info), options_(options) {
 
     print_method_banner({"Complete Active Space Configuration Interaction", "Chenyang Li"});
@@ -131,7 +131,7 @@ FCI_MO::FCI_MO(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
 
 FCI_MO::FCI_MO(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
                std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : ActiveSpaceSolver(), integral_(ints), mo_space_info_(mo_space_info), scf_info_(scf_info),
+    : ActiveSpaceMethod(), integral_(ints), mo_space_info_(mo_space_info), scf_info_(scf_info),
       options_(options) {
 
     print_method_banner({"Complete Active Space Configuration Interaction", "Chenyang Li"});

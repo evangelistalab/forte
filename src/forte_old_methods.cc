@@ -500,6 +500,27 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
             ci->compute_energy();
             reference = ci->get_reference();
 
+            //            if (options.get_bool("SEMI_CANONICAL")) {
+            //                SemiCanonical semi(forte_options, ints, mo_space_info);
+            //                if (actv_type == "CIS" || actv_type == "CISD") {
+            //                    semi.set_actv_dims(fci_mo.actv_docc(), fci_mo.actv_virt());
+            //                }
+            //                semi.semicanonicalize(reference, max_rdm_level);
+            //                Ua = semi.Ua_t();
+            //                Ub = semi.Ub_t();
+            //            }
+
+            //            auto three_dsrg_mrpt2 = std::make_shared<THREE_DSRG_MRPT2>(
+            //                reference, std::make_shared<SCFInfo>(ref_wfn), forte_options, ints,
+            //                mo_space_info);
+            //            three_dsrg_mrpt2->set_Uactv(Ua, Ub);
+
+            //            if (actv_type == "CIS" || actv_type == "CISD") {
+            //                three_dsrg_mrpt2->set_actv_occ(fci_mo.actv_occ());
+            //                three_dsrg_mrpt2->set_actv_uocc(fci_mo.actv_uocc());
+            //            }
+            //            final_energy = three_dsrg_mrpt2->compute_energy();
+
             SemiCanonical semi(forte_options, ints, mo_space_info);
             semi.semicanonicalize(reference, max_rdm_level);
             Ua = semi.Ua_t();
@@ -515,14 +536,9 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
                 auto fci_ints = three_dsrg_mrpt2->compute_Heff_actv();
                 auto state_weights_list = make_state_weights_list(forte_options, ref_wfn);
 
-                auto ms_solver = MSActiveSpaceSolver(cas_type, state_weights_list, scf_info,
-                                                     mo_space_info, fci_ints, forte_options);
+                auto ms_solver = MSGodzilla(cas_type, state_weights_list, scf_info, mo_space_info,
+                                            fci_ints, forte_options);
                 final_energy = ms_solver.compute_energy();
-
-                //                std::vector<std::pair<StateInfo, std::vector<double>>>
-                //                state_weights_list; { std::pair(state, {1.0}) }
-
-                //                final_energy = three_dsrg_mrpt2->relax_reference_once();
             }
         }
 

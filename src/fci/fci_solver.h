@@ -29,7 +29,7 @@
 #ifndef _fci_solver_h_
 #define _fci_solver_h_
 
-#include "base_classes/active_space_solver.h"
+#include "base_classes/active_space_method.h"
 #include "psi4/libmints/dimension.h"
 
 namespace forte {
@@ -41,7 +41,7 @@ class StringLists;
  * @brief The FCISolver class
  * This class performs Full CI calculations.
  */
-class FCISolver : public ActiveSpaceSolver {
+class FCISolver : public ActiveSpaceMethod {
   public:
     // ==> Class Constructor and Destructor <==
 

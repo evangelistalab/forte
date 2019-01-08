@@ -60,7 +60,7 @@ namespace forte {
 CASSCF::CASSCF(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
                std::shared_ptr<ForteOptions> options, std::shared_ptr<MOSpaceInfo> mo_space_info,
                std::shared_ptr<ActiveSpaceIntegrals> as_ints)
-    : ActiveSpaceSolver(state, nroot, mo_space_info, as_ints), scf_info_(scf_info),
+    : ActiveSpaceMethod(state, nroot, mo_space_info, as_ints), scf_info_(scf_info),
       options_(options), ints_(as_ints->ints()) {
     startup();
 }

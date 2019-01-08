@@ -26,8 +26,8 @@
  * @END LICENSE
  */
 
-#ifndef _active_space_solver_h_
-#define _active_space_solver_h_
+#ifndef _active_space_method_h_
+#define _active_space_method_h_
 
 #include <vector>
 
@@ -43,9 +43,9 @@ class Reference;
 class SCFInfo;
 
 /**
- * @class ActiveSpaceSolver
+ * @class ActiveSpaceMethod
  *
- * @brief Base class for active space solvers
+ * @brief Base class for methods that solve the Schrodinger equation in an active space
  *
  * This class is the base class for methods that solve for the wavefunction in a
  * small subset of the full orbital space (<30-40 orbitals).
@@ -56,24 +56,24 @@ class SCFInfo;
  * object in the space labeled "ACTIVE". Orbitals in the space "RESTRICTED_DOCC"
  * are not correlated and are trated via effective scalar and one-body interactions.
  */
-class ActiveSpaceSolver {
+class ActiveSpaceMethod {
   public:
     // ==> Class Constructor and Destructor <==
     /**
-     * @brief ActiveSpaceSolver Constructor for a single state computation
+     * @brief ActiveSpaceMethod Constructor for a single state computation
      * @param state the electronic state to compute
      * @param nroot the number of roots
      * @param mo_space_info a MOSpaceInfo object that defines the orbital spaces
      * @param as_ints molecular integrals defined only for the active space orbitals
      */
-    ActiveSpaceSolver(StateInfo state, size_t nroot, std::shared_ptr<MOSpaceInfo> mo_space_info,
+    ActiveSpaceMethod(StateInfo state, size_t nroot, std::shared_ptr<MOSpaceInfo> mo_space_info,
                       std::shared_ptr<ActiveSpaceIntegrals> as_ints);
 
     /// Default constructor
-    ActiveSpaceSolver() = default;
+    ActiveSpaceMethod() = default;
 
     /// Virtual destructor to enable deletion of a Derived* through a Base*
-    virtual ~ActiveSpaceSolver() = default;
+    virtual ~ActiveSpaceMethod() = default;
 
     // ==> Class Interface <==
 
@@ -165,9 +165,9 @@ class ActiveSpaceSolver {
  * @param mo_space_info orbital space information
  * @param ints an integral object
  * @param options user-provided options
- * @return a shared pointer for the base class ActiveSpaceSolver
+ * @return a shared pointer for the base class ActiveSpaceMethod
  */
-std::unique_ptr<ActiveSpaceSolver> make_active_space_solver(
+std::unique_ptr<ActiveSpaceMethod> make_active_space_solver(
     const std::string& type, StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
     std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ForteIntegrals> ints,
     std::shared_ptr<ForteOptions> options);
@@ -180,13 +180,13 @@ std::unique_ptr<ActiveSpaceSolver> make_active_space_solver(
  * @param mo_space_info orbital space information
  * @param as_ints an active space integral object
  * @param options user-provided options
- * @return a shared pointer for the base class ActiveSpaceSolver
+ * @return a shared pointer for the base class ActiveSpaceMethod
  */
-std::unique_ptr<ActiveSpaceSolver> make_active_space_solver2(
+std::unique_ptr<ActiveSpaceMethod> make_active_space_solver2(
     const std::string& type, StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
     std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ActiveSpaceIntegrals> as_ints,
     std::shared_ptr<ForteOptions> options);
 
 } // namespace forte
 
-#endif // _active_space_solver_h_
+#endif // _active_space_method_h_

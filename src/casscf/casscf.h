@@ -41,14 +41,14 @@
 #include "fci/fci_vector.h"
 #include "integrals/active_space_integrals.h"
 #include "orbital-helpers/semi_canonicalize.h"
-#include "base_classes/active_space_solver.h"
+#include "base_classes/active_space_method.h"
 
 namespace forte {
 
 // class ActiveSpaceIntegrals;
 class SCFInfo;
 
-class CASSCF : public ActiveSpaceSolver {
+class CASSCF : public ActiveSpaceMethod {
   public:
     /**
      * @brief CASSCF::CASSCF

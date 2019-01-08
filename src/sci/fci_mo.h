@@ -42,7 +42,7 @@
 #include "base_classes/mo_space_info.h"
 #include "helpers/helpers.h"
 #include "integrals/integrals.h"
-#include "base_classes/active_space_solver.h"
+#include "base_classes/active_space_method.h"
 #include "base_classes/reference.h"
 #include "sparse_ci/sparse_ci_solver.h"
 #include "integrals/active_space_integrals.h"
@@ -65,7 +65,7 @@ class SCFInfo;
 /// Set the FCI_MO options
 void set_FCI_MO_options(ForteOptions& foptions);
 
-class FCI_MO : public ActiveSpaceSolver {
+class FCI_MO : public ActiveSpaceMethod {
 
   public:
     /**

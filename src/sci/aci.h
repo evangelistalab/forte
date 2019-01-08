@@ -49,7 +49,7 @@
 #include "orbital-helpers/iao_builder.h"
 #include "orbital-helpers/localize.h"
 #include "helpers/timer.h"
-#include "base_classes/active_space_solver.h"
+#include "base_classes/active_space_method.h"
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -73,7 +73,7 @@ void set_ACI_options(ForteOptions& foptions);
  * @brief The AdaptiveCI class
  * This class implements an adaptive CI algorithm
  */
-class AdaptiveCI : public ActiveSpaceSolver {
+class AdaptiveCI : public ActiveSpaceMethod {
   public:
     // ==> Class Constructor and Destructor <==
 

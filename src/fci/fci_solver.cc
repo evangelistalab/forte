@@ -61,7 +61,7 @@ class MOSpaceInfo;
 
 FCISolver::FCISolver(StateInfo state, size_t nroot, std::shared_ptr<MOSpaceInfo> mo_space_info,
                      std::shared_ptr<ActiveSpaceIntegrals> as_ints)
-    : ActiveSpaceSolver(state, nroot, mo_space_info, as_ints),
+    : ActiveSpaceMethod(state, nroot, mo_space_info, as_ints),
       active_dim_(mo_space_info->get_dimension("ACTIVE")), nirrep_(as_ints->ints()->nirrep()),
       symmetry_(state.irrep()), multiplicity_(state.multiplicity()) {
     // TODO: read this info from the base class

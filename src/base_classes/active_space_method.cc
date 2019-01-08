@@ -36,11 +36,11 @@
 #include "sci/asci.h"
 #include "sci/fci_mo.h"
 
-#include "base_classes/active_space_solver.h"
+#include "base_classes/active_space_method.h"
 
 namespace forte {
 
-ActiveSpaceSolver::ActiveSpaceSolver(StateInfo state, size_t nroot,
+ActiveSpaceMethod::ActiveSpaceMethod(StateInfo state, size_t nroot,
                                      std::shared_ptr<MOSpaceInfo> mo_space_info,
                                      std::shared_ptr<ActiveSpaceIntegrals> as_ints)
     : state_(state), nroot_(nroot), mo_space_info_(mo_space_info), as_ints_(as_ints) {
@@ -48,21 +48,21 @@ ActiveSpaceSolver::ActiveSpaceSolver(StateInfo state, size_t nroot,
     core_mo_ = as_ints_->restricted_docc_mo();
 }
 
-void ActiveSpaceSolver::set_active_space_integrals(std::shared_ptr<ActiveSpaceIntegrals> as_ints) {
+void ActiveSpaceMethod::set_active_space_integrals(std::shared_ptr<ActiveSpaceIntegrals> as_ints) {
     as_ints_ = as_ints;
 }
 
-psi::SharedVector ActiveSpaceSolver::evals() { return evals_; }
+psi::SharedVector ActiveSpaceMethod::evals() { return evals_; }
 
-void ActiveSpaceSolver::set_e_convergence(double value) { e_convergence_ = value; }
+void ActiveSpaceMethod::set_e_convergence(double value) { e_convergence_ = value; }
 
-void ActiveSpaceSolver::set_root(int value) { root_ = value; }
+void ActiveSpaceMethod::set_root(int value) { root_ = value; }
 
-void ActiveSpaceSolver::set_max_rdm_level(int value) { max_rdm_level_ = value; }
+void ActiveSpaceMethod::set_max_rdm_level(int value) { max_rdm_level_ = value; }
 
-void ActiveSpaceSolver::set_print(int level) { print_ = level; }
+void ActiveSpaceMethod::set_print(int level) { print_ = level; }
 
-std::unique_ptr<ActiveSpaceSolver> make_active_space_solver(
+std::unique_ptr<ActiveSpaceMethod> make_active_space_solver(
     const std::string& type, StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
     std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ForteIntegrals> ints,
     std::shared_ptr<ForteOptions> options) {
@@ -70,12 +70,12 @@ std::unique_ptr<ActiveSpaceSolver> make_active_space_solver(
     return make_active_space_solver2(type, state, nroot, scf_info, mo_space_info, as_ints, options);
 }
 
-std::unique_ptr<ActiveSpaceSolver> make_active_space_solver2(
+std::unique_ptr<ActiveSpaceMethod> make_active_space_solver2(
     const std::string& type, StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
     std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ActiveSpaceIntegrals> as_ints,
     std::shared_ptr<ForteOptions> options) {
 
-    std::unique_ptr<ActiveSpaceSolver> solver;
+    std::unique_ptr<ActiveSpaceMethod> solver;
     if (type == "FCI") {
         solver = std::make_unique<FCISolver>(state, nroot, mo_space_info, as_ints);
     } else if (type == "ACI") {

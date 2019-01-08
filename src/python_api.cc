@@ -77,10 +77,10 @@ void export_ForteOptions(py::module& m) {
         .def("generate_documentation", &ForteOptions::generate_documentation);
 }
 
-/// Export the ActiveSpaceSolver class
-void export_ActiveSpaceSolver(py::module& m) {
-    py::class_<ActiveSpaceSolver>(m, "ActiveSpaceSolver")
-        .def("compute_energy", &ActiveSpaceSolver::compute_energy);
+/// Export the ActiveSpaceMethod class
+void export_ActiveSpaceMethod(py::module& m) {
+    py::class_<ActiveSpaceMethod>(m, "ActiveSpaceMethod")
+        .def("compute_energy", &ActiveSpaceMethod::compute_energy);
 }
 
 ///// Export the FCISolver class
@@ -108,7 +108,7 @@ PYBIND11_MODULE(forte, m) {
 
     export_ForteOptions(m);
 
-    export_ActiveSpaceSolver(m);
+    export_ActiveSpaceMethod(m);
 
     //    export_FCISolver(m);
 

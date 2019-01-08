@@ -36,7 +36,7 @@
 
 namespace forte {
 
-class ActiveSpaceSolver;
+class ActiveSpaceMethod;
 class ActiveSpaceIntegrals;
 class ForteIntegrals;
 class ForteOptions;
@@ -45,7 +45,7 @@ class Reference;
 class SCFInfo;
 
 /**
- * @class MSActiveSpaceSolver
+ * @class MSGodzilla
  *
  * @brief General class for a multi-state active space solver
  *
@@ -58,11 +58,11 @@ class SCFInfo;
  * object in the space labeled "ACTIVE". Orbitals in the space "RESTRICTED_DOCC"
  * are not correlated and are trated via effective scalar and one-body interactions.
  */
-class MSActiveSpaceSolver {
+class MSGodzilla {
   public:
     // ==> Class Constructor and Destructor <==
     /**
-     * @brief ActiveSpaceSolver Constructor for a multi-state computation
+     * @brief ActiveSpaceMethod Constructor for a multi-state computation
      * @param states_weights A list of electronic states and their weights stored as vector of
      *        pairs [(state_1, [w_11, w_12, ..., w_1m]), (state_2, [w_21, w_22, ..., w_n]), ...]
      *        where:
@@ -72,7 +72,7 @@ class MSActiveSpaceSolver {
      * @param mo_space_info a MOSpaceInfo object
      * @param as_ints integrals for active space
      */
-    MSActiveSpaceSolver(const std::string& type,
+    MSGodzilla(const std::string& type,
                         std::vector<std::pair<StateInfo, std::vector<double>>>& state_weights_list,
                         std::shared_ptr<SCFInfo> scf_info,
                         std::shared_ptr<MOSpaceInfo> mo_space_info,
@@ -148,7 +148,7 @@ class MSActiveSpaceSolver {
 
     std::shared_ptr<ForteOptions> options_;
 
-    std::vector<std::shared_ptr<ActiveSpaceSolver>> solvers_;
+    std::vector<std::shared_ptr<ActiveSpaceMethod>> solvers_;
 
     //    /// The molecular integrals for the active space
     //    /// This object holds only the integrals for the orbital contained in the active_mo_
@@ -189,9 +189,9 @@ class MSActiveSpaceSolver {
 // * @param mo_space_info orbital space information
 // * @param ints an integral object
 // * @param options user-provided options
-// * @return a shared pointer for the base class ActiveSpaceSolver
+// * @return a shared pointer for the base class ActiveSpaceMethod
 // */
-// std::unique_ptr<ActiveSpaceSolver> make_active_space_solver(
+// std::unique_ptr<ActiveSpaceMethod> make_active_space_solver(
 //    const std::string& type, StateInfo state, std::shared_ptr<SCFInfo> scf_info,
 //    std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ForteIntegrals> ints,
 //    std::shared_ptr<ForteOptions> options);

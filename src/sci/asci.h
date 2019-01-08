@@ -37,7 +37,7 @@
 #include "orbital-helpers/unpaired_density.h"
 #include "sparse_ci/determinant_hashvector.h"
 #include "base_classes/reference.h"
-#include "base_classes/active_space_solver.h"
+#include "base_classes/active_space_method.h"
 #include "sparse_ci/sparse_ci_solver.h"
 #include "orbital-helpers/localize.h"
 
@@ -60,7 +60,7 @@ void set_ASCI_options(ForteOptions& foptions);
  * @brief The AdaptiveCI class
  * This class implements an adaptive CI algorithm
  */
-class ASCI : public ActiveSpaceSolver {
+class ASCI : public ActiveSpaceMethod {
   public:
     // ==> Class Constructor and Destructor <==
 
