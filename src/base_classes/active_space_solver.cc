@@ -41,40 +41,38 @@
 #include "integrals/active_space_integrals.h"
 #include "active_space_method.h"
 
-#include "ms_active_space_solver.h"
+#include "active_space_solver.h"
 
 namespace forte {
 
-MSGodzilla::MSGodzilla(const std::string& method,
-                       std::vector<std::pair<StateInfo, std::vector<double>>>& state_weights_list,
-                       std::shared_ptr<SCFInfo> scf_info,
-                       std::shared_ptr<MOSpaceInfo> mo_space_info,
-                       std::shared_ptr<ActiveSpaceIntegrals> as_ints,
-                       std::shared_ptr<ForteOptions> options)
+ActiveSpaceSolver::ActiveSpaceSolver(
+    const std::string& method,
+    std::vector<std::pair<StateInfo, std::vector<double>>>& state_weights_list,
+    std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<MOSpaceInfo> mo_space_info,
+    std::shared_ptr<ActiveSpaceIntegrals> as_ints, std::shared_ptr<ForteOptions> options)
     : method_(method), state_weights_list_(state_weights_list), scf_info_(scf_info),
       mo_space_info_(mo_space_info), as_ints_(as_ints), options_(options) {
     print_options();
 }
 
-double MSGodzilla::compute_energy() {
+double ActiveSpaceSolver::compute_energy() {
     double energy = 0.0;
     for (const auto& [state, weights] : state_weights_list_) {
         // compute the energy of state and save it
         size_t nroot = weights.size();
-        std::shared_ptr<ActiveSpaceMethod> solver = make_active_space_method2(
-            type_, state, nroot, scf_info_, mo_space_info_, as_ints_, options_);
-        // TODO: need to pass information on how many states are computed
-        solver->compute_energy();
-        auto evals = solver->evals();
+        std::shared_ptr<ActiveSpaceMethod> method = make_active_space_method2(
+            method_, state, nroot, scf_info_, mo_space_info_, as_ints_, options_);
+        method->compute_energy();
+        auto evals = method->evals();
         for (size_t r = 0; r < nroot; r++) {
             energy += evals->get(r) * weights[r];
         }
-        solvers_.push_back(solver);
+        method_vec_.push_back(method);
     }
     return energy + as_ints_->ints()->nuclear_repulsion_energy();
 }
 
-void MSGodzilla::print_options() {
+void ActiveSpaceSolver::print_options() {
     print_h2("Summary of Active Space Solver Input");
 
     //    std::vector<std::pair<std::string, size_t>> info;
@@ -156,6 +154,15 @@ void MSGodzilla::print_options() {
     psi::outfile->Printf("\n    %s\n", dash.c_str());
 }
 
+std::unique_ptr<ActiveSpaceSolver> make_active_space_solver(
+    const std::string& method,
+    std::vector<std::pair<StateInfo, std::vector<double>>>& state_weights_list,
+    std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<MOSpaceInfo> mo_space_info,
+    std::shared_ptr<ActiveSpaceIntegrals> as_ints, std::shared_ptr<ForteOptions> options) {
+    return std::make_unique<ActiveSpaceSolver>(method, state_weights_list, scf_info, mo_space_info,
+                                               as_ints, options);
+}
+
 std::vector<std::pair<StateInfo, std::vector<double>>>
 make_state_weights_list(std::shared_ptr<ForteOptions> options,
                         std::shared_ptr<psi::Wavefunction> wfn) {
@@ -177,7 +184,7 @@ make_state_weights_list(std::shared_ptr<ForteOptions> options,
             if ((options->psi_options())["AVG_STATE"][i].size() != 3) {
                 psi::outfile->Printf("\n  Error: invalid input of AVG_STATE. Each "
                                      "entry should take an array of three numbers.");
-                throw psi::PSIEXCEPTION("Invalid input of AVG_STATE");
+                throw std::runtime_error("Invalid input of AVG_STATE");
             }
 
             // read data
@@ -195,18 +202,18 @@ make_state_weights_list(std::shared_ptr<ForteOptions> options,
                                      "check the input irrep (start from 0) not to "
                                      "exceed %d",
                                      nirrep - 1);
-                throw psi::PSIEXCEPTION("Invalid irrep in AVG_STATE");
+                throw std::runtime_error("Invalid irrep in AVG_STATE");
             }
             if (multi < 1) {
                 psi::outfile->Printf("\n  Error: invalid multiplicity in AVG_STATE.");
-                throw psi::PSIEXCEPTION("Invaid multiplicity in AVG_STATE");
+                throw std::runtime_error("Invaid multiplicity in AVG_STATE");
             }
 
             if (nstates_this < 1) {
                 psi::outfile->Printf("\n  Error: invalid nstates in AVG_STATE. "
                                      "nstates of a certain irrep and multiplicity "
                                      "should greater than 0.");
-                throw psi::PSIEXCEPTION("Invalid nstates in AVG_STATE.");
+                throw std::runtime_error("Invalid nstates in AVG_STATE.");
             }
 
             std::vector<double> weights;
@@ -215,8 +222,8 @@ make_state_weights_list(std::shared_ptr<ForteOptions> options,
                     psi::outfile->Printf("\n  Error: mismatched number of entries in "
                                          "AVG_STATE (%d) and AVG_WEIGHT (%d).",
                                          nentry, (options->psi_options())["AVG_WEIGHT"].size());
-                    throw psi::PSIEXCEPTION("Mismatched number of entries in AVG_STATE "
-                                            "and AVG_WEIGHT.");
+                    throw std::runtime_error("Mismatched number of entries in AVG_STATE "
+                                             "and AVG_WEIGHT.");
                 }
                 int nweights = (options->psi_options())["AVG_WEIGHT"][i].size();
                 if (nweights != nstates_this) {
@@ -224,13 +231,13 @@ make_state_weights_list(std::shared_ptr<ForteOptions> options,
                                          "in entry %d of AVG_WEIGHT. Asked for %d "
                                          "states but only %d weights.",
                                          i, nstates_this, nweights);
-                    throw psi::PSIEXCEPTION("Mismatched number of weights in AVG_WEIGHT.");
+                    throw std::runtime_error("Mismatched number of weights in AVG_WEIGHT.");
                 }
                 for (int n = 0; n < nstates_this; ++n) {
                     double w = (options->psi_options())["AVG_WEIGHT"][i][n].to_double();
                     if (w < 0.0) {
                         psi::outfile->Printf("\n  Error: negative weights in AVG_WEIGHT.");
-                        throw psi::PSIEXCEPTION("Negative weights in AVG_WEIGHT.");
+                        throw std::runtime_error("Negative weights in AVG_WEIGHT.");
                     }
                     weights.push_back(w);
                 }

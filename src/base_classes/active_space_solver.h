@@ -26,8 +26,8 @@
  * @END LICENSE
  */
 
-#ifndef _ms_active_space_solver_h_
-#define _ms_active_space_solver_h_
+#ifndef _active_space_solver_h_
+#define _active_space_solver_h_
 
 #include <vector>
 #include <string>
@@ -45,20 +45,14 @@ class Reference;
 class SCFInfo;
 
 /**
- * @class MSGodzilla
+ * @class ActiveSpaceSolver
  *
  * @brief General class for a multi-state active space solver
  *
- * This class is the base class for methods that solve for the wavefunction in a
- * small subset of the full orbital space (<30-40 orbitals).
- * This class is responsible for creating and storing the integrals used by
- * active space solvers, which are held by an ActiveSpaceIntegrals object.
- *
- * @note By default, this class assumes that the active orbitals are stored in the MOSpaceInfo
- * object in the space labeled "ACTIVE". Orbitals in the space "RESTRICTED_DOCC"
- * are not correlated and are trated via effective scalar and one-body interactions.
+ * This class can run state-specific, multi-state, and state-averaged computations
+ * on small subset of the full orbital space (<30-40 orbitals).
  */
-class MSGodzilla {
+class ActiveSpaceSolver {
   public:
     // ==> Class Constructor and Destructor <==
     /**
@@ -72,13 +66,13 @@ class MSGodzilla {
      * @param mo_space_info a MOSpaceInfo object
      * @param as_ints integrals for active space
      */
-    MSGodzilla(const std::string& method,
-               std::vector<std::pair<StateInfo, std::vector<double>>>& state_weights_list,
-               std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<MOSpaceInfo> mo_space_info,
-               std::shared_ptr<ActiveSpaceIntegrals> as_ints,
-               std::shared_ptr<ForteOptions> options);
+    ActiveSpaceSolver(const std::string& method,
+                      std::vector<std::pair<StateInfo, std::vector<double>>>& state_weights_list,
+                      std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<MOSpaceInfo> mo_space_info,
+                      std::shared_ptr<ActiveSpaceIntegrals> as_ints,
+                      std::shared_ptr<ForteOptions> options);
 
-    //    // ==> Class Interface <==
+    // ==> Class Interface <==
 
     /// Compute the energy and return it
     double compute_energy();
@@ -96,68 +90,53 @@ class MSGodzilla {
     /// for the states of the same symmetry
     std::vector<std::pair<StateInfo, std::vector<double>>>& state_weights_list_;
 
-    //    StateInfo state_;
-
+    /// The information about a previous SCF computation
     std::shared_ptr<SCFInfo> scf_info_;
+
     /// The MOSpaceInfo object
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
 
+    /// The molecular integrals for the active space
+    /// This object holds only the integrals for the orbital contained in the
+    /// active_mo_vector.
+    /// The one-electron integrals and scalar energy contains contributions from the
+    /// doubly occupied orbitals specified by the core_mo_ vector.
     std::shared_ptr<ActiveSpaceIntegrals> as_ints_;
 
+    /// User-provided options
     std::shared_ptr<ForteOptions> options_;
 
-    std::vector<std::shared_ptr<ActiveSpaceMethod>> solvers_;
-
-    //    /// The molecular integrals for the active space
-    //    /// This object holds only the integrals for the orbital contained in the active_mo_
-    //    vector.
-    //    /// The one-electron integrals and scalar energy contains contributions from the
-    //    /// doubly occupied orbitals specified by the core_mo_ vector.
-    //    std::shared_ptr<ActiveSpaceIntegrals> as_ints_;
-
-    //    // ==> Base Class Handles [can be changed before running compute_energy()]  <==
-
-    //    /// The energy convergence criterion
-    //    double e_convergence_ = 1.0e-12;
-
-    //    /// The number of roots (default = 1)
-    //    int nroot_ = 1;
-
-    //    /// The root used to compute properties (zero based, default = 0)
-    //    int root_ = 0;
-
-    //    /// The maximum RDM computed (0 - 3)
-    //    int max_rdm_level_ = 1;
-
-    //    /// A variable to control printing information
-    //    int print_ = 0;
-
-    //    /// Eigenvalues
-    //    psi::SharedVector evals_;
-
-    //    /// Allocates an ActiveSpaceIntegrals object and fills it with integrals stored in ints_
-    //    void make_active_space_ints();
+    /// A vector of pointers to the ActiveSpaceMethod instantiated for each
+    /// of the state symmetries contained in state_weights_list_
+    std::vector<std::shared_ptr<ActiveSpaceMethod>> method_vec_;
 };
 
-///**
-// * @brief make_active_space_method Make an active space solver object
-// * @param type a string that specifies the type (e.g. "FCI", "ACI", ...)
-// * @param state information about the elecronic state
-// * @param scf_info information about a previous SCF computation
-// * @param mo_space_info orbital space information
-// * @param ints an integral object
-// * @param options user-provided options
-// * @return a shared pointer for the base class ActiveSpaceMethod
-// */
-// std::unique_ptr<ActiveSpaceMethod> make_active_space_method(
-//    const std::string& type, StateInfo state, std::shared_ptr<SCFInfo> scf_info,
-//    std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ForteIntegrals> ints,
-//    std::shared_ptr<ForteOptions> options);
+/**
+ * @brief Make an active space solver object.
+ * @param type a string that specifies the type (e.g. "FCI", "ACI", ...)
+ * @param state information about the elecronic state
+ * @param scf_info information about a previous SCF computation
+ * @param mo_space_info orbital space information
+ * @param ints an integral object
+ * @param options user-provided options
+ * @return a unique pointer for the base class ActiveSpaceMethod
+ */
+std::unique_ptr<ActiveSpaceSolver> make_active_space_solver(
+    const std::string& method,
+    std::vector<std::pair<StateInfo, std::vector<double>>>& state_weights_list,
+    std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<MOSpaceInfo> mo_space_info,
+    std::shared_ptr<ActiveSpaceIntegrals> as_ints, std::shared_ptr<ForteOptions> options);
 
+/**
+ * @brief Make a list of states and weights to pass to create an ActiveSpaceSolver object.
+ * @param options user-provided options
+ * @param wfn a psi wave function
+ * @return a unique pointer to an ActiveSpaceSolver object
+ */
 std::vector<std::pair<StateInfo, std::vector<double>>>
 make_state_weights_list(std::shared_ptr<ForteOptions> options,
                         std::shared_ptr<psi::Wavefunction> wfn);
 
 } // namespace forte
 
-#endif // _ms_active_space_solver_h_
+#endif // _active_space_solver_h_

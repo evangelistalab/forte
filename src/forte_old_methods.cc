@@ -46,7 +46,7 @@
 #include "base_classes/scf_info.h"
 #include "base_classes/mo_space_info.h"
 #include "base_classes/state_info.h"
-#include "base_classes/ms_active_space_solver.h"
+#include "base_classes/active_space_solver.h"
 
 #include "integrals/integrals.h"
 #include "integrals/active_space_integrals.h"
@@ -533,12 +533,14 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
             final_energy = three_dsrg_mrpt2->compute_energy();
 
             if (ref_relax || multi_state) {
+                // grab the effective Hamiltonian in the active space
                 auto fci_ints = three_dsrg_mrpt2->compute_Heff_actv();
+                // generate a list of states with their own weights
                 auto state_weights_list = make_state_weights_list(forte_options, ref_wfn);
-
-                auto ms_solver = MSGodzilla(cas_type, state_weights_list, scf_info, mo_space_info,
-                                            fci_ints, forte_options);
-                final_energy = ms_solver.compute_energy();
+                // make a solver and run it
+                auto solver = make_active_space_solver(cas_type, state_weights_list, scf_info,
+                                                       mo_space_info, fci_ints, forte_options);
+                final_energy = solver->compute_energy();
             }
         }
 

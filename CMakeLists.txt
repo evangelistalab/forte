@@ -63,7 +63,7 @@ add_compile_options(-Wall -Wextra -pedantic) # -Werror)
 # List of CC files
 add_psi4_plugin(forte
 src/base_classes/active_space_method.cc
-src/base_classes/ms_active_space_solver.cc
+src/base_classes/active_space_solver.cc
 src/orbital-helpers/avas.cc
 src/casscf/casscf.cc
 src/cc/cc.cc

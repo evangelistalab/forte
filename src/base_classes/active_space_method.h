@@ -49,11 +49,30 @@ class SCFInfo;
  *
  * This class is the base class for methods that solve for the wavefunction in a
  * small subset of the full orbital space (<30-40 orbitals).
- * This class is responsible for creating and storing the integrals used by
- * active space solvers, which are held by an ActiveSpaceIntegrals object.
+ * The molecular orbital used by the active space methods are stored in a ActiveSpaceIntegrals
+ * and must be passed at the time of creation.
  *
- * @note By default, this class assumes that the active orbitals are stored in the MOSpaceInfo
- * object in the space labeled "ACTIVE". Orbitals in the space "RESTRICTED_DOCC"
+ * All methods that derive from this class offer the following interface
+ *
+ * - Compute the energy
+ *    double compute_energy();
+ *
+ * - Compute a reference object
+ *    Reference get_reference();
+ *
+ * - Set the options for the derived methods
+ *    set_options(std::shared_ptr<ForteOptions> options);
+ *
+ * All methods must also use the following base class variables
+ *
+ * - Information about the state
+ *    StateInfo state_;
+ *
+ * - Number of states computed
+ *    size_t nroot_;
+ *
+ * @note This class is not aware of which orbitals are considered active. This information
+ * is contained in the ActiveSpaceIntegrals object. Orbitals that are double occupied
  * are not correlated and are trated via effective scalar and one-body interactions.
  */
 class ActiveSpaceMethod {
