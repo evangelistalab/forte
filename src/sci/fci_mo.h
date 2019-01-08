@@ -68,7 +68,6 @@ void set_FCI_MO_options(ForteOptions& foptions);
 class FCI_MO : public ActiveSpaceSolver {
 
   public:
-
     /**
      * @brief FCI_MO Constructor
      * @param ref_wfn The reference wavefunction object
@@ -77,10 +76,10 @@ class FCI_MO : public ActiveSpaceSolver {
      * @param mo_space_info MOSpaceInfo
      * @param fci_ints FCIInegrals
      */
-    FCI_MO(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
-           std::shared_ptr<ForteOptions> options, std::shared_ptr<MOSpaceInfo> mo_space_info,
-           std::shared_ptr<ActiveSpaceIntegrals> as_ints);
-
+    [[deprecated("Using a deprecated constructor that does not take state and nroot")]] FCI_MO(
+        StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
+        std::shared_ptr<ForteOptions> options, std::shared_ptr<MOSpaceInfo> mo_space_info,
+        std::shared_ptr<ActiveSpaceIntegrals> as_ints);
 
     /**
      * @brief FCI_MO Constructor
@@ -89,8 +88,9 @@ class FCI_MO : public ActiveSpaceSolver {
      * @param ints ForteInegrals
      * @param mo_space_info MOSpaceInfo
      */
-    FCI_MO(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
-           std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
+    [[deprecated("Using a deprecated constructor that does not take state and nroot")]] FCI_MO(
+        std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
+        std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /**
      * @brief FCI_MO Constructor
