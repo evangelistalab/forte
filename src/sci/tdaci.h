@@ -41,13 +41,14 @@
 #include "ci_rdm/ci_rdms.h"
 #include "sparse_ci/ci_reference.h"
 #include "fci/fci_integrals.h"
-#include "orbital-helpers/unpaired_density.h"
-#include "sparse_ci/determinant_hashvector.h"
 #include "base_classes/reference.h"
 #include "sparse_ci/sparse_ci_solver.h"
 #include "sparse_ci/determinant.h"
+#include "sparse_ci/determinant_hashvector.h"
 #include "orbital-helpers/iao_builder.h"
 #include "orbital-helpers/localize.h"
+
+#include "sparse_ci/operator.h"
 #include "sci/aci.h"
 
 #ifdef _OPENMP
@@ -115,12 +116,15 @@ class TDACI : public psi::Wavefunction {
     void propogate_QCN( psi::SharedVector C0, psi::SharedMatrix H);
     void propogate_lanczos( psi::SharedVector C0, psi::SharedMatrix H);
 
-    void compute_tdaci_select(psi::SharedVector C0, psi::SharedMatrix H);
+    void compute_tdaci_select(psi::SharedVector C0);
     
     void propagate_exact_select( std::vector<double>& PQ_coeffs_r,std::vector<double>& PQ_coeffs_i, 
                                                             DeterminantHashVec& PQ_space, double dt);
 
     void propagate_RK4_select(std::vector<double>& PQ_coeffs_r,std::vector<double>& PQ_coeffs_i, 
+                                                             DeterminantHashVec& PQ_space, double dt); 
+
+    void propagate_RK4_select_list(std::vector<double>& PQ_coeffs_r,std::vector<double>& PQ_coeffs_i, 
                                                              DeterminantHashVec& PQ_space, double dt); 
     // The core state determinant space
     DeterminantHashVec core_dets_;
@@ -133,6 +137,10 @@ class TDACI : public psi::Wavefunction {
 
     void update_P_space(DeterminantHashVec& P_space, std::vector<double>& P_coeffs_r, std::vector<double>& P_coeffs_i,
                         DeterminantHashVec& PQ_space, std::vector<double>& PQ_coeffs_r, std::vector<double>& PQ_coeffs_i);
+
+    // Compute Hc using coupling lists
+    void complex_sigma_build( std::vector<double>& sigma_r, std::vector<double>& sigma_i,std::vector<double>& c_r, std::vector<double>& c_i,DeterminantHashVec& dethash, WFNOperator& op);
+
 };
 
 } // namespace forte
