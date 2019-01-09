@@ -31,7 +31,7 @@ set forte {
   job_type aci
   aci_SELECT_TYPE aimed_energy
   sigma 0.001000
-  aci_nroot 1
+  nroot 1
   charge 0
   diag_algorithm sparse
   active_guess_size 300

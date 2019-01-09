@@ -28,7 +28,7 @@ set forte {
   frozen_docc [1,0,0,0,0,1,0,0]
   sigma 0.05
   charge 0
-  aci_nroot 2
+  nroot 2
   aci_n_average 2
   ACI_INITIAL_SPACE CIS
   aci_excited_algorithm average

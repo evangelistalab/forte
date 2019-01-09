@@ -39,7 +39,6 @@ set forte{
    active                  [2,0,0,0]
    root_sym                0
    nroot                   1
-   aci_nroot               1
    ms                      0.0
    multiplicity            1
    cas_type                ACI

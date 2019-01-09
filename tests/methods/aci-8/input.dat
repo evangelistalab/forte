@@ -34,7 +34,7 @@ set forte {
   aci_enforce_spin_complete false
   gamma  8.0
   sigma 0.000500
-  aci_nroot 1
+  nroot 1
   charge 0
   diag_algorithm full
 }

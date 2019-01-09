@@ -278,6 +278,10 @@ void AdaptiveCI::startup() {
         root_spin_vec_.push_back(std::make_pair(S, S2));
     }
 
+
+    // TODO: This shouldn't come from options
+    root_ = options_->get_int("ROOT");
+
     // get options for algorithm
     perturb_select_ = options_->get_bool("ACI_PERTURB_SELECT");
     pq_function_ = options_->get_str("ACI_PQ_FUNCTION");
@@ -672,6 +676,10 @@ double AdaptiveCI::compute_energy() {
 
     outfile->Printf("\n\n  %s: %f s", "Adaptive-CI ran in ", aci_elapse.get());
     outfile->Printf("\n\n  %s: %d", "Saving information for root", root_);
+    
+    // Set active space method evals
+    evals_.reset(new Vector("e", nroot_));
+    evals_->copy(PQ_evals->clone());
     return PQ_evals->get(root_) + nuclear_repulsion_energy_ +
            as_ints_->scalar_energy();
 }
@@ -749,7 +757,7 @@ void AdaptiveCI::print_final(DeterminantHashVec& dets, psi::SharedMatrix& PQ_eve
     outfile->Printf("\n\n  ==> ACI Summary <==\n");
 
     outfile->Printf("\n  Iterations required:                         %zu", cycle_);
-    outfile->Printf("\n  psi::Dimension of optimized determinant space:    %zu\n", dim);
+    outfile->Printf("\n  Dimension of optimized determinant space:    %zu\n", dim);
 
     for (int i = 0; i < nroot_; ++i) {
         double abs_energy =
@@ -825,7 +833,7 @@ void AdaptiveCI::find_q_space_batched(DeterminantHashVec& P_space, DeterminantHa
     PQ_space.swap(P_space);
 
     if (!quiet_mode_) {
-        outfile->Printf("\n  %s: %zu determinants", "psi::Dimension of the truncated SD space",
+        outfile->Printf("\n  %s: %zu determinants", "Dimension of the truncated SD space",
                         F_space.size());
         outfile->Printf("\n  %s: %f s\n", "Time spent building the external space (default)",
                         build.get());
@@ -873,7 +881,7 @@ void AdaptiveCI::find_q_space_batched(DeterminantHashVec& P_space, DeterminantHa
     multistate_pt2_energy_correction_[0] = ept2;
 
     if (!quiet_mode_) {
-        outfile->Printf("\n  %s: %zu determinants", "psi::Dimension of the P + Q space",
+        outfile->Printf("\n  %s: %zu determinants", "Dimension of the P + Q space",
                         PQ_space.size());
         outfile->Printf("\n  %s: %f s", "Time spent screening the model space", screen.get());
     }
@@ -900,7 +908,7 @@ void AdaptiveCI::default_find_q_space(DeterminantHashVec& P_space, DeterminantHa
     outfile->Printf("\n  Time spent preparing PQ_space: %1.6f", erase.get());
 
     if (!quiet_mode_) {
-        outfile->Printf("\n  %s: %zu determinants", "psi::Dimension of the SD space",
+        outfile->Printf("\n  %s: %zu determinants", "Dimension of the SD space",
                         V_hash.size());
         outfile->Printf("\n  %s: %f s\n", "Time spent building the external space (default)",
                         build.get());
@@ -973,7 +981,7 @@ void AdaptiveCI::default_find_q_space(DeterminantHashVec& P_space, DeterminantHa
     multistate_pt2_energy_correction_[0] = ept2;
 
     if (!quiet_mode_) {
-        outfile->Printf("\n  %s: %zu determinants", "psi::Dimension of the P + Q space",
+        outfile->Printf("\n  %s: %zu determinants", "Dimension of the P + Q space",
                         PQ_space.size());
         outfile->Printf("\n  %s: %f s", "Time spent screening the model space", screen.get());
     }
@@ -995,7 +1003,7 @@ void AdaptiveCI::find_q_space(DeterminantHashVec& P_space, DeterminantHashVec& P
     }
 
     if (!quiet_mode_) {
-        outfile->Printf("\n  %s: %zu determinants", "psi::Dimension of the SD space",
+        outfile->Printf("\n  %s: %zu determinants", "Dimension of the SD space",
                         V_hash.size());
         outfile->Printf("\n  %s: %f s\n", "Time spent building the external space",
                         t_ms_build.get());
@@ -1134,7 +1142,7 @@ void AdaptiveCI::find_q_space(DeterminantHashVec& P_space, DeterminantHashVec& P
     multistate_pt2_energy_correction_ = ept2;
 
     if (!quiet_mode_) {
-        outfile->Printf("\n  %s: %zu determinants", "psi::Dimension of the P + Q space",
+        outfile->Printf("\n  %s: %zu determinants", "Dimension of the P + Q space",
                         PQ_space.size());
         outfile->Printf("\n  %s: %f s", "Time spent screening the model space", t_ms_screen.get());
     }
@@ -1189,6 +1197,7 @@ double AdaptiveCI::root_select(int nroot, std::vector<double>& C1, std::vector<d
     double select_value;
 
     if (ref_root_ + 1 > nroot_) {
+        outfile->Printf("\n  nroot: %d, ref_roof: %d", nroot_, ref_root_);
         throw psi::PSIEXCEPTION("\n  Your selection is not valid. Check ROOT in options.");
     }
     int root = ref_root_;
@@ -1802,10 +1811,11 @@ void AdaptiveCI::compute_aci(DeterminantHashVec& PQ_space, psi::SharedMatrix& PQ
         print_refs = options_->get_bool("ACI_PRINT_REFS");
     }
 
+    size_t nroot_master = nroot_;
     if ((options_->get_str("ACI_EXCITED_ALGORITHM") == "ROOT_ORTHOGONALIZE" or
          options_->get_str("ACI_EXCITED_ALGORITHM") == "MULTISTATE" or
          options_->get_str("ACI_EXCITED_ALGORITHM") == "ROOT_COMBINE") and
-        root_ == 0 and !multi_root) {
+        (ref_root_ == 0) and !multi_root) {
         nroot_ = 1;
     }
 
@@ -2128,6 +2138,9 @@ void AdaptiveCI::compute_aci(DeterminantHashVec& PQ_space, psi::SharedMatrix& PQ
         ex_alg_ = options_->get_str("ACI_EXCITED_ALGORITHM");
     } // end iterations
 
+    // Reset nroot to original value if changed
+    nroot_ = nroot_master;
+    
     // if (det_save_)
     //     det_list_.close();
 }

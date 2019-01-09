@@ -37,7 +37,7 @@ set forte {
   frozen_docc [1,0,0,0,0,1,0,0]
   root_sym 0
   sigma 0.01
-  aci_nroot 1
+  nroot 1
   charge 0
   aci_enforce_spin_complete true
   aci_prescreen_threshold 0.0

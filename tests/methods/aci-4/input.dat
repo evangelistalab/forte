@@ -36,8 +36,8 @@ set forte {
   aci_n_average 2
   aci_average_offset 1
   sigma 0.01
-  aci_nroot 3
-  aci_root 1 
+  nroot 3
+  root 1 
   charge 0
  # aci_initial_space cis
   aci_enforce_spin_complete true
