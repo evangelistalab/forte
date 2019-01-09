@@ -83,7 +83,7 @@ Reference ActiveSpaceSolver::get_reference() {
     Reference ref;
 
     if( method_vec_.size() == 1 ){
-        ref =  method_vec_[0].get_reference();
+        ref =  method_vec_[0]->get_reference();
     } else {
     // TODO: Implement SA procedure
         for( auto& method : method_vec_ ){
