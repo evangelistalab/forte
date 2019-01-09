@@ -17,9 +17,9 @@ matrix:
         - gfortran
         - g++-4.9
     env:
-      - CXX_COMPILER='clang++'
       - PYTHON_VER='3.6'
-      - C_COMPILER='clang'
+      - CXX_COMPILER='${HOME}/miniconda/envs/p4env/bin/clang++'
+      - C_COMPILER='${HOME}/miniconda/envs/p4env/bin/clang'
       - Fortran_COMPILER='gfortran'
       - BUILD_TYPE='Debug'
       - NAME='clang'
@@ -40,9 +40,9 @@ matrix:
         - gfortran
         - g++-4.9
     env:
-      - CXX_COMPILER='clang++'
       - PYTHON_VER='3.6'
-      - C_COMPILER='clang'
+      - CXX_COMPILER='${HOME}/miniconda/envs/p4env/bin/clang++'
+      - C_COMPILER='${HOME}/miniconda/envs/p4env/bin/clang'
       - Fortran_COMPILER='gfortran'
       - BUILD_TYPE='Debug'
       - NAME='clang'
@@ -67,7 +67,7 @@ install:
 - pip install pyyaml
 #- python -c 'import numpy; print(numpy.version.version)'
 - cd ${TRAVIS_BUILD_DIR}
-- export CXX=$${HOME}/miniconda/envs/p4env/bin/clang++
+- export CXX=${HOME}/miniconda/envs/p4env/bin/clang++
 - export CC=${HOME}/miniconda/envs/p4env/bin/clang
 - export FC=${Fortran_COMPILER}
 - export CTEST_OUTPUT_ON_FAILURE=1
