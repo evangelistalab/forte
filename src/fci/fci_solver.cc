@@ -126,9 +126,6 @@ double FCISolver::compute_energy() {
     local_timer t;
     startup();
 
-    double nuclear_repulsion_energy =
-        psi::Process::environment.molecule()->nuclear_repulsion_energy({{0, 0, 0}});
-
     FCIVector::allocate_temp_space(lists_, print_);
 
     FCIVector Hdiag(lists_, symmetry_);
@@ -222,7 +219,7 @@ double FCISolver::compute_energy() {
         if (converged != SolverStatus::Collapse) {
             double avg_energy = 0.0;
             for (size_t r = 0; r < nroot_; ++r) {
-                avg_energy += dls.eigenvalues()->get(r) + nuclear_repulsion_energy;
+                avg_energy += dls.eigenvalues()->get(r);
             }
             avg_energy /= static_cast<double>(nroot_);
             if (print_) {
@@ -255,6 +252,10 @@ double FCISolver::compute_energy() {
 
     // Copy eigen values and eigen vectors
     evals_ = dls.eigenvalues();
+    energies_ = std::vector<double>(nroot_, 0.0);
+    for (size_t r = 0; r < nroot_; r++) {
+        energies_[r] = evals_->get(r);
+    }
     eigen_vecs_ = dls.eigenvectors();
 
     // Print determinants
@@ -299,7 +300,7 @@ double FCISolver::compute_energy() {
                 outfile->Printf("%15.8f", ci);
             }
 
-            double root_energy = dls.eigenvalues()->get(r) + nuclear_repulsion_energy;
+            double root_energy = dls.eigenvalues()->get(r);
 
             outfile->Printf("\n\n    Total Energy: %25.15f", root_energy);
         }
@@ -328,7 +329,7 @@ double FCISolver::compute_energy() {
     //        C_->print_natural_orbitals(mo_space_info_);
     //    }
 
-    energy_ = dls.eigenvalues()->get(root_) + nuclear_repulsion_energy;
+    energy_ = dls.eigenvalues()->get(root_);
     psi::Process::environment.globals["CURRENT ENERGY"] = energy_;
     psi::Process::environment.globals["FCI ENERGY"] = energy_;
 

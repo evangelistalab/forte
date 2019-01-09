@@ -54,6 +54,8 @@ void ActiveSpaceMethod::set_active_space_integrals(std::shared_ptr<ActiveSpaceIn
 
 psi::SharedVector ActiveSpaceMethod::evals() { return evals_; }
 
+const std::vector<double>& ActiveSpaceMethod::energies() const { return energies_; }
+
 void ActiveSpaceMethod::set_e_convergence(double value) { e_convergence_ = value; }
 
 void ActiveSpaceMethod::set_root(int value) { root_ = value; }

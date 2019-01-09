@@ -71,6 +71,9 @@ class SCFInfo;
  * - Number of states computed
  *    size_t nroot_;
  *
+ * - Store final energies in the vector (including nuclear repulsion):
+ *    std::vector<double> energies_;
+ *
  * @note This class is not aware of which orbitals are considered active. This information
  * is contained in the ActiveSpaceIntegrals object. Orbitals that are double occupied
  * are not correlated and are trated via effective scalar and one-body interactions.
@@ -114,6 +117,9 @@ class ActiveSpaceMethod {
 
     /// Return the eigenvalues
     psi::SharedVector evals();
+
+    /// Return a vector with the energies of all the states
+    const std::vector<double>& energies() const;
 
     // ==> Base Class Handles Set Functions <==
 
@@ -171,6 +177,9 @@ class ActiveSpaceMethod {
 
     /// Eigenvalues
     psi::SharedVector evals_;
+
+    /// The energies (including nuclear repulsion) of all the states
+    std::vector<double> energies_;
 
     /// Allocates an ActiveSpaceIntegrals object and fills it with integrals stored in ints_
     void make_active_space_ints();

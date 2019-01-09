@@ -118,8 +118,6 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
     int nentry = eigens_.size();
     std::vector<std::vector<double>> Edsrg_sa(nentry, std::vector<double>());
 
-    size_t nroot = foptions_->get_int("NROOT");
-
     // call FCI_MO if SA_FULL and CAS_TYPE == CAS
     if (multi_state_algorithm_ == "SA_FULL" && foptions_->get_str("CAS_TYPE") == "CAS") {
         FCI_MO fci_mo(scf_info_, foptions_, ints_, mo_space_info_, fci_ints);

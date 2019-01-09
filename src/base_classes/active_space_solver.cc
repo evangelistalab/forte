@@ -63,13 +63,13 @@ double ActiveSpaceSolver::compute_energy() {
         std::shared_ptr<ActiveSpaceMethod> method = make_active_space_method2(
             method_, state, nroot, scf_info_, mo_space_info_, as_ints_, options_);
         method->compute_energy();
-        auto evals = method->evals();
+        auto energies = method->energies();
         for (size_t r = 0; r < nroot; r++) {
-            energy += evals->get(r) * weights[r];
+            energy += energies[r] * weights[r];
         }
         method_vec_.push_back(method);
     }
-    return energy + as_ints_->ints()->nuclear_repulsion_energy();
+    return energy;
 }
 
 void ActiveSpaceSolver::print_options() {

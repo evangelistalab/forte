@@ -85,7 +85,8 @@ void FCIVector::Hamiltonian(FCIVector& result, std::shared_ptr<ActiveSpaceIntegr
  * Apply the scalar part of the Hamiltonian to the wave function
  */
 void FCIVector::H0(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_ints) {
-    double core_energy = fci_ints->scalar_energy() + fci_ints->frozen_core_energy();
+    double core_energy = fci_ints->scalar_energy() + fci_ints->frozen_core_energy() +
+                         fci_ints->nuclear_repulsion_energy();
     for (int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym) {
         result.C_[alfa_sym]->copy(C_[alfa_sym]);
         result.C_[alfa_sym]->scale(core_energy);
