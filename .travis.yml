@@ -55,13 +55,12 @@ install:
 - conda info -a
 - conda create -q -n p4env python=$PYTHON_VER numpy cmake gdma pylibefp libint libxc gau2grid boost -c psi4/label/test -c psi4
 - source activate p4env
-#- conda list
 - conda install pint pylibefp -c psi4/label/dev
+- conda install -c intel mkl-devel 
 - python -V
 - pyenv global system 3.6
 - pip install deepdiff
 - pip install pyyaml
-#- python -c 'import numpy; print(numpy.version.version)'
 - cd ${TRAVIS_BUILD_DIR}
 - export CXX=clang++
 - export CC=clang
