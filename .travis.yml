@@ -99,6 +99,8 @@ install:
     -DENABLE_PLUGIN_TESTING=ON
     -DCMAKE_INSTALL_PREFIX=${HOME}/build/psi4-bin
     -DOpenMP_CXX_FLAG="-fopenmp=libiomp5"
+    -DLAPACK_LIBRARIES="${HOME}/miniconda/envs/p4env/lib/libmkl_rt.dylib;${HOME}/miniconda/envs/p4env/lib/libiomp5.dylib"
+    -DLAPACK_INCLUDE_DIRS="${HOME}/miniconda/envs/p4env/include"
 - cd build
 - echo "Starting compilation of Psi4"
 - make -j2 -s
