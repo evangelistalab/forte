@@ -303,6 +303,9 @@ def run_forte(name, **kwargs):
     # Print the banner
     forte.banner()
 
+    # Create the fragment(embedding) projector (not done!)
+    #ps = forte.make_fragment_projector(ref_wfn, options)
+
     # Create the MOSpaceInfo object
     mo_space_info = forte.make_mo_space_info(ref_wfn, forte.forte_options)
 
