@@ -7,6 +7,7 @@ matrix:
     addons: &1
       apt:
         sources:
+        - llvm-toolchain-trusty-4.0
         - ubuntu-toolchain-r-test
         - george-edison55-precise-backports
         packages:
@@ -27,6 +28,7 @@ matrix:
     addons: &1
       apt:
         sources:
+        - llvm-toolchain-trusty-4.0
         - ubuntu-toolchain-r-test
         - george-edison55-precise-backports
         packages:
