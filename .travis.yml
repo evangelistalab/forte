@@ -86,8 +86,8 @@ install:
 - cd psi4
 - >
     cmake -Bbuild -H.
-    -DCMAKE_CXX_COMPILER=${HOME}/miniconda/envs/p4env/bin/clang++
-    -DCMAKE_C_COMPILER=${HOME}/miniconda/envs/p4env/bin/clang
+    -DCMAKE_CXX_COMPILER=${CXX_COMPILER}
+    -DCMAKE_C_COMPILER=${C_COMPILER}
     -DCMAKE_BUILD_TYPE=${BUILD_TYPE}
     -DCMAKE_PREFIX_PATH=${HOME}/miniconda/envs/p4env
     -DPYTHON_EXECUTABLE=${HOME}/miniconda/envs/p4env/bin/python
