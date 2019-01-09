@@ -28,7 +28,6 @@ set forte {
   restricted_docc [0,0,0,0]
   root_sym 2
   multiplicity 3
-#  aci_initial_space cis
   ms 0.0
   active_guess_size 4
 }

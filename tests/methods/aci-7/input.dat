@@ -36,7 +36,7 @@ set forte {
   sigma 0.08
   aci_excited_algorithm average
   aci_pq_function average
-  aci_nroot 3
+  nroot 3
   mp2_nos true
   aci_average_offset 0
   charge 0

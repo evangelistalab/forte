@@ -154,29 +154,35 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
     }
     if (options.get_str("JOB_TYPE") == "ACI") {
         auto as_ints = make_active_space_ints(mo_space_info, ints, "ACTIVE", {{"RESTRICTED_DOCC"}});
-        auto aci = std::make_shared<AdaptiveCI>(state, nroot, std::make_shared<SCFInfo>(ref_wfn),
-                                                forte_options, mo_space_info, as_ints);
-        final_energy = aci->compute_energy();
-        if (options.get_bool("ACI_NO")) {
-            aci->compute_nos();
-        }
-        if (options.get_bool("ACI_ADD_EXTERNAL_EXCITATIONS")) {
-            DeterminantHashVec wfn = aci->get_wavefunction();
-            aci->upcast_reference(wfn);
-            aci->add_external_excitations(wfn);
-        }
-        if (options.get_bool("UNPAIRED_DENSITY")) {
-            psi::SharedMatrix Ua;
-            psi::SharedMatrix Ub;
+        auto state_weights_list = make_state_weights_list(forte_options, ref_wfn);
+        auto solver = make_active_space_solver("ACI", state_weights_list, scf_info,
+                                               mo_space_info, as_ints, forte_options);
+       // auto aci = std::make_shared<AdaptiveCI>(state, nroot, std::make_shared<SCFInfo>(ref_wfn),
+       //                                         forte_options, mo_space_info, as_ints);
+        final_energy = solver->compute_energy();
 
-            Ua = ref_wfn->Ca()->clone();
-            Ub = ref_wfn->Ca()->clone();
 
-            Ua->identity();
-            Ub->identity();
+        // TODO: re-enable this code from active space solver
+        //if (options.get_bool("ACI_NO")) {
+        //    aci->compute_nos();
+        //}
+        //if (options.get_bool("ACI_ADD_EXTERNAL_EXCITATIONS")) {
+        //    DeterminantHashVec wfn = aci->get_wavefunction();
+        //    aci->upcast_reference(wfn);
+        //    aci->add_external_excitations(wfn);
+        //}
+        //if (options.get_bool("UNPAIRED_DENSITY")) {
+        //    psi::SharedMatrix Ua;
+        //    psi::SharedMatrix Ub;
 
-            aci->unpaired_density(Ua, Ub);
-        }
+        //    Ua = ref_wfn->Ca()->clone();
+        //    Ub = ref_wfn->Ca()->clone();
+
+        //    Ua->identity();
+        //    Ub->identity();
+
+        //    aci->unpaired_density(Ua, Ub);
+        //}
     }
     if (options.get_str("JOB_TYPE") == "PCI") {
         auto pci = std::make_shared<ProjectorCI>(state, std::make_shared<SCFInfo>(ref_wfn),

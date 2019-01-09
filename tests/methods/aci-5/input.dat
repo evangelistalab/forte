@@ -31,11 +31,11 @@ set forte {
   aci_perturb_select false
   aci_excited_algorithm state_average
   aci_pq_function average
-  aci_root 0
+  root 0
   root_sym 0
   gamma 0.1
   sigma 0.005
-  aci_nroot 2
+  nroot 2
   charge 0
   aci_enforce_spin_complete false
   active_guess_size 56

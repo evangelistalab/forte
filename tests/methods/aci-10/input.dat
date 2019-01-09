@@ -41,7 +41,7 @@ set forte {
   restricted_docc	  [3,2,0,0,0,0,2,3]
   active                 [1,0,1,2,1,2,1,0]
   root_sym               0
-  aci_nroot                  1
+  nroot                  1
   job_type               aci
   sigma	                  0.001
   aci_select_type            aimed_energy	 
