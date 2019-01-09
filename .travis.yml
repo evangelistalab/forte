@@ -16,8 +16,8 @@ matrix:
         - g++-4.9
     env:
       - PYTHON_VER='3.6'
-      - CXX_COMPILER='${HOME}/miniconda/envs/p4env/bin/clang++'
-      - C_COMPILER='${HOME}/miniconda/envs/p4env/bin/clang'
+      - CXX_COMPILER=clang++
+      - C_COMPILER=clang
       - Fortran_COMPILER='gfortran'
       - BUILD_TYPE='Debug'
       - NAME='clang'
@@ -36,8 +36,8 @@ matrix:
         - g++-4.9
     env:
       - PYTHON_VER='3.6'
-      - CXX_COMPILER='${HOME}/miniconda/envs/p4env/bin/clang++'
-      - C_COMPILER='${HOME}/miniconda/envs/p4env/bin/clang'
+      - CXX_COMPILER=clang++
+      - C_COMPILER=clang
       - Fortran_COMPILER='gfortran'
       - BUILD_TYPE='Debug'
       - NAME='clang'
