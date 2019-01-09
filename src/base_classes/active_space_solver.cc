@@ -64,7 +64,10 @@ double ActiveSpaceSolver::compute_energy() {
         std::shared_ptr<ActiveSpaceMethod> method = make_active_space_method2(
             method_, state, nroot, scf_info_, mo_space_info_, as_ints_, options_);
 
-        method->set_max_rdm_level(max_rdm_level_);
+        method->set_options(options_);
+        if( set_rdm_ ){
+            method->set_max_rdm_level(max_rdm_level_);
+        }
         method->compute_energy();
         auto energies = method->energies();
         for (size_t r = 0; r < nroot; r++) {
@@ -79,15 +82,20 @@ Reference ActiveSpaceSolver::get_reference() {
 
     Reference ref;
 
+    if( method_vec_.size() == 1 ){
+        ref =  method_vec_[0].get_reference();
+    } else {
     // TODO: Implement SA procedure
-    for( auto& method : method_vec_ ){
-        ref = method->get_reference();
+        for( auto& method : method_vec_ ){
+            ref = method->get_reference();
+        }
     }
     return ref;
 }
 
 void ActiveSpaceSolver::set_max_rdm_level( size_t level ){
     max_rdm_level_ = level;
+    set_rdm_ = true;
 }
 
 void ActiveSpaceSolver::print_options() {

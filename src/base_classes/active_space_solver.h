@@ -118,6 +118,9 @@ class ActiveSpaceSolver {
 
     /// The maximum order RDM/cumulant to use for all ActiveSpaceMethod objects initialized
     size_t max_rdm_level_ = 1;
+
+    /// Controls which defaulr rdm level to use
+    bool set_rdm_ = false; // TODO: remove this hack
 };
 
 /**
