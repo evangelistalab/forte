@@ -41,7 +41,6 @@ using namespace psi;
 
 namespace forte {
 
-
 bool pairComp(const std::pair<double, Determinant> E1, const std::pair<double, Determinant> E2) {
     return E1.first < E2.first;
 }
@@ -227,17 +226,6 @@ void AdaptiveCI::print_info() {
         outfile->Printf("\n    %-40s %s", str_dim.first.c_str(), str_dim.second.c_str());
     }
     outfile->Printf("\n  %s", std::string(65, '-').c_str());
-
-    if (options_->get_bool("PRINT_1BODY_EVALS")) {
-        outfile->Printf("\n  Reference orbital energies:");
-        std::shared_ptr<Vector> epsilon_a = scf_info_->epsilon_a();
-
-        auto actmo = mo_space_info_->get_absolute_mo("ACTIVE");
-
-        for (int n = 0, maxn = actmo.size(); n < maxn; ++n) {
-            outfile->Printf("\n   %da: %1.6f ", n, epsilon_a->get(actmo[n]));
-        }
-    }
 }
 
 double AdaptiveCI::compute_energy() {
@@ -435,15 +423,34 @@ double AdaptiveCI::compute_energy() {
     // }
 
     //** Compute the RDMs **//
-    //   double list_time = 0.0;
-    //   if ((options_->get_int("ACI_MAX_RDM") >= 3 or (max_rdm_level_ >= 3)) and
-    //       !(options_->get_bool("ACI_DIRECT_RDMS"))) {
-    //       outfile->Printf("\n  Computing 3-list...    ");
-    //       local_timer l3;
-    //       op_.three_s_lists(final_wfn_);
-    //       outfile->Printf(" done (%1.5f s)", l3.get());
-    //       list_time += l3.get();
-    //   }
+    double list_time = 0.0;
+    if ((max_rdm_level_ >= 3) and
+        !(options_->get_bool("ACI_DIRECT_RDMS"))) {
+        outfile->Printf("\n  Computing 3-list...    ");
+        local_timer l3;
+        op_.three_s_lists(final_wfn_);
+        outfile->Printf(" done (%1.5f s)", l3.get());
+        list_time += l3.get();
+    }
+
+    psi::SharedMatrix new_evecs;
+    if (ex_alg_ == "ROOT_COMBINE") {
+        compute_rdms(as_ints_, full_space, op_c, PQ_evecs, 0, 0);
+    } else if (approx_rdm_) {
+        outfile->Printf("\n  Approximating RDMs");
+        DeterminantHashVec approx = approximate_wfn(final_wfn_, PQ_evecs, PQ_evals, new_evecs);
+        //    WFNOperator op1(mo_space_info_);
+        //    op1.op_lists(approx);
+        if (!(options_->get_bool("ACI_DIRECT_RDMS"))) {
+            op_.clear_op_lists();
+            op_.clear_tp_lists();
+            op_.build_strings(approx);
+            op_.op_lists(approx);
+        }
+        outfile->Printf("\n  Size of approx: %zu  size of var: %zu", approx.size(),
+                        final_wfn_.size());
+        compute_rdms(as_ints_, approx, op_, new_evecs, 0, 0);
+>>>>>>> ACI uses base class root, nroot, mult, ms
 
     //  psi::SharedMatrix new_evecs;
     //  if (ex_alg_ == "ROOT_COMBINE") {
