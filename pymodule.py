@@ -38,7 +38,7 @@ def forte_driver(state, scf_info, options, ints, mo_space_info):
     # Create an active space solver object
     as_solver_type = options.get_str('ACTIVE_SPACE_SOLVER')
     nroot = options.get_int("NROOT")
-    as_solver = forte.make_active_space_solver(as_solver_type,state,nroot,scf_info,mo_space_info,ints,options)
+    as_solver = forte.make_active_space_method(as_solver_type,state,nroot,scf_info,mo_space_info,ints,options)
     energy = as_solver.compute_energy()
 #    reference = solver.reference()
 
