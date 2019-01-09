@@ -59,12 +59,6 @@ void set_ACI_options(ForteOptions& foptions) {
     foptions.add_str("ACI_PQ_FUNCTION", "AVERAGE", "Function for SA-ACI");
     /* Method to calculate excited state */
     foptions.add_str("ACI_EXCITED_ALGORITHM", "ROOT_ORTHOGONALIZE", "The excited state algorithm");
-    /*Number of roots to compute*/
-    foptions.add_int("ACI_NROOT", 1, "Number of roots for ACI computation");
-    /*Roots to compute*/
-    foptions.add_int("ACI_ROOT", 0, "Root for single-state computations");
-    /*- Compute 1-RDM? -*/
-    foptions.add_int("ACI_MAX_RDM", 1, "Order of RDM to compute");
     /*- Type of spin projection
      * 0 - None
      * 1 - Project initial P spaces at each iteration
@@ -209,11 +203,12 @@ AdaptiveCI::AdaptiveCI(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> s
                        std::shared_ptr<ForteOptions> options,
                        std::shared_ptr<MOSpaceInfo> mo_space_info,
                        std::shared_ptr<ActiveSpaceIntegrals> as_ints)
-    : ActiveSpaceMethod(state, nroot, mo_space_info, as_ints), scf_info_(scf_info),
+    : ActiveSpaceMethod(state, nroot, mo_space_info, as_ints),  scf_info_(scf_info),
       options_(options) {
     mo_symmetry_ = mo_space_info_->symmetry("ACTIVE");
     sigma_ = options_->get_double("SIGMA");
     nuclear_repulsion_energy_ = as_ints->ints()->nuclear_repulsion_energy();
+    nroot_ = nroot;
 }
 
 void AdaptiveCI::set_fci_ints(std::shared_ptr<ActiveSpaceIntegrals> fci_ints) {
@@ -223,7 +218,6 @@ void AdaptiveCI::set_fci_ints(std::shared_ptr<ActiveSpaceIntegrals> fci_ints) {
 }
 
 void AdaptiveCI::startup() {
-    outfile->Printf("\n  max rdm = %d", max_rdm_level_);
     quiet_mode_ = false;
     if (options_->has_changed("ACI_QUIET_MODE")) {
         quiet_mode_ = options_->get_bool("ACI_QUIET_MODE");
@@ -235,18 +229,8 @@ void AdaptiveCI::startup() {
 
     op_.initialize(mo_symmetry_, as_ints_);
 
-    wavefunction_symmetry_ = 0;
-    if (options_->has_changed("ROOT_SYM")) {
-        wavefunction_symmetry_ = options_->get_int("ROOT_SYM");
-    }
-    multiplicity_ = 1;
-    if (options_->has_changed("MULTIPLICITY")) {
-        multiplicity_ = options_->get_int("MULTIPLICITY");
-    }
-
-    if (max_rdm_level_ <= 1) {
-        max_rdm_level_ = options_->get_int("ACI_MAX_RDM");
-    }
+    wavefunction_symmetry_ = state_.irrep();
+    multiplicity_ = state_.multiplicity();
 
     nact_ = mo_space_info_->size("ACTIVE");
     nactpi_ = mo_space_info_->get_dimension("ACTIVE");
@@ -263,10 +247,7 @@ void AdaptiveCI::startup() {
 
     nirrep_ = as_ints_->ints()->nirrep();
 
-    twice_ms_ = multiplicity_ - 1;
-    if (options_->has_changed("MS")) {
-        twice_ms_ = std::round(2.0 * options_->get_double("MS"));
-    }
+    twice_ms_ = state_.twice_ms();
 
     // Build the reference determinant and compute its energy
     CI_Reference ref(scf_info_, options_, mo_space_info_, as_ints_, multiplicity_, twice_ms_,
@@ -274,7 +255,6 @@ void AdaptiveCI::startup() {
     ref.build_reference(initial_reference_);
 
     // Read options
-    nroot_ = options_->get_int("ACI_NROOT");
     gamma_ = options_->get_double("GAMMA");
     screen_thresh_ = options_->get_double("ACI_PRESCREEN_THRESHOLD");
     add_aimed_degenerate_ = options_->get_bool("ACI_ADD_AIMED_DEGENERATE");
@@ -302,8 +282,7 @@ void AdaptiveCI::startup() {
     perturb_select_ = options_->get_bool("ACI_PERTURB_SELECT");
     pq_function_ = options_->get_str("ACI_PQ_FUNCTION");
     ex_alg_ = options_->get_str("ACI_EXCITED_ALGORITHM");
-    ref_root_ = options_->get_int("ACI_ROOT");
-    root_ = options_->get_int("ACI_ROOT");
+    ref_root_ = root_;
     approx_rdm_ = options_->get_bool("ACI_APPROXIMATE_RDM");
     print_weights_ = options_->get_bool("ACI_PRINT_WEIGHTS");
 
@@ -366,7 +345,7 @@ void AdaptiveCI::print_info() {
         {"Multiplicity", multiplicity_},
         {"Symmetry", wavefunction_symmetry_},
         {"Number of roots", nroot_},
-        {"Root used for properties", options_->get_int("ACI_ROOT")}};
+        {"Root used for properties", root_}};
 
     std::vector<std::pair<std::string, double>> calculation_info_double{
         {"Sigma (Eh)", sigma_},
@@ -465,7 +444,6 @@ double AdaptiveCI::compute_energy() {
     }
 
     for (int i = 0; i < nrun; ++i) {
-        nroot_ = options_->get_int("ACI_NROOT");
         if (!quiet_mode_)
             outfile->Printf("\n  Computing wavefunction for root %d", i);
 
@@ -506,7 +484,7 @@ double AdaptiveCI::compute_energy() {
     final_wfn_.copy(PQ_space);
     PQ_space.clear();
 
-    int froot = options_->get_int("ACI_ROOT");
+    int froot = root_;
     if (ex_alg_ == "ROOT_ORTHOGONALIZE") {
         froot = nroot_ - 1;
         multistate_pt2_energy_correction_ = pt2_energies;
@@ -682,7 +660,7 @@ double AdaptiveCI::compute_energy() {
 
     // Save final wave function to a file
     if (options_->get_bool("ACI_SAVE_FINAL_WFN")) {
-        int root = options_->get_int("ACI_ROOT");
+        int root = root_;
         outfile->Printf("\n  Saving final wave function for root %d", root);
         wfn_to_file(final_wfn_, PQ_evecs, root);
     }
@@ -693,8 +671,8 @@ double AdaptiveCI::compute_energy() {
     //    }
 
     outfile->Printf("\n\n  %s: %f s", "Adaptive-CI ran in ", aci_elapse.get());
-    outfile->Printf("\n\n  %s: %d", "Saving information for root", options_->get_int("ACI_ROOT"));
-    return PQ_evals->get(options_->get_int("ACI_ROOT")) + nuclear_repulsion_energy_ +
+    outfile->Printf("\n\n  %s: %d", "Saving information for root", root_);
+    return PQ_evals->get(root_) + nuclear_repulsion_energy_ +
            as_ints_->scalar_energy();
 }
 
@@ -1902,7 +1880,7 @@ void AdaptiveCI::compute_aci(DeterminantHashVec& PQ_space, psi::SharedMatrix& PQ
     psi::SharedMatrix old_evecs;
 
     if (options_->get_str("ACI_EXCITED_ALGORITHM") == "ROOT_SELECT") {
-        ref_root_ = options_->get_int("ACI_ROOT");
+        ref_root_ = root_;
     }
 
     // Save the P_space energies to predict convergence
@@ -2097,7 +2075,7 @@ void AdaptiveCI::compute_aci(DeterminantHashVec& PQ_space, psi::SharedMatrix& PQ
         if (follow and (cycle == (pre_iter_ - 1) or (pre_iter_ == 0 and cycle == 0))) {
 
             if (options_->get_str("ACI_EXCITED_ALGORITHM") == "ROOT_SELECT") {
-                ref_root_ = options_->get_int("ACI_ROOT");
+                ref_root_ = root_;
             }
             size_t dim = std::min(static_cast<int>(PQ_space.size()), 1000);
             P_ref.subspace(PQ_space, PQ_evecs, P_ref_evecs, dim, ref_root_);
@@ -2116,7 +2094,7 @@ void AdaptiveCI::compute_aci(DeterminantHashVec& PQ_space, psi::SharedMatrix& PQ
                    ex_alg_ == "AVERAGE") {
             outfile->Printf("\n  Root averaging algorithm converged.");
             outfile->Printf("\n  Now optimizing PQ Space for root %d",
-                            options_->get_int("ACI_ROOT"));
+                            root_);
             ex_alg_ = options_->get_str("ACI_EXCITED_ALGORITHM");
             pre_iter_ = cycle + 1;
         }
@@ -2127,7 +2105,7 @@ void AdaptiveCI::compute_aci(DeterminantHashVec& PQ_space, psi::SharedMatrix& PQ
             options_->get_str("ACI_EXCITED_ALGORITHM") == "COMPOSITE") {
             outfile->Printf("\n  Root averaging algorithm converged.");
             outfile->Printf("\n  Now optimizing PQ Space for root %d",
-                            options_->get_int("ACI_ROOT"));
+                            root_);
             ex_alg_ = options_->get_str("ACI_EXCITED_ALGORITHM");
             pre_iter_ = cycle + 1;
         } else if (converged) {
