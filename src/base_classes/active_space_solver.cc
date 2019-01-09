@@ -37,6 +37,7 @@
 #include "psi4/libpsi4util/process.h"
 
 #include "base_classes/forte_options.h"
+#include "base_classes/reference.h"
 #include "helpers/helpers.h"
 #include "integrals/active_space_integrals.h"
 #include "active_space_method.h"
@@ -62,6 +63,8 @@ double ActiveSpaceSolver::compute_energy() {
         size_t nroot = weights.size();
         std::shared_ptr<ActiveSpaceMethod> method = make_active_space_method2(
             method_, state, nroot, scf_info_, mo_space_info_, as_ints_, options_);
+
+        method->set_max_rdm_level(max_rdm_level_);
         method->compute_energy();
         auto energies = method->energies();
         for (size_t r = 0; r < nroot; r++) {
@@ -70,6 +73,21 @@ double ActiveSpaceSolver::compute_energy() {
         method_vec_.push_back(method);
     }
     return energy;
+}
+
+Reference ActiveSpaceSolver::get_reference() {
+
+    Reference ref;
+
+    // TODO: Implement SA procedure
+    for( auto& method : method_vec_ ){
+        ref = method->get_reference();
+    }
+    return ref;
+}
+
+void ActiveSpaceSolver::set_max_rdm_level( size_t level ){
+    max_rdm_level_ = level;
 }
 
 void ActiveSpaceSolver::print_options() {

@@ -315,6 +315,12 @@ double ASCI::compute_energy() {
 
     double root_energy = PQ_evals->get(0) + nuclear_repulsion_energy_ + as_ints_->scalar_energy();
 
+    energies_.resize(nroot_,0.0);
+    for( int n = 0; n < nroot_; ++n ){
+        energies_[n] = PQ_evals->get(n) + nuclear_repulsion_energy_ + as_ints_->scalar_energy();
+    }
+
+
     psi::Process::environment.globals["CURRENT ENERGY"] = root_energy;
     psi::Process::environment.globals["ASCI ENERGY"] = root_energy;
 
@@ -342,7 +348,7 @@ double ASCI::compute_energy() {
 
     print_wfn(PQ_space, op_, PQ_evecs, nroot_);
 
-    compute_rdms(as_ints_, PQ_space, op_, PQ_evecs, 0, 0);
+//    compute_rdms(as_ints_, PQ_space, op_, PQ_evecs, 0, 0);
 
     return root_energy;
 }

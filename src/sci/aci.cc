@@ -678,8 +678,12 @@ double AdaptiveCI::compute_energy() {
     outfile->Printf("\n\n  %s: %d", "Saving information for root", root_);
     
     // Set active space method evals
-    evals_.reset(new Vector("e", nroot_));
-    evals_->copy(PQ_evals->clone());
+
+    energies_.resize(nroot_,0.0);
+    for( int n = 0; n < nroot_; ++n ){
+        energies_[n] = PQ_evals->get(n) + nuclear_repulsion_energy_ + as_ints_->scalar_energy();
+    }
+
     return PQ_evals->get(root_) + nuclear_repulsion_energy_ +
            as_ints_->scalar_energy();
 }

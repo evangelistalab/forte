@@ -77,6 +77,12 @@ class ActiveSpaceSolver {
     /// Compute the energy and return it
     double compute_energy();
 
+    /// Compute reference and return it
+    Reference get_reference();
+
+    /// Sets the maximum order RDM/cumulant
+    void set_max_rdm_level(size_t value);
+
     /// Print a summary of the computation information
     void print_options();
 
@@ -109,6 +115,9 @@ class ActiveSpaceSolver {
     /// A vector of pointers to the ActiveSpaceMethod instantiated for each
     /// of the state symmetries contained in state_weights_list_
     std::vector<std::shared_ptr<ActiveSpaceMethod>> method_vec_;
+
+    /// The maximum order RDM/cumulant to use for all ActiveSpaceMethod objects initialized
+    size_t max_rdm_level_ = 1;
 };
 
 /**
