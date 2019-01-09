@@ -57,7 +57,6 @@ install:
 - source activate p4env
 #- conda list
 - conda install pint pylibefp -c psi4/label/dev
-- conda install -c conda-forge openmp 
 - python -V
 - pyenv global system 3.6
 - pip install deepdiff
@@ -99,6 +98,7 @@ install:
     -DENABLE_gdma=ON
     -DENABLE_PLUGIN_TESTING=ON
     -DCMAKE_INSTALL_PREFIX=${HOME}/build/psi4-bin
+    -DOpenMP_CXX_FLAG="-fopenmp=libiomp5"
 - cd build
 - echo "Starting compilation of Psi4"
 - make -j2 -s
