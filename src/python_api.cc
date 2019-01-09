@@ -130,6 +130,7 @@ PYBIND11_MODULE(forte, m) {
     m.def("cleanup", &cleanup);
     m.def("banner", &banner, "Print forte banner");
     m.def("make_mo_space_info", &make_mo_space_info, "Make a MOSpaceInfo object");
+//    m.def("make_fragment_projector", &make_fragment_projector, "Make a fragment(embedding) projector");
     m.def("make_aosubspace_projector", &make_aosubspace_projector, "Make a AOSubspace projector");
     m.def("make_forte_integrals", &make_forte_integrals, "Make Forte integrals");
     m.def("forte_old_methods", &forte_old_methods, "Run Forte methods");
