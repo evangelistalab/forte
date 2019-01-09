@@ -7,12 +7,10 @@ matrix:
     addons: &1
       apt:
         sources:
-        - llvm-toolchain-precise-3.6
         - ubuntu-toolchain-r-test
         - george-edison55-precise-backports
         packages:
         - liblapack-dev
-        - clang-3.6
         - libhdf5-serial-dev
         - gfortran
         - g++-4.9
@@ -23,19 +21,16 @@ matrix:
       - Fortran_COMPILER='gfortran'
       - BUILD_TYPE='Debug'
       - NAME='clang'
-      - VERSION='3.6'
       - MAX_DET_ORB=64
   - os: linux
     compiler: clang
     addons: &1
       apt:
         sources:
-        - llvm-toolchain-precise-3.6
         - ubuntu-toolchain-r-test
         - george-edison55-precise-backports
         packages:
         - liblapack-dev
-        - clang-3.6
         - libhdf5-serial-dev
         - gfortran
         - g++-4.9
@@ -46,7 +41,6 @@ matrix:
       - Fortran_COMPILER='gfortran'
       - BUILD_TYPE='Debug'
       - NAME='clang'
-      - VERSION='3.6'
       - MAX_DET_ORB=128
 
 install:
@@ -57,7 +51,7 @@ install:
 - conda config --set always_yes yes --set changeps1 no
 - conda update -q conda
 - conda info -a
-- conda create -q -n p4env python=$PYTHON_VER numpy cmake gdma pylibefp libint libxc gau2grid boost clang -c psi4/label/test -c psi4
+ conda create -q -n p4env python=$PYTHON_VER numpy cmake gdma pylibefp libint libxc gau2grid boost -c psi4/label/test -c psi4
 - source activate p4env
 #- conda list
 - conda install pint pylibefp -c psi4/label/dev
@@ -67,8 +61,8 @@ install:
 - pip install pyyaml
 #- python -c 'import numpy; print(numpy.version.version)'
 - cd ${TRAVIS_BUILD_DIR}
-- export CXX=${HOME}/miniconda/envs/p4env/bin/clang++
-- export CC=${HOME}/miniconda/envs/p4env/bin/clang
+- export CXX=clang++
+- export CC=clang
 - export FC=${Fortran_COMPILER}
 - export CTEST_OUTPUT_ON_FAILURE=1
 - ${CXX_COMPILER} --version
