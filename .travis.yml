@@ -93,7 +93,7 @@ install:
     -DCMAKE_INSTALL_PREFIX=${HOME}/build/psi4-bin
 - cd build
 - echo "Starting compilation of Psi4"
-- make -j2 -s
+- make -j2 -s VERBOSE=1
 - echo " Done"
 - make install >& psi4_install.log
 - export PATH="$HOME/build/psi4-bin/bin:$PATH"
@@ -108,9 +108,10 @@ install:
     -DCMAKE_BUILD_TYPE=${BUILD_TYPE}
     -DMAX_DET_ORB=${MAX_DET_ORB}
     -DENABLE_ForteTests=ON
-- make -j2
+- make -j2 VERBOSE=1
 - export PYTHONPATH="${HOME}/build/evangelistalab:$PYTHONPATH"
 - hash -r
+- echo $LD_LIBRARY_PATH
 script:
 - cd ${HOME}/build/evangelistalab/forte/tests/methods
 - python run_forte_tests.py --bw --failed_dump
