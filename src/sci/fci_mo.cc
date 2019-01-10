@@ -215,7 +215,6 @@ void FCI_MO::read_options() {
 
     // energy convergence
     econv_ = options_->get_double("E_CONVERGENCE");
-    fcheck_threshold_ = 100.0 * econv_;
 
     // nuclear repulsion
     e_nuc_ = integral_->nuclear_repulsion_energy();
@@ -336,25 +335,9 @@ void FCI_MO::read_options() {
         }
     }
 
-    // setup symmetry index of correlated orbitals
-    for (int h = 0; h < nirrep_; ++h) {
-        for (size_t i = 0; i < size_t(ncmopi_[h]); ++i) {
-            sym_ncmo_.push_back(h);
-        }
-    }
-
     // obtain absolute indices of core, active and virtual
     core_mos_ = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
     actv_mos_ = mo_space_info_->get_corr_abs_mo("ACTIVE");
-    virt_mos_ = mo_space_info_->get_corr_abs_mo("RESTRICTED_UOCC");
-
-    // setup hole and particle indices (Active must start first for old mcsrgpt2 code)
-    nhole_ = ncore_ + nactv_;
-    npart_ = nactv_ + nvirt_;
-    hole_mos_ = std::vector<size_t>(actv_mos_);
-    hole_mos_.insert(hole_mos_.end(), core_mos_.begin(), core_mos_.end());
-    part_mos_ = std::vector<size_t>(actv_mos_);
-    part_mos_.insert(part_mos_.end(), virt_mos_.begin(), virt_mos_.end());
 
     // active hole and active particle indices
     if (actv_space_type_ == "CIS" || actv_space_type_ == "CISD") {
@@ -1300,200 +1283,6 @@ void FCI_MO::print_CI(const int& nroot, const double& CI_threshold,
     timer_off("Print CI Vectors");
 }
 
-void FCI_MO::print_density(const string& spin, const d2& density) {
-    string name = "Density " + spin;
-    outfile->Printf("  ==> %s <==\n\n", name.c_str());
-
-    psi::SharedMatrix dens(new psi::Matrix("A-A", nactv_, nactv_));
-    for (size_t u = 0; u < nactv_; ++u) {
-        size_t nu = actv_mos_[u];
-        for (size_t v = 0; v < nactv_; ++v) {
-            size_t nv = actv_mos_[v];
-            dens->set(u, v, density[nu][nv]);
-        }
-    }
-
-    dens->print();
-}
-
-void FCI_MO::print2PDC(const string& str, const d4& TwoPDC, const int& PRINT) {
-    timer_on("PRINT 2-Cumulant");
-    outfile->Printf("\n  ** %s **", str.c_str());
-    size_t count = 0;
-    size_t size = TwoPDC.size();
-    for (size_t i = 0; i != size; ++i) {
-        for (size_t j = 0; j != size; ++j) {
-            for (size_t k = 0; k != size; ++k) {
-                for (size_t l = 0; l != size; ++l) {
-                    if (std::fabs(TwoPDC[i][j][k][l]) > 1.0e-15) {
-                        ++count;
-                        if (PRINT > 2)
-                            outfile->Printf("\n  Lambda "
-                                            "[%3lu][%3lu][%3lu][%3lu] = "
-                                            "%18.15lf",
-                                            i, j, k, l, TwoPDC[i][j][k][l]);
-                    }
-                }
-            }
-        }
-    }
-    outfile->Printf("\n");
-    outfile->Printf("\n  Number of Nonzero Elements: %zu", count);
-    outfile->Printf("\n");
-    timer_off("PRINT 2-Cumulant");
-}
-
-void FCI_MO::print3PDC(const string& str, const d6& ThreePDC, const int& PRINT) {
-    timer_on("PRINT 3-Cumulant");
-    outfile->Printf("\n  ** %s **", str.c_str());
-    size_t count = 0;
-    size_t size = ThreePDC.size();
-    for (size_t i = 0; i != size; ++i) {
-        for (size_t j = 0; j != size; ++j) {
-            for (size_t k = 0; k != size; ++k) {
-                for (size_t l = 0; l != size; ++l) {
-                    for (size_t m = 0; m != size; ++m) {
-                        for (size_t n = 0; n != size; ++n) {
-                            if (std::fabs(ThreePDC[i][j][k][l][m][n]) > 1.0e-15) {
-                                ++count;
-                                if (PRINT > 3)
-                                    outfile->Printf("\n  Lambda "
-                                                    "[%3lu][%3lu][%3lu][%3lu][%"
-                                                    "3lu][%3lu] = %18.15lf",
-                                                    i, j, k, l, m, n, ThreePDC[i][j][k][l][m][n]);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-    outfile->Printf("\n");
-    outfile->Printf("\n  Number of Nonzero Elements: %zu", count);
-    outfile->Printf("\n");
-    timer_off("PRINT 3-Cumulant");
-}
-
-void FCI_MO::print_Fock(const string& spin, const d2& Fock) {
-    string name = "Fock " + spin;
-    outfile->Printf("  ==> %s <==\n\n", name.c_str());
-
-    // print Fock block
-    auto print_Fock_block = [&](const string& name1, const string& name2,
-                                const std::vector<size_t>& idx1, const std::vector<size_t>& idx2) {
-        size_t dim1 = idx1.size();
-        size_t dim2 = idx2.size();
-        string bname = name1 + "-" + name2;
-
-        psi::Matrix F(bname, dim1, dim2);
-        for (size_t i = 0; i < dim1; ++i) {
-            size_t ni = idx1[i];
-            for (size_t j = 0; j < dim2; ++j) {
-                size_t nj = idx2[j];
-                F.set(i, j, Fock[ni][nj]);
-            }
-        }
-
-        F.print();
-
-        if (dim1 != dim2) {
-            string bnamer = name2 + "-" + name1;
-            psi::Matrix Fr(bnamer, dim2, dim1);
-            for (size_t i = 0; i < dim2; ++i) {
-                size_t ni = idx2[i];
-                for (size_t j = 0; j < dim1; ++j) {
-                    size_t nj = idx1[j];
-                    Fr.set(i, j, Fock[ni][nj]);
-                }
-            }
-
-            psi::SharedMatrix FT = Fr.transpose();
-            for (size_t i = 0; i < dim1; ++i) {
-                for (size_t j = 0; j < dim2; ++j) {
-                    double diff = FT->get(i, j) - F.get(i, j);
-                    FT->set(i, j, diff);
-                }
-            }
-            if (FT->rms() > fcheck_threshold_) {
-                outfile->Printf("  Warning: %s not symmetric for %s and %s blocks\n", name.c_str(),
-                                bname.c_str(), bnamer.c_str());
-                Fr.print();
-            }
-        }
-    };
-
-    // diagonal blocks
-    print_Fock_block("C", "C", core_mos_, core_mos_);
-    print_Fock_block("V", "V", virt_mos_, virt_mos_);
-
-    std::vector<size_t> idx_ah, idx_ap;
-    if (actv_space_type_ == "CIS" || actv_space_type_ == "CISD") {
-        for (int i = 0, hsize = actv_hole_mos_.size(); i < hsize; ++i) {
-            idx_ah.push_back(actv_mos_[actv_hole_mos_[i]]);
-        }
-        for (int i = 0, psize = actv_part_mos_.size(); i < psize; ++i) {
-            idx_ap.push_back(actv_mos_[actv_part_mos_[i]]);
-        }
-        print_Fock_block("AH", "AH", idx_ah, idx_ah);
-        print_Fock_block("AP", "AP", idx_ap, idx_ap);
-    } else {
-        print_Fock_block("A", "A", actv_mos_, actv_mos_);
-    }
-
-    // off-diagonal blocks
-    print_Fock_block("C", "A", core_mos_, actv_mos_);
-    print_Fock_block("C", "V", core_mos_, virt_mos_);
-    print_Fock_block("A", "V", actv_mos_, virt_mos_);
-    if (actv_space_type_ == "CIS" || actv_space_type_ == "CISD") {
-        print_Fock_block("AH", "AP", idx_ah, idx_ap);
-    }
-}
-
-void FCI_MO::Form_Fock(d2& A, d2& B) {
-    timer_on("Form Fock");
-    compute_Fock_ints();
-
-    for (size_t p = 0; p < ncmo_; ++p) {
-        for (size_t q = 0; q < ncmo_; ++q) {
-            A[p][q] = integral_->get_fock_a(p, q);
-            B[p][q] = integral_->get_fock_b(p, q);
-        }
-    }
-
-    timer_off("Form Fock");
-}
-
-void FCI_MO::compute_Fock_ints() {
-    local_timer tfock;
-    if (!quiet_) {
-        outfile->Printf("\n  %-35s ...", "Forming generalized Fock matrix");
-    }
-
-    psi::SharedMatrix DaM(new psi::Matrix("DaM", ncmo_, ncmo_));
-    psi::SharedMatrix DbM(new psi::Matrix("DbM", ncmo_, ncmo_));
-    for (size_t m = 0; m < ncore_; m++) {
-        size_t nm = core_mos_[m];
-        for (size_t n = 0; n < ncore_; n++) {
-            size_t nn = core_mos_[n];
-            DaM->set(nm, nn, Da_[nm][nn]);
-            DbM->set(nm, nn, Db_[nm][nn]);
-        }
-    }
-    for (size_t u = 0; u < nactv_; u++) {
-        size_t nu = actv_mos_[u];
-        for (size_t v = 0; v < nactv_; v++) {
-            size_t nv = actv_mos_[v];
-            DaM->set(nu, nv, Da_[nu][nv]);
-            DbM->set(nu, nv, Db_[nu][nv]);
-        }
-    }
-    integral_->make_fock_matrix(DaM, DbM);
-
-    if (!quiet_) {
-        outfile->Printf("  Done. Timing %15.6f s", tfock.get());
-    }
-}
-
 void FCI_MO::compute_permanent_dipole() {
 
     CharacterTable ct = psi::Process::environment.molecule()->point_group()->char_table();
@@ -2344,21 +2133,21 @@ Reference FCI_MO::get_reference(int root) {
     ref.set_Eref(Eref_);
 
     if (max_rdm_ > 0) {
-        ref.set_L1a(L1a);
-        ref.set_L1b(L1b);
+        ref.set_L1a(L1a_);
+        ref.set_L1b(L1b_);
     }
 
     if (max_rdm_ > 1) {
-        ref.set_L2aa(L2aa);
-        ref.set_L2ab(L2ab);
-        ref.set_L2bb(L2bb);
+        ref.set_L2aa(L2aa_);
+        ref.set_L2ab(L2ab_);
+        ref.set_L2bb(L2bb_);
     }
 
     if (max_rdm_ > 2 && (options_->get_str("THREEPDC") != "ZERO")) {
-        ref.set_L3aaa(L3aaa);
-        ref.set_L3aab(L3aab);
-        ref.set_L3abb(L3abb);
-        ref.set_L3bbb(L3bbb);
+        ref.set_L3aaa(L3aaa_);
+        ref.set_L3aab(L3aab_);
+        ref.set_L3abb(L3abb_);
+        ref.set_L3bbb(L3bbb_);
     }
     return ref;
 }
@@ -2379,16 +2168,16 @@ void FCI_MO::compute_ref(const int& level) {
 
     // compute 1-RDM
     auto D1 = compute_n_rdm(determinant_, evecs, 1, root_, root_, root_sym_, multi_, false);
-    L1a = D1[0];
-    L1b = D1[1];
+    L1a_ = D1[0];
+    L1b_ = D1[1];
 
     // compute 2-RDM
     if (level >= 2) {
         auto D2 = compute_n_rdm(determinant_, evecs, 2, root_, root_, root_sym_, multi_, false);
-        L2aa = D2[0];
-        L2ab = D2[1];
-        L2bb = D2[2];
-        add_wedge_cu2(L1a, L1b, L2aa, L2ab, L2bb);
+        L2aa_ = D2[0];
+        L2ab_ = D2[1];
+        L2bb_ = D2[2];
+        add_wedge_cu2(L1a_, L1b_, L2aa_, L2ab_, L2bb_);
     }
 
     // compute 3-RDM
@@ -2396,21 +2185,21 @@ void FCI_MO::compute_ref(const int& level) {
     if (threepdc != "ZERO" && level >= 3) {
         if (threepdc == "MK") {
             auto D3 = compute_n_rdm(determinant_, evecs, 3, root_, root_, root_sym_, multi_, false);
-            L3aaa = D3[0];
-            L3aab = D3[1];
-            L3abb = D3[2];
-            L3bbb = D3[3];
+            L3aaa_ = D3[0];
+            L3aab_ = D3[1];
+            L3abb_ = D3[2];
+            L3bbb_ = D3[3];
         } else {
-            L3aaa =
+            L3aaa_ =
                 ambit::Tensor::build(ambit::CoreTensor, "L3aaa", std::vector<size_t>(6, nactv_));
-            L3aab =
+            L3aab_ =
                 ambit::Tensor::build(ambit::CoreTensor, "L3aab", std::vector<size_t>(6, nactv_));
-            L3abb =
+            L3abb_ =
                 ambit::Tensor::build(ambit::CoreTensor, "L3abb", std::vector<size_t>(6, nactv_));
-            L3bbb =
+            L3bbb_ =
                 ambit::Tensor::build(ambit::CoreTensor, "L3bbb", std::vector<size_t>(6, nactv_));
         }
-        add_wedge_cu3(L1a, L1b, L2aa, L2ab, L2bb, L3aaa, L3aab, L3abb, L3bbb);
+        add_wedge_cu3(L1a_, L1b_, L2aa_, L2ab_, L2bb_, L3aaa_, L3aab_, L3abb_, L3bbb_);
     }
 
     timer_off("Compute Ref");
@@ -2512,154 +2301,6 @@ void FCI_MO::add_wedge_cu3(const ambit::Tensor& L1a, const ambit::Tensor& L1b,
 
     outfile->Printf("Done. Timing %15.6f s", timer.get());
     timer_off(job_name);
-}
-
-void FCI_MO::fill_naive_cumulants(Reference& ref, const int& level) {
-    // fill in 1-cumulant (same as 1-RDM) to D1a_, D1b_
-    ambit::Tensor L1a = ref.L1a();
-    ambit::Tensor L1b = ref.L1b();
-    fill_one_cumulant(L1a, L1b);
-    if (print_ > 1) {
-        print_density("Alpha", Da_);
-        print_density("Beta", Db_);
-    }
-
-    // fill in 2-cumulant to L2aa_, L2ab_, L2bb_
-    if (level >= 2) {
-        ambit::Tensor L2aa = ref.L2aa();
-        ambit::Tensor L2ab = ref.L2ab();
-        ambit::Tensor L2bb = ref.L2bb();
-        fill_two_cumulant(L2aa, L2ab, L2bb);
-        if (print_ > 2) {
-            print2PDC("L2aa", L2aa_, print_);
-            print2PDC("L2ab", L2ab_, print_);
-            print2PDC("L2bb", L2bb_, print_);
-        }
-    }
-
-    // fill in 3-cumulant to L3aaa_, L3aab_, L3abb_, L3bbb_
-    if (level >= 3) {
-        ambit::Tensor L3aaa = ref.L3aaa();
-        ambit::Tensor L3aab = ref.L3aab();
-        ambit::Tensor L3abb = ref.L3abb();
-        ambit::Tensor L3bbb = ref.L3bbb();
-        fill_three_cumulant(L3aaa, L3aab, L3abb, L3bbb);
-        if (print_ > 3) {
-            print3PDC("L3aaa", L3aaa_, print_);
-            print3PDC("L3aab", L3aab_, print_);
-            print3PDC("L3abb", L3abb_, print_);
-            print3PDC("L3bbb", L3bbb_, print_);
-        }
-    }
-}
-
-void FCI_MO::fill_one_cumulant(ambit::Tensor& L1a, ambit::Tensor& L1b) {
-    Da_ = d2(ncmo_, d1(ncmo_));
-    Db_ = d2(ncmo_, d1(ncmo_));
-
-    for (size_t p = 0; p < ncore_; ++p) {
-        size_t np = core_mos_[p];
-        Da_[np][np] = 1.0;
-        Db_[np][np] = 1.0;
-    }
-
-    std::vector<double>& opdc_a = L1a.data();
-    std::vector<double>& opdc_b = L1b.data();
-
-    // TODO: try omp here
-    for (size_t p = 0; p < nactv_; ++p) {
-        size_t np = actv_mos_[p];
-        for (size_t q = p; q < nactv_; ++q) {
-            size_t nq = actv_mos_[q];
-
-            if ((sym_actv_[p] ^ sym_actv_[q]) != 0)
-                continue;
-
-            size_t index = p * nactv_ + q;
-            Da_[np][nq] = opdc_a[index];
-            Db_[np][nq] = opdc_b[index];
-
-            Da_[nq][np] = Da_[np][nq];
-            Db_[nq][np] = Db_[np][nq];
-        }
-    }
-}
-
-void FCI_MO::fill_two_cumulant(ambit::Tensor& L2aa, ambit::Tensor& L2ab, ambit::Tensor& L2bb) {
-    L2aa_ = d4(nactv_, d3(nactv_, d2(nactv_, d1(nactv_))));
-    L2ab_ = d4(nactv_, d3(nactv_, d2(nactv_, d1(nactv_))));
-    L2bb_ = d4(nactv_, d3(nactv_, d2(nactv_, d1(nactv_))));
-
-    std::vector<double>& tpdc_aa = L2aa.data();
-    std::vector<double>& tpdc_ab = L2ab.data();
-    std::vector<double>& tpdc_bb = L2bb.data();
-
-    size_t dim2 = nactv_ * nactv_;
-    size_t dim3 = nactv_ * dim2;
-
-    // TODO: try omp here
-    for (size_t p = 0; p < nactv_; ++p) {
-        for (size_t q = 0; q < nactv_; ++q) {
-            for (size_t r = 0; r < nactv_; ++r) {
-                for (size_t s = 0; s < nactv_; ++s) {
-
-                    if ((sym_actv_[p] ^ sym_actv_[q] ^ sym_actv_[r] ^ sym_actv_[s]) != 0)
-                        continue;
-
-                    size_t index = p * dim3 + q * dim2 + r * nactv_ + s;
-
-                    L2aa_[p][q][r][s] = tpdc_aa[index];
-                    L2ab_[p][q][r][s] = tpdc_ab[index];
-                    L2bb_[p][q][r][s] = tpdc_bb[index];
-                }
-            }
-        }
-    }
-}
-
-void FCI_MO::fill_three_cumulant(ambit::Tensor& L3aaa, ambit::Tensor& L3aab, ambit::Tensor& L3abb,
-                                 ambit::Tensor& L3bbb) {
-    L3aaa_ = d6(nactv_, d5(nactv_, d4(nactv_, d3(nactv_, d2(nactv_, d1(nactv_))))));
-    L3aab_ = d6(nactv_, d5(nactv_, d4(nactv_, d3(nactv_, d2(nactv_, d1(nactv_))))));
-    L3abb_ = d6(nactv_, d5(nactv_, d4(nactv_, d3(nactv_, d2(nactv_, d1(nactv_))))));
-    L3bbb_ = d6(nactv_, d5(nactv_, d4(nactv_, d3(nactv_, d2(nactv_, d1(nactv_))))));
-
-    size_t dim2 = nactv_ * nactv_;
-    size_t dim3 = nactv_ * dim2;
-    size_t dim4 = nactv_ * dim3;
-    size_t dim5 = nactv_ * dim4;
-
-    auto fill = [&](d6& L3, ambit::Tensor& L3t) {
-        std::vector<double>& data = L3t.data();
-
-        // TODO: try omp here
-        for (size_t p = 0; p != nactv_; ++p) {
-            for (size_t q = 0; q != nactv_; ++q) {
-                for (size_t r = 0; r != nactv_; ++r) {
-                    for (size_t s = 0; s != nactv_; ++s) {
-                        for (size_t t = 0; t != nactv_; ++t) {
-                            for (size_t u = 0; u != nactv_; ++u) {
-
-                                if ((sym_actv_[p] ^ sym_actv_[q] ^ sym_actv_[r] ^ sym_actv_[s] ^
-                                     sym_actv_[t] ^ sym_actv_[u]) != 0)
-                                    continue;
-
-                                size_t index =
-                                    p * dim5 + q * dim4 + r * dim3 + s * dim2 + t * nactv_ + u;
-
-                                L3[p][q][r][s][t][u] = data[index];
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    };
-
-    fill(L3aaa_, L3aaa);
-    fill(L3aab_, L3aab);
-    fill(L3abb_, L3abb);
-    fill(L3bbb_, L3bbb);
 }
 
 double FCI_MO::compute_sa_energy() {
@@ -2794,14 +2435,14 @@ void FCI_MO::xms_rotate_civecs() {
     Fb("uv") += V("umvn") * I("mn");
 
     V = integral_->aptei_aa_block(actv_mos_, actv_mos_, actv_mos_, actv_mos_);
-    Fa("uv") += V("uxvy") * L1a("xy");
+    Fa("uv") += V("uxvy") * L1a_("xy");
 
     V = integral_->aptei_ab_block(actv_mos_, actv_mos_, actv_mos_, actv_mos_);
-    Fa("uv") += V("uxvy") * L1b("xy");
-    Fb("uv") += V("xuyv") * L1a("xy");
+    Fa("uv") += V("uxvy") * L1b_("xy");
+    Fb("uv") += V("xuyv") * L1a_("xy");
 
     V = integral_->aptei_bb_block(actv_mos_, actv_mos_, actv_mos_, actv_mos_);
-    Fb("uv") += V("uxvy") * L1b("xy");
+    Fb("uv") += V("uxvy") * L1b_("xy");
 
     // XMS rotation for all symmetries
     for (int n = 0; n < nentry; ++n) {
@@ -2878,21 +2519,21 @@ void FCI_MO::compute_sa_ref(const int& level) {
     }
 
     // prepare averaged densities
-    L1a = ambit::Tensor::build(ambit::CoreTensor, "L1a", {nactv_, nactv_});
-    L1b = ambit::Tensor::build(ambit::CoreTensor, "L1b", {nactv_, nactv_});
+    L1a_ = ambit::Tensor::build(ambit::CoreTensor, "L1a", {nactv_, nactv_});
+    L1b_ = ambit::Tensor::build(ambit::CoreTensor, "L1b", {nactv_, nactv_});
 
     if (level >= 2) {
-        L2aa = ambit::Tensor::build(ambit::CoreTensor, "L2aa", {nactv_, nactv_, nactv_, nactv_});
-        L2ab = ambit::Tensor::build(ambit::CoreTensor, "L2ab", {nactv_, nactv_, nactv_, nactv_});
-        L2bb = ambit::Tensor::build(ambit::CoreTensor, "L2bb", {nactv_, nactv_, nactv_, nactv_});
+        L2aa_ = ambit::Tensor::build(ambit::CoreTensor, "L2aa", {nactv_, nactv_, nactv_, nactv_});
+        L2ab_ = ambit::Tensor::build(ambit::CoreTensor, "L2ab", {nactv_, nactv_, nactv_, nactv_});
+        L2bb_ = ambit::Tensor::build(ambit::CoreTensor, "L2bb", {nactv_, nactv_, nactv_, nactv_});
     }
 
     std::string threepdc = options_->get_str("THREEPDC");
     if (level >= 3 && threepdc != "ZERO") {
-        L3aaa = ambit::Tensor::build(ambit::CoreTensor, "L3aaa", std::vector<size_t>(6, nactv_));
-        L3aab = ambit::Tensor::build(ambit::CoreTensor, "L3aab", std::vector<size_t>(6, nactv_));
-        L3abb = ambit::Tensor::build(ambit::CoreTensor, "L3abb", std::vector<size_t>(6, nactv_));
-        L3bbb = ambit::Tensor::build(ambit::CoreTensor, "L3bbb", std::vector<size_t>(6, nactv_));
+        L3aaa_ = ambit::Tensor::build(ambit::CoreTensor, "L3aaa", std::vector<size_t>(6, nactv_));
+        L3aab_ = ambit::Tensor::build(ambit::CoreTensor, "L3aab", std::vector<size_t>(6, nactv_));
+        L3abb_ = ambit::Tensor::build(ambit::CoreTensor, "L3abb", std::vector<size_t>(6, nactv_));
+        L3bbb_ = ambit::Tensor::build(ambit::CoreTensor, "L3bbb", std::vector<size_t>(6, nactv_));
     }
 
     // function that scale pdm by w and add scaled pdm to sa_pdm
@@ -2924,23 +2565,23 @@ void FCI_MO::compute_sa_ref(const int& level) {
 
             // compute 1-RDMs
             auto D1 = compute_n_rdm(p_spaces_[n], evecs, 1, i, i, irrep, multi, do_disk);
-            scale_add(L1a.data(), D1[0].data(), weight);
-            scale_add(L1b.data(), D1[1].data(), weight);
+            scale_add(L1a_.data(), D1[0].data(), weight);
+            scale_add(L1b_.data(), D1[1].data(), weight);
 
             // compute 2-RDMs
             if (level >= 2) {
                 auto D2 = compute_n_rdm(p_spaces_[n], evecs, 2, i, i, irrep, multi, do_disk);
-                scale_add(L2aa.data(), D2[0].data(), weight);
-                scale_add(L2ab.data(), D2[1].data(), weight);
-                scale_add(L2bb.data(), D2[2].data(), weight);
+                scale_add(L2aa_.data(), D2[0].data(), weight);
+                scale_add(L2ab_.data(), D2[1].data(), weight);
+                scale_add(L2bb_.data(), D2[2].data(), weight);
             }
 
             if (level >= 3 && threepdc == "MK") {
                 auto D3 = compute_n_rdm(p_spaces_[n], evecs, 3, i, i, irrep, multi, do_disk);
-                scale_add(L3aaa.data(), D3[0].data(), weight);
-                scale_add(L3aab.data(), D3[1].data(), weight);
-                scale_add(L3abb.data(), D3[2].data(), weight);
-                scale_add(L3bbb.data(), D3[3].data(), weight);
+                scale_add(L3aaa_.data(), D3[0].data(), weight);
+                scale_add(L3aab_.data(), D3[1].data(), weight);
+                scale_add(L3abb_.data(), D3[2].data(), weight);
+                scale_add(L3bbb_.data(), D3[3].data(), weight);
             }
         }
     } // end looping over all averaged states
@@ -2949,12 +2590,12 @@ void FCI_MO::compute_sa_ref(const int& level) {
 
     // compute 2-cumulants and fill in L2 tensors
     if (level >= 2) {
-        add_wedge_cu2(L1a, L1b, L2aa, L2ab, L2bb);
+        add_wedge_cu2(L1a_, L1b_, L2aa_, L2ab_, L2bb_);
     }
 
     // compute 3-cumulants and fill in L3 tensors
     if (level >= 3 && threepdc != "ZERO") {
-        add_wedge_cu3(L1a, L1b, L2aa, L2ab, L2bb, L3aaa, L3aab, L3abb, L3bbb);
+        add_wedge_cu3(L1a_, L1b_, L2aa_, L2ab_, L2bb_, L3aaa_, L3aab_, L3abb_, L3bbb_);
     }
 
     timer_off("Compute SA Ref");

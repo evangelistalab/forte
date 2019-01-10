@@ -119,7 +119,7 @@ class FCI_MO : public ActiveSpaceMethod {
     /// Return averaged cumulants if AVG_STATE is not empty
     Reference get_reference(int root = 0) override;
 
-    void set_options(std::shared_ptr<ForteOptions>) override{}; // TODO implement
+    void set_options(std::shared_ptr<ForteOptions>) override {} // TODO implement
 
     /// Compute densities or transition densities
     /// root1, root2 -- the ket and bra roots of p_space and eigen
@@ -157,9 +157,6 @@ class FCI_MO : public ActiveSpaceMethod {
     compute_ref_relaxed_osc(std::vector<ambit::BlockedTensor>& dm1,
                             std::vector<ambit::BlockedTensor>& dm2,
                             std::vector<ambit::BlockedTensor>& dm3);
-
-    /// Compute Fock (stored in ForteIntegal) using this->Da_
-    void compute_Fock_ints();
 
     /**
      * @brief Rotate the SA references such that <M|F|N> is diagonal
@@ -287,7 +284,6 @@ class FCI_MO : public ActiveSpaceMethod {
 
     /// Convergence
     double econv_;
-    double fcheck_threshold_;
 
     /// Multiplicity
     int multi_;
@@ -298,7 +294,6 @@ class FCI_MO : public ActiveSpaceMethod {
     int nirrep_;                // number of irrep
     int root_sym_;              // root
     std::vector<int> sym_actv_; // active MOs
-    std::vector<int> sym_ncmo_; // correlated MOs
     std::vector<std::string> irrep_symbols_;
 
     /// Molecular Orbitals
@@ -401,28 +396,19 @@ class FCI_MO : public ActiveSpaceMethod {
                   const vecdet& det);
 
     /// Density Matrix
-    d2 Da_;
-    d2 Db_;
-    ambit::Tensor L1a; // only in active
-    ambit::Tensor L1b; // only in active
+    ambit::Tensor L1a_; // only in active
+    ambit::Tensor L1b_; // only in active
 
     /// 2-Body Density Cumulant
-    d4 L2aa_;
-    d4 L2ab_;
-    d4 L2bb_;
-    ambit::Tensor L2aa;
-    ambit::Tensor L2ab;
-    ambit::Tensor L2bb;
+    ambit::Tensor L2aa_;
+    ambit::Tensor L2ab_;
+    ambit::Tensor L2bb_;
 
     /// 3-Body Density Cumulant
-    d6 L3aaa_;
-    d6 L3aab_;
-    d6 L3abb_;
-    d6 L3bbb_;
-    ambit::Tensor L3aaa;
-    ambit::Tensor L3aab;
-    ambit::Tensor L3abb;
-    ambit::Tensor L3bbb;
+    ambit::Tensor L3aaa_;
+    ambit::Tensor L3aab_;
+    ambit::Tensor L3abb_;
+    ambit::Tensor L3bbb_;
 
     /// File Names of Densities Stored on Disk
     std::unordered_set<std::string> density_files_;
@@ -436,24 +422,6 @@ class FCI_MO : public ActiveSpaceMethod {
     std::vector<ambit::Tensor> compute_n_rdm(const vecdet& p_space, psi::SharedMatrix evecs,
                                              int rdm_level, int root1, int root2, int irrep,
                                              int multi, bool disk);
-
-    /// Print Functions
-    void print2PDC(const std::string& str, const d4& TwoPDC, const int& PRINT);
-    void print3PDC(const std::string& str, const d6& ThreePDC, const int& PRINT);
-
-    /// Print Density Matrix (Active ONLY)
-    void print_density(const std::string& spin, const d2& density);
-
-    /// Fill in non-tensor cumulants used in the naive MR-DSRG-PT2 code
-    void fill_naive_cumulants(Reference& ref, const int& level);
-    /// Fill in non-tensor quantities D1a_ and D1b_ using ambit tensors
-    void fill_one_cumulant(ambit::Tensor& L1a, ambit::Tensor& L1b);
-    /// Fill in non-tensor quantities L2aa_, L2ab_, and L2bb_ using ambit tensors
-    void fill_two_cumulant(ambit::Tensor& L2aa, ambit::Tensor& L2ab, ambit::Tensor& L2bb);
-    /// Fill in non-tensor quantities L3aaa_, L3aab_, L3abb_ and L3bbb_ using ambit tensors
-    void fill_three_cumulant(ambit::Tensor& L3aaa, ambit::Tensor& L3aab, ambit::Tensor& L3abb,
-                             ambit::Tensor& L3bbb);
-
     /// Add wedge product of L1 to L2
     void add_wedge_cu2(const ambit::Tensor& L1a, const ambit::Tensor& L1b, ambit::Tensor& L2aa,
                        ambit::Tensor& L2ab, ambit::Tensor& L2bb);
@@ -462,14 +430,6 @@ class FCI_MO : public ActiveSpaceMethod {
                        const ambit::Tensor& L2aa, const ambit::Tensor& L2ab,
                        const ambit::Tensor& L2bb, ambit::Tensor& L3aaa, ambit::Tensor& L3aab,
                        ambit::Tensor& L3abb, ambit::Tensor& L3bbb);
-
-    /// Fock Matrix
-    d2 Fa_;
-    d2 Fb_;
-    /// Form Fock matrix
-    void Form_Fock(d2& A, d2& B);
-    /// Print Fock Matrix in Blocks
-    void print_Fock(const std::string& spin, const d2& Fock);
 
     /// Rotate the given CI vectors by XMS
     psi::SharedMatrix xms_rotate_this_civecs(const det_vec& p_space, psi::SharedMatrix civecs,

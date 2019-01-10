@@ -29,13 +29,15 @@
 #ifndef _mcsrgpt2_mo_h_
 #define _mcsrgpt2_mo_h_
 
+#include <cmath>
+#include <vector>
 #include "boost/assign.hpp"
 #include "psi4/liboptions/liboptions.h"
 #include "psi4/libmints/vector.h"
 #include "psi4/libmints/matrix.h"
-#include <vector>
-#include <cmath>
-#include "sci/fci_mo.h"
+#include "base_classes/reference.h"
+#include "base_classes/scf_info.h"
+#include "helpers/timer.h"
 #include "integrals/integrals.h"
 #include "mrdsrg-helper/dsrg_source.h"
 
@@ -48,7 +50,7 @@ using d6 = std::vector<d5>;
 
 namespace forte {
 
-class MCSRGPT2_MO : public FCI_MO {
+class MCSRGPT2_MO {
   public:
     /**
      * @brief The Constructor for the pilot DSRG-MRPT2 code
@@ -57,11 +59,14 @@ class MCSRGPT2_MO : public FCI_MO {
      * @param ints A pointer to an allocated integral object
      * @param mo_space_info The MOSpaceInfo object
      */
-    MCSRGPT2_MO(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
+    MCSRGPT2_MO(Reference reference, std::shared_ptr<ForteOptions> options,
                 std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Destructor
     ~MCSRGPT2_MO();
+
+    /// Compute the energy
+    double compute_energy();
 
   protected:
     /// Source Operators
@@ -70,15 +75,50 @@ class MCSRGPT2_MO : public FCI_MO {
         "AMP", AMP)("EMP2", EMP2)("LAMP", LAMP)("LEMP2", LEMP2);
 
     /// Basis preparation
-    void startup(std::shared_ptr<ForteOptions> options);
+    void startup();
 
     void cleanup();
+
+    /// Integrals
+    std::shared_ptr<ForteIntegrals> integral_;
+
+    /// Reference
+    Reference reference_;
+
+    /// MO space info
+    std::shared_ptr<MOSpaceInfo> mo_space_info_;
+
+    /// ForteOptions
+    std::shared_ptr<ForteOptions> options_;
+
+    /// Printing level
+    int print_;
+
+    /// Molecular Orbitals
+    size_t ncmo_; // correlated MOs
+    size_t nfrzc_;
+    size_t nfrzv_;
+    size_t ncore_;
+    std::vector<size_t> core_mos_;
+    size_t nactv_;
+    std::vector<size_t> actv_mos_;
+    size_t nvirt_; // virtual MOs
+    std::vector<size_t> virt_mos_;
+    size_t nhole_; // hole MOs
+    std::vector<size_t> hole_mos_;
+    size_t npart_; // particle MOs
+    std::vector<size_t> part_mos_;
+    void prepare_mo_space();
+
+    /// Symmetry
+    std::vector<int> sym_actv_; // active MOs
+    std::vector<int> sym_ncmo_; // correlated MOs
 
     /// DSRG s Parameter
     double s_;
 
     /// Source Operator
-    string source_;
+    std::string source_;
 
     /// Exponent of Delta
     double expo_delta_;
@@ -90,6 +130,51 @@ class MCSRGPT2_MO : public FCI_MO {
     /// Reference Energy
     void compute_ref();
 
+    /// Density Matrix
+    d2 Da_;
+    d2 Db_;
+
+    /// 2-Body Density Cumulant
+    d4 L2aa_;
+    d4 L2ab_;
+    d4 L2bb_;
+
+    /// 3-Body Density Cumulant
+    d6 L3aaa_;
+    d6 L3aab_;
+    d6 L3abb_;
+    d6 L3bbb_;
+
+    /// Fill in non-tensor cumulants used in the naive MR-DSRG-PT2 code
+    void fill_naive_cumulants(Reference& ref, const int level);
+    /// Fill in non-tensor quantities D1a_ and D1b_ using ambit tensors
+    void fill_one_cumulant(ambit::Tensor& L1a, ambit::Tensor& L1b);
+    /// Fill in non-tensor quantities L2aa_, L2ab_, and L2bb_ using ambit tensors
+    void fill_two_cumulant(ambit::Tensor& L2aa, ambit::Tensor& L2ab, ambit::Tensor& L2bb);
+    /// Fill in non-tensor quantities L3aaa_, L3aab_, L3abb_ and L3bbb_ using ambit tensors
+    void fill_three_cumulant(ambit::Tensor& L3aaa, ambit::Tensor& L3aab, ambit::Tensor& L3abb,
+                             ambit::Tensor& L3bbb);
+
+    /// Print Density Matrix (Active ONLY)
+    void print_density(const std::string& spin, const d2& density);
+    /// Print 2-body cumulants
+    void print2PDC(const std::string& str, const d4& TwoPDC, const int& PRINT);
+    /// Print 3-body cumulants
+    void print3PDC(const std::string& str, const d6& ThreePDC, const int& PRINT);
+
+    /// Fock Matrix
+    d2 Fa_;
+    d2 Fb_;
+    /// Form Fock matrix
+    void Form_Fock(d2& A, d2& B);
+    /// Compute Fock (stored in ForteIntegal) using this->Da_
+    void compute_Fock_ints();
+    /// Print Fock Matrix in Blocks
+    void print_Fock(const std::string& spin, const d2& Fock);
+
+    /// Form T Amplitudes for DSRG
+    void Form_AMP_DSRG();
+
     /// T1 Amplitude
     d2 T1a_;
     d2 T1b_;
@@ -97,7 +182,7 @@ class MCSRGPT2_MO : public FCI_MO {
     double T1Nb_;   // Norm T1b
     double T1Maxa_; // Max T1a
     double T1Maxb_; // Max T1b
-    string t1_amp_;
+    std::string t1_amp_;
 
     /// T2 Amplitude
     d4 T2aa_;
@@ -111,16 +196,16 @@ class MCSRGPT2_MO : public FCI_MO {
     double T2Maxbb_; // Max T2bb
 
     /// Form T Amplitudes
-    void Form_T2_DSRG(d4& AA, d4& AB, d4& BB, string& T_ALGOR);
+    void Form_T2_DSRG(d4& AA, d4& AB, d4& BB, std::string& T_ALGOR);
     void Form_T1_DSRG(d2& A, d2& B);
     void Form_T2_ISA(d4& AA, d4& AB, d4& BB, const double& b_const);
     void Form_T1_ISA(d2& A, d2& B, const double& b_const);
     void Form_T2_SELEC(d4& AA, d4& AB, d4& BB);
 
     /// Check T Amplitudes
-    void Check_T1(const string& x, const d2& M, double& Norm, double& MaxT,
+    void Check_T1(const std::string& x, const d2& M, double& Norm, double& MaxT,
                   std::shared_ptr<ForteOptions> options);
-    void Check_T2(const string& x, const d4& M, double& Norm, double& MaxT,
+    void Check_T2(const std::string& x, const d4& M, double& Norm, double& MaxT,
                   std::shared_ptr<ForteOptions> options);
 
     /// Effective Fock Matrix
@@ -190,10 +275,10 @@ class MCSRGPT2_MO : public FCI_MO {
     double VT2C6_timing;
 
     /// Compute an addition element of renorm. H according to source operator
-    double ElementRH(const string& source, const double& D, const double& V);
+    double ElementRH(const std::string& source, const double& D, const double& V);
 
     /// Compute an element of T according to source operator
-    double ElementT(const string& source, const double& D, const double& V);
+    double ElementT(const std::string& source, const double& D, const double& V);
 
     /// Taylor Expansion of [1 - exp(-|Z|^g)] / Z = Z^{g-1} \sum_{n=1}
     /// \frac{1}{n!} (-1)^{n+1} Z^{(n-1)g})

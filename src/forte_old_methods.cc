@@ -144,11 +144,23 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
         localize->split_localize();
     }
 
-    //    if (options.get_str("JOB_TYPE") == "MR-DSRG-PT2") {
-    //        MCSRGPT2_MO mcsrgpt2_mo(std::make_shared<SCFInfo>(ref_wfn),
-    //                                forte_options, ints, mo_space_info);
-    //        final_energy = psi::Process::environment.globals["CURRENT ENERGY"];
-    //    }
+    if (options.get_str("JOB_TYPE") == "MR-DSRG-PT2") {
+        if (std::string actv_type = options.get_str("FCIMO_ACTV_TYPE"); actv_type == "CIS" or actv_type == "CISD") {
+            throw psi::PSIEXCEPTION("VCIS/VCISD is not supported for MR-DSRG-PT2");
+        }
+        int max_rdm_level = (options.get_str("THREEPDC") == "ZERO") ? 2 : 3;
+        auto as_ints = make_active_space_ints(mo_space_info, ints, "ACTIVE", {{"RESTRICTED_DOCC"}});
+        FCI_MO fci_mo(state, nroot, scf_info, forte_options, mo_space_info, as_ints);
+        fci_mo.compute_energy();
+        fci_mo.set_max_rdm_level(max_rdm_level);
+
+        Reference reference = fci_mo.get_reference();
+        SemiCanonical semi(forte_options, ints, mo_space_info);
+        semi.semicanonicalize(reference, max_rdm_level);
+
+        MCSRGPT2_MO mcsrgpt2_mo(reference, forte_options, ints, mo_space_info);
+        final_energy = mcsrgpt2_mo.compute_energy();
+    }
 
     if (std::string cas_type = options.get_str("JOB_TYPE");
         (cas_type == "FCI") or (cas_type == "ACI") or (cas_type == "ASCI")) {
