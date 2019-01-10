@@ -39,6 +39,7 @@
 #include "integrals/integrals.h"
 #include "integrals/make_integrals.h"
 #include "orbital-helpers/localize.h"
+#include "orbital-helpers/mp2_nos.h"
 #include "forte.h"
 #include "fci/fci_solver.h"
 #include "base_classes/dynamic_correlation_solver.h"
@@ -125,6 +126,11 @@ PYBIND11_MODULE(forte, m) {
                       std::shared_ptr<ForteIntegrals>, std::shared_ptr<MOSpaceInfo>>())
         .def("split_localize", &LOCALIZE::split_localize)
         .def("full_localize", &LOCALIZE::split_localize);
+
+    // export MP2_NOS
+    py::class_<MP2_NOS, std::shared_ptr<MP2_NOS>>(m, "MP2_NOS")
+        .def(py::init<std::shared_ptr<psi::Wavefunction>, psi::Options&,
+                      std::shared_ptr<ForteIntegrals>, std::shared_ptr<MOSpaceInfo>>());
 
     // export StateInfo
     py::class_<StateInfo, std::shared_ptr<StateInfo>>(m, "StateInfo")

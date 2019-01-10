@@ -18,7 +18,7 @@ set {
 }
 
 set forte {
-  job_type pci_hashvec
+  active_space_solver pci_hashvec
   pci_nroot 1
   charge 0
   pci_tau 1.0

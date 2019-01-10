@@ -45,6 +45,7 @@
 #include "sparse_ci/sparse_ci_solver.h"
 #include "sparse_ci/determinant.h"
 #include "base_classes/state_info.h"
+#include "base_classes/active_space_method.h"
 
 
 namespace forte {
@@ -77,7 +78,7 @@ using det_hashvec = HashVector<Determinant, Determinant::Hash>;
  * @brief The SparsePathIntegralCI class
  * This class implements an a sparse path-integral FCI algorithm
  */
-class ProjectorCI_HashVec {
+class ProjectorCI_HashVec : public ActiveSpaceMethod {
   public:
     // ==> Class Constructor and Destructor <==
 
@@ -87,24 +88,23 @@ class ProjectorCI_HashVec {
      * @param options The main options object
      * @param ints A pointer to an allocated integral object
      */
-    ProjectorCI_HashVec(StateInfo state, std::shared_ptr<forte::SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
-                        std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
+    ProjectorCI_HashVec(StateInfo state, size_t nroot, std::shared_ptr<forte::SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
+                        std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ActiveSpaceIntegrals> as_ints);
 
     // ==> Class Interface <==
 
+    void set_options(std::shared_ptr<ForteOptions>) override{};
+
+    /// Return a reference object
+    Reference get_reference(int root = 0) override;
+
     /// Compute the energy
-    double compute_energy();
+    double compute_energy() override;
 
   private:
     // ==> Class data <==
 
     // * Calculation data
-    /// The state to calculate
-    StateInfo state_;
-    /// The molecular integrals required by Explorer
-    std::shared_ptr<ForteIntegrals> ints_;
-    /// Store all the integrals locally
-    static std::shared_ptr<ActiveSpaceIntegrals> fci_ints_;
     /// The options
     std::shared_ptr<ForteOptions> options_;
     /// SCF information
@@ -144,8 +144,6 @@ class ProjectorCI_HashVec {
     /// The reference determinant
     Determinant reference_determinant_;
     std::vector<std::pair<det_hashvec, std::vector<double>>> solutions_;
-    /// The information of mo space
-    std::shared_ptr<MOSpaceInfo> mo_space_info_;
     /// (pq|pq) matrix for prescreening
     double *pqpq_aa_, *pqpq_ab_, *pqpq_bb_;
     /// maximum element in (pq|pq) matrix
@@ -166,8 +164,6 @@ class ProjectorCI_HashVec {
     bool do_shift_;
     /// Use intermediate normalization?
     bool use_inter_norm_;
-    /// The number of roots computed
-    int nroot_;
     /// The energy convergence criterium
     double e_convergence_;
     /// The maximum number of iterations

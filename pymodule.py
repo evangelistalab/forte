@@ -105,10 +105,11 @@ def run_forte(name, **kwargs):
         # Make an integral object
         ints = forte.make_forte_integrals(ref_wfn, options, mo_space_info)
 
-        if options.get_bool("LOCALIZE"):
-            forte.LOCALIZE(ref_wfn,options,ints,mo_space_info)
-
         if (job_type == 'NEWDRIVER'):
+            if options.get_bool("LOCALIZE"):
+                forte.LOCALIZE(ref_wfn,options,ints,mo_space_info)
+            if options.get_bool("MP2_NOS"):
+                forte.MP2_NOS(ref_wfn,options,ints,mo_space_info)
             energy = forte_driver(state, scf_info, forte.forte_options, ints, mo_space_info)
         else:
             # Run a method
