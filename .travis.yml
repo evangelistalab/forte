@@ -66,6 +66,7 @@ install:
 - export CC=clang
 - export FC=${Fortran_COMPILER}
 - export CTEST_OUTPUT_ON_FAILURE=1
+- export LD_LIBRARY_PATH=/usr/local/clang/lib:$LD_LIBRARY_PATH
 - ${CXX_COMPILER} --version
 - ${Fortran_COMPILER} --version
 - ${C_COMPILER} --version
