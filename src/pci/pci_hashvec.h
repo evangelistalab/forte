@@ -47,7 +47,6 @@
 #include "base_classes/state_info.h"
 #include "base_classes/active_space_method.h"
 
-
 namespace forte {
 class SCFInfo;
 
@@ -88,8 +87,10 @@ class ProjectorCI_HashVec : public ActiveSpaceMethod {
      * @param options The main options object
      * @param ints A pointer to an allocated integral object
      */
-    ProjectorCI_HashVec(StateInfo state, size_t nroot, std::shared_ptr<forte::SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
-                        std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ActiveSpaceIntegrals> as_ints);
+    ProjectorCI_HashVec(StateInfo state, size_t nroot, std::shared_ptr<forte::SCFInfo> scf_info,
+                        std::shared_ptr<ForteOptions> options,
+                        std::shared_ptr<MOSpaceInfo> mo_space_info,
+                        std::shared_ptr<ActiveSpaceIntegrals> as_ints);
 
     // ==> Class Interface <==
 
@@ -164,8 +165,6 @@ class ProjectorCI_HashVec : public ActiveSpaceMethod {
     bool do_shift_;
     /// Use intermediate normalization?
     bool use_inter_norm_;
-    /// The energy convergence criterium
-    double e_convergence_;
     /// The maximum number of iterations
     int maxiter_;
     /// The maximum number of iterations in Davidson generator

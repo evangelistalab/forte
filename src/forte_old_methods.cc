@@ -150,17 +150,19 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
     //        final_energy = psi::Process::environment.globals["CURRENT ENERGY"];
     //    }
 
-    if( std::string cas_type = options.get_str("JOB_TYPE"); (cas_type == "FCI") or (cas_type == "ACI") or (cas_type == "ASCI") ){
+    if (std::string cas_type = options.get_str("JOB_TYPE");
+        (cas_type == "FCI") or (cas_type == "ACI") or (cas_type == "ASCI")) {
         auto as_ints = make_active_space_ints(mo_space_info, ints, "ACTIVE", {{"RESTRICTED_DOCC"}});
         auto solver = make_active_space_solver(cas_type, state_weights_list, scf_info,
                                                mo_space_info, as_ints, forte_options);
         final_energy = solver->compute_energy();
-
     }
 
     if (options.get_str("JOB_TYPE") == "PCI") {
-        auto pci = std::make_shared<ProjectorCI>(state, std::make_shared<SCFInfo>(ref_wfn),
-                                                 forte_options, ints, mo_space_info);
+        auto as_ints = make_active_space_ints(mo_space_info, ints, "ACTIVE", {{"RESTRICTED_DOCC"}});
+        auto pci = std::make_shared<ProjectorCI>(state, options.get_int("NROOT"),
+                                                 std::make_shared<SCFInfo>(ref_wfn), forte_options,
+                                                 mo_space_info, as_ints);
         for (int n = 0; n < options.get_int("NROOT"); ++n) {
             final_energy = pci->compute_energy();
         }
@@ -168,7 +170,8 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
     if (options.get_str("JOB_TYPE") == "PCI_HASHVEC") {
         auto as_ints = make_active_space_ints(mo_space_info, ints, "ACTIVE", {{"RESTRICTED_DOCC"}});
         auto pci_hashvec = std::make_shared<ProjectorCI_HashVec>(
-            state, options.get_int("NROOT"), std::make_shared<SCFInfo>(ref_wfn), forte_options, mo_space_info, as_ints);
+            state, options.get_int("NROOT"), std::make_shared<SCFInfo>(ref_wfn), forte_options,
+            mo_space_info, as_ints);
         for (int n = 0; n < options.get_int("NROOT"); ++n) {
             final_energy = pci_hashvec->compute_energy();
         }
@@ -187,11 +190,11 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
             final_energy = ewci->compute_energy();
         }
     }
-   // if (options.get_str("JOB_TYPE") == "FCI") {
-   //     auto fci = make_active_space_method("FCI", state, nroot, scf_info, mo_space_info, ints,
-   //                                         forte_options);
-   //     final_energy = fci->compute_energy();
-   // }
+    // if (options.get_str("JOB_TYPE") == "FCI") {
+    //     auto fci = make_active_space_method("FCI", state, nroot, scf_info, mo_space_info, ints,
+    //                                         forte_options);
+    //     final_energy = fci->compute_energy();
+    // }
     if (options.get_bool("USE_DMRGSCF")) {
 #ifdef HAVE_CHEMPS2
         auto dmrg = std::make_shared<DMRGSCF>(state, std::make_shared<SCFInfo>(ref_wfn),
@@ -475,7 +478,8 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
 
         } else {
 
-            auto as_ints = make_active_space_ints(mo_space_info, ints, "ACTIVE", {{"RESTRICTED_DOCC"}});
+            auto as_ints =
+                make_active_space_ints(mo_space_info, ints, "ACTIVE", {{"RESTRICTED_DOCC"}});
             auto solver = make_active_space_solver(cas_type, state_weights_list, scf_info,
                                                    mo_space_info, as_ints, forte_options);
             solver->set_max_rdm_level(3);
@@ -518,8 +522,8 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
                 // grab the effective Hamiltonian in the active space
                 auto fci_ints = three_dsrg_mrpt2->compute_Heff_actv();
                 // make a solver and run it
-                auto relaxed_solver = make_active_space_solver(cas_type, state_weights_list, scf_info,
-                                                       mo_space_info, fci_ints, forte_options);
+                auto relaxed_solver = make_active_space_solver(
+                    cas_type, state_weights_list, scf_info, mo_space_info, fci_ints, forte_options);
                 final_energy = relaxed_solver->compute_energy();
             }
         }

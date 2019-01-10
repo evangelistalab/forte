@@ -19,7 +19,7 @@ set {
 }
 
 set forte {
-  job_type pci
+  active_space_solver pci
   frozen_docc [1,0,0,0,0,1,0,0]
   frozen_uocc [4,1,2,2,1,5,2,2]
   pci_nroot 1

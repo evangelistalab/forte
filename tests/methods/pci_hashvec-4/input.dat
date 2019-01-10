@@ -22,7 +22,7 @@ set forte {
   active_space_solver pci_hashvec
   frozen_docc [1,0,0,0,0,1,0,0]
   frozen_uocc [4,1,2,2,1,5,2,2]
-  pci_nroot 1
+  nroot 1
   charge 0
   pci_spawning_threshold 0.0001
   pci_ENERGY_ESTIMATE_FREQ 1

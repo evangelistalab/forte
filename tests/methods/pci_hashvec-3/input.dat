@@ -19,7 +19,7 @@ set {
 
 set forte {
   active_space_solver pci_hashvec
-  pci_nroot 1
+  nroot 1
   charge 0
   pci_tau 1.0
   pci_spawning_threshold 0.0001

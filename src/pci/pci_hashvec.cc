@@ -59,7 +59,6 @@ using namespace forte::GeneratorType_HashVec;
 #define DO_STATS 0
 #define ENFORCE_SYM 1
 
-
 namespace forte {
 #ifdef _OPENMP
 #include <omp.h>
@@ -74,8 +73,7 @@ void scale(std::vector<double>& A, double alpha);
 double normalize(std::vector<double>& C);
 double dot(std::vector<double>& C1, std::vector<double>& C2);
 void add(std::vector<double>& a, double k, std::vector<double>& b);
-void Wall_Chebyshev_generator_coefs(std::vector<double>& coefs, int order,
-                                    double range);
+void Wall_Chebyshev_generator_coefs(std::vector<double>& coefs, int order, double range);
 void print_polynomial(std::vector<double>& coefs);
 
 void add(const det_hashvec& A, std::vector<double> Ca, double beta, const det_hashvec& B,
@@ -127,27 +125,29 @@ void ProjectorCI_HashVec::sortHashVecByCoefficient(det_hashvec& dets_hashvec,
     dets_max_couplings_ = std::move(new_dets_max_couplings);
 }
 
-ProjectorCI_HashVec::ProjectorCI_HashVec(StateInfo state, size_t nroot, std::shared_ptr<forte::SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
-                                         std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ActiveSpaceIntegrals> as_ints)
-    : ActiveSpaceMethod(state, nroot, mo_space_info, as_ints), scf_info_(scf_info), options_(options),
-      fast_variational_estimate_(false) {
+ProjectorCI_HashVec::ProjectorCI_HashVec(StateInfo state, size_t nroot,
+                                         std::shared_ptr<forte::SCFInfo> scf_info,
+                                         std::shared_ptr<ForteOptions> options,
+                                         std::shared_ptr<MOSpaceInfo> mo_space_info,
+                                         std::shared_ptr<ActiveSpaceIntegrals> as_ints)
+    : ActiveSpaceMethod(state, nroot, mo_space_info, as_ints), scf_info_(scf_info),
+      options_(options), fast_variational_estimate_(false) {
     // Copy the wavefunction information
     startup();
 }
 
-Reference ProjectorCI_HashVec::get_reference(int root) {
-//    CI_RDMS ci_rdms(final_wfn_, as_ints_, evecs_, root, root);
-//    ci_rdms.set_max_rdm(max_rdm_level_);
-//    Reference pci_ref = ci_rdms.reference(ordm_a_, ordm_b_, trdm_aa_, trdm_ab_, trdm_bb_, trdm_aaa_,
-//                                          trdm_aab_, trdm_abb_, trdm_bbb_);
+Reference ProjectorCI_HashVec::get_reference(int) {
+    //    CI_RDMS ci_rdms(final_wfn_, as_ints_, evecs_, root, root);
+    //    ci_rdms.set_max_rdm(max_rdm_level_);
+    //    Reference pci_ref = ci_rdms.reference(ordm_a_, ordm_b_, trdm_aa_, trdm_ab_, trdm_bb_,
+    //    trdm_aaa_,
+    //                                          trdm_aab_, trdm_abb_, trdm_bbb_);
     Reference pci_ref;
     // TODO: implement
     return pci_ref;
 }
 
 void ProjectorCI_HashVec::startup() {
-    // Connect the integrals to the determinant class
-
     // The number of correlated molecular orbitals
     nact_ = mo_space_info_->get_corr_abs_mo("ACTIVE").size();
     nactpi_ = mo_space_info_->get_dimension("ACTIVE");
@@ -184,8 +184,8 @@ void ProjectorCI_HashVec::startup() {
 
     // Build the reference determinant and compute its energy
     std::vector<Determinant> reference_vec;
-    CI_Reference ref(scf_info_, options_, mo_space_info_, as_ints_,
-                     wavefunction_multiplicity_, ms, wavefunction_symmetry_);
+    CI_Reference ref(scf_info_, options_, mo_space_info_, as_ints_, wavefunction_multiplicity_, ms,
+                     wavefunction_symmetry_);
     ref.set_ref_type("HF");
     ref.build_reference(reference_vec);
     reference_determinant_ = reference_vec[0];
@@ -483,8 +483,7 @@ void ProjectorCI_HashVec::compute_characteristic_function() {
     range_ = (lambda_h_ - lambda_1_) / 2.0;
     switch (generator_) {
     case WallChebyshevGenerator:
-        Wall_Chebyshev_generator_coefs(cha_func_coefs_, chebyshev_order_,
-                                       range_);
+        Wall_Chebyshev_generator_coefs(cha_func_coefs_, chebyshev_order_, range_);
     default:
         break;
     }
@@ -782,8 +781,8 @@ double ProjectorCI_HashVec::compute_energy() {
 
         timer_off("PCI:Post_Diag");
 
-        double post_diag_energy = apfci_evals->get(current_root_) + nuclear_repulsion_energy_ +
-                                  as_ints_->scalar_energy();
+        double post_diag_energy =
+            apfci_evals->get(current_root_) + nuclear_repulsion_energy_ + as_ints_->scalar_energy();
         psi::Process::environment.globals["PCI POST DIAG ENERGY"] = post_diag_energy;
 
         outfile->Printf("\n\n  * Projector-CI Post-diag   Energy     = %18.12f Eh", 1,
@@ -3007,7 +3006,8 @@ ProjectorCI_HashVec::sym_labeled_orbitals(std::string type) {
         int cumidx = 0;
         for (int h = 0; h < nirrep_; ++h) {
             for (int a = 0; a < nactpi_[h]; ++a) {
-                orb_e.push_back(std::make_pair(scf_info_->epsilon_a()->get(h, frzcpi_[h] + a), a + cumidx));
+                orb_e.push_back(
+                    std::make_pair(scf_info_->epsilon_a()->get(h, frzcpi_[h] + a), a + cumidx));
             }
             cumidx += nactpi_[h];
         }
@@ -3026,7 +3026,8 @@ ProjectorCI_HashVec::sym_labeled_orbitals(std::string type) {
         int cumidx = 0;
         for (int h = 0; h < nirrep_; ++h) {
             for (size_t a = 0, max = nactpi_[h]; a < max; ++a) {
-                orb_e.push_back(std::make_pair(scf_info_->epsilon_b()->get(h, frzcpi_[h] + a), a + cumidx));
+                orb_e.push_back(
+                    std::make_pair(scf_info_->epsilon_b()->get(h, frzcpi_[h] + a), a + cumidx));
             }
             cumidx += nactpi_[h];
         }
