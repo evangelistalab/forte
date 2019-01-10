@@ -94,7 +94,7 @@ class AdaptiveCI : public ActiveSpaceMethod {
     double compute_energy() override;
 
     /// Update the reference file
-    Reference get_reference() override;
+    Reference get_reference(int root = 0) override;
 
     // Set the options
     void set_options(std::shared_ptr<ForteOptions>) override{};

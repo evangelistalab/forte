@@ -38,6 +38,7 @@
 
 #include "base_classes/forte_options.h"
 #include "base_classes/reference.h"
+#include "base_classes/mo_space_info.h"
 #include "helpers/helpers.h"
 #include "integrals/active_space_integrals.h"
 #include "active_space_method.h"
@@ -78,17 +79,95 @@ double ActiveSpaceSolver::compute_energy() {
     return energy;
 }
 
-Reference ActiveSpaceSolver::get_reference() {
+Reference ActiveSpaceSolver::get_reference(int root) {
 
     Reference ref;
 
+    // For single state
     if( method_vec_.size() == 1 ){
         ref =  method_vec_[0]->get_reference();
+    // For state average
     } else {
-    // TODO: Implement SA procedure
-        for( auto& method : method_vec_ ){
-            ref = method->get_reference();
+        size_t nactive = mo_space_info_->size("ACTIVE");
+        ambit::Tensor L1a = ambit::Tensor::build(ambit::CoreTensor, "L1a", {nactive, nactive});
+        ambit::Tensor L1b = ambit::Tensor::build(ambit::CoreTensor, "L1b", {nactive, nactive});
+
+        ambit::Tensor L2aa;
+        ambit::Tensor L2ab;
+        ambit::Tensor L2bb;
+
+        ambit::Tensor L3aaa;
+        ambit::Tensor L3aab;
+        ambit::Tensor L3abb;
+        ambit::Tensor L3bbb;
+
+        if (max_rdm_level_ >= 2) {
+            L2aa = ambit::Tensor::build(ambit::CoreTensor, "L2aa", {nactive, nactive, nactive, nactive});
+            L2ab = ambit::Tensor::build(ambit::CoreTensor, "L2ab", {nactive, nactive, nactive, nactive});
+            L2bb = ambit::Tensor::build(ambit::CoreTensor, "L2bb", {nactive, nactive, nactive, nactive});
         }
+
+        if (max_rdm_level_ >= 3) {
+            L3aaa = ambit::Tensor::build(ambit::CoreTensor, "L3aaa", std::vector<size_t>(6, nactive));
+            L3aab = ambit::Tensor::build(ambit::CoreTensor, "L3aab", std::vector<size_t>(6, nactive));
+            L3abb = ambit::Tensor::build(ambit::CoreTensor, "L3abb", std::vector<size_t>(6, nactive));
+            L3bbb = ambit::Tensor::build(ambit::CoreTensor, "L3bbb", std::vector<size_t>(6, nactive));
+        }
+        // function that scale pdm by w and add scaled pdm to sa_pdm
+        auto scale_add = [](std::vector<double>& sa_pdm, std::vector<double>& pdm, const double& w) {
+            std::for_each(pdm.begin(), pdm.end(), [&](double& v) { v *= w; });
+            std::transform(sa_pdm.begin(), sa_pdm.end(), pdm.begin(), sa_pdm.begin(),
+                           std::plus<double>());
+        };
+
+        // Loop through references, add to master ref
+        int state_num = 0;
+        for (const auto& [state, weights] : state_weights_list_) {
+            size_t nroot = weights.size();
+            for (size_t r = 0; r < nroot; r++) {
+            
+                // Get the already-run method
+                auto& method = method_vec_[state_num];
+
+                // Get the reference of the correct root
+                Reference method_ref = method->get_reference(r);
+                double weight = weights[r];
+
+                // Now the RDMs
+                // 1 RDM
+                scale_add(L1a.data(), method_ref.L1a().data(), weight);
+                scale_add(L1b.data(), method_ref.L1b().data(), weight);
+
+                if (max_rdm_level_ >= 2) {
+                    // 2 RDM
+                    scale_add(L2aa.data(), method_ref.L2aa().data(), weight);
+                    scale_add(L2ab.data(), method_ref.L2ab().data(), weight);
+                    scale_add(L2bb.data(), method_ref.L2bb().data(), weight);
+                }
+
+                if (max_rdm_level_ >= 3) {
+                    // 3 RDM
+                    scale_add(L3aaa.data(), method_ref.L3aaa().data(), weight);
+                    scale_add(L3aab.data(), method_ref.L3aab().data(), weight);
+                    scale_add(L3abb.data(), method_ref.L3abb().data(), weight);
+                    scale_add(L3bbb.data(), method_ref.L3bbb().data(), weight);
+                }
+
+                state_num++;
+            }
+        }
+        // Update current reference object with RDMs
+        ref.set_L1a(L1a);
+        ref.set_L1b(L1b);
+
+        ref.set_L2aa(L2aa);
+        ref.set_L2ab(L2ab);
+        ref.set_L2bb(L2bb);
+        
+        ref.set_L3aaa(L3aaa);
+        ref.set_L3aab(L3aab);
+        ref.set_L3abb(L3abb);
+        ref.set_L3bbb(L3bbb);
     }
     return ref;
 }

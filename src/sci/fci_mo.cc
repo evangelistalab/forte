@@ -2332,7 +2332,7 @@ d3 FCI_MO::compute_orbital_extents() {
     return orb_extents;
 }
 
-Reference FCI_MO::get_reference() {
+Reference FCI_MO::get_reference(int root) {
     Reference ref;
 
     if ((options_->psi_options())["AVG_STATE"].size() != 0) {

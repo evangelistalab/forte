@@ -63,7 +63,7 @@ class FCISolver : public ActiveSpaceMethod {
     double compute_energy() override;
 
     /// Return a reference object
-    Reference get_reference() override;
+    Reference get_reference(int root = 0) override;
 
     /// Set the options
     void set_options(std::shared_ptr<ForteOptions> options) override;

@@ -1064,6 +1064,6 @@ std::pair<ambit::Tensor, std::vector<double>> CASSCF::CI_Integrals() {
     return pair_return;
 }
 
-Reference CASSCF::get_reference() { return cas_ref_; }
+Reference CASSCF::get_reference(int root) { return cas_ref_; }
 
 } // namespace forte

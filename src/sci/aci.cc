@@ -1573,10 +1573,10 @@ void AdaptiveCI::set_max_rdm(int rdm) {
     set_rdm_ = true;
 }
 
-Reference AdaptiveCI::get_reference() {
+Reference AdaptiveCI::get_reference(int root) {
     // const std::vector<Determinant>& final_wfn =
     //     final_wfn_.determinants();
-    CI_RDMS ci_rdms(final_wfn_, as_ints_, evecs_, 0, 0);
+    CI_RDMS ci_rdms(final_wfn_, as_ints_, evecs_, root, root);
     ci_rdms.set_max_rdm(max_rdm_level_);
     Reference aci_ref = ci_rdms.reference(ordm_a_, ordm_b_, trdm_aa_, trdm_ab_, trdm_bb_, trdm_aaa_,
                                           trdm_aab_, trdm_abb_, trdm_bbb_);

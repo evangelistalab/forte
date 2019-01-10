@@ -76,7 +76,7 @@ class CASSCF : public ActiveSpaceMethod {
     void set_options(std::shared_ptr<ForteOptions>) override{};
 
     /// Return a reference object
-    Reference get_reference() override;
+    Reference get_reference(int root = 0) override;
 
     /// check the cas_ci energy with spin-free RDM
     double cas_check(Reference cas);

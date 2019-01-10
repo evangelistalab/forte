@@ -103,7 +103,7 @@ class ActiveSpaceMethod {
     virtual double compute_energy() = 0;
 
     /// Returns the reference
-    virtual Reference get_reference() = 0;
+    virtual Reference get_reference(int root = 0) = 0;
 
     /// Set options from an option object
     /// @param options the options passed in

@@ -117,7 +117,7 @@ class FCI_MO : public ActiveSpaceMethod {
 
     /// Return the reference object
     /// Return averaged cumulants if AVG_STATE is not empty
-    Reference get_reference() override;
+    Reference get_reference(int root = 0) override;
 
     void set_options(std::shared_ptr<ForteOptions>) override{}; // TODO implement
 

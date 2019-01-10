@@ -503,7 +503,7 @@ FCISolver::initial_guess(FCIVector& diag, size_t n,
     return guess;
 }
 
-Reference FCISolver::get_reference() {
+Reference FCISolver::get_reference(int root) {
     size_t nact = active_dim_.sum();
     size_t nact2 = nact * nact;
     size_t nact3 = nact2 * nact;
