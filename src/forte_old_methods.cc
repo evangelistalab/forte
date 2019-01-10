@@ -189,15 +189,19 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
         }
     }
     if (options.get_str("JOB_TYPE") == "PCI_SIMPLE") {
+        auto as_ints = make_active_space_ints(mo_space_info, ints, "ACTIVE", {{"RESTRICTED_DOCC"}});
         auto pci_simple = std::make_shared<ProjectorCI_Simple>(
-            state, std::make_shared<SCFInfo>(ref_wfn), forte_options, ints, mo_space_info);
+            state, options.get_int("NROOT"), std::make_shared<SCFInfo>(ref_wfn), forte_options,
+            mo_space_info, as_ints);
         for (int n = 0; n < options.get_int("NROOT"); ++n) {
             final_energy = pci_simple->compute_energy();
         }
     }
     if (options.get_str("JOB_TYPE") == "EWCI") {
-        auto ewci = std::make_shared<ElementwiseCI>(state, std::make_shared<SCFInfo>(ref_wfn),
-                                                    forte_options, ints, mo_space_info);
+        auto as_ints = make_active_space_ints(mo_space_info, ints, "ACTIVE", {{"RESTRICTED_DOCC"}});
+        auto ewci = std::make_shared<ElementwiseCI>(state, options.get_int("NROOT"),
+                                                    std::make_shared<SCFInfo>(ref_wfn),
+                                                    forte_options, mo_space_info, as_ints);
         for (int n = 0; n < options.get_int("NROOT"); ++n) {
             final_energy = ewci->compute_energy();
         }

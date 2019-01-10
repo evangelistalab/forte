@@ -37,6 +37,8 @@
 #include "sci/fci_mo.h"
 #include "pci/pci.h"
 #include "pci/pci_hashvec.h"
+#include "pci/ewci.h"
+#include "pci/pci_simple.h"
 
 #include "base_classes/active_space_method.h"
 
@@ -93,12 +95,20 @@ std::unique_ptr<ActiveSpaceMethod> make_active_space_method2(
         solver = std::make_unique<CASSCF>(state, nroot, scf_info, options, mo_space_info, as_ints);
     } else if (type == "PCI") {
         // TODO modify pci code to compute multiple roots under new framework
-        solver = std::make_unique<ProjectorCI>(state, nroot, scf_info, options,
-                                                       mo_space_info, as_ints);
+        solver =
+            std::make_unique<ProjectorCI>(state, nroot, scf_info, options, mo_space_info, as_ints);
+    } else if (type == "PCI_SIMPLE") {
+        // TODO modify pci code to compute multiple roots under new framework
+        solver = std::make_unique<ProjectorCI_Simple>(state, nroot, scf_info, options,
+                                                      mo_space_info, as_ints);
     } else if (type == "PCI_HASHVEC") {
         // TODO modify pci code to compute multiple roots under new framework
         solver = std::make_unique<ProjectorCI_HashVec>(state, nroot, scf_info, options,
                                                        mo_space_info, as_ints);
+    } else if (type == "EWCI") {
+        // TODO modify pci code to compute multiple roots under new framework
+        solver = std::make_unique<ElementwiseCI>(state, nroot, scf_info, options, mo_space_info,
+                                                 as_ints);
     } else {
         throw psi::PSIEXCEPTION("make_active_space_method: type = " + type + " was not recognized");
     }

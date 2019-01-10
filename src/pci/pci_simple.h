@@ -43,7 +43,7 @@
 #include "fci/fci_vector.h"
 #include "base_classes/forte_options.h"
 #include "base_classes/state_info.h"
-
+#include "base_classes/active_space_method.h"
 
 namespace forte {
 class SCFInfo;
@@ -73,7 +73,7 @@ enum GeneratorType {
  * @brief The SparsePathIntegralCI class
  * This class implements an a sparse path-integral FCI algorithm
  */
-class ProjectorCI_Simple {
+class ProjectorCI_Simple : public ActiveSpaceMethod {
   public:
     // ==> Class Constructor and Destructor <==
 
@@ -83,25 +83,25 @@ class ProjectorCI_Simple {
      * @param options The main options object
      * @param ints A pointer to an allocated integral object
      */
-    ProjectorCI_Simple(StateInfo state, std::shared_ptr<forte::SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
-                       std::shared_ptr<ForteIntegrals> ints,
-                       std::shared_ptr<MOSpaceInfo> mo_space_info);
+    ProjectorCI_Simple(StateInfo state, size_t nroot, std::shared_ptr<forte::SCFInfo> scf_info,
+                       std::shared_ptr<ForteOptions> options,
+                       std::shared_ptr<MOSpaceInfo> mo_space_info,
+                       std::shared_ptr<ActiveSpaceIntegrals> as_ints);
 
     // ==> Class Interface <==
 
+    void set_options(std::shared_ptr<ForteOptions>) override{};
+
+    /// Return a reference object
+    Reference get_reference(int root = 0) override;
+
     /// Compute the energy
-    double compute_energy();
+    double compute_energy() override;
 
   private:
     // ==> Class data <==
 
     // * Calculation data
-    /// The state to calculate
-    StateInfo state_;
-    /// The molecular integrals required by Explorer
-    std::shared_ptr<ForteIntegrals> ints_;
-    /// Store all the integrals locally
-    static std::shared_ptr<ActiveSpaceIntegrals> fci_ints_;
     /// The options
     std::shared_ptr<ForteOptions> options_;
     /// SCF information
@@ -141,8 +141,6 @@ class ProjectorCI_Simple {
     /// The reference determinant
     Determinant reference_determinant_;
     std::vector<det_hash<>> solutions_;
-    /// The information of mo space
-    std::shared_ptr<MOSpaceInfo> mo_space_info_;
     /// (pq|pq) matrix for prescreening
     double *pqpq_aa_, *pqpq_ab_, *pqpq_bb_;
     /// maximum element in (pq|pq) matrix
@@ -165,10 +163,6 @@ class ProjectorCI_Simple {
     bool do_shift_;
     /// Use intermediate normalization?
     bool use_inter_norm_;
-    /// The number of roots computed
-    int nroot_;
-    /// The energy convergence criterium
-    double e_convergence_;
     /// The maximum number of iterations
     int maxiter_;
     /// The maximum number of iterations in Davidson generator
