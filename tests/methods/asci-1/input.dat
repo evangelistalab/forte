@@ -5,7 +5,7 @@ import forte
 #   J. Chem. Phys., 145 (4), 044112. http://doi.org/doi: 10.1063/1.4955109
 
 refscf = -75.38645665583094 
-refasci = -75.718424927906 
+refasci = -75.7184255710 
                                          
 molecule CH2{                            
 0 1
@@ -19,6 +19,7 @@ set {
   #multiplicity 1                         
   basis cc-pvdz                      
   reference rohf
+  e_convergence 10
 }                                        
                                          
 set forte {                              
