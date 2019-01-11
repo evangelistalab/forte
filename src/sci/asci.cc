@@ -545,14 +545,19 @@ double ASCI::compute_spin_contamination(DeterminantHashVec& space, WFNOperator& 
     return spin_contam;
 }
 
-Reference ASCI::get_reference(int root) {
+std::vector<Reference> ASCI::get_reference(std::vector<std::pair<size_t,size_t>>& root_list) {
     // const std::vector<Determinant>& final_wfn =
-    //     final_wfn_.determinants();
-    CI_RDMS ci_rdms(final_wfn_, as_ints_, evecs_, root, root);
-    ci_rdms.set_max_rdm(rdm_level_);
-    Reference aci_ref = ci_rdms.reference(ordm_a_, ordm_b_, trdm_aa_, trdm_ab_, trdm_bb_, trdm_aaa_,
-                                          trdm_aab_, trdm_abb_, trdm_bbb_);
-    return aci_ref;
+    //     final_wfn_.determinants//();
+    std::vector<Reference> refs;
+    for( auto& root : root_list ){
+        compute_rdms(as_ints_, final_wfn_, op_, evecs_, root.first,root.second);
+        CI_RDMS ci_rdms(final_wfn_, as_ints_, evecs_, root.first, root.second);
+        ci_rdms.set_max_rdm(rdm_level_);
+        Reference aci_ref = ci_rdms.reference(ordm_a_, ordm_b_, trdm_aa_, trdm_ab_, trdm_bb_, trdm_aaa_,
+                                              trdm_aab_, trdm_abb_, trdm_bbb_);
+        refs.push_back(aci_ref);
+    }
+    return refs;
 }
 
 void ASCI::print_nos() {

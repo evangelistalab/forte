@@ -366,7 +366,9 @@ void CASSCF::cas_ci() {
         aci.set_max_rdm(2);
         aci.set_quiet(quiet);
         aci.compute_energy();
-        cas_ref_ = aci.get_reference();
+        std::vector<std::pair<size_t,size_t>> roots;
+        roots.push_back(std::make_pair(0,0));
+        cas_ref_ = aci.get_reference(roots)[0];
         E_casscf_ = cas_ref_.get_Eref();
     } else if (options_->get_str("CASSCF_CI_SOLVER") == "DMRG") {
 #ifdef HAVE_CHEMPS2
@@ -451,7 +453,9 @@ void CASSCF::cas_ci_final() {
         aci.set_max_rdm(3);
         aci.set_quiet(quiet);
         aci.compute_energy();
-        cas_ref_ = aci.get_reference();
+        std::vector<std::pair<size_t,size_t>> roots;
+        roots.push_back(std::make_pair(0,0));
+        cas_ref_ = aci.get_reference(roots)[0];
         E_casscf_ = cas_ref_.get_Eref();
     } else if (options_->get_str("CASSCF_CI_SOLVER") == "DMRG") {
 #ifdef HAVE_CHEMPS2
@@ -703,7 +707,9 @@ void CASSCF::set_up_fci() {
     fcisolver->set_active_space_integrals(fci_ints);
     E_casscf_ = fcisolver->compute_energy();
 
-    cas_ref_ = fcisolver->get_reference();
+    std::vector<std::pair<size_t,size_t>> roots;
+    roots.push_back(std::make_pair(0,0));
+    cas_ref_ = fcisolver->get_reference(roots)[0];
 }
 
 std::shared_ptr<ActiveSpaceIntegrals> CASSCF::get_ci_integrals() {
@@ -1025,7 +1031,10 @@ void CASSCF::set_up_fcimo() {
         cas.set_quite_mode(print_ > 0 ? false : true);
         cas.compute_energy();
         cas.set_max_rdm_level(2);
-        cas_ref_ = cas.get_reference();
+        std::vector<std::pair<size_t,size_t>> roots;
+        roots.push_back(std::make_pair(0,0));
+
+        cas_ref_ = cas.get_reference(roots)[0];
         E_casscf_ = cas_ref_.get_Eref();
     }
 }
@@ -1064,6 +1073,12 @@ std::pair<ambit::Tensor, std::vector<double>> CASSCF::CI_Integrals() {
     return pair_return;
 }
 
-Reference CASSCF::get_reference(int root) { return cas_ref_; }
+std::vector<Reference> CASSCF::get_reference(std::vector<std::pair<size_t,size_t>>& root_list) {
+
+    std::vector<Reference> refs;
+    refs.push_back(cas_ref_);
+    return refs; 
+}
+
 
 } // namespace forte

@@ -103,7 +103,8 @@ class ActiveSpaceMethod {
     virtual double compute_energy() = 0;
 
     /// Returns the reference
-    virtual Reference get_reference(int root = 0) = 0;
+    virtual std::vector<Reference>
+    get_reference(std::vector<std::pair<size_t, size_t>>& roots) = 0;
 
     /// Set options from an option object
     /// @param options the options passed in

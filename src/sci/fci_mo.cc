@@ -576,9 +576,14 @@ double FCI_MO::compute_energy() {
     } else {
         Eref_ = compute_ss_energy();
     }
-
     psi::Process::environment.globals["CURRENT ENERGY"] = Eref_;
     psi::Process::environment.globals["FCI_MO ENERGY"] = Eref_;
+
+    energies_.resize(nroot_,0.0);
+    for( int n = 0; n < nroot_; ++n ){
+        energies_[n] = eigen_[n].second;
+    }
+
     return Eref_;
 }
 
@@ -2121,38 +2126,66 @@ d3 FCI_MO::compute_orbital_extents() {
     return orb_extents;
 }
 
-Reference FCI_MO::get_reference(int root) {
-    Reference ref;
+std::vector<Reference> FCI_MO::get_reference(std::vector<std::pair<size_t,size_t>>& root_list) {
 
+
+    std::vector<Reference> refs;
     if ((options_->psi_options())["AVG_STATE"].size() != 0) {
+        Reference ref;
         compute_sa_ref(max_rdm_);
+        ref.set_Eref(Eref_);
+
+        if (max_rdm_ > 0) {
+            ref.set_L1a(L1a);
+            ref.set_L1b(L1b);
+        }
+
+        if (max_rdm_ > 1) {
+            ref.set_L2aa(L2aa);
+            ref.set_L2ab(L2ab);
+            ref.set_L2bb(L2bb);
+        }
+
+        if (max_rdm_ > 2 && (options_->get_str("THREEPDC") != "ZERO")) {
+            ref.set_L3aaa(L3aaa);
+            ref.set_L3aab(L3aab);
+            ref.set_L3abb(L3abb);
+            ref.set_L3bbb(L3bbb);
+        }
+        refs.push_back(ref);
     } else {
-        compute_ref(max_rdm_);
-    }
 
-    ref.set_Eref(Eref_);
+        for( auto& roots : root_list ){
+            Reference ref; 
+            compute_ref(max_rdm_, roots.first, roots.second);
 
-    if (max_rdm_ > 0) {
-        ref.set_L1a(L1a_);
-        ref.set_L1b(L1b_);
-    }
+            ref.set_Eref(Eref_);
 
-    if (max_rdm_ > 1) {
-        ref.set_L2aa(L2aa_);
-        ref.set_L2ab(L2ab_);
-        ref.set_L2bb(L2bb_);
-    }
+            if (max_rdm_ > 0) {
+                ref.set_L1a(L1a);
+                ref.set_L1b(L1b);
+            }
 
-    if (max_rdm_ > 2 && (options_->get_str("THREEPDC") != "ZERO")) {
-        ref.set_L3aaa(L3aaa_);
-        ref.set_L3aab(L3aab_);
-        ref.set_L3abb(L3abb_);
-        ref.set_L3bbb(L3bbb_);
+            if (max_rdm_ > 1) {
+                ref.set_L2aa(L2aa);
+                ref.set_L2ab(L2ab);
+                ref.set_L2bb(L2bb);
+            }
+
+            if (max_rdm_ > 2 && (options_->get_str("THREEPDC") != "ZERO")) {
+                ref.set_L3aaa(L3aaa);
+                ref.set_L3aab(L3aab);
+                ref.set_L3abb(L3abb);
+                ref.set_L3bbb(L3bbb);
+            }
+            
+            refs.push_back(ref);
+        }
     }
-    return ref;
+    return refs;
 }
 
-void FCI_MO::compute_ref(const int& level) {
+void FCI_MO::compute_ref(const int& level, size_t root1, size_t root2) {
     timer_on("Compute Ref");
     if (!quiet_) {
         print_h2("Compute State-Specific Cumulants");

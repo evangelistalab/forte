@@ -503,12 +503,18 @@ FCISolver::initial_guess(FCIVector& diag, size_t n,
     return guess;
 }
 
-Reference FCISolver::get_reference(int root) {
+std::vector<Reference> FCISolver::get_reference(std::vector<std::pair<size_t,size_t>>& root_list) {
+
+
+    // TODO: Implement different roots    
+
     size_t nact = active_dim_.sum();
     size_t nact2 = nact * nact;
     size_t nact3 = nact2 * nact;
     size_t nact4 = nact3 * nact;
     size_t nact5 = nact4 * nact;
+
+    std::vector<Reference> refs;
 
     Reference fci_ref;
     fci_ref.set_Eref(energy_);
@@ -729,7 +735,7 @@ Reference FCISolver::get_reference(int root) {
             }
         }
     }
-
-    return fci_ref;
+    refs.push_back(fci_ref);
+    return refs;
 }
 } // namespace forte

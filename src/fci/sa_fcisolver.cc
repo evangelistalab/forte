@@ -321,6 +321,13 @@ double SA_FCISolver::compute_energy() {
         psi::SharedVector evals;
         double Enuc = psi::Process::environment.molecule()->nuclear_repulsion_energy(
             wfn_->get_dipole_field_strength());
+
+        std::vector<std::pair<size_t,size_t>> roots;
+        for (int root_number = 0; root_number < nroot; root_number++) {
+            roots.push_back(std::make_pair(root_number,root_number));
+        }
+        sa_cas_ref = fcisolver.get_reference(roots);
+        
         for (int root_number = 0; root_number < nroot; root_number++) {
             fcisolver.set_root(root_number);
 
@@ -336,7 +343,6 @@ double SA_FCISolver::compute_energy() {
             //            SA_C_.push_back(fcisolver.get_FCIWFN());
             double Ecasscf = evals->get(root_number) + Enuc;
             casscf_energies.push_back(Ecasscf);
-            sa_cas_ref.push_back(fcisolver.get_reference());
             sa_cas_ref[root_number].set_Eref(Ecasscf);
         }
     }

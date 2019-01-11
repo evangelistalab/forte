@@ -85,7 +85,9 @@ Reference ActiveSpaceSolver::get_reference(int root) {
 
     // For single state
     if( method_vec_.size() == 1 ){
-        ref =  method_vec_[0]->get_reference();
+        std::vector<std::pair<size_t,size_t>> root;
+        root.push_back(std::make_pair(0,0));
+        ref =  method_vec_[0]->get_reference(root)[0];
     // For state average
     } else {
         size_t nactive = mo_space_info_->size("ACTIVE");
@@ -124,14 +126,24 @@ Reference ActiveSpaceSolver::get_reference(int root) {
         int state_num = 0;
         for (const auto& [state, weights] : state_weights_list_) {
             size_t nroot = weights.size();
+            // Get the already-run method
+            auto& method = method_vec_[state_num];
+    
+            std::vector<std::pair<size_t,size_t>> root_list;
             for (size_t r = 0; r < nroot; r++) {
-            
-                // Get the already-run method
-                auto& method = method_vec_[state_num];
+                root_list.push_back(std::make_pair(r,r));
+            }
+            std::vector<Reference> references = method->get_reference(root_list);
+
+            for (size_t r = 0; r < nroot; r++) {
+                double weight = weights[r];
+    
+                // Don't bother if the weight is zero
+                if ( weight <= 1e-15 ) continue; 
+
 
                 // Get the reference of the correct root
-                Reference method_ref = method->get_reference(r);
-                double weight = weights[r];
+                Reference method_ref = references[r];
 
                 // Now the RDMs
                 // 1 RDM
@@ -153,8 +165,8 @@ Reference ActiveSpaceSolver::get_reference(int root) {
                     scale_add(L3bbb.data(), method_ref.g3bbb().data(), weight);
                 }
 
-                state_num++;
             }
+            state_num++;
         }
         // compute cumulants
         // move this code to Reference?
@@ -292,11 +304,11 @@ void ActiveSpaceSolver::print_options() {
     psi::CharacterTable ct = psi::Process::environment.molecule()->point_group()->char_table();
 
     std::vector<std::string> irrep_symbol = psi::Process::environment.molecule()->irrep_labels();
-
     int nroots_max = 0;
     int nstates = 0;
     for (const auto& [state, weights] : state_weights_list_) {
         int nroots = weights.size();
+        psi::outfile->Printf("\n  nroots: %d", nroots);
         nstates += nroots;
         nroots_max = std::max(nroots_max, nroots);
     }
@@ -428,7 +440,7 @@ make_state_weights_list(std::shared_ptr<ForteOptions> options,
                 }
             } else {
                 // use equal weights
-                weights = std::vector<double>(nstates, 1.0);
+                weights = std::vector<double>(nstates_this, 1.0);
             }
             sum_of_weights = std::accumulate(std::begin(weights), std::end(weights), 0.0);
             state_weight_list.push_back(std::make_pair(state, weights));

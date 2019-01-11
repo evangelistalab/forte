@@ -117,7 +117,12 @@ class FCI_MO : public ActiveSpaceMethod {
 
     /// Return the reference object
     /// Return averaged cumulants if AVG_STATE is not empty
-    Reference get_reference(int root = 0) override;
+    std::vector<Reference> get_reference(std::vector<std::pair<size_t,size_t>>& roots) override;
+    
+    Reference get_reference(){
+        std::vector<std::pair<size_t,size_t>> roots;
+        return get_reference(roots)[0];
+    }
 
     void set_options(std::shared_ptr<ForteOptions>) override {} // TODO implement
 
@@ -439,7 +444,7 @@ class FCI_MO : public ActiveSpaceMethod {
     double Eref_;
 
     /// Compute 2- and 3-cumulants
-    void compute_ref(const int& level);
+    void compute_ref(const int& level, size_t root1, size_t root2);
     void compute_sa_ref(const int& level);
 
     /// Orbital Extents
