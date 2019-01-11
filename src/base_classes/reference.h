@@ -163,7 +163,7 @@ void make_cumulant_L3abb_in_place(const ambit::Tensor& g1a, const ambit::Tensor&
 void make_cumulant_L3bbb_in_place(const ambit::Tensor& g1b, const ambit::Tensor& L2bb,
                                   ambit::Tensor& L3bbb);
 
-double compute_Eref_from_reference(const Reference& ref, std::shared_ptr<ForteIntegrals> ints,
+double compute_Eref_from_reference(Reference& ref, std::shared_ptr<ForteIntegrals> ints,
                                    std::shared_ptr<MOSpaceInfo> mo_space_info, double Enuc);
 } // namespace forte
 
