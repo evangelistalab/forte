@@ -551,9 +551,7 @@ std::vector<Reference> ASCI::get_reference(std::vector<std::pair<size_t,size_t>>
     std::vector<Reference> refs;
     for( auto& root : root_list ){
         compute_rdms(as_ints_, final_wfn_, op_, evecs_, root.first,root.second);
-        CI_RDMS ci_rdms(final_wfn_, as_ints_, evecs_, root.first, root.second);
-        ci_rdms.set_max_rdm(rdm_level_);
-        Reference aci_ref = ci_rdms.reference(ordm_a_, ordm_b_, trdm_aa_, trdm_ab_, trdm_bb_, trdm_aaa_,
+        Reference aci_ref(ordm_a_, ordm_b_, trdm_aa_, trdm_ab_, trdm_bb_, trdm_aaa_,
                                               trdm_aab_, trdm_abb_, trdm_bbb_);
         refs.push_back(aci_ref);
     }
@@ -570,8 +568,8 @@ void ASCI::print_nos() {
     for (size_t h = 0; h < nirrep_; h++) {
         for (int u = 0; u < nactpi_[h]; u++) {
             for (int v = 0; v < nactpi_[h]; v++) {
-                opdm_a->set(h, u, v, ordm_a_[(u + offset) * nact_ + v + offset]);
-                opdm_b->set(h, u, v, ordm_b_[(u + offset) * nact_ + v + offset]);
+                opdm_a->set(h, u, v, ordm_a_.data()[(u + offset) * nact_ + v + offset]);
+                opdm_b->set(h, u, v, ordm_b_.data()[(u + offset) * nact_ + v + offset]);
             }
         }
         offset += nactpi_[h];
@@ -652,18 +650,6 @@ void ASCI::print_nos() {
 void ASCI::compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints, DeterminantHashVec& dets,
                         WFNOperator& op, psi::SharedMatrix& PQ_evecs, int root1, int root2) {
 
-    ordm_a_.clear();
-    ordm_b_.clear();
-
-    trdm_aa_.clear();
-    trdm_ab_.clear();
-    trdm_bb_.clear();
-
-    trdm_aaa_.clear();
-    trdm_aab_.clear();
-    trdm_abb_.clear();
-    trdm_bbb_.clear();
-
     CI_RDMS ci_rdms_(dets, fci_ints, PQ_evecs, root1, root2);
 
     //    double total_time = 0.0;
@@ -671,19 +657,19 @@ void ASCI::compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints, Determin
 
     if (rdm_level_ >= 1) {
         local_timer one_r;
-        ci_rdms_.compute_1rdm(ordm_a_, ordm_b_, op);
+        ci_rdms_.compute_1rdm(ordm_a_.data(), ordm_b_.data(), op);
         outfile->Printf("\n  1-RDM  took %2.6f s (determinant)", one_r.get());
 
         print_nos();
     }
     if (rdm_level_ >= 2) {
         local_timer two_r;
-        ci_rdms_.compute_2rdm(trdm_aa_, trdm_ab_, trdm_bb_, op);
+        ci_rdms_.compute_2rdm(trdm_aa_.data(), trdm_ab_.data(), trdm_bb_.data(), op);
         outfile->Printf("\n  2-RDMS took %2.6f s (determinant)", two_r.get());
     }
     if (rdm_level_ >= 3) {
         local_timer tr;
-        ci_rdms_.compute_3rdm(trdm_aaa_, trdm_aab_, trdm_abb_, trdm_bbb_, op);
+        ci_rdms_.compute_3rdm(trdm_aaa_.data(), trdm_aab_.data(), trdm_abb_.data(), trdm_bbb_.data(), op);
         outfile->Printf("\n  3-RDMs took %2.6f s (determinant)", tr.get());
     }
 }

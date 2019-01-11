@@ -166,15 +166,15 @@ class ASCI : public ActiveSpaceMethod {
     double spin_trans_;
 
     // The RDMS
-    std::vector<double> ordm_a_;
-    std::vector<double> ordm_b_;
-    std::vector<double> trdm_aa_;
-    std::vector<double> trdm_ab_;
-    std::vector<double> trdm_bb_;
-    std::vector<double> trdm_aaa_;
-    std::vector<double> trdm_aab_;
-    std::vector<double> trdm_abb_;
-    std::vector<double> trdm_bbb_;
+    ambit::Tensor ordm_a_;
+    ambit::Tensor ordm_b_;
+    ambit::Tensor trdm_aa_;
+    ambit::Tensor trdm_ab_;
+    ambit::Tensor trdm_bb_;
+    ambit::Tensor trdm_aaa_;
+    ambit::Tensor trdm_aab_;
+    ambit::Tensor trdm_abb_;
+    ambit::Tensor trdm_bbb_;
 
     // ==> Class functions <==
 
