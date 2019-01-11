@@ -198,9 +198,6 @@ class FCI_MO : public ActiveSpaceMethod {
         projected_roots_ = projected;
     }
 
-    /// Set maximum RDM to compute
-    void set_max_rdm_level(int level) { max_rdm_ = level; }
-
     /// Set initial guess
     void set_initial_guess(std::vector<std::pair<size_t, double>>& guess) {
         initial_guess_ = guess;
@@ -366,7 +363,7 @@ class FCI_MO : public ActiveSpaceMethod {
                                                                const bool& print = false);
 
     /// Max RDM to compute
-    int max_rdm_ = 3;
+   // int max_rdm_ = 3;
 
     /// Choice of Roots
   //  int nroot_; // number of roots

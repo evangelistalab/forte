@@ -1582,9 +1582,7 @@ std::vector<Reference> AdaptiveCI::get_reference(std::vector<std::pair<size_t, s
 
         compute_rdms(as_ints_, final_wfn_, op_, evecs_, root_pair.first, root_pair.second); 
 
-        CI_RDMS ci_rdms(final_wfn_, as_ints_, evecs_, root_pair.first, root_pair.second);
-        ci_rdms.set_max_rdm(max_rdm_level_);
-        Reference aci_ref = ci_rdms.reference(ordm_a_, ordm_b_, trdm_aa_, trdm_ab_, trdm_bb_, trdm_aaa_,
+        Reference aci_ref(ordm_a_, ordm_b_, trdm_aa_, trdm_ab_, trdm_bb_, trdm_aaa_,
                                               trdm_aab_, trdm_abb_, trdm_bbb_);
 
         refs.push_back(aci_ref);
@@ -1603,8 +1601,8 @@ void AdaptiveCI::print_nos() {
     for (size_t h = 0; h < nirrep_; h++) {
         for (int u = 0; u < nactpi_[h]; u++) {
             for (int v = 0; v < nactpi_[h]; v++) {
-                opdm_a->set(h, u, v, ordm_a_[(u + offset) * nact_ + v + offset]);
-                opdm_b->set(h, u, v, ordm_b_[(u + offset) * nact_ + v + offset]);
+                opdm_a->set(h, u, v, ordm_a_.data()[(u + offset) * nact_ + v + offset]);
+                opdm_b->set(h, u, v, ordm_b_.data()[(u + offset) * nact_ + v + offset]);
             }
         }
         offset += nactpi_[h];
@@ -2202,18 +2200,6 @@ void AdaptiveCI::compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
         }
     }
 
-    ordm_a_.clear();
-    ordm_b_.clear();
-
-    trdm_aa_.clear();
-    trdm_ab_.clear();
-    trdm_bb_.clear();
-
-    trdm_aaa_.clear();
-    trdm_aab_.clear();
-    trdm_abb_.clear();
-    trdm_bbb_.clear();
-
     CI_RDMS ci_rdms_(dets, fci_ints, PQ_evecs, root1, root2);
 
     //    double total_time = 0.0;
@@ -2222,15 +2208,15 @@ void AdaptiveCI::compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
     if (options_->get_bool("ACI_DIRECT_RDMS")) {
         // local_timer dyn;
         //   CI_RDMS ci_rdms_(final_wfn_, as_ints_, PQ_evecs, 0, 0);
-        ci_rdms_.compute_rdms_dynamic(ordm_a_, ordm_b_, trdm_aa_, trdm_ab_, trdm_bb_, trdm_aaa_,
-                                      trdm_aab_, trdm_abb_, trdm_bbb_);
+        ci_rdms_.compute_rdms_dynamic(ordm_a_.data(), ordm_b_.data(), trdm_aa_.data(), trdm_ab_.data(), trdm_bb_.data(), trdm_aaa_.data(),
+                                      trdm_aab_.data(), trdm_abb_.data(), trdm_bbb_.data());
         print_nos();
         // double dt = dyn.get();
         // outfile->Printf("\n  RDMS (bits) took           %1.6f", dt);
     } else {
         if (max_rdm_level_ >= 1) {
             local_timer one_r;
-            ci_rdms_.compute_1rdm(ordm_a_, ordm_b_, op);
+            ci_rdms_.compute_1rdm(ordm_a_.data(), ordm_b_.data(), op);
             outfile->Printf("\n  1-RDM  took %2.6f s (determinant)", one_r.get());
 
             if (options_->get_bool("ACI_PRINT_NO")) {
@@ -2239,18 +2225,18 @@ void AdaptiveCI::compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
         }
         if (max_rdm_level_ >= 2) {
             local_timer two_r;
-            ci_rdms_.compute_2rdm(trdm_aa_, trdm_ab_, trdm_bb_, op);
+            ci_rdms_.compute_2rdm(trdm_aa_.data(), trdm_ab_.data(), trdm_bb_.data(), op);
             outfile->Printf("\n  2-RDMS took %2.6f s (determinant)", two_r.get());
         }
         if (max_rdm_level_ >= 3) {
             local_timer tr;
-            ci_rdms_.compute_3rdm(trdm_aaa_, trdm_aab_, trdm_abb_, trdm_bbb_, op);
+            ci_rdms_.compute_3rdm(trdm_aaa_.data(), trdm_aab_.data(), trdm_abb_.data(), trdm_bbb_.data(), op);
             outfile->Printf("\n  3-RDMs took %2.6f s (determinant)", tr.get());
         }
     }
     if (options_->get_bool("ACI_TEST_RDMS")) {
-        ci_rdms_.rdm_test(ordm_a_, ordm_b_, trdm_aa_, trdm_bb_, trdm_ab_, trdm_aaa_, trdm_aab_,
-                          trdm_abb_, trdm_bbb_);
+        ci_rdms_.rdm_test(ordm_a_.data(), ordm_b_.data(), trdm_aa_.data(), trdm_bb_.data(), trdm_ab_.data(), trdm_aaa_.data(), trdm_aab_.data(),
+                          trdm_abb_.data(), trdm_bbb_.data());
     }
 }
 
@@ -2440,8 +2426,8 @@ void AdaptiveCI::compute_nos() {
     for (size_t h = 0; h < nirrep_; h++) {
         for (int u = 0; u < nactpi_[h]; u++) {
             for (int v = 0; v < nactpi_[h]; v++) {
-                opdm_a->set(h, u, v, ordm_a_[(u + offset) * nact_ + v + offset]);
-                opdm_b->set(h, u, v, ordm_b_[(u + offset) * nact_ + v + offset]);
+                opdm_a->set(h, u, v, ordm_a_.data()[(u + offset) * nact_ + v + offset]);
+                opdm_b->set(h, u, v, ordm_b_.data()[(u + offset) * nact_ + v + offset]);
             }
         }
         offset += nactpi_[h];
@@ -2996,27 +2982,11 @@ void AdaptiveCI::spin_analysis() {
     size_t nact3 = nact * nact2;
 
     // First build rdms as ambit tensors
-    ambit::Tensor L1a = ambit::Tensor::build(ambit::CoreTensor, "L1a", {nact, nact});
-    ambit::Tensor L1b = ambit::Tensor::build(ambit::CoreTensor, "L1b", {nact, nact});
-    ambit::Tensor L2aa = ambit::Tensor::build(ambit::CoreTensor, "L2aa", {nact, nact, nact, nact});
-    ambit::Tensor L2ab = ambit::Tensor::build(ambit::CoreTensor, "L2ab", {nact, nact, nact, nact});
-    ambit::Tensor L2bb = ambit::Tensor::build(ambit::CoreTensor, "L2bb", {nact, nact, nact, nact});
-
-    L1a.iterate(
-        [&](const std::vector<size_t>& i, double& value) { value = ordm_a_[i[0] * nact + i[1]]; });
-
-    L1b.iterate(
-        [&](const std::vector<size_t>& i, double& value) { value = ordm_b_[i[0] * nact + i[1]]; });
-
-    L2aa.iterate([&](const std::vector<size_t>& i, double& value) {
-        value = trdm_aa_[i[0] * nact3 + i[1] * nact2 + i[2] * nact + i[3]];
-    });
-    L2ab.iterate([&](const std::vector<size_t>& i, double& value) {
-        value = trdm_ab_[i[0] * nact3 + i[1] * nact2 + i[2] * nact + i[3]];
-    });
-    L2bb.iterate([&](const std::vector<size_t>& i, double& value) {
-        value = trdm_bb_[i[0] * nact3 + i[1] * nact2 + i[2] * nact + i[3]];
-    });
+    //ambit::Tensor L1a = ambit::Tensor::build(ambit::CoreTensor, "L1a", {nact, nact});
+    //ambit::Tensor L1b = ambit::Tensor::build(ambit::CoreTensor, "L1b", {nact, nact});
+    //ambit::Tensor L2aa = ambit::Tensor::build(ambit::CoreTensor, "L2aa", {nact, nact, nact, nact});
+    //ambit::Tensor L2ab = ambit::Tensor::build(ambit::CoreTensor, "L2ab", {nact, nact, nact, nact});
+    //ambit::Tensor L2bb = ambit::Tensor::build(ambit::CoreTensor, "L2bb", {nact, nact, nact, nact});
 
     psi::SharedMatrix UA(new psi::Matrix(nact, nact));
     psi::SharedMatrix UB(new psi::Matrix(nact, nact));
@@ -3075,8 +3045,8 @@ void AdaptiveCI::spin_analysis() {
 
         for (size_t i = 0; i < nact; ++i) {
             for (size_t j = 0; j < nact; ++j) {
-                RDMa->set(i, j, ordm_a_[i * nact + j]);
-                RDMb->set(i, j, ordm_b_[i * nact + j]);
+                RDMa->set(i, j, ordm_a_.data()[i * nact + j]);
+                RDMb->set(i, j, ordm_b_.data()[i * nact + j]);
             }
         }
 
@@ -3143,8 +3113,8 @@ void AdaptiveCI::spin_analysis() {
     ambit::Tensor L1aT = ambit::Tensor::build(ambit::CoreTensor, "Transformed L1a", {nact, nact});
     ambit::Tensor L1bT = ambit::Tensor::build(ambit::CoreTensor, "Transformed L1b", {nact, nact});
 
-    L1aT("pq") = Ua("ap") * L1a("ab") * Ua("bq");
-    L1bT("pq") = Ub("ap") * L1b("ab") * Ub("bq");
+    L1aT("pq") = Ua("ap") * ordm_a_("ab") * Ua("bq");
+    L1bT("pq") = Ub("ap") * ordm_b_("ab") * Ub("bq");
     // 2 rdms
     ambit::Tensor L2aaT =
         ambit::Tensor::build(ambit::CoreTensor, "Transformed L2aa", {nact, nact, nact, nact});
@@ -3153,9 +3123,9 @@ void AdaptiveCI::spin_analysis() {
     ambit::Tensor L2bbT =
         ambit::Tensor::build(ambit::CoreTensor, "Transformed L2bb", {nact, nact, nact, nact});
 
-    L2aaT("pqrs") = Ua("ap") * Ua("bq") * L2aa("abcd") * Ua("cr") * Ua("ds");
-    L2abT("pqrs") = Ua("ap") * Ub("bq") * L2ab("abcd") * Ua("cr") * Ub("ds");
-    L2bbT("pqrs") = Ub("ap") * Ub("bq") * L2bb("abcd") * Ub("cr") * Ub("ds");
+    L2aaT("pqrs") = Ua("ap") * Ua("bq") * trdm_aa_("abcd") * Ua("cr") * Ua("ds");
+    L2abT("pqrs") = Ua("ap") * Ub("bq") * trdm_ab_("abcd") * Ua("cr") * Ub("ds");
+    L2bbT("pqrs") = Ub("ap") * Ub("bq") * trdm_bb_("abcd") * Ub("cr") * Ub("ds");
 
     // Now form the spin correlation
     psi::SharedMatrix spin_corr(new psi::Matrix("Spin Correlation", nact, nact));

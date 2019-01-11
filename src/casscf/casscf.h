@@ -132,7 +132,7 @@ class CASSCF : public ActiveSpaceMethod {
     /// Sets up the FCI
     void set_up_fci();
     /// Set up a SA-FCI
-    void set_up_sa_fci();
+  //  void set_up_sa_fci();
     /// Set up FCI_MO
     void set_up_fcimo();
     /// Read all the mospace info and assign correct dimensions

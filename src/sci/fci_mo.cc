@@ -2163,30 +2163,19 @@ std::vector<Reference> FCI_MO::get_reference(std::vector<std::pair<size_t,size_t
    // } else {
 
         for( auto& roots : root_list ){
-            Reference ref; 
             compute_ref(max_rdm_level_, roots.first, roots.second);
 
-            ref.set_Eref(Eref_);
-
-            if (max_rdm_ > 0) {
-                ref.set_L1a(L1a_);
-                ref.set_L1b(L1b_);
+            if (max_rdm_level_ == 1) {
+                refs.emplace_back(L1a_,L1b_);
             }
 
-            if (max_rdm_ > 1) {
-                ref.set_L2aa(L2aa_);
-                ref.set_L2ab(L2ab_);
-                ref.set_L2bb(L2bb_);
+            if (max_rdm_level_ == 2) {
+                refs.emplace_back(L1a_,L1b_, L2aa_, L2ab_, L2bb_);
             }
 
-            if (max_rdm_ > 2 && (options_->get_str("THREEPDC") != "ZERO")) {
-                ref.set_L3aaa(L3aaa_);
-                ref.set_L3aab(L3aab_);
-                ref.set_L3abb(L3abb_);
-                ref.set_L3bbb(L3bbb_);
+            if (max_rdm_level_ == 3  && (options_->get_str("THREEPDC") != "ZERO")) {
+                refs.emplace_back(L1a_,L1b_, L2aa_, L2ab_, L2bb_,  L3aaa_, L3aab_, L3abb_, L3bbb_);
             }
-            
-            refs.push_back(ref);
         }
     //}
     return refs;
@@ -2901,35 +2890,25 @@ Reference FCI_MO::transition_reference(int root1, int root2, bool multi_state, i
         evecs->set_column(0, i, (eigen[i]).first);
     }
 
-    Reference ref;
 
-    if (max_level >= 1) {
+    if (max_level == 1) {
         auto D1 = compute_n_rdm(p_space, evecs, 1, root1, root2, irrep, multi, disk);
-        ref.set_L1(D1[0], D1[1]);
-    }
-
-    if (max_level >= 2) {
+        Reference ref(D1[0], D1[1]);
+        return ref;
+    } else if (max_level == 2) {
+        auto D1 = compute_n_rdm(p_space, evecs, 1, root1, root2, irrep, multi, disk);
         auto D2 = compute_n_rdm(p_space, evecs, 2, root1, root2, irrep, multi, disk);
-        if (do_cumulant) {
-            add_wedge_cu2(ref.g1a(), ref.g1b(), D2[0], D2[1], D2[2]);
-            ref.set_L2(D2[0], D2[1], D2[2]);
-        } else {
-            ref.set_G2(D2[0], D2[1], D2[2]);
-        }
-    }
-
-    if (max_level >= 3) {
+        Reference ref(D1[0], D1[1], D2[0], D2[1], D2[2]);
+        return ref;
+    } else if (max_level == 3) {
+        auto D1 = compute_n_rdm(p_space, evecs, 1, root1, root2, irrep, multi, disk);
+        auto D2 = compute_n_rdm(p_space, evecs, 2, root1, root2, irrep, multi, disk);
         auto D3 = compute_n_rdm(p_space, evecs, 3, root1, root2, irrep, multi, disk);
-        if (do_cumulant) {
-            add_wedge_cu3(ref.g1a(), ref.g1b(), ref.L2aa(), ref.L2ab(), ref.L2bb(), D3[0], D3[1],
-                          D3[2], D3[3]);
-            ref.set_L3(D3[0], D3[1], D3[2], D3[3]);
-        } else {
-            ref.set_G3(D3[0], D3[1], D3[2], D3[3]);
-        }
+        Reference ref(D1[0], D1[1], D2[0], D2[1], D2[2], D3[0], D3[1], D3[2], D3[3] );
+        return ref;
+    } else{
+        throw psi::PSIEXCEPTION("Max RDM level > 3 or < 1 is not available.");
     }
-
-    return ref;
 }
 
 void FCI_MO::print_det(const vecdet& dets) {
