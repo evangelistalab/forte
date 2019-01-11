@@ -365,11 +365,10 @@ void CASSCF::cas_ci() {
         AdaptiveCI aci(state_, nroot_, scf_info_, options_, mo_space_info_, as_ints_);
         aci.set_max_rdm(2);
         aci.set_quiet(quiet);
-        aci.compute_energy();
+        E_casscf_ = aci.compute_energy();
         std::vector<std::pair<size_t,size_t>> roots;
         roots.push_back(std::make_pair(0,0));
         cas_ref_ = aci.get_reference(roots)[0];
-        E_casscf_ = cas_ref_.get_Eref();
     } else if (options_->get_str("CASSCF_CI_SOLVER") == "DMRG") {
 #ifdef HAVE_CHEMPS2
         DMRGSolver dmrg(state_, scf_info_, options_, ints_, mo_space_info_);
@@ -379,10 +378,9 @@ void CASSCF::cas_ci() {
         dmrg.set_up_integrals(integral_pair.first, integral_pair.second);
         dmrg.set_scalar(scalar_energy_ + ints_->frozen_core_energy() +
                         ints_->nuclear_repulsion_energy());
-        dmrg.compute_energy();
+        E_casscf_ = dmrg.compute_energy();
 
         cas_ref_ = dmrg.reference();
-        E_casscf_ = cas_ref_.get_Eref();
 #else
         throw psi::PSIEXCEPTION("Did not compile with CHEMPS2 so DMRG will not work");
 #endif
@@ -453,10 +451,12 @@ void CASSCF::cas_ci_final() {
         aci.set_max_rdm(3);
         aci.set_quiet(quiet);
         aci.compute_energy();
+        E_casscf_ = aci.energies()[0]; // TODO: Check if this should be root_
+
         std::vector<std::pair<size_t,size_t>> roots;
         roots.push_back(std::make_pair(0,0));
         cas_ref_ = aci.get_reference(roots)[0];
-        E_casscf_ = cas_ref_.get_Eref();
+
     } else if (options_->get_str("CASSCF_CI_SOLVER") == "DMRG") {
 #ifdef HAVE_CHEMPS2
         DMRGSolver dmrg(state_, scf_info_, options_, ints_, mo_space_info_);
@@ -1029,13 +1029,12 @@ void CASSCF::set_up_fcimo() {
 
         FCI_MO cas(state_, nroot_, scf_info_, options_, mo_space_info_, fci_ints);
         cas.set_quite_mode(print_ > 0 ? false : true);
-        cas.compute_energy();
+        E_casscf_ = cas.compute_energy();
         cas.set_max_rdm_level(2);
         std::vector<std::pair<size_t,size_t>> roots;
         roots.push_back(std::make_pair(0,0));
 
         cas_ref_ = cas.get_reference(roots)[0];
-        E_casscf_ = cas_ref_.get_Eref();
     }
 }
 void CASSCF::write_orbitals_molden() {
