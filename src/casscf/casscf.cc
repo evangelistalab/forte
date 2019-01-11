@@ -43,7 +43,6 @@
 #include "fci/fci_solver.h"
 
 #include "sci/fci_mo.h"
-#include "fci/sa_fcisolver.h"
 #include "orbital-helpers/mp2_nos.h"
 #include "orbital-helpers/orbitaloptimizer.h"
 #include "orbital-helpers/semi_canonicalize.h"
@@ -355,8 +354,8 @@ void CASSCF::cas_ci() {
         // Used to grab the computed energy and RDMs.
         if (options_->psi_options()["AVG_STATE"].size() == 0) {
             set_up_fci();
-        } else {
-            set_up_sa_fci();
+       // } else {
+       //     set_up_sa_fci();
         }
     } else if (options_->get_str("CASSCF_CI_SOLVER") == "CAS") {
         set_up_fcimo();
@@ -440,8 +439,8 @@ void CASSCF::cas_ci_final() {
         // Used to grab the computed energy and RDMs.
         if (options_->psi_options()["AVG_STATE"].size() == 0) {
             set_up_fci();
-        } else {
-            set_up_sa_fci();
+        //} else {
+        //    set_up_sa_fci();
         }
     } else if (options_->get_str("CASSCF_CI_SOLVER") == "CAS") {
         set_up_fcimo();
@@ -888,6 +887,7 @@ void CASSCF::overlap_orbitals(const psi::SharedMatrix& C_old, const psi::SharedM
         }
     }
 }
+/*
 void CASSCF::set_up_sa_fci() {
     SA_FCISolver sa_fcisolver(options_->psi_options(), ints_->wfn());
     sa_fcisolver.set_mo_space_info(mo_space_info_);
@@ -956,6 +956,7 @@ void CASSCF::set_up_sa_fci() {
     //        CISolutions_.push_back(StateAveragedFCISolver);
     //    }
 }
+*/
 void CASSCF::set_up_fcimo() {
     // setup ActiveSpaceIntegrals for FCI_MO
     std::vector<size_t> rdocc = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
