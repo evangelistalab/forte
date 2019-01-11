@@ -57,9 +57,6 @@ MCSRGPT2_MO::MCSRGPT2_MO(Reference reference, std::shared_ptr<ForteOptions> opti
 
     print_method_banner({"Driven Similarity Renormalization Group",
                          "Second-Order Perturbative Analysis", "Chenyang Li"});
-    // compute CI energy
-    compute_ss_energy();
-
 //    // reference cumulants
 //    // int max_rdm_level = (options->get_str("THREEPDC") != "ZERO") ? 3 : 2;
 //    max_rdm_ = (options->get_str("THREEPDC") != "ZERO") ? 3 : 2;

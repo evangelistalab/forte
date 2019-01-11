@@ -145,7 +145,8 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
     }
 
     if (options.get_str("JOB_TYPE") == "MR-DSRG-PT2") {
-        if (std::string actv_type = options.get_str("FCIMO_ACTV_TYPE"); actv_type == "CIS" or actv_type == "CISD") {
+        if (std::string actv_type = options.get_str("FCIMO_ACTV_TYPE");
+            actv_type == "CIS" or actv_type == "CISD") {
             throw psi::PSIEXCEPTION("VCIS/VCISD is not supported for MR-DSRG-PT2");
         }
         int max_rdm_level = (options.get_str("THREEPDC") == "ZERO") ? 2 : 3;
@@ -248,8 +249,8 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
         });
 
         auto as_ints = make_active_space_ints(mo_space_info, ints, "ACTIVE", {{"RESTRICTED_DOCC"}});
-        auto ci = make_active_space_solver(cas_type, state_weights_list, scf_info,
-                                               mo_space_info, as_ints, forte_options);
+        auto ci = make_active_space_solver(cas_type, state_weights_list, scf_info, mo_space_info,
+                                           as_ints, forte_options);
         ci->set_max_rdm_level(3);
         ci->compute_energy();
         Reference reference = ci->get_reference();
@@ -274,8 +275,8 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
     if (options.get_str("JOB_TYPE") == "MRDSRG_SO") {
         std::string cas_type = options.get_str("CAS_TYPE");
         auto as_ints = make_active_space_ints(mo_space_info, ints, "ACTIVE", {{"RESTRICTED_DOCC"}});
-        auto ci = make_active_space_solver(cas_type, state_weights_list, scf_info,
-                                               mo_space_info, as_ints, forte_options);
+        auto ci = make_active_space_solver(cas_type, state_weights_list, scf_info, mo_space_info,
+                                           as_ints, forte_options);
         Reference reference = ci->get_reference();
         if (options.get_bool("SEMI_CANONICAL")) {
             SemiCanonical semi(forte_options, ints, mo_space_info);
@@ -296,8 +297,8 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
         std::string cas_type = options.get_str("CAS_TYPE");
         int max_rdm_level = (options.get_str("THREEPDC") == "ZERO") ? 2 : 3;
         auto as_ints = make_active_space_ints(mo_space_info, ints, "ACTIVE", {{"RESTRICTED_DOCC"}});
-        auto ci = make_active_space_solver(cas_type, state_weights_list, scf_info,
-                                               mo_space_info, as_ints, forte_options);
+        auto ci = make_active_space_solver(cas_type, state_weights_list, scf_info, mo_space_info,
+                                           as_ints, forte_options);
 
         ci->compute_energy();
         Reference reference = ci->get_reference();
@@ -331,8 +332,8 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
         });
 
         auto as_ints = make_active_space_ints(mo_space_info, ints, "ACTIVE", {{"RESTRICTED_DOCC"}});
-        auto ci = make_active_space_solver(cas_type, state_weights_list, scf_info,
-                                               mo_space_info, as_ints, forte_options);
+        auto ci = make_active_space_solver(cas_type, state_weights_list, scf_info, mo_space_info,
+                                           as_ints, forte_options);
         ci->set_max_rdm_level(3);
         ci->compute_energy();
         Reference reference = ci->get_reference();
@@ -340,7 +341,7 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
         if (options.get_bool("SEMI_CANONICAL")) {
             SemiCanonical semi(forte_options, ints, mo_space_info);
             // from FCI_MO
-            //if (actv_type == "CIS" || actv_type == "CISD") {
+            // if (actv_type == "CIS" || actv_type == "CISD") {
             //    semi.set_actv_dims(fci_mo->actv_docc(), fci_mo->actv_virt());
             //}
             semi.semicanonicalize(reference, max_rdm_level);
@@ -350,15 +351,18 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
         std::shared_ptr<DSRG_MRPT2> dsrg_mrpt2 = std::make_shared<DSRG_MRPT2>(
             reference, std::make_shared<SCFInfo>(ref_wfn), forte_options, ints, mo_space_info);
         dsrg_mrpt2->set_Uactv(Ua, Ub);
-        if (options.get_str("RELAX_REF") != "NONE") {
-            final_energy = dsrg_mrpt2->compute_energy_relaxed();
-        } else if (options["AVG_STATE"].size() != 0) {
-            /// Need following two lines to work
-            /// dsrg_mrpt2->set_p_spaces(fci_mo->p_spaces());
-            /// dsrg_mrpt2->set_eigens(fci_mo->eigens());
-            final_energy = dsrg_mrpt2->compute_energy_multi_state();
-        } else {
-            final_energy = dsrg_mrpt2->compute_energy();
+        final_energy = dsrg_mrpt2->compute_energy();
+
+        bool multi_state = options["AVG_STATE"].size() != 0;
+        bool ref_relax = options.get_str("RELAX_REF") != "NONE";
+
+        if (ref_relax || multi_state) {
+            // grab the effective Hamiltonian in the active space
+            auto fci_ints = dsrg_mrpt2->compute_Heff_actv();
+            // make a solver and run it
+            auto relaxed_solver = make_active_space_solver(cas_type, state_weights_list, scf_info,
+                                                           mo_space_info, fci_ints, forte_options);
+            final_energy = relaxed_solver->compute_energy();
         }
     }
     if (options.get_str("JOB_TYPE") == "THREE-DSRG-MRPT2") {
@@ -408,9 +412,10 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
         if (ref_relax || multi_state) {
             // grab the effective Hamiltonian in the active space
             auto fci_ints = three_dsrg_mrpt2->compute_Heff_actv();
+
             // make a solver and run it
             auto relaxed_solver = make_active_space_solver(cas_type, state_weights_list, scf_info,
-                                                   mo_space_info, fci_ints, forte_options);
+                                                           mo_space_info, fci_ints, forte_options);
             final_energy = relaxed_solver->compute_energy();
         }
         outfile->Printf("\n CD/DF DSRG-MRPT2 took %8.5f s.", all_three_dsrg_mrpt2.get());
@@ -432,8 +437,8 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
         });
 
         auto as_ints = make_active_space_ints(mo_space_info, ints, "ACTIVE", {{"RESTRICTED_DOCC"}});
-        auto ci = make_active_space_solver(cas_type, state_weights_list, scf_info,
-                                               mo_space_info, as_ints, forte_options);
+        auto ci = make_active_space_solver(cas_type, state_weights_list, scf_info, mo_space_info,
+                                           as_ints, forte_options);
 
         ci->set_max_rdm_level(3);
         ci->compute_energy();
@@ -446,26 +451,26 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
         auto dsrg_mrpt3 = std::make_shared<DSRG_MRPT3>(
             reference, std::make_shared<SCFInfo>(ref_wfn), forte_options, ints, mo_space_info);
         dsrg_mrpt3->set_Uactv(Ua, Ub);
+        final_energy = dsrg_mrpt3->compute_energy();
+        bool multi_state = options["AVG_STATE"].size() != 0;
+        bool ref_relax = options.get_str("RELAX_REF") != "NONE";
 
-        if (options["AVG_STATE"].size() != 0) {
-          //  dsrg_mrpt3->set_p_spaces(fci_mo->p_spaces());
-          //  dsrg_mrpt3->set_eigens(fci_mo->eigens());
-            final_energy = dsrg_mrpt3->compute_energy_sa();
-        } else{
-            if (options.get_str("RELAX_REF") != "NONE") {
-                final_energy = dsrg_mrpt3->compute_energy_relaxed();
-            } else {
-                final_energy = dsrg_mrpt3->compute_energy();
-            }
+        if (ref_relax || multi_state) {
+            // grab the effective Hamiltonian in the active space
+            auto fci_ints = dsrg_mrpt3->compute_Heff_actv();
+            // make a solver and run it
+            auto relaxed_solver = make_active_space_solver(cas_type, state_weights_list, scf_info,
+                                                           mo_space_info, fci_ints, forte_options);
+            final_energy = relaxed_solver->compute_energy();
         }
     }
 
     if (options.get_str("JOB_TYPE") == "SOMRDSRG") {
         std::string cas_type = options.get_str("CAS_TYPE");
         int max_rdm_level = (options.get_str("THREEPDC") == "ZERO") ? 2 : 3;
-         auto as_ints = make_active_space_ints(mo_space_info, ints, "ACTIVE", {{"RESTRICTED_DOCC"}});
-         auto solver = make_active_space_solver(cas_type, state_weights_list, scf_info,
-                                                mo_space_info, as_ints, forte_options);
+        auto as_ints = make_active_space_ints(mo_space_info, ints, "ACTIVE", {{"RESTRICTED_DOCC"}});
+        auto solver = make_active_space_solver(cas_type, state_weights_list, scf_info,
+                                               mo_space_info, as_ints, forte_options);
         solver->set_max_rdm_level(max_rdm_level);
         solver->compute_energy();
         Reference reference = solver->get_reference();

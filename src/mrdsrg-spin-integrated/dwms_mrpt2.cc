@@ -1092,7 +1092,7 @@ void DWMS_DSRGPT2::compute_dwms_energy_separated_H(std::shared_ptr<FCI_MO>& fci_
                 fci_mo->set_initial_guess(guess);
 
                 // diagonalize DSRG-PT2 active Hamiltonian
-                Ept_[n][i] = fci_mo->compute_ss_energy();
+                Ept_[n][i] = fci_mo->compute_ss_energies()[0]; // bc set root = 0
 
                 // since Heff is rotated to the original basis, we can safely store the CI vectors
                 evecs_new[i] = fci_mo->eigen()[0].first;
@@ -1106,7 +1106,7 @@ void DWMS_DSRGPT2::compute_dwms_energy_separated_H(std::shared_ptr<FCI_MO>& fci_
             } else {
                 fci_mo->set_nroots(nroots);
                 fci_mo->set_root(i);
-                Ept_[n][i] = fci_mo->compute_ss_energy();
+                Ept_[n] = fci_mo->compute_ss_energies();
 
                 // since Heff is rotated to the original basis, we can safely store the CI vectors
                 evecs_new[i] = fci_mo->eigen()[i].first;

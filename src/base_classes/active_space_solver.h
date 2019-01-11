@@ -78,7 +78,7 @@ class ActiveSpaceSolver {
     double compute_energy();
 
     /// Compute reference and return it
-    Reference get_reference(int root = 0);
+    Reference get_reference();
 
     /// Sets the maximum order RDM/cumulant
     void set_max_rdm_level(size_t value);
@@ -121,6 +121,9 @@ class ActiveSpaceSolver {
 
     /// Controls which defaulr rdm level to use
     bool set_rdm_ = false; // TODO: remove this hack
+
+    /// Prints a summary of the energies with State info
+    void print_energies(std::vector<std::vector<double>>& energies);
 };
 
 /**

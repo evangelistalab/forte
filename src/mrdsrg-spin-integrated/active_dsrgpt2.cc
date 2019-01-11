@@ -261,7 +261,7 @@ double ACTIVE_DSRGPT2::compute_energy() {
 
             // compute reference energy
             set_fcimo_params(1, 0, 1); // nroots, root, multiplicity
-            double Eref = fci_mo_->compute_ss_energy();
+            double Eref = fci_mo_->compute_ss_energies()[0];
             ref_energies_[0].push_back(Eref);
 
             dominant_dets_[h].push_back(fci_mo_->dominant_dets()[0]);
@@ -297,7 +297,7 @@ double ACTIVE_DSRGPT2::compute_energy() {
 
         // compute reference energy for a given symmetry
         set_fcimo_params(nroot, 0, multiplicity_);
-        fci_mo_->compute_ss_energy();
+        fci_mo_->compute_ss_energies()[0];
 
         // loop over nroot and save a copy of the orbital rotation matrix
         // (from original to corresponding semicanonical basis)

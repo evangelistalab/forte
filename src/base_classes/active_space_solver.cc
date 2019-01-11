@@ -59,6 +59,10 @@ ActiveSpaceSolver::ActiveSpaceSolver(
 
 double ActiveSpaceSolver::compute_energy() {
     double energy = 0.0;
+    std::vector<std::vector<double>> energies(state_weights_list_.size());
+
+    size_t nstate = 0;
+    size_t nmethod = 0;
     for (const auto& [state, weights] : state_weights_list_) {
         // compute the energy of state and save it
         size_t nroot = weights.size();
@@ -66,57 +70,92 @@ double ActiveSpaceSolver::compute_energy() {
             method_, state, nroot, scf_info_, mo_space_info_, as_ints_, options_);
 
         method->set_options(options_);
-        if( set_rdm_ ){
+        if (set_rdm_) {
             method->set_max_rdm_level(max_rdm_level_);
         }
         method->compute_energy();
-        auto energies = method->energies();
+        energies[nmethod] = method->energies();
         for (size_t r = 0; r < nroot; r++) {
-            energy += energies[r] * weights[r];
+            energy += energies[nmethod][r] * weights[r];
+            nstate++;
         }
         method_vec_.push_back(method);
+        nmethod++;
     }
-    return energy;
+    psi::outfile->Printf("\n  Average Energy from %d state(s): %17.15f", nstate, energy);
+    print_energies(energies);
+    return energies[0][0];
 }
 
-Reference ActiveSpaceSolver::get_reference(int root) {
+void ActiveSpaceSolver::print_energies(std::vector<std::vector<double>>& energies) {
+    print_h2("Energy Summary");
+    psi::outfile->Printf("\n    Multi.  Irrep.  No.               Energy");
+    std::string dash(41, '-');
+    psi::outfile->Printf("\n    %s", dash.c_str());
+    std::vector<std::string> irrep_symbol = psi::Process::environment.molecule()->irrep_labels();
 
-    Reference ref;
+    int n = 0;
+    for (const auto& [state, weights] : state_weights_list_) {
+        int irrep = state.irrep();
+        int multi = state.multiplicity();
+        int nstates = weights.size();
+
+        for (int i = 0; i < nstates; ++i) {
+            psi::outfile->Printf("\n     %3d     %3s    %2d   %20.12f", multi,
+                                 irrep_symbol[irrep].c_str(), i, energies[n][i]);
+            psi::Process::environment.globals["ENERGY ROOT " + std::to_string(n + i)] =
+                energies[n][i];
+        }
+        n++;
+        psi::outfile->Printf("\n    %s", dash.c_str());
+    }
+}
+
+Reference ActiveSpaceSolver::get_reference() {
 
     // For single state
-    if( method_vec_.size() == 1 ){
-        std::vector<std::pair<size_t,size_t>> root;
-        root.push_back(std::make_pair(0,0));
-        ref =  method_vec_[0]->get_reference(root)[0];
-    // For state average
+    if ((state_weights_list_.size() == 1) and (state_weights_list_[0].second.size() == 1)) {
+        std::vector<std::pair<size_t, size_t>> root;
+        root.push_back(std::make_pair(0, 0));
+        Reference ref = method_vec_[0]->get_reference(root)[0];
+        return ref;
+        // For state average
     } else {
         size_t nactive = mo_space_info_->size("ACTIVE");
-        ambit::Tensor L1a = ambit::Tensor::build(ambit::CoreTensor, "L1a", {nactive, nactive});
-        ambit::Tensor L1b = ambit::Tensor::build(ambit::CoreTensor, "L1b", {nactive, nactive});
+        ambit::Tensor g1a = ambit::Tensor::build(ambit::CoreTensor, "g1a", {nactive, nactive});
+        ambit::Tensor g1b = ambit::Tensor::build(ambit::CoreTensor, "g1b", {nactive, nactive});
 
-        ambit::Tensor L2aa;
-        ambit::Tensor L2ab;
-        ambit::Tensor L2bb;
+        ambit::Tensor g2aa;
+        ambit::Tensor g2ab;
+        ambit::Tensor g2bb;
 
-        ambit::Tensor L3aaa;
-        ambit::Tensor L3aab;
-        ambit::Tensor L3abb;
-        ambit::Tensor L3bbb;
+        ambit::Tensor g3aaa;
+        ambit::Tensor g3aab;
+        ambit::Tensor g3abb;
+        ambit::Tensor g3bbb;
 
         if (max_rdm_level_ >= 2) {
-            L2aa = ambit::Tensor::build(ambit::CoreTensor, "L2aa", {nactive, nactive, nactive, nactive});
-            L2ab = ambit::Tensor::build(ambit::CoreTensor, "L2ab", {nactive, nactive, nactive, nactive});
-            L2bb = ambit::Tensor::build(ambit::CoreTensor, "L2bb", {nactive, nactive, nactive, nactive});
+            g2aa = ambit::Tensor::build(ambit::CoreTensor, "g2aa",
+                                       {nactive, nactive, nactive, nactive});
+            g2ab = ambit::Tensor::build(ambit::CoreTensor, "g2ab",
+                                       {nactive, nactive, nactive, nactive});
+            g2bb = ambit::Tensor::build(ambit::CoreTensor, "g2bb",
+                                        {nactive, nactive, nactive, nactive});
         }
 
         if (max_rdm_level_ >= 3) {
-            L3aaa = ambit::Tensor::build(ambit::CoreTensor, "L3aaa", std::vector<size_t>(6, nactive));
-            L3aab = ambit::Tensor::build(ambit::CoreTensor, "L3aab", std::vector<size_t>(6, nactive));
-            L3abb = ambit::Tensor::build(ambit::CoreTensor, "L3abb", std::vector<size_t>(6, nactive));
-            L3bbb = ambit::Tensor::build(ambit::CoreTensor, "L3bbb", std::vector<size_t>(6, nactive));
+            g3aaa =
+               ambit::Tensor::build(ambit::CoreTensor, "g3aaa", std::vector<size_t>(6, nactive));
+            g3aab =
+               ambit::Tensor::build(ambit::CoreTensor, "g3aab", std::vector<size_t>(6, nactive));
+            g3abb =
+               ambit::Tensor::build(ambit::CoreTensor, "g3abb", std::vector<size_t>(6, nactive));
+            g3bbb =
+                ambit::Tensor::build(ambit::CoreTensor, "g3bbb", std::vector<size_t>(6, nactive));
         }
         // function that scale pdm by w and add scaled pdm to sa_pdm
-        auto scale_add = [](std::vector<double>& sa_pdm, std::vector<double>& pdm, const double& w) {
+        auto scale_add = [](std::vector<double>& sa_pdm, std::vector<double>& pdm,
+                            const double& w) {
             std::for_each(pdm.begin(), pdm.end(), [&](double& v) { v *= w; });
             std::transform(sa_pdm.begin(), sa_pdm.end(), pdm.begin(), sa_pdm.begin(),
                            std::plus<double>());
@@ -124,53 +163,62 @@ Reference ActiveSpaceSolver::get_reference(int root) {
 
         // Loop through references, add to master ref
         int state_num = 0;
+        double energy = 0.0;
         for (const auto& [state, weights] : state_weights_list_) {
             size_t nroot = weights.size();
             // Get the already-run method
             auto& method = method_vec_[state_num];
-    
-            std::vector<std::pair<size_t,size_t>> root_list;
+
+            std::vector<std::pair<size_t, size_t>> root_list;
             for (size_t r = 0; r < nroot; r++) {
-                root_list.push_back(std::make_pair(r,r));
+                root_list.push_back(std::make_pair(r, r));
             }
             std::vector<Reference> references = method->get_reference(root_list);
 
+            // Grab energies to set E in reference
+            auto& energies = method->energies();
+
             for (size_t r = 0; r < nroot; r++) {
                 double weight = weights[r];
-    
-                // Don't bother if the weight is zero
-                if ( weight <= 1e-15 ) continue; 
 
+                // Don't bother if the weight is zero
+                if (weight <= 1e-15)
+                    continue;
+
+                energy += energies[r] * weight;
 
                 // Get the reference of the correct root
                 Reference method_ref = references[r];
 
                 // Now the RDMs
                 // 1 RDM
-                scale_add(L1a.data(), method_ref.L1a().data(), weight);
-                scale_add(L1b.data(), method_ref.L1b().data(), weight);
+                scale_add(g1a.data(), method_ref.L1a().data(), weight);
+                scale_add(g1b.data(), method_ref.L1b().data(), weight);
 
                 if (max_rdm_level_ >= 2) {
                     // 2 RDM
-                    scale_add(L2aa.data(), method_ref.g2aa().data(), weight);
-                    scale_add(L2ab.data(), method_ref.g2ab().data(), weight);
-                    scale_add(L2bb.data(), method_ref.g2bb().data(), weight);
+                    scale_add(g2aa.data(), method_ref.L2aa().data(), weight);
+                    scale_add(g2ab.data(), method_ref.L2ab().data(), weight);
+                    scale_add(g2bb.data(), method_ref.L2bb().data(), weight);
                 }
 
                 if (max_rdm_level_ >= 3) {
                     // 3 RDM
-                    scale_add(L3aaa.data(), method_ref.g3aaa().data(), weight);
-                    scale_add(L3aab.data(), method_ref.g3aab().data(), weight);
-                    scale_add(L3abb.data(), method_ref.g3abb().data(), weight);
-                    scale_add(L3bbb.data(), method_ref.g3bbb().data(), weight);
+                    scale_add(g3aaa.data(), method_ref.L3aaa().data(), weight);
+                    scale_add(g3aab.data(), method_ref.L3aab().data(), weight);
+                    scale_add(g3abb.data(), method_ref.L3abb().data(), weight);
+                    scale_add(g3bbb.data(), method_ref.L3bbb().data(), weight);
                 }
-
             }
             state_num++;
         }
+
+        // set energy
+  //      ref.set_Eref(energy);
+
         // compute cumulants
         // move this code to Reference?
-        // i.e., ref.update_cumulants()
+ /*       // i.e., ref.update_cumulants()
 
         // 2-particle
         L2aa("pqrs") -= L1a("pr") * L1a("qs");
@@ -180,7 +228,7 @@ Reference ActiveSpaceSolver::get_reference(int root) {
         L2bb("pqrs") += L1b("ps") * L1b("qr");
 
         L2ab("pqrs") -= L1a("pr") * L1b("qs");
-        
+
         // 3-particle
         L3aaa("pqrstu") -= L1a("ps") * L2aa("qrtu");
         L3aaa("pqrstu") += L1a("pt") * L2aa("qrsu");
@@ -246,25 +294,15 @@ Reference ActiveSpaceSolver::get_reference(int root) {
         L3bbb("pqrstu") += L1b("ps") * L1b("qu") * L1b("rt");
         L3bbb("pqrstu") += L1b("pu") * L1b("qt") * L1b("rs");
         L3bbb("pqrstu") += L1b("pt") * L1b("qs") * L1b("ru");
+*/
 
-
-        // Update current reference object with RDMs
-        ref.set_L1a(L1a);
-        ref.set_L1b(L1b);
-
-        ref.set_L2aa(L2aa);
-        ref.set_L2ab(L2ab);
-        ref.set_L2bb(L2bb);
-        
-        ref.set_L3aaa(L3aaa);
-        ref.set_L3aab(L3aab);
-        ref.set_L3abb(L3abb);
-        ref.set_L3bbb(L3bbb);
+        // Construct Reference object with RDMs
+        Reference ref(g1a,g1b,g2aa,g2ab,g2bb,g3aaa,g3aab,g3abb,g3bbb);
+        return ref;
     }
-    return ref;
 }
 
-void ActiveSpaceSolver::set_max_rdm_level( size_t level ){
+void ActiveSpaceSolver::set_max_rdm_level(size_t level) {
     max_rdm_level_ = level;
     set_rdm_ = true;
 }
@@ -308,7 +346,6 @@ void ActiveSpaceSolver::print_options() {
     int nstates = 0;
     for (const auto& [state, weights] : state_weights_list_) {
         int nroots = weights.size();
-        psi::outfile->Printf("\n  nroots: %d", nroots);
         nstates += nroots;
         nroots_max = std::max(nroots_max, nroots);
     }

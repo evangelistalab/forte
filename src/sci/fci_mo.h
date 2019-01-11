@@ -111,7 +111,7 @@ class FCI_MO : public ActiveSpaceMethod {
     double compute_energy() override;
 
     /// Compute state-specific CASCI energy
-    double compute_ss_energy();
+    std::vector<double> compute_ss_energies();
     /// Compute state-averaged CASCI energy
     double compute_sa_energy();
 
@@ -369,8 +369,8 @@ class FCI_MO : public ActiveSpaceMethod {
     int max_rdm_ = 3;
 
     /// Choice of Roots
-    int nroot_; // number of roots
-    int root_;  // which root in nroot
+  //  int nroot_; // number of roots
+  //  int root_;  // which root in nroot
 
     /// State Average Information (tuple of irrep, multi, nstates, weights)
     std::vector<std::tuple<int, int, int, std::vector<double>>> sa_info_;
@@ -445,7 +445,7 @@ class FCI_MO : public ActiveSpaceMethod {
 
     /// Compute 2- and 3-cumulants
     void compute_ref(const int& level, size_t root1, size_t root2);
-    void compute_sa_ref(const int& level);
+  //  void compute_sa_ref(const int& level);
 
     /// Orbital Extents
     /// returns a vector of irrep by # active orbitals in current irrep

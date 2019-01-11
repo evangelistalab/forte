@@ -5,7 +5,6 @@
 #include "integrals/integrals.h"
 #include "pci/pci.h"
 
-
 namespace forte {
 
 void forte_old_options(ForteOptions& options) {
@@ -60,8 +59,6 @@ void forte_old_options(ForteOptions& options) {
      * electrons) -*/
     options.add_int("MAX_EXC_LEVEL", 0);
 
-
-
     /*- The algorithm used to screen the determinant
      *  - DENOMINATORS uses the MP denominators to screen strings
      *  - SINGLES generates the space by a series of single excitations -*/
@@ -86,10 +83,11 @@ void forte_old_options(ForteOptions& options) {
     options.add_str("H_TYPE", "FIXED_ENERGY", "FIXED_ENERGY FIXED_SIZE");
 
     /*- Determines if this job will compute the energy -*/
-    options.add_str("ENERGY_TYPE", "FULL", "FULL SELECTED LOWDIN SPARSE RENORMALIZE "
-                                           "RENORMALIZE_FIXED LMRCISD LMRCIS IMRCISD "
-                                           "IMRCISD_SPARSE LMRCISD_SPARSE LMRCIS_SPARSE "
-                                           "FACTORIZED_CI");
+    options.add_str("ENERGY_TYPE", "FULL",
+                    "FULL SELECTED LOWDIN SPARSE RENORMALIZE "
+                    "RENORMALIZE_FIXED LMRCISD LMRCIS IMRCISD "
+                    "IMRCISD_SPARSE LMRCISD_SPARSE LMRCIS_SPARSE "
+                    "FACTORIZED_CI");
 
     /*- The form of the Hamiltonian matrix.
      *  - FIXED diagonalizes a matrix of fixed dimension
@@ -264,7 +262,6 @@ void forte_old_options(ForteOptions& options) {
     options.add_int("CASSCF_CI_FREQ", 1);
     /// When to start skipping CI steps
     options.add_int("CASSCF_CI_STEP_START", -1);
-
 
     /*- Monitor the CAS-CI solutions through iterations -*/
     options.add_bool("MONITOR_SA_SOLUTION", false);
@@ -454,4 +451,4 @@ void forte_old_options(ForteOptions& options) {
      *  - V2RDM V2RDM interface -*/
     options.add_str("CAS_TYPE", "FCI", "CAS FCI ACI DMRG V2RDM");
 }
-}
+} // namespace forte

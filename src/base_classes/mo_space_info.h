@@ -170,7 +170,8 @@ class MOSpaceInfo {
 
     // ==> Class functions <==
     /// Read information about each elementary space from the psi Options object
-    std::pair<SpaceInfo, bool> read_mo_space(const std::string& space, std::shared_ptr<ForteOptions> options);
+    std::pair<SpaceInfo, bool> read_mo_space(const std::string& space,
+                                             std::shared_ptr<ForteOptions> options);
 };
 
 std::shared_ptr<MOSpaceInfo> make_mo_space_info(std::shared_ptr<psi::Wavefunction> ref_wfn,

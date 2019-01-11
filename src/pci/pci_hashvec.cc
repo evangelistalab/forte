@@ -136,13 +136,13 @@ ProjectorCI_HashVec::ProjectorCI_HashVec(StateInfo state, size_t nroot,
     startup();
 }
 
-Reference ProjectorCI_HashVec::get_reference(int) {
+std::vector<Reference> ProjectorCI_HashVec::get_reference(std::vector<std::pair<size_t,size_t>>&) {
     //    CI_RDMS ci_rdms(final_wfn_, as_ints_, evecs_, root, root);
     //    ci_rdms.set_max_rdm(max_rdm_level_);
     //    Reference pci_ref = ci_rdms.reference(ordm_a_, ordm_b_, trdm_aa_, trdm_ab_, trdm_bb_,
     //    trdm_aaa_,
     //                                          trdm_aab_, trdm_abb_, trdm_bbb_);
-    Reference pci_ref;
+    std::vector<Reference> pci_ref;
     // TODO: implement
     return pci_ref;
 }

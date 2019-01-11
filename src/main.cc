@@ -124,7 +124,8 @@ void cleanup() {
 #endif
 }
 
-psi::SharedMatrix make_aosubspace_projector(psi::SharedWavefunction ref_wfn, psi::Options& options) {
+psi::SharedMatrix make_aosubspace_projector(psi::SharedWavefunction ref_wfn,
+                                            psi::Options& options) {
     // Ps is a psi::SharedMatrix Ps = S^{BA} X X^+ S^{AB}
     auto Ps = create_aosubspace_projector(ref_wfn, options);
     if (Ps) {
@@ -162,7 +163,6 @@ void banner() {
 }
 
 } // namespace forte
-
 
 ///**
 // * @brief The main forte function.

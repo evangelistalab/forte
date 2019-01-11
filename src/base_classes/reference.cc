@@ -32,6 +32,21 @@
 
 namespace forte {
 
+Reference::Reference() : max_rdm_(0)
+{}
+
+Reference::Reference(ambit::Tensor g1a, ambit::Tensor g1b) : g1a_(g1a), g1b_(g1b), max_rdm_(1)
+{}
+
+Reference::Reference(ambit::Tensor g1a, ambit::Tensor g1b, ambit::Tensor g2aa, ambit::Tensor g2ab,
+              ambit::Tensor g2bb) : g1a_(g1a), g1b_(g1b), g2aa_(g2aa), g2ab_(g2ab), g2bb_(g2bb), max_rdm_(2)
+{}
+
+Reference::Reference(ambit::Tensor g1a, ambit::Tensor g1b, ambit::Tensor g2aa, ambit::Tensor g2ab,
+              ambit::Tensor g2bb, ambit::Tensor g3aaa, ambit::Tensor g3aab, ambit::Tensor g3abb,
+              ambit::Tensor g3bbb) : g1a_(g1a), g1b_(g1b), g2aa_(g2aa), g2ab_(g2ab), g2bb_(g2bb), g3aaa_(g3aaa), g3aab_(g3aab), g3abb_(g3abb), g3bbb_(g3bbb),max_rdm_(3)
+{}
+
 double compute_Eref_from_reference(const Reference& ref, std::shared_ptr<ForteIntegrals> ints,
                                    std::shared_ptr<MOSpaceInfo> mo_space_info, double Enuc) {
     // similar to MASTER_DSRG::compute_reference_energy_from_ints (use Fock and cumulants)

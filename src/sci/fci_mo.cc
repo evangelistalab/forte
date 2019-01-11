@@ -320,8 +320,8 @@ void FCI_MO::read_options() {
     root_sym_ = options_->get_int("ROOT_SYM");
 
     // obtain number of roots and roots of interest
-    nroot_ = options_->get_int("NROOT");
-    root_ = options_->get_int("ROOT");
+//    nroot_ = options_->get_int("NROOT");
+//    root_ = options_->get_int("ROOT");
     if (root_ >= nroot_) {
         outfile->Printf("\n  NROOT = %3d, ROOT = %3d", nroot_, root_);
         outfile->Printf("\n  ROOT must be smaller than NROOT.");
@@ -367,110 +367,110 @@ void FCI_MO::read_options() {
         }
     }
 
-    // state averaging
-    if ((options_->psi_options())["AVG_STATE"].size() != 0) {
-        size_t nstates = 0;
-        size_t nentry = (options_->psi_options())["AVG_STATE"].size();
-
-        // figure out total number of states
-        std::vector<int> nstatespim;
-        std::vector<int> irreps;
-        std::vector<int> multis;
-        for (size_t i = 0; i < nentry; ++i) {
-            if ((options_->psi_options())["AVG_STATE"][i].size() != 3) {
-                outfile->Printf("\n  Error: invalid input of AVG_STATE. Each "
-                                "entry should take an array of three numbers.");
-                throw psi::PSIEXCEPTION("Invalid input of AVG_STATE");
-            }
-
-            // irrep
-            int irrep = (options_->psi_options())["AVG_STATE"][i][0].to_integer();
-            if (irrep >= nirrep_ || irrep < 0) {
-                outfile->Printf("\n  Error: invalid irrep in AVG_STATE. Please "
-                                "check the input irrep (start from 0) not to "
-                                "exceed %d",
-                                nirrep_ - 1);
-                throw psi::PSIEXCEPTION("Invalid irrep in AVG_STATE");
-            }
-            irreps.push_back(irrep);
-
-            // multiplicity
-            int multi = (options_->psi_options())["AVG_STATE"][i][1].to_integer();
-            if (multi < 1) {
-                outfile->Printf("\n  Error: invalid multiplicity in AVG_STATE.");
-                throw psi::PSIEXCEPTION("Invaid multiplicity in AVG_STATE");
-            }
-            multis.push_back(multi);
-
-            // number of states of irrep and multiplicity
-            int nstates_this = (options_->psi_options())["AVG_STATE"][i][2].to_integer();
-            if (nstates_this < 1) {
-                outfile->Printf("\n  Error: invalid nstates in AVG_STATE. "
-                                "nstates of a certain irrep and multiplicity "
-                                "should greater than 0.");
-                throw psi::PSIEXCEPTION("Invalid nstates in AVG_STATE.");
-            }
-            nstatespim.push_back(nstates_this);
-            nstates += nstates_this;
-        }
-
-        // test input weights
-        std::vector<std::vector<double>> weights;
-        if ((options_->psi_options())["AVG_WEIGHT"].has_changed()) {
-            if ((options_->psi_options())["AVG_WEIGHT"].size() != nentry) {
-                outfile->Printf("\n  Error: mismatched number of entries in "
-                                "AVG_STATE (%d) and AVG_WEIGHT (%d).",
-                                nentry, (options_->psi_options())["AVG_WEIGHT"].size());
-                throw psi::PSIEXCEPTION("Mismatched number of entries in AVG_STATE "
-                                        "and AVG_WEIGHT.");
-            }
-
-            double wsum = 0.0;
-            for (size_t i = 0; i < nentry; ++i) {
-                int nw = (options_->psi_options())["AVG_WEIGHT"][i].size();
-                if (nw != nstatespim[i]) {
-                    outfile->Printf("\n  Error: mismatched number of weights "
-                                    "in entry %d of AVG_WEIGHT. Asked for %d "
-                                    "states but only %d weights.",
-                                    i, nstatespim[i], nw);
-                    throw psi::PSIEXCEPTION("Mismatched number of weights in AVG_WEIGHT.");
-                }
-
-                std::vector<double> weight;
-                for (int n = 0; n < nw; ++n) {
-                    double w = (options_->psi_options())["AVG_WEIGHT"][i][n].to_double();
-                    if (w < 0.0) {
-                        outfile->Printf("\n  Error: negative weights in AVG_WEIGHT.");
-                        throw psi::PSIEXCEPTION("Negative weights in AVG_WEIGHT.");
-                    }
-                    weight.push_back(w);
-                    wsum += w;
-                }
-                weights.push_back(weight);
-            }
-            if (std::fabs(wsum - 1.0) > 1.0e-10) {
-                outfile->Printf("\n  Error: AVG_WEIGHT entries do not add up "
-                                "to 1.0. Sum = %.10f",
-                                wsum);
-                throw psi::PSIEXCEPTION("AVG_WEIGHT entries do not add up to 1.0.");
-            }
-
-        } else {
-            // use equal weights
-            double w = 1.0 / nstates;
-            for (size_t i = 0; i < nentry; ++i) {
-                std::vector<double> weight(nstatespim[i], w);
-                weights.push_back(weight);
-            }
-        }
-
-        // form option parser
-        for (size_t i = 0; i < nentry; ++i) {
-            std::tuple<int, int, int, std::vector<double>> avg_info =
-                std::make_tuple(irreps[i], multis[i], nstatespim[i], weights[i]);
-            sa_info_.push_back(avg_info);
-        }
-    }
+//    // state averaging
+//    if ((options_->psi_options())["AVG_STATE"].size() != 0) {
+//        size_t nstates = 0;
+//        size_t nentry = (options_->psi_options())["AVG_STATE"].size();
+//
+//        // figure out total number of states
+//        std::vector<int> nstatespim;
+//        std::vector<int> irreps;
+//        std::vector<int> multis;
+//        for (size_t i = 0; i < nentry; ++i) {
+//            if ((options_->psi_options())["AVG_STATE"][i].size() != 3) {
+//                outfile->Printf("\n  Error: invalid input of AVG_STATE. Each "
+//                                "entry should take an array of three numbers.");
+//                throw psi::PSIEXCEPTION("Invalid input of AVG_STATE");
+//            }
+//
+//            // irrep
+//            int irrep = (options_->psi_options())["AVG_STATE"][i][0].to_integer();
+//            if (irrep >= nirrep_ || irrep < 0) {
+//                outfile->Printf("\n  Error: invalid irrep in AVG_STATE. Please "
+//                                "check the input irrep (start from 0) not to "
+//                                "exceed %d",
+//                                nirrep_ - 1);
+//                throw psi::PSIEXCEPTION("Invalid irrep in AVG_STATE");
+//            }
+//            irreps.push_back(irrep);
+//
+//            // multiplicity
+//            int multi = (options_->psi_options())["AVG_STATE"][i][1].to_integer();
+//            if (multi < 1) {
+//                outfile->Printf("\n  Error: invalid multiplicity in AVG_STATE.");
+//                throw psi::PSIEXCEPTION("Invaid multiplicity in AVG_STATE");
+//            }
+//            multis.push_back(multi);
+//
+//            // number of states of irrep and multiplicity
+//            int nstates_this = (options_->psi_options())["AVG_STATE"][i][2].to_integer();
+//            if (nstates_this < 1) {
+//                outfile->Printf("\n  Error: invalid nstates in AVG_STATE. "
+//                                "nstates of a certain irrep and multiplicity "
+//                                "should greater than 0.");
+//                throw psi::PSIEXCEPTION("Invalid nstates in AVG_STATE.");
+//            }
+//            nstatespim.push_back(nstates_this);
+//            nstates += nstates_this;
+//        }
+//
+//        // test input weights
+//        std::vector<std::vector<double>> weights;
+//        if ((options_->psi_options())["AVG_WEIGHT"].has_changed()) {
+//            if ((options_->psi_options())["AVG_WEIGHT"].size() != nentry) {
+//                outfile->Printf("\n  Error: mismatched number of entries in "
+//                                "AVG_STATE (%d) and AVG_WEIGHT (%d).",
+//                                nentry, (options_->psi_options())["AVG_WEIGHT"].size());
+//                throw psi::PSIEXCEPTION("Mismatched number of entries in AVG_STATE "
+//                                        "and AVG_WEIGHT.");
+//            }
+//
+//            double wsum = 0.0;
+//            for (size_t i = 0; i < nentry; ++i) {
+//                int nw = (options_->psi_options())["AVG_WEIGHT"][i].size();
+//                if (nw != nstatespim[i]) {
+//                    outfile->Printf("\n  Error: mismatched number of weights "
+//                                    "in entry %d of AVG_WEIGHT. Asked for %d "
+//                                    "states but only %d weights.",
+//                                    i, nstatespim[i], nw);
+//                    throw psi::PSIEXCEPTION("Mismatched number of weights in AVG_WEIGHT.");
+//                }
+//
+//                std::vector<double> weight;
+//                for (int n = 0; n < nw; ++n) {
+//                    double w = (options_->psi_options())["AVG_WEIGHT"][i][n].to_double();
+//                    if (w < 0.0) {
+//                        outfile->Printf("\n  Error: negative weights in AVG_WEIGHT.");
+//                        throw psi::PSIEXCEPTION("Negative weights in AVG_WEIGHT.");
+//                    }
+//                    weight.push_back(w);
+//                    wsum += w;
+//                }
+//                weights.push_back(weight);
+//            }
+//            if (std::fabs(wsum - 1.0) > 1.0e-10) {
+//                outfile->Printf("\n  Error: AVG_WEIGHT entries do not add up "
+//                                "to 1.0. Sum = %.10f",
+//                                wsum);
+//                throw psi::PSIEXCEPTION("AVG_WEIGHT entries do not add up to 1.0.");
+//            }
+//
+//        } else {
+//            // use equal weights
+//            double w = 1.0 / nstates;
+//            for (size_t i = 0; i < nentry; ++i) {
+//                std::vector<double> weight(nstatespim[i], w);
+//                weights.push_back(weight);
+//            }
+//        }
+//
+//        // form option parser
+//        for (size_t i = 0; i < nentry; ++i) {
+//            std::tuple<int, int, int, std::vector<double>> avg_info =
+//                std::make_tuple(irreps[i], multis[i], nstatespim[i], weights[i]);
+//            sa_info_.push_back(avg_info);
+//        }
+//    }
 }
 
 void FCI_MO::print_options() {
@@ -503,62 +503,62 @@ void FCI_MO::print_options() {
     print_irrep("ACTIVE", actv_dim_);
     print_irrep("VIRTUAL", virt_dim_);
 
-    int nentry = sa_info_.size();
-    if (nentry != 0) {
-        print_h2("State Averaging Summary");
-
-        CharacterTable ct = psi::Process::environment.molecule()->point_group()->char_table();
-        std::vector<std::string> irrep_symbol;
-        for (int h = 0; h < nirrep_; ++h) {
-            irrep_symbol.push_back(std::string(ct.gamma(h).symbol()));
-        }
-
-        int nroots_max = 0;
-        int nstates = 0;
-        for (const auto& x : sa_info_) {
-            int nroots;
-            std::tie(std::ignore, std::ignore, nroots, std::ignore) = x;
-            nstates += nroots;
-            if (nroots > nroots_max) {
-                nroots_max = nroots;
-            }
-        }
-
-        if (nroots_max == 1) {
-            nroots_max = 7;
-        } else {
-            nroots_max *= 6;
-            nroots_max -= 1;
-        }
-        int ltotal = 6 + 2 + 6 + 2 + 7 + 2 + nroots_max;
-        std::string blank(nroots_max - 7, ' ');
-        std::string dash(ltotal, '-');
-        outfile->Printf("\n    Irrep.  Multi.  Nstates  %sWeights", blank.c_str());
-        outfile->Printf("\n    %s", dash.c_str());
-
-        for (int i = 0; i < nentry; ++i) {
-            int irrep, multi, nroots;
-            std::vector<double> weights;
-            std::tie(irrep, multi, nroots, weights) = sa_info_[i];
-
-            std::string w_str;
-            for (const double& w : weights) {
-                std::stringstream ss;
-                ss << std::fixed << std::setprecision(3) << w;
-                w_str += ss.str() + " ";
-            }
-            w_str.pop_back(); // delete the last space character
-
-            std::stringstream ss;
-            ss << std::setw(4) << std::right << irrep_symbol[irrep] << "    " << std::setw(4)
-               << std::right << multi << "    " << std::setw(5) << std::right << nroots << "    "
-               << std::setw(nroots_max) << w_str;
-            outfile->Printf("\n    %s", ss.str().c_str());
-        }
-        outfile->Printf("\n    %s", dash.c_str());
-        outfile->Printf("\n    Total number of states: %d", nstates);
-        outfile->Printf("\n    %s\n", dash.c_str());
-    }
+//    int nentry = sa_info_.size();
+//    if (nentry != 0) {
+//        print_h2("State Averaging Summary");
+//
+//        CharacterTable ct = psi::Process::environment.molecule()->point_group()->char_table();
+//        std::vector<std::string> irrep_symbol;
+//        for (int h = 0; h < nirrep_; ++h) {
+//            irrep_symbol.push_back(std::string(ct.gamma(h).symbol()));
+//        }
+//
+//        int nroots_max = 0;
+//        int nstates = 0;
+//        for (const auto& x : sa_info_) {
+//            int nroots;
+//            std::tie(std::ignore, std::ignore, nroots, std::ignore) = x;
+//            nstates += nroots;
+//            if (nroots > nroots_max) {
+//                nroots_max = nroots;
+//            }
+//        }
+//
+//        if (nroots_max == 1) {
+//            nroots_max = 7;
+//        } else {
+//            nroots_max *= 6;
+//            nroots_max -= 1;
+//        }
+//        int ltotal = 6 + 2 + 6 + 2 + 7 + 2 + nroots_max;
+//        std::string blank(nroots_max - 7, ' ');
+//        std::string dash(ltotal, '-');
+//        outfile->Printf("\n    Irrep.  Multi.  Nstates  %sWeights", blank.c_str());
+//        outfile->Printf("\n    %s", dash.c_str());
+//
+//        for (int i = 0; i < nentry; ++i) {
+//            int irrep, multi, nroots;
+//            std::vector<double> weights;
+//            std::tie(irrep, multi, nroots, weights) = sa_info_[i];
+//
+//            std::string w_str;
+//            for (const double& w : weights) {
+//                std::stringstream ss;
+//                ss << std::fixed << std::setprecision(3) << w;
+//                w_str += ss.str() + " ";
+//            }
+//            w_str.pop_back(); // delete the last space character
+//
+//            std::stringstream ss;
+//            ss << std::setw(4) << std::right << irrep_symbol[irrep] << "    " << std::setw(4)
+//               << std::right << multi << "    " << std::setw(5) << std::right << nroots << "    "
+//               << std::setw(nroots_max) << w_str;
+//            outfile->Printf("\n    %s", ss.str().c_str());
+//        }
+//        outfile->Printf("\n    %s", dash.c_str());
+//        outfile->Printf("\n    Total number of states: %d", nstates);
+//        outfile->Printf("\n    %s\n", dash.c_str());
+//    }
 }
 
 double FCI_MO::compute_energy() {
@@ -571,23 +571,24 @@ double FCI_MO::compute_energy() {
         localize_actv_orbs();
     }
 
-    if ((options_->psi_options())["AVG_STATE"].size() != 0) {
-        Eref_ = compute_sa_energy();
-    } else {
-        Eref_ = compute_ss_energy();
-    }
+  //  if ((options_->psi_options())["AVG_STATE"].size() != 0) {
+  //      Eref_ = compute_sa_energy();
+  //  } else {
+        // get all energies
+        energies_ = compute_ss_energies();
+  //  }
     psi::Process::environment.globals["CURRENT ENERGY"] = Eref_;
     psi::Process::environment.globals["FCI_MO ENERGY"] = Eref_;
 
-    energies_.resize(nroot_,0.0);
-    for( int n = 0; n < nroot_; ++n ){
-        energies_[n] = eigen_[n].second;
-    }
-
+ //   energies_.resize(nroot_,0.0);
+ //   for( int n = 0; n < nroot_; ++n ){
+ //       energies_[n] = eigen_[n].second;
+ //   }
+    Eref_ = energies_[root_];
     return Eref_;
 }
 
-double FCI_MO::compute_ss_energy() {
+std::vector<double> FCI_MO::compute_ss_energies() {
     // form determinants
     form_p_space();
 
@@ -625,7 +626,13 @@ double FCI_MO::compute_ss_energy() {
     double Eref = eigen_[root_].second;
     Eref_ = Eref;
     psi::Process::environment.globals["CURRENT ENERGY"] = Eref;
-    return Eref;
+    
+    // Return just the energies
+    std::vector<double> en;
+    for( auto& p : eigen_){
+        en.push_back(p.second);
+    }
+    return en;
 }
 
 void FCI_MO::form_p_space() {
@@ -2130,65 +2137,66 @@ std::vector<Reference> FCI_MO::get_reference(std::vector<std::pair<size_t,size_t
 
 
     std::vector<Reference> refs;
-    if ((options_->psi_options())["AVG_STATE"].size() != 0) {
-        Reference ref;
-        compute_sa_ref(max_rdm_);
-        ref.set_Eref(Eref_);
+   // if ((options_->psi_options())["AVG_STATE"].size() != 0) {
+   //     Reference ref;
+   //     compute_sa_ref(max_rdm_);
+   //     ref.set_Eref(Eref_);
 
-        if (max_rdm_ > 0) {
-            ref.set_L1a(L1a);
-            ref.set_L1b(L1b);
-        }
+   //     if (max_rdm_ > 0) {
+   //         ref.set_L1a(L1a_);
+   //         ref.set_L1b(L1b_);
+   //     }
 
-        if (max_rdm_ > 1) {
-            ref.set_L2aa(L2aa);
-            ref.set_L2ab(L2ab);
-            ref.set_L2bb(L2bb);
-        }
+   //     if (max_rdm_ > 1) {
+   //         ref.set_L2aa(L2aa_);
+   //         ref.set_L2ab(L2ab_);
+   //         ref.set_L2bb(L2bb_);
+   //     }
 
-        if (max_rdm_ > 2 && (options_->get_str("THREEPDC") != "ZERO")) {
-            ref.set_L3aaa(L3aaa);
-            ref.set_L3aab(L3aab);
-            ref.set_L3abb(L3abb);
-            ref.set_L3bbb(L3bbb);
-        }
-        refs.push_back(ref);
-    } else {
+   //     if (max_rdm_ > 2 && (options_->get_str("THREEPDC") != "ZERO")) {
+   //         ref.set_L3aaa(L3aaa_);
+   //         ref.set_L3aab(L3aab_);
+   //         ref.set_L3abb(L3abb_);
+   //         ref.set_L3bbb(L3bbb_);
+   //     }
+   //     refs.push_back(ref);
+   // } else {
 
         for( auto& roots : root_list ){
             Reference ref; 
-            compute_ref(max_rdm_, roots.first, roots.second);
+            compute_ref(max_rdm_level_, roots.first, roots.second);
 
             ref.set_Eref(Eref_);
 
             if (max_rdm_ > 0) {
-                ref.set_L1a(L1a);
-                ref.set_L1b(L1b);
+                ref.set_L1a(L1a_);
+                ref.set_L1b(L1b_);
             }
 
             if (max_rdm_ > 1) {
-                ref.set_L2aa(L2aa);
-                ref.set_L2ab(L2ab);
-                ref.set_L2bb(L2bb);
+                ref.set_L2aa(L2aa_);
+                ref.set_L2ab(L2ab_);
+                ref.set_L2bb(L2bb_);
             }
 
             if (max_rdm_ > 2 && (options_->get_str("THREEPDC") != "ZERO")) {
-                ref.set_L3aaa(L3aaa);
-                ref.set_L3aab(L3aab);
-                ref.set_L3abb(L3abb);
-                ref.set_L3bbb(L3bbb);
+                ref.set_L3aaa(L3aaa_);
+                ref.set_L3aab(L3aab_);
+                ref.set_L3abb(L3abb_);
+                ref.set_L3bbb(L3bbb_);
             }
             
             refs.push_back(ref);
         }
-    }
+    //}
     return refs;
 }
 
 void FCI_MO::compute_ref(const int& level, size_t root1, size_t root2) {
     timer_on("Compute Ref");
     if (!quiet_) {
-        print_h2("Compute State-Specific Cumulants");
+  //      print_h2("Compute State-Specific Cumulants");
+        outfile->Printf("\n  Computing (%d,%d) RDMs", root1, root2);
     }
 
     // prepare eigen vectors for ci_rdms
@@ -2200,24 +2208,24 @@ void FCI_MO::compute_ref(const int& level, size_t root1, size_t root2) {
     }
 
     // compute 1-RDM
-    auto D1 = compute_n_rdm(determinant_, evecs, 1, root_, root_, root_sym_, multi_, false);
+    auto D1 = compute_n_rdm(determinant_, evecs, 1, root1, root2, root_sym_, multi_, false);
     L1a_ = D1[0];
     L1b_ = D1[1];
 
     // compute 2-RDM
     if (level >= 2) {
-        auto D2 = compute_n_rdm(determinant_, evecs, 2, root_, root_, root_sym_, multi_, false);
+        auto D2 = compute_n_rdm(determinant_, evecs, 2, root1, root2, root_sym_, multi_, false);
         L2aa_ = D2[0];
         L2ab_ = D2[1];
         L2bb_ = D2[2];
-        add_wedge_cu2(L1a_, L1b_, L2aa_, L2ab_, L2bb_);
+//        add_wedge_cu2(L1a_, L1b_, L2aa_, L2ab_, L2bb_);
     }
 
     // compute 3-RDM
     std::string threepdc = options_->get_str("THREEPDC");
     if (threepdc != "ZERO" && level >= 3) {
         if (threepdc == "MK") {
-            auto D3 = compute_n_rdm(determinant_, evecs, 3, root_, root_, root_sym_, multi_, false);
+            auto D3 = compute_n_rdm(determinant_, evecs, 3, root1, root2, root_sym_, multi_, false);
             L3aaa_ = D3[0];
             L3aab_ = D3[1];
             L3abb_ = D3[2];
@@ -2232,7 +2240,7 @@ void FCI_MO::compute_ref(const int& level, size_t root1, size_t root2) {
             L3bbb_ =
                 ambit::Tensor::build(ambit::CoreTensor, "L3bbb", std::vector<size_t>(6, nactv_));
         }
-        add_wedge_cu3(L1a_, L1b_, L2aa_, L2ab_, L2bb_, L3aaa_, L3aab_, L3abb_, L3bbb_);
+//        add_wedge_cu3(L1a_, L1b_, L2aa_, L2ab_, L2bb_, L3aaa_, L3aab_, L3abb_, L3bbb_);
     }
 
     timer_off("Compute Ref");
@@ -2428,7 +2436,7 @@ void FCI_MO::xms_rotate_civecs() {
         std::tie(irrep, multi, nroots, std::ignore) = sa_info0[n];
         sa_info_[n] = std::make_tuple(irrep, multi, nroots, std::vector<double>(nroots, w));
     }
-    compute_sa_ref(1);
+    //compute_sa_ref(1);
     safe_to_read_density_files_ = false;
     sa_info_ = sa_info0;
 
@@ -2545,94 +2553,94 @@ psi::SharedMatrix FCI_MO::xms_rotate_this_civecs(const det_vec& p_space, psi::Sh
     return rcivecs;
 }
 
-void FCI_MO::compute_sa_ref(const int& level) {
-    timer_on("Compute SA Ref");
-    if (!quiet_) {
-        print_h2("Compute State-Averaged Cumulants");
-    }
-
-    // prepare averaged densities
-    L1a_ = ambit::Tensor::build(ambit::CoreTensor, "L1a", {nactv_, nactv_});
-    L1b_ = ambit::Tensor::build(ambit::CoreTensor, "L1b", {nactv_, nactv_});
-
-    if (level >= 2) {
-        L2aa_ = ambit::Tensor::build(ambit::CoreTensor, "L2aa", {nactv_, nactv_, nactv_, nactv_});
-        L2ab_ = ambit::Tensor::build(ambit::CoreTensor, "L2ab", {nactv_, nactv_, nactv_, nactv_});
-        L2bb_ = ambit::Tensor::build(ambit::CoreTensor, "L2bb", {nactv_, nactv_, nactv_, nactv_});
-    }
-
-    std::string threepdc = options_->get_str("THREEPDC");
-    if (level >= 3 && threepdc != "ZERO") {
-        L3aaa_ = ambit::Tensor::build(ambit::CoreTensor, "L3aaa", std::vector<size_t>(6, nactv_));
-        L3aab_ = ambit::Tensor::build(ambit::CoreTensor, "L3aab", std::vector<size_t>(6, nactv_));
-        L3abb_ = ambit::Tensor::build(ambit::CoreTensor, "L3abb", std::vector<size_t>(6, nactv_));
-        L3bbb_ = ambit::Tensor::build(ambit::CoreTensor, "L3bbb", std::vector<size_t>(6, nactv_));
-    }
-
-    // function that scale pdm by w and add scaled pdm to sa_pdm
-    auto scale_add = [](std::vector<double>& sa_pdm, std::vector<double>& pdm, const double& w) {
-        std::for_each(pdm.begin(), pdm.end(), [&](double& v) { v *= w; });
-        std::transform(sa_pdm.begin(), sa_pdm.end(), pdm.begin(), sa_pdm.begin(),
-                       std::plus<double>());
-    };
-
-    // save state-specific density to disk for DWMS-DSRG-PT
-    bool do_disk = options_->get_str("JOB_TYPE") == "DWMS-DSRGPT2";
-
-    for (size_t n = 0, nentry = sa_info_.size(); n < nentry; ++n) {
-        // get current nroots and weights
-        int nroots, irrep, multi;
-        std::vector<double> weights;
-        std::tie(irrep, multi, nroots, weights) = sa_info_[n];
-
-        // prepare eigen vectors for current symmetry
-        int dim = (eigens_[n][0].first)->dim();
-        size_t eigen_size = eigens_[n].size();
-        psi::SharedMatrix evecs(new psi::Matrix("evecs", dim, eigen_size));
-        for (size_t i = 0; i < eigen_size; ++i) {
-            evecs->set_column(0, i, (eigens_[n][i]).first);
-        }
-
-        for (int i = 0; i < nroots; ++i) {
-            double weight = weights[i];
-
-            // compute 1-RDMs
-            auto D1 = compute_n_rdm(p_spaces_[n], evecs, 1, i, i, irrep, multi, do_disk);
-            scale_add(L1a_.data(), D1[0].data(), weight);
-            scale_add(L1b_.data(), D1[1].data(), weight);
-
-            // compute 2-RDMs
-            if (level >= 2) {
-                auto D2 = compute_n_rdm(p_spaces_[n], evecs, 2, i, i, irrep, multi, do_disk);
-                scale_add(L2aa_.data(), D2[0].data(), weight);
-                scale_add(L2ab_.data(), D2[1].data(), weight);
-                scale_add(L2bb_.data(), D2[2].data(), weight);
-            }
-
-            if (level >= 3 && threepdc == "MK") {
-                auto D3 = compute_n_rdm(p_spaces_[n], evecs, 3, i, i, irrep, multi, do_disk);
-                scale_add(L3aaa_.data(), D3[0].data(), weight);
-                scale_add(L3aab_.data(), D3[1].data(), weight);
-                scale_add(L3abb_.data(), D3[2].data(), weight);
-                scale_add(L3bbb_.data(), D3[3].data(), weight);
-            }
-        }
-    } // end looping over all averaged states
-
-    safe_to_read_density_files_ = true;
-
-    // compute 2-cumulants and fill in L2 tensors
-    if (level >= 2) {
-        add_wedge_cu2(L1a_, L1b_, L2aa_, L2ab_, L2bb_);
-    }
-
-    // compute 3-cumulants and fill in L3 tensors
-    if (level >= 3 && threepdc != "ZERO") {
-        add_wedge_cu3(L1a_, L1b_, L2aa_, L2ab_, L2bb_, L3aaa_, L3aab_, L3abb_, L3bbb_);
-    }
-
-    timer_off("Compute SA Ref");
-}
+//void FCI_MO::compute_sa_ref(const int& level) {
+//    timer_on("Compute SA Ref");
+//    if (!quiet_) {
+//        print_h2("Compute State-Averaged Cumulants");
+//    }
+//
+//    // prepare averaged densities
+//    L1a_ = ambit::Tensor::build(ambit::CoreTensor, "L1a", {nactv_, nactv_});
+//    L1b_ = ambit::Tensor::build(ambit::CoreTensor, "L1b", {nactv_, nactv_});
+//
+//    if (level >= 2) {
+//        L2aa_ = ambit::Tensor::build(ambit::CoreTensor, "L2aa", {nactv_, nactv_, nactv_, nactv_});
+//        L2ab_ = ambit::Tensor::build(ambit::CoreTensor, "L2ab", {nactv_, nactv_, nactv_, nactv_});
+//        L2bb_ = ambit::Tensor::build(ambit::CoreTensor, "L2bb", {nactv_, nactv_, nactv_, nactv_});
+//    }
+//
+//    std::string threepdc = options_->get_str("THREEPDC");
+//    if (level >= 3 && threepdc != "ZERO") {
+//        L3aaa_ = ambit::Tensor::build(ambit::CoreTensor, "L3aaa", std::vector<size_t>(6, nactv_));
+//        L3aab_ = ambit::Tensor::build(ambit::CoreTensor, "L3aab", std::vector<size_t>(6, nactv_));
+//        L3abb_ = ambit::Tensor::build(ambit::CoreTensor, "L3abb", std::vector<size_t>(6, nactv_));
+//        L3bbb_ = ambit::Tensor::build(ambit::CoreTensor, "L3bbb", std::vector<size_t>(6, nactv_));
+//    }
+//
+//    // function that scale pdm by w and add scaled pdm to sa_pdm
+//    auto scale_add = [](std::vector<double>& sa_pdm, std::vector<double>& pdm, const double& w) {
+//        std::for_each(pdm.begin(), pdm.end(), [&](double& v) { v *= w; });
+//        std::transform(sa_pdm.begin(), sa_pdm.end(), pdm.begin(), sa_pdm.begin(),
+//                       std::plus<double>());
+//    };
+//
+//    // save state-specific density to disk for DWMS-DSRG-PT
+//    bool do_disk = options_->get_str("JOB_TYPE") == "DWMS-DSRGPT2";
+//
+//    for (size_t n = 0, nentry = sa_info_.size(); n < nentry; ++n) {
+//        // get current nroots and weights
+//        int nroots, irrep, multi;
+//        std::vector<double> weights;
+//        std::tie(irrep, multi, nroots, weights) = sa_info_[n];
+//
+//        // prepare eigen vectors for current symmetry
+//        int dim = (eigens_[n][0].first)->dim();
+//        size_t eigen_size = eigens_[n].size();
+//        psi::SharedMatrix evecs(new psi::Matrix("evecs", dim, eigen_size));
+//        for (size_t i = 0; i < eigen_size; ++i) {
+//            evecs->set_column(0, i, (eigens_[n][i]).first);
+//        }
+//
+//        for (int i = 0; i < nroots; ++i) {
+//            double weight = weights[i];
+//
+//            // compute 1-RDMs
+//            auto D1 = compute_n_rdm(p_spaces_[n], evecs, 1, i, i, irrep, multi, do_disk);
+//            scale_add(L1a_.data(), D1[0].data(), weight);
+//            scale_add(L1b_.data(), D1[1].data(), weight);
+//
+//            // compute 2-RDMs
+//            if (level >= 2) {
+//                auto D2 = compute_n_rdm(p_spaces_[n], evecs, 2, i, i, irrep, multi, do_disk);
+//                scale_add(L2aa_.data(), D2[0].data(), weight);
+//                scale_add(L2ab_.data(), D2[1].data(), weight);
+//                scale_add(L2bb_.data(), D2[2].data(), weight);
+//            }
+//
+//            if (level >= 3 && threepdc == "MK") {
+//                auto D3 = compute_n_rdm(p_spaces_[n], evecs, 3, i, i, irrep, multi, do_disk);
+//                scale_add(L3aaa_.data(), D3[0].data(), weight);
+//                scale_add(L3aab_.data(), D3[1].data(), weight);
+//                scale_add(L3abb_.data(), D3[2].data(), weight);
+//                scale_add(L3bbb_.data(), D3[3].data(), weight);
+//            }
+//        }
+//    } // end looping over all averaged states
+//
+//    safe_to_read_density_files_ = true;
+//
+//    // compute 2-cumulants and fill in L2 tensors
+//    if (level >= 2) {
+//        add_wedge_cu2(L1a_, L1b_, L2aa_, L2ab_, L2bb_);
+//    }
+//
+//    // compute 3-cumulants and fill in L3 tensors
+//    if (level >= 3 && threepdc != "ZERO") {
+//        add_wedge_cu3(L1a_, L1b_, L2aa_, L2ab_, L2bb_, L3aaa_, L3aab_, L3abb_, L3bbb_);
+//    }
+//
+//    timer_off("Compute SA Ref");
+//}
 
 bool FCI_MO::check_density_files(int rdm_level, int irrep, int multi, int root1, int root2) {
     auto filenames = density_filenames_generator(rdm_level, irrep, multi, root1, root2);
