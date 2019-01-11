@@ -64,7 +64,7 @@ class SemiCanonical {
                           const bool& build_fock = true, const bool& transform = true);
 
     /// Transform all cumulants, rebuild 2-RDMs using 2-cumulants
-    void transform_reference(ambit::Tensor& Ua, ambit::Tensor& Ub, Reference& reference,
+    Reference transform_reference(ambit::Tensor& Ua, ambit::Tensor& Ub, const Reference& reference,
                              const int& max_rdm_level);
 
     /// Set active hole and particle dimensions

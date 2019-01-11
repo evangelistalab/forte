@@ -26,6 +26,7 @@
  * @END LICENSE
  */
 
+#include "helpers/timer.h"
 #include "base_classes/reference.h"
 #include "integrals/integrals.h"
 #include "base_classes/mo_space_info.h"
@@ -94,7 +95,7 @@ ambit::Tensor Reference::L3aab() {
 ambit::Tensor Reference::L3abb() {
     if (not have_L3abb_) {
         L3abb_ = g3abb_.clone();
-        make_cumulant_L3abb_in_place(g1a, g1b, L2ab, L2bb, L3abb);
+        make_cumulant_L3aab_in_place(g1a_, g1b_, L2aa_, L2bb_, L3abb_);
         have_L3abb_ = true;
     }
     return L3abb_;
@@ -110,39 +111,30 @@ ambit::Tensor Reference::L3bbb() {
 }
 
 void make_cumulant_L2aa_in_place(const ambit::Tensor& g1a, ambit::Tensor& L2aa) {
-    std::string job_name = "make_cumulant_L2aa_in_place";
-    timer_on(job_name);
+    timer t("make_cumulant_L2aa_in_place");
 
     L2aa("pqrs") -= g1a("pr") * g1a("qs");
     L2aa("pqrs") += g1a("ps") * g1a("qr");
-
-    timer_off(job_name);
 }
 
 void make_cumulant_L2ab_in_place(const ambit::Tensor& g1a, const ambit::Tensor& g1b,
                                  ambit::Tensor& L2ab) {
-    std::string job_name = "make_cumulant_L2ab_in_place";
-    timer_on(job_name);
+    timer t("make_cumulant_L2ab_in_place");
 
     L2ab("pqrs") -= g1a("pr") * g1b("qs");
-
-    timer_off(job_name);
 }
 
 void make_cumulant_L2bb_in_place(const ambit::Tensor& g1b, ambit::Tensor& L2bb) {
-    std::string job_name = "make_cumulant_L2bb_in_place";
-    timer_on(job_name);
+    timer t("make_cumulant_L2bb_in_place");
 
     L2bb("pqrs") -= g1b("pr") * g1b("qs");
     L2bb("pqrs") += g1b("ps") * g1b("qr");
 
-    timer_off(job_name);
 }
 
 void make_cumulant_L3aaa_in_place(const ambit::Tensor& g1a, const ambit::Tensor& L2aa,
                                   ambit::Tensor& L3aaa) {
-    std::string job_name = "make_cumulant_L3aaa_in_place";
-    timer_on(job_name);
+    timer t("make_cumulant_L3aaa_in_place");
 
     L3aaa("pqrstu") -= g1a("ps") * L2aa("qrtu");
     L3aaa("pqrstu") += g1a("pt") * L2aa("qrsu");
@@ -164,14 +156,12 @@ void make_cumulant_L3aaa_in_place(const ambit::Tensor& g1a, const ambit::Tensor&
     L3aaa("pqrstu") += g1a("pu") * g1a("qt") * g1a("rs");
     L3aaa("pqrstu") += g1a("pt") * g1a("qs") * g1a("ru");
 
-    timer_off(job_name);
 }
 
 void make_cumulant_L3aab_in_place(const ambit::Tensor& g1a, const ambit::Tensor& g1b,
                                   const ambit::Tensor& L2aa, const ambit::Tensor& L2ab,
                                   ambit::Tensor& L3aab) {
-    std::string job_name = "make_cumulant_L3aab_in_place";
-    timer_on(job_name);
+    timer t("make_cumulant_L3aab_in_place");
 
     L3aab("pqRstU") -= g1a("ps") * L2ab("qRtU");
     L3aab("pqRstU") += g1a("pt") * L2ab("qRsU");
@@ -184,14 +174,12 @@ void make_cumulant_L3aab_in_place(const ambit::Tensor& g1a, const ambit::Tensor&
     L3aab("pqRstU") -= g1a("ps") * g1a("qt") * g1b("RU");
     L3aab("pqRstU") += g1a("pt") * g1a("qs") * g1b("RU");
 
-    timer_off(job_name);
 }
 
 void make_cumulant_L3abb_in_place(const ambit::Tensor& g1a, const ambit::Tensor& g1b,
                                   const ambit::Tensor& L2ab, const ambit::Tensor& L2bb,
                                   ambit::Tensor& L3abb) {
-    std::string job_name = "make_cumulant_L3abb_in_place";
-    timer_on(job_name);
+    timer t("make_cumulant_L3abb_in_place");
 
     L3abb("pQRsTU") -= g1a("ps") * L2bb("QRTU");
 
@@ -204,13 +192,11 @@ void make_cumulant_L3abb_in_place(const ambit::Tensor& g1a, const ambit::Tensor&
     L3abb("pQRsTU") -= g1a("ps") * g1b("QT") * g1b("RU");
     L3abb("pQRsTU") += g1a("ps") * g1b("QU") * g1b("RT");
 
-    timer_off(job_name);
 }
 
 void make_cumulant_L3bbb_in_place(const ambit::Tensor& g1b, const ambit::Tensor& L2bb,
                                   ambit::Tensor& L3bbb) {
-    std::string job_name = "make_cumulant_L3bbb_in_place";
-    timer_on(job_name);
+    timer t("make_cumulant_L3bbb_in_place");
 
     L3bbb("pqrstu") -= g1b("ps") * L2bb("qrtu");
     L3bbb("pqrstu") += g1b("pt") * L2bb("qrsu");
@@ -232,10 +218,9 @@ void make_cumulant_L3bbb_in_place(const ambit::Tensor& g1b, const ambit::Tensor&
     L3bbb("pqrstu") += g1b("pu") * g1b("qt") * g1b("rs");
     L3bbb("pqrstu") += g1b("pt") * g1b("qs") * g1b("ru");
 
-    timer_off(job_name);
 }
 
-double compute_Eref_from_reference(const Reference& ref, std::shared_ptr<ForteIntegrals> ints,
+double compute_Eref_from_reference(Reference& ref, std::shared_ptr<ForteIntegrals> ints,
                                    std::shared_ptr<MOSpaceInfo> mo_space_info, double Enuc) {
     // similar to MASTER_DSRG::compute_reference_energy_from_ints (use Fock and cumulants)
     // here I form two density and directly use bare Hamiltonian

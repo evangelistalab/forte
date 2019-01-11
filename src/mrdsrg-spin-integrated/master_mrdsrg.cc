@@ -51,9 +51,9 @@ void MASTER_DSRG::startup() {
     set_ambit_MOSpace();
 
     // read commonly used energies
-    Eref_ = reference_.get_Eref();
     Enuc_ = ints_->nuclear_repulsion_energy();
     Efrzc_ = ints_->frozen_core_energy();
+    Eref_ = compute_Eref_from_reference(reference_, ints_, mo_space_info_, Enuc_);
 
     // initialize timer for commutator
     dsrg_time_ = DSRG_TIME();

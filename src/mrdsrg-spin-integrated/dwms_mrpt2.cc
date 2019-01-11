@@ -477,8 +477,8 @@ DWMS_DSRGPT2::compute_macro_dsrg_pt(std::shared_ptr<MASTER_DSRG>& dsrg_pt,
     Reference reference = fci_mo->get_reference();
 
     // update MK vacuum energy
-    double new_Eref = compute_Eref_from_reference(reference, ints_, mo_space_info_, Enuc_);
-    reference.set_Eref(new_Eref); // TODO: ?why do this here this way?
+    //double new_Eref = compute_Eref_from_reference(reference, ints_, mo_space_info_, Enuc_);
+    //reference.set_Eref(new_Eref); // TODO: ?why do this here this way?
 
     // compute DSRG-PT2/3 energies and Hbar
     return compute_dsrg_pt(dsrg_pt, reference, dwms_corrlv_);

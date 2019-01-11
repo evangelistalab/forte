@@ -387,7 +387,6 @@ double ACTIVE_DSRGPT2::compute_energy() {
             std::vector<std::pair<size_t,size_t>> rootvec;
             rootvec.push_back(std::make_pair(i,i));
             Reference reference = fci_mo_->get_reference(rootvec)[0];
-            reference.set_Eref(Eref);
 
             // manually rotate the reference and integrals
             semi->transform_reference(Uas_t[i], Ubs_t[i], reference, max_cu_level);

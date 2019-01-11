@@ -55,6 +55,7 @@ DSRG_MRPT::DSRG_MRPT(Reference reference, psi::SharedWavefunction ref_wfn, psi::
     startup();
 }
 
+/*
 void DSRG_MRPT::hack_doublet() {
     // form spin multiplets averaged densities
     ambit::Tensor D1 = reference_.g1a().clone();
@@ -139,6 +140,7 @@ void DSRG_MRPT::hack_doublet() {
     reference_.set_L3abb(D3abb);
     reference_.set_L3bbb(D3aaa.clone());
 }
+*/
 
 DSRG_MRPT::~DSRG_MRPT() { cleanup(); }
 
@@ -232,7 +234,7 @@ void DSRG_MRPT::startup() {
     frozen_core_energy_ = ints_->frozen_core_energy();
 
     // reference energy
-    Eref_ = reference_.get_Eref();
+    Eref_ = compute_Eref_from_reference(reference_, ints_, mo_space_info_, ints_->nuclear_repulsion_energy());
 
     // orbital spaces
     core_mos_ = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
