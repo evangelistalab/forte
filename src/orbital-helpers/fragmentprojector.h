@@ -47,7 +47,7 @@ class FragmentProjector {
 	//	std::shared_ptr<BasisSet> prime_basis);
 
     // Build projector and return AO basis matrix Pf_AO
-    psi::SharedMatrix build_projector(std::shared_ptr<Molecule> molecule,
+    SharedMatrix FragmentProjector::build_f_projector(std::shared_ptr<Molecule> molecule,
                                  std::shared_ptr<BasisSet> basis);
 
 

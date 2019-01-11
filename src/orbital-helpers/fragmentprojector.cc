@@ -47,7 +47,7 @@ using namespace psi;
 
 namespace forte {
 
-psi::SharedMatrix create_fragment_projector(psi::SharedWavefunction wfn, psi::Options& options) {
+SharedMatrix create_fragment_projector(SharedWavefunction wfn, Options& options) {
     SharedMatrix Pf;
 
     // Run this code only if user specified fragments
@@ -114,7 +114,7 @@ void FragmentProjector::startup() {
 	A_end_[0] = nbf_A_;
 }
 
-psi::SharedMatrix FragmentProjector::build_f_projector(std::shared_ptr<psi::Molecule> molecule, 
+SharedMatrix FragmentProjector::build_f_projector(std::shared_ptr<Molecule> molecule, 
 	std::shared_ptr<psi::BasisSet> basis) {
 
 	std::shared_ptr<IntegralFactory> integral_pp(
@@ -138,6 +138,8 @@ psi::SharedMatrix FragmentProjector::build_f_projector(std::shared_ptr<psi::Mole
 
 	// Evaluate AO basis projector
 	S_A_nn->transform(S_nn);
+
+	S_A_nn->print();
 
     return S_A_nn;
 }

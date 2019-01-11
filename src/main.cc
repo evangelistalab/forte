@@ -146,13 +146,13 @@ psi::SharedMatrix make_aosubspace_projector(psi::SharedWavefunction ref_wfn,
     return Ps;
 }
 
-psi::SharedMatrix make_fragment_projector(psi::SharedWavefunction ref_wfn, psi::Options& options) {
-    // Pf is the AO basis franment(s) projector
-    auto Pf = create_fragment_projector(ref_wfn, options);
-    return Pf;
-}
+//psi::SharedMatrix make_fragment_projector(psi::SharedWavefunction ref_wfn, psi::Options& options) {
+//    // Pf is the AO basis franment(s) projector
+//    auto Pf = create_fragment_projector(ref_wfn, options);
+//    return Pf;
+//}
 
-make_embedding(ref_wfn, options, Pf);
+//make_embedding(ref_wfn, options, Pf);
 
 void banner() {
     outfile->Printf(
