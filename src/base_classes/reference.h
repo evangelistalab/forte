@@ -53,13 +53,13 @@ class Reference {
               ambit::Tensor g3bbb);
 
     /// Obtain density cumulants
-    ambit::Tensor L2aa() const { return L2aa_; }
-    ambit::Tensor L2ab() const { return L2ab_; }
-    ambit::Tensor L2bb() const { return L2bb_; }
-    ambit::Tensor L3aaa() const { return L3aaa_; }
-    ambit::Tensor L3aab() const { return L3aab_; }
-    ambit::Tensor L3abb() const { return L3abb_; }
-    ambit::Tensor L3bbb() const { return L3bbb_; }
+    ambit::Tensor L2aa();
+    ambit::Tensor L2ab();
+    ambit::Tensor L2bb();
+    ambit::Tensor L3aaa();
+    ambit::Tensor L3aab();
+    ambit::Tensor L3abb();
+    ambit::Tensor L3bbb();
 
     /// Obtain 2-RDMs
     ambit::Tensor g1a() const { return g1a_; }
