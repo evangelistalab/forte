@@ -3426,8 +3426,8 @@ void MCSRGPT2_MO::compute_Fock_ints() {
 
 void MCSRGPT2_MO::fill_naive_cumulants(Reference& ref, const int level) {
     // fill in 1-cumulant (same as 1-RDM) to D1a_, D1b_
-    ambit::Tensor L1a = ref.L1a();
-    ambit::Tensor L1b = ref.L1b();
+    ambit::Tensor L1a = ref.g1a();
+    ambit::Tensor L1b = ref.g1b();
     fill_one_cumulant(L1a, L1b);
     if (print_ > 1) {
         print_density("Alpha", Da_);

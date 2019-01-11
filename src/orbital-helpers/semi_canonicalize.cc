@@ -213,8 +213,8 @@ void SemiCanonical::build_fock_matrix(Reference& reference) {
     psi::SharedMatrix Da(new psi::Matrix("Da", ncmo_, ncmo_));
     psi::SharedMatrix Db(new psi::Matrix("Db", ncmo_, ncmo_));
 
-    Matrix L1a = tensor_to_matrix(reference.L1a(), actv_);
-    Matrix L1b = tensor_to_matrix(reference.L1b(), actv_);
+    Matrix L1a = tensor_to_matrix(reference.g1a(), actv_);
+    Matrix L1b = tensor_to_matrix(reference.g1b(), actv_);
 
     for (size_t h = 0, offset = 0; h < nirrep_; ++h) {
         // core block (diagonal)
@@ -409,8 +409,8 @@ void SemiCanonical::transform_reference(ambit::Tensor& Ua, ambit::Tensor& Ub, Re
         print_h2("Reference Transformation to Semicanonical Basis");
 
         // Transform the 1-cumulants
-        ambit::Tensor L1a0 = reference.L1a();
-        ambit::Tensor L1b0 = reference.L1b();
+        ambit::Tensor L1a0 = reference.g1a();
+        ambit::Tensor L1b0 = reference.g1b();
 
         ambit::Tensor L1aT =
             ambit::Tensor::build(ambit::CoreTensor, "Transformed L1a", {nact_, nact_});

@@ -202,15 +202,15 @@ void CC::startup() {
 //    symmetry breaking.");
 //    outfile->Printf("\n  If this is not desired, go to mrdsrg.cc
 //    build_density() around line 190.");
-//    Gamma1_.block("aa")("pq") = reference_.L1a()("pq");
-//    Gamma1_.block("AA")("pq") = reference_.L1a()("pq");
-//    Eta1_.block("aa")("pq") -= reference_.L1a()("pq");
-//    Eta1_.block("AA")("pq") -= reference_.L1a()("pq");
+//    Gamma1_.block("aa")("pq") = reference_.g1a()("pq");
+//    Gamma1_.block("AA")("pq") = reference_.g1a()("pq");
+//    Eta1_.block("aa")("pq") -= reference_.g1a()("pq");
+//    Eta1_.block("AA")("pq") -= reference_.g1a()("pq");
 
 ////    ambit::Tensor Diff =
-/// ambit::Tensor::build(tensor_type_,"Diff",reference_.L1a().dims());
-////    Diff.data() = reference_.L1a().data();
-////    Diff("pq") -= reference_.L1b()("pq");
+/// ambit::Tensor::build(tensor_type_,"Diff",reference_.g1a().dims());
+////    Diff.data() = reference_.g1a().data();
+////    Diff("pq") -= reference_.g1b()("pq");
 ////    outfile->Printf("\n  L1a diff Here !!!!");
 ////    Diff.citerate([&](const std::vector<size_t>& i,const double& value){
 ////        if(value != 0.0){

@@ -192,8 +192,8 @@ Reference ActiveSpaceSolver::get_reference() {
 
                 // Now the RDMs
                 // 1 RDM
-                scale_add(g1a.data(), method_ref.L1a().data(), weight);
-                scale_add(g1b.data(), method_ref.L1b().data(), weight);
+                scale_add(g1a.data(), method_ref.g1a().data(), weight);
+                scale_add(g1b.data(), method_ref.g1b().data(), weight);
 
                 if (max_rdm_level_ >= 2) {
                     // 2 RDM

@@ -361,8 +361,8 @@ double SA_FCISolver::compute_energy() {
         ambit::Tensor L2bb_sa =
             ambit::Tensor::build(ambit::CoreTensor, "L2bb_sa", {na, na, na, na});
         for (auto& casscf_ref : sa_cas_ref) {
-            L1a_sa("u, v") += casscf_ref.L1a()("u, v");
-            L1b_sa("u, v") += casscf_ref.L1b()("u, v");
+            L1a_sa("u, v") += casscf_ref.g1a()("u, v");
+            L1b_sa("u, v") += casscf_ref.g1b()("u, v");
             L2aa_sa("u, v, x, y") += casscf_ref.g2aa()("u, v, x, y");
             L2ab_sa("u, v, x, y") += casscf_ref.g2ab()("u, v, x, y");
             L2bb_sa("u, v, x, y") += casscf_ref.g2bb()("u, v, x, y");

@@ -389,8 +389,8 @@ void CASSCF::cas_ci() {
     ambit::Tensor L2aa = cas_ref_.L2aa();
     ambit::Tensor L2ab = cas_ref_.L2ab();
     ambit::Tensor L2bb = cas_ref_.L2bb();
-    ambit::Tensor L1a = cas_ref_.L1a();
-    ambit::Tensor L1b = cas_ref_.L1b();
+    ambit::Tensor L1a = cas_ref_.g1a();
+    ambit::Tensor L1b = cas_ref_.g1b();
 
     L2aa("p,q,r,s") += L1a("p,r") * L1a("q,s");
     L2aa("p,q,r,s") -= L1a("p,s") * L1a("q,r");
@@ -417,8 +417,8 @@ void CASSCF::cas_ci() {
     /// Compute the 1RDM
     ambit::Tensor gamma_no_spin = ambit::Tensor::build(ambit::CoreTensor, "Return", {na_, na_});
     gamma1_ = ambit::Tensor::build(ambit::CoreTensor, "Return", {na_, na_});
-    ambit::Tensor gamma1a = cas_ref_.L1a();
-    ambit::Tensor gamma1b = cas_ref_.L1b();
+    ambit::Tensor gamma1a = cas_ref_.g1a();
+    ambit::Tensor gamma1b = cas_ref_.g1b();
 
     gamma_no_spin("i,j") = (gamma1a("i,j") + gamma1b("i,j"));
 
@@ -485,8 +485,8 @@ double CASSCF::cas_check(Reference cas_ref) {
     fci_ints->set_active_integrals_and_restricted_docc();
 
     /// Spin-free ORDM = gamma1_a + gamma1_b
-    ambit::Tensor L1b = cas_ref.L1b();
-    ambit::Tensor L1a = cas_ref.L1a();
+    ambit::Tensor L1b = cas_ref.g1b();
+    ambit::Tensor L1a = cas_ref.g1a();
     gamma1("u, v") = (L1a("u, v") + L1b("u, v"));
     ambit::Tensor L2aa = cas_ref.L2aa();
     ambit::Tensor L2ab = cas_ref.L2ab();

@@ -59,8 +59,8 @@ double compute_Eref_from_reference(const Reference& ref, std::shared_ptr<ForteIn
     size_t ncore = core_mos.size();
     size_t nactv = actv_mos.size();
 
-    ambit::Tensor L1a = ref.L1a();
-    ambit::Tensor L1b = ref.L1b();
+    ambit::Tensor L1a = ref.g1a();
+    ambit::Tensor L1b = ref.g1b();
     ambit::Tensor L2aa = ref.L2aa();
     ambit::Tensor L2ab = ref.L2ab();
     ambit::Tensor L2bb = ref.L2bb();
@@ -82,8 +82,8 @@ double compute_Eref_from_reference(const Reference& ref, std::shared_ptr<ForteIn
             Hb.data()[u * nactv + v] = ints->oei_b(nu, nv);
         }
     }
-    E += Ha("uv") * ref.L1a()("vu");
-    E += Hb("uv") * ref.L1b()("vu");
+    E += Ha("uv") * ref.g1a()("vu");
+    E += Hb("uv") * ref.g1b()("vu");
 
     // core-core 2-body: 0.5 * \sum_{mn}^{C} v^{mn}_{mn} in mini-batches
     // 4-index tensor of core-core-core-core could be large (> 600 electrons)

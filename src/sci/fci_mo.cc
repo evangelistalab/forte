@@ -2911,7 +2911,7 @@ Reference FCI_MO::transition_reference(int root1, int root2, bool multi_state, i
     if (max_level >= 2) {
         auto D2 = compute_n_rdm(p_space, evecs, 2, root1, root2, irrep, multi, disk);
         if (do_cumulant) {
-            add_wedge_cu2(ref.L1a(), ref.L1b(), D2[0], D2[1], D2[2]);
+            add_wedge_cu2(ref.g1a(), ref.g1b(), D2[0], D2[1], D2[2]);
             ref.set_L2(D2[0], D2[1], D2[2]);
         } else {
             ref.set_G2(D2[0], D2[1], D2[2]);
@@ -2921,7 +2921,7 @@ Reference FCI_MO::transition_reference(int root1, int root2, bool multi_state, i
     if (max_level >= 3) {
         auto D3 = compute_n_rdm(p_space, evecs, 3, root1, root2, irrep, multi, disk);
         if (do_cumulant) {
-            add_wedge_cu3(ref.L1a(), ref.L1b(), ref.L2aa(), ref.L2ab(), ref.L2bb(), D3[0], D3[1],
+            add_wedge_cu3(ref.g1a(), ref.g1b(), ref.L2aa(), ref.L2ab(), ref.L2bb(), D3[0], D3[1],
                           D3[2], D3[3]);
             ref.set_L3(D3[0], D3[1], D3[2], D3[3]);
         } else {

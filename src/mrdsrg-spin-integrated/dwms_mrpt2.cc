@@ -927,8 +927,8 @@ double DWMS_DSRGPT2::contract_Heff_1TrDM(ambit::Tensor& H1a, ambit::Tensor& H1b,
     double coupling = 0.0;
     std::string indices = transpose ? "vu" : "uv";
 
-    coupling += H1a("vu") * TrD.L1a()(indices);
-    coupling += H1b("vu") * TrD.L1b()(indices);
+    coupling += H1a("vu") * TrD.g1a()(indices);
+    coupling += H1b("vu") * TrD.g1b()(indices);
 
     return coupling;
 }

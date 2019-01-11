@@ -57,8 +57,8 @@ DSRG_MRPT::DSRG_MRPT(Reference reference, psi::SharedWavefunction ref_wfn, psi::
 
 void DSRG_MRPT::hack_doublet() {
     // form spin multiplets averaged densities
-    ambit::Tensor D1 = reference_.L1a().clone();
-    D1("pq") += reference_.L1b()("pq");
+    ambit::Tensor D1 = reference_.g1a().clone();
+    D1("pq") += reference_.g1b()("pq");
     D1.scale(0.5);
     reference_.set_L1a(D1);
     reference_.set_L1b(D1.clone());
@@ -330,8 +330,8 @@ void DSRG_MRPT::build_ints() {
 
 void DSRG_MRPT::build_density() {
     // test OPDC
-    ambit::Tensor diff = ambit::Tensor::build(tensor_type_, "diff_L1", reference_.L1a().dims());
-    diff("pq") = reference_.L1a()("pq") - reference_.L1b()("pq");
+    ambit::Tensor diff = ambit::Tensor::build(tensor_type_, "diff_L1", reference_.g1a().dims());
+    diff("pq") = reference_.g1a()("pq") - reference_.g1b()("pq");
     if (diff.norm() > 1.0e-8) {
         outfile->Printf("\n  Error: one-particle density cumulant cannot be spin-adapted!");
         outfile->Printf("\n  |L1a - L1b| = %20.15f  <== This should be 0.0.", diff.norm());
@@ -340,7 +340,7 @@ void DSRG_MRPT::build_density() {
 
     // fill spin-summed OPDC
     ambit::Tensor L1aa = L1_.block("aa");
-    L1aa("pq") = reference_.L1a()("pq") + reference_.L1b()("pq");
+    L1aa("pq") = reference_.g1a()("pq") + reference_.g1b()("pq");
 
     ambit::Tensor E1aa = Eta1_.block("aa");
     E1aa.iterate(
