@@ -75,7 +75,6 @@ class Reference {
     ambit::Tensor g3abb() const { return g3abb_; }
     ambit::Tensor g3bbb() const { return g3bbb_; }
 
-
   protected:
     // ==> Class Data <==
 
@@ -91,6 +90,14 @@ class Reference {
     ambit::Tensor L3abb_;
     ambit::Tensor L3bbb_;
 
+    bool have_L2aa_ = false;
+    bool have_L2ab_ = false;
+    bool have_L2bb_ = false;
+    bool have_L3aaa_ = false;
+    bool have_L3aab_ = false;
+    bool have_L3abb_ = false;
+    bool have_L3bbb_ = false;
+
     /// Reduced density matrices
     ambit::Tensor g1a_;
     ambit::Tensor g1b_;
@@ -103,6 +110,58 @@ class Reference {
     ambit::Tensor g3abb_;
     ambit::Tensor g3bbb_;
 };
+
+/**
+ * @brief make_cumulant_L2aa_in_place Make the alpha-alpha 2-body cumulant.
+ * This function replaces the tensor passed in (L2aa) containing the aa 2-RDM
+ * with the cumulant.
+ * @param g1a The 1-body alpha RDM
+ * @param L2aa The 2-body alpha-alpha RDM
+ */
+void make_cumulant_L2aa_in_place(const ambit::Tensor& L1a, ambit::Tensor& L2aa);
+
+/**
+
+ * @brief make_cumulant_L2ab_in_place Make the alpha-beta 2-body cumulant.
+ * This function replaces the tensor passed in (L2ab) containing the ab 2-RDM
+ * with the cumulant.
+ * @param g1a The 1-body alpha RDM
+ * @param g1b The 1-body beta RDM
+ * @param L2ab The 2-body beta-beta RDM
+ */
+void make_cumulant_L2ab_in_place(const ambit::Tensor& L1a, const ambit::Tensor& L1b,
+                                 ambit::Tensor& L2ab);
+
+/**
+ * @brief make_cumulant_L2bb_in_place Make the beta-beta 2-body cumulant.
+ * This function replaces the tensor passed in (L2bb) containing the bb 2-RDM
+ * with the cumulant.
+ * @param g1b The 1-body beta RDM
+ * @param L2bb The 2-body beta-beta RDM
+ */
+void make_cumulant_L2bb_in_place(const ambit::Tensor& L1b, ambit::Tensor& L2bb);
+
+/**
+ * @brief make_cumulant_L3aaa_in_place Make the aaa 3-body cumulant.
+ * This function replaces the tensor passed in (L3aaa) containing the aaa 3-RDM
+ * with the cumulant.
+ * @param g1a 1-body alpha RDM
+ * @param L2aa
+ * @param L3aaa
+ */
+void make_cumulant_L3aaa_in_place(const ambit::Tensor& g1a, const ambit::Tensor& L2aa,
+                                  ambit::Tensor& L3aaa);
+
+void make_cumulant_L3aab_in_place(const ambit::Tensor& g1a, const ambit::Tensor& g1b,
+                                  const ambit::Tensor& L2aa, const ambit::Tensor& L2ab,
+                                  ambit::Tensor& L3aab);
+
+void make_cumulant_L3abb_in_place(const ambit::Tensor& g1a, const ambit::Tensor& g1b,
+                                  const ambit::Tensor& L2ab, const ambit::Tensor& L2bb,
+                                  ambit::Tensor& L3abb);
+
+void make_cumulant_L3bbb_in_place(const ambit::Tensor& g1b, const ambit::Tensor& L2bb,
+                                  ambit::Tensor& L3bbb);
 
 double compute_Eref_from_reference(const Reference& ref, std::shared_ptr<ForteIntegrals> ints,
                                    std::shared_ptr<MOSpaceInfo> mo_space_info, double Enuc);
