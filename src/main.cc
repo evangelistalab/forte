@@ -36,7 +36,7 @@ namespace py = pybind11;
 
 #include "orbital-helpers/aosubspace.h"
 #include "orbital-helpers/avas.h"
-//#include "orbital-helpers/fragmentprojector.h"
+#include "orbital-helpers/fragmentprojector.h"
 //#include "orbital-helpers/embedding.h"
 #include "base_classes/forte_options.h"
 #include "base_classes/mo_space_info.h"

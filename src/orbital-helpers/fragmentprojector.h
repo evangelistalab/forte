@@ -36,41 +36,42 @@
 using namespace psi;
 namespace forte {
 
-class FragmentProjector {
-  public:
-    // ==> Constructors <==
+	class FragmentProjector {
+	public:
+		// ==> Constructors <==
 
-    // Simple constructor
-	FragmentProjector::FragmentProjector(std::shared_ptr<Molecule> molecule, std::shared_ptr<BasisSet> basis);
-    // Constructor with minAO
-	//FragmentProjector::FragmentProjector(std::shared_ptr<Molecule> molecule, std::shared_ptr<BasisSet> minao_basis, 
-	//	std::shared_ptr<BasisSet> prime_basis);
+		// Simple constructor
+		FragmentProjector(std::shared_ptr<Molecule> molecule, std::shared_ptr<BasisSet> basis);
+		// Constructor with minAO
+		//FragmentProjector::FragmentProjector(std::shared_ptr<Molecule> molecule, std::shared_ptr<BasisSet> minao_basis, 
+		//	std::shared_ptr<BasisSet> prime_basis);
 
-    // Build projector and return AO basis matrix Pf_AO
-    SharedMatrix FragmentProjector::build_f_projector(std::shared_ptr<Molecule> molecule,
-                                 std::shared_ptr<BasisSet> basis);
+		// Build projector and return AO basis matrix Pf_AO
+		SharedMatrix build_f_projector(std::shared_ptr<Molecule> molecule,
+			std::shared_ptr<BasisSet> basis);
 
 
-  private:
-    /// The molecule
-    std::shared_ptr<psi::Molecule> molecule_;
-    /// The AO basis set
-    std::shared_ptr<psi::BasisSet> basis_;
+	private:
+		/// The molecule
+		std::shared_ptr<Molecule> molecule_;
+		/// The AO basis set
+		std::shared_ptr<BasisSet> basis_;
 
-	int nbf_;
+		int nbf_;
 
-	int nbf_A;
+		int nbf_A_;
 
-	int natom_A_;
+		int natom_A_;
 
-	Dimension A_begin_;
-	Dimension A_end_;
+		Dimension A_begin_;
+		Dimension A_end_;
 
-    /// The startup function
-    void startup();
-};
+		/// The startup function
+		void startup();
+	};
 
-// Helper function
-SharedMatrix create_fragment_projector(psi::SharedWavefunction wfn, psi::Options& options)
+	// Helper function
+	SharedMatrix create_fragment_projector(SharedWavefunction wfn, Options& options);
 
-#endif // _FragmentProjector_h_
+} //namespace forte
+#endif // _fragmentprojector_h_

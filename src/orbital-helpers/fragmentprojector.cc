@@ -31,15 +31,13 @@
 #include <regex>
 #include <vector>
 
-#include "psi4/libpsi4util/PsiOutStream.h"
-#include "psi4/libmints/element_to_Z.h"
-#include "psi4/libmints/integral.h"
+#include "psi4/libmints/vector.h"
 #include "psi4/libmints/matrix.h"
-#include "psi4/libmints/petitelist.h"
+#include "psi4/libmints/molecule.h"
+#include "psi4/libmints/basisset.h"
+#include "psi4/libpsi4util/PsiOutStream.h"
+#include "psi4/libmints/integral.h"
 #include "psi4/libmints/wavefunction.h"
-#include "psi4/masses.h"
-
-#include "boost/format.hpp"
 
 #include "fragmentprojector.h"
 
@@ -52,7 +50,7 @@ SharedMatrix create_fragment_projector(SharedWavefunction wfn, Options& options)
 
     // Run this code only if user specified fragments
 	std::shared_ptr<Molecule> molecule = wfn->molecule();
-	int nfrag = mol->nfragments();
+	int nfrag = molecule->nfragments();
 	if (nfrag == 1) {
 		throw PSIEXCEPTION("A input molecule with fragments (-- in atom list) is required "
 			"for embedding!");
@@ -72,7 +70,6 @@ SharedMatrix create_fragment_projector(SharedWavefunction wfn, Options& options)
 
         // Compute and return the projector matrix
         Pf = FP.build_f_projector(molecule, prime_basis);
-    }
     return Pf;
 }
 
@@ -95,7 +92,7 @@ void FragmentProjector::startup() {
 	//mol_env->print();
 
 	nbf_ = basis_->nbf();
-	outfile->Printf("\n number of basis on all atoms: %d", nbf);
+	outfile->Printf("\n number of basis on all atoms: %d", nbf_);
 
 	natom_A_ = mol_sys->natom();
 	int count_basis = 0;
