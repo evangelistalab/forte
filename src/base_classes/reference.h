@@ -53,8 +53,6 @@ class Reference {
               ambit::Tensor g3bbb);
 
     /// Obtain density cumulants
-    ambit::Tensor L1a() const { return L1a_; }
-    ambit::Tensor L1b() const { return L1b_; }
     ambit::Tensor L2aa() const { return L2aa_; }
     ambit::Tensor L2ab() const { return L2ab_; }
     ambit::Tensor L2bb() const { return L2bb_; }
@@ -64,6 +62,8 @@ class Reference {
     ambit::Tensor L3bbb() const { return L3bbb_; }
 
     /// Obtain 2-RDMs
+    ambit::Tensor g1a() const { return g1a_; }
+    ambit::Tensor g1b() const { return g1b_; }
     ambit::Tensor g2aa() const { return g2aa_; }
     ambit::Tensor g2ab() const { return g2ab_; }
     ambit::Tensor g2bb() const { return g2bb_; }
@@ -83,17 +83,17 @@ class Reference {
     size_t max_rdm_ = 0;
 
     /// Density cumulants
-    ambit::Tensor L1a_ = ambit::Tensor::build(ambit::CoreTensor, "L1a", {0, 0});
-    ambit::Tensor L1b_ = ambit::Tensor::build(ambit::CoreTensor, "L1b", {0, 0});
-    ambit::Tensor L2aa_ = ambit::Tensor::build(ambit::CoreTensor, "L2aa", {0, 0, 0, 0});
-    ambit::Tensor L2ab_ = ambit::Tensor::build(ambit::CoreTensor, "L2ab", {0, 0, 0, 0});
-    ambit::Tensor L2bb_ = ambit::Tensor::build(ambit::CoreTensor, "L2bb", {0, 0, 0, 0});
+    ambit::Tensor L2aa_;
+    ambit::Tensor L2ab_;
+    ambit::Tensor L2bb_;
     ambit::Tensor L3aaa_;
     ambit::Tensor L3aab_;
     ambit::Tensor L3abb_;
     ambit::Tensor L3bbb_;
 
     /// Reduced density matrices
+    ambit::Tensor g1a_;
+    ambit::Tensor g1b_;
     ambit::Tensor g2aa_;
     ambit::Tensor g2ab_;
     ambit::Tensor g2bb_;
