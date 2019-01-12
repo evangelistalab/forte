@@ -35,17 +35,17 @@ namespace forte {
 
 Reference::Reference() : max_rdm_(0) {}
 
-Reference::Reference(ambit::Tensor g1a, ambit::Tensor g1b) : g1a_(g1a), g1b_(g1b), max_rdm_(1) {}
+Reference::Reference(ambit::Tensor g1a, ambit::Tensor g1b) : max_rdm_(1), g1a_(g1a), g1b_(g1b) {}
 
 Reference::Reference(ambit::Tensor g1a, ambit::Tensor g1b, ambit::Tensor g2aa, ambit::Tensor g2ab,
                      ambit::Tensor g2bb)
-    : g1a_(g1a), g1b_(g1b), g2aa_(g2aa), g2ab_(g2ab), g2bb_(g2bb), max_rdm_(2) {}
+    : max_rdm_(2), g1a_(g1a), g1b_(g1b), g2aa_(g2aa), g2ab_(g2ab), g2bb_(g2bb) {}
 
 Reference::Reference(ambit::Tensor g1a, ambit::Tensor g1b, ambit::Tensor g2aa, ambit::Tensor g2ab,
                      ambit::Tensor g2bb, ambit::Tensor g3aaa, ambit::Tensor g3aab,
                      ambit::Tensor g3abb, ambit::Tensor g3bbb)
-    : g1a_(g1a), g1b_(g1b), g2aa_(g2aa), g2ab_(g2ab), g2bb_(g2bb), g3aaa_(g3aaa), g3aab_(g3aab),
-      g3abb_(g3abb), g3bbb_(g3bbb), max_rdm_(3) {}
+    : max_rdm_(3), g1a_(g1a), g1b_(g1b), g2aa_(g2aa), g2ab_(g2ab), g2bb_(g2bb), g3aaa_(g3aaa),
+      g3aab_(g3aab), g3abb_(g3abb), g3bbb_(g3bbb) {}
 
 ambit::Tensor Reference::L2aa() {
     if (not have_L2aa_) {
@@ -129,7 +129,6 @@ void make_cumulant_L2bb_in_place(const ambit::Tensor& g1b, ambit::Tensor& L2bb) 
 
     L2bb("pqrs") -= g1b("pr") * g1b("qs");
     L2bb("pqrs") += g1b("ps") * g1b("qr");
-
 }
 
 void make_cumulant_L3aaa_in_place(const ambit::Tensor& g1a, const ambit::Tensor& L2aa,
@@ -155,7 +154,6 @@ void make_cumulant_L3aaa_in_place(const ambit::Tensor& g1a, const ambit::Tensor&
     L3aaa("pqrstu") += g1a("ps") * g1a("qu") * g1a("rt");
     L3aaa("pqrstu") += g1a("pu") * g1a("qt") * g1a("rs");
     L3aaa("pqrstu") += g1a("pt") * g1a("qs") * g1a("ru");
-
 }
 
 void make_cumulant_L3aab_in_place(const ambit::Tensor& g1a, const ambit::Tensor& g1b,
@@ -173,7 +171,6 @@ void make_cumulant_L3aab_in_place(const ambit::Tensor& g1a, const ambit::Tensor&
 
     L3aab("pqRstU") -= g1a("ps") * g1a("qt") * g1b("RU");
     L3aab("pqRstU") += g1a("pt") * g1a("qs") * g1b("RU");
-
 }
 
 void make_cumulant_L3abb_in_place(const ambit::Tensor& g1a, const ambit::Tensor& g1b,
@@ -191,7 +188,6 @@ void make_cumulant_L3abb_in_place(const ambit::Tensor& g1a, const ambit::Tensor&
 
     L3abb("pQRsTU") -= g1a("ps") * g1b("QT") * g1b("RU");
     L3abb("pQRsTU") += g1a("ps") * g1b("QU") * g1b("RT");
-
 }
 
 void make_cumulant_L3bbb_in_place(const ambit::Tensor& g1b, const ambit::Tensor& L2bb,
@@ -217,7 +213,6 @@ void make_cumulant_L3bbb_in_place(const ambit::Tensor& g1b, const ambit::Tensor&
     L3bbb("pqrstu") += g1b("ps") * g1b("qu") * g1b("rt");
     L3bbb("pqrstu") += g1b("pu") * g1b("qt") * g1b("rs");
     L3bbb("pqrstu") += g1b("pt") * g1b("qs") * g1b("ru");
-
 }
 
 double compute_Eref_from_reference(Reference& ref, std::shared_ptr<ForteIntegrals> ints,
