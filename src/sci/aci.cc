@@ -2182,17 +2182,8 @@ void AdaptiveCI::compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
                               DeterminantHashVec& dets, WFNOperator& op,
                               psi::SharedMatrix& PQ_evecs, int root1, int root2) {
 
-    ordm_a_ = ambit::Tensor::build(ambit::CoreTensor, "g1a", {nact_, nact_});
-    ordm_b_ = ambit::Tensor::build(ambit::CoreTensor, "g1b", {nact_, nact_});
 
-    trdm_aa_ = ambit::Tensor::build(ambit::CoreTensor, "g2aa", {nact_,nact_,nact_, nact_});
-    trdm_ab_ = ambit::Tensor::build(ambit::CoreTensor, "g2ab", {nact_,nact_,nact_, nact_});
-    trdm_bb_ = ambit::Tensor::build(ambit::CoreTensor, "g2bb", {nact_,nact_,nact_, nact_});
 
-    trdm_aaa_ = ambit::Tensor::build(ambit::CoreTensor, "g2aaa", {nact_,nact_,nact_,nact_,nact_,nact_});
-    trdm_aab_ = ambit::Tensor::build(ambit::CoreTensor, "g2aab", {nact_,nact_,nact_,nact_,nact_,nact_});
-    trdm_abb_ = ambit::Tensor::build(ambit::CoreTensor, "g2abb", {nact_,nact_,nact_,nact_,nact_,nact_});
-    trdm_bbb_ = ambit::Tensor::build(ambit::CoreTensor, "g2bbb", {nact_,nact_,nact_,nact_,nact_,nact_});
 
     if (!(options_->get_bool("ACI_DIRECT_RDMS"))) {
         op.clear_op_s_lists();
@@ -2227,6 +2218,9 @@ void AdaptiveCI::compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
     } else {
         if (max_rdm_level_ >= 1) {
             local_timer one_r;
+            ordm_a_ = ambit::Tensor::build(ambit::CoreTensor, "g1a", {nact_, nact_});
+            ordm_b_ = ambit::Tensor::build(ambit::CoreTensor, "g1b", {nact_, nact_});
+
             ci_rdms_.compute_1rdm(ordm_a_.data(), ordm_b_.data(), op);
             outfile->Printf("\n  1-RDM  took %2.6f s (determinant)", one_r.get());
 
@@ -2236,11 +2230,20 @@ void AdaptiveCI::compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
         }
         if (max_rdm_level_ >= 2) {
             local_timer two_r;
+            trdm_aa_ = ambit::Tensor::build(ambit::CoreTensor, "g2aa", {nact_,nact_,nact_, nact_});
+            trdm_ab_ = ambit::Tensor::build(ambit::CoreTensor, "g2ab", {nact_,nact_,nact_, nact_});
+            trdm_bb_ = ambit::Tensor::build(ambit::CoreTensor, "g2bb", {nact_,nact_,nact_, nact_});
+
             ci_rdms_.compute_2rdm(trdm_aa_.data(), trdm_ab_.data(), trdm_bb_.data(), op);
             outfile->Printf("\n  2-RDMS took %2.6f s (determinant)", two_r.get());
         }
         if (max_rdm_level_ >= 3) {
             local_timer tr;
+            trdm_aaa_ = ambit::Tensor::build(ambit::CoreTensor, "g2aaa", {nact_,nact_,nact_,nact_,nact_,nact_});
+            trdm_aab_ = ambit::Tensor::build(ambit::CoreTensor, "g2aab", {nact_,nact_,nact_,nact_,nact_,nact_});
+            trdm_abb_ = ambit::Tensor::build(ambit::CoreTensor, "g2abb", {nact_,nact_,nact_,nact_,nact_,nact_});
+            trdm_bbb_ = ambit::Tensor::build(ambit::CoreTensor, "g2bbb", {nact_,nact_,nact_,nact_,nact_,nact_});
+
             ci_rdms_.compute_3rdm(trdm_aaa_.data(), trdm_aab_.data(), trdm_abb_.data(), trdm_bbb_.data(), op);
             outfile->Printf("\n  3-RDMs took %2.6f s (determinant)", tr.get());
         }
