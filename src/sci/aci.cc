@@ -2182,6 +2182,17 @@ void AdaptiveCI::compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
                               DeterminantHashVec& dets, WFNOperator& op,
                               psi::SharedMatrix& PQ_evecs, int root1, int root2) {
 
+    ordm_a_ = ambit::Tensor::build(ambit::CoreTensor, "g1a", {nact_, nact_});
+    ordm_b_ = ambit::Tensor::build(ambit::CoreTensor, "g1b", {nact_, nact_});
+
+    trdm_aa_ = ambit::Tensor::build(ambit::CoreTensor, "g2aa", {nact_,nact_,nact_, nact_});
+    trdm_ab_ = ambit::Tensor::build(ambit::CoreTensor, "g2ab", {nact_,nact_,nact_, nact_});
+    trdm_bb_ = ambit::Tensor::build(ambit::CoreTensor, "g2bb", {nact_,nact_,nact_, nact_});
+
+    trdm_aaa_ = ambit::Tensor::build(ambit::CoreTensor, "g2aaa", {nact_,nact_,nact_,nact_,nact_,nact_});
+    trdm_aab_ = ambit::Tensor::build(ambit::CoreTensor, "g2aab", {nact_,nact_,nact_,nact_,nact_,nact_});
+    trdm_abb_ = ambit::Tensor::build(ambit::CoreTensor, "g2abb", {nact_,nact_,nact_,nact_,nact_,nact_});
+    trdm_bbb_ = ambit::Tensor::build(ambit::CoreTensor, "g2bbb", {nact_,nact_,nact_,nact_,nact_,nact_});
 
     if (!(options_->get_bool("ACI_DIRECT_RDMS"))) {
         op.clear_op_s_lists();

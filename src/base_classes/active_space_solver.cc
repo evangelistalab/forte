@@ -84,7 +84,7 @@ double ActiveSpaceSolver::compute_energy() {
     }
     psi::outfile->Printf("\n  Average Energy from %d state(s): %17.15f", nstate, energy);
     print_energies(energies);
-    return energies[0][0];
+    return energies[0][options_->get_int("ROOT")];
 }
 
 void ActiveSpaceSolver::print_energies(std::vector<std::vector<double>>& energies) {
