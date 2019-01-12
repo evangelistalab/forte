@@ -95,7 +95,7 @@ ambit::Tensor Reference::L3aab() {
 ambit::Tensor Reference::L3abb() {
     if (not have_L3abb_) {
         L3abb_ = g3abb_.clone();
-        make_cumulant_L3aab_in_place(g1a_, g1b_, L2aa_, L2bb_, L3abb_);
+        make_cumulant_L3abb_in_place(g1a_, g1b_, L2ab_, L2bb_, L3abb_);
         have_L3abb_ = true;
     }
     return L3abb_;
