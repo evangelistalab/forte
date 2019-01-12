@@ -200,7 +200,8 @@ void SemiCanonical::semicanonicalize(Reference& reference, const int& max_rdm_le
         // 3. Retransform integrals and cumulants/RDMs
         if (transform) {
             ints_->rotate_orbitals(Ua_, Ua_);
-            transform_reference(Ua_t_, Ua_t_, reference, max_rdm_level);
+            Reference oldref = reference;
+            reference = transform_reference(Ua_t_, Ua_t_, oldref, max_rdm_level);
         }
 
         outfile->Printf("\n  SemiCanonicalize takes %8.6f s.", SemiCanonicalize.get());
