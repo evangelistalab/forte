@@ -86,6 +86,14 @@ class ActiveSpaceSolver {
     /// Print a summary of the computation information
     void print_options();
 
+    const std::vector<std::pair<StateInfo, std::vector<double>>>& get_state_weights_list() const {
+        return state_weights_list_;
+    }
+
+    const std::vector<std::shared_ptr<ActiveSpaceMethod>>& get_method_vec() const {
+        return method_vec_;
+    }
+
   protected:
     // a string that specifies the method used (e.g. "FCI", "ACI", ...)
     std::string method_;
