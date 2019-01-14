@@ -38,6 +38,7 @@
 #include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/libmints/integral.h"
 #include "psi4/libmints/wavefunction.h"
+#include "psi4/libpsio/psio.hpp"
 
 #include "fragmentprojector.h"
 

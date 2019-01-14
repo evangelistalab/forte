@@ -162,7 +162,7 @@ src/mrdsrg-spin-integrated/mrdsrg_commutator.cc
 src/mrdsrg-spin-integrated/mrdsrg_nonpt.cc
 src/mrdsrg-spin-integrated/mrdsrg_pt.cc
 src/mrdsrg-spin-integrated/mrdsrg_smart_s.cc
-src/mrdsrg-spin-integrated/mrdsrg_srg.cc
+#src/mrdsrg-spin-integrated/mrdsrg_srg.cc
 src/mrdsrg-spin-integrated/three_dsrg_mrpt2.cc
 src/mrdsrg-spin-integrated/active_dsrgpt2.cc
 src/mrdsrg-spin-integrated/dwms_mrpt2.cc
@@ -173,10 +173,10 @@ src/orbital-helpers/iao_builder.cc
 src/orbital-helpers/mp2_nos.cc
 src/orbital-helpers/semi_canonicalize.cc
 src/orbital-helpers/unpaired_density.cc
-src/pci/pci.cc
-src/pci/pci_hashvec.cc
-src/pci/pci_simple.cc
-src/pci/ewci.cc
+#src/pci/pci.cc
+#src/pci/pci_hashvec.cc
+#src/pci/pci_simple.cc
+#src/pci/ewci.cc
 src/v2rdm/v2rdm.cc
 )
 
