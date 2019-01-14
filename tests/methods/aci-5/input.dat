@@ -26,7 +26,7 @@ set {
 }
 
 set forte {
-  job_type aci
+  active_space_solver aci
   aci_SELECT_TYPE aimed_energy
   aci_perturb_select false
   aci_excited_algorithm state_average
