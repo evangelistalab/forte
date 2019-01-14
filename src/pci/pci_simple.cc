@@ -132,15 +132,8 @@ void ProjectorCI_Simple::startup() {
 
     mo_symmetry_ = mo_space_info_->symmetry("ACTIVE");
 
-    wavefunction_symmetry_ = 0;
-    if (options_->has_changed("ROOT_SYM")) {
-        wavefunction_symmetry_ = options_->get_int("ROOT_SYM");
-    }
-    // Read options
-    wavefunction_multiplicity_ = 1;
-    if (options_->has_changed("MULTIPLICITY")) {
-        wavefunction_multiplicity_ = options_->get_int("MULTIPLICITY");
-    }
+    wavefunction_symmetry_ = state_.irrep();
+    wavefunction_multiplicity_ = state_.multiplicity();
 
     // Number of correlated electrons
     nactel_ = 0;

@@ -81,13 +81,7 @@ void ASCI::startup() {
     op_.initialize(mo_symmetry_, as_ints_);
 
     wavefunction_symmetry_ = state_.irrep();
-    if (options_->has_changed("ROOT_SYM")) {
-        wavefunction_symmetry_ = options_->get_int("ROOT_SYM");
-    }
     multiplicity_ = state_.multiplicity();
-    if (options_->has_changed("MULTIPLICITY")) {
-        multiplicity_ = options_->get_int("MULTIPLICITY");
-    }
 
     nact_ = mo_space_info_->size("ACTIVE");
     nactpi_ = mo_space_info_->get_dimension("ACTIVE");
