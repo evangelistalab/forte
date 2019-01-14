@@ -197,104 +197,21 @@ Reference ActiveSpaceSolver::get_reference() {
 
                 if (max_rdm_level_ >= 2) {
                     // 2 RDM
-                    scale_add(g2aa.data(), method_ref.L2aa().data(), weight);
-                    scale_add(g2ab.data(), method_ref.L2ab().data(), weight);
-                    scale_add(g2bb.data(), method_ref.L2bb().data(), weight);
+                    scale_add(g2aa.data(), method_ref.g2aa().data(), weight);
+                    scale_add(g2ab.data(), method_ref.g2ab().data(), weight);
+                    scale_add(g2bb.data(), method_ref.g2bb().data(), weight);
                 }
 
                 if (max_rdm_level_ >= 3) {
                     // 3 RDM
-                    scale_add(g3aaa.data(), method_ref.L3aaa().data(), weight);
-                    scale_add(g3aab.data(), method_ref.L3aab().data(), weight);
-                    scale_add(g3abb.data(), method_ref.L3abb().data(), weight);
-                    scale_add(g3bbb.data(), method_ref.L3bbb().data(), weight);
+                    scale_add(g3aaa.data(), method_ref.g3aaa().data(), weight);
+                    scale_add(g3aab.data(), method_ref.g3aab().data(), weight);
+                    scale_add(g3abb.data(), method_ref.g3abb().data(), weight);
+                    scale_add(g3bbb.data(), method_ref.g3bbb().data(), weight);
                 }
             }
             state_num++;
         }
-
-        // set energy
-  //      ref.set_Eref(energy);
-
-        // compute cumulants
-        // move this code to Reference?
- /*       // i.e., ref.update_cumulants()
-
-        // 2-particle
-        L2aa("pqrs") -= L1a("pr") * L1a("qs");
-        L2aa("pqrs") += L1a("ps") * L1a("qr");
-
-        L2bb("pqrs") -= L1b("pr") * L1b("qs");
-        L2bb("pqrs") += L1b("ps") * L1b("qr");
-
-        L2ab("pqrs") -= L1a("pr") * L1b("qs");
-
-        // 3-particle
-        L3aaa("pqrstu") -= L1a("ps") * L2aa("qrtu");
-        L3aaa("pqrstu") += L1a("pt") * L2aa("qrsu");
-        L3aaa("pqrstu") += L1a("pu") * L2aa("qrts");
-
-        L3aaa("pqrstu") -= L1a("qt") * L2aa("prsu");
-        L3aaa("pqrstu") += L1a("qs") * L2aa("prtu");
-        L3aaa("pqrstu") += L1a("qu") * L2aa("prst");
-
-        L3aaa("pqrstu") -= L1a("ru") * L2aa("pqst");
-        L3aaa("pqrstu") += L1a("rs") * L2aa("pqut");
-        L3aaa("pqrstu") += L1a("rt") * L2aa("pqsu");
-
-        L3aaa("pqrstu") -= L1a("ps") * L1a("qt") * L1a("ru");
-        L3aaa("pqrstu") -= L1a("pt") * L1a("qu") * L1a("rs");
-        L3aaa("pqrstu") -= L1a("pu") * L1a("qs") * L1a("rt");
-
-        L3aaa("pqrstu") += L1a("ps") * L1a("qu") * L1a("rt");
-        L3aaa("pqrstu") += L1a("pu") * L1a("qt") * L1a("rs");
-        L3aaa("pqrstu") += L1a("pt") * L1a("qs") * L1a("ru");
-
-        // aab
-        L3aab("pqRstU") -= L1a("ps") * L2ab("qRtU");
-        L3aab("pqRstU") += L1a("pt") * L2ab("qRsU");
-
-        L3aab("pqRstU") -= L1a("qt") * L2ab("pRsU");
-        L3aab("pqRstU") += L1a("qs") * L2ab("pRtU");
-
-        L3aab("pqRstU") -= L1b("RU") * L2aa("pqst");
-
-        L3aab("pqRstU") -= L1a("ps") * L1a("qt") * L1b("RU");
-        L3aab("pqRstU") += L1a("pt") * L1a("qs") * L1b("RU");
-
-        // abb
-        L3abb("pQRsTU") -= L1a("ps") * L2bb("QRTU");
-
-        L3abb("pQRsTU") -= L1b("QT") * L2ab("pRsU");
-        L3abb("pQRsTU") += L1b("QU") * L2ab("pRsT");
-
-        L3abb("pQRsTU") -= L1b("RU") * L2ab("pQsT");
-        L3abb("pQRsTU") += L1b("RT") * L2ab("pQsU");
-
-        L3abb("pQRsTU") -= L1a("ps") * L1b("QT") * L1b("RU");
-        L3abb("pQRsTU") += L1a("ps") * L1b("QU") * L1b("RT");
-
-        // bbb
-        L3bbb("pqrstu") -= L1b("ps") * L2bb("qrtu");
-        L3bbb("pqrstu") += L1b("pt") * L2bb("qrsu");
-        L3bbb("pqrstu") += L1b("pu") * L2bb("qrts");
-
-        L3bbb("pqrstu") -= L1b("qt") * L2bb("prsu");
-        L3bbb("pqrstu") += L1b("qs") * L2bb("prtu");
-        L3bbb("pqrstu") += L1b("qu") * L2bb("prst");
-
-        L3bbb("pqrstu") -= L1b("ru") * L2bb("pqst");
-        L3bbb("pqrstu") += L1b("rs") * L2bb("pqut");
-        L3bbb("pqrstu") += L1b("rt") * L2bb("pqsu");
-
-        L3bbb("pqrstu") -= L1b("ps") * L1b("qt") * L1b("ru");
-        L3bbb("pqrstu") -= L1b("pt") * L1b("qu") * L1b("rs");
-        L3bbb("pqrstu") -= L1b("pu") * L1b("qs") * L1b("rt");
-
-        L3bbb("pqrstu") += L1b("ps") * L1b("qu") * L1b("rt");
-        L3bbb("pqrstu") += L1b("pu") * L1b("qt") * L1b("rs");
-        L3bbb("pqrstu") += L1b("pt") * L1b("qs") * L1b("ru");
-*/
 
         // Construct Reference object with RDMs
         Reference ref(g1a,g1b,g2aa,g2ab,g2bb,g3aaa,g3aab,g3abb,g3bbb);
