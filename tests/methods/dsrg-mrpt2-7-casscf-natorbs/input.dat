@@ -53,7 +53,7 @@ compare_values(refpt2, variable("UNRELAXED ENERGY"), 10, "DSRG-MRPT2 urelaxed en
 compare_values(refpt2_relax, variable("PARTIALLY RELAXED ENERGY"), 10,
                "DSRG-MRPT2 partially relaxed energy")
 
-# try CASSCF with natual orbital
+# try CASSCF with natural orbital
 set {
   nat_orbs true
 }

@@ -356,6 +356,8 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
         bool multi_state = options["AVG_STATE"].size() != 0;
         bool ref_relax = options.get_str("RELAX_REF") != "NONE";
 
+        psi::Process::environment.globals["UNRELAXED ENERGY"] = final_energy;
+
         if (ref_relax || multi_state) {
             // grab the effective Hamiltonian in the active space
             auto fci_ints = dsrg_mrpt2->compute_Heff_actv();
@@ -363,6 +365,9 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
             auto relaxed_solver = make_active_space_solver(cas_type, state_weights_list, scf_info,
                                                            mo_space_info, fci_ints, forte_options);
             final_energy = relaxed_solver->compute_energy();
+
+            // For some test cases
+            psi::Process::environment.globals["PARTIALLY RELAXED ENERGY"] = final_energy;
         }
     }
     if (options.get_str("JOB_TYPE") == "THREE-DSRG-MRPT2") {
