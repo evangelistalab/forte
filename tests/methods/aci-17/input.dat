@@ -31,7 +31,7 @@ set mcscf {
 set forte {
   multiplicity 2
   ms 0.5
-  job_type = aci
+  active_space_solver aci
   frozen_docc = [0,0,0,0,0,0,0,0]
   aci_SELECT_TYPE amp
   gamma 10.00
