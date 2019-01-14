@@ -46,6 +46,8 @@ std::shared_ptr<MOSpaceInfo> make_mo_space_info(psi::SharedWavefunction ref_wfn,
 
 psi::SharedMatrix make_aosubspace_projector(psi::SharedWavefunction ref_wfn, psi::Options& options);
 
+psi::SharedMatrix make_fragment_projector(psi::SharedWavefunction ref_wfn, psi::Options& options);
+
 void make_ci_nos(psi::SharedWavefunction ref_wfn, psi::Options& options,
                  std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
