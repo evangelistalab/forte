@@ -86,7 +86,7 @@ void ASCI::startup() {
     nact_ = mo_space_info_->size("ACTIVE");
     nactpi_ = mo_space_info_->get_dimension("ACTIVE");
 
-    nirrep_ = nactpi_.n();
+    nirrep_ = mo_space_info_->nirrep();
     // Include frozen_docc and restricted_docc
     frzcpi_ = mo_space_info_->get_dimension("INACTIVE_DOCC");
     nfrzc_ = mo_space_info_->size("INACTIVE_DOCC");

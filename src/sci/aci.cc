@@ -245,7 +245,7 @@ void AdaptiveCI::startup() {
     // "Correlated" includes restricted_docc
     ncmo_ = mo_space_info_->size("CORRELATED");
 
-    nirrep_ = as_ints_->ints()->nirrep();
+    nirrep_ = mo_space_info_->nirrep();
 
     twice_ms_ = state_.twice_ms();
 
