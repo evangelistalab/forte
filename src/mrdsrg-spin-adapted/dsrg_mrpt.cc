@@ -234,7 +234,7 @@ void DSRG_MRPT::startup() {
     frozen_core_energy_ = ints_->frozen_core_energy();
 
     // reference energy
-    Eref_ = compute_Eref_from_reference(reference_, ints_, mo_space_info_, ints_->nuclear_repulsion_energy());
+    Eref_ = compute_Eref_from_reference(reference_, ints_, mo_space_info_);
 
     // orbital spaces
     core_mos_ = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");

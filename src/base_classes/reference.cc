@@ -216,11 +216,11 @@ void make_cumulant_L3bbb_in_place(const ambit::Tensor& g1b, const ambit::Tensor&
 }
 
 double compute_Eref_from_reference(Reference& ref, std::shared_ptr<ForteIntegrals> ints,
-                                   std::shared_ptr<MOSpaceInfo> mo_space_info, double Enuc) {
+                                   std::shared_ptr<MOSpaceInfo> mo_space_info) {
     // similar to MASTER_DSRG::compute_reference_energy_from_ints (use Fock and cumulants)
     // here I form two density and directly use bare Hamiltonian
 
-    double E = Enuc + ints->frozen_core_energy();
+    double E = ints->nuclear_repulsion_energy() + ints->frozen_core_energy();
 
     std::vector<size_t> core_mos = mo_space_info->get_corr_abs_mo("RESTRICTED_DOCC");
     std::vector<size_t> actv_mos = mo_space_info->get_corr_abs_mo("ACTIVE");
@@ -229,9 +229,9 @@ double compute_Eref_from_reference(Reference& ref, std::shared_ptr<ForteIntegral
 
     ambit::Tensor g1a = ref.g1a();
     ambit::Tensor g1b = ref.g1b();
-    ambit::Tensor L2aa = ref.L2aa();
-    ambit::Tensor L2ab = ref.L2ab();
-    ambit::Tensor L2bb = ref.L2bb();
+    ambit::Tensor g2aa = ref.g2aa();
+    ambit::Tensor g2ab = ref.g2ab();
+    ambit::Tensor g2bb = ref.g2bb();
 
     // core 1-body: \sum_{m}^{C} h^{m}_{m}
     for (size_t m : core_mos) {
@@ -301,25 +301,14 @@ double compute_Eref_from_reference(Reference& ref, std::shared_ptr<ForteIntegral
     Vtemp = ints->aptei_bb_block(core_mos, actv_mos, core_mos, actv_mos);
     E += Vtemp("munv") * I("mn") * g1b("vu");
 
-    // TODO: avoid using clone here, should copy only the active part of these tensors
-
-    // active-active 2-body: 0.25 * \sum_{uvxy}^{A} * v^{uv}_{xy} * G2^{xy}_{uv}
-    ambit::Tensor G2 = L2aa.clone();
-    G2("pqrs") += g1a("pr") * g1a("qs");
-    G2("pqrs") -= g1a("ps") * g1a("qr");
     Vtemp = ints->aptei_aa_block(actv_mos, actv_mos, actv_mos, actv_mos);
-    E += 0.25 * Vtemp("uvxy") * G2("uvxy");
+    E += 0.25 * Vtemp("uvxy") * g2aa("uvxy");
 
-    G2 = L2ab.clone();
-    G2("pqrs") += g1a("pr") * g1b("qs");
     Vtemp = ints->aptei_ab_block(actv_mos, actv_mos, actv_mos, actv_mos);
-    E += Vtemp("uVxY") * G2("uVxY");
+    E += Vtemp("uVxY") * g2ab("uVxY");
 
-    G2 = L2bb.clone();
-    G2("pqrs") += g1b("pr") * g1b("qs");
-    G2("pqrs") -= g1b("ps") * g1b("qr");
     Vtemp = ints->aptei_bb_block(actv_mos, actv_mos, actv_mos, actv_mos);
-    E += 0.25 * Vtemp("UVXY") * G2("UVXY");
+    E += 0.25 * Vtemp("UVXY") * g2bb("UVXY");
 
     return E;
 }

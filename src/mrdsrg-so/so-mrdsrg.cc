@@ -75,7 +75,7 @@ SOMRDSRG::~SOMRDSRG() {
 }
 
 void SOMRDSRG::startup() {
-    Eref = compute_Eref_from_reference(reference_, ints_, mo_space_info_, ints_->nuclear_repulsion_energy());
+    Eref = compute_Eref_from_reference(reference_, ints_, mo_space_info_);
 
     frozen_core_energy = ints_->frozen_core_energy();
 

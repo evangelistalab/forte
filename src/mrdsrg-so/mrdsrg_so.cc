@@ -59,7 +59,7 @@ MRDSRG_SO::MRDSRG_SO(Reference reference, psi::Options& options,
 MRDSRG_SO::~MRDSRG_SO() {}
 
 void MRDSRG_SO::startup() {
-    Eref = compute_Eref_from_reference(reference_, ints_, mo_space_info_, ints_->nuclear_repulsion_energy());
+    Eref = compute_Eref_from_reference(reference_, ints_, mo_space_info_);
     BlockedTensor::reset_mo_spaces();
 
     frozen_core_energy = ints_->frozen_core_energy();
