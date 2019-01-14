@@ -37,7 +37,7 @@ namespace py = pybind11;
 #include "orbital-helpers/aosubspace.h"
 #include "orbital-helpers/avas.h"
 #include "orbital-helpers/fragmentprojector.h"
-//#include "orbital-helpers/embedding.h"
+#include "orbital-helpers/embedding.h"
 #include "base_classes/forte_options.h"
 #include "base_classes/mo_space_info.h"
 #include "helpers/timer.h"
@@ -147,22 +147,19 @@ psi::SharedMatrix make_aosubspace_projector(psi::SharedWavefunction ref_wfn,
     return Ps;
 }
 
-psi::SharedMatrix make_fragment_projector(psi::SharedWavefunction ref_wfn, psi::Options& options) {
-	// Pf is the AO basis franment(s) projector
-	auto Pf = create_fragment_projector(ref_wfn, options);
-	if (Pf) {
-		psi::SharedMatrix CPfC = Pf->clone();
-		CPfC->transform(ref_wfn->Ca());
-		outfile->Printf("\n  Orbital overlap with system fragment (Checkpoint #1):\n");
-		outfile->Printf("    ========================\n");
-		CPfC->print();
-		outfile->Printf("    ========================\n");
+	psi::SharedMatrix make_fragment_projector(psi::SharedWavefunction ref_wfn, psi::Options& options) {
+		// Pf is the AO basis franment(s) projector
+		auto Pf = create_fragment_projector(ref_wfn, options);
+		if (Pf) {
+			psi::SharedMatrix CPfC = Pf->clone();
+			CPfC->transform(ref_wfn->Ca());
+			outfile->Printf("\n  Orbital overlap with system fragment (Checkpoint #1):\n");
+			outfile->Printf("    ========================\n");
+			CPfC->print();
+			outfile->Printf("    ========================\n");
+		}
+		return Pf;
 	}
-	return Pf;
-}
-//}
-
-//make_embedding(ref_wfn, options, Pf);
 
 void banner() {
     outfile->Printf(

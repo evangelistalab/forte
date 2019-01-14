@@ -71,6 +71,7 @@ add_psi4_plugin(forte
 src/base_classes/active_space_method.cc
 src/base_classes/active_space_solver.cc
 src/orbital-helpers/avas.cc
+src/orbital-helpers/embedding.cc
 src/casscf/casscf.cc
 src/cc/cc.cc
 src/ci_rdm/ci_rdms.cc
