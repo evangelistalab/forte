@@ -32,7 +32,7 @@ energy('forte')
 compare_values(reffci, variable("CURRENT ENERGY"),11, "FCI energy (M_S =  1/2)") #TEST
 
 set forte {
-  job_type fci
+  active_space_solver fci
   root_sym 3
   ms = -0.5
 }

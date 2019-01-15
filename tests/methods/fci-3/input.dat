@@ -22,7 +22,7 @@ set {
 }
 
 set forte {
-  job_type fci
+  active_space_solver fci
   print 1
   job_type fci
   active [4,0,1,1]

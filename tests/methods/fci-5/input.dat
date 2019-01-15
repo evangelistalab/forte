@@ -33,7 +33,7 @@ set forte {
 restricted_docc [ 1,0,0,0,0,0,0,0]
 active [1, 0, 0, 0, 0, 1, 0, 0]
 dsrg_s  0.5
-job_type FCI
+active_space_solver FCI
 multiplicity 3
 root_sym     5
 ms           0.0
@@ -51,7 +51,7 @@ restricted_docc    [1, 0, 0, 0, 0, 0, 0, 0]
 active             [1, 0, 0, 0, 0, 1, 0, 0]
 dsrg_s  0.5
 int_type conventional
-job_type FCI
+active_space_solver FCI
 multiplicity 1
 root_sym     0
 ms           0.0
