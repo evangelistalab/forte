@@ -38,7 +38,7 @@ set forte{
   job_type            dsrg-mrpt2
   rotate_mos          [1,17,20]
   cas_type            cas
-  fcimo_localize_actv true
+  localize            full
   e_convergence       12
   dsrg_s              0.5
   frozen_docc         [4]
@@ -48,9 +48,11 @@ set forte{
   rotate_mos          [1,17,20]
   dsrg_dipole         true
   print               1
+  ms                  0.0
   semi_canonical      false # a trick to make  ForteIntegral
                             # and FCIIntegral in the same basis
                             # for re-diagonalization
 }
-E0ag, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
-compare_values(r_0ag, E0ag, 8, "abs. energy of singlet 0Ag")
+energy('forte', ref_wfn=wfn)
+compare_values(r_0ag, variable("ENERGY ROOT 0 1A"), 8, "abs. energy of singlet 0Ag")
+

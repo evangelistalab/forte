@@ -88,4 +88,4 @@ set forte{
   localize FULL
 }
 energy('forte', ref_wfn=wfn)
-compare_values(r_0ag, variable("GS ENERGY"), 8, "abs. energy of singlet 0Ag")
+compare_values(r_0ag, variable("ENERGY ROOT 0 1A"), 8, "abs. energy of singlet 0Ag")

@@ -454,7 +454,6 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
 
             // For some test cases
             psi::Process::environment.globals["PARTIALLY RELAXED ENERGY"] = final_energy;
-            psi::Process::environment.globals["GS ENERGY"] = state_energies_list[0].second[0];
         }
     }
     if (options.get_str("JOB_TYPE") == "THREE-DSRG-MRPT2") {
