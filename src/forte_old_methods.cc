@@ -258,8 +258,10 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
         ci->compute_energy();
         Reference reference = ci->get_reference();
 
+        std::string relax_mode = options.get_str("RELAX_REF");
+
+        SemiCanonical semi(forte_options, ints, mo_space_info);
         if (options.get_bool("SEMI_CANONICAL")) {
-            SemiCanonical semi(forte_options, ints, mo_space_info);
             semi.semicanonicalize(reference, max_rdm_level);
             Ua = semi.Ua_t();
             Ub = semi.Ub_t();
@@ -268,13 +270,76 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
         auto mrdsrg = std::make_shared<MRDSRG>(reference, std::make_shared<SCFInfo>(ref_wfn),
                                                forte_options, ints, mo_space_info);
         mrdsrg->set_Uactv(Ua, Ub);
+        final_energy = mrdsrg->compute_energy();
 
-        if (options.get_str("RELAX_REF") == "NONE") {
+        std::vector<double> e_relax;
+        std::vector<double> e_dsrg;
+
+        e_dsrg.push_back(final_energy);
+    
+        size_t niter = 0;
+        size_t maxiter = forte_options->get_int("MAXITER_RELAX_REF");
+        double old_energy = 0.0;
+        double e_conv = forte_options->get_double("RELAX_E_CONVERGENCE");
+        while(niter < 10){
+
+            if( relax_mode == "NONE"){
+                break;
+            }
+
+            // grab the effective Hamiltonian in the active space
+            auto fci_ints = mrdsrg->compute_Heff_actv();
+            // make a solver and run it
+            auto relaxed_solver = make_active_space_solver(cas_type, state_weights_list, scf_info,
+                                                           mo_space_info, fci_ints, forte_options);
+
+            relaxed_solver->set_max_rdm_level(3);
+            final_energy = relaxed_solver->compute_energy();
+
+            e_relax.push_back(final_energy);
+
+            niter++;
+            if( relax_mode == "ONCE"){
+                break;
+            } else if( (relax_mode == "TWICE") and (niter == 2) ){
+                break;
+            } else if( std::fabs(old_energy - final_energy) <= e_conv ){
+                psi::Process::environment.globals["FULLY RELAXED ENERGY"] = final_energy;
+                break;
+            }
+
+            Reference rel_reference;
+            // Rotate reference to original semicanonical basis
+            {
+                Reference tmp = relaxed_solver->get_reference();
+                rel_reference = semi.transform_reference(Ua,Ub,tmp,max_rdm_level); 
+            }
+
+            // Semicanonicalize reference and transform ints
+            if (options.get_bool("SEMI_CANONICAL")) {
+                semi.semicanonicalize(rel_reference, max_rdm_level);
+                Ua = semi.Ua_t();
+                Ub = semi.Ub_t();
+            }
+
+            // Compute MRDSRG in this basis, save the energy
+            mrdsrg = std::make_shared<MRDSRG>(rel_reference, std::make_shared<SCFInfo>(ref_wfn),
+                                                   forte_options, ints, mo_space_info);
+            mrdsrg->set_Uactv(Ua, Ub);
             final_energy = mrdsrg->compute_energy();
-        } else {
-            final_energy = mrdsrg->compute_energy_relaxed();
+
+            e_dsrg.push_back(final_energy);
+            old_energy = final_energy;       
+        }
+
+        // set energies to psi4 environment
+        psi::Process::environment.globals["UNRELAXED ENERGY"] = e_dsrg[0];
+        psi::Process::environment.globals["PARTIALLY RELAXED ENERGY"] = e_relax[0];
+        if (niter > 1) {
+            psi::Process::environment.globals["RELAXED ENERGY"] = e_dsrg[1];
         }
     }
+
     if (options.get_str("JOB_TYPE") == "MRDSRG_SO") {
         std::string cas_type = options.get_str("CAS_TYPE");
         auto as_ints = make_active_space_ints(mo_space_info, ints, "ACTIVE", {{"RESTRICTED_DOCC"}});
