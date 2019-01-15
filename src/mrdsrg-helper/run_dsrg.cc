@@ -37,7 +37,6 @@
 
 #include "run_dsrg.h"
 
-
 namespace forte {
 
 void set_DSRG_options(ForteOptions& foptions) {
@@ -143,9 +142,10 @@ void set_DSRG_options(ForteOptions& foptions) {
                      "The way of forming T1 amplitudes (used in toy code mcsrgpt2)");
 
     /*- Intruder State Avoidance b Parameter -*/
-    foptions.add_double("ISA_B", 0.02, "Intruder state avoidance parameter "
-                                       "when use ISA to form amplitudes (only "
-                                       "used in toy code mcsrgpt2)");
+    foptions.add_double("ISA_B", 0.02,
+                        "Intruder state avoidance parameter "
+                        "when use ISA to form amplitudes (only "
+                        "used in toy code mcsrgpt2)");
 
     /*- Defintion for source operator for ccvv term -*/
     foptions.add_str("CCVV_SOURCE", "NORMAL", {"ZERO", "NORMAL"},
@@ -194,4 +194,24 @@ void set_DSRG_options(ForteOptions& foptions) {
 
 /// A uniformed function to run DSRG related jobs
 // void run_dsrg() {}
+
+std::unique_ptr<MASTER_DSRG> make_dsrg_method(const std::string& method, Reference reference,
+                                              std::shared_ptr<SCFInfo> scf_info,
+                                              std::shared_ptr<ForteOptions> options,
+                                              std::shared_ptr<ForteIntegrals> ints,
+                                              std::shared_ptr<MOSpaceInfo> mo_space_info) {
+    std::unique_ptr<MASTER_DSRG> dsrg_method;
+    if (method == "DSRG-MRPT2") {
+        dsrg_method = std::make_unique<DSRG_MRPT2>(reference, scf_info, options, ints, mo_space_info);
+    } else if (method == "DSRG-MRPT3") {
+        dsrg_method = std::make_unique<DSRG_MRPT3>(reference, scf_info, options, ints, mo_space_info);
+    } else if (method == "THREE-DSRG-MRPT2") {
+        dsrg_method = std::make_unique<THREE_DSRG_MRPT2>(reference, scf_info, options, ints, mo_space_info);
+    } else if (method == "MRDSRG") {
+        dsrg_method = std::make_unique<MRDSRG>(reference, scf_info, options, ints, mo_space_info);
+    } else {
+        throw psi::PSIEXCEPTION("Method name " + method + " not recognized.");
+    }
+    return dsrg_method;
 }
+} // namespace forte
