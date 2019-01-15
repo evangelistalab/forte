@@ -24,7 +24,7 @@ set {
 }
 
 set forte {
-  job_type aci
+  active_space_solver aci
   aci_select_type aimed_energy
   aci_add_aimed_degenerate false
   aci_enforce_spin_complete false
