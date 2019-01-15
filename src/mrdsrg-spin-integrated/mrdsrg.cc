@@ -362,7 +362,7 @@ double MRDSRG::compute_energy() {
     psi::Process::environment.globals["CURRENT ENERGY"] = Etotal;
     return Etotal;
 }
-
+/*
 double MRDSRG::compute_energy_relaxed() {
     // reference relaxation
     double Edsrg = 0.0, Erelax = 0.0;
@@ -577,6 +577,7 @@ double MRDSRG::compute_energy_relaxed() {
     psi::Process::environment.globals["CURRENT ENERGY"] = Erelax;
     return Erelax;
 }
+*/
 
 double MRDSRG::compute_energy_sa() {
     int nentry = eigens_.size();

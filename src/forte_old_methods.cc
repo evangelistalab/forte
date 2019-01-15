@@ -300,10 +300,19 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
 
             niter++;
             if( relax_mode == "ONCE"){
+                // set energies to psi4 environment
+                psi::Process::environment.globals["UNRELAXED ENERGY"] = e_dsrg[0];
+                psi::Process::environment.globals["PARTIALLY RELAXED ENERGY"] = e_relax[0];
                 break;
             } else if( (relax_mode == "TWICE") and (niter == 2) ){
+                // set energies to psi4 environment
+                psi::Process::environment.globals["UNRELAXED ENERGY"] = e_dsrg[0];
+                psi::Process::environment.globals["PARTIALLY RELAXED ENERGY"] = e_relax[0];
                 break;
             } else if( std::fabs(old_energy - final_energy) <= e_conv ){
+                // set energies to psi4 environment
+                psi::Process::environment.globals["UNRELAXED ENERGY"] = e_dsrg[0];
+                psi::Process::environment.globals["PARTIALLY RELAXED ENERGY"] = e_relax[0];
                 psi::Process::environment.globals["FULLY RELAXED ENERGY"] = final_energy;
                 break;
             }
@@ -332,9 +341,6 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
             old_energy = final_energy;       
         }
 
-        // set energies to psi4 environment
-        psi::Process::environment.globals["UNRELAXED ENERGY"] = e_dsrg[0];
-        psi::Process::environment.globals["PARTIALLY RELAXED ENERGY"] = e_relax[0];
         if (niter > 1) {
             psi::Process::environment.globals["RELAXED ENERGY"] = e_dsrg[1];
         }
