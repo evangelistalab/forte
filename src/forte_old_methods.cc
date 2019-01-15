@@ -294,7 +294,7 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
                                                            mo_space_info, fci_ints, forte_options);
 
             relaxed_solver->set_max_rdm_level(3);
-            final_energy = relaxed_solver->compute_energy();
+            final_energy = relaxed_solver->compute_energy()[0].second[0];
 
             e_relax.push_back(final_energy);
 
