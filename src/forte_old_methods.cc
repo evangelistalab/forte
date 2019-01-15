@@ -280,6 +280,7 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
         size_t niter = 0;
         size_t maxiter = forte_options->get_int("MAXITER_RELAX_REF");
         double old_energy = 0.0;
+        double old_dsrg = final_energy;
         double e_conv = forte_options->get_double("RELAX_E_CONVERGENCE");
         while(niter < 10){
 
@@ -309,12 +310,6 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
                 psi::Process::environment.globals["UNRELAXED ENERGY"] = e_dsrg[0];
                 psi::Process::environment.globals["PARTIALLY RELAXED ENERGY"] = e_relax[0];
                 break;
-            } else if( std::fabs(old_energy - final_energy) <= e_conv ){
-                // set energies to psi4 environment
-                psi::Process::environment.globals["UNRELAXED ENERGY"] = e_dsrg[0];
-                psi::Process::environment.globals["PARTIALLY RELAXED ENERGY"] = e_relax[0];
-                psi::Process::environment.globals["FULLY RELAXED ENERGY"] = final_energy;
-                break;
             }
 
             Reference rel_reference;
@@ -339,6 +334,15 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
 
             e_dsrg.push_back(final_energy);
             old_energy = final_energy;       
+            if( (std::fabs(old_energy - final_energy) <= e_conv) and
+                (std::fabs(old_dsrg - final_energy) <= e_conv)){
+                // set energies to psi4 environment
+                psi::Process::environment.globals["UNRELAXED ENERGY"] = e_dsrg[0];
+                psi::Process::environment.globals["PARTIALLY RELAXED ENERGY"] = e_relax[0];
+                psi::Process::environment.globals["FULLY RELAXED ENERGY"] = final_energy;
+                break;
+            }
+            old_dsrg = final_energy;
         }
 
         if (niter > 1) {

@@ -105,8 +105,8 @@ void ActiveSpaceSolver::print_energies(
             psi::outfile->Printf("\n     %3d     %3s    %2d   %20.12f", multi,
                                  irrep_symbol[irrep].c_str(), i, energy);
             psi::Process::environment.globals[label] = energy;
-            psi::outfile->Printf("\n %s = %f", label.c_str(),
-                                 energy); // TODO remove this line once we are done (Francesco)
+//            psi::outfile->Printf("\n %s = %f", label.c_str(),
+//                                 energy); // TODO remove this line once we are done (Francesco)
         }
 
         n++;
