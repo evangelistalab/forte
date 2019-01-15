@@ -64,7 +64,6 @@ LOCALIZE::LOCALIZE(std::shared_ptr<psi::Wavefunction> wfn, psi::Options& options
 
     // The wavefunction multiplicity
     multiplicity_ = options.get_int("MULTIPLICITY");
-    outfile->Printf("\n MULT: %d", multiplicity_);
 
     // The number of active electrons
     int nactel = nel - 2 * nfrz_ - 2 * nrst_;
@@ -179,10 +178,10 @@ void LOCALIZE::split_localize() {
 void LOCALIZE::full_localize() {
 
     // Build C matrices
-    psi::SharedMatrix Ca = wfn_->Ca();
-    psi::SharedMatrix Cb = wfn_->Cb();
+    psi::SharedMatrix Ca = ints_->Ca();
+    psi::SharedMatrix Cb = ints_->Cb();
     psi::Dimension nsopi = wfn_->nsopi();
-    int nirrep = wfn_->nirrep();
+    int nirrep = ints_->nirrep();
 
     size_t nact = abs_act_.size();
 
