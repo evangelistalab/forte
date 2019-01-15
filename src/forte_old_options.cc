@@ -175,7 +175,7 @@ void forte_old_options(ForteOptions& options) {
     options.add_int("MAXITER", 100);
 
     /*- Use localized basis? -*/
-    options.add_bool("LOCALIZE", false);
+    options.add_str("LOCALIZE", "NONE", "NONE SPLIT FULL");
     /*- Type of localization -*/
     options.add_str("LOCALIZE_TYPE", "PIPEK_MEZEY", "BOYS");
 

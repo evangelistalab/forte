@@ -201,21 +201,17 @@ void LOCALIZE::full_localize() {
     std::shared_ptr<Localizer> loc_a = Localizer::build(local_type_, primary, Caact);
     loc_a->localize();
 
-    psi::SharedMatrix Ua = loc_a->U();
     psi::SharedMatrix Laocc = loc_a->L();
-
-    std::shared_ptr<psi::Matrix> U = std::make_shared<psi::Matrix>("U", Ca->colspi(), Ca->rowspi());
-    U->identity();
+    psi::SharedMatrix Ua = loc_a->U();
 
     for (int h = 0; h < nirrep; ++h) {
         for (size_t i = 0; i < nact; ++i) {
             psi::SharedVector vec = Laocc->get_column(h, i);
             Ca->set_column(h, i + nfrz_ + nrst_, vec);
             Cb->set_column(h, i + nfrz_ + nrst_, vec);
-            U->set_column(h, i + nfrz_ + nrst_, Ua->get_column(h,i));
         }
     }
-    ints_->rotate_orbitals(U,U);
+    ints_->update_orbitals(Ca,Cb);
 
     U_ = std::make_shared<psi::Matrix>("U", nsopi[0], nact);
     U_->copy(Ua);

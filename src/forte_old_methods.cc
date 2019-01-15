@@ -139,9 +139,13 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
         auto mrcino = std::make_shared<MRCINO>(ref_wfn, options, ints, mo_space_info);
         final_energy = mrcino->compute_energy();
     }
-    if (options.get_bool("LOCALIZE")) {
+    if (options.get_str("LOCALIZE") == "FULL" or options.get_str("LOCALIZE") == "SPLIT") {
         auto localize = std::make_shared<LOCALIZE>(ref_wfn, options, ints, mo_space_info);
-        localize->split_localize();
+        if ( options.get_str("LOCALIZE") == "FULL" ){
+            localize->full_localize();
+        } else {
+            localize->split_localize();
+        }
     }
 
     if (options.get_str("JOB_TYPE") == "MR-DSRG-PT2") {
@@ -450,6 +454,7 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
 
             // For some test cases
             psi::Process::environment.globals["PARTIALLY RELAXED ENERGY"] = final_energy;
+            psi::Process::environment.globals["GS ENERGY"] = state_energies_list[0].second[0];
         }
     }
     if (options.get_str("JOB_TYPE") == "THREE-DSRG-MRPT2") {

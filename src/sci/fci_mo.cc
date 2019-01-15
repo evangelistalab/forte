@@ -37,7 +37,6 @@
 #include "psi4/libmints/dipole.h"
 #include "psi4/libmints/oeprop.h"
 #include "psi4/libmints/petitelist.h"
-#include "psi4/libmints/local.h"
 
 #include "sparse_ci/determinant_hashvector.h"
 #include "fci/fci_vector.h"
@@ -74,8 +73,6 @@ void set_FCI_MO_options(ForteOptions& foptions) {
     //    /*- Intrinsic atomic orbital analysis -*/
     //    foptions.add_bool("FCIMO_IAO_ANALYSIS", false, "Intrinsic atomic orbital analysis");
 
-    /*- Use localized orbitals -*/
-    foptions.add_bool("FCIMO_LOCALIZE_ACTV", false, "Localize active orbitals before computation");
 }
 
 // FCI_MO::FCI_MO(StateInfo state, std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions>
@@ -221,9 +218,6 @@ void FCI_MO::read_options() {
 
     // digonalization algorithm
     diag_algorithm_ = options_->get_str("DIAG_ALGORITHM");
-
-    // orbitals
-    localize_actv_ = options_->get_bool("FCIMO_LOCALIZE_ACTV");
 
     // number of Irrep
     nirrep_ = mo_space_info_->nirrep();
@@ -562,21 +556,8 @@ void FCI_MO::print_options() {
 }
 
 double FCI_MO::compute_energy() {
-    // temporarily put localizer here
-    // move to startup when run_dsrg is completed
-    if (localize_actv_) {
-        if (nirrep_ != 1) {
-            throw psi::PSIEXCEPTION("Localizer does not support point group symmetry.");
-        }
-        localize_actv_orbs();
-    }
-
-  //  if ((options_->psi_options())["AVG_STATE"].size() != 0) {
-  //      Eref_ = compute_sa_energy();
-  //  } else {
-        // get all energies
-        energies_ = compute_ss_energies();
-  //  }
+    
+    energies_ = compute_ss_energies();
     psi::Process::environment.globals["CURRENT ENERGY"] = Eref_;
     psi::Process::environment.globals["FCI_MO ENERGY"] = Eref_;
 
@@ -2710,43 +2691,6 @@ void FCI_MO::clean_all_density_files() {
         }
     }
     density_files_.clear();
-}
-
-void FCI_MO::localize_actv_orbs() {
-    // modified from localize.cc
-    print_h2("Localizing active orbitals");
-
-    psi::SharedMatrix Ca = integral_->Ca()->clone();
-    auto Ca_actv = std::make_shared<psi::Matrix>("Ca active", Ca->rowspi(), actv_dim_);
-
-    for (int h = 0; h < nirrep_; ++h) {
-        for (int u = 0; u < actv_dim_[h]; ++u) {
-            int nu = u + frzc_dim_[h] + core_dim_[h];
-            Ca_actv->set_column(h, u, Ca->get_column(h, nu));
-        }
-    }
-
-    std::shared_ptr<psi::Localizer> localizer =
-        psi::Localizer::build(options_->get_str("LOCALIZE_TYPE"), integral_->basisset(), Ca_actv);
-    localizer->localize();
-    psi::SharedMatrix Lorbs = localizer->L();
-
-    for (int h = 0; h < nirrep_; ++h) {
-        for (int u = 0; u < actv_dim_[h]; ++u) {
-            int nu = u + frzc_dim_[h] + core_dim_[h];
-            Ca->set_column(h, nu, Lorbs->get_column(h, u));
-        }
-    }
-
-    integral_->update_orbitals(Ca, Ca);
-    ambit::Tensor tei_active_aa =
-        integral_->aptei_aa_block(actv_mos_, actv_mos_, actv_mos_, actv_mos_);
-    ambit::Tensor tei_active_ab =
-        integral_->aptei_ab_block(actv_mos_, actv_mos_, actv_mos_, actv_mos_);
-    ambit::Tensor tei_active_bb =
-        integral_->aptei_bb_block(actv_mos_, actv_mos_, actv_mos_, actv_mos_);
-    fci_ints_->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
-    fci_ints_->compute_restricted_one_body_operator();
 }
 
 void FCI_MO::set_sa_info(const std::vector<std::tuple<int, int, int, std::vector<double>>>& info) {

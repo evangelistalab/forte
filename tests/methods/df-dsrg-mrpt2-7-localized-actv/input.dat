@@ -65,7 +65,7 @@ set forte{
   active              [4]
   avg_state           [[0,1,5]]
   rotate_mos          []
-  fcimo_localize_actv true
+ # fcimo_localize_actv true
 }
 #Ecas, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
 #compare_values(r_avg_cas, Ecas, 8, "SA-CASSCF energy from FORTE FCIMO")
@@ -83,6 +83,9 @@ set forte{
   avg_state           [[0,1,5]]
   rotate_mos          []
   dsrg_dipole         true
+  nroot 5
+  root 0
+  localize FULL
 }
-E0ag, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
-compare_values(r_0ag, E0ag, 8, "abs. energy of singlet 0Ag")
+energy('forte', ref_wfn=wfn)
+compare_values(r_0ag, variable("GS ENERGY"), 8, "abs. energy of singlet 0Ag")
