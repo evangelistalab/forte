@@ -29,7 +29,7 @@ set {
 
 
 set forte {
-  JOB_TYPE aci
+  active_space_solver aci
   multiplicity 1
   aci_SELECT_TYPE aimed_energy
   sigma 0.07
