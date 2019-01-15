@@ -29,7 +29,7 @@ set {
 
 
 set forte {
-  job_type = aci
+  active_space_solver aci
   multiplicity 1
   aci_SELECT_TYPE aimed_energy
   frozen_docc [1,0,0,0,0,1,0,0]

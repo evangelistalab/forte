@@ -42,7 +42,7 @@ set forte {
   active                 [1,0,1,2,1,2,1,0]
   root_sym               0
   nroot                  1
-  job_type               aci
+  active_space_solver    aci
   sigma	                  0.001
   aci_select_type            aimed_energy	 
   aci_enforce_spin_complete  true
