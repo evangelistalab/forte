@@ -51,4 +51,4 @@ set forte{
   dsrg_multi_state   sa_full
 }
 energy('forte',ref_wfn=wfn)
-compare_values(refpt3full,variable("CURRENT ENERGY"),8,"SA-DSRG-PT3 FULL energy root 0")
+compare_values(refpt3full,variable("ENERGY ROOT 0 1A1"),8,"SA-DSRG-PT3 FULL energy root 0")

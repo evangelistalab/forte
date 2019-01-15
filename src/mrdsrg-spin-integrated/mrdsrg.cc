@@ -445,12 +445,16 @@ double MRDSRG::compute_energy_relaxed() {
 
             // diagonalize the Hamiltonian using fci_ints
             Etemp = Erelax;
-           // auto fci_ints = make_active_space_ints(mo_space_info_, ints_, "ACTIVE", {{"RESTRICTED_DOCC"}});
-            auto state_weights_list = make_state_weights_list(foptions_, ints_->wfn());  
+            // auto fci_ints = make_active_space_ints(mo_space_info_, ints_, "ACTIVE",
+            // {{"RESTRICTED_DOCC"}});
+            auto state_weights_list = make_state_weights_list(foptions_, ints_->wfn());
             auto ci = make_active_space_solver(cas_type, state_weights_list, scf_info_,
-                                                   mo_space_info_, as_ints, foptions_);
+                                               mo_space_info_, as_ints, foptions_);
             ci->set_max_rdm_level(3);
-            Erelax = ci->compute_energy();
+            const auto& state_energies_list = ci->compute_energy();
+            double average_energy =
+                compute_average_state_energy(state_energies_list, state_weights_list);
+            Erelax = average_energy;
             reference_ = ci->get_reference();
 
             outfile->Printf("\n  The following reference rotation will make the new reference and "
@@ -627,7 +631,7 @@ double MRDSRG::compute_energy_sa() {
         }
 
         // obtain new reference
-        std::vector<std::pair<size_t,size_t>> roots; // unused for SA
+        std::vector<std::pair<size_t, size_t>> roots; // unused for SA
         reference_ = fci_mo->get_reference(roots)[0];
 
         outfile->Printf("\n  The following reference rotation will make the new reference and "

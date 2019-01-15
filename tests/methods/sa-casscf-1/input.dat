@@ -3,6 +3,8 @@
 
 import forte 
 
+eroot0 = -75.600540165967757
+
 molecule {
 0 1
 C
@@ -42,6 +44,7 @@ set forte {
   avg_state              [[0, 1, 3]]
   int_type               conventional
 }
-Eforte = energy('forte')
-compare_values(Eforte, casscf_energy, 6, 'CASSCF Energy')  #TEST
+
+energy('forte')
+compare_values(variable('ENERGY ROOT 0'), eroot0, 6, 'CASSCF Energy')  #TEST
 

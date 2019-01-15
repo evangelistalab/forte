@@ -75,7 +75,7 @@ class ActiveSpaceSolver {
     // ==> Class Interface <==
 
     /// Compute the energy and return it
-    double compute_energy();
+    const std::vector<std::pair<StateInfo, std::vector<double>>>& compute_energy();
 
     /// Compute reference and return it
     Reference get_reference();
@@ -94,6 +94,10 @@ class ActiveSpaceSolver {
         return method_vec_;
     }
 
+    const std::vector<std::pair<StateInfo, std::vector<double>>>& state_energies_list() const {
+        return state_energies_list_;
+    }
+
   protected:
     // a string that specifies the method used (e.g. "FCI", "ACI", ...)
     std::string method_;
@@ -102,7 +106,7 @@ class ActiveSpaceSolver {
     ///   [(state_1, [w_11, w_12, ..., w_1m]), (state_2, [w_21, w_22, ..., w_n]), ...]
     /// where state_i specifies the symmetry of a state and w_ij are are list of weights
     /// for the states of the same symmetry
-    std::vector<std::pair<StateInfo, std::vector<double>>>& state_weights_list_;
+    std::vector<std::pair<StateInfo, std::vector<double>>> state_weights_list_;
 
     /// The information about a previous SCF computation
     std::shared_ptr<SCFInfo> scf_info_;
@@ -131,7 +135,18 @@ class ActiveSpaceSolver {
     bool set_rdm_ = false; // TODO: remove this hack
 
     /// Prints a summary of the energies with State info
-    void print_energies(std::vector<std::vector<double>>& energies);
+    void print_energies(std::vector<std::pair<StateInfo, std::vector<double>>>& energies);
+
+    //     * @param states_weights A list of electronic states and their weights stored as vector of
+    //     *        pairs [(state_1, [w_11, w_12, ..., w_1m]), (state_2, [w_21, w_22, ..., w_n]),
+    //     ...]
+    //     *        where:
+    //     *            state_i specifies the symmetry of a state
+    //     *            w_ij is the weight of the j-th state of symmetry state_i
+    /**
+     * @brief state_energies_list
+     */
+    std::vector<std::pair<StateInfo, std::vector<double>>> state_energies_list_;
 };
 
 /**
@@ -159,6 +174,10 @@ std::unique_ptr<ActiveSpaceSolver> make_active_space_solver(
 std::vector<std::pair<StateInfo, std::vector<double>>>
 make_state_weights_list(std::shared_ptr<ForteOptions> options,
                         std::shared_ptr<psi::Wavefunction> wfn);
+
+double compute_average_state_energy(
+    std::vector<std::pair<StateInfo, std::vector<double>>> state_energies_list,
+    std::vector<std::pair<StateInfo, std::vector<double>>> state_weight_list);
 
 } // namespace forte
 

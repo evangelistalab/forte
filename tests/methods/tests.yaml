@@ -166,12 +166,12 @@ integrals:
    - integrals-5
   unused:
    - integrals-6
-#mr-dsrg-pt2:
-#  short:
-#   - mr-dsrg-pt2-1
-#   - mr-dsrg-pt2-2
-#   - mr-dsrg-pt2-3
-#   - mr-dsrg-pt2-4
+mr-dsrg-pt2:
+  short:
+   - mr-dsrg-pt2-1
+   - mr-dsrg-pt2-2
+   - mr-dsrg-pt2-3
+   - mr-dsrg-pt2-4
 mrdsrg-ldsrg2-df:
   long:
    - mrdsrg-ldsrg2-df-seq-1

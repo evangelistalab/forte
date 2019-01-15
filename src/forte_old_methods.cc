@@ -168,7 +168,10 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
         auto as_ints = make_active_space_ints(mo_space_info, ints, "ACTIVE", {{"RESTRICTED_DOCC"}});
         auto solver = make_active_space_solver(cas_type, state_weights_list, scf_info,
                                                mo_space_info, as_ints, forte_options);
-        final_energy = solver->compute_energy();
+        const auto& state_energies_list = solver->compute_energy();
+        double average_energy =
+            compute_average_state_energy(state_energies_list, state_weights_list);
+        final_energy = average_energy;
     }
 
     if (options.get_str("JOB_TYPE") == "PCI") {
@@ -364,7 +367,11 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
             // make a solver and run it
             auto relaxed_solver = make_active_space_solver(cas_type, state_weights_list, scf_info,
                                                            mo_space_info, fci_ints, forte_options);
-            final_energy = relaxed_solver->compute_energy();
+
+            const auto& state_energies_list = relaxed_solver->compute_energy();
+            double average_energy =
+                compute_average_state_energy(state_energies_list, state_weights_list);
+            final_energy = average_energy;
 
             // For some test cases
             psi::Process::environment.globals["PARTIALLY RELAXED ENERGY"] = final_energy;
@@ -421,7 +428,10 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
             // make a solver and run it
             auto relaxed_solver = make_active_space_solver(cas_type, state_weights_list, scf_info,
                                                            mo_space_info, fci_ints, forte_options);
-            final_energy = relaxed_solver->compute_energy();
+            const auto& state_energies_list = relaxed_solver->compute_energy();
+            double average_energy =
+                compute_average_state_energy(state_energies_list, state_weights_list);
+            final_energy = average_energy;
         }
         outfile->Printf("\n CD/DF DSRG-MRPT2 took %8.5f s.", all_three_dsrg_mrpt2.get());
     }
@@ -466,7 +476,10 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
             // make a solver and run it
             auto relaxed_solver = make_active_space_solver(cas_type, state_weights_list, scf_info,
                                                            mo_space_info, fci_ints, forte_options);
-            final_energy = relaxed_solver->compute_energy();
+            const auto& state_energies_list = relaxed_solver->compute_energy();
+            double average_energy =
+                compute_average_state_energy(state_energies_list, state_weights_list);
+            final_energy = average_energy;
         }
     }
 

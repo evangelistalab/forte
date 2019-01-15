@@ -57,37 +57,35 @@ ActiveSpaceSolver::ActiveSpaceSolver(
     print_options();
 }
 
-double ActiveSpaceSolver::compute_energy() {
-    double energy = 0.0;
-    std::vector<std::vector<double>> energies(state_weights_list_.size());
-
+const std::vector<std::pair<StateInfo, std::vector<double>>>& ActiveSpaceSolver::compute_energy() {
+    double average_energy = 0.0;
+    state_energies_list_.clear();
     size_t nstate = 0;
-    size_t nmethod = 0;
     for (const auto& [state, weights] : state_weights_list_) {
         // compute the energy of state and save it
         size_t nroot = weights.size();
         std::shared_ptr<ActiveSpaceMethod> method = make_active_space_method2(
             method_, state, nroot, scf_info_, mo_space_info_, as_ints_, options_);
+        method_vec_.push_back(method);
 
         method->set_options(options_);
         if (set_rdm_) {
             method->set_max_rdm_level(max_rdm_level_);
         }
         method->compute_energy();
-        energies[nmethod] = method->energies();
-        for (size_t r = 0; r < nroot; r++) {
-            energy += energies[nmethod][r] * weights[r];
-            nstate++;
-        }
-        method_vec_.push_back(method);
-        nmethod++;
+        const auto& energies = method->energies();
+        average_energy +=
+            std::inner_product(std::begin(energies), std::end(energies), std::begin(weights), 0.0);
+        nstate += energies.size();
+        state_energies_list_.push_back(std::make_pair(state, energies));
     }
-    psi::outfile->Printf("\n  Average Energy from %d state(s): %17.15f", nstate, energy);
-    print_energies(energies);
-    return energies[0][options_->get_int("ROOT")];
+    psi::outfile->Printf("\n  Average Energy from %d state(s): %17.15f", nstate, average_energy);
+    print_energies(state_energies_list_);
+    return state_energies_list_;
 }
 
-void ActiveSpaceSolver::print_energies(std::vector<std::vector<double>>& energies) {
+void ActiveSpaceSolver::print_energies(
+    std::vector<std::pair<StateInfo, std::vector<double>>>& energies) {
     print_h2("Energy Summary");
     psi::outfile->Printf("\n    Multi.  Irrep.  No.               Energy");
     std::string dash(41, '-');
@@ -101,11 +99,16 @@ void ActiveSpaceSolver::print_energies(std::vector<std::vector<double>>& energie
         int nstates = weights.size();
 
         for (int i = 0; i < nstates; ++i) {
+            auto label = "ENERGY ROOT " + std::to_string(i) + " " + std::to_string(multi) +
+                         irrep_symbol[irrep];
+            double energy = energies[n].second[i];
             psi::outfile->Printf("\n     %3d     %3s    %2d   %20.12f", multi,
-                                 irrep_symbol[irrep].c_str(), i, energies[n][i]);
-            psi::Process::environment.globals["ENERGY ROOT " + std::to_string(n + i)] =
-                energies[n][i];
+                                 irrep_symbol[irrep].c_str(), i, energy);
+            psi::Process::environment.globals[label] = energy;
+            psi::outfile->Printf("\n %s = %f", label.c_str(),
+                                 energy); // TODO remove this line once we are done (Francesco)
         }
+
         n++;
         psi::outfile->Printf("\n    %s", dash.c_str());
     }
@@ -136,20 +139,20 @@ Reference ActiveSpaceSolver::get_reference() {
 
         if (max_rdm_level_ >= 2) {
             g2aa = ambit::Tensor::build(ambit::CoreTensor, "g2aa",
-                                       {nactive, nactive, nactive, nactive});
+                                        {nactive, nactive, nactive, nactive});
             g2ab = ambit::Tensor::build(ambit::CoreTensor, "g2ab",
-                                       {nactive, nactive, nactive, nactive});
+                                        {nactive, nactive, nactive, nactive});
             g2bb = ambit::Tensor::build(ambit::CoreTensor, "g2bb",
                                         {nactive, nactive, nactive, nactive});
         }
 
         if (max_rdm_level_ >= 3) {
             g3aaa =
-               ambit::Tensor::build(ambit::CoreTensor, "g3aaa", std::vector<size_t>(6, nactive));
+                ambit::Tensor::build(ambit::CoreTensor, "g3aaa", std::vector<size_t>(6, nactive));
             g3aab =
-               ambit::Tensor::build(ambit::CoreTensor, "g3aab", std::vector<size_t>(6, nactive));
+                ambit::Tensor::build(ambit::CoreTensor, "g3aab", std::vector<size_t>(6, nactive));
             g3abb =
-               ambit::Tensor::build(ambit::CoreTensor, "g3abb", std::vector<size_t>(6, nactive));
+                ambit::Tensor::build(ambit::CoreTensor, "g3abb", std::vector<size_t>(6, nactive));
             g3bbb =
                 ambit::Tensor::build(ambit::CoreTensor, "g3bbb", std::vector<size_t>(6, nactive));
         }
@@ -214,7 +217,7 @@ Reference ActiveSpaceSolver::get_reference() {
         }
 
         // Construct Reference object with RDMs
-        Reference ref(g1a,g1b,g2aa,g2ab,g2bb,g3aaa,g3aab,g3abb,g3bbb);
+        Reference ref(g1a, g1b, g2aa, g2ab, g2bb, g3aaa, g3aab, g3abb, g3bbb);
         return ref;
     }
 }
@@ -409,6 +412,23 @@ make_state_weights_list(std::shared_ptr<ForteOptions> options,
         }
     }
     return state_weight_list;
+}
+
+double compute_average_state_energy(
+    std::vector<std::pair<StateInfo, std::vector<double>>> state_energies_list,
+    std::vector<std::pair<StateInfo, std::vector<double>>> state_weight_list) {
+    std::vector<double> weights;
+    std::vector<double> energies;
+    // flatten state_energies_list and state_weight_list into
+    for (const auto& state_weights : state_weight_list) {
+        std::copy(state_weights.second.begin(), state_weights.second.end(),
+                  std::back_inserter(weights));
+    }
+    for (const auto& state_energies : state_energies_list) {
+        std::copy(state_energies.second.begin(), state_energies.second.end(),
+                  std::back_inserter(energies));
+    }
+    return std::inner_product(energies.begin(), energies.end(), weights.begin(), 0.0);
 }
 
 } // namespace forte

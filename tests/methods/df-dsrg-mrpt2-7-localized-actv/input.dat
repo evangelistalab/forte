@@ -4,7 +4,7 @@ import forte
 memory 1 gb
 
 r_scf = -154.979263255832
-r_cas = -154.745701429278
+r_avg_cas = -154.745701429278
 r_0ag = -155.618385970396
 
 molecule butadiene{
@@ -56,7 +56,7 @@ set forte{
   fci_maxiter          1000
 }
 Ecas, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
-compare_values(r_cas, Ecas, 8, "SA-CASSCF energy from FORTE CASSCF")
+compare_values(r_avg_cas, Ecas, 8, "SA-CASSCF energy from FORTE CASSCF")
 
 set forte{
   job_type            cas
@@ -67,8 +67,8 @@ set forte{
   rotate_mos          []
   fcimo_localize_actv true
 }
-Ecas, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
-compare_values(r_cas, Ecas, 8, "SA-CASSCF energy from FORTE FCIMO")
+#Ecas, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
+#compare_values(r_avg_cas, Ecas, 8, "SA-CASSCF energy from FORTE FCIMO")
 #cubeprop(wfn)
 
 set forte{
