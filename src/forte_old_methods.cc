@@ -73,6 +73,7 @@
 #include "mrdsrg-spin-integrated/mcsrgpt2_mo.h"
 #include "mrdsrg-spin-integrated/mrdsrg.h"
 #include "mrdsrg-spin-integrated/dwms_mrpt2.h"
+#include "mrdsrg-helper/dsrg_transformed.h"
 //#include "mrdsrg-spin-integrated/dsrg_mrpt2.h"
 //#include "mrdsrg-spin-integrated/three_dsrg_mrpt2.h"
 //#include "mrdsrg-spin-integrated/active_dsrgpt2.h"
@@ -141,7 +142,7 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
     }
     if (options.get_str("LOCALIZE") == "FULL" or options.get_str("LOCALIZE") == "SPLIT") {
         auto localize = std::make_shared<LOCALIZE>(ref_wfn, options, ints, mo_space_info);
-        if ( options.get_str("LOCALIZE") == "FULL" ){
+        if (options.get_str("LOCALIZE") == "FULL") {
             localize->full_localize();
         } else {
             localize->split_localize();
@@ -282,15 +283,15 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
         std::vector<double> e_dsrg;
 
         e_dsrg.push_back(final_energy);
-    
+
         size_t niter = 0;
         size_t maxiter = forte_options->get_int("MAXITER_RELAX_REF");
         double old_energy = 0.0;
         double old_dsrg = final_energy;
         double e_conv = forte_options->get_double("RELAX_E_CONVERGENCE");
-        while(niter < 10){
+        while (niter < 10) {
 
-            if( relax_mode == "NONE"){
+            if (relax_mode == "NONE") {
                 break;
             }
 
@@ -306,12 +307,12 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
             e_relax.push_back(final_energy);
 
             niter++;
-            if( relax_mode == "ONCE"){
+            if (relax_mode == "ONCE") {
                 // set energies to psi4 environment
                 psi::Process::environment.globals["UNRELAXED ENERGY"] = e_dsrg[0];
                 psi::Process::environment.globals["PARTIALLY RELAXED ENERGY"] = e_relax[0];
                 break;
-            } else if( (relax_mode == "TWICE") and (niter == 2) ){
+            } else if ((relax_mode == "TWICE") and (niter == 2)) {
                 // set energies to psi4 environment
                 psi::Process::environment.globals["UNRELAXED ENERGY"] = e_dsrg[0];
                 psi::Process::environment.globals["PARTIALLY RELAXED ENERGY"] = e_relax[0];
@@ -322,7 +323,7 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
             // Rotate reference to original semicanonical basis
             {
                 Reference tmp = relaxed_solver->get_reference();
-                rel_reference = semi.transform_reference(Ua,Ub,tmp,max_rdm_level); 
+                rel_reference = semi.transform_reference(Ua, Ub, tmp, max_rdm_level);
             }
 
             // Semicanonicalize reference and transform ints
@@ -334,14 +335,14 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
 
             // Compute MRDSRG in this basis, save the energy
             mrdsrg = std::make_shared<MRDSRG>(rel_reference, std::make_shared<SCFInfo>(ref_wfn),
-                                                   forte_options, ints, mo_space_info);
+                                              forte_options, ints, mo_space_info);
             mrdsrg->set_Uactv(Ua, Ub);
             final_energy = mrdsrg->compute_energy();
 
             e_dsrg.push_back(final_energy);
-            old_energy = final_energy;       
-            if( (std::fabs(old_energy - final_energy) <= e_conv) and
-                (std::fabs(old_dsrg - final_energy) <= e_conv)){
+            old_energy = final_energy;
+            if ((std::fabs(old_energy - final_energy) <= e_conv) and
+                (std::fabs(old_dsrg - final_energy) <= e_conv)) {
                 // set energies to psi4 environment
                 psi::Process::environment.globals["UNRELAXED ENERGY"] = e_dsrg[0];
                 psi::Process::environment.globals["PARTIALLY RELAXED ENERGY"] = e_relax[0];
@@ -448,11 +449,27 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
             // make a solver and run it
             auto relaxed_solver = make_active_space_solver(cas_type, state_weights_list, scf_info,
                                                            mo_space_info, fci_ints, forte_options);
+            relaxed_solver->set_max_rdm_level(options.get_bool("FORM_MBAR3") ? 3 : 2);
 
             const auto& state_energies_list = relaxed_solver->compute_energy();
             double average_energy =
                 compute_average_state_energy(state_energies_list, state_weights_list);
             final_energy = average_energy;
+
+            // test for relaxed dipole
+            if (!multi_state and dsrg_mrpt2->do_dipole()) {
+                auto dipole_moments = dsrg_mrpt2->nuclear_dipole();
+                auto transformed_dipoles = dsrg_mrpt2->deGNO_DMbar_actv();
+                Reference reference = relaxed_solver->get_reference();
+                for (int i = 0; i < 3; ++i) {
+                    dipole_moments[i] += transformed_dipoles[i].contract_with_densities(reference);
+                }
+                const auto& [x, y, z] = dipole_moments;
+                double dm_total = std::sqrt(x * x + y * y + z * z);
+                outfile->Printf("\n    DSRG-MRPT2 partially relaxed dipole moment:");
+                outfile->Printf("\n      X: %10.6f  Y: %10.6f  Z: %10.6f  Total: %10.6f\n", x, y, z, dm_total);
+                psi::Process::environment.globals["PARTIALLY RELAXED DIPOLE"] = dm_total;
+            }
 
             // For some test cases
             psi::Process::environment.globals["PARTIALLY RELAXED ENERGY"] = final_energy;

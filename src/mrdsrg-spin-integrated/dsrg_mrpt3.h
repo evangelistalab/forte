@@ -293,9 +293,9 @@ class DSRG_MRPT3 : public MASTER_DSRG {
     void print_dm_pt3();
 
     /// DSRG-MRPT2 transformed dipole scalar
-    std::vector<double> Mbar0_pt2_;
+    std::array<double, 3> Mbar0_pt2_;
     /// DSRG-MRPT2 (2nd-order complete) transformed dipole scalar
-    std::vector<double> Mbar0_pt2c_;
+    std::array<double, 3> Mbar0_pt2c_;
 };
 } // namespace forte
 

@@ -432,14 +432,11 @@ double MASTER_DSRG::compute_reference_energy_df(BlockedTensor H, BlockedTensor F
 
 void MASTER_DSRG::init_dm_ints() {
     outfile->Printf("\n    Preparing ambit tensors for dipole moments ...... ");
-    dm_.clear();
-    dm_nuc_ = std::vector<double>(3, 0.0);
     Vector3 dm_nuc =
         psi::Process::environment.molecule()->nuclear_dipole(psi::Vector3(0.0, 0.0, 0.0));
     for (int i = 0; i < 3; ++i) {
         dm_nuc_[i] = dm_nuc[i];
-        BlockedTensor dm_i = BTF_->build(tensor_type_, "Dipole " + dm_dirs_[i], spin_cases({"gg"}));
-        dm_.emplace_back(dm_i);
+        dm_[i] = BTF_->build(tensor_type_, "Dipole " + dm_dirs_[i], spin_cases({"gg"}));
     }
 
     std::vector<psi::SharedMatrix> dm_a = ints_->compute_MOdipole_ints(true, true);
@@ -449,21 +446,13 @@ void MASTER_DSRG::init_dm_ints() {
 
     // prepare transformed dipole integrals
     if (multi_state_ || (relax_ref_ != "NONE")) {
-        Mbar0_ = std::vector<double>(3, 0.0);
-        Mbar1_.clear();
-        Mbar2_.clear();
-        Mbar3_.clear();
+        Mbar0_ = {0.0, 0.0, 0.0};
         for (int i = 0; i < 3; ++i) {
-            BlockedTensor Mbar1 =
-                BTF_->build(tensor_type_, "DSRG DM1 " + dm_dirs_[i], spin_cases({"aa"}));
-            Mbar1_.emplace_back(Mbar1);
-            BlockedTensor Mbar2 =
-                BTF_->build(tensor_type_, "DSRG DM2 " + dm_dirs_[i], spin_cases({"aaaa"}));
-            Mbar2_.emplace_back(Mbar2);
+            Mbar1_[i] = BTF_->build(tensor_type_, "DSRG DM1 " + dm_dirs_[i], spin_cases({"aa"}));
+            Mbar2_[i] = BTF_->build(tensor_type_, "DSRG DM2 " + dm_dirs_[i], spin_cases({"aaaa"}));
             if (foptions_->get_bool("FORM_MBAR3")) {
-                BlockedTensor Mbar3 =
+                Mbar3_[i] =
                     BTF_->build(tensor_type_, "DSRG DM3 " + dm_dirs_[i], spin_cases({"aaaaaa"}));
-                Mbar3_.emplace_back(Mbar3);
             }
         }
     }
@@ -474,7 +463,6 @@ void MASTER_DSRG::init_dm_ints() {
 void MASTER_DSRG::fill_MOdm(std::vector<psi::SharedMatrix>& dm_a,
                             std::vector<psi::SharedMatrix>& dm_b) {
     // consider frozen-core part
-    dm_frzc_ = std::vector<double>(3, 0.0);
     std::vector<size_t> frzc_mos = mo_space_info_->get_absolute_mo("FROZEN_DOCC");
     for (int z = 0; z < 3; ++z) {
         double dipole = 0.0;
@@ -493,7 +481,7 @@ void MASTER_DSRG::fill_MOdm(std::vector<psi::SharedMatrix>& dm_a,
     for (int h = 0, p = 0, nirrep = mo_space_info_->nirrep(); h < nirrep; ++h) {
         p += frzcpi[h];
         for (int r = 0; r < ncmopi[h]; ++r) {
-            cmo_to_mo.push_back((size_t)p);
+            cmo_to_mo.push_back(static_cast<size_t>(p));
             ++p;
         }
         p += frzvpi[h];
@@ -512,8 +500,6 @@ void MASTER_DSRG::fill_MOdm(std::vector<psi::SharedMatrix>& dm_a,
 }
 
 void MASTER_DSRG::compute_dm_ref() {
-    dm_ref_ = std::vector<double>(3, 0.0);
-    do_dm_dirs_.clear();
     for (int z = 0; z < 3; ++z) {
         double dipole = dm_frzc_[z];
         for (const std::string& block : {"cc", "CC"}) {
@@ -526,8 +512,7 @@ void MASTER_DSRG::compute_dm_ref() {
         dipole += dm_[z]["uv"] * Gamma1_["uv"];
         dipole += dm_[z]["UV"] * Gamma1_["UV"];
         dm_ref_[z] = dipole;
-
-        do_dm_dirs_.push_back(std::fabs(dipole) > 1.0e-15 ? true : false);
+        do_dm_dirs_[z] = std::fabs(dipole) > 1.0e-15 ? true : false;
     }
 }
 

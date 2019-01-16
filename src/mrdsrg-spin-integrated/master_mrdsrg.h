@@ -97,6 +97,9 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     /// Return if dipole moments are computed
     bool do_dipole() { return do_dm_; }
 
+    /// Return the nuclear components of dipole moments
+    std::array<double, 3> nuclear_dipole() { return dm_nuc_; }
+
     /// Set unitary matrix (in active space) from original to semicanonical
     void set_Uactv(ambit::Tensor& Ua, ambit::Tensor& Ub) {
         Uactv_ = BTF_->build(tensor_type_, "Uactv", spin_cases({"aa"}));
@@ -325,35 +328,35 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     /// Compute dipole or not
     bool do_dm_;
     /// Dipole moment directions
-    std::vector<std::string> dm_dirs_{"X", "Y", "Z"};
+    std::array<std::string, 3> dm_dirs_{"X", "Y", "Z"};
     /// Setup dipole integrals and DSRG transformed integrals
     void init_dm_ints();
 
     /// Nuclear dipole moments
-    std::vector<double> dm_nuc_;
+    std::array<double, 3> dm_nuc_;
     /// Frozen-core contributions to permament dipole
-    std::vector<double> dm_frzc_;
+    std::array<double, 3> dm_frzc_;
     /// Electronic dipole moment of the reference
-    std::vector<double> dm_ref_;
+    std::array<double, 3> dm_ref_;
 
     /// MO bare dipole integrals of size ncmo by ncmo
-    std::vector<ambit::BlockedTensor> dm_;
+    std::array<ambit::BlockedTensor, 3> dm_;
 
     /// Fill in bare MO dipole integrals
     void fill_MOdm(std::vector<psi::SharedMatrix>& dm_a, std::vector<psi::SharedMatrix>& dm_b);
     /// Compute dipole moment of the reference
     void compute_dm_ref();
     /// Compute dipole for a certain direction or not
-    std::vector<bool> do_dm_dirs_;
+    std::array<bool, 3> do_dm_dirs_;
 
     /// DSRG transformed dipole scalar
-    std::vector<double> Mbar0_;
+    std::array<double, 3> Mbar0_;
     /// DSRG transformed 1-body dipole integrals (active only)
-    std::vector<BlockedTensor> Mbar1_;
+    std::array<ambit::BlockedTensor, 3> Mbar1_;
     /// DSRG transformed 2-body dipole integrals (active only)
-    std::vector<BlockedTensor> Mbar2_;
+    std::array<ambit::BlockedTensor, 3> Mbar2_;
     /// DSRG transformed 3-body dipole integrals (active only)
-    std::vector<BlockedTensor> Mbar3_;
+    std::array<ambit::BlockedTensor, 3> Mbar3_;
 
     // ==> commutators <==
     /**
