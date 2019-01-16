@@ -328,7 +328,7 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     /// Compute dipole or not
     bool do_dm_;
     /// Dipole moment directions
-    std::array<std::string, 3> dm_dirs_{{"X", "Y", "Z"}};
+    std::array<std::string, 3> dm_dirs_ = {{"X", "Y", "Z"}};
     /// Setup dipole integrals and DSRG transformed integrals
     void init_dm_ints();
 
