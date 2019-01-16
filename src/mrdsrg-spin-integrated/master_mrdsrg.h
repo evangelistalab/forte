@@ -18,6 +18,7 @@
 #include "mrdsrg-helper/dsrg_source.h"
 #include "mrdsrg-helper/dsrg_time.h"
 #include "mrdsrg-helper/dsrg_tensors.h"
+#include "mrdsrg-helper/dsrg_transformed.h"
 
 using namespace ambit;
 
@@ -43,6 +44,9 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
 
     /// Compute DSRG transformed Hamiltonian
     virtual std::shared_ptr<ActiveSpaceIntegrals> compute_Heff_actv();
+
+    /// De-normal-order DSRG transformed dipole moment
+    std::vector<DressedQuantity> deGNO_DMbar_actv();
 
     /// Compute second-order effective Hamiltonian couplings (child class overrides)
     /// <M|H + HA(N)|N> = Heff1 * TrD1 + Heff2 * TrD2 + Heff3 * TrD3 if CAS
@@ -89,6 +93,9 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
 
     /// Return the Hbar of a given order
     std::vector<ambit::Tensor> Hbar(int n);
+
+    /// Return if dipole moments are computed
+    bool do_dipole() { return do_dm_; }
 
     /// Set unitary matrix (in active space) from original to semicanonical
     void set_Uactv(ambit::Tensor& Ua, ambit::Tensor& Ub) {

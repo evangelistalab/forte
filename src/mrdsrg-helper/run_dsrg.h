@@ -3,6 +3,7 @@
 
 #include "base_classes/forte_options.h"
 #include "sci/fci_mo.h"
+#include "mrdsrg-helper/dsrg_transformed.h"
 #include "mrdsrg-spin-integrated/dsrg_mrpt2.h"
 #include "mrdsrg-spin-integrated/dsrg_mrpt3.h"
 #include "mrdsrg-spin-integrated/master_mrdsrg.h"
@@ -46,6 +47,7 @@ std::unique_ptr<MASTER_DSRG> make_dsrg_method(const std::string& method, Referen
                                               std::shared_ptr<ForteOptions> options,
                                               std::shared_ptr<ForteIntegrals> ints,
                                               std::shared_ptr<MOSpaceInfo> mo_space_info);
+
 } // namespace forte
 
 #endif // RUN_DSRG_H

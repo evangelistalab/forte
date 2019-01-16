@@ -802,6 +802,33 @@ std::vector<ambit::Tensor> MASTER_DSRG::Hbar(int n) {
     return out;
 }
 
+std::vector<DressedQuantity> MASTER_DSRG::deGNO_DMbar_actv() {
+    std::vector<DressedQuantity> out;
+    for (int z = 0; z < 3; ++z) {
+        if (do_dm_dirs_[z] || multi_state_) {
+            std::string name = "Dipole " + dm_dirs_[z] + " Integrals";
+            if (foptions_->get_bool("FORM_MBAR3")) {
+                deGNO_ints(name, Mbar0_[z], Mbar1_[z], Mbar2_[z], Mbar3_[z]);
+                rotate_ints_semi_to_origin(name, Mbar1_[z], Mbar2_[z], Mbar3_[z]);
+                out.emplace_back(Mbar0_[z], Mbar1_[z].block("aa"), Mbar1_[z].block("AA"),
+                                 Mbar2_[z].block("aaaa"), Mbar2_[z].block("aAaA"),
+                                 Mbar2_[z].block("AAAA"), Mbar3_[z].block("aaaaaa"),
+                                 Mbar3_[z].block("aaAaaA"), Mbar3_[z].block("aAAaAA"),
+                                 Mbar3_[z].block("AAAAAA"));
+            } else {
+                deGNO_ints(name, Mbar0_[z], Mbar1_[z], Mbar2_[z]);
+                rotate_ints_semi_to_origin(name, Mbar1_[z], Mbar2_[z]);
+                out.emplace_back(Mbar0_[z], Mbar1_[z].block("aa"), Mbar1_[z].block("AA"),
+                                 Mbar2_[z].block("aaaa"), Mbar2_[z].block("aAaA"),
+                                 Mbar2_[z].block("AAAA"));
+            }
+        } else {
+            out.emplace_back(DressedQuantity());
+        }
+    }
+    return out;
+}
+
 void MASTER_DSRG::H1_T1_C0(BlockedTensor& H1, BlockedTensor& T1, const double& alpha, double& C0) {
     local_timer timer;
 

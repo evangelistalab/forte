@@ -118,6 +118,8 @@ class Reference {
     /// @return the beta-beta-beta 3-RDC
     ambit::Tensor L3bbb();
 
+    size_t max_rdm_level() { return max_rdm_; }
+
   protected:
     // ==> Class Data <==
 

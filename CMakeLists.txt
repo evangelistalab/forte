@@ -137,6 +137,7 @@ src/integrals/active_space_integrals.cc
 src/mrdsrg-helper/cci_solver.cc
 src/mrdsrg-helper/dsrg_source.cc
 src/mrdsrg-helper/dsrg_time.cc
+src/mrdsrg-helper/dsrg_transformed.cc
 src/mrdsrg-helper/run_dsrg.cc
 src/mrdsrg-so/mrdsrg_so.cc
 src/mrdsrg-so/so-mrdsrg.cc

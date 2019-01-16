@@ -146,7 +146,7 @@ class MCSRGPT2_MO {
     d6 L3bbb_;
 
     /// Fill in non-tensor cumulants used in the naive MR-DSRG-PT2 code
-    void fill_naive_cumulants(Reference& ref, const int level);
+    void fill_naive_cumulants(Reference ref, const int level);
     /// Fill in non-tensor quantities D1a_ and D1b_ using ambit tensors
     void fill_one_cumulant(ambit::Tensor& L1a, ambit::Tensor& L1b);
     /// Fill in non-tensor quantities L2aa_, L2ab_, and L2bb_ using ambit tensors

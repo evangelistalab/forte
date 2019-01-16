@@ -3424,7 +3424,7 @@ void MCSRGPT2_MO::compute_Fock_ints() {
     outfile->Printf("  Done. Timing %15.6f s", tfock.get());
 }
 
-void MCSRGPT2_MO::fill_naive_cumulants(Reference& ref, const int level) {
+void MCSRGPT2_MO::fill_naive_cumulants(Reference ref, const int level) {
     // fill in 1-cumulant (same as 1-RDM) to D1a_, D1b_
     ambit::Tensor L1a = ref.g1a();
     ambit::Tensor L1b = ref.g1b();
