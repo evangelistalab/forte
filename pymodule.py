@@ -37,21 +37,29 @@ from psi4.driver.procrouting import proc_util
 def forte_driver(state_weights_list, scf_info, options, ints, mo_space_info):
 #    if options.get_str('PROCEDURE') == 'UNRELAXED':
 #        procedure_unrelaxed(...)
+    max_rdm_level = 3 # TODO: set this (Francesco)
 
     # Create an active space solver object and compute the energy
     active_space_solver_type = options.get_str('ACTIVE_SPACE_SOLVER')
     as_ints = forte.make_active_space_ints(mo_space_info, ints, "ACTIVE", ["RESTRICTED_DOCC"]);
     active_space_solver = forte.make_active_space_solver(active_space_solver_type,state_weights_list,scf_info,mo_space_info,as_ints,options)
+    active_space_solver.set_max_rdm_level(max_rdm_level)
     state_energies_list = active_space_solver.compute_energy()
 
-#    correlation_solver_type = options.get_str('CORRELATION_SOLVER')
-#    if correlation_solver_type != 'NONE':
+    correlation_solver_type = options.get_str('CORRELATION_SOLVER')
+    if correlation_solver_type != 'NONE':
+        reference = active_space_solver.reference()
+        semi = forte.SemiCanonical(mo_space_info, ints, options)
+        semi.semicanonicalize(reference, max_rdm_level)
+        Ua = semi.Ua_t()
+        Ub = semi.Ub_t()
 
-#    reference = solver.reference()
+
 
     # Create a dynamical correlation solver object
 #    dyncorr_solver = options.get_str('DYNCORR_SOLVER')
 #    solver = forte.make_dynamical_solver(dyncorr_solver,state,scf_info,forte_options,ints,mo_space_info)
+
     average_energy = forte.compute_average_state_energy(state_energies_list,state_weights_list)
     return average_energy
 

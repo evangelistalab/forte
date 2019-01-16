@@ -52,7 +52,7 @@ class DMRGSCF : public ActiveSpaceMethod {
 
     double compute_energy();
 
-    Reference get_reference() { return dmrg_ref_; }
+    Reference reference() { return dmrg_ref_; }
     void set_iterations(int dmrg_iterations) { dmrg_iterations_ = dmrg_iterations; }
 
   private:

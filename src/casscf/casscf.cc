@@ -363,7 +363,7 @@ void CASSCF::cas_ci() {
     //    fcisolver->set_root(options_->get_int("ROOT"));
     //    fcisolver->set_active_space_integrals(fci_ints);
     const auto state_energies_list = fcisolver->compute_energy();
-    cas_ref_ = fcisolver->get_reference();
+    cas_ref_ = fcisolver->reference();
     double average_energy = compute_average_state_energy(state_energies_list, state_weights_list);
     // return the average energy
     E_casscf_ = average_energy;
@@ -372,7 +372,7 @@ void CASSCF::cas_ci() {
 
     //    std::vector<std::pair<size_t, size_t>> roots;
     //    roots.push_back(std::make_pair(0, 0));
-    //        cas_ref_ = fcisolver->get_reference();
+    //        cas_ref_ = fcisolver->reference();
 
     /*
         if (options_->get_str("CASSCF_CI_SOLVER") == "FCI") {
@@ -392,7 +392,7 @@ void CASSCF::cas_ci() {
             E_casscf_ = aci.compute_energy();
             std::vector<std::pair<size_t,size_t>> roots;
             roots.push_back(std::make_pair(0,0));
-            cas_ref_ = aci.get_reference(roots)[0];
+            cas_ref_ = aci.reference(roots)[0];
         } else if (options_->get_str("CASSCF_CI_SOLVER") == "DMRG") {
     #ifdef HAVE_CHEMPS2
             DMRGSolver dmrg(state_, scf_info_, options_, ints_, mo_space_info_);
@@ -467,7 +467,7 @@ void CASSCF::cas_ci_final() {
 
 //        std::vector<std::pair<size_t, size_t>> roots;
 //        roots.push_back(std::make_pair(0, 0));
-//        cas_ref_ = aci.get_reference(roots)[0];
+//        cas_ref_ = aci.reference(roots)[0];
 
 //    } else if (options_->get_str("CASSCF_CI_SOLVER") == "DMRG") {
 //#ifdef HAVE_CHEMPS2
@@ -721,7 +721,7 @@ void CASSCF::set_up_fci() {
 
     std::vector<std::pair<size_t, size_t>> roots;
     roots.push_back(std::make_pair(0, 0));
-    cas_ref_ = fcisolver->get_reference(roots)[0];
+    cas_ref_ = fcisolver->reference(roots)[0];
 }
 
 std::shared_ptr<ActiveSpaceIntegrals> CASSCF::get_ci_integrals() {
@@ -1048,7 +1048,7 @@ void CASSCF::set_up_fcimo() {
         std::vector<std::pair<size_t, size_t>> roots;
         roots.push_back(std::make_pair(0, 0));
 
-        cas_ref_ = cas.get_reference(roots)[0];
+        cas_ref_ = cas.reference(roots)[0];
     }
 }
 void CASSCF::write_orbitals_molden() {
@@ -1086,7 +1086,7 @@ std::pair<ambit::Tensor, std::vector<double>> CASSCF::CI_Integrals() {
     return pair_return;
 }
 
-std::vector<Reference> CASSCF::get_reference(std::vector<std::pair<size_t, size_t>>& root_list) {
+std::vector<Reference> CASSCF::reference(std::vector<std::pair<size_t, size_t>>& root_list) {
 
     std::vector<Reference> refs;
     refs.push_back(cas_ref_);

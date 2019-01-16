@@ -117,11 +117,11 @@ class FCI_MO : public ActiveSpaceMethod {
 
     /// Return the reference object
     /// Return averaged cumulants if AVG_STATE is not empty
-    std::vector<Reference> get_reference(std::vector<std::pair<size_t,size_t>>& roots) override;
+    std::vector<Reference> reference(std::vector<std::pair<size_t,size_t>>& roots) override;
     
-    Reference get_reference(){
+    Reference reference(){
         std::vector<std::pair<size_t,size_t>> roots;
-        return get_reference(roots)[0];
+        return reference(roots)[0];
     }
 
     void set_options(std::shared_ptr<ForteOptions>) override {} // TODO implement

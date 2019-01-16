@@ -16,8 +16,8 @@ def register_driver_options(forte_options):
     ], 'Specify the job type')
 
     forte_options.add_str('ACTIVE_SPACE_SOLVER', '', ['FCI', 'ACI'],
-                          'Active space solver type')
-    forte_options.add_str('DYNCORR_SOLVER', '', [],
+                          'Active space solver type') # TODO: why is PCI running even if it is not in this list (Francesco)
+    forte_options.add_str('CORRELATION_SOLVER', 'NONE', ['DSRG-MRPT2'],
                           'Dynamical correlation solver type')
 
 

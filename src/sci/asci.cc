@@ -539,7 +539,7 @@ double ASCI::compute_spin_contamination(DeterminantHashVec& space, WFNOperator& 
     return spin_contam;
 }
 
-std::vector<Reference> ASCI::get_reference(std::vector<std::pair<size_t,size_t>>& root_list) {
+std::vector<Reference> ASCI::reference(std::vector<std::pair<size_t,size_t>>& root_list) {
     // const std::vector<Determinant>& final_wfn =
     //     final_wfn_.determinants//();
     std::vector<Reference> refs;

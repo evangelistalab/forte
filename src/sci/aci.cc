@@ -1574,7 +1574,7 @@ void AdaptiveCI::set_max_rdm(int rdm) {
     set_rdm_ = true;
 }
 
-std::vector<Reference> AdaptiveCI::get_reference(std::vector<std::pair<size_t, size_t>>& roots) {
+std::vector<Reference> AdaptiveCI::reference(std::vector<std::pair<size_t, size_t>>& roots) {
 
     std::vector<Reference> refs;
 

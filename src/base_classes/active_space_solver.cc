@@ -114,13 +114,13 @@ void ActiveSpaceSolver::print_energies(
     }
 }
 
-Reference ActiveSpaceSolver::get_reference() {
+Reference ActiveSpaceSolver::reference() {
 
     // For single state
     if ((state_weights_list_.size() == 1) and (state_weights_list_[0].second.size() == 1)) {
         std::vector<std::pair<size_t, size_t>> root;
         root.push_back(std::make_pair(0, 0));
-        Reference ref = method_vec_[0]->get_reference(root)[0];
+        Reference ref = method_vec_[0]->reference(root)[0];
         return ref;
         // For state average
     } else {
@@ -176,7 +176,7 @@ Reference ActiveSpaceSolver::get_reference() {
             for (size_t r = 0; r < nroot; r++) {
                 root_list.push_back(std::make_pair(r, r));
             }
-            std::vector<Reference> references = method->get_reference(root_list);
+            std::vector<Reference> references = method->reference(root_list);
 
             // Grab energies to set E in reference
             auto& energies = method->energies();

@@ -455,7 +455,7 @@ double MRDSRG::compute_energy_relaxed() {
             double average_energy =
                 compute_average_state_energy(state_energies_list, state_weights_list);
             Erelax = average_energy;
-            reference_ = ci->get_reference();
+            reference_ = ci->reference();
 
             outfile->Printf("\n  The following reference rotation will make the new reference and "
                             "integrals in the same basis.");
@@ -582,7 +582,7 @@ double MRDSRG::compute_energy_relaxed() {
 double MRDSRG::compute_energy_sa() {
     int nentry = eigens_.size();
     std::vector<std::vector<std::vector<double>>> Edsrg_vec;
-    SemiCanonical semiorb(foptions_, ints_, mo_space_info_, true);
+    SemiCanonical semiorb(mo_space_info_, ints_, foptions_, true);
     int max_rdm_level = foptions_->get_str("THREEPDC") == "ZERO" ? 2 : 3;
 
     // iteration variables
@@ -633,7 +633,7 @@ double MRDSRG::compute_energy_sa() {
 
         // obtain new reference
         std::vector<std::pair<size_t, size_t>> roots; // unused for SA
-        reference_ = fci_mo->get_reference(roots)[0];
+        reference_ = fci_mo->reference(roots)[0];
 
         outfile->Printf("\n  The following reference rotation will make the new reference and "
                         "integrals in the same basis.");

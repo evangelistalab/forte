@@ -93,7 +93,7 @@ class ProjectorCI_Simple : public ActiveSpaceMethod {
     void set_options(std::shared_ptr<ForteOptions>) override{};
 
     /// Return a reference object
-    std::vector<Reference> get_reference(std::vector<std::pair<size_t,size_t>>& root_list) override;
+    std::vector<Reference> reference(std::vector<std::pair<size_t,size_t>>& root_list) override;
 
     /// Compute the energy
     double compute_energy() override;

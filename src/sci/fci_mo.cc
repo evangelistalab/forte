@@ -2114,7 +2114,7 @@ d3 FCI_MO::compute_orbital_extents() {
     return orb_extents;
 }
 
-std::vector<Reference> FCI_MO::get_reference(std::vector<std::pair<size_t,size_t>>& root_list) {
+std::vector<Reference> FCI_MO::reference(std::vector<std::pair<size_t,size_t>>& root_list) {
 
 
     std::vector<Reference> refs;

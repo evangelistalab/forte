@@ -41,6 +41,8 @@
 #include "integrals/make_integrals.h"
 #include "orbital-helpers/localize.h"
 #include "orbital-helpers/mp2_nos.h"
+#include "orbital-helpers/semi_canonicalize.h"
+
 #include "forte.h"
 #include "fci/fci_solver.h"
 #include "base_classes/dynamic_correlation_solver.h"
@@ -87,7 +89,9 @@ void export_ActiveSpaceMethod(py::module& m) {
 
 void export_ActiveSpaceSolver(py::module& m) {
     py::class_<ActiveSpaceSolver>(m, "ActiveSpaceSolver")
-        .def("compute_energy", &ActiveSpaceSolver::compute_energy);
+        .def("compute_energy", &ActiveSpaceSolver::compute_energy)
+        .def("reference", &ActiveSpaceSolver::reference)
+        .def("set_max_rdm_level", &ActiveSpaceSolver::set_max_rdm_level);
     m.def("compute_average_state_energy", &compute_average_state_energy,
           "Compute the average energy given the energies and weights of each state");
 }
@@ -164,6 +168,20 @@ PYBIND11_MODULE(forte, m) {
     py::class_<ActiveSpaceIntegrals, std::shared_ptr<ActiveSpaceIntegrals>>(m,
                                                                             "ActiveSpaceIntegrals")
         .def(py::init<std::shared_ptr<ForteIntegrals>, std::shared_ptr<MOSpaceInfo>>());
+
+    // export SemiCanonical
+    py::class_<SemiCanonical>(m, "SemiCanonical")
+        .def(py::init<std::shared_ptr<MOSpaceInfo>, std::shared_ptr<ForteIntegrals>,
+                      std::shared_ptr<ForteOptions>, bool>(),
+             "mo_space_info"_a, "ints"_a, "options"_a, "quiet_banner"_a = false)
+        .def("semicanonicalize", &SemiCanonical::semicanonicalize, "reference"_a,
+             "max_rdm_level"_a = 3, "build_fock"_a = true, "transform"_a = true,
+             "Semicanonicalize the orbitals and transform the integrals and reference")
+        .def("Ua_t", &SemiCanonical::Ua_t, "Return the alpha rotation matrix in the active space")
+        .def("Ub_t", &SemiCanonical::Ub_t, "Return the beta rotation matrix in the active space");
+
+    // export Reference
+    py::class_<Reference>(m, "Reference");
 }
 
 } // namespace forte

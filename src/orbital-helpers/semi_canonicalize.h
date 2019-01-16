@@ -56,16 +56,16 @@ class SemiCanonical {
      * @param mo_space_info MOSpaceInfo
      * @param quiet_banner Method banner is not printed if set to true
      */
-    SemiCanonical(std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
-                  std::shared_ptr<MOSpaceInfo> mo_space_info, bool quiet_banner = false);
+    SemiCanonical(std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ForteIntegrals> ints,
+                  std::shared_ptr<ForteOptions> options, bool quiet_banner = false);
 
     /// Transforms integrals and reference
-    void semicanonicalize(Reference& reference, const int& max_rdm_level = 3,
-                          const bool& build_fock = true, const bool& transform = true);
+    Reference semicanonicalize(Reference& reference, const int& max_rdm_level = 3,
+                               const bool& build_fock = true, const bool& transform = true);
 
     /// Transform all cumulants, rebuild 2-RDMs using 2-cumulants
     Reference transform_reference(ambit::Tensor& Ua, ambit::Tensor& Ub, const Reference& reference,
-                             const int& max_rdm_level);
+                                  const int& max_rdm_level);
 
     /// Set active hole and particle dimensions
     void set_actv_dims(const psi::Dimension& actv_docc, const psi::Dimension& actv_virt);
@@ -159,8 +159,8 @@ class SemiCanonical {
      * Ua, Ub span all MOs
      * Ua_t, Ub_t span active MOs
      */
-    void build_transformation_matrices(psi::SharedMatrix& Ua, psi::SharedMatrix& Ub, ambit::Tensor& Ua_t,
-                                       ambit::Tensor& Ub_t);
+    void build_transformation_matrices(psi::SharedMatrix& Ua, psi::SharedMatrix& Ub,
+                                       ambit::Tensor& Ua_t, ambit::Tensor& Ub_t);
 };
 } // namespace forte
 

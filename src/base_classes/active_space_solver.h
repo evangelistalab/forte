@@ -78,7 +78,7 @@ class ActiveSpaceSolver {
     const std::vector<std::pair<StateInfo, std::vector<double>>>& compute_energy();
 
     /// Compute reference and return it
-    Reference get_reference();
+    Reference reference();
 
     /// Sets the maximum order RDM/cumulant
     void set_max_rdm_level(size_t value);

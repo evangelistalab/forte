@@ -162,8 +162,8 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
         ci->set_max_rdm_level(max_rdm_level);
         ci->compute_energy();
 
-        Reference reference = ci->get_reference();
-        SemiCanonical semi(forte_options, ints, mo_space_info);
+        Reference reference = ci->reference();
+        SemiCanonical semi(mo_space_info, ints, forte_options);
         semi.semicanonicalize(reference, max_rdm_level);
 
         MCSRGPT2_MO mcsrgpt2_mo(reference, forte_options, ints, mo_space_info);
@@ -211,11 +211,11 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
                                            as_ints, forte_options);
         ci->set_max_rdm_level(3);
         ci->compute_energy();
-        Reference reference = ci->get_reference();
+        Reference reference = ci->reference();
 
         std::string relax_mode = options.get_str("RELAX_REF");
 
-        SemiCanonical semi(forte_options, ints, mo_space_info);
+        SemiCanonical semi(mo_space_info, ints, forte_options);
         if (options.get_bool("SEMI_CANONICAL")) {
             semi.semicanonicalize(reference, max_rdm_level);
             Ua = semi.Ua_t();
@@ -270,7 +270,7 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
             Reference rel_reference;
             // Rotate reference to original semicanonical basis
             {
-                Reference tmp = relaxed_solver->get_reference();
+                Reference tmp = relaxed_solver->reference();
                 rel_reference = semi.transform_reference(Ua, Ub, tmp, max_rdm_level);
             }
 
@@ -310,9 +310,9 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
         auto as_ints = make_active_space_ints(mo_space_info, ints, "ACTIVE", {{"RESTRICTED_DOCC"}});
         auto ci = make_active_space_solver(cas_type, state_weights_list, scf_info, mo_space_info,
                                            as_ints, forte_options);
-        Reference reference = ci->get_reference();
+        Reference reference = ci->reference();
         if (options.get_bool("SEMI_CANONICAL")) {
-            SemiCanonical semi(forte_options, ints, mo_space_info);
+            SemiCanonical semi(mo_space_info, ints, forte_options);
             semi.semicanonicalize(reference);
         }
         std::shared_ptr<MRDSRG_SO> mrdsrg(new MRDSRG_SO(reference, options, ints, mo_space_info));
@@ -334,10 +334,10 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
                                            as_ints, forte_options);
 
         ci->compute_energy();
-        Reference reference = ci->get_reference();
+        Reference reference = ci->reference();
 
         if (options.get_bool("SEMI_CANONICAL")) {
-            SemiCanonical semi(forte_options, ints, mo_space_info);
+            SemiCanonical semi(mo_space_info, ints, forte_options);
             semi.semicanonicalize(reference, max_rdm_level);
         }
 
@@ -369,10 +369,10 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
                                            as_ints, forte_options);
         ci->set_max_rdm_level(3);
         ci->compute_energy();
-        Reference reference = ci->get_reference();
+        Reference reference = ci->reference();
 
         if (options.get_bool("SEMI_CANONICAL")) {
-            SemiCanonical semi(forte_options, ints, mo_space_info);
+            SemiCanonical semi(mo_space_info, ints, forte_options);
             // from FCI_MO
             // if (actv_type == "CIS" || actv_type == "CISD") {
             //    semi.set_actv_dims(fci_mo->actv_docc(), fci_mo->actv_virt());
@@ -408,14 +408,15 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
             if (!multi_state and dsrg_mrpt2->do_dipole()) {
                 auto dipole_moments = dsrg_mrpt2->nuclear_dipole();
                 auto transformed_dipoles = dsrg_mrpt2->deGNO_DMbar_actv();
-                Reference reference = relaxed_solver->get_reference();
+                Reference reference = relaxed_solver->reference();
                 for (int i = 0; i < 3; ++i) {
                     dipole_moments[i] += transformed_dipoles[i].contract_with_densities(reference);
                 }
                 const auto& [x, y, z] = dipole_moments;
                 double dm_total = std::sqrt(x * x + y * y + z * z);
                 outfile->Printf("\n    DSRG-MRPT2 partially relaxed dipole moment:");
-                outfile->Printf("\n      X: %10.6f  Y: %10.6f  Z: %10.6f  Total: %10.6f\n", x, y, z, dm_total);
+                outfile->Printf("\n      X: %10.6f  Y: %10.6f  Z: %10.6f  Total: %10.6f\n", x, y, z,
+                                dm_total);
                 psi::Process::environment.globals["PARTIALLY RELAXED DIPOLE"] = dm_total;
             }
 
@@ -454,9 +455,9 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
                                                mo_space_info, as_ints, forte_options);
         solver->set_max_rdm_level(3);
         solver->compute_energy();
-        Reference reference = solver->get_reference();
+        Reference reference = solver->reference();
 
-        SemiCanonical semi(forte_options, ints, mo_space_info);
+        SemiCanonical semi(mo_space_info, ints, forte_options);
         semi.semicanonicalize(reference, max_rdm_level);
         Ua = semi.Ua_t();
         Ub = semi.Ub_t();
@@ -503,9 +504,9 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
 
         ci->set_max_rdm_level(3);
         ci->compute_energy();
-        Reference reference = ci->get_reference();
+        Reference reference = ci->reference();
 
-        SemiCanonical semi(forte_options, ints, mo_space_info);
+        SemiCanonical semi(mo_space_info, ints, forte_options);
         semi.semicanonicalize(reference, max_rdm_level);
         Ua = semi.Ua_t();
         Ub = semi.Ub_t();
@@ -531,14 +532,15 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
             if (!multi_state and dsrg_mrpt3->do_dipole()) {
                 auto dipole_moments = dsrg_mrpt3->nuclear_dipole();
                 auto transformed_dipoles = dsrg_mrpt3->deGNO_DMbar_actv();
-                Reference reference = relaxed_solver->get_reference();
+                Reference reference = relaxed_solver->reference();
                 for (int i = 0; i < 3; ++i) {
                     dipole_moments[i] += transformed_dipoles[i].contract_with_densities(reference);
                 }
                 const auto& [x, y, z] = dipole_moments;
                 double dm_total = std::sqrt(x * x + y * y + z * z);
                 outfile->Printf("\n    DSRG-MRPT3 partially relaxed dipole moment:");
-                outfile->Printf("\n      X: %10.6f  Y: %10.6f  Z: %10.6f  Total: %10.6f\n", x, y, z, dm_total);
+                outfile->Printf("\n      X: %10.6f  Y: %10.6f  Z: %10.6f  Total: %10.6f\n", x, y, z,
+                                dm_total);
                 psi::Process::environment.globals["PARTIALLY RELAXED DIPOLE"] = dm_total;
             }
             psi::Process::environment.globals["PARTIALLY RELAXED ENERGY"] = final_energy;
@@ -553,10 +555,10 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
                                                mo_space_info, as_ints, forte_options);
         solver->set_max_rdm_level(max_rdm_level);
         solver->compute_energy();
-        Reference reference = solver->get_reference();
+        Reference reference = solver->reference();
 
         if (options.get_bool("SEMI_CANONICAL")) {
-            SemiCanonical semi(forte_options, ints, mo_space_info);
+            SemiCanonical semi(mo_space_info, ints, forte_options);
             semi.semicanonicalize(reference, max_rdm_level);
         }
         std::shared_ptr<SOMRDSRG> somrdsrg(

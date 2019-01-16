@@ -503,7 +503,7 @@ FCISolver::initial_guess(FCIVector& diag, size_t n,
     return guess;
 }
 
-std::vector<Reference> FCISolver::get_reference(std::vector<std::pair<size_t,size_t>>& root_list) {
+std::vector<Reference> FCISolver::reference(std::vector<std::pair<size_t,size_t>>& root_list) {
 
 
     // TODO: Implement different roots    
