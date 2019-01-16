@@ -35,6 +35,7 @@
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libmints/wavefunction.h"
 
+#include "base_classes/active_space_solver.h"
 #include "base_classes/mo_space_info.h"
 #include "integrals/integrals.h"
 #include "integrals/make_integrals.h"
@@ -84,6 +85,13 @@ void export_ActiveSpaceMethod(py::module& m) {
         .def("compute_energy", &ActiveSpaceMethod::compute_energy);
 }
 
+void export_ActiveSpaceSolver(py::module& m) {
+    py::class_<ActiveSpaceSolver>(m, "ActiveSpaceSolver")
+        .def("compute_energy", &ActiveSpaceSolver::compute_energy);
+    m.def("compute_average_state_energy", &compute_average_state_energy,
+          "Compute the average energy given the energies and weights of each state");
+}
+
 ///// Export the FCISolver class
 // void export_FCISolver(py::module& m) {
 //    py::class_<FCISolver>(m, "FCISolver")
@@ -103,13 +111,19 @@ PYBIND11_MODULE(forte, m) {
     m.def("make_aosubspace_projector", &make_aosubspace_projector, "Make a AOSubspace projector");
     m.def("make_forte_integrals", &make_forte_integrals, "Make Forte integrals");
     m.def("forte_old_methods", &forte_old_methods, "Run Forte methods");
-    m.def("make_active_space_method", &make_active_space_method, "Make an active space solver");
+    m.def("make_active_space_method", &make_active_space_method, "Make an active space method");
+    m.def("make_active_space_solver", &make_active_space_solver, "Make an active space solver");
     m.def("make_state_info_from_psi_wfn", &make_state_info_from_psi_wfn,
           "Make a state info object from a psi4 Wavefunction");
+    m.def("make_state_weights_list", &make_state_weights_list,
+          "Make a list of target states with their weigth");
+    m.def("make_active_space_ints", &make_active_space_ints,
+          "Make an object that holds the molecular orbital integrals for the active orbitals");
 
     export_ForteOptions(m);
 
     export_ActiveSpaceMethod(m);
+    export_ActiveSpaceSolver(m);
 
     //    export_FCISolver(m);
 

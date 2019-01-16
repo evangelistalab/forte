@@ -24,7 +24,7 @@ set {
                                          
 set forte {                              
   multiplicity 1
-  job_type asci                          
+  active_space_solver asci                          
   frozen_docc [1,0,0,0,0,1,0,0]
   charge 0                               
   root_sym 0

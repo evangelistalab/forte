@@ -170,58 +170,6 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
         final_energy = mcsrgpt2_mo.compute_energy();
     }
 
-    if (std::string cas_type = options.get_str("JOB_TYPE");
-        (cas_type == "FCI") or (cas_type == "ACI") or (cas_type == "ASCI")) {
-        auto as_ints = make_active_space_ints(mo_space_info, ints, "ACTIVE", {{"RESTRICTED_DOCC"}});
-        auto solver = make_active_space_solver(cas_type, state_weights_list, scf_info,
-                                               mo_space_info, as_ints, forte_options);
-        const auto& state_energies_list = solver->compute_energy();
-        double average_energy =
-            compute_average_state_energy(state_energies_list, state_weights_list);
-        final_energy = average_energy;
-    }
-
-    if (options.get_str("JOB_TYPE") == "PCI") {
-        auto as_ints = make_active_space_ints(mo_space_info, ints, "ACTIVE", {{"RESTRICTED_DOCC"}});
-        auto pci = std::make_shared<ProjectorCI>(state, options.get_int("NROOT"),
-                                                 std::make_shared<SCFInfo>(ref_wfn), forte_options,
-                                                 mo_space_info, as_ints);
-        for (int n = 0; n < options.get_int("NROOT"); ++n) {
-            final_energy = pci->compute_energy();
-        }
-    }
-    if (options.get_str("JOB_TYPE") == "PCI_HASHVEC") {
-        auto as_ints = make_active_space_ints(mo_space_info, ints, "ACTIVE", {{"RESTRICTED_DOCC"}});
-        auto pci_hashvec = std::make_shared<ProjectorCI_HashVec>(
-            state, options.get_int("NROOT"), std::make_shared<SCFInfo>(ref_wfn), forte_options,
-            mo_space_info, as_ints);
-        for (int n = 0; n < options.get_int("NROOT"); ++n) {
-            final_energy = pci_hashvec->compute_energy();
-        }
-    }
-    if (options.get_str("JOB_TYPE") == "PCI_SIMPLE") {
-        auto as_ints = make_active_space_ints(mo_space_info, ints, "ACTIVE", {{"RESTRICTED_DOCC"}});
-        auto pci_simple = std::make_shared<ProjectorCI_Simple>(
-            state, options.get_int("NROOT"), std::make_shared<SCFInfo>(ref_wfn), forte_options,
-            mo_space_info, as_ints);
-        for (int n = 0; n < options.get_int("NROOT"); ++n) {
-            final_energy = pci_simple->compute_energy();
-        }
-    }
-    if (options.get_str("JOB_TYPE") == "EWCI") {
-        auto as_ints = make_active_space_ints(mo_space_info, ints, "ACTIVE", {{"RESTRICTED_DOCC"}});
-        auto ewci = std::make_shared<ElementwiseCI>(state, options.get_int("NROOT"),
-                                                    std::make_shared<SCFInfo>(ref_wfn),
-                                                    forte_options, mo_space_info, as_ints);
-        for (int n = 0; n < options.get_int("NROOT"); ++n) {
-            final_energy = ewci->compute_energy();
-        }
-    }
-    // if (options.get_str("JOB_TYPE") == "FCI") {
-    //     auto fci = make_active_space_method("FCI", state, nroot, scf_info, mo_space_info, ints,
-    //                                         forte_options);
-    //     final_energy = fci->compute_energy();
-    // }
     if (options.get_bool("USE_DMRGSCF")) {
 #ifdef HAVE_CHEMPS2
         auto dmrg = std::make_shared<DMRGSCF>(state, std::make_shared<SCFInfo>(ref_wfn),

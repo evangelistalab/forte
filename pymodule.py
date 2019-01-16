@@ -34,18 +34,35 @@ import forte
 import psi4.driver.p4util as p4util
 from psi4.driver.procrouting import proc_util
 
-def forte_driver(state, scf_info, options, ints, mo_space_info):
-    # Create an active space solver object
-    as_solver_type = options.get_str('ACTIVE_SPACE_SOLVER')
-    nroot = options.get_int("NROOT")
-    as_solver = forte.make_active_space_method(as_solver_type,state,nroot,scf_info,mo_space_info,ints,options)
-    energy = as_solver.compute_energy()
+def forte_driver(state_weights_list, scf_info, options, ints, mo_space_info):
+#    if options.get_str('PROCEDURE') == 'UNRELAXED':
+#        procedure_unrelaxed(...)
+
+    # Create an active space solver object and compute the energy
+    active_space_solver_type = options.get_str('ACTIVE_SPACE_SOLVER')
+    as_ints = forte.make_active_space_ints(mo_space_info, ints, "ACTIVE", ["RESTRICTED_DOCC"]);
+    active_space_solver = forte.make_active_space_solver(active_space_solver_type,state_weights_list,scf_info,mo_space_info,as_ints,options)
+    state_energies_list = active_space_solver.compute_energy()
+
+#    correlation_solver_type = options.get_str('CORRELATION_SOLVER')
+#    if correlation_solver_type != 'NONE':
+
 #    reference = solver.reference()
 
     # Create a dynamical correlation solver object
 #    dyncorr_solver = options.get_str('DYNCORR_SOLVER')
 #    solver = forte.make_dynamical_solver(dyncorr_solver,state,scf_info,forte_options,ints,mo_space_info)
-    return energy
+    average_energy = forte.compute_average_state_energy(state_energies_list,state_weights_list)
+    return average_energy
+
+#def procedure_unrelaxed(...):
+#    reference = run_active_space_solver(...)
+#    run_correlation_solver(reference,...)
+
+#def procedure_relaxed(...):
+
+#    procedure_unrelaxed(...):
+
 
 def run_forte(name, **kwargs):
     r"""Function encoding sequence of PSI module and plugin calls so that
@@ -94,6 +111,7 @@ def run_forte(name, **kwargs):
 
     state = forte.make_state_info_from_psi_wfn(ref_wfn)
     scf_info = forte.SCFInfo(ref_wfn)
+    state_weights_list = forte.make_state_weights_list(forte.forte_options,ref_wfn)
 
     # Run a method
     job_type = options.get_str('JOB_TYPE')
@@ -110,7 +128,7 @@ def run_forte(name, **kwargs):
                 forte.LOCALIZE(ref_wfn,options,ints,mo_space_info)
             if options.get_bool("MP2_NOS"):
                 forte.MP2_NOS(ref_wfn,options,ints,mo_space_info)
-            energy = forte_driver(state, scf_info, forte.forte_options, ints, mo_space_info)
+            energy = forte_driver(state_weights_list, scf_info, forte.forte_options, ints, mo_space_info)
         else:
             # Run a method
             energy = forte.forte_old_methods(ref_wfn, options, ints, mo_space_info)
