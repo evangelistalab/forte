@@ -45,6 +45,7 @@ set forte {
   relax_ref          once
   cas_type           cas
   dsrg_dipole        true
+  multiplicity       1
 }
 
 Eforte, wfn_cas = energy('forte', ref_wfn=wfn_cas, return_wfn=True)
