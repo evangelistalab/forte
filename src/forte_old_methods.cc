@@ -289,7 +289,7 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
         double old_energy = 0.0;
         double old_dsrg = final_energy;
         double e_conv = forte_options->get_double("RELAX_E_CONVERGENCE");
-        while (niter < 10) {
+        while (niter < maxiter) {
 
             if (relax_mode == "NONE") {
                 break;
@@ -574,10 +574,26 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
             // make a solver and run it
             auto relaxed_solver = make_active_space_solver(cas_type, state_weights_list, scf_info,
                                                            mo_space_info, fci_ints, forte_options);
+            relaxed_solver->set_max_rdm_level(options.get_bool("FORM_MBAR3") ? 3 : 2);
             const auto& state_energies_list = relaxed_solver->compute_energy();
             double average_energy =
                 compute_average_state_energy(state_energies_list, state_weights_list);
             final_energy = average_energy;
+
+            if (!multi_state and dsrg_mrpt3->do_dipole()) {
+                auto dipole_moments = dsrg_mrpt3->nuclear_dipole();
+                auto transformed_dipoles = dsrg_mrpt3->deGNO_DMbar_actv();
+                Reference reference = relaxed_solver->get_reference();
+                for (int i = 0; i < 3; ++i) {
+                    dipole_moments[i] += transformed_dipoles[i].contract_with_densities(reference);
+                }
+                const auto& [x, y, z] = dipole_moments;
+                double dm_total = std::sqrt(x * x + y * y + z * z);
+                outfile->Printf("\n    DSRG-MRPT3 partially relaxed dipole moment:");
+                outfile->Printf("\n      X: %10.6f  Y: %10.6f  Z: %10.6f  Total: %10.6f\n", x, y, z, dm_total);
+                psi::Process::environment.globals["PARTIALLY RELAXED DIPOLE"] = dm_total;
+            }
+            psi::Process::environment.globals["PARTIALLY RELAXED ENERGY"] = final_energy;
         }
     }
 
