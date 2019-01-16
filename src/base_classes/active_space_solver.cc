@@ -317,6 +317,10 @@ std::unique_ptr<ActiveSpaceSolver> make_active_space_solver(
                                                as_ints, options);
 }
 
+double ActiveSpaceSolver::get_average_state_energy() const {
+    return compute_average_state_energy(state_energies_list_, state_weights_list_);
+}
+
 std::vector<std::pair<StateInfo, std::vector<double>>>
 make_state_weights_list(std::shared_ptr<ForteOptions> options,
                         std::shared_ptr<psi::Wavefunction> wfn) {
