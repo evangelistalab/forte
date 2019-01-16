@@ -98,6 +98,8 @@ class ActiveSpaceSolver {
         return state_energies_list_;
     }
 
+    double get_average_state_energy() const;
+
   protected:
     // a string that specifies the method used (e.g. "FCI", "ACI", ...)
     std::string method_;
