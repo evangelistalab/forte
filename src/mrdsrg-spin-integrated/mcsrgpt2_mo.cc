@@ -55,17 +55,10 @@ MCSRGPT2_MO::MCSRGPT2_MO(Reference reference, std::shared_ptr<ForteOptions> opti
                          std::shared_ptr<MOSpaceInfo> mo_space_info)
     : integral_(ints), mo_space_info_(mo_space_info), options_(options) {
 
-    print_method_banner({"Driven Similarity Renormalization Group",
+    print_method_banner({"(Driven) Similarity Renormalization Group",
                          "Second-Order Perturbative Analysis", "Chenyang Li"});
-//    // reference cumulants
-//    // int max_rdm_level = (options->get_str("THREEPDC") != "ZERO") ? 3 : 2;
-//    max_rdm_ = (options->get_str("THREEPDC") != "ZERO") ? 3 : 2;
-//    // Reference ref = reference(max_rdm_level);
-//    //TODO: remove
-//    std::vector<std::pair<size_t,size_t>> roots;
-//    roots.push_back(std::make_pair(0,0));
-//    Reference ref = get_reference(roots)[0];
 
+    // prepare mo space indices
     prepare_mo_space();
 
     // fill in non-tensor based cumulants
@@ -131,7 +124,6 @@ void MCSRGPT2_MO::prepare_mo_space(){
 
 void MCSRGPT2_MO::startup() {
     // Source Operator
-    outfile->Printf("\nAAAA");
     source_ = options_->get_str("SOURCE");
     if (sourcemap.find(source_) == sourcemap.end()) {
         outfile->Printf("\n  Source operator %s is not available.", source_.c_str());
@@ -145,7 +137,6 @@ void MCSRGPT2_MO::startup() {
     }
 
     // Print Delta
-    outfile->Printf("\nAAAA");
     print_ = options_->get_int("PRINT");
     if (print_ > 1) {
         PrintDelta();
@@ -154,25 +145,20 @@ void MCSRGPT2_MO::startup() {
     }
 
     // DSRG Parameters
-    outfile->Printf("\nAAAA");
     s_ = options_->get_double("DSRG_S");
     if (s_ < 0) {
         throw psi::PSIEXCEPTION("DSRG_S cannot be negative numbers.");
     }
-    outfile->Printf("\nAAAA");
     taylor_threshold_ = options_->get_int("TAYLOR_THRESHOLD");
     if (taylor_threshold_ <= 0) {
         throw psi::PSIEXCEPTION("TAYLOR_THRESHOLD must be an integer greater than 0.");
     }
-    outfile->Printf("\nAAAA");
     expo_delta_ = options_->get_double("DSRG_POWER");
     if (expo_delta_ <= 1.0) {
         throw psi::PSIEXCEPTION("DELTA_EXPONENT must be greater than 1.0.");
     }
-    outfile->Printf("\nAAAA");
     double e_conv = -log10(options_->get_double("E_CONVERGENCE"));
     taylor_order_ = floor((e_conv / taylor_threshold_ + 1.0) / expo_delta_) + 1;
-    outfile->Printf("\nAAAA");
 
     // Print Original Orbital Indices
     print_h2("Correlated Subspace Indices");
