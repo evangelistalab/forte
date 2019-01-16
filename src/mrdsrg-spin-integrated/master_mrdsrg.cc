@@ -446,7 +446,7 @@ void MASTER_DSRG::init_dm_ints() {
 
     // prepare transformed dipole integrals
     if (multi_state_ || (relax_ref_ != "NONE")) {
-        Mbar0_ = {0.0, 0.0, 0.0};
+        Mbar0_ = {{0.0, 0.0, 0.0}};
         for (int i = 0; i < 3; ++i) {
             Mbar1_[i] = BTF_->build(tensor_type_, "DSRG DM1 " + dm_dirs_[i], spin_cases({"aa"}));
             Mbar2_[i] = BTF_->build(tensor_type_, "DSRG DM2 " + dm_dirs_[i], spin_cases({"aaaa"}));
