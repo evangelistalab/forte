@@ -37,6 +37,7 @@ set forte{
    dsrg_s               1.0e10
    dsrgpt               true
    print_denom2         true
+   multiplicity         1
 }
 
 basis {

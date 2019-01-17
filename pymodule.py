@@ -31,6 +31,7 @@ import timeit
 
 import psi4
 import forte
+import ambit
 import psi4.driver.p4util as p4util
 from psi4.driver.procrouting import proc_util
 
@@ -54,8 +55,19 @@ def forte_driver(state_weights_list, scf_info, options, ints, mo_space_info):
         semi.semicanonicalize(reference, max_rdm_level)
         Ua = semi.Ua_t()
         Ub = semi.Ub_t()
+
         # TODO: need to return an object in make_dynamic_correlation_solver (francesco)
 #        correlation_solver = forte.make_dynamic_correlation_solver(correlation_solver_type,options,ints,mo_space_info)
+
+
+        dsrg = forte.make_dsrg_method(correlation_solver_type, reference, scf_info, options, ints, mo_space_info)
+        dsrg.set_Uactv(Ua, Ub)
+        return dsrg.compute_energy()
+
+
+    # Create a dynamical correlation solver object
+#    dyncorr_solver = options.get_str('DYNCORR_SOLVER')
+#    solver = forte.make_dynamical_solver(dyncorr_solver,state,scf_info,forte_options,ints,mo_space_info)
 
     average_energy = forte.compute_average_state_energy(state_energies_list,state_weights_list)
     return average_energy

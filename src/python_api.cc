@@ -48,6 +48,8 @@
 #include "base_classes/dynamic_correlation_solver.h"
 #include "base_classes/state_info.h"
 #include "base_classes/scf_info.h"
+#include "mrdsrg-helper/run_dsrg.h"
+#include "mrdsrg-spin-integrated/master_mrdsrg.h"
 
 namespace py = pybind11;
 using namespace pybind11::literals;
@@ -125,6 +127,7 @@ PYBIND11_MODULE(forte, m) {
           "Make an object that holds the molecular orbital integrals for the active orbitals");
     m.def("make_dynamic_correlation_solver", &make_dynamic_correlation_solver,
           "Make a dynamical correlation solver");
+    m.def("make_dsrg_method", &make_dsrg_method, "Make a DSRG method");
 
     export_ForteOptions(m);
 
@@ -187,6 +190,16 @@ PYBIND11_MODULE(forte, m) {
 
     // export ambit::Tensor
     py::class_<ambit::Tensor>(m, "ambitTensor");
+
+    // export MASTER_DSRG
+    py::class_<MASTER_DSRG>(m, "MASTER_DSRG")
+        .def("compute_energy", &MASTER_DSRG::compute_energy, "Compute the DSRG energy")
+        .def("compute_Heff_actv", &MASTER_DSRG::compute_Heff_actv,
+             "Return the DSRG dressed ActiveSpaceIntegrals")
+        .def("deGNO_DMbar_actv", &MASTER_DSRG::deGNO_DMbar_actv,
+             "Return the DSRG dressed dipole integrals")
+        .def("set_Uactv", &MASTER_DSRG::set_Uactv, "Ua"_a, "Ub"_a,
+             "Set active part orbital rotation matrix (from original to semicanonical)");
 }
 
 } // namespace forte
