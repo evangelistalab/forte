@@ -62,7 +62,22 @@ def forte_driver(state_weights_list, scf_info, options, ints, mo_space_info):
 
         dsrg = forte.make_dsrg_method(correlation_solver_type, reference, scf_info, options, ints, mo_space_info)
         dsrg.set_Uactv(Ua, Ub)
-        return dsrg.compute_energy()
+        Edsrg = dsrg.compute_energy()
+
+        # TODO: York - how to get an options array?
+#        multi_state = len(options.get_int_vector("AVG_STATE")) != 0
+        do_dipole = options.get_bool("DSRG_DIPOLE")
+
+        if options.get_str("RELAX_REF") != "NONE":
+            ints_dressed = dsrg.compute_Heff_actv()
+            as_solver_relaxed = forte.make_active_space_solver(active_space_solver_type,state_weights_list,scf_info,mo_space_info,ints_dressed,options)
+            as_solver_relaxed.set_max_rdm_level(max_rdm_level)
+            state_energies_list = as_solver_relaxed.compute_energy()
+
+            if do_dipole:
+                pass
+        else:
+            return Edsrg
 
 
     # Create a dynamical correlation solver object
