@@ -41,7 +41,7 @@ set forte{
   root_sym          0
   nroot             1
   int_type          conventional
-  job_type          fci
+  active_space_solver   fci
 }
 
 energy('scf')
