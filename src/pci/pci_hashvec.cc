@@ -804,6 +804,7 @@ double ProjectorCI_HashVec::compute_energy() {
     delete[] pqpq_aa_;
     delete[] pqpq_ab_;
     delete[] pqpq_bb_;
+    energies_.push_back(var_energy);
 
     timer_off("PCI:Energy");
     return var_energy;

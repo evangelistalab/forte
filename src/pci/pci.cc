@@ -1160,6 +1160,9 @@ double ProjectorCI::compute_energy() {
         }
     }
 
+
+    energies_.push_back(var_energy);
+
     delete[] pqpq_aa_;
     delete[] pqpq_ab_;
     delete[] pqpq_bb_;

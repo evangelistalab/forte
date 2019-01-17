@@ -850,6 +850,7 @@ double ElementwiseCI::compute_energy() {
     delete[] pqpq_ab_;
     delete[] pqpq_bb_;
 
+    energies_.push_back(var_energy);
     timer_off("EWCI:Energy");
     return var_energy;
 }
