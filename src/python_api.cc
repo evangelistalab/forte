@@ -123,6 +123,8 @@ PYBIND11_MODULE(forte, m) {
           "Make a list of target states with their weigth");
     m.def("make_active_space_ints", &make_active_space_ints,
           "Make an object that holds the molecular orbital integrals for the active orbitals");
+    m.def("make_dynamic_correlation_solver", &make_dynamic_correlation_solver,
+          "Make a dynamical correlation solver");
 
     export_ForteOptions(m);
 
@@ -183,6 +185,7 @@ PYBIND11_MODULE(forte, m) {
     // export Reference
     py::class_<Reference>(m, "Reference");
 
+    // export ambit::Tensor
     py::class_<ambit::Tensor>(m, "ambitTensor");
 }
 
