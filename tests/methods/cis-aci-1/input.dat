@@ -24,7 +24,7 @@ set {
 }
 
 set forte {
-  job_type aci
+  active_space_solver aci
   frozen_docc [1,0,0,0,0,1,0,0]
   sigma 0.05
   charge 0
