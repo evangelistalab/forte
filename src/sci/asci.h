@@ -140,8 +140,6 @@ class ASCI : public ActiveSpaceMethod {
     int c_det_;
     /// The threshold applied to the secondary space
     int t_det_;
-    /// The number of roots computed
-    int nroot_;
 
     /// The eigensolver type
     DiagonalizationMethod diag_method_ = DLString;

@@ -310,7 +310,7 @@ double ASCI::compute_energy() {
     double root_energy = PQ_evals->get(0) + nuclear_repulsion_energy_ + as_ints_->scalar_energy();
 
     energies_.resize(nroot_,0.0);
-    for( int n = 0; n < nroot_; ++n ){
+    for( size_t n = 0; n < nroot_; ++n ){
         energies_[n] = PQ_evals->get(n) + nuclear_repulsion_energy_ + as_ints_->scalar_energy();
     }
 
@@ -483,13 +483,13 @@ ASCI::compute_spin(DeterminantHashVec& space, WFNOperator& op, psi::SharedMatrix
     }
 
     if (!build_lists_) {
-        for (int n = 0; n < nroot_; ++n) {
+        for (size_t n = 0; n < nroot_; ++n) {
             double S2 = op.s2_direct(space, evecs, n);
             double S = std::fabs(0.5 * (std::sqrt(1.0 + 4.0 * S2) - 1.0));
             spin_vec[n] = std::make_pair(S, S2);
         }
     } else {
-        for (int n = 0; n < nroot_; ++n) {
+        for (size_t n = 0; n < nroot_; ++n) {
             double S2 = op.s2(space, evecs, n);
             double S = std::fabs(0.5 * (std::sqrt(1.0 + 4.0 * S2) - 1.0));
             spin_vec[n] = std::make_pair(S, S2);
