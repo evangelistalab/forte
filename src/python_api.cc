@@ -182,6 +182,8 @@ PYBIND11_MODULE(forte, m) {
 
     // export Reference
     py::class_<Reference>(m, "Reference");
+
+    py::class_<ambit::Tensor>(m, "ambitTensor");
 }
 
 } // namespace forte

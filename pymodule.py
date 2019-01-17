@@ -56,6 +56,7 @@ def forte_driver(state_weights_list, scf_info, options, ints, mo_space_info):
 
 
 
+
     # Create a dynamical correlation solver object
 #    dyncorr_solver = options.get_str('DYNCORR_SOLVER')
 #    solver = forte.make_dynamical_solver(dyncorr_solver,state,scf_info,forte_options,ints,mo_space_info)
