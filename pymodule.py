@@ -54,6 +54,7 @@ def forte_driver(state_weights_list, scf_info, options, ints, mo_space_info):
         semi.semicanonicalize(reference, max_rdm_level)
         Ua = semi.Ua_t()
         Ub = semi.Ub_t()
+        # TODO: need to return an object in make_dynamic_correlation_solver (francesco)
 #        correlation_solver = forte.make_dynamic_correlation_solver(correlation_solver_type,options,ints,mo_space_info)
 
     average_energy = forte.compute_average_state_energy(state_energies_list,state_weights_list)
