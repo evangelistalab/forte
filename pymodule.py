@@ -120,7 +120,7 @@ def forte_driver(state_weights_list, scf_info, options, ints, mo_space_info):
                 
                 # Compute DSRG in this basis
                 dsrg = forte.make_dsrg_method(correlation_solver_type, reference, scf_info, options, ints, mo_space_info)
-
+                dsrg.set_Uactv(Ua, Ub)
                 Edsrg = dsrg.compute_energy()
 
             if do_dipole:
