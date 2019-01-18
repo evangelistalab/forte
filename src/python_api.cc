@@ -201,8 +201,14 @@ PYBIND11_MODULE(forte, m) {
              "Return the DSRG dressed ActiveSpaceIntegrals")
         .def("deGNO_DMbar_actv", &MASTER_DSRG::deGNO_DMbar_actv,
              "Return the DSRG dressed dipole integrals")
+        .def("nuclear_dipole", &MASTER_DSRG::nuclear_dipole,"Return nuclear components of dipole moments")
         .def("set_Uactv", &MASTER_DSRG::set_Uactv, "Ua"_a, "Ub"_a,
              "Set active part orbital rotation matrix (from original to semicanonical)");
+
+
+    // export DressedQuantity for dipole moments
+    py::class_<DressedQuantity>(m,"DressedQuantity")
+        .def("contract_with_densities", &DressedQuantity::contract_with_densities,"reference"_a, "Contract densities with quantity");
 }
 
 } // namespace forte

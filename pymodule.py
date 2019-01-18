@@ -28,6 +28,7 @@
 #
 
 import timeit
+import math
 
 import psi4
 import forte
@@ -123,8 +124,16 @@ def forte_driver(state_weights_list, scf_info, options, ints, mo_space_info):
                 dsrg.set_Uactv(Ua, Ub)
                 Edsrg = dsrg.compute_energy()
 
-            if do_dipole:
-                pass
+            elif do_dipole:
+                dipole_moments = dsrg.nuclear_dipole()
+                trans_dipole = dsrg.deGNO_DMbar_actv()
+                reference = as_solver_relaxed.reference()
+                dm_total = 0.0
+                for i in range(3):
+                    dipole_moments[i] += trans_dipole[i].contract_with_densities(reference)
+                    dm_total += dipole_moments[i] * dipole_moments[i]
+                dm_total = math.sqrt(dm_total)
+                psi4.core.set_scalar_variable('PARTIALLY RELAXED DIPOLE', dm_total)
         
         psi4.core.set_scalar_variable('UNRELAXED ENERGY', Evec[0][0])
         psi4.core.set_scalar_variable('PARTIALLY RELAXED ENERGY', Evec[0][1])
