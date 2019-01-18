@@ -71,19 +71,19 @@ set globals{
 }
 
 set forte{
-  job_type           dsrg-mrpt2
-  frozen_docc        [3,0,0,0]
-  restricted_docc    [0,0,1,1]
-  active             [2,0,0,0]
-  root_sym           0
-  nroot              2
-  root               0
-  dsrg_s             0.5
-  maxiter            50
-  e_convergence      10
-  cas_type           cas
-  avg_state          [[0,1,2]] # 2 states of symmetry A1 (irrep = 0) and multiplicity = 1
-  dsrg_multi_state   sa_full
+  active_space_solver  cas
+  correlation_solver   dsrg-mrpt2
+  frozen_docc          [3,0,0,0]
+  restricted_docc      [0,0,1,1]
+  active               [2,0,0,0]
+  root_sym             0
+  nroot                2
+  root                 0
+  dsrg_s               0.5
+  maxiter              50
+  e_convergence        10
+  avg_state            [[0,1,2]] # 2 states of symmetry A1 (irrep = 0) and multiplicity = 1
+  dsrg_multi_state     sa_full
 }
 
 Emcscf, wfn = energy('casscf', return_wfn=True)
@@ -92,7 +92,7 @@ energy('forte', ref_wfn=wfn)
 compare_values(refpt2full,variable('ENERGY ROOT 0 1A1'),8,"SA-DSRG-MRPT2 FULL energy root 0")
 
 set forte {
-  job_type           three-dsrg-mrpt2
+  correlation_solver three-dsrg-mrpt2
   int_type           cholesky
   cholesky_tolerance 1e-12
 }

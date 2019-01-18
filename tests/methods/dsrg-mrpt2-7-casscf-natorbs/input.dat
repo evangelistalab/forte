@@ -32,7 +32,8 @@ set {
 }
 
 set forte {
-  job_type           dsrg-mrpt2
+  active_space_solver  cas
+  correlation_solver   dsrg-mrpt2
   frozen_docc        [1,0,0,0,0,1,0,0]
   frozen_uocc        [0,0,0,0,0,0,0,0]
   restricted_docc    [0,0,0,0,0,0,0,0]
@@ -41,7 +42,6 @@ set forte {
   nroot              1
   dsrg_s             0.5
   relax_ref          once
-  cas_type           cas
   e_convergence      10
 }
 
@@ -61,7 +61,7 @@ Ecasscf, wfn_cas = energy('casscf', return_wfn=True)
 compare_values(refcasscf, variable("CURRENT ENERGY"), 10, "CASSCF energy (natural orbitals)")
 
 set forte {
-  cas_type           fci
+  active_space_solver      fci
   print 1
 }
 Eforte, wfn = energy('forte', ref_wfn=wfn_cas, return_wfn=True)

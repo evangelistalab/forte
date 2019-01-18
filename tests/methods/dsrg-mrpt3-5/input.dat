@@ -71,7 +71,8 @@ set globals{
 }
 
 set forte{
-  job_type           dsrg-mrpt3
+  active_space_solver     cas    
+  correlation_solver      dsrg-mrpt3
   frozen_docc        [3,0,0,0]
   restricted_docc    [0,0,1,1]
   active             [2,0,0,0]
@@ -82,7 +83,6 @@ set forte{
   maxiter            50
   relax_ref          once
   e_convergence      12
-  cas_type           cas
   avg_state          [[0,1,2]]
   dsrg_multi_state   sa_full
 }

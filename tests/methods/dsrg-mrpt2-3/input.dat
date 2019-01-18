@@ -30,7 +30,8 @@ set globals{
 }
 
 set forte{
-   job_type                dsrg-mrpt2
+   active_space_solver     fci
+   correlation_solver      dsrg-mrpt2
    restricted_docc         [0,0,0,0,0,0,0,0]
    active                  [1,0,0,1,0,1,1,0]
    root_sym                0

@@ -26,7 +26,7 @@ set globals{
 }
 
 set forte {
-   job_type                three-dsrg-mrpt2
+   correlation_solver      three-dsrg-mrpt2
    int_type                diskdf
    restricted_docc         [2,0,0,0,0,2,0,0]
    active                  [1,0,1,1,0,1,1,1]
@@ -35,7 +35,7 @@ set forte {
    dsrg_s                  1.0
    semi_canonical          true
    ntrial_per_root         100
-   cas_type                cas
+   active_space_solver     cas
    relax_ref               once
 }
 

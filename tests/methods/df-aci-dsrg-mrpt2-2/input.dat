@@ -34,8 +34,8 @@ set mcscf{
 
 set forte {
    int_type                df
-   job_type                three-dsrg-mrpt2
-   cas_type                aci
+   correlation_solver      three-dsrg-mrpt2
+   active_space_solver     aci
    active_guess_size       1
    sigma                   0.0001
    multiplicity            1

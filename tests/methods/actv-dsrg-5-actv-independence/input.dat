@@ -51,7 +51,8 @@ compare_values(refdsrgpt2,variable("CURRENT ENERGY"),7,"CD-DSRG-MRPT2 energy")
 
 # now do single reference DSRG-PT2
 set forte{
-  job_type                dsrg-mrpt2
+  active_space_solver     fci
+  correlation_solver      dsrg-mrpt2
   int_type                conventional
   frozen_docc             [1,0,0,0]
   restricted_docc         [2,0,1,1]

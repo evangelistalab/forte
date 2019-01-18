@@ -36,9 +36,8 @@ import psi4.driver.p4util as p4util
 from psi4.driver.procrouting import proc_util
 
 def forte_driver(state_weights_list, scf_info, options, ints, mo_space_info):
-#    if options.get_str('PROCEDURE') == 'UNRELAXED':
-#        procedure_unrelaxed(...)
     max_rdm_level = 3 # TODO: set this (Francesco)
+    return_en = 0.0
 
     # Create an active space solver object and compute the energy
     active_space_solver_type = options.get_str('ACTIVE_SPACE_SOLVER')
@@ -50,50 +49,98 @@ def forte_driver(state_weights_list, scf_info, options, ints, mo_space_info):
     correlation_solver_type = options.get_str('CORRELATION_SOLVER')
     # Create a dynamical correlation solver object
     if correlation_solver_type != 'NONE':
+
         reference = active_space_solver.reference()
         semi = forte.SemiCanonical(mo_space_info, ints, options)
         semi.semicanonicalize(reference, max_rdm_level)
         Ua = semi.Ua_t()
         Ub = semi.Ub_t()
 
-        # TODO: need to return an object in make_dynamic_correlation_solver (francesco)
-#        correlation_solver = forte.make_dynamic_correlation_solver(correlation_solver_type,options,ints,mo_space_info)
-
 
         dsrg = forte.make_dsrg_method(correlation_solver_type, reference, scf_info, options, ints, mo_space_info)
         dsrg.set_Uactv(Ua, Ub)
+    
         Edsrg = dsrg.compute_energy()
 
-        # TODO: York - how to get an options array?
-#        multi_state = len(options.get_int_vector("AVG_STATE")) != 0
+        # store DSRG energy in vector of pair
+        # Evec = [ [Edsrg, Erelaxed], ...]
+        Evec = []
+
         do_dipole = options.get_bool("DSRG_DIPOLE")
 
-        if options.get_str("RELAX_REF") != "NONE":
+        # determine the relaxation procedure
+        relax_mode = options.get_str('RELAX_REF')
+
+        # set the maxiter  
+        maxiter = options.get_int('MAXITER_RELAX_REF')
+        if relax_mode == 'NONE':
+            if (len(state_weights_list) > 1) or (len(state_weights_list[0][1]) > 1) :
+                maxiter = 1
+            else:
+                maxiter = 0
+                Evec.append([Edsrg,Edsrg]) #TODO: fix
+        elif relax_mode == 'ONCE':
+            maxiter = 1
+        elif relax_mode == 'TWICE':
+            maxiter = 2
+
+        for N in range(maxiter):
+
+            # Grab the effective Hamiltonian in the actice space
             ints_dressed = dsrg.compute_Heff_actv()
+
+            # Make a new ActiveSpaceSolver with the new ints
             as_solver_relaxed = forte.make_active_space_solver(active_space_solver_type,state_weights_list,scf_info,mo_space_info,ints_dressed,options)
             as_solver_relaxed.set_max_rdm_level(max_rdm_level)
+
+            # Compute the energy
             state_energies_list = as_solver_relaxed.compute_energy()
+            Erelax = forte.compute_average_state_energy(state_energies_list,state_weights_list)
+            Evec.append([Edsrg,Erelax])
+
+            try:
+                if (abs(Evec[N][0] - Evec[N-1][0]) <= econv) and (abs(Evec[N][1] - Evec[N-1][1]) <= econv):
+                    psi4.core.set_scalar_variable('FULLY RELAXED ENERGY', Evec[N][1])
+                    break
+            except:
+                pass
+            
+            # NOTE: This loop ends here on last iteration
+
+            # if we are continuing iterations, 
+            # update the reference and recompute the dynamical correlation energy
+            if (N+1) != maxiter:
+                # Compute the reference in the original semicanonical basis
+                reference = semi.transform_reference(Ua, Ub, as_solver_relaxed.reference(), max_rdm_level)
+                
+                # Now semicanonicalize
+                semi.semicanonicalize(reference, max_rdm_level)
+                Ua = semi.Ua_t()
+                Ub = semi.Ub_t()
+                
+                # Compute DSRG in this basis
+                dsrg = forte.make_dsrg_method(correlation_solver_type, reference, scf_info, options, ints, mo_space_info)
+
+                Edsrg = dsrg.compute_energy()
 
             if do_dipole:
                 pass
-        else:
-            return Edsrg
+        
+        psi4.core.set_scalar_variable('UNRELAXED ENERGY', Evec[0][0])
+        psi4.core.set_scalar_variable('PARTIALLY RELAXED ENERGY', Evec[0][1])
+        # is this 'relaxed energy'?
+        psi4.core.set_scalar_variable('RELAXED ENERGY', Evec[-1][0])
 
+        ## TODO: maybe change this
+        ## return relaxed energy
+        return_en = Evec[-1][1]
 
-    # Create a dynamical correlation solver object
-#    dyncorr_solver = options.get_str('DYNCORR_SOLVER')
-#    solver = forte.make_dynamical_solver(dyncorr_solver,state,scf_info,forte_options,ints,mo_space_info)
+    else : 
 
-    average_energy = forte.compute_average_state_energy(state_energies_list,state_weights_list)
-    return average_energy
+        average_energy = forte.compute_average_state_energy(state_energies_list,state_weights_list)
+        return_en = average_energy
 
-#def procedure_unrelaxed(...):
-#    reference = run_active_space_solver(...)
-#    run_correlation_solver(reference,...)
-
-#def procedure_relaxed(...):
-
-#    procedure_unrelaxed(...):
+    return return_en
 
 
 def run_forte(name, **kwargs):
@@ -156,8 +203,13 @@ def run_forte(name, **kwargs):
         ints = forte.make_forte_integrals(ref_wfn, options, mo_space_info)
 
         if (job_type == 'NEWDRIVER'):
-            if options.get_bool("LOCALIZE"):
-                forte.LOCALIZE(ref_wfn,options,ints,mo_space_info)
+            loc_type = options.get_str("LOCALIZE")
+            if loc_type == "FULL":
+                loc = forte.LOCALIZE(ref_wfn,options,ints,mo_space_info)
+                loc.full_localize()
+            if loc_type == "SPLIT":
+                loc = forte.LOCALIZE(ref_wfn,options,ints,mo_space_info)
+                loc.split_localize()
             if options.get_bool("MP2_NOS"):
                 forte.MP2_NOS(ref_wfn,options,ints,mo_space_info)
             energy = forte_driver(state_weights_list, scf_info, forte.forte_options, ints, mo_space_info)

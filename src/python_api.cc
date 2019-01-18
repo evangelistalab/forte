@@ -78,6 +78,7 @@ void export_ForteOptions(py::module& m) {
         .def("get_int", &ForteOptions::get_int, "Get an integer option")
         .def("get_double", &ForteOptions::add_double, "Get a double option")
         .def("get_str", &ForteOptions::get_str, "Get a string option")
+        .def("get_int_vec", &ForteOptions::get_int_vec, "Get a vector of integers option")
         .def("push_options_to_psi4", &ForteOptions::push_options_to_psi4)
         .def("update_psi_options", &ForteOptions::update_psi_options)
         .def("generate_documentation", &ForteOptions::generate_documentation);
@@ -148,7 +149,7 @@ PYBIND11_MODULE(forte, m) {
         .def(py::init<std::shared_ptr<psi::Wavefunction>, psi::Options&,
                       std::shared_ptr<ForteIntegrals>, std::shared_ptr<MOSpaceInfo>>())
         .def("split_localize", &LOCALIZE::split_localize)
-        .def("full_localize", &LOCALIZE::split_localize);
+        .def("full_localize", &LOCALIZE::full_localize);
 
     // export MP2_NOS
     py::class_<MP2_NOS, std::shared_ptr<MP2_NOS>>(m, "MP2_NOS")
@@ -182,6 +183,8 @@ PYBIND11_MODULE(forte, m) {
         .def("semicanonicalize", &SemiCanonical::semicanonicalize, "reference"_a,
              "max_rdm_level"_a = 3, "build_fock"_a = true, "transform"_a = true,
              "Semicanonicalize the orbitals and transform the integrals and reference")
+        .def("transform_reference", &SemiCanonical::transform_reference, "Ua"_a, "Ub"_a,
+             "reference"_a, "max_rdm_level"_a, "Transform the reference by input rotation matrices")
         .def("Ua_t", &SemiCanonical::Ua_t, "Return the alpha rotation matrix in the active space")
         .def("Ub_t", &SemiCanonical::Ub_t, "Return the beta rotation matrix in the active space");
 
