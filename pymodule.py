@@ -133,6 +133,12 @@ def forte_driver(state_weights_list, scf_info, options, ints, mo_space_info):
                     dipole_moments[i] += trans_dipole[i].contract_with_densities(reference)
                     dm_total += dipole_moments[i] * dipole_moments[i]
                 dm_total = math.sqrt(dm_total)
+
+                psi4.core.print_out("\n    DSRG-MRPT3 partially relaxed dipole moment:")
+                psi4.core.print_out("\n      X: %10.6f  Y: %10.6f  Z: %10.6f  Total: %10.6f\n" % 
+                                (dipole_moments[0], dipole_moments[1], dipole_moments[2],
+                                dm_total ))
+
                 psi4.core.set_scalar_variable('PARTIALLY RELAXED DIPOLE', dm_total)
         
         psi4.core.set_scalar_variable('UNRELAXED ENERGY', Evec[0][0])
@@ -211,19 +217,23 @@ def run_forte(name, **kwargs):
         # Make an integral object
         ints = forte.make_forte_integrals(ref_wfn, options, mo_space_info)
 
+        # Rotate orbitals before computation
+        # TODO: Have these (and ci no) inherit from a base class
+        #       and just call that
+        loc_type = options.get_str("LOCALIZE")
+        if loc_type == "FULL":
+            loc = forte.LOCALIZE(ref_wfn,options,ints,mo_space_info)
+            loc.full_localize()
+        if loc_type == "SPLIT":
+            loc = forte.LOCALIZE(ref_wfn,options,ints,mo_space_info)
+            loc.split_localize()
+        if options.get_bool("MP2_NOS"):
+            forte.MP2_NOS(ref_wfn,options,ints,mo_space_info)
+
+        # Run a method
         if (job_type == 'NEWDRIVER'):
-            loc_type = options.get_str("LOCALIZE")
-            if loc_type == "FULL":
-                loc = forte.LOCALIZE(ref_wfn,options,ints,mo_space_info)
-                loc.full_localize()
-            if loc_type == "SPLIT":
-                loc = forte.LOCALIZE(ref_wfn,options,ints,mo_space_info)
-                loc.split_localize()
-            if options.get_bool("MP2_NOS"):
-                forte.MP2_NOS(ref_wfn,options,ints,mo_space_info)
             energy = forte_driver(state_weights_list, scf_info, forte.forte_options, ints, mo_space_info)
         else:
-            # Run a method
             energy = forte.forte_old_methods(ref_wfn, options, ints, mo_space_info)
 
         end = timeit.timeit()
