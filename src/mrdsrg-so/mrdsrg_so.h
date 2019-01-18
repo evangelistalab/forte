@@ -82,11 +82,11 @@ class MRDSRG_SO : public psi::Wavefunction {
     std::vector<size_t> bvirt_sos;
 
     /// List of core SOs
-    std::vector<size_t> core_sos;
+    std::vector<size_t> core_sos_;
     /// List of active SOs
-    std::vector<size_t> actv_sos;
+    std::vector<size_t> actv_sos_;
     /// List of virtual SOs
-    std::vector<size_t> virt_sos;
+    std::vector<size_t> virt_sos_;
 
     /// Number of spin orbitals
     size_t nso_;
@@ -137,16 +137,18 @@ class MRDSRG_SO : public psi::Wavefunction {
     ambit::BlockedTensor H;
     ambit::BlockedTensor F;
     ambit::BlockedTensor V;
-    ambit::BlockedTensor Gamma1;
+    ambit::BlockedTensor W;
+    ambit::BlockedTensor L1;
     ambit::BlockedTensor Eta1;
-    ambit::BlockedTensor Lambda2;
-    ambit::BlockedTensor Lambda3;
+    ambit::BlockedTensor L2;
+    ambit::BlockedTensor L3;
     ambit::BlockedTensor Delta1;
     ambit::BlockedTensor Delta2;
     ambit::BlockedTensor RDelta1;
     ambit::BlockedTensor RDelta2;
     ambit::BlockedTensor T1;
     ambit::BlockedTensor T2;
+    ambit::BlockedTensor T3;
     ambit::BlockedTensor RExp1; // < one-particle exponential for renormalized Fock matrix
     ambit::BlockedTensor RExp2; // < two-particle exponential for renormalized integral
 
@@ -200,6 +202,11 @@ class MRDSRG_SO : public psi::Wavefunction {
     double T1norm;
     double T1max;
 
+    void update_t3();
+    double rms_t3 = 0.0;
+    double T3norm = 0.0;
+    double T3max = 0.0;
+
     /// Renormalize Fock matrix and two-electron integral
     void renormalize_F();
     void renormalize_V();
@@ -210,7 +217,8 @@ class MRDSRG_SO : public psi::Wavefunction {
     double Hbar0;
     ambit::BlockedTensor Hbar1;
     ambit::BlockedTensor Hbar2;
-    void compute_hbar();
+    ambit::BlockedTensor Hbar3;
+    void compute_lhbar();
     void compute_qhbar();
 
     /// Compute zero-term term of commutator [H, T]
@@ -236,6 +244,13 @@ class MRDSRG_SO : public psi::Wavefunction {
 
     /// Compute three-body term of commutator [H, T]
     void H2_T2_C3(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, BlockedTensor& C3);
+
+    /// Generated commutator equations
+    void commutator_H_A_2(double factor, BlockedTensor& H1, BlockedTensor& H2, BlockedTensor& T1,
+                          BlockedTensor& T2, double& C0, BlockedTensor& C1, BlockedTensor& C2);
+    void commutator_H_A_3(double factor, BlockedTensor& H1, BlockedTensor& H2, BlockedTensor& H3,
+                          BlockedTensor& T1, BlockedTensor& T2, BlockedTensor& T3, double& C0,
+                          BlockedTensor& C1, BlockedTensor& C2, BlockedTensor& C3);
 
     // Taylor Expansion of [1 - exp(-s * D^2)] / D = sqrt(s) * (\sum_{n=1}
     // \frac{1}{n!} (-1)^{n+1} Z^{2n-1})
@@ -292,6 +307,6 @@ class MRDSRG_SO : public psi::Wavefunction {
     /// The frozen-core energy
     double frozen_core_energy;
 };
-}
+} // namespace forte
 
 #endif // _mrdsrg_so_h_
