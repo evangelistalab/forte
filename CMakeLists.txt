@@ -91,6 +91,7 @@ src/base_classes/state_info.cc
 src/base_classes/scf_info.cc
 src/base_classes/forte_options.cc
 src/base_classes/mo_space_info.cc
+src/base_classes/orbital_transform.cc
 src/sci/aci.cc
 src/sci/aci_build_F.cc
 src/sci/asci.cc

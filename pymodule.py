@@ -220,15 +220,25 @@ def run_forte(name, **kwargs):
         # Rotate orbitals before computation
         # TODO: Have these (and ci no) inherit from a base class
         #       and just call that
-        loc_type = options.get_str("LOCALIZE")
-        if loc_type == "FULL":
-            loc = forte.LOCALIZE(ref_wfn,options,ints,mo_space_info)
-            loc.full_localize()
-        if loc_type == "SPLIT":
-            loc = forte.LOCALIZE(ref_wfn,options,ints,mo_space_info)
-            loc.split_localize()
-        if options.get_bool("MP2_NOS"):
-            forte.MP2_NOS(ref_wfn,options,ints,mo_space_info)
+
+        orb_type = options.get_str("ORBITAL_TYPE")
+        if orb_type != 'CANONICAL':
+            orb_t = forte.make_orbital_transformation(orb_type, state, scf_info, forte.forte_options, ints, mo_space_info)
+            orb_t.compute_transformation()
+            Ua = orb_t.get_Ua()
+            Ub = orb_t.get_Ub()
+
+            ints.rotate_orbitals(Ua,Ub)
+
+        #loc_type = options.get_str("LOCALIZE")
+        #if loc_type == "FULL":
+        #    loc = forte.LOCALIZE(state,scf_info,forte.forte_options,ints,mo_space_info)
+        #    loc.full_localize()
+        #if loc_type == "SPLIT":
+        #    loc = forte.LOCALIZE(state,scf_info,forte.forte_options,ints,mo_space_info)
+        #    loc.split_localize()
+        #if options.get_bool("MP2_NOS"):
+        #    forte.MP2_NOS(ref_wfn,options,ints,mo_space_info)
 
         # Run a method
         if (job_type == 'NEWDRIVER'):

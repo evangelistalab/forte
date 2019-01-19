@@ -13,6 +13,10 @@ void forte_old_options(ForteOptions& options) {
 
     /*- SUBSECTION Job Type */
 
+
+    /*- Type of orbitals to use -*/
+    options.add_str("ORBITAL_TYPE", "CANONICAL", "CANONICAL LOCAL MP2_NO");
+
     /*- Compute natural orbitals using MP2 -*/
     options.add_bool("MP2_NOS", false);
     /*- View the natural orbitals with their symmetry information -*/
@@ -20,7 +24,6 @@ void forte_old_options(ForteOptions& options) {
     /*- Use Natural Orbitals to suggest active space -*/
     options.add_bool("NAT_ACT", false);
     options.add_bool("MOLDEN_WRITE_FORTE", false);
-
     // Natural Orbital selection criteria.  Used to fine tune how many
     // active orbitals there are
 

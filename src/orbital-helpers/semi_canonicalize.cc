@@ -179,7 +179,7 @@ void SemiCanonical::set_actv_dims(const psi::Dimension& actv_docc,
 }
 
 Reference SemiCanonical::semicanonicalize(Reference& reference, const int& max_rdm_level,
-                                     const bool& build_fock, const bool& transform) {
+                                          const bool& build_fock, const bool& transform) {
     local_timer SemiCanonicalize;
 
     // 1. Build the Fock matrix from ForteIntegral

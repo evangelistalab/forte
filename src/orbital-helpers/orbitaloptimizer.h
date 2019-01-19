@@ -94,7 +94,8 @@ class OrbitalOptimizer {
      */
 
     OrbitalOptimizer(ambit::Tensor Gamma1, ambit::Tensor Gamma2, ambit::Tensor two_body_ab,
-                     std::shared_ptr<ForteOptions> options, std::shared_ptr<MOSpaceInfo> mo_space_info);
+                     std::shared_ptr<ForteOptions> options,
+                     std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// You have to set these at the start of the computation
     /// The MO Coefficient you get from wfn_->Ca()
@@ -247,7 +248,8 @@ class OrbitalOptimizer {
 class CASSCFOrbitalOptimizer : public OrbitalOptimizer {
   public:
     CASSCFOrbitalOptimizer(ambit::Tensor Gamma1, ambit::Tensor Gamma2, ambit::Tensor two_body_ab,
-                           std::shared_ptr<ForteOptions> options, std::shared_ptr<MOSpaceInfo> mo_space_info);
+                           std::shared_ptr<ForteOptions> options,
+                           std::shared_ptr<MOSpaceInfo> mo_space_info);
     virtual ~CASSCFOrbitalOptimizer();
 
   private:

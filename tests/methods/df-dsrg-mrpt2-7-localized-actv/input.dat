@@ -86,6 +86,7 @@ set forte{
   dsrg_dipole         true
   nroot 5
   root 0
+  orbital_type local
   localize FULL
 }
 energy('forte', ref_wfn=wfn)

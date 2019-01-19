@@ -38,6 +38,7 @@ set forte{
   active_space_solver cas
   correlation_solver  dsrg-mrpt2
   rotate_mos          [1,17,20]
+  orbital_type        local
   localize            full
   e_convergence       12
   dsrg_s              0.5

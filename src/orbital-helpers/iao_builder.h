@@ -1,4 +1,4 @@
-        /*
+/*
  * @BEGIN LICENSE
  *
  * Psi4: an open-source quantum chemistry software package
@@ -40,13 +40,11 @@
 
 #include "boost/format.hpp"
 
-
 namespace forte {
 
 class IAOBuilder {
 
-protected:
-
+  protected:
     // => Overall Parameters <= //
 
     /// Print flag
@@ -66,10 +64,10 @@ protected:
     /// Use ghost IAOs?
     bool use_ghosts_;
     /// IAO localization power (4 or 2)
-    int power_; 
+    int power_;
     /// Metric condition for IAO
     double condition_;
-    
+
     /// Occupied orbitals, in primary basis
     psi::SharedMatrix C_;
     /// Primary orbital basis set
@@ -78,7 +76,7 @@ protected:
     std::shared_ptr<psi::BasisSet> minao_;
 
     // => Stars Parameters <= //
-    
+
     /// Do stars treatment?
     bool use_stars_;
     /// Charge completeness for two-center orbitals
@@ -89,54 +87,45 @@ protected:
     // => IAO Data <= //
 
     /// Map from non-ghosted to full atoms: true_atoms[ind_true] = ind_full
-    std::vector<int> true_atoms_; 
+    std::vector<int> true_atoms_;
     /// Map from non-ghosted IAOs to full IAOs: true_iaos[ind_true] = ind_full
     std::vector<int> true_iaos_;
-    /// Map from non-ghosted IAOs to non-ghosted atoms 
+    /// Map from non-ghosted IAOs to non-ghosted atoms
     std::vector<int> iaos_to_atoms_;
 
     /// Overlap matrix in full basis
     psi::SharedMatrix S_;
     /// Non-ghosted IAOs in full basis
     psi::SharedMatrix A_;
-    
-    
+
     /// Set defaults
     void common_init();
-    
 
-public:
-
+  public:
     // => Constructors <= //
 
-    IAOBuilder(
-        std::shared_ptr<psi::BasisSet> primary,
-        std::shared_ptr<psi::BasisSet> minao,
-        std::shared_ptr<psi::Matrix> C);
-    
+    IAOBuilder(std::shared_ptr<psi::BasisSet> primary, std::shared_ptr<psi::BasisSet> minao,
+               std::shared_ptr<psi::Matrix> C);
+
     virtual ~IAOBuilder();
 
     /// Build IBO with defaults from Options object (including MINAO_BASIS)
-    static std::shared_ptr<IAOBuilder> build(
-        std::shared_ptr<psi::BasisSet> primary,
-        std::shared_ptr<psi::BasisSet> minao,
-        std::shared_ptr<psi::Matrix> C,
-        psi::Options& options);
+    static std::shared_ptr<IAOBuilder> build(std::shared_ptr<psi::BasisSet> primary,
+                                             std::shared_ptr<psi::BasisSet> minao,
+                                             std::shared_ptr<psi::Matrix> C, psi::Options& options);
     /// Build the IAOs for exporting
     std::map<std::string, psi::SharedMatrix> build_iaos();
 
-    std::vector<std::string> print_IAO(psi::SharedMatrix A, int nmin, int nbf, psi::SharedWavefunction wfn_);
+    std::vector<std::string> print_IAO(psi::SharedMatrix A, int nmin, int nbf,
+                                       psi::SharedWavefunction wfn_);
 
-    std::map<std::string, psi::SharedMatrix> ibo_localizer(psi::SharedMatrix L, 
-                                                  const std::vector<std::vector<int> >& minao_inds, 
-                                                  const std::vector<std::pair<int, int> >& rot_inds, 
-                                                  double convergence,int maxiter, int power);
+    std::map<std::string, psi::SharedMatrix>
+    ibo_localizer(psi::SharedMatrix L, const std::vector<std::vector<int>>& minao_inds,
+                  const std::vector<std::pair<int, int>>& rot_inds, double convergence, int maxiter,
+                  int power);
 
-    std::map<std::string, psi::SharedMatrix > localize(
-        psi::SharedMatrix Cocc,
-        psi::SharedMatrix Focc,
-        const std::vector<int>& ranges2
-        );
+    std::map<std::string, psi::SharedMatrix>
+    localize(psi::SharedMatrix Cocc, psi::SharedMatrix Focc, const std::vector<int>& ranges2);
 
     psi::SharedMatrix reorder_orbitals(psi::SharedMatrix F, const std::vector<int>& ranges);
 
@@ -153,12 +142,12 @@ public:
     void set_condition(double condition) { condition_ = condition; }
     void set_power(double power) { power_ = power; }
     void set_use_stars(bool use_stars) { use_stars_ = use_stars; }
-    void set_stars_completeness(double stars_completeness) { stars_completeness_ = stars_completeness; }
+    void set_stars_completeness(double stars_completeness) {
+        stars_completeness_ = stars_completeness;
+    }
     void set_stars(const std::vector<int>& stars) { stars_ = stars; }
-
 };
 
-}
-
+} // namespace forte
 
 #endif

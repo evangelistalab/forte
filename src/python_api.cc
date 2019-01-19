@@ -37,6 +37,7 @@
 
 #include "base_classes/active_space_solver.h"
 #include "base_classes/mo_space_info.h"
+#include "base_classes/orbital_transform.h"
 #include "integrals/integrals.h"
 #include "integrals/make_integrals.h"
 #include "orbital-helpers/localize.h"
@@ -99,6 +100,14 @@ void export_ActiveSpaceSolver(py::module& m) {
           "Compute the average energy given the energies and weights of each state");
 }
 
+/// Export the OrbitalTransform class
+void export_OrbitalTransform(py::module& m) {
+    py::class_<OrbitalTransform>(m, "OrbitalTransform")
+    .def("compute_transformation", &OrbitalTransform::compute_transformation)
+    .def("get_Ua", &OrbitalTransform::get_Ua, "Get Ua rotation")
+    .def("get_Ub", &OrbitalTransform::get_Ub, "Get Ub rotation");
+}
+
 ///// Export the FCISolver class
 // void export_FCISolver(py::module& m) {
 //    py::class_<FCISolver>(m, "FCISolver")
@@ -120,6 +129,7 @@ PYBIND11_MODULE(forte, m) {
     m.def("forte_old_methods", &forte_old_methods, "Run Forte methods");
     m.def("make_active_space_method", &make_active_space_method, "Make an active space method");
     m.def("make_active_space_solver", &make_active_space_solver, "Make an active space solver");
+    m.def("make_orbital_transformation", &make_orbital_transformation, "Make an orbital transformation");
     m.def("make_state_info_from_psi_wfn", &make_state_info_from_psi_wfn,
           "Make a state info object from a psi4 Wavefunction");
     m.def("make_state_weights_list", &make_state_weights_list,
@@ -135,6 +145,8 @@ PYBIND11_MODULE(forte, m) {
     export_ActiveSpaceMethod(m);
     export_ActiveSpaceSolver(m);
 
+    export_OrbitalTransform(m);
+
     //    export_FCISolver(m);
 
     // export MOSpaceInfo
@@ -142,19 +154,20 @@ PYBIND11_MODULE(forte, m) {
         .def("size", &MOSpaceInfo::size);
 
     // export ForteIntegrals
-    py::class_<ForteIntegrals, std::shared_ptr<ForteIntegrals>>(m, "ForteIntegrals");
+    py::class_<ForteIntegrals, std::shared_ptr<ForteIntegrals>>(m, "ForteIntegrals")
+        .def("rotate_orbitals", &ForteIntegrals::rotate_orbitals);
 
-    // export Localize
-    py::class_<LOCALIZE, std::shared_ptr<LOCALIZE>>(m, "LOCALIZE")
-        .def(py::init<std::shared_ptr<psi::Wavefunction>, psi::Options&,
-                      std::shared_ptr<ForteIntegrals>, std::shared_ptr<MOSpaceInfo>>())
-        .def("split_localize", &LOCALIZE::split_localize)
-        .def("full_localize", &LOCALIZE::full_localize);
-
-    // export MP2_NOS
-    py::class_<MP2_NOS, std::shared_ptr<MP2_NOS>>(m, "MP2_NOS")
-        .def(py::init<std::shared_ptr<psi::Wavefunction>, psi::Options&,
-                      std::shared_ptr<ForteIntegrals>, std::shared_ptr<MOSpaceInfo>>());
+//    // export Localize
+//    py::class_<LOCALIZE, std::shared_ptr<LOCALIZE>>(m, "LOCALIZE")
+//        .def(py::init<StateInfo, std::shared_ptr<SCFInfo>, std::shared_ptr<ForteOptions>,
+//                      std::shared_ptr<ForteIntegrals>, std::shared_ptr<MOSpaceInfo>>())
+//        .def("split_localize", &LOCALIZE::split_localize)
+//        .def("full_localize", &LOCALIZE::full_localize);
+//
+//    // export MP2_NOS
+//    py::class_<MP2_NOS, std::shared_ptr<MP2_NOS>>(m, "MP2_NOS")
+//        .def(py::init<StateInfo, std::shared_ptr<SCFInfo>, std::shared_ptr<ForteOptions>,
+//                      std::shared_ptr<ForteIntegrals>, std::shared_ptr<MOSpaceInfo>>());
 
     // export StateInfo
     py::class_<StateInfo, std::shared_ptr<StateInfo>>(m, "StateInfo")
