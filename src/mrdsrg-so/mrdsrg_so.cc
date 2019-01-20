@@ -515,7 +515,7 @@ void MRDSRG_SO::update_t3() {
     R3.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
         value *= (Fd[i[0]] + Fd[i[1]] + Fd[i[2]] - Fd[i[3]] - Fd[i[4]] - Fd[i[5]]);
     });
-    R3["ijab"] += Hbar3["ijab"];
+    R3["ijkabc"] += Hbar3["ijkabc"];
     R3.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
         value *= renormalized_denominator(Fd[i[0]] + Fd[i[1]] + Fd[i[2]] - Fd[i[3]] - Fd[i[4]] -
                                           Fd[i[5]]);
@@ -552,7 +552,7 @@ double MRDSRG_SO::compute_energy() {
     guess_t1();
 
     if (options_.get_str("CORR_LEVEL") == "LDSRG3") {
-        Hbar3 = BTF->build(tensor_type_, "Hbar3", {"hhhppp"});
+        Hbar3 = BTF->build(tensor_type_, "Hbar3", {"gggggg"});
         T3 = BTF->build(tensor_type_, "T3 Amplitudes", {"hhhppp"});
     }
 
@@ -694,7 +694,13 @@ void MRDSRG_SO::compute_lhbar() {
 
         double C0 = 0.0;
         if (options_.get_str("CORR_LEVEL") == "LDSRG3") {
-            commutator_H_A_3(factor, O1, O2, O3, T1, T2, T3, C0, C1, C2, C3);
+            timer_on("3-body [H, A]");
+            if (na_ == 0) {
+                commutator_H_A_3_sr(factor, O1, O2, O3, T1, T2, T3, C0, C1, C2, C3);
+            } else {
+                commutator_H_A_3(factor, O1, O2, O3, T1, T2, T3, C0, C1, C2, C3);
+            }
+            timer_off("3-body [H, A]");
         } else {
             commutator_H_A_2(factor, O1, O2, T1, T2, C0, C1, C2);
         }
@@ -747,8 +753,8 @@ void MRDSRG_SO::compute_lhbar() {
         double norm_C2 = C2.norm();
         double norm_C3 = 0.0;
         if (options_.get_str("CORR_LEVEL") == "LDSRG3") {
-            Hbar3["pqrsto"] += C3["pqrsto"];
-            O3["pqrsto"] = C3["pqrsto"];
+            Hbar3["g0,g1,g2,g3,g4,g5"] += C3["g0,g1,g2,g3,g4,g5"];
+            O3["g0,g1,g2,g3,g4,g5"] = C3["g0,g1,g2,g3,g4,g5"];
             norm_C3 = C3.norm();
         }
         //        outfile->Printf("\n  %2d %20.12f %20e
