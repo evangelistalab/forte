@@ -62,6 +62,7 @@ MRDSRG_SO::~MRDSRG_SO() {}
 void MRDSRG_SO::startup() {
     Eref = compute_Eref_from_rdms(rdms_, ints_, mo_space_info_);
     BlockedTensor::reset_mo_spaces();
+    BlockedTensor::set_expert_mode(true);
 
     frozen_core_energy = ints_->frozen_core_energy();
 
@@ -444,6 +445,53 @@ void MRDSRG_SO::guess_t1() {
     outfile->Printf("  Done. Timing %10.3f s", timer.get());
 }
 
+void MRDSRG_SO::guess_t3() {
+    local_timer timer;
+    std::string str = "Computing T3 amplitudes     ...";
+    outfile->Printf("\n    %-35s", str.c_str());
+
+    ambit::BlockedTensor C3 = ambit::BlockedTensor::build(tensor_type_, "C3", {"gggggg"});
+    auto temp = ambit::BlockedTensor::build(CoreTensor, "temp", {"gccggv"});
+    temp["g2,c0,c1,g0,g1,v0"] += -1.0 * V["g2,v1,g0,g1"] * T2["c0,c1,v0,v1"];
+    C3["c0,c1,g2,g0,g1,v0"] += temp["g2,c0,c1,g0,g1,v0"];
+    C3["c0,g2,c1,g0,g1,v0"] -= temp["g2,c0,c1,g0,g1,v0"];
+    C3["g2,c0,c1,g0,g1,v0"] += temp["g2,c0,c1,g0,g1,v0"];
+    C3["c0,c1,g2,g0,v0,g1"] -= temp["g2,c0,c1,g0,g1,v0"];
+    C3["c0,g2,c1,g0,v0,g1"] += temp["g2,c0,c1,g0,g1,v0"];
+    C3["g2,c0,c1,g0,v0,g1"] -= temp["g2,c0,c1,g0,g1,v0"];
+    C3["c0,c1,g2,v0,g0,g1"] += temp["g2,c0,c1,g0,g1,v0"];
+    C3["c0,g2,c1,v0,g0,g1"] -= temp["g2,c0,c1,g0,g1,v0"];
+    C3["g2,c0,c1,v0,g0,g1"] += temp["g2,c0,c1,g0,g1,v0"];
+
+    temp = ambit::BlockedTensor::build(CoreTensor, "temp", {"ggcgvv"});
+    temp["g1,g2,c0,g0,v0,v1"] += 1.0 * V["g1,g2,g0,c1"] * T2["c0,c1,v0,v1"];
+    C3["c0,g1,g2,g0,v0,v1"] += temp["g1,g2,c0,g0,v0,v1"];
+    C3["g1,c0,g2,g0,v0,v1"] -= temp["g1,g2,c0,g0,v0,v1"];
+    C3["g1,g2,c0,g0,v0,v1"] += temp["g1,g2,c0,g0,v0,v1"];
+    C3["c0,g1,g2,v0,g0,v1"] -= temp["g1,g2,c0,g0,v0,v1"];
+    C3["g1,c0,g2,v0,g0,v1"] += temp["g1,g2,c0,g0,v0,v1"];
+    C3["g1,g2,c0,v0,g0,v1"] -= temp["g1,g2,c0,g0,v0,v1"];
+    C3["c0,g1,g2,v0,v1,g0"] += temp["g1,g2,c0,g0,v0,v1"];
+    C3["g1,c0,g2,v0,v1,g0"] -= temp["g1,g2,c0,g0,v0,v1"];
+    C3["g1,g2,c0,v0,v1,g0"] += temp["g1,g2,c0,g0,v0,v1"];
+
+    T3["ijkabc"] = C3["ijkabc"];
+    T3["ijkabc"] += C3["abcijk"];
+
+    T3.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+        value *= renormalized_denominator(Fd[i[0]] + Fd[i[1]] + Fd[i[2]] - Fd[i[3]] - Fd[i[4]] -
+                                          Fd[i[5]]);
+    });
+
+    // zero internal amplitudes
+    T3.block("aaaaaa").zero();
+
+    // norm and max
+    T3max = T3.norm(0), T3norm = T3.norm();
+
+    outfile->Printf("  Done. Timing %10.3f s", timer.get());
+}
+
 double MRDSRG_SO::renormalized_denominator(double D) {
     double Z = std::sqrt(s_) * D;
     if (std::fabs(Z) < std::pow(0.1, taylor_threshold_)) {
@@ -554,6 +602,7 @@ double MRDSRG_SO::compute_energy() {
     if (options_.get_str("CORR_LEVEL") == "LDSRG3") {
         Hbar3 = BTF->build(tensor_type_, "Hbar3", {"gggggg"});
         T3 = BTF->build(tensor_type_, "T3 Amplitudes", {"hhhppp"});
+        guess_t3();
     }
 
     // iteration variables
@@ -567,7 +616,7 @@ double MRDSRG_SO::compute_energy() {
                     "----------------------------------------------------------"
                     "----------------------------------------");
     outfile->Printf("\n           Cycle     Energy (a.u.)     Delta(E)  "
-                    "|Hbar1|_N  |Hbar2|_N    |T1|    |T2|  max(T1) max(T2)");
+                    "|Hbar1|_N  |Hbar2|_N    |T1|    |T2|    |T3|  max(T1) max(T2) max(T3)");
     outfile->Printf("\n    "
                     "----------------------------------------------------------"
                     "----------------------------------------");
@@ -614,9 +663,9 @@ double MRDSRG_SO::compute_energy() {
         Hbar2Nnorm = sqrt(Hbar2Nnorm);
 
         outfile->Printf("\n      @CT %4d %20.12f %11.3e %10.3e %10.3e %7.4f "
-                        "%7.4f %7.4f %7.4f",
-                        cycle, Etotal, Edelta, Hbar1Nnorm, Hbar2Nnorm, T1norm, T2norm, T1max,
-                        T2max);
+                        "%7.4f %7.4f %7.4f %7.4f %7.4f",
+                        cycle, Etotal, Edelta, Hbar1Nnorm, Hbar2Nnorm, T1norm, T2norm, T3norm,
+                        T1max, T2max, T3max);
 
         // update amplitudes
         update_t2();
@@ -683,8 +732,8 @@ void MRDSRG_SO::compute_lhbar() {
 
     BlockedTensor O3, C3;
     if (options_.get_str("CORR_LEVEL") == "LDSRG3") {
-        O3 = BTF->build(tensor_type_, "O3", {"gggggg"});
-        C3 = BTF->build(tensor_type_, "C3", {"gggggg"});
+        O3 = ambit::BlockedTensor::build(tensor_type_, "O3", {"gggggg"});
+        C3 = ambit::BlockedTensor::build(tensor_type_, "C3", {"gggggg"});
     }
 
     // compute Hbar recursively
