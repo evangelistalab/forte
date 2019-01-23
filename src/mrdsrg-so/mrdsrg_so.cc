@@ -715,7 +715,6 @@ void MRDSRG_SO::compute_lhbar() {
     Hbar0 = 0.0;
     Hbar1["pq"] = F["pq"];
     Hbar2["pqrs"] = V["pqrs"];
-    Hbar3.zero();
 
     BlockedTensor O1 = ambit::BlockedTensor::build(tensor_type_, "O1", {"gg"});
     BlockedTensor O2 = ambit::BlockedTensor::build(tensor_type_, "O2", {"gggg"});
@@ -733,6 +732,7 @@ void MRDSRG_SO::compute_lhbar() {
 
     BlockedTensor O3, C3;
     if (options_.get_str("CORR_LEVEL") == "LDSRG3") {
+        Hbar3.zero();
         O3 = ambit::BlockedTensor::build(tensor_type_, "O3", {"gggggg"});
         C3 = ambit::BlockedTensor::build(tensor_type_, "C3", {"gggggg"});
     }
