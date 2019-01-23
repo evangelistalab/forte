@@ -715,6 +715,7 @@ void MRDSRG_SO::compute_lhbar() {
     Hbar0 = 0.0;
     Hbar1["pq"] = F["pq"];
     Hbar2["pqrs"] = V["pqrs"];
+    Hbar3.zero();
 
     BlockedTensor O1 = ambit::BlockedTensor::build(tensor_type_, "O1", {"gg"});
     BlockedTensor O2 = ambit::BlockedTensor::build(tensor_type_, "O2", {"gggg"});
