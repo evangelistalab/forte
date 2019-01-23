@@ -108,13 +108,13 @@ class TDACI : public psi::Wavefunction {
     void save_vector(std::vector<size_t>& vec, std::string str);
     void save_vector(std::vector<std::string>& vec, std::string str);
 
-    void propogate_exact(psi::SharedVector C0, psi::SharedMatrix H);
-    void propogate_cn( psi::SharedVector C0, psi::SharedMatrix H);
-    void propogate_taylor1( psi::SharedVector C0, psi::SharedMatrix H);
-    void propogate_taylor2( psi::SharedVector C0, psi::SharedMatrix H);
-    void propogate_RK4( psi::SharedVector C0, psi::SharedMatrix H);
-    void propogate_QCN( psi::SharedVector C0, psi::SharedMatrix H);
-    void propogate_lanczos( psi::SharedVector C0, psi::SharedMatrix H);
+    void propagate_exact(psi::SharedVector C0, psi::SharedMatrix H);
+    void propagate_cn( psi::SharedVector C0, psi::SharedMatrix H);
+    void propagate_taylor1( psi::SharedVector C0, psi::SharedMatrix H);
+    void propagate_taylor2( psi::SharedVector C0, psi::SharedMatrix H);
+    void propagate_RK4( psi::SharedVector C0, psi::SharedMatrix H);
+    void propagate_QCN( psi::SharedVector C0, psi::SharedMatrix H);
+    void propagate_lanczos( psi::SharedVector C0, psi::SharedMatrix H);
 
     void compute_tdaci_select(psi::SharedVector C0);
     

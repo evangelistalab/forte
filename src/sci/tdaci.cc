@@ -164,38 +164,38 @@ double TDACI::compute_energy() {
     norm = 1.0/ norm;
     core_coeffs->scale(norm);
 
-    // 5. Propogate
+    // 5. Propagate
     if( options_.get_str("TDACI_PROPOGATOR") == "EXACT" ){
-        propogate_exact( core_coeffs, full_aH );
+        propagate_exact( core_coeffs, full_aH );
     } else if ( options_.get_str("TDACI_PROPOGATOR") == "CN"){
-        propogate_cn( core_coeffs, full_aH );
+        propagate_cn( core_coeffs, full_aH );
     } else if ( options_.get_str("TDACI_PROPOGATOR") == "QCN" ){
-        propogate_QCN( core_coeffs, full_aH );
+        propagate_QCN( core_coeffs, full_aH );
     } else if ( options_.get_str("TDACI_PROPOGATOR") == "LINEAR" ){
-        propogate_taylor1( core_coeffs, full_aH);
+        propagate_taylor1( core_coeffs, full_aH);
     } else if ( options_.get_str("TDACI_PROPOGATOR") == "QUADRATIC" ){
-        propogate_taylor2( core_coeffs, full_aH);
+        propagate_taylor2( core_coeffs, full_aH);
     } else if (options_.get_str("TDACI_PROPOGATOR") == "RK4" ){
-        propogate_RK4( core_coeffs, full_aH);
+        propagate_RK4( core_coeffs, full_aH);
     } else if (options_.get_str("TDACI_PROPOGATOR") == "LANCZOS" ){
-        propogate_lanczos( core_coeffs, full_aH);
+        propagate_lanczos( core_coeffs, full_aH);
     } else if (options_.get_str("TDACI_PROPOGATOR") == "EXACT_SELECT" or options_.get_str("TDACI_PROPOGATOR") == "RK4_SELECT"
                or options_.get_str("TDACI_PROPOGATOR") == "RK4_SELECT_LIST" ){
         compute_tdaci_select(core_coeffs);
     } else if (options_.get_str("TDACI_PROPOGATOR") == "ALL" ){
-        propogate_exact( core_coeffs, full_aH );
-        propogate_cn( core_coeffs, full_aH );
-        propogate_taylor1( core_coeffs, full_aH);
-        propogate_taylor2( core_coeffs, full_aH);
-        propogate_RK4( core_coeffs, full_aH);
-        propogate_QCN( core_coeffs, full_aH);
-        propogate_lanczos( core_coeffs, full_aH);
+        propagate_exact( core_coeffs, full_aH );
+        propagate_cn( core_coeffs, full_aH );
+        propagate_taylor1( core_coeffs, full_aH);
+        propagate_taylor2( core_coeffs, full_aH);
+        propagate_RK4( core_coeffs, full_aH);
+        propagate_QCN( core_coeffs, full_aH);
+        propagate_lanczos( core_coeffs, full_aH);
     }
     
     return en;
 }
 
-void TDACI::propogate_exact(SharedVector C0, SharedMatrix H) {
+void TDACI::propagate_exact(SharedVector C0, SharedMatrix H) {
 
 
 
@@ -227,7 +227,7 @@ void TDACI::propogate_exact(SharedVector C0, SharedMatrix H) {
     double conv = 1.0/24.18884326505;
     double time = dt;
 
-    std::vector<std::vector<double>> occupations(orbs.size(), std::vector<double>(nstep));
+    std::vector<std::vector<double>> occupations(orbs.size());
     SharedVector int1 = std::make_shared<Vector>("int1", ndet);
     SharedVector int1r = std::make_shared<Vector>("int2r", ndet);
     SharedVector int1i = std::make_shared<Vector>("int2i", ndet);
@@ -242,8 +242,6 @@ void TDACI::propogate_exact(SharedVector C0, SharedMatrix H) {
         ct_r->gemv(false, 1.0, &(*evecs), &(*int1r), 0.0);
         ct_i->gemv(false, 1.0, &(*evecs), &(*int1i), 0.0);
         
-
-
         if( std::abs( time - round(time) ) <= 1e-8){
             if( options_.get_bool("TDACI_PRINT_WFN")){
                 std::stringstream ss;
@@ -254,7 +252,7 @@ void TDACI::propogate_exact(SharedVector C0, SharedMatrix H) {
             }
             std::vector<double> occ = compute_occupation(ct_r, ct_i, orbs);
             for( size_t i = 0; i < orbs.size(); ++i ){
-                occupations[i][n] = occ[i];
+                occupations[i].push_back(occ[i]);
             }
         }
         int1r->zero();
@@ -268,7 +266,7 @@ void TDACI::propogate_exact(SharedVector C0, SharedMatrix H) {
     outfile->Printf("\n Time spent propogating (exact): %1.6f s", t1.get()); 
 }
 
-void TDACI::propogate_cn( SharedVector C0, SharedMatrix H ){
+void TDACI::propagate_cn( SharedVector C0, SharedMatrix H ){
 
     outfile->Printf("\n  Propogating with Crank-Nicholson algorithm");
 
@@ -289,18 +287,13 @@ void TDACI::propogate_cn( SharedVector C0, SharedMatrix H ){
     ct_r->copy(C0->clone());
     ct_i->zero();
 
-    // Get the zeroed diagonal H
-    SharedMatrix H0 = std::make_shared<Matrix>("H0",ndet,ndet);
-    H0->copy(H->clone());
-    H0->zero_diagonal();
-
     std::vector<int> orbs(options_["TDACI_OCC_ORB"].size());
     for( size_t h = 0; h < options_["TDACI_OCC_ORB"].size(); ++h ){
         int orb = options_["TDACI_OCC_ORB"][h].to_integer();
         orbs[h] = orb;
     }
 
-    std::vector<std::vector<double>> occupations(orbs.size(), std::vector<double>(nstep));
+    std::vector<std::vector<double>> occupations(orbs.size());
     for( int n = 1; n <= nstep; ++n ){
 //        outfile->Printf("\n  Propogating at t = %1.6f", time/conv);        
         // Form b vector
@@ -308,59 +301,26 @@ void TDACI::propogate_cn( SharedVector C0, SharedMatrix H ){
         SharedVector b_r = std::make_shared<Vector>("br",ndet);
         SharedVector b_i = std::make_shared<Vector>("bi",ndet);
 
+
+        // -iHdt|Psi>
         b_r->gemv(false, 0.5*dt, &(*H), &(*ct_i), 0.0);
         b_i->gemv(false, -1.0*0.5*dt, &(*H), &(*ct_r), 0.0);
 
         b_r->add(ct_r);
         b_i->add(ct_i);
     
-        // Form D^(-1) matrix
-        Timer dinv;
-        SharedMatrix Dinv_r = std::make_shared<Matrix>("Dr", ndet,ndet); 
-        SharedMatrix Dinv_i = std::make_shared<Matrix>("Di", ndet,ndet); 
-        Dinv_r->zero();
-        Dinv_i->zero();
-
-        for( size_t I = 0; I < ndet; ++I ){
-            double HII = H->get(I,I);
-            Dinv_r->set(I,I, 1.0/(1.0 + HII*HII*0.25*dt*dt) );
-            Dinv_i->set(I,I, (HII*dt*-0.5)/(1.0 + HII*HII*0.25*dt*dt) );
-        }
-
-        // Transform b my D^(-1)
-        Timer db;
-        // real part
-        SharedVector Dbr = std::make_shared<Vector>("Dbr",ndet); 
-        Dbr->gemv(false, 1.0, &(*Dinv_r), &(*b_r), 0.0); 
-        Dbr->gemv(false, -1.0, &(*Dinv_i), &(*b_i), 1.0); 
-        // Imag part
-        SharedVector Dbi = std::make_shared<Vector>("Dbi",ndet); 
-        Dbi->gemv(false, 1.0, &(*Dinv_r), &(*b_i), 0.0); 
-        Dbi->gemv(false, 1.0, &(*Dinv_i), &(*b_r), 1.0); 
-
         // Converge C(t+dt)
         bool converged = false;
         SharedVector ct_r_new = std::make_shared<Vector>("ct_R",ndet);
         SharedVector ct_i_new = std::make_shared<Vector>("ct_I",ndet);
 
         while( !converged ){
-            SharedVector r_new = std::make_shared<Vector>("ct_R",ndet);
-            r_new->zero();
-            r_new->gemv(false,1.0, &(*Dinv_r), &(*ct_i), 0.0);
-            r_new->gemv(false,1.0, &(*Dinv_i), &(*ct_r), 1.0);
-            r_new->scale(0.5*dt); 
             
-            ct_r_new->copy(Dbr->clone());
-            ct_r_new->gemv(false,1.0,&(*H0),&(*r_new),1.0); 
-            
-            SharedVector i_new = std::make_shared<Vector>("ct_R",ndet);
-            i_new->zero();
-            i_new->gemv(false,1.0, &(*Dinv_r), &(*ct_r), 0.0);
-            i_new->gemv(false,1.0, &(*Dinv_i), &(*ct_i), 1.0);
-            i_new->scale(-0.5*dt); 
-            
-            ct_i_new->copy(Dbi->clone());
-            ct_i_new->gemv(false,1.0,&(*H0),&(*i_new),1.0); 
+            ct_r_new->gemv(false, 0.5*dt, &(*H), &(*ct_i), 0.0);
+            ct_i_new->gemv(false, -1.0*0.5*dt, &(*H), &(*ct_r), 0.0);
+        
+            ct_r_new->add(b_r);
+            ct_i_new->add(b_i);
 
             // Test convergence
             SharedVector err = std::make_shared<Vector>("err",ndet);
@@ -380,7 +340,7 @@ void TDACI::propogate_cn( SharedVector C0, SharedMatrix H ){
                 err->set(I, (rn*rn + in*in) - (ro*ro + io*io));                
             }
 
- //           outfile->Printf("\n  %1.9f", err->norm());
+//            outfile->Printf("\n  %1.9f", err->norm());
             if( err->norm() <= options_.get_double("TDACI_CN_CONVERGENCE") ){
                 converged = true;
             }
@@ -389,8 +349,6 @@ void TDACI::propogate_cn( SharedVector C0, SharedMatrix H ){
             ct_i->copy( ct_i_new->clone() );
         }
 
-        std::stringstream ss;
-        ss << std::fixed << std::setprecision(3) << time/conv;
         double norm = 0.0;
         SharedVector mag = std::make_shared<Vector>("mag",ndet);
         for( size_t I = 0; I < ndet; ++I ){
@@ -406,16 +364,17 @@ void TDACI::propogate_cn( SharedVector C0, SharedMatrix H ){
 
 //        outfile->Printf("\n  norm(t=%1.3f) = %1.5f", time/conv, norm);
         
-        if( std::fabs( (time/conv) - round(time/conv)) <= 1e-8 ){
+        if( std::abs( time/conv - round(time/conv) ) <= 1e-8){
+            std::stringstream ss;
+            ss << std::fixed << std::setprecision(3) << time/conv;
             if( options_.get_bool("TDACI_PRINT_WFN")){
                 outfile->Printf("\n Saving wavefunction for t = %1.3f as", time/conv);
-              //  save_vector(mag,"CN_" + ss.str()+ ".txt");
                 save_vector(ct_r,"CN_" + ss.str()+ "_r.txt");
                 save_vector(ct_i,"CN_" + ss.str()+ "_i.txt");
             }
             std::vector<double> occ = compute_occupation(ct_r, ct_i, orbs);
             for( size_t i = 0; i < orbs.size(); ++i ){
-                occupations[i][n] = occ[i];
+                occupations[i].push_back(occ[i]);
             }
         }
 
@@ -427,7 +386,7 @@ void TDACI::propogate_cn( SharedVector C0, SharedMatrix H ){
     outfile->Printf("\n  Time spent propogating (CN): %1.6f", total.get());
 }
 
-void TDACI::propogate_taylor1(SharedVector C0, SharedMatrix H  ) {
+void TDACI::propagate_taylor1(SharedVector C0, SharedMatrix H  ) {
     outfile->Printf("\n  Propogating with linear Taylor algorithm");
     
     Timer t1;
@@ -516,7 +475,7 @@ void TDACI::propogate_taylor1(SharedVector C0, SharedMatrix H  ) {
     outfile->Printf("\n  Time spent propogating (linear): %1.6f", t1.get());
 }
 
-void TDACI::propogate_taylor2(SharedVector C0, SharedMatrix H  ) {
+void TDACI::propagate_taylor2(SharedVector C0, SharedMatrix H  ) {
 
     outfile->Printf("\n  Propogating with quadratic Taylor algorithm");
     Timer t2;
@@ -525,14 +484,15 @@ void TDACI::propogate_taylor2(SharedVector C0, SharedMatrix H  ) {
         int orb = options_["TDACI_OCC_ORB"][h].to_integer();
         orbs[h] = orb;
     }
-    // The screening criterion
-   // double eta = options_.get_double("TDACI_ETA");        
-    double d_tau = options_.get_double("TDACI_TIMESTEP")*0.0413413745758;        
-    double tau = 0.0;
+
     int nstep = options_.get_int("TDACI_NSTEP");
+    double dt = options_.get_double("TDACI_TIMESTEP");
+    double conv = 1.0/24.18884326505;
+    dt *= conv;
+    double time = dt;
     
     size_t ndet = C0->dim();
-    std::vector<std::vector<double>> occupations(orbs.size(), std::vector<double>(nstep));
+    std::vector<std::vector<double>> occupations(orbs.size());
     //The imaginary part
     SharedVector C0_r = std::make_shared<Vector>("C0r", ndet);
     SharedVector C0_i = std::make_shared<Vector>("C0i", ndet);
@@ -544,9 +504,7 @@ void TDACI::propogate_taylor2(SharedVector C0, SharedMatrix H  ) {
     
     for( int N = 0; N < nstep; ++N ){
         std::vector<size_t> counter(ndet, 0);
-        tau += d_tau;
-
-//        outfile->Printf("\n  Propogating at t = %1.6f", tau/0.0413413745758);        
+      //  outfile->Printf("\n  Propogating at t = %1.6f", time/conv);        
         SharedVector sigma_r = std::make_shared<Vector>("Sr", ndet);        
         SharedVector sigma_i = std::make_shared<Vector>("Si", ndet);        
     
@@ -559,8 +517,8 @@ void TDACI::propogate_taylor2(SharedVector C0, SharedMatrix H  ) {
         sigma_r->gemv(false, 1.0, &(*H), &(*C0_r), 0.0);
         sigma_i->gemv(false, 1.0, &(*H), &(*C0_i), 0.0);
 
-        sigma_r->scale(d_tau);
-        sigma_i->scale(d_tau);
+        sigma_r->scale(dt);
+        sigma_i->scale(dt);
 
         Ct_r->add(C0_r);
         Ct_i->add(C0_i);
@@ -570,13 +528,13 @@ void TDACI::propogate_taylor2(SharedVector C0, SharedMatrix H  ) {
         // Quadratic correction
         SharedVector sigmaq_r = std::make_shared<Vector>("Sr", ndet);        
         SharedVector sigmaq_i = std::make_shared<Vector>("Si", ndet);        
-        sigma_r->scale(1.0/d_tau);
-        sigma_i->scale(1.0/d_tau);
+        sigma_r->scale(1.0/dt);
+        sigma_i->scale(1.0/dt);
         sigmaq_r->gemv(false, 1.0, &(*H), &(*sigma_r), 0.0);
         sigmaq_i->gemv(false, 1.0, &(*H), &(*sigma_i), 0.0);
 
-        sigmaq_r->scale( d_tau * d_tau * 0.5);
-        sigmaq_i->scale( d_tau * d_tau * 0.5);
+        sigmaq_r->scale( dt * dt * 0.5);
+        sigmaq_i->scale( dt * dt * 0.5);
 
         Ct_r->subtract(sigmaq_r);
         Ct_i->subtract(sigmaq_i);
@@ -598,25 +556,30 @@ void TDACI::propogate_taylor2(SharedVector C0, SharedMatrix H  ) {
         }
 
         // print the wavefunction
-        if( std::abs( (tau/0.0413413745758) - round(tau/0.0413413745758)) <= 1e-8){ 
+        if( std::fabs( (time/conv) - round(time/conv)) <= 1e-8 ){
             if( options_.get_bool("TDACI_PRINT_WFN")){
-                outfile->Printf("\n Saving wavefunction for t = %1.3f as", tau/0.0413413745758);
+                outfile->Printf("\n Saving wavefunction for t = %1.3f as",time/conv );
                 std::stringstream ss;
-                ss << std::fixed << std::setprecision(3) << tau/0.0413413745758;
-                save_vector(Ct_r,"taylor2_" + ss.str()+ "_r.txt");
-                save_vector(Ct_i,"taylor2_" + ss.str()+ "_i.txt");
+                ss << std::fixed << std::setprecision(3) << time/conv;
+                save_vector(Ct_r,"t2_" + ss.str()+ "_r.txt");
+                save_vector(Ct_i,"t2_" + ss.str()+ "_i.txt");
             }
+            std::vector<double> occ = compute_occupation(Ct_r, Ct_i, orbs);
             for( size_t i = 0; i < orbs.size(); ++i ){
-                save_vector(occupations[i], "occupations_" + std::to_string(orbs[i]) + ".txt");
+                occupations[i].push_back(occ[i]);
             }
         }
         C0_r->copy(Ct_r->clone());
         C0_i->copy(Ct_i->clone());
+        time += dt;
     } 
+    for( size_t i = 0; i < orbs.size(); ++i ){
+        save_vector(occupations[i], "occupations_" + std::to_string(orbs[i]) + ".txt");
+    }
     outfile->Printf("\n  Time spent propogating (quadratic): %1.6f", t2.get());
 }
 
-void TDACI::propogate_RK4(SharedVector C0, SharedMatrix H  ) {
+void TDACI::propagate_RK4(SharedVector C0, SharedMatrix H  ) {
 
     outfile->Printf("\n  Propogating with 4th order Runge-Kutta algorithm");
 
@@ -762,7 +725,7 @@ void TDACI::propogate_RK4(SharedVector C0, SharedMatrix H  ) {
     outfile->Printf("\n  Time spent propogating (RK4): %1.6f", total.get());
 }
 
-void TDACI::propogate_QCN(SharedVector C0, SharedMatrix H  ) {
+void TDACI::propagate_QCN(SharedVector C0, SharedMatrix H  ) {
 
     Timer total;
     size_t ndet = C0->dim();
@@ -875,7 +838,7 @@ void TDACI::propogate_QCN(SharedVector C0, SharedMatrix H  ) {
     }
 } 
 
-void TDACI::propogate_lanczos(SharedVector C0, SharedMatrix H  ) {
+void TDACI::propagate_lanczos(SharedVector C0, SharedMatrix H  ) {
 
 
     std::vector<int> orbs(options_["TDACI_OCC_ORB"].size());
@@ -1119,7 +1082,7 @@ void TDACI::propogate_lanczos(SharedVector C0, SharedMatrix H  ) {
     outfile->Printf("\n  Time spent propogating (Lanzcos): %1.6f", total.get());
 }
 
-//void TDACI::propogate_verlet(std::vector<std::pair<double,double>>& C0, std::vector<std::pair<double,double>>& C_tau, std::shared_ptr<FCIIntegrals> fci_ints, DeterminantHashVec& ann_dets  ) {
+//void TDACI::propagate_verlet(std::vector<std::pair<double,double>>& C0, std::vector<std::pair<double,double>>& C_tau, std::shared_ptr<FCIIntegrals> fci_ints, DeterminantHashVec& ann_dets  ) {
 //    
 //    // The screening criterion
 //    double eta = options_.get_double("TDACI_ETA");        
@@ -1394,7 +1357,7 @@ void TDACI::compute_tdaci_select(SharedVector C0) {
             propagate_RK4_select_list(PQ_coeffs_r, PQ_coeffs_i, PQ_space, dt ); 
         }
 
-        outfile->Printf("\n  propogate: %1.6f", prop.get());
+        outfile->Printf("\n  propagate: %1.6f", prop.get());
 
 //        const det_hashvec& PQ_dets = PQ_space.wfn_hash();
 //        for( size_t I = 0; I < PQ_space.size(); ++I ){
