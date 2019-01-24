@@ -1272,7 +1272,7 @@ void TDACI::compute_tdaci_select(SharedVector C0) {
     dt *= conv;
     double time = dt;
 
-    std::vector<std::vector<double>> occupations(orbs.size(), std::vector<double>(nstep));
+    std::vector<std::vector<double>> occupations(orbs.size());
     // Get the initial P and Q space determinants
     DeterminantHashVec P_space;
     DeterminantHashVec PQ_space;
@@ -1370,14 +1370,9 @@ void TDACI::compute_tdaci_select(SharedVector C0) {
 //            }
 //        }
 
-        // 3. Save wfn/occ to file
-        std::vector<double> occ = compute_occupation(PQ_space, PQ_coeffs_r, PQ_coeffs_i, orbs);
-        for( size_t i = 0; i < orbs.size(); ++i ){
-            occupations[i][N] = occ[i];
-        }
 
-        if( options_.get_bool("TDACI_PRINT_WFN")){
-            if( std::abs( (time/conv) - round(time/conv) ) <= 1e-8){
+        if( std::abs( (time/conv) - round(time/conv) ) <= 1e-8){
+            if( options_.get_bool("TDACI_PRINT_WFN")){
                 std::stringstream ss;
                 ss << std::fixed << std::setprecision(3) << time/conv;
                 save_vector(PQ_coeffs_r, "select_" + ss.str() +"_r.txt");
@@ -1391,6 +1386,11 @@ void TDACI::compute_tdaci_select(SharedVector C0) {
                     det_str[I] = detI.str(nact).c_str();
                 }
                 save_vector(det_str, "determinants_"+ ss.str()+ ".txt");
+            }
+            // 3. Save wfn/occ to file
+            std::vector<double> occ = compute_occupation(PQ_space, PQ_coeffs_r, PQ_coeffs_i, orbs);
+            for( size_t i = 0; i < orbs.size(); ++i ){
+                occupations[i].push_back(occ[i]);
             }
         }
         
