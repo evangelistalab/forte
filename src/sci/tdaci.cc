@@ -365,10 +365,10 @@ void TDACI::propagate_cn( SharedVector C0, SharedMatrix H ){
 //        outfile->Printf("\n  norm(t=%1.3f) = %1.5f", time/conv, norm);
         
         if( std::abs( time/conv - round(time/conv) ) <= 1e-8){
+            outfile->Printf("\n t = %1.3f as", time/conv);
             std::stringstream ss;
             ss << std::fixed << std::setprecision(3) << time/conv;
             if( options_.get_bool("TDACI_PRINT_WFN")){
-                outfile->Printf("\n Saving wavefunction for t = %1.3f as", time/conv);
                 save_vector(ct_r,"CN_" + ss.str()+ "_r.txt");
                 save_vector(ct_i,"CN_" + ss.str()+ "_i.txt");
             }
@@ -411,7 +411,7 @@ void TDACI::propagate_taylor1(SharedVector C0, SharedMatrix H  ) {
     C0_r->copy(C0->clone());
     C0_i->zero();
     
-    std::vector<std::vector<double>> occupations(orbs.size(), std::vector<double>(nstep));
+    std::vector<std::vector<double>> occupations(orbs.size());
     
     for( int N = 0; N < nstep; ++N ){
         std::vector<size_t> counter(ndet, 0);
@@ -449,21 +449,20 @@ void TDACI::propagate_taylor1(SharedVector C0, SharedMatrix H  ) {
         Ct_r->scale(norm);        
         Ct_i->scale(norm);        
 
-        std::vector<double> occ = compute_occupation(Ct_r, Ct_i, orbs);
-        for( size_t i = 0; i < orbs.size(); ++i ){
-            occupations[i][N] = occ[i];
-        }
 
         // print the wavefunction
-        if( options_.get_bool("TDACI_PRINT_WFN")){
-            if( std::abs( (tau/0.0413413745758) - round(tau/0.0413413745758)) <= 1e-8){ 
-
-                outfile->Printf("\n Saving wavefunction for t = %1.3f as", tau/0.0413413745758);
+        if( std::abs( (tau/0.0413413745758) - round(tau/0.0413413745758)) <= 1e-8){ 
+            outfile->Printf("\n t = %1.3f as", tau/0.0413413745758);
+            if( options_.get_bool("TDACI_PRINT_WFN")){
                 std::stringstream ss;
                 ss << std::fixed << std::setprecision(3) << tau/0.0413413745758;
                 save_vector(Ct_r,"taylor_" + ss.str()+ "_r.txt");
                 save_vector(Ct_i,"taylor_" + ss.str()+ "_i.txt");
                
+            }
+            std::vector<double> occ = compute_occupation(Ct_r, Ct_i, orbs);
+            for( size_t i = 0; i < orbs.size(); ++i ){
+                occupations[i].push_back(occ[i]);
             }
         }
         C0_r->copy(Ct_r->clone());
@@ -550,15 +549,10 @@ void TDACI::propagate_taylor2(SharedVector C0, SharedMatrix H  ) {
         Ct_r->scale(norm);        
         Ct_i->scale(norm);        
 
-        std::vector<double> occ = compute_occupation(Ct_r, Ct_i, orbs);
-        for( size_t i = 0; i < orbs.size(); ++i ){
-            occupations[i][N] = occ[i];
-        }
-
         // print the wavefunction
         if( std::fabs( (time/conv) - round(time/conv)) <= 1e-8 ){
+            outfile->Printf("\n t = %1.3f as",time/conv );
             if( options_.get_bool("TDACI_PRINT_WFN")){
-                outfile->Printf("\n Saving wavefunction for t = %1.3f as",time/conv );
                 std::stringstream ss;
                 ss << std::fixed << std::setprecision(3) << time/conv;
                 save_vector(Ct_r,"t2_" + ss.str()+ "_r.txt");
@@ -704,10 +698,10 @@ void TDACI::propagate_RK4(SharedVector C0, SharedMatrix H  ) {
         ct_i->scale(1.0/norm);
 
         if( std::fabs( (time/conv) - round(time/conv)) <= 1e-8 ){
+            outfile->Printf("\n t = %1.3f as", time/conv);
             if( options_.get_bool("TDACI_PRINT_WFN")){
                 std::stringstream ss;
                 ss << std::fixed << std::setprecision(3) << time/conv;
-                outfile->Printf("\n Saving wavefunction for t = %1.3f as", time/conv);
                 save_vector(ct_r,"RK4_" + ss.str()+ "_r.txt");
                 save_vector(ct_i,"RK4_" + ss.str()+ "_i.txt");
             }
@@ -819,10 +813,10 @@ void TDACI::propagate_QCN(SharedVector C0, SharedMatrix H  ) {
             ct_i->copy( ct_i_new->clone() );
         }
         if( std::fabs( (time/conv) - round(time/conv)) <= 1e-8 ){
+            outfile->Printf("\n t = %1.3f as", time/conv);
             if( options_.get_bool("TDACI_PRINT_WFN")){
                 std::stringstream ss;
                 ss << std::fixed << std::setprecision(3) << time/conv;
-                outfile->Printf("\n Saving wavefunction for t = %1.3f as", time/conv);
                 save_vector(ct_r,"QCN_" + ss.str()+ "_r.txt");
                 save_vector(ct_i,"QCN_" + ss.str()+ "_i.txt");
             }
@@ -867,7 +861,7 @@ void TDACI::propagate_lanczos(SharedVector C0, SharedMatrix H  ) {
 
     int krylov_dim = options_.get_int("TDACI_KRYLOV_DIM");
 
-    std::vector<std::vector<double>> occupations(orbs.size(), std::vector<double>(nstep));
+    std::vector<std::vector<double>> occupations(orbs.size());
     SharedMatrix Kn_r = std::make_shared<Matrix>("knr", ndet, krylov_dim);
     SharedMatrix Kn_i = std::make_shared<Matrix>("kni", ndet, krylov_dim);
     for( int N = 0; N < nstep; ++N ){
@@ -1061,16 +1055,17 @@ void TDACI::propagate_lanczos(SharedVector C0, SharedMatrix H  ) {
         ct_r->scale( 1.0/sqrt(norm));
         ct_i->scale( 1.0/sqrt(norm));
 
-        std::vector<double> occ = compute_occupation(ct_r, ct_i, orbs);
-        for( size_t i = 0; i < orbs.size(); ++i ){
-            occupations[i][N] = occ[i];
-        }
         if( options_.get_bool("TDACI_PRINT_WFN")){
+            outfile->Printf("\n  t = %1.3f as", time/conv);
             if( std::abs( (time/conv) - round((time/conv)) ) <= 1e-8){
                 std::stringstream ss;
                 ss << std::fixed << std::setprecision(3) << time/conv;
                 save_vector(ct_r, "lanczos_" + ss.str() +"_r.txt");
                 save_vector(ct_i, "lanczos_" + ss.str() +"_i.txt");
+            }
+            std::vector<double> occ = compute_occupation(ct_r, ct_i, orbs);
+            for( size_t i = 0; i < orbs.size(); ++i ){
+                occupations[i].push_back(occ[i]);
             }
         }
         time += dt;
