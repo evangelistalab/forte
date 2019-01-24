@@ -12,6 +12,7 @@ void MRDSRG_SO::commutator_H_A_3_sr(double factor, BlockedTensor& H1, BlockedTen
     C0 = 0.0;
     C1.zero();
     C2.zero();
+    C3.zero();
 
     C0 += 1.0 * H1["v0,c0"] * T1["c0,v0"];
     C0 += (1.0 / 4.0) * H2["v0,v1,c0,c1"] * T2["c0,c1,v0,v1"];
