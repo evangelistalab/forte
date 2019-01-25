@@ -37,10 +37,10 @@
 #include "psi4/libpsi4util/libpsi4util.h"
 #include "psi4/physconst.h"
 
-#include "forte_options.h"
+#include "base_classes/forte_options.h"
 #include "ci_rdm/ci_rdms.h"
 #include "sparse_ci/ci_reference.h"
-#include "fci/fci_integrals.h"
+#include "integrals/active_space_integrals.h"
 #include "base_classes/reference.h"
 #include "sparse_ci/sparse_ci_solver.h"
 #include "sparse_ci/determinant.h"
@@ -70,7 +70,7 @@ void set_TDACI_options(ForteOptions& foptions);
  * @brief The TDACI class
  * This class implements an adaptive CI algorithm
  */
-class TDACI : public psi::Wavefunction {
+class TDACI {
   public:
     // ==> Class Constructor and Destructor <==
 
@@ -81,8 +81,7 @@ class TDACI : public psi::Wavefunction {
      * @param ints A pointer to an allocated integral object
      * @param mo_space_info A pointer to the MOSpaceInfo object
      */
-    TDACI(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
-               std::shared_ptr<MOSpaceInfo> mo_space_info);
+    TDACI(StateInfo state, std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options, std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ActiveSpaceIntegrals> as_ints);
 
     /// Destructor
     ~TDACI();
@@ -93,10 +92,11 @@ class TDACI : public psi::Wavefunction {
     double compute_energy();
 
   private:
-    std::shared_ptr<ForteIntegrals> ints_;
-    psi::SharedWavefunction wfn_;      
+    StateInfo state_;
+    std::shared_ptr<SCFInfo> scf_info_;
+    std::shared_ptr<ActiveSpaceIntegrals> as_ints_;
+    std::shared_ptr<ForteOptions> options_;
     std::shared_ptr<MOSpaceInfo> mo_space_info_; 
-    std::shared_ptr<FCIIntegrals> fci_ints_;
 
     void annihilate_wfn( DeterminantHashVec& olddets, DeterminantHashVec& adets, int frz_orb );
 

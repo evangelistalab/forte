@@ -65,27 +65,7 @@ void AdaptiveCI::set_fci_ints(std::shared_ptr<ActiveSpaceIntegrals> fci_ints) {
     set_ints_ = true;
 }
 
-void AdaptiveCI::set_aci_ints(psi::SharedWavefunction ref_wfn, std::shared_ptr<ForteIntegrals> ints) {
-    timer int_timer("ACI:Form Integrals");
-    ints_ = ints;
-    shallow_copy(ref_wfn);
-    reference_wavefunction_ = ref_wfn;
-
-    fci_ints_ = std::make_shared<FCIIntegrals>(ints, mo_space_info_->get_corr_abs_mo("ACTIVE"),
-                                               mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
-
-    auto active_mo = mo_space_info_->get_corr_abs_mo("ACTIVE");
-    ambit::Tensor tei_active_aa = ints->aptei_aa_block(active_mo, active_mo, active_mo, active_mo);
-    ambit::Tensor tei_active_ab = ints->aptei_ab_block(active_mo, active_mo, active_mo, active_mo);
-    ambit::Tensor tei_active_bb = ints->aptei_bb_block(active_mo, active_mo, active_mo, active_mo);
-    fci_ints_->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
-    fci_ints_->compute_restricted_one_body_operator();
-
-    nuclear_repulsion_energy_ =
-        molecule_->nuclear_repulsion_energy(reference_wavefunction_->get_dipole_field_strength());
-}
-
-std::shared_ptr<FCIIntegrals> AdaptiveCI::get_aci_ints() { return fci_ints_; }
+std::shared_ptr<ActiveSpaceIntegrals> AdaptiveCI::get_aci_ints() { return as_ints_; }
 
 void AdaptiveCI::startup() {
     quiet_mode_ = false;

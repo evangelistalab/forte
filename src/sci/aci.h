@@ -146,7 +146,7 @@ class AdaptiveCI : public SelectedCIMethod {
     void unpaired_density(ambit::Tensor Ua, ambit::Tensor Ub);
     void spin_analysis();
 
-    std::shared_ptr<FCIIntegrals> get_aci_ints();
+    std::shared_ptr<ActiveSpaceIntegrals> get_aci_ints();
   private:
     // Temporarily added
     psi::SharedMatrix P_evecs_;

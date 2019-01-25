@@ -82,13 +82,8 @@ void set_TDACI_options(ForteOptions& foptions) {
     foptions.add_double("TDACI_PRESCREEN_THRESH", 1e-12, "Prescreening threshold");
 }
 
-TDACI::TDACI(psi::SharedWavefunction ref_wfn, psi::Options& options,
-                       std::shared_ptr<ForteIntegrals> ints,
-                       std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : Wavefunction(options), ints_(ints), mo_space_info_(mo_space_info) {
-    // Copy the wavefunction information
-    shallow_copy(ref_wfn);
-    wfn_ = ref_wfn;
+    TDACI::TDACI(StateInfo state, std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options, std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ActiveSpaceIntegrals> as_ints)
+    : state_(state), scf_info_(scf_info), as_ints_(as_ints), options_(options), mo_space_info_(mo_space_info) {
 }
 
 TDACI::~TDACI() {}
@@ -97,16 +92,16 @@ double TDACI::compute_energy() {
 
     double en = 0.0;
     int nact = mo_space_info_->size("ACTIVE");
-    int hole = options_.get_int("TDACI_HOLE");
+    int hole = options_->get_int("TDACI_HOLE");
 
     // skip some steps if doing screening
     bool screen = false;
-    if (options_.get_str("TDACI_PROPOGATOR") == "EXACT_SELECT" ){
+    if (options_->get_str("TDACI_PROPOGATOR") == "EXACT_SELECT" ){
         screen = true;
     }
 
     // 1. Grab an ACI wavefunction
-    auto aci = std::make_shared<AdaptiveCI>(wfn_, options_, ints_, mo_space_info_);
+    auto aci = std::make_shared<AdaptiveCI>(state_, scf_info_, options_, mo_space_info_, as_ints_);
     aci->set_quiet(true);
     aci->compute_energy();
     DeterminantHashVec aci_dets = aci->get_wavefunction();
@@ -122,7 +117,7 @@ double TDACI::compute_energy() {
 
     // 3. Build the full n-1 Hamiltonian if not screening
     std::vector<std::string> det_str( nann);
-    fci_ints_ = aci->get_aci_ints();
+    as_ints_ = aci->get_aci_ints();
     SharedMatrix full_aH = std::make_shared<Matrix>("aH",nann, nann);
     if (!screen){
         for( size_t I = 0; I < nann; ++I ){
@@ -130,7 +125,7 @@ double TDACI::compute_energy() {
             det_str[I] = detI.str(nact).c_str();
             for( size_t J = I; J < nann; ++J ){
                 Determinant detJ = ann_dets_.get_det(J);
-                double value = fci_ints_->slater_rules(detI,detJ);
+                double value = as_ints_->slater_rules(detI,detJ);
                 full_aH->set(I,J, value);
                 full_aH->set(J,I, value);
             }
@@ -165,24 +160,24 @@ double TDACI::compute_energy() {
     core_coeffs->scale(norm);
 
     // 5. Propagate
-    if( options_.get_str("TDACI_PROPOGATOR") == "EXACT" ){
+    if( options_->get_str("TDACI_PROPOGATOR") == "EXACT" ){
         propagate_exact( core_coeffs, full_aH );
-    } else if ( options_.get_str("TDACI_PROPOGATOR") == "CN"){
+    } else if ( options_->get_str("TDACI_PROPOGATOR") == "CN"){
         propagate_cn( core_coeffs, full_aH );
-    } else if ( options_.get_str("TDACI_PROPOGATOR") == "QCN" ){
+    } else if ( options_->get_str("TDACI_PROPOGATOR") == "QCN" ){
         propagate_QCN( core_coeffs, full_aH );
-    } else if ( options_.get_str("TDACI_PROPOGATOR") == "LINEAR" ){
+    } else if ( options_->get_str("TDACI_PROPOGATOR") == "LINEAR" ){
         propagate_taylor1( core_coeffs, full_aH);
-    } else if ( options_.get_str("TDACI_PROPOGATOR") == "QUADRATIC" ){
+    } else if ( options_->get_str("TDACI_PROPOGATOR") == "QUADRATIC" ){
         propagate_taylor2( core_coeffs, full_aH);
-    } else if (options_.get_str("TDACI_PROPOGATOR") == "RK4" ){
+    } else if (options_->get_str("TDACI_PROPOGATOR") == "RK4" ){
         propagate_RK4( core_coeffs, full_aH);
-    } else if (options_.get_str("TDACI_PROPOGATOR") == "LANCZOS" ){
+    } else if (options_->get_str("TDACI_PROPOGATOR") == "LANCZOS" ){
         propagate_lanczos( core_coeffs, full_aH);
-    } else if (options_.get_str("TDACI_PROPOGATOR") == "EXACT_SELECT" or options_.get_str("TDACI_PROPOGATOR") == "RK4_SELECT"
-               or options_.get_str("TDACI_PROPOGATOR") == "RK4_SELECT_LIST" ){
+    } else if (options_->get_str("TDACI_PROPOGATOR") == "EXACT_SELECT" or options_->get_str("TDACI_PROPOGATOR") == "RK4_SELECT"
+               or options_->get_str("TDACI_PROPOGATOR") == "RK4_SELECT_LIST" ){
         compute_tdaci_select(core_coeffs);
-    } else if (options_.get_str("TDACI_PROPOGATOR") == "ALL" ){
+    } else if (options_->get_str("TDACI_PROPOGATOR") == "ALL" ){
         propagate_exact( core_coeffs, full_aH );
         propagate_cn( core_coeffs, full_aH );
         propagate_taylor1( core_coeffs, full_aH);
@@ -198,12 +193,8 @@ double TDACI::compute_energy() {
 void TDACI::propagate_exact(SharedVector C0, SharedMatrix H) {
 
 
-
-    std::vector<int> orbs(options_["TDACI_OCC_ORB"].size());
-    for( size_t h = 0; h < options_["TDACI_OCC_ORB"].size(); ++h ){
-        int orb = options_["TDACI_OCC_ORB"][h].to_integer();
-        orbs[h] = orb;
-    }
+    
+    std::vector<int> orbs = options_->get_int_vec("TDACI_OCC_ORB");
 
     Timer t1;
     size_t ndet = C0->dim();
@@ -215,8 +206,8 @@ void TDACI::propagate_exact(SharedVector C0, SharedMatrix H) {
     outfile->Printf("\n  Diagonalizing Hamiltonian");
     H->diagonalize(evecs, evals);
 
-    int nstep = options_.get_int("TDACI_NSTEP");
-    double dt = options_.get_double("TDACI_TIMESTEP");
+    int nstep = options_->get_int("TDACI_NSTEP");
+    double dt = options_->get_double("TDACI_TIMESTEP");
 
     SharedVector ct_r = std::make_shared<Vector>("ct_R",ndet);
     SharedVector ct_i = std::make_shared<Vector>("ct_I",ndet);
@@ -243,7 +234,7 @@ void TDACI::propagate_exact(SharedVector C0, SharedMatrix H) {
         ct_i->gemv(false, 1.0, &(*evecs), &(*int1i), 0.0);
         
         if( std::abs( time - round(time) ) <= 1e-8){
-            if( options_.get_bool("TDACI_PRINT_WFN")){
+            if( options_->get_bool("TDACI_PRINT_WFN")){
                 std::stringstream ss;
                 ss << std::fixed << std::setprecision(3) << time;
               //  save_vector(mag,"exact_" + ss.str()+ ".txt");
@@ -273,8 +264,8 @@ void TDACI::propagate_cn( SharedVector C0, SharedMatrix H ){
     Timer total;
     size_t ndet = C0->dim();
 
-    int nstep = options_.get_int("TDACI_NSTEP");
-    double dt = options_.get_double("TDACI_TIMESTEP");
+    int nstep = options_->get_int("TDACI_NSTEP");
+    double dt = options_->get_double("TDACI_TIMESTEP");
     double conv = 1.0/24.18884326505;
     dt *= conv;
     double time = dt;
@@ -287,11 +278,7 @@ void TDACI::propagate_cn( SharedVector C0, SharedMatrix H ){
     ct_r->copy(C0->clone());
     ct_i->zero();
 
-    std::vector<int> orbs(options_["TDACI_OCC_ORB"].size());
-    for( size_t h = 0; h < options_["TDACI_OCC_ORB"].size(); ++h ){
-        int orb = options_["TDACI_OCC_ORB"][h].to_integer();
-        orbs[h] = orb;
-    }
+    std::vector<int> orbs = options_->get_int_vec("TDACI_OCC_ORB");
 
     std::vector<std::vector<double>> occupations(orbs.size());
     for( int n = 1; n <= nstep; ++n ){
@@ -341,7 +328,7 @@ void TDACI::propagate_cn( SharedVector C0, SharedMatrix H ){
             }
 
 //            outfile->Printf("\n  %1.9f", err->norm());
-            if( err->norm() <= options_.get_double("TDACI_CN_CONVERGENCE") ){
+            if( err->norm() <= options_->get_double("TDACI_CN_CONVERGENCE") ){
                 converged = true;
             }
             
@@ -368,7 +355,7 @@ void TDACI::propagate_cn( SharedVector C0, SharedMatrix H ){
             outfile->Printf("\n t = %1.3f as", time/conv);
             std::stringstream ss;
             ss << std::fixed << std::setprecision(3) << time/conv;
-            if( options_.get_bool("TDACI_PRINT_WFN")){
+            if( options_->get_bool("TDACI_PRINT_WFN")){
                 save_vector(ct_r,"CN_" + ss.str()+ "_r.txt");
                 save_vector(ct_i,"CN_" + ss.str()+ "_i.txt");
             }
@@ -390,16 +377,12 @@ void TDACI::propagate_taylor1(SharedVector C0, SharedMatrix H  ) {
     outfile->Printf("\n  Propogating with linear Taylor algorithm");
     
     Timer t1;
-    std::vector<int> orbs(options_["TDACI_OCC_ORB"].size());
-    for( size_t h = 0; h < options_["TDACI_OCC_ORB"].size(); ++h ){
-        int orb = options_["TDACI_OCC_ORB"][h].to_integer();
-        orbs[h] = orb;
-    }
+    std::vector<int> orbs = options_->get_int_vec("TDACI_OCC_ORB");
     // The screening criterion
-   // double eta = options_.get_double("TDACI_ETA_P");        
-    double d_tau = options_.get_double("TDACI_TIMESTEP")*0.0413413745758;        
+   // double eta = options_->get_double("TDACI_ETA_P");        
+    double d_tau = options_->get_double("TDACI_TIMESTEP")*0.0413413745758;        
     double tau = 0.0;
-    int nstep = options_.get_int("TDACI_NSTEP");
+    int nstep = options_->get_int("TDACI_NSTEP");
     
     size_t ndet = C0->dim();
     //The imaginary part
@@ -453,7 +436,7 @@ void TDACI::propagate_taylor1(SharedVector C0, SharedMatrix H  ) {
         // print the wavefunction
         if( std::abs( (tau/0.0413413745758) - round(tau/0.0413413745758)) <= 1e-8){ 
             outfile->Printf("\n t = %1.3f as", tau/0.0413413745758);
-            if( options_.get_bool("TDACI_PRINT_WFN")){
+            if( options_->get_bool("TDACI_PRINT_WFN")){
                 std::stringstream ss;
                 ss << std::fixed << std::setprecision(3) << tau/0.0413413745758;
                 save_vector(Ct_r,"taylor_" + ss.str()+ "_r.txt");
@@ -478,14 +461,10 @@ void TDACI::propagate_taylor2(SharedVector C0, SharedMatrix H  ) {
 
     outfile->Printf("\n  Propogating with quadratic Taylor algorithm");
     Timer t2;
-    std::vector<int> orbs(options_["TDACI_OCC_ORB"].size());
-    for( size_t h = 0; h < options_["TDACI_OCC_ORB"].size(); ++h ){
-        int orb = options_["TDACI_OCC_ORB"][h].to_integer();
-        orbs[h] = orb;
-    }
+    std::vector<int> orbs = options_->get_int_vec("TDACI_OCC_ORB");
 
-    int nstep = options_.get_int("TDACI_NSTEP");
-    double dt = options_.get_double("TDACI_TIMESTEP");
+    int nstep = options_->get_int("TDACI_NSTEP");
+    double dt = options_->get_double("TDACI_TIMESTEP");
     double conv = 1.0/24.18884326505;
     dt *= conv;
     double time = dt;
@@ -552,7 +531,7 @@ void TDACI::propagate_taylor2(SharedVector C0, SharedMatrix H  ) {
         // print the wavefunction
         if( std::fabs( (time/conv) - round(time/conv)) <= 1e-8 ){
             outfile->Printf("\n t = %1.3f as",time/conv );
-            if( options_.get_bool("TDACI_PRINT_WFN")){
+            if( options_->get_bool("TDACI_PRINT_WFN")){
                 std::stringstream ss;
                 ss << std::fixed << std::setprecision(3) << time/conv;
                 save_vector(Ct_r,"t2_" + ss.str()+ "_r.txt");
@@ -580,18 +559,14 @@ void TDACI::propagate_RK4(SharedVector C0, SharedMatrix H  ) {
     Timer total;
     size_t ndet = C0->dim();
 
-    int nstep = options_.get_int("TDACI_NSTEP");
-    double dt = options_.get_double("TDACI_TIMESTEP");
+    int nstep = options_->get_int("TDACI_NSTEP");
+    double dt = options_->get_double("TDACI_TIMESTEP");
     double conv = 1.0/24.18884326505;
     dt *= conv;
     double time = dt;
 
 
-    std::vector<int> orbs(options_["TDACI_OCC_ORB"].size());
-    for( size_t h = 0; h < options_["TDACI_OCC_ORB"].size(); ++h ){
-        int orb = options_["TDACI_OCC_ORB"][h].to_integer();
-        orbs[h] = orb;
-    }
+    std::vector<int> orbs = options_->get_int_vec("TDACI_OCC_ORB");
     std::vector<std::vector<double>> occupations(orbs.size());
     // Copy initial state into iteratively updated vectors
     SharedVector ct_r = std::make_shared<Vector>("ct_R",ndet);
@@ -699,7 +674,7 @@ void TDACI::propagate_RK4(SharedVector C0, SharedMatrix H  ) {
 
         if( std::fabs( (time/conv) - round(time/conv)) <= 1e-8 ){
             outfile->Printf("\n t = %1.3f as", time/conv);
-            if( options_.get_bool("TDACI_PRINT_WFN")){
+            if( options_->get_bool("TDACI_PRINT_WFN")){
                 std::stringstream ss;
                 ss << std::fixed << std::setprecision(3) << time/conv;
                 save_vector(ct_r,"RK4_" + ss.str()+ "_r.txt");
@@ -724,17 +699,13 @@ void TDACI::propagate_QCN(SharedVector C0, SharedMatrix H  ) {
     Timer total;
     size_t ndet = C0->dim();
 
-    size_t nstep = options_.get_int("TDACI_NSTEP");
-    double dt = options_.get_double("TDACI_TIMESTEP");
+    size_t nstep = options_->get_int("TDACI_NSTEP");
+    double dt = options_->get_double("TDACI_TIMESTEP");
     double conv = 1.0/24.18884326505;
     dt *= conv;
     double time = dt;
 
-    std::vector<int> orbs(options_["TDACI_OCC_ORB"].size());
-    for( size_t h = 0; h < options_["TDACI_OCC_ORB"].size(); ++h ){
-        int orb = options_["TDACI_OCC_ORB"][h].to_integer();
-        orbs[h] = orb;
-    }
+    std::vector<int> orbs = options_->get_int_vec("TDACI_OCC_ORB");
     std::vector<std::vector<double>> occupations(orbs.size());
 
     // Copy initial state into iteratively updated vectors
@@ -805,7 +776,7 @@ void TDACI::propagate_QCN(SharedVector C0, SharedMatrix H  ) {
             }
 
  //           outfile->Printf("\n  %1.9f", err->norm());
-            if( err->norm() <= options_.get_double("TDACI_CN_CONVERGENCE") ){
+            if( err->norm() <= options_->get_double("TDACI_CN_CONVERGENCE") ){
                 converged = true;
             }
             
@@ -814,7 +785,7 @@ void TDACI::propagate_QCN(SharedVector C0, SharedMatrix H  ) {
         }
         if( std::fabs( (time/conv) - round(time/conv)) <= 1e-8 ){
             outfile->Printf("\n t = %1.3f as", time/conv);
-            if( options_.get_bool("TDACI_PRINT_WFN")){
+            if( options_->get_bool("TDACI_PRINT_WFN")){
                 std::stringstream ss;
                 ss << std::fixed << std::setprecision(3) << time/conv;
                 save_vector(ct_r,"QCN_" + ss.str()+ "_r.txt");
@@ -835,18 +806,14 @@ void TDACI::propagate_QCN(SharedVector C0, SharedMatrix H  ) {
 void TDACI::propagate_lanczos(SharedVector C0, SharedMatrix H  ) {
 
 
-    std::vector<int> orbs(options_["TDACI_OCC_ORB"].size());
-    for( size_t h = 0; h < options_["TDACI_OCC_ORB"].size(); ++h ){
-        int orb = options_["TDACI_OCC_ORB"][h].to_integer();
-        orbs[h] = orb;
-    }
+    std::vector<int> orbs = options_->get_int_vec("TDACI_OCC_ORB");
 
     outfile->Printf("\n  Propogating with Arnoldi-Lanzcos algorithm");
     Timer total;
     size_t ndet = C0->dim();
 
-    int nstep = options_.get_int("TDACI_NSTEP");
-    double dt = options_.get_double("TDACI_TIMESTEP");
+    int nstep = options_->get_int("TDACI_NSTEP");
+    double dt = options_->get_double("TDACI_TIMESTEP");
     double conv = 1.0/24.18884326505;
     dt *= conv;
     double time = dt;
@@ -859,7 +826,7 @@ void TDACI::propagate_lanczos(SharedVector C0, SharedMatrix H  ) {
     ct_r->copy(C0->clone());
     ct_i->zero();
 
-    int krylov_dim = options_.get_int("TDACI_KRYLOV_DIM");
+    int krylov_dim = options_->get_int("TDACI_KRYLOV_DIM");
 
     std::vector<std::vector<double>> occupations(orbs.size());
     SharedMatrix Kn_r = std::make_shared<Matrix>("knr", ndet, krylov_dim);
@@ -1055,7 +1022,7 @@ void TDACI::propagate_lanczos(SharedVector C0, SharedMatrix H  ) {
         ct_r->scale( 1.0/sqrt(norm));
         ct_i->scale( 1.0/sqrt(norm));
 
-        if( options_.get_bool("TDACI_PRINT_WFN")){
+        if( options_->get_bool("TDACI_PRINT_WFN")){
             outfile->Printf("\n  t = %1.3f as", time/conv);
             if( std::abs( (time/conv) - round((time/conv)) ) <= 1e-8){
                 std::stringstream ss;
@@ -1080,10 +1047,10 @@ void TDACI::propagate_lanczos(SharedVector C0, SharedMatrix H  ) {
 //void TDACI::propagate_verlet(std::vector<std::pair<double,double>>& C0, std::vector<std::pair<double,double>>& C_tau, std::shared_ptr<FCIIntegrals> fci_ints, DeterminantHashVec& ann_dets  ) {
 //    
 //    // The screening criterion
-//    double eta = options_.get_double("TDACI_ETA");        
-//    double d_tau = options_.get_double("TDACI_TIMESTEP")*0.0413413745758;        
+//    double eta = options_->get_double("TDACI_ETA");        
+//    double d_tau = options_->get_double("TDACI_TIMESTEP")*0.0413413745758;        
 //    double tau = 0.0;
-//    int nstep = options_.get_int("TDACI_NSTEP");
+//    int nstep = options_->get_int("TDACI_NSTEP");
 //    
 //    size_t ndet = ann_dets.size();
 //    C_tau.resize(ndet);
@@ -1250,19 +1217,15 @@ void TDACI::compute_tdaci_select(SharedVector C0) {
 
 
     Timer t1;
-    double eta = options_.get_double("TDACI_ETA_P");
+    double eta = options_->get_double("TDACI_ETA_P");
     int nact = mo_space_info_->size("ACTIVE");
 
     // A list of orbitals to compute occupations during propogation
-    std::vector<int> orbs(options_["TDACI_OCC_ORB"].size());
-    for( size_t h = 0; h < options_["TDACI_OCC_ORB"].size(); ++h ){
-        int orb = options_["TDACI_OCC_ORB"][h].to_integer();
-        orbs[h] = orb;
-    }
+    std::vector<int> orbs = options_->get_int_vec("TDACI_OCC_ORB");
 
     // Timestep details
-    int nstep = options_.get_int("TDACI_NSTEP");
-    double dt = options_.get_double("TDACI_TIMESTEP");
+    int nstep = options_->get_int("TDACI_NSTEP");
+    double dt = options_->get_double("TDACI_TIMESTEP");
     double conv = 1.0/24.18884326505;
     dt *= conv;
     double time = dt;
@@ -1344,11 +1307,11 @@ void TDACI::compute_tdaci_select(SharedVector C0) {
         // 2. Propogate in PQ space
         Timer prop;
 
-        if( options_.get_str("TDACI_PROPOGATOR") == "EXACT_SELECT"){
+        if( options_->get_str("TDACI_PROPOGATOR") == "EXACT_SELECT"){
             propagate_exact_select(PQ_coeffs_r, PQ_coeffs_i, PQ_space, dt ); 
-        } else if (options_.get_str("TDACI_PROPOGATOR") == "RK4_SELECT") {
+        } else if (options_->get_str("TDACI_PROPOGATOR") == "RK4_SELECT") {
             propagate_RK4_select(PQ_coeffs_r, PQ_coeffs_i, PQ_space, dt ); 
-        } else if (options_.get_str("TDACI_PROPOGATOR") == "RK4_SELECT_LIST") {
+        } else if (options_->get_str("TDACI_PROPOGATOR") == "RK4_SELECT_LIST") {
             propagate_RK4_select_list(PQ_coeffs_r, PQ_coeffs_i, PQ_space, dt ); 
         }
 
@@ -1367,7 +1330,7 @@ void TDACI::compute_tdaci_select(SharedVector C0) {
 
 
         if( std::abs( (time/conv) - round(time/conv) ) <= 1e-8){
-            if( options_.get_bool("TDACI_PRINT_WFN")){
+            if( options_->get_bool("TDACI_PRINT_WFN")){
                 std::stringstream ss;
                 ss << std::fixed << std::setprecision(3) << time/conv;
                 save_vector(PQ_coeffs_r, "select_" + ss.str() +"_r.txt");
@@ -1408,13 +1371,13 @@ void TDACI::compute_tdaci_select(SharedVector C0) {
 void TDACI::get_PQ_space( DeterminantHashVec& P_space,  std::vector<double>& P_coeffs_r,std::vector<double>& P_coeffs_i, 
                           DeterminantHashVec& PQ_space, std::vector<double>& PQ_coeffs_r,std::vector<double>& PQ_coeffs_i ) {
 
-    double eta = options_.get_double("TDACI_ETA_PQ");
-    double dt = options_.get_double("TDACI_TIMESTEP");
+    double eta = options_->get_double("TDACI_ETA_PQ");
+    double dt = options_->get_double("TDACI_TIMESTEP");
     double conv = 1.0/24.18884326505;
     dt *= conv;
     int nact = mo_space_info_->size("ACTIVE");
     auto mo_sym = mo_space_info_->symmetry("ACTIVE");
-    double thresh = options_.get_double("TDACI_PRESCREEN_THRESH");
+    double thresh = options_->get_double("TDACI_PRESCREEN_THRESH");
 
     size_t max_P = P_space.size();
     const det_hashvec& P_dets = P_space.wfn_hash();
@@ -1442,7 +1405,7 @@ void TDACI::get_PQ_space( DeterminantHashVec& P_space,  std::vector<double>& P_c
             const Determinant& det = P_dets[P];
             double Cp_r = P_coeffs_r[P];
             double Cp_i = P_coeffs_i[P];
-            Hc_t[det] = std::make_pair( Cp_r*fci_ints_->energy(det), Cp_i*fci_ints_->energy(det) );
+            Hc_t[det] = std::make_pair( Cp_r*as_ints_->energy(det), Cp_i*as_ints_->energy(det) );
         }
 
         for( size_t P = start_idx; P < end_idx; ++P ){ 
@@ -1470,7 +1433,7 @@ void TDACI::get_PQ_space( DeterminantHashVec& P_space,  std::vector<double>& P_c
                 for( size_t a = 0; a < nvalpha; ++a ){
                     size_t aa = avir[a];
                     if( (mo_sym[ii] ^ mo_sym[aa]) == 0 ){
-                        double int_ia =  fci_ints_->slater_rules_single_alpha( det, ii, aa );
+                        double int_ia =  as_ints_->slater_rules_single_alpha( det, ii, aa );
                         if( std::fabs(int_ia * Cmag_sq) >= thresh ){
 
                             new_det = det;
@@ -1501,7 +1464,7 @@ void TDACI::get_PQ_space( DeterminantHashVec& P_space,  std::vector<double>& P_c
                 for( size_t a = 0; a < nvbeta; ++a ){
                     size_t aa = bvir[a];
                     if( (mo_sym[ii] ^ mo_sym[aa]) == 0 ){
-                        double int_ia =  fci_ints_->slater_rules_single_beta( det, ii, aa );
+                        double int_ia =  as_ints_->slater_rules_single_beta( det, ii, aa );
                         if( std::fabs(int_ia * Cmag_sq) >= thresh ){
                             new_det = det;
                             new_det.set_beta_bit(ii,false);
@@ -1533,7 +1496,7 @@ void TDACI::get_PQ_space( DeterminantHashVec& P_space,  std::vector<double>& P_c
                         for( size_t b = 0; b < nvbeta; ++b ){
                             size_t bb = bvir[b];
                             if ((mo_sym[ii] ^ mo_sym[jj] ^ mo_sym[aa] ^ mo_sym[bb]) == 0 ){
-                                double int_ijab = fci_ints_->tei_ab(ii,jj,aa,bb);
+                                double int_ijab = as_ints_->tei_ab(ii,jj,aa,bb);
                                 if( std::fabs(int_ijab * Cmag_sq) >= thresh ){
                                     new_det = det;
                                     int_ijab *= new_det.double_excitation_ab(ii,jj,aa,bb);
@@ -1567,7 +1530,7 @@ void TDACI::get_PQ_space( DeterminantHashVec& P_space,  std::vector<double>& P_c
                         for( size_t b = a+1; b < nvalpha; ++b ){
                             size_t bb = avir[b];
                             if ((mo_sym[ii] ^ mo_sym[jj] ^ mo_sym[aa] ^ mo_sym[bb]) == 0 ){
-                                double int_ijab = fci_ints_->tei_aa(ii,jj,aa,bb);
+                                double int_ijab = as_ints_->tei_aa(ii,jj,aa,bb);
                                 if( std::fabs(int_ijab * Cmag_sq) >= thresh ){
                                     new_det = det;
                                     int_ijab *= new_det.double_excitation_aa(ii,jj,aa,bb);
@@ -1602,7 +1565,7 @@ void TDACI::get_PQ_space( DeterminantHashVec& P_space,  std::vector<double>& P_c
                         for( size_t b = a+1; b < nvbeta; ++b ){
                             size_t bb = bvir[b];
                             if ((mo_sym[ii] ^ mo_sym[jj] ^ mo_sym[aa] ^ mo_sym[bb]) == 0 ){
-                                double int_ijab = fci_ints_->tei_bb(ii,jj,aa,bb);
+                                double int_ijab = as_ints_->tei_bb(ii,jj,aa,bb);
                                 if( std::fabs(int_ijab * Cmag_sq) >= thresh ){
                                     new_det = det;
                                     int_ijab *= new_det.double_excitation_bb(ii,jj,aa,bb);
@@ -1757,7 +1720,7 @@ void TDACI::propagate_exact_select(std::vector<double>& PQ_coeffs_r,std::vector<
         const Determinant& detI = PQ_dets[I]; 
         for( size_t J = I; J < npq; ++J ){
             const Determinant& detJ = PQ_dets[J]; 
-            double value = fci_ints_->slater_rules(detI,detJ);
+            double value = as_ints_->slater_rules(detI,detJ);
             H->set(I,J, value);
             H->set(J,I, value);
         }
@@ -1806,7 +1769,7 @@ void TDACI::update_P_space( DeterminantHashVec& P_space, std::vector<double>& P_
 
     std::sort( sorted_dets.begin(), sorted_dets.end() );
 
-    double eta = options_.get_double("TDACI_ETA_P");
+    double eta = options_->get_double("TDACI_ETA_P");
     const det_hashvec& PQ_dets = PQ_space.wfn_hash();
     
     double sum = 0.0;
@@ -1874,7 +1837,7 @@ void TDACI::propagate_RK4_select(std::vector<double>& PQ_coeffs_r,std::vector<do
 
         for( size_t J = I; J < npq; ++J ){
             const Determinant& detJ = PQ_dets[J]; 
-            double value = fci_ints_->slater_rules(detI,detJ);
+            double value = as_ints_->slater_rules(detI,detJ);
             H->set(I,J, value);
             H->set(J,I, value);
         }
@@ -1991,7 +1954,7 @@ void TDACI::propagate_RK4_select_list(std::vector<double>& PQ_coeffs_r,std::vect
 
     // build coupling lists
     auto mo_sym = mo_space_info_->symmetry("ACTIVE");
-    WFNOperator op(mo_sym, fci_ints_);
+    WFNOperator op(mo_sym, as_ints_);
 
     op.build_strings(PQ_space);
     op.op_s_lists(PQ_space);
@@ -2113,7 +2076,7 @@ void TDACI::complex_sigma_build(std::vector<double>& sigma_r, std::vector<double
         size_t end_idx = start_idx + bin_size;
 
         for (size_t J = start_idx; J < end_idx; ++J) {
-            double diag_J = fci_ints_->energy(dets[J]);
+            double diag_J = as_ints_->energy(dets[J]);
             sigma_r[J] += diag_J * c_r[J]; 
             sigma_i[J] += diag_J * c_i[J]; 
         }
@@ -2141,7 +2104,7 @@ void TDACI::complex_sigma_build(std::vector<double>& sigma_r, std::vector<double
                             const size_t I = detI.first;
                             double sign_q = detI.second > 0.0 ? 1.0 : -1.0;
                             const double HIJ =
-                                fci_ints_->slater_rules_single_alpha_abs(dets[J], p, q) * sign_p *
+                                as_ints_->slater_rules_single_alpha_abs(dets[J], p, q) * sign_p *
                                 sign_q;
                             sigma_t_r[I] += HIJ * c_r[J];
                             sigma_t_r[J] += HIJ * c_r[I];
@@ -2174,7 +2137,7 @@ void TDACI::complex_sigma_build(std::vector<double>& sigma_r, std::vector<double
                             const size_t I = detI.first;
                             double sign_q = detI.second > 0.0 ? 1.0 : -1.0;
                             const double HIJ =
-                                fci_ints_->slater_rules_single_beta_abs(dets[J], p, q) * sign_p *
+                                as_ints_->slater_rules_single_beta_abs(dets[J], p, q) * sign_p *
                                 sign_q;
                             sigma_t_r[I] += HIJ * c_r[J];
                             sigma_t_r[J] += HIJ * c_r[I];
@@ -2213,7 +2176,7 @@ void TDACI::complex_sigma_build(std::vector<double>& sigma_r, std::vector<double
                         if ((p != r) and (q != s) and (p != s) and (q != r)) {
                             size_t I = std::get<0>(detI);
                             double sign_q = std::get<1>(detI) > 0.0 ? 1.0 : -1.0;
-                            double HIJ = sign_p * sign_q * fci_ints_->tei_aa(p, q, r, s);
+                            double HIJ = sign_p * sign_q * as_ints_->tei_aa(p, q, r, s);
                             sigma_t_r[I] += HIJ * c_r[J];
                             sigma_t_r[J] += HIJ * c_r[I];
 
@@ -2243,7 +2206,7 @@ void TDACI::complex_sigma_build(std::vector<double>& sigma_r, std::vector<double
                         if ((p != r) and (q != s) and (p != s) and (q != r)) {
                             size_t I = std::get<0>(detI);
                             double sign_q = std::get<1>(detI) > 0.0 ? 1.0 : -1.0;
-                            double HIJ = sign_p * sign_q * fci_ints_->tei_bb(p, q, r, s);
+                            double HIJ = sign_p * sign_q * as_ints_->tei_bb(p, q, r, s);
                             sigma_t_r[I] += HIJ * c_r[J];
                             sigma_t_r[J] += HIJ * c_r[I];
 
@@ -2271,7 +2234,7 @@ void TDACI::complex_sigma_build(std::vector<double>& sigma_r, std::vector<double
                         if ((p != r) and (q != s)) {
                             size_t I = std::get<0>(detI);
                             double sign_q = std::get<1>(detI) > 0.0 ? 1.0 : -1.0;
-                            double HIJ = sign_p * sign_q * fci_ints_->tei_ab(p, q, r, s);
+                            double HIJ = sign_p * sign_q * as_ints_->tei_ab(p, q, r, s);
                             sigma_t_r[I] += HIJ * c_r[J];
                             sigma_t_r[J] += HIJ * c_r[I];
 
