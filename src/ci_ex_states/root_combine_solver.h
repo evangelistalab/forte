@@ -31,28 +31,26 @@
 
 #include "ci_ex_states/excited_state_solver.h"
 namespace forte {
-class RootCombineSolver : public ExcitedStateSolver
-{
-public:
-  RootCombineSolver(StateInfo state, size_t nroot,
-                    std::shared_ptr<MOSpaceInfo> mo_space_info,
-                    std::shared_ptr<ActiveSpaceIntegrals> as_ints,
-                    std::shared_ptr<SelectedCIMethod> sci);
+class RootCombineSolver : public ExcitedStateSolver {
+  public:
+    RootCombineSolver(StateInfo state, size_t nroot, std::shared_ptr<MOSpaceInfo> mo_space_info,
+                      std::shared_ptr<ActiveSpaceIntegrals> as_ints,
+                      std::shared_ptr<SelectedCIMethod> sci);
 
-  /// Virtual destructor to enable deletion of a Derived* through a Base*
-  virtual ~RootCombineSolver() = default;
+    /// Virtual destructor to enable deletion of a Derived* through a Base*
+    virtual ~RootCombineSolver() = default;
 
-  // ==> Class Interface <==
+    // ==> Class Interface <==
 
-  /// Compute the energy and return it
-  double compute_energy() override;
+    /// Compute the energy and return it
+    double compute_energy() override;
 
-  /// Returns the reference
-  std::vector<Reference> reference(std::vector<std::pair<size_t, size_t>>& roots) override;
+    /// Returns the reference
+    std::vector<Reference> reference(std::vector<std::pair<size_t, size_t>>& roots) override;
 
-  /// Set options from an option object
-  /// @param options the options passed in
-  void set_options(std::shared_ptr<ForteOptions> options) override;
+    /// Set options from an option object
+    /// @param options the options passed in
+    void set_options(std::shared_ptr<ForteOptions> options) override;
 };
 }
 #endif // ROOT_COMBINE_SOLVER_H

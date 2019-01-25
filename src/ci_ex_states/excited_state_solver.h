@@ -44,10 +44,9 @@
 namespace forte {
 class SelectedCIMethod;
 
-class ExcitedStateSolver : public ActiveSpaceMethod{
+class ExcitedStateSolver : public ActiveSpaceMethod {
   public:
-    ExcitedStateSolver(StateInfo state, size_t nroot,
-                       std::shared_ptr<MOSpaceInfo> mo_space_info,
+    ExcitedStateSolver(StateInfo state, size_t nroot, std::shared_ptr<MOSpaceInfo> mo_space_info,
                        std::shared_ptr<ActiveSpaceIntegrals> as_ints,
                        std::shared_ptr<SelectedCIMethod> sci);
 
@@ -60,7 +59,8 @@ class ExcitedStateSolver : public ActiveSpaceMethod{
     virtual double compute_energy() override;
 
     /// Returns the reference
-    virtual std::vector<Reference> reference(std::vector<std::pair<size_t, size_t>>& roots) override = 0;
+    virtual std::vector<Reference>
+    reference(std::vector<std::pair<size_t, size_t>>& roots) override = 0;
 
     /// Set options from an option object
     /// @param options the options passed in
@@ -76,7 +76,6 @@ class ExcitedStateSolver : public ActiveSpaceMethod{
     void set_quiet(bool quiet);
 
   protected:
-
     DeterminantHashVec final_wfn_;
     WFNOperator op_;
 
@@ -103,7 +102,8 @@ class ExcitedStateSolver : public ActiveSpaceMethod{
     /// Print information about this calculation
     void print_info();
     /// Save older roots
-    void save_old_root(DeterminantHashVec& dets, psi::SharedMatrix& PQ_evecs, int root, int ref_root);
+    void save_old_root(DeterminantHashVec& dets, psi::SharedMatrix& PQ_evecs, int root,
+                       int ref_root);
 
     void compute_multistate(psi::SharedVector& PQ_evals);
     /// Computes spin
@@ -115,6 +115,5 @@ class ExcitedStateSolver : public ActiveSpaceMethod{
     /// Print a wave function
     void print_wfn(DeterminantHashVec& space, WFNOperator& op, psi::SharedMatrix evecs, int nroot);
 };
-
 }
 #endif // _excited_state_solver_h_

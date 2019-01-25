@@ -36,7 +36,5 @@ GroundStateSolver::GroundStateSolver(StateInfo state, size_t nroot,
                                      std::shared_ptr<SelectedCIMethod> sci)
     : ExcitedStateSolver(state, nroot, mo_space_info, as_ints, sci) {}
 
-double GroundStateSolver::compute_energy() {
-    return sci_->compute_energy();
-}
+double GroundStateSolver::compute_energy() { return sci_->compute_energy(); }
 }

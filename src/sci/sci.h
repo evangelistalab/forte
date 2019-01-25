@@ -44,8 +44,8 @@ class SCFInfo;
 class SelectedCIMethod {
   public:
     SelectedCIMethod(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
-               std::shared_ptr<MOSpaceInfo> mo_space_info,
-               std::shared_ptr<ActiveSpaceIntegrals> as_ints);
+                     std::shared_ptr<MOSpaceInfo> mo_space_info,
+                     std::shared_ptr<ActiveSpaceIntegrals> as_ints);
 
     /// Virtual destructor to enable deletion of a Derived* through a Base*
     virtual ~SelectedCIMethod() = default;
@@ -55,12 +55,13 @@ class SelectedCIMethod {
     /// Compute the energy and return it
     double compute_energy();
 
-//    /// Returns the reference
-//    virtual std::vector<Reference> reference(std::vector<std::pair<size_t, size_t>>& roots) override = 0;
+    //    /// Returns the reference
+    //    virtual std::vector<Reference> reference(std::vector<std::pair<size_t, size_t>>& roots)
+    //    override = 0;
 
-//    /// Set options from an option object
-//    /// @param options the options passed in
-//    virtual void set_options(std::shared_ptr<ForteOptions> options) override = 0;
+    //    /// Set options from an option object
+    //    /// @param options the options passed in
+    //    virtual void set_options(std::shared_ptr<ForteOptions> options) override = 0;
 };
 } // namespace forte
 #endif // _sci_h_
