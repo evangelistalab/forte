@@ -103,6 +103,12 @@ src/sci/asci.cc
 src/sci/fci_mo.cc
 src/sci/mrci.cc
 src/sci/mrpt2.cc
+src/sci/sci.cc
+src/ci_ex_states/excited_state_solver.cc
+src/ci_ex_states/ground_state_solver.cc
+src/ci_ex_states/root_ortho_solver.cc
+src/ci_ex_states/root_combine_solver.cc
+src/ci_ex_states/multi_state_solver.cc
 src/sparse_ci/sparse_ci_solver.cc
 src/sparse_ci/sigma_vector.cc
 src/sparse_ci/sigma_vector_dynamic.cc
