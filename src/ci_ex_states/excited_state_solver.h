@@ -31,6 +31,7 @@
 
 #include "sparse_ci/determinant_hashvector.h"
 #include "base_classes/active_space_method.h"
+#include "base_classes/reference.h"
 #include "sparse_ci/sparse_ci_solver.h"
 
 #ifdef _OPENMP
@@ -60,7 +61,7 @@ class ExcitedStateSolver : public ActiveSpaceMethod {
 
     /// Returns the reference
     virtual std::vector<Reference>
-    reference(std::vector<std::pair<size_t, size_t>>& roots) override = 0;
+    reference(std::vector<std::pair<size_t, size_t>>& roots) override;
 
     /// Set options from an option object
     /// @param options the options passed in
@@ -79,6 +80,8 @@ class ExcitedStateSolver : public ActiveSpaceMethod {
     DeterminantHashVec final_wfn_;
     WFNOperator op_;
 
+    /// The number of active orbitals
+    size_t nact_;
     std::shared_ptr<SelectedCIMethod> sci_;
     std::shared_ptr<SparseCISolver> sparse_solver_;
     /// Algorithm for computing excited states
@@ -97,6 +100,12 @@ class ExcitedStateSolver : public ActiveSpaceMethod {
     psi::SharedMatrix evecs_;
     /// Adds all active single excitations to the final wave function
     bool add_singles_ = false;
+    /// Computes RDMs without coupling lists
+    bool direct_rdms_ = false;
+    /// Run test for the RDMs
+    bool test_rdms_ = false;
+    /// Print final wavefunction to file
+    bool save_final_wfn_ = false;
 
   private:
     /// Print information about this calculation
@@ -112,8 +121,14 @@ class ExcitedStateSolver : public ActiveSpaceMethod {
     /// Print Summary
     void print_final(DeterminantHashVec& dets, psi::SharedMatrix& PQ_evecs,
                      psi::SharedVector& PQ_evals);
+    /// Save a wave function
+    void wfn_to_file(DeterminantHashVec& det_space, psi::SharedMatrix evecs, int root);
     /// Print a wave function
     void print_wfn(DeterminantHashVec& space, WFNOperator& op, psi::SharedMatrix evecs, int nroot);
+
+    /// Compute the RDMs
+    Reference compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints, DeterminantHashVec& dets,
+                           WFNOperator& op, psi::SharedMatrix& PQ_evecs, int root1, int root2);
 };
 }
 #endif // _excited_state_solver_h_
