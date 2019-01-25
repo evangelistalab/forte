@@ -129,14 +129,6 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
                                                forte_options, mo_space_info, as_ints);
         final_energy = casscf->compute_energy();
     }
-    if (options.get_bool("CINO")) {
-        auto cino = std::make_shared<CINO>(ref_wfn, options, ints, mo_space_info);
-        cino->compute_energy();
-    }
-    if (options.get_bool("MRCINO")) {
-        auto mrcino = std::make_shared<MRCINO>(ref_wfn, options, ints, mo_space_info);
-        final_energy = mrcino->compute_energy();
-    }
     if (options.get_str("JOB_TYPE") == "MR-DSRG-PT2") {
         std::string cas_type = options.get_str("CAS_TYPE");
         if (std::string actv_type = options.get_str("FCIMO_ACTV_TYPE");

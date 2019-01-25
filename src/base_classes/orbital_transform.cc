@@ -30,6 +30,8 @@
 
 #include "orbital-helpers/localize.h"
 #include "orbital-helpers/mp2_nos.h"
+#include "orbital-helpers/ci-no/ci-no.h"
+#include "orbital-helpers/ci-no/mrci-no.h"
 
 namespace forte {
 
@@ -49,6 +51,12 @@ std::unique_ptr<OrbitalTransform> make_orbital_transformation(const std::string&
     }
     if( type == "MP2_NOS" ){
         orb_t = std::make_unique<MP2_NOS>(state, scf_info, options, ints, mo_space_info);
+    } 
+    if( type == "CINO" ){
+        orb_t = std::make_unique<CINO>(scf_info, options, ints, mo_space_info);
+    } 
+    if( type == "MRCINO" ){
+        orb_t = std::make_unique<MRCINO>(scf_info, options, ints, mo_space_info);
     } 
 
     return orb_t;
