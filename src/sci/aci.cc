@@ -1280,7 +1280,6 @@ void AdaptiveCI::print_wfn(DeterminantHashVec& space, WFNOperator& op, psi::Shar
                             tmp.get_det(I).str(nact_).c_str());
         }
         state_label = s2_labels[std::round(spins[n].first * 2.0)];
-        root_spin_vec_.clear();
         root_spin_vec_[n] = std::make_pair(spins[n].first, spins[n].second);
         outfile->Printf("\n\n  Spin state for root %zu: S^2 = %5.6f, S = %5.3f, %s", n,
                         root_spin_vec_[n].first, root_spin_vec_[n].second, state_label.c_str());

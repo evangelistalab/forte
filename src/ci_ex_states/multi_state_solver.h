@@ -31,11 +31,9 @@
 
 #include "ci_ex_states/excited_state_solver.h"
 namespace forte {
-class MultiStateSolver : public ExcitedStateSolver
-{
+class MultiStateSolver : public ExcitedStateSolver {
   public:
-    MultiStateSolver(StateInfo state, size_t nroot,
-                     std::shared_ptr<MOSpaceInfo> mo_space_info,
+    MultiStateSolver(StateInfo state, size_t nroot, std::shared_ptr<MOSpaceInfo> mo_space_info,
                      std::shared_ptr<ActiveSpaceIntegrals> as_ints,
                      std::shared_ptr<SelectedCIMethod> sci);
 

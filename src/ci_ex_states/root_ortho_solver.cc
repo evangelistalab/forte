@@ -33,7 +33,5 @@ RootOrthoSolver::RootOrthoSolver(StateInfo state, size_t nroot,
                                  std::shared_ptr<ActiveSpaceIntegrals> as_ints,
                                  std::shared_ptr<SelectedCIMethod> sci)
     : ExcitedStateSolver(state, nroot, mo_space_info, as_ints, sci) {}
-double RootOrthoSolver::compute_energy() {
-    return 0.0;
-}
+double RootOrthoSolver::compute_energy() { return 0.0; }
 }

@@ -57,7 +57,8 @@ void ExcitedStateSolver::set_options(std::shared_ptr<ForteOptions> options) {
         sparse_solver_->set_e_convergence(options->get_double("E_CONVERGENCE"));
         sparse_solver_->set_maxiter_davidson(options->get_int("DL_MAXITER"));
         sparse_solver_->set_spin_project(options->get_bool("ACI_PROJECT_OUT_SPIN_CONTAMINANTS"));
-        sparse_solver_->set_spin_project_full(options->get_bool("ACI_PROJECT_OUT_SPIN_CONTAMINANTS"));
+        sparse_solver_->set_spin_project_full(
+            options->get_bool("ACI_PROJECT_OUT_SPIN_CONTAMINANTS"));
         sparse_solver_->set_guess_dimension(options->get_int("DL_GUESS_SIZE"));
         sparse_solver_->set_num_vecs(options->get_int("N_GUESS_VEC"));
         sparse_solver_->set_sigma_method(options->get_str("SIGMA_BUILD_TYPE"));
@@ -74,8 +75,7 @@ void ExcitedStateSolver::print_info() {
         {"Number of roots", nroot_}};
 
     std::vector<std::pair<std::string, std::string>> calculation_info_string{
-        {"Ms", get_ms_string(state_.twice_ms())},
-        {"Excited Algorithm", ex_alg_}};
+        {"Ms", get_ms_string(state_.twice_ms())}, {"Excited Algorithm", ex_alg_}};
 
     // Print some information
     psi::outfile->Printf("\n  ==> Calculation Information <==\n");
@@ -92,8 +92,9 @@ void ExcitedStateSolver::print_info() {
 double ExcitedStateSolver::compute_energy() {
     timer energy_timer("ExcitedStateSolver:Energy");
 
-    print_method_banner({"Selected Configuration Interaction Excited States",
-                         "written by Jeffrey B. Schriber, Tianyuan Zhang and Francesco A. Evangelista"});
+    print_method_banner(
+        {"Selected Configuration Interaction Excited States",
+         "written by Jeffrey B. Schriber, Tianyuan Zhang and Francesco A. Evangelista"});
     psi::outfile->Printf("\n  ==> Reference Information <==\n");
     print_info();
     if (!quiet_mode_) {
@@ -113,9 +114,7 @@ double ExcitedStateSolver::compute_energy() {
     int nrun = 1;
     bool multi_state = false;
 
-    if (ex_alg_ == "ROOT_COMBINE" or
-        ex_alg_ == "MULTISTATE" or
-        ex_alg_ == "ROOT_ORTHOGONALIZE") {
+    if (ex_alg_ == "ROOT_COMBINE" or ex_alg_ == "MULTISTATE" or ex_alg_ == "ROOT_ORTHOGONALIZE") {
         nrun = nroot_;
         multi_state = true;
     }
@@ -150,7 +149,7 @@ double ExcitedStateSolver::compute_energy() {
             ref_root = i - 1;
         }
 
-//        sci_->compute_energy(PQ_space, PQ_evecs, PQ_evals);
+        //        sci_->compute_energy(PQ_space, PQ_evecs, PQ_evals);
 
         if (ex_alg_ == "ROOT_COMBINE") {
             sizes[i] = PQ_space.size();
@@ -245,29 +244,30 @@ double ExcitedStateSolver::compute_energy() {
     }
     evecs_ = PQ_evecs;
 
-    double root_energy =
-        PQ_evals->get(froot) + as_ints_->ints()->nuclear_repulsion_energy() + as_ints_->scalar_energy();
+    double root_energy = PQ_evals->get(froot) + as_ints_->ints()->nuclear_repulsion_energy() +
+                         as_ints_->scalar_energy();
     double root_energy_pt2 = root_energy + multistate_pt2_energy_correction_[froot];
 
     psi::Process::environment.globals["CURRENT ENERGY"] = root_energy;
     psi::Process::environment.globals["ACI ENERGY"] = root_energy;
-//    psi::Process::environment.globals["ACI+PT2 ENERGY"] = root_energy_pt2;
+    //    psi::Process::environment.globals["ACI+PT2 ENERGY"] = root_energy_pt2;
 
     // Save final wave function to a file
-//    if (options_->get_bool("ACI_SAVE_FINAL_WFN")) {
-//        int root = root_;
-//        psi::outfile->Printf("\n  Saving final wave function for root %d", root);
-//        wfn_to_file(final_wfn_, PQ_evecs, root);
-//    }
+    //    if (options_->get_bool("ACI_SAVE_FINAL_WFN")) {
+    //        int root = root_;
+    //        psi::outfile->Printf("\n  Saving final wave function for root %d", root);
+    //        wfn_to_file(final_wfn_, PQ_evecs, root);
+    //    }
 
-//    psi::outfile->Printf("\n\n  %s: %f s", "Adaptive-CI ran in ", aci_elapse.get());
+    //    psi::outfile->Printf("\n\n  %s: %f s", "Adaptive-CI ran in ", aci_elapse.get());
     psi::outfile->Printf("\n\n  %s: %d", "Saving information for root", root_);
 
     // Set active space method evals
 
-    energies_.resize(nroot_,0.0);
-    for( int n = 0; n < nroot_; ++n ){
-        energies_[n] = PQ_evals->get(n) + as_ints_->ints()->nuclear_repulsion_energy() + as_ints_->scalar_energy();
+    energies_.resize(nroot_, 0.0);
+    for (int n = 0; n < nroot_; ++n) {
+        energies_[n] = PQ_evals->get(n) + as_ints_->ints()->nuclear_repulsion_energy() +
+                       as_ints_->scalar_energy();
     }
 
     return PQ_evals->get(root_) + as_ints_->ints()->nuclear_repulsion_energy() +
@@ -362,53 +362,53 @@ void ExcitedStateSolver::compute_multistate(psi::SharedVector& PQ_evals) {
 }
 
 void ExcitedStateSolver::print_final(DeterminantHashVec& dets, psi::SharedMatrix& PQ_evecs,
-                             psi::SharedVector& PQ_evals) {
+                                     psi::SharedVector& PQ_evals) {
     size_t dim = dets.size();
     // Print a summary
     psi::outfile->Printf("\n\n  ==> SCI excited state solver summary <==\n");
 
-//    psi::outfile->Printf("\n  Iterations required:                         %zu", cycle_);
+    //    psi::outfile->Printf("\n  Iterations required:                         %zu", cycle_);
     psi::outfile->Printf("\n  Dimension of optimized determinant space:    %zu\n", dim);
 
     for (int i = 0; i < nroot_; ++i) {
-        double abs_energy =
-            PQ_evals->get(i) + as_ints_->ints()->nuclear_repulsion_energy() + as_ints_->scalar_energy();
+        double abs_energy = PQ_evals->get(i) + as_ints_->ints()->nuclear_repulsion_energy() +
+                            as_ints_->scalar_energy();
         double exc_energy = pc_hartree2ev * (PQ_evals->get(i) - PQ_evals->get(0));
         psi::outfile->Printf("\n  * Adaptive-CI Energy Root %3d        = %.12f Eh = %8.4f eV", i,
-                        abs_energy, exc_energy);
+                             abs_energy, exc_energy);
         psi::outfile->Printf("\n  * Adaptive-CI Energy Root %3d + EPT2 = %.12f Eh = %8.4f eV", i,
-                        abs_energy + multistate_pt2_energy_correction_[i],
-                        exc_energy + pc_hartree2ev * (multistate_pt2_energy_correction_[i] -
-                                                      multistate_pt2_energy_correction_[0]));
+                             abs_energy + multistate_pt2_energy_correction_[i],
+                             exc_energy +
+                                 pc_hartree2ev * (multistate_pt2_energy_correction_[i] -
+                                                  multistate_pt2_energy_correction_[0]));
     }
 
     if (ex_alg_ == "ROOT_SELECT") {
         psi::outfile->Printf("\n\n  Energy optimized for Root %d: %.12f Eh", root_,
-                        PQ_evals->get(root_) + as_ints_->ints()->nuclear_repulsion_energy() +
-                            as_ints_->scalar_energy());
+                             PQ_evals->get(root_) + as_ints_->ints()->nuclear_repulsion_energy() +
+                                 as_ints_->scalar_energy());
         psi::outfile->Printf("\n\n  Root %d Energy + PT2:         %.12f Eh", root_,
-                        PQ_evals->get(root_) + as_ints_->ints()->nuclear_repulsion_energy() +
-                            as_ints_->scalar_energy() +
-                            multistate_pt2_energy_correction_[root_]);
+                             PQ_evals->get(root_) + as_ints_->ints()->nuclear_repulsion_energy() +
+                                 as_ints_->scalar_energy() +
+                                 multistate_pt2_energy_correction_[root_]);
     }
 
     if ((ex_alg_ != "ROOT_ORTHOGONALIZE") or (nroot_ == 1)) {
         psi::outfile->Printf("\n\n  ==> Wavefunction Information <==");
 
         print_wfn(dets, op_, PQ_evecs, nroot_);
-
     }
 }
 
-void ExcitedStateSolver::print_wfn(DeterminantHashVec& space, WFNOperator& op, psi::SharedMatrix evecs,
-                           int nroot) {
+void ExcitedStateSolver::print_wfn(DeterminantHashVec& space, WFNOperator& op,
+                                   psi::SharedMatrix evecs, int nroot) {
     std::string state_label;
     std::vector<std::string> s2_labels({"singlet", "doublet", "triplet", "quartet", "quintet",
                                         "sextet", "septet", "octet", "nonet", "decatet"});
 
     std::vector<std::pair<double, double>> spins = compute_spin(space, op, evecs, nroot);
 
-//    std::vector<std::pair<double, double>> root_spin_vec;
+    //    std::vector<std::pair<double, double>> root_spin_vec;
 
     for (int n = 0; n < nroot; ++n) {
         DeterminantHashVec tmp;
@@ -421,19 +421,19 @@ void ExcitedStateSolver::print_wfn(DeterminantHashVec& space, WFNOperator& op, p
 
         for (size_t I = 0; I < max_dets; ++I) {
             psi::outfile->Printf("\n  %3zu  %9.6f %.9f  %10zu %s", I, tmp_evecs[I],
-                            tmp_evecs[I] * tmp_evecs[I], space.get_idx(tmp.get_det(I)),
-                            tmp.get_det(I).str(mo_space_info_->size("ACTIVE")).c_str());
+                                 tmp_evecs[I] * tmp_evecs[I], space.get_idx(tmp.get_det(I)),
+                                 tmp.get_det(I).str(mo_space_info_->size("ACTIVE")).c_str());
         }
         state_label = s2_labels[std::round(spins[n].first * 2.0)];
         psi::outfile->Printf("\n\n  Spin state for root %zu: S^2 = %5.6f, S = %5.3f, %s", n,
-                        spins[n].first, spins[n].second, state_label.c_str());
+                             spins[n].first, spins[n].second, state_label.c_str());
     }
 }
 
 std::vector<std::pair<double, double>> ExcitedStateSolver::compute_spin(DeterminantHashVec& space,
-                                                                WFNOperator& op,
-                                                                psi::SharedMatrix evecs,
-                                                                int nroot) {
+                                                                        WFNOperator& op,
+                                                                        psi::SharedMatrix evecs,
+                                                                        int nroot) {
     // WFNOperator op(mo_symmetry_);
 
     // op.build_strings(space);
@@ -465,17 +465,14 @@ std::vector<std::pair<double, double>> ExcitedStateSolver::compute_spin(Determin
     return spin_vec;
 }
 
-void ExcitedStateSolver::set_excitation_algorithm(std::string ex_alg){
-    ex_alg_ = ex_alg;
-}
+void ExcitedStateSolver::set_excitation_algorithm(std::string ex_alg) { ex_alg_ = ex_alg; }
 
-void ExcitedStateSolver::set_excitation_type(std::string ex_type){
-    ex_type_ = ex_type;
-}
+void ExcitedStateSolver::set_excitation_type(std::string ex_type) { ex_type_ = ex_type; }
 
 void ExcitedStateSolver::set_quiet(bool quiet) { quiet_mode_ = quiet; }
 
-void ExcitedStateSolver::save_old_root(DeterminantHashVec& dets, psi::SharedMatrix& PQ_evecs, int root, int ref_root) {
+void ExcitedStateSolver::save_old_root(DeterminantHashVec& dets, psi::SharedMatrix& PQ_evecs,
+                                       int root, int ref_root) {
     std::vector<std::pair<Determinant, double>> vec;
 
     if (!quiet_mode_ and nroot_ > 0) {

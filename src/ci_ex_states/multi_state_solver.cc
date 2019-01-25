@@ -33,7 +33,5 @@ MultiStateSolver::MultiStateSolver(StateInfo state, size_t nroot,
                                    std::shared_ptr<ActiveSpaceIntegrals> as_ints,
                                    std::shared_ptr<SelectedCIMethod> sci)
     : ExcitedStateSolver(state, nroot, mo_space_info, as_ints, sci) {}
-double MultiStateSolver::compute_energy() {
-    return 0.0;
-}
+double MultiStateSolver::compute_energy() { return 0.0; }
 }
