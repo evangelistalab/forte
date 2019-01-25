@@ -26,7 +26,9 @@
  * @END LICENSE
  */
 
-#include "cmath"
+#include <fstream>
+#include <iomanip>
+#include <cmath>
 
 #include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/physconst.h"
@@ -36,12 +38,15 @@
 #include "sparse_ci/operator.h"
 #include "helpers/helpers.h"
 #include "helpers/printing.h"
+#include "ci_rdm/ci_rdms.h"
 namespace forte {
 ExcitedStateSolver::ExcitedStateSolver(StateInfo state, size_t nroot,
                                        std::shared_ptr<MOSpaceInfo> mo_space_info,
                                        std::shared_ptr<ActiveSpaceIntegrals> as_ints,
                                        std::shared_ptr<SelectedCIMethod> sci)
-    : ActiveSpaceMethod(state, nroot, mo_space_info, as_ints), sci_(sci) {}
+    : ActiveSpaceMethod(state, nroot, mo_space_info, as_ints), sci_(sci) {
+    nact_ = mo_space_info_->size("ACTIVE");
+}
 
 void ExcitedStateSolver::set_options(std::shared_ptr<ForteOptions> options) {
     ex_alg_ = options->get_str("ACI_EXCITED_ALGORITHM");
@@ -50,6 +55,9 @@ void ExcitedStateSolver::set_options(std::shared_ptr<ForteOptions> options) {
         quiet_mode_ = options->get_bool("ACI_QUIET_MODE");
     }
     add_singles_ = options->get_bool("ACI_ADD_SINGLES");
+    direct_rdms_ = options->get_bool("ACI_DIRECT_RDMS");
+    test_rdms_ = options->get_bool("ACI_TEST_RDMS");
+    save_final_wfn_ = options->get_bool("ACI_SAVE_FINAL_WFN");
     if (ex_alg_ == "ROOT_COMBINE" or add_singles_) {
         sparse_solver_ = std::make_shared<SparseCISolver>(as_ints_);
         sparse_solver_->set_parallel(true);
@@ -187,7 +195,7 @@ double ExcitedStateSolver::compute_energy() {
         psi::outfile->Printf("\n\n  ==> Diagonalizing Final Space <==");
         dim = full_space.size();
 
-        for (int n = 0; n < nroot_; ++n) {
+        for (size_t n = 0; n < nroot_; ++n) {
             psi::outfile->Printf("\n  Determinants for root %d: %zu", n, sizes[n]);
         }
 
@@ -250,14 +258,13 @@ double ExcitedStateSolver::compute_energy() {
 
     psi::Process::environment.globals["CURRENT ENERGY"] = root_energy;
     psi::Process::environment.globals["ACI ENERGY"] = root_energy;
-    //    psi::Process::environment.globals["ACI+PT2 ENERGY"] = root_energy_pt2;
+    psi::Process::environment.globals["ACI+PT2 ENERGY"] = root_energy_pt2;
 
     // Save final wave function to a file
-    //    if (options_->get_bool("ACI_SAVE_FINAL_WFN")) {
-    //        int root = root_;
-    //        psi::outfile->Printf("\n  Saving final wave function for root %d", root);
-    //        wfn_to_file(final_wfn_, PQ_evecs, root);
-    //    }
+    if (save_final_wfn_) {
+        psi::outfile->Printf("\n  Saving final wave function for root %d", root_);
+        wfn_to_file(final_wfn_, PQ_evecs, root_);
+    }
 
     //    psi::outfile->Printf("\n\n  %s: %f s", "Adaptive-CI ran in ", aci_elapse.get());
     psi::outfile->Printf("\n\n  %s: %d", "Saving information for root", root_);
@@ -265,7 +272,7 @@ double ExcitedStateSolver::compute_energy() {
     // Set active space method evals
 
     energies_.resize(nroot_, 0.0);
-    for (int n = 0; n < nroot_; ++n) {
+    for (size_t n = 0; n < nroot_; ++n) {
         energies_[n] = PQ_evals->get(n) + as_ints_->ints()->nuclear_repulsion_energy() +
                        as_ints_->scalar_energy();
     }
@@ -370,7 +377,7 @@ void ExcitedStateSolver::print_final(DeterminantHashVec& dets, psi::SharedMatrix
     //    psi::outfile->Printf("\n  Iterations required:                         %zu", cycle_);
     psi::outfile->Printf("\n  Dimension of optimized determinant space:    %zu\n", dim);
 
-    for (int i = 0; i < nroot_; ++i) {
+    for (size_t i = 0; i < nroot_; ++i) {
         double abs_energy = PQ_evals->get(i) + as_ints_->ints()->nuclear_repulsion_energy() +
                             as_ints_->scalar_energy();
         double exc_energy = pc_hartree2ev * (PQ_evals->get(i) - PQ_evals->get(0));
@@ -422,12 +429,25 @@ void ExcitedStateSolver::print_wfn(DeterminantHashVec& space, WFNOperator& op,
         for (size_t I = 0; I < max_dets; ++I) {
             psi::outfile->Printf("\n  %3zu  %9.6f %.9f  %10zu %s", I, tmp_evecs[I],
                                  tmp_evecs[I] * tmp_evecs[I], space.get_idx(tmp.get_det(I)),
-                                 tmp.get_det(I).str(mo_space_info_->size("ACTIVE")).c_str());
+                                 tmp.get_det(I).str(nact_).c_str());
         }
         state_label = s2_labels[std::round(spins[n].first * 2.0)];
         psi::outfile->Printf("\n\n  Spin state for root %zu: S^2 = %5.6f, S = %5.3f, %s", n,
                              spins[n].first, spins[n].second, state_label.c_str());
     }
+}
+
+void ExcitedStateSolver::wfn_to_file(DeterminantHashVec& det_space, psi::SharedMatrix evecs,
+                                     int root) {
+
+    std::ofstream final_wfn;
+    final_wfn.open("sci_final_wfn_" + std::to_string(root) + ".txt");
+    const det_hashvec& detmap = det_space.wfn_hash();
+    for (size_t I = 0, maxI = detmap.size(); I < maxI; ++I) {
+        final_wfn << std::scientific << std::setw(20) << std::setprecision(11)
+                  << evecs->get(I, root) << " \t " << detmap[I].str(nact_).c_str() << std::endl;
+    }
+    final_wfn.close();
 }
 
 std::vector<std::pair<double, double>> ExcitedStateSolver::compute_spin(DeterminantHashVec& space,
@@ -450,19 +470,138 @@ std::vector<std::pair<double, double>> ExcitedStateSolver::compute_spin(Determin
     }
 
     if (diag_method_ == Dynamic) {
-        for (int n = 0; n < nroot_; ++n) {
+        for (size_t n = 0; n < nroot_; ++n) {
             double S2 = op.s2_direct(space, evecs, n);
             double S = std::fabs(0.5 * (std::sqrt(1.0 + 4.0 * S2) - 1.0));
             spin_vec[n] = std::make_pair(S, S2);
         }
     } else {
-        for (int n = 0; n < nroot_; ++n) {
+        for (size_t n = 0; n < nroot_; ++n) {
             double S2 = op.s2(space, evecs, n);
             double S = std::fabs(0.5 * (std::sqrt(1.0 + 4.0 * S2) - 1.0));
             spin_vec[n] = std::make_pair(S, S2);
         }
     }
     return spin_vec;
+}
+
+std::vector<Reference>
+ExcitedStateSolver::reference(std::vector<std::pair<size_t, size_t>>& roots) {
+
+    std::vector<Reference> refs;
+
+    for (const auto& root_pair : roots) {
+
+        refs.push_back(
+            compute_rdms(as_ints_, final_wfn_, op_, evecs_, root_pair.first, root_pair.second));
+    }
+
+    return refs;
+}
+
+Reference ExcitedStateSolver::compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
+                                           DeterminantHashVec& dets, WFNOperator& op,
+                                           psi::SharedMatrix& PQ_evecs, int root1, int root2) {
+
+    if (!direct_rdms_) {
+        op.clear_op_s_lists();
+        op.clear_tp_s_lists();
+        if (diag_method_ == Dynamic) {
+            op.build_strings(dets);
+        }
+        op.op_s_lists(dets);
+        op.tp_s_lists(dets);
+
+        if (max_rdm_level_ >= 3) {
+            psi::outfile->Printf("\n  Computing 3-list...    ");
+            local_timer l3;
+            op_.three_s_lists(final_wfn_);
+            psi::outfile->Printf(" done (%1.5f s)", l3.get());
+        }
+    }
+
+    CI_RDMS ci_rdms_(dets, fci_ints, PQ_evecs, root1, root2);
+
+    ci_rdms_.set_max_rdm(max_rdm_level_);
+
+    ambit::Tensor ordm_a;
+    ambit::Tensor ordm_b;
+    ambit::Tensor trdm_aa;
+    ambit::Tensor trdm_ab;
+    ambit::Tensor trdm_bb;
+    ambit::Tensor trdm_aaa;
+    ambit::Tensor trdm_aab;
+    ambit::Tensor trdm_abb;
+    ambit::Tensor trdm_bbb;
+
+    if (direct_rdms_) {
+        // TODO: Implemente order-by-order version of direct algorithm
+        ordm_a = ambit::Tensor::build(ambit::CoreTensor, "g1a", {nact_, nact_});
+        ordm_b = ambit::Tensor::build(ambit::CoreTensor, "g1b", {nact_, nact_});
+
+        trdm_aa = ambit::Tensor::build(ambit::CoreTensor, "g2aa", {nact_, nact_, nact_, nact_});
+        trdm_ab = ambit::Tensor::build(ambit::CoreTensor, "g2ab", {nact_, nact_, nact_, nact_});
+        trdm_bb = ambit::Tensor::build(ambit::CoreTensor, "g2bb", {nact_, nact_, nact_, nact_});
+
+        trdm_aaa = ambit::Tensor::build(ambit::CoreTensor, "g2aaa",
+                                        {nact_, nact_, nact_, nact_, nact_, nact_});
+        trdm_aab = ambit::Tensor::build(ambit::CoreTensor, "g2aab",
+                                        {nact_, nact_, nact_, nact_, nact_, nact_});
+        trdm_abb = ambit::Tensor::build(ambit::CoreTensor, "g2abb",
+                                        {nact_, nact_, nact_, nact_, nact_, nact_});
+        trdm_bbb = ambit::Tensor::build(ambit::CoreTensor, "g2bbb",
+                                        {nact_, nact_, nact_, nact_, nact_, nact_});
+
+        ci_rdms_.compute_rdms_dynamic(ordm_a.data(), ordm_b.data(), trdm_aa.data(), trdm_ab.data(),
+                                      trdm_bb.data(), trdm_aaa.data(), trdm_aab.data(),
+                                      trdm_abb.data(), trdm_bbb.data());
+        //        print_nos();
+    } else {
+        if (max_rdm_level_ >= 1) {
+            local_timer one_r;
+            ordm_a = ambit::Tensor::build(ambit::CoreTensor, "g1a", {nact_, nact_});
+            ordm_b = ambit::Tensor::build(ambit::CoreTensor, "g1b", {nact_, nact_});
+
+            ci_rdms_.compute_1rdm(ordm_a.data(), ordm_b.data(), op);
+            psi::outfile->Printf("\n  1-RDM  took %2.6f s (determinant)", one_r.get());
+
+            //            if (options_->get_bool("ACI_PRINT_NO")) {
+            //                print_nos();
+            //            }
+        }
+        if (max_rdm_level_ >= 2) {
+            local_timer two_r;
+            trdm_aa = ambit::Tensor::build(ambit::CoreTensor, "g2aa", {nact_, nact_, nact_, nact_});
+            trdm_ab = ambit::Tensor::build(ambit::CoreTensor, "g2ab", {nact_, nact_, nact_, nact_});
+            trdm_bb = ambit::Tensor::build(ambit::CoreTensor, "g2bb", {nact_, nact_, nact_, nact_});
+
+            ci_rdms_.compute_2rdm(trdm_aa.data(), trdm_ab.data(), trdm_bb.data(), op);
+            psi::outfile->Printf("\n  2-RDMS took %2.6f s (determinant)", two_r.get());
+        }
+        if (max_rdm_level_ >= 3) {
+            local_timer tr;
+            trdm_aaa = ambit::Tensor::build(ambit::CoreTensor, "g2aaa",
+                                            {nact_, nact_, nact_, nact_, nact_, nact_});
+            trdm_aab = ambit::Tensor::build(ambit::CoreTensor, "g2aab",
+                                            {nact_, nact_, nact_, nact_, nact_, nact_});
+            trdm_abb = ambit::Tensor::build(ambit::CoreTensor, "g2abb",
+                                            {nact_, nact_, nact_, nact_, nact_, nact_});
+            trdm_bbb = ambit::Tensor::build(ambit::CoreTensor, "g2bbb",
+                                            {nact_, nact_, nact_, nact_, nact_, nact_});
+
+            ci_rdms_.compute_3rdm(trdm_aaa.data(), trdm_aab.data(), trdm_abb.data(),
+                                  trdm_bbb.data(), op);
+            psi::outfile->Printf("\n  3-RDMs took %2.6f s (determinant)", tr.get());
+        }
+    }
+    if (test_rdms_) {
+        ci_rdms_.rdm_test(ordm_a.data(), ordm_b.data(), trdm_aa.data(), trdm_bb.data(),
+                          trdm_ab.data(), trdm_aaa.data(), trdm_aab.data(), trdm_abb.data(),
+                          trdm_bbb.data());
+    }
+
+    return Reference(ordm_a, ordm_b, trdm_aa, trdm_ab, trdm_bb, trdm_aaa, trdm_aab, trdm_abb,
+                     trdm_bbb);
 }
 
 void ExcitedStateSolver::set_excitation_algorithm(std::string ex_alg) { ex_alg_ = ex_alg; }
