@@ -28,28 +28,39 @@
 
 #ifndef _sci_h_
 #define _sci_h_
+#include <memory>
+#include <vector>
 
-#include "base_classes/active_space_method.h"
+#include "base_classes/state_info.h"
+
 namespace forte {
-class SelectedCI : public ActiveSpaceMethod {
+class ActiveSpaceIntegrals;
+class ForteIntegrals;
+class ForteOptions;
+class MOSpaceInfo;
+class Reference;
+class SCFInfo;
+
+class SelectedCIMethod {
   public:
-    SelectedCI(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
+    SelectedCIMethod(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
                std::shared_ptr<MOSpaceInfo> mo_space_info,
                std::shared_ptr<ActiveSpaceIntegrals> as_ints);
 
-    /// Default constructor
-    SelectedCI() = default;
-
     /// Virtual destructor to enable deletion of a Derived* through a Base*
-    virtual ~SelectedCI() = default;
+    virtual ~SelectedCIMethod() = default;
 
     // ==> Class Interface <==
 
     /// Compute the energy and return it
-    double compute_energy() override;
+    double compute_energy();
 
-    /// Returns the reference
-    virtual Reference get_reference(int root = 0) = 0;
+//    /// Returns the reference
+//    virtual std::vector<Reference> reference(std::vector<std::pair<size_t, size_t>>& roots) override = 0;
+
+//    /// Set options from an option object
+//    /// @param options the options passed in
+//    virtual void set_options(std::shared_ptr<ForteOptions> options) override = 0;
 };
 } // namespace forte
 #endif // _sci_h_

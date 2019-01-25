@@ -27,18 +27,15 @@
  */
 
 #include "sci.h"
-
+#include "helpers/timer.h"
 namespace forte {
-SelectedCI::SelectedCI(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
+SelectedCIMethod::SelectedCIMethod(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
                        std::shared_ptr<MOSpaceInfo> mo_space_info,
-                       std::shared_ptr<ActiveSpaceIntegrals> as_ints)
-    : ActiveSpaceMethod(state, nroot, mo_space_info, as_ints), scf_info_(scf_info) {}
+                       std::shared_ptr<ActiveSpaceIntegrals> as_ints){}
 
-SelectedCI::~SelectedCI() {}
-
-double SelectedCI::compute_energy() {
+double SelectedCIMethod::compute_energy() {
     timer energy_timer("SelectedCI:Energy");
-
+/*
     startup();
 
     print_info();
@@ -212,6 +209,8 @@ double SelectedCI::compute_energy() {
 //    compute_rdms(as_ints_, PQ_space, op_, PQ_evecs, 0, 0);
 
     return root_energy;
+    */
+    return 0.0;
 }
 
 } // namespace forte
