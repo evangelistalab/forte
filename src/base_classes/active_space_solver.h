@@ -57,6 +57,7 @@ class ActiveSpaceSolver {
     // ==> Class Constructor and Destructor <==
     /**
      * @brief ActiveSpaceMethod Constructor for a multi-state computation
+     * @param method A string that labels the method requested (e.g. "FCI", "ACI", ...)
      * @param states_weights A list of electronic states and their weights stored as vector of
      *        pairs [(state_1, [w_11, w_12, ..., w_1m]), (state_2, [w_21, w_22, ..., w_n]), ...]
      *        where:
@@ -74,7 +75,7 @@ class ActiveSpaceSolver {
 
     // ==> Class Interface <==
 
-    /// Compute the energy and return it
+    /// Compute the energy and return it // TODO: document (Francesco)
     const std::vector<std::pair<StateInfo, std::vector<double>>>& compute_energy();
 
     /// Compute reference and return it

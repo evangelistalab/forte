@@ -180,25 +180,7 @@ class ActiveSpaceMethod {
 
     /// The energies (including nuclear repulsion) of all the states
     std::vector<double> energies_;
-
-    /// Allocates an ActiveSpaceIntegrals object and fills it with integrals stored in ints_
-    void make_active_space_ints();
 };
-
-/**
- * @brief make_active_space_method Make an active space method object
- * @param type a string that specifies the type (e.g. "FCI", "ACI", ...)
- * @param state information about the elecronic state
- * @param scf_info information about a previous SCF computation
- * @param mo_space_info orbital space information
- * @param ints an integral object
- * @param options user-provided options
- * @return a shared pointer for the base class ActiveSpaceMethod
- */
-std::unique_ptr<ActiveSpaceMethod> make_active_space_method(
-    const std::string& type, StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
-    std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ForteIntegrals> ints,
-    std::shared_ptr<ForteOptions> options);
 
 /**
  * @brief make_active_space_method Make an active space method object
@@ -210,7 +192,7 @@ std::unique_ptr<ActiveSpaceMethod> make_active_space_method(
  * @param options user-provided options
  * @return a shared pointer for the base class ActiveSpaceMethod
  */
-std::unique_ptr<ActiveSpaceMethod> make_active_space_method2(
+std::unique_ptr<ActiveSpaceMethod> make_active_space_method(
     const std::string& type, StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
     std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ActiveSpaceIntegrals> as_ints,
     std::shared_ptr<ForteOptions> options);

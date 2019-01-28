@@ -3093,62 +3093,64 @@ void THREE_DSRG_MRPT2::form_Hbar() {
     }
 }
 
-double THREE_DSRG_MRPT2::relax_reference_once() {
 
-    outfile->Printf("\n Computing ints for Heff");
-    auto fci_ints = compute_Heff_actv();
-    outfile->Printf("\n done");
+// TODO: This code is now implemented in Python, except for the printing (Francesco)
+//double THREE_DSRG_MRPT2::relax_reference_once() {
 
-    std::vector<double> E_relaxed = relaxed_energy(fci_ints);
+//    outfile->Printf("\n Computing ints for Heff");
+//    auto fci_ints = compute_Heff_actv();
+//    outfile->Printf("\n done");
 
-    if ((foptions_->psi_options())["AVG_STATE"].size() == 0) {
-        double Erelax = E_relaxed[0];
+//    std::vector<double> E_relaxed = relaxed_energy(fci_ints);
 
-        // printing
-        print_h2("CD/DF DSRG-MRPT2 Energy Summary");
-        outfile->Printf("\n    %-37s = %22.15f", "CD/DF DSRG-MRPT2 Total Energy (fixed)  ",
-                        Hbar0_ + Eref_);
-        outfile->Printf("\n    %-37s = %22.15f", "CD/DF DSRG-MRPT2 Total Energy (relaxed)", Erelax);
+//    if ((foptions_->psi_options())["AVG_STATE"].size() == 0) {
+//        double Erelax = E_relaxed[0];
 
-        psi::Process::environment.globals["PARTIALLY RELAXED ENERGY"] = Erelax;
-        psi::Process::environment.globals["CURRENT ENERGY"] = Erelax;
-    } else {
-        // get character table
-        CharacterTable ct = psi::Process::environment.molecule()->point_group()->char_table();
-        std::vector<std::string> irrep_symbol;
-        for (int h = 0, nirrep = mo_space_info_->nirrep(); h < nirrep; ++h) {
-            irrep_symbol.push_back(std::string(ct.gamma(h).symbol()));
-        }
+//        // printing
+//        print_h2("CD/DF DSRG-MRPT2 Energy Summary");
+//        outfile->Printf("\n    %-37s = %22.15f", "CD/DF DSRG-MRPT2 Total Energy (fixed)  ",
+//                        Hbar0_ + Eref_);
+//        outfile->Printf("\n    %-37s = %22.15f", "CD/DF DSRG-MRPT2 Total Energy (relaxed)", Erelax);
 
-        // energy summuary
-        print_h2("DF/CD SA-DSRG-PT2 Energy Summary");
+//        psi::Process::environment.globals["PARTIALLY RELAXED ENERGY"] = Erelax;
+//        psi::Process::environment.globals["CURRENT ENERGY"] = Erelax;
+//    } else {
+//        // get character table
+//        CharacterTable ct = psi::Process::environment.molecule()->point_group()->char_table();
+//        std::vector<std::string> irrep_symbol;
+//        for (int h = 0, nirrep = mo_space_info_->nirrep(); h < nirrep; ++h) {
+//            irrep_symbol.push_back(std::string(ct.gamma(h).symbol()));
+//        }
 
-        outfile->Printf("\n    Multi.  Irrep.  No.    DSRG-MRPT2 Energy");
-        std::string dash(41, '-');
-        outfile->Printf("\n    %s", dash.c_str());
+//        // energy summuary
+//        print_h2("DF/CD SA-DSRG-PT2 Energy Summary");
 
-        int nentry = (foptions_->psi_options())["AVG_STATE"].size();
-        for (int n = 0, offset = 0; n < nentry; ++n) {
-            int irrep = (foptions_->psi_options())["AVG_STATE"][n][0].to_integer();
-            int multi = (foptions_->psi_options())["AVG_STATE"][n][1].to_integer();
-            int nstates = (foptions_->psi_options())["AVG_STATE"][n][2].to_integer();
+//        outfile->Printf("\n    Multi.  Irrep.  No.    DSRG-MRPT2 Energy");
+//        std::string dash(41, '-');
+//        outfile->Printf("\n    %s", dash.c_str());
 
-            for (int i = 0; i < nstates; ++i) {
-                int ni = i + offset;
-                outfile->Printf("\n     %3d     %3s    %2d   %20.12f", multi,
-                                irrep_symbol[irrep].c_str(), i, E_relaxed[ni]);
-                psi::Process::environment.globals["ENERGY ROOT " + std::to_string(ni)] =
-                    E_relaxed[ni];
-            }
-            outfile->Printf("\n    %s", dash.c_str());
+//        int nentry = (foptions_->psi_options())["AVG_STATE"].size();
+//        for (int n = 0, offset = 0; n < nentry; ++n) {
+//            int irrep = (foptions_->psi_options())["AVG_STATE"][n][0].to_integer();
+//            int multi = (foptions_->psi_options())["AVG_STATE"][n][1].to_integer();
+//            int nstates = (foptions_->psi_options())["AVG_STATE"][n][2].to_integer();
 
-            offset += nstates;
-        }
+//            for (int i = 0; i < nstates; ++i) {
+//                int ni = i + offset;
+//                outfile->Printf("\n     %3d     %3s    %2d   %20.12f", multi,
+//                                irrep_symbol[irrep].c_str(), i, E_relaxed[ni]);
+//                psi::Process::environment.globals["ENERGY ROOT " + std::to_string(ni)] =
+//                    E_relaxed[ni];
+//            }
+//            outfile->Printf("\n    %s", dash.c_str());
 
-        psi::Process::environment.globals["CURRENT ENERGY"] = E_relaxed[0];
-    }
-    return E_relaxed[0];
-}
+//            offset += nstates;
+//        }
+
+//        psi::Process::environment.globals["CURRENT ENERGY"] = E_relaxed[0];
+//    }
+//    return E_relaxed[0];
+//}
 
 void THREE_DSRG_MRPT2::set_Ufull(psi::SharedMatrix& Ua, psi::SharedMatrix& Ub) {
     outfile->Printf("\n here");
@@ -3412,147 +3414,149 @@ void THREE_DSRG_MRPT2::compute_Hbar1V_diskDF(ambit::BlockedTensor& Hbar1, bool s
     }
 }
 
-std::vector<double>
-THREE_DSRG_MRPT2::relaxed_energy(std::shared_ptr<ActiveSpaceIntegrals> fci_ints) {
+//std::vector<double>
+//THREE_DSRG_MRPT2::relaxed_energy(std::shared_ptr<ActiveSpaceIntegrals> fci_ints) {
 
-    // reference relaxation
-    std::vector<double> Erelax;
-    std::string cas_type;
+//    // reference relaxation
+//    std::vector<double> Erelax;
+//    std::string cas_type;
 
-    if (foptions_->get_str("CAS_TYPE") == "CASSCF") {
-        cas_type = foptions_->get_str("CASSCF_CI_SOLVER");
-    } else {
-        cas_type = foptions_->get_str("CAS_TYPE");
-    }
+//    if (foptions_->get_str("CAS_TYPE") == "CASSCF") {
+//        cas_type = foptions_->get_str("CASSCF_CI_SOLVER");
+//    } else {
+//        cas_type = foptions_->get_str("CAS_TYPE");
+//    }
 
-    // check CAS_TYPE to decide diagonalization code
-    if (cas_type == "CAS") {
+//    // check CAS_TYPE to decide diagonalization code
+//    if (cas_type == "CAS") {
 
-        FCI_MO fci_mo(scf_info_, foptions_, ints_, mo_space_info_, fci_ints);
-        fci_mo.set_localize_actv(false);
-        double Eci = fci_mo.compute_energy();
+//        FCI_MO fci_mo(scf_info_, foptions_, ints_, mo_space_info_, fci_ints);
+//        fci_mo.set_localize_actv(false);
+//        double Eci = fci_mo.compute_energy();
 
-        // test state specific or state average
-        if (!multi_state_) {
-            Erelax.push_back(Eci);
-        } else {
-            std::vector<std::vector<std::pair<psi::SharedVector, double>>> eigens = fci_mo.eigens();
-            size_t nentry = eigens.size();
-            for (size_t n = 0; n < nentry; ++n) {
-                std::vector<std::pair<psi::SharedVector, double>> eigen = eigens[n];
-                size_t ni = eigen.size();
-                for (size_t i = 0; i < ni; ++i) {
-                    Erelax.push_back(eigen[i].second);
-                }
-            }
-        }
+//        // test state specific or state average
+//        if (!multi_state_) {
+//            Erelax.push_back(Eci);
+//        } else {
+//            std::vector<std::vector<std::pair<psi::SharedVector, double>>> eigens = fci_mo.eigens();
+//            size_t nentry = eigens.size();
+//            for (size_t n = 0; n < nentry; ++n) {
+//                std::vector<std::pair<psi::SharedVector, double>> eigen = eigens[n];
+//                size_t ni = eigen.size();
+//                for (size_t i = 0; i < ni; ++i) {
+//                    Erelax.push_back(eigen[i].second);
+//                }
+//            }
+//        }
 
-    } else if (cas_type == "ACI") {
+//    } else if (cas_type == "ACI") {
 
-        size_t nroot = foptions_->get_int("NROOT");
-        // Only do ground state ACI for now
-        auto state = make_state_info_from_psi_wfn(ints_->wfn());
-        AdaptiveCI aci(state, nroot, scf_info_, foptions_, mo_space_info_,
-                       fci_ints); // ints_->wfn() is implicitly converted to StateInfo
-        if ((foptions_->psi_options())["ACI_RELAX_SIGMA"].has_changed()) {
-            aci.update_sigma();
-        }
+//        size_t nroot = foptions_->get_int("NROOT");
+//        // Only do ground state ACI for now
+//        auto state = make_state_info_from_psi_wfn(ints_->wfn());
+//        AdaptiveCI aci(state, nroot, scf_info_, foptions_, mo_space_info_,
+//                       fci_ints); // ints_->wfn() is implicitly converted to StateInfo
+//        if ((foptions_->psi_options())["ACI_RELAX_SIGMA"].has_changed()) {
+//            aci.update_sigma();
+//        }
 
-        double relaxed_aci_en = aci.compute_energy();
-        Erelax.push_back(relaxed_aci_en);
+//        double relaxed_aci_en = aci.compute_energy();
+//        Erelax.push_back(relaxed_aci_en);
 
-        // Compute relaxed NOs
-        if (foptions_->get_bool("ACI_NO")) {
-            aci.compute_nos();
-        }
-        if (foptions_->get_bool("ACI_SPIN_ANALYSIS")) {
-            aci.spin_analysis();
-        }
+//        // Compute relaxed NOs
+//        if (foptions_->get_bool("ACI_NO")) {
+//            aci.compute_nos();
+//        }
+//        if (foptions_->get_bool("ACI_SPIN_ANALYSIS")) {
+//            aci.spin_analysis();
+//        }
 
-        if (foptions_->get_bool("UNPAIRED_DENSITY")) {
+//        if (foptions_->get_bool("UNPAIRED_DENSITY")) {
 
-            aci.unpaired_density(Ua_full_, Ub_full_);
-        }
+//            aci.unpaired_density(Ua_full_, Ub_full_);
+//        }
 
-    } else {
+//    } else {
 
-        // common (SS and SA) setup
-        psi::Dimension active_dim = mo_space_info_->get_dimension("ACTIVE");
-        std::shared_ptr<psi::Molecule> molecule = psi::Process::environment.molecule();
-        double Enuc = ints_->nuclear_repulsion_energy();
-        int charge = molecule->molecular_charge();
-        if ((foptions_->psi_options())["CHARGE"].has_changed()) {
-            charge = foptions_->get_int("CHARGE");
-        }
-        auto nelec = 0;
-        int natom = molecule->natom();
-        for (int i = 0; i < natom; ++i) {
-            nelec += molecule->fZ(i);
-        }
-        nelec -= charge;
+//        // common (SS and SA) setup
+//        psi::Dimension active_dim = mo_space_info_->get_dimension("ACTIVE");
+//        std::shared_ptr<psi::Molecule> molecule = psi::Process::environment.molecule();
+//        double Enuc = ints_->nuclear_repulsion_energy();
+//        int charge = molecule->molecular_charge();
+//        if ((foptions_->psi_options())["CHARGE"].has_changed()) {
+//            charge = foptions_->get_int("CHARGE");
+//        }
+//        auto nelec = 0;
+//        int natom = molecule->natom();
+//        for (int i = 0; i < natom; ++i) {
+//            nelec += molecule->fZ(i);
+//        }
+//        nelec -= charge;
 
-        // if state specific, read from fci_root and fci_nroot
-        if ((foptions_->psi_options())["AVG_STATE"].size() == 0) {
-            // TODO: update this code to use the State object
-            int multi = psi::Process::environment.molecule()->multiplicity();
-            if ((foptions_->psi_options())["MULTIPLICITY"].has_changed()) {
-                multi = foptions_->get_int("MULTIPLICITY");
-            }
-            int twice_ms = (multi + 1) % 2;
-            if ((foptions_->psi_options())["MS"].has_changed()) {
-                twice_ms = std::round(2.0 * foptions_->get_double("MS"));
-            }
-            auto nelec_actv = nelec;
-            auto na = (nelec_actv + twice_ms) / 2;
-            auto nb = nelec_actv - na;
+//        // if state specific, read from fci_root and fci_nroot
+//        if ((foptions_->psi_options())["AVG_STATE"].size() == 0) {
+//            // TODO: update this code to use the State object
+//            int multi = psi::Process::environment.molecule()->multiplicity();
+//            if ((foptions_->psi_options())["MULTIPLICITY"].has_changed()) {
+//                multi = foptions_->get_int("MULTIPLICITY");
+//            }
+//            int twice_ms = (multi + 1) % 2;
+//            if ((foptions_->psi_options())["MS"].has_changed()) {
+//                twice_ms = std::round(2.0 * foptions_->get_double("MS"));
+//            }
+//            auto nelec_actv = nelec;
+//            auto na = (nelec_actv + twice_ms) / 2;
+//            auto nb = nelec_actv - na;
 
-            StateInfo state(na, nb, multi, multi - 1,
-                            foptions_->get_int("ROOT_SYM")); // assumes highest Ms
-                                                             // TODO use base class info
-            size_t nroot = foptions_->get_int("NROOT");
+//            StateInfo state(na, nb, multi, multi - 1,
+//                            foptions_->get_int("ROOT_SYM")); // assumes highest Ms
+//                                                             // TODO use base class info
+//            size_t nroot = foptions_->get_int("NROOT");
 
-            auto fci = make_active_space_method("FCI", state, nroot, scf_info_, mo_space_info_,
-                                                ints_, foptions_);
-            fci->set_max_rdm_level(1);
-            fci->set_active_space_integrals(fci_ints);
-            fci->set_print(print_);
-            Erelax.push_back(fci->compute_energy());
-        } else {
-            int nentry = (foptions_->psi_options())["AVG_STATE"].size();
+//            auto
 
-            for (int n = 0; n < nentry; ++n) {
-                int irrep = (foptions_->psi_options())["AVG_STATE"][n][0].to_integer();
-                int multi = (foptions_->psi_options())["AVG_STATE"][n][1].to_integer();
-                int nstates = (foptions_->psi_options())["AVG_STATE"][n][2].to_integer();
+//            auto fci = make_active_space_method("FCI", state, nroot, scf_info_, mo_space_info_,
+//                                                ints_, foptions_);
+//            fci->set_max_rdm_level(1);
+//            fci->set_active_space_integrals(fci_ints);
+//            fci->set_print(print_);
+//            Erelax.push_back(fci->compute_energy());
+//        } else {
+//            int nentry = (foptions_->psi_options())["AVG_STATE"].size();
 
-                // TODO: remove this code in
-                int ms = (multi + 1) % 2;
-                auto nelec_actv = nelec;
-                //                - 2 * mo_space_info_->size("FROZEN_DOCC") - 2 * core_mos_.size();
-                auto na = (nelec_actv + ms) / 2;
-                auto nb = nelec_actv - na;
+//            for (int n = 0; n < nentry; ++n) {
+//                int irrep = (foptions_->psi_options())["AVG_STATE"][n][0].to_integer();
+//                int multi = (foptions_->psi_options())["AVG_STATE"][n][1].to_integer();
+//                int nstates = (foptions_->psi_options())["AVG_STATE"][n][2].to_integer();
 
-                StateInfo state(na, nb, multi, multi - 1, irrep); // assumes highes Ms
-                // TODO use base class info
-                auto fci = make_active_space_method("FCI", state, nstates, scf_info_,
-                                                    mo_space_info_, ints_, foptions_);
-                fci->set_max_rdm_level(1);
-                fci->set_root(nstates - 1);
-                // set integrals manually
-                fci->set_active_space_integrals(fci_ints);
+//                // TODO: remove this code in
+//                int ms = (multi + 1) % 2;
+//                auto nelec_actv = nelec;
+//                //                - 2 * mo_space_info_->size("FROZEN_DOCC") - 2 * core_mos_.size();
+//                auto na = (nelec_actv + ms) / 2;
+//                auto nb = nelec_actv - na;
 
-                // compute energy and fill in results
-                fci->compute_energy();
-                psi::SharedVector Ems = fci->evals();
-                for (int i = 0; i < nstates; ++i) {
-                    Erelax.push_back(Ems->get(i) + Enuc);
-                }
-            }
-        }
-    }
+//                StateInfo state(na, nb, multi, multi - 1, irrep); // assumes highes Ms
+//                // TODO use base class info
+//                auto fci = make_active_space_method("FCI", state, nstates, scf_info_,
+//                                                    mo_space_info_, ints_, foptions_);
+//                fci->set_max_rdm_level(1);
+//                fci->set_root(nstates - 1);
+//                // set integrals manually
+//                fci->set_active_space_integrals(fci_ints);
 
-    return Erelax;
-}
+//                // compute energy and fill in results
+//                fci->compute_energy();
+//                psi::SharedVector Ems = fci->evals();
+//                for (int i = 0; i < nstates; ++i) {
+//                    Erelax.push_back(Ems->get(i) + Enuc);
+//                }
+//            }
+//        }
+//    }
+
+//    return Erelax;
+//}
 
 void THREE_DSRG_MRPT2::compute_Heff_2nd_coupling(double& H0, ambit::Tensor& H1a, ambit::Tensor& H1b,
                                                  ambit::Tensor& H2aa, ambit::Tensor& H2ab,

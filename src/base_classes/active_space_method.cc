@@ -70,14 +70,6 @@ void ActiveSpaceMethod::set_print(int level) { print_ = level; }
 
 std::unique_ptr<ActiveSpaceMethod> make_active_space_method(
     const std::string& type, StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
-    std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ForteIntegrals> ints,
-    std::shared_ptr<ForteOptions> options) {
-    auto as_ints = make_active_space_ints(mo_space_info, ints, "ACTIVE", {{"RESTRICTED_DOCC"}});
-    return make_active_space_method2(type, state, nroot, scf_info, mo_space_info, as_ints, options);
-}
-
-std::unique_ptr<ActiveSpaceMethod> make_active_space_method2(
-    const std::string& type, StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
     std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ActiveSpaceIntegrals> as_ints,
     std::shared_ptr<ForteOptions> options) {
 

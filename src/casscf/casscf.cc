@@ -448,44 +448,44 @@ void CASSCF::cas_ci_final() {
         quiet = false;
     }
     cas_ci();
-//    if (options_->get_str("CASSCF_CI_SOLVER") == "FCI") {
-//        // Used to grab the computed energy and RDMs.
-//        //        if (options_->psi_options()["AVG_STATE"].size() == 0) {
-////        set_up_fci();
-//        //} else {
-//        //    set_up_sa_fci();
-//        //        }
-//    } else if (options_->get_str("CASSCF_CI_SOLVER") == "CAS") {
-//        set_up_fcimo();
-//    } else if (options_->get_str("CASSCF_CI_SOLVER") == "ACI") {
-//        as_ints_ = get_ci_integrals();
-//        AdaptiveCI aci(state_, nroot_, scf_info_, options_, mo_space_info_, as_ints_);
-//        aci.set_max_rdm(3);
-//        aci.set_quiet(quiet);
-//        aci.compute_energy();
-//        E_casscf_ = aci.energies()[0]; // TODO: Check if this should be root_
+    //    if (options_->get_str("CASSCF_CI_SOLVER") == "FCI") {
+    //        // Used to grab the computed energy and RDMs.
+    //        //        if (options_->psi_options()["AVG_STATE"].size() == 0) {
+    ////        set_up_fci();
+    //        //} else {
+    //        //    set_up_sa_fci();
+    //        //        }
+    //    } else if (options_->get_str("CASSCF_CI_SOLVER") == "CAS") {
+    //        set_up_fcimo();
+    //    } else if (options_->get_str("CASSCF_CI_SOLVER") == "ACI") {
+    //        as_ints_ = get_ci_integrals();
+    //        AdaptiveCI aci(state_, nroot_, scf_info_, options_, mo_space_info_, as_ints_);
+    //        aci.set_max_rdm(3);
+    //        aci.set_quiet(quiet);
+    //        aci.compute_energy();
+    //        E_casscf_ = aci.energies()[0]; // TODO: Check if this should be root_
 
-//        std::vector<std::pair<size_t, size_t>> roots;
-//        roots.push_back(std::make_pair(0, 0));
-//        cas_ref_ = aci.reference(roots)[0];
+    //        std::vector<std::pair<size_t, size_t>> roots;
+    //        roots.push_back(std::make_pair(0, 0));
+    //        cas_ref_ = aci.reference(roots)[0];
 
-//    } else if (options_->get_str("CASSCF_CI_SOLVER") == "DMRG") {
-//#ifdef HAVE_CHEMPS2
-//        DMRGSolver dmrg(state_, scf_info_, options_, ints_, mo_space_info_);
-//        dmrg.set_max_rdm(3);
-//        dmrg.spin_free_rdm(true);
-//        std::pair<ambit::Tensor, std::vector<double>> integral_pair = CI_Integrals();
-//        dmrg.set_up_integrals(integral_pair.first, integral_pair.second);
-//        dmrg.set_scalar(scalar_energy_ + ints_->frozen_core_energy() +
-//                        ints_->nuclear_repulsion_energy());
-//        dmrg.compute_energy();
+    //    } else if (options_->get_str("CASSCF_CI_SOLVER") == "DMRG") {
+    //#ifdef HAVE_CHEMPS2
+    //        DMRGSolver dmrg(state_, scf_info_, options_, ints_, mo_space_info_);
+    //        dmrg.set_max_rdm(3);
+    //        dmrg.spin_free_rdm(true);
+    //        std::pair<ambit::Tensor, std::vector<double>> integral_pair = CI_Integrals();
+    //        dmrg.set_up_integrals(integral_pair.first, integral_pair.second);
+    //        dmrg.set_scalar(scalar_energy_ + ints_->frozen_core_energy() +
+    //                        ints_->nuclear_repulsion_energy());
+    //        dmrg.compute_energy();
 
-//        cas_ref_ = dmrg.reference();
-//        E_casscf_ = cas_ref_.get_Eref();
-//#else
-//        throw psi::PSIEXCEPTION("Did not compile with CHEMPS2 so DMRG will not work");
-//#endif
-//    }
+    //        cas_ref_ = dmrg.reference();
+    //        E_casscf_ = cas_ref_.get_Eref();
+    //#else
+    //        throw psi::PSIEXCEPTION("Did not compile with CHEMPS2 so DMRG will not work");
+    //#endif
+    //    }
 }
 
 double CASSCF::cas_check(Reference cas_ref) {
@@ -710,8 +710,10 @@ ambit::Tensor CASSCF::transform_integrals() {
     return active_int;
 }
 void CASSCF::set_up_fci() {
-    auto fcisolver =
-        make_active_space_method("FCI", state_, nroot_, scf_info_, mo_space_info_, ints_, options_);
+    auto as_ints = make_active_space_ints(mo_space_info_, ints_, "ACTIVE", {{"RESTRICTED_DOCC"}});
+
+    auto fcisolver = make_active_space_method("FCI", state_, nroot_, scf_info_, mo_space_info_,
+                                              as_ints, options_);
     fcisolver->set_max_rdm_level(3);
 
     fcisolver->set_root(options_->get_int("ROOT"));

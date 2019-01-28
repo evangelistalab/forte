@@ -32,7 +32,6 @@ import math
 
 import psi4
 import forte
-import ambit
 import psi4.driver.p4util as p4util
 from psi4.driver.procrouting import proc_util
 

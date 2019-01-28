@@ -61,10 +61,12 @@ const std::vector<std::pair<StateInfo, std::vector<double>>>& ActiveSpaceSolver:
     double average_energy = 0.0;
     state_energies_list_.clear();
     size_t nstate = 0;
-    for (const auto& [state, weights] : state_weights_list_) {
+    for (const auto& state_weights : state_weights_list_) {
+        const auto& state = state_weights.first;
+        const auto& weights = state_weights.second;
         // compute the energy of state and save it
         size_t nroot = weights.size();
-        std::shared_ptr<ActiveSpaceMethod> method = make_active_space_method2(
+        std::shared_ptr<ActiveSpaceMethod> method = make_active_space_method(
             method_, state, nroot, scf_info_, mo_space_info_, as_ints_, options_);
         method_vec_.push_back(method);
 
@@ -93,7 +95,10 @@ void ActiveSpaceSolver::print_energies(
     std::vector<std::string> irrep_symbol = psi::Process::environment.molecule()->irrep_labels();
 
     int n = 0;
-    for (const auto& [state, weights] : state_weights_list_) {
+    for (const auto& state_weights : state_weights_list_) {
+        const auto& state = state_weights.first;
+        const auto& weights = state_weights.second;
+
         int irrep = state.irrep();
         int multi = state.multiplicity();
         int nstates = weights.size();
@@ -105,8 +110,9 @@ void ActiveSpaceSolver::print_energies(
             psi::outfile->Printf("\n     %3d     %3s    %2d   %20.12f", multi,
                                  irrep_symbol[irrep].c_str(), i, energy);
             psi::Process::environment.globals[label] = energy;
-//            psi::outfile->Printf("\n %s = %f", label.c_str(),
-//                                 energy); // TODO remove this line once we are done (Francesco)
+            //            psi::outfile->Printf("\n %s = %f", label.c_str(),
+            //                                 energy); // TODO remove this line once we are done
+            //                                 (Francesco)
         }
 
         n++;
@@ -167,7 +173,9 @@ Reference ActiveSpaceSolver::reference() {
         // Loop through references, add to master ref
         int state_num = 0;
         double energy = 0.0;
-        for (const auto& [state, weights] : state_weights_list_) {
+        for (const auto& state_weights : state_weights_list_) {
+            const auto& weights = state_weights.second;
+
             size_t nroot = weights.size();
             // Get the already-run method
             auto& method = method_vec_[state_num];
@@ -264,7 +272,8 @@ void ActiveSpaceSolver::print_options() {
     std::vector<std::string> irrep_symbol = psi::Process::environment.molecule()->irrep_labels();
     int nroots_max = 0;
     int nstates = 0;
-    for (const auto& [state, weights] : state_weights_list_) {
+    for (const auto& state_weights : state_weights_list_) {
+        const auto& weights = state_weights.second;
         int nroots = weights.size();
         nstates += nroots;
         nroots_max = std::max(nroots_max, nroots);
@@ -282,10 +291,9 @@ void ActiveSpaceSolver::print_options() {
     std::string dash(ltotal, '-');
     psi::outfile->Printf("\n    Irrep.  Multi.  Nstates  %sWeights", blank.c_str());
     psi::outfile->Printf("\n    %s", dash.c_str());
-    for (const auto& [state, weights] : state_weights_list_) {
-        //            int irrep, multi, nroots;
-        //            std::vector<double> weights;
-        //            std::tie(irrep, multi, nroots, weights) = sa_info_[i];
+    for (const auto& state_weights : state_weights_list_) {
+        const auto& state = state_weights.first;
+        const auto& weights = state_weights.second;
         int irrep = state.irrep();
         int multiplicity = state.multiplicity();
         int nroots = weights.size();
@@ -324,7 +332,7 @@ double ActiveSpaceSolver::get_average_state_energy() const {
 std::vector<std::pair<StateInfo, std::vector<double>>>
 make_state_weights_list(std::shared_ptr<ForteOptions> options,
                         std::shared_ptr<psi::Wavefunction> wfn) {
-    std::vector<std::pair<StateInfo, std::vector<double>>> state_weight_list;
+    std::vector<std::pair<StateInfo, std::vector<double>>> state_weights_list;
     auto state = make_state_info_from_psi_wfn(wfn);
     if ((options->psi_options())["AVG_STATE"].size() == 0) {
 
@@ -333,7 +341,7 @@ make_state_weights_list(std::shared_ptr<ForteOptions> options,
 
         std::vector<double> weights(nroot, 0.0);
         weights[root] = 1.0;
-        state_weight_list.push_back(std::make_pair(state, weights));
+        state_weights_list.push_back(std::make_pair(state, weights));
     } else {
         double sum_of_weights = 0.0;
         size_t nstates = 0;
@@ -404,18 +412,18 @@ make_state_weights_list(std::shared_ptr<ForteOptions> options,
                 weights = std::vector<double>(nstates_this, 1.0);
             }
             sum_of_weights = std::accumulate(std::begin(weights), std::end(weights), 0.0);
-            state_weight_list.push_back(std::make_pair(state, weights));
+            state_weights_list.push_back(std::make_pair(state, weights));
             nstates += nstates_this;
         }
 
         // normalize weights
-        for (auto& [state, weights] : state_weight_list) {
-            for (auto& w : weights) {
-                w /= sum_of_weights;
-            }
+        for (auto& state_weights : state_weights_list) {
+            auto& weights = state_weights.second;
+            std::transform(weights.begin(), weights.end(), weights.begin(),
+                           [sum_of_weights](auto& w) { return w / sum_of_weights; });
         }
     }
-    return state_weight_list;
+    return state_weights_list;
 }
 
 double compute_average_state_energy(
