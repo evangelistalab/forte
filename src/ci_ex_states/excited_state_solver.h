@@ -49,7 +49,7 @@ class ExcitedStateSolver : public ActiveSpaceMethod {
   public:
     ExcitedStateSolver(StateInfo state, size_t nroot, std::shared_ptr<MOSpaceInfo> mo_space_info,
                        std::shared_ptr<ActiveSpaceIntegrals> as_ints,
-                       std::shared_ptr<SelectedCIMethod> sci);
+                       std::unique_ptr<SelectedCIMethod> sci);
 
     /// Virtual destructor to enable deletion of a Derived* through a Base*
     virtual ~ExcitedStateSolver() = default;
@@ -67,6 +67,8 @@ class ExcitedStateSolver : public ActiveSpaceMethod {
     /// @param options the options passed in
     virtual void set_options(std::shared_ptr<ForteOptions> options) override;
 
+    //    void add_external_excitations(DeterminantHashVec& ref);
+
     /// Set excitation algorithm
     void set_excitation_algorithm(std::string ex_alg);
 
@@ -76,13 +78,16 @@ class ExcitedStateSolver : public ActiveSpaceMethod {
     /// Set the printing level
     void set_quiet(bool quiet);
 
+    /// Set the RDM
+    void set_max_rdm(int rdm);
+
   protected:
     DeterminantHashVec final_wfn_;
     WFNOperator op_;
 
     /// The number of active orbitals
     size_t nact_;
-    std::shared_ptr<SelectedCIMethod> sci_;
+    std::unique_ptr<SelectedCIMethod> sci_;
     std::shared_ptr<SparseCISolver> sparse_solver_;
     /// Algorithm for computing excited states
     std::string ex_alg_;
@@ -106,6 +111,8 @@ class ExcitedStateSolver : public ActiveSpaceMethod {
     bool test_rdms_ = false;
     /// Print final wavefunction to file
     bool save_final_wfn_ = false;
+    /// Compute all roots on first iteration?
+    bool first_iter_roots_ = false;
 
   private:
     /// Print information about this calculation
@@ -118,9 +125,12 @@ class ExcitedStateSolver : public ActiveSpaceMethod {
     /// Computes spin
     std::vector<std::pair<double, double>> compute_spin(DeterminantHashVec& space, WFNOperator& op,
                                                         psi::SharedMatrix evecs, int nroot);
+    /// Check for spin contamination
+    double compute_spin_contamination(DeterminantHashVec& space, WFNOperator& op,
+                                      psi::SharedMatrix evecs, int nroot);
     /// Print Summary
     void print_final(DeterminantHashVec& dets, psi::SharedMatrix& PQ_evecs,
-                     psi::SharedVector& PQ_evals);
+                     psi::SharedVector& PQ_evals, size_t cycle);
     /// Save a wave function
     void wfn_to_file(DeterminantHashVec& det_space, psi::SharedMatrix evecs, int root);
     /// Print a wave function

@@ -31,7 +31,10 @@
 #include <memory>
 #include <vector>
 
+#include "base_classes/active_space_method.h"
 #include "base_classes/state_info.h"
+#include "sparse_ci/determinant_hashvector.h"
+#include "sparse_ci/operator.h"
 
 namespace forte {
 class ActiveSpaceIntegrals;
@@ -53,15 +56,49 @@ class SelectedCIMethod {
     // ==> Class Interface <==
 
     /// Compute the energy and return it
-    double compute_energy();
+    virtual double compute_energy();
 
-    //    /// Returns the reference
-    //    virtual std::vector<Reference> reference(std::vector<std::pair<size_t, size_t>>& roots)
-    //    override = 0;
+    // Temporarily added interface to ExcitedStateSolver
+    /// Set the class variable
+    virtual void set_method_variables(DeterminantHashVec PQ_space,
+                                      psi::SharedMatrix PQ_evecs,
+                                      psi::SharedVector PQ_evals,
+                                      std::string ex_alg,
+                                      WFNOperator op,
+                                      size_t nroot_method,
+                                      size_t root,
+                                      size_t ref_root,
+                                      std::vector<std::vector<std::pair<Determinant, double>>> old_roots,
+                                      DeterminantHashVec final_wfn,
+                                      std::vector<double> multistate_pt2_energy_correction) = 0;
+    /// Getters
+    virtual DeterminantHashVec get_PQ_space() = 0;
+    virtual psi::SharedMatrix get_PQ_evecs() = 0;
+    virtual psi::SharedVector get_PQ_evals() = 0;
+    virtual WFNOperator get_op() = 0;
+    virtual size_t get_ref_root() = 0;
+    virtual DeterminantHashVec get_final_wfn() = 0;
+    virtual std::vector<double> get_multistate_pt2_energy_correction() = 0;
+    virtual size_t get_cycle() = 0;
 
-    //    /// Set options from an option object
-    //    /// @param options the options passed in
-    //    virtual void set_options(std::shared_ptr<ForteOptions> options) override = 0;
+  protected:
+    /// The state to calculate
+    StateInfo state_;
+
+    /// The number of roots (default = 1)
+    size_t nroot_ = 1;
+
+    /// The MOSpaceInfo object
+    std::shared_ptr<MOSpaceInfo> mo_space_info_;
+
+    /// The molecular integrals for the active space
+    /// This object holds only the integrals for the orbital contained in the active_mo_ vector.
+    /// The one-electron integrals and scalar energy contains contributions from the
+    /// doubly occupied orbitals specified by the core_mo_ vector.
+    std::shared_ptr<ActiveSpaceIntegrals> as_ints_;
+
+    /// Some HF info
+    std::shared_ptr<SCFInfo> scf_info_;
 };
 } // namespace forte
 #endif // _sci_h_
