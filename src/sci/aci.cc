@@ -300,7 +300,24 @@ double AdaptiveCI::compute_energy() {
             ref_root_ = i - 1;
         }
 
+        bool multi_root = false;
+
+        if (options_->has_changed("ACI_FIRST_ITER_ROOTS")) {
+            multi_root = options_->get_bool("ACI_FIRST_ITER_ROOTS");
+        }
+
+        size_t nroot_master = nroot_;
+        if ((options_->get_str("ACI_EXCITED_ALGORITHM") == "ROOT_ORTHOGONALIZE" or
+             options_->get_str("ACI_EXCITED_ALGORITHM") == "MULTISTATE" or
+             options_->get_str("ACI_EXCITED_ALGORITHM") == "ROOT_COMBINE") and
+            (ref_root_ == 0) and !multi_root) {
+            nroot_ = 1;
+        }
+
         compute_aci(PQ_space, PQ_evecs, PQ_evals);
+
+        // Reset nroot to original value if changed
+        nroot_ = nroot_master;
 
         if (ex_alg_ == "ROOT_COMBINE") {
             sizes[i] = PQ_space.size();
@@ -1649,22 +1666,9 @@ void AdaptiveCI::compute_aci(DeterminantHashVec& PQ_space, psi::SharedMatrix& PQ
                              psi::SharedVector& PQ_evals) {
 
     bool print_refs = false;
-    bool multi_root = false;
-
-    if (options_->has_changed("ACI_FIRST_ITER_ROOTS")) {
-        multi_root = options_->get_bool("ACI_FIRST_ITER_ROOTS");
-    }
 
     if (options_->has_changed("ACI_PRINT_REFS")) {
         print_refs = options_->get_bool("ACI_PRINT_REFS");
-    }
-
-    size_t nroot_master = nroot_;
-    if ((options_->get_str("ACI_EXCITED_ALGORITHM") == "ROOT_ORTHOGONALIZE" or
-         options_->get_str("ACI_EXCITED_ALGORITHM") == "MULTISTATE" or
-         options_->get_str("ACI_EXCITED_ALGORITHM") == "ROOT_COMBINE") and
-        (ref_root_ == 0) and !multi_root) {
-        nroot_ = 1;
     }
 
     psi::SharedMatrix P_evecs;
@@ -1962,9 +1966,6 @@ void AdaptiveCI::compute_aci(DeterminantHashVec& PQ_space, psi::SharedMatrix& PQ
 
         ex_alg_ = options_->get_str("ACI_EXCITED_ALGORITHM");
     } // end iterations
-
-    // Reset nroot to original value if changed
-    nroot_ = nroot_master;
 
     // if (det_save_)
     //     det_list_.close();
