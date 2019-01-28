@@ -65,7 +65,7 @@ namespace forte {
 
 void set_TDACI_options(ForteOptions& foptions) {
     foptions.add_int("TDACI_HOLE", 0, "");
-    foptions.add_str("TDACI_PROPOGATOR", "EXACT", "Type of propogator");
+    foptions.add_str("TDACI_PROPAGATOR", "EXACT", "Type of propagator");
     foptions.add_int("TDACI_NSTEP", 20, "Number of steps");
     foptions.add_double("TDACI_TIMESTEP", 1.0, "Timestep (as)");
     foptions.add_double("TDACI_ETA", 1e-12, "Path filtering threshold");
@@ -74,7 +74,7 @@ void set_TDACI_options(ForteOptions& foptions) {
     foptions.add_array("TDACI_OCC_ORB","" );
     foptions.add_int("TDACI_KRYLOV_DIM", 5, "Dimension of Krylov subspace for Lanczos method");
 //    foptions.add_int("TDACI_TAYLOR_ORDER", 1, "Maximum order of taylor expansion used");
-    foptions.add_str("TDACI_PROPOGATOR", "EXACT", "Type of propogator");
+    foptions.add_str("TDACI_PROPOGATOR", "EXACT", "Type of propagator");
     foptions.add_int("TDACI_NSTEP", 20, "Number of steps");
     foptions.add_double("TDACI_TIMESTEP", 1.0, "Timestep (as)");
     foptions.add_double("TDACI_ETA_P", 1e-12, "Path filtering threshold for P space");
@@ -254,7 +254,7 @@ void TDACI::propagate_exact(SharedVector C0, SharedMatrix H) {
     for( size_t i = 0; i < orbs.size(); ++i ){
         save_vector(occupations[i], "occupations_" + std::to_string(orbs[i]) + ".txt");
     }
-    outfile->Printf("\n Time spent propogating (exact): %1.6f s", t1.get()); 
+    outfile->Printf("\n Time spent propagating (exact): %1.6f s", t1.get()); 
 }
 
 void TDACI::propagate_cn( SharedVector C0, SharedMatrix H ){
@@ -370,7 +370,7 @@ void TDACI::propagate_cn( SharedVector C0, SharedMatrix H ){
     for( size_t i = 0; i < orbs.size(); ++i ){
         save_vector(occupations[i], "occupations_" + std::to_string(orbs[i]) + ".txt");
     }
-    outfile->Printf("\n  Time spent propogating (CN): %1.6f", total.get());
+    outfile->Printf("\n  Time spent propagating (CN): %1.6f", total.get());
 }
 
 void TDACI::propagate_taylor1(SharedVector C0, SharedMatrix H  ) {
@@ -454,7 +454,7 @@ void TDACI::propagate_taylor1(SharedVector C0, SharedMatrix H  ) {
     for( size_t i = 0; i < orbs.size(); ++i ){
         save_vector(occupations[i], "occupations_" + std::to_string(orbs[i]) + ".txt");
     }
-    outfile->Printf("\n  Time spent propogating (linear): %1.6f", t1.get());
+    outfile->Printf("\n  Time spent propagating (linear): %1.6f", t1.get());
 }
 
 void TDACI::propagate_taylor2(SharedVector C0, SharedMatrix H  ) {
@@ -549,7 +549,7 @@ void TDACI::propagate_taylor2(SharedVector C0, SharedMatrix H  ) {
     for( size_t i = 0; i < orbs.size(); ++i ){
         save_vector(occupations[i], "occupations_" + std::to_string(orbs[i]) + ".txt");
     }
-    outfile->Printf("\n  Time spent propogating (quadratic): %1.6f", t2.get());
+    outfile->Printf("\n  Time spent propagating (quadratic): %1.6f", t2.get());
 }
 
 void TDACI::propagate_RK4(SharedVector C0, SharedMatrix H  ) {
@@ -691,7 +691,7 @@ void TDACI::propagate_RK4(SharedVector C0, SharedMatrix H  ) {
     for( size_t i = 0; i < orbs.size(); ++i ){
         save_vector(occupations[i], "occupations_" + std::to_string(orbs[i]) + ".txt");
     }
-    outfile->Printf("\n  Time spent propogating (RK4): %1.6f", total.get());
+    outfile->Printf("\n  Time spent propagating (RK4): %1.6f", total.get());
 }
 
 void TDACI::propagate_QCN(SharedVector C0, SharedMatrix H  ) {
@@ -720,7 +720,7 @@ void TDACI::propagate_QCN(SharedVector C0, SharedMatrix H  ) {
         SharedVector b_r = std::make_shared<Vector>("br",ndet);
         SharedVector b_i = std::make_shared<Vector>("bi",ndet);
 
-        // Quadratic propogator for b
+        // Quadratic propagator for b
 
         b_r->copy(ct_r->clone());
         b_i->copy(ct_i->clone());
@@ -966,7 +966,7 @@ void TDACI::propagate_lanczos(SharedVector C0, SharedMatrix H  ) {
     
         delete[] Hs;
         delete[] work;
-        // Do the propogation
+        // Do the propagation
         
         SharedVector ct_int_r = std::make_shared<Vector>("ct_R", krylov_dim);
         SharedVector ct_int_i = std::make_shared<Vector>("ct_I", krylov_dim);
@@ -1041,7 +1041,7 @@ void TDACI::propagate_lanczos(SharedVector C0, SharedMatrix H  ) {
         save_vector(occupations[i], "occupations_" + std::to_string(orbs[i]) + ".txt");
     }
 
-    outfile->Printf("\n  Time spent propogating (Lanzcos): %1.6f", total.get());
+    outfile->Printf("\n  Time spent propagating (Lanzcos): %1.6f", total.get());
 }
 
 //void TDACI::propagate_verlet(std::vector<std::pair<double,double>>& C0, std::vector<std::pair<double,double>>& C_tau, std::shared_ptr<FCIIntegrals> fci_ints, DeterminantHashVec& ann_dets  ) {
@@ -1220,7 +1220,7 @@ void TDACI::compute_tdaci_select(SharedVector C0) {
     double eta = options_->get_double("TDACI_ETA_P");
     int nact = mo_space_info_->size("ACTIVE");
 
-    // A list of orbitals to compute occupations during propogation
+    // A list of orbitals to compute occupations during propagation
     std::vector<int> orbs = options_->get_int_vec("TDACI_OCC_ORB");
 
     // Timestep details
@@ -1365,7 +1365,7 @@ void TDACI::compute_tdaci_select(SharedVector C0) {
         save_vector(occupations[i], "occupations_" + std::to_string(orbs[i]) + ".txt");
     }
 
-    outfile->Printf("\n Time spent propogating (exact): %1.6f s", t1.get()); 
+    outfile->Printf("\n Time spent propagating (exact): %1.6f s", t1.get()); 
 }
 
 void TDACI::get_PQ_space( DeterminantHashVec& P_space,  std::vector<double>& P_coeffs_r,std::vector<double>& P_coeffs_i, 
@@ -1942,7 +1942,7 @@ void TDACI::propagate_RK4_select(std::vector<double>& PQ_coeffs_r,std::vector<do
     }
 
 
-    //outfile->Printf("\n  Time spent propogating (RK4): %1.6f", total.get());
+    //outfile->Printf("\n  Time spent propagating (RK4): %1.6f", total.get());
 }
 
 void TDACI::propagate_RK4_select_list(std::vector<double>& PQ_coeffs_r,std::vector<double>& PQ_coeffs_i, 
@@ -2044,7 +2044,7 @@ void TDACI::propagate_RK4_select_list(std::vector<double>& PQ_coeffs_r,std::vect
     }
 
 
-    //outfile->Printf("\n  Time spent propogating (RK4): %1.6f", total.get());
+    //outfile->Printf("\n  Time spent propagating (RK4): %1.6f", total.get());
 }
 
 void TDACI::complex_sigma_build(std::vector<double>& sigma_r, std::vector<double>& sigma_i, 
