@@ -16,6 +16,7 @@ matrix:
         - libhdf5-serial-dev
         - gfortran
         - g++-4.9
+        - lcov
     env:
       - CXX_COMPILER='clang++-3.6'
       - PYTHON_VER='3.6'
@@ -39,6 +40,7 @@ matrix:
         - libhdf5-serial-dev
         - gfortran
         - g++-4.9
+        - lcov
     env:
       - CXX_COMPILER='clang++-3.6'
       - PYTHON_VER='3.6'
@@ -125,6 +127,7 @@ install:
   fi
 - bash miniconda.sh -b -p $HOME/miniconda
 - export PATH="$HOME/miniconda/bin:$PATH"
+- export CODECOV_TOKEN="f2ca5872-66d7-48dc-8464-e286452dd05b"
 - hash -r
 - conda config --set always_yes yes --set changeps1 no
 - conda update -q conda

@@ -61,6 +61,8 @@ if(SSE42_FLAG)
 endif()
 add_compile_options(-Wall -Wextra -pedantic) # -Werror)
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage") # enabling coverage
+
 # List of CC files
 add_psi4_plugin(forte
 src/base_classes/active_space_solver.cc
