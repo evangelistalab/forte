@@ -198,5 +198,9 @@ script:
     python run_forte_tests_travis.py;
   fi
 - cd ${HOME}/build/evangelistalab/forte
+- lcov --directory . --zerocounters
 - ./forte_tests
 - ./forte_benchmarks
+- lcov --directory . --capture --output-file coverage.info
+- lcov --list coverage.info #debug info
+- bash <(curl -s https://codecov.io/bash) -f coverage.info || echo "Codecov did not collect coverage reports"
