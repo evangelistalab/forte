@@ -60,17 +60,11 @@ class SelectedCIMethod {
 
     // Temporarily added interface to ExcitedStateSolver
     /// Set the class variable
-    virtual void set_method_variables(DeterminantHashVec PQ_space,
-                                      psi::SharedMatrix PQ_evecs,
-                                      psi::SharedVector PQ_evals,
-                                      std::string ex_alg,
-                                      WFNOperator op,
-                                      size_t nroot_method,
-                                      size_t root,
-                                      size_t ref_root,
-                                      std::vector<std::vector<std::pair<Determinant, double>>> old_roots,
-                                      DeterminantHashVec final_wfn,
-                                      std::vector<double> multistate_pt2_energy_correction) = 0;
+    virtual void set_method_variables(
+        DeterminantHashVec PQ_space, psi::SharedMatrix PQ_evecs, psi::SharedVector PQ_evals,
+        std::string ex_alg, WFNOperator op, size_t nroot_method, size_t root, size_t ref_root,
+        std::vector<std::vector<std::pair<Determinant, double>>> old_roots,
+        DeterminantHashVec final_wfn, std::vector<double> multistate_pt2_energy_correction) = 0;
     /// Getters
     virtual DeterminantHashVec get_PQ_space() = 0;
     virtual psi::SharedMatrix get_PQ_evecs() = 0;

@@ -32,7 +32,8 @@ namespace forte {
 SelectedCIMethod::SelectedCIMethod(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
                                    std::shared_ptr<MOSpaceInfo> mo_space_info,
                                    std::shared_ptr<ActiveSpaceIntegrals> as_ints)
-    : state_(state), nroot_(nroot), mo_space_info_(mo_space_info), as_ints_(as_ints), scf_info_(scf_info) {}
+    : state_(state), nroot_(nroot), mo_space_info_(mo_space_info), as_ints_(as_ints),
+      scf_info_(scf_info) {}
 
 double SelectedCIMethod::compute_energy() {
     timer energy_timer("SelectedCI:Energy");
