@@ -83,8 +83,9 @@ class AdaptiveCI_SCI : public SelectedCIMethod {
      * @param mo_space_info A pointer to the MOSpaceInfo object
      */
     AdaptiveCI_SCI(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
-               std::shared_ptr<ForteOptions> options, std::shared_ptr<MOSpaceInfo> mo_space_info,
-               std::shared_ptr<ActiveSpaceIntegrals> as_ints);
+                   std::shared_ptr<ForteOptions> options,
+                   std::shared_ptr<MOSpaceInfo> mo_space_info,
+                   std::shared_ptr<ActiveSpaceIntegrals> as_ints);
 
     // ==> Class Interface <==
 
@@ -93,17 +94,13 @@ class AdaptiveCI_SCI : public SelectedCIMethod {
 
     // Temporarily added interface to ExcitedStateSolver
     /// Set the class variable
-    virtual void set_method_variables(DeterminantHashVec PQ_space,
-                                      psi::SharedMatrix PQ_evecs,
-                                      psi::SharedVector PQ_evals,
-                                      std::string ex_alg,
-                                      WFNOperator op,
-                                      size_t nroot_method,
-                                      size_t root,
-                                      size_t ref_root,
-                                      std::vector<std::vector<std::pair<Determinant, double> > > old_roots,
-                                      DeterminantHashVec final_wfn,
-                                      std::vector<double> multistate_pt2_energy_correction) override;
+    virtual void
+    set_method_variables(DeterminantHashVec PQ_space, psi::SharedMatrix PQ_evecs,
+                         psi::SharedVector PQ_evals, std::string ex_alg, WFNOperator op,
+                         size_t nroot_method, size_t root, size_t ref_root,
+                         std::vector<std::vector<std::pair<Determinant, double>>> old_roots,
+                         DeterminantHashVec final_wfn,
+                         std::vector<double> multistate_pt2_energy_correction) override;
     /// Getters
     DeterminantHashVec get_PQ_space() override;
     psi::SharedMatrix get_PQ_evecs() override;
@@ -293,25 +290,25 @@ class AdaptiveCI_SCI : public SelectedCIMethod {
     double spin_trans_;
 
     // The RDMS
-//    std::vector<double> ordm_a_;
-//    std::vector<double> ordm_b_;
-//    std::vector<double> trdm_aa_;
-//    std::vector<double> trdm_ab_;
-//    std::vector<double> trdm_bb_;
-//    std::vector<double> trdm_aaa_;
-//    std::vector<double> trdm_aab_;
-//    std::vector<double> trdm_abb_;
-//    std::vector<double> trdm_bbb_;
+    //    std::vector<double> ordm_a_;
+    //    std::vector<double> ordm_b_;
+    //    std::vector<double> trdm_aa_;
+    //    std::vector<double> trdm_ab_;
+    //    std::vector<double> trdm_bb_;
+    //    std::vector<double> trdm_aaa_;
+    //    std::vector<double> trdm_aab_;
+    //    std::vector<double> trdm_abb_;
+    //    std::vector<double> trdm_bbb_;
 
-    ambit::Tensor  ordm_a_;
-    ambit::Tensor  ordm_b_;
-    ambit::Tensor  trdm_aa_;
-    ambit::Tensor  trdm_ab_;
-    ambit::Tensor  trdm_bb_;
-    ambit::Tensor  trdm_aaa_;
-    ambit::Tensor  trdm_aab_;
-    ambit::Tensor  trdm_abb_;
-    ambit::Tensor  trdm_bbb_;
+    ambit::Tensor ordm_a_;
+    ambit::Tensor ordm_b_;
+    ambit::Tensor trdm_aa_;
+    ambit::Tensor trdm_ab_;
+    ambit::Tensor trdm_bb_;
+    ambit::Tensor trdm_aaa_;
+    ambit::Tensor trdm_aab_;
+    ambit::Tensor trdm_abb_;
+    ambit::Tensor trdm_bbb_;
 
     // ==> Class functions <==
 

@@ -269,9 +269,7 @@ double AdaptiveCI::compute_energy() {
     int nrun = 1;
     bool multi_state = false;
 
-    if (options_->get_str("ACI_EXCITED_ALGORITHM") == "ROOT_COMBINE" or
-        options_->get_str("ACI_EXCITED_ALGORITHM") == "MULTISTATE" or
-        options_->get_str("ACI_EXCITED_ALGORITHM") == "ROOT_ORTHOGONALIZE") {
+    if (ex_alg_ == "ROOT_COMBINE" or ex_alg_ == "MULTISTATE" or ex_alg_ == "ROOT_ORTHOGONALIZE") {
         nrun = nroot_;
         multi_state = true;
     }
@@ -628,8 +626,9 @@ void AdaptiveCI::print_final(DeterminantHashVec& dets, psi::SharedMatrix& PQ_eve
                         abs_energy, exc_energy);
         outfile->Printf("\n  * Adaptive-CI Energy Root %3d + EPT2 = %.12f Eh = %8.4f eV", i,
                         abs_energy + multistate_pt2_energy_correction_[i],
-                        exc_energy + pc_hartree2ev * (multistate_pt2_energy_correction_[i] -
-                                                      multistate_pt2_energy_correction_[0]));
+                        exc_energy +
+                            pc_hartree2ev * (multistate_pt2_energy_correction_[i] -
+                                             multistate_pt2_energy_correction_[0]));
         //    	if(options_->get_str("SIZE_CORRECTION") == "DAVIDSON" ){
         //        outfile->Printf("\n  * Adaptive-CI Energy Root %3d + D1   =
         //        %.12f Eh = %8.4f eV",i,abs_energy + davidson[i],
@@ -2838,9 +2837,11 @@ void AdaptiveCI::spin_analysis() {
     // ambit::Tensor L1a = ambit::Tensor::build(ambit::CoreTensor, "L1a", {nact, nact});
     // ambit::Tensor L1b = ambit::Tensor::build(ambit::CoreTensor, "L1b", {nact, nact});
     // ambit::Tensor L2aa = ambit::Tensor::build(ambit::CoreTensor, "L2aa", {nact, nact, nact,
-    // nact}); ambit::Tensor L2ab = ambit::Tensor::build(ambit::CoreTensor, "L2ab", {nact, nact,
-    // nact, nact}); ambit::Tensor L2bb = ambit::Tensor::build(ambit::CoreTensor, "L2bb", {nact,
-    // nact, nact, nact});
+    // nact});
+    // ambit::Tensor L2ab = ambit::Tensor::build(ambit::CoreTensor, "L2ab", {nact, nact, nact,
+    // nact});
+    // ambit::Tensor L2bb = ambit::Tensor::build(ambit::CoreTensor, "L2bb", {nact, nact, nact,
+    // nact});
 
     psi::SharedMatrix UA(new psi::Matrix(nact, nact));
     psi::SharedMatrix UB(new psi::Matrix(nact, nact));

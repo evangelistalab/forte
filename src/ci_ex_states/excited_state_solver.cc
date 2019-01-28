@@ -68,8 +68,7 @@ void ExcitedStateSolver::set_options(std::shared_ptr<ForteOptions> options) {
     sparse_solver_->set_e_convergence(options->get_double("E_CONVERGENCE"));
     sparse_solver_->set_maxiter_davidson(options->get_int("DL_MAXITER"));
     sparse_solver_->set_spin_project(options->get_bool("ACI_PROJECT_OUT_SPIN_CONTAMINANTS"));
-    sparse_solver_->set_spin_project_full(
-        options->get_bool("ACI_PROJECT_OUT_SPIN_CONTAMINANTS"));
+    sparse_solver_->set_spin_project_full(options->get_bool("ACI_PROJECT_OUT_SPIN_CONTAMINANTS"));
     sparse_solver_->set_guess_dimension(options->get_int("DL_GUESS_SIZE"));
     sparse_solver_->set_num_vecs(options->get_int("N_GUESS_VEC"));
     sparse_solver_->set_sigma_method(options->get_str("SIGMA_BUILD_TYPE"));
@@ -124,6 +123,10 @@ double ExcitedStateSolver::compute_energy() {
     int nrun = 1;
     bool multi_state = false;
 
+    if (ex_type_ == "CORE") {
+        ex_alg_ = "ROOT_ORTHOGONALIZE";
+    }
+
     if (ex_alg_ == "ROOT_COMBINE" or ex_alg_ == "MULTISTATE" or ex_alg_ == "ROOT_ORTHOGONALIZE") {
         nrun = nroot_;
         multi_state = true;
@@ -137,10 +140,6 @@ double ExcitedStateSolver::compute_energy() {
     std::vector<double> pt2_energies(nroot_);
 
     DeterminantHashVec PQ_space;
-
-    if (ex_type_ == "CORE") {
-        ex_alg_ = "ROOT_ORTHOGONALIZE";
-    }
 
     std::vector<int> mo_symmetry = mo_space_info_->symmetry("ACTIVE");
     op_.initialize(mo_symmetry, as_ints_);
@@ -165,16 +164,8 @@ double ExcitedStateSolver::compute_energy() {
             nroot_method = 1;
         }
 
-        sci_->set_method_variables(PQ_space,
-                                   PQ_evecs,
-                                   PQ_evals,
-                                   ex_alg_,
-                                   op_,
-                                   nroot_method,
-                                   root_,
-                                   ref_root,
-                                   old_roots_,
-                                   final_wfn_,
+        sci_->set_method_variables(PQ_space, PQ_evecs, PQ_evals, ex_alg_, op_, nroot_method, root_,
+                                   ref_root, old_roots_, final_wfn_,
                                    multistate_pt2_energy_correction_);
 
         sci_->compute_energy();
@@ -514,7 +505,7 @@ std::vector<std::pair<double, double>> ExcitedStateSolver::compute_spin(Determin
 }
 
 double ExcitedStateSolver::compute_spin_contamination(DeterminantHashVec& space, WFNOperator& op,
-                                              psi::SharedMatrix evecs, int nroot) {
+                                                      psi::SharedMatrix evecs, int nroot) {
     auto spins = compute_spin(space, op, evecs, nroot);
     double spin_contam = 0.0;
     for (int n = 0; n < nroot; ++n) {
@@ -645,7 +636,7 @@ Reference ExcitedStateSolver::compute_rdms(std::shared_ptr<ActiveSpaceIntegrals>
                      trdm_bbb);
 }
 
-//void ExcitedStateSolver::add_external_excitations(DeterminantHashVec& ref) {
+// void ExcitedStateSolver::add_external_excitations(DeterminantHashVec& ref) {
 
 //    print_h2("Adding external Excitations");
 
@@ -1025,7 +1016,8 @@ Reference ExcitedStateSolver::compute_rdms(std::shared_ptr<ActiveSpaceIntegrals>
 //    if (spin_complete_) {
 //        ref.make_spin_complete(ncore + nact + nvir); // <- xsize
 //        if (!quiet_mode_)
-//            outfile->Printf("\n  Spin-complete dimension of the new model space: %zu", ref.size());
+//            outfile->Printf("\n  Spin-complete dimension of the new model space: %zu",
+//            ref.size());
 //    }
 
 //    // Diagonalize final space (maybe abstract this function)
@@ -1040,9 +1032,12 @@ Reference ExcitedStateSolver::compute_rdms(std::shared_ptr<ActiveSpaceIntegrals>
 
 //    std::sort(active_mo.begin(), active_mo.end());
 
-//    ambit::Tensor tei_active_aa = ints_->aptei_aa_block(active_mo, active_mo, active_mo, active_mo);
-//    ambit::Tensor tei_active_ab = ints_->aptei_ab_block(active_mo, active_mo, active_mo, active_mo);
-//    ambit::Tensor tei_active_bb = ints_->aptei_bb_block(active_mo, active_mo, active_mo, active_mo);
+//    ambit::Tensor tei_active_aa = ints_->aptei_aa_block(active_mo, active_mo, active_mo,
+//    active_mo);
+//    ambit::Tensor tei_active_ab = ints_->aptei_ab_block(active_mo, active_mo, active_mo,
+//    active_mo);
+//    ambit::Tensor tei_active_bb = ints_->aptei_bb_block(active_mo, active_mo, active_mo,
+//    active_mo);
 //    fci_ints->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
 
 //    std::vector<double> oei_a(nact_ * nact_, 0.0);
@@ -1094,7 +1089,8 @@ Reference ExcitedStateSolver::compute_rdms(std::shared_ptr<ActiveSpaceIntegrals>
 //        double abs_energy =
 //            final_evals->get(i) + nuclear_repulsion_energy_ + fci_ints->frozen_core_energy();
 //        double exc_energy = pc_hartree2ev * (final_evals->get(i) - final_evals->get(0));
-//        outfile->Printf("\n  * ACI+es Energy Root %3d        = %.12f Eh = %8.4f eV", i, abs_energy,
+//        outfile->Printf("\n  * ACI+es Energy Root %3d        = %.12f Eh = %8.4f eV", i,
+//        abs_energy,
 //                        exc_energy);
 //        //    outfile->Printf("\n  * Adaptive-CI Energy Root %3d + EPT2 = %.12f Eh = %8.4f eV", i,
 //        //                    abs_energy + multistate_pt2_energy_correction_[i],
