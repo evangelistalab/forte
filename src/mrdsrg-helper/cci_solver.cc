@@ -46,7 +46,9 @@ void ContractedCISolver::compute_Heff() {
 
     auto method_vec = as_solver_->get_method_vec();
     int i_state = 0;
-    for (const auto& [state, weights] : as_solver_->get_state_weights_list()) {
+    for (const auto& state_weights: as_solver_->get_state_weights_list()) {
+        const auto& state = state_weights.first;
+        const auto& weights = state_weights.second;
         auto method = method_vec[i_state];
         method->set_max_rdm_level(do_three_body ? 3 : 2);
         int nroots = weights.size();

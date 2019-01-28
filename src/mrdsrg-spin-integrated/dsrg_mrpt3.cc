@@ -1763,7 +1763,9 @@ void DSRG_MRPT3::print_dm_pt3() {
     print_h2("DSRG-MRPT3 (unrelaxed) Dipole Moments (a.u.)");
 
     auto print_vector3 = [](const std::string& name, const std::array<double, 3>& dm) {
-        const auto& [x, y, z] = dm;
+        const double x = dm[0];
+        const double y = dm[1];
+        const double z = dm[2];
         outfile->Printf("\n    %s dipole moment:", name.c_str());
         outfile->Printf("\n      X: %10.6f  Y: %10.6f  Z: %10.6f\n", x, y, z);
     };
