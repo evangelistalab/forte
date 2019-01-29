@@ -197,16 +197,18 @@ def forte_driver(state_weights_list, scf_info, options, ints, mo_space_info):
         title += indent + "{:5}  {:>20} {:>10}  {:>20} {:>10}\n".format("Iter.", "Total Energy", "Delta",
                                                                         "Total Energy", "Delta")
         psi4.core.print_out("\n{}".format(title + indent + dash))
-        for n in range(maxiter):
-            if n == 0:
-                Edelta1, Edelta2 = 0.0, 0.0
-            else:
-                Edelta1 = dsrg_energies[n][0] - dsrg_energies[n - 1][0]
-                Edelta2 = dsrg_energies[n][1] - dsrg_energies[n - 1][1]
+        E0_old, E1_old = 0.0, 0.0
+        for n, pair in enumerate(dsrg_energies):
+            
+            E0 = pair[0]
+            E1 = pair[1]
+            
             psi4.core.print_out("\n{}{:>5}  {:>20.12f} {:>10.3e}"
                                 "  {:>20.12f} {:>10.3e}".format(indent, n + 1,
-                                                                dsrg_energies[n][0], Edelta1,
-                                                                dsrg_energies[n][1], Edelta2))
+                                                                E0, E1, E0 - E0_old, E1 - E1_old))
+            E0_old = E0
+            E1_old = E1
+
         psi4.core.print_out("\n{}{}".format(indent, dash))
 
         if do_dipole and (not is_multi_state):
