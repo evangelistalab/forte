@@ -358,8 +358,6 @@ double MRDSRG::compute_energy() {
     }
     }
 
-    psi::Process::environment.globals["UNRELAXED ENERGY"] = Etotal;
-    psi::Process::environment.globals["CURRENT ENERGY"] = Etotal;
     return Etotal;
 }
 /*
