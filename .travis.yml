@@ -190,6 +190,8 @@ install:
 - export PYTHONPATH="${HOME}/build/evangelistalab:$PYTHONPATH"
 - hash -r
 script:
+- cd ${HOME}/build/evangelistalab/forte
+- lcov --directory . --zerocounters
 - cd ${HOME}/build/evangelistalab/forte/tests/methods
 - python run_forte_tests.py --bw --failed_dump
 - grep 'Size of Determinant class' aci-1/output.dat
@@ -198,9 +200,8 @@ script:
     python run_forte_tests_travis.py;
   fi
 - cd ${HOME}/build/evangelistalab/forte
-- lcov --directory . --zerocounters
 - ./forte_tests
 - ./forte_benchmarks
 - lcov --directory . --capture --output-file coverage.info
-- lcov --list coverage.info #debug info
+#- lcov --list coverage.info #debug info
 - bash <(curl -s https://codecov.io/bash) -f coverage.info || echo "Codecov did not collect coverage reports"
