@@ -131,8 +131,8 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
     }
     if (options.get_str("JOB_TYPE") == "MR-DSRG-PT2") {
         std::string cas_type = options.get_str("CAS_TYPE");
-        if (std::string actv_type = options.get_str("FCIMO_ACTV_TYPE");
-            actv_type == "CIS" or actv_type == "CISD") {
+        std::string actv_type = options.get_str("FCIMO_ACTV_TYPE");
+        if (actv_type == "CIS" or actv_type == "CISD") {
             throw psi::PSIEXCEPTION("VCIS/VCISD is not supported for MR-DSRG-PT2");
         }
         int max_rdm_level = (options.get_str("THREEPDC") == "ZERO") ? 2 : 3;

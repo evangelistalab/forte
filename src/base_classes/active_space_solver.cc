@@ -55,6 +55,15 @@ ActiveSpaceSolver::ActiveSpaceSolver(
     : method_(method), state_weights_list_(state_weights_list), scf_info_(scf_info),
       mo_space_info_(mo_space_info), as_ints_(as_ints), options_(options) {
     print_options();
+
+    // determine the state-specific root number
+    if(state_weights_list.size() == 1) {
+        const std::vector<double>& weights = state_weights_list[0].second;
+        auto it = std::find(weights.begin(), weights.end(), 1.0);
+        if (it != weights.end()) {
+            state_specific_root_ = std::distance(weights.begin(), it);
+        }
+    }
 }
 
 const std::vector<std::pair<StateInfo, std::vector<double>>>& ActiveSpaceSolver::compute_energy() {
@@ -123,13 +132,13 @@ void ActiveSpaceSolver::print_energies(
 Reference ActiveSpaceSolver::reference() {
 
     // For single state
-    if ((state_weights_list_.size() == 1) and (state_weights_list_[0].second.size() == 1)) {
+    if (state_specific_root_ >= 0) {
         std::vector<std::pair<size_t, size_t>> root;
-        root.push_back(std::make_pair(0, 0));
+        root.push_back(std::make_pair(state_specific_root_, state_specific_root_));
         Reference ref = method_vec_[0]->reference(root)[0];
         return ref;
-        // For state average
     } else {
+        // For state average
         size_t nactive = mo_space_info_->size("ACTIVE");
         ambit::Tensor g1a = ambit::Tensor::build(ambit::CoreTensor, "g1a", {nactive, nactive});
         ambit::Tensor g1b = ambit::Tensor::build(ambit::CoreTensor, "g1b", {nactive, nactive});
