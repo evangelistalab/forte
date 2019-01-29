@@ -57,7 +57,7 @@ ActiveSpaceSolver::ActiveSpaceSolver(
     print_options();
 
     // determine the state-specific root number
-    if(state_weights_list.size() == 1) {
+    if (state_weights_list.size() == 1) {
         const std::vector<double>& weights = state_weights_list[0].second;
         auto it = std::find(weights.begin(), weights.end(), 1.0);
         if (it != weights.end()) {
@@ -132,7 +132,7 @@ void ActiveSpaceSolver::print_energies(
 Reference ActiveSpaceSolver::reference() {
 
     // For single state
-    if (state_specific_root_ >= 0) {
+    if (!is_multi_state()) {
         std::vector<std::pair<size_t, size_t>> root;
         root.push_back(std::make_pair(state_specific_root_, state_specific_root_));
         Reference ref = method_vec_[0]->reference(root)[0];

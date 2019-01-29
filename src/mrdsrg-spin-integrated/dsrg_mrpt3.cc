@@ -1791,6 +1791,9 @@ void DSRG_MRPT3::print_dm_pt3() {
     print_vector4("DSRG-MRPT2 (2nd-order complete)", Mbar0_pt2c_);
     double t = print_vector4("DSRG-MRPT3", Mbar0_);
 
+    psi::Process::environment.globals["UNRELAXED DIPOLE X"] = Mbar0_[0] + dm_nuc_[0];
+    psi::Process::environment.globals["UNRELAXED DIPOLE Y"] = Mbar0_[1] + dm_nuc_[1];
+    psi::Process::environment.globals["UNRELAXED DIPOLE Z"] = Mbar0_[2] + dm_nuc_[2];
     psi::Process::environment.globals["UNRELAXED DIPOLE"] = t;
 }
 

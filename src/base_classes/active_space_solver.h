@@ -87,6 +87,9 @@ class ActiveSpaceSolver {
     /// Print a summary of the computation information
     void print_options();
 
+    /// Is this ActiveSpaceSolver targets a multi-state computation
+    bool is_multi_state() { return state_specific_root_ < 0 ? true : false; }
+
     const std::vector<std::pair<StateInfo, std::vector<double>>>& get_state_weights_list() const {
         return state_weights_list_;
     }

@@ -77,7 +77,7 @@ void export_ForteOptions(py::module& m) {
         .def("add_array", &ForteOptions::add_array, "Add an array option")
         .def("get_bool", &ForteOptions::get_bool, "Get a boolean option")
         .def("get_int", &ForteOptions::get_int, "Get an integer option")
-        .def("get_double", &ForteOptions::add_double, "Get a double option")
+        .def("get_double", &ForteOptions::get_double, "Get a double option")
         .def("get_str", &ForteOptions::get_str, "Get a string option")
         .def("get_int_vec", &ForteOptions::get_int_vec, "Get a vector of integers option")
         .def("push_options_to_psi4", &ForteOptions::push_options_to_psi4)
@@ -95,7 +95,9 @@ void export_ActiveSpaceSolver(py::module& m) {
     py::class_<ActiveSpaceSolver>(m, "ActiveSpaceSolver")
         .def("compute_energy", &ActiveSpaceSolver::compute_energy)
         .def("reference", &ActiveSpaceSolver::reference)
-        .def("set_max_rdm_level", &ActiveSpaceSolver::set_max_rdm_level);
+        .def("set_max_rdm_level", &ActiveSpaceSolver::set_max_rdm_level)
+        .def("is_multi_state", &ActiveSpaceSolver::is_multi_state,
+             "True if this solver is state-specific");
     m.def("compute_average_state_energy", &compute_average_state_energy,
           "Compute the average energy given the energies and weights of each state");
 }
