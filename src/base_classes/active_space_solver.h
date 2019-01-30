@@ -32,6 +32,8 @@
 #include <vector>
 #include <string>
 
+#include "psi4/libmints/matrix.h"
+
 #include "base_classes/state_info.h"
 
 namespace forte {
@@ -77,6 +79,10 @@ class ActiveSpaceSolver {
 
     /// Compute the energy and return it // TODO: document (Francesco)
     const std::vector<std::pair<StateInfo, std::vector<double>>>& compute_energy();
+
+    /// Compute the contracted CI energy
+    const std::vector<std::pair<StateInfo, std::vector<double>>>&
+    compute_contracted_energy(std::shared_ptr<forte::ActiveSpaceIntegrals> as_ints);
 
     /// Compute reference and return it
     Reference reference();
@@ -137,7 +143,8 @@ class ActiveSpaceSolver {
     /// The maximum order RDM/cumulant to use for all ActiveSpaceMethod objects initialized
     size_t max_rdm_level_ = 1;
 
-    /// The index of root if this targets a state-specific computation, a negative number if multi-state
+    /// The index of root if this targets a state-specific computation, a negative number if
+    /// multi-state
     int state_specific_root_ = -1;
 
     /// Controls which defaulr rdm level to use
@@ -156,6 +163,9 @@ class ActiveSpaceSolver {
      * @brief state_energies_list
      */
     std::vector<std::pair<StateInfo, std::vector<double>>> state_energies_list_;
+
+    /// Pairs of state info and the contracted CI eigen vectors
+    std::vector<std::pair<StateInfo, psi::Matrix>> state_contracted_evecs_list_;
 };
 
 /**

@@ -97,7 +97,7 @@ dsrg-mrpt2:
    - dsrg-mrpt2-5
    - dsrg-mrpt2-6
    - dsrg-mrpt2-7-casscf-natorbs
-#  - dsrg-mrpt2-8-sa
+   - dsrg-mrpt2-8-sa
 #  - dsrg-mrpt2-9-xms
    - dsrg-mrpt2-10-CO
    - dsrg-mrpt2-11-sa-C2H4

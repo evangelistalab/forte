@@ -41,6 +41,7 @@
 #include "base_classes/mo_space_info.h"
 #include "helpers/helpers.h"
 #include "integrals/active_space_integrals.h"
+#include "mrdsrg-helper/dsrg_transformed.h"
 #include "active_space_method.h"
 
 #include "active_space_solver.h"
@@ -91,6 +92,90 @@ const std::vector<std::pair<StateInfo, std::vector<double>>>& ActiveSpaceSolver:
         state_energies_list_.push_back(std::make_pair(state, energies));
     }
     psi::outfile->Printf("\n  Average Energy from %d state(s): %17.15f", nstate, average_energy);
+    print_energies(state_energies_list_);
+    return state_energies_list_;
+}
+
+const std::vector<std::pair<StateInfo, std::vector<double>>>&
+ActiveSpaceSolver::compute_contracted_energy(std::shared_ptr<ActiveSpaceIntegrals> as_ints) {
+    if (method_vec_.size() == 0) {
+        throw psi::PSIEXCEPTION("Old CI determinants are not solved. Call compute_energy first.");
+    }
+    if (!is_multi_state()) {
+        throw psi::PSIEXCEPTION("Multi-state computation only.");
+    }
+
+    state_energies_list_.clear();
+    state_contracted_evecs_list_.clear();
+    std::vector<std::string> irrep_labels = psi::Process::environment.molecule()->irrep_labels();
+    std::vector<std::string> multiplicity_labels{
+        "Singlet", "Doublet", "Triplet", "Quartet", "Quintet", "Sextet", "Septet", "Octet",
+        "Nonet",   "Decaet",  "11-et",   "12-et",   "13-et",   "14-et",  "15-et",  "16-et",
+        "17-et",   "18-et",   "19-et",   "20-et",   "21-et",   "22-et",  "23-et",  "24-et"};
+
+    // prepare integrals
+    size_t nactv = mo_space_info_->size("ACTIVE");
+    auto init_fill_tensor = [nactv](std::string name, size_t dim, std::vector<double> data) {
+        ambit::Tensor out = ambit::Tensor::build(ambit::CoreTensor, name, std::vector<size_t>(dim, nactv));
+        out.data() = data;
+        return out;
+    };
+    ambit::Tensor oei_a = init_fill_tensor("oei_a", 2, as_ints->oei_a_vector());
+    ambit::Tensor oei_b = init_fill_tensor("oei_a", 2, as_ints->oei_b_vector());
+    ambit::Tensor tei_aa = init_fill_tensor("tei_aa", 4, as_ints->tei_aa_vector());
+    ambit::Tensor tei_ab = init_fill_tensor("tei_ab", 4, as_ints->tei_ab_vector());
+    ambit::Tensor tei_bb = init_fill_tensor("tei_bb", 4, as_ints->tei_bb_vector());
+
+    // TODO: check three-body integrals available or not
+    //    bool do_three_body = (max_body_ == 3 and max_rdm_level_ == 3) ? true : false;
+
+    DressedQuantity ints(0.0, oei_a, oei_b, tei_aa, tei_ab, tei_bb);
+
+    for (size_t i = 0, nentry = method_vec_.size(); i < nentry; ++i) {
+        const auto& state = state_weights_list_[i].first;
+        size_t nroots = state_weights_list_[i].second.size();
+        std::string state_name =
+            multiplicity_labels[state.multiplicity()] + " " + irrep_labels[state.irrep()];
+        auto method = method_vec_[i];
+
+        // form the Hermitian effective Hamiltonian
+        print_h2("Building Effective Hamiltonian for " + state_name);
+        psi::Matrix Heff("Heff " + state_name, nroots, nroots);
+
+        for (size_t A = 0; A < nroots; ++A) {
+            for (size_t B = A; B < nroots; ++B) {
+                // just compute transition rdms of <A|sqop|B>
+                std::vector<std::pair<size_t, size_t>> root_list{std::make_pair(A, B)};
+                Reference reference = method->reference(root_list)[0];
+
+                double H_AB = ints.contract_with_densities(reference);
+                if (A == B) {
+                    H_AB += as_ints->nuclear_repulsion_energy() + as_ints->scalar_energy() +
+                            as_ints->frozen_core_energy();
+                    Heff.set(A, B, H_AB);
+                } else {
+                    Heff.set(A, B, H_AB);
+                    Heff.set(B, A, H_AB);
+                }
+            }
+        }
+
+        print_h2("Effective Hamiltonian for " + state_name);
+        psi::outfile->Printf("\n");
+        Heff.print();
+        psi::Matrix U("Eigen Vectors of Heff for " + state_name, nroots, nroots);
+        psi::Vector E("Eigen Values of Heff for " + state_name, nroots);
+        Heff.diagonalize(U, E);
+        U.eivprint(E);
+
+        std::vector<double> energies(nroots);
+        for (size_t i = 0; i < nroots; ++i) {
+            energies[i] = E.get(i);
+        }
+        state_energies_list_.push_back(std::make_pair(state, energies));
+        state_contracted_evecs_list_.push_back(std::make_pair(state, U));
+    }
+
     print_energies(state_energies_list_);
     return state_energies_list_;
 }
@@ -256,23 +341,6 @@ void ActiveSpaceSolver::print_options() {
     //    for (auto& str_dim : info) {
     //        outfile->Printf("\n    %-30s = %5zu", str_dim.first.c_str(), str_dim.second);
     //    }
-
-    //    print_h2("Orbital Spaces");
-    //    auto print_irrep = [&](const string& str, const psi::Dimension& array) {
-    //        outfile->Printf("\n    %-30s", str.c_str());
-    //        outfile->Printf("[");
-    //        for (int h = 0; h < nirrep_; ++h) {
-    //            outfile->Printf(" %4d ", array[h]);
-    //        }
-    //        outfile->Printf("]");
-    //    };
-    //    print_irrep("TOTAL MO", nmopi_);
-    //    print_irrep("FROZEN CORE", frzc_dim_);
-    //    print_irrep("FROZEN VIRTUAL", frzv_dim_);
-    //    print_irrep("CORRELATED MO", ncmopi_);
-    //    print_irrep("CORE", core_dim_);
-    //    print_irrep("ACTIVE", actv_dim_);
-    //    print_irrep("VIRTUAL", virt_dim_);
 
     print_h2("State Averaging Summary");
 
