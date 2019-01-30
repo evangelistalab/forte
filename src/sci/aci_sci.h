@@ -89,8 +89,23 @@ class AdaptiveCI_SCI : public SelectedCIMethod {
 
     // ==> Class Interface <==
 
-    /// Compute the energy
-    double compute_energy() override;
+    // Interfaces of SCI algorithm
+    /// Print the banner and starting information.
+    void print_info() override;
+    /// Pre-iter preparation, usually includes preparing an initial reference
+    void pre_iter_preparation() override;
+    /// Step 1. Diagonalize the Hamiltonian in the P space
+    void diagonalize_P_space() override;
+    /// Step 2. Find determinants in the Q space
+    void find_q_space() override;
+    /// Step 3. Diagonalize the Hamiltonian in the P + Q space
+    void diagonalize_PQ_space() override;
+    /// Step 4. Check convergence
+    bool convergence_check() override;
+    /// Step 5. Prune the P + Q space to get an updated P space
+    void prune_PQ_to_P() override;
+    /// Post-iter process
+    void post_iter_process() override {}
 
     // Temporarily added interface to ExcitedStateSolver
     /// Set the class variable
@@ -99,7 +114,6 @@ class AdaptiveCI_SCI : public SelectedCIMethod {
                          psi::SharedVector PQ_evals, std::string ex_alg, WFNOperator op,
                          size_t nroot_method, size_t root, size_t ref_root,
                          std::vector<std::vector<std::pair<Determinant, double>>> old_roots,
-                         DeterminantHashVec final_wfn,
                          std::vector<double> multistate_pt2_energy_correction) override;
     /// Getters
     DeterminantHashVec get_PQ_space() override;
@@ -107,14 +121,10 @@ class AdaptiveCI_SCI : public SelectedCIMethod {
     psi::SharedVector get_PQ_evals() override;
     WFNOperator get_op() override;
     size_t get_ref_root() override;
-    DeterminantHashVec get_final_wfn() override;
     std::vector<double> get_multistate_pt2_energy_correction() override;
-    size_t get_cycle() override;
 
     /// Set the printing level
     void set_quiet(bool quiet) { quiet_mode_ = quiet; }
-    /// Get the wavefunction
-    DeterminantHashVec get_wavefunction();
 
     /// Compute the ACI-NOs
     void compute_nos();
@@ -132,15 +142,24 @@ class AdaptiveCI_SCI : public SelectedCIMethod {
     void spin_analysis();
 
   private:
-    // ==> Class data <==
+    // Temporarily added
+    psi::SharedMatrix P_evecs_;
+    psi::SharedVector P_evals_;
+    DeterminantHashVec P_space_;
+    DeterminantHashVec P_ref_;
+    std::vector<double> P_ref_evecs_;
+    std::vector<double> P_energies_;
+    std::vector<std::vector<double>> energy_history_;
+    SparseCISolver sparse_solver_;
+    int num_ref_roots_;
+    bool follow_;
 
     // Temporarily added interface to ExcitedStateSolver
     psi::SharedMatrix PQ_evecs_;
     psi::SharedVector PQ_evals_;
     DeterminantHashVec PQ_space_;
 
-    DeterminantHashVec final_wfn_;
-
+    // ==> Class data <==
     WFNOperator op_;
 
     /// Forte options
@@ -187,10 +206,6 @@ class AdaptiveCI_SCI : public SelectedCIMethod {
     std::vector<Determinant> initial_reference_;
     /// The PT2 energy correction
     std::vector<double> multistate_pt2_energy_correction_;
-    /// The current iteration
-    int cycle_;
-    /// The last iteration
-    int max_cycle_;
     int pre_iter_;
     bool set_ints_ = false;
 
@@ -245,8 +260,6 @@ class AdaptiveCI_SCI : public SelectedCIMethod {
     bool det_save_;
     /// Order of RDM to compute
     //    int rdm_level_;
-    /// Control amount of printing
-    bool quiet_mode_;
     /// Control streamlining
     bool streamline_qspace_;
     /// The CI coeffiecients
@@ -314,13 +327,6 @@ class AdaptiveCI_SCI : public SelectedCIMethod {
 
     /// All that happens before we compute the energy
     void startup();
-
-    /// Compute an aci wavefunction
-    void compute_aci(DeterminantHashVec& PQ_space, psi::SharedMatrix& PQ_evecs,
-                     psi::SharedVector& PQ_evals);
-
-    /// Print information about this calculation
-    void print_info();
 
     /// Print a wave function
     void print_wfn(DeterminantHashVec& space, WFNOperator& op, psi::SharedMatrix evecs, int nroot);
@@ -406,7 +412,7 @@ class AdaptiveCI_SCI : public SelectedCIMethod {
                            psi::SharedVector new_energies);
 
     /// Check if the procedure is stuck
-    bool check_stuck(std::vector<std::vector<double>>& energy_history, psi::SharedVector evals);
+    bool check_stuck(const std::vector<std::vector<double> > &energy_history, psi::SharedVector evals);
 
     /// Computes spin
     std::vector<std::pair<double, double>> compute_spin(DeterminantHashVec& space, WFNOperator& op,

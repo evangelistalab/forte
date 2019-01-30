@@ -58,22 +58,39 @@ class SelectedCIMethod {
     /// Compute the energy and return it
     virtual double compute_energy();
 
+    // Interfaces of SCI algorithm
+    /// Print the banner and starting information.
+    virtual void print_info() = 0;
+    /// Pre-iter preparation, usually includes preparing an initial reference
+    virtual void pre_iter_preparation() = 0;
+    /// Step 1. Diagonalize the Hamiltonian in the P space
+    virtual void diagonalize_P_space() = 0;
+    /// Step 2. Find determinants in the Q space
+    virtual void find_q_space() = 0;
+    /// Step 3. Diagonalize the Hamiltonian in the P + Q space
+    virtual void diagonalize_PQ_space() = 0;
+    /// Step 4. Check convergence
+    virtual bool convergence_check() = 0;
+    /// Step 5. Prune the P + Q space to get an updated P space
+    virtual void prune_PQ_to_P() = 0;
+    /// Post-iter process
+    virtual void post_iter_process() = 0;
+
     // Temporarily added interface to ExcitedStateSolver
     /// Set the class variable
     virtual void set_method_variables(
         DeterminantHashVec PQ_space, psi::SharedMatrix PQ_evecs, psi::SharedVector PQ_evals,
         std::string ex_alg, WFNOperator op, size_t nroot_method, size_t root, size_t ref_root,
         std::vector<std::vector<std::pair<Determinant, double>>> old_roots,
-        DeterminantHashVec final_wfn, std::vector<double> multistate_pt2_energy_correction) = 0;
+        std::vector<double> multistate_pt2_energy_correction) = 0;
     /// Getters
     virtual DeterminantHashVec get_PQ_space() = 0;
     virtual psi::SharedMatrix get_PQ_evecs() = 0;
     virtual psi::SharedVector get_PQ_evals() = 0;
     virtual WFNOperator get_op() = 0;
     virtual size_t get_ref_root() = 0;
-    virtual DeterminantHashVec get_final_wfn() = 0;
     virtual std::vector<double> get_multistate_pt2_energy_correction() = 0;
-    virtual size_t get_cycle() = 0;
+    virtual size_t get_cycle();
 
   protected:
     /// The state to calculate
@@ -93,6 +110,15 @@ class SelectedCIMethod {
 
     /// Some HF info
     std::shared_ptr<SCFInfo> scf_info_;
+
+    /// The current iteration
+    size_t cycle_;
+
+    /// Maximum number of SCI iterations
+    size_t max_cycle_;
+
+    /// Control amount of printing
+    bool quiet_mode_;
 };
 } // namespace forte
 #endif // _sci_h_
