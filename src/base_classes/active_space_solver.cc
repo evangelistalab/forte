@@ -328,8 +328,6 @@ Reference ActiveSpaceSolver::compute_average_reference(
     };
 
     // Loop through references, add to master ref
-    int state_num = 0;
-    double energy = 0.0;
     for (const auto& state_nroot : state_list_) {
         const auto& state = state_nroot.first;
         size_t nroot = state_nroot.second;
@@ -337,24 +335,22 @@ Reference ActiveSpaceSolver::compute_average_reference(
         const auto& weights = state_weights.at(state);
 
         // Get the already-run method
-        auto& method = method_map_[state];
+        const auto& method = method_map_.at(state);
 
         // Loop through roots in the method
         for (size_t r = 0; r < nroot; r++) {
+
+            // Get the weight
+            double weight = weights[r];
 
             // Don't bother if the weight is zero
             if (weight <= 1e-15)
                 continue;
 
             // Get the Reference
-            std::vector<size_t, size_t> state_ids;
+            std::vector<std::pair<size_t, size_t>> state_ids;
             state_ids.push_back(std::make_pair(r, r));
             Reference method_ref = method->reference(state_ids)[0];
-
-            double weight = weights[r];
-
-            // Get the reference of the correct root
-            // Reference method_ref = references[r];
 
             // Now the RDMs
             // 1 RDM
@@ -376,7 +372,6 @@ Reference ActiveSpaceSolver::compute_average_reference(
                 scale_add(g3bbb.data(), method_ref.g3bbb().data(), weight);
             }
         }
-        state_num++;
     }
 
     if (max_rdm_level_ == 1) {
