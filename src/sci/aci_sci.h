@@ -412,7 +412,8 @@ class AdaptiveCI_SCI : public SelectedCIMethod {
                            psi::SharedVector new_energies);
 
     /// Check if the procedure is stuck
-    bool check_stuck(const std::vector<std::vector<double> > &energy_history, psi::SharedVector evals);
+    bool check_stuck(const std::vector<std::vector<double>>& energy_history,
+                     psi::SharedVector evals);
 
     /// Computes spin
     std::vector<std::pair<double, double>> compute_spin(DeterminantHashVec& space, WFNOperator& op,

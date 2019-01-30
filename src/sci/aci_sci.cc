@@ -47,7 +47,8 @@ AdaptiveCI_SCI::AdaptiveCI_SCI(StateInfo state, size_t nroot, std::shared_ptr<SC
                                std::shared_ptr<ForteOptions> options,
                                std::shared_ptr<MOSpaceInfo> mo_space_info,
                                std::shared_ptr<ActiveSpaceIntegrals> as_ints)
-    : SelectedCIMethod(state, nroot, scf_info, mo_space_info, as_ints), options_(options), sparse_solver_(as_ints_) {
+    : SelectedCIMethod(state, nroot, scf_info, mo_space_info, as_ints), options_(options),
+      sparse_solver_(as_ints_) {
     mo_symmetry_ = mo_space_info_->symmetry("ACTIVE");
     sigma_ = options_->get_double("SIGMA");
     nuclear_repulsion_energy_ = as_ints->ints()->nuclear_repulsion_energy();
@@ -1691,8 +1692,8 @@ void AdaptiveCI_SCI::diagonalize_P_space() {
         // assumes P_space handles determinants with only active space orbitals
         P_space_.make_spin_complete(nact_);
         if (!quiet_mode_)
-            outfile->Printf("\n  %s: %zu determinants",
-                            "Spin-complete dimension of the P space", P_space_.size());
+            outfile->Printf("\n  %s: %zu determinants", "Spin-complete dimension of the P space",
+                            P_space_.size());
     } else if (!quiet_mode_) {
         outfile->Printf("\n  Not checking for spin-completeness.");
     }
@@ -1720,7 +1721,7 @@ void AdaptiveCI_SCI::diagonalize_P_space() {
     sparse_solver_.manual_guess(false);
     local_timer diag;
     sparse_solver_.diagonalize_hamiltonian_map(P_space_, op_, P_evals_, P_evecs_, num_ref_roots_,
-                                              multiplicity_, diag_method_);
+                                               multiplicity_, diag_method_);
     if (!quiet_mode_)
         outfile->Printf("\n  Time spent diagonalizing H:   %1.6f s", diag.get());
 
@@ -1778,8 +1779,7 @@ void AdaptiveCI_SCI::find_q_space() {
     if (spin_complete_) {
         PQ_space_.make_spin_complete(nact_); // <- xsize
         if (!quiet_mode_)
-            outfile->Printf("\n  Spin-complete dimension of the PQ space: %zu",
-                            PQ_space_.size());
+            outfile->Printf("\n  Spin-complete dimension of the PQ space: %zu", PQ_space_.size());
     }
 
     if ((options_->get_str("ACI_EXCITED_ALGORITHM") == "ROOT_ORTHOGONALIZE") and (root_ > 0) and
@@ -1810,7 +1810,7 @@ void AdaptiveCI_SCI::diagonalize_PQ_space() {
     local_timer diag_pq;
 
     sparse_solver_.diagonalize_hamiltonian_map(PQ_space_, op_, PQ_evals_, PQ_evecs_, num_ref_roots_,
-                                              multiplicity_, diag_method_);
+                                               multiplicity_, diag_method_);
 
     if (!quiet_mode_)
         outfile->Printf("\n  Total time spent diagonalizing H:   %1.6f s", diag_pq.get());
