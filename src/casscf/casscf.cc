@@ -353,18 +353,19 @@ void CASSCF::cas_ci() {
 
     std::shared_ptr<ActiveSpaceIntegrals> fci_ints = get_ci_integrals();
 
-    auto state_weights_list = make_state_weights_list(options_, ints_->wfn());
+    auto state_weights_map = make_state_weights_map(options_, ints_->wfn());
+    auto state_map = to_state_map(state_weights_map);
 
     std::string casscf_ci_type = options_->get_str("CASSCF_CI_SOLVER");
-    auto fcisolver = make_active_space_solver(casscf_ci_type, state_weights_list, scf_info_,
-                                              mo_space_info_, fci_ints, options_);
-    fcisolver->set_max_rdm_level(2);
+    auto active_space_solver = make_active_space_solver(casscf_ci_type, state_map, scf_info_,
+                                                        mo_space_info_, fci_ints, options_);
+    active_space_solver->set_max_rdm_level(2);
 
     //    fcisolver->set_root(options_->get_int("ROOT"));
     //    fcisolver->set_active_space_integrals(fci_ints);
-    const auto state_energies_list = fcisolver->compute_energy();
-    cas_ref_ = fcisolver->reference();
-    double average_energy = compute_average_state_energy(state_energies_list, state_weights_list);
+    const auto state_energies_map = active_space_solver->compute_energy();
+    cas_ref_ = active_space_solver->compute_average_reference(state_weights_map);
+    double average_energy = compute_average_state_energy(state_energies_map, state_weights_map);
     // return the average energy
     E_casscf_ = average_energy;
 
@@ -1088,7 +1089,7 @@ std::pair<ambit::Tensor, std::vector<double>> CASSCF::CI_Integrals() {
     return pair_return;
 }
 
-std::vector<Reference> CASSCF::reference(const std::vector<std::pair<size_t, size_t> > &root_list) {
+std::vector<Reference> CASSCF::reference(const std::vector<std::pair<size_t, size_t>>& root_list) {
 
     std::vector<Reference> refs;
     refs.push_back(cas_ref_);

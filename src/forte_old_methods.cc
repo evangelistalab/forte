@@ -138,12 +138,12 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
         }
         int max_rdm_level = (options.get_str("THREEPDC") == "ZERO") ? 2 : 3;
         auto as_ints = make_active_space_ints(mo_space_info, ints, "ACTIVE", {{"RESTRICTED_DOCC"}});
-        auto ci = make_active_space_solver(cas_type, state_map, scf_info, mo_space_info,
-                                           as_ints, forte_options);
+        auto ci = make_active_space_solver(cas_type, state_map, scf_info, mo_space_info, as_ints,
+                                           forte_options);
         ci->set_max_rdm_level(max_rdm_level);
         ci->compute_energy();
 
-        Reference reference = ci->reference();
+        Reference reference = ci->compute_average_reference(state_weights_map);
         SemiCanonical semi(mo_space_info, ints, forte_options);
         semi.semicanonicalize(reference, max_rdm_level);
 
@@ -174,9 +174,9 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
     if (options.get_str("JOB_TYPE") == "MRDSRG_SO") {
         std::string cas_type = options.get_str("CAS_TYPE");
         auto as_ints = make_active_space_ints(mo_space_info, ints, "ACTIVE", {{"RESTRICTED_DOCC"}});
-        auto ci = make_active_space_solver(cas_type, state_map, scf_info, mo_space_info,
-                                           as_ints, forte_options);
-        Reference reference = ci->reference();
+        auto ci = make_active_space_solver(cas_type, state_map, scf_info, mo_space_info, as_ints,
+                                           forte_options);
+        Reference reference = ci->compute_average_reference(state_weights_map);
         if (options.get_bool("SEMI_CANONICAL")) {
             SemiCanonical semi(mo_space_info, ints, forte_options);
             semi.semicanonicalize(reference);
@@ -196,11 +196,11 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
         std::string cas_type = options.get_str("CAS_TYPE");
         int max_rdm_level = (options.get_str("THREEPDC") == "ZERO") ? 2 : 3;
         auto as_ints = make_active_space_ints(mo_space_info, ints, "ACTIVE", {{"RESTRICTED_DOCC"}});
-        auto ci = make_active_space_solver(cas_type, state_map, scf_info, mo_space_info,
-                                           as_ints, forte_options);
+        auto ci = make_active_space_solver(cas_type, state_map, scf_info, mo_space_info, as_ints,
+                                           forte_options);
 
         ci->compute_energy();
-        Reference reference = ci->reference();
+        Reference reference = ci->compute_average_reference(state_weights_map);
 
         if (options.get_bool("SEMI_CANONICAL")) {
             SemiCanonical semi(mo_space_info, ints, forte_options);
@@ -217,11 +217,11 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
         std::string cas_type = options.get_str("CAS_TYPE");
         int max_rdm_level = (options.get_str("THREEPDC") == "ZERO") ? 2 : 3;
         auto as_ints = make_active_space_ints(mo_space_info, ints, "ACTIVE", {{"RESTRICTED_DOCC"}});
-        auto solver = make_active_space_solver(cas_type, state_map, scf_info,
-                                               mo_space_info, as_ints, forte_options);
+        auto solver = make_active_space_solver(cas_type, state_map, scf_info, mo_space_info,
+                                               as_ints, forte_options);
         solver->set_max_rdm_level(max_rdm_level);
         solver->compute_energy();
-        Reference reference = solver->reference();
+        Reference reference = solver->compute_average_reference(state_weights_map);
 
         if (options.get_bool("SEMI_CANONICAL")) {
             SemiCanonical semi(mo_space_info, ints, forte_options);
