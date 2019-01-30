@@ -49,7 +49,7 @@
 namespace forte {
 
 ActiveSpaceSolver::ActiveSpaceSolver(const std::string& method,
-                                     std::map<StateInfo, size_t>& state_map,
+                                     const std::map<StateInfo, size_t> &state_map,
                                      std::shared_ptr<SCFInfo> scf_info,
                                      std::shared_ptr<MOSpaceInfo> mo_space_info,
                                      std::shared_ptr<ActiveSpaceIntegrals> as_ints,
@@ -183,11 +183,19 @@ void ActiveSpaceSolver::print_options() {
 
 std::unique_ptr<ActiveSpaceSolver> make_active_space_solver(
     const std::string& method,
-    std::vector<std::pair<StateInfo, std::vector<double>>>& state_weights_list,
+    const std::map<StateInfo, size_t>& state_map,
     std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<MOSpaceInfo> mo_space_info,
     std::shared_ptr<ActiveSpaceIntegrals> as_ints, std::shared_ptr<ForteOptions> options) {
-    return std::make_unique<ActiveSpaceSolver>(method, state_weights_list, scf_info, mo_space_info,
+    return std::make_unique<ActiveSpaceSolver>(method, state_map, scf_info, mo_space_info,
                                                as_ints, options);
+}
+
+std::map<StateInfo, size_t> to_state_map(const std::map<StateInfo, std::vector<double>>& state_weights_map) {
+    std::map<StateInfo, size_t> state_map;
+    for (const auto& state_vec : state_weights_map) {
+        state_map[state_vec.first] = state_vec.second.size();
+    }
+    return state_map;
 }
 
 std::map<StateInfo, std::vector<double>>

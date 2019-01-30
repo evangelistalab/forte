@@ -68,7 +68,7 @@ class ActiveSpaceSolver {
      * @param mo_space_info a MOSpaceInfo object
      * @param as_ints integrals for active space
      */
-    ActiveSpaceSolver(const std::string& method, std::map<StateInfo, size_t>& state_map,
+    ActiveSpaceSolver(const std::string& method, const std::map<StateInfo, size_t>& state_map,
                       std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<MOSpaceInfo> mo_space_info,
                       std::shared_ptr<ActiveSpaceIntegrals> as_ints,
                       std::shared_ptr<ForteOptions> options);
@@ -180,19 +180,27 @@ class ActiveSpaceSolver {
  */
 std::unique_ptr<ActiveSpaceSolver> make_active_space_solver(
     const std::string& method,
-    std::vector<std::pair<StateInfo, std::vector<double>>>& state_weights_list,
+    const std::map<StateInfo, size_t>& state_map,
     std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<MOSpaceInfo> mo_space_info,
     std::shared_ptr<ActiveSpaceIntegrals> as_ints, std::shared_ptr<ForteOptions> options);
 
 /**
- * @brief Make a list of states and weights to pass to create an ActiveSpaceSolver object.
+ * @brief Convert a map of StateInfo to weight lists to a map of StateInfo to number of states.
+ * @param state_weights_map A map of StateInfo to weight lists
+ * @return A map of StateInfo to number of states
+ */
+std::map<StateInfo, size_t>
+to_state_map(const std::map<StateInfo, std::vector<double>>& state_weights_map);
+
+/**
+ * @brief Make a list of states and weights.
  * @param options user-provided options
  * @param wfn a psi wave function
  * @return a unique pointer to an ActiveSpaceSolver object
  */
-std::vector<std::pair<StateInfo, std::vector<double>>>
-make_state_weights_list(std::shared_ptr<ForteOptions> options,
-                        std::shared_ptr<psi::Wavefunction> wfn);
+std::map<StateInfo, std::vector<double>>
+make_state_weights_map(std::shared_ptr<ForteOptions> options,
+                       std::shared_ptr<psi::Wavefunction> wfn);
 
 /**
  * @brief Compute the average energy for a set of states
