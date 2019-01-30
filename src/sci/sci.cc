@@ -58,7 +58,7 @@ double SelectedCIMethod::compute_energy() {
         diagonalize_PQ_space();
 
         // Step 4. Check convergence and break if needed
-        if (convergence_check())
+        if (check_convergence())
             break;
 
         // Step 5. Prune the P + Q space to get an updated P space

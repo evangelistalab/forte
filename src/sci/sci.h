@@ -70,7 +70,7 @@ class SelectedCIMethod {
     /// Step 3. Diagonalize the Hamiltonian in the P + Q space
     virtual void diagonalize_PQ_space() = 0;
     /// Step 4. Check convergence
-    virtual bool convergence_check() = 0;
+    virtual bool check_convergence() = 0;
     /// Step 5. Prune the P + Q space to get an updated P space
     virtual void prune_PQ_to_P() = 0;
     /// Post-iter process

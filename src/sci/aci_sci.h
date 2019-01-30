@@ -101,7 +101,7 @@ class AdaptiveCI_SCI : public SelectedCIMethod {
     /// Step 3. Diagonalize the Hamiltonian in the P + Q space
     void diagonalize_PQ_space() override;
     /// Step 4. Check convergence
-    bool convergence_check() override;
+    bool check_convergence() override;
     /// Step 5. Prune the P + Q space to get an updated P space
     void prune_PQ_to_P() override;
     /// Post-iter process
