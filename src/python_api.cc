@@ -95,7 +95,7 @@ void export_ActiveSpaceSolver(py::module& m) {
     py::class_<ActiveSpaceSolver>(m, "ActiveSpaceSolver")
         .def("compute_energy", &ActiveSpaceSolver::compute_energy)
         .def("reference", &ActiveSpaceSolver::reference)
-        .det("compute_average_reference", &ActiveSpaceSolver::compute_average_reference)
+        .def("compute_average_reference", &ActiveSpaceSolver::compute_average_reference)
         .def("set_max_rdm_level", &ActiveSpaceSolver::set_max_rdm_level)
         .def("is_multi_state", &ActiveSpaceSolver::is_multi_state,
              "True if this solver is state-specific")
