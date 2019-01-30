@@ -1858,7 +1858,7 @@ void AdaptiveCI_SCI::diagonalize_PQ_space() {
     }
 }
 
-bool AdaptiveCI_SCI::convergence_check() {
+bool AdaptiveCI_SCI::check_convergence() {
     bool stuck = check_stuck(energy_history_, PQ_evals_);
     if (stuck and (options_->get_str("ACI_EXCITED_ALGORITHM") != "COMPOSITE")) {
         outfile->Printf("\n  Procedure is stuck! Quitting...");
