@@ -78,6 +78,10 @@ class ActiveSpaceSolver {
     /// Compute the energy and return it // TODO: document (Francesco)
     const std::map<StateInfo, std::vector<double>>& compute_energy();
 
+    /// Compute the contracted CI energy
+    const std::map<StateInfo, std::vector<double>>&
+    compute_contracted_energy(std::shared_ptr<forte::ActiveSpaceIntegrals> as_ints);
+
     /// Compute reference and return it
     std::vector<Reference> reference(std::map<std::pair<StateInfo, StateInfo>,
                                               std::vector<std::pair<size_t, size_t>>>& elements);
@@ -175,8 +179,7 @@ class ActiveSpaceSolver {
  * @return a unique pointer for the base class ActiveSpaceMethod
  */
 std::unique_ptr<ActiveSpaceSolver> make_active_space_solver(
-    const std::string& method,
-    const std::map<StateInfo, size_t>& state_map,
+    const std::string& method, const std::map<StateInfo, size_t>& state_map,
     std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<MOSpaceInfo> mo_space_info,
     std::shared_ptr<ActiveSpaceIntegrals> as_ints, std::shared_ptr<ForteOptions> options);
 
