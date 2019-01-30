@@ -426,8 +426,11 @@ Reference compute_average_reference(std::shared_ptr<ActiveSpaceSolver>,
         state_num++;
     }
 
+    if (max_rdm_level_ >= 3) {
+        return Reference(g1a, g1b, g2aa, g2ab, g2bb, g3aaa, g3aab, g3abb, g3bbb);
+    }
     // Construct Reference object with RDMs
     Reference ref(g1a, g1b, g2aa, g2ab, g2bb, g3aaa, g3aab, g3abb, g3bbb);
     return ref;
-}
+} // namespace forte
 } // namespace forte
