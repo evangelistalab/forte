@@ -40,10 +40,12 @@ def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
     max_rdm_level = 3 # TODO: set this (Francesco)
     return_en = 0.0
 
+    state_map = to_state_map(state_weights_map)
+
     # Create an active space solver object and compute the energy
     active_space_solver_type = options.get_str('ACTIVE_SPACE_SOLVER')
     as_ints = forte.make_active_space_ints(mo_space_info, ints, "ACTIVE", ["RESTRICTED_DOCC"]);
-    active_space_solver = forte.make_active_space_solver(active_space_solver_type,state_weights_list,scf_info,mo_space_info,as_ints,options)
+    active_space_solver = forte.make_active_space_solver(active_space_solver_type,state_map,scf_info,mo_space_info,as_ints,options)
     active_space_solver.set_max_rdm_level(max_rdm_level)
     state_energies_list = active_space_solver.compute_energy()
 
@@ -132,7 +134,7 @@ def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
             else:
                 # Make a new ActiveSpaceSolver with the new ints
                 as_solver_relaxed = forte.make_active_space_solver(active_space_solver_type,
-                                                                   state_weights_list,scf_info,
+                                                                   state_map,scf_info,
                                                                    mo_space_info,ints_dressed,
                                                                    options)
                 as_solver_relaxed.set_max_rdm_level(max_rdm_level)

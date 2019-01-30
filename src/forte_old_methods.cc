@@ -121,7 +121,8 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
     auto scf_info = std::make_shared<SCFInfo>(ref_wfn);
     auto forte_options = std::make_shared<ForteOptions>(options);
     // generate a list of states with their own weights
-    auto state_weights_list = make_state_weights_list(forte_options, ref_wfn);
+    auto state_weights_map = make_state_weights_map(forte_options, ref_wfn);
+    auto state_map = to_state_map(state_weights_map);
 
     if (options.get_bool("CASSCF_REFERENCE") == true or options.get_str("JOB_TYPE") == "CASSCF") {
         auto as_ints = make_active_space_ints(mo_space_info, ints, "ACTIVE", {{"RESTRICTED_DOCC"}});
@@ -137,7 +138,7 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
         }
         int max_rdm_level = (options.get_str("THREEPDC") == "ZERO") ? 2 : 3;
         auto as_ints = make_active_space_ints(mo_space_info, ints, "ACTIVE", {{"RESTRICTED_DOCC"}});
-        auto ci = make_active_space_solver(cas_type, state_weights_list, scf_info, mo_space_info,
+        auto ci = make_active_space_solver(cas_type, state_map, scf_info, mo_space_info,
                                            as_ints, forte_options);
         ci->set_max_rdm_level(max_rdm_level);
         ci->compute_energy();
@@ -173,7 +174,7 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
     if (options.get_str("JOB_TYPE") == "MRDSRG_SO") {
         std::string cas_type = options.get_str("CAS_TYPE");
         auto as_ints = make_active_space_ints(mo_space_info, ints, "ACTIVE", {{"RESTRICTED_DOCC"}});
-        auto ci = make_active_space_solver(cas_type, state_weights_list, scf_info, mo_space_info,
+        auto ci = make_active_space_solver(cas_type, state_map, scf_info, mo_space_info,
                                            as_ints, forte_options);
         Reference reference = ci->reference();
         if (options.get_bool("SEMI_CANONICAL")) {
@@ -195,7 +196,7 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
         std::string cas_type = options.get_str("CAS_TYPE");
         int max_rdm_level = (options.get_str("THREEPDC") == "ZERO") ? 2 : 3;
         auto as_ints = make_active_space_ints(mo_space_info, ints, "ACTIVE", {{"RESTRICTED_DOCC"}});
-        auto ci = make_active_space_solver(cas_type, state_weights_list, scf_info, mo_space_info,
+        auto ci = make_active_space_solver(cas_type, state_map, scf_info, mo_space_info,
                                            as_ints, forte_options);
 
         ci->compute_energy();
@@ -216,7 +217,7 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
         std::string cas_type = options.get_str("CAS_TYPE");
         int max_rdm_level = (options.get_str("THREEPDC") == "ZERO") ? 2 : 3;
         auto as_ints = make_active_space_ints(mo_space_info, ints, "ACTIVE", {{"RESTRICTED_DOCC"}});
-        auto solver = make_active_space_solver(cas_type, state_weights_list, scf_info,
+        auto solver = make_active_space_solver(cas_type, state_map, scf_info,
                                                mo_space_info, as_ints, forte_options);
         solver->set_max_rdm_level(max_rdm_level);
         solver->compute_energy();
