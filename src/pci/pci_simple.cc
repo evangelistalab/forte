@@ -108,7 +108,8 @@ ProjectorCI_Simple::ProjectorCI_Simple(StateInfo state, size_t nroot,
     startup();
 }
 
-std::vector<Reference> ProjectorCI_Simple::reference(std::vector<std::pair<size_t,size_t>>&) {
+std::vector<Reference>
+ProjectorCI_Simple::reference(const std::vector<std::pair<size_t, size_t>>&) {
     //    CI_RDMS ci_rdms(final_wfn_, as_ints_, evecs_, root, root);
     //    ci_rdms.set_max_rdm(max_rdm_level_);
     //    Reference pci_ref = ci_rdms.reference(ordm_a_, ordm_b_, trdm_aa_, trdm_ab_, trdm_bb_,
@@ -2001,4 +2002,4 @@ ProjectorCI_Simple::sym_labeled_orbitals(std::string type) {
     }
     return labeled_orb;
 }
-}
+} // namespace forte

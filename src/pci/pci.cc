@@ -205,7 +205,7 @@ ProjectorCI::ProjectorCI(StateInfo state, size_t nroot, std::shared_ptr<forte::S
     startup();
 }
 
-std::vector<Reference> ProjectorCI::reference(std::vector<std::pair<size_t,size_t>>&) {
+std::vector<Reference> ProjectorCI::reference(const std::vector<std::pair<size_t, size_t>>&) {
     //    CI_RDMS ci_rdms(final_wfn_, as_ints_, evecs_, root, root);
     //    ci_rdms.set_max_rdm(max_rdm_level_);
     //    Reference pci_ref = ci_rdms.reference(ordm_a_, ordm_b_, trdm_aa_, trdm_ab_, trdm_bb_,
@@ -1159,7 +1159,6 @@ double ProjectorCI::compute_energy() {
             print_wfn(dets, diag_C);
         }
     }
-
 
     energies_.push_back(var_energy);
 
@@ -5383,4 +5382,4 @@ std::vector<std::tuple<double, int, int>> ProjectorCI::sym_labeled_orbitals(std:
     }
     return labeled_orb;
 }
-}
+} // namespace forte

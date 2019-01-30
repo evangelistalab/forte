@@ -136,7 +136,8 @@ ProjectorCI_HashVec::ProjectorCI_HashVec(StateInfo state, size_t nroot,
     startup();
 }
 
-std::vector<Reference> ProjectorCI_HashVec::reference(std::vector<std::pair<size_t,size_t>>&) {
+std::vector<Reference>
+ProjectorCI_HashVec::reference(const std::vector<std::pair<size_t, size_t>>&) {
     //    CI_RDMS ci_rdms(final_wfn_, as_ints_, evecs_, root, root);
     //    ci_rdms.set_max_rdm(max_rdm_level_);
     //    Reference pci_ref = ci_rdms.reference(ordm_a_, ordm_b_, trdm_aa_, trdm_ab_, trdm_bb_,
@@ -696,9 +697,9 @@ double ProjectorCI_HashVec::compute_energy() {
     if (converged) {
         outfile->Printf("\n\n  Calculation converged.");
     } else {
-        outfile->Printf("\n\n  Calculation %s",
-                        iter_ != maxiter_ ? "stoped in appearance of higher new low."
-                                          : "did not converge!");
+        outfile->Printf("\n\n  Calculation %s", iter_ != maxiter_
+                                                    ? "stoped in appearance of higher new low."
+                                                    : "did not converge!");
     }
 
     if (do_shift_) {
@@ -3035,4 +3036,4 @@ ProjectorCI_HashVec::sym_labeled_orbitals(std::string type) {
     }
     return labeled_orb;
 }
-}
+} // namespace forte

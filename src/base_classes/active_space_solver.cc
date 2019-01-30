@@ -287,23 +287,6 @@ make_state_weights_map(std::shared_ptr<ForteOptions> options,
     return state_weights_map;
 }
 
-double compute_average_state_energy(
-    std::vector<std::pair<StateInfo, std::vector<double>>> state_energies_list,
-    std::vector<std::pair<StateInfo, std::vector<double>>> state_weight_list) {
-    std::vector<double> weights;
-    std::vector<double> energies;
-    // flatten state_energies_list and state_weight_list into
-    for (const auto& state_weights : state_weight_list) {
-        std::copy(state_weights.second.begin(), state_weights.second.end(),
-                  std::back_inserter(weights));
-    }
-    for (const auto& state_energies : state_energies_list) {
-        std::copy(state_energies.second.begin(), state_energies.second.end(),
-                  std::back_inserter(energies));
-    }
-    return std::inner_product(energies.begin(), energies.end(), weights.begin(), 0.0);
-}
-
 Reference ActiveSpaceSolver::compute_average_reference(
     const std::map<StateInfo, std::vector<double>>& state_weights) {
     // For state average
@@ -402,9 +385,23 @@ Reference ActiveSpaceSolver::compute_average_reference(
         return Reference(g1a, g1b, g2aa, g2ab, g2bb);
     } else if (max_rdm_level_ == 3) {
         return Reference(g1a, g1b, g2aa, g2ab, g2bb, g3aaa, g3aab, g3abb, g3bbb);
-    } else {
-        return Reference();
     }
+    return Reference();
+}
 
-} // namespace forte
+double
+compute_average_state_energy(const std::map<StateInfo, std::vector<double>>& state_energies_map,
+                             const std::map<StateInfo, std::vector<double>>& state_weight_map) {
+    double average_energy = 0.0;
+    // loop over each state and compute the inner product of energies and weights
+    for (const auto& state_weights : state_weight_list) {
+        const auto& state = state_weights.first;
+        const auto& weights = state_weights.second;
+        const auto& energies = state_energies_list.at(state).second;
+        average_energy +=
+            std::inner_product(energies.begin(), energies.end(), weights.begin(), 0.0);
+    }
+    return average_energy;
+}
+
 } // namespace forte

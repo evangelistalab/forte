@@ -92,7 +92,8 @@ class ProjectorCI : public ActiveSpaceMethod {
     void set_options(std::shared_ptr<ForteOptions>) override{};
 
     /// Return a reference object
-    std::vector<Reference> reference(std::vector<std::pair<size_t,size_t>>& root_list) override;
+    std::vector<Reference>
+    reference(const std::vector<std::pair<size_t, size_t>>& root_list) override;
 
     /// Compute the energy
     double compute_energy() override;
@@ -314,15 +315,15 @@ class ProjectorCI : public ActiveSpaceMethod {
     double initial_guess(det_vec& dets, std::vector<double>& C);
 
     /**
-    * Propagate the wave function by a step of length tau
-    * @param Generator The type of Generator used
-    * @param dets The set of determinants that form the wave function at time n
-    * @param C The wave function coefficients at time n
-    * @param tau The time step in a.u.
-    * @param spawning_threshold The threshold used to accept or reject spawning
-    * events
-    * @param S An energy shift subtracted from the Hamiltonian
-    */
+     * Propagate the wave function by a step of length tau
+     * @param Generator The type of Generator used
+     * @param dets The set of determinants that form the wave function at time n
+     * @param C The wave function coefficients at time n
+     * @param tau The time step in a.u.
+     * @param spawning_threshold The threshold used to accept or reject spawning
+     * events
+     * @param S An energy shift subtracted from the Hamiltonian
+     */
     void propagate(GeneratorType_::GeneratorType generator, det_vec& dets, std::vector<double>& C,
                    double tau, double spawning_threshold, double S);
     /// A Delta projector fitted by 10th order chebyshev polynomial
@@ -475,6 +476,6 @@ class ProjectorCI : public ActiveSpaceMethod {
     /// Returns a vector of orbital energy, sym label pairs
     std::vector<std::tuple<double, int, int>> sym_labeled_orbitals(std::string type);
 };
-}
+} // namespace forte
 
 #endif // _pci_h_

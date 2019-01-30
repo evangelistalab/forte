@@ -194,9 +194,13 @@ std::vector<std::pair<StateInfo, std::vector<double>>>
 make_state_weights_list(std::shared_ptr<ForteOptions> options,
                         std::shared_ptr<psi::Wavefunction> wfn);
 
-double compute_average_state_energy(
-    std::vector<std::pair<StateInfo, std::vector<double>>> state_energies_list,
-    std::vector<std::pair<StateInfo, std::vector<double>>> state_weight_list);
+/**
+ * @brief Compute the average energy for a set of states
+ * @param state_energies_list a map of state -> energies
+ * @param state_weight_list a map of state -> weights
+ */
+compute_average_state_energy(const std::map<StateInfo, std::vector<double>>& state_energies_map,
+                             const std::map<StateInfo, std::vector<double>>& state_weight_map);
 
 } // namespace forte
 
