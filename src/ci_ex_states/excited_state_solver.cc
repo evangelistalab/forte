@@ -165,8 +165,7 @@ double ExcitedStateSolver::compute_energy() {
         }
 
         sci_->set_method_variables(PQ_space, PQ_evecs, PQ_evals, ex_alg_, op_, nroot_method, root_,
-                                   ref_root, old_roots_,
-                                   multistate_pt2_energy_correction_);
+                                   ref_root, old_roots_, multistate_pt2_energy_correction_);
 
         sci_->compute_energy();
 
