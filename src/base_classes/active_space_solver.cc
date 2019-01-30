@@ -41,6 +41,7 @@
 #include "base_classes/mo_space_info.h"
 #include "helpers/helpers.h"
 #include "integrals/active_space_integrals.h"
+#include "mrdsrg-helper/dsrg_transformed.h"
 #include "active_space_method.h"
 
 #include "active_space_solver.h"
@@ -161,23 +162,6 @@ void ActiveSpaceSolver::print_options() {
     //    for (auto& str_dim : info) {
     //        outfile->Printf("\n    %-30s = %5zu", str_dim.first.c_str(), str_dim.second);
     //    }
-
-    //    print_h2("Orbital Spaces");
-    //    auto print_irrep = [&](const string& str, const psi::Dimension& array) {
-    //        outfile->Printf("\n    %-30s", str.c_str());
-    //        outfile->Printf("[");
-    //        for (int h = 0; h < nirrep_; ++h) {
-    //            outfile->Printf(" %4d ", array[h]);
-    //        }
-    //        outfile->Printf("]");
-    //    };
-    //    print_irrep("TOTAL MO", nmopi_);
-    //    print_irrep("FROZEN CORE", frzc_dim_);
-    //    print_irrep("FROZEN VIRTUAL", frzv_dim_);
-    //    print_irrep("CORRELATED MO", ncmopi_);
-    //    print_irrep("CORE", core_dim_);
-    //    print_irrep("ACTIVE", actv_dim_);
-    //    print_irrep("VIRTUAL", virt_dim_);
 
     print_h2("State Averaging Summary");
 

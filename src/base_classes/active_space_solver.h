@@ -32,6 +32,8 @@
 #include <vector>
 #include <string>
 
+#include "psi4/libmints/matrix.h"
+
 #include "base_classes/state_info.h"
 
 namespace forte {
@@ -75,6 +77,10 @@ class ActiveSpaceSolver {
 
     /// Compute the energy and return it // TODO: document (Francesco)
     const std::map<StateInfo, std::vector<double>>& compute_energy();
+
+    /// Compute the contracted CI energy
+    const std::vector<std::pair<StateInfo, std::vector<double>>>&
+    compute_contracted_energy(std::shared_ptr<forte::ActiveSpaceIntegrals> as_ints);
 
     /// Compute reference and return it
     std::vector<Reference> reference(std::map<std::pair<StateInfo, StateInfo>,
@@ -153,6 +159,9 @@ class ActiveSpaceSolver {
      * @brief state_energies_list
      */
     std::map<StateInfo, std::vector<double>> state_energies_map_;
+
+    /// Pairs of state info and the contracted CI eigen vectors
+    std::map<StateInfo, psi::Matrix> state_contracted_evecs_map_; // TODO move outside?
 };
 
 /**

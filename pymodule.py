@@ -124,17 +124,18 @@ def forte_driver(state_weights_list, scf_info, options, ints, mo_space_info):
             # Grab the effective Hamiltonian in the actice space
             ints_dressed = dsrg.compute_Heff_actv()
 
-            # Make a new ActiveSpaceSolver with the new ints
-            as_solver_relaxed = forte.make_active_space_solver(active_space_solver_type,
-                                                               state_weights_list,scf_info,
-                                                               mo_space_info,ints_dressed,
-                                                               options)
-            as_solver_relaxed.set_max_rdm_level(max_rdm_level)
-
             # Compute the energy
             if is_multi_state and ms_dsrg_algorithm == "SA_SUB":
-                raise NotImplementedError("SA_SUB is disabled temporarily.")
+                state_energies_list = active_space_solver.compute_contracted_energy(ints_dressed)
+                Erelax = forte.compute_average_state_energy(state_energies_list,state_weights_list)
+                return Erelax
             else:
+                # Make a new ActiveSpaceSolver with the new ints
+                as_solver_relaxed = forte.make_active_space_solver(active_space_solver_type,
+                                                                   state_weights_list,scf_info,
+                                                                   mo_space_info,ints_dressed,
+                                                                   options)
+                as_solver_relaxed.set_max_rdm_level(max_rdm_level)
                 state_energies_list = as_solver_relaxed.compute_energy()
                 Erelax = forte.compute_average_state_energy(state_energies_list,state_weights_list)
 
@@ -188,26 +189,25 @@ def forte_driver(state_weights_list, scf_info, options, ints, mo_space_info):
                     udm_t = psi4.core.variable('UNRELAXED DIPOLE')
 
         # printing
-        psi4.core.print_out("\n\n  => {} Reference Relaxation Energy Summary <=\n".format(correlation_solver_type))
-        indent = ' ' * 4
-        dash = '-' * 71
-        title = indent + "{:5}  {:>31}  {:>31}\n".format(' ', "Fixed Ref. (a.u.)",
-                                                         "Relaxed Ref. (a.u.)")
-        title += indent + "{}  {}  {}\n".format(' ' * 5, '-' * 31, '-' * 31)
-        title += indent + "{:5}  {:>20} {:>10}  {:>20} {:>10}\n".format("Iter.", "Total Energy", "Delta",
+        if (not is_multi_state) or maxiter > 1:
+            psi4.core.print_out("\n\n  => {} Reference Relaxation Energy Summary <=\n".format(correlation_solver_type))
+            indent = ' ' * 4
+            dash = '-' * 71
+            title = indent + "{:5}  {:>31}  {:>31}\n".format(' ', "Fixed Ref. (a.u.)",
+                                                             "Relaxed Ref. (a.u.)")
+            title += indent + "{}  {}  {}\n".format(' ' * 5, '-' * 31, '-' * 31)
+            title += indent + "{:5}  {:>20} {:>10}  {:>20} {:>10}\n".format("Iter.", "Total Energy", "Delta",
                                                                         "Total Energy", "Delta")
-        psi4.core.print_out("\n{}".format(title + indent + dash))
-        for n in range(maxiter):
-            if n == 0:
-                Edelta1, Edelta2 = 0.0, 0.0
-            else:
-                Edelta1 = dsrg_energies[n][0] - dsrg_energies[n - 1][0]
-                Edelta2 = dsrg_energies[n][1] - dsrg_energies[n - 1][1]
-            psi4.core.print_out("\n{}{:>5}  {:>20.12f} {:>10.3e}"
-                                "  {:>20.12f} {:>10.3e}".format(indent, n + 1,
-                                                                dsrg_energies[n][0], Edelta1,
-                                                                dsrg_energies[n][1], Edelta2))
-        psi4.core.print_out("\n{}{}".format(indent, dash))
+            psi4.core.print_out("\n{}".format(title + indent + dash))
+            E0_old, E1_old = 0.0, 0.0
+            for n, pair in enumerate(dsrg_energies):
+                E0, E1 = pair
+                psi4.core.print_out("\n{}{:>5}  {:>20.12f} {:>10.3e}"
+                                    "  {:>20.12f} {:>10.3e}".format(indent, n + 1,
+                                                                    E0, E0 - E0_old, E1, E1 - E1_old))
+                E0_old, E1_old = E0, E1
+
+            psi4.core.print_out("\n{}{}".format(indent, dash))
 
         if do_dipole and (not is_multi_state):
             psi4.core.print_out("\n\n  => {} Reference Relaxation Dipole Summary <=\n".format(correlation_solver_type))

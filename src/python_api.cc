@@ -97,7 +97,9 @@ void export_ActiveSpaceSolver(py::module& m) {
         .def("reference", &ActiveSpaceSolver::reference)
         .def("set_max_rdm_level", &ActiveSpaceSolver::set_max_rdm_level)
         .def("is_multi_state", &ActiveSpaceSolver::is_multi_state,
-             "True if this solver is state-specific");
+             "True if this solver is state-specific")
+        .def("compute_contracted_energy", &ActiveSpaceSolver::compute_contracted_energy,
+             "as_ints"_a, "Solve the contracted CI eigenvalue problem using given integrals");
     m.def("compute_average_state_energy", &compute_average_state_energy,
           "Compute the average energy given the energies and weights of each state");
 }
@@ -105,9 +107,9 @@ void export_ActiveSpaceSolver(py::module& m) {
 /// Export the OrbitalTransform class
 void export_OrbitalTransform(py::module& m) {
     py::class_<OrbitalTransform>(m, "OrbitalTransform")
-    .def("compute_transformation", &OrbitalTransform::compute_transformation)
-    .def("get_Ua", &OrbitalTransform::get_Ua, "Get Ua rotation")
-    .def("get_Ub", &OrbitalTransform::get_Ub, "Get Ub rotation");
+        .def("compute_transformation", &OrbitalTransform::compute_transformation)
+        .def("get_Ua", &OrbitalTransform::get_Ua, "Get Ua rotation")
+        .def("get_Ub", &OrbitalTransform::get_Ub, "Get Ub rotation");
 }
 
 ///// Export the FCISolver class
@@ -131,7 +133,8 @@ PYBIND11_MODULE(forte, m) {
     m.def("forte_old_methods", &forte_old_methods, "Run Forte methods");
     m.def("make_active_space_method", &make_active_space_method, "Make an active space method");
     m.def("make_active_space_solver", &make_active_space_solver, "Make an active space solver");
-    m.def("make_orbital_transformation", &make_orbital_transformation, "Make an orbital transformation");
+    m.def("make_orbital_transformation", &make_orbital_transformation,
+          "Make an orbital transformation");
     m.def("make_state_info_from_psi_wfn", &make_state_info_from_psi_wfn,
           "Make a state info object from a psi4 Wavefunction");
     m.def("make_state_weights_list", &make_state_weights_list,
@@ -159,17 +162,17 @@ PYBIND11_MODULE(forte, m) {
     py::class_<ForteIntegrals, std::shared_ptr<ForteIntegrals>>(m, "ForteIntegrals")
         .def("rotate_orbitals", &ForteIntegrals::rotate_orbitals);
 
-//    // export Localize
-//    py::class_<LOCALIZE, std::shared_ptr<LOCALIZE>>(m, "LOCALIZE")
-//        .def(py::init<StateInfo, std::shared_ptr<SCFInfo>, std::shared_ptr<ForteOptions>,
-//                      std::shared_ptr<ForteIntegrals>, std::shared_ptr<MOSpaceInfo>>())
-//        .def("split_localize", &LOCALIZE::split_localize)
-//        .def("full_localize", &LOCALIZE::full_localize);
-//
-//    // export MP2_NOS
-//    py::class_<MP2_NOS, std::shared_ptr<MP2_NOS>>(m, "MP2_NOS")
-//        .def(py::init<StateInfo, std::shared_ptr<SCFInfo>, std::shared_ptr<ForteOptions>,
-//                      std::shared_ptr<ForteIntegrals>, std::shared_ptr<MOSpaceInfo>>());
+    //    // export Localize
+    //    py::class_<LOCALIZE, std::shared_ptr<LOCALIZE>>(m, "LOCALIZE")
+    //        .def(py::init<StateInfo, std::shared_ptr<SCFInfo>, std::shared_ptr<ForteOptions>,
+    //                      std::shared_ptr<ForteIntegrals>, std::shared_ptr<MOSpaceInfo>>())
+    //        .def("split_localize", &LOCALIZE::split_localize)
+    //        .def("full_localize", &LOCALIZE::full_localize);
+    //
+    //    // export MP2_NOS
+    //    py::class_<MP2_NOS, std::shared_ptr<MP2_NOS>>(m, "MP2_NOS")
+    //        .def(py::init<StateInfo, std::shared_ptr<SCFInfo>, std::shared_ptr<ForteOptions>,
+    //                      std::shared_ptr<ForteIntegrals>, std::shared_ptr<MOSpaceInfo>>());
 
     // export StateInfo
     py::class_<StateInfo, std::shared_ptr<StateInfo>>(m, "StateInfo")
@@ -216,14 +219,15 @@ PYBIND11_MODULE(forte, m) {
              "Return the DSRG dressed ActiveSpaceIntegrals")
         .def("deGNO_DMbar_actv", &MASTER_DSRG::deGNO_DMbar_actv,
              "Return the DSRG dressed dipole integrals")
-        .def("nuclear_dipole", &MASTER_DSRG::nuclear_dipole,"Return nuclear components of dipole moments")
+        .def("nuclear_dipole", &MASTER_DSRG::nuclear_dipole,
+             "Return nuclear components of dipole moments")
         .def("set_Uactv", &MASTER_DSRG::set_Uactv, "Ua"_a, "Ub"_a,
              "Set active part orbital rotation matrix (from original to semicanonical)");
 
-
     // export DressedQuantity for dipole moments
-    py::class_<DressedQuantity>(m,"DressedQuantity")
-        .def("contract_with_densities", &DressedQuantity::contract_with_densities,"reference"_a, "Contract densities with quantity");
+    py::class_<DressedQuantity>(m, "DressedQuantity")
+        .def("contract_with_densities", &DressedQuantity::contract_with_densities, "reference"_a,
+             "Contract densities with quantity");
 }
 
 } // namespace forte
