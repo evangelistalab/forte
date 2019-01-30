@@ -190,13 +190,9 @@ std::unique_ptr<ActiveSpaceSolver> make_active_space_solver(
                                                as_ints, options);
 }
 
-double ActiveSpaceSolver::get_average_state_energy() const {
-    return compute_average_state_energy(state_energies_map_, state_list_);
-}
-
 std::map<StateInfo, std::vector<double>>
 make_state_weights_map(std::shared_ptr<ForteOptions> options,
-                        std::shared_ptr<psi::Wavefunction> wfn) {
+                       std::shared_ptr<psi::Wavefunction> wfn) {
     std::map<StateInfo, std::vector<double>> state_weights_map;
     auto state = make_state_info_from_psi_wfn(wfn);
     if ((options->psi_options())["AVG_STATE"].size() == 0) {
@@ -308,7 +304,8 @@ double compute_average_state_energy(
     return std::inner_product(energies.begin(), energies.end(), weights.begin(), 0.0);
 }
 
-Reference ActiveSpaceSolver::compute_average_reference(std::map<StateInfo, std::vector<double>> weights) {
+Reference ActiveSpaceSolver::compute_average_reference(
+    const std::map<StateInfo, std::vector<double>>& state_weights) {
     // For state average
     size_t nactive = mo_space_info_->size(
         "ACTIVE"); // TODO: grab this info from the ActiveSpaceSolver object (Francesco)
@@ -351,11 +348,13 @@ Reference ActiveSpaceSolver::compute_average_reference(std::map<StateInfo, std::
     int state_num = 0;
     double energy = 0.0;
     for (const auto& state_nroot : state_list_) {
-        const auto& weights = state_weights.second;
+        const auto& state = state_nroot.first;
+        size_t nroot = state_nroot.second;
 
-        size_t nroot = weights.size();
+        const auto& weights = state_weights.at(state);
+
         // Get the already-run method
-        auto& method = method_vec_[state_num];
+        auto& method = method_map_[state];
 
         // Loop through roots in the method
         for (size_t r = 0; r < nroot; r++) {
@@ -364,15 +363,15 @@ Reference ActiveSpaceSolver::compute_average_reference(std::map<StateInfo, std::
             if (weight <= 1e-15)
                 continue;
 
-            // Get the Reference 
-            std::vector<size_t,size_t> state_ids;
-            state_ids.push_back(std::make_pair(r,r));
+            // Get the Reference
+            std::vector<size_t, size_t> state_ids;
+            state_ids.push_back(std::make_pair(r, r));
             Reference method_ref = method->reference(state_ids)[0];
 
             double weight = weights[r];
 
             // Get the reference of the correct root
-            //Reference method_ref = references[r];
+            // Reference method_ref = references[r];
 
             // Now the RDMs
             // 1 RDM
@@ -401,11 +400,11 @@ Reference ActiveSpaceSolver::compute_average_reference(std::map<StateInfo, std::
         return Reference(g1a, g1b);
     } else if (max_rdm_level_ == 2) {
         return Reference(g1a, g1b, g2aa, g2ab, g2bb);
-    }else if (max_rdm_level_ == 3) {
+    } else if (max_rdm_level_ == 3) {
         return Reference(g1a, g1b, g2aa, g2ab, g2bb, g3aaa, g3aab, g3abb, g3bbb);
     } else {
         return Reference();
     }
-        
+
 } // namespace forte
 } // namespace forte

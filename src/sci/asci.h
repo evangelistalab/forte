@@ -84,7 +84,7 @@ class ASCI : public ActiveSpaceMethod {
     double compute_energy() override;
 
     /// Update the reference file
-    std::vector<Reference> reference(std::vector<std::pair<size_t,size_t>>& root_list) override;
+    std::vector<Reference> reference(const std::vector<std::pair<size_t,size_t>>& root_list) override;
 
     void set_options(std::shared_ptr<ForteOptions>) override{}; // TODO : define
 

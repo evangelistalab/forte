@@ -309,11 +309,10 @@ double ASCI::compute_energy() {
 
     double root_energy = PQ_evals->get(0) + nuclear_repulsion_energy_ + as_ints_->scalar_energy();
 
-    energies_.resize(nroot_,0.0);
-    for( size_t n = 0; n < nroot_; ++n ){
+    energies_.resize(nroot_, 0.0);
+    for (size_t n = 0; n < nroot_; ++n) {
         energies_[n] = PQ_evals->get(n) + nuclear_repulsion_energy_ + as_ints_->scalar_energy();
     }
-
 
     psi::Process::environment.globals["CURRENT ENERGY"] = root_energy;
     psi::Process::environment.globals["ASCI ENERGY"] = root_energy;
@@ -342,7 +341,7 @@ double ASCI::compute_energy() {
 
     print_wfn(PQ_space, op_, PQ_evecs, nroot_);
 
-//    compute_rdms(as_ints_, PQ_space, op_, PQ_evecs, 0, 0);
+    //    compute_rdms(as_ints_, PQ_space, op_, PQ_evecs, 0, 0);
 
     return root_energy;
 }
@@ -539,14 +538,14 @@ double ASCI::compute_spin_contamination(DeterminantHashVec& space, WFNOperator& 
     return spin_contam;
 }
 
-std::vector<Reference> ASCI::reference(std::vector<std::pair<size_t,size_t>>& root_list) {
+std::vector<Reference> ASCI::reference(const std::vector<std::pair<size_t, size_t>>& root_list) {
     // const std::vector<Determinant>& final_wfn =
     //     final_wfn_.determinants//();
     std::vector<Reference> refs;
-    for( auto& root : root_list ){
-        compute_rdms(as_ints_, final_wfn_, op_, evecs_, root.first,root.second);
-        Reference aci_ref(ordm_a_, ordm_b_, trdm_aa_, trdm_ab_, trdm_bb_, trdm_aaa_,
-                                              trdm_aab_, trdm_abb_, trdm_bbb_);
+    for (auto& root : root_list) {
+        compute_rdms(as_ints_, final_wfn_, op_, evecs_, root.first, root.second);
+        Reference aci_ref(ordm_a_, ordm_b_, trdm_aa_, trdm_ab_, trdm_bb_, trdm_aaa_, trdm_aab_,
+                          trdm_abb_, trdm_bbb_);
         refs.push_back(aci_ref);
     }
     return refs;
@@ -663,7 +662,8 @@ void ASCI::compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints, Determin
     }
     if (rdm_level_ >= 3) {
         local_timer tr;
-        ci_rdms_.compute_3rdm(trdm_aaa_.data(), trdm_aab_.data(), trdm_abb_.data(), trdm_bbb_.data(), op);
+        ci_rdms_.compute_3rdm(trdm_aaa_.data(), trdm_aab_.data(), trdm_abb_.data(),
+                              trdm_bbb_.data(), op);
         outfile->Printf("\n  3-RDMs took %2.6f s (determinant)", tr.get());
     }
 }

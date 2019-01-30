@@ -203,7 +203,7 @@ AdaptiveCI::AdaptiveCI(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> s
                        std::shared_ptr<ForteOptions> options,
                        std::shared_ptr<MOSpaceInfo> mo_space_info,
                        std::shared_ptr<ActiveSpaceIntegrals> as_ints)
-    : ActiveSpaceMethod(state, nroot, mo_space_info, as_ints),  scf_info_(scf_info),
+    : ActiveSpaceMethod(state, nroot, mo_space_info, as_ints), scf_info_(scf_info),
       options_(options) {
     mo_symmetry_ = mo_space_info_->symmetry("ACTIVE");
     sigma_ = options_->get_double("SIGMA");
@@ -278,7 +278,6 @@ void AdaptiveCI::startup() {
         root_spin_vec_.push_back(std::make_pair(S, S2));
     }
 
-
     // TODO: This shouldn't come from options
     root_ = options_->get_int("ROOT");
 
@@ -345,11 +344,10 @@ void AdaptiveCI::startup() {
 void AdaptiveCI::print_info() {
 
     // Print a summary
-    std::vector<std::pair<std::string, int>> calculation_info{
-        {"Multiplicity", multiplicity_},
-        {"Symmetry", wavefunction_symmetry_},
-        {"Number of roots", nroot_},
-        {"Root used for properties", root_}};
+    std::vector<std::pair<std::string, int>> calculation_info{{"Multiplicity", multiplicity_},
+                                                              {"Symmetry", wavefunction_symmetry_},
+                                                              {"Number of roots", nroot_},
+                                                              {"Root used for properties", root_}};
 
     std::vector<std::pair<std::string, double>> calculation_info_double{
         {"Sigma (Eh)", sigma_},
@@ -594,49 +592,49 @@ double AdaptiveCI::compute_energy() {
     // }
 
     //** Compute the RDMs **//
- //   double list_time = 0.0;
- //   if ((options_->get_int("ACI_MAX_RDM") >= 3 or (max_rdm_level_ >= 3)) and
- //       !(options_->get_bool("ACI_DIRECT_RDMS"))) {
- //       outfile->Printf("\n  Computing 3-list...    ");
- //       local_timer l3;
- //       op_.three_s_lists(final_wfn_);
- //       outfile->Printf(" done (%1.5f s)", l3.get());
- //       list_time += l3.get();
- //   }
+    //   double list_time = 0.0;
+    //   if ((options_->get_int("ACI_MAX_RDM") >= 3 or (max_rdm_level_ >= 3)) and
+    //       !(options_->get_bool("ACI_DIRECT_RDMS"))) {
+    //       outfile->Printf("\n  Computing 3-list...    ");
+    //       local_timer l3;
+    //       op_.three_s_lists(final_wfn_);
+    //       outfile->Printf(" done (%1.5f s)", l3.get());
+    //       list_time += l3.get();
+    //   }
 
-  //  psi::SharedMatrix new_evecs;
-  //  if (ex_alg_ == "ROOT_COMBINE") {
-  //      compute_rdms(as_ints_, full_space, op_c, PQ_evecs, 0, 0);
-  //  } else if (approx_rdm_) {
-  //      outfile->Printf("\n  Approximating RDMs");
-  //      DeterminantHashVec approx = approximate_wfn(final_wfn_, PQ_evecs, PQ_evals, new_evecs);
-  //      //    WFNOperator op1(mo_space_info_);
-  //      //    op1.op_lists(approx);
-  //      if (!(options_->get_bool("ACI_DIRECT_RDMS"))) {
-  //          op_.clear_op_lists();
-  //          op_.clear_tp_lists();
-  //          op_.build_strings(approx);
-  //          op_.op_lists(approx);
-  //      }
-  //      outfile->Printf("\n  Size of approx: %zu  size of var: %zu", approx.size(),
-  //                      final_wfn_.size());
-  //      compute_rdms(as_ints_, approx, op_, new_evecs, 0, 0);
+    //  psi::SharedMatrix new_evecs;
+    //  if (ex_alg_ == "ROOT_COMBINE") {
+    //      compute_rdms(as_ints_, full_space, op_c, PQ_evecs, 0, 0);
+    //  } else if (approx_rdm_) {
+    //      outfile->Printf("\n  Approximating RDMs");
+    //      DeterminantHashVec approx = approximate_wfn(final_wfn_, PQ_evecs, PQ_evals, new_evecs);
+    //      //    WFNOperator op1(mo_space_info_);
+    //      //    op1.op_lists(approx);
+    //      if (!(options_->get_bool("ACI_DIRECT_RDMS"))) {
+    //          op_.clear_op_lists();
+    //          op_.clear_tp_lists();
+    //          op_.build_strings(approx);
+    //          op_.op_lists(approx);
+    //      }
+    //      outfile->Printf("\n  Size of approx: %zu  size of var: %zu", approx.size(),
+    //                      final_wfn_.size());
+    //      compute_rdms(as_ints_, approx, op_, new_evecs, 0, 0);
 
-  //  } else {
-  //      local_timer totaltt;
-  //      if (!(options_->get_bool("ACI_DIRECT_RDMS"))) {
-  //          op_.clear_op_s_lists();
-  //          op_.clear_tp_s_lists();
-  //          if (diag_method_ == Dynamic) {
-  //              op_.build_strings(final_wfn_);
-  //          }
-  //          op_.op_s_lists(final_wfn_);
-  //          op_.tp_s_lists(final_wfn_);
-  //      }
-  //      compute_rdms(as_ints_, final_wfn_, op_, PQ_evecs, 0, 0);
-  //      list_time += totaltt.get();
-  //      outfile->Printf("\n  RDMS took %1.6f", list_time);
-  //  }
+    //  } else {
+    //      local_timer totaltt;
+    //      if (!(options_->get_bool("ACI_DIRECT_RDMS"))) {
+    //          op_.clear_op_s_lists();
+    //          op_.clear_tp_s_lists();
+    //          if (diag_method_ == Dynamic) {
+    //              op_.build_strings(final_wfn_);
+    //          }
+    //          op_.op_s_lists(final_wfn_);
+    //          op_.tp_s_lists(final_wfn_);
+    //      }
+    //      compute_rdms(as_ints_, final_wfn_, op_, PQ_evecs, 0, 0);
+    //      list_time += totaltt.get();
+    //      outfile->Printf("\n  RDMS took %1.6f", list_time);
+    //  }
 
     // if( approx_rdm_ ){
     //     approximate_rdm( final_wfn_, PQ_evecs,);
@@ -659,9 +657,9 @@ double AdaptiveCI::compute_energy() {
     psi::Process::environment.globals["ACI+PT2 ENERGY"] = root_energy_pt2;
 
     // printf( "\n%1.5f\n", aci_elapse.get());
-  //  if (options_->get_bool("ACI_SPIN_ANALYSIS") and !(options_->get_bool("ACI_RELAXED_SPIN"))) {
-  //      spin_analysis();
-  //  }
+    //  if (options_->get_bool("ACI_SPIN_ANALYSIS") and !(options_->get_bool("ACI_RELAXED_SPIN"))) {
+    //      spin_analysis();
+    //  }
 
     // Save final wave function to a file
     if (options_->get_bool("ACI_SAVE_FINAL_WFN")) {
@@ -677,35 +675,34 @@ double AdaptiveCI::compute_energy() {
 
     outfile->Printf("\n\n  %s: %f s", "Adaptive-CI ran in ", aci_elapse.get());
     outfile->Printf("\n\n  %s: %d", "Saving information for root", root_);
-    
+
     // Set active space method evals
 
-    energies_.resize(nroot_,0.0);
-    for( int n = 0; n < nroot_; ++n ){
+    energies_.resize(nroot_, 0.0);
+    for (int n = 0; n < nroot_; ++n) {
         energies_[n] = PQ_evals->get(n) + nuclear_repulsion_energy_ + as_ints_->scalar_energy();
     }
 
-    return PQ_evals->get(root_) + nuclear_repulsion_energy_ +
-           as_ints_->scalar_energy();
+    return PQ_evals->get(root_) + nuclear_repulsion_energy_ + as_ints_->scalar_energy();
 }
 
 void AdaptiveCI::unpaired_density(psi::SharedMatrix Ua, psi::SharedMatrix Ub) {
-//    UPDensity density(as_ints_->ints(), mo_space_info_, options_, Ua, Ub);
-//    density.compute_unpaired_density(ordm_a_, ordm_b_);
+    //    UPDensity density(as_ints_->ints(), mo_space_info_, options_, Ua, Ub);
+    //    density.compute_unpaired_density(ordm_a_, ordm_b_);
 }
 void AdaptiveCI::unpaired_density(ambit::Tensor Ua, ambit::Tensor Ub) {
-//
-//    Matrix am = tensor_to_matrix(Ua, nactpi_);
-//    Matrix bm = tensor_to_matrix(Ub, nactpi_);
-//
-//    psi::SharedMatrix Uam(new psi::Matrix(nactpi_, nactpi_));
-//    psi::SharedMatrix Ubm(new psi::Matrix(nactpi_, nactpi_));
-//
-//    Uam->copy(am);
-//    Ubm->copy(bm);
-//
-//    UPDensity density(as_ints_->ints(), mo_space_info_, options_, Uam, Ubm);
-//    density.compute_unpaired_density(ordm_a_, ordm_b_);
+    //
+    //    Matrix am = tensor_to_matrix(Ua, nactpi_);
+    //    Matrix bm = tensor_to_matrix(Ub, nactpi_);
+    //
+    //    psi::SharedMatrix Uam(new psi::Matrix(nactpi_, nactpi_));
+    //    psi::SharedMatrix Ubm(new psi::Matrix(nactpi_, nactpi_));
+    //
+    //    Uam->copy(am);
+    //    Ubm->copy(bm);
+    //
+    //    UPDensity density(as_ints_->ints(), mo_space_info_, options_, Uam, Ubm);
+    //    density.compute_unpaired_density(ordm_a_, ordm_b_);
 }
 
 void AdaptiveCI::diagonalize_final_and_compute_rdms() {
@@ -913,8 +910,7 @@ void AdaptiveCI::default_find_q_space(DeterminantHashVec& P_space, DeterminantHa
     outfile->Printf("\n  Time spent preparing PQ_space: %1.6f", erase.get());
 
     if (!quiet_mode_) {
-        outfile->Printf("\n  %s: %zu determinants", "Dimension of the SD space",
-                        V_hash.size());
+        outfile->Printf("\n  %s: %zu determinants", "Dimension of the SD space", V_hash.size());
         outfile->Printf("\n  %s: %f s\n", "Time spent building the external space (default)",
                         build.get());
     }
@@ -1008,8 +1004,7 @@ void AdaptiveCI::find_q_space(DeterminantHashVec& P_space, DeterminantHashVec& P
     }
 
     if (!quiet_mode_) {
-        outfile->Printf("\n  %s: %zu determinants", "Dimension of the SD space",
-                        V_hash.size());
+        outfile->Printf("\n  %s: %zu determinants", "Dimension of the SD space", V_hash.size());
         outfile->Printf("\n  %s: %f s\n", "Time spent building the external space",
                         t_ms_build.get());
     }
@@ -1574,16 +1569,16 @@ void AdaptiveCI::set_max_rdm(int rdm) {
     set_rdm_ = true;
 }
 
-std::vector<Reference> AdaptiveCI::reference(std::vector<std::pair<size_t, size_t>>& roots) {
+std::vector<Reference> AdaptiveCI::reference(const std::vector<std::pair<size_t, size_t>>& roots) {
 
     std::vector<Reference> refs;
 
-    for( const auto& root_pair : roots ){
+    for (const auto& root_pair : roots) {
 
-        compute_rdms(as_ints_, final_wfn_, op_, evecs_, root_pair.first, root_pair.second); 
+        compute_rdms(as_ints_, final_wfn_, op_, evecs_, root_pair.first, root_pair.second);
 
-        Reference aci_ref(ordm_a_, ordm_b_, trdm_aa_, trdm_ab_, trdm_bb_, trdm_aaa_,
-                                              trdm_aab_, trdm_abb_, trdm_bbb_);
+        Reference aci_ref(ordm_a_, ordm_b_, trdm_aa_, trdm_ab_, trdm_bb_, trdm_aaa_, trdm_aab_,
+                          trdm_abb_, trdm_bbb_);
 
         refs.push_back(aci_ref);
     }
@@ -2115,8 +2110,7 @@ void AdaptiveCI::compute_aci(DeterminantHashVec& PQ_space, psi::SharedMatrix& PQ
         } else if (stuck and (options_->get_str("ACI_EXCITED_ALGORITHM") == "COMPOSITE") and
                    ex_alg_ == "AVERAGE") {
             outfile->Printf("\n  Root averaging algorithm converged.");
-            outfile->Printf("\n  Now optimizing PQ Space for root %d",
-                            root_);
+            outfile->Printf("\n  Now optimizing PQ Space for root %d", root_);
             ex_alg_ = options_->get_str("ACI_EXCITED_ALGORITHM");
             pre_iter_ = cycle + 1;
         }
@@ -2126,8 +2120,7 @@ void AdaptiveCI::compute_aci(DeterminantHashVec& PQ_space, psi::SharedMatrix& PQ
         if (converged and (ex_alg_ == "AVERAGE") and
             options_->get_str("ACI_EXCITED_ALGORITHM") == "COMPOSITE") {
             outfile->Printf("\n  Root averaging algorithm converged.");
-            outfile->Printf("\n  Now optimizing PQ Space for root %d",
-                            root_);
+            outfile->Printf("\n  Now optimizing PQ Space for root %d", root_);
             ex_alg_ = options_->get_str("ACI_EXCITED_ALGORITHM");
             pre_iter_ = cycle + 1;
         } else if (converged) {
@@ -2152,7 +2145,7 @@ void AdaptiveCI::compute_aci(DeterminantHashVec& PQ_space, psi::SharedMatrix& PQ
 
     // Reset nroot to original value if changed
     nroot_ = nroot_master;
-    
+
     // if (det_save_)
     //     det_list_.close();
 }
@@ -2182,9 +2175,6 @@ void AdaptiveCI::compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
                               DeterminantHashVec& dets, WFNOperator& op,
                               psi::SharedMatrix& PQ_evecs, int root1, int root2) {
 
-
-
-
     if (!(options_->get_bool("ACI_DIRECT_RDMS"))) {
         op.clear_op_s_lists();
         op.clear_tp_s_lists();
@@ -2212,16 +2202,21 @@ void AdaptiveCI::compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
         ordm_a_ = ambit::Tensor::build(ambit::CoreTensor, "g1a", {nact_, nact_});
         ordm_b_ = ambit::Tensor::build(ambit::CoreTensor, "g1b", {nact_, nact_});
 
-        trdm_aa_ = ambit::Tensor::build(ambit::CoreTensor, "g2aa", {nact_,nact_,nact_, nact_});
-        trdm_ab_ = ambit::Tensor::build(ambit::CoreTensor, "g2ab", {nact_,nact_,nact_, nact_});
-        trdm_bb_ = ambit::Tensor::build(ambit::CoreTensor, "g2bb", {nact_,nact_,nact_, nact_});
+        trdm_aa_ = ambit::Tensor::build(ambit::CoreTensor, "g2aa", {nact_, nact_, nact_, nact_});
+        trdm_ab_ = ambit::Tensor::build(ambit::CoreTensor, "g2ab", {nact_, nact_, nact_, nact_});
+        trdm_bb_ = ambit::Tensor::build(ambit::CoreTensor, "g2bb", {nact_, nact_, nact_, nact_});
 
-        trdm_aaa_ = ambit::Tensor::build(ambit::CoreTensor, "g2aaa", {nact_,nact_,nact_,nact_,nact_,nact_});
-        trdm_aab_ = ambit::Tensor::build(ambit::CoreTensor, "g2aab", {nact_,nact_,nact_,nact_,nact_,nact_});
-        trdm_abb_ = ambit::Tensor::build(ambit::CoreTensor, "g2abb", {nact_,nact_,nact_,nact_,nact_,nact_});
-        trdm_bbb_ = ambit::Tensor::build(ambit::CoreTensor, "g2bbb", {nact_,nact_,nact_,nact_,nact_,nact_});
+        trdm_aaa_ = ambit::Tensor::build(ambit::CoreTensor, "g2aaa",
+                                         {nact_, nact_, nact_, nact_, nact_, nact_});
+        trdm_aab_ = ambit::Tensor::build(ambit::CoreTensor, "g2aab",
+                                         {nact_, nact_, nact_, nact_, nact_, nact_});
+        trdm_abb_ = ambit::Tensor::build(ambit::CoreTensor, "g2abb",
+                                         {nact_, nact_, nact_, nact_, nact_, nact_});
+        trdm_bbb_ = ambit::Tensor::build(ambit::CoreTensor, "g2bbb",
+                                         {nact_, nact_, nact_, nact_, nact_, nact_});
 
-        ci_rdms_.compute_rdms_dynamic(ordm_a_.data(), ordm_b_.data(), trdm_aa_.data(), trdm_ab_.data(), trdm_bb_.data(), trdm_aaa_.data(),
+        ci_rdms_.compute_rdms_dynamic(ordm_a_.data(), ordm_b_.data(), trdm_aa_.data(),
+                                      trdm_ab_.data(), trdm_bb_.data(), trdm_aaa_.data(),
                                       trdm_aab_.data(), trdm_abb_.data(), trdm_bbb_.data());
         print_nos();
         // double dt = dyn.get();
@@ -2241,27 +2236,36 @@ void AdaptiveCI::compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
         }
         if (max_rdm_level_ >= 2) {
             local_timer two_r;
-            trdm_aa_ = ambit::Tensor::build(ambit::CoreTensor, "g2aa", {nact_,nact_,nact_, nact_});
-            trdm_ab_ = ambit::Tensor::build(ambit::CoreTensor, "g2ab", {nact_,nact_,nact_, nact_});
-            trdm_bb_ = ambit::Tensor::build(ambit::CoreTensor, "g2bb", {nact_,nact_,nact_, nact_});
+            trdm_aa_ =
+                ambit::Tensor::build(ambit::CoreTensor, "g2aa", {nact_, nact_, nact_, nact_});
+            trdm_ab_ =
+                ambit::Tensor::build(ambit::CoreTensor, "g2ab", {nact_, nact_, nact_, nact_});
+            trdm_bb_ =
+                ambit::Tensor::build(ambit::CoreTensor, "g2bb", {nact_, nact_, nact_, nact_});
 
             ci_rdms_.compute_2rdm(trdm_aa_.data(), trdm_ab_.data(), trdm_bb_.data(), op);
             outfile->Printf("\n  2-RDMS took %2.6f s (determinant)", two_r.get());
         }
         if (max_rdm_level_ >= 3) {
             local_timer tr;
-            trdm_aaa_ = ambit::Tensor::build(ambit::CoreTensor, "g2aaa", {nact_,nact_,nact_,nact_,nact_,nact_});
-            trdm_aab_ = ambit::Tensor::build(ambit::CoreTensor, "g2aab", {nact_,nact_,nact_,nact_,nact_,nact_});
-            trdm_abb_ = ambit::Tensor::build(ambit::CoreTensor, "g2abb", {nact_,nact_,nact_,nact_,nact_,nact_});
-            trdm_bbb_ = ambit::Tensor::build(ambit::CoreTensor, "g2bbb", {nact_,nact_,nact_,nact_,nact_,nact_});
+            trdm_aaa_ = ambit::Tensor::build(ambit::CoreTensor, "g2aaa",
+                                             {nact_, nact_, nact_, nact_, nact_, nact_});
+            trdm_aab_ = ambit::Tensor::build(ambit::CoreTensor, "g2aab",
+                                             {nact_, nact_, nact_, nact_, nact_, nact_});
+            trdm_abb_ = ambit::Tensor::build(ambit::CoreTensor, "g2abb",
+                                             {nact_, nact_, nact_, nact_, nact_, nact_});
+            trdm_bbb_ = ambit::Tensor::build(ambit::CoreTensor, "g2bbb",
+                                             {nact_, nact_, nact_, nact_, nact_, nact_});
 
-            ci_rdms_.compute_3rdm(trdm_aaa_.data(), trdm_aab_.data(), trdm_abb_.data(), trdm_bbb_.data(), op);
+            ci_rdms_.compute_3rdm(trdm_aaa_.data(), trdm_aab_.data(), trdm_abb_.data(),
+                                  trdm_bbb_.data(), op);
             outfile->Printf("\n  3-RDMs took %2.6f s (determinant)", tr.get());
         }
     }
     if (options_->get_bool("ACI_TEST_RDMS")) {
-        ci_rdms_.rdm_test(ordm_a_.data(), ordm_b_.data(), trdm_aa_.data(), trdm_bb_.data(), trdm_ab_.data(), trdm_aaa_.data(), trdm_aab_.data(),
-                          trdm_abb_.data(), trdm_bbb_.data());
+        ci_rdms_.rdm_test(ordm_a_.data(), ordm_b_.data(), trdm_aa_.data(), trdm_bb_.data(),
+                          trdm_ab_.data(), trdm_aaa_.data(), trdm_aab_.data(), trdm_abb_.data(),
+                          trdm_bbb_.data());
     }
 }
 
@@ -3007,11 +3011,12 @@ void AdaptiveCI::spin_analysis() {
     size_t nact3 = nact * nact2;
 
     // First build rdms as ambit tensors
-    //ambit::Tensor L1a = ambit::Tensor::build(ambit::CoreTensor, "L1a", {nact, nact});
-    //ambit::Tensor L1b = ambit::Tensor::build(ambit::CoreTensor, "L1b", {nact, nact});
-    //ambit::Tensor L2aa = ambit::Tensor::build(ambit::CoreTensor, "L2aa", {nact, nact, nact, nact});
-    //ambit::Tensor L2ab = ambit::Tensor::build(ambit::CoreTensor, "L2ab", {nact, nact, nact, nact});
-    //ambit::Tensor L2bb = ambit::Tensor::build(ambit::CoreTensor, "L2bb", {nact, nact, nact, nact});
+    // ambit::Tensor L1a = ambit::Tensor::build(ambit::CoreTensor, "L1a", {nact, nact});
+    // ambit::Tensor L1b = ambit::Tensor::build(ambit::CoreTensor, "L1b", {nact, nact});
+    // ambit::Tensor L2aa = ambit::Tensor::build(ambit::CoreTensor, "L2aa", {nact, nact, nact,
+    // nact}); ambit::Tensor L2ab = ambit::Tensor::build(ambit::CoreTensor, "L2ab", {nact, nact,
+    // nact, nact}); ambit::Tensor L2bb = ambit::Tensor::build(ambit::CoreTensor, "L2bb", {nact,
+    // nact, nact, nact});
 
     psi::SharedMatrix UA(new psi::Matrix(nact, nact));
     psi::SharedMatrix UB(new psi::Matrix(nact, nact));
