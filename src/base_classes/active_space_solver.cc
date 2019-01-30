@@ -393,15 +393,12 @@ Reference ActiveSpaceSolver::compute_average_reference(
 
 const std::map<StateInfo, std::vector<double>>&
 ActiveSpaceSolver::compute_contracted_energy(std::shared_ptr<ActiveSpaceIntegrals> as_ints) {
-    if (method_vec_.size() == 0) {
+    if (method_map_.size() == 0) {
         throw psi::PSIEXCEPTION("Old CI determinants are not solved. Call compute_energy first.");
     }
-    if (!is_multi_state()) {
-        throw psi::PSIEXCEPTION("Multi-state computation only.");
-    }
 
-    state_energies_list_.clear();
-    state_contracted_evecs_list_.clear();
+    state_energies_map_.clear();
+    state_contracted_evecs_map_.clear();
     std::vector<std::string> irrep_labels = psi::Process::environment.molecule()->irrep_labels();
     std::vector<std::string> multiplicity_labels{
         "Singlet", "Doublet", "Triplet", "Quartet", "Quintet", "Sextet", "Septet", "Octet",
@@ -427,12 +424,12 @@ ActiveSpaceSolver::compute_contracted_energy(std::shared_ptr<ActiveSpaceIntegral
 
     DressedQuantity ints(0.0, oei_a, oei_b, tei_aa, tei_ab, tei_bb);
 
-    for (size_t i = 0, nentry = method_vec_.size(); i < nentry; ++i) {
-        const auto& state = state_weights_list_[i].first;
-        size_t nroots = state_weights_list_[i].second.size();
+    for (const auto& state_nroots: state_list_) {
+        const auto& state = state_nroots.first;
+        size_t nroots = state_nroots.second;
         std::string state_name =
             multiplicity_labels[state.multiplicity()] + " " + irrep_labels[state.irrep()];
-        auto method = method_vec_[i];
+        auto method = method_map_.at(state);
 
         // form the Hermitian effective Hamiltonian
         print_h2("Building Effective Hamiltonian for " + state_name);
@@ -468,12 +465,12 @@ ActiveSpaceSolver::compute_contracted_energy(std::shared_ptr<ActiveSpaceIntegral
         for (size_t i = 0; i < nroots; ++i) {
             energies[i] = E.get(i);
         }
-        state_energies_list_.push_back(std::make_pair(state, energies));
-        state_contracted_evecs_list_.push_back(std::make_pair(state, U));
+        state_energies_map_[state] = energies;
+        state_contracted_evecs_map_[state] = U;
     }
 
-    print_energies(state_energies_list_);
-    return state_energies_list_;
+    print_energies(state_energies_map_);
+    return state_energies_map_;
 }
 
 double
