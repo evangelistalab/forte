@@ -58,17 +58,15 @@ class ActiveSpaceSolver {
     /**
      * @brief ActiveSpaceMethod Constructor for a multi-state computation
      * @param method A string that labels the method requested (e.g. "FCI", "ACI", ...)
-     * @param states_weights A list of electronic states and their weights stored as vector of
-     *        pairs [(state_1, [w_11, w_12, ..., w_1m]), (state_2, [w_21, w_22, ..., w_n]), ...]
-     *        where:
-     *            state_i specifies the symmetry of a state
-     *            w_ij is the weight of the j-th state of symmetry state_i
+     * @param state_map A map of electronic states to the number of roots computed
+    ///   {state_1 : n_1, state_2 : n_2, ...}
+     *        where state_i specifies the symmetry of a state and n_i is the number of levels
+     * computed.
      * @param state information about the electronic state
      * @param mo_space_info a MOSpaceInfo object
      * @param as_ints integrals for active space
      */
-    ActiveSpaceSolver(const std::string& method,
-                      std::vector<std::pair<StateInfo, std::vector<double>>>& state_weights_list,
+    ActiveSpaceSolver(const std::string& method, std::map<StateInfo, size_t>& state_map,
                       std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<MOSpaceInfo> mo_space_info,
                       std::shared_ptr<ActiveSpaceIntegrals> as_ints,
                       std::shared_ptr<ForteOptions> options);
@@ -76,10 +74,11 @@ class ActiveSpaceSolver {
     // ==> Class Interface <==
 
     /// Compute the energy and return it // TODO: document (Francesco)
-    const std::vector<std::pair<StateInfo, std::vector<double>>>& compute_energy();
+    const std::map<StateInfo, std::vector<double>>& compute_energy();
 
     /// Compute reference and return it
-    Reference reference();
+    std::vector<Reference> reference(std::map<std::pair<StateInfo, StateInfo>,
+                                              std::vector<std::pair<size_t, size_t>>>& elements);
 
     /// Sets the maximum order RDM/cumulant
     void set_max_rdm_level(size_t value);
@@ -90,16 +89,14 @@ class ActiveSpaceSolver {
     /// Is this ActiveSpaceSolver targets a multi-state computation
     bool is_multi_state() { return state_specific_root_ < 0 ? true : false; }
 
-    const std::vector<std::pair<StateInfo, std::vector<double>>>& get_state_weights_list() const {
-        return state_weights_list_;
+    const std::map<StateInfo, size_t>& get_state_list() const { return state_list_; }
+
+    const std::map<StateInfo, std::shared_ptr<ActiveSpaceMethod>>& get_method_map() const {
+        return method_map_;
     }
 
-    const std::vector<std::shared_ptr<ActiveSpaceMethod>>& get_method_vec() const {
-        return method_vec_;
-    }
-
-    const std::vector<std::pair<StateInfo, std::vector<double>>>& state_energies_list() const {
-        return state_energies_list_;
+    const std::map<StateInfo, std::vector<double>>& state_energies_map() const {
+        return state_energies_map_;
     }
 
     double get_average_state_energy() const;
@@ -108,11 +105,10 @@ class ActiveSpaceSolver {
     // a string that specifies the method used (e.g. "FCI", "ACI", ...)
     std::string method_;
 
-    /// A list of electronic states and their weights stored as vector of pairs
-    ///   [(state_1, [w_11, w_12, ..., w_1m]), (state_2, [w_21, w_22, ..., w_n]), ...]
-    /// where state_i specifies the symmetry of a state and w_ij are are list of weights
-    /// for the states of the same symmetry
-    std::vector<std::pair<StateInfo, std::vector<double>>> state_weights_list_;
+    /// A map of electronic states to the number of roots computed
+    ///   {state_1 : n_1, state_2 : n_2, ...}
+    /// where state_i specifies the symmetry of a state and n_i is the number of levels computed.
+    std::map<StateInfo, size_t> state_list_;
 
     /// The information about a previous SCF computation
     std::shared_ptr<SCFInfo> scf_info_;
@@ -131,20 +127,21 @@ class ActiveSpaceSolver {
     std::shared_ptr<ForteOptions> options_;
 
     /// A vector of pointers to the ActiveSpaceMethod instantiated for each
-    /// of the state symmetries contained in state_weights_list_
-    std::vector<std::shared_ptr<ActiveSpaceMethod>> method_vec_;
+    /// of the state symmetries contained in state_list_
+    std::map<StateInfo, std::shared_ptr<ActiveSpaceMethod>> method_map_;
 
     /// The maximum order RDM/cumulant to use for all ActiveSpaceMethod objects initialized
     size_t max_rdm_level_ = 1;
 
-    /// The index of root if this targets a state-specific computation, a negative number if multi-state
+    /// The index of root if this targets a state-specific computation, a negative number if
+    /// multi-state
     int state_specific_root_ = -1;
 
     /// Controls which defaulr rdm level to use
     bool set_rdm_ = false; // TODO: remove this hack
 
     /// Prints a summary of the energies with State info
-    void print_energies(std::vector<std::pair<StateInfo, std::vector<double>>>& energies);
+    void print_energies(std::map<StateInfo, std::vector<double>>& energies);
 
     //     * @param states_weights A list of electronic states and their weights stored as vector of
     //     *        pairs [(state_1, [w_11, w_12, ..., w_1m]), (state_2, [w_21, w_22, ..., w_n]),
@@ -155,7 +152,7 @@ class ActiveSpaceSolver {
     /**
      * @brief state_energies_list
      */
-    std::vector<std::pair<StateInfo, std::vector<double>>> state_energies_list_;
+    std::map<StateInfo, std::vector<double>> state_energies_map_;
 };
 
 /**

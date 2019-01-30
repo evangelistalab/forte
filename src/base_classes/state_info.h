@@ -56,6 +56,9 @@ class StateInfo {
     /// Return the name of the molecule (needed for DMRG)
     std::string name() const;
 
+    /// Comparison operator for StateInfo objects
+    bool operator<(const StateInfo& rhs) const;
+
   private:
     // number of alpha electrons (including core, excludes ecp)
     int na_;

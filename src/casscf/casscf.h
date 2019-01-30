@@ -76,7 +76,8 @@ class CASSCF : public ActiveSpaceMethod {
     void set_options(std::shared_ptr<ForteOptions>) override{};
 
     /// Return a reference object
-    std::vector<Reference> reference(std::vector<std::pair<size_t,size_t>>& root_list) override;
+    std::vector<Reference>
+    reference(const std::vector<std::pair<size_t, size_t>>& root_list) override;
 
     /// check the cas_ci energy with spin-free RDM
     double cas_check(Reference cas);
@@ -132,7 +133,7 @@ class CASSCF : public ActiveSpaceMethod {
     /// Sets up the FCI
     void set_up_fci();
     /// Set up a SA-FCI
-  //  void set_up_sa_fci();
+    //  void set_up_sa_fci();
     /// Set up FCI_MO
     void set_up_fcimo();
     /// Read all the mospace info and assign correct dimensions

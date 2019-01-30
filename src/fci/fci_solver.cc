@@ -503,10 +503,10 @@ FCISolver::initial_guess(FCIVector& diag, size_t n,
     return guess;
 }
 
-std::vector<Reference> FCISolver::reference(std::vector<std::pair<size_t,size_t>>& root_list) {
+std::vector<Reference>
+FCISolver::reference(const std::vector<std::pair<size_t, size_t>>& root_list) {
 
-
-    // TODO: Implement different roots    
+    // TODO: Implement different roots
 
     size_t nact = active_dim_.sum();
     size_t nact2 = nact * nact;
@@ -572,7 +572,7 @@ std::vector<Reference> FCISolver::reference(std::vector<std::pair<size_t,size_t>
             }
             if (max_rdm_level_ < 3) {
                 refs.emplace_back(L1a, L1b, L2aa, L2ab, L2bb);
-            } else{
+            } else {
                 // Three-particle density matrices in the active space
                 ambit::Tensor L3aaa = ambit::Tensor::build(ambit::CoreTensor, "L3aaa",
                                                            {nact, nact, nact, nact, nact, nact});

@@ -47,37 +47,38 @@
 
 namespace forte {
 
-ActiveSpaceSolver::ActiveSpaceSolver(
-    const std::string& method,
-    std::vector<std::pair<StateInfo, std::vector<double>>>& state_weights_list,
-    std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<MOSpaceInfo> mo_space_info,
-    std::shared_ptr<ActiveSpaceIntegrals> as_ints, std::shared_ptr<ForteOptions> options)
-    : method_(method), state_weights_list_(state_weights_list), scf_info_(scf_info),
-      mo_space_info_(mo_space_info), as_ints_(as_ints), options_(options) {
+ActiveSpaceSolver::ActiveSpaceSolver(const std::string& method,
+                                     std::map<StateInfo, size_t>& state_map,
+                                     std::shared_ptr<SCFInfo> scf_info,
+                                     std::shared_ptr<MOSpaceInfo> mo_space_info,
+                                     std::shared_ptr<ActiveSpaceIntegrals> as_ints,
+                                     std::shared_ptr<ForteOptions> options)
+    : method_(method), state_list_(state_map), scf_info_(scf_info), mo_space_info_(mo_space_info),
+      as_ints_(as_ints), options_(options) {
+
     print_options();
 
-    // determine the state-specific root number
-    if (state_weights_list.size() == 1) {
-        const std::vector<double>& weights = state_weights_list[0].second;
-        auto it = std::find(weights.begin(), weights.end(), 1.0);
-        if (it != weights.end()) {
-            state_specific_root_ = std::distance(weights.begin(), it);
-        }
-    }
+    //    // determine the state-specific root number
+    //    if (state_list.size() == 1) {
+    //        const std::vector<double>& weights = state_list[0].second;
+    //        auto it = std::find(weights.begin(), weights.end(), 1.0);
+    //        if (it != weights.end()) {
+    //            state_specific_root_ = std::distance(weights.begin(), it);
+    //        }
+    //    }
 }
 
-const std::vector<std::pair<StateInfo, std::vector<double>>>& ActiveSpaceSolver::compute_energy() {
+const std::map<StateInfo, std::vector<double>>& ActiveSpaceSolver::compute_energy() {
     double average_energy = 0.0;
-    state_energies_list_.clear();
+    state_energies_map_.clear();
     size_t nstate = 0;
-    for (const auto& state_weights : state_weights_list_) {
-        const auto& state = state_weights.first;
-        const auto& weights = state_weights.second;
+    for (const auto& state_nroot : state_list_) {
+        const auto& state = state_nroot.first;
+        size_t nroot = state_nroot.second;
         // compute the energy of state and save it
-        size_t nroot = weights.size();
         std::shared_ptr<ActiveSpaceMethod> method = make_active_space_method(
             method_, state, nroot, scf_info_, mo_space_info_, as_ints_, options_);
-        method_vec_.push_back(method);
+        method_map_[state] = method;
 
         method->set_options(options_);
         if (set_rdm_) {
@@ -85,18 +86,13 @@ const std::vector<std::pair<StateInfo, std::vector<double>>>& ActiveSpaceSolver:
         }
         method->compute_energy();
         const auto& energies = method->energies();
-        average_energy +=
-            std::inner_product(std::begin(energies), std::end(energies), std::begin(weights), 0.0);
-        nstate += energies.size();
-        state_energies_list_.push_back(std::make_pair(state, energies));
+        state_energies_map_[state] = energies;
     }
-    psi::outfile->Printf("\n  Average Energy from %d state(s): %17.15f", nstate, average_energy);
-    print_energies(state_energies_list_);
-    return state_energies_list_;
+    print_energies(state_energies_map_);
+    return state_energies_map_;
 }
 
-void ActiveSpaceSolver::print_energies(
-    std::vector<std::pair<StateInfo, std::vector<double>>>& energies) {
+void ActiveSpaceSolver::print_energies(std::map<StateInfo, std::vector<double>>& energies) {
     print_h2("Energy Summary");
     psi::outfile->Printf("\n    Multi.  Irrep.  No.               Energy");
     std::string dash(41, '-');
@@ -104,18 +100,16 @@ void ActiveSpaceSolver::print_energies(
     std::vector<std::string> irrep_symbol = psi::Process::environment.molecule()->irrep_labels();
 
     int n = 0;
-    for (const auto& state_weights : state_weights_list_) {
-        const auto& state = state_weights.first;
-        const auto& weights = state_weights.second;
-
+    for (const auto& state_nroot : state_list_) {
+        const auto& state = state_nroot.first;
         int irrep = state.irrep();
         int multi = state.multiplicity();
-        int nstates = weights.size();
+        int nstates = state_nroot.second;
 
         for (int i = 0; i < nstates; ++i) {
             auto label = "ENERGY ROOT " + std::to_string(i) + " " + std::to_string(multi) +
                          irrep_symbol[irrep];
-            double energy = energies[n].second[i];
+            double energy = energies[state][i];
             psi::outfile->Printf("\n     %3d     %3s    %2d   %20.12f", multi,
                                  irrep_symbol[irrep].c_str(), i, energy);
             psi::Process::environment.globals[label] = energy;
@@ -129,113 +123,24 @@ void ActiveSpaceSolver::print_energies(
     }
 }
 
-Reference ActiveSpaceSolver::reference() {
+std::vector<Reference> ActiveSpaceSolver::reference(
+    std::map<std::pair<StateInfo, StateInfo>, std::vector<std::pair<size_t, size_t>>>& elements) {
 
-    // For single state
-    if (!is_multi_state()) {
-        std::vector<std::pair<size_t, size_t>> root;
-        root.push_back(std::make_pair(state_specific_root_, state_specific_root_));
-        Reference ref = method_vec_[0]->reference(root)[0];
-        return ref;
-    } else {
-        // For state average
-        size_t nactive = mo_space_info_->size("ACTIVE");
-        ambit::Tensor g1a = ambit::Tensor::build(ambit::CoreTensor, "g1a", {nactive, nactive});
-        ambit::Tensor g1b = ambit::Tensor::build(ambit::CoreTensor, "g1b", {nactive, nactive});
+    std::vector<Reference> refs;
 
-        ambit::Tensor g2aa;
-        ambit::Tensor g2ab;
-        ambit::Tensor g2bb;
+    for (const auto& element : elements) {
+        const auto& state1 = element.first.first;
+        const auto& state2 = element.first.second;
 
-        ambit::Tensor g3aaa;
-        ambit::Tensor g3aab;
-        ambit::Tensor g3abb;
-        ambit::Tensor g3bbb;
-
-        if (max_rdm_level_ >= 2) {
-            g2aa = ambit::Tensor::build(ambit::CoreTensor, "g2aa",
-                                        {nactive, nactive, nactive, nactive});
-            g2ab = ambit::Tensor::build(ambit::CoreTensor, "g2ab",
-                                        {nactive, nactive, nactive, nactive});
-            g2bb = ambit::Tensor::build(ambit::CoreTensor, "g2bb",
-                                        {nactive, nactive, nactive, nactive});
+        if (state1 != state2) {
+            throw std::runtime_error("ActiveSpaceSolver::reference called with states of different "
+                                     "symmetry! This function is not yet suported in Forte.")
         }
 
-        if (max_rdm_level_ >= 3) {
-            g3aaa =
-                ambit::Tensor::build(ambit::CoreTensor, "g3aaa", std::vector<size_t>(6, nactive));
-            g3aab =
-                ambit::Tensor::build(ambit::CoreTensor, "g3aab", std::vector<size_t>(6, nactive));
-            g3abb =
-                ambit::Tensor::build(ambit::CoreTensor, "g3abb", std::vector<size_t>(6, nactive));
-            g3bbb =
-                ambit::Tensor::build(ambit::CoreTensor, "g3bbb", std::vector<size_t>(6, nactive));
+        std::vector<Reference> state_refs = method_map_[state1]->reference(element.second);
+        for (const auto& state_ref : state_refs) {
+            refs.push_back(state_ref);
         }
-        // function that scale pdm by w and add scaled pdm to sa_pdm
-        auto scale_add = [](std::vector<double>& sa_pdm, std::vector<double>& pdm,
-                            const double& w) {
-            std::for_each(pdm.begin(), pdm.end(), [&](double& v) { v *= w; });
-            std::transform(sa_pdm.begin(), sa_pdm.end(), pdm.begin(), sa_pdm.begin(),
-                           std::plus<double>());
-        };
-
-        // Loop through references, add to master ref
-        int state_num = 0;
-        double energy = 0.0;
-        for (const auto& state_weights : state_weights_list_) {
-            const auto& weights = state_weights.second;
-
-            size_t nroot = weights.size();
-            // Get the already-run method
-            auto& method = method_vec_[state_num];
-
-            std::vector<std::pair<size_t, size_t>> root_list;
-            for (size_t r = 0; r < nroot; r++) {
-                root_list.push_back(std::make_pair(r, r));
-            }
-            std::vector<Reference> references = method->reference(root_list);
-
-            // Grab energies to set E in reference
-            auto& energies = method->energies();
-
-            for (size_t r = 0; r < nroot; r++) {
-                double weight = weights[r];
-
-                // Don't bother if the weight is zero
-                if (weight <= 1e-15)
-                    continue;
-
-                energy += energies[r] * weight;
-
-                // Get the reference of the correct root
-                Reference method_ref = references[r];
-
-                // Now the RDMs
-                // 1 RDM
-                scale_add(g1a.data(), method_ref.g1a().data(), weight);
-                scale_add(g1b.data(), method_ref.g1b().data(), weight);
-
-                if (max_rdm_level_ >= 2) {
-                    // 2 RDM
-                    scale_add(g2aa.data(), method_ref.g2aa().data(), weight);
-                    scale_add(g2ab.data(), method_ref.g2ab().data(), weight);
-                    scale_add(g2bb.data(), method_ref.g2bb().data(), weight);
-                }
-
-                if (max_rdm_level_ >= 3) {
-                    // 3 RDM
-                    scale_add(g3aaa.data(), method_ref.g3aaa().data(), weight);
-                    scale_add(g3aab.data(), method_ref.g3aab().data(), weight);
-                    scale_add(g3abb.data(), method_ref.g3abb().data(), weight);
-                    scale_add(g3bbb.data(), method_ref.g3bbb().data(), weight);
-                }
-            }
-            state_num++;
-        }
-
-        // Construct Reference object with RDMs
-        Reference ref(g1a, g1b, g2aa, g2ab, g2bb, g3aaa, g3aab, g3abb, g3bbb);
-        return ref;
     }
 }
 
@@ -281,8 +186,8 @@ void ActiveSpaceSolver::print_options() {
     std::vector<std::string> irrep_symbol = psi::Process::environment.molecule()->irrep_labels();
     int nroots_max = 0;
     int nstates = 0;
-    for (const auto& state_weights : state_weights_list_) {
-        const auto& weights = state_weights.second;
+    for (const auto& state_nroot : state_list_) {
+        const auto& weights = state_nroot.second;
         int nroots = weights.size();
         nstates += nroots;
         nroots_max = std::max(nroots_max, nroots);
@@ -295,29 +200,20 @@ void ActiveSpaceSolver::print_options() {
         nroots_max -= 1;
     }
 
-    int ltotal = 6 + 2 + 6 + 2 + 7 + 2 + nroots_max;
+    int ltotal = 6 + 2 + 6 + 2 + 7 + 2;
     std::string blank(nroots_max - 7, ' ');
     std::string dash(ltotal, '-');
-    psi::outfile->Printf("\n    Irrep.  Multi.  Nstates  %sWeights", blank.c_str());
+    psi::outfile->Printf("\n    Irrep.  Multi.  Nstates");
     psi::outfile->Printf("\n    %s", dash.c_str());
-    for (const auto& state_weights : state_weights_list_) {
-        const auto& state = state_weights.first;
-        const auto& weights = state_weights.second;
+    for (const auto& state_nroot : state_list_) {
+        const auto& state = state_nroot.first;
         int irrep = state.irrep();
         int multiplicity = state.multiplicity();
-        int nroots = weights.size();
-        std::string w_str;
-        for (const double& w : weights) {
-            std::stringstream ss;
-            ss << std::fixed << std::setprecision(3) << w;
-            w_str += ss.str() + " ";
-        }
-        w_str.pop_back(); // delete the last space character
+        int nroots = state_nroot.second;
 
         std::stringstream ss;
         ss << std::setw(4) << std::right << irrep_symbol[irrep] << "    " << std::setw(4)
-           << std::right << multiplicity << "    " << std::setw(5) << std::right << nroots << "    "
-           << std::setw(nroots_max) << w_str;
+           << std::right << multiplicity << "    " << std::setw(5) << std::right << nroots;
         psi::outfile->Printf("\n    %s", ss.str().c_str());
     }
     psi::outfile->Printf("\n    %s", dash.c_str());
@@ -335,7 +231,7 @@ std::unique_ptr<ActiveSpaceSolver> make_active_space_solver(
 }
 
 double ActiveSpaceSolver::get_average_state_energy() const {
-    return compute_average_state_energy(state_energies_list_, state_weights_list_);
+    return compute_average_state_energy(state_energies_map_, state_list_);
 }
 
 std::vector<std::pair<StateInfo, std::vector<double>>>
@@ -452,4 +348,102 @@ double compute_average_state_energy(
     return std::inner_product(energies.begin(), energies.end(), weights.begin(), 0.0);
 }
 
+Reference compute_average_reference(std::shared_ptr<ActiveSpaceSolver>,
+                                    std::map<StateInfo, std::vector<double>> weights) {
+    // For state average
+    size_t nactive = mo_space_info_->size(
+        "ACTIVE"); // TODO: grab this info from the ActiveSpaceSolver object (Francesco)
+
+    ambit::Tensor g1a = ambit::Tensor::build(ambit::CoreTensor, "g1a", {nactive, nactive});
+    ambit::Tensor g1b = ambit::Tensor::build(ambit::CoreTensor, "g1b", {nactive, nactive});
+
+    ambit::Tensor g2aa;
+    ambit::Tensor g2ab;
+    ambit::Tensor g2bb;
+
+    ambit::Tensor g3aaa;
+    ambit::Tensor g3aab;
+    ambit::Tensor g3abb;
+    ambit::Tensor g3bbb;
+
+    if (max_rdm_level_ >= 2) {
+        g2aa =
+            ambit::Tensor::build(ambit::CoreTensor, "g2aa", {nactive, nactive, nactive, nactive});
+        g2ab =
+            ambit::Tensor::build(ambit::CoreTensor, "g2ab", {nactive, nactive, nactive, nactive});
+        g2bb =
+            ambit::Tensor::build(ambit::CoreTensor, "g2bb", {nactive, nactive, nactive, nactive});
+    }
+
+    if (max_rdm_level_ >= 3) {
+        g3aaa = ambit::Tensor::build(ambit::CoreTensor, "g3aaa", std::vector<size_t>(6, nactive));
+        g3aab = ambit::Tensor::build(ambit::CoreTensor, "g3aab", std::vector<size_t>(6, nactive));
+        g3abb = ambit::Tensor::build(ambit::CoreTensor, "g3abb", std::vector<size_t>(6, nactive));
+        g3bbb = ambit::Tensor::build(ambit::CoreTensor, "g3bbb", std::vector<size_t>(6, nactive));
+    }
+    // function that scale pdm by w and add scaled pdm to sa_pdm
+    auto scale_add = [](std::vector<double>& sa_pdm, std::vector<double>& pdm, const double& w) {
+        std::for_each(pdm.begin(), pdm.end(), [&](double& v) { v *= w; });
+        std::transform(sa_pdm.begin(), sa_pdm.end(), pdm.begin(), sa_pdm.begin(),
+                       std::plus<double>());
+    };
+
+    // Loop through references, add to master ref
+    int state_num = 0;
+    double energy = 0.0;
+    for (const auto& state_nroot : state_list_) {
+        const auto& weights = state_weights.second;
+
+        size_t nroot = weights.size();
+        // Get the already-run method
+        auto& method = method_vec_[state_num];
+
+        std::vector<std::pair<size_t, size_t>> root_list;
+        for (size_t r = 0; r < nroot; r++) {
+            root_list.push_back(std::make_pair(r, r));
+        }
+        std::vector<Reference> references = method->reference(root_list);
+
+        // Grab energies to set E in reference
+        auto& energies = method->energies();
+
+        for (size_t r = 0; r < nroot; r++) {
+            double weight = weights[r];
+
+            // Don't bother if the weight is zero
+            if (weight <= 1e-15)
+                continue;
+
+            energy += energies[r] * weight;
+
+            // Get the reference of the correct root
+            Reference method_ref = references[r];
+
+            // Now the RDMs
+            // 1 RDM
+            scale_add(g1a.data(), method_ref.g1a().data(), weight);
+            scale_add(g1b.data(), method_ref.g1b().data(), weight);
+
+            if (max_rdm_level_ >= 2) {
+                // 2 RDM
+                scale_add(g2aa.data(), method_ref.g2aa().data(), weight);
+                scale_add(g2ab.data(), method_ref.g2ab().data(), weight);
+                scale_add(g2bb.data(), method_ref.g2bb().data(), weight);
+            }
+
+            if (max_rdm_level_ >= 3) {
+                // 3 RDM
+                scale_add(g3aaa.data(), method_ref.g3aaa().data(), weight);
+                scale_add(g3aab.data(), method_ref.g3aab().data(), weight);
+                scale_add(g3abb.data(), method_ref.g3abb().data(), weight);
+                scale_add(g3bbb.data(), method_ref.g3bbb().data(), weight);
+            }
+        }
+        state_num++;
+    }
+
+    // Construct Reference object with RDMs
+    Reference ref(g1a, g1b, g2aa, g2ab, g2bb, g3aaa, g3aab, g3abb, g3bbb);
+    return ref;
+}
 } // namespace forte

@@ -1088,7 +1088,7 @@ std::pair<ambit::Tensor, std::vector<double>> CASSCF::CI_Integrals() {
     return pair_return;
 }
 
-std::vector<Reference> CASSCF::reference(std::vector<std::pair<size_t, size_t>>& root_list) {
+std::vector<Reference> CASSCF::reference(const std::vector<std::pair<size_t, size_t> > &root_list) {
 
     std::vector<Reference> refs;
     refs.push_back(cas_ref_);
