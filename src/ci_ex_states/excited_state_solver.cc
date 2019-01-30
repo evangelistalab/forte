@@ -165,7 +165,7 @@ double ExcitedStateSolver::compute_energy() {
         }
 
         sci_->set_method_variables(PQ_space, PQ_evecs, PQ_evals, ex_alg_, op_, nroot_method, root_,
-                                   ref_root, old_roots_, final_wfn_,
+                                   ref_root, old_roots_,
                                    multistate_pt2_energy_correction_);
 
         sci_->compute_energy();
@@ -175,7 +175,6 @@ double ExcitedStateSolver::compute_energy() {
         PQ_evals = sci_->get_PQ_evals();
         op_ = sci_->get_op();
         ref_root = sci_->get_ref_root();
-        final_wfn_ = sci_->get_final_wfn();
         multistate_pt2_energy_correction_ = sci_->get_multistate_pt2_energy_correction();
 
         if (ex_alg_ == "ROOT_COMBINE") {

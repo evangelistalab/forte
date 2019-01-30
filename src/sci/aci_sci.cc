@@ -47,7 +47,7 @@ AdaptiveCI_SCI::AdaptiveCI_SCI(StateInfo state, size_t nroot, std::shared_ptr<SC
                                std::shared_ptr<ForteOptions> options,
                                std::shared_ptr<MOSpaceInfo> mo_space_info,
                                std::shared_ptr<ActiveSpaceIntegrals> as_ints)
-    : SelectedCIMethod(state, nroot, scf_info, mo_space_info, as_ints), options_(options) {
+    : SelectedCIMethod(state, nroot, scf_info, mo_space_info, as_ints), options_(options), sparse_solver_(as_ints_) {
     mo_symmetry_ = mo_space_info_->symmetry("ACTIVE");
     sigma_ = options_->get_double("SIGMA");
     nuclear_repulsion_energy_ = as_ints->ints()->nuclear_repulsion_energy();
@@ -92,11 +92,6 @@ void AdaptiveCI_SCI::startup() {
     nirrep_ = mo_space_info_->nirrep();
 
     twice_ms_ = state_.twice_ms();
-
-    // Build the reference determinant and compute its energy
-    CI_Reference ref(scf_info_, options_, mo_space_info_, as_ints_, multiplicity_, twice_ms_,
-                     wavefunction_symmetry_);
-    ref.build_reference(initial_reference_);
 
     // Read options
     gamma_ = options_->get_double("GAMMA");
@@ -187,6 +182,12 @@ void AdaptiveCI_SCI::startup() {
 
 void AdaptiveCI_SCI::print_info() {
 
+    print_method_banner({"Adaptive Configuration Interaction",
+                         "written by Jeffrey B. Schriber and Francesco A. Evangelista"});
+    outfile->Printf("\n  ==> Reference Information <==\n");
+    outfile->Printf("\n  There are %d frozen orbitals.", nfrzc_);
+    outfile->Printf("\n  There are %zu active orbitals.\n", nact_);
+
     // Print a summary
     std::vector<std::pair<std::string, int>> calculation_info{{"Multiplicity", multiplicity_},
                                                               {"Symmetry", wavefunction_symmetry_},
@@ -241,7 +242,7 @@ void AdaptiveCI_SCI::set_method_variables(
     DeterminantHashVec PQ_space, psi::SharedMatrix PQ_evecs, psi::SharedVector PQ_evals,
     std::string ex_alg, WFNOperator op, size_t nroot_method, size_t root, size_t ref_root,
     std::vector<std::vector<std::pair<Determinant, double>>> old_roots,
-    DeterminantHashVec final_wfn, std::vector<double> multistate_pt2_energy_correction) {
+    std::vector<double> multistate_pt2_energy_correction) {
     PQ_space_ = PQ_space;
     PQ_evecs_ = PQ_evecs;
     PQ_evals_ = PQ_evals;
@@ -251,23 +252,7 @@ void AdaptiveCI_SCI::set_method_variables(
     root_ = root;
     ref_root_ = ref_root;
     old_roots_ = old_roots;
-    final_wfn_ = final_wfn;
     multistate_pt2_energy_correction_ = multistate_pt2_energy_correction;
-}
-
-double AdaptiveCI_SCI::compute_energy() {
-    timer energy_timer("ACI:Energy");
-
-    print_method_banner({"Adaptive Configuration Interaction",
-                         "written by Jeffrey B. Schriber and Francesco A. Evangelista"});
-    outfile->Printf("\n  ==> Reference Information <==\n");
-    outfile->Printf("\n  There are %d frozen orbitals.", nfrzc_);
-    outfile->Printf("\n  There are %zu active orbitals.\n", nact_);
-    print_info();
-
-    compute_aci(PQ_space_, PQ_evecs_, PQ_evals_);
-
-    return 0.0;
 }
 
 void AdaptiveCI_SCI::unpaired_density(psi::SharedMatrix Ua, psi::SharedMatrix Ub) {
@@ -288,8 +273,6 @@ void AdaptiveCI_SCI::unpaired_density(ambit::Tensor Ua, ambit::Tensor Ub) {
     //    UPDensity density(as_ints_->ints(), mo_space_info_, options_, Uam, Ubm);
     //    density.compute_unpaired_density(ordm_a_, ordm_b_);
 }
-
-DeterminantHashVec AdaptiveCI_SCI::get_wavefunction() { return final_wfn_; }
 
 void AdaptiveCI_SCI::find_q_space_batched(DeterminantHashVec& P_space, DeterminantHashVec& PQ_space,
                                           psi::SharedVector evals, psi::SharedMatrix evecs) {
@@ -826,7 +809,7 @@ void AdaptiveCI_SCI::prune_q_space(DeterminantHashVec& PQ_space, DeterminantHash
     }
 }
 
-bool AdaptiveCI_SCI::check_stuck(std::vector<std::vector<double>>& energy_history,
+bool AdaptiveCI_SCI::check_stuck(const std::vector<std::vector<double>>& energy_history,
                                  psi::SharedVector evals) {
     bool stuck = false;
     int nroot = evals->dim();
@@ -1166,326 +1149,6 @@ int AdaptiveCI_SCI::root_follow(DeterminantHashVec& P_ref, std::vector<double>& 
     outfile->Printf("\n  Setting reference root to: %d", new_root);
 
     return new_root;
-}
-
-void AdaptiveCI_SCI::compute_aci(DeterminantHashVec& PQ_space, psi::SharedMatrix& PQ_evecs,
-                                 psi::SharedVector& PQ_evals) {
-
-    bool print_refs = false;
-
-    if (options_->has_changed("ACI_PRINT_REFS")) {
-        print_refs = options_->get_bool("ACI_PRINT_REFS");
-    }
-
-    psi::SharedMatrix P_evecs;
-    psi::SharedVector P_evals;
-
-    DeterminantHashVec P_ref;
-    std::vector<double> P_ref_evecs;
-    DeterminantHashVec P_space(initial_reference_);
-
-    if ((options_->get_str("ACI_EX_TYPE") == "CORE") and (root_ > 0)) {
-
-        int ncstate = options_->get_int("ACI_ROOTS_PER_CORE");
-
-        if (((root_) > ncstate) and (root_ > 1)) {
-            hole_++;
-        }
-        int particle = (root_ - 1) - (hole_ * ncstate);
-
-        P_space.clear();
-        Determinant det = initial_reference_[0];
-        Determinant detb(det);
-        std::vector<int> avir = det.get_alfa_vir(nact_); // TODO check this
-        outfile->Printf("\n  %s", det.str(nact_).c_str());
-        outfile->Printf("\n  Freezing alpha orbital %d", hole_);
-        outfile->Printf("\n  Exciting electron from %d to %d", hole_, avir[particle]);
-        det.set_alfa_bit(hole_, false);
-        detb.set_beta_bit(hole_, false);
-
-        for (int n = 0, max_n = avir.size(); n < max_n; ++n) {
-            if ((mo_symmetry_[hole_] ^ mo_symmetry_[avir[n]]) == 0) {
-                det.set_alfa_bit(avir[particle], true);
-                detb.set_beta_bit(avir[particle], true);
-                break;
-            }
-        }
-        outfile->Printf("\n  %s", det.str(nact_).c_str());
-        outfile->Printf("\n  %s", detb.str(nact_).c_str());
-        P_space.add(det);
-        P_space.add(detb);
-    }
-
-    size_t nvec = options_->get_int("N_GUESS_VEC");
-    std::string sigma_method = options_->get_str("SIGMA_BUILD_TYPE");
-
-    std::vector<std::vector<double>> energy_history;
-    SparseCISolver sparse_solver(as_ints_);
-    if (quiet_mode_) {
-        sparse_solver.set_print_details(false);
-    }
-    sparse_solver.set_parallel(true);
-    sparse_solver.set_force_diag(options_->get_bool("FORCE_DIAG_METHOD"));
-    sparse_solver.set_e_convergence(options_->get_double("E_CONVERGENCE"));
-    sparse_solver.set_maxiter_davidson(options_->get_int("DL_MAXITER"));
-    sparse_solver.set_spin_project(project_out_spin_contaminants_);
-    //    sparse_solver.set_spin_project_full(project_out_spin_contaminants_);
-    sparse_solver.set_guess_dimension(options_->get_int("DL_GUESS_SIZE"));
-    sparse_solver.set_num_vecs(nvec);
-    sparse_solver.set_sigma_method(sigma_method);
-    sparse_solver.set_spin_project_full(false);
-    sparse_solver.set_max_memory(options_->get_int("SIGMA_VECTOR_MAX_MEMORY"));
-
-    // if (det_save_)
-    //     det_list_.open("det_list.txt");
-
-    if (streamline_qspace_ and !quiet_mode_)
-        outfile->Printf("\n  Using streamlined Q-space builder.");
-
-    ex_alg_ = options_->get_str("ACI_EXCITED_ALGORITHM");
-
-    std::vector<Determinant> old_dets;
-    psi::SharedMatrix old_evecs;
-
-    if (options_->get_str("ACI_EXCITED_ALGORITHM") == "ROOT_SELECT") {
-        ref_root_ = root_;
-    }
-
-    // Save the P_space energies to predict convergence
-    std::vector<double> P_energies;
-    // approx_rdm_ = false;
-
-    int cycle;
-    for (cycle = 0; cycle < max_cycle_; ++cycle) {
-        local_timer cycle_time;
-        // Step 1. Diagonalize the Hamiltonian in the P space
-        int num_ref_roots = std::min(nroot_, int(P_space.size()));
-        cycle_ = cycle;
-        std::string cycle_h = "Cycle " + std::to_string(cycle_);
-
-        bool follow = false;
-        if (options_->get_str("ACI_EXCITED_ALGORITHM") == "ROOT_SELECT" or
-            options_->get_str("ACI_EXCITED_ALGORITHM") == "ROOT_COMBINE" or
-            options_->get_str("ACI_EXCITED_ALGORITHM") == "MULTISTATE" or
-            options_->get_str("ACI_EXCITED_ALGORITHM") == "ROOT_ORTHOGONALIZE") {
-
-            follow = true;
-        }
-
-        if (!quiet_mode_) {
-            print_h2(cycle_h);
-            outfile->Printf("\n  Initial P space dimension: %zu", P_space.size());
-        }
-
-        // Check that the initial space is spin-complete
-        if (spin_complete_) {
-            // assumes P_space handles determinants with only active space orbitals
-            P_space.make_spin_complete(nact_);
-            if (!quiet_mode_)
-                outfile->Printf("\n  %s: %zu determinants",
-                                "Spin-complete dimension of the P space", P_space.size());
-        } else if (!quiet_mode_) {
-            outfile->Printf("\n  Not checking for spin-completeness.");
-        }
-        // Diagonalize H in the P space
-        if (ex_alg_ == "ROOT_ORTHOGONALIZE" and root_ > 0 and cycle >= pre_iter_) {
-            sparse_solver.set_root_project(true);
-            add_bad_roots(P_space);
-            sparse_solver.add_bad_states(bad_roots_);
-        }
-
-        if (sigma_method == "HZ") {
-            op_.clear_op_lists();
-            op_.clear_tp_lists();
-            op_.build_strings(P_space);
-            op_.op_lists(P_space);
-            op_.tp_lists(P_space);
-        } else if (diag_method_ != Dynamic) {
-            op_.clear_op_s_lists();
-            op_.clear_tp_s_lists();
-            op_.build_strings(P_space);
-            op_.op_s_lists(P_space);
-            op_.tp_s_lists(P_space);
-        }
-
-        sparse_solver.manual_guess(false);
-        local_timer diag;
-        sparse_solver.diagonalize_hamiltonian_map(P_space, op_, P_evals, P_evecs, num_ref_roots,
-                                                  multiplicity_, diag_method_);
-        if (!quiet_mode_)
-            outfile->Printf("\n  Time spent diagonalizing H:   %1.6f s", diag.get());
-
-        // Save ground state energy
-        P_energies.push_back(P_evals->get(0));
-
-        if ((cycle > 1) and options_->get_bool("ACI_APPROXIMATE_RDM")) {
-            double diff = std::abs(P_energies[cycle] - P_energies[cycle - 1]);
-            if (diff <= 1e-5) {
-                approx_rdm_ = true;
-            }
-        }
-
-        if (cycle < pre_iter_) {
-            ex_alg_ = "AVERAGE";
-        } else if (cycle == pre_iter_ and follow) {
-            ex_alg_ = options_->get_str("ACI_EXCITED_ALGORITHM");
-        }
-
-        // Update the reference root if root following
-        if (follow and num_ref_roots > 1 and (cycle >= pre_iter_) and cycle > 0) {
-            ref_root_ = root_follow(P_ref, P_ref_evecs, P_space, P_evecs, num_ref_roots);
-        }
-
-        // Print the energy
-        if (!quiet_mode_) {
-            outfile->Printf("\n");
-            for (int i = 0; i < num_ref_roots; ++i) {
-                double abs_energy =
-                    P_evals->get(i) + nuclear_repulsion_energy_ + as_ints_->scalar_energy();
-                double exc_energy = pc_hartree2ev * (P_evals->get(i) - P_evals->get(0));
-                outfile->Printf("\n    P-space  CI Energy Root %3d        = "
-                                "%.12f Eh = %8.4f eV",
-                                i, abs_energy, exc_energy);
-            }
-            outfile->Printf("\n");
-        }
-
-        if (!quiet_mode_ and print_refs)
-            print_wfn(P_space, op_, P_evecs, num_ref_roots);
-
-        // Step 2. Find determinants in the Q space
-        local_timer build_space;
-        if (options_->get_bool("ACI_BATCHED_SCREENING")) {
-            find_q_space_batched(P_space, PQ_space, P_evals, P_evecs);
-        } else if (streamline_qspace_) {
-            default_find_q_space(P_space, PQ_space, P_evals, P_evecs);
-        } else {
-            find_q_space(P_space, PQ_space, num_ref_roots, P_evals, P_evecs);
-        }
-        outfile->Printf("\n  Time spent building the model space: %1.6f", build_space.get());
-        // Check if P+Q space is spin complete
-        if (spin_complete_) {
-            PQ_space.make_spin_complete(nact_); // <- xsize
-            if (!quiet_mode_)
-                outfile->Printf("\n  Spin-complete dimension of the PQ space: %zu",
-                                PQ_space.size());
-        }
-
-        if ((options_->get_str("ACI_EXCITED_ALGORITHM") == "ROOT_ORTHOGONALIZE") and (root_ > 0) and
-            cycle >= pre_iter_) {
-            sparse_solver.set_root_project(true);
-            add_bad_roots(PQ_space);
-            sparse_solver.add_bad_states(bad_roots_);
-        }
-
-        // Step 3. Diagonalize the Hamiltonian in the P + Q space
-        if (sigma_method == "HZ") {
-            op_.clear_op_lists();
-            op_.clear_tp_lists();
-            local_timer str;
-            op_.build_strings(PQ_space);
-            outfile->Printf("\n  Time spent building strings      %1.6f s", str.get());
-            op_.op_lists(PQ_space);
-            op_.tp_lists(PQ_space);
-        } else if (diag_method_ != Dynamic) {
-            op_.clear_op_s_lists();
-            op_.clear_tp_s_lists();
-            op_.build_strings(PQ_space);
-            op_.op_s_lists(PQ_space);
-            op_.tp_s_lists(PQ_space);
-        }
-        local_timer diag_pq;
-
-        sparse_solver.diagonalize_hamiltonian_map(PQ_space, op_, PQ_evals, PQ_evecs, num_ref_roots,
-                                                  multiplicity_, diag_method_);
-
-        if (!quiet_mode_)
-            outfile->Printf("\n  Total time spent diagonalizing H:   %1.6f s", diag_pq.get());
-
-        // Save the solutions for the next iteration
-        //        old_dets.clear();
-        //        old_dets = PQ_space_;
-        //        old_evecs = PQ_evecs->clone();
-
-        if (!quiet_mode_) {
-            // Print the energy
-            outfile->Printf("\n");
-            for (int i = 0; i < num_ref_roots; ++i) {
-                double abs_energy =
-                    PQ_evals->get(i) + nuclear_repulsion_energy_ + as_ints_->scalar_energy();
-                double exc_energy = pc_hartree2ev * (PQ_evals->get(i) - PQ_evals->get(0));
-                outfile->Printf("\n    PQ-space CI Energy Root %3d        = "
-                                "%.12f Eh = %8.4f eV",
-                                i, abs_energy, exc_energy);
-                outfile->Printf("\n    PQ-space CI Energy + EPT2 Root %3d = %.12f Eh = "
-                                "%8.4f eV",
-                                i, abs_energy + multistate_pt2_energy_correction_[i],
-                                exc_energy +
-                                    pc_hartree2ev * (multistate_pt2_energy_correction_[i] -
-                                                     multistate_pt2_energy_correction_[0]));
-            }
-            outfile->Printf("\n");
-        }
-
-        num_ref_roots = std::min(nroot_, int(PQ_space.size()));
-
-        // If doing root-following, grab the initial root
-        if (follow and (cycle == (pre_iter_ - 1) or (pre_iter_ == 0 and cycle == 0))) {
-
-            if (options_->get_str("ACI_EXCITED_ALGORITHM") == "ROOT_SELECT") {
-                ref_root_ = root_;
-            }
-            size_t dim = std::min(static_cast<int>(PQ_space.size()), 1000);
-            P_ref.subspace(PQ_space, PQ_evecs, P_ref_evecs, dim, ref_root_);
-        }
-
-        // if( follow and num_ref_roots > 0 and (cycle >= (pre_iter_ - 1)) ){
-        if (follow and (num_ref_roots > 1) and (cycle >= pre_iter_)) {
-            ref_root_ = root_follow(P_ref, P_ref_evecs, PQ_space, PQ_evecs, num_ref_roots);
-        }
-
-        bool stuck = check_stuck(energy_history, PQ_evals);
-        if (stuck and (options_->get_str("ACI_EXCITED_ALGORITHM") != "COMPOSITE")) {
-            outfile->Printf("\n  Procedure is stuck! Quitting...");
-            break;
-        } else if (stuck and (options_->get_str("ACI_EXCITED_ALGORITHM") == "COMPOSITE") and
-                   ex_alg_ == "AVERAGE") {
-            outfile->Printf("\n  Root averaging algorithm converged.");
-            outfile->Printf("\n  Now optimizing PQ Space for root %d", root_);
-            ex_alg_ = options_->get_str("ACI_EXCITED_ALGORITHM");
-            pre_iter_ = cycle + 1;
-        }
-
-        // Step 4. Check convergence and break if needed
-        bool converged = check_convergence(energy_history, PQ_evals);
-        if (converged and (ex_alg_ == "AVERAGE") and
-            options_->get_str("ACI_EXCITED_ALGORITHM") == "COMPOSITE") {
-            outfile->Printf("\n  Root averaging algorithm converged.");
-            outfile->Printf("\n  Now optimizing PQ Space for root %d", root_);
-            ex_alg_ = options_->get_str("ACI_EXCITED_ALGORITHM");
-            pre_iter_ = cycle + 1;
-        } else if (converged) {
-            // if(quiet_mode_) outfile->Printf(
-            // "\n----------------------------------------------------------" );
-            if (!quiet_mode_)
-                outfile->Printf("\n  ***** Calculation Converged *****");
-            break;
-        }
-
-        // Step 5. Prune the P + Q space to get an updated P space
-        prune_q_space(PQ_space, P_space, PQ_evecs, num_ref_roots);
-
-        // Print information about the wave function
-        if (!quiet_mode_) {
-            print_wfn(PQ_space, op_, PQ_evecs, num_ref_roots);
-            outfile->Printf("\n  Cycle %d took: %1.6f s", cycle, cycle_time.get());
-        }
-
-        ex_alg_ = options_->get_str("ACI_EXCITED_ALGORITHM");
-    } // end iterations
-
-    // if (det_save_)
-    //     det_list_.close();
 }
 
 std::vector<std::pair<size_t, double>>
@@ -1935,15 +1598,317 @@ void AdaptiveCI_SCI::spin_analysis() {
 
 void AdaptiveCI_SCI::update_sigma() { sigma_ = options_->get_double("ACI_RELAX_SIGMA"); }
 
+void AdaptiveCI_SCI::pre_iter_preparation() {
+    // Build the reference determinant and compute its energy
+    CI_Reference ref(scf_info_, options_, mo_space_info_, as_ints_, multiplicity_, twice_ms_,
+                     wavefunction_symmetry_);
+    ref.build_reference(initial_reference_);
+    P_space_ = initial_reference_;
+
+    if ((options_->get_str("ACI_EX_TYPE") == "CORE") and (root_ > 0)) {
+
+        int ncstate = options_->get_int("ACI_ROOTS_PER_CORE");
+
+        if (((root_) > ncstate) and (root_ > 1)) {
+            hole_++;
+        }
+        int particle = (root_ - 1) - (hole_ * ncstate);
+
+        P_space_.clear();
+        Determinant det = initial_reference_[0];
+        Determinant detb(det);
+        std::vector<int> avir = det.get_alfa_vir(nact_); // TODO check this
+        outfile->Printf("\n  %s", det.str(nact_).c_str());
+        outfile->Printf("\n  Freezing alpha orbital %d", hole_);
+        outfile->Printf("\n  Exciting electron from %d to %d", hole_, avir[particle]);
+        det.set_alfa_bit(hole_, false);
+        detb.set_beta_bit(hole_, false);
+
+        for (int n = 0, max_n = avir.size(); n < max_n; ++n) {
+            if ((mo_symmetry_[hole_] ^ mo_symmetry_[avir[n]]) == 0) {
+                det.set_alfa_bit(avir[particle], true);
+                detb.set_beta_bit(avir[particle], true);
+                break;
+            }
+        }
+        outfile->Printf("\n  %s", det.str(nact_).c_str());
+        outfile->Printf("\n  %s", detb.str(nact_).c_str());
+        P_space_.add(det);
+        P_space_.add(detb);
+    }
+
+    if (quiet_mode_) {
+        sparse_solver_.set_print_details(false);
+    }
+    sparse_solver_.set_parallel(true);
+    sparse_solver_.set_force_diag(options_->get_bool("FORCE_DIAG_METHOD"));
+    sparse_solver_.set_e_convergence(options_->get_double("E_CONVERGENCE"));
+    sparse_solver_.set_maxiter_davidson(options_->get_int("DL_MAXITER"));
+    sparse_solver_.set_spin_project(project_out_spin_contaminants_);
+    //    sparse_solver.set_spin_project_full(project_out_spin_contaminants_);
+    sparse_solver_.set_guess_dimension(options_->get_int("DL_GUESS_SIZE"));
+    sparse_solver_.set_num_vecs(options_->get_int("N_GUESS_VEC"));
+    sparse_solver_.set_sigma_method(options_->get_str("SIGMA_BUILD_TYPE"));
+    sparse_solver_.set_spin_project_full(false);
+    sparse_solver_.set_max_memory(options_->get_int("SIGMA_VECTOR_MAX_MEMORY"));
+
+    // if (det_save_)
+    //     det_list_.open("det_list.txt");
+
+    if (streamline_qspace_ and !quiet_mode_)
+        outfile->Printf("\n  Using streamlined Q-space builder.");
+
+    ex_alg_ = options_->get_str("ACI_EXCITED_ALGORITHM");
+
+    if (options_->get_str("ACI_EXCITED_ALGORITHM") == "ROOT_SELECT") {
+        ref_root_ = root_;
+    }
+
+    // approx_rdm_ = false;
+}
+
+void AdaptiveCI_SCI::diagonalize_P_space() {
+    // Step 1. Diagonalize the Hamiltonian in the P space
+    num_ref_roots_ = std::min(nroot_, int(P_space_.size()));
+    std::string cycle_h = "Cycle " + std::to_string(cycle_);
+
+    follow_ = false;
+    if (options_->get_str("ACI_EXCITED_ALGORITHM") == "ROOT_SELECT" or
+        options_->get_str("ACI_EXCITED_ALGORITHM") == "ROOT_COMBINE" or
+        options_->get_str("ACI_EXCITED_ALGORITHM") == "MULTISTATE" or
+        options_->get_str("ACI_EXCITED_ALGORITHM") == "ROOT_ORTHOGONALIZE") {
+
+        follow_ = true;
+    }
+
+    if (!quiet_mode_) {
+        print_h2(cycle_h);
+        outfile->Printf("\n  Initial P space dimension: %zu", P_space_.size());
+    }
+
+    // Check that the initial space is spin-complete
+    if (spin_complete_) {
+        // assumes P_space handles determinants with only active space orbitals
+        P_space_.make_spin_complete(nact_);
+        if (!quiet_mode_)
+            outfile->Printf("\n  %s: %zu determinants",
+                            "Spin-complete dimension of the P space", P_space_.size());
+    } else if (!quiet_mode_) {
+        outfile->Printf("\n  Not checking for spin-completeness.");
+    }
+    // Diagonalize H in the P space
+    if (ex_alg_ == "ROOT_ORTHOGONALIZE" and root_ > 0 and cycle_ >= pre_iter_) {
+        sparse_solver_.set_root_project(true);
+        add_bad_roots(P_space_);
+        sparse_solver_.add_bad_states(bad_roots_);
+    }
+
+    if (sparse_solver_.sigma_method_ == "HZ") {
+        op_.clear_op_lists();
+        op_.clear_tp_lists();
+        op_.build_strings(P_space_);
+        op_.op_lists(P_space_);
+        op_.tp_lists(P_space_);
+    } else if (diag_method_ != Dynamic) {
+        op_.clear_op_s_lists();
+        op_.clear_tp_s_lists();
+        op_.build_strings(P_space_);
+        op_.op_s_lists(P_space_);
+        op_.tp_s_lists(P_space_);
+    }
+
+    sparse_solver_.manual_guess(false);
+    local_timer diag;
+    sparse_solver_.diagonalize_hamiltonian_map(P_space_, op_, P_evals_, P_evecs_, num_ref_roots_,
+                                              multiplicity_, diag_method_);
+    if (!quiet_mode_)
+        outfile->Printf("\n  Time spent diagonalizing H:   %1.6f s", diag.get());
+
+    // Save ground state energy
+    P_energies_.push_back(P_evals_->get(0));
+
+    if ((cycle_ > 1) and options_->get_bool("ACI_APPROXIMATE_RDM")) {
+        double diff = std::abs(P_energies_[cycle_] - P_energies_[cycle_ - 1]);
+        if (diff <= 1e-5) {
+            approx_rdm_ = true;
+        }
+    }
+
+    if (cycle_ < pre_iter_) {
+        ex_alg_ = "AVERAGE";
+    } else if (cycle_ == pre_iter_ and follow_) {
+        ex_alg_ = options_->get_str("ACI_EXCITED_ALGORITHM");
+    }
+
+    // Update the reference root if root following
+    if (follow_ and num_ref_roots_ > 1 and (cycle_ >= pre_iter_) and cycle_ > 0) {
+        ref_root_ = root_follow(P_ref_, P_ref_evecs_, P_space_, P_evecs_, num_ref_roots_);
+    }
+
+    // Print the energy
+    if (!quiet_mode_) {
+        outfile->Printf("\n");
+        for (int i = 0; i < num_ref_roots_; ++i) {
+            double abs_energy =
+                P_evals_->get(i) + nuclear_repulsion_energy_ + as_ints_->scalar_energy();
+            double exc_energy = pc_hartree2ev * (P_evals_->get(i) - P_evals_->get(0));
+            outfile->Printf("\n    P-space  CI Energy Root %3d        = "
+                            "%.12f Eh = %8.4f eV",
+                            i, abs_energy, exc_energy);
+        }
+        outfile->Printf("\n");
+    }
+
+    if (!quiet_mode_ and options_->get_bool("ACI_PRINT_REFS"))
+        print_wfn(P_space_, op_, P_evecs_, num_ref_roots_);
+}
+
+void AdaptiveCI_SCI::find_q_space() {
+    // Step 2. Find determinants in the Q space
+    local_timer build_space;
+    if (options_->get_bool("ACI_BATCHED_SCREENING")) {
+        find_q_space_batched(P_space_, PQ_space_, P_evals_, P_evecs_);
+    } else if (streamline_qspace_) {
+        default_find_q_space(P_space_, PQ_space_, P_evals_, P_evecs_);
+    } else {
+        find_q_space(P_space_, PQ_space_, num_ref_roots_, P_evals_, P_evecs_);
+    }
+    outfile->Printf("\n  Time spent building the model space: %1.6f", build_space.get());
+    // Check if P+Q space is spin complete
+    if (spin_complete_) {
+        PQ_space_.make_spin_complete(nact_); // <- xsize
+        if (!quiet_mode_)
+            outfile->Printf("\n  Spin-complete dimension of the PQ space: %zu",
+                            PQ_space_.size());
+    }
+
+    if ((options_->get_str("ACI_EXCITED_ALGORITHM") == "ROOT_ORTHOGONALIZE") and (root_ > 0) and
+        cycle_ >= pre_iter_) {
+        sparse_solver_.set_root_project(true);
+        add_bad_roots(PQ_space_);
+        sparse_solver_.add_bad_states(bad_roots_);
+    }
+}
+
+void AdaptiveCI_SCI::diagonalize_PQ_space() {
+    // Step 3. Diagonalize the Hamiltonian in the P + Q space
+    if (sparse_solver_.sigma_method_ == "HZ") {
+        op_.clear_op_lists();
+        op_.clear_tp_lists();
+        local_timer str;
+        op_.build_strings(PQ_space_);
+        outfile->Printf("\n  Time spent building strings      %1.6f s", str.get());
+        op_.op_lists(PQ_space_);
+        op_.tp_lists(PQ_space_);
+    } else if (diag_method_ != Dynamic) {
+        op_.clear_op_s_lists();
+        op_.clear_tp_s_lists();
+        op_.build_strings(PQ_space_);
+        op_.op_s_lists(PQ_space_);
+        op_.tp_s_lists(PQ_space_);
+    }
+    local_timer diag_pq;
+
+    sparse_solver_.diagonalize_hamiltonian_map(PQ_space_, op_, PQ_evals_, PQ_evecs_, num_ref_roots_,
+                                              multiplicity_, diag_method_);
+
+    if (!quiet_mode_)
+        outfile->Printf("\n  Total time spent diagonalizing H:   %1.6f s", diag_pq.get());
+
+    // Save the solutions for the next iteration
+    //        old_dets.clear();
+    //        old_dets = PQ_space_;
+    //        old_evecs = PQ_evecs->clone();
+
+    if (!quiet_mode_) {
+        // Print the energy
+        outfile->Printf("\n");
+        for (int i = 0; i < num_ref_roots_; ++i) {
+            double abs_energy =
+                PQ_evals_->get(i) + nuclear_repulsion_energy_ + as_ints_->scalar_energy();
+            double exc_energy = pc_hartree2ev * (PQ_evals_->get(i) - PQ_evals_->get(0));
+            outfile->Printf("\n    PQ-space CI Energy Root %3d        = "
+                            "%.12f Eh = %8.4f eV",
+                            i, abs_energy, exc_energy);
+            outfile->Printf("\n    PQ-space CI Energy + EPT2 Root %3d = %.12f Eh = "
+                            "%8.4f eV",
+                            i, abs_energy + multistate_pt2_energy_correction_[i],
+                            exc_energy +
+                                pc_hartree2ev * (multistate_pt2_energy_correction_[i] -
+                                                 multistate_pt2_energy_correction_[0]));
+        }
+        outfile->Printf("\n");
+    }
+
+    num_ref_roots_ = std::min(nroot_, int(PQ_space_.size()));
+
+    // If doing root-following, grab the initial root
+    if (follow_ and (cycle_ == (pre_iter_ - 1) or (pre_iter_ == 0 and cycle_ == 0))) {
+
+        if (options_->get_str("ACI_EXCITED_ALGORITHM") == "ROOT_SELECT") {
+            ref_root_ = root_;
+        }
+        size_t dim = std::min(static_cast<int>(PQ_space_.size()), 1000);
+        P_ref_.subspace(PQ_space_, PQ_evecs_, P_ref_evecs_, dim, ref_root_);
+    }
+
+    // if( follow and num_ref_roots > 0 and (cycle >= (pre_iter_ - 1)) ){
+    if (follow_ and (num_ref_roots_ > 1) and (cycle_ >= pre_iter_)) {
+        ref_root_ = root_follow(P_ref_, P_ref_evecs_, PQ_space_, PQ_evecs_, num_ref_roots_);
+    }
+}
+
+bool AdaptiveCI_SCI::convergence_check() {
+    bool stuck = check_stuck(energy_history_, PQ_evals_);
+    if (stuck and (options_->get_str("ACI_EXCITED_ALGORITHM") != "COMPOSITE")) {
+        outfile->Printf("\n  Procedure is stuck! Quitting...");
+        return true;
+    } else if (stuck and (options_->get_str("ACI_EXCITED_ALGORITHM") == "COMPOSITE") and
+               ex_alg_ == "AVERAGE") {
+        outfile->Printf("\n  Root averaging algorithm converged.");
+        outfile->Printf("\n  Now optimizing PQ Space for root %d", root_);
+        ex_alg_ = options_->get_str("ACI_EXCITED_ALGORITHM");
+        pre_iter_ = cycle_ + 1;
+    }
+
+    // Step 4. Check convergence and break if needed
+    bool converged = check_convergence(energy_history_, PQ_evals_);
+    if (converged and (ex_alg_ == "AVERAGE") and
+        options_->get_str("ACI_EXCITED_ALGORITHM") == "COMPOSITE") {
+        outfile->Printf("\n  Root averaging algorithm converged.");
+        outfile->Printf("\n  Now optimizing PQ Space for root %d", root_);
+        ex_alg_ = options_->get_str("ACI_EXCITED_ALGORITHM");
+        pre_iter_ = cycle_ + 1;
+    } else if (converged) {
+        // if(quiet_mode_) outfile->Printf(
+        // "\n----------------------------------------------------------" );
+        if (!quiet_mode_)
+            outfile->Printf("\n  ***** Calculation Converged *****");
+        return true;
+    }
+
+    return false;
+}
+
+void AdaptiveCI_SCI::prune_PQ_to_P() {
+    // Step 5. Prune the P + Q space to get an updated P space
+    prune_q_space(PQ_space_, P_space_, PQ_evecs_, num_ref_roots_);
+
+    // Print information about the wave function
+    if (!quiet_mode_) {
+        print_wfn(PQ_space_, op_, PQ_evecs_, num_ref_roots_);
+    }
+
+    ex_alg_ = options_->get_str("ACI_EXCITED_ALGORITHM");
+}
+
 DeterminantHashVec AdaptiveCI_SCI::get_PQ_space() { return PQ_space_; }
 psi::SharedMatrix AdaptiveCI_SCI::get_PQ_evecs() { return PQ_evecs_; }
 psi::SharedVector AdaptiveCI_SCI::get_PQ_evals() { return PQ_evals_; }
 WFNOperator AdaptiveCI_SCI::get_op() { return op_; }
 size_t AdaptiveCI_SCI::get_ref_root() { return ref_root_; }
-DeterminantHashVec AdaptiveCI_SCI::get_final_wfn() { return final_wfn_; }
 std::vector<double> AdaptiveCI_SCI::get_multistate_pt2_energy_correction() {
     return multistate_pt2_energy_correction_;
 }
-size_t AdaptiveCI_SCI::get_cycle() { return cycle_; }
 
 } // namespace forte
