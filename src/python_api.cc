@@ -137,7 +137,7 @@ PYBIND11_MODULE(forte, m) {
           "Make an orbital transformation");
     m.def("make_state_info_from_psi_wfn", &make_state_info_from_psi_wfn,
           "Make a state info object from a psi4 Wavefunction");
-    m.def("make_state_weights_list", &make_state_weights_list,
+    m.def("make_state_weights_map", &make_state_weights_map,
           "Make a list of target states with their weigth");
     m.def("make_active_space_ints", &make_active_space_ints,
           "Make an object that holds the molecular orbital integrals for the active orbitals");

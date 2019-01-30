@@ -36,7 +36,7 @@ import forte
 import psi4.driver.p4util as p4util
 from psi4.driver.procrouting import proc_util
 
-def forte_driver(state_weights_list, scf_info, options, ints, mo_space_info):
+def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
     max_rdm_level = 3 # TODO: set this (Francesco)
     return_en = 0.0
 
@@ -127,7 +127,7 @@ def forte_driver(state_weights_list, scf_info, options, ints, mo_space_info):
             # Compute the energy
             if is_multi_state and ms_dsrg_algorithm == "SA_SUB":
                 state_energies_list = active_space_solver.compute_contracted_energy(ints_dressed)
-                Erelax = forte.compute_average_state_energy(state_energies_list,state_weights_list)
+                Erelax = forte.compute_average_state_energy(state_energies_list,state_weights_map)
                 return Erelax
             else:
                 # Make a new ActiveSpaceSolver with the new ints
@@ -137,7 +137,7 @@ def forte_driver(state_weights_list, scf_info, options, ints, mo_space_info):
                                                                    options)
                 as_solver_relaxed.set_max_rdm_level(max_rdm_level)
                 state_energies_list = as_solver_relaxed.compute_energy()
-                Erelax = forte.compute_average_state_energy(state_energies_list,state_weights_list)
+                Erelax = forte.compute_average_state_energy(state_energies_list,state_weights_map)
 
             dsrg_energies.append((Edsrg, Erelax))
 
@@ -339,7 +339,7 @@ def forte_driver(state_weights_list, scf_info, options, ints, mo_space_info):
 
     else : 
 
-        average_energy = forte.compute_average_state_energy(state_energies_list,state_weights_list)
+        average_energy = forte.compute_average_state_energy(state_energies_list,state_weights_map)
         return_en = average_energy
 
     return return_en
@@ -392,7 +392,7 @@ def run_forte(name, **kwargs):
 
     state = forte.make_state_info_from_psi_wfn(ref_wfn)
     scf_info = forte.SCFInfo(ref_wfn)
-    state_weights_list = forte.make_state_weights_list(forte.forte_options,ref_wfn)
+    state_weights_map = forte.make_state_weights_map(forte.forte_options,ref_wfn)
 
     # Run a method
     job_type = options.get_str('JOB_TYPE')
@@ -416,7 +416,7 @@ def run_forte(name, **kwargs):
 
         # Run a method
         if (job_type == 'NEWDRIVER'):
-            energy = forte_driver(state_weights_list, scf_info, forte.forte_options, ints, mo_space_info)
+            energy = forte_driver(state_weights_map, scf_info, forte.forte_options, ints, mo_space_info)
         else:
             energy = forte.forte_old_methods(ref_wfn, options, ints, mo_space_info)
 

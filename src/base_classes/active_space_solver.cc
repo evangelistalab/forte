@@ -194,10 +194,10 @@ double ActiveSpaceSolver::get_average_state_energy() const {
     return compute_average_state_energy(state_energies_map_, state_list_);
 }
 
-std::vector<std::pair<StateInfo, std::vector<double>>>
-make_state_weights_list(std::shared_ptr<ForteOptions> options,
+std::map<StateInfo, std::vector<double>>
+make_state_weights_map(std::shared_ptr<ForteOptions> options,
                         std::shared_ptr<psi::Wavefunction> wfn) {
-    std::vector<std::pair<StateInfo, std::vector<double>>> state_weights_list;
+    std::map<StateInfo, std::vector<double>> state_weights_map;
     auto state = make_state_info_from_psi_wfn(wfn);
     if ((options->psi_options())["AVG_STATE"].size() == 0) {
 
@@ -206,7 +206,7 @@ make_state_weights_list(std::shared_ptr<ForteOptions> options,
 
         std::vector<double> weights(nroot, 0.0);
         weights[root] = 1.0;
-        state_weights_list.push_back(std::make_pair(state, weights));
+        state_weights_map[state] = weights;
     } else {
         double sum_of_weights = 0.0;
         size_t nstates = 0;
@@ -277,18 +277,18 @@ make_state_weights_list(std::shared_ptr<ForteOptions> options,
                 weights = std::vector<double>(nstates_this, 1.0);
             }
             sum_of_weights = std::accumulate(std::begin(weights), std::end(weights), 0.0);
-            state_weights_list.push_back(std::make_pair(state, weights));
+            state_weights_map[state] = weights;
             nstates += nstates_this;
         }
 
         // normalize weights
-        for (auto& state_weights : state_weights_list) {
+        for (auto& state_weights : state_weights_map) {
             auto& weights = state_weights.second;
             std::transform(weights.begin(), weights.end(), weights.begin(),
                            [sum_of_weights](auto& w) { return w / sum_of_weights; });
         }
     }
-    return state_weights_list;
+    return state_weights_map;
 }
 
 double compute_average_state_energy(
