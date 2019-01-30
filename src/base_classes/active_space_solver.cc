@@ -308,8 +308,7 @@ double compute_average_state_energy(
     return std::inner_product(energies.begin(), energies.end(), weights.begin(), 0.0);
 }
 
-Reference compute_average_reference(std::shared_ptr<ActiveSpaceSolver>,
-                                    std::map<StateInfo, std::vector<double>> weights) {
+Reference ActiveSpaceSolver::compute_average_reference(std::map<StateInfo, std::vector<double>> weights) {
     // For state average
     size_t nactive = mo_space_info_->size(
         "ACTIVE"); // TODO: grab this info from the ActiveSpaceSolver object (Francesco)
@@ -358,26 +357,22 @@ Reference compute_average_reference(std::shared_ptr<ActiveSpaceSolver>,
         // Get the already-run method
         auto& method = method_vec_[state_num];
 
-        std::vector<std::pair<size_t, size_t>> root_list;
+        // Loop through roots in the method
         for (size_t r = 0; r < nroot; r++) {
-            root_list.push_back(std::make_pair(r, r));
-        }
-        std::vector<Reference> references = method->reference(root_list);
-
-        // Grab energies to set E in reference
-        auto& energies = method->energies();
-
-        for (size_t r = 0; r < nroot; r++) {
-            double weight = weights[r];
 
             // Don't bother if the weight is zero
             if (weight <= 1e-15)
                 continue;
 
-            energy += energies[r] * weight;
+            // Get the Reference 
+            std::vector<size_t,size_t> state_ids;
+            state_ids.push_back(std::make_pair(r,r));
+            Reference method_ref = method->reference(state_ids)[0];
+
+            double weight = weights[r];
 
             // Get the reference of the correct root
-            Reference method_ref = references[r];
+            //Reference method_ref = references[r];
 
             // Now the RDMs
             // 1 RDM
@@ -402,11 +397,15 @@ Reference compute_average_reference(std::shared_ptr<ActiveSpaceSolver>,
         state_num++;
     }
 
-    if (max_rdm_level_ >= 3) {
+    if (max_rdm_level_ == 1) {
+        return Reference(g1a, g1b);
+    } else if (max_rdm_level_ == 2) {
+        return Reference(g1a, g1b, g2aa, g2ab, g2bb);
+    }else if (max_rdm_level_ == 3) {
         return Reference(g1a, g1b, g2aa, g2ab, g2bb, g3aaa, g3aab, g3abb, g3bbb);
+    } else {
+        return Reference();
     }
-    // Construct Reference object with RDMs
-    Reference ref(g1a, g1b, g2aa, g2ab, g2bb, g3aaa, g3aab, g3abb, g3bbb);
-    return ref;
+        
 } // namespace forte
 } // namespace forte
