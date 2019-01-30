@@ -153,39 +153,15 @@ void ActiveSpaceSolver::set_max_rdm_level(size_t level) {
 void ActiveSpaceSolver::print_options() {
     print_h2("Summary of Active Space Solver Input");
 
-    //    std::vector<std::pair<std::string, size_t>> info;
-    //    info.push_back({"No. a electrons in active", nalfa_ - ncore_ - nfrzc_});
-    //    info.push_back({"No. b electrons in active", nbeta_ - ncore_ - nfrzc_});
-    //    info.push_back({"multiplicity", multi_});
-    //    info.push_back({"spin ms (2 * Sz)", twice_ms_});
-
-    //    for (auto& str_dim : info) {
-    //        outfile->Printf("\n    %-30s = %5zu", str_dim.first.c_str(), str_dim.second);
-    //    }
-
-    print_h2("State Averaging Summary");
-
     psi::CharacterTable ct = psi::Process::environment.molecule()->point_group()->char_table();
 
     std::vector<std::string> irrep_symbol = psi::Process::environment.molecule()->irrep_labels();
-    int nroots_max = 0;
     int nstates = 0;
     for (const auto& state_nroot : state_list_) {
-        const auto& weights = state_nroot.second;
-        int nroots = weights.size();
-        nstates += nroots;
-        nroots_max = std::max(nroots_max, nroots);
-    }
-
-    if (nroots_max == 1) {
-        nroots_max = 7;
-    } else {
-        nroots_max *= 6;
-        nroots_max -= 1;
+        nstates += state_nroot.second;
     }
 
     int ltotal = 6 + 2 + 6 + 2 + 7 + 2;
-    std::string blank(nroots_max - 7, ' ');
     std::string dash(ltotal, '-');
     psi::outfile->Printf("\n    Irrep.  Multi.  Nstates");
     psi::outfile->Printf("\n    %s", dash.c_str());
