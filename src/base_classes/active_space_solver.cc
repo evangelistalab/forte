@@ -135,7 +135,7 @@ std::vector<Reference> ActiveSpaceSolver::reference(
 
         if (state1 != state2) {
             throw std::runtime_error("ActiveSpaceSolver::reference called with states of different "
-                                     "symmetry! This function is not yet suported in Forte.")
+                                     "symmetry! This function is not yet suported in Forte.");
         }
 
         std::vector<Reference> state_refs = method_map_[state1]->reference(element.second);
