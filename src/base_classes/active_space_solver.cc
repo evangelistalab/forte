@@ -389,10 +389,10 @@ compute_average_state_energy(const std::map<StateInfo, std::vector<double>>& sta
                              const std::map<StateInfo, std::vector<double>>& state_weight_map) {
     double average_energy = 0.0;
     // loop over each state and compute the inner product of energies and weights
-    for (const auto& state_weights : state_weight_list) {
+    for (const auto& state_weights : state_weight_map) {
         const auto& state = state_weights.first;
         const auto& weights = state_weights.second;
-        const auto& energies = state_energies_list.at(state).second;
+        const auto& energies = state_energies_map.at(state);
         average_energy +=
             std::inner_product(energies.begin(), energies.end(), weights.begin(), 0.0);
     }
