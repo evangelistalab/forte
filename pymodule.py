@@ -40,7 +40,7 @@ def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
     max_rdm_level = 3 # TODO: set this (Francesco)
     return_en = 0.0
 
-    state_map = to_state_map(state_weights_map)
+    state_map = forte.to_state_map(state_weights_map)
 
     # Create an active space solver object and compute the energy
     active_space_solver_type = options.get_str('ACTIVE_SPACE_SOLVER')
