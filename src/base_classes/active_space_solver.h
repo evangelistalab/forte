@@ -199,6 +199,7 @@ make_state_weights_list(std::shared_ptr<ForteOptions> options,
  * @param state_energies_list a map of state -> energies
  * @param state_weight_list a map of state -> weights
  */
+double
 compute_average_state_energy(const std::map<StateInfo, std::vector<double>>& state_energies_map,
                              const std::map<StateInfo, std::vector<double>>& state_weight_map);
 
