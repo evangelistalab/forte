@@ -78,10 +78,6 @@ class ActiveSpaceSolver {
     /// Compute the energy and return it // TODO: document (Francesco)
     const std::map<StateInfo, std::vector<double>>& compute_energy();
 
-    /// Compute the contracted CI energy
-    const std::vector<std::pair<StateInfo, std::vector<double>>>&
-    compute_contracted_energy(std::shared_ptr<forte::ActiveSpaceIntegrals> as_ints);
-
     /// Compute reference and return it
     std::vector<Reference> reference(std::map<std::pair<StateInfo, StateInfo>,
                                               std::vector<std::pair<size_t, size_t>>>& elements);
