@@ -70,9 +70,7 @@ ActiveSpaceSolver::ActiveSpaceSolver(const std::string& method,
 }
 
 const std::map<StateInfo, std::vector<double>>& ActiveSpaceSolver::compute_energy() {
-    double average_energy = 0.0;
     state_energies_map_.clear();
-    size_t nstate = 0;
     for (const auto& state_nroot : state_list_) {
         const auto& state = state_nroot.first;
         size_t nroot = state_nroot.second;
@@ -143,6 +141,7 @@ std::vector<Reference> ActiveSpaceSolver::reference(
             refs.push_back(state_ref);
         }
     }
+    return refs;
 }
 
 void ActiveSpaceSolver::set_max_rdm_level(size_t level) {
@@ -182,8 +181,7 @@ void ActiveSpaceSolver::print_options() {
 }
 
 std::unique_ptr<ActiveSpaceSolver> make_active_space_solver(
-    const std::string& method,
-    std::vector<std::pair<StateInfo, std::vector<double>>>& state_weights_list,
+    const std::string& method, std::map<StateInfo, std::vector<double>>& state_weights_list,
     std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<MOSpaceInfo> mo_space_info,
     std::shared_ptr<ActiveSpaceIntegrals> as_ints, std::shared_ptr<ForteOptions> options) {
     return std::make_unique<ActiveSpaceSolver>(method, state_weights_list, scf_info, mo_space_info,
