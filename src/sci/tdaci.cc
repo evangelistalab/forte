@@ -70,7 +70,7 @@ void set_TDACI_options(ForteOptions& foptions) {
     foptions.add_double("TDACI_TIMESTEP", 1.0, "Timestep (as)");
     foptions.add_double("TDACI_ETA", 1e-12, "Path filtering threshold");
     foptions.add_double("TDACI_CN_CONVERGENCE", 1e-12, "Convergence threshold for CN iterations");
-    foptions.add_bool("TDACI_PRINT_WFN", true, "Print coefficients to files");
+    foptions.add_bool("TDACI_PRINT_WFN", false, "Print coefficients to files");
     foptions.add_array("TDACI_OCC_ORB","" );
     foptions.add_int("TDACI_KRYLOV_DIM", 5, "Dimension of Krylov subspace for Lanczos method");
 //    foptions.add_int("TDACI_TAYLOR_ORDER", 1, "Maximum order of taylor expansion used");
