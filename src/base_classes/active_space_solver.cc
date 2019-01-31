@@ -295,7 +295,7 @@ make_state_weights_map(std::shared_ptr<ForteOptions> options,
 }
 
 Reference ActiveSpaceSolver::compute_average_reference(
-    const std::map<StateInfo, std::vector<double>>& state_weights) {
+    const std::map<StateInfo, std::vector<double>>& state_weights_map) {
     // For state average
     size_t nactive = mo_space_info_->size(
         "ACTIVE"); // TODO: grab this info from the ActiveSpaceSolver object (Francesco)
@@ -339,7 +339,7 @@ Reference ActiveSpaceSolver::compute_average_reference(
         const auto& state = state_nroot.first;
         size_t nroot = state_nroot.second;
 
-        const auto& weights = state_weights.at(state);
+        const auto& weights = state_weights_map.at(state);
 
         // Get the already-run method
         const auto& method = method_map_.at(state);
@@ -424,7 +424,7 @@ ActiveSpaceSolver::compute_contracted_energy(std::shared_ptr<ActiveSpaceIntegral
 
     DressedQuantity ints(0.0, oei_a, oei_b, tei_aa, tei_ab, tei_bb);
 
-    for (const auto& state_nroots: state_list_) {
+    for (const auto& state_nroots : state_list_) {
         const auto& state = state_nroots.first;
         size_t nroots = state_nroots.second;
         std::string state_name =

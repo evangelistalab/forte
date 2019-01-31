@@ -49,16 +49,19 @@ def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
     active_space_solver.set_max_rdm_level(max_rdm_level)
     state_energies_list = active_space_solver.compute_energy()
 
-    # Create a dynamical correlation solver object
-    correlation_solver_type = options.get_str('CORRELATION_SOLVER')
 
     # Notes (York):
     #     cases to run active space solver: reference relaxation, state-average dsrg
     #     cases to run contracted ci solver (will be put in ActiveSpaceSolver): contracted state-average dsrg
     Etemp1, Etemp2 = 0.0, 0.0
 
+    # Create a dynamical correlation solver object
+    correlation_solver_type = options.get_str('CORRELATION_SOLVER')
     if correlation_solver_type != 'NONE':
-        reference = active_space_solver.reference()
+        # Grab the reference
+        reference = active_space_solver.compute_average_reference(state_weights_map)
+
+        # Compute unitary matrices Ua and Ub that rotate the orbitals to the semicanonical basis
         semi = forte.SemiCanonical(mo_space_info, ints, options)
         semi.semicanonicalize(reference, max_rdm_level)
         Ua = semi.Ua_t()

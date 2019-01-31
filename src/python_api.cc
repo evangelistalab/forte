@@ -98,7 +98,10 @@ void export_ActiveSpaceSolver(py::module& m) {
         .def("compute_average_reference", &ActiveSpaceSolver::compute_average_reference)
         .def("set_max_rdm_level", &ActiveSpaceSolver::set_max_rdm_level)
         .def("compute_contracted_energy", &ActiveSpaceSolver::compute_contracted_energy,
-             "as_ints"_a, "Solve the contracted CI eigenvalue problem using given integrals");
+             "as_ints"_a, "Solve the contracted CI eigenvalue problem using given integrals")
+        .def("compute_average_reference", &ActiveSpaceSolver::compute_average_reference,
+             "Compute the weighted average reference");
+
     m.def("compute_average_state_energy", &compute_average_state_energy,
           "Compute the average energy given the energies and weights of each state");
 }

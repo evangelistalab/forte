@@ -88,7 +88,7 @@ class ActiveSpaceSolver {
 
     /// Compute state-averaged reference
     Reference
-    compute_average_reference(const std::map<StateInfo, std::vector<double>>& state_weights);
+    compute_average_reference(const std::map<StateInfo, std::vector<double>>& state_weights_map);
 
     /// Sets the maximum order RDM/cumulant
     void set_max_rdm_level(size_t value);
