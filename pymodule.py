@@ -152,7 +152,7 @@ def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
                     psi4.core.print_out("\n  !DSRG transition dipoles are disabled temporarily.")
                     warnings.warn("DSRG transition dipoles are disabled temporarily.", UserWarning)
                 else:
-                    reference = as_solver_relaxed.reference()
+                    reference = as_solver_relaxed.compute_average_reference(state_weights_map)
                     x, y, z, t = dipole_routine(dsrg, reference)
                     dsrg_dipoles.append(((udm_x, udm_y, udm_z, udm_t), (x, y, z, t)))
                     psi4.core.print_out("\n\n    {} partially relaxed dipole moment:".format(correlation_solver_type))
@@ -174,7 +174,7 @@ def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
                 if do_dipole and (not is_multi_state):
                     reference = semi.transform_reference(Ua, Ub, reference, max_rdm_level)
                 else:
-                    reference = semi.transform_reference(Ua, Ub, as_solver_relaxed.reference(),
+                    reference = semi.transform_reference(Ua, Ub, as_solver_relaxed.compute_average_reference(state_weights_map),
                                                          max_rdm_level)
 
                 # Now semicanonicalize the reference and orbitals

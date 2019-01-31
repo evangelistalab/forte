@@ -165,7 +165,7 @@ class ActiveSpaceSolver {
     std::map<StateInfo, std::vector<double>> state_energies_map_;
 
     /// Pairs of state info and the contracted CI eigen vectors
-    std::map<StateInfo, psi::Matrix> state_contracted_evecs_map_; // TODO move outside?
+    std::map<StateInfo, std::shared_ptr<psi::Matrix>> state_contracted_evecs_map_; // TODO move outside?
 };
 
 /**

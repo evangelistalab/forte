@@ -466,7 +466,7 @@ ActiveSpaceSolver::compute_contracted_energy(std::shared_ptr<ActiveSpaceIntegral
             energies[i] = E.get(i);
         }
         state_energies_map_[state] = energies;
-        state_contracted_evecs_map_[state] = U;
+        state_contracted_evecs_map_[state] = std::make_shared<psi::Matrix>(U);
     }
 
     print_energies(state_energies_map_);
