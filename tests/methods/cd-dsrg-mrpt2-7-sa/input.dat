@@ -84,7 +84,7 @@ set forte{
   e_convergence        10
   avg_state            [[0,1,2]] # 2 states of symmetry A1 (irrep = 0) and multiplicity = 1
   dsrg_multi_state     sa_full
-  calc_type            ms
+  calc_type            sa
 }
 
 Emcscf, wfn = energy('casscf', return_wfn=True)

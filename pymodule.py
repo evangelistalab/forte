@@ -96,7 +96,7 @@ def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
 
         # determine the relaxation procedure
         relax_mode = options.get_str("RELAX_REF")
-        is_multi_state = True if options.get_str("CALC_TYPE") == "MS" else False
+        is_multi_state = True if options.get_str("CALC_TYPE") != "SS" else False
 
         if relax_mode == 'NONE' and is_multi_state:
             relax_mode = 'ONCE'
