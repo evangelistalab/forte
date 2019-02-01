@@ -96,6 +96,10 @@ class ActiveSpaceSolver {
     /// Print a summary of the computation information
     void print_options();
 
+    const std::map<StateInfo, std::vector<double>>& state_energies_map() const {
+        return state_energies_map_;
+    }
+
   protected:
     // a string that specifies the method used (e.g. "FCI", "ACI", ...)
     std::string method_;
@@ -146,8 +150,9 @@ class ActiveSpaceSolver {
     std::map<StateInfo, std::vector<double>> state_energies_map_;
 
     /// Pairs of state info and the contracted CI eigen vectors
-    std::map<StateInfo, std::shared_ptr<psi::Matrix>> state_contracted_evecs_map_; // TODO move outside?
-};
+    std::map<StateInfo, std::shared_ptr<psi::Matrix>>
+        state_contracted_evecs_map_; // TODO move outside?
+};                                   // namespace forte
 
 /**
  * @brief Make an active space solver object.
