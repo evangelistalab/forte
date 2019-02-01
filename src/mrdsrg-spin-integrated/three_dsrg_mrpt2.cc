@@ -2703,7 +2703,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_one_active() {
     double Eccva = 0;
     double Eacvv = 0;
     int nthread = 1;
-//    int thread = 0;
+    int thread = 0;
 #ifdef _OPENMP
     nthread = omp_get_max_threads();
     thread = omp_get_thread_num();
