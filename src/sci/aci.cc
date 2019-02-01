@@ -967,14 +967,6 @@ void AdaptiveCI::print_nos() {
     // file << endl;
     // file.close();
 
-    if( options_->get_str("JOB_TYPE") == "TDACI" ){
-        std::ofstream file;
-        file.open("aci-occ.txt", std::ofstream::out | std::ofstream::trunc);
-        for (auto vec : vec_irrep_occupation) {
-            file << std::setw(12) << std::setprecision(8) << vec.first << " ";
-            file << "\n";
-        }
-    }
     CharacterTable ct = psi::Process::environment.molecule()->point_group()->char_table();
     std::sort(vec_irrep_occupation.begin(), vec_irrep_occupation.end(),
               std::greater<std::pair<double, std::pair<int, int>>>());

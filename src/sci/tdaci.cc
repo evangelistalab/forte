@@ -108,6 +108,25 @@ double TDACI::compute_energy() {
     SharedMatrix aci_coeffs = aci->get_evecs();
     outfile->Printf("\n  ACI wavefunction built");
 
+    // 1.5 Compute ACI occs and save to file
+    std::vector<double> ref_occs(nact, 0.0);
+    for( size_t I = 0, maxI= aci_dets.size(); I < maxI; ++I ){
+        const Determinant& det = aci_dets.get_det(I);
+        const double CI = aci_coeffs->get(I,0);        
+        for( int p = 0; p < nact; ++p ){
+            double value = 0.0;
+            if ( det.get_alfa_bit(p) == true ){
+                value += CI*CI;
+            }
+            if ( det.get_beta_bit(p) == true ){
+                value += CI*CI;
+            }
+            ref_occs[p] += value;
+        }
+    }    
+    save_vector(ref_occs, "aci-occ.txt");
+    
+
     // 2. Generate the n-1 Determinants (not just core)
     for( int i = 0; i < nact; ++i ){
         annihilate_wfn(aci_dets, ann_dets_,i);  
