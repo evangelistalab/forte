@@ -96,21 +96,6 @@ class ActiveSpaceSolver {
     /// Print a summary of the computation information
     void print_options();
 
-    /// Is this ActiveSpaceSolver targets a multi-state computation
-    bool is_multi_state() { return state_specific_root_ < 0 ? true : false; }
-
-    const std::map<StateInfo, size_t>& get_state_list() const { return state_list_; }
-
-    const std::map<StateInfo, std::shared_ptr<ActiveSpaceMethod>>& get_method_map() const {
-        return method_map_;
-    }
-
-    const std::map<StateInfo, std::vector<double>>& state_energies_map() const {
-        return state_energies_map_;
-    }
-
-    double get_average_state_energy() const;
-
   protected:
     // a string that specifies the method used (e.g. "FCI", "ACI", ...)
     std::string method_;
@@ -142,10 +127,6 @@ class ActiveSpaceSolver {
 
     /// The maximum order RDM/cumulant to use for all ActiveSpaceMethod objects initialized
     size_t max_rdm_level_ = 1;
-
-    /// The index of root if this targets a state-specific computation, a negative number if
-    /// multi-state
-    int state_specific_root_ = -1;
 
     /// Controls which defaulr rdm level to use
     bool set_rdm_ = false; // TODO: remove this hack
