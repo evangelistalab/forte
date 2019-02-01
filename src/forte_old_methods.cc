@@ -122,7 +122,7 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
     auto forte_options = std::make_shared<ForteOptions>(options);
     // generate a list of states with their own weights
     auto state_weights_map = make_state_weights_map(forte_options, ref_wfn);
-    auto state_map = to_state_map(state_weights_map);
+    auto state_map = to_state_nroots_map(state_weights_map);
 
     if (options.get_bool("CASSCF_REFERENCE") == true or options.get_str("JOB_TYPE") == "CASSCF") {
         auto as_ints = make_active_space_ints(mo_space_info, ints, "ACTIVE", {{"RESTRICTED_DOCC"}});

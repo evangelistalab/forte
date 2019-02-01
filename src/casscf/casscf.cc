@@ -354,7 +354,7 @@ void CASSCF::cas_ci() {
     std::shared_ptr<ActiveSpaceIntegrals> fci_ints = get_ci_integrals();
 
     auto state_weights_map = make_state_weights_map(options_, ints_->wfn());
-    auto state_map = to_state_map(state_weights_map);
+    auto state_map = to_state_nroots_map(state_weights_map);
 
     std::string casscf_ci_type = options_->get_str("CASSCF_CI_SOLVER");
     auto active_space_solver = make_active_space_solver(casscf_ci_type, state_map, scf_info_,

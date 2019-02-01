@@ -60,15 +60,15 @@ class ActiveSpaceSolver {
     /**
      * @brief ActiveSpaceMethod Constructor for a multi-state computation
      * @param method A string that labels the method requested (e.g. "FCI", "ACI", ...)
-     * @param state_map A map of electronic states to the number of roots computed
-    ///   {state_1 : n_1, state_2 : n_2, ...}
-     *        where state_i specifies the symmetry of a state and n_i is the number of levels
-     * computed.
+     * @param nroots_map A map of electronic states to the number of roots computed {state_1 : n_1,
+     * state_2 : n_2, ...} where state_i specifies the symmetry of a state and n_i is the number of
+     * levels computed.
      * @param state information about the electronic state
      * @param mo_space_info a MOSpaceInfo object
      * @param as_ints integrals for active space
      */
-    ActiveSpaceSolver(const std::string& method, const std::map<StateInfo, size_t>& state_map,
+    ActiveSpaceSolver(const std::string& method,
+                      const std::map<StateInfo, size_t>& state_nroots_map,
                       std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<MOSpaceInfo> mo_space_info,
                       std::shared_ptr<ActiveSpaceIntegrals> as_ints,
                       std::shared_ptr<ForteOptions> options);
@@ -82,7 +82,8 @@ class ActiveSpaceSolver {
     const std::map<StateInfo, std::vector<double>>&
     compute_contracted_energy(std::shared_ptr<forte::ActiveSpaceIntegrals> as_ints);
 
-    /// Compute reference and return it
+    /// Compute references of all states in the given map
+    /// First entry of the pair corresponds to bra and the second is the ket.
     std::vector<Reference> reference(std::map<std::pair<StateInfo, StateInfo>,
                                               std::vector<std::pair<size_t, size_t>>>& elements);
 
@@ -96,6 +97,7 @@ class ActiveSpaceSolver {
     /// Print a summary of the computation information
     void print_options();
 
+    /// Return a map of StateInfo to the computed nroots of energies
     const std::map<StateInfo, std::vector<double>>& state_energies_map() const {
         return state_energies_map_;
     }
@@ -107,7 +109,7 @@ class ActiveSpaceSolver {
     /// A map of electronic states to the number of roots computed
     ///   {state_1 : n_1, state_2 : n_2, ...}
     /// where state_i specifies the symmetry of a state and n_i is the number of levels computed.
-    std::map<StateInfo, size_t> state_list_;
+    std::map<StateInfo, size_t> state_nroots_map_;
 
     /// The information about a previous SCF computation
     std::shared_ptr<SCFInfo> scf_info_;
@@ -125,28 +127,19 @@ class ActiveSpaceSolver {
     /// User-provided options
     std::shared_ptr<ForteOptions> options_;
 
-    /// A vector of pointers to the ActiveSpaceMethod instantiated for each
-    /// of the state symmetries contained in state_list_
-    std::map<StateInfo, std::shared_ptr<ActiveSpaceMethod>> method_map_;
+    /// A map of state symmetries to the associated ActiveSpaceMethod
+    std::map<StateInfo, std::shared_ptr<ActiveSpaceMethod>> state_method_map_;
 
     /// The maximum order RDM/cumulant to use for all ActiveSpaceMethod objects initialized
     size_t max_rdm_level_ = 1;
 
-    /// Controls which defaulr rdm level to use
+    /// Controls which default rdm level to use
     bool set_rdm_ = false; // TODO: remove this hack
 
     /// Prints a summary of the energies with State info
     void print_energies(std::map<StateInfo, std::vector<double>>& energies);
 
-    //     * @param states_weights A list of electronic states and their weights stored as vector of
-    //     *        pairs [(state_1, [w_11, w_12, ..., w_1m]), (state_2, [w_21, w_22, ..., w_n]),
-    //     ...]
-    //     *        where:
-    //     *            state_i specifies the symmetry of a state
-    //     *            w_ij is the weight of the j-th state of symmetry state_i
-    /**
-     * @brief state_energies_list
-     */
+    /// A map of state symmetries to vectors of computed energies under given state symmetry
     std::map<StateInfo, std::vector<double>> state_energies_map_;
 
     /// Pairs of state info and the contracted CI eigen vectors
@@ -157,7 +150,7 @@ class ActiveSpaceSolver {
 /**
  * @brief Make an active space solver object.
  * @param type a string that specifies the type (e.g. "FCI", "ACI", ...)
- * @param state information about the elecronic state
+ * @param state_nroots_map a map from state symmetry to the number of roots
  * @param scf_info information about a previous SCF computation
  * @param mo_space_info orbital space information
  * @param ints an integral object
@@ -165,17 +158,17 @@ class ActiveSpaceSolver {
  * @return a unique pointer for the base class ActiveSpaceMethod
  */
 std::unique_ptr<ActiveSpaceSolver> make_active_space_solver(
-    const std::string& method, const std::map<StateInfo, size_t>& state_map,
+    const std::string& method, const std::map<StateInfo, size_t>& state_nroots_map,
     std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<MOSpaceInfo> mo_space_info,
     std::shared_ptr<ActiveSpaceIntegrals> as_ints, std::shared_ptr<ForteOptions> options);
 
 /**
- * @brief Convert a map of StateInfo to weight lists to a map of StateInfo to number of states.
+ * @brief Convert a map of StateInfo to weight lists to a map of StateInfo to number of roots.
  * @param state_weights_map A map of StateInfo to weight lists
  * @return A map of StateInfo to number of states
  */
 std::map<StateInfo, size_t>
-to_state_map(const std::map<StateInfo, std::vector<double>>& state_weights_map);
+to_state_nroots_map(const std::map<StateInfo, std::vector<double>>& state_weights_map);
 
 /**
  * @brief Make a list of states and weights.

@@ -49,35 +49,26 @@
 namespace forte {
 
 ActiveSpaceSolver::ActiveSpaceSolver(const std::string& method,
-                                     const std::map<StateInfo, size_t>& state_map,
+                                     const std::map<StateInfo, size_t>& state_nroots_map,
                                      std::shared_ptr<SCFInfo> scf_info,
                                      std::shared_ptr<MOSpaceInfo> mo_space_info,
                                      std::shared_ptr<ActiveSpaceIntegrals> as_ints,
                                      std::shared_ptr<ForteOptions> options)
-    : method_(method), state_list_(state_map), scf_info_(scf_info), mo_space_info_(mo_space_info),
-      as_ints_(as_ints), options_(options) {
+    : method_(method), state_nroots_map_(state_nroots_map), scf_info_(scf_info),
+      mo_space_info_(mo_space_info), as_ints_(as_ints), options_(options) {
 
     print_options();
-
-    //    // determine the state-specific root number
-    //    if (state_list.size() == 1) {
-    //        const std::vector<double>& weights = state_list[0].second;
-    //        auto it = std::find(weights.begin(), weights.end(), 1.0);
-    //        if (it != weights.end()) {
-    //            state_specific_root_ = std::distance(weights.begin(), it);
-    //        }
-    //    }
 }
 
 const std::map<StateInfo, std::vector<double>>& ActiveSpaceSolver::compute_energy() {
     state_energies_map_.clear();
-    for (const auto& state_nroot : state_list_) {
+    for (const auto& state_nroot : state_nroots_map_) {
         const auto& state = state_nroot.first;
         size_t nroot = state_nroot.second;
         // compute the energy of state and save it
         std::shared_ptr<ActiveSpaceMethod> method = make_active_space_method(
             method_, state, nroot, scf_info_, mo_space_info_, as_ints_, options_);
-        method_map_[state] = method;
+        state_method_map_[state] = method;
 
         method->set_options(options_);
         if (set_rdm_) {
@@ -99,7 +90,7 @@ void ActiveSpaceSolver::print_energies(std::map<StateInfo, std::vector<double>>&
     std::vector<std::string> irrep_symbol = psi::Process::environment.molecule()->irrep_labels();
 
     int n = 0;
-    for (const auto& state_nroot : state_list_) {
+    for (const auto& state_nroot : state_nroots_map_) {
         const auto& state = state_nroot.first;
         int irrep = state.irrep();
         int multi = state.multiplicity();
@@ -136,7 +127,7 @@ std::vector<Reference> ActiveSpaceSolver::reference(
                                      "symmetry! This function is not yet suported in Forte.");
         }
 
-        std::vector<Reference> state_refs = method_map_[state1]->reference(element.second);
+        std::vector<Reference> state_refs = state_method_map_[state1]->reference(element.second);
         for (const auto& state_ref : state_refs) {
             refs.push_back(state_ref);
         }
@@ -152,11 +143,9 @@ void ActiveSpaceSolver::set_max_rdm_level(size_t level) {
 void ActiveSpaceSolver::print_options() {
     print_h2("Summary of Active Space Solver Input");
 
-    psi::CharacterTable ct = psi::Process::environment.molecule()->point_group()->char_table();
-
     std::vector<std::string> irrep_symbol = psi::Process::environment.molecule()->irrep_labels();
     int nstates = 0;
-    for (const auto& state_nroot : state_list_) {
+    for (const auto& state_nroot : state_nroots_map_) {
         nstates += state_nroot.second;
     }
 
@@ -164,7 +153,7 @@ void ActiveSpaceSolver::print_options() {
     std::string dash(ltotal, '-');
     psi::outfile->Printf("\n    Irrep.  Multi.  Nstates");
     psi::outfile->Printf("\n    %s", dash.c_str());
-    for (const auto& state_nroot : state_list_) {
+    for (const auto& state_nroot : state_nroots_map_) {
         const auto& state = state_nroot.first;
         int irrep = state.irrep();
         int multiplicity = state.multiplicity();
@@ -181,20 +170,20 @@ void ActiveSpaceSolver::print_options() {
 }
 
 std::unique_ptr<ActiveSpaceSolver> make_active_space_solver(
-    const std::string& method, const std::map<StateInfo, size_t>& state_map,
+    const std::string& method, const std::map<StateInfo, size_t>& state_nroots_map,
     std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<MOSpaceInfo> mo_space_info,
     std::shared_ptr<ActiveSpaceIntegrals> as_ints, std::shared_ptr<ForteOptions> options) {
-    return std::make_unique<ActiveSpaceSolver>(method, state_map, scf_info, mo_space_info, as_ints,
-                                               options);
+    return std::make_unique<ActiveSpaceSolver>(method, state_nroots_map, scf_info, mo_space_info,
+                                               as_ints, options);
 }
 
 std::map<StateInfo, size_t>
-to_state_map(const std::map<StateInfo, std::vector<double>>& state_weights_map) {
-    std::map<StateInfo, size_t> state_map;
+to_state_nroots_map(const std::map<StateInfo, std::vector<double>>& state_weights_map) {
+    std::map<StateInfo, size_t> state_nroots_map;
     for (const auto& state_vec : state_weights_map) {
-        state_map[state_vec.first] = state_vec.second.size();
+        state_nroots_map[state_vec.first] = state_vec.second.size();
     }
-    return state_map;
+    return state_nroots_map;
 }
 
 std::map<StateInfo, std::vector<double>>
@@ -335,14 +324,13 @@ Reference ActiveSpaceSolver::compute_average_reference(
     };
 
     // Loop through references, add to master ref
-    for (const auto& state_nroot : state_list_) {
+    for (const auto& state_nroot : state_nroots_map_) {
         const auto& state = state_nroot.first;
         size_t nroot = state_nroot.second;
-
         const auto& weights = state_weights_map.at(state);
 
         // Get the already-run method
-        const auto& method = method_map_.at(state);
+        const auto& method = state_method_map_.at(state);
 
         // Loop through roots in the method
         for (size_t r = 0; r < nroot; r++) {
@@ -393,7 +381,7 @@ Reference ActiveSpaceSolver::compute_average_reference(
 
 const std::map<StateInfo, std::vector<double>>&
 ActiveSpaceSolver::compute_contracted_energy(std::shared_ptr<ActiveSpaceIntegrals> as_ints) {
-    if (method_map_.size() == 0) {
+    if (state_method_map_.size() == 0) {
         throw psi::PSIEXCEPTION("Old CI determinants are not solved. Call compute_energy first.");
     }
 
@@ -424,12 +412,12 @@ ActiveSpaceSolver::compute_contracted_energy(std::shared_ptr<ActiveSpaceIntegral
 
     DressedQuantity ints(0.0, oei_a, oei_b, tei_aa, tei_ab, tei_bb);
 
-    for (const auto& state_nroots : state_list_) {
+    for (const auto& state_nroots : state_nroots_map_) {
         const auto& state = state_nroots.first;
         size_t nroots = state_nroots.second;
         std::string state_name =
             multiplicity_labels[state.multiplicity()] + " " + irrep_labels[state.irrep()];
-        auto method = method_map_.at(state);
+        auto method = state_method_map_.at(state);
 
         // form the Hermitian effective Hamiltonian
         print_h2("Building Effective Hamiltonian for " + state_name);
