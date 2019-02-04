@@ -86,118 +86,150 @@ def register_fci_options(forte_options):
 def register_aci_options(forte_options):
     forte_options.add_double("ACI_CONVERGENCE", 1e-9, "ACI Convergence threshold")
     # The selection type for the Q-space
-    foptions.add_str("ACI_SELECT_TYPE", "AIMED_ENERGY", "The selection type for the Q-space")
-    /*-Threshold for the selection of the P space -*/
-    foptions.add_double("SIGMA", 0.01, "The energy selection threshold for the P space");
-    /*- The threshold for the selection of the Q space -*/
-    foptions.add_double("GAMMA", 1.0, "The reference space selection threshold");
-    foptions.add_double("ACI_PRESCREEN_THRESHOLD", 1e-12, "The SD space prescreening threshold")
-    /*- The type of selection parameters to use*/
-    foptions.add_bool("ACI_PERTURB_SELECT", false, "Type of energy selection");
-    /*Function of q-space criteria, per root*/
-    foptions.add_str("ACI_PQ_FUNCTION", "AVERAGE", "Function for SA-ACI");
-    /* Method to calculate excited state */
-    foptions.add_str("ACI_EXCITED_ALGORITHM", "ROOT_ORTHOGONALIZE", "The excited state algorithm");
-    foptions.add_int("ACI_SPIN_PROJECTION", 0, """Type of spin projection
+    forte_options.add_str("ACI_SELECT_TYPE", "AIMED_ENERGY", "The selection type for the Q-space")
+
+    forte_options.add_double("SIGMA", 0.01, "The energy selection threshold for the P space")
+
+    forte_options.add_double("GAMMA", 1.0, "The threshold for the selection of the Q space")
+    forte_options.add_double("ACI_PRESCREEN_THRESHOLD", 1e-12, "The SD space prescreening threshold")
+    # The type of selection parameters to use
+    forte_options.add_bool("ACI_PERTURB_SELECT", false, "Type of energy selection")
+    # Function of q-space criteria, per root
+    forte_options.add_str("ACI_PQ_FUNCTION", "AVERAGE", "Function of q-space criteria, per root for SA-ACI")
+
+    forte_options.add_str("ACI_EXCITED_ALGORITHM", "ROOT_ORTHOGONALIZE", "The excited state algorithm")
+    forte_options.add_int("ACI_SPIN_PROJECTION", 0, """Type of spin projection
      0 - None
      1 - Project initial P spaces at each iteration
      2 - Project only after converged PQ space
      3 - Do 1 and 2""")
-    /*- Add determinants to enforce spin-complete set? -*/
-    foptions.add_bool("ACI_ENFORCE_SPIN_COMPLETE", true,
-                      "Enforce determinant spaces to be spin-complete");
-    /*- Project out spin contaminants in Davidson-Liu's algorithm? -*/
-    foptions.add_bool("ACI_PROJECT_OUT_SPIN_CONTAMINANTS", true,
-                      "Project out spin contaminants in Davidson-Liu's algorithm");
-    /*- Project solution in full diagonalization algorithm -*/
-    foptions.add_bool("SPIN_PROJECT_FULL", false,
-                      "Project solution in full diagonalization algorithm");
-    /*- Add "degenerate" determinants not included in the aimed selection?
-     * -*/
-    foptions.add_bool("ACI_ADD_AIMED_DEGENERATE", true,
-                      "Add degenerate determinants not included in the aimed selection");
-    /*- Perform size extensivity correction -*/
-    foptions.add_str("ACI_SIZE_CORRECTION", "", "Perform size extensivity correction");
-    /*- Sets the maximum cycle -*/
-    foptions.add_int("ACI_MAX_CYCLE", 20, "Maximum number of cycles");
-    /*- Control print level -*/
-    foptions.add_bool("ACI_QUIET_MODE", false, "Print during ACI procedure");
-    /*- Control streamlining -*/
-    foptions.add_bool("ACI_STREAMLINE_Q", false, "Do streamlined algorithm");
-    /*- Initial reference wavefunction -*/
-    foptions.add_str("ACI_INITIAL_SPACE", "CAS", "The initial reference space");
-    /*- Number of iterations to run SA-ACI before SS-ACI -*/
-    foptions.add_int("ACI_PREITERATIONS", 0, "Number of iterations to run SA-ACI before SS-ACI");
-    /*- Number of roots to average -*/
-    foptions.add_int("ACI_N_AVERAGE", 1, "Number of roots to averag");
-    /*- Offset for state averaging -*/
-    foptions.add_int("ACI_AVERAGE_OFFSET", 0, "Offset for state averaging");
-    
+
+    forte_options.add_bool("ACI_ENFORCE_SPIN_COMPLETE", true,
+                      "Enforce determinant spaces to be spin-complete")
+
+    forte_options.add_bool("ACI_PROJECT_OUT_SPIN_CONTAMINANTS", true,
+                      "Project out spin contaminants in Davidson-Liu's algorithm")
+
+    forte_options.add_bool("SPIN_PROJECT_FULL", false,
+                      "Project solution in full diagonalization algorithm")
+
+    forte_options.add_bool("ACI_ADD_AIMED_DEGENERATE", true,
+                      "Add degenerate determinants not included in the aimed selection")
+    # No string in option, shouldn't this be a bool?
+    forte_options.add_str("ACI_SIZE_CORRECTION", "", "Perform size extensivity correction")
+
+    forte_options.add_int("ACI_MAX_CYCLE", 20, "Maximum number of cycles")
+
+    forte_options.add_bool("ACI_QUIET_MODE", false, "Print during ACI procedure")
+
+    forte_options.add_bool("ACI_STREAMLINE_Q", false, "Do streamlined algorithm")
+
+    forte_options.add_str("ACI_INITIAL_SPACE", "CAS", "The initial reference space")
+
+    forte_options.add_int("ACI_PREITERATIONS", 0, "Number of iterations to run SA-ACI before SS-ACI")
+
+    forte_options.add_int("ACI_N_AVERAGE", 1, "Number of roots to averag")
+
+    forte_options.add_int("ACI_AVERAGE_OFFSET", 0, "Offset for state averaging")
+
     forte_options.add_bool("ACI_SAVE_FINAL_WFN", false, "Print final wavefunction to file")
+
     forte_options.add_bool("ACI_PRINT_REFS", false, "Print the P space")
+
     forte_options.add_int("DL_GUESS_SIZE", 100, "Set the initial guess space size for DL solver")
+
     forte_options.add_int("N_GUESS_VEC", 10, "Number of guess vectors for Sparse CI solver")
     forte_options.add_double("ACI_NO_THRESHOLD", 0.02, "Threshold for active space prediction")
     forte_options.add_double("ACI_SPIN_TOL", 0.02, "Tolerance for S^2 value")
-    # /*- Approximate 1RDM? -*/
-    forte_options.add_bool("ACI_APPROXIMATE_RDM", false, "Approximate the RDMs")
-    forte_options.add_bool("ACI_TEST_RDMS", false, "Run test for the RDMs")
-    forte_options.add_bool("ACI_FIRST_ITER_ROOTS", false, "Compute all roots on first iteration?")
-    forte_options.add_bool("ACI_PRINT_WEIGHTS", false, "Print weights for active space prediction")
 
-    forte_options.add_bool("ACI_PRINT_NO", true, "Print the natural orbitals")
+    /*- Approximate 1RDM? -*/
+    foptions.add_bool("ACI_APPROXIMATE_RDM", false, "Approximate the RDMs");
+    /*- Test RDMs -*/
+    foptions.add_bool("ACI_TEST_RDMS", false, "Run test for the RDMs");
 
-    forte_options.add_bool("ACI_NO", false, "Computes ACI natural orbitals")
+    /*- Do compute nroots on first cycle? -*/
+    foptions.add_bool("ACI_FIRST_ITER_ROOTS", false, "Compute all roots on first iteration?");
+    foptions.add_bool("ACI_PRINT_WEIGHTS", false, "Print weights for active space prediction");
 
-    forte_options.add_bool("MRPT2", false, "Compute full PT2 energy")
+    /*- Print Natural orbitals -*/
+    foptions.add_bool("ACI_PRINT_NO", true, "Print the natural orbitals");
 
-    forte_options.add_bool("UNPAIRED_DENSITY", false, "Compute unpaired electron density")
+    /*- Compute ACI-NOs -*/
+    foptions.add_bool("ACI_NO", false, "Computes ACI natural orbitals");
 
-    forte_options.add_bool("ACI_ADD_SINGLES", false,
-                      "Adds all active single excitations to the final wave function")
-    forte_options.add_bool("ACI_ADD_EXTERNAL_EXCITATIONS", false,
-                      "Adds external single excitations to the final wave function")
-    forte_options.add_str("ACI_EXTERNAL_EXCITATION_ORDER", "SINGLES",
-                     "Order of external excitations to add")
-    forte_options.add_str("ACI_EXTERNAL_EXCITATION_TYPE", "ALL", "Type of external excitations to add")
-    forte_options.add_bool("ESNOS", false, "Compute external single natural orbitals (ESNO)")
-    forte_options.add_int("ESNO_MAX_SIZE", 0, "Number of external orbitals to correlate")
+    /*- Compute full PT2 energy -*/
+    foptions.add_bool("MRPT2", false, "Compute full PT2 energy");
 
-    forte_options.add_bool("ACI_LOW_MEM_SCREENING", false, "Use low-memory screening algorithm")
+    /*- Compute unpaired electron density -*/
+    foptions.add_bool("UNPAIRED_DENSITY", false, "Compute unpaired electron density");
 
-    forte_options.add_bool("ACI_REF_RELAX", false, "Do reference relaxation in ACI")
+    /*- Add all active singles -*/
+    foptions.add_bool("ACI_ADD_SINGLES", false,
+                      "Adds all active single excitations to the final wave function");
+    /*- Add all active singles -*/
+    foptions.add_bool("ACI_ADD_EXTERNAL_EXCITATIONS", false,
+                      "Adds external single excitations to the final wave function");
+    /*- Order of external excitations to add -*/
+    foptions.add_str("ACI_EXTERNAL_EXCITATION_ORDER", "SINGLES",
+                     "Order of external excitations to add");
+    /*- Type of external excitations to add -*/
+    foptions.add_str("ACI_EXTERNAL_EXCITATION_TYPE", "ALL", "Type of external excitations to add");
 
-    forte_options.add_str("ACI_EX_TYPE", "CONV", "Type of excited state to compute")
+    /*- Do ESNO transformation? -*/
+    foptions.add_bool("ESNOS", false, "Compute external single natural orbitals");
+    foptions.add_int("ESNO_MAX_SIZE", 0, "Number of external orbitals to correlate");
 
-    forte_options.add_int("ACI_NFROZEN_CORE", 0, "Number of orbitals to freeze for core excitations")
+    /*- optionally use low-memory screening -*/
+    foptions.add_bool("ACI_LOW_MEM_SCREENING", false, "Use low-memory screening algorithm");
 
-    forte_options.add_int("ACI_ROOTS_PER_CORE", 1, "Number of roots to compute per frozen orbital")
+    /*- Do reference relaxation in ACI? -*/
+    foptions.add_bool("ACI_REF_RELAX", false, "Do reference relaxation in ACI");
 
-    forte_options.add_bool("ACI_SPIN_ANALYSIS", false, "Do spin correlation analysis")
-    forte_options.add_bool("ACI_RELAXED_SPIN", false,
-                      "Do spin correlation analysis for relaxed wave function")
+    /*- Type of excited state to compute -*/
+    foptions.add_str("ACI_EX_TYPE", "CONV", "Type of excited state to compute");
 
-    forte_options.add_bool("PRINT_IAOS", true, "Print IAOs")
+    /*- Number of core orbitals to freeze -*/
+    foptions.add_int("ACI_NFROZEN_CORE", 0, "Number of orbitals to freeze for core excitations");
 
-    forte_options.add_bool("PI_ACTIVE_SPACE", false, "Active space type")
+    /*- Number of roots to compute per frozen orbital -*/
+    foptions.add_int("ACI_ROOTS_PER_CORE", 1, "Number of roots to compute per frozen occupation");
 
-    forte_options.add_bool("SPIN_MAT_TO_FILE", false, "Save spin correlation matrix to file")
+    /*- Do spin analysis? -*/
+    foptions.add_bool("ACI_SPIN_ANALYSIS", false, "Do spin correlation analysis");
+    foptions.add_bool("ACI_RELAXED_SPIN", false,
+                      "Do spin correlation analysis for relaxed wave function");
 
-    forte_options.add_str("SPIN_BASIS", "LOCAL", "Basis for spin analysis")
+    /*- Print IAOs -*/
+    foptions.add_bool("PRINT_IAOS", true, "Print IAOs");
 
-    forte_options.add_double("ACI_RELAX_SIGMA", 0.01, "Sigma for reference relaxation")
+    /*- Active Space type -*/
+    foptions.add_bool("PI_ACTIVE_SPACE", false, "Active space type");
 
-    forte_options.add_bool("ACI_BATCHED_SCREENING", false, "Control batched screeing")
+    /*- Save spin correlation matrix to file -*/
+    foptions.add_bool("SPIN_MAT_TO_FILE", false, "Save spin correlation matrix to file");
 
-    forte_options.add_int("ACI_NBATCH", 1, "Number of batches in screening")
+    foptions.add_str("SPIN_BASIS", "LOCAL", "Basis for spin analysis");
 
-    forte_options.add_int("ACI_MAX_MEM", 1000, "Sets max memory for batching algorithm (MB)")
+    /*- Sigma for reference relaxation -*/
+    foptions.add_double("ACI_RELAX_SIGMA", 0.01, "Sigma for reference relaxation");
 
-    forte_options.add_double("ACI_SCALE_SIGMA", 0.5, "Scales sigma in batched algorithm")
+    /*- Control batched screeing -*/
+    foptions.add_bool("ACI_BATCHED_SCREENING", false, "Control batched screeing");
 
-    forte_options.add_bool("ACI_DIRECT_RDMS", false, "Computes RDMs without coupling lists")
+    /*- Number of batches in screening  -*/
+    foptions.add_int("ACI_NBATCH", 1, "Number of batches in screening");
 
-    forte_options.add_str("ACI_BATCH_ALG", "HASH", "Algorithm to use for batching")
+    /*- Sets max memory for batching algorithm (MB) -*/
+    foptions.add_int("ACI_MAX_MEM", 1000, "Sets max memory for batching algorithm (MB)");
+
+    /*- Scales sigma in batched algorithm -*/
+    foptions.add_double("ACI_SCALE_SIGMA", 0.5, "Scales sigma in batched algorithm");
+
+    /*- Computes RDMs without coupling lists -*/
+    foptions.add_bool("ACI_DIRECT_RDMS", false, "Computes RDMs without coupling lists");
+
+    // temp
+    foptions.add_str("ACI_BATCH_ALG", "HASH", "Algorithm to use for batching");
 
 
 def register_integral_options(forte_options):
