@@ -41,8 +41,6 @@ using namespace psi;
 
 namespace forte {
 
-void set_ACI_options(ForteOptions& foptions) { // TODO delete me (Francesco)
-}
 
 bool pairComp(const std::pair<double, Determinant> E1, const std::pair<double, Determinant> E2) {
     return E1.first < E2.first;
