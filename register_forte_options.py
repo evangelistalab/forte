@@ -132,62 +132,42 @@ def register_aci_options(forte_options):
     foptions.add_int("ACI_N_AVERAGE", 1, "Number of roots to averag");
     /*- Offset for state averaging -*/
     foptions.add_int("ACI_AVERAGE_OFFSET", 0, "Offset for state averaging");
-    /*- Print final wavefunction to file? -*/
-    foptions.add_bool("ACI_SAVE_FINAL_WFN", false, "Print final wavefunction to file");
-    /*- Print the P space? -*/
-    foptions.add_bool("ACI_PRINT_REFS", false, "Print the P space");
-    /*- Set the initial guess space size for DL solver -*/
-    foptions.add_int("DL_GUESS_SIZE", 100, "Set the initial guess space size for DL solver");
-    /*- Number of guess vectors for Sparse CI solver -*/
-    foptions.add_int("N_GUESS_VEC", 10, "Number of guess vectors for Sparse CI solver");
-    foptions.add_double("ACI_NO_THRESHOLD", 0.02, "Threshold for active space prediction");
-    foptions.add_double("ACI_SPIN_TOL", 0.02, "Tolerance for S^2 value");
+    
+    forte_options.add_bool("ACI_SAVE_FINAL_WFN", false, "Print final wavefunction to file")
+    forte_options.add_bool("ACI_PRINT_REFS", false, "Print the P space")
+    forte_options.add_int("DL_GUESS_SIZE", 100, "Set the initial guess space size for DL solver")
+    forte_options.add_int("N_GUESS_VEC", 10, "Number of guess vectors for Sparse CI solver")
+    forte_options.add_double("ACI_NO_THRESHOLD", 0.02, "Threshold for active space prediction")
+    forte_options.add_double("ACI_SPIN_TOL", 0.02, "Tolerance for S^2 value")
+    # /*- Approximate 1RDM? -*/
+    forte_options.add_bool("ACI_APPROXIMATE_RDM", false, "Approximate the RDMs")
+    forte_options.add_bool("ACI_TEST_RDMS", false, "Run test for the RDMs")
+    forte_options.add_bool("ACI_FIRST_ITER_ROOTS", false, "Compute all roots on first iteration?")
+    forte_options.add_bool("ACI_PRINT_WEIGHTS", false, "Print weights for active space prediction")
 
-    /*- Approximate 1RDM? -*/
-    foptions.add_bool("ACI_APPROXIMATE_RDM", false, "Approximate the RDMs");
-    /*- Test RDMs -*/
-    foptions.add_bool("ACI_TEST_RDMS", false, "Run test for the RDMs");
+    forte_options.add_bool("ACI_PRINT_NO", true, "Print the natural orbitals")
 
-    /*- Do compute nroots on first cycle? -*/
-    foptions.add_bool("ACI_FIRST_ITER_ROOTS", false, "Compute all roots on first iteration?");
-    foptions.add_bool("ACI_PRINT_WEIGHTS", false, "Print weights for active space prediction");
+    forte_options.add_bool("ACI_NO", false, "Computes ACI natural orbitals")
 
-    /*- Print Natural orbitals -*/
-    foptions.add_bool("ACI_PRINT_NO", true, "Print the natural orbitals");
+    forte_options.add_bool("MRPT2", false, "Compute full PT2 energy")
 
-    /*- Compute ACI-NOs -*/
-    foptions.add_bool("ACI_NO", false, "Computes ACI natural orbitals");
+    forte_options.add_bool("UNPAIRED_DENSITY", false, "Compute unpaired electron density")
 
-    /*- Compute full PT2 energy -*/
-    foptions.add_bool("MRPT2", false, "Compute full PT2 energy");
+    forte_options.add_bool("ACI_ADD_SINGLES", false,
+                      "Adds all active single excitations to the final wave function")
+    forte_options.add_bool("ACI_ADD_EXTERNAL_EXCITATIONS", false,
+                      "Adds external single excitations to the final wave function")
+    forte_options.add_str("ACI_EXTERNAL_EXCITATION_ORDER", "SINGLES",
+                     "Order of external excitations to add")
+    forte_options.add_str("ACI_EXTERNAL_EXCITATION_TYPE", "ALL", "Type of external excitations to add")
+    forte_options.add_bool("ESNOS", false, "Compute external single natural orbitals (ESNO)")
+    forte_options.add_int("ESNO_MAX_SIZE", 0, "Number of external orbitals to correlate")
 
-    /*- Compute unpaired electron density -*/
-    foptions.add_bool("UNPAIRED_DENSITY", false, "Compute unpaired electron density");
+    forte_options.add_bool("ACI_LOW_MEM_SCREENING", false, "Use low-memory screening algorithm")
 
-    /*- Add all active singles -*/
-    foptions.add_bool("ACI_ADD_SINGLES", false,
-                      "Adds all active single excitations to the final wave function");
-    /*- Add all active singles -*/
-    foptions.add_bool("ACI_ADD_EXTERNAL_EXCITATIONS", false,
-                      "Adds external single excitations to the final wave function");
-    /*- Order of external excitations to add -*/
-    foptions.add_str("ACI_EXTERNAL_EXCITATION_ORDER", "SINGLES",
-                     "Order of external excitations to add");
-    /*- Type of external excitations to add -*/
-    foptions.add_str("ACI_EXTERNAL_EXCITATION_TYPE", "ALL", "Type of external excitations to add");
+    forte_options.add_bool("ACI_REF_RELAX", false, "Do reference relaxation in ACI")
 
-    /*- Do ESNO transformation? -*/
-    foptions.add_bool("ESNOS", false, "Compute external single natural orbitals");
-    foptions.add_int("ESNO_MAX_SIZE", 0, "Number of external orbitals to correlate");
-
-    /*- optionally use low-memory screening -*/
-    foptions.add_bool("ACI_LOW_MEM_SCREENING", false, "Use low-memory screening algorithm");
-
-    /*- Do reference relaxation in ACI? -*/
-    foptions.add_bool("ACI_REF_RELAX", false, "Do reference relaxation in ACI");
-
-    /*- Type of excited state to compute -*/
-    foptions.add_str("ACI_EX_TYPE", "CONV", "Type of excited state to compute");
+    forte_options.add_str("ACI_EX_TYPE", "CONV", "Type of excited state to compute")
 
     forte_options.add_int("ACI_NFROZEN_CORE", 0, "Number of orbitals to freeze for core excitations")
 
