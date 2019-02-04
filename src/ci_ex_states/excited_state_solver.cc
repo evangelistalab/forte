@@ -516,7 +516,7 @@ double ExcitedStateSolver::compute_spin_contamination(DeterminantHashVec& space,
 }
 
 std::vector<Reference>
-ExcitedStateSolver::reference(std::vector<std::pair<size_t, size_t>>& roots) {
+ExcitedStateSolver::reference(const std::vector<std::pair<size_t, size_t>>& roots) {
 
     std::vector<Reference> refs;
 

@@ -61,7 +61,7 @@ class ExcitedStateSolver : public ActiveSpaceMethod {
 
     /// Returns the reference
     virtual std::vector<Reference>
-    reference(std::vector<std::pair<size_t, size_t>>& roots) override;
+    reference(const std::vector<std::pair<size_t, size_t>>& roots) override;
 
     /// Set options from an option object
     /// @param options the options passed in
