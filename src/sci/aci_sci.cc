@@ -118,14 +118,9 @@ void AdaptiveCI_SCI::startup() {
         root_spin_vec_.push_back(std::make_pair(S, S2));
     }
 
-    // TODO: This shouldn't come from options
-    root_ = options_->get_int("ROOT");
-
     // get options for algorithm
     perturb_select_ = options_->get_bool("ACI_PERTURB_SELECT");
     pq_function_ = options_->get_str("ACI_PQ_FUNCTION");
-    ex_alg_ = options_->get_str("ACI_EXCITED_ALGORITHM");
-    ref_root_ = root_;
     approx_rdm_ = options_->get_bool("ACI_APPROXIMATE_RDM");
     print_weights_ = options_->get_bool("ACI_PRINT_WEIGHTS");
 
@@ -205,7 +200,7 @@ void AdaptiveCI_SCI::print_info() {
         {"Determinant selection criterion",
          energy_selection_ ? "Second-order Energy" : "First-order Coefficients"},
         {"Selection criterion", aimed_selection_ ? "Aimed selection" : "Threshold"},
-        {"Excited Algorithm", options_->get_str("ACI_EXCITED_ALGORITHM")},
+        {"Excited Algorithm", ex_alg_},
         //        {"Q Type", q_rel_ ? "Relative Energy" : "Absolute Energy"},
         //        {"PT2 Parameters", options_->get_bool("PERTURB_SELECT") ?
         //        "True" : "False"},
@@ -527,7 +522,7 @@ void AdaptiveCI_SCI::find_q_space(DeterminantHashVec& P_space, DeterminantHashVe
 
                     e2[n] = E2_I;
                 }
-                if (ex_alg_ == "AVERAGE" and nroot > 1) {
+                if ((ex_alg_ == "AVERAGE" or cycle_ < pre_iter_) and nroot > 1) {
                     criteria = average_q_values(nroot, C1, E2);
                 } else {
                     criteria = root_select(nroot, C1, E2);
@@ -744,7 +739,7 @@ void AdaptiveCI_SCI::prune_q_space(DeterminantHashVec& PQ_space, DeterminantHash
     const det_hashvec& detmap = PQ_space.wfn_hash();
     for (size_t i = 0, max_i = detmap.size(); i < max_i; ++i) {
         double criteria = 0.0;
-        if (ex_alg_ == "AVERAGE") {
+        if (ex_alg_ == "AVERAGE" or cycle_ < pre_iter_) {
             for (int n = 0; n < nav; ++n) {
                 if (pq_function_ == "MAX") {
                     criteria = std::max(criteria, std::fabs(evecs->get(i, n)));
@@ -1659,9 +1654,7 @@ void AdaptiveCI_SCI::pre_iter_preparation() {
     if (streamline_qspace_ and !quiet_mode_)
         outfile->Printf("\n  Using streamlined Q-space builder.");
 
-    ex_alg_ = options_->get_str("ACI_EXCITED_ALGORITHM");
-
-    if (options_->get_str("ACI_EXCITED_ALGORITHM") == "ROOT_SELECT") {
+    if (ex_alg_ == "ROOT_SELECT") {
         ref_root_ = root_;
     }
 
@@ -1674,10 +1667,8 @@ void AdaptiveCI_SCI::diagonalize_P_space() {
     std::string cycle_h = "Cycle " + std::to_string(cycle_);
 
     follow_ = false;
-    if (options_->get_str("ACI_EXCITED_ALGORITHM") == "ROOT_SELECT" or
-        options_->get_str("ACI_EXCITED_ALGORITHM") == "ROOT_COMBINE" or
-        options_->get_str("ACI_EXCITED_ALGORITHM") == "MULTISTATE" or
-        options_->get_str("ACI_EXCITED_ALGORITHM") == "ROOT_ORTHOGONALIZE") {
+    if (ex_alg_ == "ROOT_SELECT" or ex_alg_ == "ROOT_COMBINE" or ex_alg_ == "MULTISTATE" or
+        ex_alg_ == "ROOT_ORTHOGONALIZE") {
 
         follow_ = true;
     }
@@ -1735,12 +1726,6 @@ void AdaptiveCI_SCI::diagonalize_P_space() {
         }
     }
 
-    if (cycle_ < pre_iter_) {
-        ex_alg_ = "AVERAGE";
-    } else if (cycle_ == pre_iter_ and follow_) {
-        ex_alg_ = options_->get_str("ACI_EXCITED_ALGORITHM");
-    }
-
     // Update the reference root if root following
     if (follow_ and num_ref_roots_ > 1 and (cycle_ >= pre_iter_) and cycle_ > 0) {
         ref_root_ = root_follow(P_ref_, P_ref_evecs_, P_space_, P_evecs_, num_ref_roots_);
@@ -1782,8 +1767,7 @@ void AdaptiveCI_SCI::find_q_space() {
             outfile->Printf("\n  Spin-complete dimension of the PQ space: %zu", PQ_space_.size());
     }
 
-    if ((options_->get_str("ACI_EXCITED_ALGORITHM") == "ROOT_ORTHOGONALIZE") and (root_ > 0) and
-        cycle_ >= pre_iter_) {
+    if ((ex_alg_ == "ROOT_ORTHOGONALIZE") and (root_ > 0) and cycle_ >= pre_iter_) {
         sparse_solver_.set_root_project(true);
         add_bad_roots(PQ_space_);
         sparse_solver_.add_bad_states(bad_roots_);
@@ -1845,7 +1829,7 @@ void AdaptiveCI_SCI::diagonalize_PQ_space() {
     // If doing root-following, grab the initial root
     if (follow_ and (cycle_ == (pre_iter_ - 1) or (pre_iter_ == 0 and cycle_ == 0))) {
 
-        if (options_->get_str("ACI_EXCITED_ALGORITHM") == "ROOT_SELECT") {
+        if (ex_alg_ == "ROOT_SELECT") {
             ref_root_ = root_;
         }
         size_t dim = std::min(static_cast<int>(PQ_space_.size()), 1000);
@@ -1860,24 +1844,20 @@ void AdaptiveCI_SCI::diagonalize_PQ_space() {
 
 bool AdaptiveCI_SCI::check_convergence() {
     bool stuck = check_stuck(energy_history_, PQ_evals_);
-    if (stuck and (options_->get_str("ACI_EXCITED_ALGORITHM") != "COMPOSITE")) {
+    if (stuck and (ex_alg_ != "COMPOSITE")) {
         outfile->Printf("\n  Procedure is stuck! Quitting...");
         return true;
-    } else if (stuck and (options_->get_str("ACI_EXCITED_ALGORITHM") == "COMPOSITE") and
-               ex_alg_ == "AVERAGE") {
+    } else if (stuck and (ex_alg_ == "COMPOSITE") and cycle_ < pre_iter_) {
         outfile->Printf("\n  Root averaging algorithm converged.");
         outfile->Printf("\n  Now optimizing PQ Space for root %d", root_);
-        ex_alg_ = options_->get_str("ACI_EXCITED_ALGORITHM");
         pre_iter_ = cycle_ + 1;
     }
 
     // Step 4. Check convergence and break if needed
     bool converged = check_convergence(energy_history_, PQ_evals_);
-    if (converged and (ex_alg_ == "AVERAGE") and
-        options_->get_str("ACI_EXCITED_ALGORITHM") == "COMPOSITE") {
+    if (converged and cycle_ < pre_iter_ and ex_alg_ == "COMPOSITE") {
         outfile->Printf("\n  Root averaging algorithm converged.");
         outfile->Printf("\n  Now optimizing PQ Space for root %d", root_);
-        ex_alg_ = options_->get_str("ACI_EXCITED_ALGORITHM");
         pre_iter_ = cycle_ + 1;
     } else if (converged) {
         // if(quiet_mode_) outfile->Printf(
@@ -1898,8 +1878,6 @@ void AdaptiveCI_SCI::prune_PQ_to_P() {
     if (!quiet_mode_) {
         print_wfn(PQ_space_, op_, PQ_evecs_, num_ref_roots_);
     }
-
-    ex_alg_ = options_->get_str("ACI_EXCITED_ALGORITHM");
 }
 
 DeterminantHashVec AdaptiveCI_SCI::get_PQ_space() { return PQ_space_; }
