@@ -86,9 +86,9 @@ def register_fci_options(forte_options):
 def register_aci_options(forte_options):
     forte_options.add_double("ACI_CONVERGENCE", 1e-9, "ACI Convergence threshold")
     # The selection type for the Q-space
-    foptions.add_str("ACI_SELECT_TYPE", "AIMED_ENERGY", "The energy selection criteria");
+    foptions.add_str("ACI_SELECT_TYPE", "AIMED_ENERGY", "The selection type for the Q-space")
     /*-Threshold for the selection of the P space -*/
-    foptions.add_double("SIGMA", 0.01, "The energy selection threshold");
+    foptions.add_double("SIGMA", 0.01, "The energy selection threshold for the P space");
     /*- The threshold for the selection of the Q space -*/
     foptions.add_double("GAMMA", 1.0, "The reference space selection threshold");
     foptions.add_double("ACI_PRESCREEN_THRESHOLD", 1e-12, "The SD space prescreening threshold")
