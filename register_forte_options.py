@@ -189,48 +189,35 @@ def register_aci_options(forte_options):
     /*- Type of excited state to compute -*/
     foptions.add_str("ACI_EX_TYPE", "CONV", "Type of excited state to compute");
 
-    /*- Number of core orbitals to freeze -*/
-    foptions.add_int("ACI_NFROZEN_CORE", 0, "Number of orbitals to freeze for core excitations");
+    forte_options.add_int("ACI_NFROZEN_CORE", 0, "Number of orbitals to freeze for core excitations")
 
-    /*- Number of roots to compute per frozen orbital -*/
-    foptions.add_int("ACI_ROOTS_PER_CORE", 1, "Number of roots to compute per frozen occupation");
+    forte_options.add_int("ACI_ROOTS_PER_CORE", 1, "Number of roots to compute per frozen orbital")
 
-    /*- Do spin analysis? -*/
-    foptions.add_bool("ACI_SPIN_ANALYSIS", false, "Do spin correlation analysis");
-    foptions.add_bool("ACI_RELAXED_SPIN", false,
-                      "Do spin correlation analysis for relaxed wave function");
+    forte_options.add_bool("ACI_SPIN_ANALYSIS", false, "Do spin correlation analysis")
+    forte_options.add_bool("ACI_RELAXED_SPIN", false,
+                      "Do spin correlation analysis for relaxed wave function")
 
-    /*- Print IAOs -*/
-    foptions.add_bool("PRINT_IAOS", true, "Print IAOs");
+    forte_options.add_bool("PRINT_IAOS", true, "Print IAOs")
 
-    /*- Active Space type -*/
-    foptions.add_bool("PI_ACTIVE_SPACE", false, "Active space type");
+    forte_options.add_bool("PI_ACTIVE_SPACE", false, "Active space type")
 
-    /*- Save spin correlation matrix to file -*/
-    foptions.add_bool("SPIN_MAT_TO_FILE", false, "Save spin correlation matrix to file");
+    forte_options.add_bool("SPIN_MAT_TO_FILE", false, "Save spin correlation matrix to file")
 
-    foptions.add_str("SPIN_BASIS", "LOCAL", "Basis for spin analysis");
+    forte_options.add_str("SPIN_BASIS", "LOCAL", "Basis for spin analysis")
 
-    /*- Sigma for reference relaxation -*/
-    foptions.add_double("ACI_RELAX_SIGMA", 0.01, "Sigma for reference relaxation");
+    forte_options.add_double("ACI_RELAX_SIGMA", 0.01, "Sigma for reference relaxation")
 
-    /*- Control batched screeing -*/
-    foptions.add_bool("ACI_BATCHED_SCREENING", false, "Control batched screeing");
+    forte_options.add_bool("ACI_BATCHED_SCREENING", false, "Control batched screeing")
 
-    /*- Number of batches in screening  -*/
-    foptions.add_int("ACI_NBATCH", 1, "Number of batches in screening");
+    forte_options.add_int("ACI_NBATCH", 1, "Number of batches in screening")
 
-    /*- Sets max memory for batching algorithm (MB) -*/
-    foptions.add_int("ACI_MAX_MEM", 1000, "Sets max memory for batching algorithm (MB)");
+    forte_options.add_int("ACI_MAX_MEM", 1000, "Sets max memory for batching algorithm (MB)")
 
-    /*- Scales sigma in batched algorithm -*/
-    foptions.add_double("ACI_SCALE_SIGMA", 0.5, "Scales sigma in batched algorithm");
+    forte_options.add_double("ACI_SCALE_SIGMA", 0.5, "Scales sigma in batched algorithm")
 
-    /*- Computes RDMs without coupling lists -*/
-    foptions.add_bool("ACI_DIRECT_RDMS", false, "Computes RDMs without coupling lists");
+    forte_options.add_bool("ACI_DIRECT_RDMS", false, "Computes RDMs without coupling lists")
 
-    // temp
-    foptions.add_str("ACI_BATCH_ALG", "HASH", "Algorithm to use for batching");
+    forte_options.add_str("ACI_BATCH_ALG", "HASH", "Algorithm to use for batching")
 
 
 def register_integral_options(forte_options):
