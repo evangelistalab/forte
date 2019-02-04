@@ -461,120 +461,26 @@ double V2RDM::compute_ref_energy() {
 }
 
 Reference V2RDM::reference() {
-    Reference return_ref;
-    double Eref = compute_ref_energy();
-
     std::string str = "Converting to Reference";
     outfile->Printf("\n  %-45s ...", str.c_str());
-
-    // compute 2-cumulants
-    ambit::Tensor& D2aa = D2_[0];
-    ambit::Tensor& D2ab = D2_[1];
-    ambit::Tensor& D2bb = D2_[2];
-
-    D2aa("pqrs") -= D1a_("pr") * D1a_("qs");
-    D2aa("pqrs") += D1a_("ps") * D1a_("qr");
-
-    D2bb("pqrs") -= D1b_("pr") * D1b_("qs");
-    D2bb("pqrs") += D1b_("ps") * D1b_("qr");
-
-    D2ab("pqrs") -= D1a_("pr") * D1b_("qs");
-
-    // fill out values
-    return_ref.set_Eref(Eref);
-    return_ref.set_L1a(D1a_);
-    return_ref.set_L1b(D1b_);
-    return_ref.set_L2aa(D2aa);
-    return_ref.set_L2ab(D2ab);
-    return_ref.set_L2bb(D2bb);
-
-    // if 3-cumulants are needed
+    // if 3-RDMs are needed
     if (options_.get_str("THREEPDC") != "ZERO") {
-        // compute 3-cumulants
-        ambit::Tensor& D3aaa = D3_[0];
-        ambit::Tensor& D3aab = D3_[1];
-        ambit::Tensor& D3abb = D3_[2];
-        ambit::Tensor& D3bbb = D3_[3];
+        Reference return_ref(D1a_, D1b_, D2_[0], D2_[1], D2_[3], D3_[0], D3_[1], D3_[2], D3_[3]);   
+        if (options_.get_str("WRITE_DENSITY_TYPE") == "CUMULANT") {
+            write_density_to_file();
+        }
 
-        // aaa
-        D3aaa("pqrstu") -= D1a_("ps") * D2aa("qrtu");
-        D3aaa("pqrstu") += D1a_("pt") * D2aa("qrsu");
-        D3aaa("pqrstu") += D1a_("pu") * D2aa("qrts");
-
-        D3aaa("pqrstu") -= D1a_("qt") * D2aa("prsu");
-        D3aaa("pqrstu") += D1a_("qs") * D2aa("prtu");
-        D3aaa("pqrstu") += D1a_("qu") * D2aa("prst");
-
-        D3aaa("pqrstu") -= D1a_("ru") * D2aa("pqst");
-        D3aaa("pqrstu") += D1a_("rs") * D2aa("pqut");
-        D3aaa("pqrstu") += D1a_("rt") * D2aa("pqsu");
-
-        D3aaa("pqrstu") -= D1a_("ps") * D1a_("qt") * D1a_("ru");
-        D3aaa("pqrstu") -= D1a_("pt") * D1a_("qu") * D1a_("rs");
-        D3aaa("pqrstu") -= D1a_("pu") * D1a_("qs") * D1a_("rt");
-
-        D3aaa("pqrstu") += D1a_("ps") * D1a_("qu") * D1a_("rt");
-        D3aaa("pqrstu") += D1a_("pu") * D1a_("qt") * D1a_("rs");
-        D3aaa("pqrstu") += D1a_("pt") * D1a_("qs") * D1a_("ru");
-
-        // aab
-        D3aab("pqRstU") -= D1a_("ps") * D2ab("qRtU");
-        D3aab("pqRstU") += D1a_("pt") * D2ab("qRsU");
-
-        D3aab("pqRstU") -= D1a_("qt") * D2ab("pRsU");
-        D3aab("pqRstU") += D1a_("qs") * D2ab("pRtU");
-
-        D3aab("pqRstU") -= D1b_("RU") * D2aa("pqst");
-
-        D3aab("pqRstU") -= D1a_("ps") * D1a_("qt") * D1b_("RU");
-        D3aab("pqRstU") += D1a_("pt") * D1a_("qs") * D1b_("RU");
-
-        // abb
-        D3abb("pQRsTU") -= D1a_("ps") * D2bb("QRTU");
-
-        D3abb("pQRsTU") -= D1b_("QT") * D2ab("pRsU");
-        D3abb("pQRsTU") += D1b_("QU") * D2ab("pRsT");
-
-        D3abb("pQRsTU") -= D1b_("RU") * D2ab("pQsT");
-        D3abb("pQRsTU") += D1b_("RT") * D2ab("pQsU");
-
-        D3abb("pQRsTU") -= D1a_("ps") * D1b_("QT") * D1b_("RU");
-        D3abb("pQRsTU") += D1a_("ps") * D1b_("QU") * D1b_("RT");
-
-        // bbb
-        D3bbb("pqrstu") -= D1b_("ps") * D2bb("qrtu");
-        D3bbb("pqrstu") += D1b_("pt") * D2bb("qrsu");
-        D3bbb("pqrstu") += D1b_("pu") * D2bb("qrts");
-
-        D3bbb("pqrstu") -= D1b_("qt") * D2bb("prsu");
-        D3bbb("pqrstu") += D1b_("qs") * D2bb("prtu");
-        D3bbb("pqrstu") += D1b_("qu") * D2bb("prst");
-
-        D3bbb("pqrstu") -= D1b_("ru") * D2bb("pqst");
-        D3bbb("pqrstu") += D1b_("rs") * D2bb("pqut");
-        D3bbb("pqrstu") += D1b_("rt") * D2bb("pqsu");
-
-        D3bbb("pqrstu") -= D1b_("ps") * D1b_("qt") * D1b_("ru");
-        D3bbb("pqrstu") -= D1b_("pt") * D1b_("qu") * D1b_("rs");
-        D3bbb("pqrstu") -= D1b_("pu") * D1b_("qs") * D1b_("rt");
-
-        D3bbb("pqrstu") += D1b_("ps") * D1b_("qu") * D1b_("rt");
-        D3bbb("pqrstu") += D1b_("pu") * D1b_("qt") * D1b_("rs");
-        D3bbb("pqrstu") += D1b_("pt") * D1b_("qs") * D1b_("ru");
-
-        // fill out values
-        return_ref.set_L3aaa(D3aaa);
-        return_ref.set_L3aab(D3aab);
-        return_ref.set_L3abb(D3abb);
-        return_ref.set_L3bbb(D3bbb);
+        outfile->Printf("    Done.");
+        return return_ref;
+    } else {
+        
+        Reference return_ref(D1a_, D1b_, D2_[0], D2_[1], D2_[3]);   
+        if (options_.get_str("WRITE_DENSITY_TYPE") == "CUMULANT") {
+            write_density_to_file();
+        }
+        outfile->Printf("    Done.");
+        return return_ref;
     }
-
-    if (options_.get_str("WRITE_DENSITY_TYPE") == "CUMULANT") {
-        write_density_to_file();
-    }
-
-    outfile->Printf("    Done.");
-    return return_ref;
 }
 
 void V2RDM::write_density_to_file() {

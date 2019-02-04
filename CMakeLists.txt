@@ -11,7 +11,7 @@ set(forte_AUTHORS      "Francesco A. Evangelista and Group")
 set(forte_DESCRIPTION  "Quantum Chemistry Methods for Strongly Correlated Electrons plugin to Psi4")
 set(forte_URL          "https://github.com/evangelistalab/forte")
 set(forte_LICENSE      "GPL-3.0+")
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 14)
 set(TargetOpenMP_FIND_COMPONENTS "CXX")
 
 cmake_minimum_required(VERSION 3.1 FATAL_ERROR)
@@ -63,6 +63,7 @@ add_compile_options(-Wall -Wextra -pedantic) # -Werror)
 
 # List of CC files
 add_psi4_plugin(forte
+src/base_classes/active_space_method.cc
 src/base_classes/active_space_solver.cc
 src/orbital-helpers/avas.cc
 src/casscf/casscf.cc
@@ -91,6 +92,7 @@ src/base_classes/state_info.cc
 src/base_classes/scf_info.cc
 src/base_classes/forte_options.cc
 src/base_classes/mo_space_info.cc
+src/base_classes/orbital_transform.cc
 src/sci/aci.cc
 src/sci/aci_build_F.cc
 src/sci/asci.cc
@@ -109,7 +111,6 @@ src/orbital-helpers/aosubspace.cc
 src/orbital-helpers/ci-no/ci-no.cc
 src/orbital-helpers/ci-no/mrci-no.cc
 src/fci/binary_graph.cc
-src/fci/sa_fcisolver.cc
 src/fci/fci_solver.cc
 src/fci/fci_vector.cc
 src/fci/fci_vector_h_diag.cc
@@ -137,6 +138,7 @@ src/integrals/make_integrals.cc
 src/integrals/active_space_integrals.cc
 src/mrdsrg-helper/dsrg_source.cc
 src/mrdsrg-helper/dsrg_time.cc
+src/mrdsrg-helper/dsrg_transformed.cc
 src/mrdsrg-helper/run_dsrg.cc
 src/mrdsrg-so/mrdsrg_so.cc
 src/mrdsrg-so/so-mrdsrg.cc

@@ -41,15 +41,15 @@ set forte{
   root_sym          0
   nroot             1
   int_type          conventional
-  job_type          fci
+  active_space_solver   fci
 }
 
 energy('scf')
 gs_energy = energy('forte')
 compare_values(refgs,gs_energy,11, "Ground state FCI energy") #TEST
 
-set forte fci_nroot 2
-set forte fci_root  1
+set forte nroot 2
+set forte root  1
 energy('scf')
 ex_energy = energy('forte')
 compare_values(refex,ex_energy,11, "Singlet Excited State FCI energy") #TEST

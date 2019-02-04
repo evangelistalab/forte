@@ -47,8 +47,8 @@ set forte {
 #   dsrgpt                  false
    dsrg_s                  0.5
    int_type                DF
-   job_type                three-dsrg-mrpt2
-   cas_type                FCI
+   correlation_solver      three-dsrg-mrpt2
+   active_space_solver     fci
 }
 
 scf, wfn = energy('mcscf', return_wfn=True)

@@ -58,7 +58,8 @@ set {
 }
 
 set forte {
-  job_type           mrdsrg
+  correlation_solver     mrdsrg
+  active_space_solver    fci 
   corr_level         srg_pt2
   frozen_docc        [1,0,0,0]
   restricted_docc    [1,0,0,0]

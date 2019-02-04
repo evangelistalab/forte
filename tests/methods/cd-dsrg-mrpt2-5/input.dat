@@ -39,7 +39,8 @@ set mcscf{
 }
 
 set forte{
-   job_type               three-dsrg-mrpt2
+   active_space_solver    fci
+   correlation_solver     three-dsrg-mrpt2
    frozen_docc            [2, 1, 0, 0, 0, 0, 2, 1]
    restricted_docc        [3, 2, 1, 1, 0, 1, 2, 3]
    active                 [1, 0, 0, 0, 0, 0, 1, 0]

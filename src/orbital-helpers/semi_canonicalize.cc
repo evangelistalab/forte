@@ -49,9 +49,9 @@ namespace forte {
 
 using namespace ambit;
 
-SemiCanonical::SemiCanonical(std::shared_ptr<ForteOptions> foptions,
+SemiCanonical::SemiCanonical(std::shared_ptr<MOSpaceInfo> mo_space_info,
                              std::shared_ptr<ForteIntegrals> ints,
-                             std::shared_ptr<MOSpaceInfo> mo_space_info, bool quiet_banner)
+                             std::shared_ptr<ForteOptions> foptions, bool quiet_banner)
     : mo_space_info_(mo_space_info), ints_(ints) {
 
     if (!quiet_banner) {
@@ -178,8 +178,8 @@ void SemiCanonical::set_actv_dims(const psi::Dimension& actv_docc,
     actv_offsets_["actv_virt"] = actvp_off;
 }
 
-void SemiCanonical::semicanonicalize(Reference& reference, const int& max_rdm_level,
-                                     const bool& build_fock, const bool& transform) {
+Reference SemiCanonical::semicanonicalize(Reference& reference, const int& max_rdm_level,
+                                          const bool& build_fock, const bool& transform) {
     local_timer SemiCanonicalize;
 
     // 1. Build the Fock matrix from ForteIntegral
@@ -200,11 +200,11 @@ void SemiCanonical::semicanonicalize(Reference& reference, const int& max_rdm_le
         // 3. Retransform integrals and cumulants/RDMs
         if (transform) {
             ints_->rotate_orbitals(Ua_, Ua_);
-            transform_reference(Ua_t_, Ua_t_, reference, max_rdm_level);
+            reference = transform_reference(Ua_t_, Ua_t_, reference, max_rdm_level);
         }
-
         outfile->Printf("\n  SemiCanonicalize takes %8.6f s.", SemiCanonicalize.get());
     }
+    return reference;
 }
 
 void SemiCanonical::build_fock_matrix(Reference& reference) {
@@ -213,8 +213,8 @@ void SemiCanonical::build_fock_matrix(Reference& reference) {
     psi::SharedMatrix Da(new psi::Matrix("Da", ncmo_, ncmo_));
     psi::SharedMatrix Db(new psi::Matrix("Db", ncmo_, ncmo_));
 
-    Matrix L1a = tensor_to_matrix(reference.L1a(), actv_);
-    Matrix L1b = tensor_to_matrix(reference.L1b(), actv_);
+    Matrix L1a = tensor_to_matrix(reference.g1a(), actv_);
+    Matrix L1b = tensor_to_matrix(reference.g1b(), actv_);
 
     for (size_t h = 0, offset = 0; h < nirrep_; ++h) {
         // core block (diagonal)
@@ -403,99 +403,77 @@ void SemiCanonical::build_transformation_matrices(psi::SharedMatrix& Ua, psi::Sh
     }
 }
 
-void SemiCanonical::transform_reference(ambit::Tensor& Ua, ambit::Tensor& Ub, Reference& reference,
-                                        const int& max_rdm_level) {
-    if (max_rdm_level >= 1) {
-        print_h2("Reference Transformation to Semicanonical Basis");
+Reference SemiCanonical::transform_reference(ambit::Tensor& Ua, ambit::Tensor& Ub,
+                                             const Reference& reference, const int& max_rdm_level) {
+    if (max_rdm_level < 1)
+        return Reference();
 
-        // Transform the 1-cumulants
-        ambit::Tensor L1a0 = reference.L1a();
-        ambit::Tensor L1b0 = reference.L1b();
+    print_h2("Reference Transformation to Semicanonical Basis");
 
-        ambit::Tensor L1aT =
-            ambit::Tensor::build(ambit::CoreTensor, "Transformed L1a", {nact_, nact_});
-        ambit::Tensor L1bT =
-            ambit::Tensor::build(ambit::CoreTensor, "Transformed L1b", {nact_, nact_});
-        L1aT("pq") = Ua("ap") * L1a0("ab") * Ua("bq");
-        L1bT("PQ") = Ub("AP") * L1b0("AB") * Ub("BQ");
+    // Transform the 1-cumulants
+    ambit::Tensor g1a0 = reference.g1a();
+    ambit::Tensor g1b0 = reference.g1b();
 
-        reference.set_L1a(L1aT);
-        reference.set_L1b(L1bT);
-        outfile->Printf("\n    Transformed 1 cumulants.");
+    ambit::Tensor g1aT = ambit::Tensor::build(ambit::CoreTensor, "Transformed L1a", {nact_, nact_});
+    ambit::Tensor g1bT = ambit::Tensor::build(ambit::CoreTensor, "Transformed L1b", {nact_, nact_});
+    g1aT("pq") = Ua("ap") * g1a0("ab") * Ua("bq");
+    g1bT("PQ") = Ub("AP") * g1b0("AB") * Ub("BQ");
 
-        if (max_rdm_level >= 2) {
-            // Transform 2-cumulants and recompute 2-RDMs using transformed cumulants
-            ambit::Tensor L2aa0 = reference.L2aa();
-            ambit::Tensor L2ab0 = reference.L2ab();
-            ambit::Tensor L2bb0 = reference.L2bb();
+    if (max_rdm_level == 1)
+        return Reference(g1aT, g1bT);
 
-            //   aa spin
-            ambit::Tensor L2T = ambit::Tensor::build(ambit::CoreTensor, "Transformed L2aa",
-                                                     {nact_, nact_, nact_, nact_});
-            L2T("pqrs") = Ua("ap") * Ua("bq") * L2aa0("abcd") * Ua("cr") * Ua("ds");
-            L2aa0.copy(L2T);
+    // the original 2-rdms
+    ambit::Tensor g2aa0 = reference.g2aa();
+    ambit::Tensor g2ab0 = reference.g2ab();
+    ambit::Tensor g2bb0 = reference.g2bb();
 
-            ambit::Tensor G2T = ambit::Tensor::build(ambit::CoreTensor, "Transformed G2aa",
-                                                     {nact_, nact_, nact_, nact_});
-            G2T.copy(L2T);
-            G2T("pqrs") += L1aT("pr") * L1aT("qs");
-            G2T("pqrs") -= L1aT("ps") * L1aT("qr");
-            reference.set_g2aa(G2T.clone());
+    //   aa spin
+    ambit::Tensor g2Taa =
+        ambit::Tensor::build(ambit::CoreTensor, "Transformed L2aa", {nact_, nact_, nact_, nact_});
+    g2Taa("pqrs") = Ua("ap") * Ua("bq") * g2aa0("abcd") * Ua("cr") * Ua("ds");
 
-            //   ab spin
-            L2T.set_name("Transformed L2ab");
-            L2T("pQrS") = Ua("ap") * Ub("BQ") * L2ab0("aBcD") * Ua("cr") * Ub("DS");
-            L2ab0.copy(L2T);
+    //   ab spin
+    ambit::Tensor g2Tab =
+        ambit::Tensor::build(ambit::CoreTensor, "Transformed L2ab", {nact_, nact_, nact_, nact_});
+    g2Tab("pQrS") = Ua("ap") * Ub("BQ") * g2ab0("aBcD") * Ua("cr") * Ub("DS");
 
-            G2T.set_name("Transformed G2ab");
-            G2T.copy(L2T);
-            G2T("pqrs") += L1aT("pr") * L1bT("qs");
-            reference.set_g2ab(G2T.clone());
+    //   bb spin
+    ambit::Tensor g2Tbb =
+        ambit::Tensor::build(ambit::CoreTensor, "Transformed L2bb", {nact_, nact_, nact_, nact_});
+    g2Tbb("PQRS") = Ub("AP") * Ub("BQ") * g2bb0("ABCD") * Ub("CR") * Ub("DS");
 
-            //   bb spin
-            L2T.set_name("Transformed L2bb");
-            L2T("PQRS") = Ub("AP") * Ub("BQ") * L2bb0("ABCD") * Ub("CR") * Ub("DS");
-            L2bb0.copy(L2T);
+    outfile->Printf("\n    Transformed 2 RDMs.");
 
-            G2T.set_name("Transformed G2bb");
-            G2T.copy(L2T);
-            G2T("pqrs") += L1bT("pr") * L1bT("qs");
-            G2T("pqrs") -= L1bT("ps") * L1bT("qr");
-            reference.set_g2bb(G2T.clone());
+    if (max_rdm_level == 2)
+        return Reference(g1aT, g1bT, g2Taa, g2Tab, g2Tbb);
 
-            outfile->Printf("\n    Transformed 2 cumulants and RDMs.");
+    // Transform 3 cumulants
+    ambit::Tensor g3aaa0 = reference.g3aaa();
+    ambit::Tensor g3aab0 = reference.g3aab();
+    ambit::Tensor g3abb0 = reference.g3abb();
+    ambit::Tensor g3bbb0 = reference.g3bbb();
 
-            if (max_rdm_level >= 3) {
-                // Transform 3 cumulants
-                ambit::Tensor L3aaa0 = reference.L3aaa();
-                ambit::Tensor L3aab0 = reference.L3aab();
-                ambit::Tensor L3abb0 = reference.L3abb();
-                ambit::Tensor L3bbb0 = reference.L3bbb();
+    ambit::Tensor g3Taaa =
+        ambit::Tensor::build(ambit::CoreTensor, "Transformed g3aaa", std::vector<size_t>(6, nact_));
+    g3Taaa("pqrstu") =
+        Ua("ap") * Ua("bq") * Ua("cr") * g3aaa0("abcijk") * Ua("is") * Ua("jt") * Ua("ku");
 
-                ambit::Tensor L3T = ambit::Tensor::build(ambit::CoreTensor, "Transformed L3aaa",
-                                                         std::vector<size_t>(6, nact_));
-                L3T("pqrstu") = Ua("ap") * Ua("bq") * Ua("cr") * L3aaa0("abcijk") * Ua("is") *
-                                Ua("jt") * Ua("ku");
-                L3aaa0.copy(L3T);
+    ambit::Tensor g3Taab =
+        ambit::Tensor::build(ambit::CoreTensor, "Transformed g3aab", std::vector<size_t>(6, nact_));
+    g3Taab("pqRstU") =
+        Ua("ap") * Ua("bq") * Ub("CR") * g3aab0("abCijK") * Ua("is") * Ua("jt") * Ub("KU");
 
-                L3T.set_name("Transformed L3aab");
-                L3T("pqRstU") = Ua("ap") * Ua("bq") * Ub("CR") * L3aab0("abCijK") * Ua("is") *
-                                Ua("jt") * Ub("KU");
-                L3aab0.copy(L3T);
+    ambit::Tensor g3Tabb =
+        ambit::Tensor::build(ambit::CoreTensor, "Transformed g3abb", std::vector<size_t>(6, nact_));
+    g3Tabb("pQRsTU") =
+        Ua("ap") * Ub("BQ") * Ub("CR") * g3abb0("aBCiJK") * Ua("is") * Ub("JT") * Ub("KU");
 
-                L3T.set_name("Transformed L3abb");
-                L3T("pQRsTU") = Ua("ap") * Ub("BQ") * Ub("CR") * L3abb0("aBCiJK") * Ua("is") *
-                                Ub("JT") * Ub("KU");
-                L3abb0.copy(L3T);
+    ambit::Tensor g3Tbbb =
+        ambit::Tensor::build(ambit::CoreTensor, "Transformed g3bbb", std::vector<size_t>(6, nact_));
+    g3Tbbb("PQRSTU") =
+        Ub("AP") * Ub("BQ") * Ub("CR") * g3bbb0("ABCIJK") * Ub("IS") * Ub("JT") * Ub("KU");
 
-                L3T.set_name("Transformed L3bbb");
-                L3T("PQRSTU") = Ub("AP") * Ub("BQ") * Ub("CR") * L3bbb0("ABCIJK") * Ub("IS") *
-                                Ub("JT") * Ub("KU");
-                L3bbb0.copy(L3T);
-
-                outfile->Printf("\n    Transformed 3 cumulants.");
-            }
-        }
-    }
+    outfile->Printf("\n    Transformed 3 cumulants.");
+    return Reference(g1aT, g1bT, g2Taa, g2Tab, g2Tbb, g3Taaa, g3Taab, g3Tabb, g3Tbbb);
 }
 } // namespace forte

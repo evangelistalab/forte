@@ -32,7 +32,7 @@
 #include "psi4/libmints/dimension.h"
 #include "psi4/libmints/wavefunction.h"
 
-//class Vector;
+// class Vector;
 
 namespace forte {
 
@@ -62,12 +62,10 @@ class SCFInfo {
     /// beta orbital energy
     std::shared_ptr<psi::Vector> epsilon_b();
 
-
   private:
-    
     // Doubly occupied in RHF
     psi::Dimension doccpi_;
-    
+
     // Singly occupied in RHF
     psi::Dimension soccpi_;
 
@@ -82,7 +80,6 @@ class SCFInfo {
 
     /// beta orbital energy
     std::shared_ptr<psi::Vector> epsilon_b_;
-    
 };
 
 } // namespace forte

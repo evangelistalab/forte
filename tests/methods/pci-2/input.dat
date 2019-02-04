@@ -18,7 +18,7 @@ set {
 }
 
 set forte {
-  job_type pci
+  active_space_solver pci
   pci_tau 0.1
   pci_spawning_threshold 0.0001
   pci_simple_prescreening true

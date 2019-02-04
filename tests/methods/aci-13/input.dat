@@ -30,13 +30,13 @@ set {
 
 
 set forte {
-  job_type = aci
+  active_space_solver aci
   multiplicity 1
   aci_select_type amp
   frozen_docc [1,0,0,0,0,1,0,0]
   root_sym 0
   sigma 0.01
-  aci_nroot 1
+  nroot 1
   charge 0
   aci_enforce_spin_complete true
   aci_prescreen_threshold 0.0

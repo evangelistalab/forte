@@ -184,8 +184,8 @@ void DMRGSolver::compute_reference(double* one_rdm, double* two_rdm, double* thr
         // gamma3_dmrg("p, q, r, t, u, s") - gamma3_dmrg("p, q, r, u, s, t") -
         // 2.0 * gamma3_dmrg("p, q, r, s, u, t"));
         // gamma3_abb.scale(1.0 / 12.0);
-        ambit::Tensor L1a = dmrg_ref.L1a();
-        ambit::Tensor L1b = dmrg_ref.L1b();
+        ambit::Tensor L1a = dmrg_ref.g1a();
+        ambit::Tensor L1b = dmrg_ref.g1b();
         ambit::Tensor L2aa = dmrg_ref.L2aa();
         ambit::Tensor L2ab = dmrg_ref.L2ab();
         // ambit::Tensor L2bb = dmrg_ref.L2bb();

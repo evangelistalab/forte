@@ -5,7 +5,7 @@ def register_forte_options(forte_options):
     register_mo_space_info_options(forte_options)
     register_integral_options(forte_options)
     register_fci_options(forte_options)
-
+    register_active_space_solver_options(forte_options)
 
 def register_driver_options(forte_options):
     forte_options.add_str('JOB_TYPE', 'NEWDRIVER', [
@@ -16,9 +16,11 @@ def register_driver_options(forte_options):
     ], 'Specify the job type')
 
     forte_options.add_str('ACTIVE_SPACE_SOLVER', '', ['FCI', 'ACI'],
-                          'Active space solver type')
-    forte_options.add_str('DYNCORR_SOLVER', '', [],
+                          'Active space solver type') # TODO: why is PCI running even if it is not in this list (Francesco)
+    forte_options.add_str('CORRELATION_SOLVER', 'NONE', ['DSRG-MRPT2', 'THREE-DSRG-MRPT2', 'DSRG-MRPT3', 'MRDSRG'],
                           'Dynamical correlation solver type')
+    forte_options.add_str('CALC_TYPE', 'SS', ['SS', 'SA', 'MS', 'DWMS'],
+                          'The type of computation')
 
 
 def register_mo_space_info_options(forte_options):
@@ -62,10 +64,12 @@ def register_mo_space_info_options(forte_options):
                             "Number of roots per irrep (in Cotton order)")
 
 
-def register_fci_options(forte_options):
-    forte_options.add_int('FCI_NROOT', 1, 'The number of roots computed')
-    forte_options.add_int('FCI_ROOT', 0,
+def register_active_space_solver_options(forte_options):
+    forte_options.add_int('NROOT', 1, 'The number of roots computed')
+    forte_options.add_int('ROOT', 0,
                           'The root selected for state-specific computations')
+
+def register_fci_options(forte_options):
     forte_options.add_int('FCI_MAXITER', 30,
                           'Maximum number of iterations for FCI code')
     forte_options.add_int(

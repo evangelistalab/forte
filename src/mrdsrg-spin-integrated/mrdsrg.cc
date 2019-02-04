@@ -33,6 +33,7 @@
 
 #include "psi4/libmints/molecule.h"
 
+#include "base_classes/active_space_solver.h"
 #include "fci/fci_solver.h"
 #include "sci/fci_mo.h"
 #include "helpers/printing.h"
@@ -357,15 +358,15 @@ double MRDSRG::compute_energy() {
     }
     }
 
-    psi::Process::environment.globals["UNRELAXED ENERGY"] = Etotal;
-    psi::Process::environment.globals["CURRENT ENERGY"] = Etotal;
     return Etotal;
 }
-
+/*
 double MRDSRG::compute_energy_relaxed() {
     // reference relaxation
     double Edsrg = 0.0, Erelax = 0.0;
     std::string cas_type = foptions_->get_str("CAS_TYPE");
+
+    size_t nroot = foptions_->get_int("NROOT");
 
     if (relax_ref_ == "ONCE") {
         // compute energy with fixed ref.
@@ -380,7 +381,7 @@ double MRDSRG::compute_energy_relaxed() {
             Erelax = fci_mo.compute_energy();
         } else if (cas_type == "ACI") {
             auto state = make_state_info_from_psi_wfn(ints_->wfn());
-            AdaptiveCI aci(state, scf_info_, foptions_, mo_space_info_,
+            AdaptiveCI aci(state, nroot, scf_info_, foptions_, mo_space_info_,
                            fci_ints); // ints_->wfn() is implicitly converted to StateInfo
             aci.set_fci_ints(fci_ints);
             if (foptions_->has_changed("ACI_RELAX_SIGMA")) {
@@ -390,8 +391,8 @@ double MRDSRG::compute_energy_relaxed() {
 
         } else {
             auto state = make_state_info_from_psi_wfn(ints_->wfn());
-            auto fci =
-                make_active_space_solver("FCI", state, scf_info_, mo_space_info_, ints_, foptions_);
+            auto fci = make_active_space_method("FCI", state, nroot, scf_info_, mo_space_info_,
+                                                ints_, foptions_);
             fci->set_max_rdm_level(1);
             fci->set_active_space_integrals(fci_ints);
             Erelax = fci->compute_energy();
@@ -431,7 +432,7 @@ double MRDSRG::compute_energy_relaxed() {
             Edelta_dsrg_vec.push_back(Edelta_dsrg);
 
             // compute de-normal-ordered all-active DSRG transformed Hamiltonian
-            auto fci_ints = compute_Heff_actv();
+            auto as_ints = compute_Heff_actv();
 
             /// NOTE: For consistant CI coefficients, compute_Heff will rotate Hbar to the basis
             /// before semicanonicalization!
@@ -442,34 +443,18 @@ double MRDSRG::compute_energy_relaxed() {
 
             // diagonalize the Hamiltonian using fci_ints
             Etemp = Erelax;
-            if (cas_type == "CAS") {
-                FCI_MO fci_mo(scf_info_, foptions_, ints_, mo_space_info_, fci_ints);
-                fci_mo.set_localize_actv(false);
+            // auto fci_ints = make_active_space_ints(mo_space_info_, ints_, "ACTIVE",
+            // {{"RESTRICTED_DOCC"}});
+            auto state_weights_list = make_state_weights_list(foptions_, ints_->wfn());
+            auto ci = make_active_space_solver(cas_type, state_weights_list, scf_info_,
+                                               mo_space_info_, as_ints, foptions_);
+            ci->set_max_rdm_level(3);
+            const auto& state_energies_list = ci->compute_energy();
+            double average_energy =
+                compute_average_state_energy(state_energies_list, state_weights_list);
+            Erelax = average_energy;
+            reference_ = ci->reference();
 
-                fci_mo.set_max_rdm_level(max_rdm_level);
-                Erelax = fci_mo.compute_energy();
-
-                reference_ = fci_mo.get_reference();
-            } else if (cas_type == "ACI") {
-                auto state = make_state_info_from_psi_wfn(ints_->wfn());
-
-                AdaptiveCI aci(state, scf_info_, foptions_, mo_space_info_,
-                               fci_ints); // ints_->wfn() is implicitly converted to StateInfo
-                aci.set_fci_ints(fci_ints);
-                if (foptions_->has_changed("ACI_RELAX_SIGMA")) {
-                    aci.update_sigma();
-                }
-                Erelax = aci.compute_energy();
-                reference_ = aci.get_reference();
-            } else {
-                auto state = make_state_info_from_psi_wfn(ints_->wfn());
-                auto fci = make_active_space_solver("FCI", state, scf_info_, mo_space_info_, ints_,
-                                                    foptions_);
-                fci->set_max_rdm_level(max_rdm_level);
-                fci->set_active_space_integrals(fci_ints);
-                Erelax = fci->compute_energy();
-                reference_ = fci->get_reference();
-            }
             outfile->Printf("\n  The following reference rotation will make the new reference and "
                             "integrals in the same basis.");
             ambit::Tensor Ua = Uactv_.block("aa"), Ub = Uactv_.block("AA");
@@ -590,11 +575,12 @@ double MRDSRG::compute_energy_relaxed() {
     psi::Process::environment.globals["CURRENT ENERGY"] = Erelax;
     return Erelax;
 }
+*/
 
 double MRDSRG::compute_energy_sa() {
     int nentry = eigens_.size();
     std::vector<std::vector<std::vector<double>>> Edsrg_vec;
-    SemiCanonical semiorb(foptions_, ints_, mo_space_info_, true);
+    SemiCanonical semiorb(mo_space_info_, ints_, foptions_, true);
     int max_rdm_level = foptions_->get_str("THREEPDC") == "ZERO" ? 2 : 3;
 
     // iteration variables
@@ -644,7 +630,8 @@ double MRDSRG::compute_energy_sa() {
         }
 
         // obtain new reference
-        reference_ = fci_mo->get_reference();
+        std::vector<std::pair<size_t, size_t>> roots; // unused for SA
+        reference_ = fci_mo->reference(roots)[0];
 
         outfile->Printf("\n  The following reference rotation will make the new reference and "
                         "integrals in the same basis.");

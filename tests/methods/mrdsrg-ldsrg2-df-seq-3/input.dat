@@ -28,7 +28,8 @@ set globals{
 }
 
 set forte{
-   job_type                mrdsrg
+   active_space_solver     fci
+   correlation_solver      mrdsrg
    int_type                cholesky
    cholesky_tolerance      1e-4
    corr_level              ldsrg2

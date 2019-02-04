@@ -223,7 +223,7 @@ double ACTIVE_DSRGPT2::compute_energy() {
     orb_extents_ = flatten_fci_orbextents(fci_mo_->orb_extents());
 
     // semicanonicalzer
-    auto semi = std::make_shared<SemiCanonical>(foptions_, ints_, mo_space_info_, true);
+    auto semi = std::make_shared<SemiCanonical>(mo_space_info_, ints_, foptions_, true);
     if (ref_type_ == "CIS" || ref_type_ == "CISD") {
         semi->set_actv_dims(fci_mo_->actv_docc(), fci_mo_->actv_virt());
     }
@@ -261,7 +261,7 @@ double ACTIVE_DSRGPT2::compute_energy() {
 
             // compute reference energy
             set_fcimo_params(1, 0, 1); // nroots, root, multiplicity
-            double Eref = fci_mo_->compute_ss_energy();
+            double Eref = fci_mo_->compute_ss_energies()[0];
             ref_energies_[0].push_back(Eref);
 
             dominant_dets_[h].push_back(fci_mo_->dominant_dets()[0]);
@@ -271,7 +271,7 @@ double ACTIVE_DSRGPT2::compute_energy() {
 
             // compute cumultans
             fci_mo_->set_max_rdm_level(max_cu_level);
-            Reference reference = fci_mo_->get_reference();
+            Reference reference = fci_mo_->reference();
 
             // semicanonicalize integrals and cumulants
             semi->semicanonicalize(reference, max_cu_level);
@@ -297,7 +297,7 @@ double ACTIVE_DSRGPT2::compute_energy() {
 
         // compute reference energy for a given symmetry
         set_fcimo_params(nroot, 0, multiplicity_);
-        fci_mo_->compute_ss_energy();
+        fci_mo_->compute_ss_energies()[0];
 
         // loop over nroot and save a copy of the orbital rotation matrix
         // (from original to corresponding semicanonical basis)
@@ -310,7 +310,9 @@ double ACTIVE_DSRGPT2::compute_energy() {
             outfile->Printf("\n\n  Computing semicanonical orbitals for root %d.", i);
             fci_mo_->set_root(i);
             fci_mo_->set_max_rdm_level(1);
-            Reference reference = fci_mo_->get_reference();
+            std::vector<std::pair<size_t, size_t>> root;
+            root.push_back(std::make_pair(i, i));
+            Reference reference = fci_mo_->reference(root)[0];
             semi->semicanonicalize(reference, 1, true, false);
 
             Uas.emplace_back(semi->Ua()->clone());
@@ -380,8 +382,11 @@ double ACTIVE_DSRGPT2::compute_energy() {
             // compute cumulants
             fci_mo_->set_root(i);
             fci_mo_->set_max_rdm_level(max_cu_level);
-            Reference reference = fci_mo_->get_reference();
-            reference.set_Eref(Eref);
+
+            // can move this out of loop
+            std::vector<std::pair<size_t, size_t>> rootvec;
+            rootvec.push_back(std::make_pair(i, i));
+            Reference reference = fci_mo_->reference(rootvec)[0];
 
             // manually rotate the reference and integrals
             semi->transform_reference(Uas_t[i], Ubs_t[i], reference, max_cu_level);
@@ -999,7 +1004,7 @@ void ACTIVE_DSRGPT2::transform_integrals(psi::SharedMatrix Ca0, psi::SharedMatri
     ambit::Tensor tei_active_bb = ints_->aptei_bb_block(idx_a, idx_a, idx_a, idx_a);
     auto fci_ints =
         std::make_shared<ActiveSpaceIntegrals>(ints_, mo_space_info_->get_corr_abs_mo("ACTIVE"),
-                                       mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
+                                               mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
     fci_ints->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
     fci_ints->compute_restricted_one_body_operator();
     fci_mo_->set_fci_int(fci_ints);

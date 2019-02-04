@@ -59,7 +59,7 @@ MRDSRG_SO::MRDSRG_SO(Reference reference, psi::Options& options,
 MRDSRG_SO::~MRDSRG_SO() {}
 
 void MRDSRG_SO::startup() {
-    Eref = reference_.get_Eref();
+    Eref = compute_Eref_from_reference(reference_, ints_, mo_space_info_);
     BlockedTensor::reset_mo_spaces();
 
     frozen_core_energy = ints_->frozen_core_energy();
@@ -180,12 +180,12 @@ void MRDSRG_SO::startup() {
     Eta1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
         value = (i[0] == i[1] ? 1.0 : 0.0);
     });
-    (reference_.L1a()).citerate([&](const std::vector<size_t>& i, const double& value) {
+    (reference_.g1a()).citerate([&](const std::vector<size_t>& i, const double& value) {
         size_t index = i[0] * na_ + i[1];
         (Gamma1.block("aa")).data()[index] = value;
         (Eta1.block("aa")).data()[index] -= value;
     });
-    (reference_.L1b()).citerate([&](const std::vector<size_t>& i, const double& value) {
+    (reference_.g1b()).citerate([&](const std::vector<size_t>& i, const double& value) {
         size_t index = (i[0] + na_mo) * na_ + (i[1] + na_mo);
         (Gamma1.block("aa")).data()[index] = value;
         (Eta1.block("aa")).data()[index] -= value;

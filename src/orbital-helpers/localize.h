@@ -36,30 +36,35 @@
 #include "base_classes/mo_space_info.h"
 #include "integrals/integrals.h"
 #include "base_classes/reference.h"
+#include "base_classes/state_info.h"
+#include "base_classes/scf_info.h"
 
-
+#include "base_classes/orbital_transform.h"
 
 namespace forte {
 
-class LOCALIZE {
+class LOCALIZE : public OrbitalTransform {
   public:
-    LOCALIZE(std::shared_ptr<psi::Wavefunction> wfn, psi::Options& options,
-             std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
+    LOCALIZE(StateInfo state, std::shared_ptr<SCFInfo> scf_info,
+             std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
+             std::shared_ptr<MOSpaceInfo> mo_space_info);
 
-    ~LOCALIZE();
+    psi::SharedMatrix get_Ua();
+    psi::SharedMatrix get_Ub();
 
     void split_localize();
 
     void full_localize();
 
-    psi::SharedMatrix get_U();
+    void compute_transformation();
 
   private:
-    std::shared_ptr<psi::Wavefunction> wfn_;
-
+    std::shared_ptr<SCFInfo> scf_info_;
+    std::shared_ptr<ForteOptions> options_;
     std::shared_ptr<ForteIntegrals> ints_;
 
-    psi::SharedMatrix U_;
+    psi::SharedMatrix Ua_;
+    psi::SharedMatrix Ub_;
 
     size_t nfrz_;
     size_t nrst_;
@@ -74,6 +79,6 @@ class LOCALIZE {
     std::string local_type_;
     std::string local_method_;
 };
-}
+} // namespace forte
 
 #endif

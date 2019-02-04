@@ -20,7 +20,7 @@ set {
 }
 
 set forte {
-  job_type fci
+  active_space_solver fci
   int_type cholesky
   cholesky_tolerance 1.0e-12
   frozen_docc      [2 ,0 ,0 ,0]
@@ -30,7 +30,7 @@ set forte {
 }
 
 set forte {
-  job_type fci
+  active_space_solver fci
   int_type conventional
   frozen_docc      [2 ,0 ,0 ,0]
   restricted_docc  [2 ,0 ,0 ,0]

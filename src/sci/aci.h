@@ -49,7 +49,7 @@
 #include "orbital-helpers/iao_builder.h"
 #include "orbital-helpers/localize.h"
 #include "helpers/timer.h"
-#include "base_classes/active_space_solver.h"
+#include "base_classes/active_space_method.h"
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -73,7 +73,7 @@ void set_ACI_options(ForteOptions& foptions);
  * @brief The AdaptiveCI class
  * This class implements an adaptive CI algorithm
  */
-class AdaptiveCI : public ActiveSpaceSolver {
+class AdaptiveCI : public ActiveSpaceMethod {
   public:
     // ==> Class Constructor and Destructor <==
 
@@ -84,11 +84,9 @@ class AdaptiveCI : public ActiveSpaceSolver {
      * @param ints A pointer to an allocated integral object
      * @param mo_space_info A pointer to the MOSpaceInfo object
      */
-    AdaptiveCI(StateInfo state, std::shared_ptr<SCFInfo> scf_info,
+    AdaptiveCI(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
                std::shared_ptr<ForteOptions> options, std::shared_ptr<MOSpaceInfo> mo_space_info,
                std::shared_ptr<ActiveSpaceIntegrals> as_ints);
-    /// Destructor
-    ~AdaptiveCI();
 
     // ==> Class Interface <==
 
@@ -96,7 +94,7 @@ class AdaptiveCI : public ActiveSpaceSolver {
     double compute_energy() override;
 
     /// Update the reference file
-    Reference get_reference() override;
+    std::vector<Reference> reference(const std::vector<std::pair<size_t,size_t>>& root_list) override;
 
     // Set the options
     void set_options(std::shared_ptr<ForteOptions>) override{};
@@ -135,7 +133,6 @@ class AdaptiveCI : public ActiveSpaceSolver {
 
     /// Some HF info
     std::shared_ptr<SCFInfo> scf_info_;
-    StateInfo state_;
     /// Forte options
     std::shared_ptr<ForteOptions> options_;
     /// The wave function symmetry
@@ -237,7 +234,7 @@ class AdaptiveCI : public ActiveSpaceSolver {
     /// Save dets to file?
     bool det_save_;
     /// Order of RDM to compute
-//    int rdm_level_;
+    //    int rdm_level_;
     /// Control amount of printing
     bool quiet_mode_;
     /// Control streamlining
@@ -285,15 +282,25 @@ class AdaptiveCI : public ActiveSpaceSolver {
     double spin_trans_;
 
     // The RDMS
-    std::vector<double> ordm_a_;
-    std::vector<double> ordm_b_;
-    std::vector<double> trdm_aa_;
-    std::vector<double> trdm_ab_;
-    std::vector<double> trdm_bb_;
-    std::vector<double> trdm_aaa_;
-    std::vector<double> trdm_aab_;
-    std::vector<double> trdm_abb_;
-    std::vector<double> trdm_bbb_;
+//    std::vector<double> ordm_a_;
+//    std::vector<double> ordm_b_;
+//    std::vector<double> trdm_aa_;
+//    std::vector<double> trdm_ab_;
+//    std::vector<double> trdm_bb_;
+//    std::vector<double> trdm_aaa_;
+//    std::vector<double> trdm_aab_;
+//    std::vector<double> trdm_abb_;
+//    std::vector<double> trdm_bbb_;
+
+    ambit::Tensor  ordm_a_;
+    ambit::Tensor  ordm_b_;
+    ambit::Tensor  trdm_aa_;
+    ambit::Tensor  trdm_ab_;
+    ambit::Tensor  trdm_bb_;
+    ambit::Tensor  trdm_aaa_;
+    ambit::Tensor  trdm_aab_;
+    ambit::Tensor  trdm_abb_;
+    ambit::Tensor  trdm_bbb_;
 
     // ==> Class functions <==
 

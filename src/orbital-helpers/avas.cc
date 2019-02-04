@@ -40,27 +40,31 @@ using namespace psi;
 namespace forte {
 
 psi::SharedMatrix semicanonicalize_block(psi::SharedWavefunction ref_wfn, psi::SharedMatrix C_tilde,
-                                    std::vector<int>& mos, int offset);
+                                         std::vector<int>& mos, int offset);
 
 void set_AVAS_options(ForteOptions& foptions) {
     foptions.add_double("AVAS_SIGMA", 0.98, "Threshold that controls the size of the active space");
-    foptions.add_int("AVAS_NUM_ACTIVE", 0, "Allows the user to specify the "
-                                           "total number of active orbitals. "
-                                           "It takes priority over the "
-                                           "threshold based selection.");
-    foptions.add_int("AVAS_NUM_ACTIVE_OCC", 0, "Allows the user to specify the "
-                                               "number of active occupied orbitals. "
-                                               "It takes priority over the "
-                                               "threshold based selection.");
-    foptions.add_int("AVAS_NUM_ACTIVE_VIR", 0, "Allows the user to specify the "
-                                               "number of active occupied orbitals. "
-                                               "It takes priority over the "
-                                               "threshold based selection.");
+    foptions.add_int("AVAS_NUM_ACTIVE", 0,
+                     "Allows the user to specify the "
+                     "total number of active orbitals. "
+                     "It takes priority over the "
+                     "threshold based selection.");
+    foptions.add_int("AVAS_NUM_ACTIVE_OCC", 0,
+                     "Allows the user to specify the "
+                     "number of active occupied orbitals. "
+                     "It takes priority over the "
+                     "threshold based selection.");
+    foptions.add_int("AVAS_NUM_ACTIVE_VIR", 0,
+                     "Allows the user to specify the "
+                     "number of active occupied orbitals. "
+                     "It takes priority over the "
+                     "threshold based selection.");
     // add options of diagonalizing S
-    foptions.add_bool("AVAS_DIAGONALIZE", true, "Allow the users to specify"
-                                                "diagonalization of Socc and Svir"
-                                                "It takes priority over the"
-                                                "threshold based selection.");
+    foptions.add_bool("AVAS_DIAGONALIZE", true,
+                      "Allow the users to specify"
+                      "diagonalization of Socc and Svir"
+                      "It takes priority over the"
+                      "threshold based selection.");
 }
 
 void make_avas(psi::SharedWavefunction ref_wfn, psi::Options& options, psi::SharedMatrix Ps) {
@@ -308,7 +312,7 @@ void make_avas(psi::SharedWavefunction ref_wfn, psi::Options& options, psi::Shar
 }
 
 psi::SharedMatrix semicanonicalize_block(psi::SharedWavefunction ref_wfn, psi::SharedMatrix C_tilde,
-                                    std::vector<int>& mos, int offset) {
+                                         std::vector<int>& mos, int offset) {
     int nso = ref_wfn->nso();
     int nmo_block = mos.size();
     auto C_block = std::make_shared<psi::Matrix>("C block", nso, nmo_block);
@@ -330,7 +334,7 @@ psi::SharedMatrix semicanonicalize_block(psi::SharedWavefunction ref_wfn, psi::S
     auto C_block_prime = psi::Matrix::doublet(C_block, U_block);
     return C_block_prime;
 }
-}
+} // namespace forte
 
 // outfile->Printf("\n  Orbital overlap with ao subspace:\n");
 // outfile->Printf("    ========================\n");

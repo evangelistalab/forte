@@ -63,6 +63,9 @@ class ActiveSpaceIntegrals {
 
     std::vector<size_t> restricted_docc_mo() const;
 
+    /// Return nuclear repulsion energy
+    double nuclear_repulsion_energy() const { return ints_->nuclear_repulsion_energy(); }
+
     /// Return the frozen core energy (contribution from FROZEN_DOCC)
     double frozen_core_energy() const { return frozen_core_energy_; }
 
