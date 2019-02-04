@@ -83,30 +83,26 @@ def register_fci_options(forte_options):
         'FCI_NTRIAL_PER_ROOT', 10,
         'The number of trial guess vectors to generate per root')
 
-def register_aci_options(forte_options)"
-        /* Convergence Threshold -*/
-    foptions.add_double("ACI_CONVERGENCE", 1e-9, "ACI Convergence threshold");
-
-    /*- The selection type for the Q-space-*/
+def register_aci_options(forte_options):
+    forte_options.add_double("ACI_CONVERGENCE", 1e-9, "ACI Convergence threshold")
+    # The selection type for the Q-space
     foptions.add_str("ACI_SELECT_TYPE", "AIMED_ENERGY", "The energy selection criteria");
     /*-Threshold for the selection of the P space -*/
     foptions.add_double("SIGMA", 0.01, "The energy selection threshold");
     /*- The threshold for the selection of the Q space -*/
     foptions.add_double("GAMMA", 1.0, "The reference space selection threshold");
-    /*- The SD-space prescreening threshold -*/
-    foptions.add_double("ACI_PRESCREEN_THRESHOLD", 1e-12, "The SD space prescreening threshold");
+    foptions.add_double("ACI_PRESCREEN_THRESHOLD", 1e-12, "The SD space prescreening threshold")
     /*- The type of selection parameters to use*/
     foptions.add_bool("ACI_PERTURB_SELECT", false, "Type of energy selection");
     /*Function of q-space criteria, per root*/
     foptions.add_str("ACI_PQ_FUNCTION", "AVERAGE", "Function for SA-ACI");
     /* Method to calculate excited state */
     foptions.add_str("ACI_EXCITED_ALGORITHM", "ROOT_ORTHOGONALIZE", "The excited state algorithm");
-    /*- Type of spin projection
-     * 0 - None
-     * 1 - Project initial P spaces at each iteration
-     * 2 - Project only after converged PQ space
-     * 3 - Do 1 and 2 -*/
-    foptions.add_int("ACI_SPIN_PROJECTION", 0, "Type of spin projection");
+    foptions.add_int("ACI_SPIN_PROJECTION", 0, """Type of spin projection
+     0 - None
+     1 - Project initial P spaces at each iteration
+     2 - Project only after converged PQ space
+     3 - Do 1 and 2""")
     /*- Add determinants to enforce spin-complete set? -*/
     foptions.add_bool("ACI_ENFORCE_SPIN_COMPLETE", true,
                       "Enforce determinant spaces to be spin-complete");
