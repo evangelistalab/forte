@@ -3,6 +3,9 @@
 def register_forte_options(forte_options):
     register_driver_options(forte_options)
     register_mo_space_info_options(forte_options)
+    register_avas_options(forte_options)
+    register_cino_options(forte_options)
+    register_mrcino_options(forte_options)
     register_integral_options(forte_options)
     register_fci_options(forte_options)
     register_active_space_solver_options(forte_options)
@@ -22,6 +25,69 @@ def register_driver_options(forte_options):
     forte_options.add_str('CALC_TYPE', 'SS', ['SS', 'SA', 'MS', 'DWMS'],
                           'The type of computation')
 
+def register_avas_options(forte_options):
+    forte_options.add_double("AVAS_SIGMA", 0.98, "Threshold that controls the size of the active space")
+    forte_options.add_int("AVAS_NUM_ACTIVE", 0,
+                     "Allows the user to specify the "
+                     "total number of active orbitals. "
+                     "It takes priority over the "
+                     "threshold based selection.")
+    forte_options.add_int("AVAS_NUM_ACTIVE_OCC", 0,
+                     "Allows the user to specify the "
+                     "number of active occupied orbitals. "
+                     "It takes priority over the "
+                     "threshold based selection.")
+    forte_options.add_int("AVAS_NUM_ACTIVE_VIR", 0,
+                     "Allows the user to specify the "
+                     "number of active occupied orbitals. "
+                     "It takes priority over the "
+                     "threshold based selection.")
+    forte_options.add_bool("AVAS_DIAGONALIZE", true,
+                      "Allow the users to specify"
+                      "diagonalization of Socc and Svir"
+                      "It takes priority over the"
+                      "threshold based selection.")
+
+def register_cino_options(forte_options):
+    forte_options.add_bool("CINO", false, "Do a CINO computation?")
+    forte_options.add_str("CINO_TYPE", "CIS", ["CIS", "CISD"], "The type of wave function.")
+    forte_options.add_int("CINO_NROOT", 1, "The number of roots computed")
+    forte_options.add_array("CINO_ROOTS_PER_IRREP",
+                       "The number of excited states per irreducible representation")
+    forte_options.add_double("CINO_THRESHOLD", 0.99,
+                        "The fraction of NOs to include in the active space")
+    forte_options.add_int("ACI_MAX_RDM", 1, "Order of RDM to compute
+     Type of spin projection
+     * 0 - None
+     * 1 - Project initial P spaces at each iteration
+     * 2 - Project only after converged PQ space
+     * 3 - Do 1 and 2 ")
+    forte_options.add_bool("CINO_AUTO", false,
+                      "Allow the users to choose"
+                      "whether pass frozen_docc"
+                      "actice_docc and restricted_docc"
+                      "or not")
+
+def register_mrcino_options(forte_options):
+    forte_options.add_bool("MRCINO", false, "Do a MRCINO computation?")
+    forte_options.add_str("MRCINO_TYPE", "CIS", ["CIS", "CISD"], "The type of wave function.")
+    forte_options.add_int("MRCINO_NROOT", 1, "The number of roots computed")
+    forte_options.add_array("MRCINO_ROOTS_PER_IRREP",
+                       "The number of excited states per irreducible representation")
+    forte_options.add_double("MRCINO_THRESHOLD", 0.99,
+                        "The fraction of NOs to include in the active space")
+    forte_options.add_int("ACI_MAX_RDM", 1, "Order of RDM to compute 
+     Type of spin projection
+     * 0 - None
+     * 1 - Project initial P spaces at each iteration
+     * 2 - Project only after converged PQ space
+     * 3 - Do 1 and 2 ")
+
+    forte_options.add_bool("MRCINO_AUTO", false,
+                      "Allow the users to choose"
+                      "whether pass frozen_docc"
+                      "actice_docc and restricted_docc"
+                      "or not")
 
 def register_mo_space_info_options(forte_options):
     forte_options.add_array(
