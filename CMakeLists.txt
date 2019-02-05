@@ -24,7 +24,7 @@ option_with_print(ENABLE_OPENMP "Enable threadsafe linking to OpenMP parallelize
 option_with_print(ENABLE_MPI "Enable MPI parallelization" OFF)
 option_with_print(ENABLE_GA "Enable Global Arrays" OFF)
 option_with_print(MAX_DET_ORB "Set the maximum number of orbitals in a determinant" OFF)
-option_with_print(ENBLE_CODECOV "Enable compilation with code coverage flags" OFF)
+option_with_print(ENABLE_CODECOV "Enable compilation with code coverage flags" OFF)
 #option_with_print(ENABLE_GENERIC "Enable mostly static linking in shared library" OFF)
 
 include(autocmake_omp)
