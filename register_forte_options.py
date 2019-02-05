@@ -56,12 +56,12 @@ def register_cino_options(forte_options):
                        "The number of excited states per irreducible representation")
     forte_options.add_double("CINO_THRESHOLD", 0.99,
                         "The fraction of NOs to include in the active space")
-    forte_options.add_int("ACI_MAX_RDM", 1, "Order of RDM to compute
-     Type of spin projection
-     * 0 - None
-     * 1 - Project initial P spaces at each iteration
-     * 2 - Project only after converged PQ space
-     * 3 - Do 1 and 2 ")
+#   forte_options.add_int("ACI_MAX_RDM", 1, "Order of RDM to compute
+#     Type of spin projection
+#     * 0 - None
+#     * 1 - Project initial P spaces at each iteration
+#     * 2 - Project only after converged PQ space
+#     * 3 - Do 1 and 2 ")
     forte_options.add_bool("CINO_AUTO", false,
                       "Allow the users to choose"
                       "whether pass frozen_docc"
@@ -76,12 +76,12 @@ def register_mrcino_options(forte_options):
                        "The number of excited states per irreducible representation")
     forte_options.add_double("MRCINO_THRESHOLD", 0.99,
                         "The fraction of NOs to include in the active space")
-    forte_options.add_int("ACI_MAX_RDM", 1, "Order of RDM to compute 
-     Type of spin projection
-     * 0 - None
-     * 1 - Project initial P spaces at each iteration
-     * 2 - Project only after converged PQ space
-     * 3 - Do 1 and 2 ")
+#    forte_options.add_int("ACI_MAX_RDM", 1, "Order of RDM to compute 
+#     Type of spin projection
+#     * 0 - None
+#     * 1 - Project initial P spaces at each iteration
+#     * 2 - Project only after converged PQ space
+#     * 3 - Do 1 and 2 ")
 
     forte_options.add_bool("MRCINO_AUTO", false,
                       "Allow the users to choose"
