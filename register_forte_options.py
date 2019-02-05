@@ -42,14 +42,14 @@ def register_avas_options(forte_options):
                      "number of active occupied orbitals. "
                      "It takes priority over the "
                      "threshold based selection.")
-    forte_options.add_bool("AVAS_DIAGONALIZE", true,
+    forte_options.add_bool("AVAS_DIAGONALIZE", True,
                       "Allow the users to specify"
                       "diagonalization of Socc and Svir"
                       "It takes priority over the"
                       "threshold based selection.")
 
 def register_cino_options(forte_options):
-    forte_options.add_bool("CINO", false, "Do a CINO computation?")
+    forte_options.add_bool("CINO", False, "Do a CINO computation?")
     forte_options.add_str("CINO_TYPE", "CIS", ["CIS", "CISD"], "The type of wave function.")
     forte_options.add_int("CINO_NROOT", 1, "The number of roots computed")
     forte_options.add_array("CINO_ROOTS_PER_IRREP",
@@ -62,14 +62,14 @@ def register_cino_options(forte_options):
 #     * 1 - Project initial P spaces at each iteration
 #     * 2 - Project only after converged PQ space
 #     * 3 - Do 1 and 2 ")
-    forte_options.add_bool("CINO_AUTO", false,
+    forte_options.add_bool("CINO_AUTO", False,
                       "Allow the users to choose"
                       "whether pass frozen_docc"
                       "actice_docc and restricted_docc"
                       "or not")
 
 def register_mrcino_options(forte_options):
-    forte_options.add_bool("MRCINO", false, "Do a MRCINO computation?")
+    forte_options.add_bool("MRCINO", False, "Do a MRCINO computation?")
     forte_options.add_str("MRCINO_TYPE", "CIS", ["CIS", "CISD"], "The type of wave function.")
     forte_options.add_int("MRCINO_NROOT", 1, "The number of roots computed")
     forte_options.add_array("MRCINO_ROOTS_PER_IRREP",
@@ -83,7 +83,7 @@ def register_mrcino_options(forte_options):
 #     * 2 - Project only after converged PQ space
 #     * 3 - Do 1 and 2 ")
 
-    forte_options.add_bool("MRCINO_AUTO", false,
+    forte_options.add_bool("MRCINO_AUTO", False,
                       "Allow the users to choose"
                       "whether pass frozen_docc"
                       "actice_docc and restricted_docc"
