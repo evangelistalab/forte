@@ -1334,7 +1334,7 @@ void TDACI::compute_tdaci_select(SharedVector C0) {
             propagate_RK4_select_list(PQ_coeffs_r, PQ_coeffs_i, PQ_space, dt ); 
         }
 
-        outfile->Printf("\n  propagate: %1.6f", prop.get());
+//        outfile->Printf("\n  propagate: %1.6f", prop.get());
 
 //        const det_hashvec& PQ_dets = PQ_space.wfn_hash();
 //        for( size_t I = 0; I < PQ_space.size(); ++I ){
@@ -1374,11 +1374,11 @@ void TDACI::compute_tdaci_select(SharedVector C0) {
         // 4. Update P space
         Timer prune;
         update_P_space( P_space, P_coeffs_r, P_coeffs_i, PQ_space, PQ_coeffs_r, PQ_coeffs_i );
-        outfile->Printf("\n  prune: %1.6f", prune.get());
+       // outfile->Printf("\n  prune: %1.6f", prune.get());
 
         time += dt;
 
-        outfile->Printf("\n total: %8.6f s", total.get());
+  //      outfile->Printf("\n total: %8.6f s", total.get());
     }  
     for( size_t i = 0; i < orbs.size(); ++i ){
         save_vector(occupations[i], "occupations_" + std::to_string(orbs[i]) + ".txt");
