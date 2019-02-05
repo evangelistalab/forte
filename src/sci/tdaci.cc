@@ -101,7 +101,7 @@ double TDACI::compute_energy() {
     }
 
     // 1. Grab an ACI wavefunction
-    auto aci = std::make_shared<AdaptiveCI>(state_, scf_info_, options_, mo_space_info_, as_ints_);
+    auto aci = std::make_shared<AdaptiveCI>(state_, 0, scf_info_, options_, mo_space_info_, as_ints_);
     aci->set_quiet(true);
     aci->compute_energy();
     DeterminantHashVec aci_dets = aci->get_wavefunction();
