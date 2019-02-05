@@ -739,7 +739,7 @@ void AdaptiveCI_SCI::prune_q_space(DeterminantHashVec& PQ_space, DeterminantHash
     const det_hashvec& detmap = PQ_space.wfn_hash();
     for (size_t i = 0, max_i = detmap.size(); i < max_i; ++i) {
         double criteria = 0.0;
-        if (ex_alg_ == "AVERAGE" or cycle_ < pre_iter_) {
+        if ((nroot_ > 1) and (ex_alg_ == "AVERAGE" or cycle_ < pre_iter_)) {
             for (int n = 0; n < nav; ++n) {
                 if (pq_function_ == "MAX") {
                     criteria = std::max(criteria, std::fabs(evecs->get(i, n)));
