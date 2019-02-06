@@ -46,7 +46,6 @@
 
 namespace forte {
 
-void set_PT2_options(ForteOptions& foptions);
 
 class MRPT2 : public psi::Wavefunction {
   public:

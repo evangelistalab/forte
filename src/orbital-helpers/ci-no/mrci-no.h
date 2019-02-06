@@ -34,9 +34,6 @@ namespace forte {
 
 class ForteOptions;
 
-/// Set the MRCI-NO options
-void set_MRCINO_options(ForteOptions& foptions);
-
 /**
  * @brief The MRCINO class
  * This class implements natural orbitals for CI wave functions
