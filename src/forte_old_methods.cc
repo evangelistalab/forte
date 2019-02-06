@@ -119,6 +119,13 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
                                                forte_options, mo_space_info, as_ints);
         final_energy = casscf->compute_energy();
     }
+
+    if (options.get_str("JOB_TYPE") == "TDACI") {
+        auto as_ints = make_active_space_ints(mo_space_info, ints, "ACTIVE", {{"RESTRICTED_DOCC"}});
+        auto tdaci = std::make_shared<TDACI>(state, scf_info, forte_options, mo_space_info, as_ints);
+        final_energy = tdaci->compute_energy();
+    }
+
     if (options.get_str("JOB_TYPE") == "MR-DSRG-PT2") {
         std::string cas_type = options.get_str("ACTIVE_SPACE_SOLVER");
         std::string actv_type = options.get_str("FCIMO_ACTV_TYPE");
