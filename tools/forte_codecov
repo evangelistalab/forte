@@ -1,0 +1,16 @@
+#! usr/bin/env bash
+
+export CODECOV_TOKEN="f2ca5872-66d7-48dc-8464-e286452dd05b"
+
+lcov --directory . --zerocounters
+
+# Run tests
+cd tests/methods
+python run_forte_tests.py
+cd ../..
+
+# Gather data
+lcov --directory . --capture --output-file coverage.info
+lcov --remove coverage.info '/usr/*' --output-file coverage.info # filter system-files
+lcov --list coverage.info #debug info
+bash <(curl -s https://codecov.io/bash) -f coverage.info || echo "Codecov did not collect coverage reports"
