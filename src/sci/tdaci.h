@@ -98,6 +98,8 @@ class TDACI {
     std::shared_ptr<ForteOptions> options_;
     std::shared_ptr<MOSpaceInfo> mo_space_info_; 
 
+    std::vector<std::vector<double>> occupations_;
+
     void annihilate_wfn( DeterminantHashVec& olddets, DeterminantHashVec& adets, int frz_orb );
 
     void renormalize_wfn( std::vector<double>& acoeffs );
@@ -140,6 +142,9 @@ class TDACI {
 
     // Compute Hc using coupling lists
     void complex_sigma_build( std::vector<double>& sigma_r, std::vector<double>& sigma_i,std::vector<double>& c_r, std::vector<double>& c_i,DeterminantHashVec& dethash, WFNOperator& op);
+
+    // Test occupation vectors using ref_occ_n.txt file
+    double test_occ();
 
 };
 
