@@ -29,15 +29,15 @@ def register_avas_options(forte_options):
     forte_options.add_double("AVAS_SIGMA", 0.98, "Threshold that controls the size of the active space")
     forte_options.add_int("AVAS_NUM_ACTIVE", 0,
                      "The total number of active orbitals. "
-                     "Takes priority over "
+                     "If not equal to 0, it takes priority over "
                      "threshold based selection.")
     forte_options.add_int("AVAS_NUM_ACTIVE_OCC", 0,
                      "The number of active occupied orbitals. "
-                     "Takes priority over "
+                     "If not equal to 0, it takes priority over "
                      "threshold based selection.")
     forte_options.add_int("AVAS_NUM_ACTIVE_VIR", 0,
                      "The number of active occupied orbitals. "
-                     "Takes priority over "
+                     "If not equal to 0, it takes priority over "
                      "threshold based selection.")
     forte_options.add_bool("AVAS_DIAGONALIZE", True,
                       "Diagonalize Socc and Svir?"
