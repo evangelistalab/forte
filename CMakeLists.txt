@@ -62,7 +62,7 @@ if(SSE42_FLAG)
 endif()
 add_compile_options(-Wall -Wextra -pedantic) # -Werror)
 
-if(ENABLE_CheMPS2)
+if(ENABLE_CODECOV)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage") # enabling coverage
 endif()
 
