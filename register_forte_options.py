@@ -345,7 +345,7 @@ def register_aci_options(forte_options):
 
     forte_options.add_bool("SPIN_MAT_TO_FILE", False, "Save spin correlation matrix to file?")
 
-    forte_options.add_str("SPIN_BASIS", "LOCAL", ['LOCAL','IAO','NO','CANON'], "Basis for spin analysis")
+    forte_options.add_str("SPIN_BASIS", "LOCAL", ['LOCAL','IAO','NO','CANONICAL'], "Basis for spin analysis")
 
     forte_options.add_double("ACI_RELAX_SIGMA", 0.01, "Sigma for reference relaxation")
 
