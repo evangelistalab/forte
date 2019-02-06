@@ -108,25 +108,25 @@ def register_aci_options(forte_options):
      3 - Do 1 and 2""")
 
     forte_options.add_bool("ACI_ENFORCE_SPIN_COMPLETE", True,
-                      "Enforce determinant spaces to be spin-complete")
+                      "Enforce determinant spaces to be spin-complete?")
 
     forte_options.add_bool("ACI_PROJECT_OUT_SPIN_CONTAMINANTS", True,
-                      "Project out spin contaminants in Davidson-Liu's algorithm")
+                      "Project out spin contaminants in Davidson-Liu's algorithm?")
 
     forte_options.add_bool("SPIN_PROJECT_FULL", False,
-                      "Project solution in full diagonalization algorithm")
+                      "Project solution in full diagonalization algorithm?")
 
     forte_options.add_bool("ACI_ADD_AIMED_DEGENERATE", True,
-                      "Add degenerate determinants not included in the aimed selection")
+                      "Add degenerate determinants not included in the aimed selection?")
     
     # No string in option, shouldn't this be a bool?
     forte_options.add_str("ACI_SIZE_CORRECTION", "", "Perform size extensivity correction")
 
     forte_options.add_int("ACI_MAX_CYCLE", 20, "Maximum number of cycles")
 
-    forte_options.add_bool("ACI_QUIET_MODE", False, "Print during ACI procedure")
+    forte_options.add_bool("ACI_QUIET_MODE", False, "Print during ACI procedure?")
 
-    forte_options.add_bool("ACI_STREAMLINE_Q", False, "Do streamlined algorithm")
+    forte_options.add_bool("ACI_STREAMLINE_Q", False, "Do streamlined algorithm?")
 
     forte_options.add_str("ACI_INITIAL_SPACE", "CAS", "The initial reference space")
 
@@ -136,9 +136,9 @@ def register_aci_options(forte_options):
 
     forte_options.add_int("ACI_AVERAGE_OFFSET", 0, "Offset for state averaging")
 
-    forte_options.add_bool("ACI_SAVE_FINAL_WFN", False, "Print final wavefunction to file")
+    forte_options.add_bool("ACI_SAVE_FINAL_WFN", False, "Print final wavefunction to file?")
 
-    forte_options.add_bool("ACI_PRINT_REFS", False, "Print the P space")
+    forte_options.add_bool("ACI_PRINT_REFS", False, "Print the P space?")
 
     forte_options.add_int("DL_GUESS_SIZE", 100, "Set the initial guess space size for DL solver")
 
