@@ -47,6 +47,16 @@ int StateInfo::twice_ms() const { return twice_ms_; }
 
 int StateInfo::irrep() const { return irrep_; }
 
+bool StateInfo::operator<(const StateInfo& rhs) const {
+    return std::tie(na_, nb_, multiplicity_, twice_ms_, irrep_) <
+           std::tie(rhs.na_, rhs.nb_, rhs.multiplicity_, rhs.twice_ms_, rhs.irrep_);
+}
+
+bool StateInfo::operator!=(const StateInfo& rhs) const {
+    return std::tie(na_, nb_, multiplicity_, twice_ms_, irrep_) !=
+           std::tie(rhs.na_, rhs.nb_, rhs.multiplicity_, rhs.twice_ms_, rhs.irrep_);
+}
+
 StateInfo make_state_info_from_psi_wfn(std::shared_ptr<psi::Wavefunction> wfn) {
     int charge = psi::Process::environment.molecule()->molecular_charge();
     if (wfn->options()["CHARGE"].has_changed()) {

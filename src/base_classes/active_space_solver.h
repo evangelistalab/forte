@@ -30,11 +30,15 @@
 #define _active_space_solver_h_
 
 #include <vector>
+#include <string>
+
+#include "psi4/libmints/matrix.h"
 
 #include "base_classes/state_info.h"
 
 namespace forte {
 
+class ActiveSpaceMethod;
 class ActiveSpaceIntegrals;
 class ForteIntegrals;
 class ForteOptions;
@@ -45,145 +49,145 @@ class SCFInfo;
 /**
  * @class ActiveSpaceSolver
  *
- * @brief Base class for active space solvers
+ * @brief General class for a multi-state active space solver
  *
- * This class is the base class for methods that solve for the wavefunction in a
- * small subset of the full orbital space (<30-40 orbitals).
- * This class is responsible for creating and storing the integrals used by
- * active space solvers, which are held by an ActiveSpaceIntegrals object.
- *
- * @note By default, this class assumes that the active orbitals are stored in the MOSpaceInfo
- * object in the space labeled "ACTIVE". Orbitals in the space "RESTRICTED_DOCC"
- * are not correlated and are trated via effective scalar and one-body interactions.
+ * This class can run state-specific, multi-state, and state-averaged computations
+ * on small subset of the full orbital space (<30-40 orbitals).
  */
 class ActiveSpaceSolver {
   public:
     // ==> Class Constructor and Destructor <==
     /**
-     * @brief ActiveSpaceSolver Constructor for a single state computation
+     * @brief ActiveSpaceMethod Constructor for a multi-state computation
+     * @param method A string that labels the method requested (e.g. "FCI", "ACI", ...)
+     * @param nroots_map A map of electronic states to the number of roots computed {state_1 : n_1,
+     * state_2 : n_2, ...} where state_i specifies the symmetry of a state and n_i is the number of
+     * levels computed.
      * @param state information about the electronic state
      * @param mo_space_info a MOSpaceInfo object
      * @param as_ints integrals for active space
      */
-    ActiveSpaceSolver(StateInfo state, std::shared_ptr<MOSpaceInfo> mo_space_info,
-                      std::shared_ptr<ActiveSpaceIntegrals> as_ints);
-
-    /**
-     * @brief ActiveSpaceSolver Constructor for a multi-state computation
-     * @param state information about the electronic state
-     * @param mo_space_info a MOSpaceInfo object
-     * @param as_ints integrals for active space
-     */
-    ActiveSpaceSolver(const std::vector<std::pair<StateInfo, double>>& states_weights,
-                      std::shared_ptr<MOSpaceInfo> mo_space_info,
-                      std::shared_ptr<ActiveSpaceIntegrals> as_ints);
-
-    /// Default constructor
-    ActiveSpaceSolver() = default;
-
-    /// Virtual destructor to enable deletion of a Derived* through a Base*
-    virtual ~ActiveSpaceSolver() = default;
+    ActiveSpaceSolver(const std::string& method,
+                      const std::map<StateInfo, size_t>& state_nroots_map,
+                      std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<MOSpaceInfo> mo_space_info,
+                      std::shared_ptr<ActiveSpaceIntegrals> as_ints,
+                      std::shared_ptr<ForteOptions> options);
 
     // ==> Class Interface <==
 
-    /// Compute the energy and return it
-    virtual double compute_energy() = 0;
+    /// Compute the energy and return it // TODO: document (Francesco)
+    const std::map<StateInfo, std::vector<double>>& compute_energy();
 
-    /// Returns the reference
-    virtual Reference get_reference() = 0;
+    /// Compute the contracted CI energy
+    const std::map<StateInfo, std::vector<double>>&
+    compute_contracted_energy(std::shared_ptr<forte::ActiveSpaceIntegrals> as_ints);
 
-    /// Set options from an option object
-    /// @param options the options passed in
-    virtual void set_options(std::shared_ptr<ForteOptions> options) = 0;
+    /// Compute references of all states in the given map
+    /// First entry of the pair corresponds to bra and the second is the ket.
+    std::vector<Reference> reference(std::map<std::pair<StateInfo, StateInfo>,
+                                              std::vector<std::pair<size_t, size_t>>>& elements);
 
-    // ==> Base Class Functionality (inherited by derived classes) <==
+    /// Compute state-averaged reference
+    Reference
+    compute_average_reference(const std::map<StateInfo, std::vector<double>>& state_weights_map);
 
-    /// Pass a set of ActiveSpaceIntegrals to the solver (e.g. an effective Hamiltonian)
-    /// @param as_ints the integrals passed in
-    void set_active_space_integrals(std::shared_ptr<ActiveSpaceIntegrals> as_ints);
+    /// Sets the maximum order RDM/cumulant
+    void set_max_rdm_level(size_t value);
 
-    /// Return the eigenvalues
-    psi::SharedVector evals();
+    /// Print a summary of the computation information
+    void print_options();
 
-    // ==> Base Class Handles Set Functions <==
-
-    /// Set the energy convergence criterion
-    /// @param value the convergence criterion in a.u.
-    void set_e_convergence(double value);
-
-    /// Set the number of desired roots
-    /// @param value the number of desired roots
-    void set_nroot(int value);
-
-    /// Set the root that will be used to compute the properties
-    /// @param the root (root = 0, 1, 2, ...)
-    void set_root(int value);
-
-    /// Set the maximum RDM computed (0 - 3)
-    /// @param value the rank of the RDM
-    void set_max_rdm_level(int value);
-
-    /// Set the print level
-    /// @param level the print level (0 = no printing, 1 default)
-    void set_print(int level);
+    /// Return a map of StateInfo to the computed nroots of energies
+    const std::map<StateInfo, std::vector<double>>& state_energies_map() const {
+        return state_energies_map_;
+    }
 
   protected:
-    /// The list of active orbitals (absolute ordering)
-    std::vector<size_t> active_mo_;
+    // a string that specifies the method used (e.g. "FCI", "ACI", ...)
+    std::string method_;
 
-    /// The list of doubly occupied orbitals (absolute ordering)
-    std::vector<size_t> core_mo_;
+    /// A map of electronic states to the number of roots computed
+    ///   {state_1 : n_1, state_2 : n_2, ...}
+    /// where state_i specifies the symmetry of a state and n_i is the number of levels computed.
+    std::map<StateInfo, size_t> state_nroots_map_;
 
-    /// A list of electronic states and their weights
-    std::vector<std::pair<StateInfo, double>> states_weights_;
+    /// The information about a previous SCF computation
+    std::shared_ptr<SCFInfo> scf_info_;
 
     /// The MOSpaceInfo object
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
 
     /// The molecular integrals for the active space
-    /// This object holds only the integrals for the orbital contained in the active_mo_ vector.
+    /// This object holds only the integrals for the orbital contained in the
+    /// active_mo_vector.
     /// The one-electron integrals and scalar energy contains contributions from the
     /// doubly occupied orbitals specified by the core_mo_ vector.
     std::shared_ptr<ActiveSpaceIntegrals> as_ints_;
 
-    // ==> Base Class Handles [can be changed before running compute_energy()]  <==
+    /// User-provided options
+    std::shared_ptr<ForteOptions> options_;
 
-    /// The energy convergence criterion
-    double e_convergence_ = 1.0e-12;
+    /// A map of state symmetries to the associated ActiveSpaceMethod
+    std::map<StateInfo, std::shared_ptr<ActiveSpaceMethod>> state_method_map_;
 
-    /// The number of roots (default = 1)
-    int nroot_ = 1;
+    /// The maximum order RDM/cumulant to use for all ActiveSpaceMethod objects initialized
+    size_t max_rdm_level_ = 1;
 
-    /// The root used to compute properties (zero based, default = 0)
-    int root_ = 0;
+    /// Controls which default rdm level to use
+    bool set_rdm_ = false; // TODO: remove this hack
 
-    /// The maximum RDM computed (0 - 3)
-    int max_rdm_level_ = 1;
+    /// Prints a summary of the energies with State info
+    void print_energies(std::map<StateInfo, std::vector<double>>& energies);
 
-    /// A variable to control printing information
-    int print_ = 0;
+    /// A map of state symmetries to vectors of computed energies under given state symmetry
+    std::map<StateInfo, std::vector<double>> state_energies_map_;
 
-    /// Eigenvalues
-    psi::SharedVector evals_;
-
-    /// Allocates an ActiveSpaceIntegrals object and fills it with integrals stored in ints_
-    void make_active_space_ints();
-};
+    /// Pairs of state info and the contracted CI eigen vectors
+    std::map<StateInfo, std::shared_ptr<psi::Matrix>>
+        state_contracted_evecs_map_; // TODO move outside?
+};                                   // namespace forte
 
 /**
- * @brief make_active_space_solver Make an active space solver object
+ * @brief Make an active space solver object.
  * @param type a string that specifies the type (e.g. "FCI", "ACI", ...)
- * @param state information about the elecronic state
+ * @param state_nroots_map a map from state symmetry to the number of roots
  * @param scf_info information about a previous SCF computation
  * @param mo_space_info orbital space information
  * @param ints an integral object
  * @param options user-provided options
- * @return a shared pointer for the base class ActiveSpaceSolver
+ * @return a unique pointer for the base class ActiveSpaceMethod
  */
 std::unique_ptr<ActiveSpaceSolver> make_active_space_solver(
-    const std::string& type, StateInfo state, std::shared_ptr<SCFInfo> scf_info,
-    std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ForteIntegrals> ints,
-    std::shared_ptr<ForteOptions> options);
+    const std::string& method, const std::map<StateInfo, size_t>& state_nroots_map,
+    std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<MOSpaceInfo> mo_space_info,
+    std::shared_ptr<ActiveSpaceIntegrals> as_ints, std::shared_ptr<ForteOptions> options);
+
+/**
+ * @brief Convert a map of StateInfo to weight lists to a map of StateInfo to number of roots.
+ * @param state_weights_map A map of StateInfo to weight lists
+ * @return A map of StateInfo to number of states
+ */
+std::map<StateInfo, size_t>
+to_state_nroots_map(const std::map<StateInfo, std::vector<double>>& state_weights_map);
+
+/**
+ * @brief Make a list of states and weights.
+ * @param options user-provided options
+ * @param wfn a psi wave function
+ * @return a unique pointer to an ActiveSpaceSolver object
+ */
+std::map<StateInfo, std::vector<double>>
+make_state_weights_map(std::shared_ptr<ForteOptions> options,
+                       std::shared_ptr<psi::Wavefunction> wfn);
+
+/**
+ * @brief Compute the average energy for a set of states
+ * @param state_energies_list a map of state -> energies
+ * @param state_weight_list a map of state -> weights
+ */
+double
+compute_average_state_energy(const std::map<StateInfo, std::vector<double>>& state_energies_map,
+                             const std::map<StateInfo, std::vector<double>>& state_weight_map);
 
 } // namespace forte
 

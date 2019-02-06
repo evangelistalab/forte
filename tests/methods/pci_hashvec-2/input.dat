@@ -18,7 +18,7 @@ set {
 }
 
 set forte {
-  job_type pci_hashvec
+  active_space_solver pci_hashvec
   PCI_GENERATOR DL
   pci_spawning_threshold 0.0001
   pci_e_convergence 12

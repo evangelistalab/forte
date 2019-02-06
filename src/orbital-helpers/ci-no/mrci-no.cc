@@ -80,18 +80,18 @@ void set_MRCINO_options(ForteOptions& foptions) {
      * 3 - Do 1 and 2 -*/
 
     // add options of whether pass MOSpaceInfo or not
-    foptions.add_bool("MRCINO_AUTO", false, "Allow the users to choose"
-                                            "whether pass frozen_docc"
-                                            "actice_docc and restricted_docc"
-                                            "or not");
+    foptions.add_bool("MRCINO_AUTO", false,
+                      "Allow the users to choose"
+                      "whether pass frozen_docc"
+                      "actice_docc and restricted_docc"
+                      "or not");
 }
 
-MRCINO::MRCINO(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
-               std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : Wavefunction(options), ints_(ints), mo_space_info_(mo_space_info) {
+MRCINO::MRCINO(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
+               std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
+    : OrbitalTransform(scf_info, options, ints, mo_space_info), scf_info_(scf_info),
+      options_(options), ints_(ints), mo_space_info_(mo_space_info) {
     // Copy the wavefunction information
-    shallow_copy(ref_wfn);
-    reference_wavefunction_ = ref_wfn;
 
     std::vector<size_t> active_mo(mo_space_info_->size("CORRELATED"));
     std::iota(active_mo.begin(), active_mo.end(), 0);
@@ -114,10 +114,11 @@ MRCINO::MRCINO(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shar
 
 MRCINO::~MRCINO() {}
 
-double MRCINO::compute_energy() {
-    outfile->Printf("\n\n  Computing CIS natural orbitals\n");
+psi::SharedMatrix MRCINO::get_Ua() { return Ua_; }
+psi::SharedMatrix MRCINO::get_Ub() { return Ub_; }
 
-    CharacterTable ct = molecule_->point_group()->char_table();
+void MRCINO::compute_transformation() {
+    outfile->Printf("\n\n  Computing CIS natural orbitals\n");
 
     psi::SharedMatrix Density_a(new psi::Matrix(corrpi_, corrpi_));
     psi::SharedMatrix Density_b(new psi::Matrix(corrpi_, corrpi_));
@@ -126,12 +127,12 @@ double MRCINO::compute_energy() {
     // Build CAS determinants
     std::vector<std::vector<Determinant>> dets_cas = build_dets_cas();
 
+    std::vector<int> rootspi = options_->get_int_vec("MRCINO_ROOTS_PER_IRREP");
     for (int h = 0; h < nirrep_; ++h) {
-        int nsolutions = options_["MRCINO_ROOTS_PER_IRREP"][h].to_integer();
+        int nsolutions = rootspi[h];
         sum += nsolutions;
         if (nsolutions > 0) {
-            outfile->Printf("\n  ==> Irrep %s: %d solutions <==\n", ct.gamma(h).symbol(),
-                            nsolutions);
+            outfile->Printf("\n  ==> Irrep %s: %d solutions <==\n", h, nsolutions);
 
             // 1. Build the space of determinants
             std::vector<Determinant> dets = build_dets(h, dets_cas);
@@ -158,7 +159,8 @@ double MRCINO::compute_energy() {
 
     // Density_a->print();
 
-    std::pair<psi::SharedMatrix, psi::SharedMatrix> avg_gamma = std::make_pair(Density_a, Density_b);
+    std::pair<psi::SharedMatrix, psi::SharedMatrix> avg_gamma =
+        std::make_pair(Density_a, Density_b);
 
     // 4. Diagonalize the density matrix
     std::tuple<psi::SharedVector, psi::SharedMatrix, psi::SharedVector, psi::SharedMatrix> no_U =
@@ -166,27 +168,28 @@ double MRCINO::compute_energy() {
 
     //    // 5. Find optimal active space and transform the orbitals
     find_active_space_and_transform(no_U);
-
-    return 0.0;
 }
 
 void MRCINO::startup() {
     wavefunction_multiplicity_ = 1;
-    if (options_["MULTIPLICITY"].has_changed()) {
-        wavefunction_multiplicity_ = options_.get_int("MULTIPLICITY");
+    if (options_->has_changed("MULTIPLICITY")) {
+        wavefunction_multiplicity_ = options_->get_int("MULTIPLICITY");
     }
+
+    nirrep_ = ints_->nirrep();
+
     diag_method_ = DLSolver;
-    if (options_["DIAG_ALGORITHM"].has_changed()) {
-        if (options_.get_str("DIAG_ALGORITHM") == "FULL") {
+    if (options_->has_changed("DIAG_ALGORITHM")) {
+        if (options_->get_str("DIAG_ALGORITHM") == "FULL") {
             diag_method_ = Full;
-        } else if (options_.get_str("DIAG_ALGORITHM") == "DLSTRING") {
+        } else if (options_->get_str("DIAG_ALGORITHM") == "DLSTRING") {
             diag_method_ = DLString;
-        } else if (options_.get_str("DIAG_ALGORITHM") == "DLDISK") {
+        } else if (options_->get_str("DIAG_ALGORITHM") == "DLDISK") {
             diag_method_ = DLDisk;
         }
     }
     // Read Options
-    rdm_level_ = options_.get_int("ACI_MAX_RDM");
+    rdm_level_ = options_->get_int("ACI_MAX_RDM");
     nactv_ = mo_space_info_->size("ACTIVE");
     corr_ = mo_space_info_->size("CORRELATED");
 
@@ -199,8 +202,10 @@ void MRCINO::startup() {
 
     ncmo2_ = corr_ * corr_;
 
-    aoccpi_ = nalphapi_ - fdoccpi_;
-    mrcino_auto = options_.get_bool("MRCINO_AUTO");
+    aoccpi_ = ints_->wfn()->nalphapi() - fdoccpi_;
+    boccpi_ = ints_->wfn()->nbetapi() - fdoccpi_;
+
+    mrcino_auto = options_->get_bool("MRCINO_AUTO");
 }
 
 std::vector<std::vector<Determinant>> MRCINO::build_dets_cas() {
@@ -214,11 +219,11 @@ std::vector<std::vector<Determinant>> MRCINO::build_dets_cas() {
 
     int offset = 0;
     for (int h = 0; h < nirrep_; h++) {
-        int aocc_h = nalphapi_[h] - rdoccpi_[h] - fdoccpi_[h];
+        int aocc_h = aoccpi_[h];
         for (int i = 0; i < aocc_h; i++) {
             tmp_det_a[i + offset] = true;
         }
-        int bocc_h = nbetapi_[h] - rdoccpi_[h] - fdoccpi_[h];
+        int bocc_h = boccpi_[h];
         for (int i = 0; i < bocc_h; i++) {
             tmp_det_b[i + offset] = true;
         }
@@ -234,11 +239,11 @@ std::vector<std::vector<Determinant>> MRCINO::build_dets_cas() {
     // add the reference determinant
     offset = 0;
     for (int h = 0; h < nirrep_; h++) {
-        int aocc_h = nalphapi_[h] - fdoccpi_[h];
+        int aocc_h = aoccpi_[h] + rdoccpi_[h];
         for (int i = 0; i < aocc_h; i++) {
             occupation_a[i + offset] = true;
         }
-        int bocc_h = nbetapi_[h] - fdoccpi_[h];
+        int bocc_h = boccpi_[h] + rdoccpi_[h];
         for (int i = 0; i < bocc_h; i++) {
             occupation_b[i + offset] = true;
         }
@@ -413,7 +418,7 @@ std::vector<Determinant> MRCINO::build_dets(int irrep,
         }
     }
 
-    if (options_.get_str("MRCINO_TYPE") == "CISD") {
+    if (options_->get_str("MRCINO_TYPE") == "CISD") {
         // alpha-alpha double excitation
         //        for (int i = 0; i < naocc_; ++i) {
         //            for (int j = i + 1; j < naocc_; ++j) {
@@ -483,10 +488,10 @@ MRCINO::diagonalize_hamiltonian(const std::vector<Determinant>& dets, int nsolut
 
     SparseCISolver sparse_solver(fci_ints_);
     sparse_solver.set_parallel(true);
-    sparse_solver.set_e_convergence(options_.get_double("E_CONVERGENCE"));
-    sparse_solver.set_maxiter_davidson(options_.get_int("DL_MAXITER"));
+    sparse_solver.set_e_convergence(options_->get_double("E_CONVERGENCE"));
+    sparse_solver.set_maxiter_davidson(options_->get_int("DL_MAXITER"));
     sparse_solver.set_spin_project(project_out_spin_contaminants_);
-    sparse_solver.set_guess_dimension(options_.get_int("DL_GUESS_SIZE"));
+    sparse_solver.set_guess_dimension(options_->get_int("DL_GUESS_SIZE"));
     sparse_solver.set_spin_project_full(true);
     sparse_solver.set_print_details(true);
 
@@ -498,8 +503,7 @@ MRCINO::diagonalize_hamiltonian(const std::vector<Determinant>& dets, int nsolut
     outfile->Printf("\n  ----------------------------");
     for (int i = 0; i < nsolutions; ++i) {
         double energy = evals_evecs.first->get(i) + fci_ints_->scalar_energy() +
-                        molecule_->nuclear_repulsion_energy(
-                            reference_wavefunction_->get_dipole_field_strength());
+                        ints_->nuclear_repulsion_energy();
         outfile->Printf("\n    %3d %20.10f", i, energy);
     }
     outfile->Printf("\n  ------------------------------\n");
@@ -573,7 +577,7 @@ MRCINO::diagonalize_density_matrix(std::pair<psi::SharedMatrix, psi::SharedMatri
     psi::SharedMatrix NO_B(new psi::Matrix(corrpi_, corrpi_));
 
     psi::Dimension zero_dim(nirrep_);
-    psi::Dimension aoccpi = nalphapi_ - fdoccpi_;
+    psi::Dimension aoccpi = ints_->wfn()->nalphapi() - fdoccpi_;
     psi::Dimension avirpi = corrpi_ - aoccpi;
 
     // Grab the alpha occupied/virtual block of the density matrix
@@ -601,7 +605,7 @@ MRCINO::diagonalize_density_matrix(std::pair<psi::SharedMatrix, psi::SharedMatri
     NO_A->set_block(avir_slice, avir_slice, NO_A_vir);
 
     /// Diagonalize Beta density matrix
-    psi::Dimension boccpi = nbetapi_ - fdoccpi_;
+    psi::Dimension boccpi = ints_->wfn()->nbetapi() - fdoccpi_;
     psi::Dimension bvirpi = corrpi_ - boccpi;
 
     // Grab the beta occupied/virtual block of the density matrix
@@ -638,20 +642,19 @@ MRCINO::diagonalize_density_matrix(std::pair<psi::SharedMatrix, psi::SharedMatri
 // Find optimal active space and transform the orbitals
 void MRCINO::find_active_space_and_transform(
     std::tuple<psi::SharedVector, psi::SharedMatrix, psi::SharedVector, psi::SharedMatrix> no_U) {
-
-    psi::SharedMatrix Ua = std::make_shared<psi::Matrix>("U", nmopi_, nmopi_);
+    
+    auto nmopi = mo_space_info_->get_dimension("ALL");
+    Ua_.reset( new psi::Matrix("U", nmopi, nmopi));
+    Ub_.reset( new psi::Matrix("U", nmopi, nmopi));
     psi::SharedMatrix NO_A = std::get<1>(no_U);
     for (int h = 0; h < nirrep_; h++) {
-        for (int p = 0; p < nmopi_[h]; p++) {
-            Ua->set(h, p, p, 1.0);
+        for (int p = 0; p < nmopi[h]; p++) {
+            Ua_->set(h, p, p, 1.0);
         }
     }
     Slice corr_slice(fdoccpi_, fdoccpi_ + corrpi_);
-    Ua->set_block(corr_slice, corr_slice, NO_A);
-
-    psi::SharedMatrix Ca_new = psi::Matrix::doublet(Ca_, Ua);
-    Ca_->copy(Ca_new);
-    Cb_ = Ca_; // Fix this for unrestricted case
+    Ua_->set_block(corr_slice, corr_slice, NO_A);
+    Ub_->copy(Ua_->clone());
 
     psi::SharedVector OCC_A = std::get<0>(no_U);
     psi::SharedVector OCC_B = std::get<2>(no_U);
@@ -678,7 +681,7 @@ void MRCINO::find_active_space_and_transform(
     std::sort(sorted_aocc.rbegin(), sorted_aocc.rend());
     std::sort(sorted_avir.rbegin(), sorted_avir.rend());
 
-    double mrcino_threshold = options_.get_double("MRCINO_THRESHOLD");
+    double mrcino_threshold = options_->get_double("MRCINO_THRESHOLD");
 
     psi::Dimension nactv_occ(nirrep_);
     double partial_sum_o = 0.0;
@@ -718,14 +721,13 @@ void MRCINO::find_active_space_and_transform(
     // outfile->Printf("\n  RESTRICTED_UOCC = %s", dimension_to_string(noci_rducc).c_str());
 
     // Pass the MOSpaceInfo
-    if (mrcino_auto) {
-        for (int h = 0; h < nirrep_; h++) {
-            // options_["RESTRICTED_DOCC"].add(h);
-            // options_["ACTIVE"].add(h);
-            options_["RESTRICTED_DOCC"][h].assign(noci_rdocc[h]);
-            options_["ACTIVE"][h].assign(noci_actv[h]);
-        }
-    }
+    //   if (mrcino_auto) {
+    //       for (int h = 0; h < nirrep_; h++) {
+    //           // options_["RESTRICTED_DOCC"].add(h);
+    //           // options_["ACTIVE"].add(h);
+    //           options_["RESTRICTED_DOCC"][h].assign(noci_rdocc[h]);
+    //           options_["ACTIVE"][h].assign(noci_actv[h]);
+    //       }
+    //   }
 }
 } // namespace forte
-

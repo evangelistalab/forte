@@ -50,6 +50,7 @@
 #include "helpers/timer.h"
 #include "sparse_ci/ci_reference.h"
 #include "base_classes/state_info.h"
+#include "base_classes/reference.h"
 
 using namespace psi;
 using namespace forte::GeneratorType_HashVec;
@@ -57,7 +58,6 @@ using namespace forte::GeneratorType_HashVec;
 #define USE_HASH 1
 #define DO_STATS 0
 #define ENFORCE_SYM 1
-
 
 namespace forte {
 #ifdef _OPENMP
@@ -73,8 +73,7 @@ void scale(std::vector<double>& A, double alpha);
 double normalize(std::vector<double>& C);
 double dot(std::vector<double>& C1, std::vector<double>& C2);
 void add(std::vector<double>& a, double k, std::vector<double>& b);
-void Wall_Chebyshev_generator_coefs(std::vector<double>& coefs, int order,
-                                    double range);
+void Wall_Chebyshev_generator_coefs(std::vector<double>& coefs, int order, double range);
 void print_polynomial(std::vector<double>& coefs);
 
 void add(const det_hashvec& A, std::vector<double> Ca, double beta, const det_hashvec& B,
@@ -126,29 +125,30 @@ void ProjectorCI_HashVec::sortHashVecByCoefficient(det_hashvec& dets_hashvec,
     dets_max_couplings_ = std::move(new_dets_max_couplings);
 }
 
-ProjectorCI_HashVec::ProjectorCI_HashVec(StateInfo state, std::shared_ptr<forte::SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
-                                         std::shared_ptr<ForteIntegrals> ints,
-                                         std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : state_(state), scf_info_(scf_info), ints_(ints), mo_space_info_(mo_space_info), options_(options),
-      fast_variational_estimate_(false) {
+ProjectorCI_HashVec::ProjectorCI_HashVec(StateInfo state, size_t nroot,
+                                         std::shared_ptr<forte::SCFInfo> scf_info,
+                                         std::shared_ptr<ForteOptions> options,
+                                         std::shared_ptr<MOSpaceInfo> mo_space_info,
+                                         std::shared_ptr<ActiveSpaceIntegrals> as_ints)
+    : ActiveSpaceMethod(state, nroot, mo_space_info, as_ints), scf_info_(scf_info),
+      options_(options), fast_variational_estimate_(false) {
     // Copy the wavefunction information
     startup();
 }
 
-std::shared_ptr<ActiveSpaceIntegrals> ProjectorCI_HashVec::fci_ints_ = nullptr;
+std::vector<Reference>
+ProjectorCI_HashVec::reference(const std::vector<std::pair<size_t, size_t>>&) {
+    //    CI_RDMS ci_rdms(final_wfn_, as_ints_, evecs_, root, root);
+    //    ci_rdms.set_max_rdm(max_rdm_level_);
+    //    Reference pci_ref = ci_rdms.reference(ordm_a_, ordm_b_, trdm_aa_, trdm_ab_, trdm_bb_,
+    //    trdm_aaa_,
+    //                                          trdm_aab_, trdm_abb_, trdm_bbb_);
+    std::vector<Reference> pci_ref;
+    // TODO: implement
+    return pci_ref;
+}
 
 void ProjectorCI_HashVec::startup() {
-    // Connect the integrals to the determinant class
-    fci_ints_ = std::make_shared<ActiveSpaceIntegrals>(ints_, mo_space_info_->get_corr_abs_mo("ACTIVE"),
-                                               mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
-
-    auto active_mo = mo_space_info_->get_corr_abs_mo("ACTIVE");
-    ambit::Tensor tei_active_aa = ints_->aptei_aa_block(active_mo, active_mo, active_mo, active_mo);
-    ambit::Tensor tei_active_ab = ints_->aptei_ab_block(active_mo, active_mo, active_mo, active_mo);
-    ambit::Tensor tei_active_bb = ints_->aptei_bb_block(active_mo, active_mo, active_mo, active_mo);
-    fci_ints_->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
-    fci_ints_->compute_restricted_one_body_operator();
-
     // The number of correlated molecular orbitals
     nact_ = mo_space_info_->get_corr_abs_mo("ACTIVE").size();
     nactpi_ = mo_space_info_->get_dimension("ACTIVE");
@@ -157,19 +157,12 @@ void ProjectorCI_HashVec::startup() {
     frzcpi_ = mo_space_info_->get_dimension("INACTIVE_DOCC");
     nfrzc_ = mo_space_info_->size("INACTIVE_DOCC");
 
-    nuclear_repulsion_energy_ = ints_-> nuclear_repulsion_energy();
+    nuclear_repulsion_energy_ = as_ints_->ints()->nuclear_repulsion_energy();
 
     mo_symmetry_ = mo_space_info_->symmetry("ACTIVE");
 
-    wavefunction_symmetry_ = 0;
-    if (options_->has_changed("ROOT_SYM")) {
-        wavefunction_symmetry_ = options_->get_int("ROOT_SYM");
-    }
-    // Read options
-    wavefunction_multiplicity_ = 1;
-    if (options_->has_changed("MULTIPLICITY")) {
-        wavefunction_multiplicity_ = options_->get_int("MULTIPLICITY");
-    }
+    wavefunction_symmetry_ = state_.irrep();
+    wavefunction_multiplicity_ = state_.multiplicity();
 
     // Number of correlated electrons
     nactel_ = 0;
@@ -185,8 +178,8 @@ void ProjectorCI_HashVec::startup() {
 
     // Build the reference determinant and compute its energy
     std::vector<Determinant> reference_vec;
-    CI_Reference ref(scf_info_, options_, mo_space_info_, fci_ints_,
-                     wavefunction_multiplicity_, ms, wavefunction_symmetry_);
+    CI_Reference ref(scf_info_, options_, mo_space_info_, as_ints_, wavefunction_multiplicity_, ms,
+                     wavefunction_symmetry_);
     ref.set_ref_type("HF");
     ref.build_reference(reference_vec);
     reference_determinant_ = reference_vec[0];
@@ -323,13 +316,13 @@ double ProjectorCI_HashVec::estimate_high_energy() {
             high_det.destroy_beta_bit(i);
         }
 
-        double temp = fci_ints_->oei_a(i, i);
+        double temp = as_ints_->oei_a(i, i);
         for (size_t p = 0; p < nact_; ++p) {
             if (reference_determinant_.get_alfa_bit(p)) {
-                temp += fci_ints_->tei_aa(i, p, i, p);
+                temp += as_ints_->tei_aa(i, p, i, p);
             }
             if (reference_determinant_.get_beta_bit(p)) {
-                temp += fci_ints_->tei_ab(i, p, i, p);
+                temp += as_ints_->tei_ab(i, p, i, p);
             }
         }
         obt_energies.push_back(std::make_pair(temp, i));
@@ -350,9 +343,9 @@ double ProjectorCI_HashVec::estimate_high_energy() {
     //        obt_energies[obt_energies.size()-1-Ndocc].first;
     //        high_det.create_alfa_bit(obt_energies[obt_energies.size()-1-Ndocc].second);
     //    }
-    lambda_h_ = high_obt_energy + fci_ints_->frozen_core_energy() + fci_ints_->scalar_energy();
+    lambda_h_ = high_obt_energy + as_ints_->frozen_core_energy() + as_ints_->scalar_energy();
 
-    double lambda_h_G = fci_ints_->energy(high_det) + fci_ints_->scalar_energy();
+    double lambda_h_G = as_ints_->energy(high_det) + as_ints_->scalar_energy();
     std::vector<int> aocc = high_det.get_alfa_occ(nact_);
     std::vector<int> bocc = high_det.get_beta_occ(nact_);
     std::vector<int> avir = high_det.get_alfa_vir(nact_);
@@ -388,7 +381,7 @@ double ProjectorCI_HashVec::estimate_high_energy() {
             int ii = aocc[i];
             for (int a = avir_offset[h]; a < avir_offset[h + 1]; ++a) {
                 int aa = avir[a];
-                double HJI = fci_ints_->slater_rules_single_alpha(high_det, ii, aa);
+                double HJI = as_ints_->slater_rules_single_alpha(high_det, ii, aa);
                 lambda_h_G += std::fabs(HJI);
             }
         }
@@ -399,7 +392,7 @@ double ProjectorCI_HashVec::estimate_high_energy() {
             int ii = bocc[i];
             for (int a = bvir_offset[h]; a < bvir_offset[h + 1]; ++a) {
                 int aa = bvir[a];
-                double HJI = fci_ints_->slater_rules_single_beta(high_det, ii, aa);
+                double HJI = as_ints_->slater_rules_single_beta(high_det, ii, aa);
                 lambda_h_G += std::fabs(HJI);
             }
         }
@@ -418,7 +411,7 @@ double ProjectorCI_HashVec::estimate_high_energy() {
                 int maxb = avir_offset[h + 1];
                 for (int b = minb; b < maxb; ++b) {
                     int bb = avir[b];
-                    double HJI = fci_ints_->tei_aa(ii, jj, aa, bb);
+                    double HJI = as_ints_->tei_aa(ii, jj, aa, bb);
                     lambda_h_G += std::fabs(HJI);
                 }
             }
@@ -436,7 +429,7 @@ double ProjectorCI_HashVec::estimate_high_energy() {
                 int maxb = bvir_offset[h + 1];
                 for (int b = minb; b < maxb; ++b) {
                     int bb = bvir[b];
-                    double HJI = fci_ints_->tei_ab(ii, jj, aa, bb);
+                    double HJI = as_ints_->tei_ab(ii, jj, aa, bb);
                     lambda_h_G += std::fabs(HJI);
                 }
             }
@@ -455,7 +448,7 @@ double ProjectorCI_HashVec::estimate_high_energy() {
                 int maxb = bvir_offset[h + 1];
                 for (int b = minb; b < maxb; ++b) {
                     int bb = bvir[b];
-                    double HJI = fci_ints_->tei_bb(ii, jj, aa, bb);
+                    double HJI = as_ints_->tei_bb(ii, jj, aa, bb);
                     lambda_h_G += std::fabs(HJI);
                 }
             }
@@ -465,8 +458,8 @@ double ProjectorCI_HashVec::estimate_high_energy() {
     outfile->Printf("\n  Highest Excited determinant:");
     outfile->Printf("\n  %s", high_det.str().c_str());
     outfile->Printf("\n  Determinant Energy                    :  %.12f",
-                    fci_ints_->energy(high_det) + nuclear_repulsion_energy_ +
-                        fci_ints_->scalar_energy());
+                    as_ints_->energy(high_det) + nuclear_repulsion_energy_ +
+                        as_ints_->scalar_energy());
     outfile->Printf("\n  Highest Energy Gershgorin circle Est. :  %.12f",
                     lambda_h_G + nuclear_repulsion_energy_);
     lambda_h_ = lambda_h_G;
@@ -484,8 +477,7 @@ void ProjectorCI_HashVec::compute_characteristic_function() {
     range_ = (lambda_h_ - lambda_1_) / 2.0;
     switch (generator_) {
     case WallChebyshevGenerator:
-        Wall_Chebyshev_generator_coefs(cha_func_coefs_, chebyshev_order_,
-                                       range_);
+        Wall_Chebyshev_generator_coefs(cha_func_coefs_, chebyshev_order_, range_);
     default:
         break;
     }
@@ -527,7 +519,7 @@ double ProjectorCI_HashVec::compute_energy() {
     det_hashvec dets_hashvec;
     std::vector<double> C;
 
-    SparseCISolver sparse_solver(fci_ints_);
+    SparseCISolver sparse_solver(as_ints_);
     sparse_solver.set_parallel(true);
     sparse_solver.set_e_convergence(options_->get_double("E_CONVERGENCE"));
     sparse_solver.set_maxiter_davidson(options_->get_int("DL_MAXITER"));
@@ -539,15 +531,15 @@ double ProjectorCI_HashVec::compute_energy() {
 
     for (size_t i = 0; i < (size_t)nact_; ++i) {
         for (size_t j = 0; j < (size_t)nact_; ++j) {
-            double temp_aa = sqrt(std::fabs(fci_ints_->tei_aa(i, j, i, j)));
+            double temp_aa = sqrt(std::fabs(as_ints_->tei_aa(i, j, i, j)));
             pqpq_aa_[i * nact_ + j] = temp_aa;
             if (temp_aa > pqpq_max_aa_)
                 pqpq_max_aa_ = temp_aa;
-            double temp_ab = sqrt(std::fabs(fci_ints_->tei_ab(i, j, i, j)));
+            double temp_ab = sqrt(std::fabs(as_ints_->tei_ab(i, j, i, j)));
             pqpq_ab_[i * nact_ + j] = temp_ab;
             if (temp_ab > pqpq_max_ab_)
                 pqpq_max_ab_ = temp_ab;
-            double temp_bb = sqrt(std::fabs(fci_ints_->tei_bb(i, j, i, j)));
+            double temp_bb = sqrt(std::fabs(as_ints_->tei_bb(i, j, i, j)));
             pqpq_bb_[i * nact_ + j] = temp_bb;
             if (temp_bb > pqpq_max_bb_)
                 pqpq_max_bb_ = temp_bb;
@@ -705,9 +697,9 @@ double ProjectorCI_HashVec::compute_energy() {
     if (converged) {
         outfile->Printf("\n\n  Calculation converged.");
     } else {
-        outfile->Printf("\n\n  Calculation %s",
-                        iter_ != maxiter_ ? "stoped in appearance of higher new low."
-                                          : "did not converge!");
+        outfile->Printf("\n\n  Calculation %s", iter_ != maxiter_
+                                                    ? "stoped in appearance of higher new low."
+                                                    : "did not converge!");
     }
 
     if (do_shift_) {
@@ -747,8 +739,8 @@ double ProjectorCI_HashVec::compute_energy() {
 
     outfile->Printf("\n  * Projector-CI Variational Energy     = %18.12f Eh", 1, var_energy);
     outfile->Printf("\n  * Projector-CI Var. Corr.  Energy     = %18.12f Eh", 1,
-                    var_energy - fci_ints_->energy(reference_determinant_) -
-                        nuclear_repulsion_energy_ - fci_ints_->scalar_energy());
+                    var_energy - as_ints_->energy(reference_determinant_) -
+                        nuclear_repulsion_energy_ - as_ints_->scalar_energy());
 
     outfile->Printf("\n  * 1st order perturbation   Energy     = %18.12f Eh", 1,
                     var_energy - approx_energy_);
@@ -765,7 +757,7 @@ double ProjectorCI_HashVec::compute_energy() {
         psi::SharedMatrix apfci_evecs(new psi::Matrix("Eigenvectors", C.size(), nroot_));
         psi::SharedVector apfci_evals(new Vector("Eigenvalues", nroot_));
 
-        WFNOperator op(mo_symmetry_, fci_ints_);
+        WFNOperator op(mo_symmetry_, as_ints_);
         DeterminantHashVec det_map(std::move(dets_hashvec));
         op.build_strings(det_map);
         op.op_s_lists(det_map);
@@ -783,15 +775,15 @@ double ProjectorCI_HashVec::compute_energy() {
 
         timer_off("PCI:Post_Diag");
 
-        double post_diag_energy = apfci_evals->get(current_root_) + nuclear_repulsion_energy_ +
-                                  fci_ints_->scalar_energy();
+        double post_diag_energy =
+            apfci_evals->get(current_root_) + nuclear_repulsion_energy_ + as_ints_->scalar_energy();
         psi::Process::environment.globals["PCI POST DIAG ENERGY"] = post_diag_energy;
 
         outfile->Printf("\n\n  * Projector-CI Post-diag   Energy     = %18.12f Eh", 1,
                         post_diag_energy);
         outfile->Printf("\n  * Projector-CI Var. Corr.  Energy     = %18.12f Eh", 1,
-                        post_diag_energy - fci_ints_->energy(reference_determinant_) -
-                            nuclear_repulsion_energy_ - fci_ints_->scalar_energy());
+                        post_diag_energy - as_ints_->energy(reference_determinant_) -
+                            nuclear_repulsion_energy_ - as_ints_->scalar_energy());
 
         std::vector<double> diag_C(C.size());
 
@@ -813,6 +805,7 @@ double ProjectorCI_HashVec::compute_energy() {
     delete[] pqpq_aa_;
     delete[] pqpq_ab_;
     delete[] pqpq_bb_;
+    energies_.push_back(var_energy);
 
     timer_off("PCI:Energy");
     return var_energy;
@@ -874,7 +867,7 @@ double ProjectorCI_HashVec::initial_guess(det_hashvec& dets_hashvec, std::vector
 
     outfile->Printf("\n\n  Initial guess size = %zu", guess_size);
 
-    SparseCISolver sparse_solver(fci_ints_);
+    SparseCISolver sparse_solver(as_ints_);
     sparse_solver.set_parallel(true);
     sparse_solver.set_e_convergence(options_->get_double("E_CONVERGENCE"));
     sparse_solver.set_maxiter_davidson(options_->get_int("DL_MAXITER"));
@@ -890,11 +883,11 @@ double ProjectorCI_HashVec::initial_guess(det_hashvec& dets_hashvec, std::vector
     sparse_solver.diagonalize_hamiltonian(dets_hashvec.toVector(), evals, evecs, nroot_,
                                           wavefunction_multiplicity_, DLSolver);
     double var_energy =
-        evals->get(current_root_) + nuclear_repulsion_energy_ + fci_ints_->scalar_energy();
+        evals->get(current_root_) + nuclear_repulsion_energy_ + as_ints_->scalar_energy();
     outfile->Printf("\n\n  Initial guess energy (variational) = %20.12f Eh (root = %d)", var_energy,
                     current_root_ + 1);
 
-    lambda_1_ = evals->get(current_root_) + fci_ints_->scalar_energy();
+    lambda_1_ = evals->get(current_root_) + as_ints_->scalar_energy();
 
     // Copy the ground state eigenvector
     for (size_t I = 0; I < guess_size; ++I) {
@@ -990,7 +983,7 @@ void ProjectorCI_HashVec::propagate_DL(det_hashvec& dets_hashvec, std::vector<do
     std::vector<double> diag_vec(dets_size);
 #pragma omp parallel for
     for (size_t i = 0; i < dets_size; i++) {
-        diag_vec[i] = fci_ints_->energy(dets_hashvec[i]) + fci_ints_->scalar_energy();
+        diag_vec[i] = as_ints_->energy(dets_hashvec[i]) + as_ints_->scalar_energy();
     }
 
     double lambda = A->get(0, 0);
@@ -1071,7 +1064,7 @@ void ProjectorCI_HashVec::propagate_DL(det_hashvec& dets_hashvec, std::vector<do
         e_gradiant += lambda;
         outfile->Printf("\nDavidson iter %4d order %4d correction norm %10.3e dE %10.3e E %18.12f.",
                         i, current_order, correct_norm, e_gradiant,
-                        lambda + nuclear_repulsion_energy_ + fci_ints_->scalar_energy());
+                        lambda + nuclear_repulsion_energy_ + as_ints_->scalar_energy());
         if (std::fabs(e_gradiant) < e_convergence_) {
             i++;
             break;
@@ -1216,7 +1209,7 @@ void ProjectorCI_HashVec::apply_tau_H_symm_det_dynamic_HBCI_2(
     // Diagonal contributions
     // parallel_timer_on("PCI:diagonal", omp_get_thread_num());
 
-    double det_energy = fci_ints_->energy(detI) + fci_ints_->scalar_energy();
+    double det_energy = as_ints_->energy(detI) + as_ints_->scalar_energy();
 #pragma omp atomic
     result_C[I] += tau * (det_energy - E0) * CI;
 
@@ -1245,7 +1238,7 @@ void ProjectorCI_HashVec::apply_tau_H_symm_det_dynamic_HBCI_2(
                     if (!detI.get_alfa_bit(a)) {
                         Determinant detJ(detI);
 
-                        double HJI = fci_ints_->slater_rules_single_alpha_abs(detJ, i, a);
+                        double HJI = as_ints_->slater_rules_single_alpha_abs(detJ, i, a);
 
                         if (std::fabs(HJI * CI) >= spawning_threshold) {
                             HJI *= detJ.single_excitation_a(i, a);
@@ -1295,7 +1288,7 @@ void ProjectorCI_HashVec::apply_tau_H_symm_det_dynamic_HBCI_2(
                     if (!detI.get_beta_bit(a)) {
                         Determinant detJ(detI);
 
-                        double HJI = fci_ints_->slater_rules_single_beta_abs(detJ, i, a);
+                        double HJI = as_ints_->slater_rules_single_beta_abs(detJ, i, a);
 
                         if (std::fabs(HJI * CI) >= spawning_threshold) {
                             HJI *= detJ.single_excitation_b(i, a);
@@ -1348,7 +1341,7 @@ void ProjectorCI_HashVec::apply_tau_H_symm_det_dynamic_HBCI_2(
                     if (!detI.get_alfa_bit(a)) {
                         Determinant detJ(detI);
 
-                        double HJI = fci_ints_->slater_rules_single_alpha_abs(detJ, i, a);
+                        double HJI = as_ints_->slater_rules_single_alpha_abs(detJ, i, a);
 
                         max_coupling.first = std::max(max_coupling.first, std::fabs(HJI));
                         if (std::fabs(HJI * CI) >= spawning_threshold) {
@@ -1399,7 +1392,7 @@ void ProjectorCI_HashVec::apply_tau_H_symm_det_dynamic_HBCI_2(
                     if (!detI.get_beta_bit(a)) {
                         Determinant detJ(detI);
 
-                        double HJI = fci_ints_->slater_rules_single_beta_abs(detJ, i, a);
+                        double HJI = as_ints_->slater_rules_single_beta_abs(detJ, i, a);
 
                         max_coupling.first = std::max(max_coupling.first, std::fabs(HJI));
                         if (std::fabs(HJI * CI) >= spawning_threshold) {
@@ -1756,7 +1749,7 @@ void ProjectorCI_HashVec::apply_tau_H_ref_C_symm(double tau, double spawning_thr
     for (size_t I = ref_max_I; I < max_I; ++I) {
         // Diagonal contribution
         // parallel_timer_on("PCI:diagonal", omp_get_thread_num());
-        double det_energy = fci_ints_->energy(dets_hashvec[I]) + fci_ints_->scalar_energy();
+        double det_energy = as_ints_->energy(dets_hashvec[I]) + as_ints_->scalar_energy();
         // parallel_timer_off("PCI:diagonal", omp_get_thread_num());
         // Diagonal contributions
         result_C[I] += tau * (det_energy - S) * pre_C[I];
@@ -1778,7 +1771,7 @@ void ProjectorCI_HashVec::apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(
     // Diagonal contributions
     // parallel_timer_on("PCI:diagonal", omp_get_thread_num());
 
-    double det_energy = fci_ints_->energy(detI) + fci_ints_->scalar_energy();
+    double det_energy = as_ints_->energy(detI) + as_ints_->scalar_energy();
 
 #pragma omp atomic
     result_C[I] += tau * (det_energy - E0) * CI;
@@ -1808,7 +1801,7 @@ void ProjectorCI_HashVec::apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(
                     if (!detI.get_alfa_bit(a)) {
                         Determinant detJ(detI);
 
-                        double HJI = fci_ints_->slater_rules_single_alpha_abs(detJ, i, a);
+                        double HJI = as_ints_->slater_rules_single_alpha_abs(detJ, i, a);
 
                         if (std::fabs(HJI * ref_CI) >= spawning_threshold) {
                             HJI *= detJ.single_excitation_a(i, a);
@@ -1850,7 +1843,7 @@ void ProjectorCI_HashVec::apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(
                     if (!detI.get_beta_bit(a)) {
                         Determinant detJ(detI);
 
-                        double HJI = fci_ints_->slater_rules_single_beta_abs(detJ, i, a);
+                        double HJI = as_ints_->slater_rules_single_beta_abs(detJ, i, a);
 
                         if (std::fabs(HJI * ref_CI) >= spawning_threshold) {
                             HJI *= detJ.single_excitation_b(i, a);
@@ -2040,10 +2033,10 @@ double ProjectorCI_HashVec::estimate_proj_energy(const det_hashvec& dets_hashvec
     // Compute the projective energy
     double projective_energy_estimator = 0.0;
     for (int I = 0, max_I = dets_hashvec.size(); I < max_I; ++I) {
-        double HIJ = fci_ints_->slater_rules(dets_hashvec[I], (dets_hashvec[J]));
+        double HIJ = as_ints_->slater_rules(dets_hashvec[I], (dets_hashvec[J]));
         projective_energy_estimator += HIJ * C[I] / CJ;
     }
-    return projective_energy_estimator + nuclear_repulsion_energy_ + fci_ints_->scalar_energy();
+    return projective_energy_estimator + nuclear_repulsion_energy_ + as_ints_->scalar_energy();
 }
 
 double ProjectorCI_HashVec::estimate_var_energy(const det_hashvec& dets_hashvec,
@@ -2054,15 +2047,15 @@ double ProjectorCI_HashVec::estimate_var_energy(const det_hashvec& dets_hashvec,
 #pragma omp parallel for reduction(+ : variational_energy_estimator)
     for (size_t I = 0; I < size; ++I) {
         const Determinant& detI = dets_hashvec[I];
-        variational_energy_estimator += C[I] * C[I] * fci_ints_->energy(detI);
+        variational_energy_estimator += C[I] * C[I] * as_ints_->energy(detI);
         for (size_t J = I + 1; J < size; ++J) {
             if (std::fabs(C[I] * C[J]) > tollerance) {
-                double HIJ = fci_ints_->slater_rules(dets_hashvec[I], (dets_hashvec[J]));
+                double HIJ = as_ints_->slater_rules(dets_hashvec[I], (dets_hashvec[J]));
                 variational_energy_estimator += 2.0 * C[I] * HIJ * C[J];
             }
         }
     }
-    return variational_energy_estimator + nuclear_repulsion_energy_ + fci_ints_->scalar_energy();
+    return variational_energy_estimator + nuclear_repulsion_energy_ + as_ints_->scalar_energy();
 }
 
 double ProjectorCI_HashVec::estimate_var_energy_within_error(const det_hashvec& dets_hashvec,
@@ -2092,14 +2085,14 @@ double ProjectorCI_HashVec::estimate_var_energy_within_error(const det_hashvec& 
 #pragma omp parallel for reduction(+ : variational_energy_estimator)
     for (size_t I = 0; I <= cut_index; ++I) {
         const Determinant& detI = dets_hashvec[I];
-        variational_energy_estimator += C[I] * C[I] * fci_ints_->energy(detI);
+        variational_energy_estimator += C[I] * C[I] * as_ints_->energy(detI);
         for (size_t J = I + 1; J <= cut_index; ++J) {
-            double HIJ = fci_ints_->slater_rules(dets_hashvec[I], dets_hashvec[J]);
+            double HIJ = as_ints_->slater_rules(dets_hashvec[I], dets_hashvec[J]);
             variational_energy_estimator += 2.0 * C[I] * HIJ * C[J];
         }
     }
     variational_energy_estimator /= 1.0 - cume_ignore;
-    return variational_energy_estimator + nuclear_repulsion_energy_ + fci_ints_->scalar_energy();
+    return variational_energy_estimator + nuclear_repulsion_energy_ + as_ints_->scalar_energy();
 }
 
 double ProjectorCI_HashVec::estimate_var_energy_within_error_sigma(const det_hashvec& dets_hashvec,
@@ -2127,7 +2120,7 @@ double ProjectorCI_HashVec::estimate_var_energy_within_error_sigma(const det_has
         cut_index + 1, max_error);
     double variational_energy_estimator = 0.0;
 
-    WFNOperator op(mo_symmetry_, fci_ints_);
+    WFNOperator op(mo_symmetry_, as_ints_);
     std::vector<Determinant> sub_dets = dets_hashvec.toVector();
     sub_dets.erase(sub_dets.begin() + cut_index + 1, sub_dets.end());
     DeterminantHashVec det_map(sub_dets);
@@ -2137,7 +2130,7 @@ double ProjectorCI_HashVec::estimate_var_energy_within_error_sigma(const det_has
     //    std::vector<std::pair<std::vector<size_t>, std::vector<double>>> H =
     //    op.build_H_sparse(det_map);
     //    SigmaVectorSparse svs(H);
-    SigmaVectorWfn2 svs(det_map, op, fci_ints_);
+    SigmaVectorWfn2 svs(det_map, op, as_ints_);
     size_t sub_size = svs.size();
     // allocate vectors
     psi::SharedVector b(new Vector("b", sub_size));
@@ -2149,7 +2142,7 @@ double ProjectorCI_HashVec::estimate_var_energy_within_error_sigma(const det_has
     variational_energy_estimator = sigma->dot(b.get());
 
     variational_energy_estimator /= 1.0 - cume_ignore;
-    return variational_energy_estimator + nuclear_repulsion_energy_ + fci_ints_->scalar_energy();
+    return variational_energy_estimator + nuclear_repulsion_energy_ + as_ints_->scalar_energy();
 }
 
 double ProjectorCI_HashVec::estimate_var_energy_sparse(const det_hashvec& dets_hashvec,
@@ -2189,7 +2182,7 @@ double ProjectorCI_HashVec::estimate_var_energy_sparse(const det_hashvec& dets_h
         variational_energy_estimator += energy[t];
     }
     variational_energy_estimator /= 1.0 - cume_ignore;
-    return variational_energy_estimator + nuclear_repulsion_energy_ + fci_ints_->scalar_energy();
+    return variational_energy_estimator + nuclear_repulsion_energy_ + as_ints_->scalar_energy();
 }
 
 void ProjectorCI_HashVec::print_wfn(const det_hashvec& space_hashvec, std::vector<double>& C,
@@ -2200,7 +2193,7 @@ void ProjectorCI_HashVec::print_wfn(const det_hashvec& space_hashvec, std::vecto
     for (size_t I = 0; I < max_dets; ++I) {
         outfile->Printf("\n  %3zu  %13.6g %13.6g  %10zu %s  %18.12f", I, C[I], C[I] * C[I], I,
                         space_hashvec[I].str().c_str(),
-                        fci_ints_->energy(space_hashvec[I]) + fci_ints_->scalar_energy());
+                        as_ints_->energy(space_hashvec[I]) + as_ints_->scalar_energy());
     }
 
     // Compute the expectation value of the spin
@@ -2291,7 +2284,7 @@ double ProjectorCI_HashVec::form_H_C(const det_hashvec& dets_hashvec, std::vecto
     double CI = C[I];
 
     // diagonal contribution
-    double result = CI * CI * fci_ints_->energy(detI);
+    double result = CI * CI * as_ints_->energy(detI);
 
     std::vector<int> aocc = detI.get_alfa_occ(nact_);
     std::vector<int> bocc = detI.get_beta_occ(nact_);
@@ -2315,7 +2308,7 @@ double ProjectorCI_HashVec::form_H_C(const det_hashvec& dets_hashvec, std::vecto
                 detJ.set_alfa_bit(aa, true);
                 size_t index = dets_hashvec.find(detJ);
                 if (index < I) {
-                    HJI = fci_ints_->slater_rules_single_alpha(detI, ii, aa);
+                    HJI = as_ints_->slater_rules_single_alpha(detI, ii, aa);
                     result += 2.0 * HJI * CI * C[index];
                 }
                 detJ.set_alfa_bit(ii, true);
@@ -2333,7 +2326,7 @@ double ProjectorCI_HashVec::form_H_C(const det_hashvec& dets_hashvec, std::vecto
                 detJ.set_beta_bit(aa, true);
                 size_t index = dets_hashvec.find(detJ);
                 if (index < I) {
-                    HJI = fci_ints_->slater_rules_single_beta(detI, ii, aa);
+                    HJI = as_ints_->slater_rules_single_beta(detI, ii, aa);
                     result += 2.0 * HJI * CI * C[index];
                 }
                 detJ.set_beta_bit(ii, true);
@@ -2360,7 +2353,7 @@ double ProjectorCI_HashVec::form_H_C(const det_hashvec& dets_hashvec, std::vecto
                         size_t index = dets_hashvec.find(detJ);
                         if (index < I) {
                             sign = detJ.double_excitation_aa(aa, bb, ii, jj);
-                            HJI = fci_ints_->tei_aa(ii, jj, aa, bb);
+                            HJI = as_ints_->tei_aa(ii, jj, aa, bb);
                             result += 2.0 * sign * HJI * CI * C[index];
                         } else {
                             detJ.set_alfa_bit(ii, true);
@@ -2391,7 +2384,7 @@ double ProjectorCI_HashVec::form_H_C(const det_hashvec& dets_hashvec, std::vecto
                         size_t index = dets_hashvec.find(detJ);
                         if (index < I) {
                             sign = detJ.double_excitation_ab(aa, bb, ii, jj);
-                            HJI = fci_ints_->tei_ab(ii, jj, aa, bb);
+                            HJI = as_ints_->tei_ab(ii, jj, aa, bb);
                             result += 2.0 * sign * HJI * CI * C[index];
                         } else {
                             detJ.set_alfa_bit(ii, true);
@@ -2421,7 +2414,7 @@ double ProjectorCI_HashVec::form_H_C(const det_hashvec& dets_hashvec, std::vecto
                         size_t index = dets_hashvec.find(detJ);
                         if (index < I) {
                             sign = detJ.double_excitation_bb(aa, bb, ii, jj);
-                            HJI = fci_ints_->tei_bb(ii, jj, aa, bb);
+                            HJI = as_ints_->tei_bb(ii, jj, aa, bb);
                             result += 2.0 * sign * HJI * CI * C[index];
                         } else {
                             detJ.set_beta_bit(ii, true);
@@ -2443,7 +2436,7 @@ double ProjectorCI_HashVec::form_H_C_2(const det_hashvec& dets_hashvec, std::vec
     double CI = C[I];
 
     // diagonal contribution
-    double result = CI * CI * fci_ints_->energy(detI);
+    double result = CI * CI * as_ints_->energy(detI);
 
     Determinant detJ(detI);
     double HJI;
@@ -2466,7 +2459,7 @@ double ProjectorCI_HashVec::form_H_C_2(const det_hashvec& dets_hashvec, std::vec
                     //                        }
                     //                    }
                     //                    HJI *= detJ.single_excitation_a(i, a);
-                    HJI = fci_ints_->slater_rules_single_alpha_abs(detJ, i, a);
+                    HJI = as_ints_->slater_rules_single_alpha_abs(detJ, i, a);
                     HJI *= detJ.single_excitation_a(i, a);
                     size_t index = dets_hashvec.find(detJ);
                     if (index <= cut_index) {
@@ -2498,7 +2491,7 @@ double ProjectorCI_HashVec::form_H_C_2(const det_hashvec& dets_hashvec, std::vec
                     //                        }
                     //                    }
                     //                    HJI *= detJ.single_excitation_b(i, a);
-                    HJI = fci_ints_->slater_rules_single_beta_abs(detJ, i, a);
+                    HJI = as_ints_->slater_rules_single_beta_abs(detJ, i, a);
                     HJI *= detJ.single_excitation_b(i, a);
                     size_t index = dets_hashvec.find(detJ);
                     if (index <= cut_index) {
@@ -2621,14 +2614,14 @@ void ProjectorCI_HashVec::compute_single_couplings(double single_coupling_thresh
     for (size_t i = 0; i < nact_; ++i) {
         for (size_t a = i + 1; a < nact_; ++a) {
             if ((mo_symmetry_[i] ^ mo_symmetry_[a]) == 0) {
-                double Hia = fci_ints_->oei_a(i, a);
+                double Hia = as_ints_->oei_a(i, a);
                 std::vector<double> aa_double_couplings(nact_);
                 std::vector<double> ab_double_couplings(nact_);
                 //                single_alpha_excite_double_couplings_[i][a].resize(2 * nact_);
                 //                single_alpha_excite_double_couplings_[a][i].resize(2 * nact_);
                 for (size_t p = 0; p < nact_; ++p) {
-                    aa_double_couplings[p] = fci_ints_->tei_aa(i, p, a, p);
-                    ab_double_couplings[p] = fci_ints_->tei_ab(i, p, a, p);
+                    aa_double_couplings[p] = as_ints_->tei_aa(i, p, a, p);
+                    ab_double_couplings[p] = as_ints_->tei_ab(i, p, a, p);
                     //                    single_alpha_excite_double_couplings_[i][a][p] =
                     //                    aa_double_couplings[p];
                     //                    single_alpha_excite_double_couplings_[a][i][p] =
@@ -2677,14 +2670,14 @@ void ProjectorCI_HashVec::compute_single_couplings(double single_coupling_thresh
     for (size_t i = 0; i < nact_; ++i) {
         for (size_t a = i + 1; a < nact_; ++a) {
             if ((mo_symmetry_[i] ^ mo_symmetry_[a]) == 0) {
-                double Hia = fci_ints_->oei_b(i, a);
+                double Hia = as_ints_->oei_b(i, a);
                 std::vector<double> ab_double_couplings(nact_);
                 std::vector<double> bb_double_couplings(nact_);
                 //                single_beta_excite_double_couplings_[i][a].resize(2 * nact_);
                 //                single_beta_excite_double_couplings_[a][i].resize(2 * nact_);
                 for (size_t p = 0; p < nact_; ++p) {
-                    ab_double_couplings[p] = fci_ints_->tei_ab(p, i, p, a);
-                    bb_double_couplings[p] = fci_ints_->tei_bb(i, p, a, p);
+                    ab_double_couplings[p] = as_ints_->tei_ab(p, i, p, a);
+                    bb_double_couplings[p] = as_ints_->tei_bb(i, p, a, p);
                     //                    single_beta_excite_double_couplings_[i][a][p] =
                     //                    ab_double_couplings[p];
                     //                    single_beta_excite_double_couplings_[a][i][p] =
@@ -2765,7 +2758,7 @@ void ProjectorCI_HashVec::compute_double_couplings(double double_coupling_thresh
                         continue;
                     if ((mo_symmetry_[i] ^ mo_symmetry_[j] ^ mo_symmetry_[a] ^ mo_symmetry_[b]) ==
                         0) {
-                        double Hijab = fci_ints_->tei_aa(i, j, a, b);
+                        double Hijab = as_ints_->tei_aa(i, j, a, b);
                         if (std::fabs(Hijab) >= double_coupling_threshold) {
                             ij_couplings.push_back(std::make_tuple(a, b, Hijab));
                         }
@@ -2800,7 +2793,7 @@ void ProjectorCI_HashVec::compute_double_couplings(double double_coupling_thresh
                         continue;
                     if ((mo_symmetry_[i] ^ mo_symmetry_[j] ^ mo_symmetry_[a] ^ mo_symmetry_[b]) ==
                         0) {
-                        double Hijab = fci_ints_->tei_ab(i, j, a, b);
+                        double Hijab = as_ints_->tei_ab(i, j, a, b);
                         if (std::fabs(Hijab) >= double_coupling_threshold) {
                             ij_couplings.push_back(std::make_tuple(a, b, Hijab));
                         }
@@ -2837,7 +2830,7 @@ void ProjectorCI_HashVec::compute_double_couplings(double double_coupling_thresh
                         continue;
                     if ((mo_symmetry_[i] ^ mo_symmetry_[j] ^ mo_symmetry_[a] ^ mo_symmetry_[b]) ==
                         0) {
-                        double Hijab = fci_ints_->tei_bb(i, j, a, b);
+                        double Hijab = as_ints_->tei_bb(i, j, a, b);
                         if (std::fabs(Hijab) >= double_coupling_threshold) {
                             ij_couplings.push_back(std::make_tuple(a, b, Hijab));
                         }
@@ -2882,7 +2875,7 @@ void ProjectorCI_HashVec::compute_couplings_half(const det_hashvec& dets, size_t
             if (!actBits.get_alfa_bit(a))
                 continue;
             if ((mo_symmetry_[i] ^ mo_symmetry_[a]) == 0) {
-                double Hia = fci_ints_->oei_a(i, a);
+                double Hia = as_ints_->oei_a(i, a);
                 i_couplings.push_back(std::make_tuple(a, Hia));
             }
         }
@@ -2902,7 +2895,7 @@ void ProjectorCI_HashVec::compute_couplings_half(const det_hashvec& dets, size_t
             if (!actBits.get_beta_bit(a))
                 continue;
             if ((mo_symmetry_[i] ^ mo_symmetry_[a]) == 0) {
-                double Hia = fci_ints_->oei_b(i, a);
+                double Hia = as_ints_->oei_b(i, a);
                 i_couplings.push_back(std::make_tuple(a, Hia));
             }
         }
@@ -2928,7 +2921,7 @@ void ProjectorCI_HashVec::compute_couplings_half(const det_hashvec& dets, size_t
                         continue;
                     if ((mo_symmetry_[i] ^ mo_symmetry_[j] ^ mo_symmetry_[a] ^ mo_symmetry_[b]) ==
                         0) {
-                        double Hijab = fci_ints_->tei_aa(i, j, a, b);
+                        double Hijab = as_ints_->tei_aa(i, j, a, b);
                         ij_couplings.push_back(std::make_tuple(a, b, Hijab));
                     }
                 }
@@ -2956,7 +2949,7 @@ void ProjectorCI_HashVec::compute_couplings_half(const det_hashvec& dets, size_t
                         continue;
                     if ((mo_symmetry_[i] ^ mo_symmetry_[j] ^ mo_symmetry_[a] ^ mo_symmetry_[b]) ==
                         0) {
-                        double Hijab = fci_ints_->tei_ab(i, j, a, b);
+                        double Hijab = as_ints_->tei_ab(i, j, a, b);
                         ij_couplings.push_back(std::make_tuple(a, b, Hijab));
                     }
                 }
@@ -2984,7 +2977,7 @@ void ProjectorCI_HashVec::compute_couplings_half(const det_hashvec& dets, size_t
                         continue;
                     if ((mo_symmetry_[i] ^ mo_symmetry_[j] ^ mo_symmetry_[a] ^ mo_symmetry_[b]) ==
                         0) {
-                        double Hijab = fci_ints_->tei_bb(i, j, a, b);
+                        double Hijab = as_ints_->tei_bb(i, j, a, b);
                         ij_couplings.push_back(std::make_tuple(a, b, Hijab));
                     }
                 }
@@ -3008,7 +3001,8 @@ ProjectorCI_HashVec::sym_labeled_orbitals(std::string type) {
         int cumidx = 0;
         for (int h = 0; h < nirrep_; ++h) {
             for (int a = 0; a < nactpi_[h]; ++a) {
-                orb_e.push_back(std::make_pair(scf_info_->epsilon_a()->get(h, frzcpi_[h] + a), a + cumidx));
+                orb_e.push_back(
+                    std::make_pair(scf_info_->epsilon_a()->get(h, frzcpi_[h] + a), a + cumidx));
             }
             cumidx += nactpi_[h];
         }
@@ -3027,7 +3021,8 @@ ProjectorCI_HashVec::sym_labeled_orbitals(std::string type) {
         int cumidx = 0;
         for (int h = 0; h < nirrep_; ++h) {
             for (size_t a = 0, max = nactpi_[h]; a < max; ++a) {
-                orb_e.push_back(std::make_pair(scf_info_->epsilon_b()->get(h, frzcpi_[h] + a), a + cumidx));
+                orb_e.push_back(
+                    std::make_pair(scf_info_->epsilon_b()->get(h, frzcpi_[h] + a), a + cumidx));
             }
             cumidx += nactpi_[h];
         }
@@ -3041,4 +3036,4 @@ ProjectorCI_HashVec::sym_labeled_orbitals(std::string type) {
     }
     return labeled_orb;
 }
-}
+} // namespace forte

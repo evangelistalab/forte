@@ -36,6 +36,7 @@ set forte{
    dsrg_s                1.0e10
    print                 3
    dsrgpt                true
+   multiplicity          1
 }
 
 basis {

@@ -37,7 +37,6 @@
 
 #include "sparse_ci/determinant_hashvector.h"
 #include "sparse_ci/operator.h"
-#include "base_classes/reference.h"
 #include "sparse_ci/determinant.h"
 #include "sparse_ci/sorted_string_list.h"
 #include "fci/string_lists.h"
@@ -79,14 +78,6 @@ class CI_RDMS {
     // all RDMs (1,2 and 3) in one function, but soon I'll write functions to grab
     // separate RDMs (however, these should be avoided).
     //***
-
-
-    // Return a reference object
-    Reference reference(std::vector<double>& oprdm_a, std::vector<double>& oprdm_b,
-                        std::vector<double>& tprdm_aa, std::vector<double>& tprdm_bb,
-                        std::vector<double>& tprdm_ab, std::vector<double>& tprdm_aaa,
-                        std::vector<double>& tprdm_aab, std::vector<double>& tprdm_abb,
-                        std::vector<double>& tprdm_bbb);
 
     // Compute rdms
     void compute_1rdm(std::vector<double>& oprdm_a, std::vector<double>& oprdm_b);

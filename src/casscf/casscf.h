@@ -41,14 +41,14 @@
 #include "fci/fci_vector.h"
 #include "integrals/active_space_integrals.h"
 #include "orbital-helpers/semi_canonicalize.h"
-#include "base_classes/active_space_solver.h"
+#include "base_classes/active_space_method.h"
 
 namespace forte {
 
 // class ActiveSpaceIntegrals;
 class SCFInfo;
 
-class CASSCF : public ActiveSpaceSolver {
+class CASSCF : public ActiveSpaceMethod {
   public:
     /**
      * @brief CASSCF::CASSCF
@@ -62,7 +62,7 @@ class CASSCF : public ActiveSpaceSolver {
      * This reference has a nice algorithmic flowchart.  Look it up
      *
      */
-    CASSCF(StateInfo state, std::shared_ptr<forte::SCFInfo> scf_info,
+    CASSCF(StateInfo state, size_t nroot, std::shared_ptr<forte::SCFInfo> scf_info,
            std::shared_ptr<ForteOptions> options, std::shared_ptr<MOSpaceInfo> mo_space_info,
            std::shared_ptr<ActiveSpaceIntegrals> as_ints);
     /// Use daniels code to compute Orbital optimization
@@ -76,14 +76,13 @@ class CASSCF : public ActiveSpaceSolver {
     void set_options(std::shared_ptr<ForteOptions>) override{};
 
     /// Return a reference object
-    Reference get_reference() override;
+    std::vector<Reference>
+    reference(const std::vector<std::pair<size_t, size_t>>& root_list) override;
 
     /// check the cas_ci energy with spin-free RDM
     double cas_check(Reference cas);
 
   private:
-    /// The state to calculate
-    StateInfo state_;
     /// SCF information
     std::shared_ptr<SCFInfo> scf_info_;
     /// The options
@@ -99,8 +98,6 @@ class CASSCF : public ActiveSpaceSolver {
     /// The energy computed in FCI with updates from CASSCF and CI
     double E_casscf_;
     std::shared_ptr<ForteIntegrals> ints_;
-    /// The mo_space_info
-    std::shared_ptr<MOSpaceInfo> mo_space_info_;
 
     /// The dimension for number of molecular orbitals (CORRELATED or ALL)
     psi::Dimension nmopi_;
@@ -136,7 +133,7 @@ class CASSCF : public ActiveSpaceSolver {
     /// Sets up the FCI
     void set_up_fci();
     /// Set up a SA-FCI
-    void set_up_sa_fci();
+    //  void set_up_sa_fci();
     /// Set up FCI_MO
     void set_up_fcimo();
     /// Read all the mospace info and assign correct dimensions

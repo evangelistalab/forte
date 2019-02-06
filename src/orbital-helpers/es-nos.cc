@@ -39,8 +39,9 @@ using namespace psi;
 
 namespace forte {
 
-ESNO::ESNO(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
-           std::shared_ptr<MOSpaceInfo> mo_space_info, DeterminantHashVec& reference)
+ESNO::ESNO(psi::SharedWavefunction ref_wfn, psi::Options& options,
+           std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info,
+           DeterminantHashVec& reference)
     : Wavefunction(options), ints_(ints), reference_(reference), ref_wfn_(ref_wfn),
       mo_space_info_(mo_space_info) {
     shallow_copy(ref_wfn);
@@ -59,8 +60,8 @@ void ESNO::startup() {
     auto correlated_mo = mo_space_info_->get_corr_abs_mo("GENERALIZED PARTICLE");
     std::sort(correlated_mo.begin(), correlated_mo.end());
 
-    fci_ints_ = std::make_shared<ActiveSpaceIntegrals>(ints_, correlated_mo,
-                                               mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
+    fci_ints_ = std::make_shared<ActiveSpaceIntegrals>(
+        ints_, correlated_mo, mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
 
     // Set the integrals
     outfile->Printf("\n  Resetting FCI integrals");
@@ -342,4 +343,3 @@ std::vector<size_t> ESNO::get_excitation_space() {
     return ex_space;
 }
 } // namespace forte
-

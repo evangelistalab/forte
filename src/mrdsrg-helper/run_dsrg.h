@@ -3,12 +3,12 @@
 
 #include "base_classes/forte_options.h"
 #include "sci/fci_mo.h"
+#include "mrdsrg-helper/dsrg_transformed.h"
 #include "mrdsrg-spin-integrated/dsrg_mrpt2.h"
 #include "mrdsrg-spin-integrated/dsrg_mrpt3.h"
 #include "mrdsrg-spin-integrated/master_mrdsrg.h"
 #include "mrdsrg-spin-integrated/three_dsrg_mrpt2.h"
 #include "mrdsrg-spin-integrated/mrdsrg.h"
-
 
 namespace forte {
 
@@ -18,7 +18,7 @@ void set_DSRG_options(ForteOptions& foptions);
 /// Reference relaxation, relaxed dipoles, transition dipoles,
 /// general sequence of running dsrg should be implemented in this class
 
-//class RUN_DSRG {
+// class RUN_DSRG {
 //  public:
 //    /**
 //     * Constructor
@@ -36,12 +36,18 @@ void set_DSRG_options(ForteOptions& foptions);
 //    /// Compute DSRG density
 //    void compute_dsrg_density();
 
-//protected:
+// protected:
 //    /// Reference type (FCI for FCI_MO)
 //    std::string ref_type_;
 
-
 //};
-}
+
+std::unique_ptr<MASTER_DSRG> make_dsrg_method(const std::string& method, Reference reference,
+                                              std::shared_ptr<SCFInfo> scf_info,
+                                              std::shared_ptr<ForteOptions> options,
+                                              std::shared_ptr<ForteIntegrals> ints,
+                                              std::shared_ptr<MOSpaceInfo> mo_space_info);
+
+} // namespace forte
 
 #endif // RUN_DSRG_H

@@ -40,6 +40,7 @@
 #include "psi4/libqt/qt.h"
 
 #include "mcsrgpt2_mo.h"
+#include "sci/fci_mo.h"
 #include "orbital-helpers/semi_canonicalize.h"
 #include "helpers/printing.h"
 
@@ -49,48 +50,27 @@ using namespace psi;
 
 namespace forte {
 
-MCSRGPT2_MO::MCSRGPT2_MO(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
+MCSRGPT2_MO::MCSRGPT2_MO(Reference reference, std::shared_ptr<ForteOptions> options,
                          std::shared_ptr<ForteIntegrals> ints,
                          std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : FCI_MO(scf_info, options, ints, mo_space_info) {
+    : integral_(ints), mo_space_info_(mo_space_info), options_(options) {
 
-    // compute CI energy
-    compute_ss_energy();
+    print_method_banner({"(Driven) Similarity Renormalization Group",
+                         "Second-Order Perturbative Analysis", "Chenyang Li"});
 
-    // reference cumulants
-    //int max_rdm_level = (options->get_str("THREEPDC") != "ZERO") ? 3 : 2;
-    max_rdm_ = (options->get_str("THREEPDC") != "ZERO") ? 3 : 2;
-    //Reference ref = reference(max_rdm_level);
-    Reference ref = get_reference();
-
-    // semicanonicalize orbitals
-    SemiCanonical semi(options, integral_, mo_space_info_);
-    if (actv_space_type_ == "CIS" || actv_space_type_ == "CISD") {
-        semi.set_actv_dims(actv_hole_dim_, actv_part_dim_);
-    }
-    semi.semicanonicalize(ref, max_rdm_);
+    // prepare mo space indices
+    prepare_mo_space();
 
     // fill in non-tensor based cumulants
-    fill_naive_cumulants(ref, max_rdm_);
+    int max_rdm_level = (options->get_str("THREEPDC") == "ZERO") ? 2 : 3;
+    fill_naive_cumulants(reference, max_rdm_level);
 
-    // build Fock matrix using semicanonicalized densities
+    // build Fock matrix
     Fa_ = d2(ncmo_, d1(ncmo_));
     Fb_ = d2(ncmo_, d1(ncmo_));
     Form_Fock(Fa_, Fb_);
-    if (print_ > 1) {
-        print_Fock("Alpha", Fa_);
-        print_Fock("Beta", Fb_);
-    }
 
-    print_method_banner({"Driven Similarity Renormalization Group",
-                         "Second-Order Perturbative Analysis", "Chenyang Li"});
-
-    startup(options);
-    if (options->get_str("CORR_LEVEL") == "SRG_PT2") {
-        psi::Process::environment.globals["CURRENT ENERGY"] = compute_energy_srg();
-    } else {
-        psi::Process::environment.globals["CURRENT ENERGY"] = compute_energy_dsrg();
-    }
+    startup();
 }
 
 MCSRGPT2_MO::~MCSRGPT2_MO() { cleanup(); }
@@ -99,10 +79,52 @@ void MCSRGPT2_MO::cleanup() {
     //    delete integral_;
 }
 
-void MCSRGPT2_MO::startup(std::shared_ptr<ForteOptions> options) {
+double MCSRGPT2_MO::compute_energy() {
+    if (options_->get_str("CORR_LEVEL") == "SRG_PT2") {
+        return compute_energy_srg();
+    } else {
+        Form_AMP_DSRG();
+        return compute_energy_dsrg();
+    }
+}
 
+void MCSRGPT2_MO::prepare_mo_space(){
+    // MO space
+    ncmo_ = mo_space_info_->size("CORRELATED");
+    nactv_ = mo_space_info_->size("ACTIVE");
+    ncore_ = mo_space_info_->size("RESTRICTED_DOCC");
+    nvirt_ = mo_space_info_->size("RESTRICTED_UOCC");
+
+    // obtain absolute indices of core, active and virtual
+    core_mos_ = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
+    actv_mos_ = mo_space_info_->get_corr_abs_mo("ACTIVE");
+    virt_mos_ = mo_space_info_->get_corr_abs_mo("RESTRICTED_UOCC");
+
+    // setup hole and particle indices (Active must start first)
+    nhole_ = ncore_ + nactv_;
+    npart_ = nactv_ + nvirt_;
+    hole_mos_ = std::vector<size_t>(actv_mos_);
+    hole_mos_.insert(hole_mos_.end(), core_mos_.begin(), core_mos_.end());
+    part_mos_ = std::vector<size_t>(actv_mos_);
+    part_mos_.insert(part_mos_.end(), virt_mos_.begin(), virt_mos_.end());
+
+    // setup symmetry index of active/correlated orbitals
+    auto actv_dim = mo_space_info_->get_dimension("ACTIVE");
+    auto ncmopi = mo_space_info_->get_dimension("CORRELATED");
+    for (int h = 0, nirrep = mo_space_info_->nirrep(); h < nirrep; ++h) {
+        for (size_t i = 0; i < size_t(actv_dim[h]); ++i) {
+            sym_actv_.push_back(h);
+        }
+        for (size_t i = 0; i < size_t(ncmopi[h]); ++i) {
+            sym_ncmo_.push_back(h);
+        }
+    }
+
+}
+
+void MCSRGPT2_MO::startup() {
     // Source Operator
-    source_ = options->get_str("SOURCE");
+    source_ = options_->get_str("SOURCE");
     if (sourcemap.find(source_) == sourcemap.end()) {
         outfile->Printf("\n  Source operator %s is not available.", source_.c_str());
         outfile->Printf("\n  Only these source operators are available: ");
@@ -115,6 +137,7 @@ void MCSRGPT2_MO::startup(std::shared_ptr<ForteOptions> options) {
     }
 
     // Print Delta
+    print_ = options_->get_int("PRINT");
     if (print_ > 1) {
         PrintDelta();
         test_D1_RE();
@@ -122,19 +145,19 @@ void MCSRGPT2_MO::startup(std::shared_ptr<ForteOptions> options) {
     }
 
     // DSRG Parameters
-    s_ = options->get_double("DSRG_S");
+    s_ = options_->get_double("DSRG_S");
     if (s_ < 0) {
         throw psi::PSIEXCEPTION("DSRG_S cannot be negative numbers.");
     }
-    taylor_threshold_ = options->get_int("TAYLOR_THRESHOLD");
+    taylor_threshold_ = options_->get_int("TAYLOR_THRESHOLD");
     if (taylor_threshold_ <= 0) {
         throw psi::PSIEXCEPTION("TAYLOR_THRESHOLD must be an integer greater than 0.");
     }
-    expo_delta_ = options->get_double("DSRG_POWER");
+    expo_delta_ = options_->get_double("DSRG_POWER");
     if (expo_delta_ <= 1.0) {
         throw psi::PSIEXCEPTION("DELTA_EXPONENT must be greater than 1.0.");
     }
-    double e_conv = -log10(options->get_double("E_CONVERGENCE"));
+    double e_conv = -log10(options_->get_double("E_CONVERGENCE"));
     taylor_order_ = floor((e_conv / taylor_threshold_ + 1.0) / expo_delta_) + 1;
 
     // Print Original Orbital Indices
@@ -158,118 +181,15 @@ void MCSRGPT2_MO::startup(std::shared_ptr<ForteOptions> options) {
 
     // Compute Reference Energy
     outfile->Printf("\n  Computing reference energy using density cumulant ...");
-
     compute_ref();
     outfile->Printf("\t\t\tDone.");
 
     // 2-Particle Density Cumulant
-    string twopdc = options->get_str("TWOPDC");
+    string twopdc = options_->get_str("TWOPDC");
     if (twopdc == "ZERO") {
         L2aa_ = d4(nactv_, d3(nactv_, d2(nactv_, d1(nactv_))));
         L2ab_ = d4(nactv_, d3(nactv_, d2(nactv_, d1(nactv_))));
         L2bb_ = d4(nactv_, d3(nactv_, d2(nactv_, d1(nactv_))));
-    }
-
-    if (options->get_str("CORR_LEVEL") == "SRG_PT2") {
-        // compute [1 - exp(-s * x^2)] / x^2
-        srg_source_ = std::make_shared<LABS_SOURCE>(s_, taylor_threshold_);
-
-        // no need to form amplitudes nor effective integrals
-        // do need to reform the Fock matrix
-        Fa_srg_ = d2(ncmo_, d1(ncmo_));
-        Fb_srg_ = d2(ncmo_, d1(ncmo_));
-        Form_Fock_SRG();
-
-        //        // zero all acitve two-electron integrals
-        //        for(size_t u = 0; u < na_; ++u){
-        //            size_t nu = idx_a_[u];
-        //            for(size_t v = 0; v < na_; ++v){
-        //                size_t nv = idx_a_[v];
-        //                for(size_t x = 0; x < na_; ++x){
-        //                    size_t nx = idx_a_[x];
-        //                    for(size_t y = 0; y < na_; ++y){
-        //                        size_t ny = idx_a_[y];
-
-        //                        integral_->set_tei(nu,nv,nx,ny,0.0,true,true);
-        //                        integral_->set_tei(nu,nv,nx,ny,0.0,true,false);
-        //                        integral_->set_tei(nu,nv,nx,ny,0.0,false,false);
-        //                    }
-        //                }
-        //            }
-        //        }
-    } else {
-        // Form T Amplitudes
-        T2aa_ = d4(nhole_, d3(nhole_, d2(npart_, d1(npart_))));
-        T2ab_ = d4(nhole_, d3(nhole_, d2(npart_, d1(npart_))));
-        T2bb_ = d4(nhole_, d3(nhole_, d2(npart_, d1(npart_))));
-        T1a_ = d2(nhole_, d1(npart_));
-        T1b_ = d2(nhole_, d1(npart_));
-
-        string t_algorithm = options->get_str("T_ALGORITHM");
-        t1_amp_ = options->get_str("T1_AMP");
-        bool t1_zero = t1_amp_ == "ZERO";
-        outfile->Printf("\n");
-        outfile->Printf("\n  Computing MR-DSRG-PT2 T amplitudes ...");
-
-        if (boost::starts_with(t_algorithm, "DSRG")) {
-            outfile->Printf("\n  Form T amplitudes using %s formalism.", t_algorithm.c_str());
-            Form_T2_DSRG(T2aa_, T2ab_, T2bb_, t_algorithm);
-            if (!t1_zero) {
-                Form_T1_DSRG(T1a_, T1b_);
-            } else {
-                outfile->Printf("\n  Zero T1 amplitudes.");
-            }
-        } else if (t_algorithm == "SELEC") {
-            outfile->Printf("\n  Form T amplitudes using DSRG_SELEC formalism. "
-                            "(c->a, c->v, a->v)");
-            Form_T2_SELEC(T2aa_, T2ab_, T2bb_);
-            if (!t1_zero) {
-                Form_T1_DSRG(T1a_, T1b_);
-            } else {
-                outfile->Printf("\n  Zero T1 amplitudes.");
-            }
-        } else if (t_algorithm == "ISA") {
-            outfile->Printf("\n  Form T amplitudes using intruder state "
-                            "avoidance (ISA) formalism.");
-            double b = options->get_double("ISA_B");
-            Form_T2_ISA(T2aa_, T2ab_, T2bb_, b);
-            if (!t1_zero) {
-                Form_T1_ISA(T1a_, T1b_, b);
-            } else {
-                outfile->Printf("\n  Zero T1 amplitudes.");
-            }
-        }
-        outfile->Printf("\n  Done.");
-
-        // Check T Amplitudes
-        T2Naa_ = 0.0, T2Nab_ = 0.0, T2Nbb_ = 0.0;
-        T2Maxaa_ = 0.0, T2Maxab_ = 0.0, T2Maxbb_ = 0.0;
-        Check_T2("AA", T2aa_, T2Naa_, T2Maxaa_, options);
-        Check_T2("AB", T2ab_, T2Nab_, T2Maxab_, options);
-        Check_T2("BB", T2bb_, T2Nbb_, T2Maxbb_, options);
-
-        T1Na_ = 0.0, T1Nb_ = 0.0;
-        T1Maxa_ = 0.0, T1Maxb_ = 0.0;
-        Check_T1("A", T1a_, T1Na_, T1Maxa_, options);
-        Check_T1("B", T1b_, T1Nb_, T1Maxb_, options);
-
-        bool dsrgpt = options->get_bool("DSRGPT");
-
-        // Effective Fock Matrix
-        Fa_dsrg_ = d2(ncmo_, d1(ncmo_));
-        Fb_dsrg_ = d2(ncmo_, d1(ncmo_));
-        outfile->Printf("\n");
-        outfile->Printf("\n  Computing the MR-DSRG-PT2 effective Fock matrix ...");
-
-        Form_Fock_DSRG(Fa_dsrg_, Fb_dsrg_, dsrgpt);
-        outfile->Printf("\t\t\tDone.");
-
-        // Effective Two Electron Integrals
-        outfile->Printf("\n  Computing the MR-DSRG-PT2 effective two-electron "
-                        "integrals ...");
-
-        Form_APTEI_DSRG(dsrgpt);
-        outfile->Printf("\tDone.");
     }
 }
 
@@ -470,7 +390,7 @@ void MCSRGPT2_MO::compute_ref() {
             }
         }
     }
-    Eref_ += e_nuc_ + integral_->frozen_core_energy();
+    Eref_ += integral_->nuclear_repulsion_energy() + integral_->frozen_core_energy();
     //    outfile->Printf("\n    E0 (cumulant) %15c = %22.15f", ' ', Eref_);
     timer_off("Compute Ref");
 }
@@ -1653,6 +1573,81 @@ void MCSRGPT2_MO::PrintDelta() {
         }
     }
     out_delta.close();
+}
+
+void MCSRGPT2_MO::Form_AMP_DSRG() {
+    // Form T Amplitudes
+    T2aa_ = d4(nhole_, d3(nhole_, d2(npart_, d1(npart_))));
+    T2ab_ = d4(nhole_, d3(nhole_, d2(npart_, d1(npart_))));
+    T2bb_ = d4(nhole_, d3(nhole_, d2(npart_, d1(npart_))));
+    T1a_ = d2(nhole_, d1(npart_));
+    T1b_ = d2(nhole_, d1(npart_));
+
+    string t_algorithm = options_->get_str("T_ALGORITHM");
+    t1_amp_ = options_->get_str("T1_AMP");
+    bool t1_zero = t1_amp_ == "ZERO";
+    outfile->Printf("\n");
+    outfile->Printf("\n  Computing MR-DSRG-PT2 T amplitudes ...");
+
+    if (boost::starts_with(t_algorithm, "DSRG")) {
+        outfile->Printf("\n  Form T amplitudes using %s formalism.", t_algorithm.c_str());
+        Form_T2_DSRG(T2aa_, T2ab_, T2bb_, t_algorithm);
+        if (!t1_zero) {
+            Form_T1_DSRG(T1a_, T1b_);
+        } else {
+            outfile->Printf("\n  Zero T1 amplitudes.");
+        }
+    } else if (t_algorithm == "SELEC") {
+        outfile->Printf("\n  Form T amplitudes using DSRG_SELEC formalism. "
+                        "(c->a, c->v, a->v)");
+        Form_T2_SELEC(T2aa_, T2ab_, T2bb_);
+        if (!t1_zero) {
+            Form_T1_DSRG(T1a_, T1b_);
+        } else {
+            outfile->Printf("\n  Zero T1 amplitudes.");
+        }
+    } else if (t_algorithm == "ISA") {
+        outfile->Printf("\n  Form T amplitudes using intruder state "
+                        "avoidance (ISA) formalism.");
+        double b = options_->get_double("ISA_B");
+        Form_T2_ISA(T2aa_, T2ab_, T2bb_, b);
+        if (!t1_zero) {
+            Form_T1_ISA(T1a_, T1b_, b);
+        } else {
+            outfile->Printf("\n  Zero T1 amplitudes.");
+        }
+    }
+    outfile->Printf("\n  Done.");
+
+    // Check T Amplitudes
+    T2Naa_ = 0.0, T2Nab_ = 0.0, T2Nbb_ = 0.0;
+    T2Maxaa_ = 0.0, T2Maxab_ = 0.0, T2Maxbb_ = 0.0;
+    Check_T2("AA", T2aa_, T2Naa_, T2Maxaa_, options_);
+    Check_T2("AB", T2ab_, T2Nab_, T2Maxab_, options_);
+    Check_T2("BB", T2bb_, T2Nbb_, T2Maxbb_, options_);
+
+    T1Na_ = 0.0, T1Nb_ = 0.0;
+    T1Maxa_ = 0.0, T1Maxb_ = 0.0;
+    Check_T1("A", T1a_, T1Na_, T1Maxa_, options_);
+    Check_T1("B", T1b_, T1Nb_, T1Maxb_, options_);
+
+    bool dsrgpt = options_->get_bool("DSRGPT");
+
+    // Effective Fock Matrix
+    Fa_dsrg_ = d2(ncmo_, d1(ncmo_));
+    Fb_dsrg_ = d2(ncmo_, d1(ncmo_));
+    outfile->Printf("\n");
+    outfile->Printf("\n  Computing the MR-DSRG-PT2 effective Fock matrix ...");
+
+    Form_Fock_DSRG(Fa_dsrg_, Fb_dsrg_, dsrgpt);
+    outfile->Printf("\t\t\tDone.");
+
+    // Effective Two Electron Integrals
+    outfile->Printf("\n  Computing the MR-DSRG-PT2 effective two-electron "
+                    "integrals ...");
+
+    Form_APTEI_DSRG(dsrgpt);
+    outfile->Printf("\tDone.");
 }
 
 double MCSRGPT2_MO::compute_energy_dsrg() {
@@ -3234,6 +3229,33 @@ double MCSRGPT2_MO::ESRG_22_6() {
 }
 
 double MCSRGPT2_MO::compute_energy_srg() {
+    // compute [1 - exp(-s * x^2)] / x^2
+    srg_source_ = std::make_shared<LABS_SOURCE>(s_, taylor_threshold_);
+
+    // no need to form amplitudes nor effective integrals
+    // do need to reform the Fock matrix
+    Fa_srg_ = d2(ncmo_, d1(ncmo_));
+    Fb_srg_ = d2(ncmo_, d1(ncmo_));
+    Form_Fock_SRG();
+
+    //        // zero all acitve two-electron integrals
+    //        for(size_t u = 0; u < na_; ++u){
+    //            size_t nu = idx_a_[u];
+    //            for(size_t v = 0; v < na_; ++v){
+    //                size_t nv = idx_a_[v];
+    //                for(size_t x = 0; x < na_; ++x){
+    //                    size_t nx = idx_a_[x];
+    //                    for(size_t y = 0; y < na_; ++y){
+    //                        size_t ny = idx_a_[y];
+
+    //                        integral_->set_tei(nu,nv,nx,ny,0.0,true,true);
+    //                        integral_->set_tei(nu,nv,nx,ny,0.0,true,false);
+    //                        integral_->set_tei(nu,nv,nx,ny,0.0,false,false);
+    //                    }
+    //                }
+    //            }
+    //        }
+
     outfile->Printf("\n");
     outfile->Printf("\n  Computing energy of [eta1, H1] ...");
     double Esrg_11 = ESRG_11();
@@ -3282,4 +3304,332 @@ double MCSRGPT2_MO::compute_energy_srg() {
 
     return Etotal;
 }
+
+void MCSRGPT2_MO::print_Fock(const string& spin, const d2& Fock) {
+    string name = "Fock " + spin;
+    outfile->Printf("  ==> %s <==\n\n", name.c_str());
+    double econv = options_->get_double("E_CONVERGENCE");
+
+    // print Fock block
+    auto print_Fock_block = [&](const string& name1, const string& name2,
+                                const std::vector<size_t>& idx1, const std::vector<size_t>& idx2) {
+        size_t dim1 = idx1.size();
+        size_t dim2 = idx2.size();
+        string bname = name1 + "-" + name2;
+
+        psi::Matrix F(bname, dim1, dim2);
+        for (size_t i = 0; i < dim1; ++i) {
+            size_t ni = idx1[i];
+            for (size_t j = 0; j < dim2; ++j) {
+                size_t nj = idx2[j];
+                F.set(i, j, Fock[ni][nj]);
+            }
+        }
+
+        F.print();
+
+        if (dim1 != dim2) {
+            string bnamer = name2 + "-" + name1;
+            psi::Matrix Fr(bnamer, dim2, dim1);
+            for (size_t i = 0; i < dim2; ++i) {
+                size_t ni = idx2[i];
+                for (size_t j = 0; j < dim1; ++j) {
+                    size_t nj = idx1[j];
+                    Fr.set(i, j, Fock[ni][nj]);
+                }
+            }
+
+            psi::SharedMatrix FT = Fr.transpose();
+            for (size_t i = 0; i < dim1; ++i) {
+                for (size_t j = 0; j < dim2; ++j) {
+                    double diff = FT->get(i, j) - F.get(i, j);
+                    FT->set(i, j, diff);
+                }
+            }
+            if (FT->rms() > 100.0 * econv) {
+                outfile->Printf("  Warning: %s not symmetric for %s and %s blocks\n", name.c_str(),
+                                bname.c_str(), bnamer.c_str());
+                Fr.print();
+            }
+        }
+    };
+
+    // diagonal blocks
+    print_Fock_block("C", "C", core_mos_, core_mos_);
+    print_Fock_block("V", "V", virt_mos_, virt_mos_);
+    print_Fock_block("A", "A", actv_mos_, actv_mos_);
+
+    // off-diagonal blocks
+    print_Fock_block("C", "A", core_mos_, actv_mos_);
+    print_Fock_block("C", "V", core_mos_, virt_mos_);
+    print_Fock_block("A", "V", actv_mos_, virt_mos_);
+}
+
+void MCSRGPT2_MO::Form_Fock(d2& A, d2& B) {
+    timer_on("Form Fock");
+    compute_Fock_ints();
+
+    for (size_t p = 0; p < ncmo_; ++p) {
+        for (size_t q = 0; q < ncmo_; ++q) {
+            A[p][q] = integral_->get_fock_a(p, q);
+            B[p][q] = integral_->get_fock_b(p, q);
+        }
+    }
+    timer_off("Form Fock");
+
+    if (print_ > 1) {
+        print_Fock("Alpha", A);
+        print_Fock("Beta", B);
+    }
+}
+
+void MCSRGPT2_MO::compute_Fock_ints() {
+    local_timer tfock;
+    outfile->Printf("\n  %-35s ...", "Forming generalized Fock matrix");
+
+    psi::SharedMatrix DaM(new psi::Matrix("DaM", ncmo_, ncmo_));
+    psi::SharedMatrix DbM(new psi::Matrix("DbM", ncmo_, ncmo_));
+    for (size_t m = 0; m < ncore_; m++) {
+        size_t nm = core_mos_[m];
+        for (size_t n = 0; n < ncore_; n++) {
+            size_t nn = core_mos_[n];
+            DaM->set(nm, nn, Da_[nm][nn]);
+            DbM->set(nm, nn, Db_[nm][nn]);
+        }
+    }
+    for (size_t u = 0; u < nactv_; u++) {
+        size_t nu = actv_mos_[u];
+        for (size_t v = 0; v < nactv_; v++) {
+            size_t nv = actv_mos_[v];
+            DaM->set(nu, nv, Da_[nu][nv]);
+            DbM->set(nu, nv, Db_[nu][nv]);
+        }
+    }
+    integral_->make_fock_matrix(DaM, DbM);
+
+    outfile->Printf("  Done. Timing %15.6f s", tfock.get());
+}
+
+void MCSRGPT2_MO::fill_naive_cumulants(Reference ref, const int level) {
+    // fill in 1-cumulant (same as 1-RDM) to D1a_, D1b_
+    ambit::Tensor L1a = ref.g1a();
+    ambit::Tensor L1b = ref.g1b();
+    fill_one_cumulant(L1a, L1b);
+    if (print_ > 1) {
+        print_density("Alpha", Da_);
+        print_density("Beta", Db_);
+    }
+
+    // fill in 2-cumulant to L2aa_, L2ab_, L2bb_
+    if (level >= 2) {
+        ambit::Tensor L2aa = ref.L2aa();
+        ambit::Tensor L2ab = ref.L2ab();
+        ambit::Tensor L2bb = ref.L2bb();
+        fill_two_cumulant(L2aa, L2ab, L2bb);
+        if (print_ > 2) {
+            print2PDC("L2aa", L2aa_, print_);
+            print2PDC("L2ab", L2ab_, print_);
+            print2PDC("L2bb", L2bb_, print_);
+        }
+    }
+
+    // fill in 3-cumulant to L3aaa_, L3aab_, L3abb_, L3bbb_
+    if (level >= 3) {
+        ambit::Tensor L3aaa = ref.L3aaa();
+        ambit::Tensor L3aab = ref.L3aab();
+        ambit::Tensor L3abb = ref.L3abb();
+        ambit::Tensor L3bbb = ref.L3bbb();
+        fill_three_cumulant(L3aaa, L3aab, L3abb, L3bbb);
+        if (print_ > 3) {
+            print3PDC("L3aaa", L3aaa_, print_);
+            print3PDC("L3aab", L3aab_, print_);
+            print3PDC("L3abb", L3abb_, print_);
+            print3PDC("L3bbb", L3bbb_, print_);
+        }
+    }
+}
+
+void MCSRGPT2_MO::fill_one_cumulant(ambit::Tensor& L1a, ambit::Tensor& L1b) {
+    Da_ = d2(ncmo_, d1(ncmo_));
+    Db_ = d2(ncmo_, d1(ncmo_));
+
+    for (size_t p = 0; p < ncore_; ++p) {
+        size_t np = core_mos_[p];
+        Da_[np][np] = 1.0;
+        Db_[np][np] = 1.0;
+    }
+
+    std::vector<double>& opdc_a = L1a.data();
+    std::vector<double>& opdc_b = L1b.data();
+
+    // TODO: try omp here
+    for (size_t p = 0; p < nactv_; ++p) {
+        size_t np = actv_mos_[p];
+        for (size_t q = p; q < nactv_; ++q) {
+            size_t nq = actv_mos_[q];
+
+            if ((sym_actv_[p] ^ sym_actv_[q]) != 0)
+                continue;
+
+            size_t index = p * nactv_ + q;
+            Da_[np][nq] = opdc_a[index];
+            Db_[np][nq] = opdc_b[index];
+
+            Da_[nq][np] = Da_[np][nq];
+            Db_[nq][np] = Db_[np][nq];
+        }
+    }
+}
+
+void MCSRGPT2_MO::fill_two_cumulant(ambit::Tensor& L2aa, ambit::Tensor& L2ab, ambit::Tensor& L2bb) {
+    L2aa_ = d4(nactv_, d3(nactv_, d2(nactv_, d1(nactv_))));
+    L2ab_ = d4(nactv_, d3(nactv_, d2(nactv_, d1(nactv_))));
+    L2bb_ = d4(nactv_, d3(nactv_, d2(nactv_, d1(nactv_))));
+
+    std::vector<double>& tpdc_aa = L2aa.data();
+    std::vector<double>& tpdc_ab = L2ab.data();
+    std::vector<double>& tpdc_bb = L2bb.data();
+
+    size_t dim2 = nactv_ * nactv_;
+    size_t dim3 = nactv_ * dim2;
+
+    // TODO: try omp here
+    for (size_t p = 0; p < nactv_; ++p) {
+        for (size_t q = 0; q < nactv_; ++q) {
+            for (size_t r = 0; r < nactv_; ++r) {
+                for (size_t s = 0; s < nactv_; ++s) {
+
+                    if ((sym_actv_[p] ^ sym_actv_[q] ^ sym_actv_[r] ^ sym_actv_[s]) != 0)
+                        continue;
+
+                    size_t index = p * dim3 + q * dim2 + r * nactv_ + s;
+
+                    L2aa_[p][q][r][s] = tpdc_aa[index];
+                    L2ab_[p][q][r][s] = tpdc_ab[index];
+                    L2bb_[p][q][r][s] = tpdc_bb[index];
+                }
+            }
+        }
+    }
+}
+
+void MCSRGPT2_MO::fill_three_cumulant(ambit::Tensor& L3aaa, ambit::Tensor& L3aab,
+                                      ambit::Tensor& L3abb, ambit::Tensor& L3bbb) {
+    L3aaa_ = d6(nactv_, d5(nactv_, d4(nactv_, d3(nactv_, d2(nactv_, d1(nactv_))))));
+    L3aab_ = d6(nactv_, d5(nactv_, d4(nactv_, d3(nactv_, d2(nactv_, d1(nactv_))))));
+    L3abb_ = d6(nactv_, d5(nactv_, d4(nactv_, d3(nactv_, d2(nactv_, d1(nactv_))))));
+    L3bbb_ = d6(nactv_, d5(nactv_, d4(nactv_, d3(nactv_, d2(nactv_, d1(nactv_))))));
+
+    size_t dim2 = nactv_ * nactv_;
+    size_t dim3 = nactv_ * dim2;
+    size_t dim4 = nactv_ * dim3;
+    size_t dim5 = nactv_ * dim4;
+
+    auto fill = [&](d6& L3, ambit::Tensor& L3t) {
+        std::vector<double>& data = L3t.data();
+
+        // TODO: try omp here
+        for (size_t p = 0; p != nactv_; ++p) {
+            for (size_t q = 0; q != nactv_; ++q) {
+                for (size_t r = 0; r != nactv_; ++r) {
+                    for (size_t s = 0; s != nactv_; ++s) {
+                        for (size_t t = 0; t != nactv_; ++t) {
+                            for (size_t u = 0; u != nactv_; ++u) {
+
+                                if ((sym_actv_[p] ^ sym_actv_[q] ^ sym_actv_[r] ^ sym_actv_[s] ^
+                                     sym_actv_[t] ^ sym_actv_[u]) != 0)
+                                    continue;
+
+                                size_t index =
+                                    p * dim5 + q * dim4 + r * dim3 + s * dim2 + t * nactv_ + u;
+
+                                L3[p][q][r][s][t][u] = data[index];
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    };
+
+    fill(L3aaa_, L3aaa);
+    fill(L3aab_, L3aab);
+    fill(L3abb_, L3abb);
+    fill(L3bbb_, L3bbb);
+}
+
+void MCSRGPT2_MO::print_density(const string& spin, const d2& density) {
+    string name = "Density " + spin;
+    outfile->Printf("  ==> %s <==\n\n", name.c_str());
+
+    psi::SharedMatrix dens(new psi::Matrix("A-A", nactv_, nactv_));
+    for (size_t u = 0; u < nactv_; ++u) {
+        size_t nu = actv_mos_[u];
+        for (size_t v = 0; v < nactv_; ++v) {
+            size_t nv = actv_mos_[v];
+            dens->set(u, v, density[nu][nv]);
+        }
+    }
+
+    dens->print();
+}
+
+void MCSRGPT2_MO::print2PDC(const string& str, const d4& TwoPDC, const int& PRINT) {
+    timer_on("PRINT 2-Cumulant");
+    outfile->Printf("\n  ** %s **", str.c_str());
+    size_t count = 0;
+    size_t size = TwoPDC.size();
+    for (size_t i = 0; i != size; ++i) {
+        for (size_t j = 0; j != size; ++j) {
+            for (size_t k = 0; k != size; ++k) {
+                for (size_t l = 0; l != size; ++l) {
+                    if (std::fabs(TwoPDC[i][j][k][l]) > 1.0e-15) {
+                        ++count;
+                        if (PRINT > 2)
+                            outfile->Printf("\n  Lambda "
+                                            "[%3lu][%3lu][%3lu][%3lu] = "
+                                            "%18.15lf",
+                                            i, j, k, l, TwoPDC[i][j][k][l]);
+                    }
+                }
+            }
+        }
+    }
+    outfile->Printf("\n");
+    outfile->Printf("\n  Number of Nonzero Elements: %zu", count);
+    outfile->Printf("\n");
+    timer_off("PRINT 2-Cumulant");
+}
+
+void MCSRGPT2_MO::print3PDC(const string& str, const d6& ThreePDC, const int& PRINT) {
+    timer_on("PRINT 3-Cumulant");
+    outfile->Printf("\n  ** %s **", str.c_str());
+    size_t count = 0;
+    size_t size = ThreePDC.size();
+    for (size_t i = 0; i != size; ++i) {
+        for (size_t j = 0; j != size; ++j) {
+            for (size_t k = 0; k != size; ++k) {
+                for (size_t l = 0; l != size; ++l) {
+                    for (size_t m = 0; m != size; ++m) {
+                        for (size_t n = 0; n != size; ++n) {
+                            if (std::fabs(ThreePDC[i][j][k][l][m][n]) > 1.0e-15) {
+                                ++count;
+                                if (PRINT > 3)
+                                    outfile->Printf("\n  Lambda "
+                                                    "[%3lu][%3lu][%3lu][%3lu][%"
+                                                    "3lu][%3lu] = %18.15lf",
+                                                    i, j, k, l, m, n, ThreePDC[i][j][k][l][m][n]);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    outfile->Printf("\n");
+    outfile->Printf("\n  Number of Nonzero Elements: %zu", count);
+    outfile->Printf("\n");
+    timer_off("PRINT 3-Cumulant");
+}
+
 } // namespace forte

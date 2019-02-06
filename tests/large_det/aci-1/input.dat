@@ -26,7 +26,7 @@ set scf {
 }
 
 set forte {
-  job_type = aci
+  active_space_solver aci
   frozen_docc [1,0,0,0,0,1,0,0]
   ACI_SELECT_TYPE aimed_energy
   diag_algorithm davidsonliulist

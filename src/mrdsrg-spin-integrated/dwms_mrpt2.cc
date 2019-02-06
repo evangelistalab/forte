@@ -337,7 +337,7 @@ std::shared_ptr<FCI_MO> DWMS_DSRGPT2::precompute_energy() {
     // perform SA-DSRG-PT2/3 if needed
     if (dwms_ref_ != "CASCI") {
         fci_mo->set_max_rdm_level(max_rdm_level_);
-        Reference reference = fci_mo->get_reference();
+        Reference reference = fci_mo->reference();
 
         std::shared_ptr<MASTER_DSRG> dsrg_pt;
         fci_ints_ = compute_dsrg_pt(dsrg_pt, reference, dwms_ref_);
@@ -433,7 +433,7 @@ DWMS_DSRGPT2::compute_dsrg_pt(std::shared_ptr<MASTER_DSRG>& dsrg_pt, Reference& 
 
     // compute dsrg-pt2/3 energy
     if (do_semi_) {
-        SemiCanonical semi(foptions_, ints_, mo_space_info_);
+        SemiCanonical semi(mo_space_info_, ints_, foptions_);
         semi.semicanonicalize(reference, max_rdm_level_);
         Ua_ = semi.Ua_t();
         Ub_ = semi.Ub_t();
@@ -474,11 +474,11 @@ DWMS_DSRGPT2::compute_macro_dsrg_pt(std::shared_ptr<MASTER_DSRG>& dsrg_pt,
     // compute Reference
     fci_mo->set_sa_info(sa_info_new);
     fci_mo->set_max_rdm_level(max_rdm_level_);
-    Reference reference = fci_mo->get_reference();
+    Reference reference = fci_mo->reference();
 
     // update MK vacuum energy
-    double new_Eref = compute_Eref_from_reference(reference, ints_, mo_space_info_, Enuc_);
-    reference.set_Eref(new_Eref); // TODO: ?why do this here this way?
+    //double new_Eref = compute_Eref_from_reference(reference, ints_, mo_space_info_, Enuc_);
+    //reference.set_Eref(new_Eref); // TODO: ?why do this here this way?
 
     // compute DSRG-PT2/3 energies and Hbar
     return compute_dsrg_pt(dsrg_pt, reference, dwms_corrlv_);
@@ -927,8 +927,8 @@ double DWMS_DSRGPT2::contract_Heff_1TrDM(ambit::Tensor& H1a, ambit::Tensor& H1b,
     double coupling = 0.0;
     std::string indices = transpose ? "vu" : "uv";
 
-    coupling += H1a("vu") * TrD.L1a()(indices);
-    coupling += H1b("vu") * TrD.L1b()(indices);
+    coupling += H1a("vu") * TrD.g1a()(indices);
+    coupling += H1b("vu") * TrD.g1b()(indices);
 
     return coupling;
 }
@@ -1092,7 +1092,7 @@ void DWMS_DSRGPT2::compute_dwms_energy_separated_H(std::shared_ptr<FCI_MO>& fci_
                 fci_mo->set_initial_guess(guess);
 
                 // diagonalize DSRG-PT2 active Hamiltonian
-                Ept_[n][i] = fci_mo->compute_ss_energy();
+                Ept_[n][i] = fci_mo->compute_ss_energies()[0]; // bc set root = 0
 
                 // since Heff is rotated to the original basis, we can safely store the CI vectors
                 evecs_new[i] = fci_mo->eigen()[0].first;
@@ -1106,7 +1106,7 @@ void DWMS_DSRGPT2::compute_dwms_energy_separated_H(std::shared_ptr<FCI_MO>& fci_
             } else {
                 fci_mo->set_nroots(nroots);
                 fci_mo->set_root(i);
-                Ept_[n][i] = fci_mo->compute_ss_energy();
+                Ept_[n] = fci_mo->compute_ss_energies();
 
                 // since Heff is rotated to the original basis, we can safely store the CI vectors
                 evecs_new[i] = fci_mo->eigen()[i].first;

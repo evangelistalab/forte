@@ -29,7 +29,7 @@
 #ifndef _fci_solver_h_
 #define _fci_solver_h_
 
-#include "base_classes/active_space_solver.h"
+#include "base_classes/active_space_method.h"
 #include "psi4/libmints/dimension.h"
 
 namespace forte {
@@ -41,17 +41,18 @@ class StringLists;
  * @brief The FCISolver class
  * This class performs Full CI calculations.
  */
-class FCISolver : public ActiveSpaceSolver {
+class FCISolver : public ActiveSpaceMethod {
   public:
     // ==> Class Constructor and Destructor <==
 
     /**
      * @brief FCISolver A class that performs a FCI computation in an active space
      * @param state the electronic state to compute
+     * @param nroot the number of roots
      * @param mo_space_info a MOSpaceInfo object that defines the orbital spaces
-     * @param as_ints integrals for the active space integrals
+     * @param as_ints molecular integrals defined only for the active space orbitals
      */
-    FCISolver(StateInfo state, std::shared_ptr<MOSpaceInfo> mo_space_info,
+    FCISolver(StateInfo state, size_t nroot, std::shared_ptr<MOSpaceInfo> mo_space_info,
               std::shared_ptr<ActiveSpaceIntegrals> as_ints);
 
     ~FCISolver() = default;
@@ -62,7 +63,8 @@ class FCISolver : public ActiveSpaceSolver {
     double compute_energy() override;
 
     /// Return a reference object
-    Reference get_reference() override;
+    std::vector<Reference>
+    reference(const std::vector<std::pair<size_t, size_t>>& root_list) override;
 
     /// Set the options
     void set_options(std::shared_ptr<ForteOptions> options) override;

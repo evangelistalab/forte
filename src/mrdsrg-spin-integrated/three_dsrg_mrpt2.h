@@ -79,9 +79,6 @@ class THREE_DSRG_MRPT2 : public MASTER_DSRG {
     /// Return T2 amplitudes
     virtual ambit::BlockedTensor get_T2(const std::vector<std::string>& blocks);
 
-    /// Allow the reference to relax
-    double relax_reference_once();
-
     //    /// Compute de-normal-ordered amplitudes and return the scalar term
     //    double Tamp_deGNO();
 
@@ -241,8 +238,6 @@ class THREE_DSRG_MRPT2 : public MASTER_DSRG {
     void compute_Hbar1C_diskDF(ambit::BlockedTensor& Hbar1, bool scaleV = true);
     /// Compute Hbar1 from virtual contraction when doing DiskDF
     void compute_Hbar1V_diskDF(ambit::BlockedTensor& Hbar1, bool scaleV = true);
-
-    std::vector<double> relaxed_energy(std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
 
     /// Print detailed timings
     bool detail_time_ = false;

@@ -3,7 +3,7 @@
           Psi4: An Open-Source Ab Initio Electronic Structure Package
                                Psi4 undefined 
 
-                         Git: Rev {master} 3c26e8e 
+                         Git: Rev {master} c27a5c4 dirty
 
 
     R. M. Parrish, L. A. Burns, D. G. A. Smith, A. C. Simmonett,
@@ -22,11 +22,11 @@
     -----------------------------------------------------------------------
 
 
-    Psi4 started on: Thursday, 25 October 2018 04:13PM
+    Psi4 started on: Thursday, 10 January 2019 05:18PM
 
-    Process ID: 93356
-    Host:       jeffschriber
-    PSIDATADIR: /Users/jeffschriber/src/psi4-debug-install/share/psi4
+    Process ID: 6931
+    Host:       tianyuans-air.wireless.emory.edu
+    PSIDATADIR: /Users/tianyuanzhang/Documents/Source/psi4_2018/psi4-bin-clang-debug/share/psi4
     Memory:     500.0 MiB
     Threads:    1
     
@@ -53,7 +53,7 @@ set {
 }
 
 set forte {
-  job_type pci
+  active_space_solver pci
   pci_nroot 1
   charge 0
   pci_tau 1.0
@@ -68,21 +68,21 @@ set forte {
 }
 
 energy('scf')
-compare_values(refscf, get_variable("CURRENT ENERGY"), 11, "SCF energy") #TEST
+compare_values(refscf, variable("CURRENT ENERGY"), 11, "SCF energy") #TEST
 
 energy('forte')
-compare_values(refpci, get_variable("PCI ENERGY"), 10, "PCI energy") #TEST
+compare_values(refpci, variable("PCI ENERGY"), 10, "PCI energy") #TEST
 --------------------------------------------------------------------------
 
-*** tstart() called on jeffschriber
-*** at Thu Oct 25 16:13:45 2018
+*** tstart() called on tianyuans-air.wireless.emory.edu
+*** at Thu Jan 10 17:18:45 2019
 
    => Loading Basis Set <=
 
     Name: STO-3G
     Role: ORBITAL
     Keyword: BASIS
-    atoms 1-2 entry LI         line    31 file /Users/jeffschriber/src/psi4-debug-install/share/psi4/basis/sto-3g.gbs 
+    atoms 1-2 entry LI         line    31 file /Users/tianyuanzhang/Documents/Source/psi4_2018/psi4-bin-clang-debug/share/psi4/basis/sto-3g.gbs 
 
 
          ---------------------------------------------------------
@@ -102,13 +102,13 @@ compare_values(refpci, get_variable("PCI ENERGY"), 10, "PCI energy") #TEST
 
        Center              X                  Y                   Z               Mass       
     ------------   -----------------  -----------------  -----------------  -----------------
-         LI           0.000000000000     0.000000000000    -1.000000000000     7.016004548000
-         LI           0.000000000000     0.000000000000     1.000000000000     7.016004548000
+         LI           0.000000000000     0.000000000000    -1.000000000000     7.016003436600
+         LI           0.000000000000     0.000000000000     1.000000000000     7.016003436600
 
   Running in d2h symmetry.
 
   Rotational constants: A = ************  B =      1.20137  C =      1.20137 [cm^-1]
-  Rotational constants: A = ************  B =  36016.15459  C =  36016.15459 [MHz]
+  Rotational constants: A = ************  B =  36016.16030  C =  36016.16030 [MHz]
   Nuclear repulsion =    2.381297448014999
 
   Charge       = 0
@@ -192,14 +192,14 @@ compare_values(refpci, get_variable("PCI ENERGY"), 10, "PCI energy") #TEST
 
                         Total Energy        Delta E     RMS |[F,P]|
 
-   @RHF iter   0:   -14.58573852679840   -1.45857e+01   6.38128e-02 
-   @RHF iter   1:   -14.60879129707151   -2.30528e-02   3.90853e-03 
+   @RHF iter   0:   -14.58573852679841   -1.45857e+01   6.38128e-02 
+   @RHF iter   1:   -14.60879129707150   -2.30528e-02   3.90853e-03 
    @RHF iter   2:   -14.60956780353629   -7.76506e-04   1.49380e-03 DIIS
    @RHF iter   3:   -14.60974068441564   -1.72881e-04   2.15662e-04 DIIS
    @RHF iter   4:   -14.60974473615713   -4.05174e-06   4.32612e-06 DIIS
    @RHF iter   5:   -14.60974473808782   -1.93069e-09   1.41353e-07 DIIS
    @RHF iter   6:   -14.60974473808995   -2.12985e-12   3.63226e-09 DIIS
-   @RHF iter   7:   -14.60974473808996   -3.55271e-15   1.73383e-11 DIIS
+   @RHF iter   7:   -14.60974473808996   -7.10543e-15   1.73384e-11 DIIS
   Energy converged.
 
 
@@ -227,9 +227,9 @@ compare_values(refpci, get_variable("PCI ENERGY"), 10, "PCI energy") #TEST
    => Energetics <=
 
     Nuclear Repulsion Energy =              2.3812974480149989
-    One-Electron Energy =                 -24.3030864655733474
-    Two-Electron Energy =                   7.3120442794683926
-    Total Energy =                        -14.6097447380899581
+    One-Electron Energy =                 -24.3030864655733509
+    Two-Electron Energy =                   7.3120442794683909
+    Total Energy =                        -14.6097447380899617
 
 Computation Completed
 
@@ -251,26 +251,26 @@ Properties computed using the SCF density matrix
      X:     0.0000      Y:     0.0000      Z:     0.0000     Total:     0.0000
 
 
-*** tstop() called on jeffschriber at Thu Oct 25 16:13:45 2018
+*** tstop() called on tianyuans-air.wireless.emory.edu at Thu Jan 10 17:18:45 2019
 Module time:
-	user time   =       0.35 seconds =       0.01 minutes
+	user time   =       0.51 seconds =       0.01 minutes
 	system time =       0.02 seconds =       0.00 minutes
 	total time  =          0 seconds =       0.00 minutes
 Total time:
-	user time   =       0.35 seconds =       0.01 minutes
+	user time   =       0.51 seconds =       0.01 minutes
 	system time =       0.02 seconds =       0.00 minutes
 	total time  =          0 seconds =       0.00 minutes
 	SCF energy........................................................PASSED
 
-*** tstart() called on jeffschriber
-*** at Thu Oct 25 16:13:45 2018
+*** tstart() called on tianyuans-air.wireless.emory.edu
+*** at Thu Jan 10 17:18:45 2019
 
    => Loading Basis Set <=
 
     Name: STO-3G
     Role: ORBITAL
     Keyword: BASIS
-    atoms 1-2 entry LI         line    31 file /Users/jeffschriber/src/psi4-debug-install/share/psi4/basis/sto-3g.gbs 
+    atoms 1-2 entry LI         line    31 file /Users/tianyuanzhang/Documents/Source/psi4_2018/psi4-bin-clang-debug/share/psi4/basis/sto-3g.gbs 
 
 
          ---------------------------------------------------------
@@ -290,14 +290,14 @@ Total time:
 
        Center              X                  Y                   Z               Mass       
     ------------   -----------------  -----------------  -----------------  -----------------
-         LI           0.000000000000     0.000000000000    -1.000000000000     7.016004548000
-         LI           0.000000000000     0.000000000000     1.000000000000     7.016004548000
+         LI           0.000000000000     0.000000000000    -1.000000000000     7.016003436600
+         LI           0.000000000000     0.000000000000     1.000000000000     7.016003436600
 
   Running in d2h symmetry.
 
   Rotational constants: A = ************  B =      1.20137  C =      1.20137 [cm^-1]
-  Rotational constants: A = ************  B =  36016.15459  C =  36016.15459 [MHz]
-  Nuclear repulsion =    2.381297448014999
+  Rotational constants: A = ************  B =  36016.16030  C =  36016.16030 [MHz]
+  Nuclear repulsion =    2.381297448014998
 
   Charge       = 0
   Multiplicity = 1
@@ -380,14 +380,14 @@ Total time:
 
                         Total Energy        Delta E     RMS |[F,P]|
 
-   @RHF iter   0:   -14.58573852679840   -1.45857e+01   6.38128e-02 
+   @RHF iter   0:   -14.58573852679838   -1.45857e+01   6.38128e-02 
    @RHF iter   1:   -14.60879129707151   -2.30528e-02   3.90853e-03 
-   @RHF iter   2:   -14.60956780353630   -7.76506e-04   1.49380e-03 DIIS
+   @RHF iter   2:   -14.60956780353629   -7.76506e-04   1.49380e-03 DIIS
    @RHF iter   3:   -14.60974068441565   -1.72881e-04   2.15662e-04 DIIS
    @RHF iter   4:   -14.60974473615714   -4.05174e-06   4.32612e-06 DIIS
-   @RHF iter   5:   -14.60974473808783   -1.93069e-09   1.41353e-07 DIIS
-   @RHF iter   6:   -14.60974473808996   -2.13340e-12   3.63226e-09 DIIS
-   @RHF iter   7:   -14.60974473808996    5.32907e-15   1.73381e-11 DIIS
+   @RHF iter   5:   -14.60974473808784   -1.93070e-09   1.41353e-07 DIIS
+   @RHF iter   6:   -14.60974473808997   -2.13163e-12   3.63226e-09 DIIS
+   @RHF iter   7:   -14.60974473808997    1.77636e-15   1.73383e-11 DIIS
   Energy converged.
 
 
@@ -410,14 +410,14 @@ Total time:
              Ag   B1g   B2g   B3g    Au   B1u   B2u   B3u 
     DOCC [     2,    0,    0,    0,    0,    1,    0,    0 ]
 
-  @RHF Final Energy:   -14.60974473808996
+  @RHF Final Energy:   -14.60974473808997
 
    => Energetics <=
 
-    Nuclear Repulsion Energy =              2.3812974480149989
-    One-Electron Energy =                 -24.3030864655733545
-    Two-Electron Energy =                   7.3120442794683989
-    Total Energy =                        -14.6097447380899581
+    Nuclear Repulsion Energy =              2.3812974480149980
+    One-Electron Energy =                 -24.3030864655733652
+    Two-Electron Energy =                   7.3120442794684024
+    Total Energy =                        -14.6097447380899652
 
 Computation Completed
 
@@ -439,40 +439,35 @@ Properties computed using the SCF density matrix
      X:     0.0000      Y:     0.0000      Z:     0.0000     Total:     0.0000
 
 
-*** tstop() called on jeffschriber at Thu Oct 25 16:13:45 2018
+*** tstop() called on tianyuans-air.wireless.emory.edu at Thu Jan 10 17:18:46 2019
 Module time:
-	user time   =       0.33 seconds =       0.01 minutes
+	user time   =       0.46 seconds =       0.01 minutes
 	system time =       0.02 seconds =       0.00 minutes
-	total time  =          0 seconds =       0.00 minutes
+	total time  =          1 seconds =       0.02 minutes
 Total time:
-	user time   =       0.70 seconds =       0.01 minutes
+	user time   =       0.99 seconds =       0.02 minutes
 	system time =       0.04 seconds =       0.00 minutes
-	total time  =          0 seconds =       0.00 minutes
+	total time  =          1 seconds =       0.02 minutes
    => Loading Basis Set <=
 
     Name: STO-3G
     Role: ORBITAL
     Keyword: MINAO_BASIS
-    atoms 1-2 entry LI         line    31 file /Users/jeffschriber/src/psi4-debug-install/share/psi4/basis/sto-3g.gbs 
-
-
-Reading options from the FORTE block
-Calling plugin forte.so.
-
+    atoms 1-2 entry LI         line    31 file /Users/tianyuanzhang/Documents/Source/psi4_2018/psi4-bin-clang-debug/share/psi4/basis/sto-3g.gbs 
 
 
   Forte
   ----------------------------------------------------------------------------
   A suite of quantum chemistry methods for strongly correlated electrons
 
-    git branch: master - git commit: 9480afcf
+    git branch: ms_solver - git commit: 8dcc2a59
 
   Developed by:
     Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
-    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai
+    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai,    Nan He, Nicholas Stair, Shuhe Wang, Renke Huang
   ----------------------------------------------------------------------------
 
-  Size of Determinant class: 16
+  Size of Determinant class: 32
 
   ==> MO Space Information <==
 
@@ -498,20 +493,8 @@ Calling plugin forte.so.
 
   Overall Conventional Integrals timings
 
-	Presorting SO-basis two-electron integrals.
-	Sorting File: SO Ints (nn|nn) nbuckets = 1
-	Transforming the one-electron integrals and constructing Fock matrices
-	Starting first half-transformation.
-	Sorting half-transformed integrals.
-	First half integral transformation complete.
-	Starting second half-transformation.
-	Two-electron integral transformation complete.
 
-  Integral transformation done. 0.00779759 s
-  Reading the two-electron integrals from disk
-  Size of two-electron integrals:   0.000224 GB
-  Timing for freezing core and virtual orbitals:              0.000 s.
-  Conventional integrals take 0.03694261 s
+  Conventional integrals take 0.05011314 s
   Number of active alpha electrons: 3
   Number of active beta electrons: 3
   Maximum reference space size: 1000
@@ -521,7 +504,7 @@ Calling plugin forte.so.
 	      Adaptive Path-Integral Full Configuration Interaction
 	         by Francesco A. Evangelista and Tianyuan Zhang
 	                      version Jun. 4 2017
-	                       1 thread(s) (OMP)
+	                       1 thread(s) 
 	  ---------------------------------------------------------
 
   ==> Calculation Information <==
@@ -549,7 +532,7 @@ Calling plugin forte.so.
     Initiator approximation                         NO
     Fast variational estimate                      YES
     Result perturbation analysis                    NO
-    Using OpenMP                                   YES
+    Using OpenMP                                    NO
 
   ==> Initial Guess <==
 
@@ -560,13 +543,13 @@ Calling plugin forte.so.
 
   Most important contributions to the wave function:
 
-    0              1             1           0 |2200020000000000000000000000000000000000000000000000000000000000>    -16.991042186105
+    0              1             1           0 |22000200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -16.991042186105
 
-  Spin State: S^2 = 0.000, S = 0.000, singlet (from 1 determinants,100.00)
+  Spin State: S^2 = 0.000, S = 0.000, singlet (from 1 determinants,100.00%)
 
   ==> Estimate highest excitation energy <==
   Highest Excited determinant:
-  |0002200200000000000000000000000000000000000000000000000000000000>
+  |00022002000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>
   Determinant Energy                    :  -2.581264114651
   Highest Energy Gershgorin circle Est. :  -0.994024721782
 
@@ -631,24 +614,24 @@ Calling plugin forte.so.
      1175  1175.00        472     -14.646228920309 -4.209e-10     -14.645385642996 -6.515e-11
      1200  1200.00        472     -14.646228928552 -3.297e-10     -14.645385644293 -5.188e-11
      1225  1225.00        472     -14.646228935026 -2.590e-10     -14.645385645328 -4.140e-11
-     1250  1250.00        472     -14.646228940123 -2.039e-10     -14.645385646156 -3.311e-11
+     1250  1250.00        472     -14.646228940123 -2.039e-10     -14.645385646156 -3.312e-11
      1275  1275.00        472     -14.646228944147 -1.610e-10     -14.645385646819 -2.654e-11
      1300  1300.00        472     -14.646228947332 -1.274e-10     -14.645385647352 -2.131e-11
-     1325  1325.00        472     -14.646228949859 -1.011e-10     -14.645385647781 -1.715e-11
+     1325  1325.00        472     -14.646228949859 -1.011e-10     -14.645385647780 -1.714e-11
      1350  1350.00        472     -14.646228951868 -8.037e-11     -14.645385648126 -1.382e-11
      1375  1375.00        472     -14.646228953470 -6.406e-11     -14.645385648405 -1.115e-11
      1400  1400.00        472     -14.646228954749 -5.117e-11     -14.645385648630 -9.015e-12
-     1425  1425.00        472     -14.646228955773 -4.096e-11     -14.645385648813 -7.299e-12
-     1450  1450.00        472     -14.646228956595 -3.286e-11     -14.645385648960 -5.918e-12
+     1425  1425.00        472     -14.646228955773 -4.096e-11     -14.645385648812 -7.297e-12
+     1450  1450.00        472     -14.646228956595 -3.286e-11     -14.645385648960 -5.919e-12
      1475  1475.00        472     -14.646228957255 -2.641e-11     -14.645385649081 -4.803e-12
-     1500  1500.00        472     -14.646228957786 -2.126e-11     -14.645385649178 -3.904e-12
-     1525  1525.00        472     -14.646228958215 -1.714e-11     -14.645385649258 -3.176e-12
-     1550  1550.00        472     -14.646228958561 -1.385e-11     -14.645385649322 -2.587e-12
-     1575  1575.00        472     -14.646228958841 -1.120e-11     -14.645385649375 -2.105e-12
-     1600  1600.00        472     -14.646228959068 -9.079e-12     -14.645385649418 -1.721e-12
-     1625  1625.00        472     -14.646228959252 -7.364e-12     -14.645385649453 -1.404e-12
-     1650  1650.00        472     -14.646228959402 -5.982e-12     -14.645385649482 -1.149e-12
-     1675  1675.00        472     -14.646228959523 -4.863e-12     -14.645385649505 -9.364e-13
+     1500  1500.00        472     -14.646228957786 -2.126e-11     -14.645385649178 -3.903e-12
+     1525  1525.00        472     -14.646228958215 -1.715e-11     -14.645385649258 -3.177e-12
+     1550  1550.00        472     -14.646228958561 -1.385e-11     -14.645385649322 -2.584e-12
+     1575  1575.00        472     -14.646228958841 -1.121e-11     -14.645385649375 -2.107e-12
+     1600  1600.00        472     -14.646228959068 -9.078e-12     -14.645385649418 -1.721e-12
+     1625  1625.00        472     -14.646228959252 -7.365e-12     -14.645385649453 -1.406e-12
+     1650  1650.00        472     -14.646228959402 -5.981e-12     -14.645385649482 -1.146e-12
+     1675  1675.00        472     -14.646228959523 -4.864e-12     -14.645385649505 -9.358e-13
      1700  1700.00        472     -14.646228959622 -3.959e-12
   ------------------------------------------------------------------------------------------------
 
@@ -665,24 +648,24 @@ Calling plugin forte.so.
 
   * Size of CI space                    = 472
 
-  Projector-CI (bitset) ran in  : 10.100235 s
+  Projector-CI (bitset) ran in  : 18.200160 s
 
   Most important contributions to the wave function:
 
-    0       0.932962      0.870419         175 |2200020000000000000000000000000000000000000000000000000000000000>    -16.991042186105
-    1      -0.230884     0.0533076         250 |2000020020000000000000000000000000000000000000000000000000000000>    -16.844531944287
-    2      -0.230884     0.0533076         157 |2000020002000000000000000000000000000000000000000000000000000000>    -16.844531944287
-    3      -0.120006     0.0144015          75 |2000022000000000000000000000000000000000000000000000000000000000>    -16.780684423917
-    4     -0.0811428    0.00658415         104 |2020020000000000000000000000000000000000000000000000000000000000>    -16.722588679069
-    5     -0.0241159   0.000581575         108 |200002+-00000000000000000000000000000000000000000000000000000000>    -16.358845134715
-    6     -0.0241159   0.000581575         240 |200002-+00000000000000000000000000000000000000000000000000000000>    -16.358845134715
-    7     -0.0144446   0.000208647          86 |2+-0020000000000000000000000000000000000000000000000000000000000>    -16.872775657949
-    8     -0.0144446   0.000208647         368 |2-+0020000000000000000000000000000000000000000000000000000000000>    -16.872775657949
-    9    -0.00767978    5.8979e-05         397 |2000020200000000000000000000000000000000000000000000000000000000>    -15.877818677698
+    0       0.932962      0.870419         344 |22000200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -16.991042186105
+    1      -0.230884     0.0533076         336 |20000200020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -16.844531944287
+    2      -0.230884     0.0533076         335 |20000200200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -16.844531944287
+    3      -0.120006     0.0144015         333 |20000220000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -16.780684423917
+    4     -0.0811428    0.00658415         330 |20200200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -16.722588679069
+    5     -0.0241159   0.000581575         291 |200002-+000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -16.358845134715
+    6     -0.0241159   0.000581575         290 |200002+-000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -16.358845134715
+    7     -0.0144446   0.000208647         379 |2+-00200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -16.872775657949
+    8     -0.0144446   0.000208647         378 |2-+00200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -16.872775657949
+    9    -0.00767978    5.8979e-05         334 |20000202000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -15.877818677698
 
-  Spin State: S^2 = 0.000, S = 0.000, singlet (from 3 determinants,97.70)	PCI energy........................................................PASSED
+  Spin State: S^2 = 0.000, S = 0.000, singlet (from 3 determinants,97.70%)	PCI energy........................................................PASSED
 
-    Psi4 stopped on: Thursday, 25 October 2018 04:13PM
-    Psi4 wall time for execution: 0:00:11.04
+    Psi4 stopped on: Thursday, 10 January 2019 05:19PM
+    Psi4 wall time for execution: 0:00:19.54
 
 *** Psi4 exiting successfully. Buy a developer a beer!

@@ -22,9 +22,8 @@ set {
 }
 
 set forte {
-  job_type fci
+  active_space_solver fci
   print 1
-  job_type fci
   active [4,0,1,1]
   restricted_docc [0,0,0,0]
   root_sym 2

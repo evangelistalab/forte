@@ -37,18 +37,18 @@ Ecasscf, wfn_cas = energy('casscf', return_wfn=True)
 compare_values(refcasscf,variable("CURRENT ENERGY"),10,"CASSCF energy") #TEST
 
 set forte {
-  job_type           dsrg-mrpt2
-  frozen_docc        [1,0,0,0,0,1,0,0]
-  frozen_uocc        [0,0,0,0,0,0,0,0]
-  restricted_docc    [1,0,0,0,0,1,0,0]
-  active             [1,0,1,1,0,1,1,1]
-  root_sym           0
-  nroot              1
-  dsrg_s             0.5
-  ntrial_per_root    56
-  relax_ref          once
-  semi_canonical     false
-  cas_type           cas
+  active_space_solver cas
+  correlation_solver  dsrg-mrpt2
+  multiplicity        1
+  frozen_docc         [1,0,0,0,0,1,0,0]
+  frozen_uocc         [0,0,0,0,0,0,0,0]
+  restricted_docc     [1,0,0,0,0,1,0,0]
+  active              [1,0,1,1,0,1,1,1]
+  root_sym            0
+  nroot               1
+  dsrg_s              0.5
+  ntrial_per_root     56
+  relax_ref           once
 }
 
 Eforte, wfn_cas = energy('forte', ref_wfn=wfn_cas, return_wfn=True)

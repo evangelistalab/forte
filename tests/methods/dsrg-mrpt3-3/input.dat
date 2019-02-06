@@ -30,7 +30,8 @@ set globals{
 }
 
 set forte{
-  job_type               dsrg-mrpt3
+  active_space_solver     fci    
+  correlation_solver      dsrg-mrpt3
   frozen_docc            [1,0,0,0,0,1,0,0]
   frozen_uocc            [0,0,0,0,0,0,0,0]
   restricted_docc        [1,0,0,0,0,1,0,0]

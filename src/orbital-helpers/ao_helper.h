@@ -47,18 +47,18 @@ class AtomicOrbitalHelper {
     psi::SharedMatrix PVir_;
     void Compute_Psuedo_Density();
 
-	// LaplaceDenominator Laplace_;
-	psi::SharedMatrix Occupied_Laplace_;
-	psi::SharedMatrix Virtual_Laplace_;
-	double laplace_tolerance_=1e-10;
+    // LaplaceDenominator Laplace_;
+    psi::SharedMatrix Occupied_Laplace_;
+    psi::SharedMatrix Virtual_Laplace_;
+    double laplace_tolerance_ = 1e-10;
 
-	int weights_;
-	int nbf_;
-	int nrdocc_;
-	int nvir_;
-	/// How many orbitals does it take to go from occupied to virtual (ie should
-	/// be active)
-	int shift_;
+    int weights_;
+    int nbf_;
+    int nrdocc_;
+    int nvir_;
+    /// How many orbitals does it take to go from occupied to virtual (ie should
+    /// be active)
+    int shift_;
 
   public:
     psi::SharedMatrix AO_Screen() { return AO_Screen_; }
@@ -80,6 +80,6 @@ class AtomicOrbitalHelper {
 
     ~AtomicOrbitalHelper();
 };
-}
+} // namespace forte
 
 #endif

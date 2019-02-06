@@ -35,7 +35,8 @@ set mcscf{
 }
 
 set forte{
-   job_type                mrdsrg
+   correlation_solver        mrdsrg
+   active_space_solver    fci 
    corr_level              ldsrg2_qc
    frozen_docc            [1,0,0,0]
    restricted_docc        [1,0,1,1]

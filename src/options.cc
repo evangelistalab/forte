@@ -40,7 +40,6 @@
 #include "mrdsrg-helper/run_dsrg.h"
 #include "mrdsrg-spin-integrated/dwms_mrpt2.h"
 
-
 namespace forte {
 
 void forte_options(ForteOptions& foptions) {
@@ -67,7 +66,6 @@ void forte_options(ForteOptions& foptions) {
     foptions.add_str("ACTIVE_REF_TYPE", "CAS", "Initial guess for active space wave functions");
 }
 } // namespace forte
-
 
 // if (name == "FORTE" || options.read_globals()) {
 

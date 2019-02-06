@@ -38,14 +38,11 @@
 #include "base_classes/reference.h"
 #include "iao_builder.h"
 
-
-
 namespace forte {
 
 class UPDensity {
   public:
-    UPDensity(std::shared_ptr<ForteIntegrals> ints, 
-              std::shared_ptr<MOSpaceInfo> mo_space_info, 
+    UPDensity(std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info,
               std::shared_ptr<ForteOptions> options, psi::SharedMatrix Ua, psi::SharedMatrix Ub);
 
     ~UPDensity();
@@ -59,6 +56,6 @@ class UPDensity {
     psi::SharedMatrix Uas_;
     psi::SharedMatrix Ubs_;
 };
-}
+} // namespace forte
 
 #endif

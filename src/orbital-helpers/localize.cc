@@ -26,12 +26,8 @@
  * @END LICENSE
  */
 
-#include "psi4/libpsi4util/process.h"
-#include "psi4/libmints/molecule.h"
-#include "psi4/libmints/wavefunction.h"
 #include "psi4/libpsio/psio.h"
 #include "psi4/libpsio/psio.hpp"
-
 #include "psi4/libmints/local.h"
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/vector.h"
@@ -44,37 +40,31 @@ using namespace psi;
 
 namespace forte {
 
-LOCALIZE::LOCALIZE(std::shared_ptr<psi::Wavefunction> wfn, psi::Options& options,
-                   std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : wfn_(wfn), ints_(ints) {
+LOCALIZE::LOCALIZE(StateInfo state, std::shared_ptr<SCFInfo> scf_info,
+                   std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
+                   std::shared_ptr<MOSpaceInfo> mo_space_info)
+    : OrbitalTransform(scf_info, options, ints, mo_space_info), scf_info_(scf_info),
+      options_(options), ints_(ints) {
     nfrz_ = mo_space_info->size("FROZEN_DOCC");
     nrst_ = mo_space_info->size("RESTRICTED_DOCC");
     namo_ = mo_space_info->size("ACTIVE");
 
-    if (wfn_->nirrep() > 1) {
+    if (ints_->nirrep() > 1) {
         throw psi::PSIEXCEPTION("\n\n ERROR: Localizer only implemented for C1 symmetry!");
     }
 
-    int nel = 0;
-    int natom = psi::Process::environment.molecule()->natom();
-    for (int i = 0; i < natom; i++) {
-        nel += static_cast<int>(psi::Process::environment.molecule()->Z(i));
-    }
-    nel -= options.get_int("CHARGE");
-
     // The wavefunction multiplicity
-    multiplicity_ = options.get_int("MULTIPLICITY");
-    outfile->Printf("\n MULT: %d", multiplicity_);
+    multiplicity_ = options->get_int("MULTIPLICITY");
 
-    // The number of active electrons
-    int nactel = nel - 2 * nfrz_ - 2 * nrst_;
+    // double occupied active
+    naocc_ = scf_info_->doccpi().n() - nfrz_ - nrst_;
 
-    naocc_ = ((nactel - (nactel % 2)) / 2) + (nactel % 2);
+    // virtual active
     navir_ = namo_ - naocc_;
 
     abs_act_ = mo_space_info->get_absolute_mo("ACTIVE");
 
-    local_type_ = options.get_str("LOCALIZE_TYPE");
+    local_type_ = options->get_str("LOCALIZE_TYPE");
 
     if (local_type_ == "BOYS" or local_type_ == "SPLIT_BOYS") {
         local_method_ = "BOYS";
@@ -84,18 +74,26 @@ LOCALIZE::LOCALIZE(std::shared_ptr<psi::Wavefunction> wfn, psi::Options& options
     }
 }
 
-void LOCALIZE::split_localize() {
-    psi::SharedMatrix Ca = ints_->Ca();
-    psi::SharedMatrix Cb = ints_->Cb();
+void LOCALIZE::compute_transformation() {
+    std::string loc = options_->get_str("LOCALIZE");
+    if (loc == "SPLIT") {
+        split_localize();
+    } else {
+        full_localize();
+    }
+}
 
-    psi::Dimension nsopi = wfn_->nsopi();
-    int nirrep = wfn_->nirrep();
+void LOCALIZE::split_localize() {
+    psi::Dimension nsopi = scf_info_->nsopi();
+    int nirrep = ints_->nirrep();
     int off = 0;
     if (multiplicity_ == 3) {
         naocc_ -= 1;
         navir_ -= 1;
         off = 2;
     }
+    psi::SharedMatrix Ca = ints_->Ca();
+    psi::SharedMatrix Cb = ints_->Cb();
 
     psi::SharedMatrix Caocc(new psi::Matrix("Caocc", nsopi[0], naocc_));
     psi::SharedMatrix Cavir(new psi::Matrix("Cavir", nsopi[0], navir_));
@@ -115,20 +113,14 @@ void LOCALIZE::split_localize() {
         }
     }
 
-    std::shared_ptr<psi::BasisSet> primary = wfn_->basisset();
+
+    std::shared_ptr<psi::BasisSet> primary = ints_->basisset();
 
     std::shared_ptr<Localizer> loc_a = Localizer::build(local_type_, primary, Caocc);
     loc_a->localize();
 
-    psi::SharedMatrix Laocc = loc_a->L();
-
     std::shared_ptr<psi::Localizer> loc_v = psi::Localizer::build(local_type_, primary, Cavir);
     loc_v->localize();
-
-    psi::SharedMatrix Lvir = loc_v->L();
-
-    std::shared_ptr<psi::Matrix> U = std::make_shared<psi::Matrix>("U",Ca->rowspi(), Ca->colspi()); 
-    U->identity();
 
     psi::SharedMatrix Lact;
     psi::SharedMatrix Uact;
@@ -141,50 +133,43 @@ void LOCALIZE::split_localize() {
     psi::SharedMatrix Uocc = loc_a->U();
     psi::SharedMatrix Uvir = loc_v->U();
 
+    Ua_.reset(new psi::Matrix("Ua",nsopi[0], nsopi[0]));
+    Ub_.reset(new psi::Matrix("Ua",nsopi[0], nsopi[0]));
+
+    Ua_->identity();
+    Ub_->identity();
+
     for (int h = 0; h < nirrep; ++h) {
         for (int i = 0; i < naocc_; ++i) {
-            psi::SharedVector vec = Laocc->get_column(h, i);
-            Ca->set_column(h, i + nfrz_ + nrst_, vec);
-            Cb->set_column(h, i + nfrz_ + nrst_, vec);
-            U->set_column(h, i + nfrz_ + nrst_, Uocc->get_column(h,i));
+            for (int j = 0; j < naocc_; ++j) {
+                Ua_->set(h,i + nfrz_ + nrst_,j + nfrz_ + nrst_, Uocc->get(h,i,j));
+                Ub_->set(h,i + nfrz_ + nrst_,j + nfrz_ + nrst_, Uocc->get(h,i,j));
+            }
         }
         for (int i = 0; i < navir_; ++i) {
-            psi::SharedVector vec = Lvir->get_column(h, i);
-            Ca->set_column(h, i + nfrz_ + nrst_ + naocc_ + off, vec);
-            Cb->set_column(h, i + nfrz_ + nrst_ + naocc_ + off, vec);
-            U->set_column(h, i + nfrz_ + nrst_+ naocc_ + off, Uvir->get_column(h,i));
+            for (int j = 0; j < navir_; ++j) {
+                Ua_->set(h,i + nfrz_ + nrst_,j + nfrz_ + nrst_, Uvir->get(h,i,j));
+                Ub_->set(h,i + nfrz_ + nrst_,j + nfrz_ + nrst_, Uvir->get(h,i,j));
+            }
         }
 
         for (int i = 0; i < off; ++i) {
-            psi::SharedVector vec = Lact->get_column(h, i);
-            Ca->set_column(h, i + nfrz_ + nrst_ + naocc_, vec);
-            Cb->set_column(h, i + nfrz_ + nrst_ + naocc_, vec);
-            U->set_column(h, i + nfrz_ + nrst_+ naocc_ + off, Uact->get_column(h,i));
-        }
-    }
-
-    double value = 0.0;
-    for (int h = 0; h < nirrep; ++h) {
-        for (int i = 0; i < Ca->rowdim(h); ++i) {
-            for (int j = 0; j < Ca->coldim(h); ++j) {
-                value = std::fabs(Ca->get(i, j) - Cb->get(i, j));
+            for (int j = 0; j < off; ++j) {
+                Ua_->set(h,i + nfrz_ + nrst_,j + nfrz_ + nrst_, Uact->get(h,i,j));
+                Ub_->set(h,i + nfrz_ + nrst_,j + nfrz_ + nrst_, Uact->get(h,i,j));
             }
         }
     }
-    outfile->Printf("\n  ||Ca - Cb||_[1] = %1.5f", value);
-
-    ints_->rotate_orbitals(U,U);
 }
 
 void LOCALIZE::full_localize() {
 
-    // Build C matrices
-    psi::SharedMatrix Ca = wfn_->Ca();
-    psi::SharedMatrix Cb = wfn_->Cb();
-    psi::Dimension nsopi = wfn_->nsopi();
-    int nirrep = wfn_->nirrep();
-
+    psi::Dimension nsopi = scf_info_->nsopi();
+    int nirrep = ints_->nirrep();
     size_t nact = abs_act_.size();
+
+    psi::SharedMatrix Ca = ints_->Ca();
+    psi::SharedMatrix Cb = ints_->Cb();
 
     psi::SharedMatrix Caact(new psi::Matrix("Caact", nsopi[0], nact));
     for (int h = 0; h < nirrep; h++) {
@@ -196,32 +181,31 @@ void LOCALIZE::full_localize() {
     }
 
     // Localize all active together
-    std::shared_ptr<psi::BasisSet> primary = wfn_->basisset();
+    std::shared_ptr<psi::BasisSet> primary = ints_->basisset();
 
     std::shared_ptr<Localizer> loc_a = Localizer::build(local_type_, primary, Caact);
     loc_a->localize();
 
-    psi::SharedMatrix Ua = loc_a->U();
     psi::SharedMatrix Laocc = loc_a->L();
+    psi::SharedMatrix Ua = loc_a->U();
 
-    std::shared_ptr<psi::Matrix> U = std::make_shared<psi::Matrix>("U", Ca->colspi(), Ca->rowspi());
-    U->identity();
+    Ua_.reset(new psi::Matrix("Ua",Ca->rowdim(), Ca->coldim()));
+    Ub_.reset(new psi::Matrix("Ua",Ca->rowdim(), Ca->coldim()));
+
+    Ua_->identity();
+    Ub_->identity();
 
     for (int h = 0; h < nirrep; ++h) {
         for (size_t i = 0; i < nact; ++i) {
-            psi::SharedVector vec = Laocc->get_column(h, i);
-            Ca->set_column(h, i + nfrz_ + nrst_, vec);
-            Cb->set_column(h, i + nfrz_ + nrst_, vec);
-            U->set_column(h, i + nfrz_ + nrst_, Ua->get_column(h,i));
+            for (size_t j = 0; j < nact; ++j) {
+                Ua_->set(h,i + nfrz_ + nrst_,j + nfrz_ + nrst_, Ua->get(h,i,j));
+                Ub_->set(h,i + nfrz_ + nrst_,j + nfrz_ + nrst_, Ua->get(h,i,j));
+            }
         }
     }
-    ints_->rotate_orbitals(U,U);
-
-    U_ = std::make_shared<psi::Matrix>("U", nsopi[0], nact);
-    U_->copy(Ua);
 }
 
-psi::SharedMatrix LOCALIZE::get_U() { return U_; }
+psi::SharedMatrix LOCALIZE::get_Ua() { return Ua_; }
+psi::SharedMatrix LOCALIZE::get_Ub() { return Ub_; }
 
-LOCALIZE::~LOCALIZE() {}
-}
+} // namespace forte

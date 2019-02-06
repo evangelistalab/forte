@@ -28,7 +28,8 @@ set mcscf{
 }
 
 set forte{
-   job_type             dsrg-mrpt2
+   active_space_solver  fci
+   correlation_solver   dsrg-mrpt2
    restricted_docc      [2,0,0,0]
    active               [1,0,0,1]
    root_sym             0
@@ -36,7 +37,7 @@ set forte{
    dsrg_s               1.0e10
    dsrgpt               true
    print_denom2         true
-   cas_type             cas
+   multiplicity         1
 }
 
 basis {

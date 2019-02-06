@@ -46,7 +46,7 @@
 #include "sparse_ci/sparse_ci_solver.h"
 #include "sparse_ci/determinant.h"
 #include "base_classes/state_info.h"
-
+#include "base_classes/active_space_method.h"
 
 namespace forte {
 class SCFInfo;
@@ -78,7 +78,7 @@ using det_hashvec = HashVector<Determinant, Determinant::Hash>;
  * @brief The SparsePathIntegralCI class
  * This class implements an a sparse path-integral FCI algorithm
  */
-class ElementwiseCI {
+class ElementwiseCI : public ActiveSpaceMethod {
   public:
     // ==> Class Constructor and Destructor <==
 
@@ -88,24 +88,25 @@ class ElementwiseCI {
      * @param options The main options object
      * @param ints A pointer to an allocated integral object
      */
-    ElementwiseCI(StateInfo state, std::shared_ptr<forte::SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
-                  std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
+    ElementwiseCI(StateInfo state, size_t nroot, std::shared_ptr<forte::SCFInfo> scf_info,
+                  std::shared_ptr<ForteOptions> options, std::shared_ptr<MOSpaceInfo> mo_space_info,
+                  std::shared_ptr<ActiveSpaceIntegrals> as_ints);
 
     // ==> Class Interface <==
 
+    void set_options(std::shared_ptr<ForteOptions>) override{};
+
+    /// Return a reference object
+    std::vector<Reference>
+    reference(const std::vector<std::pair<size_t, size_t>>& root_list) override;
+
     /// Compute the energy
-    double compute_energy();
+    double compute_energy() override;
 
   private:
     // ==> Class data <==
 
     // * Calculation data
-    /// The state to calculate
-    StateInfo state_;
-    /// The molecular integrals required by Explorer
-    std::shared_ptr<ForteIntegrals> ints_;
-    /// Store all the integrals locally
-    static std::shared_ptr<ActiveSpaceIntegrals> fci_ints_;
     /// The options
     std::shared_ptr<ForteOptions> options_;
     /// SCF information
@@ -153,8 +154,6 @@ class ElementwiseCI {
     /// The reference determinant
     Determinant reference_determinant_;
     std::vector<std::pair<det_hashvec, std::vector<double>>> solutions_;
-    /// The information of mo space
-    std::shared_ptr<MOSpaceInfo> mo_space_info_;
     /// (pq|pq) matrix for prescreening
     double *pqpq_aa_, *pqpq_ab_, *pqpq_bb_;
     /// maximum element in (pq|pq) matrix
@@ -175,10 +174,6 @@ class ElementwiseCI {
     bool do_shift_;
     /// Use intermediate normalization?
     bool use_inter_norm_;
-    /// The number of roots computed
-    int nroot_;
-    /// The energy convergence criterium
-    double e_convergence_;
     /// The maximum number of iterations
     int maxiter_;
     /// The maximum number of iterations in Davidson generator
@@ -298,15 +293,15 @@ class ElementwiseCI {
     double initial_guess(det_hashvec& dets, std::vector<double>& C);
 
     /**
-    * Propagate the wave function by a step of length tau
-    * @param Generator The type of Generator used
-    * @param dets The set of determinants that form the wave function at time n
-    * @param C The wave function coefficients at time n
-    * @param tau The time step in a.u.
-    * @param spawning_threshold The threshold used to accept or reject spawning
-    * events
-    * @param S An energy shift subtracted from the Hamiltonian
-    */
+     * Propagate the wave function by a step of length tau
+     * @param Generator The type of Generator used
+     * @param dets The set of determinants that form the wave function at time n
+     * @param C The wave function coefficients at time n
+     * @param tau The time step in a.u.
+     * @param spawning_threshold The threshold used to accept or reject spawning
+     * events
+     * @param S An energy shift subtracted from the Hamiltonian
+     */
     void propagate(GeneratorType_EWCI::GeneratorType generator, det_hashvec& dets_hashvec,
                    std::vector<double>& C, double spawning_threshold);
     /// A Delta projector fitted by 10th order chebyshev polynomial
@@ -323,12 +318,11 @@ class ElementwiseCI {
     /// Apply symmetric approx tau H to a determinant using dynamic screening
     /// with selection according to a reference coefficient
     /// and with HBCI sorting scheme with singles screening
-    void
-    apply_tau_H_symm_det_dynamic_HBCI_2(double tau, double spawning_threshold,
-                                        const det_hashvec& dets_hashvec,
-                                        const std::vector<double>& pre_C, size_t I, double CI,
-                                        std::vector<double> &result_C,
-                                        std::vector<std::pair<Determinant, double>>& new_det_C_vec, std::pair<double, double>& max_coupling);
+    void apply_tau_H_symm_det_dynamic_HBCI_2(
+        double tau, double spawning_threshold, const det_hashvec& dets_hashvec,
+        const std::vector<double>& pre_C, size_t I, double CI, std::vector<double>& result_C,
+        std::vector<std::pair<Determinant, double>>& new_det_C_vec,
+        std::pair<double, double>& max_coupling);
     /// Apply symmetric approx tau H to a set of determinants with selection
     /// according to reference coefficients
     void apply_tau_H_ref_C_symm(double tau, double spawning_threshold,
@@ -339,7 +333,8 @@ class ElementwiseCI {
     /// Apply symmetric approx tau H to a determinant using dynamic screening
     /// with selection according to a reference coefficient
     /// and with HBCI sorting scheme with singles screening
-    void apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(double tau, double spawning_threshold, const det_hashvec& dets_hashvec,
+    void apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(
+        double tau, double spawning_threshold, const det_hashvec& dets_hashvec,
         const std::vector<double>& pre_C, const std::vector<double>& ref_C, size_t I, double CI,
         double ref_CI, const size_t overlap_size, std::vector<double>& result_C,
         const std::pair<double, double>& max_coupling);
@@ -409,6 +404,6 @@ class ElementwiseCI {
     /// Sort the determinants by coefficients
     void sortHashVecByCoefficient(det_hashvec& dets_hashvec, std::vector<double>& C);
 };
-}
+} // namespace forte
 
 #endif // _ewci_h_
