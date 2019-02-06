@@ -3,7 +3,12 @@
 def register_forte_options(forte_options):
     register_driver_options(forte_options)
     register_mo_space_info_options(forte_options)
+    register_avas_options(forte_options)
+    register_cino_options(forte_options)
+    register_mrcino_options(forte_options)
     register_integral_options(forte_options)
+    register_pt2_options(forte_options)
+    register_pci_options(forte_options)
     register_fci_options(forte_options)
     register_aci_options(forte_options)
     register_active_space_solver_options(forte_options)
@@ -23,6 +28,55 @@ def register_driver_options(forte_options):
     forte_options.add_str('CALC_TYPE', 'SS', ['SS', 'SA', 'MS', 'DWMS'],
                           'The type of computation')
 
+def register_avas_options(forte_options):
+    forte_options.add_double("AVAS_SIGMA", 0.98, "Threshold that controls the size of the active space")
+    forte_options.add_int("AVAS_NUM_ACTIVE", 0,
+                     "The total number of active orbitals. "
+                     "If not equal to 0, it takes priority over "
+                     "threshold based selection.")
+    forte_options.add_int("AVAS_NUM_ACTIVE_OCC", 0,
+                     "The number of active occupied orbitals. "
+                     "If not equal to 0, it takes priority over "
+                     "threshold based selection.")
+    forte_options.add_int("AVAS_NUM_ACTIVE_VIR", 0,
+                     "The number of active occupied orbitals. "
+                     "If not equal to 0, it takes priority over "
+                     "threshold based selection.")
+    forte_options.add_bool("AVAS_DIAGONALIZE", True,
+                      "Diagonalize Socc and Svir?"
+                      "This option takes priority over "
+                      "threshold based selection.")
+
+def register_cino_options(forte_options):
+    forte_options.add_bool("CINO", False, "Do a CINO computation?")
+    
+    forte_options.add_str("CINO_TYPE", "CIS", ["CIS", "CISD"], "The type of wave function.")
+    
+    forte_options.add_int("CINO_NROOT", 1, "The number of roots computed")
+    
+    forte_options.add_array("CINO_ROOTS_PER_IRREP",
+                       "The number of excited states per irreducible representation")    
+    forte_options.add_double("CINO_THRESHOLD", 0.99,
+                        "The fraction of NOs to include in the active space")
+    forte_options.add_bool("CINO_AUTO", False,
+                      "{ass frozen_docc, actice_docc, and restricted_docc?")
+
+def register_mrcino_options(forte_options):
+    forte_options.add_bool("MRCINO", False, "Do a MRCINO computation?")
+    
+    forte_options.add_str("MRCINO_TYPE", "CIS", ["CIS", "CISD"], "The type of wave function.")
+    
+    forte_options.add_int("MRCINO_NROOT", 1, "The number of roots computed")
+    
+    forte_options.add_array("MRCINO_ROOTS_PER_IRREP",
+                       "The number of excited states per irreducible representation")
+    forte_options.add_double("MRCINO_THRESHOLD", 0.99,
+                        "The fraction of NOs to include in the active space")
+    forte_options.add_bool("MRCINO_AUTO", False,
+                      "Allow the users to choose"
+                      "whether pass frozen_docc"
+                      "actice_docc and restricted_docc"
+                      "or not")
 
 def register_mo_space_info_options(forte_options):
     forte_options.add_array(
@@ -69,6 +123,98 @@ def register_active_space_solver_options(forte_options):
     forte_options.add_int('NROOT', 1, 'The number of roots computed')
     forte_options.add_int('ROOT', 0,
                           'The root selected for state-specific computations')
+
+def register_pt2_options(forte_options):
+    forte_options.add_double("PT2_MAX_MEM", 1.0, " Maximum size of the determinant hash (GB)")
+
+def register_pci_options(forte_options):
+    forte_options.add_str("PCI_GENERATOR", "WALL-CHEBYSHEV",
+                     ["LINEAR", "QUADRATIC", "CUBIC", "QUARTIC", "POWER", "TROTTER", "OLSEN",
+                      "DAVIDSON", "MITRUSHENKOV", "EXP-CHEBYSHEV", "WALL-CHEBYSHEV", "CHEBYSHEV",
+                      "LANCZOS", "DL"],
+                     "The propagation algorithm")
+
+    forte_options.add_int("PCI_NROOT", 1, "The number of roots computed")
+
+    forte_options.add_double("PCI_SPAWNING_THRESHOLD", 0.001, "The determinant importance threshold")
+
+    forte_options.add_double("PCI_MAX_GUESS_SIZE", 10000,
+                        "The maximum number of determinants used to form the "
+                        "guess wave function")
+
+    forte_options.add_double("PCI_GUESS_SPAWNING_THRESHOLD", -1, "The determinant importance threshold")
+
+    forte_options.add_double("PCI_ENERGY_ESTIMATE_THRESHOLD", 1.0e-6,
+                        "The threshold with which we estimate the variational "
+                        "energy. Note that the final energy is always "
+                        "estimated exactly.")
+
+    forte_options.add_double("PCI_TAU", 1.0, "The time step in imaginary time (a.u.)")
+
+    forte_options.add_double("PCI_E_CONVERGENCE", 1.0e-8, "The energy convergence criterion")
+
+    forte_options.add_bool("PCI_FAST_EVAR", False, "Use a fast (sparse) estimate of the energy?")
+
+    forte_options.add_double("PCI_EVAR_MAX_ERROR", 0.0, "The max allowed error for variational energy")
+
+    forte_options.add_int("PCI_ENERGY_ESTIMATE_FREQ", 1,
+                     "Iterations in between variational estimation of the energy")
+
+    forte_options.add_bool("PCI_ADAPTIVE_BETA", False, "Use an adaptive time step?")
+
+    forte_options.add_bool("PCI_USE_INTER_NORM", False, "Use intermediate normalization?")
+
+    forte_options.add_bool("PCI_USE_SHIFT", False, "Use a shift in the exponential?")
+
+    forte_options.add_bool("PCI_VAR_ESTIMATE", False, "Estimate variational energy during calculation?")
+
+    forte_options.add_bool("PCI_PRINT_FULL_WAVEFUNCTION", False, "Print full wavefunction when finished?")
+
+    forte_options.add_bool("PCI_SIMPLE_PRESCREENING", False, "Prescreen the spawning of excitations?")
+
+    forte_options.add_bool("PCI_DYNAMIC_PRESCREENING", False, "Use dynamic prescreening?")
+
+    forte_options.add_bool("PCI_SCHWARZ_PRESCREENING", False, "Use schwarz prescreening?")
+
+    forte_options.add_bool("PCI_INITIATOR_APPROX", False, "Use initiator approximation?")
+
+    forte_options.add_double("PCI_INITIATOR_APPROX_FACTOR", 1.0, "The initiator approximation factor")
+
+    forte_options.add_bool("PCI_PERTURB_ANALYSIS", False, "Do result perturbation analysis?")
+
+    forte_options.add_bool("PCI_SYMM_APPROX_H", False, "Use Symmetric Approximate Hamiltonian?")
+
+    forte_options.add_bool("PCI_STOP_HIGHER_NEW_LOW", False,
+                      "Stop iteration when higher new low detected?")
+
+    forte_options.add_double("PCI_MAXBETA", 1000.0, "The maximum value of beta")
+
+    forte_options.add_int("PCI_MAX_DAVIDSON_ITER", 12,
+                     "The maximum value of Davidson generator iteration")
+
+    forte_options.add_int("PCI_DL_COLLAPSE_PER_ROOT", 2,
+                     "The number of trial vector to retain after Davidson-Liu collapsing")
+
+    forte_options.add_int("PCI_DL_SUBSPACE_PER_ROOT", 8,
+                     "The maxim number of trial Davidson-Liu vectors")
+
+    forte_options.add_int("PCI_CHEBYSHEV_ORDER", 5, "The order of Chebyshev truncation")
+
+    forte_options.add_int("PCI_KRYLOV_ORDER", 5, "The order of Krylov truncation")
+
+    forte_options.add_double("PCI_COLINEAR_THRESHOLD", 1.0e-6, "The minimum norm of orthogonal vector")
+
+    forte_options.add_bool("PCI_REFERENCE_SPAWNING", False, "Do spawning according to reference?")
+
+    forte_options.add_bool("PCI_POST_DIAGONALIZE", False, "Do a final diagonalization after convergence?")
+
+    forte_options.add_str("PCI_FUNCTIONAL", "MAX", ["MAX", "SUM", "SQUARE", "SQRT", "SPECIFY-ORDER"],
+                     "The functional for determinant coupling importance evaluation")
+
+    forte_options.add_double("PCI_FUNCTIONAL_ORDER", 1.0,
+                        "The functional order of PCI_FUNCTIONAL is SPECIFY-ORDER")
+
+
 
 def register_fci_options(forte_options):
     forte_options.add_int('FCI_MAXITER', 30,

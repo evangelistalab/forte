@@ -45,9 +45,6 @@ namespace forte {
 
 class ForteOptions;
 
-/// Set the CI-NO options
-void set_CINO_options(ForteOptions& foptions);
-
 /**
  * @brief The CINO class
  * This class implements natural orbitals for CI wave functions
