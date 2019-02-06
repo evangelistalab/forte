@@ -47,10 +47,7 @@ using namespace psi;
 
 namespace forte {
 
-void set_PT2_options(ForteOptions& foptions) {
-    /*- Maximum size of the determinant hash (GB)-*/
-    foptions.add_double("PT2_MAX_MEM", 1.0, " Maximum size of the determinant hash (GB)");
-}
+
 
 MRPT2::MRPT2(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
              std::shared_ptr<MOSpaceInfo> mo_space_info, DeterminantHashVec& reference,

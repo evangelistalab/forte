@@ -46,8 +46,6 @@ void forte_options(ForteOptions& foptions) {
 
     // Method-specific options
     set_ASCI_options(foptions);
-    set_PCI_options(foptions);
-    set_PT2_options(foptions);
     set_AVAS_options(foptions);
     set_CINO_options(foptions);
     set_MRCINO_options(foptions);
