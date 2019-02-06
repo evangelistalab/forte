@@ -2,6 +2,7 @@
 
 [![Build Status](https://travis-ci.org/evangelistalab/forte.svg?branch=master)](https://travis-ci.org/evangelistalab/forte)
 [![Documentation Status](https://readthedocs.org/projects/forte/badge/?version=latest)](http://forte.readthedocs.io/en/latest/?badge=latest)
+[![codecov](https://codecov.io/gh/evangelistalab/forte/branch/master/graph/badge.svg)](https://codecov.io/gh/evangelistalab/forte)
 
 #### Code Authors: Evangelistalab
 
