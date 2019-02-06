@@ -24,6 +24,7 @@ option_with_print(ENABLE_OPENMP "Enable threadsafe linking to OpenMP parallelize
 option_with_print(ENABLE_MPI "Enable MPI parallelization" OFF)
 option_with_print(ENABLE_GA "Enable Global Arrays" OFF)
 option_with_print(MAX_DET_ORB "Set the maximum number of orbitals in a determinant" OFF)
+option_with_print(ENABLE_CODECOV "Enable compilation with code coverage flags" OFF)
 #option_with_print(ENABLE_GENERIC "Enable mostly static linking in shared library" OFF)
 
 include(autocmake_omp)
@@ -60,6 +61,10 @@ if(SSE42_FLAG)
     set(CMAKE_CXX_FLAGS "-msse4.2")
 endif()
 add_compile_options(-Wall -Wextra -pedantic) # -Werror)
+
+if(ENABLE_CODECOV)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage") # enabling coverage
+endif()
 
 # List of CC files
 add_psi4_plugin(forte
