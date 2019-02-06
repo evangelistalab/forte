@@ -258,10 +258,6 @@ double AdaptiveCI::compute_energy() {
         outfile->Printf("\n  Using %d threads", omp_get_max_threads());
     }
 
-    if (ex_alg_ == "COMPOSITE") {
-        ex_alg_ = "AVERAGE";
-    }
-
     op_.set_quiet_mode(quiet_mode_);
     local_timer aci_elapse;
 
@@ -288,7 +284,7 @@ double AdaptiveCI::compute_energy() {
 
     DeterminantHashVec PQ_space;
 
-    if (options_->get_str("ACI_EX_TYPE") == "CORE") {
+    if (options_->get_bool("ACI_CORE_EX")) {
         ex_alg_ = "ROOT_ORTHOGONALIZE";
     }
 
@@ -301,7 +297,7 @@ double AdaptiveCI::compute_energy() {
             root_ = i;
         }
 
-        if ((options_->get_str("ACI_EX_TYPE") == "CORE") and (i > 0)) {
+        if ((options_->get_bool("ACI_CORE_EX")) and (i > 0)) {
             ref_root_ = i - 1;
         }
 
@@ -626,16 +622,6 @@ void AdaptiveCI::print_final(DeterminantHashVec& dets, psi::SharedMatrix& PQ_eve
         //    	}
     }
 
-    if (ex_alg_ == "ROOT_SELECT") {
-        outfile->Printf("\n\n  Energy optimized for Root %d: %.12f Eh", ref_root_,
-                        PQ_evals->get(ref_root_) + nuclear_repulsion_energy_ +
-                            as_ints_->scalar_energy());
-        outfile->Printf("\n\n  Root %d Energy + PT2:         %.12f Eh", ref_root_,
-                        PQ_evals->get(ref_root_) + nuclear_repulsion_energy_ +
-                            as_ints_->scalar_energy() +
-                            multistate_pt2_energy_correction_[ref_root_]);
-    }
-
     if ((ex_alg_ != "ROOT_ORTHOGONALIZE") or (nroot_ == 1)) {
         outfile->Printf("\n\n  ==> Wavefunction Information <==");
 
@@ -673,7 +659,7 @@ void AdaptiveCI::find_q_space_batched(DeterminantHashVec& P_space, DeterminantHa
     double remainder = 0.0;
     if (options_->get_str("ACI_BATCH_ALG") == "HASH") {
         remainder = get_excited_determinants_batch(evecs, evals, P_space, F_space);
-    } else {
+    } else if(options_->get_str("ACI_BATCH_ALG") == "VECSORT")  {
         remainder = get_excited_determinants_batch_vecsort(evecs, evals, P_space, F_space);
     }
 
@@ -844,7 +830,7 @@ void AdaptiveCI::find_q_space(DeterminantHashVec& P_space, DeterminantHashVec& P
     det_hash<std::vector<double>> V_hash;
     if (options_->get_bool("ACI_LOW_MEM_SCREENING")) {
         get_excited_determinants_seq(nroot_, evecs, P_space, V_hash);
-    } else if ((options_->get_str("ACI_EX_TYPE") == "CORE") and (root_ > 0)) {
+    } else if (options_->get_bool("ACI_CORE_EX") and (root_ > 0)) {
         get_core_excited_determinants(evecs, P_space, V_hash);
     } else {
         get_excited_determinants(nroot_, evecs, P_space, V_hash);
@@ -1680,7 +1666,7 @@ void AdaptiveCI::compute_aci(DeterminantHashVec& PQ_space, psi::SharedMatrix& PQ
     std::vector<double> P_ref_evecs;
     DeterminantHashVec P_space(initial_reference_);
 
-    if ((options_->get_str("ACI_EX_TYPE") == "CORE") and (root_ > 0)) {
+    if ((options_->get_bool("ACI_CORE_EX")) and (root_ > 0)) {
 
         int ncstate = options_->get_int("ACI_ROOTS_PER_CORE");
 
@@ -1743,10 +1729,6 @@ void AdaptiveCI::compute_aci(DeterminantHashVec& PQ_space, psi::SharedMatrix& PQ
     std::vector<Determinant> old_dets;
     psi::SharedMatrix old_evecs;
 
-    if (options_->get_str("ACI_EXCITED_ALGORITHM") == "ROOT_SELECT") {
-        ref_root_ = root_;
-    }
-
     // Save the P_space energies to predict convergence
     std::vector<double> P_energies;
     // approx_rdm_ = false;
@@ -1760,8 +1742,7 @@ void AdaptiveCI::compute_aci(DeterminantHashVec& PQ_space, psi::SharedMatrix& PQ
         std::string cycle_h = "Cycle " + std::to_string(cycle_);
 
         bool follow = false;
-        if (options_->get_str("ACI_EXCITED_ALGORITHM") == "ROOT_SELECT" or
-            options_->get_str("ACI_EXCITED_ALGORITHM") == "ROOT_COMBINE" or
+        if( options_->get_str("ACI_EXCITED_ALGORITHM") == "ROOT_COMBINE" or
             options_->get_str("ACI_EXCITED_ALGORITHM") == "MULTISTATE" or
             options_->get_str("ACI_EXCITED_ALGORITHM") == "ROOT_ORTHOGONALIZE") {
 
@@ -1937,10 +1918,6 @@ void AdaptiveCI::compute_aci(DeterminantHashVec& PQ_space, psi::SharedMatrix& PQ
 
         // If doing root-following, grab the initial root
         if (follow and (cycle == (pre_iter_ - 1) or (pre_iter_ == 0 and cycle == 0))) {
-
-            if (options_->get_str("ACI_EXCITED_ALGORITHM") == "ROOT_SELECT") {
-                ref_root_ = root_;
-            }
             size_t dim = std::min(static_cast<int>(PQ_space.size()), 1000);
             P_ref.subspace(PQ_space, PQ_evecs, P_ref_evecs, dim, ref_root_);
         }
@@ -1951,26 +1928,14 @@ void AdaptiveCI::compute_aci(DeterminantHashVec& PQ_space, psi::SharedMatrix& PQ
         }
 
         bool stuck = check_stuck(energy_history, PQ_evals);
-        if (stuck and (options_->get_str("ACI_EXCITED_ALGORITHM") != "COMPOSITE")) {
+        if (stuck) {
             outfile->Printf("\n  Procedure is stuck! Quitting...");
             break;
-        } else if (stuck and (options_->get_str("ACI_EXCITED_ALGORITHM") == "COMPOSITE") and
-                   ex_alg_ == "AVERAGE") {
-            outfile->Printf("\n  Root averaging algorithm converged.");
-            outfile->Printf("\n  Now optimizing PQ Space for root %d", root_);
-            ex_alg_ = options_->get_str("ACI_EXCITED_ALGORITHM");
-            pre_iter_ = cycle + 1;
         }
 
         // Step 4. Check convergence and break if needed
         bool converged = check_convergence(energy_history, PQ_evals);
-        if (converged and (ex_alg_ == "AVERAGE") and
-            options_->get_str("ACI_EXCITED_ALGORITHM") == "COMPOSITE") {
-            outfile->Printf("\n  Root averaging algorithm converged.");
-            outfile->Printf("\n  Now optimizing PQ Space for root %d", root_);
-            ex_alg_ = options_->get_str("ACI_EXCITED_ALGORITHM");
-            pre_iter_ = cycle + 1;
-        } else if (converged) {
+        if (converged) {
             // if(quiet_mode_) outfile->Printf(
             // "\n----------------------------------------------------------" );
             if (!quiet_mode_)
@@ -2384,7 +2349,7 @@ void AdaptiveCI::upcast_reference(DeterminantHashVec& ref) {
 }
 
 void AdaptiveCI::add_external_excitations(DeterminantHashVec& ref) {
-
+/*
     print_h2("Adding external Excitations");
 
     const det_hashvec& dets = ref.wfn_hash();
@@ -2408,10 +2373,8 @@ void AdaptiveCI::add_external_excitations(DeterminantHashVec& ref) {
     DeterminantHashVec cv;
 
     std::string order = options_->get_str("ACI_EXTERNAL_EXCITATION_ORDER");
-    std::string type = options_->get_str("ACI_EXTERNAL_EXCITATION_TYPE");
 
     outfile->Printf("\n  Maximum excitation order:  %s", order.c_str());
-    outfile->Printf("\n  Excitation type:  %s", type.c_str());
 
     for (size_t I = 0; I < nref; ++I) {
         Determinant det = dets[I];
@@ -2850,6 +2813,7 @@ void AdaptiveCI::add_external_excitations(DeterminantHashVec& ref) {
     print_wfn(ref, op, final_evecs, nroot_);
     max_rdm_level_ = 1;
     compute_rdms(fci_ints, ref, op, final_evecs, 0, 0);
+*/
 }
 
 void AdaptiveCI::spin_analysis() {
@@ -2974,7 +2938,7 @@ void AdaptiveCI::spin_analysis() {
         //  UA = loc->get_U()->clone();
         //  UB = loc->get_U()->clone();
 
-    } else {
+    } else if (options_->get_str("SPIN_BASIS") == "CANONICAL") {
         outfile->Printf("\n  Computing spin correlation in reference basis \n");
         UA->identity();
         UB->identity();
