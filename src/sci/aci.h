@@ -66,8 +66,6 @@ namespace forte {
 
 class Reference;
 
-/// Set the ACI options
-void set_ACI_options(ForteOptions& foptions);
 
 /**
  * @brief The AdaptiveCI class
