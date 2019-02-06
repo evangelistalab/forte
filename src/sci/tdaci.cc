@@ -1309,11 +1309,11 @@ void TDACI::compute_tdaci_select(SharedVector C0) {
         // 2. Propogate in PQ space
         Timer prop;
 
-        if (options_->get_str("TDACI_PROPOGATOR") == "EXACT_SELECT") {
+        if (options_->get_str("TDACI_PROPAGATOR") == "EXACT_SELECT") {
             propagate_exact_select(PQ_coeffs_r, PQ_coeffs_i, PQ_space, dt);
-        } else if (options_->get_str("TDACI_PROPOGATOR") == "RK4_SELECT") {
+        } else if (options_->get_str("TDACI_PROPAGATOR") == "RK4_SELECT") {
             propagate_RK4_select(PQ_coeffs_r, PQ_coeffs_i, PQ_space, dt);
-        } else if (options_->get_str("TDACI_PROPOGATOR") == "RK4_SELECT_LIST") {
+        } else if (options_->get_str("TDACI_PROPAGATOR") == "RK4_SELECT_LIST") {
             propagate_RK4_select_list(PQ_coeffs_r, PQ_coeffs_i, PQ_space, dt);
         }
 
