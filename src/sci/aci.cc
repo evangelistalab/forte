@@ -2938,7 +2938,7 @@ void AdaptiveCI::spin_analysis() {
         //  UA = loc->get_U()->clone();
         //  UB = loc->get_U()->clone();
 
-    } else if (options_->get_str("SPIN_BASIS") == "CANON") {
+    } else if (options_->get_str("SPIN_BASIS") == "CANONICAL") {
         outfile->Printf("\n  Computing spin correlation in reference basis \n");
         UA->identity();
         UB->identity();
