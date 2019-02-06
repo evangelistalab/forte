@@ -100,7 +100,7 @@ def register_pci_options(forte_options):
 
     forte_options.add_double("PCI_E_CONVERGENCE", 1.0e-8, "The energy convergence criterion")
 
-    forte_options.add_bool("PCI_FAST_EVAR", False, "Use a fast (sparse) estimate of the energy")
+    forte_options.add_bool("PCI_FAST_EVAR", False, "Use a fast (sparse) estimate of the energy?")
 
     forte_options.add_double("PCI_EVAR_MAX_ERROR", 0.0, "The max allowed error for variational energy")
 
@@ -109,30 +109,30 @@ def register_pci_options(forte_options):
 
     forte_options.add_bool("PCI_ADAPTIVE_BETA", False, "Use an adaptive time step?")
 
-    forte_options.add_bool("PCI_USE_INTER_NORM", False, "Use intermediate normalization")
+    forte_options.add_bool("PCI_USE_INTER_NORM", False, "Use intermediate normalization?")
 
-    forte_options.add_bool("PCI_USE_SHIFT", False, "Use a shift in the exponential")
+    forte_options.add_bool("PCI_USE_SHIFT", False, "Use a shift in the exponential?")
 
-    forte_options.add_bool("PCI_VAR_ESTIMATE", False, "Estimate variational energy during calculation")
+    forte_options.add_bool("PCI_VAR_ESTIMATE", False, "Estimate variational energy during calculation?")
 
-    forte_options.add_bool("PCI_PRINT_FULL_WAVEFUNCTION", False, "Print full wavefunction when finish")
+    forte_options.add_bool("PCI_PRINT_FULL_WAVEFUNCTION", False, "Print full wavefunction when finished?")
 
-    forte_options.add_bool("PCI_SIMPLE_PRESCREENING", False, "Prescreen the spawning of excitations")
+    forte_options.add_bool("PCI_SIMPLE_PRESCREENING", False, "Prescreen the spawning of excitations?")
 
-    forte_options.add_bool("PCI_DYNAMIC_PRESCREENING", False, "Use dynamic prescreening")
+    forte_options.add_bool("PCI_DYNAMIC_PRESCREENING", False, "Use dynamic prescreening?")
 
-    forte_options.add_bool("PCI_SCHWARZ_PRESCREENING", False, "Use schwarz prescreening")
+    forte_options.add_bool("PCI_SCHWARZ_PRESCREENING", False, "Use schwarz prescreening?")
 
-    forte_options.add_bool("PCI_INITIATOR_APPROX", False, "Use initiator approximation")
+    forte_options.add_bool("PCI_INITIATOR_APPROX", False, "Use initiator approximation?")
 
     forte_options.add_double("PCI_INITIATOR_APPROX_FACTOR", 1.0, "The initiator approximation factor")
 
-    forte_options.add_bool("PCI_PERTURB_ANALYSIS", False, "Do result perturbation analysis")
+    forte_options.add_bool("PCI_PERTURB_ANALYSIS", False, "Do result perturbation analysis?")
 
-    forte_options.add_bool("PCI_SYMM_APPROX_H", False, "Use Symmetric Approximate Hamiltonian")
+    forte_options.add_bool("PCI_SYMM_APPROX_H", False, "Use Symmetric Approximate Hamiltonian?")
 
     forte_options.add_bool("PCI_STOP_HIGHER_NEW_LOW", False,
-                      "Stop iteration when higher new low detected")
+                      "Stop iteration when higher new low detected?")
 
     forte_options.add_double("PCI_MAXBETA", 1000.0, "The maximum value of beta")
 
@@ -151,9 +151,9 @@ def register_pci_options(forte_options):
 
     forte_options.add_double("PCI_COLINEAR_THRESHOLD", 1.0e-6, "The minimum norm of orthogonal vector")
 
-    forte_options.add_bool("PCI_REFERENCE_SPAWNING", False, "Do spawning according to reference")
+    forte_options.add_bool("PCI_REFERENCE_SPAWNING", False, "Do spawning according to reference?")
 
-    forte_options.add_bool("PCI_POST_DIAGONALIZE", False, "Do a post diagonalization?")
+    forte_options.add_bool("PCI_POST_DIAGONALIZE", False, "Do a final diagonalization after convergence?")
 
     forte_options.add_str("PCI_FUNCTIONAL", "MAX", ["MAX", "SUM", "SQUARE", "SQRT", "SPECIFY-ORDER"],
                      "The functional for determinant coupling importance evaluation")
