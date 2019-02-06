@@ -53,29 +53,6 @@ std::string dimension_to_string(psi::Dimension dim) {
     return s;
 }
 
-void set_CINO_options(ForteOptions& foptions) {
-    foptions.add_bool("CINO", false, "Do a CINO computation?");
-    foptions.add_str("CINO_TYPE", "CIS", {"CIS", "CISD"}, "The type of wave function.");
-    foptions.add_int("CINO_NROOT", 1, "The number of roots computed");
-    foptions.add_array("CINO_ROOTS_PER_IRREP",
-                       "The number of excited states per irreducible representation");
-    foptions.add_double("CINO_THRESHOLD", 0.99,
-                        "The fraction of NOs to include in the active space");
-    foptions.add_int("ACI_MAX_RDM", 1, "Order of RDM to compute");
-    /*- Type of spin projection
-     * 0 - None
-     * 1 - Project initial P spaces at each iteration
-     * 2 - Project only after converged PQ space
-     * 3 - Do 1 and 2 -*/
-
-    // add options of whether pass MOSpaceInfo or not
-    foptions.add_bool("CINO_AUTO", false,
-                      "Allow the users to choose"
-                      "whether pass frozen_docc"
-                      "actice_docc and restricted_docc"
-                      "or not");
-}
-
 CINO::CINO(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
            std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
     : OrbitalTransform(scf_info, options, ints, mo_space_info), ints_(ints), options_(options),
