@@ -57,11 +57,12 @@ void IAOBuilder::common_init() {
     stars_.clear();
 }
 std::shared_ptr<IAOBuilder> IAOBuilder::build(std::shared_ptr<psi::BasisSet> primary,
-                                              std::shared_ptr<psi::BasisSet> minao, psi::SharedMatrix C,
-                                              psi::Options& options) {
+                                              std::shared_ptr<psi::BasisSet> minao,
+                                              psi::SharedMatrix C, psi::Options& options) {
     //    psi::Options& options = psi::Process::environment.options;
 
-    //  std::shared_ptr<psi::BasisSet> minao = psi::BasisSet::pyconstruct_orbital(primary->molecule(),
+    //  std::shared_ptr<psi::BasisSet> minao =
+    //  psi::BasisSet::pyconstruct_orbital(primary->molecule(),
     //      "BASIS", options.get_str("MINAO_BASIS"));
 
     std::shared_ptr<IAOBuilder> local(new IAOBuilder(primary, minao, C));
@@ -171,8 +172,8 @@ std::map<std::string, psi::SharedMatrix> IAOBuilder::build_iaos() {
 
     psi::SharedMatrix C = C_;
     psi::SharedMatrix T1 = psi::Matrix::doublet(S22_m12, S12, false, true);
-    psi::SharedMatrix T2 =
-        psi::Matrix::doublet(S11_m12, psi::Matrix::triplet(T1, T1, C, true, false, false), false, false);
+    psi::SharedMatrix T2 = psi::Matrix::doublet(
+        S11_m12, psi::Matrix::triplet(T1, T1, C, true, false, false), false, false);
     psi::SharedMatrix T3 = psi::Matrix::doublet(T2, T2, true, false);
     T3->power(-1.0 / 2.0, condition_);
     psi::SharedMatrix Ctilde = psi::Matrix::triplet(S11_m12, T2, T3, false, false, false);
@@ -187,7 +188,8 @@ std::map<std::string, psi::SharedMatrix> IAOBuilder::build_iaos() {
     psi::SharedMatrix DSDtilde = psi::Matrix::triplet(D, S11, Dtilde, false, false, false);
     DSDtilde->scale(2.0);
 
-    psi::SharedMatrix L = psi::Matrix::doublet(S11_m12, S11_m12, false, false); // TODO: Possibly Unstable
+    psi::SharedMatrix L =
+        psi::Matrix::doublet(S11_m12, S11_m12, false, false); // TODO: Possibly Unstable
     L->add(DSDtilde);
     L->subtract(D);
     L->subtract(Dtilde);
@@ -542,8 +544,9 @@ IAOBuilder::ibo_localizer(psi::SharedMatrix L, const std::vector<std::vector<int
     return ret;
 }
 
-std::map<std::string, psi::SharedMatrix> IAOBuilder::localize(psi::SharedMatrix Cocc, psi::SharedMatrix Focc,
-                                                         const std::vector<int>& ranges2) {
+std::map<std::string, psi::SharedMatrix> IAOBuilder::localize(psi::SharedMatrix Cocc,
+                                                              psi::SharedMatrix Focc,
+                                                              const std::vector<int>& ranges2) {
     if (!A_)
         build_iaos();
 
@@ -722,7 +725,8 @@ std::map<std::string, psi::SharedMatrix> IAOBuilder::localize(psi::SharedMatrix 
     return ret;
 }
 
-psi::SharedMatrix IAOBuilder::reorder_orbitals(psi::SharedMatrix F, const std::vector<int>& ranges) {
+psi::SharedMatrix IAOBuilder::reorder_orbitals(psi::SharedMatrix F,
+                                               const std::vector<int>& ranges) {
     int nmo = F->rowspi()[0];
     double** Fp = F->pointer();
 
@@ -762,4 +766,4 @@ psi::SharedMatrix IAOBuilder::orbital_charges(psi::SharedMatrix L) {
 
     return Q;
 }
-}
+} // namespace forte

@@ -32,7 +32,7 @@
 #include "psi4/libfock/jk.h"
 #include "psi4/libtrans/mospace.h"
 #include "base_classes/reference.h"
-#include "base_classes/active_space_solver.h"
+#include "base_classes/active_space_method.h"
 #include "integrals/integrals.h"
 #include "base_classes/mo_space_info.h"
 
@@ -45,14 +45,14 @@
 
 namespace forte {
 
-class DMRGSCF : public ActiveSpaceSolver {
+class DMRGSCF : public ActiveSpaceMethod {
   public:
     DMRGSCF(StateInfo state, std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
             std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     double compute_energy();
 
-    Reference get_reference() { return dmrg_ref_; }
+    Reference reference() { return dmrg_ref_; }
     void set_iterations(int dmrg_iterations) { dmrg_iterations_ = dmrg_iterations; }
 
   private:

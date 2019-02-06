@@ -489,7 +489,8 @@ psi::SharedMatrix OrbitalOptimizer::AugmentedHessianSolve() {
 
     // AugmentedHessian->set(nhole * npart, nhole * npart, 0.0);
     // AugmentedHessian->print();
-    psi::SharedMatrix HessianEvec(new psi::Matrix("HessianEvec", nhole + npart + 1, nhole + npart + 1));
+    psi::SharedMatrix HessianEvec(
+        new psi::Matrix("HessianEvec", nhole + npart + 1, nhole + npart + 1));
     psi::SharedVector HessianEval(new Vector("HessianEval", nhole + npart + 1));
     AugmentedHessian->diagonalize(HessianEvec, HessianEval);
     HessianEvec->print();
@@ -510,8 +511,8 @@ psi::SharedMatrix OrbitalOptimizer::rotate_orbitals(psi::SharedMatrix C, psi::Sh
     psi::SharedMatrix C_rot(C->clone());
     psi::SharedMatrix S_mat(S->clone());
     psi::SharedMatrix S_sym(new psi::Matrix("Exp(K)", mo_space_info_->nirrep(),
-                                  mo_space_info_->get_dimension("ALL"),
-                                  mo_space_info_->get_dimension("ALL")));
+                                            mo_space_info_->get_dimension("ALL"),
+                                            mo_space_info_->get_dimension("ALL")));
     int offset_hole = 0;
     int offset_part = 0;
     for (size_t h = 0; h < nirrep_; h++) {
@@ -633,7 +634,8 @@ void OrbitalOptimizer::zero_redunant(psi::SharedMatrix& matrix) {
     }
 }
 CASSCFOrbitalOptimizer::CASSCFOrbitalOptimizer(ambit::Tensor Gamma1, ambit::Tensor Gamma2,
-                                               ambit::Tensor two_body_ab, std::shared_ptr<ForteOptions> options,
+                                               ambit::Tensor two_body_ab,
+                                               std::shared_ptr<ForteOptions> options,
                                                std::shared_ptr<MOSpaceInfo> mo_space_info)
     : OrbitalOptimizer(Gamma1, Gamma2, two_body_ab, options, mo_space_info) {}
 CASSCFOrbitalOptimizer::~CASSCFOrbitalOptimizer() {}
@@ -791,7 +793,8 @@ void CASSCFOrbitalOptimizer::form_fock_intermediates() {
     }
 }
 PostCASSCFOrbitalOptimizer::PostCASSCFOrbitalOptimizer(ambit::Tensor Gamma1, ambit::Tensor Gamma2,
-                                                       ambit::Tensor two_body_ab, std::shared_ptr<ForteOptions> options,
+                                                       ambit::Tensor two_body_ab,
+                                                       std::shared_ptr<ForteOptions> options,
                                                        std::shared_ptr<MOSpaceInfo> mo_space_info)
     : OrbitalOptimizer(Gamma1, Gamma2, two_body_ab, options, mo_space_info) {}
 PostCASSCFOrbitalOptimizer::~PostCASSCFOrbitalOptimizer() {}
@@ -815,4 +818,4 @@ void PostCASSCFOrbitalOptimizer::form_fock_intermediates() {
     F_core_ = F_core_c1;
     F_act_ = F_core_c1;
 }
-}
+} // namespace forte

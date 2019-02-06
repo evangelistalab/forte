@@ -37,7 +37,7 @@
 #include "orbital-helpers/unpaired_density.h"
 #include "sparse_ci/determinant_hashvector.h"
 #include "base_classes/reference.h"
-#include "base_classes/active_space_solver.h"
+#include "base_classes/active_space_method.h"
 #include "sparse_ci/sparse_ci_solver.h"
 #include "orbital-helpers/localize.h"
 
@@ -60,7 +60,7 @@ void set_ASCI_options(ForteOptions& foptions);
  * @brief The AdaptiveCI class
  * This class implements an adaptive CI algorithm
  */
-class ASCI : public ActiveSpaceSolver {
+class ASCI : public ActiveSpaceMethod {
   public:
     // ==> Class Constructor and Destructor <==
 
@@ -72,8 +72,9 @@ class ASCI : public ActiveSpaceSolver {
      * @param mo_space_info A pointer to the MOSpaceInfo object
      */
 
-    ASCI(StateInfo state, std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
-         std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ActiveSpaceIntegrals> as_ints);
+    ASCI(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
+         std::shared_ptr<ForteOptions> options, std::shared_ptr<MOSpaceInfo> mo_space_info,
+         std::shared_ptr<ActiveSpaceIntegrals> as_ints);
     /// Destructor
     ~ASCI();
 
@@ -83,7 +84,7 @@ class ASCI : public ActiveSpaceSolver {
     double compute_energy() override;
 
     /// Update the reference file
-    Reference get_reference() override;
+    std::vector<Reference> reference(const std::vector<std::pair<size_t,size_t>>& root_list) override;
 
     void set_options(std::shared_ptr<ForteOptions>) override{}; // TODO : define
 
@@ -104,7 +105,6 @@ class ASCI : public ActiveSpaceSolver {
 
     /// HF info
     std::shared_ptr<SCFInfo> scf_info_;
-    StateInfo state_;
     /// Options
     std::shared_ptr<ForteOptions> options_;
     /// The wave function symmetry
@@ -140,8 +140,6 @@ class ASCI : public ActiveSpaceSolver {
     int c_det_;
     /// The threshold applied to the secondary space
     int t_det_;
-    /// The number of roots computed
-    int nroot_;
 
     /// The eigensolver type
     DiagonalizationMethod diag_method_ = DLString;
@@ -166,15 +164,15 @@ class ASCI : public ActiveSpaceSolver {
     double spin_trans_;
 
     // The RDMS
-    std::vector<double> ordm_a_;
-    std::vector<double> ordm_b_;
-    std::vector<double> trdm_aa_;
-    std::vector<double> trdm_ab_;
-    std::vector<double> trdm_bb_;
-    std::vector<double> trdm_aaa_;
-    std::vector<double> trdm_aab_;
-    std::vector<double> trdm_abb_;
-    std::vector<double> trdm_bbb_;
+    ambit::Tensor ordm_a_;
+    ambit::Tensor ordm_b_;
+    ambit::Tensor trdm_aa_;
+    ambit::Tensor trdm_ab_;
+    ambit::Tensor trdm_bb_;
+    ambit::Tensor trdm_aaa_;
+    ambit::Tensor trdm_aab_;
+    ambit::Tensor trdm_abb_;
+    ambit::Tensor trdm_bbb_;
 
     // ==> Class functions <==
 

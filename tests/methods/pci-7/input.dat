@@ -19,7 +19,7 @@ set {
 }
 
 set forte {
-  job_type pci
+  active_space_solver pci
   pci_nroot 1
   charge 0
   pci_tau 1.0
@@ -31,7 +31,7 @@ set forte {
   pci_INITIATOR_APPROX true
   pci_INITIATOR_APPROX_FACTOR 1.0
   pci_GENERATOR POWER
-  MP2_NOS true
+  orbital_type MP2_NOS
   pci_maxbeta 100000.00
   pci_POST_DIAGONALIZE true
   pci_e_convergence 12

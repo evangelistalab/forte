@@ -29,15 +29,15 @@ set {
 
 
 set forte {
-  job_type = aci
+  active_space_solver aci
   multiplicity 1
   aci_select_type aimed_energy
   frozen_docc [1,0,0,0,0,1,0,0]
   sigma 0.08
   aci_excited_algorithm average
   aci_pq_function average
-  aci_nroot 3
-  mp2_nos true
+  nroot 3
+  orbital_type mp2_nos
   aci_average_offset 0
   charge 0
   diag_algorithm dynamic

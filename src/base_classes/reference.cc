@@ -26,29 +26,212 @@
  * @END LICENSE
  */
 
+#include "helpers/timer.h"
 #include "base_classes/reference.h"
 #include "integrals/integrals.h"
 #include "base_classes/mo_space_info.h"
 
 namespace forte {
 
-double compute_Eref_from_reference(const Reference& ref, std::shared_ptr<ForteIntegrals> ints,
-                                   std::shared_ptr<MOSpaceInfo> mo_space_info, double Enuc) {
+Reference::Reference() : max_rdm_(0) {}
+
+Reference::Reference(ambit::Tensor g1a, ambit::Tensor g1b) : max_rdm_(1), g1a_(g1a), g1b_(g1b) {}
+
+Reference::Reference(ambit::Tensor g1a, ambit::Tensor g1b, ambit::Tensor g2aa, ambit::Tensor g2ab,
+                     ambit::Tensor g2bb)
+    : max_rdm_(2), g1a_(g1a), g1b_(g1b), g2aa_(g2aa), g2ab_(g2ab), g2bb_(g2bb) {}
+
+Reference::Reference(ambit::Tensor g1a, ambit::Tensor g1b, ambit::Tensor g2aa, ambit::Tensor g2ab,
+                     ambit::Tensor g2bb, ambit::Tensor g3aaa, ambit::Tensor g3aab,
+                     ambit::Tensor g3abb, ambit::Tensor g3bbb)
+    : max_rdm_(3), g1a_(g1a), g1b_(g1b), g2aa_(g2aa), g2ab_(g2ab), g2bb_(g2bb), g3aaa_(g3aaa),
+      g3aab_(g3aab), g3abb_(g3abb), g3bbb_(g3bbb) {}
+
+ambit::Tensor Reference::L2aa() {
+    if (not have_L2aa_) {
+        L2aa_ = g2aa_.clone();
+        make_cumulant_L2aa_in_place(g1a_, L2aa_);
+        have_L2aa_ = true;
+    }
+    return L2aa_;
+}
+
+ambit::Tensor Reference::L2ab() {
+    if (not have_L2ab_) {
+        L2ab_ = g2ab_.clone();
+        make_cumulant_L2ab_in_place(g1a_, g1b_, L2ab_);
+        have_L2ab_ = true;
+    }
+    return L2ab_;
+}
+
+ambit::Tensor Reference::L2bb() {
+    if (not have_L2bb_) {
+        L2bb_ = g2bb_.clone();
+        make_cumulant_L2bb_in_place(g1b_, L2bb_);
+        have_L2bb_ = true;
+    }
+    return L2bb_;
+}
+
+ambit::Tensor Reference::L3aaa() {
+    if (not have_L3aaa_) {
+        L3aaa_ = g3aaa_.clone();
+        make_cumulant_L3aaa_in_place(g1a_, L2aa_, L3aaa_);
+        have_L3aaa_ = true;
+    }
+    return L3aaa_;
+}
+
+ambit::Tensor Reference::L3aab() {
+    if (not have_L3aab_) {
+        L3aab_ = g3aab_.clone();
+        make_cumulant_L3aab_in_place(g1a_, g1b_, L2aa_, L2ab_, L3aab_);
+        have_L3aab_ = true;
+    }
+    return L3aab_;
+}
+
+ambit::Tensor Reference::L3abb() {
+    if (not have_L3abb_) {
+        L3abb_ = g3abb_.clone();
+        make_cumulant_L3abb_in_place(g1a_, g1b_, L2ab_, L2bb_, L3abb_);
+        have_L3abb_ = true;
+    }
+    return L3abb_;
+}
+
+ambit::Tensor Reference::L3bbb() {
+    if (not have_L3bbb_) {
+        L3bbb_ = g3bbb_.clone();
+        make_cumulant_L3bbb_in_place(g1b_, L2bb_, L3bbb_);
+        have_L3bbb_ = true;
+    }
+    return L3bbb_;
+}
+
+void make_cumulant_L2aa_in_place(const ambit::Tensor& g1a, ambit::Tensor& L2aa) {
+    timer t("make_cumulant_L2aa_in_place");
+
+    L2aa("pqrs") -= g1a("pr") * g1a("qs");
+    L2aa("pqrs") += g1a("ps") * g1a("qr");
+}
+
+void make_cumulant_L2ab_in_place(const ambit::Tensor& g1a, const ambit::Tensor& g1b,
+                                 ambit::Tensor& L2ab) {
+    timer t("make_cumulant_L2ab_in_place");
+
+    L2ab("pqrs") -= g1a("pr") * g1b("qs");
+}
+
+void make_cumulant_L2bb_in_place(const ambit::Tensor& g1b, ambit::Tensor& L2bb) {
+    timer t("make_cumulant_L2bb_in_place");
+
+    L2bb("pqrs") -= g1b("pr") * g1b("qs");
+    L2bb("pqrs") += g1b("ps") * g1b("qr");
+}
+
+void make_cumulant_L3aaa_in_place(const ambit::Tensor& g1a, const ambit::Tensor& L2aa,
+                                  ambit::Tensor& L3aaa) {
+    timer t("make_cumulant_L3aaa_in_place");
+
+    L3aaa("pqrstu") -= g1a("ps") * L2aa("qrtu");
+    L3aaa("pqrstu") += g1a("pt") * L2aa("qrsu");
+    L3aaa("pqrstu") += g1a("pu") * L2aa("qrts");
+
+    L3aaa("pqrstu") -= g1a("qt") * L2aa("prsu");
+    L3aaa("pqrstu") += g1a("qs") * L2aa("prtu");
+    L3aaa("pqrstu") += g1a("qu") * L2aa("prst");
+
+    L3aaa("pqrstu") -= g1a("ru") * L2aa("pqst");
+    L3aaa("pqrstu") += g1a("rs") * L2aa("pqut");
+    L3aaa("pqrstu") += g1a("rt") * L2aa("pqsu");
+
+    L3aaa("pqrstu") -= g1a("ps") * g1a("qt") * g1a("ru");
+    L3aaa("pqrstu") -= g1a("pt") * g1a("qu") * g1a("rs");
+    L3aaa("pqrstu") -= g1a("pu") * g1a("qs") * g1a("rt");
+
+    L3aaa("pqrstu") += g1a("ps") * g1a("qu") * g1a("rt");
+    L3aaa("pqrstu") += g1a("pu") * g1a("qt") * g1a("rs");
+    L3aaa("pqrstu") += g1a("pt") * g1a("qs") * g1a("ru");
+}
+
+void make_cumulant_L3aab_in_place(const ambit::Tensor& g1a, const ambit::Tensor& g1b,
+                                  const ambit::Tensor& L2aa, const ambit::Tensor& L2ab,
+                                  ambit::Tensor& L3aab) {
+    timer t("make_cumulant_L3aab_in_place");
+
+    L3aab("pqRstU") -= g1a("ps") * L2ab("qRtU");
+    L3aab("pqRstU") += g1a("pt") * L2ab("qRsU");
+
+    L3aab("pqRstU") -= g1a("qt") * L2ab("pRsU");
+    L3aab("pqRstU") += g1a("qs") * L2ab("pRtU");
+
+    L3aab("pqRstU") -= g1b("RU") * L2aa("pqst");
+
+    L3aab("pqRstU") -= g1a("ps") * g1a("qt") * g1b("RU");
+    L3aab("pqRstU") += g1a("pt") * g1a("qs") * g1b("RU");
+}
+
+void make_cumulant_L3abb_in_place(const ambit::Tensor& g1a, const ambit::Tensor& g1b,
+                                  const ambit::Tensor& L2ab, const ambit::Tensor& L2bb,
+                                  ambit::Tensor& L3abb) {
+    timer t("make_cumulant_L3abb_in_place");
+
+    L3abb("pQRsTU") -= g1a("ps") * L2bb("QRTU");
+
+    L3abb("pQRsTU") -= g1b("QT") * L2ab("pRsU");
+    L3abb("pQRsTU") += g1b("QU") * L2ab("pRsT");
+
+    L3abb("pQRsTU") -= g1b("RU") * L2ab("pQsT");
+    L3abb("pQRsTU") += g1b("RT") * L2ab("pQsU");
+
+    L3abb("pQRsTU") -= g1a("ps") * g1b("QT") * g1b("RU");
+    L3abb("pQRsTU") += g1a("ps") * g1b("QU") * g1b("RT");
+}
+
+void make_cumulant_L3bbb_in_place(const ambit::Tensor& g1b, const ambit::Tensor& L2bb,
+                                  ambit::Tensor& L3bbb) {
+    timer t("make_cumulant_L3bbb_in_place");
+
+    L3bbb("pqrstu") -= g1b("ps") * L2bb("qrtu");
+    L3bbb("pqrstu") += g1b("pt") * L2bb("qrsu");
+    L3bbb("pqrstu") += g1b("pu") * L2bb("qrts");
+
+    L3bbb("pqrstu") -= g1b("qt") * L2bb("prsu");
+    L3bbb("pqrstu") += g1b("qs") * L2bb("prtu");
+    L3bbb("pqrstu") += g1b("qu") * L2bb("prst");
+
+    L3bbb("pqrstu") -= g1b("ru") * L2bb("pqst");
+    L3bbb("pqrstu") += g1b("rs") * L2bb("pqut");
+    L3bbb("pqrstu") += g1b("rt") * L2bb("pqsu");
+
+    L3bbb("pqrstu") -= g1b("ps") * g1b("qt") * g1b("ru");
+    L3bbb("pqrstu") -= g1b("pt") * g1b("qu") * g1b("rs");
+    L3bbb("pqrstu") -= g1b("pu") * g1b("qs") * g1b("rt");
+
+    L3bbb("pqrstu") += g1b("ps") * g1b("qu") * g1b("rt");
+    L3bbb("pqrstu") += g1b("pu") * g1b("qt") * g1b("rs");
+    L3bbb("pqrstu") += g1b("pt") * g1b("qs") * g1b("ru");
+}
+
+double compute_Eref_from_reference(Reference& ref, std::shared_ptr<ForteIntegrals> ints,
+                                   std::shared_ptr<MOSpaceInfo> mo_space_info) {
     // similar to MASTER_DSRG::compute_reference_energy_from_ints (use Fock and cumulants)
     // here I form two density and directly use bare Hamiltonian
 
-    double E = Enuc + ints->frozen_core_energy();
+    double E = ints->nuclear_repulsion_energy() + ints->frozen_core_energy();
 
     std::vector<size_t> core_mos = mo_space_info->get_corr_abs_mo("RESTRICTED_DOCC");
     std::vector<size_t> actv_mos = mo_space_info->get_corr_abs_mo("ACTIVE");
     size_t ncore = core_mos.size();
     size_t nactv = actv_mos.size();
 
-    ambit::Tensor L1a = ref.L1a();
-    ambit::Tensor L1b = ref.L1b();
-    ambit::Tensor L2aa = ref.L2aa();
-    ambit::Tensor L2ab = ref.L2ab();
-    ambit::Tensor L2bb = ref.L2bb();
+    ambit::Tensor g1a = ref.g1a();
+    ambit::Tensor g1b = ref.g1b();
+    ambit::Tensor g2aa = ref.g2aa();
+    ambit::Tensor g2ab = ref.g2ab();
+    ambit::Tensor g2bb = ref.g2bb();
 
     // core 1-body: \sum_{m}^{C} h^{m}_{m}
     for (size_t m : core_mos) {
@@ -67,8 +250,8 @@ double compute_Eref_from_reference(const Reference& ref, std::shared_ptr<ForteIn
             Hb.data()[u * nactv + v] = ints->oei_b(nu, nv);
         }
     }
-    E += Ha("uv") * ref.L1a()("vu");
-    E += Hb("uv") * ref.L1b()("vu");
+    E += Ha("uv") * ref.g1a()("vu");
+    E += Hb("uv") * ref.g1b()("vu");
 
     // core-core 2-body: 0.5 * \sum_{mn}^{C} v^{mn}_{mn} in mini-batches
     // 4-index tensor of core-core-core-core could be large (> 600 electrons)
@@ -107,36 +290,25 @@ double compute_Eref_from_reference(const Reference& ref, std::shared_ptr<ForteIn
     });
 
     Vtemp = ints->aptei_aa_block(core_mos, actv_mos, core_mos, actv_mos);
-    E += Vtemp("munv") * I("mn") * L1a("vu");
+    E += Vtemp("munv") * I("mn") * g1a("vu");
 
     Vtemp = ints->aptei_ab_block(core_mos, actv_mos, core_mos, actv_mos);
-    E += Vtemp("munv") * I("mn") * L1b("vu");
+    E += Vtemp("munv") * I("mn") * g1b("vu");
 
     Vtemp = ints->aptei_ab_block(actv_mos, core_mos, actv_mos, core_mos);
-    E += Vtemp("umvn") * I("mn") * L1a("vu");
+    E += Vtemp("umvn") * I("mn") * g1a("vu");
 
     Vtemp = ints->aptei_bb_block(core_mos, actv_mos, core_mos, actv_mos);
-    E += Vtemp("munv") * I("mn") * L1b("vu");
+    E += Vtemp("munv") * I("mn") * g1b("vu");
 
-    // TODO: avoid using clone here, should copy only the active part of these tensors
-
-    // active-active 2-body: 0.25 * \sum_{uvxy}^{A} * v^{uv}_{xy} * G2^{xy}_{uv}
-    ambit::Tensor G2 = L2aa.clone();
-    G2("pqrs") += L1a("pr") * L1a("qs");
-    G2("pqrs") -= L1a("ps") * L1a("qr");
     Vtemp = ints->aptei_aa_block(actv_mos, actv_mos, actv_mos, actv_mos);
-    E += 0.25 * Vtemp("uvxy") * G2("uvxy");
+    E += 0.25 * Vtemp("uvxy") * g2aa("uvxy");
 
-    G2 = L2ab.clone();
-    G2("pqrs") += L1a("pr") * L1b("qs");
     Vtemp = ints->aptei_ab_block(actv_mos, actv_mos, actv_mos, actv_mos);
-    E += Vtemp("uVxY") * G2("uVxY");
+    E += Vtemp("uVxY") * g2ab("uVxY");
 
-    G2 = L2bb.clone();
-    G2("pqrs") += L1b("pr") * L1b("qs");
-    G2("pqrs") -= L1b("ps") * L1b("qr");
     Vtemp = ints->aptei_bb_block(actv_mos, actv_mos, actv_mos, actv_mos);
-    E += 0.25 * Vtemp("UVXY") * G2("UVXY");
+    E += 0.25 * Vtemp("UVXY") * g2bb("UVXY");
 
     return E;
 }

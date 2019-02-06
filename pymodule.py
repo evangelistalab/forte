@@ -28,23 +28,240 @@
 #
 
 import timeit
+import math
+import warnings
 
 import psi4
 import forte
 import psi4.driver.p4util as p4util
 from psi4.driver.procrouting import proc_util
 
-def forte_driver(state, scf_info, options, ints, mo_space_info):
-    # Create an active space solver object
-    as_solver_type = options.get_str('ACTIVE_SPACE_SOLVER')
-    as_solver = forte.make_active_space_solver(as_solver_type,state,scf_info,mo_space_info,ints,options)
-    energy = as_solver.compute_energy()
-#    reference = solver.reference()
+def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
+    max_rdm_level = 3 # TODO: set this (Francesco)
+    return_en = 0.0
+
+    state_map = forte.to_state_nroots_map(state_weights_map)
+
+    # Create an active space solver object and compute the energy
+    active_space_solver_type = options.get_str('ACTIVE_SPACE_SOLVER')
+    as_ints = forte.make_active_space_ints(mo_space_info, ints, "ACTIVE", ["RESTRICTED_DOCC"]);
+    active_space_solver = forte.make_active_space_solver(active_space_solver_type,state_map,scf_info,mo_space_info,as_ints,options)
+    active_space_solver.set_max_rdm_level(max_rdm_level)
+    state_energies_list = active_space_solver.compute_energy()
+
+
+    # Notes (York):
+    #     cases to run active space solver: reference relaxation, state-average dsrg
+    #     cases to run contracted ci solver (will be put in ActiveSpaceSolver): contracted state-average dsrg
+    Etemp1, Etemp2 = 0.0, 0.0
 
     # Create a dynamical correlation solver object
-#    dyncorr_solver = options.get_str('DYNCORR_SOLVER')
-#    solver = forte.make_dynamical_solver(dyncorr_solver,state,scf_info,forte_options,ints,mo_space_info)
-    return energy
+    correlation_solver_type = options.get_str('CORRELATION_SOLVER')
+    if correlation_solver_type != 'NONE':
+        # Grab the reference
+        reference = active_space_solver.compute_average_reference(state_weights_map) # TODO: this should be chosen in a smart way
+
+        # Compute unitary matrices Ua and Ub that rotate the orbitals to the semicanonical basis
+        semi = forte.SemiCanonical(mo_space_info, ints, options)
+        semi.semicanonicalize(reference, max_rdm_level)
+        Ua = semi.Ua_t()
+        Ub = semi.Ub_t()
+
+        dsrg = forte.make_dsrg_method(correlation_solver_type, reference,
+                                      scf_info, options, ints, mo_space_info)
+        dsrg.set_Uactv(Ua, Ub)
+        Edsrg = dsrg.compute_energy()
+        psi4.core.set_scalar_variable('UNRELAXED ENERGY', Edsrg)
+
+        # dipole moment related
+        do_dipole = options.get_bool("DSRG_DIPOLE")
+        if do_dipole:
+            if correlation_solver_type == 'MRDSRG' or correlation_solver_type == 'THREE-DSRG-MRPT2':
+                do_dipole = False
+                psi4.core.print_out("\n  !Dipole moment is not implemented for {}.".format(correlation_solver_type))
+                warnings.warn("Dipole moment is not implemented for MRDSRG.", UserWarning)
+            udm_x = psi4.core.variable('UNRELAXED DIPOLE X')
+            udm_y = psi4.core.variable('UNRELAXED DIPOLE Y')
+            udm_z = psi4.core.variable('UNRELAXED DIPOLE Z')
+            udm_t = psi4.core.variable('UNRELAXED DIPOLE')
+
+        def dipole_routine(dsrg_method, reference):
+            dipole_moments = dsrg_method.nuclear_dipole()
+            dipole_dressed = dsrg_method.deGNO_DMbar_actv()
+            for i in range(3):
+                dipole_moments[i] += dipole_dressed[i].contract_with_densities(reference)
+            dm_total = math.sqrt(sum([i * i for i in dipole_moments]))
+            dipole_moments.append(dm_total)
+            return dipole_moments
+
+        # determine the relaxation procedure
+        relax_mode = options.get_str("RELAX_REF")
+        is_multi_state = True if options.get_str("CALC_TYPE") != "SS" else False
+
+        if relax_mode == 'NONE' and is_multi_state:
+            relax_mode = 'ONCE'
+
+        if relax_mode == 'NONE':
+            return Edsrg
+        elif relax_mode == 'ONCE':
+            maxiter = 1
+        elif relax_mode == 'TWICE':
+            maxiter = 2
+        else:
+            maxiter = options.get_int('MAXITER_RELAX_REF')
+
+        # filter out some ms-dsrg algorithms
+        ms_dsrg_algorithm = options.get_str("DSRG_MULTI_STATE")
+        if is_multi_state and ("SA" not in ms_dsrg_algorithm):
+            raise NotImplementedError("MS or XMS is disabled due to the reconstruction.")
+        if ms_dsrg_algorithm == "SA_SUB" and relax_mode != 'ONCE':
+            raise NotImplementedError("Need to figure out how to compute relaxed SA density.")
+
+        # prepare for reference relaxation iteration
+        relax_conv = options.get_double("RELAX_E_CONVERGENCE")
+        e_conv = options.get_double("E_CONVERGENCE")
+        converged = False if relax_mode != 'ONCE' and relax_mode != 'TWICE' else True
+
+        # store (unrelaxed, relaxed) quantities
+        dsrg_energies = []
+        dsrg_dipoles = []
+
+        for N in range(maxiter):
+            # Grab the effective Hamiltonian in the actice space
+            ints_dressed = dsrg.compute_Heff_actv()
+
+            # Compute the energy
+            if is_multi_state and ms_dsrg_algorithm == "SA_SUB":
+                state_energies_list = active_space_solver.compute_contracted_energy(ints_dressed)
+                Erelax = forte.compute_average_state_energy(state_energies_list,state_weights_map)
+                return Erelax
+            else:
+                # Make a new ActiveSpaceSolver with the new ints
+                as_solver_relaxed = forte.make_active_space_solver(active_space_solver_type,
+                                                                   state_map,scf_info,
+                                                                   mo_space_info,ints_dressed,
+                                                                   options)
+                as_solver_relaxed.set_max_rdm_level(max_rdm_level)
+                state_energies_list = as_solver_relaxed.compute_energy()
+                Erelax = forte.compute_average_state_energy(state_energies_list,state_weights_map)
+
+            dsrg_energies.append((Edsrg, Erelax))
+
+            if do_dipole:
+                if is_multi_state:
+                    psi4.core.print_out("\n  !DSRG transition dipoles are disabled temporarily.")
+                    warnings.warn("DSRG transition dipoles are disabled temporarily.", UserWarning)
+                else:
+                    reference = as_solver_relaxed.compute_average_reference(state_weights_map)
+                    x, y, z, t = dipole_routine(dsrg, reference)
+                    dsrg_dipoles.append(((udm_x, udm_y, udm_z, udm_t), (x, y, z, t)))
+                    psi4.core.print_out("\n\n    {} partially relaxed dipole moment:".format(correlation_solver_type))
+                    psi4.core.print_out("\n      X: {:10.6f}  Y: {:10.6f}"
+                                        "  Z: {:10.6f}  Total: {:10.6f}\n".format(x, y, z, t))
+
+            # test convergence and break loop
+            if abs(Edsrg - Etemp1) < relax_conv and abs(Erelax - Etemp2) < relax_conv \
+                and abs(Edsrg - Erelax) < e_conv:
+                converged = True
+                break
+
+            Etemp1, Etemp2 = Edsrg, Erelax
+
+            # continue iterations
+            if N + 1 != maxiter:
+                # Compute the reference in the original basis
+                # reference available if done relaxed dipole
+                if do_dipole and (not is_multi_state):
+                    reference = semi.transform_reference(Ua, Ub, reference, max_rdm_level)
+                else:
+                    reference = semi.transform_reference(Ua, Ub, as_solver_relaxed.compute_average_reference(state_weights_map),
+                                                         max_rdm_level)
+
+                # Now semicanonicalize the reference and orbitals
+                semi.semicanonicalize(reference, max_rdm_level)
+                Ua = semi.Ua_t()
+                Ub = semi.Ub_t()
+
+                # Compute DSRG in the semicanonical basis
+                dsrg = forte.make_dsrg_method(correlation_solver_type, reference,
+                                              scf_info, options, ints, mo_space_info)
+                dsrg.set_Uactv(Ua, Ub)
+                Edsrg = dsrg.compute_energy()
+
+                if do_dipole:
+                    udm_x = psi4.core.variable('UNRELAXED DIPOLE X')
+                    udm_y = psi4.core.variable('UNRELAXED DIPOLE Y')
+                    udm_z = psi4.core.variable('UNRELAXED DIPOLE Z')
+                    udm_t = psi4.core.variable('UNRELAXED DIPOLE')
+
+        # printing
+        if (not is_multi_state) or maxiter > 1:
+            psi4.core.print_out("\n\n  => {} Reference Relaxation Energy Summary <=\n".format(correlation_solver_type))
+            indent = ' ' * 4
+            dash = '-' * 71
+            title = indent + "{:5}  {:>31}  {:>31}\n".format(' ', "Fixed Ref. (a.u.)",
+                                                             "Relaxed Ref. (a.u.)")
+            title += indent + "{}  {}  {}\n".format(' ' * 5, '-' * 31, '-' * 31)
+            title += indent + "{:5}  {:>20} {:>10}  {:>20} {:>10}\n".format("Iter.", "Total Energy", "Delta",
+                                                                        "Total Energy", "Delta")
+            psi4.core.print_out("\n{}".format(title + indent + dash))
+            E0_old, E1_old = 0.0, 0.0
+            for n, pair in enumerate(dsrg_energies):
+                E0, E1 = pair
+                psi4.core.print_out("\n{}{:>5}  {:>20.12f} {:>10.3e}"
+                                    "  {:>20.12f} {:>10.3e}".format(indent, n + 1,
+                                                                    E0, E0 - E0_old, E1, E1 - E1_old))
+                E0_old, E1_old = E0, E1
+
+            psi4.core.print_out("\n{}{}".format(indent, dash))
+
+        if do_dipole and (not is_multi_state):
+            psi4.core.print_out("\n\n  => {} Reference Relaxation Dipole Summary <=\n".format(correlation_solver_type))
+            psi4.core.print_out("\n    {} unrelaxed dipole moment:".format(correlation_solver_type))
+            psi4.core.print_out("\n      X: {:10.6f}  Y: {:10.6f}  "
+                                "Z: {:10.6f}  Total: {:10.6f}\n".format(*dsrg_dipoles[0][0]))
+            psi4.core.set_scalar_variable('UNRELAXED DIPOLE', dsrg_dipoles[0][0][-1])
+
+            psi4.core.print_out("\n    {} partially relaxed dipole moment:".format(correlation_solver_type))
+            psi4.core.print_out("\n      X: {:10.6f}  Y: {:10.6f}  "
+                                "Z: {:10.6f}  Total: {:10.6f}\n".format(*dsrg_dipoles[0][1]))
+            psi4.core.set_scalar_variable('PARTIALLY RELAXED DIPOLE', dsrg_dipoles[0][1][-1])
+
+            if maxiter > 1:
+                psi4.core.print_out("\n    {} relaxed dipole moment:".format(correlation_solver_type))
+                psi4.core.print_out("\n      X: {:10.6f}  Y: {:10.6f}  "
+                                    "Z: {:10.6f}  Total: {:10.6f}\n".format(*dsrg_dipoles[1][0]))
+                psi4.core.set_scalar_variable('RELAXED DIPOLE', dsrg_dipoles[1][0][-1])
+
+        # set energies to environment
+        psi4.core.set_scalar_variable('PARTIALLY RELAXED ENERGY', dsrg_energies[0][1])
+        if maxiter > 1:
+            psi4.core.set_scalar_variable('RELAXED ENERGY', dsrg_energies[1][0])
+
+        # throw not converging error if relaxation not converged
+        if not converged:
+            psi4.core.set_scalar_variable('CURRENT UNRELAXED ENERGY', dsrg_energies[-1][0])
+            psi4.core.set_scalar_variable('CURRENT RELAXED ENERGY', dsrg_energies[-1][1])
+            psi4.core.set_scalar_variable('CURRENT ENERGY', dsrg_energies[-1][1])
+            raise psi4.core.ConvergenceError("DSRG relaxation does not converge in {} cycles".format(maxiter))
+        else:
+            if relax_mode != 'ONCE' and relax_mode != 'TWICE':
+                psi4.core.set_scalar_variable('FULLY RELAXED ENERGY', dsrg_energies[-1][1])
+                psi4.core.set_scalar_variable('CURRENT ENERGY', dsrg_energies[-1][1])
+                if do_dipole and (not is_multi_state):
+                    psi4.core.print_out("\n    {} fully relaxed dipole moment:".format(correlation_solver_type))
+                    psi4.core.print_out("\n      X: {:10.6f}  Y: {:10.6f}  "
+                                        "Z: {:10.6f}  Total: {:10.6f}\n".format(*dsrg_dipoles[-1][1]))
+                    psi4.core.set_scalar_variable('FULLY RELAXED DIPOLE', dsrg_dipoles[-1][1][-1])
+
+        return Erelax
+    else : 
+
+        average_energy = forte.compute_average_state_energy(state_energies_list,state_weights_map)
+        return_en = average_energy
+
+    return return_en
+
 
 def run_forte(name, **kwargs):
     r"""Function encoding sequence of PSI module and plugin calls so that
@@ -93,6 +310,7 @@ def run_forte(name, **kwargs):
 
     state = forte.make_state_info_from_psi_wfn(ref_wfn)
     scf_info = forte.SCFInfo(ref_wfn)
+    state_weights_map = forte.make_state_weights_map(forte.forte_options,ref_wfn)
 
     # Run a method
     job_type = options.get_str('JOB_TYPE')
@@ -104,13 +322,20 @@ def run_forte(name, **kwargs):
         # Make an integral object
         ints = forte.make_forte_integrals(ref_wfn, options, mo_space_info)
 
-        if options.get_bool("LOCALIZE"):
-            forte.LOCALIZE(ref_wfn,options,ints,mo_space_info)
+        # Rotate orbitals before computation
+        orb_type = options.get_str("ORBITAL_TYPE")
+        if orb_type != 'CANONICAL':
+            orb_t = forte.make_orbital_transformation(orb_type, state, scf_info, forte.forte_options, ints, mo_space_info)
+            orb_t.compute_transformation()
+            Ua = orb_t.get_Ua()
+            Ub = orb_t.get_Ub()
 
+            ints.rotate_orbitals(Ua,Ub)
+
+        # Run a method
         if (job_type == 'NEWDRIVER'):
-            energy = forte_driver(state, scf_info, forte.forte_options, ints, mo_space_info)
+            energy = forte_driver(state_weights_map, scf_info, forte.forte_options, ints, mo_space_info)
         else:
-            # Run a method
             energy = forte.forte_old_methods(ref_wfn, options, ints, mo_space_info)
 
         end = timeit.timeit()

@@ -19,8 +19,9 @@ set {
   scf_type pk
   e_convergence 12
 }
+
 set forte {
-  job_type FCI
+  active_space_solver fci
 }
 
 energy('scf')

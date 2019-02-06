@@ -59,9 +59,9 @@ namespace forte {
 
 class MOSpaceInfo;
 
-FCISolver::FCISolver(StateInfo state, std::shared_ptr<MOSpaceInfo> mo_space_info,
+FCISolver::FCISolver(StateInfo state, size_t nroot, std::shared_ptr<MOSpaceInfo> mo_space_info,
                      std::shared_ptr<ActiveSpaceIntegrals> as_ints)
-    : ActiveSpaceSolver(state, mo_space_info, as_ints),
+    : ActiveSpaceMethod(state, nroot, mo_space_info, as_ints),
       active_dim_(mo_space_info->get_dimension("ACTIVE")), nirrep_(as_ints->ints()->nirrep()),
       symmetry_(state.irrep()), multiplicity_(state.multiplicity()) {
     // TODO: read this info from the base class
@@ -107,8 +107,7 @@ void FCISolver::startup() {
 }
 
 void FCISolver::set_options(std::shared_ptr<ForteOptions> options) {
-    set_nroot(options->get_int("FCI_NROOT"));
-    set_root(options->get_int("FCI_ROOT"));
+    set_root(options->get_int("ROOT"));
     set_test_rdms(options->get_bool("FCI_TEST_RDMS"));
     set_max_rdm_level(options->get_int("FCI_MAX_RDM"));
     set_fci_iterations(options->get_int("FCI_MAXITER"));
@@ -126,9 +125,6 @@ void FCISolver::set_options(std::shared_ptr<ForteOptions> options) {
 double FCISolver::compute_energy() {
     local_timer t;
     startup();
-
-    double nuclear_repulsion_energy =
-        psi::Process::environment.molecule()->nuclear_repulsion_energy({{0, 0, 0}});
 
     FCIVector::allocate_temp_space(lists_, print_);
 
@@ -222,8 +218,8 @@ double FCISolver::compute_energy() {
 
         if (converged != SolverStatus::Collapse) {
             double avg_energy = 0.0;
-            for (int r = 0; r < nroot_; ++r) {
-                avg_energy += dls.eigenvalues()->get(r) + nuclear_repulsion_energy;
+            for (size_t r = 0; r < nroot_; ++r) {
+                avg_energy += dls.eigenvalues()->get(r);
             }
             avg_energy /= static_cast<double>(nroot_);
             if (print_) {
@@ -256,11 +252,15 @@ double FCISolver::compute_energy() {
 
     // Copy eigen values and eigen vectors
     evals_ = dls.eigenvalues();
+    energies_ = std::vector<double>(nroot_, 0.0);
+    for (size_t r = 0; r < nroot_; r++) {
+        energies_[r] = evals_->get(r);
+    }
     eigen_vecs_ = dls.eigenvectors();
 
     // Print determinants
     if (print_) {
-        for (int r = 0; r < nroot_; ++r) {
+        for (size_t r = 0; r < nroot_; ++r) {
             outfile->Printf("\n\n  ==> Root No. %d <==\n", r);
 
             C_->copy(dls.eigenvector(r));
@@ -300,7 +300,7 @@ double FCISolver::compute_energy() {
                 outfile->Printf("%15.8f", ci);
             }
 
-            double root_energy = dls.eigenvalues()->get(r) + nuclear_repulsion_energy;
+            double root_energy = dls.eigenvalues()->get(r);
 
             outfile->Printf("\n\n    Total Energy: %25.15f", root_energy);
         }
@@ -329,7 +329,7 @@ double FCISolver::compute_energy() {
     //        C_->print_natural_orbitals(mo_space_info_);
     //    }
 
-    energy_ = dls.eigenvalues()->get(root_) + nuclear_repulsion_energy;
+    energy_ = dls.eigenvalues()->get(root_);
     psi::Process::environment.globals["CURRENT ENERGY"] = energy_;
     psi::Process::environment.globals["FCI ENERGY"] = energy_;
 
@@ -503,15 +503,20 @@ FCISolver::initial_guess(FCIVector& diag, size_t n,
     return guess;
 }
 
-Reference FCISolver::get_reference() {
+std::vector<Reference>
+FCISolver::reference(const std::vector<std::pair<size_t, size_t>>& root_list) {
+
+    // TODO: Implement different roots
+
     size_t nact = active_dim_.sum();
     size_t nact2 = nact * nact;
     size_t nact3 = nact2 * nact;
     size_t nact4 = nact3 * nact;
     size_t nact5 = nact4 * nact;
 
+    std::vector<Reference> refs;
+
     Reference fci_ref;
-    fci_ref.set_Eref(energy_);
 
     if (max_rdm_level_ >= 1) {
         // One-particle density matrices in the active space
@@ -529,10 +534,10 @@ Reference FCISolver::get_reference() {
                 value = opdm_b[i[0] * nact + i[1]];
             });
         }
-        fci_ref.set_L1a(L1a);
-        fci_ref.set_L1b(L1b);
 
-        if (max_rdm_level_ >= 2) {
+        if (max_rdm_level_ < 2) {
+            refs.emplace_back(L1a, L1b);
+        } else {
             // Two-particle density matrices in the active space
             ambit::Tensor L2aa =
                 ambit::Tensor::build(ambit::CoreTensor, "L2aa", {nact, nact, nact, nact});
@@ -565,28 +570,9 @@ Reference FCISolver::get_reference() {
                     value = tpdm_bb[i[0] * nact3 + i[1] * nact2 + i[2] * nact + i[3]];
                 });
             }
-            g2aa.copy(L2aa);
-            g2ab.copy(L2ab);
-            g2bb.copy(L2bb);
-
-            fci_ref.set_g2aa(g2aa);
-            fci_ref.set_g2ab(g2ab);
-            fci_ref.set_g2bb(g2bb);
-
-            // Convert the 2-RDMs to 2-RCMs
-            L2aa("pqrs") -= L1a("pr") * L1a("qs");
-            L2aa("pqrs") += L1a("ps") * L1a("qr");
-
-            L2ab("pqrs") -= L1a("pr") * L1b("qs");
-
-            L2bb("pqrs") -= L1b("pr") * L1b("qs");
-            L2bb("pqrs") += L1b("ps") * L1b("qr");
-
-            fci_ref.set_L2aa(L2aa);
-            fci_ref.set_L2ab(L2ab);
-            fci_ref.set_L2bb(L2bb);
-
-            if (max_rdm_level_ >= 3) {
+            if (max_rdm_level_ < 3) {
+                refs.emplace_back(L1a, L1b, L2aa, L2ab, L2bb);
+            } else {
                 // Three-particle density matrices in the active space
                 ambit::Tensor L3aaa = ambit::Tensor::build(ambit::CoreTensor, "L3aaa",
                                                            {nact, nact, nact, nact, nact, nact});
@@ -624,74 +610,7 @@ Reference FCISolver::get_reference() {
                                          i[4] * nact + i[5]];
                     });
                 }
-
-                // Convert the 3-RDMs to 3-RCMs
-                L3aaa("pqrstu") -= L1a("ps") * L2aa("qrtu");
-                L3aaa("pqrstu") += L1a("pt") * L2aa("qrsu");
-                L3aaa("pqrstu") += L1a("pu") * L2aa("qrts");
-
-                L3aaa("pqrstu") -= L1a("qt") * L2aa("prsu");
-                L3aaa("pqrstu") += L1a("qs") * L2aa("prtu");
-                L3aaa("pqrstu") += L1a("qu") * L2aa("prst");
-
-                L3aaa("pqrstu") -= L1a("ru") * L2aa("pqst");
-                L3aaa("pqrstu") += L1a("rs") * L2aa("pqut");
-                L3aaa("pqrstu") += L1a("rt") * L2aa("pqsu");
-
-                L3aaa("pqrstu") -= L1a("ps") * L1a("qt") * L1a("ru");
-                L3aaa("pqrstu") -= L1a("pt") * L1a("qu") * L1a("rs");
-                L3aaa("pqrstu") -= L1a("pu") * L1a("qs") * L1a("rt");
-
-                L3aaa("pqrstu") += L1a("ps") * L1a("qu") * L1a("rt");
-                L3aaa("pqrstu") += L1a("pu") * L1a("qt") * L1a("rs");
-                L3aaa("pqrstu") += L1a("pt") * L1a("qs") * L1a("ru");
-
-                L3aab("pqRstU") -= L1a("ps") * L2ab("qRtU");
-                L3aab("pqRstU") += L1a("pt") * L2ab("qRsU");
-
-                L3aab("pqRstU") -= L1a("qt") * L2ab("pRsU");
-                L3aab("pqRstU") += L1a("qs") * L2ab("pRtU");
-
-                L3aab("pqRstU") -= L1b("RU") * L2aa("pqst");
-
-                L3aab("pqRstU") -= L1a("ps") * L1a("qt") * L1b("RU");
-                L3aab("pqRstU") += L1a("pt") * L1a("qs") * L1b("RU");
-
-                L3abb("pQRsTU") -= L1a("ps") * L2bb("QRTU");
-
-                L3abb("pQRsTU") -= L1b("QT") * L2ab("pRsU");
-                L3abb("pQRsTU") += L1b("QU") * L2ab("pRsT");
-
-                L3abb("pQRsTU") -= L1b("RU") * L2ab("pQsT");
-                L3abb("pQRsTU") += L1b("RT") * L2ab("pQsU");
-
-                L3abb("pQRsTU") -= L1a("ps") * L1b("QT") * L1b("RU");
-                L3abb("pQRsTU") += L1a("ps") * L1b("QU") * L1b("RT");
-
-                L3bbb("pqrstu") -= L1b("ps") * L2bb("qrtu");
-                L3bbb("pqrstu") += L1b("pt") * L2bb("qrsu");
-                L3bbb("pqrstu") += L1b("pu") * L2bb("qrts");
-
-                L3bbb("pqrstu") -= L1b("qt") * L2bb("prsu");
-                L3bbb("pqrstu") += L1b("qs") * L2bb("prtu");
-                L3bbb("pqrstu") += L1b("qu") * L2bb("prst");
-
-                L3bbb("pqrstu") -= L1b("ru") * L2bb("pqst");
-                L3bbb("pqrstu") += L1b("rs") * L2bb("pqut");
-                L3bbb("pqrstu") += L1b("rt") * L2bb("pqsu");
-
-                L3bbb("pqrstu") -= L1b("ps") * L1b("qt") * L1b("ru");
-                L3bbb("pqrstu") -= L1b("pt") * L1b("qu") * L1b("rs");
-                L3bbb("pqrstu") -= L1b("pu") * L1b("qs") * L1b("rt");
-
-                L3bbb("pqrstu") += L1b("ps") * L1b("qu") * L1b("rt");
-                L3bbb("pqrstu") += L1b("pu") * L1b("qt") * L1b("rs");
-                L3bbb("pqrstu") += L1b("pt") * L1b("qs") * L1b("ru");
-
-                fci_ref.set_L3aaa(L3aaa);
-                fci_ref.set_L3aab(L3aab);
-                fci_ref.set_L3abb(L3abb);
-                fci_ref.set_L3bbb(L3bbb);
+                refs.emplace_back(L1a, L1b, L2aa, L2ab, L2bb, L3aaa, L3aab, L3abb, L3bbb);
 
                 if (print_ > 1)
                     for (auto L1 : {L1a, L1b}) {
@@ -729,7 +648,6 @@ Reference FCISolver::get_reference() {
             }
         }
     }
-
-    return fci_ref;
+    return refs;
 }
 } // namespace forte

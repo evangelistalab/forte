@@ -5,7 +5,7 @@ import forte
 refmcscf    =  -99.939316381643394
 refsrgpt2   = -100.105323238278629
 
-memory 50 mb
+memory 500 mb
 
 molecule HF{
   0 1
@@ -43,10 +43,11 @@ set forte{
    dsrg_s                  0.5
    maxiter                 100
    e_convergence           8
+   multiplicity            1
 }
 
 Emcscf, wfn = energy('mcscf', return_wfn=True)
-compare_values(refmcscf,variable("CURRENT ENERGY"),10,"MCSCF energy") #TEST
+compare_values(refmcscf,variable("CURRENT ENERGY"),8,"MCSCF energy") #TEST
 
 energy('forte', ref_wfn=wfn)
 compare_values(refsrgpt2,variable("CURRENT ENERGY"),8,"SRG-MRPT2 energy") #TEST

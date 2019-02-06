@@ -75,7 +75,7 @@ SOMRDSRG::~SOMRDSRG() {
 }
 
 void SOMRDSRG::startup() {
-    Eref = reference_.get_Eref();
+    Eref = compute_Eref_from_reference(reference_, ints_, mo_space_info_);
 
     frozen_core_energy = ints_->frozen_core_energy();
 
@@ -210,9 +210,9 @@ void SOMRDSRG::startup() {
     Matrix gamma_aa("Gamma_aa", nactv, nactv);
     Matrix gamma_AA("Gamma_AA", nactv, nactv);
 
-    reference_.L1a().iterate(
+    reference_.g1a().iterate(
         [&](const std::vector<size_t>& i, double& value) { gamma_aa.set(i[0], i[1], value); });
-    reference_.L1b().iterate(
+    reference_.g1b().iterate(
         [&](const std::vector<size_t>& i, double& value) { gamma_AA.set(i[0], i[1], value); });
 
     gamma_aa.print();

@@ -98,7 +98,8 @@ void FCIVector::form_H_diagonal(std::shared_ptr<ActiveSpaceIntegrals> fci_ints) 
 
 double FCIVector::determinant_energy(bool*& Ia, bool*& Ib, int n,
                                      std::shared_ptr<ActiveSpaceIntegrals> fci_ints) {
-    double energy(fci_ints->scalar_energy() + fci_ints->frozen_core_energy());
+    double energy(fci_ints->scalar_energy() + fci_ints->frozen_core_energy() +
+                  fci_ints->nuclear_repulsion_energy());
 
     for (int p = 0; p < n; ++p) {
         if (Ia[p])

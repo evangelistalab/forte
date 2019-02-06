@@ -39,9 +39,9 @@ set globals{
 }
 
 set forte {
-   job_type         three-dsrg-mrpt2
+   active_space_solver  aci
+   correlation_solver   three-dsrg-mrpt2
    int_type         df
-   cas_type         aci
    sigma            0.0
    gamma            0.0
    frozen_docc      [2, 1, 0, 0, 0, 0, 2, 1]

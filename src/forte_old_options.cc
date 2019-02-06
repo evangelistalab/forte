@@ -5,7 +5,6 @@
 #include "integrals/integrals.h"
 #include "pci/pci.h"
 
-
 namespace forte {
 
 void forte_old_options(ForteOptions& options) {
@@ -14,6 +13,10 @@ void forte_old_options(ForteOptions& options) {
 
     /*- SUBSECTION Job Type */
 
+
+    /*- Type of orbitals to use -*/
+    options.add_str("ORBITAL_TYPE", "CANONICAL", "CANONICAL LOCAL MP2_NO");
+
     /*- Compute natural orbitals using MP2 -*/
     options.add_bool("MP2_NOS", false);
     /*- View the natural orbitals with their symmetry information -*/
@@ -21,7 +24,6 @@ void forte_old_options(ForteOptions& options) {
     /*- Use Natural Orbitals to suggest active space -*/
     options.add_bool("NAT_ACT", false);
     options.add_bool("MOLDEN_WRITE_FORTE", false);
-
     // Natural Orbital selection criteria.  Used to fine tune how many
     // active orbitals there are
 
@@ -60,8 +62,6 @@ void forte_old_options(ForteOptions& options) {
      * electrons) -*/
     options.add_int("MAX_EXC_LEVEL", 0);
 
-
-
     /*- The algorithm used to screen the determinant
      *  - DENOMINATORS uses the MP denominators to screen strings
      *  - SINGLES generates the space by a series of single excitations -*/
@@ -86,10 +86,11 @@ void forte_old_options(ForteOptions& options) {
     options.add_str("H_TYPE", "FIXED_ENERGY", "FIXED_ENERGY FIXED_SIZE");
 
     /*- Determines if this job will compute the energy -*/
-    options.add_str("ENERGY_TYPE", "FULL", "FULL SELECTED LOWDIN SPARSE RENORMALIZE "
-                                           "RENORMALIZE_FIXED LMRCISD LMRCIS IMRCISD "
-                                           "IMRCISD_SPARSE LMRCISD_SPARSE LMRCIS_SPARSE "
-                                           "FACTORIZED_CI");
+    options.add_str("ENERGY_TYPE", "FULL",
+                    "FULL SELECTED LOWDIN SPARSE RENORMALIZE "
+                    "RENORMALIZE_FIXED LMRCISD LMRCIS IMRCISD "
+                    "IMRCISD_SPARSE LMRCISD_SPARSE LMRCIS_SPARSE "
+                    "FACTORIZED_CI");
 
     /*- The form of the Hamiltonian matrix.
      *  - FIXED diagonalizes a matrix of fixed dimension
@@ -149,12 +150,6 @@ void forte_old_options(ForteOptions& options) {
     /*- The energy relaxation convergence criterion -*/
     options.add_double("RELAX_E_CONVERGENCE", 1.0e-8);
 
-    /*- The number of roots computed -*/
-    options.add_int("NROOT", 1);
-
-    /*- The root selected for state-specific computations -*/
-    options.add_int("ROOT", 0);
-
     // Options for the Cartographer class //
     /*- Density of determinants format -*/
     options.add_str("DOD_FORMAT", "HISTOGRAM", "GAUSSIAN HISTOGRAM");
@@ -183,7 +178,7 @@ void forte_old_options(ForteOptions& options) {
     options.add_int("MAXITER", 100);
 
     /*- Use localized basis? -*/
-    options.add_bool("LOCALIZE", false);
+    options.add_str("LOCALIZE", "NONE", "NONE SPLIT FULL");
     /*- Type of localization -*/
     options.add_str("LOCALIZE_TYPE", "PIPEK_MEZEY", "BOYS");
 
@@ -270,7 +265,6 @@ void forte_old_options(ForteOptions& options) {
     options.add_int("CASSCF_CI_FREQ", 1);
     /// When to start skipping CI steps
     options.add_int("CASSCF_CI_STEP_START", -1);
-
 
     /*- Monitor the CAS-CI solutions through iterations -*/
     options.add_bool("MONITOR_SA_SOLUTION", false);
@@ -460,4 +454,4 @@ void forte_old_options(ForteOptions& options) {
      *  - V2RDM V2RDM interface -*/
     options.add_str("CAS_TYPE", "FCI", "CAS FCI ACI DMRG V2RDM");
 }
-}
+} // namespace forte

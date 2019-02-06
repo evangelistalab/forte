@@ -274,7 +274,7 @@ double SA_FCISolver::compute_energy() {
         // TODO use base class info
         auto as_ints =
             make_active_space_ints(mo_space_info_, ints_, "ACTIVE", {{"RESTRICTED_DOCC"}});
-        FCISolver fcisolver(state, mo_space_info_, as_ints);
+        FCISolver fcisolver(state, nroot, mo_space_info_, as_ints);
 
         fcisolver.set_options(std::make_shared<ForteOptions>(options_));
         fcisolver.set_max_rdm_level(2);
@@ -289,7 +289,6 @@ double SA_FCISolver::compute_energy() {
         } else {
             fcisolver.set_active_space_integrals(fci_ints_);
         }
-        fcisolver.set_nroot(nroot);
 
         //        fcisolver.set_root(0);
         //        fcisolver.set_test_rdms(false);
@@ -322,6 +321,13 @@ double SA_FCISolver::compute_energy() {
         psi::SharedVector evals;
         double Enuc = psi::Process::environment.molecule()->nuclear_repulsion_energy(
             wfn_->get_dipole_field_strength());
+
+        std::vector<std::pair<size_t,size_t>> roots;
+        for (int root_number = 0; root_number < nroot; root_number++) {
+            roots.push_back(std::make_pair(root_number,root_number));
+        }
+        sa_cas_ref = fcisolver.get_reference(roots);
+        
         for (int root_number = 0; root_number < nroot; root_number++) {
             fcisolver.set_root(root_number);
 
@@ -337,7 +343,6 @@ double SA_FCISolver::compute_energy() {
             //            SA_C_.push_back(fcisolver.get_FCIWFN());
             double Ecasscf = evals->get(root_number) + Enuc;
             casscf_energies.push_back(Ecasscf);
-            sa_cas_ref.push_back(fcisolver.get_reference());
             sa_cas_ref[root_number].set_Eref(Ecasscf);
         }
     }
@@ -356,8 +361,8 @@ double SA_FCISolver::compute_energy() {
         ambit::Tensor L2bb_sa =
             ambit::Tensor::build(ambit::CoreTensor, "L2bb_sa", {na, na, na, na});
         for (auto& casscf_ref : sa_cas_ref) {
-            L1a_sa("u, v") += casscf_ref.L1a()("u, v");
-            L1b_sa("u, v") += casscf_ref.L1b()("u, v");
+            L1a_sa("u, v") += casscf_ref.g1a()("u, v");
+            L1b_sa("u, v") += casscf_ref.g1b()("u, v");
             L2aa_sa("u, v, x, y") += casscf_ref.g2aa()("u, v, x, y");
             L2ab_sa("u, v, x, y") += casscf_ref.g2ab()("u, v, x, y");
             L2bb_sa("u, v, x, y") += casscf_ref.g2bb()("u, v, x, y");

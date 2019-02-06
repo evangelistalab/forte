@@ -4,7 +4,7 @@ import forte
 memory 1 gb
 
 r_scf = -154.979263255832
-r_cas = -154.745701429278
+r_avg_cas = -154.745701429278
 r_0ag = -155.618385970396
 
 molecule butadiene{
@@ -56,25 +56,26 @@ set forte{
   fci_maxiter          1000
 }
 Ecas, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
-compare_values(r_cas, Ecas, 8, "SA-CASSCF energy from FORTE CASSCF")
+compare_values(r_avg_cas, Ecas, 8, "SA-CASSCF energy from FORTE CASSCF")
 
-set forte{
-  job_type            cas
-  frozen_docc         [4]
-  restricted_docc     [9]
-  active              [4]
-  avg_state           [[0,1,5]]
-  rotate_mos          []
-  fcimo_localize_actv true
-}
-Ecas, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
-compare_values(r_cas, Ecas, 8, "SA-CASSCF energy from FORTE FCIMO")
+#set forte{
+#  active_space_solver          cas
+#  frozen_docc         [4]
+#  restricted_docc     [9]
+#  active              [4]
+#  avg_state           [[0,1,5]]
+#  rotate_mos          []
+# # fcimo_localize_actv true
+#}
+#Ecas, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
+#compare_values(r_avg_cas, Ecas, 8, "SA-CASSCF energy from FORTE FCIMO")
 #cubeprop(wfn)
 
 set forte{
-  job_type            dsrg-mrpt2
+  job_type newdriver
+  correlation_solver  dsrg-mrpt2
   int_type            df
-  cas_type            cas
+  active_space_solver cas
   e_convergence       12
   dsrg_s              0.5
   frozen_docc         [4]
@@ -83,6 +84,10 @@ set forte{
   avg_state           [[0,1,5]]
   rotate_mos          []
   dsrg_dipole         true
+  nroot 5
+  root 0
+  orbital_type local
+  localize FULL
 }
-E0ag, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
-compare_values(r_0ag, E0ag, 8, "abs. energy of singlet 0Ag")
+energy('forte', ref_wfn=wfn)
+compare_values(r_0ag, variable("ENERGY ROOT 0 1A"), 8, "abs. energy of singlet 0Ag")

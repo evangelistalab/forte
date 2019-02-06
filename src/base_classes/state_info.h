@@ -40,6 +40,8 @@ class StateInfo {
     /// Constructor
     StateInfo(int na, int nb, int multiplicity, int twice_ms, int irrep);
 
+    StateInfo() = default;
+
     /// return the number of alpha electrons
     int na() const;
     /// return the number of beta electrons
@@ -53,6 +55,12 @@ class StateInfo {
 
     /// Return the name of the molecule (needed for DMRG)
     std::string name() const;
+
+    /// Comparison operator for StateInfo objects
+    bool operator<(const StateInfo& rhs) const;
+
+    /// Comparison operator for StateInfo objects
+    bool operator!=(const StateInfo& rhs) const;
 
   private:
     // number of alpha electrons (including core, excludes ecp)

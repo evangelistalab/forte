@@ -12,16 +12,16 @@ C  0.00000 0.00000 1.24253
 set {
   basis 6-31g*
   scf_type pk
-  e_convergence 10
-  d_convergence 10
-  r_convergence 10
+  e_convergence 12
+  d_convergence 12
+  r_convergence 12
   docc [2,0,0,0,0,2,1,1]
   guess gwh
 }
 
 
 set forte {
-  job_type aci
+  active_space_solver aci
   frozen_docc [0,0,0,0,0,0,0,0]
   restricted_docc [0,0,0,0,0,0,0,0]
   active [3,0,1,1,0,3,2,2]
@@ -29,7 +29,6 @@ set forte {
   aci_excited_algorithm root_orthogonalize
   sigma 0.001
   nroot 2
-  aci_nroot 2
   aci_n_average 2
   charge 0
   root_sym 0

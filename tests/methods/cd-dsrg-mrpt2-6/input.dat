@@ -74,7 +74,8 @@ set {
 }
 
 set forte {
-  job_type              three-dsrg-mrpt2
+  active_space_solver   fci
+  correlation_solver    three-dsrg-mrpt2
   frozen_docc           [1,0,0,0]
   restricted_docc       [1,0,0,0]
   active                [1,0,0,1]

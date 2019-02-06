@@ -124,7 +124,8 @@ void cleanup() {
 #endif
 }
 
-psi::SharedMatrix make_aosubspace_projector(psi::SharedWavefunction ref_wfn, psi::Options& options) {
+psi::SharedMatrix make_aosubspace_projector(psi::SharedWavefunction ref_wfn,
+                                            psi::Options& options) {
     // Ps is a psi::SharedMatrix Ps = S^{BA} X X^+ S^{AB}
     auto Ps = create_aosubspace_projector(ref_wfn, options);
     if (Ps) {
@@ -154,7 +155,7 @@ void banner() {
         "    git branch: %s - git commit: %s\n\n"
         "  Developed by:\n"
         "    Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,\n"
-        "    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai,"
+        "    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai,\n"
         "    Nan He, Nicholas Stair, Shuhe Wang, Renke Huang\n"
         "  ----------------------------------------------------------------------------\n",
         GIT_BRANCH, GIT_COMMIT_HASH);
@@ -162,7 +163,6 @@ void banner() {
 }
 
 } // namespace forte
-
 
 ///**
 // * @brief The main forte function.

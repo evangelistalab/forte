@@ -72,8 +72,8 @@ class MRDSRG : public MASTER_DSRG {
     /// Compute the corr_level energy with fixed reference
     virtual double compute_energy();
 
-    /// Compute the corr_level energy with relaxed reference
-    double compute_energy_relaxed();
+//    /// Compute the corr_level energy with relaxed reference
+//    double compute_energy_relaxed();
 
     /// Compute state-average MR-DSRG energy
     double compute_energy_sa();

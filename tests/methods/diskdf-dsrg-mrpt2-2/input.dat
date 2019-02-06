@@ -32,8 +32,8 @@ set forte {
    nroot                   1
    dsrg_s                  1.0
    int_type                diskdf
-   job_type                three-dsrg-mrpt2
-   cas_type                FCI
+   correlation_solver      three-dsrg-mrpt2
+   active_space_solver     fci
 }
 
 Escf, wfn = energy('scf', return_wfn=True)

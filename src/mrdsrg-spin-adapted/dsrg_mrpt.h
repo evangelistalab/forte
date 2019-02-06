@@ -68,7 +68,7 @@ class DSRG_MRPT : public psi::Wavefunction {
     double compute_energy();
 
   protected:
-    void hack_doublet();
+    //void hack_doublet();
 
     // => Class initialization and termination <= //
 
