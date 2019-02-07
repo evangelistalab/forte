@@ -150,8 +150,8 @@ double ExcitedStateSolver::compute_energy() {
             psi::outfile->Printf("\n  Computing wavefunction for root %d", i);
 
         if (multi_state) {
-            ref_root = i;
             root_ = i;
+            ref_root = i;
         }
 
         if ((ex_type_ == "CORE") and (i > 0)) {
@@ -164,8 +164,7 @@ double ExcitedStateSolver::compute_energy() {
             nroot_method = 1;
         }
 
-        sci_->set_method_variables(PQ_space, PQ_evecs, PQ_evals, ex_alg_, op_, nroot_method, root_,
-                                   ref_root, old_roots_, multistate_pt2_energy_correction_);
+        sci_->set_method_variables(ex_alg_, op_, nroot_method, root_, ref_root, old_roots_);
 
         sci_->compute_energy();
 

@@ -72,8 +72,6 @@ void AdaptiveCI_SCI::startup() {
     //        set_aci_ints(ints_); // TODO: maybe a BUG?
     //    }
 
-    op_.initialize(mo_symmetry_, as_ints_);
-
     wavefunction_symmetry_ = state_.irrep();
     multiplicity_ = state_.multiplicity();
 
@@ -235,20 +233,14 @@ void AdaptiveCI_SCI::print_info() {
 }
 
 void AdaptiveCI_SCI::set_method_variables(
-    DeterminantHashVec PQ_space, psi::SharedMatrix PQ_evecs, psi::SharedVector PQ_evals,
     std::string ex_alg, WFNOperator op, size_t nroot_method, size_t root, size_t ref_root,
-    std::vector<std::vector<std::pair<Determinant, double>>> old_roots,
-    std::vector<double> multistate_pt2_energy_correction) {
-    PQ_space_ = PQ_space;
-    PQ_evecs_ = PQ_evecs;
-    PQ_evals_ = PQ_evals;
+    std::vector<std::vector<std::pair<Determinant, double>>> old_roots) {
     ex_alg_ = ex_alg;
     op_ = op;
     nroot_ = nroot_method;
     root_ = root;
     ref_root_ = ref_root;
     old_roots_ = old_roots;
-    multistate_pt2_energy_correction_ = multistate_pt2_energy_correction;
 }
 
 void AdaptiveCI_SCI::unpaired_density(psi::SharedMatrix Ua, psi::SharedMatrix Ub) {
