@@ -49,13 +49,13 @@ def register_avas_options(forte_options):
 
 def register_cino_options(forte_options):
     forte_options.add_bool("CINO", False, "Do a CINO computation?")
-    
+
     forte_options.add_str("CINO_TYPE", "CIS", ["CIS", "CISD"], "The type of wave function.")
-    
+
     forte_options.add_int("CINO_NROOT", 1, "The number of roots computed")
-    
+
     forte_options.add_array("CINO_ROOTS_PER_IRREP",
-                       "The number of excited states per irreducible representation")    
+                       "The number of excited states per irreducible representation")
     forte_options.add_double("CINO_THRESHOLD", 0.99,
                         "The fraction of NOs to include in the active space")
     forte_options.add_bool("CINO_AUTO", False,
@@ -63,11 +63,11 @@ def register_cino_options(forte_options):
 
 def register_mrcino_options(forte_options):
     forte_options.add_bool("MRCINO", False, "Do a MRCINO computation?")
-    
+
     forte_options.add_str("MRCINO_TYPE", "CIS", ["CIS", "CISD"], "The type of wave function.")
-    
+
     forte_options.add_int("MRCINO_NROOT", 1, "The number of roots computed")
-    
+
     forte_options.add_array("MRCINO_ROOTS_PER_IRREP",
                        "The number of excited states per irreducible representation")
     forte_options.add_double("MRCINO_THRESHOLD", 0.99,
@@ -229,20 +229,22 @@ def register_fci_options(forte_options):
     forte_options.add_int(
         'FCI_NTRIAL_PER_ROOT', 10,
         'The number of trial guess vectors to generate per root')
+    forte_options.add_bool('COMPRESS_FCI', False,
+                           'Compress the FCI wave function')
 
 def register_aci_options(forte_options):
     forte_options.add_double("ACI_CONVERGENCE", 1e-9, "ACI Convergence threshold")
-    
+
     forte_options.add_str("ACI_SELECT_TYPE", "AIMED_ENERGY", "The selection type for the Q space")
-    
+
     forte_options.add_double("SIGMA", 0.01, "The ACI cumulative energy selection threshold for the P space")
-    
+
     forte_options.add_double("GAMMA", 1.0, "The threshold for the selection of the Q space")
-    
+
     forte_options.add_double("ACI_PRESCREEN_THRESHOLD", 1e-12, "The singles and doubles space prescreening threshold")
-    
+
     forte_options.add_bool("ACI_PERTURB_SELECT", False, "Use a perturbative energy estimate?")
-    
+
     forte_options.add_str("ACI_PQ_FUNCTION", "AVERAGE", ["AVERAGE","MAX"], "Function of q-space criteria, per root for SA-ACI")
 
     forte_options.add_str("ACI_EXCITED_ALGORITHM", "ROOT_ORTHOGONALIZE", "The excited state algorithm")
@@ -264,7 +266,7 @@ def register_aci_options(forte_options):
 
     forte_options.add_bool("ACI_ADD_AIMED_DEGENERATE", True,
                       "Add degenerate determinants not included in the aimed selection?")
-    
+
     # No string in option, shouldn't this be a bool?
     forte_options.add_str("ACI_SIZE_CORRECTION", "", "Perform size extensivity correction")
 
@@ -289,18 +291,18 @@ def register_aci_options(forte_options):
     forte_options.add_int("DL_GUESS_SIZE", 100, "Set the initial guess space size for DL solver")
 
     forte_options.add_int("N_GUESS_VEC", 10, "Number of guess vectors for Sparse CI solver")
-    
+
     forte_options.add_double("ACI_NO_THRESHOLD", 0.02, "Threshold for active space prediction")
-    
+
     forte_options.add_double("ACI_SPIN_TOL", 0.02, "Tolerance for S^2 value")
 
     # /*- Approximate 1RDM? -*/
     forte_options.add_bool("ACI_APPROXIMATE_RDM", False, "Approximate the RDMs?")
-    
+
     forte_options.add_bool("ACI_TEST_RDMS", False, "Run test for the RDMs?")
-    
+
     forte_options.add_bool("ACI_FIRST_ITER_ROOTS", False, "Compute all roots on first iteration?")
-    
+
     forte_options.add_bool("ACI_PRINT_WEIGHTS", False, "Print weights for active space prediction?")
 
     forte_options.add_bool("ACI_PRINT_NO", True, "Print the natural orbitals?")
@@ -313,18 +315,18 @@ def register_aci_options(forte_options):
 
     forte_options.add_bool("ACI_ADD_SINGLES", False,
                       "Add all active single excitations to the final wave function?")
-    
+
     forte_options.add_bool("ACI_ADD_EXTERNAL_EXCITATIONS", False,
                       "Add external single excitations to the final wave function?")
-    
+
     forte_options.add_str("ACI_EXTERNAL_EXCITATION_ORDER", "SINGLES",
                      "Order of external excitations to add")
-    
+
     forte_options.add_str("ACI_EXTERNAL_EXCITATION_TYPE", "ALL", "Type of external excitations to add")
-    
+
     forte_options.add_bool("ESNOS", False, "Compute external single natural orbitals (ESNO)?")
-    
-    forte_options.add_int("ESNO_MAX_SIZE", 0, "Number of external orbitals to correlate")    
+
+    forte_options.add_int("ESNO_MAX_SIZE", 0, "Number of external orbitals to correlate")
 
     forte_options.add_bool("ACI_LOW_MEM_SCREENING", False, "Use low-memory screening algorithm?")
 
@@ -337,7 +339,7 @@ def register_aci_options(forte_options):
     forte_options.add_int("ACI_ROOTS_PER_CORE", 1, "Number of roots to compute per frozen orbital")
 
     forte_options.add_bool("ACI_SPIN_ANALYSIS", False, "Do spin correlation analysis?")
-    
+
     forte_options.add_bool("ACI_RELAXED_SPIN", False,
                       "Do spin correlation analysis for relaxed wave function?")
 

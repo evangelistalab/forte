@@ -41,6 +41,7 @@
 
 #include "fci_solver.h"
 #include "fci_vector.h"
+#include "fci_compressor.h"
 #include "string_lists.h"
 #include "helpers/helpers.h"
 
@@ -76,6 +77,8 @@ void FCISolver::set_fci_iterations(int value) { fci_iterations_ = value; }
 void FCISolver::set_collapse_per_root(int value) { collapse_per_root_ = value; }
 
 void FCISolver::set_subspace_per_root(int value) { subspace_per_root_ = value; }
+
+void FCISolver::set_compress_fci_wnf(bool value) { compress_fci_wfn_ = value; }
 
 void FCISolver::startup() {
     // Create the string lists
@@ -117,6 +120,7 @@ void FCISolver::set_options(std::shared_ptr<ForteOptions> options) {
     set_ntrial_per_root(options->get_int("NTRIAL_PER_ROOT"));
     set_print(options->get_int("PRINT"));
     set_e_convergence(options->get_double("E_CONVERGENCE"));
+    set_compress_fci_wnf(options->get_bool("COMPRESS_FCI"));
 }
 
 /*
@@ -332,6 +336,11 @@ double FCISolver::compute_energy() {
     energy_ = dls.eigenvalues()->get(root_);
     psi::Process::environment.globals["CURRENT ENERGY"] = energy_;
     psi::Process::environment.globals["FCI ENERGY"] = energy_;
+
+    if(compress_fci_wfn_){
+      FCICompressor Compressor(C_, as_ints_, energy_);
+      //Compressor.compress_and_analyze();
+    }
 
     return energy_;
 }

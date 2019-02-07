@@ -116,6 +116,7 @@ src/orbital-helpers/aosubspace.cc
 src/orbital-helpers/ci-no/ci-no.cc
 src/orbital-helpers/ci-no/mrci-no.cc
 src/fci/binary_graph.cc
+src/fci/fci_compressor.cc
 src/fci/fci_solver.cc
 src/fci/fci_vector.cc
 src/fci/fci_vector_h_diag.cc

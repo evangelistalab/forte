@@ -36,6 +36,7 @@ namespace forte {
 
 class FCIVector;
 class StringLists;
+class FCICompressor;
 
 /**
  * @brief The FCISolver class
@@ -80,6 +81,8 @@ class FCISolver : public ActiveSpaceMethod {
     void set_collapse_per_root(int value);
     /// Set the maximum subspace size for each root
     void set_subspace_per_root(int value);
+    /// Set weather to compress the FCI wave function for analysis
+    void set_compress_fci_wnf(bool value);
     /// When set to true before calling compute_energy(), it will test the
     /// reduce density matrices.  Watch out, this function is very slow!
     void set_test_rdms(bool value) { test_rdms_ = value; }
@@ -135,6 +138,8 @@ class FCISolver : public ActiveSpaceMethod {
     bool test_rdms_ = false;
     /// Print the NO from the 1-RDM
     bool print_no_ = false;
+    /// Compress the FCI wave function?
+    bool compress_fci_wfn_ = false;
 
     // ==> Class functions <==
 
