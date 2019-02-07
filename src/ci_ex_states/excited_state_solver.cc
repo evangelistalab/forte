@@ -53,7 +53,7 @@ void ExcitedStateSolver::set_options(std::shared_ptr<ForteOptions> options) {
     root_ = options->get_int("ROOT");
 
     ex_alg_ = options->get_str("ACI_EXCITED_ALGORITHM");
-    ex_type_ = options->get_str("ACI_EX_TYPE");
+    core_ex_ = options->get_bool("ACI_CORE_EX");
     if (options->has_changed("ACI_QUIET_MODE")) {
         quiet_mode_ = options->get_bool("ACI_QUIET_MODE");
     }
@@ -110,16 +110,12 @@ double ExcitedStateSolver::compute_energy() {
         psi::outfile->Printf("\n  Using %d threads", omp_get_max_threads());
     }
 
-    if (ex_alg_ == "COMPOSITE") {
-        ex_alg_ = "AVERAGE";
-    }
-
     // Compute wavefunction and energy
     size_t dim;
     int nrun = 1;
     bool multi_state = false;
 
-    if (ex_type_ == "CORE") {
+    if (core_ex_) {
         ex_alg_ = "ROOT_ORTHOGONALIZE";
     }
 
@@ -149,7 +145,7 @@ double ExcitedStateSolver::compute_energy() {
             ref_root = i;
         }
 
-        if ((ex_type_ == "CORE") and (i > 0)) {
+        if (core_ex_ and (i > 0)) {
             ref_root = i - 1;
         }
 
@@ -401,16 +397,6 @@ void ExcitedStateSolver::print_final(DeterminantHashVec& dets, psi::SharedMatrix
                              exc_energy +
                                  pc_hartree2ev * (multistate_pt2_energy_correction_[i] -
                                                   multistate_pt2_energy_correction_[0]));
-    }
-
-    if (ex_alg_ == "ROOT_SELECT") {
-        psi::outfile->Printf("\n\n  Energy optimized for Root %d: %.12f Eh", root_,
-                             PQ_evals->get(root_) + as_ints_->ints()->nuclear_repulsion_energy() +
-                                 as_ints_->scalar_energy());
-        psi::outfile->Printf("\n\n  Root %d Energy + PT2:         %.12f Eh", root_,
-                             PQ_evals->get(root_) + as_ints_->ints()->nuclear_repulsion_energy() +
-                                 as_ints_->scalar_energy() +
-                                 multistate_pt2_energy_correction_[root_]);
     }
 
     if ((ex_alg_ != "ROOT_ORTHOGONALIZE") or (nroot_ == 1)) {
@@ -1123,7 +1109,7 @@ void ExcitedStateSolver::save_old_root(DeterminantHashVec& dets, psi::SharedMatr
 
 void ExcitedStateSolver::set_excitation_algorithm(std::string ex_alg) { ex_alg_ = ex_alg; }
 
-void ExcitedStateSolver::set_excitation_type(std::string ex_type) { ex_type_ = ex_type; }
+void ExcitedStateSolver::set_core_excitation(bool core_ex) { core_ex_ = core_ex; }
 
 void ExcitedStateSolver::set_quiet(bool quiet) { quiet_mode_ = quiet; }
 
