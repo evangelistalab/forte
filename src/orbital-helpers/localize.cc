@@ -42,7 +42,7 @@ namespace forte {
 
 LOCALIZE::LOCALIZE(std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
                    std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : OrbitalTransform(options, ints, mo_space_info), options_(options), ints_(ints) {
+    : OrbitalTransform(options, ints, mo_space_info), options_(options), ints_(ints), mo_space_info_(mo_space_info) {
 
     if (ints_->nirrep() > 1) {
         throw psi::PSIEXCEPTION("\n\n ERROR: Localizer only implemented for C1 symmetry!");
@@ -56,8 +56,18 @@ LOCALIZE::LOCALIZE(std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteI
     outfile->Printf("\n  Localize method: %s", local_method_.c_str());
 }
 
+
 void LOCALIZE::set_orbital_space(std::vector<int>& orbital_spaces) {
     orbital_spaces_ = orbital_spaces;
+}
+
+void LOCALIZE::set_orbital_space(std::vector<std::string>& labels) {
+
+    for( const auto& label : labels ){
+        std::vector<size_t> mos = mo_space_info_->get_corr_abs_mo(label);
+        orbital_spaces_.push_back(mos[0]); 
+        orbital_spaces_.push_back(mos.back()); 
+    }
 }
 
 void LOCALIZE::compute_transformation() {

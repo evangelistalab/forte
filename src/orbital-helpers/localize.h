@@ -38,7 +38,7 @@
 #include "integrals/integrals.h"
 #include "base_classes/forte_options.h"
 #include "base_classes/reference.h"
-#include "base_classes/state_info.h"
+#include "base_classes/mo_space_info.h"
 #include "base_classes/scf_info.h"
 
 #include "base_classes/orbital_transform.h"
@@ -57,13 +57,16 @@ class LOCALIZE : public OrbitalTransform {
     psi::SharedMatrix get_Ua();
     psi::SharedMatrix get_Ub();
 
-    // Sets the orbitals to localize, bool to split localize
+    // Sets the orbitals to localize by first/last indices
     void set_orbital_space(std::vector<int>& orbital_spaces);
 
+    // Sets the orbitals to localize by space label from MOSpaceInfo
+    void set_orbital_space(std::vector<std::string>& labels);
+
   private:
-    std::shared_ptr<SCFInfo> scf_info_;
     std::shared_ptr<ForteOptions> options_;
     std::shared_ptr<ForteIntegrals> ints_;
+    std::shared_ptr<MOSpaceInfo> mo_space_info_;
 
     psi::SharedMatrix Ua_;
     psi::SharedMatrix Ub_;
