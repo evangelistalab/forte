@@ -35,22 +35,22 @@
 
 namespace forte {
 
-OrbitalTransform::OrbitalTransform(std::shared_ptr<SCFInfo> scf_info,
+OrbitalTransform::OrbitalTransform(
                  std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
                  std::shared_ptr<MOSpaceInfo> mo_space_info)
 {}
 
-std::unique_ptr<OrbitalTransform> make_orbital_transformation(const std::string& type, StateInfo state, std::shared_ptr<SCFInfo> scf_info,
+std::unique_ptr<OrbitalTransform> make_orbital_transformation(const std::string& type, std::shared_ptr<SCFInfo> scf_info,
                  std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
                  std::shared_ptr<MOSpaceInfo> mo_space_info) {
 
     std::unique_ptr<OrbitalTransform> orb_t;
 
     if( type == "LOCAL" ){
-        orb_t = std::make_unique<LOCALIZE>(state, scf_info, options, ints, mo_space_info);
+        orb_t = std::make_unique<LOCALIZE>(options, ints, mo_space_info);
     }
     if( type == "MP2_NOS" ){
-        orb_t = std::make_unique<MP2_NOS>(state, scf_info, options, ints, mo_space_info);
+        orb_t = std::make_unique<MP2_NOS>(scf_info, options, ints, mo_space_info);
     } 
     if( type == "CINO" ){
         orb_t = std::make_unique<CINO>(scf_info, options, ints, mo_space_info);

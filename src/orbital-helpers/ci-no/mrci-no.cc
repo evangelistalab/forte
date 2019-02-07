@@ -66,7 +66,7 @@ namespace forte {
 
 MRCINO::MRCINO(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
                std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : OrbitalTransform(scf_info, options, ints, mo_space_info), scf_info_(scf_info),
+    : OrbitalTransform(options, ints, mo_space_info), scf_info_(scf_info),
       options_(options), ints_(ints), mo_space_info_(mo_space_info) {
     // Copy the wavefunction information
 

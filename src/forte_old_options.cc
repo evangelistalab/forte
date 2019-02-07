@@ -178,7 +178,7 @@ void forte_old_options(ForteOptions& options) {
     options.add_int("MAXITER", 100);
 
     /*-One option to determine localization scheme -*/
-    options.add_str("LOCALIZE","NONE", "NONE PIPEK_MEZEY BOYS" );
+    options.add_str("LOCALIZE","PIPEK_MEZEY", "PIPEK_MEZEY BOYS" );
 
     /*-Sets the orbital space for localization-*/
     options.add_array("LOCALIZE_SPACE");

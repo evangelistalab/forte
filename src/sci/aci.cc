@@ -50,7 +50,7 @@ AdaptiveCI::AdaptiveCI(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> s
                        std::shared_ptr<ForteOptions> options,
                        std::shared_ptr<MOSpaceInfo> mo_space_info,
                        std::shared_ptr<ActiveSpaceIntegrals> as_ints)
-    : ActiveSpaceMethod(state, nroot, mo_space_info, as_ints), scf_info_(scf_info),
+    : ActiveSpaceMethod(state, nroot, mo_space_info, as_ints),state_(state), scf_info_(scf_info),
       options_(options) {
     mo_symmetry_ = mo_space_info_->symmetry("ACTIVE");
     sigma_ = options_->get_double("SIGMA");
@@ -2932,16 +2932,16 @@ void AdaptiveCI::spin_analysis() {
         outfile->Printf("\n  Computing spin correlation in local basis \n");
 
         auto loc =
-            std::make_shared<LOCALIZE>(options_, as_ints_->ints());
+            std::make_shared<LOCALIZE>(options_, as_ints_->ints(), mo_space_info_);
 
         std::vector<size_t> actmo = mo_space_info_->get_absolute_mo("ACTIVE");
         std::vector<int> loc_mo(2);        
         loc_mo[0] = static_cast<int>(actmo[0]);
         loc_mo[1] = static_cast<int>(actmo.back());
         loc->set_orbital_space(loc_mo);
-        loc->localize();
-        UA = loc->get_U()->clone();
-        UB = loc->get_U()->clone();
+        loc->compute_transformation();
+        UA = loc->get_Ua()->clone();
+        UB = loc->get_Ub()->clone();
 
     } else if (options_->get_str("SPIN_BASIS") == "CANONICAL") {
         outfile->Printf("\n  Computing spin correlation in reference basis \n");

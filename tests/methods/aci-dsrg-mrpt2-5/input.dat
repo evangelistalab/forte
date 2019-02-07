@@ -64,7 +64,7 @@ set forte {
   charge 0
   print_no true
   relax_ref once
-  localize PIPEK_MEZEY
+  orbital_type LOCAL
   localize_space [25,28, 29,32]
 }
 

@@ -26,9 +26,7 @@
  * @END LICENSE
  */
 
-#include "psi4/libpsio/psio.h"
-#include "psi4/libpsio/psio.hpp"
-#include "psi4/libmints/local.h"
+#include "psi4/libpsi4util/process.h"
 #include "psi4/libqt/qt.h"
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/vector.h"
@@ -41,21 +39,18 @@ using namespace psi;
 
 namespace forte {
 
-LOCALIZE::LOCALIZE(StateInfo state, std::shared_ptr<SCFInfo> scf_info,
-                   std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
+LOCALIZE::LOCALIZE(std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
                    std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : OrbitalTransform(scf_info, options, ints, mo_space_info), scf_info_(scf_info),
+    : OrbitalTransform(options, ints, mo_space_info),
       options_(options), ints_(ints) {
-    nfrz_ = mo_space_info->size("FROZEN_DOCC");
-    nrst_ = mo_space_info->size("RESTRICTED_DOCC");
-    namo_ = mo_space_info->size("ACTIVE");
 
     if (ints_->nirrep() > 1) {
         throw psi::PSIEXCEPTION("\n\n ERROR: Localizer only implemented for C1 symmetry!");
     }
 
-    
     orbital_spaces_ = options->get_int_vec("LOCALIZE_SPACE");
+    local_method_ = options->get_str("LOCALIZE");
+
     outfile->Printf("\n\n");
 }
 
@@ -63,7 +58,7 @@ void LOCALIZE::set_orbital_space(std::vector<int>& orbital_spaces){
     orbital_spaces_ = orbital_spaces;
 }
 
-void LOCALIZE::localize() {
+void LOCALIZE::compute_transformation() {
 
     if( orbital_spaces_.size() == 0 ){
         outfile->Printf("\n  Error: Orbital space for localization is not set!");
@@ -73,14 +68,13 @@ void LOCALIZE::localize() {
         exit(1);
     } 
 
-    // Get references to C matrices
     psi::SharedMatrix Ca = ints_->Ca();
-    psi::SharedMatrix Cb = ints_->Cb();
-
-    size_t nmo = Ca->rowdim();
    
-    U_ = std::make_shared<psi::Matrix>("U", nmo, nmo);
-    U_->identity();
+    Ua_ = std::make_shared<psi::Matrix>("U", Ca->rowdim(), Ca->coldim());
+    Ub_ = std::make_shared<psi::Matrix>("U", Ca->rowdim(), Ca->coldim());
+
+    Ua_->identity();
+    Ub_->identity();
 
     // loop through each space
     for( size_t f_idx = 0, max = orbital_spaces_.size(); f_idx < max - 1; f_idx += 2 ){
@@ -104,7 +98,7 @@ void LOCALIZE::localize() {
         size_t orb_dim = last - first + 1;
 
         // Build C matrix to localize
-        psi::SharedMatrix Ca_loc = std::make_shared<psi::Matrix>("Caact", nmo, orb_dim);
+        psi::SharedMatrix Ca_loc = std::make_shared<psi::Matrix>("Caact", Ca->rowdim(), orb_dim);
 
         for( size_t i = 0; i < orb_dim; ++i ){
             psi::SharedVector col = Ca->get_column(0, first + i);
@@ -117,18 +111,16 @@ void LOCALIZE::localize() {
         loc_a->localize();
         
         // Grab the transformation and localized matrices
-        psi::SharedMatrix Laocc = loc_a->L();
+        psi::SharedMatrix Ua_loc = loc_a->U();
 
-        //Set Ca, Cb, and U
+        //Set Ua, Ub
         for( size_t i = 0; i < orb_dim; ++i ){
-            psi::SharedVector C_col = Laocc->get_column(0, i);
-            
-            Ca->set_column(0, i+first, C_col);
-            Cb->set_column(0, i+first, C_col);
+            for( size_t j = 0; j < orb_dim; ++j ){
+                Ua_->set(i + first, j + first, Ua_loc->get(i,j));
+                Ub_->set(i + first, j + first, Ua_loc->get(i,j));
+            }
         }
     }
-
-    ints_->update_orbitals(Ca, Cb);
 }
 
 psi::SharedMatrix LOCALIZE::get_Ua() { return Ua_; }

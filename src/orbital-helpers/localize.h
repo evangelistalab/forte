@@ -47,25 +47,18 @@ namespace forte {
 
 class LOCALIZE : public OrbitalTransform {
   public:
-    LOCALIZE(StateInfo state, std::shared_ptr<SCFInfo> scf_info,
-             std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
+    LOCALIZE(std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
              std::shared_ptr<MOSpaceInfo> mo_space_info);
 
+    // Compute the rotation matrices
+    void compute_transformation();
+
+    // Return the matrices
     psi::SharedMatrix get_Ua();
     psi::SharedMatrix get_Ub();
 
-
     // Sets the orbitals to localize, bool to split localize
     void set_orbital_space( std::vector<int>& orbital_spaces );
-
-    // Call to localize, class handles options
-    void localize();
-
-    // Returns unitary matrix that transforms
-    // RHF -> local basis
-    psi::SharedMatrix get_U();
-
-    void compute_transformation();
 
   private:
     std::shared_ptr<SCFInfo> scf_info_;
