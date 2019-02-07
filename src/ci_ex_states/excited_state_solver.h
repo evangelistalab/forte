@@ -72,8 +72,8 @@ class ExcitedStateSolver : public ActiveSpaceMethod {
     /// Set excitation algorithm
     void set_excitation_algorithm(std::string ex_alg);
 
-    /// Set excitation type
-    void set_excitation_type(std::string ex_type);
+    /// Set core excitation
+    void set_core_excitation(bool core_ex);
 
     /// Set the printing level
     void set_quiet(bool quiet);
@@ -92,7 +92,7 @@ class ExcitedStateSolver : public ActiveSpaceMethod {
     /// Algorithm for computing excited states
     std::string ex_alg_;
     /// Type of excited state to compute
-    std::string ex_type_;
+    bool core_ex_;
     /// Control amount of printing
     bool quiet_mode_;
     /// Storage of past roots

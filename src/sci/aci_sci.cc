@@ -275,7 +275,7 @@ void AdaptiveCI_SCI::find_q_space_batched(DeterminantHashVec& P_space, Determina
     double remainder = 0.0;
     if (options_->get_str("ACI_BATCH_ALG") == "HASH") {
         remainder = get_excited_determinants_batch(evecs, evals, P_space, F_space);
-    } else {
+    } else if (options_->get_str("ACI_BATCH_ALG") == "VECSORT") {
         remainder = get_excited_determinants_batch_vecsort(evecs, evals, P_space, F_space);
     }
 
@@ -446,7 +446,7 @@ void AdaptiveCI_SCI::find_q_space(DeterminantHashVec& P_space, DeterminantHashVe
     det_hash<std::vector<double>> V_hash;
     if (options_->get_bool("ACI_LOW_MEM_SCREENING")) {
         get_excited_determinants_seq(nroot_, evecs, P_space, V_hash);
-    } else if ((options_->get_str("ACI_EX_TYPE") == "CORE") and (root_ > 0)) {
+    } else if (options_->get_bool("ACI_CORE_EX") and (root_ > 0)) {
         get_core_excited_determinants(evecs, P_space, V_hash);
     } else {
         get_excited_determinants(nroot_, evecs, P_space, V_hash);
@@ -1451,7 +1451,7 @@ void AdaptiveCI_SCI::spin_analysis() {
         //  UA = loc->get_U()->clone();
         //  UB = loc->get_U()->clone();
 
-    } else {
+    } else if (options_->get_str("SPIN_BASIS") == "CANONICAL") {
         outfile->Printf("\n  Computing spin correlation in reference basis \n");
         UA->identity();
         UB->identity();
@@ -1595,7 +1595,7 @@ void AdaptiveCI_SCI::pre_iter_preparation() {
     ref.build_reference(initial_reference_);
     P_space_ = initial_reference_;
 
-    if ((options_->get_str("ACI_EX_TYPE") == "CORE") and (root_ > 0)) {
+    if ((options_->get_bool("ACI_CORE_EX")) and (root_ > 0)) {
 
         ref_root_ = root_ - 1;
 
@@ -1650,10 +1650,6 @@ void AdaptiveCI_SCI::pre_iter_preparation() {
     if (streamline_qspace_ and !quiet_mode_)
         outfile->Printf("\n  Using streamlined Q-space builder.");
 
-    if (ex_alg_ == "ROOT_SELECT") {
-        ref_root_ = root_;
-    }
-
     // approx_rdm_ = false;
 }
 
@@ -1663,8 +1659,7 @@ void AdaptiveCI_SCI::diagonalize_P_space() {
     std::string cycle_h = "Cycle " + std::to_string(cycle_);
 
     follow_ = false;
-    if (ex_alg_ == "ROOT_SELECT" or ex_alg_ == "ROOT_COMBINE" or ex_alg_ == "MULTISTATE" or
-        ex_alg_ == "ROOT_ORTHOGONALIZE") {
+    if (ex_alg_ == "ROOT_COMBINE" or ex_alg_ == "MULTISTATE" or ex_alg_ == "ROOT_ORTHOGONALIZE") {
 
         follow_ = true;
     }
@@ -1824,10 +1819,6 @@ void AdaptiveCI_SCI::diagonalize_PQ_space() {
 
     // If doing root-following, grab the initial root
     if (follow_ and ((pre_iter_ == 0 and cycle_ == 0) or cycle_ == (pre_iter_ - 1))) {
-
-        if (ex_alg_ == "ROOT_SELECT") {
-            ref_root_ = root_;
-        }
         size_t dim = std::min(static_cast<int>(PQ_space_.size()), 1000);
         P_ref_.subspace(PQ_space_, PQ_evecs_, P_ref_evecs_, dim, ref_root_);
     }
@@ -1840,22 +1831,14 @@ void AdaptiveCI_SCI::diagonalize_PQ_space() {
 
 bool AdaptiveCI_SCI::check_convergence() {
     bool stuck = check_stuck(energy_history_, PQ_evals_);
-    if (stuck and (ex_alg_ != "COMPOSITE")) {
+    if (stuck) {
         outfile->Printf("\n  Procedure is stuck! Quitting...");
         return true;
-    } else if (stuck and (ex_alg_ == "COMPOSITE") and cycle_ < pre_iter_) {
-        outfile->Printf("\n  Root averaging algorithm converged.");
-        outfile->Printf("\n  Now optimizing PQ Space for root %d", root_);
-        pre_iter_ = cycle_ + 1;
     }
 
     // Step 4. Check convergence and break if needed
     bool converged = check_convergence(energy_history_, PQ_evals_);
-    if (converged and cycle_ < pre_iter_ and ex_alg_ == "COMPOSITE") {
-        outfile->Printf("\n  Root averaging algorithm converged.");
-        outfile->Printf("\n  Now optimizing PQ Space for root %d", root_);
-        pre_iter_ = cycle_ + 1;
-    } else if (converged) {
+    if (converged) {
         // if(quiet_mode_) outfile->Printf(
         // "\n----------------------------------------------------------" );
         if (!quiet_mode_)
