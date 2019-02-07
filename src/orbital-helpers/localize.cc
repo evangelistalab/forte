@@ -30,6 +30,7 @@
 #include "psi4/libqt/qt.h"
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/vector.h"
+#include "helpers/helpers.h"
 
 #include "base_classes/reference.h"
 
@@ -51,7 +52,9 @@ LOCALIZE::LOCALIZE(std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteI
     orbital_spaces_ = options->get_int_vec("LOCALIZE_SPACE");
     local_method_ = options->get_str("LOCALIZE");
 
-    outfile->Printf("\n\n");
+    print_h2("ORBITAL LOCALIZER");
+
+    outfile->Printf("\n  Localize method: %s", local_method_.c_str());
 }
 
 void LOCALIZE::set_orbital_space(std::vector<int>& orbital_spaces){
@@ -84,10 +87,11 @@ void LOCALIZE::compute_transformation() {
         size_t last  = orbital_spaces_[f_idx+1]; 
 
         //print
-        outfile->Printf("\n  Localizing orbitals:");
+        outfile->Printf("\n  Localizing orbitals: ");
         for( size_t orb = first; orb <= last; ++orb){
             outfile->Printf(" %d", orb);
         }
+        outfile->Printf("\n");
         
         if( last < first ){
             outfile->Printf("\n  Error: Orbital space for localization not properly set!");
