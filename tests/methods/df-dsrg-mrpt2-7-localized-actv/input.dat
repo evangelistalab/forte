@@ -58,24 +58,12 @@ set forte{
 Ecas, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
 compare_values(r_avg_cas, Ecas, 8, "SA-CASSCF energy from FORTE CASSCF")
 
-#set forte{
-#  active_space_solver          cas
-#  frozen_docc         [4]
-#  restricted_docc     [9]
-#  active              [4]
-#  avg_state           [[0,1,5]]
-#  rotate_mos          []
-# # fcimo_localize_actv true
-#}
-#Ecas, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
-#compare_values(r_avg_cas, Ecas, 8, "SA-CASSCF energy from FORTE FCIMO")
-#cubeprop(wfn)
-
 set forte{
-  job_type newdriver
-  correlation_solver  dsrg-mrpt2
-  int_type            df
+  job_type            newdriver
   active_space_solver cas
+  correlation_solver  dsrg-mrpt2
+  calc_type           sa
+  int_type            df
   e_convergence       12
   dsrg_s              0.5
   frozen_docc         [4]
@@ -84,10 +72,8 @@ set forte{
   avg_state           [[0,1,5]]
   rotate_mos          []
   dsrg_dipole         true
-  nroot 5
-  root 0
-  orbital_type local
-  localize FULL
+  orbital_type        local
+  localize            full
 }
 energy('forte', ref_wfn=wfn)
 compare_values(r_0ag, variable("ENERGY ROOT 0 1A"), 8, "abs. energy of singlet 0Ag")
