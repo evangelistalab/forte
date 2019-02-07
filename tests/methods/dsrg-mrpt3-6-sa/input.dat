@@ -49,6 +49,7 @@ set forte{
   e_convergence      10
   avg_state          [[0,1,2]]
   dsrg_multi_state   sa_full
+  calc_type          sa
 }
 energy('forte',ref_wfn=wfn)
 compare_values(refpt3full,variable("ENERGY ROOT 0 1A1"),8,"SA-DSRG-PT3 FULL energy root 0")
