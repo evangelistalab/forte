@@ -47,8 +47,8 @@ AdaptiveCI_SCI::AdaptiveCI_SCI(StateInfo state, size_t nroot, std::shared_ptr<SC
                                std::shared_ptr<ForteOptions> options,
                                std::shared_ptr<MOSpaceInfo> mo_space_info,
                                std::shared_ptr<ActiveSpaceIntegrals> as_ints)
-    : SelectedCIMethod(state, nroot, scf_info, mo_space_info, as_ints), options_(options),
-      sparse_solver_(as_ints_) {
+    : SelectedCIMethod(state, nroot, scf_info, mo_space_info, as_ints), sparse_solver_(as_ints_),
+      options_(options) {
     mo_symmetry_ = mo_space_info_->symmetry("ACTIVE");
     sigma_ = options_->get_double("SIGMA");
     nuclear_repulsion_energy_ = as_ints->ints()->nuclear_repulsion_energy();
@@ -71,6 +71,9 @@ void AdaptiveCI_SCI::startup() {
     //    if (!set_ints_) {
     //        set_aci_ints(ints_); // TODO: maybe a BUG?
     //    }
+
+    op_.initialize(mo_symmetry_, as_ints_);
+    op_.set_quiet_mode(quiet_mode_);
 
     wavefunction_symmetry_ = state_.irrep();
     multiplicity_ = state_.multiplicity();
@@ -233,13 +236,12 @@ void AdaptiveCI_SCI::print_info() {
 }
 
 void AdaptiveCI_SCI::set_method_variables(
-    std::string ex_alg, WFNOperator op, size_t nroot_method, size_t root, size_t ref_root,
+    std::string ex_alg, size_t nroot_method, size_t root,
     std::vector<std::vector<std::pair<Determinant, double>>> old_roots) {
     ex_alg_ = ex_alg;
-    op_ = op;
     nroot_ = nroot_method;
     root_ = root;
-    ref_root_ = ref_root;
+    ref_root_ = root;
     old_roots_ = old_roots;
 }
 
@@ -805,7 +807,7 @@ bool AdaptiveCI_SCI::check_stuck(const std::vector<std::vector<double>>& energy_
         stuck = false;
     } else {
         std::vector<double> av_energies;
-        for (int i = 0; i < cycle_; ++i) {
+        for (size_t i = 0; i < cycle_; ++i) {
             double energy = 0.0;
             for (int n = 0; n < nroot; ++n) {
                 energy += energy_history[i][n];
@@ -1595,6 +1597,8 @@ void AdaptiveCI_SCI::pre_iter_preparation() {
 
     if ((options_->get_str("ACI_EX_TYPE") == "CORE") and (root_ > 0)) {
 
+        ref_root_ = root_ - 1;
+
         int ncstate = options_->get_int("ACI_ROOTS_PER_CORE");
 
         if (((root_) > ncstate) and (root_ > 1)) {
@@ -1819,7 +1823,7 @@ void AdaptiveCI_SCI::diagonalize_PQ_space() {
     num_ref_roots_ = std::min(nroot_, int(PQ_space_.size()));
 
     // If doing root-following, grab the initial root
-    if (follow_ and (cycle_ == (pre_iter_ - 1) or (pre_iter_ == 0 and cycle_ == 0))) {
+    if (follow_ and ((pre_iter_ == 0 and cycle_ == 0) or cycle_ == (pre_iter_ - 1))) {
 
         if (ex_alg_ == "ROOT_SELECT") {
             ref_root_ = root_;

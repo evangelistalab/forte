@@ -114,10 +114,6 @@ double ExcitedStateSolver::compute_energy() {
         ex_alg_ = "AVERAGE";
     }
 
-    // The eigenvalues and eigenvectors
-    psi::SharedMatrix PQ_evecs;
-    psi::SharedVector PQ_evals;
-
     // Compute wavefunction and energy
     size_t dim;
     int nrun = 1;
@@ -139,11 +135,10 @@ double ExcitedStateSolver::compute_energy() {
     psi::SharedVector energies(new psi::Vector(nroot_));
     std::vector<double> pt2_energies(nroot_);
 
+    // The eigenvalues and eigenvectors
     DeterminantHashVec PQ_space;
-
-    std::vector<int> mo_symmetry = mo_space_info_->symmetry("ACTIVE");
-    op_.initialize(mo_symmetry, as_ints_);
-    op_.set_quiet_mode(quiet_mode_);
+    psi::SharedMatrix PQ_evecs;
+    psi::SharedVector PQ_evals;
 
     for (int i = 0; i < nrun; ++i) {
         if (!quiet_mode_)
@@ -164,16 +159,14 @@ double ExcitedStateSolver::compute_energy() {
             nroot_method = 1;
         }
 
-        sci_->set_method_variables(ex_alg_, op_, nroot_method, root_, ref_root, old_roots_);
+        sci_->set_method_variables(ex_alg_, nroot_method, root_, old_roots_);
 
         sci_->compute_energy();
 
         PQ_space = sci_->get_PQ_space();
         PQ_evecs = sci_->get_PQ_evecs();
         PQ_evals = sci_->get_PQ_evals();
-        op_ = sci_->get_op();
         ref_root = sci_->get_ref_root();
-        multistate_pt2_energy_correction_ = sci_->get_multistate_pt2_energy_correction();
 
         if (ex_alg_ == "ROOT_COMBINE") {
             sizes[i] = PQ_space.size();
@@ -186,7 +179,7 @@ double ExcitedStateSolver::compute_energy() {
             // orthogonalize
             save_old_root(PQ_space, PQ_evecs, i, ref_root);
             energies->set(i, PQ_evals->get(0));
-            pt2_energies[i] = multistate_pt2_energy_correction_[0];
+            pt2_energies[i] = sci_->get_multistate_pt2_energy_correction()[0];
         } else if ((ex_alg_ == "MULTISTATE")) {
             // orthogonalize
             save_old_root(PQ_space, PQ_evecs, i, ref_root);
@@ -195,6 +188,9 @@ double ExcitedStateSolver::compute_energy() {
             root_ = i;
         }
     }
+    op_ = sci_->get_op();
+    multistate_pt2_energy_correction_ = sci_->get_multistate_pt2_energy_correction();
+
     dim = PQ_space.size();
     final_wfn_.copy(PQ_space);
     PQ_space.clear();
@@ -206,6 +202,7 @@ double ExcitedStateSolver::compute_energy() {
         PQ_evals = energies;
     }
 
+    std::vector<int> mo_symmetry = mo_space_info_->symmetry("ACTIVE");
     WFNOperator op_c(mo_symmetry, as_ints_);
     if (ex_alg_ == "ROOT_COMBINE") {
         psi::outfile->Printf("\n\n  ==> Diagonalizing Final Space <==");

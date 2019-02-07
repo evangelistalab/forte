@@ -79,8 +79,7 @@ class SelectedCIMethod {
     // Temporarily added interface to ExcitedStateSolver
     /// Set the class variable
     virtual void
-    set_method_variables(std::string ex_alg, WFNOperator op, size_t nroot_method, size_t root,
-                         size_t ref_root,
+    set_method_variables(std::string ex_alg, size_t nroot_method, size_t root,
                          std::vector<std::vector<std::pair<Determinant, double>>> old_roots) = 0;
     /// Getters
     virtual DeterminantHashVec get_PQ_space() = 0;

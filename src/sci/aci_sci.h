@@ -110,7 +110,7 @@ class AdaptiveCI_SCI : public SelectedCIMethod {
     // Temporarily added interface to ExcitedStateSolver
     /// Set the class variable
     virtual void set_method_variables(
-        std::string ex_alg, WFNOperator op, size_t nroot_method, size_t root, size_t ref_root,
+        std::string ex_alg, size_t nroot_method, size_t root,
         std::vector<std::vector<std::pair<Determinant, double>>> old_roots) override;
     /// Getters
     DeterminantHashVec get_PQ_space() override;
@@ -203,7 +203,7 @@ class AdaptiveCI_SCI : public SelectedCIMethod {
     std::vector<Determinant> initial_reference_;
     /// The PT2 energy correction
     std::vector<double> multistate_pt2_energy_correction_;
-    int pre_iter_;
+    size_t pre_iter_;
     bool set_ints_ = false;
 
     // ==> ACI Options <==
