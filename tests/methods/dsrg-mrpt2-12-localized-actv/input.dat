@@ -37,6 +37,7 @@ compare_values(r_scf, Escf, 8, "SCF energy")
 set forte{
   active_space_solver cas
   correlation_solver  dsrg-mrpt2
+  calc_type           sa
   rotate_mos          [1,17,20]
   orbital_type        local
   localize            full
@@ -53,6 +54,7 @@ set forte{
                             # and FCIIntegral in the same basis
                             # for re-diagonalization
 }
-energy('forte', ref_wfn=wfn)
+E, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
 compare_values(r_0ag, variable("ENERGY ROOT 0 1A"), 8, "abs. energy of singlet 0Ag")
 
+#cubeprop(wfn)
