@@ -63,7 +63,8 @@ def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
 
         # Compute unitary matrices Ua and Ub that rotate the orbitals to the semicanonical basis
         semi = forte.SemiCanonical(mo_space_info, ints, options)
-        semi.semicanonicalize(reference, max_rdm_level)
+        if options.get_bool("SEMI_CANONICAL"):
+            semi.semicanonicalize(reference, max_rdm_level)
         Ua = semi.Ua_t()
         Ub = semi.Ub_t()
 
