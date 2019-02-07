@@ -114,9 +114,6 @@ class SelectedCIMethod {
 
     /// Maximum number of SCI iterations
     size_t max_cycle_;
-
-    /// Control amount of printing
-    bool quiet_mode_;
 };
 } // namespace forte
 #endif // _sci_h_

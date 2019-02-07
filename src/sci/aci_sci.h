@@ -257,6 +257,8 @@ class AdaptiveCI_SCI : public SelectedCIMethod {
     bool det_save_;
     /// Order of RDM to compute
     //    int rdm_level_;
+    /// Control amount of printing
+    bool quiet_mode_;
     /// Control streamlining
     bool streamline_qspace_;
     /// The CI coeffiecients
