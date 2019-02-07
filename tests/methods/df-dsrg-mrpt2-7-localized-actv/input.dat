@@ -71,7 +71,7 @@ set forte{
   active              [4]
   avg_state           [[0,1,5]]
   rotate_mos          []
-  dsrg_dipole         true
+  dsrg_dipole         true  # dipole output from the relaxed fci is not meaningful
   orbital_type        local
   localize            full
 }
