@@ -47,11 +47,10 @@ using namespace psi;
 
 namespace forte {
 
-MP2_NOS::MP2_NOS(std::shared_ptr<SCFInfo> scf_info,
-                 std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
-                 std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : OrbitalTransform(options, ints, mo_space_info), scf_info_(scf_info),
-      options_(options), ints_(ints), mo_space_info_(mo_space_info) {}
+MP2_NOS::MP2_NOS(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
+                 std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
+    : OrbitalTransform(options, ints, mo_space_info), scf_info_(scf_info), options_(options),
+      ints_(ints), mo_space_info_(mo_space_info) {}
 
 psi::SharedMatrix MP2_NOS::get_Ua() { return Ua_; }
 psi::SharedMatrix MP2_NOS::get_Ub() { return Ub_; }
@@ -395,8 +394,8 @@ void MP2_NOS::compute_transformation() {
     // TODO: this class should read this information (ints_->spin_restriction()) early and compute
     // only one set of MOs
 
-    auto spin_restriction = ints_->spin_restriction();  
-    
+    auto spin_restriction = ints_->spin_restriction();
+
     Ua_.reset(new psi::Matrix("Ua", nmopi, nmopi));
     Ub_.reset(new psi::Matrix("Ub", nmopi, nmopi));
 

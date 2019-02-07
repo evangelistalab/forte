@@ -237,7 +237,7 @@ void UPDensity::compute_unpaired_density(std::vector<double>& oprdm_a,
     auto loc = std::make_shared<LOCALIZE>(options_, ints_, mo_space_info_);
 
     std::vector<size_t> actmo = mo_space_info_->get_absolute_mo("ACTIVE");
-    std::vector<int> loc_mo(2);        
+    std::vector<int> loc_mo(2);
     loc_mo[0] = static_cast<int>(actmo[0]);
     loc_mo[1] = static_cast<int>(actmo.back());
     loc->set_orbital_space(loc_mo);

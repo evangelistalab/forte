@@ -97,7 +97,6 @@ class MRCINO : public OrbitalTransform {
     //    /// The number of beta unoccupied active orbitals per irrep
     //    psi::Dimension bvirpi_;
 
-
     /// The transformation matrices
     psi::SharedMatrix Ua_;
     psi::SharedMatrix Ub_;

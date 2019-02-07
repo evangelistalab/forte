@@ -1,9 +1,9 @@
 #ifndef _orbital_transform_h_
 #define _orbital_transform_h_
 
-#include "base_classes/scf_info.h" 
-#include "base_classes/state_info.h" 
-#include "base_classes/forte_options.h" 
+#include "base_classes/scf_info.h"
+#include "base_classes/state_info.h"
+#include "base_classes/forte_options.h"
 #include "integrals/integrals.h"
 
 namespace forte {
@@ -19,7 +19,7 @@ class OrbitalTransform {
 
     /// Default constructor
     OrbitalTransform() = default;
-    
+
     /// Virtual destructor to enable deletion of a Derived* through a Base*
     virtual ~OrbitalTransform() = default;
 
@@ -30,14 +30,13 @@ class OrbitalTransform {
     virtual psi::SharedMatrix get_Ub() = 0;
 
   private:
-
     psi::SharedMatrix Ua_;
 
     psi::SharedMatrix Ub_;
 };
 
 std::unique_ptr<OrbitalTransform>
-make_orbital_transformation(const std::string& type,std::shared_ptr<SCFInfo> scf_info,
+make_orbital_transformation(const std::string& type, std::shared_ptr<SCFInfo> scf_info,
                             std::shared_ptr<ForteOptions> options,
                             std::shared_ptr<ForteIntegrals> ints,
                             std::shared_ptr<MOSpaceInfo> mo_space_info);

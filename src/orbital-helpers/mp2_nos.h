@@ -46,9 +46,8 @@ namespace forte {
 class MP2_NOS : public OrbitalTransform {
   public:
     // => Constructor <= //
-    MP2_NOS(std::shared_ptr<SCFInfo> scf_info,
-            std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
-            std::shared_ptr<MOSpaceInfo> mo_space_info);
+    MP2_NOS(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
+            std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     void compute_transformation();
     psi::SharedMatrix get_Ua();

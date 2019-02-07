@@ -42,8 +42,7 @@ namespace forte {
 
 LOCALIZE::LOCALIZE(std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
                    std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : OrbitalTransform(options, ints, mo_space_info),
-      options_(options), ints_(ints) {
+    : OrbitalTransform(options, ints, mo_space_info), options_(options), ints_(ints) {
 
     if (ints_->nirrep() > 1) {
         throw psi::PSIEXCEPTION("\n\n ERROR: Localizer only implemented for C1 symmetry!");
@@ -57,22 +56,22 @@ LOCALIZE::LOCALIZE(std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteI
     outfile->Printf("\n  Localize method: %s", local_method_.c_str());
 }
 
-void LOCALIZE::set_orbital_space(std::vector<int>& orbital_spaces){
+void LOCALIZE::set_orbital_space(std::vector<int>& orbital_spaces) {
     orbital_spaces_ = orbital_spaces;
 }
 
 void LOCALIZE::compute_transformation() {
 
-    if( orbital_spaces_.size() == 0 ){
+    if (orbital_spaces_.size() == 0) {
         outfile->Printf("\n  Error: Orbital space for localization is not set!");
         exit(1);
-    } else if ( (orbital_spaces_.size() % 2 ) != 0 ) {
+    } else if ((orbital_spaces_.size() % 2) != 0) {
         outfile->Printf("\n  Error: Orbital space for localization not properly set!");
         exit(1);
-    } 
+    }
 
     psi::SharedMatrix Ca = ints_->Ca();
-   
+
     Ua_ = std::make_shared<psi::Matrix>("U", Ca->rowdim(), Ca->coldim());
     Ub_ = std::make_shared<psi::Matrix>("U", Ca->rowdim(), Ca->coldim());
 
@@ -80,23 +79,23 @@ void LOCALIZE::compute_transformation() {
     Ub_->identity();
 
     // loop through each space
-    for( size_t f_idx = 0, max = orbital_spaces_.size(); f_idx < max - 1; f_idx += 2 ){
-    
-        // indices are INCLUSIVE
-        size_t first = orbital_spaces_[f_idx]; 
-        size_t last  = orbital_spaces_[f_idx+1]; 
+    for (size_t f_idx = 0, max = orbital_spaces_.size(); f_idx < max - 1; f_idx += 2) {
 
-        //print
+        // indices are INCLUSIVE
+        size_t first = orbital_spaces_[f_idx];
+        size_t last = orbital_spaces_[f_idx + 1];
+
+        // print
         outfile->Printf("\n  Localizing orbitals: ");
-        for( size_t orb = first; orb <= last; ++orb){
+        for (size_t orb = first; orb <= last; ++orb) {
             outfile->Printf(" %d", orb);
         }
         outfile->Printf("\n");
-        
-        if( last < first ){
+
+        if (last < first) {
             outfile->Printf("\n  Error: Orbital space for localization not properly set!");
             exit(1);
-        } 
+        }
 
         // number of orbitals to localize
         size_t orb_dim = last - first + 1;
@@ -104,24 +103,25 @@ void LOCALIZE::compute_transformation() {
         // Build C matrix to localize
         psi::SharedMatrix Ca_loc = std::make_shared<psi::Matrix>("Caact", Ca->rowdim(), orb_dim);
 
-        for( size_t i = 0; i < orb_dim; ++i ){
+        for (size_t i = 0; i < orb_dim; ++i) {
             psi::SharedVector col = Ca->get_column(0, first + i);
-            Ca_loc->set_column(0, i, col); 
+            Ca_loc->set_column(0, i, col);
         }
-    
+
         // localize
         std::shared_ptr<psi::BasisSet> primary = ints_->wfn()->basisset();
-        std::shared_ptr<psi::Localizer> loc_a = psi::Localizer::build(local_method_, primary, Ca_loc);
+        std::shared_ptr<psi::Localizer> loc_a =
+            psi::Localizer::build(local_method_, primary, Ca_loc);
         loc_a->localize();
-        
+
         // Grab the transformation and localized matrices
         psi::SharedMatrix Ua_loc = loc_a->U();
 
-        //Set Ua, Ub
-        for( size_t i = 0; i < orb_dim; ++i ){
-            for( size_t j = 0; j < orb_dim; ++j ){
-                Ua_->set(i + first, j + first, Ua_loc->get(i,j));
-                Ub_->set(i + first, j + first, Ua_loc->get(i,j));
+        // Set Ua, Ub
+        for (size_t i = 0; i < orb_dim; ++i) {
+            for (size_t j = 0; j < orb_dim; ++j) {
+                Ua_->set(i + first, j + first, Ua_loc->get(i, j));
+                Ub_->set(i + first, j + first, Ua_loc->get(i, j));
             }
         }
     }
@@ -131,4 +131,3 @@ psi::SharedMatrix LOCALIZE::get_Ua() { return Ua_; }
 psi::SharedMatrix LOCALIZE::get_Ub() { return Ub_; }
 
 } // namespace forte
-

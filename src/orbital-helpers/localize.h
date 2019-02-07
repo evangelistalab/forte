@@ -58,7 +58,7 @@ class LOCALIZE : public OrbitalTransform {
     psi::SharedMatrix get_Ub();
 
     // Sets the orbitals to localize, bool to split localize
-    void set_orbital_space( std::vector<int>& orbital_spaces );
+    void set_orbital_space(std::vector<int>& orbital_spaces);
 
   private:
     std::shared_ptr<SCFInfo> scf_info_;
