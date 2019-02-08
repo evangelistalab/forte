@@ -18,7 +18,7 @@ aci:
    - aci-11
    - aci-12
    - aci-13
-   - aci-14
+#   - aci-14
    - aci-15
    - aci-16
    - aci-17
@@ -155,8 +155,8 @@ fci:
    - fci-one-electron
    - fci-rdms-1
    - fci-rdms-2
-#  long:
-#   - fci-6
+  long:
+   - fci-6
 integrals:
   short:
    - integrals-1
