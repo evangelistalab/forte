@@ -126,7 +126,7 @@ install:
 script:
 - cd ${HOME}/build/evangelistalab/forte/tests/methods
 - python run_forte_tests.py --bw --failed_dump
-- grep 'Size of Determinant class' aci-1/output.dat
+- grep 'Size of Determinant class' aci-14/output.dat
 - if [ "$MAX_DET_ORB" -ge "128" ]; then
     cd ${HOME}/build/evangelistalab/forte/tests/large_det;
     python run_forte_tests_travis.py;
