@@ -89,6 +89,10 @@ class AdaptiveCI_SCI : public SelectedCIMethod {
 
     // ==> Class Interface <==
 
+    /// Set options from an option object
+    /// @param options the options passed in
+    void set_options(std::shared_ptr<ForteOptions> options) override {}
+
     // Interfaces of SCI algorithm
     /// Print the banner and starting information.
     void print_info() override;
