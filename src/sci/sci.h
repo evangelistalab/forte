@@ -55,6 +55,10 @@ class SelectedCIMethod {
 
     // ==> Class Interface <==
 
+    /// Set options from an option object
+    /// @param options the options passed in
+    virtual void set_options(std::shared_ptr<ForteOptions> options) = 0;
+
     /// Compute the energy and return it
     virtual double compute_energy();
 

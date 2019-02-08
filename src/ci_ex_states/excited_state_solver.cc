@@ -73,6 +73,8 @@ void ExcitedStateSolver::set_options(std::shared_ptr<ForteOptions> options) {
     sparse_solver_->set_num_vecs(options->get_int("N_GUESS_VEC"));
     sparse_solver_->set_sigma_method(options->get_str("SIGMA_BUILD_TYPE"));
     sparse_solver_->set_max_memory(options->get_int("SIGMA_VECTOR_MAX_MEMORY"));
+
+    sci_->set_options(options);
 }
 
 void ExcitedStateSolver::print_info() {
