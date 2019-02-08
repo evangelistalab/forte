@@ -1303,8 +1303,6 @@ void TDACI::compute_tdaci_select(SharedVector C0) {
         Timer pq;
         get_PQ_space(P_space, P_coeffs_r, P_coeffs_i, PQ_space, PQ_coeffs_r, PQ_coeffs_i);
 
-        outfile->Printf("\n  (t = %10.2f)  P: %6zu, PQ: %6zu   (%1.6f)", time / conv,
-                        P_space.size(), PQ_space.size(), pq.get());
 
         // 2. Propogate in PQ space
         Timer prop;
@@ -1333,6 +1331,8 @@ void TDACI::compute_tdaci_select(SharedVector C0) {
         //        }
 
         if (std::abs((time / conv) - round(time / conv)) <= 1e-8) {
+            outfile->Printf("\n  (t = %10.2f)  P: %6zu, PQ: %6zu   (%1.6f)", time / conv,
+                            P_space.size(), PQ_space.size(), pq.get());
             if (options_->get_bool("TDACI_PRINT_WFN")) {
                 std::stringstream ss;
                 ss << std::fixed << std::setprecision(3) << time / conv;
@@ -1661,7 +1661,7 @@ void TDACI::get_PQ_space(DeterminantHashVec& P_space, std::vector<double>& P_coe
         const auto& dpair = sorted_dets[I];
         const double cI = dpair.first;
 
-        if (sum + cI < eta) {
+        if ( (sum + cI) < eta) {
             sum += cI;
         } else {
             PQ_space.add(dpair.second);
@@ -1848,7 +1848,7 @@ void TDACI::propagate_RK4_select(std::vector<double>& PQ_coeffs_r, std::vector<d
         }
     }
 
-    outfile->Printf("\n    Build H: %1.6f", total.get());
+ //   outfile->Printf("\n    Build H: %1.6f", total.get());
 
     // k1
     SharedVector k1r = std::make_shared<Vector>("k1r", npq);
@@ -1960,11 +1960,12 @@ void TDACI::propagate_RK4_select_list(std::vector<double>& PQ_coeffs_r,
     // build coupling lists
     auto mo_sym = mo_space_info_->symmetry("ACTIVE");
     WFNOperator op(mo_sym, as_ints_);
+    op.set_quiet_mode(true);
 
     op.build_strings(PQ_space);
     op.op_s_lists(PQ_space);
     op.tp_s_lists(PQ_space);
-    outfile->Printf("\n    Build lists: %1.6f", total.get());
+  //  outfile->Printf("\n    Build lists: %1.6f", total.get());
 
     // k1 = -iH|Psi>
     std::vector<double> k1r(npq, 0.0);
