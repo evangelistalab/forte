@@ -38,8 +38,6 @@
 
 namespace forte {
 
-void set_EMBEDDING_options(ForteOptions& foptions);
-
 void make_embedding(psi::SharedWavefunction ref_wfn, psi::Options& options, psi::SharedMatrix Pf);
 
 psi::SharedMatrix semicanonicalize_block(psi::SharedWavefunction ref_wfn, psi::SharedMatrix C_tilde,
