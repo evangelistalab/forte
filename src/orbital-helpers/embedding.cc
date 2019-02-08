@@ -43,19 +43,6 @@ using namespace psi;
 
 namespace forte {
 
-void set_EMBEDDING_options(ForteOptions& foptions) {
-	foptions.add_str("CUTOFF_BY", "THRESHOLD", "Cut off by: threshold or number.");
-	foptions.add_int("NUM_OCC", 0, "Number of (restricted) occpied in system A");
-	foptions.add_int("NUM_VIR", 0, "Number of (restricted) virtual in system A");
-	foptions.add_double("THRESHOLD", 0.5, "Projector eigenvalue threshold, 0.5 as default");
-	foptions.add_str("REFERENCE", "HF", "HF, ROHF, UHF(not implemented), MCSCF, CASSCF, CINO, CINOACTV");
-	foptions.add_bool("WRITE_FREEZE_MO", true,
-		"Pass orbital space information automatically or manually");
-	foptions.add_bool("SEMICANON", true, "Perform semi-canonicalization or not in the end");
-	foptions.add_int("FROZEN_SYS_DOCC", 0, "Freeze system occ orbitals");
-	foptions.add_int("FROZEN_SYS_UOCC", 0, "Freeze system vir orbitals");
-}
-
 void make_embedding(psi::SharedWavefunction ref_wfn, psi::Options& options, psi::SharedMatrix Pf) {
 	outfile->Printf("\n ------ Orbital Localization and Embedding ------ \n");
 
