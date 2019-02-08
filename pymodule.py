@@ -305,7 +305,7 @@ def run_forte(name, **kwargs):
     # Create the fragment(embedding) projector (not done!)
     pf = forte.make_fragment_projector(ref_wfn, options)
     if (1):
-	make_embedding(ref_wfn, options, pf);
+        make_embedding(ref_wfn, options, pf);
 
     # Create the MOSpaceInfo object
     mo_space_info = forte.make_mo_space_info(ref_wfn, forte.forte_options)
