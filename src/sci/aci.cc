@@ -768,7 +768,10 @@ void AdaptiveCI::prune_q_space(DeterminantHashVec& PQ_space, DeterminantHashVec&
                                       // less than tau_p
                 sum += dsum;
                 last_excluded = I;
+                outfile->Printf("\n %16.14f", dsum);
             } else {
+                outfile->Printf("\n Keep");
+                outfile->Printf("\n %16.14f", dsum);
                 P_space.add(dm_det_list[I].second);
             }
         }
@@ -781,6 +784,9 @@ void AdaptiveCI::prune_q_space(DeterminantHashVec& PQ_space, DeterminantHashVec&
                 size_t J = last_excluded - I;
                 if (std::fabs(dm_det_list[last_excluded + 1].first - dm_det_list[J].first) <
                     1.0e-9) {
+
+                    outfile->Printf("\n ADD");
+                    outfile->Printf("\n %16.14f",dm_det_list[J].first * dm_det_list[J].first);
                     P_space.add(dm_det_list[J].second);
                     num_extra += 1;
                 } else {

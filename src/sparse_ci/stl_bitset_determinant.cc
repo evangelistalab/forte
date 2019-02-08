@@ -600,7 +600,7 @@ void enforce_spin_completeness(std::vector<STLBitsetDeterminant>& det_space, int
     std::vector<size_t> open_bits(nmo, 0);
     for (size_t I = 0, det_size = det_space.size(); I < det_size; ++I) {
         const STLBitsetDeterminant& det = det_space[I];
-        outfile->Printf("\n  Original determinant: %s", det.str().c_str());
+//        outfile->Printf("\n  Original determinant: %s", det.str().c_str());
         for (int i = 0; i < nmo; ++i) {
             closed[i] = open[i] = 0;
             open_bits[i] = false;
@@ -646,7 +646,7 @@ void enforce_spin_completeness(std::vector<STLBitsetDeterminant>& det_space, int
             if (det_map.count(new_det) == 0) {
                 det_space.push_back(new_det);
                 det_map[new_det] = true;
-                outfile->Printf("\n  added determinant:    %s", new_det.str().c_str());
+//                outfile->Printf("\n  added determinant:    %s", new_det.str().c_str());
                 ndet_added++;
             }
         } while (std::next_permutation(open_bits.begin(), open_bits.begin() + naopen + nbopen));
