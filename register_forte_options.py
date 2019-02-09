@@ -39,6 +39,9 @@ def register_driver_options(forte_options):
         'Dynamical correlation solver type')
     forte_options.add_str('CALC_TYPE', 'SS', ['SS', 'SA', 'MS', 'DWMS'],
                           'The type of computation')
+    forte_options.add_int('ACTIVE_SPACE_MAX_RDM', 1,
+                          'The maximum rank of the reduced density matrices computed by the active space solver.')
+
 
     forte_options.add_int(
         "CHARGE", 0,
@@ -286,7 +289,6 @@ def register_pci_options(forte_options):
     forte_options.add_double(
         "PCI_FUNCTIONAL_ORDER", 1.0,
         "The functional order of PCI_FUNCTIONAL is SPECIFY-ORDER")
-
 
 def register_fci_options(forte_options):
     forte_options.add_int('FCI_MAXITER', 30,

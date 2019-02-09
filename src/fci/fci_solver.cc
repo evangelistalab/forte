@@ -65,6 +65,7 @@ FCISolver::FCISolver(StateInfo state, size_t nroot, std::shared_ptr<MOSpaceInfo>
       active_dim_(mo_space_info->get_dimension("ACTIVE")), nirrep_(as_ints->ints()->nirrep()),
       symmetry_(state.irrep()), multiplicity_(state.multiplicity()) {
     // TODO: read this info from the base class
+    print_ = 1;
     na_ = state.na() - core_mo_.size() - mo_space_info->size("FROZEN_DOCC");
     nb_ = state.nb() - core_mo_.size() - mo_space_info->size("FROZEN_DOCC");
 }
@@ -96,7 +97,8 @@ void FCISolver::startup() {
             {"Multiplicity", multiplicity_},
             {"Number of roots", nroot_},
             {"Target root", root_},
-            {"Trial vectors per root", ntrial_per_root_}};
+            {"Trial vectors per root", ntrial_per_root_},
+            {"Maximum RDM level", max_rdm_level_}};
 
         // Print some information
         outfile->Printf("\n\n  ==> FCI Solver <==\n\n");
@@ -112,9 +114,9 @@ void FCISolver::set_options(std::shared_ptr<ForteOptions> options) {
     set_fci_iterations(options->get_int("FCI_MAXITER"));
     set_collapse_per_root(options->get_int("DL_COLLAPSE_PER_ROOT"));
     set_subspace_per_root(options->get_int("DL_SUBSPACE_PER_ROOT"));
-    set_print(options->get_int("PRINT"));
+    //    set_print(options->get_int("PRINT"));
     set_ntrial_per_root(options->get_int("NTRIAL_PER_ROOT"));
-    set_print(options->get_int("PRINT"));
+    //    set_print(options->get_int("PRINT"));
     set_e_convergence(options->get_double("E_CONVERGENCE"));
 }
 

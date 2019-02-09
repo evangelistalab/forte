@@ -86,7 +86,6 @@ void ActiveSpaceSolver::print_energies(std::map<StateInfo, std::vector<double>>&
     psi::outfile->Printf("\n    %s", dash.c_str());
     std::vector<std::string> irrep_symbol = psi::Process::environment.molecule()->irrep_labels();
 
-    int n = 0;
     for (const auto& state_nroot : state_nroots_map_) {
         const auto& state = state_nroot.first;
         int irrep = state.irrep();
@@ -99,14 +98,9 @@ void ActiveSpaceSolver::print_energies(std::map<StateInfo, std::vector<double>>&
             double energy = energies[state][i];
             psi::outfile->Printf("\n     %3d     %3s    %2d   %20.12f", multi,
                                  irrep_symbol[irrep].c_str(), i, energy);
-            psi::Process::environment.globals[label] = energy;
-            //            psi::outfile->Printf("\n %s = %f", label.c_str(),
-            //                                 energy); // TODO remove this line once we are done
-            //                                 (Francesco)
+            psi::Process::environment.globals[label] = energy; // TODO remove this line once we are done (Francesco)
         }
-
-        n++;
-        psi::outfile->Printf("\n    %s", dash.c_str());
+        psi::outfile->Printf("\n    %s\n", dash.c_str());
     }
 }
 
