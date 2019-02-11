@@ -1,0 +1,43 @@
+#! Avas projection test
+
+import forte
+
+refscf = -7.862246310410
+reffci = -7.721901186659
+
+molecule {
+0 1
+Li
+H 1 R
+
+R = 3.0
+units bohr 
+symmetry c1
+}
+
+set {
+  basis sto-3g
+  reference rhf
+  scf_type pk
+  e_convergence 12
+}
+
+set forte {
+  subspace ["Li"]
+  avas True
+  AVAS_DIAGONALIZE False
+  active_space_solver fci
+  print 1
+  active [5]
+  restricted_docc [0]
+  root_sym 0
+  multiplicity 3
+  ms 0.0
+}
+
+
+energy('scf')
+compare_values(refscf, variable("CURRENT ENERGY"),11, "SCF energy") #TEST
+
+energy('forte')
+compare_values(reffci, variable("CURRENT ENERGY"),11, "FCI energy") #TEST

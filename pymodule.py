@@ -310,7 +310,7 @@ def run_forte(name, **kwargs):
 
     #Apply the projector to rotate orbitals
     avas = options.get_bool("AVAS")
-    apply_avas(ref_wfn, options, ps, avas)
+    forte.apply_avas(ref_wfn, options, ps, avas)
 
     state = forte.make_state_info_from_psi_wfn(ref_wfn)
     scf_info = forte.SCFInfo(ref_wfn)
