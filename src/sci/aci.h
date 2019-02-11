@@ -66,7 +66,6 @@ namespace forte {
 
 class Reference;
 
-
 /**
  * @brief The AdaptiveCI class
  * This class implements an adaptive CI algorithm
@@ -92,7 +91,8 @@ class AdaptiveCI : public ActiveSpaceMethod {
     double compute_energy() override;
 
     /// Update the reference file
-    std::vector<Reference> reference(const std::vector<std::pair<size_t,size_t>>& root_list) override;
+    std::vector<Reference>
+    reference(const std::vector<std::pair<size_t, size_t>>& root_list) override;
 
     std::vector<Reference> densities(const std::vector<std::pair<size_t, size_t>>& root_list,
                                      std::shared_ptr<ActiveSpaceMethod> method2,
@@ -284,25 +284,25 @@ class AdaptiveCI : public ActiveSpaceMethod {
     double spin_trans_;
 
     // The RDMS
-//    std::vector<double> ordm_a_;
-//    std::vector<double> ordm_b_;
-//    std::vector<double> trdm_aa_;
-//    std::vector<double> trdm_ab_;
-//    std::vector<double> trdm_bb_;
-//    std::vector<double> trdm_aaa_;
-//    std::vector<double> trdm_aab_;
-//    std::vector<double> trdm_abb_;
-//    std::vector<double> trdm_bbb_;
+    //    std::vector<double> ordm_a_;
+    //    std::vector<double> ordm_b_;
+    //    std::vector<double> trdm_aa_;
+    //    std::vector<double> trdm_ab_;
+    //    std::vector<double> trdm_bb_;
+    //    std::vector<double> trdm_aaa_;
+    //    std::vector<double> trdm_aab_;
+    //    std::vector<double> trdm_abb_;
+    //    std::vector<double> trdm_bbb_;
 
-    ambit::Tensor  ordm_a_;
-    ambit::Tensor  ordm_b_;
-    ambit::Tensor  trdm_aa_;
-    ambit::Tensor  trdm_ab_;
-    ambit::Tensor  trdm_bb_;
-    ambit::Tensor  trdm_aaa_;
-    ambit::Tensor  trdm_aab_;
-    ambit::Tensor  trdm_abb_;
-    ambit::Tensor  trdm_bbb_;
+    ambit::Tensor ordm_a_;
+    ambit::Tensor ordm_b_;
+    ambit::Tensor trdm_aa_;
+    ambit::Tensor trdm_ab_;
+    ambit::Tensor trdm_bb_;
+    ambit::Tensor trdm_aaa_;
+    ambit::Tensor trdm_aab_;
+    ambit::Tensor trdm_abb_;
+    ambit::Tensor trdm_bbb_;
 
     // ==> Class functions <==
 
@@ -450,7 +450,8 @@ class AdaptiveCI : public ActiveSpaceMethod {
 
     /// Compute the RDMs
     void compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints, DeterminantHashVec& dets,
-                      WFNOperator& op, psi::SharedMatrix& PQ_evecs, int root1, int root2, int max_level);
+                      WFNOperator& op, psi::SharedMatrix& PQ_evecs, int root1, int root2,
+                      int max_level);
 
     /// Save older roots
     void save_old_root(DeterminantHashVec& dets, psi::SharedMatrix& PQ_evecs, int root);
