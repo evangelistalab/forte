@@ -530,23 +530,25 @@ double ASCI::compute_spin_contamination(DeterminantHashVec& space, WFNOperator& 
 }
 
 std::vector<Reference> ASCI::densities(const std::vector<std::pair<size_t, size_t>>& root_list,
-                                     std::shared_ptr<ActiveSpaceMethod> method2,
-                                     int max_rdm_level) {
+                                       std::shared_ptr<ActiveSpaceMethod> method2,
+                                       int max_rdm_level) {
 
     std::vector<Reference> refs;
 
-    for (const auto& root_pair : root_lists) {
+    for (const auto& root_pair : root_list) {
 
-        compute_rdms(as_ints_, final_wfn_, op_, evecs_, root_pair.first, root_pair.second, max_rdm_level);
+        compute_rdms(as_ints_, final_wfn_, op_, evecs_, root_pair.first, root_pair.second,
+                     max_rdm_level);
 
-        if (max_rdm_level == 1){
+        if (max_rdm_level == 1) {
             refs.emplace_back(ordm_a_, ordm_b_);
-        } 
+        }
         if (max_rdm_level_ == 2) {
             refs.emplace_back(ordm_a_, ordm_b_, trdm_aa_, trdm_ab_, trdm_bb_);
         }
         if (max_rdm_level_ == 3) {
-            refs.emplace_back(ordm_a_, ordm_b_, trdm_aa_, trdm_ab_, trdm_bb_, trdm_aaa_, trdm_aab_, trdm_abb_, trdm_bbb_);
+            refs.emplace_back(ordm_a_, ordm_b_, trdm_aa_, trdm_ab_, trdm_bb_, trdm_aaa_, trdm_aab_,
+                              trdm_abb_, trdm_bbb_);
         }
 
         refs.push_back(aci_ref);
@@ -559,16 +561,18 @@ std::vector<Reference> ASCI::reference(const std::vector<std::pair<size_t, size_
     //     final_wfn_.determinants//();
     std::vector<Reference> refs;
     for (auto& root : root_list) {
-        compute_rdms(as_ints_, final_wfn_, op_, evecs_, root_pair.first, root_pair.second, max_rdm_level_);
+        compute_rdms(as_ints_, final_wfn_, op_, evecs_, root_pair.first, root_pair.second,
+                     max_rdm_level_);
 
-        if (max_rdm_level == 1){
+        if (max_rdm_level == 1) {
             refs.emplace_back(ordm_a_, ordm_b_);
-        } 
+        }
         if (max_rdm_level_ == 2) {
             refs.emplace_back(ordm_a_, ordm_b_, trdm_aa_, trdm_ab_, trdm_bb_);
         }
         if (max_rdm_level_ == 3) {
-            refs.emplace_back(ordm_a_, ordm_b_, trdm_aa_, trdm_ab_, trdm_bb_, trdm_aaa_, trdm_aab_, trdm_abb_, trdm_bbb_);
+            refs.emplace_back(ordm_a_, ordm_b_, trdm_aa_, trdm_ab_, trdm_bb_, trdm_aaa_, trdm_aab_,
+                              trdm_abb_, trdm_bbb_);
         }
     }
     return refs;
@@ -664,7 +668,8 @@ void ASCI::print_nos() {
 }
 
 void ASCI::compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints, DeterminantHashVec& dets,
-                        WFNOperator& op, psi::SharedMatrix& PQ_evecs, int root1, int root2, int rdm_level) {
+                        WFNOperator& op, psi::SharedMatrix& PQ_evecs, int root1, int root2,
+                        int rdm_level) {
 
     CI_RDMS ci_rdms_(dets, fci_ints, PQ_evecs, root1, root2);
 

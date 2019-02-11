@@ -338,7 +338,7 @@ double FCISolver::compute_energy() {
 void FCISolver::compute_rdms_root(int root1, int root2, int max_rdm_level) {
     // make sure a compute_energy is called before this
     if (C_) {
-        if (root >= nroot_) {
+        if (root1 >= nroot_) {
             std::string error = "Cannot compute RDMs of root " + std::to_string(root1) +
                                 "(0-based) because nroot = " + std::to_string(nroot_);
             throw psi::PSIEXCEPTION(error);
@@ -506,7 +506,7 @@ std::vector<Reference>
 FCISolver::reference(const std::vector<std::pair<size_t, size_t>>& root_list) {
 
     // TODO: Implement different roots
-    compute_rdms_root(root_);
+    compute_rdms_root(root_, root_, max_rdm_level_);
 
     size_t nact = active_dim_.sum();
     size_t nact2 = nact * nact;
@@ -670,14 +670,14 @@ std::vector<Reference> FCISolver::densities(const std::vector<std::pair<size_t, 
 
         ambit::Tensor g1a, g1b;
         ambit::Tensor g2aa, g2ab, g2bb;
-        ambit::Tensor g3aaa, g3aab, g3abb, g23bbb;
+        ambit::Tensor g3aaa, g3aab, g3abb, g3bbb;
 
         if (max_rdm_level_ >= 1) {
             // One-particle density matrices in the active space
             std::vector<double>& opdm_a = C_->opdm_a();
             std::vector<double>& opdm_b = C_->opdm_b();
-            ambit::Tensor g1a = ambit::Tensor::build(ambit::CoreTensor, "g1a", {nact, nact});
-            ambit::Tensor g1b = ambit::Tensor::build(ambit::CoreTensor, "g1b", {nact, nact});
+            g1a = ambit::Tensor::build(ambit::CoreTensor, "g1a", {nact, nact});
+            g1b = ambit::Tensor::build(ambit::CoreTensor, "g1b", {nact, nact});
             if (na_ >= 1) {
                 g1a.iterate([&](const std::vector<size_t>& i, double& value) {
                     value = opdm_a[i[0] * nact + i[1]];
@@ -692,18 +692,9 @@ std::vector<Reference> FCISolver::densities(const std::vector<std::pair<size_t, 
 
         if (max_rdm_level_ >= 2) {
             // Two-particle density matrices in the active space
-            ambit::Tensor g2aa =
-                ambit::Tensor::build(ambit::CoreTensor, "g2aa", {nact, nact, nact, nact});
-            ambit::Tensor g2ab =
-                ambit::Tensor::build(ambit::CoreTensor, "g2ab", {nact, nact, nact, nact});
-            ambit::Tensor g2bb =
-                ambit::Tensor::build(ambit::CoreTensor, "g2bb", {nact, nact, nact, nact});
-            ambit::Tensor g2aa =
-                ambit::Tensor::build(ambit::CoreTensor, "g2aa", {nact, nact, nact, nact});
-            ambit::Tensor g2ab =
-                ambit::Tensor::build(ambit::CoreTensor, "g2ab", {nact, nact, nact, nact});
-            ambit::Tensor g2bb =
-                ambit::Tensor::build(ambit::CoreTensor, "g2bb", {nact, nact, nact, nact});
+            g2aa = ambit::Tensor::build(ambit::CoreTensor, "g2aa", {nact, nact, nact, nact});
+            g2ab = ambit::Tensor::build(ambit::CoreTensor, "g2ab", {nact, nact, nact, nact});
+            g2bb = ambit::Tensor::build(ambit::CoreTensor, "g2bb", {nact, nact, nact, nact});
 
             if (na_ >= 2) {
                 std::vector<double>& tpdm_aa = C_->tpdm_aa();
@@ -727,14 +718,14 @@ std::vector<Reference> FCISolver::densities(const std::vector<std::pair<size_t, 
 
         if (max_rdm_level_ >= 3) {
             // Three-particle density matrices in the active space
-            ambit::Tensor g3aaa = ambit::Tensor::build(ambit::CoreTensor, "g3aaa",
-                                                       {nact, nact, nact, nact, nact, nact});
-            ambit::Tensor g3aab = ambit::Tensor::build(ambit::CoreTensor, "g3aab",
-                                                       {nact, nact, nact, nact, nact, nact});
-            ambit::Tensor g3abb = ambit::Tensor::build(ambit::CoreTensor, "g3abb",
-                                                       {nact, nact, nact, nact, nact, nact});
-            ambit::Tensor g3bbb = ambit::Tensor::build(ambit::CoreTensor, "g3bbb",
-                                                       {nact, nact, nact, nact, nact, nact});
+            g3aaa = ambit::Tensor::build(ambit::CoreTensor, "g3aaa",
+                                         {nact, nact, nact, nact, nact, nact});
+            g3aab = ambit::Tensor::build(ambit::CoreTensor, "g3aab",
+                                         {nact, nact, nact, nact, nact, nact});
+            g3abb = ambit::Tensor::build(ambit::CoreTensor, "g3abb",
+                                         {nact, nact, nact, nact, nact, nact});
+            g3bbb = ambit::Tensor::build(ambit::CoreTensor, "g3bbb",
+                                         {nact, nact, nact, nact, nact, nact});
             if (na_ >= 3) {
                 std::vector<double>& tpdm_aaa = C_->tpdm_aaa();
                 g3aaa.iterate([&](const std::vector<size_t>& i, double& value) {
