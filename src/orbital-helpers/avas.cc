@@ -80,8 +80,6 @@ void make_avas(psi::SharedWavefunction ref_wfn, psi::Options& options, psi::Shar
             }
 
             Socc->diagonalize(Uocc, sigmaocc, descending);
-	    CPsC->print();
-	    Svir->print();
             // Grab the virtual block and diagonalize it
             for (int a = 0; a < nvir; a++) {
                 for (int b = 0; b < nvir; b++) {
