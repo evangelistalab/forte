@@ -2155,8 +2155,12 @@ std::vector<Reference> FCI_MO::densities(const std::vector<std::pair<size_t, siz
             refs.emplace_back(L1a_, L1b_, L2aa_, L2ab_, L2bb_);
         }
 
-        if (max_rdm_level_ == 3 && (options_->get_str("THREEPDC") != "ZERO")) {
-            refs.emplace_back(L1a_, L1b_, L2aa_, L2ab_, L2bb_, L3aaa_, L3aab_, L3abb_, L3bbb_);
+        if (max_rdm_level_ == 3) {
+            if (options_->get_str("THREEPDC") != "ZERO") {
+                refs.emplace_back(L1a_, L1b_, L2aa_, L2ab_, L2bb_, L3aaa_, L3aab_, L3abb_, L3bbb_);
+            } else {
+                refs.emplace_back(L1a_, L1b_, L2aa_, L2ab_, L2bb_);
+            }
         }
     }
     return refs;
