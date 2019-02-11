@@ -69,7 +69,7 @@ class FCIVector {
     void copy_to(std::shared_ptr<psi::Vector> vec);
 
     /// Return the vector coefficients as a vector of matrices
-    // std::vector<std::shared_ptr<psi::Matrix>> coefficients_blocks() { return C_; }
+    std::vector<std::shared_ptr<psi::Matrix>> coefficients_blocks() { return C_; }
 
     /// Form the diagonal part of the Hamiltonian
     void form_H_diagonal(std::shared_ptr<ActiveSpaceIntegrals> fci_ints);

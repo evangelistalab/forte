@@ -232,6 +232,22 @@ def register_fci_options(forte_options):
     forte_options.add_bool('COMPRESS_FCI', False,
                            'Compress the FCI wave function')
 
+def register_compressor_options(forte_options):
+    forte_options.add_bool("DO_RANK_REDUCTION", True, "Do a rank reduction compression?")
+
+    forte_options.add_bool("DO_STRING_TRIM", True, "Do a string trimming compression?")
+
+    forte_options.add_bool("DO_DET_SCREEN", True, "Do a determinat screen compression?")
+
+    forte_options.add_bool("DO_MPS_TRANSFORM", True, "Do a mps transform compression?")
+
+    forte_options.add_double("TAU_COMPRESSION", 0.0, "The cumulative compression threshold")
+
+    forte_options.add_double("DELTA_TAU_COMPRESSION", 0.000025, "The cumulative compression threshold")
+
+    forte_options.add_int("NUM_COMPRESSIONS", 200, "The number of compressions to be performed for each compression type")
+
+
 def register_aci_options(forte_options):
     forte_options.add_double("ACI_CONVERGENCE", 1e-9, "ACI Convergence threshold")
 

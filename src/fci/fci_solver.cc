@@ -338,10 +338,14 @@ double FCISolver::compute_energy() {
     psi::Process::environment.globals["FCI ENERGY"] = energy_;
 
     if(compress_fci_wfn_){
-      FCICompressor Compressor(C_, as_ints_, energy_);
-      //Compressor.compress_and_analyze();
-    }
+        FCICompressor Compressor(C_, HC, as_ints_,
+        psi::Process::environment.molecule()->nuclear_repulsion_energy({{0, 0, 0}}),
+        energy_);
 
+        std::cout<<"Igethere4"<<std::endl;
+        Compressor.compress_and_analyze();
+    }
+    std::cout<<"Igethere5"<<std::endl;
     return energy_;
 }
 

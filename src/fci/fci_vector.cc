@@ -89,14 +89,11 @@ FCIVector::FCIVector(const FCIVector & other)
     : nirrep_(other.nirrep_), symmetry_(other.symmetry_), ncmo_(other.ncmo_),
       cmopi_(other.cmopi_), cmopi_offset_(other.cmopi_offset_), ndet_(other.ndet_),
       detpi_(other.detpi_), print_(other.print_),
-      lists_(std::make_shared<StringLists>( * (other.lists_))),
-      alfa_graph_(std::make_shared<BinaryGraph>( * (other.alfa_graph_))),
-      beta_graph_(std::make_shared<BinaryGraph>( * (other.beta_graph_)))
-      //C_(other.C_)
+      lists_(std::make_shared<StringLists>( * (other.lists_)))
+      // alfa_graph_(std::make_shared<BinaryGraph>( * (other.alfa_graph_)))
+      // beta_graph_(std::make_shared<BinaryGraph>( * (other.beta_graph_)))
 {
-    for(size_t h = 0; h < other.nirrep_; h++){
-      C_[h] = std::make_shared<psi::Matrix>( * (other.C_[h]));
-    }
+    for(int h = 0; h < other.nirrep_; h++){ C_.push_back(other.C_[h]->clone()); }
 }
 
 FCIVector::~FCIVector() { cleanup(); }

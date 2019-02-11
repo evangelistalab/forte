@@ -255,7 +255,7 @@ def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
                     psi4.core.set_scalar_variable('FULLY RELAXED DIPOLE', dsrg_dipoles[-1][1][-1])
 
         return Erelax
-    else : 
+    else :
 
         average_energy = forte.compute_average_state_energy(state_energies_list,state_weights_map)
         return_en = average_energy
@@ -349,4 +349,4 @@ def run_forte(name, **kwargs):
 
 # Integration with driver routines
 psi4.driver.procedures['energy']['forte'] = run_forte
-
+# psi4.driver.procedures['compressor']['forte'] = compress_forte
