@@ -123,6 +123,14 @@ std::vector<Reference> ElementwiseCI::reference(const std::vector<std::pair<size
     return pci_ref;
 }
 
+std::vector<Reference>
+ElementwiseCI::densities(const std::vector<std::pair<size_t, size_t>>& root_list,
+                         std::shared_ptr<ActiveSpaceMethod> method2, int max_rdm_level) {
+    std::vector<Reference> pci_ref;
+    // TODO: implement
+    return pci_ref;
+}
+
 void ElementwiseCI::startup() {
     // The number of correlated molecular orbitals
     nact_ = mo_space_info_->get_corr_abs_mo("ACTIVE").size();
@@ -741,9 +749,9 @@ double ElementwiseCI::compute_energy() {
     if (converged) {
         outfile->Printf("\n\n  Calculation converged.");
     } else {
-        outfile->Printf("\n\n  Calculation %s", iter_ != maxiter_
-                                                    ? "stoped in appearance of higher new low."
-                                                    : "did not converge!");
+        outfile->Printf("\n\n  Calculation %s",
+                        iter_ != maxiter_ ? "stoped in appearance of higher new low."
+                                          : "did not converge!");
     }
 
     if (do_shift_) {

@@ -67,7 +67,6 @@ bool ProjectorCI::have_omp_ = true;
 bool ProjectorCI::have_omp_ = false;
 #endif
 
-
 void combine_hashes(std::vector<det_hash<>>& thread_det_C_map, det_hash<>& dets_C_hash);
 void combine_hashes(det_hash<>& dets_C_hash_A, det_hash<>& dets_C_hash_B);
 void combine_hashes_into_hash(std::vector<det_hash<>>& thread_det_C_hash, det_hash<>& dets_C_hash);
@@ -120,6 +119,14 @@ std::vector<Reference> ProjectorCI::reference(const std::vector<std::pair<size_t
     //    Reference pci_ref = ci_rdms.reference(ordm_a_, ordm_b_, trdm_aa_, trdm_ab_, trdm_bb_,
     //    trdm_aaa_,
     //                                          trdm_aab_, trdm_abb_, trdm_bbb_);
+    std::vector<Reference> pci_ref;
+    // TODO: implement
+    return pci_ref;
+}
+
+std::vector<Reference>
+ProjectorCI::densities(const std::vector<std::pair<size_t, size_t>>& root_list,
+                       std::shared_ptr<ActiveSpaceMethod> method2, int max_rdm_level) {
     std::vector<Reference> pci_ref;
     // TODO: implement
     return pci_ref;
