@@ -106,6 +106,10 @@ class ActiveSpaceMethod {
     virtual std::vector<Reference>
     reference(const std::vector<std::pair<size_t, size_t>>& roots) = 0;
 
+    /// Returns the reduced density matrices up to a given level (max_rdm_level)
+    virtual std::vector<Reference> densities(const std::vector<std::pair<size_t, size_t>>& roots,
+                                             int max_rdm_level) = 0;
+
     /// Set options from an option object
     /// @param options the options passed in
     virtual void set_options(std::shared_ptr<ForteOptions> options) = 0;
