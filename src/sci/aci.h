@@ -94,6 +94,9 @@ class AdaptiveCI : public ActiveSpaceMethod {
     /// Update the reference file
     std::vector<Reference> reference(const std::vector<std::pair<size_t,size_t>>& root_list) override;
 
+    std::vector<Reference> densities(const std::vector<std::pair<size_t, size_t>>& root_list,
+                                     std::shared_ptr<ActiveSpaceMethod> method2,
+                                     int max_rdm_level) override;
     // Set the options
     void set_options(std::shared_ptr<ForteOptions>) override{};
 
@@ -447,7 +450,7 @@ class AdaptiveCI : public ActiveSpaceMethod {
 
     /// Compute the RDMs
     void compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints, DeterminantHashVec& dets,
-                      WFNOperator& op, psi::SharedMatrix& PQ_evecs, int root1, int root2);
+                      WFNOperator& op, psi::SharedMatrix& PQ_evecs, int root1, int root2, int max_level);
 
     /// Save older roots
     void save_old_root(DeterminantHashVec& dets, psi::SharedMatrix& PQ_evecs, int root);

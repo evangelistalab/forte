@@ -1401,6 +1401,30 @@ void AdaptiveCI::set_max_rdm(int rdm) {
     max_rdm_level_ = rdm;
     set_rdm_ = true;
 }
+std::vector<Reference> AdaptiveCI::densities(const std::vector<std::pair<size_t, size_t>>& root_list,
+                                     std::shared_ptr<ActiveSpaceMethod> method2,
+                                     int max_rdm_level) {
+
+    std::vector<Reference> refs;
+
+    for (const auto& root_pair : root_lists) {
+
+        compute_rdms(as_ints_, final_wfn_, op_, evecs_, root_pair.first, root_pair.second, max_rdm_level_);
+
+        if (max_rdm_level == 1){
+            refs.emplace_back(ordm_a_, ordm_b_);
+        } 
+        if (max_rdm_level_ == 2) {
+            refs.emplace_back(ordm_a_, ordm_b_, trdm_aa_, trdm_ab_, trdm_bb_);
+        }
+        if (max_rdm_level_ == 3) {
+            refs.emplace_back(ordm_a_, ordm_b_, trdm_aa_, trdm_ab_, trdm_bb_, trdm_aaa_, trdm_aab_, trdm_abb_, trdm_bbb_);
+        }
+
+        refs.push_back(aci_ref);
+    }
+    return refs;
+}
 
 std::vector<Reference> AdaptiveCI::reference(const std::vector<std::pair<size_t, size_t>>& roots) {
 
@@ -1408,14 +1432,19 @@ std::vector<Reference> AdaptiveCI::reference(const std::vector<std::pair<size_t,
 
     for (const auto& root_pair : roots) {
 
-        compute_rdms(as_ints_, final_wfn_, op_, evecs_, root_pair.first, root_pair.second);
+        compute_rdms(as_ints_, final_wfn_, op_, evecs_, root_pair.first, root_pair.second, max_rdm_level_);
 
-        Reference aci_ref(ordm_a_, ordm_b_, trdm_aa_, trdm_ab_, trdm_bb_, trdm_aaa_, trdm_aab_,
-                          trdm_abb_, trdm_bbb_);
-
+        if (max_rdm_level == 1){
+            refs.emplace_back(ordm_a_, ordm_b_);
+        } 
+        if (max_rdm_level_ == 2) {
+            refs.emplace_back(ordm_a_, ordm_b_, trdm_aa_, trdm_ab_, trdm_bb_);
+        }
+        if (max_rdm_level_ == 3) {
+            refs.emplace_back(ordm_a_, ordm_b_, trdm_aa_, trdm_ab_, trdm_bb_, trdm_aaa_, trdm_aab_, trdm_abb_, trdm_bbb_);
+        }
         refs.push_back(aci_ref);
     }
-
     return refs;
 }
 
@@ -1985,7 +2014,7 @@ AdaptiveCI::dl_initial_guess(std::vector<Determinant>& old_dets, std::vector<Det
 
 void AdaptiveCI::compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
                               DeterminantHashVec& dets, WFNOperator& op,
-                              psi::SharedMatrix& PQ_evecs, int root1, int root2) {
+                              psi::SharedMatrix& PQ_evecs, int root1, int root2, int max_rdm_level) {
 
     if (!(options_->get_bool("ACI_DIRECT_RDMS"))) {
         op.clear_op_s_lists();
@@ -1996,7 +2025,7 @@ void AdaptiveCI::compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
         op.op_s_lists(dets);
         op.tp_s_lists(dets);
 
-        if (max_rdm_level_ >= 3) {
+        if (max_rdm_level >= 3) {
             outfile->Printf("\n  Computing 3-list...    ");
             local_timer l3;
             op_.three_s_lists(final_wfn_);
@@ -2007,7 +2036,7 @@ void AdaptiveCI::compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
     CI_RDMS ci_rdms_(dets, fci_ints, PQ_evecs, root1, root2);
 
     //    double total_time = 0.0;
-    ci_rdms_.set_max_rdm(max_rdm_level_);
+    ci_rdms_.set_max_rdm(max_rdm_level);
 
     if (options_->get_bool("ACI_DIRECT_RDMS")) {
         // TODO: Implemente order-by-order version of direct algorithm
@@ -2034,7 +2063,7 @@ void AdaptiveCI::compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
         // double dt = dyn.get();
         // outfile->Printf("\n  RDMS (bits) took           %1.6f", dt);
     } else {
-        if (max_rdm_level_ >= 1) {
+        if (max_rdm_level >= 1) {
             local_timer one_r;
             ordm_a_ = ambit::Tensor::build(ambit::CoreTensor, "g1a", {nact_, nact_});
             ordm_b_ = ambit::Tensor::build(ambit::CoreTensor, "g1b", {nact_, nact_});
@@ -2046,7 +2075,7 @@ void AdaptiveCI::compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
                 print_nos();
             }
         }
-        if (max_rdm_level_ >= 2) {
+        if (max_rdm_level >= 2) {
             local_timer two_r;
             trdm_aa_ =
                 ambit::Tensor::build(ambit::CoreTensor, "g2aa", {nact_, nact_, nact_, nact_});
@@ -2058,7 +2087,7 @@ void AdaptiveCI::compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
             ci_rdms_.compute_2rdm(trdm_aa_.data(), trdm_ab_.data(), trdm_bb_.data(), op);
             outfile->Printf("\n  2-RDMS took %2.6f s (determinant)", two_r.get());
         }
-        if (max_rdm_level_ >= 3) {
+        if (max_rdm_level >= 3) {
             local_timer tr;
             trdm_aaa_ = ambit::Tensor::build(ambit::CoreTensor, "g2aaa",
                                              {nact_, nact_, nact_, nact_, nact_, nact_});
