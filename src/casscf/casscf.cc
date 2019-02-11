@@ -1096,4 +1096,13 @@ std::vector<Reference> CASSCF::reference(const std::vector<std::pair<size_t, siz
     return refs;
 }
 
+std::vector<Reference> CASSCF::densities(const std::vector<std::pair<size_t, size_t>>& root_list,
+                                         std::shared_ptr<ActiveSpaceMethod> method2,
+                                         int max_rdm_level) {
+    // TODO (York): this does not seem the correct thing to do.
+    std::vector<Reference> refs;
+    refs.push_back(cas_ref_);
+    return refs;
+}
+
 } // namespace forte
