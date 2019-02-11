@@ -78,7 +78,6 @@ def register_avas_options(forte_options):
         "This option takes priority over "
         "threshold based selection.")
 
-
 def register_cino_options(forte_options):
     forte_options.add_bool("CINO", False, "Do a CINO computation?")
 

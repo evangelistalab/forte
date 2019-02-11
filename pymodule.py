@@ -308,6 +308,10 @@ def run_forte(name, **kwargs):
     # Create the AO subspace projector
     ps = forte.make_aosubspace_projector(ref_wfn, options)
 
+    #Apply the projector to rotate orbitals
+    avas = options.get_bool("AVAS")
+    apply_avas(ref_wfn, options, ps, avas)
+
     state = forte.make_state_info_from_psi_wfn(ref_wfn)
     scf_info = forte.SCFInfo(ref_wfn)
     state_weights_map = forte.make_state_weights_map(forte.forte_options,ref_wfn)
