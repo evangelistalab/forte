@@ -87,6 +87,12 @@ class ActiveSpaceSolver {
     std::vector<Reference> reference(std::map<std::pair<StateInfo, StateInfo>,
                                               std::vector<std::pair<size_t, size_t>>>& elements);
 
+    /// Compute references of all states in the given map
+    /// First entry of the pair corresponds to bra and the second is the ket.
+    std::vector<Reference> densities(
+        std::map<std::pair<StateInfo, StateInfo>, std::vector<std::pair<size_t, size_t>>>& elements,
+        int max_rdm_level);
+
     /// Compute state-averaged reference
     Reference
     compute_average_reference(const std::map<StateInfo, std::vector<double>>& state_weights_map);
