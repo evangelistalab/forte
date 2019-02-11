@@ -120,6 +120,14 @@ ProjectorCI_Simple::reference(const std::vector<std::pair<size_t, size_t>>&) {
     return pci_ref;
 }
 
+std::vector<Reference>
+ProjectorCI_Simple::densities(const std::vector<std::pair<size_t, size_t>>& root_list,
+                              std::shared_ptr<ActiveSpaceMethod> method2, int max_rdm_level) {
+    std::vector<Reference> pci_ref;
+    // TODO: implement
+    return pci_ref;
+}
+
 void ProjectorCI_Simple::startup() {
     // The number of correlated molecular orbitals
     nact_ = mo_space_info_->get_corr_abs_mo("ACTIVE").size();
