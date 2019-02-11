@@ -67,16 +67,19 @@ set forte {
   orbital_type LOCAL
   localize_space [25,28, 29,32]
 }
-
+#set cubeprop_tasks ['orbitals']
+#set cubeprop_orbitals [26,27,28,29,30,31,32,33]
 set_num_threads(8)
 
 e, scf_wfn = energy('scf', return_wfn=True)
 
 compare_values(escf,variable("CURRENT ENERGY"), 9, "SCF energy") 
 
-energy('forte', ref_wfn=scf_wfn)
+ea, awfn = energy('forte', ref_wfn=scf_wfn, return_wfn=True)
 compare_values(efix,variable("UNRELAXED ENERGY"), 9, "ACI-DSRG-MRPT2 fixed energy")
 compare_values(eaci,variable("CURRENT ENERGY"), 9, "ACI-DSRG-MRPT2 relaxed energy") 
+#cubeprop(awfn)
+
 
 
 
