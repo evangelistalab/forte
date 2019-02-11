@@ -135,6 +135,29 @@ std::vector<Reference> ActiveSpaceSolver::reference(
     return refs;
 }
 
+std::vector<Reference> ActiveSpaceSolver::densities(
+    std::map<std::pair<StateInfo, StateInfo>, std::vector<std::pair<size_t, size_t>>>& elements,
+    int max_rdm_level) {
+    std::vector<Reference> refs;
+
+    for (const auto& element : elements) {
+        const auto& state1 = element.first.first;
+        const auto& state2 = element.first.second;
+
+        if (state1 != state2) {
+            throw std::runtime_error("ActiveSpaceSolver::reference called with states of different "
+                                     "symmetry! This function is not yet suported in Forte.");
+        }
+
+        std::vector<Reference> state_refs = state_method_map_[state1]->densities(
+            element.second, state_method_map_[state2], max_rdm_level);
+        for (const auto& state_ref : state_refs) {
+            refs.push_back(state_ref);
+        }
+    }
+    return refs;
+}
+
 void ActiveSpaceSolver::set_max_rdm_level(size_t level) {
     max_rdm_level_ = level;
     set_rdm_ = true;
