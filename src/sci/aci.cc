@@ -1409,7 +1409,7 @@ std::vector<Reference> AdaptiveCI::densities(const std::vector<std::pair<size_t,
 
     for (const auto& root_pair : root_lists) {
 
-        compute_rdms(as_ints_, final_wfn_, op_, evecs_, root_pair.first, root_pair.second, max_rdm_level_);
+        compute_rdms(as_ints_, final_wfn_, op_, evecs_, root_pair.first, root_pair.second, max_rdm_level);
 
         if (max_rdm_level == 1){
             refs.emplace_back(ordm_a_, ordm_b_);
