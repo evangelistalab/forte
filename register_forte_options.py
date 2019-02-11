@@ -11,7 +11,10 @@ def register_forte_options(forte_options):
     register_pci_options(forte_options)
     register_fci_options(forte_options)
     register_aci_options(forte_options)
+    register_asci_options(forte_options)
+    register_fci_mo_options(forte_options)
     register_active_space_solver_options(forte_options)
+    register_dsrg_options(forte_options)
 
 def register_driver_options(forte_options):
     forte_options.add_str('JOB_TYPE', 'NEWDRIVER', [
@@ -49,13 +52,13 @@ def register_avas_options(forte_options):
 
 def register_cino_options(forte_options):
     forte_options.add_bool("CINO", False, "Do a CINO computation?")
-    
+
     forte_options.add_str("CINO_TYPE", "CIS", ["CIS", "CISD"], "The type of wave function.")
-    
+
     forte_options.add_int("CINO_NROOT", 1, "The number of roots computed")
-    
+
     forte_options.add_array("CINO_ROOTS_PER_IRREP",
-                       "The number of excited states per irreducible representation")    
+                       "The number of excited states per irreducible representation")
     forte_options.add_double("CINO_THRESHOLD", 0.99,
                         "The fraction of NOs to include in the active space")
     forte_options.add_bool("CINO_AUTO", False,
@@ -63,11 +66,11 @@ def register_cino_options(forte_options):
 
 def register_mrcino_options(forte_options):
     forte_options.add_bool("MRCINO", False, "Do a MRCINO computation?")
-    
+
     forte_options.add_str("MRCINO_TYPE", "CIS", ["CIS", "CISD"], "The type of wave function.")
-    
+
     forte_options.add_int("MRCINO_NROOT", 1, "The number of roots computed")
-    
+
     forte_options.add_array("MRCINO_ROOTS_PER_IRREP",
                        "The number of excited states per irreducible representation")
     forte_options.add_double("MRCINO_THRESHOLD", 0.99,
@@ -233,7 +236,7 @@ def register_fci_options(forte_options):
 def register_aci_options(forte_options):
     forte_options.add_double("ACI_CONVERGENCE", 1e-9, "ACI Convergence threshold")
 
-    forte_options.add_str("ACI_SELECT_TYPE", "AIMED_ENERGY", ['AIMED_AMP', 'AIMED_ENERGY', 'ENERGY', 'AMP'], 
+    forte_options.add_str("ACI_SELECT_TYPE", "AIMED_ENERGY", ['AIMED_AMP', 'AIMED_ENERGY', 'ENERGY', 'AMP'],
                           "The selection type for the Q-space")
 
     forte_options.add_double("SIGMA", 0.01, "The energy selection threshold for the P space")
@@ -286,18 +289,18 @@ def register_aci_options(forte_options):
     forte_options.add_int("DL_GUESS_SIZE", 100, "Set the initial guess space size for DL solver")
 
     forte_options.add_int("N_GUESS_VEC", 10, "Number of guess vectors for Sparse CI solver")
-    
+
     forte_options.add_double("ACI_NO_THRESHOLD", 0.02, "Threshold for active space prediction")
-    
+
     forte_options.add_double("ACI_SPIN_TOL", 0.02, "Tolerance for S^2 value")
 
     # /*- Approximate 1RDM? -*/
     forte_options.add_bool("ACI_APPROXIMATE_RDM", False, "Approximate the RDMs?")
-    
+
     forte_options.add_bool("ACI_TEST_RDMS", False, "Run test for the RDMs?")
-    
+
     forte_options.add_bool("ACI_FIRST_ITER_ROOTS", False, "Compute all roots on first iteration?")
-    
+
     forte_options.add_bool("ACI_PRINT_WEIGHTS", False, "Print weights for active space prediction?")
 
     forte_options.add_bool("ACI_PRINT_NO", True, "Print the natural orbitals?")
@@ -326,7 +329,7 @@ def register_aci_options(forte_options):
     forte_options.add_int("ACI_ROOTS_PER_CORE", 1, "Number of roots to compute per frozen orbital")
 
     forte_options.add_bool("ACI_SPIN_ANALYSIS", False, "Do spin correlation analysis?")
-    
+
     forte_options.add_bool("ACI_RELAXED_SPIN", False,
                       "Do spin correlation analysis for relaxed wave function?")
 
@@ -361,6 +364,30 @@ def register_aci_options(forte_options):
 
     forte_options.add_str("ACI_BATCH_ALG", "HASH",['HASH','VECSORT'], "Algorithm to use for batching")
 
+def register_asci_options(forte_options):
+    forte_options.add_double("ASCI_E_CONVERGENCE", 1e-5, "ASCI energy convergence threshold")
+
+    forte_options.add_int("ASCI_MAX_CYCLE", 20, "ASCI MAX Cycle")
+
+    forte_options.add_int("ASCI_TDET", 2000, "ASCI Max det")
+
+    forte_options.add_int("ASCI_CDET", 200, "ASCI Max reference det")
+
+    forte_options.add_double("ASCI_PRESCREEN_THRESHOLD", 1e-12, "ASCI prescreening threshold")
+
+def register_fci_mo_options(forte_options):
+    forte_options.add_str("FCIMO_ACTV_TYPE", "COMPLETE", ["COMPLETE", "CIS", "CISD", "DOCI"],
+                     "The active space type")
+
+    forte_options.add_bool("FCIMO_CISD_NOHF", True,
+                      "Ground state: HF; Excited states: no HF determinant in CISD space")
+
+    forte_options.add_str("FCIMO_IPEA", "NONE", ["NONE", "IP", "EA"], "Generate IP/EA CIS/CISD space")
+
+    forte_options.add_double("FCIMO_PRINT_CIVEC", 0.05, "The printing threshold for CI vectors")
+
+    # forte_options.add_bool("FCIMO_IAO_ANALYSIS", False, "Intrinsic atomic orbital analysis")
+
 def register_integral_options(forte_options):
     forte_options.add_str(
         "INT_TYPE", "CONVENTIONAL",
@@ -377,3 +404,171 @@ def register_integral_options(forte_options):
 
     forte_options.add_bool("PRINT_INTS", False,
                            "Print the one- and two-electron integrals?")
+
+def register_dsrg_options(forte_options):
+
+    forte_options.add_str("CORR_LEVEL", "PT2",
+                     ["PT2", "PT3", "LDSRG2", "LDSRG2_QC", "LSRG2", "SRG_PT2", "QDSRG2",
+                      "LDSRG2_P3", "QDSRG2_P3"],
+                     "Correlation level of MR-DSRG (used in mrdsrg code, "
+                     "LDSRG2_P3 and QDSRG2_P3 not implemented)")
+
+    forte_options.add_str("SOURCE", "STANDARD",
+                     ["STANDARD", "LABS", "DYSON", "AMP", "EMP2", "LAMP", "LEMP2"],
+                     "Source operator used in DSRG (AMP, EMP2, LAMP, LEMP2 "
+                     "only available in toy code mcsrgpt2)")
+
+    forte_options.add_str("T_ALGORITHM", "DSRG", ["DSRG", "DSRG_NOSEMI", "SELEC", "ISA"],
+                     "The way of forming T amplitudes (DSRG_NOSEMI, SELEC, ISA "
+                     "only available in toy code mcsrgpt2)")
+
+    forte_options.add_str("H0TH", "FDIAG", ["FDIAG", "FFULL", "FDIAG_VACTV", "FDIAG_VDIAG"],
+                     "Different Zeroth-order Hamiltonian of DSRG-MRPT (used in mrdsrg code)")
+
+    forte_options.add_bool("DSRG_DIPOLE", False, "Compute (if true) DSRG dipole moments")
+
+    forte_options.add_int("DSRG_MAXITER", 50, "Max iterations for nonperturbative MR-DSRG amplitudes update")
+
+    forte_options.add_double("R_CONVERGENCE", 1.0e-6, "Residue convergence criteria for amplitudes")
+
+    forte_options.add_str("RELAX_REF", "NONE", ["NONE", "ONCE", "TWICE", "ITERATE"],
+                     "Relax the reference for MR-DSRG (used in dsrg-mrpt2/3, mrdsrg)")
+
+    forte_options.add_int("MAXITER_RELAX_REF", 15, "Max macro iterations for DSRG reference relaxation")
+
+    forte_options.add_int("TAYLOR_THRESHOLD", 3, "DSRG Taylor expansion threshold for small denominator")
+
+    forte_options.add_int("NTAMP", 15, "Number of largest amplitudes printed in the summary")
+
+    forte_options.add_double("INTRUDER_TAMP", 0.10,
+                        "T threshold for amplitudes considered as intruders for warning")
+
+    forte_options.add_str("DSRG_TRANS_TYPE", "UNITARY", ["UNITARY", "CC"], "DSRG transformation type")
+
+    forte_options.add_str("SMART_DSRG_S", "DSRG_S",
+                     ["DSRG_S", "MIN_DELTA1", "MAX_DELTA1", "DAVG_MIN_DELTA1", "DAVG_MAX_DELTA1"],
+                     "Automatically adjust the flow parameter according to denominators")
+
+    forte_options.add_bool("PRINT_TIME_PROFILE", False, "Print detailed timings in dsrg-mrpt3")
+
+    forte_options.add_str("DSRG_MULTI_STATE", "SA_FULL", ["SA_FULL", "SA_SUB", "MS", "XMS"],
+                     """Multi-state DSRG options (MS and XMS recouple states after single-state computations)
+                     - Multi-State DSRG options
+                        - State-average approach
+                          - SA_SUB:  form H_MN = <M|Hbar|N>; M, N are CAS states of interest
+                          - SA_FULL: redo a CASCI
+                        - Multi-state approach (currently only for MRPT2)
+                          - MS:  form 2nd-order Heff_MN = <M|H|N> + 0.5 * [<M|(T_M)^+ H|N> + <M|H T_N|N>]
+                          - XMS: rotate references such that <M|F|N> is diagonal before MS procedure  """
+                     )
+
+    forte_options.add_bool("FORM_HBAR3", False,
+                      "Form 3-body Hbar (only used in dsrg-mrpt2 with SA_SUB for testing)")
+
+    forte_options.add_bool("FORM_MBAR3", False,
+                      "Form 3-body mbar (only used in dsrg-mrpt2 for testing)")
+
+    forte_options.add_bool("DSRGPT", True,
+                      "Renormalize (if true) the integrals for purturbitive calculation (only used in toy code mcsrgpt2)")
+
+    forte_options.add_str("INTERNAL_AMP", "NONE", ["NONE", "SINGLES_DOUBLES", "SINGLES", "DOUBLES"],
+                     "Include internal amplitudes for VCIS/VCISD-DSRG acording to excitation level")
+
+
+    forte_options.add_str("INTERNAL_AMP_SELECT", "AUTO", ["AUTO", "ALL", "OOVV"],
+                     """Excitation types considered when internal amplitudes are included
+                     - Select only part of the asked internal amplitudes (IAs) in
+                       V-CIS/CISD
+                        - AUTO: all IAs that changes excitations (O->V; OO->VV, OO->OV,
+                       OV->VV)
+                        - ALL:  all IAs (O->O, V->V, O->V; OO->OO, OV->OV, VV->VV, OO->VV,
+                       OO->OV, OV->VV)
+                        - OOVV: pure external (O->V; OO->VV) -*/
+                     """)
+
+    forte_options.add_str("T1_AMP", "DSRG", ["DSRG", "SRG", "ZERO"],
+                     "The way of forming T1 amplitudes (used in toy code mcsrgpt2)")
+
+    forte_options.add_double("ISA_B", 0.02,
+                        "Intruder state avoidance parameter "
+                        "when use ISA to form amplitudes (only "
+                        "used in toy code mcsrgpt2)")
+
+    forte_options.add_str("CCVV_SOURCE", "NORMAL", ["ZERO", "NORMAL"],
+                     "Definition of source oporator: special treatment for the CCVV term in DSRG-MRPT2 (used "
+                     "in three-dsrg-mrpt2 code)")
+
+    forte_options.add_str("CCVV_ALGORITHM", "FLY_AMBIT",
+                     ["CORE", "FLY_AMBIT", "FLY_LOOP", "BATCH_CORE", "BATCH_VIRTUAL",
+                      "BATCH_CORE_GA", "BATCH_VIRTUAL_GA", "BATCH_VIRTUAL_MPI", "BATCH_CORE_MPI",
+                      "BATCH_CORE_REP", "BATCH_VIRTUAL_REP"],
+                     "Algorithm to compute the CCVV term in DSRG-MRPT2 (only "
+                     "used in three-dsrg-mrpt2 code)")
+
+    forte_options.add_bool("AO_DSRG_MRPT2", False, "Do AO-DSRG-MRPT2 if true (not available)")
+
+    forte_options.add_int("CCVV_BATCH_NUMBER", -1, "Batches for CCVV_ALGORITHM")
+
+    forte_options.add_bool("DSRG_MRPT2_DEBUG", False, "Excssive printing for three-dsrg-mrpt2")
+
+    forte_options.add_str("THREEPDC_ALGORITHM", "CORE", ["CORE", "BATCH"],
+                     "Algorithm for evaluating 3-body cumulants in three-dsrg-mrpt2")
+
+    forte_options.add_bool("THREE_MRPT2_TIMINGS", False,
+                      "Detailed printing (if true) in three-dsrg-mrpt2")
+
+    forte_options.add_bool("PRINT_DENOM2", False,
+                      "Print (if true) (1 - exp(-2*s*D)) / D, renormalized denominators in DSRG-MRPT2")
+
+    forte_options.add_bool("DSRG_HBAR_SEQ", False, "Evaluate H_bar sequentially if true")
+
+    forte_options.add_bool("DSRG_NIVO", False,
+                      "NIVO approximation: Omit tensor blocks with >= 3 virtual indices if true")
+
+    forte_options.add_bool("PRINT_1BODY_EVALS", False, "Print eigenvalues of 1-body effective H")
+
+def register_dwms_options(forte_options):
+    forte_options.add_double("DWMS_ZETA", 0.0, """Automatic Gaussian width cutoff for the density weights
+          Weights of state α:
+             Wi = exp(-ζ * (Eα - Ei)^2) / sum_j exp(-ζ * (Eα - Ej)^2)
+          Energies (Eα, Ei, Ej) can be CASCI or SA-DSRG-PT2/3 energies.
+        """)
+
+    forte_options.add_str("DWMS_CORRLV", "PT2", ["PT2", "PT3"], "DWMS-DSRG-PT level")
+
+
+    forte_options.add_str("DWMS_REFERENCE", "CASCI", ["CASCI", "PT2", "PT3", "PT2D"],
+                     """Energies to compute dynamic weights and CI vectors to do multi-state
+                     - Using what energies to compute the weight and what CI vectors to do multi state
+                      CAS: CASCI energies and CI vectors
+                      PT2: SA-DSRG-PT2 energies and SA-DSRG-PT2/CASCI vectors
+                      PT3: SA-DSRG-PT3 energies and SA-DSRG-PT3/CASCI vectors
+                      PT2D: Diagonal SA-DSRG-PT2c effective Hamiltonian elements and original CASCI vectors -*/
+                     """)
+
+    forte_options.add_str("DWMS_ALGORITHM", "SA", ["MS", "XMS", "SA", "XSA", "SH-0", "SH-1"],
+                     """DWMS algorithms
+                        - SA: state average Hαβ = 0.5 * ( <α|Hbar(β)|β> + <β|Hbar(α)|α> )
+                        - XSA: extended state average (rotate Fαβ to a diagonal form)
+                        - MS: multi-state (single-state single-reference)
+                        - XMS: extended multi-state (single-state single-reference)
+
+                       To Be Deprecated:
+                        - SH-0: separated diagonalizations, non-orthogonal final solutions
+                        - SH-1: separated diagonalizations, orthogonal final solutions -*/
+                     """)
+
+    forte_options.add_bool("DWMS_DELTA_AMP", False,
+                      "Consider (if true) amplitudes difference between states X(αβ) = A(β) - A(α) in SA "
+                      "algorithm, testing in non-DF DSRG-MRPT2")
+
+    forte_options.add_bool("DWMS_ITERATE", False,
+                      "Iterative update the reference CI coefficients in SA "
+                      "algorithm, testing in non-DF DSRG-MRPT2")
+
+    forte_options.add_int("DWMS_MAXITER", 10,
+                     "Max number of iteration in the update of the reference CI coefficients in SA "
+                     "algorithm, testing in non-DF DSRG-MRPT2")
+
+    forte_options.add_double("DWMS_E_CONVERGENCE", 1.0e-7,
+                        "Energy convergence criteria for DWMS iteration")
