@@ -1434,7 +1434,7 @@ std::vector<Reference> AdaptiveCI::reference(const std::vector<std::pair<size_t,
         compute_rdms(as_ints_, final_wfn_, op_, evecs_, root_pair.first, root_pair.second,
                      max_rdm_level_);
 
-        if (max_rdm_level == 1) {
+        if (max_rdm_level_ == 1) {
             refs.emplace_back(ordm_a_, ordm_b_);
         }
         if (max_rdm_level_ == 2) {
@@ -1444,7 +1444,6 @@ std::vector<Reference> AdaptiveCI::reference(const std::vector<std::pair<size_t,
             refs.emplace_back(ordm_a_, ordm_b_, trdm_aa_, trdm_ab_, trdm_bb_, trdm_aaa_, trdm_aab_,
                               trdm_abb_, trdm_bbb_);
         }
-        refs.push_back(aci_ref);
     }
     return refs;
 }
