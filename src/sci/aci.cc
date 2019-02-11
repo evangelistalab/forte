@@ -590,7 +590,7 @@ void AdaptiveCI::diagonalize_final_and_compute_rdms() {
         op_.three_s_lists(final_wfn_);
     }
 
-    compute_rdms(as_ints_, final_wfn_, op_, final_evecs, 0, 0);
+//    compute_rdms(as_ints_, final_wfn_, op_, final_evecs, 0, 0);
 }
 
 DeterminantHashVec AdaptiveCI::get_wavefunction() { return final_wfn_; }
