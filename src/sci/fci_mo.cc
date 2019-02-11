@@ -2160,6 +2160,29 @@ std::vector<Reference> FCI_MO::reference(const std::vector<std::pair<size_t, siz
     return refs;
 }
 
+std::vector<Reference> FCI_MO::densities(const std::vector<std::pair<size_t, size_t>>& root_list,
+                                         std::shared_ptr<ActiveSpaceMethod> method2,
+                                         int max_rdm_level) {
+    // TODO : add code to handle transition density matrices (Francesco)
+    std::vector<Reference> refs;
+    for (auto& roots : root_list) {
+        compute_ref(max_rdm_level, roots.first, roots.second);
+
+        if (max_rdm_level_ == 1) {
+            refs.emplace_back(L1a_, L1b_);
+        }
+
+        if (max_rdm_level_ == 2) {
+            refs.emplace_back(L1a_, L1b_, L2aa_, L2ab_, L2bb_);
+        }
+
+        if (max_rdm_level_ == 3 && (options_->get_str("THREEPDC") != "ZERO")) {
+            refs.emplace_back(L1a_, L1b_, L2aa_, L2ab_, L2bb_, L3aaa_, L3aab_, L3abb_, L3bbb_);
+        }
+    }
+    return refs;
+}
+
 void FCI_MO::compute_ref(const int& level, size_t root1, size_t root2) {
     timer_on("Compute Ref");
     if (!quiet_) {
