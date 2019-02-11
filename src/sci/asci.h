@@ -86,6 +86,10 @@ class ASCI : public ActiveSpaceMethod {
     /// Update the reference file
     std::vector<Reference> reference(const std::vector<std::pair<size_t,size_t>>& root_list) override;
 
+    std::vector<Reference> densities(const std::vector<std::pair<size_t, size_t>>& root_list,
+                                     std::shared_ptr<ActiveSpaceMethod> method2,
+                                     int max_rdm_level) override;
+
     void set_options(std::shared_ptr<ForteOptions>) override{}; // TODO : define
 
     /// Get the wavefunction
