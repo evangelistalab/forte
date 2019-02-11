@@ -75,7 +75,7 @@ class FCISolver : public ActiveSpaceMethod {
     void set_options(std::shared_ptr<ForteOptions> options) override;
 
     /// Compute RDMs on a given root
-    void compute_rdms_root(int root1, int root2);
+    void compute_rdms_root(int root1, int root2, int max_rdm_level);
 
     /// Set the number of trial vectors per root
     void set_ntrial_per_root(int value);
