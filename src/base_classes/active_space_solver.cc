@@ -368,7 +368,8 @@ Reference ActiveSpaceSolver::compute_average_reference(
             // Get the Reference
             std::vector<std::pair<size_t, size_t>> state_ids;
             state_ids.push_back(std::make_pair(r, r));
-            Reference method_ref = method->reference(state_ids)[0];
+            //Reference method_ref = method->reference(state_ids)[0];
+            Reference method_ref = method->densities(state_ids, method, max_rdm_level_)[0];
 
             // Now the RDMs
             // 1 RDM

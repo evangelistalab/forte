@@ -100,8 +100,6 @@ class AdaptiveCI : public ActiveSpaceMethod {
     // Set the options
     void set_options(std::shared_ptr<ForteOptions>) override{};
 
-    /// Set the RDM
-    void set_max_rdm(int rdm);
     /// Set the printing level
     void set_quiet(bool quiet) { quiet_mode_ = quiet; }
     /// Get the wavefunction
