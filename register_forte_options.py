@@ -15,6 +15,7 @@ def register_forte_options(forte_options):
     register_fci_mo_options(forte_options)
     register_active_space_solver_options(forte_options)
     register_dsrg_options(forte_options)
+    register_dwms_options(forte_options)
 
 def register_driver_options(forte_options):
     forte_options.add_str('JOB_TYPE', 'NEWDRIVER', [

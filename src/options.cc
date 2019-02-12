@@ -45,10 +45,6 @@ namespace forte {
 void forte_options(ForteOptions& foptions) {
 
     // Method-specific options
-    // set_ASCI_options(foptions);
-    // set_FCI_MO_options(foptions);
-    // set_DSRG_options(foptions);
-    // set_DWMS_options(foptions);
 
     // General options
     foptions.add_str("MINAO_BASIS", "STO-3G", "The basis used to define an orbital subspace");
