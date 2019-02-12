@@ -63,8 +63,6 @@ class MRCINO : public OrbitalTransform {
     std::shared_ptr<SCFInfo> scf_info_;
     /// Options
     std::shared_ptr<ForteOptions> options_;
-    /// The molecular integrals
-    std::shared_ptr<ForteIntegrals> ints_;
     /// The MOSpaceInfo object
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
     /// Pointer to FCI integrals

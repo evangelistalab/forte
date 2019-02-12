@@ -432,8 +432,8 @@ void ForteIntegrals::update_orbitals(std::shared_ptr<psi::Matrix> Ca,
                                      std::shared_ptr<psi::Matrix> Cb) {
 
     // 1. Copy orbitals and, if necessary, test they meet the spin restriction condition
-    Ca_->copy(Ca->clone());
-    Cb_->copy(Cb->clone());
+    Ca_->copy(Ca);
+    Cb_->copy(Cb);
 
     if (spin_restriction_ == IntegralSpinRestriction::Restricted) {
         if (not test_orbital_spin_restriction(Ca, Cb)) {
@@ -526,6 +526,10 @@ void ForteIntegrals::rotate_mos() {
     // std::shared_ptr<psi::Matrix> Cb_old = wfn_->Cb();
     std::shared_ptr<psi::Matrix> Cb_old = Cb_;
     Cb_old->copy(C_new);
+
+    // Send a copy to psi::Wavefunction
+    wfn_->Ca()->copy(Ca_);
+    wfn_->Cb()->copy(Cb_);
 }
 
 void ForteIntegrals::print_info() {

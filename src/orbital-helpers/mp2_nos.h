@@ -56,7 +56,6 @@ class MP2_NOS : public OrbitalTransform {
   private:
     std::shared_ptr<SCFInfo> scf_info_;
     std::shared_ptr<ForteOptions> options_;
-    std::shared_ptr<ForteIntegrals> ints_;
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
 
     psi::SharedMatrix Ua_;

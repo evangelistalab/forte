@@ -29,7 +29,6 @@ set {
   e_convergence     10
   d_convergence     8
   maxiter           100
-  cubeprop_orbitals [14,15,16,17]
 }
 Escf, wfn = energy('scf', return_wfn=True)
 compare_values(r_scf, Escf, 8, "SCF energy")
@@ -40,13 +39,19 @@ set forte{
   orbital_type        local
   localize_space      [14,17]
   e_convergence       12
-  dsrg_s              0.5
   frozen_docc         [4]
   restricted_docc     [9]
   active              [4]
   sigma               0.0001
   ms                  0.0
+  multiplicity        1
+  nroot               1
+  root_sym            0
+  charge              0
 }
-E, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
-compare_values(r_0ag, E, 8, "ACI ENERGY")
+#set cubeprop_tasks ['orbitals']
+#set cubeprop_orbitals [14,15,16,17]
 
+E,awfn = energy('forte', ref_wfn=wfn, return_wfn=True)
+compare_values(r_0ag, E, 8, "ACI ENERGY")
+#cubeprop(awfn)

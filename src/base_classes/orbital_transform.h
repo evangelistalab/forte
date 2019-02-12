@@ -14,7 +14,7 @@ class OrbitalTransform {
     /**
 
     **/
-    OrbitalTransform(std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
+    OrbitalTransform(std::shared_ptr<ForteIntegrals> ints,
                      std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Default constructor
@@ -29,10 +29,13 @@ class OrbitalTransform {
 
     virtual psi::SharedMatrix get_Ub() = 0;
 
+    // The integrals
+    std::shared_ptr<ForteIntegrals> ints_;
   private:
     psi::SharedMatrix Ua_;
 
     psi::SharedMatrix Ub_;
+
 };
 
 std::unique_ptr<OrbitalTransform>

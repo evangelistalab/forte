@@ -42,7 +42,7 @@ namespace forte {
 
 LOCALIZE::LOCALIZE(std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
                    std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : OrbitalTransform(options, ints, mo_space_info), options_(options), ints_(ints), mo_space_info_(mo_space_info) {
+    : OrbitalTransform(ints, mo_space_info), mo_space_info_(mo_space_info) {
 
     if (ints_->nirrep() > 1) {
         throw psi::PSIEXCEPTION("\n\n ERROR: Localizer only implemented for C1 symmetry!");

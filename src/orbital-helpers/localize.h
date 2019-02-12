@@ -64,8 +64,6 @@ class LOCALIZE : public OrbitalTransform {
     void set_orbital_space(std::vector<std::string>& labels);
 
   private:
-    std::shared_ptr<ForteOptions> options_;
-    std::shared_ptr<ForteIntegrals> ints_;
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
 
     psi::SharedMatrix Ua_;
