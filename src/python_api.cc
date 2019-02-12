@@ -95,6 +95,7 @@ void export_ActiveSpaceSolver(py::module& m) {
     py::class_<ActiveSpaceSolver>(m, "ActiveSpaceSolver")
         .def("compute_energy", &ActiveSpaceSolver::compute_energy)
         .def("reference", &ActiveSpaceSolver::reference)
+        .def("densities", &ActiveSpaceSolver::densities)
         .def("compute_average_reference", &ActiveSpaceSolver::compute_average_reference)
         .def("set_max_rdm_level", &ActiveSpaceSolver::set_max_rdm_level)
         .def("compute_contracted_energy", &ActiveSpaceSolver::compute_contracted_energy,

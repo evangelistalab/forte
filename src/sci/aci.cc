@@ -1396,10 +1396,6 @@ std::vector<double> AdaptiveCI::davidson_correction(std::vector<Determinant>& P_
     return dc;
 }
 
-void AdaptiveCI::set_max_rdm(int rdm) {
-    max_rdm_level_ = rdm;
-    set_rdm_ = true;
-}
 std::vector<Reference>
 AdaptiveCI::densities(const std::vector<std::pair<size_t, size_t>>& root_list,
                       std::shared_ptr<ActiveSpaceMethod> method2, int max_rdm_level) {
