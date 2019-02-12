@@ -94,13 +94,12 @@ void export_ActiveSpaceMethod(py::module& m) {
 void export_ActiveSpaceSolver(py::module& m) {
     py::class_<ActiveSpaceSolver>(m, "ActiveSpaceSolver")
         .def("compute_energy", &ActiveSpaceSolver::compute_energy)
-        .def("reference", &ActiveSpaceSolver::reference)
-        .def("densities", &ActiveSpaceSolver::densities)
-        .def("compute_average_reference", &ActiveSpaceSolver::compute_average_reference)
+        .def("rdms", &ActiveSpaceSolver::rdms)
+        .def("compute_average_rdms", &ActiveSpaceSolver::compute_average_rdms)
         .def("set_max_rdm_level", &ActiveSpaceSolver::set_max_rdm_level)
         .def("compute_contracted_energy", &ActiveSpaceSolver::compute_contracted_energy,
              "as_ints"_a, "Solve the contracted CI eigenvalue problem using given integrals")
-        .def("compute_average_reference", &ActiveSpaceSolver::compute_average_reference,
+        .def("compute_average_rdms", &ActiveSpaceSolver::compute_average_rdms,
              "Compute the weighted average reference");
 
     m.def("compute_average_state_energy", &compute_average_state_energy,
@@ -194,13 +193,13 @@ PYBIND11_MODULE(forte, m) {
         .def("semicanonicalize", &SemiCanonical::semicanonicalize, "reference"_a,
              "max_rdm_level"_a = 3, "build_fock"_a = true, "transform"_a = true,
              "Semicanonicalize the orbitals and transform the integrals and reference")
-        .def("transform_reference", &SemiCanonical::transform_reference, "Ua"_a, "Ub"_a,
-             "reference"_a, "max_rdm_level"_a, "Transform the reference by input rotation matrices")
+        .def("transform_reference", &SemiCanonical::transform_rdms, "Ua"_a, "Ub"_a, "reference"_a,
+             "max_rdm_level"_a, "Transform the RDMs by input rotation matrices")
         .def("Ua_t", &SemiCanonical::Ua_t, "Return the alpha rotation matrix in the active space")
         .def("Ub_t", &SemiCanonical::Ub_t, "Return the beta rotation matrix in the active space");
 
-    // export Reference
-    py::class_<Reference>(m, "Reference");
+    // export RDMs
+    py::class_<RDMs>(m, "RDMs");
 
     // export ambit::Tensor
     py::class_<ambit::Tensor>(m, "ambitTensor");
@@ -219,7 +218,7 @@ PYBIND11_MODULE(forte, m) {
 
     // export DressedQuantity for dipole moments
     py::class_<DressedQuantity>(m, "DressedQuantity")
-        .def("contract_with_densities", &DressedQuantity::contract_with_densities, "reference"_a,
+        .def("contract_with_rdms", &DressedQuantity::contract_with_rdms, "reference"_a,
              "Contract densities with quantity");
 }
 

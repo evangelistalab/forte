@@ -44,7 +44,7 @@
 #include "helpers/timer.h"
 #include "orbitaloptimizer.h"
 
-#include "base_classes/reference.h"
+#include "base_classes/rdms.h"
 #include "base_classes/scf_info.h"
 
 using namespace psi;

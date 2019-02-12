@@ -27,27 +27,27 @@
  */
 
 #include "helpers/timer.h"
-#include "base_classes/reference.h"
+#include "base_classes/rdms.h"
 #include "integrals/integrals.h"
 #include "base_classes/mo_space_info.h"
 
 namespace forte {
 
-Reference::Reference() : max_rdm_(0) {}
+RDMs::RDMs() : max_rdm_(0) {}
 
-Reference::Reference(ambit::Tensor g1a, ambit::Tensor g1b) : max_rdm_(1), g1a_(g1a), g1b_(g1b) {}
+RDMs::RDMs(ambit::Tensor g1a, ambit::Tensor g1b) : max_rdm_(1), g1a_(g1a), g1b_(g1b) {}
 
-Reference::Reference(ambit::Tensor g1a, ambit::Tensor g1b, ambit::Tensor g2aa, ambit::Tensor g2ab,
+RDMs::RDMs(ambit::Tensor g1a, ambit::Tensor g1b, ambit::Tensor g2aa, ambit::Tensor g2ab,
                      ambit::Tensor g2bb)
     : max_rdm_(2), g1a_(g1a), g1b_(g1b), g2aa_(g2aa), g2ab_(g2ab), g2bb_(g2bb) {}
 
-Reference::Reference(ambit::Tensor g1a, ambit::Tensor g1b, ambit::Tensor g2aa, ambit::Tensor g2ab,
+RDMs::RDMs(ambit::Tensor g1a, ambit::Tensor g1b, ambit::Tensor g2aa, ambit::Tensor g2ab,
                      ambit::Tensor g2bb, ambit::Tensor g3aaa, ambit::Tensor g3aab,
                      ambit::Tensor g3abb, ambit::Tensor g3bbb)
     : max_rdm_(3), g1a_(g1a), g1b_(g1b), g2aa_(g2aa), g2ab_(g2ab), g2bb_(g2bb), g3aaa_(g3aaa),
       g3aab_(g3aab), g3abb_(g3abb), g3bbb_(g3bbb) {}
 
-ambit::Tensor Reference::L2aa() {
+ambit::Tensor RDMs::L2aa() {
     if (not have_L2aa_) {
         L2aa_ = g2aa_.clone();
         make_cumulant_L2aa_in_place(g1a_, L2aa_);
@@ -56,7 +56,7 @@ ambit::Tensor Reference::L2aa() {
     return L2aa_;
 }
 
-ambit::Tensor Reference::L2ab() {
+ambit::Tensor RDMs::L2ab() {
     if (not have_L2ab_) {
         L2ab_ = g2ab_.clone();
         make_cumulant_L2ab_in_place(g1a_, g1b_, L2ab_);
@@ -65,7 +65,7 @@ ambit::Tensor Reference::L2ab() {
     return L2ab_;
 }
 
-ambit::Tensor Reference::L2bb() {
+ambit::Tensor RDMs::L2bb() {
     if (not have_L2bb_) {
         L2bb_ = g2bb_.clone();
         make_cumulant_L2bb_in_place(g1b_, L2bb_);
@@ -74,7 +74,7 @@ ambit::Tensor Reference::L2bb() {
     return L2bb_;
 }
 
-ambit::Tensor Reference::L3aaa() {
+ambit::Tensor RDMs::L3aaa() {
     if (not have_L3aaa_) {
         L3aaa_ = g3aaa_.clone();
         make_cumulant_L3aaa_in_place(g1a_, L2aa_, L3aaa_);
@@ -83,7 +83,7 @@ ambit::Tensor Reference::L3aaa() {
     return L3aaa_;
 }
 
-ambit::Tensor Reference::L3aab() {
+ambit::Tensor RDMs::L3aab() {
     if (not have_L3aab_) {
         L3aab_ = g3aab_.clone();
         make_cumulant_L3aab_in_place(g1a_, g1b_, L2aa_, L2ab_, L3aab_);
@@ -92,7 +92,7 @@ ambit::Tensor Reference::L3aab() {
     return L3aab_;
 }
 
-ambit::Tensor Reference::L3abb() {
+ambit::Tensor RDMs::L3abb() {
     if (not have_L3abb_) {
         L3abb_ = g3abb_.clone();
         make_cumulant_L3abb_in_place(g1a_, g1b_, L2ab_, L2bb_, L3abb_);
@@ -101,7 +101,7 @@ ambit::Tensor Reference::L3abb() {
     return L3abb_;
 }
 
-ambit::Tensor Reference::L3bbb() {
+ambit::Tensor RDMs::L3bbb() {
     if (not have_L3bbb_) {
         L3bbb_ = g3bbb_.clone();
         make_cumulant_L3bbb_in_place(g1b_, L2bb_, L3bbb_);
@@ -215,7 +215,7 @@ void make_cumulant_L3bbb_in_place(const ambit::Tensor& g1b, const ambit::Tensor&
     L3bbb("pqrstu") += g1b("pt") * g1b("qs") * g1b("ru");
 }
 
-double compute_Eref_from_reference(Reference& ref, std::shared_ptr<ForteIntegrals> ints,
+double compute_Eref_from_rdms(RDMs& ref, std::shared_ptr<ForteIntegrals> ints,
                                    std::shared_ptr<MOSpaceInfo> mo_space_info) {
     // similar to MASTER_DSRG::compute_reference_energy_from_ints (use Fock and cumulants)
     // here I form two density and directly use bare Hamiltonian

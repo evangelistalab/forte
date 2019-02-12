@@ -26,8 +26,8 @@
  * @END LICENSE
  */
 
-#ifndef _reference_h_
-#define _reference_h_
+#ifndef _rdms_h_
+#define _rdms_h_
 
 #include <ambit/tensor.h>
 
@@ -37,41 +37,41 @@ class ForteIntegrals;
 class MOSpaceInfo;
 
 /**
- * @class Reference
+ * @class RDMs
  *
  * @brief This class stores diagonal or transition reduced density matrices (RDMs) and
  *        reduced density cumulants (RDCs).
  *
  * The n-body reduced density matrix between two states |A> and |B> is defined as
  *
- *  RDM(p_1, p_2, ..., p_n, q_1, q_2, ..., q_n) = <A|  |B>
+ *  RDM(p_1, p_2, ..., p_n, q_1, q_2, ..., q_n) = <A| a+(p1) ... a+(pn) a(qn) ... a(q1)  |B>
  *
  * This class is constructed by passing the RDMs up to a given rank n (n <= 3). For example,
- * to pass the one- and two-body RDMs a Reference object is initialized as
+ * to pass the one- and two-body RDMs an object is initialized as
  *
- * auto ref = Reference(g1a, g1b, g2aa, g2ab, g2bb);
+ * auto rdms = RDMs(g1a, g1b, g2aa, g2ab, g2bb);
  *
  * From the RDMs it is possible to obtain the corresponding cumulants. For example,
- * the alpha-alpha 2-body density cumulants can be obtained by calling
+ * the alpha-alpha 2-body density cumulant can be obtained by calling
  *
- * auto L2aa = ref.L2aa();
+ * auto L2aa = rdms.L2aa();
  *
  * @note Once passed in, the RDMs are assumed to be fixed and immutable.
  *
  */
-class Reference {
+class RDMs {
   public:
     // ==> Class Constructors <==
 
     /// 0-rdm constructor
-    Reference();
-    /// @brief Construct a reference object with the 1-rdm
-    Reference(ambit::Tensor g1a, ambit::Tensor g1b);
-    /// @brief Construct a reference object with the 1- and 2-rdms
-    Reference(ambit::Tensor g1a, ambit::Tensor g1b, ambit::Tensor g2aa, ambit::Tensor g2ab,
+    RDMs();
+    /// @brief Construct a RDMs object with the 1-rdm
+    RDMs(ambit::Tensor g1a, ambit::Tensor g1b);
+    /// @brief Construct a RDMs object with the 1- and 2-rdms
+    RDMs(ambit::Tensor g1a, ambit::Tensor g1b, ambit::Tensor g2aa, ambit::Tensor g2ab,
               ambit::Tensor g2bb);
-    /// @brief Construct a reference object with the 1-, 2-, and 3-rdms
-    Reference(ambit::Tensor g1a, ambit::Tensor g1b, ambit::Tensor g2aa, ambit::Tensor g2ab,
+    /// @brief Construct a RDMs object with the 1-, 2-, and 3-rdms
+    RDMs(ambit::Tensor g1a, ambit::Tensor g1b, ambit::Tensor g2aa, ambit::Tensor g2ab,
               ambit::Tensor g2bb, ambit::Tensor g3aaa, ambit::Tensor g3aab, ambit::Tensor g3abb,
               ambit::Tensor g3bbb);
 
@@ -264,15 +264,15 @@ void make_cumulant_L3bbb_in_place(const ambit::Tensor& g1b, const ambit::Tensor&
                                   ambit::Tensor& L3bbb);
 
 /**
- * @brief compute_Eref_from_reference Compute the energy of a wave function from its
- * density matrices stored in the Reference object
+ * @brief compute_Eref_from_rdms Compute the energy of a wave function from its
+ * density matrices stored in the RDMs object
  * @param ref the reference object
  * @param ints the integrals
  * @param mo_space_info information about the orbital spaces
  * @param Enuc the nucleaer repulsion energy
  * @return the reference energy
  */
-double compute_Eref_from_reference(Reference& ref, std::shared_ptr<ForteIntegrals> ints,
+double compute_Eref_from_rdms(RDMs& ref, std::shared_ptr<ForteIntegrals> ints,
                                    std::shared_ptr<MOSpaceInfo> mo_space_info);
 } // namespace forte
 

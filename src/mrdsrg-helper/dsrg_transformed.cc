@@ -19,7 +19,7 @@ DressedQuantity::DressedQuantity(double scalar, ambit::Tensor a, ambit::Tensor b
     : max_body_(3), scalar_(scalar), a_(a), b_(b), aa_(aa), ab_(ab), bb_(bb), aaa_(aaa), aab_(aab),
       abb_(abb), bbb_(bbb) {}
 
-double DressedQuantity::contract_with_densities(Reference reference) {
+double DressedQuantity::contract_with_rdms(RDMs reference) {
     double out = scalar_;
     size_t max_rdm_level = reference.max_rdm_level();
 

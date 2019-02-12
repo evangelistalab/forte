@@ -53,13 +53,13 @@ using namespace psi;
 
 namespace forte {
 
-DSRG_MRPT3::DSRG_MRPT3(Reference reference, std::shared_ptr<SCFInfo> scf_info,
+DSRG_MRPT3::DSRG_MRPT3(RDMs reference, std::shared_ptr<SCFInfo> scf_info,
                        std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
                        std::shared_ptr<MOSpaceInfo> mo_space_info)
     : MASTER_DSRG(reference, scf_info, options, ints, mo_space_info) {
 
     print_method_banner({"MR-DSRG Third-Order Perturbation Theory", "Chenyang Li"});
-    outfile->Printf("\n    Reference:");
+    outfile->Printf("\n    RDMs:");
     outfile->Printf("\n      J. Chem. Phys. 2017, 146, 124132.");
 
     startup();
@@ -118,7 +118,7 @@ void DSRG_MRPT3::startup() {
     }
     mem_total_ -= nelement * sizeof(double);
 
-    // size of density cumulants (Lambda3 is only stored in Reference object)
+    // size of density cumulants (Lambda3 is only stored in RDMs object)
     nelement = 4 * sa * sa + 3 * sa * sa * sa * sa;
     mem_info.push_back({"Density Cumulants (1, 2)", to_XB(nelement, sizeof(double))});
     mem_total_ -= nelement * sizeof(double);
@@ -1771,7 +1771,7 @@ void DSRG_MRPT3::print_dm_pt3() {
     };
 
     print_vector3("Nuclear", dm_nuc_);
-    print_vector3("Reference electronic", dm_ref_);
+    print_vector3("RDMs electronic", dm_ref_);
     print_vector3("DSRG-MRPT2 electronic", Mbar0_pt2_);
     print_vector3("DSRG-MRPT2 (2nd-order complete) electronic", Mbar0_pt2c_);
     print_vector3("DSRG-MRPT3 electronic", Mbar0_);
@@ -1786,7 +1786,7 @@ void DSRG_MRPT3::print_dm_pt3() {
         return t;
     };
 
-    print_vector4("Reference", dm_ref_);
+    print_vector4("RDMs", dm_ref_);
     print_vector4("DSRG-MRPT2", Mbar0_pt2_);
     print_vector4("DSRG-MRPT2 (2nd-order complete)", Mbar0_pt2c_);
     double t = print_vector4("DSRG-MRPT3", Mbar0_);

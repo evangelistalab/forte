@@ -39,7 +39,7 @@
 
 namespace forte {
 
-std::unique_ptr<MASTER_DSRG> make_dsrg_method(const std::string& method, Reference reference,
+std::unique_ptr<MASTER_DSRG> make_dsrg_method(const std::string& method, RDMs reference,
                                               std::shared_ptr<SCFInfo> scf_info,
                                               std::shared_ptr<ForteOptions> options,
                                               std::shared_ptr<ForteIntegrals> ints,

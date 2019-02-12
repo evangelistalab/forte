@@ -40,7 +40,7 @@
 
 #include "boost/assign.hpp"
 #include "integrals/integrals.h"
-#include "base_classes/reference.h"
+#include "base_classes/rdms.h"
 #include "base_classes/mo_space_info.h"
 #include "helpers/blockedtensorfactory.h"
 #include "mrdsrg-helper/dsrg_time.h"
@@ -63,7 +63,7 @@ class DSRG_MRPT3 : public MASTER_DSRG {
      * @param ints A pointer to an allocated integral object
      * @param mo_space_info The MOSpaceInfo object
      */
-    DSRG_MRPT3(Reference reference, std::shared_ptr<SCFInfo> scf_info,
+    DSRG_MRPT3(RDMs reference, std::shared_ptr<SCFInfo> scf_info,
                std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
                std::shared_ptr<MOSpaceInfo> mo_space_info);
 
@@ -254,7 +254,7 @@ class DSRG_MRPT3 : public MASTER_DSRG {
                           BlockedTensor& C2, const std::vector<std::vector<std::string>>& qs,
                           const std::vector<std::vector<std::string>>& jb);
 
-    // => Reference relaxation <= //
+    // => RDMs relaxation <= //
 
     /// Transfer integrals for FCI
     void transfer_integrals();

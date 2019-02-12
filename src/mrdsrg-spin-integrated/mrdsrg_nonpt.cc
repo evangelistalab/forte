@@ -668,7 +668,7 @@ void MRDSRG::compute_hbar_sequential_rotation() {
 double MRDSRG::compute_energy_ldsrg2() {
     // print title
     outfile->Printf("\n\n  ==> Computing MR-LDSRG(2) Energy <==\n");
-    outfile->Printf("\n    Reference:");
+    outfile->Printf("\n    RDMs:");
     outfile->Printf("\n      J. Chem. Phys. 2016, 144, 164114.\n");
 
     timer ldsrg2("Energy_ldsrg2");
@@ -995,7 +995,7 @@ double MRDSRG::compute_energy_ldsrg2_qc() {
     outfile->Printf("\n\n  ==> Computing MR-LDSRG(2)-QC Energy <==\n");
     outfile->Printf("\n    DSRG transformed Hamiltonian is truncated to "
                     "quadratic nested commutator.");
-    outfile->Printf("\n    Reference:");
+    outfile->Printf("\n    RDMs:");
     outfile->Printf("\n      J. Chem. Phys. (in preparation)\n");
     std::string indent(4, ' ');
     std::string dash(99, '-');

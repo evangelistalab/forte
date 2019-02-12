@@ -866,7 +866,7 @@ vector<bool> FCI_MO::Form_String_Ref(const bool& print) {
     }
 
     if (print) {
-        print_h2("Reference String");
+        print_h2("RDMs String");
         outfile->Printf("    ");
         for (bool b : String) {
             outfile->Printf("%d ", b);
@@ -2092,11 +2092,11 @@ d3 FCI_MO::compute_orbital_extents() {
     return orb_extents;
 }
 
-std::vector<Reference> FCI_MO::reference(const std::vector<std::pair<size_t, size_t>>& root_list) {
+std::vector<RDMs> FCI_MO::reference(const std::vector<std::pair<size_t, size_t>>& root_list) {
 
-    std::vector<Reference> refs;
+    std::vector<RDMs> refs;
     // if ((options_->psi_options())["AVG_STATE"].size() != 0) {
-    //     Reference ref;
+    //     RDMs ref;
     //     compute_sa_ref(max_rdm_);
     //     ref.set_Eref(Eref_);
 
@@ -2139,11 +2139,11 @@ std::vector<Reference> FCI_MO::reference(const std::vector<std::pair<size_t, siz
     return refs;
 }
 
-std::vector<Reference> FCI_MO::densities(const std::vector<std::pair<size_t, size_t>>& root_list,
+std::vector<RDMs> FCI_MO::rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
                                          std::shared_ptr<ActiveSpaceMethod> method2,
                                          int max_rdm_level) {
     // TODO : add code to handle transition density matrices (Francesco)
-    std::vector<Reference> refs;
+    std::vector<RDMs> refs;
     for (auto& roots : root_list) {
         compute_ref(max_rdm_level, roots.first, roots.second);
 
@@ -2803,7 +2803,7 @@ std::vector<ambit::Tensor> FCI_MO::compute_n_rdm(const vecdet& p_space, psi::Sha
     return out;
 }
 
-Reference FCI_MO::transition_reference(int root1, int root2, bool multi_state, int entry,
+RDMs FCI_MO::transition_reference(int root1, int root2, bool multi_state, int entry,
                                        int max_level, bool do_cumulant, bool disk) {
     if (max_level > 3 || max_level < 1) {
         throw psi::PSIEXCEPTION("Max RDM level > 3 or < 1 is not available.");
@@ -2840,18 +2840,18 @@ Reference FCI_MO::transition_reference(int root1, int root2, bool multi_state, i
 
     if (max_level == 1) {
         auto D1 = compute_n_rdm(p_space, evecs, 1, root1, root2, irrep, multi, disk);
-        Reference ref(D1[0], D1[1]);
+        RDMs ref(D1[0], D1[1]);
         return ref;
     } else if (max_level == 2) {
         auto D1 = compute_n_rdm(p_space, evecs, 1, root1, root2, irrep, multi, disk);
         auto D2 = compute_n_rdm(p_space, evecs, 2, root1, root2, irrep, multi, disk);
-        Reference ref(D1[0], D1[1], D2[0], D2[1], D2[2]);
+        RDMs ref(D1[0], D1[1], D2[0], D2[1], D2[2]);
         return ref;
     } else if (max_level == 3) {
         auto D1 = compute_n_rdm(p_space, evecs, 1, root1, root2, irrep, multi, disk);
         auto D2 = compute_n_rdm(p_space, evecs, 2, root1, root2, irrep, multi, disk);
         auto D3 = compute_n_rdm(p_space, evecs, 3, root1, root2, irrep, multi, disk);
-        Reference ref(D1[0], D1[1], D2[0], D2[1], D2[2], D3[0], D3[1], D3[2], D3[3]);
+        RDMs ref(D1[0], D1[1], D2[0], D2[1], D2[2], D3[0], D3[1], D3[2], D3[3]);
         return ref;
     } else {
         throw psi::PSIEXCEPTION("Max RDM level > 3 or < 1 is not available.");

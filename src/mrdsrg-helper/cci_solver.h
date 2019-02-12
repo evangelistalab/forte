@@ -31,7 +31,7 @@ class ContractedCISolver {
     /// build the effective Hamiltonian <A|H|B> and diagonalize it
     void compute_Heff();
 
-    /// compute the new densities and return a new Reference??
+    /// compute the new densities and return a new RDMs??
 
     /// get the eigen values
     std::vector<std::vector<double>> get_energies() { return evals_; }

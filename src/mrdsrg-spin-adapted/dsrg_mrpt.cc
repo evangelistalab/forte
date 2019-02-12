@@ -40,7 +40,7 @@ using namespace psi;
 
 namespace forte {
 
-DSRG_MRPT::DSRG_MRPT(Reference reference, psi::SharedWavefunction ref_wfn, psi::Options& options,
+DSRG_MRPT::DSRG_MRPT(RDMs reference, psi::SharedWavefunction ref_wfn, psi::Options& options,
                      std::shared_ptr<ForteIntegrals> ints,
                      std::shared_ptr<MOSpaceInfo> mo_space_info)
     : Wavefunction(options), reference_(reference), ints_(ints), mo_space_info_(mo_space_info),
@@ -234,7 +234,7 @@ void DSRG_MRPT::startup() {
     frozen_core_energy_ = ints_->frozen_core_energy();
 
     // reference energy
-    Eref_ = compute_Eref_from_reference(reference_, ints_, mo_space_info_);
+    Eref_ = compute_Eref_from_rdms(reference_, ints_, mo_space_info_);
 
     // orbital spaces
     core_mos_ = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
@@ -636,7 +636,7 @@ std::vector<std::string> DSRG_MRPT::od_two_labels() {
 }
 
 void DSRG_MRPT::print_citation() {
-    print_h2("References");
+    print_h2("RDMss");
     std::vector<std::pair<std::string, std::string>> papers{
         {"DSRG-MRPT2", "J. Chem. Theory Comput. 2015, 11, 2097."},
         {"DSRG-MRPT3", "J. Chem. Phys. (in preparation)"}};

@@ -46,7 +46,7 @@ using namespace psi;
 
 namespace forte {
 
-MRDSRG::MRDSRG(Reference reference, std::shared_ptr<SCFInfo> scf_info,
+MRDSRG::MRDSRG(RDMs reference, std::shared_ptr<SCFInfo> scf_info,
                std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
                std::shared_ptr<MOSpaceInfo> mo_space_info)
     : MASTER_DSRG(reference, scf_info, options, ints, mo_space_info) {
@@ -421,7 +421,7 @@ double MRDSRG::compute_energy_relaxed() {
 
         // start iteration
         do {
-            std::string relax_title = "MR-DSRG Reference Relaxation Iter. " + std::to_string(cycle);
+            std::string relax_title = "MR-DSRG RDMs Relaxation Iter. " + std::to_string(cycle);
             print_h2(relax_title);
 
             // compute dsrg energy
@@ -539,7 +539,7 @@ double MRDSRG::compute_energy_relaxed() {
             }
         } while (!converged);
 
-        print_h2("MRDSRG Reference Relaxation Summary");
+        print_h2("MRDSRG RDMs Relaxation Summary");
         std::string indent(4, ' ');
         std::string dash(71, '-');
         std::string title;
@@ -561,7 +561,7 @@ double MRDSRG::compute_energy_relaxed() {
         outfile->Printf("\n");
 
         if (failed) {
-            throw psi::PSIEXCEPTION("Reference relaxation process does not converge.");
+            throw psi::PSIEXCEPTION("RDMs relaxation process does not converge.");
         }
 
         // set energies to psi4 environment
@@ -631,19 +631,19 @@ double MRDSRG::compute_energy_sa() {
 
         // obtain new reference
         std::vector<std::pair<size_t, size_t>> roots; // unused for SA
-        reference_ = fci_mo->reference(roots)[0];
+        rdms_ = fci_mo->reference(roots)[0];
 
         outfile->Printf("\n  The following reference rotation will make the new reference and "
                         "integrals in the same basis.");
         ambit::Tensor Ua = Uactv_.block("aa"), Ub = Uactv_.block("AA");
-        semiorb.transform_reference(Ua, Ub, reference_, max_rdm_level);
+        semiorb.transform_rdms(Ua, Ub, rdms_, max_rdm_level);
 
         // semicanonicalize orbitals
         if (foptions_->get_bool("SEMI_CANONICAL")) {
             print_h2("Semicanonicalize Orbitals");
 
             // use semicanonicalize class
-            semiorb.semicanonicalize(reference_);
+            semiorb.semicanonicalize(rdms_);
             Uactv_.block("aa")("pq") = semiorb.Ua_t()("pq");
             Uactv_.block("AA")("pq") = semiorb.Ub_t()("pq");
 
@@ -767,7 +767,7 @@ double MRDSRG::compute_energy_sa() {
     }
 
     if (failed) {
-        throw psi::PSIEXCEPTION("Reference relaxation process does not converge.");
+        throw psi::PSIEXCEPTION("RDMs relaxation process does not converge.");
     }
 
     psi::Process::environment.globals["CURRENT ENERGY"] = Erelax_sa;
@@ -1183,16 +1183,16 @@ void MRDSRG::print_cumulant_summary() {
 
     // 3-body
     maxes.clear();
-    maxes.push_back(reference_.L3aaa().norm(0));
-    maxes.push_back(reference_.L3aab().norm(0));
-    maxes.push_back(reference_.L3abb().norm(0));
-    maxes.push_back(reference_.L3bbb().norm(0));
+    maxes.push_back(rdms_.L3aaa().norm(0));
+    maxes.push_back(rdms_.L3aab().norm(0));
+    maxes.push_back(rdms_.L3abb().norm(0));
+    maxes.push_back(rdms_.L3bbb().norm(0));
 
     norms.clear();
-    norms.push_back(reference_.L3aaa().norm(2));
-    norms.push_back(reference_.L3aab().norm(2));
-    norms.push_back(reference_.L3abb().norm(2));
-    norms.push_back(reference_.L3bbb().norm(2));
+    norms.push_back(rdms_.L3aaa().norm(2));
+    norms.push_back(rdms_.L3aab().norm(2));
+    norms.push_back(rdms_.L3abb().norm(2));
+    norms.push_back(rdms_.L3bbb().norm(2));
 
     dash = std::string(8 + 13 * 4, '-');
     outfile->Printf("\n    %-8s %12s %12s %12s %12s", "3-body", "AAA", "AAB", "ABB", "BBB");

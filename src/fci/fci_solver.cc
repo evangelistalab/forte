@@ -31,7 +31,7 @@
 
 #include "boost/format.hpp"
 
-#include "base_classes/reference.h"
+#include "base_classes/rdms.h"
 #include "base_classes/forte_options.h"
 #include "base_classes/mo_space_info.h"
 
@@ -508,7 +508,7 @@ FCISolver::initial_guess(FCIVector& diag, size_t n,
     return guess;
 }
 
-std::vector<Reference>
+std::vector<RDMs>
 FCISolver::reference(const std::vector<std::pair<size_t, size_t>>& root_list) {
 
     // TODO: Implement different roots
@@ -520,9 +520,9 @@ FCISolver::reference(const std::vector<std::pair<size_t, size_t>>& root_list) {
     size_t nact4 = nact3 * nact;
     size_t nact5 = nact4 * nact;
 
-    std::vector<Reference> refs;
+    std::vector<RDMs> refs;
 
-    Reference fci_ref;
+    RDMs fci_ref;
 
     if (max_rdm_level_ >= 1) {
         // One-particle density matrices in the active space
@@ -657,10 +657,10 @@ FCISolver::reference(const std::vector<std::pair<size_t, size_t>>& root_list) {
     return refs;
 }
 
-std::vector<Reference> FCISolver::densities(const std::vector<std::pair<size_t, size_t>>& root_list,
+std::vector<RDMs> FCISolver::rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
                                             std::shared_ptr<ActiveSpaceMethod> method2,
                                             int max_rdm_level) {
-    std::vector<Reference> refs;
+    std::vector<RDMs> refs;
     if (max_rdm_level_ <= 0)
         return refs;
 

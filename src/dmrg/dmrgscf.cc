@@ -1120,7 +1120,7 @@ void DMRGSCF::compute_reference(double* one_rdm, double* two_rdm, double* three_
     //    quantitities");
     //    throw psi::PSIEXCEPTION("You need to spin averaged things");
     //}
-    Reference dmrg_ref;
+    RDMs dmrg_ref;
     size_t na = mo_space_info_->size("ACTIVE");
     ambit::Tensor gamma1_a = ambit::Tensor::build(ambit::CoreTensor, "gamma1_a", {na, na});
     ambit::Tensor gamma2_dmrg =

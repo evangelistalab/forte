@@ -36,7 +36,7 @@
 #include "mrpt2.h"
 #include "orbital-helpers/unpaired_density.h"
 #include "sparse_ci/determinant_hashvector.h"
-#include "base_classes/reference.h"
+#include "base_classes/rdms.h"
 #include "base_classes/active_space_method.h"
 #include "sparse_ci/sparse_ci_solver.h"
 #include "orbital-helpers/localize.h"
@@ -51,7 +51,7 @@
 
 namespace forte {
 
-class Reference;
+class RDMs;
 
 /// Set the ACI options
 void set_ASCI_options(ForteOptions& foptions);
@@ -84,10 +84,10 @@ class ASCI : public ActiveSpaceMethod {
     double compute_energy() override;
 
     /// Update the reference file
-    std::vector<Reference>
+    std::vector<RDMs>
     reference(const std::vector<std::pair<size_t, size_t>>& root_list) override;
 
-    std::vector<Reference> densities(const std::vector<std::pair<size_t, size_t>>& root_list,
+    std::vector<RDMs> rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
                                      std::shared_ptr<ActiveSpaceMethod> method2,
                                      int max_rdm_level) override;
 

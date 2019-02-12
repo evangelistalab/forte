@@ -51,14 +51,14 @@ using namespace psi;
 
 namespace forte {
 
-DSRG_MRPT2::DSRG_MRPT2(Reference reference, std::shared_ptr<SCFInfo> scf_info,
+DSRG_MRPT2::DSRG_MRPT2(RDMs reference, std::shared_ptr<SCFInfo> scf_info,
                        std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
                        std::shared_ptr<MOSpaceInfo> mo_space_info)
     : MASTER_DSRG(reference, scf_info, options, ints, mo_space_info) {
 
     print_method_banner({"MR-DSRG Second-Order Perturbation Theory",
                          "Chenyang Li, Kevin Hannon, Francesco Evangelista"});
-    outfile->Printf("\n    References:");
+    outfile->Printf("\n    RDMss:");
     outfile->Printf("\n      u-DSRG-MRPT2:    J. Chem. Theory Comput. 2015, 11, 2097.");
     outfile->Printf("\n      (pr-)DSRG-MRPT2: J. Chem. Phys. 2017, 146, 124132.");
 
@@ -120,10 +120,10 @@ void DSRG_MRPT2::startup() {
         Lambda2_.print(stdout);
     }
     if (print_ > 3) {
-        reference_.L3aaa().print();
-        reference_.L3aab().print();
-        reference_.L3abb().print();
-        reference_.L3bbb().print();
+        rdms_.L3aaa().print();
+        rdms_.L3aab().print();
+        rdms_.L3abb().print();
+        rdms_.L3bbb().print();
     }
 }
 
@@ -1366,7 +1366,7 @@ double DSRG_MRPT2::E_VT2_6() {
         temp["uvwxyz"] += V_["uv1z"] * T2_["1wxy"];
         temp["uvwxyz"] += V_["w1xy"] * T2_["uv1z"];
     }
-    E += 0.25 * temp.block("aaaaaa")("uvwxyz") * reference_.L3aaa()("xyzuvw");
+    E += 0.25 * temp.block("aaaaaa")("uvwxyz") * rdms_.L3aaa()("xyzuvw");
 
     // bbb
     temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"AAAAAA"});
@@ -1377,7 +1377,7 @@ double DSRG_MRPT2::E_VT2_6() {
         temp["UVWXYZ"] += V_["UV!Z"] * T2_["!WXY"];
         temp["UVWXYZ"] += V_["W!XY"] * T2_["UV!Z"];
     }
-    E += 0.25 * temp.block("AAAAAA")("UVWXYZ") * reference_.L3bbb()("XYZUVW");
+    E += 0.25 * temp.block("AAAAAA")("UVWXYZ") * rdms_.L3bbb()("XYZUVW");
 
     // aab
     temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"aaAaaA"});
@@ -1398,7 +1398,7 @@ double DSRG_MRPT2::E_VT2_6() {
         temp["uvWxyZ"] -= V_["v1xy"] * T2_["uW1Z"];
         temp["uvWxyZ"] -= 2.0 * V_["v!xZ"] * T2_["uWy!"];
     }
-    E += 0.5 * temp.block("aaAaaA")("uvWxyZ") * reference_.L3aab()("xyZuvW");
+    E += 0.5 * temp.block("aaAaaA")("uvWxyZ") * rdms_.L3aab()("xyZuvW");
 
     // abb
     temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"aAAaAA"});
@@ -1419,7 +1419,7 @@ double DSRG_MRPT2::E_VT2_6() {
         temp["uVWxYZ"] -= V_["W!YZ"] * T2_["uVx!"];
         temp["uVWxYZ"] -= 2.0 * V_["1WxY"] * T2_["uV1Z"];
     }
-    E += 0.5 * temp.block("aAAaAA")("uVWxYZ") * reference_.L3abb()("xYZuVW");
+    E += 0.5 * temp.block("aAAaAA")("uVWxYZ") * rdms_.L3abb()("xYZuVW");
 
     outfile->Printf("  Done. Timing %15.6f s", timer.get());
     dsrg_time_.add("220", timer.get());
@@ -1438,7 +1438,7 @@ void DSRG_MRPT2::print_dm_pt2() {
     double rx = dm_ref_[0];
     double ry = dm_ref_[1];
     double rz = dm_ref_[2];
-    outfile->Printf("\n    Reference electronic dipole moment:");
+    outfile->Printf("\n    RDMs electronic dipole moment:");
     outfile->Printf("\n      X: %10.6f  Y: %10.6f  Z: %10.6f\n", rx, ry, rz);
 
     double x = Mbar0_[0];
@@ -1451,7 +1451,7 @@ void DSRG_MRPT2::print_dm_pt2() {
     ry += ny;
     rz += nz;
     double rt = std::sqrt(rx * rx + ry * ry + rz * rz);
-    outfile->Printf("\n    Reference dipole moment:");
+    outfile->Printf("\n    RDMs dipole moment:");
     outfile->Printf("\n      X: %10.6f  Y: %10.6f  Z: %10.6f  Total: %10.6f\n", rx, ry, rz, rt);
 
     x += nx;
@@ -1990,10 +1990,10 @@ void DSRG_MRPT2::transfer_integrals() {
     bool form_hbar3 = foptions_->get_bool("FORM_HBAR3");
     double scalar3 = 0.0;
     if (form_hbar3) {
-        scalar3 -= (1.0 / 36) * Hbar3_.block("aaaaaa")("xyzuvw") * reference_.L3aaa()("xyzuvw");
-        scalar3 -= (1.0 / 36) * Hbar3_.block("AAAAAA")("XYZUVW") * reference_.L3bbb()("XYZUVW");
-        scalar3 -= 0.25 * Hbar3_.block("aaAaaA")("xyZuvW") * reference_.L3aab()("xyZuvW");
-        scalar3 -= 0.25 * Hbar3_.block("aAAaAA")("xYZuVW") * reference_.L3abb()("xYZuVW");
+        scalar3 -= (1.0 / 36) * Hbar3_.block("aaaaaa")("xyzuvw") * rdms_.L3aaa()("xyzuvw");
+        scalar3 -= (1.0 / 36) * Hbar3_.block("AAAAAA")("XYZUVW") * rdms_.L3bbb()("XYZUVW");
+        scalar3 -= 0.25 * Hbar3_.block("aaAaaA")("xyZuvW") * rdms_.L3aab()("xyZuvW");
+        scalar3 -= 0.25 * Hbar3_.block("aAAaAA")("xYZuVW") * rdms_.L3abb()("xYZuVW");
 
         scalar3 += 0.25 * Hbar3_["xyzuvw"] * Gamma1_["wz"] * Lambda2_["uvxy"];
         scalar3 += 0.25 * Hbar3_["XYZUVW"] * Gamma1_["WZ"] * Lambda2_["UVXY"];
@@ -2185,10 +2185,10 @@ void DSRG_MRPT2::transfer_integrals() {
         Etest3 += 0.5 * Hbar3_["xyZuvW"] * Gamma1_["ux"] * Gamma1_["vy"] * Gamma1_["WZ"];
         Etest3 += 0.5 * Hbar3_["xYZuVW"] * Gamma1_["ux"] * Gamma1_["VY"] * Gamma1_["WZ"];
 
-        Etest3 += (1.0 / 36) * Hbar3_.block("aaaaaa")("xyzuvw") * reference_.L3aaa()("xyzuvw");
-        Etest3 += (1.0 / 36) * Hbar3_.block("AAAAAA")("XYZUVW") * reference_.L3bbb()("XYZUVW");
-        Etest3 += 0.25 * Hbar3_.block("aaAaaA")("xyZuvW") * reference_.L3aab()("xyZuvW");
-        Etest3 += 0.25 * Hbar3_.block("aAAaAA")("xYZuVW") * reference_.L3abb()("xYZuVW");
+        Etest3 += (1.0 / 36) * Hbar3_.block("aaaaaa")("xyzuvw") * rdms_.L3aaa()("xyzuvw");
+        Etest3 += (1.0 / 36) * Hbar3_.block("AAAAAA")("XYZUVW") * rdms_.L3bbb()("XYZUVW");
+        Etest3 += 0.25 * Hbar3_.block("aaAaaA")("xyZuvW") * rdms_.L3aab()("xyZuvW");
+        Etest3 += 0.25 * Hbar3_.block("aAAaAA")("xYZuVW") * rdms_.L3abb()("xYZuVW");
 
         outfile->Printf("\n    %-30s = %22.15f", "Three-Body Energy (after)", Etest3);
         Etest += Etest3;

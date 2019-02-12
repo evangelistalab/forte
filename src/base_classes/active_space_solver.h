@@ -43,7 +43,7 @@ class ActiveSpaceIntegrals;
 class ForteIntegrals;
 class ForteOptions;
 class MOSpaceInfo;
-class Reference;
+class RDMs;
 class SCFInfo;
 
 /**
@@ -82,20 +82,21 @@ class ActiveSpaceSolver {
     const std::map<StateInfo, std::vector<double>>&
     compute_contracted_energy(std::shared_ptr<forte::ActiveSpaceIntegrals> as_ints);
 
-    /// Compute references of all states in the given map
-    /// First entry of the pair corresponds to bra and the second is the ket.
-    std::vector<Reference> reference(std::map<std::pair<StateInfo, StateInfo>,
-                                              std::vector<std::pair<size_t, size_t>>>& elements);
+    //    /// Compute references of all states in the given map
+    //    /// First entry of the pair corresponds to bra and the second is the ket.
+    //    std::vector<RDMs> reference(std::map<std::pair<StateInfo, StateInfo>,
+    //                                              std::vector<std::pair<size_t, size_t>>>&
+    //                                              elements);
 
-    /// Compute references of all states in the given map
+    /// Compute RDMS of all states in the given map
     /// First entry of the pair corresponds to bra and the second is the ket.
-    std::vector<Reference> densities(
+    std::vector<RDMs> rdms(
         std::map<std::pair<StateInfo, StateInfo>, std::vector<std::pair<size_t, size_t>>>& elements,
         int max_rdm_level);
 
     /// Compute state-averaged reference
-    Reference
-    compute_average_reference(const std::map<StateInfo, std::vector<double>>& state_weights_map);
+    RDMs compute_average_rdms(const std::map<StateInfo, std::vector<double>>& state_weights_map,
+                              int max_rdm_level);
 
     /// Sets the maximum order RDM/cumulant
     void set_max_rdm_level(size_t value);

@@ -37,7 +37,7 @@
 #include "ambit/blocked_tensor.h"
 
 #include "integrals/integrals.h"
-#include "base_classes/reference.h"
+#include "base_classes/rdms.h"
 #include "helpers/blockedtensorfactory.h"
 #include "mrdsrg-helper/dsrg_source.h"
 #include "mrdsrg-helper/dsrg_time.h"
@@ -55,7 +55,7 @@ class THREE_DSRG_MRPT2 : public MASTER_DSRG {
      * @param ints A pointer to an allocated integral object
      * @param mo_space_info A pointer to the MOSpaceInfo object
      */
-    THREE_DSRG_MRPT2(Reference reference, std::shared_ptr<SCFInfo> scf_info,
+    THREE_DSRG_MRPT2(RDMs reference, std::shared_ptr<SCFInfo> scf_info,
                      std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
                      std::shared_ptr<MOSpaceInfo> mo_space_info);
 

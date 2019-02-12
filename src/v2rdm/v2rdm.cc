@@ -460,12 +460,12 @@ double V2RDM::compute_ref_energy() {
     return Eref;
 }
 
-Reference V2RDM::reference() {
-    std::string str = "Converting to Reference";
+RDMs V2RDM::reference() {
+    std::string str = "Converting to RDMs";
     outfile->Printf("\n  %-45s ...", str.c_str());
     // if 3-RDMs are needed
     if (options_.get_str("THREEPDC") != "ZERO") {
-        Reference return_ref(D1a_, D1b_, D2_[0], D2_[1], D2_[3], D3_[0], D3_[1], D3_[2], D3_[3]);   
+        RDMs return_ref(D1a_, D1b_, D2_[0], D2_[1], D2_[3], D3_[0], D3_[1], D3_[2], D3_[3]);   
         if (options_.get_str("WRITE_DENSITY_TYPE") == "CUMULANT") {
             write_density_to_file();
         }
@@ -474,7 +474,7 @@ Reference V2RDM::reference() {
         return return_ref;
     } else {
         
-        Reference return_ref(D1a_, D1b_, D2_[0], D2_[1], D2_[3]);   
+        RDMs return_ref(D1a_, D1b_, D2_[0], D2_[1], D2_[3]);   
         if (options_.get_str("WRITE_DENSITY_TYPE") == "CUMULANT") {
             write_density_to_file();
         }

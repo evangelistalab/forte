@@ -42,7 +42,7 @@ using namespace psi;
 
 namespace forte {
 
-MRDSRG_SO::MRDSRG_SO(Reference reference, psi::Options& options,
+MRDSRG_SO::MRDSRG_SO(RDMs reference, psi::Options& options,
                      std::shared_ptr<ForteIntegrals> ints,
                      std::shared_ptr<MOSpaceInfo> mo_space_info)
     : Wavefunction(options), reference_(reference), ints_(ints), mo_space_info_(mo_space_info),
@@ -59,7 +59,7 @@ MRDSRG_SO::MRDSRG_SO(Reference reference, psi::Options& options,
 MRDSRG_SO::~MRDSRG_SO() {}
 
 void MRDSRG_SO::startup() {
-    Eref = compute_Eref_from_reference(reference_, ints_, mo_space_info_);
+    Eref = compute_Eref_from_rdms(reference_, ints_, mo_space_info_);
     BlockedTensor::reset_mo_spaces();
 
     frozen_core_energy = ints_->frozen_core_energy();

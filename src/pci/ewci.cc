@@ -51,7 +51,7 @@
 #include "ewci.h"
 #include "helpers/timer.h"
 #include "sparse_ci/ci_reference.h"
-#include "base_classes/reference.h"
+#include "base_classes/rdms.h"
 
 using namespace psi;
 using namespace forte::GeneratorType_EWCI;
@@ -112,21 +112,21 @@ ElementwiseCI::ElementwiseCI(StateInfo state, size_t nroot, std::shared_ptr<SCFI
     startup();
 }
 
-std::vector<Reference> ElementwiseCI::reference(const std::vector<std::pair<size_t, size_t>>&) {
+std::vector<RDMs> ElementwiseCI::reference(const std::vector<std::pair<size_t, size_t>>&) {
     //    CI_RDMS ci_rdms(final_wfn_, as_ints_, evecs_, root, root);
     //    ci_rdms.set_max_rdm(max_rdm_level_);
-    //    Reference pci_ref = ci_rdms.reference(ordm_a_, ordm_b_, trdm_aa_, trdm_ab_, trdm_bb_,
+    //    RDMs pci_ref = ci_rdms.reference(ordm_a_, ordm_b_, trdm_aa_, trdm_ab_, trdm_bb_,
     //    trdm_aaa_,
     //                                          trdm_aab_, trdm_abb_, trdm_bbb_);
-    std::vector<Reference> pci_ref;
+    std::vector<RDMs> pci_ref;
     // TODO: implement
     return pci_ref;
 }
 
-std::vector<Reference>
-ElementwiseCI::densities(const std::vector<std::pair<size_t, size_t>>& root_list,
+std::vector<RDMs>
+ElementwiseCI::rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
                          std::shared_ptr<ActiveSpaceMethod> method2, int max_rdm_level) {
-    std::vector<Reference> pci_ref;
+    std::vector<RDMs> pci_ref;
     // TODO: implement
     return pci_ref;
 }
@@ -161,7 +161,7 @@ void ElementwiseCI::startup() {
 
     // Build the reference determinant and compute its energy
     std::vector<Determinant> reference_vec;
-    CI_Reference ref(scf_info_, options_, mo_space_info_, as_ints_, wavefunction_multiplicity_, ms,
+    CI_RDMs ref(scf_info_, options_, mo_space_info_, as_ints_, wavefunction_multiplicity_, ms,
                      wavefunction_symmetry_);
     ref.set_ref_type("HF");
     ref.build_reference(reference_vec);

@@ -89,11 +89,11 @@ class ProjectorCI : public ActiveSpaceMethod {
     void set_options(std::shared_ptr<ForteOptions>) override{};
 
     /// Return a reference object
-    std::vector<Reference>
+    std::vector<RDMs>
     reference(const std::vector<std::pair<size_t, size_t>>& root_list) override;
 
     /// Returns the reduced density matrices up to a given level (max_rdm_level)
-    std::vector<Reference> densities(const std::vector<std::pair<size_t, size_t>>& root_list,
+    std::vector<RDMs> rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
                                      std::shared_ptr<ActiveSpaceMethod> method2,
                                      int max_rdm_level) override;
 
@@ -278,7 +278,7 @@ class ProjectorCI : public ActiveSpaceMethod {
     double lastLow = 0.0;
     bool previous_go_up = false;
 
-    // * Reference spawning
+    // * RDMs spawning
     /// Spawning according to the coefficient in a reference
     bool reference_spawning_;
 
