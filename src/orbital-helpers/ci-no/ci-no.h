@@ -77,8 +77,6 @@ class CINO : public OrbitalTransform {
   private:
     // ==> Class data <==
 
-    /// ForteIntegrals
-    std::shared_ptr<ForteIntegrals> ints_;
     /// ForteOptions
     std::shared_ptr<ForteOptions> options_;
     /// The MOSpaceInfo object

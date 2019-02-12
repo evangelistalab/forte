@@ -66,8 +66,8 @@ namespace forte {
 
 MRCINO::MRCINO(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
                std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : OrbitalTransform(scf_info, options, ints, mo_space_info), scf_info_(scf_info),
-      options_(options), ints_(ints), mo_space_info_(mo_space_info) {
+    : OrbitalTransform(ints, mo_space_info), scf_info_(scf_info), options_(options),
+      mo_space_info_(mo_space_info) {
     // Copy the wavefunction information
 
     std::vector<size_t> active_mo(mo_space_info_->size("CORRELATED"));
@@ -619,10 +619,10 @@ MRCINO::diagonalize_density_matrix(std::pair<psi::SharedMatrix, psi::SharedMatri
 // Find optimal active space and transform the orbitals
 void MRCINO::find_active_space_and_transform(
     std::tuple<psi::SharedVector, psi::SharedMatrix, psi::SharedVector, psi::SharedMatrix> no_U) {
-    
+
     auto nmopi = mo_space_info_->get_dimension("ALL");
-    Ua_.reset( new psi::Matrix("U", nmopi, nmopi));
-    Ub_.reset( new psi::Matrix("U", nmopi, nmopi));
+    Ua_.reset(new psi::Matrix("U", nmopi, nmopi));
+    Ub_.reset(new psi::Matrix("U", nmopi, nmopi));
     psi::SharedMatrix NO_A = std::get<1>(no_U);
     for (int h = 0; h < nirrep_; h++) {
         for (int p = 0; p < nmopi[h]; p++) {

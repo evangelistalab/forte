@@ -129,6 +129,7 @@ class AdaptiveCI : public ActiveSpaceMethod {
 
     WFNOperator op_;
 
+
     /// Some HF info
     std::shared_ptr<SCFInfo> scf_info_;
     /// Forte options

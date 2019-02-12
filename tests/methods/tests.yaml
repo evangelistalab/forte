@@ -24,6 +24,7 @@ aci:
    - aci-17
    - aci-18
    - aci-19
+   - aci-local-20
    - asci-1
    - aci_scf-1
   long:

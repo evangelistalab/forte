@@ -166,18 +166,6 @@ PYBIND11_MODULE(forte, m) {
     py::class_<ForteIntegrals, std::shared_ptr<ForteIntegrals>>(m, "ForteIntegrals")
         .def("rotate_orbitals", &ForteIntegrals::rotate_orbitals);
 
-    //    // export Localize
-    //    py::class_<LOCALIZE, std::shared_ptr<LOCALIZE>>(m, "LOCALIZE")
-    //        .def(py::init<StateInfo, std::shared_ptr<SCFInfo>, std::shared_ptr<ForteOptions>,
-    //                      std::shared_ptr<ForteIntegrals>, std::shared_ptr<MOSpaceInfo>>())
-    //        .def("split_localize", &LOCALIZE::split_localize)
-    //        .def("full_localize", &LOCALIZE::full_localize);
-    //
-    //    // export MP2_NOS
-    //    py::class_<MP2_NOS, std::shared_ptr<MP2_NOS>>(m, "MP2_NOS")
-    //        .def(py::init<StateInfo, std::shared_ptr<SCFInfo>, std::shared_ptr<ForteOptions>,
-    //                      std::shared_ptr<ForteIntegrals>, std::shared_ptr<MOSpaceInfo>>());
-
     // export StateInfo
     py::class_<StateInfo, std::shared_ptr<StateInfo>>(m, "StateInfo")
         .def(py::init<int, int, int, int, int>(), "na"_a, "nb"_a, "multiplicity"_a, "twice_ms"_a,

@@ -526,6 +526,10 @@ void ForteIntegrals::rotate_mos() {
     // std::shared_ptr<psi::Matrix> Cb_old = wfn_->Cb();
     std::shared_ptr<psi::Matrix> Cb_old = Cb_;
     Cb_old->copy(C_new);
+
+    // Send a copy to psi::Wavefunction
+    wfn_->Ca()->copy(Ca_);
+    wfn_->Cb()->copy(Cb_);
 }
 
 void ForteIntegrals::print_info() {

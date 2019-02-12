@@ -26,12 +26,12 @@
  * @END LICENSE
  */
 
-#include "psi4/libpsio/psio.h"
-#include "psi4/libpsio/psio.hpp"
-#include "psi4/libmints/local.h"
+#include "psi4/libpsi4util/process.h"
+#include "psi4/libqt/qt.h"
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/vector.h"
-#include "psi4/liboptions/liboptions.h"
+#include "helpers/helpers.h"
+
 #include "base_classes/reference.h"
 
 #include "localize.h"
@@ -40,166 +40,98 @@ using namespace psi;
 
 namespace forte {
 
-LOCALIZE::LOCALIZE(StateInfo state, std::shared_ptr<SCFInfo> scf_info,
-                   std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
+LOCALIZE::LOCALIZE(std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
                    std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : OrbitalTransform(scf_info, options, ints, mo_space_info), scf_info_(scf_info),
-      options_(options), ints_(ints) {
-    nfrz_ = mo_space_info->size("FROZEN_DOCC");
-    nrst_ = mo_space_info->size("RESTRICTED_DOCC");
-    namo_ = mo_space_info->size("ACTIVE");
+    : OrbitalTransform(ints, mo_space_info), mo_space_info_(mo_space_info) {
 
     if (ints_->nirrep() > 1) {
         throw psi::PSIEXCEPTION("\n\n ERROR: Localizer only implemented for C1 symmetry!");
     }
 
-    // The wavefunction multiplicity
-    multiplicity_ = options->get_int("MULTIPLICITY");
+    orbital_spaces_ = options->get_int_vec("LOCALIZE_SPACE");
+    local_method_ = options->get_str("LOCALIZE");
 
-    // double occupied active
-    naocc_ = scf_info_->doccpi().n() - nfrz_ - nrst_;
+    print_h2("ORBITAL LOCALIZER");
 
-    // virtual active
-    navir_ = namo_ - naocc_;
+    outfile->Printf("\n  Localize method: %s", local_method_.c_str());
+}
 
-    abs_act_ = mo_space_info->get_absolute_mo("ACTIVE");
 
-    local_type_ = options->get_str("LOCALIZE_TYPE");
+void LOCALIZE::set_orbital_space(std::vector<int>& orbital_spaces) {
+    orbital_spaces_ = orbital_spaces;
+}
 
-    if (local_type_ == "BOYS" or local_type_ == "SPLIT_BOYS") {
-        local_method_ = "BOYS";
-    }
-    if (local_type_ == "PM" or local_type_ == "SPLIT_PM") {
-        local_method_ = "PIPEK_MEZEY";
+void LOCALIZE::set_orbital_space(std::vector<std::string>& labels) {
+
+    for( const auto& label : labels ){
+        std::vector<size_t> mos = mo_space_info_->get_corr_abs_mo(label);
+        orbital_spaces_.push_back(mos[0]); 
+        orbital_spaces_.push_back(mos.back()); 
     }
 }
 
 void LOCALIZE::compute_transformation() {
-    std::string loc = options_->get_str("LOCALIZE");
-    if (loc == "SPLIT") {
-        split_localize();
-    } else {
-        full_localize();
-    }
-}
 
-void LOCALIZE::split_localize() {
-    psi::Dimension nsopi = scf_info_->nsopi();
-    int nirrep = ints_->nirrep();
-    int off = 0;
-    if (multiplicity_ == 3) {
-        naocc_ -= 1;
-        navir_ -= 1;
-        off = 2;
+    if (orbital_spaces_.size() == 0) {
+        outfile->Printf("\n  Error: Orbital space for localization is not set!");
+        exit(1);
+    } else if ((orbital_spaces_.size() % 2) != 0) {
+        outfile->Printf("\n  Error: Orbital space for localization not properly set!");
+        exit(1);
     }
+
     psi::SharedMatrix Ca = ints_->Ca();
-    psi::SharedMatrix Cb = ints_->Cb();
 
-    psi::SharedMatrix Caocc(new psi::Matrix("Caocc", nsopi[0], naocc_));
-    psi::SharedMatrix Cavir(new psi::Matrix("Cavir", nsopi[0], navir_));
-    psi::SharedMatrix Caact(new psi::Matrix("Caact", nsopi[0], off));
-
-    for (int h = 0; h < nirrep; h++) {
-        for (int mu = 0; mu < nsopi[h]; mu++) {
-            for (int i = 0; i < naocc_; i++) {
-                Caocc->set(h, mu, i, Ca->get(h, mu, abs_act_[i]));
-            }
-            for (int i = 0; i < navir_; ++i) {
-                Cavir->set(h, mu, i, Ca->get(h, mu, abs_act_[i + naocc_ + off]));
-            }
-            for (int i = 0; i < off; ++i) {
-                Caact->set(h, mu, i, Ca->get(h, mu, abs_act_[i + naocc_]));
-            }
-        }
-    }
-
-
-    std::shared_ptr<psi::BasisSet> primary = ints_->basisset();
-
-    std::shared_ptr<Localizer> loc_a = Localizer::build(local_type_, primary, Caocc);
-    loc_a->localize();
-
-    std::shared_ptr<psi::Localizer> loc_v = psi::Localizer::build(local_type_, primary, Cavir);
-    loc_v->localize();
-
-    psi::SharedMatrix Lact;
-    psi::SharedMatrix Uact;
-    if (multiplicity_ == 3) {
-        std::shared_ptr<Localizer> loc_c = Localizer::build(local_type_, primary, Caact);
-        loc_c->localize();
-        Lact = loc_c->L();
-        Uact = loc_c->U();
-    }
-    psi::SharedMatrix Uocc = loc_a->U();
-    psi::SharedMatrix Uvir = loc_v->U();
-
-    Ua_.reset(new psi::Matrix("Ua",nsopi[0], nsopi[0]));
-    Ub_.reset(new psi::Matrix("Ua",nsopi[0], nsopi[0]));
+    Ua_ = std::make_shared<psi::Matrix>("U", Ca->rowdim(), Ca->coldim());
+    Ub_ = std::make_shared<psi::Matrix>("U", Ca->rowdim(), Ca->coldim());
 
     Ua_->identity();
     Ub_->identity();
 
-    for (int h = 0; h < nirrep; ++h) {
-        for (int i = 0; i < naocc_; ++i) {
-            for (int j = 0; j < naocc_; ++j) {
-                Ua_->set(h,i + nfrz_ + nrst_,j + nfrz_ + nrst_, Uocc->get(h,i,j));
-                Ub_->set(h,i + nfrz_ + nrst_,j + nfrz_ + nrst_, Uocc->get(h,i,j));
-            }
+    // loop through each space
+    for (size_t f_idx = 0, max = orbital_spaces_.size(); f_idx < max - 1; f_idx += 2) {
+
+        // indices are INCLUSIVE
+        size_t first = orbital_spaces_[f_idx];
+        size_t last = orbital_spaces_[f_idx + 1];
+
+        // print
+        outfile->Printf("\n  Localizing orbitals: ");
+        for (size_t orb = first; orb <= last; ++orb) {
+            outfile->Printf(" %d", orb);
         }
-        for (int i = 0; i < navir_; ++i) {
-            for (int j = 0; j < navir_; ++j) {
-                Ua_->set(h,i + nfrz_ + nrst_,j + nfrz_ + nrst_, Uvir->get(h,i,j));
-                Ub_->set(h,i + nfrz_ + nrst_,j + nfrz_ + nrst_, Uvir->get(h,i,j));
-            }
+        outfile->Printf("\n");
+
+        if (last < first) {
+            outfile->Printf("\n  Error: Orbital space for localization not properly set!");
+            exit(1);
         }
 
-        for (int i = 0; i < off; ++i) {
-            for (int j = 0; j < off; ++j) {
-                Ua_->set(h,i + nfrz_ + nrst_,j + nfrz_ + nrst_, Uact->get(h,i,j));
-                Ub_->set(h,i + nfrz_ + nrst_,j + nfrz_ + nrst_, Uact->get(h,i,j));
-            }
+        // number of orbitals to localize
+        size_t orb_dim = last - first + 1;
+
+        // Build C matrix to localize
+        psi::SharedMatrix Ca_loc = std::make_shared<psi::Matrix>("Caact", Ca->rowdim(), orb_dim);
+
+        for (size_t i = 0; i < orb_dim; ++i) {
+            psi::SharedVector col = Ca->get_column(0, first + i);
+            Ca_loc->set_column(0, i, col);
         }
-    }
-}
 
-void LOCALIZE::full_localize() {
+        // localize
+        std::shared_ptr<psi::BasisSet> primary = ints_->wfn()->basisset();
+        std::shared_ptr<psi::Localizer> loc_a =
+            psi::Localizer::build(local_method_, primary, Ca_loc);
+        loc_a->localize();
 
-    psi::Dimension nsopi = scf_info_->nsopi();
-    int nirrep = ints_->nirrep();
-    size_t nact = abs_act_.size();
+        // Grab the transformation and localized matrices
+        psi::SharedMatrix Ua_loc = loc_a->U();
 
-    psi::SharedMatrix Ca = ints_->Ca();
-    psi::SharedMatrix Cb = ints_->Cb();
-
-    psi::SharedMatrix Caact(new psi::Matrix("Caact", nsopi[0], nact));
-    for (int h = 0; h < nirrep; h++) {
-        for (int mu = 0; mu < nsopi[h]; mu++) {
-            for (size_t i = 0; i < nact; i++) {
-                Caact->set(h, mu, i, Ca->get(h, mu, abs_act_[i]));
-            }
-        }
-    }
-
-    // Localize all active together
-    std::shared_ptr<psi::BasisSet> primary = ints_->basisset();
-
-    std::shared_ptr<Localizer> loc_a = Localizer::build(local_type_, primary, Caact);
-    loc_a->localize();
-
-    psi::SharedMatrix Laocc = loc_a->L();
-    psi::SharedMatrix Ua = loc_a->U();
-
-    Ua_.reset(new psi::Matrix("Ua",Ca->rowdim(), Ca->coldim()));
-    Ub_.reset(new psi::Matrix("Ua",Ca->rowdim(), Ca->coldim()));
-
-    Ua_->identity();
-    Ub_->identity();
-
-    for (int h = 0; h < nirrep; ++h) {
-        for (size_t i = 0; i < nact; ++i) {
-            for (size_t j = 0; j < nact; ++j) {
-                Ua_->set(h,i + nfrz_ + nrst_,j + nfrz_ + nrst_, Ua->get(h,i,j));
-                Ub_->set(h,i + nfrz_ + nrst_,j + nfrz_ + nrst_, Ua->get(h,i,j));
+        // Set Ua, Ub
+        for (size_t i = 0; i < orb_dim; ++i) {
+            for (size_t j = 0; j < orb_dim; ++j) {
+                Ua_->set(i + first, j + first, Ua_loc->get(i, j));
+                Ub_->set(i + first, j + first, Ua_loc->get(i, j));
             }
         }
     }

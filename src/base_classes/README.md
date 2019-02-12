@@ -1,19 +1,18 @@
 #Forte Base Classes
 
-
 Canonical order of base classes
 
-- StateInfo
-- SCFInfo
-- MOSpaceInfo
-- Integrals/ActiveSpaceIntegrals
-- ForteOptions
+    - StateInfo 
+    - SCFInfo 
+    - MOSpaceInfo 
+    - Integrals/ActiveSpaceIntegrals 
+    - ForteOptions
 
-- ## ActiveSpaceSolver
-- ## ActiveSpaceMethod
-- ## CorrelatedSolver
-- ## ForteOptions
-- ## MOSpaceInfo
-- ## Reference
-- ## SCFInfo
-- ## StateInfo
+    - ## ActiveSpaceSolver 
+    - ## ActiveSpaceMethod 
+    - ## CorrelatedSolver 
+    - ## ForteOptions 
+    - ## MOSpaceInfo 
+    - ## Reference 
+    - ## SCFInfo 
+    - ## StateInfo
