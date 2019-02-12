@@ -63,7 +63,7 @@ void ContractedCISolver::compute_Heff() {
             for (int B = A; B < nroots; ++B) {
                 // just compute transition rdms of <A|sqop|B>
                 std::vector<std::pair<size_t, size_t>> root_list{std::make_pair(A, B)};
-                Reference reference = method->reference(root_list)[0];
+                RDMs reference = method->reference(root_list)[0];
 
                 double H_AB = 0.0;
                 H_AB += inner_product(oei_a, reference.g1a().data());

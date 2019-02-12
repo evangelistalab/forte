@@ -37,7 +37,7 @@
 #include "psi4/libpsi4util/process.h"
 
 #include "base_classes/forte_options.h"
-#include "base_classes/reference.h"
+#include "base_classes/rdms.h"
 #include "base_classes/mo_space_info.h"
 #include "helpers/helpers.h"
 #include "integrals/active_space_integrals.h"
@@ -113,32 +113,33 @@ void ActiveSpaceSolver::print_energies(std::map<StateInfo, std::vector<double>>&
     }
 }
 
-std::vector<Reference> ActiveSpaceSolver::reference(
-    std::map<std::pair<StateInfo, StateInfo>, std::vector<std::pair<size_t, size_t>>>& elements) {
+// std::vector<RDMs> ActiveSpaceSolver::reference(
+//    std::map<std::pair<StateInfo, StateInfo>, std::vector<std::pair<size_t, size_t>>>& elements) {
 
-    std::vector<Reference> refs;
+//    std::vector<RDMs> refs;
 
-    for (const auto& element : elements) {
-        const auto& state1 = element.first.first;
-        const auto& state2 = element.first.second;
+//    for (const auto& element : elements) {
+//        const auto& state1 = element.first.first;
+//        const auto& state2 = element.first.second;
 
-        if (state1 != state2) {
-            throw std::runtime_error("ActiveSpaceSolver::reference called with states of different "
-                                     "symmetry! This function is not yet suported in Forte.");
-        }
+//        if (state1 != state2) {
+//            throw std::runtime_error("ActiveSpaceSolver::reference called with states of different
+//            "
+//                                     "symmetry! This function is not yet suported in Forte.");
+//        }
 
-        std::vector<Reference> state_refs = state_method_map_[state1]->reference(element.second);
-        for (const auto& state_ref : state_refs) {
-            refs.push_back(state_ref);
-        }
-    }
-    return refs;
-}
+//        std::vector<RDMs> state_refs = state_method_map_[state1]->reference(element.second);
+//        for (const auto& state_ref : state_refs) {
+//            refs.push_back(state_ref);
+//        }
+//    }
+//    return refs;
+//}
 
-std::vector<Reference> ActiveSpaceSolver::densities(
+std::vector<RDMs> ActiveSpaceSolver::rdms(
     std::map<std::pair<StateInfo, StateInfo>, std::vector<std::pair<size_t, size_t>>>& elements,
     int max_rdm_level) {
-    std::vector<Reference> refs;
+    std::vector<RDMs> refs;
 
     for (const auto& element : elements) {
         const auto& state1 = element.first.first;
@@ -149,7 +150,7 @@ std::vector<Reference> ActiveSpaceSolver::densities(
                                      "symmetry! This function is not yet suported in Forte.");
         }
 
-        std::vector<Reference> state_refs = state_method_map_[state1]->densities(
+        std::vector<RDMs> state_refs = state_method_map_[state1]->rdms(
             element.second, state_method_map_[state2], max_rdm_level);
         for (const auto& state_ref : state_refs) {
             refs.push_back(state_ref);
@@ -306,8 +307,8 @@ make_state_weights_map(std::shared_ptr<ForteOptions> options,
     return state_weights_map;
 }
 
-Reference ActiveSpaceSolver::compute_average_reference(
-    const std::map<StateInfo, std::vector<double>>& state_weights_map) {
+RDMs ActiveSpaceSolver::compute_average_rdms(
+    const std::map<StateInfo, std::vector<double>>& state_weights_map, int max_rdm_level) {
     // For state average
     size_t nactive = mo_space_info_->size(
         "ACTIVE"); // TODO: grab this info from the ActiveSpaceSolver object (Francesco)
@@ -365,11 +366,11 @@ Reference ActiveSpaceSolver::compute_average_reference(
             if (weight <= 1e-15)
                 continue;
 
-            // Get the Reference
+            // Get the RDMs
             std::vector<std::pair<size_t, size_t>> state_ids;
             state_ids.push_back(std::make_pair(r, r));
-            //Reference method_ref = method->reference(state_ids)[0];
-            Reference method_ref = method->densities(state_ids, method, max_rdm_level_)[0];
+            // RDMs method_ref = method->reference(state_ids)[0];
+            RDMs method_ref = method->rdms(state_ids, method, max_rdm_level)[0];
 
             // Now the RDMs
             // 1 RDM
@@ -394,13 +395,13 @@ Reference ActiveSpaceSolver::compute_average_reference(
     }
 
     if (max_rdm_level_ == 1) {
-        return Reference(g1a, g1b);
+        return RDMs(g1a, g1b);
     } else if (max_rdm_level_ == 2) {
-        return Reference(g1a, g1b, g2aa, g2ab, g2bb);
+        return RDMs(g1a, g1b, g2aa, g2ab, g2bb);
     } else if (max_rdm_level_ == 3) {
-        return Reference(g1a, g1b, g2aa, g2ab, g2bb, g3aaa, g3aab, g3abb, g3bbb);
+        return RDMs(g1a, g1b, g2aa, g2ab, g2bb, g3aaa, g3aab, g3abb, g3bbb);
     }
-    return Reference();
+    return RDMs();
 }
 
 const std::map<StateInfo, std::vector<double>>&
@@ -451,9 +452,9 @@ ActiveSpaceSolver::compute_contracted_energy(std::shared_ptr<ActiveSpaceIntegral
             for (size_t B = A; B < nroots; ++B) {
                 // just compute transition rdms of <A|sqop|B>
                 std::vector<std::pair<size_t, size_t>> root_list{std::make_pair(A, B)};
-                Reference reference = method->reference(root_list)[0];
+                RDMs rdms = method->reference(root_list)[0];
 
-                double H_AB = ints.contract_with_densities(reference);
+                double H_AB = ints.contract_with_rdms(rdms);
                 if (A == B) {
                     H_AB += as_ints->nuclear_repulsion_energy() + as_ints->scalar_energy() +
                             as_ints->frozen_core_energy();

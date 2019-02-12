@@ -35,7 +35,7 @@
 #include "psi4/liboptions/liboptions.h"
 #include "psi4/libmints/vector.h"
 #include "psi4/libmints/matrix.h"
-#include "base_classes/reference.h"
+#include "base_classes/rdms.h"
 #include "base_classes/scf_info.h"
 #include "helpers/timer.h"
 #include "integrals/integrals.h"
@@ -59,7 +59,7 @@ class MCSRGPT2_MO {
      * @param ints A pointer to an allocated integral object
      * @param mo_space_info The MOSpaceInfo object
      */
-    MCSRGPT2_MO(Reference reference, std::shared_ptr<ForteOptions> options,
+    MCSRGPT2_MO(RDMs reference, std::shared_ptr<ForteOptions> options,
                 std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Destructor
@@ -82,8 +82,8 @@ class MCSRGPT2_MO {
     /// Integrals
     std::shared_ptr<ForteIntegrals> integral_;
 
-    /// Reference
-    Reference reference_;
+    /// RDMs
+    RDMs reference_;
 
     /// MO space info
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
@@ -127,7 +127,7 @@ class MCSRGPT2_MO {
     int taylor_threshold_;
     int taylor_order_;
 
-    /// Reference Energy
+    /// RDMs Energy
     void compute_ref();
 
     /// Density Matrix
@@ -146,7 +146,7 @@ class MCSRGPT2_MO {
     d6 L3bbb_;
 
     /// Fill in non-tensor cumulants used in the naive MR-DSRG-PT2 code
-    void fill_naive_cumulants(Reference ref, const int level);
+    void fill_naive_cumulants(RDMs ref, const int level);
     /// Fill in non-tensor quantities D1a_ and D1b_ using ambit tensors
     void fill_one_cumulant(ambit::Tensor& L1a, ambit::Tensor& L1b);
     /// Fill in non-tensor quantities L2aa_, L2ab_, and L2bb_ using ambit tensors

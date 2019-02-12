@@ -72,11 +72,11 @@ void set_DSRG_options(ForteOptions& foptions) {
     /*- The residue convergence criterion -*/
     foptions.add_double("R_CONVERGENCE", 1.0e-6, "Convergence criteria for amplitudes");
 
-    /*- Reference Relaxation -*/
+    /*- RDMs Relaxation -*/
     foptions.add_str("RELAX_REF", "NONE", {"NONE", "ONCE", "TWICE", "ITERATE"},
                      "Relax the reference for MR-DSRG (used in dsrg-mrpt2/3, mrdsrg)");
 
-    /*- Max Iteration for Reference Relaxation -*/
+    /*- Max Iteration for RDMs Relaxation -*/
     foptions.add_int("MAXITER_RELAX_REF", 15, "Max macro iterations for DSRG reference relaxation");
 
     /*- DSRG Taylor Expansion Threshold -*/
@@ -195,7 +195,7 @@ void set_DSRG_options(ForteOptions& foptions) {
 /// A uniformed function to run DSRG related jobs
 // void run_dsrg() {}
 
-std::unique_ptr<MASTER_DSRG> make_dsrg_method(const std::string& method, Reference reference,
+std::unique_ptr<MASTER_DSRG> make_dsrg_method(const std::string& method, RDMs reference,
                                               std::shared_ptr<SCFInfo> scf_info,
                                               std::shared_ptr<ForteOptions> options,
                                               std::shared_ptr<ForteIntegrals> ints,

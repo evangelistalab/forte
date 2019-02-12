@@ -43,7 +43,7 @@
 #include "helpers/helpers.h"
 #include "integrals/integrals.h"
 #include "base_classes/active_space_method.h"
-#include "base_classes/reference.h"
+#include "base_classes/rdms.h"
 #include "sparse_ci/sparse_ci_solver.h"
 #include "integrals/active_space_integrals.h"
 #include "sparse_ci/determinant.h"
@@ -117,13 +117,13 @@ class FCI_MO : public ActiveSpaceMethod {
 
     /// Return the reference object
     /// Return averaged cumulants if AVG_STATE is not empty
-    std::vector<Reference> reference(const std::vector<std::pair<size_t, size_t>>& roots) override;
+    std::vector<RDMs> reference(const std::vector<std::pair<size_t, size_t>>& roots) override;
 
-    std::vector<Reference> densities(const std::vector<std::pair<size_t, size_t>>& root_list,
+    std::vector<RDMs> rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
                                      std::shared_ptr<ActiveSpaceMethod> method2,
                                      int max_rdm_level) override;
 
-    Reference reference() {
+    RDMs reference() {
         std::vector<std::pair<size_t, size_t>> roots;
         return reference(roots)[0];
     }
@@ -135,8 +135,8 @@ class FCI_MO : public ActiveSpaceMethod {
     /// multi_state -- grab p_spaces_ and eigens_ if true, otherwise p_space_ and eigen_
     /// entry -- symmetry entry of p_spaces_ and eigens_ (same entry as sa_info_)
     /// max_level -- max RDM level to be computed
-    /// do_cumulant -- returned Reference is filled by cumulants (not RDMs) if true
-    Reference transition_reference(int root1, int root2, bool multi_state, int entry = 0,
+    /// do_cumulant -- returned RDMs is filled by cumulants (not RDMs) if true
+    RDMs transition_reference(int root1, int root2, bool multi_state, int entry = 0,
                                    int max_level = 3, bool do_cumulant = false, bool disk = true);
 
     /// Density files
@@ -268,7 +268,7 @@ class FCI_MO : public ActiveSpaceMethod {
     std::string int_type_;
     std::shared_ptr<ActiveSpaceIntegrals> fci_ints_;
 
-    /// Reference Type
+    /// RDMs Type
     std::string ref_type_;
 
     /// MO space info
@@ -441,7 +441,7 @@ class FCI_MO : public ActiveSpaceMethod {
     psi::SharedMatrix xms_rotate_this_civecs(const det_vec& p_space, psi::SharedMatrix civecs,
                                              ambit::Tensor Fa, ambit::Tensor Fb);
 
-    /// Reference Energy
+    /// RDMs Energy
     double Eref_;
 
     /// Compute 2- and 3-cumulants

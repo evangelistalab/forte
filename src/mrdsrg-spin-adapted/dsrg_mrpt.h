@@ -39,7 +39,7 @@
 
 #include "boost/assign.hpp"
 #include "integrals/integrals.h"
-#include "base_classes/reference.h"
+#include "base_classes/rdms.h"
 #include "mrdsrg-helper/dsrg_source.h"
 #include "mrdsrg-helper/dsrg_time.h"
 #include "base_classes/mo_space_info.h"
@@ -58,7 +58,7 @@ class DSRG_MRPT : public psi::Wavefunction {
      * @param ints A pointer to an allocated integral object
      * @param mo_space_info The MOSpaceInfo object
      */
-    DSRG_MRPT(Reference reference, psi::SharedWavefunction ref_wfn, psi::Options& options,
+    DSRG_MRPT(RDMs reference, psi::SharedWavefunction ref_wfn, psi::Options& options,
               std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Destructor
@@ -84,7 +84,7 @@ class DSRG_MRPT : public psi::Wavefunction {
     int print_;
 
     /// The reference object
-    Reference reference_;
+    RDMs reference_;
 
     /// The energy of the reference
     double Eref_;
@@ -313,9 +313,9 @@ class DSRG_MRPT : public psi::Wavefunction {
     //    /// Compute DSRG-MRPT3 energy
     //    double compute_energy_pt3();
 
-    // => Reference relaxation <= //
+    // => RDMs relaxation <= //
 
-    /// Reference relaxation type
+    /// RDMs relaxation type
     std::string ref_relax_;
     /// Transfer integrals for FCI
     void transfer_integrals();

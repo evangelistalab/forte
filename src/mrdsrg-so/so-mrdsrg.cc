@@ -50,7 +50,7 @@ using namespace psi;
 
 namespace forte {
 
-SOMRDSRG::SOMRDSRG(Reference reference, psi::SharedWavefunction ref_wfn, psi::Options& options,
+SOMRDSRG::SOMRDSRG(RDMs reference, psi::SharedWavefunction ref_wfn, psi::Options& options,
                    std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
     : Wavefunction(options), reference_(reference), ints_(ints), mo_space_info_(mo_space_info),
       tensor_type_(CoreTensor), BTF(new BlockedTensorFactory()) {
@@ -75,7 +75,7 @@ SOMRDSRG::~SOMRDSRG() {
 }
 
 void SOMRDSRG::startup() {
-    Eref = compute_Eref_from_reference(reference_, ints_, mo_space_info_);
+    Eref = compute_Eref_from_rdms(reference_, ints_, mo_space_info_);
 
     frozen_core_energy = ints_->frozen_core_energy();
 
@@ -600,7 +600,7 @@ double SOMRDSRG::compute_energy() {
     E0_ += -0.5 * V["rspq"] * Gamma1["pr"] * Gamma1["qs"];
     E0_ += 0.25 * V["rspq"] * Lambda2["pqrs"];
 
-    outfile->Printf("\n  * Reference total energy            = %25.15f\n", E0_);
+    outfile->Printf("\n  * RDMs total energy            = %25.15f\n", E0_);
 
     // Start the SO-MR-DSRG cycle
     double old_energy = 0.0;

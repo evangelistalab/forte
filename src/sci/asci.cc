@@ -97,7 +97,7 @@ void ASCI::startup() {
     }
 
     // Build the reference determinant and compute its energy
-    CI_Reference ref(scf_info_, options_, mo_space_info_, as_ints_, multiplicity_, twice_ms_,
+    CI_RDMs ref(scf_info_, options_, mo_space_info_, as_ints_, multiplicity_, twice_ms_,
                      wavefunction_symmetry_);
     ref.build_reference(initial_reference_);
 
@@ -170,7 +170,7 @@ double ASCI::compute_energy() {
 
     startup();
     print_method_banner({"ASCI", "written by Jeffrey B. Schriber and Francesco A. Evangelista"});
-    outfile->Printf("\n  ==> Reference Information <==\n");
+    outfile->Printf("\n  ==> RDMs Information <==\n");
     outfile->Printf("\n  There are %d frozen orbitals.", nfrzc_);
     outfile->Printf("\n  There are %zu active orbitals.\n", nact_);
     print_info();
@@ -538,11 +538,11 @@ double ASCI::compute_spin_contamination(DeterminantHashVec& space, WFNOperator& 
     return spin_contam;
 }
 
-std::vector<Reference> ASCI::densities(const std::vector<std::pair<size_t, size_t>>& root_list,
+std::vector<RDMs> ASCI::rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
                                        std::shared_ptr<ActiveSpaceMethod> method2,
                                        int max_rdm_level) {
 
-    std::vector<Reference> refs;
+    std::vector<RDMs> refs;
 
     for (const auto& root_pair : root_list) {
 
@@ -563,8 +563,8 @@ std::vector<Reference> ASCI::densities(const std::vector<std::pair<size_t, size_
     return refs;
 }
 
-std::vector<Reference> ASCI::reference(const std::vector<std::pair<size_t, size_t>>& root_list) {
-    std::vector<Reference> refs;
+std::vector<RDMs> ASCI::reference(const std::vector<std::pair<size_t, size_t>>& root_list) {
+    std::vector<RDMs> refs;
     for (auto& root : root_list) {
         compute_rdms(as_ints_, final_wfn_, op_, evecs_, root.first, root.second, max_rdm_level_);
 

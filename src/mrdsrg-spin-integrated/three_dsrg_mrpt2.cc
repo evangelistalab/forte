@@ -76,7 +76,7 @@ bool THREE_DSRG_MRPT2::have_omp_ = true;
 bool THREE_DSRG_MRPT2::have_omp_ = false;
 #endif
 
-THREE_DSRG_MRPT2::THREE_DSRG_MRPT2(Reference reference, std::shared_ptr<SCFInfo> scf_info,
+THREE_DSRG_MRPT2::THREE_DSRG_MRPT2(RDMs reference, std::shared_ptr<SCFInfo> scf_info,
                                    std::shared_ptr<ForteOptions> options,
                                    std::shared_ptr<ForteIntegrals> ints,
                                    std::shared_ptr<MOSpaceInfo> mo_space_info)
@@ -105,7 +105,7 @@ THREE_DSRG_MRPT2::THREE_DSRG_MRPT2(Reference reference, std::shared_ptr<SCFInfo>
     print_method_banner({"Density Fitted / Cholesky Decomposed",
                          "MR-DSRG Second-Order Perturbation Theory",
                          "Kevin Hannon and Chenyang (York) Li", title_thread});
-    outfile->Printf("\n    References:");
+    outfile->Printf("\n    RDMss:");
     outfile->Printf("\n      u-DSRG-MRPT2:      J. Chem. Theory Comput. 2015, 11, 2097.");
     outfile->Printf("\n      DF/CD-DSRG-MRPT2:  J. Chem. Phys. 2016, 144, 204111.");
     outfile->Printf("\n      (pr-)DSRG-MRPT2:   J. Chem. Phys. 2017, 146, 124132.");
@@ -307,7 +307,7 @@ void THREE_DSRG_MRPT2::print_options_summary() {
         {"Source operator", source_},
         {"CCVV algorithm", foptions_->get_str("CCVV_ALGORITHM")},
         {"CCVV source", foptions_->get_str("CCVV_SOURCE")},
-        {"Reference relaxation", relax_ref_}};
+        {"RDMs relaxation", relax_ref_}};
 
     if (multi_state_) {
         calculation_info_string.push_back({"State type", "MULTI-STATE"});
@@ -366,7 +366,7 @@ double THREE_DSRG_MRPT2::compute_energy() {
         }
 
         print_h2("Computing DSRG-MRPT2 Energy");
-        outfile->Printf("\n  Reference Energy = %.15f", Eref_);
+        outfile->Printf("\n  RDMs Energy = %.15f", Eref_);
 
         // compute T2 and renormalize V
         if (integral_type_ != DiskDF) {
@@ -1549,13 +1549,13 @@ double THREE_DSRG_MRPT2::E_VT2_6() {
             BlockedTensor temp = BTF_->build(tensor_type_, "temp", {"aaaaaa"});
             temp["uvwxyz"] += V_["uviz"] * T2_["iwxy"];
             temp["uvwxyz"] += V_["waxy"] * T2_["uvaz"];
-            E += 0.25 * temp.block("aaaaaa")("uvwxyz") * reference_.L3aaa()("xyzuvw");
+            E += 0.25 * temp.block("aaaaaa")("uvwxyz") * rdms_.L3aaa()("xyzuvw");
 
             // bbb
             temp = BTF_->build(tensor_type_, "temp", {"AAAAAA"});
             temp["UVWXYZ"] += V_["UVIZ"] * T2_["IWXY"];
             temp["UVWXYZ"] += V_["WAXY"] * T2_["UVAZ"];
-            E += 0.25 * temp.block("AAAAAA")("UVWXYZ") * reference_.L3bbb()("XYZUVW");
+            E += 0.25 * temp.block("AAAAAA")("UVWXYZ") * rdms_.L3bbb()("XYZUVW");
 
             // aab
             temp = BTF_->build(tensor_type_, "temp", {"aaAaaA"});
@@ -1567,7 +1567,7 @@ double THREE_DSRG_MRPT2::E_VT2_6() {
             temp["uvWxyZ"] -= V_["vaxy"] * T2_["uWaZ"];
             temp["uvWxyZ"] -= 2.0 * V_["vAxZ"] * T2_["uWyA"];
 
-            E += 0.50 * temp.block("aaAaaA")("uvWxyZ") * reference_.L3aab()("xyZuvW");
+            E += 0.50 * temp.block("aaAaaA")("uvWxyZ") * rdms_.L3aab()("xyZuvW");
 
             // abb
             temp = BTF_->build(tensor_type_, "temp", {"aAAaAA"});
@@ -1579,7 +1579,7 @@ double THREE_DSRG_MRPT2::E_VT2_6() {
             temp["uVWxYZ"] -= V_["WAYZ"] * T2_["uVxA"];
             temp["uVWxYZ"] -= 2.0 * V_["aWxY"] * T2_["uVaZ"];
 
-            E += 0.50 * temp.block("aAAaAA")("uVWxYZ") * reference_.L3abb()("xYZuVW");
+            E += 0.50 * temp.block("aAAaAA")("uVWxYZ") * rdms_.L3abb()("xYZuVW");
 
         } else if (foptions_->get_str("THREEPDC_ALGORITHM") == "BATCH") {
 

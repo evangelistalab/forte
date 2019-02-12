@@ -31,7 +31,7 @@
 
 #include "psi4/libfock/jk.h"
 #include "psi4/libtrans/mospace.h"
-#include "base_classes/reference.h"
+#include "base_classes/rdms.h"
 #include "base_classes/active_space_method.h"
 #include "integrals/integrals.h"
 #include "base_classes/mo_space_info.h"
@@ -52,11 +52,11 @@ class DMRGSCF : public ActiveSpaceMethod {
 
     double compute_energy();
 
-    Reference reference() { return dmrg_ref_; }
+    RDMs reference() { return dmrg_ref_; }
     void set_iterations(int dmrg_iterations) { dmrg_iterations_ = dmrg_iterations; }
 
   private:
-    Reference dmrg_ref_;
+    RDMs dmrg_ref_;
     int dmrg_iterations_ = 1;
 
     StateInfo state_;

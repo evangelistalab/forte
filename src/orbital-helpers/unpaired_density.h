@@ -35,7 +35,7 @@
 
 #include "base_classes/mo_space_info.h"
 #include "integrals/integrals.h"
-#include "base_classes/reference.h"
+#include "base_classes/rdms.h"
 #include "iao_builder.h"
 
 namespace forte {

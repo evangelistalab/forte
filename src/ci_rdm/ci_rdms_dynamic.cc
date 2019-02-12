@@ -34,7 +34,7 @@
 #include "helpers/timer.h"
 #include "ci_rdms.h"
 #include "base_classes/mo_space_info.h"
-#include "base_classes/reference.h"
+#include "base_classes/rdms.h"
 #include "sparse_ci/determinant.h"
 
 using namespace psi;

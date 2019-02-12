@@ -39,7 +39,7 @@ class ActiveSpaceIntegrals;
 class ForteIntegrals;
 class ForteOptions;
 class MOSpaceInfo;
-class Reference;
+class RDMs;
 class SCFInfo;
 
 /**
@@ -57,8 +57,8 @@ class SCFInfo;
  * - Compute the energy
  *    double compute_energy();
  *
- * - Compute a reference object
- *    Reference reference();
+ * - Compute a RDMs object
+ *    RDMs rdms();
  *
  * - Set the options for the derived methods
  *    set_options(std::shared_ptr<ForteOptions> options);
@@ -103,12 +103,12 @@ class ActiveSpaceMethod {
     virtual double compute_energy() = 0;
 
     /// Returns the reference
-    virtual std::vector<Reference>
+    virtual std::vector<RDMs>
     reference(const std::vector<std::pair<size_t, size_t>>& roots) = 0;
 
     /// Returns the reduced density matrices up to a given rank (max_rdm_level)
-    virtual std::vector<Reference>
-    densities(const std::vector<std::pair<size_t, size_t>>& root_list,
+    virtual std::vector<RDMs>
+    rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
               std::shared_ptr<ActiveSpaceMethod> method2, int max_rdm_level) = 0;
 
     /// Set options from an option object

@@ -96,7 +96,7 @@ void AdaptiveCI::startup() {
     twice_ms_ = state_.twice_ms();
 
     // Build the reference determinant and compute its energy
-    CI_Reference ref(scf_info_, options_, mo_space_info_, as_ints_, multiplicity_, twice_ms_,
+    CI_RDMs ref(scf_info_, options_, mo_space_info_, as_ints_, multiplicity_, twice_ms_,
                      wavefunction_symmetry_);
     ref.build_reference(initial_reference_);
 
@@ -228,7 +228,7 @@ void AdaptiveCI::print_info() {
     outfile->Printf("\n  %s", std::string(65, '-').c_str());
 
     if (options_->get_bool("PRINT_1BODY_EVALS")) {
-        outfile->Printf("\n  Reference orbital energies:");
+        outfile->Printf("\n  RDMs orbital energies:");
         std::shared_ptr<Vector> epsilon_a = scf_info_->epsilon_a();
 
         auto actmo = mo_space_info_->get_absolute_mo("ACTIVE");
@@ -249,7 +249,7 @@ double AdaptiveCI::compute_energy() {
     }
     print_method_banner({"Adaptive Configuration Interaction",
                          "written by Jeffrey B. Schriber and Francesco A. Evangelista"});
-    outfile->Printf("\n  ==> Reference Information <==\n");
+    outfile->Printf("\n  ==> RDMs Information <==\n");
     outfile->Printf("\n  There are %d frozen orbitals.", nfrzc_);
     outfile->Printf("\n  There are %zu active orbitals.\n", nact_);
     print_info();
@@ -1396,11 +1396,11 @@ std::vector<double> AdaptiveCI::davidson_correction(std::vector<Determinant>& P_
     return dc;
 }
 
-std::vector<Reference>
-AdaptiveCI::densities(const std::vector<std::pair<size_t, size_t>>& root_list,
+std::vector<RDMs>
+AdaptiveCI::rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
                       std::shared_ptr<ActiveSpaceMethod> method2, int max_rdm_level) {
 
-    std::vector<Reference> refs;
+    std::vector<RDMs> refs;
 
     for (const auto& root_pair : root_list) {
 
@@ -1421,9 +1421,9 @@ AdaptiveCI::densities(const std::vector<std::pair<size_t, size_t>>& root_list,
     return refs;
 }
 
-std::vector<Reference> AdaptiveCI::reference(const std::vector<std::pair<size_t, size_t>>& roots) {
+std::vector<RDMs> AdaptiveCI::reference(const std::vector<std::pair<size_t, size_t>>& roots) {
 
-    std::vector<Reference> refs;
+    std::vector<RDMs> refs;
 
     for (const auto& root_pair : roots) {
 

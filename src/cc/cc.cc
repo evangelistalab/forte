@@ -52,7 +52,7 @@ CC::~CC() {}
 /// Compute the corr_level energy with fixed reference
 double CC::compute_energy() { return 0.0; }
 
-// MRDSRG::MRDSRG(Reference reference, psi::SharedWavefunction ref_wfn, Options&
+// MRDSRG::MRDSRG(RDMs reference, psi::SharedWavefunction ref_wfn, Options&
 // options,
 //               std::shared_ptr<ForteIntegrals> ints,
 //               std::shared_ptr<MOSpaceInfo> mo_space_info)

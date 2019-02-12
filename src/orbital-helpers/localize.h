@@ -37,7 +37,7 @@
 #include "psi4/libpsio/psio.hpp"
 #include "integrals/integrals.h"
 #include "base_classes/forte_options.h"
-#include "base_classes/reference.h"
+#include "base_classes/rdms.h"
 #include "base_classes/mo_space_info.h"
 #include "base_classes/scf_info.h"
 

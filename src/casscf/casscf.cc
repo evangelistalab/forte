@@ -28,7 +28,7 @@
 
 #include "casscf/casscf.h"
 #include "integrals/integrals.h"
-#include "base_classes/reference.h"
+#include "base_classes/rdms.h"
 
 #include "psi4/libfock/jk.h"
 #include "psi4/libmints/matrix.h"
@@ -364,7 +364,7 @@ void CASSCF::cas_ci() {
     //    fcisolver->set_root(options_->get_int("ROOT"));
     //    fcisolver->set_active_space_integrals(fci_ints);
     const auto state_energies_map = active_space_solver->compute_energy();
-    cas_ref_ = active_space_solver->compute_average_reference(state_weights_map);
+    cas_ref_ = active_space_solver->compute_average_rdms(state_weights_map, 2);
     double average_energy = compute_average_state_energy(state_energies_map, state_weights_map);
     // return the average energy
     E_casscf_ = average_energy;
@@ -489,7 +489,7 @@ void CASSCF::cas_ci_final() {
     //    }
 }
 
-double CASSCF::cas_check(Reference cas_ref) {
+double CASSCF::cas_check(RDMs cas_ref) {
     ambit::Tensor gamma1 = ambit::Tensor::build(ambit::CoreTensor, "Gamma1", {na_, na_});
     ambit::Tensor gamma2 = ambit::Tensor::build(ambit::CoreTensor, "Gamma2", {na_, na_, na_, na_});
     std::shared_ptr<ActiveSpaceIntegrals> fci_ints =
@@ -1089,18 +1089,17 @@ std::pair<ambit::Tensor, std::vector<double>> CASSCF::CI_Integrals() {
     return pair_return;
 }
 
-std::vector<Reference> CASSCF::reference(const std::vector<std::pair<size_t, size_t>>& root_list) {
+std::vector<RDMs> CASSCF::reference(const std::vector<std::pair<size_t, size_t>>& root_list) {
 
-    std::vector<Reference> refs;
+    std::vector<RDMs> refs;
     refs.push_back(cas_ref_);
     return refs;
 }
 
-std::vector<Reference> CASSCF::densities(const std::vector<std::pair<size_t, size_t>>& root_list,
-                                         std::shared_ptr<ActiveSpaceMethod> method2,
-                                         int max_rdm_level) {
+std::vector<RDMs> CASSCF::rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
+                               std::shared_ptr<ActiveSpaceMethod> method2, int max_rdm_level) {
     // TODO (York): this does not seem the correct thing to do.
-    std::vector<Reference> refs;
+    std::vector<RDMs> refs;
     refs.push_back(cas_ref_);
     return refs;
 }

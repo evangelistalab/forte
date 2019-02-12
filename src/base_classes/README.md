@@ -8,11 +8,11 @@ Canonical order of base classes
     - Integrals/ActiveSpaceIntegrals 
     - ForteOptions
 
-    - ## ActiveSpaceSolver 
-    - ## ActiveSpaceMethod 
-    - ## CorrelatedSolver 
-    - ## ForteOptions 
-    - ## MOSpaceInfo 
-    - ## Reference 
-    - ## SCFInfo 
-    - ## StateInfo
+- ## ActiveSpaceSolver
+- ## ActiveSpaceMethod
+- ## CorrelatedSolver
+- ## ForteOptions
+- ## MOSpaceInfo
+- ## RDMs
+- ## SCFInfo
+- ## StateInfo
