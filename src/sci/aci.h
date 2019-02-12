@@ -146,9 +146,9 @@ class AdaptiveCI : public ActiveSpaceMethod {
     int twice_ms_;
     /// The number of active electrons
     int nactel_;
-    /// The number of correlated alpha electrons
+    /// The number of active alpha electrons
     int nalpha_;
-    /// The number of correlated beta electrons
+    /// The number of active beta electrons
     int nbeta_;
     /// The number of frozen core orbitals
     int nfrzc_;
@@ -190,8 +190,6 @@ class AdaptiveCI : public ActiveSpaceMethod {
     double gamma_;
     /// The prescreening threshold
     double screen_thresh_;
-    /// The number of roots computed
-  //  int nroot_;
     /// Use threshold from perturbation theory?
     bool perturb_select_;
 
@@ -444,6 +442,9 @@ class AdaptiveCI : public ActiveSpaceMethod {
     /// Project ACI wavefunction
     void project_determinant_space(DeterminantHashVec& space, psi::SharedMatrix evecs,
                                    psi::SharedVector evals, int nroot);
+
+    /// Build coupling lists for diagonalization algorithm
+    void build_coupling_lists(DeterminantHashVec& space, std::string type = "SPARSE");
 
     /// Compute the RDMs
     void compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints, DeterminantHashVec& dets,
