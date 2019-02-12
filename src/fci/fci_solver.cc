@@ -319,9 +319,15 @@ double FCISolver::compute_energy() {
     //    }
 
     //    // Optionally, test the RDMs
-    //    if (test_rdms_) {
-    //        C_->rdm_test();
-    //    }
+    if (test_rdms_) {
+        C_->copy(dls.eigenvector(root_));
+        if (print_) {
+            std::string title_rdm = "Computing RDMs for Root No. " + std::to_string(root_);
+            print_h2(title_rdm);
+        }
+        C_->compute_rdms(max_rdm_level_);
+        C_->rdm_test();
+    }
 
     //    // Print the NO if energy converged
     //    if (print_no_ || print_ > 0) {
