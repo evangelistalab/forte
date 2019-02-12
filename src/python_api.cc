@@ -193,7 +193,7 @@ PYBIND11_MODULE(forte, m) {
         .def("semicanonicalize", &SemiCanonical::semicanonicalize, "reference"_a,
              "max_rdm_level"_a = 3, "build_fock"_a = true, "transform"_a = true,
              "Semicanonicalize the orbitals and transform the integrals and reference")
-        .def("transform_reference", &SemiCanonical::transform_rdms, "Ua"_a, "Ub"_a, "reference"_a,
+        .def("transform_rdms", &SemiCanonical::transform_rdms, "Ua"_a, "Ub"_a, "reference"_a,
              "max_rdm_level"_a, "Transform the RDMs by input rotation matrices")
         .def("Ua_t", &SemiCanonical::Ua_t, "Return the alpha rotation matrix in the active space")
         .def("Ub_t", &SemiCanonical::Ub_t, "Return the beta rotation matrix in the active space");
