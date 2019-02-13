@@ -58,7 +58,7 @@ class DSRG_MRPT : public psi::Wavefunction {
      * @param ints A pointer to an allocated integral object
      * @param mo_space_info The MOSpaceInfo object
      */
-    DSRG_MRPT(RDMs reference, psi::SharedWavefunction ref_wfn, psi::Options& options,
+    DSRG_MRPT(RDMs rdms, psi::SharedWavefunction ref_wfn, psi::Options& options,
               std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Destructor
@@ -83,10 +83,10 @@ class DSRG_MRPT : public psi::Wavefunction {
     /// Print levels
     int print_;
 
-    /// The reference object
+    /// The RDMs and cumulants of the reference wave function
     RDMs rdms_;
 
-    /// The energy of the reference
+    /// The energy of the rdms
     double Eref_;
 
     /// The frozen-core energy

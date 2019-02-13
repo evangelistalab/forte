@@ -13,11 +13,11 @@ using namespace psi;
 
 namespace forte {
 
-MASTER_DSRG::MASTER_DSRG(RDMs reference, std::shared_ptr<SCFInfo> scf_info,
+MASTER_DSRG::MASTER_DSRG(RDMs rdms, std::shared_ptr<SCFInfo> scf_info,
                          std::shared_ptr<ForteOptions> options,
                          std::shared_ptr<ForteIntegrals> ints,
                          std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : DynamicCorrelationSolver(reference, scf_info, options, ints, mo_space_info),
+    : DynamicCorrelationSolver(rdms, scf_info, options, ints, mo_space_info),
       BTF_(new BlockedTensorFactory()), tensor_type_(ambit::CoreTensor) {
     startup();
 }

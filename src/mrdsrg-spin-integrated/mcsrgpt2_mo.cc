@@ -50,7 +50,7 @@ using namespace psi;
 
 namespace forte {
 
-MCSRGPT2_MO::MCSRGPT2_MO(RDMs reference, std::shared_ptr<ForteOptions> options,
+MCSRGPT2_MO::MCSRGPT2_MO(RDMs rdms, std::shared_ptr<ForteOptions> options,
                          std::shared_ptr<ForteIntegrals> ints,
                          std::shared_ptr<MOSpaceInfo> mo_space_info)
     : integral_(ints), mo_space_info_(mo_space_info), options_(options) {
@@ -63,7 +63,7 @@ MCSRGPT2_MO::MCSRGPT2_MO(RDMs reference, std::shared_ptr<ForteOptions> options,
 
     // fill in non-tensor based cumulants
     int max_rdm_level = (options->get_str("THREEPDC") == "ZERO") ? 2 : 3;
-    fill_naive_cumulants(reference, max_rdm_level);
+    fill_naive_cumulants(rdms, max_rdm_level);
 
     // build Fock matrix
     Fa_ = d2(ncmo_, d1(ncmo_));

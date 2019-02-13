@@ -51,10 +51,10 @@ using namespace psi;
 
 namespace forte {
 
-DSRG_MRPT2::DSRG_MRPT2(RDMs reference, std::shared_ptr<SCFInfo> scf_info,
+DSRG_MRPT2::DSRG_MRPT2(RDMs rdms, std::shared_ptr<SCFInfo> scf_info,
                        std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
                        std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : MASTER_DSRG(reference, scf_info, options, ints, mo_space_info) {
+    : MASTER_DSRG(rdms, scf_info, options, ints, mo_space_info) {
 
     print_method_banner({"MR-DSRG Second-Order Perturbation Theory",
                          "Chenyang Li, Kevin Hannon, Francesco Evangelista"});

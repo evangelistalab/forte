@@ -337,10 +337,10 @@ std::shared_ptr<FCI_MO> DWMS_DSRGPT2::precompute_energy() {
     // perform SA-DSRG-PT2/3 if needed
     if (dwms_ref_ != "CASCI") {
         fci_mo->set_max_rdm_level(max_rdm_level_);
-        RDMs reference = fci_mo->reference();
+        RDMs rdms = fci_mo->reference();
 
         std::shared_ptr<MASTER_DSRG> dsrg_pt;
-        fci_ints_ = compute_dsrg_pt(dsrg_pt, reference, dwms_ref_);
+        fci_ints_ = compute_dsrg_pt(dsrg_pt, rdms, dwms_ref_);
 
         Ept_0_.resize(nentry);
 
@@ -426,7 +426,7 @@ std::shared_ptr<FCI_MO> DWMS_DSRGPT2::precompute_energy() {
 }
 
 std::shared_ptr<ActiveSpaceIntegrals>
-DWMS_DSRGPT2::compute_dsrg_pt(std::shared_ptr<MASTER_DSRG>& dsrg_pt, RDMs& reference,
+DWMS_DSRGPT2::compute_dsrg_pt(std::shared_ptr<MASTER_DSRG>& dsrg_pt, RDMs& rdms,
                               std::string level) {
     // use semicanonical orbitals only for THREE-DSRG-MRPT2
     do_semi_ = (level.find("PT2") != std::string::npos) && eri_df_;
@@ -434,19 +434,19 @@ DWMS_DSRGPT2::compute_dsrg_pt(std::shared_ptr<MASTER_DSRG>& dsrg_pt, RDMs& refer
     // compute dsrg-pt2/3 energy
     if (do_semi_) {
         SemiCanonical semi(mo_space_info_, ints_, foptions_);
-        semi.semicanonicalize(reference, max_rdm_level_);
+        semi.semicanonicalize(rdms, max_rdm_level_);
         Ua_ = semi.Ua_t();
         Ub_ = semi.Ub_t();
 
-        dsrg_pt = std::make_shared<THREE_DSRG_MRPT2>(reference, scf_info_, foptions_, ints_,
+        dsrg_pt = std::make_shared<THREE_DSRG_MRPT2>(rdms, scf_info_, foptions_, ints_,
                                                      mo_space_info_);
         dsrg_pt->set_Uactv(Ua_, Ub_);
     } else {
         if (level == "PT3") {
-            dsrg_pt = std::make_shared<DSRG_MRPT3>(reference, scf_info_, foptions_, ints_,
+            dsrg_pt = std::make_shared<DSRG_MRPT3>(rdms, scf_info_, foptions_, ints_,
                                                    mo_space_info_);
         } else {
-            dsrg_pt = std::make_shared<DSRG_MRPT2>(reference, scf_info_, foptions_, ints_,
+            dsrg_pt = std::make_shared<DSRG_MRPT2>(rdms, scf_info_, foptions_, ints_,
                                                    mo_space_info_);
         }
     }
@@ -474,14 +474,14 @@ DWMS_DSRGPT2::compute_macro_dsrg_pt(std::shared_ptr<MASTER_DSRG>& dsrg_pt,
     // compute RDMs
     fci_mo->set_sa_info(sa_info_new);
     fci_mo->set_max_rdm_level(max_rdm_level_);
-    RDMs reference = fci_mo->reference();
+    RDMs rdms = fci_mo->reference();
 
     // update MK vacuum energy
     //double new_Eref = compute_Eref_from_rdms(reference, ints_, mo_space_info_, Enuc_);
-    //reference.set_Eref(new_Eref); // TODO: ?why do this here this way?
+    //rdms.set_Eref(new_Eref); // TODO: ?why do this here this way?
 
     // compute DSRG-PT2/3 energies and Hbar
-    return compute_dsrg_pt(dsrg_pt, reference, dwms_corrlv_);
+    return compute_dsrg_pt(dsrg_pt, rdms, dwms_corrlv_);
 }
 
 void DWMS_DSRGPT2::compute_dwsa_energy_iterate(std::shared_ptr<FCI_MO>& fci_mo) {

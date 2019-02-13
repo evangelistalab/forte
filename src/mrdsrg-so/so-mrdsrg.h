@@ -53,7 +53,7 @@ class SOMRDSRG : public psi::Wavefunction {
   protected:
     // => Class data <= //
 
-    /// The reference object
+    /// The RDMs and cumulants of the reference wave function
     RDMs rdms_;
 
     /// The molecular integrals required by MethodBase
