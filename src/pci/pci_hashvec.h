@@ -98,8 +98,13 @@ class ProjectorCI_HashVec : public ActiveSpaceMethod {
 
     /// Compute the reduced density matrices up to a given particle rank (max_rdm_level)
     std::vector<RDMs> rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
-                                     std::shared_ptr<ActiveSpaceMethod> method2,
-                                     int max_rdm_level) override;
+                           int max_rdm_level) override;
+
+    /// Returns the transition reduced density matrices between roots of different symmetry up to a
+    /// given level (max_rdm_level)
+    std::vector<RDMs> transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
+                                      std::shared_ptr<ActiveSpaceMethod> method2,
+                                      int max_rdm_level) override;
 
     /// Compute the energy
     double compute_energy() override;

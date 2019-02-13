@@ -509,7 +509,7 @@ FCISolver::initial_guess(FCIVector& diag, size_t n,
 }
 
 std::vector<RDMs> FCISolver::rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
-                                  std::shared_ptr<ActiveSpaceMethod> method2, int max_rdm_level) {
+                                  int max_rdm_level) {
     std::vector<RDMs> refs;
     if (max_rdm_level_ <= 0)
         return refs;
@@ -655,6 +655,13 @@ std::vector<RDMs> FCISolver::rdms(const std::vector<std::pair<size_t, size_t>>& 
             refs.emplace_back(g1a, g1b, g2aa, g2ab, g2bb, g3aaa, g3aab, g3abb, g3bbb);
         }
     }
+    return refs;
+}
+
+std::vector<RDMs> FCISolver::transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
+                                  std::shared_ptr<ActiveSpaceMethod> method2, int max_rdm_level) {
+    std::vector<RDMs> refs;
+    throw std::runtime_error("FCISolver::transition_rdms is not implemented!");
     return refs;
 }
 } // namespace forte

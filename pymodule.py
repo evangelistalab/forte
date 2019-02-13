@@ -133,7 +133,8 @@ def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
 
             # Compute the energy
             if is_multi_state and ms_dsrg_algorithm == "SA_SUB":
-                state_energies_list = active_space_solver.compute_contracted_energy(ints_dressed)
+                sa_sub_max_rdm = 2 # TODO: is the 2 here correct?
+                state_energies_list = active_space_solver.compute_contracted_energy(ints_dressed, sa_sub_max_rdm)
                 Erelax = forte.compute_average_state_energy(state_energies_list,state_weights_map)
                 return Erelax
             else:

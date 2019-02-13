@@ -98,7 +98,7 @@ void ASCI::startup() {
 
     // Build the reference determinant and compute its energy
     CI_RDMs ref(scf_info_, options_, mo_space_info_, as_ints_, multiplicity_, twice_ms_,
-                     wavefunction_symmetry_);
+                wavefunction_symmetry_);
     ref.build_reference(initial_reference_);
 
     // Read options
@@ -539,8 +539,7 @@ double ASCI::compute_spin_contamination(DeterminantHashVec& space, WFNOperator& 
 }
 
 std::vector<RDMs> ASCI::rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
-                                       std::shared_ptr<ActiveSpaceMethod> method2,
-                                       int max_rdm_level) {
+                             int max_rdm_level) {
 
     std::vector<RDMs> refs;
 
@@ -560,6 +559,14 @@ std::vector<RDMs> ASCI::rdms(const std::vector<std::pair<size_t, size_t>>& root_
                               trdm_abb_, trdm_bbb_);
         }
     }
+    return refs;
+}
+
+std::vector<RDMs> ASCI::transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
+                                        std::shared_ptr<ActiveSpaceMethod> method2,
+                                        int max_rdm_level) {
+    std::vector<RDMs> refs;
+    throw std::runtime_error("ASCI::transition_rdms is not implemented!");
     return refs;
 }
 

@@ -1397,7 +1397,7 @@ std::vector<double> AdaptiveCI::davidson_correction(std::vector<Determinant>& P_
 }
 
 std::vector<RDMs> AdaptiveCI::rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
-                                   std::shared_ptr<ActiveSpaceMethod> method2, int max_rdm_level) {
+                                   int max_rdm_level) {
 
     std::vector<RDMs> refs;
 
@@ -1417,6 +1417,14 @@ std::vector<RDMs> AdaptiveCI::rdms(const std::vector<std::pair<size_t, size_t>>&
                               trdm_abb_, trdm_bbb_);
         }
     }
+    return refs;
+}
+
+std::vector<RDMs>
+AdaptiveCI::transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
+                            std::shared_ptr<ActiveSpaceMethod> method2, int max_rdm_level) {
+    std::vector<RDMs> refs;
+    throw std::runtime_error("AdaptiveCI::transition_rdms is not implemented!");
     return refs;
 }
 
