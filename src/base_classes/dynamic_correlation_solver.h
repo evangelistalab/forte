@@ -44,7 +44,7 @@ class DynamicCorrelationSolver {
     /// The MO space info
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
 
-    /// The reference object (cumulants)
+    /// The RDMs and cumulants of the reference wave function
     RDMs rdms_;
 
     /// The SCFInfo

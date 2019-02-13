@@ -48,14 +48,14 @@ namespace forte {
 class THREE_DSRG_MRPT2 : public MASTER_DSRG {
   public:
     /**
-     * THREE_DSRG_MRPT2 Constructor
-     * @param reference The reference object of FORTE
-     * @param ref_wfn The reference wavefunction object
-     * @param options The main options object
-     * @param ints A pointer to an allocated integral object
-     * @param mo_space_info A pointer to the MOSpaceInfo object
+     * @brief THREE_DSRG_MRPT2
+     * @param rdms          the RDMs for the state we are computing
+     * @param scf_info      information about orbitals
+     * @param options       a Forte options object
+     * @param ints          integrals
+     * @param mo_space_info information about orbital spaces
      */
-    THREE_DSRG_MRPT2(RDMs reference, std::shared_ptr<SCFInfo> scf_info,
+    THREE_DSRG_MRPT2(RDMs rdms, std::shared_ptr<SCFInfo> scf_info,
                      std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
                      std::shared_ptr<MOSpaceInfo> mo_space_info);
 

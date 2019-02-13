@@ -63,7 +63,7 @@ class DSRG_MRPT3 : public MASTER_DSRG {
      * @param ints A pointer to an allocated integral object
      * @param mo_space_info The MOSpaceInfo object
      */
-    DSRG_MRPT3(RDMs reference, std::shared_ptr<SCFInfo> scf_info,
+    DSRG_MRPT3(RDMs rdms, std::shared_ptr<SCFInfo> scf_info,
                std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
                std::shared_ptr<MOSpaceInfo> mo_space_info);
 

@@ -59,7 +59,7 @@ class MRDSRG_SO : public psi::Wavefunction {
     /// Print levels
     int print_;
 
-    /// The reference object
+    /// The RDMs and cumulants of the reference wave function
     RDMs rdms_;
 
     /// The molecular integrals required by MethodBase
