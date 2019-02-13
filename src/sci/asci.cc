@@ -563,25 +563,6 @@ std::vector<RDMs> ASCI::rdms(const std::vector<std::pair<size_t, size_t>>& root_
     return refs;
 }
 
-std::vector<RDMs> ASCI::reference(const std::vector<std::pair<size_t, size_t>>& root_list) {
-    std::vector<RDMs> refs;
-    for (auto& root : root_list) {
-        compute_rdms(as_ints_, final_wfn_, op_, evecs_, root.first, root.second, max_rdm_level_);
-
-        if (max_rdm_level_ == 1) {
-            refs.emplace_back(ordm_a_, ordm_b_);
-        }
-        if (max_rdm_level_ == 2) {
-            refs.emplace_back(ordm_a_, ordm_b_, trdm_aa_, trdm_ab_, trdm_bb_);
-        }
-        if (max_rdm_level_ == 3) {
-            refs.emplace_back(ordm_a_, ordm_b_, trdm_aa_, trdm_ab_, trdm_bb_, trdm_aaa_, trdm_aab_,
-                              trdm_abb_, trdm_bbb_);
-        }
-    }
-    return refs;
-}
-
 void ASCI::print_nos() {
     print_h2("NATURAL ORBITALS");
 

@@ -75,10 +75,6 @@ class CASSCF : public ActiveSpaceMethod {
 
     void set_options(std::shared_ptr<ForteOptions>) override{};
 
-    /// Return a reference object
-    std::vector<RDMs>
-    reference(const std::vector<std::pair<size_t, size_t>>& root_list) override;
-
     /// Returns the reduced density matrices up to a given level (max_rdm_level)
     std::vector<RDMs> rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
                                      std::shared_ptr<ActiveSpaceMethod> method2,
@@ -139,8 +135,6 @@ class CASSCF : public ActiveSpaceMethod {
     void set_up_fci();
     /// Set up a SA-FCI
     //  void set_up_sa_fci();
-    /// Set up FCI_MO
-    void set_up_fcimo();
     /// Read all the mospace info and assign correct dimensions
     void startup();
     /// Compute overlap between old_c and new_c

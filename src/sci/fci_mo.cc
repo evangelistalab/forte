@@ -2113,11 +2113,38 @@ d3 FCI_MO::compute_orbital_extents() {
     return orb_extents;
 }
 
-std::vector<RDMs> FCI_MO::reference(const std::vector<std::pair<size_t, size_t>>& root_list) {
+std::vector<RDMs> FCI_MO::rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
+                               std::shared_ptr<ActiveSpaceMethod> method2, int max_rdm_level) {
+    // TODO : add code to handle transition density matrices (Francesco)
+    std::vector<RDMs> refs;
+    for (auto& roots : root_list) {
+        compute_ref(max_rdm_level, roots.first, roots.second);
+
+        if (max_rdm_level_ == 1) {
+            refs.emplace_back(L1a_, L1b_);
+        }
+
+        if (max_rdm_level_ == 2) {
+            refs.emplace_back(L1a_, L1b_, L2aa_, L2ab_, L2bb_);
+        }
+
+        if (max_rdm_level_ == 3) {
+            if (options_->get_str("THREEPDC") != "ZERO") {
+                refs.emplace_back(L1a_, L1b_, L2aa_, L2ab_, L2bb_, L3aaa_, L3aab_, L3abb_, L3bbb_);
+            } else {
+                refs.emplace_back(L1a_, L1b_, L2aa_, L2ab_, L2bb_);
+            }
+        }
+    }
+    return refs;
+}
+
+[[deprecated]] std::vector<RDMs>
+FCI_MO::reference(const std::vector<std::pair<size_t, size_t>>& root_list) {
 
     std::vector<RDMs> refs;
     // if ((options_->psi_options())["AVG_STATE"].size() != 0) {
-    //     RDMs ref;
+    //     Reference ref;
     //     compute_sa_ref(max_rdm_);
     //     ref.set_Eref(Eref_);
 
@@ -2157,33 +2184,6 @@ std::vector<RDMs> FCI_MO::reference(const std::vector<std::pair<size_t, size_t>>
         }
     }
     //}
-    return refs;
-}
-
-std::vector<RDMs> FCI_MO::rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
-                                         std::shared_ptr<ActiveSpaceMethod> method2,
-                                         int max_rdm_level) {
-    // TODO : add code to handle transition density matrices (Francesco)
-    std::vector<RDMs> refs;
-    for (auto& roots : root_list) {
-        compute_ref(max_rdm_level, roots.first, roots.second);
-
-        if (max_rdm_level_ == 1) {
-            refs.emplace_back(L1a_, L1b_);
-        }
-
-        if (max_rdm_level_ == 2) {
-            refs.emplace_back(L1a_, L1b_, L2aa_, L2ab_, L2bb_);
-        }
-
-        if (max_rdm_level_ == 3) {
-            if (options_->get_str("THREEPDC") != "ZERO") {
-                refs.emplace_back(L1a_, L1b_, L2aa_, L2ab_, L2bb_, L3aaa_, L3aab_, L3abb_, L3bbb_);
-            } else {
-                refs.emplace_back(L1a_, L1b_, L2aa_, L2ab_, L2bb_);
-            }
-        }
-    }
     return refs;
 }
 
@@ -2824,8 +2824,8 @@ std::vector<ambit::Tensor> FCI_MO::compute_n_rdm(const vecdet& p_space, psi::Sha
     return out;
 }
 
-RDMs FCI_MO::transition_reference(int root1, int root2, bool multi_state, int entry,
-                                       int max_level, bool do_cumulant, bool disk) {
+RDMs FCI_MO::transition_reference(int root1, int root2, bool multi_state, int entry, int max_level,
+                                  bool do_cumulant, bool disk) {
     if (max_level > 3 || max_level < 1) {
         throw psi::PSIEXCEPTION("Max RDM level > 3 or < 1 is not available.");
     }

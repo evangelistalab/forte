@@ -577,201 +577,202 @@ double MRDSRG::compute_energy_relaxed() {
 }
 */
 
-double MRDSRG::compute_energy_sa() {
-    int nentry = eigens_.size();
-    std::vector<std::vector<std::vector<double>>> Edsrg_vec;
-    SemiCanonical semiorb(mo_space_info_, ints_, foptions_, true);
-    int max_rdm_level = foptions_->get_str("THREEPDC") == "ZERO" ? 2 : 3;
+[[deprecated]] double MRDSRG::compute_energy_sa() {
+//    int nentry = eigens_.size();
+//    std::vector<std::vector<std::vector<double>>> Edsrg_vec;
+//    SemiCanonical semiorb(mo_space_info_, ints_, foptions_, true);
+//    int max_rdm_level = foptions_->get_str("THREEPDC") == "ZERO" ? 2 : 3;
 
-    // iteration variables
-    double Edsrg_sa = 0.0, Erelax_sa = 0.0;
-    int cycle = 0, maxiter = foptions_->get_int("MAXITER_RELAX_REF");
-    double e_conv = foptions_->get_double("RELAX_E_CONVERGENCE");
-    std::vector<double> Edsrg_sa_vec, Erelax_sa_vec;
-    std::vector<double> Edelta_dsrg_sa_vec, Edelta_relax_sa_vec;
-    bool converged = false, failed = false;
+//    // iteration variables
+//    double Edsrg_sa = 0.0, Erelax_sa = 0.0;
+//    int cycle = 0, maxiter = foptions_->get_int("MAXITER_RELAX_REF");
+//    double e_conv = foptions_->get_double("RELAX_E_CONVERGENCE");
+//    std::vector<double> Edsrg_sa_vec, Erelax_sa_vec;
+//    std::vector<double> Edelta_dsrg_sa_vec, Edelta_relax_sa_vec;
+//    bool converged = false, failed = false;
 
-    // start iteration
-    do {
-        // print
-        outfile->Printf("\n  ==> SA-MR-DSRG CI Iter. %d <==", cycle);
+//    // start iteration
+//    do {
+//        // print
+//        outfile->Printf("\n  ==> SA-MR-DSRG CI Iter. %d <==", cycle);
 
-        // compute dsrg energy
-        double Etemp = Edsrg_sa;
-        Edsrg_sa = compute_energy();
-        Edsrg_sa_vec.push_back(Edsrg_sa);
-        double Edelta_dsrg = Edsrg_sa - Etemp;
-        Edelta_dsrg_sa_vec.push_back(Edelta_dsrg);
+//        // compute dsrg energy
+//        double Etemp = Edsrg_sa;
+//        Edsrg_sa = compute_energy();
+//        Edsrg_sa_vec.push_back(Edsrg_sa);
+//        double Edelta_dsrg = Edsrg_sa - Etemp;
+//        Edelta_dsrg_sa_vec.push_back(Edelta_dsrg);
 
-        // compute de-normal-ordered all-active DSRG transformed Hamiltonian
-        auto fci_ints = compute_Heff_actv();
+//        // compute de-normal-ordered all-active DSRG transformed Hamiltonian
+//        auto fci_ints = compute_Heff_actv();
 
-        // diagonalize the Hamiltonian
-        auto fci_mo =
-            std::make_shared<FCI_MO>(scf_info_, foptions_, ints_, mo_space_info_, fci_ints);
-        Etemp = Erelax_sa;
-        fci_mo->set_localize_actv(false);
-        fci_mo->set_max_rdm_level(max_rdm_level);
-        Erelax_sa = fci_mo->compute_energy();
-        Erelax_sa_vec.push_back(Erelax_sa);
-        double Edelta_relax = Erelax_sa - Etemp;
-        Edelta_relax_sa_vec.push_back(Edelta_relax);
+//        // diagonalize the Hamiltonian
+//        auto fci_mo =
+//            std::make_shared<FCI_MO>(scf_info_, foptions_, ints_, mo_space_info_, fci_ints);
+//        Etemp = Erelax_sa;
+//        fci_mo->set_localize_actv(false);
+//        fci_mo->set_max_rdm_level(max_rdm_level);
+//        Erelax_sa = fci_mo->compute_energy();
+//        Erelax_sa_vec.push_back(Erelax_sa);
+//        double Edelta_relax = Erelax_sa - Etemp;
+//        Edelta_relax_sa_vec.push_back(Edelta_relax);
 
-        // copy energy
-        std::vector<std::vector<double>> Evec(nentry, std::vector<double>());
-        for (int n = 0; n < nentry; ++n) {
-            int nstates = (foptions_->psi_options())["AVG_STATE"][n][2].to_integer();
+//        // copy energy
+//        std::vector<std::vector<double>> Evec(nentry, std::vector<double>());
+//        for (int n = 0; n < nentry; ++n) {
+//            int nstates = (foptions_->psi_options())["AVG_STATE"][n][2].to_integer();
 
-            for (int i = 0; i < nstates; ++i) {
-                Evec[n].push_back(fci_mo->eigens()[n][i].second);
-            }
+//            for (int i = 0; i < nstates; ++i) {
+//                Evec[n].push_back(fci_mo->eigens()[n][i].second);
+//            }
 
-            Edsrg_vec.push_back(Evec);
-        }
+//            Edsrg_vec.push_back(Evec);
+//        }
 
-        // obtain new reference
-        std::vector<std::pair<size_t, size_t>> roots; // unused for SA
-        rdms_ = fci_mo->reference(roots)[0];
+//        // obtain new reference
+//        std::vector<std::pair<size_t, size_t>> roots; // unused for SA
+//        rdms_ = fci_mo->reference(roots)[0];
 
-        outfile->Printf("\n  The following reference rotation will make the new reference and "
-                        "integrals in the same basis.");
-        ambit::Tensor Ua = Uactv_.block("aa"), Ub = Uactv_.block("AA");
-        semiorb.transform_rdms(Ua, Ub, rdms_, max_rdm_level);
+//        outfile->Printf("\n  The following reference rotation will make the new reference and "
+//                        "integrals in the same basis.");
+//        ambit::Tensor Ua = Uactv_.block("aa"), Ub = Uactv_.block("AA");
+//        semiorb.transform_rdms(Ua, Ub, rdms_, max_rdm_level);
 
-        // semicanonicalize orbitals
-        if (foptions_->get_bool("SEMI_CANONICAL")) {
-            print_h2("Semicanonicalize Orbitals");
+//        // semicanonicalize orbitals
+//        if (foptions_->get_bool("SEMI_CANONICAL")) {
+//            print_h2("Semicanonicalize Orbitals");
 
-            // use semicanonicalize class
-            semiorb.semicanonicalize(rdms_);
-            Uactv_.block("aa")("pq") = semiorb.Ua_t()("pq");
-            Uactv_.block("AA")("pq") = semiorb.Ub_t()("pq");
+//            // use semicanonicalize class
+//            semiorb.semicanonicalize(rdms_);
+//            Uactv_.block("aa")("pq") = semiorb.Ua_t()("pq");
+//            Uactv_.block("AA")("pq") = semiorb.Ub_t()("pq");
 
-            // refill H_, V_, and B_ from ForteIntegrals
-            build_ints();
+//            // refill H_, V_, and B_ from ForteIntegrals
+//            build_ints();
 
-            // refill densities
-            build_density();
+//            // refill densities
+//            build_density();
 
-            // build Fock matrix
-            if (!eri_df_) {
-                build_fock(H_, V_);
-            } else {
-                build_fock_df(H_, B_);
-            }
-        } else {
-            // refill density
-            build_density();
+//            // build Fock matrix
+//            if (!eri_df_) {
+//                build_fock(H_, V_);
+//            } else {
+//                build_fock_df(H_, B_);
+//            }
+//        } else {
+//            // refill density
+//            build_density();
 
-            // build Fock matrix
-            if (!eri_df_) {
-                build_fock(H_, V_);
-            } else {
-                build_fock_df(H_, B_);
-            }
+//            // build Fock matrix
+//            if (!eri_df_) {
+//                build_fock(H_, V_);
+//            } else {
+//                build_fock_df(H_, B_);
+//            }
 
-            // check semi-canonicalization
-            semi_canonical_ = check_semi_orbs();
+//            // check semi-canonicalization
+//            semi_canonical_ = check_semi_orbs();
 
-            if (!semi_canonical_) {
-                outfile->Printf("\n    Orbital invariant formalism will be employed for MR-DSRG.");
-                U_ = ambit::BlockedTensor::build(tensor_type_, "U", spin_cases({"gg"}));
-                std::vector<std::vector<double>> eigens = diagonalize_Fock_diagblocks(U_);
-                Fa_ = eigens[0];
-                Fb_ = eigens[1];
-            }
-        }
+//            if (!semi_canonical_) {
+//                outfile->Printf("\n    Orbital invariant formalism will be employed for MR-DSRG.");
+//                U_ = ambit::BlockedTensor::build(tensor_type_, "U", spin_cases({"gg"}));
+//                std::vector<std::vector<double>> eigens = diagonalize_Fock_diagblocks(U_);
+//                Fa_ = eigens[0];
+//                Fb_ = eigens[1];
+//            }
+//        }
 
-        // recompute reference energy (rebuild MK vacuum)
-        if (eri_df_) {
-            Eref_ = compute_reference_energy_df(H_, F_, B_);
-        } else {
-            Eref_ = compute_reference_energy(H_, F_, V_);
-        }
+//        // recompute reference energy (rebuild MK vacuum)
+//        if (eri_df_) {
+//            Eref_ = compute_reference_energy_df(H_, F_, B_);
+//        } else {
+//            Eref_ = compute_reference_energy(H_, F_, V_);
+//        }
 
-        // test convergence
-        if (std::fabs(Edelta_dsrg) < e_conv && std::fabs(Edelta_relax) < e_conv) {
-            converged = true;
-        }
-        if (cycle > maxiter) {
-            outfile->Printf("\n\n    The reference relaxation does not "
-                            "converge in %d iterations! Quitting.\n",
-                            maxiter);
-            converged = true;
-            failed = true;
-        }
-        ++cycle;
-    } while (!converged);
+//        // test convergence
+//        if (std::fabs(Edelta_dsrg) < e_conv && std::fabs(Edelta_relax) < e_conv) {
+//            converged = true;
+//        }
+//        if (cycle > maxiter) {
+//            outfile->Printf("\n\n    The reference relaxation does not "
+//                            "converge in %d iterations! Quitting.\n",
+//                            maxiter);
+//            converged = true;
+//            failed = true;
+//        }
+//        ++cycle;
+//    } while (!converged);
 
-    print_h2("State-Average MR-DSRG Energy Summary");
+//    print_h2("State-Average MR-DSRG Energy Summary");
 
-    outfile->Printf("\n    state-averaged energy summary (not useful)");
-    std::string indent(4, ' ');
-    std::string dash(71, '-');
-    std::string title;
-    title += indent + str(boost::format("%5c  %=31s  %=31s\n") % ' ' % "Fixed Ref. (a.u.)" %
-                          "Relaxed Ref. (a.u.)");
-    title +=
-        indent + std::string(7, ' ') + std::string(31, '-') + "  " + std::string(31, '-') + "\n";
-    title += indent + str(boost::format("%5s  %=20s %=10s  %=20s %=10s\n") % "Iter." %
-                          "Total Energy" % "Delta" % "Total Energy" % "Delta");
-    title += indent + dash;
-    outfile->Printf("\n%s", title.c_str());
-    for (int n = 0; n != cycle; ++n) {
-        outfile->Printf("\n    %5d  %20.12f %10.3e  %20.12f %10.3e", n, Edsrg_sa_vec[n],
-                        Edelta_dsrg_sa_vec[n], Erelax_sa_vec[n], Edelta_relax_sa_vec[n]);
-    }
-    outfile->Printf("\n    %s", dash.c_str());
+//    outfile->Printf("\n    state-averaged energy summary (not useful)");
+//    std::string indent(4, ' ');
+//    std::string dash(71, '-');
+//    std::string title;
+//    title += indent + str(boost::format("%5c  %=31s  %=31s\n") % ' ' % "Fixed Ref. (a.u.)" %
+//                          "Relaxed Ref. (a.u.)");
+//    title +=
+//        indent + std::string(7, ' ') + std::string(31, '-') + "  " + std::string(31, '-') + "\n";
+//    title += indent + str(boost::format("%5s  %=20s %=10s  %=20s %=10s\n") % "Iter." %
+//                          "Total Energy" % "Delta" % "Total Energy" % "Delta");
+//    title += indent + dash;
+//    outfile->Printf("\n%s", title.c_str());
+//    for (int n = 0; n != cycle; ++n) {
+//        outfile->Printf("\n    %5d  %20.12f %10.3e  %20.12f %10.3e", n, Edsrg_sa_vec[n],
+//                        Edelta_dsrg_sa_vec[n], Erelax_sa_vec[n], Edelta_relax_sa_vec[n]);
+//    }
+//    outfile->Printf("\n    %s", dash.c_str());
 
-    // get character table
-    CharacterTable ct = psi::Process::environment.molecule()->point_group()->char_table();
-    std::vector<std::string> irrep_symbol;
-    for (int h = 0, nirrep = mo_space_info_->nirrep(); h < nirrep; ++h) {
-        irrep_symbol.push_back(std::string(ct.gamma(h).symbol()));
-    }
+//    // get character table
+//    CharacterTable ct = psi::Process::environment.molecule()->point_group()->char_table();
+//    std::vector<std::string> irrep_symbol;
+//    for (int h = 0, nirrep = mo_space_info_->nirrep(); h < nirrep; ++h) {
+//        irrep_symbol.push_back(std::string(ct.gamma(h).symbol()));
+//    }
 
-    // frist step results
-    print_h2("One-Step Results");
-    outfile->Printf("\n    Multi.  Irrep.  No.    MR-DSRG Energy");
-    std::string dash1(41, '-');
-    outfile->Printf("\n    %s", dash1.c_str());
-    for (int n = 0; n < nentry; ++n) {
-        int irrep = (foptions_->psi_options())["AVG_STATE"][n][0].to_integer();
-        int multi = (foptions_->psi_options())["AVG_STATE"][n][1].to_integer();
-        int nstates = (foptions_->psi_options())["AVG_STATE"][n][2].to_integer();
+//    // frist step results
+//    print_h2("One-Step Results");
+//    outfile->Printf("\n    Multi.  Irrep.  No.    MR-DSRG Energy");
+//    std::string dash1(41, '-');
+//    outfile->Printf("\n    %s", dash1.c_str());
+//    for (int n = 0; n < nentry; ++n) {
+//        int irrep = (foptions_->psi_options())["AVG_STATE"][n][0].to_integer();
+//        int multi = (foptions_->psi_options())["AVG_STATE"][n][1].to_integer();
+//        int nstates = (foptions_->psi_options())["AVG_STATE"][n][2].to_integer();
 
-        for (int i = 0; i < nstates; ++i) {
-            outfile->Printf("\n     %3d     %3s    %2d   %20.12f", multi,
-                            irrep_symbol[irrep].c_str(), i, Edsrg_vec[0][n][i]);
-        }
-        outfile->Printf("\n    %s", dash1.c_str());
-    }
+//        for (int i = 0; i < nstates; ++i) {
+//            outfile->Printf("\n     %3d     %3s    %2d   %20.12f", multi,
+//                            irrep_symbol[irrep].c_str(), i, Edsrg_vec[0][n][i]);
+//        }
+//        outfile->Printf("\n    %s", dash1.c_str());
+//    }
 
-    // final step results
-    print_h2("Final-Step Results");
-    outfile->Printf("\n    Multi.  Irrep.  No.    MR-DSRG Energy");
-    outfile->Printf("\n    %s", dash1.c_str());
-    auto& Esa = Edsrg_vec[Edsrg_vec.size() - 1];
-    for (int n = 0, counter = 0; n < nentry; ++n) {
-        int irrep = (foptions_->psi_options())["AVG_STATE"][n][0].to_integer();
-        int multi = (foptions_->psi_options())["AVG_STATE"][n][1].to_integer();
-        int nstates = (foptions_->psi_options())["AVG_STATE"][n][2].to_integer();
+//    // final step results
+//    print_h2("Final-Step Results");
+//    outfile->Printf("\n    Multi.  Irrep.  No.    MR-DSRG Energy");
+//    outfile->Printf("\n    %s", dash1.c_str());
+//    auto& Esa = Edsrg_vec[Edsrg_vec.size() - 1];
+//    for (int n = 0, counter = 0; n < nentry; ++n) {
+//        int irrep = (foptions_->psi_options())["AVG_STATE"][n][0].to_integer();
+//        int multi = (foptions_->psi_options())["AVG_STATE"][n][1].to_integer();
+//        int nstates = (foptions_->psi_options())["AVG_STATE"][n][2].to_integer();
 
-        for (int i = 0; i < nstates; ++i) {
-            outfile->Printf("\n     %3d     %3s    %2d   %20.12f*", multi,
-                            irrep_symbol[irrep].c_str(), i, Esa[n][i]);
-            psi::Process::environment.globals["ENERGY ROOT " + std::to_string(counter)] = Esa[n][i];
-            ++counter;
-        }
-        outfile->Printf("\n    %s", dash1.c_str());
-    }
+//        for (int i = 0; i < nstates; ++i) {
+//            outfile->Printf("\n     %3d     %3s    %2d   %20.12f*", multi,
+//                            irrep_symbol[irrep].c_str(), i, Esa[n][i]);
+//            psi::Process::environment.globals["ENERGY ROOT " + std::to_string(counter)] = Esa[n][i];
+//            ++counter;
+//        }
+//        outfile->Printf("\n    %s", dash1.c_str());
+//    }
 
-    if (failed) {
-        throw psi::PSIEXCEPTION("RDMs relaxation process does not converge.");
-    }
+//    if (failed) {
+//        throw psi::PSIEXCEPTION("RDMs relaxation process does not converge.");
+//    }
 
-    psi::Process::environment.globals["CURRENT ENERGY"] = Erelax_sa;
-    return Erelax_sa;
+//    psi::Process::environment.globals["CURRENT ENERGY"] = Erelax_sa;
+//    return Erelax_sa;
+    return 0;
 }
 
 // void MRDSRG::transfer_integrals() {

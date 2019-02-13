@@ -50,9 +50,9 @@ using namespace psi;
 
 namespace forte {
 
-SOMRDSRG::SOMRDSRG(RDMs reference, psi::SharedWavefunction ref_wfn, psi::Options& options,
+SOMRDSRG::SOMRDSRG(RDMs rdms, psi::SharedWavefunction ref_wfn, psi::Options& options,
                    std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : Wavefunction(options), reference_(reference), ints_(ints), mo_space_info_(mo_space_info),
+    : Wavefunction(options), rdms_(rdms), ints_(ints), mo_space_info_(mo_space_info),
       tensor_type_(CoreTensor), BTF(new BlockedTensorFactory()) {
     // Copy the wavefunction information
     shallow_copy(ref_wfn);
@@ -75,7 +75,7 @@ SOMRDSRG::~SOMRDSRG() {
 }
 
 void SOMRDSRG::startup() {
-    Eref = compute_Eref_from_rdms(reference_, ints_, mo_space_info_);
+    Eref = compute_Eref_from_rdms(rdms_, ints_, mo_space_info_);
 
     frozen_core_energy = ints_->frozen_core_energy();
 
@@ -210,9 +210,9 @@ void SOMRDSRG::startup() {
     Matrix gamma_aa("Gamma_aa", nactv, nactv);
     Matrix gamma_AA("Gamma_AA", nactv, nactv);
 
-    reference_.g1a().iterate(
+    rdms_.g1a().iterate(
         [&](const std::vector<size_t>& i, double& value) { gamma_aa.set(i[0], i[1], value); });
-    reference_.g1b().iterate(
+    rdms_.g1b().iterate(
         [&](const std::vector<size_t>& i, double& value) { gamma_AA.set(i[0], i[1], value); });
 
     gamma_aa.print();
@@ -237,18 +237,18 @@ void SOMRDSRG::startup() {
     Matrix lambda2_aA("Lambda2_aA", nactv * nactv, nactv * nactv);
     Matrix lambda2_AA("Lambda2_AA", nactv * nactv, nactv * nactv);
 
-    reference_.L2aa().iterate([&](const std::vector<size_t>& i, double& value) {
+    rdms_.L2aa().iterate([&](const std::vector<size_t>& i, double& value) {
         size_t I = nactv * i[0] + i[1];
         size_t J = nactv * i[2] + i[3];
         lambda2_aa.set(I, J, value);
     });
-    reference_.L2ab().iterate([&](const std::vector<size_t>& i, double& value) {
+    rdms_.L2ab().iterate([&](const std::vector<size_t>& i, double& value) {
         size_t I = nactv * i[0] + i[1];
         size_t J = nactv * i[2] + i[3];
         lambda2_aA.set(I, J, value);
     });
 
-    reference_.L2bb().iterate([&](const std::vector<size_t>& i, double& value) {
+    rdms_.L2bb().iterate([&](const std::vector<size_t>& i, double& value) {
         size_t I = nactv * i[0] + i[1];
         size_t J = nactv * i[2] + i[3];
         lambda2_AA.set(I, J, value);
@@ -302,22 +302,22 @@ void SOMRDSRG::startup() {
         Matrix lambda3_aAA("Lambda3_aAA", nactv * nactv * nactv, nactv * nactv * nactv);
         Matrix lambda3_AAA("Lambda3_AAA", nactv * nactv * nactv, nactv * nactv * nactv);
 
-        reference_.L3aaa().iterate([&](const std::vector<size_t>& i, double& value) {
+        rdms_.L3aaa().iterate([&](const std::vector<size_t>& i, double& value) {
             size_t I = nactv * nactv * i[0] + nactv * i[1] + i[2];
             size_t J = nactv * nactv * i[3] + nactv * i[4] + i[5];
             lambda3_aaa.set(I, J, value);
         });
-        reference_.L3aab().iterate([&](const std::vector<size_t>& i, double& value) {
+        rdms_.L3aab().iterate([&](const std::vector<size_t>& i, double& value) {
             size_t I = nactv * nactv * i[0] + nactv * i[1] + i[2];
             size_t J = nactv * nactv * i[3] + nactv * i[4] + i[5];
             lambda3_aaA.set(I, J, value);
         });
-        reference_.L3abb().iterate([&](const std::vector<size_t>& i, double& value) {
+        rdms_.L3abb().iterate([&](const std::vector<size_t>& i, double& value) {
             size_t I = nactv * nactv * i[0] + nactv * i[1] + i[2];
             size_t J = nactv * nactv * i[3] + nactv * i[4] + i[5];
             lambda3_aAA.set(I, J, value);
         });
-        reference_.L3bbb().iterate([&](const std::vector<size_t>& i, double& value) {
+        rdms_.L3bbb().iterate([&](const std::vector<size_t>& i, double& value) {
             size_t I = nactv * nactv * i[0] + nactv * i[1] + i[2];
             size_t J = nactv * nactv * i[3] + nactv * i[4] + i[5];
             lambda3_AAA.set(I, J, value);

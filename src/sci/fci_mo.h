@@ -115,13 +115,12 @@ class FCI_MO : public ActiveSpaceMethod {
     /// Compute state-averaged CASCI energy
     double compute_sa_energy();
 
-    /// Return the reference object
-    /// Return averaged cumulants if AVG_STATE is not empty
-    std::vector<RDMs> reference(const std::vector<std::pair<size_t, size_t>>& roots) override;
-
+    /// Compute the reduced density matrices up to a given particle rank (max_rdm_level)
     std::vector<RDMs> rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
-                                     std::shared_ptr<ActiveSpaceMethod> method2,
-                                     int max_rdm_level) override;
+                           std::shared_ptr<ActiveSpaceMethod> method2, int max_rdm_level) override;
+
+    [[deprecated]] std::vector<RDMs>
+    reference(const std::vector<std::pair<size_t, size_t>>& root_list);
 
     RDMs reference() {
         std::vector<std::pair<size_t, size_t>> roots;
@@ -137,7 +136,7 @@ class FCI_MO : public ActiveSpaceMethod {
     /// max_level -- max RDM level to be computed
     /// do_cumulant -- returned RDMs is filled by cumulants (not RDMs) if true
     RDMs transition_reference(int root1, int root2, bool multi_state, int entry = 0,
-                                   int max_level = 3, bool do_cumulant = false, bool disk = true);
+                              int max_level = 3, bool do_cumulant = false, bool disk = true);
 
     /// Density files
     std::vector<std::string> density_filenames_generator(int rdm_level, int irrep, int multi,

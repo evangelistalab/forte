@@ -92,11 +92,7 @@ class ProjectorCI_Simple : public ActiveSpaceMethod {
 
     void set_options(std::shared_ptr<ForteOptions>) override{};
 
-    /// Return a reference object
-    std::vector<RDMs>
-    reference(const std::vector<std::pair<size_t, size_t>>& root_list) override;
-
-    /// Returns the reduced density matrices up to a given level (max_rdm_level)
+    /// Compute the reduced density matrices up to a given particle rank (max_rdm_level)
     std::vector<RDMs> rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
                                      std::shared_ptr<ActiveSpaceMethod> method2,
                                      int max_rdm_level) override;

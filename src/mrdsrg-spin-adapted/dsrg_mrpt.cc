@@ -40,10 +40,10 @@ using namespace psi;
 
 namespace forte {
 
-DSRG_MRPT::DSRG_MRPT(RDMs reference, psi::SharedWavefunction ref_wfn, psi::Options& options,
+DSRG_MRPT::DSRG_MRPT(RDMs rdms, psi::SharedWavefunction ref_wfn, psi::Options& options,
                      std::shared_ptr<ForteIntegrals> ints,
                      std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : Wavefunction(options), reference_(reference), ints_(ints), mo_space_info_(mo_space_info),
+    : Wavefunction(options), rdms_(rdms), ints_(ints), mo_space_info_(mo_space_info),
       tensor_type_(ambit::CoreTensor) {
     shallow_copy(ref_wfn);
     // wfn_ = ref_wfn;
@@ -58,31 +58,31 @@ DSRG_MRPT::DSRG_MRPT(RDMs reference, psi::SharedWavefunction ref_wfn, psi::Optio
 /*
 void DSRG_MRPT::hack_doublet() {
     // form spin multiplets averaged densities
-    ambit::Tensor D1 = reference_.g1a().clone();
-    D1("pq") += reference_.g1b()("pq");
+    ambit::Tensor D1 = rdms_.g1a().clone();
+    D1("pq") += rdms_.g1b()("pq");
     D1.scale(0.5);
-    reference_.set_L1a(D1);
-    reference_.set_L1b(D1.clone());
+    rdms_.set_L1a(D1);
+    rdms_.set_L1b(D1.clone());
 
-    ambit::Tensor D2aa = reference_.L2aa().clone();
-    D2aa("pqrs") += reference_.L2bb()("pqrs");
+    ambit::Tensor D2aa = rdms_.L2aa().clone();
+    D2aa("pqrs") += rdms_.L2bb()("pqrs");
     D2aa.scale(0.5);
 
     D2aa("pqrs") -= D1("pr") * D1("qs");
     D2aa("pqrs") += D1("ps") * D1("qr");
 
-    ambit::Tensor D2ab = reference_.L2ab().clone();
-    D2ab("pqrs") += reference_.L2ab()("qpsr");
+    ambit::Tensor D2ab = rdms_.L2ab().clone();
+    D2ab("pqrs") += rdms_.L2ab()("qpsr");
     D2ab.scale(0.5);
 
     D2ab("pqrs") -= D1("pr") * D1("qs");
 
-    reference_.set_L2aa(D2aa);
-    reference_.set_L2ab(D2ab);
-    reference_.set_L2bb(D2aa.clone());
+    rdms_.set_L2aa(D2aa);
+    rdms_.set_L2ab(D2ab);
+    rdms_.set_L2bb(D2aa.clone());
 
-    ambit::Tensor D3aaa = reference_.L3aaa().clone();
-    D3aaa("pqrstu") += reference_.L3bbb()("pqrstu");
+    ambit::Tensor D3aaa = rdms_.L3aaa().clone();
+    D3aaa("pqrstu") += rdms_.L3bbb()("pqrstu");
     D3aaa.scale(0.5);
 
     D3aaa("pqrstu") -= D1("ps") * D2aa("qrtu");
@@ -105,8 +105,8 @@ void DSRG_MRPT::hack_doublet() {
     D3aaa("pqrstu") += D1("pu") * D1("qt") * D1("rs");
     D3aaa("pqrstu") += D1("pt") * D1("qs") * D1("ru");
 
-    ambit::Tensor D3aab = reference_.L3aab().clone();
-    D3aab("pqrstu") += reference_.L3abb()("rpqust");
+    ambit::Tensor D3aab = rdms_.L3aab().clone();
+    D3aab("pqrstu") += rdms_.L3abb()("rpqust");
     D3aab.scale(0.5);
 
     D3aab("pqRstU") -= D1("ps") * D2ab("qRtU");
@@ -120,8 +120,8 @@ void DSRG_MRPT::hack_doublet() {
     D3aab("pqRstU") -= D1("ps") * D1("qt") * D1("RU");
     D3aab("pqRstU") += D1("pt") * D1("qs") * D1("RU");
 
-    ambit::Tensor D3abb = reference_.L3abb().clone();
-    D3abb("pqrstu") += reference_.L3aab()("qrptus");
+    ambit::Tensor D3abb = rdms_.L3abb().clone();
+    D3abb("pqrstu") += rdms_.L3aab()("qrptus");
     D3abb.scale(0.5);
 
     D3abb("pQRsTU") -= D1("ps") * D2aa("QRTU");
@@ -135,10 +135,10 @@ void DSRG_MRPT::hack_doublet() {
     D3abb("pQRsTU") -= D1("ps") * D1("QT") * D1("RU");
     D3abb("pQRsTU") += D1("ps") * D1("QU") * D1("RT");
 
-    reference_.set_L3aaa(D3aaa);
-    reference_.set_L3aab(D3aab);
-    reference_.set_L3abb(D3abb);
-    reference_.set_L3bbb(D3aaa.clone());
+    rdms_.set_L3aaa(D3aaa);
+    rdms_.set_L3aab(D3aab);
+    rdms_.set_L3abb(D3abb);
+    rdms_.set_L3bbb(D3aaa.clone());
 }
 */
 
@@ -234,7 +234,7 @@ void DSRG_MRPT::startup() {
     frozen_core_energy_ = ints_->frozen_core_energy();
 
     // reference energy
-    Eref_ = compute_Eref_from_rdms(reference_, ints_, mo_space_info_);
+    Eref_ = compute_Eref_from_rdms(rdms_, ints_, mo_space_info_);
 
     // orbital spaces
     core_mos_ = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
@@ -332,8 +332,8 @@ void DSRG_MRPT::build_ints() {
 
 void DSRG_MRPT::build_density() {
     // test OPDC
-    ambit::Tensor diff = ambit::Tensor::build(tensor_type_, "diff_L1", reference_.g1a().dims());
-    diff("pq") = reference_.g1a()("pq") - reference_.g1b()("pq");
+    ambit::Tensor diff = ambit::Tensor::build(tensor_type_, "diff_L1", rdms_.g1a().dims());
+    diff("pq") = rdms_.g1a()("pq") - rdms_.g1b()("pq");
     if (diff.norm() > 1.0e-8) {
         outfile->Printf("\n  Error: one-particle density cumulant cannot be spin-adapted!");
         outfile->Printf("\n  |L1a - L1b| = %20.15f  <== This should be 0.0.", diff.norm());
@@ -342,7 +342,7 @@ void DSRG_MRPT::build_density() {
 
     // fill spin-summed OPDC
     ambit::Tensor L1aa = L1_.block("aa");
-    L1aa("pq") = reference_.g1a()("pq") + reference_.g1b()("pq");
+    L1aa("pq") = rdms_.g1a()("pq") + rdms_.g1b()("pq");
 
     ambit::Tensor E1aa = Eta1_.block("aa");
     E1aa.iterate(
@@ -350,9 +350,9 @@ void DSRG_MRPT::build_density() {
     E1aa("pq") -= L1aa("pq");
 
     // test T2PDC
-    diff = ambit::Tensor::build(tensor_type_, "diff_L2", reference_.L2aa().dims());
+    diff = ambit::Tensor::build(tensor_type_, "diff_L2", rdms_.L2aa().dims());
     diff("pqrs") =
-        reference_.L2aa()("pqrs") - reference_.L2ab()("pqrs") + reference_.L2ab()("pqsr");
+        rdms_.L2aa()("pqrs") - rdms_.L2ab()("pqrs") + rdms_.L2ab()("pqsr");
     if (diff.norm() > 1.0e-8) {
         outfile->Printf("\n  Error: two-particle density cumulant cannot be spin-adapted!");
         outfile->Printf("\n  |L2[pqrs] - (L2[pQrS] - L2[pQsR])| = %20.15f  <== "
@@ -363,21 +363,21 @@ void DSRG_MRPT::build_density() {
 
     // fill spin-summed T2PDC
     ambit::Tensor L2aa = L2_.block("aaaa");
-    L2aa("pqrs") += 4.0 * reference_.L2ab()("pqrs");
-    L2aa("pqrs") -= 2.0 * reference_.L2ab()("pqsr");
+    L2aa("pqrs") += 4.0 * rdms_.L2ab()("pqrs");
+    L2aa("pqrs") -= 2.0 * rdms_.L2ab()("pqsr");
 
     // T3PDC
     if (options_.get_str("THREEPDC") != "ZERO") {
         // test spin adaptation
-        diff = ambit::Tensor::build(tensor_type_, "diff_L3", reference_.L3aaa().dims());
-        diff("pqrstu") += reference_.L3aab()("pqrstu") - reference_.L3aab()("pqrsut") +
-                          reference_.L3aab()("pqrtus");
-        diff("pqrstu") -= reference_.L3aab()("prqstu") - reference_.L3aab()("prqsut") +
-                          reference_.L3aab()("prqtus");
-        diff("pqrstu") += reference_.L3aab()("qrpstu") - reference_.L3aab()("qrpsut") +
-                          reference_.L3aab()("qrptus");
+        diff = ambit::Tensor::build(tensor_type_, "diff_L3", rdms_.L3aaa().dims());
+        diff("pqrstu") += rdms_.L3aab()("pqrstu") - rdms_.L3aab()("pqrsut") +
+                          rdms_.L3aab()("pqrtus");
+        diff("pqrstu") -= rdms_.L3aab()("prqstu") - rdms_.L3aab()("prqsut") +
+                          rdms_.L3aab()("prqtus");
+        diff("pqrstu") += rdms_.L3aab()("qrpstu") - rdms_.L3aab()("qrpsut") +
+                          rdms_.L3aab()("qrptus");
         diff.scale(1.0 / 3.0);
-        diff("pqrstu") -= reference_.L3aaa()("pqrstu");
+        diff("pqrstu") -= rdms_.L3aaa()("pqrstu");
         if (diff.norm() > 1.0e-8) {
             outfile->Printf("\n  Error: three-particle density cumulant cannot "
                             "be spin-adapted!");
@@ -389,10 +389,10 @@ void DSRG_MRPT::build_density() {
 
         // fill spin-summed T3PDC
         ambit::Tensor L3aaa = L3_.block("aaaaaa");
-        L3aaa("pqrstu") += reference_.L3aaa()("pqrstu");
-        L3aaa("pqrstu") += reference_.L3aab()("pqrstu");
-        L3aaa("pqrstu") += reference_.L3aab()("prqsut");
-        L3aaa("pqrstu") += reference_.L3aab()("qrptus");
+        L3aaa("pqrstu") += rdms_.L3aaa()("pqrstu");
+        L3aaa("pqrstu") += rdms_.L3aab()("pqrstu");
+        L3aaa("pqrstu") += rdms_.L3aab()("prqsut");
+        L3aaa("pqrstu") += rdms_.L3aab()("qrptus");
         L3aaa.scale(2.0);
     }
 }

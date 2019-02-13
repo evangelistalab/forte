@@ -62,10 +62,6 @@ class FCISolver : public ActiveSpaceMethod {
     /// Compute the FCI energy
     double compute_energy() override;
 
-    /// Return a reference object
-    std::vector<RDMs>
-    reference(const std::vector<std::pair<size_t, size_t>>& root_list) override;
-
     /// Returns the reduced density matrices up to a given rank (max_rdm_level)
     std::vector<RDMs> rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
                                      std::shared_ptr<ActiveSpaceMethod> method2,

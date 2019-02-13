@@ -102,14 +102,25 @@ class ActiveSpaceMethod {
     /// Compute the energy and return it
     virtual double compute_energy() = 0;
 
-    /// Returns the reference
-    virtual std::vector<RDMs>
-    reference(const std::vector<std::pair<size_t, size_t>>& roots) = 0;
-
-    /// Returns the reduced density matrices up to a given rank (max_rdm_level)
-    virtual std::vector<RDMs>
-    rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
-              std::shared_ptr<ActiveSpaceMethod> method2, int max_rdm_level) = 0;
+    /**
+     * @brief Compute the reduced density matrices up to a given particle rank (max_rdm_level)
+     *
+     *        This function can be used to compute transition density matrices between
+     *        states of difference symmetry,
+     *
+     *        D^{p}_{q} = <I, symmetry_l| a+_p1 ... a_qn |J, symmetry_r>
+     *
+     *        where |I, symmetry_l> is the I-th state of symmetry = symmetry_l
+     *              |J, symmetry_r> is the J-th state of symmetry = symmetry_r
+     *
+     * @param root_list     a list of pairs of roots to compute [(I_1, J_1), (I_2, J_2), ...]
+     * @param method2       a second ActiveSpaceMethod object that holds the states for symmetry_r
+     * @param max_rdm_level the maximum RDM rank
+     * @return
+     */
+    virtual std::vector<RDMs> rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
+                                   std::shared_ptr<ActiveSpaceMethod> method2,
+                                   int max_rdm_level) = 0;
 
     /// Set options from an option object
     /// @param options the options passed in

@@ -54,7 +54,7 @@ class SOMRDSRG : public psi::Wavefunction {
     // => Class data <= //
 
     /// The reference object
-    RDMs reference_;
+    RDMs rdms_;
 
     /// The molecular integrals required by MethodBase
     std::shared_ptr<ForteIntegrals> ints_;
@@ -203,7 +203,7 @@ class SOMRDSRG : public psi::Wavefunction {
   public:
     // => Constructors <= //
 
-    SOMRDSRG(RDMs reference, psi::SharedWavefunction ref_wfn, psi::Options& options,
+    SOMRDSRG(RDMs rdms, psi::SharedWavefunction ref_wfn, psi::Options& options,
              std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     ~SOMRDSRG();
