@@ -136,12 +136,21 @@ ProjectorCI_HashVec::ProjectorCI_HashVec(StateInfo state, size_t nroot,
     startup();
 }
 
-std::vector<RDMs>
-ProjectorCI_HashVec::rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
-                               std::shared_ptr<ActiveSpaceMethod> method2, int max_rdm_level) {
+std::vector<RDMs> ProjectorCI_HashVec::rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
+                                            int max_rdm_level) {
     std::vector<RDMs> pci_ref;
     // TODO: implement
+    throw std::runtime_error("ProjectorCI_HashVec::rdms is not implemented!");
     return pci_ref;
+}
+
+std::vector<RDMs>
+ProjectorCI_HashVec::transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
+                                     std::shared_ptr<ActiveSpaceMethod> method2,
+                                     int max_rdm_level) {
+    std::vector<RDMs> refs;
+    throw std::runtime_error("ProjectorCI_HashVec::transition_rdms is not implemented!");
+    return refs;
 }
 
 void ProjectorCI_HashVec::startup() {
@@ -175,7 +184,7 @@ void ProjectorCI_HashVec::startup() {
     // Build the reference determinant and compute its energy
     std::vector<Determinant> reference_vec;
     CI_RDMs ref(scf_info_, options_, mo_space_info_, as_ints_, wavefunction_multiplicity_, ms,
-                     wavefunction_symmetry_);
+                wavefunction_symmetry_);
     ref.set_ref_type("HF");
     ref.build_reference(reference_vec);
     reference_determinant_ = reference_vec[0];
@@ -693,9 +702,9 @@ double ProjectorCI_HashVec::compute_energy() {
     if (converged) {
         outfile->Printf("\n\n  Calculation converged.");
     } else {
-        outfile->Printf("\n\n  Calculation %s",
-                        iter_ != maxiter_ ? "stoped in appearance of higher new low."
-                                          : "did not converge!");
+        outfile->Printf("\n\n  Calculation %s", iter_ != maxiter_
+                                                    ? "stoped in appearance of higher new low."
+                                                    : "did not converge!");
     }
 
     if (do_shift_) {

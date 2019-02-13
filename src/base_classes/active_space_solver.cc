@@ -150,8 +150,8 @@ std::vector<RDMs> ActiveSpaceSolver::rdms(
                                      "symmetry! This function is not yet suported in Forte.");
         }
 
-        std::vector<RDMs> state_refs = state_method_map_[state1]->rdms(
-            element.second, state_method_map_[state2], max_rdm_level);
+        std::vector<RDMs> state_refs =
+            state_method_map_[state1]->rdms(element.second, max_rdm_level);
         for (const auto& state_ref : state_refs) {
             refs.push_back(state_ref);
         }
@@ -369,27 +369,26 @@ RDMs ActiveSpaceSolver::compute_average_rdms(
             // Get the RDMs
             std::vector<std::pair<size_t, size_t>> state_ids;
             state_ids.push_back(std::make_pair(r, r));
-            // RDMs method_ref = method->reference(state_ids)[0];
-            RDMs method_ref = method->rdms(state_ids, method, max_rdm_level)[0];
+            RDMs method_rdms = method->rdms(state_ids, max_rdm_level)[0];
 
             // Now the RDMs
             // 1 RDM
-            scale_add(g1a.data(), method_ref.g1a().data(), weight);
-            scale_add(g1b.data(), method_ref.g1b().data(), weight);
+            scale_add(g1a.data(), method_rdms.g1a().data(), weight);
+            scale_add(g1b.data(), method_rdms.g1b().data(), weight);
 
             if (max_rdm_level_ >= 2) {
                 // 2 RDM
-                scale_add(g2aa.data(), method_ref.g2aa().data(), weight);
-                scale_add(g2ab.data(), method_ref.g2ab().data(), weight);
-                scale_add(g2bb.data(), method_ref.g2bb().data(), weight);
+                scale_add(g2aa.data(), method_rdms.g2aa().data(), weight);
+                scale_add(g2ab.data(), method_rdms.g2ab().data(), weight);
+                scale_add(g2bb.data(), method_rdms.g2bb().data(), weight);
             }
 
             if (max_rdm_level_ >= 3) {
                 // 3 RDM
-                scale_add(g3aaa.data(), method_ref.g3aaa().data(), weight);
-                scale_add(g3aab.data(), method_ref.g3aab().data(), weight);
-                scale_add(g3abb.data(), method_ref.g3abb().data(), weight);
-                scale_add(g3bbb.data(), method_ref.g3bbb().data(), weight);
+                scale_add(g3aaa.data(), method_rdms.g3aaa().data(), weight);
+                scale_add(g3aab.data(), method_rdms.g3aab().data(), weight);
+                scale_add(g3abb.data(), method_rdms.g3abb().data(), weight);
+                scale_add(g3bbb.data(), method_rdms.g3bbb().data(), weight);
             }
         }
     }
@@ -453,7 +452,7 @@ ActiveSpaceSolver::compute_contracted_energy(std::shared_ptr<ActiveSpaceIntegral
             for (size_t B = A; B < nroots; ++B) {
                 // just compute transition rdms of <A|sqop|B>
                 std::vector<std::pair<size_t, size_t>> root_list{std::make_pair(A, B)};
-                RDMs rdms = method->rdms(root_list, method, max_body)[0];
+                RDMs rdms = method->rdms(root_list, max_body)[0];
 
                 double H_AB = ints.contract_with_rdms(rdms);
                 if (A == B) {

@@ -2093,7 +2093,7 @@ d3 FCI_MO::compute_orbital_extents() {
 }
 
 std::vector<RDMs> FCI_MO::rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
-                               std::shared_ptr<ActiveSpaceMethod> method2, int max_rdm_level) {
+                               int max_rdm_level) {
     // TODO : add code to handle transition density matrices (Francesco)
     std::vector<RDMs> refs;
     for (auto& roots : root_list) {
@@ -2115,6 +2115,14 @@ std::vector<RDMs> FCI_MO::rdms(const std::vector<std::pair<size_t, size_t>>& roo
             }
         }
     }
+    return refs;
+}
+
+std::vector<RDMs> FCI_MO::transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
+                                          std::shared_ptr<ActiveSpaceMethod> method2,
+                                          int max_rdm_level) {
+    std::vector<RDMs> refs;
+    throw std::runtime_error("FCI_MO::transition_rdms is not implemented!");
     return refs;
 }
 

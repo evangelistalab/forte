@@ -119,8 +119,11 @@ class ActiveSpaceMethod {
      * @return
      */
     virtual std::vector<RDMs> rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
-                                   std::shared_ptr<ActiveSpaceMethod> method2,
                                    int max_rdm_level) = 0;
+
+    virtual std::vector<RDMs>
+    transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
+                    std::shared_ptr<ActiveSpaceMethod> method2, int max_rdm_level) = 0;
 
     /// Set options from an option object
     /// @param options the options passed in
@@ -213,6 +216,10 @@ std::unique_ptr<ActiveSpaceMethod> make_active_space_method(
     const std::string& type, StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
     std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ActiveSpaceIntegrals> as_ints,
     std::shared_ptr<ForteOptions> options);
+
+std::vector<RDMs> transition_rdms(std::shared_ptr<ActiveSpaceMethod> m1,
+                                  std::shared_ptr<ActiveSpaceMethod> m2,
+                                  std::vector<std::pair<size_t, size_t>>, int max_rdm_level);
 
 } // namespace forte
 

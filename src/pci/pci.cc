@@ -113,12 +113,20 @@ ProjectorCI::ProjectorCI(StateInfo state, size_t nroot, std::shared_ptr<forte::S
     startup();
 }
 
-std::vector<RDMs>
-ProjectorCI::rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
-                       std::shared_ptr<ActiveSpaceMethod> method2, int max_rdm_level) {
-    std::vector<RDMs> pci_ref;
+std::vector<RDMs> ProjectorCI::rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
+                                    int max_rdm_level) {
+    std::vector<RDMs> refs;
     // TODO: implement
-    return pci_ref;
+    throw std::runtime_error("ProjectorCI::rdms is not implemented!");
+    return refs;
+}
+
+std::vector<RDMs>
+ProjectorCI::transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
+                             std::shared_ptr<ActiveSpaceMethod> method2, int max_rdm_level) {
+    std::vector<RDMs> refs;
+    throw std::runtime_error("ProjectorCI::transition_rdms is not implemented!");
+    return refs;
 }
 
 void ProjectorCI::startup() {
@@ -152,7 +160,7 @@ void ProjectorCI::startup() {
     // Build the reference determinant and compute its energy
     std::vector<Determinant> reference_vec;
     CI_RDMs ref(scf_info_, options_, mo_space_info_, as_ints_, wavefunction_multiplicity_, ms,
-                     wavefunction_symmetry_);
+                wavefunction_symmetry_);
     ref.set_ref_type("HF");
     ref.build_reference(reference_vec);
     reference_determinant_ = reference_vec[0];
