@@ -271,7 +271,9 @@ double ACTIVE_DSRGPT2::compute_energy() {
 
             // compute cumultans
             fci_mo_->set_max_rdm_level(max_cu_level);
-            RDMs rdms = fci_mo_->reference();
+            std::vector<std::pair<size_t, size_t>> root;
+            root.push_back(std::make_pair(0, 0));
+            RDMs rdms = fci_mo_->rdms(root, fci_mo_, 3)[0];
 
             // semicanonicalize integrals and cumulants
             semi->semicanonicalize(rdms, max_cu_level);
@@ -312,7 +314,7 @@ double ACTIVE_DSRGPT2::compute_energy() {
             fci_mo_->set_max_rdm_level(1);
             std::vector<std::pair<size_t, size_t>> root;
             root.push_back(std::make_pair(i, i));
-            RDMs rdms = fci_mo_->reference(root)[0];
+            RDMs rdms = fci_mo_->rdms(root, fci_mo_, 3)[0];
             semi->semicanonicalize(rdms, 1, true, false);
 
             Uas.emplace_back(semi->Ua()->clone());
@@ -386,7 +388,7 @@ double ACTIVE_DSRGPT2::compute_energy() {
             // can move this out of loop
             std::vector<std::pair<size_t, size_t>> rootvec;
             rootvec.push_back(std::make_pair(i, i));
-            RDMs rdms = fci_mo_->reference(rootvec)[0];
+            RDMs rdms = fci_mo_->rdms(rootvec, fci_mo_, 3)[0];
 
             // manually rotate the RDMs and integrals
             semi->transform_rdms(Uas_t[i], Ubs_t[i], rdms, max_cu_level);
