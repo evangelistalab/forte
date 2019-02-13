@@ -68,7 +68,7 @@ class DSRG_MRPT : public psi::Wavefunction {
     double compute_energy();
 
   protected:
-    //void hack_doublet();
+    // void hack_doublet();
 
     // => Class initialization and termination <= //
 
@@ -84,7 +84,7 @@ class DSRG_MRPT : public psi::Wavefunction {
     int print_;
 
     /// The reference object
-    RDMs reference_;
+    RDMs rdms_;
 
     /// The energy of the reference
     double Eref_;
