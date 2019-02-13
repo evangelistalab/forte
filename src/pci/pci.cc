@@ -113,17 +113,6 @@ ProjectorCI::ProjectorCI(StateInfo state, size_t nroot, std::shared_ptr<forte::S
     startup();
 }
 
-std::vector<RDMs> ProjectorCI::reference(const std::vector<std::pair<size_t, size_t>>&) {
-    //    CI_RDMS ci_rdms(final_wfn_, as_ints_, evecs_, root, root);
-    //    ci_rdms.set_max_rdm(max_rdm_level_);
-    //    RDMs pci_ref = ci_rdms.reference(ordm_a_, ordm_b_, trdm_aa_, trdm_ab_, trdm_bb_,
-    //    trdm_aaa_,
-    //                                          trdm_aab_, trdm_abb_, trdm_bbb_);
-    std::vector<RDMs> pci_ref;
-    // TODO: implement
-    return pci_ref;
-}
-
 std::vector<RDMs>
 ProjectorCI::rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
                        std::shared_ptr<ActiveSpaceMethod> method2, int max_rdm_level) {

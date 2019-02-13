@@ -90,10 +90,7 @@ class AdaptiveCI : public ActiveSpaceMethod {
     /// Compute the energy
     double compute_energy() override;
 
-    /// Update the reference file
-    std::vector<RDMs>
-    reference(const std::vector<std::pair<size_t, size_t>>& root_list) override;
-
+    /// Compute the reduced density matrices up to a given particle rank (max_rdm_level)
     std::vector<RDMs> rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
                                      std::shared_ptr<ActiveSpaceMethod> method2,
                                      int max_rdm_level) override;

@@ -405,7 +405,8 @@ RDMs ActiveSpaceSolver::compute_average_rdms(
 }
 
 const std::map<StateInfo, std::vector<double>>&
-ActiveSpaceSolver::compute_contracted_energy(std::shared_ptr<ActiveSpaceIntegrals> as_ints) {
+ActiveSpaceSolver::compute_contracted_energy(std::shared_ptr<ActiveSpaceIntegrals> as_ints,
+                                             int max_body) {
     if (state_method_map_.size() == 0) {
         throw psi::PSIEXCEPTION("Old CI determinants are not solved. Call compute_energy first.");
     }
@@ -452,7 +453,7 @@ ActiveSpaceSolver::compute_contracted_energy(std::shared_ptr<ActiveSpaceIntegral
             for (size_t B = A; B < nroots; ++B) {
                 // just compute transition rdms of <A|sqop|B>
                 std::vector<std::pair<size_t, size_t>> root_list{std::make_pair(A, B)};
-                RDMs rdms = method->reference(root_list)[0];
+                RDMs rdms = method->rdms(root_list, method, max_body)[0];
 
                 double H_AB = ints.contract_with_rdms(rdms);
                 if (A == B) {

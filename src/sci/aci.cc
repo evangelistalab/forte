@@ -97,7 +97,7 @@ void AdaptiveCI::startup() {
 
     // Build the reference determinant and compute its energy
     CI_RDMs ref(scf_info_, options_, mo_space_info_, as_ints_, multiplicity_, twice_ms_,
-                     wavefunction_symmetry_);
+                wavefunction_symmetry_);
     ref.build_reference(initial_reference_);
 
     // Read options
@@ -1396,9 +1396,8 @@ std::vector<double> AdaptiveCI::davidson_correction(std::vector<Determinant>& P_
     return dc;
 }
 
-std::vector<RDMs>
-AdaptiveCI::rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
-                      std::shared_ptr<ActiveSpaceMethod> method2, int max_rdm_level) {
+std::vector<RDMs> AdaptiveCI::rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
+                                   std::shared_ptr<ActiveSpaceMethod> method2, int max_rdm_level) {
 
     std::vector<RDMs> refs;
 
@@ -1408,29 +1407,6 @@ AdaptiveCI::rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
                      max_rdm_level);
 
         if (max_rdm_level == 1) {
-            refs.emplace_back(ordm_a_, ordm_b_);
-        }
-        if (max_rdm_level_ == 2) {
-            refs.emplace_back(ordm_a_, ordm_b_, trdm_aa_, trdm_ab_, trdm_bb_);
-        }
-        if (max_rdm_level_ == 3) {
-            refs.emplace_back(ordm_a_, ordm_b_, trdm_aa_, trdm_ab_, trdm_bb_, trdm_aaa_, trdm_aab_,
-                              trdm_abb_, trdm_bbb_);
-        }
-    }
-    return refs;
-}
-
-std::vector<RDMs> AdaptiveCI::reference(const std::vector<std::pair<size_t, size_t>>& roots) {
-
-    std::vector<RDMs> refs;
-
-    for (const auto& root_pair : roots) {
-
-        compute_rdms(as_ints_, final_wfn_, op_, evecs_, root_pair.first, root_pair.second,
-                     max_rdm_level_);
-
-        if (max_rdm_level_ == 1) {
             refs.emplace_back(ordm_a_, ordm_b_);
         }
         if (max_rdm_level_ == 2) {

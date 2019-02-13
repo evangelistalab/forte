@@ -27,7 +27,7 @@ void set_DSRG_options(ForteOptions& foptions);
 //     * @param ints A pointer to an allocated integral object
 //     * @param mo_space_info The MOSpaceInfo object
 //     */
-//    RUN_DSRG(RDMs reference, psi::SharedWavefunction ref_wfn, psi::Options& options,
+//    RUN_DSRG(RDMs rdms, psi::SharedWavefunction ref_wfn, psi::Options& options,
 //             std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
 //    /// Compute DSRG energy
@@ -42,7 +42,7 @@ void set_DSRG_options(ForteOptions& foptions);
 
 //};
 
-std::unique_ptr<MASTER_DSRG> make_dsrg_method(const std::string& method, RDMs reference,
+std::unique_ptr<MASTER_DSRG> make_dsrg_method(const std::string& method, RDMs rdms,
                                               std::shared_ptr<SCFInfo> scf_info,
                                               std::shared_ptr<ForteOptions> options,
                                               std::shared_ptr<ForteIntegrals> ints,

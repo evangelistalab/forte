@@ -52,67 +52,6 @@ CC::~CC() {}
 /// Compute the corr_level energy with fixed reference
 double CC::compute_energy() { return 0.0; }
 
-// MRDSRG::MRDSRG(RDMs reference, psi::SharedWavefunction ref_wfn, Options&
-// options,
-//               std::shared_ptr<ForteIntegrals> ints,
-//               std::shared_ptr<MOSpaceInfo> mo_space_info)
-//    : Wavefunction(options), reference_(reference), ints_(ints),
-//      mo_space_info_(mo_space_info), BTF_(new BlockedTensorFactory(options)),
-//      tensor_type_(CoreTensor)
-//{
-//    shallow_copy(ref_wfn);
-//    reference_wavefunction_ = ref_wfn;
-
-//    print_method_banner({"Multireference Driven Similarity Renormalization
-//    Group","Chenyang Li"});
-//    read_options();
-//    print_options();
-//
-//}
-
-// MRDSRG::~MRDSRG(){
-//    cleanup();
-//}
-
-// void MRDSRG::cleanup(){
-//    dsrg_time_.print_comm_time();
-//}
-
-// void MRDSRG::read_options(){
-
-//    print_ = options_.get_int("PRINT");
-
-//    s_ = options_.get_double("DSRG_S");
-//    if(s_ < 0){
-//        outfile->Printf("\n  S parameter for DSRG must >= 0!");
-//        throw psi::PSIEXCEPTION("S parameter for DSRG must >= 0!");
-//    }
-//    taylor_threshold_ = options_.get_int("TAYLOR_THRESHOLD");
-//    if(taylor_threshold_ <= 0){
-//        outfile->Printf("\n  Threshold for Taylor expansion must be an integer
-//        greater than 0!");
-//        throw psi::PSIEXCEPTION("Threshold for Taylor expansion must be an integer
-//        greater than 0!");
-//    }
-
-//    source_ = options_.get_str("SOURCE");
-//    if(source_ != "STANDARD" && source_ != "LABS" && source_ != "DYSON"){
-//        outfile->Printf("\n  Warning: SOURCE option \"%s\" is not implemented
-//        in MRDSRG. Changed to STANDARD.", source_.c_str());
-//        source_ = "STANDARD";
-//    }
-//    if(source_ == "STANDARD"){
-//        dsrg_source_ = std::make_shared<STD_SOURCE>(s_,taylor_threshold_);
-//    }else if(source_ == "LABS"){
-//        dsrg_source_ = std::make_shared<LABS_SOURCE>(s_,taylor_threshold_);
-//    }else if(source_ == "DYSON"){
-//        dsrg_source_ = std::make_shared<DYSON_SOURCE>(s_,taylor_threshold_);
-//    }
-
-//    ntamp_ = options_.get_int("NTAMP");
-//    intruder_tamp_ = options_.get_double("INTRUDER_TAMP");
-//}
-
 void CC::startup() {
     // frozen-core energy
     frozen_core_energy_ = ints_->frozen_core_energy();

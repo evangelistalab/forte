@@ -80,15 +80,9 @@ class ActiveSpaceSolver {
 
     /// Compute the contracted CI energy
     const std::map<StateInfo, std::vector<double>>&
-    compute_contracted_energy(std::shared_ptr<forte::ActiveSpaceIntegrals> as_ints);
+    compute_contracted_energy(std::shared_ptr<forte::ActiveSpaceIntegrals> as_ints, int max_body);
 
-    //    /// Compute references of all states in the given map
-    //    /// First entry of the pair corresponds to bra and the second is the ket.
-    //    std::vector<RDMs> reference(std::map<std::pair<StateInfo, StateInfo>,
-    //                                              std::vector<std::pair<size_t, size_t>>>&
-    //                                              elements);
-
-    /// Compute RDMS of all states in the given map
+    /// Compute RDMs of all states in the given map
     /// First entry of the pair corresponds to bra and the second is the ket.
     std::vector<RDMs> rdms(
         std::map<std::pair<StateInfo, StateInfo>, std::vector<std::pair<size_t, size_t>>>& elements,
