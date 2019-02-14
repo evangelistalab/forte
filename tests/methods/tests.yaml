@@ -229,3 +229,11 @@ pci_hashvec:
    - pci_hashvec-4
    - pci_hashvec-5
    - pci_hashvec-6
+ewci:
+  short:
+   - ewci-1
+   - ewci-2
+   - ewci-3
+   - ewci-4
+   - ewci-5
+   - ewci-6
