@@ -22,9 +22,9 @@
     -----------------------------------------------------------------------
 
 
-    Psi4 started on: Thursday, 10 January 2019 05:01PM
+    Psi4 started on: Thursday, 14 February 2019 06:17PM
 
-    Process ID: 6728
+    Process ID: 5345
     Host:       tianyuans-air.wireless.emory.edu
     PSIDATADIR: /Users/tianyuanzhang/Documents/Source/psi4_2018/psi4-bin-clang-debug/share/psi4
     Memory:     500.0 MiB
@@ -53,7 +53,7 @@ set {
 }
 
 set forte {
-  active_space_solver pci_hashvec
+  active_space_solver ewci
   nroot 1
   charge 0
   pci_spawning_threshold 0.0
@@ -71,11 +71,11 @@ energy('scf')
 compare_values(refscf, variable("CURRENT ENERGY"), 11, "SCF energy") #TEST
 
 energy('forte')
-compare_values(refpci, variable("PCI ENERGY"), 11, "PCI energy") #TEST
+compare_values(refpci, variable("EWCI ENERGY"), 11, "EWCI energy") #TEST
 --------------------------------------------------------------------------
 
 *** tstart() called on tianyuans-air.wireless.emory.edu
-*** at Thu Jan 10 17:01:33 2019
+*** at Thu Feb 14 18:17:13 2019
 
    => Loading Basis Set <=
 
@@ -250,19 +250,19 @@ Properties computed using the SCF density matrix
      X:     0.0000      Y:     0.0000      Z:     0.0000     Total:     0.0000
 
 
-*** tstop() called on tianyuans-air.wireless.emory.edu at Thu Jan 10 17:01:34 2019
+*** tstop() called on tianyuans-air.wireless.emory.edu at Thu Feb 14 18:17:14 2019
 Module time:
-	user time   =       0.53 seconds =       0.01 minutes
-	system time =       0.03 seconds =       0.00 minutes
+	user time   =       0.48 seconds =       0.01 minutes
+	system time =       0.02 seconds =       0.00 minutes
 	total time  =          1 seconds =       0.02 minutes
 Total time:
-	user time   =       0.53 seconds =       0.01 minutes
-	system time =       0.03 seconds =       0.00 minutes
+	user time   =       0.48 seconds =       0.01 minutes
+	system time =       0.02 seconds =       0.00 minutes
 	total time  =          1 seconds =       0.02 minutes
 	SCF energy........................................................PASSED
 
 *** tstart() called on tianyuans-air.wireless.emory.edu
-*** at Thu Jan 10 17:01:34 2019
+*** at Thu Feb 14 18:17:14 2019
 
    => Loading Basis Set <=
 
@@ -437,15 +437,15 @@ Properties computed using the SCF density matrix
      X:     0.0000      Y:     0.0000      Z:     0.0000     Total:     0.0000
 
 
-*** tstop() called on tianyuans-air.wireless.emory.edu at Thu Jan 10 17:01:35 2019
+*** tstop() called on tianyuans-air.wireless.emory.edu at Thu Feb 14 18:17:14 2019
 Module time:
-	user time   =       0.48 seconds =       0.01 minutes
+	user time   =       0.46 seconds =       0.01 minutes
 	system time =       0.02 seconds =       0.00 minutes
-	total time  =          1 seconds =       0.02 minutes
+	total time  =          0 seconds =       0.00 minutes
 Total time:
-	user time   =       1.03 seconds =       0.02 minutes
-	system time =       0.05 seconds =       0.00 minutes
-	total time  =          2 seconds =       0.03 minutes
+	user time   =       0.97 seconds =       0.02 minutes
+	system time =       0.04 seconds =       0.00 minutes
+	total time  =          1 seconds =       0.02 minutes
    => Loading Basis Set <=
 
     Name: STO-3G
@@ -458,11 +458,12 @@ Total time:
   ----------------------------------------------------------------------------
   A suite of quantum chemistry methods for strongly correlated electrons
 
-    git branch: ms_solver - git commit: 8dcc2a59
+    git branch: ci_framework - git commit: fe5fbd54
 
   Developed by:
     Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
-    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai,    Nan He, Nicholas Stair, Shuhe Wang, Renke Huang
+    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai,
+    Nan He, Nicholas Stair, Shuhe Wang, Renke Huang
   ----------------------------------------------------------------------------
 
   Size of Determinant class: 32
@@ -492,16 +493,45 @@ Total time:
   Overall Conventional Integrals timings
 
 
-  Conventional integrals take 0.05197920 s
+  Conventional integrals take 0.04787573 s
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.  Nstates
+    -------------------------
+      Ag       1        1
+    -------------------------
+    Total number of states: 1
+    -------------------------
+
   Number of active alpha electrons: 1
   Number of active beta electrons: 1
   Maximum reference space size: 1000
   |2000000000>
 
+-------------------------------------------------------------------------------
+               Selected Configuration Interaction Excited States
+  written by Jeffrey B. Schriber, Tianyuan Zhang and Francesco A. Evangelista
+-------------------------------------------------------------------------------
+
+  ==> Reference Information <==
+
+  ==> Calculation Information <==
+
+  -----------------------------------------------------------------
+    Multiplicity                             1    
+    Symmetry                                 0    
+    Number of roots                          1    
+    Ms                                       0
+    Excited Algorithm                        ROOT_ORTHOGONALIZE
+  -----------------------------------------------------------------
+  Using 1 threads
+  Computing wavefunction for root 0
+
 	  ---------------------------------------------------------
-	    Projector Configuration Interaction HashVector implementation
+	              Element wise Configuration Interactionimplementation
 	         by Francesco A. Evangelista and Tianyuan Zhang
-	                      version Jul. 28 2017
+	                      version Aug. 3 2017
 	                       1 thread(s) 
 	  ---------------------------------------------------------
 
@@ -520,13 +550,14 @@ Total time:
     Convergence threshold                    1.000e-12
     Energy estimate tollerance               0.000e+00
     Generator type                          Davidson-Liu by Tianyuan
+    Importance functional                   |Hij|*max(|Ci|,|Cj|)
     Shift the energy                                NO
     Use intermediate normalization                  NO
     Fast variational estimate                      YES
     Result perturbation analysis                    NO
     Using OpenMP                                    NO
 
-  ==> Initial Guess <==      -1.113177215933 -1.113e+00
+  ==> Initial Guess <==       0.853511630113  8.535e-01
 
   Initial guess size = 1
   Found 1 roots with 2S+1 = 1 *
@@ -602,19 +633,19 @@ Davidson iter    5 order    6 correction norm  2.335e-01 dE -8.247e-11 E    -1.1
 Davidson iter    6 order    7 correction norm  4.192e-01 dE -3.124e-09 E    -1.145796365079.
 Davidson iter    7 order    8 correction norm  2.893e-01 dE -1.503e-09 E    -1.145796366582.
 Davidson collapsed from 8 vectors to 2 vectors.
-Davidson iter    8 order    3 correction norm  6.081e-01 dE -2.546e-12 E    -1.145796366584.
+Davidson iter    8 order    3 correction norm  6.081e-01 dE -2.549e-12 E    -1.145796366584.
 Davidson iter    9 order    4 correction norm  1.241e-01 dE -1.673e-11 E    -1.145796366601.
-Davidson iter   10 order    5 correction norm  1.966e-01 dE -2.298e-13 E    -1.145796366601.
+Davidson iter   10 order    5 correction norm  1.966e-01 dE -2.292e-13 E    -1.145796366601.
         3       11         22           462      -1.145796120889  8.271e-06      -1.145796366601 -3.905e-07
 Davidson iter    1 order    2 correction norm  7.266e-01 dE -2.642e-10 E    -1.145796366865.
 Davidson iter    2 order    3 correction norm  4.924e-01 dE -1.608e-13 E    -1.145796366865.
         4        3         22           462      -1.145796531028 -4.101e-07      -1.145796366865 -2.644e-10
 Davidson iter    1 order    2 correction norm  3.417e-01 dE -2.937e-12 E    -1.145796366868.
-Davidson iter    2 order    3 correction norm  1.075e-01 dE -4.508e-14 E    -1.145796366868.
-        5        3         22           462      -1.145796310365  2.207e-07      -1.145796366868 -2.981e-12
+Davidson iter    2 order    3 correction norm  1.075e-01 dE -4.530e-14 E    -1.145796366868.
+        5        3         22           462      -1.145796310365  2.207e-07      -1.145796366868 -2.980e-12
 Davidson iter    1 order    2 correction norm  3.106e-01 dE -2.716e-13 E    -1.145796366869.
-        6        2         22           462      -1.145796388310 -7.795e-08      -1.145796366869 -2.718e-13
-Davidson iter    1 order    2 correction norm  3.442e-01 dE -3.886e-14 E    -1.145796366869.
+        6        2         22           462      -1.145796388310 -7.795e-08      -1.145796366869 -2.713e-13
+Davidson iter    1 order    2 correction norm  3.442e-01 dE -3.908e-14 E    -1.145796366869.
         7        2         22           462      -1.145796358568  2.974e-08
   --------------------------------------------------------------------------------------------------------------
 
@@ -624,33 +655,71 @@ Davidson iter    1 order    2 correction norm  3.442e-01 dE -3.886e-14 E    -1.1
 
   * Size of CI space                    = 22
   * Number of off-diagonal elements     = 462
-  * Projector-CI Approximate Energy     =    -1.145796366869 Eh
-  * Projector-CI Projective  Energy     =    -1.145796358568 Eh
+  * ElementwiseCI Approximate Energy    =    -1.145796366869 Eh
+  * ElementwiseCI Projective  Energy    =    -1.145796358568 Eh
 
   Most important contributions to the wave function:
 
     0      -0.993095      0.986237           0 |20000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>     -1.966688846046
     1      0.0505026    0.00255051           1 |00000020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>      0.465430650341
     2      0.0486604    0.00236784           2 |02000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>     -0.397745117947
-    3      0.0421031    0.00177267           3 |00000000200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>      0.893715722109
-    4      0.0421031    0.00177267           4 |00000000020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>      0.893715722109
-    5      0.0381598    0.00145617           5 |00000-+0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>     -0.186631584721
-    6      0.0381598    0.00145617           6 |00000+-0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>     -0.186631584721
+    3      0.0421031    0.00177267           3 |00000000020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>      0.893715722109
+    4      0.0421031    0.00177267           4 |00000000200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>      0.893715722109
+    5      0.0381598    0.00145617           5 |00000+-0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>     -0.186631584721
+    6      0.0381598    0.00145617           6 |00000-+0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>     -0.186631584721
     7      0.0370656    0.00137386           7 |00000200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>     -0.652883883483
     8     -0.0139536   0.000194703           8 |0+-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>      0.910192242159
     9     -0.0139536   0.000194703           9 |0-+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>      0.910192242159
 
   Spin State: S^2 = 0.000, S = 0.000, singlet (from 1 determinants,98.62%)
-  Projector-CI (bitset) steps finished in  : 0.032848 s
+  ElementwiseCI (bitset) steps finished in  : 0.033519 s
 
   Variational energy estimated with 22 determinants to meet the max error 0.000000e+00
-  * Projector-CI Variational Energy     =    -1.145796366869 Eh
-  * Projector-CI Var. Corr.  Energy     =    -0.032619150935 Eh
+  * ElementwiseCI Variational Energy    =    -1.145796366869 Eh
+  * ElementwiseCI Var. Corr.  Energy    =    -0.032619150935 Eh
   * 1st order perturbation   Energy     =    -0.000000000000 Eh
 
-  Projector-CI (bitset) ran in  : 0.033825 s	PCI energy........................................................PASSED
+  ElementwiseCI (bitset) ran in  : 0.034497 s
 
-    Psi4 stopped on: Thursday, 10 January 2019 05:01PM
-    Psi4 wall time for execution: 0:00:01.48
+  Saving the wave function:
+
+  Saving root 0, ref_root is 0
+  Number of old roots: 1
+
+  ==> SCI excited state solver summary <==
+
+  Iterations required:                         0
+  Dimension of optimized determinant space:    22
+
+  * Adaptive-CI Energy Root   0        = -1.145796366869 Eh =   0.0000 eV
+  * Adaptive-CI Energy Root   0 + EPT2 = -1.145796366869 Eh =   0.0000 eV
+
+  ==> Wavefunction Information <==
+
+  Most important contributions to root   0:
+    0  -0.993095 0.986237357           0 |2000000000>
+    1   0.050503 0.002550511           1 |0000002000>
+    2   0.048660 0.002367839           2 |0200000000>
+    3   0.042103 0.001772671           4 |0000000020>
+    4   0.042103 0.001772671           3 |0000000002>
+    5   0.038160 0.001456172           6 |00000-+000>
+    6   0.038160 0.001456172           5 |00000+-000>
+    7   0.037066 0.001373855           7 |0000020000>
+    8  -0.013954 0.000194703           9 |0-+0000000>
+    9  -0.013954 0.000194703           8 |0+-0000000>
+
+  Spin state for root 0: S^2 = 0.003534, S = 0.004, singlet
+
+  Saving information for root: 0
+
+  ==> Energy Summary <==
+
+    Multi.  Irrep.  No.               Energy
+    -----------------------------------------
+       1      Ag     0        -1.145796366869
+    -----------------------------------------	EWCI energy.......................................................PASSED
+
+    Psi4 stopped on: Thursday, 14 February 2019 06:17PM
+    Psi4 wall time for execution: 0:00:01.37
 
 *** Psi4 exiting successfully. Buy a developer a beer!

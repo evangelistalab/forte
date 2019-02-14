@@ -115,7 +115,7 @@ class AdaptiveCI_SCI : public SelectedCIMethod {
     /// Set the class variable
     void set_method_variables(
         std::string ex_alg, size_t nroot_method, size_t root,
-        std::vector<std::vector<std::pair<Determinant, double>>> old_roots) override;
+        const std::vector<std::vector<std::pair<Determinant, double>>>& old_roots) override;
     /// Getters
     DeterminantHashVec get_PQ_space() override;
     psi::SharedMatrix get_PQ_evecs() override;

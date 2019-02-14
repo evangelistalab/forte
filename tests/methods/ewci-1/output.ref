@@ -22,10 +22,10 @@
     -----------------------------------------------------------------------
 
 
-    Psi4 started on: Thursday, 14 February 2019 12:48PM
+    Psi4 started on: Thursday, 14 February 2019 06:17PM
 
-    Process ID: 3832
-    Host:       Tianyuans-MacBook-Air.local
+    Process ID: 5341
+    Host:       tianyuans-air.wireless.emory.edu
     PSIDATADIR: /Users/tianyuanzhang/Documents/Source/psi4_2018/psi4-bin-clang-debug/share/psi4
     Memory:     500.0 MiB
     Threads:    1
@@ -71,8 +71,8 @@ compare_values(refpostdiag, variable("EWCI POST DIAG ENERGY"), 10, "EWCI POST DI
 
 --------------------------------------------------------------------------
 
-*** tstart() called on Tianyuans-MacBook-Air.local
-*** at Thu Feb 14 12:48:36 2019
+*** tstart() called on tianyuans-air.wireless.emory.edu
+*** at Thu Feb 14 18:17:00 2019
 
    => Loading Basis Set <=
 
@@ -248,19 +248,19 @@ Properties computed using the SCF density matrix
      X:     0.0000      Y:     0.0000      Z:     0.0000     Total:     0.0000
 
 
-*** tstop() called on Tianyuans-MacBook-Air.local at Thu Feb 14 12:48:37 2019
+*** tstop() called on tianyuans-air.wireless.emory.edu at Thu Feb 14 18:17:01 2019
 Module time:
-	user time   =       0.46 seconds =       0.01 minutes
+	user time   =       0.47 seconds =       0.01 minutes
 	system time =       0.02 seconds =       0.00 minutes
 	total time  =          1 seconds =       0.02 minutes
 Total time:
-	user time   =       0.46 seconds =       0.01 minutes
+	user time   =       0.47 seconds =       0.01 minutes
 	system time =       0.02 seconds =       0.00 minutes
 	total time  =          1 seconds =       0.02 minutes
 	SCF energy........................................................PASSED
 
-*** tstart() called on Tianyuans-MacBook-Air.local
-*** at Thu Feb 14 12:48:37 2019
+*** tstart() called on tianyuans-air.wireless.emory.edu
+*** at Thu Feb 14 18:17:01 2019
 
    => Loading Basis Set <=
 
@@ -436,13 +436,13 @@ Properties computed using the SCF density matrix
      X:     0.0000      Y:     0.0000      Z:     0.0000     Total:     0.0000
 
 
-*** tstop() called on Tianyuans-MacBook-Air.local at Thu Feb 14 12:48:37 2019
+*** tstop() called on tianyuans-air.wireless.emory.edu at Thu Feb 14 18:17:01 2019
 Module time:
-	user time   =       0.44 seconds =       0.01 minutes
+	user time   =       0.45 seconds =       0.01 minutes
 	system time =       0.02 seconds =       0.00 minutes
 	total time  =          0 seconds =       0.00 minutes
 Total time:
-	user time   =       0.92 seconds =       0.02 minutes
+	user time   =       0.95 seconds =       0.02 minutes
 	system time =       0.04 seconds =       0.00 minutes
 	total time  =          1 seconds =       0.02 minutes
    => Loading Basis Set <=
@@ -492,7 +492,7 @@ Total time:
   Overall Conventional Integrals timings
 
 
-  Conventional integrals take 0.05486574 s
+  Conventional integrals take 0.04794147 s
 
   ==> Summary of Active Space Solver Input <==
 
@@ -507,6 +507,25 @@ Total time:
   Number of active beta electrons: 3
   Maximum reference space size: 1000
   |2200020000>
+
+-------------------------------------------------------------------------------
+               Selected Configuration Interaction Excited States
+  written by Jeffrey B. Schriber, Tianyuan Zhang and Francesco A. Evangelista
+-------------------------------------------------------------------------------
+
+  ==> Reference Information <==
+
+  ==> Calculation Information <==
+
+  -----------------------------------------------------------------
+    Multiplicity                             1    
+    Symmetry                                 0    
+    Number of roots                          1    
+    Ms                                       0
+    Excited Algorithm                        ROOT_ORTHOGONALIZE
+  -----------------------------------------------------------------
+  Using 1 threads
+  Computing wavefunction for root 0
 
 	  ---------------------------------------------------------
 	              Element wise Configuration Interactionimplementation
@@ -537,7 +556,7 @@ Total time:
     Result perturbation analysis                    NO
     Using OpenMP                                    NO
 
-  ==> Initial Guess <==     -14.609744738090 -1.461e+01
+  ==> Initial Guess <==
 
   Initial guess size = 86
   Spin multiplicity of root 78 not close to integer (4.1231)
@@ -616,34 +635,37 @@ Total time:
     9     0.00782457    6.1224e-05           9 |20000202000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -15.877818677698
 
   Spin State: S^2 = 0.000, S = 0.000, singlet (from 3 determinants,97.74%)
-  ElementwiseCI (bitset) steps finished in  : 0.220316 s
+  ElementwiseCI (bitset) steps finished in  : 0.233628 s
 
   Variational energy estimated with 418 determinants to meet the max error 0.000000e+00
 
   ==> Computing Coupling Lists <==
   --------------------------------
-        α          0.002033 s
-        β          0.002014 s
-        αα         0.001791 s
-        ββ         0.001755 s
-        αβ         0.004497 s
+        α          0.002493 s
+        β          0.002024 s
+        αα         0.001895 s
+        ββ         0.001774 s
+        αβ         0.005973 s
   --------------------------------
   * ElementwiseCI Variational Energy    =   -14.646159980219 Eh
   * ElementwiseCI Var. Corr.  Energy    =    -0.036415242129 Eh
   * 1st order perturbation   Energy     =    -0.000005371283 Eh
 
-  ElementwiseCI (bitset) ran in  : 0.235913 s
+  ElementwiseCI (bitset) ran in  : 0.252625 s
+
+  Saving the wave function:
+
 
   ==> Post-Diagonalization <==
 
 
   ==> Computing Coupling Lists <==
   --------------------------------
-        α          0.001948 s
-        β          0.002018 s
-        αα         0.001776 s
-        ββ         0.001739 s
-        αβ         0.004415 s
+        α          0.001919 s
+        β          0.001956 s
+        αα         0.001871 s
+        ββ         0.001751 s
+        αβ         0.004518 s
   --------------------------------
 
   Davidson-Liu solver algorithm
@@ -875,7 +897,7 @@ Total time:
       8      -17.027462305398  -6.111e-13
   ----------------------------------------
   The Davidson-Liu algorithm converged in 9 iterations.
-  Davidson-Liu procedure took  0.383156 s
+  Davidson-Liu procedure took  0.401489 s
 
   * ElementwiseCI Post-diag   Energy    =   -14.646164857383 Eh
   * ElementwiseCI Var. Corr.  Energy    =    -0.036420119293 Eh
@@ -894,16 +916,44 @@ Total time:
     9     0.00775819   6.01895e-05           9 |20000202000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -15.877818677698
 
   Spin State: S^2 = 0.000, S = 0.000, singlet (from 3 determinants,97.69%)
+  Saving root 0, ref_root is 0
+  Number of old roots: 1
+
+  ==> SCI excited state solver summary <==
+
+  Iterations required:                         0
+  Dimension of optimized determinant space:    418
+
+  * Adaptive-CI Energy Root   0        = -14.646154608936 Eh =   0.0000 eV
+  * Adaptive-CI Energy Root   0 + EPT2 = -14.646154608936 Eh =   0.0000 eV
+
+  ==> Wavefunction Information <==
+
+  Most important contributions to root   0:
+    0  -0.933172 0.870810393           0 |2200020000>
+    1   0.230853 0.053292896           1 |2000020002>
+    2   0.230853 0.053292896           2 |2000020020>
+    3   0.119017 0.014165035           3 |2000022000>
+    4   0.080494 0.006479207           4 |2020020000>
+    5   0.024586 0.000604474           5 |200002-+00>
+    6   0.024586 0.000604474           6 |200002+-00>
+    7   0.013181 0.000173745           7 |2+-0020000>
+    8   0.013181 0.000173745           8 |2-+0020000>
+    9   0.007825 0.000061224           9 |2000020200>
+
+  Spin state for root 0: S^2 = 0.001984, S = 0.002, singlet
+
+  Saving information for root: 0
 
   ==> Energy Summary <==
 
     Multi.  Irrep.  No.               Energy
     -----------------------------------------
-       1      Ag     0       -14.646159980219
+       1      Ag     0       -14.646154608936
     -----------------------------------------	EWCI energy.......................................................PASSED
 	EWCI POST DIAG ENERGY.............................................PASSED
 
-    Psi4 stopped on: Thursday, 14 February 2019 12:48PM
-    Psi4 wall time for execution: 0:00:01.89
+    Psi4 stopped on: Thursday, 14 February 2019 06:17PM
+    Psi4 wall time for execution: 0:00:02.06
 
 *** Psi4 exiting successfully. Buy a developer a beer!

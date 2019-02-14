@@ -59,9 +59,15 @@ class ExcitedStateSolver : public ActiveSpaceMethod {
     /// Compute the energy and return it
     virtual double compute_energy() override;
 
-    /// Returns the reference
-    virtual std::vector<Reference>
-    reference(const std::vector<std::pair<size_t, size_t>>& roots) override;
+    /// Returns the reduced density matrices up to a given level (max_rdm_level)
+    std::vector<RDMs> rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
+                           int max_rdm_level) override;
+
+    /// Returns the transition reduced density matrices between roots of different symmetry up to a
+    /// given level (max_rdm_level)
+    std::vector<RDMs> transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
+                                      std::shared_ptr<ActiveSpaceMethod> method2,
+                                      int max_rdm_level) override;
 
     /// Set options from an option object
     /// @param options the options passed in
@@ -138,7 +144,7 @@ class ExcitedStateSolver : public ActiveSpaceMethod {
 
     /// Compute the RDMs
     Reference compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints, DeterminantHashVec& dets,
-                           WFNOperator& op, psi::SharedMatrix& PQ_evecs, int root1, int root2);
+                           WFNOperator& op, psi::SharedMatrix& PQ_evecs, int root1, int root2, int max_rdm_level);
 };
 }
 #endif // _excited_state_solver_h_

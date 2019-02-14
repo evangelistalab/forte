@@ -37,7 +37,6 @@
 #include <utility>
 
 #include "boost/format.hpp"
-#include "boost/math/special_functions/bessel.hpp"
 
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libciomr/libciomr.h"
@@ -106,26 +105,10 @@ ElementwiseCI::ElementwiseCI(StateInfo state, size_t nroot, std::shared_ptr<SCFI
                              std::shared_ptr<ForteOptions> options,
                              std::shared_ptr<MOSpaceInfo> mo_space_info,
                              std::shared_ptr<ActiveSpaceIntegrals> as_ints)
-    : ActiveSpaceMethod(state, nroot, mo_space_info, as_ints), scf_info_(scf_info),
-      options_(options), fast_variational_estimate_(false) {
+    : SelectedCIMethod(state, nroot, scf_info, mo_space_info, as_ints), options_(options),
+      fast_variational_estimate_(false) {
     // Copy the wavefunction information
     startup();
-}
-
-std::vector<RDMs> ElementwiseCI::rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
-                                      int max_rdm_level) {
-    std::vector<RDMs> refs;
-    // TODO: implement
-    throw std::runtime_error("ElementwiseCI::rdms is not implemented!");
-    return refs;
-}
-
-std::vector<RDMs>
-ElementwiseCI::transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
-                               std::shared_ptr<ActiveSpaceMethod> method2, int max_rdm_level) {
-    std::vector<RDMs> refs;
-    throw std::runtime_error("ElementwiseCI::transition_rdms is not implemented!");
-    return refs;
 }
 
 void ElementwiseCI::startup() {
@@ -167,8 +150,6 @@ void ElementwiseCI::startup() {
     //    outfile->Printf("\n  The reference determinant is:\n");
     //    reference_determinant_.print();
 
-    nroot_ = options_->get_int("PCI_NROOT");
-    current_root_ = -1;
     post_diagonalization_ = options_->get_bool("PCI_POST_DIAGONALIZE");
     diag_method_ = DLSolver;
     if (options_->has_changed("DIAG_ALGORITHM")) {
@@ -302,6 +283,15 @@ void ElementwiseCI::startup() {
 }
 
 void ElementwiseCI::print_info() {
+    outfile->Printf("\n\n\t  ---------------------------------------------------------");
+    outfile->Printf("\n\t              Element wise Configuration Interaction"
+                    "implementation");
+    outfile->Printf("\n\t         by Francesco A. Evangelista and Tianyuan Zhang");
+    outfile->Printf("\n\t                      version Aug. 3 2017");
+    outfile->Printf("\n\t                    %4d thread(s) %s", num_threads_,
+                    have_omp_ ? "(OMP)" : "");
+    outfile->Printf("\n\t  ---------------------------------------------------------");
+
     // Print a summary
     std::vector<std::pair<std::string, int>> calculation_info{
         {"Symmetry", wavefunction_symmetry_},
@@ -539,19 +529,8 @@ double ElementwiseCI::compute_energy() {
     timer_on("EWCI:Energy");
     local_timer t_apici;
 
-    // Increase the root counter (ground state = 0)
-    current_root_ += 1;
     lastLow = 0.0;
     previous_go_up = false;
-
-    outfile->Printf("\n\n\t  ---------------------------------------------------------");
-    outfile->Printf("\n\t              Element wise Configuration Interaction"
-                    "implementation");
-    outfile->Printf("\n\t         by Francesco A. Evangelista and Tianyuan Zhang");
-    outfile->Printf("\n\t                      version Aug. 3 2017");
-    outfile->Printf("\n\t                    %4d thread(s) %s", num_threads_,
-                    have_omp_ ? "(OMP)" : "");
-    outfile->Printf("\n\t  ---------------------------------------------------------");
 
     // Print a summary of the options
     print_info();
@@ -571,27 +550,6 @@ double ElementwiseCI::compute_energy() {
     sparse_solver.set_e_convergence(options_->get_double("E_CONVERGENCE"));
     sparse_solver.set_maxiter_davidson(options_->get_int("DL_MAXITER"));
     sparse_solver.set_spin_project(true);
-
-    pqpq_aa_ = new double[nact_ * nact_];
-    pqpq_ab_ = new double[nact_ * nact_];
-    pqpq_bb_ = new double[nact_ * nact_];
-
-    for (size_t i = 0; i < (size_t)nact_; ++i) {
-        for (size_t j = 0; j < (size_t)nact_; ++j) {
-            double temp_aa = sqrt(std::fabs(as_ints_->tei_aa(i, j, i, j)));
-            pqpq_aa_[i * nact_ + j] = temp_aa;
-            if (temp_aa > pqpq_max_aa_)
-                pqpq_max_aa_ = temp_aa;
-            double temp_ab = sqrt(std::fabs(as_ints_->tei_ab(i, j, i, j)));
-            pqpq_ab_[i * nact_ + j] = temp_ab;
-            if (temp_ab > pqpq_max_ab_)
-                pqpq_max_ab_ = temp_ab;
-            double temp_bb = sqrt(std::fabs(as_ints_->tei_bb(i, j, i, j)));
-            pqpq_bb_[i * nact_ + j] = temp_bb;
-            if (temp_bb > pqpq_max_bb_)
-                pqpq_max_bb_ = temp_bb;
-        }
-    }
 
     timer_on("EWCI:Couplings");
     double factor = std::max(1.0, std::pow(2.0, 1.0 / functional_order_ - 0.5));
@@ -746,9 +704,9 @@ double ElementwiseCI::compute_energy() {
     if (converged) {
         outfile->Printf("\n\n  Calculation converged.");
     } else {
-        outfile->Printf("\n\n  Calculation %s", iter_ != maxiter_
-                                                    ? "stoped in appearance of higher new low."
-                                                    : "did not converge!");
+        outfile->Printf("\n\n  Calculation %s",
+                        iter_ != maxiter_ ? "stoped in appearance of higher new low."
+                                          : "did not converge!");
     }
 
     if (do_shift_) {
@@ -796,9 +754,7 @@ double ElementwiseCI::compute_energy() {
 
     outfile->Printf("\n\n  %s: %f s", "ElementwiseCI (bitset) ran in  ", t_apici.get());
 
-    if (current_root_ < nroot_ - 1) {
-        save_wfn(dets_hashvec, C, solutions_);
-    }
+    save_wfn(dets_hashvec, C, solutions_);
 
     if (post_diagonalization_) {
         outfile->Printf("\n\n  ==> Post-Diagonalization <==\n");
@@ -851,11 +807,7 @@ double ElementwiseCI::compute_energy() {
         }
     }
 
-    delete[] pqpq_aa_;
-    delete[] pqpq_ab_;
-    delete[] pqpq_bb_;
-
-    energies_.push_back(var_energy);
+    //    energies_.push_back(var_energy);
     timer_off("EWCI:Energy");
     return var_energy;
 }
@@ -3192,5 +3144,62 @@ std::vector<std::tuple<double, int, int>> ElementwiseCI::sym_labeled_orbitals(st
         std::sort(labeled_orb.begin(), labeled_orb.end());
     }
     return labeled_orb;
+}
+
+void ElementwiseCI::pre_iter_preparation() {}
+
+void ElementwiseCI::diagonalize_P_space() {}
+
+void ElementwiseCI::find_q_space() {}
+
+void ElementwiseCI::diagonalize_PQ_space() {}
+
+bool ElementwiseCI::check_convergence() {}
+
+void ElementwiseCI::prune_PQ_to_P() {}
+
+void ElementwiseCI::post_iter_process() {}
+
+void ElementwiseCI::set_method_variables(
+    std::string ex_alg, size_t nroot_method, size_t root,
+    const std::vector<std::vector<std::pair<Determinant, double>>>& old_roots) {
+    if (ex_alg != "ROOT_ORTHOGONALIZE") {
+        throw psi::PSIEXCEPTION(ex_alg + " has not been implemented in EWCI.");
+    }
+    nroot_ = nroot_method;
+    current_root_ = root;
+
+    solutions_.clear();
+    solutions_.reserve(old_roots.size());
+    for (const auto& old_root : old_roots) {
+        std::vector<double> C;
+        C.reserve(old_root.size());
+        det_hashvec dets;
+        dets.reserve(old_root.size());
+        merge(dets, C, old_root);
+        solutions_.push_back(std::make_pair(dets, C));
+    }
+}
+
+DeterminantHashVec ElementwiseCI::get_PQ_space() { return solutions_[current_root_].first; }
+psi::SharedMatrix ElementwiseCI::get_PQ_evecs() {
+    const auto& C = solutions_[current_root_].second;
+    size_t nDet = C.size();
+    psi::SharedMatrix evecs = std::make_shared<psi::Matrix>("U", nDet, nroot_);
+    for (size_t i = 0; i < nDet; ++i) {
+        evecs->set(i, current_root_, C[i]);
+    }
+    return evecs;
+}
+psi::SharedVector ElementwiseCI::get_PQ_evals() {
+    psi::SharedVector evals = std::make_shared<psi::Vector>("e", nroot_);
+    evals->set(current_root_,
+               approx_energy_ - nuclear_repulsion_energy_ - as_ints_->scalar_energy());
+    return evals;
+}
+WFNOperator ElementwiseCI::get_op() { return WFNOperator(); }
+size_t ElementwiseCI::get_ref_root() { return current_root_; }
+std::vector<double> ElementwiseCI::get_multistate_pt2_energy_correction() {
+    return std::vector<double>(nroot_);
 }
 } // namespace forte
