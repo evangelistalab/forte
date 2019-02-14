@@ -47,8 +47,8 @@ class EWCI_SCI : public SelectedCIMethod {
      * @param mo_space_info A pointer to the MOSpaceInfo object
      */
     EWCI_SCI(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
-                   std::shared_ptr<MOSpaceInfo> mo_space_info,
-                   std::shared_ptr<ActiveSpaceIntegrals> as_ints);
+             std::shared_ptr<MOSpaceInfo> mo_space_info,
+             std::shared_ptr<ActiveSpaceIntegrals> as_ints);
 
     // ==> Class Interface <==
 
@@ -76,7 +76,7 @@ class EWCI_SCI : public SelectedCIMethod {
 
     // Temporarily added interface to ExcitedStateSolver
     /// Set the class variable
-    virtual void set_method_variables(
+    void set_method_variables(
         std::string ex_alg, size_t nroot_method, size_t root,
         std::vector<std::vector<std::pair<Determinant, double>>> old_roots) override;
     /// Getters
@@ -89,7 +89,6 @@ class EWCI_SCI : public SelectedCIMethod {
 
   private:
     // ==> Class data <==
-
 };
 }
 
