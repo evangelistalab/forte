@@ -537,7 +537,6 @@ SparseCISolver::initial_guess_map(const DeterminantHashVec& space, int nroot, in
     size_t nguess = std::min(static_cast<size_t>(nroot) * dl_guess_, ndets);
     std::vector<std::pair<double, std::vector<std::pair<size_t, double>>>> guess(nguess);
 
-    outfile->Printf("\n Guess size: %zu", nguess);
     // Find the ntrial lowest diagonals
     std::vector<std::pair<Determinant, size_t>> guess_dets_pos;
     std::vector<std::pair<double, Determinant>> smallest;
@@ -554,7 +553,6 @@ SparseCISolver::initial_guess_map(const DeterminantHashVec& space, int nroot, in
         guess_dets_pos.push_back(
             std::make_pair(detI, space.get_idx(detI))); // store a det and its position
         guess_det.push_back(detI);
-        outfile->Printf("\n  %20.14f  %s", fci_ints_->energy(detI), detI.str().c_str());
     }
 
     if (spin_project_) {
