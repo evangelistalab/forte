@@ -22,10 +22,10 @@
     -----------------------------------------------------------------------
 
 
-    Psi4 started on: Thursday, 14 February 2019 12:56PM
+    Psi4 started on: Thursday, 14 February 2019 06:17PM
 
-    Process ID: 3885
-    Host:       Tianyuans-MacBook-Air.local
+    Process ID: 5344
+    Host:       tianyuans-air.wireless.emory.edu
     PSIDATADIR: /Users/tianyuanzhang/Documents/Source/psi4_2018/psi4-bin-clang-debug/share/psi4
     Memory:     500.0 MiB
     Threads:    1
@@ -77,8 +77,8 @@ energy('forte')
 compare_values(refpci, variable("EWCI ENERGY"), 9, "EWCI energy") #TEST
 --------------------------------------------------------------------------
 
-*** tstart() called on Tianyuans-MacBook-Air.local
-*** at Thu Feb 14 12:56:47 2019
+*** tstart() called on tianyuans-air.wireless.emory.edu
+*** at Thu Feb 14 18:17:09 2019
 
    => Loading Basis Set <=
 
@@ -263,19 +263,19 @@ Properties computed using the SCF density matrix
      X:     0.0000      Y:     0.0000      Z:     0.0000     Total:     0.0000
 
 
-*** tstop() called on Tianyuans-MacBook-Air.local at Thu Feb 14 12:56:47 2019
+*** tstop() called on tianyuans-air.wireless.emory.edu at Thu Feb 14 18:17:10 2019
 Module time:
-	user time   =       0.45 seconds =       0.01 minutes
+	user time   =       0.47 seconds =       0.01 minutes
 	system time =       0.02 seconds =       0.00 minutes
-	total time  =          0 seconds =       0.00 minutes
+	total time  =          1 seconds =       0.02 minutes
 Total time:
-	user time   =       0.45 seconds =       0.01 minutes
+	user time   =       0.47 seconds =       0.01 minutes
 	system time =       0.02 seconds =       0.00 minutes
-	total time  =          0 seconds =       0.00 minutes
+	total time  =          1 seconds =       0.02 minutes
 	SCF energy........................................................PASSED
 
-*** tstart() called on Tianyuans-MacBook-Air.local
-*** at Thu Feb 14 12:56:47 2019
+*** tstart() called on tianyuans-air.wireless.emory.edu
+*** at Thu Feb 14 18:17:10 2019
 
    => Loading Basis Set <=
 
@@ -460,13 +460,13 @@ Properties computed using the SCF density matrix
      X:     0.0000      Y:     0.0000      Z:     0.0000     Total:     0.0000
 
 
-*** tstop() called on Tianyuans-MacBook-Air.local at Thu Feb 14 12:56:48 2019
+*** tstop() called on tianyuans-air.wireless.emory.edu at Thu Feb 14 18:17:10 2019
 Module time:
-	user time   =       0.41 seconds =       0.01 minutes
+	user time   =       0.43 seconds =       0.01 minutes
 	system time =       0.02 seconds =       0.00 minutes
-	total time  =          1 seconds =       0.02 minutes
+	total time  =          0 seconds =       0.00 minutes
 Total time:
-	user time   =       0.89 seconds =       0.01 minutes
+	user time   =       0.92 seconds =       0.02 minutes
 	system time =       0.04 seconds =       0.00 minutes
 	total time  =          1 seconds =       0.02 minutes
    => Loading Basis Set <=
@@ -534,7 +534,7 @@ Total time:
   Whereas there are 3081 unique shell quartets.
 
 
-  Conventional integrals take 0.46924008 s
+  Conventional integrals take 0.47474184 s
 
                 ------------------------------------------------
                   Second-Order Moller-Plesset Natural Orbitals
@@ -579,6 +579,23 @@ Total time:
   Number of active beta electrons: 5
   Maximum reference space size: 1000
   |2020222>
+
+-------------------------------------------------------------------------------
+               Selected Configuration Interaction Excited States
+  written by Jeffrey B. Schriber, Tianyuan Zhang and Francesco A. Evangelista
+-------------------------------------------------------------------------------
+
+  ==> Reference Information <==
+
+  ==> Calculation Information <==
+
+  -----------------------------------------------------------------
+    Multiplicity                             1    
+    Symmetry                                 0    
+    Number of roots                          1    
+    Ms                                       0
+    Excited Algorithm                        ROOT_ORTHOGONALIZE
+  -----------------------------------------------------------------
 
 	  ---------------------------------------------------------
 	              Element wise Configuration Interactionimplementation
@@ -799,23 +816,52 @@ Total time:
     9       0.103427     0.0106972           9 |22++2--0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>   -121.130730997570
 
   Spin State: S^2 = 0.044, S = 0.042, singlet (from 8 determinants,97.73%)
-  ElementwiseCI (bitset) steps finished in  : 0.894870 s
+  ElementwiseCI (bitset) steps finished in  : 0.896954 s
 
   Variational energy estimated with 61 determinants to meet the max error 0.000000e+00
   * ElementwiseCI Variational Energy    =  -108.638029876760 Eh
   * ElementwiseCI Var. Corr.  Energy    =    -0.313646930994 Eh
   * 1st order perturbation   Energy     =     0.000001021233 Eh
 
-  ElementwiseCI (bitset) ran in  : 0.897250 s
+  ElementwiseCI (bitset) ran in  : 0.898609 s
+
+  Saving the wave function:
+
+
+  ==> SCI excited state solver summary <==
+
+  Iterations required:                         0
+  Dimension of optimized determinant space:    61
+
+  * Adaptive-CI Energy Root   0        = -108.638030897993 Eh =   0.0000 eV
+  * Adaptive-CI Energy Root   0 + EPT2 = -108.638030897993 Eh =   0.0000 eV
+
+  ==> Wavefunction Information <==
+
+  Most important contributions to root   0:
+    0  -0.606889 0.368314334           0 |2200222>
+    1   0.421146 0.177363703           1 |2220220>
+    2   0.396289 0.157045051           2 |2202202>
+    3  -0.322786 0.104190516           3 |2222200>
+    4  -0.251575 0.063290168           5 |22-+2+->
+    5  -0.251575 0.063290168           4 |22+-2-+>
+    6  -0.147919 0.021880144           7 |22-+2-+>
+    7  -0.147919 0.021880144           6 |22+-2+->
+    8   0.103427 0.010697219           9 |22++2-->
+    9   0.103427 0.010697219           8 |22--2++>
+
+  Spin state for root 0: S^2 = 0.296263, S = 0.384, doublet
+
+  Saving information for root: 0
 
   ==> Energy Summary <==
 
     Multi.  Irrep.  No.               Energy
     -----------------------------------------
-       1      Ag     0      -108.638029876760
+       1      Ag     0      -108.638030897993
     -----------------------------------------	EWCI energy.......................................................PASSED
 
-    Psi4 stopped on: Thursday, 14 February 2019 12:56PM
-    Psi4 wall time for execution: 0:00:03.03
+    Psi4 stopped on: Thursday, 14 February 2019 06:17PM
+    Psi4 wall time for execution: 0:00:03.10
 
 *** Psi4 exiting successfully. Buy a developer a beer!

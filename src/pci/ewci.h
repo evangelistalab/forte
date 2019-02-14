@@ -46,7 +46,7 @@
 #include "sparse_ci/sparse_ci_solver.h"
 #include "sparse_ci/determinant.h"
 #include "base_classes/state_info.h"
-#include "base_classes/active_space_method.h"
+#include "sci/sci.h"
 
 namespace forte {
 class SCFInfo;
@@ -75,7 +75,7 @@ using det_hashvec = HashVector<Determinant, Determinant::Hash>;
  * @brief The SparsePathIntegralCI class
  * This class implements an a sparse path-integral FCI algorithm
  */
-class ElementwiseCI : public ActiveSpaceMethod {
+class ElementwiseCI : public SelectedCIMethod {
   public:
     // ==> Class Constructor and Destructor <==
 
@@ -93,18 +93,39 @@ class ElementwiseCI : public ActiveSpaceMethod {
 
     void set_options(std::shared_ptr<ForteOptions>) override{};
 
-    /// Returns the reduced density matrices up to a given level (max_rdm_level)
-    std::vector<RDMs> rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
-                           int max_rdm_level) override;
-
-    /// Returns the transition reduced density matrices between roots of different symmetry up to a
-    /// given level (max_rdm_level)
-    std::vector<RDMs> transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
-                                      std::shared_ptr<ActiveSpaceMethod> method2,
-                                      int max_rdm_level) override;
-
     /// Compute the energy
     double compute_energy() override;
+
+    // Interfaces of SCI algorithm
+    /// Print the banner and starting information.
+    void print_info() override;
+    /// Pre-iter preparation, usually includes preparing an initial reference
+    void pre_iter_preparation() override;
+    /// Step 1. Diagonalize the Hamiltonian in the P space
+    void diagonalize_P_space() override;
+    /// Step 2. Find determinants in the Q space
+    void find_q_space() override;
+    /// Step 3. Diagonalize the Hamiltonian in the P + Q space
+    void diagonalize_PQ_space() override;
+    /// Step 4. Check convergence
+    bool check_convergence() override;
+    /// Step 5. Prune the P + Q space to get an updated P space
+    void prune_PQ_to_P() override;
+    /// Post-iter process
+    void post_iter_process() override;
+
+    // Temporarily added interface to ExcitedStateSolver
+    /// Set the class variable
+    void set_method_variables(
+        std::string ex_alg, size_t nroot_method, size_t root,
+        const std::vector<std::vector<std::pair<Determinant, double>>>& old_roots) override;
+    /// Getters
+    DeterminantHashVec get_PQ_space() override;
+    psi::SharedMatrix get_PQ_evecs() override;
+    psi::SharedVector get_PQ_evals() override;
+    WFNOperator get_op() override;
+    size_t get_ref_root() override;
+    std::vector<double> get_multistate_pt2_energy_correction() override;
 
   private:
     // ==> Class data <==
@@ -112,8 +133,6 @@ class ElementwiseCI : public ActiveSpaceMethod {
     // * Calculation data
     /// The options
     std::shared_ptr<ForteOptions> options_;
-    /// SCF information
-    std::shared_ptr<SCFInfo> scf_info_;
     /// The maximum number of threads
     int num_threads_;
     /// The type of Generator used
@@ -157,14 +176,10 @@ class ElementwiseCI : public ActiveSpaceMethod {
     /// The reference determinant
     Determinant reference_determinant_;
     std::vector<std::pair<det_hashvec, std::vector<double>>> solutions_;
-    /// (pq|pq) matrix for prescreening
-    double *pqpq_aa_, *pqpq_ab_, *pqpq_bb_;
-    /// maximum element in (pq|pq) matrix
-    double pqpq_max_aa_, pqpq_max_ab_, pqpq_max_bb_;
-    /// maximum element in (pq|pq) matrix
-    std::vector<double> pqpq_row_max_;
 
     // * Calculation info
+    /// The energy convergence criterion
+    double e_convergence_;
     /// The threshold applied to the primary space
     double spawning_threshold_;
     /// The threshold applied for initial guess
@@ -276,9 +291,6 @@ class ElementwiseCI : public ActiveSpaceMethod {
 
     /// All that happens before we compute the energy
     void startup();
-
-    /// Print information about this calculation
-    void print_info();
 
     /// Print a wave function
     void print_wfn(const det_hashvec& space_hashvec, std::vector<double>& C,

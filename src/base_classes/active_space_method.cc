@@ -79,9 +79,10 @@ std::unique_ptr<ActiveSpaceMethod> make_active_space_method(
     } else if (type == "ACI") {
 //        solver =
 //            std::make_unique<AdaptiveCI>(state, nroot, scf_info, options, mo_space_info, as_ints);
-        solver =
-            std::make_unique<ExcitedStateSolver>(state, nroot, mo_space_info, as_ints,
-                 std::make_unique<AdaptiveCI_SCI>(state, nroot, scf_info, options, mo_space_info, as_ints));
+        solver = std::make_unique<ExcitedStateSolver>(
+            state, nroot, mo_space_info, as_ints,
+            std::make_unique<AdaptiveCI_SCI>(state, nroot, scf_info, options, mo_space_info,
+                                             as_ints));
     } else if (type == "CAS") {
         solver = std::make_unique<FCI_MO>(state, nroot, scf_info, options, mo_space_info, as_ints);
     } else if (type == "ASCI") {
@@ -102,8 +103,12 @@ std::unique_ptr<ActiveSpaceMethod> make_active_space_method(
                                                        mo_space_info, as_ints);
     } else if (type == "EWCI") {
         // TODO modify pci code to compute multiple roots under new framework
-        solver = std::make_unique<ElementwiseCI>(state, nroot, scf_info, options, mo_space_info,
-                                                 as_ints);
+//        solver = std::make_unique<ElementwiseCI>(state, nroot, scf_info, options, mo_space_info,
+//                                                 as_ints);
+        solver = std::make_unique<ExcitedStateSolver>(
+            state, nroot, mo_space_info, as_ints,
+            std::make_unique<ElementwiseCI>(state, nroot, scf_info, options, mo_space_info,
+                                            as_ints));
     } else {
         throw psi::PSIEXCEPTION("make_active_space_method: type = " + type + " was not recognized");
     }

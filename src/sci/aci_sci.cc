@@ -237,7 +237,7 @@ void AdaptiveCI_SCI::print_info() {
 
 void AdaptiveCI_SCI::set_method_variables(
     std::string ex_alg, size_t nroot_method, size_t root,
-    std::vector<std::vector<std::pair<Determinant, double>>> old_roots) {
+    const std::vector<std::vector<std::pair<Determinant, double>>>& old_roots) {
     ex_alg_ = ex_alg;
     nroot_ = nroot_method;
     root_ = root;
