@@ -297,7 +297,7 @@ void ElementwiseCI::print_info() {
         {"Symmetry", wavefunction_symmetry_},
         {"Multiplicity", wavefunction_multiplicity_},
         {"Number of roots", nroot_},
-        {"Root used for properties", options_->get_int("ROOT")},
+        {"Root used for properties", current_root_},
         {"Maximum number of iterations", maxiter_},
         {"Energy estimation frequency", energy_estimate_freq_},
         {"Number of threads", num_threads_}};
@@ -626,9 +626,7 @@ double ElementwiseCI::compute_energy() {
 
         // Orthogonalize this solution with respect to the previous ones
         timer_on("EWCI:Ortho");
-        if (current_root_ > 0) {
-            orthogonalize(dets_hashvec, C, solutions_);
-        }
+        orthogonalize(dets_hashvec, C, solutions_);
         timer_off("EWCI:Ortho");
 
         timer_on("EWCI:sort");
@@ -2384,6 +2382,7 @@ void ElementwiseCI::orthogonalize(
     //    space = det_hashvec(det_C, C);
     for (size_t n = 0; n < solutions.size(); ++n) {
         double dot_prod = dot(space, C, solutions[n].first, solutions[n].second);
+        psi::outfile->Printf("\nElementwiseCI::orthogonalize::dot_prod = %.6f", dot_prod);
         add(space, C, -dot_prod, solutions[n].first, solutions[n].second);
     }
     normalize(C);
@@ -3181,19 +3180,19 @@ void ElementwiseCI::set_method_variables(
     }
 }
 
-DeterminantHashVec ElementwiseCI::get_PQ_space() { return solutions_[current_root_].first; }
+DeterminantHashVec ElementwiseCI::get_PQ_space() { return solutions_[solutions_.size() - 1].first; }
 psi::SharedMatrix ElementwiseCI::get_PQ_evecs() {
-    const auto& C = solutions_[current_root_].second;
+    const auto& C = solutions_[solutions_.size() - 1].second;
     size_t nDet = C.size();
     psi::SharedMatrix evecs = std::make_shared<psi::Matrix>("U", nDet, nroot_);
     for (size_t i = 0; i < nDet; ++i) {
-        evecs->set(i, current_root_, C[i]);
+        evecs->set(i, 0, C[i]);
     }
     return evecs;
 }
 psi::SharedVector ElementwiseCI::get_PQ_evals() {
     psi::SharedVector evals = std::make_shared<psi::Vector>("e", nroot_);
-    evals->set(current_root_,
+    evals->set(0,
                approx_energy_ - nuclear_repulsion_energy_ - as_ints_->scalar_energy());
     return evals;
 }
