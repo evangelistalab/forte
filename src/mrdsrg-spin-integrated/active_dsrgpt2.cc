@@ -273,7 +273,7 @@ double ACTIVE_DSRGPT2::compute_energy() {
             fci_mo_->set_max_rdm_level(max_cu_level);
             std::vector<std::pair<size_t, size_t>> root;
             root.push_back(std::make_pair(0, 0));
-            RDMs rdms = fci_mo_->rdms(root, fci_mo_, 3)[0];
+            RDMs rdms = fci_mo_->rdms(root, 3)[0];
 
             // semicanonicalize integrals and cumulants
             semi->semicanonicalize(rdms, max_cu_level);
@@ -314,7 +314,7 @@ double ACTIVE_DSRGPT2::compute_energy() {
             fci_mo_->set_max_rdm_level(1);
             std::vector<std::pair<size_t, size_t>> root;
             root.push_back(std::make_pair(i, i));
-            RDMs rdms = fci_mo_->rdms(root, fci_mo_, 3)[0];
+            RDMs rdms = fci_mo_->rdms(root, 3)[0];
             semi->semicanonicalize(rdms, 1, true, false);
 
             Uas.emplace_back(semi->Ua()->clone());
@@ -388,7 +388,7 @@ double ACTIVE_DSRGPT2::compute_energy() {
             // can move this out of loop
             std::vector<std::pair<size_t, size_t>> rootvec;
             rootvec.push_back(std::make_pair(i, i));
-            RDMs rdms = fci_mo_->rdms(rootvec, fci_mo_, 3)[0];
+            RDMs rdms = fci_mo_->rdms(rootvec, 3)[0];
 
             // manually rotate the RDMs and integrals
             semi->transform_rdms(Uas_t[i], Ubs_t[i], rdms, max_cu_level);
@@ -481,14 +481,13 @@ void ACTIVE_DSRGPT2::set_fcimo_params(int nroots, int root, int multiplicity) {
     fci_mo_->set_root(root);
 }
 
-double ACTIVE_DSRGPT2::compute_dsrg_mrpt2_energy(std::shared_ptr<MASTER_DSRG>& dsrg,
-                                                 RDMs& rdms) {
+double ACTIVE_DSRGPT2::compute_dsrg_mrpt2_energy(std::shared_ptr<MASTER_DSRG>& dsrg, RDMs& rdms) {
     IntegralType int_type = ints_->integral_type();
     if (int_type == Conventional) {
         dsrg = std::make_shared<DSRG_MRPT2>(rdms, scf_info_, foptions_, ints_, mo_space_info_);
     } else if (int_type == Cholesky || int_type == DF || int_type == DiskDF) {
-        dsrg = std::make_shared<THREE_DSRG_MRPT2>(rdms, scf_info_, foptions_, ints_,
-                                                  mo_space_info_);
+        dsrg =
+            std::make_shared<THREE_DSRG_MRPT2>(rdms, scf_info_, foptions_, ints_, mo_space_info_);
     } else {
         throw psi::PSIEXCEPTION("Unknown integral type for DSRG.");
     }
