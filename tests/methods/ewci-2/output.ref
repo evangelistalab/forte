@@ -1,0 +1,704 @@
+
+    -----------------------------------------------------------------------
+          Psi4: An Open-Source Ab Initio Electronic Structure Package
+                               Psi4 undefined 
+
+                         Git: Rev {master} c27a5c4 dirty
+
+
+    R. M. Parrish, L. A. Burns, D. G. A. Smith, A. C. Simmonett,
+    A. E. DePrince III, E. G. Hohenstein, U. Bozkaya, A. Yu. Sokolov,
+    R. Di Remigio, R. M. Richard, J. F. Gonthier, A. M. James,
+    H. R. McAlexander, A. Kumar, M. Saitow, X. Wang, B. P. Pritchard,
+    P. Verma, H. F. Schaefer III, K. Patkowski, R. A. King, E. F. Valeev,
+    F. A. Evangelista, J. M. Turney, T. D. Crawford, and C. D. Sherrill,
+    J. Chem. Theory Comput. 13(7) pp 3185--3197 (2017).
+    (doi: 10.1021/acs.jctc.7b00174)
+
+
+                         Additional Contributions by
+    P. Kraus, H. Kruse, M. H. Lechner, M. C. Schieber, and R. A. Shaw
+
+    -----------------------------------------------------------------------
+
+
+    Psi4 started on: Thursday, 14 February 2019 12:52PM
+
+    Process ID: 3856
+    Host:       Tianyuans-MacBook-Air.local
+    PSIDATADIR: /Users/tianyuanzhang/Documents/Source/psi4_2018/psi4-bin-clang-debug/share/psi4
+    Memory:     500.0 MiB
+    Threads:    1
+    
+  ==> Input File <==
+
+--------------------------------------------------------------------------
+#! This tests the Adaptive Path-Integral FCI procedure with dynamic prescreening
+#! Generated using commit GITCOMMIT
+
+import forte
+
+refscf = -14.6097447380899563 #TEST
+refpci = -14.646161244794 #TEST
+
+molecule li2{
+   Li
+   Li 1 2.0000
+}
+
+set {
+  basis sto-3g
+  scf_type pk
+  e_convergence 12
+}
+
+set forte {
+  active_space_solver ewci
+  PCI_GENERATOR DL
+  pci_spawning_threshold 0.0001
+  pci_e_convergence 12
+  PCI_STOP_HIGHER_NEW_LOW true
+}
+
+energy('scf')
+compare_values(refscf, variable("CURRENT ENERGY"), 10, "SCF energy") #TEST
+
+energy('forte')
+compare_values(refpci, variable("EWCI ENERGY"), 9, "EWCI energy") #TEST
+--------------------------------------------------------------------------
+
+*** tstart() called on Tianyuans-MacBook-Air.local
+*** at Thu Feb 14 12:52:39 2019
+
+   => Loading Basis Set <=
+
+    Name: STO-3G
+    Role: ORBITAL
+    Keyword: BASIS
+    atoms 1-2 entry LI         line    31 file /Users/tianyuanzhang/Documents/Source/psi4_2018/psi4-bin-clang-debug/share/psi4/basis/sto-3g.gbs 
+
+
+         ---------------------------------------------------------
+                                   SCF
+            by Justin Turney, Rob Parrish, Andy Simmonett
+                             and Daniel Smith
+                              RHF Reference
+                        1 Threads,    500 MiB Core
+         ---------------------------------------------------------
+
+  ==> Geometry <==
+
+    Molecular point group: d2h
+    Full point group: D_inf_h
+
+    Geometry (in Angstrom), charge = 0, multiplicity = 1:
+
+       Center              X                  Y                   Z               Mass       
+    ------------   -----------------  -----------------  -----------------  -----------------
+         LI           0.000000000000     0.000000000000    -1.000000000000     7.016003436600
+         LI           0.000000000000     0.000000000000     1.000000000000     7.016003436600
+
+  Running in d2h symmetry.
+
+  Rotational constants: A = ************  B =      1.20137  C =      1.20137 [cm^-1]
+  Rotational constants: A = ************  B =  36016.16030  C =  36016.16030 [MHz]
+  Nuclear repulsion =    2.381297448014999
+
+  Charge       = 0
+  Multiplicity = 1
+  Electrons    = 6
+  Nalpha       = 3
+  Nbeta        = 3
+
+  ==> Algorithm <==
+
+  SCF Algorithm Type is PK.
+  DIIS enabled.
+  MOM disabled.
+  Fractional occupation disabled.
+  Guess Type is SAD.
+  Energy threshold   = 1.00e-12
+  Density threshold  = 1.00e-06
+  Integral threshold = 0.00e+00
+
+  ==> Primary Basis <==
+
+  Basis Set: STO-3G
+    Blend: STO-3G
+    Number of shells: 6
+    Number of basis function: 10
+    Number of Cartesian functions: 10
+    Spherical Harmonics?: true
+    Max angular momentum: 1
+
+  ==> Pre-Iterations <==
+
+   -------------------------------------------------------
+    Irrep   Nso     Nmo     Nalpha   Nbeta   Ndocc  Nsocc
+   -------------------------------------------------------
+     Ag         3       3       0       0       0       0
+     B1g        0       0       0       0       0       0
+     B2g        1       1       0       0       0       0
+     B3g        1       1       0       0       0       0
+     Au         0       0       0       0       0       0
+     B1u        3       3       0       0       0       0
+     B2u        1       1       0       0       0       0
+     B3u        1       1       0       0       0       0
+   -------------------------------------------------------
+    Total      10      10       3       3       3       0
+   -------------------------------------------------------
+
+  ==> Integral Setup <==
+
+  Using in-core PK algorithm.
+   Calculation information:
+      Number of atoms:                   2
+      Number of AO shells:               6
+      Number of primitives:             18
+      Number of atomic orbitals:        10
+      Number of basis functions:        10
+
+      Integral cutoff                 1.00e-12
+      Number of threads:                 1
+
+  Performing in-core PK
+  Using 3080 doubles for integral storage.
+  We computed 231 shell quartets total.
+  Whereas there are 231 unique shell quartets.
+
+  ==> DiskJK: Disk-Based J/K Matrices <==
+
+    J tasked:                  Yes
+    K tasked:                  Yes
+    wK tasked:                  No
+    Memory [MiB]:              375
+    Schwarz Cutoff:          1E-12
+
+    OpenMP threads:              1
+
+  Minimum eigenvalue in the overlap matrix is 4.0289192732E-02.
+  Using Symmetric Orthogonalization.
+
+  SCF Guess: Superposition of Atomic Densities via on-the-fly atomic UHF.
+
+  ==> Iterations <==
+
+                        Total Energy        Delta E     RMS |[F,P]|
+
+   @RHF iter   0:   -14.58573852679841   -1.45857e+01   6.38128e-02 
+   @RHF iter   1:   -14.60879129707150   -2.30528e-02   3.90853e-03 
+   @RHF iter   2:   -14.60956780353629   -7.76506e-04   1.49380e-03 DIIS
+   @RHF iter   3:   -14.60974068441564   -1.72881e-04   2.15662e-04 DIIS
+   @RHF iter   4:   -14.60974473615713   -4.05174e-06   4.32612e-06 DIIS
+   @RHF iter   5:   -14.60974473808782   -1.93069e-09   1.41353e-07 DIIS
+   @RHF iter   6:   -14.60974473808995   -2.12985e-12   3.63226e-09 DIIS
+   @RHF iter   7:   -14.60974473808996   -7.10543e-15   1.73384e-11 DIIS
+  Energy converged.
+
+
+  ==> Post-Iterations <==
+
+    Orbital Energies [Eh]
+    ---------------------
+
+    Doubly Occupied:                                                      
+
+       1Ag    -2.340313     1B1u   -2.335347     2Ag    -0.163839  
+
+    Virtual:                                                              
+
+       2B1u    0.093646     1B2u    0.108933     1B3u    0.108933  
+       3Ag     0.176245     1B2g    0.275579     1B3g    0.275579  
+       3B1u    0.645556  
+
+    Final Occupation by Irrep:
+             Ag   B1g   B2g   B3g    Au   B1u   B2u   B3u 
+    DOCC [     2,    0,    0,    0,    0,    1,    0,    0 ]
+
+  @RHF Final Energy:   -14.60974473808996
+
+   => Energetics <=
+
+    Nuclear Repulsion Energy =              2.3812974480149989
+    One-Electron Energy =                 -24.3030864655733509
+    Two-Electron Energy =                   7.3120442794683909
+    Total Energy =                        -14.6097447380899617
+
+Computation Completed
+
+
+Properties will be evaluated at   0.000000,   0.000000,   0.000000 [a0]
+
+Properties computed using the SCF density matrix
+
+  Nuclear Dipole Moment: [e a0]
+     X:     0.0000      Y:     0.0000      Z:     0.0000
+
+  Electronic Dipole Moment: [e a0]
+     X:     0.0000      Y:     0.0000      Z:     0.0000
+
+  Dipole Moment: [e a0]
+     X:     0.0000      Y:     0.0000      Z:     0.0000     Total:     0.0000
+
+  Dipole Moment: [D]
+     X:     0.0000      Y:     0.0000      Z:     0.0000     Total:     0.0000
+
+
+*** tstop() called on Tianyuans-MacBook-Air.local at Thu Feb 14 12:52:40 2019
+Module time:
+	user time   =       0.47 seconds =       0.01 minutes
+	system time =       0.03 seconds =       0.00 minutes
+	total time  =          1 seconds =       0.02 minutes
+Total time:
+	user time   =       0.47 seconds =       0.01 minutes
+	system time =       0.03 seconds =       0.00 minutes
+	total time  =          1 seconds =       0.02 minutes
+	SCF energy........................................................PASSED
+
+*** tstart() called on Tianyuans-MacBook-Air.local
+*** at Thu Feb 14 12:52:40 2019
+
+   => Loading Basis Set <=
+
+    Name: STO-3G
+    Role: ORBITAL
+    Keyword: BASIS
+    atoms 1-2 entry LI         line    31 file /Users/tianyuanzhang/Documents/Source/psi4_2018/psi4-bin-clang-debug/share/psi4/basis/sto-3g.gbs 
+
+
+         ---------------------------------------------------------
+                                   SCF
+            by Justin Turney, Rob Parrish, Andy Simmonett
+                             and Daniel Smith
+                              RHF Reference
+                        1 Threads,    500 MiB Core
+         ---------------------------------------------------------
+
+  ==> Geometry <==
+
+    Molecular point group: d2h
+    Full point group: D_inf_h
+
+    Geometry (in Angstrom), charge = 0, multiplicity = 1:
+
+       Center              X                  Y                   Z               Mass       
+    ------------   -----------------  -----------------  -----------------  -----------------
+         LI           0.000000000000     0.000000000000    -1.000000000000     7.016003436600
+         LI           0.000000000000     0.000000000000     1.000000000000     7.016003436600
+
+  Running in d2h symmetry.
+
+  Rotational constants: A = ************  B =      1.20137  C =      1.20137 [cm^-1]
+  Rotational constants: A = ************  B =  36016.16030  C =  36016.16030 [MHz]
+  Nuclear repulsion =    2.381297448014998
+
+  Charge       = 0
+  Multiplicity = 1
+  Electrons    = 6
+  Nalpha       = 3
+  Nbeta        = 3
+
+  ==> Algorithm <==
+
+  SCF Algorithm Type is PK.
+  DIIS enabled.
+  MOM disabled.
+  Fractional occupation disabled.
+  Guess Type is SAD.
+  Energy threshold   = 1.00e-12
+  Density threshold  = 1.00e-08
+  Integral threshold = 0.00e+00
+
+  ==> Primary Basis <==
+
+  Basis Set: STO-3G
+    Blend: STO-3G
+    Number of shells: 6
+    Number of basis function: 10
+    Number of Cartesian functions: 10
+    Spherical Harmonics?: true
+    Max angular momentum: 1
+
+  ==> Pre-Iterations <==
+
+   -------------------------------------------------------
+    Irrep   Nso     Nmo     Nalpha   Nbeta   Ndocc  Nsocc
+   -------------------------------------------------------
+     Ag         3       3       0       0       0       0
+     B1g        0       0       0       0       0       0
+     B2g        1       1       0       0       0       0
+     B3g        1       1       0       0       0       0
+     Au         0       0       0       0       0       0
+     B1u        3       3       0       0       0       0
+     B2u        1       1       0       0       0       0
+     B3u        1       1       0       0       0       0
+   -------------------------------------------------------
+    Total      10      10       3       3       3       0
+   -------------------------------------------------------
+
+  ==> Integral Setup <==
+
+  Using in-core PK algorithm.
+   Calculation information:
+      Number of atoms:                   2
+      Number of AO shells:               6
+      Number of primitives:             18
+      Number of atomic orbitals:        10
+      Number of basis functions:        10
+
+      Integral cutoff                 1.00e-12
+      Number of threads:                 1
+
+  Performing in-core PK
+  Using 3080 doubles for integral storage.
+  We computed 231 shell quartets total.
+  Whereas there are 231 unique shell quartets.
+
+  ==> DiskJK: Disk-Based J/K Matrices <==
+
+    J tasked:                  Yes
+    K tasked:                  Yes
+    wK tasked:                  No
+    Memory [MiB]:              375
+    Schwarz Cutoff:          1E-12
+
+    OpenMP threads:              1
+
+  Minimum eigenvalue in the overlap matrix is 4.0289192732E-02.
+  Using Symmetric Orthogonalization.
+
+  SCF Guess: Superposition of Atomic Densities via on-the-fly atomic UHF.
+
+  ==> Iterations <==
+
+                        Total Energy        Delta E     RMS |[F,P]|
+
+   @RHF iter   0:   -14.58573852679838   -1.45857e+01   6.38128e-02 
+   @RHF iter   1:   -14.60879129707151   -2.30528e-02   3.90853e-03 
+   @RHF iter   2:   -14.60956780353629   -7.76506e-04   1.49380e-03 DIIS
+   @RHF iter   3:   -14.60974068441565   -1.72881e-04   2.15662e-04 DIIS
+   @RHF iter   4:   -14.60974473615714   -4.05174e-06   4.32612e-06 DIIS
+   @RHF iter   5:   -14.60974473808784   -1.93070e-09   1.41353e-07 DIIS
+   @RHF iter   6:   -14.60974473808997   -2.13163e-12   3.63226e-09 DIIS
+   @RHF iter   7:   -14.60974473808997    1.77636e-15   1.73383e-11 DIIS
+  Energy converged.
+
+
+  ==> Post-Iterations <==
+
+    Orbital Energies [Eh]
+    ---------------------
+
+    Doubly Occupied:                                                      
+
+       1Ag    -2.340313     1B1u   -2.335347     2Ag    -0.163839  
+
+    Virtual:                                                              
+
+       2B1u    0.093646     1B2u    0.108933     1B3u    0.108933  
+       3Ag     0.176245     1B2g    0.275579     1B3g    0.275579  
+       3B1u    0.645556  
+
+    Final Occupation by Irrep:
+             Ag   B1g   B2g   B3g    Au   B1u   B2u   B3u 
+    DOCC [     2,    0,    0,    0,    0,    1,    0,    0 ]
+
+  @RHF Final Energy:   -14.60974473808997
+
+   => Energetics <=
+
+    Nuclear Repulsion Energy =              2.3812974480149980
+    One-Electron Energy =                 -24.3030864655733652
+    Two-Electron Energy =                   7.3120442794684024
+    Total Energy =                        -14.6097447380899652
+
+Computation Completed
+
+
+Properties will be evaluated at   0.000000,   0.000000,   0.000000 [a0]
+
+Properties computed using the SCF density matrix
+
+  Nuclear Dipole Moment: [e a0]
+     X:     0.0000      Y:     0.0000      Z:     0.0000
+
+  Electronic Dipole Moment: [e a0]
+     X:     0.0000      Y:     0.0000      Z:     0.0000
+
+  Dipole Moment: [e a0]
+     X:     0.0000      Y:     0.0000      Z:     0.0000     Total:     0.0000
+
+  Dipole Moment: [D]
+     X:     0.0000      Y:     0.0000      Z:     0.0000     Total:     0.0000
+
+
+*** tstop() called on Tianyuans-MacBook-Air.local at Thu Feb 14 12:52:40 2019
+Module time:
+	user time   =       0.43 seconds =       0.01 minutes
+	system time =       0.02 seconds =       0.00 minutes
+	total time  =          0 seconds =       0.00 minutes
+Total time:
+	user time   =       0.93 seconds =       0.02 minutes
+	system time =       0.05 seconds =       0.00 minutes
+	total time  =          1 seconds =       0.02 minutes
+   => Loading Basis Set <=
+
+    Name: STO-3G
+    Role: ORBITAL
+    Keyword: MINAO_BASIS
+    atoms 1-2 entry LI         line    31 file /Users/tianyuanzhang/Documents/Source/psi4_2018/psi4-bin-clang-debug/share/psi4/basis/sto-3g.gbs 
+
+
+  Forte
+  ----------------------------------------------------------------------------
+  A suite of quantum chemistry methods for strongly correlated electrons
+
+    git branch: ci_framework - git commit: fe5fbd54
+
+  Developed by:
+    Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
+    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai,
+    Nan He, Nicholas Stair, Shuhe Wang, Renke Huang
+  ----------------------------------------------------------------------------
+
+  Size of Determinant class: 32
+
+  ==> MO Space Information <==
+
+  -------------------------------------------------------------------------
+                       Ag   B1g   B2g   B3g    Au   B1u   B2u   B3u   Sum
+  -------------------------------------------------------------------------
+    FROZEN_DOCC         0     0     0     0     0     0     0     0     0
+    RESTRICTED_DOCC     0     0     0     0     0     0     0     0     0
+    ACTIVE              3     0     1     1     0     3     1     1    10
+    RESTRICTED_UOCC     0     0     0     0     0     0     0     0     0
+    FROZEN_UOCC         0     0     0     0     0     0     0     0     0
+    Total               3     0     1     1     0     3     1     1    10
+  -------------------------------------------------------------------------
+
+  ==> Integral Transformation <==
+
+  Number of molecular orbitals:                    10
+  Number of correlated molecular orbitals:         10
+  Number of frozen occupied orbitals:               0
+  Number of frozen unoccupied orbitals:             0
+  Two-electron integral type:              Conventional
+
+
+  Overall Conventional Integrals timings
+
+
+  Conventional integrals take 0.04970813 s
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.  Nstates
+    -------------------------
+      Ag       1        1
+    -------------------------
+    Total number of states: 1
+    -------------------------
+
+  Number of active alpha electrons: 3
+  Number of active beta electrons: 3
+  Maximum reference space size: 1000
+  |2200020000>
+
+	  ---------------------------------------------------------
+	              Element wise Configuration Interactionimplementation
+	         by Francesco A. Evangelista and Tianyuan Zhang
+	                      version Aug. 3 2017
+	                       1 thread(s) 
+	  ---------------------------------------------------------
+
+  ==> Calculation Information <==
+
+    Symmetry                                         0
+    Multiplicity                                     1
+    Number of roots                                  1
+    Root used for properties                         0
+    Maximum number of iterations                  1000
+    Energy estimation frequency                      1
+    Number of threads                                1
+    Time step (beta)                         1.000e+00
+    Spawning threshold                       1.000e-04
+    Initial guess spawning threshold         1.000e-03
+    Convergence threshold                    1.000e-12
+    Energy estimate tollerance               1.000e-06
+    Generator type                          Davidson-Liu by Tianyuan
+    Importance functional                   |Hij|*max(|Ci|,|Cj|)
+    Shift the energy                                NO
+    Use intermediate normalization                  NO
+    Fast variational estimate                       NO
+    Result perturbation analysis                    NO
+    Using OpenMP                                    NO
+
+  ==> Initial Guess <==
+
+  Initial guess size = 86
+  Spin multiplicity of root 78 not close to integer (4.1231)
+  Spin multiplicity of root 79 not close to integer (4.1231)
+  Spin multiplicity of root 80 not close to integer (4.1231)
+  Found 45 roots with 2S+1 = 1 *
+  Found 33 roots with 2S+1 = 3
+  Found 5 roots with 2S+1 = 5
+
+  Initial guess energy (variational) =     -14.645947472327 Eh (root = 1)
+
+  Most important contributions to the wave function:
+
+    0        -0.9337      0.871796           0 |22000200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -16.991042186105
+    1       0.231508     0.0535959           1 |20000200020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -16.844531944287
+    2       0.231508     0.0535959           2 |20000200200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -16.844531944287
+    3       0.113963     0.0129877           3 |20000220000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -16.780684423917
+    4      0.0799895    0.00639832           4 |20200200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -16.722588679069
+    5      0.0250221   0.000626107           5 |200002+-000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -16.358845134715
+    6      0.0250221   0.000626107           6 |200002-+000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -16.358845134715
+    7     0.00824472   6.79755e-05           7 |20000202000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -15.877818677698
+    8    -0.00468421   2.19418e-05           8 |20002200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -16.542435848077
+    9    -0.00468421   2.19418e-05           9 |20020200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -16.542435848077
+
+  Spin State: S^2 = 0.000, S = 0.000, singlet (from 3 determinants,97.90%)
+
+  ==> Estimate highest excitation energy <==
+  Highest Excited determinant:
+  |00022002000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>
+  Determinant Energy                    :  -2.581264114651
+  Highest Energy Gershgorin circle Est. :  -0.994024721782
+
+  ==> Characteristic Function <==
+    f(x) = 
+    with tau = 1.000000e+00, shift = -10.201283545070, range = 6.825961375272
+    Initial guess: lambda_1= -14.645947472327
+    Est. Highest eigenvalue= -0.994024721782
+
+  ==> PCI Iterations <==
+
+  --------------------------------------------------------------------------------------------------------------
+    Steps  Beta/Eh      Ndets      NoffDiag     Proj. Energy/Eh     dEp/dt      Approx. Energy/Eh   dEv/dt
+  --------------------------------------------------------------------------------------------------------------
+Davidson iter    1 order    2 correction norm  9.999e-01 dE -2.071e-04 E   -14.646167322073.
+Davidson iter    2 order    3 correction norm  2.476e-01 dE -2.080e-11 E   -14.646167322094.
+Davidson iter    3 order    4 correction norm  7.520e-02 dE -1.333e-08 E   -14.646167335422.
+Davidson iter    4 order    5 correction norm  6.205e-01 dE -5.823e-07 E   -14.646167917710.
+Davidson iter    5 order    6 correction norm  2.046e-01 dE -1.442e-09 E   -14.646167919152.
+Davidson iter    6 order    7 correction norm  8.856e-02 dE -5.097e-06 E   -14.646173016084.
+Davidson iter    7 order    8 correction norm  2.954e-01 dE -8.454e-06 E   -14.646181470180.
+Davidson collapsed from 8 vectors to 2 vectors.
+Davidson iter    8 order    3 correction norm  8.483e-01 dE -1.190e-08 E   -14.646181482079.
+Davidson iter    9 order    4 correction norm  3.047e-01 dE -1.087e-09 E   -14.646181483165.
+Davidson iter   10 order    5 correction norm  3.346e-01 dE -3.366e-09 E   -14.646181486531.
+Davidson iter   11 order    6 correction norm  4.907e-01 dE -1.090e-08 E   -14.646181497435.
+        0       12        418          2080     -14.646186851478 -2.394e-04     -14.646149368211 -1.892e-04
+Davidson iter    1 order    2 correction norm  9.920e-01 dE -7.617e-06 E   -14.646156984719.
+Davidson iter    2 order    3 correction norm  2.086e-01 dE -3.604e-08 E   -14.646157020757.
+Davidson iter    3 order    4 correction norm  5.083e-01 dE -7.976e-09 E   -14.646157028733.
+Davidson iter    4 order    5 correction norm  3.313e-01 dE -9.054e-10 E   -14.646157029638.
+Davidson iter    5 order    6 correction norm  1.685e-01 dE -4.408e-09 E   -14.646157034046.
+Davidson iter    6 order    7 correction norm  3.610e-01 dE -1.280e-08 E   -14.646157046841.
+Davidson iter    7 order    8 correction norm  2.984e-01 dE -7.469e-08 E   -14.646157121530.
+Davidson collapsed from 8 vectors to 2 vectors.
+Davidson iter    8 order    3 correction norm  9.927e-01 dE -1.301e-07 E   -14.646157251624.
+Davidson iter    9 order    4 correction norm  2.867e-01 dE -2.369e-07 E   -14.646157488559.
+Davidson iter   10 order    5 correction norm  1.816e-01 dE -5.169e-10 E   -14.646157489076.
+Davidson iter   11 order    6 correction norm  5.898e-01 dE -3.670e-10 E   -14.646157489443.
+        1       12        434          2396     -14.646136519614  5.033e-05     -14.646155527932 -6.160e-06
+Davidson iter    1 order    2 correction norm  9.127e-01 dE -2.560e-07 E   -14.646155783965.
+Davidson iter    2 order    3 correction norm  3.453e-01 dE -7.946e-09 E   -14.646155791911.
+Davidson iter    3 order    4 correction norm  3.403e-01 dE -5.956e-09 E   -14.646155797867.
+Davidson iter    4 order    5 correction norm  4.260e-01 dE -2.379e-10 E   -14.646155798105.
+Davidson iter    5 order    6 correction norm  8.148e-02 dE -2.245e-12 E   -14.646155798107.
+Davidson iter    6 order    7 correction norm  5.533e-01 dE -8.639e-09 E   -14.646155806746.
+Davidson iter    7 order    8 correction norm  2.874e-01 dE -1.297e-08 E   -14.646155819720.
+Davidson collapsed from 8 vectors to 2 vectors.
+Davidson iter    8 order    3 correction norm  8.301e-01 dE -7.475e-12 E   -14.646155819727.
+Davidson iter    9 order    4 correction norm  3.824e-01 dE -2.615e-12 E   -14.646155819730.
+Davidson iter   10 order    5 correction norm  2.681e-01 dE -4.977e-11 E   -14.646155819780.
+Davidson iter   11 order    6 correction norm  5.303e-01 dE -8.134e-11 E   -14.646155819861.
+        2       12        426          2344     -14.646156537728 -2.002e-05     -14.646156196445 -6.685e-07
+Davidson iter    1 order    2 correction norm  9.998e-01 dE -7.084e-08 E   -14.646156267288.
+Davidson iter    2 order    3 correction norm  7.562e-01 dE -4.956e-12 E   -14.646156267293.
+Davidson iter    3 order    4 correction norm  2.752e-01 dE -1.987e-10 E   -14.646156267491.
+Davidson iter    4 order    5 correction norm  1.440e-01 dE -2.158e-11 E   -14.646156267513.
+Davidson iter    5 order    6 correction norm  5.043e-01 dE -2.356e-11 E   -14.646156267537.
+Davidson iter    6 order    7 correction norm  4.421e-01 dE -9.437e-11 E   -14.646156267631.
+Davidson iter    7 order    8 correction norm  2.455e-01 dE -1.051e-11 E   -14.646156267641.
+Davidson collapsed from 8 vectors to 2 vectors.
+Davidson iter    8 order    3 correction norm  9.499e-01 dE -7.105e-15 E   -14.646156267641.
+        3        9        422          2340     -14.646156269572  2.682e-07     -14.646156514491 -3.180e-07
+Davidson iter    1 order    2 correction norm  9.968e-01 dE -3.044e-08 E   -14.646156544934.
+Davidson iter    2 order    3 correction norm  6.311e-01 dE -7.034e-13 E   -14.646156544934.
+        4        3        422          2320     -14.646156386723 -1.172e-07     -14.646156258658  2.558e-07
+Davidson iter    1 order    2 correction norm  9.989e-01 dE -3.391e-08 E   -14.646156292569.
+Davidson iter    2 order    3 correction norm  5.945e-01 dE -2.355e-12 E   -14.646156292571.
+Davidson iter    3 order    4 correction norm  1.261e-01 dE -1.268e-12 E   -14.646156292572.
+Davidson iter    4 order    5 correction norm  4.038e-01 dE -7.034e-13 E   -14.646156292573.
+        5        5        422          2340     -14.646156307153  7.957e-08     -14.646156514849 -2.562e-07
+Davidson iter    1 order    2 correction norm  9.976e-01 dE -3.009e-08 E   -14.646156544936.
+Davidson iter    2 order    3 correction norm  5.754e-01 dE -7.105e-15 E   -14.646156544936.
+        6        3        422          2320     -14.646156478219 -1.711e-07     -14.646156258617  2.562e-07
+Davidson iter    1 order    2 correction norm  9.977e-01 dE -3.395e-08 E   -14.646156292570.
+Davidson iter    2 order    3 correction norm  3.528e-01 dE -1.410e-12 E   -14.646156292572.
+Davidson iter    3 order    4 correction norm  3.136e-01 dE -2.540e-12 E   -14.646156292574.
+Davidson iter    4 order    5 correction norm  2.733e-01 dE -4.974e-14 E   -14.646156292574.
+        7        5        422          2340     -14.646156304080  1.741e-07     -14.646156514849 -2.562e-07
+Davidson iter    1 order    2 correction norm  9.976e-01 dE -3.009e-08 E   -14.646156544935.
+Davidson iter    2 order    3 correction norm  5.481e-01 dE -1.705e-13 E   -14.646156544936.
+        8        3        422          2320     -14.646156539692 -2.356e-07     -14.646156258616  2.562e-07
+Davidson iter    1 order    2 correction norm  9.966e-01 dE -3.396e-08 E   -14.646156292571.
+Davidson iter    2 order    3 correction norm  5.750e-01 dE -2.558e-13 E   -14.646156292571.
+        9        3        422          2340     -14.646156423995  1.157e-07
+  --------------------------------------------------------------------------------------------------------------
+
+  Calculation stoped in appearance of higher new low.
+
+  ==> Post-Iterations <==
+
+  * Size of CI space                    = 422
+  * Number of off-diagonal elements     = 2340
+  * ElementwiseCI Approximate Energy    =   -14.646156258616 Eh
+  * ElementwiseCI Projective  Energy    =   -14.646156423995 Eh
+
+  Most important contributions to the wave function:
+
+    0      -0.933273      0.870998           0 |22000200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -16.991042186105
+    1       0.230241     0.0530111           1 |20000200020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -16.844531944287
+    2       0.230241     0.0530111           2 |20000200200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -16.844531944287
+    3       0.120368     0.0144886           3 |20000220000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -16.780684423917
+    4      0.0803608    0.00645786           4 |20200200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -16.722588679069
+    5      0.0245641   0.000603395           5 |200002+-000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -16.358845134715
+    6      0.0245641   0.000603395           6 |200002-+000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -16.358845134715
+    7      0.0145793   0.000212556           7 |2-+00200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -16.872775657949
+    8      0.0145793   0.000212556           8 |2+-00200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -16.872775657949
+    9     0.00777602   6.04665e-05           9 |20000202000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -15.877818677698
+
+  Spin State: S^2 = 0.000, S = 0.000, singlet (from 3 determinants,97.70%)
+  ElementwiseCI (bitset) steps finished in  : 0.278053 s
+
+  Variational energy estimated with 422 determinants to meet the max error 0.000000e+00
+
+  ==> Computing Coupling Lists <==
+  --------------------------------
+        α          0.001925 s
+        β          0.001905 s
+        αα         0.001809 s
+        ββ         0.001768 s
+        αβ         0.004506 s
+  --------------------------------
+  * ElementwiseCI Variational Energy    =   -14.646161244953 Eh
+  * ElementwiseCI Var. Corr.  Energy    =    -0.036416506863 Eh
+  * 1st order perturbation   Energy     =    -0.000004986337 Eh
+
+  ElementwiseCI (bitset) ran in  : 0.293472 s
+
+  ==> Energy Summary <==
+
+    Multi.  Irrep.  No.               Energy
+    -----------------------------------------
+       1      Ag     0       -14.646161244953
+    -----------------------------------------	EWCI energy.......................................................PASSED
+
+    Psi4 stopped on: Thursday, 14 February 2019 12:52PM
+    Psi4 wall time for execution: 0:00:01.62
+
+*** Psi4 exiting successfully. Buy a developer a beer!
