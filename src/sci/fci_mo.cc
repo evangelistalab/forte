@@ -1945,7 +1945,7 @@ std::vector<RDMs> FCI_MO::transition_rdms(const std::vector<std::pair<size_t, si
 }
 
 [[deprecated]] std::vector<RDMs>
-FCI_MO::reference(const std::vector<std::pair<size_t, size_t>>& root_list) {
+FCI_MO::reference(const std::vector<std::pair<size_t, size_t>>& root_list, int max_rdm_level) {
 
     std::vector<RDMs> refs;
     // if ((options_->psi_options())["AVG_STATE"].size() != 0) {
@@ -1974,17 +1974,17 @@ FCI_MO::reference(const std::vector<std::pair<size_t, size_t>>& root_list) {
     // } else {
 
     for (auto& roots : root_list) {
-        compute_ref(max_rdm_level_, roots.first, roots.second);
+        compute_ref(max_rdm_level, roots.first, roots.second);
 
-        if (max_rdm_level_ == 1) {
+        if (max_rdm_level == 1) {
             refs.emplace_back(L1a_, L1b_);
         }
 
-        if (max_rdm_level_ == 2) {
+        if (max_rdm_level == 2) {
             refs.emplace_back(L1a_, L1b_, L2aa_, L2ab_, L2bb_);
         }
 
-        if (max_rdm_level_ == 3 && (options_->get_str("THREEPDC") != "ZERO")) {
+        if (max_rdm_level == 3 && (options_->get_str("THREEPDC") != "ZERO")) {
             refs.emplace_back(L1a_, L1b_, L2aa_, L2ab_, L2bb_, L3aaa_, L3aab_, L3abb_, L3bbb_);
         }
     }

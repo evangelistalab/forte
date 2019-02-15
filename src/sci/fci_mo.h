@@ -126,11 +126,11 @@ class FCI_MO : public ActiveSpaceMethod {
                                       int max_rdm_level) override;
 
     [[deprecated]] std::vector<RDMs>
-    reference(const std::vector<std::pair<size_t, size_t>>& root_list);
+    reference(const std::vector<std::pair<size_t, size_t>>& root_list, int max_rdm_level);
 
-    RDMs reference() {
+    RDMs reference(int max_rdm_level) {
         std::vector<std::pair<size_t, size_t>> roots;
-        return reference(roots)[0];
+        return reference(roots, max_rdm_level)[0];
     }
 
     void set_options(std::shared_ptr<ForteOptions>) override {} // TODO implement

@@ -49,9 +49,14 @@ class MOSpaceInfo;
  * This class is constructed by passing the RDMs up to a given rank n (n <= 3). For example,
  * to pass the one- and two-body RDMs an object is initialized as
  *
+ * ambit::Tensor g1a, g1b, g2aa, g2ab, g2bb;
+ * // ...
+ * // fill in g1a, g1b, ...
+ * // ...
  * auto rdms = RDMs(g1a, g1b, g2aa, g2ab, g2bb);
  *
- * From the RDMs it is possible to obtain the corresponding cumulants. For example,
+ * From the RDMs it is possible to obtain the corresponding cumulants by calling appropriate member
+ * functions. For example,
  * the alpha-alpha 2-body density cumulant can be obtained by calling
  *
  * auto L2aa = rdms.L2aa();

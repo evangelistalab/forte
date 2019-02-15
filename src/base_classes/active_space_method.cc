@@ -64,8 +64,6 @@ void ActiveSpaceMethod::set_e_convergence(double value) { e_convergence_ = value
 
 void ActiveSpaceMethod::set_root(int value) { root_ = value; }
 
-void ActiveSpaceMethod::set_max_rdm_level(int value) { max_rdm_level_ = value; }
-
 void ActiveSpaceMethod::set_print(int level) { print_ = level; }
 
 std::vector<std::string> ActiveSpaceMethod::generate_rdm_file_names(int rdm_level, int root1,

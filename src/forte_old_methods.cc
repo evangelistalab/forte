@@ -140,10 +140,9 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
         auto as_ints = make_active_space_ints(mo_space_info, ints, "ACTIVE", {{"RESTRICTED_DOCC"}});
         auto ci = make_active_space_solver(cas_type, state_map, scf_info, mo_space_info, as_ints,
                                            forte_options);
-        ci->set_max_rdm_level(max_rdm_level);
         ci->compute_energy();
 
-        RDMs rdms = ci->compute_average_rdms(state_weights_map, 3);
+        RDMs rdms = ci->compute_average_rdms(state_weights_map, max_rdm_level);
         SemiCanonical semi(mo_space_info, ints, forte_options);
         semi.semicanonicalize(rdms, max_rdm_level);
 
@@ -219,9 +218,8 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
         auto as_ints = make_active_space_ints(mo_space_info, ints, "ACTIVE", {{"RESTRICTED_DOCC"}});
         auto solver = make_active_space_solver(cas_type, state_map, scf_info, mo_space_info,
                                                as_ints, forte_options);
-        solver->set_max_rdm_level(max_rdm_level);
         solver->compute_energy();
-        RDMs rdms = solver->compute_average_rdms(state_weights_map, 3);
+        RDMs rdms = solver->compute_average_rdms(state_weights_map, max_rdm_level);
 
         if (options.get_bool("SEMI_CANONICAL")) {
             SemiCanonical semi(mo_space_info, ints, forte_options);

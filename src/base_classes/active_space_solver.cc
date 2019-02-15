@@ -70,11 +70,8 @@ const std::map<StateInfo, std::vector<double>>& ActiveSpaceSolver::compute_energ
             method_, state, nroot, scf_info_, mo_space_info_, as_ints_, options_);
         state_method_map_[state] = method;
 
-        method->set_options(options_);
-        if (set_rdm_) {
-            method->set_max_rdm_level(max_rdm_level_);
-        }
         method->compute_energy();
+
         const auto& energies = method->energies();
         state_energies_map_[state] = energies;
     }
@@ -157,11 +154,6 @@ std::vector<RDMs> ActiveSpaceSolver::rdms(
         }
     }
     return refs;
-}
-
-void ActiveSpaceSolver::set_max_rdm_level(size_t level) {
-    max_rdm_level_ = level;
-    set_rdm_ = true;
 }
 
 void ActiveSpaceSolver::print_options() {
@@ -331,7 +323,7 @@ RDMs ActiveSpaceSolver::compute_average_rdms(
         g2bb = ambit::Tensor::build(ambit::CoreTensor, "g2bb", std::vector<size_t>(4, nactive));
     }
 
-    if (max_rdm_level_ >= 3) {
+    if (max_rdm_level >= 3) {
         g3aaa = ambit::Tensor::build(ambit::CoreTensor, "g3aaa", std::vector<size_t>(6, nactive));
         g3aab = ambit::Tensor::build(ambit::CoreTensor, "g3aab", std::vector<size_t>(6, nactive));
         g3abb = ambit::Tensor::build(ambit::CoreTensor, "g3abb", std::vector<size_t>(6, nactive));
@@ -373,14 +365,14 @@ RDMs ActiveSpaceSolver::compute_average_rdms(
             scale_add(g1a.data(), method_rdms.g1a().data(), weight);
             scale_add(g1b.data(), method_rdms.g1b().data(), weight);
 
-            if (max_rdm_level_ >= 2) {
+            if (max_rdm_level >= 2) {
                 // 2 RDM
                 scale_add(g2aa.data(), method_rdms.g2aa().data(), weight);
                 scale_add(g2ab.data(), method_rdms.g2ab().data(), weight);
                 scale_add(g2bb.data(), method_rdms.g2bb().data(), weight);
             }
 
-            if (max_rdm_level_ >= 3) {
+            if (max_rdm_level >= 3) {
                 // 3 RDM
                 scale_add(g3aaa.data(), method_rdms.g3aaa().data(), weight);
                 scale_add(g3aab.data(), method_rdms.g3aab().data(), weight);
@@ -390,11 +382,11 @@ RDMs ActiveSpaceSolver::compute_average_rdms(
         }
     }
 
-    if (max_rdm_level_ == 1) {
+    if (max_rdm_level == 1) {
         return RDMs(g1a, g1b);
-    } else if (max_rdm_level_ == 2) {
+    } else if (max_rdm_level == 2) {
         return RDMs(g1a, g1b, g2aa, g2ab, g2bb);
-    } else if (max_rdm_level_ == 3) {
+    } else if (max_rdm_level == 3) {
         return RDMs(g1a, g1b, g2aa, g2ab, g2bb, g3aaa, g3aab, g3abb, g3bbb);
     }
     return RDMs();
@@ -402,7 +394,7 @@ RDMs ActiveSpaceSolver::compute_average_rdms(
 
 const std::map<StateInfo, std::vector<double>>&
 ActiveSpaceSolver::compute_contracted_energy(std::shared_ptr<ActiveSpaceIntegrals> as_ints,
-                                             int max_body) {
+                                             int max_rdm_level) {
     if (state_method_map_.size() == 0) {
         throw psi::PSIEXCEPTION("Old CI determinants are not solved. Call compute_energy first.");
     }
@@ -449,7 +441,7 @@ ActiveSpaceSolver::compute_contracted_energy(std::shared_ptr<ActiveSpaceIntegral
             for (size_t B = A; B < nroots; ++B) {
                 // just compute transition rdms of <A|sqop|B>
                 std::vector<std::pair<size_t, size_t>> root_list{std::make_pair(A, B)};
-                RDMs rdms = method->rdms(root_list, max_body)[0];
+                RDMs rdms = method->rdms(root_list, max_rdm_level)[0];
 
                 double H_AB = ints.contract_with_rdms(rdms);
                 if (A == B) {

@@ -542,10 +542,10 @@ std::vector<RDMs> ASCI::rdms(const std::vector<std::pair<size_t, size_t>>& root_
         if (max_rdm_level == 1) {
             refs.emplace_back(ordm_a_, ordm_b_);
         }
-        if (max_rdm_level_ == 2) {
+        if (max_rdm_level == 2) {
             refs.emplace_back(ordm_a_, ordm_b_, trdm_aa_, trdm_ab_, trdm_bb_);
         }
-        if (max_rdm_level_ == 3) {
+        if (max_rdm_level == 3) {
             refs.emplace_back(ordm_a_, ordm_b_, trdm_aa_, trdm_ab_, trdm_bb_, trdm_aaa_, trdm_aab_,
                               trdm_abb_, trdm_bbb_);
         }

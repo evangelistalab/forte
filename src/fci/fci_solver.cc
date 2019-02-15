@@ -109,7 +109,6 @@ void FCISolver::startup() {
 void FCISolver::set_options(std::shared_ptr<ForteOptions> options) {
     set_root(options->get_int("ROOT"));
     set_test_rdms(options->get_bool("FCI_TEST_RDMS"));
-    set_max_rdm_level(options->get_int("FCI_MAX_RDM"));
     set_fci_iterations(options->get_int("FCI_MAXITER"));
     set_collapse_per_root(options->get_int("DL_COLLAPSE_PER_ROOT"));
     set_subspace_per_root(options->get_int("DL_SUBSPACE_PER_ROOT"));
@@ -306,18 +305,6 @@ double FCISolver::compute_energy() {
         }
     }
 
-    // Compute the RDMs
-    //    C_->copy(dls.eigenvector(root_));
-    //    if (print_) {
-    //        std::string title_rdm = "Computing RDMs for Root No. " + std::to_string(root_);
-    //        print_h2(title_rdm);
-    //    }
-    //    C_->compute_rdms(max_rdm_level_);
-
-    //    if (print_ > 1 && max_rdm_level_ > 1) {
-    //        C_->energy_from_rdms(as_ints_);
-    //    }
-
     //    // Optionally, test the RDMs
     if (test_rdms_) {
         C_->copy(dls.eigenvector(root_));
@@ -325,7 +312,7 @@ double FCISolver::compute_energy() {
             std::string title_rdm = "Computing RDMs for Root No. " + std::to_string(root_);
             print_h2(title_rdm);
         }
-        C_->compute_rdms(max_rdm_level_);
+        C_->compute_rdms(3);
         C_->rdm_test();
     }
 
@@ -511,11 +498,17 @@ FCISolver::initial_guess(FCIVector& diag, size_t n,
 std::vector<RDMs> FCISolver::rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
                                   int max_rdm_level) {
     std::vector<RDMs> refs;
-    if (max_rdm_level_ <= 0)
+    if (max_rdm_level <= 0)
         return refs;
 
     // loop over all the pairs of references
     for (auto& roots : root_list) {
+
+        if (roots.first != roots.second) {
+            throw psi::PSIEXCEPTION(
+                "FCISolver::rdms(): cannot compute transition RDMs within the same symmetry.");
+        }
+
         compute_rdms_root(roots.first, roots.second, max_rdm_level);
 
         size_t nact = active_dim_.sum();
@@ -528,7 +521,7 @@ std::vector<RDMs> FCISolver::rdms(const std::vector<std::pair<size_t, size_t>>& 
         ambit::Tensor g2aa, g2ab, g2bb;
         ambit::Tensor g3aaa, g3aab, g3abb, g3bbb;
 
-        if (max_rdm_level_ >= 1) {
+        if (max_rdm_level >= 1) {
             // One-particle density matrices in the active space
             std::vector<double>& opdm_a = C_->opdm_a();
             std::vector<double>& opdm_b = C_->opdm_b();
@@ -546,7 +539,7 @@ std::vector<RDMs> FCISolver::rdms(const std::vector<std::pair<size_t, size_t>>& 
             }
         }
 
-        if (max_rdm_level_ >= 2) {
+        if (max_rdm_level >= 2) {
             // Two-particle density matrices in the active space
             g2aa = ambit::Tensor::build(ambit::CoreTensor, "g2aa", {nact, nact, nact, nact});
             g2ab = ambit::Tensor::build(ambit::CoreTensor, "g2ab", {nact, nact, nact, nact});
@@ -572,7 +565,7 @@ std::vector<RDMs> FCISolver::rdms(const std::vector<std::pair<size_t, size_t>>& 
             }
         }
 
-        if (max_rdm_level_ >= 3) {
+        if (max_rdm_level >= 3) {
             // Three-particle density matrices in the active space
             g3aaa = ambit::Tensor::build(ambit::CoreTensor, "g3aaa",
                                          {nact, nact, nact, nact, nact, nact});
@@ -658,8 +651,9 @@ std::vector<RDMs> FCISolver::rdms(const std::vector<std::pair<size_t, size_t>>& 
     return refs;
 }
 
-std::vector<RDMs> FCISolver::transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
-                                  std::shared_ptr<ActiveSpaceMethod> method2, int max_rdm_level) {
+std::vector<RDMs>
+FCISolver::transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
+                           std::shared_ptr<ActiveSpaceMethod> method2, int max_rdm_level) {
     std::vector<RDMs> refs;
     throw std::runtime_error("FCISolver::transition_rdms is not implemented!");
     return refs;

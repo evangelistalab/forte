@@ -167,10 +167,6 @@ class ActiveSpaceMethod {
     /// @param the root (root = 0, 1, 2, ...)
     void set_root(int value);
 
-    /// Set the maximum RDM computed (0 - 3)
-    /// @param value the rank of the RDM
-    void set_max_rdm_level(int value);
-
     /// Set the print level
     /// @param level the print level (0 = no printing, 1 default)
     void set_print(int level);
@@ -204,9 +200,6 @@ class ActiveSpaceMethod {
 
     /// The root used to compute properties (zero based, default = 0)
     int root_ = 0;
-
-    /// The maximum RDM computed (0 - 3)
-    int max_rdm_level_ = 1;
 
     /// A variable to control printing information
     int print_ = 0;

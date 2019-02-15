@@ -270,7 +270,6 @@ double ACTIVE_DSRGPT2::compute_energy() {
             }
 
             // compute cumultans
-            fci_mo_->set_max_rdm_level(max_cu_level);
             std::vector<std::pair<size_t, size_t>> root;
             root.push_back(std::make_pair(0, 0));
             RDMs rdms = fci_mo_->rdms(root, 3)[0];
@@ -311,7 +310,6 @@ double ACTIVE_DSRGPT2::compute_energy() {
         for (int i = 0; i < nroot; ++i) {
             outfile->Printf("\n\n  Computing semicanonical orbitals for root %d.", i);
             fci_mo_->set_root(i);
-            fci_mo_->set_max_rdm_level(1);
             std::vector<std::pair<size_t, size_t>> root;
             root.push_back(std::make_pair(i, i));
             RDMs rdms = fci_mo_->rdms(root, 3)[0];
@@ -383,12 +381,11 @@ double ACTIVE_DSRGPT2::compute_energy() {
 
             // compute cumulants
             fci_mo_->set_root(i);
-            fci_mo_->set_max_rdm_level(max_cu_level);
 
             // can move this out of loop
             std::vector<std::pair<size_t, size_t>> rootvec;
             rootvec.push_back(std::make_pair(i, i));
-            RDMs rdms = fci_mo_->rdms(rootvec, 3)[0];
+            RDMs rdms = fci_mo_->rdms(rootvec, max_cu_level)[0];
 
             // manually rotate the RDMs and integrals
             semi->transform_rdms(Uas_t[i], Ubs_t[i], rdms, max_cu_level);
