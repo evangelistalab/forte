@@ -36,8 +36,22 @@ namespace forte {
 
 class PCISigmaVector : public SigmaVector {
   public:
-    PCISigmaVector(det_hashvec& dets_hashvec, std::vector<double>& ref_C,
-                   double spawning_threshold);
+    PCISigmaVector(
+        det_hashvec& dets_hashvec, std::vector<double>& ref_C, double spawning_threshold,
+        std::shared_ptr<ActiveSpaceIntegrals> as_ints,
+        std::function<bool(double, double, double)> prescreen_H_CI,
+        std::function<bool(double, double, double, double)> important_H_CI_CJ,
+        const std::vector<std::tuple<int, double, std::vector<std::tuple<int, double>>>>&
+            a_couplings,
+        const std::vector<std::tuple<int, double, std::vector<std::tuple<int, double>>>>&
+            b_couplings,
+        const std::vector<std::tuple<int, int, double, std::vector<std::tuple<int, int, double>>>>&
+            aa_couplings,
+        const std::vector<std::tuple<int, int, double, std::vector<std::tuple<int, int, double>>>>&
+            ab_couplings,
+        const std::vector<std::tuple<int, int, double, std::vector<std::tuple<int, int, double>>>>&
+            bb_couplings,
+        double dets_single_max_coupling, double dets_double_max_coupling);
     void compute_sigma(psi::SharedVector sigma, psi::SharedVector b) override;
     void get_diagonal(psi::Vector& diag) override;
     void add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& bad_states) override;
@@ -66,12 +80,12 @@ class PCISigmaVector : public SigmaVector {
     std::unordered_map<Determinant, std::pair<double, double>, Determinant::Hash>
         dets_max_couplings_;
     double dets_single_max_coupling_;
-    std::vector<std::tuple<int, double, std::vector<std::tuple<int, double>>>> a_couplings_,
-        b_couplings_;
+    const std::vector<std::tuple<int, double, std::vector<std::tuple<int, double>>>>&a_couplings_,
+        &b_couplings_;
     size_t a_couplings_size_, b_couplings_size_;
     double dets_double_max_coupling_;
-    std::vector<std::tuple<int, int, double, std::vector<std::tuple<int, int, double>>>>
-        aa_couplings_, ab_couplings_, bb_couplings_;
+    const std::vector<std::tuple<int, int, double, std::vector<std::tuple<int, int, double>>>>
+        &aa_couplings_, &ab_couplings_, &bb_couplings_;
     size_t aa_couplings_size_, ab_couplings_size_, bb_couplings_size_;
 
     /// Apply symmetric approx tau H to a set of determinants with selection

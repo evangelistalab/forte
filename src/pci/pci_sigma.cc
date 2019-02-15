@@ -38,10 +38,28 @@ namespace forte {
 #define omp_get_thread_num() 0
 #endif
 
-PCISigmaVector::PCISigmaVector(det_hashvec& dets_hashvec, std::vector<double>& ref_C,
-                               double spawning_threshold)
+PCISigmaVector::PCISigmaVector(
+    det_hashvec& dets_hashvec, std::vector<double>& ref_C, double spawning_threshold,
+    std::shared_ptr<ActiveSpaceIntegrals> as_ints,
+    std::function<bool(double, double, double)> prescreen_H_CI,
+    std::function<bool(double, double, double, double)> important_H_CI_CJ,
+    const std::vector<std::tuple<int, double, std::vector<std::tuple<int, double>>>>& a_couplings,
+    const std::vector<std::tuple<int, double, std::vector<std::tuple<int, double>>>>& b_couplings,
+    const std::vector<std::tuple<int, int, double, std::vector<std::tuple<int, int, double>>>>&
+        aa_couplings,
+    const std::vector<std::tuple<int, int, double, std::vector<std::tuple<int, int, double>>>>&
+        ab_couplings,
+    const std::vector<std::tuple<int, int, double, std::vector<std::tuple<int, int, double>>>>&
+        bb_couplings,
+    double dets_single_max_coupling, double dets_double_max_coupling)
     : SigmaVector(dets_hashvec.size()), dets_(dets_hashvec), ref_C_(ref_C),
-      spawning_threshold_(spawning_threshold) {}
+      spawning_threshold_(spawning_threshold), as_ints_(as_ints), prescreen_H_CI_(prescreen_H_CI),
+      important_H_CI_CJ_(important_H_CI_CJ), a_couplings_(a_couplings), b_couplings_(b_couplings),
+      aa_couplings_(aa_couplings), ab_couplings_(ab_couplings), bb_couplings_(bb_couplings),
+      dets_single_max_coupling_(dets_single_max_coupling),
+      dets_double_max_coupling_(dets_double_max_coupling), a_couplings_size_(a_couplings.size()),
+      b_couplings_size_(b_couplings.size()), aa_couplings_size_(aa_couplings.size()),
+      ab_couplings_size_(ab_couplings.size()), bb_couplings_size_(bb_couplings.size()) {}
 
 void PCISigmaVector::compute_sigma(psi::SharedVector sigma, psi::SharedVector b) {}
 
