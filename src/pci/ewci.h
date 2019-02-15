@@ -93,9 +93,6 @@ class ElementwiseCI : public SelectedCIMethod {
 
     void set_options(std::shared_ptr<ForteOptions>) override{};
 
-    /// Compute the energy
-    double compute_energy() override;
-
     // Interfaces of SCI algorithm
     /// Print the banner and starting information.
     void print_info() override;
@@ -176,6 +173,10 @@ class ElementwiseCI : public SelectedCIMethod {
     /// The reference determinant
     Determinant reference_determinant_;
     std::vector<std::pair<det_hashvec, std::vector<double>>> solutions_;
+    /// Determinants
+    det_hashvec dets_hashvec_;
+    /// Coefficients
+    std::vector<double> C_;
 
     // * Calculation info
     /// The energy convergence criterion
@@ -192,16 +193,12 @@ class ElementwiseCI : public SelectedCIMethod {
     bool do_shift_;
     /// Use intermediate normalization?
     bool use_inter_norm_;
-    /// The maximum number of iterations
-    int maxiter_;
     /// The maximum number of iterations in Davidson generator
     int max_Davidson_iter_;
     /// The number of trial vector to retain after collapsing
     size_t davidson_collapse_per_root_;
     /// The maxim number of trial vectors
     size_t davidson_subspace_per_root_;
-    /// The current iteration
-    int iter_;
     /// The current root
     int current_root_;
     /// The current davidson iter
@@ -286,6 +283,14 @@ class ElementwiseCI : public SelectedCIMethod {
     bool stop_higher_new_low_;
     double lastLow = 0.0;
     bool previous_go_up = false;
+
+    // * New addition
+    double var_energy_;
+    double proj_energy_;
+    double old_var_energy_;
+    double old_proj_energy_;
+    bool converged_;
+    local_timer t_ewci_;
 
     // ==> Class functions <==
 

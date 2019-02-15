@@ -1141,6 +1141,279 @@ int AdaptiveCI_SCI::root_follow(DeterminantHashVec& P_ref, std::vector<double>& 
     return new_root;
 }
 
+void AdaptiveCI_SCI::pre_iter_preparation() {
+    // Build the reference determinant and compute its energy
+    CI_Reference ref(scf_info_, options_, mo_space_info_, as_ints_, multiplicity_, twice_ms_,
+                     wavefunction_symmetry_);
+    ref.build_reference(initial_reference_);
+    P_space_ = initial_reference_;
+
+    if ((options_->get_bool("ACI_CORE_EX")) and (root_ > 0)) {
+
+        ref_root_ = root_ - 1;
+
+        int ncstate = options_->get_int("ACI_ROOTS_PER_CORE");
+
+        if (((root_) > ncstate) and (root_ > 1)) {
+            hole_++;
+        }
+        int particle = (root_ - 1) - (hole_ * ncstate);
+
+        P_space_.clear();
+        Determinant det = initial_reference_[0];
+        Determinant detb(det);
+        std::vector<int> avir = det.get_alfa_vir(nact_); // TODO check this
+        outfile->Printf("\n  %s", det.str(nact_).c_str());
+        outfile->Printf("\n  Freezing alpha orbital %d", hole_);
+        outfile->Printf("\n  Exciting electron from %d to %d", hole_, avir[particle]);
+        det.set_alfa_bit(hole_, false);
+        detb.set_beta_bit(hole_, false);
+
+        for (int n = 0, max_n = avir.size(); n < max_n; ++n) {
+            if ((mo_symmetry_[hole_] ^ mo_symmetry_[avir[n]]) == 0) {
+                det.set_alfa_bit(avir[particle], true);
+                detb.set_beta_bit(avir[particle], true);
+                break;
+            }
+        }
+        outfile->Printf("\n  %s", det.str(nact_).c_str());
+        outfile->Printf("\n  %s", detb.str(nact_).c_str());
+        P_space_.add(det);
+        P_space_.add(detb);
+    }
+
+    if (quiet_mode_) {
+        sparse_solver_.set_print_details(false);
+    }
+    sparse_solver_.set_parallel(true);
+    sparse_solver_.set_force_diag(options_->get_bool("FORCE_DIAG_METHOD"));
+    sparse_solver_.set_e_convergence(options_->get_double("E_CONVERGENCE"));
+    sparse_solver_.set_maxiter_davidson(options_->get_int("DL_MAXITER"));
+    sparse_solver_.set_spin_project(project_out_spin_contaminants_);
+    //    sparse_solver.set_spin_project_full(project_out_spin_contaminants_);
+    sparse_solver_.set_guess_dimension(options_->get_int("DL_GUESS_SIZE"));
+    sparse_solver_.set_num_vecs(options_->get_int("N_GUESS_VEC"));
+    sparse_solver_.set_sigma_method(options_->get_str("SIGMA_BUILD_TYPE"));
+    sparse_solver_.set_spin_project_full(false);
+    sparse_solver_.set_max_memory(options_->get_int("SIGMA_VECTOR_MAX_MEMORY"));
+
+    // if (det_save_)
+    //     det_list_.open("det_list.txt");
+
+    if (streamline_qspace_ and !quiet_mode_)
+        outfile->Printf("\n  Using streamlined Q-space builder.");
+
+    // approx_rdm_ = false;
+}
+
+void AdaptiveCI_SCI::diagonalize_P_space() {
+    cycle_time_.reset();
+    // Step 1. Diagonalize the Hamiltonian in the P space
+    num_ref_roots_ = std::min(nroot_, int(P_space_.size()));
+    std::string cycle_h = "Cycle " + std::to_string(cycle_);
+
+    follow_ = false;
+    if (ex_alg_ == "ROOT_COMBINE" or ex_alg_ == "MULTISTATE" or ex_alg_ == "ROOT_ORTHOGONALIZE") {
+
+        follow_ = true;
+    }
+
+    if (!quiet_mode_) {
+        print_h2(cycle_h);
+        outfile->Printf("\n  Initial P space dimension: %zu", P_space_.size());
+    }
+
+    // Check that the initial space is spin-complete
+    if (spin_complete_) {
+        // assumes P_space handles determinants with only active space orbitals
+        P_space_.make_spin_complete(nact_);
+        if (!quiet_mode_)
+            outfile->Printf("\n  %s: %zu determinants", "Spin-complete dimension of the P space",
+                            P_space_.size());
+    } else if (!quiet_mode_) {
+        outfile->Printf("\n  Not checking for spin-completeness.");
+    }
+    // Diagonalize H in the P space
+    if (ex_alg_ == "ROOT_ORTHOGONALIZE" and root_ > 0 and cycle_ >= pre_iter_) {
+        sparse_solver_.set_root_project(true);
+        add_bad_roots(P_space_);
+        sparse_solver_.add_bad_states(bad_roots_);
+    }
+
+    if (sparse_solver_.sigma_method_ == "HZ") {
+        op_.clear_op_lists();
+        op_.clear_tp_lists();
+        op_.build_strings(P_space_);
+        op_.op_lists(P_space_);
+        op_.tp_lists(P_space_);
+    } else if (diag_method_ != Dynamic) {
+        op_.clear_op_s_lists();
+        op_.clear_tp_s_lists();
+        op_.build_strings(P_space_);
+        op_.op_s_lists(P_space_);
+        op_.tp_s_lists(P_space_);
+    }
+
+    sparse_solver_.manual_guess(false);
+    local_timer diag;
+    sparse_solver_.diagonalize_hamiltonian_map(P_space_, op_, P_evals_, P_evecs_, num_ref_roots_,
+                                               multiplicity_, diag_method_);
+    if (!quiet_mode_)
+        outfile->Printf("\n  Time spent diagonalizing H:   %1.6f s", diag.get());
+
+    // Save ground state energy
+    P_energies_.push_back(P_evals_->get(0));
+
+    if ((cycle_ > 1) and options_->get_bool("ACI_APPROXIMATE_RDM")) {
+        double diff = std::abs(P_energies_[cycle_] - P_energies_[cycle_ - 1]);
+        if (diff <= 1e-5) {
+            approx_rdm_ = true;
+        }
+    }
+
+    // Update the reference root if root following
+    if (follow_ and num_ref_roots_ > 1 and (cycle_ >= pre_iter_) and cycle_ > 0) {
+        ref_root_ = root_follow(P_ref_, P_ref_evecs_, P_space_, P_evecs_, num_ref_roots_);
+    }
+
+    // Print the energy
+    if (!quiet_mode_) {
+        outfile->Printf("\n");
+        for (int i = 0; i < num_ref_roots_; ++i) {
+            double abs_energy =
+                P_evals_->get(i) + nuclear_repulsion_energy_ + as_ints_->scalar_energy();
+            double exc_energy = pc_hartree2ev * (P_evals_->get(i) - P_evals_->get(0));
+            outfile->Printf("\n    P-space  CI Energy Root %3d        = "
+                            "%.12f Eh = %8.4f eV",
+                            i, abs_energy, exc_energy);
+        }
+        outfile->Printf("\n");
+    }
+
+    if (!quiet_mode_ and options_->get_bool("ACI_PRINT_REFS"))
+        print_wfn(P_space_, op_, P_evecs_, num_ref_roots_);
+}
+
+void AdaptiveCI_SCI::find_q_space() {
+    // Step 2. Find determinants in the Q space
+    local_timer build_space;
+    if (options_->get_bool("ACI_BATCHED_SCREENING")) {
+        find_q_space_batched(P_space_, PQ_space_, P_evals_, P_evecs_);
+    } else if (streamline_qspace_) {
+        default_find_q_space(P_space_, PQ_space_, P_evals_, P_evecs_);
+    } else {
+        find_q_space(P_space_, PQ_space_, num_ref_roots_, P_evals_, P_evecs_);
+    }
+    outfile->Printf("\n  Time spent building the model space: %1.6f", build_space.get());
+    // Check if P+Q space is spin complete
+    if (spin_complete_) {
+        PQ_space_.make_spin_complete(nact_); // <- xsize
+        if (!quiet_mode_)
+            outfile->Printf("\n  Spin-complete dimension of the PQ space: %zu", PQ_space_.size());
+    }
+
+    if ((ex_alg_ == "ROOT_ORTHOGONALIZE") and (root_ > 0) and cycle_ >= pre_iter_) {
+        sparse_solver_.set_root_project(true);
+        add_bad_roots(PQ_space_);
+        sparse_solver_.add_bad_states(bad_roots_);
+    }
+}
+
+void AdaptiveCI_SCI::diagonalize_PQ_space() {
+    // Step 3. Diagonalize the Hamiltonian in the P + Q space
+    if (sparse_solver_.sigma_method_ == "HZ") {
+        op_.clear_op_lists();
+        op_.clear_tp_lists();
+        local_timer str;
+        op_.build_strings(PQ_space_);
+        outfile->Printf("\n  Time spent building strings      %1.6f s", str.get());
+        op_.op_lists(PQ_space_);
+        op_.tp_lists(PQ_space_);
+    } else if (diag_method_ != Dynamic) {
+        op_.clear_op_s_lists();
+        op_.clear_tp_s_lists();
+        op_.build_strings(PQ_space_);
+        op_.op_s_lists(PQ_space_);
+        op_.tp_s_lists(PQ_space_);
+    }
+    local_timer diag_pq;
+
+    sparse_solver_.diagonalize_hamiltonian_map(PQ_space_, op_, PQ_evals_, PQ_evecs_, num_ref_roots_,
+                                               multiplicity_, diag_method_);
+
+    if (!quiet_mode_)
+        outfile->Printf("\n  Total time spent diagonalizing H:   %1.6f s", diag_pq.get());
+
+    // Save the solutions for the next iteration
+    //        old_dets.clear();
+    //        old_dets = PQ_space_;
+    //        old_evecs = PQ_evecs->clone();
+
+    if (!quiet_mode_) {
+        // Print the energy
+        outfile->Printf("\n");
+        for (int i = 0; i < num_ref_roots_; ++i) {
+            double abs_energy =
+                PQ_evals_->get(i) + nuclear_repulsion_energy_ + as_ints_->scalar_energy();
+            double exc_energy = pc_hartree2ev * (PQ_evals_->get(i) - PQ_evals_->get(0));
+            outfile->Printf("\n    PQ-space CI Energy Root %3d        = "
+                            "%.12f Eh = %8.4f eV",
+                            i, abs_energy, exc_energy);
+            outfile->Printf("\n    PQ-space CI Energy + EPT2 Root %3d = %.12f Eh = "
+                            "%8.4f eV",
+                            i, abs_energy + multistate_pt2_energy_correction_[i],
+                            exc_energy +
+                                pc_hartree2ev * (multistate_pt2_energy_correction_[i] -
+                                                 multistate_pt2_energy_correction_[0]));
+        }
+        outfile->Printf("\n");
+    }
+
+    num_ref_roots_ = std::min(nroot_, int(PQ_space_.size()));
+
+    // If doing root-following, grab the initial root
+    if (follow_ and ((pre_iter_ == 0 and cycle_ == 0) or cycle_ == (pre_iter_ - 1))) {
+        size_t dim = std::min(static_cast<int>(PQ_space_.size()), 1000);
+        P_ref_.subspace(PQ_space_, PQ_evecs_, P_ref_evecs_, dim, ref_root_);
+    }
+
+    // if( follow and num_ref_roots > 0 and (cycle >= (pre_iter_ - 1)) ){
+    if (follow_ and (num_ref_roots_ > 1) and (cycle_ >= pre_iter_)) {
+        ref_root_ = root_follow(P_ref_, P_ref_evecs_, PQ_space_, PQ_evecs_, num_ref_roots_);
+    }
+}
+
+bool AdaptiveCI_SCI::check_convergence() {
+    bool stuck = check_stuck(energy_history_, PQ_evals_);
+    if (stuck) {
+        outfile->Printf("\n  Procedure is stuck! Quitting...");
+        return true;
+    }
+
+    // Step 4. Check convergence and break if needed
+    bool converged = check_convergence(energy_history_, PQ_evals_);
+    if (converged) {
+        // if(quiet_mode_) outfile->Printf(
+        // "\n----------------------------------------------------------" );
+        if (!quiet_mode_)
+            outfile->Printf("\n  ***** Calculation Converged *****");
+        return true;
+    }
+
+    return false;
+}
+
+void AdaptiveCI_SCI::prune_PQ_to_P() {
+    // Step 5. Prune the P + Q space to get an updated P space
+    prune_q_space(PQ_space_, P_space_, PQ_evecs_, num_ref_roots_);
+
+    // Print information about the wave function
+    if (!quiet_mode_) {
+        print_wfn(PQ_space_, op_, PQ_evecs_, num_ref_roots_);
+        outfile->Printf("\n  Cycle %d took: %1.6f s", cycle_, cycle_time_.get());
+    }
+}
+
 std::vector<std::pair<size_t, double>>
 AdaptiveCI_SCI::dl_initial_guess(std::vector<Determinant>& old_dets, std::vector<Determinant>& dets,
                                  psi::SharedMatrix& evecs, int root) {
@@ -1591,277 +1864,6 @@ void AdaptiveCI_SCI::spin_analysis() {
 }
 
 void AdaptiveCI_SCI::update_sigma() { sigma_ = options_->get_double("ACI_RELAX_SIGMA"); }
-
-void AdaptiveCI_SCI::pre_iter_preparation() {
-    // Build the reference determinant and compute its energy
-    CI_Reference ref(scf_info_, options_, mo_space_info_, as_ints_, multiplicity_, twice_ms_,
-                     wavefunction_symmetry_);
-    ref.build_reference(initial_reference_);
-    P_space_ = initial_reference_;
-
-    if ((options_->get_bool("ACI_CORE_EX")) and (root_ > 0)) {
-
-        ref_root_ = root_ - 1;
-
-        int ncstate = options_->get_int("ACI_ROOTS_PER_CORE");
-
-        if (((root_) > ncstate) and (root_ > 1)) {
-            hole_++;
-        }
-        int particle = (root_ - 1) - (hole_ * ncstate);
-
-        P_space_.clear();
-        Determinant det = initial_reference_[0];
-        Determinant detb(det);
-        std::vector<int> avir = det.get_alfa_vir(nact_); // TODO check this
-        outfile->Printf("\n  %s", det.str(nact_).c_str());
-        outfile->Printf("\n  Freezing alpha orbital %d", hole_);
-        outfile->Printf("\n  Exciting electron from %d to %d", hole_, avir[particle]);
-        det.set_alfa_bit(hole_, false);
-        detb.set_beta_bit(hole_, false);
-
-        for (int n = 0, max_n = avir.size(); n < max_n; ++n) {
-            if ((mo_symmetry_[hole_] ^ mo_symmetry_[avir[n]]) == 0) {
-                det.set_alfa_bit(avir[particle], true);
-                detb.set_beta_bit(avir[particle], true);
-                break;
-            }
-        }
-        outfile->Printf("\n  %s", det.str(nact_).c_str());
-        outfile->Printf("\n  %s", detb.str(nact_).c_str());
-        P_space_.add(det);
-        P_space_.add(detb);
-    }
-
-    if (quiet_mode_) {
-        sparse_solver_.set_print_details(false);
-    }
-    sparse_solver_.set_parallel(true);
-    sparse_solver_.set_force_diag(options_->get_bool("FORCE_DIAG_METHOD"));
-    sparse_solver_.set_e_convergence(options_->get_double("E_CONVERGENCE"));
-    sparse_solver_.set_maxiter_davidson(options_->get_int("DL_MAXITER"));
-    sparse_solver_.set_spin_project(project_out_spin_contaminants_);
-    //    sparse_solver.set_spin_project_full(project_out_spin_contaminants_);
-    sparse_solver_.set_guess_dimension(options_->get_int("DL_GUESS_SIZE"));
-    sparse_solver_.set_num_vecs(options_->get_int("N_GUESS_VEC"));
-    sparse_solver_.set_sigma_method(options_->get_str("SIGMA_BUILD_TYPE"));
-    sparse_solver_.set_spin_project_full(false);
-    sparse_solver_.set_max_memory(options_->get_int("SIGMA_VECTOR_MAX_MEMORY"));
-
-    // if (det_save_)
-    //     det_list_.open("det_list.txt");
-
-    if (streamline_qspace_ and !quiet_mode_)
-        outfile->Printf("\n  Using streamlined Q-space builder.");
-
-    // approx_rdm_ = false;
-}
-
-void AdaptiveCI_SCI::diagonalize_P_space() {
-    // Step 1. Diagonalize the Hamiltonian in the P space
-    num_ref_roots_ = std::min(nroot_, int(P_space_.size()));
-    std::string cycle_h = "Cycle " + std::to_string(cycle_);
-
-    follow_ = false;
-    if (ex_alg_ == "ROOT_COMBINE" or ex_alg_ == "MULTISTATE" or ex_alg_ == "ROOT_ORTHOGONALIZE") {
-
-        follow_ = true;
-    }
-
-    if (!quiet_mode_) {
-        print_h2(cycle_h);
-        outfile->Printf("\n  Initial P space dimension: %zu", P_space_.size());
-    }
-
-    // Check that the initial space is spin-complete
-    if (spin_complete_) {
-        // assumes P_space handles determinants with only active space orbitals
-        P_space_.make_spin_complete(nact_);
-        if (!quiet_mode_)
-            outfile->Printf("\n  %s: %zu determinants", "Spin-complete dimension of the P space",
-                            P_space_.size());
-    } else if (!quiet_mode_) {
-        outfile->Printf("\n  Not checking for spin-completeness.");
-    }
-    // Diagonalize H in the P space
-    if (ex_alg_ == "ROOT_ORTHOGONALIZE" and root_ > 0 and cycle_ >= pre_iter_) {
-        sparse_solver_.set_root_project(true);
-        add_bad_roots(P_space_);
-        sparse_solver_.add_bad_states(bad_roots_);
-    }
-
-    if (sparse_solver_.sigma_method_ == "HZ") {
-        op_.clear_op_lists();
-        op_.clear_tp_lists();
-        op_.build_strings(P_space_);
-        op_.op_lists(P_space_);
-        op_.tp_lists(P_space_);
-    } else if (diag_method_ != Dynamic) {
-        op_.clear_op_s_lists();
-        op_.clear_tp_s_lists();
-        op_.build_strings(P_space_);
-        op_.op_s_lists(P_space_);
-        op_.tp_s_lists(P_space_);
-    }
-
-    sparse_solver_.manual_guess(false);
-    local_timer diag;
-    sparse_solver_.diagonalize_hamiltonian_map(P_space_, op_, P_evals_, P_evecs_, num_ref_roots_,
-                                               multiplicity_, diag_method_);
-    if (!quiet_mode_)
-        outfile->Printf("\n  Time spent diagonalizing H:   %1.6f s", diag.get());
-
-    // Save ground state energy
-    P_energies_.push_back(P_evals_->get(0));
-
-    if ((cycle_ > 1) and options_->get_bool("ACI_APPROXIMATE_RDM")) {
-        double diff = std::abs(P_energies_[cycle_] - P_energies_[cycle_ - 1]);
-        if (diff <= 1e-5) {
-            approx_rdm_ = true;
-        }
-    }
-
-    // Update the reference root if root following
-    if (follow_ and num_ref_roots_ > 1 and (cycle_ >= pre_iter_) and cycle_ > 0) {
-        ref_root_ = root_follow(P_ref_, P_ref_evecs_, P_space_, P_evecs_, num_ref_roots_);
-    }
-
-    // Print the energy
-    if (!quiet_mode_) {
-        outfile->Printf("\n");
-        for (int i = 0; i < num_ref_roots_; ++i) {
-            double abs_energy =
-                P_evals_->get(i) + nuclear_repulsion_energy_ + as_ints_->scalar_energy();
-            double exc_energy = pc_hartree2ev * (P_evals_->get(i) - P_evals_->get(0));
-            outfile->Printf("\n    P-space  CI Energy Root %3d        = "
-                            "%.12f Eh = %8.4f eV",
-                            i, abs_energy, exc_energy);
-        }
-        outfile->Printf("\n");
-    }
-
-    if (!quiet_mode_ and options_->get_bool("ACI_PRINT_REFS"))
-        print_wfn(P_space_, op_, P_evecs_, num_ref_roots_);
-}
-
-void AdaptiveCI_SCI::find_q_space() {
-    // Step 2. Find determinants in the Q space
-    local_timer build_space;
-    if (options_->get_bool("ACI_BATCHED_SCREENING")) {
-        find_q_space_batched(P_space_, PQ_space_, P_evals_, P_evecs_);
-    } else if (streamline_qspace_) {
-        default_find_q_space(P_space_, PQ_space_, P_evals_, P_evecs_);
-    } else {
-        find_q_space(P_space_, PQ_space_, num_ref_roots_, P_evals_, P_evecs_);
-    }
-    outfile->Printf("\n  Time spent building the model space: %1.6f", build_space.get());
-    // Check if P+Q space is spin complete
-    if (spin_complete_) {
-        PQ_space_.make_spin_complete(nact_); // <- xsize
-        if (!quiet_mode_)
-            outfile->Printf("\n  Spin-complete dimension of the PQ space: %zu", PQ_space_.size());
-    }
-
-    if ((ex_alg_ == "ROOT_ORTHOGONALIZE") and (root_ > 0) and cycle_ >= pre_iter_) {
-        sparse_solver_.set_root_project(true);
-        add_bad_roots(PQ_space_);
-        sparse_solver_.add_bad_states(bad_roots_);
-    }
-}
-
-void AdaptiveCI_SCI::diagonalize_PQ_space() {
-    // Step 3. Diagonalize the Hamiltonian in the P + Q space
-    if (sparse_solver_.sigma_method_ == "HZ") {
-        op_.clear_op_lists();
-        op_.clear_tp_lists();
-        local_timer str;
-        op_.build_strings(PQ_space_);
-        outfile->Printf("\n  Time spent building strings      %1.6f s", str.get());
-        op_.op_lists(PQ_space_);
-        op_.tp_lists(PQ_space_);
-    } else if (diag_method_ != Dynamic) {
-        op_.clear_op_s_lists();
-        op_.clear_tp_s_lists();
-        op_.build_strings(PQ_space_);
-        op_.op_s_lists(PQ_space_);
-        op_.tp_s_lists(PQ_space_);
-    }
-    local_timer diag_pq;
-
-    sparse_solver_.diagonalize_hamiltonian_map(PQ_space_, op_, PQ_evals_, PQ_evecs_, num_ref_roots_,
-                                               multiplicity_, diag_method_);
-
-    if (!quiet_mode_)
-        outfile->Printf("\n  Total time spent diagonalizing H:   %1.6f s", diag_pq.get());
-
-    // Save the solutions for the next iteration
-    //        old_dets.clear();
-    //        old_dets = PQ_space_;
-    //        old_evecs = PQ_evecs->clone();
-
-    if (!quiet_mode_) {
-        // Print the energy
-        outfile->Printf("\n");
-        for (int i = 0; i < num_ref_roots_; ++i) {
-            double abs_energy =
-                PQ_evals_->get(i) + nuclear_repulsion_energy_ + as_ints_->scalar_energy();
-            double exc_energy = pc_hartree2ev * (PQ_evals_->get(i) - PQ_evals_->get(0));
-            outfile->Printf("\n    PQ-space CI Energy Root %3d        = "
-                            "%.12f Eh = %8.4f eV",
-                            i, abs_energy, exc_energy);
-            outfile->Printf("\n    PQ-space CI Energy + EPT2 Root %3d = %.12f Eh = "
-                            "%8.4f eV",
-                            i, abs_energy + multistate_pt2_energy_correction_[i],
-                            exc_energy +
-                                pc_hartree2ev * (multistate_pt2_energy_correction_[i] -
-                                                 multistate_pt2_energy_correction_[0]));
-        }
-        outfile->Printf("\n");
-    }
-
-    num_ref_roots_ = std::min(nroot_, int(PQ_space_.size()));
-
-    // If doing root-following, grab the initial root
-    if (follow_ and ((pre_iter_ == 0 and cycle_ == 0) or cycle_ == (pre_iter_ - 1))) {
-        size_t dim = std::min(static_cast<int>(PQ_space_.size()), 1000);
-        P_ref_.subspace(PQ_space_, PQ_evecs_, P_ref_evecs_, dim, ref_root_);
-    }
-
-    // if( follow and num_ref_roots > 0 and (cycle >= (pre_iter_ - 1)) ){
-    if (follow_ and (num_ref_roots_ > 1) and (cycle_ >= pre_iter_)) {
-        ref_root_ = root_follow(P_ref_, P_ref_evecs_, PQ_space_, PQ_evecs_, num_ref_roots_);
-    }
-}
-
-bool AdaptiveCI_SCI::check_convergence() {
-    bool stuck = check_stuck(energy_history_, PQ_evals_);
-    if (stuck) {
-        outfile->Printf("\n  Procedure is stuck! Quitting...");
-        return true;
-    }
-
-    // Step 4. Check convergence and break if needed
-    bool converged = check_convergence(energy_history_, PQ_evals_);
-    if (converged) {
-        // if(quiet_mode_) outfile->Printf(
-        // "\n----------------------------------------------------------" );
-        if (!quiet_mode_)
-            outfile->Printf("\n  ***** Calculation Converged *****");
-        return true;
-    }
-
-    return false;
-}
-
-void AdaptiveCI_SCI::prune_PQ_to_P() {
-    // Step 5. Prune the P + Q space to get an updated P space
-    prune_q_space(PQ_space_, P_space_, PQ_evecs_, num_ref_roots_);
-
-    // Print information about the wave function
-    if (!quiet_mode_) {
-        print_wfn(PQ_space_, op_, PQ_evecs_, num_ref_roots_);
-    }
-}
 
 DeterminantHashVec AdaptiveCI_SCI::get_PQ_space() { return PQ_space_; }
 psi::SharedMatrix AdaptiveCI_SCI::get_PQ_evecs() { return PQ_evecs_; }

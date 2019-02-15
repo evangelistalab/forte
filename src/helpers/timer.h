@@ -44,6 +44,10 @@ class local_timer {
   public:
     local_timer() : start_(std::chrono::high_resolution_clock::now()) {}
 
+    void reset() {
+        start_ = std::chrono::high_resolution_clock::now();
+    }
+
     /// return the elapsed time in seconds
     double get() {
         auto duration = std::chrono::high_resolution_clock::now() - start_;
