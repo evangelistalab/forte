@@ -624,6 +624,7 @@ void ElementwiseCI::diagonalize_PQ_space() {
     // Orthogonalize this solution with respect to the previous ones
     timer_on("EWCI:Ortho");
     orthogonalize(dets_hashvec_, C_, solutions_);
+    normalize(C_);
     timer_off("EWCI:Ortho");
 
     timer_on("EWCI:sort");
@@ -2375,7 +2376,7 @@ void ElementwiseCI::orthogonalize(
         psi::outfile->Printf("\nElementwiseCI::orthogonalize::dot_prod = %.6f", dot_prod);
         add(space, C, -dot_prod, solutions[n].first, solutions[n].second);
     }
-    normalize(C);
+    //    normalize(C);
 }
 
 double ElementwiseCI::form_H_C(const det_hashvec& dets_hashvec, std::vector<double>& C, size_t I) {
