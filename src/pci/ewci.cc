@@ -650,13 +650,12 @@ bool ElementwiseCI::check_convergence() {
 
         switch (generator_) {
         case DLGenerator:
-            outfile->Printf("\n%9d %8d %10zu %13zu %20.12f %10.3e", cycle_,
-                            current_davidson_iter_, C_.size(), num_off_diag_elem_, proj_energy_,
-                            proj_energy_gradient);
+            outfile->Printf("\n%9d %8d %10zu %13zu %20.12f %10.3e", cycle_, current_davidson_iter_,
+                            C_.size(), num_off_diag_elem_, proj_energy_, proj_energy_gradient);
             break;
         default:
-            outfile->Printf("\n%9d %8.2f %10zu %13zu %20.12f %10.3e", cycle_, time_step_ * cycle_, C_.size(),
-                            num_off_diag_elem_, proj_energy_, proj_energy_gradient);
+            outfile->Printf("\n%9d %8.2f %10zu %13zu %20.12f %10.3e", cycle_, time_step_ * cycle_,
+                            C_.size(), num_off_diag_elem_, proj_energy_, proj_energy_gradient);
             break;
         }
 
@@ -691,7 +690,6 @@ void ElementwiseCI::prune_PQ_to_P() {}
 
 void ElementwiseCI::post_iter_process() {
 
-
     if (variational_estimate_) {
         outfile->Printf("\n  "
                         "------------------------------------------------------"
@@ -708,7 +706,7 @@ void ElementwiseCI::post_iter_process() {
     } else {
         outfile->Printf("\n\n  Calculation %s",
                         cycle_ != max_cycle_ ? "stoped in appearance of higher new low."
-                                          : "did not converge!");
+                                             : "did not converge!");
     }
 
     if (do_shift_) {
@@ -775,7 +773,7 @@ void ElementwiseCI::post_iter_process() {
         sparse_solver_.set_spin_project_full(false);
 
         sparse_solver_.diagonalize_hamiltonian_map(det_map, op, apfci_evals, apfci_evecs, nroot_,
-                                                  wavefunction_multiplicity_, diag_method_);
+                                                   wavefunction_multiplicity_, diag_method_);
         det_map.swap(dets_hashvec_);
 
         timer_off("EWCI:Post_Diag");
@@ -878,7 +876,7 @@ double ElementwiseCI::initial_guess(det_hashvec& dets_hashvec, std::vector<doubl
     //  dyn_dets.push_back(dbs);
     // }
     sparse_solver_.diagonalize_hamiltonian(dets_hashvec.toVector(), evals, evecs, nroot_,
-                                          wavefunction_multiplicity_, DLSolver);
+                                           wavefunction_multiplicity_, DLSolver);
     double var_energy =
         evals->get(current_root_) + nuclear_repulsion_energy_ + as_ints_->scalar_energy();
     outfile->Printf("\n\n  Initial guess energy (variational) = %20.12f Eh (root = %d)", var_energy,
@@ -3170,8 +3168,7 @@ psi::SharedMatrix ElementwiseCI::get_PQ_evecs() {
 }
 psi::SharedVector ElementwiseCI::get_PQ_evals() {
     psi::SharedVector evals = std::make_shared<psi::Vector>("e", nroot_);
-    evals->set(0,
-               approx_energy_ - nuclear_repulsion_energy_ - as_ints_->scalar_energy());
+    evals->set(0, approx_energy_ - nuclear_repulsion_energy_ - as_ints_->scalar_energy());
     return evals;
 }
 WFNOperator ElementwiseCI::get_op() { return WFNOperator(); }

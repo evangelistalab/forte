@@ -31,22 +31,15 @@
 
 namespace forte {
 
-PCISigmaVector::PCISigmaVector(det_hashvec &dets_hashvec, std::vector<double> &C, double spawning_threshold)
-    : SigmaVector(dets_hashvec.size()), dets_(dets_hashvec), C_(C), spawning_threshold_(spawning_threshold)
-{
+PCISigmaVector::PCISigmaVector(det_hashvec& dets_hashvec, std::vector<double>& C,
+                               double spawning_threshold)
+    : SigmaVector(dets_hashvec.size()), dets_(dets_hashvec), C_(C),
+      spawning_threshold_(spawning_threshold) {}
 
-}
+void PCISigmaVector::compute_sigma(psi::SharedVector sigma, psi::SharedVector b) {}
 
-void PCISigmaVector::compute_sigma(psi::SharedVector sigma, psi::SharedVector b) {
+void PCISigmaVector::get_diagonal(psi::Vector& diag) {}
 
-}
-
-void PCISigmaVector::get_diagonal(psi::Vector& diag) {
-
-}
-
-void PCISigmaVector::add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& bad_states) {
-
-}
-
+void PCISigmaVector::add_bad_roots(
+    std::vector<std::vector<std::pair<size_t, double>>>& bad_states) {}
 }
