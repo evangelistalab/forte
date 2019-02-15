@@ -967,6 +967,7 @@ void ElementwiseCI::propagate_DL(det_hashvec& dets_hashvec, std::vector<double>&
     //    copy_hash_to_vec_order_ref(dets_C_hash, dets, sigma_vec[0]);
     //    det_hashvec dets_hashvec(dets);
     apply_tau_H_symm(1.0, spawning_threshold, dets_hashvec, C, sigma_vec[0], 0.0, overlap_size);
+    orthogonalize(dets_hashvec, sigma_vec[0], solutions_);
     //    b_vec[0].resize(overlap_size);
     //    b_vec[0].resize(dets_hashvec.size(), 0.0);
     //    dets_hashvec = result_dets;
@@ -1039,6 +1040,7 @@ void ElementwiseCI::propagate_DL(det_hashvec& dets_hashvec, std::vector<double>&
         //        dets_hashvec = det_hashvec(dets);
         apply_tau_H_ref_C_symm(1.0, spawning_threshold, dets_hashvec, C, b_vec[current_order],
                                sigma_vec[current_order], overlap_size, 0.0);
+        orthogonalize(dets_hashvec, sigma_vec[current_order], solutions_);
         //        dets = dets_hashvec.toVector();
         for (size_t m = 0; m < current_order; m++) {
             double b_dot_sigma_m = dot(b_vec[current_order], sigma_vec[m]);
