@@ -53,27 +53,6 @@ using namespace psi;
 
 namespace forte {
 
-void set_FCI_MO_options(ForteOptions& foptions) {
-
-    /*- Active space type -*/
-    foptions.add_str("FCIMO_ACTV_TYPE", "COMPLETE", {"COMPLETE", "CIS", "CISD", "DOCI"},
-                     "The active space type");
-
-    /*- Exclude HF to the CISD space for excited state;
-     *  Ground state will be HF energy -*/
-    foptions.add_bool("FCIMO_CISD_NOHF", true,
-                      "Ground state: HF; Excited states: no HF determinant in CISD space");
-
-    /*- Compute IP/EA in active-CI -*/
-    foptions.add_str("FCIMO_IPEA", "NONE", {"NONE", "IP", "EA"}, "Generate IP/EA CIS/CISD space");
-
-    /*- Threshold for printing CI vectors -*/
-    foptions.add_double("FCIMO_PRINT_CIVEC", 0.05, "The printing threshold for CI vectors");
-
-    //    /*- Intrinsic atomic orbital analysis -*/
-    //    foptions.add_bool("FCIMO_IAO_ANALYSIS", false, "Intrinsic atomic orbital analysis");
-}
-
 // FCI_MO::FCI_MO(StateInfo state, std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions>
 // options,
 //               std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info)

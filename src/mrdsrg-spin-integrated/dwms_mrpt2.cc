@@ -17,60 +17,6 @@ using namespace psi;
 
 namespace forte {
 
-void set_DWMS_options(ForteOptions& foptions) {
-    /**
-     * Weights of state α:
-     *    Wi = exp(-ζ * (Eα - Ei)^2) / sum_j exp(-ζ * (Eα - Ej)^2)
-     *
-     * Energies (Eα, Ei, Ej) can be CASCI or SA-DSRG-PT2/3 energies.
-     */
-
-    /*- Automatic weight switching -*/
-    foptions.add_double("DWMS_ZETA", 0.0, "Gaussian width cutoff for the density weights");
-
-    /*- DWMS-DSRG-PT correlation level -*/
-    foptions.add_str("DWMS_CORRLV", "PT2", {"PT2", "PT3"}, "DWMS-DSRG-PT level");
-
-    /*- Using what energies to compute the weight and what CI vectors to do multi state
-     * CAS: CASCI energies and CI vectors
-     * PT2: SA-DSRG-PT2 energies and SA-DSRG-PT2/CASCI vectors
-     * PT3: SA-DSRG-PT3 energies and SA-DSRG-PT3/CASCI vectors
-     * PT2D: Diagonal SA-DSRG-PT2c effective Hamiltonian elements and original CASCI vectors -*/
-    foptions.add_str("DWMS_REFERENCE", "CASCI", {"CASCI", "PT2", "PT3", "PT2D"},
-                     "Energies to compute dynamic weights and CI vectors to do multi-state");
-
-    /*- DWMS algorithms
-     *  - SA: state average Hαβ = 0.5 * ( <α|Hbar(β)|β> + <β|Hbar(α)|α> )
-     *  - XSA: extended state average (rotate Fαβ to a diagonal form)
-     *  - MS: multi-state (single-state single-reference)
-     *  - XMS: extended multi-state (single-state single-reference)
-     *
-     * To Be Deprecated:
-     *  - SH-0: separated diagonalizations, non-orthogonal final solutions
-     *  - SH-1: separated diagonalizations, orthogonal final solutions -*/
-    foptions.add_str("DWMS_ALGORITHM", "SA", {"MS", "XMS", "SA", "XSA", "SH-0", "SH-1"},
-                     "DWMS algorithms");
-
-    /*- Consider X(αβ) = A(β) - A(α) in SA algorithm if set to true -*/
-    foptions.add_bool("DWMS_DELTA_AMP", false,
-                      "Consider amplitudes difference between states in SA "
-                      "algorithm, testing in non-DF DSRG-MRPT2");
-
-    /*- Iteratively update the states coefficients -*/
-    foptions.add_bool("DWMS_ITERATE", false,
-                      "Iterative update the reference CI coefficients in SA "
-                      "algorithm, testing in non-DF DSRG-MRPT2");
-
-    /*- Max number of iteration for the update of reference CI coefficients -*/
-    foptions.add_int("DWMS_MAXITER", 10,
-                     "Max number of iteration in the update of the reference CI coefficients in SA "
-                     "algorithm, testing in non-DF DSRG-MRPT2");
-
-    /*- Energy convergence criteria for DWMS iteration -*/
-    foptions.add_double("DWMS_E_CONVERGENCE", 1.0e-7,
-                        "Energy convergence criteria for DWMS iteration");
-}
-
 DWMS_DSRGPT2::DWMS_DSRGPT2(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
                            std::shared_ptr<ForteIntegrals> ints,
                            std::shared_ptr<MOSpaceInfo> mo_space_info)
