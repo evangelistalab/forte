@@ -180,6 +180,7 @@ src/pci/pci.cc
 src/pci/pci_hashvec.cc
 src/pci/pci_simple.cc
 src/pci/ewci.cc
+src/pci/pci_sigma.cc
 src/v2rdm/v2rdm.cc
 )
 
