@@ -102,11 +102,9 @@ void ElementwiseCI::sortHashVecByCoefficient(det_hashvec& dets_hashvec, std::vec
 }
 
 ElementwiseCI::ElementwiseCI(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
-                             std::shared_ptr<ForteOptions> options,
                              std::shared_ptr<MOSpaceInfo> mo_space_info,
                              std::shared_ptr<ActiveSpaceIntegrals> as_ints)
-    : SelectedCIMethod(state, nroot, scf_info, mo_space_info, as_ints), options_(options),
-      fast_variational_estimate_(false) {
+    : SelectedCIMethod(state, nroot, scf_info, mo_space_info, as_ints), sparse_solver_(as_ints_) {
     // Copy the wavefunction information
     startup();
 }
@@ -139,10 +137,21 @@ void ElementwiseCI::startup() {
     nalpha_ = (nactel_ + ms) / 2;
     nbeta_ = nactel_ - nalpha_;
 
+    approx_E_tau_ = 1.0;
+    approx_E_S_ = 0.0;
+
+    sparse_solver_.set_parallel(true);
+    sparse_solver_.set_spin_project(true);
+
+    num_threads_ = omp_get_max_threads();
+}
+
+void ElementwiseCI::set_options(std::shared_ptr<ForteOptions> options) {
     // Build the reference determinant and compute its energy
+    int ms = wavefunction_multiplicity_ - 1;
     std::vector<Determinant> reference_vec;
-    CI_RDMs ref(scf_info_, options_, mo_space_info_, as_ints_, wavefunction_multiplicity_, ms,
-                wavefunction_symmetry_);
+    CI_Reference ref(scf_info_, options, mo_space_info_, as_ints_, wavefunction_multiplicity_, ms,
+                     wavefunction_symmetry_);
     ref.set_ref_type("HF");
     ref.build_reference(reference_vec);
     reference_determinant_ = reference_vec[0];
@@ -150,51 +159,48 @@ void ElementwiseCI::startup() {
     //    outfile->Printf("\n  The reference determinant is:\n");
     //    reference_determinant_.print();
 
-    post_diagonalization_ = options_->get_bool("PCI_POST_DIAGONALIZE");
+    post_diagonalization_ = options->get_bool("PCI_POST_DIAGONALIZE");
     diag_method_ = DLSolver;
-    if (options_->has_changed("DIAG_ALGORITHM")) {
-        if (options_->get_str("DIAG_ALGORITHM") == "FULL") {
+    if (options->has_changed("DIAG_ALGORITHM")) {
+        if (options->get_str("DIAG_ALGORITHM") == "FULL") {
             diag_method_ = Full;
-        } else if (options_->get_str("DIAG_ALGORITHM") == "DLSTRING") {
+        } else if (options->get_str("DIAG_ALGORITHM") == "DLSTRING") {
             diag_method_ = DLString;
-        } else if (options_->get_str("DIAG_ALGORITHM") == "DLDISK") {
+        } else if (options->get_str("DIAG_ALGORITHM") == "DLDISK") {
             diag_method_ = DLDisk;
         }
     }
     //    /-> Define appropriate variable: post_diagonalization_ =
     //    options_->get_bool("EX_ALGORITHM");
 
-    spawning_threshold_ = options_->get_double("PCI_SPAWNING_THRESHOLD");
-    initial_guess_spawning_threshold_ = options_->get_double("PCI_GUESS_SPAWNING_THRESHOLD");
+    spawning_threshold_ = options->get_double("PCI_SPAWNING_THRESHOLD");
+    initial_guess_spawning_threshold_ = options->get_double("PCI_GUESS_SPAWNING_THRESHOLD");
     if (initial_guess_spawning_threshold_ < 0.0)
         initial_guess_spawning_threshold_ = 10.0 * spawning_threshold_;
-    time_step_ = options_->get_double("PCI_TAU");
-    max_cycle_ = options_->get_int("PCI_MAXBETA") / time_step_;
-    max_Davidson_iter_ = options_->get_int("PCI_MAX_DAVIDSON_ITER");
-    davidson_collapse_per_root_ = options_->get_int("PCI_DL_COLLAPSE_PER_ROOT");
-    davidson_subspace_per_root_ = options_->get_int("PCI_DL_SUBSPACE_PER_ROOT");
-    e_convergence_ = options_->get_double("PCI_E_CONVERGENCE");
-    energy_estimate_threshold_ = options_->get_double("PCI_ENERGY_ESTIMATE_THRESHOLD");
-    evar_max_error_ = options_->get_double("PCI_EVAR_MAX_ERROR");
+    time_step_ = options->get_double("PCI_TAU");
+    max_cycle_ = options->get_int("PCI_MAXBETA") / time_step_;
+    max_Davidson_iter_ = options->get_int("PCI_MAX_DAVIDSON_ITER");
+    davidson_collapse_per_root_ = options->get_int("PCI_DL_COLLAPSE_PER_ROOT");
+    davidson_subspace_per_root_ = options->get_int("PCI_DL_SUBSPACE_PER_ROOT");
+    e_convergence_ = options->get_double("PCI_E_CONVERGENCE");
+    energy_estimate_threshold_ = options->get_double("PCI_ENERGY_ESTIMATE_THRESHOLD");
+    evar_max_error_ = options->get_double("PCI_EVAR_MAX_ERROR");
 
-    max_guess_size_ = options_->get_int("PCI_MAX_GUESS_SIZE");
-    energy_estimate_freq_ = options_->get_int("PCI_ENERGY_ESTIMATE_FREQ");
+    max_guess_size_ = options->get_int("PCI_MAX_GUESS_SIZE");
+    energy_estimate_freq_ = options->get_int("PCI_ENERGY_ESTIMATE_FREQ");
 
-    fast_variational_estimate_ = options_->get_bool("PCI_FAST_EVAR");
-    do_shift_ = options_->get_bool("PCI_USE_SHIFT");
-    use_inter_norm_ = options_->get_bool("PCI_USE_INTER_NORM");
-    do_perturb_analysis_ = options_->get_bool("PCI_PERTURB_ANALYSIS");
-    stop_higher_new_low_ = options_->get_bool("PCI_STOP_HIGHER_NEW_LOW");
-    chebyshev_order_ = options_->get_int("PCI_CHEBYSHEV_ORDER");
-    krylov_order_ = options_->get_int("PCI_KRYLOV_ORDER");
+    fast_variational_estimate_ = options->get_bool("PCI_FAST_EVAR");
+    do_shift_ = options->get_bool("PCI_USE_SHIFT");
+    use_inter_norm_ = options->get_bool("PCI_USE_INTER_NORM");
+    do_perturb_analysis_ = options->get_bool("PCI_PERTURB_ANALYSIS");
+    stop_higher_new_low_ = options->get_bool("PCI_STOP_HIGHER_NEW_LOW");
+    chebyshev_order_ = options->get_int("PCI_CHEBYSHEV_ORDER");
+    krylov_order_ = options->get_int("PCI_KRYLOV_ORDER");
 
-    variational_estimate_ = options_->get_bool("PCI_VAR_ESTIMATE");
-    print_full_wavefunction_ = options_->get_bool("PCI_PRINT_FULL_WAVEFUNCTION");
+    variational_estimate_ = options->get_bool("PCI_VAR_ESTIMATE");
+    print_full_wavefunction_ = options->get_bool("PCI_PRINT_FULL_WAVEFUNCTION");
 
-    approx_E_tau_ = 1.0;
-    approx_E_S_ = 0.0;
-
-    if (options_->get_str("PCI_GENERATOR") == "WALL-CHEBYSHEV") {
+    if (options->get_str("PCI_GENERATOR") == "WALL-CHEBYSHEV") {
         generator_ = WallChebyshevGenerator;
         generator_description_ = "Wall-Chebyshev";
         time_step_ = 1.0;
@@ -204,7 +210,7 @@ void ElementwiseCI::startup() {
                             chebyshev_order_);
             chebyshev_order_ = 5;
         }
-    } else if (options_->get_str("PCI_GENERATOR") == "DL") {
+    } else if (options->get_str("PCI_GENERATOR") == "DL") {
         generator_ = DLGenerator;
         generator_description_ = "Davidson-Liu by Tianyuan";
         time_step_ = 1.0;
@@ -219,7 +225,7 @@ void ElementwiseCI::startup() {
         abort();
     }
 
-    if (options_->get_str("PCI_FUNCTIONAL") == "MAX") {
+    if (options->get_str("PCI_FUNCTIONAL") == "MAX") {
         if (std::numeric_limits<double>::has_infinity) {
             functional_order_ = std::numeric_limits<double>::infinity();
         } else {
@@ -230,7 +236,7 @@ void ElementwiseCI::startup() {
         };
         important_H_CI_CJ_ = [](double, double, double, double) { return true; };
         functional_description_ = "|Hij|*max(|Ci|,|Cj|)";
-    } else if (options_->get_str("PCI_FUNCTIONAL") == "SUM") {
+    } else if (options->get_str("PCI_FUNCTIONAL") == "SUM") {
         functional_order_ = 1.0;
         prescreen_H_CI_ = [](double HJI, double CI, double spawning_threshold) {
             return std::fabs(HJI * CI) >= 0.5 * spawning_threshold;
@@ -239,7 +245,7 @@ void ElementwiseCI::startup() {
             return std::fabs(HJI * CI) + std::fabs(HJI * CJ) >= spawning_threshold;
         };
         functional_description_ = "|Hij|*(|Ci|+|Cj|)";
-    } else if (options_->get_str("PCI_FUNCTIONAL") == "SQUARE") {
+    } else if (options->get_str("PCI_FUNCTIONAL") == "SQUARE") {
         functional_order_ = 2.0;
         prescreen_H_CI_ = [](double HJI, double CI, double spawning_threshold) {
             return std::fabs(HJI * CI) >= 1.4142135623730952 * spawning_threshold;
@@ -248,7 +254,7 @@ void ElementwiseCI::startup() {
             return std::fabs(HJI) * std::sqrt(CI * CI + CJ * CJ) >= spawning_threshold;
         };
         functional_description_ = "|Hij|*sqrt(Ci^2+Cj^2)";
-    } else if (options_->get_str("PCI_FUNCTIONAL") == "SQRT") {
+    } else if (options->get_str("PCI_FUNCTIONAL") == "SQRT") {
         functional_order_ = 0.5;
         prescreen_H_CI_ = [](double HJI, double CI, double spawning_threshold) {
             return std::fabs(HJI * CI) >= 0.25 * spawning_threshold;
@@ -259,8 +265,8 @@ void ElementwiseCI::startup() {
                    spawning_threshold;
         };
         functional_description_ = "|Hij|*(sqrt(|Ci|)+sqrt(|Cj|))^2";
-    } else if (options_->get_str("PCI_FUNCTIONAL") == "SPECIFY-ORDER") {
-        functional_order_ = options_->get_double("PCI_FUNCTIONAL_ORDER");
+    } else if (options->get_str("PCI_FUNCTIONAL") == "SPECIFY-ORDER") {
+        functional_order_ = options->get_double("PCI_FUNCTIONAL_ORDER");
         double factor = std::pow(2.0, 1.0 / functional_order_);
         prescreen_H_CI_ = [factor](double HJI, double CI, double spawning_threshold) {
             return std::fabs(HJI * CI) * factor >= spawning_threshold;
@@ -279,7 +285,8 @@ void ElementwiseCI::startup() {
         abort();
     }
 
-    num_threads_ = omp_get_max_threads();
+    sparse_solver_.set_e_convergence(options->get_double("E_CONVERGENCE"));
+    sparse_solver_.set_maxiter_davidson(options->get_int("DL_MAXITER"));
 }
 
 void ElementwiseCI::print_info() {
@@ -764,17 +771,10 @@ void ElementwiseCI::post_iter_process() {
         op.tp_s_lists(det_map);
 
         // set SparseCISolver options
-        SparseCISolver sparse_solver(as_ints_);
-        sparse_solver.set_parallel(true);
-        sparse_solver.set_e_convergence(options_->get_double("E_CONVERGENCE"));
-        sparse_solver.set_maxiter_davidson(options_->get_int("DL_MAXITER"));
-        sparse_solver.set_spin_project(true);
-        sparse_solver.set_sigma_method("SPARSE");
-        sparse_solver.set_e_convergence(e_convergence_);
-        sparse_solver.set_spin_project(true);
-        sparse_solver.set_spin_project_full(false);
+        sparse_solver_.set_sigma_method("SPARSE");
+        sparse_solver_.set_spin_project_full(false);
 
-        sparse_solver.diagonalize_hamiltonian_map(det_map, op, apfci_evals, apfci_evecs, nroot_,
+        sparse_solver_.diagonalize_hamiltonian_map(det_map, op, apfci_evals, apfci_evecs, nroot_,
                                                   wavefunction_multiplicity_, diag_method_);
         det_map.swap(dets_hashvec_);
 
@@ -870,12 +870,6 @@ double ElementwiseCI::initial_guess(det_hashvec& dets_hashvec, std::vector<doubl
 
     outfile->Printf("\n\n  Initial guess size = %zu", guess_size);
 
-    SparseCISolver sparse_solver(as_ints_);
-    sparse_solver.set_parallel(true);
-    sparse_solver.set_e_convergence(options_->get_double("E_CONVERGENCE"));
-    sparse_solver.set_maxiter_davidson(options_->get_int("DL_MAXITER"));
-    sparse_solver.set_spin_project(true);
-
     psi::SharedMatrix evecs(new psi::Matrix("Eigenvectors", guess_size, nroot_));
     psi::SharedVector evals(new Vector("Eigenvalues", nroot_));
     //  std::vector<DynamicBitsetDeterminant> dyn_dets;
@@ -883,7 +877,7 @@ double ElementwiseCI::initial_guess(det_hashvec& dets_hashvec, std::vector<doubl
     //   DynamicBitsetDeterminant dbs = d.to_dynamic_bitset();
     //  dyn_dets.push_back(dbs);
     // }
-    sparse_solver.diagonalize_hamiltonian(dets_hashvec.toVector(), evals, evecs, nroot_,
+    sparse_solver_.diagonalize_hamiltonian(dets_hashvec.toVector(), evals, evecs, nroot_,
                                           wavefunction_multiplicity_, DLSolver);
     double var_energy =
         evals->get(current_root_) + nuclear_repulsion_energy_ + as_ints_->scalar_energy();

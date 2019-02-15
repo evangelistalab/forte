@@ -86,12 +86,12 @@ class ElementwiseCI : public SelectedCIMethod {
      * @param ints A pointer to an allocated integral object
      */
     ElementwiseCI(StateInfo state, size_t nroot, std::shared_ptr<forte::SCFInfo> scf_info,
-                  std::shared_ptr<ForteOptions> options, std::shared_ptr<MOSpaceInfo> mo_space_info,
+                  std::shared_ptr<MOSpaceInfo> mo_space_info,
                   std::shared_ptr<ActiveSpaceIntegrals> as_ints);
 
     // ==> Class Interface <==
 
-    void set_options(std::shared_ptr<ForteOptions>) override{};
+    void set_options(std::shared_ptr<ForteOptions> options) override;
 
     // Interfaces of SCI algorithm
     /// Print the banner and starting information.
@@ -128,8 +128,6 @@ class ElementwiseCI : public SelectedCIMethod {
     // ==> Class data <==
 
     // * Calculation data
-    /// The options
-    std::shared_ptr<ForteOptions> options_;
     /// The maximum number of threads
     int num_threads_;
     /// The type of Generator used
@@ -291,6 +289,7 @@ class ElementwiseCI : public SelectedCIMethod {
     double old_proj_energy_;
     bool converged_;
     local_timer t_ewci_;
+    SparseCISolver sparse_solver_;
 
     // ==> Class functions <==
 
