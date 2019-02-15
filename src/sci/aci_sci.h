@@ -154,6 +154,7 @@ class AdaptiveCI_SCI : public SelectedCIMethod {
     SparseCISolver sparse_solver_;
     int num_ref_roots_;
     bool follow_;
+    local_timer cycle_time_;
 
     // Temporarily added interface to ExcitedStateSolver
     psi::SharedMatrix PQ_evecs_;
