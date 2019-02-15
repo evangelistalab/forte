@@ -96,7 +96,7 @@ void AdaptiveCI::startup() {
     twice_ms_ = state_.twice_ms();
 
     // Build the reference determinant and compute its energy
-    CI_RDMs ref(scf_info_, options_, mo_space_info_, as_ints_, multiplicity_, twice_ms_,
+    CI_Reference ref(scf_info_, options_, mo_space_info_, as_ints_, multiplicity_, twice_ms_,
                 wavefunction_symmetry_);
     ref.build_reference(initial_reference_);
 

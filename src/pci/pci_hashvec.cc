@@ -183,7 +183,7 @@ void ProjectorCI_HashVec::startup() {
 
     // Build the reference determinant and compute its energy
     std::vector<Determinant> reference_vec;
-    CI_RDMs ref(scf_info_, options_, mo_space_info_, as_ints_, wavefunction_multiplicity_, ms,
+    CI_Reference ref(scf_info_, options_, mo_space_info_, as_ints_, wavefunction_multiplicity_, ms,
                 wavefunction_symmetry_);
     ref.set_ref_type("HF");
     ref.build_reference(reference_vec);
