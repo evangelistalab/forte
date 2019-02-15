@@ -46,7 +46,6 @@ double SelectedCIMethod::compute_energy() {
     pre_iter_preparation();
 
     for (cycle_ = 0; cycle_ < max_cycle_; ++cycle_) {
-        local_timer cycle_time;
 
         // Step 1. Diagonalize the Hamiltonian in the P space
         diagonalize_P_space();
@@ -63,8 +62,6 @@ double SelectedCIMethod::compute_energy() {
 
         // Step 5. Prune the P + Q space to get an updated P space
         prune_PQ_to_P();
-
-        psi::outfile->Printf("\n  Cycle %d took: %1.6f s", cycle_, cycle_time.get());
     }
 
     // Post-iter process
