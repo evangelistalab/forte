@@ -76,7 +76,7 @@ void add(std::vector<double>& a, double k, std::vector<double>& b);
 void Wall_Chebyshev_generator_coefs(std::vector<double>& coefs, int order, double range);
 void print_polynomial(std::vector<double>& coefs);
 
-void add(const det_hashvec& A, std::vector<double> Ca, double beta, const det_hashvec& B,
+void add(const det_hashvec& A, std::vector<double>& Ca, double beta, const det_hashvec& B,
          const std::vector<double> Cb);
 
 double dot(const det_hashvec& A, const std::vector<double> Ca, const det_hashvec& B,
@@ -2373,7 +2373,6 @@ void ElementwiseCI::orthogonalize(
     //    space = det_hashvec(det_C, C);
     for (size_t n = 0; n < solutions.size(); ++n) {
         double dot_prod = dot(space, C, solutions[n].first, solutions[n].second);
-        psi::outfile->Printf("\nElementwiseCI::orthogonalize::dot_prod = %.6f", dot_prod);
         add(space, C, -dot_prod, solutions[n].first, solutions[n].second);
     }
     //    normalize(C);

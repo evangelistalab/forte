@@ -383,7 +383,7 @@ void ExcitedStateSolver::print_final(DeterminantHashVec& dets, psi::SharedMatrix
                                      psi::SharedVector& PQ_evals, size_t cycle) {
     size_t dim = dets.size();
     // Print a summary
-    psi::outfile->Printf("\n\n  ==> SCI excited state solver summary <==\n");
+    psi::outfile->Printf("\n\n  ==> Excited state solver summary <==\n");
 
     psi::outfile->Printf("\n  Iterations required:                         %zu", cycle);
     psi::outfile->Printf("\n  Dimension of optimized determinant space:    %zu\n", dim);
@@ -392,9 +392,9 @@ void ExcitedStateSolver::print_final(DeterminantHashVec& dets, psi::SharedMatrix
         double abs_energy = PQ_evals->get(i) + as_ints_->ints()->nuclear_repulsion_energy() +
                             as_ints_->scalar_energy();
         double exc_energy = pc_hartree2ev * (PQ_evals->get(i) - PQ_evals->get(0));
-        psi::outfile->Printf("\n  * Adaptive-CI Energy Root %3d        = %.12f Eh = %8.4f eV", i,
+        psi::outfile->Printf("\n  * Selected-CI Energy Root %3d        = %.12f Eh = %8.4f eV", i,
                              abs_energy, exc_energy);
-        psi::outfile->Printf("\n  * Adaptive-CI Energy Root %3d + EPT2 = %.12f Eh = %8.4f eV", i,
+        psi::outfile->Printf("\n  * Selected-CI Energy Root %3d + EPT2 = %.12f Eh = %8.4f eV", i,
                              abs_energy + multistate_pt2_energy_correction_[i],
                              exc_energy +
                                  pc_hartree2ev * (multistate_pt2_energy_correction_[i] -

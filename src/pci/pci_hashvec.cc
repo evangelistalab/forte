@@ -76,7 +76,7 @@ void add(std::vector<double>& a, double k, std::vector<double>& b);
 void Wall_Chebyshev_generator_coefs(std::vector<double>& coefs, int order, double range);
 void print_polynomial(std::vector<double>& coefs);
 
-void add(const det_hashvec& A, std::vector<double> Ca, double beta, const det_hashvec& B,
+void add(const det_hashvec& A, std::vector<double>& Ca, double beta, const det_hashvec& B,
          const std::vector<double> Cb) {
     size_t A_size = A.size(), B_size = B.size();
 #pragma omp parallel for
