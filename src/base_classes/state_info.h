@@ -41,7 +41,7 @@ namespace forte {
 class StateInfo {
   public:
     /// Constructor
-    StateInfo(int na, int nb, int multiplicity, int twice_ms, int irrep);
+    StateInfo(int na, int nb, int multiplicity, int twice_ms, int irrep, const std::string& irrep_label = "");
 
     StateInfo() = default;
 
@@ -82,6 +82,8 @@ class StateInfo {
     int twice_ms_;
     // Irrep
     int irrep_;
+    // Irrep label
+    std::string irrep_label_;
 };
 
 /**

@@ -401,11 +401,6 @@ ActiveSpaceSolver::compute_contracted_energy(std::shared_ptr<ActiveSpaceIntegral
 
     state_energies_map_.clear();
     state_contracted_evecs_map_.clear();
-    std::vector<std::string> irrep_labels = psi::Process::environment.molecule()->irrep_labels();
-    std::vector<std::string> multiplicity_labels{
-        "Singlet", "Doublet", "Triplet", "Quartet", "Quintet", "Sextet", "Septet", "Octet",
-        "Nonet",   "Decaet",  "11-et",   "12-et",   "13-et",   "14-et",  "15-et",  "16-et",
-        "17-et",   "18-et",   "19-et",   "20-et",   "21-et",   "22-et",  "23-et",  "24-et"};
 
     // prepare integrals
     size_t nactv = mo_space_info_->size("ACTIVE");
@@ -429,8 +424,7 @@ ActiveSpaceSolver::compute_contracted_energy(std::shared_ptr<ActiveSpaceIntegral
     for (const auto& state_nroots : state_nroots_map_) {
         const auto& state = state_nroots.first;
         size_t nroots = state_nroots.second;
-        std::string state_name =
-            multiplicity_labels[state.multiplicity()] + " " + irrep_labels[state.irrep()];
+        std::string state_name = state.multiplicity_label() + " " + state.irrep_label();
         auto method = state_method_map_.at(state);
 
         // form the Hermitian effective Hamiltonian
