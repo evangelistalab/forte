@@ -45,8 +45,6 @@ class StateInfo {
 
     StateInfo() = default;
 
-    /// irrep labels
-    static const std::vector<std::string> irrep_labels;
     /// multiplicity labels
     static const std::vector<std::string> multiplicity_labels;
 

@@ -203,7 +203,7 @@ void FCI_MO::read_options() {
 
     // number of Irrep
     nirrep_ = mo_space_info_->nirrep();
-    irrep_symbols_ = StateInfo::irrep_labels;
+    irrep_symbols_ = psi::Process::environment.molecule()->irrep_labels();
 
     // obtain MOs
     nmo_ = mo_space_info_->size("ALL");
