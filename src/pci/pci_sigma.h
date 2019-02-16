@@ -60,6 +60,7 @@ class PCISigmaVector : public SigmaVector {
 
     void reset(std::vector<double>& ref_C);
     void compute_sigma_with_diag(psi::SharedVector sigma, psi::SharedVector b);
+    size_t get_num_off_diag();
 
   private:
     det_hashvec& dets_;
@@ -98,9 +99,6 @@ class PCISigmaVector : public SigmaVector {
     size_t num_off_diag_elem_;
     /// The maximum number of threads
     int num_threads_;
-
-    std::vector<double> to_std_vector(psi::SharedVector c);
-    void set_psi_Vector(psi::SharedVector c_psi, const std::vector<double>& c_vec);
 
     /// Orthogonalize the wave function to previous solutions
     void orthogonalize(
