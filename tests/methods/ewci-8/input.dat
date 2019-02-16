@@ -30,4 +30,4 @@ energy('scf')
 compare_values(refscf, variable("CURRENT ENERGY"), 10, "SCF energy") #TEST
 
 energy('forte')
-compare_values(refpci, variable("EWCI ENERGY"), 9, "EWCI excited state energy") #TEST
+compare_values(refpci, variable("EWCI ENERGY"), 7, "EWCI excited state energy") #TEST
