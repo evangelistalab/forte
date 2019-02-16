@@ -28,6 +28,7 @@
  */
 
 #include <cfloat>
+#include <cmath>
 #include "pci_sigma.h"
 
 namespace forte {
@@ -194,7 +195,7 @@ void PCISigmaVector::apply_tau_H_symm_det_dynamic_HBCI_2(
             }
             int i = std::get<0>(a_couplings_[x]);
             if (detI.get_alfa_bit(i)) {
-                std::vector<std::tuple<int, double>>& sub_couplings = std::get<2>(a_couplings_[x]);
+                const std::vector<std::tuple<int, double>>& sub_couplings = std::get<2>(a_couplings_[x]);
                 size_t sub_couplings_size = sub_couplings.size();
                 for (size_t y = 0; y < sub_couplings_size; ++y) {
                     int a;
@@ -247,7 +248,7 @@ void PCISigmaVector::apply_tau_H_symm_det_dynamic_HBCI_2(
             }
             int i = std::get<0>(b_couplings_[x]);
             if (detI.get_beta_bit(i)) {
-                std::vector<std::tuple<int, double>>& sub_couplings = std::get<2>(b_couplings_[x]);
+                const std::vector<std::tuple<int, double>>& sub_couplings = std::get<2>(b_couplings_[x]);
                 size_t sub_couplings_size = sub_couplings.size();
                 for (size_t y = 0; y < sub_couplings_size; ++y) {
                     int a;
@@ -302,7 +303,7 @@ void PCISigmaVector::apply_tau_H_symm_det_dynamic_HBCI_2(
             }
             int i = std::get<0>(a_couplings_[x]);
             if (detI.get_alfa_bit(i)) {
-                std::vector<std::tuple<int, double>>& sub_couplings = std::get<2>(a_couplings_[x]);
+                const std::vector<std::tuple<int, double>>& sub_couplings = std::get<2>(a_couplings_[x]);
                 size_t sub_couplings_size = sub_couplings.size();
                 for (size_t y = 0; y < sub_couplings_size; ++y) {
                     int a;
@@ -356,7 +357,7 @@ void PCISigmaVector::apply_tau_H_symm_det_dynamic_HBCI_2(
             }
             int i = std::get<0>(b_couplings_[x]);
             if (detI.get_beta_bit(i)) {
-                std::vector<std::tuple<int, double>>& sub_couplings = std::get<2>(b_couplings_[x]);
+                const std::vector<std::tuple<int, double>>& sub_couplings = std::get<2>(b_couplings_[x]);
                 size_t sub_couplings_size = sub_couplings.size();
                 for (size_t y = 0; y < sub_couplings_size; ++y) {
                     int a;
@@ -416,7 +417,7 @@ void PCISigmaVector::apply_tau_H_symm_det_dynamic_HBCI_2(
             int i = std::get<0>(aa_couplings_[x]);
             int j = std::get<1>(aa_couplings_[x]);
             if (detI.get_alfa_bit(i) and detI.get_alfa_bit(j)) {
-                std::vector<std::tuple<int, int, double>>& sub_couplings =
+                const std::vector<std::tuple<int, int, double>>& sub_couplings =
                     std::get<3>(aa_couplings_[x]);
                 size_t sub_couplings_size = sub_couplings.size();
                 for (size_t y = 0; y < sub_couplings_size; ++y) {
@@ -467,7 +468,7 @@ void PCISigmaVector::apply_tau_H_symm_det_dynamic_HBCI_2(
             int i = std::get<0>(ab_couplings_[x]);
             int j = std::get<1>(ab_couplings_[x]);
             if (detI.get_alfa_bit(i) and detI.get_beta_bit(j)) {
-                std::vector<std::tuple<int, int, double>>& sub_couplings =
+                const std::vector<std::tuple<int, int, double>>& sub_couplings =
                     std::get<3>(ab_couplings_[x]);
                 size_t sub_couplings_size = sub_couplings.size();
                 for (size_t y = 0; y < sub_couplings_size; ++y) {
@@ -518,7 +519,7 @@ void PCISigmaVector::apply_tau_H_symm_det_dynamic_HBCI_2(
             int i = std::get<0>(bb_couplings_[x]);
             int j = std::get<1>(bb_couplings_[x]);
             if (detI.get_beta_bit(i) and detI.get_beta_bit(j)) {
-                std::vector<std::tuple<int, int, double>>& sub_couplings =
+                const std::vector<std::tuple<int, int, double>>& sub_couplings =
                     std::get<3>(bb_couplings_[x]);
                 size_t sub_couplings_size = sub_couplings.size();
                 for (size_t y = 0; y < sub_couplings_size; ++y) {
@@ -572,7 +573,7 @@ void PCISigmaVector::apply_tau_H_symm_det_dynamic_HBCI_2(
             int i = std::get<0>(aa_couplings_[x]);
             int j = std::get<1>(aa_couplings_[x]);
             if (detI.get_alfa_bit(i) and detI.get_alfa_bit(j)) {
-                std::vector<std::tuple<int, int, double>>& sub_couplings =
+                const std::vector<std::tuple<int, int, double>>& sub_couplings =
                     std::get<3>(aa_couplings_[x]);
                 size_t sub_couplings_size = sub_couplings.size();
                 for (size_t y = 0; y < sub_couplings_size; ++y) {
@@ -624,7 +625,7 @@ void PCISigmaVector::apply_tau_H_symm_det_dynamic_HBCI_2(
             int i = std::get<0>(ab_couplings_[x]);
             int j = std::get<1>(ab_couplings_[x]);
             if (detI.get_alfa_bit(i) and detI.get_beta_bit(j)) {
-                std::vector<std::tuple<int, int, double>>& sub_couplings =
+                const std::vector<std::tuple<int, int, double>>& sub_couplings =
                     std::get<3>(ab_couplings_[x]);
                 size_t sub_couplings_size = sub_couplings.size();
                 for (size_t y = 0; y < sub_couplings_size; ++y) {
@@ -676,7 +677,7 @@ void PCISigmaVector::apply_tau_H_symm_det_dynamic_HBCI_2(
             int i = std::get<0>(bb_couplings_[x]);
             int j = std::get<1>(bb_couplings_[x]);
             if (detI.get_beta_bit(i) and detI.get_beta_bit(j)) {
-                std::vector<std::tuple<int, int, double>>& sub_couplings =
+                const std::vector<std::tuple<int, int, double>>& sub_couplings =
                     std::get<3>(bb_couplings_[x]);
                 size_t sub_couplings_size = sub_couplings.size();
                 for (size_t y = 0; y < sub_couplings_size; ++y) {
@@ -789,7 +790,7 @@ void PCISigmaVector::apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(
             }
             int i = std::get<0>(a_couplings_[x]);
             if (detI.get_alfa_bit(i)) {
-                std::vector<std::tuple<int, double>>& sub_couplings = std::get<2>(a_couplings_[x]);
+                const std::vector<std::tuple<int, double>>& sub_couplings = std::get<2>(a_couplings_[x]);
                 size_t sub_couplings_size = sub_couplings.size();
                 for (size_t y = 0; y < sub_couplings_size; ++y) {
                     int a;
@@ -837,7 +838,7 @@ void PCISigmaVector::apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(
             }
             int i = std::get<0>(b_couplings_[x]);
             if (detI.get_beta_bit(i)) {
-                std::vector<std::tuple<int, double>>& sub_couplings = std::get<2>(b_couplings_[x]);
+                const std::vector<std::tuple<int, double>>& sub_couplings = std::get<2>(b_couplings_[x]);
                 size_t sub_couplings_size = sub_couplings.size();
                 for (size_t y = 0; y < sub_couplings_size; ++y) {
                     int a;
@@ -891,7 +892,7 @@ void PCISigmaVector::apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(
             int i = std::get<0>(aa_couplings_[x]);
             int j = std::get<1>(aa_couplings_[x]);
             if (detI.get_alfa_bit(i) and detI.get_alfa_bit(j)) {
-                std::vector<std::tuple<int, int, double>>& sub_couplings =
+                const std::vector<std::tuple<int, int, double>>& sub_couplings =
                     std::get<3>(aa_couplings_[x]);
                 size_t sub_couplings_size = sub_couplings.size();
                 for (size_t y = 0; y < sub_couplings_size; ++y) {
@@ -936,7 +937,7 @@ void PCISigmaVector::apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(
             int i = std::get<0>(ab_couplings_[x]);
             int j = std::get<1>(ab_couplings_[x]);
             if (detI.get_alfa_bit(i) and detI.get_beta_bit(j)) {
-                std::vector<std::tuple<int, int, double>>& sub_couplings =
+                const std::vector<std::tuple<int, int, double>>& sub_couplings =
                     std::get<3>(ab_couplings_[x]);
                 size_t sub_couplings_size = sub_couplings.size();
                 for (size_t y = 0; y < sub_couplings_size; ++y) {
@@ -981,7 +982,7 @@ void PCISigmaVector::apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(
             int i = std::get<0>(bb_couplings_[x]);
             int j = std::get<1>(bb_couplings_[x]);
             if (detI.get_beta_bit(i) and detI.get_beta_bit(j)) {
-                std::vector<std::tuple<int, int, double>>& sub_couplings =
+                const std::vector<std::tuple<int, int, double>>& sub_couplings =
                     std::get<3>(bb_couplings_[x]);
                 size_t sub_couplings_size = sub_couplings.size();
                 for (size_t y = 0; y < sub_couplings_size; ++y) {
