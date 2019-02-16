@@ -37,8 +37,8 @@ namespace forte {
 StateInfo::StateInfo(int na, int nb, int multiplicity, int twice_ms, int irrep)
     : na_(na), nb_(nb), multiplicity_(multiplicity), twice_ms_(twice_ms), irrep_(irrep) {}
 
-const std::vector<std::string> StateInfo::irrep_labels =
-    psi::Process::environment.molecule()->irrep_labels();
+const std::vector<std::string> StateInfo::irrep_labels = {"","","","","","","",""};
+
 const std::vector<std::string> StateInfo::multiplicity_labels{
     "Singlet", "Doublet", "Triplet", "Quartet", "Quintet", "Sextet", "Septet", "Octet",
     "Nonet",   "Decaet",  "11-et",   "12-et",   "13-et",   "14-et",  "15-et",  "16-et",

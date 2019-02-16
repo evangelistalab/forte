@@ -64,16 +64,10 @@ class StateInfo {
     const std::string& multiplicity_label() const;
     /// return the irrep symbol
     const std::string& irrep_label() const;
-
-    /// Return the name of the molecule (needed for DMRG)
-    std::string name() const;
-
     /// Comparison operator for StateInfo objects
     bool operator<(const StateInfo& rhs) const;
-
     /// Comparison operator for StateInfo objects
     bool operator!=(const StateInfo& rhs) const;
-
     /// Comparison operator for StateInfo objects
     bool operator==(const StateInfo& rhs) const;
 
