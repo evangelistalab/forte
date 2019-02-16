@@ -33,7 +33,7 @@ set forte{
     int_type             cholesky
     cholesky_tolerance   1e-14
     job_type             three-dsrg-mrpt2
-    cas_type             dmrg
+    active_space_solver             dmrg
     casscf_reference     false
     dsrg_s               0.5
     print                0

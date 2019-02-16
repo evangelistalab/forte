@@ -32,7 +32,7 @@ set forte {
   multiplicity         3
   root_sym             5
   ms                   0.0
-  cas_type             fci
+  active_space_solver             fci
   e_convergence        1e-10
   int_type             conventional
   avg_state            [[5, 3, 1], [0, 1, 1]]

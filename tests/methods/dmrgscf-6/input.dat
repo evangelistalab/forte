@@ -46,7 +46,7 @@ set forte {
   dmrg_wfn_multp             1
   frozen_docc           [9, 6, 0, 0, 0, 0, 7, 7]
   active                [0, 0, 2, 3, 2, 3, 0, 0]
-  cas_type               DMRG
+  active_space_solver               DMRG
   int_type              cholesky
   cholesky_tolerance     1e-14
   dmrgscf_max_iter        1

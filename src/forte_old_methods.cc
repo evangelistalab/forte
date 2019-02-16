@@ -131,7 +131,7 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
         final_energy = casscf->compute_energy();
     }
     if (options.get_str("JOB_TYPE") == "MR-DSRG-PT2") {
-        std::string cas_type = options.get_str("CAS_TYPE");
+        std::string cas_type = options.get_str("ACTIVE_SPACE_SOLVER");
         std::string actv_type = options.get_str("FCIMO_ACTV_TYPE");
         if (actv_type == "CIS" or actv_type == "CISD") {
             throw psi::PSIEXCEPTION("VCIS/VCISD is not supported for MR-DSRG-PT2");
@@ -171,7 +171,7 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
 #endif
     }
     if (options.get_str("JOB_TYPE") == "MRDSRG_SO") {
-        std::string cas_type = options.get_str("CAS_TYPE");
+        std::string cas_type = options.get_str("ACTIVE_SPACE_SOLVER");
         auto as_ints = make_active_space_ints(mo_space_info, ints, "ACTIVE", {{"RESTRICTED_DOCC"}});
         auto ci = make_active_space_solver(cas_type, state_map, scf_info, mo_space_info, as_ints,
                                            forte_options);
@@ -192,7 +192,7 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
         final_energy = dwms.compute_energy();
     }
     if (options.get_str("JOB_TYPE") == "DSRG_MRPT") {
-        std::string cas_type = options.get_str("CAS_TYPE");
+        std::string cas_type = options.get_str("ACTIVE_SPACE_SOLVER");
         int max_rdm_level = (options.get_str("THREEPDC") == "ZERO") ? 2 : 3;
         auto as_ints = make_active_space_ints(mo_space_info, ints, "ACTIVE", {{"RESTRICTED_DOCC"}});
         auto ci = make_active_space_solver(cas_type, state_map, scf_info, mo_space_info, as_ints,
@@ -213,7 +213,7 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
         }
     }
     if (options.get_str("JOB_TYPE") == "SOMRDSRG") {
-        std::string cas_type = options.get_str("CAS_TYPE");
+        std::string cas_type = options.get_str("ACTIVE_SPACE_SOLVER");
         int max_rdm_level = (options.get_str("THREEPDC") == "ZERO") ? 2 : 3;
         auto as_ints = make_active_space_ints(mo_space_info, ints, "ACTIVE", {{"RESTRICTED_DOCC"}});
         auto solver = make_active_space_solver(cas_type, state_map, scf_info, mo_space_info,

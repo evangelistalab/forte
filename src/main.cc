@@ -74,7 +74,6 @@ void replace_free(void* ptr) { free(ptr); }
  */
 void read_options(ForteOptions& options) {
     forte_options(options);
-    forte_old_options(options);
 }
 
 /**

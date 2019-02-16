@@ -39,7 +39,7 @@ set forte{
   root_sym                 0
   nroot                    1
   dsrg_s                   0.5
-  cas_type                 cas
+  active_space_solver                 cas
 }
 
 Eopt = optimize('forte_mcscf',dertype=0)

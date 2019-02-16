@@ -30,7 +30,7 @@ set forte{
     dmrgscf_max_iter     1
     int_type             cholesky
     cholesky_tolerance   1e-10
-    cas_type             dmrg
+    active_space_solver             dmrg
     job_type              dsrg-mrpt2
     dsrg_s               0.5
     cholesky_tolerance   1e-10

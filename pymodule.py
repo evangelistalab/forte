@@ -142,7 +142,6 @@ def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
                                                                    state_map,scf_info,
                                                                    mo_space_info,ints_dressed,
                                                                    options)
-                as_solver_relaxed.set_max_rdm_level(max_rdm_level)
                 state_energies_list = as_solver_relaxed.compute_energy()
                 Erelax = forte.compute_average_state_energy(state_energies_list,state_weights_map)
 

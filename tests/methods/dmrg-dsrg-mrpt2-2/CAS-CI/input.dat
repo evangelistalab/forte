@@ -35,7 +35,7 @@ set forte{
     int_type             cholesky
     cholesky_tolerance   1e-14
     job_type             dsrg-mrpt2
-    cas_type             FCI
+    active_space_solver             FCI
     dsrg_s               0.5
  }
 
