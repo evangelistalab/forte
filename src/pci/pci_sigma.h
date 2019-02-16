@@ -51,7 +51,10 @@ class PCISigmaVector : public SigmaVector {
             ab_couplings,
         const std::vector<std::tuple<int, int, double, std::vector<std::tuple<int, int, double>>>>&
             bb_couplings,
-        double dets_single_max_coupling, double dets_double_max_coupling);
+        std::unordered_map<Determinant, std::pair<double, double>, Determinant::Hash>&
+            dets_max_couplings,
+        double dets_single_max_coupling, double dets_double_max_coupling,
+        const std::vector<std::pair<det_hashvec, std::vector<double>>> &bad_roots);
     void compute_sigma(psi::SharedVector sigma, psi::SharedVector b) override;
     void get_diagonal(psi::Vector& diag) override;
     void add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& bad_states) override;
@@ -69,16 +72,12 @@ class PCISigmaVector : public SigmaVector {
     std::function<bool(double, double, double)> prescreen_H_CI_;
     /// Function for important matrix element
     std::function<bool(double, double, double, double)> important_H_CI_CJ_;
-    /// The maximum number of threads
-    int num_threads_;
-    /// The number of off-diagonal elements
-    size_t num_off_diag_elem_;
     /// A map used to store the largest absolute value of the couplings of a
     /// determinant to all of its singly and doubly excited states.
     /// Bounds are stored as a pair (f_max,v_max) where f_max and v_max are
     /// the couplings to the singles and doubles, respectively.
     std::unordered_map<Determinant, std::pair<double, double>, Determinant::Hash>
-        dets_max_couplings_;
+        &dets_max_couplings_;
     double dets_single_max_coupling_;
     const std::vector<std::tuple<int, double, std::vector<std::tuple<int, double>>>>&a_couplings_,
         &b_couplings_;
@@ -87,6 +86,11 @@ class PCISigmaVector : public SigmaVector {
     const std::vector<std::tuple<int, int, double, std::vector<std::tuple<int, int, double>>>>
         &aa_couplings_, &ab_couplings_, &bb_couplings_;
     size_t aa_couplings_size_, ab_couplings_size_, bb_couplings_size_;
+    const std::vector<std::pair<det_hashvec, std::vector<double>>> &bad_roots_;
+    /// The number of off-diagonal elements
+    size_t num_off_diag_elem_;
+    /// The maximum number of threads
+    int num_threads_;
 
     /// Apply symmetric approx tau H to a set of determinants with selection
     /// according to reference coefficients
