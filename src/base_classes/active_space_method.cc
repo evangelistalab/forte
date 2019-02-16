@@ -68,6 +68,76 @@ void ActiveSpaceMethod::set_max_rdm_level(int value) { max_rdm_level_ = value; }
 
 void ActiveSpaceMethod::set_print(int level) { print_ = level; }
 
+std::vector<std::string> ActiveSpaceMethod::generate_rdm_file_names(int rdm_level, int root1,
+                                                                    int root2,
+                                                                    const StateInfo& state2) {
+    std::vector<std::string> out, spins;
+    out.reserve(rdm_level + 1);
+
+    if (rdm_level == 1) {
+        spins = std::vector<std::string>{"a", "b"};
+    } else if (rdm_level == 2) {
+        spins = std::vector<std::string>{"aa", "ab", "bb"};
+    } else if (rdm_level == 3) {
+        spins = std::vector<std::string>{"aaa", "aab", "abb", "bbb"};
+    } else {
+        throw psi::PSIEXCEPTION("RDM level > 3 is not supported.");
+    }
+
+    std::string path0 = psi::PSIOManager::shared_object()->get_default_path() + "psi." +
+                        std::to_string(getpid()) + "." +
+                        psi::Process::environment.molecule()->name();
+    std::string name0 = (root1 == root2 and state_ == state2) ? std::to_string(rdm_level) + "RDMs"
+                                                              : std::to_string(rdm_level) + "TrDMs";
+
+    for (const std::string& spin : spins) {
+        std::string name = name0 + spin;
+        std::string path = path0;
+        std::vector<std::string> components = {name,
+                                               std::to_string(root1),
+                                               std::to_string(state_.multiplicity()),
+                                               std::to_string(state_.irrep()),
+                                               std::to_string(root2),
+                                               std::to_string(state2.multiplicity()),
+                                               std::to_string(state2.irrep()),
+                                               "bin"};
+        for (const std::string& str : components) {
+            path += "." + str;
+        }
+        out.push_back(path);
+    }
+
+    return out;
+}
+
+bool ActiveSpaceMethod::check_density_files(int rdm_level, int root1, int root2,
+                                            const StateInfo& state2) {
+    auto filenames = generate_rdm_file_names(rdm_level, root1, root2, state2);
+
+    // only one of these file names is needed because
+    // they are always pushed/deleted together to/from density_files_
+    return density_files_.find(filenames[0]) != density_files_.end();
+}
+
+void ActiveSpaceMethod::remove_density_files(int rdm_level, int root1, int root2,
+                                             const StateInfo& state2) {
+    auto fullnames = generate_rdm_file_names(rdm_level, root1, root2, state2);
+    for (const std::string& filename : fullnames) {
+        density_files_.erase(filename);
+        if (remove(filename.c_str()) != 0) {
+            std::stringstream ss;
+            ss << "Error deleting file " << filename << ": No such file or directory";
+            throw psi::PSIEXCEPTION(ss.str());
+        }
+    }
+
+    std::string level = std::to_string(rdm_level);
+    std::string name = (root1 == root2 and state_ == state2) ? level + "RDMs" : level + "TrDMs";
+    psi::outfile->Printf("\n  Deleted files from disk for %s (%d %s %s - %d %s %s).", name.c_str(),
+                         root1, state_.multiplicity_label().c_str(), state_.irrep_label().c_str(),
+                         root2, state2.multiplicity_label().c_str(), state2.irrep_label().c_str());
+}
+
 std::unique_ptr<ActiveSpaceMethod> make_active_space_method(
     const std::string& type, StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
     std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ActiveSpaceIntegrals> as_ints,
