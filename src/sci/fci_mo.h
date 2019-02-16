@@ -147,8 +147,8 @@ class FCI_MO : public ActiveSpaceMethod {
     /// Density files
     std::vector<std::string> density_filenames_generator(int rdm_level, int irrep, int multi,
                                                          int root1, int root2);
-    bool check_density_files(int rdm_level, int irrep, int multi, int root1, int root2);
-    void remove_density_files(int rdm_level, int irrep, int multi, int root1, int root2);
+    bool check_density_files_fcimo(int rdm_level, int irrep, int multi, int root1, int root2);
+    void remove_density_files_fcimo(int rdm_level, int irrep, int multi, int root1, int root2);
 
     /// Compute dipole moments with DSRG transformed MO dipole integrals
     /// This function is used for reference relaxation and SA-MRDSRG
@@ -193,9 +193,6 @@ class FCI_MO : public ActiveSpaceMethod {
     /// Set number of roots
     void set_nroots(int nroot) { nroot_ = nroot; }
 
-    /// Set which root is preferred
-    void set_root(int root) { root_ = root; }
-
     /// Quiet mode (no printing, for use with CASSCF)
     void set_quite_mode(bool quiet) { quiet_ = quiet; }
 
@@ -222,7 +219,7 @@ class FCI_MO : public ActiveSpaceMethod {
     std::shared_ptr<ActiveSpaceIntegrals> fci_ints() { return fci_ints_; }
 
     /// Return the vector of determinants
-    vecdet p_space() { return determinant_; }
+    const vecdet& p_space() const { return determinant_; }
 
     /// Return P spaces for states with different symmetry
     std::vector<vecdet> p_spaces() { return p_spaces_; }
@@ -422,17 +419,27 @@ class FCI_MO : public ActiveSpaceMethod {
     ambit::Tensor L3bbb_;
 
     /// File Names of Densities Stored on Disk
-    std::unordered_set<std::string> density_files_;
+    //    std::unordered_set<std::string> density_files_;
     bool safe_to_read_density_files_ = false;
-    //    std::vector<std::string> density_filenames_generator(int rdm_level, int irrep, int multi,
-    //                                                         int root1, int root2);
-    //    bool check_density_files(int rdm_level, int irrep, int multi, int root1, int root2);
-    //    void remove_density_files(int rdm_level, int irrep, int multi, int root1, int root2);
     void clean_all_density_files();
 
+    /// Prepare eigen vectors for RDM or TRDM (within current symmetry) computations
+    psi::SharedMatrix prepare_for_rdm();
+
+    /// Prepare determinant space and eigen vectors for TRDM computations between different
+    /// symmetries
+    std::pair<std::shared_ptr<vecdet>, psi::SharedMatrix>
+    prepare_for_trans_rdm(std::shared_ptr<FCI_MO> method2);
+
+    /// Compute reduced density matricies for given determinant space and eigen vectors
+    [[deprecated("Soon will be using StateInfo based rdm function")]] std::vector<ambit::Tensor>
+    compute_n_rdm(const vecdet& p_space, psi::SharedMatrix evecs, int rdm_level, int root1,
+                  int root2, int irrep, int multi, bool disk);
+
     std::vector<ambit::Tensor> compute_n_rdm(const vecdet& p_space, psi::SharedMatrix evecs,
-                                             int rdm_level, int root1, int root2, int irrep,
-                                             int multi, bool disk);
+                                             int rdm_level, int root1, int root2,
+                                             const StateInfo& state2, bool disk);
+
     /// Add wedge product of L1 to L2
     void add_wedge_cu2(const ambit::Tensor& L1a, const ambit::Tensor& L1b, ambit::Tensor& L2aa,
                        ambit::Tensor& L2ab, ambit::Tensor& L2bb);

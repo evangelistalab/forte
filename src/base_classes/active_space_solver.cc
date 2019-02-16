@@ -326,12 +326,9 @@ RDMs ActiveSpaceSolver::compute_average_rdms(
     ambit::Tensor g3bbb;
 
     if (max_rdm_level_ >= 2) {
-        g2aa =
-            ambit::Tensor::build(ambit::CoreTensor, "g2aa", {nactive, nactive, nactive, nactive});
-        g2ab =
-            ambit::Tensor::build(ambit::CoreTensor, "g2ab", {nactive, nactive, nactive, nactive});
-        g2bb =
-            ambit::Tensor::build(ambit::CoreTensor, "g2bb", {nactive, nactive, nactive, nactive});
+        g2aa = ambit::Tensor::build(ambit::CoreTensor, "g2aa", std::vector<size_t>(4, nactive));
+        g2ab = ambit::Tensor::build(ambit::CoreTensor, "g2ab", std::vector<size_t>(4, nactive));
+        g2bb = ambit::Tensor::build(ambit::CoreTensor, "g2bb", std::vector<size_t>(4, nactive));
     }
 
     if (max_rdm_level_ >= 3) {

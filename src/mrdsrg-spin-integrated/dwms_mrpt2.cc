@@ -315,7 +315,7 @@ std::shared_ptr<FCI_MO> DWMS_DSRGPT2::precompute_energy() {
                     double value = 0.0;
 
                     auto filenames = fci_mo->density_filenames_generator(1, irrep, multi, A, A);
-                    bool files_exist = fci_mo->check_density_files(1, irrep, multi, A, A);
+                    bool files_exist = fci_mo->check_density_files_fcimo(1, irrep, multi, A, A);
                     if (files_exist) {
                         read_disk_vector_double(filenames[0], D1.block("aa").data());
                         read_disk_vector_double(filenames[1], D1.block("AA").data());
@@ -324,7 +324,7 @@ std::shared_ptr<FCI_MO> DWMS_DSRGPT2::precompute_energy() {
                     value += oei["UV"] * D1["UV"];
 
                     filenames = fci_mo->density_filenames_generator(2, irrep, multi, A, A);
-                    files_exist = fci_mo->check_density_files(2, irrep, multi, A, A);
+                    files_exist = fci_mo->check_density_files_fcimo(2, irrep, multi, A, A);
                     if (files_exist) {
                         read_disk_vector_double(filenames[0], D2.block("aaaa").data());
                         read_disk_vector_double(filenames[1], D2.block("aAaA").data());
