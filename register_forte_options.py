@@ -543,7 +543,6 @@ def register_integral_options(forte_options):
                            "Print the one- and two-electron integrals?")
 
 def register_dsrg_options(forte_options):
-
     forte_options.add_double("DSRG_S", 1.0e10,"The end value of the integration parameter s")
     forte_options.add_double("DSRG_POWER", 2.0, "The power of the parameter s in the regularizer")
 
@@ -800,10 +799,6 @@ def register_old_options(forte_options):
                           "The form of the two-particle density cumulant")
     forte_options.add_str("THREEPDC", "MK", ["MK", "MK_DECOMP", "ZERO"],
                           "The form of the three-particle density cumulant")
-
-def register_dsrg_options(forte_options):
-    forte_options.add_double("DSRG_S", 1.0e10,"The end value of the integration parameter s")
-    forte_options.add_double("DSRG_POWER", 2.0, "The power of the parameter s in the regularizer")
 
     #    /*- The minimum excitation level (Default value: 0) -*/
     #    forte_options.add_int("MIN_EXC_LEVEL", 0)

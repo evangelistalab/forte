@@ -302,7 +302,7 @@ class FCI_MO : public ActiveSpaceMethod {
     int nirrep_;                // number of irrep
     int root_sym_;              // root
     std::vector<int> sym_actv_; // active MOs
-    std::vector<std::string> irrep_symbols_;
+    std::vector<std::string> irrep_symbols_ = {"", "", "", "", "", "", "", ""};
 
     /// Molecular Orbitals
     size_t nmo_; // total MOs
