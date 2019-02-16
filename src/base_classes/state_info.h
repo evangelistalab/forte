@@ -29,6 +29,9 @@
 #ifndef _state_info_h_
 #define _state_info_h_
 
+#include <string>
+#include <vector>
+
 namespace psi {
 class Wavefunction;
 }
@@ -42,6 +45,11 @@ class StateInfo {
 
     StateInfo() = default;
 
+    /// irrep labels
+    static const std::vector<std::string> irrep_labels;
+    /// multiplicity labels
+    static const std::vector<std::string> multiplicity_labels;
+
     /// return the number of alpha electrons
     int na() const;
     /// return the number of beta electrons
@@ -52,6 +60,10 @@ class StateInfo {
     int twice_ms() const;
     /// return the irrep
     int irrep() const;
+    /// return the multiplicity symbol
+    const std::string& multiplicity_label() const;
+    /// return the irrep symbol
+    const std::string& irrep_label() const;
 
     /// Return the name of the molecule (needed for DMRG)
     std::string name() const;
@@ -61,6 +73,9 @@ class StateInfo {
 
     /// Comparison operator for StateInfo objects
     bool operator!=(const StateInfo& rhs) const;
+
+    /// Comparison operator for StateInfo objects
+    bool operator==(const StateInfo& rhs) const;
 
   private:
     // number of alpha electrons (including core, excludes ecp)

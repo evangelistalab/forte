@@ -37,6 +37,13 @@ namespace forte {
 StateInfo::StateInfo(int na, int nb, int multiplicity, int twice_ms, int irrep)
     : na_(na), nb_(nb), multiplicity_(multiplicity), twice_ms_(twice_ms), irrep_(irrep) {}
 
+const std::vector<std::string> StateInfo::irrep_labels =
+    psi::Process::environment.molecule()->irrep_labels();
+const std::vector<std::string> StateInfo::multiplicity_labels{
+    "Singlet", "Doublet", "Triplet", "Quartet", "Quintet", "Sextet", "Septet", "Octet",
+    "Nonet",   "Decaet",  "11-et",   "12-et",   "13-et",   "14-et",  "15-et",  "16-et",
+    "17-et",   "18-et",   "19-et",   "20-et",   "21-et",   "22-et",  "23-et",  "24-et"};
+
 int StateInfo::na() const { return na_; }
 
 int StateInfo::nb() const { return nb_; }
@@ -47,6 +54,12 @@ int StateInfo::twice_ms() const { return twice_ms_; }
 
 int StateInfo::irrep() const { return irrep_; }
 
+const std::string& StateInfo::irrep_label() const { return irrep_labels[irrep_]; }
+
+const std::string& StateInfo::multiplicity_label() const {
+    return multiplicity_labels[multiplicity_ - 1];
+}
+
 bool StateInfo::operator<(const StateInfo& rhs) const {
     return std::tie(na_, nb_, multiplicity_, twice_ms_, irrep_) <
            std::tie(rhs.na_, rhs.nb_, rhs.multiplicity_, rhs.twice_ms_, rhs.irrep_);
@@ -54,6 +67,11 @@ bool StateInfo::operator<(const StateInfo& rhs) const {
 
 bool StateInfo::operator!=(const StateInfo& rhs) const {
     return std::tie(na_, nb_, multiplicity_, twice_ms_, irrep_) !=
+           std::tie(rhs.na_, rhs.nb_, rhs.multiplicity_, rhs.twice_ms_, rhs.irrep_);
+}
+
+bool StateInfo::operator==(const StateInfo& rhs) const {
+    return std::tie(na_, nb_, multiplicity_, twice_ms_, irrep_) ==
            std::tie(rhs.na_, rhs.nb_, rhs.multiplicity_, rhs.twice_ms_, rhs.irrep_);
 }
 
