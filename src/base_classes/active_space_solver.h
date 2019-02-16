@@ -102,7 +102,7 @@ class ActiveSpaceSolver {
     }
 
   protected:
-    // a string that specifies the method used (e.g. "FCI", "ACI", ...)
+    /// a string that specifies the method used (e.g. "FCI", "ACI", ...)
     std::string method_;
 
     /// A map of electronic states to the number of roots computed
