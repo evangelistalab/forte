@@ -50,7 +50,7 @@
 #include "ewci.h"
 #include "helpers/timer.h"
 #include "sparse_ci/ci_reference.h"
-#include "base_classes/rdms.h"
+#include "pci_sigma.h"
 
 using namespace psi;
 using namespace forte::GeneratorType_EWCI;
@@ -75,6 +75,9 @@ double dot(std::vector<double>& C1, std::vector<double>& C2);
 void add(std::vector<double>& a, double k, std::vector<double>& b);
 void Wall_Chebyshev_generator_coefs(std::vector<double>& coefs, int order, double range);
 void print_polynomial(std::vector<double>& coefs);
+
+std::vector<double> to_std_vector(psi::SharedVector c);
+void set_psi_Vector(psi::SharedVector c_psi, const std::vector<double>& c_vec);
 
 void add(const det_hashvec& A, std::vector<double>& Ca, double beta, const det_hashvec& B,
          const std::vector<double> Cb);
@@ -926,10 +929,53 @@ void ElementwiseCI::propagate_wallCh(det_hashvec& dets_hashvec, std::vector<doub
     size_t overlap_size;
 
     double root = -cos(((double)chebyshev_order_) * PI / (chebyshev_order_ + 0.5));
-    apply_tau_H_symm(-1.0, spawning_threshold, dets_hashvec, ref_C, C, range_ * root + shift_,
-                     overlap_size);
+
+    PCISigmaVector sigma_vector(dets_hashvec, ref_C, spawning_threshold, as_ints_,
+                                prescreen_H_CI_, important_H_CI_CJ_,
+                                a_couplings_, b_couplings_,
+                                aa_couplings_, ab_couplings_, bb_couplings_,
+                                dets_max_couplings_, dets_single_max_coupling_,
+                                dets_double_max_coupling_, solutions_);
+
+    overlap_size = ref_C.size();
+    psi::SharedVector C_psi = std::make_shared<psi::Vector>(overlap_size),
+            sigma_psi = std::make_shared<psi::Vector>(sigma_vector.size());
+    set_psi_Vector(C_psi, ref_C);
+    sigma_vector.compute_sigma(sigma_psi, C_psi);
+    sigma_psi->scale(-1.0);
+    C = to_std_vector(sigma_psi);
+    num_off_diag_elem_ = sigma_vector.get_num_off_diag();
+
+#pragma omp parallel for
+    for (size_t I = 0; I < overlap_size; ++I) {
+        double det_energy = as_ints_->energy(dets_hashvec[I]) + as_ints_->scalar_energy();
+        C[I] += -1.0 * (det_energy - (range_ * root + shift_)) * ref_C[I];
+    }
+
+    if (approx_E_flag_) {
+        timer_on("EWCI:<E>a");
+        double CHC_energy = 0.0;
+#pragma omp parallel for reduction(+ : CHC_energy)
+        for (size_t I = 0; I < overlap_size; ++I) {
+            CHC_energy += ref_C[I] * C[I];
+        }
+        CHC_energy = CHC_energy / -1.0 + (range_ * root + shift_) + nuclear_repulsion_energy_;
+        timer_off("EWCI:<E>a");
+        double CHC_energy_gradient =
+            (CHC_energy - approx_energy_) / (time_step_ * energy_estimate_freq_);
+        old_approx_energy_ = approx_energy_;
+        approx_energy_ = CHC_energy;
+        approx_E_flag_ = false;
+        approx_E_tau_ = -1.0;
+        approx_E_S_ = (range_ * root + shift_);
+        if (cycle_ != 0)
+            outfile->Printf(" %20.12f %10.3e", approx_energy_, CHC_energy_gradient);
+    }
+//    apply_tau_H_symm(-1.0, spawning_threshold, dets_hashvec, ref_C, C, range_ * root + shift_,
+//                     overlap_size);
     normalize(C);
 
+    C_psi = std::make_shared<psi::Vector>(sigma_vector.size());
     for (int i = chebyshev_order_ - 1; i > 0; i--) {
         //        outfile->Printf("\nCurrent root:%.12lf",range_ * root +
         //        shift_);
@@ -938,8 +984,18 @@ void ElementwiseCI::propagate_wallCh(det_hashvec& dets_hashvec, std::vector<doub
         double root = -cos(((double)i) * PI / (chebyshev_order_ + 0.5));
         //        dets = dets_hashvec.toVector();
         std::vector<double> result_C;
-        apply_tau_H_ref_C_symm(-1.0, spawning_threshold, dets_hashvec, ref_C, C, result_C,
-                               overlap_size, range_ * root + shift_);
+
+        set_psi_Vector(C_psi, C);
+        sigma_vector.compute_sigma(sigma_psi, C_psi);
+        sigma_psi->scale(-1.0);
+        result_C = to_std_vector(sigma_psi);
+    #pragma omp parallel for
+        for (size_t I = 0; I < sigma_vector.size(); ++I) {
+            double det_energy = as_ints_->energy(dets_hashvec[I]) + as_ints_->scalar_energy();
+            result_C[I] += -1.0 * (det_energy - (range_ * root + shift_)) * C[I];
+        }
+//        apply_tau_H_ref_C_symm(-1.0, spawning_threshold, dets_hashvec, ref_C, C, result_C,
+//                               overlap_size, range_ * root + shift_);
         C.swap(result_C);
         //        copy_hash_to_vec_order_ref(dets_C_hash, dets, C);
         //        dets_hashvec = det_hashvec(dets_C_hash, C);

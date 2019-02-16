@@ -47,6 +47,17 @@ void add(const det_hashvec& A, std::vector<double>& Ca, double beta, const det_h
 double dot(const det_hashvec& A, const std::vector<double> Ca, const det_hashvec& B,
            const std::vector<double> Cb);
 
+std::vector<double> to_std_vector(psi::SharedVector c) {
+    const size_t c_size = c->dim();
+    std::vector<double> c_vec(c_size);
+    std::memcpy(c_vec.data(), c->pointer(), c_size * sizeof(double));
+    return c_vec;
+}
+
+void set_psi_Vector(psi::SharedVector c_psi, const std::vector<double>& c_vec) {
+    std::memcpy(c_psi->pointer(), c_vec.data(), c_vec.size() * sizeof(double));
+}
+
 PCISigmaVector::PCISigmaVector(det_hashvec& dets_hashvec, std::vector<double>& ref_C, double spawning_threshold,
     std::shared_ptr<ActiveSpaceIntegrals> as_ints,
     std::function<bool(double, double, double)> prescreen_H_CI,
@@ -89,7 +100,7 @@ void PCISigmaVector::reset(std::vector<double>& ref_C) {
 
     diag_.resize(size_);
     for (size_t I = 0; I < size_; ++I) {
-        diag_[I] = as_ints_->energy(dets_[I]);
+        diag_[I] = as_ints_->energy(dets_[I]) + as_ints_->scalar_energy();
     }
 }
 
@@ -126,15 +137,8 @@ void PCISigmaVector::compute_sigma_with_diag(psi::SharedVector sigma, psi::Share
     }
 }
 
-std::vector<double> PCISigmaVector::to_std_vector(psi::SharedVector c) {
-    const size_t c_size = c->dim();
-    std::vector<double> c_vec(c_size);
-    std::memcpy(c_vec.data(), c->pointer(), c_size);
-    return c_vec;
-}
-
-void PCISigmaVector::set_psi_Vector(psi::SharedVector c_psi, const std::vector<double>& c_vec) {
-    std::memcpy(c_psi->pointer(), c_vec.data(), c_vec.size());
+size_t PCISigmaVector::get_num_off_diag() {
+    return num_off_diag_elem_;
 }
 
 void PCISigmaVector::orthogonalize(
