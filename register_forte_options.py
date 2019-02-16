@@ -782,22 +782,28 @@ def register_old_options(forte_options):
 
     forte_options.add_bool("NAT_ACT", False,
                            "Use Natural Orbitals to suggest active space?")
-    #    forte_options.add_bool("MOLDEN_WRITE_FORTE", False)
-    #    // Natural Orbital selection criteria.  Used to fine tune how many
-    #    // active orbitals there are
 
-    #    /*- Typically, a occupied orbital with a NO occupation of <0.98 is
-    #     * considered active -*/
-    #    forte_options.add_double("OCC_NATURAL", 0.98)
-    #    /*- Typically, a virtual orbital with a NO occupation of > 0.02 is
-    #     * considered active -*/
-    #    forte_options.add_double("VIRT_NATURAL", 0.02)
-
-    #    /*- The amount of information printed
-    #        to the output file -*/
-    #    forte_options.add_int("PRINT", 0)
-    #    /*-  -*/
     forte_options.add_bool("MEMORY_SUMMARY", False, "Print summary of memory")
+
+
+
+    forte_options.add_double("RELAX_E_CONVERGENCE", 1.0e-8, "The energy relaxation convergence criterion")
+
+
+    forte_options.add_bool("USE_DMRGSCF", False,
+                           "Use the older DMRGSCF algorithm?")
+
+    #    /*- Semicanonicalize orbitals -*/
+    forte_options.add_bool("SEMI_CANONICAL", True, "Semicanonicalize orbitals")
+    #    /*- Two-particle density cumulant -*/
+    forte_options.add_str("TWOPDC", "MK", ["MK", "ZERO"],
+                          "The form of the two-particle density cumulant")
+    forte_options.add_str("THREEPDC", "MK", ["MK", "MK_DECOMP", "ZERO"],
+                          "The form of the three-particle density cumulant")
+
+def register_dsrg_options(forte_options):
+    forte_options.add_double("DSRG_S", 1.0e10,"The end value of the integration parameter s")
+    forte_options.add_double("DSRG_POWER", 2.0, "The power of the parameter s in the regularizer")
 
     #    /*- The minimum excitation level (Default value: 0) -*/
     #    forte_options.add_int("MIN_EXC_LEVEL", 0)
@@ -879,9 +885,24 @@ def register_old_options(forte_options):
     #    /*- The energy convergence criterion -*/
     #    forte_options.add_double("E_CONVERGENCE", 1.0e-8)
 
-    forte_options.add_double("RELAX_E_CONVERGENCE", 1.0e-8, "The energy relaxation convergence criterion")
+    #    forte_options.add_bool("MOLDEN_WRITE_FORTE", False)
+    #    // Natural Orbital selection criteria.  Used to fine tune how many
+    #    // active orbitals there are
 
-    #    // Options for the Cartographer class //
+    #    /*- Typically, a occupied orbital with a NO occupation of <0.98 is
+    #     * considered active -*/
+    #    forte_options.add_double("OCC_NATURAL", 0.98)
+    #    /*- Typically, a virtual orbital with a NO occupation of > 0.02 is
+    #     * considered active -*/
+    #    forte_options.add_double("VIRT_NATURAL", 0.02)
+
+    #    /*- The amount of information printed
+    #        to the output file -*/
+    #    forte_options.add_int("PRINT", 0)
+    #    /*-  -*/
+
+
+   #    // Options for the Cartographer class //
     #    /*- Density of determinants format -*/
     #    forte_options.add_str("DOD_FORMAT", "HISTOGRAM", "GAUSSIAN HISTOGRAM")
     #    /*- Number of bins used to form the DOD plot -*/
@@ -1015,9 +1036,6 @@ def register_old_options(forte_options):
     #     * unitary or the unit matrix. -*/
     #    forte_options.add_bool("DMRG_LOC_RANDOM", True)
     #    /*-  -*/
-    forte_options.add_bool("USE_DMRGSCF", False,
-                           "Use the older DMRGSCF algorithm?")
-
     #    //////////////////////////////////////////////////////////////
     #    ///         OPTIONS FOR THE FULL CI QUANTUM MONTE-CARLO
     #    //////////////////////////////////////////////////////////////
@@ -1080,15 +1098,6 @@ def register_old_options(forte_options):
     #    //////////////////////////////////////////////////////////////
     #    ///         OPTIONS FOR THE PILOT FULL CI CODE
     #    //////////////////////////////////////////////////////////////
-    #    /*- Semicanonicalize orbitals -*/
-    forte_options.add_bool("SEMI_CANONICAL", True, "Semicanonicalize orbitals")
-    #    /*- Two-particle density cumulant -*/
-    forte_options.add_str("TWOPDC", "MK", ["MK", "ZERO"],
-                          "The form of the two-particle density cumulant")
-    forte_options.add_str("THREEPDC", "MK", ["MK", "MK_DECOMP", "ZERO"],
-                          "The form of the three-particle density cumulant")
-
-
 #    /*- The density convergence criterion -*/
 #    forte_options.add_double("D_CONVERGENCE", 1.0e-8)
 
