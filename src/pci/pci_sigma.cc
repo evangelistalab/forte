@@ -29,6 +29,8 @@
 
 #include <cfloat>
 #include <cmath>
+#include <cstring>
+#include <algorithm>
 #include "pci_sigma.h"
 
 namespace forte {
@@ -38,6 +40,12 @@ namespace forte {
 #define omp_get_max_threads() 1
 #define omp_get_thread_num() 0
 #endif
+
+void add(const det_hashvec& A, std::vector<double>& Ca, double beta, const det_hashvec& B,
+         const std::vector<double> Cb);
+
+double dot(const det_hashvec& A, const std::vector<double> Ca, const det_hashvec& B,
+           const std::vector<double> Cb);
 
 PCISigmaVector::PCISigmaVector(det_hashvec& dets_hashvec, std::vector<double>& ref_C, double spawning_threshold,
     std::shared_ptr<ActiveSpaceIntegrals> as_ints,
@@ -55,7 +63,7 @@ PCISigmaVector::PCISigmaVector(det_hashvec& dets_hashvec, std::vector<double>& r
         dets_max_couplings,
     double dets_single_max_coupling, double dets_double_max_coupling,
     const std::vector<std::pair<det_hashvec, std::vector<double> > > &bad_roots)
-    : SigmaVector(dets_hashvec.size()), dets_(dets_hashvec), ref_C_(ref_C),
+    : SigmaVector(dets_hashvec.size()), dets_(dets_hashvec),
       spawning_threshold_(spawning_threshold), as_ints_(as_ints),
       prescreen_H_CI_(prescreen_H_CI),
       important_H_CI_CJ_(important_H_CI_CJ),
@@ -68,18 +76,79 @@ PCISigmaVector::PCISigmaVector(det_hashvec& dets_hashvec, std::vector<double>& r
       aa_couplings_size_(aa_couplings.size()),
       ab_couplings_size_(ab_couplings.size()), bb_couplings_size_(bb_couplings.size()),
       bad_roots_(bad_roots),
-      num_threads_(omp_get_max_threads()) {}
+      num_threads_(omp_get_max_threads()) {
+    reset(ref_C);
+}
 
-void PCISigmaVector::compute_sigma(psi::SharedVector sigma, psi::SharedVector b) {}
+void PCISigmaVector::reset(std::vector<double>& ref_C) {
+    ref_size_ = ref_C.size();
+    orthogonalize(dets_, ref_C, bad_roots_);
+    apply_tau_H_symm(spawning_threshold_, dets_, ref_C, first_sigma_vec_, ref_size_);
+    ref_C_ = ref_C;
+    size_ = dets_.size();
 
-void PCISigmaVector::get_diagonal(psi::Vector& diag) {}
+    diag_.resize(size_);
+    for (size_t I = 0; I < size_; ++I) {
+        diag_[I] = as_ints_->energy(dets_[I]);
+    }
+}
+
+void PCISigmaVector::compute_sigma(psi::SharedVector sigma, psi::SharedVector b) {
+    if ((not first_sigma_vec_.empty())
+            and 0 == std::memcmp(ref_C_.data(), b->pointer(), ref_size_)
+            and std::all_of(b->pointer() + ref_size_, b->pointer() + b->dim(), [](double x) { return x==0; })) {
+        set_psi_Vector(sigma, first_sigma_vec_);
+        first_sigma_vec_.clear();
+    } else {
+        std::vector<double> b_vec = to_std_vector(b);
+        orthogonalize(dets_, b_vec, bad_roots_);
+        set_psi_Vector(b, b_vec);
+        std::vector<double> sigma_vec;
+        apply_tau_H_ref_C_symm(spawning_threshold_, dets_, ref_C_, b_vec,
+                               sigma_vec, ref_size_);
+        set_psi_Vector(sigma, sigma_vec);
+    }
+}
+
+void PCISigmaVector::get_diagonal(psi::Vector& diag) {
+    std::memcpy(diag.pointer(), diag_.data(), size_);
+}
 
 void PCISigmaVector::add_bad_roots(
     std::vector<std::vector<std::pair<size_t, double>>>& bad_states) {}
 
-void PCISigmaVector::apply_tau_H_symm(double tau, double spawning_threshold, det_hashvec& ref_dets,
+void PCISigmaVector::compute_sigma_with_diag(psi::SharedVector sigma, psi::SharedVector b) {
+    compute_sigma(sigma, b);
+
+#pragma omp parallel for
+    for (size_t I = 0; I < size_; ++I) {
+        sigma->set(I, diag_[I] * b->get(I));
+    }
+}
+
+std::vector<double> PCISigmaVector::to_std_vector(psi::SharedVector c) {
+    const size_t c_size = c->dim();
+    std::vector<double> c_vec(c_size);
+    std::memcpy(c_vec.data(), c->pointer(), c_size);
+    return c_vec;
+}
+
+void PCISigmaVector::set_psi_Vector(psi::SharedVector c_psi, const std::vector<double>& c_vec) {
+    std::memcpy(c_psi->pointer(), c_vec.data(), c_vec.size());
+}
+
+void PCISigmaVector::orthogonalize(
+    const det_hashvec& space, std::vector<double>& C,
+    const std::vector<std::pair<det_hashvec, std::vector<double>>>& solutions) {
+    for (size_t n = 0, solution_size = solutions.size(); n < solution_size; ++n) {
+        double dot_prod = dot(space, C, solutions[n].first, solutions[n].second);
+        add(space, C, -dot_prod, solutions[n].first, solutions[n].second);
+    }
+}
+
+void PCISigmaVector::apply_tau_H_symm(double spawning_threshold, det_hashvec& ref_dets,
                                       std::vector<double>& ref_C, std::vector<double>& result_C,
-                                      double S, size_t& overlap_size) {
+                                      size_t& overlap_size) {
 
     size_t ref_size = ref_dets.size();
     //    result_dets.clear();
@@ -100,7 +169,7 @@ void PCISigmaVector::apply_tau_H_symm(double tau, double spawning_threshold, det
         { max_coupling = dets_max_couplings_[ref_dets[I]]; }
         if (max_coupling.first == 0.0 or max_coupling.second == 0.0) {
             thread_det_C_vecs[current_rank].clear();
-            apply_tau_H_symm_det_dynamic_HBCI_2(tau, spawning_threshold, ref_dets, ref_C, I,
+            apply_tau_H_symm_det_dynamic_HBCI_2(spawning_threshold, ref_dets, ref_C, I,
                                                 ref_C[I], result_C, thread_det_C_vecs[current_rank],
                                                 max_coupling);
 #pragma omp critical(merge_extra)
@@ -112,7 +181,7 @@ void PCISigmaVector::apply_tau_H_symm(double tau, double spawning_threshold, det
             { dets_max_couplings_[ref_dets[I]] = max_coupling; }
         } else {
             thread_det_C_vecs[current_rank].clear();
-            apply_tau_H_symm_det_dynamic_HBCI_2(tau, spawning_threshold, ref_dets, ref_C, I,
+            apply_tau_H_symm_det_dynamic_HBCI_2(spawning_threshold, ref_dets, ref_C, I,
                                                 ref_C[I], result_C, thread_det_C_vecs[current_rank],
                                                 max_coupling);
 #pragma omp critical(merge_extra)
@@ -138,40 +207,10 @@ void PCISigmaVector::apply_tau_H_symm(double tau, double spawning_threshold, det
     overlap_size = ref_dets.size();
     ref_dets.merge(extra_dets);
     result_C.insert(result_C.end(), extra_C.begin(), extra_C.end());
-
-#pragma omp parallel for
-    for (size_t I = 0; I < overlap_size; ++I) {
-        // Diagonal contribution
-        // parallel_timer_on("EWCI:diagonal", omp_get_thread_num());
-        double det_energy = as_ints_->energy(ref_dets[I]) + as_ints_->scalar_energy();
-        // parallel_timer_off("EWCI:diagonal", omp_get_thread_num());
-        // Diagonal contributions
-        result_C[I] += tau * (det_energy - S) * ref_C[I];
-    }
-
-    //    if (approx_E_flag_) {
-    //        timer_on("EWCI:<E>a");
-    //        double CHC_energy = 0.0;
-    //#pragma omp parallel for reduction(+ : CHC_energy)
-    //        for (size_t I = 0; I < overlap_size; ++I) {
-    //            CHC_energy += ref_C[I] * result_C[I];
-    //        }
-    //        CHC_energy = CHC_energy / tau + S + nuclear_repulsion_energy_;
-    //        timer_off("EWCI:<E>a");
-    //        double CHC_energy_gradient =
-    //            (CHC_energy - approx_energy_) / (time_step_ * energy_estimate_freq_);
-    //        old_approx_energy_ = approx_energy_;
-    //        approx_energy_ = CHC_energy;
-    //        approx_E_flag_ = false;
-    //        approx_E_tau_ = tau;
-    //        approx_E_S_ = S;
-    //        if (cycle_ != 0)
-    //            outfile->Printf(" %20.12f %10.3e", approx_energy_, CHC_energy_gradient);
-    //    }
 }
 
 void PCISigmaVector::apply_tau_H_symm_det_dynamic_HBCI_2(
-    double tau, double spawning_threshold, const det_hashvec& dets_hashvec,
+    double spawning_threshold, const det_hashvec& dets_hashvec,
     const std::vector<double>& pre_C, size_t I, double CI, std::vector<double>& result_C,
     std::vector<std::pair<Determinant, double>>& new_det_C_vec,
     std::pair<double, double>& max_coupling) {
@@ -225,7 +264,7 @@ void PCISigmaVector::apply_tau_H_symm_det_dynamic_HBCI_2(
                                 if (index >= pre_C_size) {
                                     if (important_H_CI_CJ_(HJI, CI, 0.0, spawning_threshold)) {
                                         new_det_C_vec.push_back(
-                                            std::make_pair(detJ, tau * HJI * CI));
+                                            std::make_pair(detJ, HJI * CI));
                                         diagonal_flag = true;
 #pragma omp atomic
                                         num_off_diag_elem_ += 2;
@@ -233,9 +272,9 @@ void PCISigmaVector::apply_tau_H_symm_det_dynamic_HBCI_2(
                                 } else if (important_H_CI_CJ_(HJI, CI, pre_C[index],
                                                               spawning_threshold)) {
 #pragma omp atomic
-                                    result_C[index] += tau * HJI * CI;
+                                    result_C[index] += HJI * CI;
                                     diagonal_flag = true;
-                                    diagonal_contribution += tau * HJI * pre_C[index];
+                                    diagonal_contribution += HJI * pre_C[index];
 #pragma omp atomic
                                     num_off_diag_elem_ += 2;
                                 }
@@ -277,7 +316,7 @@ void PCISigmaVector::apply_tau_H_symm_det_dynamic_HBCI_2(
                                 if (index >= pre_C_size) {
                                     if (important_H_CI_CJ_(HJI, CI, 0.0, spawning_threshold)) {
                                         new_det_C_vec.push_back(
-                                            std::make_pair(detJ, tau * HJI * CI));
+                                            std::make_pair(detJ, HJI * CI));
                                         diagonal_flag = true;
 #pragma omp atomic
                                         num_off_diag_elem_ += 2;
@@ -285,9 +324,9 @@ void PCISigmaVector::apply_tau_H_symm_det_dynamic_HBCI_2(
                                 } else if (important_H_CI_CJ_(HJI, CI, pre_C[index],
                                                               spawning_threshold)) {
 #pragma omp atomic
-                                    result_C[index] += tau * HJI * CI;
+                                    result_C[index] += HJI * CI;
                                     diagonal_flag = true;
-                                    diagonal_contribution += tau * HJI * pre_C[index];
+                                    diagonal_contribution += HJI * pre_C[index];
 #pragma omp atomic
                                     num_off_diag_elem_ += 2;
                                 }
@@ -334,7 +373,7 @@ void PCISigmaVector::apply_tau_H_symm_det_dynamic_HBCI_2(
                                 if (index >= pre_C_size) {
                                     if (important_H_CI_CJ_(HJI, CI, 0.0, spawning_threshold)) {
                                         new_det_C_vec.push_back(
-                                            std::make_pair(detJ, tau * HJI * CI));
+                                            std::make_pair(detJ, HJI * CI));
                                         diagonal_flag = true;
 #pragma omp atomic
                                         num_off_diag_elem_ += 2;
@@ -342,9 +381,9 @@ void PCISigmaVector::apply_tau_H_symm_det_dynamic_HBCI_2(
                                 } else if (important_H_CI_CJ_(HJI, CI, pre_C[index],
                                                               spawning_threshold)) {
 #pragma omp atomic
-                                    result_C[index] += tau * HJI * CI;
+                                    result_C[index] += HJI * CI;
                                     diagonal_flag = true;
-                                    diagonal_contribution += tau * HJI * pre_C[index];
+                                    diagonal_contribution += HJI * pre_C[index];
 #pragma omp atomic
                                     num_off_diag_elem_ += 2;
                                 }
@@ -388,7 +427,7 @@ void PCISigmaVector::apply_tau_H_symm_det_dynamic_HBCI_2(
                                 if (index >= pre_C_size) {
                                     if (important_H_CI_CJ_(HJI, CI, 0.0, spawning_threshold)) {
                                         new_det_C_vec.push_back(
-                                            std::make_pair(detJ, tau * HJI * CI));
+                                            std::make_pair(detJ, HJI * CI));
                                         diagonal_flag = true;
 #pragma omp atomic
                                         num_off_diag_elem_ += 2;
@@ -396,9 +435,9 @@ void PCISigmaVector::apply_tau_H_symm_det_dynamic_HBCI_2(
                                 } else if (important_H_CI_CJ_(HJI, CI, pre_C[index],
                                                               spawning_threshold)) {
 #pragma omp atomic
-                                    result_C[index] += tau * HJI * CI;
+                                    result_C[index] += HJI * CI;
                                     diagonal_flag = true;
-                                    diagonal_contribution += tau * HJI * pre_C[index];
+                                    diagonal_contribution += HJI * pre_C[index];
 #pragma omp atomic
                                     num_off_diag_elem_ += 2;
                                 }
@@ -443,7 +482,7 @@ void PCISigmaVector::apply_tau_H_symm_det_dynamic_HBCI_2(
                         if (index > I) {
                             if (index >= pre_C_size) {
                                 if (important_H_CI_CJ_(HJI, CI, 0.0, spawning_threshold)) {
-                                    new_det_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
+                                    new_det_C_vec.push_back(std::make_pair(detJ, HJI * CI));
                                     diagonal_flag = true;
 #pragma omp atomic
                                     num_off_diag_elem_ += 2;
@@ -451,9 +490,9 @@ void PCISigmaVector::apply_tau_H_symm_det_dynamic_HBCI_2(
                             } else if (important_H_CI_CJ_(HJI, CI, pre_C[index],
                                                           spawning_threshold)) {
 #pragma omp atomic
-                                result_C[index] += tau * HJI * CI;
+                                result_C[index] += HJI * CI;
                                 diagonal_flag = true;
-                                diagonal_contribution += tau * HJI * pre_C[index];
+                                diagonal_contribution += HJI * pre_C[index];
 #pragma omp atomic
                                 num_off_diag_elem_ += 2;
                             }
@@ -494,7 +533,7 @@ void PCISigmaVector::apply_tau_H_symm_det_dynamic_HBCI_2(
                         if (index > I) {
                             if (index >= pre_C_size) {
                                 if (important_H_CI_CJ_(HJI, CI, 0.0, spawning_threshold)) {
-                                    new_det_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
+                                    new_det_C_vec.push_back(std::make_pair(detJ, HJI * CI));
                                     diagonal_flag = true;
 #pragma omp atomic
                                     num_off_diag_elem_ += 2;
@@ -502,9 +541,9 @@ void PCISigmaVector::apply_tau_H_symm_det_dynamic_HBCI_2(
                             } else if (important_H_CI_CJ_(HJI, CI, pre_C[index],
                                                           spawning_threshold)) {
 #pragma omp atomic
-                                result_C[index] += tau * HJI * CI;
+                                result_C[index] += HJI * CI;
                                 diagonal_flag = true;
-                                diagonal_contribution += tau * HJI * pre_C[index];
+                                diagonal_contribution += HJI * pre_C[index];
 #pragma omp atomic
                                 num_off_diag_elem_ += 2;
                             }
@@ -545,7 +584,7 @@ void PCISigmaVector::apply_tau_H_symm_det_dynamic_HBCI_2(
                         if (index > I) {
                             if (index >= pre_C_size) {
                                 if (important_H_CI_CJ_(HJI, CI, 0.0, spawning_threshold)) {
-                                    new_det_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
+                                    new_det_C_vec.push_back(std::make_pair(detJ, HJI * CI));
                                     diagonal_flag = true;
 #pragma omp atomic
                                     num_off_diag_elem_ += 2;
@@ -553,9 +592,9 @@ void PCISigmaVector::apply_tau_H_symm_det_dynamic_HBCI_2(
                             } else if (important_H_CI_CJ_(HJI, CI, pre_C[index],
                                                           spawning_threshold)) {
 #pragma omp atomic
-                                result_C[index] += tau * HJI * CI;
+                                result_C[index] += HJI * CI;
                                 diagonal_flag = true;
-                                diagonal_contribution += tau * HJI * pre_C[index];
+                                diagonal_contribution += HJI * pre_C[index];
 #pragma omp atomic
                                 num_off_diag_elem_ += 2;
                             }
@@ -600,7 +639,7 @@ void PCISigmaVector::apply_tau_H_symm_det_dynamic_HBCI_2(
                         if (index > I) {
                             if (index >= pre_C_size) {
                                 if (important_H_CI_CJ_(HJI, CI, 0.0, spawning_threshold)) {
-                                    new_det_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
+                                    new_det_C_vec.push_back(std::make_pair(detJ, HJI * CI));
                                     diagonal_flag = true;
 #pragma omp atomic
                                     num_off_diag_elem_ += 2;
@@ -608,9 +647,9 @@ void PCISigmaVector::apply_tau_H_symm_det_dynamic_HBCI_2(
                             } else if (important_H_CI_CJ_(HJI, CI, pre_C[index],
                                                           spawning_threshold)) {
 #pragma omp atomic
-                                result_C[index] += tau * HJI * CI;
+                                result_C[index] += HJI * CI;
                                 diagonal_flag = true;
-                                diagonal_contribution += tau * HJI * pre_C[index];
+                                diagonal_contribution += HJI * pre_C[index];
 #pragma omp atomic
                                 num_off_diag_elem_ += 2;
                             }
@@ -652,7 +691,7 @@ void PCISigmaVector::apply_tau_H_symm_det_dynamic_HBCI_2(
                         if (index > I) {
                             if (index >= pre_C_size) {
                                 if (important_H_CI_CJ_(HJI, CI, 0.0, spawning_threshold)) {
-                                    new_det_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
+                                    new_det_C_vec.push_back(std::make_pair(detJ, HJI * CI));
                                     diagonal_flag = true;
 #pragma omp atomic
                                     num_off_diag_elem_ += 2;
@@ -660,9 +699,9 @@ void PCISigmaVector::apply_tau_H_symm_det_dynamic_HBCI_2(
                             } else if (important_H_CI_CJ_(HJI, CI, pre_C[index],
                                                           spawning_threshold)) {
 #pragma omp atomic
-                                result_C[index] += tau * HJI * CI;
+                                result_C[index] += HJI * CI;
                                 diagonal_flag = true;
-                                diagonal_contribution += tau * HJI * pre_C[index];
+                                diagonal_contribution += HJI * pre_C[index];
 #pragma omp atomic
                                 num_off_diag_elem_ += 2;
                             }
@@ -704,7 +743,7 @@ void PCISigmaVector::apply_tau_H_symm_det_dynamic_HBCI_2(
                         if (index > I) {
                             if (index >= pre_C_size) {
                                 if (important_H_CI_CJ_(HJI, CI, 0.0, spawning_threshold)) {
-                                    new_det_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
+                                    new_det_C_vec.push_back(std::make_pair(detJ, HJI * CI));
                                     diagonal_flag = true;
 #pragma omp atomic
                                     num_off_diag_elem_ += 2;
@@ -712,9 +751,9 @@ void PCISigmaVector::apply_tau_H_symm_det_dynamic_HBCI_2(
                             } else if (important_H_CI_CJ_(HJI, CI, pre_C[index],
                                                           spawning_threshold)) {
 #pragma omp atomic
-                                result_C[index] += tau * HJI * CI;
+                                result_C[index] += HJI * CI;
                                 diagonal_flag = true;
-                                diagonal_contribution += tau * HJI * pre_C[index];
+                                diagonal_contribution += HJI * pre_C[index];
 #pragma omp atomic
                                 num_off_diag_elem_ += 2;
                             }
@@ -741,12 +780,12 @@ void PCISigmaVector::apply_tau_H_symm_det_dynamic_HBCI_2(
     }
 }
 
-void PCISigmaVector::apply_tau_H_ref_C_symm(double tau, double spawning_threshold,
+void PCISigmaVector::apply_tau_H_ref_C_symm(double spawning_threshold,
                                             const det_hashvec& result_dets,
                                             const std::vector<double>& ref_C,
                                             const std::vector<double>& pre_C,
                                             std::vector<double>& result_C,
-                                            const size_t overlap_size, double S) {
+                                            const size_t overlap_size) {
 
     const size_t result_size = result_dets.size();
     result_C.clear();
@@ -756,23 +795,14 @@ void PCISigmaVector::apply_tau_H_ref_C_symm(double tau, double spawning_threshol
     for (size_t I = 0; I < overlap_size; ++I) {
         std::pair<double, double> max_coupling;
         max_coupling = dets_max_couplings_[result_dets[I]];
-        apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(tau, spawning_threshold, result_dets, pre_C,
+        apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(spawning_threshold, result_dets, pre_C,
                                                   ref_C, I, pre_C[I], ref_C[I], overlap_size,
                                                   result_C, max_coupling);
-    }
-#pragma omp parallel for
-    for (size_t I = 0; I < result_size; ++I) {
-        // Diagonal contribution
-        // parallel_timer_on("EWCI:diagonal", omp_get_thread_num());
-        double det_energy = as_ints_->energy(result_dets[I]) + as_ints_->scalar_energy();
-        // parallel_timer_off("EWCI:diagonal", omp_get_thread_num());
-        // Diagonal contributions
-        result_C[I] += tau * (det_energy - S) * pre_C[I];
     }
 }
 
 void PCISigmaVector::apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(
-    double tau, double spawning_threshold, const det_hashvec& dets_hashvec,
+    double spawning_threshold, const det_hashvec& dets_hashvec,
     const std::vector<double>& pre_C, const std::vector<double>& ref_C, size_t I, double CI,
     double ref_CI, const size_t overlap_size, std::vector<double>& result_C,
     const std::pair<double, double>& max_coupling) {
@@ -821,14 +851,14 @@ void PCISigmaVector::apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(
                                     if (important_H_CI_CJ_(HJI, ref_CI, ref_C[index],
                                                            spawning_threshold)) {
 #pragma omp atomic
-                                        result_C[index] += tau * HJI * CI;
-                                        diagonal_contribution += tau * HJI * pre_C[index];
+                                        result_C[index] += HJI * CI;
+                                        diagonal_contribution += HJI * pre_C[index];
                                     }
                                 } else if (important_H_CI_CJ_(HJI, ref_CI, 0.0,
                                                               spawning_threshold)) {
 #pragma omp atomic
-                                    result_C[index] += tau * HJI * CI;
-                                    diagonal_contribution += tau * HJI * pre_C[index];
+                                    result_C[index] += HJI * CI;
+                                    diagonal_contribution += HJI * pre_C[index];
                                 }
                             }
                             detJ.set_alfa_bit(i, true);
@@ -869,14 +899,14 @@ void PCISigmaVector::apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(
                                     if (important_H_CI_CJ_(HJI, ref_CI, ref_C[index],
                                                            spawning_threshold)) {
 #pragma omp atomic
-                                        result_C[index] += tau * HJI * CI;
-                                        diagonal_contribution += tau * HJI * pre_C[index];
+                                        result_C[index] += HJI * CI;
+                                        diagonal_contribution += HJI * pre_C[index];
                                     }
                                 } else if (important_H_CI_CJ_(HJI, ref_CI, 0.0,
                                                               spawning_threshold)) {
 #pragma omp atomic
-                                    result_C[index] += tau * HJI * CI;
-                                    diagonal_contribution += tau * HJI * pre_C[index];
+                                    result_C[index] += HJI * CI;
+                                    diagonal_contribution += HJI * pre_C[index];
                                 }
                             }
                             detJ.set_beta_bit(i, true);
@@ -919,13 +949,13 @@ void PCISigmaVector::apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(
                                 if (important_H_CI_CJ_(HJI, ref_CI, ref_C[index],
                                                        spawning_threshold)) {
 #pragma omp atomic
-                                    result_C[index] += tau * HJI * CI;
-                                    diagonal_contribution += tau * HJI * pre_C[index];
+                                    result_C[index] += HJI * CI;
+                                    diagonal_contribution += HJI * pre_C[index];
                                 }
                             } else if (important_H_CI_CJ_(HJI, ref_CI, 0.0, spawning_threshold)) {
 #pragma omp atomic
-                                result_C[index] += tau * HJI * CI;
-                                diagonal_contribution += tau * HJI * pre_C[index];
+                                result_C[index] += HJI * CI;
+                                diagonal_contribution += HJI * pre_C[index];
                             }
                         }
                         detJ.set_alfa_bit(i, true);
@@ -964,13 +994,13 @@ void PCISigmaVector::apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(
                                 if (important_H_CI_CJ_(HJI, ref_CI, ref_C[index],
                                                        spawning_threshold)) {
 #pragma omp atomic
-                                    result_C[index] += tau * HJI * CI;
-                                    diagonal_contribution += tau * HJI * pre_C[index];
+                                    result_C[index] += HJI * CI;
+                                    diagonal_contribution += HJI * pre_C[index];
                                 }
                             } else if (important_H_CI_CJ_(HJI, ref_CI, 0.0, spawning_threshold)) {
 #pragma omp atomic
-                                result_C[index] += tau * HJI * CI;
-                                diagonal_contribution += tau * HJI * pre_C[index];
+                                result_C[index] += HJI * CI;
+                                diagonal_contribution += HJI * pre_C[index];
                             }
                         }
                         detJ.set_alfa_bit(i, true);
@@ -1009,13 +1039,13 @@ void PCISigmaVector::apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(
                                 if (important_H_CI_CJ_(HJI, ref_CI, ref_C[index],
                                                        spawning_threshold)) {
 #pragma omp atomic
-                                    result_C[index] += tau * HJI * CI;
-                                    diagonal_contribution += tau * HJI * pre_C[index];
+                                    result_C[index] += HJI * CI;
+                                    diagonal_contribution += HJI * pre_C[index];
                                 }
                             } else if (important_H_CI_CJ_(HJI, ref_CI, 0.0, spawning_threshold)) {
 #pragma omp atomic
-                                result_C[index] += tau * HJI * CI;
-                                diagonal_contribution += tau * HJI * pre_C[index];
+                                result_C[index] += HJI * CI;
+                                diagonal_contribution += HJI * pre_C[index];
                             }
                         }
                         detJ.set_beta_bit(i, true);

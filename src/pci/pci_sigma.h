@@ -36,8 +36,7 @@ namespace forte {
 
 class PCISigmaVector : public SigmaVector {
   public:
-    PCISigmaVector(
-        det_hashvec& dets_hashvec, std::vector<double>& ref_C, double spawning_threshold,
+    PCISigmaVector(det_hashvec& dets_hashvec, std::vector<double> &ref_C, double spawning_threshold,
         std::shared_ptr<ActiveSpaceIntegrals> as_ints,
         std::function<bool(double, double, double)> prescreen_H_CI,
         std::function<bool(double, double, double, double)> important_H_CI_CJ,
@@ -59,9 +58,13 @@ class PCISigmaVector : public SigmaVector {
     void get_diagonal(psi::Vector& diag) override;
     void add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& bad_states) override;
 
+    void reset(std::vector<double>& ref_C);
+    void compute_sigma_with_diag(psi::SharedVector sigma, psi::SharedVector b);
+
   private:
     det_hashvec& dets_;
-    std::vector<double>& ref_C_;
+    std::vector<double> ref_C_;
+    size_t ref_size_;
     double spawning_threshold_;
     /// The molecular integrals for the active space
     /// This object holds only the integrals for the orbital contained in the active_mo_ vector.
@@ -87,37 +90,47 @@ class PCISigmaVector : public SigmaVector {
         &aa_couplings_, &ab_couplings_, &bb_couplings_;
     size_t aa_couplings_size_, ab_couplings_size_, bb_couplings_size_;
     const std::vector<std::pair<det_hashvec, std::vector<double>>> &bad_roots_;
+
+    std::vector<double> first_sigma_vec_;
+    /// The diagonal elements
+    std::vector<double> diag_;
     /// The number of off-diagonal elements
     size_t num_off_diag_elem_;
     /// The maximum number of threads
     int num_threads_;
 
+    std::vector<double> to_std_vector(psi::SharedVector c);
+    void set_psi_Vector(psi::SharedVector c_psi, const std::vector<double>& c_vec);
+
+    /// Orthogonalize the wave function to previous solutions
+    void orthogonalize(
+        const det_hashvec& space, std::vector<double>& C,
+        const std::vector<std::pair<det_hashvec, std::vector<double>>>& solutions);
+
     /// Apply symmetric approx tau H to a set of determinants with selection
     /// according to reference coefficients
-    void apply_tau_H_symm(double tau, double spawning_threshold, det_hashvec& dets_hashvec,
-                          std::vector<double>& ref_C, std::vector<double>& result_C, double S,
+    void apply_tau_H_symm(double spawning_threshold, det_hashvec& dets_hashvec,
+                          std::vector<double>& ref_C, std::vector<double>& result_C,
                           size_t& overlap_size);
 
     /// Apply symmetric approx tau H to a determinant using dynamic screening
     /// with selection according to a reference coefficient
     /// and with HBCI sorting scheme with singles screening
-    void apply_tau_H_symm_det_dynamic_HBCI_2(
-        double tau, double spawning_threshold, const det_hashvec& dets_hashvec,
+    void apply_tau_H_symm_det_dynamic_HBCI_2(double spawning_threshold, const det_hashvec& dets_hashvec,
         const std::vector<double>& pre_C, size_t I, double CI, std::vector<double>& result_C,
         std::vector<std::pair<Determinant, double>>& new_det_C_vec,
         std::pair<double, double>& max_coupling);
     /// Apply symmetric approx tau H to a set of determinants with selection
     /// according to reference coefficients
-    void apply_tau_H_ref_C_symm(double tau, double spawning_threshold,
+    void apply_tau_H_ref_C_symm(double spawning_threshold,
                                 const det_hashvec& result_dets, const std::vector<double>& ref_C,
                                 const std::vector<double>& pre_C, std::vector<double>& result_C,
-                                const size_t overlap_size, double S);
+                                const size_t overlap_size);
 
     /// Apply symmetric approx tau H to a determinant using dynamic screening
     /// with selection according to a reference coefficient
     /// and with HBCI sorting scheme with singles screening
-    void apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(
-        double tau, double spawning_threshold, const det_hashvec& dets_hashvec,
+    void apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(double spawning_threshold, const det_hashvec& dets_hashvec,
         const std::vector<double>& pre_C, const std::vector<double>& ref_C, size_t I, double CI,
         double ref_CI, const size_t overlap_size, std::vector<double>& result_C,
         const std::pair<double, double>& max_coupling);
