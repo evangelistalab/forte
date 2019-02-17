@@ -93,7 +93,7 @@ set forte{
   dsrg_s             0.5
   maxiter            50
   e_convergence      10
-  cas_type           cas
+  active_space_solver           cas
   avg_state          [[0,1,2]]
   dsrg_multi_state   ms
   form_hbar3         true

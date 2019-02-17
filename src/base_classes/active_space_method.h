@@ -30,6 +30,7 @@
 #define _active_space_method_h_
 
 #include <vector>
+#include <unordered_set>
 
 #include "base_classes/state_info.h"
 
@@ -141,6 +142,21 @@ class ActiveSpaceMethod {
     /// Return a vector with the energies of all the states
     const std::vector<double>& energies() const;
 
+    /// Return the number of roots computed
+    size_t nroot() const { return nroot_; }
+
+    /// Return the state info
+    const StateInfo& state() const { return state_; }
+
+    // I am not sure this is the place to put this support. Please modidy it if necessary.
+    /// Generate density file names at a certain RDM level
+    std::vector<std::string> generate_rdm_file_names(int rdm_level, int root1, int root2,
+                                                     const StateInfo& state2);
+    /// Check if density files for a given RDM level already exist
+    bool check_density_files(int rdm_level, int root1, int root2, const StateInfo& state2);
+    /// Remove density files for a given RDM level
+    void remove_density_files(int rdm_level, int root1, int root2, const StateInfo& state2);
+
     // ==> Base Class Handles Set Functions <==
 
     /// Set the energy convergence criterion
@@ -150,10 +166,6 @@ class ActiveSpaceMethod {
     /// Set the root that will be used to compute the properties
     /// @param the root (root = 0, 1, 2, ...)
     void set_root(int value);
-
-    /// Set the maximum RDM computed (0 - 3)
-    /// @param value the rank of the RDM
-    void set_max_rdm_level(int value);
 
     /// Set the print level
     /// @param level the print level (0 = no printing, 1 default)
@@ -189,9 +201,6 @@ class ActiveSpaceMethod {
     /// The root used to compute properties (zero based, default = 0)
     int root_ = 0;
 
-    /// The maximum RDM computed (0 - 3)
-    int max_rdm_level_ = 1;
-
     /// A variable to control printing information
     int print_ = 0;
 
@@ -200,6 +209,9 @@ class ActiveSpaceMethod {
 
     /// The energies (including nuclear repulsion) of all the states
     std::vector<double> energies_;
+
+    /// File names of RDMs or transition RDMs stored on disk
+    std::unordered_set<std::string> density_files_;
 };
 
 /**

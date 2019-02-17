@@ -46,7 +46,6 @@ def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
     active_space_solver_type = options.get_str('ACTIVE_SPACE_SOLVER')
     as_ints = forte.make_active_space_ints(mo_space_info, ints, "ACTIVE", ["RESTRICTED_DOCC"]);
     active_space_solver = forte.make_active_space_solver(active_space_solver_type,state_map,scf_info,mo_space_info,as_ints,options)
-    active_space_solver.set_max_rdm_level(max_rdm_level)
     state_energies_list = active_space_solver.compute_energy()
 
 
@@ -143,7 +142,6 @@ def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
                                                                    state_map,scf_info,
                                                                    mo_space_info,ints_dressed,
                                                                    options)
-                as_solver_relaxed.set_max_rdm_level(max_rdm_level)
                 state_energies_list = as_solver_relaxed.compute_energy()
                 Erelax = forte.compute_average_state_energy(state_energies_list,state_weights_map)
 

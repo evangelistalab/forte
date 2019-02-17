@@ -17,60 +17,6 @@ using namespace psi;
 
 namespace forte {
 
-void set_DWMS_options(ForteOptions& foptions) {
-    /**
-     * Weights of state α:
-     *    Wi = exp(-ζ * (Eα - Ei)^2) / sum_j exp(-ζ * (Eα - Ej)^2)
-     *
-     * Energies (Eα, Ei, Ej) can be CASCI or SA-DSRG-PT2/3 energies.
-     */
-
-    /*- Automatic weight switching -*/
-    foptions.add_double("DWMS_ZETA", 0.0, "Gaussian width cutoff for the density weights");
-
-    /*- DWMS-DSRG-PT correlation level -*/
-    foptions.add_str("DWMS_CORRLV", "PT2", {"PT2", "PT3"}, "DWMS-DSRG-PT level");
-
-    /*- Using what energies to compute the weight and what CI vectors to do multi state
-     * CAS: CASCI energies and CI vectors
-     * PT2: SA-DSRG-PT2 energies and SA-DSRG-PT2/CASCI vectors
-     * PT3: SA-DSRG-PT3 energies and SA-DSRG-PT3/CASCI vectors
-     * PT2D: Diagonal SA-DSRG-PT2c effective Hamiltonian elements and original CASCI vectors -*/
-    foptions.add_str("DWMS_REFERENCE", "CASCI", {"CASCI", "PT2", "PT3", "PT2D"},
-                     "Energies to compute dynamic weights and CI vectors to do multi-state");
-
-    /*- DWMS algorithms
-     *  - SA: state average Hαβ = 0.5 * ( <α|Hbar(β)|β> + <β|Hbar(α)|α> )
-     *  - XSA: extended state average (rotate Fαβ to a diagonal form)
-     *  - MS: multi-state (single-state single-reference)
-     *  - XMS: extended multi-state (single-state single-reference)
-     *
-     * To Be Deprecated:
-     *  - SH-0: separated diagonalizations, non-orthogonal final solutions
-     *  - SH-1: separated diagonalizations, orthogonal final solutions -*/
-    foptions.add_str("DWMS_ALGORITHM", "SA", {"MS", "XMS", "SA", "XSA", "SH-0", "SH-1"},
-                     "DWMS algorithms");
-
-    /*- Consider X(αβ) = A(β) - A(α) in SA algorithm if set to true -*/
-    foptions.add_bool("DWMS_DELTA_AMP", false,
-                      "Consider amplitudes difference between states in SA "
-                      "algorithm, testing in non-DF DSRG-MRPT2");
-
-    /*- Iteratively update the states coefficients -*/
-    foptions.add_bool("DWMS_ITERATE", false,
-                      "Iterative update the reference CI coefficients in SA "
-                      "algorithm, testing in non-DF DSRG-MRPT2");
-
-    /*- Max number of iteration for the update of reference CI coefficients -*/
-    foptions.add_int("DWMS_MAXITER", 10,
-                     "Max number of iteration in the update of the reference CI coefficients in SA "
-                     "algorithm, testing in non-DF DSRG-MRPT2");
-
-    /*- Energy convergence criteria for DWMS iteration -*/
-    foptions.add_double("DWMS_E_CONVERGENCE", 1.0e-7,
-                        "Energy convergence criteria for DWMS iteration");
-}
-
 DWMS_DSRGPT2::DWMS_DSRGPT2(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
                            std::shared_ptr<ForteIntegrals> ints,
                            std::shared_ptr<MOSpaceInfo> mo_space_info)
@@ -336,8 +282,7 @@ std::shared_ptr<FCI_MO> DWMS_DSRGPT2::precompute_energy() {
 
     // perform SA-DSRG-PT2/3 if needed
     if (dwms_ref_ != "CASCI") {
-        fci_mo->set_max_rdm_level(max_rdm_level_);
-        RDMs rdms = fci_mo->reference();
+        RDMs rdms = fci_mo->reference(max_rdm_level_); // TODO: bug here? (Francesco)
 
         std::shared_ptr<MASTER_DSRG> dsrg_pt;
         fci_ints_ = compute_dsrg_pt(dsrg_pt, rdms, dwms_ref_);
@@ -369,7 +314,7 @@ std::shared_ptr<FCI_MO> DWMS_DSRGPT2::precompute_energy() {
                     double value = 0.0;
 
                     auto filenames = fci_mo->density_filenames_generator(1, irrep, multi, A, A);
-                    bool files_exist = fci_mo->check_density_files(1, irrep, multi, A, A);
+                    bool files_exist = fci_mo->check_density_files_fcimo(1, irrep, multi, A, A);
                     if (files_exist) {
                         read_disk_vector_double(filenames[0], D1.block("aa").data());
                         read_disk_vector_double(filenames[1], D1.block("AA").data());
@@ -378,7 +323,7 @@ std::shared_ptr<FCI_MO> DWMS_DSRGPT2::precompute_energy() {
                     value += oei["UV"] * D1["UV"];
 
                     filenames = fci_mo->density_filenames_generator(2, irrep, multi, A, A);
-                    files_exist = fci_mo->check_density_files(2, irrep, multi, A, A);
+                    files_exist = fci_mo->check_density_files_fcimo(2, irrep, multi, A, A);
                     if (files_exist) {
                         read_disk_vector_double(filenames[0], D2.block("aaaa").data());
                         read_disk_vector_double(filenames[1], D2.block("aAaA").data());
@@ -438,16 +383,16 @@ DWMS_DSRGPT2::compute_dsrg_pt(std::shared_ptr<MASTER_DSRG>& dsrg_pt, RDMs& rdms,
         Ua_ = semi.Ua_t();
         Ub_ = semi.Ub_t();
 
-        dsrg_pt = std::make_shared<THREE_DSRG_MRPT2>(rdms, scf_info_, foptions_, ints_,
-                                                     mo_space_info_);
+        dsrg_pt =
+            std::make_shared<THREE_DSRG_MRPT2>(rdms, scf_info_, foptions_, ints_, mo_space_info_);
         dsrg_pt->set_Uactv(Ua_, Ub_);
     } else {
         if (level == "PT3") {
-            dsrg_pt = std::make_shared<DSRG_MRPT3>(rdms, scf_info_, foptions_, ints_,
-                                                   mo_space_info_);
+            dsrg_pt =
+                std::make_shared<DSRG_MRPT3>(rdms, scf_info_, foptions_, ints_, mo_space_info_);
         } else {
-            dsrg_pt = std::make_shared<DSRG_MRPT2>(rdms, scf_info_, foptions_, ints_,
-                                                   mo_space_info_);
+            dsrg_pt =
+                std::make_shared<DSRG_MRPT2>(rdms, scf_info_, foptions_, ints_, mo_space_info_);
         }
     }
 
@@ -473,12 +418,11 @@ DWMS_DSRGPT2::compute_macro_dsrg_pt(std::shared_ptr<MASTER_DSRG>& dsrg_pt,
 
     // compute RDMs
     fci_mo->set_sa_info(sa_info_new);
-    fci_mo->set_max_rdm_level(max_rdm_level_);
-    RDMs rdms = fci_mo->reference();
+    RDMs rdms = fci_mo->reference(max_rdm_level_); // TODO: bug here? (Francesco)
 
     // update MK vacuum energy
-    //double new_Eref = compute_Eref_from_rdms(reference, ints_, mo_space_info_, Enuc_);
-    //rdms.set_Eref(new_Eref); // TODO: ?why do this here this way?
+    // double new_Eref = compute_Eref_from_rdms(reference, ints_, mo_space_info_, Enuc_);
+    // rdms.set_Eref(new_Eref); // TODO: ?why do this here this way?
 
     // compute DSRG-PT2/3 energies and Hbar
     return compute_dsrg_pt(dsrg_pt, rdms, dwms_corrlv_);
@@ -669,8 +613,7 @@ void DWMS_DSRGPT2::compute_dwsa_energy(std::shared_ptr<FCI_MO>& fci_mo) {
                 auto& T1M = T1s[M];
                 auto& T2M = T2s[M];
                 for (int N = M + 1; N < nroots; ++N) {
-                    RDMs TrD =
-                        fci_mo->transition_reference(M, N, true, n, max_hbar_level_, false);
+                    RDMs TrD = fci_mo->transition_reference(M, N, true, n, max_hbar_level_, false);
 
                     T1M["ia"] -= T1s[N]["ia"];
                     T1M["IA"] -= T1s[N]["IA"];
@@ -815,7 +758,7 @@ void DWMS_DSRGPT2::compute_dwms_energy(std::shared_ptr<FCI_MO>& fci_mo) {
                 // compute transition densities
                 outfile->Printf("\n  Compute %s.", msg.c_str());
                 RDMs TrD = (M <= N) ? fci_mo->transition_reference(M, N, true, n, 3, false)
-                                         : fci_mo->transition_reference(N, M, true, n, 3, false);
+                                    : fci_mo->transition_reference(N, M, true, n, 3, false);
                 bool transpose = (M <= N) ? false : true;
 
                 outfile->Printf("\n  Contract %s with Heff.", msg.c_str());

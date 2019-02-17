@@ -30,7 +30,7 @@ set forte{
   active             [4,0,2,2]
   nrootpi            [1,0,1,0]
   dsrg_s             0.5
-  cas_type           cas
+  active_space_solver           cas
   multiplicity       1
   fcimo_actv_type    cisd
   fcimo_cisd_nohf    false

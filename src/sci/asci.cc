@@ -40,15 +40,6 @@ using namespace psi;
 
 namespace forte {
 
-void set_ASCI_options(ForteOptions& foptions) {
-    /* Convergence Threshold -*/
-    foptions.add_double("ASCI_E_CONVERGENCE", 1e-5, "ASCI energy convergence threshold");
-    foptions.add_int("ASCI_MAX_CYCLE", 20, "ASCI MAX Cycle");
-    foptions.add_int("ASCI_TDET", 2000, "ASCI Max det");
-    foptions.add_int("ASCI_CDET", 200, "ASCI Max reference det");
-    foptions.add_double("ASCI_PRESCREEN_THRESHOLD", 1e-12, "ASCI prescreening threshold");
-}
-
 bool pairCompDescend(const std::pair<double, Determinant> E1,
                      const std::pair<double, Determinant> E2) {
     return E1.first > E2.first;
@@ -551,10 +542,10 @@ std::vector<RDMs> ASCI::rdms(const std::vector<std::pair<size_t, size_t>>& root_
         if (max_rdm_level == 1) {
             refs.emplace_back(ordm_a_, ordm_b_);
         }
-        if (max_rdm_level_ == 2) {
+        if (max_rdm_level == 2) {
             refs.emplace_back(ordm_a_, ordm_b_, trdm_aa_, trdm_ab_, trdm_bb_);
         }
-        if (max_rdm_level_ == 3) {
+        if (max_rdm_level == 3) {
             refs.emplace_back(ordm_a_, ordm_b_, trdm_aa_, trdm_ab_, trdm_bb_, trdm_aaa_, trdm_aab_,
                               trdm_abb_, trdm_bbb_);
         }

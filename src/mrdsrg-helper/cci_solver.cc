@@ -20,11 +20,6 @@ ContractedCISolver::ContractedCISolver(std::shared_ptr<ActiveSpaceSolver> as_sol
 }
 
 void ContractedCISolver::compute_Heff() {
-    std::vector<std::string> irrep_labels = psi::Process::environment.molecule()->irrep_labels();
-    std::vector<std::string> multiplicity_labels{"Singlet", "Doublet", "Triplet", "Quartet",
-                                                 "Quintet", "Sextet",  "Septet",  "Octet",
-                                                 "Nonet",   "Decaet"};
-
     evals_.resize(as_solver_->get_state_weights_list().size());
     evecs_.resize(as_solver_->get_state_weights_list().size());
 
@@ -52,8 +47,8 @@ void ContractedCISolver::compute_Heff() {
         auto method = method_vec[i_state];
         method->set_max_rdm_level(do_three_body ? 3 : 2);
         int nroots = weights.size();
-        auto state_name =
-            multiplicity_labels[state.multiplicity()] + " " + irrep_labels[state.irrep()];
+        std::string state_name = state.multiplicity_label() + " " + state.irrep_label();
+
 
         // form the effective Hamiltonian (assume Hermitian)
         print_h2("Building Effective Hamiltonian for " + state_name);

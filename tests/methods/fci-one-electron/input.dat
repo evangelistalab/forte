@@ -26,7 +26,6 @@ set forte{
   frozen_docc      [0, 0, 0, 0, 0, 0, 0, 0]
   restricted_docc  [0, 0, 0, 0, 0, 0, 0, 0]
   active           [1, 0, 0, 0, 0, 0, 0, 0]
-  cas_type          fci
   multiplicity      2
   root_sym          0
   nroot             1

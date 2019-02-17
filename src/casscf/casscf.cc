@@ -359,10 +359,6 @@ void CASSCF::cas_ci() {
     std::string casscf_ci_type = options_->get_str("CASSCF_CI_SOLVER");
     auto active_space_solver = make_active_space_solver(casscf_ci_type, state_map, scf_info_,
                                                         mo_space_info_, fci_ints, options_);
-    active_space_solver->set_max_rdm_level(2);
-
-    //    fcisolver->set_root(options_->get_int("ROOT"));
-    //    fcisolver->set_active_space_integrals(fci_ints);
     const auto state_energies_map = active_space_solver->compute_energy();
     cas_ref_ = active_space_solver->compute_average_rdms(state_weights_map, 2);
     double average_energy = compute_average_state_energy(state_energies_map, state_weights_map);
@@ -716,7 +712,6 @@ void CASSCF::set_up_fci() {
 
     std::shared_ptr<ActiveSpaceMethod> fcisolver = make_active_space_method(
         "FCI", state_, nroot_, scf_info_, mo_space_info_, as_ints, options_);
-    fcisolver->set_max_rdm_level(3);
 
     fcisolver->set_root(options_->get_int("ROOT"));
     std::shared_ptr<ActiveSpaceIntegrals> fci_ints = get_ci_integrals();

@@ -43,7 +43,7 @@ set forte{
    restricted_docc         [19]
    active                  [2]
    dsrg_s                  1.0
-   cas_type                cas
+   active_space_solver                cas
    multiplicity            1
 }
 

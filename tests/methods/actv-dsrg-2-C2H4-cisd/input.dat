@@ -34,7 +34,7 @@ set forte{
   restricted_docc      [1,0,0,1,0,1,1,0]
   active               [1,0,1,1,0,1,1,1]
   dsrg_s               0.5
-  cas_type             cas
+  active_space_solver             cas
   fcimo_actv_type      cisd
   fcimo_cisd_nohf      true
   nrootpi              [1,0,0,0,0,1,0,0]

@@ -39,7 +39,7 @@ set forte {
     int_type          cholesky
     cholesky_tolerance 1e-14
     job_type           three-dsrg-mrpt2
-    cas_type           DMRG
+    active_space_solver           DMRG
 #    THREEPDC           ZERO
 }
 dsrg_dmrg = energy('forte')

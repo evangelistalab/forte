@@ -43,7 +43,7 @@ compare_values(Escf,variable("CURRENT ENERGY"),8,"DF-SCF(RHF) energy")
 set forte{
   job_type           dwms-dsrgpt2
   int_type           df
-  cas_type           cas
+  active_space_solver           cas
   dsrg_s             0.50
   frozen_docc        [2,1,0,0,0,0,2,1]
   restricted_docc    [4,2,0,0,0,0,3,3]

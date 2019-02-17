@@ -96,7 +96,6 @@ void export_ActiveSpaceSolver(py::module& m) {
         .def("compute_energy", &ActiveSpaceSolver::compute_energy)
         .def("rdms", &ActiveSpaceSolver::rdms)
         .def("compute_average_rdms", &ActiveSpaceSolver::compute_average_rdms)
-        .def("set_max_rdm_level", &ActiveSpaceSolver::set_max_rdm_level)
         .def("compute_contracted_energy", &ActiveSpaceSolver::compute_contracted_energy,
              "as_ints"_a, "max_body"_a,
              "Solve the contracted CI eigenvalue problem using given integrals")

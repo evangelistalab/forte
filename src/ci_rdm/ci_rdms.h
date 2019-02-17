@@ -51,6 +51,8 @@ class CI_RDMS {
     using det_hash_it = det_hash::iterator;
 
     // Class constructor and destructor
+    // I (York) think the following is correct, please check.
+    // e.g., <root1| p^+ q^+ s r | root2> = 2rdm[p*ncmo^(3) + q*ncmo^(2) + r*ncmo + s]
     CI_RDMS(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
             const std::vector<Determinant>& det_space, psi::SharedMatrix evecs, int root1,
             int root2);
