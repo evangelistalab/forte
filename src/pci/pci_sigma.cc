@@ -58,7 +58,8 @@ void set_psi_Vector(psi::SharedVector c_psi, const std::vector<double>& c_vec) {
     std::memcpy(c_psi->pointer(), c_vec.data(), c_vec.size() * sizeof(double));
 }
 
-PCISigmaVector::PCISigmaVector(det_hashvec& dets_hashvec, std::vector<double>& ref_C, double spawning_threshold,
+PCISigmaVector::PCISigmaVector(
+    det_hashvec& dets_hashvec, std::vector<double>& ref_C, double spawning_threshold,
     std::shared_ptr<ActiveSpaceIntegrals> as_ints,
     std::function<bool(double, double, double)> prescreen_H_CI,
     std::function<bool(double, double, double, double)> important_H_CI_CJ,
@@ -73,20 +74,16 @@ PCISigmaVector::PCISigmaVector(det_hashvec& dets_hashvec, std::vector<double>& r
     std::unordered_map<Determinant, std::pair<double, double>, Determinant::Hash>&
         dets_max_couplings,
     double dets_single_max_coupling, double dets_double_max_coupling,
-    const std::vector<std::pair<det_hashvec, std::vector<double> > > &bad_roots)
+    const std::vector<std::pair<det_hashvec, std::vector<double>>>& bad_roots)
     : SigmaVector(dets_hashvec.size()), dets_(dets_hashvec),
-      spawning_threshold_(spawning_threshold), as_ints_(as_ints),
-      prescreen_H_CI_(prescreen_H_CI),
-      important_H_CI_CJ_(important_H_CI_CJ),
-      dets_max_couplings_(dets_max_couplings),
-      dets_single_max_coupling_(dets_single_max_coupling),
-      a_couplings_(a_couplings), b_couplings_(b_couplings),
-      a_couplings_size_(a_couplings.size()), b_couplings_size_(b_couplings.size()),
-      dets_double_max_coupling_(dets_double_max_coupling),
+      spawning_threshold_(spawning_threshold), as_ints_(as_ints), prescreen_H_CI_(prescreen_H_CI),
+      important_H_CI_CJ_(important_H_CI_CJ), dets_max_couplings_(dets_max_couplings),
+      dets_single_max_coupling_(dets_single_max_coupling), a_couplings_(a_couplings),
+      b_couplings_(b_couplings), a_couplings_size_(a_couplings.size()),
+      b_couplings_size_(b_couplings.size()), dets_double_max_coupling_(dets_double_max_coupling),
       aa_couplings_(aa_couplings), ab_couplings_(ab_couplings), bb_couplings_(bb_couplings),
-      aa_couplings_size_(aa_couplings.size()),
-      ab_couplings_size_(ab_couplings.size()), bb_couplings_size_(bb_couplings.size()),
-      bad_roots_(bad_roots),
+      aa_couplings_size_(aa_couplings.size()), ab_couplings_size_(ab_couplings.size()),
+      bb_couplings_size_(bb_couplings.size()), bad_roots_(bad_roots),
       num_threads_(omp_get_max_threads()) {
     reset(ref_C);
 }
@@ -99,7 +96,8 @@ void PCISigmaVector::reset(std::vector<double>& ref_C) {
     ref_C_ = ref_C;
     size_ = dets_.size();
 
-    const double scaler_energy = as_ints_->scalar_energy() + as_ints_->ints()->nuclear_repulsion_energy();
+    const double scaler_energy =
+        as_ints_->scalar_energy() + as_ints_->ints()->nuclear_repulsion_energy();
 #pragma omp parallel for
     for (size_t I = ref_size_; I < size_; ++I) {
         diag_[I] = as_ints_->energy(dets_[I]) + scaler_energy;
@@ -107,9 +105,10 @@ void PCISigmaVector::reset(std::vector<double>& ref_C) {
 }
 
 void PCISigmaVector::compute_sigma(psi::SharedVector sigma, psi::SharedVector b) {
-    if ((not first_sigma_vec_.empty())
-            and 0 == std::memcmp(ref_C_.data(), b->pointer(), ref_size_)
-            and std::all_of(b->pointer() + ref_size_, b->pointer() + b->dim(), [](double x) { return x==0; })) {
+    if ((not first_sigma_vec_.empty()) and
+        0 == std::memcmp(ref_C_.data(), b->pointer(), ref_size_) and
+        std::all_of(b->pointer() + ref_size_, b->pointer() + b->dim(),
+                    [](double x) { return x == 0; })) {
         set_psi_Vector(sigma, first_sigma_vec_);
         first_sigma_vec_.clear();
     } else {
@@ -117,8 +116,7 @@ void PCISigmaVector::compute_sigma(psi::SharedVector sigma, psi::SharedVector b)
         orthogonalize(dets_, b_vec, bad_roots_);
         set_psi_Vector(b, b_vec);
         std::vector<double> sigma_vec;
-        apply_tau_H_ref_C_symm(spawning_threshold_, dets_, ref_C_, b_vec,
-                               sigma_vec, ref_size_);
+        apply_tau_H_ref_C_symm(spawning_threshold_, dets_, ref_C_, b_vec, sigma_vec, ref_size_);
         set_psi_Vector(sigma, sigma_vec);
     }
     ++sigma_build_count_;
@@ -140,13 +138,9 @@ void PCISigmaVector::compute_sigma_with_diag(psi::SharedVector sigma, psi::Share
     }
 }
 
-size_t PCISigmaVector::get_num_off_diag() {
-    return num_off_diag_elem_;
-}
+size_t PCISigmaVector::get_num_off_diag() { return num_off_diag_elem_; }
 
-size_t PCISigmaVector::get_sigma_build_count() {
-    return sigma_build_count_;
-}
+size_t PCISigmaVector::get_sigma_build_count() { return sigma_build_count_; }
 
 void PCISigmaVector::orthogonalize(
     const det_hashvec& space, std::vector<double>& C,
@@ -180,8 +174,8 @@ void PCISigmaVector::apply_tau_H_symm(double spawning_threshold, det_hashvec& re
         { max_coupling = dets_max_couplings_[ref_dets[I]]; }
         if (max_coupling.first == 0.0 or max_coupling.second == 0.0) {
             thread_det_C_vecs[current_rank].clear();
-            apply_tau_H_symm_det_dynamic_HBCI_2(spawning_threshold, ref_dets, ref_C, I,
-                                                ref_C[I], result_C, thread_det_C_vecs[current_rank],
+            apply_tau_H_symm_det_dynamic_HBCI_2(spawning_threshold, ref_dets, ref_C, I, ref_C[I],
+                                                result_C, thread_det_C_vecs[current_rank],
                                                 max_coupling);
 #pragma omp critical(merge_extra)
             {
@@ -192,8 +186,8 @@ void PCISigmaVector::apply_tau_H_symm(double spawning_threshold, det_hashvec& re
             { dets_max_couplings_[ref_dets[I]] = max_coupling; }
         } else {
             thread_det_C_vecs[current_rank].clear();
-            apply_tau_H_symm_det_dynamic_HBCI_2(spawning_threshold, ref_dets, ref_C, I,
-                                                ref_C[I], result_C, thread_det_C_vecs[current_rank],
+            apply_tau_H_symm_det_dynamic_HBCI_2(spawning_threshold, ref_dets, ref_C, I, ref_C[I],
+                                                result_C, thread_det_C_vecs[current_rank],
                                                 max_coupling);
 #pragma omp critical(merge_extra)
             {
@@ -220,7 +214,8 @@ void PCISigmaVector::apply_tau_H_symm(double spawning_threshold, det_hashvec& re
     result_C.insert(result_C.end(), extra_C.begin(), extra_C.end());
 
     diag_.resize(ref_dets.size());
-    const double scaler_energy = as_ints_->scalar_energy() + as_ints_->ints()->nuclear_repulsion_energy();
+    const double scaler_energy =
+        as_ints_->scalar_energy() + as_ints_->ints()->nuclear_repulsion_energy();
 #pragma omp parallel for
     for (size_t I = 0; I < overlap_size; ++I) {
         diag_[I] = as_ints_->energy(ref_dets[I]) + scaler_energy;
@@ -229,8 +224,8 @@ void PCISigmaVector::apply_tau_H_symm(double spawning_threshold, det_hashvec& re
 }
 
 void PCISigmaVector::apply_tau_H_symm_det_dynamic_HBCI_2(
-    double spawning_threshold, const det_hashvec& dets_hashvec,
-    const std::vector<double>& pre_C, size_t I, double CI, std::vector<double>& result_C,
+    double spawning_threshold, const det_hashvec& dets_hashvec, const std::vector<double>& pre_C,
+    size_t I, double CI, std::vector<double>& result_C,
     std::vector<std::pair<Determinant, double>>& new_det_C_vec,
     std::pair<double, double>& max_coupling) {
 
@@ -261,7 +256,8 @@ void PCISigmaVector::apply_tau_H_symm_det_dynamic_HBCI_2(
             }
             int i = std::get<0>(a_couplings_[x]);
             if (detI.get_alfa_bit(i)) {
-                const std::vector<std::tuple<int, double>>& sub_couplings = std::get<2>(a_couplings_[x]);
+                const std::vector<std::tuple<int, double>>& sub_couplings =
+                    std::get<2>(a_couplings_[x]);
                 size_t sub_couplings_size = sub_couplings.size();
                 for (size_t y = 0; y < sub_couplings_size; ++y) {
                     int a;
@@ -282,8 +278,7 @@ void PCISigmaVector::apply_tau_H_symm_det_dynamic_HBCI_2(
                             if (index > I) {
                                 if (index >= pre_C_size) {
                                     if (important_H_CI_CJ_(HJI, CI, 0.0, spawning_threshold)) {
-                                        new_det_C_vec.push_back(
-                                            std::make_pair(detJ, HJI * CI));
+                                        new_det_C_vec.push_back(std::make_pair(detJ, HJI * CI));
                                         diagonal_flag = true;
 #pragma omp atomic
                                         num_off_diag_elem_ += 2;
@@ -314,7 +309,8 @@ void PCISigmaVector::apply_tau_H_symm_det_dynamic_HBCI_2(
             }
             int i = std::get<0>(b_couplings_[x]);
             if (detI.get_beta_bit(i)) {
-                const std::vector<std::tuple<int, double>>& sub_couplings = std::get<2>(b_couplings_[x]);
+                const std::vector<std::tuple<int, double>>& sub_couplings =
+                    std::get<2>(b_couplings_[x]);
                 size_t sub_couplings_size = sub_couplings.size();
                 for (size_t y = 0; y < sub_couplings_size; ++y) {
                     int a;
@@ -334,8 +330,7 @@ void PCISigmaVector::apply_tau_H_symm_det_dynamic_HBCI_2(
                             if (index > I) {
                                 if (index >= pre_C_size) {
                                     if (important_H_CI_CJ_(HJI, CI, 0.0, spawning_threshold)) {
-                                        new_det_C_vec.push_back(
-                                            std::make_pair(detJ, HJI * CI));
+                                        new_det_C_vec.push_back(std::make_pair(detJ, HJI * CI));
                                         diagonal_flag = true;
 #pragma omp atomic
                                         num_off_diag_elem_ += 2;
@@ -369,7 +364,8 @@ void PCISigmaVector::apply_tau_H_symm_det_dynamic_HBCI_2(
             }
             int i = std::get<0>(a_couplings_[x]);
             if (detI.get_alfa_bit(i)) {
-                const std::vector<std::tuple<int, double>>& sub_couplings = std::get<2>(a_couplings_[x]);
+                const std::vector<std::tuple<int, double>>& sub_couplings =
+                    std::get<2>(a_couplings_[x]);
                 size_t sub_couplings_size = sub_couplings.size();
                 for (size_t y = 0; y < sub_couplings_size; ++y) {
                     int a;
@@ -391,8 +387,7 @@ void PCISigmaVector::apply_tau_H_symm_det_dynamic_HBCI_2(
                             if (index > I) {
                                 if (index >= pre_C_size) {
                                     if (important_H_CI_CJ_(HJI, CI, 0.0, spawning_threshold)) {
-                                        new_det_C_vec.push_back(
-                                            std::make_pair(detJ, HJI * CI));
+                                        new_det_C_vec.push_back(std::make_pair(detJ, HJI * CI));
                                         diagonal_flag = true;
 #pragma omp atomic
                                         num_off_diag_elem_ += 2;
@@ -423,7 +418,8 @@ void PCISigmaVector::apply_tau_H_symm_det_dynamic_HBCI_2(
             }
             int i = std::get<0>(b_couplings_[x]);
             if (detI.get_beta_bit(i)) {
-                const std::vector<std::tuple<int, double>>& sub_couplings = std::get<2>(b_couplings_[x]);
+                const std::vector<std::tuple<int, double>>& sub_couplings =
+                    std::get<2>(b_couplings_[x]);
                 size_t sub_couplings_size = sub_couplings.size();
                 for (size_t y = 0; y < sub_couplings_size; ++y) {
                     int a;
@@ -445,8 +441,7 @@ void PCISigmaVector::apply_tau_H_symm_det_dynamic_HBCI_2(
                             if (index > I) {
                                 if (index >= pre_C_size) {
                                     if (important_H_CI_CJ_(HJI, CI, 0.0, spawning_threshold)) {
-                                        new_det_C_vec.push_back(
-                                            std::make_pair(detJ, HJI * CI));
+                                        new_det_C_vec.push_back(std::make_pair(detJ, HJI * CI));
                                         diagonal_flag = true;
 #pragma omp atomic
                                         num_off_diag_elem_ += 2;
@@ -799,12 +794,9 @@ void PCISigmaVector::apply_tau_H_symm_det_dynamic_HBCI_2(
     }
 }
 
-void PCISigmaVector::apply_tau_H_ref_C_symm(double spawning_threshold,
-                                            const det_hashvec& result_dets,
-                                            const std::vector<double>& ref_C,
-                                            const std::vector<double>& pre_C,
-                                            std::vector<double>& result_C,
-                                            const size_t overlap_size) {
+void PCISigmaVector::apply_tau_H_ref_C_symm(
+    double spawning_threshold, const det_hashvec& result_dets, const std::vector<double>& ref_C,
+    const std::vector<double>& pre_C, std::vector<double>& result_C, const size_t overlap_size) {
 
     const size_t result_size = result_dets.size();
     result_C.clear();
@@ -814,9 +806,9 @@ void PCISigmaVector::apply_tau_H_ref_C_symm(double spawning_threshold,
     for (size_t I = 0; I < overlap_size; ++I) {
         std::pair<double, double> max_coupling;
         max_coupling = dets_max_couplings_[result_dets[I]];
-        apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(spawning_threshold, result_dets, pre_C,
-                                                  ref_C, I, pre_C[I], ref_C[I], overlap_size,
-                                                  result_C, max_coupling);
+        apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(spawning_threshold, result_dets, pre_C, ref_C, I,
+                                                  pre_C[I], ref_C[I], overlap_size, result_C,
+                                                  max_coupling);
     }
 
 #pragma omp parallel for
@@ -826,10 +818,9 @@ void PCISigmaVector::apply_tau_H_ref_C_symm(double spawning_threshold,
 }
 
 void PCISigmaVector::apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(
-    double spawning_threshold, const det_hashvec& dets_hashvec,
-    const std::vector<double>& pre_C, const std::vector<double>& ref_C, size_t I, double CI,
-    double ref_CI, const size_t overlap_size, std::vector<double>& result_C,
-    const std::pair<double, double>& max_coupling) {
+    double spawning_threshold, const det_hashvec& dets_hashvec, const std::vector<double>& pre_C,
+    const std::vector<double>& ref_C, size_t I, double CI, double ref_CI, const size_t overlap_size,
+    std::vector<double>& result_C, const std::pair<double, double>& max_coupling) {
 
     const Determinant& detI = dets_hashvec[I];
 
@@ -852,7 +843,8 @@ void PCISigmaVector::apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(
             }
             int i = std::get<0>(a_couplings_[x]);
             if (detI.get_alfa_bit(i)) {
-                const std::vector<std::tuple<int, double>>& sub_couplings = std::get<2>(a_couplings_[x]);
+                const std::vector<std::tuple<int, double>>& sub_couplings =
+                    std::get<2>(a_couplings_[x]);
                 size_t sub_couplings_size = sub_couplings.size();
                 for (size_t y = 0; y < sub_couplings_size; ++y) {
                     int a;
@@ -900,7 +892,8 @@ void PCISigmaVector::apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(
             }
             int i = std::get<0>(b_couplings_[x]);
             if (detI.get_beta_bit(i)) {
-                const std::vector<std::tuple<int, double>>& sub_couplings = std::get<2>(b_couplings_[x]);
+                const std::vector<std::tuple<int, double>>& sub_couplings =
+                    std::get<2>(b_couplings_[x]);
                 size_t sub_couplings_size = sub_couplings.size();
                 for (size_t y = 0; y < sub_couplings_size; ++y) {
                     int a;

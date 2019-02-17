@@ -386,7 +386,8 @@ double ElementwiseCI::estimate_high_energy() {
     //    }
     lambda_h_ = high_obt_energy + as_ints_->frozen_core_energy() + as_ints_->scalar_energy();
 
-    double lambda_h_G = as_ints_->energy(high_det) + as_ints_->scalar_energy() + nuclear_repulsion_energy_;
+    double lambda_h_G =
+        as_ints_->energy(high_det) + as_ints_->scalar_energy() + nuclear_repulsion_energy_;
     std::vector<int> aocc = high_det.get_alfa_occ(nact_);
     std::vector<int> bocc = high_det.get_beta_occ(nact_);
     std::vector<int> avir = high_det.get_alfa_vir(nact_);
@@ -502,8 +503,7 @@ double ElementwiseCI::estimate_high_energy() {
     outfile->Printf("\n  Determinant Energy                    :  %.12f",
                     as_ints_->energy(high_det) + nuclear_repulsion_energy_ +
                         as_ints_->scalar_energy());
-    outfile->Printf("\n  Highest Energy Gershgorin circle Est. :  %.12f",
-                    lambda_h_);
+    outfile->Printf("\n  Highest Energy Gershgorin circle Est. :  %.12f", lambda_h_);
     return lambda_h_;
 }
 
@@ -654,10 +654,9 @@ bool ElementwiseCI::check_convergence() {
 
         switch (generator_) {
         case DLGenerator:
-            outfile->Printf("\n%9d %8d %10zu %13zu %20.12f %10.3e %20.12f %10.3e     ~",
-                            cycle_, current_davidson_iter_, C_.size(), num_off_diag_elem_,
-                            proj_energy_, proj_energy_gradient,
-                            approx_energy_, approx_energy_gradient);
+            outfile->Printf("\n%9d %8d %10zu %13zu %20.12f %10.3e %20.12f %10.3e     ~", cycle_,
+                            current_davidson_iter_, C_.size(), num_off_diag_elem_, proj_energy_,
+                            proj_energy_gradient, approx_energy_, approx_energy_gradient);
             break;
         default:
             outfile->Printf("\n%9d %8.2f %10zu %13zu %20.12f %10.3e", cycle_, time_step_ * cycle_,
@@ -838,25 +837,24 @@ double ElementwiseCI::initial_guess(det_hashvec& dets_hashvec, std::vector<doubl
     dets_hashvec.add(bs_det);
     std::vector<double> start_C(1, 1.0);
     //    det_hashvec result_dets;
-//    size_t overlap_size;
+    //    size_t overlap_size;
 
     PCISigmaVector sigma_vector(dets_hashvec, start_C, initial_guess_spawning_threshold_, as_ints_,
-                                prescreen_H_CI_, important_H_CI_CJ_,
-                                a_couplings_, b_couplings_,
-                                aa_couplings_, ab_couplings_, bb_couplings_,
-                                dets_max_couplings_, dets_single_max_coupling_,
-                                dets_double_max_coupling_, solutions_);
+                                prescreen_H_CI_, important_H_CI_CJ_, a_couplings_, b_couplings_,
+                                aa_couplings_, ab_couplings_, bb_couplings_, dets_max_couplings_,
+                                dets_single_max_coupling_, dets_double_max_coupling_, solutions_);
 
-//    overlap_size = C.size();
+    //    overlap_size = C.size();
     psi::SharedVector C_psi = std::make_shared<psi::Vector>(sigma_vector.size()),
-            sigma_psi = std::make_shared<psi::Vector>(sigma_vector.size());
+                      sigma_psi = std::make_shared<psi::Vector>(sigma_vector.size());
     set_psi_Vector(C_psi, start_C);
     sigma_vector.compute_sigma(sigma_psi, C_psi);
     C = to_std_vector(sigma_psi);
     num_off_diag_elem_ = sigma_vector.get_num_off_diag();
 
-//    apply_tau_H_symm(time_step_, initial_guess_spawning_threshold_, dets_hashvec, start_C, C, 0.0,
-//                     overlap_size);
+    //    apply_tau_H_symm(time_step_, initial_guess_spawning_threshold_, dets_hashvec, start_C, C,
+    //    0.0,
+    //                     overlap_size);
 
     //    dets_hashvec.swap(result_dets);
     size_t guess_size = dets_hashvec.size();
@@ -947,16 +945,14 @@ void ElementwiseCI::propagate_wallCh(det_hashvec& dets_hashvec, std::vector<doub
 
     double root = -cos(((double)chebyshev_order_) * PI / (chebyshev_order_ + 0.5));
 
-    PCISigmaVector sigma_vector(dets_hashvec, ref_C, spawning_threshold, as_ints_,
-                                prescreen_H_CI_, important_H_CI_CJ_,
-                                a_couplings_, b_couplings_,
-                                aa_couplings_, ab_couplings_, bb_couplings_,
-                                dets_max_couplings_, dets_single_max_coupling_,
-                                dets_double_max_coupling_, solutions_);
+    PCISigmaVector sigma_vector(dets_hashvec, ref_C, spawning_threshold, as_ints_, prescreen_H_CI_,
+                                important_H_CI_CJ_, a_couplings_, b_couplings_, aa_couplings_,
+                                ab_couplings_, bb_couplings_, dets_max_couplings_,
+                                dets_single_max_coupling_, dets_double_max_coupling_, solutions_);
 
     overlap_size = ref_C.size();
     psi::SharedVector C_psi = std::make_shared<psi::Vector>(sigma_vector.size()),
-            sigma_psi = std::make_shared<psi::Vector>(sigma_vector.size());
+                      sigma_psi = std::make_shared<psi::Vector>(sigma_vector.size());
     set_psi_Vector(C_psi, ref_C);
     sigma_vector.compute_sigma(sigma_psi, C_psi);
     sigma_psi->scale(-1.0);
@@ -988,8 +984,8 @@ void ElementwiseCI::propagate_wallCh(det_hashvec& dets_hashvec, std::vector<doub
         if (cycle_ != 0)
             outfile->Printf(" %20.12f %10.3e     ~", approx_energy_, CHC_energy_gradient);
     }
-//    apply_tau_H_symm(-1.0, spawning_threshold, dets_hashvec, ref_C, C, range_ * root + shift_,
-//                     overlap_size);
+    //    apply_tau_H_symm(-1.0, spawning_threshold, dets_hashvec, ref_C, C, range_ * root + shift_,
+    //                     overlap_size);
     normalize(C);
 
     for (int i = chebyshev_order_ - 1; i > 0; i--) {
@@ -1006,12 +1002,12 @@ void ElementwiseCI::propagate_wallCh(det_hashvec& dets_hashvec, std::vector<doub
         sigma_psi->scale(-1.0);
         result_C = to_std_vector(sigma_psi);
         S = range_ * root + shift_;
-    #pragma omp parallel for
+#pragma omp parallel for
         for (size_t I = 0; I < sigma_vector.size(); ++I) {
             result_C[I] += S * C[I];
         }
-//        apply_tau_H_ref_C_symm(-1.0, spawning_threshold, dets_hashvec, ref_C, C, result_C,
-//                               overlap_size, range_ * root + shift_);
+        //        apply_tau_H_ref_C_symm(-1.0, spawning_threshold, dets_hashvec, ref_C, C, result_C,
+        //                               overlap_size, range_ * root + shift_);
         C.swap(result_C);
         //        copy_hash_to_vec_order_ref(dets_C_hash, dets, C);
         //        dets_hashvec = det_hashvec(dets_C_hash, C);
@@ -1026,12 +1022,10 @@ void ElementwiseCI::propagate_wallCh(det_hashvec& dets_hashvec, std::vector<doub
 
 void ElementwiseCI::propagate_DL(det_hashvec& dets_hashvec, std::vector<double>& C,
                                  double spawning_threshold) {
-    PCISigmaVector sigma_vector(dets_hashvec, C, spawning_threshold, as_ints_,
-                                prescreen_H_CI_, important_H_CI_CJ_,
-                                a_couplings_, b_couplings_,
-                                aa_couplings_, ab_couplings_, bb_couplings_,
-                                dets_max_couplings_, dets_single_max_coupling_,
-                                dets_double_max_coupling_, solutions_);
+    PCISigmaVector sigma_vector(dets_hashvec, C, spawning_threshold, as_ints_, prescreen_H_CI_,
+                                important_H_CI_CJ_, a_couplings_, b_couplings_, aa_couplings_,
+                                ab_couplings_, bb_couplings_, dets_max_couplings_,
+                                dets_single_max_coupling_, dets_double_max_coupling_, solutions_);
     num_off_diag_elem_ = sigma_vector.get_num_off_diag();
     size_t ref_size = C.size(), result_size = sigma_vector.size();
     std::vector<std::pair<size_t, double>> guess(ref_size);
@@ -1043,7 +1037,8 @@ void ElementwiseCI::propagate_DL(det_hashvec& dets_hashvec, std::vector<double>&
     sparse_solver_.set_spin_project(false);
     psi::SharedMatrix PQ_evecs_;
     psi::SharedVector PQ_evals_;
-    sparse_solver_.diagonalize_hamiltonian(dets_hashvec.toVector(), PQ_evals_, PQ_evecs_, nroot_, state_.multiplicity(), Sparse);
+    sparse_solver_.diagonalize_hamiltonian(dets_hashvec.toVector(), PQ_evals_, PQ_evecs_, nroot_,
+                                           state_.multiplicity(), Sparse);
     current_davidson_iter_ = sigma_vector.get_sigma_build_count();
     old_approx_energy_ = approx_energy_;
     approx_energy_ = PQ_evals_->get(0);
