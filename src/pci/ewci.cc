@@ -948,8 +948,9 @@ void ElementwiseCI::propagate_wallCh(det_hashvec& dets_hashvec, std::vector<doub
 
 #pragma omp parallel for
     for (size_t I = 0; I < overlap_size; ++I) {
-        double det_energy = as_ints_->energy(dets_hashvec[I]) + as_ints_->scalar_energy();
-        C[I] += -1.0 * (det_energy - (range_ * root + shift_)) * ref_C[I];
+//        double det_energy = as_ints_->energy(dets_hashvec[I]) + as_ints_->scalar_energy();
+//        C[I] += -1.0 * (det_energy - (range_ * root + shift_)) * ref_C[I];
+        C[I] += -1.0 * ( - (range_ * root + shift_)) * ref_C[I];
     }
 
     if (approx_E_flag_) {
@@ -990,8 +991,9 @@ void ElementwiseCI::propagate_wallCh(det_hashvec& dets_hashvec, std::vector<doub
         result_C = to_std_vector(sigma_psi);
     #pragma omp parallel for
         for (size_t I = 0; I < sigma_vector.size(); ++I) {
-            double det_energy = as_ints_->energy(dets_hashvec[I]) + as_ints_->scalar_energy();
-            result_C[I] += -1.0 * (det_energy - (range_ * root + shift_)) * C[I];
+//            double det_energy = as_ints_->energy(dets_hashvec[I]) + as_ints_->scalar_energy();
+//            result_C[I] += -1.0 * (det_energy - (range_ * root + shift_)) * C[I];
+            result_C[I] += -1.0 * ( - (range_ * root + shift_)) * C[I];
         }
 //        apply_tau_H_ref_C_symm(-1.0, spawning_threshold, dets_hashvec, ref_C, C, result_C,
 //                               overlap_size, range_ * root + shift_);
@@ -1009,242 +1011,270 @@ void ElementwiseCI::propagate_wallCh(det_hashvec& dets_hashvec, std::vector<doub
 
 void ElementwiseCI::propagate_DL(det_hashvec& dets_hashvec, std::vector<double>& C,
                                  double spawning_threshold) {
-    size_t ref_size = C.size();
-    //    det_hashvec result_dets;
-    size_t overlap_size;
-    std::vector<std::vector<double>> b_vec(davidson_subspace_per_root_);
-    std::vector<std::vector<double>> sigma_vec(davidson_subspace_per_root_);
-    std::vector<double> alpha_vec(davidson_subspace_per_root_);
-    psi::SharedMatrix A(new psi::Matrix(davidson_subspace_per_root_, davidson_subspace_per_root_));
-    //    det_hash<> dets_C_hash;
-    //    apply_tau_H_ref_C_symm(1.0, spawning_threshold, dets, b_vec[0], C,
-    //                           dets_C_hash, 0.0);
-    //    copy_hash_to_vec_order_ref(dets_C_hash, dets, sigma_vec[0]);
-    //    det_hashvec dets_hashvec(dets);
     PCISigmaVector sigma_vector(dets_hashvec, C, spawning_threshold, as_ints_,
                                 prescreen_H_CI_, important_H_CI_CJ_,
                                 a_couplings_, b_couplings_,
                                 aa_couplings_, ab_couplings_, bb_couplings_,
                                 dets_max_couplings_, dets_single_max_coupling_,
                                 dets_double_max_coupling_, solutions_);
-
-    overlap_size = C.size();
-    psi::SharedVector C_psi = std::make_shared<psi::Vector>(sigma_vector.size()),
-            sigma_psi = std::make_shared<psi::Vector>(sigma_vector.size());
-    set_psi_Vector(C_psi, C);
-    sigma_vector.compute_sigma(sigma_psi, C_psi);
-    sigma_vec[0] = to_std_vector(sigma_psi);
     num_off_diag_elem_ = sigma_vector.get_num_off_diag();
-
-#pragma omp parallel for
-    for (size_t I = 0; I < overlap_size; ++I) {
-        double det_energy = as_ints_->energy(dets_hashvec[I]) + as_ints_->scalar_energy();
-        sigma_vec[0][I] += det_energy * C[I];
+    size_t ref_size = C.size(), result_size = sigma_vector.size();
+    std::vector<std::pair<size_t, double>> guess(ref_size);
+    for (size_t I = 0; I < ref_size; ++I) {
+        guess[I] = std::make_pair(I, C[I]);
     }
-
-    if (approx_E_flag_) {
-        timer_on("EWCI:<E>a");
-        double CHC_energy = 0.0;
-#pragma omp parallel for reduction(+ : CHC_energy)
-        for (size_t I = 0; I < overlap_size; ++I) {
-            CHC_energy += C[I] * sigma_vec[0][I];
-        }
-        CHC_energy = CHC_energy + nuclear_repulsion_energy_;
-        timer_off("EWCI:<E>a");
-        double CHC_energy_gradient =
-            (CHC_energy - approx_energy_) / (time_step_ * energy_estimate_freq_);
-        old_approx_energy_ = approx_energy_;
-        approx_energy_ = CHC_energy;
-        approx_E_flag_ = false;
-        approx_E_tau_ = 1.0;
-        approx_E_S_ = 0.0;
-        if (cycle_ != 0)
-            outfile->Printf(" %20.12f %10.3e", approx_energy_, CHC_energy_gradient);
+    sparse_solver_.set_sigma_vector(&sigma_vector);
+    sparse_solver_.set_initial_guess(guess);
+    sparse_solver_.set_spin_project(false);
+    psi::SharedMatrix PQ_evecs_;
+    psi::SharedVector PQ_evals_;
+    sparse_solver_.diagonalize_hamiltonian(dets_hashvec.toVector(), PQ_evals_, PQ_evecs_, nroot_, state_.multiplicity(), Sparse);
+    old_approx_energy_ = approx_energy_;
+    approx_energy_ = PQ_evals_->get(0) + nuclear_repulsion_energy_;
+    C.resize(result_size);
+    for (size_t I = 0; I < result_size; ++I) {
+        C[I] = PQ_evecs_->get(I, 0);
     }
-//    apply_tau_H_symm(1.0, spawning_threshold, dets_hashvec, C, sigma_vec[0], 0.0, overlap_size);
-    orthogonalize(dets_hashvec, sigma_vec[0], solutions_);
-    //    b_vec[0].resize(overlap_size);
-    //    b_vec[0].resize(dets_hashvec.size(), 0.0);
-    //    dets_hashvec = result_dets;
-    //    dets = dets_hashvec.toVector();
-    if (ref_size <= 1) {
-        C = sigma_vec[0];
-        outfile->Printf("\nDavidson break because the reference space have "
-                        "only 1 determinant.");
-        current_davidson_iter_ = 1;
-        return;
-    }
-
-    size_t dets_size = dets_hashvec.size();
-    b_vec[0] = C;
-    A->set(0, 0, dot(b_vec[0], sigma_vec[0]));
-    b_vec[0].resize(dets_size, 0.0);
-
-    std::vector<double> diag_vec(dets_size);
-#pragma omp parallel for
-    for (size_t i = 0; i < dets_size; i++) {
-        diag_vec[i] = as_ints_->energy(dets_hashvec[i]) + as_ints_->scalar_energy();
-    }
-
-    double lambda = A->get(0, 0);
-    alpha_vec[0] = 1.0;
-    std::vector<double> delta_vec(dets_size, 0.0);
-    size_t current_order = 1;
-
-    int i = 1;
-    for (i = 1; i < max_Davidson_iter_; i++) {
-
-        for (size_t k = 0; k < current_order; k++) {
-#pragma omp parallel for
-            for (size_t j = 0; j < dets_size; j++) {
-                delta_vec[j] += alpha_vec[k] * (sigma_vec[k][j] - lambda * b_vec[k][j]);
-            }
-        }
-#pragma omp parallel for
-        for (size_t j = 0; j < dets_size; j++) {
-            delta_vec[j] /= lambda - diag_vec[j];
-        }
-
-        normalize(delta_vec);
-        for (size_t m = 0; m < current_order; m++) {
-            double delta_dot_bm = dot(delta_vec, b_vec[m]);
-            add(delta_vec, -delta_dot_bm, b_vec[m]);
-        }
-        double correct_norm = normalize(delta_vec);
-        if (correct_norm < 1e-4) {
-            outfile->Printf("\nDavidson break at %d-th iter because the "
-                            "correction norm %10.3e is too small.",
-                            i, correct_norm);
-            break;
-        }
-        if (correct_norm > 1e1) {
-            outfile->Printf("\nDavidson break at %d-th iter because the "
-                            "correction norm %10.3e is too large.",
-                            i, correct_norm);
-            break;
-        }
-        //        print_vector(delta_vec, "delta_vec");
-        b_vec[current_order] = delta_vec;
-
-        //        dets_C_hash.clear();
-        //        apply_tau_H_ref_C_symm(1.0, spawning_threshold, dets,
-        //                               b_vec[current_order], C, dets_C_hash,
-        //                               0.0);
-        //        copy_hash_to_vec_order_ref(dets_C_hash, dets,
-        //        sigma_vec[current_order]);
-        //        dets_hashvec = det_hashvec(dets);
-        set_psi_Vector(C_psi, b_vec[current_order]);
-        sigma_vector.compute_sigma(sigma_psi, C_psi);
-        sigma_vec[current_order] = to_std_vector(sigma_psi);
-    #pragma omp parallel for
-        for (size_t I = 0; I < sigma_vector.size(); ++I) {
-            double det_energy = as_ints_->energy(dets_hashvec[I]) + as_ints_->scalar_energy();
-            sigma_vec[current_order][I] += det_energy * b_vec[current_order][I];
-        }
-//        apply_tau_H_ref_C_symm(1.0, spawning_threshold, dets_hashvec, C, b_vec[current_order],
-//                               sigma_vec[current_order], overlap_size, 0.0);
-        orthogonalize(dets_hashvec, sigma_vec[current_order], solutions_);
-        //        dets = dets_hashvec.toVector();
-        for (size_t m = 0; m < current_order; m++) {
-            double b_dot_sigma_m = dot(b_vec[current_order], sigma_vec[m]);
-            A->set(current_order, m, b_dot_sigma_m);
-            A->set(m, current_order, b_dot_sigma_m);
-        }
-        A->set(current_order, current_order, dot(b_vec[current_order], sigma_vec[current_order]));
-
-        current_order++;
-        psi::SharedMatrix G(new psi::Matrix(current_order, current_order));
-
-        for (size_t k = 0; k < current_order; k++) {
-            for (size_t j = 0; j < current_order; j++) {
-                G->set(k, j, A->get(k, j));
-            }
-        }
-        psi::SharedMatrix evecs(new psi::Matrix(current_order, current_order));
-        psi::SharedVector eigs(new Vector(current_order));
-        G->diagonalize(evecs, eigs);
-
-        double e_gradiant = -lambda;
-
-        lambda = eigs->get(0);
-        for (size_t j = 0; j < current_order; j++) {
-            alpha_vec[j] = evecs->get(j, 0);
-        }
-        e_gradiant += lambda;
-        outfile->Printf("\nDavidson iter %4d order %4d correction norm %10.3e dE %10.3e E %18.12f.",
-                        i, current_order, correct_norm, e_gradiant,
-                        lambda + nuclear_repulsion_energy_ + as_ints_->scalar_energy());
-        if (std::fabs(e_gradiant) < e_convergence_) {
-            i++;
-            break;
-        }
-        if (current_order >= davidson_subspace_per_root_) {
-#pragma omp parallel for
-            for (size_t j = 0; j < dets_size; j++) {
-                std::vector<double> b_j(davidson_collapse_per_root_, 0.0);
-                std::vector<double> sigma_j(davidson_collapse_per_root_, 0.0);
-                for (size_t l = 0; l < davidson_collapse_per_root_; l++) {
-                    for (size_t k = 0; k < current_order; k++) {
-                        b_j[l] += evecs->get(k, l) * b_vec[k][j];
-                        sigma_j[l] += evecs->get(k, l) * sigma_vec[k][j];
-                    }
-                }
-                for (size_t l = 0; l < davidson_collapse_per_root_; l++) {
-                    b_vec[l][j] = b_j[l];
-                    sigma_vec[l][j] = sigma_j[l];
-                }
-            }
-            for (size_t l = davidson_collapse_per_root_; l < davidson_subspace_per_root_; l++) {
-                b_vec[l].clear();
-                sigma_vec[l].clear();
-            }
-            for (size_t m = 0; m < davidson_collapse_per_root_; m++) {
-                for (size_t n = 0; n <= m; n++) {
-                    double n_dot_sigma_m = dot(b_vec[n], sigma_vec[m]);
-                    A->set(n, m, n_dot_sigma_m);
-                    A->set(m, n, n_dot_sigma_m);
-                }
-            }
-            alpha_vec[0] = 1.0;
-            for (size_t l = 1; l < davidson_subspace_per_root_; l++) {
-                alpha_vec[l] = 0.0;
-            }
-            outfile->Printf("\nDavidson collapsed from %d vectors to %d vectors.", current_order,
-                            davidson_collapse_per_root_);
-            current_order = davidson_collapse_per_root_;
-        }
-    }
-
-    //    for (int i = 0; i < krylov_order_; i++) {
-    //        print_vector(b_vec[i], "b_vec["+std::to_string(i)+"]");
-    //    }
-
-    current_davidson_iter_ = i;
-
-    //    scale(C, alpha_vec[0]);
-    //    C.clear();
-    C = b_vec[0];
-    scale(C, alpha_vec[0]);
-    C.resize(dets_hashvec.size(), 0.0);
-    //    b_vec[0].resize(dets.size(), 0.0);
-    for (size_t i = 1; i < current_order; i++) {
-#pragma omp parallel for
-        for (size_t j = 0; j < dets_size; j++) {
-            C[j] += alpha_vec[i] * b_vec[i][j];
-        }
-    }
-    //    dets = dets_hashvec.toVector();
-
-    //    std::vector<double> C2;
-    //    C2.resize(dets.size(), 0.0);
-    //    for (int i = 0; i < current_order; i++) {
-    //        for (int j = 0; j < b_vec[i].size(); j++) {
-    //            C2[j] += alpha_vec[i] * b_vec[i][j];
-    //        }
-    //    }
-    //    add(C2, -1.0, C);
-    //    outfile->Printf("\nC2 norm %10.3e", norm(C2));
 }
+
+//void ElementwiseCI::propagate_DL(det_hashvec& dets_hashvec, std::vector<double>& C,
+//                                 double spawning_threshold) {
+//    size_t ref_size = C.size();
+//    //    det_hashvec result_dets;
+//    size_t overlap_size;
+//    std::vector<std::vector<double>> b_vec(davidson_subspace_per_root_);
+//    std::vector<std::vector<double>> sigma_vec(davidson_subspace_per_root_);
+//    std::vector<double> alpha_vec(davidson_subspace_per_root_);
+//    psi::SharedMatrix A(new psi::Matrix(davidson_subspace_per_root_, davidson_subspace_per_root_));
+//    //    det_hash<> dets_C_hash;
+//    //    apply_tau_H_ref_C_symm(1.0, spawning_threshold, dets, b_vec[0], C,
+//    //                           dets_C_hash, 0.0);
+//    //    copy_hash_to_vec_order_ref(dets_C_hash, dets, sigma_vec[0]);
+//    //    det_hashvec dets_hashvec(dets);
+//    PCISigmaVector sigma_vector(dets_hashvec, C, spawning_threshold, as_ints_,
+//                                prescreen_H_CI_, important_H_CI_CJ_,
+//                                a_couplings_, b_couplings_,
+//                                aa_couplings_, ab_couplings_, bb_couplings_,
+//                                dets_max_couplings_, dets_single_max_coupling_,
+//                                dets_double_max_coupling_, solutions_);
+
+//    overlap_size = C.size();
+//    psi::SharedVector C_psi = std::make_shared<psi::Vector>(sigma_vector.size()),
+//            sigma_psi = std::make_shared<psi::Vector>(sigma_vector.size());
+//    set_psi_Vector(C_psi, C);
+//    sigma_vector.compute_sigma(sigma_psi, C_psi);
+//    sigma_vec[0] = to_std_vector(sigma_psi);
+//    num_off_diag_elem_ = sigma_vector.get_num_off_diag();
+
+//#pragma omp parallel for
+//    for (size_t I = 0; I < overlap_size; ++I) {
+//        double det_energy = as_ints_->energy(dets_hashvec[I]) + as_ints_->scalar_energy();
+//        sigma_vec[0][I] += det_energy * C[I];
+//    }
+
+//    if (approx_E_flag_) {
+//        timer_on("EWCI:<E>a");
+//        double CHC_energy = 0.0;
+//#pragma omp parallel for reduction(+ : CHC_energy)
+//        for (size_t I = 0; I < overlap_size; ++I) {
+//            CHC_energy += C[I] * sigma_vec[0][I];
+//        }
+//        CHC_energy = CHC_energy + nuclear_repulsion_energy_;
+//        timer_off("EWCI:<E>a");
+//        double CHC_energy_gradient =
+//            (CHC_energy - approx_energy_) / (time_step_ * energy_estimate_freq_);
+//        old_approx_energy_ = approx_energy_;
+//        approx_energy_ = CHC_energy;
+//        approx_E_flag_ = false;
+//        approx_E_tau_ = 1.0;
+//        approx_E_S_ = 0.0;
+//        if (cycle_ != 0)
+//            outfile->Printf(" %20.12f %10.3e", approx_energy_, CHC_energy_gradient);
+//    }
+////    apply_tau_H_symm(1.0, spawning_threshold, dets_hashvec, C, sigma_vec[0], 0.0, overlap_size);
+//    orthogonalize(dets_hashvec, sigma_vec[0], solutions_);
+//    //    b_vec[0].resize(overlap_size);
+//    //    b_vec[0].resize(dets_hashvec.size(), 0.0);
+//    //    dets_hashvec = result_dets;
+//    //    dets = dets_hashvec.toVector();
+//    if (ref_size <= 1) {
+//        C = sigma_vec[0];
+//        outfile->Printf("\nDavidson break because the reference space have "
+//                        "only 1 determinant.");
+//        current_davidson_iter_ = 1;
+//        return;
+//    }
+
+//    size_t dets_size = dets_hashvec.size();
+//    b_vec[0] = C;
+//    A->set(0, 0, dot(b_vec[0], sigma_vec[0]));
+//    b_vec[0].resize(dets_size, 0.0);
+
+//    std::vector<double> diag_vec(dets_size);
+//#pragma omp parallel for
+//    for (size_t i = 0; i < dets_size; i++) {
+//        diag_vec[i] = as_ints_->energy(dets_hashvec[i]) + as_ints_->scalar_energy();
+//    }
+
+//    double lambda = A->get(0, 0);
+//    alpha_vec[0] = 1.0;
+//    std::vector<double> delta_vec(dets_size, 0.0);
+//    size_t current_order = 1;
+
+//    int i = 1;
+//    for (i = 1; i < max_Davidson_iter_; i++) {
+
+//        for (size_t k = 0; k < current_order; k++) {
+//#pragma omp parallel for
+//            for (size_t j = 0; j < dets_size; j++) {
+//                delta_vec[j] += alpha_vec[k] * (sigma_vec[k][j] - lambda * b_vec[k][j]);
+//            }
+//        }
+//#pragma omp parallel for
+//        for (size_t j = 0; j < dets_size; j++) {
+//            delta_vec[j] /= lambda - diag_vec[j];
+//        }
+
+//        normalize(delta_vec);
+//        for (size_t m = 0; m < current_order; m++) {
+//            double delta_dot_bm = dot(delta_vec, b_vec[m]);
+//            add(delta_vec, -delta_dot_bm, b_vec[m]);
+//        }
+//        double correct_norm = normalize(delta_vec);
+//        if (correct_norm < 1e-4) {
+//            outfile->Printf("\nDavidson break at %d-th iter because the "
+//                            "correction norm %10.3e is too small.",
+//                            i, correct_norm);
+//            break;
+//        }
+//        if (correct_norm > 1e1) {
+//            outfile->Printf("\nDavidson break at %d-th iter because the "
+//                            "correction norm %10.3e is too large.",
+//                            i, correct_norm);
+//            break;
+//        }
+//        //        print_vector(delta_vec, "delta_vec");
+//        b_vec[current_order] = delta_vec;
+
+//        //        dets_C_hash.clear();
+//        //        apply_tau_H_ref_C_symm(1.0, spawning_threshold, dets,
+//        //                               b_vec[current_order], C, dets_C_hash,
+//        //                               0.0);
+//        //        copy_hash_to_vec_order_ref(dets_C_hash, dets,
+//        //        sigma_vec[current_order]);
+//        //        dets_hashvec = det_hashvec(dets);
+//        set_psi_Vector(C_psi, b_vec[current_order]);
+//        sigma_vector.compute_sigma(sigma_psi, C_psi);
+//        sigma_vec[current_order] = to_std_vector(sigma_psi);
+//    #pragma omp parallel for
+//        for (size_t I = 0; I < sigma_vector.size(); ++I) {
+//            double det_energy = as_ints_->energy(dets_hashvec[I]) + as_ints_->scalar_energy();
+//            sigma_vec[current_order][I] += det_energy * b_vec[current_order][I];
+//        }
+////        apply_tau_H_ref_C_symm(1.0, spawning_threshold, dets_hashvec, C, b_vec[current_order],
+////                               sigma_vec[current_order], overlap_size, 0.0);
+//        orthogonalize(dets_hashvec, sigma_vec[current_order], solutions_);
+//        //        dets = dets_hashvec.toVector();
+//        for (size_t m = 0; m < current_order; m++) {
+//            double b_dot_sigma_m = dot(b_vec[current_order], sigma_vec[m]);
+//            A->set(current_order, m, b_dot_sigma_m);
+//            A->set(m, current_order, b_dot_sigma_m);
+//        }
+//        A->set(current_order, current_order, dot(b_vec[current_order], sigma_vec[current_order]));
+
+//        current_order++;
+//        psi::SharedMatrix G(new psi::Matrix(current_order, current_order));
+
+//        for (size_t k = 0; k < current_order; k++) {
+//            for (size_t j = 0; j < current_order; j++) {
+//                G->set(k, j, A->get(k, j));
+//            }
+//        }
+//        psi::SharedMatrix evecs(new psi::Matrix(current_order, current_order));
+//        psi::SharedVector eigs(new Vector(current_order));
+//        G->diagonalize(evecs, eigs);
+
+//        double e_gradiant = -lambda;
+
+//        lambda = eigs->get(0);
+//        for (size_t j = 0; j < current_order; j++) {
+//            alpha_vec[j] = evecs->get(j, 0);
+//        }
+//        e_gradiant += lambda;
+//        outfile->Printf("\nDavidson iter %4d order %4d correction norm %10.3e dE %10.3e E %18.12f.",
+//                        i, current_order, correct_norm, e_gradiant,
+//                        lambda + nuclear_repulsion_energy_ + as_ints_->scalar_energy());
+//        if (std::fabs(e_gradiant) < e_convergence_) {
+//            i++;
+//            break;
+//        }
+//        if (current_order >= davidson_subspace_per_root_) {
+//#pragma omp parallel for
+//            for (size_t j = 0; j < dets_size; j++) {
+//                std::vector<double> b_j(davidson_collapse_per_root_, 0.0);
+//                std::vector<double> sigma_j(davidson_collapse_per_root_, 0.0);
+//                for (size_t l = 0; l < davidson_collapse_per_root_; l++) {
+//                    for (size_t k = 0; k < current_order; k++) {
+//                        b_j[l] += evecs->get(k, l) * b_vec[k][j];
+//                        sigma_j[l] += evecs->get(k, l) * sigma_vec[k][j];
+//                    }
+//                }
+//                for (size_t l = 0; l < davidson_collapse_per_root_; l++) {
+//                    b_vec[l][j] = b_j[l];
+//                    sigma_vec[l][j] = sigma_j[l];
+//                }
+//            }
+//            for (size_t l = davidson_collapse_per_root_; l < davidson_subspace_per_root_; l++) {
+//                b_vec[l].clear();
+//                sigma_vec[l].clear();
+//            }
+//            for (size_t m = 0; m < davidson_collapse_per_root_; m++) {
+//                for (size_t n = 0; n <= m; n++) {
+//                    double n_dot_sigma_m = dot(b_vec[n], sigma_vec[m]);
+//                    A->set(n, m, n_dot_sigma_m);
+//                    A->set(m, n, n_dot_sigma_m);
+//                }
+//            }
+//            alpha_vec[0] = 1.0;
+//            for (size_t l = 1; l < davidson_subspace_per_root_; l++) {
+//                alpha_vec[l] = 0.0;
+//            }
+//            outfile->Printf("\nDavidson collapsed from %d vectors to %d vectors.", current_order,
+//                            davidson_collapse_per_root_);
+//            current_order = davidson_collapse_per_root_;
+//        }
+//    }
+
+//    //    for (int i = 0; i < krylov_order_; i++) {
+//    //        print_vector(b_vec[i], "b_vec["+std::to_string(i)+"]");
+//    //    }
+
+//    current_davidson_iter_ = i;
+
+//    //    scale(C, alpha_vec[0]);
+//    //    C.clear();
+//    C = b_vec[0];
+//    scale(C, alpha_vec[0]);
+//    C.resize(dets_hashvec.size(), 0.0);
+//    //    b_vec[0].resize(dets.size(), 0.0);
+//    for (size_t i = 1; i < current_order; i++) {
+//#pragma omp parallel for
+//        for (size_t j = 0; j < dets_size; j++) {
+//            C[j] += alpha_vec[i] * b_vec[i][j];
+//        }
+//    }
+//    //    dets = dets_hashvec.toVector();
+
+//    //    std::vector<double> C2;
+//    //    C2.resize(dets.size(), 0.0);
+//    //    for (int i = 0; i < current_order; i++) {
+//    //        for (int j = 0; j < b_vec[i].size(); j++) {
+//    //            C2[j] += alpha_vec[i] * b_vec[i][j];
+//    //        }
+//    //    }
+//    //    add(C2, -1.0, C);
+//    //    outfile->Printf("\nC2 norm %10.3e", norm(C2));
+//}
 
 void ElementwiseCI::apply_tau_H_symm(double tau, double spawning_threshold, det_hashvec& ref_dets,
                                      std::vector<double>& ref_C, std::vector<double>& result_C,

@@ -22,11 +22,11 @@
     -----------------------------------------------------------------------
 
 
-    Psi4 started on: Friday, 15 February 2019 02:58PM
+    Psi4 started on: Sunday, 17 February 2019 03:04AM
 
-    Process ID: 7139
-    Host:       tianyuans-air.wireless.emory.edu
-    PSIDATADIR: /Users/tianyuanzhang/Documents/Source/psi4_2018/psi4-bin-clang-debug/share/psi4
+    Process ID: 4422
+    Host:       DESKTOP-JOFFIR0
+    PSIDATADIR: /home/zty/Source/psi4-github-bin-g++-7.3.0-opt-c++17/share/psi4
     Memory:     500.0 MiB
     Threads:    1
     
@@ -39,7 +39,7 @@
 import forte
 
 refscf = -14.6097447380899563 #TEST
-refpci = -14.534282241080 #TEST
+refpci = -14.515843385662 #TEST
 
 molecule li2{
    Li
@@ -57,26 +57,27 @@ set forte {
   nroot 2
   PCI_GENERATOR dl
   pci_spawning_threshold 0.0001
-  pci_e_convergence 12
+  pci_e_convergence 8
   PCI_STOP_HIGHER_NEW_LOW true
+  DL_MAXITER 1000
 }
 
 energy('scf')
 compare_values(refscf, variable("CURRENT ENERGY"), 10, "SCF energy") #TEST
 
 energy('forte')
-compare_values(refpci, variable("EWCI ENERGY"), 9, "EWCI excited state energy") #TEST
+compare_values(refpci, variable("EWCI ENERGY"), 7, "EWCI excited state energy") #TEST
 --------------------------------------------------------------------------
 
-*** tstart() called on tianyuans-air.wireless.emory.edu
-*** at Fri Feb 15 14:58:15 2019
+*** tstart() called on DESKTOP-JOFFIR0
+*** at Sun Feb 17 03:04:56 2019
 
    => Loading Basis Set <=
 
     Name: STO-3G
     Role: ORBITAL
     Keyword: BASIS
-    atoms 1-2 entry LI         line    31 file /Users/tianyuanzhang/Documents/Source/psi4_2018/psi4-bin-clang-debug/share/psi4/basis/sto-3g.gbs 
+    atoms 1-2 entry LI         line    31 file /home/zty/Source/psi4-github-bin-g++-7.3.0-opt-c++17/share/psi4/basis/sto-3g.gbs 
 
 
          ---------------------------------------------------------
@@ -186,14 +187,14 @@ compare_values(refpci, variable("EWCI ENERGY"), 9, "EWCI excited state energy") 
 
                         Total Energy        Delta E     RMS |[F,P]|
 
-   @RHF iter   0:   -14.58573852679841   -1.45857e+01   6.38128e-02 
-   @RHF iter   1:   -14.60879129707150   -2.30528e-02   3.90853e-03 
-   @RHF iter   2:   -14.60956780353629   -7.76506e-04   1.49380e-03 DIIS
+   @RHF iter   0:   -14.58573852679840   -1.45857e+01   6.38128e-02 
+   @RHF iter   1:   -14.60879129707151   -2.30528e-02   3.90853e-03 
+   @RHF iter   2:   -14.60956780353628   -7.76506e-04   1.49380e-03 DIIS
    @RHF iter   3:   -14.60974068441564   -1.72881e-04   2.15662e-04 DIIS
    @RHF iter   4:   -14.60974473615713   -4.05174e-06   4.32612e-06 DIIS
    @RHF iter   5:   -14.60974473808782   -1.93069e-09   1.41353e-07 DIIS
-   @RHF iter   6:   -14.60974473808995   -2.12985e-12   3.63226e-09 DIIS
-   @RHF iter   7:   -14.60974473808996   -7.10543e-15   1.73384e-11 DIIS
+   @RHF iter   6:   -14.60974473808996   -2.13873e-12   3.63226e-09 DIIS
+   @RHF iter   7:   -14.60974473808995    7.10543e-15   1.73382e-11 DIIS
   Energy converged.
 
 
@@ -216,14 +217,14 @@ compare_values(refpci, variable("EWCI ENERGY"), 9, "EWCI excited state energy") 
              Ag   B1g   B2g   B3g    Au   B1u   B2u   B3u 
     DOCC [     2,    0,    0,    0,    0,    1,    0,    0 ]
 
-  @RHF Final Energy:   -14.60974473808996
+  @RHF Final Energy:   -14.60974473808995
 
    => Energetics <=
 
     Nuclear Repulsion Energy =              2.3812974480149989
-    One-Electron Energy =                 -24.3030864655733509
-    Two-Electron Energy =                   7.3120442794683909
-    Total Energy =                        -14.6097447380899617
+    One-Electron Energy =                 -24.3030864655733438
+    Two-Electron Energy =                   7.3120442794683917
+    Total Energy =                        -14.6097447380899546
 
 Computation Completed
 
@@ -245,26 +246,26 @@ Properties computed using the SCF density matrix
      X:     0.0000      Y:     0.0000      Z:     0.0000     Total:     0.0000
 
 
-*** tstop() called on tianyuans-air.wireless.emory.edu at Fri Feb 15 14:58:16 2019
+*** tstop() called on DESKTOP-JOFFIR0 at Sun Feb 17 03:04:57 2019
 Module time:
-	user time   =       0.49 seconds =       0.01 minutes
-	system time =       0.02 seconds =       0.00 minutes
+	user time   =       0.28 seconds =       0.00 minutes
+	system time =       0.00 seconds =       0.00 minutes
 	total time  =          1 seconds =       0.02 minutes
 Total time:
-	user time   =       0.49 seconds =       0.01 minutes
-	system time =       0.02 seconds =       0.00 minutes
+	user time   =       0.28 seconds =       0.00 minutes
+	system time =       0.00 seconds =       0.00 minutes
 	total time  =          1 seconds =       0.02 minutes
 	SCF energy........................................................PASSED
 
-*** tstart() called on tianyuans-air.wireless.emory.edu
-*** at Fri Feb 15 14:58:16 2019
+*** tstart() called on DESKTOP-JOFFIR0
+*** at Sun Feb 17 03:04:57 2019
 
    => Loading Basis Set <=
 
     Name: STO-3G
     Role: ORBITAL
     Keyword: BASIS
-    atoms 1-2 entry LI         line    31 file /Users/tianyuanzhang/Documents/Source/psi4_2018/psi4-bin-clang-debug/share/psi4/basis/sto-3g.gbs 
+    atoms 1-2 entry LI         line    31 file /home/zty/Source/psi4-github-bin-g++-7.3.0-opt-c++17/share/psi4/basis/sto-3g.gbs 
 
 
          ---------------------------------------------------------
@@ -374,14 +375,14 @@ Total time:
 
                         Total Energy        Delta E     RMS |[F,P]|
 
-   @RHF iter   0:   -14.58573852679838   -1.45857e+01   6.38128e-02 
+   @RHF iter   0:   -14.58573852679840   -1.45857e+01   6.38128e-02 
    @RHF iter   1:   -14.60879129707151   -2.30528e-02   3.90853e-03 
    @RHF iter   2:   -14.60956780353629   -7.76506e-04   1.49380e-03 DIIS
    @RHF iter   3:   -14.60974068441565   -1.72881e-04   2.15662e-04 DIIS
-   @RHF iter   4:   -14.60974473615714   -4.05174e-06   4.32612e-06 DIIS
-   @RHF iter   5:   -14.60974473808784   -1.93070e-09   1.41353e-07 DIIS
-   @RHF iter   6:   -14.60974473808997   -2.13163e-12   3.63226e-09 DIIS
-   @RHF iter   7:   -14.60974473808997    1.77636e-15   1.73383e-11 DIIS
+   @RHF iter   4:   -14.60974473615713   -4.05174e-06   4.32612e-06 DIIS
+   @RHF iter   5:   -14.60974473808782   -1.93069e-09   1.41353e-07 DIIS
+   @RHF iter   6:   -14.60974473808996   -2.13696e-12   3.63226e-09 DIIS
+   @RHF iter   7:   -14.60974473808996    1.77636e-15   1.73386e-11 DIIS
   Energy converged.
 
 
@@ -404,14 +405,14 @@ Total time:
              Ag   B1g   B2g   B3g    Au   B1u   B2u   B3u 
     DOCC [     2,    0,    0,    0,    0,    1,    0,    0 ]
 
-  @RHF Final Energy:   -14.60974473808997
+  @RHF Final Energy:   -14.60974473808996
 
    => Energetics <=
 
     Nuclear Repulsion Energy =              2.3812974480149980
-    One-Electron Energy =                 -24.3030864655733652
-    Two-Electron Energy =                   7.3120442794684024
-    Total Energy =                        -14.6097447380899652
+    One-Electron Energy =                 -24.3030864655733474
+    Two-Electron Energy =                   7.3120442794683917
+    Total Energy =                        -14.6097447380899581
 
 Computation Completed
 
@@ -433,28 +434,28 @@ Properties computed using the SCF density matrix
      X:     0.0000      Y:     0.0000      Z:     0.0000     Total:     0.0000
 
 
-*** tstop() called on tianyuans-air.wireless.emory.edu at Fri Feb 15 14:58:16 2019
+*** tstop() called on DESKTOP-JOFFIR0 at Sun Feb 17 03:04:57 2019
 Module time:
-	user time   =       0.46 seconds =       0.01 minutes
-	system time =       0.02 seconds =       0.00 minutes
+	user time   =       0.25 seconds =       0.00 minutes
+	system time =       0.00 seconds =       0.00 minutes
 	total time  =          0 seconds =       0.00 minutes
 Total time:
-	user time   =       0.97 seconds =       0.02 minutes
-	system time =       0.04 seconds =       0.00 minutes
+	user time   =       0.56 seconds =       0.01 minutes
+	system time =       0.00 seconds =       0.00 minutes
 	total time  =          1 seconds =       0.02 minutes
    => Loading Basis Set <=
 
     Name: STO-3G
     Role: ORBITAL
     Keyword: MINAO_BASIS
-    atoms 1-2 entry LI         line    31 file /Users/tianyuanzhang/Documents/Source/psi4_2018/psi4-bin-clang-debug/share/psi4/basis/sto-3g.gbs 
+    atoms 1-2 entry LI         line    31 file /home/zty/Source/psi4-github-bin-g++-7.3.0-opt-c++17/share/psi4/basis/sto-3g.gbs 
 
 
   Forte
   ----------------------------------------------------------------------------
   A suite of quantum chemistry methods for strongly correlated electrons
 
-    git branch: ci_framework - git commit: 1c5ec3ae
+    git branch: ci_framework - git commit: 8fb0f35
 
   Developed by:
     Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
@@ -462,7 +463,7 @@ Total time:
     Nan He, Nicholas Stair, Shuhe Wang, Renke Huang
   ----------------------------------------------------------------------------
 
-  Size of Determinant class: 32
+  Size of Determinant class: 16
 
   ==> MO Space Information <==
 
@@ -489,7 +490,7 @@ Total time:
   Overall Conventional Integrals timings
 
 
-  Conventional integrals take 0.05234741 s
+  Conventional integrals take 0.12099550 s
 
   ==> Summary of Active Space Solver Input <==
 
@@ -547,7 +548,7 @@ Total time:
     Time step (beta)                         1.000e+00
     Spawning threshold                       1.000e-04
     Initial guess spawning threshold         1.000e-03
-    Convergence threshold                    1.000e-12
+    Convergence threshold                    1.000e-08
     Energy estimate tollerance               1.000e-06
     Generator type                          Davidson-Liu by Tianyuan
     Importance functional                   |Hij|*max(|Ci|,|Cj|)
@@ -557,7 +558,7 @@ Total time:
     Result perturbation analysis                    NO
     Using OpenMP                                    NO
 
-  ==> Initial Guess <==     -14.609744738090 -2.716e+01
+  ==> Initial Guess <==
 
   Initial guess size = 86
   Spin multiplicity of root 78 not close to integer (4.1231)
@@ -571,28 +572,28 @@ Total time:
 
   Most important contributions to the wave function:
 
-    0        -0.9337      0.871796           0 |22000200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -16.991042186105
-    1       0.231508     0.0535959           1 |20000200020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -16.844531944287
-    2       0.231508     0.0535959           2 |20000200200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -16.844531944287
-    3       0.113963     0.0129877           3 |20000220000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -16.780684423917
-    4      0.0799895    0.00639832           4 |20200200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -16.722588679069
-    5      0.0250221   0.000626107           5 |200002+-000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -16.358845134715
-    6      0.0250221   0.000626107           6 |200002-+000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -16.358845134715
-    7     0.00824472   6.79755e-05           7 |20000202000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -15.877818677698
-    8    -0.00468421   2.19418e-05           8 |20002200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -16.542435848077
-    9    -0.00468421   2.19418e-05           9 |20020200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -16.542435848077
+    0         0.9337      0.871796           0 |2200020000000000000000000000000000000000000000000000000000000000>    -16.991042186105
+    1      -0.231508     0.0535959           1 |2000020020000000000000000000000000000000000000000000000000000000>    -16.844531944287
+    2      -0.231508     0.0535959           2 |2000020002000000000000000000000000000000000000000000000000000000>    -16.844531944287
+    3      -0.113963     0.0129877           3 |2000022000000000000000000000000000000000000000000000000000000000>    -16.780684423917
+    4     -0.0799895    0.00639832           4 |2020020000000000000000000000000000000000000000000000000000000000>    -16.722588679069
+    5     -0.0250221   0.000626107           5 |200002-+00000000000000000000000000000000000000000000000000000000>    -16.358845134715
+    6     -0.0250221   0.000626107           6 |200002+-00000000000000000000000000000000000000000000000000000000>    -16.358845134715
+    7    -0.00824472   6.79755e-05           7 |2000020200000000000000000000000000000000000000000000000000000000>    -15.877818677698
+    8     0.00468421   2.19418e-05           8 |2000220000000000000000000000000000000000000000000000000000000000>    -16.542435848077
+    9     0.00468421   2.19418e-05           9 |2002020000000000000000000000000000000000000000000000000000000000>    -16.542435848077
 
   Spin State: S^2 = 0.000, S = 0.000, singlet (from 3 determinants,97.90%)
 
   ==> Estimate highest excitation energy <==
   Highest Excited determinant:
-  |00022002000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>
+  |0002200200000000000000000000000000000000000000000000000000000000>
   Determinant Energy                    :  -2.581264114651
   Highest Energy Gershgorin circle Est. :  -0.994024721782
 
   ==> Characteristic Function <==
     f(x) = 
-    with tau = 1.000000e+00, shift = -10.201283545070, range = 6.825961375272
+    with tau = 1.000000e+00, shift = -10.201283545070, range = 6.825961375273
     Initial guess: lambda_1= -14.645947472327
     Est. Highest eigenvalue= -0.994024721782
 
@@ -601,93 +602,223 @@ Total time:
   --------------------------------------------------------------------------------------------------------------
     Steps  Beta/Eh      Ndets      NoffDiag     Proj. Energy/Eh     dEp/dt      Approx. Energy/Eh   dEv/dt
   --------------------------------------------------------------------------------------------------------------
-Davidson iter    1 order    2 correction norm  9.999e-01 dE -2.071e-04 E   -14.646167322073.
-Davidson iter    2 order    3 correction norm  2.476e-01 dE -2.080e-11 E   -14.646167322094.
-Davidson iter    3 order    4 correction norm  7.520e-02 dE -1.333e-08 E   -14.646167335422.
-Davidson iter    4 order    5 correction norm  6.205e-01 dE -5.823e-07 E   -14.646167917710.
-Davidson iter    5 order    6 correction norm  2.046e-01 dE -1.442e-09 E   -14.646167919152.
-Davidson iter    6 order    7 correction norm  8.856e-02 dE -5.097e-06 E   -14.646173016084.
-Davidson iter    7 order    8 correction norm  2.954e-01 dE -8.454e-06 E   -14.646181470180.
-Davidson collapsed from 8 vectors to 2 vectors.
-Davidson iter    8 order    3 correction norm  8.483e-01 dE -1.190e-08 E   -14.646181482079.
-Davidson iter    9 order    4 correction norm  3.047e-01 dE -1.087e-09 E   -14.646181483165.
-Davidson iter   10 order    5 correction norm  3.346e-01 dE -3.366e-09 E   -14.646181486531.
-Davidson iter   11 order    6 correction norm  4.907e-01 dE -1.090e-08 E   -14.646181497435.
-        0       12        418          2080     -14.646186851478 -2.394e-04     -14.646149368211 -1.892e-04
-Davidson iter    1 order    2 correction norm  9.920e-01 dE -7.617e-06 E   -14.646156984719.
-Davidson iter    2 order    3 correction norm  2.086e-01 dE -3.604e-08 E   -14.646157020757.
-Davidson iter    3 order    4 correction norm  5.083e-01 dE -7.976e-09 E   -14.646157028733.
-Davidson iter    4 order    5 correction norm  3.313e-01 dE -9.054e-10 E   -14.646157029638.
-Davidson iter    5 order    6 correction norm  1.685e-01 dE -4.408e-09 E   -14.646157034046.
-Davidson iter    6 order    7 correction norm  3.610e-01 dE -1.280e-08 E   -14.646157046841.
-Davidson iter    7 order    8 correction norm  2.984e-01 dE -7.469e-08 E   -14.646157121530.
-Davidson collapsed from 8 vectors to 2 vectors.
-Davidson iter    8 order    3 correction norm  9.927e-01 dE -1.301e-07 E   -14.646157251624.
-Davidson iter    9 order    4 correction norm  2.867e-01 dE -2.369e-07 E   -14.646157488559.
-Davidson iter   10 order    5 correction norm  1.816e-01 dE -5.169e-10 E   -14.646157489076.
-Davidson iter   11 order    6 correction norm  5.898e-01 dE -3.670e-10 E   -14.646157489443.
-        1       12        434          2396     -14.646136519614  5.033e-05     -14.646155527932 -6.160e-06
-Davidson iter    1 order    2 correction norm  9.127e-01 dE -2.560e-07 E   -14.646155783965.
-Davidson iter    2 order    3 correction norm  3.453e-01 dE -7.946e-09 E   -14.646155791911.
-Davidson iter    3 order    4 correction norm  3.403e-01 dE -5.956e-09 E   -14.646155797867.
-Davidson iter    4 order    5 correction norm  4.260e-01 dE -2.379e-10 E   -14.646155798105.
-Davidson iter    5 order    6 correction norm  8.148e-02 dE -2.245e-12 E   -14.646155798107.
-Davidson iter    6 order    7 correction norm  5.533e-01 dE -8.639e-09 E   -14.646155806746.
-Davidson iter    7 order    8 correction norm  2.874e-01 dE -1.297e-08 E   -14.646155819720.
-Davidson collapsed from 8 vectors to 2 vectors.
-Davidson iter    8 order    3 correction norm  8.301e-01 dE -7.475e-12 E   -14.646155819727.
-Davidson iter    9 order    4 correction norm  3.824e-01 dE -2.615e-12 E   -14.646155819730.
-Davidson iter   10 order    5 correction norm  2.681e-01 dE -4.977e-11 E   -14.646155819780.
-Davidson iter   11 order    6 correction norm  5.303e-01 dE -8.134e-11 E   -14.646155819861.
-        2       12        426          2344     -14.646156537728 -2.002e-05     -14.646156196445 -6.685e-07
-Davidson iter    1 order    2 correction norm  9.998e-01 dE -7.084e-08 E   -14.646156267288.
-Davidson iter    2 order    3 correction norm  7.562e-01 dE -4.956e-12 E   -14.646156267293.
-Davidson iter    3 order    4 correction norm  2.752e-01 dE -1.987e-10 E   -14.646156267491.
-Davidson iter    4 order    5 correction norm  1.440e-01 dE -2.158e-11 E   -14.646156267513.
-Davidson iter    5 order    6 correction norm  5.043e-01 dE -2.356e-11 E   -14.646156267537.
-Davidson iter    6 order    7 correction norm  4.421e-01 dE -9.437e-11 E   -14.646156267631.
-Davidson iter    7 order    8 correction norm  2.455e-01 dE -1.051e-11 E   -14.646156267641.
-Davidson collapsed from 8 vectors to 2 vectors.
-Davidson iter    8 order    3 correction norm  9.499e-01 dE -7.105e-15 E   -14.646156267641.
-        3        9        422          2340     -14.646156269572  2.682e-07     -14.646156514491 -3.180e-07
-Davidson iter    1 order    2 correction norm  9.968e-01 dE -3.044e-08 E   -14.646156544934.
-Davidson iter    2 order    3 correction norm  6.311e-01 dE -7.034e-13 E   -14.646156544934.
-        4        3        422          2320     -14.646156386723 -1.172e-07     -14.646156258658  2.558e-07
-Davidson iter    1 order    2 correction norm  9.989e-01 dE -3.391e-08 E   -14.646156292569.
-Davidson iter    2 order    3 correction norm  5.945e-01 dE -2.352e-12 E   -14.646156292571.
-Davidson iter    3 order    4 correction norm  1.261e-01 dE -1.268e-12 E   -14.646156292572.
-Davidson iter    4 order    5 correction norm  4.038e-01 dE -7.105e-13 E   -14.646156292573.
-        5        5        422          2340     -14.646156307153  7.957e-08     -14.646156514849 -2.562e-07
-Davidson iter    1 order    2 correction norm  9.976e-01 dE -3.009e-08 E   -14.646156544936.
-Davidson iter    2 order    3 correction norm  5.754e-01 dE -7.105e-15 E   -14.646156544936.
-        6        3        422          2320     -14.646156478219 -1.711e-07     -14.646156258617  2.562e-07
-Davidson iter    1 order    2 correction norm  9.977e-01 dE -3.395e-08 E   -14.646156292570.
-Davidson iter    2 order    3 correction norm  3.528e-01 dE -1.414e-12 E   -14.646156292572.
-Davidson iter    3 order    4 correction norm  3.136e-01 dE -2.530e-12 E   -14.646156292574.
-Davidson iter    4 order    5 correction norm  2.733e-01 dE -5.329e-14 E   -14.646156292574.
-        7        5        422          2340     -14.646156304080  1.741e-07     -14.646156514849 -2.562e-07
-Davidson iter    1 order    2 correction norm  9.976e-01 dE -3.009e-08 E   -14.646156544935.
-Davidson iter    2 order    3 correction norm  5.481e-01 dE -1.705e-13 E   -14.646156544936.
-        8        3        422          2320     -14.646156539692 -2.356e-07     -14.646156258616  2.562e-07
-Davidson iter    1 order    2 correction norm  9.966e-01 dE -3.396e-08 E   -14.646156292571.
-Davidson iter    2 order    3 correction norm  5.750e-01 dE -2.558e-13 E   -14.646156292571.
-        9        3        422          2340     -14.646156423995  1.157e-07     -14.646156514858 -2.562e-07
-Davidson iter    1 order    2 correction norm  9.992e-01 dE -3.008e-08 E   -14.646156544935.
-Davidson iter    2 order    3 correction norm  5.473e-01 dE -2.501e-12 E   -14.646156544937.
-Davidson iter    3 order    4 correction norm  1.440e-01 dE -1.350e-13 E   -14.646156544937.
-       10        4        422          2320     -14.646156559478 -1.355e-07     -14.646156258616  2.562e-07
-Davidson iter    1 order    2 correction norm  9.963e-01 dE -3.395e-08 E   -14.646156292570.
-Davidson iter    2 order    3 correction norm  5.947e-01 dE -6.750e-14 E   -14.646156292570.
-       11        3        422          2340     -14.646156359033  2.004e-07     -14.646156514856 -2.562e-07
-Davidson iter    1 order    2 correction norm  9.984e-01 dE -3.008e-08 E   -14.646156544936.
-Davidson iter    2 order    3 correction norm  3.286e-01 dE -1.293e-12 E   -14.646156544937.
-Davidson iter    3 order    4 correction norm  3.188e-01 dE -1.066e-14 E   -14.646156544937.
-       12        4        422          2320     -14.646156414396 -5.536e-08     -14.646156258617  2.562e-07
-Davidson iter    1 order    2 correction norm  9.986e-01 dE -3.395e-08 E   -14.646156292569.
-Davidson iter    2 order    3 correction norm  4.450e-01 dE -1.741e-12 E   -14.646156292571.
-Davidson iter    3 order    4 correction norm  1.334e-01 dE -1.098e-12 E   -14.646156292572.
-Davidson iter    4 order    5 correction norm  4.670e-01 dE -7.674e-13 E   -14.646156292573.
-       13        5        422          2340     -14.646156289836  1.246e-07
+
+  Davidson-liu solver algorithm
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Initial guess found 82 solutions with 2S+1 = 1 *
+  Initial guess found 101 solutions with 2S+1 = 3  
+  Initial guess found 15 solutions with 2S+1 = 5  
+
+  ==> Diagonalizing Hamiltonian <==
+
+  ----------------------------------------
+    Iter.      Avg. Energy       Delta_E
+  ----------------------------------------
+      1      -17.027257642158  -1.703e+01
+      2      -17.027378941568  -1.213e-04
+      3      -17.027390008385  -1.107e-05
+      4      -17.027397691034  -7.683e-06
+      5      -17.027404697831  -7.007e-06
+      6      -17.027409402977  -4.705e-06
+      7      -17.027413544071  -4.141e-06
+      8      -17.027433589991  -2.005e-05
+      9      -17.027440609107  -7.019e-06
+     10      -17.027446331652  -5.723e-06
+     11      -17.027448087597  -1.756e-06
+     12      -17.027451886131  -3.799e-06
+     13      -17.027454582687  -2.697e-06
+     14      -17.027456203597  -1.621e-06
+     15      -17.027457144843  -9.412e-07
+     16      -17.027459123405  -1.979e-06
+     17      -17.027460417311  -1.294e-06
+     18      -17.027461728610  -1.311e-06
+     19      -17.027462530324  -8.017e-07
+     20      -17.027463940167  -1.410e-06
+     21      -17.027465005144  -1.065e-06
+     22      -17.027465882169  -8.770e-07
+     23      -17.027466549335  -6.672e-07
+     24      -17.027467837191  -1.288e-06
+     25      -17.027469699902  -1.863e-06
+     26      -17.027475027560  -5.328e-06
+     27      -17.027477830988  -2.803e-06
+     28      -17.027478882932  -1.052e-06
+     29      -17.027479358144  -4.752e-07
+     30      -17.027479637741  -2.796e-07
+     31      -17.027479714501  -7.676e-08
+     32      -17.027479737695  -2.319e-08
+     33      -17.027479749469  -1.177e-08
+     34      -17.027479758757  -9.287e-09
+     35      -17.027479763027  -4.270e-09
+     36      -17.027479764800  -1.773e-09
+     37      -17.027479765943  -1.143e-09
+     38      -17.027479766967  -1.024e-09
+     39      -17.027479767540  -5.734e-10
+     40      -17.027479767793  -2.528e-10
+     41      -17.027479767953  -1.602e-10
+     42      -17.027479768089  -1.360e-10
+     43      -17.027479768167  -7.812e-11
+     44      -17.027479768206  -3.895e-11
+     45      -17.027479768229  -2.230e-11
+     46      -17.027479768245  -1.615e-11
+     47      -17.027479768254  -9.457e-12
+     48      -17.027479768261  -6.299e-12
+     49      -17.027479768263  -2.501e-12
+     50      -17.027479768264  -1.265e-12
+     51      -17.027479768265  -5.649e-13
+  ----------------------------------------
+  The Davidson-Liu algorithm converged in 52 iterations.
+        0        0        418          2080     -14.646182433470 -2.350e-04
+
+  Davidson-liu solver algorithm
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Initial guess found 82 solutions with 2S+1 = 1 *
+  Initial guess found 101 solutions with 2S+1 = 3  
+  Initial guess found 15 solutions with 2S+1 = 5  
+
+  ==> Diagonalizing Hamiltonian <==
+
+  ----------------------------------------
+    Iter.      Avg. Energy       Delta_E
+  ----------------------------------------
+      1      -17.027446590908  -1.703e+01
+      2      -17.027452669137  -6.078e-06
+      3      -17.027453812347  -1.143e-06
+      4      -17.027454090978  -2.786e-07
+      5      -17.027454192977  -1.020e-07
+      6      -17.027454273674  -8.070e-08
+      7      -17.027454305033  -3.136e-08
+      8      -17.027454326657  -2.162e-08
+      9      -17.027454338709  -1.205e-08
+     10      -17.027454344965  -6.256e-09
+     11      -17.027454348710  -3.746e-09
+     12      -17.027454351005  -2.294e-09
+     13      -17.027454352309  -1.305e-09
+     14      -17.027454353045  -7.353e-10
+     15      -17.027454353493  -4.482e-10
+     16      -17.027454353762  -2.687e-10
+     17      -17.027454353905  -1.438e-10
+     18      -17.027454353972  -6.684e-11
+     19      -17.027454354011  -3.920e-11
+     20      -17.027454354026  -1.415e-11
+     21      -17.027454354030  -4.221e-12
+     22      -17.027454354030  -6.040e-14
+  ----------------------------------------
+  The Davidson-Liu algorithm converged in 23 iterations.
+        1        0        434          2410     -14.646157054534  2.538e-05
+
+  Davidson-liu solver algorithm
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Initial guess found 82 solutions with 2S+1 = 1 *
+  Initial guess found 101 solutions with 2S+1 = 3  
+  Initial guess found 15 solutions with 2S+1 = 5  
+
+  ==> Diagonalizing Hamiltonian <==
+
+  ----------------------------------------
+    Iter.      Avg. Energy       Delta_E
+  ----------------------------------------
+      1      -17.027453441341  -1.703e+01
+      2      -17.027453518847  -7.751e-08
+      3      -17.027453551877  -3.303e-08
+      4      -17.027453576781  -2.490e-08
+      5      -17.027453578899  -2.118e-09
+      6      -17.027453580586  -1.687e-09
+      7      -17.027453581391  -8.044e-10
+      8      -17.027453581751  -3.606e-10
+      9      -17.027453581901  -1.496e-10
+     10      -17.027453582023  -1.224e-10
+     11      -17.027453582069  -4.560e-11
+     12      -17.027453582071  -2.707e-12
+     13      -17.027453582072  -9.805e-13
+  ----------------------------------------
+  The Davidson-Liu algorithm converged in 14 iterations.
+        2        0        426          2336     -14.646156112890  9.416e-07
+
+  Davidson-liu solver algorithm
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Initial guess found 82 solutions with 2S+1 = 1 *
+  Initial guess found 101 solutions with 2S+1 = 3  
+  Initial guess found 15 solutions with 2S+1 = 5  
+
+  ==> Diagonalizing Hamiltonian <==
+
+  ----------------------------------------
+    Iter.      Avg. Energy       Delta_E
+  ----------------------------------------
+      1      -17.027453038104  -1.703e+01
+      2      -17.027453083010  -4.491e-08
+      3      -17.027453087242  -4.231e-09
+      4      -17.027453100706  -1.346e-08
+      5      -17.027453102713  -2.007e-09
+      6      -17.027453103171  -4.577e-10
+      7      -17.027453103192  -2.164e-11
+      8      -17.027453103253  -6.072e-11
+      9      -17.027453103262  -8.740e-12
+     10      -17.027453103281  -1.931e-11
+     11      -17.027453103285  -3.684e-12
+     12      -17.027453103304  -1.928e-11
+     13      -17.027453103306  -2.302e-12
+     14      -17.027453103319  -1.326e-11
+     15      -17.027453103320  -1.027e-12
+  ----------------------------------------
+  The Davidson-Liu algorithm converged in 16 iterations.
+        3        0        422          2344     -14.646155810846  3.020e-07
+
+  Davidson-liu solver algorithm
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Initial guess found 82 solutions with 2S+1 = 1 *
+  Initial guess found 101 solutions with 2S+1 = 3  
+  Initial guess found 15 solutions with 2S+1 = 5  
+
+  ==> Diagonalizing Hamiltonian <==
+
+  ----------------------------------------
+    Iter.      Avg. Energy       Delta_E
+  ----------------------------------------
+      1      -17.027453795917  -1.703e+01
+      2      -17.027453829585  -3.367e-08
+      3      -17.027453837466  -7.881e-09
+      4      -17.027453838108  -6.416e-10
+      5      -17.027453838832  -7.244e-10
+      6      -17.027453838966  -1.333e-10
+      7      -17.027453839117  -1.516e-10
+      8      -17.027453839145  -2.793e-11
+      9      -17.027453839160  -1.487e-11
+     10      -17.027453839184  -2.403e-11
+     11      -17.027453839185  -8.384e-13
+  ----------------------------------------
+  The Davidson-Liu algorithm converged in 12 iterations.
+        4        0        422          2316     -14.646156378528 -5.677e-07
+
+  Davidson-liu solver algorithm
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Initial guess found 82 solutions with 2S+1 = 1 *
+  Initial guess found 101 solutions with 2S+1 = 3  
+  Initial guess found 15 solutions with 2S+1 = 5  
+
+  ==> Diagonalizing Hamiltonian <==
+
+  ----------------------------------------
+    Iter.      Avg. Energy       Delta_E
+  ----------------------------------------
+      1      -17.027452729739  -1.703e+01
+      2      -17.027452766716  -3.698e-08
+      3      -17.027452776431  -9.715e-09
+      4      -17.027452777828  -1.397e-09
+      5      -17.027452780531  -2.703e-09
+      6      -17.027452781556  -1.025e-09
+      7      -17.027452781643  -8.604e-11
+      8      -17.027452781860  -2.170e-10
+      9      -17.027452781860  -1.066e-14
+  ----------------------------------------
+  The Davidson-Liu algorithm converged in 10 iterations.
+        5        0        422          2348     -14.646155198128  1.180e-06
   --------------------------------------------------------------------------------------------------------------
 
   Calculation stoped in appearance of higher new low.
@@ -695,41 +826,41 @@ Davidson iter    4 order    5 correction norm  4.670e-01 dE -7.674e-13 E   -14.6
   ==> Post-Iterations <==
 
   * Size of CI space                    = 422
-  * Number of off-diagonal elements     = 2340
-  * ElementwiseCI Approximate Energy    =   -14.646156258617 Eh
-  * ElementwiseCI Projective  Energy    =   -14.646156289836 Eh
+  * Number of off-diagonal elements     = 2348
+  * ElementwiseCI Approximate Energy    =   -14.646155333845 Eh
+  * ElementwiseCI Projective  Energy    =   -14.646155198128 Eh
 
   Most important contributions to the wave function:
 
-    0      -0.933273      0.870999           0 |22000200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -16.991042186105
-    1        0.23024     0.0530107           1 |20000200200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -16.844531944287
-    2        0.23024     0.0530107           2 |20000200020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -16.844531944287
-    3       0.120369     0.0144887           3 |20000220000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -16.780684423917
-    4      0.0803599    0.00645772           4 |20200200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -16.722588679069
-    5      0.0245642   0.000603402           5 |200002+-000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -16.358845134715
-    6      0.0245642   0.000603402           6 |200002-+000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -16.358845134715
-    7      0.0145795   0.000212563           7 |2-+00200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -16.872775657949
-    8      0.0145795   0.000212563           8 |2+-00200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -16.872775657949
-    9     0.00777609   6.04677e-05           9 |20000202000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -15.877818677698
+    0      -0.933275      0.871003           0 |2200020000000000000000000000000000000000000000000000000000000000>    -16.991042186105
+    1        0.23024     0.0530103           1 |2000020020000000000000000000000000000000000000000000000000000000>    -16.844531944287
+    2        0.23024     0.0530103           2 |2000020002000000000000000000000000000000000000000000000000000000>    -16.844531944287
+    3       0.120366     0.0144879           3 |2000022000000000000000000000000000000000000000000000000000000000>    -16.780684423917
+    4      0.0803484    0.00645586           4 |2020020000000000000000000000000000000000000000000000000000000000>    -16.722588679069
+    5      0.0245617   0.000603276           5 |200002-+00000000000000000000000000000000000000000000000000000000>    -16.358845134715
+    6      0.0245617   0.000603276           6 |200002+-00000000000000000000000000000000000000000000000000000000>    -16.358845134715
+    7      0.0145784   0.000212531           7 |2+-0020000000000000000000000000000000000000000000000000000000000>    -16.872775657949
+    8      0.0145784   0.000212531           8 |2-+0020000000000000000000000000000000000000000000000000000000000>    -16.872775657949
+    9     0.00777723   6.04854e-05           9 |2000020200000000000000000000000000000000000000000000000000000000>    -15.877818677698
 
   Spin State: S^2 = 0.000, S = 0.000, singlet (from 3 determinants,97.70%)
-  ElementwiseCI (bitset) steps finished in  : 0.355505 s
+  ElementwiseCI (bitset) steps finished in  : 1.549605 s
 
   Variational energy estimated with 422 determinants to meet the max error 0.000000e+00
 
   ==> Computing Coupling Lists <==
   --------------------------------
-        α          0.002066 s
-        β          0.001966 s
-        αα         0.001796 s
-        ββ         0.001771 s
-        αβ         0.004516 s
+        α          0.001637 s
+        β          0.001574 s
+        αα         0.001697 s
+        ββ         0.001670 s
+        αβ         0.004563 s
   --------------------------------
-  * ElementwiseCI Variational Energy    =   -14.646161244794 Eh
-  * ElementwiseCI Var. Corr.  Energy    =    -0.036416506704 Eh
-  * 1st order perturbation   Energy     =    -0.000004986177 Eh
+  * ElementwiseCI Variational Energy    =   -14.646160965127 Eh
+  * ElementwiseCI Var. Corr.  Energy    =    -0.036416227037 Eh
+  * 1st order perturbation   Energy     =    -0.000005631282 Eh
 
-  ElementwiseCI (bitset) ran in  : 0.371154 s
+  ElementwiseCI (bitset) ran in  : 1.564176 s
 
   Saving the wave function:
 
@@ -756,7 +887,7 @@ Davidson iter    4 order    5 correction norm  4.670e-01 dE -7.674e-13 E   -14.6
     Time step (beta)                         1.000e+00
     Spawning threshold                       1.000e-04
     Initial guess spawning threshold         1.000e-03
-    Convergence threshold                    1.000e-12
+    Convergence threshold                    1.000e-08
     Energy estimate tollerance               1.000e-06
     Generator type                          Davidson-Liu by Tianyuan
     Importance functional                   |Hij|*max(|Ci|,|Cj|)
@@ -780,22 +911,22 @@ Davidson iter    4 order    5 correction norm  4.670e-01 dE -7.674e-13 E   -14.6
 
   Most important contributions to the wave function:
 
-    0       0.694823      0.482779           0 |20000200020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -16.844531944287
-    1      -0.694823      0.482779           1 |20000200200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -16.844531944287
-    2      -0.130852     0.0171223           2 |20020200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -16.542435848077
-    3       0.130852     0.0171223           3 |20002200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -16.542435848077
-    4    -0.00437172   1.91119e-05           4 |2-0-0+000+0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -14.589779191178
-    5    -0.00437172   1.91119e-05           5 |2+0+0-000-0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -14.589779191178
-    6     0.00437172   1.91119e-05           6 |2-00-+00+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -14.589779191178
-    7     0.00437172   1.91119e-05           7 |2+00+-00-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -14.589779191178
-    8    -0.00348068   1.21151e-05           8 |2+0-0+000-0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -14.650355633514
-    9    -0.00348068   1.21151e-05           9 |2-0+0-000+0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -14.650355633514
+    0      -0.694823      0.482779           0 |2000020020000000000000000000000000000000000000000000000000000000>    -16.844531944287
+    1       0.694823      0.482779           1 |2000020002000000000000000000000000000000000000000000000000000000>    -16.844531944287
+    2       0.130852     0.0171223           2 |2000220000000000000000000000000000000000000000000000000000000000>    -16.542435848077
+    3      -0.130852     0.0171223           3 |2002020000000000000000000000000000000000000000000000000000000000>    -16.542435848077
+    4     0.00437172   1.91119e-05           4 |2+00+-00-0000000000000000000000000000000000000000000000000000000>    -14.589779191178
+    5     0.00437172   1.91119e-05           5 |2-00-+00+0000000000000000000000000000000000000000000000000000000>    -14.589779191178
+    6    -0.00437172   1.91119e-05           6 |2-0-0+000+000000000000000000000000000000000000000000000000000000>    -14.589779191178
+    7    -0.00437172   1.91119e-05           7 |2+0+0-000-000000000000000000000000000000000000000000000000000000>    -14.589779191178
+    8     0.00348068   1.21151e-05           8 |2+00-+00-0000000000000000000000000000000000000000000000000000000>    -14.650355633514
+    9     0.00348068   1.21151e-05           9 |2-00+-00+0000000000000000000000000000000000000000000000000000000>    -14.650355633514
 
   Spin State: S^2 = 0.000, S = 0.000, singlet (from 2 determinants,96.56%)
 
   ==> Estimate highest excitation energy <==
   Highest Excited determinant:
-  |00022002000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>
+  |0002200200000000000000000000000000000000000000000000000000000000>
   Determinant Energy                    :  -2.581264114651
   Highest Energy Gershgorin circle Est. :  -0.994024721782
 
@@ -810,129 +941,2080 @@ Davidson iter    4 order    5 correction norm  4.670e-01 dE -7.674e-13 E   -14.6
   --------------------------------------------------------------------------------------------------------------
     Steps  Beta/Eh      Ndets      NoffDiag     Proj. Energy/Eh     dEp/dt      Approx. Energy/Eh   dEv/dt
   --------------------------------------------------------------------------------------------------------------
-Davidson iter    1 order    2 correction norm  1.000e+00 dE -9.459e-04 E   -14.487578956549.
-Davidson iter    2 order    3 correction norm  3.297e-01 dE -1.967e-10 E   -14.487578956746.
-Davidson iter    3 order    4 correction norm  1.668e-01 dE -6.997e-10 E   -14.487578957446.
-Davidson iter    4 order    5 correction norm  8.186e-01 dE -8.053e-09 E   -14.487578965499.
-Davidson iter    5 order    6 correction norm  3.094e-01 dE -1.278e-09 E   -14.487578966777.
-Davidson iter    6 order    7 correction norm  2.318e-02 dE -5.457e-03 E   -14.493036018642.
-Davidson iter    7 order    8 correction norm  6.634e-02 dE -1.119e-04 E   -14.493147921772.
-Davidson collapsed from 8 vectors to 2 vectors.
-Davidson iter    8 order    3 correction norm  9.984e-01 dE -2.363e-04 E   -14.493384214280.
-Davidson iter    9 order    4 correction norm  2.279e-01 dE -1.368e-03 E   -14.494752240602.
-Davidson iter   10 order    5 correction norm  5.131e-01 dE -1.914e-05 E   -14.494771376752.
-Davidson iter   11 order    6 correction norm  7.630e-01 dE -1.221e-03 E   -14.495992767435.
-        0       12        324          1212     -14.472026482408  1.461e-02     -14.475968561044  1.066e-02
-Davidson iter    1 order    2 correction norm  7.758e-01 dE -2.360e-02 E   -14.499571902204.
-Davidson iter    2 order    3 correction norm  6.918e-01 dE -1.218e-02 E   -14.511756459271.
-Davidson iter    3 order    4 correction norm  1.638e-01 dE -1.797e-02 E   -14.529729919765.
-Davidson iter    4 order    5 correction norm  6.836e-01 dE -1.772e-06 E   -14.529731691285.
-Davidson iter    5 order    6 correction norm  2.643e-01 dE -8.284e-05 E   -14.529814533040.
-Davidson iter    6 order    7 correction norm  3.759e-01 dE -1.705e-05 E   -14.529831582809.
-Davidson iter    7 order    8 correction norm  6.385e-01 dE -2.472e-05 E   -14.529856306112.
-Davidson collapsed from 8 vectors to 2 vectors.
-Davidson iter    8 order    3 correction norm  9.933e-01 dE -2.017e-05 E   -14.529876478884.
-Davidson iter    9 order    4 correction norm  8.955e-02 dE -1.343e-07 E   -14.529876613138.
-Davidson iter   10 order    5 correction norm  6.016e-01 dE -2.695e-06 E   -14.529879308186.
-Davidson iter   11 order    6 correction norm  7.581e-01 dE -1.184e-05 E   -14.529891152093.
-        1       12        379          1340     -14.530069991432 -5.804e-02     -14.529894235304 -5.393e-02
-Davidson iter    1 order    2 correction norm  1.000e+00 dE -4.323e-03 E   -14.534217048364.
-Davidson iter    2 order    3 correction norm  5.855e-01 dE -1.486e-06 E   -14.534218534624.
-Davidson iter    3 order    4 correction norm  3.696e-01 dE -3.146e-06 E   -14.534221680166.
-Davidson iter    4 order    5 correction norm  5.475e-01 dE -6.580e-06 E   -14.534228259979.
-Davidson iter    5 order    6 correction norm  8.232e-01 dE -5.954e-06 E   -14.534234213619.
-Davidson iter    6 order    7 correction norm  4.398e-01 dE -2.810e-06 E   -14.534237023166.
-Davidson iter    7 order    8 correction norm  2.356e-01 dE -6.439e-06 E   -14.534243462542.
-Davidson collapsed from 8 vectors to 2 vectors.
-Davidson iter    8 order    3 correction norm  9.726e-01 dE -1.239e-06 E   -14.534244701791.
-Davidson iter    9 order    4 correction norm  2.886e-01 dE -2.014e-06 E   -14.534246715671.
-Davidson iter   10 order    5 correction norm  8.851e-01 dE -1.205e-06 E   -14.534247920575.
-Davidson iter   11 order    6 correction norm  5.341e-01 dE -5.727e-08 E   -14.534247977841.
-        2       12        231           600     -14.534458820383 -4.389e-03     -14.534219434686 -4.325e-03
-Davidson iter    1 order    2 correction norm  9.991e-01 dE -1.086e-06 E   -14.534220520922.
-Davidson iter    2 order    3 correction norm  7.418e-01 dE -2.373e-05 E   -14.534244248819.
-Davidson iter    3 order    4 correction norm  7.390e-01 dE -2.562e-05 E   -14.534269873443.
-Davidson iter    4 order    5 correction norm  4.814e-01 dE -2.006e-09 E   -14.534269875449.
-Davidson iter    5 order    6 correction norm  2.928e-01 dE -1.047e-07 E   -14.534269980147.
-Davidson iter    6 order    7 correction norm  2.337e-01 dE -1.162e-07 E   -14.534270096354.
-Davidson iter    7 order    8 correction norm  4.160e-01 dE -2.405e-06 E   -14.534272501476.
-Davidson collapsed from 8 vectors to 2 vectors.
-Davidson iter    8 order    3 correction norm  9.907e-01 dE -2.809e-07 E   -14.534272782354.
-Davidson iter    9 order    4 correction norm  3.025e-01 dE -2.933e-07 E   -14.534273075688.
-Davidson iter   10 order    5 correction norm  3.240e-01 dE -1.663e-08 E   -14.534273092316.
-Davidson iter   11 order    6 correction norm  9.134e-01 dE -3.559e-09 E   -14.534273095875.
-        3       12        373          2068     -14.534221563536  2.373e-04     -14.534275174362 -5.574e-05
-Davidson iter    1 order    2 correction norm  9.855e-01 dE -4.721e-06 E   -14.534279895664.
-Davidson iter    2 order    3 correction norm  7.049e-01 dE -2.601e-07 E   -14.534280155746.
-Davidson iter    3 order    4 correction norm  4.863e-01 dE -1.634e-07 E   -14.534280319110.
-Davidson iter    4 order    5 correction norm  8.745e-01 dE -1.084e-07 E   -14.534280427470.
-Davidson iter    5 order    6 correction norm  3.367e-01 dE -7.854e-08 E   -14.534280506014.
-Davidson iter    6 order    7 correction norm  3.748e-01 dE -9.029e-08 E   -14.534280596309.
-Davidson iter    7 order    8 correction norm  1.348e-01 dE -1.884e-08 E   -14.534280615147.
-Davidson collapsed from 8 vectors to 2 vectors.
-Davidson iter    8 order    3 correction norm  9.517e-01 dE  1.407e-08 E   -14.534280601078.
-Davidson iter    9 order    4 correction norm  5.028e-01 dE -1.307e-09 E   -14.534280602385.
-Davidson iter   10 order    5 correction norm  3.675e-01 dE -1.839e-08 E   -14.534280620780.
-Davidson iter   11 order    6 correction norm  3.737e-01 dE -3.296e-09 E   -14.534280624076.
-        4       12        356          1940     -14.534282204077 -6.064e-05     -14.534280326405 -5.152e-06
-Davidson iter    1 order    2 correction norm  9.475e-01 dE -3.005e-08 E   -14.534280356452.
-Davidson iter    2 order    3 correction norm  8.484e-01 dE -1.611e-08 E   -14.534280372559.
-Davidson iter    3 order    4 correction norm  7.377e-01 dE -3.661e-08 E   -14.534280409167.
-Davidson iter    4 order    5 correction norm  7.069e-01 dE -7.638e-13 E   -14.534280409168.
-        5        5        356          1952     -14.534279220735  2.983e-06     -14.534280506825 -1.804e-07
-Davidson iter    1 order    2 correction norm  9.921e-01 dE -2.343e-09 E   -14.534280509168.
-Davidson iter    2 order    3 correction norm  8.273e-01 dE -1.956e-09 E   -14.534280511124.
-Davidson iter    3 order    4 correction norm  7.575e-01 dE -3.883e-09 E   -14.534280515008.
-Davidson iter    4 order    5 correction norm  6.623e-01 dE -2.908e-11 E   -14.534280515037.
-Davidson iter    5 order    6 correction norm  2.587e-01 dE -3.553e-15 E   -14.534280515037.
-        6        6        356          1942     -14.534280050812 -8.301e-07     -14.534280459049  4.778e-08
-Davidson iter    1 order    2 correction norm  9.997e-01 dE -4.487e-09 E   -14.534280463535.
-Davidson iter    2 order    3 correction norm  9.273e-01 dE -8.163e-10 E   -14.534280464352.
-Davidson iter    3 order    4 correction norm  6.076e-01 dE -5.806e-10 E   -14.534280464932.
-Davidson iter    4 order    5 correction norm  6.910e-01 dE -6.644e-13 E   -14.534280464933.
-        7        5        356          1946     -14.534280248257 -1.974e-07
+
+  Davidson-liu solver algorithm
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Initial guess found 150 solutions with 2S+1 = 1 *
+  Initial guess found 136 solutions with 2S+1 = 3  
+  Initial guess found 20 solutions with 2S+1 = 5  
+
+  ==> Diagonalizing Hamiltonian <==
+
+  ----------------------------------------
+    Iter.      Avg. Energy       Delta_E
+  ----------------------------------------
+      1       -8.433965274034  -8.434e+00
+      2      -14.533166273407  -6.099e+00
+      3      -15.622772950047  -1.090e+00
+      4      -16.179134097508  -5.564e-01
+      5      -16.665866251768  -4.867e-01
+      6      -16.666308016845  -4.418e-04
+      7      -16.757174990056  -9.087e-02
+      8      -16.841163741798  -8.399e-02
+      9      -16.846690669022  -5.527e-03
+     10      -16.848161393643  -1.471e-03
+     11      -16.848554399459  -3.930e-04
+     12      -16.848937071086  -3.827e-04
+     13      -16.849419988900  -4.829e-04
+     14      -16.849501389135  -8.140e-05
+     15      -16.849540736480  -3.935e-05
+     16      -16.849574375663  -3.364e-05
+     17      -16.849619758225  -4.538e-05
+     18      -16.849657932292  -3.817e-05
+     19      -16.849690748494  -3.282e-05
+     20      -16.849724573355  -3.382e-05
+     21      -16.849757092932  -3.252e-05
+     22      -16.849789118859  -3.203e-05
+     23      -16.849826805997  -3.769e-05
+     24      -16.849866434917  -3.963e-05
+     25      -16.849909791880  -4.336e-05
+     26      -16.849955145992  -4.535e-05
+     27      -16.850095308196  -1.402e-04
+     28      -16.850260688562  -1.654e-04
+     29      -16.850762091030  -5.014e-04
+     30      -16.850959738541  -1.976e-04
+     31      -16.852714166342  -1.754e-03
+     32      -16.852882015671  -1.678e-04
+     33      -16.860684980631  -7.803e-03
+     34      -16.860927862754  -2.429e-04
+     35      -16.862443503371  -1.516e-03
+     36      -16.863317247563  -8.737e-04
+     37      -16.865220328021  -1.903e-03
+     38      -16.865498014247  -2.777e-04
+     39      -16.866345469690  -8.475e-04
+     40      -16.866539087190  -1.936e-04
+     41      -16.867161007494  -6.219e-04
+     42      -16.867331378583  -1.704e-04
+     43      -16.867778810624  -4.474e-04
+     44      -16.867923098418  -1.443e-04
+     45      -16.868355404945  -4.323e-04
+     46      -16.868496562579  -1.412e-04
+     47      -16.869119484546  -6.229e-04
+     48      -16.869260708596  -1.412e-04
+     49      -16.869586889288  -3.262e-04
+     50      -16.869676224498  -8.934e-05
+     51      -16.869834125352  -1.579e-04
+     52      -16.869908459579  -7.433e-05
+     53      -16.870197820219  -2.894e-04
+     54      -16.870305544880  -1.077e-04
+     55      -16.870525058433  -2.195e-04
+     56      -16.870602462797  -7.740e-05
+     57      -16.870830573812  -2.281e-04
+     58      -16.870928958905  -9.839e-05
+     59      -16.871104958784  -1.760e-04
+     60      -16.871176209691  -7.125e-05
+     61      -16.871371228425  -1.950e-04
+     62      -16.871467409990  -9.618e-05
+     63      -16.871611387601  -1.440e-04
+     64      -16.871675099491  -6.371e-05
+     65      -16.871846632685  -1.715e-04
+     66      -16.871937495566  -9.086e-05
+     67      -16.872058178489  -1.207e-04
+     68      -16.872113393012  -5.521e-05
+     69      -16.872266885795  -1.535e-04
+     70      -16.872353087984  -8.620e-05
+     71      -16.872453953465  -1.009e-04
+     72      -16.872501538772  -4.759e-05
+     73      -16.872639941256  -1.384e-04
+     74      -16.872721959805  -8.202e-05
+     75      -16.872805951968  -8.399e-05
+     76      -16.872846565470  -4.061e-05
+     77      -16.872972363607  -1.258e-04
+     78      -16.873049742105  -7.738e-05
+     79      -16.873119864353  -7.012e-05
+     80      -16.873154090028  -3.423e-05
+     81      -16.873270456915  -1.164e-04
+     82      -16.873343426033  -7.297e-05
+     83      -16.873402258015  -5.883e-05
+     84      -16.873430652829  -2.839e-05
+     85      -16.873543622009  -1.130e-04
+     86      -16.873615056244  -7.143e-05
+     87      -16.873664396087  -4.934e-05
+     88      -16.873687526239  -2.313e-05
+     89      -16.873814324179  -1.268e-04
+     90      -16.873894256825  -7.993e-05
+     91      -16.873934868239  -4.061e-05
+     92      -16.873953284901  -1.842e-05
+     93      -16.874242484390  -2.892e-04
+     94      -16.874492553524  -2.501e-04
+     95      -16.874652648945  -1.601e-04
+     96      -16.874654937896  -2.289e-06
+     97      -16.874657043095  -2.105e-06
+     98      -16.874657986186  -9.431e-07
+     99      -16.874659500831  -1.515e-06
+    100      -16.874660284609  -7.838e-07
+    101      -16.874661556483  -1.272e-06
+    102      -16.874662283224  -7.267e-07
+    103      -16.874663314408  -1.031e-06
+    104      -16.874664086658  -7.722e-07
+    105      -16.874664867624  -7.810e-07
+    106      -16.874665399667  -5.320e-07
+    107      -16.874666134310  -7.346e-07
+    108      -16.874666693617  -5.593e-07
+    109      -16.874666848640  -1.550e-07
+    110      -16.874666911828  -6.319e-08
+    111      -16.874667223825  -3.120e-07
+    112      -16.874667459379  -2.356e-07
+    113      -16.874669081666  -1.622e-06
+    114      -16.874669706360  -6.247e-07
+    115      -16.874670398686  -6.923e-07
+    116      -16.874670564011  -1.653e-07
+    117      -16.874671490849  -9.268e-07
+    118      -16.874671973542  -4.827e-07
+    119      -16.874672252524  -2.790e-07
+    120      -16.874672334363  -8.184e-08
+    121      -16.874673018185  -6.838e-07
+    122      -16.874673262537  -2.444e-07
+    123      -16.874673492545  -2.300e-07
+    124      -16.874673558135  -6.559e-08
+    125      -16.874673737493  -1.794e-07
+    126      -16.874673829303  -9.181e-08
+    127      -16.874673907136  -7.783e-08
+    128      -16.874673939561  -3.243e-08
+    129      -16.874674088864  -1.493e-07
+    130      -16.874674157564  -6.870e-08
+    131      -16.874674182644  -2.508e-08
+    132      -16.874674203932  -2.129e-08
+    133      -16.874674308782  -1.049e-07
+    134      -16.874674348877  -4.009e-08
+    135      -16.874674395740  -4.686e-08
+    136      -16.874674414996  -1.926e-08
+    137      -16.874674476789  -6.179e-08
+    138      -16.874674507005  -3.022e-08
+    139      -16.874674536500  -2.950e-08
+    140      -16.874674554302  -1.780e-08
+    141      -16.874674592069  -3.777e-08
+    142      -16.874674617507  -2.544e-08
+    143      -16.874674634245  -1.674e-08
+    144      -16.874674642885  -8.640e-09
+    145      -16.874674671892  -2.901e-08
+    146      -16.874674684459  -1.257e-08
+    147      -16.874674698166  -1.371e-08
+    148      -16.874674704086  -5.920e-09
+    149      -16.874674726317  -2.223e-08
+    150      -16.874674735021  -8.704e-09
+    151      -16.874674745381  -1.036e-08
+    152      -16.874674749937  -4.556e-09
+    153      -16.874674767668  -1.773e-08
+    154      -16.874674774650  -6.982e-09
+    155      -16.874674782047  -7.396e-09
+    156      -16.874674786165  -4.118e-09
+    157      -16.874674800290  -1.412e-08
+    158      -16.874674806463  -6.174e-09
+    159      -16.874674811216  -4.753e-09
+    160      -16.874674814688  -3.471e-09
+    161      -16.874674824112  -9.424e-09
+    162      -16.874674830076  -5.964e-09
+    163      -16.874674832111  -2.035e-09
+    164      -16.874674833110  -9.989e-10
+    165      -16.874674839606  -6.496e-09
+    166      -16.874674842175  -2.569e-09
+    167      -16.874674842984  -8.094e-10
+    168      -16.874674843963  -9.784e-10
+    169      -16.874674848123  -4.160e-09
+    170      -16.874674850310  -2.187e-09
+    171      -16.874674850770  -4.605e-10
+    172      -16.874674851396  -6.263e-10
+    173      -16.874674854428  -3.032e-09
+    174      -16.874674855880  -1.452e-09
+    175      -16.874674856121  -2.410e-10
+    176      -16.874674856665  -5.444e-10
+    177      -16.874674859264  -2.599e-09
+    178      -16.874674860346  -1.082e-09
+    179      -16.874674859202  +1.144e-09
+    180      -16.874674859309  -1.071e-10
+    181      -16.874674860463  -1.153e-09
+    182      -16.874674860644  -1.808e-10
+    183      -16.874674860138  +5.058e-10
+    184      -16.874674860233  -9.517e-11
+    185      -16.874674860271  -3.796e-11
+    186      -16.874674860401  -1.299e-10
+    187      -16.874674860380  +2.069e-11
+    188      -16.874674860454  -7.354e-11
+    189      -16.874674860536  -8.214e-11
+    190      -16.874674860646  -1.101e-10
+    191      -16.874674860562  +8.404e-11
+    192      -16.874674860619  -5.706e-11
+    193      -16.874674860654  -3.472e-11
+    194      -16.874674860744  -8.983e-11
+    195      -16.874674860669  +7.464e-11
+    196      -16.874674860709  -3.980e-11
+    197      -16.874674860755  -4.613e-11
+    198      -16.874674860822  -6.673e-11
+    199      -16.874674860759  +6.246e-11
+    200      -16.874674860785  -2.610e-11
+    201      -16.874674860828  -4.290e-11
+    202      -16.874674860877  -4.860e-11
+    203      -16.874674860786  +9.094e-11
+    204      -16.874674860797  -1.086e-11
+    205      -16.874674860948  -1.513e-10
+    206      -16.874674860977  -2.919e-11
+    207      -16.874674860777  +1.998e-10
+    208      -16.874674860794  -1.632e-11
+    209      -16.874674860851  -5.728e-11
+    210      -16.874674860882  -3.072e-11
+    211      -16.874674860695  +1.867e-10
+    212      -16.874674860700  -5.492e-12
+    213      -16.874674860742  -4.209e-11
+    214      -16.874674860755  -1.216e-11
+    215      -16.874674860686  +6.863e-11
+    216      -16.874674860691  -5.468e-12
+    217      -16.874674860789  -9.712e-11
+    218      -16.874674860798  -9.564e-12
+    219      -16.874674860615  +1.830e-10
+    220      -16.874674860617  -1.901e-12
+    221      -16.874674860618  -1.251e-12
+    222      -16.874674860621  -2.306e-12
+    223      -16.874674860605  +1.585e-11
+    224      -16.874674860606  -1.243e-12
+    225      -16.874674860593  +1.278e-11
+    226      -16.874674860595  -1.915e-12
+    227      -16.874674860577  +1.825e-11
+    228      -16.874674860578  -9.486e-13
+    229      -16.874674860578  -4.974e-14
+    230      -16.874674860580  -1.720e-12
+    231      -16.874674860549  +3.086e-11
+    232      -16.874674860550  -9.805e-13
+    233      -16.874674860570  -2.002e-11
+    234      -16.874674860572  -1.890e-12
+    235      -16.874674860521  +5.096e-11
+    236      -16.874674860521  -2.593e-13
+    237      -16.874674860520  +6.892e-13
+    238      -16.874674860521  -6.253e-13
+    239      -16.874674860503  +1.747e-11
+    240      -16.874674860504  -3.126e-13
+    241      -16.874674860505  -1.350e-12
+    242      -16.874674860506  -6.111e-13
+    243      -16.874674860506  -3.588e-13
+  ----------------------------------------
+  The Davidson-Liu algorithm converged in 244 iterations.
+        0        0        324          1212     -14.463758297899  2.287e-02
+
+  Davidson-liu solver algorithm
+  Found a guess vector with spin not close to integer value (2.236068)
+  Found a guess vector with spin not close to integer value (2.236068)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (5.744563)
+  Found a guess vector with spin not close to integer value (5.744563)
+  Initial guess found 167 solutions with 2S+1 = 1 *
+  Initial guess found 177 solutions with 2S+1 = 3  
+  Initial guess found 23 solutions with 2S+1 = 5  
+
+  ==> Diagonalizing Hamiltonian <==
+
+  ----------------------------------------
+    Iter.      Avg. Energy       Delta_E
+  ----------------------------------------
+      1       -8.426432723561  -8.426e+00
+      2      -16.470276835938  -8.044e+00
+      3      -16.839751463902  -3.695e-01
+      4      -16.860018641281  -2.027e-02
+      5      -16.862325008477  -2.306e-03
+      6      -16.862458936383  -1.339e-04
+      7      -16.862546588565  -8.765e-05
+      8      -16.862580817701  -3.423e-05
+      9      -16.862612552946  -3.174e-05
+     10      -16.862629308390  -1.676e-05
+     11      -16.862643249934  -1.394e-05
+     12      -16.862649198522  -5.949e-06
+     13      -16.862662929393  -1.373e-05
+     14      -16.863204201331  -5.413e-04
+     15      -16.867517830214  -4.314e-03
+     16      -16.870025662300  -2.508e-03
+     17      -16.874686918939  -4.661e-03
+     18      -16.881398827283  -6.712e-03
+     19      -16.882226481258  -8.277e-04
+     20      -16.882251868037  -2.539e-05
+     21      -16.882452637809  -2.008e-04
+     22      -16.882466660729  -1.402e-05
+     23      -16.882561819645  -9.516e-05
+     24      -16.882578444915  -1.663e-05
+     25      -16.882585761017  -7.316e-06
+     26      -16.882591940164  -6.179e-06
+     27      -16.882595206314  -3.266e-06
+     28      -16.882597388264  -2.182e-06
+     29      -16.882601892064  -4.504e-06
+     30      -16.882604018413  -2.126e-06
+     31      -16.882607335408  -3.317e-06
+     32      -16.882607538375  -2.030e-07
+     33      -16.882700063848  -9.253e-05
+     34      -16.882730271516  -3.021e-05
+     35      -16.882743355833  -1.308e-05
+     36      -16.882762461037  -1.911e-05
+     37      -16.882851234649  -8.877e-05
+     38      -16.882869234328  -1.800e-05
+     39      -16.882886247550  -1.701e-05
+     40      -16.882890193747  -3.946e-06
+     41      -16.882894160618  -3.967e-06
+     42      -16.882896152193  -1.992e-06
+     43      -16.882896409440  -2.572e-07
+     44      -16.882897161391  -7.520e-07
+     45      -16.882898046925  -8.855e-07
+     46      -16.882898241903  -1.950e-07
+     47      -16.882899967018  -1.725e-06
+     48      -16.882900421533  -4.545e-07
+     49      -16.882900725581  -3.040e-07
+     50      -16.882900782097  -5.652e-08
+     51      -16.882900925236  -1.431e-07
+     52      -16.882900959618  -3.438e-08
+     53      -16.882901103757  -1.441e-07
+     54      -16.882901133367  -2.961e-08
+     55      -16.882901584096  -4.507e-07
+     56      -16.882901766954  -1.829e-07
+     57      -16.882902095632  -3.287e-07
+     58      -16.882902245449  -1.498e-07
+     59      -16.882902252274  -6.824e-09
+     60      -16.882902257658  -5.384e-09
+     61      -16.882902307918  -5.026e-08
+     62      -16.882902313112  -5.193e-09
+     63      -16.882902322572  -9.460e-09
+     64      -16.882902322985  -4.136e-10
+     65      -16.882902333252  -1.027e-08
+     66      -16.882902335029  -1.778e-09
+     67      -16.882902343895  -8.865e-09
+     68      -16.882902344255  -3.606e-10
+     69      -16.882902352752  -8.497e-09
+     70      -16.882902354103  -1.351e-09
+     71      -16.882902361177  -7.074e-09
+     72      -16.882902361687  -5.108e-10
+     73      -16.882902368777  -7.090e-09
+     74      -16.882902369764  -9.871e-10
+     75      -16.882902375719  -5.954e-09
+     76      -16.882902376245  -5.268e-10
+     77      -16.882902382745  -6.500e-09
+     78      -16.882902384038  -1.293e-09
+     79      -16.882902389032  -4.994e-09
+     80      -16.882902389498  -4.660e-10
+     81      -16.882902395127  -5.629e-09
+     82      -16.882902396421  -1.294e-09
+     83      -16.882902400581  -4.160e-09
+     84      -16.882902400960  -3.788e-10
+     85      -16.882902405787  -4.827e-09
+     86      -16.882902406932  -1.146e-09
+     87      -16.882902410451  -3.519e-09
+     88      -16.882902410752  -3.003e-10
+     89      -16.882902414888  -4.136e-09
+     90      -16.882902415878  -9.898e-10
+     91      -16.882902418873  -2.995e-09
+     92      -16.882902419114  -2.413e-10
+     93      -16.882902422661  -3.547e-09
+     94      -16.882902423521  -8.598e-10
+     95      -16.882902426070  -2.549e-09
+     96      -16.882902426268  -1.977e-10
+     97      -16.882902429307  -3.039e-09
+     98      -16.882902430055  -7.471e-10
+     99      -16.882902432226  -2.171e-09
+    100      -16.882902432390  -1.644e-10
+    101      -16.882902434992  -2.602e-09
+    102      -16.882902435637  -6.450e-10
+    103      -16.882902437490  -1.853e-09
+    104      -16.882902437628  -1.382e-10
+    105      -16.882902439855  -2.227e-09
+    106      -16.882902440408  -5.528e-10
+    107      -16.882902441992  -1.585e-09
+    108      -16.882902442110  -1.177e-10
+    109      -16.882902444015  -1.905e-09
+    110      -16.882902444486  -4.713e-10
+    111      -16.882902445845  -1.359e-09
+    112      -16.882902445947  -1.018e-10
+    113      -16.882902447576  -1.629e-09
+    114      -16.882902447976  -4.002e-10
+    115      -16.882902449144  -1.168e-09
+    116      -16.882902449233  -8.934e-11
+    117      -16.882902450626  -1.393e-09
+    118      -16.882902450964  -3.384e-10
+    119      -16.882902451969  -1.005e-09
+    120      -16.882902452049  -7.964e-11
+    121      -16.882902453239  -1.190e-09
+    122      -16.882902453524  -2.847e-10
+    123      -16.882902454391  -8.674e-10
+    124      -16.882902454463  -7.208e-11
+    125      -16.882902455479  -1.016e-09
+    126      -16.882902455717  -2.381e-10
+    127      -16.882902456468  -7.503e-10
+    128      -16.882902456534  -6.617e-11
+    129      -16.882902457401  -8.672e-10
+    130      -16.882902457599  -1.979e-10
+    131      -16.882902458250  -6.505e-10
+    132      -16.882902458311  -6.169e-11
+    133      -16.882902459051  -7.393e-10
+    134      -16.882902459214  -1.632e-10
+    135      -16.882902459779  -5.656e-10
+    136      -16.882902459838  -5.843e-11
+    137      -16.882902460467  -6.292e-10
+    138      -16.882902460600  -1.332e-10
+    139      -16.882902461093  -4.930e-10
+    140      -16.882902461150  -5.638e-11
+    141      -16.882902461684  -5.345e-10
+    142      -16.882902461791  -1.073e-10
+    143      -16.882902462223  -4.311e-10
+    144      -16.882902462279  -5.612e-11
+    145      -16.882902462733  -4.540e-10
+    146      -16.882902462818  -8.524e-11
+    147      -16.882902463197  -3.794e-10
+    148      -16.882902463257  -5.974e-11
+    149      -16.882902463654  -3.973e-10
+    150      -16.882902463723  -6.904e-11
+    151      -16.882902464058  -3.351e-10
+    152      -16.882902464109  -5.062e-11
+    153      -16.882902464445  -3.359e-10
+    154      -16.882902464503  -5.796e-11
+    155      -16.882902464795  -2.919e-10
+    156      -16.882902464838  -4.372e-11
+    157      -16.882902465134  -2.950e-10
+    158      -16.882902465183  -4.956e-11
+    159      -16.882902465446  -2.630e-10
+    160      -16.882902465489  -4.318e-11
+    161      -16.882902465744  -2.552e-10
+    162      -16.882902465784  -3.968e-11
+    163      -16.882902466018  -2.336e-10
+    164      -16.882902466060  -4.263e-11
+    165      -16.882902466280  -2.197e-10
+    166      -16.882902466313  -3.299e-11
+    167      -16.882902466520  -2.071e-10
+    168      -16.882902466562  -4.198e-11
+    169      -16.882902466753  -1.914e-10
+    170      -16.882902466782  -2.867e-11
+    171      -16.882902466967  -1.847e-10
+    172      -16.882902467008  -4.112e-11
+    173      -16.882902467176  -1.681e-10
+    174      -16.882902467202  -2.563e-11
+    175      -16.882902467367  -1.656e-10
+    176      -16.882902467408  -4.028e-11
+    177      -16.882902467556  -1.485e-10
+    178      -16.882902467579  -2.341e-11
+    179      -16.882902467729  -1.491e-10
+    180      -16.882902467768  -3.951e-11
+    181      -16.882902467900  -1.319e-10
+    182      -16.882902467922  -2.201e-11
+    183      -16.882902468057  -1.347e-10
+    184      -16.882902468095  -3.879e-11
+    185      -16.882902468214  -1.182e-10
+    186      -16.882902468235  -2.141e-11
+    187      -16.882902468357  -1.221e-10
+    188      -16.882902468395  -3.809e-11
+    189      -16.882902468502  -1.067e-10
+    190      -16.882902468524  -2.176e-11
+    191      -16.882902468634  -1.107e-10
+    192      -16.882902468672  -3.737e-11
+    193      -16.882902468769  -9.747e-11
+    194      -16.882902468793  -2.363e-11
+    195      -16.882902468893  -9.982e-11
+    196      -16.882902468929  -3.647e-11
+    197      -16.882902469020  -9.081e-11
+    198      -16.882902469050  -2.969e-11
+    199      -16.882902469145  -9.560e-11
+    200      -16.882902469176  -3.100e-11
+    201      -16.882902469317  -1.411e-10
+    202      -16.882902469344  -2.650e-11
+    203      -16.882902469470  -1.262e-10
+    204      -16.882902469497  -2.742e-11
+    205      -16.882902469524  -2.656e-11
+    206      -16.882902469531  -6.803e-12
+    207      -16.882902469581  -5.016e-11
+    208      -16.882902469611  -3.012e-11
+    209      -16.882902469683  -7.218e-11
+    210      -16.882902469753  -6.938e-11
+    211      -16.882902469771  -1.831e-11
+    212      -16.882902469792  -2.115e-11
+    213      -16.882902469898  -1.057e-10
+    214      -16.882902469913  -1.505e-11
+    215      -16.882902470036  -1.227e-10
+    216      -16.882902470050  -1.455e-11
+    217      -16.882902470078  -2.804e-11
+    218      -16.882902470082  -4.171e-12
+    219      -16.882902470139  -5.666e-11
+    220      -16.882902470183  -4.429e-11
+    221      -16.882902470257  -7.340e-11
+    222      -16.882902470277  -2.035e-11
+    223      -16.882902470345  -6.824e-11
+    224      -16.882902470374  -2.878e-11
+    225      -16.882902470417  -4.290e-11
+    226      -16.882902470432  -1.550e-11
+    227      -16.882902470481  -4.837e-11
+    228      -16.882902470507  -2.653e-11
+    229      -16.882902470538  -3.102e-11
+    230      -16.882902470568  -2.919e-11
+    231      -16.882902470592  -2.424e-11
+    232      -16.882902470621  -2.888e-11
+    233      -16.882902470660  -3.963e-11
+    234      -16.882902470678  -1.795e-11
+    235      -16.882902470718  -4.002e-11
+    236      -16.882902470742  -2.346e-11
+    237      -16.882902470758  -1.645e-11
+    238      -16.882902470773  -1.519e-11
+    239      -16.882902470798  -2.448e-11
+    240      -16.882902470820  -2.214e-11
+    241      -16.882902470829  -9.074e-12
+    242      -16.882902470841  -1.206e-11
+    243      -16.882902470872  -3.074e-11
+    244      -16.882902470894  -2.190e-11
+    245      -16.882902471287  -3.930e-10
+    246      -16.882902471372  -8.497e-11
+    247      -16.882902471540  -1.685e-10
+    248      -16.882902471571  -3.048e-11
+    249      -16.882902471694  -1.234e-10
+    250      -16.882902471762  -6.768e-11
+    251      -16.882902472198  -4.367e-10
+    252      -16.882902472205  -6.235e-12
+    253      -16.882902472754  -5.495e-10
+    254      -16.882902472763  -9.209e-12
+    255      -16.882902473069  -3.058e-10
+    256      -16.882902473099  -2.949e-11
+    257      -16.882902473114  -1.512e-11
+    258      -16.882902473228  -1.137e-10
+    259      -16.882902474640  -1.412e-09
+    260      -16.882902474731  -9.127e-11
+    261      -16.882902474750  -1.886e-11
+    262      -16.882902475169  -4.192e-10
+    263      -16.882902475217  -4.855e-11
+    264      -16.882902475467  -2.496e-10
+    265      -16.882902476011  -5.444e-10
+    266      -16.882902476019  -7.823e-12
+    267      -16.882902476078  -5.883e-11
+    268      -16.882902476084  -6.011e-12
+    269      -16.882902476125  -4.092e-11
+    270      -16.882902476127  -2.004e-12
+    271      -16.882902476582  -4.554e-10
+    272      -16.882902476606  -2.384e-11
+    273      -16.882902476598  +7.915e-12
+    274      -16.882902476602  -3.741e-12
+    275      -16.882902476616  -1.421e-11
+    276      -16.882902476616  -3.553e-14
+    277      -16.882902476682  -6.538e-11
+    278      -16.882902476683  -1.041e-12
+    279      -16.882902476702  -1.932e-11
+    280      -16.882902476702  -2.132e-14
+    281      -16.882902477213  -5.109e-10
+    282      -16.882902477238  -2.478e-11
+    283      -16.882902477237  +4.974e-13
+    284      -16.882902477244  -6.249e-12
+    285      -16.882902477335  -9.139e-11
+    286      -16.882902477337  -1.855e-12
+    287      -16.882902478423  -1.087e-09
+    288      -16.882902478427  -3.379e-12
+    289      -16.882902478556  -1.293e-10
+    290      -16.882902478570  -1.406e-11
+    291      -16.882902478762  -1.916e-10
+    292      -16.882902478778  -1.594e-11
+    293      -16.882902478791  -1.297e-11
+    294      -16.882902478793  -1.958e-12
+    295      -16.882902478790  +2.739e-12
+    296      -16.882902478791  -7.319e-13
+    297      -16.882902478810  -1.987e-11
+    298      -16.882902478815  -4.395e-12
+    299      -16.882902478815  -4.903e-13
+  ----------------------------------------
+  The Davidson-Liu algorithm converged in 300 iterations.
+        1        0        430          1706     -14.515762418287 -5.200e-02
+
+  Davidson-liu solver algorithm
+  Found a guess vector with spin not close to integer value (2.013884)
+  Found a guess vector with spin not close to integer value (2.013884)
+  Found a guess vector with spin not close to integer value (2.236068)
+  Found a guess vector with spin not close to integer value (2.236068)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.684471)
+  Found a guess vector with spin not close to integer value (4.684471)
+  Found a guess vector with spin not close to integer value (6.082763)
+  Found a guess vector with spin not close to integer value (6.082763)
+  Initial guess found 163 solutions with 2S+1 = 1 *
+  Initial guess found 182 solutions with 2S+1 = 3  
+  Initial guess found 27 solutions with 2S+1 = 5  
+
+  ==> Diagonalizing Hamiltonian <==
+
+  ----------------------------------------
+    Iter.      Avg. Energy       Delta_E
+  ----------------------------------------
+      1       -8.448555423148  -8.449e+00
+      2      -15.786191938996  -7.338e+00
+      3      -16.386698000206  -6.005e-01
+      4      -16.809469976000  -4.228e-01
+      5      -16.844854630202  -3.538e-02
+      6      -16.845310486652  -4.559e-04
+      7      -16.847761873058  -2.451e-03
+      8      -16.860978367231  -1.322e-02
+      9      -16.861888548683  -9.102e-04
+     10      -16.861899025629  -1.048e-05
+     11      -16.862336102368  -4.371e-04
+     12      -16.862512880896  -1.768e-04
+     13      -16.862610972366  -9.809e-05
+     14      -16.862621068254  -1.010e-05
+     15      -16.862656371308  -3.530e-05
+     16      -16.862657915335  -1.544e-06
+     17      -16.868006780477  -5.349e-03
+     18      -16.878156162949  -1.015e-02
+     19      -16.880099408479  -1.943e-03
+     20      -16.880364432633  -2.650e-04
+     21      -16.881642836606  -1.278e-03
+     22      -16.881654939982  -1.210e-05
+     23      -16.881704223694  -4.928e-05
+     24      -16.881706687470  -2.464e-06
+     25      -16.881830983093  -1.243e-04
+     26      -16.881861063630  -3.008e-05
+     27      -16.881881768217  -2.070e-05
+     28      -16.881882325522  -5.573e-07
+     29      -16.881885191422  -2.866e-06
+     30      -16.881885241851  -5.043e-08
+     31      -16.881944267626  -5.903e-05
+     32      -16.881958259306  -1.399e-05
+     33      -16.882032815909  -7.456e-05
+     34      -16.882037552002  -4.736e-06
+     35      -16.882110075637  -7.252e-05
+     36      -16.882121364719  -1.129e-05
+     37      -16.882168561767  -4.720e-05
+     38      -16.882170671803  -2.110e-06
+     39      -16.882234476068  -6.380e-05
+     40      -16.882247200572  -1.272e-05
+     41      -16.882272807704  -2.561e-05
+     42      -16.882273692864  -8.852e-07
+     43      -16.882295733346  -2.204e-05
+     44      -16.882303843094  -8.110e-06
+     45      -16.882345422620  -4.158e-05
+     46      -16.882348549266  -3.127e-06
+     47      -16.882392033576  -4.348e-05
+     48      -16.882399848309  -7.815e-06
+     49      -16.882425474480  -2.563e-05
+     50      -16.882426963751  -1.489e-06
+     51      -16.882459664393  -3.270e-05
+     52      -16.882467421714  -7.757e-06
+     53      -16.882485609201  -1.819e-05
+     54      -16.882485997812  -3.886e-07
+     55      -16.882514487560  -2.849e-05
+     56      -16.882522602394  -8.115e-06
+     57      -16.882535300035  -1.270e-05
+     58      -16.882535592266  -2.922e-07
+     59      -16.882552723788  -1.713e-05
+     60      -16.882559558326  -6.835e-06
+     61      -16.882572525584  -1.297e-05
+     62      -16.882572701468  -1.759e-07
+     63      -16.882572809017  -1.075e-07
+     64      -16.882572830131  -2.111e-08
+     65      -16.882576374618  -3.544e-06
+     66      -16.882576737655  -3.630e-07
+     67      -16.882770033687  -1.933e-04
+     68      -16.882774774194  -4.741e-06
+     69      -16.882796651714  -2.188e-05
+     70      -16.882798838979  -2.187e-06
+     71      -16.882821881024  -2.304e-05
+     72      -16.882825945018  -4.064e-06
+     73      -16.882835158963  -9.214e-06
+     74      -16.882836425369  -1.266e-06
+     75      -16.882840338912  -3.914e-06
+     76      -16.882842181309  -1.842e-06
+     77      -16.882846479407  -4.298e-06
+     78      -16.882847124915  -6.455e-07
+     79      -16.882850792982  -3.668e-06
+     80      -16.882852243617  -1.451e-06
+     81      -16.882855178849  -2.935e-06
+     82      -16.882855657463  -4.786e-07
+     83      -16.882858836813  -3.179e-06
+     84      -16.882860081880  -1.245e-06
+     85      -16.882862513887  -2.432e-06
+     86      -16.882862892733  -3.788e-07
+     87      -16.882865711098  -2.818e-06
+     88      -16.882866813748  -1.103e-06
+     89      -16.882868926136  -2.112e-06
+     90      -16.882869233028  -3.069e-07
+     91      -16.882871770374  -2.537e-06
+     92      -16.882872761823  -9.914e-07
+     93      -16.882874631929  -1.870e-06
+     94      -16.882874881051  -2.491e-07
+     95      -16.882877188314  -2.307e-06
+     96      -16.882878085727  -8.974e-07
+     97      -16.882879760609  -1.675e-06
+     98      -16.882879960690  -2.001e-07
+     99      -16.882882073129  -2.112e-06
+    100      -16.882882887666  -8.145e-07
+    101      -16.882884401581  -1.514e-06
+    102      -16.882884559408  -1.578e-07
+    103      -16.882886502947  -1.944e-06
+    104      -16.882887243041  -7.401e-07
+    105      -16.882888622120  -1.379e-06
+    106      -16.882888743617  -1.215e-07
+    107      -16.882890538023  -1.794e-06
+    108      -16.882891210526  -6.725e-07
+    109      -16.882892475290  -1.265e-06
+    110      -16.882892565742  -9.045e-08
+    111      -16.882894226483  -1.661e-06
+    112      -16.882894837052  -6.106e-07
+    113      -16.882896004271  -1.167e-06
+    114      -16.882896068391  -6.412e-08
+    115      -16.882897607631  -1.539e-06
+    116      -16.882898160818  -5.532e-07
+    117      -16.882899244980  -1.084e-06
+    118      -16.882899287002  -4.202e-08
+    119      -16.882900713723  -1.427e-06
+    120      -16.882901212807  -4.991e-07
+    121      -16.882902227575  -1.015e-06
+    122      -16.882902251419  -2.384e-08
+    123      -16.882903569610  -1.318e-06
+    124      -16.882904015826  -4.462e-07
+    125      -16.882904976535  -9.607e-07
+    126      -16.882904986223  -9.687e-09
+    127      -16.882906181482  -1.195e-06
+    128      -16.882906569898  -3.884e-07
+    129      -16.882907504150  -9.343e-07
+    130      -16.882907506032  -1.881e-09
+    131      -16.882908046865  -5.408e-07
+    132      -16.882908060063  -1.320e-08
+    133      -16.882909353256  -1.293e-06
+    134      -16.882909840685  -4.874e-07
+    135      -16.882910520575  -6.799e-07
+    136      -16.882910622890  -1.023e-07
+    137      -16.882911641569  -1.019e-06
+    138      -16.882912095848  -4.543e-07
+    139      -16.882912759535  -6.637e-07
+    140      -16.882912873969  -1.144e-07
+    141      -16.882913829049  -9.551e-07
+    142      -16.882914243660  -4.146e-07
+    143      -16.882914890084  -6.464e-07
+    144      -16.882915015186  -1.251e-07
+    145      -16.882915907811  -8.926e-07
+    146      -16.882916289730  -3.819e-07
+    147      -16.882916911121  -6.214e-07
+    148      -16.882917041077  -1.300e-07
+    149      -16.882917873937  -8.329e-07
+    150      -16.882918226514  -3.526e-07
+    151      -16.882918819780  -5.933e-07
+    152      -16.882918951056  -1.313e-07
+    153      -16.882919727448  -7.764e-07
+    154      -16.882920053219  -3.258e-07
+    155      -16.882920617459  -5.642e-07
+    156      -16.882920748180  -1.307e-07
+    157      -16.882921471358  -7.232e-07
+    158      -16.882921772358  -3.010e-07
+    159      -16.882922308004  -5.356e-07
+    160      -16.882922437420  -1.294e-07
+    161      -16.882923110437  -6.730e-07
+    162      -16.882923388382  -2.779e-07
+    163      -16.882923896624  -5.082e-07
+    164      -16.882924024726  -1.281e-07
+    165      -16.882924650359  -6.256e-07
+    166      -16.882924906747  -2.564e-07
+    167      -16.882925389160  -4.824e-07
+    168      -16.882925516429  -1.273e-07
+    169      -16.882926097136  -5.807e-07
+    170      -16.882926333301  -2.362e-07
+    171      -16.882926791617  -4.583e-07
+    172      -16.882926918891  -1.273e-07
+    173      -16.882927456770  -5.379e-07
+    174      -16.882927673918  -2.171e-07
+    175      -16.882928109880  -4.360e-07
+    176      -16.882928238297  -1.284e-07
+    177      -16.882928735035  -4.967e-07
+    178      -16.882928934262  -1.992e-07
+    179      -16.882929349532  -4.153e-07
+    180      -16.882929480544  -1.310e-07
+    181      -16.882929937332  -4.568e-07
+    182      -16.882930119637  -1.823e-07
+    183      -16.882930515728  -3.961e-07
+    184      -16.882930651175  -1.354e-07
+    185      -16.882931068576  -4.174e-07
+    186      -16.882931234860  -1.663e-07
+    187      -16.882931613072  -3.782e-07
+    188      -16.882931755350  -1.423e-07
+    189      -16.882932133064  -3.777e-07
+    190      -16.882932284107  -1.510e-07
+    191      -16.882932645458  -3.614e-07
+    192      -16.882932797784  -1.523e-07
+    193      -16.882933134265  -3.365e-07
+    194      -16.882933270616  -1.364e-07
+    195      -16.882933615815  -3.452e-07
+    196      -16.882933782564  -1.667e-07
+    197      -16.882934074393  -2.918e-07
+    198      -16.882934195882  -1.215e-07
+    199      -16.882934525771  -3.299e-07
+    200      -16.882934712054  -1.863e-07
+    201      -16.882934953226  -2.412e-07
+    202      -16.882935055961  -1.027e-07
+    203      -16.882935376706  -3.207e-07
+    204      -16.882935579044  -2.023e-07
+    205      -16.882935768214  -1.892e-07
+    206      -16.882935831784  -6.357e-08
+    207      -16.882936178292  -3.465e-07
+    208      -16.882936349676  -1.714e-07
+    209      -16.882936576188  -2.265e-07
+    210      -16.882936656718  -8.053e-08
+    211      -16.882936907091  -2.504e-07
+    212      -16.882937142404  -2.353e-07
+    213      -16.882937254029  -1.116e-07
+    214      -16.882937326981  -7.295e-08
+    215      -16.882937496849  -1.699e-07
+    216      -16.882937655236  -1.584e-07
+    217      -16.882937781494  -1.263e-07
+    218      -16.882937906955  -1.255e-07
+    219      -16.882938053971  -1.470e-07
+    220      -16.882938201491  -1.475e-07
+    221      -16.882938318353  -1.169e-07
+    222      -16.882938435809  -1.175e-07
+    223      -16.882938570741  -1.349e-07
+    224      -16.882938705697  -1.350e-07
+    225      -16.882938814852  -1.092e-07
+    226      -16.882938923750  -1.089e-07
+    227      -16.882939048460  -1.247e-07
+    228      -16.882939172485  -1.240e-07
+    229      -16.882939274566  -1.021e-07
+    230      -16.882939375679  -1.011e-07
+    231      -16.882939491310  -1.156e-07
+    232      -16.882939605624  -1.143e-07
+    233      -16.882939701239  -9.562e-08
+    234      -16.882939795228  -9.399e-08
+    235      -16.882939902742  -1.075e-07
+    236      -16.882940008372  -1.056e-07
+    237      -16.882940098052  -8.968e-08
+    238      -16.882940185500  -8.745e-08
+    239      -16.882940285713  -1.002e-07
+    240      -16.882940383531  -9.782e-08
+    241      -16.882940467744  -8.421e-08
+    242      -16.882940549173  -8.143e-08
+    243      -16.882940642788  -9.362e-08
+    244      -16.882940733544  -9.076e-08
+    245      -16.882940812712  -7.917e-08
+    246      -16.882940888586  -7.587e-08
+    247      -16.882940976215  -8.763e-08
+    248      -16.882941060563  -8.435e-08
+    249      -16.882941135064  -7.450e-08
+    250      -16.882941205805  -7.074e-08
+    251      -16.882941287986  -8.218e-08
+    252      -16.882941366498  -7.851e-08
+    253      -16.882941436678  -7.018e-08
+    254      -16.882941502666  -6.599e-08
+    255      -16.882941579876  -7.721e-08
+    256      -16.882941653060  -7.318e-08
+    257      -16.882941719233  -6.617e-08
+    258      -16.882941780813  -6.158e-08
+    259      -16.882941853477  -7.266e-08
+    260      -16.882941921783  -6.831e-08
+    261      -16.882941984238  -6.246e-08
+    262      -16.882942041727  -5.749e-08
+    263      -16.882942110225  -6.850e-08
+    264      -16.882942174057  -6.383e-08
+    265      -16.882942233061  -5.900e-08
+    266      -16.882942286746  -5.369e-08
+    267      -16.882942351423  -6.468e-08
+    268      -16.882942411141  -5.972e-08
+    269      -16.882942466940  -5.580e-08
+    270      -16.882942517088  -5.015e-08
+    271      -16.882942578253  -6.116e-08
+    272      -16.882942634183  -5.593e-08
+    273      -16.882942687008  -5.282e-08
+    274      -16.882942733862  -4.685e-08
+    275      -16.882942791798  -5.794e-08
+    276      -16.882942844234  -5.244e-08
+    277      -16.882942894298  -5.006e-08
+    278      -16.882942938084  -4.379e-08
+    279      -16.882942993048  -5.496e-08
+    280      -16.882943042257  -4.921e-08
+    281      -16.882943089762  -4.750e-08
+    282      -16.882943130686  -4.092e-08
+    283      -16.882943182915  -5.223e-08
+    284      -16.882943229138  -4.622e-08
+    285      -16.882943274274  -4.514e-08
+    286      -16.882943312529  -3.825e-08
+    287      -16.882943362242  -4.971e-08
+    288      -16.882943405698  -4.346e-08
+    289      -16.882943448644  -4.295e-08
+    290      -16.882943484409  -3.576e-08
+    291      -16.882943531807  -4.740e-08
+    292      -16.882943572696  -4.089e-08
+    293      -16.882943613625  -4.093e-08
+    294      -16.882943647064  -3.344e-08
+    295      -16.882943692336  -4.527e-08
+    296      -16.882943730841  -3.851e-08
+    297      -16.882943769918  -3.908e-08
+    298      -16.882943801186  -3.127e-08
+    299      -16.882943844506  -4.332e-08
+    300      -16.882943880794  -3.629e-08
+    301      -16.882943918179  -3.738e-08
+    302      -16.882943947419  -2.924e-08
+    303      -16.882943988954  -4.154e-08
+    304      -16.882944023176  -3.422e-08
+    305      -16.882944059025  -3.585e-08
+    306      -16.882944086371  -2.735e-08
+    307      -16.882944126279  -3.991e-08
+    308      -16.882944158575  -3.230e-08
+    309      -16.882944193042  -3.447e-08
+    310      -16.882944218620  -2.558e-08
+    311      -16.882944257051  -3.843e-08
+    312      -16.882944287547  -3.050e-08
+    313      -16.882944320790  -3.324e-08
+    314      -16.882944344716  -2.393e-08
+    315      -16.882944381817  -3.710e-08
+    316      -16.882944410629  -2.881e-08
+    317      -16.882944442804  -3.217e-08
+    318      -16.882944465189  -2.239e-08
+    319      -16.882944501104  -3.591e-08
+    320      -16.882944528337  -2.723e-08
+    321      -16.882944559607  -3.127e-08
+    322      -16.882944580555  -2.095e-08
+    323      -16.882944615427  -3.487e-08
+    324      -16.882944641176  -2.575e-08
+    325      -16.882944671713  -3.054e-08
+    326      -16.882944691321  -1.961e-08
+    327      -16.882944725294  -3.397e-08
+    328      -16.882944749645  -2.435e-08
+    329      -16.882944779635  -2.999e-08
+    330      -16.882944797994  -1.836e-08
+    331      -16.882944831217  -3.322e-08
+    332      -16.882944854245  -2.303e-08
+    333      -16.882944883890  -2.964e-08
+    334      -16.882944901086  -1.720e-08
+    335      -16.882944933715  -3.263e-08
+    336      -16.882944955486  -2.177e-08
+    337      -16.882944985012  -2.953e-08
+    338      -16.882945001128  -1.612e-08
+    339      -16.882945033328  -3.220e-08
+    340      -16.882945053894  -2.057e-08
+    341      -16.882945083563  -2.967e-08
+    342      -16.882945098672  -1.511e-08
+    343      -16.882945130622  -3.195e-08
+    344      -16.882945150024  -1.940e-08
+    345      -16.882945180136  -3.011e-08
+    346      -16.882945194308  -1.417e-08
+    347      -16.882945226202  -3.189e-08
+    348      -16.882945244465  -1.826e-08
+    349      -16.882945275373  -3.091e-08
+    350      -16.882945288666  -1.329e-08
+    351      -16.882945320715  -3.205e-08
+    352      -16.882945337841  -1.713e-08
+    353      -16.882945369958  -3.212e-08
+    354      -16.882945382416  -1.246e-08
+    355      -16.882945414839  -3.242e-08
+    356      -16.882945430807  -1.597e-08
+    357      -16.882945464597  -3.379e-08
+    358      -16.882945476241  -1.164e-08
+    359      -16.882945509243  -3.300e-08
+    360      -16.882945523997  -1.475e-08
+    361      -16.882945559938  -3.594e-08
+    362      -16.882945570746  -1.081e-08
+    363      -16.882945604456  -3.371e-08
+    364      -16.882945617900  -1.344e-08
+    365      -16.882945656357  -3.846e-08
+    366      -16.882945666233  -9.877e-09
+    367      -16.882945700560  -3.433e-08
+    368      -16.882945712572  -1.201e-08
+    369      -16.882945753481  -4.091e-08
+    370      -16.882945762211  -8.730e-09
+    371      -16.882945796542  -3.433e-08
+    372      -16.882945807042  -1.050e-08
+    373      -16.882945849348  -4.231e-08
+    374      -16.882945856544  -7.196e-09
+    375      -16.882945889182  -3.264e-08
+    376      -16.882945898358  -9.175e-09
+    377      -16.882945939558  -4.120e-08
+    378      -16.882945944635  -5.077e-09
+    379      -16.882945971040  -2.640e-08
+    380      -16.882945979958  -8.918e-09
+    381      -16.882946008004  -2.805e-08
+    382      -16.882946010051  -2.048e-09
+    383      -16.882946022579  -1.253e-08
+    384      -16.882946027819  -5.240e-09
+    385      -16.882946032303  -4.485e-09
+    386      -16.882946033653  -1.350e-09
+    387      -16.882946039945  -6.292e-09
+    388      -16.882946042690  -2.745e-09
+    389      -16.882946048669  -5.980e-09
+    390      -16.882946049111  -4.417e-10
+    391      -16.882946053869  -4.758e-09
+    392      -16.882946054453  -5.840e-10
+    393      -16.882946057855  -3.403e-09
+    394      -16.882946058119  -2.640e-10
+    395      -16.882946060528  -2.408e-09
+    396      -16.882946060698  -1.703e-10
+    397      -16.882946062810  -2.112e-09
+    398      -16.882946063036  -2.256e-10
+    399      -16.882946064173  -1.137e-09
+    400      -16.882946064196  -2.345e-11
+    401      -16.882946065294  -1.098e-09
+    402      -16.882946065791  -4.963e-10
+    403      -16.882946065905  -1.142e-10
+    404      -16.882946065908  -3.510e-12
+    405      -16.882946066279  -3.708e-10
+    406      -16.882946066308  -2.838e-11
+    407      -16.882946066528  -2.209e-10
+    408      -16.882946066547  -1.828e-11
+    409      -16.882946066831  -2.840e-10
+    410      -16.882946066857  -2.636e-11
+    411      -16.882946066936  -7.906e-11
+    412      -16.882946066936  -2.984e-13
+  ----------------------------------------
+  The Davidson-Liu algorithm converged in 413 iterations.
+        2        0        468          3118     -14.515853411896 -9.099e-05
+
+  Davidson-liu solver algorithm
+  Found a guess vector with spin not close to integer value (1.828427)
+  Found a guess vector with spin not close to integer value (1.828427)
+  Found a guess vector with spin not close to integer value (2.236068)
+  Found a guess vector with spin not close to integer value (2.236068)
+  Found a guess vector with spin not close to integer value (3.828427)
+  Found a guess vector with spin not close to integer value (3.828427)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (6.082763)
+  Found a guess vector with spin not close to integer value (6.082763)
+  Initial guess found 163 solutions with 2S+1 = 1 *
+  Initial guess found 178 solutions with 2S+1 = 3  
+  Initial guess found 28 solutions with 2S+1 = 5  
+
+  ==> Diagonalizing Hamiltonian <==
+
+  ----------------------------------------
+    Iter.      Avg. Energy       Delta_E
+  ----------------------------------------
+      1       -8.448563650482  -8.449e+00
+      2      -13.866630786282  -5.418e+00
+      3      -16.835034330810  -2.968e+00
+      4      -16.837775900992  -2.742e-03
+      5      -16.861165375900  -2.339e-02
+      6      -16.861291138891  -1.258e-04
+      7      -16.862501556726  -1.210e-03
+      8      -16.862636290286  -1.347e-04
+      9      -16.862645113759  -8.823e-06
+     10      -16.862654624155  -9.510e-06
+     11      -16.862686517118  -3.189e-05
+     12      -16.862701696525  -1.518e-05
+     13      -16.862703527334  -1.831e-06
+     14      -16.862705305576  -1.778e-06
+     15      -16.862723109841  -1.780e-05
+     16      -16.870527031877  -7.804e-03
+     17      -16.871019076672  -4.920e-04
+     18      -16.871509619122  -4.905e-04
+     19      -16.877155869974  -5.646e-03
+     20      -16.882304611405  -5.149e-03
+     21      -16.882649913260  -3.453e-04
+     22      -16.882760808569  -1.109e-04
+     23      -16.882862161146  -1.014e-04
+     24      -16.882869860993  -7.700e-06
+     25      -16.882870556874  -6.959e-07
+     26      -16.882871013925  -4.571e-07
+     27      -16.882875900702  -4.887e-06
+     28      -16.882879352319  -3.452e-06
+     29      -16.882909058799  -2.971e-05
+     30      -16.882911325891  -2.267e-06
+     31      -16.882922315055  -1.099e-05
+     32      -16.882925443081  -3.128e-06
+     33      -16.882930663640  -5.221e-06
+     34      -16.882934059962  -3.396e-06
+     35      -16.882936164653  -2.105e-06
+     36      -16.882937929095  -1.764e-06
+     37      -16.882939830849  -1.902e-06
+     38      -16.882940915126  -1.084e-06
+     39      -16.882942417658  -1.503e-06
+     40      -16.882942472400  -5.474e-08
+     41      -16.882944259095  -1.787e-06
+     42      -16.882944501142  -2.420e-07
+     43      -16.882945550673  -1.050e-06
+     44      -16.882945571265  -2.059e-08
+     45      -16.882946426080  -8.548e-07
+     46      -16.882946500094  -7.401e-08
+     47      -16.882947034201  -5.341e-07
+     48      -16.882947045451  -1.125e-08
+     49      -16.882947450310  -4.049e-07
+     50      -16.882947477757  -2.745e-08
+     51      -16.882947743137  -2.654e-07
+     52      -16.882947750057  -6.920e-09
+     53      -16.882947942915  -1.929e-07
+     54      -16.882947956723  -1.381e-08
+     55      -16.882948084949  -1.282e-07
+     56      -16.882948089439  -4.490e-09
+     57      -16.882948180625  -9.119e-08
+     58      -16.882948190078  -9.453e-09
+     59      -16.882948249007  -5.893e-08
+     60      -16.882948252275  -3.268e-09
+     61      -16.882948294191  -4.192e-08
+     62      -16.882948301914  -7.723e-09
+     63      -16.882948326771  -2.486e-08
+     64      -16.882948329883  -3.111e-09
+     65      -16.882948347854  -1.797e-08
+     66      -16.882948353486  -5.632e-09
+     67      -16.882948363522  -1.004e-08
+     68      -16.882948366997  -3.475e-09
+     69      -16.882948373388  -6.390e-09
+     70      -16.882948376210  -2.822e-09
+     71      -16.882948381258  -5.049e-09
+     72      -16.882948383614  -2.356e-09
+     73      -16.882948385935  -2.321e-09
+     74      -16.882948387198  -1.263e-09
+     75      -16.882948390030  -2.832e-09
+     76      -16.882948391463  -1.433e-09
+     77      -16.882948392170  -7.072e-10
+     78      -16.882948392636  -4.658e-10
+     79      -16.882948394417  -1.780e-09
+     80      -16.882948395049  -6.319e-10
+     81      -16.882948395139  -9.084e-11
+     82      -16.882948395212  -7.273e-11
+     83      -16.882948395453  -2.409e-10
+     84      -16.882948395578  -1.253e-10
+     85      -16.882948395604  -2.554e-11
+     86      -16.882948395606  -1.954e-12
+     87      -16.882948395603  +2.856e-12
+     88      -16.882948395603  -1.421e-13
+     89      -16.882948395609  -6.224e-12
+     90      -16.882948395610  -2.771e-13
+     91      -16.882948395616  -6.040e-12
+     92      -16.882948395616  -4.619e-13
+     93      -16.882948395616  -1.918e-13
+  ----------------------------------------
+  The Davidson-Liu algorithm converged in 94 iterations.
+        3        0        482          3204     -14.515848989027  4.423e-06
+
+  Davidson-liu solver algorithm
+  Found a guess vector with spin not close to integer value (1.828427)
+  Found a guess vector with spin not close to integer value (1.828427)
+  Found a guess vector with spin not close to integer value (2.236068)
+  Found a guess vector with spin not close to integer value (2.236068)
+  Found a guess vector with spin not close to integer value (3.828427)
+  Found a guess vector with spin not close to integer value (3.828427)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (6.082763)
+  Found a guess vector with spin not close to integer value (6.082763)
+  Initial guess found 163 solutions with 2S+1 = 1 *
+  Initial guess found 178 solutions with 2S+1 = 3  
+  Initial guess found 28 solutions with 2S+1 = 5  
+
+  ==> Diagonalizing Hamiltonian <==
+
+  ----------------------------------------
+    Iter.      Avg. Energy       Delta_E
+  ----------------------------------------
+      1       -8.448565226764  -8.449e+00
+      2      -13.799597610447  -5.351e+00
+      3      -16.835972144234  -3.036e+00
+      4      -16.843415325691  -7.443e-03
+      5      -16.861622632374  -1.821e-02
+      6      -16.861753491532  -1.309e-04
+      7      -16.862488207244  -7.347e-04
+      8      -16.862615503422  -1.273e-04
+      9      -16.862619379726  -3.876e-06
+     10      -16.862621301080  -1.921e-06
+     11      -16.862672857746  -5.156e-05
+     12      -16.862697182227  -2.432e-05
+     13      -16.862698321265  -1.139e-06
+     14      -16.862698422325  -1.011e-07
+     15      -16.862713089095  -1.467e-05
+     16      -16.870165193656  -7.452e-03
+     17      -16.871909250660  -1.744e-03
+     18      -16.872478377991  -5.691e-04
+     19      -16.879442197309  -6.964e-03
+     20      -16.882446852131  -3.005e-03
+     21      -16.882510816944  -6.396e-05
+     22      -16.882522076844  -1.126e-05
+     23      -16.882555122458  -3.305e-05
+     24      -16.882585750995  -3.063e-05
+     25      -16.882758379647  -1.726e-04
+     26      -16.882788224668  -2.985e-05
+     27      -16.882837986907  -4.976e-05
+     28      -16.882843249966  -5.263e-06
+     29      -16.882870885652  -2.764e-05
+     30      -16.882871848068  -9.624e-07
+     31      -16.882902346607  -3.050e-05
+     32      -16.882908585260  -6.239e-06
+     33      -16.882919523411  -1.094e-05
+     34      -16.882919612760  -8.935e-08
+     35      -16.882928421920  -8.809e-06
+     36      -16.882929912135  -1.490e-06
+     37      -16.882933036286  -3.124e-06
+     38      -16.882933146153  -1.099e-07
+     39      -16.882934913867  -1.768e-06
+     40      -16.882935480588  -5.667e-07
+     41      -16.882935732442  -2.519e-07
+     42      -16.882935985620  -2.532e-07
+     43      -16.882936490382  -5.048e-07
+     44      -16.882936954815  -4.644e-07
+     45      -16.882937143023  -1.882e-07
+     46      -16.882937329579  -1.866e-07
+     47      -16.882937732391  -4.028e-07
+     48      -16.882938121751  -3.894e-07
+     49      -16.882938277436  -1.557e-07
+     50      -16.882938414470  -1.370e-07
+     51      -16.882938769250  -3.548e-07
+     52      -16.882939102567  -3.333e-07
+     53      -16.882939235035  -1.325e-07
+     54      -16.882939340473  -1.054e-07
+     55      -16.882939660635  -3.202e-07
+     56      -16.882939951797  -2.912e-07
+     57      -16.882940065694  -1.139e-07
+     58      -16.882940151187  -8.549e-08
+     59      -16.882940442353  -2.912e-07
+     60      -16.882940701461  -2.591e-07
+     61      -16.882940800636  -9.917e-08
+     62      -16.882940873559  -7.292e-08
+     63      -16.882941111613  -2.381e-07
+     64      -16.882941339808  -2.282e-07
+     65      -16.882941437754  -9.795e-08
+     66      -16.882941484520  -4.677e-08
+     67      -16.882941733857  -2.493e-07
+     68      -16.882941937743  -2.039e-07
+     69      -16.882942027373  -8.963e-08
+     70      -16.882942058675  -3.130e-08
+     71      -16.882942310511  -2.518e-07
+     72      -16.882942498472  -1.880e-07
+     73      -16.882942579416  -8.094e-08
+     74      -16.882942606719  -2.730e-08
+     75      -16.882942857309  -2.506e-07
+     76      -16.882943036714  -1.794e-07
+     77      -16.882943109278  -7.256e-08
+     78      -16.882943136635  -2.736e-08
+     79      -16.882943338248  -2.016e-07
+     80      -16.882943498728  -1.605e-07
+     81      -16.882943563927  -6.520e-08
+     82      -16.882943588877  -2.495e-08
+     83      -16.882943766454  -1.776e-07
+     84      -16.882943909937  -1.435e-07
+     85      -16.882943981917  -7.198e-08
+     86      -16.882943996356  -1.444e-08
+     87      -16.882944185199  -1.888e-07
+     88      -16.882944316475  -1.313e-07
+     89      -16.882944385843  -6.937e-08
+     90      -16.882944395687  -9.843e-09
+     91      -16.882944579743  -1.841e-07
+     92      -16.882944700566  -1.208e-07
+     93      -16.882944765559  -6.499e-08
+     94      -16.882944774023  -8.464e-09
+     95      -16.882944940559  -1.665e-07
+     96      -16.882945050315  -1.098e-07
+     97      -16.882945117766  -6.745e-08
+     98      -16.882945123502  -5.736e-09
+     99      -16.882945277109  -1.536e-07
+    100      -16.882945374704  -9.760e-08
+    101      -16.882945459984  -8.528e-08
+    102      -16.882945461602  -1.618e-09
+    103      -16.882945608469  -1.469e-07
+    104      -16.882945688608  -8.014e-08
+    105      -16.882945827633  -1.390e-07
+    106      -16.882945832260  -4.626e-09
+    107      -16.882946041345  -2.091e-07
+    108      -16.882946114860  -7.351e-08
+    109      -16.882946231014  -1.162e-07
+    110      -16.882946235543  -4.529e-09
+    111      -16.882946420390  -1.848e-07
+    112      -16.882946486017  -6.563e-08
+    113      -16.882946604076  -1.181e-07
+    114      -16.882946611003  -6.927e-09
+    115      -16.882946777682  -1.667e-07
+    116      -16.882946833762  -5.608e-08
+    117      -16.882946950625  -1.169e-07
+    118      -16.882946962544  -1.192e-08
+    119      -16.882947109134  -1.466e-07
+    120      -16.882947155399  -4.626e-08
+    121      -16.882947267131  -1.117e-07
+    122      -16.882947294587  -2.746e-08
+    123      -16.882947410935  -1.163e-07
+    124      -16.882947448927  -3.799e-08
+    125      -16.882947536131  -8.720e-08
+    126      -16.882947619375  -8.324e-08
+    127      -16.882947930514  -3.111e-07
+    128      -16.882948064933  -1.344e-07
+    129      -16.882948181603  -1.167e-07
+    130      -16.882948202357  -2.075e-08
+    131      -16.882948632069  -4.297e-07
+    132      -16.882948638382  -6.313e-09
+    133      -16.882948884033  -2.457e-07
+    134      -16.882948901431  -1.740e-08
+    135      -16.882948988732  -8.730e-08
+    136      -16.882948990448  -1.716e-09
+    137      -16.882949063601  -7.315e-08
+    138      -16.882949068058  -4.457e-09
+    139      -16.882949137298  -6.924e-08
+    140      -16.882949144090  -6.792e-09
+    141      -16.882949182057  -3.797e-08
+    142      -16.882949182321  -2.636e-10
+    143      -16.882949225627  -4.331e-08
+    144      -16.882949227381  -1.754e-09
+    145      -16.882949255644  -2.826e-08
+    146      -16.882949256266  -6.220e-10
+    147      -16.882949277162  -2.090e-08
+    148      -16.882949277686  -5.244e-10
+    149      -16.882949291738  -1.405e-08
+    150      -16.882949292059  -3.211e-10
+    151      -16.882949300806  -8.747e-09
+    152      -16.882949301106  -2.999e-10
+    153      -16.882949307739  -6.633e-09
+    154      -16.882949308002  -2.629e-10
+    155      -16.882949312181  -4.180e-09
+    156      -16.882949312370  -1.888e-10
+    157      -16.882949315635  -3.265e-09
+    158      -16.882949316024  -3.885e-10
+    159      -16.882949317590  -1.566e-09
+    160      -16.882949317777  -1.877e-10
+    161      -16.882949319424  -1.646e-09
+    162      -16.882949319827  -4.032e-10
+    163      -16.882949320395  -5.683e-10
+    164      -16.882949320649  -2.540e-10
+    165      -16.882949321574  -9.250e-10
+    166      -16.882949321990  -4.158e-10
+    167      -16.882949322083  -9.300e-11
+    168      -16.882949322181  -9.771e-11
+    169      -16.882949322671  -4.905e-10
+    170      -16.882949322680  -8.470e-12
+    171      -16.882949322816  -1.362e-10
+    172      -16.882949322829  -1.354e-11
+    173      -16.882949322847  -1.796e-11
+    174      -16.882949322853  -6.054e-12
+    175      -16.882949322866  -1.309e-11
+    176      -16.882949322875  -8.551e-12
+    177      -16.882949322881  -5.890e-12
+    178      -16.882949322885  -4.512e-12
+    179      -16.882949322893  -7.198e-12
+    180      -16.882949322898  -5.585e-12
+    181      -16.882949322902  -4.000e-12
+    182      -16.882949322906  -3.379e-12
+    183      -16.882949322910  -4.807e-12
+    184      -16.882949322914  -3.610e-12
+    185      -16.882949322917  -2.785e-12
+    186      -16.882949322919  -2.565e-12
+    187      -16.882949322923  -3.375e-12
+    188      -16.882949322925  -2.352e-12
+    189      -16.882949322927  -2.007e-12
+    190      -16.882949322929  -1.982e-12
+    191      -16.882949322931  -2.483e-12
+    192      -16.882949322933  -1.521e-12
+    193      -16.882949322934  -1.492e-12
+    194      -16.882949322936  -1.567e-12
+    195      -16.882949322938  -1.897e-12
+    196      -16.882949322939  -9.877e-13
+    197      -16.882949322940  -1.080e-12
+    198      -16.882949322941  -1.251e-12
+    199      -16.882949322943  -1.581e-12
+    200      -16.882949322943  -6.253e-13
+    201      -16.882949322944  -7.745e-13
+    202      -16.882949322945  -1.037e-12
+    203      -16.882949322947  -1.350e-12
+    204      -16.882949322947  -3.908e-13
+    205      -16.882949322948  -4.690e-13
+    206      -16.882949322948  -8.669e-13
+    207      -16.882949322950  -1.286e-12
+    208      -16.882949322950  -2.274e-13
+    209      -16.882949322950  -3.553e-13
+    210      -16.882949322951  -7.390e-13
+    211      -16.882949322952  -5.365e-13
+  ----------------------------------------
+  The Davidson-Liu algorithm converged in 212 iterations.
+        4        0        482          3214     -14.515859221503 -1.023e-05
+
+  Davidson-liu solver algorithm
+  Found a guess vector with spin not close to integer value (1.828427)
+  Found a guess vector with spin not close to integer value (1.828427)
+  Found a guess vector with spin not close to integer value (2.236068)
+  Found a guess vector with spin not close to integer value (2.236068)
+  Found a guess vector with spin not close to integer value (3.828427)
+  Found a guess vector with spin not close to integer value (3.828427)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (6.082763)
+  Found a guess vector with spin not close to integer value (6.082763)
+  Initial guess found 163 solutions with 2S+1 = 1 *
+  Initial guess found 178 solutions with 2S+1 = 3  
+  Initial guess found 28 solutions with 2S+1 = 5  
+
+  ==> Diagonalizing Hamiltonian <==
+
+  ----------------------------------------
+    Iter.      Avg. Energy       Delta_E
+  ----------------------------------------
+      1       -8.448564612436  -8.449e+00
+      2      -13.798836115279  -5.350e+00
+      3      -16.835878071577  -3.037e+00
+      4      -16.838819666689  -2.942e-03
+      5      -16.860747580551  -2.193e-02
+      6      -16.861021594716  -2.740e-04
+      7      -16.862373000634  -1.351e-03
+      8      -16.862603885939  -2.309e-04
+      9      -16.862607701432  -3.815e-06
+     10      -16.862610503755  -2.802e-06
+     11      -16.862671245031  -6.074e-05
+     12      -16.862694946182  -2.370e-05
+     13      -16.862696590677  -1.644e-06
+     14      -16.862697029737  -4.391e-07
+     15      -16.862717878332  -2.085e-05
+     16      -16.878795171909  -1.608e-02
+     17      -16.879653447383  -8.583e-04
+     18      -16.880027531976  -3.741e-04
+     19      -16.882010941017  -1.983e-03
+     20      -16.882436153326  -4.252e-04
+     21      -16.882462769908  -2.662e-05
+     22      -16.882487361179  -2.459e-05
+     23      -16.882644502782  -1.571e-04
+     24      -16.882715703206  -7.120e-05
+     25      -16.882719755137  -4.052e-06
+     26      -16.882721654320  -1.899e-06
+     27      -16.882729133177  -7.479e-06
+     28      -16.882736044410  -6.911e-06
+     29      -16.882758652396  -2.261e-05
+     30      -16.882759541171  -8.888e-07
+     31      -16.882765399859  -5.859e-06
+     32      -16.882768202659  -2.803e-06
+     33      -16.882770915905  -2.713e-06
+     34      -16.882772133678  -1.218e-06
+     35      -16.882775148651  -3.015e-06
+     36      -16.882777527915  -2.379e-06
+     37      -16.882779940756  -2.413e-06
+     38      -16.882780723421  -7.827e-07
+     39      -16.882783962066  -3.239e-06
+     40      -16.882786121511  -2.159e-06
+     41      -16.882788191304  -2.070e-06
+     42      -16.882788760367  -5.691e-07
+     43      -16.882792134531  -3.374e-06
+     44      -16.882794178381  -2.044e-06
+     45      -16.882796143785  -1.965e-06
+     46      -16.882796592504  -4.487e-07
+     47      -16.882799993006  -3.401e-06
+     48      -16.882801944007  -1.951e-06
+     49      -16.882803872333  -1.928e-06
+     50      -16.882804231207  -3.589e-07
+     51      -16.882807629035  -3.398e-06
+     52      -16.882809494947  -1.866e-06
+     53      -16.882811409020  -1.914e-06
+     54      -16.882811693383  -2.844e-07
+     55      -16.882815076996  -3.384e-06
+     56      -16.882816860840  -1.784e-06
+     57      -16.882818772833  -1.912e-06
+     58      -16.882818993429  -2.206e-07
+     59      -16.882822357865  -3.364e-06
+     60      -16.882824060725  -1.703e-06
+     61      -16.882825979543  -1.919e-06
+     62      -16.882826145576  -1.660e-07
+     63      -16.882829487904  -3.342e-06
+     64      -16.882831109950  -1.622e-06
+     65      -16.882833042184  -1.932e-06
+     66      -16.882833162341  -1.202e-07
+     67      -16.882836479050  -3.317e-06
+     68      -16.882838019998  -1.541e-06
+     69      -16.882839969215  -1.949e-06
+     70      -16.882840051980  -8.277e-08
+     71      -16.882843337402  -3.285e-06
+     72      -16.882844796834  -1.459e-06
+     73      -16.882846762167  -1.965e-06
+     74      -16.882846815828  -5.366e-08
+     75      -16.882850061038  -3.245e-06
+     76      -16.882851438751  -1.378e-06
+     77      -16.882853412912  -1.974e-06
+     78      -16.882853445381  -3.247e-08
+     79      -16.882856637281  -3.192e-06
+     80      -16.882857933760  -1.296e-06
+     81      -16.882859900445  -1.967e-06
+     82      -16.882859918920  -1.847e-08
+     83      -16.882863039063  -3.120e-06
+     84      -16.882864256082  -1.217e-06
+     85      -16.882866187226  -1.931e-06
+     86      -16.882866197723  -1.050e-08
+     87      -16.882869219196  -3.021e-06
+     88      -16.882870360035  -1.141e-06
+     89      -16.882872216502  -1.856e-06
+     90      -16.882872223369  -6.867e-09
+     91      -16.882875103559  -2.880e-06
+     92      -16.882876171281  -1.068e-06
+     93      -16.882877918475  -1.747e-06
+     94      -16.882877924044  -5.569e-09
+     95      -16.882880615887  -2.692e-06
+     96      -16.882881611027  -9.951e-07
+     97      -16.882883241937  -1.631e-06
+     98      -16.882883246623  -4.686e-09
+     99      -16.882885744268  -2.498e-06
+    100      -16.882886668027  -9.238e-07
+    101      -16.882888188596  -1.521e-06
+    102      -16.882888192360  -3.764e-09
+    103      -16.882890512732  -2.320e-06
+    104      -16.882891368595  -8.559e-07
+    105      -16.882892781514  -1.413e-06
+    106      -16.882892784608  -3.094e-09
+    107      -16.882894936139  -2.152e-06
+    108      -16.882895728061  -7.919e-07
+    109      -16.882897036934  -1.309e-06
+    110      -16.882897039551  -2.617e-09
+    111      -16.882899029181  -1.990e-06
+    112      -16.882899760965  -7.318e-07
+    113      -16.882900972324  -1.211e-06
+    114      -16.882900974525  -2.200e-09
+    115      -16.882902813722  -1.839e-06
+    116      -16.882903489371  -6.756e-07
+    117      -16.882904609404  -1.120e-06
+    118      -16.882904611264  -1.860e-09
+    119      -16.882906310423  -1.699e-06
+    120      -16.882906933889  -6.235e-07
+    121      -16.882907968508  -1.035e-06
+    122      -16.882907970095  -1.586e-09
+    123      -16.882909538636  -1.569e-06
+    124      -16.882910113666  -5.750e-07
+    125      -16.882911068989  -9.553e-07
+    126      -16.882911070343  -1.353e-09
+    127      -16.882912517977  -1.448e-06
+    128      -16.882913048171  -5.302e-07
+    129      -16.882913929943  -8.818e-07
+    130      -16.882913931101  -1.158e-09
+    131      -16.882915266814  -1.336e-06
+    132      -16.882915755569  -4.888e-07
+    133      -16.882916569211  -8.136e-07
+    134      -16.882916570205  -9.943e-10
+    135      -16.882917802377  -1.232e-06
+    136      -16.882918252871  -4.505e-07
+    137      -16.882919003539  -7.507e-07
+    138      -16.882919004394  -8.547e-10
+    139      -16.882920140985  -1.137e-06
+    140      -16.882920556195  -4.152e-07
+    141      -16.882921248683  -6.925e-07
+    142      -16.882921249420  -7.362e-10
+    143      -16.882922297784  -1.048e-06
+    144      -16.882922680475  -3.827e-07
+    145      -16.882923319261  -6.388e-07
+    146      -16.882923319896  -6.352e-10
+    147      -16.882924286884  -9.670e-07
+    148      -16.882924639621  -3.527e-07
+    149      -16.882925228869  -5.892e-07
+    150      -16.882925229417  -5.487e-10
+    151      -16.882926121392  -8.920e-07
+    152      -16.882926446550  -3.252e-07
+    153      -16.882926990117  -5.436e-07
+    154      -16.882926990592  -4.746e-10
+    155      -16.882927813427  -8.228e-07
+    156      -16.882928113203  -2.998e-07
+    157      -16.882928614663  -5.015e-07
+    158      -16.882928615074  -4.110e-10
+    159      -16.882929374210  -7.591e-07
+    160      -16.882929650629  -2.764e-07
+    161      -16.882930113284  -4.627e-07
+    162      -16.882930113640  -3.562e-10
+    163      -16.882930814097  -7.005e-07
+    164      -16.882931069026  -2.549e-07
+    165      -16.882931495926  -4.269e-07
+    166      -16.882931496235  -3.091e-10
+    167      -16.882932142643  -6.464e-07
+    168      -16.882932377800  -2.352e-07
+    169      -16.882932771759  -3.940e-07
+    170      -16.882932772028  -2.684e-10
+    171      -16.882933368655  -5.966e-07
+    172      -16.882933585623  -2.170e-07
+    173      -16.882933949236  -3.636e-07
+    174      -16.882933949469  -2.332e-10
+    175      -16.882934500247  -5.508e-07
+    176      -16.882934700481  -2.002e-07
+    177      -16.882935036139  -3.357e-07
+    178      -16.882935036341  -2.028e-10
+    179      -16.882935544891  -5.085e-07
+    180      -16.882935729729  -1.848e-07
+    181      -16.882936039632  -3.099e-07
+    182      -16.882936039809  -1.765e-10
+    183      -16.882936509462  -4.697e-07
+    184      -16.882936680133  -1.707e-07
+    185      -16.882936966310  -2.862e-07
+    186      -16.882936966464  -1.536e-10
+    187      -16.882937400288  -4.338e-07
+    188      -16.882937557921  -1.576e-07
+    189      -16.882937822237  -2.643e-07
+    190      -16.882937822371  -1.338e-10
+    191      -16.882938223188  -4.008e-07
+    192      -16.882938368821  -1.456e-07
+    193      -16.882938612994  -2.442e-07
+    194      -16.882938613110  -1.166e-10
+    195      -16.882938983514  -3.704e-07
+    196      -16.882939118099  -1.346e-07
+    197      -16.882939343709  -2.256e-07
+    198      -16.882939343811  -1.017e-10
+    199      -16.882939686190  -3.424e-07
+    200      -16.882939810602  -1.244e-07
+    201      -16.882940019104  -2.085e-07
+    202      -16.882940019193  -8.866e-11
+    203      -16.882940335741  -3.165e-07
+    204      -16.882940450785  -1.150e-07
+    205      -16.882940643516  -1.927e-07
+    206      -16.882940643593  -7.735e-11
+    207      -16.882940936331  -2.927e-07
+    208      -16.882941042744  -1.064e-07
+    209      -16.882941220935  -1.782e-07
+    210      -16.882941221003  -6.749e-11
+    211      -16.882941491787  -2.708e-07
+    212      -16.882941590248  -9.846e-08
+    213      -16.882941755032  -1.648e-07
+    214      -16.882941755090  -5.889e-11
+    215      -16.882942005630  -2.505e-07
+    216      -16.882942096762  -9.113e-08
+    217      -16.882942249180  -1.524e-07
+    218      -16.882942249231  -5.140e-11
+    219      -16.882942481097  -2.319e-07
+    220      -16.882942565472  -8.438e-08
+    221      -16.882942706484  -1.410e-07
+    222      -16.882942706529  -4.488e-11
+    223      -16.882942921167  -2.146e-07
+    224      -16.882942999311  -7.814e-08
+    225      -16.882943129799  -1.305e-07
+    226      -16.882943129838  -3.918e-11
+    227      -16.882943328579  -1.987e-07
+    228      -16.882943400976  -7.240e-08
+    229      -16.882943521752  -1.208e-07
+    230      -16.882943521786  -3.421e-11
+    231      -16.882943705855  -1.841e-07
+    232      -16.882943772949  -6.709e-08
+    233      -16.882943884761  -1.118e-07
+    234      -16.882943884790  -2.986e-11
+    235      -16.882944055312  -1.705e-07
+    236      -16.882944117512  -6.220e-08
+    237      -16.882944221048  -1.035e-07
+    238      -16.882944221074  -2.606e-11
+    239      -16.882944379088  -1.580e-07
+    240      -16.882944436769  -5.768e-08
+    241      -16.882944532664  -9.589e-08
+    242      -16.882944532687  -2.274e-11
+    243      -16.882944679146  -1.465e-07
+    244      -16.882944732654  -5.351e-08
+    245      -16.882944821491  -8.884e-08
+    246      -16.882944821511  -1.983e-11
+    247      -16.882944957298  -1.358e-07
+    248      -16.882945006952  -4.965e-08
+    249      -16.882945089268  -8.232e-08
+    250      -16.882945089286  -1.731e-11
+    251      -16.882945215206  -1.259e-07
+    252      -16.882945261298  -4.609e-08
+    253      -16.882945337591  -7.629e-08
+    254      -16.882945337606  -1.507e-11
+    255      -16.882945454414  -1.168e-07
+    256      -16.882945497213  -4.280e-08
+    257      -16.882945567936  -7.072e-08
+    258      -16.882945567950  -1.317e-11
+    259      -16.882945676321  -1.084e-07
+    260      -16.882945716075  -3.975e-08
+    261      -16.882945781655  -6.558e-08
+    262      -16.882945781666  -1.141e-11
+    263      -16.882945882255  -1.006e-07
+    264      -16.882945919196  -3.694e-08
+    265      -16.882945980009  -6.081e-08
+    266      -16.882945980019  -1.003e-11
+    267      -16.882946073375  -9.336e-08
+    268      -16.882946107708  -3.433e-08
+    269      -16.882946164133  -5.642e-08
+    270      -16.882946164141  -8.548e-12
+    271      -16.882946250867  -8.673e-08
+    272      -16.882946282795  -3.193e-08
+    273      -16.882946335125  -5.233e-08
+    274      -16.882946335132  -7.770e-12
+    275      -16.882946415601  -8.047e-08
+    276      -16.882946445287  -2.969e-08
+    277      -16.882946493896  -4.861e-08
+    278      -16.882946493902  -6.093e-12
+    279      -16.882946568827  -7.493e-08
+    280      -16.882946596469  -2.764e-08
+    281      -16.882946641490  -4.502e-08
+    282      -16.882946641496  -6.718e-12
+    283      -16.882946710769  -6.927e-08
+    284      -16.882946736451  -2.568e-08
+    285      -16.882946778450  -4.200e-08
+    286      -16.882946778453  -3.283e-12
+    287      -16.882946843688  -6.523e-08
+    288      -16.882946867719  -2.403e-08
+    289      -16.882946906150  -3.843e-08
+    290      -16.882946906162  -1.226e-11
+    291      -16.882946965084  -5.892e-08
+    292      -16.882946987279  -2.220e-08
+    293      -16.882947023768  -3.649e-08
+    294      -16.882947023768  -5.329e-13
+    295      -16.882947088274  -6.451e-08
+    296      -16.882947110793  -2.252e-08
+    297      -16.882947135783  -2.499e-08
+    298      -16.882947136921  -1.138e-09
+    299      -16.882947178029  -4.111e-08
+    300      -16.882947198407  -2.038e-08
+    301      -16.882947221481  -2.307e-08
+    302      -16.882947222217  -7.358e-10
+    303      -16.882947262218  -4.000e-08
+    304      -16.882947281194  -1.898e-08
+    305      -16.882947304274  -2.308e-08
+    306      -16.882947304682  -4.081e-10
+    307      -16.882947343777  -3.910e-08
+    308      -16.882947361414  -1.764e-08
+    309      -16.882947384412  -2.300e-08
+    310      -16.882947384604  -1.924e-10
+    311      -16.882947422677  -3.807e-08
+    312      -16.882947439061  -1.638e-08
+    313      -16.882947461935  -2.287e-08
+    314      -16.882947462000  -6.421e-11
+    315      -16.882947498973  -3.697e-08
+    316      -16.882947514179  -1.521e-08
+    317      -16.882947536864  -2.268e-08
+    318      -16.882947536871  -7.002e-12
+    319      -16.882947572768  -3.590e-08
+    320      -16.882947586891  -1.412e-08
+    321      -16.882947609149  -2.226e-08
+    322      -16.882947609152  -2.700e-12
+    323      -16.882947642967  -3.382e-08
+    324      -16.882947655892  -1.292e-08
+    325      -16.882947678538  -2.265e-08
+    326      -16.882947678626  -8.864e-11
+    327      -16.882947712093  -3.347e-08
+    328      -16.882947723996  -1.190e-08
+    329      -16.882947746562  -2.257e-08
+    330      -16.882947746780  -2.181e-10
+    331      -16.882947778964  -3.218e-08
+    332      -16.882947789864  -1.090e-08
+    333      -16.882947812229  -2.236e-08
+    334      -16.882947812628  -3.991e-10
+    335      -16.882947843482  -3.085e-08
+    336      -16.882947853428  -9.947e-09
+    337      -16.882947875513  -2.208e-08
+    338      -16.882947876136  -6.234e-10
+    339      -16.882947905577  -2.944e-08
+    340      -16.882947914617  -9.040e-09
+    341      -16.882947936336  -2.172e-08
+    342      -16.882947937224  -8.872e-10
+    343      -16.882947965178  -2.795e-08
+    344      -16.882947973360  -8.182e-09
+    345      -16.882947994626  -2.127e-08
+    346      -16.882947995814  -1.188e-09
+    347      -16.882948022211  -2.640e-08
+    348      -16.882948029584  -7.373e-09
+    349      -16.882948050309  -2.073e-08
+    350      -16.882948051834  -1.525e-09
+    351      -16.882948076603  -2.477e-08
+    352      -16.882948083218  -6.615e-09
+    353      -16.882948103313  -2.009e-08
+    354      -16.882948105213  -1.901e-09
+    355      -16.882948128282  -2.307e-08
+    356      -16.882948134191  -5.909e-09
+    357      -16.882948153566  -1.937e-08
+    358      -16.882948155889  -2.323e-09
+    359      -16.882948177179  -2.129e-08
+    360      -16.882948182436  -5.257e-09
+    361      -16.882948201002  -1.857e-08
+    362      -16.882948203811  -2.809e-09
+    363      -16.882948223230  -1.942e-08
+    364      -16.882948227890  -4.660e-09
+    365      -16.882948245556  -1.767e-08
+    366      -16.882948248949  -3.394e-09
+    367      -16.882948266370  -1.742e-08
+    368      -16.882948270491  -4.121e-09
+    369      -16.882948287159  -1.667e-08
+    370      -16.882948291304  -4.146e-09
+    371      -16.882948306528  -1.522e-08
+    372      -16.882948310173  -3.645e-09
+    373      -16.882948325724  -1.555e-08
+    374      -16.882948330949  -5.225e-09
+    375      -16.882948343607  -1.266e-08
+    376      -16.882948346857  -3.250e-09
+    377      -16.882948361090  -1.423e-08
+    378      -16.882948368162  -7.072e-09
+    379      -16.882948377413  -9.251e-09
+    380      -16.882948380410  -2.997e-09
+    381      -16.882948392733  -1.232e-08
+    382      -16.882948403504  -1.077e-08
+    383      -16.882948407526  -4.022e-09
+    384      -16.882948411034  -3.508e-09
+    385      -16.882948566151  -1.551e-07
+    386      -16.882948573363  -7.212e-09
+    387      -16.882948629604  -5.624e-08
+    388      -16.882948631436  -1.833e-09
+    389      -16.882948656754  -2.532e-08
+    390      -16.882948657018  -2.640e-10
+    391      -16.882948671654  -1.464e-08
+    392      -16.882948671753  -9.880e-11
+    393      -16.882948680289  -8.536e-09
+    394      -16.882948683493  -3.204e-09
+    395      -16.882948685239  -1.745e-09
+    396      -16.882948685261  -2.220e-11
+    397      -16.882948686706  -1.445e-09
+    398      -16.882948686744  -3.757e-11
+    399      -16.882948687271  -5.275e-10
+    400      -16.882948687306  -3.498e-11
+    401      -16.882948687590  -2.840e-10
+    402      -16.882948687649  -5.832e-11
+    403      -16.882948687928  -2.793e-10
+    404      -16.882948687953  -2.531e-11
+    405      -16.882948688352  -3.989e-10
+    406      -16.882948688401  -4.899e-11
+    407      -16.882948688674  -2.725e-10
+    408      -16.882948688697  -2.323e-11
+    409      -16.882948688763  -6.638e-11
+    410      -16.882948688824  -6.037e-11
+    411      -16.882948688871  -4.760e-11
+    412      -16.882948688894  -2.234e-11
+    413      -16.882948689194  -3.008e-10
+    414      -16.882948689223  -2.878e-11
+    415      -16.882948689401  -1.777e-10
+    416      -16.882948689420  -1.919e-11
+    417      -16.882948689556  -1.357e-10
+    418      -16.882948689595  -3.919e-11
+    419      -16.882948689650  -5.475e-11
+    420      -16.882948689675  -2.559e-11
+    421      -16.882948689845  -1.698e-10
+    422      -16.882948689875  -3.005e-11
+    423      -16.882948689991  -1.160e-10
+    424      -16.882948690015  -2.350e-11
+    425      -16.882948690141  -1.265e-10
+    426      -16.882948690168  -2.702e-11
+    427      -16.882948690265  -9.681e-11
+    428      -16.882948690286  -2.066e-11
+    429      -16.882948690405  -1.190e-10
+    430      -16.882948690427  -2.199e-11
+    431      -16.882948690525  -9.873e-11
+    432      -16.882948690542  -1.652e-11
+    433      -16.882948690644  -1.025e-10
+    434      -16.882948690663  -1.903e-11
+    435      -16.882948690748  -8.506e-11
+    436      -16.882948690762  -1.315e-11
+    437      -16.882948690832  -7.004e-11
+    438      -16.882948690850  -1.887e-11
+    439      -16.882948690906  -5.522e-11
+    440      -16.882948690917  -1.111e-11
+    441      -16.882948690967  -5.000e-11
+    442      -16.882948690986  -1.874e-11
+    443      -16.882948691022  -3.634e-11
+    444      -16.882948691032  -9.628e-12
+    445      -16.882948691067  -3.588e-11
+    446      -16.882948691086  -1.872e-11
+    447      -16.882948691109  -2.276e-11
+    448      -16.882948691117  -8.523e-12
+    449      -16.882948691141  -2.402e-11
+    450      -16.882948691161  -1.928e-11
+    451      -16.882948691171  -1.007e-11
+    452      -16.882948691178  -7.738e-12
+    453      -16.882948691202  -2.317e-11
+    454      -16.882948691220  -1.809e-11
+    455      -16.882948691227  -7.244e-12
+    456      -16.882948691234  -7.113e-12
+    457      -16.882948691279  -4.461e-11
+    458      -16.882948691293  -1.432e-11
+    459      -16.882948691318  -2.501e-11
+    460      -16.882948691324  -6.445e-12
+    461      -16.882948691384  -5.965e-11
+    462      -16.882948691395  -1.111e-11
+    463      -16.882948691432  -3.626e-11
+    464      -16.882948691437  -5.421e-12
+    465      -16.882948691488  -5.156e-11
+    466      -16.882948691498  -9.315e-12
+    467      -16.882948691530  -3.223e-11
+    468      -16.882948691534  -4.320e-12
+    469      -16.882948691570  -3.543e-11
+    470      -16.882948691579  -9.067e-12
+    471      -16.882948691599  -2.034e-11
+    472      -16.882948691603  -3.485e-12
+    473      -16.882948691623  -2.067e-11
+    474      -16.882948691633  -1.008e-11
+    475      -16.882948691640  -6.825e-12
+    476      -16.882948691643  -2.981e-12
+    477      -16.882948691661  -1.811e-11
+    478      -16.882948691672  -1.046e-11
+    479      -16.882948691673  -1.073e-12
+    480      -16.882948691676  -2.728e-12
+    481      -16.882948691692  -1.682e-11
+    482      -16.882948691702  -9.297e-12
+    483      -16.882948691700  +1.961e-12
+    484      -16.882948691702  -2.469e-12
+    485      -16.882948691742  -3.990e-11
+    486      -16.882948691748  -5.912e-12
+    487      -16.882948691767  -1.947e-11
+    488      -16.882948691770  -2.082e-12
+    489      -16.882948691791  -2.171e-11
+    490      -16.882948691799  -7.677e-12
+    491      -16.882948691799  -5.222e-13
+    492      -16.882948691801  -1.847e-12
+    493      -16.882948691832  -3.020e-11
+    494      -16.882948691836  -4.697e-12
+    495      -16.882948691847  -1.121e-11
+    496      -16.882948691849  -1.251e-12
+    497      -16.882948691879  -3.001e-11
+    498      -16.882948691884  -5.667e-12
+    499      -16.882948691933  -4.848e-11
+    500      -16.882948691935  -2.419e-12
+    501      -16.882948691992  -5.711e-11
+    502      -16.882948691994  -1.954e-12
+    503      -16.882948692053  -5.862e-11
+    504      -16.882948692054  -1.368e-12
+    505      -16.882948692105  -5.037e-11
+    506      -16.882948692108  -3.169e-12
+    507      -16.882948692105  +3.077e-12
+    508      -16.882948692107  -1.748e-12
+    509      -16.882948692179  -7.233e-11
+    510      -16.882948692199  -2.006e-11
+    511      -16.882948692197  +1.954e-12
+    512      -16.882948692197  -5.436e-13
+    513      -16.882948692234  -3.671e-11
+    514      -16.882948692241  -6.899e-12
+    515      -16.882948692270  -2.884e-11
+    516      -16.882948692271  -1.180e-12
+    517      -16.882948692273  -1.407e-12
+    518      -16.882948692273  -5.862e-13
+  ----------------------------------------
+  The Davidson-Liu algorithm converged in 519 iterations.
+        5        0        482          3220     -14.515854549183  4.672e-06
   --------------------------------------------------------------------------------------------------------------
 
   Calculation stoped in appearance of higher new low.
 
   ==> Post-Iterations <==
 
-  * Size of CI space                    = 356
-  * Number of off-diagonal elements     = 1946
-  * ElementwiseCI Approximate Energy    =   -14.534280459049 Eh
-  * ElementwiseCI Projective  Energy    =   -14.534280248257 Eh
+  * Size of CI space                    = 482
+  * Number of off-diagonal elements     = 3220
+  * ElementwiseCI Approximate Energy    =   -14.515831792656 Eh
+  * ElementwiseCI Projective  Energy    =   -14.515854549183 Eh
 
   Most important contributions to the wave function:
 
-    0       -0.70476      0.496687           0 |2-+00200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -16.872775657949
-    1       0.704712      0.496619           1 |2+-00200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -16.872775657949
-    2      0.0562847    0.00316797           2 |200002-+000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -16.358845134715
-    3      -0.056284    0.00316789           3 |200002+-000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -16.358845134715
-    4     0.00448525   2.01175e-05           4 |2-+00-+0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -14.732712544473
-    5    -0.00448469   2.01124e-05           5 |2+-00+-0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -14.732712544473
-    6     0.00376025   1.41395e-05           6 |--0002++000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -14.298107185834
-    7    -0.00375903   1.41303e-05           7 |++0002--000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -14.298107185834
-    8     0.00328712   1.08052e-05           8 |20++0-000-0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -14.472581087373
-    9     0.00328712   1.08052e-05           9 |20+0+-00-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -14.472581087373
+    0       0.565893      0.320235           0 |2000022000000000000000000000000000000000000000000000000000000000>    -16.780684423917
+    1       0.514195      0.264397           1 |2+-0020000000000000000000000000000000000000000000000000000000000>    -16.872775657949
+    2       0.514195      0.264397           2 |2-+0020000000000000000000000000000000000000000000000000000000000>    -16.872775657949
+    3      -0.265162     0.0703111           3 |2000020002000000000000000000000000000000000000000000000000000000>    -16.844531944287
+    4      -0.265161     0.0703104           4 |2000020020000000000000000000000000000000000000000000000000000000>    -16.844531944287
+    5     -0.0726394    0.00527648           5 |2020020000000000000000000000000000000000000000000000000000000000>    -16.722588679069
+    6      -0.048427    0.00234518           6 |2200020000000000000000000000000000000000000000000000000000000000>    -16.991042186105
+    7      0.0302403   0.000914477           7 |2000220000000000000000000000000000000000000000000000000000000000>    -16.542435848077
+    8      0.0302366   0.000914252           8 |2002020000000000000000000000000000000000000000000000000000000000>    -16.542435848077
+    9     -0.0157512     0.0002481           9 |2000020200000000000000000000000000000000000000000000000000000000>    -15.877818677698
 
-  Spin State: S^2 = 2.000, S = 1.000, triplet (from 2 determinants,99.33%)
-  ElementwiseCI (bitset) steps finished in  : 0.287126 s
+  Spin State: S^2 = -0.000, S = 0.000, singlet (from 5 determinants,98.97%)
+  ElementwiseCI (bitset) steps finished in  : 24.365054 s
 
-  Variational energy estimated with 356 determinants to meet the max error 0.000000e+00
+  Variational energy estimated with 482 determinants to meet the max error 0.000000e+00
 
   ==> Computing Coupling Lists <==
   --------------------------------
-        α          0.001709 s
-        β          0.001650 s
-        αα         0.001559 s
-        ββ         0.001511 s
-        αβ         0.003991 s
+        α          0.001850 s
+        β          0.001862 s
+        αα         0.002005 s
+        ββ         0.001936 s
+        αβ         0.005082 s
   --------------------------------
-  * ElementwiseCI Variational Energy    =   -14.534282241080 Eh
-  * ElementwiseCI Var. Corr.  Energy    =     0.075462497010 Eh
-  * 1st order perturbation   Energy     =    -0.000001782031 Eh
+  * ElementwiseCI Variational Energy    =   -14.515843385662 Eh
+  * ElementwiseCI Var. Corr.  Energy    =     0.093901352428 Eh
+  * 1st order perturbation   Energy     =    -0.000011593006 Eh
 
-  ElementwiseCI (bitset) ran in  : 0.300479 s
+  ElementwiseCI (bitset) ran in  : 24.381719 s
 
   Saving the wave function:
 
@@ -941,13 +3023,13 @@ Davidson iter    4 order    5 correction norm  6.910e-01 dE -6.644e-13 E   -14.5
 
   ==> Excited state solver summary <==
 
-  Iterations required:                         7
-  Dimension of optimized determinant space:    356
+  Iterations required:                         5
+  Dimension of optimized determinant space:    482
 
-  * Selected-CI Energy Root   0        = -14.646156258617 Eh =   0.0000 eV
-  * Selected-CI Energy Root   0 + EPT2 = -14.646156258617 Eh =   0.0000 eV
-  * Selected-CI Energy Root   1        = -14.534280459049 Eh =   3.0443 eV
-  * Selected-CI Energy Root   1 + EPT2 = -14.534280459049 Eh =   3.0443 eV
+  * Selected-CI Energy Root   0        = -14.646155333845 Eh =   0.0000 eV
+  * Selected-CI Energy Root   0 + EPT2 = -14.646155333845 Eh =   0.0000 eV
+  * Selected-CI Energy Root   1        = -14.515831792656 Eh =   3.5463 eV
+  * Selected-CI Energy Root   1 + EPT2 = -14.515831792656 Eh =   3.5463 eV
 
   Saving information for root: 1
 
@@ -955,11 +3037,11 @@ Davidson iter    4 order    5 correction norm  6.910e-01 dE -6.644e-13 E   -14.5
 
     Multi.  Irrep.  No.               Energy
     -----------------------------------------
-       1      Ag     0       -14.646156258617
-       1      Ag     1       -14.534280459049
+       1      Ag     0       -14.646155333845
+       1      Ag     1       -14.515831792656
     -----------------------------------------	EWCI excited state energy.........................................PASSED
 
-    Psi4 stopped on: Friday, 15 February 2019 02:58PM
-    Psi4 wall time for execution: 0:00:01.99
+    Psi4 stopped on: Sunday, 17 February 2019 03:05AM
+    Psi4 wall time for execution: 0:00:26.89
 
 *** Psi4 exiting successfully. Buy a developer a beer!
