@@ -73,7 +73,7 @@ set forte{
   rotate_mos          []
   dsrg_dipole         true  # dipole output from the relaxed fci is not meaningful
   orbital_type        local
-  localize            full
+  localize_space      [13,16]
 }
 energy('forte', ref_wfn=wfn)
 compare_values(r_0ag, variable("ENERGY ROOT 0 1A"), 8, "abs. energy of singlet 0Ag")
