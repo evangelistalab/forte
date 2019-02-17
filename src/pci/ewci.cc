@@ -984,7 +984,7 @@ void ElementwiseCI::propagate_wallCh(det_hashvec& dets_hashvec, std::vector<doub
         approx_energy_ = CHC_energy;
         approx_E_flag_ = false;
         approx_E_tau_ = -1.0;
-        approx_E_S_ = (range_ * root + shift_);
+        approx_E_S_ = S;
         if (cycle_ != 0)
             outfile->Printf(" %20.12f %10.3e     ~", approx_energy_, CHC_energy_gradient);
     }
