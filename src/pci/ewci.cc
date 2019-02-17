@@ -584,23 +584,23 @@ void ElementwiseCI::pre_iter_preparation() {
         outfile->Printf("\n\n  "
                         "------------------------------------------------------"
                         "------------------------------------------------------"
-                        "----------------------------------");
+                        "----------------------------------~");
         outfile->Printf("\n    Steps  Beta/Eh      Ndets      NoffDiag     Proj. Energy/Eh   "
                         "  dEp/dt      Var. Energy/Eh      dEp/dt      Approx. "
-                        "Energy/Eh   dEv/dt");
+                        "Energy/Eh   dEv/dt      ~");
         outfile->Printf("\n  "
                         "------------------------------------------------------"
                         "------------------------------------------------------"
-                        "----------------------------------");
+                        "----------------------------------~");
     } else {
         outfile->Printf("\n\n  "
                         "------------------------------------------------------"
-                        "--------------------------------------------------------");
+                        "--------------------------------------------------------~");
         outfile->Printf("\n    Steps  Beta/Eh      Ndets      NoffDiag     Proj. Energy/Eh   "
-                        "  dEp/dt      Approx. Energy/Eh   dEv/dt");
+                        "  dEp/dt      Approx. Energy/Eh   dEv/dt      ~");
         outfile->Printf("\n  "
                         "------------------------------------------------------"
-                        "--------------------------------------------------------");
+                        "--------------------------------------------------------~");
     }
 
     old_var_energy_ = var_energy_;
@@ -654,8 +654,10 @@ bool ElementwiseCI::check_convergence() {
 
         switch (generator_) {
         case DLGenerator:
-            outfile->Printf("\n%9d %8d %10zu %13zu %20.12f %10.3e", cycle_, current_davidson_iter_,
-                            C_.size(), num_off_diag_elem_, proj_energy_, proj_energy_gradient);
+            outfile->Printf("\n%9d %8d %10zu %13zu %20.12f %10.3e %20.12f %10.3e     ~",
+                            cycle_, current_davidson_iter_, C_.size(), num_off_diag_elem_,
+                            proj_energy_, proj_energy_gradient,
+                            approx_energy_, approx_energy_gradient);
             break;
         default:
             outfile->Printf("\n%9d %8.2f %10zu %13zu %20.12f %10.3e", cycle_, time_step_ * cycle_,
@@ -698,11 +700,11 @@ void ElementwiseCI::post_iter_process() {
         outfile->Printf("\n  "
                         "------------------------------------------------------"
                         "------------------------------------------------------"
-                        "----------------------------------");
+                        "----------------------------------~");
     } else {
         outfile->Printf("\n  "
                         "------------------------------------------------------"
-                        "--------------------------------------------------------");
+                        "--------------------------------------------------------~");
     }
 
     if (converged_) {
@@ -946,11 +948,10 @@ void ElementwiseCI::propagate_wallCh(det_hashvec& dets_hashvec, std::vector<doub
     C = to_std_vector(sigma_psi);
     num_off_diag_elem_ = sigma_vector.get_num_off_diag();
 
+    double S = range_ * root + shift_;
 #pragma omp parallel for
     for (size_t I = 0; I < overlap_size; ++I) {
-//        double det_energy = as_ints_->energy(dets_hashvec[I]) + as_ints_->scalar_energy();
-//        C[I] += -1.0 * (det_energy - (range_ * root + shift_)) * ref_C[I];
-        C[I] += -1.0 * ( - (range_ * root + shift_)) * ref_C[I];
+        C[I] += S * ref_C[I];
     }
 
     if (approx_E_flag_) {
@@ -970,7 +971,7 @@ void ElementwiseCI::propagate_wallCh(det_hashvec& dets_hashvec, std::vector<doub
         approx_E_tau_ = -1.0;
         approx_E_S_ = (range_ * root + shift_);
         if (cycle_ != 0)
-            outfile->Printf(" %20.12f %10.3e", approx_energy_, CHC_energy_gradient);
+            outfile->Printf(" %20.12f %10.3e     ~", approx_energy_, CHC_energy_gradient);
     }
 //    apply_tau_H_symm(-1.0, spawning_threshold, dets_hashvec, ref_C, C, range_ * root + shift_,
 //                     overlap_size);
@@ -989,11 +990,10 @@ void ElementwiseCI::propagate_wallCh(det_hashvec& dets_hashvec, std::vector<doub
         sigma_vector.compute_sigma(sigma_psi, C_psi);
         sigma_psi->scale(-1.0);
         result_C = to_std_vector(sigma_psi);
+        S = range_ * root + shift_;
     #pragma omp parallel for
         for (size_t I = 0; I < sigma_vector.size(); ++I) {
-//            double det_energy = as_ints_->energy(dets_hashvec[I]) + as_ints_->scalar_energy();
-//            result_C[I] += -1.0 * (det_energy - (range_ * root + shift_)) * C[I];
-            result_C[I] += -1.0 * ( - (range_ * root + shift_)) * C[I];
+            result_C[I] += S * C[I];
         }
 //        apply_tau_H_ref_C_symm(-1.0, spawning_threshold, dets_hashvec, ref_C, C, result_C,
 //                               overlap_size, range_ * root + shift_);
@@ -1029,6 +1029,7 @@ void ElementwiseCI::propagate_DL(det_hashvec& dets_hashvec, std::vector<double>&
     psi::SharedMatrix PQ_evecs_;
     psi::SharedVector PQ_evals_;
     sparse_solver_.diagonalize_hamiltonian(dets_hashvec.toVector(), PQ_evals_, PQ_evecs_, nroot_, state_.multiplicity(), Sparse);
+    current_davidson_iter_ = sigma_vector.get_sigma_build_count();
     old_approx_energy_ = approx_energy_;
     approx_energy_ = PQ_evals_->get(0) + nuclear_repulsion_energy_;
     C.resize(result_size);

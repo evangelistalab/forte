@@ -61,6 +61,7 @@ class PCISigmaVector : public SigmaVector {
     void reset(std::vector<double>& ref_C);
     void compute_sigma_with_diag(psi::SharedVector sigma, psi::SharedVector b);
     size_t get_num_off_diag();
+    size_t get_sigma_build_count();
 
   private:
     det_hashvec& dets_;
@@ -97,6 +98,8 @@ class PCISigmaVector : public SigmaVector {
     std::vector<double> diag_;
     /// The number of off-diagonal elements
     size_t num_off_diag_elem_;
+    /// The number of off-diagonal elements
+    size_t sigma_build_count_;
     /// The maximum number of threads
     int num_threads_;
 

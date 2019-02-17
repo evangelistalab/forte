@@ -92,16 +92,16 @@ PCISigmaVector::PCISigmaVector(det_hashvec& dets_hashvec, std::vector<double>& r
 }
 
 void PCISigmaVector::reset(std::vector<double>& ref_C) {
+    sigma_build_count_ = 0;
     ref_size_ = ref_C.size();
     orthogonalize(dets_, ref_C, bad_roots_);
     apply_tau_H_symm(spawning_threshold_, dets_, ref_C, first_sigma_vec_, ref_size_);
     ref_C_ = ref_C;
     size_ = dets_.size();
 
-    diag_.resize(size_);
     const double scaler_energy = as_ints_->scalar_energy();
 #pragma omp parallel for
-    for (size_t I = 0; I < size_; ++I) {
+    for (size_t I = ref_size_; I < size_; ++I) {
         diag_[I] = as_ints_->energy(dets_[I]) + scaler_energy;
     }
 }
@@ -121,10 +121,7 @@ void PCISigmaVector::compute_sigma(psi::SharedVector sigma, psi::SharedVector b)
                                sigma_vec, ref_size_);
         set_psi_Vector(sigma, sigma_vec);
     }
-#pragma omp parallel for
-    for (size_t I = 0; I < size_; ++I) {
-        sigma->set(I, sigma->get(I) + diag_[I] * b->get(I));
-    }
+    ++sigma_build_count_;
 }
 
 void PCISigmaVector::get_diagonal(psi::Vector& diag) {
@@ -145,6 +142,10 @@ void PCISigmaVector::compute_sigma_with_diag(psi::SharedVector sigma, psi::Share
 
 size_t PCISigmaVector::get_num_off_diag() {
     return num_off_diag_elem_;
+}
+
+size_t PCISigmaVector::get_sigma_build_count() {
+    return sigma_build_count_;
 }
 
 void PCISigmaVector::orthogonalize(
@@ -218,12 +219,13 @@ void PCISigmaVector::apply_tau_H_symm(double spawning_threshold, det_hashvec& re
     ref_dets.merge(extra_dets);
     result_C.insert(result_C.end(), extra_C.begin(), extra_C.end());
 
-//    const double scaler_energy = as_ints_->scalar_energy();
-//#pragma omp parallel for
-//    for (size_t I = 0; I < overlap_size; ++I) {
-//        diag_[I] = as_ints_->energy(ref_dets[I]) + scaler_energy;
-//        result_C[I] += diag_[I] * ref_C[I];
-//    }
+    diag_.resize(ref_dets.size());
+    const double scaler_energy = as_ints_->scalar_energy();
+#pragma omp parallel for
+    for (size_t I = 0; I < overlap_size; ++I) {
+        diag_[I] = as_ints_->energy(ref_dets[I]) + scaler_energy;
+        result_C[I] += diag_[I] * ref_C[I];
+    }
 }
 
 void PCISigmaVector::apply_tau_H_symm_det_dynamic_HBCI_2(
@@ -817,10 +819,10 @@ void PCISigmaVector::apply_tau_H_ref_C_symm(double spawning_threshold,
                                                   result_C, max_coupling);
     }
 
-//#pragma omp parallel for
-//    for (size_t I = 0; I < result_size; ++I) {
-//        result_C[I] += diag_[I] * pre_C[I];
-//    }
+#pragma omp parallel for
+    for (size_t I = 0; I < result_size; ++I) {
+        result_C[I] += diag_[I] * pre_C[I];
+    }
 }
 
 void PCISigmaVector::apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(
