@@ -99,7 +99,7 @@ void PCISigmaVector::reset(std::vector<double>& ref_C) {
     ref_C_ = ref_C;
     size_ = dets_.size();
 
-    const double scaler_energy = as_ints_->scalar_energy();
+    const double scaler_energy = as_ints_->scalar_energy() + as_ints_->ints()->nuclear_repulsion_energy();
 #pragma omp parallel for
     for (size_t I = ref_size_; I < size_; ++I) {
         diag_[I] = as_ints_->energy(dets_[I]) + scaler_energy;
@@ -220,7 +220,7 @@ void PCISigmaVector::apply_tau_H_symm(double spawning_threshold, det_hashvec& re
     result_C.insert(result_C.end(), extra_C.begin(), extra_C.end());
 
     diag_.resize(ref_dets.size());
-    const double scaler_energy = as_ints_->scalar_energy();
+    const double scaler_energy = as_ints_->scalar_energy() + as_ints_->ints()->nuclear_repulsion_energy();
 #pragma omp parallel for
     for (size_t I = 0; I < overlap_size; ++I) {
         diag_[I] = as_ints_->energy(ref_dets[I]) + scaler_energy;
