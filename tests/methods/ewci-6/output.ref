@@ -22,11 +22,11 @@
     -----------------------------------------------------------------------
 
 
-    Psi4 started on: Thursday, 14 February 2019 06:17PM
+    Psi4 started on: Sunday, 17 February 2019 03:48AM
 
-    Process ID: 5346
-    Host:       tianyuans-air.wireless.emory.edu
-    PSIDATADIR: /Users/tianyuanzhang/Documents/Source/psi4_2018/psi4-bin-clang-debug/share/psi4
+    Process ID: 5177
+    Host:       DESKTOP-JOFFIR0
+    PSIDATADIR: /home/zty/Source/psi4-github-bin-g++-7.3.0-opt-c++17/share/psi4
     Memory:     500.0 MiB
     Threads:    1
     
@@ -74,15 +74,15 @@ energy('forte')
 compare_values(refpci, variable("EWCI ENERGY"), 11, "EWCI energy") #TEST
 --------------------------------------------------------------------------
 
-*** tstart() called on tianyuans-air.wireless.emory.edu
-*** at Thu Feb 14 18:17:16 2019
+*** tstart() called on DESKTOP-JOFFIR0
+*** at Sun Feb 17 03:48:55 2019
 
    => Loading Basis Set <=
 
     Name: CC-PVDZ
     Role: ORBITAL
     Keyword: BASIS
-    atoms 1-2 entry H          line    22 file /Users/tianyuanzhang/Documents/Source/psi4_2018/psi4-bin-clang-debug/share/psi4/basis/cc-pvdz.gbs 
+    atoms 1-2 entry H          line    22 file /home/zty/Source/psi4-github-bin-g++-7.3.0-opt-c++17/share/psi4/basis/cc-pvdz.gbs 
 
 
          ---------------------------------------------------------
@@ -198,7 +198,7 @@ compare_values(refpci, variable("EWCI ENERGY"), 11, "EWCI energy") #TEST
    @RHF iter   3:    -1.11317712826906   -6.22327e-05   7.99006e-05 DIIS
    @RHF iter   4:    -1.11317721589492   -8.76259e-08   1.26032e-06 DIIS
    @RHF iter   5:    -1.11317721593341   -3.84914e-11   1.10029e-09 DIIS
-   @RHF iter   6:    -1.11317721593341    2.22045e-16   2.05262e-12 DIIS
+   @RHF iter   6:    -1.11317721593341   -8.88178e-16   2.05259e-12 DIIS
   Energy converged.
 
 
@@ -226,9 +226,9 @@ compare_values(refpci, variable("EWCI ENERGY"), 11, "EWCI energy") #TEST
    => Energetics <=
 
     Nuclear Repulsion Energy =              0.8535116301129032
-    One-Electron Energy =                  -2.6700960604609905
-    Two-Electron Energy =                   0.7034072144146777
-    Total Energy =                         -1.1131772159334095
+    One-Electron Energy =                  -2.6700960604609918
+    Two-Electron Energy =                   0.7034072144146782
+    Total Energy =                         -1.1131772159334101
 
 Computation Completed
 
@@ -250,26 +250,26 @@ Properties computed using the SCF density matrix
      X:     0.0000      Y:     0.0000      Z:     0.0000     Total:     0.0000
 
 
-*** tstop() called on tianyuans-air.wireless.emory.edu at Thu Feb 14 18:17:16 2019
+*** tstop() called on DESKTOP-JOFFIR0 at Sun Feb 17 03:48:56 2019
 Module time:
-	user time   =       0.50 seconds =       0.01 minutes
-	system time =       0.02 seconds =       0.00 minutes
-	total time  =          0 seconds =       0.00 minutes
+	user time   =       0.35 seconds =       0.01 minutes
+	system time =       0.01 seconds =       0.00 minutes
+	total time  =          1 seconds =       0.02 minutes
 Total time:
-	user time   =       0.50 seconds =       0.01 minutes
-	system time =       0.02 seconds =       0.00 minutes
-	total time  =          0 seconds =       0.00 minutes
+	user time   =       0.35 seconds =       0.01 minutes
+	system time =       0.01 seconds =       0.00 minutes
+	total time  =          1 seconds =       0.02 minutes
 	SCF energy........................................................PASSED
 
-*** tstart() called on tianyuans-air.wireless.emory.edu
-*** at Thu Feb 14 18:17:16 2019
+*** tstart() called on DESKTOP-JOFFIR0
+*** at Sun Feb 17 03:48:56 2019
 
    => Loading Basis Set <=
 
     Name: CC-PVDZ
     Role: ORBITAL
     Keyword: BASIS
-    atoms 1-2 entry H          line    22 file /Users/tianyuanzhang/Documents/Source/psi4_2018/psi4-bin-clang-debug/share/psi4/basis/cc-pvdz.gbs 
+    atoms 1-2 entry H          line    22 file /home/zty/Source/psi4-github-bin-g++-7.3.0-opt-c++17/share/psi4/basis/cc-pvdz.gbs 
 
 
          ---------------------------------------------------------
@@ -385,7 +385,7 @@ Total time:
    @RHF iter   3:    -1.11317712826906   -6.22327e-05   7.99006e-05 DIIS
    @RHF iter   4:    -1.11317721589492   -8.76259e-08   1.26032e-06 DIIS
    @RHF iter   5:    -1.11317721593341   -3.84914e-11   1.10029e-09 DIIS
-   @RHF iter   6:    -1.11317721593341    2.22045e-16   2.05262e-12 DIIS
+   @RHF iter   6:    -1.11317721593341   -8.88178e-16   2.05259e-12 DIIS
   Energy converged.
 
 
@@ -413,9 +413,9 @@ Total time:
    => Energetics <=
 
     Nuclear Repulsion Energy =              0.8535116301129032
-    One-Electron Energy =                  -2.6700960604609905
-    Two-Electron Energy =                   0.7034072144146777
-    Total Energy =                         -1.1131772159334095
+    One-Electron Energy =                  -2.6700960604609918
+    Two-Electron Energy =                   0.7034072144146782
+    Total Energy =                         -1.1131772159334101
 
 Computation Completed
 
@@ -437,28 +437,28 @@ Properties computed using the SCF density matrix
      X:     0.0000      Y:     0.0000      Z:     0.0000     Total:     0.0000
 
 
-*** tstop() called on tianyuans-air.wireless.emory.edu at Thu Feb 14 18:17:17 2019
+*** tstop() called on DESKTOP-JOFFIR0 at Sun Feb 17 03:48:56 2019
 Module time:
-	user time   =       0.48 seconds =       0.01 minutes
+	user time   =       0.26 seconds =       0.00 minutes
 	system time =       0.02 seconds =       0.00 minutes
-	total time  =          1 seconds =       0.02 minutes
+	total time  =          0 seconds =       0.00 minutes
 Total time:
-	user time   =       1.00 seconds =       0.02 minutes
-	system time =       0.04 seconds =       0.00 minutes
+	user time   =       0.64 seconds =       0.01 minutes
+	system time =       0.03 seconds =       0.00 minutes
 	total time  =          1 seconds =       0.02 minutes
    => Loading Basis Set <=
 
     Name: STO-3G
     Role: ORBITAL
     Keyword: MINAO_BASIS
-    atoms 1-2 entry H          line    19 file /Users/tianyuanzhang/Documents/Source/psi4_2018/psi4-bin-clang-debug/share/psi4/basis/sto-3g.gbs 
+    atoms 1-2 entry H          line    19 file /home/zty/Source/psi4-github-bin-g++-7.3.0-opt-c++17/share/psi4/basis/sto-3g.gbs 
 
 
   Forte
   ----------------------------------------------------------------------------
   A suite of quantum chemistry methods for strongly correlated electrons
 
-    git branch: ci_framework - git commit: fe5fbd54
+    git branch: ci_framework - git commit: 8fb0f35
 
   Developed by:
     Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
@@ -466,7 +466,7 @@ Total time:
     Nan He, Nicholas Stair, Shuhe Wang, Renke Huang
   ----------------------------------------------------------------------------
 
-  Size of Determinant class: 32
+  Size of Determinant class: 16
 
   ==> MO Space Information <==
 
@@ -493,7 +493,7 @@ Total time:
   Overall Conventional Integrals timings
 
 
-  Conventional integrals take 0.04820512 s
+  Conventional integrals take 0.11060790 s
 
   ==> Summary of Active Space Solver Input <==
 
@@ -504,6 +504,10 @@ Total time:
     Total number of states: 1
     -------------------------
 
+  Number of active alpha electrons: 1
+  Number of active beta electrons: 1
+  Maximum reference space size: 1000
+  |2000000000>
   Number of active alpha electrons: 1
   Number of active beta electrons: 1
   Maximum reference space size: 1000
@@ -557,7 +561,7 @@ Total time:
     Result perturbation analysis                    NO
     Using OpenMP                                    NO
 
-  ==> Initial Guess <==
+  ==> Initial Guess <==       0.853511630113  8.535e-01
 
   Initial guess size = 1
   Found 1 roots with 2S+1 = 1 *
@@ -566,13 +570,13 @@ Total time:
 
   Most important contributions to the wave function:
 
-    0              1             1           0 |20000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>     -1.966688846046
+    0              1             1           0 |2000000000000000000000000000000000000000000000000000000000000000>     -1.966688846046
 
   Spin State: S^2 = 0.000, S = 0.000, singlet (from 1 determinants,100.00%)
 
   ==> Estimate highest excitation energy <==
   Highest Excited determinant:
-  |00000002000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>
+  |0000000200000000000000000000000000000000000000000000000000000000>
   Determinant Energy                    :  8.124278048470
   Highest Energy Gershgorin circle Est. :  8.875328224252
 
@@ -584,20 +588,20 @@ Total time:
 
   ==> PCI Iterations <==
 
-  --------------------------------------------------------------------------------------------------------------
-    Steps  Beta/Eh      Ndets      NoffDiag     Proj. Energy/Eh     dEp/dt      Approx. Energy/Eh   dEv/dt
-  --------------------------------------------------------------------------------------------------------------
-        0     0.00         22            42      -1.149001725923 -3.582e-02      -1.145172830927 -3.200e-02
-        1     1.00         22           462      -1.145533535244  3.468e-03      -1.145782582496 -6.098e-04
-        2     2.00         22           462      -1.145867485094 -3.339e-04      -1.145795839113 -1.326e-05
-        3     3.00         22           462      -1.145784912906  8.257e-05      -1.145796344666 -5.056e-07
-        4     4.00         22           462      -1.145799012017 -1.410e-05      -1.145796365910 -2.124e-08
-        5     5.00         22           462      -1.145795861134  3.151e-06      -1.145796366827 -9.174e-10
-        6     6.00         22           462      -1.145796475969 -6.148e-07      -1.145796366867 -3.997e-11
-        7     7.00         22           462      -1.145796344789  1.312e-07      -1.145796366869 -1.741e-12
-        8     8.00         22           462      -1.145796371521 -2.673e-08      -1.145796366869 -7.638e-14
+  --------------------------------------------------------------------------------------------------------------~
+    Steps  Beta/Eh      Ndets      NoffDiag     Proj. Energy/Eh     dEp/dt      Approx. Energy/Eh   dEv/dt      ~
+  --------------------------------------------------------------------------------------------------------------~
+        0     0.00         22            42      -1.149001725923 -3.582e-02      -1.145172830927 -3.200e-02     ~
+        1     1.00         22           462      -1.145533535244  3.468e-03      -1.145782582496 -6.098e-04     ~
+        2     2.00         22           462      -1.145867485094 -3.339e-04      -1.145795839113 -1.326e-05     ~
+        3     3.00         22           462      -1.145784912906  8.257e-05      -1.145796344666 -5.056e-07     ~
+        4     4.00         22           462      -1.145799012017 -1.410e-05      -1.145796365910 -2.124e-08     ~
+        5     5.00         22           462      -1.145795861134  3.151e-06      -1.145796366827 -9.174e-10     ~
+        6     6.00         22           462      -1.145796475969 -6.148e-07      -1.145796366867 -3.997e-11     ~
+        7     7.00         22           462      -1.145796344789  1.312e-07      -1.145796366869 -1.741e-12     ~
+        8     8.00         22           462      -1.145796371521 -2.673e-08      -1.145796366869 -7.283e-14     ~
         9     9.00         22           462      -1.145796365909  5.613e-09
-  --------------------------------------------------------------------------------------------------------------
+  --------------------------------------------------------------------------------------------------------------~
 
   Calculation converged.
 
@@ -610,39 +614,39 @@ Total time:
 
   Most important contributions to the wave function:
 
-    0       0.993095      0.986237           0 |20000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>     -1.966688846046
-    1     -0.0505026    0.00255051           1 |00000020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>      0.465430650341
-    2     -0.0486604    0.00236784           2 |02000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>     -0.397745117947
-    3     -0.0421031    0.00177267           3 |00000000020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>      0.893715722109
-    4     -0.0421031    0.00177267           4 |00000000200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>      0.893715722109
-    5     -0.0381598    0.00145617           5 |00000+-0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>     -0.186631584721
-    6     -0.0381598    0.00145617           6 |00000-+0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>     -0.186631584721
-    7     -0.0370655    0.00137385           7 |00000200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>     -0.652883883483
-    8      0.0139536   0.000194703           8 |0+-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>      0.910192242159
-    9      0.0139536   0.000194703           9 |0-+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>      0.910192242159
+    0       0.993095      0.986237           0 |2000000000000000000000000000000000000000000000000000000000000000>     -1.966688846046
+    1     -0.0505026    0.00255051           1 |0000002000000000000000000000000000000000000000000000000000000000>      0.465430650341
+    2     -0.0486604    0.00236784           2 |0200000000000000000000000000000000000000000000000000000000000000>     -0.397745117947
+    3     -0.0421031    0.00177267           3 |0000000002000000000000000000000000000000000000000000000000000000>      0.893715722109
+    4     -0.0421031    0.00177267           4 |0000000020000000000000000000000000000000000000000000000000000000>      0.893715722109
+    5     -0.0381598    0.00145617           5 |00000+-000000000000000000000000000000000000000000000000000000000>     -0.186631584721
+    6     -0.0381598    0.00145617           6 |00000-+000000000000000000000000000000000000000000000000000000000>     -0.186631584721
+    7     -0.0370655    0.00137385           7 |0000020000000000000000000000000000000000000000000000000000000000>     -0.652883883483
+    8      0.0139536   0.000194703           8 |0-+0000000000000000000000000000000000000000000000000000000000000>      0.910192242159
+    9      0.0139536   0.000194703           9 |0+-0000000000000000000000000000000000000000000000000000000000000>      0.910192242159
 
   Spin State: S^2 = 0.000, S = 0.000, singlet (from 1 determinants,98.62%)
-  ElementwiseCI (bitset) steps finished in  : 0.028570 s
+  ElementwiseCI (bitset) steps finished in  : 0.025666 s
 
   Variational energy estimated with 22 determinants to meet the max error 0.000000e+00
   * ElementwiseCI Variational Energy    =    -1.145796366869 Eh
   * ElementwiseCI Var. Corr.  Energy    =    -0.032619150935 Eh
   * 1st order perturbation   Energy     =    -0.000000000000 Eh
 
-  ElementwiseCI (bitset) ran in  : 0.029570 s
+  ElementwiseCI (bitset) ran in  : 0.026705 s
 
   Saving the wave function:
 
   Saving root 0, ref_root is 0
   Number of old roots: 1
 
-  ==> SCI excited state solver summary <==
+  ==> Excited state solver summary <==
 
-  Iterations required:                         0
+  Iterations required:                         9
   Dimension of optimized determinant space:    22
 
-  * Adaptive-CI Energy Root   0        = -1.145796366869 Eh =   0.0000 eV
-  * Adaptive-CI Energy Root   0 + EPT2 = -1.145796366869 Eh =   0.0000 eV
+  * Selected-CI Energy Root   0        = -1.145796366869 Eh =   0.0000 eV
+  * Selected-CI Energy Root   0 + EPT2 = -1.145796366869 Eh =   0.0000 eV
 
   ==> Wavefunction Information <==
 
@@ -655,8 +659,8 @@ Total time:
     5  -0.038160 0.001456172           5 |00000+-000>
     6  -0.038160 0.001456172           6 |00000-+000>
     7  -0.037066 0.001373854           7 |0000020000>
-    8   0.013954 0.000194703           8 |0+-0000000>
-    9   0.013954 0.000194703           9 |0-+0000000>
+    8   0.013954 0.000194703           9 |0+-0000000>
+    9   0.013954 0.000194703           8 |0-+0000000>
 
   Spin state for root 0: S^2 = 0.003534, S = 0.004, singlet
 
@@ -669,7 +673,7 @@ Total time:
        1      Ag     0        -1.145796366869
     -----------------------------------------	EWCI energy.......................................................PASSED
 
-    Psi4 stopped on: Thursday, 14 February 2019 06:17PM
-    Psi4 wall time for execution: 0:00:01.38
+    Psi4 stopped on: Sunday, 17 February 2019 03:48AM
+    Psi4 wall time for execution: 0:00:00.96
 
 *** Psi4 exiting successfully. Buy a developer a beer!

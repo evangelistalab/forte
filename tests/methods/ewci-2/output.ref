@@ -22,9 +22,9 @@
     -----------------------------------------------------------------------
 
 
-    Psi4 started on: Sunday, 17 February 2019 03:04AM
+    Psi4 started on: Sunday, 17 February 2019 03:48AM
 
-    Process ID: 4396
+    Process ID: 5155
     Host:       DESKTOP-JOFFIR0
     PSIDATADIR: /home/zty/Source/psi4-github-bin-g++-7.3.0-opt-c++17/share/psi4
     Memory:     500.0 MiB
@@ -68,7 +68,7 @@ compare_values(refpci, variable("EWCI ENERGY"), 9, "EWCI energy") #TEST
 --------------------------------------------------------------------------
 
 *** tstart() called on DESKTOP-JOFFIR0
-*** at Sun Feb 17 03:04:41 2019
+*** at Sun Feb 17 03:48:44 2019
 
    => Loading Basis Set <=
 
@@ -244,19 +244,19 @@ Properties computed using the SCF density matrix
      X:     0.0000      Y:     0.0000      Z:     0.0000     Total:     0.0000
 
 
-*** tstop() called on DESKTOP-JOFFIR0 at Sun Feb 17 03:04:41 2019
+*** tstop() called on DESKTOP-JOFFIR0 at Sun Feb 17 03:48:45 2019
 Module time:
-	user time   =       0.25 seconds =       0.00 minutes
-	system time =       0.03 seconds =       0.00 minutes
-	total time  =          0 seconds =       0.00 minutes
+	user time   =       0.32 seconds =       0.01 minutes
+	system time =       0.00 seconds =       0.00 minutes
+	total time  =          1 seconds =       0.02 minutes
 Total time:
-	user time   =       0.25 seconds =       0.00 minutes
-	system time =       0.03 seconds =       0.00 minutes
-	total time  =          0 seconds =       0.00 minutes
+	user time   =       0.32 seconds =       0.01 minutes
+	system time =       0.00 seconds =       0.00 minutes
+	total time  =          1 seconds =       0.02 minutes
 	SCF energy........................................................PASSED
 
 *** tstart() called on DESKTOP-JOFFIR0
-*** at Sun Feb 17 03:04:41 2019
+*** at Sun Feb 17 03:48:45 2019
 
    => Loading Basis Set <=
 
@@ -432,14 +432,14 @@ Properties computed using the SCF density matrix
      X:     0.0000      Y:     0.0000      Z:     0.0000     Total:     0.0000
 
 
-*** tstop() called on DESKTOP-JOFFIR0 at Sun Feb 17 03:04:42 2019
+*** tstop() called on DESKTOP-JOFFIR0 at Sun Feb 17 03:48:45 2019
 Module time:
-	user time   =       0.27 seconds =       0.00 minutes
-	system time =       0.05 seconds =       0.00 minutes
-	total time  =          1 seconds =       0.02 minutes
+	user time   =       0.28 seconds =       0.00 minutes
+	system time =       0.01 seconds =       0.00 minutes
+	total time  =          0 seconds =       0.00 minutes
 Total time:
-	user time   =       0.53 seconds =       0.01 minutes
-	system time =       0.08 seconds =       0.00 minutes
+	user time   =       0.61 seconds =       0.01 minutes
+	system time =       0.01 seconds =       0.00 minutes
 	total time  =          1 seconds =       0.02 minutes
    => Loading Basis Set <=
 
@@ -488,7 +488,7 @@ Total time:
   Overall Conventional Integrals timings
 
 
-  Conventional integrals take 0.11805780 s
+  Conventional integrals take 0.11411640 s
 
   ==> Summary of Active Space Solver Input <==
 
@@ -556,7 +556,7 @@ Total time:
     Result perturbation analysis                    NO
     Using OpenMP                                    NO
 
-  ==> Initial Guess <==
+  ==> Initial Guess <==     -14.609744738090 -1.461e+01
 
   Initial guess size = 86
   Spin multiplicity of root 78 not close to integer (4.1231)
@@ -597,9 +597,9 @@ Total time:
 
   ==> PCI Iterations <==
 
-  --------------------------------------------------------------------------------------------------------------
-    Steps  Beta/Eh      Ndets      NoffDiag     Proj. Energy/Eh     dEp/dt      Approx. Energy/Eh   dEv/dt
-  --------------------------------------------------------------------------------------------------------------
+  --------------------------------------------------------------------------------------------------------------~
+    Steps  Beta/Eh      Ndets      NoffDiag     Proj. Energy/Eh     dEp/dt      Approx. Energy/Eh   dEv/dt      ~
+  --------------------------------------------------------------------------------------------------------------~
 
   Davidson-liu solver algorithm
   Found a guess vector with spin not close to integer value (4.123106)
@@ -666,7 +666,7 @@ Total time:
      51      -17.027479768265  -5.649e-13
   ----------------------------------------
   The Davidson-Liu algorithm converged in 52 iterations.
-        0        0        418          2080     -14.646182433470 -2.350e-04
+        0       99        418          2080     -14.646182433470 -2.350e-04     -14.646182320250  1.000e+00     ~
 
   Davidson-liu solver algorithm
   Found a guess vector with spin not close to integer value (4.123106)
@@ -704,7 +704,7 @@ Total time:
      22      -17.027454354030  -6.040e-14
   ----------------------------------------
   The Davidson-Liu algorithm converged in 23 iterations.
-        1        0        434          2410     -14.646157054534  2.538e-05
+        1       40        434          2410     -14.646157054534  2.538e-05     -14.646156906015  2.541e-05     ~
 
   Davidson-liu solver algorithm
   Found a guess vector with spin not close to integer value (4.123106)
@@ -733,7 +733,7 @@ Total time:
      13      -17.027453582072  -9.805e-13
   ----------------------------------------
   The Davidson-Liu algorithm converged in 14 iterations.
-        2        0        426          2336     -14.646156112890  9.416e-07
+        2       23        426          2336     -14.646156112890  9.416e-07     -14.646156134057  7.720e-07     ~
 
   Davidson-liu solver algorithm
   Found a guess vector with spin not close to integer value (4.123106)
@@ -764,7 +764,7 @@ Total time:
      15      -17.027453103320  -1.027e-12
   ----------------------------------------
   The Davidson-Liu algorithm converged in 16 iterations.
-        3        0        422          2344     -14.646155810846  3.020e-07
+        3       27        422          2344     -14.646155810846  3.020e-07     -14.646155655305  4.788e-07     ~
 
   Davidson-liu solver algorithm
   Found a guess vector with spin not close to integer value (4.123106)
@@ -791,7 +791,7 @@ Total time:
      11      -17.027453839185  -8.384e-13
   ----------------------------------------
   The Davidson-Liu algorithm converged in 12 iterations.
-        4        0        422          2316     -14.646156378528 -5.677e-07
+        4       19        422          2316     -14.646156378528 -5.677e-07     -14.646156391170 -7.359e-07     ~
 
   Davidson-liu solver algorithm
   Found a guess vector with spin not close to integer value (4.123106)
@@ -816,8 +816,8 @@ Total time:
       9      -17.027452781860  -1.066e-14
   ----------------------------------------
   The Davidson-Liu algorithm converged in 10 iterations.
-        5        0        422          2348     -14.646155198128  1.180e-06
-  --------------------------------------------------------------------------------------------------------------
+        5       15        422          2348     -14.646155198128  1.180e-06     -14.646155333845  1.057e-06     ~
+  --------------------------------------------------------------------------------------------------------------~
 
   Calculation stoped in appearance of higher new low.
 
@@ -842,23 +842,23 @@ Total time:
     9     0.00777723   6.04854e-05           9 |2000020200000000000000000000000000000000000000000000000000000000>    -15.877818677698
 
   Spin State: S^2 = 0.000, S = 0.000, singlet (from 3 determinants,97.70%)
-  ElementwiseCI (bitset) steps finished in  : 1.555189 s
+  ElementwiseCI (bitset) steps finished in  : 1.557001 s
 
   Variational energy estimated with 422 determinants to meet the max error 0.000000e+00
 
   ==> Computing Coupling Lists <==
   --------------------------------
-        α          0.001638 s
-        β          0.001636 s
-        αα         0.001753 s
-        ββ         0.001720 s
-        αβ         0.004566 s
+        α          0.001594 s
+        β          0.001559 s
+        αα         0.001744 s
+        ββ         0.001680 s
+        αβ         0.004508 s
   --------------------------------
   * ElementwiseCI Variational Energy    =   -14.646160965127 Eh
   * ElementwiseCI Var. Corr.  Energy    =    -0.036416227037 Eh
   * 1st order perturbation   Energy     =    -0.000005631282 Eh
 
-  ElementwiseCI (bitset) ran in  : 1.570087 s
+  ElementwiseCI (bitset) ran in  : 1.571550 s
 
   Saving the wave function:
 
@@ -898,7 +898,7 @@ Total time:
        1      Ag     0       -14.646155333845
     -----------------------------------------	EWCI energy.......................................................PASSED
 
-    Psi4 stopped on: Sunday, 17 February 2019 03:04AM
-    Psi4 wall time for execution: 0:00:02.52
+    Psi4 stopped on: Sunday, 17 February 2019 03:48AM
+    Psi4 wall time for execution: 0:00:02.50
 
 *** Psi4 exiting successfully. Buy a developer a beer!
