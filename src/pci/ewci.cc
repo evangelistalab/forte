@@ -288,7 +288,7 @@ void ElementwiseCI::set_options(std::shared_ptr<ForteOptions> options) {
         abort();
     }
 
-    sparse_solver_.set_e_convergence(options->get_double("E_CONVERGENCE"));
+    sparse_solver_.set_e_convergence(options->get_double("PCI_E_CONVERGENCE"));
     sparse_solver_.set_maxiter_davidson(options->get_int("DL_MAXITER"));
 }
 
