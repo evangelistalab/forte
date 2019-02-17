@@ -99,8 +99,10 @@ void PCISigmaVector::reset(std::vector<double>& ref_C) {
     size_ = dets_.size();
 
     diag_.resize(size_);
+    const double scaler_energy = as_ints_->scalar_energy();
+#pragma omp parallel for
     for (size_t I = 0; I < size_; ++I) {
-        diag_[I] = as_ints_->energy(dets_[I]) + as_ints_->scalar_energy();
+        diag_[I] = as_ints_->energy(dets_[I]) + scaler_energy;
     }
 }
 
@@ -119,6 +121,10 @@ void PCISigmaVector::compute_sigma(psi::SharedVector sigma, psi::SharedVector b)
                                sigma_vec, ref_size_);
         set_psi_Vector(sigma, sigma_vec);
     }
+#pragma omp parallel for
+    for (size_t I = 0; I < size_; ++I) {
+        sigma->set(I, sigma->get(I) + diag_[I] * b->get(I));
+    }
 }
 
 void PCISigmaVector::get_diagonal(psi::Vector& diag) {
@@ -133,7 +139,7 @@ void PCISigmaVector::compute_sigma_with_diag(psi::SharedVector sigma, psi::Share
 
 #pragma omp parallel for
     for (size_t I = 0; I < size_; ++I) {
-        sigma->set(I, diag_[I] * b->get(I));
+        sigma->set(I, sigma->get(I) + diag_[I] * b->get(I));
     }
 }
 
@@ -211,6 +217,13 @@ void PCISigmaVector::apply_tau_H_symm(double spawning_threshold, det_hashvec& re
     overlap_size = ref_dets.size();
     ref_dets.merge(extra_dets);
     result_C.insert(result_C.end(), extra_C.begin(), extra_C.end());
+
+//    const double scaler_energy = as_ints_->scalar_energy();
+//#pragma omp parallel for
+//    for (size_t I = 0; I < overlap_size; ++I) {
+//        diag_[I] = as_ints_->energy(ref_dets[I]) + scaler_energy;
+//        result_C[I] += diag_[I] * ref_C[I];
+//    }
 }
 
 void PCISigmaVector::apply_tau_H_symm_det_dynamic_HBCI_2(
@@ -803,6 +816,11 @@ void PCISigmaVector::apply_tau_H_ref_C_symm(double spawning_threshold,
                                                   ref_C, I, pre_C[I], ref_C[I], overlap_size,
                                                   result_C, max_coupling);
     }
+
+//#pragma omp parallel for
+//    for (size_t I = 0; I < result_size; ++I) {
+//        result_C[I] += diag_[I] * pre_C[I];
+//    }
 }
 
 void PCISigmaVector::apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(

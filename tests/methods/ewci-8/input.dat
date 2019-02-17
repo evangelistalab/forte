@@ -4,7 +4,7 @@
 import forte
 
 refscf = -14.6097447380899563 #TEST
-refpci = -14.534282241080 #TEST
+refpci = -14.515843385662 #TEST
 
 molecule li2{
    Li
@@ -22,8 +22,9 @@ set forte {
   nroot 2
   PCI_GENERATOR dl
   pci_spawning_threshold 0.0001
-  pci_e_convergence 12
+  pci_e_convergence 8
   PCI_STOP_HIGHER_NEW_LOW true
+  DL_MAXITER 1000
 }
 
 energy('scf')

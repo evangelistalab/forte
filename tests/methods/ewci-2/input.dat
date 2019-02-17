@@ -4,7 +4,7 @@
 import forte
 
 refscf = -14.6097447380899563 #TEST
-refpci = -14.646161244794 #TEST
+refpci = -14.646160965127 #TEST
 
 molecule li2{
    Li
