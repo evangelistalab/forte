@@ -330,33 +330,6 @@ class ElementwiseCI : public SelectedCIMethod {
     void propagate_DL(det_hashvec& dets_hashvec, std::vector<double>& C, double spawning_threshold);
     /// Apply symmetric approx tau H to a set of determinants with selection
     /// according to reference coefficients
-    void apply_tau_H_symm(double tau, double spawning_threshold, det_hashvec& dets_hashvec,
-                          std::vector<double>& ref_C, std::vector<double>& result_C, double S,
-                          size_t& overlap_size);
-
-    /// Apply symmetric approx tau H to a determinant using dynamic screening
-    /// with selection according to a reference coefficient
-    /// and with HBCI sorting scheme with singles screening
-    void apply_tau_H_symm_det_dynamic_HBCI_2(
-        double tau, double spawning_threshold, const det_hashvec& dets_hashvec,
-        const std::vector<double>& pre_C, size_t I, double CI, std::vector<double>& result_C,
-        std::vector<std::pair<Determinant, double>>& new_det_C_vec,
-        std::pair<double, double>& max_coupling);
-    /// Apply symmetric approx tau H to a set of determinants with selection
-    /// according to reference coefficients
-    void apply_tau_H_ref_C_symm(double tau, double spawning_threshold,
-                                const det_hashvec& result_dets, const std::vector<double>& ref_C,
-                                const std::vector<double>& pre_C, std::vector<double>& result_C,
-                                const size_t overlap_size, double S);
-
-    /// Apply symmetric approx tau H to a determinant using dynamic screening
-    /// with selection according to a reference coefficient
-    /// and with HBCI sorting scheme with singles screening
-    void apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(
-        double tau, double spawning_threshold, const det_hashvec& dets_hashvec,
-        const std::vector<double>& pre_C, const std::vector<double>& ref_C, size_t I, double CI,
-        double ref_CI, const size_t overlap_size, std::vector<double>& result_C,
-        const std::pair<double, double>& max_coupling);
 
     /// Estimates the energy give a wave function
     std::map<std::string, double> estimate_energy(const det_hashvec& dets_hashvec,
