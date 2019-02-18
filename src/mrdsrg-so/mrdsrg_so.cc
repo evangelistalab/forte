@@ -645,7 +645,7 @@ void MRDSRG_SO::compute_hbar() {
 
     // iterator variables
     int maxn = options_.get_int("DSRG_RSC_NCOMM");
-    double ct_threshold = options_.get_double("SRG_RSC_THRESHOLD");
+    double ct_threshold = options_.get_double("DSRG_RSC_THRESHOLD");
     BlockedTensor C1 = ambit::BlockedTensor::build(tensor_type_, "C1", {"gg"});
     BlockedTensor C2 = ambit::BlockedTensor::build(tensor_type_, "C2", {"gggg"});
 
@@ -736,7 +736,7 @@ void MRDSRG_SO::compute_qhbar() {
 
     // iterator variables
     int maxn = options_.get_int("DSRG_RSC_NCOMM");
-    double ct_threshold = options_.get_double("SRG_RSC_THRESHOLD");
+    double ct_threshold = options_.get_double("DSRG_RSC_THRESHOLD");
     BlockedTensor C1 = ambit::BlockedTensor::build(tensor_type_, "C1", {"gg"});
     BlockedTensor C2 = ambit::BlockedTensor::build(tensor_type_, "C2", {"gggg"});
     BlockedTensor C3 = ambit::BlockedTensor::build(tensor_type_, "C3", {"gggggg"});

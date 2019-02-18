@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-
 def register_forte_options(forte_options):
     register_driver_options(forte_options)
     register_mo_space_info_options(forte_options)
@@ -557,6 +556,10 @@ def register_dsrg_options(forte_options):
                      "Source operator used in DSRG (AMP, EMP2, LAMP, LEMP2 "
                      "only available in toy code mcsrgpt2)")
 
+    forte_options.add_int("DSRG_RSC_NCOMM", 20, "The maximum number of commutators in the recursive single commutator approximation")
+
+    forte_options.add_double("DSRG_RSC_THRESHOLD", 1.0e-12, "The treshold for terminating the recursive single commutator approximation")
+
     forte_options.add_str("T_ALGORITHM", "DSRG", ["DSRG", "DSRG_NOSEMI", "SELEC", "ISA"],
                      "The way of forming T amplitudes (DSRG_NOSEMI, SELEC, ISA "
                      "only available in toy code mcsrgpt2)")
@@ -1082,11 +1085,7 @@ def register_old_options(forte_options):
     #    forte_options.add_double("SRG_ODEINT_RELERR", 1.0e-12)
     #    /*- Select a modified commutator -*/
     #    forte_options.add_str("SRG_COMM", "STANDARD", "STANDARD FO FO2")
-    #    /*- The maximum number of commutators in the recursive single commutator
-    #     * approximation -*/
-    #    forte_options.add_int("DSRG_RSC_NCOMM", 20)
-    #    /*- The treshold for terminating the RSC approximation -*/
-    #    forte_options.add_double("SRG_RSC_THRESHOLD", 1.0e-12)
+
     #    /*- Save Hbar? -*/
     #    forte_options.add_bool("SAVE_HBAR", False)
 
