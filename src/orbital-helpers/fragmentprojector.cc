@@ -35,6 +35,7 @@
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/basisset.h"
+#include "psi4/libmints/dimension.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/libmints/integral.h"
 #include "psi4/libmints/wavefunction.h"
@@ -68,7 +69,7 @@ SharedMatrix create_fragment_projector(SharedWavefunction wfn, Options& options)
 
 		// Create a fragmentprojector with the second constructor if we want to project to minAO or use IAO procedure
 		// FragmentProjector FP(molecule, prime_basis, minao_basis);
-
+		outfile->Printf("Debug check #2");
         // Compute and return the projector matrix
         Pf = FP.build_f_projector(molecule, prime_basis);
     return Pf;
@@ -108,26 +109,30 @@ void FragmentProjector::startup() {
 	nbf_A_ = count_basis;
 
 	//Create fragment slice (0 -> nbf_A, AA block)
-	A_begin_[0] = 0;
-	A_end_[0] = nbf_A_;
 }
 
 SharedMatrix FragmentProjector::build_f_projector(std::shared_ptr<Molecule> molecule, 
 	std::shared_ptr<psi::BasisSet> basis) {
 
+	std::vector<int> zeropi(1,0);
+	Dimension A_begin(zeropi);
+	Dimension A_end(zeropi);
+	A_begin[0] = 0;
+	A_end[0] = nbf_A_;
+
 	std::shared_ptr<IntegralFactory> integral_pp(
 		new IntegralFactory(basis, basis, basis, basis));
-
 	std::shared_ptr<OneBodyAOInt> S_int(integral_pp->ao_overlap());
 	SharedMatrix S_nn = std::make_shared<psi::Matrix>("S_nn", nbf_, nbf_);
 	S_int->compute(S_nn);
 
 	S_nn->print();
 
-	Slice fragA(A_begin_, A_end_);
+	Slice fragA(A_begin, A_end);
 
 	// Construct S_A
 	SharedMatrix S_A = S_nn->get_block(fragA, fragA);
+	S_A->print();
 
 	// Construct S_A^-1 in n*n size
 	S_A->general_invert();
@@ -136,7 +141,6 @@ SharedMatrix FragmentProjector::build_f_projector(std::shared_ptr<Molecule> mole
 
 	// Evaluate AO basis projector
 	S_A_nn->transform(S_nn);
-
 	S_A_nn->print();
 
     return S_A_nn;

@@ -59,11 +59,12 @@ set {
 E, wfn_cas = energy('casscf', return_wfn = True)
 
 set forte {
-#  reference casscf
-#  CUTOFF_BY threshold
-#  threshold 0.5
-#  WRITE_FREEZE_MO true
-#  semicanon true
+  embedding true
+  reference casscf
+  CUTOFF_BY threshold
+  threshold 0.5
+  WRITE_FREEZE_MO true
+  semicanon true
   active_space_solver  fci
   correlation_solver   dsrg-mrpt2
   root_sym           0
