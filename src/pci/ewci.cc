@@ -384,10 +384,9 @@ double ElementwiseCI::estimate_high_energy() {
     //        obt_energies[obt_energies.size()-1-Ndocc].first;
     //        high_det.create_alfa_bit(obt_energies[obt_energies.size()-1-Ndocc].second);
     //    }
-    lambda_h_ = high_obt_energy + as_ints_->frozen_core_energy() + as_ints_->scalar_energy();
+    lambda_h_ = high_obt_energy;
 
-    double lambda_h_G =
-        as_ints_->energy(high_det) + as_ints_->scalar_energy() + nuclear_repulsion_energy_;
+    double lambda_h_G = as_ints_->energy(high_det);
     std::vector<int> aocc = high_det.get_alfa_occ(nact_);
     std::vector<int> bocc = high_det.get_beta_occ(nact_);
     std::vector<int> avir = high_det.get_alfa_vir(nact_);
@@ -501,8 +500,7 @@ double ElementwiseCI::estimate_high_energy() {
     outfile->Printf("\n  Highest Excited determinant:");
     outfile->Printf("\n  %s", high_det.str().c_str());
     outfile->Printf("\n  Determinant Energy                    :  %.12f",
-                    as_ints_->energy(high_det) + nuclear_repulsion_energy_ +
-                        as_ints_->scalar_energy());
+                    as_ints_->energy(high_det));
     outfile->Printf("\n  Highest Energy Gershgorin circle Est. :  %.12f", lambda_h_);
     return lambda_h_;
 }
@@ -684,7 +682,7 @@ bool ElementwiseCI::check_convergence() {
             return true;
         }
         if (do_shift_) {
-            lambda_1_ = approx_energy_;
+            lambda_1_ = approx_energy_ - as_ints_->scalar_energy() - nuclear_repulsion_energy_;
             compute_characteristic_function();
         }
     }
@@ -901,7 +899,7 @@ double ElementwiseCI::initial_guess(det_hashvec& dets_hashvec, std::vector<doubl
     outfile->Printf("\n\n  Initial guess energy (variational) = %20.12f Eh (root = %d)", var_energy,
                     current_root_ + 1);
 
-    lambda_1_ = var_energy;
+    lambda_1_ = evals->get(current_root_);
 
     // Copy the ground state eigenvector
     for (size_t I = 0; I < guess_size; ++I) {
@@ -972,7 +970,8 @@ void ElementwiseCI::propagate_wallCh(det_hashvec& dets_hashvec, std::vector<doub
         for (size_t I = 0; I < overlap_size; ++I) {
             CHC_energy += ref_C[I] * C[I];
         }
-        CHC_energy = CHC_energy / -1.0 + (range_ * root + shift_);
+        CHC_energy = CHC_energy / -1.0 + (range_ * root + shift_) + as_ints_->scalar_energy() +
+                     nuclear_repulsion_energy_;
         timer_off("EWCI:<E>a");
         double CHC_energy_gradient =
             (CHC_energy - approx_energy_) / (time_step_ * energy_estimate_freq_);
@@ -1041,7 +1040,7 @@ void ElementwiseCI::propagate_DL(det_hashvec& dets_hashvec, std::vector<double>&
                                            state_.multiplicity(), Sparse);
     current_davidson_iter_ = sigma_vector.get_sigma_build_count();
     old_approx_energy_ = approx_energy_;
-    approx_energy_ = PQ_evals_->get(0);
+    approx_energy_ = PQ_evals_->get(0) + as_ints_->scalar_energy() + nuclear_repulsion_energy_;
     C.resize(result_size);
     for (size_t I = 0; I < result_size; ++I) {
         C[I] = PQ_evecs_->get(I, 0);
