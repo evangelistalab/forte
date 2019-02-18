@@ -30,6 +30,7 @@
 #define _fragmentprojector_h_
 
 #include "psi4/libmints/molecule.h"
+#include "psi4/libmints/matrix.h"
 #include "psi4/libmints/basisset.h"
 #include "psi4/liboptions/liboptions.h"
 
@@ -62,9 +63,6 @@ namespace forte {
 		int nbf_A_;
 
 		int natom_A_;
-
-		Dimension A_begin_;
-		Dimension A_end_;
 
 		/// The startup function
 		void startup();

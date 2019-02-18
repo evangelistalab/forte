@@ -80,6 +80,7 @@ def register_mrcino_options(forte_options):
                       "or not")
 
 def register_embedding_options(forte_options):
+        forte_options.add_bool("EMBEDDING", False, "Whether to perform embedding partition and projection")
         forte_options.add_str("CUTOFF_BY", "THRESHOLD", "Cut off by: threshold or number.")
         forte_options.add_int("NUM_OCC", 0, "Number of (restricted) occpied in system A")
         forte_options.add_int("NUM_VIR", 0, "Number of (restricted) virtual in system A")
