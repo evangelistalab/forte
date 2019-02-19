@@ -69,7 +69,7 @@ void make_avas(psi::SharedWavefunction ref_wfn, psi::Options& options, psi::Shar
         auto sigmavir = std::make_shared<Vector>("sigma virtual block", nvir);
 
         auto U = std::make_shared<psi::Matrix>("U", nmo, nmo);
-        // diagnolize S
+        // diagonalize S
         if (diagonalize_s) {
             // Grab the occupied block and diagonalize it
             for (int i = 0; i < nocc; i++) {

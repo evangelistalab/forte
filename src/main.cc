@@ -145,12 +145,6 @@ psi::SharedMatrix make_aosubspace_projector(psi::SharedWavefunction ref_wfn,
     return Ps;
 }
 
-void apply_avas(psi::SharedWavefunction ref_wfn, psi::Options& options, psi::SharedMatrix Ps, bool avas) {
-    if (avas) {
-        make_avas(ref_wfn, options, Ps);
-    }
-}
-
 void banner() {
     outfile->Printf(
         "\n"
