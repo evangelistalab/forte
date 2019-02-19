@@ -148,15 +148,6 @@ class ActiveSpaceMethod {
     /// Return the state info
     const StateInfo& state() const { return state_; }
 
-    // I am not sure this is the place to put this support. Please modidy it if necessary.
-    /// Generate density file names at a certain RDM level
-    std::vector<std::string> generate_rdm_file_names(int rdm_level, int root1, int root2,
-                                                     const StateInfo& state2);
-    /// Check if density files for a given RDM level already exist
-    bool check_density_files(int rdm_level, int root1, int root2, const StateInfo& state2);
-    /// Remove density files for a given RDM level
-    void remove_density_files(int rdm_level, int root1, int root2, const StateInfo& state2);
-
     // ==> Base Class Handles Set Functions <==
 
     /// Set the energy convergence criterion

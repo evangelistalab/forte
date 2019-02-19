@@ -499,6 +499,15 @@ class FCI_MO : public ActiveSpaceMethod {
     /// Compute RDMs at given order and put into BlockedTensor format
     ambit::BlockedTensor compute_n_rdm(CI_RDMS& cirdm, const int& order);
 
+    // I am not sure this is the place to put this support. Please modidy it if necessary. TODO: move (Francesco)
+    /// Generate density file names at a certain RDM level
+    std::vector<std::string> generate_rdm_file_names(int rdm_level, int root1, int root2,
+                                                     const StateInfo& state2);
+    /// Check if density files for a given RDM level already exist
+    bool check_density_files(int rdm_level, int root1, int root2, const StateInfo& state2);
+    /// Remove density files for a given RDM level
+    void remove_density_files(int rdm_level, int root1, int root2, const StateInfo& state2);
+
     /// Localize active orbitals
     bool localize_actv_;
     void localize_actv_orbs();
