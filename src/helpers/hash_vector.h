@@ -119,7 +119,7 @@ template <class Key, class Hash = std::hash<Key>> class HashVector {
             return std::vector<CINode<Key>>::const_iterator::operator*().value;
         }
 
-        const Key* const operator->() const {
+        const Key* operator->() const {
             return &(std::vector<CINode<Key>>::const_iterator::operator*().value);
         }
     };
