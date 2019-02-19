@@ -33,14 +33,14 @@ aci:
   unused:
    - aci-mrcisd-1
    - aci-mrcisd-2
-actv-dsrg:
-  short:
+#actv-dsrg:
+#  short:
 #   - actv-dsrg-1-C2H4-cis
 #   - actv-dsrg-2-C2H4-cisd
 #   - actv-dsrg-5-actv-independence
 #   - actv-dsrg-ipea-1
 #  - actv-dsrg-ipea-2
-  long:
+#  long:
 #   - actv-dsrg-3-C4H6-cisd
 #  - actv-dsrg-4-C4H6-triplet
 #   - actv-dsrg-size-intensive
