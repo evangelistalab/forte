@@ -52,9 +52,6 @@
 #include "sparse_ci/ci_reference.h"
 #include "pci_sigma.h"
 
-using namespace psi;
-using namespace forte::GeneratorType_EWCI;
-
 #define USE_HASH 1
 #define DO_STATS 0
 #define ENFORCE_SYM 1
@@ -153,29 +150,29 @@ void Wall_Chebyshev_generator_coefs(std::vector<double>& coefs, int order, doubl
     for (int i = 0; i <= order; i++) {
         std::vector<double> chbv_poly_coefs;
         Chebyshev_polynomial_coefs(chbv_poly_coefs, i);
-        //        outfile->Printf("\n\n  chebyshev poly in step %d", i);
+        //        psi::outfile->Printf("\n\n  chebyshev poly in step %d", i);
         //        print_polynomial(chbv_poly_coefs);
         for (int j = 0; j <= i; j++) {
             poly_coefs[j] += (i == 0 ? 1.0 : 2.0) * chbv_poly_coefs[j];
         }
-        //        outfile->Printf("\n\n  propagate poly in step %d", i);
+        //        psi::outfile->Printf("\n\n  propagate poly in step %d", i);
         //        print_polynomial(poly_coefs);
     }
     Polynomial_generator_coefs(coefs, poly_coefs, -1.0 / range, 0.0);
 }
 
 void print_polynomial(std::vector<double>& coefs) {
-    outfile->Printf("\n    f(x) = ");
+    psi::outfile->Printf("\n    f(x) = ");
     for (int i = coefs.size() - 1; i >= 0; i--) {
         switch (i) {
         case 0:
-            outfile->Printf("%s%e", coefs[i] >= 0 ? "+" : "", coefs[i]);
+            psi::outfile->Printf("%s%e", coefs[i] >= 0 ? "+" : "", coefs[i]);
             break;
         case 1:
-            outfile->Printf("%s%e * x ", coefs[i] >= 0 ? "+" : "", coefs[i]);
+            psi::outfile->Printf("%s%e * x ", coefs[i] >= 0 ? "+" : "", coefs[i]);
             break;
         default:
-            outfile->Printf("%s%e * x^%d ", coefs[i] >= 0 ? "+" : "", coefs[i], i);
+            psi::outfile->Printf("%s%e * x^%d ", coefs[i] >= 0 ? "+" : "", coefs[i], i);
             break;
         }
     }
@@ -279,7 +276,7 @@ void ElementwiseCI::set_options(std::shared_ptr<ForteOptions> options) {
     ref.build_reference(reference_vec);
     reference_determinant_ = reference_vec[0];
 
-    //    outfile->Printf("\n  The reference determinant is:\n");
+    //    psi::outfile->Printf("\n  The reference determinant is:\n");
     //    reference_determinant_.print();
 
     post_diagonalization_ = options->get_bool("PCI_POST_DIAGONALIZE");
@@ -328,9 +325,9 @@ void ElementwiseCI::set_options(std::shared_ptr<ForteOptions> options) {
         generator_description_ = "Wall-Chebyshev";
         time_step_ = 1.0;
         if (chebyshev_order_ <= 0) {
-            outfile->Printf("\n\n  Warning! Chebyshev order %d out of bound, "
-                            "automatically adjusted to 5.",
-                            chebyshev_order_);
+            psi::outfile->Printf("\n\n  Warning! Chebyshev order %d out of bound, "
+                                 "automatically adjusted to 5.",
+                                 chebyshev_order_);
             chebyshev_order_ = 5;
         }
     } else if (options->get_str("PCI_GENERATOR") == "DL") {
@@ -338,13 +335,13 @@ void ElementwiseCI::set_options(std::shared_ptr<ForteOptions> options) {
         generator_description_ = "Davidson-Liu by Tianyuan";
         time_step_ = 1.0;
         if (krylov_order_ <= 0) {
-            outfile->Printf("\n\n  Warning! Krylov order %d out of bound, "
-                            "automatically adjusted to 8.",
-                            krylov_order_);
+            psi::outfile->Printf("\n\n  Warning! Krylov order %d out of bound, "
+                                 "automatically adjusted to 8.",
+                                 krylov_order_);
             krylov_order_ = 8;
         }
     } else {
-        outfile->Printf("\n\n  Warning! Generator Unsupported.");
+        psi::outfile->Printf("\n\n  Warning! Generator Unsupported.");
         abort();
     }
 
@@ -404,7 +401,7 @@ void ElementwiseCI::set_options(std::shared_ptr<ForteOptions> options) {
         functional_description_ = "|Hij|*((|Ci|^" + std::to_string(order) + ")+(|Cj|^" +
                                   std::to_string(order) + "))^" + std::to_string(1.0 / order);
     } else {
-        outfile->Printf("\n\n  Warning! Functional Unsupported.");
+        psi::outfile->Printf("\n\n  Warning! Functional Unsupported.");
         abort();
     }
 
@@ -413,14 +410,14 @@ void ElementwiseCI::set_options(std::shared_ptr<ForteOptions> options) {
 }
 
 void ElementwiseCI::print_info() {
-    outfile->Printf("\n\n\t  ---------------------------------------------------------");
-    outfile->Printf("\n\t              Element wise Configuration Interaction"
-                    "implementation");
-    outfile->Printf("\n\t         by Francesco A. Evangelista and Tianyuan Zhang");
-    outfile->Printf("\n\t                      version Aug. 3 2017");
-    outfile->Printf("\n\t                    %4d thread(s) %s", num_threads_,
-                    have_omp_ ? "(OMP)" : "");
-    outfile->Printf("\n\t  ---------------------------------------------------------");
+    psi::outfile->Printf("\n\n\t  ---------------------------------------------------------");
+    psi::outfile->Printf("\n\t              Element wise Configuration Interaction"
+                         "implementation");
+    psi::outfile->Printf("\n\t         by Francesco A. Evangelista and Tianyuan Zhang");
+    psi::outfile->Printf("\n\t                      version Aug. 3 2017");
+    psi::outfile->Printf("\n\t                    %4d thread(s) %s", num_threads_,
+                         have_omp_ ? "(OMP)" : "");
+    psi::outfile->Printf("\n\t  ---------------------------------------------------------");
 
     // Print a summary
     std::vector<std::pair<std::string, int>> calculation_info{
@@ -450,15 +447,15 @@ void ElementwiseCI::print_info() {
     };
 
     // Print some information
-    outfile->Printf("\n\n  ==> Calculation Information <==\n");
+    psi::outfile->Printf("\n\n  ==> Calculation Information <==\n");
     for (auto& str_dim : calculation_info) {
-        outfile->Printf("\n    %-39s %10d", str_dim.first.c_str(), str_dim.second);
+        psi::outfile->Printf("\n    %-39s %10d", str_dim.first.c_str(), str_dim.second);
     }
     for (auto& str_dim : calculation_info_double) {
-        outfile->Printf("\n    %-39s %10.3e", str_dim.first.c_str(), str_dim.second);
+        psi::outfile->Printf("\n    %-39s %10.3e", str_dim.first.c_str(), str_dim.second);
     }
     for (auto& str_dim : calculation_info_string) {
-        outfile->Printf("\n    %-39s %10s", str_dim.first.c_str(), str_dim.second.c_str());
+        psi::outfile->Printf("\n    %-39s %10s", str_dim.first.c_str(), str_dim.second.c_str());
     }
 }
 
@@ -616,12 +613,12 @@ double ElementwiseCI::estimate_high_energy() {
         }
     }
     lambda_h_ = lambda_h_G;
-    outfile->Printf("\n\n  ==> Estimate highest excitation energy <==");
-    outfile->Printf("\n  Highest Excited determinant:");
-    outfile->Printf("\n  %s", high_det.str().c_str());
-    outfile->Printf("\n  Determinant Energy                    :  %.12f",
-                    as_ints_->energy(high_det));
-    outfile->Printf("\n  Highest Energy Gershgorin circle Est. :  %.12f", lambda_h_);
+    psi::outfile->Printf("\n\n  ==> Estimate highest excitation energy <==");
+    psi::outfile->Printf("\n  Highest Excited determinant:");
+    psi::outfile->Printf("\n  %s", high_det.str().c_str());
+    psi::outfile->Printf("\n  Determinant Energy                    :  %.12f",
+                         as_ints_->energy(high_det));
+    psi::outfile->Printf("\n  Highest Energy Gershgorin circle Est. :  %.12f", lambda_h_);
     return lambda_h_;
 }
 
@@ -643,14 +640,14 @@ void ElementwiseCI::compute_characteristic_function() {
 }
 
 void ElementwiseCI::print_characteristic_function() {
-    outfile->Printf("\n\n  ==> Characteristic Function <==");
+    psi::outfile->Printf("\n\n  ==> Characteristic Function <==");
     print_polynomial(cha_func_coefs_);
-    outfile->Printf("\n    with tau = %e, shift = %.12f, range = %.12f", time_step_, shift_,
-                    range_);
-    outfile->Printf("\n    Initial guess: lambda_1= %s%.12f", lambda_1_ >= 0.0 ? " " : "",
-                    lambda_1_);
-    outfile->Printf("\n    Est. Highest eigenvalue= %s%.12f", lambda_h_ >= 0.0 ? " " : "",
-                    lambda_h_);
+    psi::outfile->Printf("\n    with tau = %e, shift = %.12f, range = %.12f", time_step_, shift_,
+                         range_);
+    psi::outfile->Printf("\n    Initial guess: lambda_1= %s%.12f", lambda_1_ >= 0.0 ? " " : "",
+                         lambda_1_);
+    psi::outfile->Printf("\n    Est. Highest eigenvalue= %s%.12f", lambda_h_ >= 0.0 ? " " : "",
+                         lambda_h_);
 }
 
 void ElementwiseCI::pre_iter_preparation() {
@@ -660,29 +657,29 @@ void ElementwiseCI::pre_iter_preparation() {
     previous_go_up = false;
 
     if (!std::numeric_limits<double>::has_quiet_NaN) {
-        outfile->Printf("\n\n  The implementation does not support quiet_NaN.");
-        outfile->Printf("\n  Program behavior undefined. Abort.");
+        psi::outfile->Printf("\n\n  The implementation does not support quiet_NaN.");
+        psi::outfile->Printf("\n  Program behavior undefined. Abort.");
         abort();
     }
 
     dets_hashvec_.clear();
     C_.clear();
 
-    timer_on("EWCI:Couplings");
+    psi::timer_on("EWCI:Couplings");
     double factor = std::max(1.0, std::pow(2.0, 1.0 / functional_order_ - 0.5));
     compute_single_couplings(spawning_threshold_ / factor);
     compute_double_couplings(spawning_threshold_ / factor);
-    timer_off("EWCI:Couplings");
+    psi::timer_off("EWCI:Couplings");
 
     // Compute the initial guess
-    outfile->Printf("\n\n  ==> Initial Guess <==");
+    psi::outfile->Printf("\n\n  ==> Initial Guess <==");
     approx_E_flag_ = true;
     var_energy_ = initial_guess(dets_hashvec_, C_);
     proj_energy_ = var_energy_;
 
-    timer_on("EWCI:sort");
+    psi::timer_on("EWCI:sort");
     sortHashVecByCoefficient(dets_hashvec_, C_);
-    timer_off("EWCI:sort");
+    psi::timer_off("EWCI:sort");
 
     print_wfn(dets_hashvec_, C_);
     //    det_hash<> old_space_map;
@@ -697,28 +694,28 @@ void ElementwiseCI::pre_iter_preparation() {
     //    }
 
     // Main iterations
-    outfile->Printf("\n\n  ==> PCI Iterations <==");
+    psi::outfile->Printf("\n\n  ==> PCI Iterations <==");
     if (variational_estimate_) {
-        outfile->Printf("\n\n  "
-                        "------------------------------------------------------"
-                        "------------------------------------------------------"
-                        "----------------------------------~");
-        outfile->Printf("\n    Steps  Beta/Eh      Ndets      NoffDiag     Proj. Energy/Eh   "
-                        "  dEp/dt      Var. Energy/Eh      dEp/dt      Approx. "
-                        "Energy/Eh   dEv/dt      ~");
-        outfile->Printf("\n  "
-                        "------------------------------------------------------"
-                        "------------------------------------------------------"
-                        "----------------------------------~");
+        psi::outfile->Printf("\n\n  "
+                             "------------------------------------------------------"
+                             "------------------------------------------------------"
+                             "----------------------------------~");
+        psi::outfile->Printf("\n    Steps  Beta/Eh      Ndets      NoffDiag     Proj. Energy/Eh   "
+                             "  dEp/dt      Var. Energy/Eh      dEp/dt      Approx. "
+                             "Energy/Eh   dEv/dt      ~");
+        psi::outfile->Printf("\n  "
+                             "------------------------------------------------------"
+                             "------------------------------------------------------"
+                             "----------------------------------~");
     } else {
-        outfile->Printf("\n\n  "
-                        "------------------------------------------------------"
-                        "--------------------------------------------------------~");
-        outfile->Printf("\n    Steps  Beta/Eh      Ndets      NoffDiag     Proj. Energy/Eh   "
-                        "  dEp/dt      Approx. Energy/Eh   dEv/dt      ~");
-        outfile->Printf("\n  "
-                        "------------------------------------------------------"
-                        "--------------------------------------------------------~");
+        psi::outfile->Printf("\n\n  "
+                             "------------------------------------------------------"
+                             "--------------------------------------------------------~");
+        psi::outfile->Printf("\n    Steps  Beta/Eh      Ndets      NoffDiag     Proj. Energy/Eh   "
+                             "  dEp/dt      Approx. Energy/Eh   dEv/dt      ~");
+        psi::outfile->Printf("\n  "
+                             "------------------------------------------------------"
+                             "--------------------------------------------------------~");
     }
 
     old_var_energy_ = var_energy_;
@@ -733,33 +730,33 @@ void ElementwiseCI::diagonalize_P_space() {}
 void ElementwiseCI::find_q_space() {}
 
 void ElementwiseCI::diagonalize_PQ_space() {
-    timer_on("EWCI:Step");
+    psi::timer_on("EWCI:Step");
     if (use_inter_norm_) {
         double max_C = std::fabs(C_[0]);
         propagate(generator_, dets_hashvec_, C_, spawning_threshold_ * max_C);
     } else {
         propagate(generator_, dets_hashvec_, C_, spawning_threshold_);
     }
-    timer_off("EWCI:Step");
+    psi::timer_off("EWCI:Step");
 
     // Orthogonalize this solution with respect to the previous ones
-    timer_on("EWCI:Ortho");
+    psi::timer_on("EWCI:Ortho");
     orthogonalize(dets_hashvec_, C_, solutions_);
     normalize(C_);
-    timer_off("EWCI:Ortho");
+    psi::timer_off("EWCI:Ortho");
 
-    timer_on("EWCI:sort");
+    psi::timer_on("EWCI:sort");
     sortHashVecByCoefficient(dets_hashvec_, C_);
-    timer_off("EWCI:sort");
+    psi::timer_off("EWCI:sort");
 }
 
 bool ElementwiseCI::check_convergence() {
     // Compute the energy and check for convergence
     if (cycle_ % energy_estimate_freq_ == 0) {
         approx_E_flag_ = true;
-        timer_on("EWCI:<E>");
+        psi::timer_on("EWCI:<E>");
         std::map<std::string, double> results = estimate_energy(dets_hashvec_, C_);
-        timer_off("EWCI:<E>");
+        psi::timer_off("EWCI:<E>");
 
         proj_energy_ = results["PROJECTIVE ENERGY"];
 
@@ -772,13 +769,15 @@ bool ElementwiseCI::check_convergence() {
 
         switch (generator_) {
         case DLGenerator:
-            outfile->Printf("\n%9d %8d %10zu %13zu %20.12f %10.3e %20.12f %10.3e     ~", cycle_,
-                            current_davidson_iter_, C_.size(), num_off_diag_elem_, proj_energy_,
-                            proj_energy_gradient, approx_energy_, approx_energy_gradient);
+            psi::outfile->Printf("\n%9d %8d %10zu %13zu %20.12f %10.3e %20.12f %10.3e     ~",
+                                 cycle_, current_davidson_iter_, C_.size(), num_off_diag_elem_,
+                                 proj_energy_, proj_energy_gradient, approx_energy_,
+                                 approx_energy_gradient);
             break;
         default:
-            outfile->Printf("\n%9d %8.2f %10zu %13zu %20.12f %10.3e", cycle_, time_step_ * cycle_,
-                            C_.size(), num_off_diag_elem_, proj_energy_, proj_energy_gradient);
+            psi::outfile->Printf("\n%9d %8.2f %10zu %13zu %20.12f %10.3e", cycle_,
+                                 time_step_ * cycle_, C_.size(), num_off_diag_elem_, proj_energy_,
+                                 proj_energy_gradient);
             break;
         }
 
@@ -786,7 +785,7 @@ bool ElementwiseCI::check_convergence() {
             var_energy_ = results["VARIATIONAL ENERGY"];
             double var_energy_gradient =
                 (var_energy_ - old_var_energy_) / (time_step_ * energy_estimate_freq_);
-            outfile->Printf(" %20.12f %10.3e", var_energy_, var_energy_gradient);
+            psi::outfile->Printf(" %20.12f %10.3e", var_energy_, var_energy_gradient);
         }
 
         old_var_energy_ = var_energy_;
@@ -814,40 +813,41 @@ void ElementwiseCI::prune_PQ_to_P() {}
 void ElementwiseCI::post_iter_process() {
 
     if (variational_estimate_) {
-        outfile->Printf("\n  "
-                        "------------------------------------------------------"
-                        "------------------------------------------------------"
-                        "----------------------------------~");
+        psi::outfile->Printf("\n  "
+                             "------------------------------------------------------"
+                             "------------------------------------------------------"
+                             "----------------------------------~");
     } else {
-        outfile->Printf("\n  "
-                        "------------------------------------------------------"
-                        "--------------------------------------------------------~");
+        psi::outfile->Printf("\n  "
+                             "------------------------------------------------------"
+                             "--------------------------------------------------------~");
     }
 
     if (converged_) {
-        outfile->Printf("\n\n  Calculation converged.");
+        psi::outfile->Printf("\n\n  Calculation converged.");
     } else {
-        outfile->Printf("\n\n  Calculation %s",
-                        cycle_ != max_cycle_ ? "stoped in appearance of higher new low."
-                                             : "did not converge!");
+        psi::outfile->Printf("\n\n  Calculation %s",
+                             cycle_ != max_cycle_ ? "stoped in appearance of higher new low."
+                                                  : "did not converge!");
     }
 
     if (do_shift_) {
-        outfile->Printf("\n\n  Shift applied during iteration, the "
-                        "characteristic function may change every step.\n  "
-                        "Characteristic function at last step:");
+        psi::outfile->Printf("\n\n  Shift applied during iteration, the "
+                             "characteristic function may change every step.\n  "
+                             "Characteristic function at last step:");
         print_characteristic_function();
     }
 
-    outfile->Printf("\n\n  ==> Post-Iterations <==\n");
-    outfile->Printf("\n  * Size of CI space                    = %zu", C_.size());
-    outfile->Printf("\n  * Number of off-diagonal elements     = %zu", num_off_diag_elem_);
-    outfile->Printf("\n  * ElementwiseCI Approximate Energy    = %18.12f Eh", 1, approx_energy_);
-    outfile->Printf("\n  * ElementwiseCI Projective  Energy    = %18.12f Eh", 1, proj_energy_);
+    psi::outfile->Printf("\n\n  ==> Post-Iterations <==\n");
+    psi::outfile->Printf("\n  * Size of CI space                    = %zu", C_.size());
+    psi::outfile->Printf("\n  * Number of off-diagonal elements     = %zu", num_off_diag_elem_);
+    psi::outfile->Printf("\n  * ElementwiseCI Approximate Energy    = %18.12f Eh", 1,
+                         approx_energy_);
+    psi::outfile->Printf("\n  * ElementwiseCI Projective  Energy    = %18.12f Eh", 1, proj_energy_);
 
-    timer_on("EWCI:sort");
+    psi::timer_on("EWCI:sort");
     sortHashVecByCoefficient(dets_hashvec_, C_);
-    timer_off("EWCI:sort");
+    psi::timer_off("EWCI:sort");
 
     if (print_full_wavefunction_) {
         print_wfn(dets_hashvec_, C_, C_.size());
@@ -855,35 +855,36 @@ void ElementwiseCI::post_iter_process() {
         print_wfn(dets_hashvec_, C_);
     }
 
-    outfile->Printf("\n  %s: %f s\n", "ElementwiseCI (bitset) steps finished in  ", t_ewci_.get());
+    psi::outfile->Printf("\n  %s: %f s\n", "ElementwiseCI (bitset) steps finished in  ",
+                         t_ewci_.get());
 
-    timer_on("EWCI:<E>end_v");
+    psi::timer_on("EWCI:<E>end_v");
     if (fast_variational_estimate_) {
         var_energy_ = estimate_var_energy_sparse(dets_hashvec_, C_, evar_max_error_);
     } else {
         var_energy_ = estimate_var_energy_within_error_sigma(dets_hashvec_, C_, evar_max_error_);
     }
-    timer_off("EWCI:<E>end_v");
+    psi::timer_off("EWCI:<E>end_v");
 
     psi::Process::environment.globals["EWCI ENERGY"] = var_energy_;
 
-    outfile->Printf("\n  * ElementwiseCI Variational Energy    = %18.12f Eh", 1, var_energy_);
-    outfile->Printf("\n  * ElementwiseCI Var. Corr.  Energy    = %18.12f Eh", 1,
-                    var_energy_ - as_ints_->energy(reference_determinant_) -
-                        nuclear_repulsion_energy_ - as_ints_->scalar_energy());
+    psi::outfile->Printf("\n  * ElementwiseCI Variational Energy    = %18.12f Eh", 1, var_energy_);
+    psi::outfile->Printf("\n  * ElementwiseCI Var. Corr.  Energy    = %18.12f Eh", 1,
+                         var_energy_ - as_ints_->energy(reference_determinant_) -
+                             nuclear_repulsion_energy_ - as_ints_->scalar_energy());
 
-    outfile->Printf("\n  * 1st order perturbation   Energy     = %18.12f Eh", 1,
-                    var_energy_ - approx_energy_);
+    psi::outfile->Printf("\n  * 1st order perturbation   Energy     = %18.12f Eh", 1,
+                         var_energy_ - approx_energy_);
 
-    outfile->Printf("\n\n  %s: %f s", "ElementwiseCI (bitset) ran in  ", t_ewci_.get());
+    psi::outfile->Printf("\n\n  %s: %f s", "ElementwiseCI (bitset) ran in  ", t_ewci_.get());
 
     save_wfn(dets_hashvec_, C_, solutions_);
 
     if (post_diagonalization_) {
-        outfile->Printf("\n\n  ==> Post-Diagonalization <==\n");
-        timer_on("EWCI:Post_Diag");
+        psi::outfile->Printf("\n\n  ==> Post-Diagonalization <==\n");
+        psi::timer_on("EWCI:Post_Diag");
         psi::SharedMatrix apfci_evecs(new psi::Matrix("Eigenvectors", C_.size(), nroot_));
-        psi::SharedVector apfci_evals(new Vector("Eigenvalues", nroot_));
+        psi::SharedVector apfci_evals(new psi::Vector("Eigenvalues", nroot_));
 
         WFNOperator op(mo_symmetry_, as_ints_);
         DeterminantHashVec det_map(std::move(dets_hashvec_));
@@ -899,17 +900,17 @@ void ElementwiseCI::post_iter_process() {
                                                    wavefunction_multiplicity_, diag_method_);
         det_map.swap(dets_hashvec_);
 
-        timer_off("EWCI:Post_Diag");
+        psi::timer_off("EWCI:Post_Diag");
 
         double post_diag_energy =
             apfci_evals->get(current_root_) + nuclear_repulsion_energy_ + as_ints_->scalar_energy();
         psi::Process::environment.globals["EWCI POST DIAG ENERGY"] = post_diag_energy;
 
-        outfile->Printf("\n\n  * ElementwiseCI Post-diag   Energy    = %18.12f Eh", 1,
-                        post_diag_energy);
-        outfile->Printf("\n  * ElementwiseCI Var. Corr.  Energy    = %18.12f Eh", 1,
-                        post_diag_energy - as_ints_->energy(reference_determinant_) -
-                            nuclear_repulsion_energy_ - as_ints_->scalar_energy());
+        psi::outfile->Printf("\n\n  * ElementwiseCI Post-diag   Energy    = %18.12f Eh", 1,
+                             post_diag_energy);
+        psi::outfile->Printf("\n  * ElementwiseCI Var. Corr.  Energy    = %18.12f Eh", 1,
+                             post_diag_energy - as_ints_->energy(reference_determinant_) -
+                                 nuclear_repulsion_energy_ - as_ints_->scalar_energy());
 
         std::vector<double> diag_C(C_.size());
 
@@ -917,9 +918,9 @@ void ElementwiseCI::post_iter_process() {
             diag_C[I] = apfci_evecs->get(I, current_root_);
         }
 
-        timer_on("EWCI:sort");
+        psi::timer_on("EWCI:sort");
         sortHashVecByCoefficient(dets_hashvec_, C_);
-        timer_off("EWCI:sort");
+        psi::timer_off("EWCI:sort");
 
         if (print_full_wavefunction_) {
             print_wfn(dets_hashvec_, diag_C, diag_C.size());
@@ -1003,10 +1004,10 @@ double ElementwiseCI::initial_guess(det_hashvec& dets_hashvec, std::vector<doubl
         C.resize(guess_size);
     }
 
-    outfile->Printf("\n\n  Initial guess size = %zu", guess_size);
+    psi::outfile->Printf("\n\n  Initial guess size = %zu", guess_size);
 
     psi::SharedMatrix evecs(new psi::Matrix("Eigenvectors", guess_size, nroot_));
-    psi::SharedVector evals(new Vector("Eigenvalues", nroot_));
+    psi::SharedVector evals(new psi::Vector("Eigenvalues", nroot_));
     //  std::vector<DynamicBitsetDeterminant> dyn_dets;
     // for (auto& d : dets){
     //   DynamicBitsetDeterminant dbs = d.to_dynamic_bitset();
@@ -1016,8 +1017,8 @@ double ElementwiseCI::initial_guess(det_hashvec& dets_hashvec, std::vector<doubl
                                            wavefunction_multiplicity_, DLSolver);
     double var_energy =
         evals->get(current_root_) + nuclear_repulsion_energy_ + as_ints_->scalar_energy();
-    outfile->Printf("\n\n  Initial guess energy (variational) = %20.12f Eh (root = %d)", var_energy,
-                    current_root_ + 1);
+    psi::outfile->Printf("\n\n  Initial guess energy (variational) = %20.12f Eh (root = %d)",
+                         var_energy, current_root_ + 1);
 
     lambda_1_ = evals->get(current_root_);
 
@@ -1025,30 +1026,25 @@ double ElementwiseCI::initial_guess(det_hashvec& dets_hashvec, std::vector<doubl
     for (size_t I = 0; I < guess_size; ++I) {
         C[I] = evecs->get(I, current_root_);
     }
-    //    outfile->Printf("\n\n  Reached here");
+    //    psi::outfile->Printf("\n\n  Reached here");
     return var_energy;
 }
 
 void ElementwiseCI::propagate(GeneratorType generator, det_hashvec& dets_hashvec,
                               std::vector<double>& C, double spawning_threshold) {
-    //    det_hashvec dets_hashvec(dets);
-    //    det_vec dets;
     switch (generator) {
     case WallChebyshevGenerator:
         propagate_wallCh(dets_hashvec, C, spawning_threshold);
         break;
     case DLGenerator:
-        //        dets = dets_hashvec.toVector();
         propagate_DL(dets_hashvec, C, spawning_threshold);
-        //        dets_hashvec = det_hashvec(dets);
         break;
     default:
-        outfile->Printf("\n\n  Selected Generator Unsupported in HashVector version!!!");
+        psi::outfile->Printf("\n\n  Selected Generator Unsupported!!!");
         abort();
         break;
     }
     normalize(C);
-    //    dets = dets_hashvec.toVector();
 }
 
 void ElementwiseCI::propagate_wallCh(det_hashvec& dets_hashvec, std::vector<double>& C,
@@ -1084,7 +1080,7 @@ void ElementwiseCI::propagate_wallCh(det_hashvec& dets_hashvec, std::vector<doub
     }
 
     if (approx_E_flag_) {
-        timer_on("EWCI:<E>a");
+        psi::timer_on("EWCI:<E>a");
         double CHC_energy = 0.0;
 #pragma omp parallel for reduction(+ : CHC_energy)
         for (size_t I = 0; I < overlap_size; ++I) {
@@ -1092,7 +1088,7 @@ void ElementwiseCI::propagate_wallCh(det_hashvec& dets_hashvec, std::vector<doub
         }
         CHC_energy = CHC_energy / -1.0 + (range_ * root + shift_) + as_ints_->scalar_energy() +
                      nuclear_repulsion_energy_;
-        timer_off("EWCI:<E>a");
+        psi::timer_off("EWCI:<E>a");
         double CHC_energy_gradient =
             (CHC_energy - approx_energy_) / (time_step_ * energy_estimate_freq_);
         old_approx_energy_ = approx_energy_;
@@ -1101,14 +1097,14 @@ void ElementwiseCI::propagate_wallCh(det_hashvec& dets_hashvec, std::vector<doub
         approx_E_tau_ = -1.0;
         approx_E_S_ = S;
         if (cycle_ != 0)
-            outfile->Printf(" %20.12f %10.3e     ~", approx_energy_, CHC_energy_gradient);
+            psi::outfile->Printf(" %20.12f %10.3e     ~", approx_energy_, CHC_energy_gradient);
     }
     //    apply_tau_H_symm(-1.0, spawning_threshold, dets_hashvec, ref_C, C, range_ * root + shift_,
     //                     overlap_size);
     normalize(C);
 
     for (int i = chebyshev_order_ - 1; i > 0; i--) {
-        //        outfile->Printf("\nCurrent root:%.12lf",range_ * root +
+        //        psi::outfile->Printf("\nCurrent root:%.12lf",range_ * root +
         //        shift_);
         //        apply_tau_H(-1.0/range_,spawning_threshold,dets,C,dets_C_hash,
         //        range_ * root + shift_);
@@ -1172,21 +1168,21 @@ std::map<std::string, double> ElementwiseCI::estimate_energy(const det_hashvec& 
     std::map<std::string, double> results;
     //    det_hashvec dets_hashvec(dets);
     //    dets = dets_hashvec.toVector();
-    timer_on("EWCI:<E>p");
+    psi::timer_on("EWCI:<E>p");
     results["PROJECTIVE ENERGY"] = estimate_proj_energy(dets_hashvec, C);
-    timer_off("EWCI:<E>p");
+    psi::timer_off("EWCI:<E>p");
 
     if (variational_estimate_) {
         if (fast_variational_estimate_) {
-            timer_on("EWCI:<E>vs");
+            psi::timer_on("EWCI:<E>vs");
             results["VARIATIONAL ENERGY"] =
                 estimate_var_energy_sparse(dets_hashvec, C, energy_estimate_threshold_);
-            timer_off("EWCI:<E>vs");
+            psi::timer_off("EWCI:<E>vs");
         } else {
-            timer_on("EWCI:<E>v");
+            psi::timer_on("EWCI:<E>v");
             results["VARIATIONAL ENERGY"] =
                 estimate_var_energy(dets_hashvec, C, energy_estimate_threshold_);
-            timer_off("EWCI:<E>v");
+            psi::timer_off("EWCI:<E>v");
         }
     }
     //    dets_hashvec = det_hashvec(dets);
@@ -1250,7 +1246,7 @@ double ElementwiseCI::estimate_var_energy_within_error(const det_hashvec& dets_h
     if (cut_index < dets_hashvec.size() - 1) {
         ++cut_index;
     }
-    outfile->Printf(
+    psi::outfile->Printf(
         "\n  Variational energy estimated with %zu determinants to meet the max error %e",
         cut_index + 1, max_error);
     double variational_energy_estimator = 0.0;
@@ -1287,7 +1283,7 @@ double ElementwiseCI::estimate_var_energy_within_error_sigma(const det_hashvec& 
     if (cut_index < dets_hashvec.size() - 1) {
         ++cut_index;
     }
-    outfile->Printf(
+    psi::outfile->Printf(
         "\n  Variational energy estimated with %zu determinants to meet the max error %e",
         cut_index + 1, max_error);
     double variational_energy_estimator = 0.0;
@@ -1305,8 +1301,8 @@ double ElementwiseCI::estimate_var_energy_within_error_sigma(const det_hashvec& 
     SigmaVectorWfn2 svs(det_map, op, as_ints_);
     size_t sub_size = svs.size();
     // allocate vectors
-    psi::SharedVector b(new Vector("b", sub_size));
-    psi::SharedVector sigma(new Vector("sigma", sub_size));
+    psi::SharedVector b(new psi::Vector("b", sub_size));
+    psi::SharedVector sigma(new psi::Vector("sigma", sub_size));
     for (size_t i = 0; i < sub_size; ++i) {
         b->set(i, C[i]);
     }
@@ -1335,13 +1331,13 @@ double ElementwiseCI::estimate_var_energy_sparse(const det_hashvec& dets_hashvec
     if (cut_index < dets_hashvec.size() - 1) {
         ++cut_index;
     }
-    outfile->Printf(
+    psi::outfile->Printf(
         "\n  Variational energy estimated with %zu determinants to meet the max error %e",
         cut_index + 1, max_error);
 
-    timer_on("EWCI:Couplings");
+    psi::timer_on("EWCI:Couplings");
     compute_couplings_half(dets_hashvec, cut_index + 1);
-    timer_off("EWCI:Couplings");
+    psi::timer_off("EWCI:Couplings");
 
     double variational_energy_estimator = 0.0;
     std::vector<double> energy(num_threads_, 0.0);
@@ -1359,13 +1355,13 @@ double ElementwiseCI::estimate_var_energy_sparse(const det_hashvec& dets_hashvec
 
 void ElementwiseCI::print_wfn(const det_hashvec& space_hashvec, std::vector<double>& C,
                               size_t max_output) {
-    outfile->Printf("\n\n  Most important contributions to the wave function:\n");
+    psi::outfile->Printf("\n\n  Most important contributions to the wave function:\n");
 
     size_t max_dets = std::min(int(max_output), int(C.size()));
     for (size_t I = 0; I < max_dets; ++I) {
-        outfile->Printf("\n  %3zu  %13.6g %13.6g  %10zu %s  %18.12f", I, C[I], C[I] * C[I], I,
-                        space_hashvec[I].str().c_str(),
-                        as_ints_->energy(space_hashvec[I]) + as_ints_->scalar_energy());
+        psi::outfile->Printf("\n  %3zu  %13.6g %13.6g  %10zu %s  %18.12f", I, C[I], C[I] * C[I], I,
+                             space_hashvec[I].str().c_str(),
+                             as_ints_->energy(space_hashvec[I]) + as_ints_->scalar_energy());
     }
 
     // Compute the expectation value of the spin
@@ -1410,14 +1406,14 @@ void ElementwiseCI::print_wfn(const det_hashvec& space_hashvec, std::vector<doub
         state_label = std::to_string(nLet) + "-let";
     }
 
-    outfile->Printf("\n\n  Spin State: S^2 = %5.3f, S = %5.3f, %s (from %zu "
-                    "determinants,%.2f%%)",
-                    S2, S, state_label.c_str(), max_I, 100.0 * sum_weight);
+    psi::outfile->Printf("\n\n  Spin State: S^2 = %5.3f, S = %5.3f, %s (from %zu "
+                         "determinants,%.2f%%)",
+                         S2, S, state_label.c_str(), max_I, 100.0 * sum_weight);
 }
 
 void ElementwiseCI::save_wfn(det_hashvec& space, std::vector<double>& C,
                              std::vector<std::pair<det_hashvec, std::vector<double>>>& solutions) {
-    outfile->Printf("\n\n  Saving the wave function:\n");
+    psi::outfile->Printf("\n\n  Saving the wave function:\n");
 
     //    det_hash<> solution;
     //    for (size_t I = 0; I < space.size(); ++I) {

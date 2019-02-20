@@ -51,23 +51,7 @@
 namespace forte {
 class SCFInfo;
 
-namespace GeneratorType_EWCI {
-enum GeneratorType {
-    LinearGenerator,
-    TrotterLinear,
-    QuadraticGenerator,
-    CubicGenerator,
-    QuarticGenerator,
-    PowerGenerator,
-    OlsenGenerator,
-    DavidsonLiuGenerator,
-    ExpChebyshevGenerator,
-    WallChebyshevGenerator,
-    ChebyshevGenerator,
-    LanczosGenerator,
-    DLGenerator
-};
-}
+enum GeneratorType { WallChebyshevGenerator, DLGenerator };
 
 using det_hashvec = HashVector<Determinant, Determinant::Hash>;
 
@@ -131,7 +115,7 @@ class ElementwiseCI : public SelectedCIMethod {
     /// The maximum number of threads
     int num_threads_;
     /// The type of Generator used
-    GeneratorType_EWCI::GeneratorType generator_;
+    GeneratorType generator_;
     /// A string that describes the Generator type
     std::string generator_description_;
     /// Function for prescreening with one coefficient
@@ -321,8 +305,8 @@ class ElementwiseCI : public SelectedCIMethod {
      * events
      * @param S An energy shift subtracted from the Hamiltonian
      */
-    void propagate(GeneratorType_EWCI::GeneratorType generator, det_hashvec& dets_hashvec,
-                   std::vector<double>& C, double spawning_threshold);
+    void propagate(GeneratorType generator, det_hashvec& dets_hashvec, std::vector<double>& C,
+                   double spawning_threshold);
     /// A Delta projector fitted by 10th order chebyshev polynomial
     void propagate_wallCh(det_hashvec& dets_hashvec, std::vector<double>& C,
                           double spawning_threshold);
