@@ -150,6 +150,7 @@ psi::SharedMatrix make_aosubspace_projector(psi::SharedWavefunction ref_wfn,
 	psi::SharedMatrix make_fragment_projector(psi::SharedWavefunction ref_wfn, psi::Options& options) {
 		// Pf is the AO basis franment(s) projector
 		auto Pf = create_fragment_projector(ref_wfn, options);
+/*
 		if (Pf) {
 			psi::SharedMatrix CPfC = Pf->clone();
 			CPfC->transform(ref_wfn->Ca());
@@ -158,6 +159,7 @@ psi::SharedMatrix make_aosubspace_projector(psi::SharedWavefunction ref_wfn,
 			CPfC->print();
 			outfile->Printf("    ========================\n");
 		}
+*/
 		return Pf;
 	}
 

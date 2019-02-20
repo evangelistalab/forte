@@ -126,13 +126,10 @@ SharedMatrix FragmentProjector::build_f_projector(std::shared_ptr<Molecule> mole
 	SharedMatrix S_nn = std::make_shared<psi::Matrix>("S_nn", nbf_, nbf_);
 	S_int->compute(S_nn);
 
-	S_nn->print();
-
 	Slice fragA(A_begin, A_end);
 
 	// Construct S_A
 	SharedMatrix S_A = S_nn->get_block(fragA, fragA);
-	S_A->print();
 
 	// Construct S_A^-1 in n*n size
 	S_A->general_invert();
@@ -141,7 +138,6 @@ SharedMatrix FragmentProjector::build_f_projector(std::shared_ptr<Molecule> mole
 
 	// Evaluate AO basis projector
 	S_A_nn->transform(S_nn);
-	S_A_nn->print();
 
     return S_A_nn;
 }

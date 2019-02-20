@@ -62,13 +62,13 @@ set forte {
   embedding true
   reference casscf
   CUTOFF_BY threshold
-  threshold 0.5
+  threshold 0.1
   WRITE_FREEZE_MO true
   semicanon true
   active_space_solver  fci
   correlation_solver   dsrg-mrpt2
   root_sym           0
-  nroot              1
+  nroot              2
   root               0
   d_convergence      10
   dsrg_s             0.5
