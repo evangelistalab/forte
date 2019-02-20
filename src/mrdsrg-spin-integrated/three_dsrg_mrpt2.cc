@@ -105,7 +105,7 @@ THREE_DSRG_MRPT2::THREE_DSRG_MRPT2(RDMs rdms, std::shared_ptr<SCFInfo> scf_info,
     print_method_banner({"Density Fitted / Cholesky Decomposed",
                          "MR-DSRG Second-Order Perturbation Theory",
                          "Kevin Hannon and Chenyang (York) Li", title_thread});
-    outfile->Printf("\n    RDMss:");
+    outfile->Printf("\n    References:");
     outfile->Printf("\n      u-DSRG-MRPT2:      J. Chem. Theory Comput. 2015, 11, 2097.");
     outfile->Printf("\n      DF/CD-DSRG-MRPT2:  J. Chem. Phys. 2016, 144, 204111.");
     outfile->Printf("\n      (pr-)DSRG-MRPT2:   J. Chem. Phys. 2017, 146, 124132.");
@@ -307,7 +307,7 @@ void THREE_DSRG_MRPT2::print_options_summary() {
         {"Source operator", source_},
         {"CCVV algorithm", foptions_->get_str("CCVV_ALGORITHM")},
         {"CCVV source", foptions_->get_str("CCVV_SOURCE")},
-        {"RDMs relaxation", relax_ref_}};
+        {"Reference relaxation", relax_ref_}};
 
     if (multi_state_) {
         calculation_info_string.push_back({"State type", "MULTI-STATE"});
@@ -366,7 +366,7 @@ double THREE_DSRG_MRPT2::compute_energy() {
         }
 
         print_h2("Computing DSRG-MRPT2 Energy");
-        outfile->Printf("\n  RDMs Energy = %.15f", Eref_);
+        outfile->Printf("\n  Reference Energy = %.15f", Eref_);
 
         // compute T2 and renormalize V
         if (integral_type_ != DiskDF) {

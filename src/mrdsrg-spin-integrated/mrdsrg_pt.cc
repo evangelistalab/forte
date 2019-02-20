@@ -48,7 +48,7 @@ namespace forte {
 double MRDSRG::compute_energy_pt2() {
     // print title
     outfile->Printf("\n\n  ==> Second-Order Perturbation DSRG-MRPT2 <==\n");
-    outfile->Printf("\n    RDMs:");
+    outfile->Printf("\n    References:");
     outfile->Printf("\n      J. Chem. Theory Comput. 2015, 11, 2097-2108.");
     outfile->Printf("\n      J. Chem. Phys. 2017, 146, 124132.\n");
 
@@ -1186,7 +1186,7 @@ std::vector<std::pair<std::string, double>> MRDSRG::compute_energy_pt2_Ffull() {
 double MRDSRG::compute_energy_pt3() {
     // print title
     outfile->Printf("\n\n  ==> Third-Order Perturbation DSRG-MRPT3 <==\n");
-    outfile->Printf("\n    RDMs:");
+    outfile->Printf("\n    Reference:");
     outfile->Printf("\n      J. Chem. Phys. 2017, 146, 124132.\n");
     std::vector<std::pair<std::string, double>> energy;
     energy.push_back({"E0 (reference)", Eref_});

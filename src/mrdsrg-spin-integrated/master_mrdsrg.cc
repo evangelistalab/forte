@@ -53,8 +53,6 @@ void MASTER_DSRG::startup() {
     // read commonly used energies
     Enuc_ = ints_->nuclear_repulsion_energy();
     Efrzc_ = ints_->frozen_core_energy();
-    Eref_ = compute_Eref_from_rdms(rdms_, ints_, mo_space_info_);
-    psi::Process::environment.globals["DSRG REFERENCE ENERGY"] = Eref_;
 
     // initialize timer for commutator
     dsrg_time_ = DSRG_TIME();
@@ -74,6 +72,8 @@ void MASTER_DSRG::startup() {
     // I see no point of checking reference energy because it is now recomputed
     // instead of reading a number from Reference class
     //    check_init_reference_energy();
+    Eref_ = compute_reference_energy_from_ints(ints_);
+    psi::Process::environment.globals["DSRG REFERENCE ENERGY"] = Eref_;
 
     // initialize Uactv_ to identity
     Uactv_ = BTF_->build(tensor_type_, "Uactv", spin_cases({"aa"}));
