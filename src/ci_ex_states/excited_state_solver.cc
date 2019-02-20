@@ -520,7 +520,7 @@ ExcitedStateSolver::transition_rdms(const std::vector<std::pair<size_t, size_t>>
     return refs;
 }
 
-Reference ExcitedStateSolver::compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
+RDMs ExcitedStateSolver::compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
                                            DeterminantHashVec& dets, WFNOperator& op,
                                            psi::SharedMatrix& PQ_evecs, int root1, int root2, int max_rdm_level) {
 
@@ -622,10 +622,10 @@ Reference ExcitedStateSolver::compute_rdms(std::shared_ptr<ActiveSpaceIntegrals>
     }
 
     if (max_rdm_level == 1) {
-        return RDMs(ordm_a_, ordm_b_);
+        return RDMs(ordm_a, ordm_b);
     }
     if (max_rdm_level == 2) {
-        return RDMs(ordm_a_, ordm_b_, trdm_aa_, trdm_ab_, trdm_bb_);
+        return RDMs(ordm_a, ordm_b, trdm_aa, trdm_ab, trdm_bb);
     }
 
     return RDMs(ordm_a, ordm_b, trdm_aa, trdm_ab, trdm_bb, trdm_aaa, trdm_aab, trdm_abb,
@@ -1128,6 +1128,4 @@ void ExcitedStateSolver::set_excitation_algorithm(std::string ex_alg) { ex_alg_ 
 void ExcitedStateSolver::set_core_excitation(bool core_ex) { core_ex_ = core_ex; }
 
 void ExcitedStateSolver::set_quiet(bool quiet) { quiet_mode_ = quiet; }
-
-void ExcitedStateSolver::set_max_rdm(int rdm) { max_rdm_level_ = rdm; }
 }

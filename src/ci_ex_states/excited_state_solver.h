@@ -31,7 +31,7 @@
 
 #include "sparse_ci/determinant_hashvector.h"
 #include "base_classes/active_space_method.h"
-#include "base_classes/reference.h"
+#include "base_classes/rdms.h"
 #include "sparse_ci/sparse_ci_solver.h"
 
 #ifdef _OPENMP
@@ -83,9 +83,6 @@ class ExcitedStateSolver : public ActiveSpaceMethod {
 
     /// Set the printing level
     void set_quiet(bool quiet);
-
-    /// Set the RDM
-    void set_max_rdm(int rdm);
 
   protected:
     DeterminantHashVec final_wfn_;
@@ -143,7 +140,7 @@ class ExcitedStateSolver : public ActiveSpaceMethod {
     void print_wfn(DeterminantHashVec& space, WFNOperator& op, psi::SharedMatrix evecs, int nroot);
 
     /// Compute the RDMs
-    Reference compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints, DeterminantHashVec& dets,
+    RDMs compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints, DeterminantHashVec& dets,
                            WFNOperator& op, psi::SharedMatrix& PQ_evecs, int root1, int root2, int max_rdm_level);
 };
 }
