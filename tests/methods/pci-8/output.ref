@@ -22,9 +22,9 @@
     -----------------------------------------------------------------------
 
 
-    Psi4 started on: Wednesday, 20 February 2019 03:40PM
+    Psi4 started on: Wednesday, 20 February 2019 05:00PM
 
-    Process ID: 61662
+    Process ID: 62493
     Host:       Tianyuans-MacBook-Air.local
     PSIDATADIR: /Users/tianyuanzhang/Documents/Source/psi4_2018/psi4-bin-clang-debug/share/psi4
     Memory:     500.0 MiB
@@ -69,7 +69,7 @@ compare_values(refpci, variable("PCI ENERGY"), 7, "PCI excited state energy") #T
 --------------------------------------------------------------------------
 
 *** tstart() called on Tianyuans-MacBook-Air.local
-*** at Wed Feb 20 15:40:15 2019
+*** at Wed Feb 20 17:00:49 2019
 
    => Loading Basis Set <=
 
@@ -245,19 +245,19 @@ Properties computed using the SCF density matrix
      X:     0.0000      Y:     0.0000      Z:     0.0000     Total:     0.0000
 
 
-*** tstop() called on Tianyuans-MacBook-Air.local at Wed Feb 20 15:40:15 2019
+*** tstop() called on Tianyuans-MacBook-Air.local at Wed Feb 20 17:00:50 2019
 Module time:
-	user time   =       0.51 seconds =       0.01 minutes
-	system time =       0.02 seconds =       0.00 minutes
-	total time  =          0 seconds =       0.00 minutes
+	user time   =       0.52 seconds =       0.01 minutes
+	system time =       0.03 seconds =       0.00 minutes
+	total time  =          1 seconds =       0.02 minutes
 Total time:
-	user time   =       0.51 seconds =       0.01 minutes
-	system time =       0.02 seconds =       0.00 minutes
-	total time  =          0 seconds =       0.00 minutes
+	user time   =       0.52 seconds =       0.01 minutes
+	system time =       0.03 seconds =       0.00 minutes
+	total time  =          1 seconds =       0.02 minutes
 	SCF energy........................................................PASSED
 
 *** tstart() called on Tianyuans-MacBook-Air.local
-*** at Wed Feb 20 15:40:15 2019
+*** at Wed Feb 20 17:00:50 2019
 
    => Loading Basis Set <=
 
@@ -433,11 +433,11 @@ Properties computed using the SCF density matrix
      X:     0.0000      Y:     0.0000      Z:     0.0000     Total:     0.0000
 
 
-*** tstop() called on Tianyuans-MacBook-Air.local at Wed Feb 20 15:40:16 2019
+*** tstop() called on Tianyuans-MacBook-Air.local at Wed Feb 20 17:00:50 2019
 Module time:
 	user time   =       0.47 seconds =       0.01 minutes
-	system time =       0.02 seconds =       0.00 minutes
-	total time  =          1 seconds =       0.02 minutes
+	system time =       0.01 seconds =       0.00 minutes
+	total time  =          0 seconds =       0.00 minutes
 Total time:
 	user time   =       1.01 seconds =       0.02 minutes
 	system time =       0.04 seconds =       0.00 minutes
@@ -497,11 +497,11 @@ Total time:
 	Starting second half-transformation.
 	Two-electron integral transformation complete.
 
-  Integral transformation done. 0.01071815 s
+  Integral transformation done. 0.01139594 s
   Reading the two-electron integrals from disk
   Size of two-electron integrals:   0.000224 GB
   Timing for freezing core and virtual orbitals:              0.000 s.
-  Conventional integrals take 0.05505473 s
+  Conventional integrals take 0.04890721 s
 
   ==> Summary of Active Space Solver Input <==
 
@@ -537,9 +537,8 @@ Total time:
   Computing wavefunction for root 0
 
 	  ---------------------------------------------------------
-	              Element wise Configuration Interactionimplementation
+	              Projector Configuration Interaction
 	         by Francesco A. Evangelista and Tianyuan Zhang
-	                      version Aug. 3 2017
 	                       1 thread(s) 
 	  ---------------------------------------------------------
 
@@ -644,23 +643,23 @@ Total time:
     9     0.00782457    6.1224e-05           9 |20000202000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -15.877818677698
 
   Spin State: S^2 = 0.000, S = 0.000, singlet (from 3 determinants,97.74%)
-  ProjectorCI (bitset) steps finished in  : 0.358383 s
+  ProjectorCI (bitset) steps finished in  : 0.340353 s
 
   Variational energy estimated with 418 determinants to meet the max error 0.000000e+00
 
   ==> Computing Coupling Lists <==
   --------------------------------
-        α          0.004199 s
-        β          0.004643 s
-        αα         0.004004 s
-        ββ         0.003696 s
-        αβ         0.011962 s
+        α          0.004158 s
+        β          0.004337 s
+        αα         0.003771 s
+        ββ         0.006335 s
+        αβ         0.011738 s
   --------------------------------
   * ProjectorCI Variational Energy    =   -14.646159980219 Eh
   * ProjectorCI Var. Corr.  Energy    =    -0.036415242129 Eh
   * 1st order perturbation   Energy     =    -0.000005371283 Eh
 
-  ProjectorCI (bitset) ran in  : 0.394900 s
+  ProjectorCI (bitset) ran in  : 0.377587 s
 
   Saving the wave function:
 
@@ -669,9 +668,8 @@ Total time:
   Computing wavefunction for root 1
 
 	  ---------------------------------------------------------
-	              Element wise Configuration Interactionimplementation
+	              Projector Configuration Interaction
 	         by Francesco A. Evangelista and Tianyuan Zhang
-	                      version Aug. 3 2017
 	                       1 thread(s) 
 	  ---------------------------------------------------------
 
@@ -776,23 +774,23 @@ Total time:
     9     0.00365911   1.33891e-05           9 |2+0-0+000-0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -14.650355633514
 
   Spin State: S^2 = 0.000, S = 0.000, singlet (from 2 determinants,96.53%)
-  ProjectorCI (bitset) steps finished in  : 0.380569 s
+  ProjectorCI (bitset) steps finished in  : 0.376300 s
 
   Variational energy estimated with 450 determinants to meet the max error 0.000000e+00
 
   ==> Computing Coupling Lists <==
   --------------------------------
-        α          0.004455 s
-        β          0.004500 s
-        αα         0.004063 s
-        ββ         0.003909 s
-        αβ         0.010475 s
+        α          0.004429 s
+        β          0.004444 s
+        αα         0.004192 s
+        ββ         0.004415 s
+        αβ         0.010122 s
   --------------------------------
   * ProjectorCI Variational Energy    =   -14.487553666665 Eh
   * ProjectorCI Var. Corr.  Energy    =     0.122191071425 Eh
   * 1st order perturbation   Energy     =     0.000004193145 Eh
 
-  ProjectorCI (bitset) ran in  : 0.414101 s
+  ProjectorCI (bitset) ran in  : 0.410019 s
 
   Saving the wave function:
 
@@ -819,7 +817,7 @@ Total time:
        1      Ag     1       -14.487557859810
     -----------------------------------------	PCI excited state energy..........................................PASSED
 
-    Psi4 stopped on: Wednesday, 20 February 2019 03:40PM
-    Psi4 wall time for execution: 0:00:02.47
+    Psi4 stopped on: Wednesday, 20 February 2019 05:00PM
+    Psi4 wall time for execution: 0:00:02.57
 
 *** Psi4 exiting successfully. Buy a developer a beer!

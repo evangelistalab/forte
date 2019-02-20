@@ -411,10 +411,8 @@ void ProjectorCI::set_options(std::shared_ptr<ForteOptions> options) {
 
 void ProjectorCI::print_info() {
     psi::outfile->Printf("\n\n\t  ---------------------------------------------------------");
-    psi::outfile->Printf("\n\t              Element wise Configuration Interaction"
-                         "implementation");
+    psi::outfile->Printf("\n\t              Projector Configuration Interaction");
     psi::outfile->Printf("\n\t         by Francesco A. Evangelista and Tianyuan Zhang");
-    psi::outfile->Printf("\n\t                      version Aug. 3 2017");
     psi::outfile->Printf("\n\t                    %4d thread(s) %s", num_threads_,
                          have_omp_ ? "(OMP)" : "");
     psi::outfile->Printf("\n\t  ---------------------------------------------------------");
