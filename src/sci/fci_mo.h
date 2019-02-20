@@ -112,8 +112,6 @@ class FCI_MO : public ActiveSpaceMethod {
 
     /// Compute state-specific CASCI energy
     std::vector<double> compute_ss_energies();
-    /// Compute state-averaged CASCI energy
-    double compute_sa_energy();
 
     /// Compute the reduced density matrices up to a given particle rank (max_rdm_level)
     std::vector<RDMs> rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
@@ -130,6 +128,7 @@ class FCI_MO : public ActiveSpaceMethod {
 
     RDMs reference(int max_rdm_level) {
         std::vector<std::pair<size_t, size_t>> roots;
+        roots.push_back(std::make_pair(0, 0));
         return reference(roots, max_rdm_level)[0];
     }
 
@@ -149,6 +148,14 @@ class FCI_MO : public ActiveSpaceMethod {
                                                          int root1, int root2);
     bool check_density_files_fcimo(int rdm_level, int irrep, int multi, int root1, int root2);
     void remove_density_files_fcimo(int rdm_level, int irrep, int multi, int root1, int root2);
+
+    /// Generate density file names at a certain RDM level
+    std::vector<std::string> generate_rdm_file_names(int rdm_level, int root1, int root2,
+                                                     const StateInfo& state2);
+    /// Check if density files for a given RDM level already exist
+    bool check_density_files(int rdm_level, int root1, int root2, const StateInfo& state2);
+    /// Remove density files for a given RDM level
+    void remove_density_files(int rdm_level, int root1, int root2, const StateInfo& state2);
 
     /// Compute dipole moments with DSRG transformed MO dipole integrals
     /// This function is used for reference relaxation and SA-MRDSRG
@@ -270,7 +277,7 @@ class FCI_MO : public ActiveSpaceMethod {
     std::string int_type_;
     std::shared_ptr<ActiveSpaceIntegrals> fci_ints_;
 
-    /// RDMs Type
+    /// Reference Type
     std::string ref_type_;
 
     /// MO space info
@@ -302,7 +309,7 @@ class FCI_MO : public ActiveSpaceMethod {
     int nirrep_;                // number of irrep
     int root_sym_;              // root
     std::vector<int> sym_actv_; // active MOs
-    std::vector<std::string> irrep_symbols_ = {"", "", "", "", "", "", "", ""};
+    std::vector<std::string> irrep_symbols_;
 
     /// Molecular Orbitals
     size_t nmo_; // total MOs
@@ -368,13 +375,6 @@ class FCI_MO : public ActiveSpaceMethod {
     std::vector<std::vector<std::vector<bool>>> Form_String_EA(const std::vector<bool>& ref_string,
                                                                const bool& print = false);
 
-    /// Max RDM to compute
-    // int max_rdm_ = 3;
-
-    /// Choice of Roots
-    //  int nroot_; // number of roots
-    //  int root_;  // which root in nroot
-
     /// State Average Information (tuple of irrep, multi, nstates, weights)
     std::vector<std::tuple<int, int, int, std::vector<double>>> sa_info_;
 
@@ -419,7 +419,7 @@ class FCI_MO : public ActiveSpaceMethod {
     ambit::Tensor L3bbb_;
 
     /// File Names of Densities Stored on Disk
-    //    std::unordered_set<std::string> density_files_;
+    std::unordered_set<std::string> density_files_;
     bool safe_to_read_density_files_ = false;
     void clean_all_density_files();
 
@@ -453,12 +453,11 @@ class FCI_MO : public ActiveSpaceMethod {
     psi::SharedMatrix xms_rotate_this_civecs(const det_vec& p_space, psi::SharedMatrix civecs,
                                              ambit::Tensor Fa, ambit::Tensor Fb);
 
-    /// RDMs Energy
+    /// Reference Energy
     double Eref_;
 
     /// Compute 2- and 3-cumulants
     void compute_ref(const int& level, size_t root1, size_t root2);
-    //  void compute_sa_ref(const int& level);
 
     /// Orbital Extents
     /// returns a vector of irrep by # active orbitals in current irrep
@@ -498,15 +497,6 @@ class FCI_MO : public ActiveSpaceMethod {
 
     /// Compute RDMs at given order and put into BlockedTensor format
     ambit::BlockedTensor compute_n_rdm(CI_RDMS& cirdm, const int& order);
-
-    // I am not sure this is the place to put this support. Please modidy it if necessary. TODO: move (Francesco)
-    /// Generate density file names at a certain RDM level
-    std::vector<std::string> generate_rdm_file_names(int rdm_level, int root1, int root2,
-                                                     const StateInfo& state2);
-    /// Check if density files for a given RDM level already exist
-    bool check_density_files(int rdm_level, int root1, int root2, const StateInfo& state2);
-    /// Remove density files for a given RDM level
-    void remove_density_files(int rdm_level, int root1, int root2, const StateInfo& state2);
 
     /// Localize active orbitals
     bool localize_actv_;

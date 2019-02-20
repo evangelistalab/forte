@@ -53,30 +53,6 @@ using namespace psi;
 
 namespace forte {
 
-// FCI_MO::FCI_MO(StateInfo state, std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions>
-// options,
-//               std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
-//    : ActiveSpaceMethod(state, mo_space_info, as_ints), integral_(ints), scf_info_(scf_info),
-//      options_(options) {
-
-//    print_method_banner({"Complete Active Space Configuration Interaction", "Chenyang Li"});
-//    startup();
-
-//    // setup integrals
-//    fci_ints_ =
-//        std::make_shared<ActiveSpaceIntegrals>(integral_,
-//        mo_space_info_->get_corr_abs_mo("ACTIVE"),
-//                                               mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
-//    ambit::Tensor tei_active_aa =
-//        integral_->aptei_aa_block(actv_mos_, actv_mos_, actv_mos_, actv_mos_);
-//    ambit::Tensor tei_active_ab =
-//        integral_->aptei_ab_block(actv_mos_, actv_mos_, actv_mos_, actv_mos_);
-//    ambit::Tensor tei_active_bb =
-//        integral_->aptei_bb_block(actv_mos_, actv_mos_, actv_mos_, actv_mos_);
-//    fci_ints_->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
-//    fci_ints_->compute_restricted_one_body_operator();
-//}
-
 FCI_MO::FCI_MO(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
                std::shared_ptr<ForteOptions> options, std::shared_ptr<MOSpaceInfo> mo_space_info,
                std::shared_ptr<ActiveSpaceIntegrals> as_ints)
@@ -637,7 +613,7 @@ vector<bool> FCI_MO::Form_String_Ref(const bool& print) {
     }
 
     if (print) {
-        print_h2("RDMs String");
+        print_h2("Reference String");
         outfile->Printf("    ");
         for (bool b : String) {
             outfile->Printf("%d ", b);
@@ -2202,75 +2178,8 @@ void FCI_MO::add_wedge_cu3(const ambit::Tensor& L1a, const ambit::Tensor& L1b,
     timer_off(job_name);
 }
 
-double FCI_MO::compute_sa_energy() {
-    // averaged energy
-    double Ecas_sa = 0.0;
-
-    // clear eigen values, eigen vectors and determinants
-    eigens_.clear();
-    p_spaces_.clear();
-
-    // loop over all averaged states
-    int nstates = 0;
-    for (const auto& info : sa_info_) {
-        // get current symmetry, multiplicity, nroots, weights
-        int irrep, multi, nroots;
-        std::vector<double> weights;
-        std::tie(irrep, multi, nroots, weights) = info;
-        nstates += nroots;
-
-        root_sym_ = irrep;
-        multi_ = multi;
-        nroot_ = nroots;
-        root_ = nroot_ - 1; // not necessary
-
-        // form determinants
-        form_p_space();
-        p_spaces_.push_back(determinant_);
-
-        // diagonalize the CASCI Hamiltonian
-        eigen_.clear();
-        Diagonalize_H(determinant_, multi_, nroot_, eigen_);
-        eigens_.push_back(eigen_);
-
-        // print CI vectors in eigen_
-        int eigen_size = eigen_.size();
-        if (nroot_ > eigen_size) {
-            outfile->Printf("\n  Too many roots of interest!");
-            std::string be = (eigen_size > 1) ? "are" : "is";
-            std::string plural = (eigen_size > 1) ? "roots" : "root";
-            outfile->Printf("\n  There %s only %3d %s that satisfy the condition!", be.c_str(),
-                            eigen_size, plural.c_str());
-            outfile->Printf("\n  Check root_sym, multi, and number of determinants.");
-            throw psi::PSIEXCEPTION("Too many roots of interest.");
-        }
-        print_CI(nroot_, options_->get_double("FCIMO_PRINT_CIVEC"), eigen_, determinant_);
-
-        // weight energies
-        for (int i = 0; i < nroots; ++i) {
-            Ecas_sa += weights[i] * eigen_[i].second;
-        }
-
-        // compute dipole moments
-        compute_permanent_dipole();
-
-        // compute oscillator strength
-        if (nroot_ > 1) {
-            compute_transition_dipole();
-            compute_oscillator_strength();
-        }
-    }                     // end looping over all averaged states
-    eigen_.clear();       // make sure other code use eigens_ for state average
-    determinant_.clear(); // make sure other code use p_spaces_ for state average
-    outfile->Printf("\n  Total Energy (averaged over %d states): %20.15f\n", nstates, Ecas_sa);
-
-    Eref_ = Ecas_sa;
-    psi::Process::environment.globals["CURRENT ENERGY"] = Ecas_sa;
-    return Ecas_sa;
-}
-
 void FCI_MO::xms_rotate_civecs() {
-    /// TODO: This should be in ActiveSpaceSolver. Thus I (York) will ignore RDM stuff here.
+    /// TODO: Move this out.
     if (eigens_.size() != sa_info_.size()) {
         throw psi::PSIEXCEPTION(
             "Cannot do XMS rotation due to inconsistent size. Is CASCI computed?");
@@ -2411,95 +2320,6 @@ psi::SharedMatrix FCI_MO::xms_rotate_this_civecs(const det_vec& p_space, psi::Sh
 
     return rcivecs;
 }
-
-// void FCI_MO::compute_sa_ref(const int& level) {
-//    timer_on("Compute SA Ref");
-//    if (!quiet_) {
-//        print_h2("Compute State-Averaged Cumulants");
-//    }
-//
-//    // prepare averaged densities
-//    L1a_ = ambit::Tensor::build(ambit::CoreTensor, "L1a", {nactv_, nactv_});
-//    L1b_ = ambit::Tensor::build(ambit::CoreTensor, "L1b", {nactv_, nactv_});
-//
-//    if (level >= 2) {
-//        L2aa_ = ambit::Tensor::build(ambit::CoreTensor, "L2aa", {nactv_, nactv_, nactv_, nactv_});
-//        L2ab_ = ambit::Tensor::build(ambit::CoreTensor, "L2ab", {nactv_, nactv_, nactv_, nactv_});
-//        L2bb_ = ambit::Tensor::build(ambit::CoreTensor, "L2bb", {nactv_, nactv_, nactv_, nactv_});
-//    }
-//
-//    std::string threepdc = options_->get_str("THREEPDC");
-//    if (level >= 3 && threepdc != "ZERO") {
-//        L3aaa_ = ambit::Tensor::build(ambit::CoreTensor, "L3aaa", std::vector<size_t>(6, nactv_));
-//        L3aab_ = ambit::Tensor::build(ambit::CoreTensor, "L3aab", std::vector<size_t>(6, nactv_));
-//        L3abb_ = ambit::Tensor::build(ambit::CoreTensor, "L3abb", std::vector<size_t>(6, nactv_));
-//        L3bbb_ = ambit::Tensor::build(ambit::CoreTensor, "L3bbb", std::vector<size_t>(6, nactv_));
-//    }
-//
-//    // function that scale pdm by w and add scaled pdm to sa_pdm
-//    auto scale_add = [](std::vector<double>& sa_pdm, std::vector<double>& pdm, const double& w) {
-//        std::for_each(pdm.begin(), pdm.end(), [&](double& v) { v *= w; });
-//        std::transform(sa_pdm.begin(), sa_pdm.end(), pdm.begin(), sa_pdm.begin(),
-//                       std::plus<double>());
-//    };
-//
-//    // save state-specific density to disk for DWMS-DSRG-PT
-//    bool do_disk = options_->get_str("JOB_TYPE") == "DWMS-DSRGPT2";
-//
-//    for (size_t n = 0, nentry = sa_info_.size(); n < nentry; ++n) {
-//        // get current nroots and weights
-//        int nroots, irrep, multi;
-//        std::vector<double> weights;
-//        std::tie(irrep, multi, nroots, weights) = sa_info_[n];
-//
-//        // prepare eigen vectors for current symmetry
-//        int dim = (eigens_[n][0].first)->dim();
-//        size_t eigen_size = eigens_[n].size();
-//        psi::SharedMatrix evecs(new psi::Matrix("evecs", dim, eigen_size));
-//        for (size_t i = 0; i < eigen_size; ++i) {
-//            evecs->set_column(0, i, (eigens_[n][i]).first);
-//        }
-//
-//        for (int i = 0; i < nroots; ++i) {
-//            double weight = weights[i];
-//
-//            // compute 1-RDMs
-//            auto D1 = compute_n_rdm(p_spaces_[n], evecs, 1, i, i, irrep, multi, do_disk);
-//            scale_add(L1a_.data(), D1[0].data(), weight);
-//            scale_add(L1b_.data(), D1[1].data(), weight);
-//
-//            // compute 2-RDMs
-//            if (level >= 2) {
-//                auto D2 = compute_n_rdm(p_spaces_[n], evecs, 2, i, i, irrep, multi, do_disk);
-//                scale_add(L2aa_.data(), D2[0].data(), weight);
-//                scale_add(L2ab_.data(), D2[1].data(), weight);
-//                scale_add(L2bb_.data(), D2[2].data(), weight);
-//            }
-//
-//            if (level >= 3 && threepdc == "MK") {
-//                auto D3 = compute_n_rdm(p_spaces_[n], evecs, 3, i, i, irrep, multi, do_disk);
-//                scale_add(L3aaa_.data(), D3[0].data(), weight);
-//                scale_add(L3aab_.data(), D3[1].data(), weight);
-//                scale_add(L3abb_.data(), D3[2].data(), weight);
-//                scale_add(L3bbb_.data(), D3[3].data(), weight);
-//            }
-//        }
-//    } // end looping over all averaged states
-//
-//    safe_to_read_density_files_ = true;
-//
-//    // compute 2-cumulants and fill in L2 tensors
-//    if (level >= 2) {
-//        add_wedge_cu2(L1a_, L1b_, L2aa_, L2ab_, L2bb_);
-//    }
-//
-//    // compute 3-cumulants and fill in L3 tensors
-//    if (level >= 3 && threepdc != "ZERO") {
-//        add_wedge_cu3(L1a_, L1b_, L2aa_, L2ab_, L2bb_, L3aaa_, L3aab_, L3abb_, L3bbb_);
-//    }
-//
-//    timer_off("Compute SA Ref");
-//}
 
 bool FCI_MO::check_density_files_fcimo(int rdm_level, int irrep, int multi, int root1, int root2) {
     auto filenames = density_filenames_generator(rdm_level, irrep, multi, root1, root2);
