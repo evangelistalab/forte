@@ -176,7 +176,7 @@ src/orbital-helpers/iao_builder.cc
 src/orbital-helpers/mp2_nos.cc
 src/orbital-helpers/semi_canonicalize.cc
 src/orbital-helpers/unpaired_density.cc
-src/pci/ewci.cc
+src/pci/pci.cc
 src/pci/pci_sigma.cc
 src/v2rdm/v2rdm.cc
 )

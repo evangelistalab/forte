@@ -18,7 +18,7 @@ set {
 }
 
 set forte {
-  active_space_solver ewci
+  active_space_solver pci
   nroot 1
   charge 0
   pci_tau 1.0
@@ -38,4 +38,4 @@ energy('scf')
 compare_values(refscf, variable("CURRENT ENERGY"), 11, "SCF energy") #TEST
 
 energy('forte')
-compare_values(refpci, variable("EWCI ENERGY"), 10, "EWCI energy") #TEST
+compare_values(refpci, variable("PCI ENERGY"), 10, "PCI energy") #TEST
