@@ -12,9 +12,6 @@
 
 namespace forte {
 
-/// Set the DSRG options
-void set_DSRG_options(ForteOptions& foptions);
-
 /// Reference relaxation, relaxed dipoles, transition dipoles,
 /// general sequence of running dsrg should be implemented in this class
 
@@ -27,7 +24,7 @@ void set_DSRG_options(ForteOptions& foptions);
 //     * @param ints A pointer to an allocated integral object
 //     * @param mo_space_info The MOSpaceInfo object
 //     */
-//    RUN_DSRG(Reference reference, psi::SharedWavefunction ref_wfn, psi::Options& options,
+//    RUN_DSRG(RDMs rdms, psi::SharedWavefunction ref_wfn, psi::Options& options,
 //             std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
 //    /// Compute DSRG energy
@@ -37,12 +34,12 @@ void set_DSRG_options(ForteOptions& foptions);
 //    void compute_dsrg_density();
 
 // protected:
-//    /// Reference type (FCI for FCI_MO)
+//    /// RDMs type (FCI for FCI_MO)
 //    std::string ref_type_;
 
 //};
 
-std::unique_ptr<MASTER_DSRG> make_dsrg_method(const std::string& method, Reference reference,
+std::unique_ptr<MASTER_DSRG> make_dsrg_method(const std::string& method, RDMs rdms,
                                               std::shared_ptr<SCFInfo> scf_info,
                                               std::shared_ptr<ForteOptions> options,
                                               std::shared_ptr<ForteIntegrals> ints,

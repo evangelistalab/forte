@@ -50,7 +50,7 @@ using namespace psi;
 
 namespace forte {
 
-MCSRGPT2_MO::MCSRGPT2_MO(Reference reference, std::shared_ptr<ForteOptions> options,
+MCSRGPT2_MO::MCSRGPT2_MO(RDMs rdms, std::shared_ptr<ForteOptions> options,
                          std::shared_ptr<ForteIntegrals> ints,
                          std::shared_ptr<MOSpaceInfo> mo_space_info)
     : integral_(ints), mo_space_info_(mo_space_info), options_(options) {
@@ -63,7 +63,7 @@ MCSRGPT2_MO::MCSRGPT2_MO(Reference reference, std::shared_ptr<ForteOptions> opti
 
     // fill in non-tensor based cumulants
     int max_rdm_level = (options->get_str("THREEPDC") == "ZERO") ? 2 : 3;
-    fill_naive_cumulants(reference, max_rdm_level);
+    fill_naive_cumulants(rdms, max_rdm_level);
 
     // build Fock matrix
     Fa_ = d2(ncmo_, d1(ncmo_));
@@ -179,7 +179,7 @@ void MCSRGPT2_MO::startup() {
     print_idx("PARTICLE", part_mos_);
     outfile->Printf("\n");
 
-    // Compute Reference Energy
+    // Compute RDMs Energy
     outfile->Printf("\n  Computing reference energy using density cumulant ...");
     compute_ref();
     outfile->Printf("\t\t\tDone.");
@@ -3410,7 +3410,7 @@ void MCSRGPT2_MO::compute_Fock_ints() {
     outfile->Printf("  Done. Timing %15.6f s", tfock.get());
 }
 
-void MCSRGPT2_MO::fill_naive_cumulants(Reference ref, const int level) {
+void MCSRGPT2_MO::fill_naive_cumulants(RDMs ref, const int level) {
     // fill in 1-cumulant (same as 1-RDM) to D1a_, D1b_
     ambit::Tensor L1a = ref.g1a();
     ambit::Tensor L1b = ref.g1b();

@@ -36,7 +36,7 @@ set forte{
    int_type                conventional
    CASSCF_ITERATIONS       36
    active                  [2, 0, 0, 0, 0, 0, 0, 0]
-   cas_type                 CAS
+   active_space_solver                 CAS
    multiplicity             3
    ms                       0.0
    CASSCF_G_CONVERGENCE     1e-6

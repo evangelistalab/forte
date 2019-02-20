@@ -103,7 +103,7 @@ install:
     -DLAPACK_INCLUDE_DIRS="${HOME}/miniconda/envs/p4env/include"
 - cd build
 - echo "Starting compilation of Psi4"
-- make -j2 -s
+- make -j2 -s 
 - echo " Done"
 - make install >& psi4_install.log
 - export PATH="$HOME/build/psi4-bin/bin:$PATH"

@@ -53,30 +53,6 @@ using namespace psi;
 
 namespace forte {
 
-// FCI_MO::FCI_MO(StateInfo state, std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions>
-// options,
-//               std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
-//    : ActiveSpaceMethod(state, mo_space_info, as_ints), integral_(ints), scf_info_(scf_info),
-//      options_(options) {
-
-//    print_method_banner({"Complete Active Space Configuration Interaction", "Chenyang Li"});
-//    startup();
-
-//    // setup integrals
-//    fci_ints_ =
-//        std::make_shared<ActiveSpaceIntegrals>(integral_,
-//        mo_space_info_->get_corr_abs_mo("ACTIVE"),
-//                                               mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
-//    ambit::Tensor tei_active_aa =
-//        integral_->aptei_aa_block(actv_mos_, actv_mos_, actv_mos_, actv_mos_);
-//    ambit::Tensor tei_active_ab =
-//        integral_->aptei_ab_block(actv_mos_, actv_mos_, actv_mos_, actv_mos_);
-//    ambit::Tensor tei_active_bb =
-//        integral_->aptei_bb_block(actv_mos_, actv_mos_, actv_mos_, actv_mos_);
-//    fci_ints_->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
-//    fci_ints_->compute_restricted_one_body_operator();
-//}
-
 FCI_MO::FCI_MO(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
                std::shared_ptr<ForteOptions> options, std::shared_ptr<MOSpaceInfo> mo_space_info,
                std::shared_ptr<ActiveSpaceIntegrals> as_ints)
@@ -109,6 +85,8 @@ FCI_MO::FCI_MO(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> 
     : ActiveSpaceMethod(), integral_(ints), mo_space_info_(mo_space_info), scf_info_(scf_info),
       options_(options) {
 
+    throw std::runtime_error("This FCI_MO constructor is now disabled!");
+
     print_method_banner({"Complete Active Space Configuration Interaction", "Chenyang Li"});
     startup();
 
@@ -130,6 +108,8 @@ FCI_MO::FCI_MO(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> 
                std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info,
                std::shared_ptr<ActiveSpaceIntegrals> fci_ints)
     : integral_(ints), mo_space_info_(mo_space_info), scf_info_(scf_info), options_(options) {
+
+    throw std::runtime_error("This FCI_MO constructor is now disabled!");
 
     print_method_banner({"Complete Active Space Configuration Interaction", "Chenyang Li"});
     startup();
@@ -199,11 +179,7 @@ void FCI_MO::read_options() {
 
     // number of Irrep
     nirrep_ = mo_space_info_->nirrep();
-    CharacterTable ct = psi::Process::environment.molecule()->point_group()->char_table();
-    irrep_symbols_.clear();
-    for (int h = 0; h < nirrep_; ++h) {
-        irrep_symbols_.push_back(ct.gamma(h).symbol());
-    }
+    irrep_symbols_ = psi::Process::environment.molecule()->irrep_labels();
 
     // obtain MOs
     nmo_ = mo_space_info_->size("ALL");
@@ -218,12 +194,6 @@ void FCI_MO::read_options() {
     nfrzv_ = mo_space_info_->size("FROZEN_UOCC");
 
     // obtain active orbitals
-    if ((options_->psi_options())["ACTIVE"].size() == 0) {
-        outfile->Printf("\n  Please specify the ACTIVE occupations.");
-        outfile->Printf("\n  Single-reference computations should set ACTIVE to zeros.");
-        outfile->Printf("\n  For example, ACTIVE [0,0,0,0] depending on the symmetry. \n");
-        throw psi::PSIEXCEPTION("Please specify the ACTIVE occupations. Check output for details.");
-    }
     actv_dim_ = mo_space_info_->get_dimension("ACTIVE");
     nactv_ = actv_dim_.sum();
 
@@ -233,72 +203,17 @@ void FCI_MO::read_options() {
     ncore_ = core_dim_.sum();
     nvirt_ = virt_dim_.sum();
 
-    // compute number of electrons
-    std::shared_ptr<psi::Molecule> molecule = psi::Process::environment.molecule();
-    int natom = molecule->natom();
-    int nelec = 0;
-    for (int i = 0; i < natom; ++i) {
-        nelec += molecule->fZ(i);
-    }
-    int charge = molecule->molecular_charge();
-    if (options_->has_changed("CHARGE")) {
-        charge = options_->get_int("CHARGE");
-    }
-    nelec -= charge;
+    // multiplicity
+    multi_ = state_.multiplicity();
+    twice_ms_ = state_.twice_ms();
+    multi_symbols_ = StateInfo::multiplicity_labels;
 
-    multi_ = molecule->multiplicity();
-    if (options_->has_changed("MULTIPLICITY")) {
-        multi_ = options_->get_int("MULTIPLICITY");
-    }
-    if (multi_ < 1) {
-        outfile->Printf("\n  MULTIPLICITY must be no less than 1.");
-        outfile->Printf("\n  MULTIPLICITY = %2d", multi_);
-        outfile->Printf("\n  Check (specify) Multiplicity! \n");
-        throw psi::PSIEXCEPTION("MULTIPLICITY must be no less than 1. Check output for details.");
-    }
-    multi_symbols_ = std::vector<std::string>{"Singlet", "Doublet", "Triplet", "Quartet", "Quintet",
-                                              "Sextet",  "Septet",  "Octet",   "Nonet",   "Decaet"};
-
-    twice_ms_ = std::round(2.0 * options_->get_double("MS"));
-    if (twice_ms_ < 0) {
-        outfile->Printf("\n  Ms must be no less than 0.");
-        outfile->Printf("\n  Ms = %2d, MULTIPLICITY = %2d", twice_ms_, multi_);
-        outfile->Printf("\n  Check (specify) Ms value (component of multiplicity)! \n");
-        throw psi::PSIEXCEPTION("Ms must be no less than 0. Check output for details.");
-    }
-
-    nalfa_ = (nelec + twice_ms_) / 2;
-    nbeta_ = (nelec - twice_ms_) / 2;
-    if (nalfa_ < 0 || nbeta_ < 0 || (nalfa_ + nbeta_) != nelec) {
-        outfile->Printf("\n  Number of alpha electrons or beta electrons is negative.");
-        outfile->Printf("\n  Nalpha = %5ld, Nbeta = %5ld", nalfa_, nbeta_);
-        outfile->Printf("\n  Charge = %3d, Multiplicity = %3d, Ms = %.1f", charge, multi_,
-                        twice_ms_);
-        outfile->Printf("\n  Check the Charge, Multiplicity, and Ms! \n");
-        outfile->Printf("\n  Note that Ms is 2 * Sz \n");
-        throw psi::PSIEXCEPTION("Negative number of alpha electrons or beta "
-                                "electrons. Check output for details.");
-    }
-    if (nalfa_ - ncore_ - nfrzc_ > nactv_) {
-        outfile->Printf("\n  Not enough active orbitals to arrange electrons!");
-        outfile->Printf("\n  Number of orbitals: active = %5zu, core = %5zu", nactv_, ncore_);
-        outfile->Printf("\n  Number of alpha electrons: Nalpha = %5ld", nalfa_);
-        outfile->Printf("\n  Check core and active orbitals! \n");
-        throw psi::PSIEXCEPTION("Not enough active orbitals to arrange electrons! "
-                                "Check output for details.");
-    }
+    // number of alpha and beta electrons
+    nalfa_ = state_.na();
+    nbeta_ = state_.nb();
 
     // obtain root symmetry
-    root_sym_ = options_->get_int("ROOT_SYM");
-
-    // obtain number of roots and roots of interest
-    //    nroot_ = options_->get_int("NROOT");
-    //    root_ = options_->get_int("ROOT");
-    if (root_ >= nroot_) {
-        outfile->Printf("\n  NROOT = %3d, ROOT = %3d", nroot_, root_);
-        outfile->Printf("\n  ROOT must be smaller than NROOT.");
-        throw psi::PSIEXCEPTION("ROOT must be smaller than NROOT.");
-    }
+    root_sym_ = state_.irrep();
 
     // setup symmetry index of active orbitals
     for (int h = 0; h < nirrep_; ++h) {
@@ -338,111 +253,6 @@ void FCI_MO::read_options() {
             }
         }
     }
-
-    //    // state averaging
-    //    if ((options_->psi_options())["AVG_STATE"].size() != 0) {
-    //        size_t nstates = 0;
-    //        size_t nentry = (options_->psi_options())["AVG_STATE"].size();
-    //
-    //        // figure out total number of states
-    //        std::vector<int> nstatespim;
-    //        std::vector<int> irreps;
-    //        std::vector<int> multis;
-    //        for (size_t i = 0; i < nentry; ++i) {
-    //            if ((options_->psi_options())["AVG_STATE"][i].size() != 3) {
-    //                outfile->Printf("\n  Error: invalid input of AVG_STATE. Each "
-    //                                "entry should take an array of three numbers.");
-    //                throw psi::PSIEXCEPTION("Invalid input of AVG_STATE");
-    //            }
-    //
-    //            // irrep
-    //            int irrep = (options_->psi_options())["AVG_STATE"][i][0].to_integer();
-    //            if (irrep >= nirrep_ || irrep < 0) {
-    //                outfile->Printf("\n  Error: invalid irrep in AVG_STATE. Please "
-    //                                "check the input irrep (start from 0) not to "
-    //                                "exceed %d",
-    //                                nirrep_ - 1);
-    //                throw psi::PSIEXCEPTION("Invalid irrep in AVG_STATE");
-    //            }
-    //            irreps.push_back(irrep);
-    //
-    //            // multiplicity
-    //            int multi = (options_->psi_options())["AVG_STATE"][i][1].to_integer();
-    //            if (multi < 1) {
-    //                outfile->Printf("\n  Error: invalid multiplicity in AVG_STATE.");
-    //                throw psi::PSIEXCEPTION("Invaid multiplicity in AVG_STATE");
-    //            }
-    //            multis.push_back(multi);
-    //
-    //            // number of states of irrep and multiplicity
-    //            int nstates_this = (options_->psi_options())["AVG_STATE"][i][2].to_integer();
-    //            if (nstates_this < 1) {
-    //                outfile->Printf("\n  Error: invalid nstates in AVG_STATE. "
-    //                                "nstates of a certain irrep and multiplicity "
-    //                                "should greater than 0.");
-    //                throw psi::PSIEXCEPTION("Invalid nstates in AVG_STATE.");
-    //            }
-    //            nstatespim.push_back(nstates_this);
-    //            nstates += nstates_this;
-    //        }
-    //
-    //        // test input weights
-    //        std::vector<std::vector<double>> weights;
-    //        if ((options_->psi_options())["AVG_WEIGHT"].has_changed()) {
-    //            if ((options_->psi_options())["AVG_WEIGHT"].size() != nentry) {
-    //                outfile->Printf("\n  Error: mismatched number of entries in "
-    //                                "AVG_STATE (%d) and AVG_WEIGHT (%d).",
-    //                                nentry, (options_->psi_options())["AVG_WEIGHT"].size());
-    //                throw psi::PSIEXCEPTION("Mismatched number of entries in AVG_STATE "
-    //                                        "and AVG_WEIGHT.");
-    //            }
-    //
-    //            double wsum = 0.0;
-    //            for (size_t i = 0; i < nentry; ++i) {
-    //                int nw = (options_->psi_options())["AVG_WEIGHT"][i].size();
-    //                if (nw != nstatespim[i]) {
-    //                    outfile->Printf("\n  Error: mismatched number of weights "
-    //                                    "in entry %d of AVG_WEIGHT. Asked for %d "
-    //                                    "states but only %d weights.",
-    //                                    i, nstatespim[i], nw);
-    //                    throw psi::PSIEXCEPTION("Mismatched number of weights in AVG_WEIGHT.");
-    //                }
-    //
-    //                std::vector<double> weight;
-    //                for (int n = 0; n < nw; ++n) {
-    //                    double w = (options_->psi_options())["AVG_WEIGHT"][i][n].to_double();
-    //                    if (w < 0.0) {
-    //                        outfile->Printf("\n  Error: negative weights in AVG_WEIGHT.");
-    //                        throw psi::PSIEXCEPTION("Negative weights in AVG_WEIGHT.");
-    //                    }
-    //                    weight.push_back(w);
-    //                    wsum += w;
-    //                }
-    //                weights.push_back(weight);
-    //            }
-    //            if (std::fabs(wsum - 1.0) > 1.0e-10) {
-    //                outfile->Printf("\n  Error: AVG_WEIGHT entries do not add up "
-    //                                "to 1.0. Sum = %.10f",
-    //                                wsum);
-    //                throw psi::PSIEXCEPTION("AVG_WEIGHT entries do not add up to 1.0.");
-    //            }
-    //
-    //        } else {
-    //            // use equal weights
-    //            double w = 1.0 / nstates;
-    //            for (size_t i = 0; i < nentry; ++i) {
-    //                std::vector<double> weight(nstatespim[i], w);
-    //                weights.push_back(weight);
-    //            }
-    //        }
-    //
-    //        // form option parser
-    //        for (size_t i = 0; i < nentry; ++i) {
-    //            std::tuple<int, int, int, std::vector<double>> avg_info =
-    //                std::make_tuple(irreps[i], multis[i], nstatespim[i], weights[i]);
-    //            sa_info_.push_back(avg_info);
-    //        }
-    //    }
 }
 
 void FCI_MO::print_options() {
@@ -474,76 +284,13 @@ void FCI_MO::print_options() {
     print_irrep("CORE", core_dim_);
     print_irrep("ACTIVE", actv_dim_);
     print_irrep("VIRTUAL", virt_dim_);
-
-    //    int nentry = sa_info_.size();
-    //    if (nentry != 0) {
-    //        print_h2("State Averaging Summary");
-    //
-    //        CharacterTable ct = psi::Process::environment.molecule()->point_group()->char_table();
-    //        std::vector<std::string> irrep_symbol;
-    //        for (int h = 0; h < nirrep_; ++h) {
-    //            irrep_symbol.push_back(std::string(ct.gamma(h).symbol()));
-    //        }
-    //
-    //        int nroots_max = 0;
-    //        int nstates = 0;
-    //        for (const auto& x : sa_info_) {
-    //            int nroots;
-    //            std::tie(std::ignore, std::ignore, nroots, std::ignore) = x;
-    //            nstates += nroots;
-    //            if (nroots > nroots_max) {
-    //                nroots_max = nroots;
-    //            }
-    //        }
-    //
-    //        if (nroots_max == 1) {
-    //            nroots_max = 7;
-    //        } else {
-    //            nroots_max *= 6;
-    //            nroots_max -= 1;
-    //        }
-    //        int ltotal = 6 + 2 + 6 + 2 + 7 + 2 + nroots_max;
-    //        std::string blank(nroots_max - 7, ' ');
-    //        std::string dash(ltotal, '-');
-    //        outfile->Printf("\n    Irrep.  Multi.  Nstates  %sWeights", blank.c_str());
-    //        outfile->Printf("\n    %s", dash.c_str());
-    //
-    //        for (int i = 0; i < nentry; ++i) {
-    //            int irrep, multi, nroots;
-    //            std::vector<double> weights;
-    //            std::tie(irrep, multi, nroots, weights) = sa_info_[i];
-    //
-    //            std::string w_str;
-    //            for (const double& w : weights) {
-    //                std::stringstream ss;
-    //                ss << std::fixed << std::setprecision(3) << w;
-    //                w_str += ss.str() + " ";
-    //            }
-    //            w_str.pop_back(); // delete the last space character
-    //
-    //            std::stringstream ss;
-    //            ss << std::setw(4) << std::right << irrep_symbol[irrep] << "    " << std::setw(4)
-    //               << std::right << multi << "    " << std::setw(5) << std::right << nroots << " "
-    //               << std::setw(nroots_max) << w_str;
-    //            outfile->Printf("\n    %s", ss.str().c_str());
-    //        }
-    //        outfile->Printf("\n    %s", dash.c_str());
-    //        outfile->Printf("\n    Total number of states: %d", nstates);
-    //        outfile->Printf("\n    %s\n", dash.c_str());
-    //    }
 }
 
 double FCI_MO::compute_energy() {
-
     energies_ = compute_ss_energies();
+
     psi::Process::environment.globals["CURRENT ENERGY"] = Eref_;
     psi::Process::environment.globals["FCI_MO ENERGY"] = Eref_;
-
-    //   energies_.resize(nroot_,0.0);
-    //   for( int n = 0; n < nroot_; ++n ){
-    //       energies_[n] = eigen_[n].second;
-    //   }
-    Eref_ = energies_[root_];
     return Eref_;
 }
 
@@ -1282,7 +1029,7 @@ void FCI_MO::compute_permanent_dipole() {
     }
 
     // loop over states
-    for (int A = 0; A < nroot_; ++A) {
+    for (size_t A = 0; A < nroot_; ++A) {
         std::string trans_name = std::to_string(A) + " -> " + std::to_string(A);
 
         CI_RDMS ci_rdms(fci_ints_, determinant_, evecs, A, A);
@@ -1401,8 +1148,8 @@ void FCI_MO::compute_transition_dipole() {
 
     // loop over states of the same symmetry
     trans_dipole_.clear();
-    for (int A = 0; A < nroot_; ++A) {
-        for (int B = A + 1; B < nroot_; ++B) {
+    for (size_t A = 0; A < nroot_; ++A) {
+        for (size_t B = A + 1; B < nroot_; ++B) {
             std::string trans_name = std::to_string(A) + " -> " + std::to_string(B);
 
             CI_RDMS ci_rdms(fci_ints_, determinant_, evecs, A, B);
@@ -1470,8 +1217,8 @@ void FCI_MO::compute_oscillator_strength() {
 
     // obtain the excitation energies map
     std::map<std::string, double> Exs;
-    for (int A = 0; A < nroot_; ++A) {
-        for (int B = A + 1; B < nroot_; ++B) {
+    for (size_t A = 0; A < nroot_; ++A) {
+        for (size_t B = A + 1; B < nroot_; ++B) {
             std::string trans_name = std::to_string(A) + " -> " + std::to_string(B);
             Exs[trans_name] = eigen_[B].second - eigen_[A].second;
         }
@@ -1954,6 +1701,73 @@ ambit::BlockedTensor FCI_MO::compute_n_rdm(CI_RDMS& cirdm, const int& order) {
     return out;
 }
 
+std::vector<std::string> FCI_MO::generate_rdm_file_names(int rdm_level, int root1, int root2,
+                                                         const StateInfo& state2) {
+    std::vector<std::string> out, spins;
+    out.reserve(rdm_level + 1);
+
+    if (rdm_level == 1) {
+        spins = std::vector<std::string>{"a", "b"};
+    } else if (rdm_level == 2) {
+        spins = std::vector<std::string>{"aa", "ab", "bb"};
+    } else if (rdm_level == 3) {
+        spins = std::vector<std::string>{"aaa", "aab", "abb", "bbb"};
+    } else {
+        throw psi::PSIEXCEPTION("RDM level > 3 is not supported.");
+    }
+
+    std::string path0 = psi::PSIOManager::shared_object()->get_default_path() + "psi." +
+                        std::to_string(getpid()) + "." +
+                        psi::Process::environment.molecule()->name();
+    std::string name0 = (root1 == root2 and state_ == state2) ? std::to_string(rdm_level) + "RDMs"
+                                                              : std::to_string(rdm_level) + "TrDMs";
+
+    for (const std::string& spin : spins) {
+        std::string name = name0 + spin;
+        std::string path = path0;
+        std::vector<std::string> components = {name,
+                                               std::to_string(root1),
+                                               std::to_string(state_.multiplicity()),
+                                               std::to_string(state_.irrep()),
+                                               std::to_string(root2),
+                                               std::to_string(state2.multiplicity()),
+                                               std::to_string(state2.irrep()),
+                                               "bin"};
+        for (const std::string& str : components) {
+            path += "." + str;
+        }
+        out.push_back(path);
+    }
+
+    return out;
+}
+
+bool FCI_MO::check_density_files(int rdm_level, int root1, int root2, const StateInfo& state2) {
+    auto filenames = generate_rdm_file_names(rdm_level, root1, root2, state2);
+
+    // only one of these file names is needed because
+    // they are always pushed/deleted together to/from density_files_
+    return density_files_.find(filenames[0]) != density_files_.end();
+}
+
+void FCI_MO::remove_density_files(int rdm_level, int root1, int root2, const StateInfo& state2) {
+    auto fullnames = generate_rdm_file_names(rdm_level, root1, root2, state2);
+    for (const std::string& filename : fullnames) {
+        density_files_.erase(filename);
+        if (remove(filename.c_str()) != 0) {
+            std::stringstream ss;
+            ss << "Error deleting file " << filename << ": No such file or directory";
+            throw psi::PSIEXCEPTION(ss.str());
+        }
+    }
+
+    std::string level = std::to_string(rdm_level);
+    std::string name = (root1 == root2 and state_ == state2) ? level + "RDMs" : level + "TrDMs";
+    psi::outfile->Printf("\n  Deleted files from disk for %s (%d %s %s - %d %s %s).", name.c_str(),
+                         root1, state_.multiplicity_label().c_str(), state_.irrep_label().c_str(),
+                         root2, state2.multiplicity_label().c_str(), state2.irrep_label().c_str());
+}
+
 double FCI_MO::ref_relaxed_dm_helper(const double& dm0, BlockedTensor& dm1, BlockedTensor& dm2,
                                      BlockedTensor& D1, BlockedTensor& D2) {
     double dm_out = dm0;
@@ -2092,9 +1906,91 @@ d3 FCI_MO::compute_orbital_extents() {
     return orb_extents;
 }
 
-std::vector<Reference> FCI_MO::reference(const std::vector<std::pair<size_t, size_t>>& root_list) {
+std::vector<RDMs> FCI_MO::rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
+                               int max_rdm_level) {
+    if (max_rdm_level > 3 || max_rdm_level < 1) {
+        throw psi::PSIEXCEPTION("Invalid max_rdm_level, required 1 <= max_rdm_level <= 3.");
+    }
 
-    std::vector<Reference> refs;
+    std::vector<RDMs> refs;
+
+    // TODO: change this when other methods support disk
+    bool disk = false;
+
+    // TODO: remove this when removing eigen_
+    psi::SharedMatrix evecs = prepare_for_rdm();
+
+    for (auto& roots : root_list) {
+        auto D1 = compute_n_rdm(determinant_, evecs, 1, roots.first, roots.second, state_, disk);
+        if (max_rdm_level == 1) {
+            refs.emplace_back(D1[0], D1[1]);
+        } else {
+            auto D2 =
+                compute_n_rdm(determinant_, evecs, 2, roots.first, roots.second, state_, disk);
+
+            bool do_3rdm = (max_rdm_level == 3) and (options_->get_str("THREEPDC") != "ZERO");
+
+            if (do_3rdm) {
+                std::vector<ambit::Tensor> D3;
+                D3.reserve(4);
+                if (options_->get_str("THREEPDC") == "MK") {
+                    D3 = compute_n_rdm(determinant_, evecs, 3, roots.first, roots.second, state_,
+                                       disk);
+                } else {
+                    for (const std::string& name : {"D3aaa", "D3aab", "D3abb", "D3bbb"}) {
+                        D3.push_back(ambit::Tensor::build(ambit::CoreTensor, name,
+                                                          std::vector<size_t>(6, nactv_)));
+                    }
+                }
+                refs.emplace_back(D1[0], D1[1], D2[0], D2[1], D2[2], D3[0], D3[1], D3[2], D3[3]);
+            } else {
+                refs.emplace_back(D1[0], D1[1], D2[0], D2[1], D2[2]);
+            }
+        }
+    }
+    return refs;
+}
+
+std::vector<RDMs> FCI_MO::transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
+                                          std::shared_ptr<ActiveSpaceMethod> method2,
+                                          int max_rdm_level) {
+    if (max_rdm_level > 3 || max_rdm_level < 1) {
+        throw psi::PSIEXCEPTION("Invalid max_rdm_level, required 1 <= max_rdm_level <= 3.");
+    }
+
+    // TODO: change this when other methods support disk
+    bool disk = false;
+
+    std::vector<RDMs> refs;
+
+    std::pair<std::shared_ptr<vecdet>, psi::SharedMatrix> det_evec_pair =
+        prepare_for_trans_rdm(std::dynamic_pointer_cast<FCI_MO>(method2));
+
+    for (auto& roots : root_list) {
+        auto D1 = compute_n_rdm(*det_evec_pair.first, det_evec_pair.second, 1, roots.first,
+                                roots.second, method2->state(), disk);
+        if (max_rdm_level == 1) {
+            refs.emplace_back(D1[0], D1[1]);
+        } else {
+            auto D2 = compute_n_rdm(*det_evec_pair.first, det_evec_pair.second, 2, roots.first,
+                                    roots.second, method2->state(), disk);
+            if (max_rdm_level == 2) {
+                refs.emplace_back(D1[0], D1[1], D2[0], D2[1], D2[2]);
+            } else {
+                auto D3 = compute_n_rdm(*det_evec_pair.first, det_evec_pair.second, 3, roots.first,
+                                        roots.second, method2->state(), disk);
+                refs.emplace_back(D1[0], D1[1], D2[0], D2[1], D2[2], D3[0], D3[1], D3[2], D3[3]);
+            }
+        }
+    }
+
+    return refs;
+}
+
+[[deprecated]] std::vector<RDMs>
+FCI_MO::reference(const std::vector<std::pair<size_t, size_t>>& root_list, int max_rdm_level) {
+
+    std::vector<RDMs> refs;
     // if ((options_->psi_options())["AVG_STATE"].size() != 0) {
     //     Reference ref;
     //     compute_sa_ref(max_rdm_);
@@ -2121,17 +2017,17 @@ std::vector<Reference> FCI_MO::reference(const std::vector<std::pair<size_t, siz
     // } else {
 
     for (auto& roots : root_list) {
-        compute_ref(max_rdm_level_, roots.first, roots.second);
+        compute_ref(max_rdm_level, roots.first, roots.second);
 
-        if (max_rdm_level_ == 1) {
+        if (max_rdm_level == 1) {
             refs.emplace_back(L1a_, L1b_);
         }
 
-        if (max_rdm_level_ == 2) {
+        if (max_rdm_level == 2) {
             refs.emplace_back(L1a_, L1b_, L2aa_, L2ab_, L2bb_);
         }
 
-        if (max_rdm_level_ == 3 && (options_->get_str("THREEPDC") != "ZERO")) {
+        if (max_rdm_level == 3 && (options_->get_str("THREEPDC") != "ZERO")) {
             refs.emplace_back(L1a_, L1b_, L2aa_, L2ab_, L2bb_, L3aaa_, L3aab_, L3abb_, L3bbb_);
         }
     }
@@ -2141,18 +2037,9 @@ std::vector<Reference> FCI_MO::reference(const std::vector<std::pair<size_t, siz
 
 void FCI_MO::compute_ref(const int& level, size_t root1, size_t root2) {
     timer_on("Compute Ref");
-    if (!quiet_) {
-        //      print_h2("Compute State-Specific Cumulants");
-        outfile->Printf("\n  Computing (%d,%d) RDMs", root1, root2);
-    }
 
     // prepare eigen vectors for ci_rdms
-    int dim = (eigen_[0].first)->dim();
-    size_t eigen_size = eigen_.size();
-    psi::SharedMatrix evecs(new psi::Matrix("evecs", dim, eigen_size));
-    for (size_t i = 0; i < eigen_size; ++i) {
-        evecs->set_column(0, i, (eigen_[i]).first);
-    }
+    psi::SharedMatrix evecs = prepare_for_rdm();
 
     // compute 1-RDM
     auto D1 = compute_n_rdm(determinant_, evecs, 1, root1, root2, root_sym_, multi_, false);
@@ -2291,74 +2178,8 @@ void FCI_MO::add_wedge_cu3(const ambit::Tensor& L1a, const ambit::Tensor& L1b,
     timer_off(job_name);
 }
 
-double FCI_MO::compute_sa_energy() {
-    // averaged energy
-    double Ecas_sa = 0.0;
-
-    // clear eigen values, eigen vectors and determinants
-    eigens_.clear();
-    p_spaces_.clear();
-
-    // loop over all averaged states
-    int nstates = 0;
-    for (const auto& info : sa_info_) {
-        // get current symmetry, multiplicity, nroots, weights
-        int irrep, multi, nroots;
-        std::vector<double> weights;
-        std::tie(irrep, multi, nroots, weights) = info;
-        nstates += nroots;
-
-        root_sym_ = irrep;
-        multi_ = multi;
-        nroot_ = nroots;
-        root_ = nroot_ - 1; // not necessary
-
-        // form determinants
-        form_p_space();
-        p_spaces_.push_back(determinant_);
-
-        // diagonalize the CASCI Hamiltonian
-        eigen_.clear();
-        Diagonalize_H(determinant_, multi_, nroot_, eigen_);
-        eigens_.push_back(eigen_);
-
-        // print CI vectors in eigen_
-        int eigen_size = eigen_.size();
-        if (nroot_ > eigen_size) {
-            outfile->Printf("\n  Too many roots of interest!");
-            std::string be = (eigen_size > 1) ? "are" : "is";
-            std::string plural = (eigen_size > 1) ? "roots" : "root";
-            outfile->Printf("\n  There %s only %3d %s that satisfy the condition!", be.c_str(),
-                            eigen_size, plural.c_str());
-            outfile->Printf("\n  Check root_sym, multi, and number of determinants.");
-            throw psi::PSIEXCEPTION("Too many roots of interest.");
-        }
-        print_CI(nroot_, options_->get_double("FCIMO_PRINT_CIVEC"), eigen_, determinant_);
-
-        // weight energies
-        for (int i = 0; i < nroots; ++i) {
-            Ecas_sa += weights[i] * eigen_[i].second;
-        }
-
-        // compute dipole moments
-        compute_permanent_dipole();
-
-        // compute oscillator strength
-        if (nroot_ > 1) {
-            compute_transition_dipole();
-            compute_oscillator_strength();
-        }
-    }                     // end looping over all averaged states
-    eigen_.clear();       // make sure other code use eigens_ for state average
-    determinant_.clear(); // make sure other code use p_spaces_ for state average
-    outfile->Printf("\n  Total Energy (averaged over %d states): %20.15f\n", nstates, Ecas_sa);
-
-    Eref_ = Ecas_sa;
-    psi::Process::environment.globals["CURRENT ENERGY"] = Ecas_sa;
-    return Ecas_sa;
-}
-
 void FCI_MO::xms_rotate_civecs() {
+    /// TODO: Move this out.
     if (eigens_.size() != sa_info_.size()) {
         throw psi::PSIEXCEPTION(
             "Cannot do XMS rotation due to inconsistent size. Is CASCI computed?");
@@ -2500,96 +2321,7 @@ psi::SharedMatrix FCI_MO::xms_rotate_this_civecs(const det_vec& p_space, psi::Sh
     return rcivecs;
 }
 
-// void FCI_MO::compute_sa_ref(const int& level) {
-//    timer_on("Compute SA Ref");
-//    if (!quiet_) {
-//        print_h2("Compute State-Averaged Cumulants");
-//    }
-//
-//    // prepare averaged densities
-//    L1a_ = ambit::Tensor::build(ambit::CoreTensor, "L1a", {nactv_, nactv_});
-//    L1b_ = ambit::Tensor::build(ambit::CoreTensor, "L1b", {nactv_, nactv_});
-//
-//    if (level >= 2) {
-//        L2aa_ = ambit::Tensor::build(ambit::CoreTensor, "L2aa", {nactv_, nactv_, nactv_, nactv_});
-//        L2ab_ = ambit::Tensor::build(ambit::CoreTensor, "L2ab", {nactv_, nactv_, nactv_, nactv_});
-//        L2bb_ = ambit::Tensor::build(ambit::CoreTensor, "L2bb", {nactv_, nactv_, nactv_, nactv_});
-//    }
-//
-//    std::string threepdc = options_->get_str("THREEPDC");
-//    if (level >= 3 && threepdc != "ZERO") {
-//        L3aaa_ = ambit::Tensor::build(ambit::CoreTensor, "L3aaa", std::vector<size_t>(6, nactv_));
-//        L3aab_ = ambit::Tensor::build(ambit::CoreTensor, "L3aab", std::vector<size_t>(6, nactv_));
-//        L3abb_ = ambit::Tensor::build(ambit::CoreTensor, "L3abb", std::vector<size_t>(6, nactv_));
-//        L3bbb_ = ambit::Tensor::build(ambit::CoreTensor, "L3bbb", std::vector<size_t>(6, nactv_));
-//    }
-//
-//    // function that scale pdm by w and add scaled pdm to sa_pdm
-//    auto scale_add = [](std::vector<double>& sa_pdm, std::vector<double>& pdm, const double& w) {
-//        std::for_each(pdm.begin(), pdm.end(), [&](double& v) { v *= w; });
-//        std::transform(sa_pdm.begin(), sa_pdm.end(), pdm.begin(), sa_pdm.begin(),
-//                       std::plus<double>());
-//    };
-//
-//    // save state-specific density to disk for DWMS-DSRG-PT
-//    bool do_disk = options_->get_str("JOB_TYPE") == "DWMS-DSRGPT2";
-//
-//    for (size_t n = 0, nentry = sa_info_.size(); n < nentry; ++n) {
-//        // get current nroots and weights
-//        int nroots, irrep, multi;
-//        std::vector<double> weights;
-//        std::tie(irrep, multi, nroots, weights) = sa_info_[n];
-//
-//        // prepare eigen vectors for current symmetry
-//        int dim = (eigens_[n][0].first)->dim();
-//        size_t eigen_size = eigens_[n].size();
-//        psi::SharedMatrix evecs(new psi::Matrix("evecs", dim, eigen_size));
-//        for (size_t i = 0; i < eigen_size; ++i) {
-//            evecs->set_column(0, i, (eigens_[n][i]).first);
-//        }
-//
-//        for (int i = 0; i < nroots; ++i) {
-//            double weight = weights[i];
-//
-//            // compute 1-RDMs
-//            auto D1 = compute_n_rdm(p_spaces_[n], evecs, 1, i, i, irrep, multi, do_disk);
-//            scale_add(L1a_.data(), D1[0].data(), weight);
-//            scale_add(L1b_.data(), D1[1].data(), weight);
-//
-//            // compute 2-RDMs
-//            if (level >= 2) {
-//                auto D2 = compute_n_rdm(p_spaces_[n], evecs, 2, i, i, irrep, multi, do_disk);
-//                scale_add(L2aa_.data(), D2[0].data(), weight);
-//                scale_add(L2ab_.data(), D2[1].data(), weight);
-//                scale_add(L2bb_.data(), D2[2].data(), weight);
-//            }
-//
-//            if (level >= 3 && threepdc == "MK") {
-//                auto D3 = compute_n_rdm(p_spaces_[n], evecs, 3, i, i, irrep, multi, do_disk);
-//                scale_add(L3aaa_.data(), D3[0].data(), weight);
-//                scale_add(L3aab_.data(), D3[1].data(), weight);
-//                scale_add(L3abb_.data(), D3[2].data(), weight);
-//                scale_add(L3bbb_.data(), D3[3].data(), weight);
-//            }
-//        }
-//    } // end looping over all averaged states
-//
-//    safe_to_read_density_files_ = true;
-//
-//    // compute 2-cumulants and fill in L2 tensors
-//    if (level >= 2) {
-//        add_wedge_cu2(L1a_, L1b_, L2aa_, L2ab_, L2bb_);
-//    }
-//
-//    // compute 3-cumulants and fill in L3 tensors
-//    if (level >= 3 && threepdc != "ZERO") {
-//        add_wedge_cu3(L1a_, L1b_, L2aa_, L2ab_, L2bb_, L3aaa_, L3aab_, L3abb_, L3bbb_);
-//    }
-//
-//    timer_off("Compute SA Ref");
-//}
-
-bool FCI_MO::check_density_files(int rdm_level, int irrep, int multi, int root1, int root2) {
+bool FCI_MO::check_density_files_fcimo(int rdm_level, int irrep, int multi, int root1, int root2) {
     auto filenames = density_filenames_generator(rdm_level, irrep, multi, root1, root2);
 
     bool out = true;
@@ -2642,7 +2374,7 @@ std::vector<std::string> FCI_MO::density_filenames_generator(int rdm_level, int 
     return out;
 }
 
-void FCI_MO::remove_density_files(int rdm_level, int irrep, int multi, int root1, int root2) {
+void FCI_MO::remove_density_files_fcimo(int rdm_level, int irrep, int multi, int root1, int root2) {
     auto fullnames = density_filenames_generator(rdm_level, irrep, multi, root1, root2);
     for (const std::string& filename : fullnames) {
         density_files_.erase(filename);
@@ -2707,6 +2439,119 @@ void FCI_MO::set_eigens(const std::vector<vector<pair<psi::SharedVector, double>
     }
 }
 
+psi::SharedMatrix FCI_MO::prepare_for_rdm() {
+    size_t n_dets = determinant_.size();
+    psi::SharedMatrix evecs = std::make_shared<psi::Matrix>("evecs", n_dets, nroot_);
+    for (size_t i = 0; i < nroot_; ++i) {
+        evecs->set_column(0, i, (eigen_[i]).first);
+    }
+    return evecs;
+}
+
+std::pair<std::shared_ptr<vecdet>, psi::SharedMatrix>
+FCI_MO::prepare_for_trans_rdm(std::shared_ptr<FCI_MO> method2) {
+    // combine p_space
+    std::vector<Determinant> dets(determinant_);
+    auto p_space_2 = method2->p_space();
+    dets.insert(dets.end(), p_space_2.begin(), p_space_2.end());
+    std::shared_ptr<vecdet> p_space = std::make_shared<vecdet>(dets);
+
+    // combine two eigen vectors
+    size_t n_dets_1 = determinant_.size();
+    size_t n_dets = dets.size();
+    size_t nroots = nroot_ + method2->nroot();
+    psi::SharedMatrix evecs = std::make_shared<psi::Matrix>("evecs", n_dets, nroots);
+
+    for (size_t n = 0; n < nroot_; ++n) {
+        for (size_t i = 0; i < n_dets_1; ++i) {
+            evecs->set(i, n, (eigen_[n]).first->get(i));
+        }
+    }
+
+    auto eigen2 = method2->eigen();
+    for (size_t n = nroot_; n < nroots; ++n) {
+        for (size_t i = 0, n_dets_2 = method2->p_space().size(); i < n_dets_2; ++i) {
+            evecs->set(i + n_dets_1, n, (eigen2[n - nroot_]).first->get(i));
+        }
+    }
+
+    return std::make_pair(p_space, evecs);
+}
+
+std::vector<ambit::Tensor> FCI_MO::compute_n_rdm(const vecdet& p_space, psi::SharedMatrix evecs,
+                                                 int rdm_level, int root1, int root2,
+                                                 const StateInfo& state2, bool disk) {
+    if (rdm_level > 3 || rdm_level < 1) {
+        throw psi::PSIEXCEPTION("Incorrect RDM_LEVEL. Check your code!");
+    }
+
+    local_timer timer;
+    std::string job_name = (root1 == root2 and state_ == state2) ? "RDMs" : "TrDMs";
+    job_name = std::to_string(rdm_level) + job_name;
+    timer_on(job_name);
+
+    psi::outfile->Printf("\n Computing %6s (%d %s %s - %d %s %s) ... ", job_name.c_str(), root1,
+                         state_.multiplicity_label().c_str(), state_.irrep_label().c_str(), root2,
+                         state2.multiplicity_label().c_str(), state2.irrep_label().c_str());
+
+    std::vector<std::string> names;
+    if (rdm_level == 1) {
+        names = std::vector<std::string>{"D1a", "D1b"};
+    } else if (rdm_level == 2) {
+        names = std::vector<std::string>{"D2aa", "D2ab", "D2bb"};
+    } else if (rdm_level == 3) {
+        names = std::vector<std::string>{"D3aaa", "D3aab", "D3abb", "D3bbb"};
+    }
+
+    int ntensors = rdm_level + 1;
+
+    std::vector<ambit::Tensor> out;
+    out.reserve(ntensors);
+    for (int i = 0; i < ntensors; ++i) {
+        out.push_back(ambit::Tensor::build(ambit::CoreTensor, names[i],
+                                           std::vector<size_t>(2 * rdm_level, nactv_)));
+    }
+
+    auto filenames = generate_rdm_file_names(rdm_level, root1, root2, state2);
+    bool files_exist = check_density_files(rdm_level, root1, root2, state2);
+
+    if (safe_to_read_density_files_ && files_exist) {
+        outfile->Printf("Reading ... ");
+        for (int i = 0; i < ntensors; ++i) {
+            read_disk_vector_double(filenames[i], out[i].data());
+        }
+    } else {
+        // Important! need to shift root2 when two states are different
+        int root2_shifted = (state2 == state_) ? root2 : nroot_ + root2;
+
+        CI_RDMS ci_rdms(fci_ints_, p_space, evecs, root1, root2_shifted);
+
+        if (rdm_level == 1) {
+            ci_rdms.compute_1rdm(out[0].data(), out[1].data());
+        } else if (rdm_level == 2) {
+            ci_rdms.compute_2rdm(out[0].data(), out[1].data(), out[2].data());
+        } else if (rdm_level == 3) {
+            ci_rdms.compute_3rdm(out[0].data(), out[1].data(), out[2].data(), out[3].data());
+        }
+
+        if (files_exist) {
+            remove_density_files(rdm_level, root1, root2, state2);
+        }
+
+        if (disk) {
+            outfile->Printf("Writing ... ");
+            for (int i = 0; i < ntensors; ++i) {
+                write_disk_vector_double(filenames[i], out[i].data());
+                density_files_.insert(filenames[i]);
+            }
+        }
+    }
+
+    outfile->Printf("Done. Timing %15.6f s", timer.get());
+    timer_off(job_name);
+    return out;
+}
+
 std::vector<ambit::Tensor> FCI_MO::compute_n_rdm(const vecdet& p_space, psi::SharedMatrix evecs,
                                                  int rdm_level, int root1, int root2, int irrep,
                                                  int multi, bool disk) {
@@ -2740,7 +2585,7 @@ std::vector<ambit::Tensor> FCI_MO::compute_n_rdm(const vecdet& p_space, psi::Sha
     }
 
     auto filenames = density_filenames_generator(rdm_level, irrep, multi, root1, root2);
-    bool files_exist = check_density_files(rdm_level, irrep, multi, root1, root2);
+    bool files_exist = check_density_files_fcimo(rdm_level, irrep, multi, root1, root2);
 
     if (safe_to_read_density_files_ && files_exist) {
         outfile->Printf("Reading ... ");
@@ -2759,7 +2604,7 @@ std::vector<ambit::Tensor> FCI_MO::compute_n_rdm(const vecdet& p_space, psi::Sha
         }
 
         if (files_exist) {
-            remove_density_files(rdm_level, irrep, multi, root1, root2);
+            remove_density_files_fcimo(rdm_level, irrep, multi, root1, root2);
         }
 
         if (disk) {
@@ -2776,8 +2621,8 @@ std::vector<ambit::Tensor> FCI_MO::compute_n_rdm(const vecdet& p_space, psi::Sha
     return out;
 }
 
-Reference FCI_MO::transition_reference(int root1, int root2, bool multi_state, int entry,
-                                       int max_level, bool do_cumulant, bool disk) {
+RDMs FCI_MO::transition_reference(int root1, int root2, bool multi_state, int entry, int max_level,
+                                  bool do_cumulant, bool disk) {
     if (max_level > 3 || max_level < 1) {
         throw psi::PSIEXCEPTION("Max RDM level > 3 or < 1 is not available.");
     }
@@ -2813,18 +2658,18 @@ Reference FCI_MO::transition_reference(int root1, int root2, bool multi_state, i
 
     if (max_level == 1) {
         auto D1 = compute_n_rdm(p_space, evecs, 1, root1, root2, irrep, multi, disk);
-        Reference ref(D1[0], D1[1]);
+        RDMs ref(D1[0], D1[1]);
         return ref;
     } else if (max_level == 2) {
         auto D1 = compute_n_rdm(p_space, evecs, 1, root1, root2, irrep, multi, disk);
         auto D2 = compute_n_rdm(p_space, evecs, 2, root1, root2, irrep, multi, disk);
-        Reference ref(D1[0], D1[1], D2[0], D2[1], D2[2]);
+        RDMs ref(D1[0], D1[1], D2[0], D2[1], D2[2]);
         return ref;
     } else if (max_level == 3) {
         auto D1 = compute_n_rdm(p_space, evecs, 1, root1, root2, irrep, multi, disk);
         auto D2 = compute_n_rdm(p_space, evecs, 2, root1, root2, irrep, multi, disk);
         auto D3 = compute_n_rdm(p_space, evecs, 3, root1, root2, irrep, multi, disk);
-        Reference ref(D1[0], D1[1], D2[0], D2[1], D2[2], D3[0], D3[1], D3[2], D3[3]);
+        RDMs ref(D1[0], D1[1], D2[0], D2[1], D2[2], D3[0], D3[1], D3[2], D3[3]);
         return ref;
     } else {
         throw psi::PSIEXCEPTION("Max RDM level > 3 or < 1 is not available.");

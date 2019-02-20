@@ -88,8 +88,8 @@ void ASCI::startup() {
     }
 
     // Build the reference determinant and compute its energy
-    CI_Reference ref(scf_info_, options_, mo_space_info_, as_ints_, multiplicity_, twice_ms_,
-                     wavefunction_symmetry_);
+    CI_RDMs ref(scf_info_, options_, mo_space_info_, as_ints_, multiplicity_, twice_ms_,
+                wavefunction_symmetry_);
     ref.build_reference(initial_reference_);
 
     // Read options
@@ -529,16 +529,35 @@ double ASCI::compute_spin_contamination(DeterminantHashVec& space, WFNOperator& 
     return spin_contam;
 }
 
-std::vector<Reference> ASCI::reference(const std::vector<std::pair<size_t, size_t>>& root_list) {
-    // const std::vector<Determinant>& final_wfn =
-    //     final_wfn_.determinants//();
-    std::vector<Reference> refs;
-    for (auto& root : root_list) {
-        compute_rdms(as_ints_, final_wfn_, op_, evecs_, root.first, root.second);
-        Reference aci_ref(ordm_a_, ordm_b_, trdm_aa_, trdm_ab_, trdm_bb_, trdm_aaa_, trdm_aab_,
-                          trdm_abb_, trdm_bbb_);
-        refs.push_back(aci_ref);
+std::vector<RDMs> ASCI::rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
+                             int max_rdm_level) {
+
+    std::vector<RDMs> refs;
+
+    for (const auto& root_pair : root_list) {
+
+        compute_rdms(as_ints_, final_wfn_, op_, evecs_, root_pair.first, root_pair.second,
+                     max_rdm_level);
+
+        if (max_rdm_level == 1) {
+            refs.emplace_back(ordm_a_, ordm_b_);
+        }
+        if (max_rdm_level == 2) {
+            refs.emplace_back(ordm_a_, ordm_b_, trdm_aa_, trdm_ab_, trdm_bb_);
+        }
+        if (max_rdm_level == 3) {
+            refs.emplace_back(ordm_a_, ordm_b_, trdm_aa_, trdm_ab_, trdm_bb_, trdm_aaa_, trdm_aab_,
+                              trdm_abb_, trdm_bbb_);
+        }
     }
+    return refs;
+}
+
+std::vector<RDMs> ASCI::transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
+                                        std::shared_ptr<ActiveSpaceMethod> method2,
+                                        int max_rdm_level) {
+    std::vector<RDMs> refs;
+    throw std::runtime_error("ASCI::transition_rdms is not implemented!");
     return refs;
 }
 
@@ -632,26 +651,27 @@ void ASCI::print_nos() {
 }
 
 void ASCI::compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints, DeterminantHashVec& dets,
-                        WFNOperator& op, psi::SharedMatrix& PQ_evecs, int root1, int root2) {
+                        WFNOperator& op, psi::SharedMatrix& PQ_evecs, int root1, int root2,
+                        int rdm_level) {
 
     CI_RDMS ci_rdms_(dets, fci_ints, PQ_evecs, root1, root2);
 
     //    double total_time = 0.0;
-    ci_rdms_.set_max_rdm(rdm_level_);
+    ci_rdms_.set_max_rdm(rdm_level);
 
-    if (rdm_level_ >= 1) {
+    if (rdm_level >= 1) {
         local_timer one_r;
         ci_rdms_.compute_1rdm(ordm_a_.data(), ordm_b_.data(), op);
         outfile->Printf("\n  1-RDM  took %2.6f s (determinant)", one_r.get());
 
         print_nos();
     }
-    if (rdm_level_ >= 2) {
+    if (rdm_level >= 2) {
         local_timer two_r;
         ci_rdms_.compute_2rdm(trdm_aa_.data(), trdm_ab_.data(), trdm_bb_.data(), op);
         outfile->Printf("\n  2-RDMS took %2.6f s (determinant)", two_r.get());
     }
-    if (rdm_level_ >= 3) {
+    if (rdm_level >= 3) {
         local_timer tr;
         ci_rdms_.compute_3rdm(trdm_aaa_.data(), trdm_aab_.data(), trdm_abb_.data(),
                               trdm_bbb_.data(), op);

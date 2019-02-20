@@ -33,17 +33,17 @@ aci:
   unused:
    - aci-mrcisd-1
    - aci-mrcisd-2
-actv-dsrg:
-  short:
-   - actv-dsrg-1-C2H4-cis
-   - actv-dsrg-2-C2H4-cisd
-   - actv-dsrg-5-actv-independence
-   - actv-dsrg-ipea-1
+#actv-dsrg:
+#  short:
+#   - actv-dsrg-1-C2H4-cis
+#   - actv-dsrg-2-C2H4-cisd
+#   - actv-dsrg-5-actv-independence
+#   - actv-dsrg-ipea-1
 #  - actv-dsrg-ipea-2
-  long:
-   - actv-dsrg-3-C4H6-cisd
+#  long:
+#   - actv-dsrg-3-C4H6-cisd
 #  - actv-dsrg-4-C4H6-triplet
-   - actv-dsrg-size-intensive
+#   - actv-dsrg-size-intensive
 casscf:
   short:
    - casscf
@@ -172,7 +172,7 @@ mr-dsrg-pt2:
    - mr-dsrg-pt2-1
    - mr-dsrg-pt2-2
    - mr-dsrg-pt2-3
-   - mr-dsrg-pt2-4
+#   - mr-dsrg-pt2-4
 mrdsrg-ldsrg2-df:
   long:
    - mrdsrg-ldsrg2-df-seq-1

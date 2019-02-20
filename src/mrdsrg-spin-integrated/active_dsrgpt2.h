@@ -46,7 +46,7 @@
 
 #include "base_classes/mo_space_info.h"
 #include "integrals/integrals.h"
-#include "base_classes/reference.h"
+#include "base_classes/rdms.h"
 #include "sparse_ci/determinant.h"
 #include "master_mrdsrg.h"
 #include "dsrg_mrpt2.h"
@@ -131,7 +131,7 @@ class ACTIVE_DSRGPT2 {
     std::string compute_ex_type(const Determinant& det1, const Determinant& ref_det);
 
     /// Compute unrelaxed DSRG-MRPT2 energy and return energy value
-    double compute_dsrg_mrpt2_energy(std::shared_ptr<MASTER_DSRG>& dsrg, Reference& reference);
+    double compute_dsrg_mrpt2_energy(std::shared_ptr<MASTER_DSRG>& dsrg, RDMs& reference);
 
     /// Set FCI_MO parameters
     void set_fcimo_params(int nroots, int root, int multiplicity);

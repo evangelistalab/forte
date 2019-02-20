@@ -282,11 +282,10 @@ std::shared_ptr<FCI_MO> DWMS_DSRGPT2::precompute_energy() {
 
     // perform SA-DSRG-PT2/3 if needed
     if (dwms_ref_ != "CASCI") {
-        fci_mo->set_max_rdm_level(max_rdm_level_);
-        Reference reference = fci_mo->reference();
+        RDMs rdms = fci_mo->reference(max_rdm_level_); // TODO: bug here? (Francesco)
 
         std::shared_ptr<MASTER_DSRG> dsrg_pt;
-        fci_ints_ = compute_dsrg_pt(dsrg_pt, reference, dwms_ref_);
+        fci_ints_ = compute_dsrg_pt(dsrg_pt, rdms, dwms_ref_);
 
         Ept_0_.resize(nentry);
 
@@ -315,7 +314,7 @@ std::shared_ptr<FCI_MO> DWMS_DSRGPT2::precompute_energy() {
                     double value = 0.0;
 
                     auto filenames = fci_mo->density_filenames_generator(1, irrep, multi, A, A);
-                    bool files_exist = fci_mo->check_density_files(1, irrep, multi, A, A);
+                    bool files_exist = fci_mo->check_density_files_fcimo(1, irrep, multi, A, A);
                     if (files_exist) {
                         read_disk_vector_double(filenames[0], D1.block("aa").data());
                         read_disk_vector_double(filenames[1], D1.block("AA").data());
@@ -324,7 +323,7 @@ std::shared_ptr<FCI_MO> DWMS_DSRGPT2::precompute_energy() {
                     value += oei["UV"] * D1["UV"];
 
                     filenames = fci_mo->density_filenames_generator(2, irrep, multi, A, A);
-                    files_exist = fci_mo->check_density_files(2, irrep, multi, A, A);
+                    files_exist = fci_mo->check_density_files_fcimo(2, irrep, multi, A, A);
                     if (files_exist) {
                         read_disk_vector_double(filenames[0], D2.block("aaaa").data());
                         read_disk_vector_double(filenames[1], D2.block("aAaA").data());
@@ -372,7 +371,7 @@ std::shared_ptr<FCI_MO> DWMS_DSRGPT2::precompute_energy() {
 }
 
 std::shared_ptr<ActiveSpaceIntegrals>
-DWMS_DSRGPT2::compute_dsrg_pt(std::shared_ptr<MASTER_DSRG>& dsrg_pt, Reference& reference,
+DWMS_DSRGPT2::compute_dsrg_pt(std::shared_ptr<MASTER_DSRG>& dsrg_pt, RDMs& rdms,
                               std::string level) {
     // use semicanonical orbitals only for THREE-DSRG-MRPT2
     do_semi_ = (level.find("PT2") != std::string::npos) && eri_df_;
@@ -380,20 +379,20 @@ DWMS_DSRGPT2::compute_dsrg_pt(std::shared_ptr<MASTER_DSRG>& dsrg_pt, Reference& 
     // compute dsrg-pt2/3 energy
     if (do_semi_) {
         SemiCanonical semi(mo_space_info_, ints_, foptions_);
-        semi.semicanonicalize(reference, max_rdm_level_);
+        semi.semicanonicalize(rdms, max_rdm_level_);
         Ua_ = semi.Ua_t();
         Ub_ = semi.Ub_t();
 
-        dsrg_pt = std::make_shared<THREE_DSRG_MRPT2>(reference, scf_info_, foptions_, ints_,
-                                                     mo_space_info_);
+        dsrg_pt =
+            std::make_shared<THREE_DSRG_MRPT2>(rdms, scf_info_, foptions_, ints_, mo_space_info_);
         dsrg_pt->set_Uactv(Ua_, Ub_);
     } else {
         if (level == "PT3") {
-            dsrg_pt = std::make_shared<DSRG_MRPT3>(reference, scf_info_, foptions_, ints_,
-                                                   mo_space_info_);
+            dsrg_pt =
+                std::make_shared<DSRG_MRPT3>(rdms, scf_info_, foptions_, ints_, mo_space_info_);
         } else {
-            dsrg_pt = std::make_shared<DSRG_MRPT2>(reference, scf_info_, foptions_, ints_,
-                                                   mo_space_info_);
+            dsrg_pt =
+                std::make_shared<DSRG_MRPT2>(rdms, scf_info_, foptions_, ints_, mo_space_info_);
         }
     }
 
@@ -417,17 +416,16 @@ DWMS_DSRGPT2::compute_macro_dsrg_pt(std::shared_ptr<MASTER_DSRG>& dsrg_pt,
     print_sa_info("Original State Averaging Summary", sa_info);
     print_sa_info("Reweighted State Averaging Summary", sa_info_new);
 
-    // compute Reference
+    // compute RDMs
     fci_mo->set_sa_info(sa_info_new);
-    fci_mo->set_max_rdm_level(max_rdm_level_);
-    Reference reference = fci_mo->reference();
+    RDMs rdms = fci_mo->reference(max_rdm_level_); // TODO: bug here? (Francesco)
 
     // update MK vacuum energy
-    //double new_Eref = compute_Eref_from_reference(reference, ints_, mo_space_info_, Enuc_);
-    //reference.set_Eref(new_Eref); // TODO: ?why do this here this way?
+    // double new_Eref = compute_Eref_from_rdms(reference, ints_, mo_space_info_, Enuc_);
+    // rdms.set_Eref(new_Eref); // TODO: ?why do this here this way?
 
     // compute DSRG-PT2/3 energies and Hbar
-    return compute_dsrg_pt(dsrg_pt, reference, dwms_corrlv_);
+    return compute_dsrg_pt(dsrg_pt, rdms, dwms_corrlv_);
 }
 
 void DWMS_DSRGPT2::compute_dwsa_energy_iterate(std::shared_ptr<FCI_MO>& fci_mo) {
@@ -569,7 +567,7 @@ void DWMS_DSRGPT2::compute_dwsa_energy(std::shared_ptr<FCI_MO>& fci_mo) {
                 }
 
                 // compute transition densities
-                Reference TrD;
+                RDMs TrD;
                 TrD = fci_mo->transition_reference(MM, NN, true, n, max_hbar_level_, false);
 
                 outfile->Printf("\n  Contract %s with Heff.", msg.c_str());
@@ -615,8 +613,7 @@ void DWMS_DSRGPT2::compute_dwsa_energy(std::shared_ptr<FCI_MO>& fci_mo) {
                 auto& T1M = T1s[M];
                 auto& T2M = T2s[M];
                 for (int N = M + 1; N < nroots; ++N) {
-                    Reference TrD =
-                        fci_mo->transition_reference(M, N, true, n, max_hbar_level_, false);
+                    RDMs TrD = fci_mo->transition_reference(M, N, true, n, max_hbar_level_, false);
 
                     T1M["ia"] -= T1s[N]["ia"];
                     T1M["IA"] -= T1s[N]["IA"];
@@ -760,8 +757,8 @@ void DWMS_DSRGPT2::compute_dwms_energy(std::shared_ptr<FCI_MO>& fci_mo) {
 
                 // compute transition densities
                 outfile->Printf("\n  Compute %s.", msg.c_str());
-                Reference TrD = (M <= N) ? fci_mo->transition_reference(M, N, true, n, 3, false)
-                                         : fci_mo->transition_reference(N, M, true, n, 3, false);
+                RDMs TrD = (M <= N) ? fci_mo->transition_reference(M, N, true, n, 3, false)
+                                    : fci_mo->transition_reference(N, M, true, n, 3, false);
                 bool transpose = (M <= N) ? false : true;
 
                 outfile->Printf("\n  Contract %s with Heff.", msg.c_str());
@@ -868,7 +865,7 @@ void DWMS_DSRGPT2::rotate_H3(ambit::Tensor& H3aaa, ambit::Tensor& H3aab, ambit::
         Ub_("pa") * Ub_("qb") * Ub_("rc") * temp("abcdef") * Ub_("sd") * Ub_("te") * Ub_("of");
 }
 
-double DWMS_DSRGPT2::contract_Heff_1TrDM(ambit::Tensor& H1a, ambit::Tensor& H1b, Reference& TrD,
+double DWMS_DSRGPT2::contract_Heff_1TrDM(ambit::Tensor& H1a, ambit::Tensor& H1b, RDMs& TrD,
                                          bool transpose) {
     double coupling = 0.0;
     std::string indices = transpose ? "vu" : "uv";
@@ -880,7 +877,7 @@ double DWMS_DSRGPT2::contract_Heff_1TrDM(ambit::Tensor& H1a, ambit::Tensor& H1b,
 }
 
 double DWMS_DSRGPT2::contract_Heff_2TrDM(ambit::Tensor& H2aa, ambit::Tensor& H2ab,
-                                         ambit::Tensor& H2bb, Reference& TrD, bool transpose) {
+                                         ambit::Tensor& H2bb, RDMs& TrD, bool transpose) {
     double coupling = 0.0;
     std::string indices = transpose ? "uvxy" : "xyuv";
 
@@ -892,7 +889,7 @@ double DWMS_DSRGPT2::contract_Heff_2TrDM(ambit::Tensor& H2aa, ambit::Tensor& H2a
 }
 
 double DWMS_DSRGPT2::contract_Heff_3TrDM(ambit::Tensor& H3aaa, ambit::Tensor& H3aab,
-                                         ambit::Tensor& H3abb, ambit::Tensor& H3bbb, Reference& TrD,
+                                         ambit::Tensor& H3abb, ambit::Tensor& H3bbb, RDMs& TrD,
                                          bool transpose) {
     double coupling = 0.0;
     std::string indices = transpose ? "uvwxyz" : "xyzuvw";

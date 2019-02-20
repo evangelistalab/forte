@@ -62,15 +62,21 @@ class FCISolver : public ActiveSpaceMethod {
     /// Compute the FCI energy
     double compute_energy() override;
 
-    /// Return a reference object
-    std::vector<Reference>
-    reference(const std::vector<std::pair<size_t, size_t>>& root_list) override;
+    /// Returns the reduced density matrices up to a given rank (max_rdm_level)
+    std::vector<RDMs> rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
+                           int max_rdm_level) override;
+
+    /// Returns the transition reduced density matrices between roots of different symmetry up to a
+    /// given level (max_rdm_level)
+    std::vector<RDMs> transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
+                                      std::shared_ptr<ActiveSpaceMethod> method2,
+                                      int max_rdm_level) override;
 
     /// Set the options
     void set_options(std::shared_ptr<ForteOptions> options) override;
 
     /// Compute RDMs on a given root
-    void compute_rdms_root(int root);
+    void compute_rdms_root(int root1, int root2, int max_rdm_level);
 
     /// Set the number of trial vectors per root
     void set_ntrial_per_root(int value);

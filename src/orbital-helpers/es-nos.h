@@ -33,7 +33,7 @@
 #include "psi4/liboptions/liboptions.h"
 
 #include "ci_rdm/ci_rdms.h"
-#include "base_classes/reference.h"
+#include "base_classes/rdms.h"
 #include "sparse_ci/determinant.h"
 #include "integrals/integrals.h"
 #include "integrals/active_space_integrals.h"
@@ -56,7 +56,7 @@ class ESNO : public psi::Wavefunction {
     DeterminantHashVec& reference_;
 
     void compute_nos();
-    void transform(Reference& reference);
+//    void transform(RDMs& rdms);
 
   private:
     std::shared_ptr<ActiveSpaceIntegrals> fci_ints_;

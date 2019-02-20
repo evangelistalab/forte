@@ -82,7 +82,7 @@ set forte{
   dsrg_s             0.5
   maxiter            50
   e_convergence      10
-  cas_type           cas
+  active_space_solver           cas
   avg_state          [[0,1,2]]
   dwms_algorithm     sa
   dwms_zeta          1000.0

@@ -52,6 +52,4 @@ void make_ci_nos(psi::SharedWavefunction ref_wfn, psi::Options& options,
 double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
                          std::shared_ptr<ForteIntegrals> ints,
                          std::shared_ptr<MOSpaceInfo> mo_space_info);
-
-void forte_old_options(ForteOptions& options);
 } // namespace forte

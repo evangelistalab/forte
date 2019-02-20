@@ -47,7 +47,7 @@ namespace forte {
 /// D_{uv} = n[i] * C_{ui}C_{vi}
 /// Kevin first implemented this in a toy code, but this code was imported from
 /// there.
-/// References
+/// RDMs
 /// Ref 1. P. Slavcek and T. J. Martınez. J. Chem. Phys.132(23):234102, 2010.
 /// Ref 2. A. D. Rabuck and G. E. Scuseria. J. Chem. Phys. 110(2):695–700, 1999.
 ///

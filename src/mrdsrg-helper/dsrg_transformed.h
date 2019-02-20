@@ -3,7 +3,7 @@
 
 #include "ambit/tensor.h"
 
-#include "base_classes/reference.h"
+#include "base_classes/rdms.h"
 
 namespace forte {
 class DressedQuantity {
@@ -16,7 +16,7 @@ class DressedQuantity {
     DressedQuantity(double scalar, ambit::Tensor a, ambit::Tensor b, ambit::Tensor aa,
                     ambit::Tensor ab, ambit::Tensor bb, ambit::Tensor aaa, ambit::Tensor aab,
                     ambit::Tensor abb, ambit::Tensor bbb);
-    double contract_with_densities(Reference reference);
+    double contract_with_rdms(RDMs rdms);
 
   private:
     size_t max_body_;

@@ -84,7 +84,6 @@ src/dmrg/dmrgsolver.cc
 src/base_classes/dynamic_correlation_solver.cc
 src/finite_temperature/finite_temperature.cc
 src/forte_old_methods.cc
-src/forte_old_options.cc
 src/helpers/iterative_solvers.cc
 src/helpers/helpers.cc
 src/main.cc
@@ -92,7 +91,7 @@ src/sparse_ci/operator.cc
 src/options.cc
 src/orbital-helpers/orbitaloptimizer.cc
 src/python_api.cc
-src/base_classes/reference.cc
+src/base_classes/rdms.cc
 src/base_classes/state_info.cc
 src/base_classes/scf_info.cc
 src/base_classes/forte_options.cc

@@ -40,7 +40,7 @@ set forte{
   calc_type           sa
   rotate_mos          [1,17,20]
   orbital_type        local
-  localize            full
+  localize_space      [13,16]
   e_convergence       12
   dsrg_s              0.5
   frozen_docc         [4]

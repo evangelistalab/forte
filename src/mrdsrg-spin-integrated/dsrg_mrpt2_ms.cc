@@ -239,7 +239,6 @@ namespace forte {
 //                // TODO use base class info
 //                auto fci = make_active_space_method("FCI", state, nstates, scf_info_,
 //                                                    mo_space_info_, ints_, foptions_);
-//                fci->set_max_rdm_level(1);
 //                fci->set_root(nstates - 1);
 //                fci->set_active_space_integrals(fci_ints);
 
@@ -470,7 +469,7 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_xms() {
                     continue;
                 } else {
                     // compute transition densities
-                    compute_densities(fci_ints, p_space, civecs, M, N);
+                    compute_rdms(fci_ints, p_space, civecs, M, N);
 
                     // compute coupling of <N|H|M>
                     std::stringstream ss;
@@ -780,10 +779,10 @@ double DSRG_MRPT2::compute_ms_2nd_coupling(const std::string& name) {
     BlockedTensor H3 = BTF_->build(tensor_type_, "Heff3_2nd", spin_cases({"aaaaaa"}));
     H2_T2_C3(V_, T2_, 1.0, H3, true);
 
-    coupling += 1.0 / 36.0 * H3.block("aaaaaa")("uvwxyz") * reference_.L3aaa()("xyzuvw");
-    coupling += 1.0 / 36.0 * H3.block("AAAAAA")("UVWXYZ") * reference_.L3bbb()("XYZUVW");
-    coupling += 0.25 * H3.block("aaAaaA")("uvWxyZ") * reference_.L3aab()("xyZuvW");
-    coupling += 0.25 * H3.block("aAAaAA")("uVWxYZ") * reference_.L3abb()("xYZuVW");
+    coupling += 1.0 / 36.0 * H3.block("aaaaaa")("uvwxyz") * rdms_.L3aaa()("xyzuvw");
+    coupling += 1.0 / 36.0 * H3.block("AAAAAA")("UVWXYZ") * rdms_.L3bbb()("XYZUVW");
+    coupling += 0.25 * H3.block("aaAaaA")("uvWxyZ") * rdms_.L3aab()("xyZuvW");
+    coupling += 0.25 * H3.block("aAAaAA")("uVWxYZ") * rdms_.L3abb()("xYZuVW");
 
     outfile->Printf("  Done. Timing %15.6f s", timer.get());
     return coupling;
@@ -882,10 +881,10 @@ void DSRG_MRPT2::compute_cumulants(std::shared_ptr<ActiveSpaceIntegrals> fci_int
 
     // 3 cumulant
     if (foptions_->get_str("THREEPDC") != "ZERO") {
-        ambit::Tensor L3aaa = reference_.L3aaa();
-        ambit::Tensor L3aab = reference_.L3aab();
-        ambit::Tensor L3abb = reference_.L3abb();
-        ambit::Tensor L3bbb = reference_.L3bbb();
+        ambit::Tensor L3aaa = rdms_.L3aaa();
+        ambit::Tensor L3aab = rdms_.L3aab();
+        ambit::Tensor L3abb = rdms_.L3abb();
+        ambit::Tensor L3bbb = rdms_.L3bbb();
         ci_rdms.compute_3rdm(L3aaa.data(), L3aab.data(), L3abb.data(), L3bbb.data());
         rotate_3rdm(L3aaa, L3aab, L3abb, L3bbb);
 
@@ -957,7 +956,7 @@ void DSRG_MRPT2::compute_cumulants(std::shared_ptr<ActiveSpaceIntegrals> fci_int
     }
 }
 
-void DSRG_MRPT2::compute_densities(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
+void DSRG_MRPT2::compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
                                    std::vector<forte::Determinant>& p_space,
                                    psi::SharedMatrix evecs, const int& root1, const int& root2) {
     CI_RDMS ci_rdms(fci_ints, p_space, evecs, root1, root2);
@@ -976,10 +975,10 @@ void DSRG_MRPT2::compute_densities(std::shared_ptr<ActiveSpaceIntegrals> fci_int
     rotate_2rdm(L2aa, L2ab, L2bb);
 
     // 3 density
-    ambit::Tensor L3aaa = reference_.L3aaa();
-    ambit::Tensor L3aab = reference_.L3aab();
-    ambit::Tensor L3abb = reference_.L3abb();
-    ambit::Tensor L3bbb = reference_.L3bbb();
+    ambit::Tensor L3aaa = rdms_.L3aaa();
+    ambit::Tensor L3aab = rdms_.L3aab();
+    ambit::Tensor L3abb = rdms_.L3abb();
+    ambit::Tensor L3bbb = rdms_.L3bbb();
     ci_rdms.compute_3rdm(L3aaa.data(), L3aab.data(), L3abb.data(), L3bbb.data());
     rotate_3rdm(L3aaa, L3aab, L3abb, L3bbb);
 }

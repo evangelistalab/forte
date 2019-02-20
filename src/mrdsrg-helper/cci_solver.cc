@@ -20,11 +20,6 @@ ContractedCISolver::ContractedCISolver(std::shared_ptr<ActiveSpaceSolver> as_sol
 }
 
 void ContractedCISolver::compute_Heff() {
-    std::vector<std::string> irrep_labels = psi::Process::environment.molecule()->irrep_labels();
-    std::vector<std::string> multiplicity_labels{"Singlet", "Doublet", "Triplet", "Quartet",
-                                                 "Quintet", "Sextet",  "Septet",  "Octet",
-                                                 "Nonet",   "Decaet"};
-
     evals_.resize(as_solver_->get_state_weights_list().size());
     evecs_.resize(as_solver_->get_state_weights_list().size());
 
@@ -50,10 +45,9 @@ void ContractedCISolver::compute_Heff() {
         const auto& state = state_weights.first;
         const auto& weights = state_weights.second;
         auto method = method_vec[i_state];
-        method->set_max_rdm_level(do_three_body ? 3 : 2);
         int nroots = weights.size();
-        auto state_name =
-            multiplicity_labels[state.multiplicity()] + " " + irrep_labels[state.irrep()];
+        std::string state_name = state.multiplicity_label() + " " + state.irrep_label();
+
 
         // form the effective Hamiltonian (assume Hermitian)
         print_h2("Building Effective Hamiltonian for " + state_name);
@@ -63,22 +57,22 @@ void ContractedCISolver::compute_Heff() {
             for (int B = A; B < nroots; ++B) {
                 // just compute transition rdms of <A|sqop|B>
                 std::vector<std::pair<size_t, size_t>> root_list{std::make_pair(A, B)};
-                Reference reference = method->reference(root_list)[0];
+                RDMs rdms = method->reference(root_list)[0];
 
                 double H_AB = 0.0;
-                H_AB += inner_product(oei_a, reference.g1a().data());
-                H_AB += inner_product(oei_b, reference.g1b().data());
+                H_AB += inner_product(oei_a, rdms.g1a().data());
+                H_AB += inner_product(oei_b, rdms.g1b().data());
 
-                H_AB += 0.25 * inner_product(tei_aa, reference.g2aa().data());
-                H_AB += 0.25 * inner_product(tei_bb, reference.g2bb().data());
-                H_AB += inner_product(tei_ab, reference.g2ab().data());
+                H_AB += 0.25 * inner_product(tei_aa, rdms.g2aa().data());
+                H_AB += 0.25 * inner_product(tei_bb, rdms.g2bb().data());
+                H_AB += inner_product(tei_ab, rdms.g2ab().data());
 
                 //                if (do_three_body) {
                 //                    H_AB += (1.0 / 36.0) * inner_product(tei_aaa,
-                //                    reference.g3aaa().data()); H_AB += (1.0 / 36.0) *
-                //                    inner_product(tei_bbb, reference.g3bbb().data()); H_AB += 0.25
-                //                    * inner_product(tei_aab, reference.g3aab().data()); H_AB +=
-                //                    0.25 * inner_product(tei_abb, reference.g3abb().data());
+                //                    rdms.g3aaa().data()); H_AB += (1.0 / 36.0) *
+                //                    inner_product(tei_bbb, rdms.g3bbb().data()); H_AB += 0.25
+                //                    * inner_product(tei_aab, rdms.g3aab().data()); H_AB +=
+                //                    0.25 * inner_product(tei_abb, rdms.g3abb().data());
                 //                }
 
                 if (A == B) {

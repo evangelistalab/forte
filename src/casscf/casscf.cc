@@ -28,7 +28,7 @@
 
 #include "casscf/casscf.h"
 #include "integrals/integrals.h"
-#include "base_classes/reference.h"
+#include "base_classes/rdms.h"
 
 #include "psi4/libfock/jk.h"
 #include "psi4/libmints/matrix.h"
@@ -359,12 +359,8 @@ void CASSCF::cas_ci() {
     std::string casscf_ci_type = options_->get_str("CASSCF_CI_SOLVER");
     auto active_space_solver = make_active_space_solver(casscf_ci_type, state_map, scf_info_,
                                                         mo_space_info_, fci_ints, options_);
-    active_space_solver->set_max_rdm_level(2);
-
-    //    fcisolver->set_root(options_->get_int("ROOT"));
-    //    fcisolver->set_active_space_integrals(fci_ints);
     const auto state_energies_map = active_space_solver->compute_energy();
-    cas_ref_ = active_space_solver->compute_average_reference(state_weights_map);
+    cas_ref_ = active_space_solver->compute_average_rdms(state_weights_map, 2);
     double average_energy = compute_average_state_energy(state_energies_map, state_weights_map);
     // return the average energy
     E_casscf_ = average_energy;
@@ -489,7 +485,7 @@ void CASSCF::cas_ci_final() {
     //    }
 }
 
-double CASSCF::cas_check(Reference cas_ref) {
+double CASSCF::cas_check(RDMs cas_ref) {
     ambit::Tensor gamma1 = ambit::Tensor::build(ambit::CoreTensor, "Gamma1", {na_, na_});
     ambit::Tensor gamma2 = ambit::Tensor::build(ambit::CoreTensor, "Gamma2", {na_, na_, na_, na_});
     std::shared_ptr<ActiveSpaceIntegrals> fci_ints =
@@ -710,12 +706,12 @@ ambit::Tensor CASSCF::transform_integrals() {
     }
     return active_int;
 }
+
 void CASSCF::set_up_fci() {
     auto as_ints = make_active_space_ints(mo_space_info_, ints_, "ACTIVE", {{"RESTRICTED_DOCC"}});
 
-    auto fcisolver = make_active_space_method("FCI", state_, nroot_, scf_info_, mo_space_info_,
-                                              as_ints, options_);
-    fcisolver->set_max_rdm_level(3);
+    std::shared_ptr<ActiveSpaceMethod> fcisolver = make_active_space_method(
+        "FCI", state_, nroot_, scf_info_, mo_space_info_, as_ints, options_);
 
     fcisolver->set_root(options_->get_int("ROOT"));
     std::shared_ptr<ActiveSpaceIntegrals> fci_ints = get_ci_integrals();
@@ -724,7 +720,7 @@ void CASSCF::set_up_fci() {
 
     std::vector<std::pair<size_t, size_t>> roots;
     roots.push_back(std::make_pair(0, 0));
-    cas_ref_ = fcisolver->reference(roots)[0];
+    cas_ref_ = fcisolver->rdms(roots, 2)[0];
 }
 
 std::shared_ptr<ActiveSpaceIntegrals> CASSCF::get_ci_integrals() {
@@ -973,87 +969,7 @@ void CASSCF::set_up_sa_fci() {
     //    }
 }
 */
-void CASSCF::set_up_fcimo() {
-    // setup ActiveSpaceIntegrals for FCI_MO
-    std::vector<size_t> rdocc = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
-    std::vector<size_t> active = mo_space_info_->get_corr_abs_mo("ACTIVE");
-    std::shared_ptr<ActiveSpaceIntegrals> fci_ints =
-        std::make_shared<ActiveSpaceIntegrals>(ints_, active, rdocc);
 
-    if (!(options_->get_bool("RESTRICTED_DOCC_JK"))) {
-        fci_ints->set_active_integrals_and_restricted_docc();
-    } else {
-        auto na_array = mo_space_info_->get_corr_abs_mo("ACTIVE");
-
-        ambit::Tensor active_aa =
-            ambit::Tensor::build(ambit::CoreTensor, "ActiveIntegralsAA", {na_, na_, na_, na_});
-        ambit::Tensor active_ab =
-            ambit::Tensor::build(ambit::CoreTensor, "ActiveIntegralsAB", {na_, na_, na_, na_});
-        ambit::Tensor active_bb =
-            ambit::Tensor::build(ambit::CoreTensor, "ActiveIntegralsBB", {na_, na_, na_, na_});
-        const std::vector<double>& tei_paaa_data = tei_paaa_.data();
-
-        active_ab.iterate([&](const std::vector<size_t>& i, double& value) {
-            value = tei_paaa_data[na_array[i[0]] * na_ * na_ * na_ + i[1] * na_ * na_ + i[2] * na_ +
-                                  i[3]];
-        });
-
-        active_aa.copy(active_ab);
-        active_bb.copy(active_ab);
-        active_aa("u,v,x,y") -= active_ab("u, v, y, x");
-        active_bb.copy(active_aa);
-
-        fci_ints->set_active_integrals(active_aa, active_ab, active_bb);
-        if (casscf_debug_print_) {
-            outfile->Printf("\n\n tei_active_aa: %8.8f tei_active_ab: %8.8f", active_aa.norm(2),
-                            active_ab.norm(2));
-        }
-
-        std::vector<std::vector<double>> oei_vector;
-        if ((nrdocc_ + nfrozen_) > 0) {
-            oei_vector = compute_restricted_docc_operator();
-            fci_ints->set_restricted_one_body_operator(oei_vector[0], oei_vector[1]);
-            fci_ints->set_scalar_energy(scalar_energy_);
-        } else {
-            std::vector<double> oei_a(na_ * na_);
-            std::vector<double> oei_b(na_ * na_);
-
-            std::vector<std::vector<double>> oei_vector;
-            if ((nrdocc_ + nfrozen_) > 0) {
-                oei_vector = compute_restricted_docc_operator();
-                fci_ints->set_restricted_one_body_operator(oei_vector[0], oei_vector[1]);
-                fci_ints->set_scalar_energy(scalar_energy_);
-            } else {
-                std::vector<double> oei_a(na_ * na_);
-                std::vector<double> oei_b(na_ * na_);
-
-                for (size_t p = 0; p < na_; ++p) {
-                    size_t pp = active[p];
-                    for (size_t q = 0; q < na_; ++q) {
-                        size_t qq = active[q];
-                        size_t idx = na_ * p + q;
-                        oei_a[idx] = ints_->oei_a(pp, qq);
-                        oei_b[idx] = ints_->oei_b(pp, qq);
-                    }
-                }
-                oei_vector.push_back(oei_a);
-                oei_vector.push_back(oei_b);
-                scalar_energy_ = 0.00;
-                fci_ints->set_restricted_one_body_operator(oei_vector[0], oei_vector[1]);
-                fci_ints->set_scalar_energy(scalar_energy_);
-            }
-        }
-
-        FCI_MO cas(state_, nroot_, scf_info_, options_, mo_space_info_, fci_ints);
-        cas.set_quite_mode(print_ > 0 ? false : true);
-        E_casscf_ = cas.compute_energy();
-        cas.set_max_rdm_level(2);
-        std::vector<std::pair<size_t, size_t>> roots;
-        roots.push_back(std::make_pair(0, 0));
-
-        cas_ref_ = cas.reference(roots)[0];
-    }
-}
 void CASSCF::write_orbitals_molden() {
     psi::SharedVector occ_vector(new psi::Vector(nirrep_, nmopi_));
     view_modified_orbitals(ints_->wfn(), ints_->Ca(), scf_info_->epsilon_a(), occ_vector);
@@ -1089,10 +1005,19 @@ std::pair<ambit::Tensor, std::vector<double>> CASSCF::CI_Integrals() {
     return pair_return;
 }
 
-std::vector<Reference> CASSCF::reference(const std::vector<std::pair<size_t, size_t>>& root_list) {
-
-    std::vector<Reference> refs;
+std::vector<RDMs> CASSCF::rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
+                               int max_rdm_level) {
+    // TODO (York): this does not seem the correct thing to do.
+    std::vector<RDMs> refs;
     refs.push_back(cas_ref_);
+    return refs;
+}
+
+std::vector<RDMs> CASSCF::transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
+                                          std::shared_ptr<ActiveSpaceMethod> method2,
+                                          int max_rdm_level) {
+    std::vector<RDMs> refs;
+    throw std::runtime_error("FCISolver::transition_rdms is not implemented!");
     return refs;
 }
 

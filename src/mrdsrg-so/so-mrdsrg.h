@@ -38,7 +38,7 @@
 #include "boost/assign.hpp"
 #include "base_classes/mo_space_info.h"
 #include "integrals/integrals.h"
-#include "base_classes/reference.h"
+#include "base_classes/rdms.h"
 #include "helpers/blockedtensorfactory.h"
 
 
@@ -53,8 +53,8 @@ class SOMRDSRG : public psi::Wavefunction {
   protected:
     // => Class data <= //
 
-    /// The reference object
-    Reference reference_;
+    /// The RDMs and cumulants of the reference wave function
+    RDMs rdms_;
 
     /// The molecular integrals required by MethodBase
     std::shared_ptr<ForteIntegrals> ints_;
@@ -203,7 +203,7 @@ class SOMRDSRG : public psi::Wavefunction {
   public:
     // => Constructors <= //
 
-    SOMRDSRG(Reference reference, psi::SharedWavefunction ref_wfn, psi::Options& options,
+    SOMRDSRG(RDMs rdms, psi::SharedWavefunction ref_wfn, psi::Options& options,
              std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     ~SOMRDSRG();

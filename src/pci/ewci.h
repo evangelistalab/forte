@@ -51,9 +51,6 @@
 namespace forte {
 class SCFInfo;
 
-/// Set the forte style options for the FCI method
-// void set_PCI_HashVec_options(ForteOptions& foptions);
-
 namespace GeneratorType_EWCI {
 enum GeneratorType {
     LinearGenerator,
@@ -96,9 +93,15 @@ class ElementwiseCI : public ActiveSpaceMethod {
 
     void set_options(std::shared_ptr<ForteOptions>) override{};
 
-    /// Return a reference object
-    std::vector<Reference>
-    reference(const std::vector<std::pair<size_t, size_t>>& root_list) override;
+    /// Returns the reduced density matrices up to a given level (max_rdm_level)
+    std::vector<RDMs> rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
+                           int max_rdm_level) override;
+
+    /// Returns the transition reduced density matrices between roots of different symmetry up to a
+    /// given level (max_rdm_level)
+    std::vector<RDMs> transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
+                                      std::shared_ptr<ActiveSpaceMethod> method2,
+                                      int max_rdm_level) override;
 
     /// Compute the energy
     double compute_energy() override;

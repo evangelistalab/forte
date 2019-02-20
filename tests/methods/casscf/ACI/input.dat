@@ -42,7 +42,7 @@ set forte{
    restricted_docc       [2]
    active                [2]
    int_type             conventional
-   cas_type               ACI
+   active_space_solver               ACI
    print                  0
    CASSCF_DO_DIIS         true
    CASSCF_DEBUG_PRINTING  false

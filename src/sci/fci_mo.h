@@ -43,7 +43,7 @@
 #include "helpers/helpers.h"
 #include "integrals/integrals.h"
 #include "base_classes/active_space_method.h"
-#include "base_classes/reference.h"
+#include "base_classes/rdms.h"
 #include "sparse_ci/sparse_ci_solver.h"
 #include "integrals/active_space_integrals.h"
 #include "sparse_ci/determinant.h"
@@ -112,16 +112,24 @@ class FCI_MO : public ActiveSpaceMethod {
 
     /// Compute state-specific CASCI energy
     std::vector<double> compute_ss_energies();
-    /// Compute state-averaged CASCI energy
-    double compute_sa_energy();
 
-    /// Return the reference object
-    /// Return averaged cumulants if AVG_STATE is not empty
-    std::vector<Reference> reference(const std::vector<std::pair<size_t,size_t>>& roots) override;
-    
-    Reference reference(){
-        std::vector<std::pair<size_t,size_t>> roots;
-        return reference(roots)[0];
+    /// Compute the reduced density matrices up to a given particle rank (max_rdm_level)
+    std::vector<RDMs> rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
+                           int max_rdm_level) override;
+
+    /// Returns the transition reduced density matrices between roots of different symmetry up to a
+    /// given level (max_rdm_level)
+    std::vector<RDMs> transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
+                                      std::shared_ptr<ActiveSpaceMethod> method2,
+                                      int max_rdm_level) override;
+
+    [[deprecated]] std::vector<RDMs>
+    reference(const std::vector<std::pair<size_t, size_t>>& root_list, int max_rdm_level);
+
+    RDMs reference(int max_rdm_level) {
+        std::vector<std::pair<size_t, size_t>> roots;
+        roots.push_back(std::make_pair(0, 0));
+        return reference(roots, max_rdm_level)[0];
     }
 
     void set_options(std::shared_ptr<ForteOptions>) override {} // TODO implement
@@ -131,15 +139,23 @@ class FCI_MO : public ActiveSpaceMethod {
     /// multi_state -- grab p_spaces_ and eigens_ if true, otherwise p_space_ and eigen_
     /// entry -- symmetry entry of p_spaces_ and eigens_ (same entry as sa_info_)
     /// max_level -- max RDM level to be computed
-    /// do_cumulant -- returned Reference is filled by cumulants (not RDMs) if true
-    Reference transition_reference(int root1, int root2, bool multi_state, int entry = 0,
-                                   int max_level = 3, bool do_cumulant = false, bool disk = true);
+    /// do_cumulant -- returned RDMs is filled by cumulants (not RDMs) if true
+    RDMs transition_reference(int root1, int root2, bool multi_state, int entry = 0,
+                              int max_level = 3, bool do_cumulant = false, bool disk = true);
 
     /// Density files
     std::vector<std::string> density_filenames_generator(int rdm_level, int irrep, int multi,
                                                          int root1, int root2);
-    bool check_density_files(int rdm_level, int irrep, int multi, int root1, int root2);
-    void remove_density_files(int rdm_level, int irrep, int multi, int root1, int root2);
+    bool check_density_files_fcimo(int rdm_level, int irrep, int multi, int root1, int root2);
+    void remove_density_files_fcimo(int rdm_level, int irrep, int multi, int root1, int root2);
+
+    /// Generate density file names at a certain RDM level
+    std::vector<std::string> generate_rdm_file_names(int rdm_level, int root1, int root2,
+                                                     const StateInfo& state2);
+    /// Check if density files for a given RDM level already exist
+    bool check_density_files(int rdm_level, int root1, int root2, const StateInfo& state2);
+    /// Remove density files for a given RDM level
+    void remove_density_files(int rdm_level, int root1, int root2, const StateInfo& state2);
 
     /// Compute dipole moments with DSRG transformed MO dipole integrals
     /// This function is used for reference relaxation and SA-MRDSRG
@@ -184,9 +200,6 @@ class FCI_MO : public ActiveSpaceMethod {
     /// Set number of roots
     void set_nroots(int nroot) { nroot_ = nroot; }
 
-    /// Set which root is preferred
-    void set_root(int root) { root_ = root; }
-
     /// Quiet mode (no printing, for use with CASSCF)
     void set_quite_mode(bool quiet) { quiet_ = quiet; }
 
@@ -213,7 +226,7 @@ class FCI_MO : public ActiveSpaceMethod {
     std::shared_ptr<ActiveSpaceIntegrals> fci_ints() { return fci_ints_; }
 
     /// Return the vector of determinants
-    vecdet p_space() { return determinant_; }
+    const vecdet& p_space() const { return determinant_; }
 
     /// Return P spaces for states with different symmetry
     std::vector<vecdet> p_spaces() { return p_spaces_; }
@@ -362,13 +375,6 @@ class FCI_MO : public ActiveSpaceMethod {
     std::vector<std::vector<std::vector<bool>>> Form_String_EA(const std::vector<bool>& ref_string,
                                                                const bool& print = false);
 
-    /// Max RDM to compute
-   // int max_rdm_ = 3;
-
-    /// Choice of Roots
-  //  int nroot_; // number of roots
-  //  int root_;  // which root in nroot
-
     /// State Average Information (tuple of irrep, multi, nstates, weights)
     std::vector<std::tuple<int, int, int, std::vector<double>>> sa_info_;
 
@@ -415,15 +421,25 @@ class FCI_MO : public ActiveSpaceMethod {
     /// File Names of Densities Stored on Disk
     std::unordered_set<std::string> density_files_;
     bool safe_to_read_density_files_ = false;
-    //    std::vector<std::string> density_filenames_generator(int rdm_level, int irrep, int multi,
-    //                                                         int root1, int root2);
-    //    bool check_density_files(int rdm_level, int irrep, int multi, int root1, int root2);
-    //    void remove_density_files(int rdm_level, int irrep, int multi, int root1, int root2);
     void clean_all_density_files();
 
+    /// Prepare eigen vectors for RDM or TRDM (within current symmetry) computations
+    psi::SharedMatrix prepare_for_rdm();
+
+    /// Prepare determinant space and eigen vectors for TRDM computations between different
+    /// symmetries
+    std::pair<std::shared_ptr<vecdet>, psi::SharedMatrix>
+    prepare_for_trans_rdm(std::shared_ptr<FCI_MO> method2);
+
+    /// Compute reduced density matricies for given determinant space and eigen vectors
+    [[deprecated("Soon will be using StateInfo based rdm function")]] std::vector<ambit::Tensor>
+    compute_n_rdm(const vecdet& p_space, psi::SharedMatrix evecs, int rdm_level, int root1,
+                  int root2, int irrep, int multi, bool disk);
+
     std::vector<ambit::Tensor> compute_n_rdm(const vecdet& p_space, psi::SharedMatrix evecs,
-                                             int rdm_level, int root1, int root2, int irrep,
-                                             int multi, bool disk);
+                                             int rdm_level, int root1, int root2,
+                                             const StateInfo& state2, bool disk);
+
     /// Add wedge product of L1 to L2
     void add_wedge_cu2(const ambit::Tensor& L1a, const ambit::Tensor& L1b, ambit::Tensor& L2aa,
                        ambit::Tensor& L2ab, ambit::Tensor& L2bb);
@@ -442,7 +458,6 @@ class FCI_MO : public ActiveSpaceMethod {
 
     /// Compute 2- and 3-cumulants
     void compute_ref(const int& level, size_t root1, size_t root2);
-  //  void compute_sa_ref(const int& level);
 
     /// Orbital Extents
     /// returns a vector of irrep by # active orbitals in current irrep

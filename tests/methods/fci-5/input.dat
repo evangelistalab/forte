@@ -37,7 +37,7 @@ active_space_solver FCI
 multiplicity 3
 root_sym     5
 ms           0.0
-cas_type     FCI
+active_space_solver     FCI
 e_convergence 1e-10
 }
 
@@ -55,7 +55,6 @@ active_space_solver FCI
 multiplicity 1
 root_sym     0
 ms           0.0
-cas_type     FCI
 }
 singlet = energy('forte')
 fci_split = (singlet - triplet) * 219474.63

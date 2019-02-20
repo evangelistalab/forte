@@ -38,7 +38,7 @@
 #include "ambit/blocked_tensor.h"
 
 #include "integrals/integrals.h"
-#include "base_classes/reference.h"
+#include "base_classes/rdms.h"
 #include "helpers/blockedtensorfactory.h"
 
 using namespace ambit;
@@ -59,8 +59,8 @@ class MRDSRG_SO : public psi::Wavefunction {
     /// Print levels
     int print_;
 
-    /// The reference object
-    Reference reference_;
+    /// The RDMs and cumulants of the reference wave function
+    RDMs rdms_;
 
     /// The molecular integrals required by MethodBase
     std::shared_ptr<ForteIntegrals> ints_;
@@ -278,7 +278,7 @@ class MRDSRG_SO : public psi::Wavefunction {
   public:
     // => Constructors <= //
 
-    MRDSRG_SO(Reference reference, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
+    MRDSRG_SO(RDMs rdms, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
               std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     ~MRDSRG_SO();

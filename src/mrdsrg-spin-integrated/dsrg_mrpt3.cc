@@ -53,10 +53,10 @@ using namespace psi;
 
 namespace forte {
 
-DSRG_MRPT3::DSRG_MRPT3(Reference reference, std::shared_ptr<SCFInfo> scf_info,
+DSRG_MRPT3::DSRG_MRPT3(RDMs rdms, std::shared_ptr<SCFInfo> scf_info,
                        std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
                        std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : MASTER_DSRG(reference, scf_info, options, ints, mo_space_info) {
+    : MASTER_DSRG(rdms, scf_info, options, ints, mo_space_info) {
 
     print_method_banner({"MR-DSRG Third-Order Perturbation Theory", "Chenyang Li"});
     outfile->Printf("\n    Reference:");
@@ -118,7 +118,7 @@ void DSRG_MRPT3::startup() {
     }
     mem_total_ -= nelement * sizeof(double);
 
-    // size of density cumulants (Lambda3 is only stored in Reference object)
+    // size of density cumulants (Lambda3 is only stored in RDMs object)
     nelement = 4 * sa * sa + 3 * sa * sa * sa * sa;
     mem_info.push_back({"Density Cumulants (1, 2)", to_XB(nelement, sizeof(double))});
     mem_total_ -= nelement * sizeof(double);
@@ -1426,7 +1426,6 @@ void DSRG_MRPT3::renormalize_F(const bool& plusone) {
 //                // TODO use base class info
 //                auto fci = make_active_space_method("FCI", state, nstates, scf_info_,
 //                                                    mo_space_info_, ints_, foptions_);
-//                fci->set_max_rdm_level(1);
 //                fci->set_root(nstates - 1);
 //                if (eri_df_) {
 //                    fci->set_active_space_integrals(fci_ints);

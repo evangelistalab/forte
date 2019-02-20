@@ -35,7 +35,7 @@
 
 #include "integrals/integrals.h"
 #include "ambit/blocked_tensor.h"
-#include "base_classes/reference.h"
+#include "base_classes/rdms.h"
 #include "base_classes/mo_space_info.h"
 #include "helpers/blockedtensorfactory.h"
 #include "fci/fci_vector.h"
@@ -75,12 +75,18 @@ class CASSCF : public ActiveSpaceMethod {
 
     void set_options(std::shared_ptr<ForteOptions>) override{};
 
-    /// Return a reference object
-    std::vector<Reference>
-    reference(const std::vector<std::pair<size_t, size_t>>& root_list) override;
+    /// Returns the reduced density matrices up to a given level (max_rdm_level)
+    std::vector<RDMs> rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
+                           int max_rdm_level) override;
+
+    /// Returns the transition reduced density matrices between roots of different symmetry up to a
+    /// given level (max_rdm_level)
+    std::vector<RDMs> transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
+                                      std::shared_ptr<ActiveSpaceMethod> method2,
+                                      int max_rdm_level) override;
 
     /// check the cas_ci energy with spin-free RDM
-    double cas_check(Reference cas);
+    double cas_check(RDMs cas);
 
   private:
     /// SCF information
@@ -94,7 +100,7 @@ class CASSCF : public ActiveSpaceMethod {
     /// The active two RDM (may need to be symmetrized)
     ambit::Tensor gamma2_;
     /// The reference object generated from Francesco's Full CI
-    Reference cas_ref_;
+    RDMs cas_ref_;
     /// The energy computed in FCI with updates from CASSCF and CI
     double E_casscf_;
     std::shared_ptr<ForteIntegrals> ints_;
@@ -134,8 +140,6 @@ class CASSCF : public ActiveSpaceMethod {
     void set_up_fci();
     /// Set up a SA-FCI
     //  void set_up_sa_fci();
-    /// Set up FCI_MO
-    void set_up_fcimo();
     /// Read all the mospace info and assign correct dimensions
     void startup();
     /// Compute overlap between old_c and new_c

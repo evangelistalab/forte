@@ -33,7 +33,7 @@
 
 #include "helpers/timer.h"
 #include "ci_rdms.h"
-#include "base_classes/reference.h"
+#include "base_classes/rdms.h"
 #include "sparse_ci/determinant.h"
 
 using namespace psi;
@@ -164,7 +164,7 @@ void CI_RDMS::compute_1rdm(std::vector<double>& oprdm_a, std::vector<double>& op
                 const double sign_q = aaJ_mo_sign.second > 0 ? 1.0 : -1.0;
                 const size_t I = aaJ_mo_sign.first;
                 oprdm_a[q * ncmo_ + p] +=
-                    evecs_->get(J, root1_) * evecs_->get(I, root2_) * sign_p * sign_q;
+                    evecs_->get(I, root1_) * evecs_->get(J, root2_) * sign_p * sign_q;
             }
         }
         for (auto& bJ_mo_sign : b_ann_list_[J]) {
@@ -176,7 +176,7 @@ void CI_RDMS::compute_1rdm(std::vector<double>& oprdm_a, std::vector<double>& op
                 const double sign_q = bbJ_mo_sign.second > 0 ? 1.0 : -1.0;
                 const size_t I = bbJ_mo_sign.first;
                 oprdm_b[q * ncmo_ + p] +=
-                    evecs_->get(J, root1_) * evecs_->get(I, root2_) * sign_p * sign_q;
+                    evecs_->get(I, root1_) * evecs_->get(J, root2_) * sign_p * sign_q;
             }
         }
     }

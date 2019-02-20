@@ -46,7 +46,7 @@
 #include "pci_simple.h"
 #include "helpers/timer.h"
 #include "sparse_ci/ci_reference.h"
-#include "base_classes/reference.h"
+#include "base_classes/rdms.h"
 
 using namespace psi;
 using namespace forte::GeneratorType_Simple;
@@ -108,16 +108,20 @@ ProjectorCI_Simple::ProjectorCI_Simple(StateInfo state, size_t nroot,
     startup();
 }
 
-std::vector<Reference>
-ProjectorCI_Simple::reference(const std::vector<std::pair<size_t, size_t>>&) {
-    //    CI_RDMS ci_rdms(final_wfn_, as_ints_, evecs_, root, root);
-    //    ci_rdms.set_max_rdm(max_rdm_level_);
-    //    Reference pci_ref = ci_rdms.reference(ordm_a_, ordm_b_, trdm_aa_, trdm_ab_, trdm_bb_,
-    //    trdm_aaa_,
-    //                                          trdm_aab_, trdm_abb_, trdm_bbb_);
-    std::vector<Reference> pci_ref;
+std::vector<RDMs> ProjectorCI_Simple::rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
+                                           int max_rdm_level) {
+    std::vector<RDMs> refs;
     // TODO: implement
-    return pci_ref;
+    throw std::runtime_error("ProjectorCI_Simple::rdms is not implemented!");
+    return refs;
+}
+
+std::vector<RDMs>
+ProjectorCI_Simple::transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
+                                    std::shared_ptr<ActiveSpaceMethod> method2, int max_rdm_level) {
+    std::vector<RDMs> refs;
+    throw std::runtime_error("ProjectorCI_Simple::transition_rdms is not implemented!");
+    return refs;
 }
 
 void ProjectorCI_Simple::startup() {
@@ -150,8 +154,8 @@ void ProjectorCI_Simple::startup() {
 
     // Build the reference determinant and compute its energy
     std::vector<Determinant> reference_vec;
-    CI_Reference ref(scf_info_, options_, mo_space_info_, as_ints_, wavefunction_multiplicity_, ms,
-                     wavefunction_symmetry_);
+    CI_RDMs ref(scf_info_, options_, mo_space_info_, as_ints_, wavefunction_multiplicity_, ms,
+                wavefunction_symmetry_);
     ref.set_ref_type("HF");
     ref.build_reference(reference_vec);
     reference_determinant_ = reference_vec[0];

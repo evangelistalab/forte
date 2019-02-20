@@ -178,13 +178,13 @@ void SemiCanonical::set_actv_dims(const psi::Dimension& actv_docc,
     actv_offsets_["actv_virt"] = actvp_off;
 }
 
-Reference SemiCanonical::semicanonicalize(Reference& reference, const int& max_rdm_level,
-                                          const bool& build_fock, const bool& transform) {
+RDMs SemiCanonical::semicanonicalize(RDMs& rdms, const int& max_rdm_level, const bool& build_fock,
+                                     const bool& transform) {
     local_timer SemiCanonicalize;
 
     // 1. Build the Fock matrix from ForteIntegral
     if (build_fock) {
-        build_fock_matrix(reference);
+        build_fock_matrix(rdms);
     }
 
     // Check Fock matrix
@@ -200,21 +200,21 @@ Reference SemiCanonical::semicanonicalize(Reference& reference, const int& max_r
         // 3. Retransform integrals and cumulants/RDMs
         if (transform) {
             ints_->rotate_orbitals(Ua_, Ua_);
-            reference = transform_reference(Ua_t_, Ua_t_, reference, max_rdm_level);
+            rdms = transform_rdms(Ua_t_, Ua_t_, rdms, max_rdm_level);
         }
         outfile->Printf("\n  SemiCanonicalize takes %8.6f s.", SemiCanonicalize.get());
     }
-    return reference;
+    return rdms;
 }
 
-void SemiCanonical::build_fock_matrix(Reference& reference) {
+void SemiCanonical::build_fock_matrix(RDMs& rdms) {
     // 1. Build the Fock matrix
 
     psi::SharedMatrix Da(new psi::Matrix("Da", ncmo_, ncmo_));
     psi::SharedMatrix Db(new psi::Matrix("Db", ncmo_, ncmo_));
 
-    Matrix L1a = tensor_to_matrix(reference.g1a(), actv_);
-    Matrix L1b = tensor_to_matrix(reference.g1b(), actv_);
+    Matrix L1a = tensor_to_matrix(rdms.g1a(), actv_);
+    Matrix L1b = tensor_to_matrix(rdms.g1b(), actv_);
 
     for (size_t h = 0, offset = 0; h < nirrep_; ++h) {
         // core block (diagonal)
@@ -403,16 +403,16 @@ void SemiCanonical::build_transformation_matrices(psi::SharedMatrix& Ua, psi::Sh
     }
 }
 
-Reference SemiCanonical::transform_reference(ambit::Tensor& Ua, ambit::Tensor& Ub,
-                                             const Reference& reference, const int& max_rdm_level) {
+RDMs SemiCanonical::transform_rdms(ambit::Tensor& Ua, ambit::Tensor& Ub, const RDMs& rdms,
+                                   const int& max_rdm_level) {
     if (max_rdm_level < 1)
-        return Reference();
+        return RDMs();
 
-    print_h2("Reference Transformation to Semicanonical Basis");
+    print_h2("RDMs Transformation to Semicanonical Basis");
 
     // Transform the 1-cumulants
-    ambit::Tensor g1a0 = reference.g1a();
-    ambit::Tensor g1b0 = reference.g1b();
+    ambit::Tensor g1a0 = rdms.g1a();
+    ambit::Tensor g1b0 = rdms.g1b();
 
     ambit::Tensor g1aT = ambit::Tensor::build(ambit::CoreTensor, "Transformed L1a", {nact_, nact_});
     ambit::Tensor g1bT = ambit::Tensor::build(ambit::CoreTensor, "Transformed L1b", {nact_, nact_});
@@ -420,12 +420,12 @@ Reference SemiCanonical::transform_reference(ambit::Tensor& Ua, ambit::Tensor& U
     g1bT("PQ") = Ub("AP") * g1b0("AB") * Ub("BQ");
 
     if (max_rdm_level == 1)
-        return Reference(g1aT, g1bT);
+        return RDMs(g1aT, g1bT);
 
     // the original 2-rdms
-    ambit::Tensor g2aa0 = reference.g2aa();
-    ambit::Tensor g2ab0 = reference.g2ab();
-    ambit::Tensor g2bb0 = reference.g2bb();
+    ambit::Tensor g2aa0 = rdms.g2aa();
+    ambit::Tensor g2ab0 = rdms.g2ab();
+    ambit::Tensor g2bb0 = rdms.g2bb();
 
     //   aa spin
     ambit::Tensor g2Taa =
@@ -445,13 +445,13 @@ Reference SemiCanonical::transform_reference(ambit::Tensor& Ua, ambit::Tensor& U
     outfile->Printf("\n    Transformed 2 RDMs.");
 
     if (max_rdm_level == 2)
-        return Reference(g1aT, g1bT, g2Taa, g2Tab, g2Tbb);
+        return RDMs(g1aT, g1bT, g2Taa, g2Tab, g2Tbb);
 
     // Transform 3 cumulants
-    ambit::Tensor g3aaa0 = reference.g3aaa();
-    ambit::Tensor g3aab0 = reference.g3aab();
-    ambit::Tensor g3abb0 = reference.g3abb();
-    ambit::Tensor g3bbb0 = reference.g3bbb();
+    ambit::Tensor g3aaa0 = rdms.g3aaa();
+    ambit::Tensor g3aab0 = rdms.g3aab();
+    ambit::Tensor g3abb0 = rdms.g3abb();
+    ambit::Tensor g3bbb0 = rdms.g3bbb();
 
     ambit::Tensor g3Taaa =
         ambit::Tensor::build(ambit::CoreTensor, "Transformed g3aaa", std::vector<size_t>(6, nact_));
@@ -474,6 +474,6 @@ Reference SemiCanonical::transform_reference(ambit::Tensor& Ua, ambit::Tensor& U
         Ub("AP") * Ub("BQ") * Ub("CR") * g3bbb0("ABCIJK") * Ub("IS") * Ub("JT") * Ub("KU");
 
     outfile->Printf("\n    Transformed 3 cumulants.");
-    return Reference(g1aT, g1bT, g2Taa, g2Tab, g2Tbb, g3Taaa, g3Taab, g3Tabb, g3Tbbb);
+    return RDMs(g1aT, g1bT, g2Taa, g2Tab, g2Tbb, g3Taaa, g3Taab, g3Tabb, g3Tbbb);
 }
 } // namespace forte

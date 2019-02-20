@@ -36,7 +36,7 @@
 #include "mrpt2.h"
 #include "orbital-helpers/unpaired_density.h"
 #include "sparse_ci/determinant_hashvector.h"
-#include "base_classes/reference.h"
+#include "base_classes/rdms.h"
 #include "base_classes/active_space_method.h"
 #include "sparse_ci/sparse_ci_solver.h"
 #include "orbital-helpers/localize.h"
@@ -51,10 +51,7 @@
 
 namespace forte {
 
-class Reference;
-
-/// Set the ACI options
-void set_ASCI_options(ForteOptions& foptions);
+class RDMs;
 
 /**
  * @brief The AdaptiveCI class
@@ -83,8 +80,15 @@ class ASCI : public ActiveSpaceMethod {
     /// Compute the energy
     double compute_energy() override;
 
-    /// Update the reference file
-    std::vector<Reference> reference(const std::vector<std::pair<size_t,size_t>>& root_list) override;
+    /// Compute the reduced density matrices up to a given particle rank (max_rdm_level)
+    std::vector<RDMs> rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
+                           int max_rdm_level) override;
+
+    /// Returns the transition reduced density matrices between roots of different symmetry up to a
+    /// given level (max_rdm_level)
+    std::vector<RDMs> transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
+                                      std::shared_ptr<ActiveSpaceMethod> method2,
+                                      int max_rdm_level) override;
 
     void set_options(std::shared_ptr<ForteOptions>) override{}; // TODO : define
 
@@ -218,7 +222,8 @@ class ASCI : public ActiveSpaceMethod {
 
     /// Compute the RDMs
     void compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints, DeterminantHashVec& dets,
-                      WFNOperator& op, psi::SharedMatrix& PQ_evecs, int root1, int root2);
+                      WFNOperator& op, psi::SharedMatrix& PQ_evecs, int root1, int root2,
+                      int max_level);
 };
 
 } // namespace forte

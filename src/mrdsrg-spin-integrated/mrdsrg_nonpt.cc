@@ -80,7 +80,7 @@ void MRDSRG::compute_hbar() {
     // iteration variables
     bool converged = false;
     int maxn = foptions_->get_int("DSRG_RSC_NCOMM");
-    double ct_threshold = foptions_->get_double("SRG_RSC_THRESHOLD");
+    double ct_threshold = foptions_->get_double("DSRG_RSC_THRESHOLD");
     std::string dsrg_op = foptions_->get_str("DSRG_TRANS_TYPE");
 
     // compute Hbar recursively
@@ -242,7 +242,7 @@ void MRDSRG::compute_hbar_sequential() {
     // iteration variables
     bool converged = false;
     int maxn = foptions_->get_int("DSRG_RSC_NCOMM");
-    double ct_threshold = foptions_->get_double("SRG_RSC_THRESHOLD");
+    double ct_threshold = foptions_->get_double("DSRG_RSC_THRESHOLD");
     std::string dsrg_op = foptions_->get_str("DSRG_TRANS_TYPE");
 
     // compute Hbar recursively
@@ -550,7 +550,7 @@ void MRDSRG::compute_hbar_sequential_rotation() {
     // iteration variables
     bool converged = false;
     int maxn = foptions_->get_int("DSRG_RSC_NCOMM");
-    double ct_threshold = foptions_->get_double("SRG_RSC_THRESHOLD");
+    double ct_threshold = foptions_->get_double("DSRG_RSC_THRESHOLD");
 
     timer comm("Hbar T2 commutator");
 

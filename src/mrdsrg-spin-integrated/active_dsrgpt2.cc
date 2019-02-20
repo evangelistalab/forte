@@ -63,7 +63,7 @@ ACTIVE_DSRGPT2::ACTIVE_DSRGPT2(std::shared_ptr<SCFInfo> scf_info,
     print_method_banner({"ACTIVE-DSRG-MRPT2", description, "Chenyang Li"});
 
     outfile->Printf("\n  Note: Orbitals are NOT optimized throughout the process.");
-    outfile->Printf("\n  Reference selection criteria (CAS/CIS/CISD) will NOT change.");
+    outfile->Printf("\n  Reference selection criterium (CAS/CIS/CISD) will NOT change.");
     outfile->Printf("\n  Each state uses its OWN semicanonical orbitals.");
     outfile->Printf("\n  Ground state is assumed to be a singlet.");
     outfile->Printf("\n  Otherwise, please run separate DSRG-MRPT2 jobs.");
@@ -269,16 +269,17 @@ double ACTIVE_DSRGPT2::compute_energy() {
                 t1_percentage_[h].push_back(fci_mo_->compute_T1_percentage()[0]);
             }
 
-            // compute cumultans
-            fci_mo_->set_max_rdm_level(max_cu_level);
-            Reference reference = fci_mo_->reference();
+            // compute cumulants
+            std::vector<std::pair<size_t, size_t>> root;
+            root.push_back(std::make_pair(0, 0));
+            RDMs rdms = fci_mo_->rdms(root, 3)[0];
 
             // semicanonicalize integrals and cumulants
-            semi->semicanonicalize(reference, max_cu_level);
+            semi->semicanonicalize(rdms, max_cu_level);
 
             // compute DSRG-MRPT2 energy
             std::shared_ptr<MASTER_DSRG> dsrg;
-            double Ept2 = compute_dsrg_mrpt2_energy(dsrg, reference);
+            double Ept2 = compute_dsrg_mrpt2_energy(dsrg, rdms);
             pt2_energies_[0].push_back(Ept2);
 
             // minus nroot (just for irrep 0) by 1
@@ -309,11 +310,10 @@ double ACTIVE_DSRGPT2::compute_energy() {
         for (int i = 0; i < nroot; ++i) {
             outfile->Printf("\n\n  Computing semicanonical orbitals for root %d.", i);
             fci_mo_->set_root(i);
-            fci_mo_->set_max_rdm_level(1);
             std::vector<std::pair<size_t, size_t>> root;
             root.push_back(std::make_pair(i, i));
-            Reference reference = fci_mo_->reference(root)[0];
-            semi->semicanonicalize(reference, 1, true, false);
+            RDMs rdms = fci_mo_->rdms(root, 3)[0];
+            semi->semicanonicalize(rdms, 1, true, false);
 
             Uas.emplace_back(semi->Ua()->clone());
             Ubs.emplace_back(semi->Ub()->clone());
@@ -381,15 +381,14 @@ double ACTIVE_DSRGPT2::compute_energy() {
 
             // compute cumulants
             fci_mo_->set_root(i);
-            fci_mo_->set_max_rdm_level(max_cu_level);
 
             // can move this out of loop
             std::vector<std::pair<size_t, size_t>> rootvec;
             rootvec.push_back(std::make_pair(i, i));
-            Reference reference = fci_mo_->reference(rootvec)[0];
+            RDMs rdms = fci_mo_->rdms(rootvec, max_cu_level)[0];
 
-            // manually rotate the reference and integrals
-            semi->transform_reference(Uas_t[i], Ubs_t[i], reference, max_cu_level);
+            // manually rotate the RDMs and integrals
+            semi->transform_rdms(Uas_t[i], Ubs_t[i], rdms, max_cu_level);
             print_h2("Integral Transformation to Semicanonical Basis");
             psi::SharedMatrix Ca = ints_->Ca();
             psi::SharedMatrix Cb = ints_->Cb();
@@ -411,7 +410,7 @@ double ACTIVE_DSRGPT2::compute_energy() {
 
             // compute DSRG-MRPT2 energy
             std::shared_ptr<MASTER_DSRG> dsrg;
-            double Ept2 = compute_dsrg_mrpt2_energy(dsrg, reference);
+            double Ept2 = compute_dsrg_mrpt2_energy(dsrg, rdms);
             pt2_energies_[h].push_back(Ept2);
 
             // Declare useful amplitudes outside dsrg-mrpt2 to avoid storage of multiple
@@ -479,14 +478,13 @@ void ACTIVE_DSRGPT2::set_fcimo_params(int nroots, int root, int multiplicity) {
     fci_mo_->set_root(root);
 }
 
-double ACTIVE_DSRGPT2::compute_dsrg_mrpt2_energy(std::shared_ptr<MASTER_DSRG>& dsrg,
-                                                 Reference& reference) {
+double ACTIVE_DSRGPT2::compute_dsrg_mrpt2_energy(std::shared_ptr<MASTER_DSRG>& dsrg, RDMs& rdms) {
     IntegralType int_type = ints_->integral_type();
     if (int_type == Conventional) {
-        dsrg = std::make_shared<DSRG_MRPT2>(reference, scf_info_, foptions_, ints_, mo_space_info_);
+        dsrg = std::make_shared<DSRG_MRPT2>(rdms, scf_info_, foptions_, ints_, mo_space_info_);
     } else if (int_type == Cholesky || int_type == DF || int_type == DiskDF) {
-        dsrg = std::make_shared<THREE_DSRG_MRPT2>(reference, scf_info_, foptions_, ints_,
-                                                  mo_space_info_);
+        dsrg =
+            std::make_shared<THREE_DSRG_MRPT2>(rdms, scf_info_, foptions_, ints_, mo_space_info_);
     } else {
         throw psi::PSIEXCEPTION("Unknown integral type for DSRG.");
     }
@@ -710,7 +708,7 @@ Vector4 ACTIVE_DSRGPT2::compute_td_ref_root(std::shared_ptr<ActiveSpaceIntegrals
 
 void ACTIVE_DSRGPT2::compute_osc_pt2(const int& irrep, const int& root, const double& Tde_x,
                                      ambit::BlockedTensor& T1_x, ambit::BlockedTensor& T2_x) {
-    // compute reference transition density
+    // compute rdms transition density
     // step 1: combine p_space and eigenvectors if needed
     int n = root;
     std::vector<Determinant> p_space(p_space_g_);

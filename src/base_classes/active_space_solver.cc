@@ -37,7 +37,7 @@
 #include "psi4/libpsi4util/process.h"
 
 #include "base_classes/forte_options.h"
-#include "base_classes/reference.h"
+#include "base_classes/rdms.h"
 #include "base_classes/mo_space_info.h"
 #include "helpers/helpers.h"
 #include "integrals/active_space_integrals.h"
@@ -70,11 +70,8 @@ const std::map<StateInfo, std::vector<double>>& ActiveSpaceSolver::compute_energ
             method_, state, nroot, scf_info_, mo_space_info_, as_ints_, options_);
         state_method_map_[state] = method;
 
-        method->set_options(options_);
-        if (set_rdm_) {
-            method->set_max_rdm_level(max_rdm_level_);
-        }
         method->compute_energy();
+
         const auto& energies = method->energies();
         state_energies_map_[state] = energies;
     }
@@ -113,10 +110,10 @@ void ActiveSpaceSolver::print_energies(std::map<StateInfo, std::vector<double>>&
     }
 }
 
-std::vector<Reference> ActiveSpaceSolver::reference(
-    std::map<std::pair<StateInfo, StateInfo>, std::vector<std::pair<size_t, size_t>>>& elements) {
-
-    std::vector<Reference> refs;
+std::vector<RDMs> ActiveSpaceSolver::rdms(
+    std::map<std::pair<StateInfo, StateInfo>, std::vector<std::pair<size_t, size_t>>>& elements,
+    int max_rdm_level) {
+    std::vector<RDMs> refs;
 
     for (const auto& element : elements) {
         const auto& state1 = element.first.first;
@@ -127,17 +124,13 @@ std::vector<Reference> ActiveSpaceSolver::reference(
                                      "symmetry! This function is not yet suported in Forte.");
         }
 
-        std::vector<Reference> state_refs = state_method_map_[state1]->reference(element.second);
+        std::vector<RDMs> state_refs =
+            state_method_map_[state1]->rdms(element.second, max_rdm_level);
         for (const auto& state_ref : state_refs) {
             refs.push_back(state_ref);
         }
     }
     return refs;
-}
-
-void ActiveSpaceSolver::set_max_rdm_level(size_t level) {
-    max_rdm_level_ = level;
-    set_rdm_ = true;
 }
 
 void ActiveSpaceSolver::print_options() {
@@ -283,8 +276,8 @@ make_state_weights_map(std::shared_ptr<ForteOptions> options,
     return state_weights_map;
 }
 
-Reference ActiveSpaceSolver::compute_average_reference(
-    const std::map<StateInfo, std::vector<double>>& state_weights_map) {
+RDMs ActiveSpaceSolver::compute_average_rdms(
+    const std::map<StateInfo, std::vector<double>>& state_weights_map, int max_rdm_level) {
     // For state average
     size_t nactive = mo_space_info_->size(
         "ACTIVE"); // TODO: grab this info from the ActiveSpaceSolver object (Francesco)
@@ -301,16 +294,13 @@ Reference ActiveSpaceSolver::compute_average_reference(
     ambit::Tensor g3abb;
     ambit::Tensor g3bbb;
 
-    if (max_rdm_level_ >= 2) {
-        g2aa =
-            ambit::Tensor::build(ambit::CoreTensor, "g2aa", {nactive, nactive, nactive, nactive});
-        g2ab =
-            ambit::Tensor::build(ambit::CoreTensor, "g2ab", {nactive, nactive, nactive, nactive});
-        g2bb =
-            ambit::Tensor::build(ambit::CoreTensor, "g2bb", {nactive, nactive, nactive, nactive});
+    if (max_rdm_level >= 2) {
+        g2aa = ambit::Tensor::build(ambit::CoreTensor, "g2aa", std::vector<size_t>(4, nactive));
+        g2ab = ambit::Tensor::build(ambit::CoreTensor, "g2ab", std::vector<size_t>(4, nactive));
+        g2bb = ambit::Tensor::build(ambit::CoreTensor, "g2bb", std::vector<size_t>(4, nactive));
     }
 
-    if (max_rdm_level_ >= 3) {
+    if (max_rdm_level >= 3) {
         g3aaa = ambit::Tensor::build(ambit::CoreTensor, "g3aaa", std::vector<size_t>(6, nactive));
         g3aab = ambit::Tensor::build(ambit::CoreTensor, "g3aab", std::vector<size_t>(6, nactive));
         g3abb = ambit::Tensor::build(ambit::CoreTensor, "g3abb", std::vector<size_t>(6, nactive));
@@ -342,56 +332,52 @@ Reference ActiveSpaceSolver::compute_average_reference(
             if (weight <= 1e-15)
                 continue;
 
-            // Get the Reference
+            // Get the RDMs
             std::vector<std::pair<size_t, size_t>> state_ids;
             state_ids.push_back(std::make_pair(r, r));
-            Reference method_ref = method->reference(state_ids)[0];
+            RDMs method_rdms = method->rdms(state_ids, max_rdm_level)[0];
 
             // Now the RDMs
             // 1 RDM
-            scale_add(g1a.data(), method_ref.g1a().data(), weight);
-            scale_add(g1b.data(), method_ref.g1b().data(), weight);
+            scale_add(g1a.data(), method_rdms.g1a().data(), weight);
+            scale_add(g1b.data(), method_rdms.g1b().data(), weight);
 
-            if (max_rdm_level_ >= 2) {
+            if (max_rdm_level >= 2) {
                 // 2 RDM
-                scale_add(g2aa.data(), method_ref.g2aa().data(), weight);
-                scale_add(g2ab.data(), method_ref.g2ab().data(), weight);
-                scale_add(g2bb.data(), method_ref.g2bb().data(), weight);
+                scale_add(g2aa.data(), method_rdms.g2aa().data(), weight);
+                scale_add(g2ab.data(), method_rdms.g2ab().data(), weight);
+                scale_add(g2bb.data(), method_rdms.g2bb().data(), weight);
             }
 
-            if (max_rdm_level_ >= 3) {
+            if (max_rdm_level >= 3) {
                 // 3 RDM
-                scale_add(g3aaa.data(), method_ref.g3aaa().data(), weight);
-                scale_add(g3aab.data(), method_ref.g3aab().data(), weight);
-                scale_add(g3abb.data(), method_ref.g3abb().data(), weight);
-                scale_add(g3bbb.data(), method_ref.g3bbb().data(), weight);
+                scale_add(g3aaa.data(), method_rdms.g3aaa().data(), weight);
+                scale_add(g3aab.data(), method_rdms.g3aab().data(), weight);
+                scale_add(g3abb.data(), method_rdms.g3abb().data(), weight);
+                scale_add(g3bbb.data(), method_rdms.g3bbb().data(), weight);
             }
         }
     }
 
-    if (max_rdm_level_ == 1) {
-        return Reference(g1a, g1b);
-    } else if (max_rdm_level_ == 2) {
-        return Reference(g1a, g1b, g2aa, g2ab, g2bb);
-    } else if (max_rdm_level_ == 3) {
-        return Reference(g1a, g1b, g2aa, g2ab, g2bb, g3aaa, g3aab, g3abb, g3bbb);
+    if (max_rdm_level == 1) {
+        return RDMs(g1a, g1b);
+    } else if (max_rdm_level == 2) {
+        return RDMs(g1a, g1b, g2aa, g2ab, g2bb);
+    } else if (max_rdm_level == 3) {
+        return RDMs(g1a, g1b, g2aa, g2ab, g2bb, g3aaa, g3aab, g3abb, g3bbb);
     }
-    return Reference();
+    return RDMs();
 }
 
 const std::map<StateInfo, std::vector<double>>&
-ActiveSpaceSolver::compute_contracted_energy(std::shared_ptr<ActiveSpaceIntegrals> as_ints) {
+ActiveSpaceSolver::compute_contracted_energy(std::shared_ptr<ActiveSpaceIntegrals> as_ints,
+                                             int max_rdm_level) {
     if (state_method_map_.size() == 0) {
         throw psi::PSIEXCEPTION("Old CI determinants are not solved. Call compute_energy first.");
     }
 
     state_energies_map_.clear();
     state_contracted_evecs_map_.clear();
-    std::vector<std::string> irrep_labels = psi::Process::environment.molecule()->irrep_labels();
-    std::vector<std::string> multiplicity_labels{
-        "Singlet", "Doublet", "Triplet", "Quartet", "Quintet", "Sextet", "Septet", "Octet",
-        "Nonet",   "Decaet",  "11-et",   "12-et",   "13-et",   "14-et",  "15-et",  "16-et",
-        "17-et",   "18-et",   "19-et",   "20-et",   "21-et",   "22-et",  "23-et",  "24-et"};
 
     // prepare integrals
     size_t nactv = mo_space_info_->size("ACTIVE");
@@ -415,8 +401,7 @@ ActiveSpaceSolver::compute_contracted_energy(std::shared_ptr<ActiveSpaceIntegral
     for (const auto& state_nroots : state_nroots_map_) {
         const auto& state = state_nroots.first;
         size_t nroots = state_nroots.second;
-        std::string state_name =
-            multiplicity_labels[state.multiplicity()] + " " + irrep_labels[state.irrep()];
+        std::string state_name = state.multiplicity_label() + " " + state.irrep_label();
         auto method = state_method_map_.at(state);
 
         // form the Hermitian effective Hamiltonian
@@ -427,9 +412,9 @@ ActiveSpaceSolver::compute_contracted_energy(std::shared_ptr<ActiveSpaceIntegral
             for (size_t B = A; B < nroots; ++B) {
                 // just compute transition rdms of <A|sqop|B>
                 std::vector<std::pair<size_t, size_t>> root_list{std::make_pair(A, B)};
-                Reference reference = method->reference(root_list)[0];
+                RDMs rdms = method->rdms(root_list, max_rdm_level)[0];
 
-                double H_AB = ints.contract_with_densities(reference);
+                double H_AB = ints.contract_with_rdms(rdms);
                 if (A == B) {
                     H_AB += as_ints->nuclear_repulsion_energy() + as_ints->scalar_energy() +
                             as_ints->frozen_core_energy();

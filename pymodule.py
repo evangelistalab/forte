@@ -46,7 +46,6 @@ def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
     active_space_solver_type = options.get_str('ACTIVE_SPACE_SOLVER')
     as_ints = forte.make_active_space_ints(mo_space_info, ints, "ACTIVE", ["RESTRICTED_DOCC"]);
     active_space_solver = forte.make_active_space_solver(active_space_solver_type,state_map,scf_info,mo_space_info,as_ints,options)
-    active_space_solver.set_max_rdm_level(max_rdm_level)
     state_energies_list = active_space_solver.compute_energy()
 
 
@@ -59,16 +58,16 @@ def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
     correlation_solver_type = options.get_str('CORRELATION_SOLVER')
     if correlation_solver_type != 'NONE':
         # Grab the reference
-        reference = active_space_solver.compute_average_reference(state_weights_map) # TODO: this should be chosen in a smart way
+        rdms = active_space_solver.compute_average_rdms(state_weights_map, 3) # TODO: max_rdm_level should be chosen in a smart way
 
         # Compute unitary matrices Ua and Ub that rotate the orbitals to the semicanonical basis
         semi = forte.SemiCanonical(mo_space_info, ints, options)
         if options.get_bool("SEMI_CANONICAL"):
-            semi.semicanonicalize(reference, max_rdm_level)
+            semi.semicanonicalize(rdms, max_rdm_level)
         Ua = semi.Ua_t()
         Ub = semi.Ub_t()
 
-        dsrg = forte.make_dsrg_method(correlation_solver_type, reference,
+        dsrg = forte.make_dsrg_method(correlation_solver_type, rdms,
                                       scf_info, options, ints, mo_space_info)
         dsrg.set_Uactv(Ua, Ub)
         Edsrg = dsrg.compute_energy()
@@ -86,11 +85,11 @@ def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
             udm_z = psi4.core.variable('UNRELAXED DIPOLE Z')
             udm_t = psi4.core.variable('UNRELAXED DIPOLE')
 
-        def dipole_routine(dsrg_method, reference):
+        def dipole_routine(dsrg_method, rdms):
             dipole_moments = dsrg_method.nuclear_dipole()
             dipole_dressed = dsrg_method.deGNO_DMbar_actv()
             for i in range(3):
-                dipole_moments[i] += dipole_dressed[i].contract_with_densities(reference)
+                dipole_moments[i] += dipole_dressed[i].contract_with_rdms(rdms)
             dm_total = math.sqrt(sum([i * i for i in dipole_moments]))
             dipole_moments.append(dm_total)
             return dipole_moments
@@ -133,7 +132,8 @@ def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
 
             # Compute the energy
             if is_multi_state and ms_dsrg_algorithm == "SA_SUB":
-                state_energies_list = active_space_solver.compute_contracted_energy(ints_dressed)
+                sa_sub_max_rdm = 2 # TODO: This should be 3 if do_hbar3 is true
+                state_energies_list = active_space_solver.compute_contracted_energy(ints_dressed, sa_sub_max_rdm)
                 Erelax = forte.compute_average_state_energy(state_energies_list,state_weights_map)
                 return Erelax
             else:
@@ -142,7 +142,6 @@ def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
                                                                    state_map,scf_info,
                                                                    mo_space_info,ints_dressed,
                                                                    options)
-                as_solver_relaxed.set_max_rdm_level(max_rdm_level)
                 state_energies_list = as_solver_relaxed.compute_energy()
                 Erelax = forte.compute_average_state_energy(state_energies_list,state_weights_map)
 
@@ -153,8 +152,8 @@ def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
                     psi4.core.print_out("\n  !DSRG transition dipoles are disabled temporarily.")
                     warnings.warn("DSRG transition dipoles are disabled temporarily.", UserWarning)
                 else:
-                    reference = as_solver_relaxed.compute_average_reference(state_weights_map)
-                    x, y, z, t = dipole_routine(dsrg, reference)
+                    rdms = as_solver_relaxed.compute_average_rdms(state_weights_map, 3)
+                    x, y, z, t = dipole_routine(dsrg, rdms)
                     dsrg_dipoles.append(((udm_x, udm_y, udm_z, udm_t), (x, y, z, t)))
                     psi4.core.print_out("\n\n    {} partially relaxed dipole moment:".format(correlation_solver_type))
                     psi4.core.print_out("\n      X: {:10.6f}  Y: {:10.6f}"
@@ -170,21 +169,21 @@ def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
 
             # continue iterations
             if N + 1 != maxiter:
-                # Compute the reference in the original basis
-                # reference available if done relaxed dipole
+                # Compute the rdms in the original basis
+                # rdms available if done relaxed dipole
                 if do_dipole and (not is_multi_state):
-                    reference = semi.transform_reference(Ua, Ub, reference, max_rdm_level)
+                    rdms = semi.transform_rdms(Ua, Ub, rdms, max_rdm_level)
                 else:
-                    reference = semi.transform_reference(Ua, Ub, as_solver_relaxed.compute_average_reference(state_weights_map),
+                    rdms = semi.transform_rdms(Ua, Ub, as_solver_relaxed.compute_average_rdms(state_weights_map, 3),
                                                          max_rdm_level)
 
                 # Now semicanonicalize the reference and orbitals
-                semi.semicanonicalize(reference, max_rdm_level)
+                semi.semicanonicalize(rdms, max_rdm_level)
                 Ua = semi.Ua_t()
                 Ub = semi.Ub_t()
 
                 # Compute DSRG in the semicanonical basis
-                dsrg = forte.make_dsrg_method(correlation_solver_type, reference,
+                dsrg = forte.make_dsrg_method(correlation_solver_type, rdms,
                                               scf_info, options, ints, mo_space_info)
                 dsrg.set_Uactv(Ua, Ub)
                 Edsrg = dsrg.compute_energy()

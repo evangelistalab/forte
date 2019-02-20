@@ -37,7 +37,7 @@ set forte{
    job_type              three-dsrg-mrpt2
    print                 0
    AO_DSRG_MRPT2         true
-   cas_type              fci
+   active_space_solver              fci
 }
 #
 #ref = energy('scf')

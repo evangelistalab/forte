@@ -30,6 +30,7 @@
 #define _active_space_method_h_
 
 #include <vector>
+#include <unordered_set>
 
 #include "base_classes/state_info.h"
 
@@ -39,7 +40,7 @@ class ActiveSpaceIntegrals;
 class ForteIntegrals;
 class ForteOptions;
 class MOSpaceInfo;
-class Reference;
+class RDMs;
 class SCFInfo;
 
 /**
@@ -57,8 +58,8 @@ class SCFInfo;
  * - Compute the energy
  *    double compute_energy();
  *
- * - Compute a reference object
- *    Reference reference();
+ * - Compute a RDMs object
+ *    RDMs rdms();
  *
  * - Set the options for the derived methods
  *    set_options(std::shared_ptr<ForteOptions> options);
@@ -102,9 +103,28 @@ class ActiveSpaceMethod {
     /// Compute the energy and return it
     virtual double compute_energy() = 0;
 
-    /// Returns the reference
-    virtual std::vector<Reference>
-    reference(const std::vector<std::pair<size_t, size_t>>& roots) = 0;
+    /**
+     * @brief Compute the reduced density matrices up to a given particle rank (max_rdm_level)
+     *
+     *        This function can be used to compute transition density matrices between
+     *        states of difference symmetry,
+     *
+     *        D^{p}_{q} = <I, symmetry_l| a+_p1 ... a_qn |J, symmetry_r>
+     *
+     *        where |I, symmetry_l> is the I-th state of symmetry = symmetry_l
+     *              |J, symmetry_r> is the J-th state of symmetry = symmetry_r
+     *
+     * @param root_list     a list of pairs of roots to compute [(I_1, J_1), (I_2, J_2), ...]
+     * @param method2       a second ActiveSpaceMethod object that holds the states for symmetry_r
+     * @param max_rdm_level the maximum RDM rank
+     * @return
+     */
+    virtual std::vector<RDMs> rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
+                                   int max_rdm_level) = 0;
+
+    virtual std::vector<RDMs>
+    transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
+                    std::shared_ptr<ActiveSpaceMethod> method2, int max_rdm_level) = 0;
 
     /// Set options from an option object
     /// @param options the options passed in
@@ -122,6 +142,12 @@ class ActiveSpaceMethod {
     /// Return a vector with the energies of all the states
     const std::vector<double>& energies() const;
 
+    /// Return the number of roots computed
+    size_t nroot() const { return nroot_; }
+
+    /// Return the state info
+    const StateInfo& state() const { return state_; }
+
     // ==> Base Class Handles Set Functions <==
 
     /// Set the energy convergence criterion
@@ -131,10 +157,6 @@ class ActiveSpaceMethod {
     /// Set the root that will be used to compute the properties
     /// @param the root (root = 0, 1, 2, ...)
     void set_root(int value);
-
-    /// Set the maximum RDM computed (0 - 3)
-    /// @param value the rank of the RDM
-    void set_max_rdm_level(int value);
 
     /// Set the print level
     /// @param level the print level (0 = no printing, 1 default)
@@ -170,9 +192,6 @@ class ActiveSpaceMethod {
     /// The root used to compute properties (zero based, default = 0)
     int root_ = 0;
 
-    /// The maximum RDM computed (0 - 3)
-    int max_rdm_level_ = 1;
-
     /// A variable to control printing information
     int print_ = 0;
 
@@ -197,6 +216,10 @@ std::unique_ptr<ActiveSpaceMethod> make_active_space_method(
     const std::string& type, StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
     std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ActiveSpaceIntegrals> as_ints,
     std::shared_ptr<ForteOptions> options);
+
+std::vector<RDMs> transition_rdms(std::shared_ptr<ActiveSpaceMethod> m1,
+                                  std::shared_ptr<ActiveSpaceMethod> m2,
+                                  std::vector<std::pair<size_t, size_t>>, int max_rdm_level);
 
 } // namespace forte
 

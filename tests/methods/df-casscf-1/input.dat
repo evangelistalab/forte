@@ -42,7 +42,7 @@ set forte{
    active                  [2,0,0,0]
    root_sym                0
    nroot                   1
-   cas_type                fci
+   active_space_solver                fci
    casscf_reference        true
    int_type                df
    casscf_iterations       25

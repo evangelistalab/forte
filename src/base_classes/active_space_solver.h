@@ -43,7 +43,7 @@ class ActiveSpaceIntegrals;
 class ForteIntegrals;
 class ForteOptions;
 class MOSpaceInfo;
-class Reference;
+class RDMs;
 class SCFInfo;
 
 /**
@@ -80,19 +80,18 @@ class ActiveSpaceSolver {
 
     /// Compute the contracted CI energy
     const std::map<StateInfo, std::vector<double>>&
-    compute_contracted_energy(std::shared_ptr<forte::ActiveSpaceIntegrals> as_ints);
+    compute_contracted_energy(std::shared_ptr<forte::ActiveSpaceIntegrals> as_ints,
+                              int max_rdm_level);
 
-    /// Compute references of all states in the given map
+    /// Compute RDMs of all states in the given map
     /// First entry of the pair corresponds to bra and the second is the ket.
-    std::vector<Reference> reference(std::map<std::pair<StateInfo, StateInfo>,
-                                              std::vector<std::pair<size_t, size_t>>>& elements);
+    std::vector<RDMs> rdms(
+        std::map<std::pair<StateInfo, StateInfo>, std::vector<std::pair<size_t, size_t>>>& elements,
+        int max_rdm_level);
 
-    /// Compute state-averaged reference
-    Reference
-    compute_average_reference(const std::map<StateInfo, std::vector<double>>& state_weights_map);
-
-    /// Sets the maximum order RDM/cumulant
-    void set_max_rdm_level(size_t value);
+    /// Compute a state-averaged reference
+    RDMs compute_average_rdms(const std::map<StateInfo, std::vector<double>>& state_weights_map,
+                              int max_rdm_level);
 
     /// Print a summary of the computation information
     void print_options();
@@ -103,7 +102,7 @@ class ActiveSpaceSolver {
     }
 
   protected:
-    // a string that specifies the method used (e.g. "FCI", "ACI", ...)
+    /// a string that specifies the method used (e.g. "FCI", "ACI", ...)
     std::string method_;
 
     /// A map of electronic states to the number of roots computed
@@ -129,12 +128,6 @@ class ActiveSpaceSolver {
 
     /// A map of state symmetries to the associated ActiveSpaceMethod
     std::map<StateInfo, std::shared_ptr<ActiveSpaceMethod>> state_method_map_;
-
-    /// The maximum order RDM/cumulant to use for all ActiveSpaceMethod objects initialized
-    size_t max_rdm_level_ = 1;
-
-    /// Controls which default rdm level to use
-    bool set_rdm_ = false; // TODO: remove this hack
 
     /// Prints a summary of the energies with State info
     void print_energies(std::map<StateInfo, std::vector<double>>& energies);

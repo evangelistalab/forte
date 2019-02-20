@@ -12,7 +12,7 @@
 #include "base_classes/dynamic_correlation_solver.h"
 #include "integrals/integrals.h"
 #include "integrals/active_space_integrals.h"
-#include "base_classes/reference.h"
+#include "base_classes/rdms.h"
 #include "base_classes/mo_space_info.h"
 #include "helpers/blockedtensorfactory.h"
 #include "mrdsrg-helper/dsrg_source.h"
@@ -32,7 +32,7 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
      * @param ints A pointer to an allocated integral object
      * @param mo_space_info The MOSpaceInfo object
      */
-    MASTER_DSRG(Reference reference, std::shared_ptr<SCFInfo> scf_info,
+    MASTER_DSRG(RDMs rdms, std::shared_ptr<SCFInfo> scf_info,
                 std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
                 std::shared_ptr<MOSpaceInfo> mo_space_info);
 
@@ -253,12 +253,12 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     std::vector<std::string> od_two_labels_hhpp();
     std::vector<std::string> od_two_labels_pphh();
 
-    // ==> fill in densities from Reference <==
+    // ==> fill in densities from RDMs <==
     /** Lambda3 is no longer stored !!! */
 
     /// Initialize density cumulants
     void init_density();
-    /// Fill in density cumulants from the Reference
+    /// Fill in density cumulants from the RDMs
     void fill_density();
 
     /// One-particle density matrix
