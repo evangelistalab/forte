@@ -45,7 +45,6 @@ void ContractedCISolver::compute_Heff() {
         const auto& state = state_weights.first;
         const auto& weights = state_weights.second;
         auto method = method_vec[i_state];
-        method->set_max_rdm_level(do_three_body ? 3 : 2);
         int nroots = weights.size();
         std::string state_name = state.multiplicity_label() + " " + state.irrep_label();
 

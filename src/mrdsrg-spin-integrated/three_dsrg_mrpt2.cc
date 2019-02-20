@@ -3517,7 +3517,6 @@ void THREE_DSRG_MRPT2::compute_Hbar1V_diskDF(ambit::BlockedTensor& Hbar1, bool s
 
 //            auto fci = make_active_space_method("FCI", state, nroot, scf_info_, mo_space_info_,
 //                                                ints_, foptions_);
-//            fci->set_max_rdm_level(1);
 //            fci->set_active_space_integrals(fci_ints);
 //            fci->set_print(print_);
 //            Erelax.push_back(fci->compute_energy());

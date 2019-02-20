@@ -1752,7 +1752,6 @@ void DSRG_MRPT2::compute_dm1d_pt2(BlockedTensor& M, double& Mbar0, BlockedTensor
 //        auto state = make_state_info_from_psi_wfn(ints_->wfn());
 //        auto fci = make_active_space_method("FCI", state, nroot, scf_info_, mo_space_info_, ints_,
 //                                            foptions_);
-//        fci->set_max_rdm_level(1);
 //        fci->set_active_space_integrals(fci_ints);
 //        Erelax = fci->compute_energy();
 //    }

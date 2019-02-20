@@ -1426,7 +1426,6 @@ void DSRG_MRPT3::renormalize_F(const bool& plusone) {
 //                // TODO use base class info
 //                auto fci = make_active_space_method("FCI", state, nstates, scf_info_,
 //                                                    mo_space_info_, ints_, foptions_);
-//                fci->set_max_rdm_level(1);
 //                fci->set_root(nstates - 1);
 //                if (eri_df_) {
 //                    fci->set_active_space_integrals(fci_ints);
