@@ -77,28 +77,10 @@ void Wall_Chebyshev_generator_coefs(std::vector<double>& coefs, int order, doubl
 void print_polynomial(std::vector<double>& coefs);
 
 void add(const det_hashvec& A, std::vector<double>& Ca, double beta, const det_hashvec& B,
-         const std::vector<double> Cb) {
-    size_t A_size = A.size(), B_size = B.size();
-#pragma omp parallel for
-    for (size_t i = 0; i < A_size; ++i) {
-        size_t B_index = B.find(A[i]);
-        if (B_index < B_size)
-            Ca[i] += beta * Cb[B_index];
-    }
-}
+         const std::vector<double> Cb);
 
 double dot(const det_hashvec& A, const std::vector<double> Ca, const det_hashvec& B,
-           const std::vector<double> Cb) {
-    double res = 0.0;
-    size_t A_size = A.size(), B_size = B.size();
-#pragma omp parallel for reduction(+ : res)
-    for (size_t i = 0; i < A_size; ++i) {
-        size_t B_index = B.find(A[i]);
-        if (B_index < B_size)
-            res += Ca[i] * Cb[B_index];
-    }
-    return res;
-}
+           const std::vector<double> Cb);
 
 void ProjectorCI_HashVec::sortHashVecByCoefficient(det_hashvec& dets_hashvec,
                                                    std::vector<double>& C) {

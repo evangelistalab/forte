@@ -35,7 +35,6 @@
 #include "sci/fci_mo.h"
 #include "base_classes/forte_options.h"
 #include "integrals/integrals.h"
-#include "pci/pci.h"
 #include "base_classes/rdms.h"
 #include "mrdsrg-helper/run_dsrg.h"
 #include "mrdsrg-spin-integrated/dwms_mrpt2.h"

@@ -69,21 +69,141 @@ bool ElementwiseCI::have_omp_ = true;
 bool ElementwiseCI::have_omp_ = false;
 #endif
 
-void scale(std::vector<double>& A, double alpha);
-double normalize(std::vector<double>& C);
-double dot(std::vector<double>& C1, std::vector<double>& C2);
-void add(std::vector<double>& a, double k, std::vector<double>& b);
-void Wall_Chebyshev_generator_coefs(std::vector<double>& coefs, int order, double range);
-void print_polynomial(std::vector<double>& coefs);
-
 std::vector<double> to_std_vector(psi::SharedVector c);
 void set_psi_Vector(psi::SharedVector c_psi, const std::vector<double>& c_vec);
 
+double normalize(std::vector<double>& C) {
+    size_t size = C.size();
+    double norm = 0.0;
+    for (size_t I = 0; I < size; ++I) {
+        norm += C[I] * C[I];
+    }
+    norm = std::sqrt(norm);
+    for (size_t I = 0; I < size; ++I) {
+        C[I] /= norm;
+    }
+    return norm;
+}
+
+double factorial(int n) { return (n == 1 || n == 0) ? 1.0 : factorial(n - 1) * n; }
+
+void binomial_coefs(std::vector<double>& coefs, int order, double a, double b) {
+    coefs.clear();
+    for (int i = 0; i <= order; i++) {
+        coefs.push_back(factorial(order) / (factorial(i) * factorial(order - i)) * pow(a, i) *
+                        pow(b, order - i));
+    }
+}
+
+void Polynomial_generator_coefs(std::vector<double>& coefs, std::vector<double>& poly_coefs,
+                                double a, double b) {
+    coefs.clear();
+    int order = poly_coefs.size() - 1;
+    for (int i = 0; i <= order; i++) {
+        coefs.push_back(0.0);
+    }
+    for (int i = 0; i <= order; i++) {
+        std::vector<double> bino_coefs;
+        binomial_coefs(bino_coefs, i, a, b);
+        for (int j = 0; j <= i; j++) {
+            coefs[j] += poly_coefs[i] * bino_coefs[j];
+        }
+    }
+}
+
+void Chebyshev_polynomial_coefs(std::vector<double>& coefs, int order) {
+    coefs.clear();
+    std::vector<double> coefs_0, coefs_1;
+    if (order == 0) {
+        coefs.push_back(1.0);
+        return;
+    } else
+        coefs_0.push_back(1.0);
+    if (order == 1) {
+        coefs.push_back(0.0);
+        coefs.push_back(1.0);
+        return;
+    } else {
+        coefs_1.push_back(0.0);
+        coefs_1.push_back(1.0);
+    }
+    for (int i = 2; i <= order; i++) {
+        coefs.clear();
+        for (int j = 0; j <= i; j++) {
+            coefs.push_back(0.0);
+        }
+        for (int j = 0; j <= i - 2; j++) {
+            coefs[j] -= coefs_0[j];
+        }
+        for (int j = 0; j <= i - 1; j++) {
+            coefs[j + 1] += 2.0 * coefs_1[j];
+        }
+        coefs_0 = coefs_1;
+        coefs_1 = coefs;
+    }
+}
+
+void Wall_Chebyshev_generator_coefs(std::vector<double>& coefs, int order, double range) {
+    coefs.clear();
+    std::vector<double> poly_coefs;
+    for (int i = 0; i <= order; i++) {
+        poly_coefs.push_back(0.0);
+    }
+
+    for (int i = 0; i <= order; i++) {
+        std::vector<double> chbv_poly_coefs;
+        Chebyshev_polynomial_coefs(chbv_poly_coefs, i);
+        //        outfile->Printf("\n\n  chebyshev poly in step %d", i);
+        //        print_polynomial(chbv_poly_coefs);
+        for (int j = 0; j <= i; j++) {
+            poly_coefs[j] += (i == 0 ? 1.0 : 2.0) * chbv_poly_coefs[j];
+        }
+        //        outfile->Printf("\n\n  propagate poly in step %d", i);
+        //        print_polynomial(poly_coefs);
+    }
+    Polynomial_generator_coefs(coefs, poly_coefs, -1.0 / range, 0.0);
+}
+
+void print_polynomial(std::vector<double>& coefs) {
+    outfile->Printf("\n    f(x) = ");
+    for (int i = coefs.size() - 1; i >= 0; i--) {
+        switch (i) {
+        case 0:
+            outfile->Printf("%s%e", coefs[i] >= 0 ? "+" : "", coefs[i]);
+            break;
+        case 1:
+            outfile->Printf("%s%e * x ", coefs[i] >= 0 ? "+" : "", coefs[i]);
+            break;
+        default:
+            outfile->Printf("%s%e * x^%d ", coefs[i] >= 0 ? "+" : "", coefs[i], i);
+            break;
+        }
+    }
+}
+
 void add(const det_hashvec& A, std::vector<double>& Ca, double beta, const det_hashvec& B,
-         const std::vector<double> Cb);
+         const std::vector<double> Cb) {
+    size_t A_size = A.size(), B_size = B.size();
+#pragma omp parallel for
+    for (size_t i = 0; i < A_size; ++i) {
+        size_t B_index = B.find(A[i]);
+        if (B_index < B_size)
+            Ca[i] += beta * Cb[B_index];
+    }
+}
 
 double dot(const det_hashvec& A, const std::vector<double> Ca, const det_hashvec& B,
-           const std::vector<double> Cb);
+           const std::vector<double> Cb) {
+    double res = 0.0;
+    size_t A_size = A.size(), B_size = B.size();
+#pragma omp parallel for reduction(+ : res)
+    for (size_t i = 0; i < A_size; ++i) {
+        size_t B_index = B.find(A[i]);
+        if (B_index < B_size)
+            res += Ca[i] * Cb[B_index];
+    }
+    return res;
+}
 
 void ElementwiseCI::sortHashVecByCoefficient(det_hashvec& dets_hashvec, std::vector<double>& C) {
     size_t dets_size = dets_hashvec.size();
