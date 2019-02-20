@@ -97,8 +97,7 @@ void FCISolver::startup() {
             {"Multiplicity", multiplicity_},
             {"Number of roots", nroot_},
             {"Target root", root_},
-            {"Trial vectors per root", ntrial_per_root_},
-            {"Maximum RDM level", max_rdm_level_}};
+            {"Trial vectors per root", ntrial_per_root_}};
 
         // Print some information
         outfile->Printf("\n\n  ==> FCI Solver <==\n\n");
