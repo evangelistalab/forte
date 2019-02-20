@@ -200,9 +200,6 @@ class ActiveSpaceMethod {
 
     /// The energies (including nuclear repulsion) of all the states
     std::vector<double> energies_;
-
-    /// File names of RDMs or transition RDMs stored on disk
-    std::unordered_set<std::string> density_files_;
 };
 
 /**
