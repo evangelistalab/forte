@@ -217,13 +217,14 @@ mrdsrg-pt2:
    - mrdsrg-pt2-3
    - mrdsrg-srgpt2-1
    - mrdsrg-srgpt2-2
-ewci:
+pci:
   short:
-   - ewci-1
-   - ewci-2
-   - ewci-3
-   - ewci-4
-   - ewci-5
-   - ewci-6
-   - ewci-7
-   - ewci-8
+   - pci-1
+   - pci-2
+   - pci-3
+   - pci-4
+   - pci-5
+   - pci-6
+   - pci-7
+   - pci-8
+   - pci-9

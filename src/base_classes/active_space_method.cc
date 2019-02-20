@@ -35,7 +35,7 @@
 #include "sci/aci.h"
 #include "sci/asci.h"
 #include "sci/fci_mo.h"
-#include "pci/ewci.h"
+#include "pci/pci.h"
 #include "sci/aci_sci.h"
 #include "ci_ex_states/excited_state_solver.h"
 
@@ -87,10 +87,10 @@ std::unique_ptr<ActiveSpaceMethod> make_active_space_method(
         solver = std::make_unique<ASCI>(state, nroot, scf_info, options, mo_space_info, as_ints);
     } else if (type == "CASSCF") {
         solver = std::make_unique<CASSCF>(state, nroot, scf_info, options, mo_space_info, as_ints);
-    } else if (type == "EWCI") {
+    } else if (type == "PCI") {
         solver = std::make_unique<ExcitedStateSolver>(
             state, nroot, mo_space_info, as_ints,
-            std::make_unique<ElementwiseCI>(state, nroot, scf_info, mo_space_info, as_ints));
+            std::make_unique<ProjectorCI>(state, nroot, scf_info, mo_space_info, as_ints));
     } else {
         throw psi::PSIEXCEPTION("make_active_space_method: type = " + type + " was not recognized");
     }

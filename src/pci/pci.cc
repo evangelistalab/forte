@@ -47,9 +47,9 @@
 #include "psi4/libpsio/psio.hpp"
 #include "psi4/libqt/qt.h"
 
-#include "ewci.h"
 #include "helpers/timer.h"
 #include "sparse_ci/ci_reference.h"
+#include "pci.h"
 #include "pci_sigma.h"
 
 #define USE_HASH 1
@@ -59,11 +59,11 @@
 namespace forte {
 #ifdef _OPENMP
 #include <omp.h>
-bool ElementwiseCI::have_omp_ = true;
+bool ProjectorCI::have_omp_ = true;
 #else
 #define omp_get_max_threads() 1
 #define omp_get_thread_num() 0
-bool ElementwiseCI::have_omp_ = false;
+bool ProjectorCI::have_omp_ = false;
 #endif
 
 std::vector<double> to_std_vector(psi::SharedVector c);
@@ -202,7 +202,7 @@ double dot(const det_hashvec& A, const std::vector<double> Ca, const det_hashvec
     return res;
 }
 
-void ElementwiseCI::sortHashVecByCoefficient(det_hashvec& dets_hashvec, std::vector<double>& C) {
+void ProjectorCI::sortHashVecByCoefficient(det_hashvec& dets_hashvec, std::vector<double>& C) {
     size_t dets_size = dets_hashvec.size();
     std::vector<std::pair<double, size_t>> det_weight(dets_size);
     for (size_t I = 0; I < dets_size; ++I) {
@@ -221,15 +221,15 @@ void ElementwiseCI::sortHashVecByCoefficient(det_hashvec& dets_hashvec, std::vec
     C = std::move(new_C);
 }
 
-ElementwiseCI::ElementwiseCI(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
-                             std::shared_ptr<MOSpaceInfo> mo_space_info,
-                             std::shared_ptr<ActiveSpaceIntegrals> as_ints)
+ProjectorCI::ProjectorCI(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
+                         std::shared_ptr<MOSpaceInfo> mo_space_info,
+                         std::shared_ptr<ActiveSpaceIntegrals> as_ints)
     : SelectedCIMethod(state, nroot, scf_info, mo_space_info, as_ints), sparse_solver_(as_ints_) {
     // Copy the wavefunction information
     startup();
 }
 
-void ElementwiseCI::startup() {
+void ProjectorCI::startup() {
     // The number of correlated molecular orbitals
     nact_ = mo_space_info_->get_corr_abs_mo("ACTIVE").size();
     nactpi_ = mo_space_info_->get_dimension("ACTIVE");
@@ -266,7 +266,7 @@ void ElementwiseCI::startup() {
     num_threads_ = omp_get_max_threads();
 }
 
-void ElementwiseCI::set_options(std::shared_ptr<ForteOptions> options) {
+void ProjectorCI::set_options(std::shared_ptr<ForteOptions> options) {
     // Build the reference determinant and compute its energy
     int ms = wavefunction_multiplicity_ - 1;
     std::vector<Determinant> reference_vec;
@@ -409,7 +409,7 @@ void ElementwiseCI::set_options(std::shared_ptr<ForteOptions> options) {
     sparse_solver_.set_maxiter_davidson(options->get_int("DL_MAXITER"));
 }
 
-void ElementwiseCI::print_info() {
+void ProjectorCI::print_info() {
     psi::outfile->Printf("\n\n\t  ---------------------------------------------------------");
     psi::outfile->Printf("\n\t              Element wise Configuration Interaction"
                          "implementation");
@@ -459,7 +459,7 @@ void ElementwiseCI::print_info() {
     }
 }
 
-double ElementwiseCI::estimate_high_energy() {
+double ProjectorCI::estimate_high_energy() {
     double high_obt_energy = 0.0;
     int nea = 0, neb = 0;
     std::vector<std::pair<double, int>> obt_energies;
@@ -622,13 +622,13 @@ double ElementwiseCI::estimate_high_energy() {
     return lambda_h_;
 }
 
-void ElementwiseCI::convergence_analysis() {
+void ProjectorCI::convergence_analysis() {
     estimate_high_energy();
     compute_characteristic_function();
     print_characteristic_function();
 }
 
-void ElementwiseCI::compute_characteristic_function() {
+void ProjectorCI::compute_characteristic_function() {
     shift_ = (lambda_h_ + lambda_1_) / 2.0;
     range_ = (lambda_h_ - lambda_1_) / 2.0;
     switch (generator_) {
@@ -639,7 +639,7 @@ void ElementwiseCI::compute_characteristic_function() {
     }
 }
 
-void ElementwiseCI::print_characteristic_function() {
+void ProjectorCI::print_characteristic_function() {
     psi::outfile->Printf("\n\n  ==> Characteristic Function <==");
     print_polynomial(cha_func_coefs_);
     psi::outfile->Printf("\n    with tau = %e, shift = %.12f, range = %.12f", time_step_, shift_,
@@ -650,8 +650,8 @@ void ElementwiseCI::print_characteristic_function() {
                          lambda_h_);
 }
 
-void ElementwiseCI::pre_iter_preparation() {
-    t_ewci_.reset();
+void ProjectorCI::pre_iter_preparation() {
+    t_pci_.reset();
 
     lastLow = 0.0;
     previous_go_up = false;
@@ -665,11 +665,11 @@ void ElementwiseCI::pre_iter_preparation() {
     dets_hashvec_.clear();
     C_.clear();
 
-    psi::timer_on("EWCI:Couplings");
+    psi::timer_on("PCI:Couplings");
     double factor = std::max(1.0, std::pow(2.0, 1.0 / functional_order_ - 0.5));
     compute_single_couplings(spawning_threshold_ / factor);
     compute_double_couplings(spawning_threshold_ / factor);
-    psi::timer_off("EWCI:Couplings");
+    psi::timer_off("PCI:Couplings");
 
     // Compute the initial guess
     psi::outfile->Printf("\n\n  ==> Initial Guess <==");
@@ -677,9 +677,9 @@ void ElementwiseCI::pre_iter_preparation() {
     var_energy_ = initial_guess(dets_hashvec_, C_);
     proj_energy_ = var_energy_;
 
-    psi::timer_on("EWCI:sort");
+    psi::timer_on("PCI:sort");
     sortHashVecByCoefficient(dets_hashvec_, C_);
-    psi::timer_off("EWCI:sort");
+    psi::timer_off("PCI:sort");
 
     print_wfn(dets_hashvec_, C_);
     //    det_hash<> old_space_map;
@@ -725,38 +725,38 @@ void ElementwiseCI::pre_iter_preparation() {
     approx_E_flag_ = true;
 }
 
-void ElementwiseCI::diagonalize_P_space() {}
+void ProjectorCI::diagonalize_P_space() {}
 
-void ElementwiseCI::find_q_space() {}
+void ProjectorCI::find_q_space() {}
 
-void ElementwiseCI::diagonalize_PQ_space() {
-    psi::timer_on("EWCI:Step");
+void ProjectorCI::diagonalize_PQ_space() {
+    psi::timer_on("PCI:Step");
     if (use_inter_norm_) {
         double max_C = std::fabs(C_[0]);
         propagate(generator_, dets_hashvec_, C_, spawning_threshold_ * max_C);
     } else {
         propagate(generator_, dets_hashvec_, C_, spawning_threshold_);
     }
-    psi::timer_off("EWCI:Step");
+    psi::timer_off("PCI:Step");
 
     // Orthogonalize this solution with respect to the previous ones
-    psi::timer_on("EWCI:Ortho");
+    psi::timer_on("PCI:Ortho");
     orthogonalize(dets_hashvec_, C_, solutions_);
     normalize(C_);
-    psi::timer_off("EWCI:Ortho");
+    psi::timer_off("PCI:Ortho");
 
-    psi::timer_on("EWCI:sort");
+    psi::timer_on("PCI:sort");
     sortHashVecByCoefficient(dets_hashvec_, C_);
-    psi::timer_off("EWCI:sort");
+    psi::timer_off("PCI:sort");
 }
 
-bool ElementwiseCI::check_convergence() {
+bool ProjectorCI::check_convergence() {
     // Compute the energy and check for convergence
     if (cycle_ % energy_estimate_freq_ == 0) {
         approx_E_flag_ = true;
-        psi::timer_on("EWCI:<E>");
+        psi::timer_on("PCI:<E>");
         std::map<std::string, double> results = estimate_energy(dets_hashvec_, C_);
-        psi::timer_off("EWCI:<E>");
+        psi::timer_off("PCI:<E>");
 
         proj_energy_ = results["PROJECTIVE ENERGY"];
 
@@ -808,9 +808,9 @@ bool ElementwiseCI::check_convergence() {
     return false;
 }
 
-void ElementwiseCI::prune_PQ_to_P() {}
+void ProjectorCI::prune_PQ_to_P() {}
 
-void ElementwiseCI::post_iter_process() {
+void ProjectorCI::post_iter_process() {
 
     if (variational_estimate_) {
         psi::outfile->Printf("\n  "
@@ -841,13 +841,12 @@ void ElementwiseCI::post_iter_process() {
     psi::outfile->Printf("\n\n  ==> Post-Iterations <==\n");
     psi::outfile->Printf("\n  * Size of CI space                    = %zu", C_.size());
     psi::outfile->Printf("\n  * Number of off-diagonal elements     = %zu", num_off_diag_elem_);
-    psi::outfile->Printf("\n  * ElementwiseCI Approximate Energy    = %18.12f Eh", 1,
-                         approx_energy_);
-    psi::outfile->Printf("\n  * ElementwiseCI Projective  Energy    = %18.12f Eh", 1, proj_energy_);
+    psi::outfile->Printf("\n  * ProjectorCI Approximate Energy    = %18.12f Eh", 1, approx_energy_);
+    psi::outfile->Printf("\n  * ProjectorCI Projective  Energy    = %18.12f Eh", 1, proj_energy_);
 
-    psi::timer_on("EWCI:sort");
+    psi::timer_on("PCI:sort");
     sortHashVecByCoefficient(dets_hashvec_, C_);
-    psi::timer_off("EWCI:sort");
+    psi::timer_off("PCI:sort");
 
     if (print_full_wavefunction_) {
         print_wfn(dets_hashvec_, C_, C_.size());
@@ -855,34 +854,34 @@ void ElementwiseCI::post_iter_process() {
         print_wfn(dets_hashvec_, C_);
     }
 
-    psi::outfile->Printf("\n  %s: %f s\n", "ElementwiseCI (bitset) steps finished in  ",
-                         t_ewci_.get());
+    psi::outfile->Printf("\n  %s: %f s\n", "ProjectorCI (bitset) steps finished in  ",
+                         t_pci_.get());
 
-    psi::timer_on("EWCI:<E>end_v");
+    psi::timer_on("PCI:<E>end_v");
     if (fast_variational_estimate_) {
         var_energy_ = estimate_var_energy_sparse(dets_hashvec_, C_, evar_max_error_);
     } else {
         var_energy_ = estimate_var_energy_within_error_sigma(dets_hashvec_, C_, evar_max_error_);
     }
-    psi::timer_off("EWCI:<E>end_v");
+    psi::timer_off("PCI:<E>end_v");
 
-    psi::Process::environment.globals["EWCI ENERGY"] = var_energy_;
+    psi::Process::environment.globals["PCI ENERGY"] = var_energy_;
 
-    psi::outfile->Printf("\n  * ElementwiseCI Variational Energy    = %18.12f Eh", 1, var_energy_);
-    psi::outfile->Printf("\n  * ElementwiseCI Var. Corr.  Energy    = %18.12f Eh", 1,
+    psi::outfile->Printf("\n  * ProjectorCI Variational Energy    = %18.12f Eh", 1, var_energy_);
+    psi::outfile->Printf("\n  * ProjectorCI Var. Corr.  Energy    = %18.12f Eh", 1,
                          var_energy_ - as_ints_->energy(reference_determinant_) -
                              nuclear_repulsion_energy_ - as_ints_->scalar_energy());
 
     psi::outfile->Printf("\n  * 1st order perturbation   Energy     = %18.12f Eh", 1,
                          var_energy_ - approx_energy_);
 
-    psi::outfile->Printf("\n\n  %s: %f s", "ElementwiseCI (bitset) ran in  ", t_ewci_.get());
+    psi::outfile->Printf("\n\n  %s: %f s", "ProjectorCI (bitset) ran in  ", t_pci_.get());
 
     save_wfn(dets_hashvec_, C_, solutions_);
 
     if (post_diagonalization_) {
         psi::outfile->Printf("\n\n  ==> Post-Diagonalization <==\n");
-        psi::timer_on("EWCI:Post_Diag");
+        psi::timer_on("PCI:Post_Diag");
         psi::SharedMatrix apfci_evecs(new psi::Matrix("Eigenvectors", C_.size(), nroot_));
         psi::SharedVector apfci_evals(new psi::Vector("Eigenvalues", nroot_));
 
@@ -900,15 +899,15 @@ void ElementwiseCI::post_iter_process() {
                                                    wavefunction_multiplicity_, diag_method_);
         det_map.swap(dets_hashvec_);
 
-        psi::timer_off("EWCI:Post_Diag");
+        psi::timer_off("PCI:Post_Diag");
 
         double post_diag_energy =
             apfci_evals->get(current_root_) + nuclear_repulsion_energy_ + as_ints_->scalar_energy();
-        psi::Process::environment.globals["EWCI POST DIAG ENERGY"] = post_diag_energy;
+        psi::Process::environment.globals["PCI POST DIAG ENERGY"] = post_diag_energy;
 
-        psi::outfile->Printf("\n\n  * ElementwiseCI Post-diag   Energy    = %18.12f Eh", 1,
+        psi::outfile->Printf("\n\n  * ProjectorCI Post-diag   Energy    = %18.12f Eh", 1,
                              post_diag_energy);
-        psi::outfile->Printf("\n  * ElementwiseCI Var. Corr.  Energy    = %18.12f Eh", 1,
+        psi::outfile->Printf("\n  * ProjectorCI Var. Corr.  Energy    = %18.12f Eh", 1,
                              post_diag_energy - as_ints_->energy(reference_determinant_) -
                                  nuclear_repulsion_energy_ - as_ints_->scalar_energy());
 
@@ -918,9 +917,9 @@ void ElementwiseCI::post_iter_process() {
             diag_C[I] = apfci_evecs->get(I, current_root_);
         }
 
-        psi::timer_on("EWCI:sort");
+        psi::timer_on("PCI:sort");
         sortHashVecByCoefficient(dets_hashvec_, C_);
-        psi::timer_off("EWCI:sort");
+        psi::timer_off("PCI:sort");
 
         if (print_full_wavefunction_) {
             print_wfn(dets_hashvec_, diag_C, diag_C.size());
@@ -930,7 +929,7 @@ void ElementwiseCI::post_iter_process() {
     }
 }
 
-bool ElementwiseCI::converge_test() {
+bool ProjectorCI::converge_test() {
     if (!stop_higher_new_low_) {
         return false;
     }
@@ -948,7 +947,7 @@ bool ElementwiseCI::converge_test() {
     return false;
 }
 
-double ElementwiseCI::initial_guess(det_hashvec& dets_hashvec, std::vector<double>& C) {
+double ProjectorCI::initial_guess(det_hashvec& dets_hashvec, std::vector<double>& C) {
 
     // Do one time step starting from the reference determinant
     Determinant bs_det(reference_determinant_);
@@ -1030,8 +1029,8 @@ double ElementwiseCI::initial_guess(det_hashvec& dets_hashvec, std::vector<doubl
     return var_energy;
 }
 
-void ElementwiseCI::propagate(GeneratorType generator, det_hashvec& dets_hashvec,
-                              std::vector<double>& C, double spawning_threshold) {
+void ProjectorCI::propagate(GeneratorType generator, det_hashvec& dets_hashvec,
+                            std::vector<double>& C, double spawning_threshold) {
     switch (generator) {
     case WallChebyshevGenerator:
         propagate_wallCh(dets_hashvec, C, spawning_threshold);
@@ -1047,8 +1046,8 @@ void ElementwiseCI::propagate(GeneratorType generator, det_hashvec& dets_hashvec
     normalize(C);
 }
 
-void ElementwiseCI::propagate_wallCh(det_hashvec& dets_hashvec, std::vector<double>& C,
-                                     double spawning_threshold) {
+void ProjectorCI::propagate_wallCh(det_hashvec& dets_hashvec, std::vector<double>& C,
+                                   double spawning_threshold) {
     //    det_hashvec dets_hashvec(dets);
     // A map that contains the pair (determinant,coefficient)
     const double PI = 2 * acos(0.0);
@@ -1080,7 +1079,7 @@ void ElementwiseCI::propagate_wallCh(det_hashvec& dets_hashvec, std::vector<doub
     }
 
     if (approx_E_flag_) {
-        psi::timer_on("EWCI:<E>a");
+        psi::timer_on("PCI:<E>a");
         double CHC_energy = 0.0;
 #pragma omp parallel for reduction(+ : CHC_energy)
         for (size_t I = 0; I < overlap_size; ++I) {
@@ -1088,7 +1087,7 @@ void ElementwiseCI::propagate_wallCh(det_hashvec& dets_hashvec, std::vector<doub
         }
         CHC_energy = CHC_energy / -1.0 + (range_ * root + shift_) + as_ints_->scalar_energy() +
                      nuclear_repulsion_energy_;
-        psi::timer_off("EWCI:<E>a");
+        psi::timer_off("PCI:<E>a");
         double CHC_energy_gradient =
             (CHC_energy - approx_energy_) / (time_step_ * energy_estimate_freq_);
         old_approx_energy_ = approx_energy_;
@@ -1135,8 +1134,8 @@ void ElementwiseCI::propagate_wallCh(det_hashvec& dets_hashvec, std::vector<doub
     //    dets = dets_hashvec.toVector();
 }
 
-void ElementwiseCI::propagate_DL(det_hashvec& dets_hashvec, std::vector<double>& C,
-                                 double spawning_threshold) {
+void ProjectorCI::propagate_DL(det_hashvec& dets_hashvec, std::vector<double>& C,
+                               double spawning_threshold) {
     PCISigmaVector sigma_vector(dets_hashvec, C, spawning_threshold, as_ints_, prescreen_H_CI_,
                                 important_H_CI_CJ_, a_couplings_, b_couplings_, aa_couplings_,
                                 ab_couplings_, bb_couplings_, dets_max_couplings_,
@@ -1163,26 +1162,26 @@ void ElementwiseCI::propagate_DL(det_hashvec& dets_hashvec, std::vector<double>&
     }
 }
 
-std::map<std::string, double> ElementwiseCI::estimate_energy(const det_hashvec& dets_hashvec,
-                                                             std::vector<double>& C) {
+std::map<std::string, double> ProjectorCI::estimate_energy(const det_hashvec& dets_hashvec,
+                                                           std::vector<double>& C) {
     std::map<std::string, double> results;
     //    det_hashvec dets_hashvec(dets);
     //    dets = dets_hashvec.toVector();
-    psi::timer_on("EWCI:<E>p");
+    psi::timer_on("PCI:<E>p");
     results["PROJECTIVE ENERGY"] = estimate_proj_energy(dets_hashvec, C);
-    psi::timer_off("EWCI:<E>p");
+    psi::timer_off("PCI:<E>p");
 
     if (variational_estimate_) {
         if (fast_variational_estimate_) {
-            psi::timer_on("EWCI:<E>vs");
+            psi::timer_on("PCI:<E>vs");
             results["VARIATIONAL ENERGY"] =
                 estimate_var_energy_sparse(dets_hashvec, C, energy_estimate_threshold_);
-            psi::timer_off("EWCI:<E>vs");
+            psi::timer_off("PCI:<E>vs");
         } else {
-            psi::timer_on("EWCI:<E>v");
+            psi::timer_on("PCI:<E>v");
             results["VARIATIONAL ENERGY"] =
                 estimate_var_energy(dets_hashvec, C, energy_estimate_threshold_);
-            psi::timer_off("EWCI:<E>v");
+            psi::timer_off("PCI:<E>v");
         }
     }
     //    dets_hashvec = det_hashvec(dets);
@@ -1192,8 +1191,7 @@ std::map<std::string, double> ElementwiseCI::estimate_energy(const det_hashvec& 
 
 static bool abs_compare(double a, double b) { return (std::abs(a) < std::abs(b)); }
 
-double ElementwiseCI::estimate_proj_energy(const det_hashvec& dets_hashvec,
-                                           std::vector<double>& C) {
+double ProjectorCI::estimate_proj_energy(const det_hashvec& dets_hashvec, std::vector<double>& C) {
     // Find the determinant with the largest value of C
     auto result = std::max_element(C.begin(), C.end(), abs_compare);
     size_t J = std::distance(C.begin(), result);
@@ -1208,8 +1206,8 @@ double ElementwiseCI::estimate_proj_energy(const det_hashvec& dets_hashvec,
     return projective_energy_estimator + nuclear_repulsion_energy_ + as_ints_->scalar_energy();
 }
 
-double ElementwiseCI::estimate_var_energy(const det_hashvec& dets_hashvec, std::vector<double>& C,
-                                          double tollerance) {
+double ProjectorCI::estimate_var_energy(const det_hashvec& dets_hashvec, std::vector<double>& C,
+                                        double tollerance) {
     // Compute a variational estimator of the energy
     size_t size = dets_hashvec.size();
     double variational_energy_estimator = 0.0;
@@ -1227,8 +1225,8 @@ double ElementwiseCI::estimate_var_energy(const det_hashvec& dets_hashvec, std::
     return variational_energy_estimator + nuclear_repulsion_energy_ + as_ints_->scalar_energy();
 }
 
-double ElementwiseCI::estimate_var_energy_within_error(const det_hashvec& dets_hashvec,
-                                                       std::vector<double>& C, double max_error) {
+double ProjectorCI::estimate_var_energy_within_error(const det_hashvec& dets_hashvec,
+                                                     std::vector<double>& C, double max_error) {
     // Compute a variational estimator of the energy
     size_t cut_index = dets_hashvec.size() - 1;
     double max_HIJ = dets_single_max_coupling_ > dets_double_max_coupling_
@@ -1263,9 +1261,9 @@ double ElementwiseCI::estimate_var_energy_within_error(const det_hashvec& dets_h
     return variational_energy_estimator + nuclear_repulsion_energy_ + as_ints_->scalar_energy();
 }
 
-double ElementwiseCI::estimate_var_energy_within_error_sigma(const det_hashvec& dets_hashvec,
-                                                             std::vector<double>& C,
-                                                             double max_error) {
+double ProjectorCI::estimate_var_energy_within_error_sigma(const det_hashvec& dets_hashvec,
+                                                           std::vector<double>& C,
+                                                           double max_error) {
     // Compute a variational estimator of the energy
     size_t cut_index = dets_hashvec.size() - 1;
     double max_HIJ = dets_single_max_coupling_ > dets_double_max_coupling_
@@ -1313,8 +1311,8 @@ double ElementwiseCI::estimate_var_energy_within_error_sigma(const det_hashvec& 
     return variational_energy_estimator + nuclear_repulsion_energy_ + as_ints_->scalar_energy();
 }
 
-double ElementwiseCI::estimate_var_energy_sparse(const det_hashvec& dets_hashvec,
-                                                 std::vector<double>& C, double max_error) {
+double ProjectorCI::estimate_var_energy_sparse(const det_hashvec& dets_hashvec,
+                                               std::vector<double>& C, double max_error) {
     size_t cut_index = dets_hashvec.size() - 1;
     double max_HIJ = dets_single_max_coupling_ > dets_double_max_coupling_
                          ? dets_single_max_coupling_
@@ -1335,9 +1333,9 @@ double ElementwiseCI::estimate_var_energy_sparse(const det_hashvec& dets_hashvec
         "\n  Variational energy estimated with %zu determinants to meet the max error %e",
         cut_index + 1, max_error);
 
-    psi::timer_on("EWCI:Couplings");
+    psi::timer_on("PCI:Couplings");
     compute_couplings_half(dets_hashvec, cut_index + 1);
-    psi::timer_off("EWCI:Couplings");
+    psi::timer_off("PCI:Couplings");
 
     double variational_energy_estimator = 0.0;
     std::vector<double> energy(num_threads_, 0.0);
@@ -1353,8 +1351,8 @@ double ElementwiseCI::estimate_var_energy_sparse(const det_hashvec& dets_hashvec
     return variational_energy_estimator + nuclear_repulsion_energy_ + as_ints_->scalar_energy();
 }
 
-void ElementwiseCI::print_wfn(const det_hashvec& space_hashvec, std::vector<double>& C,
-                              size_t max_output) {
+void ProjectorCI::print_wfn(const det_hashvec& space_hashvec, std::vector<double>& C,
+                            size_t max_output) {
     psi::outfile->Printf("\n\n  Most important contributions to the wave function:\n");
 
     size_t max_dets = std::min(int(max_output), int(C.size()));
@@ -1411,8 +1409,8 @@ void ElementwiseCI::print_wfn(const det_hashvec& space_hashvec, std::vector<doub
                          S2, S, state_label.c_str(), max_I, 100.0 * sum_weight);
 }
 
-void ElementwiseCI::save_wfn(det_hashvec& space, std::vector<double>& C,
-                             std::vector<std::pair<det_hashvec, std::vector<double>>>& solutions) {
+void ProjectorCI::save_wfn(det_hashvec& space, std::vector<double>& C,
+                           std::vector<std::pair<det_hashvec, std::vector<double>>>& solutions) {
     psi::outfile->Printf("\n\n  Saving the wave function:\n");
 
     //    det_hash<> solution;
@@ -1423,7 +1421,7 @@ void ElementwiseCI::save_wfn(det_hashvec& space, std::vector<double>& C,
     solutions.push_back(std::make_pair(space, C));
 }
 
-void ElementwiseCI::orthogonalize(
+void ProjectorCI::orthogonalize(
     det_hashvec& space, std::vector<double>& C,
     std::vector<std::pair<det_hashvec, std::vector<double>>>& solutions) {
     //    det_hash<> det_C;
@@ -1445,7 +1443,7 @@ void ElementwiseCI::orthogonalize(
     //    normalize(C);
 }
 
-double ElementwiseCI::form_H_C(const det_hashvec& dets_hashvec, std::vector<double>& C, size_t I) {
+double ProjectorCI::form_H_C(const det_hashvec& dets_hashvec, std::vector<double>& C, size_t I) {
     const Determinant& detI = dets_hashvec[I];
     double CI = C[I];
 
@@ -1596,8 +1594,8 @@ double ElementwiseCI::form_H_C(const det_hashvec& dets_hashvec, std::vector<doub
     return result;
 }
 
-double ElementwiseCI::form_H_C_2(const det_hashvec& dets_hashvec, std::vector<double>& C, size_t I,
-                                 size_t cut_index) {
+double ProjectorCI::form_H_C_2(const det_hashvec& dets_hashvec, std::vector<double>& C, size_t I,
+                               size_t cut_index) {
     const Determinant& detI = dets_hashvec[I];
     double CI = C[I];
 
@@ -1748,7 +1746,7 @@ double ElementwiseCI::form_H_C_2(const det_hashvec& dets_hashvec, std::vector<do
     return result;
 }
 
-void ElementwiseCI::compute_single_couplings(double single_coupling_threshold) {
+void ProjectorCI::compute_single_couplings(double single_coupling_threshold) {
     struct {
         bool operator()(std::tuple<int, double> first, std::tuple<int, double> second) const {
             double H1 = std::get<1>(first);
@@ -1890,7 +1888,7 @@ void ElementwiseCI::compute_single_couplings(double single_coupling_threshold) {
     }
 }
 
-void ElementwiseCI::compute_double_couplings(double double_coupling_threshold) {
+void ProjectorCI::compute_double_couplings(double double_coupling_threshold) {
     struct {
         bool operator()(std::tuple<int, int, double> first,
                         std::tuple<int, int, double> second) const {
@@ -2022,7 +2020,7 @@ void ElementwiseCI::compute_double_couplings(double double_coupling_threshold) {
     }
 }
 
-void ElementwiseCI::compute_couplings_half(const det_hashvec& dets, size_t cut_size) {
+void ProjectorCI::compute_couplings_half(const det_hashvec& dets, size_t cut_size) {
     Determinant andBits(dets[0]), orBits(dets[0]);
     andBits.flip();
     for (size_t i = 0; i < cut_size; ++i) {
@@ -2156,7 +2154,7 @@ void ElementwiseCI::compute_couplings_half(const det_hashvec& dets, size_t cut_s
     bb_couplings_size_ = bb_couplings_.size();
 }
 
-std::vector<std::tuple<double, int, int>> ElementwiseCI::sym_labeled_orbitals(std::string type) {
+std::vector<std::tuple<double, int, int>> ProjectorCI::sym_labeled_orbitals(std::string type) {
     std::vector<std::tuple<double, int, int>> labeled_orb;
 
     if (type == "RHF" or type == "ROHF" or type == "ALFA") {
@@ -2202,11 +2200,11 @@ std::vector<std::tuple<double, int, int>> ElementwiseCI::sym_labeled_orbitals(st
     return labeled_orb;
 }
 
-void ElementwiseCI::set_method_variables(
+void ProjectorCI::set_method_variables(
     std::string ex_alg, size_t nroot_method, size_t root,
     const std::vector<std::vector<std::pair<Determinant, double>>>& old_roots) {
     if (ex_alg != "ROOT_ORTHOGONALIZE") {
-        throw psi::PSIEXCEPTION(ex_alg + " has not been implemented in EWCI.");
+        throw psi::PSIEXCEPTION(ex_alg + " has not been implemented in PCI.");
     }
     nroot_ = nroot_method;
     current_root_ = root;
@@ -2223,8 +2221,8 @@ void ElementwiseCI::set_method_variables(
     }
 }
 
-DeterminantHashVec ElementwiseCI::get_PQ_space() { return solutions_[solutions_.size() - 1].first; }
-psi::SharedMatrix ElementwiseCI::get_PQ_evecs() {
+DeterminantHashVec ProjectorCI::get_PQ_space() { return solutions_[solutions_.size() - 1].first; }
+psi::SharedMatrix ProjectorCI::get_PQ_evecs() {
     const auto& C = solutions_[solutions_.size() - 1].second;
     size_t nDet = C.size();
     psi::SharedMatrix evecs = std::make_shared<psi::Matrix>("U", nDet, nroot_);
@@ -2233,14 +2231,14 @@ psi::SharedMatrix ElementwiseCI::get_PQ_evecs() {
     }
     return evecs;
 }
-psi::SharedVector ElementwiseCI::get_PQ_evals() {
+psi::SharedVector ProjectorCI::get_PQ_evals() {
     psi::SharedVector evals = std::make_shared<psi::Vector>("e", nroot_);
     evals->set(0, approx_energy_ - as_ints_->scalar_energy() - nuclear_repulsion_energy_);
     return evals;
 }
-WFNOperator ElementwiseCI::get_op() { return WFNOperator(); }
-size_t ElementwiseCI::get_ref_root() { return current_root_; }
-std::vector<double> ElementwiseCI::get_multistate_pt2_energy_correction() {
+WFNOperator ProjectorCI::get_op() { return WFNOperator(); }
+size_t ProjectorCI::get_ref_root() { return current_root_; }
+std::vector<double> ProjectorCI::get_multistate_pt2_energy_correction() {
     return std::vector<double>(nroot_);
 }
 } // namespace forte

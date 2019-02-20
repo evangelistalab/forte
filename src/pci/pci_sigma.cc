@@ -236,14 +236,14 @@ void PCISigmaVector::apply_tau_H_symm_det_dynamic_HBCI_2(
     bool do_doubles = std::fabs(max_coupling.second * CI) >= spawning_threshold;
 
     // Diagonal contributions
-    // parallel_timer_on("EWCI:diagonal", omp_get_thread_num());
+    // parallel_timer_on("PCI:diagonal", omp_get_thread_num());
     bool diagonal_flag = false;
     double diagonal_contribution = 0.0;
-    // parallel_timer_off("EWCI:diagonal", omp_get_thread_num());
+    // parallel_timer_off("PCI:diagonal", omp_get_thread_num());
 
     Determinant detJ(detI);
     if (do_singles) {
-        // parallel_timer_on("EWCI:singles", omp_get_thread_num());
+        // parallel_timer_on("PCI:singles", omp_get_thread_num());
         // Generate alpha excitations
         for (size_t x = 0; x < a_couplings_size_; ++x) {
             double HJI_max = std::get<1>(a_couplings_[x]);
@@ -349,9 +349,9 @@ void PCISigmaVector::apply_tau_H_symm_det_dynamic_HBCI_2(
                 }
             }
         }
-        // parallel_timer_off("EWCI:singles", omp_get_thread_num());
+        // parallel_timer_off("PCI:singles", omp_get_thread_num());
     } else if (do_singles_1) {
-        // parallel_timer_on("EWCI:singles", omp_get_thread_num());
+        // parallel_timer_on("PCI:singles", omp_get_thread_num());
         // Generate alpha excitations
         for (size_t x = 0; x < a_couplings_size_; ++x) {
             double HJI_max = std::get<1>(a_couplings_[x]);
@@ -460,11 +460,11 @@ void PCISigmaVector::apply_tau_H_symm_det_dynamic_HBCI_2(
                 }
             }
         }
-        // parallel_timer_off("EWCI:singles", omp_get_thread_num());
+        // parallel_timer_off("PCI:singles", omp_get_thread_num());
     }
 
     if (do_doubles) {
-        // parallel_timer_on("EWCI:doubles", omp_get_thread_num());
+        // parallel_timer_on("PCI:doubles", omp_get_thread_num());
         // Generate alpha-alpha excitations
         for (size_t x = 0; x < aa_couplings_size_; ++x) {
             double HJI_max = std::get<2>(aa_couplings_[x]);
@@ -618,9 +618,9 @@ void PCISigmaVector::apply_tau_H_symm_det_dynamic_HBCI_2(
                 }
             }
         }
-        // parallel_timer_off("EWCI:doubles", omp_get_thread_num());
+        // parallel_timer_off("PCI:doubles", omp_get_thread_num());
     } else if (do_doubles_1) {
-        // parallel_timer_on("EWCI:doubles", omp_get_thread_num());
+        // parallel_timer_on("PCI:doubles", omp_get_thread_num());
         // Generate alpha-alpha excitations
         for (size_t x = 0; x < aa_couplings_size_; ++x) {
             double HJI_max = std::get<2>(aa_couplings_[x]);
@@ -777,7 +777,7 @@ void PCISigmaVector::apply_tau_H_symm_det_dynamic_HBCI_2(
                 }
             }
         }
-        // parallel_timer_off("EWCI:doubles", omp_get_thread_num());
+        // parallel_timer_off("PCI:doubles", omp_get_thread_num());
     }
     if (diagonal_flag) {
         if (std::fabs(diagonal_contribution) > DBL_MIN) {
@@ -824,13 +824,13 @@ void PCISigmaVector::apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(
     bool do_doubles = std::fabs(max_coupling.second * ref_CI) >= spawning_threshold;
 
     // Diagonal contributions
-    // parallel_timer_on("EWCI:diagonal", omp_get_thread_num());
+    // parallel_timer_on("PCI:diagonal", omp_get_thread_num());
     double diagonal_contribution = 0.0;
-    // parallel_timer_off("EWCI:diagonal", omp_get_thread_num());
+    // parallel_timer_off("PCI:diagonal", omp_get_thread_num());
 
     Determinant detJ(detI);
     if (do_singles) {
-        // parallel_timer_on("EWCI:singles", omp_get_thread_num());
+        // parallel_timer_on("PCI:singles", omp_get_thread_num());
         // Generate alpha excitations
         for (size_t x = 0; x < a_couplings_size_; ++x) {
             double HJI_max = std::get<1>(a_couplings_[x]);
@@ -929,11 +929,11 @@ void PCISigmaVector::apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(
                 }
             }
         }
-        // parallel_timer_off("EWCI:singles", omp_get_thread_num());
+        // parallel_timer_off("PCI:singles", omp_get_thread_num());
     }
 
     if (do_doubles) {
-        // parallel_timer_on("EWCI:doubles", omp_get_thread_num());
+        // parallel_timer_on("PCI:doubles", omp_get_thread_num());
         // Generate alpha-alpha excitations
         for (size_t x = 0; x < aa_couplings_size_; ++x) {
             double HJI_max = std::get<2>(aa_couplings_[x]);
@@ -1069,7 +1069,7 @@ void PCISigmaVector::apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(
                 }
             }
         }
-        // parallel_timer_off("EWCI:doubles", omp_get_thread_num());
+        // parallel_timer_off("PCI:doubles", omp_get_thread_num());
     }
 #pragma omp atomic
     result_C[I] += diagonal_contribution;

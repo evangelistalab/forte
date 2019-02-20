@@ -18,7 +18,7 @@ set {
 }
 
 set forte {
-  active_space_solver ewci
+  active_space_solver pci
   nroot 2
   PCI_GENERATOR wall-chebyshev
   pci_spawning_threshold 0.0001
@@ -30,4 +30,4 @@ energy('scf')
 compare_values(refscf, variable("CURRENT ENERGY"), 10, "SCF energy") #TEST
 
 energy('forte')
-compare_values(refpci, variable("EWCI ENERGY"), 7, "EWCI excited state energy") #TEST
+compare_values(refpci, variable("PCI ENERGY"), 7, "PCI excited state energy") #TEST

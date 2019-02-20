@@ -27,8 +27,8 @@
  * @END LICENSE
  */
 
-#ifndef _ewci_h_
-#define _ewci_h_
+#ifndef _pci_h_
+#define _pci_h_
 
 #include <fstream>
 #include <functional>
@@ -59,7 +59,7 @@ using det_hashvec = HashVector<Determinant, Determinant::Hash>;
  * @brief The SparsePathIntegralCI class
  * This class implements an a sparse path-integral FCI algorithm
  */
-class ElementwiseCI : public SelectedCIMethod {
+class ProjectorCI : public SelectedCIMethod {
   public:
     // ==> Class Constructor and Destructor <==
 
@@ -69,7 +69,7 @@ class ElementwiseCI : public SelectedCIMethod {
      * @param options The main options object
      * @param ints A pointer to an allocated integral object
      */
-    ElementwiseCI(StateInfo state, size_t nroot, std::shared_ptr<forte::SCFInfo> scf_info,
+    ProjectorCI(StateInfo state, size_t nroot, std::shared_ptr<forte::SCFInfo> scf_info,
                   std::shared_ptr<MOSpaceInfo> mo_space_info,
                   std::shared_ptr<ActiveSpaceIntegrals> as_ints);
 
@@ -272,7 +272,7 @@ class ElementwiseCI : public SelectedCIMethod {
     double old_var_energy_;
     double old_proj_energy_;
     bool converged_;
-    local_timer t_ewci_;
+    local_timer t_pci_;
     SparseCISolver sparse_solver_;
 
     // ==> Class functions <==
@@ -382,4 +382,4 @@ class ElementwiseCI : public SelectedCIMethod {
 };
 } // namespace forte
 
-#endif // _ewci_h_
+#endif // _pci_h_
