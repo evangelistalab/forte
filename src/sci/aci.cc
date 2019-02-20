@@ -228,7 +228,7 @@ void AdaptiveCI::print_info() {
     outfile->Printf("\n  %s", std::string(65, '-').c_str());
 
     if (options_->get_bool("PRINT_1BODY_EVALS")) {
-        outfile->Printf("\n  RDMs orbital energies:");
+        outfile->Printf("\n  Reference orbital energies:");
         std::shared_ptr<Vector> epsilon_a = scf_info_->epsilon_a();
 
         auto actmo = mo_space_info_->get_absolute_mo("ACTIVE");
@@ -249,7 +249,7 @@ double AdaptiveCI::compute_energy() {
     }
     print_method_banner({"Adaptive Configuration Interaction",
                          "written by Jeffrey B. Schriber and Francesco A. Evangelista"});
-    outfile->Printf("\n  ==> RDMs Information <==\n");
+    outfile->Printf("\n  ==> Reference Information <==\n");
     outfile->Printf("\n  There are %d frozen orbitals.", nfrzc_);
     outfile->Printf("\n  There are %zu active orbitals.\n", nact_);
     print_info();

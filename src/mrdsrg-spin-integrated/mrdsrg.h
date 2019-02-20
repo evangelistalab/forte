@@ -382,7 +382,7 @@ class MRDSRG : public MASTER_DSRG {
     /// Compute two-body term of commutator [H2, G2]
     void H2_G2_C2(BlockedTensor& H2, BlockedTensor& G2, const double& alpha, BlockedTensor& C2);
 
-    // => RDMs relaxation <= //
+    // => Reference relaxation <= //
 
     /// Transfer integrals for FCI
     void transfer_integrals();

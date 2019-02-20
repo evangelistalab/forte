@@ -277,7 +277,7 @@ class ProjectorCI_Simple : public ActiveSpaceMethod {
     double lastLow = 0.0;
     bool previous_go_up = false;
 
-    // * RDMs spawning
+    // * Reference spawning
     /// Spawning according to the coefficient in a reference
     bool reference_spawning_;
 

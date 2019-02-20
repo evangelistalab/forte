@@ -71,7 +71,7 @@ CI_RDMs::CI_RDMs(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions
     // Size of subspace
     subspace_size_ = options->get_int("ACTIVE_GUESS_SIZE");
 
-    // RDMs type
+    // Reference type
     ref_type_ = "CAS";
     if (options->has_changed("ACTIVE_REF_TYPE")) {
         ref_type_ = options->get_str("ACTIVE_REF_TYPE");
@@ -344,7 +344,7 @@ void CI_RDMs::build_cas_reference(std::vector<Determinant>& ref_space) {
     }
 
     outfile->Printf("\n  Number of reference determinants: %zu", ref_space.size());
-    outfile->Printf("\n  RDMs generated from %d MOs", na);
+    outfile->Printf("\n  Reference generated from %d MOs", na);
 }
 
 std::vector<std::tuple<double, int, int>> CI_RDMs::sym_labeled_orbitals(std::string type) {

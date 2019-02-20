@@ -161,7 +161,7 @@ double ASCI::compute_energy() {
 
     startup();
     print_method_banner({"ASCI", "written by Jeffrey B. Schriber and Francesco A. Evangelista"});
-    outfile->Printf("\n  ==> RDMs Information <==\n");
+    outfile->Printf("\n  ==> Reference Information <==\n");
     outfile->Printf("\n  There are %d frozen orbitals.", nfrzc_);
     outfile->Printf("\n  There are %zu active orbitals.\n", nact_);
     print_info();
