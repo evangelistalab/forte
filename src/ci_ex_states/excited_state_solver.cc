@@ -500,29 +500,30 @@ double ExcitedStateSolver::compute_spin_contamination(DeterminantHashVec& space,
 }
 
 std::vector<RDMs> ExcitedStateSolver::rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
-                                   int max_rdm_level) {
+                                           int max_rdm_level) {
 
     std::vector<RDMs> refs;
 
     for (const auto& root_pair : root_list) {
 
-        refs.push_back(
-            compute_rdms(as_ints_, final_wfn_, op_, evecs_, root_pair.first, root_pair.second, max_rdm_level));
+        refs.push_back(compute_rdms(as_ints_, final_wfn_, op_, evecs_, root_pair.first,
+                                    root_pair.second, max_rdm_level));
     }
     return refs;
 }
 
 std::vector<RDMs>
 ExcitedStateSolver::transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
-                            std::shared_ptr<ActiveSpaceMethod> method2, int max_rdm_level) {
+                                    std::shared_ptr<ActiveSpaceMethod> method2, int max_rdm_level) {
     std::vector<RDMs> refs;
     throw std::runtime_error("ExcitedStateSolver::transition_rdms is not implemented!");
     return refs;
 }
 
 RDMs ExcitedStateSolver::compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
-                                           DeterminantHashVec& dets, WFNOperator& op,
-                                           psi::SharedMatrix& PQ_evecs, int root1, int root2, int max_rdm_level) {
+                                      DeterminantHashVec& dets, WFNOperator& op,
+                                      psi::SharedMatrix& PQ_evecs, int root1, int root2,
+                                      int max_rdm_level) {
 
     if (!direct_rdms_) {
         op.clear_op_s_lists();
@@ -628,8 +629,7 @@ RDMs ExcitedStateSolver::compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_
         return RDMs(ordm_a, ordm_b, trdm_aa, trdm_ab, trdm_bb);
     }
 
-    return RDMs(ordm_a, ordm_b, trdm_aa, trdm_ab, trdm_bb, trdm_aaa, trdm_aab, trdm_abb,
-                     trdm_bbb);
+    return RDMs(ordm_a, ordm_b, trdm_aa, trdm_ab, trdm_bb, trdm_aaa, trdm_aab, trdm_abb, trdm_bbb);
 }
 
 // void ExcitedStateSolver::add_external_excitations(DeterminantHashVec& ref) {

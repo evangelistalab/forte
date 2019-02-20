@@ -141,7 +141,8 @@ class ExcitedStateSolver : public ActiveSpaceMethod {
 
     /// Compute the RDMs
     RDMs compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints, DeterminantHashVec& dets,
-                           WFNOperator& op, psi::SharedMatrix& PQ_evecs, int root1, int root2, int max_rdm_level);
+                      WFNOperator& op, psi::SharedMatrix& PQ_evecs, int root1, int root2,
+                      int max_rdm_level);
 };
 }
 #endif // _excited_state_solver_h_
