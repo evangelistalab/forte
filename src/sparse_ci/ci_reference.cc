@@ -49,7 +49,6 @@ CI_Reference::CI_Reference(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<Fo
     // State symmetry
     root_sym_ = symmetry;
 
-
     // Double and singly occupied MOs
     psi::Dimension doccpi = scf_info_->doccpi();
     psi::Dimension soccpi = scf_info_->soccpi();

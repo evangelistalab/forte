@@ -74,8 +74,9 @@ std::unique_ptr<ActiveSpaceMethod> make_active_space_method(
     if (type == "FCI") {
         solver = std::make_unique<FCISolver>(state, nroot, mo_space_info, as_ints);
     } else if (type == "ACI") {
-//        solver =
-//            std::make_unique<AdaptiveCI>(state, nroot, scf_info, options, mo_space_info, as_ints);
+        //        solver =
+        //            std::make_unique<AdaptiveCI>(state, nroot, scf_info, options, mo_space_info,
+        //            as_ints);
         solver = std::make_unique<ExcitedStateSolver>(
             state, nroot, mo_space_info, as_ints,
             std::make_unique<AdaptiveCI_SCI>(state, nroot, scf_info, options, mo_space_info,
@@ -86,22 +87,7 @@ std::unique_ptr<ActiveSpaceMethod> make_active_space_method(
         solver = std::make_unique<ASCI>(state, nroot, scf_info, options, mo_space_info, as_ints);
     } else if (type == "CASSCF") {
         solver = std::make_unique<CASSCF>(state, nroot, scf_info, options, mo_space_info, as_ints);
-//    } else if (type == "PCI") {
-//        // TODO modify pci code to compute multiple roots under new framework
-//        solver =
-//            std::make_unique<ProjectorCI>(state, nroot, scf_info, options, mo_space_info, as_ints);
-//    } else if (type == "PCI_SIMPLE") {
-//        // TODO modify pci code to compute multiple roots under new framework
-//        solver = std::make_unique<ProjectorCI_Simple>(state, nroot, scf_info, options,
-//                                                      mo_space_info, as_ints);
-//    } else if (type == "PCI_HASHVEC") {
-//        // TODO modify pci code to compute multiple roots under new framework
-//        solver = std::make_unique<ProjectorCI_HashVec>(state, nroot, scf_info, options,
-//                                                       mo_space_info, as_ints);
     } else if (type == "EWCI") {
-        // TODO modify pci code to compute multiple roots under new framework
-//        solver = std::make_unique<ElementwiseCI>(state, nroot, scf_info, options, mo_space_info,
-//                                                 as_ints);
         solver = std::make_unique<ExcitedStateSolver>(
             state, nroot, mo_space_info, as_ints,
             std::make_unique<ElementwiseCI>(state, nroot, scf_info, mo_space_info, as_ints));
