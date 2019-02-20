@@ -54,6 +54,7 @@ void MASTER_DSRG::startup() {
     Enuc_ = ints_->nuclear_repulsion_energy();
     Efrzc_ = ints_->frozen_core_energy();
     Eref_ = compute_Eref_from_rdms(rdms_, ints_, mo_space_info_);
+    psi::Process::environment.globals["DSRG REFERENCE ENERGY"] = Eref_;
 
     // initialize timer for commutator
     dsrg_time_ = DSRG_TIME();
@@ -70,7 +71,9 @@ void MASTER_DSRG::startup() {
     }
 
     // recompute reference energy from ForteIntegral and check consistency with RDMs
-    check_init_reference_energy();
+    // I see no point of checking reference energy because it is now recomputed
+    // instead of reading a number from Reference class
+    //    check_init_reference_energy();
 
     // initialize Uactv_ to identity
     Uactv_ = BTF_->build(tensor_type_, "Uactv", spin_cases({"aa"}));
@@ -289,8 +292,8 @@ void MASTER_DSRG::check_init_reference_energy() {
     if (fabs(E - Eref_) > 10.0 * econv) {
         outfile->Printf("\n    Warning! Inconsistent reference energy!");
         outfile->Printf("\n    Read from RDMs class:            %.12f", Eref_);
-        outfile->Printf("\n    Recomputed using RDMs densities: %.12f", E);
-        outfile->Printf("\n    RDMs energy (MK vacuum) is set to recomputed value.");
+        outfile->Printf("\n    Recomputed using reference RDMs: %.12f", E);
+        outfile->Printf("\n    Reference energy (MK vacuum) is set to recomputed value.");
 
         warnings_.push_back(std::make_tuple("Inconsistent ref. energy", "Use recomputed value",
                                             "A bug? Post an issue."));

@@ -558,7 +558,7 @@ void DSRG_MRPT2::build_eff_oei() {
 psi::SharedMatrix DSRG_MRPT2::xms_rotation(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
                                            std::vector<forte::Determinant>& p_space,
                                            psi::SharedMatrix civecs) {
-    print_h2("Perform XMS Rotation to RDMs States");
+    print_h2("Perform XMS Rotation to Reference States");
     outfile->Printf("\n");
 
     // build Fock matrix

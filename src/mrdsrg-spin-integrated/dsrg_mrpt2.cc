@@ -58,7 +58,7 @@ DSRG_MRPT2::DSRG_MRPT2(RDMs rdms, std::shared_ptr<SCFInfo> scf_info,
 
     print_method_banner({"MR-DSRG Second-Order Perturbation Theory",
                          "Chenyang Li, Kevin Hannon, Francesco Evangelista"});
-    outfile->Printf("\n    RDMss:");
+    outfile->Printf("\n    References:");
     outfile->Printf("\n      u-DSRG-MRPT2:    J. Chem. Theory Comput. 2015, 11, 2097.");
     outfile->Printf("\n      (pr-)DSRG-MRPT2: J. Chem. Phys. 2017, 146, 124132.");
 
@@ -1438,7 +1438,7 @@ void DSRG_MRPT2::print_dm_pt2() {
     double rx = dm_ref_[0];
     double ry = dm_ref_[1];
     double rz = dm_ref_[2];
-    outfile->Printf("\n    RDMs electronic dipole moment:");
+    outfile->Printf("\n    Reference electronic dipole moment:");
     outfile->Printf("\n      X: %10.6f  Y: %10.6f  Z: %10.6f\n", rx, ry, rz);
 
     double x = Mbar0_[0];
@@ -1451,7 +1451,7 @@ void DSRG_MRPT2::print_dm_pt2() {
     ry += ny;
     rz += nz;
     double rt = std::sqrt(rx * rx + ry * ry + rz * rz);
-    outfile->Printf("\n    RDMs dipole moment:");
+    outfile->Printf("\n    Reference dipole moment:");
     outfile->Printf("\n      X: %10.6f  Y: %10.6f  Z: %10.6f  Total: %10.6f\n", rx, ry, rz, rt);
 
     x += nx;

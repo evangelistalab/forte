@@ -59,7 +59,7 @@ DSRG_MRPT3::DSRG_MRPT3(RDMs rdms, std::shared_ptr<SCFInfo> scf_info,
     : MASTER_DSRG(rdms, scf_info, options, ints, mo_space_info) {
 
     print_method_banner({"MR-DSRG Third-Order Perturbation Theory", "Chenyang Li"});
-    outfile->Printf("\n    RDMs:");
+    outfile->Printf("\n    Reference:");
     outfile->Printf("\n      J. Chem. Phys. 2017, 146, 124132.");
 
     startup();
@@ -1771,7 +1771,7 @@ void DSRG_MRPT3::print_dm_pt3() {
     };
 
     print_vector3("Nuclear", dm_nuc_);
-    print_vector3("RDMs electronic", dm_ref_);
+    print_vector3("Reference electronic", dm_ref_);
     print_vector3("DSRG-MRPT2 electronic", Mbar0_pt2_);
     print_vector3("DSRG-MRPT2 (2nd-order complete) electronic", Mbar0_pt2c_);
     print_vector3("DSRG-MRPT3 electronic", Mbar0_);
@@ -1786,7 +1786,7 @@ void DSRG_MRPT3::print_dm_pt3() {
         return t;
     };
 
-    print_vector4("RDMs", dm_ref_);
+    print_vector4("Reference", dm_ref_);
     print_vector4("DSRG-MRPT2", Mbar0_pt2_);
     print_vector4("DSRG-MRPT2 (2nd-order complete)", Mbar0_pt2c_);
     double t = print_vector4("DSRG-MRPT3", Mbar0_);
