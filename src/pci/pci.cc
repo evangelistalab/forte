@@ -362,22 +362,7 @@ void ProjectorCI::print_info() {
     }
 }
 
-void print_polynomial(std::vector<double>& coefs) {
-    outfile->Printf("\n    f(x) = ");
-    for (int i = coefs.size() - 1; i >= 0; i--) {
-        switch (i) {
-        case 0:
-            outfile->Printf("%s%e", coefs[i] >= 0 ? "+" : "", coefs[i]);
-            break;
-        case 1:
-            outfile->Printf("%s%e * x ", coefs[i] >= 0 ? "+" : "", coefs[i]);
-            break;
-        default:
-            outfile->Printf("%s%e * x^%d ", coefs[i] >= 0 ? "+" : "", coefs[i], i);
-            break;
-        }
-    }
-}
+void print_polynomial(std::vector<double>& coefs);
 
 double ProjectorCI::estimate_high_energy() {
     double high_obt_energy = 0.0;
@@ -616,31 +601,12 @@ void ProjectorCI::print_characteristic_function() {
                     lambda_h_ + nuclear_repulsion_energy_);
 }
 
-double factorial(int n) { return (n == 1 || n == 0) ? 1.0 : factorial(n - 1) * n; }
+double factorial(int n);
 
-void binomial_coefs(std::vector<double>& coefs, int order, double a, double b) {
-    coefs.clear();
-    for (int i = 0; i <= order; i++) {
-        coefs.push_back(factorial(order) / (factorial(i) * factorial(order - i)) * pow(a, i) *
-                        pow(b, order - i));
-    }
-}
+void binomial_coefs(std::vector<double>& coefs, int order, double a, double b);
 
 void Polynomial_generator_coefs(std::vector<double>& coefs, std::vector<double>& poly_coefs,
-                                double a, double b) {
-    coefs.clear();
-    int order = poly_coefs.size() - 1;
-    for (int i = 0; i <= order; i++) {
-        coefs.push_back(0.0);
-    }
-    for (int i = 0; i <= order; i++) {
-        std::vector<double> bino_coefs;
-        binomial_coefs(bino_coefs, i, a, b);
-        for (int j = 0; j <= i; j++) {
-            coefs[j] += poly_coefs[i] * bino_coefs[j];
-        }
-    }
-}
+                                double a, double b);
 
 void Taylor_polynomial_coefs(std::vector<double>& coefs, int order) {
     coefs.clear();
@@ -664,37 +630,7 @@ void Taylor_generator_coefs(std::vector<double>& coefs, int order, double tau, d
     //    }
 }
 
-void Chebyshev_polynomial_coefs(std::vector<double>& coefs, int order) {
-    coefs.clear();
-    std::vector<double> coefs_0, coefs_1;
-    if (order == 0) {
-        coefs.push_back(1.0);
-        return;
-    } else
-        coefs_0.push_back(1.0);
-    if (order == 1) {
-        coefs.push_back(0.0);
-        coefs.push_back(1.0);
-        return;
-    } else {
-        coefs_1.push_back(0.0);
-        coefs_1.push_back(1.0);
-    }
-    for (int i = 2; i <= order; i++) {
-        coefs.clear();
-        for (int j = 0; j <= i; j++) {
-            coefs.push_back(0.0);
-        }
-        for (int j = 0; j <= i - 2; j++) {
-            coefs[j] -= coefs_0[j];
-        }
-        for (int j = 0; j <= i - 1; j++) {
-            coefs[j + 1] += 2.0 * coefs_1[j];
-        }
-        coefs_0 = coefs_1;
-        coefs_1 = coefs;
-    }
-}
+void Chebyshev_polynomial_coefs(std::vector<double>& coefs, int order);
 
 void Exp_Chebyshev_generator_coefs(std::vector<double>& coefs, int order, double tau,
                                    double range) {
@@ -727,26 +663,7 @@ void Chebyshev_generator_coefs(std::vector<double>& coefs, int order, double ran
     Polynomial_generator_coefs(coefs, poly_coefs, -1.0 / range, 0.0);
 }
 
-void Wall_Chebyshev_generator_coefs(std::vector<double>& coefs, int order, double range) {
-    coefs.clear();
-    std::vector<double> poly_coefs;
-    for (int i = 0; i <= order; i++) {
-        poly_coefs.push_back(0.0);
-    }
-
-    for (int i = 0; i <= order; i++) {
-        std::vector<double> chbv_poly_coefs;
-        Chebyshev_polynomial_coefs(chbv_poly_coefs, i);
-        //        outfile->Printf("\n\n  chebyshev poly in step %d", i);
-        //        print_polynomial(chbv_poly_coefs);
-        for (int j = 0; j <= i; j++) {
-            poly_coefs[j] += (i == 0 ? 1.0 : 2.0) * chbv_poly_coefs[j];
-        }
-        //        outfile->Printf("\n\n  propagate poly in step %d", i);
-        //        print_polynomial(poly_coefs);
-    }
-    Polynomial_generator_coefs(coefs, poly_coefs, -1.0 / range, 0.0);
-}
+void Wall_Chebyshev_generator_coefs(std::vector<double>& coefs, int order, double range);
 
 double ProjectorCI::compute_energy() {
     timer_on("PCI:Energy");
@@ -4620,18 +4537,7 @@ void copy_vec_to_hash(det_vec& dets, const std::vector<double>& C, det_hash<>& d
     }
 }
 
-double normalize(std::vector<double>& C) {
-    size_t size = C.size();
-    double norm = 0.0;
-    for (size_t I = 0; I < size; ++I) {
-        norm += C[I] * C[I];
-    }
-    norm = std::sqrt(norm);
-    for (size_t I = 0; I < size; ++I) {
-        C[I] /= norm;
-    }
-    return norm;
-}
+double normalize(std::vector<double>& C);
 
 double normalize(det_hash<>& dets_C) {
     double norm = 0.0;

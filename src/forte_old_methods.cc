@@ -79,9 +79,6 @@
 //#include "mrdsrg-spin-integrated/active_dsrgpt2.h"
 
 #include "pci/ewci.h"
-#include "pci/pci.h"
-#include "pci/pci_hashvec.h"
-#include "pci/pci_simple.h"
 
 #include "v2rdm/v2rdm.h"
 #include "helpers/timer.h"
