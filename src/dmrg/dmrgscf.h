@@ -42,21 +42,21 @@
 #include "chemps2/Initialize.h"
 #include "chemps2/EdmistonRuedenberg.h"
 
-
 namespace forte {
 
 class DMRGSCF : public ActiveSpaceMethod {
   public:
-    DMRGSCF(StateInfo state, std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
-            std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
+    DMRGSCF(StateInfo state, std::shared_ptr<SCFInfo> scf_info,
+            std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
+            std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     double compute_energy();
 
-    RDMs reference() { return dmrg_ref_; }
+    RDMs rmds() { return dmrg_rdms_; }
     void set_iterations(int dmrg_iterations) { dmrg_iterations_ = dmrg_iterations; }
 
   private:
-    RDMs dmrg_ref_;
+    RDMs dmrg_rdms_;
     int dmrg_iterations_ = 1;
 
     StateInfo state_;
@@ -82,13 +82,13 @@ class DMRGSCF : public ActiveSpaceMethod {
 
     /// Form active fock matrix
     void buildQmatACT(CheMPS2::DMRGSCFmatrix* theQmatACT, CheMPS2::DMRGSCFindices* iHandler,
-                      double* DMRG1DM, psi::SharedMatrix MO_RDM, psi::SharedMatrix MO_JK, psi::SharedMatrix Cmat,
-                      std::shared_ptr<psi::JK> myJK);
+                      double* DMRG1DM, psi::SharedMatrix MO_RDM, psi::SharedMatrix MO_JK,
+                      psi::SharedMatrix Cmat, std::shared_ptr<psi::JK> myJK);
 
-    void buildHamDMRG(std::shared_ptr<psi::IntegralTransform> ints, std::shared_ptr<psi::MOSpace> Aorbs_ptr,
-                      CheMPS2::DMRGSCFmatrix* theTmatrix, CheMPS2::DMRGSCFmatrix* theQmatOCC,
-                      CheMPS2::DMRGSCFindices* iHandler, CheMPS2::Hamiltonian* HamDMRG,
-                      std::shared_ptr<psi::PSIO> psio);
+    void buildHamDMRG(std::shared_ptr<psi::IntegralTransform> ints,
+                      std::shared_ptr<psi::MOSpace> Aorbs_ptr, CheMPS2::DMRGSCFmatrix* theTmatrix,
+                      CheMPS2::DMRGSCFmatrix* theQmatOCC, CheMPS2::DMRGSCFindices* iHandler,
+                      CheMPS2::Hamiltonian* HamDMRG, std::shared_ptr<psi::PSIO> psio);
     void buildHamDMRGForte(CheMPS2::DMRGSCFmatrix* theQmatOCC, CheMPS2::DMRGSCFindices* iHandler,
                            CheMPS2::Hamiltonian* HamDMRG, std::shared_ptr<ForteIntegrals> ints);
 
@@ -101,11 +101,13 @@ class DMRGSCF : public ActiveSpaceMethod {
                                  std::shared_ptr<psi::MOSpace> OAorbs_ptr,
                                  std::shared_ptr<psi::MOSpace> Vorbs_ptr,
                                  CheMPS2::DMRGSCFintegrals* theRotatedTEI,
-                                 CheMPS2::DMRGSCFindices* iHandler, std::shared_ptr<psi::PSIO> psio);
+                                 CheMPS2::DMRGSCFindices* iHandler,
+                                 std::shared_ptr<psi::PSIO> psio);
     void copyUNITARYtoPSIMX(CheMPS2::DMRGSCFunitary* unitary, CheMPS2::DMRGSCFindices* iHandler,
                             psi::SharedMatrix target);
     void update_WFNco(psi::SharedMatrix orig_coeff, CheMPS2::DMRGSCFindices* iHandler,
-                      CheMPS2::DMRGSCFunitary* unitary, psi::SharedMatrix work1, psi::SharedMatrix work2);
+                      CheMPS2::DMRGSCFunitary* unitary, psi::SharedMatrix work1,
+                      psi::SharedMatrix work2);
 
     /// Makes sure that CHEMPS2 and PSI4 have same symmetry
     int chemps2_groupnumber(const string SymmLabel);
@@ -115,6 +117,6 @@ class DMRGSCF : public ActiveSpaceMethod {
     void copyCHEMPS2MXtoPSIMX(CheMPS2::DMRGSCFmatrix* source, CheMPS2::DMRGSCFindices* iHandler,
                               psi::SharedMatrix target);
 };
-}
+} // namespace forte
 
 #endif // DMRG_H

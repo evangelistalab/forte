@@ -254,7 +254,7 @@ class DSRG_MRPT3 : public MASTER_DSRG {
                           BlockedTensor& C2, const std::vector<std::vector<std::string>>& qs,
                           const std::vector<std::vector<std::string>>& jb);
 
-    // => RDMs relaxation <= //
+    // => Reference relaxation <= //
 
     /// Transfer integrals for FCI
     void transfer_integrals();

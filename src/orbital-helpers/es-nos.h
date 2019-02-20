@@ -56,7 +56,7 @@ class ESNO : public psi::Wavefunction {
     DeterminantHashVec& reference_;
 
     void compute_nos();
-    void transform(RDMs& reference);
+//    void transform(RDMs& rdms);
 
   private:
     std::shared_ptr<ActiveSpaceIntegrals> fci_ints_;

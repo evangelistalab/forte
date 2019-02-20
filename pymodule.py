@@ -50,7 +50,7 @@ def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
 
 
     # Notes (York):
-    #     cases to run active space solver: rdms relaxation, state-average dsrg
+    #     cases to run active space solver: reference relaxation, state-average dsrg
     #     cases to run contracted ci solver (will be put in ActiveSpaceSolver): contracted state-average dsrg
     Etemp1, Etemp2 = 0.0, 0.0
 
@@ -132,7 +132,7 @@ def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
 
             # Compute the energy
             if is_multi_state and ms_dsrg_algorithm == "SA_SUB":
-                sa_sub_max_rdm = 2 # TODO: is the 2 here correct?
+                sa_sub_max_rdm = 2 # TODO: This should be 3 if do_hbar3 is true
                 state_energies_list = active_space_solver.compute_contracted_energy(ints_dressed, sa_sub_max_rdm)
                 Erelax = forte.compute_average_state_energy(state_energies_list,state_weights_map)
                 return Erelax

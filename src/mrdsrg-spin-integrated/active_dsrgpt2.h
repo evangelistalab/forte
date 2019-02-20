@@ -112,10 +112,10 @@ class ACTIVE_DSRGPT2 {
     /// The FCI_MO object
     std::shared_ptr<FCI_MO> fci_mo_;
 
-    /// RDMs type (CIS/CISD/COMPLETE)
+    /// Reference type (CIS/CISD/COMPLETE)
     std::string ref_type_;
 
-    /// RDMs energies
+    /// Reference energies
     std::vector<std::vector<double>> ref_energies_;
 
     /// DSRGPT2 energies

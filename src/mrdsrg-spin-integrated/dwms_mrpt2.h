@@ -13,8 +13,6 @@ namespace forte {
 class ForteOptions;
 class SCFInfo;
 
-void set_DWMS_options(ForteOptions& foptions);
-
 class DWMS_DSRGPT2 {
   public:
     /**

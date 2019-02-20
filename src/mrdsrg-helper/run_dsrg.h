@@ -12,10 +12,7 @@
 
 namespace forte {
 
-/// Set the DSRG options
-void set_DSRG_options(ForteOptions& foptions);
-
-/// RDMs relaxation, relaxed dipoles, transition dipoles,
+/// Reference relaxation, relaxed dipoles, transition dipoles,
 /// general sequence of running dsrg should be implemented in this class
 
 // class RUN_DSRG {

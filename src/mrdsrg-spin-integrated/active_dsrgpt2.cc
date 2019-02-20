@@ -63,7 +63,7 @@ ACTIVE_DSRGPT2::ACTIVE_DSRGPT2(std::shared_ptr<SCFInfo> scf_info,
     print_method_banner({"ACTIVE-DSRG-MRPT2", description, "Chenyang Li"});
 
     outfile->Printf("\n  Note: Orbitals are NOT optimized throughout the process.");
-    outfile->Printf("\n  RDMs selection criteria (CAS/CIS/CISD) will NOT change.");
+    outfile->Printf("\n  Reference selection criterium (CAS/CIS/CISD) will NOT change.");
     outfile->Printf("\n  Each state uses its OWN semicanonical orbitals.");
     outfile->Printf("\n  Ground state is assumed to be a singlet.");
     outfile->Printf("\n  Otherwise, please run separate DSRG-MRPT2 jobs.");
@@ -269,7 +269,7 @@ double ACTIVE_DSRGPT2::compute_energy() {
                 t1_percentage_[h].push_back(fci_mo_->compute_T1_percentage()[0]);
             }
 
-            // compute cumultans
+            // compute cumulants
             std::vector<std::pair<size_t, size_t>> root;
             root.push_back(std::make_pair(0, 0));
             RDMs rdms = fci_mo_->rdms(root, 3)[0];

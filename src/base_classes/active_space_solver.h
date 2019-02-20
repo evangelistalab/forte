@@ -89,7 +89,7 @@ class ActiveSpaceSolver {
         std::map<std::pair<StateInfo, StateInfo>, std::vector<std::pair<size_t, size_t>>>& elements,
         int max_rdm_level);
 
-    /// Compute state-averaged reference
+    /// Compute a state-averaged reference
     RDMs compute_average_rdms(const std::map<StateInfo, std::vector<double>>& state_weights_map,
                               int max_rdm_level);
 

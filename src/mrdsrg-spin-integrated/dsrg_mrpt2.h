@@ -263,7 +263,7 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     /// Compute DSRG-PT2 correction for unrelaxed density
     BlockedTensor compute_pt2_unrelaxed_opdm();
 
-    // => RDMs relaxation <= //
+    // => Reference relaxation <= //
 
     /// Compute one-body term of commutator [H1, T1]
     void H1_T1_C1aa(BlockedTensor& H1, BlockedTensor& T1, const double& alpha, BlockedTensor& C1);

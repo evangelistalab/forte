@@ -110,29 +110,6 @@ void ActiveSpaceSolver::print_energies(std::map<StateInfo, std::vector<double>>&
     }
 }
 
-// std::vector<RDMs> ActiveSpaceSolver::reference(
-//    std::map<std::pair<StateInfo, StateInfo>, std::vector<std::pair<size_t, size_t>>>& elements) {
-
-//    std::vector<RDMs> refs;
-
-//    for (const auto& element : elements) {
-//        const auto& state1 = element.first.first;
-//        const auto& state2 = element.first.second;
-
-//        if (state1 != state2) {
-//            throw std::runtime_error("ActiveSpaceSolver::reference called with states of different
-//            "
-//                                     "symmetry! This function is not yet suported in Forte.");
-//        }
-
-//        std::vector<RDMs> state_refs = state_method_map_[state1]->reference(element.second);
-//        for (const auto& state_ref : state_refs) {
-//            refs.push_back(state_ref);
-//        }
-//    }
-//    return refs;
-//}
-
 std::vector<RDMs> ActiveSpaceSolver::rdms(
     std::map<std::pair<StateInfo, StateInfo>, std::vector<std::pair<size_t, size_t>>>& elements,
     int max_rdm_level) {

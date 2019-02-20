@@ -311,7 +311,7 @@ double DSRG_MRPT::compute_energy() {
     if (corr_lv_ == "PT2") {
         Etotal += compute_energy_pt2();
     } else if (corr_lv_ == "PT3") {
-        //        Etotal += compute_energy_pt3();
+        //        Etotal += compute_energy_pt3(); // TODO: throw if you reach here
     }
 
     psi::Process::environment.globals["CURRENT ENERGY"] = Etotal;
@@ -636,7 +636,7 @@ std::vector<std::string> DSRG_MRPT::od_two_labels() {
 }
 
 void DSRG_MRPT::print_citation() {
-    print_h2("RDMss");
+    print_h2("References");
     std::vector<std::pair<std::string, std::string>> papers{
         {"DSRG-MRPT2", "J. Chem. Theory Comput. 2015, 11, 2097."},
         {"DSRG-MRPT3", "J. Chem. Phys. (in preparation)"}};

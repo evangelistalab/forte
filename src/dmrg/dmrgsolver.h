@@ -59,7 +59,7 @@ class DMRGSolver {
 //               std::shared_ptr<MOSpaceInfo> mo_space_info);
     void compute_energy();
 
-    RDMs reference() { return dmrg_ref_; }
+    RDMs rdms() { return dmrg_rdms_; }
     void set_max_rdm(int max_rdm) { max_rdm_ = max_rdm; }
     void spin_free_rdm(bool spin_free) { spin_free_rdm_ = spin_free; }
     void disk_3_rdm(bool use_disk_for_3rdm) { disk_3_rdm_ = use_disk_for_3rdm; }
@@ -72,7 +72,7 @@ class DMRGSolver {
     void set_scalar(double energy) { scalar_energy_ = energy; }
 
   private:
-    RDMs dmrg_ref_;
+    RDMs dmrg_rdms_;
 
     StateInfo state_;
     std::shared_ptr<SCFInfo> scf_info_;

@@ -308,14 +308,9 @@ class DSRG_MRPT : public psi::Wavefunction {
     /// Compute first-order T2
     void compute_T2_1st(BlockedTensor& V, BlockedTensor& T2);
 
-    // => DSRG-MRPT3 <= //
+    // => Reference relaxation <= //
 
-    //    /// Compute DSRG-MRPT3 energy
-    //    double compute_energy_pt3();
-
-    // => RDMs relaxation <= //
-
-    /// RDMs relaxation type
+    /// Reference relaxation type
     std::string ref_relax_;
     /// Transfer integrals for FCI
     void transfer_integrals();

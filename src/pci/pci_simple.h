@@ -48,9 +48,6 @@
 namespace forte {
 class SCFInfo;
 
-/// Set the forte style options for the FCI method
-// void set_PCI_Simple_options(ForteOptions& foptions);
-
 namespace GeneratorType_Simple {
 enum GeneratorType {
     LinearGenerator,

@@ -53,9 +53,6 @@ namespace forte {
 
 class RDMs;
 
-/// Set the ACI options
-void set_ASCI_options(ForteOptions& foptions);
-
 /**
  * @brief The AdaptiveCI class
  * This class implements an adaptive CI algorithm

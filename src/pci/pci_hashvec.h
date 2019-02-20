@@ -50,9 +50,6 @@
 namespace forte {
 class SCFInfo;
 
-/// Set the forte style options for the FCI method
-// void set_PCI_HashVec_options(ForteOptions& foptions);
-
 namespace GeneratorType_HashVec {
 enum GeneratorType {
     LinearGenerator,
