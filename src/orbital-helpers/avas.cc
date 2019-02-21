@@ -115,7 +115,7 @@ void make_avas(psi::SharedWavefunction ref_wfn, psi::Options& options, psi::Shar
             }
         } else {
             outfile->Printf("\n  Skipping diagonalization of the projector matrix.\n  Orbitals "
-                            "will sorted instead of being rotated.");
+                            "will be sorted instead of being rotated.");
             // Socc
             for (int i = 0; i < nocc; i++) {
                 for (int j = 0; j < nocc; j++) {
