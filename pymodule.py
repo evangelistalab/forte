@@ -339,7 +339,7 @@ def run_forte(name, **kwargs):
     # Rotate orbitals before computation
     orb_type = options.get_str("ORBITAL_TYPE")
     if orb_type != 'CANONICAL':
-        orb_t = forte.make_orbital_transformation(orb_type, state, scf_info, forte.forte_options, ints, mo_space_info)
+        orb_t = forte.make_orbital_transformation(orb_type, scf_info, forte.forte_options, ints, mo_space_info)
         orb_t.compute_transformation()
         Ua = orb_t.get_Ua()
         Ub = orb_t.get_Ub()
