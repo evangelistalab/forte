@@ -106,8 +106,6 @@ class ExcitedStateSolver : public ActiveSpaceMethod {
     DiagonalizationMethod diag_method_ = DLString;
     /// The CI coeffiecients
     psi::SharedMatrix evecs_;
-    /// Adds all active single excitations to the final wave function
-    bool add_singles_ = false;
     /// Computes RDMs without coupling lists
     bool direct_rdms_ = false;
     /// Run test for the RDMs

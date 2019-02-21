@@ -437,8 +437,8 @@ void AdaptiveCI_SCI::default_find_q_space(DeterminantHashVec& P_space, Determina
     }
 }
 
-void AdaptiveCI_SCI::find_q_space(DeterminantHashVec& P_space, DeterminantHashVec& PQ_space,
-                                  int nroot, psi::SharedVector evals, psi::SharedMatrix evecs) {
+void AdaptiveCI_SCI::find_q_space_multiroot(DeterminantHashVec& P_space, DeterminantHashVec& PQ_space,
+                                            int nroot, psi::SharedVector evals, psi::SharedMatrix evecs) {
     timer find_q("ACI:Build Model Space");
     local_timer t_ms_build;
 
@@ -1302,7 +1302,7 @@ void AdaptiveCI_SCI::find_q_space() {
     } else if (streamline_qspace_) {
         default_find_q_space(P_space_, PQ_space_, P_evals_, P_evecs_);
     } else {
-        find_q_space(P_space_, PQ_space_, num_ref_roots_, P_evals_, P_evecs_);
+        find_q_space_multiroot(P_space_, PQ_space_, num_ref_roots_, P_evals_, P_evecs_);
     }
     outfile->Printf("\n  Time spent building the model space: %1.6f", build_space.get());
     // Check if P+Q space is spin complete

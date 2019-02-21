@@ -343,8 +343,8 @@ class AdaptiveCI_SCI : public SelectedCIMethod {
                               psi::SharedVector evals, psi::SharedMatrix evecs);
 
     /// Find all the relevant excitations out of the P space
-    void find_q_space(DeterminantHashVec& P_space, DeterminantHashVec& PQ_space, int nroot,
-                      psi::SharedVector evals, psi::SharedMatrix evecs);
+    void find_q_space_multiroot(DeterminantHashVec& P_space, DeterminantHashVec& PQ_space, int nroot,
+                                psi::SharedVector evals, psi::SharedMatrix evecs);
 
     /// Generate set of state-averaged q-criteria and determinants
     double average_q_values(int nroot, std::vector<double>& C1, std::vector<double>& E2);
