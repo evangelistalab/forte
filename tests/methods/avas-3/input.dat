@@ -3,7 +3,7 @@
 import forte
 
 refscf = -113.87663391962522
-reffci = -113.911667467206
+reffci = -113.911667467206257
 
 molecule {
 0 1
@@ -38,7 +38,7 @@ set forte {
 }
 
 energy('scf')
-compare_values(refscf, variable("CURRENT ENERGY"),10, "SCF energy") #TEST
+compare_values(refscf, variable("CURRENT ENERGY"),9, "SCF energy") #TEST
 
 energy('forte')
-compare_values(reffci, variable("CURRENT ENERGY"),10, "FCI energy") #TEST
+compare_values(reffci, variable("CURRENT ENERGY"),9, "FCI energy") #TEST

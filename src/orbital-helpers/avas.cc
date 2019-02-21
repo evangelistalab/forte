@@ -224,7 +224,7 @@ void make_avas(psi::SharedWavefunction ref_wfn, psi::Options& options, psi::Shar
                 // the
                 // partial sum of singular values and the total sum of singular
                 // values
-                if ((fraction < avas_sigma) and (std::fabs(sigma) > 1.0e-6)) {
+                if ((fraction <= avas_sigma) and (std::fabs(sigma) > 1.0e-6)) {
                     if (is_occ) {
                         occ_act.push_back(p);
                     } else {
