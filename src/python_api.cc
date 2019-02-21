@@ -40,6 +40,8 @@
 #include "base_classes/orbital_transform.h"
 #include "integrals/integrals.h"
 #include "integrals/make_integrals.h"
+
+#include "orbital-helpers/aosubspace.h"
 #include "orbital-helpers/localize.h"
 #include "orbital-helpers/mp2_nos.h"
 #include "orbital-helpers/semi_canonicalize.h"

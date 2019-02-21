@@ -121,30 +121,6 @@ void cleanup() {
 #endif
 }
 
-psi::SharedMatrix make_aosubspace_projector(psi::SharedWavefunction ref_wfn,
-                                            psi::Options& options) {
-    // Ps is a psi::SharedMatrix Ps = S^{BA} X X^+ S^{AB}
-    auto Ps = create_aosubspace_projector(ref_wfn, options);
-    if (Ps) {
-        psi::SharedMatrix CPsC = Ps->clone();
-        CPsC->transform(ref_wfn->Ca());
-        double print_threshold = 1.0e-6;
-        outfile->Printf("\n  Orbital overlap with ao subspace (> %e):\n",print_threshold);
-        outfile->Printf("    ========================\n");
-        outfile->Printf("    Irrep   MO   <phi|P|phi>\n");
-        outfile->Printf("    ------------------------\n");
-        for (int h = 0; h < CPsC->nirrep(); h++) {
-            for (int i = 0; i < CPsC->rowspi(h); i++) {
-                if (std::fabs(CPsC->get(h, i, i)) > 1.0e-6) {
-                    outfile->Printf("      %1d   %4d    %.6f\n", h, i + 1, CPsC->get(h, i, i));
-                }
-            }
-        }
-        outfile->Printf("    ========================\n");
-    }
-    return Ps;
-}
-
 void banner() {
     outfile->Printf(
         "\n"

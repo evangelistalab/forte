@@ -225,8 +225,8 @@ class AOSubspace {
     void parse_basis_set();
 };
 
-// Helper function to create a projector using info in wfn and options
-psi::SharedMatrix create_aosubspace_projector(psi::SharedWavefunction wfn, psi::Options& options);
+// Helper function to make a projector using info in wfn and options
+psi::SharedMatrix make_aosubspace_projector(psi::SharedWavefunction wfn, psi::Options& options);
 } // namespace forte
 
 #endif // _aosubspace_h_
