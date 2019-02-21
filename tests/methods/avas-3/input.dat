@@ -1,9 +1,9 @@
-#! Test AVAS algorithm with selection based on the cumulative threshold including all orbitals
+#! Test AVAS algorithm with a target number of occupied/virtual active orbitals 
 
 import forte
 
 refscf = -113.87663391962522
-reffci = -113.91166746721
+reffci = -113.911667467206
 
 molecule {
 0 1
@@ -26,7 +26,8 @@ set forte {
   subspace ["C(2px)","O(2px)"]
   avas True
   avas_diagonalize true
-  avas_sigma 1.0
+  avas_num_active_occ 1
+  avas_num_active_vir 2
   active_space_solver fci
   print 1
   restricted_docc [7]

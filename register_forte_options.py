@@ -58,6 +58,7 @@ def register_driver_options(forte_options):
 
 
 def register_avas_options(forte_options):
+    forte_options.add_bool("AVAS", False, "Form AVAS orbitals?")
     forte_options.add_double(
         "AVAS_SIGMA", 0.98,
         "Threshold that controls the size of the active space")

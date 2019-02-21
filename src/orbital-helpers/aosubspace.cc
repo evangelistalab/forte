@@ -80,19 +80,18 @@ psi::SharedMatrix create_aosubspace_projector(psi::SharedWavefunction wfn, psi::
 
         // Show minimal basis using custom formatting
         outfile->Printf("\n  Minimal basis:\n");
-        outfile->Printf("    ==================================\n");
-        outfile->Printf("       AO    Atom    Label  AO type   \n");
-        outfile->Printf("    ----------------------------------\n");
+        outfile->Printf("    ================================\n");
+        outfile->Printf("       AO    Atom  Label  AO type   \n");
+        outfile->Printf("    --------------------------------\n");
         {
-            std::vector<std::string> aolabels = aosub.aolabels("%1$4d%2$-2s %3$-4d  %4$d%5$s");
-
+            std::vector<std::string> aolabels = aosub.aolabels("%1$4d%2$-2s%3$6d     %4$d%5$s");
             int nbf = 0;
             for (const auto& s : aolabels) {
                 outfile->Printf("    %5d  %s\n", nbf + 1, s.c_str());
                 nbf++;
             }
         }
-        outfile->Printf("    ==================================\n");
+        outfile->Printf("    ================================\n");
 
         const std::vector<int>& subspace = aosub.subspace();
 

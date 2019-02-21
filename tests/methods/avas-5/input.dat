@@ -1,9 +1,9 @@
-#! Test AVAS algorithm with selection based on the cumulative threshold including all orbitals
+#! Test AVAS algorithm using the cumulative threshold and sorting
 
 import forte
 
 refscf = -113.87663391962522
-reffci = -113.91166746721
+reffci = -113.897668334147355
 
 molecule {
 0 1
@@ -23,18 +23,18 @@ set {
 }
 
 set forte {
-  subspace ["C(2px)","O(2px)"]
-  avas True
-  avas_diagonalize true
-  avas_sigma 1.0
+  subspace ["O(2px)"]
+  avas true
+  avas_diagonalize false
   active_space_solver fci
   print 1
   restricted_docc [7]
-  active [3]
+  active [2]
   root_sym 0
   multiplicity 1
   ms 0.0
 }
+
 
 energy('scf')
 compare_values(refscf, variable("CURRENT ENERGY"),10, "SCF energy") #TEST

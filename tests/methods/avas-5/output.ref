@@ -24,7 +24,7 @@
 
     Psi4 started on: Thursday, 21 February 2019 10:06AM
 
-    Process ID: 73973
+    Process ID: 74099
     Host:       CHE-FEVANGE-01I (2)
     PSIDATADIR: /Users/fevange/Source/psi4/objdir-Debug/stage/share/psi4
     Memory:     500.0 MiB
@@ -33,12 +33,12 @@
   ==> Input File <==
 
 --------------------------------------------------------------------------
-#! Test AVAS algorithm with selection based on the cumulative threshold including all orbitals
+#! Test AVAS algorithm using the cumulative threshold and sorting
 
 import forte
 
 refscf = -113.87663391962522
-reffci = -113.91166746721
+reffci = -113.897668334147355
 
 molecule {
 0 1
@@ -58,18 +58,18 @@ set {
 }
 
 set forte {
-  subspace ["C(2px)","O(2px)"]
-  avas True
-  avas_diagonalize true
-  avas_sigma 1.0
+  subspace ["O(2px)"]
+  avas true
+  avas_diagonalize false
   active_space_solver fci
   print 1
   restricted_docc [7]
-  active [3]
+  active [2]
   root_sym 0
   multiplicity 1
   ms 0.0
 }
+
 
 energy('scf')
 compare_values(refscf, variable("CURRENT ENERGY"),10, "SCF energy") #TEST
@@ -79,7 +79,7 @@ compare_values(reffci, variable("CURRENT ENERGY"),10, "FCI energy") #TEST
 --------------------------------------------------------------------------
 
 *** tstart() called on CHE-FEVANGE-01I (2)
-*** at Thu Feb 21 10:06:15 2019
+*** at Thu Feb 21 10:06:32 2019
 
    => Loading Basis Set <=
 
@@ -265,19 +265,19 @@ Properties computed using the SCF density matrix
      X:     0.0000      Y:     0.0000      Z:    -2.6523     Total:     2.6523
 
 
-*** tstop() called on CHE-FEVANGE-01I (2) at Thu Feb 21 10:06:16 2019
+*** tstop() called on CHE-FEVANGE-01I (2) at Thu Feb 21 10:06:33 2019
 Module time:
-	user time   =       0.98 seconds =       0.02 minutes
+	user time   =       0.92 seconds =       0.02 minutes
 	system time =       0.03 seconds =       0.00 minutes
 	total time  =          1 seconds =       0.02 minutes
 Total time:
-	user time   =       0.98 seconds =       0.02 minutes
+	user time   =       0.92 seconds =       0.02 minutes
 	system time =       0.03 seconds =       0.00 minutes
 	total time  =          1 seconds =       0.02 minutes
 	SCF energy........................................................PASSED
 
 *** tstart() called on CHE-FEVANGE-01I (2)
-*** at Thu Feb 21 10:06:16 2019
+*** at Thu Feb 21 10:06:33 2019
 
    => Loading Basis Set <=
 
@@ -463,14 +463,14 @@ Properties computed using the SCF density matrix
      X:     0.0000      Y:     0.0000      Z:    -2.6523     Total:     2.6523
 
 
-*** tstop() called on CHE-FEVANGE-01I (2) at Thu Feb 21 10:06:17 2019
+*** tstop() called on CHE-FEVANGE-01I (2) at Thu Feb 21 10:06:34 2019
 Module time:
-	user time   =       0.94 seconds =       0.02 minutes
-	system time =       0.04 seconds =       0.00 minutes
+	user time   =       0.96 seconds =       0.02 minutes
+	system time =       0.03 seconds =       0.00 minutes
 	total time  =          1 seconds =       0.02 minutes
 Total time:
-	user time   =       1.94 seconds =       0.03 minutes
-	system time =       0.07 seconds =       0.00 minutes
+	user time   =       1.91 seconds =       0.03 minutes
+	system time =       0.06 seconds =       0.00 minutes
 	total time  =          2 seconds =       0.03 minutes
    => Loading Basis Set <=
 
@@ -505,16 +505,16 @@ Total time:
   -------------------------------
     FROZEN_DOCC         0     0
     RESTRICTED_DOCC     7     7
-    ACTIVE              3     3
-    RESTRICTED_UOCC    28    28
+    ACTIVE              2     2
+    RESTRICTED_UOCC    29    29
     FROZEN_UOCC         0     0
     Total              38    38
   -------------------------------
 
-  List of subspaces: C(2PX) O(2PX)
+  List of subspaces: O(2PX)
 
   Subspace contains AOs:
-       4       9
+       9
 
   Minimal basis:
     ================================
@@ -538,13 +538,13 @@ Total time:
     ========================
     Irrep   MO   <phi|P|phi>
     ------------------------
-      0      7    0.970513
-      0      9    0.851958
-      0     14    0.112501
-      0     21    0.041736
-      0     23    0.006299
-      0     27    0.001631
-      0     36    0.000632
+      0      7    0.711806
+      0      9    0.238785
+      0     14    0.005662
+      0     21    0.026331
+      0     23    0.006005
+      0     27    0.001179
+      0     36    0.000301
     ========================
 
   Generating AVAS orbitals
@@ -553,13 +553,12 @@ Total time:
     Number of AVAV MOs:                      0
     Number of active occupied AVAS MOs:      0
     Number of active virtual AVAS  MOs:      0
-    AVAS sigma (cumulative threshold):       1.000000
+    AVAS sigma (cumulative threshold):       0.980000
     Number of occupied MOs:                  8
     Number of virtual MOs:                  30
 
-  Diagonalizing the occupied/virtual blocks of the projector matrix
-  o 0.970513
-
+  Skipping diagonalization of the projector matrix.
+  Orbitals will sorted instead of being rotated.
   o 0.000000
 
   o 0.000000
@@ -568,15 +567,25 @@ Total time:
 
   o 0.000000
 
-  o -0.000000
+  o 0.000000
 
-  o -0.000000
+  o 0.000000
 
-  o -0.000000
+  o 0.711806
 
-  v 0.992548
+  o 0.000000
 
-  v 0.022209
+  v 0.238785
+
+  v 0.000000
+
+  v 0.000000
+
+  v 0.000000
+
+  v 0.000000
+
+  v 0.005662
 
   v 0.000000
 
@@ -590,6 +599,26 @@ Total time:
 
   v 0.000000
 
+  v 0.026331
+
+  v 0.000000
+
+  v 0.006005
+
+  v 0.000000
+
+  v 0.000000
+
+  v 0.000000
+
+  v 0.001179
+
+  v 0.000000
+
+  v 0.000000
+
+  v -0.000000
+
   v 0.000000
 
   v 0.000000
@@ -600,60 +629,31 @@ Total time:
 
   v 0.000000
 
-  v 0.000000
+  v 0.000301
 
   v 0.000000
 
   v 0.000000
 
-  v -0.000000
-
-  v -0.000000
-
-  v -0.000000
-
-  v -0.000000
-
-  v -0.000000
-
-  v -0.000000
-
-  v -0.000000
-
-  v -0.000000
-
-  v -0.000000
-
-  v -0.000000
-
-  v -0.000000
-
-  v -0.000000
-
-  v -0.000000
-
-  v -0.000000
-
-  Sum of eigenvalues: 1.985270
+  Sum of eigenvalues: 0.990069
 
   AVAS selection based cumulative threshold (sigma)
 
   ==> AVAS MOs Information <==
     Number of inactive occupied MOs:      7
     Number of active occupied MOs:        1
-    Number of active virtual MOs:         2
-    Number of inactive virtual MOs:      28
+    Number of active virtual MOs:         1
+    Number of inactive virtual MOs:      29
 
     restricted_docc = [7]
-    active          = [3]
+    active          = [2]
 
   Atomic Valence MOs:
     ============================
     Occupation  MO   <phi|P|phi>
     ----------------------------
-      2          1    0.970513
-      0          9    0.992548
-      0         10    0.022209
+      2          7    0.711806
+      0          9    0.238785
     ============================
 
 
@@ -677,11 +677,11 @@ Total time:
 	Starting second half-transformation.
 	Two-electron integral transformation complete.
 
-  Integral transformation done. 0.20478415 s
+  Integral transformation done. 0.17625402 s
   Reading the two-electron integrals from disk
   Size of two-electron integrals:   0.046606 GB
   Timing for freezing core and virtual orbitals:              0.000 s.
-  Conventional integrals take 0.88336380 s
+  Conventional integrals take 0.73660647 s
 
   ==> Summary of Active Space Solver Input <==
 
@@ -697,8 +697,8 @@ Total time:
 
   Number of alpha electrons     = 1
   Number of beta electrons      = 1
-  Number of alpha strings       = 3
-  Number of beta strings        = 3
+  Number of alpha strings       = 2
+  Number of beta strings        = 2
   Timing for strings        =      0.000 s
   Timing for NN strings     =      0.000 s
   Timing for VO strings     =      0.000 s
@@ -712,60 +712,53 @@ Total time:
 
   ==> FCI Solver <==
 
-    Number of determinants                           9
+    Number of determinants                           4
     Symmetry                                         0
     Multiplicity                                     1
     Number of roots                                  1
     Target root                                      0
     Trial vectors per root                          10
 
-  Allocating memory for the Hamiltonian algorithm. Size: 2 x 3 x 3.   Memory: 0.000000 GB
+  Allocating memory for the Hamiltonian algorithm. Size: 2 x 2 x 2.   Memory: 0.000000 GB
 
   ==> FCI Initial Guess <==
 
   ---------------------------------------------
     Root            Energy     <S^2>   Spin
   ---------------------------------------------
-      0     -113.911667467206  0.000  singlet
-      1     -113.659281651900  2.000  triplet
-      2     -113.384062451506  0.000  singlet
-      3     -113.011859852671  0.000  singlet
-      4     -112.736727576400  2.000  triplet
-      5     -112.536048708733  0.000  singlet
-      6     -112.305200749311  2.000  triplet
-      7     -112.078972129725  0.000  singlet
-      8     -111.355214845345  0.000  singlet
+      0     -113.897668334147  0.000  singlet
+      1     -113.665588208378  2.000  triplet
+      2     -113.451929265345  0.000  singlet
+      3     -113.050091303400  0.000  singlet
   ---------------------------------------------
-  Timing for initial guess  =      0.007 s
+  Timing for initial guess  =      0.001 s
 
   Projecting out root 1
-  Projecting out root 4
-  Projecting out root 6
   ==> Diagonalizing Hamiltonian <==
 
   ----------------------------------------
     Iter.      Avg. Energy       Delta_E
   ----------------------------------------
-      1     -113.911667467206  -1.139e+02
-      2     -113.911667467206  +5.684e-14
+      1     -113.897668334147  -1.139e+02
+      2     -113.897668334147  +4.263e-14
   ----------------------------------------
   The Davidson-Liu algorithm converged in 3 iterations.
 
   ==> Root No. 0 <==
 
-    200      0.98014601
-    020     -0.18910986
+    20     -0.98556206
+    02      0.16424424
 
-    Total Energy:      -113.911667467206257
+    Total Energy:      -113.897668334147355
 
   ==> Energy Summary <==
 
     Multi.  Irrep.  No.               Energy
     -----------------------------------------
-       1       A     0      -113.911667467206
+       1       A     0      -113.897668334147
     -----------------------------------------	FCI energy........................................................PASSED
 
     Psi4 stopped on: Thursday, 21 February 2019 10:06AM
-    Psi4 wall time for execution: 0:00:03.21
+    Psi4 wall time for execution: 0:00:02.97
 
 *** Psi4 exiting successfully. Buy a developer a beer!

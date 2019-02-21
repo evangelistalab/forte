@@ -45,16 +45,26 @@ psi::SharedMatrix semicanonicalize_block(psi::SharedWavefunction ref_wfn, psi::S
 void make_avas(psi::SharedWavefunction ref_wfn, psi::Options& options, psi::SharedMatrix Ps) {
     if (Ps) {
         outfile->Printf("\n  Generating AVAS orbitals\n");
-
-        // Allocate a matrix for the occupied block
         int nocc = ref_wfn->nalpha();
         int nso = ref_wfn->nso();
         int nmo = ref_wfn->nmo();
         int nvir = nmo - nocc;
-        outfile->Printf("\n  Number of occupied MOs: %6d", nocc);
-        outfile->Printf("\n  Number of virtual MOs:  %6d", nvir);
+
+        int avas_num_active = options.get_int("AVAS_NUM_ACTIVE");
+        size_t avas_num_active_occ = options.get_int("AVAS_NUM_ACTIVE_OCC");
+        size_t avas_num_active_vir = options.get_int("AVAS_NUM_ACTIVE_VIR");
+        double avas_sigma = options.get_double("AVAS_SIGMA");
+
+        outfile->Printf("\n  ==> AVAS Options <==");
+        outfile->Printf("\n    Number of AVAV MOs:                 %6d", avas_num_active);
+        outfile->Printf("\n    Number of active occupied AVAS MOs: %6d", avas_num_active_occ);
+        outfile->Printf("\n    Number of active virtual AVAS  MOs: %6d", avas_num_active_vir);
+        outfile->Printf("\n    AVAS sigma (cumulative threshold):       %5f", avas_sigma);
+        outfile->Printf("\n    Number of occupied MOs:             %6d", nocc);
+        outfile->Printf("\n    Number of virtual MOs:              %6d", nvir);
         outfile->Printf("\n");
 
+        // Allocate a matrix for the occupied block
         auto Socc = std::make_shared<psi::Matrix>("S occupied block", nocc, nocc);
         auto Svir = std::make_shared<psi::Matrix>("S virtual block", nvir, nvir);
         psi::SharedMatrix CPsC = Ps->clone();
@@ -71,6 +81,8 @@ void make_avas(psi::SharedWavefunction ref_wfn, psi::Options& options, psi::Shar
         auto U = std::make_shared<psi::Matrix>("U", nmo, nmo);
         // diagonalize S
         if (diagonalize_s) {
+            outfile->Printf(
+                "\n  Diagonalizing the occupied/virtual blocks of the projector matrix");
             // Grab the occupied block and diagonalize it
             for (int i = 0; i < nocc; i++) {
                 for (int j = 0; j < nocc; j++) {
@@ -102,6 +114,8 @@ void make_avas(psi::SharedWavefunction ref_wfn, psi::Options& options, psi::Shar
                 }
             }
         } else {
+            outfile->Printf("\n  Skipping diagonalization of the projector matrix.\n  Orbitals "
+                            "will sorted instead of being rotated.");
             // Socc
             for (int i = 0; i < nocc; i++) {
                 for (int j = 0; j < nocc; j++) {
@@ -155,11 +169,9 @@ void make_avas(psi::SharedWavefunction ref_wfn, psi::Options& options, psi::Shar
 
         std::vector<int> occ_inact, occ_act, vir_inact, vir_act;
 
-        int avas_num_active = options.get_int("AVAS_NUM_ACTIVE");
-        size_t avas_num_active_occ = options.get_int("AVAS_NUM_ACTIVE_OCC");
-        size_t avas_num_active_vir = options.get_int("AVAS_NUM_ACTIVE_VIR");
-        double avas_sigma = options.get_double("AVAS_SIGMA");
         if (avas_num_active_occ + avas_num_active_vir > 0) {
+            outfile->Printf(
+                "\n  AVAS selection based on number of occupied/virtual MOs requested\n");
             for (const auto& mo_tuple : sorted_mos) {
                 bool is_occ = std::get<1>(mo_tuple);
                 int p = std::get<2>(mo_tuple);
@@ -178,6 +190,7 @@ void make_avas(psi::SharedWavefunction ref_wfn, psi::Options& options, psi::Shar
                 }
             }
         } else if (avas_num_active > 0) {
+            outfile->Printf("\n  AVAS selection based on number of MOs requested\n");
             for (int n = 0; n < avas_num_active; ++n) {
                 bool is_occ = std::get<1>(sorted_mos[n]);
                 int p = std::get<2>(sorted_mos[n]);
@@ -197,6 +210,7 @@ void make_avas(psi::SharedWavefunction ref_wfn, psi::Options& options, psi::Shar
                 }
             }
         } else {
+            outfile->Printf("\n  AVAS selection based cumulative threshold (sigma)\n");
             double s_act_sum = 0.0;
             for (const auto& mo_tuple : sorted_mos) {
                 double sigma = std::get<0>(mo_tuple);
@@ -226,13 +240,14 @@ void make_avas(psi::SharedWavefunction ref_wfn, psi::Options& options, psi::Shar
             }
         }
 
-        outfile->Printf("\n  Number of inactive occupied MOs: %6d", occ_inact.size());
-        outfile->Printf("\n  Number of active occupied MOs:   %6d", occ_act.size());
-        outfile->Printf("\n  Number of active virtual MOs:    %6d", vir_act.size());
-        outfile->Printf("\n  Number of inactive virtual MOs:  %6d", vir_inact.size());
+        outfile->Printf("\n  ==> AVAS MOs Information <==");
+        outfile->Printf("\n    Number of inactive occupied MOs: %6d", occ_inact.size());
+        outfile->Printf("\n    Number of active occupied MOs:   %6d", occ_act.size());
+        outfile->Printf("\n    Number of active virtual MOs:    %6d", vir_act.size());
+        outfile->Printf("\n    Number of inactive virtual MOs:  %6d", vir_inact.size());
         outfile->Printf("\n");
-        outfile->Printf("\n  restricted_docc = [%d]", occ_inact.size());
-        outfile->Printf("\n  active          = [%d]", occ_act.size() + vir_act.size());
+        outfile->Printf("\n    restricted_docc = [%d]", occ_inact.size());
+        outfile->Printf("\n    active          = [%d]", occ_act.size() + vir_act.size());
         outfile->Printf("\n");
 
         outfile->Printf("\n  Atomic Valence MOs:\n");
