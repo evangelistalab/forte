@@ -131,6 +131,19 @@ def register_embedding_options(forte_options):
         forte_options.add_int("FROZEN_SYS_DOCC", 0, "Freeze system occ orbitals")
         forte_options.add_int("FROZEN_SYS_UOCC", 0, "Freeze system vir orbitals")
 
+def register_embedding_options(forte_options):
+        forte_options.add_bool("EMBEDDING", False, "Whether to perform embedding partition and projection")
+        forte_options.add_str("CUTOFF_BY", "THRESHOLD", "Cut off by: threshold or number.")
+        forte_options.add_int("NUM_OCC", 0, "Number of (restricted) occpied in system A")
+        forte_options.add_int("NUM_VIR", 0, "Number of (restricted) virtual in system A")
+        forte_options.add_double("THRESHOLD", 0.5, "Projector eigenvalue threshold, 0.5 as default")
+        forte_options.add_str("REFERENCE", "HF", "HF, ROHF, UHF(not implemented), MCSCF, CASSCF, CINO, CINOACTV")
+        forte_options.add_bool("WRITE_FREEZE_MO", True,
+                "Pass orbital space information automatically or manually")
+        forte_options.add_bool("SEMICANON", True, "Perform semi-canonicalization or not in the end")
+        forte_options.add_int("FROZEN_SYS_DOCC", 0, "Freeze system occ orbitals")
+        forte_options.add_int("FROZEN_SYS_UOCC", 0, "Freeze system vir orbitals")
+
 def register_mo_space_info_options(forte_options):
     forte_options.add_array(
         "FROZEN_DOCC",
