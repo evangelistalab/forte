@@ -262,6 +262,16 @@ def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
 
     return return_en
 
+def orbital_projection(ref_wfn, options):
+    r"""
+    """
+    # Create the AO subspace projector
+    ps = forte.make_aosubspace_projector(ref_wfn, options)
+
+    #Apply the projector to rotate orbitals
+    if options.get_bool("AVAS"):
+        forte.make_avas(ref_wfn, options, ps)
+
 
 def run_forte(name, **kwargs):
     r"""Function encoding sequence of PSI module and plugin calls so that
@@ -305,8 +315,8 @@ def run_forte(name, **kwargs):
     # Create the MOSpaceInfo object
     mo_space_info = forte.make_mo_space_info(ref_wfn, forte.forte_options)
 
-    # Create the AO subspace projector
-    ps = forte.make_aosubspace_projector(ref_wfn, options)
+    # Call methods that project the orbitals (AVAS, embedding)
+    orbital_projection(ref_wfn, options)
 
     state = forte.make_state_info_from_psi_wfn(ref_wfn)
     scf_info = forte.SCFInfo(ref_wfn)
@@ -316,30 +326,34 @@ def run_forte(name, **kwargs):
     job_type = options.get_str('JOB_TYPE')
 
     energy = 0.0
-    if job_type != 'NONE':
-        start = timeit.timeit()
 
-        # Make an integral object
-        ints = forte.make_forte_integrals(ref_wfn, options, mo_space_info)
+    if job_type == 'NONE':
+        forte.cleanup()
+        return ref_wfn
 
-        # Rotate orbitals before computation
-        orb_type = options.get_str("ORBITAL_TYPE")
-        if orb_type != 'CANONICAL':
-            orb_t = forte.make_orbital_transformation(orb_type, scf_info, forte.forte_options, ints, mo_space_info)
-            orb_t.compute_transformation()
-            Ua = orb_t.get_Ua()
-            Ub = orb_t.get_Ub()
+    start = timeit.timeit()
 
-            ints.rotate_orbitals(Ua,Ub)
+    # Make an integral object
+    ints = forte.make_forte_integrals(ref_wfn, options, mo_space_info)
 
-        # Run a method
-        if (job_type == 'NEWDRIVER'):
-            energy = forte_driver(state_weights_map, scf_info, forte.forte_options, ints, mo_space_info)
-        else:
-            energy = forte.forte_old_methods(ref_wfn, options, ints, mo_space_info)
+    # Rotate orbitals before computation
+    orb_type = options.get_str("ORBITAL_TYPE")
+    if orb_type != 'CANONICAL':
+        orb_t = forte.make_orbital_transformation(orb_type, scf_info, forte.forte_options, ints, mo_space_info)
+        orb_t.compute_transformation()
+        Ua = orb_t.get_Ua()
+        Ub = orb_t.get_Ub()
 
-        end = timeit.timeit()
-        #print('\n\n  Your calculation took ', (end - start), ' seconds');
+        ints.rotate_orbitals(Ua,Ub)
+
+    # Run a method
+    if (job_type == 'NEWDRIVER'):
+        energy = forte_driver(state_weights_map, scf_info, forte.forte_options, ints, mo_space_info)
+    else:
+        energy = forte.forte_old_methods(ref_wfn, options, ints, mo_space_info)
+
+    end = timeit.timeit()
+    #print('\n\n  Your calculation took ', (end - start), ' seconds');
 
     # Close ambit, etc.
     forte.cleanup()
