@@ -56,7 +56,7 @@ using namespace psi;
 
 namespace forte {
 
-psi::SharedMatrix create_aosubspace_projector(psi::SharedWavefunction wfn, psi::Options& options) {
+psi::SharedMatrix make_aosubspace_projector(psi::SharedWavefunction wfn, psi::Options& options) {
     psi::SharedMatrix Ps;
 
     // Run this code only if user specified a subspace
@@ -80,23 +80,40 @@ psi::SharedMatrix create_aosubspace_projector(psi::SharedWavefunction wfn, psi::
 
         // Show minimal basis using custom formatting
         outfile->Printf("\n  Minimal basis:\n");
-        outfile->Printf("    ==================================\n");
-        outfile->Printf("       AO    Atom    Label  AO type   \n");
-        outfile->Printf("    ----------------------------------\n");
+        outfile->Printf("    ================================\n");
+        outfile->Printf("       AO    Atom  Label  AO type   \n");
+        outfile->Printf("    --------------------------------\n");
         {
-            std::vector<std::string> aolabels = aosub.aolabels("%1$4d%2$-2s %3$-4d  %4$d%5$s");
-
+            std::vector<std::string> aolabels = aosub.aolabels("%1$4d%2$-2s%3$6d     %4$d%5$s");
             int nbf = 0;
             for (const auto& s : aolabels) {
                 outfile->Printf("    %5d  %s\n", nbf + 1, s.c_str());
                 nbf++;
             }
         }
-        outfile->Printf("    ==================================\n");
+        outfile->Printf("    ================================\n");
 
         const std::vector<int>& subspace = aosub.subspace();
 
+        // build the projector
         Ps = aosub.build_projector(subspace, molecule, min_basis, wfn->basisset());
+
+        // print the overlap of the projector
+        psi::SharedMatrix CPsC = Ps->clone();
+        CPsC->transform(wfn->Ca());
+        double print_threshold = 1.0e-6;
+        outfile->Printf("\n  Orbital overlap with ao subspace (> %e):\n",print_threshold);
+        outfile->Printf("    ========================\n");
+        outfile->Printf("    Irrep   MO   <phi|P|phi>\n");
+        outfile->Printf("    ------------------------\n");
+        for (int h = 0; h < CPsC->nirrep(); h++) {
+            for (int i = 0; i < CPsC->rowspi(h); i++) {
+                if (std::fabs(CPsC->get(h, i, i)) > print_threshold) {
+                    outfile->Printf("      %1d   %4d    %.6f\n", h, i + 1, CPsC->get(h, i, i));
+                }
+            }
+        }
+        outfile->Printf("    ========================\n");
     }
     return Ps;
 }

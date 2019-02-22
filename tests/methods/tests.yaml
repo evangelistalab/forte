@@ -44,6 +44,13 @@ aci:
 #   - actv-dsrg-3-C4H6-cisd
 #  - actv-dsrg-4-C4H6-triplet
 #   - actv-dsrg-size-intensive
+avas:
+  short:
+   - avas-1
+   - avas-2
+   - avas-3
+   - avas-4
+   - avas-5
 casscf:
   short:
    - casscf

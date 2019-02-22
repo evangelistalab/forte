@@ -1,0 +1,43 @@
+#! Test AVAS algorithm with selection based on the cumulative threshold
+
+import forte
+
+refscf = -113.87663391962522
+reffci = -113.907895343493621
+
+molecule {
+0 1
+C           -0.000000000000    -0.000000000006    -0.599542970149
+O           -0.000000000000     0.000000000001     0.599382404096
+H           -0.000000000000    -0.938817812172    -1.186989139808
+H            0.000000000000     0.938817812225    -1.186989139839
+noreorient
+symmetry c1
+}
+
+set {
+  basis cc-pVDZ
+  reference rhf
+  scf_type pk
+  e_convergence 12
+}
+
+set forte {
+  subspace ["C(2px)","O(2px)"]
+  avas true
+  avas_diagonalize true
+  avas_sigma 0.99
+  active_space_solver fci
+  print 1
+  restricted_docc [7]
+  active [2]
+  root_sym 0
+  multiplicity 1
+  ms 0.0
+}
+
+energy('scf')
+compare_values(refscf, variable("CURRENT ENERGY"),9, "SCF energy") #TEST
+
+energy('forte')
+compare_values(reffci, variable("CURRENT ENERGY"),9, "FCI energy") #TEST

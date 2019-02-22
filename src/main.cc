@@ -72,9 +72,7 @@ void replace_free(void* ptr) { free(ptr); }
 /**
  * @brief Read options from the input file. Called by psi4 before everything else.
  */
-void read_options(ForteOptions& options) {
-    forte_options(options);
-}
+void read_options(ForteOptions& options) { forte_options(options); }
 
 /**
  * @brief Initialize ambit, MPI, and GA. All functions that need to be called
@@ -121,28 +119,6 @@ void cleanup() {
 #ifdef HAVE_MPI
     MPI_Finalize();
 #endif
-}
-
-psi::SharedMatrix make_aosubspace_projector(psi::SharedWavefunction ref_wfn,
-                                            psi::Options& options) {
-    // Ps is a psi::SharedMatrix Ps = S^{BA} X X^+ S^{AB}
-    auto Ps = create_aosubspace_projector(ref_wfn, options);
-    if (Ps) {
-
-        psi::SharedMatrix CPsC = Ps->clone();
-        CPsC->transform(ref_wfn->Ca());
-        outfile->Printf("\n  Orbital overlap with ao subspace:\n");
-        outfile->Printf("    ========================\n");
-        outfile->Printf("    Irrep   MO   <phi|P|phi>\n");
-        outfile->Printf("    ------------------------\n");
-        for (int h = 0; h < CPsC->nirrep(); h++) {
-            for (int i = 0; i < CPsC->rowspi(h); i++) {
-                outfile->Printf("      %1d   %4d    %.6f\n", h, i + 1, CPsC->get(h, i, i));
-            }
-        }
-        outfile->Printf("    ========================\n");
-    }
-    return Ps;
 }
 
 void banner() {
