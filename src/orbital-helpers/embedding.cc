@@ -103,6 +103,16 @@ void make_embedding(psi::SharedWavefunction ref_wfn, psi::Options& options, psi:
 			outfile->Printf("fo: %d, fv: %d \n", num_fo, num_fv);
 		}
 
+		if (options.get_str("REFERENCE") == "RHF") {
+
+			num_docc = options["DOCC"][0].to_integer();
+			num_rdocc = num_docc - num_fo;
+
+			actv_a[0] = num_actv;
+			res_docc_ori[0] = num_rdocc;
+			docc_ori[0] = num_docc;
+		}
+
 		int num_actv_docc = num_docc - num_rdocc - num_fo;
 		int num_actv_vir = num_actv - num_actv_docc;
 		outfile->Printf(
