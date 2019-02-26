@@ -3494,7 +3494,7 @@ void DSRG_MRPT3::V_T2_C2_DF_AV(BlockedTensor& B, BlockedTensor& T2, const double
                 H2 = ambit::Tensor::build(tensor_type_, "H2 va", {sh0, sh1, sv_sub, sa});
                 if (nbatch != 1) {
                     ambit::Tensor Bs =
-                        ambit::Tensor::build(tensor_type_, "B0 va", {sL, sv_sub, sh0});
+                        ambit::Tensor::build(tensor_type_, "Bzero va", {sL, sv_sub, sh0});
                     Bs.iterate([&](const std::vector<size_t>& i, double& value) {
                         size_t idx = i[0] * sv * sh0 + virt_mo_sub[i[1]] * sh0 + i[2];
                         value = B.block(Blabel0).data()[idx];
@@ -3743,9 +3743,9 @@ void DSRG_MRPT3::V_T2_C2_DF_VV(BlockedTensor& B, BlockedTensor& T2, const double
 
                 if (nbatch0 != 1) {
 
-                    ambit::Tensor B0 =
-                        ambit::Tensor::build(tensor_type_, "B0 vv", {sL, sv_sub0, sh0});
-                    B0.iterate([&](const std::vector<size_t>& i, double& value) {
+                    ambit::Tensor Bzero =
+                        ambit::Tensor::build(tensor_type_, "Bzero vv", {sL, sv_sub0, sh0});
+                    Bzero.iterate([&](const std::vector<size_t>& i, double& value) {
                         size_t idx = i[0] * sv * sh0 + virt_mo_sub0[i[1]] * sh0 + i[2];
                         value = B.block(Blabel0).data()[idx];
                     });
@@ -3759,10 +3759,10 @@ void DSRG_MRPT3::V_T2_C2_DF_VV(BlockedTensor& B, BlockedTensor& T2, const double
                             value = B.block(Blabel1).data()[idx];
                         });
 
-                        H2("rsef") = B0("ger") * B1("gfs");
+                        H2("rsef") = Bzero("ger") * B1("gfs");
                     } else {
 
-                        H2("rsef") = B0("ger") * B.block(Blabel1)("gfs");
+                        H2("rsef") = Bzero("ger") * B.block(Blabel1)("gfs");
                     }
 
                 } else {

@@ -29,6 +29,8 @@
 #ifndef _forte_options_h_
 #define _forte_options_h_
 
+#include <pybind11/pybind11.h>
+
 #include "psi4/liboptions/liboptions.h"
 #include <string>
 #include <vector>
@@ -66,6 +68,16 @@ class ForteOptions {
      * @param options a psi4 Options object
      */
     ForteOptions(psi::Options& options);
+
+    /**
+     * @brief Add a python object option
+     * @param label Option label
+     * @param type the option type
+     * @param default_value default value of the option
+     * @param description description of the option
+     */
+    void add(const std::string& label, const std::string& type, pybind11::object default_value,
+             const std::string& description);
 
     /**
      * @brief Add a boolean option
@@ -177,7 +189,10 @@ class ForteOptions {
     /// temporary solution for the option array problem
     psi::Options& psi_options() { return psi_options_; }
 
+    pybind11::dict dict();
+
   private:
+    pybind11::dict dict_;
     std::vector<bool_opt_t> bool_opts_;
     std::vector<int_opt_t> int_opts_;
     std::vector<double_opt_t> double_opts_;

@@ -4,6 +4,9 @@
 
 #include "psi4/libpsi4util/PsiOutStream.h"
 
+namespace py = pybind11;
+using namespace pybind11::literals;
+
 using namespace psi;
 
 namespace forte {
@@ -17,22 +20,41 @@ std::string option_formatter(const std::string& type, const std::string& label,
 ForteOptions::ForteOptions() {}
 ForteOptions::ForteOptions(psi::Options& options) : psi_options_(options) {}
 
+pybind11::dict ForteOptions::dict() {
+    return dict_;
+}
+
+py::dict make_option(const std::string& type, py::object default_value,
+                     const std::string& description) {
+    return py::dict("type"_a = type, "default_value"_a = default_value,
+                    "description"_a = description.c_str());
+}
+
+void ForteOptions::add(const std::string& label, const std::string& type, py::object default_value,
+                       const std::string& description) {
+    dict_[label.c_str()] = make_option(type, default_value, description);
+}
+
 void ForteOptions::add_bool(const std::string& label, bool value, const std::string& description) {
     bool_opts_.push_back(std::make_tuple(label, value, description));
+    add(label, "bool", py::bool_(value), description);
 }
 
 void ForteOptions::add_int(const std::string& label, int value, const std::string& description) {
     int_opts_.push_back(std::make_tuple(label, value, description));
+    add(label, "int", py::int_(value), description);
 }
 
 void ForteOptions::add_double(const std::string& label, double value,
                               const std::string& description) {
     double_opts_.push_back(std::make_tuple(label, value, description));
+    add(label, "float", py::float_(value), description);
 }
 
 void ForteOptions::add_str(const std::string& label, const std::string& value,
                            const std::string& description) {
     str_opts_.push_back(std::make_tuple(label, value, description, std::vector<std::string>()));
+    add(label, "str", py::str(value), description);
 }
 
 void ForteOptions::add_str(const std::string& label, const std::string& value,
@@ -43,6 +65,7 @@ void ForteOptions::add_str(const std::string& label, const std::string& value,
 
 void ForteOptions::add_array(const std::string& label, const std::string& description) {
     array_opts_.push_back(std::make_tuple(label, description));
+    add(label, "list", py::str("empty"), description);
 }
 
 bool ForteOptions::get_bool(const std::string& label) { return psi_options_.get_bool(label); }

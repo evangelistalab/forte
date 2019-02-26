@@ -86,7 +86,8 @@ void export_ForteOptions(py::module& m) {
         .def("get_int_vec", &ForteOptions::get_int_vec, "Get a vector of integers option")
         .def("push_options_to_psi4", &ForteOptions::push_options_to_psi4)
         .def("update_psi_options", &ForteOptions::update_psi_options)
-        .def("generate_documentation", &ForteOptions::generate_documentation);
+        .def("generate_documentation", &ForteOptions::generate_documentation)
+        .def("dict", &ForteOptions::dict);
 }
 
 /// Export the ActiveSpaceMethod class
