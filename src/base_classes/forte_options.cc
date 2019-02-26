@@ -78,11 +78,19 @@ void ForteOptions::add_str(const std::string& label, const std::string& value,
                            const std::vector<std::string>& allowed_values,
                            const std::string& description) {
     str_opts_.push_back(std::make_tuple(label, value, description, allowed_values));
+<<<<<<< HEAD
     auto allowed_values_list = py::list();
     for (const auto& s : allowed_values) {
         allowed_values_list.append(py::str(s));
     }
     add(label, "str", py::str(value), allowed_values_list, description);
+=======
+    auto list = py::list();
+    for (const auto& s : allowed_values) {
+        list.append(py::str(s));
+    }
+    dict_[label.c_str()] = make_option("str", py::str(value), list, description);
+>>>>>>> Export str with allowed values as dict
 }
 
 void ForteOptions::add_array(const std::string& label, const std::string& description) {
