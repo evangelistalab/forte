@@ -43,6 +43,11 @@
 #include "boost/format.hpp"
 #include "mrdsrg.h"
 
+#define TIME_LINE(x)                                                                               \
+    timer_on(#x);                                                                                  \
+    x;                                                                                             \
+    timer_off(#x)
+
 using namespace psi;
 
 namespace forte {
@@ -552,30 +557,38 @@ void MRDSRG::compute_hbar_sequential_rotation() {
     int maxn = foptions_->get_int("DSRG_RSC_NCOMM");
     double ct_threshold = foptions_->get_double("DSRG_RSC_THRESHOLD");
 
-    timer comm("Hbar T2 commutator");
+    timer init("Initialize Hbar");
 
     // temporary Hamiltonian used in every iteration
     O1_["pq"] = Hbar1_["pq"];
     O1_["PQ"] = Hbar1_["PQ"];
     if (eri_df_) {
-        Hbar2_["pqrs"] = B["gpr"] * B["gqs"];
-        Hbar2_["pqrs"] -= B["gps"] * B["gqr"];
+        TIME_LINE(Hbar2_["pqrs"] = B["gpr"] * B["gqs"]);
+        TIME_LINE(Hbar2_["pqrs"] -= B["gps"] * B["gqr"]);
 
-        Hbar2_["pQrS"] = B["gpr"] * B["gQS"];
+        TIME_LINE(Hbar2_["pQrS"] = B["gpr"] * B["gQS"]);
 
-        Hbar2_["PQRS"] = B["gPR"] * B["gQS"];
-        Hbar2_["PQRS"] -= B["gPS"] * B["gQR"];
+        TIME_LINE(Hbar2_["PQRS"] = B["gPR"] * B["gQS"]);
+        TIME_LINE(Hbar2_["PQRS"] -= B["gPS"] * B["gQR"]);
     } else {
-        O2_["pqrs"] = Hbar2_["pqrs"];
-        O2_["pQrS"] = Hbar2_["pQrS"];
-        O2_["PQRS"] = Hbar2_["PQRS"];
+        TIME_LINE(O2_["pqrs"] = Hbar2_["pqrs"]);
+        TIME_LINE(O2_["pQrS"] = Hbar2_["pQrS"]);
+        TIME_LINE(O2_["PQRS"] = Hbar2_["PQRS"]);
     }
+    init.stop();
 
     // iteration variables
     converged = false;
 
     // compute Hbar recursively
     for (int n = 1; n <= maxn; ++n) {
+        // printing level
+        if (print_ > 2) {
+            std::string dash(38, '-');
+            outfile->Printf("\n    %s", dash.c_str());
+        }
+
+        timer comm("Hbar T2 commutator");
         // prefactor before n-nested commutator
         double factor = 1.0 / n;
 
@@ -583,12 +596,6 @@ void MRDSRG::compute_hbar_sequential_rotation() {
         double C0 = 0.0;
         C1_.zero();
         C2_.zero();
-
-        // printing level
-        if (print_ > 2) {
-            std::string dash(38, '-');
-            outfile->Printf("\n    %s", dash.c_str());
-        }
 
         if (n == 1 && eri_df_) {
             // zero-body
@@ -611,6 +618,7 @@ void MRDSRG::compute_hbar_sequential_rotation() {
             H1_T2_C2(O1_, T2_, factor, C2_);
             H2_T2_C2(O2_, T2_, factor, C2_);
         }
+        comm.stop();
 
         // printing level
         if (print_ > 2) {
@@ -620,33 +628,39 @@ void MRDSRG::compute_hbar_sequential_rotation() {
 
         // [H, A] = [H, T] + [H, T]^dagger
         if (dsrg_trans_type_ == "UNITARY") {
+            timer transpose("Commutator transpose");
             C0 *= 2.0;
-            O1_["pq"] = C1_["pq"];
-            O1_["PQ"] = C1_["PQ"];
-            C1_["pq"] += O1_["qp"];
-            C1_["PQ"] += O1_["QP"];
-            O2_["pqrs"] = C2_["pqrs"];
-            O2_["pQrS"] = C2_["pQrS"];
-            O2_["PQRS"] = C2_["PQRS"];
-            C2_["pqrs"] += O2_["rspq"];
-            C2_["pQrS"] += O2_["rSpQ"];
-            C2_["PQRS"] += O2_["RSPQ"];
+            TIME_LINE(O1_["pq"] = C1_["pq"]);
+            TIME_LINE(O1_["PQ"] = C1_["PQ"]);
+            TIME_LINE(C1_["pq"] += O1_["qp"]);
+            TIME_LINE(C1_["PQ"] += O1_["QP"]);
+            TIME_LINE(O2_["pqrs"] = C2_["pqrs"]);
+            TIME_LINE(O2_["pQrS"] = C2_["pQrS"]);
+            TIME_LINE(O2_["PQRS"] = C2_["PQRS"]);
+            TIME_LINE(C2_["pqrs"] += O2_["rspq"]);
+            TIME_LINE(C2_["pQrS"] += O2_["rSpQ"]);
+            TIME_LINE(C2_["PQRS"] += O2_["RSPQ"]);
+            transpose.stop();
         }
 
         // Hbar += C
+        timer sum("Hbar summation");
         Hbar0_ += C0;
-        Hbar1_["pq"] += C1_["pq"];
-        Hbar1_["PQ"] += C1_["PQ"];
-        Hbar2_["pqrs"] += C2_["pqrs"];
-        Hbar2_["pQrS"] += C2_["pQrS"];
-        Hbar2_["PQRS"] += C2_["PQRS"];
+        TIME_LINE(Hbar1_["pq"] += C1_["pq"]);
+        TIME_LINE(Hbar1_["PQ"] += C1_["PQ"]);
+        TIME_LINE(Hbar2_["pqrs"] += C2_["pqrs"]);
+        TIME_LINE(Hbar2_["pQrS"] += C2_["pQrS"]);
+        TIME_LINE(Hbar2_["PQRS"] += C2_["PQRS"]);
+        sum.stop();
 
+        timer update("Update Commutator");
         // copy C to O for next level commutator
-        O1_["pq"] = C1_["pq"];
-        O1_["PQ"] = C1_["PQ"];
-        O2_["pqrs"] = C2_["pqrs"];
-        O2_["pQrS"] = C2_["pQrS"];
-        O2_["PQRS"] = C2_["PQRS"];
+        TIME_LINE(O1_["pq"] = C1_["pq"]);
+        TIME_LINE(O1_["PQ"] = C1_["PQ"]);
+        TIME_LINE(O2_["pqrs"] = C2_["pqrs"]);
+        TIME_LINE(O2_["pQrS"] = C2_["pQrS"]);
+        TIME_LINE(O2_["PQRS"] = C2_["PQRS"]);
+        update.stop();
 
         // test convergence of C
         double norm_C1 = C1_.norm();
