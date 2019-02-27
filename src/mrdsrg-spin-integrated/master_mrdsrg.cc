@@ -854,21 +854,21 @@ void MASTER_DSRG::H1_T2_C0(BlockedTensor& H1, BlockedTensor& T2, const double& a
     double E = 0.0;
 
     TIME_LINE(temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"aaaa"}));
-    TIME_LINE(temp["uvxy"] -= H1["ex"] * T2["uvye"]);
-    TIME_LINE(temp["uvxy"] += H1["vm"] * T2["muxy"]);
-    TIME_LINE(E += 0.5 * temp["uvxy"] * Lambda2_["uvxy"]);
+    TIME_LINE(temp["uvxy"] += H1["ex"] * T2["uvey"]);
+    TIME_LINE(temp["uvxy"] -= H1["vm"] * T2["umxy"]);
+    TIME_LINE(E += 0.5 * temp["uvxy"] * Lambda2_["xyuv"]);
 
     TIME_LINE(temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"AAAA"}));
-    TIME_LINE(temp["UVXY"] -= H1["EX"] * T2["UVYE"]);
-    TIME_LINE(temp["UVXY"] += H1["VM"] * T2["MUXY"]);
-    TIME_LINE(E += 0.5 * temp["UVXY"] * Lambda2_["UVXY"]);
+    TIME_LINE(temp["UVXY"] += H1["EX"] * T2["UVEY"]);
+    TIME_LINE(temp["UVXY"] -= H1["VM"] * T2["UMXY"]);
+    TIME_LINE(E += 0.5 * temp["UVXY"] * Lambda2_["XYUV"]);
 
     TIME_LINE(temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"aAaA"}));
     TIME_LINE(temp["uVxY"] += H1["ex"] * T2["uVeY"]);
     TIME_LINE(temp["uVxY"] += H1["EY"] * T2["uVxE"]);
     TIME_LINE(temp["uVxY"] -= H1["VM"] * T2["uMxY"]);
     TIME_LINE(temp["uVxY"] -= H1["um"] * T2["mVxY"]);
-    TIME_LINE(E += temp["uVxY"] * Lambda2_["uVxY"]);
+    TIME_LINE(E += temp["uVxY"] * Lambda2_["xYuV"]);
 
     E *= alpha;
     C0 += E;
