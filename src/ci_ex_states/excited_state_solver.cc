@@ -547,8 +547,8 @@ RDMs ExcitedStateSolver::compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_
                                         {nact_, nact_, nact_, nact_, nact_, nact_});
 
         ci_rdms.compute_rdms_dynamic(ordm_a.data(), ordm_b.data(), trdm_aa.data(), trdm_ab.data(),
-                                      trdm_bb.data(), trdm_aaa.data(), trdm_aab.data(),
-                                      trdm_abb.data(), trdm_bbb.data());
+                                     trdm_bb.data(), trdm_aaa.data(), trdm_aab.data(),
+                                     trdm_abb.data(), trdm_bbb.data());
         //        print_nos();
     } else {
         if (max_rdm_level >= 1) {
@@ -583,15 +583,15 @@ RDMs ExcitedStateSolver::compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_
             trdm_bbb = ambit::Tensor::build(ambit::CoreTensor, "g2bbb",
                                             {nact_, nact_, nact_, nact_, nact_, nact_});
 
-            ci_rdms.compute_3rdm(trdm_aaa.data(), trdm_aab.data(), trdm_abb.data(),
-                                  trdm_bbb.data(), op);
+            ci_rdms.compute_3rdm(trdm_aaa.data(), trdm_aab.data(), trdm_abb.data(), trdm_bbb.data(),
+                                 op);
             psi::outfile->Printf("\n  3-RDMs took %2.6f s (determinant)", tr.get());
         }
     }
     if (test_rdms_) {
         ci_rdms.rdm_test(ordm_a.data(), ordm_b.data(), trdm_aa.data(), trdm_bb.data(),
-                          trdm_ab.data(), trdm_aaa.data(), trdm_aab.data(), trdm_abb.data(),
-                          trdm_bbb.data());
+                         trdm_ab.data(), trdm_aaa.data(), trdm_aab.data(), trdm_abb.data(),
+                         trdm_bbb.data());
     }
 
     if (max_rdm_level == 1) {
