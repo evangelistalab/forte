@@ -667,6 +667,8 @@ def register_dsrg_options(forte_options):
     forte_options.add_bool("DSRG_NIVO", False,
                       "NIVO approximation: Omit tensor blocks with >= 3 virtual indices if true")
 
+    forte_options.add_bool("DSRG_DF_BATCH", True, "Batch contraction C2 <- B*B*T2")
+
     forte_options.add_bool("PRINT_1BODY_EVALS", False, "Print eigenvalues of 1-body effective H")
 
 def register_dwms_options(forte_options):
