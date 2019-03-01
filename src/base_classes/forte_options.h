@@ -70,6 +70,18 @@ class ForteOptions {
     ForteOptions(psi::Options& options);
 
     /**
+     * @brief Set the group to which options are added
+     * @param group a string with the group name (default = "")
+     */
+    void set_group(const std::string& group = "");
+
+    /**
+     * @brief Get the group to which options are added
+     * @return the group name
+     */
+    const std::string& get_group();
+
+    /**
      * @brief Add a python object option
      * @param label Option label
      * @param type the option type
@@ -78,6 +90,16 @@ class ForteOptions {
      */
     void add(const std::string& label, const std::string& type, pybind11::object default_value,
              const std::string& description);
+
+    /**
+     * @brief Add a python object option
+     * @param label Option label
+     * @param type the option type
+     * @param default_value default value of the option
+     * @param description description of the option
+     */
+    void add(const std::string& label, const std::string& type, pybind11::object default_value,
+             pybind11::list allowed_values, const std::string& description);
 
     /**
      * @brief Add a boolean option
@@ -189,10 +211,14 @@ class ForteOptions {
     /// temporary solution for the option array problem
     psi::Options& psi_options() { return psi_options_; }
 
+    /**
+     * @brief Return a python dictionary with all the options registered
+     */
     pybind11::dict dict();
 
   private:
     pybind11::dict dict_;
+    std::string group_ = "";
     std::vector<bool_opt_t> bool_opts_;
     std::vector<int_opt_t> int_opts_;
     std::vector<double_opt_t> double_opts_;
