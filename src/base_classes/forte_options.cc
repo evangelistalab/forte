@@ -36,9 +36,7 @@ py::dict make_option(const std::string& type, const std::string& group, py::obje
                     "description"_a = description.c_str());
 }
 
-void ForteOptions::set_group(const std::string& group) { group_ = group;
-//outfile->Printf("Setting group to %s",group_.c_str());
-}
+void ForteOptions::set_group(const std::string& group) { group_ = group; }
 
 const std::string& ForteOptions::get_group() { return group_; }
 
@@ -79,6 +77,7 @@ void ForteOptions::add_str(const std::string& label, const std::string& value,
                            const std::string& description) {
     str_opts_.push_back(std::make_tuple(label, value, description, allowed_values));
 <<<<<<< HEAD
+<<<<<<< HEAD
     auto allowed_values_list = py::list();
     for (const auto& s : allowed_values) {
         allowed_values_list.append(py::str(s));
@@ -86,11 +85,18 @@ void ForteOptions::add_str(const std::string& label, const std::string& value,
     add(label, "str", py::str(value), allowed_values_list, description);
 =======
     auto list = py::list();
+=======
+    auto allowed_values_list = py::list();
+>>>>>>> Changes to options class
     for (const auto& s : allowed_values) {
-        list.append(py::str(s));
+        allowed_values_list.append(py::str(s));
     }
+<<<<<<< HEAD
     dict_[label.c_str()] = make_option("str", py::str(value), list, description);
 >>>>>>> Export str with allowed values as dict
+=======
+    add(label, "str", py::str(value), allowed_values_list, description);
+>>>>>>> Changes to options class
 }
 
 void ForteOptions::add_array(const std::string& label, const std::string& description) {
