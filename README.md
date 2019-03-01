@@ -1,4 +1,4 @@
-![forte](lib/logos/forte_logo_github_2017.png)
+![forte](lib/logos/forte_motologo_github.gif)
 
 [![Build Status](https://travis-ci.org/evangelistalab/forte.svg?branch=master)](https://travis-ci.org/evangelistalab/forte)
 [![Documentation Status](https://readthedocs.org/projects/forte/badge/?version=latest)](http://forte.readthedocs.io/en/latest/?badge=latest)
