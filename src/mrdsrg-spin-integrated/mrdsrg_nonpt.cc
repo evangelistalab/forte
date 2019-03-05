@@ -57,6 +57,8 @@ void MRDSRG::compute_hbar() {
         outfile->Printf("\n\n  ==> Computing the DSRG Transformed Hamiltonian <==\n");
     }
 
+    timer init("Initialize Hbar");
+
     // copy bare Hamiltonian to Hbar
     Hbar0_ = 0.0;
     Hbar1_["pq"] = F_["pq"];
@@ -82,6 +84,8 @@ void MRDSRG::compute_hbar() {
     O1_["pq"] = F_["pq"];
     O1_["PQ"] = F_["PQ"];
 
+    init.stop();
+
     // iteration variables
     bool converged = false;
     int maxn = foptions_->get_int("DSRG_RSC_NCOMM");
@@ -94,9 +98,11 @@ void MRDSRG::compute_hbar() {
         double factor = 1.0 / n;
 
         // Compute the commutator C = 1/n [O, T]
+        timer zeroC("Zero C");
         double C0 = 0.0;
         C1_.zero();
         C2_.zero();
+        zeroC.stop();
 
         // printing level
         if (print_ > 2) {
@@ -104,24 +110,44 @@ void MRDSRG::compute_hbar() {
             outfile->Printf("\n    %s", dash.c_str());
         }
 
+        timer comm("Hbar commutators");
         // zero-body
+        timer t1comm("Hbar T1 commutators");
         H1_T1_C0(O1_, T1_, factor, C0);
+        t1comm.stop();
+        timer t2comm("Hbar T2 commutators");
         H1_T2_C0(O1_, T2_, factor, C0);
+        t2comm.stop();
         if (n == 1 && eri_df_) {
+            t1comm.restart();
             H2_T1_C0_DF(B_, T1_, factor, C0);
+            t1comm.stop();
+            t2comm.restart();
             H2_T2_C0_DF(B_, T2_, factor, C0);
+            t2comm.stop();
         } else {
+            t1comm.restart();
             H2_T1_C0(O2_, T1_, factor, C0);
+            t1comm.stop();
+            t2comm.restart();
             H2_T2_C0(O2_, T2_, factor, C0);
+            t2comm.stop();
         }
         // one-body
+        t1comm.restart();
         H1_T1_C1(O1_, T1_, factor, C1_);
+        t1comm.stop();
+        t2comm.restart();
         H1_T2_C1(O1_, T2_, factor, C1_);
+        t2comm.stop();
+        t1comm.restart();
         if (n == 1 && eri_df_) {
             H2_T1_C1_DF(B_, T1_, factor, C1_);
         } else {
             H2_T1_C1(O2_, T1_, factor, C1_);
         }
+        t1comm.stop();
+        t2comm.restart();
         if (foptions_->get_str("SRG_COMM") == "STANDARD") {
             if (n == 1 && eri_df_) {
                 H2_T2_C1_DF(B_, T2_, factor, C1_);
@@ -162,13 +188,23 @@ void MRDSRG::compute_hbar() {
             O1_.block("AA").scale(0.5);
             O1_.block("VV").scale(0.5);
         }
+        t2comm.stop();
         if (n == 1 && eri_df_) {
+            t1comm.restart();
             H2_T1_C2_DF(B_, T1_, factor, C2_);
+            t1comm.stop();
+            t2comm.restart();
             H2_T2_C2_DF(B_, T2_, factor, C2_);
+            t2comm.stop();
         } else {
+            t1comm.restart();
             H2_T1_C2(O2_, T1_, factor, C2_);
+            t1comm.stop();
+            t2comm.restart();
             H2_T2_C2(O2_, T2_, factor, C2_);
+            t2comm.stop();
         }
+        comm.stop();
 
         // printing level
         if (print_ > 2) {
@@ -178,6 +214,7 @@ void MRDSRG::compute_hbar() {
 
         // [H, A] = [H, T] + [H, T]^dagger
         if (dsrg_op == "UNITARY") {
+            timer transpose("Commutator transpose");
             C0 *= 2.0;
             O1_["pq"] = C1_["pq"];
             O1_["PQ"] = C1_["PQ"];
@@ -189,26 +226,33 @@ void MRDSRG::compute_hbar() {
             C2_["pqrs"] += O2_["rspq"];
             C2_["pQrS"] += O2_["rSpQ"];
             C2_["PQRS"] += O2_["RSPQ"];
+            transpose.stop();
         }
 
         // Hbar += C
+        timer sum("Hbar summation");
         Hbar0_ += C0;
         Hbar1_["pq"] += C1_["pq"];
         Hbar1_["PQ"] += C1_["PQ"];
         Hbar2_["pqrs"] += C2_["pqrs"];
         Hbar2_["pQrS"] += C2_["pQrS"];
         Hbar2_["PQRS"] += C2_["PQRS"];
+        sum.stop();
 
+        timer update("Update Commutator");
         // copy C to O for next level commutator
         O1_["pq"] = C1_["pq"];
         O1_["PQ"] = C1_["PQ"];
         O2_["pqrs"] = C2_["pqrs"];
         O2_["pQrS"] = C2_["pQrS"];
         O2_["PQRS"] = C2_["PQRS"];
+        update.stop();
 
         // test convergence of C
+        timer convergence("Convergence check");
         double norm_C1 = C1_.norm();
         double norm_C2 = C2_.norm();
+        convergence.stop();
         if (print_ > 2) {
             outfile->Printf("\n  n = %3d, C1norm = %20.15f, C2norm = %20.15f", n, norm_C1, norm_C2);
         }
@@ -588,15 +632,18 @@ void MRDSRG::compute_hbar_sequential_rotation() {
             outfile->Printf("\n    %s", dash.c_str());
         }
 
-        timer comm("Hbar T2 commutator");
         // prefactor before n-nested commutator
         double factor = 1.0 / n;
 
         // Compute the commutator C = 1/n [O, T]
+        timer zeroC("Zero C");
         double C0 = 0.0;
         C1_.zero();
         C2_.zero();
+        zeroC.stop();
 
+        timer comm("Hbar commutators");
+        timer t2comm("Hbar T2 commutators");
         if (n == 1 && eri_df_) {
             // zero-body
             H1_T2_C0(O1_, T2_, factor, C0);
@@ -618,6 +665,7 @@ void MRDSRG::compute_hbar_sequential_rotation() {
             H1_T2_C2(O1_, T2_, factor, C2_);
             H2_T2_C2(O2_, T2_, factor, C2_);
         }
+        t2comm.stop();
         comm.stop();
 
         // printing level
@@ -663,8 +711,10 @@ void MRDSRG::compute_hbar_sequential_rotation() {
         update.stop();
 
         // test convergence of C
+        timer convergence("Convergence check");
         double norm_C1 = C1_.norm();
         double norm_C2 = C2_.norm();
+        convergence.stop();
         if (print_ > 2) {
             outfile->Printf("\n  n = %3d, C1norm = %20.15f, C2norm = %20.15f", n, norm_C1, norm_C2);
         }
@@ -822,11 +872,13 @@ double MRDSRG::compute_energy_ldsrg2() {
             // rebuild Hbar because it is destroyed when updating amplitudes
             if (foptions_->get_str("RELAX_REF") != "NONE" ||
                 (foptions_->psi_options())["AVG_STATE"].size() != 0) {
+                timer hbar_rebuild("Rebuild Hbar");
                 if (sequential_Hbar_) {
                     compute_hbar_sequential_rotation();
                 } else {
                     compute_hbar();
                 }
+                hbar_rebuild.stop();
             }
         }
         if (cycle > maxiter) {

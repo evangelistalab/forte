@@ -64,6 +64,14 @@ class timer {
     timer(const std::string& name) : name_(name) { psi::timer_on(name_); }
     ~timer() { stop(); }
 
+    /// Restart the timer
+    void restart() {
+        if (not running_) {
+            running_ = true;
+            psi::timer_on(name_);
+        }
+    }
+
     /// Return the elapsed time in seconds
     void stop() {
         if (running_) {

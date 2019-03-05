@@ -1086,7 +1086,7 @@ def register_old_options(forte_options):
     #    /*- The absolute error tollerance for the ode solver -*/
     #    forte_options.add_double("SRG_ODEINT_RELERR", 1.0e-12)
     #    /*- Select a modified commutator -*/
-    #    forte_options.add_str("SRG_COMM", "STANDARD", "STANDARD FO FO2")
+    forte_options.add_str("SRG_COMM", "STANDARD", "STANDARD FO FO2")
 
     #    /*- Save Hbar? -*/
     #    forte_options.add_bool("SAVE_HBAR", False)

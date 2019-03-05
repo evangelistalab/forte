@@ -1644,6 +1644,8 @@ void MASTER_DSRG::H2_T2_C3(BlockedTensor& H2, BlockedTensor& T2, const double& a
                            BlockedTensor& C3, const bool& active_only) {
     local_timer timer;
 
+    forte::timer t("H2_T2_C3");
+
     /// Potentially be as large as p * p * h * g * g * g
 
     BlockedTensor temp;
