@@ -22,7 +22,7 @@ set forte {
   charge 0                               
   active [6]
   orbital_type local
-  localize full
+  localize_space [0,5]
   nroot 1
   active_ref_type hf
   dl_maxiter 500

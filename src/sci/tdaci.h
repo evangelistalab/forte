@@ -41,7 +41,6 @@
 #include "ci_rdm/ci_rdms.h"
 #include "sparse_ci/ci_reference.h"
 #include "integrals/active_space_integrals.h"
-#include "base_classes/reference.h"
 #include "sparse_ci/sparse_ci_solver.h"
 #include "sparse_ci/determinant.h"
 #include "sparse_ci/determinant_hashvector.h"
