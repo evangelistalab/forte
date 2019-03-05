@@ -1986,77 +1986,47 @@ void TDACI::propagate_RK4_list(std::vector<double>& PQ_coeffs_r,
     std::vector<double> k1i(npq, 0.0);
 
     complex_sigma_build(k1i, k1r, PQ_coeffs_r, PQ_coeffs_i, PQ_space, op);
-#pragma omp parallel for
-    for (size_t I = 0; I < npq; ++I) {
-        k1i[I] *= -1.0 * dt;
-        k1r[I] *= dt;
-    }
 
     // k2
     std::vector<double> intr = PQ_coeffs_r;
     std::vector<double> inti = PQ_coeffs_i;
 #pragma omp parallel for
     for (size_t I = 0; I < npq; ++I) {
-        intr[I] += k1r[I] * 0.5;
-        inti[I] += k1i[I] * 0.5;
+        intr[I] += k1r[I] * 0.5 *dt;
+        inti[I] -= k1i[I] * 0.5 *dt;
     }
 
     std::vector<double> k2r(npq, 0.0);
     std::vector<double> k2i(npq, 0.0);
     complex_sigma_build(k2i, k2r, intr, inti, PQ_space, op);
-#pragma omp parallel for
-    for (size_t I = 0; I < npq; ++I) {
-        k2i[I] *= -1.0 * dt ;
-        k2r[I] *= dt;
-    }
 
     // k3
-//    intr = PQ_coeffs_r;
-//    inti = PQ_coeffs_i;
 #pragma omp parallel for
     for (size_t I = 0; I < npq; ++I) {
-//        intr[I] += k2r[I] * 0.5 * dt;
-//        inti[I] += k2i[I] * 0.5 * dt;
-        intr[I] = PQ_coeffs_r[I] + k2r[I] * 0.5;
-        inti[I] = PQ_coeffs_i[I] + k2i[I] * 0.5;
+        intr[I] = PQ_coeffs_r[I] + k2r[I] * 0.5 * dt;
+        inti[I] = PQ_coeffs_i[I] - k2i[I] * 0.5 * dt;
     }
 
     std::vector<double> k3r(npq, 0.0);
     std::vector<double> k3i(npq, 0.0);
     complex_sigma_build(k3i, k3r, intr, inti, PQ_space, op);
-#pragma omp parallel for
-    for (size_t I = 0; I < npq; ++I) {
-        k3r[I] *= dt;
-        k3i[I] *= -1.0 * dt;
-    }
-
     // k4
-  //  intr = PQ_coeffs_r;
-  //  inti = PQ_coeffs_i;
 #pragma omp parallel for
     for (size_t I = 0; I < npq; ++I) {
-        //intr[I] += k3r[I] * dt;
-        //inti[I] += k3i[I] * dt;
-
-        intr[I] = PQ_coeffs_r[I] + k3r[I];
-        inti[I] = PQ_coeffs_i[I] + k3i[I];
+        intr[I] = PQ_coeffs_r[I] + k3r[I] * dt;
+        inti[I] = PQ_coeffs_i[I] - k3i[I] * dt;
     }
 
     std::vector<double> k4r(npq, 0.0);
     std::vector<double> k4i(npq, 0.0);
     complex_sigma_build(k4i, k4r, intr, inti, PQ_space, op);
-#pragma omp parallel for
-    for (size_t I = 0; I < npq; ++I) {
-        k4i[I] *= -1.0 * dt;
-        k4r[I] *= dt;
-    }
 
     // Compile all intermediates
 
 #pragma omp parallel for
     for (size_t I = 0; I < npq; ++I) {
-        PQ_coeffs_r[I] += (1.0 / 6.0) * (k1r[I] + 2 * k2r[I] + 2 * k3r[I] + k4r[I]);
-        PQ_coeffs_i[I] += (1.0 / 6.0) * (k1i[I] + 2 * k2i[I] + 2 * k3i[I] + k4i[I]);
+        PQ_coeffs_r[I] += (dt / 6.0) * (k1r[I] + 2 * k2r[I] + 2 * k3r[I] + k4r[I]);
+        PQ_coeffs_i[I] -= (dt / 6.0) * (k1i[I] + 2 * k2i[I] + 2 * k3i[I] + k4i[I]);
     }
 
     double norm = 0.0;
