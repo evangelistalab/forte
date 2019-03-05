@@ -120,14 +120,16 @@ class TDACI {
 
     void compute_tdaci_select(psi::SharedVector C0);
     
+    void propagate_list(psi::SharedVector C0);
+
     void propagate_exact_select( std::vector<double>& PQ_coeffs_r,std::vector<double>& PQ_coeffs_i, 
                                                             DeterminantHashVec& PQ_space, double dt);
 
     void propagate_RK4_select(std::vector<double>& PQ_coeffs_r,std::vector<double>& PQ_coeffs_i, 
                                                              DeterminantHashVec& PQ_space, double dt); 
 
-    void propagate_RK4_select_list(std::vector<double>& PQ_coeffs_r,std::vector<double>& PQ_coeffs_i, 
-                                                             DeterminantHashVec& PQ_space, double dt); 
+    void propagate_RK4_list(std::vector<double>& PQ_coeffs_r,std::vector<double>& PQ_coeffs_i, 
+                                                             DeterminantHashVec& PQ_space,WFNOperator& op, double dt); 
     // The core state determinant space
     DeterminantHashVec core_dets_;
     DeterminantHashVec ann_dets_;

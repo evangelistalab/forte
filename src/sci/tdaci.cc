@@ -72,15 +72,16 @@ double TDACI::compute_energy() {
     int hole = options_->get_int("TDACI_HOLE");
 
     // skip some steps if doing screening
-    bool screen = false;
+    bool build_full_H = true;
 
     std::string propagate_type = options_->get_str("TDACI_PROPAGATOR");
 
     if ( (propagate_type == "EXACT_SELECT") or
          (propagate_type == "RK4_SELECT") or
+         (propagate_type == "RK4_LIST") or
          (propagate_type == "RK4_SELECT_LIST")) {
 
-        screen = true;
+        build_full_H = false;
     }
 
     // 1. Grab an ACI wavefunction
@@ -115,13 +116,13 @@ double TDACI::compute_energy() {
         annihilate_wfn(aci_dets, ann_dets_, i);
     }
     size_t nann = ann_dets_.size();
-    outfile->Printf("\n  size of ann dets: %zu", ann_dets_.size());
+    outfile->Printf("\n  Number of cationic determinants: %zu", ann_dets_.size());
 
     // 3. Build the full n-1 Hamiltonian if not screening
     std::vector<std::string> det_str(nann);
     as_ints_ = aci->get_aci_ints();
     SharedMatrix full_aH = std::make_shared<Matrix>("aH", nann, nann);
-    if (!screen) {
+    if (build_full_H) {
         for (size_t I = 0; I < nann; ++I) {
             Determinant detI = ann_dets_.get_det(I);
             det_str[I] = detI.str(nact).c_str();
@@ -162,6 +163,7 @@ double TDACI::compute_energy() {
     norm = 1.0 / norm;
     core_coeffs->scale(norm);
 
+    outfile->Printf("\n  Using %s propagator", propagate_type.c_str());
     // 5. Propagate
     if (propagate_type == "EXACT") {
         propagate_exact(core_coeffs, full_aH);
@@ -175,6 +177,8 @@ double TDACI::compute_energy() {
         propagate_taylor2(core_coeffs, full_aH);
     } else if (propagate_type == "RK4") {
         propagate_RK4(core_coeffs, full_aH);
+    } else if (propagate_type == "RK4_LIST") {
+        propagate_list(core_coeffs);
     } else if (propagate_type == "LANCZOS") {
         propagate_lanczos(core_coeffs, full_aH);
     } else if (propagate_type == "EXACT_SELECT" or
@@ -197,6 +201,73 @@ double TDACI::compute_energy() {
     }
 
     return en;
+}
+
+void TDACI::propagate_list(SharedVector C0) {
+
+    Timer t1;
+
+    // A list of orbitals to compute occupations_ during propagation
+    std::vector<int> orbs = options_->get_int_vec("TDACI_OCC_ORB");
+
+    // Timestep details
+    int nstep = options_->get_int("TDACI_NSTEP");
+    double dt = options_->get_double("TDACI_TIMESTEP");
+    double conv = 1.0 / 24.18884326505;
+    dt *= conv;
+    double time = dt;
+
+    occupations_.resize(orbs.size());
+
+    size_t n_ann_dets = ann_dets_.size();
+    // set initial coefficients
+    std::vector<double> PQ_coeffs_r(n_ann_dets, 0.0);
+    std::vector<double> PQ_coeffs_i(n_ann_dets, 0.0);
+
+    for( size_t I = 0; I < n_ann_dets; ++I ){
+        PQ_coeffs_r[I] = C0->get(I);
+    }   
+    
+    // Compute couplings for sigma builds
+    auto mo_sym = mo_space_info_->symmetry("ACTIVE");
+    WFNOperator op(mo_sym, as_ints_);
+    op.set_quiet_mode(true);
+
+    op.build_strings(ann_dets_);
+    op.op_s_lists(ann_dets_);
+    op.tp_s_lists(ann_dets_);
+
+    // Begin the timesteps
+    for (int N = 0; N < nstep; ++N) {
+
+    //    if (options_->get_str("TDACI_PROPAGATOR") == "RK4_LIST") {
+            propagate_RK4_list(PQ_coeffs_r, PQ_coeffs_i, ann_dets_, op,  dt);
+    //    } else if (options_->get_str("TDACI_PROPAGATOR") == "LANCZOS_LIST") {
+    //        propagate_lanczos_list(PQ_coeffs_r, PQ_coeffs_i, PQ_space, dt);
+    //    }
+
+        if (std::fabs((time / conv) - round(time / conv)) <= 1e-8) {
+            outfile->Printf("\n t = %1.3f as", time / conv);
+            if (options_->get_bool("TDACI_PRINT_WFN")) {
+                std::stringstream ss;
+                ss << std::fixed << std::setprecision(3) << time / conv;
+                save_vector(PQ_coeffs_r, "rk4_list_" + ss.str() + "_r.txt");
+                save_vector(PQ_coeffs_i, "rk4_list_" + ss.str() + "_i.txt");
+            }
+          //  std::vector<double> occ = compute_occupation(ct_r, ct_i, orbs);
+            std::vector<double> occ = compute_occupation(ann_dets_, PQ_coeffs_r, PQ_coeffs_i, orbs);
+            for (size_t i = 0; i < orbs.size(); ++i) {
+                occupations_[i].push_back(occ[i]);
+            }
+        }
+    
+        time += dt;
+    }
+    for (size_t i = 0; i < orbs.size(); ++i) {
+        save_vector(occupations_[i], "occupations_" + std::to_string(orbs[i]) + ".txt");
+    }
+
+    outfile->Printf("\n Time spent propagating: %1.6f s", t1.get());
 }
 
 void TDACI::propagate_exact(SharedVector C0, SharedMatrix H) {
@@ -585,6 +656,7 @@ void TDACI::propagate_RK4(SharedVector C0, SharedMatrix H) {
 
         k1r->gemv(false, 1.0, &(*H), &(*ct_i), 0.0);
         k1i->gemv(false, -1.0, &(*H), &(*ct_r), 0.0);
+
         k1r->scale(dt);
         k1i->scale(dt);
 
@@ -1045,61 +1117,6 @@ void TDACI::propagate_lanczos(SharedVector C0, SharedMatrix H) {
     outfile->Printf("\n  Time spent propagating (Lanzcos): %1.6f", total.get());
 }
 
-// void TDACI::propagate_verlet(std::vector<std::pair<double,double>>& C0,
-// std::vector<std::pair<double,double>>& C_tau, std::shared_ptr<FCIIntegrals> fci_ints,
-// DeterminantHashVec& ann_dets  ) {
-//
-//    // The screening criterion
-//    double eta = options_->get_double("TDACI_ETA");
-//    double d_tau = options_->get_double("TDACI_TIMESTEP")*0.0413413745758;
-//    double tau = 0.0;
-//    int nstep = options_->get_int("TDACI_NSTEP");
-//
-//    size_t ndet = ann_dets.size();
-//    C_tau.resize(ndet);
-//    // Save initial wavefunction
-//
-//    outfile->Printf("\n Saving wavefunction for t = 0.0 as");
-//    std::vector<double> zr(ndet);
-//    std::vector<double> zi(ndet);
-//    for( int I = 0; I < ndet; ++I ){
-//        zr[I] = C0[I].first;
-//        zi[I] = C0[I].second;
-//    }
-//    save_vector(zr,"tau_0.0_r.txt");
-//    save_vector(zi,"tau_0.0_i.txt");
-//
-//    //read hamiltonian from disk
-//    outfile->Printf("\n  Loading Hamiltonian");
-//    SharedMatrix full_aH = std::make_shared<Matrix>("aH",ndet,ndet);
-//
-//    std::ifstream file("hamiltonian.txt", std::ios::in);
-//    if( !file ){
-//        outfile->Printf("\n  Could not open file");
-//        outfile->Printf("\n  Building Hamiltonian from scratch");
-//        for( size_t I = 0; I < ndet; ++I ){
-//            Determinant detI = ann_dets.get_det(I);
-//            for( size_t J = I; J < ndet; ++J ){
-//                Determinant detJ = ann_dets.get_det(J);
-//                double value = fci_ints->slater_rules(detI,detJ);
-//                full_aH->set(I,J, value);
-//                full_aH->set(J,I, value);
-//            }
-//        }
-//    } else {
-//        for( size_t I = 0; I < ndet; ++I ){
-//            for( size_t J = 0; J < ndet; ++J ){
-//                double num = 0.0;
-//                file >> num;
-//                full_aH->set(I,J,num);
-//            }
-//        }
-//    }
-//    outfile->Printf("  ...done");
-//
-//
-//}
-
 void TDACI::save_matrix(SharedMatrix mat, std::string name) {
 
     size_t dim = mat->nrow();
@@ -1312,7 +1329,15 @@ void TDACI::compute_tdaci_select(SharedVector C0) {
         } else if (options_->get_str("TDACI_PROPAGATOR") == "RK4_SELECT") {
             propagate_RK4_select(PQ_coeffs_r, PQ_coeffs_i, PQ_space, dt);
         } else if (options_->get_str("TDACI_PROPAGATOR") == "RK4_SELECT_LIST") {
-            propagate_RK4_select_list(PQ_coeffs_r, PQ_coeffs_i, PQ_space, dt);
+            // build coupling lists
+            auto mo_sym = mo_space_info_->symmetry("ACTIVE");
+            WFNOperator op(mo_sym, as_ints_);
+            op.set_quiet_mode(true);
+
+            op.build_strings(PQ_space);
+            op.op_s_lists(PQ_space);
+            op.tp_s_lists(PQ_space);
+            propagate_RK4_list(PQ_coeffs_r, PQ_coeffs_i, PQ_space, op, dt);
         }
 
         //        outfile->Printf("\n  propagate: %1.6f", prop.get());
@@ -1949,23 +1974,12 @@ void TDACI::propagate_RK4_select(std::vector<double>& PQ_coeffs_r, std::vector<d
     // outfile->Printf("\n  Time spent propagating (RK4): %1.6f", total.get());
 }
 
-void TDACI::propagate_RK4_select_list(std::vector<double>& PQ_coeffs_r,
-                                      std::vector<double>& PQ_coeffs_i,
-                                      DeterminantHashVec& PQ_space, double dt) {
+void TDACI::propagate_RK4_list(std::vector<double>& PQ_coeffs_r,
+                               std::vector<double>& PQ_coeffs_i,
+                               DeterminantHashVec& PQ_space, WFNOperator& op, double dt) {
 
     Timer total;
     size_t npq = PQ_space.size();
-    const det_hashvec& PQ_dets = PQ_space.wfn_hash();
-
-    // build coupling lists
-    auto mo_sym = mo_space_info_->symmetry("ACTIVE");
-    WFNOperator op(mo_sym, as_ints_);
-    op.set_quiet_mode(true);
-
-    op.build_strings(PQ_space);
-    op.op_s_lists(PQ_space);
-    op.tp_s_lists(PQ_space);
-  //  outfile->Printf("\n    Build lists: %1.6f", total.get());
 
     // k1 = -iH|Psi>
     std::vector<double> k1r(npq, 0.0);
@@ -1974,7 +1988,8 @@ void TDACI::propagate_RK4_select_list(std::vector<double>& PQ_coeffs_r,
     complex_sigma_build(k1i, k1r, PQ_coeffs_r, PQ_coeffs_i, PQ_space, op);
 #pragma omp parallel for
     for (size_t I = 0; I < npq; ++I) {
-        k1i[I] *= -1.0;
+        k1i[I] *= -1.0 * dt;
+        k1r[I] *= dt;
     }
 
     // k2
@@ -1982,8 +1997,8 @@ void TDACI::propagate_RK4_select_list(std::vector<double>& PQ_coeffs_r,
     std::vector<double> inti = PQ_coeffs_i;
 #pragma omp parallel for
     for (size_t I = 0; I < npq; ++I) {
-        intr[I] += k1r[I] * 0.5 * dt;
-        inti[I] += k1i[I] * 0.5 * dt;
+        intr[I] += k1r[I] * 0.5;
+        inti[I] += k1i[I] * 0.5;
     }
 
     std::vector<double> k2r(npq, 0.0);
@@ -1991,16 +2006,19 @@ void TDACI::propagate_RK4_select_list(std::vector<double>& PQ_coeffs_r,
     complex_sigma_build(k2i, k2r, intr, inti, PQ_space, op);
 #pragma omp parallel for
     for (size_t I = 0; I < npq; ++I) {
-        k2i[I] *= -1.0;
+        k2i[I] *= -1.0 * dt ;
+        k2r[I] *= dt;
     }
 
     // k3
-    intr = PQ_coeffs_r;
-    inti = PQ_coeffs_i;
+//    intr = PQ_coeffs_r;
+//    inti = PQ_coeffs_i;
 #pragma omp parallel for
     for (size_t I = 0; I < npq; ++I) {
-        intr[I] += k2r[I] * 0.5 * dt;
-        inti[I] += k2i[I] * 0.5 * dt;
+//        intr[I] += k2r[I] * 0.5 * dt;
+//        inti[I] += k2i[I] * 0.5 * dt;
+        intr[I] = PQ_coeffs_r[I] + k2r[I] * 0.5;
+        inti[I] = PQ_coeffs_i[I] + k2i[I] * 0.5;
     }
 
     std::vector<double> k3r(npq, 0.0);
@@ -2008,16 +2026,20 @@ void TDACI::propagate_RK4_select_list(std::vector<double>& PQ_coeffs_r,
     complex_sigma_build(k3i, k3r, intr, inti, PQ_space, op);
 #pragma omp parallel for
     for (size_t I = 0; I < npq; ++I) {
-        k3i[I] *= -1.0;
+        k3r[I] *= dt;
+        k3i[I] *= -1.0 * dt;
     }
 
     // k4
-    intr = PQ_coeffs_r;
-    inti = PQ_coeffs_i;
+  //  intr = PQ_coeffs_r;
+  //  inti = PQ_coeffs_i;
 #pragma omp parallel for
     for (size_t I = 0; I < npq; ++I) {
-        intr[I] += k3r[I] * dt;
-        inti[I] += k3i[I] * dt;
+        //intr[I] += k3r[I] * dt;
+        //inti[I] += k3i[I] * dt;
+
+        intr[I] = PQ_coeffs_r[I] + k3r[I];
+        inti[I] = PQ_coeffs_i[I] + k3i[I];
     }
 
     std::vector<double> k4r(npq, 0.0);
@@ -2025,15 +2047,16 @@ void TDACI::propagate_RK4_select_list(std::vector<double>& PQ_coeffs_r,
     complex_sigma_build(k4i, k4r, intr, inti, PQ_space, op);
 #pragma omp parallel for
     for (size_t I = 0; I < npq; ++I) {
-        k4i[I] *= -1.0;
+        k4i[I] *= -1.0 * dt;
+        k4r[I] *= dt;
     }
 
     // Compile all intermediates
 
 #pragma omp parallel for
     for (size_t I = 0; I < npq; ++I) {
-        PQ_coeffs_r[I] += (dt / 6.0) * (k1r[I] + 2 * k2r[I] + 2 * k3r[I] + k4r[I]);
-        PQ_coeffs_i[I] += (dt / 6.0) * (k1i[I] + 2 * k2i[I] + 2 * k3i[I] + k4i[I]);
+        PQ_coeffs_r[I] += (1.0 / 6.0) * (k1r[I] + 2 * k2r[I] + 2 * k3r[I] + k4r[I]);
+        PQ_coeffs_i[I] += (1.0 / 6.0) * (k1i[I] + 2 * k2i[I] + 2 * k3i[I] + k4i[I]);
     }
 
     double norm = 0.0;
@@ -2042,13 +2065,12 @@ void TDACI::propagate_RK4_select_list(std::vector<double>& PQ_coeffs_r,
         double im = PQ_coeffs_i[I];
         norm += (re * re) + (im * im);
     }
-    norm = std::sqrt(norm);
+    norm = 1.0/std::sqrt(norm);
 
     for (size_t I = 0; I < npq; ++I) {
         PQ_coeffs_r[I] *= norm;
         PQ_coeffs_i[I] *= norm;
     }
-
     // outfile->Printf("\n  Time spent propagating (RK4): %1.6f", total.get());
 }
 
@@ -2085,8 +2107,8 @@ void TDACI::complex_sigma_build(std::vector<double>& sigma_r, std::vector<double
         }
 
         // Each thread gets local copy of sigma
-        std::vector<double> sigma_t_r(size);
-        std::vector<double> sigma_t_i(size);
+        std::vector<double> sigma_t_r(size, 0.0);
+        std::vector<double> sigma_t_i(size, 0.0);
 
         // a singles
         size_t end_a_idx = a_list.size();
@@ -2276,7 +2298,8 @@ double TDACI::test_occ(){
             ref_occ.push_back(value);
         }
     } else {
-       outfile->Printf("\n File not found!"); 
+        outfile->Printf("\n File not found!"); 
+        exit(1);
     }
 
     std::vector<double>& curr_occ = occupations_[0];
