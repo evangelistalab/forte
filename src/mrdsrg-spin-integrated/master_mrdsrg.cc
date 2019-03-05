@@ -1044,12 +1044,12 @@ void MASTER_DSRG::H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const double& a
         TIME_LINE(temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"aaaaaa"}));
         TIME_LINE(temp["uvwxyz"] += H2["uviz"] * T2["iwxy"]);
         TIME_LINE(temp["uvwxyz"] += H2["waxy"] * T2["uvaz"]);
-        TIME_LINE(E += 0.25 * temp.block("aaaaaa")("uvwxyz") * reference_.L3aaa()("xyzuvw"));
+        TIME_LINE(E += 0.25 * temp.block("aaaaaa")("uvwxyz") * rdms_.L3aaa()("xyzuvw"));
 
         TIME_LINE(temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"AAAAAA"}));
         TIME_LINE(temp["UVWXYZ"] += H2["UVIZ"] * T2["IWXY"]);
         TIME_LINE(temp["UVWXYZ"] += H2["WAXY"] * T2["UVAZ"]);
-        TIME_LINE(E += 0.25 * temp.block("AAAAAA")("UVWXYZ") * reference_.L3bbb()("XYZUVW"));
+        TIME_LINE(E += 0.25 * temp.block("AAAAAA")("UVWXYZ") * rdms_.L3bbb()("XYZUVW"));
 
         TIME_LINE(temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"aaAaaA"}));
         TIME_LINE(temp["uvWxyZ"] -= H2["uviy"] * T2["iWxZ"]);
@@ -1059,7 +1059,7 @@ void MASTER_DSRG::H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const double& a
         TIME_LINE(temp["uvWxyZ"] += H2["aWxZ"] * T2["uvay"]);
         TIME_LINE(temp["uvWxyZ"] -= H2["vaxy"] * T2["uWaZ"]);
         TIME_LINE(temp["uvWxyZ"] -= 2.0 * H2["vAxZ"] * T2["uWyA"]);
-        TIME_LINE(E += 0.5 * temp.block("aaAaaA")("uvWxyZ") * reference_.L3aab()("xyZuvW"));
+        TIME_LINE(E += 0.5 * temp.block("aaAaaA")("uvWxyZ") * rdms_.L3aab()("xyZuvW"));
 
         TIME_LINE(temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"aAAaAA"}));
         TIME_LINE(temp["uVWxYZ"] -= H2["VWIZ"] * T2["uIxY"]);
@@ -1069,7 +1069,7 @@ void MASTER_DSRG::H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const double& a
         TIME_LINE(temp["uVWxYZ"] += H2["uAxY"] * T2["VWAZ"]);
         TIME_LINE(temp["uVWxYZ"] -= H2["WAYZ"] * T2["uVxA"]);
         TIME_LINE(temp["uVWxYZ"] -= 2.0 * H2["aWxY"] * T2["uVaZ"]);
-        TIME_LINE(E += 0.5 * temp.block("aAAaAA")("uVWxYZ") * reference_.L3abb()("xYZuVW"));
+        TIME_LINE(E += 0.5 * temp.block("aAAaAA")("uVWxYZ") * rdms_.L3abb()("xYZuVW"));
     }
 
     // multiply prefactor and copy to C0
