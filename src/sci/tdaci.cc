@@ -1095,9 +1095,9 @@ void TDACI::propagate_lanczos(SharedVector C0, SharedMatrix H) {
         ct_r->scale(1.0 / sqrt(norm));
         ct_i->scale(1.0 / sqrt(norm));
 
-        if (options_->get_bool("TDACI_PRINT_WFN")) {
+        if (std::abs((time / conv) - round((time / conv))) <= 1e-8) {
             outfile->Printf("\n  t = %1.3f as", time / conv);
-            if (std::abs((time / conv) - round((time / conv))) <= 1e-8) {
+            if (options_->get_bool("TDACI_PRINT_WFN")) {
                 std::stringstream ss;
                 ss << std::fixed << std::setprecision(3) << time / conv;
                 save_vector(ct_r, "lanczos_" + ss.str() + "_r.txt");
