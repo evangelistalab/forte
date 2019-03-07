@@ -571,7 +571,7 @@ void MRDSRG::compute_hbar_sequential_rotation() {
 
         Hbar1_["PQ"] -= B["gPN"] * B["gMQ"] * D1c["MN"];
         Hbar1_["PQ"] -= B["gPV"] * B["gUQ"] * Gamma1_["UV"];
-    } else {
+    } else if (nivo_) {
         Vtrans = BTF_->build(tensor_type_, "Hbar2", spin_cases({"gggg"}));
         Vtrans["pqrs"] = U1["pt"] * U1["qo"] * V_["to45"] * U1["r4"] * U1["s5"];
         Vtrans["pQrS"] = U1["pt"] * U1["QO"] * V_["tO49"] * U1["r4"] * U1["S9"];
@@ -593,6 +593,27 @@ void MRDSRG::compute_hbar_sequential_rotation() {
         Hbar1_["PQ"] += Vtrans["PNQM"] * D1c["MN"];
         Hbar1_["PQ"] += Vtrans["vPuQ"] * Gamma1_["uv"];
         Hbar1_["PQ"] += Vtrans["PVQU"] * Gamma1_["UV"];
+    } else {
+        Hbar2_["pqrs"] = U1["pt"] * U1["qo"] * V_["to45"] * U1["r4"] * U1["s5"];
+        Hbar2_["pQrS"] = U1["pt"] * U1["QO"] * V_["tO49"] * U1["r4"] * U1["S9"];
+        Hbar2_["PQRS"] = U1["PT"] * U1["QO"] * V_["TO89"] * U1["R8"] * U1["S9"];
+
+        // for simplicity, create a core-core density matrix
+        BlockedTensor D1c = BTF_->build(tensor_type_, "Gamma1 core", spin_cases({"cc"}));
+        for (size_t m = 0, nc = core_mos_.size(); m < nc; ++m) {
+            D1c.block("cc").data()[m * nc + m] = 1.0;
+            D1c.block("CC").data()[m * nc + m] = 1.0;
+        }
+
+        Hbar1_["pq"] += Hbar2_["pnqm"] * D1c["mn"];
+        Hbar1_["pq"] += Hbar2_["pNqM"] * D1c["MN"];
+        Hbar1_["pq"] += Hbar2_["pvqu"] * Gamma1_["uv"];
+        Hbar1_["pq"] += Hbar2_["pVqU"] * Gamma1_["UV"];
+
+        Hbar1_["PQ"] += Hbar2_["nPmQ"] * D1c["mn"];
+        Hbar1_["PQ"] += Hbar2_["PNQM"] * D1c["MN"];
+        Hbar1_["PQ"] += Hbar2_["vPuQ"] * Gamma1_["uv"];
+        Hbar1_["PQ"] += Hbar2_["PVQU"] * Gamma1_["UV"];
     }
 
     // compute fully contracted term from T1
@@ -612,10 +633,14 @@ void MRDSRG::compute_hbar_sequential_rotation() {
         Hbar0_ += 0.25 * B["gUX"] * B["gVY"] * Lambda2_["XYUV"];
         Hbar0_ -= 0.25 * B["gUY"] * B["gVX"] * Lambda2_["XYUV"];
         Hbar0_ += B["gux"] * B["gVY"] * Lambda2_["xYuV"];
-    } else {
+    } else if (nivo_) {
         Hbar0_ += 0.25 * Vtrans["uvxy"] * Lambda2_["xyuv"];
         Hbar0_ += 0.25 * Vtrans["UVXY"] * Lambda2_["XYUV"];
         Hbar0_ += Vtrans["uVxY"] * Lambda2_["xYuV"];
+    } else {
+        Hbar0_ += 0.25 * Hbar2_["uvxy"] * Lambda2_["xyuv"];
+        Hbar0_ += 0.25 * Hbar2_["UVXY"] * Lambda2_["XYUV"];
+        Hbar0_ += Hbar2_["uVxY"] * Lambda2_["xYuV"];
     }
 
     Hbar0_ += Efrzc_ + Enuc_ - Eref_;
@@ -642,10 +667,14 @@ void MRDSRG::compute_hbar_sequential_rotation() {
 
         TIME_LINE(Hbar2_["PQRS"] = B["gPR"] * B["gQS"]);
         TIME_LINE(Hbar2_["PQRS"] -= B["gPS"] * B["gQR"]);
-    } else {
+    } else if (nivo_) {
         TIME_LINE(Hbar2_["pqrs"] = Vtrans["pqrs"]);
         TIME_LINE(Hbar2_["pQrS"] = Vtrans["pQrS"]);
         TIME_LINE(Hbar2_["PQRS"] = Vtrans["PQRS"]);
+    } else {
+        TIME_LINE(O2_["pqrs"] = Hbar2_["pqrs"]);
+        TIME_LINE(O2_["pQrS"] = Hbar2_["pQrS"]);
+        TIME_LINE(O2_["PQRS"] = Hbar2_["PQRS"]);
     }
     init.stop();
 
@@ -683,7 +712,7 @@ void MRDSRG::compute_hbar_sequential_rotation() {
                 // two-body
                 H1_T2_C2(O1_, T2_, factor, C2_);
                 H2_T2_C2_DF(B, T2_, factor, C2_);
-            } else {
+            } else if (nivo_) {
                 // zero-body
                 H1_T2_C0(O1_, T2_, factor, C0);
                 H2_T2_C0(Vtrans, T2_, factor, C0);
@@ -693,6 +722,16 @@ void MRDSRG::compute_hbar_sequential_rotation() {
                 // two-body
                 H1_T2_C2(O1_, T2_, factor, C2_);
                 H2_T2_C2(Vtrans, T2_, factor, C2_);
+            } else {
+                // zero-body
+                H1_T2_C0(O1_, T2_, factor, C0);
+                H2_T2_C0(O2_, T2_, factor, C0);
+                // one-body
+                H1_T2_C1(O1_, T2_, factor, C1_);
+                H2_T2_C1(O2_, T2_, factor, C1_);
+                // two-body
+                H1_T2_C2(O1_, T2_, factor, C2_);
+                H2_T2_C2(O2_, T2_, factor, C2_);
             }
         } else {
             // zero-body
