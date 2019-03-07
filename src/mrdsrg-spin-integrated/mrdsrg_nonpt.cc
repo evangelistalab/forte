@@ -75,9 +75,6 @@ void MRDSRG::compute_hbar() {
         Hbar2_["pqrs"] = V_["pqrs"];
         Hbar2_["pQrS"] = V_["pQrS"];
         Hbar2_["PQRS"] = V_["PQRS"];
-        O2_["pqrs"] = Hbar2_["pqrs"];
-        O2_["pQrS"] = Hbar2_["pQrS"];
-        O2_["PQRS"] = Hbar2_["PQRS"];
     }
 
     // temporary Hamiltonian used in every iteration
@@ -118,13 +115,22 @@ void MRDSRG::compute_hbar() {
         timer t2comm("Hbar T2 commutators");
         H1_T2_C0(O1_, T2_, factor, C0);
         t2comm.stop();
-        if (n == 1 && eri_df_) {
-            t1comm.restart();
-            H2_T1_C0_DF(B_, T1_, factor, C0);
-            t1comm.stop();
-            t2comm.restart();
-            H2_T2_C0_DF(B_, T2_, factor, C0);
-            t2comm.stop();
+        if (n == 1) {
+            if (eri_df_) {
+                t1comm.restart();
+                H2_T1_C0_DF(B_, T1_, factor, C0);
+                t1comm.stop();
+                t2comm.restart();
+                H2_T2_C0_DF(B_, T2_, factor, C0);
+                t2comm.stop();
+            } else {
+                t1comm.restart();
+                H2_T1_C0(V_, T1_, factor, C0);
+                t1comm.stop();
+                t2comm.restart();
+                H2_T2_C0(V_, T2_, factor, C0);
+                t2comm.stop();
+            }
         } else {
             t1comm.restart();
             H2_T1_C0(O2_, T1_, factor, C0);
@@ -141,23 +147,35 @@ void MRDSRG::compute_hbar() {
         H1_T2_C1(O1_, T2_, factor, C1_);
         t2comm.stop();
         t1comm.restart();
-        if (n == 1 && eri_df_) {
-            H2_T1_C1_DF(B_, T1_, factor, C1_);
+        if (n == 1) {
+            if (eri_df_) {
+                H2_T1_C1_DF(B_, T1_, factor, C1_);
+            } else {
+                H2_T1_C1(V_, T1_, factor, C1_);
+            }
         } else {
             H2_T1_C1(O2_, T1_, factor, C1_);
         }
         t1comm.stop();
         t2comm.restart();
         if (foptions_->get_str("SRG_COMM") == "STANDARD") {
-            if (n == 1 && eri_df_) {
-                H2_T2_C1_DF(B_, T2_, factor, C1_);
+            if (n == 1) {
+                if (eri_df_) {
+                    H2_T2_C1_DF(B_, T2_, factor, C1_);
+                } else {
+                    H2_T2_C1(V_, T2_, factor, C1_);
+                }
             } else {
                 H2_T2_C1(O2_, T2_, factor, C1_);
             }
         } else if (foptions_->get_str("SRG_COMM") == "FO") {
             BlockedTensor C1p = BTF_->build(tensor_type_, "C1p", spin_cases({"gg"}));
-            if (n == 1 && eri_df_) {
-                H2_T2_C1_DF(B_, T2_, factor, C1p);
+            if (n == 1) {
+                if (eri_df_) {
+                    H2_T2_C1_DF(B_, T2_, factor, C1p);
+                } else {
+                    H2_T2_C1(V_, T2_, factor, C1p);
+                }
             } else {
                 H2_T2_C1(O2_, T2_, factor, C1p);
             }
@@ -189,13 +207,22 @@ void MRDSRG::compute_hbar() {
             O1_.block("VV").scale(0.5);
         }
         t2comm.stop();
-        if (n == 1 && eri_df_) {
-            t1comm.restart();
-            H2_T1_C2_DF(B_, T1_, factor, C2_);
-            t1comm.stop();
-            t2comm.restart();
-            H2_T2_C2_DF(B_, T2_, factor, C2_);
-            t2comm.stop();
+        if (n == 1) {
+            if (eri_df_) {
+                t1comm.restart();
+                H2_T1_C2_DF(B_, T1_, factor, C2_);
+                t1comm.stop();
+                t2comm.restart();
+                H2_T2_C2_DF(B_, T2_, factor, C2_);
+                t2comm.stop();
+            } else {
+                t1comm.restart();
+                H2_T1_C2(V_, T1_, factor, C2_);
+                t1comm.stop();
+                t2comm.restart();
+                H2_T2_C2(V_, T2_, factor, C2_);
+                t2comm.stop();
+            }
         } else {
             t1comm.restart();
             H2_T1_C2(O2_, T1_, factor, C2_);
@@ -515,7 +542,7 @@ void MRDSRG::compute_hbar_sequential_rotation() {
     Hbar0_ += 0.5 * Hbar1_["uv"] * Gamma1_["vu"];
     Hbar0_ += 0.5 * Hbar1_["UV"] * Gamma1_["VU"];
 
-    ambit::BlockedTensor B;
+    ambit::BlockedTensor B, Vtrans;
     if (eri_df_) {
         B = BTF_->build(tensor_type_, "B 3-idx", {"Lgg", "LGG"});
         B["grs"] = U1["rp"] * B_["gpq"] * U1["sq"];
@@ -545,9 +572,10 @@ void MRDSRG::compute_hbar_sequential_rotation() {
         Hbar1_["PQ"] -= B["gPN"] * B["gMQ"] * D1c["MN"];
         Hbar1_["PQ"] -= B["gPV"] * B["gUQ"] * Gamma1_["UV"];
     } else {
-        Hbar2_["pqrs"] = U1["pt"] * U1["qo"] * V_["to45"] * U1["r4"] * U1["s5"];
-        Hbar2_["pQrS"] = U1["pt"] * U1["QO"] * V_["tO49"] * U1["r4"] * U1["S9"];
-        Hbar2_["PQRS"] = U1["PT"] * U1["QO"] * V_["TO89"] * U1["R8"] * U1["S9"];
+        Vtrans = BTF_->build(tensor_type_, "Hbar2", spin_cases({"gggg"}));
+        Vtrans["pqrs"] = U1["pt"] * U1["qo"] * V_["to45"] * U1["r4"] * U1["s5"];
+        Vtrans["pQrS"] = U1["pt"] * U1["QO"] * V_["tO49"] * U1["r4"] * U1["S9"];
+        Vtrans["PQRS"] = U1["PT"] * U1["QO"] * V_["TO89"] * U1["R8"] * U1["S9"];
 
         // for simplicity, create a core-core density matrix
         BlockedTensor D1c = BTF_->build(tensor_type_, "Gamma1 core", spin_cases({"cc"}));
@@ -556,15 +584,15 @@ void MRDSRG::compute_hbar_sequential_rotation() {
             D1c.block("CC").data()[m * nc + m] = 1.0;
         }
 
-        Hbar1_["pq"] += Hbar2_["pnqm"] * D1c["mn"];
-        Hbar1_["pq"] += Hbar2_["pNqM"] * D1c["MN"];
-        Hbar1_["pq"] += Hbar2_["pvqu"] * Gamma1_["uv"];
-        Hbar1_["pq"] += Hbar2_["pVqU"] * Gamma1_["UV"];
+        Hbar1_["pq"] += Vtrans["pnqm"] * D1c["mn"];
+        Hbar1_["pq"] += Vtrans["pNqM"] * D1c["MN"];
+        Hbar1_["pq"] += Vtrans["pvqu"] * Gamma1_["uv"];
+        Hbar1_["pq"] += Vtrans["pVqU"] * Gamma1_["UV"];
 
-        Hbar1_["PQ"] += Hbar2_["nPmQ"] * D1c["mn"];
-        Hbar1_["PQ"] += Hbar2_["PNQM"] * D1c["MN"];
-        Hbar1_["PQ"] += Hbar2_["vPuQ"] * Gamma1_["uv"];
-        Hbar1_["PQ"] += Hbar2_["PVQU"] * Gamma1_["UV"];
+        Hbar1_["PQ"] += Vtrans["nPmQ"] * D1c["mn"];
+        Hbar1_["PQ"] += Vtrans["PNQM"] * D1c["MN"];
+        Hbar1_["PQ"] += Vtrans["vPuQ"] * Gamma1_["uv"];
+        Hbar1_["PQ"] += Vtrans["PVQU"] * Gamma1_["UV"];
     }
 
     // compute fully contracted term from T1
@@ -585,9 +613,9 @@ void MRDSRG::compute_hbar_sequential_rotation() {
         Hbar0_ -= 0.25 * B["gUY"] * B["gVX"] * Lambda2_["XYUV"];
         Hbar0_ += B["gux"] * B["gVY"] * Lambda2_["xYuV"];
     } else {
-        Hbar0_ += 0.25 * Hbar2_["uvxy"] * Lambda2_["xyuv"];
-        Hbar0_ += 0.25 * Hbar2_["UVXY"] * Lambda2_["XYUV"];
-        Hbar0_ += Hbar2_["uVxY"] * Lambda2_["xYuV"];
+        Hbar0_ += 0.25 * Vtrans["uvxy"] * Lambda2_["xyuv"];
+        Hbar0_ += 0.25 * Vtrans["UVXY"] * Lambda2_["XYUV"];
+        Hbar0_ += Vtrans["uVxY"] * Lambda2_["xYuV"];
     }
 
     Hbar0_ += Efrzc_ + Enuc_ - Eref_;
@@ -615,9 +643,9 @@ void MRDSRG::compute_hbar_sequential_rotation() {
         TIME_LINE(Hbar2_["PQRS"] = B["gPR"] * B["gQS"]);
         TIME_LINE(Hbar2_["PQRS"] -= B["gPS"] * B["gQR"]);
     } else {
-        TIME_LINE(O2_["pqrs"] = Hbar2_["pqrs"]);
-        TIME_LINE(O2_["pQrS"] = Hbar2_["pQrS"]);
-        TIME_LINE(O2_["PQRS"] = Hbar2_["PQRS"]);
+        TIME_LINE(Hbar2_["pqrs"] = Vtrans["pqrs"]);
+        TIME_LINE(Hbar2_["pQrS"] = Vtrans["pQrS"]);
+        TIME_LINE(Hbar2_["PQRS"] = Vtrans["PQRS"]);
     }
     init.stop();
 
@@ -644,16 +672,28 @@ void MRDSRG::compute_hbar_sequential_rotation() {
 
         timer comm("Hbar commutators");
         timer t2comm("Hbar T2 commutators");
-        if (n == 1 && eri_df_) {
-            // zero-body
-            H1_T2_C0(O1_, T2_, factor, C0);
-            H2_T2_C0_DF(B, T2_, factor, C0);
-            // one-body
-            H1_T2_C1(O1_, T2_, factor, C1_);
-            H2_T2_C1_DF(B, T2_, factor, C1_);
-            // two-body
-            H1_T2_C2(O1_, T2_, factor, C2_);
-            H2_T2_C2_DF(B, T2_, factor, C2_);
+        if (n == 1) {
+            if (eri_df_) {
+                // zero-body
+                H1_T2_C0(O1_, T2_, factor, C0);
+                H2_T2_C0_DF(B, T2_, factor, C0);
+                // one-body
+                H1_T2_C1(O1_, T2_, factor, C1_);
+                H2_T2_C1_DF(B, T2_, factor, C1_);
+                // two-body
+                H1_T2_C2(O1_, T2_, factor, C2_);
+                H2_T2_C2_DF(B, T2_, factor, C2_);
+            } else {
+                // zero-body
+                H1_T2_C0(O1_, T2_, factor, C0);
+                H2_T2_C0(Vtrans, T2_, factor, C0);
+                // one-body
+                H1_T2_C1(O1_, T2_, factor, C1_);
+                H2_T2_C1(Vtrans, T2_, factor, C1_);
+                // two-body
+                H1_T2_C2(O1_, T2_, factor, C2_);
+                H2_T2_C2(Vtrans, T2_, factor, C2_);
+            }
         } else {
             // zero-body
             H1_T2_C0(O1_, T2_, factor, C0);
