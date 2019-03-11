@@ -52,6 +52,7 @@ void ExcitedStateSolver::set_options(std::shared_ptr<ForteOptions> options) {
     // TODO: This shouldn't come from options
     root_ = options->get_int("ROOT");
 
+    // TODO: move all ACI_* options to SCI_* and update register_forte_options.py
     ex_alg_ = options->get_str("ACI_EXCITED_ALGORITHM");
     core_ex_ = options->get_bool("ACI_CORE_EX");
     if (options->has_changed("ACI_QUIET_MODE")) {

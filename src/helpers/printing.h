@@ -29,11 +29,9 @@
 #ifndef _printing_h_
 #define _printing_h_
 
-
-
-class Options;
-
 namespace forte {
+
+enum class PrintLevel { Quiet = 0, Mini = 1, Default = 2, Debug = 3 };
 
 /**
  * @brief print_method_banner Print a banner for a method
@@ -49,6 +47,6 @@ void print_method_banner(const std::vector<std::string>& text, const std::string
  */
 void print_timing(const std::string& text, double seconds);
 
-}
+} // namespace forte
 
 #endif // _helpers_h_
