@@ -184,7 +184,7 @@ void make_embedding(psi::SharedWavefunction ref_wfn, psi::Options& options, psi:
                         for (int i = 0; i < nroccpi[0]; i++) {
 				tmp += lo->get(0, i);
 				cum_l_o = tmp/sum_lo;
-                                if (cum_l_o > thresh) {
+                                if (cum_l_o < thresh) {
                                         index_trace_occ.push_back(i);
                                         outfile->Printf("\n Occupied orbital %d is partitioned to A with cumulative eigenvalue %8.8f",
                                                 i, cum_l_o);
@@ -195,7 +195,7 @@ void make_embedding(psi::SharedWavefunction ref_wfn, psi::Options& options, psi:
                         for (int i = 0; i < nrvirpi[0]; i++) {
 				tmp += lv->get(0, i);
 				cum_l_v = tmp/sum_lv;
-                                if (cum_l_v > thresh) {
+                                if (cum_l_v < thresh) {
                                         index_trace_vir.push_back(i);
                                         outfile->Printf("\n Virtual orbital %d is partitioned to A with cumulative eigenvalue %8.8f",
                                                 i, cum_l_v);
