@@ -24,14 +24,14 @@ def register_forte_options(forte_options):
 def register_driver_options(forte_options):
     forte_options.set_group("Driver")
     forte_options.add_str('JOB_TYPE', 'NEWDRIVER', [
-        'NONE', 'ACI', 'PCI', 'CAS', 'DMRG', 'SR-DSRG', 'SR-DSRG-ACI',
+        'NONE', 'NEWDRIVER', 'ACI', 'PCI', 'CAS', 'DMRG', 'SR-DSRG', 'SR-DSRG-ACI',
         'SR-DSRG-PCI', 'DSRG-MRPT2', 'DSRG-MRPT3', 'MR-DSRG-PT2',
         'THREE-DSRG-MRPT2', 'SOMRDSRG', 'MRDSRG', 'MRDSRG_SO', 'CASSCF',
         'ACTIVE-DSRGPT2', 'DWMS-DSRGPT2', 'DSRG_MRPT', 'TASKS'
     ], 'Specify the job type')
 
     forte_options.add_str(
-        'ACTIVE_SPACE_SOLVER', '', ['FCI', 'ACI', 'CAS'],
+        'ACTIVE_SPACE_SOLVER', 'NONE', ['NONE','FCI', 'ACI', 'CAS'],
         'Active space solver type'
     )  # TODO: why is PCI running even if it is not in this list (Francesco)
     forte_options.add_str(
@@ -56,7 +56,7 @@ def register_driver_options(forte_options):
     forte_options.add_str("ORBITAL_TYPE", "CANONICAL",
                           ['CANONICAL', 'LOCAL', 'MP2_NO'],
                           'Type of orbitals to use')
-
+    forte_options.set_group("")
 
 def register_avas_options(forte_options):
     forte_options.set_group("AVAS")
