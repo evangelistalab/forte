@@ -890,6 +890,7 @@ void ProjectorCI::post_iter_process() {
         op.tp_s_lists(det_map);
 
         // set SparseCISolver options
+        sparse_solver_.set_sigma_vector(nullptr);
         sparse_solver_.set_spin_project(true);
         sparse_solver_.set_sigma_method("SPARSE");
         sparse_solver_.manual_guess(false);
@@ -1012,6 +1013,7 @@ double ProjectorCI::initial_guess(det_hashvec& dets_hashvec, std::vector<double>
     //   DynamicBitsetDeterminant dbs = d.to_dynamic_bitset();
     //  dyn_dets.push_back(dbs);
     // }
+    sparse_solver_.set_sigma_vector(nullptr);
     sparse_solver_.set_spin_project(true);
     sparse_solver_.manual_guess(false);
     sparse_solver_.set_force_diag(false);
