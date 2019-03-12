@@ -261,7 +261,7 @@ void ProjectorCI::startup() {
     approx_E_S_ = 0.0;
 
     sparse_solver_.set_parallel(true);
-    sparse_solver_.set_spin_project(true);
+    sparse_solver_.set_spin_project_full(true);
 
     num_threads_ = omp_get_max_threads();
 }
@@ -890,8 +890,10 @@ void ProjectorCI::post_iter_process() {
         op.tp_s_lists(det_map);
 
         // set SparseCISolver options
+        sparse_solver_.set_spin_project(true);
         sparse_solver_.set_sigma_method("SPARSE");
-        sparse_solver_.set_spin_project_full(false);
+        sparse_solver_.manual_guess(false);
+        sparse_solver_.set_force_diag(false);
 
         sparse_solver_.diagonalize_hamiltonian_map(det_map, op, apfci_evals, apfci_evecs, nroot_,
                                                    wavefunction_multiplicity_, diag_method_);
@@ -1010,6 +1012,9 @@ double ProjectorCI::initial_guess(det_hashvec& dets_hashvec, std::vector<double>
     //   DynamicBitsetDeterminant dbs = d.to_dynamic_bitset();
     //  dyn_dets.push_back(dbs);
     // }
+    sparse_solver_.set_spin_project(true);
+    sparse_solver_.manual_guess(false);
+    sparse_solver_.set_force_diag(false);
     sparse_solver_.diagonalize_hamiltonian(dets_hashvec.toVector(), evals, evecs, nroot_,
                                            wavefunction_multiplicity_, DLSolver);
     double var_energy =
@@ -1147,6 +1152,7 @@ void ProjectorCI::propagate_DL(det_hashvec& dets_hashvec, std::vector<double>& C
     sparse_solver_.set_sigma_vector(&sigma_vector);
     sparse_solver_.set_initial_guess(guess);
     sparse_solver_.set_spin_project(false);
+    sparse_solver_.set_force_diag(true);
     psi::SharedMatrix PQ_evecs_;
     psi::SharedVector PQ_evals_;
     sparse_solver_.diagonalize_hamiltonian(dets_hashvec.toVector(), PQ_evals_, PQ_evecs_, nroot_,
