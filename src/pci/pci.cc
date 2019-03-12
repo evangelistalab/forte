@@ -1346,10 +1346,16 @@ double ProjectorCI::estimate_var_energy_sparse(const det_hashvec& dets_hashvec,
     double variational_energy_estimator = 0.0;
     std::vector<double> energy(num_threads_, 0.0);
 
-#pragma omp parallel for
+    size_t full_num_off_diag_elem = 0;
+#pragma omp parallel for reduction(+ : full_num_off_diag_elem)
     for (size_t I = 0; I <= cut_index; ++I) {
-        energy[omp_get_thread_num()] += form_H_C(dets_hashvec, C, I);
+        size_t thread_num_off_diag_elem = 0;
+        energy[omp_get_thread_num()] += form_H_C(dets_hashvec, C, I, thread_num_off_diag_elem);
+        full_num_off_diag_elem += thread_num_off_diag_elem;
     }
+    psi::outfile->Printf(
+        "\n  * Subspace Hamiltonian number of off-diagonal elements = %zu",
+        full_num_off_diag_elem);
     for (int t = 0; t < num_threads_; ++t) {
         variational_energy_estimator += energy[t];
     }
@@ -1449,7 +1455,7 @@ void ProjectorCI::orthogonalize(
     //    normalize(C);
 }
 
-double ProjectorCI::form_H_C(const det_hashvec& dets_hashvec, std::vector<double>& C, size_t I) {
+double ProjectorCI::form_H_C(const det_hashvec& dets_hashvec, std::vector<double>& C, size_t I, size_t &thread_num_off_diag_elem) {
     const Determinant& detI = dets_hashvec[I];
     double CI = C[I];
 
@@ -1480,6 +1486,7 @@ double ProjectorCI::form_H_C(const det_hashvec& dets_hashvec, std::vector<double
                 if (index < I) {
                     HJI = as_ints_->slater_rules_single_alpha(detI, ii, aa);
                     result += 2.0 * HJI * CI * C[index];
+                    thread_num_off_diag_elem += 2;
                 }
                 detJ.set_alfa_bit(ii, true);
                 detJ.set_alfa_bit(aa, false);
@@ -1498,6 +1505,7 @@ double ProjectorCI::form_H_C(const det_hashvec& dets_hashvec, std::vector<double
                 if (index < I) {
                     HJI = as_ints_->slater_rules_single_beta(detI, ii, aa);
                     result += 2.0 * HJI * CI * C[index];
+                    thread_num_off_diag_elem += 2;
                 }
                 detJ.set_beta_bit(ii, true);
                 detJ.set_beta_bit(aa, false);
@@ -1525,6 +1533,7 @@ double ProjectorCI::form_H_C(const det_hashvec& dets_hashvec, std::vector<double
                             sign = detJ.double_excitation_aa(aa, bb, ii, jj);
                             HJI = as_ints_->tei_aa(ii, jj, aa, bb);
                             result += 2.0 * sign * HJI * CI * C[index];
+                            thread_num_off_diag_elem += 2;
                         } else {
                             detJ.set_alfa_bit(ii, true);
                             detJ.set_alfa_bit(jj, true);
@@ -1556,6 +1565,7 @@ double ProjectorCI::form_H_C(const det_hashvec& dets_hashvec, std::vector<double
                             sign = detJ.double_excitation_ab(aa, bb, ii, jj);
                             HJI = as_ints_->tei_ab(ii, jj, aa, bb);
                             result += 2.0 * sign * HJI * CI * C[index];
+                            thread_num_off_diag_elem += 2;
                         } else {
                             detJ.set_alfa_bit(ii, true);
                             detJ.set_beta_bit(jj, true);
@@ -1586,6 +1596,7 @@ double ProjectorCI::form_H_C(const det_hashvec& dets_hashvec, std::vector<double
                             sign = detJ.double_excitation_bb(aa, bb, ii, jj);
                             HJI = as_ints_->tei_bb(ii, jj, aa, bb);
                             result += 2.0 * sign * HJI * CI * C[index];
+                            thread_num_off_diag_elem += 2;
                         } else {
                             detJ.set_beta_bit(ii, true);
                             detJ.set_beta_bit(jj, true);
