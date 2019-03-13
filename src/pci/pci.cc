@@ -368,7 +368,7 @@ void ProjectorCI::set_options(std::shared_ptr<ForteOptions> options) {
     } else if (options->get_str("PCI_FUNCTIONAL") == "SQUARE") {
         functional_order_ = 2.0;
         prescreen_H_CI_ = [](double HJI, double CI, double spawning_threshold) {
-            return std::fabs(HJI * CI) >= 1.4142135623730952 * spawning_threshold;
+            return std::fabs(HJI * CI) * 1.4142135623730952 >= spawning_threshold;
         };
         important_H_CI_CJ_ = [](double HJI, double CI, double CJ, double spawning_threshold) {
             return std::fabs(HJI) * std::sqrt(CI * CI + CJ * CJ) >= spawning_threshold;
@@ -400,7 +400,62 @@ void ProjectorCI::set_options(std::shared_ptr<ForteOptions> options) {
         };
         functional_description_ = "|Hij|*((|Ci|^" + std::to_string(order) + ")+(|Cj|^" +
                                   std::to_string(order) + "))^" + std::to_string(1.0 / order);
-    } else {
+    } else if (options->get_str("PCI_FUNCTIONAL") == "MAX_2") {
+        if (std::numeric_limits<double>::has_infinity) {
+            functional_order_ = std::numeric_limits<double>::infinity();
+        } else {
+            functional_order_ = std::numeric_limits<double>::max();
+        }
+        prescreen_H_CI_ = [](double HJI, double CI, double spawning_threshold) {
+            return std::fabs(HJI * CI * CI) >= spawning_threshold;
+        };
+        important_H_CI_CJ_ = [](double, double, double, double) { return true; };
+        functional_description_ = "|Hij|*max(|Ci|,|Cj|)";
+    } else if (options->get_str("PCI_FUNCTIONAL") == "SUM_2") {
+        functional_order_ = 1.0;
+        prescreen_H_CI_ = [](double HJI, double CI, double spawning_threshold) {
+            return std::fabs(HJI * CI * CI) >= 0.5 * spawning_threshold;
+        };
+        important_H_CI_CJ_ = [](double HJI, double CI, double CJ, double spawning_threshold) {
+            return std::fabs(HJI) * (CI * CI + CJ * CJ) >= spawning_threshold;
+        };
+        functional_description_ = "|Hij|*(|Ci|+|Cj|)";
+    } else if (options->get_str("PCI_FUNCTIONAL") == "SQUARE_2") {
+        functional_order_ = 2.0;
+        prescreen_H_CI_ = [](double HJI, double CI, double spawning_threshold) {
+            return std::fabs(HJI * CI * CI) * 1.4142135623730952 >= spawning_threshold;
+        };
+        important_H_CI_CJ_ = [](double HJI, double CI, double CJ, double spawning_threshold) {
+            return std::fabs(HJI) * std::sqrt(CI * CI * CI * CI + CJ * CJ * CJ * CJ) >= spawning_threshold;
+        };
+        functional_description_ = "|Hij|*sqrt(Ci^2+Cj^2)";
+    } else if (options->get_str("PCI_FUNCTIONAL") == "SQRT_2") {
+        functional_order_ = 0.5;
+        prescreen_H_CI_ = [](double HJI, double CI, double spawning_threshold) {
+            return std::fabs(HJI * CI * CI) >= 0.25 * spawning_threshold;
+        };
+        important_H_CI_CJ_ = [](double HJI, double CI, double CJ, double spawning_threshold) {
+            return std::fabs(HJI) *
+                       std::pow(std::fabs(CI) + std::fabs(CJ), 2) >=
+                   spawning_threshold;
+        };
+        functional_description_ = "|Hij|*(sqrt(|Ci|)+sqrt(|Cj|))^2";
+    } else if (options->get_str("PCI_FUNCTIONAL") == "SPECIFY-ORDER_2") {
+        functional_order_ = options->get_double("PCI_FUNCTIONAL_ORDER");
+        double factor = std::pow(2.0, 1.0 / functional_order_);
+        prescreen_H_CI_ = [factor](double HJI, double CI, double spawning_threshold) {
+            return std::fabs(HJI * CI * CI) * factor >= spawning_threshold;
+        };
+        double order = functional_order_;
+        important_H_CI_CJ_ = [order](double HJI, double CI, double CJ, double spawning_threshold) {
+            return std::fabs(HJI) *
+                       std::pow(std::pow(std::fabs(CI), 2 * order) + std::pow(std::fabs(CJ), 2 * order),
+                                1.0 / order) >=
+                   spawning_threshold;
+        };
+        functional_description_ = "|Hij|*((|Ci|^" + std::to_string(order) + ")+(|Cj|^" +
+                                  std::to_string(order) + "))^" + std::to_string(1.0 / order);
+    } else  {
         psi::outfile->Printf("\n\n  Warning! Functional Unsupported.");
         abort();
     }
