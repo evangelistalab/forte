@@ -593,9 +593,9 @@ void DMRGSolver::compute_energy() {
     double Cumu_Fnorm_sq = 0.0;
     for(int i = 0; i < nact4; i++){
       //double idx = i*nact3 + i*nact2 + i*nact + i;
-      double temp = twoRCMaa[i] + twoRCMab[i] + twoRCMbb[i];
-      temp *= temp;
-      Cumu_Fnorm_sq += temp;
+      Cumu_Fnorm_sq += twoRCMaa[i] * twoRCMaa[i]
+                           + 2.0 * twoRCMab[i] * twoRCMab[i]
+                           + twoRCMbb[i] * twoRCMbb[i];
     }
     //std::cout << "I get here 3" <<std::endl;
     outfile->Printf("\n @||2Lam||F^2: %8.12f", Cumu_Fnorm_sq);
@@ -604,7 +604,7 @@ void DMRGSolver::compute_energy() {
     my_2RCM_file.open ("2RCM.dat");
 
     for(int i = 0; i < nact4; i++){
-      my_2RCM_file << twoRCMaa[i] + twoRCMab[i] + twoRCMbb[i] << " ";
+      my_2RCM_file << twoRCMaa[i] << " " << twoRCMab[i] << " " << twoRCMab[i] << " " << twoRCMbb[i] << " ";
     }
     my_2RCM_file.close();
 
