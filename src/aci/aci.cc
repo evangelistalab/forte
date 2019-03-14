@@ -663,7 +663,7 @@ double AdaptiveCI::compute_energy() {
 
     for(int i = 0; i < rdm_dim; i++){
       //double idx = i*nact3 + i*nact2 + i*nact + i;
-      Cumeu_Fnorm_sq += twoRCMaa[i] * twoRCMaa[i]
+      Cumu_Fnorm_sq += twoRCMaa[i] * twoRCMaa[i]
                      + 2.0 * twoRCMab[i] * twoRCMab[i]
                      + twoRCMbb[i] * twoRCMbb[i];
     }
