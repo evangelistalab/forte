@@ -663,9 +663,9 @@ double AdaptiveCI::compute_energy() {
 
     for(int i = 0; i < rdm_dim; i++){
       //double idx = i*nact3 + i*nact2 + i*nact + i;
-      double temp = twoRCMaa[i] + twoRCMab[i] + twoRCMbb[i];
-      temp *= temp;
-      Cumu_Fnorm_sq += temp;
+      Cume_Fnorm_sq += twoRCMaa[i] * twoRCMaa[i]
+                     + 2.0 * twoRCMab[i] * twoRCMab[i]
+                     + twoRCMbb[i] * twoRCMbb[i];
     }
     //std::cout << "I get here 3" <<std::endl;
     outfile->Printf("\n  @ ||2mulant||_F^2 : %.12f",Cumu_Fnorm_sq);
@@ -674,7 +674,7 @@ double AdaptiveCI::compute_energy() {
     my_2RCM_file.open ("2RCM.dat");
 
     for(int i = 0; i < rdm_dim; i++){
-      my_2RCM_file << twoRCMaa[i] + twoRCMab[i] + twoRCMbb[i] << " ";
+      my_2RCM_file << twoRCMaa[i] << " " << twoRCMab[i] << " " << twoRCMab[i] << " " << twoRCMbb[i] << " ";
     }
     my_2RCM_file.close();
 

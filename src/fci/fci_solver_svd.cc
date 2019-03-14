@@ -230,9 +230,9 @@ void FCISolver::twomulent_correlation(std::vector<double>& Tau_2RCM_cor_info, st
           double Cumu_Fnorm_sq = 0.0;
           for(int i = 0; i < nact4; i++){
             //double idx = i*nact3 + i*nact2 + i*nact + i;
-            double temp = twoRCMaa[i] + twoRCMab[i] + twoRCMbb[i];
-            temp *= temp;
-            Cumu_Fnorm_sq += temp;
+            Cume_Fnorm_sq += twoRCMaa[i] * twoRCMaa[i]
+                           + 2.0 * twoRCMab[i] * twoRCMab[i]
+                           + twoRCMbb[i] * twoRCMbb[i];
           }
           //std::cout << "I get here 3" <<std::endl;
           Tau_2RCM_cor_info.push_back(Cumu_Fnorm_sq);
@@ -242,7 +242,7 @@ void FCISolver::twomulent_correlation(std::vector<double>& Tau_2RCM_cor_info, st
             my_2RCM_file.open (Tau_method + "2RCM.dat");
 
             for(int i = 0; i < nact4; i++){
-              my_2RCM_file << twoRCMaa[i] + twoRCMab[i] + twoRCMbb[i] << " ";
+              my_2RCM_file << twoRCMaa[i] << " " << twoRCMab[i] << " " << twoRCMab[i] << " " << twoRCMbb[i] << " ";
             }
             my_2RCM_file.close();
           }
