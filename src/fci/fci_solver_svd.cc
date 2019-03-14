@@ -230,7 +230,7 @@ void FCISolver::twomulent_correlation(std::vector<double>& Tau_2RCM_cor_info, st
           double Cumu_Fnorm_sq = 0.0;
           for(int i = 0; i < nact4; i++){
             //double idx = i*nact3 + i*nact2 + i*nact + i;
-            Cume_Fnorm_sq += twoRCMaa[i] * twoRCMaa[i]
+            Cumeu_Fnorm_sq += twoRCMaa[i] * twoRCMaa[i]
                            + 2.0 * twoRCMab[i] * twoRCMab[i]
                            + twoRCMbb[i] * twoRCMbb[i];
           }
