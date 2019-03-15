@@ -50,7 +50,8 @@ std::unique_ptr<MASTER_DSRG> make_dsrg_method(const std::string& method, RDMs rd
     } else if (method == "DSRG-MRPT3") {
         dsrg_method = std::make_unique<DSRG_MRPT3>(rdms, scf_info, options, ints, mo_space_info);
     } else if (method == "THREE-DSRG-MRPT2") {
-        dsrg_method = std::make_unique<THREE_DSRG_MRPT2>(rdms, scf_info, options, ints, mo_space_info);
+        dsrg_method =
+            std::make_unique<THREE_DSRG_MRPT2>(rdms, scf_info, options, ints, mo_space_info);
     } else if (method == "MRDSRG") {
         dsrg_method = std::make_unique<MRDSRG>(rdms, scf_info, options, ints, mo_space_info);
     } else {
