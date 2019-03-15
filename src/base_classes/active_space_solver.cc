@@ -189,6 +189,10 @@ make_state_weights_map(std::shared_ptr<ForteOptions> options,
         int nroot = options->get_int("NROOT");
         int root = options->get_int("ROOT");
 
+        if (root >= nroot) {
+            throw std::runtime_error("Invalid input of NROOT or ROOT");
+        }
+
         std::vector<double> weights(nroot, 0.0);
         weights[root] = 1.0;
         state_weights_map[state] = weights;

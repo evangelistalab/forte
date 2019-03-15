@@ -42,8 +42,7 @@ using namespace psi;
 
 namespace forte {
 
-MRDSRG_SO::MRDSRG_SO(RDMs rdms, psi::Options& options,
-                     std::shared_ptr<ForteIntegrals> ints,
+MRDSRG_SO::MRDSRG_SO(RDMs rdms, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
                      std::shared_ptr<MOSpaceInfo> mo_space_info)
     : Wavefunction(options), rdms_(rdms), ints_(ints), mo_space_info_(mo_space_info),
       tensor_type_(CoreTensor), BTF(new BlockedTensorFactory()) {
@@ -192,7 +191,7 @@ void MRDSRG_SO::startup() {
     });
 
     // prepare two-body density cumulant
-    Lambda2 = BTF->build(tensor_type_, "Lambda2", {"aaaa"});
+    L2 = BTF->build(tensor_type_, "Lambda2", {"aaaa"});
     (rdms_.L2aa()).citerate([&](const std::vector<size_t>& i, const double& value) {
         if (std::fabs(value) > 1.0e-15) {
             size_t index = 0;
@@ -232,7 +231,7 @@ void MRDSRG_SO::startup() {
 
     // prepare three-body density cumulant
     if (options_.get_str("THREEPDC") != "ZERO") {
-        Lambda3 = BTF->build(tensor_type_, "Lambda3", {"aaaaaa"});
+        L3 = BTF->build(tensor_type_, "Lambda3", {"aaaaaa"});
         (rdms_.L3aaa()).citerate([&](const std::vector<size_t>& i, const double& value) {
             if (std::fabs(value) > 1.0e-15) {
                 size_t index = 0;

@@ -418,6 +418,7 @@ RDMs SemiCanonical::transform_rdms(ambit::Tensor& Ua, ambit::Tensor& Ub, const R
     ambit::Tensor g1bT = ambit::Tensor::build(ambit::CoreTensor, "Transformed L1b", {nact_, nact_});
     g1aT("pq") = Ua("ap") * g1a0("ab") * Ua("bq");
     g1bT("PQ") = Ub("AP") * g1b0("AB") * Ub("BQ");
+    outfile->Printf("\n    Transformed 1RDMs.");
 
     if (max_rdm_level == 1)
         return RDMs(g1aT, g1bT);
@@ -442,7 +443,7 @@ RDMs SemiCanonical::transform_rdms(ambit::Tensor& Ua, ambit::Tensor& Ub, const R
         ambit::Tensor::build(ambit::CoreTensor, "Transformed L2bb", {nact_, nact_, nact_, nact_});
     g2Tbb("PQRS") = Ub("AP") * Ub("BQ") * g2bb0("ABCD") * Ub("CR") * Ub("DS");
 
-    outfile->Printf("\n    Transformed 2 RDMs.");
+    outfile->Printf("\n    Transformed 2RDMs.");
 
     if (max_rdm_level == 2)
         return RDMs(g1aT, g1bT, g2Taa, g2Tab, g2Tbb);
@@ -473,7 +474,7 @@ RDMs SemiCanonical::transform_rdms(ambit::Tensor& Ua, ambit::Tensor& Ub, const R
     g3Tbbb("PQRSTU") =
         Ub("AP") * Ub("BQ") * Ub("CR") * g3bbb0("ABCIJK") * Ub("IS") * Ub("JT") * Ub("KU");
 
-    outfile->Printf("\n    Transformed 3 cumulants.");
+    outfile->Printf("\n    Transformed 3RDMs.");
     return RDMs(g1aT, g1bT, g2Taa, g2Tab, g2Tbb, g3Taaa, g3Taab, g3Tabb, g3Tbbb);
 }
 } // namespace forte

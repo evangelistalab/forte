@@ -281,7 +281,6 @@ double compute_Eref_from_rdms(RDMs& ref, std::shared_ptr<ForteIntegrals> ints,
     }
 
     // core-active 2-body: \sum_{m}^{C} \sum_{uv}^{A} v^{mu}_{mv} * G1^{v}_{u}
-
     I = ambit::Tensor::build(ambit::CoreTensor, "I", {ncore, ncore});
     I.iterate([&](const std::vector<size_t>& i, double& value) {
         if (i[0] == i[1]) {
@@ -301,6 +300,7 @@ double compute_Eref_from_rdms(RDMs& ref, std::shared_ptr<ForteIntegrals> ints,
     Vtemp = ints->aptei_bb_block(core_mos, actv_mos, core_mos, actv_mos);
     E += Vtemp("munv") * I("mn") * g1b("vu");
 
+    // active-active 2-body: 0.25 * \sum_{uvxy}^{A} v^{uv}_{xy} * G2^{xy}_{uv}
     Vtemp = ints->aptei_aa_block(actv_mos, actv_mos, actv_mos, actv_mos);
     E += 0.25 * Vtemp("uvxy") * g2aa("uvxy");
 
