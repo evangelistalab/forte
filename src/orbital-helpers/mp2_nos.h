@@ -34,9 +34,8 @@
 
 #include "base_classes/mo_space_info.h"
 #include "integrals/integrals.h"
-#include "base_classes/reference.h"
-
-
+#include "base_classes/rdms.h"
+#include "base_classes/orbital_transform.h"
 
 namespace forte {
 
@@ -44,13 +43,24 @@ namespace forte {
  * @brief The MP2_NOS class
  * Computes MP2 natural orbitals
  */
-class MP2_NOS {
+class MP2_NOS : public OrbitalTransform {
   public:
     // => Constructor <= //
-    MP2_NOS(std::shared_ptr<psi::Wavefunction> wfn, psi::Options& options,
+    MP2_NOS(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
             std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
-    //  => Destructor <= //
+
+    void compute_transformation();
+    psi::SharedMatrix get_Ua();
+    psi::SharedMatrix get_Ub();
+
+  private:
+    std::shared_ptr<SCFInfo> scf_info_;
+    std::shared_ptr<ForteOptions> options_;
+    std::shared_ptr<MOSpaceInfo> mo_space_info_;
+
+    psi::SharedMatrix Ua_;
+    psi::SharedMatrix Ub_;
 };
-}
+} // namespace forte
 
 #endif // _mp2_nos_h_

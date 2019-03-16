@@ -7,7 +7,7 @@
 
 #include "integrals/integrals.h"
 #include "integrals/active_space_integrals.h"
-#include "base_classes/reference.h"
+#include "base_classes/rdms.h"
 
 namespace forte {
 
@@ -23,7 +23,7 @@ class DynamicCorrelationSolver {
      * @param ints A pointer to an allocated integral object
      * @param mo_space_info The MOSpaceInfo object
      */
-    DynamicCorrelationSolver(Reference reference, std::shared_ptr<SCFInfo> scf_info,
+    DynamicCorrelationSolver(RDMs rdms, std::shared_ptr<SCFInfo> scf_info,
                              std::shared_ptr<ForteOptions> options,
                              std::shared_ptr<ForteIntegrals> ints,
                              std::shared_ptr<MOSpaceInfo> mo_space_info);
@@ -44,8 +44,8 @@ class DynamicCorrelationSolver {
     /// The MO space info
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
 
-    /// The reference object (cumulants)
-    Reference reference_;
+    /// The RDMs and cumulants of the reference wave function
+    RDMs rdms_;
 
     /// The SCFInfo
     std::shared_ptr<SCFInfo> scf_info_;

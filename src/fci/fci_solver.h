@@ -29,7 +29,7 @@
 #ifndef _fci_solver_h_
 #define _fci_solver_h_
 
-#include "base_classes/active_space_solver.h"
+#include "base_classes/active_space_method.h"
 #include "psi4/libmints/dimension.h"
 
 namespace forte {
@@ -41,17 +41,18 @@ class StringLists;
  * @brief The FCISolver class
  * This class performs Full CI calculations.
  */
-class FCISolver : public ActiveSpaceSolver {
+class FCISolver : public ActiveSpaceMethod {
   public:
     // ==> Class Constructor and Destructor <==
 
     /**
      * @brief FCISolver A class that performs a FCI computation in an active space
      * @param state the electronic state to compute
+     * @param nroot the number of roots
      * @param mo_space_info a MOSpaceInfo object that defines the orbital spaces
-     * @param as_ints integrals for the active space integrals
+     * @param as_ints molecular integrals defined only for the active space orbitals
      */
-    FCISolver(StateInfo state, std::shared_ptr<MOSpaceInfo> mo_space_info,
+    FCISolver(StateInfo state, size_t nroot, std::shared_ptr<MOSpaceInfo> mo_space_info,
               std::shared_ptr<ActiveSpaceIntegrals> as_ints);
 
     ~FCISolver() = default;
@@ -61,14 +62,21 @@ class FCISolver : public ActiveSpaceSolver {
     /// Compute the FCI energy
     double compute_energy() override;
 
-    /// Return a reference object
-    Reference get_reference() override;
+    /// Returns the reduced density matrices up to a given rank (max_rdm_level)
+    std::vector<RDMs> rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
+                           int max_rdm_level) override;
+
+    /// Returns the transition reduced density matrices between roots of different symmetry up to a
+    /// given level (max_rdm_level)
+    std::vector<RDMs> transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
+                                      std::shared_ptr<ActiveSpaceMethod> method2,
+                                      int max_rdm_level) override;
 
     /// Set the options
     void set_options(std::shared_ptr<ForteOptions> options) override;
 
     /// Compute RDMs on a given root
-    void compute_rdms_root(int root);
+    void compute_rdms_root(int root1, int root2, int max_rdm_level);
 
     /// Set the number of trial vectors per root
     void set_ntrial_per_root(int value);

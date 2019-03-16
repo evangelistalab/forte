@@ -100,7 +100,7 @@ def setup_argument_parser():
     parser.add_argument(
         '--type',
         help='which type of test to run? (default: short)',
-        choices={'short', 'all'},
+        choices={'short', 'long', 'all'},
         default='short')
     parser.add_argument(
         '--group',
@@ -161,8 +161,8 @@ def main():
     # loop over group tests
     for test_group, test_levels in test_dict.items():
         if test_group in tested_groups:
-            failed_tests[test_group] = {}
             print('Test group {}'.format(test_group.upper()))
+            group_failed_tests = {} # test that failed in this group
             for test_level, tests in test_levels.items():
                 local_failed_tests = []
                 if test_level in TEST_LEVELS[args.type]:
@@ -178,9 +178,10 @@ def main():
                                                       not args.bw)
                     ntests += len(tests)
                     if len(local_failed_tests) > 0:
-                        failed_tests[test_group][
-                            test_level] = local_failed_tests
-
+                        group_failed_tests[test_level] = local_failed_tests
+            if len(group_failed_tests) > 0:
+                failed_tests[test_group] = group_failed_tests 
+ 
     # print a summary of the tests
     print('Summary:')
     print(' ' * 4 + '=' * 76)

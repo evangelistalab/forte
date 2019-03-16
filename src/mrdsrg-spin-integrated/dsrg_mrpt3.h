@@ -40,7 +40,7 @@
 
 #include "boost/assign.hpp"
 #include "integrals/integrals.h"
-#include "base_classes/reference.h"
+#include "base_classes/rdms.h"
 #include "base_classes/mo_space_info.h"
 #include "helpers/blockedtensorfactory.h"
 #include "mrdsrg-helper/dsrg_time.h"
@@ -63,7 +63,7 @@ class DSRG_MRPT3 : public MASTER_DSRG {
      * @param ints A pointer to an allocated integral object
      * @param mo_space_info The MOSpaceInfo object
      */
-    DSRG_MRPT3(Reference reference, std::shared_ptr<SCFInfo> scf_info,
+    DSRG_MRPT3(RDMs rdms, std::shared_ptr<SCFInfo> scf_info,
                std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
                std::shared_ptr<MOSpaceInfo> mo_space_info);
 
@@ -293,9 +293,9 @@ class DSRG_MRPT3 : public MASTER_DSRG {
     void print_dm_pt3();
 
     /// DSRG-MRPT2 transformed dipole scalar
-    std::vector<double> Mbar0_pt2_;
+    std::array<double, 3> Mbar0_pt2_;
     /// DSRG-MRPT2 (2nd-order complete) transformed dipole scalar
-    std::vector<double> Mbar0_pt2c_;
+    std::array<double, 3> Mbar0_pt2c_;
 };
 } // namespace forte
 

@@ -37,7 +37,7 @@
 #include "base_classes/mo_space_info.h"
 #include "helpers/blockedtensorfactory.h"
 #include "integrals/integrals.h"
-#include "base_classes/reference.h"
+#include "base_classes/rdms.h"
 
 namespace forte {
 
@@ -56,16 +56,16 @@ class SemiCanonical {
      * @param mo_space_info MOSpaceInfo
      * @param quiet_banner Method banner is not printed if set to true
      */
-    SemiCanonical(std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
-                  std::shared_ptr<MOSpaceInfo> mo_space_info, bool quiet_banner = false);
+    SemiCanonical(std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ForteIntegrals> ints,
+                  std::shared_ptr<ForteOptions> options, bool quiet_banner = false);
 
-    /// Transforms integrals and reference
-    void semicanonicalize(Reference& reference, const int& max_rdm_level = 3,
-                          const bool& build_fock = true, const bool& transform = true);
+    /// Transforms integrals and RDMs
+    RDMs semicanonicalize(RDMs& rdms, const int& max_rdm_level = 3, const bool& build_fock = true,
+                          const bool& transform = true);
 
     /// Transform all cumulants, rebuild 2-RDMs using 2-cumulants
-    void transform_reference(ambit::Tensor& Ua, ambit::Tensor& Ub, Reference& reference,
-                             const int& max_rdm_level);
+    RDMs transform_rdms(ambit::Tensor& Ua, ambit::Tensor& Ub, const RDMs& rdms,
+                        const int& max_rdm_level);
 
     /// Set active hole and particle dimensions
     void set_actv_dims(const psi::Dimension& actv_docc, const psi::Dimension& actv_virt);
@@ -143,7 +143,7 @@ class SemiCanonical {
     void set_U_to_identity();
 
     /// Build the generalized fock matrix
-    void build_fock_matrix(Reference& reference);
+    void build_fock_matrix(RDMs& rdms);
 
     /// Check Fock matrix, return true if semicanonicalized
     bool check_fock_matrix();
@@ -159,8 +159,8 @@ class SemiCanonical {
      * Ua, Ub span all MOs
      * Ua_t, Ub_t span active MOs
      */
-    void build_transformation_matrices(psi::SharedMatrix& Ua, psi::SharedMatrix& Ub, ambit::Tensor& Ua_t,
-                                       ambit::Tensor& Ub_t);
+    void build_transformation_matrices(psi::SharedMatrix& Ua, psi::SharedMatrix& Ub,
+                                       ambit::Tensor& Ua_t, ambit::Tensor& Ub_t);
 };
 } // namespace forte
 

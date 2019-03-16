@@ -13,11 +13,11 @@ using namespace psi;
 
 namespace forte {
 
-MASTER_DSRG::MASTER_DSRG(Reference reference, std::shared_ptr<SCFInfo> scf_info,
+MASTER_DSRG::MASTER_DSRG(RDMs rdms, std::shared_ptr<SCFInfo> scf_info,
                          std::shared_ptr<ForteOptions> options,
                          std::shared_ptr<ForteIntegrals> ints,
                          std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : DynamicCorrelationSolver(reference, scf_info, options, ints, mo_space_info),
+    : DynamicCorrelationSolver(rdms, scf_info, options, ints, mo_space_info),
       BTF_(new BlockedTensorFactory()), tensor_type_(ambit::CoreTensor) {
     startup();
 }
@@ -51,7 +51,6 @@ void MASTER_DSRG::startup() {
     set_ambit_MOSpace();
 
     // read commonly used energies
-    Eref_ = reference_.get_Eref();
     Enuc_ = ints_->nuclear_repulsion_energy();
     Efrzc_ = ints_->frozen_core_energy();
 
@@ -69,8 +68,12 @@ void MASTER_DSRG::startup() {
         init_dm_ints();
     }
 
-    // recompute reference energy from ForteIntegral and check consistency with Reference
-    check_init_reference_energy();
+    // recompute reference energy from ForteIntegral and check consistency with RDMs
+    // I see no point of checking reference energy because it is now recomputed
+    // instead of reading a number from Reference class
+    //    check_init_reference_energy();
+    Eref_ = compute_reference_energy_from_ints(ints_);
+    psi::Process::environment.globals["DSRG REFERENCE ENERGY"] = Eref_;
 
     // initialize Uactv_ to identity
     Uactv_ = BTF_->build(tensor_type_, "Uactv", spin_cases({"aa"}));
@@ -210,8 +213,8 @@ void MASTER_DSRG::init_density() {
 
 void MASTER_DSRG::fill_density() {
     // 1-particle density (make a copy)
-    Gamma1_.block("aa")("pq") = reference_.L1a()("pq");
-    Gamma1_.block("AA")("pq") = reference_.L1a()("pq");
+    Gamma1_.block("aa")("pq") = rdms_.g1a()("pq");
+    Gamma1_.block("AA")("pq") = rdms_.g1a()("pq");
 
     // 1-hole density
     for (const std::string& block : {"aa", "AA"}) {
@@ -223,9 +226,9 @@ void MASTER_DSRG::fill_density() {
     Eta1_["UV"] -= Gamma1_["UV"];
 
     // 2-body density cumulants (make a copy)
-    Lambda2_.block("aaaa")("pqrs") = reference_.L2aa()("pqrs");
-    Lambda2_.block("aAaA")("pqrs") = reference_.L2ab()("pqrs");
-    Lambda2_.block("AAAA")("pqrs") = reference_.L2bb()("pqrs");
+    Lambda2_.block("aaaa")("pqrs") = rdms_.L2aa()("pqrs");
+    Lambda2_.block("aAaA")("pqrs") = rdms_.L2ab()("pqrs");
+    Lambda2_.block("AAAA")("pqrs") = rdms_.L2bb()("pqrs");
 }
 
 void MASTER_DSRG::init_fock() {
@@ -288,8 +291,8 @@ void MASTER_DSRG::check_init_reference_energy() {
     econv = econv < 1.0e-12 ? 1.0e-12 : econv;
     if (fabs(E - Eref_) > 10.0 * econv) {
         outfile->Printf("\n    Warning! Inconsistent reference energy!");
-        outfile->Printf("\n    Read from Reference class:            %.12f", Eref_);
-        outfile->Printf("\n    Recomputed using Reference densities: %.12f", E);
+        outfile->Printf("\n    Read from RDMs class:            %.12f", Eref_);
+        outfile->Printf("\n    Recomputed using reference RDMs: %.12f", E);
         outfile->Printf("\n    Reference energy (MK vacuum) is set to recomputed value.");
 
         warnings_.push_back(std::make_tuple("Inconsistent ref. energy", "Use recomputed value",
@@ -432,14 +435,11 @@ double MASTER_DSRG::compute_reference_energy_df(BlockedTensor H, BlockedTensor F
 
 void MASTER_DSRG::init_dm_ints() {
     outfile->Printf("\n    Preparing ambit tensors for dipole moments ...... ");
-    dm_.clear();
-    dm_nuc_ = std::vector<double>(3, 0.0);
     Vector3 dm_nuc =
         psi::Process::environment.molecule()->nuclear_dipole(psi::Vector3(0.0, 0.0, 0.0));
     for (int i = 0; i < 3; ++i) {
         dm_nuc_[i] = dm_nuc[i];
-        BlockedTensor dm_i = BTF_->build(tensor_type_, "Dipole " + dm_dirs_[i], spin_cases({"gg"}));
-        dm_.emplace_back(dm_i);
+        dm_[i] = BTF_->build(tensor_type_, "Dipole " + dm_dirs_[i], spin_cases({"gg"}));
     }
 
     std::vector<psi::SharedMatrix> dm_a = ints_->compute_MOdipole_ints(true, true);
@@ -449,21 +449,13 @@ void MASTER_DSRG::init_dm_ints() {
 
     // prepare transformed dipole integrals
     if (multi_state_ || (relax_ref_ != "NONE")) {
-        Mbar0_ = std::vector<double>(3, 0.0);
-        Mbar1_.clear();
-        Mbar2_.clear();
-        Mbar3_.clear();
+        Mbar0_ = {{0.0, 0.0, 0.0}};
         for (int i = 0; i < 3; ++i) {
-            BlockedTensor Mbar1 =
-                BTF_->build(tensor_type_, "DSRG DM1 " + dm_dirs_[i], spin_cases({"aa"}));
-            Mbar1_.emplace_back(Mbar1);
-            BlockedTensor Mbar2 =
-                BTF_->build(tensor_type_, "DSRG DM2 " + dm_dirs_[i], spin_cases({"aaaa"}));
-            Mbar2_.emplace_back(Mbar2);
+            Mbar1_[i] = BTF_->build(tensor_type_, "DSRG DM1 " + dm_dirs_[i], spin_cases({"aa"}));
+            Mbar2_[i] = BTF_->build(tensor_type_, "DSRG DM2 " + dm_dirs_[i], spin_cases({"aaaa"}));
             if (foptions_->get_bool("FORM_MBAR3")) {
-                BlockedTensor Mbar3 =
+                Mbar3_[i] =
                     BTF_->build(tensor_type_, "DSRG DM3 " + dm_dirs_[i], spin_cases({"aaaaaa"}));
-                Mbar3_.emplace_back(Mbar3);
             }
         }
     }
@@ -474,7 +466,6 @@ void MASTER_DSRG::init_dm_ints() {
 void MASTER_DSRG::fill_MOdm(std::vector<psi::SharedMatrix>& dm_a,
                             std::vector<psi::SharedMatrix>& dm_b) {
     // consider frozen-core part
-    dm_frzc_ = std::vector<double>(3, 0.0);
     std::vector<size_t> frzc_mos = mo_space_info_->get_absolute_mo("FROZEN_DOCC");
     for (int z = 0; z < 3; ++z) {
         double dipole = 0.0;
@@ -493,7 +484,7 @@ void MASTER_DSRG::fill_MOdm(std::vector<psi::SharedMatrix>& dm_a,
     for (int h = 0, p = 0, nirrep = mo_space_info_->nirrep(); h < nirrep; ++h) {
         p += frzcpi[h];
         for (int r = 0; r < ncmopi[h]; ++r) {
-            cmo_to_mo.push_back((size_t)p);
+            cmo_to_mo.push_back(static_cast<size_t>(p));
             ++p;
         }
         p += frzvpi[h];
@@ -512,8 +503,6 @@ void MASTER_DSRG::fill_MOdm(std::vector<psi::SharedMatrix>& dm_a,
 }
 
 void MASTER_DSRG::compute_dm_ref() {
-    dm_ref_ = std::vector<double>(3, 0.0);
-    do_dm_dirs_.clear();
     for (int z = 0; z < 3; ++z) {
         double dipole = dm_frzc_[z];
         for (const std::string& block : {"cc", "CC"}) {
@@ -526,8 +515,7 @@ void MASTER_DSRG::compute_dm_ref() {
         dipole += dm_[z]["uv"] * Gamma1_["uv"];
         dipole += dm_[z]["UV"] * Gamma1_["UV"];
         dm_ref_[z] = dipole;
-
-        do_dm_dirs_.push_back(std::fabs(dipole) > 1.0e-15 ? true : false);
+        do_dm_dirs_[z] = std::fabs(dipole) > 1.0e-15 ? true : false;
     }
 }
 
@@ -616,10 +604,10 @@ void MASTER_DSRG::deGNO_ints(const std::string& name, double& H0, BlockedTensor&
 
     // scalar from H3
     double scalar3 = 0.0;
-    scalar3 -= (1.0 / 36.0) * H3.block("aaaaaa")("xyzuvw") * reference_.L3aaa()("xyzuvw");
-    scalar3 -= (1.0 / 36.0) * H3.block("AAAAAA")("XYZUVW") * reference_.L3bbb()("XYZUVW");
-    scalar3 -= 0.25 * H3.block("aaAaaA")("xyZuvW") * reference_.L3aab()("xyZuvW");
-    scalar3 -= 0.25 * H3.block("aAAaAA")("xYZuVW") * reference_.L3abb()("xYZuVW");
+    scalar3 -= (1.0 / 36.0) * H3.block("aaaaaa")("xyzuvw") * rdms_.L3aaa()("xyzuvw");
+    scalar3 -= (1.0 / 36.0) * H3.block("AAAAAA")("XYZUVW") * rdms_.L3bbb()("XYZUVW");
+    scalar3 -= 0.25 * H3.block("aaAaaA")("xyZuvW") * rdms_.L3aab()("xyZuvW");
+    scalar3 -= 0.25 * H3.block("aAAaAA")("xYZuVW") * rdms_.L3abb()("xYZuVW");
 
     // TODO: form one-body intermediate for scalar and 1-body
     scalar3 += 0.25 * H3["xyzuvw"] * Lambda2_["uvxy"] * Gamma1_["wz"];
@@ -798,6 +786,33 @@ std::vector<ambit::Tensor> MASTER_DSRG::Hbar(int n) {
         }
     } else {
         throw psi::PSIEXCEPTION("Only 1, 2, and 3 Hbar are in Tensor format.");
+    }
+    return out;
+}
+
+std::vector<DressedQuantity> MASTER_DSRG::deGNO_DMbar_actv() {
+    std::vector<DressedQuantity> out;
+    for (int z = 0; z < 3; ++z) {
+        if (do_dm_dirs_[z] || multi_state_) {
+            std::string name = "Dipole " + dm_dirs_[z] + " Integrals";
+            if (foptions_->get_bool("FORM_MBAR3")) {
+                deGNO_ints(name, Mbar0_[z], Mbar1_[z], Mbar2_[z], Mbar3_[z]);
+                rotate_ints_semi_to_origin(name, Mbar1_[z], Mbar2_[z], Mbar3_[z]);
+                out.emplace_back(Mbar0_[z], Mbar1_[z].block("aa"), Mbar1_[z].block("AA"),
+                                 Mbar2_[z].block("aaaa"), Mbar2_[z].block("aAaA"),
+                                 Mbar2_[z].block("AAAA"), Mbar3_[z].block("aaaaaa"),
+                                 Mbar3_[z].block("aaAaaA"), Mbar3_[z].block("aAAaAA"),
+                                 Mbar3_[z].block("AAAAAA"));
+            } else {
+                deGNO_ints(name, Mbar0_[z], Mbar1_[z], Mbar2_[z]);
+                rotate_ints_semi_to_origin(name, Mbar1_[z], Mbar2_[z]);
+                out.emplace_back(Mbar0_[z], Mbar1_[z].block("aa"), Mbar1_[z].block("AA"),
+                                 Mbar2_[z].block("aaaa"), Mbar2_[z].block("aAaA"),
+                                 Mbar2_[z].block("AAAA"));
+            }
+        } else {
+            out.emplace_back(DressedQuantity());
+        }
     }
     return out;
 }
@@ -1013,12 +1028,12 @@ void MASTER_DSRG::H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const double& a
         temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"aaaaaa"});
         temp["uvwxyz"] += H2["uviz"] * T2["iwxy"];
         temp["uvwxyz"] += H2["waxy"] * T2["uvaz"];
-        E += 0.25 * temp.block("aaaaaa")("uvwxyz") * reference_.L3aaa()("xyzuvw");
+        E += 0.25 * temp.block("aaaaaa")("uvwxyz") * rdms_.L3aaa()("xyzuvw");
 
         temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"AAAAAA"});
         temp["UVWXYZ"] += H2["UVIZ"] * T2["IWXY"];
         temp["UVWXYZ"] += H2["WAXY"] * T2["UVAZ"];
-        E += 0.25 * temp.block("AAAAAA")("UVWXYZ") * reference_.L3bbb()("XYZUVW");
+        E += 0.25 * temp.block("AAAAAA")("UVWXYZ") * rdms_.L3bbb()("XYZUVW");
 
         temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"aaAaaA"});
         temp["uvWxyZ"] -= H2["uviy"] * T2["iWxZ"];
@@ -1028,7 +1043,7 @@ void MASTER_DSRG::H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const double& a
         temp["uvWxyZ"] += H2["aWxZ"] * T2["uvay"];
         temp["uvWxyZ"] -= H2["vaxy"] * T2["uWaZ"];
         temp["uvWxyZ"] -= 2.0 * H2["vAxZ"] * T2["uWyA"];
-        E += 0.5 * temp.block("aaAaaA")("uvWxyZ") * reference_.L3aab()("xyZuvW");
+        E += 0.5 * temp.block("aaAaaA")("uvWxyZ") * rdms_.L3aab()("xyZuvW");
 
         temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"aAAaAA"});
         temp["uVWxYZ"] -= H2["VWIZ"] * T2["uIxY"];
@@ -1038,7 +1053,7 @@ void MASTER_DSRG::H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const double& a
         temp["uVWxYZ"] += H2["uAxY"] * T2["VWAZ"];
         temp["uVWxYZ"] -= H2["WAYZ"] * T2["uVxA"];
         temp["uVWxYZ"] -= 2.0 * H2["aWxY"] * T2["uVaZ"];
-        E += 0.5 * temp.block("aAAaAA")("uVWxYZ") * reference_.L3abb()("xYZuVW");
+        E += 0.5 * temp.block("aAAaAA")("uVWxYZ") * rdms_.L3abb()("xYZuVW");
     }
 
     // multiply prefactor and copy to C0
@@ -1907,7 +1922,7 @@ bool MASTER_DSRG::check_semi_orbs() {
     std::string actv_type = foptions_->get_str("FCIMO_ACTV_TYPE");
     if (actv_type == "CIS" || actv_type == "CISD") {
         std::string job_type = foptions_->get_str("JOB_TYPE");
-        bool fci_mo = foptions_->get_str("CAS_TYPE") == "CAS";
+        bool fci_mo = foptions_->get_str("ACTIVE_SPACE_SOLVER") == "CAS";
         if ((job_type == "MRDSRG" || job_type == "DSRG-MRPT3") && fci_mo) {
             std::stringstream ss;
             ss << "Unsupported FCIMO_ACTV_TYPE for " << job_type << " code.";

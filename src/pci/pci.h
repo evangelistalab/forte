@@ -43,13 +43,10 @@
 #include "fci/fci_vector.h"
 #include "base_classes/forte_options.h"
 #include "base_classes/state_info.h"
-
+#include "base_classes/active_space_method.h"
 
 namespace forte {
 class SCFInfo;
-
-/// Set the forte style options for the FCI method
-void set_PCI_options(ForteOptions& foptions);
 
 namespace GeneratorType_ {
 enum GeneratorType {
@@ -73,7 +70,7 @@ enum GeneratorType {
  * @brief The SparsePathIntegralCI class
  * This class implements an a sparse path-integral FCI algorithm
  */
-class ProjectorCI {
+class ProjectorCI : public ActiveSpaceMethod {
   public:
     // ==> Class Constructor and Destructor <==
 
@@ -83,25 +80,31 @@ class ProjectorCI {
      * @param options The main options object
      * @param ints A pointer to an allocated integral object
      */
-    ProjectorCI(StateInfo state, std::shared_ptr<forte::SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
-                std::shared_ptr<ForteIntegrals> ints,
-                std::shared_ptr<MOSpaceInfo> mo_space_info);
+    ProjectorCI(StateInfo state, size_t nroot, std::shared_ptr<forte::SCFInfo> scf_info,
+                std::shared_ptr<ForteOptions> options, std::shared_ptr<MOSpaceInfo> mo_space_info,
+                std::shared_ptr<ActiveSpaceIntegrals> as_ints);
 
     // ==> Class Interface <==
 
+    void set_options(std::shared_ptr<ForteOptions>) override{};
+
+    /// Compute the reduced density matrices up to a given particle rank (max_rdm_level)
+    std::vector<RDMs> rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
+                           int max_rdm_level) override;
+
+    /// Returns the transition reduced density matrices between roots of different symmetry up to a
+    /// given level (max_rdm_level)
+    std::vector<RDMs> transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
+                                      std::shared_ptr<ActiveSpaceMethod> method2,
+                                      int max_rdm_level) override;
+
     /// Compute the energy
-    double compute_energy();
+    double compute_energy() override;
 
   private:
     // ==> Class data <==
 
     // * Calculation data
-    /// The state to calculate
-    StateInfo state_;
-    /// The molecular integrals required by Explorer
-    std::shared_ptr<ForteIntegrals> ints_;
-    /// Store all the integrals locally
-    static std::shared_ptr<ActiveSpaceIntegrals> fci_ints_;
     /// The options
     std::shared_ptr<ForteOptions> options_;
     /// SCF information
@@ -143,8 +146,6 @@ class ProjectorCI {
     /// The reference determinant
     Determinant reference_determinant_;
     std::vector<det_hash<>> solutions_;
-    /// The information of mo space
-    std::shared_ptr<MOSpaceInfo> mo_space_info_;
     /// (pq|pq) matrix for prescreening
     double *pqpq_aa_, *pqpq_ab_, *pqpq_bb_;
     /// maximum element in (pq|pq) matrix
@@ -171,10 +172,6 @@ class ProjectorCI {
     bool do_shift_;
     /// Use intermediate normalization?
     bool use_inter_norm_;
-    /// The number of roots computed
-    int nroot_;
-    /// The energy convergence criterium
-    double e_convergence_;
     /// The maximum number of iterations
     int maxiter_;
     /// The maximum number of iterations in Davidson generator
@@ -282,7 +279,7 @@ class ProjectorCI {
     double lastLow = 0.0;
     bool previous_go_up = false;
 
-    // * Reference spawning
+    // * RDMs spawning
     /// Spawning according to the coefficient in a reference
     bool reference_spawning_;
 
@@ -321,15 +318,15 @@ class ProjectorCI {
     double initial_guess(det_vec& dets, std::vector<double>& C);
 
     /**
-    * Propagate the wave function by a step of length tau
-    * @param Generator The type of Generator used
-    * @param dets The set of determinants that form the wave function at time n
-    * @param C The wave function coefficients at time n
-    * @param tau The time step in a.u.
-    * @param spawning_threshold The threshold used to accept or reject spawning
-    * events
-    * @param S An energy shift subtracted from the Hamiltonian
-    */
+     * Propagate the wave function by a step of length tau
+     * @param Generator The type of Generator used
+     * @param dets The set of determinants that form the wave function at time n
+     * @param C The wave function coefficients at time n
+     * @param tau The time step in a.u.
+     * @param spawning_threshold The threshold used to accept or reject spawning
+     * events
+     * @param S An energy shift subtracted from the Hamiltonian
+     */
     void propagate(GeneratorType_::GeneratorType generator, det_vec& dets, std::vector<double>& C,
                    double tau, double spawning_threshold, double S);
     /// A Delta projector fitted by 10th order chebyshev polynomial
@@ -482,6 +479,6 @@ class ProjectorCI {
     /// Returns a vector of orbital energy, sym label pairs
     std::vector<std::tuple<double, int, int>> sym_labeled_orbitals(std::string type);
 };
-}
+} // namespace forte
 
 #endif // _pci_h_

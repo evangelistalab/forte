@@ -33,7 +33,8 @@ set forte {
    dsrg_s                  1.0
    semi_canonical          true
    int_type                df
-   job_type                three-dsrg-mrpt2
+   correlation_solver      three-dsrg-mrpt2
+   active_space_solver     fci
    ntrial_per_root         100
    relax_ref               once
    fci_maxiter             50

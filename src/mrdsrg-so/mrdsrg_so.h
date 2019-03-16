@@ -38,7 +38,7 @@
 #include "ambit/blocked_tensor.h"
 
 #include "integrals/integrals.h"
-#include "base_classes/reference.h"
+#include "base_classes/rdms.h"
 #include "helpers/blockedtensorfactory.h"
 
 using namespace ambit;
@@ -59,8 +59,8 @@ class MRDSRG_SO : public psi::Wavefunction {
     /// Print levels
     int print_;
 
-    /// The reference object
-    Reference reference_;
+    /// The RDMs and cumulants of the reference wave function
+    RDMs rdms_;
 
     /// The molecular integrals required by MethodBase
     std::shared_ptr<ForteIntegrals> ints_;
@@ -255,6 +255,10 @@ class MRDSRG_SO : public psi::Wavefunction {
     void commutator_H_A_3_sr(double factor, BlockedTensor& H1, BlockedTensor& H2, BlockedTensor& H3,
                              BlockedTensor& T1, BlockedTensor& T2, BlockedTensor& T3, double& C0,
                              BlockedTensor& C1, BlockedTensor& C2, BlockedTensor& C3);
+    void commutator_H_A_3_sr_1(double factor, BlockedTensor& H1, BlockedTensor& H2,
+                               BlockedTensor& H3, BlockedTensor& T1, BlockedTensor& T2,
+                               BlockedTensor& T3, double& C0, BlockedTensor& C1, BlockedTensor& C2,
+                               BlockedTensor& C3);
 
     // Taylor Expansion of [1 - exp(-s * D^2)] / D = sqrt(s) * (\sum_{n=1}
     // \frac{1}{n!} (-1)^{n+1} Z^{2n-1})
@@ -297,7 +301,7 @@ class MRDSRG_SO : public psi::Wavefunction {
   public:
     // => Constructors <= //
 
-    MRDSRG_SO(Reference reference, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
+    MRDSRG_SO(RDMs rdms, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
               std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     ~MRDSRG_SO();

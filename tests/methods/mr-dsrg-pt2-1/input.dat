@@ -16,9 +16,9 @@ molecule {
 
 set globals{
    reference             rhf
-   scf_type              out_of_core
-   d_convergence         12
-   e_convergence         15
+   scf_type              pk
+   d_convergence         10
+   e_convergence         12
    docc                  [2,0,0,1]
    restricted_docc       [2,0,0,0]
    active                [1,0,0,1]
@@ -29,6 +29,7 @@ set globals{
 
 set forte{
    job_type              mr-dsrg-pt2
+   active_space_solver   cas
    restricted_docc       [2,0,0,0]
    active                [1,0,0,1]
    root_sym              0
@@ -36,6 +37,7 @@ set forte{
    dsrg_s                1.0e10
    print                 3
    dsrgpt                true
+   multiplicity          1
 }
 
 basis {

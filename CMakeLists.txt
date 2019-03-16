@@ -11,7 +11,7 @@ set(forte_AUTHORS      "Francesco A. Evangelista and Group")
 set(forte_DESCRIPTION  "Quantum Chemistry Methods for Strongly Correlated Electrons plugin to Psi4")
 set(forte_URL          "https://github.com/evangelistalab/forte")
 set(forte_LICENSE      "GPL-3.0+")
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 14)
 set(TargetOpenMP_FIND_COMPONENTS "CXX")
 
 cmake_minimum_required(VERSION 3.1 FATAL_ERROR)
@@ -24,6 +24,7 @@ option_with_print(ENABLE_OPENMP "Enable threadsafe linking to OpenMP parallelize
 option_with_print(ENABLE_MPI "Enable MPI parallelization" OFF)
 option_with_print(ENABLE_GA "Enable Global Arrays" OFF)
 option_with_print(MAX_DET_ORB "Set the maximum number of orbitals in a determinant" OFF)
+option_with_print(ENABLE_CODECOV "Enable compilation with code coverage flags" OFF)
 #option_with_print(ENABLE_GENERIC "Enable mostly static linking in shared library" OFF)
 
 include(autocmake_omp)
@@ -61,8 +62,13 @@ if(SSE42_FLAG)
 endif()
 add_compile_options(-Wall -Wextra -pedantic) # -Werror)
 
+if(ENABLE_CODECOV)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage") # enabling coverage
+endif()
+
 # List of CC files
 add_psi4_plugin(forte
+src/base_classes/active_space_method.cc
 src/base_classes/active_space_solver.cc
 src/orbital-helpers/avas.cc
 src/casscf/casscf.cc
@@ -78,7 +84,6 @@ src/dmrg/dmrgsolver.cc
 src/base_classes/dynamic_correlation_solver.cc
 src/finite_temperature/finite_temperature.cc
 src/forte_old_methods.cc
-src/forte_old_options.cc
 src/helpers/iterative_solvers.cc
 src/helpers/helpers.cc
 src/main.cc
@@ -86,11 +91,12 @@ src/sparse_ci/operator.cc
 src/options.cc
 src/orbital-helpers/orbitaloptimizer.cc
 src/python_api.cc
-src/base_classes/reference.cc
+src/base_classes/rdms.cc
 src/base_classes/state_info.cc
 src/base_classes/scf_info.cc
 src/base_classes/forte_options.cc
 src/base_classes/mo_space_info.cc
+src/base_classes/orbital_transform.cc
 src/sci/aci.cc
 src/sci/aci_build_F.cc
 src/sci/asci.cc
@@ -109,7 +115,6 @@ src/orbital-helpers/aosubspace.cc
 src/orbital-helpers/ci-no/ci-no.cc
 src/orbital-helpers/ci-no/mrci-no.cc
 src/fci/binary_graph.cc
-src/fci/sa_fcisolver.cc
 src/fci/fci_solver.cc
 src/fci/fci_vector.cc
 src/fci/fci_vector_h_diag.cc
@@ -137,6 +142,7 @@ src/integrals/make_integrals.cc
 src/integrals/active_space_integrals.cc
 src/mrdsrg-helper/dsrg_source.cc
 src/mrdsrg-helper/dsrg_time.cc
+src/mrdsrg-helper/dsrg_transformed.cc
 src/mrdsrg-helper/run_dsrg.cc
 src/mrdsrg-so/mrdsrg_so.cc
 src/mrdsrg-so/commutator_generated.cc

@@ -40,25 +40,16 @@ using namespace psi;
 
 namespace forte {
 
-void set_ASCI_options(ForteOptions& foptions) {
-    /* Convergence Threshold -*/
-    foptions.add_double("ASCI_E_CONVERGENCE", 1e-5, "ASCI energy convergence threshold");
-    foptions.add_int("ASCI_MAX_CYCLE", 20, "ASCI MAX Cycle");
-    foptions.add_int("ASCI_TDET", 2000, "ASCI Max det");
-    foptions.add_int("ASCI_CDET", 200, "ASCI Max reference det");
-    foptions.add_double("ASCI_PRESCREEN_THRESHOLD", 1e-12, "ASCI prescreening threshold");
-}
-
 bool pairCompDescend(const std::pair<double, Determinant> E1,
                      const std::pair<double, Determinant> E2) {
     return E1.first > E2.first;
 }
 
-ASCI::ASCI(StateInfo state, std::shared_ptr<SCFInfo> scf_info,
+ASCI::ASCI(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
            std::shared_ptr<ForteOptions> options, std::shared_ptr<MOSpaceInfo> mo_space_info,
            std::shared_ptr<ActiveSpaceIntegrals> as_ints)
-    : ActiveSpaceSolver(state, mo_space_info, as_ints), scf_info_(scf_info), options_(options),
-      state_(state) {
+    : ActiveSpaceMethod(state, nroot, mo_space_info, as_ints), scf_info_(scf_info),
+      options_(options) {
 
     mo_symmetry_ = mo_space_info_->symmetry("ACTIVE");
     nuclear_repulsion_energy_ = as_ints->ints()->nuclear_repulsion_energy();
@@ -81,18 +72,12 @@ void ASCI::startup() {
     op_.initialize(mo_symmetry_, as_ints_);
 
     wavefunction_symmetry_ = state_.irrep();
-    if (options_->has_changed("ROOT_SYM")) {
-        wavefunction_symmetry_ = options_->get_int("ROOT_SYM");
-    }
     multiplicity_ = state_.multiplicity();
-    if (options_->has_changed("MULTIPLICITY")) {
-        multiplicity_ = options_->get_int("MULTIPLICITY");
-    }
 
     nact_ = mo_space_info_->size("ACTIVE");
     nactpi_ = mo_space_info_->get_dimension("ACTIVE");
 
-    nirrep_ = nactpi_.n();
+    nirrep_ = mo_space_info_->nirrep();
     // Include frozen_docc and restricted_docc
     frzcpi_ = mo_space_info_->get_dimension("INACTIVE_DOCC");
     nfrzc_ = mo_space_info_->size("INACTIVE_DOCC");
@@ -103,8 +88,8 @@ void ASCI::startup() {
     }
 
     // Build the reference determinant and compute its energy
-    CI_Reference ref(scf_info_, options_, mo_space_info_, as_ints_, multiplicity_, twice_ms_,
-                     wavefunction_symmetry_);
+    CI_RDMs ref(scf_info_, options_, mo_space_info_, as_ints_, multiplicity_, twice_ms_,
+                wavefunction_symmetry_);
     ref.build_reference(initial_reference_);
 
     // Read options
@@ -315,6 +300,11 @@ double ASCI::compute_energy() {
 
     double root_energy = PQ_evals->get(0) + nuclear_repulsion_energy_ + as_ints_->scalar_energy();
 
+    energies_.resize(nroot_, 0.0);
+    for (size_t n = 0; n < nroot_; ++n) {
+        energies_[n] = PQ_evals->get(n) + nuclear_repulsion_energy_ + as_ints_->scalar_energy();
+    }
+
     psi::Process::environment.globals["CURRENT ENERGY"] = root_energy;
     psi::Process::environment.globals["ASCI ENERGY"] = root_energy;
 
@@ -342,7 +332,7 @@ double ASCI::compute_energy() {
 
     print_wfn(PQ_space, op_, PQ_evecs, nroot_);
 
-    compute_rdms(as_ints_, PQ_space, op_, PQ_evecs, 0, 0);
+    //    compute_rdms(as_ints_, PQ_space, op_, PQ_evecs, 0, 0);
 
     return root_energy;
 }
@@ -483,13 +473,13 @@ ASCI::compute_spin(DeterminantHashVec& space, WFNOperator& op, psi::SharedMatrix
     }
 
     if (!build_lists_) {
-        for (int n = 0; n < nroot_; ++n) {
+        for (size_t n = 0; n < nroot_; ++n) {
             double S2 = op.s2_direct(space, evecs, n);
             double S = std::fabs(0.5 * (std::sqrt(1.0 + 4.0 * S2) - 1.0));
             spin_vec[n] = std::make_pair(S, S2);
         }
     } else {
-        for (int n = 0; n < nroot_; ++n) {
+        for (size_t n = 0; n < nroot_; ++n) {
             double S2 = op.s2(space, evecs, n);
             double S = std::fabs(0.5 * (std::sqrt(1.0 + 4.0 * S2) - 1.0));
             spin_vec[n] = std::make_pair(S, S2);
@@ -539,14 +529,36 @@ double ASCI::compute_spin_contamination(DeterminantHashVec& space, WFNOperator& 
     return spin_contam;
 }
 
-Reference ASCI::get_reference() {
-    // const std::vector<Determinant>& final_wfn =
-    //     final_wfn_.determinants();
-    CI_RDMS ci_rdms(final_wfn_, as_ints_, evecs_, 0, 0);
-    ci_rdms.set_max_rdm(rdm_level_);
-    Reference aci_ref = ci_rdms.reference(ordm_a_, ordm_b_, trdm_aa_, trdm_ab_, trdm_bb_, trdm_aaa_,
-                                          trdm_aab_, trdm_abb_, trdm_bbb_);
-    return aci_ref;
+std::vector<RDMs> ASCI::rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
+                             int max_rdm_level) {
+
+    std::vector<RDMs> refs;
+
+    for (const auto& root_pair : root_list) {
+
+        compute_rdms(as_ints_, final_wfn_, op_, evecs_, root_pair.first, root_pair.second,
+                     max_rdm_level);
+
+        if (max_rdm_level == 1) {
+            refs.emplace_back(ordm_a_, ordm_b_);
+        }
+        if (max_rdm_level == 2) {
+            refs.emplace_back(ordm_a_, ordm_b_, trdm_aa_, trdm_ab_, trdm_bb_);
+        }
+        if (max_rdm_level == 3) {
+            refs.emplace_back(ordm_a_, ordm_b_, trdm_aa_, trdm_ab_, trdm_bb_, trdm_aaa_, trdm_aab_,
+                              trdm_abb_, trdm_bbb_);
+        }
+    }
+    return refs;
+}
+
+std::vector<RDMs> ASCI::transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
+                                        std::shared_ptr<ActiveSpaceMethod> method2,
+                                        int max_rdm_level) {
+    std::vector<RDMs> refs;
+    throw std::runtime_error("ASCI::transition_rdms is not implemented!");
+    return refs;
 }
 
 void ASCI::print_nos() {
@@ -559,8 +571,8 @@ void ASCI::print_nos() {
     for (size_t h = 0; h < nirrep_; h++) {
         for (int u = 0; u < nactpi_[h]; u++) {
             for (int v = 0; v < nactpi_[h]; v++) {
-                opdm_a->set(h, u, v, ordm_a_[(u + offset) * nact_ + v + offset]);
-                opdm_b->set(h, u, v, ordm_b_[(u + offset) * nact_ + v + offset]);
+                opdm_a->set(h, u, v, ordm_a_.data()[(u + offset) * nact_ + v + offset]);
+                opdm_b->set(h, u, v, ordm_b_.data()[(u + offset) * nact_ + v + offset]);
             }
         }
         offset += nactpi_[h];
@@ -639,40 +651,30 @@ void ASCI::print_nos() {
 }
 
 void ASCI::compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints, DeterminantHashVec& dets,
-                        WFNOperator& op, psi::SharedMatrix& PQ_evecs, int root1, int root2) {
-
-    ordm_a_.clear();
-    ordm_b_.clear();
-
-    trdm_aa_.clear();
-    trdm_ab_.clear();
-    trdm_bb_.clear();
-
-    trdm_aaa_.clear();
-    trdm_aab_.clear();
-    trdm_abb_.clear();
-    trdm_bbb_.clear();
+                        WFNOperator& op, psi::SharedMatrix& PQ_evecs, int root1, int root2,
+                        int rdm_level) {
 
     CI_RDMS ci_rdms_(dets, fci_ints, PQ_evecs, root1, root2);
 
     //    double total_time = 0.0;
-    ci_rdms_.set_max_rdm(rdm_level_);
+    ci_rdms_.set_max_rdm(rdm_level);
 
-    if (rdm_level_ >= 1) {
+    if (rdm_level >= 1) {
         local_timer one_r;
-        ci_rdms_.compute_1rdm(ordm_a_, ordm_b_, op);
+        ci_rdms_.compute_1rdm(ordm_a_.data(), ordm_b_.data(), op);
         outfile->Printf("\n  1-RDM  took %2.6f s (determinant)", one_r.get());
 
         print_nos();
     }
-    if (rdm_level_ >= 2) {
+    if (rdm_level >= 2) {
         local_timer two_r;
-        ci_rdms_.compute_2rdm(trdm_aa_, trdm_ab_, trdm_bb_, op);
+        ci_rdms_.compute_2rdm(trdm_aa_.data(), trdm_ab_.data(), trdm_bb_.data(), op);
         outfile->Printf("\n  2-RDMS took %2.6f s (determinant)", two_r.get());
     }
-    if (rdm_level_ >= 3) {
+    if (rdm_level >= 3) {
         local_timer tr;
-        ci_rdms_.compute_3rdm(trdm_aaa_, trdm_aab_, trdm_abb_, trdm_bbb_, op);
+        ci_rdms_.compute_3rdm(trdm_aaa_.data(), trdm_aab_.data(), trdm_abb_.data(),
+                              trdm_bbb_.data(), op);
         outfile->Printf("\n  3-RDMs took %2.6f s (determinant)", tr.get());
     }
 }

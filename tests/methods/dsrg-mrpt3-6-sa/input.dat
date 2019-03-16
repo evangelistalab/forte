@@ -39,16 +39,17 @@ set globals{
 Emcscf, wfn = energy('casscf', return_wfn=True)
 
 set forte{
-  job_type           dsrg-mrpt3
+  active_space_solver       cas
+  correlation_solver        dsrg-mrpt3
   frozen_docc        [2,0,0,0]
   restricted_docc    [1,0,0,0]
   active             [3,0,2,2]
   dsrg_s             0.5
   maxiter            50
   e_convergence      10
-  cas_type           cas
   avg_state          [[0,1,2]]
   dsrg_multi_state   sa_full
+  calc_type          sa
 }
 energy('forte',ref_wfn=wfn)
-compare_values(refpt3full,variable("CURRENT ENERGY"),8,"SA-DSRG-PT3 FULL energy root 0")
+compare_values(refpt3full,variable("ENERGY ROOT 0 1A1"),8,"SA-DSRG-PT3 FULL energy root 0")

@@ -47,8 +47,15 @@ using namespace psi;
 
 namespace forte {
 
-MP2_NOS::MP2_NOS(std::shared_ptr<psi::Wavefunction> wfn, psi::Options& options,
-                 std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info) {
+MP2_NOS::MP2_NOS(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
+                 std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
+    : OrbitalTransform(ints, mo_space_info), scf_info_(scf_info), options_(options),
+      mo_space_info_(mo_space_info) {}
+
+psi::SharedMatrix MP2_NOS::get_Ua() { return Ua_; }
+psi::SharedMatrix MP2_NOS::get_Ub() { return Ub_; }
+
+void MP2_NOS::compute_transformation() {
     print_method_banner(
         {"Second-Order Moller-Plesset Natural Orbitals", "written by Francesco A. Evangelista"});
 
@@ -73,23 +80,23 @@ MP2_NOS::MP2_NOS(std::shared_ptr<psi::Wavefunction> wfn, psi::Options& options,
     /// Map from all the MOs to the beta virtual
     std::map<size_t, size_t> mos_to_bvir;
 
-    psi::Dimension ncmopi_ = mo_space_info->get_dimension("CORRELATED");
-    psi::Dimension frzcpi = mo_space_info->get_dimension("FROZEN_DOCC");
-    psi::Dimension frzvpi = mo_space_info->get_dimension("FROZEN_UOCC");
+    psi::Dimension ncmopi_ = mo_space_info_->get_dimension("CORRELATED");
+    psi::Dimension frzcpi = mo_space_info_->get_dimension("FROZEN_DOCC");
+    psi::Dimension frzvpi = mo_space_info_->get_dimension("FROZEN_UOCC");
 
-    psi::Dimension nmopi = wfn->nmopi();
-    psi::Dimension doccpi = wfn->doccpi();
-    psi::Dimension soccpi = wfn->soccpi();
+    psi::Dimension nmopi = mo_space_info_->get_dimension("ALL");
+    psi::Dimension doccpi = scf_info_->doccpi();
+    psi::Dimension soccpi = scf_info_->soccpi();
 
     psi::Dimension corr_docc(doccpi);
     corr_docc -= frzcpi;
 
-    psi::Dimension aoccpi = corr_docc + wfn->soccpi();
+    psi::Dimension aoccpi = corr_docc + scf_info_->soccpi();
     psi::Dimension boccpi = corr_docc;
     psi::Dimension avirpi = ncmopi_ - aoccpi;
     psi::Dimension bvirpi = ncmopi_ - boccpi;
 
-    int nirrep = wfn->nirrep();
+    int nirrep = ints_->nirrep();
 
     for (int h = 0, p = 0; h < nirrep; ++h) {
         for (int i = 0; i < corr_docc[h]; ++i, ++p) {
@@ -132,26 +139,26 @@ MP2_NOS::MP2_NOS(std::shared_ptr<psi::Wavefunction> wfn, psi::Options& options,
     // Fill in the one-electron operator (H)
     H.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
         if (spin[0] == AlphaSpin)
-            value = ints->oei_a(i[0], i[1]);
+            value = ints_->oei_a(i[0], i[1]);
         else
-            value = ints->oei_b(i[0], i[1]);
+            value = ints_->oei_b(i[0], i[1]);
     });
 
     // Fill in the two-electron operator (V)
     V.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
         if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin))
-            value = ints->aptei_aa(i[0], i[1], i[2], i[3]);
+            value = ints_->aptei_aa(i[0], i[1], i[2], i[3]);
         if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin))
-            value = ints->aptei_ab(i[0], i[1], i[2], i[3]);
+            value = ints_->aptei_ab(i[0], i[1], i[2], i[3]);
         if ((spin[0] == BetaSpin) and (spin[1] == BetaSpin))
-            value = ints->aptei_bb(i[0], i[1], i[2], i[3]);
+            value = ints_->aptei_bb(i[0], i[1], i[2], i[3]);
     });
 
     H.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
         if (spin[0] == AlphaSpin)
-            value = ints->oei_a(i[0], i[1]);
+            value = ints_->oei_a(i[0], i[1]);
         else
-            value = ints->oei_b(i[0], i[1]);
+            value = ints_->oei_b(i[0], i[1]);
     });
 
     G1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
@@ -175,7 +182,7 @@ MP2_NOS::MP2_NOS(std::shared_ptr<psi::Wavefunction> wfn, psi::Options& options,
     F["PQ"] += V["rPsQ"] * G1["sr"];
     F["PQ"] += V["PRQS"] * G1["SR"];
 
-    size_t ncmo_ = mo_space_info->size("CORRELATED");
+    size_t ncmo_ = mo_space_info_->size("CORRELATED");
     std::vector<double> Fa(ncmo_);
     std::vector<double> Fb(ncmo_);
 
@@ -208,7 +215,7 @@ MP2_NOS::MP2_NOS(std::shared_ptr<psi::Wavefunction> wfn, psi::Options& options,
     double Ebb = 0.25 * T2["IJAB"] * V["IJAB"];
 
     double mp2_correlation_energy = Eaa + Eab + Ebb;
-    double ref_energy = wfn->reference_energy();
+    double ref_energy = scf_info_->reference_energy();
     outfile->Printf("\n\n    SCF energy                            = %20.15f", ref_energy);
     outfile->Printf("\n    MP2 correlation energy                = %20.15f",
                     mp2_correlation_energy);
@@ -249,7 +256,7 @@ MP2_NOS::MP2_NOS(std::shared_ptr<psi::Wavefunction> wfn, psi::Options& options,
     D1VV.diagonalize(D1VV_evecs, D1VV_evals);
 
     // Print natural orbitals
-    if (options.get_bool("NAT_ORBS_PRINT"))
+    if (options_->get_bool("NAT_ORBS_PRINT"))
 
     {
         D1oo_evals.print();
@@ -259,11 +266,11 @@ MP2_NOS::MP2_NOS(std::shared_ptr<psi::Wavefunction> wfn, psi::Options& options,
     }
     // This will suggested a restricted_docc and a active
     // Does not take in account frozen_docc
-    if (options.get_bool("NAT_ACT")) {
+    if (options_->get_bool("NAT_ACT")) {
         std::vector<size_t> restricted_docc(nirrep);
         std::vector<size_t> active(nirrep);
-        double occupied = options.get_double("OCC_NATURAL");
-        double virtual_orb = options.get_double("VIRT_NATURAL");
+        double occupied = options_->get_double("OCC_NATURAL");
+        double virtual_orb = options_->get_double("VIRT_NATURAL");
         outfile->Printf("\n Suggested Active Space \n");
         outfile->Printf("\n Occupied orbitals with an occupation less than "
                         "%6.4f are active",
@@ -384,13 +391,19 @@ MP2_NOS::MP2_NOS(std::shared_ptr<psi::Wavefunction> wfn, psi::Options& options,
     }
 
     // Retransform the integrals in the new basis
-    // TODO: this class should read this information (ints->spin_restriction()) early and compute
+    // TODO: this class should read this information (ints_->spin_restriction()) early and compute
     // only one set of MOs
-    auto spin_restriction = ints->spin_restriction();
+
+    auto spin_restriction = ints_->spin_restriction();
+
+    Ua_.reset(new psi::Matrix("Ua", nmopi, nmopi));
+    Ub_.reset(new psi::Matrix("Ub", nmopi, nmopi));
+
+    Ua_->copy(Ua->clone());
     if (spin_restriction == IntegralSpinRestriction::Restricted) {
-        ints->rotate_orbitals(Ua, Ua);
+        Ub_->copy(Ua->clone());
     } else {
-        ints->rotate_orbitals(Ua, Ub);
+        Ub_->copy(Ub->clone());
     }
 
     BlockedTensor::set_expert_mode(false);

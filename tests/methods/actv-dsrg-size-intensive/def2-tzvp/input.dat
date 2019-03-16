@@ -102,7 +102,7 @@ set forte{
   dsrg_s             0.5
   dl_maxiter         500
   e_convergence      13
-  cas_type           cas
+  active_space_solver           cas
   fcimo_actv_type    cisd
   internal_amp       singles_doubles
 }

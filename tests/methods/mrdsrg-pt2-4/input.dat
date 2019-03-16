@@ -33,7 +33,8 @@ set mcscf{
 }
 
 set forte{
-   job_type                mrdsrg
+   correlation_solver     mrdsrg
+   active_space_solver    cas
    frozen_docc            [1,0,0,0]
    restricted_docc        [1,0,1,1]
    active                 [2,0,0,0]
@@ -43,7 +44,6 @@ set forte{
    relax_ref               iterate
    maxiter                 100
    e_convergence           8
-   cas_type                cas
 }
 
 Emcscf, wfn = energy('mcscf', return_wfn=True)

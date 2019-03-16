@@ -48,16 +48,16 @@ set {
 set forte {
   multiplicity 1
   int_type df
-  job_type three-dsrg-mrpt2
+  correlation_solver three-dsrg-mrpt2
+  active_space_solver  aci
   frozen_docc      [8]
   restricted_docc  [17]
   active           [8]
-  cas_type aci
   sigma 0.001
   diag_algorithm dynamic
   aci_direct_rdms true
   aci_batched_screening true
-  aci_batch_alg vector
+  aci_batch_alg vecsort
   aci_nbatch 4
   nroot 1
   root_sym 0
@@ -65,16 +65,16 @@ set forte {
   print_no true
   relax_ref once
 }
-
 set_num_threads(8)
 
 e, scf_wfn = energy('scf', return_wfn=True)
 
 compare_values(escf,variable("CURRENT ENERGY"), 9, "SCF energy") 
 
-energy('forte', ref_wfn=scf_wfn)
+ea, awfn = energy('forte', ref_wfn=scf_wfn, return_wfn=True)
 compare_values(efix,variable("UNRELAXED ENERGY"), 9, "ACI-DSRG-MRPT2 fixed energy")
 compare_values(eaci,variable("CURRENT ENERGY"), 9, "ACI-DSRG-MRPT2 relaxed energy") 
+
 
 
 

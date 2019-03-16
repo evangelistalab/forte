@@ -35,7 +35,7 @@
 
 #include "ci_rdm/ci_rdms.h"
 #include "base_classes/mo_space_info.h"
-#include "base_classes/reference.h"
+#include "base_classes/rdms.h"
 #include "sparse_ci/determinant.h"
 #include "integrals/integrals.h"
 #include "integrals/active_space_integrals.h"
@@ -46,7 +46,6 @@
 
 namespace forte {
 
-void set_PT2_options(ForteOptions& foptions);
 
 class MRPT2 : public psi::Wavefunction {
   public:

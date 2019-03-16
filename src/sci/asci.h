@@ -36,8 +36,8 @@
 #include "mrpt2.h"
 #include "orbital-helpers/unpaired_density.h"
 #include "sparse_ci/determinant_hashvector.h"
-#include "base_classes/reference.h"
-#include "base_classes/active_space_solver.h"
+#include "base_classes/rdms.h"
+#include "base_classes/active_space_method.h"
 #include "sparse_ci/sparse_ci_solver.h"
 #include "orbital-helpers/localize.h"
 
@@ -51,16 +51,13 @@
 
 namespace forte {
 
-class Reference;
-
-/// Set the ACI options
-void set_ASCI_options(ForteOptions& foptions);
+class RDMs;
 
 /**
  * @brief The AdaptiveCI class
  * This class implements an adaptive CI algorithm
  */
-class ASCI : public ActiveSpaceSolver {
+class ASCI : public ActiveSpaceMethod {
   public:
     // ==> Class Constructor and Destructor <==
 
@@ -72,8 +69,9 @@ class ASCI : public ActiveSpaceSolver {
      * @param mo_space_info A pointer to the MOSpaceInfo object
      */
 
-    ASCI(StateInfo state, std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
-         std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ActiveSpaceIntegrals> as_ints);
+    ASCI(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
+         std::shared_ptr<ForteOptions> options, std::shared_ptr<MOSpaceInfo> mo_space_info,
+         std::shared_ptr<ActiveSpaceIntegrals> as_ints);
     /// Destructor
     ~ASCI();
 
@@ -82,8 +80,15 @@ class ASCI : public ActiveSpaceSolver {
     /// Compute the energy
     double compute_energy() override;
 
-    /// Update the reference file
-    Reference get_reference() override;
+    /// Compute the reduced density matrices up to a given particle rank (max_rdm_level)
+    std::vector<RDMs> rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
+                           int max_rdm_level) override;
+
+    /// Returns the transition reduced density matrices between roots of different symmetry up to a
+    /// given level (max_rdm_level)
+    std::vector<RDMs> transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
+                                      std::shared_ptr<ActiveSpaceMethod> method2,
+                                      int max_rdm_level) override;
 
     void set_options(std::shared_ptr<ForteOptions>) override{}; // TODO : define
 
@@ -104,7 +109,6 @@ class ASCI : public ActiveSpaceSolver {
 
     /// HF info
     std::shared_ptr<SCFInfo> scf_info_;
-    StateInfo state_;
     /// Options
     std::shared_ptr<ForteOptions> options_;
     /// The wave function symmetry
@@ -140,8 +144,6 @@ class ASCI : public ActiveSpaceSolver {
     int c_det_;
     /// The threshold applied to the secondary space
     int t_det_;
-    /// The number of roots computed
-    int nroot_;
 
     /// The eigensolver type
     DiagonalizationMethod diag_method_ = DLString;
@@ -166,15 +168,15 @@ class ASCI : public ActiveSpaceSolver {
     double spin_trans_;
 
     // The RDMS
-    std::vector<double> ordm_a_;
-    std::vector<double> ordm_b_;
-    std::vector<double> trdm_aa_;
-    std::vector<double> trdm_ab_;
-    std::vector<double> trdm_bb_;
-    std::vector<double> trdm_aaa_;
-    std::vector<double> trdm_aab_;
-    std::vector<double> trdm_abb_;
-    std::vector<double> trdm_bbb_;
+    ambit::Tensor ordm_a_;
+    ambit::Tensor ordm_b_;
+    ambit::Tensor trdm_aa_;
+    ambit::Tensor trdm_ab_;
+    ambit::Tensor trdm_bb_;
+    ambit::Tensor trdm_aaa_;
+    ambit::Tensor trdm_aab_;
+    ambit::Tensor trdm_abb_;
+    ambit::Tensor trdm_bbb_;
 
     // ==> Class functions <==
 
@@ -220,7 +222,8 @@ class ASCI : public ActiveSpaceSolver {
 
     /// Compute the RDMs
     void compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints, DeterminantHashVec& dets,
-                      WFNOperator& op, psi::SharedMatrix& PQ_evecs, int root1, int root2);
+                      WFNOperator& op, psi::SharedMatrix& PQ_evecs, int root1, int root2,
+                      int max_level);
 };
 
 } // namespace forte

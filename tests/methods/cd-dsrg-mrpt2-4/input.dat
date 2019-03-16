@@ -23,11 +23,12 @@ set globals{
 }
 
 set forte{
-   job_type               three-dsrg-mrpt2
+   active_space_solver    fci
+   correlation_solver     three-dsrg-mrpt2
    restricted_docc        [2,0,0,0,0,2,0,0]
    active                 [1,0,1,1,0,1,1,1]
    root_sym               0
-   fci_nroot              1
+   nroot                  1
    dsrg_s                 1.0
    semi_canonical         true
    int_type               cholesky

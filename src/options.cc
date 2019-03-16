@@ -36,26 +36,15 @@
 #include "base_classes/forte_options.h"
 #include "integrals/integrals.h"
 #include "pci/pci.h"
-#include "base_classes/reference.h"
+#include "base_classes/rdms.h"
 #include "mrdsrg-helper/run_dsrg.h"
 #include "mrdsrg-spin-integrated/dwms_mrpt2.h"
-
 
 namespace forte {
 
 void forte_options(ForteOptions& foptions) {
 
     // Method-specific options
-    set_ACI_options(foptions);
-    set_ASCI_options(foptions);
-    set_PCI_options(foptions);
-    set_PT2_options(foptions);
-    set_AVAS_options(foptions);
-    set_CINO_options(foptions);
-    set_MRCINO_options(foptions);
-    set_FCI_MO_options(foptions);
-    set_DSRG_options(foptions);
-    set_DWMS_options(foptions);
 
     // General options
     foptions.add_str("MINAO_BASIS", "STO-3G", "The basis used to define an orbital subspace");
@@ -67,7 +56,6 @@ void forte_options(ForteOptions& foptions) {
     foptions.add_str("ACTIVE_REF_TYPE", "CAS", "Initial guess for active space wave functions");
 }
 } // namespace forte
-
 
 // if (name == "FORTE" || options.read_globals()) {
 

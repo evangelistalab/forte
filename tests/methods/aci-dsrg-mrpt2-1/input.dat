@@ -23,7 +23,8 @@ set globals{
 }
 
 set forte{
-   job_type               dsrg-mrpt2
+   active_space_solver    aci
+   correlation_solver     dsrg-mrpt2
    frozen_docc            [0,0,0,0,0,0,0,0]
    restricted_docc        [2,0,0,0,0,2,0,0]
    active                 [1,0,1,1,0,1,1,1]
@@ -33,7 +34,6 @@ set forte{
    dsrg_s                 1.0
    sigma                  0.0
    ntrial_per_root        100
-   cas_type               aci
 }
 
 Escf, wfn = energy('scf', return_wfn=True)

@@ -22,7 +22,7 @@ compare_values(refscf,variable("CURRENT ENERGY"),8,"SCF energy") #TEST
 
 set forte{
   job_type           active-dsrgpt2
-  cas_type           cas
+  active_space_solver           cas
   frozen_docc        [1,0,0,0,0,1,0,0]
   restricted_docc    [1,0,0,0,0,1,1,1]
   active             [3,0,0,0,0,0,0,0]

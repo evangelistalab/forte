@@ -53,10 +53,10 @@ using namespace psi;
 
 namespace forte {
 
-DSRG_MRPT3::DSRG_MRPT3(Reference reference, std::shared_ptr<SCFInfo> scf_info,
+DSRG_MRPT3::DSRG_MRPT3(RDMs rdms, std::shared_ptr<SCFInfo> scf_info,
                        std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
                        std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : MASTER_DSRG(reference, scf_info, options, ints, mo_space_info) {
+    : MASTER_DSRG(rdms, scf_info, options, ints, mo_space_info) {
 
     print_method_banner({"MR-DSRG Third-Order Perturbation Theory", "Chenyang Li"});
     outfile->Printf("\n    Reference:");
@@ -118,7 +118,7 @@ void DSRG_MRPT3::startup() {
     }
     mem_total_ -= nelement * sizeof(double);
 
-    // size of density cumulants (Lambda3 is only stored in Reference object)
+    // size of density cumulants (Lambda3 is only stored in RDMs object)
     nelement = 4 * sa * sa + 3 * sa * sa * sa * sa;
     mem_info.push_back({"Density Cumulants (1, 2)", to_XB(nelement, sizeof(double))});
     mem_total_ -= nelement * sizeof(double);
@@ -445,9 +445,9 @@ double DSRG_MRPT3::compute_energy() {
     // compute DSRG dipole integrals part 1
     if (do_dm_) {
         print_h2("Computing 3rd-Order Dipole Moment Contribution (1/2)");
-        Mbar0_ = std::vector<double>{dm_ref_[0], dm_ref_[1], dm_ref_[2]};
-        Mbar0_pt2_ = std::vector<double>{dm_ref_[0], dm_ref_[1], dm_ref_[2]};
-        Mbar0_pt2c_ = std::vector<double>{dm_ref_[0], dm_ref_[1], dm_ref_[2]};
+        Mbar0_ = {dm_ref_[0], dm_ref_[1], dm_ref_[2]};
+        Mbar0_pt2_ = {dm_ref_[0], dm_ref_[1], dm_ref_[2]};
+        Mbar0_pt2c_ = {dm_ref_[0], dm_ref_[1], dm_ref_[2]};
         for (int i = 0; i < 3; ++i) {
             local_timer timer;
             std::string name = "Computing direction " + dm_dirs_[i];
@@ -1279,354 +1279,355 @@ void DSRG_MRPT3::renormalize_F(const bool& plusone) {
     outfile->Printf("  Done. Timing %10.3f s", timer.get());
 }
 
-double DSRG_MRPT3::compute_energy_sa() {
-    // compute DSRG-MRPT3 energy
-    compute_energy();
+//double DSRG_MRPT3::compute_energy_sa() {
+//    // compute DSRG-MRPT3 energy
+//    compute_energy();
 
-    // obtain active-only transformed intergals
-    std::shared_ptr<ActiveSpaceIntegrals> fci_ints = compute_Heff_actv();
+//    // obtain active-only transformed intergals
+//    std::shared_ptr<ActiveSpaceIntegrals> fci_ints = compute_Heff_actv();
 
-    //    // transfer integrals
-    //    transfer_integrals();
+//    //    // transfer integrals
+//    //    transfer_integrals();
 
-    //    // prepare FCI integrals
-    //    std::shared_ptr<ActiveSpaceIntegrals> fci_ints =
-    //        std::make_shared<ActiveSpaceIntegrals>(ints_, actv_mos_, core_mos_);
-    //    fci_ints->set_active_integrals(Hbar2_.block("aaaa"), Hbar2_.block("aAaA"),
-    //                                   Hbar2_.block("AAAA"));
-    //    if (eri_df_) {
-    //        fci_ints->set_restricted_one_body_operator(aone_eff_, bone_eff_);
-    //        fci_ints->set_scalar_energy(ints_->scalar());
-    //    } else {
-    //        fci_ints->compute_restricted_one_body_operator();
-    //    }
+//    //    // prepare FCI integrals
+//    //    std::shared_ptr<ActiveSpaceIntegrals> fci_ints =
+//    //        std::make_shared<ActiveSpaceIntegrals>(ints_, actv_mos_, core_mos_);
+//    //    fci_ints->set_active_integrals(Hbar2_.block("aaaa"), Hbar2_.block("aAaA"),
+//    //                                   Hbar2_.block("AAAA"));
+//    //    if (eri_df_) {
+//    //        fci_ints->set_restricted_one_body_operator(aone_eff_, bone_eff_);
+//    //        fci_ints->set_scalar_energy(ints_->scalar());
+//    //    } else {
+//    //        fci_ints->compute_restricted_one_body_operator();
+//    //    }
 
-    // get character table
-    CharacterTable ct = psi::Process::environment.molecule()->point_group()->char_table();
-    std::vector<std::string> irrep_symbol;
-    for (int h = 0, nirrep = mo_space_info_->nirrep(); h < nirrep; ++h) {
-        irrep_symbol.push_back(std::string(ct.gamma(h).symbol()));
-    }
+//    // get character table
+//    CharacterTable ct = psi::Process::environment.molecule()->point_group()->char_table();
+//    std::vector<std::string> irrep_symbol;
+//    for (int h = 0, nirrep = mo_space_info_->nirrep(); h < nirrep; ++h) {
+//        irrep_symbol.push_back(std::string(ct.gamma(h).symbol()));
+//    }
 
-    // multiplicity table
-    std::vector<std::string> multi_label{
-        "Singlet", "Doublet", "Triplet", "Quartet", "Quintet", "Sextet", "Septet", "Octet",
-        "Nonet",   "Decaet",  "11-et",   "12-et",   "13-et",   "14-et",  "15-et",  "16-et",
-        "17-et",   "18-et",   "19-et",   "20-et",   "21-et",   "22-et",  "23-et",  "24-et"};
+//    // multiplicity table
+//    std::vector<std::string> multi_label{
+//        "Singlet", "Doublet", "Triplet", "Quartet", "Quintet", "Sextet", "Septet", "Octet",
+//        "Nonet",   "Decaet",  "11-et",   "12-et",   "13-et",   "14-et",  "15-et",  "16-et",
+//        "17-et",   "18-et",   "19-et",   "20-et",   "21-et",   "22-et",  "23-et",  "24-et"};
 
-    // get effective one-electron integral (DSRG transformed)
-    BlockedTensor oei = BTF_->build(tensor_type_, "temp1", spin_cases({"aa"}));
-    oei.block("aa").data() = fci_ints->oei_a_vector();
-    oei.block("AA").data() = fci_ints->oei_b_vector();
+//    // get effective one-electron integral (DSRG transformed)
+//    BlockedTensor oei = BTF_->build(tensor_type_, "temp1", spin_cases({"aa"}));
+//    oei.block("aa").data() = fci_ints->oei_a_vector();
+//    oei.block("AA").data() = fci_ints->oei_b_vector();
 
-    // loop over entries of AVG_STATE
-    int nentry = eigens_.size();
-    std::vector<std::vector<double>> Edsrg_sa(nentry, std::vector<double>());
+//    // loop over entries of AVG_STATE
+//    int nentry = eigens_.size();
+//    std::vector<std::vector<double>> Edsrg_sa(nentry, std::vector<double>());
 
-    // call FCI_MO if SA_FULL and CAS_TYPE == CAS
-    if (multi_state_algorithm_ == "SA_FULL" && foptions_->get_str("CAS_TYPE") == "CAS") {
-        FCI_MO fci_mo(scf_info_, foptions_, ints_, mo_space_info_, fci_ints);
-        fci_mo.set_localize_actv(false);
-        fci_mo.compute_energy();
-        auto eigens = fci_mo.eigens();
-        for (int n = 0; n < nentry; ++n) {
-            auto eigen = eigens[n];
-            int ni = eigen.size();
-            for (int i = 0; i < ni; ++i) {
-                Edsrg_sa[n].push_back(eigen[i].second);
-            }
-        }
+//    // call FCI_MO if SA_FULL and CAS_TYPE == CAS
+//    if (multi_state_algorithm_ == "SA_FULL" && foptions_->get_str("CAS_TYPE") == "CAS") {
+//        FCI_MO fci_mo(scf_info_, foptions_, ints_, mo_space_info_, fci_ints);
+//        fci_mo.set_localize_actv(false);
+//        fci_mo.compute_energy();
+//        auto eigens = fci_mo.eigens();
+//        for (int n = 0; n < nentry; ++n) {
+//            auto eigen = eigens[n];
+//            int ni = eigen.size();
+//            for (int i = 0; i < ni; ++i) {
+//                Edsrg_sa[n].push_back(eigen[i].second);
+//            }
+//        }
 
-        if (do_dm_) {
-            // de-normal-order DSRG dipole integrals
-            for (int z = 0; z < 3; ++z) {
-                std::string name = "Dipole " + dm_dirs_[z] + " Integrals";
-                deGNO_ints(name, Mbar0_[z], Mbar1_[z], Mbar2_[z]);
-                rotate_ints_semi_to_origin(name, Mbar1_[z], Mbar2_[z]);
-            }
+//        if (do_dm_) {
+//            // de-normal-order DSRG dipole integrals
+//            for (int z = 0; z < 3; ++z) {
+//                std::string name = "Dipole " + dm_dirs_[z] + " Integrals";
+//                deGNO_ints(name, Mbar0_[z], Mbar1_[z], Mbar2_[z]);
+//                rotate_ints_semi_to_origin(name, Mbar1_[z], Mbar2_[z]);
+//            }
 
-            // compute permanent dipoles
-            auto dm_relax = fci_mo.compute_ref_relaxed_dm(Mbar0_, Mbar1_, Mbar2_);
+//            // compute permanent dipoles
+//            auto dm_relax = fci_mo.compute_ref_relaxed_dm(Mbar0_, Mbar1_, Mbar2_);
 
-            print_h2("SA-DSRG-PT3 Dipole Moment (in a.u.) Summary");
-            outfile->Printf("\n    %14s  %10s  %10s  %10s", "State", "X", "Y", "Z");
-            std::string dash(50, '-');
-            outfile->Printf("\n    %s", dash.c_str());
-            for (const auto& p : dm_relax) {
-                std::stringstream ss;
-                ss << std::setw(14) << p.first;
-                for (int i = 0; i < 3; ++i) {
-                    ss << "  " << std::setw(10) << std::fixed << std::right << std::setprecision(6)
-                       << p.second[i] + dm_nuc_[i];
-                }
-                outfile->Printf("\n    %s", ss.str().c_str());
-            }
-            outfile->Printf("\n    %s", dash.c_str());
+//            print_h2("SA-DSRG-PT3 Dipole Moment (in a.u.) Summary");
+//            outfile->Printf("\n    %14s  %10s  %10s  %10s", "State", "X", "Y", "Z");
+//            std::string dash(50, '-');
+//            outfile->Printf("\n    %s", dash.c_str());
+//            for (const auto& p : dm_relax) {
+//                std::stringstream ss;
+//                ss << std::setw(14) << p.first;
+//                for (int i = 0; i < 3; ++i) {
+//                    ss << "  " << std::setw(10) << std::fixed << std::right << std::setprecision(6)
+//                       << p.second[i] + dm_nuc_[i];
+//                }
+//                outfile->Printf("\n    %s", ss.str().c_str());
+//            }
+//            outfile->Printf("\n    %s", dash.c_str());
 
-            // oscillator strength
-            auto osc = fci_mo.compute_ref_relaxed_osc(Mbar1_, Mbar2_);
+//            // oscillator strength
+//            auto osc = fci_mo.compute_ref_relaxed_osc(Mbar1_, Mbar2_);
 
-            print_h2("SA-DSRG-PT3 Oscillator Strength (in a.u.) Summary");
-            outfile->Printf("\n    %32s  %10s  %10s  %10s  %10s", "State", "X", "Y", "Z", "Total");
-            dash = std::string(80, '-');
-            outfile->Printf("\n    %s", dash.c_str());
-            for (const auto& p : osc) {
-                std::stringstream ss;
-                ss << std::setw(32) << p.first;
-                double total = 0.0;
-                for (int i = 0; i < 3; ++i) {
-                    ss << "  " << std::setw(10) << std::fixed << std::right << std::setprecision(6)
-                       << p.second[i];
-                    total += p.second[i];
-                }
-                ss << "  " << std::setw(10) << std::fixed << std::right << std::setprecision(6)
-                   << total;
-                outfile->Printf("\n    %s", ss.str().c_str());
-            }
-            outfile->Printf("\n    %s", dash.c_str());
-        }
-    } else {
-        for (int n = 0; n < nentry; ++n) {
-            int irrep = (foptions_->psi_options())["AVG_STATE"][n][0].to_integer();
-            int multi = (foptions_->psi_options())["AVG_STATE"][n][1].to_integer();
-            int nstates = (foptions_->psi_options())["AVG_STATE"][n][2].to_integer();
-            std::vector<forte::Determinant> p_space = p_spaces_[n];
+//            print_h2("SA-DSRG-PT3 Oscillator Strength (in a.u.) Summary");
+//            outfile->Printf("\n    %32s  %10s  %10s  %10s  %10s", "State", "X", "Y", "Z", "Total");
+//            dash = std::string(80, '-');
+//            outfile->Printf("\n    %s", dash.c_str());
+//            for (const auto& p : osc) {
+//                std::stringstream ss;
+//                ss << std::setw(32) << p.first;
+//                double total = 0.0;
+//                for (int i = 0; i < 3; ++i) {
+//                    ss << "  " << std::setw(10) << std::fixed << std::right << std::setprecision(6)
+//                       << p.second[i];
+//                    total += p.second[i];
+//                }
+//                ss << "  " << std::setw(10) << std::fixed << std::right << std::setprecision(6)
+//                   << total;
+//                outfile->Printf("\n    %s", ss.str().c_str());
+//            }
+//            outfile->Printf("\n    %s", dash.c_str());
+//        }
+//    } else {
+//        for (int n = 0; n < nentry; ++n) {
+//            int irrep = (foptions_->psi_options())["AVG_STATE"][n][0].to_integer();
+//            int multi = (foptions_->psi_options())["AVG_STATE"][n][1].to_integer();
+//            int nstates = (foptions_->psi_options())["AVG_STATE"][n][2].to_integer();
+//            std::vector<forte::Determinant> p_space = p_spaces_[n];
 
-            // print current symmetry
-            std::stringstream ss;
-            ss << "Diagonalize Effective Hamiltonian (" << multi_label[multi - 1] << " "
-               << irrep_symbol[irrep] << ")";
-            print_h2(ss.str());
+//            // print current symmetry
+//            std::stringstream ss;
+//            ss << "Diagonalize Effective Hamiltonian (" << multi_label[multi - 1] << " "
+//               << irrep_symbol[irrep] << ")";
+//            print_h2(ss.str());
 
-            // diagonalize which the second-order effective Hamiltonian
-            // SA_FULL: CASCI using determinants
-            // SA_SUB: H_AB = <A|H|B> where A and B are SA-CAS states
-            if (multi_state_algorithm_ == "SA_FULL") {
+//            // diagonalize which the second-order effective Hamiltonian
+//            // SA_FULL: CASCI using determinants
+//            // SA_SUB: H_AB = <A|H|B> where A and B are SA-CAS states
+//            if (multi_state_algorithm_ == "SA_FULL") {
 
-                outfile->Printf("    Use string FCI code.");
+//                outfile->Printf("    Use string FCI code.");
 
-                int charge = psi::Process::environment.molecule()->molecular_charge();
-                if ((foptions_->psi_options())["CHARGE"].has_changed()) {
-                    charge = foptions_->get_int("CHARGE");
-                }
-                auto nelec = 0;
-                int natom = psi::Process::environment.molecule()->natom();
-                for (int i = 0; i < natom; ++i) {
-                    nelec += psi::Process::environment.molecule()->fZ(i);
-                }
-                nelec -= charge;
-                int ms = (multi + 1) % 2;
-                auto nelec_actv = nelec;
-                //                - 2 * mo_space_info_->size("FROZEN_DOCC") - 2 * core_mos_.size();
-                auto na = (nelec_actv + ms) / 2;
-                auto nb = nelec_actv - na;
+//                int charge = psi::Process::environment.molecule()->molecular_charge();
+//                if ((foptions_->psi_options())["CHARGE"].has_changed()) {
+//                    charge = foptions_->get_int("CHARGE");
+//                }
+//                auto nelec = 0;
+//                int natom = psi::Process::environment.molecule()->natom();
+//                for (int i = 0; i < natom; ++i) {
+//                    nelec += psi::Process::environment.molecule()->fZ(i);
+//                }
+//                nelec -= charge;
+//                int ms = (multi + 1) % 2;
+//                auto nelec_actv = nelec;
+//                //                - 2 * mo_space_info_->size("FROZEN_DOCC") - 2 * core_mos_.size();
+//                auto na = (nelec_actv + ms) / 2;
+//                auto nb = nelec_actv - na;
 
-                psi::Dimension active_dim = mo_space_info_->get_dimension("ACTIVE");
-                StateInfo state(na, nb, multi, multi - 1, irrep); // assumes highes Ms
-                // TODO use base class info
-                auto fci = make_active_space_solver("FCI", state, scf_info_, mo_space_info_, ints_,
-                                                    foptions_);
-                fci->set_max_rdm_level(1);
-                fci->set_nroot(nstates);
-                fci->set_root(nstates - 1);
-                if (eri_df_) {
-                    fci->set_active_space_integrals(fci_ints);
-                }
+//                psi::Dimension active_dim = mo_space_info_->get_dimension("ACTIVE");
+//                StateInfo state(na, nb, multi, multi - 1, irrep); // assumes highes Ms
+//                // TODO use base class info
+//                auto fci = make_active_space_method("FCI", state, nstates, scf_info_,
+//                                                    mo_space_info_, ints_, foptions_);
+//                fci->set_root(nstates - 1);
+//                if (eri_df_) {
+//                    fci->set_active_space_integrals(fci_ints);
+//                }
 
-                // compute energy and fill in results
-                fci->compute_energy();
-                psi::SharedVector Ems = fci->evals();
-                for (int i = 0; i < nstates; ++i) {
-                    Edsrg_sa[n].push_back(Ems->get(i) + Enuc_);
-                }
+//                // compute energy and fill in results
+//                fci->compute_energy();
+//                psi::SharedVector Ems = fci->evals();
+//                for (int i = 0; i < nstates; ++i) {
+//                    Edsrg_sa[n].push_back(Ems->get(i) + Enuc_);
+//                }
 
-            } else {
+//            } else {
 
-                /// The sub-space CASCI is temporarily disabled because
-                /// the off-diagonal of Heff is just second order.
-                outfile->Printf("\n    Use the sub-space of CASCI.");
+//                /// The sub-space CASCI is temporarily disabled because
+//                /// the off-diagonal of Heff is just second order.
+//                outfile->Printf("\n    Use the sub-space of CASCI.");
 
-                int dim = (eigens_[n][0].first)->dim();
-                size_t eigen_size = eigens_[n].size();
-                psi::SharedMatrix evecs(new psi::Matrix("evecs", dim, eigen_size));
-                for (size_t i = 0; i < eigen_size; ++i) {
-                    evecs->set_column(0, i, (eigens_[n][i]).first);
-                }
+//                int dim = (eigens_[n][0].first)->dim();
+//                size_t eigen_size = eigens_[n].size();
+//                psi::SharedMatrix evecs(new psi::Matrix("evecs", dim, eigen_size));
+//                for (size_t i = 0; i < eigen_size; ++i) {
+//                    evecs->set_column(0, i, (eigens_[n][i]).first);
+//                }
 
-                psi::SharedMatrix Heff(
-                    new psi::Matrix("Heff " + multi_label[multi - 1] + " " + irrep_symbol[irrep],
-                                    nstates, nstates));
-                for (int A = 0; A < nstates; ++A) {
-                    for (int B = A; B < nstates; ++B) {
+//                psi::SharedMatrix Heff(
+//                    new psi::Matrix("Heff " + multi_label[multi - 1] + " " + irrep_symbol[irrep],
+//                                    nstates, nstates));
+//                for (int A = 0; A < nstates; ++A) {
+//                    for (int B = A; B < nstates; ++B) {
 
-                        // compute rdms
-                        CI_RDMS ci_rdms(fci_ints, p_space, evecs, A, B);
+//                        // compute rdms
+//                        CI_RDMS ci_rdms(fci_ints, p_space, evecs, A, B);
 
-                        ambit::BlockedTensor D1, D2;
-                        D1 = BTF_->build(tensor_type_, "D1", spin_cases({"aa"}), true);
-                        D2 = BTF_->build(tensor_type_, "D2", spin_cases({"aaaa"}), true);
+//                        ambit::BlockedTensor D1, D2;
+//                        D1 = BTF_->build(tensor_type_, "D1", spin_cases({"aa"}), true);
+//                        D2 = BTF_->build(tensor_type_, "D2", spin_cases({"aaaa"}), true);
 
-                        ambit::Tensor D1a, D1b, D2aa, D2ab, D2bb;
-                        D1a = D1.block("aa");
-                        D1b = D1.block("AA");
-                        D2aa = D2.block("aaaa");
-                        D2ab = D2.block("aAaA");
-                        D2bb = D2.block("AAAA");
+//                        ambit::Tensor D1a, D1b, D2aa, D2ab, D2bb;
+//                        D1a = D1.block("aa");
+//                        D1b = D1.block("AA");
+//                        D2aa = D2.block("aaaa");
+//                        D2ab = D2.block("aAaA");
+//                        D2bb = D2.block("AAAA");
 
-                        ci_rdms.compute_1rdm(D1a.data(), D1b.data());
-                        rotate_1rdm(D1a, D1b);
+//                        ci_rdms.compute_1rdm(D1a.data(), D1b.data());
+//                        rotate_1rdm(D1a, D1b);
 
-                        ci_rdms.compute_2rdm(D2aa.data(), D2ab.data(), D2bb.data());
-                        rotate_2rdm(D2aa, D2ab, D2bb);
+//                        ci_rdms.compute_2rdm(D2aa.data(), D2ab.data(), D2bb.data());
+//                        rotate_2rdm(D2aa, D2ab, D2bb);
 
-                        double H_AB = 0.0;
-                        H_AB += oei["uv"] * D1["uv"];
-                        H_AB += oei["UV"] * D1["UV"];
-                        H_AB += 0.25 * Hbar2_["uvxy"] * D2["xyuv"];
-                        H_AB += 0.25 * Hbar2_["UVXY"] * D2["XYUV"];
-                        H_AB += Hbar2_["uVxY"] * D2["xYuV"];
+//                        double H_AB = 0.0;
+//                        H_AB += oei["uv"] * D1["uv"];
+//                        H_AB += oei["UV"] * D1["UV"];
+//                        H_AB += 0.25 * Hbar2_["uvxy"] * D2["xyuv"];
+//                        H_AB += 0.25 * Hbar2_["UVXY"] * D2["XYUV"];
+//                        H_AB += Hbar2_["uVxY"] * D2["xYuV"];
 
-                        if (A == B) {
-                            H_AB += Efrzc_ + fci_ints->scalar_energy() + Enuc_;
-                            Heff->set(A, B, H_AB);
-                        } else {
-                            Heff->set(A, B, H_AB);
-                            Heff->set(B, A, H_AB);
-                        }
-                    }
-                } // end forming effective Hamiltonian
+//                        if (A == B) {
+//                            H_AB += Efrzc_ + fci_ints->scalar_energy() + Enuc_;
+//                            Heff->set(A, B, H_AB);
+//                        } else {
+//                            Heff->set(A, B, H_AB);
+//                            Heff->set(B, A, H_AB);
+//                        }
+//                    }
+//                } // end forming effective Hamiltonian
 
-                print_h2("Effective Hamiltonian Summary");
-                outfile->Printf("\n");
-                Heff->print();
-                psi::SharedMatrix U(new psi::Matrix("U of Heff", nstates, nstates));
-                psi::SharedVector Ems(new Vector("MS Energies", nstates));
-                Heff->diagonalize(U, Ems);
-                U->eivprint(Ems);
+//                print_h2("Effective Hamiltonian Summary");
+//                outfile->Printf("\n");
+//                Heff->print();
+//                psi::SharedMatrix U(new psi::Matrix("U of Heff", nstates, nstates));
+//                psi::SharedVector Ems(new Vector("MS Energies", nstates));
+//                Heff->diagonalize(U, Ems);
+//                U->eivprint(Ems);
 
-                // fill in Edsrg_sa
-                for (int i = 0; i < nstates; ++i) {
-                    Edsrg_sa[n].push_back(Ems->get(i));
-                }
-            } // end if DSRG_AVG_DIAG
+//                // fill in Edsrg_sa
+//                for (int i = 0; i < nstates; ++i) {
+//                    Edsrg_sa[n].push_back(Ems->get(i));
+//                }
+//            } // end if DSRG_AVG_DIAG
 
-        } // end looping averaged states
-    }
+//        } // end looping averaged states
+//    }
 
-    // energy summuary
-    print_h2("State-Average DSRG-MRPT3 Energy Summary");
+//    // energy summuary
+//    print_h2("State-Average DSRG-MRPT3 Energy Summary");
 
-    outfile->Printf("\n    Multi.  Irrep.  No.    DSRG-MRPT3 Energy");
-    std::string dash(41, '-');
-    outfile->Printf("\n    %s", dash.c_str());
+//    outfile->Printf("\n    Multi.  Irrep.  No.    DSRG-MRPT3 Energy");
+//    std::string dash(41, '-');
+//    outfile->Printf("\n    %s", dash.c_str());
 
-    for (int n = 0, counter = 0; n < nentry; ++n) {
-        int irrep = (foptions_->psi_options())["AVG_STATE"][n][0].to_integer();
-        int multi = (foptions_->psi_options())["AVG_STATE"][n][1].to_integer();
-        int nstates = (foptions_->psi_options())["AVG_STATE"][n][2].to_integer();
+//    for (int n = 0, counter = 0; n < nentry; ++n) {
+//        int irrep = (foptions_->psi_options())["AVG_STATE"][n][0].to_integer();
+//        int multi = (foptions_->psi_options())["AVG_STATE"][n][1].to_integer();
+//        int nstates = (foptions_->psi_options())["AVG_STATE"][n][2].to_integer();
 
-        for (int i = 0; i < nstates; ++i) {
-            outfile->Printf("\n     %3d     %3s    %2d   %20.12f", multi,
-                            irrep_symbol[irrep].c_str(), i, Edsrg_sa[n][i]);
-            psi::Process::environment.globals["ENERGY ROOT " + std::to_string(counter)] =
-                Edsrg_sa[n][i];
-            ++counter;
-        }
-        outfile->Printf("\n    %s", dash.c_str());
-    }
+//        for (int i = 0; i < nstates; ++i) {
+//            outfile->Printf("\n     %3d     %3s    %2d   %20.12f", multi,
+//                            irrep_symbol[irrep].c_str(), i, Edsrg_sa[n][i]);
+//            psi::Process::environment.globals["ENERGY ROOT " + std::to_string(counter)] =
+//                Edsrg_sa[n][i];
+//            ++counter;
+//        }
+//        outfile->Printf("\n    %s", dash.c_str());
+//    }
 
-    psi::Process::environment.globals["CURRENT ENERGY"] = Edsrg_sa[0][0];
-    return Edsrg_sa[0][0];
-}
+//    psi::Process::environment.globals["CURRENT ENERGY"] = Edsrg_sa[0][0];
+//    return Edsrg_sa[0][0];
+//}
 
-double DSRG_MRPT3::compute_energy_relaxed() {
-    // relaxed energy
-    double Edsrg = 0.0, Erelax = 0.0;
+//double DSRG_MRPT3::compute_energy_relaxed() {
+//    // relaxed energy
+//    double Edsrg = 0.0, Erelax = 0.0;
 
-    // compute energy with fixed ref.
-    Edsrg = compute_energy();
+//    // compute energy with fixed ref.
+//    Edsrg = compute_energy();
 
-    // unrelaxed dipole from compute_energy
-    std::vector<double> dm_dsrg(Mbar0_);
-    std::map<std::string, std::vector<double>> dm_relax;
+//    // unrelaxed dipole from compute_energy
+//    std::vector<double> dm_dsrg(Mbar0_);
+//    std::map<std::string, std::vector<double>> dm_relax;
 
-    // obtain the all-active DSRG transformed Hamiltonian
-    auto fci_ints = compute_Heff_actv();
+//    // obtain the all-active DSRG transformed Hamiltonian
+//    auto fci_ints = compute_Heff_actv();
 
-    if (foptions_->get_str("CAS_TYPE") == "CAS") {
-        FCI_MO fci_mo(scf_info_, foptions_, ints_, mo_space_info_, fci_ints);
-        fci_mo.set_localize_actv(false);
-        Erelax = fci_mo.compute_energy();
+//    if (foptions_->get_str("CAS_TYPE") == "CAS") {
+//        FCI_MO fci_mo(scf_info_, foptions_, ints_, mo_space_info_, fci_ints);
+//        fci_mo.set_localize_actv(false);
+//        Erelax = fci_mo.compute_energy();
 
-        if (do_dm_) {
-            // de-normal-order DSRG dipole integrals
-            for (int z = 0; z < 3; ++z) {
-                if (do_dm_dirs_[z]) {
-                    std::string name = "Dipole " + dm_dirs_[z] + " Integrals";
-                    deGNO_ints(name, Mbar0_[z], Mbar1_[z], Mbar2_[z]);
-                    rotate_ints_semi_to_origin(name, Mbar1_[z], Mbar2_[z]);
-                }
-            }
+//        if (do_dm_) {
+//            // de-normal-order DSRG dipole integrals
+//            for (int z = 0; z < 3; ++z) {
+//                if (do_dm_dirs_[z]) {
+//                    std::string name = "Dipole " + dm_dirs_[z] + " Integrals";
+//                    deGNO_ints(name, Mbar0_[z], Mbar1_[z], Mbar2_[z]);
+//                    rotate_ints_semi_to_origin(name, Mbar1_[z], Mbar2_[z]);
+//                }
+//            }
 
-            // compute permanent dipoles
-            dm_relax = fci_mo.compute_ref_relaxed_dm(Mbar0_, Mbar1_, Mbar2_);
-        }
-    } else if (foptions_->get_str("CAS_TYPE") == "ACI") {
-        auto state = make_state_info_from_psi_wfn(ints_->wfn());
-        AdaptiveCI aci(state, scf_info_, foptions_, mo_space_info_, fci_ints);
-        aci.set_fci_ints(fci_ints);
-        if ((foptions_->psi_options())["ACI_RELAX_SIGMA"].has_changed()) {
-            aci.update_sigma();
-        }
-        Erelax = aci.compute_energy();
+//            // compute permanent dipoles
+//            dm_relax = fci_mo.compute_ref_relaxed_dm(Mbar0_, Mbar1_, Mbar2_);
+//        }
+//    } else if (foptions_->get_str("CAS_TYPE") == "ACI") {
+//        auto state = make_state_info_from_psi_wfn(ints_->wfn());
+//        size_t nroot = foptions_->get_int("NROOT");
+//        AdaptiveCI aci(state, nroot, scf_info_, foptions_, mo_space_info_, fci_ints);
+//        aci.set_fci_ints(fci_ints);
+//        if ((foptions_->psi_options())["ACI_RELAX_SIGMA"].has_changed()) {
+//            aci.update_sigma();
+//        }
+//        Erelax = aci.compute_energy();
 
-    } else {
-        auto state = make_state_info_from_psi_wfn(ints_->wfn());
-        auto fci =
-            make_active_space_solver("FCI", state, scf_info_, mo_space_info_, ints_, foptions_);
-        fci->set_max_rdm_level(1);
-        fci->set_active_space_integrals(fci_ints);
-        Erelax = fci->compute_energy();
-    }
+//    } else {
+//        size_t nroot = foptions_->get_int("NROOT");
 
-    // printing
-    print_h2("DSRG-MRPT3 Energy Summary");
-    outfile->Printf("\n    %-35s = %22.15f", "DSRG-MRPT3 Total Energy (fixed)", Edsrg);
-    outfile->Printf("\n    %-35s = %22.15f\n", "DSRG-MRPT3 Total Energy (relaxed)", Erelax);
+//        auto state = make_state_info_from_psi_wfn(ints_->wfn());
+//        auto fci = make_active_space_method("FCI", state, nroot, scf_info_, mo_space_info_, ints_,
+//                                            foptions_);
+//        fci->set_max_rdm_level(1);
+//        fci->set_active_space_integrals(fci_ints);
+//        Erelax = fci->compute_energy();
+//    }
 
-    if (do_dm_) {
-        print_h2("DSRG-MRPT3 Dipole Moment Summary");
-        const double& nx = dm_nuc_[0];
-        const double& ny = dm_nuc_[1];
-        const double& nz = dm_nuc_[2];
+//    // printing
+//    print_h2("DSRG-MRPT3 Energy Summary");
+//    outfile->Printf("\n    %-35s = %22.15f", "DSRG-MRPT3 Total Energy (fixed)", Edsrg);
+//    outfile->Printf("\n    %-35s = %22.15f\n", "DSRG-MRPT3 Total Energy (relaxed)", Erelax);
 
-        double x = dm_dsrg[0] + nx;
-        double y = dm_dsrg[1] + ny;
-        double z = dm_dsrg[2] + nz;
-        double t = std::sqrt(x * x + y * y + z * z);
-        outfile->Printf("\n    DSRG-MRPT3 unrelaxed dipole moment:");
-        outfile->Printf("\n      X: %10.6f  Y: %10.6f  Z: %10.6f  Total: %10.6f\n", x, y, z, t);
-        psi::Process::environment.globals["UNRELAXED DIPOLE"] = t;
+//    if (do_dm_) {
+//        print_h2("DSRG-MRPT3 Dipole Moment Summary");
+//        const double& nx = dm_nuc_[0];
+//        const double& ny = dm_nuc_[1];
+//        const double& nz = dm_nuc_[2];
 
-        // there should be only one entry for state-specific computations
-        if (dm_relax.size() == 1) {
-            for (const auto& p : dm_relax) {
-                x = p.second[0] + nx;
-                y = p.second[1] + ny;
-                z = p.second[2] + nz;
-                t = std::sqrt(x * x + y * y + z * z);
-            }
-            outfile->Printf("\n    DSRG-MRPT3 partially relaxed dipole moment:");
-            outfile->Printf("\n      X: %10.6f  Y: %10.6f  Z: %10.6f  Total: %10.6f\n", x, y, z, t);
-            psi::Process::environment.globals["PARTIALLY RELAXED DIPOLE"] = t;
-        }
-    }
+//        double x = dm_dsrg[0] + nx;
+//        double y = dm_dsrg[1] + ny;
+//        double z = dm_dsrg[2] + nz;
+//        double t = std::sqrt(x * x + y * y + z * z);
+//        outfile->Printf("\n    DSRG-MRPT3 unrelaxed dipole moment:");
+//        outfile->Printf("\n      X: %10.6f  Y: %10.6f  Z: %10.6f  Total: %10.6f\n", x, y, z, t);
+//        psi::Process::environment.globals["UNRELAXED DIPOLE"] = t;
 
-    psi::Process::environment.globals["UNRELAXED ENERGY"] = Edsrg;
-    psi::Process::environment.globals["PARTIALLY RELAXED ENERGY"] = Erelax;
-    psi::Process::environment.globals["CURRENT ENERGY"] = Erelax;
-    return Erelax;
-}
+//        // there should be only one entry for state-specific computations
+//        if (dm_relax.size() == 1) {
+//            for (const auto& p : dm_relax) {
+//                x = p.second[0] + nx;
+//                y = p.second[1] + ny;
+//                z = p.second[2] + nz;
+//                t = std::sqrt(x * x + y * y + z * z);
+//            }
+//            outfile->Printf("\n    DSRG-MRPT3 partially relaxed dipole moment:");
+//            outfile->Printf("\n      X: %10.6f  Y: %10.6f  Z: %10.6f  Total: %10.6f\n", x, y, z, t);
+//            psi::Process::environment.globals["PARTIALLY RELAXED DIPOLE"] = t;
+//        }
+//    }
+
+//    psi::Process::environment.globals["UNRELAXED ENERGY"] = Edsrg;
+//    psi::Process::environment.globals["PARTIALLY RELAXED ENERGY"] = Erelax;
+//    psi::Process::environment.globals["CURRENT ENERGY"] = Erelax;
+//    return Erelax;
+//}
 
 void DSRG_MRPT3::transfer_integrals() {
     // printing
@@ -1760,10 +1761,10 @@ void DSRG_MRPT3::transfer_integrals() {
 void DSRG_MRPT3::print_dm_pt3() {
     print_h2("DSRG-MRPT3 (unrelaxed) Dipole Moments (a.u.)");
 
-    auto print_vector3 = [](const std::string& name, const std::vector<double>& dm) {
-        double x = dm[0];
-        double y = dm[1];
-        double z = dm[2];
+    auto print_vector3 = [](const std::string& name, const std::array<double, 3>& dm) {
+        const double x = dm[0];
+        const double y = dm[1];
+        const double z = dm[2];
         outfile->Printf("\n    %s dipole moment:", name.c_str());
         outfile->Printf("\n      X: %10.6f  Y: %10.6f  Z: %10.6f\n", x, y, z);
     };
@@ -1774,7 +1775,7 @@ void DSRG_MRPT3::print_dm_pt3() {
     print_vector3("DSRG-MRPT2 (2nd-order complete) electronic", Mbar0_pt2c_);
     print_vector3("DSRG-MRPT3 electronic", Mbar0_);
 
-    auto print_vector4 = [&](const std::string& name, const std::vector<double>& dm) {
+    auto print_vector4 = [&](const std::string& name, const std::array<double, 3>& dm) {
         double x = dm[0] + dm_nuc_[0];
         double y = dm[1] + dm_nuc_[1];
         double z = dm[2] + dm_nuc_[2];
@@ -1789,6 +1790,9 @@ void DSRG_MRPT3::print_dm_pt3() {
     print_vector4("DSRG-MRPT2 (2nd-order complete)", Mbar0_pt2c_);
     double t = print_vector4("DSRG-MRPT3", Mbar0_);
 
+    psi::Process::environment.globals["UNRELAXED DIPOLE X"] = Mbar0_[0] + dm_nuc_[0];
+    psi::Process::environment.globals["UNRELAXED DIPOLE Y"] = Mbar0_[1] + dm_nuc_[1];
+    psi::Process::environment.globals["UNRELAXED DIPOLE Z"] = Mbar0_[2] + dm_nuc_[2];
     psi::Process::environment.globals["UNRELAXED DIPOLE"] = t;
 }
 

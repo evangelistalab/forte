@@ -7,122 +7,46 @@ matrix:
     addons: &1
       apt:
         sources:
-        - llvm-toolchain-precise-3.6
+        - llvm-toolchain-trusty-4.0
         - ubuntu-toolchain-r-test
         - george-edison55-precise-backports
         packages:
         - liblapack-dev
-        - clang-3.6
         - libhdf5-serial-dev
         - gfortran
         - g++-4.9
     env:
-      - CXX_COMPILER='clang++-3.6'
       - PYTHON_VER='3.6'
-      - C_COMPILER='clang-3.6'
+      - CXX_COMPILER=clang++
+      - C_COMPILER=clang
       - Fortran_COMPILER='gfortran'
       - BUILD_TYPE='Debug'
       - NAME='clang'
-      - VERSION='3.6'
       - MAX_DET_ORB=64
   - os: linux
     compiler: clang
     addons: &1
       apt:
         sources:
-        - llvm-toolchain-precise-3.6
+        - llvm-toolchain-trusty-4.0
         - ubuntu-toolchain-r-test
         - george-edison55-precise-backports
         packages:
         - liblapack-dev
-        - clang-3.6
         - libhdf5-serial-dev
         - gfortran
         - g++-4.9
     env:
-      - CXX_COMPILER='clang++-3.6'
       - PYTHON_VER='3.6'
-      - C_COMPILER='clang-3.6'
+      - CXX_COMPILER=clang++
+      - C_COMPILER=clang
       - Fortran_COMPILER='gfortran'
       - BUILD_TYPE='Debug'
       - NAME='clang'
-      - VERSION='3.6'
       - MAX_DET_ORB=128
-# - os: linux
-#   compiler: clang
-#   addons: &2
-#     apt:
-#       sources:
-#       - llvm-toolchain-precise-3.6
-#       - ubuntu-toolchain-r-test
-#       - george-edison55-precise-backports
-#       packages:
-#       - liblapack-dev
-#       - clang-3.6
-#       - libhdf5-serial-dev
-#       - gfortran
-#   env:
-#     - CXX_COMPILER='clang++-3.6'
-#     - PYTHON_VER='3.6'
-#     - C_COMPILER='clang-3.6'
-#     - Fortran_COMPILER='gfortran'
-#     - BUILD_TYPE='Release'
-#     - NAME='clang'
-#     - VERSION='3.6'
-# - os: linux
-#   compiler: gcc
-#   addons: &3
-#     apt:
-#       sources:
-#       - ubuntu-toolchain-r-test
-#       packages:
-#       - python-numpy
-#       - cmake
-#       - cmake-data
-#       - liblapack-dev
-#       - libhdf5-serial-dev
-#       - g++-4.9
-#       - gcc-4.9
-#       - gfortran-4.9
-#   env:
-#     - CXX_COMPILER='g++-4.9'
-#     - PYTHON_VER='3.7'
-#     - C_COMPILER='gcc-4.9'
-#     - Fortran_COMPILER='gfortran-4.9'
-#     - BUILD_TYPE='Release'
-#     - NAME='gcc'
-#     - VERSION='4.9'
-# - os: linux
-#   compiler: gcc
-#   addons: &4
-#     apt:
-#       sources:
-#       - ubuntu-toolchain-r-test
-#       packages:
-#       - python-numpy
-#       - cmake
-#       - cmake-data
-#       - libhdf5-serial-dev
-#       - liblapack-dev
-#       - g++-6
-#       - gcc-6
-#       - gfortran-6
-#   env:
-#     - CXX_COMPILER='g++-6'
-#     - PYTHON_VER='3.5'
-#     - C_COMPILER='gcc-6'
-#     - Fortran_COMPILER='gfortran-6'
-#     - BUILD_TYPE='release'
-#     - NAME='gcc'
-#     - VERSION=6
-
 
 install:
-- if [[ "$PYTHON_VER" == "2.7" ]]; then
-    wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -O miniconda.sh;
-  else
-    wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
-  fi
+- wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
 - bash miniconda.sh -b -p $HOME/miniconda
 - export PATH="$HOME/miniconda/bin:$PATH"
 - hash -r
@@ -131,18 +55,18 @@ install:
 - conda info -a
 - conda create -q -n p4env python=$PYTHON_VER numpy cmake gdma pylibefp libint libxc gau2grid boost -c psi4/label/test -c psi4
 - source activate p4env
-#- conda list
 - conda install pint pylibefp -c psi4/label/dev
+- conda install -c intel mkl-devel 
 - python -V
 - pyenv global system 3.6
 - pip install deepdiff
 - pip install pyyaml
-#- python -c 'import numpy; print(numpy.version.version)'
 - cd ${TRAVIS_BUILD_DIR}
-- export CXX=${CXX_COMPILER}
-- export CC=${C_COMPILER}
+- export CXX=clang++
+- export CC=clang
 - export FC=${Fortran_COMPILER}
 - export CTEST_OUTPUT_ON_FAILURE=1
+- export LD_LIBRARY_PATH=/usr/local/clang/lib:$LD_LIBRARY_PATH
 - ${CXX_COMPILER} --version
 - ${Fortran_COMPILER} --version
 - ${C_COMPILER} --version
@@ -156,6 +80,9 @@ install:
 - make -j2
 - make install
 # Compile Psi4
+- ls ${HOME}/miniconda/envs/p4env/bin
+- ls ${HOME}/miniconda/envs/p4env/lib/
+- ls ${HOME}/miniconda/envs/p4env/include/
 - cd ${HOME}/build
 - git clone https://github.com/evangelistalab/psi4.git psi4
 - cd psi4
@@ -166,14 +93,17 @@ install:
     -DCMAKE_BUILD_TYPE=${BUILD_TYPE}
     -DCMAKE_PREFIX_PATH=${HOME}/miniconda/envs/p4env
     -DPYTHON_EXECUTABLE=${HOME}/miniconda/envs/p4env/bin/python
-    -DPYTHON_LIBRARY=${HOME}/miniconda/envs/p4env/lib/libpython2.7.dylib
-    -DPYTHON_INCLUDE_DIR=${HOME}/miniconda/envs/p4env/include/python2.7
+    -DPYTHON_LIBRARY=${HOME}/miniconda/envs/p4env/lib/libpython3.6.dylib
+    -DPYTHON_INCLUDE_DIR=${HOME}/miniconda/envs/p4env/include/python3.6
     -DENABLE_gdma=ON
     -DENABLE_PLUGIN_TESTING=ON
     -DCMAKE_INSTALL_PREFIX=${HOME}/build/psi4-bin
+    -DOpenMP_CXX_FLAG="-fopenmp=libiomp5"
+    -DLAPACK_LIBRARIES="${HOME}/miniconda/envs/p4env/lib/libmkl_rt.so;${HOME}/miniconda/envs/p4env/lib/libiomp5.so"
+    -DLAPACK_INCLUDE_DIRS="${HOME}/miniconda/envs/p4env/include"
 - cd build
 - echo "Starting compilation of Psi4"
-- make -j2 -s
+- make -j2 -s 
 - echo " Done"
 - make install >& psi4_install.log
 - export PATH="$HOME/build/psi4-bin/bin:$PATH"
@@ -182,7 +112,14 @@ install:
 # Compile forte
 - cd ${HOME}/build/evangelistalab/forte
 - FORTE_CMAKE_COM=$(psi4 --plugin-compile)
-- $FORTE_CMAKE_COM -Dambit_DIR=/home/travis/build/ambit-bin/share/cmake/ambit/ -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DMAX_DET_ORB=${MAX_DET_ORB} -DENABLE_ForteTests=ON
+- >
+    $FORTE_CMAKE_COM
+    -Dambit_DIR=/home/travis/build/ambit-bin/share/cmake/ambit/
+    -DCMAKE_BUILD_TYPE=${BUILD_TYPE}
+    -DMAX_DET_ORB=${MAX_DET_ORB}
+    -DENABLE_ForteTests=ON
+    -DPYTHON_EXECUTABLE=${HOME}/miniconda/envs/p4env/bin/python
+    -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
 - make -j2
 - export PYTHONPATH="${HOME}/build/evangelistalab:$PYTHONPATH"
 - hash -r

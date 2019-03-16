@@ -35,20 +35,20 @@
 
 #include "integrals/integrals.h"
 #include "ambit/blocked_tensor.h"
-#include "base_classes/reference.h"
+#include "base_classes/rdms.h"
 #include "base_classes/mo_space_info.h"
 #include "helpers/blockedtensorfactory.h"
 #include "fci/fci_vector.h"
 #include "integrals/active_space_integrals.h"
 #include "orbital-helpers/semi_canonicalize.h"
-#include "base_classes/active_space_solver.h"
+#include "base_classes/active_space_method.h"
 
 namespace forte {
 
 // class ActiveSpaceIntegrals;
 class SCFInfo;
 
-class CASSCF : public ActiveSpaceSolver {
+class CASSCF : public ActiveSpaceMethod {
   public:
     /**
      * @brief CASSCF::CASSCF
@@ -62,7 +62,7 @@ class CASSCF : public ActiveSpaceSolver {
      * This reference has a nice algorithmic flowchart.  Look it up
      *
      */
-    CASSCF(StateInfo state, std::shared_ptr<forte::SCFInfo> scf_info,
+    CASSCF(StateInfo state, size_t nroot, std::shared_ptr<forte::SCFInfo> scf_info,
            std::shared_ptr<ForteOptions> options, std::shared_ptr<MOSpaceInfo> mo_space_info,
            std::shared_ptr<ActiveSpaceIntegrals> as_ints);
     /// Use daniels code to compute Orbital optimization
@@ -75,15 +75,20 @@ class CASSCF : public ActiveSpaceSolver {
 
     void set_options(std::shared_ptr<ForteOptions>) override{};
 
-    /// Return a reference object
-    Reference get_reference() override;
+    /// Returns the reduced density matrices up to a given level (max_rdm_level)
+    std::vector<RDMs> rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
+                           int max_rdm_level) override;
+
+    /// Returns the transition reduced density matrices between roots of different symmetry up to a
+    /// given level (max_rdm_level)
+    std::vector<RDMs> transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
+                                      std::shared_ptr<ActiveSpaceMethod> method2,
+                                      int max_rdm_level) override;
 
     /// check the cas_ci energy with spin-free RDM
-    double cas_check(Reference cas);
+    double cas_check(RDMs cas);
 
   private:
-    /// The state to calculate
-    StateInfo state_;
     /// SCF information
     std::shared_ptr<SCFInfo> scf_info_;
     /// The options
@@ -95,12 +100,10 @@ class CASSCF : public ActiveSpaceSolver {
     /// The active two RDM (may need to be symmetrized)
     ambit::Tensor gamma2_;
     /// The reference object generated from Francesco's Full CI
-    Reference cas_ref_;
+    RDMs cas_ref_;
     /// The energy computed in FCI with updates from CASSCF and CI
     double E_casscf_;
     std::shared_ptr<ForteIntegrals> ints_;
-    /// The mo_space_info
-    std::shared_ptr<MOSpaceInfo> mo_space_info_;
 
     /// The dimension for number of molecular orbitals (CORRELATED or ALL)
     psi::Dimension nmopi_;
@@ -136,9 +139,7 @@ class CASSCF : public ActiveSpaceSolver {
     /// Sets up the FCI
     void set_up_fci();
     /// Set up a SA-FCI
-    void set_up_sa_fci();
-    /// Set up FCI_MO
-    void set_up_fcimo();
+    //  void set_up_sa_fci();
     /// Read all the mospace info and assign correct dimensions
     void startup();
     /// Compute overlap between old_c and new_c

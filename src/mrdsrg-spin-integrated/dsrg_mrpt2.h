@@ -43,7 +43,7 @@
 //#include "boost/assign.hpp"
 #include "sci/aci.h"
 #include "integrals/integrals.h"
-#include "base_classes/reference.h"
+#include "base_classes/rdms.h"
 #include "base_classes/mo_space_info.h"
 #include "helpers/blockedtensorfactory.h"
 #include "mrdsrg-helper/dsrg_time.h"
@@ -66,7 +66,7 @@ class DSRG_MRPT2 : public MASTER_DSRG {
      * @param ints A pointer to an allocated integral object
      * @param mo_space_info A pointer to the MOSpaceInfo object
      */
-    DSRG_MRPT2(Reference reference, std::shared_ptr<SCFInfo> scf_info,
+    DSRG_MRPT2(RDMs rdms, std::shared_ptr<SCFInfo> scf_info,
                std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
                std::shared_ptr<MOSpaceInfo> mo_space_info);
 
@@ -313,7 +313,7 @@ class DSRG_MRPT2 : public MASTER_DSRG {
                            std::vector<forte::Determinant>& p_space, psi::SharedMatrix evecs,
                            const int& root1, const int& root2);
     /// Compute denisty matrices and puts in Gamma1_, Lambda2_, and Lambda3_
-    void compute_densities(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
+    void compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
                            std::vector<Determinant>& p_space, psi::SharedMatrix evecs,
                            const int& root1, const int& root2);
 

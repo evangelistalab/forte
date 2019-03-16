@@ -31,7 +31,8 @@ set mcscf{
 }
 
 set forte{
-   job_type               three-dsrg-mrpt2
+   active_space_solver    fci
+   correlation_solver     three-dsrg-mrpt2
    frozen_docc            [1,0,0,0]
    restricted_docc        [1,0,1,1]
    active                 [2,0,0,0]
@@ -41,7 +42,6 @@ set forte{
    int_type               cholesky
    cholesky_tolerance     1e-14
    PRINT_DENOM2            true
-   cas_type fci
 }
 
 refmcscf, refwfn = energy('mcscf', return_wfn=True)

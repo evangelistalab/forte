@@ -51,10 +51,10 @@ using namespace psi;
 
 namespace forte {
 
-DSRG_MRPT2::DSRG_MRPT2(Reference reference, std::shared_ptr<SCFInfo> scf_info,
+DSRG_MRPT2::DSRG_MRPT2(RDMs rdms, std::shared_ptr<SCFInfo> scf_info,
                        std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
                        std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : MASTER_DSRG(reference, scf_info, options, ints, mo_space_info) {
+    : MASTER_DSRG(rdms, scf_info, options, ints, mo_space_info) {
 
     print_method_banner({"MR-DSRG Second-Order Perturbation Theory",
                          "Chenyang Li, Kevin Hannon, Francesco Evangelista"});
@@ -120,10 +120,10 @@ void DSRG_MRPT2::startup() {
         Lambda2_.print(stdout);
     }
     if (print_ > 3) {
-        reference_.L3aaa().print();
-        reference_.L3aab().print();
-        reference_.L3abb().print();
-        reference_.L3bbb().print();
+        rdms_.L3aaa().print();
+        rdms_.L3aab().print();
+        rdms_.L3abb().print();
+        rdms_.L3bbb().print();
     }
 }
 
@@ -499,7 +499,7 @@ double DSRG_MRPT2::compute_energy() {
     // transform dipole integrals
     if (do_dm_) {
         print_h2("Transforming Dipole Integrals ... ");
-        Mbar0_ = std::vector<double>{dm_ref_[0], dm_ref_[1], dm_ref_[2]};
+        Mbar0_ = {dm_ref_[0], dm_ref_[1], dm_ref_[2]};
         for (int i = 0; i < 3; ++i) {
             local_timer timer;
             std::string name = "Computing direction " + dm_dirs_[i];
@@ -1366,7 +1366,7 @@ double DSRG_MRPT2::E_VT2_6() {
         temp["uvwxyz"] += V_["uv1z"] * T2_["1wxy"];
         temp["uvwxyz"] += V_["w1xy"] * T2_["uv1z"];
     }
-    E += 0.25 * temp.block("aaaaaa")("uvwxyz") * reference_.L3aaa()("xyzuvw");
+    E += 0.25 * temp.block("aaaaaa")("uvwxyz") * rdms_.L3aaa()("xyzuvw");
 
     // bbb
     temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"AAAAAA"});
@@ -1377,7 +1377,7 @@ double DSRG_MRPT2::E_VT2_6() {
         temp["UVWXYZ"] += V_["UV!Z"] * T2_["!WXY"];
         temp["UVWXYZ"] += V_["W!XY"] * T2_["UV!Z"];
     }
-    E += 0.25 * temp.block("AAAAAA")("UVWXYZ") * reference_.L3bbb()("XYZUVW");
+    E += 0.25 * temp.block("AAAAAA")("UVWXYZ") * rdms_.L3bbb()("XYZUVW");
 
     // aab
     temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"aaAaaA"});
@@ -1398,7 +1398,7 @@ double DSRG_MRPT2::E_VT2_6() {
         temp["uvWxyZ"] -= V_["v1xy"] * T2_["uW1Z"];
         temp["uvWxyZ"] -= 2.0 * V_["v!xZ"] * T2_["uWy!"];
     }
-    E += 0.5 * temp.block("aaAaaA")("uvWxyZ") * reference_.L3aab()("xyZuvW");
+    E += 0.5 * temp.block("aaAaaA")("uvWxyZ") * rdms_.L3aab()("xyZuvW");
 
     // abb
     temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"aAAaAA"});
@@ -1419,7 +1419,7 @@ double DSRG_MRPT2::E_VT2_6() {
         temp["uVWxYZ"] -= V_["W!YZ"] * T2_["uVx!"];
         temp["uVWxYZ"] -= 2.0 * V_["1WxY"] * T2_["uV1Z"];
     }
-    E += 0.5 * temp.block("aAAaAA")("uVWxYZ") * reference_.L3abb()("xYZuVW");
+    E += 0.5 * temp.block("aAAaAA")("uVWxYZ") * rdms_.L3abb()("xYZuVW");
 
     outfile->Printf("  Done. Timing %15.6f s", timer.get());
     dsrg_time_.add("220", timer.get());
@@ -1461,6 +1461,9 @@ void DSRG_MRPT2::print_dm_pt2() {
     outfile->Printf("\n    DSRG-MRPT2 dipole moment:");
     outfile->Printf("\n      X: %10.6f  Y: %10.6f  Z: %10.6f  Total: %10.6f\n", x, y, z, t);
 
+    psi::Process::environment.globals["UNRELAXED DIPOLE X"] = x;
+    psi::Process::environment.globals["UNRELAXED DIPOLE Y"] = y;
+    psi::Process::environment.globals["UNRELAXED DIPOLE Z"] = z;
     psi::Process::environment.globals["UNRELAXED DIPOLE"] = t;
 }
 
@@ -1695,100 +1698,102 @@ void DSRG_MRPT2::compute_dm1d_pt2(BlockedTensor& M, double& Mbar0, BlockedTensor
     }
 }
 
-double DSRG_MRPT2::compute_energy_relaxed() {
-    double Edsrg = 0.0, Erelax = 0.0;
+//double DSRG_MRPT2::compute_energy_relaxed() {
+//    double Edsrg = 0.0, Erelax = 0.0;
 
-    // compute energy with fixed ref.
-    Edsrg = compute_energy();
+//    // compute energy with fixed ref.
+//    Edsrg = compute_energy();
 
-    // unrelaxed dipole from compute_energy
-    std::vector<double> dm_dsrg(Mbar0_);
-    std::map<std::string, std::vector<double>> dm_relax;
+//    // unrelaxed dipole from compute_energy
+//    std::vector<double> dm_dsrg(Mbar0_);
+//    std::map<std::string, std::vector<double>> dm_relax;
 
-    // obtain the all-active DSRG transformed Hamiltonian
-    auto fci_ints = compute_Heff_actv();
+//    // obtain the all-active DSRG transformed Hamiltonian
+//    auto fci_ints = compute_Heff_actv();
 
-    // diagonalize Hbar depending on CAS_TYPE
-    if (foptions_->get_str("CAS_TYPE") == "CAS") {
-        FCI_MO fci_mo(scf_info_, foptions_, ints_, mo_space_info_, fci_ints);
-        fci_mo.set_localize_actv(false);
-        Erelax = fci_mo.compute_energy();
+//    size_t nroot = foptions_->get_int("NROOT");
 
-        if (do_dm_) {
-            // de-normal-order DSRG dipole integrals
-            for (int z = 0; z < 3; ++z) {
-                if (do_dm_dirs_[z]) {
-                    std::string name = "Dipole " + dm_dirs_[z] + " Integrals";
-                    if (foptions_->get_bool("FORM_MBAR3")) {
-                        deGNO_ints(name, Mbar0_[z], Mbar1_[z], Mbar2_[z], Mbar3_[z]);
-                        rotate_ints_semi_to_origin(name, Mbar1_[z], Mbar2_[z], Mbar3_[z]);
-                    } else {
-                        deGNO_ints(name, Mbar0_[z], Mbar1_[z], Mbar2_[z]);
-                        rotate_ints_semi_to_origin(name, Mbar1_[z], Mbar2_[z]);
-                    }
-                }
-            }
+//    // diagonalize Hbar depending on CAS_TYPE
+//    if (foptions_->get_str("CAS_TYPE") == "CAS") {
+//        auto state = make_state_info_from_psi_wfn(ints_->wfn());
+//        FCI_MO fci_mo(state, nroot, scf_info_, foptions_, mo_space_info_, fci_ints);
+//        fci_mo.set_localize_actv(false);
+//        Erelax = fci_mo.compute_energy();
 
-            // compute permanent dipoles
-            if (foptions_->get_bool("FORM_MBAR3")) {
-                dm_relax = fci_mo.compute_ref_relaxed_dm(Mbar0_, Mbar1_, Mbar2_, Mbar3_);
-            } else {
-                dm_relax = fci_mo.compute_ref_relaxed_dm(Mbar0_, Mbar1_, Mbar2_);
-            }
-        }
-    } else if (foptions_->get_str("CAS_TYPE") == "ACI") {
+//        if (do_dm_) {
+//            // de-normal-order DSRG dipole integrals
+//            for (int z = 0; z < 3; ++z) {
+//                if (do_dm_dirs_[z]) {
+//                    std::string name = "Dipole " + dm_dirs_[z] + " Integrals";
+//                    if (foptions_->get_bool("FORM_MBAR3")) {
+//                        deGNO_ints(name, Mbar0_[z], Mbar1_[z], Mbar2_[z], Mbar3_[z]);
+//                        rotate_ints_semi_to_origin(name, Mbar1_[z], Mbar2_[z], Mbar3_[z]);
+//                    } else {
+//                        deGNO_ints(name, Mbar0_[z], Mbar1_[z], Mbar2_[z]);
+//                        rotate_ints_semi_to_origin(name, Mbar1_[z], Mbar2_[z]);
+//                    }
+//                }
+//            }
 
-        auto state = make_state_info_from_psi_wfn(ints_->wfn());
-        AdaptiveCI aci(state, scf_info_, foptions_, mo_space_info_, fci_ints);
+//            // compute permanent dipoles
+//            if (foptions_->get_bool("FORM_MBAR3")) {
+//                dm_relax = fci_mo.compute_ref_relaxed_dm(Mbar0_, Mbar1_, Mbar2_, Mbar3_);
+//            } else {
+//                dm_relax = fci_mo.compute_ref_relaxed_dm(Mbar0_, Mbar1_, Mbar2_);
+//            }
+//        }
+//    } else if (foptions_->get_str("CAS_TYPE") == "ACI") {
 
-        Erelax = aci.compute_energy();
-    } else {
-        auto state = make_state_info_from_psi_wfn(ints_->wfn());
-        auto fci =
-            make_active_space_solver("FCI", state, scf_info_, mo_space_info_, ints_, foptions_);
-        fci->set_max_rdm_level(1);
-        fci->set_active_space_integrals(fci_ints);
-        Erelax = fci->compute_energy();
-    }
+//        auto state = make_state_info_from_psi_wfn(ints_->wfn());
+//        AdaptiveCI aci(state, nroot, scf_info_, foptions_, mo_space_info_, fci_ints);
 
-    // printing
-    print_h2("DSRG-MRPT2 Energy Summary");
-    outfile->Printf("\n    %-30s = %22.15f", "DSRG-MRPT2 Total Energy (fixed)  ", Edsrg);
-    outfile->Printf("\n    %-30s = %22.15f\n", "DSRG-MRPT2 Total Energy (relaxed)", Erelax);
+//        Erelax = aci.compute_energy();
+//    } else {
+//        auto state = make_state_info_from_psi_wfn(ints_->wfn());
+//        auto fci = make_active_space_method("FCI", state, nroot, scf_info_, mo_space_info_, ints_,
+//                                            foptions_);
+//        fci->set_active_space_integrals(fci_ints);
+//        Erelax = fci->compute_energy();
+//    }
 
-    if (do_dm_) {
-        print_h2("DSRG-MRPT2 Dipole Moment Summary");
-        const double& nx = dm_nuc_[0];
-        const double& ny = dm_nuc_[1];
-        const double& nz = dm_nuc_[2];
+//    // printing
+//    print_h2("DSRG-MRPT2 Energy Summary");
+//    outfile->Printf("\n    %-30s = %22.15f", "DSRG-MRPT2 Total Energy (fixed)  ", Edsrg);
+//    outfile->Printf("\n    %-30s = %22.15f\n", "DSRG-MRPT2 Total Energy (relaxed)", Erelax);
 
-        double x = dm_dsrg[0] + nx;
-        double y = dm_dsrg[1] + ny;
-        double z = dm_dsrg[2] + nz;
-        double t = std::sqrt(x * x + y * y + z * z);
-        outfile->Printf("\n    DSRG-MRPT2 unrelaxed dipole moment:");
-        outfile->Printf("\n      X: %10.6f  Y: %10.6f  Z: %10.6f  Total: %10.6f\n", x, y, z, t);
-        psi::Process::environment.globals["UNRELAXED DIPOLE"] = t;
+//    if (do_dm_) {
+//        print_h2("DSRG-MRPT2 Dipole Moment Summary");
+//        const double& nx = dm_nuc_[0];
+//        const double& ny = dm_nuc_[1];
+//        const double& nz = dm_nuc_[2];
 
-        // there should be only one entry for state-specific computations
-        if (dm_relax.size() == 1) {
-            for (const auto& p : dm_relax) {
-                x = p.second[0] + nx;
-                y = p.second[1] + ny;
-                z = p.second[2] + nz;
-                t = std::sqrt(x * x + y * y + z * z);
-            }
-            outfile->Printf("\n    DSRG-MRPT2 partially relaxed dipole moment:");
-            outfile->Printf("\n      X: %10.6f  Y: %10.6f  Z: %10.6f  Total: %10.6f\n", x, y, z, t);
-            psi::Process::environment.globals["PARTIALLY RELAXED DIPOLE"] = t;
-        }
-    }
+//        double x = dm_dsrg[0] + nx;
+//        double y = dm_dsrg[1] + ny;
+//        double z = dm_dsrg[2] + nz;
+//        double t = std::sqrt(x * x + y * y + z * z);
+//        outfile->Printf("\n    DSRG-MRPT2 unrelaxed dipole moment:");
+//        outfile->Printf("\n      X: %10.6f  Y: %10.6f  Z: %10.6f  Total: %10.6f\n", x, y, z, t);
+//        psi::Process::environment.globals["UNRELAXED DIPOLE"] = t;
 
-    psi::Process::environment.globals["UNRELAXED ENERGY"] = Edsrg;
-    psi::Process::environment.globals["PARTIALLY RELAXED ENERGY"] = Erelax;
-    psi::Process::environment.globals["CURRENT ENERGY"] = Erelax;
-    return Erelax;
-}
+//        // there should be only one entry for state-specific computations
+//        if (dm_relax.size() == 1) {
+//            for (const auto& p : dm_relax) {
+//                x = p.second[0] + nx;
+//                y = p.second[1] + ny;
+//                z = p.second[2] + nz;
+//                t = std::sqrt(x * x + y * y + z * z);
+//            }
+//            outfile->Printf("\n    DSRG-MRPT2 partially relaxed dipole moment:");
+//            outfile->Printf("\n      X: %10.6f  Y: %10.6f  Z: %10.6f  Total: %10.6f\n", x, y, z, t);
+//            psi::Process::environment.globals["PARTIALLY RELAXED DIPOLE"] = t;
+//        }
+//    }
+
+//    psi::Process::environment.globals["UNRELAXED ENERGY"] = Edsrg;
+//    psi::Process::environment.globals["PARTIALLY RELAXED ENERGY"] = Erelax;
+//    psi::Process::environment.globals["CURRENT ENERGY"] = Erelax;
+//    return Erelax;
+//}
 
 // ambit::BlockedTensor DSRG_MRPT2::compute_OE_density(BlockedTensor& T1, BlockedTensor& T2,
 //                                                    BlockedTensor& D1, BlockedTensor& D2,
@@ -1984,10 +1989,10 @@ void DSRG_MRPT2::transfer_integrals() {
     bool form_hbar3 = foptions_->get_bool("FORM_HBAR3");
     double scalar3 = 0.0;
     if (form_hbar3) {
-        scalar3 -= (1.0 / 36) * Hbar3_.block("aaaaaa")("xyzuvw") * reference_.L3aaa()("xyzuvw");
-        scalar3 -= (1.0 / 36) * Hbar3_.block("AAAAAA")("XYZUVW") * reference_.L3bbb()("XYZUVW");
-        scalar3 -= 0.25 * Hbar3_.block("aaAaaA")("xyZuvW") * reference_.L3aab()("xyZuvW");
-        scalar3 -= 0.25 * Hbar3_.block("aAAaAA")("xYZuVW") * reference_.L3abb()("xYZuVW");
+        scalar3 -= (1.0 / 36) * Hbar3_.block("aaaaaa")("xyzuvw") * rdms_.L3aaa()("xyzuvw");
+        scalar3 -= (1.0 / 36) * Hbar3_.block("AAAAAA")("XYZUVW") * rdms_.L3bbb()("XYZUVW");
+        scalar3 -= 0.25 * Hbar3_.block("aaAaaA")("xyZuvW") * rdms_.L3aab()("xyZuvW");
+        scalar3 -= 0.25 * Hbar3_.block("aAAaAA")("xYZuVW") * rdms_.L3abb()("xYZuVW");
 
         scalar3 += 0.25 * Hbar3_["xyzuvw"] * Gamma1_["wz"] * Lambda2_["uvxy"];
         scalar3 += 0.25 * Hbar3_["XYZUVW"] * Gamma1_["WZ"] * Lambda2_["UVXY"];
@@ -2179,10 +2184,10 @@ void DSRG_MRPT2::transfer_integrals() {
         Etest3 += 0.5 * Hbar3_["xyZuvW"] * Gamma1_["ux"] * Gamma1_["vy"] * Gamma1_["WZ"];
         Etest3 += 0.5 * Hbar3_["xYZuVW"] * Gamma1_["ux"] * Gamma1_["VY"] * Gamma1_["WZ"];
 
-        Etest3 += (1.0 / 36) * Hbar3_.block("aaaaaa")("xyzuvw") * reference_.L3aaa()("xyzuvw");
-        Etest3 += (1.0 / 36) * Hbar3_.block("AAAAAA")("XYZUVW") * reference_.L3bbb()("XYZUVW");
-        Etest3 += 0.25 * Hbar3_.block("aaAaaA")("xyZuvW") * reference_.L3aab()("xyZuvW");
-        Etest3 += 0.25 * Hbar3_.block("aAAaAA")("xYZuVW") * reference_.L3abb()("xYZuVW");
+        Etest3 += (1.0 / 36) * Hbar3_.block("aaaaaa")("xyzuvw") * rdms_.L3aaa()("xyzuvw");
+        Etest3 += (1.0 / 36) * Hbar3_.block("AAAAAA")("XYZUVW") * rdms_.L3bbb()("XYZUVW");
+        Etest3 += 0.25 * Hbar3_.block("aaAaaA")("xyZuvW") * rdms_.L3aab()("xyZuvW");
+        Etest3 += 0.25 * Hbar3_.block("aAAaAA")("xYZuVW") * rdms_.L3abb()("xYZuVW");
 
         outfile->Printf("\n    %-30s = %22.15f", "Three-Body Energy (after)", Etest3);
         Etest += Etest3;

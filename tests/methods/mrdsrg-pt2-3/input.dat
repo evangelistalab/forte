@@ -58,19 +58,20 @@ set {
 }
 
 set forte {
-  job_type           mrdsrg
-  frozen_docc        [1,0,0,0]
-  restricted_docc    [1,0,0,0]
-  active             [1,0,0,1]
-  multiplicity       1
-  root_sym           0
-  nroot              1
-  root               0
-  dsrg_s             1.0
-  maxiter            100
-  relax_ref          iterate
-  e_convergence      9
-  maxiter_relax_ref  15
+  active_space_solver   cas
+  correlation_solver    mrdsrg
+  frozen_docc           [1,0,0,0]
+  restricted_docc       [1,0,0,0]
+  active                [1,0,0,1]
+  multiplicity          1
+  root_sym              0
+  nroot                 1
+  root                  0
+  dsrg_s                1.0
+  maxiter               100
+  relax_ref             iterate
+  e_convergence         9
+  maxiter_relax_ref     15
 }
 
 energy('scf')

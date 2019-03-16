@@ -19,17 +19,17 @@ set {
 }
 
 set forte {
-  job_type pci_hashvec
+  active_space_solver pci_hashvec
   frozen_docc [1,0,0,0,0,1,0,0]
   frozen_uocc [4,1,2,2,1,5,2,2]
-  pci_nroot 1
+  nroot 1
   charge 0
   pci_spawning_threshold 0.0001
   pci_ENERGY_ESTIMATE_FREQ 1
   pci_FAST_EVAR true
   pci_USE_INTER_NORM true
   pci_GENERATOR WALL-CHEBYSHEV
-  MP2_NOS true
+  orbital_type MP2_NOS
   pci_maxbeta 100000.00
   pci_e_convergence 12
   pci_STOP_HIGHER_NEW_LOW true

@@ -30,7 +30,7 @@
 #define _orbital_optimizer_h_
 
 #include "ambit/blocked_tensor.h"
-#include "base_classes/reference.h"
+#include "base_classes/rdms.h"
 #include "base_classes/mo_space_info.h"
 #include "helpers/blockedtensorfactory.h"
 #include "psi4/libmints/matrix.h"
@@ -94,7 +94,8 @@ class OrbitalOptimizer {
      */
 
     OrbitalOptimizer(ambit::Tensor Gamma1, ambit::Tensor Gamma2, ambit::Tensor two_body_ab,
-                     std::shared_ptr<ForteOptions> options, std::shared_ptr<MOSpaceInfo> mo_space_info);
+                     std::shared_ptr<ForteOptions> options,
+                     std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// You have to set these at the start of the computation
     /// The MO Coefficient you get from wfn_->Ca()
@@ -247,7 +248,8 @@ class OrbitalOptimizer {
 class CASSCFOrbitalOptimizer : public OrbitalOptimizer {
   public:
     CASSCFOrbitalOptimizer(ambit::Tensor Gamma1, ambit::Tensor Gamma2, ambit::Tensor two_body_ab,
-                           std::shared_ptr<ForteOptions> options, std::shared_ptr<MOSpaceInfo> mo_space_info);
+                           std::shared_ptr<ForteOptions> options,
+                           std::shared_ptr<MOSpaceInfo> mo_space_info);
     virtual ~CASSCFOrbitalOptimizer();
 
   private:

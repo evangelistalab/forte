@@ -42,10 +42,9 @@ using namespace psi;
 
 namespace forte {
 
-MRDSRG_SO::MRDSRG_SO(Reference reference, psi::Options& options,
-                     std::shared_ptr<ForteIntegrals> ints,
+MRDSRG_SO::MRDSRG_SO(RDMs rdms, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
                      std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : Wavefunction(options), reference_(reference), ints_(ints), mo_space_info_(mo_space_info),
+    : Wavefunction(options), rdms_(rdms), ints_(ints), mo_space_info_(mo_space_info),
       tensor_type_(CoreTensor), BTF(new BlockedTensorFactory()) {
     //    // Copy the wavefunction information
     //    shallow_copy(ref_wfn);
@@ -60,7 +59,7 @@ MRDSRG_SO::MRDSRG_SO(Reference reference, psi::Options& options,
 MRDSRG_SO::~MRDSRG_SO() {}
 
 void MRDSRG_SO::startup() {
-    Eref = reference_.get_Eref();
+    Eref = compute_Eref_from_rdms(rdms_, ints_, mo_space_info_);
     BlockedTensor::reset_mo_spaces();
     BlockedTensor::set_expert_mode(true);
 
@@ -180,12 +179,12 @@ void MRDSRG_SO::startup() {
     Eta1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
         value = (i[0] == i[1] ? 1.0 : 0.0);
     });
-    (reference_.L1a()).citerate([&](const std::vector<size_t>& i, const double& value) {
+    (rdms_.g1a()).citerate([&](const std::vector<size_t>& i, const double& value) {
         size_t index = i[0] * na_ + i[1];
         (L1.block("aa")).data()[index] = value;
         (Eta1.block("aa")).data()[index] -= value;
     });
-    (reference_.L1b()).citerate([&](const std::vector<size_t>& i, const double& value) {
+    (rdms_.g1b()).citerate([&](const std::vector<size_t>& i, const double& value) {
         size_t index = (i[0] + na_mo) * na_ + (i[1] + na_mo);
         (L1.block("aa")).data()[index] = value;
         (Eta1.block("aa")).data()[index] -= value;
@@ -193,7 +192,7 @@ void MRDSRG_SO::startup() {
 
     // prepare two-body density cumulant
     L2 = BTF->build(tensor_type_, "Lambda2", {"aaaa"});
-    (reference_.L2aa()).citerate([&](const std::vector<size_t>& i, const double& value) {
+    (rdms_.L2aa()).citerate([&](const std::vector<size_t>& i, const double& value) {
         if (std::fabs(value) > 1.0e-15) {
             size_t index = 0;
             for (int m = 0; m < 4; ++m) {
@@ -202,7 +201,7 @@ void MRDSRG_SO::startup() {
             (L2.block("aaaa")).data()[index] = value;
         }
     });
-    (reference_.L2bb()).citerate([&](const std::vector<size_t>& i, const double& value) {
+    (rdms_.L2bb()).citerate([&](const std::vector<size_t>& i, const double& value) {
         if (std::fabs(value) > 1.0e-15) {
             size_t index = 0;
             for (int m = 0; m < 4; ++m) {
@@ -211,7 +210,7 @@ void MRDSRG_SO::startup() {
             (L2.block("aaaa")).data()[index] = value;
         }
     });
-    (reference_.L2ab()).citerate([&](const std::vector<size_t>& i, const double& value) {
+    (rdms_.L2ab()).citerate([&](const std::vector<size_t>& i, const double& value) {
         if (std::fabs(value) > 1.0e-15) {
             size_t i0 = i[0];
             size_t i1 = i[1] + na_mo;
@@ -233,7 +232,7 @@ void MRDSRG_SO::startup() {
     // prepare three-body density cumulant
     if (options_.get_str("THREEPDC") != "ZERO") {
         L3 = BTF->build(tensor_type_, "Lambda3", {"aaaaaa"});
-        (reference_.L3aaa()).citerate([&](const std::vector<size_t>& i, const double& value) {
+        (rdms_.L3aaa()).citerate([&](const std::vector<size_t>& i, const double& value) {
             if (std::fabs(value) > 1.0e-15) {
                 size_t index = 0;
                 for (int m = 0; m < 6; ++m) {
@@ -242,7 +241,7 @@ void MRDSRG_SO::startup() {
                 (L3.block("aaaaaa")).data()[index] = value;
             }
         });
-        (reference_.L3bbb()).citerate([&](const std::vector<size_t>& i, const double& value) {
+        (rdms_.L3bbb()).citerate([&](const std::vector<size_t>& i, const double& value) {
             if (std::fabs(value) > 1.0e-15) {
                 size_t index = 0;
                 for (int m = 0; m < 6; ++m) {
@@ -251,7 +250,7 @@ void MRDSRG_SO::startup() {
                 (L3.block("aaaaaa")).data()[index] = value;
             }
         });
-        (reference_.L3aab()).citerate([&](const std::vector<size_t>& i, const double& value) {
+        (rdms_.L3aab()).citerate([&](const std::vector<size_t>& i, const double& value) {
             if (std::fabs(value) > 1.0e-15) {
                 // original: a[0]a[1]b[2]; permutation: a[0]b[2]a[1] (-1),
                 // b[2]a[0]a[1] (+1)
@@ -299,7 +298,7 @@ void MRDSRG_SO::startup() {
                 }
             }
         });
-        (reference_.L3abb()).citerate([&](const std::vector<size_t>& i, const double& value) {
+        (rdms_.L3abb()).citerate([&](const std::vector<size_t>& i, const double& value) {
             if (std::fabs(value) > 1.0e-15) {
                 // original: a[0]b[1]b[2]; permutation: b[1]a[0]b[2] (-1),
                 // b[1]b[2]a[0] (+1)
@@ -670,7 +669,7 @@ double MRDSRG_SO::compute_energy() {
         // update amplitudes
         update_t2();
         update_t1();
-        if (options_.get_str("CORR_LEVEL") == "LDSRG3") {
+        if (options_.get_str("CORR_LEVEL").find("LDSRG3") != std::string::npos) {
             update_t3();
         }
 
@@ -726,12 +725,13 @@ void MRDSRG_SO::compute_lhbar() {
 
     // iterator variables
     int maxn = options_.get_int("DSRG_RSC_NCOMM");
-    double ct_threshold = options_.get_double("SRG_RSC_THRESHOLD");
+    double ct_threshold = options_.get_double("DSRG_RSC_THRESHOLD");
     BlockedTensor C1 = ambit::BlockedTensor::build(tensor_type_, "C1", {"gg"});
     BlockedTensor C2 = ambit::BlockedTensor::build(tensor_type_, "C2", {"gggg"});
 
     BlockedTensor O3, C3;
-    if (options_.get_str("CORR_LEVEL") == "LDSRG3") {
+    bool do_t3 = options_.get_str("CORR_LEVEL").find("LDSRG3") != std::string::npos;
+    if (do_t3) {
         Hbar3.zero();
         O3 = ambit::BlockedTensor::build(tensor_type_, "O3", {"gggggg"});
         C3 = ambit::BlockedTensor::build(tensor_type_, "C3", {"gggggg"});
@@ -743,10 +743,14 @@ void MRDSRG_SO::compute_lhbar() {
         double factor = 1.0 / n;
 
         double C0 = 0.0;
-        if (options_.get_str("CORR_LEVEL") == "LDSRG3") {
+        if (do_t3) {
             timer_on("3-body [H, A]");
             if (na_ == 0) {
-                commutator_H_A_3_sr(factor, O1, O2, O3, T1, T2, T3, C0, C1, C2, C3);
+                if (options_.get_str("CORR_LEVEL") == "LDSRG3_1") {
+                    commutator_H_A_3_sr_1(factor, O1, O2, O3, T1, T2, T3, C0, C1, C2, C3);
+                } else {
+                    commutator_H_A_3_sr(factor, O1, O2, O3, T1, T2, T3, C0, C1, C2, C3);
+                }
             } else {
                 commutator_H_A_3(factor, O1, O2, O3, T1, T2, T3, C0, C1, C2, C3);
             }
@@ -843,7 +847,7 @@ void MRDSRG_SO::compute_qhbar() {
 
     // iterator variables
     int maxn = options_.get_int("DSRG_RSC_NCOMM");
-    double ct_threshold = options_.get_double("SRG_RSC_THRESHOLD");
+    double ct_threshold = options_.get_double("DSRG_RSC_THRESHOLD");
     BlockedTensor C1 = ambit::BlockedTensor::build(tensor_type_, "C1", {"gg"});
     BlockedTensor C2 = ambit::BlockedTensor::build(tensor_type_, "C2", {"gggg"});
     BlockedTensor C3 = ambit::BlockedTensor::build(tensor_type_, "C3", {"gggggg"});

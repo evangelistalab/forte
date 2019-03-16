@@ -43,13 +43,13 @@
 #include "mrpt2.h"
 #include "orbital-helpers/unpaired_density.h"
 #include "sparse_ci/determinant_hashvector.h"
-#include "base_classes/reference.h"
+#include "base_classes/rdms.h"
 #include "sparse_ci/sparse_ci_solver.h"
 #include "sparse_ci/determinant.h"
 #include "orbital-helpers/iao_builder.h"
 #include "orbital-helpers/localize.h"
 #include "helpers/timer.h"
-#include "base_classes/active_space_solver.h"
+#include "base_classes/active_space_method.h"
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -64,16 +64,13 @@ using d2 = std::vector<d1>;
 
 namespace forte {
 
-class Reference;
-
-/// Set the ACI options
-void set_ACI_options(ForteOptions& foptions);
+class RDMs;
 
 /**
  * @brief The AdaptiveCI class
  * This class implements an adaptive CI algorithm
  */
-class AdaptiveCI : public ActiveSpaceSolver {
+class AdaptiveCI : public ActiveSpaceMethod {
   public:
     // ==> Class Constructor and Destructor <==
 
@@ -84,25 +81,28 @@ class AdaptiveCI : public ActiveSpaceSolver {
      * @param ints A pointer to an allocated integral object
      * @param mo_space_info A pointer to the MOSpaceInfo object
      */
-    AdaptiveCI(StateInfo state, std::shared_ptr<SCFInfo> scf_info,
+    AdaptiveCI(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
                std::shared_ptr<ForteOptions> options, std::shared_ptr<MOSpaceInfo> mo_space_info,
                std::shared_ptr<ActiveSpaceIntegrals> as_ints);
-    /// Destructor
-    ~AdaptiveCI();
 
     // ==> Class Interface <==
 
     /// Compute the energy
     double compute_energy() override;
 
-    /// Update the reference file
-    Reference get_reference() override;
+    /// Compute the reduced density matrices up to a given particle rank (max_rdm_level)
+    std::vector<RDMs> rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
+                           int max_rdm_level) override;
+
+    /// Returns the transition reduced density matrices between roots of different symmetry up to a
+    /// given level (max_rdm_level)
+    std::vector<RDMs> transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
+                                      std::shared_ptr<ActiveSpaceMethod> method2,
+                                      int max_rdm_level) override;
 
     // Set the options
     void set_options(std::shared_ptr<ForteOptions>) override{};
 
-    /// Set the RDM
-    void set_max_rdm(int rdm);
     /// Set the printing level
     void set_quiet(bool quiet) { quiet_mode_ = quiet; }
     /// Get the wavefunction
@@ -133,9 +133,9 @@ class AdaptiveCI : public ActiveSpaceSolver {
 
     WFNOperator op_;
 
+
     /// Some HF info
     std::shared_ptr<SCFInfo> scf_info_;
-    StateInfo state_;
     /// Forte options
     std::shared_ptr<ForteOptions> options_;
     /// The wave function symmetry
@@ -237,7 +237,7 @@ class AdaptiveCI : public ActiveSpaceSolver {
     /// Save dets to file?
     bool det_save_;
     /// Order of RDM to compute
-//    int rdm_level_;
+    //    int rdm_level_;
     /// Control amount of printing
     bool quiet_mode_;
     /// Control streamlining
@@ -285,15 +285,25 @@ class AdaptiveCI : public ActiveSpaceSolver {
     double spin_trans_;
 
     // The RDMS
-    std::vector<double> ordm_a_;
-    std::vector<double> ordm_b_;
-    std::vector<double> trdm_aa_;
-    std::vector<double> trdm_ab_;
-    std::vector<double> trdm_bb_;
-    std::vector<double> trdm_aaa_;
-    std::vector<double> trdm_aab_;
-    std::vector<double> trdm_abb_;
-    std::vector<double> trdm_bbb_;
+    //    std::vector<double> ordm_a_;
+    //    std::vector<double> ordm_b_;
+    //    std::vector<double> trdm_aa_;
+    //    std::vector<double> trdm_ab_;
+    //    std::vector<double> trdm_bb_;
+    //    std::vector<double> trdm_aaa_;
+    //    std::vector<double> trdm_aab_;
+    //    std::vector<double> trdm_abb_;
+    //    std::vector<double> trdm_bbb_;
+
+    ambit::Tensor ordm_a_;
+    ambit::Tensor ordm_b_;
+    ambit::Tensor trdm_aa_;
+    ambit::Tensor trdm_ab_;
+    ambit::Tensor trdm_bb_;
+    ambit::Tensor trdm_aaa_;
+    ambit::Tensor trdm_aab_;
+    ambit::Tensor trdm_abb_;
+    ambit::Tensor trdm_bbb_;
 
     // ==> Class functions <==
 
@@ -441,7 +451,8 @@ class AdaptiveCI : public ActiveSpaceSolver {
 
     /// Compute the RDMs
     void compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints, DeterminantHashVec& dets,
-                      WFNOperator& op, psi::SharedMatrix& PQ_evecs, int root1, int root2);
+                      WFNOperator& op, psi::SharedMatrix& PQ_evecs, int root1, int root2,
+                      int max_level);
 
     /// Save older roots
     void save_old_root(DeterminantHashVec& dets, psi::SharedMatrix& PQ_evecs, int root);

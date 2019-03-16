@@ -47,11 +47,11 @@ set {
 set forte {
   multiplicity 1
   int_type df
-  job_type three-dsrg-mrpt2
+  correlation_solver three-dsrg-mrpt2
+  active_space_solver  aci
   frozen_docc      [8]
   restricted_docc  [17]
   active           [8]
-  cas_type aci
   sigma 0.001
   diag_algorithm dynamic
   aci_direct_rdms true
@@ -60,7 +60,6 @@ set forte {
   nroot 1
   root_sym 0
   charge 0
-  print_no true
 }
 
 set_num_threads(8)

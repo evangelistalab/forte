@@ -35,7 +35,6 @@
 
 #define _DEBUG_AOSUBSPACE_ 0
 
-
 namespace forte {
 
 /**
@@ -151,9 +150,9 @@ class AOSubspace {
     const std::vector<int>& subspace();
 
     psi::SharedMatrix build_projector(const std::vector<int>& subspace,
-                                 std::shared_ptr<psi::Molecule> molecule,
-                                 std::shared_ptr<psi::BasisSet> min_basis,
-                                 std::shared_ptr<psi::BasisSet> large_basis);
+                                      std::shared_ptr<psi::Molecule> molecule,
+                                      std::shared_ptr<psi::BasisSet> min_basis,
+                                      std::shared_ptr<psi::BasisSet> large_basis);
 
     /// Return a vector of labels for each atomic orbital.  This function
     /// accepts
@@ -226,8 +225,8 @@ class AOSubspace {
     void parse_basis_set();
 };
 
-// Helper function to create a projector using info in wfn and options
-psi::SharedMatrix create_aosubspace_projector(psi::SharedWavefunction wfn, psi::Options& options);
-}
+// Helper function to make a projector using info in wfn and options
+psi::SharedMatrix make_aosubspace_projector(psi::SharedWavefunction wfn, psi::Options& options);
+} // namespace forte
 
 #endif // _aosubspace_h_

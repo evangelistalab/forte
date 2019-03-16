@@ -45,13 +45,10 @@
 #include "sparse_ci/sparse_ci_solver.h"
 #include "sparse_ci/determinant.h"
 #include "base_classes/state_info.h"
-
+#include "base_classes/active_space_method.h"
 
 namespace forte {
 class SCFInfo;
-
-/// Set the forte style options for the FCI method
-// void set_PCI_HashVec_options(ForteOptions& foptions);
 
 namespace GeneratorType_HashVec {
 enum GeneratorType {
@@ -77,7 +74,7 @@ using det_hashvec = HashVector<Determinant, Determinant::Hash>;
  * @brief The SparsePathIntegralCI class
  * This class implements an a sparse path-integral FCI algorithm
  */
-class ProjectorCI_HashVec {
+class ProjectorCI_HashVec : public ActiveSpaceMethod {
   public:
     // ==> Class Constructor and Destructor <==
 
@@ -87,24 +84,32 @@ class ProjectorCI_HashVec {
      * @param options The main options object
      * @param ints A pointer to an allocated integral object
      */
-    ProjectorCI_HashVec(StateInfo state, std::shared_ptr<forte::SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
-                        std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
+    ProjectorCI_HashVec(StateInfo state, size_t nroot, std::shared_ptr<forte::SCFInfo> scf_info,
+                        std::shared_ptr<ForteOptions> options,
+                        std::shared_ptr<MOSpaceInfo> mo_space_info,
+                        std::shared_ptr<ActiveSpaceIntegrals> as_ints);
 
     // ==> Class Interface <==
 
+    void set_options(std::shared_ptr<ForteOptions>) override{};
+
+    /// Compute the reduced density matrices up to a given particle rank (max_rdm_level)
+    std::vector<RDMs> rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
+                           int max_rdm_level) override;
+
+    /// Returns the transition reduced density matrices between roots of different symmetry up to a
+    /// given level (max_rdm_level)
+    std::vector<RDMs> transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
+                                      std::shared_ptr<ActiveSpaceMethod> method2,
+                                      int max_rdm_level) override;
+
     /// Compute the energy
-    double compute_energy();
+    double compute_energy() override;
 
   private:
     // ==> Class data <==
 
     // * Calculation data
-    /// The state to calculate
-    StateInfo state_;
-    /// The molecular integrals required by Explorer
-    std::shared_ptr<ForteIntegrals> ints_;
-    /// Store all the integrals locally
-    static std::shared_ptr<ActiveSpaceIntegrals> fci_ints_;
     /// The options
     std::shared_ptr<ForteOptions> options_;
     /// SCF information
@@ -144,8 +149,6 @@ class ProjectorCI_HashVec {
     /// The reference determinant
     Determinant reference_determinant_;
     std::vector<std::pair<det_hashvec, std::vector<double>>> solutions_;
-    /// The information of mo space
-    std::shared_ptr<MOSpaceInfo> mo_space_info_;
     /// (pq|pq) matrix for prescreening
     double *pqpq_aa_, *pqpq_ab_, *pqpq_bb_;
     /// maximum element in (pq|pq) matrix
@@ -166,10 +169,6 @@ class ProjectorCI_HashVec {
     bool do_shift_;
     /// Use intermediate normalization?
     bool use_inter_norm_;
-    /// The number of roots computed
-    int nroot_;
-    /// The energy convergence criterium
-    double e_convergence_;
     /// The maximum number of iterations
     int maxiter_;
     /// The maximum number of iterations in Davidson generator
@@ -288,15 +287,15 @@ class ProjectorCI_HashVec {
     double initial_guess(det_hashvec& dets, std::vector<double>& C);
 
     /**
-    * Propagate the wave function by a step of length tau
-    * @param Generator The type of Generator used
-    * @param dets The set of determinants that form the wave function at time n
-    * @param C The wave function coefficients at time n
-    * @param tau The time step in a.u.
-    * @param spawning_threshold The threshold used to accept or reject spawning
-    * events
-    * @param S An energy shift subtracted from the Hamiltonian
-    */
+     * Propagate the wave function by a step of length tau
+     * @param Generator The type of Generator used
+     * @param dets The set of determinants that form the wave function at time n
+     * @param C The wave function coefficients at time n
+     * @param tau The time step in a.u.
+     * @param spawning_threshold The threshold used to accept or reject spawning
+     * events
+     * @param S An energy shift subtracted from the Hamiltonian
+     */
     void propagate(GeneratorType_HashVec::GeneratorType generator, det_hashvec& dets_hashvec,
                    std::vector<double>& C, double spawning_threshold);
     /// A Delta projector fitted by 10th order chebyshev polynomial
@@ -400,6 +399,6 @@ class ProjectorCI_HashVec {
     /// Sort the determinants by coefficients
     void sortHashVecByCoefficient(det_hashvec& dets_hashvec, std::vector<double>& C);
 };
-}
+} // namespace forte
 
 #endif // _pci_h_

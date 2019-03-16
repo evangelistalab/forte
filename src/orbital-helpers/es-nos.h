@@ -33,7 +33,7 @@
 #include "psi4/liboptions/liboptions.h"
 
 #include "ci_rdm/ci_rdms.h"
-#include "base_classes/reference.h"
+#include "base_classes/rdms.h"
 #include "sparse_ci/determinant.h"
 #include "integrals/integrals.h"
 #include "integrals/active_space_integrals.h"
@@ -41,14 +41,14 @@
 #include "sparse_ci/operator.h"
 #include "sparse_ci/sparse_ci_solver.h"
 
-
 namespace forte {
 
 class ESNO : public psi::Wavefunction {
   public:
     // Class constructor and destructor
-    ESNO(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
-         std::shared_ptr<MOSpaceInfo> mo_space_info, DeterminantHashVec& reference);
+    ESNO(psi::SharedWavefunction ref_wfn, psi::Options& options,
+         std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info,
+         DeterminantHashVec& reference);
 
     ~ESNO();
 
@@ -56,11 +56,11 @@ class ESNO : public psi::Wavefunction {
     DeterminantHashVec& reference_;
 
     void compute_nos();
-    void transform(Reference& reference);
+//    void transform(RDMs& rdms);
 
   private:
     std::shared_ptr<ActiveSpaceIntegrals> fci_ints_;
-	std::shared_ptr<psi::Wavefunction> ref_wfn_;
+    std::shared_ptr<psi::Wavefunction> ref_wfn_;
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
 
     void startup();
@@ -76,5 +76,4 @@ class ESNO : public psi::Wavefunction {
     void upcast_reference();
     std::vector<size_t> get_excitation_space();
 };
-}
-
+} // namespace forte

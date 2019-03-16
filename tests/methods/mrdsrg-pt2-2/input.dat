@@ -58,7 +58,9 @@ set {
 }
 
 set forte {
-  job_type           mrdsrg
+  #job_type           mrdsrg
+  active_space_solver cas
+  correlation_solver mrdsrg
   frozen_docc        [1,0,0,0]
   restricted_docc    [1,0,0,0]
   active             [1,0,0,1]

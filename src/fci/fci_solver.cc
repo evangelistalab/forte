@@ -31,7 +31,7 @@
 
 #include "boost/format.hpp"
 
-#include "base_classes/reference.h"
+#include "base_classes/rdms.h"
 #include "base_classes/forte_options.h"
 #include "base_classes/mo_space_info.h"
 
@@ -59,9 +59,9 @@ namespace forte {
 
 class MOSpaceInfo;
 
-FCISolver::FCISolver(StateInfo state, std::shared_ptr<MOSpaceInfo> mo_space_info,
+FCISolver::FCISolver(StateInfo state, size_t nroot, std::shared_ptr<MOSpaceInfo> mo_space_info,
                      std::shared_ptr<ActiveSpaceIntegrals> as_ints)
-    : ActiveSpaceSolver(state, mo_space_info, as_ints),
+    : ActiveSpaceMethod(state, nroot, mo_space_info, as_ints),
       active_dim_(mo_space_info->get_dimension("ACTIVE")), nirrep_(as_ints->ints()->nirrep()),
       symmetry_(state.irrep()), multiplicity_(state.multiplicity()) {
     // TODO: read this info from the base class
@@ -107,10 +107,8 @@ void FCISolver::startup() {
 }
 
 void FCISolver::set_options(std::shared_ptr<ForteOptions> options) {
-    set_nroot(options->get_int("FCI_NROOT"));
-    set_root(options->get_int("FCI_ROOT"));
+    set_root(options->get_int("ROOT"));
     set_test_rdms(options->get_bool("FCI_TEST_RDMS"));
-    set_max_rdm_level(options->get_int("FCI_MAX_RDM"));
     set_fci_iterations(options->get_int("FCI_MAXITER"));
     set_collapse_per_root(options->get_int("DL_COLLAPSE_PER_ROOT"));
     set_subspace_per_root(options->get_int("DL_SUBSPACE_PER_ROOT"));
@@ -126,9 +124,6 @@ void FCISolver::set_options(std::shared_ptr<ForteOptions> options) {
 double FCISolver::compute_energy() {
     local_timer t;
     startup();
-
-    double nuclear_repulsion_energy =
-        psi::Process::environment.molecule()->nuclear_repulsion_energy({{0, 0, 0}});
 
     FCIVector::allocate_temp_space(lists_, print_);
 
@@ -222,8 +217,8 @@ double FCISolver::compute_energy() {
 
         if (converged != SolverStatus::Collapse) {
             double avg_energy = 0.0;
-            for (int r = 0; r < nroot_; ++r) {
-                avg_energy += dls.eigenvalues()->get(r) + nuclear_repulsion_energy;
+            for (size_t r = 0; r < nroot_; ++r) {
+                avg_energy += dls.eigenvalues()->get(r);
             }
             avg_energy /= static_cast<double>(nroot_);
             if (print_) {
@@ -256,11 +251,15 @@ double FCISolver::compute_energy() {
 
     // Copy eigen values and eigen vectors
     evals_ = dls.eigenvalues();
+    energies_ = std::vector<double>(nroot_, 0.0);
+    for (size_t r = 0; r < nroot_; r++) {
+        energies_[r] = evals_->get(r);
+    }
     eigen_vecs_ = dls.eigenvectors();
 
     // Print determinants
     if (print_) {
-        for (int r = 0; r < nroot_; ++r) {
+        for (size_t r = 0; r < nroot_; ++r) {
             outfile->Printf("\n\n  ==> Root No. %d <==\n", r);
 
             C_->copy(dls.eigenvector(r));
@@ -300,58 +299,51 @@ double FCISolver::compute_energy() {
                 outfile->Printf("%15.8f", ci);
             }
 
-            double root_energy = dls.eigenvalues()->get(r) + nuclear_repulsion_energy;
+            double root_energy = dls.eigenvalues()->get(r);
 
             outfile->Printf("\n\n    Total Energy: %25.15f", root_energy);
         }
     }
 
-    // Compute the RDMs
-    compute_rdms_root(root_);
-    //    C_->copy(dls.eigenvector(root_));
-    //    if (print_) {
-    //        std::string title_rdm = "Computing RDMs for Root No. " + std::to_string(root_);
-    //        print_h2(title_rdm);
-    //    }
-    //    C_->compute_rdms(max_rdm_level_);
-
-    if (print_ > 1 && max_rdm_level_ > 1) {
-        C_->energy_from_rdms(as_ints_);
-    }
-
     //    // Optionally, test the RDMs
-    //    if (test_rdms_) {
-    //        C_->rdm_test();
-    //    }
+    if (test_rdms_) {
+        C_->copy(dls.eigenvector(root_));
+        if (print_) {
+            std::string title_rdm = "Computing RDMs for Root No. " + std::to_string(root_);
+            print_h2(title_rdm);
+        }
+        C_->compute_rdms(3);
+        C_->rdm_test();
+    }
 
     //    // Print the NO if energy converged
     //    if (print_no_ || print_ > 0) {
     //        C_->print_natural_orbitals(mo_space_info_);
     //    }
 
-    energy_ = dls.eigenvalues()->get(root_) + nuclear_repulsion_energy;
+    energy_ = dls.eigenvalues()->get(root_);
     psi::Process::environment.globals["CURRENT ENERGY"] = energy_;
     psi::Process::environment.globals["FCI ENERGY"] = energy_;
 
     return energy_;
 }
 
-void FCISolver::compute_rdms_root(int root) {
+void FCISolver::compute_rdms_root(int root1, int root2, int max_rdm_level) {
     // make sure a compute_energy is called before this
     if (C_) {
-        if (root >= nroot_) {
-            std::string error = "Cannot compute RDMs of root " + std::to_string(root) +
+        if (root1 >= nroot_) {
+            std::string error = "Cannot compute RDMs of root " + std::to_string(root1) +
                                 "(0-based) because nroot = " + std::to_string(nroot_);
             throw psi::PSIEXCEPTION(error);
         }
 
-        psi::SharedVector evec(eigen_vecs_->get_row(0, root));
+        psi::SharedVector evec(eigen_vecs_->get_row(0, root1));
         C_->copy(evec);
         if (print_) {
-            std::string title_rdm = "Computing RDMs for Root No. " + std::to_string(root);
+            std::string title_rdm = "Computing RDMs for Root No. " + std::to_string(root1);
             print_h2(title_rdm);
         }
-        C_->compute_rdms(max_rdm_level_);
+        C_->compute_rdms(max_rdm_level);
 
         // Optionally, test the RDMs
         if (test_rdms_) {
@@ -503,233 +495,133 @@ FCISolver::initial_guess(FCIVector& diag, size_t n,
     return guess;
 }
 
-Reference FCISolver::get_reference() {
-    size_t nact = active_dim_.sum();
-    size_t nact2 = nact * nact;
-    size_t nact3 = nact2 * nact;
-    size_t nact4 = nact3 * nact;
-    size_t nact5 = nact4 * nact;
+std::vector<RDMs> FCISolver::rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
+                                  int max_rdm_level) {
+    std::vector<RDMs> refs;
+    if (max_rdm_level <= 0)
+        return refs;
 
-    Reference fci_ref;
-    fci_ref.set_Eref(energy_);
+    // loop over all the pairs of references
+    for (auto& roots : root_list) {
 
-    if (max_rdm_level_ >= 1) {
-        // One-particle density matrices in the active space
-        std::vector<double>& opdm_a = C_->opdm_a();
-        std::vector<double>& opdm_b = C_->opdm_b();
-        ambit::Tensor L1a = ambit::Tensor::build(ambit::CoreTensor, "L1a", {nact, nact});
-        ambit::Tensor L1b = ambit::Tensor::build(ambit::CoreTensor, "L1b", {nact, nact});
-        if (na_ >= 1) {
-            L1a.iterate([&](const std::vector<size_t>& i, double& value) {
-                value = opdm_a[i[0] * nact + i[1]];
-            });
+        if (roots.first != roots.second) {
+            throw psi::PSIEXCEPTION(
+                "FCISolver::rdms(): cannot compute transition RDMs within the same symmetry.");
         }
-        if (nb_ >= 1) {
-            L1b.iterate([&](const std::vector<size_t>& i, double& value) {
-                value = opdm_b[i[0] * nact + i[1]];
-            });
-        }
-        fci_ref.set_L1a(L1a);
-        fci_ref.set_L1b(L1b);
 
-        if (max_rdm_level_ >= 2) {
+        compute_rdms_root(roots.first, roots.second, max_rdm_level);
+
+        size_t nact = active_dim_.sum();
+        size_t nact2 = nact * nact;
+        size_t nact3 = nact2 * nact;
+        size_t nact4 = nact3 * nact;
+        size_t nact5 = nact4 * nact;
+
+        ambit::Tensor g1a, g1b;
+        ambit::Tensor g2aa, g2ab, g2bb;
+        ambit::Tensor g3aaa, g3aab, g3abb, g3bbb;
+
+        if (max_rdm_level >= 1) {
+            // One-particle density matrices in the active space
+            std::vector<double>& opdm_a = C_->opdm_a();
+            std::vector<double>& opdm_b = C_->opdm_b();
+            g1a = ambit::Tensor::build(ambit::CoreTensor, "g1a", {nact, nact});
+            g1b = ambit::Tensor::build(ambit::CoreTensor, "g1b", {nact, nact});
+            if (na_ >= 1) {
+                g1a.iterate([&](const std::vector<size_t>& i, double& value) {
+                    value = opdm_a[i[0] * nact + i[1]];
+                });
+            }
+            if (nb_ >= 1) {
+                g1b.iterate([&](const std::vector<size_t>& i, double& value) {
+                    value = opdm_b[i[0] * nact + i[1]];
+                });
+            }
+        }
+
+        if (max_rdm_level >= 2) {
             // Two-particle density matrices in the active space
-            ambit::Tensor L2aa =
-                ambit::Tensor::build(ambit::CoreTensor, "L2aa", {nact, nact, nact, nact});
-            ambit::Tensor L2ab =
-                ambit::Tensor::build(ambit::CoreTensor, "L2ab", {nact, nact, nact, nact});
-            ambit::Tensor L2bb =
-                ambit::Tensor::build(ambit::CoreTensor, "L2bb", {nact, nact, nact, nact});
-            ambit::Tensor g2aa =
-                ambit::Tensor::build(ambit::CoreTensor, "L2aa", {nact, nact, nact, nact});
-            ambit::Tensor g2ab =
-                ambit::Tensor::build(ambit::CoreTensor, "L2ab", {nact, nact, nact, nact});
-            ambit::Tensor g2bb =
-                ambit::Tensor::build(ambit::CoreTensor, "L2bb", {nact, nact, nact, nact});
+            g2aa = ambit::Tensor::build(ambit::CoreTensor, "g2aa", {nact, nact, nact, nact});
+            g2ab = ambit::Tensor::build(ambit::CoreTensor, "g2ab", {nact, nact, nact, nact});
+            g2bb = ambit::Tensor::build(ambit::CoreTensor, "g2bb", {nact, nact, nact, nact});
 
             if (na_ >= 2) {
                 std::vector<double>& tpdm_aa = C_->tpdm_aa();
-                L2aa.iterate([&](const std::vector<size_t>& i, double& value) {
+                g2aa.iterate([&](const std::vector<size_t>& i, double& value) {
                     value = tpdm_aa[i[0] * nact3 + i[1] * nact2 + i[2] * nact + i[3]];
                 });
             }
             if ((na_ >= 1) and (nb_ >= 1)) {
                 std::vector<double>& tpdm_ab = C_->tpdm_ab();
-                L2ab.iterate([&](const std::vector<size_t>& i, double& value) {
+                g2ab.iterate([&](const std::vector<size_t>& i, double& value) {
                     value = tpdm_ab[i[0] * nact3 + i[1] * nact2 + i[2] * nact + i[3]];
                 });
             }
             if (nb_ >= 2) {
                 std::vector<double>& tpdm_bb = C_->tpdm_bb();
-                L2bb.iterate([&](const std::vector<size_t>& i, double& value) {
+                g2bb.iterate([&](const std::vector<size_t>& i, double& value) {
                     value = tpdm_bb[i[0] * nact3 + i[1] * nact2 + i[2] * nact + i[3]];
                 });
             }
-            g2aa.copy(L2aa);
-            g2ab.copy(L2ab);
-            g2bb.copy(L2bb);
+        }
 
-            fci_ref.set_g2aa(g2aa);
-            fci_ref.set_g2ab(g2ab);
-            fci_ref.set_g2bb(g2bb);
-
-            // Convert the 2-RDMs to 2-RCMs
-            L2aa("pqrs") -= L1a("pr") * L1a("qs");
-            L2aa("pqrs") += L1a("ps") * L1a("qr");
-
-            L2ab("pqrs") -= L1a("pr") * L1b("qs");
-
-            L2bb("pqrs") -= L1b("pr") * L1b("qs");
-            L2bb("pqrs") += L1b("ps") * L1b("qr");
-
-            fci_ref.set_L2aa(L2aa);
-            fci_ref.set_L2ab(L2ab);
-            fci_ref.set_L2bb(L2bb);
-
-            if (max_rdm_level_ >= 3) {
-                // Three-particle density matrices in the active space
-                ambit::Tensor L3aaa = ambit::Tensor::build(ambit::CoreTensor, "L3aaa",
-                                                           {nact, nact, nact, nact, nact, nact});
-                ambit::Tensor L3aab = ambit::Tensor::build(ambit::CoreTensor, "L3aab",
-                                                           {nact, nact, nact, nact, nact, nact});
-                ambit::Tensor L3abb = ambit::Tensor::build(ambit::CoreTensor, "L3abb",
-                                                           {nact, nact, nact, nact, nact, nact});
-                ambit::Tensor L3bbb = ambit::Tensor::build(ambit::CoreTensor, "L3bbb",
-                                                           {nact, nact, nact, nact, nact, nact});
-                if (na_ >= 3) {
-                    std::vector<double>& tpdm_aaa = C_->tpdm_aaa();
-                    L3aaa.iterate([&](const std::vector<size_t>& i, double& value) {
-                        value = tpdm_aaa[i[0] * nact5 + i[1] * nact4 + i[2] * nact3 + i[3] * nact2 +
-                                         i[4] * nact + i[5]];
-                    });
-                }
-                if ((na_ >= 2) and (nb_ >= 1)) {
-                    std::vector<double>& tpdm_aab = C_->tpdm_aab();
-                    L3aab.iterate([&](const std::vector<size_t>& i, double& value) {
-                        value = tpdm_aab[i[0] * nact5 + i[1] * nact4 + i[2] * nact3 + i[3] * nact2 +
-                                         i[4] * nact + i[5]];
-                    });
-                }
-                if ((na_ >= 1) and (nb_ >= 2)) {
-                    std::vector<double>& tpdm_abb = C_->tpdm_abb();
-                    L3abb.iterate([&](const std::vector<size_t>& i, double& value) {
-                        value = tpdm_abb[i[0] * nact5 + i[1] * nact4 + i[2] * nact3 + i[3] * nact2 +
-                                         i[4] * nact + i[5]];
-                    });
-                }
-                if (nb_ >= 3) {
-                    std::vector<double>& tpdm_bbb = C_->tpdm_bbb();
-                    L3bbb.iterate([&](const std::vector<size_t>& i, double& value) {
-                        value = tpdm_bbb[i[0] * nact5 + i[1] * nact4 + i[2] * nact3 + i[3] * nact2 +
-                                         i[4] * nact + i[5]];
-                    });
-                }
-
-                // Convert the 3-RDMs to 3-RCMs
-                L3aaa("pqrstu") -= L1a("ps") * L2aa("qrtu");
-                L3aaa("pqrstu") += L1a("pt") * L2aa("qrsu");
-                L3aaa("pqrstu") += L1a("pu") * L2aa("qrts");
-
-                L3aaa("pqrstu") -= L1a("qt") * L2aa("prsu");
-                L3aaa("pqrstu") += L1a("qs") * L2aa("prtu");
-                L3aaa("pqrstu") += L1a("qu") * L2aa("prst");
-
-                L3aaa("pqrstu") -= L1a("ru") * L2aa("pqst");
-                L3aaa("pqrstu") += L1a("rs") * L2aa("pqut");
-                L3aaa("pqrstu") += L1a("rt") * L2aa("pqsu");
-
-                L3aaa("pqrstu") -= L1a("ps") * L1a("qt") * L1a("ru");
-                L3aaa("pqrstu") -= L1a("pt") * L1a("qu") * L1a("rs");
-                L3aaa("pqrstu") -= L1a("pu") * L1a("qs") * L1a("rt");
-
-                L3aaa("pqrstu") += L1a("ps") * L1a("qu") * L1a("rt");
-                L3aaa("pqrstu") += L1a("pu") * L1a("qt") * L1a("rs");
-                L3aaa("pqrstu") += L1a("pt") * L1a("qs") * L1a("ru");
-
-                L3aab("pqRstU") -= L1a("ps") * L2ab("qRtU");
-                L3aab("pqRstU") += L1a("pt") * L2ab("qRsU");
-
-                L3aab("pqRstU") -= L1a("qt") * L2ab("pRsU");
-                L3aab("pqRstU") += L1a("qs") * L2ab("pRtU");
-
-                L3aab("pqRstU") -= L1b("RU") * L2aa("pqst");
-
-                L3aab("pqRstU") -= L1a("ps") * L1a("qt") * L1b("RU");
-                L3aab("pqRstU") += L1a("pt") * L1a("qs") * L1b("RU");
-
-                L3abb("pQRsTU") -= L1a("ps") * L2bb("QRTU");
-
-                L3abb("pQRsTU") -= L1b("QT") * L2ab("pRsU");
-                L3abb("pQRsTU") += L1b("QU") * L2ab("pRsT");
-
-                L3abb("pQRsTU") -= L1b("RU") * L2ab("pQsT");
-                L3abb("pQRsTU") += L1b("RT") * L2ab("pQsU");
-
-                L3abb("pQRsTU") -= L1a("ps") * L1b("QT") * L1b("RU");
-                L3abb("pQRsTU") += L1a("ps") * L1b("QU") * L1b("RT");
-
-                L3bbb("pqrstu") -= L1b("ps") * L2bb("qrtu");
-                L3bbb("pqrstu") += L1b("pt") * L2bb("qrsu");
-                L3bbb("pqrstu") += L1b("pu") * L2bb("qrts");
-
-                L3bbb("pqrstu") -= L1b("qt") * L2bb("prsu");
-                L3bbb("pqrstu") += L1b("qs") * L2bb("prtu");
-                L3bbb("pqrstu") += L1b("qu") * L2bb("prst");
-
-                L3bbb("pqrstu") -= L1b("ru") * L2bb("pqst");
-                L3bbb("pqrstu") += L1b("rs") * L2bb("pqut");
-                L3bbb("pqrstu") += L1b("rt") * L2bb("pqsu");
-
-                L3bbb("pqrstu") -= L1b("ps") * L1b("qt") * L1b("ru");
-                L3bbb("pqrstu") -= L1b("pt") * L1b("qu") * L1b("rs");
-                L3bbb("pqrstu") -= L1b("pu") * L1b("qs") * L1b("rt");
-
-                L3bbb("pqrstu") += L1b("ps") * L1b("qu") * L1b("rt");
-                L3bbb("pqrstu") += L1b("pu") * L1b("qt") * L1b("rs");
-                L3bbb("pqrstu") += L1b("pt") * L1b("qs") * L1b("ru");
-
-                fci_ref.set_L3aaa(L3aaa);
-                fci_ref.set_L3aab(L3aab);
-                fci_ref.set_L3abb(L3abb);
-                fci_ref.set_L3bbb(L3bbb);
-
-                if (print_ > 1)
-                    for (auto L1 : {L1a, L1b}) {
-                        outfile->Printf("\n\n** %s **", L1.name().c_str());
-                        L1.iterate([&](const std::vector<size_t>& i, double& value) {
-                            if (std::fabs(value) > 1.0e-15)
-                                outfile->Printf("\n  Lambda [%3lu][%3lu] = %18.15lf", i[0], i[1],
-                                                value);
-                        });
-                    }
-
-                if (print_ > 2)
-                    for (auto L2 : {L2aa, L2ab, L2bb}) {
-                        outfile->Printf("\n\n** %s **", L2.name().c_str());
-                        L2.iterate([&](const std::vector<size_t>& i, double& value) {
-                            if (std::fabs(value) > 1.0e-15)
-                                outfile->Printf("\n  Lambda "
-                                                "[%3lu][%3lu][%3lu][%3lu] = "
-                                                "%18.15lf",
-                                                i[0], i[1], i[2], i[3], value);
-                        });
-                    }
-
-                if (print_ > 3)
-                    for (auto L3 : {L3aaa, L3aab, L3abb, L3bbb}) {
-                        outfile->Printf("\n\n** %s **", L3.name().c_str());
-                        L3.iterate([&](const std::vector<size_t>& i, double& value) {
-                            if (std::fabs(value) > 1.0e-15)
-                                outfile->Printf("\n  Lambda "
-                                                "[%3lu][%3lu][%3lu][%3lu][%"
-                                                "3lu][%3lu] = %18.15lf",
-                                                i[0], i[1], i[2], i[3], i[4], i[5], value);
-                        });
-                    }
+        if (max_rdm_level >= 3) {
+            // Three-particle density matrices in the active space
+            g3aaa = ambit::Tensor::build(ambit::CoreTensor, "g3aaa",
+                                         {nact, nact, nact, nact, nact, nact});
+            g3aab = ambit::Tensor::build(ambit::CoreTensor, "g3aab",
+                                         {nact, nact, nact, nact, nact, nact});
+            g3abb = ambit::Tensor::build(ambit::CoreTensor, "g3abb",
+                                         {nact, nact, nact, nact, nact, nact});
+            g3bbb = ambit::Tensor::build(ambit::CoreTensor, "g3bbb",
+                                         {nact, nact, nact, nact, nact, nact});
+            if (na_ >= 3) {
+                std::vector<double>& tpdm_aaa = C_->tpdm_aaa();
+                g3aaa.iterate([&](const std::vector<size_t>& i, double& value) {
+                    value = tpdm_aaa[i[0] * nact5 + i[1] * nact4 + i[2] * nact3 + i[3] * nact2 +
+                                     i[4] * nact + i[5]];
+                });
+            }
+            if ((na_ >= 2) and (nb_ >= 1)) {
+                std::vector<double>& tpdm_aab = C_->tpdm_aab();
+                g3aab.iterate([&](const std::vector<size_t>& i, double& value) {
+                    value = tpdm_aab[i[0] * nact5 + i[1] * nact4 + i[2] * nact3 + i[3] * nact2 +
+                                     i[4] * nact + i[5]];
+                });
+            }
+            if ((na_ >= 1) and (nb_ >= 2)) {
+                std::vector<double>& tpdm_abb = C_->tpdm_abb();
+                g3abb.iterate([&](const std::vector<size_t>& i, double& value) {
+                    value = tpdm_abb[i[0] * nact5 + i[1] * nact4 + i[2] * nact3 + i[3] * nact2 +
+                                     i[4] * nact + i[5]];
+                });
+            }
+            if (nb_ >= 3) {
+                std::vector<double>& tpdm_bbb = C_->tpdm_bbb();
+                g3bbb.iterate([&](const std::vector<size_t>& i, double& value) {
+                    value = tpdm_bbb[i[0] * nact5 + i[1] * nact4 + i[2] * nact3 + i[3] * nact2 +
+                                     i[4] * nact + i[5]];
+                });
             }
         }
+        if (max_rdm_level == 1) {
+            refs.emplace_back(g1a, g1b);
+        }
+        if (max_rdm_level == 2) {
+            refs.emplace_back(g1a, g1b, g2aa, g2ab, g2bb);
+        }
+        if (max_rdm_level == 3) {
+            refs.emplace_back(g1a, g1b, g2aa, g2ab, g2bb, g3aaa, g3aab, g3abb, g3bbb);
+        }
     }
+    return refs;
+}
 
-    return fci_ref;
+std::vector<RDMs>
+FCISolver::transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
+                           std::shared_ptr<ActiveSpaceMethod> method2, int max_rdm_level) {
+    std::vector<RDMs> refs;
+    throw std::runtime_error("FCISolver::transition_rdms is not implemented!");
+    return refs;
 }
 } // namespace forte

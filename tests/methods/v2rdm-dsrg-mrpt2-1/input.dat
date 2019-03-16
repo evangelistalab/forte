@@ -38,7 +38,7 @@ set v2rdm_casscf {
 
 set forte{
   job_type               dsrg-mrpt2
-  cas_type               v2rdm
+  active_space_solver               v2rdm
   frozen_docc            [1,0,0,0,0,1,0,0]
   restricted_docc        [1,0,0,0,0,1,0,0]
   active                 [1,0,1,1,0,1,1,1]

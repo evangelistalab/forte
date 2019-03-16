@@ -36,7 +36,7 @@ set forte{
    int_type              df
    job_type              three-dsrg-mrpt2
    print                 0
-   cas_type              fci
+   active_space_solver              fci
 }
 
 basis {

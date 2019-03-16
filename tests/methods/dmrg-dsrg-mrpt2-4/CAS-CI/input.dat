@@ -27,7 +27,7 @@ set forte{
     mps_chkpt            false
     dmrgscf_max_iter     1
     int_type             cholesky
-    cas_type             FCI
+    active_space_solver             FCI
     dsrg_s               0.5
     job_type             three-dsrg-mrpt2
     cholesky_tolerance   1e-10

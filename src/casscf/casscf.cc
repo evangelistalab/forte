@@ -28,7 +28,7 @@
 
 #include "casscf/casscf.h"
 #include "integrals/integrals.h"
-#include "base_classes/reference.h"
+#include "base_classes/rdms.h"
 
 #include "psi4/libfock/jk.h"
 #include "psi4/libmints/matrix.h"
@@ -41,9 +41,9 @@
 #include "helpers/timer.h"
 #include "sci/aci.h"
 #include "fci/fci_solver.h"
+#include "base_classes/active_space_solver.h"
 
 #include "sci/fci_mo.h"
-#include "fci/sa_fcisolver.h"
 #include "orbital-helpers/mp2_nos.h"
 #include "orbital-helpers/orbitaloptimizer.h"
 #include "orbital-helpers/semi_canonicalize.h"
@@ -57,13 +57,14 @@
 
 namespace forte {
 
-CASSCF::CASSCF(StateInfo state, std::shared_ptr<SCFInfo> scf_info,
+CASSCF::CASSCF(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
                std::shared_ptr<ForteOptions> options, std::shared_ptr<MOSpaceInfo> mo_space_info,
                std::shared_ptr<ActiveSpaceIntegrals> as_ints)
-    : state_(state), scf_info_(scf_info), options_(options), ints_(as_ints->ints()),
-      mo_space_info_(mo_space_info) {
+    : ActiveSpaceMethod(state, nroot, mo_space_info, as_ints), scf_info_(scf_info),
+      options_(options), ints_(as_ints->ints()) {
     startup();
 }
+
 double CASSCF::compute_energy() {
     if (na_ == 0) {
         outfile->Printf("\n\n\n Please set the active space");
@@ -350,64 +351,78 @@ void CASSCF::cas_ci() {
         quiet = false;
     }
 
-    if (options_->get_str("CASSCF_CI_SOLVER") == "FCI") {
-        // Used to grab the computed energy and RDMs.
-        if (options_->psi_options()["AVG_STATE"].size() == 0) {
-            set_up_fci();
-        } else {
-            set_up_sa_fci();
+    std::shared_ptr<ActiveSpaceIntegrals> fci_ints = get_ci_integrals();
+
+    auto state_weights_map = make_state_weights_map(options_, ints_->wfn());
+    auto state_map = to_state_nroots_map(state_weights_map);
+
+    std::string casscf_ci_type = options_->get_str("CASSCF_CI_SOLVER");
+    auto active_space_solver = make_active_space_solver(casscf_ci_type, state_map, scf_info_,
+                                                        mo_space_info_, fci_ints, options_);
+    const auto state_energies_map = active_space_solver->compute_energy();
+    cas_ref_ = active_space_solver->compute_average_rdms(state_weights_map, 2);
+    double average_energy = compute_average_state_energy(state_energies_map, state_weights_map);
+    // return the average energy
+    E_casscf_ = average_energy;
+
+    //    for
+
+    //    std::vector<std::pair<size_t, size_t>> roots;
+    //    roots.push_back(std::make_pair(0, 0));
+    //        cas_ref_ = fcisolver->reference();
+
+    /*
+        if (options_->get_str("CASSCF_CI_SOLVER") == "FCI") {
+            // Used to grab the computed energy and RDMs.
+            if (options_->psi_options()["AVG_STATE"].size() == 0) {
+                set_up_fci();
+           // } else {
+           //     set_up_sa_fci();
+            }
+        } else if (options_->get_str("CASSCF_CI_SOLVER") == "CAS") {
+            set_up_fcimo();
+        } else if (options_->get_str("CASSCF_CI_SOLVER") == "ACI") {
+            as_ints_ = get_ci_integrals();
+            AdaptiveCI aci(state_, nroot_, scf_info_, options_, mo_space_info_, as_ints_);
+            aci.set_max_rdm(2);
+            aci.set_quiet(quiet);
+            E_casscf_ = aci.compute_energy();
+            std::vector<std::pair<size_t,size_t>> roots;
+            roots.push_back(std::make_pair(0,0));
+            cas_ref_ = aci.reference(roots)[0];
+        } else if (options_->get_str("CASSCF_CI_SOLVER") == "DMRG") {
+    #ifdef HAVE_CHEMPS2
+            DMRGSolver dmrg(state_, scf_info_, options_, ints_, mo_space_info_);
+            dmrg.set_max_rdm(2);
+            dmrg.spin_free_rdm(true);
+            std::pair<ambit::Tensor, std::vector<double>> integral_pair = CI_Integrals();
+            dmrg.set_up_integrals(integral_pair.first, integral_pair.second);
+            dmrg.set_scalar(scalar_energy_ + ints_->frozen_core_energy() +
+                            ints_->nuclear_repulsion_energy());
+            E_casscf_ = dmrg.compute_energy();
+
+            cas_ref_ = dmrg.reference();
+    #else
+            throw psi::PSIEXCEPTION("Did not compile with CHEMPS2 so DMRG will not work");
+    #endif
         }
-    } else if (options_->get_str("CASSCF_CI_SOLVER") == "CAS") {
-        set_up_fcimo();
-    } else if (options_->get_str("CASSCF_CI_SOLVER") == "ACI") {
-        as_ints_ = get_ci_integrals();
-        AdaptiveCI aci(state_, scf_info_, options_, mo_space_info_, as_ints_);
-        aci.set_max_rdm(2);
-        aci.set_quiet(quiet);
-        aci.compute_energy();
-        cas_ref_ = aci.get_reference();
-        E_casscf_ = cas_ref_.get_Eref();
-    } else if (options_->get_str("CASSCF_CI_SOLVER") == "DMRG") {
-#ifdef HAVE_CHEMPS2
-        DMRGSolver dmrg(state_, scf_info_, options_, ints_, mo_space_info_);
-        dmrg.set_max_rdm(2);
-        dmrg.spin_free_rdm(true);
-        std::pair<ambit::Tensor, std::vector<double>> integral_pair = CI_Integrals();
-        dmrg.set_up_integrals(integral_pair.first, integral_pair.second);
-        dmrg.set_scalar(scalar_energy_ + ints_->frozen_core_energy() +
-                        ints_->nuclear_repulsion_energy());
-        dmrg.compute_energy();
 
-        cas_ref_ = dmrg.reference();
-        E_casscf_ = cas_ref_.get_Eref();
-#else
-        throw psi::PSIEXCEPTION("Did not compile with CHEMPS2 so DMRG will not work");
-#endif
-    }
+        if (options_->get_str("CASSCF_CI_SOLVER") == "DMRG") {
+            gamma2_ = cas_ref_.SFg2();
+        }
+        */
+    ambit::Tensor g2aa = cas_ref_.g2aa();
+    ambit::Tensor g2ab = cas_ref_.g2ab();
+    ambit::Tensor g2bb = cas_ref_.g2bb();
+    ambit::Tensor g1a = cas_ref_.g1a();
+    ambit::Tensor g1b = cas_ref_.g1b();
 
-    ambit::Tensor L2aa = cas_ref_.L2aa();
-    ambit::Tensor L2ab = cas_ref_.L2ab();
-    ambit::Tensor L2bb = cas_ref_.L2bb();
-    ambit::Tensor L1a = cas_ref_.L1a();
-    ambit::Tensor L1b = cas_ref_.L1b();
+    //    if (options_->get_str("CASSCF_CI_SOLVER") == "DMRG")
+    //        L2aa.scale(0.5);
 
-    L2aa("p,q,r,s") += L1a("p,r") * L1a("q,s");
-    L2aa("p,q,r,s") -= L1a("p,s") * L1a("q,r");
-
-    L2ab("pqrs") += L1a("pr") * L1b("qs");
-    // L2ab("pqrs") += L1b("pr") * L1a("qs");
-
-    L2bb("pqrs") += L1b("pr") * L1b("qs");
-    L2bb("pqrs") -= L1b("ps") * L1b("qr");
-    if (options_->get_str("CASSCF_CI_SOLVER") == "DMRG")
-        L2aa.scale(0.5);
-
-    ambit::Tensor gamma2 = ambit::Tensor::build(ambit::CoreTensor, "gamma2", {na_, na_, na_, na_});
-
-    gamma2("u,v,x,y") += L2aa("u,v,x,y");
-    gamma2("u,v,x,y") += L2ab("u,v,x,y");
     gamma2_ = ambit::Tensor::build(ambit::CoreTensor, "gamma2", {na_, na_, na_, na_});
-    gamma2_.copy(gamma2);
+    gamma2_("u,v,x,y") += g2aa("u,v,x,y");
+    gamma2_("u,v,x,y") += g2ab("u,v,x,y");
     gamma2_.scale(2.0);
     gamma2_.iterate([&](const std::vector<size_t>& i, double& value) {
         gamma2_matrix->set(i[0] * i[1] + i[1], i[2] * i[3] + i[3], value);
@@ -416,61 +431,61 @@ void CASSCF::cas_ci() {
     /// Compute the 1RDM
     ambit::Tensor gamma_no_spin = ambit::Tensor::build(ambit::CoreTensor, "Return", {na_, na_});
     gamma1_ = ambit::Tensor::build(ambit::CoreTensor, "Return", {na_, na_});
-    ambit::Tensor gamma1a = cas_ref_.L1a();
-    ambit::Tensor gamma1b = cas_ref_.L1b();
-
-    gamma_no_spin("i,j") = (gamma1a("i,j") + gamma1b("i,j"));
+    gamma_no_spin("i,j") = (g1a("i,j") + g1b("i,j"));
 
     gamma1_ = gamma_no_spin;
-    if (options_->get_str("CASSCF_CI_SOLVER") == "DMRG") {
-        gamma2_ = cas_ref_.SFg2();
-    }
 }
 
 void CASSCF::cas_ci_final() {
-    /// Calls francisco's FCI code and does a CAS-CI with the active given in
+
+    /// Calls Francesco's FCI code and does a CAS-CI with the active given in
     /// the input
     bool quiet = true;
     if (print_ > 0) {
         quiet = false;
     }
-    if (options_->get_str("CASSCF_CI_SOLVER") == "FCI") {
-        // Used to grab the computed energy and RDMs.
-        if (options_->psi_options()["AVG_STATE"].size() == 0) {
-            set_up_fci();
-        } else {
-            set_up_sa_fci();
-        }
-    } else if (options_->get_str("CASSCF_CI_SOLVER") == "CAS") {
-        set_up_fcimo();
-    } else if (options_->get_str("CASSCF_CI_SOLVER") == "ACI") {
-        as_ints_ = get_ci_integrals();
-        AdaptiveCI aci(state_, scf_info_, options_, mo_space_info_, as_ints_);
-        aci.set_max_rdm(3);
-        aci.set_quiet(quiet);
-        aci.compute_energy();
-        cas_ref_ = aci.get_reference();
-        E_casscf_ = cas_ref_.get_Eref();
-    } else if (options_->get_str("CASSCF_CI_SOLVER") == "DMRG") {
-#ifdef HAVE_CHEMPS2
-        DMRGSolver dmrg(state_, scf_info_, options_, ints_, mo_space_info_);
-        dmrg.set_max_rdm(3);
-        dmrg.spin_free_rdm(true);
-        std::pair<ambit::Tensor, std::vector<double>> integral_pair = CI_Integrals();
-        dmrg.set_up_integrals(integral_pair.first, integral_pair.second);
-        dmrg.set_scalar(scalar_energy_ + ints_->frozen_core_energy() +
-                        ints_->nuclear_repulsion_energy());
-        dmrg.compute_energy();
+    cas_ci();
+    //    if (options_->get_str("CASSCF_CI_SOLVER") == "FCI") {
+    //        // Used to grab the computed energy and RDMs.
+    //        //        if (options_->psi_options()["AVG_STATE"].size() == 0) {
+    ////        set_up_fci();
+    //        //} else {
+    //        //    set_up_sa_fci();
+    //        //        }
+    //    } else if (options_->get_str("CASSCF_CI_SOLVER") == "CAS") {
+    //        set_up_fcimo();
+    //    } else if (options_->get_str("CASSCF_CI_SOLVER") == "ACI") {
+    //        as_ints_ = get_ci_integrals();
+    //        AdaptiveCI aci(state_, nroot_, scf_info_, options_, mo_space_info_, as_ints_);
+    //        aci.set_max_rdm(3);
+    //        aci.set_quiet(quiet);
+    //        aci.compute_energy();
+    //        E_casscf_ = aci.energies()[0]; // TODO: Check if this should be root_
 
-        cas_ref_ = dmrg.reference();
-        E_casscf_ = cas_ref_.get_Eref();
-#else
-        throw psi::PSIEXCEPTION("Did not compile with CHEMPS2 so DMRG will not work");
-#endif
-    }
+    //        std::vector<std::pair<size_t, size_t>> roots;
+    //        roots.push_back(std::make_pair(0, 0));
+    //        cas_ref_ = aci.reference(roots)[0];
+
+    //    } else if (options_->get_str("CASSCF_CI_SOLVER") == "DMRG") {
+    //#ifdef HAVE_CHEMPS2
+    //        DMRGSolver dmrg(state_, scf_info_, options_, ints_, mo_space_info_);
+    //        dmrg.set_max_rdm(3);
+    //        dmrg.spin_free_rdm(true);
+    //        std::pair<ambit::Tensor, std::vector<double>> integral_pair = CI_Integrals();
+    //        dmrg.set_up_integrals(integral_pair.first, integral_pair.second);
+    //        dmrg.set_scalar(scalar_energy_ + ints_->frozen_core_energy() +
+    //                        ints_->nuclear_repulsion_energy());
+    //        dmrg.compute_energy();
+
+    //        cas_ref_ = dmrg.reference();
+    //        E_casscf_ = cas_ref_.get_Eref();
+    //#else
+    //        throw psi::PSIEXCEPTION("Did not compile with CHEMPS2 so DMRG will not work");
+    //#endif
+    //    }
 }
 
-double CASSCF::cas_check(Reference cas_ref) {
+double CASSCF::cas_check(RDMs cas_ref) {
     ambit::Tensor gamma1 = ambit::Tensor::build(ambit::CoreTensor, "Gamma1", {na_, na_});
     ambit::Tensor gamma2 = ambit::Tensor::build(ambit::CoreTensor, "Gamma2", {na_, na_, na_, na_});
     std::shared_ptr<ActiveSpaceIntegrals> fci_ints =
@@ -479,8 +494,8 @@ double CASSCF::cas_check(Reference cas_ref) {
     fci_ints->set_active_integrals_and_restricted_docc();
 
     /// Spin-free ORDM = gamma1_a + gamma1_b
-    ambit::Tensor L1b = cas_ref.L1b();
-    ambit::Tensor L1a = cas_ref.L1a();
+    ambit::Tensor L1b = cas_ref.g1b();
+    ambit::Tensor L1a = cas_ref.g1a();
     gamma1("u, v") = (L1a("u, v") + L1b("u, v"));
     ambit::Tensor L2aa = cas_ref.L2aa();
     ambit::Tensor L2ab = cas_ref.L2ab();
@@ -691,17 +706,21 @@ ambit::Tensor CASSCF::transform_integrals() {
     }
     return active_int;
 }
+
 void CASSCF::set_up_fci() {
-    auto fcisolver =
-        make_active_space_solver("FCI", state_, scf_info_, mo_space_info_, ints_, options_);
-    fcisolver->set_max_rdm_level(3);
-    fcisolver->set_nroot(options_->get_int("NROOT"));
+    auto as_ints = make_active_space_ints(mo_space_info_, ints_, "ACTIVE", {{"RESTRICTED_DOCC"}});
+
+    std::shared_ptr<ActiveSpaceMethod> fcisolver = make_active_space_method(
+        "FCI", state_, nroot_, scf_info_, mo_space_info_, as_ints, options_);
+
     fcisolver->set_root(options_->get_int("ROOT"));
     std::shared_ptr<ActiveSpaceIntegrals> fci_ints = get_ci_integrals();
     fcisolver->set_active_space_integrals(fci_ints);
     E_casscf_ = fcisolver->compute_energy();
 
-    cas_ref_ = fcisolver->get_reference();
+    std::vector<std::pair<size_t, size_t>> roots;
+    roots.push_back(std::make_pair(0, 0));
+    cas_ref_ = fcisolver->rdms(roots, 2)[0];
 }
 
 std::shared_ptr<ActiveSpaceIntegrals> CASSCF::get_ci_integrals() {
@@ -880,6 +899,7 @@ void CASSCF::overlap_orbitals(const psi::SharedMatrix& C_old, const psi::SharedM
         }
     }
 }
+/*
 void CASSCF::set_up_sa_fci() {
     SA_FCISolver sa_fcisolver(options_->psi_options(), ints_->wfn());
     sa_fcisolver.set_mo_space_info(mo_space_info_);
@@ -948,85 +968,8 @@ void CASSCF::set_up_sa_fci() {
     //        CISolutions_.push_back(StateAveragedFCISolver);
     //    }
 }
-void CASSCF::set_up_fcimo() {
-    // setup ActiveSpaceIntegrals for FCI_MO
-    std::vector<size_t> rdocc = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
-    std::vector<size_t> active = mo_space_info_->get_corr_abs_mo("ACTIVE");
-    std::shared_ptr<ActiveSpaceIntegrals> fci_ints =
-        std::make_shared<ActiveSpaceIntegrals>(ints_, active, rdocc);
+*/
 
-    if (!(options_->get_bool("RESTRICTED_DOCC_JK"))) {
-        fci_ints->set_active_integrals_and_restricted_docc();
-    } else {
-        auto na_array = mo_space_info_->get_corr_abs_mo("ACTIVE");
-
-        ambit::Tensor active_aa =
-            ambit::Tensor::build(ambit::CoreTensor, "ActiveIntegralsAA", {na_, na_, na_, na_});
-        ambit::Tensor active_ab =
-            ambit::Tensor::build(ambit::CoreTensor, "ActiveIntegralsAB", {na_, na_, na_, na_});
-        ambit::Tensor active_bb =
-            ambit::Tensor::build(ambit::CoreTensor, "ActiveIntegralsBB", {na_, na_, na_, na_});
-        const std::vector<double>& tei_paaa_data = tei_paaa_.data();
-
-        active_ab.iterate([&](const std::vector<size_t>& i, double& value) {
-            value = tei_paaa_data[na_array[i[0]] * na_ * na_ * na_ + i[1] * na_ * na_ + i[2] * na_ +
-                                  i[3]];
-        });
-
-        active_aa.copy(active_ab);
-        active_bb.copy(active_ab);
-        active_aa("u,v,x,y") -= active_ab("u, v, y, x");
-        active_bb.copy(active_aa);
-
-        fci_ints->set_active_integrals(active_aa, active_ab, active_bb);
-        if (casscf_debug_print_) {
-            outfile->Printf("\n\n tei_active_aa: %8.8f tei_active_ab: %8.8f", active_aa.norm(2),
-                            active_ab.norm(2));
-        }
-
-        std::vector<std::vector<double>> oei_vector;
-        if ((nrdocc_ + nfrozen_) > 0) {
-            oei_vector = compute_restricted_docc_operator();
-            fci_ints->set_restricted_one_body_operator(oei_vector[0], oei_vector[1]);
-            fci_ints->set_scalar_energy(scalar_energy_);
-        } else {
-            std::vector<double> oei_a(na_ * na_);
-            std::vector<double> oei_b(na_ * na_);
-
-            std::vector<std::vector<double>> oei_vector;
-            if ((nrdocc_ + nfrozen_) > 0) {
-                oei_vector = compute_restricted_docc_operator();
-                fci_ints->set_restricted_one_body_operator(oei_vector[0], oei_vector[1]);
-                fci_ints->set_scalar_energy(scalar_energy_);
-            } else {
-                std::vector<double> oei_a(na_ * na_);
-                std::vector<double> oei_b(na_ * na_);
-
-                for (size_t p = 0; p < na_; ++p) {
-                    size_t pp = active[p];
-                    for (size_t q = 0; q < na_; ++q) {
-                        size_t qq = active[q];
-                        size_t idx = na_ * p + q;
-                        oei_a[idx] = ints_->oei_a(pp, qq);
-                        oei_b[idx] = ints_->oei_b(pp, qq);
-                    }
-                }
-                oei_vector.push_back(oei_a);
-                oei_vector.push_back(oei_b);
-                scalar_energy_ = 0.00;
-                fci_ints->set_restricted_one_body_operator(oei_vector[0], oei_vector[1]);
-                fci_ints->set_scalar_energy(scalar_energy_);
-            }
-        }
-
-        FCI_MO cas(scf_info_, options_, ints_, mo_space_info_, fci_ints);
-        cas.set_quite_mode(print_ > 0 ? false : true);
-        cas.compute_energy();
-        cas.set_max_rdm_level(2);
-        cas_ref_ = cas.get_reference();
-        E_casscf_ = cas_ref_.get_Eref();
-    }
-}
 void CASSCF::write_orbitals_molden() {
     psi::SharedVector occ_vector(new psi::Vector(nirrep_, nmopi_));
     view_modified_orbitals(ints_->wfn(), ints_->Ca(), scf_info_->epsilon_a(), occ_vector);
@@ -1062,6 +1005,20 @@ std::pair<ambit::Tensor, std::vector<double>> CASSCF::CI_Integrals() {
     return pair_return;
 }
 
-Reference CASSCF::get_reference() { return cas_ref_; }
+std::vector<RDMs> CASSCF::rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
+                               int max_rdm_level) {
+    // TODO (York): this does not seem the correct thing to do.
+    std::vector<RDMs> refs;
+    refs.push_back(cas_ref_);
+    return refs;
+}
+
+std::vector<RDMs> CASSCF::transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
+                                          std::shared_ptr<ActiveSpaceMethod> method2,
+                                          int max_rdm_level) {
+    std::vector<RDMs> refs;
+    throw std::runtime_error("FCISolver::transition_rdms is not implemented!");
+    return refs;
+}
 
 } // namespace forte

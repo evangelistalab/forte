@@ -29,21 +29,27 @@
 #ifndef _ci_no_h_
 #define _ci_no_h_
 
-#include "psi4/libmints/wavefunction.h"
+#include "psi4/psi4-dec.h"
+#include "psi4/libmints/molecule.h"
+#include "psi4/libmints/pointgrp.h"
+#include "helpers/timer.h"
+#include "ci_rdm/ci_rdms.h"
+#include "integrals/active_space_integrals.h"
+#include "base_classes/forte_options.h"
+#include "sparse_ci/sparse_ci_solver.h"
+#include "sparse_ci/determinant.h"
 
+#include "base_classes/orbital_transform.h"
 
 namespace forte {
 
 class ForteOptions;
 
-/// Set the CI-NO options
-void set_CINO_options(ForteOptions& foptions);
-
 /**
  * @brief The CINO class
  * This class implements natural orbitals for CI wave functions
  */
-class CINO : public psi::Wavefunction {
+class CINO : public OrbitalTransform {
   public:
     // ==> Class Constructor and Destructor <==
 
@@ -54,8 +60,8 @@ class CINO : public psi::Wavefunction {
      * @param ints A pointer to an allocated integral object
      * @param mo_space_info A pointer to the MOSpaceInfo object
      */
-    CINO(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
-         std::shared_ptr<MOSpaceInfo> mo_space_info);
+    CINO(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
+         std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Destructor
     ~CINO();
@@ -63,13 +69,16 @@ class CINO : public psi::Wavefunction {
     // ==> Class Interface <==
 
     /// Compute the energy
-    double compute_energy();
+    void compute_transformation();
+
+    psi::SharedMatrix get_Ua();
+    psi::SharedMatrix get_Ub();
 
   private:
     // ==> Class data <==
 
-    /// The molecular integrals
-    std::shared_ptr<ForteIntegrals> ints_;
+    /// ForteOptions
+    std::shared_ptr<ForteOptions> options_;
     /// The MOSpaceInfo object
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
     /// Pointer to FCI integrals
@@ -78,6 +87,8 @@ class CINO : public psi::Wavefunction {
     size_t nmo_;
     /// The number of active orbitals
     size_t nactv_;
+    /// The number of irreps
+    int nirrep_;
     /// The number of active orbitals per irrep
     psi::Dimension actvpi_;
     /// The number of restricted doubly occupied orbitals per irrep
@@ -92,10 +103,14 @@ class CINO : public psi::Wavefunction {
     psi::Dimension aoccpi_;
     //    /// The number of alpha unoccupied active orbitals per irrep
     //    psi::Dimension avirpi_;
-    //    /// The number of beta occupied active orbitals per irrep
-    //    psi::Dimension boccpi_;
+    /// The number of beta occupied active orbitals per irrep
+    psi::Dimension boccpi_;
     //    /// The number of beta unoccupied active orbitals per irrep
     //    psi::Dimension bvirpi_;
+
+    // The transformation matrices
+    psi::SharedMatrix Ua_;
+    psi::SharedMatrix Ub_;
 
     // ==> CINO Options <==
     /// Add missing degenerate determinants excluded from the aimed selection?
@@ -119,15 +134,15 @@ class CINO : public psi::Wavefunction {
     /// All that happens before we compute the energy
     void startup();
 
-    //std::vector<std::vector<Determinant> > build_dets_cas();
+    // std::vector<std::vector<Determinant> > build_dets_cas();
 
     std::vector<Determinant> build_dets(int irrep);
 
     std::pair<psi::SharedVector, psi::SharedMatrix>
     diagonalize_hamiltonian(const std::vector<Determinant>& dets, int nsolutions);
 
-    std::pair<psi::SharedMatrix, psi::SharedMatrix> build_density_matrix(const std::vector<Determinant>& dets,
-                                                               psi::SharedMatrix evecs, int nroot_);
+    std::pair<psi::SharedMatrix, psi::SharedMatrix>
+    build_density_matrix(const std::vector<Determinant>& dets, psi::SharedMatrix evecs, int nroot_);
 
     /// Diagonalize the density matrix
     std::tuple<psi::SharedVector, psi::SharedMatrix, psi::SharedVector, psi::SharedMatrix>
@@ -135,9 +150,10 @@ class CINO : public psi::Wavefunction {
 
     /// Find optimal active space and transform the orbitals
     void find_active_space_and_transform(
-        std::tuple<psi::SharedVector, psi::SharedMatrix, psi::SharedVector, psi::SharedMatrix> no_U);
+        std::tuple<psi::SharedVector, psi::SharedMatrix, psi::SharedVector, psi::SharedMatrix>
+            no_U);
 };
 std::string dimension_to_string(psi::Dimension dim);
-}
+} // namespace forte
 
 #endif // _ci_no_h_

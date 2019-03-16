@@ -28,13 +28,13 @@ set scf {
 }
 
 set forte {
-  job_type = aci
+  active_space_solver aci
   multiplicity 1
   ms 0.0
   ACI_SELECT_TYPE energy
   sigma 0.00001000
   gamma 100.0
-  aci_nroot 1
+  nroot 1
   root_sym 0
   charge 0
   aci_perturb_select true

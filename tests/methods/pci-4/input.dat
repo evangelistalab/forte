@@ -18,7 +18,7 @@ set {
 }
 
 set forte {
-  job_type pci
+  active_space_solver pci
   pci_nroot 1
   charge 0
   pci_tau 1.0
@@ -29,7 +29,7 @@ set forte {
   pci_ENERGY_ESTIMATE_THRESHOLD 1e-5
   pci_DYNAMIC_PRESCREENING true
   pci_GENERATOR POWER
-  MP2_NOS true
+  orbital_type mp2_nos
   pci_maxbeta 100000.00
   pci_e_convergence 12
 }

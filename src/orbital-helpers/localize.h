@@ -33,47 +33,48 @@
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/libmints/local.h"
 
-#include "base_classes/mo_space_info.h"
+#include "psi4/libpsio/psio.h"
+#include "psi4/libpsio/psio.hpp"
 #include "integrals/integrals.h"
-#include "base_classes/reference.h"
+#include "base_classes/forte_options.h"
+#include "base_classes/rdms.h"
+#include "base_classes/mo_space_info.h"
+#include "base_classes/scf_info.h"
 
-
+#include "base_classes/orbital_transform.h"
 
 namespace forte {
 
-class LOCALIZE {
+class LOCALIZE : public OrbitalTransform {
   public:
-    LOCALIZE(std::shared_ptr<psi::Wavefunction> wfn, psi::Options& options,
-             std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
+    LOCALIZE(std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
+             std::shared_ptr<MOSpaceInfo> mo_space_info);
 
-    ~LOCALIZE();
+    // Compute the rotation matrices
+    void compute_transformation();
 
-    void split_localize();
+    // Return the matrices
+    psi::SharedMatrix get_Ua();
+    psi::SharedMatrix get_Ub();
 
-    void full_localize();
+    // Sets the orbitals to localize by first/last indices
+    void set_orbital_space(std::vector<int>& orbital_spaces);
 
-    psi::SharedMatrix get_U();
+    // Sets the orbitals to localize by space label from MOSpaceInfo
+    void set_orbital_space(std::vector<std::string>& labels);
 
   private:
-    std::shared_ptr<psi::Wavefunction> wfn_;
+    std::shared_ptr<MOSpaceInfo> mo_space_info_;
 
-    std::shared_ptr<ForteIntegrals> ints_;
+    psi::SharedMatrix Ua_;
+    psi::SharedMatrix Ub_;
 
-    psi::SharedMatrix U_;
+    // orbitals to localize
+    std::vector<int> orbital_spaces_;
 
-    size_t nfrz_;
-    size_t nrst_;
-    size_t namo_;
-
-    int naocc_;
-    int navir_;
-    int multiplicity_;
-
-    std::vector<size_t> abs_act_;
-
-    std::string local_type_;
+    // Pipek-Mezey or Boys
     std::string local_method_;
 };
-}
+} // namespace forte
 
 #endif

@@ -19,8 +19,7 @@ set {
 }
 
 set forte {
-  job_type fci
-  fci_max_rdm 3
+  active_space_solver fci
   fci_test_rdms true
 }
 
