@@ -669,7 +669,7 @@ double MRDSRG_SO::compute_energy() {
         // update amplitudes
         update_t2();
         update_t1();
-        if (options_.get_str("CORR_LEVEL") == "LDSRG3") {
+        if (options_.get_str("CORR_LEVEL").find("LDSRG3") != std::string::npos) {
             update_t3();
         }
 
@@ -730,7 +730,8 @@ void MRDSRG_SO::compute_lhbar() {
     BlockedTensor C2 = ambit::BlockedTensor::build(tensor_type_, "C2", {"gggg"});
 
     BlockedTensor O3, C3;
-    if (options_.get_str("CORR_LEVEL") == "LDSRG3") {
+    bool do_t3 = options_.get_str("CORR_LEVEL").find("LDSRG3") != std::string::npos;
+    if (do_t3) {
         Hbar3.zero();
         O3 = ambit::BlockedTensor::build(tensor_type_, "O3", {"gggggg"});
         C3 = ambit::BlockedTensor::build(tensor_type_, "C3", {"gggggg"});
@@ -742,10 +743,14 @@ void MRDSRG_SO::compute_lhbar() {
         double factor = 1.0 / n;
 
         double C0 = 0.0;
-        if (options_.get_str("CORR_LEVEL") == "LDSRG3") {
+        if (do_t3) {
             timer_on("3-body [H, A]");
             if (na_ == 0) {
-                commutator_H_A_3_sr(factor, O1, O2, O3, T1, T2, T3, C0, C1, C2, C3);
+                if (options_.get_str("CORR_LEVEL") == "LDSRG3_1") {
+                    commutator_H_A_3_sr_1(factor, O1, O2, O3, T1, T2, T3, C0, C1, C2, C3);
+                } else {
+                    commutator_H_A_3_sr(factor, O1, O2, O3, T1, T2, T3, C0, C1, C2, C3);
+                }
             } else {
                 commutator_H_A_3(factor, O1, O2, O3, T1, T2, T3, C0, C1, C2, C3);
             }

@@ -255,6 +255,10 @@ class MRDSRG_SO : public psi::Wavefunction {
     void commutator_H_A_3_sr(double factor, BlockedTensor& H1, BlockedTensor& H2, BlockedTensor& H3,
                              BlockedTensor& T1, BlockedTensor& T2, BlockedTensor& T3, double& C0,
                              BlockedTensor& C1, BlockedTensor& C2, BlockedTensor& C3);
+    void commutator_H_A_3_sr_1(double factor, BlockedTensor& H1, BlockedTensor& H2,
+                               BlockedTensor& H3, BlockedTensor& T1, BlockedTensor& T2,
+                               BlockedTensor& T3, double& C0, BlockedTensor& C1, BlockedTensor& C2,
+                               BlockedTensor& C3);
 
     // Taylor Expansion of [1 - exp(-s * D^2)] / D = sqrt(s) * (\sum_{n=1}
     // \frac{1}{n!} (-1)^{n+1} Z^{2n-1})
