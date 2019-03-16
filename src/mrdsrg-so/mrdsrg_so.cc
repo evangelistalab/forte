@@ -60,6 +60,9 @@ MRDSRG_SO::~MRDSRG_SO() {}
 
 void MRDSRG_SO::startup() {
     Eref = compute_Eref_from_rdms(rdms_, ints_, mo_space_info_);
+
+    do_t3_ = options_.get_str("CORR_LEVEL").find("DSRG3") != std::string::npos;
+
     BlockedTensor::reset_mo_spaces();
     BlockedTensor::set_expert_mode(true);
 
@@ -598,7 +601,7 @@ double MRDSRG_SO::compute_energy() {
     guess_t2();
     guess_t1();
 
-    if (options_.get_str("CORR_LEVEL") == "LDSRG3") {
+    if (do_t3_) {
         Hbar3 = BTF->build(tensor_type_, "Hbar3", {"gggggg"});
         T3 = BTF->build(tensor_type_, "T3 Amplitudes", {"hhhppp"});
         guess_t3();
@@ -669,7 +672,7 @@ double MRDSRG_SO::compute_energy() {
         // update amplitudes
         update_t2();
         update_t1();
-        if (options_.get_str("CORR_LEVEL").find("LDSRG3") != std::string::npos) {
+        if (do_t3_) {
             update_t3();
         }
 
@@ -730,8 +733,7 @@ void MRDSRG_SO::compute_lhbar() {
     BlockedTensor C2 = ambit::BlockedTensor::build(tensor_type_, "C2", {"gggg"});
 
     BlockedTensor O3, C3;
-    bool do_t3 = options_.get_str("CORR_LEVEL").find("LDSRG3") != std::string::npos;
-    if (do_t3) {
+    if (do_t3_) {
         Hbar3.zero();
         O3 = ambit::BlockedTensor::build(tensor_type_, "O3", {"gggggg"});
         C3 = ambit::BlockedTensor::build(tensor_type_, "C3", {"gggggg"});
@@ -743,7 +745,7 @@ void MRDSRG_SO::compute_lhbar() {
         double factor = 1.0 / n;
 
         double C0 = 0.0;
-        if (do_t3) {
+        if (do_t3_) {
             timer_on("3-body [H, A]");
             if (na_ == 0) {
                 if (options_.get_str("CORR_LEVEL") == "LDSRG3_1") {
@@ -806,7 +808,7 @@ void MRDSRG_SO::compute_lhbar() {
         double norm_C1 = C1.norm();
         double norm_C2 = C2.norm();
         double norm_C3 = 0.0;
-        if (options_.get_str("CORR_LEVEL") == "LDSRG3") {
+        if (do_t3_) {
             Hbar3["g0,g1,g2,g3,g4,g5"] += C3["g0,g1,g2,g3,g4,g5"];
             O3["g0,g1,g2,g3,g4,g5"] = C3["g0,g1,g2,g3,g4,g5"];
             norm_C3 = C3.norm();
