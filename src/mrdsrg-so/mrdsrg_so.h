@@ -132,6 +132,8 @@ class MRDSRG_SO : public psi::Wavefunction {
     TensorType tensor_type_;
     std::shared_ptr<BlockedTensorFactory> BTF;
 
+    bool do_t3_;
+
     // => Tensors <= //
 
     ambit::BlockedTensor H;
