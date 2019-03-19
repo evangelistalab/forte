@@ -697,6 +697,12 @@ double MRDSRG_SO::compute_energy() {
                     "----------------------------------------");
     outfile->Printf("\n\n\n    MR-DSRG(2) correlation energy      = %25.15f", Etotal - Eref);
     outfile->Printf("\n  * MR-DSRG(2) total energy            = %25.15f\n", Etotal);
+    if (options_.get_str("CORR_LEVEL") == "LDSRG2_P3") {
+        T3 = BTF->build(tensor_type_, "T3 Amplitudes", {"hhhppp"});
+        guess_t3();
+        Etotal += compute_ldsrg2_4th_corr();
+        outfile->Printf("\n  * MR-LDSRG(2)-T total energy         = %25.15f\n", Etotal);
+    }
 
     psi::Process::environment.globals["CURRENT ENERGY"] = Etotal;
 
@@ -821,6 +827,154 @@ void MRDSRG_SO::compute_lhbar() {
     }
     //    outfile->Printf("\n
     //    -----------------------------------------------------------------");
+}
+
+double MRDSRG_SO::compute_ldsrg2_4th_corr(){
+    double E1 = compute_ldsrg2_4th_corr_3body();
+    outfile->Printf("\n  LDSRG(2) 4th-order correction 3-body H: %20.12f", E1);
+    double E2 = compute_ldsrg2_4th_corr_t3();
+    outfile->Printf("\n  LDSRG(2) 4th-order correction T3:       %20.12f", E2);
+    double E3 = compute_ldsrg2_4th_corr_lambda();
+    outfile->Printf("\n  LDSRG(2) 4th-order correction Lambda:   %20.12f", E3);
+    outfile->Printf("\n  LDSRG(2) 4th-order correction (total):  %20.12f", E1 + E2 + E3);
+    return E1 + E2 + E3;
+}
+
+double MRDSRG_SO::compute_ldsrg2_4th_corr_3body(){
+    double C0 = 0.0;
+
+    C0 += (-1.0 / 3.0) * V["v0,v1,v2,c0"] * T1["c0,v0"] * T2["c1,c2,v2,v3"] * T2["c1,c2,v1,v3"];
+
+    C0 += (-1.0 / 12.0) * V["v0,v1,v2,c0"] * T1["c0,v3"] * T2["c1,c2,v2,v3"] * T2["c1,c2,v0,v1"];
+
+    C0 += (1.0 / 3.0) * V["v0,v1,v2,c0"] * T1["c1,v0"] * T2["c1,c2,v2,v3"] * T2["c0,c2,v1,v3"];
+
+    C0 += (1.0 / 6.0) * V["v0,v1,v2,c0"] * T1["c1,v3"] * T2["c1,c2,v2,v3"] * T2["c0,c2,v0,v1"];
+
+    C0 += (-1.0 / 12.0) * V["v0,v1,c0,c1"] * T2["c2,c3,v2,v3"] * T2["c0,c1,v1,v3"] * T2["c2,c3,v0,v2"];
+
+    C0 += (-1.0 / 12.0) * V["v0,v1,c0,c1"] * T2["c2,c3,v2,v3"] * T2["c0,c2,v2,v3"] * T2["c1,c3,v0,v1"];
+
+    C0 += (-1.0 / 3.0) * V["v0,c0,v1,v2"] * T1["c0,v1"] * T2["c1,c2,v2,v3"] * T2["c1,c2,v0,v3"];
+
+    C0 += (1.0 / 3.0) * V["v0,c0,v1,v2"] * T1["c1,v1"] * T2["c0,c2,v2,v3"] * T2["c1,c2,v0,v3"];
+
+    C0 += (-1.0 / 12.0) * V["v0,c0,v1,v2"] * T1["c0,v3"] * T2["c1,c2,v1,v2"] * T2["c1,c2,v0,v3"];
+
+    C0 += (1.0 / 6.0) * V["v0,c0,v1,v2"] * T1["c1,v3"] * T2["c0,c2,v1,v2"] * T2["c1,c2,v0,v3"];
+
+    C0 += (-1.0 / 3.0) * V["v0,c0,c1,c2"] * T1["c1,v0"] * T2["c0,c3,v1,v2"] * T2["c2,c3,v1,v2"];
+
+    C0 += (1.0 / 3.0) * V["v0,c0,c1,c2"] * T1["c1,v1"] * T2["c0,c3,v1,v2"] * T2["c2,c3,v0,v2"];
+
+    C0 += (-1.0 / 12.0) * V["v0,c0,c1,c2"] * T1["c3,v0"] * T2["c0,c3,v1,v2"] * T2["c1,c2,v1,v2"];
+
+    C0 += (1.0 / 6.0) * V["v0,c0,c1,c2"] * T1["c3,v1"] * T2["c0,c3,v1,v2"] * T2["c1,c2,v0,v2"];
+
+    C0 += (-1.0 / 12.0) * V["c0,c1,v0,v1"] * T2["c1,c3,v0,v1"] * T2["c0,c2,v2,v3"] * T2["c2,c3,v2,v3"];
+
+    C0 += (-1.0 / 12.0) * V["c0,c1,v0,v1"] * T2["c2,c3,v0,v2"] * T2["c0,c1,v1,v3"] * T2["c2,c3,v2,v3"];
+
+    C0 += (-1.0 / 3.0) * V["c0,c1,v0,c2"] * T1["c0,v0"] * T2["c1,c3,v1,v2"] * T2["c2,c3,v1,v2"];
+
+    C0 += (-1.0 / 12.0) * V["c0,c1,v0,c2"] * T1["c3,v0"] * T2["c0,c1,v1,v2"] * T2["c2,c3,v1,v2"];
+
+    C0 += (1.0 / 3.0) * V["c0,c1,v0,c2"] * T1["c0,v1"] * T2["c1,c3,v0,v2"] * T2["c2,c3,v1,v2"];
+
+    C0 += (1.0 / 6.0) * V["c0,c1,v0,c2"] * T1["c3,v1"] * T2["c0,c1,v0,v2"] * T2["c2,c3,v1,v2"];
+
+    return C0;
+}
+
+double MRDSRG_SO::compute_ldsrg2_4th_corr_t3(){
+    double C0 = 0.0;
+
+    C0 += (1.0 / 4.0) * F["v0,c0"] * T2["c1,c2,v1,v2"] * T3["c0,c1,c2,v0,v1,v2"];
+
+    C0 += (1.0 / 4.0) * V["v0,v1,c0,c1"] * T1["c2,v2"] * T3["c0,c1,c2,v0,v1,v2"];
+
+    C0 += (-1.0 / 4.0) * V["v0,v1,v2,c0"] * T2["c1,c2,v2,v3"] * T3["c0,c1,c2,v0,v1,v3"];
+
+    C0 += (-1.0 / 4.0) * V["v0,c0,v1,v2"] * T2["c1,c2,v0,v3"] * T3["c0,c1,c2,v1,v2,v3"];
+
+    C0 += (-1.0 / 4.0) * V["v0,c0,c1,c2"] * T2["c0,c3,v1,v2"] * T3["c1,c2,c3,v0,v1,v2"];
+
+    C0 += (-1.0 / 4.0) * V["c0,c1,v0,c2"] * T2["c2,c3,v1,v2"] * T3["c0,c1,c3,v0,v1,v2"];
+
+    return C0;
+}
+
+double MRDSRG_SO::compute_ldsrg2_4th_corr_lambda(){
+    double C0 = 0.0;
+
+    ambit::BlockedTensor L1 = BTF->build(tensor_type_, "Lambda1 Amplitudes", {"ph"});
+    ambit::BlockedTensor L2 = BTF->build(tensor_type_, "Lambda2 Amplitudes", {"pphh"});
+
+    L1["ai"] = T1["ia"];
+    L1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+        double D = Fd[i[0]] - Fd[i[1]];
+        value *= 1.0 + std::exp(-s_ * D * D) ;
+    });
+
+    L2["abij"] = T2["ijab"];
+    L2.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+        double D = Fd[i[0]] + Fd[i[1]] - Fd[i[2]] - Fd[i[3]];
+        value *= 1.0 + std::exp(-s_ * D * D);
+    });
+
+    C0 += (1.0 / 4.0) * F["v0,c0"] * L2["v1,v2,c1,c2"] * T3["c0,c1,c2,v0,v1,v2"];
+
+    C0 += (1.0 / 4.0) * V["v0,v1,c0,c1"] * L1["v2,c2"] * T3["c0,c1,c2,v0,v1,v2"];
+
+    C0 += (-1.0 / 4.0) * V["v0,v1,v2,c0"] * L2["v2,v3,c1,c2"] * T3["c0,c1,c2,v0,v1,v3"];
+
+    C0 += (-1.0 / 4.0) * V["v0,c0,c1,c2"] * L2["v1,v2,c0,c3"] * T3["c1,c2,c3,v0,v1,v2"];
+
+    C0 += (-1.0 / 2.0) * V["v0,c0,v1,v2"] * L1["v1,c0"] * T2["v2,v3,c1,c2"] * T2["c1,c2,v0,v3"];
+
+    C0 += (-1.0 / 2.0) * V["c0,c1,v0,c2"] * L1["v0,c0"] * T2["c1,c3,v1,v2"] * T2["c2,c3,v1,v2"];
+
+    C0 += (1.0 / 2.0) * V["c0,c1,v0,c2"] * L1["v1,c0"] * T2["c1,c3,v0,v2"] * T2["c2,c3,v1,v2"];
+
+    C0 += (1.0 / 2.0) * V["v0,c0,v1,v2"] * L1["v1,c1"] * T2["c0,c2,v2,v3"] * T2["c1,c2,v0,v3"];
+
+    C0 += (1.0 / 4.0) * V["v0,c0,v1,v2"] * L1["v3,c1"] * T2["c0,c2,v1,v2"] * T2["c1,c2,v0,v3"];
+
+    C0 += (1.0 / 4.0) * V["c0,c1,v0,c2"] * L1["v1,c3"] * T2["c0,c1,v0,v2"] * T2["c2,c3,v1,v2"];
+
+    C0 += (-1.0 / 8.0) * V["c0,c1,v0,c2"] * L1["v0,c3"] * T2["c0,c1,v1,v2"] * T2["c2,c3,v1,v2"];
+
+    C0 += (-1.0 / 8.0) * V["v0,c0,v1,v2"] * L1["v3,c0"] * T2["c1,c2,v1,v2"] * T2["c1,c2,v0,v3"];
+
+    C0 += (1.0 / 2.0) * V["v0,c0,v1,v2"] * L2["v1,v3,c0,c1"] * T1["c2,v2"] * T2["c1,c2,v0,v3"];
+
+    C0 += (1.0 / 2.0) * V["c0,c1,v0,c2"] * L2["v0,v1,c0,c3"] * T1["c1,v2"] * T2["c2,c3,v1,v2"];
+
+    C0 += (-1.0 / 4.0) * V["v0,v1,v2,c0"] * L2["v2,v3,c1,c2"] * T1["c0,v0"] * T2["c1,c2,v1,v3"];
+
+    C0 += (-1.0 / 4.0) * V["v0,c0,v1,v2"] * L2["v1,v2,c0,c1"] * T1["c2,v3"] * T2["c1,c2,v0,v3"];
+
+    C0 += (1.0 / 4.0) * V["c0,c1,v0,c2"] * L2["v1,v2,c0,c3"] * T1["c1,v0"] * T2["c2,c3,v1,v2"];
+
+    C0 += (1.0 / 4.0) * V["v0,c0,v1,v2"] * L2["v1,v3,c1,c2"] * T1["c0,v2"] * T2["c1,c2,v0,v3"];
+
+    C0 += (-1.0 / 4.0) * V["v0,c0,c1,c2"] * L2["v1,v2,c0,c3"] * T1["c1,v0"] * T2["c2,c3,v1,v2"];
+
+    C0 += (-1.0 / 4.0) * V["c0,c1,v0,c2"] * L2["v0,v1,c0,c1"] * T1["c3,v2"] * T2["c2,c3,v1,v2"];
+
+    C0 += (-1.0 / 8.0) * V["v0,c0,v1,v2"] * L2["v1,v2,c1,c2"] * T1["c0,v3"] * T2["c1,c2,v0,v3"];
+
+    C0 += (-1.0 / 8.0) * V["c0,c1,v0,c2"] * L2["v1,v2,c0,c1"] * T1["c3,v0"] * T2["c2,c3,v1,v2"];
+
+    C0 += (-1.0 / 8.0) * V["v0,v1,c0,c1"] * L2["v2,v3,c2,c3"] * T2["c0,c1,v1,v3"] * T2["c2,c3,v0,v2"];
+
+    C0 += (-1.0 / 8.0) * V["v0,v1,c0,c1"] * L2["v2,v3,c2,c3"] * T2["c0,c2,v2,v3"] * T2["c1,c3,v0,v1"];
+
+    C0 += (-1.0 / 8.0) * V["c0,c1,v0,v1"] * L2["v0,v1,c0,c2"] * T2["c1,c3,v2,v3"] * T2["c2,c3,v2,v3"];
+
+    C0 += (-1.0 / 8.0) * V["c0,c1,v0,v1"] * L2["v0,v2,c0,c1"] * T2["c2,c3,v1,v3"] * T2["c2,c3,v2,v3"];
+
+    return C0;
 }
 
 void MRDSRG_SO::compute_qhbar() {

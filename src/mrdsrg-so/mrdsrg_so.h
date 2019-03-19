@@ -262,6 +262,12 @@ class MRDSRG_SO : public psi::Wavefunction {
                                BlockedTensor& T3, double& C0, BlockedTensor& C1, BlockedTensor& C2,
                                BlockedTensor& C3);
 
+    /// Compute 4th-order correction for LDSRG(2)
+    double compute_ldsrg2_4th_corr();
+    double compute_ldsrg2_4th_corr_3body();
+    double compute_ldsrg2_4th_corr_t3();
+    double compute_ldsrg2_4th_corr_lambda();
+
     // Taylor Expansion of [1 - exp(-s * D^2)] / D = sqrt(s) * (\sum_{n=1}
     // \frac{1}{n!} (-1)^{n+1} Z^{2n-1})
     double Taylor_Exp(const double& Z, const int& n) {
