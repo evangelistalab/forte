@@ -248,6 +248,10 @@ class MRDSRG_SO : public psi::Wavefunction {
     /// Compute three-body term of commutator [H, T]
     void H2_T2_C3(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, BlockedTensor& C3);
 
+    /// [H1, A1]1 and [H1, A2]2
+    void H1_A1_C1(BlockedTensor& H1, BlockedTensor& T1, const double& alpha, BlockedTensor& C1);
+    void H1_A2_C2(BlockedTensor& H1, BlockedTensor& T2, const double& alpha, BlockedTensor& C2);
+
     /// Generated commutator equations
     void commutator_H_A_2(double factor, BlockedTensor& H1, BlockedTensor& H2, BlockedTensor& T1,
                           BlockedTensor& T2, double& C0, BlockedTensor& C1, BlockedTensor& C2);
@@ -264,6 +268,7 @@ class MRDSRG_SO : public psi::Wavefunction {
 
     /// Compute 4th-order correction for LDSRG(2)
     double compute_ldsrg2_4th_corr();
+    double compute_ldsrg2_4th_corr_t2();
     double compute_ldsrg2_4th_corr_3body();
     double compute_ldsrg2_4th_corr_t3();
     double compute_ldsrg2_4th_corr_lambda1();
