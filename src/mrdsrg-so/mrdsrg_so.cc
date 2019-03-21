@@ -841,6 +841,11 @@ double MRDSRG_SO::compute_ldsrg2_4th_corr() {
 //    double E4 = compute_ldsrg2_4th_corr_lambda2();
 //    outfile->Printf("\n  LDSRG(2) 4th-order correction Lambda 2: %20.12f", E4);
     outfile->Printf("\n  LDSRG(2) 4th-order correction (total):  %20.12f", E0 + E1 + E2 + E3);
+
+    compute_ldsrg2_4th_corr_t2_debug();
+    compute_ldsrg2_4th_corr_t3_debug();
+    compute_ldsrg2_4th_corr_3body_debug();
+
     return E0 + E1 + E2 + E3;
 }
 
@@ -862,6 +867,135 @@ void MRDSRG_SO::H1_A2_C2(BlockedTensor& H1, BlockedTensor& T2, const double& alp
     C2["abqj"] -= alpha * T2["ijab"] * H1["qi"];
     C2["abiq"] -= alpha * T2["ijab"] * H1["qj"];
 }
+
+double MRDSRG_SO::compute_ldsrg2_4th_corr_t2_debug() {
+    // [H, A3]
+    ambit::BlockedTensor T1_3rd_1 = BTF->build(tensor_type_, "3rd-order T1 Amplitudes", {"hp"});
+    ambit::BlockedTensor T2_3rd_1 = BTF->build(tensor_type_, "3rd-order T2 Amplitudes", {"hhpp"});
+
+    sr_H_A3_C(1.0, F, V, T3, T1_3rd_1, T2_3rd_1);
+
+    // 0.5 * [[H, A2]3, A]
+    ambit::BlockedTensor temp = BTF->build(tensor_type_, "temp", {"gggggg"});
+    sr_H_A_C3(1.0, V, T2, temp);
+
+    ambit::BlockedTensor T1_3rd_2 = BTF->build(tensor_type_, "3rd-order T1 Amplitudes", {"hp"});
+    ambit::BlockedTensor T2_3rd_2 = BTF->build(tensor_type_, "3rd-order T2 Amplitudes", {"hhpp"});
+
+    sr_H3_A_C(0.5, temp, T1, T2, T1_3rd_2, T2_3rd_2);
+
+    ambit::BlockedTensor T1_3rd = BTF->build(tensor_type_, "3rd-order T1 Amplitudes", {"hp"});
+    ambit::BlockedTensor T2_3rd = BTF->build(tensor_type_, "3rd-order T2 Amplitudes", {"hhpp"});
+
+    T1_3rd["pq"] = T1_3rd_1["pq"] + T1_3rd_2["pq"];
+    T2_3rd["pqrs"] = T2_3rd_1["pqrs"] + T2_3rd_2["pqrs"];
+
+    // generate a copy of T1_3rd
+    T1_3rd_1 = BTF->build(tensor_type_, "3rd-order T1 Amplitudes", {"ph"});
+    T2_3rd_1 = BTF->build(tensor_type_, "3rd-order T2 Amplitudes", {"pphh"});
+    T1_3rd_1["ai"] = T1_3rd["ia"];
+    T2_3rd_1["abij"] = T2_3rd["ijab"];
+
+    // DSRG amplitudes
+    T1_3rd.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+        value *= renormalized_denominator(Fd[i[0]] - Fd[i[1]]);
+    });
+    T2_3rd.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+        value *= renormalized_denominator(Fd[i[0]] + Fd[i[1]] - Fd[i[2]] - Fd[i[3]]);
+    });
+
+    // contract with H
+    double C0;
+    sr_H_A_C0(1.0, F, V, T1_3rd, T2_3rd, C0);
+    outfile->Printf("3rd-order T: %20.15f", C0);
+
+    // lambda
+    T1_3rd_1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+        double D = Fd[i[0]] - Fd[i[1]];
+        value *= 1.0 + std::exp(-s_ * D * D);
+    });
+    T2_3rd_1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+        double D = Fd[i[0]] + Fd[i[1]] - Fd[i[2]] - Fd[i[3]];
+        value *= 1.0 + std::exp(-s_ * D * D);
+    });
+
+    double C1;
+    sr_H_A_C0(1.0, T1_3rd_1, T2_3rd_2, T1, T2, C1);
+    outfile->Printf("Lambda: %20.15f", C1);
+
+    return C0 + C1;
+}
+
+double MRDSRG_SO::compute_ldsrg2_4th_corr_3body_debug() {
+    // 1/6 * [[[H, A2]3, A], A] + 1/24 [[[[H0, A], A2]3, A], A]
+
+    ambit::BlockedTensor H0 = BTF->build(tensor_type_, "H0", {"cc", "vv"});
+    H0["pq"] = F["pq"];
+
+    ambit::BlockedTensor temp1 = BTF->build(tensor_type_, "temp1", {"gg"});
+    ambit::BlockedTensor temp2 = BTF->build(tensor_type_, "temp2", {"gggg"});
+
+    sr_H1_A_C(1.0, H0, T1, T2, temp1, temp2);
+
+    ambit::BlockedTensor RV = BTF->build(tensor_type_, "RV", {"gggg"});
+    RV["pqrs"] = V["pqrs"];
+    RV["pqrs"] += 0.25 * temp2["pqrs"];
+
+    ambit::BlockedTensor temp = BTF->build(tensor_type_, "temp", {"gggggg"});
+    sr_H_A_C3(1.0, RV, T2, temp);
+
+    sr_H3_A_C(1.0, temp, T1, T2, temp1, temp2);
+
+    double C0;
+    sr_H_A_C0(1.0/6.0, temp1, temp2, T1, T2, C0);
+    outfile->Printf("3-body: %20.15f", C0);
+    return C0;
+}
+
+double MRDSRG_SO::compute_ldsrg2_4th_corr_t3_debug() {
+    ambit::BlockedTensor H0 = BTF->build(tensor_type_, "H0", {"cc", "vv"});
+    H0["pq"] = F["pq"];
+
+    ambit::BlockedTensor temp1 = BTF->build(tensor_type_, "temp1", {"gg"});
+    ambit::BlockedTensor temp2 = BTF->build(tensor_type_, "temp2", {"gggg"});
+    ambit::BlockedTensor temp3 = BTF->build(tensor_type_, "temp3", {"gggggg"});
+    sr_H1_A_C(1.0, H0, T1, T2, temp1, temp2);
+    sr_H1_A3_C3(1.0, H0, T3, temp3);
+
+    // 0.5 * [[H1, A3]3, A3]
+    double C0;
+    sr_H3_A3_C0(0.5, temp3, T3, C0);
+
+    ambit::BlockedTensor RF = BTF->build(tensor_type_, "temp2", {"gg"});
+    ambit::BlockedTensor RV = BTF->build(tensor_type_, "temp2", {"gggg"});
+    RF["pq"] = F["pq"];
+    RF["pq"] += (1.0/3.0) * temp1["pq"];
+    RV["pqrs"] = V["pqrs"];
+    RV["pqrs"] += (1.0/3.0) * temp2["pqrs"];
+
+    // 0.5 * [[H, A]3, A3] + 1/6 * [[[H1, A], A]3, A3]
+    double C1;
+    sr_H_A_C3(1.0, RV, T2, temp3);
+    sr_H3_A3_C0(0.5, temp3, T3, C1);
+
+    // 1/6 * [[[H1, A3]3, A], A] + 0.5 * [[H, A3], A] + 1/6 * [[[H1, A], A3], A]
+    double C2;
+    sr_H_A3_C(1.0, RF, RV, T3, temp1, temp2);
+    sr_H_A_C0(0.5, temp1, temp2, T1, T2, C2);
+
+    double C3;
+    sr_H1_A3_C3(1.0, H0, T3, temp3);
+    sr_H3_A_C(1.0/3.0, temp3, T1, T2, temp1, temp2);
+    sr_H_A_C0(0.5, temp1, temp2, T1, T2, C3);
+
+    double C = C0 + C1 + C2 + C3;
+    outfile->Printf("T3: %20.15f", C);
+    return C;
+}
+
+//double MRDSRG_SO::compute_ldsrg2_4th_corr_lambda_debug() {
+
+//}
 
 double MRDSRG_SO::compute_ldsrg2_4th_corr_t2() {
     double C0 = 0.0;

@@ -248,6 +248,29 @@ class MRDSRG_SO : public psi::Wavefunction {
     /// Compute three-body term of commutator [H, T]
     void H2_T2_C3(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, BlockedTensor& C3);
 
+    /// Some debug stuff
+    void sr_H1_A_C(double factor, BlockedTensor& H1, BlockedTensor& T1, BlockedTensor& T2,
+                   BlockedTensor& C1, BlockedTensor& C2);
+    void sr_H1_A3_C3(double factor, BlockedTensor& H1, BlockedTensor& T3, BlockedTensor& C3);
+
+    void sr_H_A_C0(double factor, BlockedTensor& H1, BlockedTensor& H2, BlockedTensor& T1,
+                   BlockedTensor& T2, double& C0);
+    void sr_H_A_C(double factor, BlockedTensor& H1, BlockedTensor& H2, BlockedTensor& T1,
+                  BlockedTensor& T2, BlockedTensor& C1, BlockedTensor& C2);
+    void sr_H_A_C3(double factor, BlockedTensor& H2, BlockedTensor& T2, BlockedTensor& C3);
+
+    void sr_H_A3_C(double factor, BlockedTensor& H1, BlockedTensor& H2, BlockedTensor& T3,
+                   BlockedTensor& C1, BlockedTensor& C2);
+
+    void sr_H3_A_C(double factor, BlockedTensor& H3, BlockedTensor& T1, BlockedTensor& T2,
+                   BlockedTensor& C1, BlockedTensor& C2);
+    void sr_H3_A3_C0(double factor, BlockedTensor& H3, BlockedTensor& T3, double& C0);
+
+    double compute_ldsrg2_4th_corr_t2_debug();
+    double compute_ldsrg2_4th_corr_3body_debug();
+    double compute_ldsrg2_4th_corr_t3_debug();
+    double compute_ldsrg2_4th_corr_lambda_debug();
+
     /// [H1, A1]1 and [H1, A2]2
     void H1_A1_C1(BlockedTensor& H1, BlockedTensor& T1, const double& alpha, BlockedTensor& C1);
     void H1_A2_C2(BlockedTensor& H1, BlockedTensor& T2, const double& alpha, BlockedTensor& C2);
