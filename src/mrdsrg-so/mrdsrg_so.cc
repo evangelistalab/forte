@@ -907,7 +907,7 @@ double MRDSRG_SO::compute_ldsrg2_4th_corr_t2_debug() {
     // contract with H
     double C0;
     sr_H_A_C0(1.0, F, V, T1_3rd, T2_3rd, C0);
-    outfile->Printf("3rd-order T: %20.15f", C0);
+    outfile->Printf("\n3rd-order T: %20.15f", C0);
 
     // lambda
     T1_3rd_1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
@@ -921,7 +921,7 @@ double MRDSRG_SO::compute_ldsrg2_4th_corr_t2_debug() {
 
     double C1;
     sr_H_A_C0(1.0, T1_3rd_1, T2_3rd_2, T1, T2, C1);
-    outfile->Printf("Lambda: %20.15f", C1);
+    outfile->Printf("\nLambda: %20.15f", C1);
 
     return C0 + C1;
 }
@@ -948,7 +948,7 @@ double MRDSRG_SO::compute_ldsrg2_4th_corr_3body_debug() {
 
     double C0;
     sr_H_A_C0(1.0/6.0, temp1, temp2, T1, T2, C0);
-    outfile->Printf("3-body: %20.15f", C0);
+    outfile->Printf("\n3-body: %20.15f", C0);
     return C0;
 }
 
@@ -989,7 +989,7 @@ double MRDSRG_SO::compute_ldsrg2_4th_corr_t3_debug() {
     sr_H_A_C0(0.5, temp1, temp2, T1, T2, C3);
 
     double C = C0 + C1 + C2 + C3;
-    outfile->Printf("T3: %20.15f", C);
+    outfile->Printf("\nT3: %20.15f", C);
     return C;
 }
 
