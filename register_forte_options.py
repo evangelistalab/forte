@@ -551,6 +551,8 @@ def register_dsrg_options(forte_options):
                      "Correlation level of MR-DSRG (used in mrdsrg code, "
                      "LDSRG2_P3 and QDSRG2_P3 not implemented)")
 
+    forte_options.add_bool("LDSRG3_ANALYSIS", False, "Analyze LDSRG(3) using LDSRG(2)")
+
     forte_options.add_str("SOURCE", "STANDARD",
                      ["STANDARD", "LABS", "DYSON", "AMP", "EMP2", "LAMP", "LEMP2"],
                      "Source operator used in DSRG (AMP, EMP2, LAMP, LEMP2 "
