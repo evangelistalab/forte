@@ -944,6 +944,7 @@ double MRDSRG_SO::compute_ldsrg2_4th_corr_t2_debug() {
     T2_3rd.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
         value *= renormalized_denominator(Fd[i[0]] + Fd[i[1]] - Fd[i[2]] - Fd[i[3]]);
     });
+    outfile->Printf("3rd-order amps norm: %20.12f, %20.12f", T1_3rd.norm(), T2_3rd.norm());
 
     // contract with H + 0.5 * [H0th, A_3rd]
     double C0;
@@ -969,11 +970,13 @@ double MRDSRG_SO::compute_ldsrg2_4th_corr_t2_debug() {
         value *= 1.0 + std::exp(-s_ * D * D);
     });
 
-    double C1;
-    sr_H_A_C0(1.0, T1_3rd_1, T2_3rd_2, T1, T2, C1);
+    double C1 = 0.0;
+    C1 += 1.0 * T1_3rd_1["v0,c0"] * T1["c0,v0"];
+    C1 += (1.0 / 4.0) * T2_3rd_2["v0,v1,c0,c1"] * T2["c0,c1,v0,v1"];
+//    sr_H_A_C0(1.0, T1_3rd_1, T2_3rd_2, T1, T2, C1);
     outfile->Printf("\nLambda: %20.15f", C1);
 
-    return C0 + C1;
+    return C0 + C1 + C2;
 }
 
 double MRDSRG_SO::compute_ldsrg2_4th_corr_3body_debug() {
@@ -1077,13 +1080,11 @@ double MRDSRG_SO::compute_ldsrg2_4th_corr_t2() {
 
     H1_3rd["c0,v0"] += (-1.0 / 4.0) * F["c1,c2"] * T2["c1,c3,v1,v2"] * T3["c0,c2,c3,v0,v1,v2"];
 
-    temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"ccgv"});
-    temp["c0,c1,g0,v0"] += (-1.0 / 2.0) * F["v1,g0"] * T1["c2,v2"] * T3["c0,c1,c2,v0,v1,v2"];
+    temp["c0,c1,g0,v0"] = (-1.0 / 2.0) * F["v1,g0"] * T1["c2,v2"] * T3["c0,c1,c2,v0,v1,v2"];
     H2_3rd["c0,c1,g0,v0"] += temp["c0,c1,g0,v0"];
     H2_3rd["c0,c1,v0,g0"] -= temp["c0,c1,g0,v0"];
 
-    temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"gcvv"});
-    temp["g0,c0,v0,v1"] += (1.0 / 2.0) * F["g0,c1"] * T1["c2,v2"] * T3["c0,c1,c2,v0,v1,v2"];
+    temp["g0,c0,v0,v1"] = (1.0 / 2.0) * F["g0,c1"] * T1["c2,v2"] * T3["c0,c1,c2,v0,v1,v2"];
     H2_3rd["c0,g0,v0,v1"] -= temp["g0,c0,v0,v1"];
     H2_3rd["g0,c0,v0,v1"] += temp["g0,c0,v0,v1"];
 
@@ -1091,7 +1092,7 @@ double MRDSRG_SO::compute_ldsrg2_4th_corr_t2() {
 
     H2_3rd["c0,c1,v0,v1"] += (-1.0 / 2.0) * F["c2,c3"] * T1["c2,v2"] * T3["c0,c1,c3,v0,v1,v2"];
 
-    // 0.5 * [[H_1st, A2_1st]3, A_1st] + 1/6 * [[[H_0th, A_1st], A2_1st], A_1st]
+    // 0.5 * [[H_1st, A2_1st]3, A_1st] + 1/6 * [[[H_0th, A_1st], A2_1st]3, A_1st]
     renormalize_bare_Hamiltonian(RF, RV, 1.0/3.0);
 
     H1_3rd["g1,g0"] += (1.0 / 2.0) * RV["g1,v0,g0,v1"] * T2["c0,c1,v1,v2"] * T2["c0,c1,v0,v2"];
@@ -1118,42 +1119,51 @@ double MRDSRG_SO::compute_ldsrg2_4th_corr_t2() {
 
     H2_3rd["c0,c1,v0,v1"] += (-1.0 / 2.0) * RV["v2,v3,c2,c3"] * T2["c0,c2,v2,v3"] * T2["c1,c3,v0,v1"];
 
-    temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"gcgg"});
-    temp["g2,c0,g0,g1"] += (1.0 / 2.0) * RV["g2,v0,g0,g1"] * T1["c1,v1"] * T2["c0,c1,v0,v1"];
+    temp["g2,c0,g0,g1"] = (1.0 / 2.0) * RV["g2,v0,g0,g1"] * T1["c1,v1"] * T2["c0,c1,v0,v1"];
     temp["g2,c0,g0,g1"] += (-1.0 / 4.0) * RV["g2,c1,g0,g1"] * T2["c1,c2,v0,v1"] * T2["c0,c2,v0,v1"];
     H2_3rd["c0,g2,g0,g1"] -= temp["g2,c0,g0,g1"];
     H2_3rd["g2,c0,g0,g1"] += temp["g2,c0,g0,g1"];
 
-    temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"gggv"});
-    temp["g1,g2,g0,v0"] += (-1.0 / 2.0) * RV["g1,g2,g0,c0"] * T1["c1,v1"] * T2["c0,c1,v0,v1"];
+    temp["g1,g2,g0,v0"] = (-1.0 / 2.0) * RV["g1,g2,g0,c0"] * T1["c1,v1"] * T2["c0,c1,v0,v1"];
     temp["g1,g2,g0,v0"] += (-1.0 / 4.0) * RV["g1,g2,g0,v1"] * T2["c0,c1,v1,v2"] * T2["c0,c1,v0,v2"];
     H2_3rd["g1,g2,g0,v0"] += temp["g1,g2,g0,v0"];
     H2_3rd["g1,g2,v0,g0"] -= temp["g1,g2,g0,v0"];
 
-    temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"gcgv"});
-    temp["g1,c0,g0,v0"] += (1.0 / 2.0) * RV["g1,v1,g0,v2"] * T1["c1,v2"] * T2["c0,c1,v0,v1"];
+    temp["g1,c0,g0,v0"] = (1.0 / 2.0) * RV["g1,v1,g0,v2"] * T1["c1,v2"] * T2["c0,c1,v0,v1"];
     temp["g1,c0,g0,v0"] += (-1.0 / 2.0) * RV["g1,c1,g0,c2"] * T1["c1,v1"] * T2["c0,c2,v0,v1"];
     H2_3rd["c0,g1,g0,v0"] -= temp["g1,c0,g0,v0"];
     H2_3rd["c0,g1,v0,g0"] += temp["g1,c0,g0,v0"];
     H2_3rd["g1,c0,g0,v0"] += temp["g1,c0,g0,v0"];
     H2_3rd["g1,c0,v0,g0"] -= temp["g1,c0,g0,v0"];
 
-    temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"ccgv"});
-    temp["c0,c1,g0,v0"] += (1.0 / 2.0) * RV["v1,v2,g0,c2"] * T1["c2,v1"] * T2["c0,c1,v0,v2"];
+    temp["c0,c1,g0,v0"] = (1.0 / 2.0) * RV["v1,v2,g0,c2"] * T1["c2,v1"] * T2["c0,c1,v0,v2"];
     temp["c0,c1,g0,v0"] += (-1.0 / 2.0) * RV["v1,c2,g0,v2"] * T1["c2,v2"] * T2["c0,c1,v0,v1"];
     H2_3rd["c0,c1,g0,v0"] += temp["c0,c1,g0,v0"];
     H2_3rd["c0,c1,v0,g0"] -= temp["c0,c1,g0,v0"];
 
-    temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"gcvv"});
-    temp["g0,c0,v0,v1"] += (-1.0 / 2.0) * RV["g0,v2,c1,c2"] * T1["c1,v2"] * T2["c0,c2,v0,v1"];
+    temp["g0,c0,v0,v1"] = (-1.0 / 2.0) * RV["g0,v2,c1,c2"] * T1["c1,v2"] * T2["c0,c2,v0,v1"];
     temp["g0,c0,v0,v1"] += (-1.0 / 2.0) * RV["g0,c1,v2,c2"] * T1["c1,v2"] * T2["c0,c2,v0,v1"];
     H2_3rd["c0,g0,v0,v1"] -= temp["g0,c0,v0,v1"];
     H2_3rd["g0,c0,v0,v1"] += temp["g0,c0,v0,v1"];
 
     // Lambda
+    RF = BTF->build(tensor_type_, "RF", {"cv"});
+    RV = BTF->build(tensor_type_, "RV", {"ccvv"});
+    RF["ia"] = H1_3rd["ia"];
+    RV["ijab"] = H2_3rd["ijab"];
+
+    RF.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+        double D = Fd[i[0]] - Fd[i[1]];
+        value *= 1.0 + std::exp(-s_ * D * D);
+    });
+    RV.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+        double D = Fd[i[0]] + Fd[i[1]] - Fd[i[2]] - Fd[i[3]];
+        value *= 1.0 + std::exp(-s_ * D * D);
+    });
+
     double C0_lambda = 0.0;
-    C0_lambda += H1_3rd["ia"] * T1["ia"];
-    C0_lambda += 0.25 * H2_3rd["ijab"] * T2["ijab"];
+    C0_lambda += RF["ia"] * T1["ia"];
+    C0_lambda += 0.25 * RV["ijab"] * T2["ijab"];
     outfile->Printf("\n  LDSRG(2) 4th-order correction Lambda:     %20.12f", C0_lambda);
 
     // add resolvent to obtain 3rd-order amplitudes
@@ -1163,6 +1173,7 @@ double MRDSRG_SO::compute_ldsrg2_4th_corr_t2() {
     H2_3rd.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
         value *= renormalized_denominator(Fd[i[0]] + Fd[i[1]] - Fd[i[2]] - Fd[i[3]]);
     });
+    outfile->Printf("3rd-order amps norm: %20.12f, %20.12f", H1_3rd.norm(), H2_3rd.norm());
 
     // [H_1st, A_3rd]
     double C0 = 0.0;
