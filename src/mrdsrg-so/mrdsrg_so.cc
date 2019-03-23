@@ -912,18 +912,18 @@ double MRDSRG_SO::compute_ldsrg2_4th_corr_t2_debug() {
     // 0.5 * [[H0th, A3], A] + 0.5 * [[H, A2]3, A] + 1/6 * [[[H0th, A2], A2]3, A]
     ambit::BlockedTensor T1_3rd_2 = BTF->build(tensor_type_, "3rd-order T1 Amplitudes", {"hp"});
     ambit::BlockedTensor T2_3rd_2 = BTF->build(tensor_type_, "3rd-order T2 Amplitudes", {"hhpp"});
-//    ambit::BlockedTensor temp = BTF->build(tensor_type_, "temp", {"gggggg"});
+    ambit::BlockedTensor temp = BTF->build(tensor_type_, "temp", {"gggggg"});
 //    RV["pqrs"] = V["pqrs"];
 //    RV["pqrs"] += (1.0/3.0) * temp2["pqrs"];
 //    sr_H_A_C3(1.0, RV, T2, temp);
 
-//    ambit::BlockedTensor temp3 = BTF->build(tensor_type_, "temp3", {"hhhppp"});
-//    sr_H1_A3_C3(1.0, H0, T3, temp3);
-//    temp["ijkabc"] += temp3["ijkabc"];
-//    temp["abcijk"] += temp3["ijkabc"];
+    ambit::BlockedTensor temp3 = BTF->build(tensor_type_, "temp3", {"hhhppp"});
+    sr_H1_A3_C3(1.0, H0, T3, temp3);
+    temp["ijkabc"] += temp3["ijkabc"];
+    temp["abcijk"] += temp3["ijkabc"];
 
 
-//    sr_H3_A_C(0.5, temp, T1, T2, T1_3rd_2, T2_3rd_2);
+    sr_H3_A_C(0.5, temp, T1, T2, T1_3rd_2, T2_3rd_2);
 
     ambit::BlockedTensor T1_3rd = BTF->build(tensor_type_, "3rd-order T1 Amplitudes", {"hp"});
     ambit::BlockedTensor T2_3rd = BTF->build(tensor_type_, "3rd-order T2 Amplitudes", {"hhpp"});
@@ -972,7 +972,7 @@ double MRDSRG_SO::compute_ldsrg2_4th_corr_t2_debug() {
 
     double C1 = 0.0;
     C1 += 1.0 * T1_3rd_1["v0,c0"] * T1["c0,v0"];
-    C1 += (1.0 / 4.0) * T2_3rd_2["v0,v1,c0,c1"] * T2["c0,c1,v0,v1"];
+//    C1 += (1.0 / 4.0) * T2_3rd_1["v0,v1,c0,c1"] * T2["c0,c1,v0,v1"];
 //    sr_H_A_C0(1.0, T1_3rd_1, T2_3rd_2, T1, T2, C1);
     outfile->Printf("\nLambda: %20.15f", C1);
 
@@ -1071,26 +1071,26 @@ double MRDSRG_SO::compute_ldsrg2_4th_corr_t2() {
     H2_3rd["c0,g0,v0,v1"] -= temp["g0,c0,v0,v1"];
     H2_3rd["g0,c0,v0,v1"] += temp["g0,c0,v0,v1"];
 
-//    // 0.5 * [[H_0th, A3_2nd], A_1st]
-//    H1_3rd["c0,g0"] += (1.0 / 8.0) * F["v0,g0"] * T2["c1,c2,v1,v2"] * T3["c0,c1,c2,v0,v1,v2"];
+    // 0.5 * [[H_0th, A3_2nd], A_1st]
+    H1_3rd["c0,g0"] += (1.0 / 8.0) * F["v0,g0"] * T2["c1,c2,v1,v2"] * T3["c0,c1,c2,v0,v1,v2"];
 
-//    H1_3rd["g0,v0"] += (-1.0 / 8.0) * F["g0,c0"] * T2["c1,c2,v1,v2"] * T3["c0,c1,c2,v0,v1,v2"];
+    H1_3rd["g0,v0"] += (-1.0 / 8.0) * F["g0,c0"] * T2["c1,c2,v1,v2"] * T3["c0,c1,c2,v0,v1,v2"];
 
-//    H1_3rd["c0,v0"] += (1.0 / 4.0) * F["v1,v2"] * T2["c1,c2,v2,v3"] * T3["c0,c1,c2,v0,v1,v3"];
+    H1_3rd["c0,v0"] += (1.0 / 4.0) * F["v1,v2"] * T2["c1,c2,v2,v3"] * T3["c0,c1,c2,v0,v1,v3"];
 
-//    H1_3rd["c0,v0"] += (-1.0 / 4.0) * F["c1,c2"] * T2["c1,c3,v1,v2"] * T3["c0,c2,c3,v0,v1,v2"];
+    H1_3rd["c0,v0"] += (-1.0 / 4.0) * F["c1,c2"] * T2["c1,c3,v1,v2"] * T3["c0,c2,c3,v0,v1,v2"];
 
-//    temp["c0,c1,g0,v0"] = (-1.0 / 2.0) * F["v1,g0"] * T1["c2,v2"] * T3["c0,c1,c2,v0,v1,v2"];
-//    H2_3rd["c0,c1,g0,v0"] += temp["c0,c1,g0,v0"];
-//    H2_3rd["c0,c1,v0,g0"] -= temp["c0,c1,g0,v0"];
+    temp["c0,c1,g0,v0"] = (-1.0 / 2.0) * F["v1,g0"] * T1["c2,v2"] * T3["c0,c1,c2,v0,v1,v2"];
+    H2_3rd["c0,c1,g0,v0"] += temp["c0,c1,g0,v0"];
+    H2_3rd["c0,c1,v0,g0"] -= temp["c0,c1,g0,v0"];
 
-//    temp["g0,c0,v0,v1"] = (1.0 / 2.0) * F["g0,c1"] * T1["c2,v2"] * T3["c0,c1,c2,v0,v1,v2"];
-//    H2_3rd["c0,g0,v0,v1"] -= temp["g0,c0,v0,v1"];
-//    H2_3rd["g0,c0,v0,v1"] += temp["g0,c0,v0,v1"];
+    temp["g0,c0,v0,v1"] = (1.0 / 2.0) * F["g0,c1"] * T1["c2,v2"] * T3["c0,c1,c2,v0,v1,v2"];
+    H2_3rd["c0,g0,v0,v1"] -= temp["g0,c0,v0,v1"];
+    H2_3rd["g0,c0,v0,v1"] += temp["g0,c0,v0,v1"];
 
-//    H2_3rd["c0,c1,v0,v1"] += (1.0 / 2.0) * F["v2,v3"] * T1["c2,v3"] * T3["c0,c1,c2,v0,v1,v2"];
+    H2_3rd["c0,c1,v0,v1"] += (1.0 / 2.0) * F["v2,v3"] * T1["c2,v3"] * T3["c0,c1,c2,v0,v1,v2"];
 
-//    H2_3rd["c0,c1,v0,v1"] += (-1.0 / 2.0) * F["c2,c3"] * T1["c2,v2"] * T3["c0,c1,c3,v0,v1,v2"];
+    H2_3rd["c0,c1,v0,v1"] += (-1.0 / 2.0) * F["c2,c3"] * T1["c2,v2"] * T3["c0,c1,c3,v0,v1,v2"];
 
 //    // 0.5 * [[H_1st, A2_1st]3, A_1st] + 1/6 * [[[H_0th, A_1st], A2_1st]3, A_1st]
 //    renormalize_bare_Hamiltonian(RF, RV, 1.0/3.0);
