@@ -968,6 +968,7 @@ double MRDSRG_SO::compute_ldsrg2_4th_corr_t2_debug() {
         double D = Fd[i[0]] + Fd[i[1]] - Fd[i[2]] - Fd[i[3]];
         value *= 1.0 + std::exp(-s_ * D * D);
     });
+    outfile->Printf("3rd-order Hbar norm: %20.12f, %20.12f", T1_3rd_1.norm(), T2_3rd_1.norm());
 
     double C1 = 0.0;
     C1 += 1.0 * T1_3rd_1["v0,c0"] * T1["c0,v0"];
@@ -1417,6 +1418,7 @@ double MRDSRG_SO::compute_ldsrg2_4th_corr_t2() {
         double D = Fd[i[0]] + Fd[i[1]] - Fd[i[2]] - Fd[i[3]];
         value *= 1.0 + std::exp(-s_ * D * D);
     });
+    outfile->Printf("3rd-order Hbar norm: %20.12f, %20.12f", RF.norm(), RV.norm());
 
     double C0_lambda = 0.0;
     C0_lambda += RF["ia"] * T1["ia"];
