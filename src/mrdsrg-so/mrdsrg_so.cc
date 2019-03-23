@@ -847,7 +847,7 @@ double MRDSRG_SO::compute_ldsrg2_4th_corr() {
 //    outfile->Printf("\n  LDSRG(2) 4th-order correction Lambda:     %20.12f", E3);
 //    double E4 = compute_ldsrg2_4th_corr_lambda2();
 //    outfile->Printf("\n  LDSRG(2) 4th-order correction Lambda 2: %20.12f", E4);
-    outfile->Printf("\n  LDSRG(2) 4th-order correction (total):  %20.12f", E0 + E1 + E2);
+    outfile->Printf("\n  LDSRG(2) 4th-order correction (total):    %20.12f", E0 + E1 + E2);
 
     double C0 = compute_ldsrg2_4th_corr_t2_debug();
     double C1 = compute_ldsrg2_4th_corr_t3_debug();
@@ -910,20 +910,20 @@ double MRDSRG_SO::compute_ldsrg2_4th_corr_t2_debug() {
     sr_H_A3_C(1.0, RF, RV, T3, T1_3rd_1, T2_3rd_1);
 
     // 0.5 * [[H0th, A3], A] + 0.5 * [[H, A2]3, A] + 1/6 * [[[H0th, A2], A2]3, A]
-    ambit::BlockedTensor temp = BTF->build(tensor_type_, "temp", {"gggggg"});
-    RV["pqrs"] = V["pqrs"];
-    RV["pqrs"] += (1.0/3.0) * temp2["pqrs"];
-    sr_H_A_C3(1.0, RV, T2, temp);
-
-    ambit::BlockedTensor temp3 = BTF->build(tensor_type_, "temp3", {"hhhppp"});
-    sr_H1_A3_C3(1.0, H0, T3, temp3);
-    temp["ijkabc"] += temp3["ijkabc"];
-    temp["abcijk"] += temp3["ijkabc"];
-
     ambit::BlockedTensor T1_3rd_2 = BTF->build(tensor_type_, "3rd-order T1 Amplitudes", {"hp"});
     ambit::BlockedTensor T2_3rd_2 = BTF->build(tensor_type_, "3rd-order T2 Amplitudes", {"hhpp"});
+//    ambit::BlockedTensor temp = BTF->build(tensor_type_, "temp", {"gggggg"});
+//    RV["pqrs"] = V["pqrs"];
+//    RV["pqrs"] += (1.0/3.0) * temp2["pqrs"];
+//    sr_H_A_C3(1.0, RV, T2, temp);
 
-    sr_H3_A_C(0.5, temp, T1, T2, T1_3rd_2, T2_3rd_2);
+//    ambit::BlockedTensor temp3 = BTF->build(tensor_type_, "temp3", {"hhhppp"});
+//    sr_H1_A3_C3(1.0, H0, T3, temp3);
+//    temp["ijkabc"] += temp3["ijkabc"];
+//    temp["abcijk"] += temp3["ijkabc"];
+
+
+//    sr_H3_A_C(0.5, temp, T1, T2, T1_3rd_2, T2_3rd_2);
 
     ambit::BlockedTensor T1_3rd = BTF->build(tensor_type_, "3rd-order T1 Amplitudes", {"hp"});
     ambit::BlockedTensor T2_3rd = BTF->build(tensor_type_, "3rd-order T2 Amplitudes", {"hhpp"});
@@ -1071,80 +1071,80 @@ double MRDSRG_SO::compute_ldsrg2_4th_corr_t2() {
     H2_3rd["c0,g0,v0,v1"] -= temp["g0,c0,v0,v1"];
     H2_3rd["g0,c0,v0,v1"] += temp["g0,c0,v0,v1"];
 
-    // 0.5 * [[H_0th, A3_2nd], A_1st]
-    H1_3rd["c0,g0"] += (1.0 / 8.0) * F["v0,g0"] * T2["c1,c2,v1,v2"] * T3["c0,c1,c2,v0,v1,v2"];
+//    // 0.5 * [[H_0th, A3_2nd], A_1st]
+//    H1_3rd["c0,g0"] += (1.0 / 8.0) * F["v0,g0"] * T2["c1,c2,v1,v2"] * T3["c0,c1,c2,v0,v1,v2"];
 
-    H1_3rd["g0,v0"] += (-1.0 / 8.0) * F["g0,c0"] * T2["c1,c2,v1,v2"] * T3["c0,c1,c2,v0,v1,v2"];
+//    H1_3rd["g0,v0"] += (-1.0 / 8.0) * F["g0,c0"] * T2["c1,c2,v1,v2"] * T3["c0,c1,c2,v0,v1,v2"];
 
-    H1_3rd["c0,v0"] += (1.0 / 4.0) * F["v1,v2"] * T2["c1,c2,v2,v3"] * T3["c0,c1,c2,v0,v1,v3"];
+//    H1_3rd["c0,v0"] += (1.0 / 4.0) * F["v1,v2"] * T2["c1,c2,v2,v3"] * T3["c0,c1,c2,v0,v1,v3"];
 
-    H1_3rd["c0,v0"] += (-1.0 / 4.0) * F["c1,c2"] * T2["c1,c3,v1,v2"] * T3["c0,c2,c3,v0,v1,v2"];
+//    H1_3rd["c0,v0"] += (-1.0 / 4.0) * F["c1,c2"] * T2["c1,c3,v1,v2"] * T3["c0,c2,c3,v0,v1,v2"];
 
-    temp["c0,c1,g0,v0"] = (-1.0 / 2.0) * F["v1,g0"] * T1["c2,v2"] * T3["c0,c1,c2,v0,v1,v2"];
-    H2_3rd["c0,c1,g0,v0"] += temp["c0,c1,g0,v0"];
-    H2_3rd["c0,c1,v0,g0"] -= temp["c0,c1,g0,v0"];
+//    temp["c0,c1,g0,v0"] = (-1.0 / 2.0) * F["v1,g0"] * T1["c2,v2"] * T3["c0,c1,c2,v0,v1,v2"];
+//    H2_3rd["c0,c1,g0,v0"] += temp["c0,c1,g0,v0"];
+//    H2_3rd["c0,c1,v0,g0"] -= temp["c0,c1,g0,v0"];
 
-    temp["g0,c0,v0,v1"] = (1.0 / 2.0) * F["g0,c1"] * T1["c2,v2"] * T3["c0,c1,c2,v0,v1,v2"];
-    H2_3rd["c0,g0,v0,v1"] -= temp["g0,c0,v0,v1"];
-    H2_3rd["g0,c0,v0,v1"] += temp["g0,c0,v0,v1"];
+//    temp["g0,c0,v0,v1"] = (1.0 / 2.0) * F["g0,c1"] * T1["c2,v2"] * T3["c0,c1,c2,v0,v1,v2"];
+//    H2_3rd["c0,g0,v0,v1"] -= temp["g0,c0,v0,v1"];
+//    H2_3rd["g0,c0,v0,v1"] += temp["g0,c0,v0,v1"];
 
-    H2_3rd["c0,c1,v0,v1"] += (1.0 / 2.0) * F["v2,v3"] * T1["c2,v3"] * T3["c0,c1,c2,v0,v1,v2"];
+//    H2_3rd["c0,c1,v0,v1"] += (1.0 / 2.0) * F["v2,v3"] * T1["c2,v3"] * T3["c0,c1,c2,v0,v1,v2"];
 
-    H2_3rd["c0,c1,v0,v1"] += (-1.0 / 2.0) * F["c2,c3"] * T1["c2,v2"] * T3["c0,c1,c3,v0,v1,v2"];
+//    H2_3rd["c0,c1,v0,v1"] += (-1.0 / 2.0) * F["c2,c3"] * T1["c2,v2"] * T3["c0,c1,c3,v0,v1,v2"];
 
-    // 0.5 * [[H_1st, A2_1st]3, A_1st] + 1/6 * [[[H_0th, A_1st], A2_1st]3, A_1st]
-    renormalize_bare_Hamiltonian(RF, RV, 1.0/3.0);
+//    // 0.5 * [[H_1st, A2_1st]3, A_1st] + 1/6 * [[[H_0th, A_1st], A2_1st]3, A_1st]
+//    renormalize_bare_Hamiltonian(RF, RV, 1.0/3.0);
 
-    H1_3rd["g1,g0"] += (1.0 / 2.0) * RV["g1,v0,g0,v1"] * T2["c0,c1,v1,v2"] * T2["c0,c1,v0,v2"];
+//    H1_3rd["g1,g0"] += (1.0 / 2.0) * RV["g1,v0,g0,v1"] * T2["c0,c1,v1,v2"] * T2["c0,c1,v0,v2"];
 
-    H1_3rd["g1,g0"] += (-1.0 / 2.0) * RV["g1,c0,g0,c1"] * T2["c0,c2,v0,v1"] * T2["c1,c2,v0,v1"];
+//    H1_3rd["g1,g0"] += (-1.0 / 2.0) * RV["g1,c0,g0,c1"] * T2["c0,c2,v0,v1"] * T2["c1,c2,v0,v1"];
 
-    H1_3rd["c0,g0"] += (1.0 / 2.0) * RV["v0,c1,g0,v1"] * T2["c1,c2,v1,v2"] * T2["c0,c2,v0,v2"];
+//    H1_3rd["c0,g0"] += (1.0 / 2.0) * RV["v0,c1,g0,v1"] * T2["c1,c2,v1,v2"] * T2["c0,c2,v0,v2"];
 
-    H1_3rd["c0,g0"] += (1.0 / 8.0) * RV["c1,c2,g0,c3"] * T2["c1,c2,v0,v1"] * T2["c0,c3,v0,v1"];
+//    H1_3rd["c0,g0"] += (1.0 / 8.0) * RV["c1,c2,g0,c3"] * T2["c1,c2,v0,v1"] * T2["c0,c3,v0,v1"];
 
-    H1_3rd["g0,v0"] += (-1.0 / 8.0) * RV["g0,v1,v2,v3"] * T2["c0,c1,v2,v3"] * T2["c0,c1,v0,v1"];
+//    H1_3rd["g0,v0"] += (-1.0 / 8.0) * RV["g0,v1,v2,v3"] * T2["c0,c1,v2,v3"] * T2["c0,c1,v0,v1"];
 
-    H1_3rd["g0,v0"] += (1.0 / 2.0) * RV["g0,c0,v1,c1"] * T2["c0,c2,v1,v2"] * T2["c1,c2,v0,v2"];
+//    H1_3rd["g0,v0"] += (1.0 / 2.0) * RV["g0,c0,v1,c1"] * T2["c0,c2,v1,v2"] * T2["c1,c2,v0,v2"];
 
-    H1_3rd["c0,v0"] += (-1.0 / 4.0) * RV["v1,c1,v2,v3"] * T2["c1,c2,v2,v3"] * T2["c0,c2,v0,v1"];
+//    H1_3rd["c0,v0"] += (-1.0 / 4.0) * RV["v1,c1,v2,v3"] * T2["c1,c2,v2,v3"] * T2["c0,c2,v0,v1"];
 
-    H1_3rd["c0,v0"] += (-1.0 / 4.0) * RV["c1,c2,v1,c3"] * T2["c1,c2,v1,v2"] * T2["c0,c3,v0,v2"];
+//    H1_3rd["c0,v0"] += (-1.0 / 4.0) * RV["c1,c2,v1,c3"] * T2["c1,c2,v1,v2"] * T2["c0,c3,v0,v2"];
 
-    H2_3rd["c0,c1,g0,g1"] += (-1.0 / 2.0) * RV["v0,c2,g0,g1"] * T1["c2,v1"] * T2["c0,c1,v0,v1"];
+//    H2_3rd["c0,c1,g0,g1"] += (-1.0 / 2.0) * RV["v0,c2,g0,g1"] * T1["c2,v1"] * T2["c0,c1,v0,v1"];
 
-    H2_3rd["g0,g1,v0,v1"] += (-1.0 / 2.0) * RV["g0,g1,v2,c0"] * T1["c1,v2"] * T2["c0,c1,v0,v1"];
+//    H2_3rd["g0,g1,v0,v1"] += (-1.0 / 2.0) * RV["g0,g1,v2,c0"] * T1["c1,v2"] * T2["c0,c1,v0,v1"];
 
-    H2_3rd["c0,c1,v0,v1"] += (-1.0 / 2.0) * RV["v2,v3,c2,c3"] * T2["c0,c1,v1,v3"] * T2["c2,c3,v0,v2"];
+//    H2_3rd["c0,c1,v0,v1"] += (-1.0 / 2.0) * RV["v2,v3,c2,c3"] * T2["c0,c1,v1,v3"] * T2["c2,c3,v0,v2"];
 
-    H2_3rd["c0,c1,v0,v1"] += (-1.0 / 2.0) * RV["v2,v3,c2,c3"] * T2["c0,c2,v2,v3"] * T2["c1,c3,v0,v1"];
+//    H2_3rd["c0,c1,v0,v1"] += (-1.0 / 2.0) * RV["v2,v3,c2,c3"] * T2["c0,c2,v2,v3"] * T2["c1,c3,v0,v1"];
 
-    temp["g2,c0,g0,g1"] = (1.0 / 2.0) * RV["g2,v0,g0,g1"] * T1["c1,v1"] * T2["c0,c1,v0,v1"];
-    temp["g2,c0,g0,g1"] += (-1.0 / 4.0) * RV["g2,c1,g0,g1"] * T2["c1,c2,v0,v1"] * T2["c0,c2,v0,v1"];
-    H2_3rd["c0,g2,g0,g1"] -= temp["g2,c0,g0,g1"];
-    H2_3rd["g2,c0,g0,g1"] += temp["g2,c0,g0,g1"];
+//    temp["g2,c0,g0,g1"] = (1.0 / 2.0) * RV["g2,v0,g0,g1"] * T1["c1,v1"] * T2["c0,c1,v0,v1"];
+//    temp["g2,c0,g0,g1"] += (-1.0 / 4.0) * RV["g2,c1,g0,g1"] * T2["c1,c2,v0,v1"] * T2["c0,c2,v0,v1"];
+//    H2_3rd["c0,g2,g0,g1"] -= temp["g2,c0,g0,g1"];
+//    H2_3rd["g2,c0,g0,g1"] += temp["g2,c0,g0,g1"];
 
-    temp["g1,g2,g0,v0"] = (-1.0 / 2.0) * RV["g1,g2,g0,c0"] * T1["c1,v1"] * T2["c0,c1,v0,v1"];
-    temp["g1,g2,g0,v0"] += (-1.0 / 4.0) * RV["g1,g2,g0,v1"] * T2["c0,c1,v1,v2"] * T2["c0,c1,v0,v2"];
-    H2_3rd["g1,g2,g0,v0"] += temp["g1,g2,g0,v0"];
-    H2_3rd["g1,g2,v0,g0"] -= temp["g1,g2,g0,v0"];
+//    temp["g1,g2,g0,v0"] = (-1.0 / 2.0) * RV["g1,g2,g0,c0"] * T1["c1,v1"] * T2["c0,c1,v0,v1"];
+//    temp["g1,g2,g0,v0"] += (-1.0 / 4.0) * RV["g1,g2,g0,v1"] * T2["c0,c1,v1,v2"] * T2["c0,c1,v0,v2"];
+//    H2_3rd["g1,g2,g0,v0"] += temp["g1,g2,g0,v0"];
+//    H2_3rd["g1,g2,v0,g0"] -= temp["g1,g2,g0,v0"];
 
-    temp["g1,c0,g0,v0"] = (1.0 / 2.0) * RV["g1,v1,g0,v2"] * T1["c1,v2"] * T2["c0,c1,v0,v1"];
-    temp["g1,c0,g0,v0"] += (-1.0 / 2.0) * RV["g1,c1,g0,c2"] * T1["c1,v1"] * T2["c0,c2,v0,v1"];
-    H2_3rd["c0,g1,g0,v0"] -= temp["g1,c0,g0,v0"];
-    H2_3rd["c0,g1,v0,g0"] += temp["g1,c0,g0,v0"];
-    H2_3rd["g1,c0,g0,v0"] += temp["g1,c0,g0,v0"];
-    H2_3rd["g1,c0,v0,g0"] -= temp["g1,c0,g0,v0"];
+//    temp["g1,c0,g0,v0"] = (1.0 / 2.0) * RV["g1,v1,g0,v2"] * T1["c1,v2"] * T2["c0,c1,v0,v1"];
+//    temp["g1,c0,g0,v0"] += (-1.0 / 2.0) * RV["g1,c1,g0,c2"] * T1["c1,v1"] * T2["c0,c2,v0,v1"];
+//    H2_3rd["c0,g1,g0,v0"] -= temp["g1,c0,g0,v0"];
+//    H2_3rd["c0,g1,v0,g0"] += temp["g1,c0,g0,v0"];
+//    H2_3rd["g1,c0,g0,v0"] += temp["g1,c0,g0,v0"];
+//    H2_3rd["g1,c0,v0,g0"] -= temp["g1,c0,g0,v0"];
 
-    temp["c0,c1,g0,v0"] = (1.0 / 2.0) * RV["v1,v2,g0,c2"] * T1["c2,v1"] * T2["c0,c1,v0,v2"];
-    temp["c0,c1,g0,v0"] += (-1.0 / 2.0) * RV["v1,c2,g0,v2"] * T1["c2,v2"] * T2["c0,c1,v0,v1"];
-    H2_3rd["c0,c1,g0,v0"] += temp["c0,c1,g0,v0"];
-    H2_3rd["c0,c1,v0,g0"] -= temp["c0,c1,g0,v0"];
+//    temp["c0,c1,g0,v0"] = (1.0 / 2.0) * RV["v1,v2,g0,c2"] * T1["c2,v1"] * T2["c0,c1,v0,v2"];
+//    temp["c0,c1,g0,v0"] += (-1.0 / 2.0) * RV["v1,c2,g0,v2"] * T1["c2,v2"] * T2["c0,c1,v0,v1"];
+//    H2_3rd["c0,c1,g0,v0"] += temp["c0,c1,g0,v0"];
+//    H2_3rd["c0,c1,v0,g0"] -= temp["c0,c1,g0,v0"];
 
-    temp["g0,c0,v0,v1"] = (-1.0 / 2.0) * RV["g0,v2,c1,c2"] * T1["c1,v2"] * T2["c0,c2,v0,v1"];
-    temp["g0,c0,v0,v1"] += (-1.0 / 2.0) * RV["g0,c1,v2,c2"] * T1["c1,v2"] * T2["c0,c2,v0,v1"];
-    H2_3rd["c0,g0,v0,v1"] -= temp["g0,c0,v0,v1"];
-    H2_3rd["g0,c0,v0,v1"] += temp["g0,c0,v0,v1"];
+//    temp["g0,c0,v0,v1"] = (-1.0 / 2.0) * RV["g0,v2,c1,c2"] * T1["c1,v2"] * T2["c0,c2,v0,v1"];
+//    temp["g0,c0,v0,v1"] += (-1.0 / 2.0) * RV["g0,c1,v2,c2"] * T1["c1,v2"] * T2["c0,c2,v0,v1"];
+//    H2_3rd["c0,g0,v0,v1"] -= temp["g0,c0,v0,v1"];
+//    H2_3rd["g0,c0,v0,v1"] += temp["g0,c0,v0,v1"];
 
     // Lambda
     RF = BTF->build(tensor_type_, "RF", {"cv"});
