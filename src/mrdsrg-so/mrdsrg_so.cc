@@ -904,14 +904,14 @@ double MRDSRG_SO::compute_ldsrg2_4th_corr_t2_debug() {
     RV["pqrs"] = V["pqrs"];
     RV["pqrs"] += 0.5 * temp2["pqrs"];
 
-    ambit::BlockedTensor T1_3rd_1 = BTF->build(tensor_type_, "3rd-order T1 Amplitudes", {"hp"});
-    ambit::BlockedTensor T2_3rd_1 = BTF->build(tensor_type_, "3rd-order T2 Amplitudes", {"hhpp"});
+    ambit::BlockedTensor T1_3rd_1 = BTF->build(tensor_type_, "3rd-order T1 Amplitudes", {"gg"});
+    ambit::BlockedTensor T2_3rd_1 = BTF->build(tensor_type_, "3rd-order T2 Amplitudes", {"gggg"});
 
     sr_H_A3_C(1.0, RF, RV, T3, T1_3rd_1, T2_3rd_1);
 
     // 0.5 * [[H0th, A3], A] + 0.5 * [[H, A2]3, A] + 1/6 * [[[H0th, A2], A2]3, A]
-    ambit::BlockedTensor T1_3rd_2 = BTF->build(tensor_type_, "3rd-order T1 Amplitudes", {"hp"});
-    ambit::BlockedTensor T2_3rd_2 = BTF->build(tensor_type_, "3rd-order T2 Amplitudes", {"hhpp"});
+    ambit::BlockedTensor T1_3rd_2 = BTF->build(tensor_type_, "3rd-order T1 Amplitudes", {"gg"});
+    ambit::BlockedTensor T2_3rd_2 = BTF->build(tensor_type_, "3rd-order T2 Amplitudes", {"gggg"});
     ambit::BlockedTensor temp = BTF->build(tensor_type_, "temp", {"gggggg"});
 //    RV["pqrs"] = V["pqrs"];
 //    RV["pqrs"] += (1.0/3.0) * temp2["pqrs"];
