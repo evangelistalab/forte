@@ -603,13 +603,13 @@ void MRDSRG_SO::sr_H3_A_C(double factor, BlockedTensor& H3, BlockedTensor& T1, B
 
     C2["g2,g3,g0,g1"] += 1.0 * H3["g2,g3,v0,g0,g1,c0"] * T1["c0,v0"];
     auto temp = ambit::BlockedTensor::build(CoreTensor, "temp", {"gcgg"});
-    temp["g2,c0,g0,g1"] += (1.0 / 2.0) * H3["g2,v0,v1,g0,g1,c1"] * T2["c0,c1,v0,v1"];
-    C2["c0,g2,g0,g1"] -= temp["g2,c0,g0,g1"];
-    C2["g2,c0,g0,g1"] += temp["g2,c0,g0,g1"];
-    temp = ambit::BlockedTensor::build(CoreTensor, "temp", {"gggv"});
-    temp["g1,g2,g0,v0"] += (-1.0 / 2.0) * H3["g1,g2,v1,g0,c0,c1"] * T2["c0,c1,v0,v1"];
-    C2["g1,g2,g0,v0"] += temp["g1,g2,g0,v0"];
-    C2["g1,g2,v0,g0"] -= temp["g1,g2,g0,v0"];
+//    temp["g2,c0,g0,g1"] += (1.0 / 2.0) * H3["g2,v0,v1,g0,g1,c1"] * T2["c0,c1,v0,v1"];
+//    C2["c0,g2,g0,g1"] -= temp["g2,c0,g0,g1"];
+//    C2["g2,c0,g0,g1"] += temp["g2,c0,g0,g1"];
+//    temp = ambit::BlockedTensor::build(CoreTensor, "temp", {"gggv"});
+//    temp["g1,g2,g0,v0"] += (-1.0 / 2.0) * H3["g1,g2,v1,g0,c0,c1"] * T2["c0,c1,v0,v1"];
+//    C2["g1,g2,g0,v0"] += temp["g1,g2,g0,v0"];
+//    C2["g1,g2,v0,g0"] -= temp["g1,g2,g0,v0"];
 
     C1.scale(factor);
     C2.scale(factor);
