@@ -838,16 +838,16 @@ void MRDSRG_SO::compute_lhbar() {
 
 double MRDSRG_SO::compute_ldsrg2_4th_corr() {
     double E0 = compute_ldsrg2_4th_corr_t2();
-    outfile->Printf("\n  LDSRG(2) 4th-order correction [H, T_3rd]: %20.12f", E0);
+//    outfile->Printf("\n  LDSRG(2) 4th-order correction [H, T_3rd]: %20.12f", E0);
     double E1 = compute_ldsrg2_4th_corr_3body();
     outfile->Printf("\n  LDSRG(2) 4th-order correction 3-body H:   %20.12f", E1);
     double E2 = compute_ldsrg2_4th_corr_t3();
     outfile->Printf("\n  LDSRG(2) 4th-order correction T3:         %20.12f", E2);
-    double E3 = compute_ldsrg2_4th_corr_lambda1();
-    outfile->Printf("\n  LDSRG(2) 4th-order correction Lambda:     %20.12f", E3);
+//    double E3 = compute_ldsrg2_4th_corr_lambda1();
+//    outfile->Printf("\n  LDSRG(2) 4th-order correction Lambda:     %20.12f", E3);
 //    double E4 = compute_ldsrg2_4th_corr_lambda2();
 //    outfile->Printf("\n  LDSRG(2) 4th-order correction Lambda 2: %20.12f", E4);
-    outfile->Printf("\n  LDSRG(2) 4th-order correction (total):  %20.12f", E0 + E1 + E2 + E3);
+    outfile->Printf("\n  LDSRG(2) 4th-order correction (total):  %20.12f", E0 + E1 + E2);
 
     double C0 = compute_ldsrg2_4th_corr_t2_debug();
     double C1 = compute_ldsrg2_4th_corr_t3_debug();
@@ -857,6 +857,16 @@ double MRDSRG_SO::compute_ldsrg2_4th_corr() {
     return C0 + C1 + C2;
 
 //    return E0 + E1 + E2 + E3;
+}
+
+void MRDSRG_SO::renormalize_bare_Hamiltonian(BlockedTensor& RF, BlockedTensor& RV, const double scale_factor) {
+    ambit::BlockedTensor H0 = BTF->build(tensor_type_, "H0", {"cc", "vv"});
+    H0["pq"] = F["pq"];
+
+    sr_H1_A_C(scale_factor, H0, T1, T2, RF, RV);
+
+    RF["pq"] += F["pq"];
+    RV["pqrs"] += V["pqrs"];
 }
 
 void MRDSRG_SO::H1_A1_C1(BlockedTensor& H1, BlockedTensor& T1, const double& alpha, BlockedTensor& C1){
@@ -1035,94 +1045,149 @@ double MRDSRG_SO::compute_ldsrg2_4th_corr_t3_debug() {
     return C;
 }
 
-//double MRDSRG_SO::compute_ldsrg2_4th_corr_lambda_debug() {
-
-//}
-
 double MRDSRG_SO::compute_ldsrg2_4th_corr_t2() {
+    // 3rd-order Hbar
+    auto H1_3rd = ambit::BlockedTensor::build(tensor_type_, "H1 3rd", {"hp"});
+    auto H2_3rd = ambit::BlockedTensor::build(tensor_type_, "H2 3rd", {"hhpp"});
+
+    // [H_1st, A3_2nd] + 0.5 * [[H_0th, A_1st], A3_2nd]
+    auto RF = BTF->build(tensor_type_, "RF", {"gg"});
+    auto RV = BTF->build(tensor_type_, "RV", {"gggg"});
+    renormalize_bare_Hamiltonian(RF, RV, 0.5);
+
+    H1_3rd["c0,v0"] += (1.0 / 4.0) * RV["v1,v2,c1,c2"] * T3["c0,c1,c2,v0,v1,v2"];
+
+    H2_3rd["c0,c1,v0,v1"] += 1.0 * RF["v2,c2"] * T3["c0,c1,c2,v0,v1,v2"];
+
+    auto temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"ccvv"});
+    temp["c0,c1,g0,v0"] = (-1.0 / 2.0) * RV["v1,v2,g0,c2"] * T3["c0,c1,c2,v0,v1,v2"];
+    H2_3rd["c0,c1,g0,v0"] += temp["c0,c1,g0,v0"];
+    H2_3rd["c0,c1,v0,g0"] -= temp["c0,c1,g0,v0"];
+
+    temp["g0,c0,v0,v1"] = (1.0 / 2.0) * RV["g0,v2,c1,c2"] * T3["c0,c1,c2,v0,v1,v2"];
+    H2_3rd["c0,g0,v0,v1"] -= temp["g0,c0,v0,v1"];
+    H2_3rd["g0,c0,v0,v1"] += temp["g0,c0,v0,v1"];
+
+    // 0.5 * [[H_0th, A3_2nd], A_1st]
+    H1_3rd["c0,g0"] += (1.0 / 8.0) * F["v0,g0"] * T2["c1,c2,v1,v2"] * T3["c0,c1,c2,v0,v1,v2"];
+
+    H1_3rd["g0,v0"] += (-1.0 / 8.0) * F["g0,c0"] * T2["c1,c2,v1,v2"] * T3["c0,c1,c2,v0,v1,v2"];
+
+    H1_3rd["c0,v0"] += (1.0 / 4.0) * F["v1,v2"] * T2["c1,c2,v2,v3"] * T3["c0,c1,c2,v0,v1,v3"];
+
+    H1_3rd["c0,v0"] += (-1.0 / 4.0) * F["c1,c2"] * T2["c1,c3,v1,v2"] * T3["c0,c2,c3,v0,v1,v2"];
+
+    temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"ccgv"});
+    temp["c0,c1,g0,v0"] += (-1.0 / 2.0) * F["v1,g0"] * T1["c2,v2"] * T3["c0,c1,c2,v0,v1,v2"];
+    H2_3rd["c0,c1,g0,v0"] += temp["c0,c1,g0,v0"];
+    H2_3rd["c0,c1,v0,g0"] -= temp["c0,c1,g0,v0"];
+
+    temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"gcvv"});
+    temp["g0,c0,v0,v1"] += (1.0 / 2.0) * F["g0,c1"] * T1["c2,v2"] * T3["c0,c1,c2,v0,v1,v2"];
+    H2_3rd["c0,g0,v0,v1"] -= temp["g0,c0,v0,v1"];
+    H2_3rd["g0,c0,v0,v1"] += temp["g0,c0,v0,v1"];
+
+    H2_3rd["c0,c1,v0,v1"] += (1.0 / 2.0) * F["v2,v3"] * T1["c2,v3"] * T3["c0,c1,c2,v0,v1,v2"];
+
+    H2_3rd["c0,c1,v0,v1"] += (-1.0 / 2.0) * F["c2,c3"] * T1["c2,v2"] * T3["c0,c1,c3,v0,v1,v2"];
+
+    // 0.5 * [[H_1st, A2_1st]3, A_1st] + 1/6 * [[[H_0th, A_1st], A2_1st], A_1st]
+    renormalize_bare_Hamiltonian(RF, RV, 1.0/3.0);
+
+    H1_3rd["g1,g0"] += (1.0 / 2.0) * RV["g1,v0,g0,v1"] * T2["c0,c1,v1,v2"] * T2["c0,c1,v0,v2"];
+
+    H1_3rd["g1,g0"] += (-1.0 / 2.0) * RV["g1,c0,g0,c1"] * T2["c0,c2,v0,v1"] * T2["c1,c2,v0,v1"];
+
+    H1_3rd["c0,g0"] += (1.0 / 2.0) * RV["v0,c1,g0,v1"] * T2["c1,c2,v1,v2"] * T2["c0,c2,v0,v2"];
+
+    H1_3rd["c0,g0"] += (1.0 / 8.0) * RV["c1,c2,g0,c3"] * T2["c1,c2,v0,v1"] * T2["c0,c3,v0,v1"];
+
+    H1_3rd["g0,v0"] += (-1.0 / 8.0) * RV["g0,v1,v2,v3"] * T2["c0,c1,v2,v3"] * T2["c0,c1,v0,v1"];
+
+    H1_3rd["g0,v0"] += (1.0 / 2.0) * RV["g0,c0,v1,c1"] * T2["c0,c2,v1,v2"] * T2["c1,c2,v0,v2"];
+
+    H1_3rd["c0,v0"] += (-1.0 / 4.0) * RV["v1,c1,v2,v3"] * T2["c1,c2,v2,v3"] * T2["c0,c2,v0,v1"];
+
+    H1_3rd["c0,v0"] += (-1.0 / 4.0) * RV["c1,c2,v1,c3"] * T2["c1,c2,v1,v2"] * T2["c0,c3,v0,v2"];
+
+    H2_3rd["c0,c1,g0,g1"] += (-1.0 / 2.0) * RV["v0,c2,g0,g1"] * T1["c2,v1"] * T2["c0,c1,v0,v1"];
+
+    H2_3rd["g0,g1,v0,v1"] += (-1.0 / 2.0) * RV["g0,g1,v2,c0"] * T1["c1,v2"] * T2["c0,c1,v0,v1"];
+
+    H2_3rd["c0,c1,v0,v1"] += (-1.0 / 2.0) * RV["v2,v3,c2,c3"] * T2["c0,c1,v1,v3"] * T2["c2,c3,v0,v2"];
+
+    H2_3rd["c0,c1,v0,v1"] += (-1.0 / 2.0) * RV["v2,v3,c2,c3"] * T2["c0,c2,v2,v3"] * T2["c1,c3,v0,v1"];
+
+    temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"gcgg"});
+    temp["g2,c0,g0,g1"] += (1.0 / 2.0) * RV["g2,v0,g0,g1"] * T1["c1,v1"] * T2["c0,c1,v0,v1"];
+    temp["g2,c0,g0,g1"] += (-1.0 / 4.0) * RV["g2,c1,g0,g1"] * T2["c1,c2,v0,v1"] * T2["c0,c2,v0,v1"];
+    H2_3rd["c0,g2,g0,g1"] -= temp["g2,c0,g0,g1"];
+    H2_3rd["g2,c0,g0,g1"] += temp["g2,c0,g0,g1"];
+
+    temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"gggv"});
+    temp["g1,g2,g0,v0"] += (-1.0 / 2.0) * RV["g1,g2,g0,c0"] * T1["c1,v1"] * T2["c0,c1,v0,v1"];
+    temp["g1,g2,g0,v0"] += (-1.0 / 4.0) * RV["g1,g2,g0,v1"] * T2["c0,c1,v1,v2"] * T2["c0,c1,v0,v2"];
+    H2_3rd["g1,g2,g0,v0"] += temp["g1,g2,g0,v0"];
+    H2_3rd["g1,g2,v0,g0"] -= temp["g1,g2,g0,v0"];
+
+    temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"gcgv"});
+    temp["g1,c0,g0,v0"] += (1.0 / 2.0) * RV["g1,v1,g0,v2"] * T1["c1,v2"] * T2["c0,c1,v0,v1"];
+    temp["g1,c0,g0,v0"] += (-1.0 / 2.0) * RV["g1,c1,g0,c2"] * T1["c1,v1"] * T2["c0,c2,v0,v1"];
+    H2_3rd["c0,g1,g0,v0"] -= temp["g1,c0,g0,v0"];
+    H2_3rd["c0,g1,v0,g0"] += temp["g1,c0,g0,v0"];
+    H2_3rd["g1,c0,g0,v0"] += temp["g1,c0,g0,v0"];
+    H2_3rd["g1,c0,v0,g0"] -= temp["g1,c0,g0,v0"];
+
+    temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"ccgv"});
+    temp["c0,c1,g0,v0"] += (1.0 / 2.0) * RV["v1,v2,g0,c2"] * T1["c2,v1"] * T2["c0,c1,v0,v2"];
+    temp["c0,c1,g0,v0"] += (-1.0 / 2.0) * RV["v1,c2,g0,v2"] * T1["c2,v2"] * T2["c0,c1,v0,v1"];
+    H2_3rd["c0,c1,g0,v0"] += temp["c0,c1,g0,v0"];
+    H2_3rd["c0,c1,v0,g0"] -= temp["c0,c1,g0,v0"];
+
+    temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"gcvv"});
+    temp["g0,c0,v0,v1"] += (-1.0 / 2.0) * RV["g0,v2,c1,c2"] * T1["c1,v2"] * T2["c0,c2,v0,v1"];
+    temp["g0,c0,v0,v1"] += (-1.0 / 2.0) * RV["g0,c1,v2,c2"] * T1["c1,v2"] * T2["c0,c2,v0,v1"];
+    H2_3rd["c0,g0,v0,v1"] -= temp["g0,c0,v0,v1"];
+    H2_3rd["g0,c0,v0,v1"] += temp["g0,c0,v0,v1"];
+
+    // Lambda
+    double C0_lambda = 0.0;
+    C0_lambda += H1_3rd["ia"] * T1["ia"];
+    C0_lambda += 0.25 * H2_3rd["ijab"] * T2["ijab"];
+    outfile->Printf("\n  LDSRG(2) 4th-order correction Lambda:     %20.12f", C0_lambda);
+
+    // add resolvent to obtain 3rd-order amplitudes
+    H1_3rd.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+        value *= renormalized_denominator(Fd[i[0]] - Fd[i[1]]);
+    });
+    H2_3rd.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+        value *= renormalized_denominator(Fd[i[0]] + Fd[i[1]] - Fd[i[2]] - Fd[i[3]]);
+    });
+
+    // [H_1st, A_3rd]
     double C0 = 0.0;
+    C0 = 2.0 * F["ai"] * H1_3rd["ia"];
+    C0 = 0.5 * V["abij"] * H2_3rd["ijab"];
 
-    // third-order T1: [H, A3]1 + 0.5 [[H, A2]3, A1 + A2]1
-    ambit::BlockedTensor T1_3rd = BTF->build(tensor_type_, "3rd-order T1 Amplitudes", {"hp"});
+    // 0.5 * [[H_0th, A_1st], A_3rd] + 0.5 * [[H_0th, A_3rd], A_1st]
+    C0 += 2.0 * F["v0,v1"] * H1_3rd["c0,v1"] * T1["c0,v0"];
 
-    T1_3rd["c2,v2"] += 0.25 * V["v0,v1,c0,c1"] * T3["c0,c1,c2,v0,v1,v2"];
+    C0 += 1.0 * F["v0,v1"] * H2_3rd["c0,c1,v1,v2"] * T2["c0,c1,v0,v2"];
 
-    T1_3rd["c0,v1"] += -0.5 * V["v0,c0,v1,v2"] * T2["v2,v3,c1,c2"] * T2["c1,c2,v0,v3"];
+    C0 += -2.0 * F["c0,c1"] * H1_3rd["c0,v0"] * T1["c1,v0"];
 
-    T1_3rd["c0,v0"] += -0.5 * V["c0,c1,v0,c2"] * T2["c1,c3,v1,v2"] * T2["c2,c3,v1,v2"];
+    C0 += -1.0 * F["c0,c1"] * H2_3rd["c0,c2,v0,v1"] * T2["c1,c2,v0,v1"];
 
-    T1_3rd["c0,v1"] += 0.5 * V["c0,c1,v0,c2"] * T2["c1,c3,v0,v2"] * T2["c2,c3,v1,v2"];
+    outfile->Printf("\n  LDSRG(2) 4th-order correction T_3rd:      %20.12f", C0);
 
-    T1_3rd["c1,v1"] += 0.5 * V["v0,c0,v1,v2"] * T2["c0,c2,v2,v3"] * T2["c1,c2,v0,v3"];
-
-    T1_3rd["c1,v3"] += 0.25 * V["v0,c0,v1,v2"] * T2["c0,c2,v1,v2"] * T2["c1,c2,v0,v3"];
-
-    T1_3rd["c3,v1"] += 0.25 * V["c0,c1,v0,c2"] * T2["c0,c1,v0,v2"] * T2["c2,c3,v1,v2"];
-
-    T1_3rd["c3,v0"] += -0.125 * V["c0,c1,v0,c2"] * T2["c0,c1,v1,v2"] * T2["c2,c3,v1,v2"];
-
-    T1_3rd["c0,v3"] += -0.125 * V["v0,c0,v1,v2"] * T2["c1,c2,v1,v2"] * T2["c1,c2,v0,v3"];
-
-    T1_3rd.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
-        double D = Fd[i[0]] - Fd[i[1]];
-        value *= renormalized_denominator(D);
-    });
-
-    // third-order T2: [H, A3]2 + 0.5 [[H, A2]3, A1 + A2]2
-    ambit::BlockedTensor T2_3rd = BTF->build(tensor_type_, "3rd-order T2 Amplitudes", {"hhpp"});
-
-    T2_3rd["c1,c2,v1,v2"] += 1.0 * F["v0,c0"] * T3["c0,c1,c2,v0,v1,v2"];
-
-    T2_3rd["c1,c2,v2,v3"] += -1.0 * V["v0,v1,v2,c0"] * T3["c0,c1,c2,v0,v1,v3"];
-
-    T2_3rd["c0,c3,v1,v2"] += -1.0 * V["v0,c0,c1,c2"] * T3["c1,c2,c3,v0,v1,v2"];
-
-    T2_3rd["c0,c1,v1,v3"] += 2.0 * V["v0,c0,v1,v2"] * T1["c2,v2"] * T2["c1,c2,v0,v3"];
-
-    T2_3rd["c0,c3,v0,v1"] += 2.0 * V["c0,c1,v0,c2"] * T1["c1,v2"] * T2["c2,c3,v1,v2"];
-
-    T2_3rd["c1,c2,v2,v3"] += -1.0 * V["v0,v1,v2,c0"] * T1["c0,v0"] * T2["c1,c2,v1,v3"];
-
-    T2_3rd["c0,c1,v1,v2"] += -1.0 * V["v0,c0,v1,v2"] * T1["c2,v3"] * T2["c1,c2,v0,v3"];
-
-    T2_3rd["c0,c3,v1,v2"] += 1.0 * V["c0,c1,v0,c2"] * T1["c1,v0"] * T2["c2,c3,v1,v2"];
-
-    T2_3rd["c1,c2,v1,v3"] += 1.0 * V["v0,c0,v1,v2"] * T1["c0,v2"] * T2["c1,c2,v0,v3"];
-
-    T2_3rd["c0,c3,v1,v2"] += -1.0 * V["v0,c0,c1,c2"] * T1["c1,v0"] * T2["c2,c3,v1,v2"];
-
-    T2_3rd["c0,c1,v0,v1"] += -1.0 * V["c0,c1,v0,c2"] * T1["c3,v2"] * T2["c2,c3,v1,v2"];
-
-    T2_3rd["c1,c2,v1,v2"] += -0.5 * V["v0,c0,v1,v2"] * T1["c0,v3"] * T2["c1,c2,v0,v3"];
-
-    T2_3rd["c0,c1,v1,v2"] += -0.5 * V["c0,c1,v0,c2"] * T1["c3,v0"] * T2["c2,c3,v1,v2"];
-
-    T2_3rd["c2,c3,v2,v3"] += -0.5 * V["v0,v1,c0,c1"] * T2["c0,c1,v1,v3"] * T2["c2,c3,v0,v2"];
-
-    T2_3rd["c2,c3,v2,v3"] += -0.5 * V["v0,v1,c0,c1"] * T2["c0,c2,v2,v3"] * T2["c1,c3,v0,v1"];
-
-    T2_3rd["c0,c2,v0,v1"] += -0.5 * V["c0,c1,v0,v1"] * T2["c1,c3,v2,v3"] * T2["c2,c3,v2,v3"];
-
-    T2_3rd["c0,c1,v0,v2"] += -0.5 * V["c0,c1,v0,v1"] * T2["c2,c3,v1,v3"] * T2["c2,c3,v2,v3"];
-
-    T2_3rd.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
-        double D = Fd[i[0]] + Fd[i[1]] - Fd[i[2]] - Fd[i[3]];
-        value *= renormalized_denominator(D);
-    });
-
-    // contraction [H, A3rd]0
-    C0 += 2.0 * F["ai"] * T1_3rd["ia"];
-    C0 += V["abij"] * T1_3rd["ia"] * T1_3rd["jb"];
-    C0 += 0.5 * V["abij"] * T2_3rd["ijab"];
-
-    return C0;
+    return C0 + C0_lambda;
 }
 
 double MRDSRG_SO::compute_ldsrg2_4th_corr_3body() {
     double C0 = 0.0;
 
-    ambit::BlockedTensor RV = BTF->build(tensor_type_, "RV", {"gggg"});
-//    ambit::BlockedTensor RV = BTF->build(tensor_type_, "RV", {"vvvc", "vvcc", "vcvv", "vccc", "ccvv", "ccvc"});
+//    ambit::BlockedTensor RV = BTF->build(tensor_type_, "RV", {"gggg"});
+    ambit::BlockedTensor RV = BTF->build(tensor_type_, "RV", {"vvvc", "vvcc", "vcvv", "vccc", "ccvv", "ccvc"});
     RV["pqrs"] = V["pqrs"];
     H1_A2_C2(F, T2, 0.25, RV);
 
@@ -1176,48 +1241,33 @@ double MRDSRG_SO::compute_ldsrg2_4th_corr_3body() {
 double MRDSRG_SO::compute_ldsrg2_4th_corr_t3() {
     double C0 = 0.0;
 
+    // 0.5 * [[H_1st, A3_2nd], A_1st] + 1/6 * [[[H_0th, A_1st], A3_2nd], A_1st]
+    // + 0.5 * [[H_1st, A_1st], A3_2nd] + 1/6 * [[[H_0th, A_1st], A_1st], A3_2nd]
     ambit::BlockedTensor RF = BTF->build(tensor_type_, "RF", {"gg"});
-    RF["pq"] = F["pq"];
-    H1_A1_C1(F, T1, 1.0/3.0, RF);
-
     ambit::BlockedTensor RV = BTF->build(tensor_type_, "RV", {"gggg"});
-//    ambit::BlockedTensor RV = BTF->build(tensor_type_, "RV", {"vvcc", "vvvc", "vcvv", "vccc", "ccvc"});
-    RV["pqrs"] = V["pqrs"];
-    H1_A2_C2(F, T2, 1.0/3.0, RV);
+    renormalize_bare_Hamiltonian(RF, RV, 1.0/3.0);
 
-    C0 += 0.25 * RF["v0,c0"] * T2["c1,c2,v1,v2"] * T3["c0,c1,c2,v0,v1,v2"];
+    C0 += (1.0 / 4.0) * RF["v0,c0"] * T2["c1,c2,v1,v2"] * T3["c0,c1,c2,v0,v1,v2"];
 
-    C0 += 0.25 * RV["v0,v1,c0,c1"] * T1["c2,v2"] * T3["c0,c1,c2,v0,v1,v2"];
+    C0 += (1.0 / 4.0) * RV["v0,v1,c0,c1"] * T1["c2,v2"] * T3["c0,c1,c2,v0,v1,v2"];
 
-    C0 += -0.25 * RV["v0,v1,v2,c0"] * T2["c1,c2,v2,v3"] * T3["c0,c1,c2,v0,v1,v3"];
+    C0 += (-1.0 / 2.0) * RV["v0,v1,v2,c0"] * T2["c1,c2,v2,v3"] * T3["c0,c1,c2,v0,v1,v3"];
 
-    C0 += -0.25 * RV["v0,c0,v1,v2"] * T2["c1,c2,v0,v3"] * T3["c0,c1,c2,v1,v2,v3"];
+    C0 += (-1.0 / 2.0) * RV["v0,c0,c1,c2"] * T2["c0,c3,v1,v2"] * T3["c1,c2,c3,v0,v1,v2"];
 
-    C0 += -0.25 * RV["v0,c0,c1,c2"] * T2["c0,c3,v1,v2"] * T3["c1,c2,c3,v0,v1,v2"];
+    // 0.5 * [[H_0th, A3_2nd], A3_2nd]
+    C0 += (1.0 / 12.0) * F["v0,v1"] * T3["c0,c1,c2,v1,v2,v3"] * T3["c0,c1,c2,v0,v2,v3"];
 
-    C0 += -0.25 * RV["c0,c1,v0,c2"] * T2["c2,c3,v1,v2"] * T3["c0,c1,c3,v0,v1,v2"];
+    C0 += (-1.0 / 12.0) * F["c0,c1"] * T3["c0,c2,c3,v0,v1,v2"] * T3["c1,c2,c3,v0,v1,v2"];
 
-    // 0.5 * [[H1, A3], A3]
-    C0 += (1.0 / 12.0) * F["v0,v1"] * T3["v1,v2,v3,c0,c1,c2"] * T3["c0,c1,c2,v0,v2,v3"];
+    // 1/6 * [[[H_0th, A3_2nd], A_1st], A_1st]
+    C0 += (1.0 / 3.0) * F["c0,c1"] * T1["c2,v0"] * T2["c0,c3,v1,v2"] * T3["c1,c2,c3,v0,v1,v2"];
 
-    C0 += (-1.0 / 12.0) * F["c0,c1"] * T3["v0,v1,v2,c0,c2,c3"] * T3["c1,c2,c3,v0,v1,v2"];
+    C0 += (-1.0 / 3.0) * F["v0,v1"] * T1["c0,v2"] * T2["c1,c2,v1,v3"] * T3["c0,c1,c2,v0,v2,v3"];
 
-    // 1/6 * [[[F, A3], A1 + A2], A1 + A2]
-    C0 += (1.0 / 6.0) * F["c0,c1"] * T1["v0,c2"] * T2["v1,v2,c0,c3"] * T3["c1,c2,c3,v0,v1,v2"];
+    C0 += (-1.0 / 6.0) * F["c0,c1"] * T1["c0,v0"] * T2["c2,c3,v1,v2"] * T3["c1,c2,c3,v0,v1,v2"];
 
-    C0 += (1.0 / 6.0) * F["c0,c1"] * T1["c2,v0"] * T2["c1,c3,v1,v2"] * T3["v0,v1,v2,c0,c2,c3"];
-
-    C0 += (-1.0 / 6.0) * F["v0,v1"] * T1["v2,c0"] * T2["v1,v3,c1,c2"] * T3["c0,c1,c2,v0,v2,v3"];
-
-    C0 += (-1.0 / 6.0) * F["v0,v1"] * T1["c0,v2"] * T2["c1,c2,v0,v3"] * T3["v1,v2,v3,c0,c1,c2"];
-
-    C0 += (1.0 / 12.0) * F["v0,v1"] * T1["v1,c0"] * T2["v2,v3,c1,c2"] * T3["c0,c1,c2,v0,v2,v3"];
-
-    C0 += (1.0 / 12.0) * F["v0,v1"] * T1["c0,v0"] * T2["c1,c2,v2,v3"] * T3["v1,v2,v3,c0,c1,c2"];
-
-    C0 += (-1.0 / 12.0) * F["c0,c1"] * T1["v0,c0"] * T2["v1,v2,c2,c3"] * T3["c1,c2,c3,v0,v1,v2"];
-
-    C0 += (-1.0 / 12.0) * F["c0,c1"] * T1["c1,v0"] * T2["c2,c3,v1,v2"] * T3["v0,v1,v2,c0,c2,c3"];
+    C0 += (1.0 / 6.0) * F["v0,v1"] * T1["c0,v1"] * T2["c1,c2,v2,v3"] * T3["c0,c1,c2,v0,v2,v3"];
 
     return C0;
 }

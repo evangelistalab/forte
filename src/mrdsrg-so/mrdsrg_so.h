@@ -271,6 +271,8 @@ class MRDSRG_SO : public psi::Wavefunction {
     double compute_ldsrg2_4th_corr_t3_debug();
     double compute_ldsrg2_4th_corr_lambda_debug();
 
+    void renormalize_bare_Hamiltonian(BlockedTensor& RF, BlockedTensor& RV, const double scale_factor);
+
     /// [H1, A1]1 and [H1, A2]2
     void H1_A1_C1(BlockedTensor& H1, BlockedTensor& T1, const double& alpha, BlockedTensor& C1);
     void H1_A2_C2(BlockedTensor& H1, BlockedTensor& T2, const double& alpha, BlockedTensor& C2);
