@@ -838,25 +838,19 @@ void MRDSRG_SO::compute_lhbar() {
 
 double MRDSRG_SO::compute_ldsrg2_4th_corr() {
     double E0 = compute_ldsrg2_4th_corr_t2();
-//    outfile->Printf("\n  LDSRG(2) 4th-order correction [H, T_3rd]: %20.12f", E0);
     double E1 = compute_ldsrg2_4th_corr_3body();
     outfile->Printf("\n  LDSRG(2) 4th-order correction 3-body H:   %20.12f", E1);
     double E2 = compute_ldsrg2_4th_corr_t3();
     outfile->Printf("\n  LDSRG(2) 4th-order correction T3:         %20.12f", E2);
-//    double E3 = compute_ldsrg2_4th_corr_lambda1();
-//    outfile->Printf("\n  LDSRG(2) 4th-order correction Lambda:     %20.12f", E3);
-//    double E4 = compute_ldsrg2_4th_corr_lambda2();
-//    outfile->Printf("\n  LDSRG(2) 4th-order correction Lambda 2: %20.12f", E4);
     outfile->Printf("\n  LDSRG(2) 4th-order correction (total):    %20.12f", E0 + E1 + E2);
 
-    double C0 = compute_ldsrg2_4th_corr_t2_debug();
-    double C1 = compute_ldsrg2_4th_corr_t3_debug();
-    double C2 = compute_ldsrg2_4th_corr_3body_debug();
-    outfile->Printf("\n  LDSRG(2) 4th-order correction (debug):  %20.12f", C0 + C1 + C2);
+//    double C0 = compute_ldsrg2_4th_corr_t2_debug();
+//    double C1 = compute_ldsrg2_4th_corr_t3_debug();
+//    double C2 = compute_ldsrg2_4th_corr_3body_debug();
+//    outfile->Printf("\n  LDSRG(2) 4th-order correction (debug):  %20.12f", C0 + C1 + C2);
+//    return C0 + C1 + C2;
 
-    return C0 + C1 + C2;
-
-//    return E0 + E1 + E2 + E3;
+    return E0 + E1 + E2;
 }
 
 void MRDSRG_SO::renormalize_bare_Hamiltonian(BlockedTensor& RF, BlockedTensor& RV, const double scale_factor) {
