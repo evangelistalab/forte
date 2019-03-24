@@ -298,6 +298,9 @@ class MRDSRG_SO : public psi::Wavefunction {
     /// Compute 4th-order correction for LDSRG(2)
     double Elambda_l1t3;
     double Elambda_l3t1;
+    double E_t_3rd;
+    double E_t3_2nd;
+    double E_3body;
     double compute_ldsrg2_4th_corr();
     double compute_ldsrg2_4th_corr_t2();
     double compute_ldsrg2_4th_corr_3body();
