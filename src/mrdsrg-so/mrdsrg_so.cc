@@ -709,6 +709,8 @@ double MRDSRG_SO::compute_energy() {
         guess_t3();
         Etotal += compute_ldsrg2_4th_corr();
         outfile->Printf("\n  * MR-LDSRG(2)-T total energy         = %25.15f\n", Etotal);
+        psi::Process::environment.globals["WITH FIRST-ORDER LAMBDA"] = Etotal + Elambda_l1t3;
+        psi::Process::environment.globals["WITH THIRD-ORDER LAMBDA"] = Etotal + Elambda_l1t3 + Elambda_l3t1;
     }
 
     psi::Process::environment.globals["CURRENT ENERGY"] = Etotal;
@@ -838,11 +840,16 @@ void MRDSRG_SO::compute_lhbar() {
 
 double MRDSRG_SO::compute_ldsrg2_4th_corr() {
     double E0 = compute_ldsrg2_4th_corr_t2();
+    outfile->Printf("\n  LDSRG(2) 4th-order correction T_3rd:      %20.12f", E0);
     double E1 = compute_ldsrg2_4th_corr_3body();
     outfile->Printf("\n  LDSRG(2) 4th-order correction 3-body H:   %20.12f", E1);
     double E2 = compute_ldsrg2_4th_corr_t3();
     outfile->Printf("\n  LDSRG(2) 4th-order correction T3:         %20.12f", E2);
     outfile->Printf("\n  LDSRG(2) 4th-order correction (total):    %20.12f", E0 + E1 + E2);
+
+    outfile->Printf("\n\n  LDSRG(2) 4th-order energy correction from Lambda equations");
+    outfile->Printf("\n  1st-order Lambda:     %20.12f", Elambda_l1t3);
+    outfile->Printf("\n  3rd-order Lambda:     %20.12f", Elambda_l3t1);
 
 //    double C0 = compute_ldsrg2_4th_corr_t2_debug();
 //    double C1 = compute_ldsrg2_4th_corr_t3_debug();
@@ -1143,7 +1150,7 @@ double MRDSRG_SO::compute_ldsrg2_4th_corr_t2() {
     H2_3rd["c0,g0,v0,v1"] -= temp["g0,c0,v0,v1"];
     H2_3rd["g0,c0,v0,v1"] += temp["g0,c0,v0,v1"];
 
-    // Lambda
+    // 1st-order Lambda
     RF = BTF->build(tensor_type_, "RF", {"cv"});
     RV = BTF->build(tensor_type_, "RV", {"ccvv"});
     RF["ia"] = H1_3rd["ia"];
@@ -1158,10 +1165,10 @@ double MRDSRG_SO::compute_ldsrg2_4th_corr_t2() {
         value *= 1.0 + std::exp(-s_ * D * D);
     });
 
-    double C0_lambda = 0.0;
-    C0_lambda += RF["ia"] * T1["ia"];
-    C0_lambda += 0.25 * RV["ijab"] * T2["ijab"];
-    outfile->Printf("\n  LDSRG(2) 4th-order correction Lambda:     %20.12f", C0_lambda);
+    Elambda_l1t3 = 0.0;
+    Elambda_l1t3 += RF["ia"] * T1["ia"];
+    Elambda_l1t3 += 0.25 * RV["ijab"] * T2["ijab"];
+//    outfile->Printf("\n  LDSRG(2) 4th-order correction Lambda:     %20.12f", Elambda_l1t3);
 
     // add resolvent to obtain 3rd-order amplitudes
     H1_3rd.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
@@ -1170,7 +1177,7 @@ double MRDSRG_SO::compute_ldsrg2_4th_corr_t2() {
     H2_3rd.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
         value *= renormalized_denominator(Fd[i[0]] + Fd[i[1]] - Fd[i[2]] - Fd[i[3]]);
     });
-    outfile->Printf("3rd-order amps norm: %20.12f, %20.12f", H1_3rd.norm(), H2_3rd.norm());
+//    outfile->Printf("3rd-order amps norm: %20.12f, %20.12f", H1_3rd.norm(), H2_3rd.norm());
 
     // [H_1st, A_3rd]
     double C0 = 0.0;
@@ -1186,9 +1193,20 @@ double MRDSRG_SO::compute_ldsrg2_4th_corr_t2() {
 
     C0 += -1.0 * F["c0,c1"] * H2_3rd["c0,c2,v0,v1"] * T2["c1,c2,v0,v1"];
 
-    outfile->Printf("\n  LDSRG(2) 4th-order correction T_3rd:      %20.12f", C0);
+    // 3rd-order Lambda
+    H1_3rd.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+        double D = Fd[i[0]] - Fd[i[1]];
+        value *= 1.0 + std::exp(-s_ * D * D);
+    });
+    H2_3rd.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+        double D = Fd[i[0]] + Fd[i[1]] - Fd[i[2]] - Fd[i[3]];
+        value *= 1.0 + std::exp(-s_ * D * D);
+    });
+    Elambda_l3t1 = 0.0;
+    Elambda_l3t1 += F["ia"] * H1_3rd["ia"];
+    Elambda_l3t1 += 0.25 * V["ijab"] * H2_3rd["ijab"];
 
-    return C0 + C0_lambda;
+    return C0;
 }
 
 double MRDSRG_SO::compute_ldsrg2_4th_corr_3body() {
