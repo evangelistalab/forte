@@ -226,7 +226,7 @@ class MRDSRG_SO : public psi::Wavefunction {
 
     /// Add 0.5 [[H, A2]3, A1 + A2] to Hbar for recursive evaluation
     bool correct_for_3rd_amp_;
-    void correct_amps_3rd(BlockedTensor& H2, BlockedTensor& C1, BlockedTensor& C2);
+    void correct_amps_3rd(BlockedTensor& H2, BlockedTensor& C1, BlockedTensor& C2, const double& alpha);
 
     /// Compute zero-term term of commutator [H, T]
     void H1_T1_C0(BlockedTensor& H1, BlockedTensor& T1, const double& alpha, double& C0);

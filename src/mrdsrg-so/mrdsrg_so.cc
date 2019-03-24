@@ -787,7 +787,7 @@ void MRDSRG_SO::compute_lhbar() {
         } else {
             commutator_H_A_2(factor, O1, O2, T1, T2, C0, C1, C2);
             if (n == 2 and correct_for_3rd_amp_) {
-                correct_amps_3rd(V, C1, C2);
+                correct_amps_3rd(V, C1, C2, 1.0);
             }
         }
 
@@ -859,7 +859,7 @@ double MRDSRG_SO::compute_ldsrg2_4th_corr() {
     double E2 = 0.0;
 
     E0 = compute_ldsrg2_4th_corr_t2();
-    outfile->Printf("\n  LDSRG(2) 4th-order correction T_3rd:      %20.12f", E0);
+//    outfile->Printf("\n  LDSRG(2) 4th-order correction T_3rd:      %20.12f", E0);
     outfile->Printf("\n  LDSRG(2) 4th-order correction Lambda:     %20.12f", Elambda_l1t3);
 
     if (!correct_for_3rd_amp_) {
@@ -1073,7 +1073,7 @@ double MRDSRG_SO::compute_ldsrg2_4th_corr_t3_debug() {
     return C;
 }
 
-void MRDSRG_SO::correct_amps_3rd(BlockedTensor& H2, BlockedTensor& C1, BlockedTensor& C2) {
+void MRDSRG_SO::correct_amps_3rd(BlockedTensor& H2, BlockedTensor& C1, BlockedTensor& C2, const double& alpha) {
     // O = 0.5 * [[H, A2]3, A1 + A2], only off-diagonal contribution here
     auto O1 = ambit::BlockedTensor::build(tensor_type_, "O1 3rd", {"hp"});
     auto O2 = ambit::BlockedTensor::build(tensor_type_, "O2 3rd", {"hhpp"});
@@ -1134,11 +1134,11 @@ void MRDSRG_SO::correct_amps_3rd(BlockedTensor& H2, BlockedTensor& C1, BlockedTe
     O2["c0,g0,v0,v1"] -= temp["g0,c0,v0,v1"];
     O2["g0,c0,v0,v1"] += temp["g0,c0,v0,v1"];
 
-    C1["ia"] += O1["ia"];
-    C1["ai"] += O1["ia"];
+    C1["ia"] += alpha * O1["ia"];
+    C1["ai"] += alpha * O1["ia"];
 
-    C2["ijab"] += O2["ijab"];
-    C2["abij"] += O2["ijab"];
+    C2["ijab"] += alpha * O2["ijab"];
+    C2["abij"] += alpha * O2["ijab"];
 }
 
 double MRDSRG_SO::compute_ldsrg2_4th_corr_t2() {
@@ -1188,7 +1188,7 @@ double MRDSRG_SO::compute_ldsrg2_4th_corr_t2() {
     // 0.5 * [[H_1st, A2_1st]3, A_1st] + 1/6 * [[[H_0th, A_1st], A2_1st]3, A_1st]
     if (!correct_for_3rd_amp_) {
         renormalize_bare_Hamiltonian(RF, RV, 1.0/3.0);
-        correct_amps_3rd(RV, H1_3rd, H2_3rd);
+        correct_amps_3rd(RV, H1_3rd, H2_3rd, 1.0);
     }
 
     // 1st-order Lambda
@@ -1210,29 +1210,30 @@ double MRDSRG_SO::compute_ldsrg2_4th_corr_t2() {
     Elambda_l1t3 += RF["ia"] * T1["ia"];
     Elambda_l1t3 += 0.25 * RV["ijab"] * T2["ijab"];
 //    outfile->Printf("\n  LDSRG(2) 4th-order correction Lambda:     %20.12f", Elambda_l1t3);
+    return Elambda_l1t3;
 
-    // add resolvent to obtain 3rd-order amplitudes
-    H1_3rd.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
-        value *= renormalized_denominator(Fd[i[0]] - Fd[i[1]]);
-    });
-    H2_3rd.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
-        value *= renormalized_denominator(Fd[i[0]] + Fd[i[1]] - Fd[i[2]] - Fd[i[3]]);
-    });
-//    outfile->Printf("3rd-order amps norm: %20.12f, %20.12f", H1_3rd.norm(), H2_3rd.norm());
+//    // add resolvent to obtain 3rd-order amplitudes
+//    H1_3rd.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+//        value *= renormalized_denominator(Fd[i[0]] - Fd[i[1]]);
+//    });
+//    H2_3rd.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+//        value *= renormalized_denominator(Fd[i[0]] + Fd[i[1]] - Fd[i[2]] - Fd[i[3]]);
+//    });
+////    outfile->Printf("3rd-order amps norm: %20.12f, %20.12f", H1_3rd.norm(), H2_3rd.norm());
 
-    // [H_1st, A_3rd]
-    double C0 = 0.0;
-    C0 = 2.0 * F["ai"] * H1_3rd["ia"];
-    C0 = 0.5 * V["abij"] * H2_3rd["ijab"];
+//    // [H_1st, A_3rd]
+//    double C0 = 0.0;
+//    C0 = 2.0 * F["ai"] * H1_3rd["ia"];
+//    C0 = 0.5 * V["abij"] * H2_3rd["ijab"];
 
-    // 0.5 * [[H_0th, A_1st], A_3rd] + 0.5 * [[H_0th, A_3rd], A_1st]
-    C0 += 2.0 * F["v0,v1"] * H1_3rd["c0,v1"] * T1["c0,v0"];
+//    // 0.5 * [[H_0th, A_1st], A_3rd] + 0.5 * [[H_0th, A_3rd], A_1st]
+//    C0 += 2.0 * F["v0,v1"] * H1_3rd["c0,v1"] * T1["c0,v0"];
 
-    C0 += -2.0 * F["c0,c1"] * H1_3rd["c0,v0"] * T1["c1,v0"];
+//    C0 += -2.0 * F["c0,c1"] * H1_3rd["c0,v0"] * T1["c1,v0"];
 
-    C0 += 1.0 * F["v0,v1"] * H2_3rd["c0,c1,v1,v2"] * T2["c0,c1,v0,v2"];
+//    C0 += 1.0 * F["v0,v1"] * H2_3rd["c0,c1,v1,v2"] * T2["c0,c1,v0,v2"];
 
-    C0 += -1.0 * F["c0,c1"] * H2_3rd["c0,c2,v0,v1"] * T2["c1,c2,v0,v1"];
+//    C0 += -1.0 * F["c0,c1"] * H2_3rd["c0,c2,v0,v1"] * T2["c1,c2,v0,v1"];
 
 //    // 3rd-order Lambda
 //    H1_3rd.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
@@ -1247,7 +1248,7 @@ double MRDSRG_SO::compute_ldsrg2_4th_corr_t2() {
 //    Elambda_l3t1 += F["ia"] * H1_3rd["ia"];
 //    Elambda_l3t1 += 0.25 * V["ijab"] * H2_3rd["ijab"];
 
-    return C0;
+//    return C0;
 }
 
 double MRDSRG_SO::compute_ldsrg2_4th_corr_3body() {
