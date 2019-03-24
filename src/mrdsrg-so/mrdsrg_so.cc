@@ -62,6 +62,7 @@ void MRDSRG_SO::startup() {
     Eref = compute_Eref_from_rdms(rdms_, ints_, mo_space_info_);
 
     do_t3_ = options_.get_str("CORR_LEVEL").find("DSRG3") != std::string::npos;
+    correct_for_3rd_amp_ = options_.get_bool("LDSRG2_QCOMM_CORR");
 
     BlockedTensor::reset_mo_spaces();
     BlockedTensor::set_expert_mode(true);
@@ -785,6 +786,9 @@ void MRDSRG_SO::compute_lhbar() {
             timer_off("3-body [H, A]");
         } else {
             commutator_H_A_2(factor, O1, O2, T1, T2, C0, C1, C2);
+            if (n == 2 and correct_for_3rd_amp_) {
+                correct_amps_3rd(V, C1, C2);
+            }
         }
 
         //        // Compute the commutator C = 1/n [O,T]
@@ -850,13 +854,22 @@ void MRDSRG_SO::compute_lhbar() {
 }
 
 double MRDSRG_SO::compute_ldsrg2_4th_corr() {
-    double E0 = compute_ldsrg2_4th_corr_t2();
+    double E0 = 0.0;
+    double E1 = 0.0;
+    double E2 = 0.0;
+
+    E0 = compute_ldsrg2_4th_corr_t2();
     outfile->Printf("\n  LDSRG(2) 4th-order correction T_3rd:      %20.12f", E0);
     outfile->Printf("\n  LDSRG(2) 4th-order correction Lambda:     %20.12f", Elambda_l1t3);
-    double E1 = compute_ldsrg2_4th_corr_3body();
-    outfile->Printf("\n  LDSRG(2) 4th-order correction 3-body H:   %20.12f", E1);
-    double E2 = compute_ldsrg2_4th_corr_t3();
+
+    if (!correct_for_3rd_amp_) {
+        E1 = compute_ldsrg2_4th_corr_3body();
+        outfile->Printf("\n  LDSRG(2) 4th-order correction 3-body H:   %20.12f", E1);
+    }
+
+    E2 = compute_ldsrg2_4th_corr_t3();
     outfile->Printf("\n  LDSRG(2) 4th-order correction T3:         %20.12f", E2);
+
     outfile->Printf("\n  LDSRG(2) 4th-order correction (total):    %20.12f", E0 + E1 + E2);
 
 //    outfile->Printf("\n\n  LDSRG(2) 4th-order energy correction from Lambda equations");
@@ -1060,6 +1073,74 @@ double MRDSRG_SO::compute_ldsrg2_4th_corr_t3_debug() {
     return C;
 }
 
+void MRDSRG_SO::correct_amps_3rd(BlockedTensor& H2, BlockedTensor& C1, BlockedTensor& C2) {
+    // O = 0.5 * [[H, A2]3, A1 + A2], only off-diagonal contribution here
+    auto O1 = ambit::BlockedTensor::build(tensor_type_, "O1 3rd", {"hp"});
+    auto O2 = ambit::BlockedTensor::build(tensor_type_, "O2 3rd", {"hhpp"});
+
+    O1["g1,g0"] += (1.0 / 2.0) * H2["g1,v0,g0,v1"] * T2["c0,c1,v1,v2"] * T2["c0,c1,v0,v2"];
+
+    O1["g1,g0"] += (-1.0 / 2.0) * H2["g1,c0,g0,c1"] * T2["c0,c2,v0,v1"] * T2["c1,c2,v0,v1"];
+
+    O1["c0,g0"] += (1.0 / 2.0) * H2["v0,c1,g0,v1"] * T2["c1,c2,v1,v2"] * T2["c0,c2,v0,v2"];
+
+    O1["c0,g0"] += (1.0 / 8.0) * H2["c1,c2,g0,c3"] * T2["c1,c2,v0,v1"] * T2["c0,c3,v0,v1"];
+
+    O1["g0,v0"] += (-1.0 / 8.0) * H2["g0,v1,v2,v3"] * T2["c0,c1,v2,v3"] * T2["c0,c1,v0,v1"];
+
+    O1["g0,v0"] += (1.0 / 2.0) * H2["g0,c0,v1,c1"] * T2["c0,c2,v1,v2"] * T2["c1,c2,v0,v2"];
+
+    O1["c0,v0"] += (-1.0 / 4.0) * H2["v1,c1,v2,v3"] * T2["c1,c2,v2,v3"] * T2["c0,c2,v0,v1"];
+
+    O1["c0,v0"] += (-1.0 / 4.0) * H2["c1,c2,v1,c3"] * T2["c1,c2,v1,v2"] * T2["c0,c3,v0,v2"];
+
+    O2["g0,g1,v0,v1"] += (-1.0 / 2.0) * H2["g0,g1,v2,c0"] * T1["c1,v2"] * T2["c0,c1,v0,v1"];
+
+    O2["c0,c1,g0,g1"] += (-1.0 / 2.0) * H2["v0,c2,g0,g1"] * T1["c2,v1"] * T2["c0,c1,v0,v1"];
+
+    auto temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"hhpp"});
+    temp["c0,c1,v0,v1"] = (-1.0 / 4.0) * H2["v2,v3,c2,c3"] * T2["c0,c1,v1,v3"] * T2["c2,c3,v0,v2"];
+    O2["c0,c1,v0,v1"] += temp["c0,c1,v0,v1"];
+    O2["c0,c1,v1,v0"] -= temp["c0,c1,v0,v1"];
+
+    temp["c0,c1,v0,v1"] = (-1.0 / 4.0) * H2["v2,v3,c2,c3"] * T2["c0,c2,v2,v3"] * T2["c1,c3,v0,v1"];
+    O2["c0,c1,v0,v1"] += temp["c0,c1,v0,v1"];
+    O2["c1,c0,v0,v1"] -= temp["c0,c1,v0,v1"];
+
+    temp["g2,c0,g0,g1"] = (1.0 / 2.0) * H2["g2,v0,g0,g1"] * T1["c1,v1"] * T2["c0,c1,v0,v1"];
+    temp["g2,c0,g0,g1"] += (-1.0 / 4.0) * H2["g2,c1,g0,g1"] * T2["c1,c2,v0,v1"] * T2["c0,c2,v0,v1"];
+    O2["c0,g2,g0,g1"] -= temp["g2,c0,g0,g1"];
+    O2["g2,c0,g0,g1"] += temp["g2,c0,g0,g1"];
+
+    temp["g1,g2,g0,v0"] = (-1.0 / 2.0) * H2["g1,g2,g0,c0"] * T1["c1,v1"] * T2["c0,c1,v0,v1"];
+    temp["g1,g2,g0,v0"] += (-1.0 / 4.0) * H2["g1,g2,g0,v1"] * T2["c0,c1,v1,v2"] * T2["c0,c1,v0,v2"];
+    O2["g1,g2,g0,v0"] += temp["g1,g2,g0,v0"];
+    O2["g1,g2,v0,g0"] -= temp["g1,g2,g0,v0"];
+
+    temp["g1,c0,g0,v0"] = (1.0 / 2.0) * H2["g1,v1,g0,v2"] * T1["c1,v2"] * T2["c0,c1,v0,v1"];
+    temp["g1,c0,g0,v0"] += (-1.0 / 2.0) * H2["g1,c1,g0,c2"] * T1["c1,v1"] * T2["c0,c2,v0,v1"];
+    O2["c0,g1,g0,v0"] -= temp["g1,c0,g0,v0"];
+    O2["c0,g1,v0,g0"] += temp["g1,c0,g0,v0"];
+    O2["g1,c0,g0,v0"] += temp["g1,c0,g0,v0"];
+    O2["g1,c0,v0,g0"] -= temp["g1,c0,g0,v0"];
+
+    temp["c0,c1,g0,v0"] = (1.0 / 2.0) * H2["v1,v2,g0,c2"] * T1["c2,v1"] * T2["c0,c1,v0,v2"];
+    temp["c0,c1,g0,v0"] += (-1.0 / 2.0) * H2["v1,c2,g0,v2"] * T1["c2,v2"] * T2["c0,c1,v0,v1"];
+    O2["c0,c1,g0,v0"] += temp["c0,c1,g0,v0"];
+    O2["c0,c1,v0,g0"] -= temp["c0,c1,g0,v0"];
+
+    temp["g0,c0,v0,v1"] = (-1.0 / 2.0) * H2["g0,v2,c1,c2"] * T1["c1,v2"] * T2["c0,c2,v0,v1"];
+    temp["g0,c0,v0,v1"] += (-1.0 / 2.0) * H2["g0,c1,v2,c2"] * T1["c1,v2"] * T2["c0,c2,v0,v1"];
+    O2["c0,g0,v0,v1"] -= temp["g0,c0,v0,v1"];
+    O2["g0,c0,v0,v1"] += temp["g0,c0,v0,v1"];
+
+    C1["ia"] += O1["ia"];
+    C1["ai"] += O1["ia"];
+
+    C2["ijab"] += O2["ijab"];
+    C2["abij"] += O2["ijab"];
+}
+
 double MRDSRG_SO::compute_ldsrg2_4th_corr_t2() {
     // 3rd-order Hbar
     auto H1_3rd = ambit::BlockedTensor::build(tensor_type_, "H1 3rd", {"hp"});
@@ -1105,62 +1186,10 @@ double MRDSRG_SO::compute_ldsrg2_4th_corr_t2() {
     H2_3rd["c0,c1,v0,v1"] += (-1.0 / 2.0) * F["c2,c3"] * T1["c2,v2"] * T3["c0,c1,c3,v0,v1,v2"];
 
     // 0.5 * [[H_1st, A2_1st]3, A_1st] + 1/6 * [[[H_0th, A_1st], A2_1st]3, A_1st]
-    renormalize_bare_Hamiltonian(RF, RV, 1.0/3.0);
-
-    H1_3rd["g1,g0"] += (1.0 / 2.0) * RV["g1,v0,g0,v1"] * T2["c0,c1,v1,v2"] * T2["c0,c1,v0,v2"];
-
-    H1_3rd["g1,g0"] += (-1.0 / 2.0) * RV["g1,c0,g0,c1"] * T2["c0,c2,v0,v1"] * T2["c1,c2,v0,v1"];
-
-    H1_3rd["c0,g0"] += (1.0 / 2.0) * RV["v0,c1,g0,v1"] * T2["c1,c2,v1,v2"] * T2["c0,c2,v0,v2"];
-
-    H1_3rd["c0,g0"] += (1.0 / 8.0) * RV["c1,c2,g0,c3"] * T2["c1,c2,v0,v1"] * T2["c0,c3,v0,v1"];
-
-    H1_3rd["g0,v0"] += (-1.0 / 8.0) * RV["g0,v1,v2,v3"] * T2["c0,c1,v2,v3"] * T2["c0,c1,v0,v1"];
-
-    H1_3rd["g0,v0"] += (1.0 / 2.0) * RV["g0,c0,v1,c1"] * T2["c0,c2,v1,v2"] * T2["c1,c2,v0,v2"];
-
-    H1_3rd["c0,v0"] += (-1.0 / 4.0) * RV["v1,c1,v2,v3"] * T2["c1,c2,v2,v3"] * T2["c0,c2,v0,v1"];
-
-    H1_3rd["c0,v0"] += (-1.0 / 4.0) * RV["c1,c2,v1,c3"] * T2["c1,c2,v1,v2"] * T2["c0,c3,v0,v2"];
-
-    H2_3rd["g0,g1,v0,v1"] += (-1.0 / 2.0) * RV["g0,g1,v2,c0"] * T1["c1,v2"] * T2["c0,c1,v0,v1"];
-
-    H2_3rd["c0,c1,g0,g1"] += (-1.0 / 2.0) * RV["v0,c2,g0,g1"] * T1["c2,v1"] * T2["c0,c1,v0,v1"];
-
-    temp["c0,c1,v0,v1"] = (-1.0 / 4.0) * RV["v2,v3,c2,c3"] * T2["c0,c1,v1,v3"] * T2["c2,c3,v0,v2"];
-    H2_3rd["c0,c1,v0,v1"] += temp["c0,c1,v0,v1"];
-    H2_3rd["c0,c1,v1,v0"] -= temp["c0,c1,v0,v1"];
-
-    temp["c0,c1,v0,v1"] = (-1.0 / 4.0) * RV["v2,v3,c2,c3"] * T2["c0,c2,v2,v3"] * T2["c1,c3,v0,v1"];
-    H2_3rd["c0,c1,v0,v1"] += temp["c0,c1,v0,v1"];
-    H2_3rd["c1,c0,v0,v1"] -= temp["c0,c1,v0,v1"];
-
-    temp["g2,c0,g0,g1"] = (1.0 / 2.0) * RV["g2,v0,g0,g1"] * T1["c1,v1"] * T2["c0,c1,v0,v1"];
-    temp["g2,c0,g0,g1"] += (-1.0 / 4.0) * RV["g2,c1,g0,g1"] * T2["c1,c2,v0,v1"] * T2["c0,c2,v0,v1"];
-    H2_3rd["c0,g2,g0,g1"] -= temp["g2,c0,g0,g1"];
-    H2_3rd["g2,c0,g0,g1"] += temp["g2,c0,g0,g1"];
-
-    temp["g1,g2,g0,v0"] = (-1.0 / 2.0) * RV["g1,g2,g0,c0"] * T1["c1,v1"] * T2["c0,c1,v0,v1"];
-    temp["g1,g2,g0,v0"] += (-1.0 / 4.0) * RV["g1,g2,g0,v1"] * T2["c0,c1,v1,v2"] * T2["c0,c1,v0,v2"];
-    H2_3rd["g1,g2,g0,v0"] += temp["g1,g2,g0,v0"];
-    H2_3rd["g1,g2,v0,g0"] -= temp["g1,g2,g0,v0"];
-
-    temp["g1,c0,g0,v0"] = (1.0 / 2.0) * RV["g1,v1,g0,v2"] * T1["c1,v2"] * T2["c0,c1,v0,v1"];
-    temp["g1,c0,g0,v0"] += (-1.0 / 2.0) * RV["g1,c1,g0,c2"] * T1["c1,v1"] * T2["c0,c2,v0,v1"];
-    H2_3rd["c0,g1,g0,v0"] -= temp["g1,c0,g0,v0"];
-    H2_3rd["c0,g1,v0,g0"] += temp["g1,c0,g0,v0"];
-    H2_3rd["g1,c0,g0,v0"] += temp["g1,c0,g0,v0"];
-    H2_3rd["g1,c0,v0,g0"] -= temp["g1,c0,g0,v0"];
-
-    temp["c0,c1,g0,v0"] = (1.0 / 2.0) * RV["v1,v2,g0,c2"] * T1["c2,v1"] * T2["c0,c1,v0,v2"];
-    temp["c0,c1,g0,v0"] += (-1.0 / 2.0) * RV["v1,c2,g0,v2"] * T1["c2,v2"] * T2["c0,c1,v0,v1"];
-    H2_3rd["c0,c1,g0,v0"] += temp["c0,c1,g0,v0"];
-    H2_3rd["c0,c1,v0,g0"] -= temp["c0,c1,g0,v0"];
-
-    temp["g0,c0,v0,v1"] = (-1.0 / 2.0) * RV["g0,v2,c1,c2"] * T1["c1,v2"] * T2["c0,c2,v0,v1"];
-    temp["g0,c0,v0,v1"] += (-1.0 / 2.0) * RV["g0,c1,v2,c2"] * T1["c1,v2"] * T2["c0,c2,v0,v1"];
-    H2_3rd["c0,g0,v0,v1"] -= temp["g0,c0,v0,v1"];
-    H2_3rd["g0,c0,v0,v1"] += temp["g0,c0,v0,v1"];
+    if (!correct_for_3rd_amp_) {
+        renormalize_bare_Hamiltonian(RF, RV, 1.0/3.0);
+        correct_amps_3rd(RV, H1_3rd, H2_3rd);
+    }
 
     // 1st-order Lambda
     RF = BTF->build(tensor_type_, "RF", {"cv"});
