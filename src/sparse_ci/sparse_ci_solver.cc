@@ -244,7 +244,7 @@ void SparseCISolver::diagonalize_full(const std::vector<Determinant>& space, psi
 
         // Build spin selected Hamiltonian
         psi::SharedMatrix H = build_full_hamiltonian(space);
-        psi::SharedMatrix Hss = psi::Matrix::triplet(S2vecs_sub, H, S2vecs_sub, true, false, false);
+        psi::SharedMatrix Hss = psi::linalg::triplet(S2vecs_sub, H, S2vecs_sub, true, false, false);
         Hss->set_name("Hss");
 
         // Obtain spin selected eigen values and vectors
@@ -253,7 +253,7 @@ void SparseCISolver::diagonalize_full(const std::vector<Determinant>& space, psi
         Hss->diagonalize(Hss_vecs, Hss_vals);
 
         // Project Hss_vecs back to original manifold
-        psi::SharedMatrix H_vecs = psi::Matrix::doublet(S2vecs_sub, Hss_vecs);
+        psi::SharedMatrix H_vecs = psi::linalg::doublet(S2vecs_sub, Hss_vecs);
         H_vecs->set_name("H Eigen Vectors");
 
         // Fill in results
