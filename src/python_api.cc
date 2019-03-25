@@ -185,7 +185,9 @@ PYBIND11_MODULE(forte, m) {
 
     // export ForteIntegrals
     py::class_<ForteIntegrals, std::shared_ptr<ForteIntegrals>>(m, "ForteIntegrals")
-        .def("rotate_orbitals", &ForteIntegrals::rotate_orbitals);
+        .def("rotate_orbitals", &ForteIntegrals::rotate_orbitals)
+        .def("nmo", &ForteIntegrals::nmo)
+        .def("ncmo", &ForteIntegrals::ncmo);
 
     // export StateInfo
     py::class_<StateInfo, std::shared_ptr<StateInfo>>(m, "StateInfo")
