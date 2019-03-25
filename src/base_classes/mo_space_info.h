@@ -124,13 +124,21 @@ class MOSpaceInfo {
     /// space
     std::vector<size_t> get_absolute_mo(const std::string& space);
     /// @return The list of the absolute index of the molecular orbitals in a
-    /// space
-    ///         excluding the frozen core/virtual orbitals
+    /// space excluding the frozen core/virtual orbitals
     std::vector<size_t> get_corr_abs_mo(const std::string& space);
     /// @return The list of the relative index (h,p_rel) of the molecular
     /// orbitals in space
     std::vector<std::pair<size_t, size_t>> get_relative_mo(const std::string& space);
+
+    ///
     void read_options(std::shared_ptr<ForteOptions> options);
+
+    void read_from_map(std::map<std::string, std::vector<size_t>>& mo_space_map);
+
+    void set_reorder(const std::vector<size_t>& reorder);
+
+    void compute_space_info();
+
     /// @return The number of irreps
     size_t nirrep() { return nirrep_; }
 
@@ -168,14 +176,27 @@ class MOSpaceInfo {
     /// The map from all MO to the correlated MOs (excludes frozen core/virtual)
     std::vector<size_t> mo_to_cmo_;
 
+    std::vector<size_t> reorder_;
+
     // ==> Class functions <==
+
     /// Read information about each elementary space from the psi Options object
     std::pair<SpaceInfo, bool> read_mo_space(const std::string& space,
                                              std::shared_ptr<ForteOptions> options);
+
+    /// Read information about each elementary space from a map
+    std::pair<SpaceInfo, bool>
+    read_mo_space_from_map(const std::string& space,
+                           std::map<std::string, std::vector<size_t>>& mo_space_map);
 };
 
 std::shared_ptr<MOSpaceInfo> make_mo_space_info(std::shared_ptr<psi::Wavefunction> ref_wfn,
                                                 std::shared_ptr<ForteOptions> options);
+
+std::shared_ptr<MOSpaceInfo>
+make_mo_space_info_map(std::shared_ptr<psi::Wavefunction> ref_wfn,
+                       std::map<std::string, std::vector<size_t>>& mo_space_map,
+                       std::vector<size_t> reorder);
 
 } // namespace forte
 

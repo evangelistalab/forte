@@ -153,6 +153,8 @@ PYBIND11_MODULE(forte, m) {
     m.def("cleanup", &cleanup);
     m.def("banner", &banner, "Print forte banner");
     m.def("make_mo_space_info", &make_mo_space_info, "Make a MOSpaceInfo object");
+    m.def("make_mo_space_info_map", &make_mo_space_info_map, "ref_wfn"_a, "mo_space_map"_a,
+          "reorder"_a = std::vector<size_t>(), "Make a MOSpaceInfo object using a dictionary");
     m.def("make_aosubspace_projector", &make_aosubspace_projector, "Make a AOSubspace projector");
     m.def("make_avas", &make_avas, "Make AVAS orbitals");
     m.def("make_forte_integrals", &make_forte_integrals, "Make Forte integrals");
@@ -186,7 +188,10 @@ PYBIND11_MODULE(forte, m) {
 
     // export MOSpaceInfo
     py::class_<MOSpaceInfo, std::shared_ptr<MOSpaceInfo>>(m, "MOSpaceInfo")
-        .def("size", &MOSpaceInfo::size);
+        .def("size", &MOSpaceInfo::size)
+        .def("get_corr_abs_mo", &MOSpaceInfo::get_corr_abs_mo,
+             "Absolute index of the molecular orbitals in a space excluding the frozen "
+             "core/virtual orbitals");
 
     // export ForteIntegrals
     py::class_<ForteIntegrals, std::shared_ptr<ForteIntegrals>>(m, "ForteIntegrals")
@@ -197,7 +202,8 @@ PYBIND11_MODULE(forte, m) {
     // export StateInfo
     py::class_<StateInfo, std::shared_ptr<StateInfo>>(m, "StateInfo")
         .def(py::init<int, int, int, int, int>(), "na"_a, "nb"_a, "multiplicity"_a, "twice_ms"_a,
-             "irrep"_a);
+             "irrep"_a)
+        .def("str", &StateInfo::str);
 
     // export SCFInfo
     py::class_<SCFInfo, std::shared_ptr<SCFInfo>>(m, "SCFInfo")

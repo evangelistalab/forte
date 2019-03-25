@@ -60,6 +60,12 @@ const std::string& StateInfo::multiplicity_label() const {
     return multiplicity_labels[multiplicity_ - 1];
 }
 
+std::string StateInfo::str() const {
+    std::string s;
+    s += multiplicity_label() + " " + irrep_label() + " (2Ms = " + std::to_string(twice_ms()) + ")";
+    return s;
+}
+
 bool StateInfo::operator<(const StateInfo& rhs) const {
     return std::tie(na_, nb_, multiplicity_, twice_ms_, irrep_) <
            std::tie(rhs.na_, rhs.nb_, rhs.multiplicity_, rhs.twice_ms_, rhs.irrep_);
