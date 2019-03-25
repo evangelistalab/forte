@@ -453,8 +453,8 @@ void MRDSRG_SO::guess_t3() {
     std::string str = "Computing T3 amplitudes     ...";
     outfile->Printf("\n    %-35s", str.c_str());
 
-    ambit::BlockedTensor C3 = ambit::BlockedTensor::build(tensor_type_, "C3", {"gggggg"});
-    auto temp = ambit::BlockedTensor::build(CoreTensor, "temp", {"gccggv"});
+    ambit::BlockedTensor C3 = ambit::BlockedTensor::build(tensor_type_, "C3", {"hhhppp"});
+    auto temp = ambit::BlockedTensor::build(CoreTensor, "temp", {"hhhppp"});
     temp["g2,c0,c1,g0,g1,v0"] += -1.0 * V["g2,v1,g0,g1"] * T2["c0,c1,v0,v1"];
     C3["c0,c1,g2,g0,g1,v0"] += temp["g2,c0,c1,g0,g1,v0"];
     C3["c0,g2,c1,g0,g1,v0"] -= temp["g2,c0,c1,g0,g1,v0"];
@@ -466,7 +466,7 @@ void MRDSRG_SO::guess_t3() {
     C3["c0,g2,c1,v0,g0,g1"] -= temp["g2,c0,c1,g0,g1,v0"];
     C3["g2,c0,c1,v0,g0,g1"] += temp["g2,c0,c1,g0,g1,v0"];
 
-    temp = ambit::BlockedTensor::build(CoreTensor, "temp", {"ggcgvv"});
+    temp.zero();
     temp["g1,g2,c0,g0,v0,v1"] += 1.0 * V["g1,g2,g0,c1"] * T2["c0,c1,v0,v1"];
     C3["c0,g1,g2,g0,v0,v1"] += temp["g1,g2,c0,g0,v0,v1"];
     C3["g1,c0,g2,g0,v0,v1"] -= temp["g1,g2,c0,g0,v0,v1"];
@@ -603,7 +603,15 @@ double MRDSRG_SO::compute_energy() {
     guess_t1();
 
     if (do_t3_) {
-        Hbar3 = BTF->build(tensor_type_, "Hbar3", {"gggggg"});
+        if (options_.get_str("CORR_LEVEL") == "LDSRG3_0") {
+            Hbar3 = BTF->build(tensor_type_, "Hbar3", {"cccvvv","ccvcvv","ccvvcv","ccvvvc",
+                                                       "cvccvv","cvcvcv","cvcvvc","cvvccv",
+                                                       "cvvcvc","cvvvcc","vcccvv","vccvcv",
+                                                       "vccvvc","vcvccv","vcvcvc","vcvvcc",
+                                                       "vvcccv","vvccvc","vvcvcc","vvvccc"});
+        } else {
+            Hbar3 = BTF->build(tensor_type_, "Hbar3", {"gggggg"});
+        }
         T3 = BTF->build(tensor_type_, "T3 Amplitudes", {"hhhppp"});
         guess_t3();
     }
@@ -777,10 +785,24 @@ void MRDSRG_SO::compute_lhbar() {
     BlockedTensor C2 = ambit::BlockedTensor::build(tensor_type_, "C2", {"gggg"});
 
     BlockedTensor O3, C3;
+    std::string corr_level = options_.get_str("CORR_LEVEL");
     if (do_t3_) {
         Hbar3.zero();
-        O3 = ambit::BlockedTensor::build(tensor_type_, "O3", {"gggggg"});
-        C3 = ambit::BlockedTensor::build(tensor_type_, "C3", {"gggggg"});
+        if (corr_level == "LDSRG3_0") {
+            O3 = ambit::BlockedTensor::build(tensor_type_, "O3", {"cccvvv","ccvcvv","ccvvcv","ccvvvc",
+                                                                  "cvccvv","cvcvcv","cvcvvc","cvvccv",
+                                                                  "cvvcvc","cvvvcc","vcccvv","vccvcv",
+                                                                  "vccvvc","vcvccv","vcvcvc","vcvvcc",
+                                                                  "vvcccv","vvccvc","vvcvcc","vvvccc"});
+            C3 = ambit::BlockedTensor::build(tensor_type_, "C3", {"cccvvv","ccvcvv","ccvvcv","ccvvvc",
+                                                                  "cvccvv","cvcvcv","cvcvvc","cvvccv",
+                                                                  "cvvcvc","cvvvcc","vcccvv","vccvcv",
+                                                                  "vccvvc","vcvccv","vcvcvc","vcvvcc",
+                                                                  "vvcccv","vvccvc","vvcvcc","vvvccc"});
+        } else {
+            O3 = ambit::BlockedTensor::build(tensor_type_, "O3", {"gggggg"});
+            C3 = ambit::BlockedTensor::build(tensor_type_, "C3", {"gggggg"});
+        }
     }
 
     // compute Hbar recursively
@@ -792,7 +814,7 @@ void MRDSRG_SO::compute_lhbar() {
         if (do_t3_) {
             timer_on("3-body [H, A]");
             if (na_ == 0) {
-                if (options_.get_str("CORR_LEVEL") == "LDSRG3_1") {
+                if (corr_level == "LDSRG3_1" or corr_level == "LDSRG3_0") {
                     commutator_H_A_3_sr_1(factor, O1, O2, O3, T1, T2, T3, C0, C1, C2, C3);
                 } else {
                     commutator_H_A_3_sr(factor, O1, O2, O3, T1, T2, T3, C0, C1, C2, C3);
