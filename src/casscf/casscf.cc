@@ -1005,17 +1005,17 @@ std::pair<ambit::Tensor, std::vector<double>> CASSCF::CI_Integrals() {
     return pair_return;
 }
 
-std::vector<RDMs> CASSCF::rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
-                               int max_rdm_level) {
+std::vector<RDMs> CASSCF::rdms(const std::vector<std::pair<size_t, size_t>>& /*root_list*/,
+                               int /*max_rdm_level*/) {
     // TODO (York): this does not seem the correct thing to do.
     std::vector<RDMs> refs;
     refs.push_back(cas_ref_);
     return refs;
 }
 
-std::vector<RDMs> CASSCF::transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
-                                          std::shared_ptr<ActiveSpaceMethod> method2,
-                                          int max_rdm_level) {
+std::vector<RDMs> CASSCF::transition_rdms(const std::vector<std::pair<size_t, size_t>>& /*root_list*/,
+                                          std::shared_ptr<ActiveSpaceMethod> /*method2*/,
+                                          int /*max_rdm_level*/) {
     std::vector<RDMs> refs;
     throw std::runtime_error("FCISolver::transition_rdms is not implemented!");
     return refs;
