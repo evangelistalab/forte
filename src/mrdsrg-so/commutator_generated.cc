@@ -369,7 +369,109 @@ void MRDSRG_SO::commutator_H_A_3_sr_1(double factor, BlockedTensor& H1, BlockedT
     C2["g0,c0,v0,v1"] += temp["g0,c0,v0,v1"];
     C2["c0,c1,v0,v1"] += 1.0 * H1["v2,c2"] * T3["c0,c1,c2,v0,v1,v2"];
 
-    if (options_.get_str("CORR_LEVEL") == "LDSRG3_0") {
+    temp = ambit::BlockedTensor::build(CoreTensor, "temp", {"gccggv"});
+    temp["g2,c0,c1,g0,g1,v0"] += -1.0 * H2["g2,v1,g0,g1"] * T2["c0,c1,v0,v1"];
+    C3["c0,c1,g2,g0,g1,v0"] += temp["g2,c0,c1,g0,g1,v0"];
+    C3["c0,g2,c1,g0,g1,v0"] -= temp["g2,c0,c1,g0,g1,v0"];
+    C3["g2,c0,c1,g0,g1,v0"] += temp["g2,c0,c1,g0,g1,v0"];
+    C3["c0,c1,g2,g0,v0,g1"] -= temp["g2,c0,c1,g0,g1,v0"];
+    C3["c0,g2,c1,g0,v0,g1"] += temp["g2,c0,c1,g0,g1,v0"];
+    C3["g2,c0,c1,g0,v0,g1"] -= temp["g2,c0,c1,g0,g1,v0"];
+    C3["c0,c1,g2,v0,g0,g1"] += temp["g2,c0,c1,g0,g1,v0"];
+    C3["c0,g2,c1,v0,g0,g1"] -= temp["g2,c0,c1,g0,g1,v0"];
+    C3["g2,c0,c1,v0,g0,g1"] += temp["g2,c0,c1,g0,g1,v0"];
+    temp = ambit::BlockedTensor::build(CoreTensor, "temp", {"ggcgvv"});
+    temp["g1,g2,c0,g0,v0,v1"] += 1.0 * H2["g1,g2,g0,c1"] * T2["c0,c1,v0,v1"];
+    C3["c0,g1,g2,g0,v0,v1"] += temp["g1,g2,c0,g0,v0,v1"];
+    C3["g1,c0,g2,g0,v0,v1"] -= temp["g1,g2,c0,g0,v0,v1"];
+    C3["g1,g2,c0,g0,v0,v1"] += temp["g1,g2,c0,g0,v0,v1"];
+    C3["c0,g1,g2,v0,g0,v1"] -= temp["g1,g2,c0,g0,v0,v1"];
+    C3["g1,c0,g2,v0,g0,v1"] += temp["g1,g2,c0,g0,v0,v1"];
+    C3["g1,g2,c0,v0,g0,v1"] -= temp["g1,g2,c0,g0,v0,v1"];
+    C3["c0,g1,g2,v0,v1,g0"] += temp["g1,g2,c0,g0,v0,v1"];
+    C3["g1,c0,g2,v0,v1,g0"] -= temp["g1,g2,c0,g0,v0,v1"];
+    C3["g1,g2,c0,v0,v1,g0"] += temp["g1,g2,c0,g0,v0,v1"];
+    temp = ambit::BlockedTensor::build(CoreTensor, "temp", {"cccgvv"});
+    temp["c0,c1,c2,g0,v0,v1"] += 1.0 * H1["v2,g0"] * T3["c0,c1,c2,v0,v1,v2"];
+    C3["c0,c1,c2,g0,v0,v1"] += temp["c0,c1,c2,g0,v0,v1"];
+    C3["c0,c1,c2,v0,g0,v1"] -= temp["c0,c1,c2,g0,v0,v1"];
+    C3["c0,c1,c2,v0,v1,g0"] += temp["c0,c1,c2,g0,v0,v1"];
+    temp = ambit::BlockedTensor::build(CoreTensor, "temp", {"gccvvv"});
+    temp["g0,c0,c1,v0,v1,v2"] += -1.0 * H1["g0,c2"] * T3["c0,c1,c2,v0,v1,v2"];
+    C3["c0,c1,g0,v0,v1,v2"] += temp["g0,c0,c1,v0,v1,v2"];
+    C3["c0,g0,c1,v0,v1,v2"] -= temp["g0,c0,c1,v0,v1,v2"];
+    C3["g0,c0,c1,v0,v1,v2"] += temp["g0,c0,c1,v0,v1,v2"];
+
+    // scale by factor
+    C0 *= factor;
+    C1.scale(factor);
+    C2.scale(factor);
+    C3.scale(factor);
+
+    // add T dagger
+    C0 *= 2.0;
+    H1["pq"] = C1["pq"];
+    C1["pq"] += H1["qp"];
+    H2["pqrs"] = C2["pqrs"];
+    C2["pqrs"] += H2["rspq"];
+    H3["pqrsto"] = C3["pqrsto"];
+    C3["pqrsto"] += H3["stopqr"];
+}
+
+void MRDSRG_SO::commutator_H_A_3_sr_0(double factor, BlockedTensor& H1, BlockedTensor& H2,
+                           BlockedTensor& H3, BlockedTensor& T1, BlockedTensor& T2,
+                           BlockedTensor& T3, double& C0, BlockedTensor& C1, BlockedTensor& C2,
+                           BlockedTensor& C3, bool do_3body) {
+    C0 = 0.0;
+    C1.zero();
+    C2.zero();
+    C3.zero();
+
+    C0 += 1.0 * H1["v0,c0"] * T1["c0,v0"];
+    C0 += (1.0 / 4.0) * H2["v0,v1,c0,c1"] * T2["c0,c1,v0,v1"];
+    C0 += (1.0 / 36.0) * H3["v0,v1,v2,c0,c1,c2"] * T3["c0,c1,c2,v0,v1,v2"];
+
+    C1["c0,g0"] += 1.0 * H1["v0,g0"] * T1["c0,v0"];
+    C1["g0,v0"] += -1.0 * H1["g0,c0"] * T1["c0,v0"];
+    C1["c0,v0"] += 1.0 * H1["v1,c1"] * T2["c0,c1,v0,v1"];
+    C1["g1,g0"] += 1.0 * H2["g1,v0,g0,c0"] * T1["c0,v0"];
+    C1["c0,g0"] += (1.0 / 2.0) * H2["v0,v1,g0,c1"] * T2["c0,c1,v0,v1"];
+    C1["g0,v0"] += (-1.0 / 2.0) * H2["g0,v1,c0,c1"] * T2["c0,c1,v0,v1"];
+    C1["c0,v0"] += (1.0 / 4.0) * H2["v1,v2,c1,c2"] * T3["c0,c1,c2,v0,v1,v2"];
+    C1["g1,g0"] += (1.0 / 4.0) * H3["g1,v0,v1,g0,c0,c1"] * T2["c0,c1,v0,v1"];
+
+    C2["c0,c1,v0,v1"] += 1.0 * H1["v2,c2"] * T3["c0,c1,c2,v0,v1,v2"];
+    C2["g2,g3,g0,g1"] += 1.0 * H3["g2,g3,v0,g0,g1,c0"] * T1["c0,v0"];
+    C2["g0,g1,v0,v1"] += (1.0 / 2.0) * H2["g0,g1,c0,c1"] * T2["c0,c1,v0,v1"];
+    C2["c0,c1,g0,g1"] += (1.0 / 2.0) * H2["v0,v1,g0,g1"] * T2["c0,c1,v0,v1"];
+    auto temp = ambit::BlockedTensor::build(CoreTensor, "temp", {"gcgg"});
+    temp["g2,c0,g0,g1"] += 1.0 * H2["g2,v0,g0,g1"] * T1["c0,v0"];
+    temp["g2,c0,g0,g1"] += (1.0 / 2.0) * H3["g2,v0,v1,g0,g1,c1"] * T2["c0,c1,v0,v1"];
+    C2["c0,g2,g0,g1"] -= temp["g2,c0,g0,g1"];
+    C2["g2,c0,g0,g1"] += temp["g2,c0,g0,g1"];
+    temp = ambit::BlockedTensor::build(CoreTensor, "temp", {"gggv"});
+    temp["g1,g2,g0,v0"] += -1.0 * H2["g1,g2,g0,c0"] * T1["c0,v0"];
+    temp["g1,g2,g0,v0"] += (-1.0 / 2.0) * H3["g1,g2,v1,g0,c0,c1"] * T2["c0,c1,v0,v1"];
+    C2["g1,g2,g0,v0"] += temp["g1,g2,g0,v0"];
+    C2["g1,g2,v0,g0"] -= temp["g1,g2,g0,v0"];
+    temp = ambit::BlockedTensor::build(CoreTensor, "temp", {"gcgv"});
+    temp["g1,c0,g0,v0"] += 1.0 * H2["g1,v1,g0,c1"] * T2["c0,c1,v0,v1"];
+    C2["c0,g1,g0,v0"] -= temp["g1,c0,g0,v0"];
+    C2["g1,c0,g0,v0"] += temp["g1,c0,g0,v0"];
+    C2["c0,g1,v0,g0"] += temp["g1,c0,g0,v0"];
+    C2["g1,c0,v0,g0"] -= temp["g1,c0,g0,v0"];
+    temp = ambit::BlockedTensor::build(CoreTensor, "temp", {"ccgv"});
+    temp["c0,c1,g0,v0"] += -1.0 * H1["v1,g0"] * T2["c0,c1,v0,v1"];
+    temp["c0,c1,g0,v0"] += (-1.0 / 2.0) * H2["v1,v2,g0,c2"] * T3["c0,c1,c2,v0,v1,v2"];
+    C2["c0,c1,g0,v0"] += temp["c0,c1,g0,v0"];
+    C2["c0,c1,v0,g0"] -= temp["c0,c1,g0,v0"];
+    temp = ambit::BlockedTensor::build(CoreTensor, "temp", {"gcvv"});
+    temp["g0,c0,v0,v1"] += 1.0 * H1["g0,c1"] * T2["c0,c1,v0,v1"];
+    temp["g0,c0,v0,v1"] += (1.0 / 2.0) * H2["g0,v2,c1,c2"] * T3["c0,c1,c2,v0,v1,v2"];
+    C2["c0,g0,v0,v1"] -= temp["g0,c0,v0,v1"];
+    C2["g0,c0,v0,v1"] += temp["g0,c0,v0,v1"];
+
+    if (do_3body) {
         temp = ambit::BlockedTensor::build(CoreTensor, "temp", {"cccvvv","vcccvv","vccvcv",
                                                                 "ccccvv","cccvcv","vccccv","vccvvv"});
         temp["g2,c0,c1,g0,g1,v0"] += -1.0 * H2["g2,v1,g0,g1"] * T2["c0,c1,v0,v1"];
@@ -394,45 +496,12 @@ void MRDSRG_SO::commutator_H_A_3_sr_1(double factor, BlockedTensor& H1, BlockedT
         C3["c0,g1,g2,v0,v1,g0"] += temp["g1,g2,c0,g0,v0,v1"];
         C3["g1,c0,g2,v0,v1,g0"] -= temp["g1,g2,c0,g0,v0,v1"];
         C3["g1,g2,c0,v0,v1,g0"] += temp["g1,g2,c0,g0,v0,v1"];
-        temp = ambit::BlockedTensor::build(CoreTensor, "temp", {"cccgvv"});
+        temp = ambit::BlockedTensor::build(CoreTensor, "temp", {"cccvvv"});
         temp["c0,c1,c2,g0,v0,v1"] += 1.0 * H1["v2,g0"] * T3["c0,c1,c2,v0,v1,v2"];
         C3["c0,c1,c2,g0,v0,v1"] += temp["c0,c1,c2,g0,v0,v1"];
         C3["c0,c1,c2,v0,g0,v1"] -= temp["c0,c1,c2,g0,v0,v1"];
         C3["c0,c1,c2,v0,v1,g0"] += temp["c0,c1,c2,g0,v0,v1"];
-        temp = ambit::BlockedTensor::build(CoreTensor, "temp", {"gccvvv"});
-        temp["g0,c0,c1,v0,v1,v2"] += -1.0 * H1["g0,c2"] * T3["c0,c1,c2,v0,v1,v2"];
-        C3["c0,c1,g0,v0,v1,v2"] += temp["g0,c0,c1,v0,v1,v2"];
-        C3["c0,g0,c1,v0,v1,v2"] -= temp["g0,c0,c1,v0,v1,v2"];
-        C3["g0,c0,c1,v0,v1,v2"] += temp["g0,c0,c1,v0,v1,v2"];
-    } else {
-        temp = ambit::BlockedTensor::build(CoreTensor, "temp", {"gccggv"});
-        temp["g2,c0,c1,g0,g1,v0"] += -1.0 * H2["g2,v1,g0,g1"] * T2["c0,c1,v0,v1"];
-        C3["c0,c1,g2,g0,g1,v0"] += temp["g2,c0,c1,g0,g1,v0"];
-        C3["c0,g2,c1,g0,g1,v0"] -= temp["g2,c0,c1,g0,g1,v0"];
-        C3["g2,c0,c1,g0,g1,v0"] += temp["g2,c0,c1,g0,g1,v0"];
-        C3["c0,c1,g2,g0,v0,g1"] -= temp["g2,c0,c1,g0,g1,v0"];
-        C3["c0,g2,c1,g0,v0,g1"] += temp["g2,c0,c1,g0,g1,v0"];
-        C3["g2,c0,c1,g0,v0,g1"] -= temp["g2,c0,c1,g0,g1,v0"];
-        C3["c0,c1,g2,v0,g0,g1"] += temp["g2,c0,c1,g0,g1,v0"];
-        C3["c0,g2,c1,v0,g0,g1"] -= temp["g2,c0,c1,g0,g1,v0"];
-        C3["g2,c0,c1,v0,g0,g1"] += temp["g2,c0,c1,g0,g1,v0"];
-        temp = ambit::BlockedTensor::build(CoreTensor, "temp", {"ggcgvv"});
-        temp["g1,g2,c0,g0,v0,v1"] += 1.0 * H2["g1,g2,g0,c1"] * T2["c0,c1,v0,v1"];
-        C3["c0,g1,g2,g0,v0,v1"] += temp["g1,g2,c0,g0,v0,v1"];
-        C3["g1,c0,g2,g0,v0,v1"] -= temp["g1,g2,c0,g0,v0,v1"];
-        C3["g1,g2,c0,g0,v0,v1"] += temp["g1,g2,c0,g0,v0,v1"];
-        C3["c0,g1,g2,v0,g0,v1"] -= temp["g1,g2,c0,g0,v0,v1"];
-        C3["g1,c0,g2,v0,g0,v1"] += temp["g1,g2,c0,g0,v0,v1"];
-        C3["g1,g2,c0,v0,g0,v1"] -= temp["g1,g2,c0,g0,v0,v1"];
-        C3["c0,g1,g2,v0,v1,g0"] += temp["g1,g2,c0,g0,v0,v1"];
-        C3["g1,c0,g2,v0,v1,g0"] -= temp["g1,g2,c0,g0,v0,v1"];
-        C3["g1,g2,c0,v0,v1,g0"] += temp["g1,g2,c0,g0,v0,v1"];
-        temp = ambit::BlockedTensor::build(CoreTensor, "temp", {"cccgvv"});
-        temp["c0,c1,c2,g0,v0,v1"] += 1.0 * H1["v2,g0"] * T3["c0,c1,c2,v0,v1,v2"];
-        C3["c0,c1,c2,g0,v0,v1"] += temp["c0,c1,c2,g0,v0,v1"];
-        C3["c0,c1,c2,v0,g0,v1"] -= temp["c0,c1,c2,g0,v0,v1"];
-        C3["c0,c1,c2,v0,v1,g0"] += temp["c0,c1,c2,g0,v0,v1"];
-        temp = ambit::BlockedTensor::build(CoreTensor, "temp", {"gccvvv"});
+        temp = ambit::BlockedTensor::build(CoreTensor, "temp", {"cccvvv"});
         temp["g0,c0,c1,v0,v1,v2"] += -1.0 * H1["g0,c2"] * T3["c0,c1,c2,v0,v1,v2"];
         C3["c0,c1,g0,v0,v1,v2"] += temp["g0,c0,c1,v0,v1,v2"];
         C3["c0,g0,c1,v0,v1,v2"] -= temp["g0,c0,c1,v0,v1,v2"];

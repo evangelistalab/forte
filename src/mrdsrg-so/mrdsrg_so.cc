@@ -818,6 +818,8 @@ void MRDSRG_SO::compute_lhbar() {
         }
     }
 
+    int ncomm_ldsrg3_0 = options_.get_int("NCOMM_LDSRG3_0");
+
     // compute Hbar recursively
     for (int n = 1; n <= maxn; ++n) {
         // prefactor before n-nested commutator
@@ -827,8 +829,11 @@ void MRDSRG_SO::compute_lhbar() {
         if (do_t3_) {
             timer_on("3-body [H, A]");
             if (na_ == 0) {
-                if (corr_level == "LDSRG3_1" or corr_level == "LDSRG3_0") {
+                if (corr_level == "LDSRG3_1") {
                     commutator_H_A_3_sr_1(factor, O1, O2, O3, T1, T2, T3, C0, C1, C2, C3);
+                } else if (corr_level == "LDSRG3_0") {
+                    bool do_3body = ncomm_ldsrg3_0 <= n;
+                    commutator_H_A_3_sr_0(factor, O1, O2, O3, T1, T2, T3, C0, C1, C2, C3, do_3body);
                 } else {
                     commutator_H_A_3_sr(factor, O1, O2, O3, T1, T2, T3, C0, C1, C2, C3);
                 }

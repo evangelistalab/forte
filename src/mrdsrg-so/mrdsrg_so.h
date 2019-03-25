@@ -226,7 +226,8 @@ class MRDSRG_SO : public psi::Wavefunction {
 
     /// Add 0.5 [[H, A2]3, A1 + A2] to Hbar for recursive evaluation
     bool correct_for_3rd_amp_;
-    void correct_amps_3rd(BlockedTensor& H2, BlockedTensor& C1, BlockedTensor& C2, const double& alpha);
+    void correct_amps_3rd(BlockedTensor& H2, BlockedTensor& C1, BlockedTensor& C2,
+                          const double& alpha);
 
     /// Compute zero-term term of commutator [H, T]
     void H1_T1_C0(BlockedTensor& H1, BlockedTensor& T1, const double& alpha, double& C0);
@@ -275,7 +276,8 @@ class MRDSRG_SO : public psi::Wavefunction {
     double compute_ldsrg2_4th_corr_t3_debug();
     double compute_ldsrg2_4th_corr_lambda_debug();
 
-    void renormalize_bare_Hamiltonian(BlockedTensor& RF, BlockedTensor& RV, const double scale_factor);
+    void renormalize_bare_Hamiltonian(BlockedTensor& RF, BlockedTensor& RV,
+                                      const double scale_factor);
 
     /// [H1, A1]1 and [H1, A2]2
     void H1_A1_C1(BlockedTensor& H1, BlockedTensor& T1, const double& alpha, BlockedTensor& C1);
@@ -294,6 +296,10 @@ class MRDSRG_SO : public psi::Wavefunction {
                                BlockedTensor& H3, BlockedTensor& T1, BlockedTensor& T2,
                                BlockedTensor& T3, double& C0, BlockedTensor& C1, BlockedTensor& C2,
                                BlockedTensor& C3);
+    void commutator_H_A_3_sr_0(double factor, BlockedTensor& H1, BlockedTensor& H2,
+                               BlockedTensor& H3, BlockedTensor& T1, BlockedTensor& T2,
+                               BlockedTensor& T3, double& C0, BlockedTensor& C1, BlockedTensor& C2,
+                               BlockedTensor& C3, bool do_3body=true);
 
     /// Compute 4th-order correction for LDSRG(2)
     double Elambda_l1t3;
