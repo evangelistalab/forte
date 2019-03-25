@@ -604,11 +604,19 @@ double MRDSRG_SO::compute_energy() {
 
     if (do_t3_) {
         if (options_.get_str("CORR_LEVEL") == "LDSRG3_0") {
-            Hbar3 = BTF->build(tensor_type_, "Hbar3", {"cccvvv","ccvcvv","ccvvcv","ccvvvc",
-                                                       "cvccvv","cvcvcv","cvcvvc","cvvccv",
-                                                       "cvvcvc","cvvvcc","vcccvv","vccvcv",
-                                                       "vccvvc","vcvccv","vcvcvc","vcvvcc",
-                                                       "vvcccv","vvccvc","vvcvcc","vvvccc"});
+            Hbar3 = BTF->build(tensor_type_, "Hbar3", {"ccccvv","cccvcv","cccvvc","cccvvv",
+                                                       "ccvccv","ccvcvc","ccvcvv","ccvvcc",
+                                                       "ccvvcv","ccvvvc","ccvvvv","cvcccv",
+                                                       "cvccvc","cvccvv","cvcvcc","cvcvcv",
+                                                       "cvcvvc","cvcvvv","cvvccc","cvvccv",
+                                                       "cvvcvc","cvvcvv","cvvvcc","cvvvcv",
+                                                       "cvvvvc","vccccv","vcccvc","vcccvv",
+                                                       "vccvcc","vccvcv","vccvvc","vccvvv",
+                                                       "vcvccc","vcvccv","vcvcvc","vcvcvv",
+                                                       "vcvvcc","vcvvcv","vcvvvc","vvcccc",
+                                                       "vvcccv","vvccvc","vvccvv","vvcvcc",
+                                                       "vvcvcv","vvcvvc","vvvccc","vvvccv",
+                                                       "vvvcvc","vvvvcc"});
         } else {
             Hbar3 = BTF->build(tensor_type_, "Hbar3", {"gggggg"});
         }
@@ -789,16 +797,21 @@ void MRDSRG_SO::compute_lhbar() {
     if (do_t3_) {
         Hbar3.zero();
         if (corr_level == "LDSRG3_0") {
-            O3 = ambit::BlockedTensor::build(tensor_type_, "O3", {"cccvvv","ccvcvv","ccvvcv","ccvvvc",
-                                                                  "cvccvv","cvcvcv","cvcvvc","cvvccv",
-                                                                  "cvvcvc","cvvvcc","vcccvv","vccvcv",
-                                                                  "vccvvc","vcvccv","vcvcvc","vcvvcc",
-                                                                  "vvcccv","vvccvc","vvcvcc","vvvccc"});
-            C3 = ambit::BlockedTensor::build(tensor_type_, "C3", {"cccvvv","ccvcvv","ccvvcv","ccvvvc",
-                                                                  "cvccvv","cvcvcv","cvcvvc","cvvccv",
-                                                                  "cvvcvc","cvvvcc","vcccvv","vccvcv",
-                                                                  "vccvvc","vcvccv","vcvcvc","vcvvcc",
-                                                                  "vvcccv","vvccvc","vvcvcc","vvvccc"});
+            std::vector<std::string> blocks = {"ccccvv","cccvcv","cccvvc","cccvvv",
+                                               "ccvccv","ccvcvc","ccvcvv","ccvvcc",
+                                               "ccvvcv","ccvvvc","ccvvvv","cvcccv",
+                                               "cvccvc","cvccvv","cvcvcc","cvcvcv",
+                                               "cvcvvc","cvcvvv","cvvccc","cvvccv",
+                                               "cvvcvc","cvvcvv","cvvvcc","cvvvcv",
+                                               "cvvvvc","vccccv","vcccvc","vcccvv",
+                                               "vccvcc","vccvcv","vccvvc","vccvvv",
+                                               "vcvccc","vcvccv","vcvcvc","vcvcvv",
+                                               "vcvvcc","vcvvcv","vcvvvc","vvcccc",
+                                               "vvcccv","vvccvc","vvccvv","vvcvcc",
+                                               "vvcvcv","vvcvvc","vvvccc","vvvccv",
+                                               "vvvcvc","vvvvcc"};
+            O3 = ambit::BlockedTensor::build(tensor_type_, "O3", blocks);
+            C3 = ambit::BlockedTensor::build(tensor_type_, "C3", blocks);
         } else {
             O3 = ambit::BlockedTensor::build(tensor_type_, "O3", {"gggggg"});
             C3 = ambit::BlockedTensor::build(tensor_type_, "C3", {"gggggg"});
