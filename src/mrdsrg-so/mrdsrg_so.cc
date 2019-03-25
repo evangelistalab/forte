@@ -1227,7 +1227,6 @@ double MRDSRG_SO::compute_ldsrg2_4th_corr_t2() {
     Elambda_l1t3 += RF["ia"] * T1["ia"];
     Elambda_l1t3 += 0.25 * RV["ijab"] * T2["ijab"];
 //    outfile->Printf("\n  LDSRG(2) 4th-order correction Lambda:     %20.12f", Elambda_l1t3);
-    return Elambda_l1t3;
 
     // add resolvent to obtain 3rd-order amplitudes
     H1_3rd.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
@@ -1265,7 +1264,7 @@ double MRDSRG_SO::compute_ldsrg2_4th_corr_t2() {
 //    Elambda_l3t1 += F["ia"] * H1_3rd["ia"];
 //    Elambda_l3t1 += 0.25 * V["ijab"] * H2_3rd["ijab"];
 
-//    return C0;
+    return Elambda_l1t3 + E_t_3rd;
 }
 
 double MRDSRG_SO::compute_ldsrg2_4th_corr_3body() {
