@@ -54,6 +54,7 @@
 #include "base_classes/scf_info.h"
 #include "mrdsrg-helper/run_dsrg.h"
 #include "mrdsrg-spin-integrated/master_mrdsrg.h"
+#include "sparse_ci/determinant.h"
 
 namespace py = pybind11;
 using namespace pybind11::literals;
@@ -117,6 +118,20 @@ void export_OrbitalTransform(py::module& m) {
         .def("get_Ub", &OrbitalTransform::get_Ub, "Get Ub rotation");
 }
 
+constexpr int Determinant::num_str_bits;
+constexpr int Determinant::num_det_bits;
+
+/// Export the Determinant class
+void export_Determinant(py::module& m) {
+    py::class_<Determinant>(m, "Determinant")
+        .def(py::init<>())
+        .def(py::init<const std::vector<bool>&, const std::vector<bool>&>())
+        .def("get_alfa_bits", &Determinant::get_alfa_bits, "Get alpha bits")
+        .def("get_beta_bits", &Determinant::get_beta_bits, "Get beta bits")
+        .def_readonly_static("num_str_bits", &Determinant::num_str_bits)
+        .def_readonly_static("num_det_bits", &Determinant::num_det_bits);
+}
+
 ///// Export the FCISolver class
 // void export_FCISolver(py::module& m) {
 //    py::class_<FCISolver>(m, "FCISolver")
@@ -159,6 +174,8 @@ PYBIND11_MODULE(forte, m) {
     export_ActiveSpaceSolver(m);
 
     export_OrbitalTransform(m);
+
+    export_Determinant(m);
 
     //    export_FCISolver(m);
 

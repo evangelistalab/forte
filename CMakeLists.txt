@@ -192,6 +192,7 @@ if(MAX_DET_ORB)
     add_definitions(-DMAX_DET_ORB=${MAX_DET_ORB})
 else()
     add_definitions(-DMAX_DET_ORB=64)
+    add_definitions(-DSMALL_BITSET)
 endif()
 
 if(ENABLE_MPI)
