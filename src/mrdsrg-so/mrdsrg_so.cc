@@ -492,12 +492,63 @@ void MRDSRG_SO::guess_t3_complicated() {
     std::string str = "Computing complicated T3 amplitudes     ...";
     outfile->Printf("\n    %-35s", str.c_str());
 
-    ambit::BlockedTensor X1 = ambit::BlockedTensor::build(tensor_type_, "X1", {"gg"});
-    ambit::BlockedTensor RV = ambit::BlockedTensor::build(tensor_type_, "RV", {"gggg"});
-    renormalize_bare_Hamiltonian(X1, RV, 0.5);
+    ambit::BlockedTensor RV = ambit::BlockedTensor::build(tensor_type_, "RV", {"cvvv","vcvv","vvcv","vvvc",
+                                                                               "cccv","ccvc","cvcc","vccc"});
+    RV["pqrs"] = V["pqrs"];
+
+    auto temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"ccgv"});
+    temp["c0,c1,g0,v0"] += (-1.0 / 2.0) * F["v1,g0"] * T2["c0,c1,v0,v1"];
+    RV["c0,c1,g0,v0"] += temp["c0,c1,g0,v0"];
+    RV["c0,c1,v0,g0"] -= temp["c0,c1,g0,v0"];
+    RV["g0,v0,c0,c1"] += temp["c0,c1,g0,v0"];
+    RV["v0,g0,c0,c1"] -= temp["c0,c1,g0,v0"];
+
+    temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"vvgc"});
+    temp["v0,v1,g0,c0"] += (1.0 / 2.0) * F["c1,g0"] * T2["c0,c1,v0,v1"];
+    RV["v0,v1,c0,g0"] -= temp["v0,v1,g0,c0"];
+    RV["v0,v1,g0,c0"] += temp["v0,v1,g0,c0"];
+    RV["c0,g0,v0,v1"] -= temp["v0,v1,g0,c0"];
+    RV["g0,c0,v0,v1"] += temp["v0,v1,g0,c0"];
+
+    temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"gcgg"});
+    temp["g2,c0,g0,g1"] += (1.0 / 2.0) * V["g2,v0,g0,g1"] * T1["c0,v0"];
+    RV["c0,g2,g0,g1"] -= temp["g2,c0,g0,g1"];
+    RV["g2,c0,g0,g1"] += temp["g2,c0,g0,g1"];
+    RV["g0,g1,c0,g2"] -= temp["g2,c0,g0,g1"];
+    RV["g0,g1,g2,c0"] += temp["g2,c0,g0,g1"];
+
+    temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"gvgg"});
+    temp["g2,v0,g0,g1"] += (-1.0 / 2.0) * V["g2,c0,g0,g1"] * T1["v0,c0"];
+    RV["g2,v0,g0,g1"] += temp["g2,v0,g0,g1"];
+    RV["v0,g2,g0,g1"] -= temp["g2,v0,g0,g1"];
+    RV["g0,g1,g2,v0"] += temp["g2,v0,g0,g1"];
+    RV["g0,g1,v0,g2"] -= temp["g2,v0,g0,g1"];
+
+    RV["v0,v1,g0,g1"] += (1.0 / 4.0) * V["c0,c1,g0,g1"] * T2["c0,c1,v0,v1"];
+
+    RV["g0,g1,v0,v1"] += (1.0 / 4.0) * V["g0,g1,c0,c1"] * T2["c0,c1,v0,v1"];
+
+    RV["c0,c1,g0,g1"] += (1.0 / 4.0) * V["v0,v1,g0,g1"] * T2["c0,c1,v0,v1"];
+
+    RV["g0,g1,c0,c1"] += (1.0 / 4.0) * V["g0,g1,v0,v1"] * T2["c0,c1,v0,v1"];
+
+    temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"gcgv"});
+    temp["g1,c0,g0,v0"] += (1.0 / 2.0) * V["g1,v1,g0,c1"] * T2["c0,c1,v0,v1"];
+    RV["c0,g1,g0,v0"] -= temp["g1,c0,g0,v0"];
+    RV["c0,g1,v0,g0"] += temp["g1,c0,g0,v0"];
+    RV["g1,c0,g0,v0"] += temp["g1,c0,g0,v0"];
+    RV["g1,c0,v0,g0"] -= temp["g1,c0,g0,v0"];
+
+    temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"gvgc"});
+    temp["g1,v0,g0,c0"] += (1.0 / 2.0) * V["g1,c1,g0,v1"] * T2["c0,c1,v0,v1"];
+    RV["g1,v0,c0,g0"] -= temp["g1,v0,g0,c0"];
+    RV["g1,v0,g0,c0"] += temp["g1,v0,g0,c0"];
+    RV["v0,g1,c0,g0"] += temp["g1,v0,g0,c0"];
+    RV["v0,g1,g0,c0"] -= temp["g1,v0,g0,c0"];
+
 
     ambit::BlockedTensor C3 = ambit::BlockedTensor::build(tensor_type_, "C3", {"hhhppp"});
-    auto temp = ambit::BlockedTensor::build(CoreTensor, "temp", {"hhhppp"});
+    temp = ambit::BlockedTensor::build(CoreTensor, "temp", {"hhhppp"});
     temp["g2,c0,c1,g0,g1,v0"] += -1.0 * RV["g2,v1,g0,g1"] * T2["c0,c1,v0,v1"];
     C3["c0,c1,g2,g0,g1,v0"] += temp["g2,c0,c1,g0,g1,v0"];
     C3["c0,g2,c1,g0,g1,v0"] -= temp["g2,c0,c1,g0,g1,v0"];
@@ -775,6 +826,7 @@ double MRDSRG_SO::compute_energy() {
     T3.zero();
     guess_t3_complicated();
     outfile->Printf("\n  T3 max:  %20.15f", T3.norm(0));
+    outfile->Printf("\n  T3 norm: %20.15f", T3.norm());
     compute_lhbar();
     outfile->Printf("\n  LDSRG(3)-0 energy computed using 2nd-order T3 and quadratic 3-body: %.15f", Eref + Hbar0);
 
