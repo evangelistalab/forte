@@ -299,7 +299,7 @@ class MRDSRG_SO : public psi::Wavefunction {
     void commutator_H_A_3_sr_0(double factor, BlockedTensor& H1, BlockedTensor& H2,
                                BlockedTensor& H3, BlockedTensor& T1, BlockedTensor& T2,
                                BlockedTensor& T3, double& C0, BlockedTensor& C1, BlockedTensor& C2,
-                               BlockedTensor& C3, bool do_3body=true);
+                               BlockedTensor& C3, bool F_3body=true, bool V_3body=true);
 
     /// Compute 4th-order correction for LDSRG(2)
     double Elambda_l1t3;

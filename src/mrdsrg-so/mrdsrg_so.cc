@@ -807,7 +807,8 @@ void MRDSRG_SO::compute_lhbar() {
         }
     }
 
-    int ncomm_ldsrg3_0 = options_.get_int("NCOMM_LDSRG3_0");
+    int ncomm_ldsrg3_0_v = options_.get_int("NCOMM_LDSRG3_0_V");
+    int ncomm_ldsrg3_0_f = options_.get_int("NCOMM_LDSRG3_0_F");
 
     // compute Hbar recursively
     for (int n = 1; n <= maxn; ++n) {
@@ -821,8 +822,9 @@ void MRDSRG_SO::compute_lhbar() {
                 if (corr_level == "LDSRG3_1") {
                     commutator_H_A_3_sr_1(factor, O1, O2, O3, T1, T2, T3, C0, C1, C2, C3);
                 } else if (corr_level == "LDSRG3_0") {
-                    bool do_3body = ncomm_ldsrg3_0 >= n;
-                    commutator_H_A_3_sr_0(factor, O1, O2, O3, T1, T2, T3, C0, C1, C2, C3, do_3body);
+                    bool V_3body = ncomm_ldsrg3_0_v >= n;
+                    bool F_3body = ncomm_ldsrg3_0_f >= n;
+                    commutator_H_A_3_sr_0(factor, O1, O2, O3, T1, T2, T3, C0, C1, C2, C3, F_3body, V_3body);
                 } else {
                     commutator_H_A_3_sr(factor, O1, O2, O3, T1, T2, T3, C0, C1, C2, C3);
                 }

@@ -421,7 +421,7 @@ void MRDSRG_SO::commutator_H_A_3_sr_1(double factor, BlockedTensor& H1, BlockedT
 void MRDSRG_SO::commutator_H_A_3_sr_0(double factor, BlockedTensor& H1, BlockedTensor& H2,
                            BlockedTensor& H3, BlockedTensor& T1, BlockedTensor& T2,
                            BlockedTensor& T3, double& C0, BlockedTensor& C1, BlockedTensor& C2,
-                           BlockedTensor& C3, bool do_3body) {
+                           BlockedTensor& C3, bool F_3body, bool V_3body) {
     C0 = 0.0;
     C1.zero();
     C2.zero();
@@ -471,7 +471,7 @@ void MRDSRG_SO::commutator_H_A_3_sr_0(double factor, BlockedTensor& H1, BlockedT
     C2["c0,g0,v0,v1"] -= temp["g0,c0,v0,v1"];
     C2["g0,c0,v0,v1"] += temp["g0,c0,v0,v1"];
 
-    if (do_3body) {
+    if (V_3body) {
         temp = ambit::BlockedTensor::build(CoreTensor, "temp", {"cccvvv","vcccvv","vccvcv",
                                                                 "ccccvv","cccvcv","vccccv","vccvvv"});
         temp["g2,c0,c1,g0,g1,v0"] += -1.0 * H2["g2,v1,g0,g1"] * T2["c0,c1,v0,v1"];
@@ -496,6 +496,9 @@ void MRDSRG_SO::commutator_H_A_3_sr_0(double factor, BlockedTensor& H1, BlockedT
         C3["c0,g1,g2,v0,v1,g0"] += temp["g1,g2,c0,g0,v0,v1"];
         C3["g1,c0,g2,v0,v1,g0"] -= temp["g1,g2,c0,g0,v0,v1"];
         C3["g1,g2,c0,v0,v1,g0"] += temp["g1,g2,c0,g0,v0,v1"];
+    }
+
+    if (F_3body) {
         temp = ambit::BlockedTensor::build(CoreTensor, "temp", {"cccvvv"});
         temp["c0,c1,c2,g0,v0,v1"] += 1.0 * H1["v2,g0"] * T3["c0,c1,c2,v0,v1,v2"];
         C3["c0,c1,c2,g0,v0,v1"] += temp["c0,c1,c2,g0,v0,v1"];
