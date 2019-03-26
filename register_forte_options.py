@@ -555,8 +555,8 @@ def register_dsrg_options(forte_options):
 
     forte_options.add_bool("LDSRG3_ANALYSIS", False, "Analyze LDSRG(3) using LDSRG(2)")
 
-    forte_options.add_int("NCOMM_LDSRG3_0_F", 2, "To which the number of commutator we compute the three-body Hamiltonian [F, A3]3")
-    forte_options.add_int("NCOMM_LDSRG3_0_V", 2, "To which the number of commutator we compute the three-body Hamiltonian [V, A2]3")
+    forte_options.add_int("NCOMM_LDSRG3_0_F", 20, "To which the number of commutator we compute the three-body Hamiltonian [F, A3]3")
+    forte_options.add_int("NCOMM_LDSRG3_0_V", 20, "To which the number of commutator we compute the three-body Hamiltonian [V, A2]3")
 
     forte_options.add_str("SOURCE", "STANDARD",
                      ["STANDARD", "LABS", "DYSON", "AMP", "EMP2", "LAMP", "LEMP2"],

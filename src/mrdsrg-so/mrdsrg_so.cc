@@ -487,6 +487,57 @@ void MRDSRG_SO::guess_t3() {
     outfile->Printf("  Done. Timing %10.3f s", timer.get());
 }
 
+void MRDSRG_SO::guess_t3_complicated() {
+    local_timer timer;
+    std::string str = "Computing complicated T3 amplitudes     ...";
+    outfile->Printf("\n    %-35s", str.c_str());
+
+    ambit::BlockedTensor X1 = ambit::BlockedTensor::build(tensor_type_, "X1", {"gg"});
+    ambit::BlockedTensor RV = ambit::BlockedTensor::build(tensor_type_, "RV", {"gggg"});
+    renormalize_bare_Hamiltonian(X1, RV, 0.5);
+
+    ambit::BlockedTensor C3 = ambit::BlockedTensor::build(tensor_type_, "C3", {"hhhppp"});
+    auto temp = ambit::BlockedTensor::build(CoreTensor, "temp", {"hhhppp"});
+    temp["g2,c0,c1,g0,g1,v0"] += -1.0 * RV["g2,v1,g0,g1"] * T2["c0,c1,v0,v1"];
+    C3["c0,c1,g2,g0,g1,v0"] += temp["g2,c0,c1,g0,g1,v0"];
+    C3["c0,g2,c1,g0,g1,v0"] -= temp["g2,c0,c1,g0,g1,v0"];
+    C3["g2,c0,c1,g0,g1,v0"] += temp["g2,c0,c1,g0,g1,v0"];
+    C3["c0,c1,g2,g0,v0,g1"] -= temp["g2,c0,c1,g0,g1,v0"];
+    C3["c0,g2,c1,g0,v0,g1"] += temp["g2,c0,c1,g0,g1,v0"];
+    C3["g2,c0,c1,g0,v0,g1"] -= temp["g2,c0,c1,g0,g1,v0"];
+    C3["c0,c1,g2,v0,g0,g1"] += temp["g2,c0,c1,g0,g1,v0"];
+    C3["c0,g2,c1,v0,g0,g1"] -= temp["g2,c0,c1,g0,g1,v0"];
+    C3["g2,c0,c1,v0,g0,g1"] += temp["g2,c0,c1,g0,g1,v0"];
+
+    temp.zero();
+    temp["g1,g2,c0,g0,v0,v1"] += 1.0 * RV["g1,g2,g0,c1"] * T2["c0,c1,v0,v1"];
+    C3["c0,g1,g2,g0,v0,v1"] += temp["g1,g2,c0,g0,v0,v1"];
+    C3["g1,c0,g2,g0,v0,v1"] -= temp["g1,g2,c0,g0,v0,v1"];
+    C3["g1,g2,c0,g0,v0,v1"] += temp["g1,g2,c0,g0,v0,v1"];
+    C3["c0,g1,g2,v0,g0,v1"] -= temp["g1,g2,c0,g0,v0,v1"];
+    C3["g1,c0,g2,v0,g0,v1"] += temp["g1,g2,c0,g0,v0,v1"];
+    C3["g1,g2,c0,v0,g0,v1"] -= temp["g1,g2,c0,g0,v0,v1"];
+    C3["c0,g1,g2,v0,v1,g0"] += temp["g1,g2,c0,g0,v0,v1"];
+    C3["g1,c0,g2,v0,v1,g0"] -= temp["g1,g2,c0,g0,v0,v1"];
+    C3["g1,g2,c0,v0,v1,g0"] += temp["g1,g2,c0,g0,v0,v1"];
+
+    T3["ijkabc"] = C3["ijkabc"];
+    T3["ijkabc"] += C3["abcijk"];
+
+    T3.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+        value *= renormalized_denominator(Fd[i[0]] + Fd[i[1]] + Fd[i[2]] - Fd[i[3]] - Fd[i[4]] -
+                                          Fd[i[5]]);
+    });
+
+    // zero internal amplitudes
+    T3.block("aaaaaa").zero();
+
+    // norm and max
+    T3max = T3.norm(0), T3norm = T3.norm();
+
+    outfile->Printf("  Done. Timing %10.3f s", timer.get());
+}
+
 double MRDSRG_SO::renormalized_denominator(double D) {
     double Z = std::sqrt(s_) * D;
     if (std::fabs(Z) < std::pow(0.1, taylor_threshold_)) {
@@ -720,6 +771,13 @@ double MRDSRG_SO::compute_energy() {
                                                "vvvcvc","vvvvcc"});
     compute_lhbar();
     outfile->Printf("\n  LDSRG(3)-0 energy computed using 2nd-order T3 and quadratic 3-body: %.15f", Eref + Hbar0);
+
+    T3.zero();
+    guess_t3_complicated();
+    outfile->Printf("\n  T3 max:  %20.15f", T3.norm(0));
+    compute_lhbar();
+    outfile->Printf("\n  LDSRG(3)-0 energy computed using 2nd-order T3 and quadratic 3-body: %.15f", Eref + Hbar0);
+
 
     if (options_.get_bool("LDSRG3_ANALYSIS") and do_t3_) {
         outfile->Printf("\n  Compute LDSRG(2) and perturbative 3-body terms using LDSRG(3) amplitudes");

@@ -205,6 +205,7 @@ class MRDSRG_SO : public psi::Wavefunction {
     double T1max;
 
     void guess_t3();
+    void guess_t3_complicated();
     void update_t3();
     double rms_t3 = 0.0;
     double T3norm = 0.0;
