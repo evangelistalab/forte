@@ -408,11 +408,7 @@ void MRDSRG_SO::guess_t2() {
     T2.block("aaaa").zero();
 
     // norm and max
-    T2max = 0.0, T2norm = T2.norm();
-    T2.citerate([&](const std::vector<size_t>&, const std::vector<SpinType>&, const double& value) {
-        if (std::fabs(value) > std::fabs(T2max))
-            T2max = value;
-    });
+    T2max = T2.norm(0), T2norm = T2.norm();
 
     outfile->Printf("  Done. Timing %10.3f s", timer.get());
 }
@@ -439,11 +435,7 @@ void MRDSRG_SO::guess_t1() {
     T1.block("aa").zero();
 
     // norm and max
-    T1max = 0.0, T1norm = T1.norm();
-    T1.citerate([&](const std::vector<size_t>&, const std::vector<SpinType>&, const double& value) {
-        if (std::fabs(value) > std::fabs(T1max))
-            T1max = value;
-    });
+    T1max = T1.norm(0), T1norm = T1.norm();
 
     outfile->Printf("  Done. Timing %10.3f s", timer.get());
 }
@@ -525,11 +517,7 @@ void MRDSRG_SO::update_t2() {
     T2["ijab"] = R2["ijab"];
 
     // norm and max
-    T2max = 0.0, T2norm = T2.norm();
-    T2.citerate([&](const std::vector<size_t>&, const std::vector<SpinType>&, const double& value) {
-        if (std::fabs(value) > std::fabs(T2max))
-            T2max = value;
-    });
+    T2max = T2.norm(0), T2norm = T2.norm();
 }
 
 void MRDSRG_SO::update_t1() {
@@ -553,11 +541,7 @@ void MRDSRG_SO::update_t1() {
     T1["ia"] = R1["ia"];
 
     // norm and max
-    T1max = 0.0, T1norm = T1.norm();
-    T1.citerate([&](const std::vector<size_t>&, const std::vector<SpinType>&, const double& value) {
-        if (std::fabs(value) > std::fabs(T1max))
-            T1max = value;
-    });
+    T1max = T1.norm(0), T1norm = T1.norm();
 }
 
 void MRDSRG_SO::update_t3() {
@@ -714,6 +698,11 @@ double MRDSRG_SO::compute_energy() {
                     "----------------------------------------");
     outfile->Printf("\n\n\n    MR-DSRG(2) correlation energy      = %25.15f", Etotal - Eref);
     outfile->Printf("\n  * MR-DSRG(2) total energy            = %25.15f\n", Etotal);
+
+    T3 = BTF->build(tensor_type_, "T3 Amplitudes", {"hhhppp"});
+    guess_t3();
+    outfile->Printf("\n  T3 max:  %20.15f", T3.norm(0));
+    outfile->Printf("\n  T3 norm: %20.15f", T3.norm());
 
     if (options_.get_bool("LDSRG3_ANALYSIS") and do_t3_) {
         outfile->Printf("\n  Compute LDSRG(2) and perturbative 3-body terms using LDSRG(3) amplitudes");
