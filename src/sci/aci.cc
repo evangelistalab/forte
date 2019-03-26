@@ -528,11 +528,11 @@ double AdaptiveCI::compute_energy() {
     return PQ_evals->get(root_) + nuclear_repulsion_energy_ + as_ints_->scalar_energy();
 }
 
-void AdaptiveCI::unpaired_density(psi::SharedMatrix Ua, psi::SharedMatrix Ub) {
+void AdaptiveCI::unpaired_density(psi::SharedMatrix /*Ua*/, psi::SharedMatrix /*Ub*/) {
     //    UPDensity density(as_ints_->ints(), mo_space_info_, options_, Ua, Ub);
     //    density.compute_unpaired_density(ordm_a_, ordm_b_);
 }
-void AdaptiveCI::unpaired_density(ambit::Tensor Ua, ambit::Tensor Ub) {
+void AdaptiveCI::unpaired_density(ambit::Tensor /*Ua*/, ambit::Tensor /*Ub*/) {
     //
     //    Matrix am = tensor_to_matrix(Ua, nactpi_);
     //    Matrix bm = tensor_to_matrix(Ub, nactpi_);
@@ -1421,8 +1421,8 @@ std::vector<RDMs> AdaptiveCI::rdms(const std::vector<std::pair<size_t, size_t>>&
 }
 
 std::vector<RDMs>
-AdaptiveCI::transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
-                            std::shared_ptr<ActiveSpaceMethod> method2, int max_rdm_level) {
+AdaptiveCI::transition_rdms(const std::vector<std::pair<size_t, size_t>>& /*root_list*/,
+                            std::shared_ptr<ActiveSpaceMethod> /*method2*/, int /*max_rdm_level*/) {
     std::vector<RDMs> refs;
     throw std::runtime_error("AdaptiveCI::transition_rdms is not implemented!");
     return refs;
@@ -2358,7 +2358,7 @@ void AdaptiveCI::upcast_reference(DeterminantHashVec& ref) {
     }
 }
 
-void AdaptiveCI::add_external_excitations(DeterminantHashVec& ref) {
+void AdaptiveCI::add_external_excitations(DeterminantHashVec&) { // TODO:Remove (Francesco)
     /*
         print_h2("Adding external Excitations");
 
@@ -2859,7 +2859,7 @@ void AdaptiveCI::spin_analysis() {
 
         // psi::SharedMatrix Cainv(Ca->clone());
         // Cainv->invert();
-        // psi::SharedMatrix iao_coeffs = psi::Matrix::doublet(Cainv, iao_orbs, false, false);
+        // psi::SharedMatrix iao_coeffs = psi::linalg::doublet(Cainv, iao_orbs, false, false);
 
         // size_t new_dim = iao_orbs->colspi()[0];
 
@@ -2935,8 +2935,8 @@ void AdaptiveCI::spin_analysis() {
         psi::SharedMatrix CA = as_ints_->ints()->Ca();
         psi::SharedMatrix CB = as_ints_->ints()->Cb();
 
-        psi::SharedMatrix Ca_new = psi::Matrix::doublet(CA, Ua_full, false, false);
-        psi::SharedMatrix Cb_new = psi::Matrix::doublet(CB, Ub_full, false, false);
+        psi::SharedMatrix Ca_new = psi::linalg::doublet(CA, Ua_full, false, false);
+        psi::SharedMatrix Cb_new = psi::linalg::doublet(CB, Ub_full, false, false);
 
         CA->copy(Ca_new);
         CB->copy(Cb_new);

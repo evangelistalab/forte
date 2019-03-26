@@ -125,7 +125,7 @@ void UPDensity::compute_unpaired_density(std::vector<double>& oprdm_a,
     //    Ua_act = loc->get_U()->clone();
     //    psi::SharedMatrix Noinv(NO_A->clone());
     //    Noinv->invert();
-    //    psi::SharedMatrix Ua_act_r = psi::Matrix::doublet(Noinv, Ua_act, false, false);
+    //    psi::SharedMatrix Ua_act_r = psi::linalg::doublet(Noinv, Ua_act, false, false);
     //
     //    // Compute sum(p,i) n_i * ( 1 - n_i ) * (U_p,i)^2
     //    double total = 0.0;
@@ -152,8 +152,8 @@ void UPDensity::compute_unpaired_density(std::vector<double>& oprdm_a,
     //    psi::SharedMatrix Ca = ints_->Ca();
     //    psi::SharedMatrix Cb = ints_->Cb();
     //
-    //    psi::SharedMatrix Ca_new = psi::Matrix::doublet(Ca->clone(), Ua, false, false);
-    //    psi::SharedMatrix Cb_new = psi::Matrix::doublet(Cb->clone(), Ub, false, false);
+    //    psi::SharedMatrix Ca_new = psi::linalg::doublet(Ca->clone(), Ua, false, false);
+    //    psi::SharedMatrix Cb_new = psi::linalg::doublet(Cb->clone(), Ub, false, false);
     //
     //    for (size_t h = 0; h < nirrep; ++h) {
     //        int offset = fdocc[h] + rdocc[h];
@@ -246,7 +246,7 @@ void UPDensity::compute_unpaired_density(std::vector<double>& oprdm_a,
     Ua_act = loc->get_Ua()->clone();
     psi::SharedMatrix Noinv(NO_A->clone());
     Noinv->invert();
-    psi::SharedMatrix Ua_act_r = psi::Matrix::doublet(Noinv, Ua_act, false, false);
+    psi::SharedMatrix Ua_act_r = psi::linalg::doublet(Noinv, Ua_act, false, false);
 
     // Compute sum(p,i) n_i * ( 1 - n_i ) * (U_p,i)^2
     double total = 0.0;
@@ -273,8 +273,8 @@ void UPDensity::compute_unpaired_density(std::vector<double>& oprdm_a,
     psi::SharedMatrix Ca = ints_->Ca();
     psi::SharedMatrix Cb = ints_->Cb();
 
-    psi::SharedMatrix Ca_new = psi::Matrix::doublet(Ca->clone(), Ua, false, false);
-    psi::SharedMatrix Cb_new = psi::Matrix::doublet(Cb->clone(), Ub, false, false);
+    psi::SharedMatrix Ca_new = psi::linalg::doublet(Ca->clone(), Ua, false, false);
+    psi::SharedMatrix Cb_new = psi::linalg::doublet(Cb->clone(), Ub, false, false);
 
     for (size_t h = 0; h < nirrep; ++h) {
         int offset = fdocc[h] + rdocc[h];
@@ -311,7 +311,7 @@ void UPDensity::compute_unpaired_density(std::vector<double>& oprdm_a,
     //
     //    psi::SharedMatrix Cainv(Ca->clone());
     //    Cainv->invert();
-    //    psi::SharedMatrix iao_coeffs = psi::Matrix::doublet(Cainv, iao_orbs, false, false);
+    //    psi::SharedMatrix iao_coeffs = psi::linalg::doublet(Cainv, iao_orbs, false, false);
     //
     //    size_t new_dim = iao_orbs->colspi()[0];
     //    size_t new_dim2 = new_dim * new_dim;
