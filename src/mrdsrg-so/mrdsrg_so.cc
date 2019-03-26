@@ -703,6 +703,23 @@ double MRDSRG_SO::compute_energy() {
     guess_t3();
     outfile->Printf("\n  T3 max:  %20.15f", T3.norm(0));
     outfile->Printf("\n  T3 norm: %20.15f", T3.norm());
+    options_.set_str("FORTE", "CORR_LEVEL", "LDSRG3_0");
+    do_t3_ = true;
+    Hbar3 = BTF->build(tensor_type_, "Hbar3", {"ccccvv","cccvcv","cccvvc","cccvvv",
+                                               "ccvccv","ccvcvc","ccvcvv","ccvvcc",
+                                               "ccvvcv","ccvvvc","ccvvvv","cvcccv",
+                                               "cvccvc","cvccvv","cvcvcc","cvcvcv",
+                                               "cvcvvc","cvcvvv","cvvccc","cvvccv",
+                                               "cvvcvc","cvvcvv","cvvvcc","cvvvcv",
+                                               "cvvvvc","vccccv","vcccvc","vcccvv",
+                                               "vccvcc","vccvcv","vccvvc","vccvvv",
+                                               "vcvccc","vcvccv","vcvcvc","vcvcvv",
+                                               "vcvvcc","vcvvcv","vcvvvc","vvcccc",
+                                               "vvcccv","vvccvc","vvccvv","vvcvcc",
+                                               "vvcvcv","vvcvvc","vvvccc","vvvccv",
+                                               "vvvcvc","vvvvcc"});
+    compute_lhbar();
+    outfile->Printf("\n  LDSRG(3)-0 energy computed using 2nd-order T3 and quadratic 3-body: %.15f", Eref + Hbar0);
 
     if (options_.get_bool("LDSRG3_ANALYSIS") and do_t3_) {
         outfile->Printf("\n  Compute LDSRG(2) and perturbative 3-body terms using LDSRG(3) amplitudes");
