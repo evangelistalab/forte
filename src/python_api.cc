@@ -129,7 +129,18 @@ void export_Determinant(py::module& m) {
         .def("get_alfa_bits", &Determinant::get_alfa_bits, "Get alpha bits")
         .def("get_beta_bits", &Determinant::get_beta_bits, "Get beta bits")
         .def_readonly_static("num_str_bits", &Determinant::num_str_bits)
-        .def_readonly_static("num_det_bits", &Determinant::num_det_bits);
+        .def_readonly_static("num_det_bits", &Determinant::num_det_bits)
+        .def("get_alfa_bit", &Determinant::get_alfa_bit, "n"_a, "Get the value of an alpha bit")
+        .def("get_beta_bit", &Determinant::get_beta_bit, "n"_a, "Get the value of an beta bit")
+        .def("set_alfa_bit", &Determinant::set_alfa_bit, "n"_a, "value"_a,
+             "Set the value of an alpha bit")
+        .def("set_beta_bit", &Determinant::set_beta_bit, "n"_a, "value"_a,
+             "Set the value of an beta bit")
+        .def("create_alfa_bit", &Determinant::create_alfa_bit, "n"_a, "Create an alpha bit")
+        .def("create_beta_bit", &Determinant::create_beta_bit, "n"_a, "Create an beta bit")
+        .def("destroy_alfa_bit", &Determinant::destroy_alfa_bit, "n"_a, "Destroy an alpha bit")
+        .def("destroy_beta_bit", &Determinant::destroy_beta_bit, "n"_a, "Destroy an beta bit")
+        .def("str", &Determinant::str, "Get the string representation of the Slater determinant");
 }
 
 ///// Export the FCISolver class
