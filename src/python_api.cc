@@ -174,6 +174,7 @@ PYBIND11_MODULE(forte, m) {
     m.def("make_dynamic_correlation_solver", &make_dynamic_correlation_solver,
           "Make a dynamical correlation solver");
     m.def("make_dsrg_method", &make_dsrg_method, "Make a DSRG method");
+    m.def("get_no_occs", &get_no_occs, "Print the natural orbital occupations from RDMs");
 
     export_ForteOptions(m);
 

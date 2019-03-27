@@ -27,10 +27,17 @@
  */
 
 #include "helpers/timer.h"
+#include "helpers/helpers.h"
+#include "helpers/printing.h"
 #include "base_classes/rdms.h"
 #include "integrals/integrals.h"
 #include "base_classes/mo_space_info.h"
 
+#include "psi4/libpsi4util/process.h"
+#include "psi4/libmints/molecule.h"
+#include "psi4/libpsi4util/PsiOutStream.h"
+#include "psi4/libmints/pointgrp.h"
+#include "psi4/psi4-dec.h"
 namespace forte {
 
 RDMs::RDMs() : max_rdm_(0) {}
@@ -312,4 +319,73 @@ double compute_Eref_from_rdms(RDMs& ref, std::shared_ptr<ForteIntegrals> ints,
 
     return E;
 }
+
+std::vector<std::pair<std::string,double>> get_no_occs( RDMs& ref, std::shared_ptr<MOSpaceInfo> mo_space_info ){
+
+    print_h2("NATURAL ORBITALS");
+
+    psi::Dimension nactpi = mo_space_info->get_dimension("ACTIVE");
+    size_t nirrep = nactpi.n();
+    size_t nact = nactpi.sum();
+
+    std::shared_ptr<psi::Matrix> opdm_a = std::make_shared<psi::Matrix>("OPDM_A", nirrep, nactpi, nactpi);
+    std::shared_ptr<psi::Matrix> opdm_b = std::make_shared<psi::Matrix>("OPDM_B", nirrep, nactpi, nactpi);
+
+    ambit::Tensor g1a = ref.g1a();
+    ambit::Tensor g1b = ref.g1b();
+
+    int offset = 0;
+    for (size_t h = 0; h < nirrep; h++) {
+        for (int u = 0; u < nactpi[h]; u++) {
+            for (int v = 0; v < nactpi[h]; v++) {
+                opdm_a->set(h, u, v, g1a.data()[(u + offset) * nact + v + offset]);
+                opdm_b->set(h, u, v, g1b.data()[(u + offset) * nact + v + offset]);
+            }
+        }
+        offset += nactpi[h];
+    }
+    psi::SharedVector OCC_A = std::make_shared<psi::Vector>("ALPHA OCCUPATION", nirrep, nactpi);
+    psi::SharedVector OCC_B = std::make_shared<psi::Vector>("BETA OCCUPATION", nirrep, nactpi);
+
+    psi::SharedMatrix NO_A = std::make_shared<psi::Matrix>(nirrep, nactpi, nactpi);
+    psi::SharedMatrix NO_B = std::make_shared<psi::Matrix>(nirrep, nactpi, nactpi);
+
+    opdm_a->diagonalize(NO_A, OCC_A, psi::descending);
+    opdm_b->diagonalize(NO_B, OCC_B, psi::descending);
+
+    // std::ofstream file;
+    // file.open("nos.txt",std::ios_base::app);
+    std::vector<std::pair<double, std::pair<int, int>>> vec_irrep_occupation;
+    for (size_t h = 0; h < nirrep; h++) {
+        for (int u = 0; u < nactpi[h]; u++) {
+            auto irrep_occ =
+                std::make_pair(OCC_A->get(h, u) + OCC_B->get(h, u), std::make_pair(h, u + 1));
+            vec_irrep_occupation.push_back(irrep_occ);
+            //          file << OCC_A->get(h, u) + OCC_B->get(h, u) << "  ";
+        }
+    }
+    // file << endl;
+    // file.close();
+
+    psi::CharacterTable ct = psi::Process::environment.molecule()->point_group()->char_table();
+    std::sort(vec_irrep_occupation.begin(), vec_irrep_occupation.end(),
+              std::greater<std::pair<double, std::pair<int, int>>>());
+
+    std::vector<std::pair<std::string,double>> ret_vec;
+    size_t count = 0;
+    psi::outfile->Printf("\n    ");
+    for (auto vec : vec_irrep_occupation) {
+        std::string label = std::to_string(vec.second.second) + ct.gamma(vec.second.first).symbol();
+        psi::outfile->Printf(" %4d%-4s%11.6f  ", vec.second.second, ct.gamma(vec.second.first).symbol(),
+                        vec.first);
+        if (count++ % 3 == 2 && count != vec_irrep_occupation.size())
+            psi::outfile->Printf("\n    ");
+
+        ret_vec.push_back(std::make_pair(label, vec.first));
+    }
+    psi::outfile->Printf("\n\n");
+    return ret_vec;
+
+}
+
 } // namespace forte
