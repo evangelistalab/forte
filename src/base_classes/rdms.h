@@ -279,6 +279,13 @@ void make_cumulant_L3bbb_in_place(const ambit::Tensor& g1b, const ambit::Tensor&
  */
 double compute_Eref_from_rdms(RDMs& ref, std::shared_ptr<ForteIntegrals> ints,
                                    std::shared_ptr<MOSpaceInfo> mo_space_info);
+
+/**
+ * @brief print_no_occs Print the natural orbital occupation from RDMs 
+ * @param ref the reference object
+ * @param mo_space_info information about the orbital spaces
+ */
+std::vector<std::pair<std::string,double>> get_no_occs(RDMs& ref, std::shared_ptr<MOSpaceInfo> mo_space_info);
 } // namespace forte
 
 #endif // _reference_h_
