@@ -798,37 +798,38 @@ double MRDSRG_SO::compute_energy() {
     outfile->Printf("\n    "
                     "----------------------------------------------------------"
                     "----------------------------------------");
-    outfile->Printf("\n\n\n    MR-DSRG(2) correlation energy      = %25.15f", Etotal - Eref);
-    outfile->Printf("\n  * MR-DSRG(2) total energy            = %25.15f\n", Etotal);
+    outfile->Printf("\n\n\n    %s Energy Summary", options_.get_str("CORR_LEVEL").c_str());
+    outfile->Printf("\n    Correlation energy      = %25.15f", Etotal - Eref);
+    outfile->Printf("\n  * Total energy            = %25.15f\n", Etotal);
 
-    T3 = BTF->build(tensor_type_, "T3 Amplitudes", {"hhhppp"});
-    guess_t3();
-    outfile->Printf("\n  T3 max:  %20.15f", T3.norm(0));
-    outfile->Printf("\n  T3 norm: %20.15f", T3.norm());
-    options_.set_str("FORTE", "CORR_LEVEL", "LDSRG3_0");
-    do_t3_ = true;
-    Hbar3 = BTF->build(tensor_type_, "Hbar3", {"ccccvv","cccvcv","cccvvc","cccvvv",
-                                               "ccvccv","ccvcvc","ccvcvv","ccvvcc",
-                                               "ccvvcv","ccvvvc","ccvvvv","cvcccv",
-                                               "cvccvc","cvccvv","cvcvcc","cvcvcv",
-                                               "cvcvvc","cvcvvv","cvvccc","cvvccv",
-                                               "cvvcvc","cvvcvv","cvvvcc","cvvvcv",
-                                               "cvvvvc","vccccv","vcccvc","vcccvv",
-                                               "vccvcc","vccvcv","vccvvc","vccvvv",
-                                               "vcvccc","vcvccv","vcvcvc","vcvcvv",
-                                               "vcvvcc","vcvvcv","vcvvvc","vvcccc",
-                                               "vvcccv","vvccvc","vvccvv","vvcvcc",
-                                               "vvcvcv","vvcvvc","vvvccc","vvvccv",
-                                               "vvvcvc","vvvvcc"});
-    compute_lhbar();
-    outfile->Printf("\n  LDSRG(3)-0 energy computed using 2nd-order T3 and quadratic 3-body: %.15f", Eref + Hbar0);
+//    T3 = BTF->build(tensor_type_, "T3 Amplitudes", {"hhhppp"});
+//    guess_t3();
+//    outfile->Printf("\n  T3 max:  %20.15f", T3.norm(0));
+//    outfile->Printf("\n  T3 norm: %20.15f", T3.norm());
+//    options_.set_str("FORTE", "CORR_LEVEL", "LDSRG3_0");
+//    do_t3_ = true;
+//    Hbar3 = BTF->build(tensor_type_, "Hbar3", {"ccccvv","cccvcv","cccvvc","cccvvv",
+//                                               "ccvccv","ccvcvc","ccvcvv","ccvvcc",
+//                                               "ccvvcv","ccvvvc","ccvvvv","cvcccv",
+//                                               "cvccvc","cvccvv","cvcvcc","cvcvcv",
+//                                               "cvcvvc","cvcvvv","cvvccc","cvvccv",
+//                                               "cvvcvc","cvvcvv","cvvvcc","cvvvcv",
+//                                               "cvvvvc","vccccv","vcccvc","vcccvv",
+//                                               "vccvcc","vccvcv","vccvvc","vccvvv",
+//                                               "vcvccc","vcvccv","vcvcvc","vcvcvv",
+//                                               "vcvvcc","vcvvcv","vcvvvc","vvcccc",
+//                                               "vvcccv","vvccvc","vvccvv","vvcvcc",
+//                                               "vvcvcv","vvcvvc","vvvccc","vvvccv",
+//                                               "vvvcvc","vvvvcc"});
+//    compute_lhbar();
+//    outfile->Printf("\n  LDSRG(3)-0 energy computed using 2nd-order T3 and quadratic 3-body: %.15f", Eref + Hbar0);
 
-    T3.zero();
-    guess_t3_complicated();
-    outfile->Printf("\n  T3 max:  %20.15f", T3.norm(0));
-    outfile->Printf("\n  T3 norm: %20.15f", T3.norm());
-    compute_lhbar();
-    outfile->Printf("\n  LDSRG(3)-0 energy computed using 2nd-order T3 and quadratic 3-body: %.15f", Eref + Hbar0);
+//    T3.zero();
+//    guess_t3_complicated();
+//    outfile->Printf("\n  T3 max:  %20.15f", T3.norm(0));
+//    outfile->Printf("\n  T3 norm: %20.15f", T3.norm());
+//    compute_lhbar();
+//    outfile->Printf("\n  LDSRG(3)-0 energy computed using 2nd-order T3 and quadratic 3-body: %.15f", Eref + Hbar0);
 
 
     if (options_.get_bool("LDSRG3_ANALYSIS") and do_t3_) {
@@ -865,13 +866,15 @@ double MRDSRG_SO::compute_energy() {
         outfile->Printf("\n\n  LDSRG(2) 4th-order correction T_3rd:      %20.12f", E_t_3rd);
         outfile->Printf("\n  * εLDSRG(2)-P3 total energy         = %25.15f\n", Eepsilon);
 
-        Etotal = Elambda;
+        psi::Process::environment.globals["DSRG(2)"] = Etotal;
         psi::Process::environment.globals["LAMBDA"] = Elambda;
         psi::Process::environment.globals["EPSILON"] = Eepsilon;
         psi::Process::environment.globals["LAMBDA CORRECTION"] = Elambda_l1t3;
         psi::Process::environment.globals["2ND-A3 CORRECTION"] = E_t3_2nd;
         psi::Process::environment.globals["3RD-A CORRECTION"] = E_t_3rd;
         psi::Process::environment.globals["3-BODY CORRECTION"] = E_3body;
+
+        Etotal = Elambda;
     }
 
     psi::Process::environment.globals["CURRENT ENERGY"] = Etotal;
