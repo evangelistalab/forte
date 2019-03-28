@@ -110,6 +110,14 @@ void export_ActiveSpaceSolver(py::module& m) {
           "Compute the average energy given the energies and weights of each state");
 }
 
+/// Export the ActiveSpaceIntegrals class
+void export_ActiveSpaceIntegrals(py::module& m) {
+    py::class_<ActiveSpaceIntegrals>(m, "ActiveSpaceIntegrals")
+        .def(py::init<std::shared_ptr<ForteIntegrals>, std::shared_ptr<MOSpaceInfo>>())
+        .def("slater_rules", &ActiveSpaceIntegrals::slater_rules,
+             "Compute the matrix element of the Hamiltonian between two determinants");
+}
+
 /// Export the OrbitalTransform class
 void export_OrbitalTransform(py::module& m) {
     py::class_<OrbitalTransform>(m, "OrbitalTransform")
