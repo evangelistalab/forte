@@ -444,9 +444,9 @@ void AdaptiveCI::default_find_q_space(DeterminantHashVec& P_space, DeterminantHa
         size_t nadd = 0;
         for (size_t I = 0, max_I = nroot_; I < max_I; ++I) {
             size_t J = last_excluded + num_extra - I;
-            PQ_space.add(F_space[J].second);
+            PQ_space.add(F_space[J].second); 
             nadd++;
-        }
+        } 
         outfile->Printf("\n  Added %zu missing determinants.", nadd);
     }
     outfile->Printf("\n  Time spent selecting: %1.6f", select.get());
@@ -615,9 +615,9 @@ void AdaptiveCI::find_q_space_multiroot(DeterminantHashVec& P_space,
             size_t nadd = 0;
             for (size_t I = 0, max_I = nroot; I < max_I; ++I) {
                 size_t J = last_excluded + num_extra - I;
-                PQ_space.add(sorted_dets[J].second);
+                PQ_space.add(sorted_dets[J].second); 
                 nadd++;
-            }
+            } 
             outfile->Printf("\n  Added %zu missing determinants.", nadd);
         }
     }
