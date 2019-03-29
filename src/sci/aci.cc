@@ -315,8 +315,8 @@ void AdaptiveCI::find_q_space_batched(DeterminantHashVec& P_space, DeterminantHa
         }
     }
     // Add missing determinants
+    size_t num_extra = 0;
     if (add_aimed_degenerate_) {
-        size_t num_extra = 0;
         for (size_t I = 0, max_I = last_excluded; I < max_I; ++I) {
             size_t J = last_excluded - I;
             if (std::fabs(F_space[last_excluded + 1].first - F_space[J].first) < 1.0e-9) {
@@ -330,6 +330,17 @@ void AdaptiveCI::find_q_space_batched(DeterminantHashVec& P_space, DeterminantHa
             outfile->Printf("\n  Added %zu missing determinants in aimed selection.", num_extra);
         }
     }
+    
+    if( PQ_space.size() < nroot_ ){
+        size_t nadd = 0;
+        for (size_t I = 0, max_I = nroot_; I < max_I; ++I) {
+            size_t J = last_excluded + num_extra - I;
+            PQ_space.add(F_space[J].second); 
+            nadd++;
+        } 
+        outfile->Printf("\n  Added %zu missing determinants.", nadd);
+    }
+ 
     outfile->Printf("\n  Time spent selecting: %1.6f", select.get());
     multistate_pt2_energy_correction_.resize(nroot_);
     multistate_pt2_energy_correction_[0] = ept2;
@@ -414,8 +425,8 @@ void AdaptiveCI::default_find_q_space(DeterminantHashVec& P_space, DeterminantHa
         }
     }
     // Add missing determinants
+    size_t num_extra = 0;
     if (add_aimed_degenerate_) {
-        size_t num_extra = 0;
         for (size_t I = 0, max_I = last_excluded; I < max_I; ++I) {
             size_t J = last_excluded - I;
             if (std::fabs(F_space[last_excluded + 1].first - F_space[J].first) < 1.0e-9) {
@@ -428,6 +439,15 @@ void AdaptiveCI::default_find_q_space(DeterminantHashVec& P_space, DeterminantHa
         if (num_extra > 0 and (!quiet_mode_)) {
             outfile->Printf("\n  Added %zu missing determinants in aimed selection.", num_extra);
         }
+    }
+    if( PQ_space.size() < nroot_ ){
+        size_t nadd = 0;
+        for (size_t I = 0, max_I = nroot_; I < max_I; ++I) {
+            size_t J = last_excluded + num_extra - I;
+            PQ_space.add(F_space[J].second); 
+            nadd++;
+        } 
+        outfile->Printf("\n  Added %zu missing determinants.", nadd);
     }
     outfile->Printf("\n  Time spent selecting: %1.6f", select.get());
     multistate_pt2_energy_correction_.resize(nroot_);
@@ -547,6 +567,7 @@ void AdaptiveCI::find_q_space_multiroot(DeterminantHashVec& P_space,
     } // end loop over determinants
 
     if (aimed_selection_) {
+        size_t num_extra = 0;
         // Sort the CI coefficients in ascending order
         std::sort(sorted_dets.begin(), sorted_dets.end(), pairComp);
 
@@ -574,7 +595,6 @@ void AdaptiveCI::find_q_space_multiroot(DeterminantHashVec& P_space,
         // add missing determinants that have the same weight as the last one
         // included
         if (add_aimed_degenerate_) {
-            size_t num_extra = 0;
             for (size_t I = 0, max_I = last_excluded; I < max_I; ++I) {
                 size_t J = last_excluded - I;
                 if (std::fabs(sorted_dets[last_excluded + 1].first - sorted_dets[J].first) <
@@ -589,6 +609,16 @@ void AdaptiveCI::find_q_space_multiroot(DeterminantHashVec& P_space,
                 outfile->Printf("\n  Added %zu missing determinants in aimed selection.",
                                 num_extra);
             }
+        }
+        outfile->Printf("pq: %zu, nroot: %zu", PQ_space.size() , nroot);
+        if( PQ_space.size() < nroot ){
+            size_t nadd = 0;
+            for (size_t I = 0, max_I = nroot; I < max_I; ++I) {
+                size_t J = last_excluded + num_extra - I;
+                PQ_space.add(sorted_dets[J].second); 
+                nadd++;
+            } 
+            outfile->Printf("\n  Added %zu missing determinants.", nadd);
         }
     }
 
@@ -1213,7 +1243,9 @@ void AdaptiveCI::pre_iter_preparation() {
 void AdaptiveCI::diagonalize_P_space() {
     cycle_time_.reset();
     // Step 1. Diagonalize the Hamiltonian in the P space
-    num_ref_roots_ = std::min(nroot_, int(P_space_.size()));
+//    num_ref_roots_ = std::min(nroot_, int(P_space_.size()));
+    num_ref_roots_ = nroot_; // TODO: why this change here ? (Francesco)
+
     std::string cycle_h = "Cycle " + std::to_string(cycle_);
 
     follow_ = false;

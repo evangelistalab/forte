@@ -37,7 +37,7 @@ py::dict make_option(const std::string& type, const std::string& group, py::obje
 }
 
 void ForteOptions::set_group(const std::string& group) { group_ = group;
-outfile->Printf("Setting group to %s",group_.c_str());
+//outfile->Printf("Setting group to %s",group_.c_str());
 }
 
 const std::string& ForteOptions::get_group() { return group_; }
