@@ -35,11 +35,12 @@
 #include "sparse_ci/determinant.h"
 #include "base_classes/mo_space_info.h"
 #include "base_classes/scf_info.h"
+#include "base_classes/state_info.h"
 
 
 namespace forte {
 
-class CI_RDMs // : public psi::Wavefunction
+class CI_Reference // : public psi::Wavefunction
 {
   protected:
     // The wavefunction object
@@ -95,12 +96,12 @@ class CI_RDMs // : public psi::Wavefunction
 
   public:
     /// Default constructor
-    CI_RDMs(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
+    CI_Reference(StateInfo state, std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
                  std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
                  int multiplicity, double ms, int symmetry);
 
     /// Destructor
-    ~CI_RDMs();
+    ~CI_Reference();
 
     /// Build a reference
     void build_reference(std::vector<Determinant>& ref_space);

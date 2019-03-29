@@ -320,6 +320,25 @@ double compute_Eref_from_rdms(RDMs& ref, std::shared_ptr<ForteIntegrals> ints,
     return E;
 }
 
+std::vector<std::vector<double>> get_rdm_data(RDMs& ref, size_t level){
+    std::vector<std::vector<double>> rdm_list;
+
+    if(level == 1){
+        rdm_list.push_back(ref.g1a().data());
+        rdm_list.push_back(ref.g1b().data());
+    } else if (level == 2){
+        rdm_list.push_back(ref.g2aa().data());
+        rdm_list.push_back(ref.g2ab().data());
+        rdm_list.push_back(ref.g2bb().data());
+    } else if (level == 3){
+        rdm_list.push_back(ref.g3aaa().data());
+        rdm_list.push_back(ref.g3aab().data());
+        rdm_list.push_back(ref.g3abb().data());
+        rdm_list.push_back(ref.g3bbb().data());
+    } 
+    return rdm_list;
+} 
+
 std::vector<std::pair<std::string,double>> get_no_occs( RDMs& ref, std::shared_ptr<MOSpaceInfo> mo_space_info ){
 
     print_h2("NATURAL ORBITALS");
