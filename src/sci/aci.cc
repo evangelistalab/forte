@@ -330,17 +330,17 @@ void AdaptiveCI::find_q_space_batched(DeterminantHashVec& P_space, DeterminantHa
             outfile->Printf("\n  Added %zu missing determinants in aimed selection.", num_extra);
         }
     }
-    
+
     if( PQ_space.size() < nroot_ ){
         size_t nadd = 0;
         for (size_t I = 0, max_I = nroot_; I < max_I; ++I) {
             size_t J = last_excluded + num_extra - I;
-            PQ_space.add(F_space[J].second); 
+            PQ_space.add(F_space[J].second);
             nadd++;
-        } 
+        }
         outfile->Printf("\n  Added %zu missing determinants.", nadd);
     }
- 
+
     outfile->Printf("\n  Time spent selecting: %1.6f", select.get());
     multistate_pt2_energy_correction_.resize(nroot_);
     multistate_pt2_energy_correction_[0] = ept2;
@@ -444,9 +444,9 @@ void AdaptiveCI::default_find_q_space(DeterminantHashVec& P_space, DeterminantHa
         size_t nadd = 0;
         for (size_t I = 0, max_I = nroot_; I < max_I; ++I) {
             size_t J = last_excluded + num_extra - I;
-            PQ_space.add(F_space[J].second); 
+            PQ_space.add(F_space[J].second);
             nadd++;
-        } 
+        }
         outfile->Printf("\n  Added %zu missing determinants.", nadd);
     }
     outfile->Printf("\n  Time spent selecting: %1.6f", select.get());
@@ -615,9 +615,9 @@ void AdaptiveCI::find_q_space_multiroot(DeterminantHashVec& P_space,
             size_t nadd = 0;
             for (size_t I = 0, max_I = nroot; I < max_I; ++I) {
                 size_t J = last_excluded + num_extra - I;
-                PQ_space.add(sorted_dets[J].second); 
+                PQ_space.add(sorted_dets[J].second);
                 nadd++;
-            } 
+            }
             outfile->Printf("\n  Added %zu missing determinants.", nadd);
         }
     }
@@ -1177,8 +1177,8 @@ int AdaptiveCI::root_follow(DeterminantHashVec& P_ref, std::vector<double>& P_re
 
 void AdaptiveCI::pre_iter_preparation() {
     // Build the reference determinant and compute its energy
-    CI_Reference ref(scf_info_, options_, mo_space_info_, as_ints_, multiplicity_, twice_ms_,
-                     wavefunction_symmetry_);
+    CI_Reference ref(state_, scf_info_, options_, mo_space_info_, as_ints_, multiplicity_, twice_ms_,
+                wavefunction_symmetry_);
     ref.build_reference(initial_reference_);
     P_space_ = initial_reference_;
 

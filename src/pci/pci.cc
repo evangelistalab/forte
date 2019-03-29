@@ -270,8 +270,8 @@ void ProjectorCI::set_options(std::shared_ptr<ForteOptions> options) {
     // Build the reference determinant and compute its energy
     int ms = wavefunction_multiplicity_ - 1;
     std::vector<Determinant> reference_vec;
-    CI_Reference ref(scf_info_, options, mo_space_info_, as_ints_, wavefunction_multiplicity_, ms,
-                     wavefunction_symmetry_);
+    CI_Reference ref(state_, scf_info_, options_, mo_space_info_, as_ints_, wavefunction_multiplicity_, ms,
+                wavefunction_symmetry_);
     ref.set_ref_type("HF");
     ref.build_reference(reference_vec);
     reference_determinant_ = reference_vec[0];

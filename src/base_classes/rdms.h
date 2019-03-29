@@ -288,6 +288,9 @@ double compute_Eref_from_rdms(RDMs& ref, std::shared_ptr<ForteIntegrals> ints,
  * @param mo_space_info information about the orbital spaces
  */
 std::vector<std::pair<std::string,double>> get_no_occs(RDMs& ref, std::shared_ptr<MOSpaceInfo> mo_space_info);
+
+std::vector<std::vector<double>> get_rdm_data(RDMs& ref, size_t level);
+
 } // namespace forte
 
 #endif // _reference_h_
