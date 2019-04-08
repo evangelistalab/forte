@@ -28,7 +28,7 @@ set forte {
   pci_ENERGY_ESTIMATE_THRESHOLD 0.0
   pci_GENERATOR wall-Chebyshev
   pci_Chebyshev_order 5
-  pci_maxbeta 100000.00
+  sci_max_cycle 100000.00
   pci_e_convergence 12
 }
 

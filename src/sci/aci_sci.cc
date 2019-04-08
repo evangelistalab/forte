@@ -103,8 +103,8 @@ void AdaptiveCI_SCI::startup() {
     spin_complete_ = options_->get_bool("ACI_ENFORCE_SPIN_COMPLETE");
 
     max_cycle_ = 20;
-    if (options_->has_changed("ACI_MAX_CYCLE")) {
-        max_cycle_ = options_->get_int("ACI_MAX_CYCLE");
+    if (options_->has_changed("SCI_MAX_CYCLE")) {
+        max_cycle_ = options_->get_int("SCI_MAX_CYCLE");
     }
     pre_iter_ = 0;
     if (options_->has_changed("ACI_PREITERATIONS")) {

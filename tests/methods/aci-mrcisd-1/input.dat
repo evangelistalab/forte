@@ -38,7 +38,7 @@ set forte {
   aci_SELECT_TYPE aimed_energy
   sigma 0.8
   aci_prescreen_threshold 0.0
-  aci_max_cycle 1
+  sci_max_cycle 1
   nroot 1
   charge 0
   active_guess_size 1

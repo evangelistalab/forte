@@ -350,7 +350,7 @@ def register_aci_options(forte_options):
         "ACI_ADD_AIMED_DEGENERATE", True,
         "Add degenerate determinants not included in the aimed selection")
 
-    forte_options.add_int("ACI_MAX_CYCLE", 20, "Maximum number of cycles")
+    forte_options.add_int("SCI_MAX_CYCLE", 20, "Maximum number of cycles")
 
     forte_options.add_bool("ACI_QUIET_MODE", False,
                            "Print during ACI procedure?")

@@ -169,8 +169,6 @@ class ProjectorCI : public SelectedCIMethod {
     double initial_guess_spawning_threshold_;
     /// The maximum size of the guess wave function
     size_t max_guess_size_;
-    /// The size of the time step (TAU)
-    double time_step_;
     /// Shift the Hamiltonian?
     bool do_shift_;
     /// Use intermediate normalization?

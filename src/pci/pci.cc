@@ -297,8 +297,7 @@ void ProjectorCI::set_options(std::shared_ptr<ForteOptions> options) {
     initial_guess_spawning_threshold_ = options->get_double("PCI_GUESS_SPAWNING_THRESHOLD");
     if (initial_guess_spawning_threshold_ < 0.0)
         initial_guess_spawning_threshold_ = 10.0 * spawning_threshold_;
-    time_step_ = options->get_double("PCI_TAU");
-    max_cycle_ = options->get_int("PCI_MAXBETA") / time_step_;
+    max_cycle_ = options->get_int("SCI_MAX_CYCLE");
     max_Davidson_iter_ = options->get_int("PCI_MAX_DAVIDSON_ITER");
     davidson_collapse_per_root_ = options->get_int("PCI_DL_COLLAPSE_PER_ROOT");
     davidson_subspace_per_root_ = options->get_int("PCI_DL_SUBSPACE_PER_ROOT");
@@ -323,7 +322,6 @@ void ProjectorCI::set_options(std::shared_ptr<ForteOptions> options) {
     if (options->get_str("PCI_GENERATOR") == "WALL-CHEBYSHEV") {
         generator_ = WallChebyshevGenerator;
         generator_description_ = "Wall-Chebyshev";
-        time_step_ = 1.0;
         if (chebyshev_order_ <= 0) {
             psi::outfile->Printf("\n\n  Warning! Chebyshev order %d out of bound, "
                                  "automatically adjusted to 5.",
@@ -333,7 +331,6 @@ void ProjectorCI::set_options(std::shared_ptr<ForteOptions> options) {
     } else if (options->get_str("PCI_GENERATOR") == "DL") {
         generator_ = DLGenerator;
         generator_description_ = "Davidson-Liu by Tianyuan";
-        time_step_ = 1.0;
         if (krylov_order_ <= 0) {
             psi::outfile->Printf("\n\n  Warning! Krylov order %d out of bound, "
                                  "automatically adjusted to 8.",
@@ -428,7 +425,6 @@ void ProjectorCI::print_info() {
         {"Number of threads", num_threads_}};
 
     std::vector<std::pair<std::string, double>> calculation_info_double{
-        {"Time step (beta)", time_step_},
         {"Spawning threshold", spawning_threshold_},
         {"Initial guess spawning threshold", initial_guess_spawning_threshold_},
         {"Convergence threshold", e_convergence_},
@@ -640,7 +636,7 @@ void ProjectorCI::compute_characteristic_function() {
 void ProjectorCI::print_characteristic_function() {
     psi::outfile->Printf("\n\n  ==> Characteristic Function <==");
     print_polynomial(cha_func_coefs_);
-    psi::outfile->Printf("\n    with tau = %e, shift = %.12f, range = %.12f", time_step_, shift_,
+    psi::outfile->Printf("\n    with shift = %.12f, range = %.12f", shift_,
                          range_);
     psi::outfile->Printf("\n    Initial guess: lambda_1= %s%.12f", lambda_1_ >= 0.0 ? " " : "",
                          lambda_1_);
@@ -759,9 +755,9 @@ bool ProjectorCI::check_convergence() {
         proj_energy_ = results["PROJECTIVE ENERGY"];
 
         double proj_energy_gradient =
-            (proj_energy_ - old_proj_energy_) / (time_step_ * energy_estimate_freq_);
+            (proj_energy_ - old_proj_energy_) / energy_estimate_freq_;
         double approx_energy_gradient =
-            (approx_energy_ - old_approx_energy_) / (time_step_ * energy_estimate_freq_);
+            (approx_energy_ - old_approx_energy_) / energy_estimate_freq_;
         if (cycle_ == 0)
             approx_energy_gradient = 10.0 * e_convergence_ + 1.0;
 
@@ -774,7 +770,7 @@ bool ProjectorCI::check_convergence() {
             break;
         default:
             psi::outfile->Printf("\n%9d %8.2f %10zu %13zu %20.12f %10.3e", cycle_,
-                                 time_step_ * cycle_, C_.size(), num_off_diag_elem_, proj_energy_,
+                                 cycle_, C_.size(), num_off_diag_elem_, proj_energy_,
                                  proj_energy_gradient);
             break;
         }
@@ -782,7 +778,7 @@ bool ProjectorCI::check_convergence() {
         if (variational_estimate_) {
             var_energy_ = results["VARIATIONAL ENERGY"];
             double var_energy_gradient =
-                (var_energy_ - old_var_energy_) / (time_step_ * energy_estimate_freq_);
+                (var_energy_ - old_var_energy_) / energy_estimate_freq_;
             psi::outfile->Printf(" %20.12f %10.3e", var_energy_, var_energy_gradient);
         }
 
@@ -1094,7 +1090,7 @@ void ProjectorCI::propagate_wallCh(det_hashvec& dets_hashvec, std::vector<double
                      nuclear_repulsion_energy_;
         psi::timer_off("PCI:<E>a");
         double CHC_energy_gradient =
-            (CHC_energy - approx_energy_) / (time_step_ * energy_estimate_freq_);
+            (CHC_energy - approx_energy_) / energy_estimate_freq_;
         old_approx_energy_ = approx_energy_;
         approx_energy_ = CHC_energy;
         approx_E_flag_ = false;
