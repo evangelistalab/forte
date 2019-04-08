@@ -26,8 +26,8 @@
  * @END LICENSE
  */
 
-#ifndef _aci_sci_h_
-#define _aci_sci_h_
+#ifndef _aci_h_
+#define _aci_h_
 
 #include <fstream>
 #include <iomanip>
@@ -67,10 +67,10 @@ namespace forte {
 class Reference;
 
 /**
- * @brief The AdaptiveCI_SCI class
+ * @brief The AdaptiveCI class
  * This class implements an adaptive CI algorithm
  */
-class AdaptiveCI_SCI : public SelectedCIMethod {
+class AdaptiveCI : public SelectedCIMethod {
   public:
     // ==> Class Constructor and Destructor <==
 
@@ -81,7 +81,7 @@ class AdaptiveCI_SCI : public SelectedCIMethod {
      * @param ints A pointer to an allocated integral object
      * @param mo_space_info A pointer to the MOSpaceInfo object
      */
-    AdaptiveCI_SCI(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
+    AdaptiveCI(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
                    std::shared_ptr<ForteOptions> options,
                    std::shared_ptr<MOSpaceInfo> mo_space_info,
                    std::shared_ptr<ActiveSpaceIntegrals> as_ints);
@@ -488,4 +488,4 @@ class AdaptiveCI_SCI : public SelectedCIMethod {
 
 } // namespace forte
 
-#endif // _aci_sci_h_
+#endif // _aci_h_

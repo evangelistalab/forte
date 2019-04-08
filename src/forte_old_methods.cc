@@ -248,7 +248,7 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
                                                 forte_options, mo_space_info, as_ints);
         aci->compute_energy();
 
-        DeterminantHashVec reference = aci->get_wavefunction();
+        DeterminantHashVec reference = aci->get_PQ_space();
         auto mrci = std::make_shared<MRCI>(ref_wfn, options, ints, mo_space_info, reference);
         final_energy = mrci->compute_energy();
     }

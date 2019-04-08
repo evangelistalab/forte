@@ -33,7 +33,7 @@ set forte {
   multiplicity 1
   aci_SELECT_TYPE aimed_energy
   frozen_docc [1,0,0,0,0,1,0,0]
-  aci_excited_algorithm average
+  sci_excited_algorithm average
   sigma 0.05
   nroot 3
   charge 0
