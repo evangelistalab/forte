@@ -537,7 +537,7 @@ psi::SharedMatrix OrbitalOptimizer::rotate_orbitals(psi::SharedMatrix C, psi::Sh
         }
     }
 
-    C_rot = psi::Matrix::doublet(C, S_exp);
+    C_rot = psi::linalg::doublet(C, S_exp);
     C_rot->set_name("ROTATED_ORBITAL");
     S_sym->set_name("Orbital Rotation (S = exp(x))");
     if (casscf_debug_print_) {
@@ -614,7 +614,7 @@ psi::SharedMatrix OrbitalOptimizer::matrix_exp(const psi::SharedMatrix& unitary)
         }
         U->gemm(false, false, 0.5, unitary, unitary, 1.0);
 
-        psi::SharedMatrix tmp_third = psi::Matrix::triplet(unitary, unitary, unitary);
+        psi::SharedMatrix tmp_third = psi::linalg::triplet(unitary, unitary, unitary);
         tmp_third->scale(1.0 / 6.0);
         U->add(tmp_third);
         tmp_third.reset();
@@ -686,7 +686,7 @@ void CASSCFOrbitalOptimizer::form_fock_intermediates() {
         offset_active += active_dim_[h];
     }
     /// Back transform 1-RDM to AO basis
-    C_active_ao = psi::Matrix::triplet(C_active, gamma1_sym, C_active, false, false, true);
+    C_active_ao = psi::linalg::triplet(C_active, gamma1_sym, C_active, false, false, true);
     if (casscf_debug_print_)
         C_active_ao->print();
     // std::shared_ptr<JK> JK_fock = JK::build_JK(wfn_->basisset(),options_ );
@@ -748,7 +748,7 @@ void CASSCFOrbitalOptimizer::form_fock_intermediates() {
     F_core->transform(Ca_sym_);
     // F_core->set_name("TRANSFORM BUG?");
     // F_core->print();
-    // psi::SharedMatrix F_core_triplet = psi::Matrix::triplet(Ca_sym_, F_core_tmp,
+    // psi::SharedMatrix F_core_triplet = psi::linalg::triplet(Ca_sym_, F_core_tmp,
     // Ca_sym_, true, false, false);
     // F_core_triplet->set_name("TripletTransform");
     // F_core_triplet->print();

@@ -288,7 +288,7 @@ void FiniteTemperatureHF::form_G() {
     F_core->subtract(K_core);
     G_->copy(F_core);
 }
-void FiniteTemperatureHF::form_D() { D_ = psi::Matrix::doublet(C_occ_folded_, C_occ_a_, false, true); }
+void FiniteTemperatureHF::form_D() { D_ = psi::linalg::doublet(C_occ_folded_, C_occ_a_, false, true); }
 }
 }
 */

@@ -146,7 +146,7 @@ void make_avas(psi::SharedWavefunction ref_wfn, psi::Options& options, psi::Shar
                 }
             }
         } // end options of dia
-        auto Ca_tilde = psi::Matrix::doublet(ref_wfn->Ca(), U);
+        auto Ca_tilde = psi::linalg::doublet(ref_wfn->Ca(), U);
 
         // sum of the eigenvalues (occ + vir)
         double s_sum = 0.0;
@@ -309,12 +309,12 @@ psi::SharedMatrix semicanonicalize_block(psi::SharedWavefunction ref_wfn, psi::S
         mo_count += 1;
     }
     // compute (C_block)^T F C_block
-    auto Foi = psi::Matrix::triplet(C_block, ref_wfn->Fa(), C_block, true, false, false);
+    auto Foi = psi::linalg::triplet(C_block, ref_wfn->Fa(), C_block, true, false, false);
 
     auto U_block = std::make_shared<psi::Matrix>("U block", nmo_block, nmo_block);
     auto epsilon_block = std::make_shared<Vector>("epsilon block", nmo_block);
     Foi->diagonalize(U_block, epsilon_block);
-    auto C_block_prime = psi::Matrix::doublet(C_block, U_block);
+    auto C_block_prime = psi::linalg::doublet(C_block, U_block);
     return C_block_prime;
 }
 } // namespace forte

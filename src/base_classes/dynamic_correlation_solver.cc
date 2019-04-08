@@ -10,11 +10,12 @@ DynamicCorrelationSolver::DynamicCorrelationSolver(RDMs rdms,
       foptions_(options) {}
 
 std::shared_ptr<DynamicCorrelationSolver>
-make_dynamic_correlation_solver(const std::string& type, std::shared_ptr<ForteOptions> options,
-                                std::shared_ptr<ForteIntegrals> ints,
-                                std::shared_ptr<MOSpaceInfo> mo_space_info) {
+make_dynamic_correlation_solver(const std::string& /*type*/, std::shared_ptr<ForteOptions> /*options*/,
+                                std::shared_ptr<ForteIntegrals> /*ints*/,
+                                std::shared_ptr<MOSpaceInfo> /*mo_space_info*/) {
     // TODO fill and return objects!
     //    return DynamicCorrelationSolver();
+    return std::shared_ptr<DynamicCorrelationSolver>();
 }
 
 } // namespace forte

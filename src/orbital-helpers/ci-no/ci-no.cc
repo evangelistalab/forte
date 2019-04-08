@@ -500,7 +500,7 @@ void CINO::find_active_space_and_transform(
     Ua_->set_block(actv_slice, actv_slice, NO_A);
 
     Ub_->copy(Ua_->clone());
-    // psi::SharedMatrix Ca_new = psi::Matrix::doublet(Ca_, Ua);
+    // psi::SharedMatrix Ca_new = psi::linalg::doublet(Ca_, Ua);
     // Ca_->copy(Ca_new);
     // Cb_ = Ca_; // Fix this for unrestricted case
 
