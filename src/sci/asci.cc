@@ -197,7 +197,7 @@ double ASCI::compute_energy() {
     sparse_solver.set_guess_dimension(options_->get_int("DL_GUESS_SIZE"));
     sparse_solver.set_num_vecs(nvec);
     sparse_solver.set_sigma_method(sigma_method);
-    sparse_solver.set_spin_project_full(false);
+    sparse_solver.set_spin_project_full(true);
     sparse_solver.set_max_memory(options_->get_int("SIGMA_VECTOR_MAX_MEMORY"));
 
     // Save the P_space energies to predict convergence

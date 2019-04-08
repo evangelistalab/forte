@@ -205,7 +205,14 @@ PYBIND11_MODULE(forte, m) {
     py::class_<StateInfo, std::shared_ptr<StateInfo>>(m, "StateInfo")
         .def(py::init<int, int, int, int, int>(), "na"_a, "nb"_a, "multiplicity"_a, "twice_ms"_a,
              "irrep"_a)
-        .def("str", &StateInfo::str);
+        .def("na", &StateInfo::na, "Return the number of alpha electrons")
+        .def("nb", &StateInfo::nb, "Return the number of beta electrons")
+        .def("multiplicity", &StateInfo::multiplicity, "Return the multiplicity")
+        .def("twice_ms", &StateInfo::twice_ms, "Return 2 x Ms")
+        .def("irrep", &StateInfo::irrep, "Return the irrep index")
+        .def("multiplicity_label", &StateInfo::multiplicity_label, "return the multiplicity symbol")
+        .def("irrep_label", &StateInfo::irrep_label, "return the irrep symbol")
+        .def("str", &StateInfo::str, "return a string representation of this object");
 
     // export SCFInfo
     py::class_<SCFInfo, std::shared_ptr<SCFInfo>>(m, "SCFInfo")
