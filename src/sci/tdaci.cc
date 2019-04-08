@@ -1973,6 +1973,13 @@ void TDACI::propagate_RK4_select(std::vector<double>& PQ_coeffs_r, std::vector<d
 
     // outfile->Printf("\n  Time spent propagating (RK4): %1.6f", total.get());
 }
+void TDACI::propagate_RK4_list(std::vector<double>& PQ_coeffs_r,
+                               std::vector<double>& PQ_coeffs_i,
+                               DeterminantHashVec& PQ_space, WFNOperator& op, double dt) {
+
+    Timer total;
+    size_t npq = PQ_space.size();
+}
 
 void TDACI::propagate_RK4_list(std::vector<double>& PQ_coeffs_r,
                                std::vector<double>& PQ_coeffs_i,
@@ -1990,10 +1997,12 @@ void TDACI::propagate_RK4_list(std::vector<double>& PQ_coeffs_r,
     // k2
     std::vector<double> intr = PQ_coeffs_r;
     std::vector<double> inti = PQ_coeffs_i;
+
+    double half_dt = 0.5*dt;
 #pragma omp parallel for
     for (size_t I = 0; I < npq; ++I) {
-        intr[I] += k1r[I] * 0.5 *dt;
-        inti[I] -= k1i[I] * 0.5 *dt;
+        intr[I] += k1r[I] * half_dt;
+        inti[I] -= k1i[I] * half_dt;
     }
 
     std::vector<double> k2r(npq, 0.0);
@@ -2003,8 +2012,8 @@ void TDACI::propagate_RK4_list(std::vector<double>& PQ_coeffs_r,
     // k3
 #pragma omp parallel for
     for (size_t I = 0; I < npq; ++I) {
-        intr[I] = PQ_coeffs_r[I] + k2r[I] * 0.5 * dt;
-        inti[I] = PQ_coeffs_i[I] - k2i[I] * 0.5 * dt;
+        intr[I] = PQ_coeffs_r[I] + k2r[I] * half_dt;
+        inti[I] = PQ_coeffs_i[I] - k2i[I] * half_dt;
     }
 
     std::vector<double> k3r(npq, 0.0);
@@ -2023,10 +2032,11 @@ void TDACI::propagate_RK4_list(std::vector<double>& PQ_coeffs_r,
 
     // Compile all intermediates
 
+    double s_dt = dt / 6.0;
 #pragma omp parallel for
     for (size_t I = 0; I < npq; ++I) {
-        PQ_coeffs_r[I] += (dt / 6.0) * (k1r[I] + 2 * k2r[I] + 2 * k3r[I] + k4r[I]);
-        PQ_coeffs_i[I] -= (dt / 6.0) * (k1i[I] + 2 * k2i[I] + 2 * k3i[I] + k4i[I]);
+        PQ_coeffs_r[I] += s_dt * (k1r[I] + 2 * k2r[I] + 2 * k3r[I] + k4r[I]);
+        PQ_coeffs_i[I] -= s_dt * (k1i[I] + 2 * k2i[I] + 2 * k3i[I] + k4i[I]);
     }
 
     double norm = 0.0;
