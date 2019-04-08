@@ -131,25 +131,17 @@ void export_Determinant(py::module& m) {
         .def_readonly_static("num_str_bits", &Determinant::num_str_bits)
         .def_readonly_static("num_det_bits", &Determinant::num_det_bits)
         .def("get_alfa_bit", &Determinant::get_alfa_bit, "n"_a, "Get the value of an alpha bit")
-        .def("get_beta_bit", &Determinant::get_beta_bit, "n"_a, "Get the value of an beta bit")
+        .def("get_beta_bit", &Determinant::get_beta_bit, "n"_a, "Get the value of a beta bit")
         .def("set_alfa_bit", &Determinant::set_alfa_bit, "n"_a, "value"_a,
              "Set the value of an alpha bit")
         .def("set_beta_bit", &Determinant::set_beta_bit, "n"_a, "value"_a,
              "Set the value of an beta bit")
         .def("create_alfa_bit", &Determinant::create_alfa_bit, "n"_a, "Create an alpha bit")
-        .def("create_beta_bit", &Determinant::create_beta_bit, "n"_a, "Create an beta bit")
+        .def("create_beta_bit", &Determinant::create_beta_bit, "n"_a, "Create a beta bit")
         .def("destroy_alfa_bit", &Determinant::destroy_alfa_bit, "n"_a, "Destroy an alpha bit")
-        .def("destroy_beta_bit", &Determinant::destroy_beta_bit, "n"_a, "Destroy an beta bit")
+        .def("destroy_beta_bit", &Determinant::destroy_beta_bit, "n"_a, "Destroy a beta bit")
         .def("str", &Determinant::str, "Get the string representation of the Slater determinant");
 }
-
-///// Export the FCISolver class
-// void export_FCISolver(py::module& m) {
-//    py::class_<FCISolver>(m, "FCISolver")
-//        .def(py::init<StateInfo, std::shared_ptr<MOSpaceInfo>,
-//                      std::shared_ptr<ActiveSpaceIntegrals>>())
-//        .def("compute_energy", &FCISolver::compute_energy);
-//}
 
 // TODO: export more classes using the function above
 PYBIND11_MODULE(forte, m) {
