@@ -78,6 +78,14 @@ STLBitsetDeterminant::STLBitsetDeterminant(const std::vector<bool>& occupation_a
 
 const STLBitsetDeterminant::bit_t& STLBitsetDeterminant::bits() const { return bits_; }
 
+std::bitset<STLBitsetDeterminant::num_str_bits> STLBitsetDeterminant::get_alfa_bits() const {
+    return std::bitset<STLBitsetDeterminant::num_str_bits>(bits_.to_string(), 0, STLBitsetDeterminant::num_str_bits);
+}
+
+std::bitset<STLBitsetDeterminant::num_str_bits> STLBitsetDeterminant::get_beta_bits() const {
+    return std::bitset<STLBitsetDeterminant::num_str_bits>(bits_.to_string(), STLBitsetDeterminant::num_str_bits);
+}
+
 bool STLBitsetDeterminant::less_than(const STLBitsetDeterminant& rhs,
                                      const STLBitsetDeterminant& lhs) {
     // check beta first

@@ -86,6 +86,10 @@ class STLBitsetDeterminant {
 
     /// Return the bitset
     const bit_t& bits() const;
+    /// Return the alpha bitset
+    std::bitset<num_str_bits> get_alfa_bits() const;
+    /// Return the beta bitset
+    std::bitset<num_str_bits> get_beta_bits() const;
 
     /// Equal operator
     bool operator==(const STLBitsetDeterminant& lhs) const;

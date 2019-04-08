@@ -54,6 +54,7 @@
 #include "base_classes/scf_info.h"
 #include "mrdsrg-helper/run_dsrg.h"
 #include "mrdsrg-spin-integrated/master_mrdsrg.h"
+#include "sparse_ci/determinant.h"
 
 namespace py = pybind11;
 using namespace pybind11::literals;
@@ -117,13 +118,30 @@ void export_OrbitalTransform(py::module& m) {
         .def("get_Ub", &OrbitalTransform::get_Ub, "Get Ub rotation");
 }
 
-///// Export the FCISolver class
-// void export_FCISolver(py::module& m) {
-//    py::class_<FCISolver>(m, "FCISolver")
-//        .def(py::init<StateInfo, std::shared_ptr<MOSpaceInfo>,
-//                      std::shared_ptr<ActiveSpaceIntegrals>>())
-//        .def("compute_energy", &FCISolver::compute_energy);
-//}
+constexpr int Determinant::num_str_bits;
+constexpr int Determinant::num_det_bits;
+
+/// Export the Determinant class
+void export_Determinant(py::module& m) {
+    py::class_<Determinant>(m, "Determinant")
+        .def(py::init<>())
+        .def(py::init<const std::vector<bool>&, const std::vector<bool>&>())
+        .def("get_alfa_bits", &Determinant::get_alfa_bits, "Get alpha bits")
+        .def("get_beta_bits", &Determinant::get_beta_bits, "Get beta bits")
+        .def_readonly_static("num_str_bits", &Determinant::num_str_bits)
+        .def_readonly_static("num_det_bits", &Determinant::num_det_bits)
+        .def("get_alfa_bit", &Determinant::get_alfa_bit, "n"_a, "Get the value of an alpha bit")
+        .def("get_beta_bit", &Determinant::get_beta_bit, "n"_a, "Get the value of a beta bit")
+        .def("set_alfa_bit", &Determinant::set_alfa_bit, "n"_a, "value"_a,
+             "Set the value of an alpha bit")
+        .def("set_beta_bit", &Determinant::set_beta_bit, "n"_a, "value"_a,
+             "Set the value of an beta bit")
+        .def("create_alfa_bit", &Determinant::create_alfa_bit, "n"_a, "Create an alpha bit")
+        .def("create_beta_bit", &Determinant::create_beta_bit, "n"_a, "Create a beta bit")
+        .def("destroy_alfa_bit", &Determinant::destroy_alfa_bit, "n"_a, "Destroy an alpha bit")
+        .def("destroy_beta_bit", &Determinant::destroy_beta_bit, "n"_a, "Destroy a beta bit")
+        .def("str", &Determinant::str, "Get the string representation of the Slater determinant");
+}
 
 // TODO: export more classes using the function above
 PYBIND11_MODULE(forte, m) {
@@ -160,6 +178,8 @@ PYBIND11_MODULE(forte, m) {
 
     export_OrbitalTransform(m);
 
+    export_Determinant(m);
+
     //    export_FCISolver(m);
 
     // export MOSpaceInfo
@@ -168,7 +188,9 @@ PYBIND11_MODULE(forte, m) {
 
     // export ForteIntegrals
     py::class_<ForteIntegrals, std::shared_ptr<ForteIntegrals>>(m, "ForteIntegrals")
-        .def("rotate_orbitals", &ForteIntegrals::rotate_orbitals);
+        .def("rotate_orbitals", &ForteIntegrals::rotate_orbitals)
+        .def("nmo", &ForteIntegrals::nmo)
+        .def("ncmo", &ForteIntegrals::ncmo);
 
     // export StateInfo
     py::class_<StateInfo, std::shared_ptr<StateInfo>>(m, "StateInfo")
@@ -187,7 +209,15 @@ PYBIND11_MODULE(forte, m) {
     // export ActiveSpaceIntegrals
     py::class_<ActiveSpaceIntegrals, std::shared_ptr<ActiveSpaceIntegrals>>(m,
                                                                             "ActiveSpaceIntegrals")
-        .def(py::init<std::shared_ptr<ForteIntegrals>, std::shared_ptr<MOSpaceInfo>>());
+        .def(py::init<std::shared_ptr<ForteIntegrals>, std::shared_ptr<MOSpaceInfo>>())
+        .def("slater_rules", &ActiveSpaceIntegrals::slater_rules,
+             "Compute the matrix element of the Hamiltonian between two determinants")
+        .def("nuclear_repulsion_energy", &ActiveSpaceIntegrals::nuclear_repulsion_energy,
+             "Get the nuclear repulsion energy")
+        .def("frozen_core_energy", &ActiveSpaceIntegrals::frozen_core_energy,
+             "Get the frozen core energy (contribution from FROZEN_DOCC)")
+        .def("scalar_energy", &ActiveSpaceIntegrals::scalar_energy,
+             "Get the scalar_energy energy (contribution from RESTRICTED_DOCC)");
 
     // export SemiCanonical
     py::class_<SemiCanonical>(m, "SemiCanonical")
