@@ -213,7 +213,7 @@ PYBIND11_MODULE(forte, m) {
         .def("slater_rules", &ActiveSpaceIntegrals::slater_rules,
              "Compute the matrix element of the Hamiltonian between two determinants")
         .def("nuclear_repulsion_energy", &ActiveSpaceIntegrals::nuclear_repulsion_energy,
-             "Get nuclear repulsion energy")
+             "Get the nuclear repulsion energy")
         .def("frozen_core_energy", &ActiveSpaceIntegrals::frozen_core_energy,
              "Get the frozen core energy (contribution from FROZEN_DOCC)")
         .def("scalar_energy", &ActiveSpaceIntegrals::scalar_energy,
