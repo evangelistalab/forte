@@ -104,8 +104,6 @@ src/sci/fci_mo.cc
 src/sci/mrci.cc
 src/sci/mrpt2.cc
 src/sci/sci.cc
-src/sci/aci_sci.cc
-src/sci/aci_sci_build_F.cc
 src/ci_ex_states/excited_state_solver.cc
 src/sparse_ci/sparse_ci_solver.cc
 src/sparse_ci/sigma_vector.cc

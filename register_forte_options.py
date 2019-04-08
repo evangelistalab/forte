@@ -324,7 +324,7 @@ def register_aci_options(forte_options):
                           "Function of q-space criteria, per root for SA-ACI")
 
     forte_options.add_str(
-        "ACI_EXCITED_ALGORITHM", "ROOT_ORTHOGONALIZE",
+        "SCI_EXCITED_ALGORITHM", "ROOT_ORTHOGONALIZE",
         ['AVERAGE', 'ROOT_ORTHOGONALIZE', 'ROOT_COMBINE', 'MULTISTATE'],
         "The excited state algorithm")
 
@@ -339,7 +339,7 @@ def register_aci_options(forte_options):
                            "Enforce determinant spaces to be spin-complete?")
 
     forte_options.add_bool(
-        "ACI_PROJECT_OUT_SPIN_CONTAMINANTS", True,
+        "SCI_PROJECT_OUT_SPIN_CONTAMINANTS", True,
         "Project out spin contaminants in Davidson-Liu's algorithm?")
 
     forte_options.add_bool(
@@ -366,7 +366,7 @@ def register_aci_options(forte_options):
     forte_options.add_int("ACI_AVERAGE_OFFSET", 0,
                           "Offset for state averaging")
 
-    forte_options.add_bool("ACI_SAVE_FINAL_WFN", False,
+    forte_options.add_bool("SCI_SAVE_FINAL_WFN", False,
                            "Print final wavefunction to file?")
 
     forte_options.add_bool("ACI_PRINT_REFS", False, "Print the P space?")
@@ -384,9 +384,9 @@ def register_aci_options(forte_options):
 
     forte_options.add_bool("ACI_APPROXIMATE_RDM", False, "Approximate the RDMs?")
 
-    forte_options.add_bool("ACI_TEST_RDMS", False, "Run test for the RDMs?")
+    forte_options.add_bool("SCI_TEST_RDMS", False, "Run test for the RDMs?")
 
-    forte_options.add_bool("ACI_FIRST_ITER_ROOTS", False, "Compute all roots on first iteration?")
+    forte_options.add_bool("SCI_FIRST_ITER_ROOTS", False, "Compute all roots on first iteration?")
 
     forte_options.add_bool("ACI_PRINT_WEIGHTS", False, "Print weights for active space prediction?")
 
@@ -416,7 +416,7 @@ def register_aci_options(forte_options):
     forte_options.add_bool("ACI_REF_RELAX", False,
                            "Do reference relaxation in ACI?")
 
-    forte_options.add_bool("ACI_CORE_EX", False,
+    forte_options.add_bool("SCI_CORE_EX", False,
                            "Use core excitation algorithm")
 
     forte_options.add_int("ACI_NFROZEN_CORE", 0,
@@ -466,7 +466,7 @@ def register_aci_options(forte_options):
     forte_options.add_double("ACI_SCALE_SIGMA", 0.5,
                              "Scales sigma in batched algorithm")
 
-    forte_options.add_bool("ACI_DIRECT_RDMS", False,
+    forte_options.add_bool("SCI_DIRECT_RDMS", False,
                            "Computes RDMs without coupling lists?")
 
     forte_options.add_str("ACI_BATCH_ALG", "HASH", ['HASH', 'VECSORT'],

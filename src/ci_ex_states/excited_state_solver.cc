@@ -53,22 +53,22 @@ void ExcitedStateSolver::set_options(std::shared_ptr<ForteOptions> options) {
     root_ = options->get_int("ROOT");
 
     // TODO: move all ACI_* options to SCI_* and update register_forte_options.py
-    ex_alg_ = options->get_str("ACI_EXCITED_ALGORITHM");
-    core_ex_ = options->get_bool("ACI_CORE_EX");
+    ex_alg_ = options->get_str("SCI_EXCITED_ALGORITHM");
+    core_ex_ = options->get_bool("SCI_CORE_EX");
     if (options->has_changed("ACI_QUIET_MODE")) {
         quiet_mode_ = options->get_bool("ACI_QUIET_MODE");
     }
-    direct_rdms_ = options->get_bool("ACI_DIRECT_RDMS");
-    test_rdms_ = options->get_bool("ACI_TEST_RDMS");
-    save_final_wfn_ = options->get_bool("ACI_SAVE_FINAL_WFN");
-    first_iter_roots_ = options->get_bool("ACI_FIRST_ITER_ROOTS");
+    direct_rdms_ = options->get_bool("SCI_DIRECT_RDMS");
+    test_rdms_ = options->get_bool("SCI_TEST_RDMS");
+    save_final_wfn_ = options->get_bool("SCI_SAVE_FINAL_WFN");
+    first_iter_roots_ = options->get_bool("SCI_FIRST_ITER_ROOTS");
     sparse_solver_ = std::make_shared<SparseCISolver>(as_ints_);
     sparse_solver_->set_parallel(true);
     sparse_solver_->set_force_diag(options->get_bool("FORCE_DIAG_METHOD"));
     sparse_solver_->set_e_convergence(options->get_double("E_CONVERGENCE"));
     sparse_solver_->set_maxiter_davidson(options->get_int("DL_MAXITER"));
-    sparse_solver_->set_spin_project(options->get_bool("ACI_PROJECT_OUT_SPIN_CONTAMINANTS"));
-    sparse_solver_->set_spin_project_full(options->get_bool("ACI_PROJECT_OUT_SPIN_CONTAMINANTS"));
+    sparse_solver_->set_spin_project(options->get_bool("SCI_PROJECT_OUT_SPIN_CONTAMINANTS"));
+    sparse_solver_->set_spin_project_full(options->get_bool("SCI_PROJECT_OUT_SPIN_CONTAMINANTS"));
     sparse_solver_->set_guess_dimension(options->get_int("DL_GUESS_SIZE"));
     sparse_solver_->set_num_vecs(options->get_int("N_GUESS_VEC"));
     sparse_solver_->set_sigma_method(options->get_str("SIGMA_BUILD_TYPE"));
