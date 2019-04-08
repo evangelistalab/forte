@@ -35,13 +35,14 @@
 #include <string>
 #include <vector>
 
+namespace py = pybind11;
+
 namespace forte {
 
 // Types to store options
 
 // For the bool, int, and double types store:
 // ("label", default value, "description")
-using bool_opt_t = std::tuple<std::string, bool, std::string>;
 using int_opt_t = std::tuple<std::string, int, std::string>;
 using double_opt_t = std::tuple<std::string, double, std::string>;
 
@@ -100,6 +101,13 @@ class ForteOptions {
      */
     void add(const std::string& label, const std::string& type, pybind11::object default_value,
              pybind11::list allowed_values, const std::string& description);
+
+    /**
+     * @brief Get a python object option
+     * @param label Option label
+     * @return a py::object containing the result
+     */
+    py::object get(const std::string& label);
 
     /**
      * @brief Add a boolean option
@@ -197,6 +205,8 @@ class ForteOptions {
     /// Add the options to psi4's options class
     void push_options_to_psi4(psi::Options& options);
 
+    void get_options_from_psi4(psi::Options& options);
+
     /**
      * @brief Generate documentation for the options registered with this object
      * @return A string with a list of options
@@ -219,7 +229,6 @@ class ForteOptions {
   private:
     pybind11::dict dict_;
     std::string group_ = "";
-    std::vector<bool_opt_t> bool_opts_;
     std::vector<int_opt_t> int_opts_;
     std::vector<double_opt_t> double_opts_;
     std::vector<str_opt_t> str_opts_;

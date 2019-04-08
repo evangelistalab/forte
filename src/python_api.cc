@@ -85,7 +85,10 @@ void export_ForteOptions(py::module& m) {
         .def("get_double", &ForteOptions::get_double, "Get a double option")
         .def("get_str", &ForteOptions::get_str, "Get a string option")
         .def("get_int_vec", &ForteOptions::get_int_vec, "Get a vector of integers option")
-        .def("push_options_to_psi4", &ForteOptions::push_options_to_psi4)
+        .def("push_options_to_psi4", &ForteOptions::push_options_to_psi4,
+             "Push the options list to Psi4")
+        .def("get_options_from_psi4", &ForteOptions::get_options_from_psi4,
+             "Read the value of options from Psi4")
         .def("update_psi_options", &ForteOptions::update_psi_options)
         .def("generate_documentation", &ForteOptions::generate_documentation)
         .def("dict", &ForteOptions::dict);
