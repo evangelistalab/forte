@@ -103,6 +103,8 @@ src/sci/asci.cc
 src/sci/fci_mo.cc
 src/sci/mrci.cc
 src/sci/mrpt2.cc
+src/sci/sci.cc
+src/ci_ex_states/excited_state_solver.cc
 src/sparse_ci/sparse_ci_solver.cc
 src/sparse_ci/sigma_vector.cc
 src/sparse_ci/sigma_vector_dynamic.cc
@@ -173,9 +175,7 @@ src/orbital-helpers/mp2_nos.cc
 src/orbital-helpers/semi_canonicalize.cc
 src/orbital-helpers/unpaired_density.cc
 src/pci/pci.cc
-src/pci/pci_hashvec.cc
-src/pci/pci_simple.cc
-src/pci/ewci.cc
+src/pci/pci_sigma.cc
 src/v2rdm/v2rdm.cc
 )
 

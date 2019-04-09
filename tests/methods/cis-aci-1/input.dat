@@ -30,8 +30,8 @@ set forte {
   charge 0
   nroot 2
   aci_n_average 2
-  ACI_INITIAL_SPACE CIS
-  aci_excited_algorithm average
+  active_ref_type CIS
+  sci_excited_algorithm average
   aci_pq_function average
 }
 

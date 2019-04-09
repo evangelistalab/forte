@@ -78,10 +78,7 @@
 //#include "mrdsrg-spin-integrated/three_dsrg_mrpt2.h"
 //#include "mrdsrg-spin-integrated/active_dsrgpt2.h"
 
-#include "pci/ewci.h"
 #include "pci/pci.h"
-#include "pci/pci_hashvec.h"
-#include "pci/pci_simple.h"
 
 #include "v2rdm/v2rdm.h"
 #include "helpers/timer.h"
@@ -251,7 +248,7 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
                                                 forte_options, mo_space_info, as_ints);
         aci->compute_energy();
 
-        DeterminantHashVec reference = aci->get_wavefunction();
+        DeterminantHashVec reference = aci->get_PQ_space();
         auto mrci = std::make_shared<MRCI>(ref_wfn, options, ints, mo_space_info, reference);
         final_energy = mrci->compute_energy();
     }

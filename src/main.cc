@@ -167,7 +167,7 @@ void banner() {
 //    }
 
 //    if (((options.get_str("DIAG_ALGORITHM") == "DYNAMIC") or
-//         (options.get_bool("ACI_DIRECT_RDMS") == true)) and
+//         (options.get_bool("SCI_DIRECT_RDMS") == true)) and
 //        (mo_space_info->size("ACTIVE") > 64)) {
 
 //        outfile->Printf("\n  FATAL:  Dynamic diagonalization or dynamic RDM builds cannot be used

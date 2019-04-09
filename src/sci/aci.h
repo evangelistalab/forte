@@ -26,8 +26,8 @@
  * @END LICENSE
  */
 
-#ifndef _adaptive_ci_h_
-#define _adaptive_ci_h_
+#ifndef _aci_h_
+#define _aci_h_
 
 #include <fstream>
 #include <iomanip>
@@ -36,6 +36,7 @@
 #include "psi4/liboptions/liboptions.h"
 #include "psi4/physconst.h"
 
+#include "sci/sci.h"
 #include "base_classes/forte_options.h"
 #include "ci_rdm/ci_rdms.h"
 #include "sparse_ci/ci_reference.h"
@@ -43,7 +44,6 @@
 #include "mrpt2.h"
 #include "orbital-helpers/unpaired_density.h"
 #include "sparse_ci/determinant_hashvector.h"
-#include "base_classes/rdms.h"
 #include "sparse_ci/sparse_ci_solver.h"
 #include "sparse_ci/determinant.h"
 #include "orbital-helpers/iao_builder.h"
@@ -64,13 +64,13 @@ using d2 = std::vector<d1>;
 
 namespace forte {
 
-class RDMs;
+class Reference;
 
 /**
  * @brief The AdaptiveCI class
  * This class implements an adaptive CI algorithm
  */
-class AdaptiveCI : public ActiveSpaceMethod {
+class AdaptiveCI : public SelectedCIMethod {
   public:
     // ==> Class Constructor and Destructor <==
 
@@ -82,42 +82,57 @@ class AdaptiveCI : public ActiveSpaceMethod {
      * @param mo_space_info A pointer to the MOSpaceInfo object
      */
     AdaptiveCI(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
-               std::shared_ptr<ForteOptions> options, std::shared_ptr<MOSpaceInfo> mo_space_info,
-               std::shared_ptr<ActiveSpaceIntegrals> as_ints);
+                   std::shared_ptr<ForteOptions> options,
+                   std::shared_ptr<MOSpaceInfo> mo_space_info,
+                   std::shared_ptr<ActiveSpaceIntegrals> as_ints);
 
     // ==> Class Interface <==
 
-    /// Compute the energy
-    double compute_energy() override;
+    /// Set options from an option object
+    /// @param options the options passed in
+    void set_options(std::shared_ptr<ForteOptions> options) override {}
 
-    /// Compute the reduced density matrices up to a given particle rank (max_rdm_level)
-    std::vector<RDMs> rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
-                           int max_rdm_level) override;
+    // Interfaces of SCI algorithm
+    /// Print the banner and starting information.
+    void print_info() override;
+    /// Pre-iter preparation, usually includes preparing an initial reference
+    void pre_iter_preparation() override;
+    /// Step 1. Diagonalize the Hamiltonian in the P space
+    void diagonalize_P_space() override;
+    /// Step 2. Find determinants in the Q space
+    void find_q_space() override;
+    /// Step 3. Diagonalize the Hamiltonian in the P + Q space
+    void diagonalize_PQ_space() override;
+    /// Step 4. Check convergence
+    bool check_convergence() override;
+    /// Step 5. Prune the P + Q space to get an updated P space
+    void prune_PQ_to_P() override;
+    /// Post-iter process
+    void post_iter_process() override {}
 
-    /// Returns the transition reduced density matrices between roots of different symmetry up to a
-    /// given level (max_rdm_level)
-    std::vector<RDMs> transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
-                                      std::shared_ptr<ActiveSpaceMethod> method2,
-                                      int max_rdm_level) override;
-
-    // Set the options
-    void set_options(std::shared_ptr<ForteOptions>) override{};
+    // Temporarily added interface to ExcitedStateSolver
+    /// Set the class variable
+    void set_method_variables(
+        std::string ex_alg, size_t nroot_method, size_t root,
+        const std::vector<std::vector<std::pair<Determinant, double>>>& old_roots) override;
+    /// Getters
+    DeterminantHashVec get_PQ_space() override;
+    psi::SharedMatrix get_PQ_evecs() override;
+    psi::SharedVector get_PQ_evals() override;
+    WFNOperator get_op() override;
+    size_t get_ref_root() override;
+    std::vector<double> get_multistate_pt2_energy_correction() override;
 
     /// Set the printing level
     void set_quiet(bool quiet) { quiet_mode_ = quiet; }
-    /// Get the wavefunction
-    DeterminantHashVec get_wavefunction();
 
     /// Compute the ACI-NOs
     void compute_nos();
-
-    void diagonalize_final_and_compute_rdms();
 
     void semi_canonicalize();
     void set_fci_ints(std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
 
     void upcast_reference(DeterminantHashVec& ref);
-    void add_external_excitations(DeterminantHashVec& ref);
 
     // Update sigma
     void update_sigma();
@@ -127,15 +142,27 @@ class AdaptiveCI : public ActiveSpaceMethod {
     void spin_analysis();
 
   private:
+    // Temporarily added
+    psi::SharedMatrix P_evecs_;
+    psi::SharedVector P_evals_;
+    DeterminantHashVec P_space_;
+    DeterminantHashVec P_ref_;
+    std::vector<double> P_ref_evecs_;
+    std::vector<double> P_energies_;
+    std::vector<std::vector<double>> energy_history_;
+    SparseCISolver sparse_solver_;
+    int num_ref_roots_;
+    bool follow_;
+    local_timer cycle_time_;
+
+    // Temporarily added interface to ExcitedStateSolver
+    psi::SharedMatrix PQ_evecs_;
+    psi::SharedVector PQ_evals_;
+    DeterminantHashVec PQ_space_;
+
     // ==> Class data <==
-
-    DeterminantHashVec final_wfn_;
-
     WFNOperator op_;
 
-
-    /// Some HF info
-    std::shared_ptr<SCFInfo> scf_info_;
     /// Forte options
     std::shared_ptr<ForteOptions> options_;
     /// The wave function symmetry
@@ -180,11 +207,7 @@ class AdaptiveCI : public ActiveSpaceMethod {
     std::vector<Determinant> initial_reference_;
     /// The PT2 energy correction
     std::vector<double> multistate_pt2_energy_correction_;
-    /// The current iteration
-    int cycle_;
-    /// The last iteration
-    int max_cycle_;
-    int pre_iter_;
+    size_t pre_iter_;
     bool set_ints_ = false;
 
     // ==> ACI Options <==
@@ -272,8 +295,6 @@ class AdaptiveCI : public ActiveSpaceMethod {
 
     bool print_weights_;
 
-    bool set_rdm_ = false;
-
     /// The alpha MO always unoccupied
     int hole_;
 
@@ -310,13 +331,6 @@ class AdaptiveCI : public ActiveSpaceMethod {
     /// All that happens before we compute the energy
     void startup();
 
-    /// Compute an aci wavefunction
-    void compute_aci(DeterminantHashVec& PQ_space, psi::SharedMatrix& PQ_evecs,
-                     psi::SharedVector& PQ_evals);
-
-    /// Print information about this calculation
-    void print_info();
-
     /// Print a wave function
     void print_wfn(DeterminantHashVec& space, WFNOperator& op, psi::SharedMatrix evecs, int nroot);
 
@@ -329,8 +343,8 @@ class AdaptiveCI : public ActiveSpaceMethod {
                               psi::SharedVector evals, psi::SharedMatrix evecs);
 
     /// Find all the relevant excitations out of the P space
-    void find_q_space(DeterminantHashVec& P_space, DeterminantHashVec& PQ_space, int nroot,
-                      psi::SharedVector evals, psi::SharedMatrix evecs);
+    void find_q_space_multiroot(DeterminantHashVec& P_space, DeterminantHashVec& PQ_space,
+                                int nroot, psi::SharedVector evals, psi::SharedMatrix evecs);
 
     /// Generate set of state-averaged q-criteria and determinants
     double average_q_values(int nroot, std::vector<double>& C1, std::vector<double>& E2);
@@ -401,7 +415,8 @@ class AdaptiveCI : public ActiveSpaceMethod {
                            psi::SharedVector new_energies);
 
     /// Check if the procedure is stuck
-    bool check_stuck(std::vector<std::vector<double>>& energy_history, psi::SharedVector evals);
+    bool check_stuck(const std::vector<std::vector<double>>& energy_history,
+                     psi::SharedVector evals);
 
     /// Computes spin
     std::vector<std::pair<double, double>> compute_spin(DeterminantHashVec& space, WFNOperator& op,
@@ -417,9 +432,6 @@ class AdaptiveCI : public ActiveSpaceMethod {
     /// Check for spin contamination
     double compute_spin_contamination(DeterminantHashVec& space, WFNOperator& op,
                                       psi::SharedMatrix evecs, int nroot);
-
-    /// Save a wave function
-    void wfn_to_file(DeterminantHashVec& det_space, psi::SharedMatrix evecs, int root);
 
     /// Compute the Davidson correction
     std::vector<double> davidson_correction(std::vector<Determinant>& P_dets,
@@ -449,22 +461,8 @@ class AdaptiveCI : public ActiveSpaceMethod {
     void project_determinant_space(DeterminantHashVec& space, psi::SharedMatrix evecs,
                                    psi::SharedVector evals, int nroot);
 
-    /// Compute the RDMs
-    void compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints, DeterminantHashVec& dets,
-                      WFNOperator& op, psi::SharedMatrix& PQ_evecs, int root1, int root2,
-                      int max_level);
-
-    /// Save older roots
-    void save_old_root(DeterminantHashVec& dets, psi::SharedMatrix& PQ_evecs, int root);
-
     /// Add roots to be projected out in DL
     void add_bad_roots(DeterminantHashVec& dets);
-
-    /// Print Summary
-    void print_final(DeterminantHashVec& dets, psi::SharedMatrix& PQ_evecs,
-                     psi::SharedVector& PQ_evals);
-
-    void compute_multistate(psi::SharedVector& PQ_evals);
 
     void block_diagonalize_fock(const d2& Fa, const d2& Fb, psi::SharedMatrix& Ua,
                                 psi::SharedMatrix& Ub, const std::string& name);
@@ -490,4 +488,4 @@ class AdaptiveCI : public ActiveSpaceMethod {
 
 } // namespace forte
 
-#endif // _adaptive_ci_h_
+#endif // _aci_h_

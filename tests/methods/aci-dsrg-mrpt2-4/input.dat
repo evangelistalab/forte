@@ -54,7 +54,7 @@ set forte {
   active           [8]
   sigma 0.001
   diag_algorithm dynamic
-  aci_direct_rdms true
+  sci_direct_rdms true
   aci_batched_screening true
   aci_nbatch 4
   nroot 1

@@ -36,7 +36,7 @@ set forte{
    sigma            0.00
    multiplicity     1
    relax_ref        once
-   aci_direct_rdms true
+   sci_direct_rdms true
 }
 
 Escf, wfn = energy('scf', return_wfn=True)

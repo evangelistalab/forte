@@ -37,7 +37,7 @@ using namespace psi;
 
 namespace forte {
 
-CI_RDMs::CI_RDMs(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
+CI_Reference::CI_Reference(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
                            std::shared_ptr<MOSpaceInfo> mo_space_info,
                            std::shared_ptr<ActiveSpaceIntegrals> fci_ints, int multiplicity,
                            double twice_ms, int symmetry)
@@ -48,7 +48,6 @@ CI_RDMs::CI_RDMs(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions
 
     // State symmetry
     root_sym_ = symmetry;
-
 
     // Double and singly occupied MOs
     psi::Dimension doccpi = scf_info_->doccpi();
@@ -95,9 +94,9 @@ CI_RDMs::CI_RDMs(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions
     outfile->Printf("\n  Maximum reference space size: %zu", subspace_size_);
 }
 
-CI_RDMs::~CI_RDMs() {}
+CI_Reference::~CI_Reference() {}
 
-void CI_RDMs::build_reference(std::vector<Determinant>& ref_space) {
+void CI_Reference::build_reference(std::vector<Determinant>& ref_space) {
 
     if (ref_type_ == "CAS") {
         build_cas_reference(ref_space);
@@ -106,7 +105,7 @@ void CI_RDMs::build_reference(std::vector<Determinant>& ref_space) {
     }
 }
 
-void CI_RDMs::build_ci_reference(std::vector<Determinant>& ref_space) {
+void CI_Reference::build_ci_reference(std::vector<Determinant>& ref_space) {
     Determinant det(get_occupation());
     outfile->Printf("\n  %s", det.str(nact_).c_str());
 
@@ -229,7 +228,7 @@ void CI_RDMs::build_ci_reference(std::vector<Determinant>& ref_space) {
     }
 }
 
-void CI_RDMs::build_cas_reference(std::vector<Determinant>& ref_space) {
+void CI_Reference::build_cas_reference(std::vector<Determinant>& ref_space) {
     int nact = mo_space_info_->size("ACTIVE");
 
     // Get the active mos
@@ -347,7 +346,7 @@ void CI_RDMs::build_cas_reference(std::vector<Determinant>& ref_space) {
     outfile->Printf("\n  Reference generated from %d MOs", na);
 }
 
-std::vector<std::tuple<double, int, int>> CI_RDMs::sym_labeled_orbitals(std::string type) {
+std::vector<std::tuple<double, int, int>> CI_Reference::sym_labeled_orbitals(std::string type) {
     size_t nact = mo_space_info_->size("ACTIVE");
 
     std::vector<std::tuple<double, int, int>> labeled_orb;
@@ -396,7 +395,7 @@ std::vector<std::tuple<double, int, int>> CI_RDMs::sym_labeled_orbitals(std::str
     return labeled_orb;
 }
 
-Determinant CI_RDMs::get_occupation() {
+Determinant CI_Reference::get_occupation() {
     int nact = mo_space_info_->size("ACTIVE");
     //    Determinant det(nact); <- xsize
     Determinant det;

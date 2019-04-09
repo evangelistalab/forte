@@ -3,39 +3,40 @@
 
 import forte
 
-refscf = -14.6097447380899581 #TEST
-refpci = -14.646162384728 #TEST
+refscf = -108.3243829457663878 #TEST
+refpci = -108.638029876760 #TEST
 
-molecule li2{
-   Li
-   Li 1 2.0000
+molecule N2{
+   N
+   N 1 2.0000
 }
 
 set {
-  basis sto-3g
+  basis cc-pVDZ
   scf_type pk
   e_convergence 12
+  guess core
 }
 
 set forte {
   active_space_solver pci
-  pci_nroot 1
+  frozen_docc [1,0,0,0,0,1,0,0]
+  frozen_uocc [4,1,2,2,1,5,2,2]
+  nroot 1
   charge 0
-  pci_tau 1.0
   pci_spawning_threshold 0.0001
-  pci_ENERGY_ESTIMATE_FREQ 100
+  pci_ENERGY_ESTIMATE_FREQ 1
   pci_FAST_EVAR true
   pci_USE_INTER_NORM true
-  pci_ENERGY_ESTIMATE_THRESHOLD 1e-5
-  pci_DYNAMIC_PRESCREENING true
-  pci_GENERATOR POWER
-  orbital_type mp2_nos
-  pci_maxbeta 100000.00
+  pci_GENERATOR WALL-CHEBYSHEV
+  orbital_type MP2_NOS
+  sci_max_cycle 100000.00
   pci_e_convergence 12
+  pci_STOP_HIGHER_NEW_LOW true
 }
 
 energy('scf')
 compare_values(refscf, variable("CURRENT ENERGY"), 11, "SCF energy") #TEST
 
 energy('forte')
-compare_values(refpci, variable("PCI ENERGY"), 10, "PCI energy") #TEST
+compare_values(refpci, variable("PCI ENERGY"), 9, "PCI energy") #TEST

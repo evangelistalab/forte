@@ -22,10 +22,10 @@
     -----------------------------------------------------------------------
 
 
-    Psi4 started on: Thursday, 10 January 2019 05:18PM
+    Psi4 started on: Wednesday, 20 February 2019 05:00PM
 
-    Process ID: 6929
-    Host:       tianyuans-air.wireless.emory.edu
+    Process ID: 62488
+    Host:       Tianyuans-MacBook-Air.local
     PSIDATADIR: /Users/tianyuanzhang/Documents/Source/psi4_2018/psi4-bin-clang-debug/share/psi4
     Memory:     500.0 MiB
     Threads:    1
@@ -33,38 +33,36 @@
   ==> Input File <==
 
 --------------------------------------------------------------------------
-#! This tests the Adaptive Path-Integral FCI procedure with dynamic prescreening
+#! This tests the Adaptive Path-Integral FCI procedure with initiator approximation
 #! Generated using commit GITCOMMIT
 
 import forte
 
-refscf = -14.6097447380899581 #TEST
-refpci = -14.646162384728 #TEST
+refscf = -1.1131772159334097  #TEST
+refpci = -1.145796366869 #TEST
 
-molecule li2{
-   Li
-   Li 1 2.0000
+molecule H2{
+   H
+   H 1 0.62
 }
 
 set {
-  basis sto-3g
+  basis cc-pVDZ
   scf_type pk
   e_convergence 12
 }
 
 set forte {
   active_space_solver pci
-  pci_nroot 1
+  nroot 1
   charge 0
-  pci_tau 1.0
-  pci_spawning_threshold 0.0001
-  pci_ENERGY_ESTIMATE_FREQ 100
+  pci_spawning_threshold 0.0
+  pci_GUESS_SPAWNING_THRESHOLD 1.
+  pci_ENERGY_ESTIMATE_FREQ 1
   pci_FAST_EVAR true
-  pci_USE_INTER_NORM true
-  pci_ENERGY_ESTIMATE_THRESHOLD 1e-5
-  pci_SCHWARZ_PRESCREENING true
-  pci_GENERATOR POWER
-  MP2_NOS true
+  pci_ENERGY_ESTIMATE_THRESHOLD 0.0
+  pci_GENERATOR wall-Chebyshev
+  pci_Chebyshev_order 5
   pci_maxbeta 100000.00
   pci_e_convergence 12
 }
@@ -73,18 +71,18 @@ energy('scf')
 compare_values(refscf, variable("CURRENT ENERGY"), 11, "SCF energy") #TEST
 
 energy('forte')
-compare_values(refpci, variable("PCI ENERGY"), 10, "PCI energy") #TEST
+compare_values(refpci, variable("PCI ENERGY"), 11, "PCI energy") #TEST
 --------------------------------------------------------------------------
 
-*** tstart() called on tianyuans-air.wireless.emory.edu
-*** at Thu Jan 10 17:18:10 2019
+*** tstart() called on Tianyuans-MacBook-Air.local
+*** at Wed Feb 20 17:00:40 2019
 
    => Loading Basis Set <=
 
-    Name: STO-3G
+    Name: CC-PVDZ
     Role: ORBITAL
     Keyword: BASIS
-    atoms 1-2 entry LI         line    31 file /Users/tianyuanzhang/Documents/Source/psi4_2018/psi4-bin-clang-debug/share/psi4/basis/sto-3g.gbs 
+    atoms 1-2 entry H          line    22 file /Users/tianyuanzhang/Documents/Source/psi4_2018/psi4-bin-clang-debug/share/psi4/basis/cc-pvdz.gbs 
 
 
          ---------------------------------------------------------
@@ -104,20 +102,20 @@ compare_values(refpci, variable("PCI ENERGY"), 10, "PCI energy") #TEST
 
        Center              X                  Y                   Z               Mass       
     ------------   -----------------  -----------------  -----------------  -----------------
-         LI           0.000000000000     0.000000000000    -1.000000000000     7.016003436600
-         LI           0.000000000000     0.000000000000     1.000000000000     7.016003436600
+         H            0.000000000000     0.000000000000    -0.310000000000     1.007825032230
+         H            0.000000000000     0.000000000000     0.310000000000     1.007825032230
 
   Running in d2h symmetry.
 
-  Rotational constants: A = ************  B =      1.20137  C =      1.20137 [cm^-1]
-  Rotational constants: A = ************  B =  36016.16030  C =  36016.16030 [MHz]
-  Nuclear repulsion =    2.381297448014999
+  Rotational constants: A = ************  B =     87.02779  C =     87.02779 [cm^-1]
+  Rotational constants: A = ************  B = 2609027.60914  C = 2609027.60914 [MHz]
+  Nuclear repulsion =    0.853511630112903
 
   Charge       = 0
   Multiplicity = 1
-  Electrons    = 6
-  Nalpha       = 3
-  Nbeta        = 3
+  Electrons    = 2
+  Nalpha       = 1
+  Nbeta        = 1
 
   ==> Algorithm <==
 
@@ -132,8 +130,8 @@ compare_values(refpci, variable("PCI ENERGY"), 10, "PCI energy") #TEST
 
   ==> Primary Basis <==
 
-  Basis Set: STO-3G
-    Blend: STO-3G
+  Basis Set: CC-PVDZ
+    Blend: CC-PVDZ
     Number of shells: 6
     Number of basis function: 10
     Number of Cartesian functions: 10
@@ -154,7 +152,7 @@ compare_values(refpci, variable("PCI ENERGY"), 10, "PCI energy") #TEST
      B2u        1       1       0       0       0       0
      B3u        1       1       0       0       0       0
    -------------------------------------------------------
-    Total      10      10       3       3       3       0
+    Total      10      10       1       1       1       0
    -------------------------------------------------------
 
   ==> Integral Setup <==
@@ -163,7 +161,7 @@ compare_values(refpci, variable("PCI ENERGY"), 10, "PCI energy") #TEST
    Calculation information:
       Number of atoms:                   2
       Number of AO shells:               6
-      Number of primitives:             18
+      Number of primitives:             10
       Number of atomic orbitals:        10
       Number of basis functions:        10
 
@@ -185,7 +183,7 @@ compare_values(refpci, variable("PCI ENERGY"), 10, "PCI energy") #TEST
 
     OpenMP threads:              1
 
-  Minimum eigenvalue in the overlap matrix is 4.0289192732E-02.
+  Minimum eigenvalue in the overlap matrix is 2.2441131522E-02.
   Using Symmetric Orthogonalization.
 
   SCF Guess: Superposition of Atomic Densities via on-the-fly atomic UHF.
@@ -194,14 +192,13 @@ compare_values(refpci, variable("PCI ENERGY"), 10, "PCI energy") #TEST
 
                         Total Energy        Delta E     RMS |[F,P]|
 
-   @RHF iter   0:   -14.58573852679841   -1.45857e+01   6.38128e-02 
-   @RHF iter   1:   -14.60879129707150   -2.30528e-02   3.90853e-03 
-   @RHF iter   2:   -14.60956780353629   -7.76506e-04   1.49380e-03 DIIS
-   @RHF iter   3:   -14.60974068441564   -1.72881e-04   2.15662e-04 DIIS
-   @RHF iter   4:   -14.60974473615713   -4.05174e-06   4.32612e-06 DIIS
-   @RHF iter   5:   -14.60974473808782   -1.93069e-09   1.41353e-07 DIIS
-   @RHF iter   6:   -14.60974473808995   -2.12985e-12   3.63226e-09 DIIS
-   @RHF iter   7:   -14.60974473808996   -7.10543e-15   1.73384e-11 DIIS
+   @RHF iter   0:    -0.84398691408435   -8.43987e-01   4.91052e-02 
+   @RHF iter   1:    -1.11127558736985   -2.67289e-01   8.96963e-03 
+   @RHF iter   2:    -1.11311489552936   -1.83931e-03   1.57673e-03 DIIS
+   @RHF iter   3:    -1.11317712826906   -6.22327e-05   7.99006e-05 DIIS
+   @RHF iter   4:    -1.11317721589492   -8.76259e-08   1.26032e-06 DIIS
+   @RHF iter   5:    -1.11317721593341   -3.84914e-11   1.10029e-09 DIIS
+   @RHF iter   6:    -1.11317721593341    2.22045e-16   2.05262e-12 DIIS
   Energy converged.
 
 
@@ -212,26 +209,26 @@ compare_values(refpci, variable("PCI ENERGY"), 10, "PCI energy") #TEST
 
     Doubly Occupied:                                                      
 
-       1Ag    -2.340313     1B1u   -2.335347     2Ag    -0.163839  
+       1Ag    -0.631641  
 
     Virtual:                                                              
 
-       2B1u    0.093646     1B2u    0.108933     1B3u    0.108933  
-       3Ag     0.176245     1B2g    0.275579     1B3g    0.275579  
-       3B1u    0.645556  
+       1B1u    0.219233     2Ag     0.450304     2B1u    1.037790  
+       1B2u    1.310066     1B3u    1.310066     3Ag     2.062763  
+       1B2g    2.124688     1B3g    2.124688     3B1u    4.593655  
 
     Final Occupation by Irrep:
              Ag   B1g   B2g   B3g    Au   B1u   B2u   B3u 
-    DOCC [     2,    0,    0,    0,    0,    1,    0,    0 ]
+    DOCC [     1,    0,    0,    0,    0,    0,    0,    0 ]
 
-  @RHF Final Energy:   -14.60974473808996
+  @RHF Final Energy:    -1.11317721593341
 
    => Energetics <=
 
-    Nuclear Repulsion Energy =              2.3812974480149989
-    One-Electron Energy =                 -24.3030864655733509
-    Two-Electron Energy =                   7.3120442794683909
-    Total Energy =                        -14.6097447380899617
+    Nuclear Repulsion Energy =              0.8535116301129032
+    One-Electron Energy =                  -2.6700960604609905
+    Two-Electron Energy =                   0.7034072144146777
+    Total Energy =                         -1.1131772159334095
 
 Computation Completed
 
@@ -253,7 +250,7 @@ Properties computed using the SCF density matrix
      X:     0.0000      Y:     0.0000      Z:     0.0000     Total:     0.0000
 
 
-*** tstop() called on tianyuans-air.wireless.emory.edu at Thu Jan 10 17:18:10 2019
+*** tstop() called on Tianyuans-MacBook-Air.local at Wed Feb 20 17:00:40 2019
 Module time:
 	user time   =       0.50 seconds =       0.01 minutes
 	system time =       0.02 seconds =       0.00 minutes
@@ -264,15 +261,15 @@ Total time:
 	total time  =          0 seconds =       0.00 minutes
 	SCF energy........................................................PASSED
 
-*** tstart() called on tianyuans-air.wireless.emory.edu
-*** at Thu Jan 10 17:18:10 2019
+*** tstart() called on Tianyuans-MacBook-Air.local
+*** at Wed Feb 20 17:00:40 2019
 
    => Loading Basis Set <=
 
-    Name: STO-3G
+    Name: CC-PVDZ
     Role: ORBITAL
     Keyword: BASIS
-    atoms 1-2 entry LI         line    31 file /Users/tianyuanzhang/Documents/Source/psi4_2018/psi4-bin-clang-debug/share/psi4/basis/sto-3g.gbs 
+    atoms 1-2 entry H          line    22 file /Users/tianyuanzhang/Documents/Source/psi4_2018/psi4-bin-clang-debug/share/psi4/basis/cc-pvdz.gbs 
 
 
          ---------------------------------------------------------
@@ -292,20 +289,20 @@ Total time:
 
        Center              X                  Y                   Z               Mass       
     ------------   -----------------  -----------------  -----------------  -----------------
-         LI           0.000000000000     0.000000000000    -1.000000000000     7.016003436600
-         LI           0.000000000000     0.000000000000     1.000000000000     7.016003436600
+         H            0.000000000000     0.000000000000    -0.310000000000     1.007825032230
+         H            0.000000000000     0.000000000000     0.310000000000     1.007825032230
 
   Running in d2h symmetry.
 
-  Rotational constants: A = ************  B =      1.20137  C =      1.20137 [cm^-1]
-  Rotational constants: A = ************  B =  36016.16030  C =  36016.16030 [MHz]
-  Nuclear repulsion =    2.381297448014998
+  Rotational constants: A = ************  B =     87.02779  C =     87.02779 [cm^-1]
+  Rotational constants: A = ************  B = 2609027.60914  C = 2609027.60914 [MHz]
+  Nuclear repulsion =    0.853511630112903
 
   Charge       = 0
   Multiplicity = 1
-  Electrons    = 6
-  Nalpha       = 3
-  Nbeta        = 3
+  Electrons    = 2
+  Nalpha       = 1
+  Nbeta        = 1
 
   ==> Algorithm <==
 
@@ -320,8 +317,8 @@ Total time:
 
   ==> Primary Basis <==
 
-  Basis Set: STO-3G
-    Blend: STO-3G
+  Basis Set: CC-PVDZ
+    Blend: CC-PVDZ
     Number of shells: 6
     Number of basis function: 10
     Number of Cartesian functions: 10
@@ -342,7 +339,7 @@ Total time:
      B2u        1       1       0       0       0       0
      B3u        1       1       0       0       0       0
    -------------------------------------------------------
-    Total      10      10       3       3       3       0
+    Total      10      10       1       1       1       0
    -------------------------------------------------------
 
   ==> Integral Setup <==
@@ -351,7 +348,7 @@ Total time:
    Calculation information:
       Number of atoms:                   2
       Number of AO shells:               6
-      Number of primitives:             18
+      Number of primitives:             10
       Number of atomic orbitals:        10
       Number of basis functions:        10
 
@@ -373,7 +370,7 @@ Total time:
 
     OpenMP threads:              1
 
-  Minimum eigenvalue in the overlap matrix is 4.0289192732E-02.
+  Minimum eigenvalue in the overlap matrix is 2.2441131522E-02.
   Using Symmetric Orthogonalization.
 
   SCF Guess: Superposition of Atomic Densities via on-the-fly atomic UHF.
@@ -382,14 +379,13 @@ Total time:
 
                         Total Energy        Delta E     RMS |[F,P]|
 
-   @RHF iter   0:   -14.58573852679838   -1.45857e+01   6.38128e-02 
-   @RHF iter   1:   -14.60879129707151   -2.30528e-02   3.90853e-03 
-   @RHF iter   2:   -14.60956780353629   -7.76506e-04   1.49380e-03 DIIS
-   @RHF iter   3:   -14.60974068441565   -1.72881e-04   2.15662e-04 DIIS
-   @RHF iter   4:   -14.60974473615714   -4.05174e-06   4.32612e-06 DIIS
-   @RHF iter   5:   -14.60974473808784   -1.93070e-09   1.41353e-07 DIIS
-   @RHF iter   6:   -14.60974473808997   -2.13163e-12   3.63226e-09 DIIS
-   @RHF iter   7:   -14.60974473808997    1.77636e-15   1.73383e-11 DIIS
+   @RHF iter   0:    -0.84398691408435   -8.43987e-01   4.91052e-02 
+   @RHF iter   1:    -1.11127558736985   -2.67289e-01   8.96963e-03 
+   @RHF iter   2:    -1.11311489552936   -1.83931e-03   1.57673e-03 DIIS
+   @RHF iter   3:    -1.11317712826906   -6.22327e-05   7.99006e-05 DIIS
+   @RHF iter   4:    -1.11317721589492   -8.76259e-08   1.26032e-06 DIIS
+   @RHF iter   5:    -1.11317721593341   -3.84914e-11   1.10029e-09 DIIS
+   @RHF iter   6:    -1.11317721593341    2.22045e-16   2.05262e-12 DIIS
   Energy converged.
 
 
@@ -400,26 +396,26 @@ Total time:
 
     Doubly Occupied:                                                      
 
-       1Ag    -2.340313     1B1u   -2.335347     2Ag    -0.163839  
+       1Ag    -0.631641  
 
     Virtual:                                                              
 
-       2B1u    0.093646     1B2u    0.108933     1B3u    0.108933  
-       3Ag     0.176245     1B2g    0.275579     1B3g    0.275579  
-       3B1u    0.645556  
+       1B1u    0.219233     2Ag     0.450304     2B1u    1.037790  
+       1B2u    1.310066     1B3u    1.310066     3Ag     2.062763  
+       1B2g    2.124688     1B3g    2.124688     3B1u    4.593655  
 
     Final Occupation by Irrep:
              Ag   B1g   B2g   B3g    Au   B1u   B2u   B3u 
-    DOCC [     2,    0,    0,    0,    0,    1,    0,    0 ]
+    DOCC [     1,    0,    0,    0,    0,    0,    0,    0 ]
 
-  @RHF Final Energy:   -14.60974473808997
+  @RHF Final Energy:    -1.11317721593341
 
    => Energetics <=
 
-    Nuclear Repulsion Energy =              2.3812974480149980
-    One-Electron Energy =                 -24.3030864655733652
-    Two-Electron Energy =                   7.3120442794684024
-    Total Energy =                        -14.6097447380899652
+    Nuclear Repulsion Energy =              0.8535116301129032
+    One-Electron Energy =                  -2.6700960604609905
+    Two-Electron Energy =                   0.7034072144146777
+    Total Energy =                         -1.1131772159334095
 
 Computation Completed
 
@@ -441,13 +437,13 @@ Properties computed using the SCF density matrix
      X:     0.0000      Y:     0.0000      Z:     0.0000     Total:     0.0000
 
 
-*** tstop() called on tianyuans-air.wireless.emory.edu at Thu Jan 10 17:18:11 2019
+*** tstop() called on Tianyuans-MacBook-Air.local at Wed Feb 20 17:00:41 2019
 Module time:
-	user time   =       0.47 seconds =       0.01 minutes
+	user time   =       0.45 seconds =       0.01 minutes
 	system time =       0.02 seconds =       0.00 minutes
 	total time  =          1 seconds =       0.02 minutes
 Total time:
-	user time   =       0.99 seconds =       0.02 minutes
+	user time   =       0.98 seconds =       0.02 minutes
 	system time =       0.04 seconds =       0.00 minutes
 	total time  =          1 seconds =       0.02 minutes
    => Loading Basis Set <=
@@ -455,18 +451,19 @@ Total time:
     Name: STO-3G
     Role: ORBITAL
     Keyword: MINAO_BASIS
-    atoms 1-2 entry LI         line    31 file /Users/tianyuanzhang/Documents/Source/psi4_2018/psi4-bin-clang-debug/share/psi4/basis/sto-3g.gbs 
+    atoms 1-2 entry H          line    19 file /Users/tianyuanzhang/Documents/Source/psi4_2018/psi4-bin-clang-debug/share/psi4/basis/sto-3g.gbs 
 
 
   Forte
   ----------------------------------------------------------------------------
   A suite of quantum chemistry methods for strongly correlated electrons
 
-    git branch: ms_solver - git commit: 8dcc2a59
+    git branch: ci_framework - git commit: 1519b0b5
 
   Developed by:
     Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
-    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai,    Nan He, Nicholas Stair, Shuhe Wang, Renke Huang
+    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai,
+    Nan He, Nicholas Stair, Shuhe Wang, Renke Huang
   ----------------------------------------------------------------------------
 
   Size of Determinant class: 32
@@ -495,31 +492,57 @@ Total time:
 
   Overall Conventional Integrals timings
 
+	Presorting SO-basis two-electron integrals.
+	Sorting File: SO Ints (nn|nn) nbuckets = 1
+	Transforming the one-electron integrals and constructing Fock matrices
+	Starting first half-transformation.
+	Sorting half-transformed integrals.
+	First half integral transformation complete.
+	Starting second half-transformation.
+	Two-electron integral transformation complete.
 
-  Conventional integrals take 0.05160046 s
+  Integral transformation done. 0.01115117 s
+  Reading the two-electron integrals from disk
+  Size of two-electron integrals:   0.000224 GB
+  Timing for freezing core and virtual orbitals:              0.000 s.
+  Conventional integrals take 0.04810990 s
 
-                ------------------------------------------------
-                  Second-Order Moller-Plesset Natural Orbitals
-                      written by Francesco A. Evangelista
-                ------------------------------------------------
+  ==> Summary of Active Space Solver Input <==
 
+    Irrep.  Multi.  Nstates
+    -------------------------
+      Ag       1        1
+    -------------------------
+    Total number of states: 1
+    -------------------------
 
-    SCF energy                            =  -14.609744738089965
-    MP2 correlation energy                =   -0.018767063852433
-  * MP2 total energy                      =  -14.628511801942398
-
-
- Integrals are about to be computed.
- Integrals are about to be updated.
-  Number of active alpha electrons: 3
-  Number of active beta electrons: 3
+  Number of active alpha electrons: 1
+  Number of active beta electrons: 1
   Maximum reference space size: 1000
-  |2200020000>
+  |2000000000>
+
+-------------------------------------------------------------------------------
+               Selected Configuration Interaction Excited States
+  written by Jeffrey B. Schriber, Tianyuan Zhang and Francesco A. Evangelista
+-------------------------------------------------------------------------------
+
+  ==> Reference Information <==
+
+  ==> Calculation Information <==
+
+  -----------------------------------------------------------------
+    Multiplicity                             1    
+    Symmetry                                 0    
+    Number of roots                          1    
+    Ms                                       0
+    Excited Algorithm                        ROOT_ORTHOGONALIZE
+  -----------------------------------------------------------------
+  Using 1 threads
+  Computing wavefunction for root 0
 
 	  ---------------------------------------------------------
-	      Adaptive Path-Integral Full Configuration Interaction
+	              Projector Configuration Interaction
 	         by Francesco A. Evangelista and Tianyuan Zhang
-	                      version Jun. 4 2017
 	                       1 thread(s) 
 	  ---------------------------------------------------------
 
@@ -530,120 +553,134 @@ Total time:
     Number of roots                                  1
     Root used for properties                         0
     Maximum number of iterations                100000
-    Energy estimation frequency                    100
+    Energy estimation frequency                      1
     Number of threads                                1
     Time step (beta)                         1.000e+00
-    Spawning threshold                       1.000e-04
-    Initial guess spawning threshold         1.000e-03
+    Spawning threshold                       0.000e+00
+    Initial guess spawning threshold         1.000e+00
     Convergence threshold                    1.000e-12
-    Prescreening tollerance factor           1.500e+00
-    Energy estimate tollerance               1.000e-05
-    Generator type                               Power
-    Adaptive time step                              NO
+    Energy estimate tollerance               0.000e+00
+    Generator type                          Wall-Chebyshev
+    Importance functional                   |Hij|*max(|Ci|,|Cj|)
     Shift the energy                                NO
-    Use intermediate normalization                 YES
-    Prescreen spawning                              NO
-    Dynamic prescreening                            NO
-    Schwarz prescreening                           YES
-    Initiator approximation                         NO
+    Use intermediate normalization                  NO
     Fast variational estimate                      YES
     Result perturbation analysis                    NO
     Using OpenMP                                    NO
 
   ==> Initial Guess <==
 
-  Initial guess size = 88
-  Spin multiplicity of root 80 not close to integer (4.1231)
-  Spin multiplicity of root 81 not close to integer (4.1231)
-  Found 46 roots with 2S+1 = 1 *
-  Found 34 roots with 2S+1 = 3
-  Found 6 roots with 2S+1 = 5
+  Initial guess size = 1
+  Found 1 roots with 2S+1 = 1 *
 
-  Initial guess energy (variational) =     -14.645949428697 Eh (root = 1)
+  Initial guess energy (variational) =      -1.113177215933 Eh (root = 1)
 
   Most important contributions to the wave function:
 
-    0      -0.933702      0.871799          81 |22000200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -16.991042186105
-    1       0.231475     0.0535807          74 |02000200020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -16.839359201914
-    2       0.231475     0.0535807          75 |02000200200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -16.839359201914
-    3       0.119343     0.0142427          76 |02000202000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -16.757530762194
-    4      0.0801595    0.00642555          80 |02200200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -16.716835524310
-    5    -0.00514605   2.64818e-05          19 |-+000202000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -14.679187184570
-    6    -0.00514605   2.64818e-05          12 |+-000202000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -14.679187184570
-    7    -0.00451282   2.03655e-05          79 |02020200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -16.536973037810
-    8    -0.00451282   2.03655e-05          78 |02002200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -16.536973037810
-    9    -0.00409228   1.67467e-05          17 |-+000200020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -14.744117532961
+    0              1             1           0 |20000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>     -1.966688846046
 
-  Spin State: S^2 = 0.000, S = 0.000, singlet (from 3 determinants,97.90%)
+  Spin State: S^2 = 0.000, S = 0.000, singlet (from 1 determinants,100.00%)
 
   ==> Estimate highest excitation energy <==
   Highest Excited determinant:
-  |00022020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>
-  Determinant Energy                    :  -2.573638388843
-  Highest Energy Gershgorin circle Est. :  -1.099642416461
+  |00000002000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>
+  Determinant Energy                    :  7.270766418357
+  Highest Energy Gershgorin circle Est. :  8.021816594139
 
   ==> Characteristic Function <==
-    f(x) = -1.000000e+00 * x +0.000000e+00
-    with tau = 1.000000e+00, shift = -10.254093370594, range = 6.773153506118
-    Initial guess: lambda_1= -14.645949428697
-    Est. Highest eigenvalue= -1.099642416461
+    f(x) = -1.029906e-02 * x^5 +2.571804e-02 * x^4 +2.568848e-01 * x^3 -4.811054e-01 * x^2 -1.201381e+00 * x +1.000000e+00
+    with tau = 1.000000e+00, shift = 3.027563874046, range = 4.994252720093
+    Initial guess: lambda_1= -1.966688846046
+    Est. Highest eigenvalue=  8.021816594139
 
   ==> PCI Iterations <==
 
-  ------------------------------------------------------------------------------------------------
-    Steps  Beta/Eh      Ndets     Proj. Energy/Eh     dEp/dt      Approx. Energy/Eh   dEv/dt
-  ------------------------------------------------------------------------------------------------
-        0     0.00        388     -14.645955389771 -5.961e-08     -14.645330126288 -2.149e-07
-      100   100.00        388     -14.646193290888 -2.379e-06     -14.645461766825 -1.316e-06
-      200   200.00        388     -14.646275612540 -8.232e-07     -14.645402862388  5.890e-07
-      300   300.00        392     -14.646240232148  3.538e-07     -14.645404098138 -1.236e-08
-      400   400.00        392     -14.646222991307  1.724e-07     -14.645404173321 -7.518e-10
-      500   500.00        392     -14.646216758991  6.232e-08     -14.645404121077  5.224e-10
-      600   600.00        392     -14.646214312882  2.446e-08     -14.645404159976 -3.890e-10
-      700   700.00        392     -14.646213275875  1.037e-08     -14.645404045108  1.149e-09
-      800   800.00        392     -14.646212791408  4.845e-09     -14.645404036674  8.433e-11
-      900   900.00        392     -14.646212586734  2.047e-09     -14.645404033081  3.593e-11
-     1000  1000.00        392     -14.646212500234  8.650e-10     -14.645404031564  1.517e-11
-     1100  1100.00        392     -14.646212463725  3.651e-10     -14.645404030927  6.379e-12
-     1200  1200.00        392     -14.646212448334  1.539e-10     -14.645404030659  2.679e-12
-     1300  1300.00        392     -14.646212441854  6.481e-11     -14.645404030546  1.125e-12
-     1400  1400.00        392     -14.646212439126  2.727e-11     -14.645404030499  4.719e-13
-     1500  1500.00        392     -14.646212437979  1.147e-11
-  ------------------------------------------------------------------------------------------------
+  --------------------------------------------------------------------------------------------------------------~
+    Steps  Beta/Eh      Ndets      NoffDiag     Proj. Energy/Eh     dEp/dt      Approx. Energy/Eh   dEv/dt      ~
+  --------------------------------------------------------------------------------------------------------------~
+        0     0.00         22            42      -1.149001725923 -3.582e-02      -1.145172830927 -3.200e-02     ~
+        1     1.00         22           462      -1.145533535244  3.468e-03      -1.145782582496 -6.098e-04     ~
+        2     2.00         22           462      -1.145867485094 -3.339e-04      -1.145795839113 -1.326e-05     ~
+        3     3.00         22           462      -1.145784912906  8.257e-05      -1.145796344666 -5.056e-07     ~
+        4     4.00         22           462      -1.145799012017 -1.410e-05      -1.145796365910 -2.124e-08     ~
+        5     5.00         22           462      -1.145795861134  3.151e-06      -1.145796366827 -9.174e-10     ~
+        6     6.00         22           462      -1.145796475969 -6.148e-07      -1.145796366867 -3.997e-11     ~
+        7     7.00         22           462      -1.145796344789  1.312e-07      -1.145796366869 -1.741e-12     ~
+        8     8.00         22           462      -1.145796371521 -2.673e-08      -1.145796366869 -7.638e-14     ~
+        9     9.00         22           462      -1.145796365909  5.613e-09
+  --------------------------------------------------------------------------------------------------------------~
 
   Calculation converged.
 
   ==> Post-Iterations <==
 
-  * Projector-CI Variational Energy     =   -14.646162384728 Eh
-  * Projector-CI Projective  Energy     =   -14.646212437979 Eh
-
-  * Projector-CI Approximate Energy     =   -14.645404030499 Eh
-  * 1st order perturbation   Energy     =    -0.000758354229 Eh
-  * Projector-CI Var. Corr.  Energy     =    -0.036417646638 Eh
-
-  * Size of CI space                    = 392
-  * Schwarz prescreening total attempt = 8807820
-  * Schwarz prescreening succeed       = 4350049
-
-  Projector-CI (bitset) ran in  : 18.388334 s
+  * Size of CI space                    = 22
+  * Number of off-diagonal elements     = 462
+  * ProjectorCI Approximate Energy    =    -1.145796366869 Eh
+  * ProjectorCI Projective  Energy    =    -1.145796365909 Eh
 
   Most important contributions to the wave function:
 
-    0      -0.933026      0.870538          98 |22000200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -16.991042186105
-    1       0.230625     0.0531877         105 |02000200020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -16.839359201914
-    2       0.230625     0.0531877         104 |02000200200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -16.839359201914
-    3       0.125484     0.0157462         103 |02000202000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -16.757530762194
-    4      0.0807606    0.00652227          99 |02200200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -16.716835524310
-    5      0.0143057   0.000204654         187 |-2+00200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -16.869832705260
-    6      0.0143057   0.000204654         186 |+2-00200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -16.869832705260
-    7    -0.00545008   2.97033e-05         331 |+-000202000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -14.679187184570
-    8    -0.00545008   2.97033e-05         324 |-+000202000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -14.679187184570
-    9     -0.0042391   1.79699e-05         101 |02002200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>    -16.536973037810
+    0       0.993095      0.986237           0 |20000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>     -1.966688846046
+    1     -0.0505026    0.00255051           1 |00000020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>      0.465430650341
+    2     -0.0486604    0.00236784           2 |02000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>     -0.397745117947
+    3     -0.0421031    0.00177267           3 |00000000020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>      0.893715722109
+    4     -0.0421031    0.00177267           4 |00000000200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>      0.893715722109
+    5     -0.0381598    0.00145617           5 |00000-+0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>     -0.186631584721
+    6     -0.0381598    0.00145617           6 |00000+-0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>     -0.186631584721
+    7     -0.0370655    0.00137385           7 |00000200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>     -0.652883883483
+    8      0.0139536   0.000194703           8 |0+-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>      0.910192242159
+    9      0.0139536   0.000194703           9 |0-+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000>      0.910192242159
 
-  Spin State: S^2 = 0.000, S = 0.000, singlet (from 3 determinants,97.69%)	PCI energy........................................................PASSED
+  Spin State: S^2 = 0.000, S = 0.000, singlet (from 1 determinants,98.62%)
+  ProjectorCI (bitset) steps finished in  : 0.047697 s
 
-    Psi4 stopped on: Thursday, 10 January 2019 05:18PM
-    Psi4 wall time for execution: 0:00:19.81
+  Variational energy estimated with 22 determinants to meet the max error 0.000000e+00
+  * ProjectorCI Variational Energy    =    -1.145796366869 Eh
+  * ProjectorCI Var. Corr.  Energy    =    -0.032619150935 Eh
+  * 1st order perturbation   Energy     =    -0.000000000000 Eh
+
+  ProjectorCI (bitset) ran in  : 0.049521 s
+
+  Saving the wave function:
+
+  Saving root 0, ref_root is 0
+  Number of old roots: 1
+
+  ==> Excited state solver summary <==
+
+  Iterations required:                         9
+  Dimension of optimized determinant space:    22
+
+  * Selected-CI Energy Root   0        = -1.145796366869 Eh =   0.0000 eV
+  * Selected-CI Energy Root   0 + EPT2 = -1.145796366869 Eh =   0.0000 eV
+
+  ==> Wavefunction Information <==
+
+  Most important contributions to root   0:
+    0   0.993095 0.986237355           0 |2000000000>
+    1  -0.050503 0.002550514           1 |0000002000>
+    2  -0.048660 0.002367836           2 |0200000000>
+    3  -0.042103 0.001772673           3 |0000000002>
+    4  -0.042103 0.001772673           4 |0000000020>
+    5  -0.038160 0.001456172           5 |00000-+000>
+    6  -0.038160 0.001456172           6 |00000+-000>
+    7  -0.037066 0.001373854           7 |0000020000>
+    8   0.013954 0.000194703           8 |0+-0000000>
+    9   0.013954 0.000194703           9 |0-+0000000>
+
+  Spin state for root 0: S^2 = 0.003534, S = 0.004, singlet
+
+  Saving information for root: 0
+
+  ==> Energy Summary <==
+
+    Multi.  Irrep.  No.               Energy
+    -----------------------------------------
+       1      Ag     0        -1.145796366869
+    -----------------------------------------	PCI energy........................................................PASSED
+
+    Psi4 stopped on: Wednesday, 20 February 2019 05:00PM
+    Psi4 wall time for execution: 0:00:01.68
 
 *** Psi4 exiting successfully. Buy a developer a beer!

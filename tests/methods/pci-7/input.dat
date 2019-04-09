@@ -1,11 +1,10 @@
-#! This tests the Adaptive Path-Integral FCI procedure with initiator approximation
+#! This tests the Adaptive Path-Integral FCI procedure with dynamic prescreening
 #! Generated using commit GITCOMMIT
 
 import forte
 
-refscf = -14.6097447380899617 #TEST
-refpci = -14.646162384728 #TEST
-refpostdiag = -14.646164788374 #TEST
+refscf = -14.6097447380899581 #TEST
+refpci = -14.646162606275 #TEST
 
 molecule li2{
    Li
@@ -20,26 +19,19 @@ set {
 
 set forte {
   active_space_solver pci
-  pci_nroot 1
+  nroot 1
   charge 0
-  pci_tau 1.0
+  PCI_GENERATOR DL
   pci_spawning_threshold 0.0001
-  pci_ENERGY_ESTIMATE_FREQ 100
-  pci_FAST_EVAR true
   pci_USE_INTER_NORM true
-  pci_ENERGY_ESTIMATE_THRESHOLD 1e-5
-  pci_INITIATOR_APPROX true
-  pci_INITIATOR_APPROX_FACTOR 1.0
-  pci_GENERATOR POWER
   orbital_type MP2_NOS
-  pci_maxbeta 100000.00
-  pci_POST_DIAGONALIZE true
-  pci_e_convergence 12
+  sci_max_cycle 100000.00
+  pci_e_convergence 8
+  PCI_STOP_HIGHER_NEW_LOW true
 }
 
 energy('scf')
 compare_values(refscf, variable("CURRENT ENERGY"), 11, "SCF energy") #TEST
 
 energy('forte')
-compare_values(refpci, variable("PCI ENERGY"), 10, "PCI energy") #TEST
-compare_values(refpostdiag, variable("PCI POST DIAG ENERGY"), 10, "POST DIAG energy") #TEST
+compare_values(refpci, variable("PCI ENERGY"), 8, "PCI energy") #TEST
