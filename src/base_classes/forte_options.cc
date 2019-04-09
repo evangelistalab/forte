@@ -22,14 +22,15 @@ ForteOptions::ForteOptions(psi::Options& options) : psi_options_(options) {}
 
 pybind11::dict ForteOptions::dict() { return dict_; }
 
-py::dict make_dict_entry(const std::string& type, const std::string& group, py::object default_value,
-                     const std::string& description) {
+py::dict make_dict_entry(const std::string& type, const std::string& group,
+                         py::object default_value, const std::string& description) {
     return py::dict("type"_a = type, "group"_a = py::str(group), "value"_a = default_value,
                     "default_value"_a = default_value, "description"_a = description.c_str());
 }
 
-py::dict make_dict_entry(const std::string& type, const std::string& group, py::object default_value,
-                     py::list allowed_values, const std::string& description) {
+py::dict make_dict_entry(const std::string& type, const std::string& group,
+                         py::object default_value, py::list allowed_values,
+                         const std::string& description) {
     return py::dict("type"_a = type, "group"_a = py::str(group), "value"_a = default_value,
                     "default_value"_a = default_value, "allowed_values"_a = allowed_values,
                     "description"_a = description.c_str());
@@ -49,7 +50,8 @@ void ForteOptions::add(const std::string& label, const std::string& type, py::ob
 
 void ForteOptions::add(const std::string& label, const std::string& type, py::object default_value,
                        py::list allowed_values, const std::string& description) {
-    dict_[label.c_str()] = make_dict_entry(type, group_, default_value, allowed_values, description);
+    dict_[label.c_str()] =
+        make_dict_entry(type, group_, default_value, allowed_values, description);
 }
 
 py::object ForteOptions::get(const std::string& label) {
@@ -70,8 +72,7 @@ void ForteOptions::add_int(const std::string& label, int value, const std::strin
 
 void ForteOptions::add_double(const std::string& label, double value,
                               const std::string& description) {
-    double_opts_.push_back(std::make_tuple(label, value, description));
-    //    add(label, "float", py::float_(value), description);
+    add(label, "float", py::float_(value), description);
 }
 
 void ForteOptions::add_str(const std::string& label, const std::string& value,
@@ -101,7 +102,7 @@ bool ForteOptions::get_bool(const std::string& label) { return py::cast<bool>(ge
 
 int ForteOptions::get_int(const std::string& label) { return py::cast<int>(get(label)); }
 
-double ForteOptions::get_double(const std::string& label) { return psi_options_.get_double(label); }
+double ForteOptions::get_double(const std::string& label) { return py::cast<double>(get(label)); }
 
 std::string ForteOptions::get_str(const std::string& label) { return psi_options_.get_str(label); }
 
@@ -126,13 +127,16 @@ void ForteOptions::push_options_to_psi4(psi::Options& options) {
             options.add_bool(label, py::cast<bool>(py_default_value));
         }
         if (type == "int") {
-            options.add_int(label, py::cast<bool>(py_default_value));
+            options.add_int(label, py::cast<int>(py_default_value));
+        }
+        if (type == "float") {
+            options.add_double(label, py::cast<double>(py_default_value));
         }
     }
 
-    for (const auto& opt : double_opts_) {
-        options.add_double(std::get<0>(opt), std::get<1>(opt));
-    }
+    //    for (const auto& opt : double_opts_) {
+    //        options.add_double(std::get<0>(opt), std::get<1>(opt));
+    //    }
 
     for (const auto& opt : str_opts_) {
         if (std::get<3>(opt).size() > 0) {
@@ -164,6 +168,10 @@ void ForteOptions::get_options_from_psi4(psi::Options& options) {
         }
         if (type == "int") {
             int value = options.get_int(label);
+            item.second["value"] = py::cast(value);
+        }
+        if (type == "float") {
+            int value = options.get_double(label);
             item.second["value"] = py::cast(value);
         }
     }

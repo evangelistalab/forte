@@ -41,10 +41,6 @@ namespace forte {
 
 // Types to store options
 
-// For the bool, int, and double types store:
-// ("label", default value, "description")
-using double_opt_t = std::tuple<std::string, double, std::string>;
-
 // For the string type stores:
 // ("label", default value, "description",vector<"allowed values">)
 using str_opt_t = std::tuple<std::string, std::string, std::string, std::vector<std::string>>;
@@ -228,7 +224,6 @@ class ForteOptions {
   private:
     pybind11::dict dict_;
     std::string group_ = "";
-    std::vector<double_opt_t> double_opts_;
     std::vector<str_opt_t> str_opts_;
     std::vector<array_opt_t> array_opts_;
     psi::Options psi_options_;
