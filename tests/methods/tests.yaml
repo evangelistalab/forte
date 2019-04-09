@@ -6,33 +6,33 @@
 #
 aci:
   short:
-#   - aci-1
-#   - aci-2
-#   - aci-3
-#   - aci-4
-#   - aci-5
-#   - aci-7
-#   - aci-8
-#   - aci-9
-#   - aci-10
-#   - aci-11
-#   - aci-12
-#   - aci-13
-   - aci-14
-#   - aci-15
-#   - aci-16
-#   - aci-17
-#   - aci-18
-#   - aci-19
-#   - aci-local-20
-#   - asci-1
-#   - aci_scf-1
-#  long:
-#   - aci-6
-#   - cis-aci-1
-#  unused:
-#   - aci-mrcisd-1
-#   - aci-mrcisd-2
+   - aci-1
+   - aci-2
+   - aci-3
+   - aci-4
+   - aci-5
+   - aci-7
+   - aci-8
+   - aci-9
+   - aci-10
+   - aci-11
+   - aci-12
+   - aci-13
+  - aci-14
+   - aci-15
+   - aci-16
+   - aci-17
+   - aci-18
+   - aci-19
+   - aci-local-20
+   - asci-1
+   - aci_scf-1
+  long:
+   - aci-6
+   - cis-aci-1
+  unused:
+   - aci-mrcisd-1
+   - aci-mrcisd-2
 #actv-dsrg:
 #  short:
 #   - actv-dsrg-1-C2H4-cis
@@ -44,95 +44,95 @@ aci:
 #   - actv-dsrg-3-C4H6-cisd
 #  - actv-dsrg-4-C4H6-triplet
 #   - actv-dsrg-size-intensive
-#avas:
-#  short:
-#   - avas-1
-#   - avas-2
-#   - avas-3
-#   - avas-4
-#   - avas-5
-#casscf:
-#  short:
-#   - casscf
-#   - casscf-2
-#   - casscf-3
-#   - casscf-4
-#   - casscf-5
-#   - casscf-6
-#   - casscf-7
-#   - df-casscf-1
-#  unused:
-#   - casscf-8
-#cd-dsrg-mrpt2:
-#  short:
-#   - cd-dsrg-mrpt2-1
-#   - cd-dsrg-mrpt2-2
-#   - cd-dsrg-mrpt2-3
-#   - cd-dsrg-mrpt2-4
-#   - cd-dsrg-mrpt2-5
-#   - cd-dsrg-mrpt2-6
-#   - cd-dsrg-mrpt2-7-sa
-#df-dsrg-mrpt2:
-#  short:
-#   - df-dsrg-mrpt2-1
-#   - df-dsrg-mrpt2-2
-#   - df-dsrg-mrpt2-3
-#   - df-dsrg-mrpt2-4
-#   - df-dsrg-mrpt2-5
-#   - df-dsrg-mrpt2-threading1
-#   - df-dsrg-mrpt2-threading2
-#   - df-dsrg-mrpt2-threading4
-#   - diskdf-dsrg-mrpt2-1
-#   - diskdf-dsrg-mrpt2-2
-#   - diskdf-dsrg-mrpt2-3
-#   - diskdf-dsrg-mrpt2-4
-#   - diskdf-dsrg-mrpt2-5
-#   - diskdf-dsrg-mrpt2-threading1
-#   - diskdf-dsrg-mrpt2-threading4
-#   - df-aci-dsrg-mrpt2-1
-#   - df-aci-dsrg-mrpt2-2
-#  long:
-#   - df-dsrg-mrpt2-6
-#   - df-dsrg-mrpt2-7-localized-actv
-#  unused:
-#   - df-dsrg-mrpt2-testccvv
-#dsrg-mrpt2:
-#  short:
-#   - dsrg-mrpt2-1
-#   - dsrg-mrpt2-2
-#   - dsrg-mrpt2-3
-#   - dsrg-mrpt2-4
-#   - dsrg-mrpt2-5
-#   - dsrg-mrpt2-6
-#   - dsrg-mrpt2-7-casscf-natorbs
-#   - dsrg-mrpt2-8-sa
-##  - dsrg-mrpt2-9-xms
-#   - dsrg-mrpt2-10-CO
-#   - dsrg-mrpt2-11-sa-C2H4
-#   - aci-dsrg-mrpt2-1
-#   - aci-dsrg-mrpt2-2
-#   - aci-dsrg-mrpt2-3
-#   - aci-dsrg-mrpt2-4
-#   - aci-dsrg-mrpt2-5
-#  long:
-#   - dsrg-mrpt2-12-localized-actv
-#  unused:
-#   - dsrg-mrpt2-opt-findiff-1
-#   - dsrg-mrpt2-opt-findiff-2
-#   - dsrg-mrpt2-uno
-#dsrg-mrpt3:
-#  short:
-#   - dsrg-mrpt3-1
-#   - dsrg-mrpt3-2
-#   - dsrg-mrpt3-5
-#   - aci-dsrg-mrpt3-1
-#  long:
-#   - dsrg-mrpt3-3
-#   - dsrg-mrpt3-4
-#   - dsrg-mrpt3-6-sa
-#   - dsrg-mrpt3-7-CO
-#   - dsrg-mrpt3-8-sa-C2H4
-#dwms-dsrgpt:
+avas:
+  short:
+   - avas-1
+   - avas-2
+   - avas-3
+   - avas-4
+   - avas-5
+casscf:
+  short:
+   - casscf
+   - casscf-2
+   - casscf-3
+   - casscf-4
+   - casscf-5
+   - casscf-6
+   - casscf-7
+   - df-casscf-1
+  unused:
+   - casscf-8
+cd-dsrg-mrpt2:
+  short:
+   - cd-dsrg-mrpt2-1
+   - cd-dsrg-mrpt2-2
+   - cd-dsrg-mrpt2-3
+   - cd-dsrg-mrpt2-4
+   - cd-dsrg-mrpt2-5
+   - cd-dsrg-mrpt2-6
+   - cd-dsrg-mrpt2-7-sa
+df-dsrg-mrpt2:
+  short:
+   - df-dsrg-mrpt2-1
+   - df-dsrg-mrpt2-2
+   - df-dsrg-mrpt2-3
+   - df-dsrg-mrpt2-4
+   - df-dsrg-mrpt2-5
+   - df-dsrg-mrpt2-threading1
+   - df-dsrg-mrpt2-threading2
+   - df-dsrg-mrpt2-threading4
+   - diskdf-dsrg-mrpt2-1
+   - diskdf-dsrg-mrpt2-2
+   - diskdf-dsrg-mrpt2-3
+   - diskdf-dsrg-mrpt2-4
+   - diskdf-dsrg-mrpt2-5
+   - diskdf-dsrg-mrpt2-threading1
+   - diskdf-dsrg-mrpt2-threading4
+   - df-aci-dsrg-mrpt2-1
+   - df-aci-dsrg-mrpt2-2
+  long:
+   - df-dsrg-mrpt2-6
+   - df-dsrg-mrpt2-7-localized-actv
+  unused:
+   - df-dsrg-mrpt2-testccvv
+dsrg-mrpt2:
+  short:
+   - dsrg-mrpt2-1
+   - dsrg-mrpt2-2
+   - dsrg-mrpt2-3
+   - dsrg-mrpt2-4
+   - dsrg-mrpt2-5
+   - dsrg-mrpt2-6
+   - dsrg-mrpt2-7-casscf-natorbs
+   - dsrg-mrpt2-8-sa
+#  - dsrg-mrpt2-9-xms
+   - dsrg-mrpt2-10-CO
+   - dsrg-mrpt2-11-sa-C2H4
+   - aci-dsrg-mrpt2-1
+   - aci-dsrg-mrpt2-2
+   - aci-dsrg-mrpt2-3
+   - aci-dsrg-mrpt2-4
+   - aci-dsrg-mrpt2-5
+  long:
+   - dsrg-mrpt2-12-localized-actv
+  unused:
+   - dsrg-mrpt2-opt-findiff-1
+   - dsrg-mrpt2-opt-findiff-2
+   - dsrg-mrpt2-uno
+dsrg-mrpt3:
+  short:
+   - dsrg-mrpt3-1
+   - dsrg-mrpt3-2
+   - dsrg-mrpt3-5
+   - aci-dsrg-mrpt3-1
+  long:
+   - dsrg-mrpt3-3
+   - dsrg-mrpt3-4
+   - dsrg-mrpt3-6-sa
+   - dsrg-mrpt3-7-CO
+   - dsrg-mrpt3-8-sa-C2H4
+dwms-dsrgpt:
 # short:
 #  - dwms-dsrgpt-1-sa
 #  - dwms-dsrgpt-2-sa
@@ -144,95 +144,95 @@ aci:
 #  - dwms-dsrgpt-6-ms
 #  - dwms-dsrgpt-7-ms
 #  - dwms-dsrgpt-9-sa-C6H6
-#  unused:
-#   - dwms-dsrgpt2-1
-#   - dwms-dsrgpt2-2
-#   - dwms-dsrgpt2-3
-#   - dwms-dsrgpt2-4
-#fci:
-#  short:
-#   - fci-1
-#   - fci-2
-#   - fci-3
-#   - fci-4
-#   - fci-5
-#   - fci-7
-#   - fci-ecp-1
-#   - fci-ecp-2
-#   - fci-ex-1
-#   - fci-one-electron
-#   - fci-rdms-1
-#   - fci-rdms-2
-#  long:
-#   - fci-6
-#integrals:
-#  short:
-#   - integrals-1
-#   - integrals-2
-#   - integrals-3
-#   - integrals-4
-#   - integrals-5
-#  unused:
-#   - integrals-6
-#mr-dsrg-pt2:
-#  short:
-#   - mr-dsrg-pt2-1
-#   - mr-dsrg-pt2-2
-#   - mr-dsrg-pt2-3
-##   - mr-dsrg-pt2-4
-#mrdsrg-ldsrg2-df:
-#  long:
-#   - mrdsrg-ldsrg2-df-seq-1
-#   - mrdsrg-ldsrg2-df-seq-2
-#   - mrdsrg-ldsrg2-df-seq-3
-#   - mrdsrg-ldsrg2-df-seq-nivo-1
-#   - mrdsrg-ldsrg2-df-seq-nivo-2
-#   - mrdsrg-ldsrg2-df-seq-nivo-3
-#   - mrdsrg-ldsrg2-qc-1
-#   - mrdsrg-ldsrg2-qc-2
-#  unused:
-#   - mrdsrg-ldsrg2-df-1
-#   - mrdsrg-ldsrg2-df-2
-#   - mrdsrg-ldsrg2-df-3
-#   - mrdsrg-ldsrg2-df-nivo-1
-#   - mrdsrg-ldsrg2-df-nivo-2
-#   - mrdsrg-ldsrg2-df-nivo-3
-#   - mrdsrg-ldsrg2-df-seq-4
-#   - mrdsrg-ldsrg2-df-seq-linear-1
-#   - mrdsrg-ldsrg2-df-seq-linear-2
-#   - mrdsrg-ldsrg2-df-seq-linear-3
-#   - mrdsrg-ldsrg2-df-seq-linear-4
-#   - mrdsrg-ldsrg2-df-seq-linear-5
-#   - mrdsrg-ldsrg2-df-seq-linear-6
-#   - mrdsrg-ldsrg2-df-seq-noV3-1
-#   - mrdsrg-ldsrg2-df-seq-noV3-2
-#   - mrdsrg-ldsrg2-df-seq-noV3-3
-#   - mrdsrg-ldsrg2-qc-df-2
-#mrdsrg-pt2:
-#  short:
-#   - mrdsrg-pt2-1
-#   - mrdsrg-pt2-2
-#   - mrdsrg-pt2-4
-#  long:
-#   - mrdsrg-pt2-3
-#   - mrdsrg-srgpt2-1
-#   - mrdsrg-srgpt2-2
-#pci:
-#  short:
-#   - pci-1
-#   - pci-2
-#   - pci-3
-#   - pci-4
-#   - pci-5
-#   - pci-6
-#   - pci-7
-#   - pci-8
-#   - pci-9
-#pci_hashvec:
-#  short:
-#   - pci_hashvec-1
-#   - pci_hashvec-2
-#   - pci_hashvec-3
-#   - pci_hashvec-4
-#   - pci_hashvec-5
-#   - pci_hashvec-6
+  unused:
+   - dwms-dsrgpt2-1
+   - dwms-dsrgpt2-2
+   - dwms-dsrgpt2-3
+   - dwms-dsrgpt2-4
+fci:
+  short:
+   - fci-1
+   - fci-2
+   - fci-3
+   - fci-4
+   - fci-5
+   - fci-7
+   - fci-ecp-1
+   - fci-ecp-2
+   - fci-ex-1
+   - fci-one-electron
+   - fci-rdms-1
+   - fci-rdms-2
+  long:
+   - fci-6
+integrals:
+  short:
+   - integrals-1
+   - integrals-2
+   - integrals-3
+   - integrals-4
+   - integrals-5
+  unused:
+   - integrals-6
+mr-dsrg-pt2:
+  short:
+   - mr-dsrg-pt2-1
+   - mr-dsrg-pt2-2
+   - mr-dsrg-pt2-3
+#   - mr-dsrg-pt2-4
+mrdsrg-ldsrg2-df:
+  long:
+   - mrdsrg-ldsrg2-df-seq-1
+   - mrdsrg-ldsrg2-df-seq-2
+   - mrdsrg-ldsrg2-df-seq-3
+   - mrdsrg-ldsrg2-df-seq-nivo-1
+   - mrdsrg-ldsrg2-df-seq-nivo-2
+   - mrdsrg-ldsrg2-df-seq-nivo-3
+   - mrdsrg-ldsrg2-qc-1
+   - mrdsrg-ldsrg2-qc-2
+  unused:
+   - mrdsrg-ldsrg2-df-1
+   - mrdsrg-ldsrg2-df-2
+   - mrdsrg-ldsrg2-df-3
+   - mrdsrg-ldsrg2-df-nivo-1
+   - mrdsrg-ldsrg2-df-nivo-2
+   - mrdsrg-ldsrg2-df-nivo-3
+   - mrdsrg-ldsrg2-df-seq-4
+   - mrdsrg-ldsrg2-df-seq-linear-1
+   - mrdsrg-ldsrg2-df-seq-linear-2
+   - mrdsrg-ldsrg2-df-seq-linear-3
+   - mrdsrg-ldsrg2-df-seq-linear-4
+   - mrdsrg-ldsrg2-df-seq-linear-5
+   - mrdsrg-ldsrg2-df-seq-linear-6
+   - mrdsrg-ldsrg2-df-seq-noV3-1
+   - mrdsrg-ldsrg2-df-seq-noV3-2
+   - mrdsrg-ldsrg2-df-seq-noV3-3
+   - mrdsrg-ldsrg2-qc-df-2
+mrdsrg-pt2:
+  short:
+   - mrdsrg-pt2-1
+   - mrdsrg-pt2-2
+   - mrdsrg-pt2-4
+  long:
+   - mrdsrg-pt2-3
+   - mrdsrg-srgpt2-1
+   - mrdsrg-srgpt2-2
+pci:
+  short:
+   - pci-1
+   - pci-2
+   - pci-3
+   - pci-4
+   - pci-5
+   - pci-6
+   - pci-7
+   - pci-8
+   - pci-9
+pci_hashvec:
+  short:
+   - pci_hashvec-1
+   - pci_hashvec-2
+   - pci_hashvec-3
+   - pci_hashvec-4
+   - pci_hashvec-5
+   - pci_hashvec-6
