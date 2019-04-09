@@ -39,7 +39,7 @@ set forte {
   sigma_build_type sparse
 }
 
-set_num_threads(8)
+set_num_threads(1)
 
 energy('scf')
 
