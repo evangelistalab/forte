@@ -43,7 +43,6 @@ namespace forte {
 
 // For the bool, int, and double types store:
 // ("label", default value, "description")
-using int_opt_t = std::tuple<std::string, int, std::string>;
 using double_opt_t = std::tuple<std::string, double, std::string>;
 
 // For the string type stores:
@@ -229,7 +228,6 @@ class ForteOptions {
   private:
     pybind11::dict dict_;
     std::string group_ = "";
-    std::vector<int_opt_t> int_opts_;
     std::vector<double_opt_t> double_opts_;
     std::vector<str_opt_t> str_opts_;
     std::vector<array_opt_t> array_opts_;

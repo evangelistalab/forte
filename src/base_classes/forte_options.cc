@@ -22,13 +22,13 @@ ForteOptions::ForteOptions(psi::Options& options) : psi_options_(options) {}
 
 pybind11::dict ForteOptions::dict() { return dict_; }
 
-py::dict make_option(const std::string& type, const std::string& group, py::object default_value,
+py::dict make_dict_entry(const std::string& type, const std::string& group, py::object default_value,
                      const std::string& description) {
     return py::dict("type"_a = type, "group"_a = py::str(group), "value"_a = default_value,
                     "default_value"_a = default_value, "description"_a = description.c_str());
 }
 
-py::dict make_option(const std::string& type, const std::string& group, py::object default_value,
+py::dict make_dict_entry(const std::string& type, const std::string& group, py::object default_value,
                      py::list allowed_values, const std::string& description) {
     return py::dict("type"_a = type, "group"_a = py::str(group), "value"_a = default_value,
                     "default_value"_a = default_value, "allowed_values"_a = allowed_values,
@@ -44,12 +44,12 @@ const std::string& ForteOptions::get_group() { return group_; }
 
 void ForteOptions::add(const std::string& label, const std::string& type, py::object default_value,
                        const std::string& description) {
-    dict_[label.c_str()] = make_option(type, group_, default_value, description);
+    dict_[label.c_str()] = make_dict_entry(type, group_, default_value, description);
 }
 
 void ForteOptions::add(const std::string& label, const std::string& type, py::object default_value,
                        py::list allowed_values, const std::string& description) {
-    dict_[label.c_str()] = make_option(type, group_, default_value, allowed_values, description);
+    dict_[label.c_str()] = make_dict_entry(type, group_, default_value, allowed_values, description);
 }
 
 py::object ForteOptions::get(const std::string& label) {
@@ -65,20 +65,19 @@ void ForteOptions::add_bool(const std::string& label, bool value, const std::str
 }
 
 void ForteOptions::add_int(const std::string& label, int value, const std::string& description) {
-    int_opts_.push_back(std::make_tuple(label, value, description));
-//    add(label, "int", py::int_(value), description);
+    add(label, "int", py::int_(value), description);
 }
 
 void ForteOptions::add_double(const std::string& label, double value,
                               const std::string& description) {
     double_opts_.push_back(std::make_tuple(label, value, description));
-//    add(label, "float", py::float_(value), description);
+    //    add(label, "float", py::float_(value), description);
 }
 
 void ForteOptions::add_str(const std::string& label, const std::string& value,
                            const std::string& description) {
     str_opts_.push_back(std::make_tuple(label, value, description, std::vector<std::string>()));
-//    add(label, "str", py::str(value), description);
+    //    add(label, "str", py::str(value), description);
 }
 
 void ForteOptions::add_str(const std::string& label, const std::string& value,
@@ -93,14 +92,14 @@ void ForteOptions::add_str(const std::string& label, const std::string& value,
 
 void ForteOptions::add_array(const std::string& label, const std::string& description) {
     array_opts_.push_back(std::make_tuple(label, description));
-//    add(label, "list", py::str("empty"), description);
+    //    add(label, "list", py::str("empty"), description);
 }
 
 // py::object ForteOptions::get(const std::string& label) { dict_[label.c_str()]["value"]; }
 
 bool ForteOptions::get_bool(const std::string& label) { return py::cast<bool>(get(label)); }
 
-int ForteOptions::get_int(const std::string& label) { return psi_options_.get_int(label); }
+int ForteOptions::get_int(const std::string& label) { return py::cast<int>(get(label)); }
 
 double ForteOptions::get_double(const std::string& label) { return psi_options_.get_double(label); }
 
@@ -126,10 +125,9 @@ void ForteOptions::push_options_to_psi4(psi::Options& options) {
         if (type == "bool") {
             options.add_bool(label, py::cast<bool>(py_default_value));
         }
-    }
-
-    for (const auto& opt : int_opts_) {
-        options.add_int(std::get<0>(opt), std::get<1>(opt));
+        if (type == "int") {
+            options.add_int(label, py::cast<bool>(py_default_value));
+        }
     }
 
     for (const auto& opt : double_opts_) {
@@ -164,6 +162,10 @@ void ForteOptions::get_options_from_psi4(psi::Options& options) {
             bool value = options.get_bool(label);
             item.second["value"] = py::cast(value);
         }
+        if (type == "int") {
+            int value = options.get_int(label);
+            item.second["value"] = py::cast(value);
+        }
     }
 }
 
@@ -182,15 +184,15 @@ std::string ForteOptions::generate_documentation() const {
     //        option_docs_list.push_back(std::make_pair(label, option_text));
     //    }
 
-    for (const auto& opt : int_opts_) {
-        const std::string& label = std::get<0>(opt);
-        const std::string& default_value = std::to_string(std::get<1>(opt));
-        const std::string& description = std::get<2>(opt);
-        std::string option_text =
-            option_formatter("Integer", label, default_value, description, "");
-        outfile->Printf("\n %s", label.c_str());
-        option_docs_list.push_back(std::make_pair(label, option_text));
-    }
+    //    for (const auto& opt : int_opts_) {
+    //        const std::string& label = std::get<0>(opt);
+    //        const std::string& default_value = std::to_string(std::get<1>(opt));
+    //        const std::string& description = std::get<2>(opt);
+    //        std::string option_text =
+    //            option_formatter("Integer", label, default_value, description, "");
+    //        outfile->Printf("\n %s", label.c_str());
+    //        option_docs_list.push_back(std::make_pair(label, option_text));
+    //    }
 
     for (const auto& opt : double_opts_) {
         const std::string& label = std::get<0>(opt);

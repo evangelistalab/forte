@@ -794,6 +794,9 @@ def register_casscf_options(forte_options):
                           "When to start skipping CI steps")
     forte_options.add_bool("MONITOR_SA_SOLUTION", False,
                            "Monitor the CAS-CI solutions through iterations")
+    forte_options.add_bool("CASSCF_REFERENCE", False,
+                           "Perform a CASSCF computation?")
+
 
 
 def register_old_options(forte_options):
