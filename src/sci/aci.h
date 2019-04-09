@@ -223,7 +223,7 @@ class AdaptiveCI : public SelectedCIMethod {
     bool perturb_select_;
 
     /// Add missing degenerate determinants excluded from the aimed selection?
-    bool add_aimed_degenerate_;
+    bool add_aimed_degenerate_ = true;
     /// Add missing degenerate determinants excluded from the aimed selection?
     bool project_out_spin_contaminants_;
 

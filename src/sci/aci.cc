@@ -101,8 +101,10 @@ void AdaptiveCI::startup() {
     // Read options
     gamma_ = options_->get_double("GAMMA");
     screen_thresh_ = options_->get_double("ACI_PRESCREEN_THRESHOLD");
-    add_aimed_degenerate_ = options_->get_bool("ACI_ADD_AIMED_DEGENERATE");
     project_out_spin_contaminants_ = options_->get_bool("SCI_PROJECT_OUT_SPIN_CONTAMINANTS");
+    if (options_->has_changed("ACI_ADD_AIMED_DEGENERATE")) {
+        add_aimed_degenerate_ = options_->get_bool("ACI_ADD_AIMED_DEGENERATE");
+    }
     spin_complete_ = options_->get_bool("ACI_ENFORCE_SPIN_COMPLETE");
 
     max_cycle_ = 20;
