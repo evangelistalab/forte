@@ -782,6 +782,7 @@ void AdaptiveCI::prune_q_space(DeterminantHashVec& PQ_space, DeterminantHashVec&
             size_t num_extra = 0;
             for (size_t I = 0, max_I = last_excluded; I < max_I; ++I) {
                 size_t J = last_excluded - I;
+                outfile->Printf("\n  diff: %21.12f", std::fabs(dm_det_list[last_excluded + 1].first - dm_det_list[J].first));
                 if (std::fabs(dm_det_list[last_excluded + 1].first - dm_det_list[J].first) <
                     1.0e-9) {
 
