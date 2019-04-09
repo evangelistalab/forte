@@ -40,13 +40,6 @@ namespace py = pybind11;
 namespace forte {
 
 // Types to store options
-
-// For the string type stores:
-// ("label", default value, "description",vector<"allowed values">)
-using str_opt_t = std::tuple<std::string, std::string, std::string, std::vector<std::string>>;
-
-// For the array type stores:
-// ("label", "description")
 using array_opt_t = std::tuple<std::string, std::string>;
 
 /**
@@ -224,7 +217,6 @@ class ForteOptions {
   private:
     pybind11::dict dict_;
     std::string group_ = "";
-    std::vector<str_opt_t> str_opts_;
     std::vector<array_opt_t> array_opts_;
     psi::Options psi_options_;
 };

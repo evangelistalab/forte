@@ -38,7 +38,6 @@ py::dict make_dict_entry(const std::string& type, const std::string& group,
 
 void ForteOptions::set_group(const std::string& group) {
     group_ = group;
-    // outfile->Printf("Setting group to %s",group_.c_str());
 }
 
 const std::string& ForteOptions::get_group() { return group_; }
@@ -77,8 +76,7 @@ void ForteOptions::add_double(const std::string& label, double value,
 
 void ForteOptions::add_str(const std::string& label, const std::string& value,
                            const std::string& description) {
-    str_opts_.push_back(std::make_tuple(label, value, description, std::vector<std::string>()));
-    //    add(label, "str", py::str(value), description);
+    add(label, "str", py::str(value), description);
 }
 
 void ForteOptions::add_str(const std::string& label, const std::string& value,
@@ -96,15 +94,15 @@ void ForteOptions::add_array(const std::string& label, const std::string& descri
     //    add(label, "list", py::str("empty"), description);
 }
 
-// py::object ForteOptions::get(const std::string& label) { dict_[label.c_str()]["value"]; }
-
 bool ForteOptions::get_bool(const std::string& label) { return py::cast<bool>(get(label)); }
 
 int ForteOptions::get_int(const std::string& label) { return py::cast<int>(get(label)); }
 
 double ForteOptions::get_double(const std::string& label) { return py::cast<double>(get(label)); }
 
-std::string ForteOptions::get_str(const std::string& label) { return psi_options_.get_str(label); }
+std::string ForteOptions::get_str(const std::string& label) {
+    return py::cast<std::string>(get(label));
+}
 
 std::vector<int> ForteOptions::get_int_vec(const std::string& label) {
     return psi_options_.get_int_vector(label);
@@ -132,33 +130,27 @@ void ForteOptions::push_options_to_psi4(psi::Options& options) {
         if (type == "float") {
             options.add_double(label, py::cast<double>(py_default_value));
         }
-    }
-
-    //    for (const auto& opt : double_opts_) {
-    //        options.add_double(std::get<0>(opt), std::get<1>(opt));
-    //    }
-
-    for (const auto& opt : str_opts_) {
-        if (std::get<3>(opt).size() > 0) {
-            const std::vector<std::string>& str_vec = std::get<3>(opt);
-            std::string allowed = to_string(str_vec, " ");
-            options.add_str(std::get<0>(opt), std::get<1>(opt), allowed);
-        } else {
-            options.add_str(std::get<0>(opt), std::get<1>(opt));
+        if (type == "str") {
+            if (item.second.contains("allowed_values")) {
+                // Here we take a py list of strings and convert it to a string with spaces
+                auto py_allowed_values = item.second["allowed_values"];
+                std::vector<std::string> allowed_values_vec;
+                for (const auto& s : py_allowed_values) {
+                    allowed_values_vec.push_back(py::str(s));
+                }
+                std::string allowed = to_string(allowed_values_vec, " ");
+                options.add_str(label, py::cast<std::string>(py_default_value), allowed);
+            } else {
+                options.add_str(label, py::cast<std::string>(py_default_value));
+            }
         }
     }
-
     for (const auto& opt : array_opts_) {
         options.add(std::get<0>(opt), new psi::ArrayType());
     }
 }
 
 void ForteOptions::get_options_from_psi4(psi::Options& options) {
-    //    for (auto item : dict_) {
-    //        auto label = py::cast<std::string>(item.first);
-    //        options.get_bool(label);
-    //    }
-
     for (auto item : dict_) {
         auto label = py::cast<std::string>(item.first);
         auto type = py::cast<std::string>(item.second["type"]);
@@ -171,7 +163,11 @@ void ForteOptions::get_options_from_psi4(psi::Options& options) {
             item.second["value"] = py::cast(value);
         }
         if (type == "float") {
-            int value = options.get_double(label);
+            double value = options.get_double(label);
+            item.second["value"] = py::cast(value);
+        }
+        if (type == "str") {
+            std::string value = options.get_str(label);
             item.second["value"] = py::cast(value);
         }
     }
@@ -202,25 +198,25 @@ std::string ForteOptions::generate_documentation() const {
     //        option_docs_list.push_back(std::make_pair(label, option_text));
     //    }
 
-    for (const auto& opt : double_opts_) {
-        const std::string& label = std::get<0>(opt);
-        const std::string& default_value = std::to_string(std::get<1>(opt));
-        const std::string& description = std::get<2>(opt);
-        std::string option_text = option_formatter("Double", label, default_value, description, "");
-        outfile->Printf("\n %s", label.c_str());
-        option_docs_list.push_back(std::make_pair(label, option_text));
-    }
+    //    for (const auto& opt : double_opts_) {
+    //        const std::string& label = std::get<0>(opt);
+    //        const std::string& default_value = std::to_string(std::get<1>(opt));
+    //        const std::string& description = std::get<2>(opt);
+    //        std::string option_text = option_formatter("Double", label, default_value,
+    //        description, ""); outfile->Printf("\n %s", label.c_str());
+    //        option_docs_list.push_back(std::make_pair(label, option_text));
+    //    }
 
-    for (const auto& opt : str_opts_) {
-        const std::string& label = std::get<0>(opt);
-        const std::string& default_value = std::get<1>(opt);
-        const std::string& description = std::get<2>(opt);
-        const std::string& allowed_values = to_string(std::get<3>(opt), ", ");
-        std::string option_text =
-            option_formatter("String", label, default_value, description, allowed_values);
-        outfile->Printf("\n %s", label.c_str());
-        option_docs_list.push_back(std::make_pair(label, option_text));
-    }
+    //    for (const auto& opt : str_opts_) {
+    //        const std::string& label = std::get<0>(opt);
+    //        const std::string& default_value = std::get<1>(opt);
+    //        const std::string& description = std::get<2>(opt);
+    //        const std::string& allowed_values = to_string(std::get<3>(opt), ", ");
+    //        std::string option_text =
+    //            option_formatter("String", label, default_value, description, allowed_values);
+    //        outfile->Printf("\n %s", label.c_str());
+    //        option_docs_list.push_back(std::make_pair(label, option_text));
+    //    }
 
     for (const auto& opt : array_opts_) {
         const std::string& label = std::get<0>(opt);
