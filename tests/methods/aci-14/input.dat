@@ -32,7 +32,6 @@ set forte {
   aci_n_average 2
   charge 0
   root_sym 0
-#  ACI_INITIAL_SPACE CISD
   aci_preiterations 2
   dl_maxiter 100
   diag_algorithm solver
@@ -47,5 +46,5 @@ compare_values(refscf, variable("CURRENT ENERGY"),9, "SCF energy")
 
 energy('forte')
 
-compare_values(refaci, variable("ACI ENERGY"),9, "ACI energy")
-compare_values(refacipt2, variable("ACI+PT2 ENERGY"),8, "ACI+PT2 energy")
+compare_values(refaci, variable("ACI ENERGY"),5, "ACI energy")
+compare_values(refacipt2, variable("ACI+PT2 ENERGY"),5, "ACI+PT2 energy")
