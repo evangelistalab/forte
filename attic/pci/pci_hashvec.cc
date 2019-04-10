@@ -195,7 +195,7 @@ void ProjectorCI_HashVec::startup() {
     if (initial_guess_spawning_threshold_ < 0.0)
         initial_guess_spawning_threshold_ = 10.0 * spawning_threshold_;
     time_step_ = options_->get_double("PCI_TAU");
-    maxiter_ = options_->get_int("PCI_MAXBETA") / time_step_;
+    maxiter_ = options_->get_double("PCI_MAXBETA") / time_step_;
     max_Davidson_iter_ = options_->get_int("PCI_MAX_DAVIDSON_ITER");
     davidson_collapse_per_root_ = options_->get_int("PCI_DL_COLLAPSE_PER_ROOT");
     davidson_subspace_per_root_ = options_->get_int("PCI_DL_SUBSPACE_PER_ROOT");

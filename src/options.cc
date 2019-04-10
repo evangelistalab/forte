@@ -48,7 +48,7 @@ void forte_options(ForteOptions& foptions) {
     // General options
     foptions.add_str("MINAO_BASIS", "STO-3G", "The basis used to define an orbital subspace");
 
-    foptions.add_array("SUBSPACE", "A list of orbital subspaces");
+    foptions.add_int_array("SUBSPACE", "A list of orbital subspaces");
 
     foptions.add_double("MS", 0.0, "Projection of spin onto the z axis");
 

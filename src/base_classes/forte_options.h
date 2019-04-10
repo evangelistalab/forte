@@ -95,7 +95,7 @@ class ForteOptions {
      * @param label Option label
      * @return a py::object containing the result
      */
-    py::object get(const std::string& label);
+    std::pair<py::object, std::string> get(const std::string& label);
 
     /**
      * @brief Add a boolean option
@@ -147,6 +147,8 @@ class ForteOptions {
      * @param description Description of the option
      */
     void add_array(const std::string& label, const std::string& description = "");
+    void add_int_array(const std::string& label, const std::string& description = "");
+    void add_double_array(const std::string& label, const std::string& description = "");
 
     /**
      * @brief Get a boolean option

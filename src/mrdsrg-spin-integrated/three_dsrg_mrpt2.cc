@@ -1272,7 +1272,7 @@ double THREE_DSRG_MRPT2::E_VT2_2() {
 
     // Calculates all but ccvv, cCvV, and CCVV energies
     double Eccvv = 0.0;
-    std::string ccvv_algorithm = foptions_->get_str("ccvv_algorithm");
+    std::string ccvv_algorithm = foptions_->get_str("CCVV_ALGORITHM");
     local_timer ccvv_timer;
     if (my_proc == 0) {
         outfile->Printf("\n    %-40s ...", "Computing <[V, T2]> (C_2)^4 ccvv");

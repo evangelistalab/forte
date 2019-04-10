@@ -31,7 +31,6 @@
 
 #include "string_algorithms.h"
 
-
 namespace forte {
 
 std::vector<std::string> split_string(const std::string& str, const std::string& delimiter) {
@@ -50,4 +49,10 @@ std::vector<std::string> split_string(const std::string& str, const std::string&
 
     return strings;
 }
+
+std::string upper(std::string s) {
+    transform(s.begin(), s.end(), s.begin(), ::toupper);
+    return s;
 }
+
+} // namespace forte

@@ -56,6 +56,14 @@ def register_driver_options(forte_options):
     forte_options.add_str("ORBITAL_TYPE", "CANONICAL",
                           ['CANONICAL', 'LOCAL', 'MP2_NO'],
                           'Type of orbitals to use')
+
+
+    forte_options.add_int(
+        "PRINT", 0,
+        """Set the print level."""
+    )
+    forte_options.add_double("E_CONVERGENCE", 1.0e-8, "The energy convergence criterion") # TODO: obsolete? (Francesco)
+
     forte_options.set_group("")
 
 def register_avas_options(forte_options):
@@ -90,7 +98,7 @@ def register_cino_options(forte_options):
 
     forte_options.add_int("CINO_NROOT", 1, "The number of roots computed")
 
-    forte_options.add_array(
+    forte_options.add_int_array(
         "CINO_ROOTS_PER_IRREP",
         "The number of excited states per irreducible representation")
     forte_options.add_double(
@@ -109,7 +117,7 @@ def register_mrcino_options(forte_options):
 
     forte_options.add_int("MRCINO_NROOT", 1, "The number of roots computed")
 
-    forte_options.add_array(
+    forte_options.add_int_array(
         "MRCINO_ROOTS_PER_IRREP",
         "The number of excited states per irreducible representation")
     forte_options.add_double(
@@ -123,19 +131,19 @@ def register_mrcino_options(forte_options):
 
 def register_mo_space_info_options(forte_options):
     forte_options.set_group("MO Space Info")
-    forte_options.add_array(
+    forte_options.add_int_array(
         "FROZEN_DOCC",
         "Number of frozen occupied orbitals per irrep (in Cotton order)")
-    forte_options.add_array(
+    forte_options.add_int_array(
         "RESTRICTED_DOCC",
         "Number of restricted doubly occupied orbitals per irrep (in Cotton order)"
     )
-    forte_options.add_array(
+    forte_options.add_int_array(
         "ACTIVE", " Number of active orbitals per irrep (in Cotton order)")
-    forte_options.add_array(
+    forte_options.add_int_array(
         "RESTRICTED_UOCC",
         "Number of restricted unoccupied orbitals per irrep (in Cotton order)")
-    forte_options.add_array(
+    forte_options.add_int_array(
         "FROZEN_UOCC",
         "Number of frozen unoccupied orbitals per irrep (in Cotton order)")
 
@@ -145,7 +153,7 @@ def register_mo_space_info_options(forte_options):
     #     *  Format: [irrep, mo_1, mo_2, irrep, mo_3, mo_4]
     #     *          Irrep and MO indices are 1-based (NOT 0-based)!
     #    -*/
-    forte_options.add_array(
+    forte_options.add_int_array(
         "ROTATE_MOS",
         "An array of MOs to swap in the format [irrep, mo_1, mo_2, irrep, mo_3, mo_4]. Irrep and MO indices are 1-based (NOT 0-based)!"
     )
@@ -159,7 +167,7 @@ def register_mo_space_info_options(forte_options):
         "AVG_WEIGHT",
         "An array of weights [[w1_1, w1_2, ..., w1_n], [w2_1, w2_2, ..., w2_n], ...]"
     )
-    forte_options.add_array("NROOTPI",
+    forte_options.add_int_array("NROOTPI",
                             "Number of roots per irrep (in Cotton order)")
 
 
@@ -189,7 +197,7 @@ def register_pci_options(forte_options):
     forte_options.add_double("PCI_SPAWNING_THRESHOLD", 0.001,
                              "The determinant importance threshold")
 
-    forte_options.add_double(
+    forte_options.add_int(
         "PCI_MAX_GUESS_SIZE", 10000,
         "The maximum number of determinants used to form the "
         "guess wave function")
@@ -736,7 +744,7 @@ def register_localize_options(forte_options):
     forte_options.set_group("Localize")
     forte_options.add_str("LOCALIZE", "PIPEK_MEZEY", ["PIPEK_MEZEY", "BOYS"],
                           "One option to determine localization scheme")
-    forte_options.add_array("LOCALIZE_SPACE",
+    forte_options.add_int_array("LOCALIZE_SPACE",
                             "Sets the orbital space for localization")
 
 def register_casscf_options(forte_options):
@@ -826,6 +834,12 @@ def register_old_options(forte_options):
     forte_options.add_str("THREEPDC", "MK", ["MK", "MK_DECOMP", "ZERO"],
                           "The form of the three-particle density cumulant")
 
+    forte_options.add_str("SCF_TYPE", "", "The integrals used in the SCF calculation")
+    forte_options.add_str("REFERENCE", "", "The SCF refernce type")
+
+    forte_options.add_int("DIIS_MAX_VECS",5,"The maximum number of DIIS vectors");
+    forte_options.add_int("DIIS_MIN_VECS",2,"The minimum number of DIIS vectors");
+
     #    /*- The minimum excitation level (Default value: 0) -*/
     #    forte_options.add_int("MIN_EXC_LEVEL", 0)
 
@@ -903,8 +917,8 @@ def register_old_options(forte_options):
     #    /*- The method used to smooth the Hamiltonian -*/
     #    forte_options.add_bool("SELECT", False)
 
-    #    /*- The energy convergence criterion -*/
-    #    forte_options.add_double("E_CONVERGENCE", 1.0e-8)
+
+
 
     #    forte_options.add_bool("MOLDEN_WRITE_FORTE", False)
     #    // Natural Orbital selection criteria.  Used to fine tune how many

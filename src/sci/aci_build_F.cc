@@ -870,7 +870,7 @@ double AdaptiveCI::get_excited_determinants_batch_old(
     const size_t n_dets = P_space.size();
 
     int nmo = as_ints_->nmo();
-    double max_mem = options_->get_double("ACI_MAX_MEM");
+    double max_mem = options_->get_int("ACI_MAX_MEM");
     double aci_scale = options_->get_double("ACI_SCALE_SIGMA");
 
     size_t guess_size = n_dets * nmo * nmo;
@@ -1157,7 +1157,7 @@ double AdaptiveCI::get_excited_determinants_batch_vecsort(
     const size_t n_dets = P_space.size();
 
     int nmo = as_ints_->nmo();
-    double max_mem = options_->get_double("ACI_MAX_MEM");
+    double max_mem = options_->get_int("ACI_MAX_MEM");
     double aci_scale = options_->get_double("ACI_SCALE_SIGMA");
 
     // Guess the total memory needed to store all singles and doubles out of all dets
@@ -1374,7 +1374,7 @@ double AdaptiveCI::get_excited_determinants_batch(
     const size_t n_dets = P_space.size();
 
     int nmo = as_ints_->nmo();
-    double max_mem = options_->get_double("ACI_MAX_MEM");
+    double max_mem = options_->get_int("ACI_MAX_MEM");
     double aci_scale = options_->get_double("ACI_SCALE_SIGMA");
 
     size_t nocc2 = nalpha_ * nalpha_;
