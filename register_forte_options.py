@@ -842,7 +842,7 @@ def register_old_options(forte_options):
     forte_options.add_str("THREEPDC", "MK", ["MK", "MK_DECOMP", "ZERO"],
                           "The form of the three-particle density cumulant")
 
-    forte_options.add_str("SCF_TYPE", "", "The integrals used in the SCF calculation")
+    forte_options.add_str("SCF_TYPE", "PK", "The integrals used in the SCF calculation")
     forte_options.add_str("REFERENCE", "", "The SCF refernce type")
 
     forte_options.add_int("DIIS_MAX_VECS",5,"The maximum number of DIIS vectors");
@@ -967,8 +967,8 @@ def register_old_options(forte_options):
     #    /*- The energy buffer for building the Hamiltonian matrix in Hartree -*/
     #    forte_options.add_double("H_BUFFER", 0.0)
 
-    #    /*- The maximum number of iterations -*/
-    #    forte_options.add_int("MAXITER", 100)
+
+    forte_options.add_int("MAXITER", 100, "The maximum number of iterations")
 
     #    // Options for the Genetic Algorithm CI //
     #    /*- The size of the population -*/
@@ -1111,8 +1111,9 @@ def register_old_options(forte_options):
     #    forte_options.add_str("SRG_OP", "UNITARY", "UNITARY CC")
     #    /*- The flow generator to use in the SRG equations -*/
     #    forte_options.add_str("SRG_ETA", "WHITE", "WEGNER_BLOCK WHITE")
-    #    /*- The integrator used to propagate the SRG equations -*/
-    #    forte_options.add_str("SRG_ODEINT", "FEHLBERG78", "DOPRI5 CASHKARP FEHLBERG78")
+    #    /*-  -*/
+    forte_options.add_str("SRG_ODEINT", "FEHLBERG78", ["DOPRI5","CASHKARP","FEHLBERG78"],
+        "The integrator used to propagate the SRG equations")
     #    /*- The end value of the integration parameter s -*/
     #    forte_options.add_double("SRG_SMAX", 10.0)
 
@@ -1122,12 +1123,9 @@ def register_old_options(forte_options):
     #    // --------------------------- SRG EXPERT OPTIONS
     #    // ---------------------------
 
-    #    /*- The initial time step used by the ode solver -*/
-    #    forte_options.add_double("SRG_DT", 0.001)
-    #    /*- The absolute error tollerance for the ode solver -*/
-    #    forte_options.add_double("SRG_ODEINT_ABSERR", 1.0e-12)
-    #    /*- The absolute error tollerance for the ode solver -*/
-    #    forte_options.add_double("SRG_ODEINT_RELERR", 1.0e-12)
+    forte_options.add_double("SRG_DT", 0.001, "The initial time step used by the ode solver")
+    forte_options.add_double("SRG_ODEINT_ABSERR", 1.0e-12, "The absolute error tollerance for the ode solver")
+    forte_options.add_double("SRG_ODEINT_RELERR", 1.0e-12, "The relative error tollerance for the ode solver")
     #    /*- Select a modified commutator -*/
     #    forte_options.add_str("SRG_COMM", "STANDARD", "STANDARD FO FO2")
 
