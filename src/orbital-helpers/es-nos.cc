@@ -77,7 +77,12 @@ void ESNO::startup() {
     fci_ints_->compute_restricted_one_body_operator();
 
     nroot_ = options_.get_int("NROOT");
-    multiplicity_ = options_.get_int("MULTIPLICITY");
+
+    multiplicity_ = 1;
+    if (options_.get_int("MULTIPLICITY") >= 0) {
+        multiplicity_ = options_.get_int("MULTIPLICITY");
+        // TODO: potentially a if MULTIPLICITY is not defined
+    }
 
     diag_method_ = DLSolver;
 }
@@ -307,7 +312,7 @@ std::vector<size_t> ESNO::get_excitation_space() {
     int max_n = ruocc.size();
     int n_kept = options_.get_int("ESNO_MAX_SIZE");
 
-    if (!options_["ESNO_MAX_SIZE"].has_changed()) {
+    if (if n_kept == 0) {
         n_kept = max_n;
     }
 

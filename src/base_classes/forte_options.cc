@@ -11,6 +11,8 @@ using namespace psi;
 
 namespace forte {
 
+py::object process_psi4_array_data(psi::Data& data);
+
 std::string rst_bold(const std::string& s);
 
 std::string option_formatter(const std::string& type, const std::string& label,
@@ -18,8 +20,6 @@ std::string option_formatter(const std::string& type, const std::string& label,
                              const std::string& allowed_values);
 
 ForteOptions::ForteOptions() {}
-
-ForteOptions::ForteOptions(psi::Options& options) : psi_options_(options) {}
 
 pybind11::dict ForteOptions::dict() { return dict_; }
 
@@ -151,6 +151,17 @@ std::string ForteOptions::get_str(const std::string& label) {
     return std::string();
 }
 
+py::list ForteOptions::get_gen_list(const std::string& label) {
+    auto value_type = get(label);
+    if (value_type.second == "gen_list") {
+        return value_type.first;
+    }
+    std::string msg = "Called ForteOptions::get_gen_list(" + label +
+                      ") but the type for this option is " + value_type.second;
+    throw std::runtime_error(msg);
+    return py::list();
+}
+
 std::vector<int> ForteOptions::get_int_vec(const std::string& label) {
     std::vector<int> result;
     auto value_type = get(label);
@@ -179,10 +190,6 @@ std::vector<double> ForteOptions::get_double_vec(const std::string& label) {
                       ") but the type for this option is " + value_type.second;
     throw std::runtime_error(msg);
     return result;
-}
-
-bool ForteOptions::has_changed(const std::string& label) {
-    return psi_options_[label].has_changed();
 }
 
 void ForteOptions::push_options_to_psi4(psi::Options& options) {
@@ -255,10 +262,39 @@ void ForteOptions::get_options_from_psi4(psi::Options& options) {
             }
             item.second["value"] = py_list;
         }
+        if (type == "gen_list") {
+            auto& psi_array_data = options[label];
+            auto py_list = py::list();
+            size_t nentry = psi_array_data.size();
+            for (size_t i = 0; i < nentry; i++) {
+                auto result = process_psi4_array_data(psi_array_data[i]);
+                py_list.append(result);
+            }
+            item.second["value"] = py_list;
+        }
     }
 }
 
-void ForteOptions::update_psi_options(psi::Options& options) { psi_options_ = options; }
+py::object process_psi4_array_data(psi::Data& data) {
+    auto list = py::list();
+    if (data.is_array()) {
+        outfile->Printf("\n Data is an array -> call again");
+        // process each element of the array
+        size_t n = data.size();
+        for (size_t i = 0; i < n; i++) {
+            list.append(process_psi4_array_data(data[i]));
+        }
+    }
+    std::string type = data.type();
+    if (type == "int") {
+        return py::int_(data.to_integer());
+    }
+    return list;
+}
+
+void ForteOptions::update_psi_options(psi::Options& options) {
+    // TODO implement or delete because obsolete?
+}
 
 std::string ForteOptions::generate_documentation() const {
     std::vector<std::pair<std::string, std::string>> option_docs_list;
@@ -303,13 +339,13 @@ std::string ForteOptions::generate_documentation() const {
     //        option_docs_list.push_back(std::make_pair(label, option_text));
     //    }
 
-    for (const auto& opt : array_opts_) {
-        const std::string& label = std::get<0>(opt);
-        const std::string& description = std::get<1>(opt);
-        std::string option_text = option_formatter("Array", label, "[]", description, "");
-        outfile->Printf("\n %s", label.c_str());
-        option_docs_list.push_back(std::make_pair(label, option_text));
-    }
+    //    for (const auto& opt : array_opts_) {
+    //        const std::string& label = std::get<0>(opt);
+    //        const std::string& description = std::get<1>(opt);
+    //        std::string option_text = option_formatter("Array", label, "[]", description, "");
+    //        outfile->Printf("\n %s", label.c_str());
+    //        option_docs_list.push_back(std::make_pair(label, option_text));
+    //    }
 
     std::sort(option_docs_list.begin(), option_docs_list.end());
     std::vector<std::string> options_lines;

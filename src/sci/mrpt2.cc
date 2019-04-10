@@ -47,11 +47,9 @@ using namespace psi;
 
 namespace forte {
 
-
-
-MRPT2::MRPT2(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
-             std::shared_ptr<MOSpaceInfo> mo_space_info, DeterminantHashVec& reference,
-             psi::SharedMatrix evecs, psi::SharedVector evals)
+MRPT2::MRPT2(psi::SharedWavefunction ref_wfn, psi::Options& options,
+             std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info,
+             DeterminantHashVec& reference, psi::SharedMatrix evecs, psi::SharedVector evals)
     : Wavefunction(options), ints_(ints), reference_(reference), mo_space_info_(mo_space_info),
       evecs_(evecs), evals_(evals) {
     shallow_copy(ref_wfn);
@@ -68,8 +66,8 @@ void MRPT2::startup() {
     // Define the correlated space
     auto active_mo = mo_space_info_->get_corr_abs_mo("ACTIVE");
 
-    fci_ints_ = std::make_shared<ActiveSpaceIntegrals>(ints_, active_mo,
-                                               mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
+    fci_ints_ = std::make_shared<ActiveSpaceIntegrals>(
+        ints_, active_mo, mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
 
     // Set the integrals
     ambit::Tensor tei_active_aa = ints_->aptei_aa_block(active_mo, active_mo, active_mo, active_mo);
@@ -81,7 +79,11 @@ void MRPT2::startup() {
     fci_ints_->compute_restricted_one_body_operator();
 
     nroot_ = options_.get_int("NROOT");
-    multiplicity_ = options_.get_int("MULTIPLICITY");
+    multiplicity_ = 1;
+    if (options_.get_int("MULTIPLICITY") >= 0) {
+        multiplicity_ = options_.get_int("MULTIPLICITY");
+        // TODO: potentially a if MULTIPLICITY is not defined
+    }
     screen_thresh_ = options_.get_double("ACI_PRESCREEN_THRESHOLD");
 }
 
@@ -307,4 +309,4 @@ double MRPT2::energy_kernel(int bin, int nbin) {
     }
     return energy;
 }
-}
+} // namespace forte

@@ -66,10 +66,7 @@ void AdaptiveCI::set_fci_ints(std::shared_ptr<ActiveSpaceIntegrals> fci_ints) {
 }
 
 void AdaptiveCI::startup() {
-    quiet_mode_ = false;
-    if (options_->has_changed("ACI_QUIET_MODE")) {
-        quiet_mode_ = options_->get_bool("ACI_QUIET_MODE");
-    }
+    quiet_mode_ = options_->get_bool("ACI_QUIET_MODE");
 
     //    if (!set_ints_) {
     //        set_aci_ints(ints_); // TODO: maybe a BUG?
@@ -105,14 +102,9 @@ void AdaptiveCI::startup() {
     project_out_spin_contaminants_ = options_->get_bool("SCI_PROJECT_OUT_SPIN_CONTAMINANTS");
     spin_complete_ = options_->get_bool("ACI_ENFORCE_SPIN_COMPLETE");
 
-    max_cycle_ = 20;
-    if (options_->has_changed("SCI_MAX_CYCLE")) {
-        max_cycle_ = options_->get_int("SCI_MAX_CYCLE");
-    }
-    pre_iter_ = 0;
-    if (options_->has_changed("ACI_PREITERATIONS")) {
-        pre_iter_ = options_->get_int("ACI_PREITERATIONS");
-    }
+    max_cycle_ = options_->get_int("ACI_MAX_CYCLE");
+
+    pre_iter_ = options_->get_int("ACI_PREITERATIONS");
 
     spin_tol_ = options_->get_double("ACI_SPIN_TOL");
     // set the initial S^@ guess as input multiplicity
@@ -131,18 +123,16 @@ void AdaptiveCI::startup() {
     hole_ = 0;
 
     diag_method_ = DLSolver;
-    if (options_->has_changed("DIAG_ALGORITHM")) {
-        if (options_->get_str("DIAG_ALGORITHM") == "FULL") {
-            diag_method_ = Full;
-        } else if (options_->get_str("DIAG_ALGORITHM") == "DLSTRING") {
-            diag_method_ = DLString;
-        } else if (options_->get_str("DIAG_ALGORITHM") == "SPARSE") {
-            diag_method_ = Sparse;
-        } else if (options_->get_str("DIAG_ALGORITHM") == "SOLVER") {
-            diag_method_ = DLSolver;
-        } else if (options_->get_str("DIAG_ALGORITHM") == "DYNAMIC") {
-            diag_method_ = Dynamic;
-        }
+    if (options_->get_str("DIAG_ALGORITHM") == "FULL") {
+        diag_method_ = Full;
+    } else if (options_->get_str("DIAG_ALGORITHM") == "DLSTRING") {
+        diag_method_ = DLString;
+    } else if (options_->get_str("DIAG_ALGORITHM") == "SPARSE") {
+        diag_method_ = Sparse;
+    } else if (options_->get_str("DIAG_ALGORITHM") == "SOLVER") {
+        diag_method_ = DLSolver;
+    } else if (options_->get_str("DIAG_ALGORITHM") == "DYNAMIC") {
+        diag_method_ = Dynamic;
     }
     aimed_selection_ = false;
     energy_selection_ = false;
@@ -331,7 +321,7 @@ void AdaptiveCI::find_q_space_batched(DeterminantHashVec& P_space, DeterminantHa
         }
     }
 
-    if( PQ_space.size() < nroot_ ){
+    if (PQ_space.size() < nroot_) {
         size_t nadd = 0;
         for (size_t I = 0, max_I = nroot_; I < max_I; ++I) {
             size_t J = last_excluded + num_extra - I;
@@ -440,13 +430,13 @@ void AdaptiveCI::default_find_q_space(DeterminantHashVec& P_space, DeterminantHa
             outfile->Printf("\n  Added %zu missing determinants in aimed selection.", num_extra);
         }
     }
-    if( PQ_space.size() < nroot_ ){
+    if (PQ_space.size() < nroot_) {
         size_t nadd = 0;
         for (size_t I = 0, max_I = nroot_; I < max_I; ++I) {
             size_t J = last_excluded + num_extra - I;
-            PQ_space.add(F_space[J].second); 
+            PQ_space.add(F_space[J].second);
             nadd++;
-        } 
+        }
         outfile->Printf("\n  Added %zu missing determinants.", nadd);
     }
     outfile->Printf("\n  Time spent selecting: %1.6f", select.get());
@@ -610,14 +600,14 @@ void AdaptiveCI::find_q_space_multiroot(DeterminantHashVec& P_space,
                                 num_extra);
             }
         }
-        outfile->Printf("pq: %zu, nroot: %zu", PQ_space.size() , nroot);
-        if( PQ_space.size() < nroot ){
+        outfile->Printf("pq: %zu, nroot: %zu", PQ_space.size(), nroot);
+        if (PQ_space.size() < nroot) {
             size_t nadd = 0;
             for (size_t I = 0, max_I = nroot; I < max_I; ++I) {
                 size_t J = last_excluded + num_extra - I;
-                PQ_space.add(sorted_dets[J].second); 
+                PQ_space.add(sorted_dets[J].second);
                 nadd++;
-            } 
+            }
             outfile->Printf("\n  Added %zu missing determinants.", nadd);
         }
     }

@@ -283,7 +283,7 @@ std::pair<SpaceInfo, bool> MOSpaceInfo::read_mo_space(const std::string& space,
     bool read = false;
     psi::Dimension space_dim(nirrep_);
     std::vector<MOInfo> vec_mo_info;
-    if ((options->has_changed(space)) && (options->get_int_vec(space).size() == nirrep_)) {
+    if (options->get_int_vec(space).size() == nirrep_) {
         for (size_t h = 0; h < nirrep_; ++h) {
             space_dim[h] = options->get_int_vec(space)[h];
         }

@@ -165,8 +165,8 @@ void ProjectorCI_HashVec::startup() {
 
     // Build the reference determinant and compute its energy
     std::vector<Determinant> reference_vec;
-    CI_Reference ref(state_, scf_info_, options_, mo_space_info_, as_ints_, wavefunction_multiplicity_, ms,
-                wavefunction_symmetry_);
+    CI_Reference ref(state_, scf_info_, options_, mo_space_info_, as_ints_,
+                     wavefunction_multiplicity_, ms, wavefunction_symmetry_);
     ref.set_ref_type("HF");
     ref.build_reference(reference_vec);
     reference_determinant_ = reference_vec[0];
@@ -178,14 +178,12 @@ void ProjectorCI_HashVec::startup() {
     current_root_ = -1;
     post_diagonalization_ = options_->get_bool("PCI_POST_DIAGONALIZE");
     diag_method_ = DLSolver;
-    if (options_->has_changed("DIAG_ALGORITHM")) {
-        if (options_->get_str("DIAG_ALGORITHM") == "FULL") {
-            diag_method_ = Full;
-        } else if (options_->get_str("DIAG_ALGORITHM") == "DLSTRING") {
-            diag_method_ = DLString;
-        } else if (options_->get_str("DIAG_ALGORITHM") == "DLDISK") {
-            diag_method_ = DLDisk;
-        }
+    if (options_->get_str("DIAG_ALGORITHM") == "FULL") {
+        diag_method_ = Full;
+    } else if (options_->get_str("DIAG_ALGORITHM") == "DLSTRING") {
+        diag_method_ = DLString;
+    } else if (options_->get_str("DIAG_ALGORITHM") == "DLDISK") {
+        diag_method_ = DLDisk;
     }
     //    /-> Define appropriate variable: post_diagonalization_ =
     //    options_->get_bool("EX_ALGORITHM");

@@ -85,31 +85,26 @@ void ASCI::startup() {
     twice_ms_ = state_.twice_ms();
 
     // Build the reference determinant and compute its energy
-    CI_Reference ref(state_, scf_info_, options_, mo_space_info_, as_ints_, multiplicity_, twice_ms_,
-                wavefunction_symmetry_);
+    CI_Reference ref(state_, scf_info_, options_, mo_space_info_, as_ints_, multiplicity_,
+                     twice_ms_, wavefunction_symmetry_);
     ref.build_reference(initial_reference_);
 
     // Read options
-//    nroot_ = options_->get_int("NROOT");
+    //    nroot_ = options_->get_int("NROOT");
 
-    max_cycle_ = 20;
-    if (options_->has_changed("ASCI_MAX_CYCLE")) {
-        max_cycle_ = options_->get_int("ASCI_MAX_CYCLE");
-    }
+    max_cycle_ = options_->get_int("ASCI_MAX_CYCLE");
 
     diag_method_ = DLSolver;
-    if (options_->has_changed("DIAG_ALGORITHM")) {
-        if (options_->get_str("DIAG_ALGORITHM") == "FULL") {
-            diag_method_ = Full;
-        } else if (options_->get_str("DIAG_ALGORITHM") == "DLSTRING") {
-            diag_method_ = DLString;
-        } else if (options_->get_str("DIAG_ALGORITHM") == "SPARSE") {
-            diag_method_ = Sparse;
-        } else if (options_->get_str("DIAG_ALGORITHM") == "SOLVER") {
-            diag_method_ = DLSolver;
-        } else if (options_->get_str("DIAG_ALGORITHM") == "DYNAMIC") {
-            diag_method_ = Dynamic;
-        }
+    if (options_->get_str("DIAG_ALGORITHM") == "FULL") {
+        diag_method_ = Full;
+    } else if (options_->get_str("DIAG_ALGORITHM") == "DLSTRING") {
+        diag_method_ = DLString;
+    } else if (options_->get_str("DIAG_ALGORITHM") == "SPARSE") {
+        diag_method_ = Sparse;
+    } else if (options_->get_str("DIAG_ALGORITHM") == "SOLVER") {
+        diag_method_ = DLSolver;
+    } else if (options_->get_str("DIAG_ALGORITHM") == "DYNAMIC") {
+        diag_method_ = Dynamic;
     }
     // Decide when to compute coupling lists
     build_lists_ = true;

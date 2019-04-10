@@ -74,13 +74,14 @@ ACTIVE_DSRGPT2::ACTIVE_DSRGPT2(std::shared_ptr<SCFInfo> scf_info,
 ACTIVE_DSRGPT2::~ACTIVE_DSRGPT2() {}
 
 void ACTIVE_DSRGPT2::startup() {
-    if ((foptions_->psi_options())["NROOTPI"].size() == 0) {
+    if (foptions_->get_int_vec("NROOTPI").size() == 0) {
         throw psi::PSIEXCEPTION("Please specify NROOTPI for ACTIVE-DSRGPT2 jobs.");
     } else {
         std::shared_ptr<psi::Molecule> molecule = psi::Process::environment.molecule();
         multiplicity_ = molecule->multiplicity();
-        if (foptions_->has_changed("MULTIPLICITY")) {
+        if (foptions_->get_int("MULTIPLICITY") >= 0) {
             multiplicity_ = foptions_->get_int("MULTIPLICITY");
+            // TODO: potentially a if MULTIPLICITY is not defined
         }
 
         ref_type_ = foptions_->get_str("FCIMO_ACTV_TYPE");
@@ -141,7 +142,7 @@ void ACTIVE_DSRGPT2::startup() {
         }
 
         for (int h = 0; h < nirrep; ++h) {
-            nrootpi_.push_back((foptions_->psi_options())["NROOTPI"][h].to_integer());
+            nrootpi_.push_back(foptions_->get_int_vec("NROOTPI")[h]);
             irrep_symbol_.push_back(std::string(ct.gamma(h).symbol()));
             total_nroots_ += nrootpi_[h];
         }

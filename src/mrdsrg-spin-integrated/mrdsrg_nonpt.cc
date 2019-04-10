@@ -805,9 +805,10 @@ double MRDSRG::compute_energy_ldsrg2() {
         if (std::fabs(Edelta) < e_conv && rms < r_conv) {
             converged = true;
 
+            bool multi_state = foptions_->get_gen_list("AVG_STATE").size() != 0;
+
             // rebuild Hbar because it is destroyed when updating amplitudes
-            if (foptions_->get_str("RELAX_REF") != "NONE" ||
-                (foptions_->psi_options())["AVG_STATE"].size() != 0) {
+            if (foptions_->get_str("RELAX_REF") != "NONE" || multi_state) {
                 if (sequential_Hbar_) {
                     compute_hbar_sequential_rotation();
                 } else {
@@ -1101,9 +1102,10 @@ double MRDSRG::compute_energy_ldsrg2_qc() {
         if (std::fabs(Edelta) < e_conv && rms < r_conv) {
             converged = true;
 
+            bool multi_state = foptions_->get_gen_list("AVG_STATE").size() != 0;
+
             // rebuild Hbar because it is destroyed when updating amplitudes
-            if (foptions_->get_str("RELAX_REF") != "NONE" ||
-                (foptions_->psi_options())["AVG_STATE"].size() != 0) {
+            if (foptions_->get_str("RELAX_REF") != "NONE" || multi_state) {
                 compute_hbar_qc();
             }
         }

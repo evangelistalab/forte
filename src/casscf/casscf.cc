@@ -330,7 +330,7 @@ void CASSCF::startup() {
                 std::make_shared<DiskDFJK>(ints_->basisset(), ints_->get_basisset("DF_BASIS_SCF"));
         } else {
             JK_ = JK::build_JK(ints_->basisset(), psi::BasisSet::zero_ao_basis_set(),
-                               options_->psi_options());
+                               psi::Process::environment.options);
         }
     }
     JK_->set_memory(psi::Process::environment.get_memory() * 0.8);
@@ -1013,9 +1013,9 @@ std::vector<RDMs> CASSCF::rdms(const std::vector<std::pair<size_t, size_t>>& /*r
     return refs;
 }
 
-std::vector<RDMs> CASSCF::transition_rdms(const std::vector<std::pair<size_t, size_t>>& /*root_list*/,
-                                          std::shared_ptr<ActiveSpaceMethod> /*method2*/,
-                                          int /*max_rdm_level*/) {
+std::vector<RDMs>
+CASSCF::transition_rdms(const std::vector<std::pair<size_t, size_t>>& /*root_list*/,
+                        std::shared_ptr<ActiveSpaceMethod> /*method2*/, int /*max_rdm_level*/) {
     std::vector<RDMs> refs;
     throw std::runtime_error("FCISolver::transition_rdms is not implemented!");
     return refs;

@@ -72,10 +72,7 @@ CI_Reference::CI_Reference(StateInfo state, std::shared_ptr<SCFInfo> scf_info,
     subspace_size_ = options->get_int("ACTIVE_GUESS_SIZE");
 
     // Reference type
-    ref_type_ = "CAS";
-    if (options->has_changed("ACTIVE_REF_TYPE")) {
-        ref_type_ = options->get_str("ACTIVE_REF_TYPE");
-    }
+    ref_type_ = options->get_str("ACTIVE_REF_TYPE");
 
     nalpha_ = state.na() - ninact;
     nbeta_ = state.nb() - ninact;

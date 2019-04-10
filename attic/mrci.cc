@@ -40,9 +40,10 @@ using namespace psi;
 
 namespace forte {
 
-MRCI::MRCI(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
-           std::shared_ptr<MOSpaceInfo> mo_space_info, DeterminantHashVec& reference)
-    : Wavefunction(options), ints_(ints),reference_(reference), mo_space_info_(mo_space_info) {
+MRCI::MRCI(psi::SharedWavefunction ref_wfn, psi::Options& options,
+           std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info,
+           DeterminantHashVec& reference)
+    : Wavefunction(options), ints_(ints), reference_(reference), mo_space_info_(mo_space_info) {
     shallow_copy(ref_wfn);
     ref_wfn_ = ref_wfn;
     print_method_banner({"Uncontracted MR-CISD", "Jeff Schriber"});
@@ -58,8 +59,8 @@ void MRCI::startup() {
     auto correlated_mo = mo_space_info_->get_corr_abs_mo("GENERALIZED PARTICLE");
     std::sort(correlated_mo.begin(), correlated_mo.end());
 
-    fci_ints_ = std::make_shared<ActiveSpaceIntegrals>(ints_, correlated_mo,
-                                               mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
+    fci_ints_ = std::make_shared<ActiveSpaceIntegrals>(
+        ints_, correlated_mo, mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
 
     // Set the integrals
     ambit::Tensor tei_active_aa =
@@ -74,8 +75,11 @@ void MRCI::startup() {
     fci_ints_->compute_restricted_one_body_operator();
 
     nroot_ = options_.get_int("NROOT");
-    multiplicity_ = options_.get_int("MULTIPLICITY");
-
+    multiplicity_ = 1;
+    if (options_.get_int("MULTIPLICITY") >= 0) {
+        multiplicity_ = options_.get_int("MULTIPLICITY");
+        // TODO: potentially a if MULTIPLICITY is not defined
+    }
     diag_method_ = DLSolver;
 }
 
@@ -311,4 +315,4 @@ void MRCI::upcast_reference() {
     //        reference_.add(det);
     //    }
 }
-}
+} // namespace forte

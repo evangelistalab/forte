@@ -55,8 +55,7 @@ std::string dimension_to_string(psi::Dimension dim) {
 
 CINO::CINO(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
            std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : OrbitalTransform(ints, mo_space_info), options_(options),
-      mo_space_info_(mo_space_info) {
+    : OrbitalTransform(ints, mo_space_info), options_(options), mo_space_info_(mo_space_info) {
 
     fci_ints_ =
         std::make_shared<ActiveSpaceIntegrals>(ints, mo_space_info_->get_corr_abs_mo("ACTIVE"),
@@ -133,19 +132,18 @@ void CINO::compute_transformation() {
 
 void CINO::startup() {
     wavefunction_multiplicity_ = 1;
-    if (options_->has_changed("MULTIPLICITY")) {
+    if (options_->get_int("MULTIPLICITY") >= 0) {
         wavefunction_multiplicity_ = options_->get_int("MULTIPLICITY");
+        // TODO: potentially a if MULTIPLICITY is not defined
     }
 
     diag_method_ = DLSolver;
-    if (options_->has_changed("DIAG_ALGORITHM")) {
-        if (options_->get_str("DIAG_ALGORITHM") == "FULL") {
-            diag_method_ = Full;
-        } else if (options_->get_str("DIAG_ALGORITHM") == "DLSTRING") {
-            diag_method_ = DLString;
-        } else if (options_->get_str("DIAG_ALGORITHM") == "DLDISK") {
-            diag_method_ = DLDisk;
-        }
+    if (options_->get_str("DIAG_ALGORITHM") == "FULL") {
+        diag_method_ = Full;
+    } else if (options_->get_str("DIAG_ALGORITHM") == "DLSTRING") {
+        diag_method_ = DLString;
+    } else if (options_->get_str("DIAG_ALGORITHM") == "DLDISK") {
+        diag_method_ = DLDisk;
     }
     // Read Options
     rdm_level_ = options_->get_int("ACI_MAX_RDM");

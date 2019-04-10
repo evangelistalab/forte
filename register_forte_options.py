@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 
 def register_forte_options(forte_options):
     register_driver_options(forte_options)
@@ -46,7 +46,7 @@ def register_driver_options(forte_options):
         """The charge of the molecule. If a value is provided it overrides the charge of the SCF solution."""
     )
     forte_options.add_int(
-        "MULTIPLICITY", 0,
+        "MULTIPLICITY", -1,
         """The multiplicity = (2S + 1) of the electronic state.
     For example, 1 = singlet, 2 = doublet, 3 = triplet, ...
     If a value is provided it overrides the multiplicity of the SCF solution"""
@@ -63,6 +63,14 @@ def register_driver_options(forte_options):
         """Set the print level."""
     )
     forte_options.add_double("E_CONVERGENCE", 1.0e-8, "The energy convergence criterion") # TODO: obsolete? (Francesco)
+
+    forte_options.add_str("MINAO_BASIS", "STO-3G", "The basis used to define an orbital subspace")
+
+    forte_options.add_int_array("SUBSPACE", "A list of orbital subspaces")
+
+    forte_options.add_double("MS", 0.0, "Projection of spin onto the z axis")
+
+    forte_options.add_str("ACTIVE_REF_TYPE", "CAS", "Initial guess for active space wave functions")
 
     forte_options.set_group("")
 
@@ -476,7 +484,7 @@ def register_aci_options(forte_options):
     forte_options.add_bool("ACI_BATCHED_SCREENING", False,
                            "Control batched screeing?")
 
-    forte_options.add_int("ACI_NBATCH", 1, "Number of batches in screening")
+    forte_options.add_int("ACI_NBATCH", 0, "Number of batches in screening")
 
     forte_options.add_int("ACI_MAX_MEM", 1000,
                           "Sets max memory for batching algorithm (MB)")

@@ -65,7 +65,6 @@ namespace forte {
 void export_ForteOptions(py::module& m) {
     py::class_<ForteOptions, std::shared_ptr<ForteOptions>>(m, "ForteOptions")
         .def(py::init<>())
-        .def(py::init<psi::Options&>())
         .def("set_group", &ForteOptions::set_group, "Set the options group")
         .def("add_bool", &ForteOptions::add_bool, "Add a boolean option")
         .def("add_int", &ForteOptions::add_int, "Add an integer option")

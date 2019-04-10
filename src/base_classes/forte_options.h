@@ -39,9 +39,6 @@ namespace py = pybind11;
 
 namespace forte {
 
-// Types to store options
-using array_opt_t = std::tuple<std::string, std::string>;
-
 /**
  * @brief The ForteOptions class
  */
@@ -51,12 +48,6 @@ class ForteOptions {
      * @brief ForteOptions
      */
     ForteOptions();
-
-    /**
-     * @brief ForteOptions
-     * @param options a psi4 Options object
-     */
-    ForteOptions(psi::Options& options);
 
     /**
      * @brief Set the group to which options are added
@@ -175,6 +166,13 @@ class ForteOptions {
     std::string get_str(const std::string& label);
 
     /**
+     * @brief Get a general python list
+     * @param label
+     * @return a py list
+     */
+    py::list get_gen_list(const std::string& label);
+
+    /**
      * @brief Get a vector of int option
      * @param label Option label
      */
@@ -187,14 +185,15 @@ class ForteOptions {
     std::vector<double> get_double_vec(const std::string& label);
 
     /**
-     * @brief If an option is changed
-     * @param label Option label
+     * @brief Register the options with Psi4's options object
+     * @param options a Psi4 option object
      */
-    bool has_changed(const std::string& label);
-
-    /// Add the options to psi4's options class
     void push_options_to_psi4(psi::Options& options);
 
+    /**
+     * @brief Read options from a Psi4's options object
+     * @param options a Psi4 option object
+     */
     void get_options_from_psi4(psi::Options& options);
 
     /**
@@ -208,9 +207,6 @@ class ForteOptions {
      */
     void update_psi_options(psi::Options& options);
 
-    /// temporary solution for the option array problem
-    psi::Options& psi_options() { return psi_options_; }
-
     /**
      * @brief Return a python dictionary with all the options registered
      */
@@ -219,8 +215,6 @@ class ForteOptions {
   private:
     pybind11::dict dict_;
     std::string group_ = "";
-    std::vector<array_opt_t> array_opts_;
-    psi::Options psi_options_;
 };
 } // namespace forte
 
