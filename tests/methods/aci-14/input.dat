@@ -12,7 +12,7 @@ C  0.00000 0.00000 1.24253
 set {
   basis 6-31g*
   scf_type pk
-  e_convergence 12
+  e_convergence 13
   d_convergence 12
   r_convergence 12
   docc [2,0,0,0,0,2,1,1]
@@ -32,14 +32,13 @@ set forte {
   aci_n_average 2
   charge 0
   root_sym 0
-#  ACI_INITIAL_SPACE CISD
   aci_preiterations 2
   dl_maxiter 100
   diag_algorithm solver
   sigma_build_type sparse
 }
 
-set_num_threads(8)
+set_num_threads(1)
 
 energy('scf')
 
@@ -47,5 +46,5 @@ compare_values(refscf, variable("CURRENT ENERGY"),9, "SCF energy")
 
 energy('forte')
 
-compare_values(refaci, variable("ACI ENERGY"),9, "ACI energy")
-compare_values(refacipt2, variable("ACI+PT2 ENERGY"),8, "ACI+PT2 energy")
+compare_values(refaci, variable("ACI ENERGY"),5, "ACI energy")
+compare_values(refacipt2, variable("ACI+PT2 ENERGY"),5, "ACI+PT2 energy")

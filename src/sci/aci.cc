@@ -101,8 +101,10 @@ void AdaptiveCI::startup() {
     // Read options
     gamma_ = options_->get_double("GAMMA");
     screen_thresh_ = options_->get_double("ACI_PRESCREEN_THRESHOLD");
-    add_aimed_degenerate_ = options_->get_bool("ACI_ADD_AIMED_DEGENERATE");
     project_out_spin_contaminants_ = options_->get_bool("SCI_PROJECT_OUT_SPIN_CONTAMINANTS");
+    if (options_->has_changed("ACI_ADD_AIMED_DEGENERATE")) {
+        add_aimed_degenerate_ = options_->get_bool("ACI_ADD_AIMED_DEGENERATE");
+    }
     spin_complete_ = options_->get_bool("ACI_ENFORCE_SPIN_COMPLETE");
 
     max_cycle_ = 20;
@@ -781,6 +783,7 @@ void AdaptiveCI::prune_q_space(DeterminantHashVec& PQ_space, DeterminantHashVec&
                 size_t J = last_excluded - I;
                 if (std::fabs(dm_det_list[last_excluded + 1].first - dm_det_list[J].first) <
                     1.0e-9) {
+
                     P_space.add(dm_det_list[J].second);
                     num_extra += 1;
                 } else {
