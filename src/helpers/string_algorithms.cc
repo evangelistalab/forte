@@ -26,6 +26,7 @@
  * @END LICENSE
  */
 
+#include <algorithm>
 #include <vector>
 #include <string>
 
