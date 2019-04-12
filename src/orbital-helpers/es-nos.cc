@@ -312,7 +312,7 @@ std::vector<size_t> ESNO::get_excitation_space() {
     int max_n = ruocc.size();
     int n_kept = options_.get_int("ESNO_MAX_SIZE");
 
-    if (if n_kept == 0) {
+    if (n_kept == 0) {
         n_kept = max_n;
     }
 

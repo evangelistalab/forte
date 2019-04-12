@@ -102,7 +102,7 @@ void AdaptiveCI::startup() {
     project_out_spin_contaminants_ = options_->get_bool("SCI_PROJECT_OUT_SPIN_CONTAMINANTS");
     spin_complete_ = options_->get_bool("ACI_ENFORCE_SPIN_COMPLETE");
 
-    max_cycle_ = options_->get_int("ACI_MAX_CYCLE");
+    max_cycle_ = options_->get_int("SCI_MAX_CYCLE");
 
     pre_iter_ = options_->get_int("ACI_PREITERATIONS");
 
