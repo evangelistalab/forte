@@ -100,7 +100,6 @@ src/sci/aci.cc
 src/sci/aci_build_F.cc
 src/sci/asci.cc
 src/sci/fci_mo.cc
-src/sci/mrci.cc
 src/sci/mrpt2.cc
 src/sci/sci.cc
 src/ci_ex_states/excited_state_solver.cc

@@ -30,8 +30,6 @@
 #include <cmath>
 #include <memory>
 
-#include "boost/format.hpp"
-
 #include <ambit/tensor.h>
 
 #include "psi4/libdpd/dpd.h"
@@ -60,7 +58,6 @@
 
 #include "sci/aci.h"
 #include "sci/asci.h"
-#include "sci/mrci.h"
 
 #include "orbital-helpers/ci-no/ci-no.h"
 #include "orbital-helpers/ci-no/mrci-no.h"
@@ -73,11 +70,6 @@
 #include "mrdsrg-spin-integrated/mrdsrg.h"
 #include "mrdsrg-spin-integrated/dwms_mrpt2.h"
 #include "mrdsrg-helper/dsrg_transformed.h"
-//#include "mrdsrg-spin-integrated/dsrg_mrpt2.h"
-//#include "mrdsrg-spin-integrated/three_dsrg_mrpt2.h"
-//#include "mrdsrg-spin-integrated/active_dsrgpt2.h"
-
-#include "pci/pci.h"
 
 #include "v2rdm/v2rdm.h"
 #include "helpers/timer.h"
