@@ -65,9 +65,11 @@ using namespace psi;
 
 namespace forte {
 
+#ifdef HAVE_GA
 /// These functions replace the Memory Allocator in GA with C/C++ allocator.
 void* replace_malloc(size_t bytes, int, char*) { return malloc(bytes); }
 void replace_free(void* ptr) { free(ptr); }
+#endif
 
 /**
  * @brief Read options from the input file. Called by psi4 before everything else.
@@ -138,63 +140,3 @@ void banner() {
 }
 
 } // namespace forte
-
-///**
-// * @brief The main forte function.
-// */
-// psi::SharedWavefunction run_forte(psi::SharedWavefunction ref_wfn, psi::Options& options) {
-//    // Start a timer
-//    timer total_time("Forte");
-
-////    forte_banner();
-
-//    auto my_proc_n_nodes = forte_startup();
-//    int my_proc = my_proc_n_nodes.first;
-
-//    // Make a MOSpaceInfo object
-//    auto mo_space_info = make_mo_space_info(ref_wfn, options);
-
-//    // Sanity check
-//    if ((4 * sizeof(Determinant)) < mo_space_info->size("ACTIVE")) {
-//        outfile->Printf("\n  FATAL:  The active space you requested (%d) is larger than allowed by
-//        "
-//                        "the determinant class (%d)!",
-//                        mo_space_info->size("ACTIVE"), 4 * sizeof(Determinant));
-//        outfile->Printf("\n          Please check your input and/or recompile Forte with a larger
-//        "
-//                        "determinant dimension");
-//        exit(1);
-//    }
-
-//    if (((options.get_str("DIAG_ALGORITHM") == "DYNAMIC") or
-//         (options.get_bool("SCI_DIRECT_RDMS") == true)) and
-//        (mo_space_info->size("ACTIVE") > 64)) {
-
-//        outfile->Printf("\n  FATAL:  Dynamic diagonalization or dynamic RDM builds cannot be used
-//        "
-//                        "for active spaces larger than 64 orbitals!");
-
-//        exit(1);
-//    }
-
-//    // Make a subspace object
-//    psi::SharedMatrix Ps = make_aosubspace_projector(ref_wfn, options);
-
-//    // Transform the orbitals
-//    make_avas(ref_wfn, options, Ps);
-
-//    std::string job_type = options.get_str("JOB_TYPE");
-//    if (job_type != "NONE") {
-//        // Transform integrals and run forte only if necessary
-//        // Make an integral object
-//        auto ints = make_forte_integrals(ref_wfn, options, mo_space_info);
-
-//        // Compute energy
-//        forte_old_methods(ref_wfn, options, ints, mo_space_info, my_proc);
-
-//        //        outfile->Printf("\n\n  Your calculation took %.8f seconds\n", total_time.get());
-//    }
-
-//    forte_cleanup();
-//    return ref_wfn;
-//}

@@ -72,7 +72,6 @@ src/base_classes/active_space_method.cc
 src/base_classes/active_space_solver.cc
 src/orbital-helpers/avas.cc
 src/casscf/casscf.cc
-src/cc/cc.cc
 src/ci_rdm/ci_rdms.cc
 src/ci_rdm/ci_rdms_dynamic.cc
 src/sparse_ci/ci_reference.cc

@@ -62,7 +62,6 @@
 #include "sci/asci.h"
 #include "sci/mrci.h"
 
-#include "cc/cc.h"
 #include "orbital-helpers/ci-no/ci-no.h"
 #include "orbital-helpers/ci-no/mrci-no.h"
 #include "mrdsrg-so/mrdsrg_so.h"
@@ -146,8 +145,11 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
         MCSRGPT2_MO mcsrgpt2_mo(rdms, forte_options, ints, mo_space_info);
         final_energy = mcsrgpt2_mo.compute_energy();
     }
+    return final_energy;
+}
 
-    if (options.get_bool("USE_DMRGSCF")) {
+/* THE FOLLOWING PROCEDURES ARE NOT TESTED
+if (options.get_bool("USE_DMRGSCF")) {
 #ifdef HAVE_CHEMPS2
         auto dmrg = std::make_shared<DMRGSCF>(state, std::make_shared<SCFInfo>(ref_wfn),
                                               forte_options, ints, mo_space_info);
@@ -227,11 +229,6 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
         final_energy = somrdsrg->compute_energy();
     }
 
-    if (options.get_str("JOB_TYPE") == "CC") {
-        auto cc = std::make_shared<CC>(ints, mo_space_info);
-        final_energy = cc->compute_energy();
-    }
-
     if (options.get_str("JOB_TYPE") == "MRCISD") {
         if (options.get_bool("ACI_NO")) {
             auto as_ints =
@@ -252,6 +249,6 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
         auto mrci = std::make_shared<MRCI>(ref_wfn, options, ints, mo_space_info, reference);
         final_energy = mrci->compute_energy();
     }
-    return final_energy;
-}
+*/
+
 } // namespace forte
