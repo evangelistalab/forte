@@ -128,9 +128,6 @@ class AdaptiveCI : public SelectedCIMethod {
     /// Set the printing level
     void set_quiet(bool quiet) { quiet_mode_ = quiet; }
 
-    /// Get the wavefunction coefficients
-    psi::SharedMatrix get_evecs();
-
     /// Compute the ACI-NOs
     void compute_nos();
 

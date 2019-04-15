@@ -441,29 +441,23 @@ std::vector<std::pair<double, double>> ExcitedStateSolver::compute_spin(Determin
                                                                         WFNOperator& op,
                                                                         psi::SharedMatrix evecs,
                                                                         int nroot) {
-    // WFNOperator op(mo_symmetry_);
-
-    // op.build_strings(space);
-    // op.op_lists(space);
-    // op.tp_lists(space);
-
     std::vector<std::pair<double, double>> spin_vec(nroot);
-    if (sparse_solver_->sigma_method_ == "HZ") {
-        op.clear_op_s_lists();
-        op.clear_tp_s_lists();
+    op.clear_op_s_lists();
+    op.clear_tp_s_lists();
+    if (diag_method_ == Dynamic) {
         op.build_strings(space);
-        op.op_lists(space);
-        op.tp_lists(space);
     }
+    op.op_s_lists(space);
+    op.tp_s_lists(space);
 
     if (diag_method_ == Dynamic) {
-        for (size_t n = 0; n < nroot_; ++n) {
+        for (size_t n = 0; n < nroot; ++n) {
             double S2 = op.s2_direct(space, evecs, n);
             double S = std::fabs(0.5 * (std::sqrt(1.0 + 4.0 * S2) - 1.0));
             spin_vec[n] = std::make_pair(S, S2);
         }
     } else {
-        for (size_t n = 0; n < nroot_; ++n) {
+        for (size_t n = 0; n < nroot; ++n) {
             double S2 = op.s2(space, evecs, n);
             double S = std::fabs(0.5 * (std::sqrt(1.0 + 4.0 * S2) - 1.0));
             spin_vec[n] = std::make_pair(S, S2);
@@ -635,9 +629,15 @@ void ExcitedStateSolver::save_old_root(DeterminantHashVec& dets, psi::SharedMatr
     }
 }
 
+DeterminantHashVec ExcitedStateSolver::get_PQ_space() { return final_wfn_; }
+
+psi::SharedMatrix ExcitedStateSolver::get_PQ_evecs() { return evecs_; }
+
 void ExcitedStateSolver::set_excitation_algorithm(std::string ex_alg) { ex_alg_ = ex_alg; }
 
 void ExcitedStateSolver::set_core_excitation(bool core_ex) { core_ex_ = core_ex; }
+
+std::shared_ptr<ActiveSpaceIntegrals> ExcitedStateSolver::get_as_ints() { return as_ints_; }
 
 void ExcitedStateSolver::set_quiet(bool quiet) { quiet_mode_ = quiet; }
 }

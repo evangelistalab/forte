@@ -84,6 +84,16 @@ class ExcitedStateSolver : public ActiveSpaceMethod {
     /// Set the printing level
     void set_quiet(bool quiet);
 
+    /// Get the model space
+    DeterminantHashVec get_PQ_space();
+
+    /// Get model space coefficients
+    psi::SharedMatrix get_PQ_evecs();
+
+    /// Return the integrals
+    std::shared_ptr<ActiveSpaceIntegrals> get_as_ints();
+    
+
   protected:
     DeterminantHashVec final_wfn_;
     WFNOperator op_;

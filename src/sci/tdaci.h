@@ -48,6 +48,7 @@
 #include "orbital-helpers/localize.h"
 
 #include "sparse_ci/operator.h"
+#include "ci_ex_states/excited_state_solver.h"
 #include "sci/aci.h"
 
 #ifdef _OPENMP

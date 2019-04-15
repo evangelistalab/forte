@@ -85,12 +85,15 @@ double TDACI::compute_energy() {
     }
 
     // 1. Grab an ACI wavefunction
-    auto aci =
-        std::make_shared<AdaptiveCI>(state_, options_->get_int("NROOT"), scf_info_, options_, mo_space_info_, as_ints_);
+    auto aci = std::make_unique<ExcitedStateSolver>(
+            state_, options_->get_int("NROOT"), mo_space_info_, as_ints_,
+            std::make_unique<AdaptiveCI>(state_, options_->get_int("NROOT"), 
+            scf_info_, options_, mo_space_info_, as_ints_));
+
     aci->set_quiet(true);
     aci->compute_energy();
-    DeterminantHashVec aci_dets = aci->get_wavefunction();
-    SharedMatrix aci_coeffs = aci->get_evecs();
+    DeterminantHashVec aci_dets = aci->get_PQ_space();
+    SharedMatrix aci_coeffs = aci->get_PQ_evecs();
     outfile->Printf("\n  ACI wavefunction built");
 
     // 1.5 Compute ACI occs and save to file
@@ -120,7 +123,7 @@ double TDACI::compute_energy() {
 
     // 3. Build the full n-1 Hamiltonian if not screening
     std::vector<std::string> det_str(nann);
-    as_ints_ = aci->get_aci_ints();
+    as_ints_ = aci->get_as_ints();
     SharedMatrix full_aH = std::make_shared<Matrix>("aH", nann, nann);
     if (build_full_H) {
         for (size_t I = 0; I < nann; ++I) {
@@ -1973,13 +1976,13 @@ void TDACI::propagate_RK4_select(std::vector<double>& PQ_coeffs_r, std::vector<d
 
     // outfile->Printf("\n  Time spent propagating (RK4): %1.6f", total.get());
 }
-void TDACI::propagate_RK4_list(std::vector<double>& PQ_coeffs_r,
-                               std::vector<double>& PQ_coeffs_i,
-                               DeterminantHashVec& PQ_space, WFNOperator& op, double dt) {
-
-    Timer total;
-    size_t npq = PQ_space.size();
-}
+//void TDACI::propagate_RK4_list(std::vector<double>& PQ_coeffs_r,
+//                               std::vector<double>& PQ_coeffs_i,
+//                               DeterminantHashVec& PQ_space, WFNOperator& op, double dt) {
+//
+//    Timer total;
+//    size_t npq = PQ_space.size();
+//}
 
 void TDACI::propagate_RK4_list(std::vector<double>& PQ_coeffs_r,
                                std::vector<double>& PQ_coeffs_i,
