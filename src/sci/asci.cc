@@ -324,7 +324,7 @@ double ASCI::compute_energy() {
     outfile->Printf("\n  Iterations required:                         %zu", cycle);
     outfile->Printf("\n  psi::Dimension of optimized determinant space:    %zu\n", dim);
     outfile->Printf("\n  * AS-CI Energy Root 0        = %.12f Eh", root_energy);
-    if (options_->get_bool("MRPT2")) {
+    if (options_->get_bool("FULL_MRPT2")) {
         outfile->Printf("\n  * AS-CI+PT2 Energy Root 0    = %.12f Eh", root_energy + pt2);
     }
 
