@@ -85,12 +85,11 @@ void ASCI::pre_iter_preparation(){
     sparse_solver_.set_force_diag(options_->get_bool("FORCE_DIAG_METHOD"));
     sparse_solver_.set_e_convergence(options_->get_double("E_CONVERGENCE"));
     sparse_solver_.set_maxiter_davidson(options_->get_int("DL_MAXITER"));
-    sparse_solver_.set_spin_project(project_out_spin_contaminants_);
-    //    sparse_solver.set_spin_project_full(project_out_spin_contaminants_);
+    sparse_solver_.set_spin_project(true);
     sparse_solver_.set_guess_dimension(options_->get_int("DL_GUESS_SIZE"));
     sparse_solver_.set_num_vecs(options_->get_int("N_GUESS_VEC"));
     sparse_solver_.set_sigma_method(options_->get_str("SIGMA_BUILD_TYPE"));
-    sparse_solver_.set_spin_project_full(false);
+    sparse_solver_.set_spin_project_full(true);
     sparse_solver_.set_max_memory(options_->get_int("SIGMA_VECTOR_MAX_MEMORY"));
 }
 
