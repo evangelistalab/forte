@@ -40,7 +40,6 @@ set forte {
   aci_perturb_select true
   aci_enforce_spin_complete false
   active_ref_type hf 
-  full_mrpt2 true
 }
 
 energy('scf')
