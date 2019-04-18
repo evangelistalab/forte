@@ -26,6 +26,7 @@ set forte {
   multiplicity 1
   active_space_solver asci                          
   frozen_docc [1,0,0,0,0,1,0,0]
+  multiplicity 1
   charge 0                               
   root_sym 0
   nroot 1
