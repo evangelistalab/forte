@@ -27,8 +27,6 @@
  * @END LICENSE
  */
 
-#include "psi4/libmints/molecule.h"
-#include "psi4/libmints/wavefunction.h"
 #include "psi4/liboptions/liboptions.h"
 
 #include "base_classes/forte_options.h"
@@ -49,62 +47,44 @@ namespace forte {
 
 
 
-MRPT2::MRPT2(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
+MRPT2::MRPT2(std::shared_ptr<ForteOptions> options, std::shared_ptr<ActiveSpaceIntegrals> as_ints,
              std::shared_ptr<MOSpaceInfo> mo_space_info, DeterminantHashVec& reference,
-             psi::SharedMatrix evecs, psi::SharedVector evals)
-    : Wavefunction(options), ints_(ints), reference_(reference), mo_space_info_(mo_space_info),
+             psi::SharedMatrix evecs, psi::SharedVector evals, int nroot)
+    : as_ints_(as_ints),options_(options), reference_(reference),nroot_(nroot), mo_space_info_(mo_space_info),
       evecs_(evecs), evals_(evals) {
-    shallow_copy(ref_wfn);
+    outfile->Printf("\n  ==> Full EN-MRPT2 correction  <==");
     //    print_method_banner(
     //        {"Deterministic MR-PT2", "Jeff Schriber"});
-    startup();
+    mo_symmetry_ = mo_space_info_->symmetry("ACTIVE");
 }
 
 MRPT2::~MRPT2() {}
 
-void MRPT2::startup() {
-    mo_symmetry_ = mo_space_info_->symmetry("ACTIVE");
 
-    // Define the correlated space
-    auto active_mo = mo_space_info_->get_corr_abs_mo("ACTIVE");
-
-    fci_ints_ = std::make_shared<ActiveSpaceIntegrals>(ints_, active_mo,
-                                               mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
-
-    // Set the integrals
-    ambit::Tensor tei_active_aa = ints_->aptei_aa_block(active_mo, active_mo, active_mo, active_mo);
-    ambit::Tensor tei_active_ab = ints_->aptei_ab_block(active_mo, active_mo, active_mo, active_mo);
-    ambit::Tensor tei_active_bb = ints_->aptei_bb_block(active_mo, active_mo, active_mo, active_mo);
-
-    fci_ints_->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
-
-    fci_ints_->compute_restricted_one_body_operator();
-
-    nroot_ = options_.get_int("NROOT");
-    multiplicity_ = options_.get_int("MULTIPLICITY");
-    screen_thresh_ = options_.get_double("ACI_PRESCREEN_THRESHOLD");
-}
-
-double MRPT2::compute_energy() {
+std::vector<double> MRPT2::compute_energy() {
     outfile->Printf("\n\n  Computing PT2 correction from %zu reference determinants",
                     reference_.size());
 
+    std::vector<double> pt2_en;
+
     local_timer en;
-    double pt2_energy = compute_pt2_energy();
-    //  double scalar = fci_ints_->scalar_energy() + molecule_->nuclear_repulsion_energy();
+    for( int n = 0; n < nroot_; ++n){
+        pt2_en.push_back(compute_pt2_energy(n));
+        outfile->Printf("\n  Root %d PT2 energy:  %1.12f", n, pt2_en[n]);
+    }
+    //  double scalar = as_ints_->scalar_energy() + molecule_->nuclear_repulsion_energy();
     //  double energy = pt2_energy + scalar + evals_->get(0);
-    outfile->Printf("\n  PT2 computation took %1.6f s", en.get());
-    outfile->Printf("\n  PT2 energy:  %1.12f", pt2_energy);
+    outfile->Printf("\n  Full PT2 computation took %1.6f s", en.get());
     //  outfile->Printf("\n  Total energy:  %1.12f", energy);
 
-    return pt2_energy;
+    return pt2_en;
 }
 
-double MRPT2::compute_pt2_energy() {
+double MRPT2::compute_pt2_energy(int root) {
     double energy = 0.0;
     const size_t n_dets = reference_.size();
-    int nmo = fci_ints_->nmo();
-    double max_mem = options_.get_double("PT2_MAX_MEM");
+    int nmo = as_ints_->nmo();
+    double max_mem = options_->get_double("PT2_MAX_MEM");
 
     size_t guess_size = n_dets * nmo * nmo;
     double nbyte = (1073741824 * max_mem) / (sizeof(double));
@@ -133,21 +113,21 @@ double MRPT2::compute_pt2_energy() {
         int end_idx = start_idx + batch_size;
 
         for (int bin = start_idx; bin < end_idx; ++bin) {
-            energy += energy_kernel(bin, nbin);
+            energy += energy_kernel(bin, nbin, root);
         }
     }
     return energy;
 }
 
-double MRPT2::energy_kernel(int bin, int nbin) {
+double MRPT2::energy_kernel(int bin, int nbin, int root) {
     size_t nact = mo_space_info_->size("ACTIVE");
-    double E_0 = evals_->get(0);
+    double E_0 = evals_->get(root);
     double energy = 0.0;
     const size_t n_dets = reference_.size();
     const det_hashvec& dets = reference_.wfn_hash();
     det_hash<double> A_I;
     for (size_t I = 0; I < n_dets; ++I) {
-        double c_I = evecs_->get(I, 0);
+        double c_I = evecs_->get(I, root);
         const Determinant& det = dets[I];
         std::vector<int> aocc = det.get_alfa_occ(nact);
         std::vector<int> bocc = det.get_beta_occ(nact);
@@ -176,7 +156,7 @@ double MRPT2::energy_kernel(int bin, int nbin) {
                     size_t hash_val = Determinant::Hash()(new_det);
                     if ((hash_val % nbin) == bin) {
                         double coupling =
-                            fci_ints_->slater_rules_single_alpha(new_det, ii, aa) * c_I;
+                            as_ints_->slater_rules_single_alpha(new_det, ii, aa) * c_I;
                         if (A_I.find(new_det) != A_I.end()) {
                             coupling += A_I[new_det];
                         }
@@ -200,7 +180,7 @@ double MRPT2::energy_kernel(int bin, int nbin) {
                     size_t hash_val = Determinant::Hash()(new_det);
                     if ((hash_val % nbin) == bin) {
                         double coupling =
-                            fci_ints_->slater_rules_single_beta(new_det, ii, aa) * c_I;
+                            as_ints_->slater_rules_single_beta(new_det, ii, aa) * c_I;
                         if (A_I.find(new_det) != A_I.end()) {
                             coupling += A_I[new_det];
                         }
@@ -229,7 +209,7 @@ double MRPT2::energy_kernel(int bin, int nbin) {
                             size_t hash_val = Determinant::Hash()(new_det);
                             if ((hash_val % nbin) == bin) {
 
-                                double coupling = sign * c_I * fci_ints_->tei_ab(ii, jj, aa, bb);
+                                double coupling = sign * c_I * as_ints_->tei_ab(ii, jj, aa, bb);
                                 if (A_I.find(new_det) != A_I.end()) {
                                     coupling += A_I[new_det];
                                 }
@@ -259,7 +239,7 @@ double MRPT2::energy_kernel(int bin, int nbin) {
                             // Check if the determinant goes in this bin
                             size_t hash_val = Determinant::Hash()(new_det);
                             if ((hash_val % nbin) == bin) {
-                                double coupling = sign * c_I * fci_ints_->tei_aa(ii, jj, aa, bb);
+                                double coupling = sign * c_I * as_ints_->tei_aa(ii, jj, aa, bb);
                                 if (A_I.find(new_det) != A_I.end()) {
                                     coupling += A_I[new_det];
                                 }
@@ -289,7 +269,7 @@ double MRPT2::energy_kernel(int bin, int nbin) {
                             // Check if the determinant goes in this bin
                             size_t hash_val = Determinant::Hash()(new_det);
                             if ((hash_val % nbin) == bin) {
-                                double coupling = sign * c_I * fci_ints_->tei_bb(ii, jj, aa, bb);
+                                double coupling = sign * c_I * as_ints_->tei_bb(ii, jj, aa, bb);
                                 if (A_I.find(new_det) != A_I.end()) {
                                     coupling += A_I[new_det];
                                 }
@@ -303,7 +283,7 @@ double MRPT2::energy_kernel(int bin, int nbin) {
     }
 
     for (auto& det : A_I) {
-        energy += (det.second * det.second) / (E_0 - fci_ints_->energy(det.first));
+        energy += (det.second * det.second) / (E_0 - as_ints_->energy(det.first));
     }
     return energy;
 }

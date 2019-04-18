@@ -79,6 +79,8 @@ class SelectedCIMethod {
     virtual void prune_PQ_to_P() = 0;
     /// Post-iter process
     virtual void post_iter_process() = 0;
+    /// Do full active-space PT2
+    virtual void full_mrpt2() = 0;
 
     // Temporarily added interface to ExcitedStateSolver
     /// Set the class variable

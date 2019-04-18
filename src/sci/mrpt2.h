@@ -47,30 +47,30 @@
 namespace forte {
 
 
-class MRPT2 : public psi::Wavefunction {
+class MRPT2 {
   public:
     // Class constructor and destructor
-    MRPT2(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
+    MRPT2(std::shared_ptr<ForteOptions> options, std::shared_ptr<ActiveSpaceIntegrals> as_ints,
           std::shared_ptr<MOSpaceInfo> mo_space_info, DeterminantHashVec& reference,
-          psi::SharedMatrix evecs, psi::SharedVector evals);
+          psi::SharedMatrix evecs, psi::SharedVector evals, int nroot);
 
     ~MRPT2();
 
-    std::shared_ptr<ForteIntegrals> ints_;
     DeterminantHashVec& reference_;
 
-    double compute_energy();
+    std::vector<double> compute_energy();
 
   private:
-    std::shared_ptr<ActiveSpaceIntegrals> fci_ints_;
+    std::shared_ptr<ActiveSpaceIntegrals> as_ints_;
+    std::shared_ptr<ForteOptions> options_;
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
     psi::SharedMatrix evecs_;
     psi::SharedVector evals_;
 
     void startup();
 
-    double compute_pt2_energy();
-    double energy_kernel(int bin, int nbin);
+    double compute_pt2_energy(int root);
+    double energy_kernel(int bin, int nbin, int root);
 
     std::vector<int> mo_symmetry_;
 

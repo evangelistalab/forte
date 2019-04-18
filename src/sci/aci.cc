@@ -1869,6 +1869,15 @@ void AdaptiveCI::spin_analysis() {
 
 void AdaptiveCI::update_sigma() { sigma_ = options_->get_double("ACI_RELAX_SIGMA"); }
 
+void AdaptiveCI::full_mrpt2() {
+    if( options_->get_bool("FULL_MRPT2") ){
+        MRPT2 pt(options_, as_ints_, mo_space_info_, PQ_space_, PQ_evecs_,
+                 PQ_evals_, nroot_);
+        std::vector<double> pt2 = pt.compute_energy();
+        multistate_pt2_energy_correction_ = pt2;
+    }
+}
+
 DeterminantHashVec AdaptiveCI::get_PQ_space() { return PQ_space_; }
 psi::SharedMatrix AdaptiveCI::get_PQ_evecs() { return PQ_evecs_; }
 psi::SharedVector AdaptiveCI::get_PQ_evals() { return PQ_evals_; }
