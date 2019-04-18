@@ -29,26 +29,20 @@
 #ifndef _mrpt2_h_
 #define _mrpt2_h_
 
-#include "psi4/libmints/molecule.h"
-#include "psi4/libmints/wavefunction.h"
-#include "psi4/liboptions/liboptions.h"
-
-#include "ci_rdm/ci_rdms.h"
 #include "base_classes/mo_space_info.h"
-#include "base_classes/rdms.h"
 #include "sparse_ci/determinant.h"
-#include "integrals/integrals.h"
 #include "integrals/active_space_integrals.h"
 #include "sparse_ci/determinant_hashvector.h"
 #include "sparse_ci/operator.h"
-#include "sparse_ci/sparse_ci_solver.h"
-
 
 namespace forte {
 
-
 class MRPT2 {
   public:
+    // This class performs an Epstein--Nesbet second-order energy correction
+    // to any sCI wavefunction. This correction spans only the active orbitals
+    // in the standard CI+PT way
+
     // Class constructor and destructor
     MRPT2(std::shared_ptr<ForteOptions> options, std::shared_ptr<ActiveSpaceIntegrals> as_ints,
           std::shared_ptr<MOSpaceInfo> mo_space_info, DeterminantHashVec& reference,
@@ -56,29 +50,34 @@ class MRPT2 {
 
     ~MRPT2();
 
+    // The determinants
     DeterminantHashVec& reference_;
 
+    // Computes the PT2 energy correction
     std::vector<double> compute_energy();
 
   private:
+    // The active space integrals
     std::shared_ptr<ActiveSpaceIntegrals> as_ints_;
+    // The options (needed only for memory/binning)
     std::shared_ptr<ForteOptions> options_;
+    // MoSpaceInfo object
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
+    // The sCI expansion coefficients
     psi::SharedMatrix evecs_;
+    // The sCI energies
     psi::SharedVector evals_;
-
-    void startup();
-
-    double compute_pt2_energy(int root);
-    double energy_kernel(int bin, int nbin, int root);
-
+    // the orbital symmetry labels
     std::vector<int> mo_symmetry_;
-
+    // Number of reference roots
     int nroot_;
-    int multiplicity_;
 
-    double screen_thresh_;
+    // Computes the total energy correction for a given root
+    double compute_pt2_energy(int root);
+    // Computes the energy contribution from a subset of excited
+    // determinants
+    double energy_kernel(int bin, int nbin, int root);
 };
-}
+} // namespace forte
 
 #endif // _mrpt2_h_

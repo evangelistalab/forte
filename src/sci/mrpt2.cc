@@ -27,8 +27,6 @@
  * @END LICENSE
  */
 
-#include "psi4/liboptions/liboptions.h"
-
 #include "base_classes/forte_options.h"
 #include "mrpt2.h"
 #include "helpers/timer.h"
@@ -45,13 +43,11 @@ using namespace psi;
 
 namespace forte {
 
-
-
 MRPT2::MRPT2(std::shared_ptr<ForteOptions> options, std::shared_ptr<ActiveSpaceIntegrals> as_ints,
              std::shared_ptr<MOSpaceInfo> mo_space_info, DeterminantHashVec& reference,
              psi::SharedMatrix evecs, psi::SharedVector evals, int nroot)
-    : as_ints_(as_ints),options_(options), reference_(reference),nroot_(nroot), mo_space_info_(mo_space_info),
-      evecs_(evecs), evals_(evals) {
+    : as_ints_(as_ints), options_(options), reference_(reference), nroot_(nroot),
+      mo_space_info_(mo_space_info), evecs_(evecs), evals_(evals) {
     outfile->Printf("\n  ==> Full EN-MRPT2 correction  <==");
     //    print_method_banner(
     //        {"Deterministic MR-PT2", "Jeff Schriber"});
@@ -60,7 +56,6 @@ MRPT2::MRPT2(std::shared_ptr<ForteOptions> options, std::shared_ptr<ActiveSpaceI
 
 MRPT2::~MRPT2() {}
 
-
 std::vector<double> MRPT2::compute_energy() {
     outfile->Printf("\n\n  Computing PT2 correction from %zu reference determinants",
                     reference_.size());
@@ -68,7 +63,7 @@ std::vector<double> MRPT2::compute_energy() {
     std::vector<double> pt2_en;
 
     local_timer en;
-    for( int n = 0; n < nroot_; ++n){
+    for (int n = 0; n < nroot_; ++n) {
         pt2_en.push_back(compute_pt2_energy(n));
         outfile->Printf("\n  Root %d PT2 energy:  %1.12f", n, pt2_en[n]);
     }
@@ -179,8 +174,7 @@ double MRPT2::energy_kernel(int bin, int nbin, int root) {
                     // Check if the determinant goes in this bin
                     size_t hash_val = Determinant::Hash()(new_det);
                     if ((hash_val % nbin) == bin) {
-                        double coupling =
-                            as_ints_->slater_rules_single_beta(new_det, ii, aa) * c_I;
+                        double coupling = as_ints_->slater_rules_single_beta(new_det, ii, aa) * c_I;
                         if (A_I.find(new_det) != A_I.end()) {
                             coupling += A_I[new_det];
                         }
@@ -287,4 +281,4 @@ double MRPT2::energy_kernel(int bin, int nbin, int root) {
     }
     return energy;
 }
-}
+} // namespace forte
