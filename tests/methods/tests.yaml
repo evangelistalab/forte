@@ -27,9 +27,11 @@ aci:
    - aci-local-20
    - asci-1
    - aci_scf-1
+   - aci-full-pt2-1
   long:
    - aci-6
    - cis-aci-1
+   - aci-full-pt2-2
   unused:
    - aci-mrcisd-1
    - aci-mrcisd-2
