@@ -2216,7 +2216,7 @@ std::vector<std::tuple<double, int, int>> ProjectorCI::sym_labeled_orbitals(std:
 void ProjectorCI::set_method_variables(
     std::string ex_alg, size_t nroot_method, size_t root,
     const std::vector<std::vector<std::pair<Determinant, double>>>& old_roots) {
-    if ( (ex_alg != "ROOT_ORTHOGONALIZE") or (ex_alg != "NONE") ) {
+    if ( !((ex_alg == "ROOT_ORTHOGONALIZE") or (ex_alg == "NONE")) ) {
         throw psi::PSIEXCEPTION(ex_alg + " has not been implemented in PCI.");
     }
     nroot_ = nroot_method;
