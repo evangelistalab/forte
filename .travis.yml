@@ -53,9 +53,9 @@ install:
 - conda config --set always_yes yes --set changeps1 no
 - conda update -q conda
 - conda info -a
-- conda install psi4 psi4-rt python=3.6 -c psi4
-#- conda create -q -n p4env python=$PYTHON_VER numpy cmake gdma pylibefp libint libxc gau2grid boost -c psi4/label/test -c psi4
-#- source activate p4env
+- conda create -q -n p4env python=$PYTHON_VER 
+- conda install psi4 psi4-rt python=$PYTHON_VER -c psi4
+- source activate p4env
 #- conda install pint pylibefp -c psi4/label/dev
 #- conda install -c intel mkl-devel 
 - python -V
