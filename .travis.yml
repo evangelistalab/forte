@@ -53,14 +53,16 @@ install:
 - conda config --set always_yes yes --set changeps1 no
 - conda update -q conda
 - conda info -a
-- conda create -q -n p4env python=$PYTHON_VER numpy cmake gdma pylibefp libint libxc gau2grid boost -c psi4/label/test -c psi4
-- source activate p4env
-- conda install pint pylibefp -c psi4/label/dev
-- conda install -c intel mkl-devel 
+- conda install psi4 psi4-rt python=3.6 -c psi4
+#- conda create -q -n p4env python=$PYTHON_VER numpy cmake gdma pylibefp libint libxc gau2grid boost -c psi4/label/test -c psi4
+#- source activate p4env
+#- conda install pint pylibefp -c psi4/label/dev
+#- conda install -c intel mkl-devel 
 - python -V
-- pyenv global system 3.6
-- pip install deepdiff
-- pip install pyyaml
+#- pyenv global system 3.6
+#- pip install deepdiff
+#- pip install pyyaml
+- which psi4
 - cd ${TRAVIS_BUILD_DIR}
 - export CXX=clang++
 - export CC=clang
@@ -80,35 +82,6 @@ install:
 - cd objdir
 - make -j2
 - make install
-# Compile Psi4
-- ls ${HOME}/miniconda/envs/p4env/bin
-- ls ${HOME}/miniconda/envs/p4env/lib/
-- ls ${HOME}/miniconda/envs/p4env/include/
-- cd ${HOME}/build
-- git clone https://github.com/evangelistalab/psi4.git psi4
-- cd psi4
-- >
-    cmake -Bbuild -H.
-    -DCMAKE_CXX_COMPILER=${CXX_COMPILER}
-    -DCMAKE_C_COMPILER=${C_COMPILER}
-    -DCMAKE_BUILD_TYPE=${BUILD_TYPE}
-    -DCMAKE_PREFIX_PATH=${HOME}/miniconda/envs/p4env
-    -DPYTHON_EXECUTABLE=${HOME}/miniconda/envs/p4env/bin/python
-    -DPYTHON_LIBRARY=${HOME}/miniconda/envs/p4env/lib/libpython3.6.dylib
-    -DPYTHON_INCLUDE_DIR=${HOME}/miniconda/envs/p4env/include/python3.6
-    -DENABLE_gdma=ON
-    -DENABLE_PLUGIN_TESTING=ON
-    -DCMAKE_INSTALL_PREFIX=${HOME}/build/psi4-bin
-    -DOpenMP_CXX_FLAG="-fopenmp=libiomp5"
-    -DLAPACK_LIBRARIES="${HOME}/miniconda/envs/p4env/lib/libmkl_rt.so;${HOME}/miniconda/envs/p4env/lib/libiomp5.so"
-    -DLAPACK_INCLUDE_DIRS="${HOME}/miniconda/envs/p4env/include"
-- cd build
-- echo "Starting compilation of Psi4"
-- make -j2 -s 
-- echo " Done"
-- make install >& psi4_install.log
-- export PATH="$HOME/build/psi4-bin/bin:$PATH"
-- hash -r
 - which psi4
 # Compile forte
 - cd ${HOME}/build/evangelistalab/forte
