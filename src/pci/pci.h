@@ -94,8 +94,6 @@ class ProjectorCI : public SelectedCIMethod {
     void prune_PQ_to_P() override;
     /// Post-iter process
     void post_iter_process() override;
-    /// full mrpt2 correction
-    void full_mrpt2() override {}
 
     // Temporarily added interface to ExcitedStateSolver
     /// Set the class variable

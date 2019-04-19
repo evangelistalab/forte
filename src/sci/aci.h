@@ -108,9 +108,9 @@ class AdaptiveCI : public SelectedCIMethod {
     /// Step 5. Prune the P + Q space to get an updated P space
     void prune_PQ_to_P() override;
     /// Post-iter process
-    void post_iter_process() override {}
+    void post_iter_process() override;
     /// Full PT2 correction
-    void full_mrpt2() override;
+    void full_mrpt2();
 
     // Temporarily added interface to ExcitedStateSolver
     /// Set the class variable

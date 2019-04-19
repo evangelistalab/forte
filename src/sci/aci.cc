@@ -1886,5 +1886,8 @@ size_t AdaptiveCI::get_ref_root() { return ref_root_; }
 std::vector<double> AdaptiveCI::get_multistate_pt2_energy_correction() {
     return multistate_pt2_energy_correction_;
 }
+void AdaptiveCI::post_iter_process() {
+    full_mrpt2();
+}
 
 } // namespace forte

@@ -64,9 +64,6 @@ double SelectedCIMethod::compute_energy() {
         prune_PQ_to_P();
     }
 
-    // Active space PT2 correction
-    full_mrpt2();
-
     // Post-iter process
     post_iter_process();
 
