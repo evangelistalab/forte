@@ -210,6 +210,8 @@ void make_avas(psi::SharedWavefunction ref_wfn, psi::Options& options, psi::Shar
                 }
             }
         } else {
+            double sum_tollerance = 1.0e-9;
+            double include_tollerance = 1.0e-6;
             outfile->Printf("\n  AVAS selection based cumulative threshold (sigma)\n");
             double s_act_sum = 0.0;
             for (const auto& mo_tuple : sorted_mos) {
@@ -224,7 +226,8 @@ void make_avas(psi::SharedWavefunction ref_wfn, psi::Options& options, psi::Shar
                 // the
                 // partial sum of singular values and the total sum of singular
                 // values
-                if ((fraction <= avas_sigma) and (std::fabs(sigma) > 1.0e-6)) {
+                if ((fraction <= avas_sigma + sum_tollerance) and
+                    (std::fabs(sigma) > include_tollerance)) {
                     if (is_occ) {
                         occ_act.push_back(p);
                     } else {
