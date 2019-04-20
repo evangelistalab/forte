@@ -25,14 +25,20 @@ aci:
    - aci-18
    - aci-19
    - aci-local-20
-   - asci-1
    - aci_scf-1
+   - aci-full-pt2-1
   long:
    - aci-6
    - cis-aci-1
+   - aci-full-pt2-2
   unused:
    - aci-mrcisd-1
    - aci-mrcisd-2
+asci:
+  short:
+   - asci-2
+  long:
+   - asci-1
 #actv-dsrg:
 #  short:
 #   - actv-dsrg-1-C2H4-cis

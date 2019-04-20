@@ -395,7 +395,7 @@ def register_aci_options(forte_options):
 
     forte_options.add_bool("ACI_NO", False, "Computes ACI natural orbitals?")
 
-    forte_options.add_bool("MRPT2", False, "Compute full PT2 energy?")
+    forte_options.add_bool("FULL_MRPT2", False, "Compute full PT2 energy?")
 
     forte_options.add_bool("UNPAIRED_DENSITY", False,
                            "Compute unpaired electron density?")
