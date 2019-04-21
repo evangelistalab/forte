@@ -30,6 +30,7 @@
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/libmints/molecule.h"
 
+#include "helpers/helpers.h"
 #include "state_info.h"
 
 namespace forte {
@@ -62,7 +63,7 @@ const std::string& StateInfo::multiplicity_label() const {
 
 std::string StateInfo::str() const {
     std::string s;
-    s += multiplicity_label() + " " + irrep_label() + " (2Ms = " + std::to_string(twice_ms()) + ")";
+    s += multiplicity_label() + " " + irrep_label() + " (Ms = " + get_ms_string(twice_ms()) + ")";
     return s;
 }
 

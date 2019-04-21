@@ -294,10 +294,6 @@ def run_forte(name, **kwargs):
     options.set_current_module('FORTE')
     forte.forte_options.update_psi_options(options)
     forte.forte_options.get_options_from_psi4(options)
-    d = forte.forte_options.dict()
-#    for k in d:
-#        if 'NROOT' in k:
-#            print(k, d[k])
 
     if ('DF' in options.get_str('INT_TYPE')):
         aux_basis = psi4.core.BasisSet.build(ref_wfn.molecule(), 'DF_BASIS_MP2',
