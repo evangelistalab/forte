@@ -350,7 +350,7 @@ class AdaptiveCI : public SelectedCIMethod {
                                 int nroot, psi::SharedVector evals, psi::SharedMatrix evecs);
 
     /// Generate set of state-averaged q-criteria and determinants
-    double average_q_values(int nroot, std::vector<double>& C1, std::vector<double>& E2);
+    double average_q_values(std::vector<double>& E2);
 
     /// Get criteria for a specific root
     double root_select(int nroot, std::vector<double>& C1, std::vector<double>& E2);

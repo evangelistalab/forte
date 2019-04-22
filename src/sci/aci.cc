@@ -59,21 +59,11 @@ AdaptiveCI::AdaptiveCI(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> s
     startup();
 }
 
-void AdaptiveCI::set_fci_ints(std::shared_ptr<ActiveSpaceIntegrals> fci_ints) {
-    as_ints_ = fci_ints;
-    nuclear_repulsion_energy_ = as_ints_->ints()->nuclear_repulsion_energy();
-    set_ints_ = true;
-}
-
 void AdaptiveCI::startup() {
     quiet_mode_ = false;
     if (options_->has_changed("ACI_QUIET_MODE")) {
         quiet_mode_ = options_->get_bool("ACI_QUIET_MODE");
     }
-
-    //    if (!set_ints_) {
-    //        set_aci_ints(ints_); // TODO: maybe a BUG?
-    //    }
 
     op_.initialize(mo_symmetry_, as_ints_);
     op_.set_quiet_mode(quiet_mode_);
@@ -123,9 +113,7 @@ void AdaptiveCI::startup() {
     }
 
     // get options for algorithm
-    perturb_select_ = options_->get_bool("ACI_PERTURB_SELECT");
     pq_function_ = options_->get_str("ACI_PQ_FUNCTION");
-    approx_rdm_ = options_->get_bool("ACI_APPROXIMATE_RDM");
     print_weights_ = options_->get_bool("ACI_PRINT_WEIGHTS");
 
     hole_ = 0;
@@ -143,34 +131,6 @@ void AdaptiveCI::startup() {
         } else if (options_->get_str("DIAG_ALGORITHM") == "DYNAMIC") {
             diag_method_ = Dynamic;
         }
-    }
-    aimed_selection_ = false;
-    energy_selection_ = false;
-    if (options_->get_str("ACI_SELECT_TYPE") == "AIMED_AMP") {
-        aimed_selection_ = true;
-        energy_selection_ = false;
-    } else if (options_->get_str("ACI_SELECT_TYPE") == "AIMED_ENERGY") {
-        aimed_selection_ = true;
-        energy_selection_ = true;
-    } else if (options_->get_str("ACI_SELECT_TYPE") == "ENERGY") {
-        aimed_selection_ = false;
-        energy_selection_ = true;
-    } else if (options_->get_str("ACI_SELECT_TYPE") == "AMP") {
-        aimed_selection_ = false;
-        energy_selection_ = false;
-    }
-
-    if (options_->get_bool("ACI_STREAMLINE_Q") == true) {
-        streamline_qspace_ = true;
-    } else {
-        streamline_qspace_ = false;
-    }
-
-    // Set streamline mode to true if possible
-    if ((nroot_ == 1) and (aimed_selection_ == true) and (energy_selection_ == true) and
-        (perturb_select_ == false)) {
-
-        streamline_qspace_ = true;
     }
 
     // Decide when to compute coupling lists
@@ -201,9 +161,6 @@ void AdaptiveCI::print_info() {
     std::vector<std::pair<std::string, std::string>> calculation_info_string{
         {"Ms", get_ms_string(twice_ms_)},
         {"Diagonalization algorithm", options_->get_str("DIAG_ALGORITHM")},
-        {"Determinant selection criterion",
-         energy_selection_ ? "Second-order Energy" : "First-order Coefficients"},
-        {"Selection criterion", aimed_selection_ ? "Aimed selection" : "Threshold"},
         {"Excited Algorithm", ex_alg_},
         //        {"Q Type", q_rel_ ? "Relative Energy" : "Absolute Energy"},
         //        {"PT2 Parameters", options_->get_bool("PERTURB_SELECT") ?
@@ -470,31 +427,13 @@ void AdaptiveCI::find_q_space_multiroot(DeterminantHashVec& P_space,
 
     local_timer t_ms_screen;
 
-    // Define coupling out of loop, assume perturb_select_ = false
-    std::function<double(double A, double B, double C)> C1_eq = [](double A, double B,
-                                                                   double C) -> double {
-        return 0.5 * ((B - C) - sqrt((B - C) * (B - C) + 4.0 * A * A)) / A;
-    };
-
-    std::function<double(double A, double B, double C)> E2_eq = [](double A, double B,
-                                                                   double C) -> double {
-        return 0.5 * ((B - C) - sqrt((B - C) * (B - C) + 4.0 * A * A));
-    };
-
-    if (perturb_select_) {
-        C1_eq = [](double A, double B, double C) -> double { return -A / (B - C); };
-        E2_eq = [](double A, double B, double C) -> double { return -A * A / (B - C); };
-    }
-
     // Check the coupling between the reference and the SD space
 
     std::vector<std::pair<double, Determinant>> sorted_dets;
     std::vector<double> ept2(nroot_, 0.0);
 
-    if (aimed_selection_) {
-        Determinant zero_det; // <- xsize (nact_);
-        sorted_dets.resize(V_hash.size(), std::make_pair(0.0, zero_det));
-    }
+    Determinant zero_det; // <- xsize (nact_);
+    sorted_dets.resize(V_hash.size(), std::make_pair(0.0, zero_det));
 
 #pragma omp parallel
     {
@@ -502,9 +441,7 @@ void AdaptiveCI::find_q_space_multiroot(DeterminantHashVec& P_space,
         int nthreads = omp_get_num_threads();
         double criteria;
 
-        std::vector<double> C1(nroot_, 0.0);
         std::vector<double> E2(nroot_, 0.0);
-        std::vector<double> e2(nroot_, 0.0);
 
         size_t count = 0;
         for (const auto& it : V_hash) {
@@ -512,85 +449,69 @@ void AdaptiveCI::find_q_space_multiroot(DeterminantHashVec& P_space,
                 double EI = as_ints_->energy(it.first);
                 for (int n = 0; n < nroot; ++n) {
                     double V = it.second[n];
-                    double C1_I = C1_eq(V, EI, evals->get(n));
-                    double E2_I = E2_eq(V, EI, evals->get(n));
+                    double delta = as_ints_->energy(it.first) - evals->get(n);
+                    double criteria = 0.5 * (delta - sqrt(delta * delta + V * V * 4.0));
 
-                    C1[n] = std::fabs(C1_I);
-                    E2[n] = std::fabs(E2_I);
-
-                    e2[n] = E2_I;
+                    E2[n] = std::fabs(criteria);
                 }
                 if ((ex_alg_ == "AVERAGE" or cycle_ < pre_iter_) and nroot > 1) {
-                    criteria = average_q_values(nroot, C1, E2);
+                    criteria = average_q_values(E2);
                 } else {
-                    criteria = root_select(nroot, C1, E2);
+                   // criteria = root_select(nroot, C1, E2);
+                    criteria = E2[ref_root_];
                 }
 
-                if (aimed_selection_) {
-                    sorted_dets[count] = std::make_pair(criteria, it.first);
-                } else {
-                    if (std::fabs(criteria) > sigma_) {
-#pragma omp critical
-                        { PQ_space.add(it.first); }
-                    } else {
-#pragma omp critical
-                        {
-                            for (int n = 0; n < nroot; ++n) {
-                                ept2[n] += e2[n];
-                            }
-                        }
-                    }
-                }
+                sorted_dets[count] = std::make_pair(criteria, it.first);
             }
             count++;
         }
     } // end loop over determinants
 
-    if (aimed_selection_) {
-        // Sort the CI coefficients in ascending order
-        std::sort(sorted_dets.begin(), sorted_dets.end(), pairComp);
+    // Sort the determinants by criteria in ascending order
+    std::sort(sorted_dets.begin(), sorted_dets.end(), pairComp);
 
-        double sum = 0.0;
-        size_t last_excluded = 0;
-        for (size_t I = 0, max_I = sorted_dets.size(); I < max_I; ++I) {
-            const Determinant& det = sorted_dets[I].second;
-            if (sum + sorted_dets[I].first < sigma_) {
-                sum += sorted_dets[I].first;
-                double EI = as_ints_->energy(det);
-                const std::vector<double>& V_vec = V_hash[det];
-                for (int n = 0; n < nroot; ++n) {
-                    double V = V_vec[n];
-                    double E2_I = E2_eq(V, EI, evals->get(n));
+    double sum = 0.0;
+    size_t last_excluded = 0;
+    for (size_t I = 0, max_I = sorted_dets.size(); I < max_I; ++I) {
+        const Determinant& det = sorted_dets[I].second;
+        if (sum + sorted_dets[I].first < sigma_) {
+            sum += sorted_dets[I].first;
+            double EI = as_ints_->energy(det);
+            const std::vector<double>& V_vec = V_hash[det];
+            for (int n = 0; n < nroot; ++n) {
+                double V = V_vec[n];
+                double delta = EI - evals->get(n);
+                double e2 = 0.5 * (delta - sqrt(delta * delta + V * V * 4.0));
 
-                    ept2[n] += E2_I;
-                }
-                last_excluded = I;
+                ept2[n] += e2;
+            }
+            last_excluded = I;
 
-            } else {
-                PQ_space.add(sorted_dets[I].second);
-            }
-        }
-        // outfile->Printf("\n sum : %1.12f", sum );
-        // add missing determinants that have the same weight as the last one
-        // included
-        if (add_aimed_degenerate_) {
-            size_t num_extra = 0;
-            for (size_t I = 0, max_I = last_excluded; I < max_I; ++I) {
-                size_t J = last_excluded - I;
-                if (std::fabs(sorted_dets[last_excluded + 1].first - sorted_dets[J].first) <
-                    1.0e-9) {
-                    PQ_space.add(sorted_dets[J].second);
-                    num_extra++;
-                } else {
-                    break;
-                }
-            }
-            if (num_extra > 0 and (!quiet_mode_)) {
-                outfile->Printf("\n  Added %zu missing determinants in aimed selection.",
-                                num_extra);
-            }
+        } else {
+            PQ_space.add(sorted_dets[I].second);
         }
     }
+    // outfile->Printf("\n sum : %1.12f", sum );
+    // add missing determinants that have the same weight as the last one
+    // included
+    if (add_aimed_degenerate_) {
+        size_t num_extra = 0;
+        for (size_t I = 0, max_I = last_excluded; I < max_I; ++I) {
+            size_t J = last_excluded - I;
+            if (std::fabs(sorted_dets[last_excluded + 1].first - sorted_dets[J].first) <
+                1.0e-9) {
+                PQ_space.add(sorted_dets[J].second);
+                num_extra++;
+            } else {
+                break;
+            }
+        }
+        if (num_extra > 0 and (!quiet_mode_)) {
+            outfile->Printf("\n  Added %zu missing determinants in aimed selection.",
+                            num_extra);
+        }
+    }
+    
 
     multistate_pt2_energy_correction_ = ept2;
 
@@ -601,10 +522,11 @@ void AdaptiveCI::find_q_space_multiroot(DeterminantHashVec& P_space,
     }
 }
 
-double AdaptiveCI::average_q_values(int nroot, std::vector<double>& C1,
-                                        std::vector<double>& E2) {
+double AdaptiveCI::average_q_values(std::vector<double>& E2) {
     // f_E2 and f_C1 will store the selected function of the chosen q criteria
     // This functions should only be called when nroot_ > 1
+
+    size_t nroot = E2.size();
 
     int nav = options_->get_int("ACI_N_AVERAGE");
     int off = options_->get_int("ACI_AVERAGE_OFFSET");
@@ -615,36 +537,23 @@ double AdaptiveCI::average_q_values(int nroot, std::vector<double>& C1,
                            // roots and the offset exceeds the maximum number of
                            // roots!");
 
-    double f_C1 = 0.0;
     double f_E2 = 0.0;
 
     // Choose the function of the couplings for each root
     // If nroot = 1, choose the max
 
     if (pq_function_ == "MAX" or nroot == 1) {
-        f_C1 = *std::max_element(C1.begin(), C1.end());
         f_E2 = *std::max_element(E2.begin(), E2.end());
     } else if (pq_function_ == "AVERAGE") {
-        double C1_average = 0.0;
         double E2_average = 0.0;
         double dim_inv = 1.0 / nav;
         for (int n = 0; n < nav; ++n) {
-            C1_average += C1[n + off] * dim_inv;
             E2_average += E2[n + off] * dim_inv;
         }
 
-        f_C1 = C1_average;
         f_E2 = E2_average;
     }
-
-    double select_value = 0.0;
-    if (aimed_selection_) {
-        select_value = energy_selection_ ? f_E2 : (f_C1 * f_C1);
-    } else {
-        select_value = energy_selection_ ? f_E2 : f_C1;
-    }
-
-    return select_value;
+    return f_E2;
 }
 
 double AdaptiveCI::root_select(int nroot, std::vector<double>& C1, std::vector<double>& E2) {
