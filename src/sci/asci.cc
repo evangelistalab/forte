@@ -469,14 +469,30 @@ void ASCI::find_q_space() {
 
     local_timer build_sort;
     size_t N = 0;
-    for (const auto& I : V_hash) {
-        double delta = as_ints_->energy(I.first) - P_evals_->get(0);
-        double V = I.second;
+    if( options_->get_str("SCI_EXCITED_ALGORITHM") == "AVERAGE" ){
+        for (const auto& I : V_hash) {
+            double criteria = 0.0;
+            for( int n = 0; n < nroot_; ++n ){
+                double delta = as_ints_->energy(I.first) - P_evals_->get(n);
+                double V = I.second;
 
-        double criteria = V / delta;
-        F_space[N] = std::make_pair(std::fabs(criteria), I.first);
+                criteria += (V / delta);
+            }
+            criteria /= nroot_;
+            F_space[N] = std::make_pair(std::fabs(criteria), I.first);
 
-        N++;
+            N++;
+        }
+    } else {
+        for (const auto& I : V_hash) {
+            double delta = as_ints_->energy(I.first) - P_evals_->get(0);
+            double V = I.second;
+
+            double criteria = V / delta;
+            F_space[N] = std::make_pair(std::fabs(criteria), I.first);
+
+            N++;
+        }
     }
     for (const auto& I : detmap) {
         F_space.push_back(std::make_pair(std::fabs(P_evecs_->get(P_space_.get_idx(I), 0)), I));
@@ -597,25 +613,27 @@ void ASCI::print_wfn(DeterminantHashVec& space, WFNOperator& op, psi::SharedMatr
                                         "sextet", "septet", "octet", "nonet", "decatet"});
 
     std::vector<std::pair<double, double>> spins = compute_spin(space, op, evecs, nroot);
+    for( int n = 0; n < nroot; ++n ){
 
-    DeterminantHashVec tmp;
-    std::vector<double> tmp_evecs;
+        DeterminantHashVec tmp;
+        std::vector<double> tmp_evecs;
 
-    outfile->Printf("\n\n  Most important contributions to root 0:");
+        outfile->Printf("\n\n  Most important contributions to root %d:", n);
 
-    size_t max_dets = std::min(10, evecs->nrow());
-    tmp.subspace(space, evecs, tmp_evecs, max_dets, 0);
+        size_t max_dets = std::min(10, evecs->nrow());
+        tmp.subspace(space, evecs, tmp_evecs, max_dets, n);
 
-    for (size_t I = 0; I < max_dets; ++I) {
-        outfile->Printf("\n  %3zu  %9.6f %.9f  %10zu %s", I, tmp_evecs[I],
-                        tmp_evecs[I] * tmp_evecs[I], space.get_idx(tmp.get_det(I)),
-                        tmp.get_det(I).str(nact_).c_str());
+        for (size_t I = 0; I < max_dets; ++I) {
+            outfile->Printf("\n  %3zu  %9.6f %.9f  %10zu %s", I, tmp_evecs[I],
+                            tmp_evecs[I] * tmp_evecs[I], space.get_idx(tmp.get_det(I)),
+                            tmp.get_det(I).str(nact_).c_str());
+        }
+        state_label = s2_labels[std::round(spins[n].first * 2.0)];
+        root_spin_vec_.clear();
+        root_spin_vec_[n] = std::make_pair(spins[n].first, spins[n].second);
+        outfile->Printf("\n\n  Spin state for root %d: S^2 = %5.6f, S = %5.3f, %s \n",n,
+                        root_spin_vec_[n].first, root_spin_vec_[n].second, state_label.c_str());
     }
-    state_label = s2_labels[std::round(spins[0].first * 2.0)];
-    root_spin_vec_.clear();
-    root_spin_vec_[0] = std::make_pair(spins[0].first, spins[0].second);
-    outfile->Printf("\n\n  Spin state for root 0: S^2 = %5.6f, S = %5.3f, %s \n",
-                    root_spin_vec_[0].first, root_spin_vec_[0].second, state_label.c_str());
 }
 
 double ASCI::compute_spin_contamination(DeterminantHashVec& space, WFNOperator& op,
