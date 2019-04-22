@@ -468,30 +468,6 @@ double ASCI::compute_spin_contamination(DeterminantHashVec& space, WFNOperator& 
     return spin_contam;
 }
 
-std::vector<RDMs> ASCI::rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
-                             int max_rdm_level) {
-
-    std::vector<RDMs> refs;
-
-    for (const auto& root_pair : root_list) {
-
-        compute_rdms(as_ints_, final_wfn_, op_, evecs_, root_pair.first, root_pair.second,
-                     max_rdm_level);
-
-        if (max_rdm_level == 1) {
-            refs.emplace_back(ordm_a_, ordm_b_);
-        }
-        if (max_rdm_level == 2) {
-            refs.emplace_back(ordm_a_, ordm_b_, trdm_aa_, trdm_ab_, trdm_bb_);
-        }
-        if (max_rdm_level == 3) {
-            refs.emplace_back(ordm_a_, ordm_b_, trdm_aa_, trdm_ab_, trdm_bb_, trdm_aaa_, trdm_aab_,
-                              trdm_abb_, trdm_bbb_);
-        }
-    }
-    return refs;
-}
-
 void ASCI::print_nos() {
     print_h2("NATURAL ORBITALS");
 
