@@ -53,6 +53,7 @@ ASCI::ASCI(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
 
     mo_symmetry_ = mo_space_info_->symmetry("ACTIVE");
     nuclear_repulsion_energy_ = as_ints->ints()->nuclear_repulsion_energy();
+    startup();
 }
 
 ASCI::~ASCI() {}
@@ -64,12 +65,6 @@ void ASCI::set_fci_ints(std::shared_ptr<ActiveSpaceIntegrals> fci_ints) {
 }
 
 void ASCI::pre_iter_preparation(){
-    startup();
-    print_method_banner({"ASCI", "written by Jeffrey B. Schriber and Francesco A. Evangelista"});
-    outfile->Printf("\n  ==> Reference Information <==\n");
-    outfile->Printf("\n  There are %d frozen orbitals.", nfrzc_);
-    outfile->Printf("\n  There are %zu active orbitals.\n", nact_);
-    print_info();
     outfile->Printf("\n  Using %d threads", omp_get_max_threads());
 
     CI_Reference ref(scf_info_, options_, mo_space_info_, as_ints_, multiplicity_, twice_ms_,
@@ -85,11 +80,11 @@ void ASCI::pre_iter_preparation(){
     sparse_solver_.set_force_diag(options_->get_bool("FORCE_DIAG_METHOD"));
     sparse_solver_.set_e_convergence(options_->get_double("E_CONVERGENCE"));
     sparse_solver_.set_maxiter_davidson(options_->get_int("DL_MAXITER"));
-    sparse_solver_.set_spin_project(true);
+    sparse_solver_.set_spin_project_full(options_->get_bool("SPIN_PROJECT_FULL"));
+    sparse_solver_.set_spin_project(options_->get_bool("SCI_PROJECT_OUT_SPIN_CONTAMINANTS"));
     sparse_solver_.set_guess_dimension(options_->get_int("DL_GUESS_SIZE"));
     sparse_solver_.set_num_vecs(options_->get_int("N_GUESS_VEC"));
     sparse_solver_.set_sigma_method(options_->get_str("SIGMA_BUILD_TYPE"));
-    sparse_solver_.set_spin_project_full(true);
     sparse_solver_.set_max_memory(options_->get_int("SIGMA_VECTOR_MAX_MEMORY"));
 }
 
@@ -161,6 +156,10 @@ void ASCI::startup() {
 
 void ASCI::print_info() {
 
+    print_method_banner({"ASCI", "written by Jeffrey B. Schriber and Francesco A. Evangelista"});
+    outfile->Printf("\n  ==> Reference Information <==\n");
+    outfile->Printf("\n  There are %d frozen orbitals.", nfrzc_);
+    outfile->Printf("\n  There are %zu active orbitals.\n", nact_);
     // Print a summary
     std::vector<std::pair<std::string, int>> calculation_info{{"Multiplicity", multiplicity_},
                                                               {"Symmetry", wavefunction_symmetry_},
@@ -1088,6 +1087,7 @@ void ASCI::diagonalize_PQ_space() {
     if (follow_ and (num_ref_roots_ > 1) and (cycle_ >= pre_iter_)) {
         ref_root_ = root_follow(P_ref_, P_ref_evecs_, PQ_space_, PQ_evecs_, num_ref_roots_);
     }
+    print_wfn(PQ_space_, op_, PQ_evecs_, nroot_);
 }
 
 } // namespace forte
