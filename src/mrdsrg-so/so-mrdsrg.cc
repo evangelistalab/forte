@@ -58,6 +58,7 @@ SOMRDSRG::SOMRDSRG(RDMs rdms, psi::SharedWavefunction ref_wfn, psi::Options& opt
     shallow_copy(ref_wfn);
     reference_wavefunction_ = ref_wfn;
 
+    BlockedTensor::reset_mo_spaces();
     BlockedTensor::set_expert_mode(true);
 
     print_ = 2;
@@ -593,9 +594,7 @@ void SOMRDSRG::print_summary() {
 double SOMRDSRG::compute_energy() {
     print_h2("Computing the SO-MR-DSRG(2) energy");
 
-    E0_ =
-        molecule_->nuclear_repulsion_energy(reference_wavefunction_->get_dipole_field_strength()) +
-        ints_->frozen_core_energy();
+    E0_ = ints_->nuclear_repulsion_energy() + ints_->frozen_core_energy();
     E0_ += F["qp"] * Gamma1["pq"];
     E0_ += -0.5 * V["rspq"] * Gamma1["pr"] * Gamma1["qs"];
     E0_ += 0.25 * V["rspq"] * Lambda2["pqrs"];
