@@ -37,6 +37,7 @@ aci:
 asci:
   short:
    - asci-2
+   - asci-3
   long:
    - asci-1
 #actv-dsrg:

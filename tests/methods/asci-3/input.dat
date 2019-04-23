@@ -4,8 +4,8 @@ import forte
 #   Tubman, N. M., Lee, J., Takeshita, T. Y., Head-Gordon, M., & Whaley, K. B. (2016). 
 #   J. Chem. Phys., 145 (4), 044112. http://doi.org/doi: 10.1063/1.4955109
 
-refscf = -75.38645665583094 
-refasci = -75.7184255710 
+refscf = -75.34896498316222 
+refasci = -75.550651284593 
                                          
 molecule CH2{                            
 0 1
@@ -17,7 +17,7 @@ C 1 1.27273
 set {                                    
   scf_type pk                            
   #multiplicity 1                         
-  basis cc-pvdz                      
+  basis 6-31g                      
   reference rohf
   e_convergence 10
 }                                        
@@ -25,17 +25,22 @@ set {
 set forte {                              
   multiplicity 1
   active_space_solver asci                          
-  frozen_docc [1,0,0,0,0,1,0,0]
+  frozen_docc [0,0,0,0,0,0,0,0]
+  restricted_docc [0,0,0,0,0,0,0,0]
+  active [3,0,1,1,0,3,2,2]
   multiplicity 1
   charge 0                               
   root_sym 0
-  nroot 1
+  nroot 2
+  sci_excited_algorithm average
   active_ref_type hf
   dl_maxiter 500
-  asci_cdet 4000
-  asci_tdet 10000
-  asci_max_cycle 6   
+  asci_cdet 50
+  asci_tdet 334
+  asci_max_cycle 8   
   asci_e_convergence 1e-5
+  sci_project_out_spin_contaminants true
+  spin_project_full false
 }                                        
                                          
 Escf, scf_wfn = energy('scf', return_wfn=True)

@@ -56,6 +56,11 @@ void ExcitedStateSolver::set_options(std::shared_ptr<ForteOptions> options) {
 
     // TODO: move all ACI_* options to SCI_* and update register_forte_options.py
     ex_alg_ = options->get_str("SCI_EXCITED_ALGORITHM");
+    // set a default 
+    if( (nroot_ > 1) and (ex_alg_ == "NONE") ){
+        ex_alg_ = "ROOT_ORTHOGONALIZE";
+    }    
+
     core_ex_ = options->get_bool("SCI_CORE_EX");
     if (options->has_changed("ACI_QUIET_MODE")) {
         quiet_mode_ = options->get_bool("ACI_QUIET_MODE");
