@@ -137,6 +137,53 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
         MCSRGPT2_MO mcsrgpt2_mo(rdms, forte_options, ints, mo_space_info);
         final_energy = mcsrgpt2_mo.compute_energy();
     }
+    if (options.get_str("JOB_TYPE") == "MRDSRG_SO") {
+        std::string cas_type = options.get_str("ACTIVE_SPACE_SOLVER");
+        auto as_ints = make_active_space_ints(mo_space_info, ints, "ACTIVE", {{"RESTRICTED_DOCC"}});
+        auto ci = make_active_space_solver(cas_type, state_map, scf_info, mo_space_info, as_ints,
+                                           forte_options);
+        ci->compute_energy();
+        RDMs rdms = ci->compute_average_rdms(state_weights_map, 3);
+        SemiCanonical semi(mo_space_info, ints, forte_options);
+        semi.semicanonicalize(rdms);
+        std::shared_ptr<MRDSRG_SO> mrdsrg(new MRDSRG_SO(rdms, options, ints, mo_space_info));
+        final_energy = mrdsrg->compute_energy();
+    }
+    if (options.get_str("JOB_TYPE") == "SOMRDSRG") {
+        std::string cas_type = options.get_str("ACTIVE_SPACE_SOLVER");
+        int max_rdm_level = (options.get_str("THREEPDC") == "ZERO") ? 2 : 3;
+        auto as_ints = make_active_space_ints(mo_space_info, ints, "ACTIVE", {{"RESTRICTED_DOCC"}});
+        auto solver = make_active_space_solver(cas_type, state_map, scf_info, mo_space_info,
+                                               as_ints, forte_options);
+        solver->compute_energy();
+        RDMs rdms = solver->compute_average_rdms(state_weights_map, max_rdm_level);
+        SemiCanonical semi(mo_space_info, ints, forte_options);
+        semi.semicanonicalize(rdms, max_rdm_level);
+        std::shared_ptr<SOMRDSRG> somrdsrg(
+            new SOMRDSRG(rdms, ref_wfn, options, ints, mo_space_info));
+        final_energy = somrdsrg->compute_energy();
+    }
+    if (options.get_str("JOB_TYPE") == "DSRG_MRPT") {
+        std::string cas_type = options.get_str("ACTIVE_SPACE_SOLVER");
+        int max_rdm_level = (options.get_str("THREEPDC") == "ZERO") ? 2 : 3;
+        auto as_ints = make_active_space_ints(mo_space_info, ints, "ACTIVE", {{"RESTRICTED_DOCC"}});
+        auto ci = make_active_space_solver(cas_type, state_map, scf_info, mo_space_info, as_ints,
+                                           forte_options);
+
+        ci->compute_energy();
+        RDMs rdms = ci->compute_average_rdms(state_weights_map, 3);
+
+        if (options.get_bool("SEMI_CANONICAL")) {
+            SemiCanonical semi(mo_space_info, ints, forte_options);
+            semi.semicanonicalize(rdms, max_rdm_level);
+        }
+
+        std::shared_ptr<DSRG_MRPT> dsrg(
+            new DSRG_MRPT(rdms, ref_wfn, options, ints, mo_space_info));
+        if (options.get_str("RELAX_REF") == "NONE") {
+            final_energy = dsrg->compute_energy();
+        }
+    }
     return final_energy;
 }
 

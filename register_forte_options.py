@@ -802,6 +802,9 @@ def register_old_options(forte_options):
                           "The form of the two-particle density cumulant")
     forte_options.add_str("THREEPDC", "MK", ["MK", "MK_DECOMP", "ZERO"],
                           "The form of the three-particle density cumulant")
+    #    /*- Select a modified commutator -*/
+    forte_options.add_str("SRG_COMM", "STANDARD", "STANDARD FO FO2")
+
 
     #    /*- The minimum excitation level (Default value: 0) -*/
     #    forte_options.add_int("MIN_EXC_LEVEL", 0)
