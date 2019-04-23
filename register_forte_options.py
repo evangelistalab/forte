@@ -324,7 +324,7 @@ def register_aci_options(forte_options):
                           "Function of q-space criteria, per root for SA-ACI")
 
     forte_options.add_str(
-        "SCI_EXCITED_ALGORITHM", "ROOT_ORTHOGONALIZE",
+        "SCI_EXCITED_ALGORITHM", "NONE",
         ['AVERAGE', 'ROOT_ORTHOGONALIZE', 'ROOT_COMBINE', 'MULTISTATE'],
         "The excited state algorithm")
 
