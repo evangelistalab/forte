@@ -53,6 +53,7 @@ install:
 - conda update -q conda
 - conda info -a
 - conda install psi4 psi4-rt python=$PYTHON_VER -c psi4
+- export LD_LIBRARY_PATH=$HOME/miniconda/lib:$LD_LIBRARY_PATH
 - hash -r
 - ls /usr/lib64/
 - ls /usr/lib64/librt.so
