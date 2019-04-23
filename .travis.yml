@@ -52,16 +52,8 @@ install:
 - conda config --set always_yes yes --set changeps1 no
 - conda update -q conda
 - conda info -a
-- conda install psi4 psi4-rt python=$PYTHON_VER -c psi4
-- export LD_LIBRARY_PATH=$HOME/miniconda/lib:$LD_LIBRARY_PATH
-- hash -r
-- ls /usr/lib64/
-- ls /usr/lib64/librt.so
-- echo $LD_LIBRARY_PATH
-- ls ${HOME}/miniconda/lib
-
-#- conda create -q -n p4env python=$PYTHON_VER 
-#- conda install psi4 psi4-rt python=$PYTHON_VER -c psi4
+- conda create -q -n p4env python=$PYTHON_VER psi4 psi4-rt cmake -c psi4
+- export LD_LIBRARY_PATH=$HOME/miniconda/envs/p4env/lib:$LD_LIBRARY_PATH
 #- source activate p4env
 #- conda install pint pylibefp -c psi4/label/dev
 #- conda install -c intel mkl-devel 
@@ -71,9 +63,9 @@ install:
 #- pip install pyyaml
 #- which psi4
 #- cd ${TRAVIS_BUILD_DIR}
-#- export CXX=clang++
-#- export CC=clang
-#- export FC=${Fortran_COMPILER}
+- export CXX=${CXX_COMPILER}
+- export CC=${C_COMPILER}
+- export FC=${Fortran_COMPILER}
 #- export CTEST_OUTPUT_ON_FAILURE=1
 #- export LD_LIBRARY_PATH=/usr/local/clang/lib:$LD_LIBRARY_PATH
 #- ${CXX_COMPILER} --version
