@@ -613,7 +613,9 @@ void DMRGSolver::compute_energy() {
     // for the single orbital entanglement info
     std::vector<double>& opdm_a = dmrg_ref_.L1a().data();
     std::vector<double>& opdm_b = dmrg_ref_.L1b().data();
+    std::vector<double>& tpdm_aa = dmrg_ref_.g2aa().data();
     std::vector<double>& tpdm_ab = dmrg_ref_.g2ab().data();
+    std::vector<double>& tpdm_bb = dmrg_ref_.g2bb().data();
 
     std::vector<double> one_orb_ee(nact);
     for(int i=0; i<nact; i++){
@@ -644,6 +646,12 @@ void DMRGSolver::compute_energy() {
       // std::cout << "  (" << i << ")" << "  val3:  " << val3 << std::endl;
       // std::cout << "   (" << i << ")" << "  val4:  " << val4 << std::endl;
     }
+
+    // want to compute energy form rdms (currently in dmrg_ref_)
+    double nuclear_repulsion_energy =
+      Process::environment.molecule()->nuclear_repulsion_energy({0, 0, 0});
+    double E_from_rdm = dmrg_ref_.compute_energy(ints_, mo_space_info_, nuclear_repulsion_energy);
+    outfile->Printf("\n @DMRG RDM Energy = %8.12f", E_from_rdm);
 
     for(int k = 0; k<nact; k++){
       outfile->Printf("\n  Single Orb EE Si(%i) = %8.12f", k, one_orb_ee[k]);
