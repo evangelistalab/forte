@@ -307,6 +307,10 @@ def register_aci_options(forte_options):
     forte_options.add_str("ACI_SELECT_TYPE", "AIMED_ENERGY",
                           ['AIMED_AMP', 'AIMED_ENERGY', 'ENERGY', 'AMP'],
                           "The selection type for the Q-space")
+    
+    forte_options.add_str("ACI_SCREEN_ALG", "AVERAGE", 
+                        ['AVERAGE', 'SR', 'RESTRICTED', 'CORE', 'BATCH_HASH', 'BATCH_CORE', 'BATCH_VEC'],
+                        "The screening algorithm to use")
 
     forte_options.add_double("SIGMA", 0.01,
                              "The energy selection threshold for the P space")

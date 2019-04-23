@@ -31,7 +31,6 @@ set {
 set forte {
   active_space_solver aci
   multiplicity 1
-  aci_SELECT_TYPE aimed_energy
   frozen_docc [1,0,0,0,0,1,0,0]
   sci_excited_algorithm average
   sigma 0.05
@@ -49,4 +48,3 @@ compare_values(refscf, variable("CURRENT ENERGY"),9, "SCF energy") #TEST
 
 energy('forte')
 compare_values(refaci, variable("ACI ENERGY"),9, "ACI energy") #TEST
-compare_values(refacipt2, variable("ACI+PT2 ENERGY"),8, "ACI+PT2 energy") #TEST
