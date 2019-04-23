@@ -53,8 +53,12 @@ install:
 - conda update -q conda
 - conda info -a
 - conda install psi4 psi4-rt python=$PYTHON_VER -c psi4
+- hash -r
+- ls /usr/lib64/
+- ls /usr/lib64/librt.so
+- echo $LD_LIBRARY_PATH
+- ls ${HOME}/miniconda/lib
 
-#- hash -r
 #- conda create -q -n p4env python=$PYTHON_VER 
 #- conda install psi4 psi4-rt python=$PYTHON_VER -c psi4
 #- source activate p4env
