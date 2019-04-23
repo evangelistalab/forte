@@ -650,7 +650,7 @@ void DMRGSolver::compute_energy() {
     // want to compute energy form rdms (currently in dmrg_ref_)
     double nuclear_repulsion_energy =
       Process::environment.molecule()->nuclear_repulsion_energy({0, 0, 0});
-    double E_from_rdm = dmrg_ref_.compute_energy(ints_, mo_space_info_, nuclear_repulsion_energy);
+    double E_from_rdm = dmrg_ref_.compute_Eref(ints_, mo_space_info_, nuclear_repulsion_energy);
     outfile->Printf("\n @DMRG RDM Energy = %8.12f", E_from_rdm);
 
     for(int k = 0; k<nact; k++){
