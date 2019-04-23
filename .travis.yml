@@ -49,12 +49,12 @@ install:
 - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
 - bash miniconda.sh -b -p $HOME/miniconda
 - export PATH="$HOME/miniconda/bin:$PATH"
+- conda config --set always_yes yes --set changeps1 no
+- conda update -q conda
+- conda info -a
 - conda install psi4 psi4-rt python=$PYTHON_VER -c psi4
 
 #- hash -r
-#- conda config --set always_yes yes --set changeps1 no
-#- conda update -q conda
-#- conda info -a
 #- conda create -q -n p4env python=$PYTHON_VER 
 #- conda install psi4 psi4-rt python=$PYTHON_VER -c psi4
 #- source activate p4env
