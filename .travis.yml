@@ -65,7 +65,7 @@ matrix:
         #- gfortran-6
     env:
       #- CXX_COMPILER='g++-6'
-      - PYTHON_VER='2.7'
+      - PYTHON_VER='3.6'
       #- C_COMPILER='gcc-6'
       #- Fortran_COMPILER='gfortran-6'
       - BUILD_TYPE='debug'
@@ -73,11 +73,7 @@ matrix:
       - VERSION=5.2
 
 install:
-- if [[ "$PYTHON_VER" == "2.7" ]]; then
-    wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -O miniconda.sh;
-  else
-    wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
-  fi
+- wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
 - bash miniconda.sh -b -p $HOME/miniconda
 - export PATH="$HOME/miniconda/bin:$PATH"
 - hash -r
@@ -99,9 +95,6 @@ install:
 #- ${CXX_COMPILER} --version
 #- ${Fortran_COMPILER} --version
 #- ${C_COMPILER} --version
-- gcc --version
-- g++ --version
-- gfortran --version
 # Compile ambit
 - cd ${HOME}/build
 - git clone https://github.com/jturney/ambit.git ambit
