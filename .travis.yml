@@ -3,12 +3,26 @@ sudo: false
 matrix:
   include:
   - os: linux
+    compiler: clang
     addons: &1
       apt:
+        sources:
+        - llvm-toolchain-trusty-4.0
+        - ubuntu-toolchain-r-test
+        - george-edison55-precise-backports
         packages:
+        - liblapack-dev
         - libhdf5-serial-dev
-  - env:
-    - PYTHON_VER='3.6'
+        - gfortran
+        - g++-4.9
+    env:
+      - PYTHON_VER='3.6'
+#     - CXX_COMPILER=clang++
+#     - C_COMPILER=clang
+#     - Fortran_COMPILER='gfortran'
+      - BUILD_TYPE='Debug'
+      - NAME='clang'
+      - MAX_DET_ORB=64
 
 install:
   - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
