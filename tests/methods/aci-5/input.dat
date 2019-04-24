@@ -39,6 +39,7 @@ set forte {
   charge 0
   aci_enforce_spin_complete false
   active_guess_size 56
+  sigma_build_type hz
 }
 
 energy('scf')
