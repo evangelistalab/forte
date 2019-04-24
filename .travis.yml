@@ -43,3 +43,6 @@ before_script:
       -C${HOME}/miniconda/envs/tenv/share/cmake/psi4/psi4PluginCache.cmake
       -DCMAKE_BUILD_TYPE=Debug
   - make -j2
+
+script:
+  - ls
