@@ -24,10 +24,11 @@ before_script:
   - psi4 --version
   - cd ${TRAVIS_BUILD_DIR}
   - pwd
+  - cat ${HOME}/miniconda/envs/tenv/share/cmake/psi4/psi4PluginCache.cmake
   - >
       cmake -H. -B.
       -C${HOME}/miniconda/envs/tenv/share/cmake/psi4/psi4PluginCache.cmake
-      -DCMAKE_BUILD_TYPE=Debug
+      -DCMAKE_BUILD_TYPE=Debug -DHDF5_ROOT=${HOME}/miniconda/envs/tenv/
   - make -j2
 
 script:
