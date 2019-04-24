@@ -56,8 +56,7 @@ set forte {
   sigma 0.001
   diag_algorithm dynamic
   sci_direct_rdms true
-  aci_batched_screening true
-  aci_batch_alg vecsort
+  aci_screen_alg batch_vec
   aci_nbatch 4
   nroot 1
   root_sym 0
