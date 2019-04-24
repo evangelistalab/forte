@@ -655,7 +655,7 @@ void ASCI::compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints, Determin
     //    double total_time = 0.0;
     ci_rdms_.set_max_rdm(rdm_level);
 
-    if (options_->get_bool("ACI_DIRECT_RDMS")) {
+    if (options_->get_bool("SCI_DIRECT_RDMS")) {
         // TODO: Implemente order-by-order version of direct algorithm
         ordm_a_ = ambit::Tensor::build(ambit::CoreTensor, "g1a", {nact_, nact_});
         ordm_b_ = ambit::Tensor::build(ambit::CoreTensor, "g1b", {nact_, nact_});
@@ -720,7 +720,7 @@ void ASCI::compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints, Determin
             outfile->Printf("\n  3-RDMs took %2.6f s (determinant)", tr.get());
         }
     }
-    if (options_->get_bool("ACI_TEST_RDMS")) {
+    if (options_->get_bool("SCI_TEST_RDMS")) {
         ci_rdms_.rdm_test(ordm_a_.data(), ordm_b_.data(), trdm_aa_.data(), trdm_bb_.data(),
                           trdm_ab_.data(), trdm_aaa_.data(), trdm_aab_.data(), trdm_abb_.data(),
                           trdm_bbb_.data());
