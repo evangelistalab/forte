@@ -81,7 +81,7 @@ install:
 - make -j2
 - make install
 # Install psi4
-- conda install psi4-dev psi4-rt python=3.6 -c psi4/label/dev
+- conda install psi4 psi4-dev psi4-rt python=3.6 -c psi4/label/dev
 - psi4 --version
 # Compile forte
 - cd ${HOME}/build/evangelistalab/forte
