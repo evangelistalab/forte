@@ -80,9 +80,11 @@ install:
 - conda config --set always_yes yes --set changeps1 no
 - conda update -q conda
 - conda info -a
-- conda create -q -n p4env python=$PYTHON_VER psi4 psi4-rt cmake clang -c psi4 -c anaconda
+- conda create -q -n p4env python=$PYTHON_VER psi4 psi4-rt cmake -c psi4
 - source activate p4env
 - export LD_LIBRARY_PATH=$HOME/miniconda/envs/p4env/lib:$LD_LIBRARY_PATH
+- ls $HOME/miniconda/envs/p4env/bin
+- ls $HOME/miniconda/envs/p4env/lib
 - rm -rf $HOME/miniconda/envs/p4env/share/cmake/Target*
 - conda list
 - python -V
@@ -90,8 +92,8 @@ install:
 - cd ${TRAVIS_BUILD_DIR}
 - which clang++
 - which clang
-- export CXX=clang++
-- export CC=clang
+- export CXX=$HOME/miniconda/envs/p4env/bin/clang++
+- export CC=$HOME/miniconda/envs/p4env/bin/clang
 - export CTEST_OUTPUT_ON_FAILURE=1
 - ${CXX_COMPILER} --version
 - ${C_COMPILER} --version
