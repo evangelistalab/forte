@@ -492,6 +492,8 @@ void DMRGSolver::compute_energy() {
         }
 
 
+
+
         //int * mystery_var =
 
         //std::cout << "NKappa: " << (*(DMRGCI->getMPS()))->gNKappa() << std::endl;
