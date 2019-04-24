@@ -95,8 +95,8 @@ install:
 - export CXX=$HOME/miniconda/envs/p4env/bin/clang++
 - export CC=$HOME/miniconda/envs/p4env/bin/clang
 - export CTEST_OUTPUT_ON_FAILURE=1
-- ${CXX_COMPILER} --version
-- ${C_COMPILER} --version
+- ${CXX} --version
+- ${CC} --version
 #- ${Fortran_COMPILER} --version
 # Compile ambit
 - cd ${HOME}/build
