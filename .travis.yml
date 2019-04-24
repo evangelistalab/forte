@@ -28,7 +28,7 @@ before_script:
   - >
       cmake -H. -B.
       -C${HOME}/miniconda/envs/tenv/share/cmake/psi4/psi4PluginCache.cmake
-      -DCMAKE_BUILD_TYPE=Debug -DHDF5_ROOT=${HOME}/miniconda/envs/tenv/
+      -DCMAKE_BUILD_TYPE=Debug -DTargetHDF5_DIR=${HOME}/miniconda/envs/tenv/
   - make -j2
 
 script:
