@@ -25,10 +25,10 @@ install:
   - pip install pytest-shutil
   - conda list
   - echo ${HOME}
-  - ls /usr/
-  - ls /usr/lib64/
   - ls ${HOME}/miniconda/envs/p4env/lib
   - ls ${HOME}/miniconda/envs/p4env/bin
+  - ls /usr/
+  - ls /usr/lib64/
  # Compile ambit
   - cd ${HOME}/build
   - pwd
