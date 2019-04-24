@@ -459,9 +459,6 @@ def register_aci_options(forte_options):
     forte_options.add_double("ACI_RELAX_SIGMA", 0.01,
                              "Sigma for reference relaxation")
 
-    forte_options.add_bool("ACI_BATCHED_SCREENING", False,
-                           "Control batched screeing?")
-
     forte_options.add_int("ACI_NBATCH", 1, "Number of batches in screening")
 
     forte_options.add_int("ACI_MAX_MEM", 1000,
@@ -472,9 +469,6 @@ def register_aci_options(forte_options):
 
     forte_options.add_bool("SCI_DIRECT_RDMS", False,
                            "Computes RDMs without coupling lists?")
-
-    forte_options.add_str("ACI_BATCH_ALG", "HASH", ['HASH', 'VECSORT'],
-                          "Algorithm to use for batching")
 
     forte_options.add_int("ACTIVE_GUESS_SIZE", 1000,
                           "Number of determinants for CI guess")

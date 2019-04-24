@@ -235,7 +235,7 @@ void AdaptiveCI::find_q_space() {
         screen_alg = "SR";
     }
 
-    if( (screen_alg == "CORE") and (ref_root_ == 0) ) {
+    if( (screen_alg == "CORE") and (root_ == 0) ) {
         screen_alg = "SR";
     }
 
@@ -264,6 +264,9 @@ void AdaptiveCI::find_q_space() {
     } else if ( screen_alg == "BATCH_VEC" ){
         // vec batch
         remainder = get_excited_determinants_batch_vecsort( P_evecs_, P_evals_, P_space_, F_space);
+    } else {
+        std::string except = screen_alg + " is not a valid screening algorithm";
+        throw psi::PSIEXCEPTION(except);
     }
 
     // Add P_space determinants
@@ -910,13 +913,6 @@ void AdaptiveCI::pre_iter_preparation() {
     sparse_solver_.set_spin_project_full(false);
     sparse_solver_.set_max_memory(options_->get_int("SIGMA_VECTOR_MAX_MEMORY"));
 
-    // if (det_save_)
-    //     det_list_.open("det_list.txt");
-
-    if (streamline_qspace_ and !quiet_mode_)
-        outfile->Printf("\n  Using streamlined Q-space builder.");
-
-    // approx_rdm_ = false;
 }
 
 void AdaptiveCI::diagonalize_P_space() {

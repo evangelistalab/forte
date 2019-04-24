@@ -47,7 +47,7 @@ set forte {
   aci_add_aimed_degenerate          false
   sci_project_out_spin_contaminants false
   diag_algorithm                    full
-  aci_batched_screening             true
+  aci_screen_alg                    batch_hash
   aci_nbatch                        8
   active_guess_size                 100
 }

@@ -35,6 +35,8 @@ set forte {
   charge 0
   diag_algorithm sparse
   active_guess_size 300
+  ACI_SCREEN_ALG batch_hash
+  aci_nbatch 2
 }
 
 energy('scf')
