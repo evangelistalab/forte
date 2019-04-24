@@ -80,7 +80,7 @@ install:
 - conda config --set always_yes yes --set changeps1 no
 - conda update -q conda
 - conda info -a
-- conda create -q -n p4env python=$PYTHON_VER psi4 cmake -c psi4/label/dev -c psi4
+- conda create -q -n p4env python=$PYTHON_VER psi4 cmake clang -c psi4/label/dev -c psi4
 - source activate p4env
 - export LD_LIBRARY_PATH=$HOME/miniconda/envs/p4env/lib:$LD_LIBRARY_PATH
 - rm -rf $HOME/miniconda/envs/p4env/share/cmake/Target*
@@ -88,13 +88,14 @@ install:
 - python -V
 #- python -c 'import numpy; print(numpy.version.version)'
 - cd ${TRAVIS_BUILD_DIR}
-#- export CXX=${CXX_COMPILER}
-#- export CC=${C_COMPILER}
-#- export FC=${Fortran_COMPILER}
+- which clang++
+- which clang
+- export CXX=clang++
+- export CC=clang
 - export CTEST_OUTPUT_ON_FAILURE=1
-#- ${CXX_COMPILER} --version
+- ${CXX_COMPILER} --version
+- ${C_COMPILER} --version
 #- ${Fortran_COMPILER} --version
-#- ${C_COMPILER} --version
 # Compile ambit
 - cd ${HOME}/build
 - git clone https://github.com/jturney/ambit.git ambit
