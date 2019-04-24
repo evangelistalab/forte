@@ -80,36 +80,9 @@ install:
 - cd objdir
 - make -j2
 - make install
-# Compile Psi4
-- ls ${HOME}/miniconda/envs/p4env/bin
-- ls ${HOME}/miniconda/envs/p4env/lib/
-- ls ${HOME}/miniconda/envs/p4env/include/
-- cd ${HOME}/build
-- git clone https://github.com/evangelistalab/psi4.git psi4
-- cd psi4
-- >
-    cmake -Bbuild -H.
-    -DCMAKE_CXX_COMPILER=${CXX_COMPILER}
-    -DCMAKE_C_COMPILER=${C_COMPILER}
-    -DCMAKE_BUILD_TYPE=${BUILD_TYPE}
-    -DCMAKE_PREFIX_PATH=${HOME}/miniconda/envs/p4env
-    -DPYTHON_EXECUTABLE=${HOME}/miniconda/envs/p4env/bin/python
-    -DPYTHON_LIBRARY=${HOME}/miniconda/envs/p4env/lib/libpython3.6.dylib
-    -DPYTHON_INCLUDE_DIR=${HOME}/miniconda/envs/p4env/include/python3.6
-    -DENABLE_gdma=ON
-    -DENABLE_PLUGIN_TESTING=ON
-    -DCMAKE_INSTALL_PREFIX=${HOME}/build/psi4-bin
-    -DOpenMP_CXX_FLAG="-fopenmp=libiomp5"
-    -DLAPACK_LIBRARIES="${HOME}/miniconda/envs/p4env/lib/libmkl_rt.so;${HOME}/miniconda/envs/p4env/lib/libiomp5.so"
-    -DLAPACK_INCLUDE_DIRS="${HOME}/miniconda/envs/p4env/include"
-- cd build
-- echo "Starting compilation of Psi4"
-- make -j2 -s 
-- echo " Done"
-- make install >& psi4_install.log
-- export PATH="$HOME/build/psi4-bin/bin:$PATH"
-- hash -r
-- which psi4
+# Install psi4
+- conda install psi4 psi4-rt python=3.6 -c psi4/label/dev
+- psi4 --version
 # Compile forte
 - cd ${HOME}/build/evangelistalab/forte
 - FORTE_CMAKE_COM=$(psi4 --plugin-compile)
@@ -125,13 +98,13 @@ install:
 - export PYTHONPATH="${HOME}/build/evangelistalab:$PYTHONPATH"
 - hash -r
 script:
-- cd ${HOME}/build/evangelistalab/forte/tests/methods
-- python run_forte_tests.py --bw --failed_dump
-- grep 'Size of Determinant class' aci-1/output.dat
-- if [ "$MAX_DET_ORB" -ge "128" ]; then
-    cd ${HOME}/build/evangelistalab/forte/tests/large_det;
-    python run_forte_tests_travis.py;
-  fi
-- cd ${HOME}/build/evangelistalab/forte
-- ./forte_tests
-- ./forte_benchmarks
+ - cd ${HOME}/build/evangelistalab/forte/tests/methods
+#- python run_forte_tests.py --bw --failed_dump
+#- grep 'Size of Determinant class' aci-1/output.dat
+#- if [ "$MAX_DET_ORB" -ge "128" ]; then
+#    cd ${HOME}/build/evangelistalab/forte/tests/large_det;
+#    python run_forte_tests_travis.py;
+#  fi
+#- cd ${HOME}/build/evangelistalab/forte
+#- ./forte_tests
+#- ./forte_benchmarks
