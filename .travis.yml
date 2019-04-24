@@ -2,140 +2,19 @@ language: cpp
 sudo: false
 matrix:
   include:
-#  - os: linux
-#    compiler: gcc
-#    addons: &3
-#      apt:
-#        sources:
-#        - ubuntu-toolchain-r-test
-#        - george-edison55-precise-backports
-#        packages:
-#        - python-numpy
-#        - cmake
-#        - cmake-data
-#        - liblapack-dev
-#        - libhdf5-serial-dev
-#        - g++-4.9
-#        - gcc-4.9
-#        - gfortran-4.9
-#    env:
-#      - CXX_COMPILER='g++-4.9'
-#      - PYTHON_VER='2.7'
-#      - C_COMPILER='gcc-4.9'
-#      - Fortran_COMPILER='gfortran-4.9'
-#      - BUILD_TYPE='release'
-#      - NAME='gcc'
-#      - VERSION='4.9'
-#  - os: linux
-#    compiler: clang
-#    addons: &1
-#      apt:
-#        sources:
-#        - llvm-toolchain-precise-3.6
-#        - ubuntu-toolchain-r-test
-#        - george-edison55-precise-backports
-#        packages:
-#        - liblapack-dev
-#        - clang-3.6
-#        - libhdf5-serial-dev
-#        - gfortran
-#    env:
-#      - CXX_COMPILER='clang++-3.6'
-#      - PYTHON_VER='2.7'
-#      - C_COMPILER='clang-3.6'
-#      - Fortran_COMPILER='gfortran'
-#      - BUILD_TYPE='debug'
-#      - NAME='clang'
-#      - VERSION='3.6'
-  - os: linux
-    compiler: gcc
-    addons: &4
-      apt:
-        sources:
-        - ubuntu-toolchain-r-test
-        - george-edison55-precise-backports
-        packages:
-        #- python-numpy
-        #- cmake
-        #- cmake-data
-        #- libhdf5-serial-dev
-        - liblapack-dev
-        #- g++-6
-        #- gcc-6
-        #- gfortran-6
-    env:
-      #- CXX_COMPILER='g++-6'
-      - PYTHON_VER='3.6'
-      #- C_COMPILER='gcc-6'
-      #- Fortran_COMPILER='gfortran-6'
-      - BUILD_TYPE='debug'
-      - NAME='gcc'
-      - VERSION=5.2
+  - env:
+    - PYTHON_VER='3.6'
 
 install:
-- wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
-- bash miniconda.sh -b -p $HOME/miniconda
-- export PATH="$HOME/miniconda/bin:$PATH"
-- hash -r
-- conda config --set always_yes yes --set changeps1 no
-- conda update -q conda
-- conda info -a
-- conda create -q -n p4env python=$PYTHON_VER psi4 psi4-rt cmake -c psi4
-- source activate p4env
-- export LD_LIBRARY_PATH=$HOME/miniconda/envs/p4env/lib:$LD_LIBRARY_PATH
-- ls $HOME/miniconda/envs/p4env/bin
-- ls $HOME/miniconda/envs/p4env/lib
-- rm -rf $HOME/miniconda/envs/p4env/share/cmake/Target*
-- conda list
-- python -V
-#- python -c 'import numpy; print(numpy.version.version)'
-- cd ${TRAVIS_BUILD_DIR}
-- which clang++
-- which clang
-- export CXX=$HOME/miniconda/envs/p4env/bin/clang++
-- export CC=$HOME/miniconda/envs/p4env/bin/clang
-- export CTEST_OUTPUT_ON_FAILURE=1
-- ${CXX} --version
-- ${CC} --version
-#- ${Fortran_COMPILER} --version
-# Compile ambit
-- cd ${HOME}/build
-- git clone https://github.com/jturney/ambit.git ambit
-- cd ambit
-- cmake -H. -Bobjdir -C${HOME}/miniconda/envs/p4env/share/cmake/psi4/psi4PluginCache.cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=/home/travis/build/ambit-bin
-- cd objdir
-- make -j2
-- make install
-# Compile Psi4
-#- cd ${HOME}/build
-#- git clone https://github.com/psi4/psi4.git psi4
-#- cd psi4
-#- > 
-#    cmake -Bbuild -H. 
-#    -DCMAKE_CXX_COMPILER=${CXX_COMPILER} 
-#    -DCMAKE_C_COMPILER=${C_COMPILER} 
-#    -DCMAKE_BUILD_TYPE=${BUILD_TYPE} 
-#    -DCMAKE_PREFIX_PATH=${HOME}/miniconda/envs/p4env
-#    -DPYTHON_EXECUTABLE="${HOME}/miniconda/envs/p4env/bin/python"
-#    -DENABLE_gdma=ON
-#    -DENABLE_PLUGIN_TESTING=ON
-#    -DCMAKE_INSTALL_PREFIX=${HOME}/build/psi4-bin
-#- cd build
-#- make -j2
-#- make install >& psi4_install.log
-#- export PATH="$HOME/build/psi4-bin/bin:$PATH"
-- hash -r
-- which psi4
-- psi4 --version
-#- psi4 --test  # good, but takes time
-# Compile forte
-- cd ${TRAVIS_BUILD_DIR}
-- OUTPUT="$(psi4 --plugin-compile)"
-- $(echo $OUTPUT -Dambit_DIR=/home/travis/build/ambit-bin/share/cmake/ambit)
-- make -j2
-- export PYTHONPATH="${TRAVIS_BUILD_DIR}/../:$PYTHONPATH"
-- hash -r
-script:
-- cd ${TRAVIS_BUILD_DIR}/tests/methods
-- ldd -v ${TRAVIS_BUILD_DIR}/forte.so
-- python run_forte_tests_travis.py 
+  - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
+  - bash miniconda.sh -b -p $HOME/miniconda
+  - export PATH="$HOME/miniconda/bin:$PATH"
+  - hash -r
+  - conda config --set always_yes yes --set changeps1 no
+  - conda update -q conda
+  - conda info -a
+  - conda create -q -n p4env python=$PYTHON_VER psi4 psi4-dev ci-psi4 -c psi4/label/dev
+  - source activate p4env
+  - conda install pytest pytest-cov codecov -c conda-forge
+  - pip install pytest-shutil
+  - conda list
