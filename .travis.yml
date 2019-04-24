@@ -15,6 +15,7 @@ install:
   - conda info -a
   - conda create -q -n p4env python=$PYTHON_VER psi4 psi4-dev ci-psi4 -c psi4/label/dev
   - source activate p4env
+  - conda install -c intel mkl-devel
   - conda install pytest pytest-cov codecov -c conda-forge
   - pip install pytest-shutil
   - conda list
@@ -38,11 +39,11 @@ before_script:
   - python -V
   - psi4 --version
   - cd ${TRAVIS_BUILD_DIR}
-  - >
-      cmake -H. -B.
-      -C${HOME}/miniconda/envs/tenv/share/cmake/psi4/psi4PluginCache.cmake
-      -DCMAKE_BUILD_TYPE=Debug
-  - make -j2
+ #- >
+ #    cmake -H. -B.
+ #    -C${HOME}/miniconda/envs/tenv/share/cmake/psi4/psi4PluginCache.cmake
+ #    -DCMAKE_BUILD_TYPE=Debug
+ #- make -j2
 
 script:
   - ls
