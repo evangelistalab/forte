@@ -2,6 +2,11 @@ language: cpp
 sudo: false
 matrix:
   include:
+  - os: linux
+    addons: &1
+      apt:
+        packages:
+        - libhdf5-serial-dev
   - env:
     - PYTHON_VER='3.6'
 
