@@ -55,6 +55,7 @@
 #include "mrdsrg-helper/run_dsrg.h"
 #include "mrdsrg-spin-integrated/master_mrdsrg.h"
 #include "sparse_ci/determinant.h"
+#include "post_process/spin_corr.h"
 
 namespace py = pybind11;
 using namespace pybind11::literals;
@@ -170,6 +171,7 @@ PYBIND11_MODULE(forte, m) {
     m.def("make_dynamic_correlation_solver", &make_dynamic_correlation_solver,
           "Make a dynamical correlation solver");
     m.def("make_dsrg_method", &make_dsrg_method, "Make a DSRG method");
+    m.def("perform_spin_analysis", &perform_spin_analysis, "Do spin analysis");    
 
     export_ForteOptions(m);
 

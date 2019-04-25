@@ -429,7 +429,9 @@ def register_aci_options(forte_options):
     forte_options.add_int("ACI_ROOTS_PER_CORE", 1,
                           "Number of roots to compute per frozen orbital")
 
-    forte_options.add_bool("ACI_SPIN_ANALYSIS", False, "Do spin correlation analysis?")
+    forte_options.add_bool("SPIN_ANALYSIS", False, "Do spin correlation analysis?")
+
+    forte_options.add_bool("SPIN_TEST", False, "Do test validity of correlation analysis")
 
     forte_options.add_bool("ACI_RELAXED_SPIN", False,
                       "Do spin correlation analysis for relaxed wave function?")

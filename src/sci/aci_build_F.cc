@@ -959,7 +959,6 @@ AdaptiveCI::get_excited_determinants_batch(SharedMatrix evecs, SharedVector eval
 
 det_hash<double> AdaptiveCI::get_bin_F_space_core(int bin, int nbin,double E0, SharedMatrix evecs,
                                               DeterminantHashVec& P_space) {
-
     det_hash<double> bin_f_space;
     //det_hash<double> bin_E_space;
     local_timer build;

@@ -129,7 +129,7 @@ class AdaptiveCI : public SelectedCIMethod {
     void set_quiet(bool quiet) { quiet_mode_ = quiet; }
 
     /// Compute the ACI-NOs
-    std::pair<psi::SharedMatrix, psi::SharedMatrix> compute_nos(bool build_U);
+    void print_nos();
 
     void semi_canonicalize();
     void set_fci_ints(std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
@@ -398,65 +398,20 @@ class AdaptiveCI : public SelectedCIMethod {
     std::vector<std::pair<double, double>> compute_spin(DeterminantHashVec& space, WFNOperator& op,
                                                         psi::SharedMatrix evecs, int nroot);
 
-    /// Compute 1-RDM
-    void compute_1rdm(psi::SharedMatrix A, psi::SharedMatrix B, std::vector<Determinant>& det_space,
-                      psi::SharedMatrix evecs, int nroot);
-
-    /// Compute full S^2 matrix and diagonalize it
-    // void full_spin_transform(DeterminantHashVec& det_space, psi::SharedMatrix cI, int nroot);
-
     /// Check for spin contamination
     double compute_spin_contamination(DeterminantHashVec& space, WFNOperator& op,
                                       psi::SharedMatrix evecs, int nroot);
 
-    /// Compute the Davidson correction
-    std::vector<double> davidson_correction(std::vector<Determinant>& P_dets,
-                                            psi::SharedVector P_evals, psi::SharedMatrix PQ_evecs,
-                                            std::vector<Determinant>& PQ_dets,
-                                            psi::SharedVector PQ_evals);
-
-    //    void compute_H_expectation_val(const
-    //    std::vector<Determinant>& space,
-    //                                    psi::SharedVector& evals,
-    //                                    const psi::SharedMatrix evecs,
-    //                                    int nroot,
-    //                                    DiagonalizationMethod diag_method);
-    //
-
     /// Convert from determinant to string representation
-    void convert_to_string(const std::vector<Determinant>& space);
+    //void convert_to_string(const std::vector<Determinant>& space);
 
     /// Compute overlap for root following
     int root_follow(DeterminantHashVec& P_ref, std::vector<double>& P_ref_evecs,
                     DeterminantHashVec& P_space, psi::SharedMatrix P_evecs, int num_ref_roots);
 
-    /// Project ACI wavefunction
-    void project_determinant_space(DeterminantHashVec& space, psi::SharedMatrix evecs,
-                                   psi::SharedVector evals, int nroot);
-
     /// Add roots to be projected out in DL
     void add_bad_roots(DeterminantHashVec& dets);
 
-    void block_diagonalize_fock(const d2& Fa, const d2& Fb, psi::SharedMatrix& Ua,
-                                psi::SharedMatrix& Ub, const std::string& name);
-
-    DeterminantHashVec approximate_wfn(DeterminantHashVec& PQ_space, psi::SharedMatrix& evecs,
-                                       psi::SharedVector& PQ_evals, psi::SharedMatrix& new_evecs);
-
-    std::vector<std::pair<size_t, double>> dl_initial_guess(std::vector<Determinant>& old_dets,
-                                                            std::vector<Determinant>& dets,
-                                                            psi::SharedMatrix& evecs, int nroot);
-
-    //    int david2(double **A, int N, int M, double *eps, double **v,double
-    //    cutoff, int print);
-    //    /// Perform a Davidson-Liu diagonalization
-    //    void davidson_liu(psi::SharedMatrix H,psi::SharedVector Eigenvalues,psi::SharedMatrix
-    //    Eigenvectors,int nroots);
-
-    //    /// Perform a Davidson-Liu diagonalization on a sparse matrix
-    //    bool davidson_liu_sparse(std::vector<std::vector<std::pair<int,double>
-    //    > > H_sparse,psi::SharedVector Eigenvalues,psi::SharedMatrix Eigenvectors,int
-    //    nroots);
 };
 
 } // namespace forte
