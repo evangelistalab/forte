@@ -34,7 +34,7 @@ set forte {
   nroot 1
   charge 0
   diag_algorithm dlstring
-  aci_spin_analysis true
+  spin_analysis true
   spin_basis NO
 }
 
