@@ -129,7 +129,7 @@ class AdaptiveCI : public SelectedCIMethod {
     void set_quiet(bool quiet) { quiet_mode_ = quiet; }
 
     /// Compute the ACI-NOs
-    void compute_nos();
+    std::pair<psi::SharedMatrix, psi::SharedMatrix> compute_nos(bool build_U);
 
     void semi_canonicalize();
     void set_fci_ints(std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
@@ -422,9 +422,6 @@ class AdaptiveCI : public SelectedCIMethod {
     //                                    int nroot,
     //                                    DiagonalizationMethod diag_method);
     //
-
-    /// Print natural orbitals
-    void print_nos();
 
     /// Convert from determinant to string representation
     void convert_to_string(const std::vector<Determinant>& space);

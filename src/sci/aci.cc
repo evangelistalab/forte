@@ -369,27 +369,6 @@ double AdaptiveCI::average_q_values(std::vector<double>& E2) {
     return f_E2;
 }
 
-double AdaptiveCI::root_select(int nroot, std::vector<double>& C1, std::vector<double>& E2) {
-    double select_value;
-
-    if (ref_root_ + 1 > nroot_) {
-        outfile->Printf("\n  nroot: %d, ref_roof: %d", nroot_, ref_root_);
-        throw psi::PSIEXCEPTION("\n  Your selection is not valid. Check ROOT in options.");
-    }
-    int root = ref_root_;
-    if (nroot == 1) {
-        ref_root_ = 0;
-    }
-
-    if (aimed_selection_) {
-        select_value = energy_selection_ ? E2[root] : (C1[root] * C1[root]);
-    } else {
-        select_value = energy_selection_ ? E2[root] : C1[root];
-    }
-
-    return select_value;
-}
-
 bool AdaptiveCI::check_convergence(std::vector<std::vector<double>>& energy_history,
                                        psi::SharedVector evals) {
     int nroot = evals->dim();
@@ -637,95 +616,6 @@ std::vector<double> AdaptiveCI::davidson_correction(std::vector<Determinant>& P_
         dc[n] = c_sum * (PQ_evals->get(n) - P_evals->get(n));
     }
     return dc;
-}
-
-void AdaptiveCI::print_nos() {
-    print_h2("NATURAL ORBITALS");
-
-    std::shared_ptr<psi::Matrix> opdm_a(new psi::Matrix("OPDM_A", nirrep_, nactpi_, nactpi_));
-    std::shared_ptr<psi::Matrix> opdm_b(new psi::Matrix("OPDM_B", nirrep_, nactpi_, nactpi_));
-
-    int offset = 0;
-    for (size_t h = 0; h < nirrep_; h++) {
-        for (int u = 0; u < nactpi_[h]; u++) {
-            for (int v = 0; v < nactpi_[h]; v++) {
-                opdm_a->set(h, u, v, ordm_a_.data()[(u + offset) * nact_ + v + offset]);
-                opdm_b->set(h, u, v, ordm_b_.data()[(u + offset) * nact_ + v + offset]);
-            }
-        }
-        offset += nactpi_[h];
-    }
-    psi::SharedVector OCC_A(new Vector("ALPHA OCCUPATION", nirrep_, nactpi_));
-    psi::SharedVector OCC_B(new Vector("BETA OCCUPATION", nirrep_, nactpi_));
-    psi::SharedMatrix NO_A(new psi::Matrix(nirrep_, nactpi_, nactpi_));
-    psi::SharedMatrix NO_B(new psi::Matrix(nirrep_, nactpi_, nactpi_));
-
-    opdm_a->diagonalize(NO_A, OCC_A, descending);
-    opdm_b->diagonalize(NO_B, OCC_B, descending);
-
-    // std::ofstream file;
-    // file.open("nos.txt",std::ios_base::app);
-    std::vector<std::pair<double, std::pair<int, int>>> vec_irrep_occupation;
-    for (size_t h = 0; h < nirrep_; h++) {
-        for (int u = 0; u < nactpi_[h]; u++) {
-            auto irrep_occ =
-                std::make_pair(OCC_A->get(h, u) + OCC_B->get(h, u), std::make_pair(h, u + 1));
-            vec_irrep_occupation.push_back(irrep_occ);
-            //          file << OCC_A->get(h, u) + OCC_B->get(h, u) << "  ";
-        }
-    }
-    // file << endl;
-    // file.close();
-
-    CharacterTable ct = psi::Process::environment.molecule()->point_group()->char_table();
-    std::sort(vec_irrep_occupation.begin(), vec_irrep_occupation.end(),
-              std::greater<std::pair<double, std::pair<int, int>>>());
-
-    size_t count = 0;
-    outfile->Printf("\n    ");
-    for (auto vec : vec_irrep_occupation) {
-        outfile->Printf(" %4d%-4s%11.6f  ", vec.second.second, ct.gamma(vec.second.first).symbol(),
-                        vec.first);
-        if (count++ % 3 == 2 && count != vec_irrep_occupation.size())
-            outfile->Printf("\n    ");
-    }
-    outfile->Printf("\n\n");
-
-    // Compute active space weights
-    if (print_weights_) {
-        double no_thresh = options_->get_double("ACI_NO_THRESHOLD");
-
-        std::vector<int> active(nirrep_, 0);
-        std::vector<std::vector<int>> active_idx(nirrep_);
-        std::vector<int> docc(nirrep_, 0);
-
-        print_h2("Active Space Weights");
-        for (size_t h = 0; h < nirrep_; ++h) {
-            std::vector<double> weights(nactpi_[h], 0.0);
-            std::vector<double> oshell(nactpi_[h], 0.0);
-            for (int p = 0; p < nactpi_[h]; ++p) {
-                for (int q = 0; q < nactpi_[h]; ++q) {
-                    double occ = OCC_A->get(h, q) + OCC_B->get(h, q);
-                    if ((occ >= no_thresh) and (occ <= (2.0 - no_thresh))) {
-                        weights[p] += (NO_A->get(h, p, q)) * (NO_A->get(h, p, q));
-                        oshell[p] += (NO_A->get(h, p, q)) * (NO_A->get(h, p, q)) * (2 - occ) * occ;
-                    }
-                }
-            }
-
-            outfile->Printf("\n  Irrep %d:", h);
-            outfile->Printf("\n  Active idx     MO idx        Weight         OS-Weight");
-            outfile->Printf("\n ------------   --------   -------------    -------------");
-            for (int w = 0; w < nactpi_[h]; ++w) {
-                outfile->Printf("\n      %0.2d           %d       %1.9f      %1.9f", w + 1,
-                                w + frzcpi_[h] + 1, weights[w], oshell[w]);
-                if (weights[w] >= 0.9) {
-                    active[h]++;
-                    active_idx[h].push_back(w + frzcpi_[h] + 1);
-                }
-            }
-        }
-    }
 }
 
 /*
@@ -1147,9 +1037,21 @@ void AdaptiveCI::add_bad_roots(DeterminantHashVec& dets) {
     }
 }
 
-void AdaptiveCI::compute_nos() {
 
-    print_h2("ACI NO Transformation");
+std::pair<psi::SharedMatrix, psi::SharedMatrix> AdaptiveCI::compute_nos(bool comp_U = false) {
+
+    print_h2("ACI Natural Orbitals"); 
+
+    psi::SharedMatrix Ua, Ub;
+
+    // Compute a 1-rdm
+    CI_RDMS ci_rdm( PQ_space_, as_ints_, PQ_evecs_, 0, 0);
+    ci_rdm.set_max_rdm(1);
+    std::vector<double> ordm_a_v;
+    std::vector<double> ordm_b_v;
+
+    ci_rdm.compute_1rdm(ordm_a_v, ordm_b_v, op_);
+
 
     psi::Dimension nmopi = mo_space_info_->get_dimension("ALL");
     psi::Dimension ncmopi = mo_space_info_->get_dimension("CORRELATED");
@@ -1164,8 +1066,8 @@ void AdaptiveCI::compute_nos() {
     for (size_t h = 0; h < nirrep_; h++) {
         for (int u = 0; u < nactpi_[h]; u++) {
             for (int v = 0; v < nactpi_[h]; v++) {
-                opdm_a->set(h, u, v, ordm_a_.data()[(u + offset) * nact_ + v + offset]);
-                opdm_b->set(h, u, v, ordm_b_.data()[(u + offset) * nact_ + v + offset]);
+                opdm_a->set(h, u, v, ordm_a_v[(u + offset) * nact_ + v + offset]);
+                opdm_b->set(h, u, v, ordm_b_v[(u + offset) * nact_ + v + offset]);
             }
         }
         offset += nactpi_[h];
@@ -1179,70 +1081,52 @@ void AdaptiveCI::compute_nos() {
     opdm_a->diagonalize(NO_A, OCC_A, descending);
     opdm_b->diagonalize(NO_B, OCC_B, descending);
 
-    // Build full transformation matrices from e-vecs
-    psi::SharedMatrix Ua = std::make_shared<psi::Matrix>("Ua", nmopi, nmopi);
-    psi::SharedMatrix Ub = std::make_shared<psi::Matrix>("Ub", nmopi, nmopi);
-
-    Ua->identity();
-    Ub->identity();
-
-    for (size_t h = 0; h < nirrep_; ++h) {
-        size_t irrep_offset = 0;
-
-        // Frozen core and Restricted docc are unchanged
-        irrep_offset += fdocc[h] + rdocc[h];
-        // Only change the active block
-        for (int p = 0; p < nactpi_[h]; ++p) {
-            for (int q = 0; q < nactpi_[h]; ++q) {
-                Ua->set(h, p + irrep_offset, q + irrep_offset, NO_A->get(h, p, q));
-                Ub->set(h, p + irrep_offset, q + irrep_offset, NO_B->get(h, p, q));
-            }
+    std::vector<std::pair<double, std::pair<int, int>>> vec_irrep_occupation;
+    for (size_t h = 0; h < nirrep_; h++) {
+        for (int u = 0; u < nactpi_[h]; u++) {
+            auto irrep_occ =
+                std::make_pair(OCC_A->get(h, u) + OCC_B->get(h, u), std::make_pair(h, u + 1));
+            vec_irrep_occupation.push_back(irrep_occ);
+            //          file << OCC_A->get(h, u) + OCC_B->get(h, u) << "  ";
         }
     }
-    // Retransform the integrals in the new basis
-    as_ints_->ints()->rotate_orbitals(Ua, Ub);
-}
 
-void AdaptiveCI::upcast_reference(DeterminantHashVec& ref) {
-    psi::Dimension act_dim = mo_space_info_->get_dimension("ACTIVE");
-    psi::Dimension corr_dim = mo_space_info_->get_dimension("CORRELATED");
-    psi::Dimension core_dim = mo_space_info_->get_dimension("RESTRICTED_DOCC");
-    psi::Dimension vir_dim = mo_space_info_->get_dimension("RESTRICTED_UOCC");
+    CharacterTable ct = psi::Process::environment.molecule()->point_group()->char_table();
+    std::sort(vec_irrep_occupation.begin(), vec_irrep_occupation.end(),
+              std::greater<std::pair<double, std::pair<int, int>>>());
 
-    size_t nact = mo_space_info_->size("ACTIVE");
-    size_t ncmo = mo_space_info_->size("CORRELATED");
-    outfile->Printf("\n  Upcasting reference from %d orbitals to %d orbitals", nact, ncmo);
+    size_t count = 0;
+    outfile->Printf("\n    ");
+    for (auto vec : vec_irrep_occupation) {
+        outfile->Printf(" %4d%-4s%11.6f  ", vec.second.second, ct.gamma(vec.second.first).symbol(),
+                        vec.first);
+        if (count++ % 3 == 2 && count != vec_irrep_occupation.size())
+            outfile->Printf("\n    ");
+    }
 
-    det_hashvec ref_dets;
-    ref_dets.swap(ref.wfn_hash());
-    ref.clear();
+    if( comp_U ) {
+        // Build full transformation matrices from e-vecs
+        Ua = std::make_shared<psi::Matrix>("Ua", nmopi, nmopi);
+        Ub = std::make_shared<psi::Matrix>("Ub", nmopi, nmopi);
 
-    size_t ndet = ref_dets.size();
+        Ua->identity();
+        Ub->identity();
 
-    for (size_t I = 0; I < ndet; ++I) {
-        int offset = 0;
-        int act_offset = 0;
-        const Determinant& old_det = ref_dets[I];
-        Determinant new_det(old_det);
         for (size_t h = 0; h < nirrep_; ++h) {
+            size_t irrep_offset = 0;
 
-            // fill the rdocc orbitals with electrons
-            for (int i = 0; i < core_dim[h]; ++i) {
-                new_det.set_alfa_bit(i + offset, true);
-                new_det.set_beta_bit(i + offset, true);
+            // Frozen core and Restricted docc are unchanged
+            irrep_offset += fdocc[h] + rdocc[h];
+            // Only change the active block
+            for (int p = 0; p < nactpi_[h]; ++p) {
+                for (int q = 0; q < nactpi_[h]; ++q) {
+                    Ua->set(h, p + irrep_offset, q + irrep_offset, NO_A->get(h, p, q));
+                    Ub->set(h, p + irrep_offset, q + irrep_offset, NO_B->get(h, p, q));
+                }
             }
-            offset += core_dim[h];
-
-            // Copy active occupation
-            for (int p = 0; p < act_dim[h]; ++p) {
-                new_det.set_alfa_bit(p + offset, old_det.get_alfa_bit(p + act_offset));
-                new_det.set_beta_bit(p + offset, old_det.get_beta_bit(p + act_offset));
-            }
-            offset += act_dim[h] + vir_dim[h];
-            act_offset += act_dim[h];
         }
-        ref.add(new_det);
     }
+    return std::make_pair(Ua,Ub);
 }
 
 void AdaptiveCI::spin_analysis() {
@@ -1250,21 +1134,10 @@ void AdaptiveCI::spin_analysis() {
     size_t nact2 = nact * nact;
     size_t nact3 = nact * nact2;
 
-    // First build rdms as ambit tensors
-    // ambit::Tensor L1a = ambit::Tensor::build(ambit::CoreTensor, "L1a", {nact, nact});
-    // ambit::Tensor L1b = ambit::Tensor::build(ambit::CoreTensor, "L1b", {nact, nact});
-    // ambit::Tensor L2aa = ambit::Tensor::build(ambit::CoreTensor, "L2aa", {nact, nact, nact,
-    // nact});
-    // ambit::Tensor L2ab = ambit::Tensor::build(ambit::CoreTensor, "L2ab", {nact, nact, nact,
-    // nact});
-    // ambit::Tensor L2bb = ambit::Tensor::build(ambit::CoreTensor, "L2bb", {nact, nact, nact,
-    // nact});
-
     psi::SharedMatrix UA(new psi::Matrix(nact, nact));
     psi::SharedMatrix UB(new psi::Matrix(nact, nact));
 
-    if (options_->get_str("SPIN_BASIS") == "IAO") {
-
+    //if (options_->get_str("SPIN_BASIS") == "IAO") {
         // outfile->Printf("\n  Computing spin correlation in IAO basis \n");
         // psi::SharedMatrix Ca = ints_->Ca();
         // std::shared_ptr<IAOBuilder> IAO =
@@ -1309,26 +1182,15 @@ void AdaptiveCI::spin_analysis() {
         // UB->copy(UA);
         // outfile->Printf("\n");
 
-    } else if (options_->get_str("SPIN_BASIS") == "NO") {
+    //} else 
+    if (options_->get_str("SPIN_BASIS") == "NO") {
 
         outfile->Printf("\n  Computing spin correlation in NO basis \n");
-        psi::SharedMatrix RDMa(new psi::Matrix(nact, nact));
-        psi::SharedMatrix RDMb(new psi::Matrix(nact, nact));
 
-        for (size_t i = 0; i < nact; ++i) {
-            for (size_t j = 0; j < nact; ++j) {
-                RDMa->set(i, j, ordm_a_.data()[i * nact + j]);
-                RDMb->set(i, j, ordm_b_.data()[i * nact + j]);
-            }
-        }
+        auto pair = compute_nos(true);
 
-        // psi::SharedMatrix NOa;
-        // psi::SharedMatrix NOb;
-        psi::SharedVector occa(new Vector(nact));
-        psi::SharedVector occb(new Vector(nact));
-
-        RDMa->diagonalize(UA, occa);
-        RDMb->diagonalize(UB, occb);
+        UA = pair.first;
+        UB = pair.second;
 
         int nmo = mo_space_info_->size("ALL");
         psi::SharedMatrix Ua_full(new psi::Matrix(nmo, nmo));
@@ -1378,7 +1240,6 @@ void AdaptiveCI::spin_analysis() {
         UA->identity();
         UB->identity();
     }
-
     ambit::Tensor Ua = ambit::Tensor::build(ambit::CoreTensor, "U", {nact, nact});
     ambit::Tensor Ub = ambit::Tensor::build(ambit::CoreTensor, "U", {nact, nact});
     Ua.iterate([&](const std::vector<size_t>& i, double& value) { value = UA->get(i[0], i[1]); });
@@ -1388,6 +1249,30 @@ void AdaptiveCI::spin_analysis() {
     // 1 rdms first
     ambit::Tensor L1aT = ambit::Tensor::build(ambit::CoreTensor, "Transformed L1a", {nact, nact});
     ambit::Tensor L1bT = ambit::Tensor::build(ambit::CoreTensor, "Transformed L1b", {nact, nact});
+
+    ordm_a_ = ambit::Tensor::build(ambit::CoreTensor, "L1a", {nact, nact});
+    ordm_b_ = ambit::Tensor::build(ambit::CoreTensor, "L1b", {nact, nact});
+
+    trdm_aa_ = ambit::Tensor::build(ambit::CoreTensor, "L2aa", {nact, nact, nact, nact});
+    trdm_ab_ = ambit::Tensor::build(ambit::CoreTensor, "L2ab", {nact, nact, nact, nact});
+    trdm_bb_ = ambit::Tensor::build(ambit::CoreTensor, "L2bb", {nact, nact, nact, nact});
+
+    CI_RDMS ci_rdm( PQ_space_, as_ints_, PQ_evecs_, 0, 0);
+    ci_rdm.set_max_rdm(2);
+    std::vector<double> ordm_a_v;
+    std::vector<double> ordm_b_v;
+    std::vector<double> trdm_aa_v;
+    std::vector<double> trdm_ab_v;
+    std::vector<double> trdm_bb_v;
+    ci_rdm.compute_1rdm(ordm_a_v, ordm_b_v, op_);
+    ci_rdm.compute_2rdm(trdm_aa_v, trdm_ab_v,trdm_bb_v, op_);
+
+    ordm_a_.iterate([&](const std::vector<size_t>& i, double& value) { value = ordm_a_v[i[0]*nact+ i[1]]; });
+    ordm_b_.iterate([&](const std::vector<size_t>& i, double& value) { value = ordm_b_v[i[0]*nact+ i[1]]; });
+
+    trdm_aa_.iterate([&](const std::vector<size_t>& i, double& value) { value = trdm_aa_v[i[0]*nact3+ i[1]*nact2 + i[2]*nact + i[3]]; });
+    trdm_ab_.iterate([&](const std::vector<size_t>& i, double& value) { value = trdm_ab_v[i[0]*nact3+ i[1]*nact2 + i[2]*nact + i[3]]; });
+    trdm_bb_.iterate([&](const std::vector<size_t>& i, double& value) { value = trdm_bb_v[i[0]*nact3+ i[1]*nact2 + i[2]*nact + i[3]]; });
 
     L1aT("pq") = Ua("ap") * ordm_a_("ab") * Ua("bq");
     L1bT("pq") = Ub("ap") * ordm_b_("ab") * Ub("bq");
@@ -1452,6 +1337,9 @@ void AdaptiveCI::spin_analysis() {
             spin_fluct->set(i, j, value);
         }
     }
+
+    psi::Process::environment.globals["SPIN CORRELATION TEST"] = spin_fluct->get(0,1);
+
     outfile->Printf("\n");
     // spin_corr->print();
     spin_fluct->print();
@@ -1528,6 +1416,12 @@ std::vector<double> AdaptiveCI::get_multistate_pt2_energy_correction() {
     return multistate_pt2_energy_correction_;
 }
 void AdaptiveCI::post_iter_process() {
+    if( options_->get_bool("ACI_SPIN_ANALYSIS") ){
+        spin_analysis();
+    } else {
+        auto p = compute_nos();
+    }
+
     full_mrpt2();
 }
 
