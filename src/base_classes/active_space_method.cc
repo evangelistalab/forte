@@ -26,7 +26,7 @@
  * @END LICENSE
  */
 
-#include "psi4/libmints/wavefunction.h"
+#include <psi4/libmints/wavefunction.h>
 
 #include "base_classes/mo_space_info.h"
 #include "base_classes/forte_options.h"
