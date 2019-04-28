@@ -13,7 +13,7 @@ install:
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
   - conda info -a
-  - conda create -q -n tenv python=$PYTHON_VER psi4 psi4-dev ci-psi4 boost ambit -c psi4/label/dev
+  - conda create -q -n tenv python=$PYTHON_VER psi4 psi4-dev ci-psi4 boost ambit pybind11 -c psi4/label/dev
   - source activate tenv
   - conda install pytest pytest-cov codecov -c conda-forge
   - pip install pytest-shutil
