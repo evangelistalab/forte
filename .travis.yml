@@ -18,6 +18,8 @@ install:
   - conda install pytest pytest-cov codecov -c conda-forge
   - pip install pytest-shutil
   - conda list
+  - python -m pybind11 --includes
+  - ls ${HOME}/miniconda/envs/tenv/pkgs
   - ls ${HOME}/miniconda/envs/tenv/include
   - ls ${HOME}/miniconda/envs/tenv/include/ambit
   - ls ${HOME}/miniconda/envs/tenv/include/psi4
