@@ -18,6 +18,7 @@ install:
   - conda install pytest pytest-cov codecov -c conda-forge
   - pip install pytest-shutil
   - conda list
+  - ls ${HOME}/miniconda/envs/tenv/include
 
 before_script:
   - python -V
@@ -29,9 +30,12 @@ before_script:
       cmake -H. -B.
       -C${HOME}/miniconda/envs/tenv/share/cmake/psi4/psi4PluginCache.cmake
       -DCMAKE_BUILD_TYPE=Debug -DTargetHDF5_DIR=${HOME}/miniconda/envs/tenv/
+      -DCMAKE_CXX_FLAGS="-I ${HOME}/miniconda/envs/tenv/include"
   - make -j2
 
 script:
+  - cd ${HOME}/build/evangelistalab/forte/tests/methods
+  - python run_forte_tests.py --bw --failed_dump
   - PYTHONPATH=../:$PYTHONPATH psi4 --test
 
 # notifications:
