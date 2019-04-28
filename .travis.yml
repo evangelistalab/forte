@@ -21,6 +21,7 @@ install:
   - ls ${HOME}/miniconda/envs/tenv/include
   - ls ${HOME}/miniconda/envs/tenv/include/ambit
   - ls ${HOME}/miniconda/envs/tenv/include/psi4
+  - ls ${HOME}/miniconda/envs/tenv/include/psi4/libmints
   
 before_script:
   - python -V
