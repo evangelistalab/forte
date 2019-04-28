@@ -19,7 +19,9 @@ install:
   - pip install pytest-shutil
   - conda list
   - ls ${HOME}/miniconda/envs/tenv/include
-
+  - ls ${HOME}/miniconda/envs/tenv/include/ambit
+  - ls ${HOME}/miniconda/envs/tenv/include/psi4
+  
 before_script:
   - python -V
   - psi4 --version
