@@ -30,7 +30,7 @@ before_script:
       cmake -H. -B.
       -C${HOME}/miniconda/envs/tenv/share/cmake/psi4/psi4PluginCache.cmake
       -DCMAKE_BUILD_TYPE=Debug -DTargetHDF5_DIR=${HOME}/miniconda/envs/tenv/
-      -DCMAKE_CXX_FLAGS="-I ${HOME}/miniconda/envs/tenv/include -I ${HOME}/miniconda/envs/tenv/include/psi4"
+      -DCMAKE_CXX_FLAGS="-I ${HOME}/miniconda/envs/tenv/include -I ${HOME}/miniconda/envs/tenv/include/psi4 -I ${HOME}/miniconda/envs/tenv/include/ambit"
   - make -j2
 
 script:
