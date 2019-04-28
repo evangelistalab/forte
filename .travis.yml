@@ -23,6 +23,7 @@ install:
 before_script:
   - python -V
   - psi4 --version
+  - psi4 --plugin-compile
   - cd ${TRAVIS_BUILD_DIR}
   - pwd
   - cat ${HOME}/miniconda/envs/tenv/share/cmake/psi4/psi4PluginCache.cmake
