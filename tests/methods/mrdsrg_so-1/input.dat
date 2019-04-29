@@ -44,11 +44,11 @@ job_type mrdsrg_so
 E_spin_orbital = energy('forte', ref_wfn=wfn)
 compare_values(Edsrg0, E_spin_orbital, 7, "MR-LDSRG(2) energy spin-orbital York")
 
-set forte {
-job_type somrdsrg
-}
-E_spin_orbital = energy('forte', ref_wfn=wfn)
-compare_values(Edsrg0, E_spin_orbital, 7, "MR-LDSRG(2) energy spin-orbital Francesco")
+#set forte {
+#job_type somrdsrg
+#}
+#E_spin_orbital = energy('forte', ref_wfn=wfn)
+#compare_values(Edsrg0, E_spin_orbital, 7, "MR-LDSRG(2) energy spin-orbital Francesco")
 
 #set forte {
 #correlation_solver     mrdsrg
