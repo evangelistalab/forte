@@ -55,7 +55,7 @@ add_library(tgt::hdf5 INTERFACE IMPORTED)
 
 set_target_properties(tgt::hdf5 PROPERTIES
   INTERFACE_INCLUDE_DIRECTORIES "/home/travis/miniconda/envs/tenv/include"
-  INTERFACE_LINK_LIBRARIES "/home/travis/miniconda/envs/tenv/lib/libhdf5.so"
+  INTERFACE_LINK_LIBRARIES "${CONDA_PREFIX}/lib/libhdf5.so;-lrt;-lpthread;${CONDA_PREFIX}/lib/libz.so;-ldl;-lm"
 )
 
 if(CMAKE_VERSION VERSION_LESS 3.0.0)
