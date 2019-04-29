@@ -303,8 +303,8 @@ def run_forte(name, **kwargs):
     forte.banner()
 
     # Create the fragment(embedding) projector (not done!)
-    pf = forte.make_fragment_projector(ref_wfn, options)
     if options.get_bool("EMBEDDING"):
+        pf = forte.make_fragment_projector(ref_wfn, options)
         forte.make_embedding(ref_wfn, options, pf)
 
     # Create the MOSpaceInfo object
