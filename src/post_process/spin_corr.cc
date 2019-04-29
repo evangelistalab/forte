@@ -276,7 +276,7 @@ void SpinCorr::spin_analysis() {
             spin_z->set(i, j, value);
         }
     }
-
+    
     for (size_t i = 0; i < nact; ++i) {
         for (size_t j = 0; j < nact; ++j) {
             double value = 0.0;
@@ -300,7 +300,6 @@ void SpinCorr::spin_analysis() {
         }
     }
 
-    psi::Process::environment.globals["SPIN CORRELATION TEST"] = spin_fluct->get(0,1);
 
     outfile->Printf("\n");
     // spin_corr->print();
@@ -358,6 +357,15 @@ void SpinCorr::spin_analysis() {
     */
     if( options_->get_bool("SPIN_TEST") ){
         // make a test
+        double value = 0.0;
+        for (size_t i = 0; i < nact; ++i) {
+            for (size_t j = i; j < nact; ++j) {
+                value += spin_fluct->get(i,j);
+            }
+        }
+
+        psi::Process::environment.globals["SPIN CORRELATION TEST"] = value;
+
     }
 }
 

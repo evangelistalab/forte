@@ -7,7 +7,7 @@ import forte
 refscf = -2.0310813811962456 #TEST
 refaci = -2.115455548674 #TEST
 refacipt2 = -2.116454734743 #TEST
-spin_val = -0.00473146152927
+spin_val = 1.02027340
 
 molecule li2{
 0 1
@@ -39,6 +39,7 @@ set forte {
   ACI_SCREEN_ALG batch_hash
   aci_nbatch 2
   spin_analysis true
+  spin_test true
 }
 
 energy('scf')
@@ -48,4 +49,4 @@ compare_values(refscf, variable("CURRENT ENERGY"),9, "SCF energy") #TEST
 energy('forte')
 compare_values(refaci, variable("ACI ENERGY"),9, "ACI energy") #TEST
 compare_values(refacipt2, variable("ACI+PT2 ENERGY"),8, "ACI+PT2 energy") #TEST
-compare_values(spin_val, variable("SPIN CORRELATION TEST"),8, "Spin Correlation") #TEST
+compare_values(spin_val, variable("SPIN CORRELATION TEST"),7, "Spin Correlation") #TEST
