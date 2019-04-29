@@ -206,13 +206,6 @@ void ASCI::diagonalize_P_space() {
         outfile->Printf("\n  Initial P space dimension: %zu", P_space_.size());
     }
 
-    // Diagonalize H in the P space
-    if (ex_alg_ == "ROOT_ORTHOGONALIZE" and root_ > 0 and cycle_ >= pre_iter_) {
-        sparse_solver_.set_root_project(true);
-        add_bad_roots(P_space_);
-        sparse_solver_.add_bad_states(bad_roots_);
-    }
-
     if (sparse_solver_.sigma_method_ == "HZ") {
         op_.clear_op_lists();
         op_.clear_tp_lists();
@@ -455,21 +448,14 @@ void ASCI::print_wfn(DeterminantHashVec& space, WFNOperator& op, psi::SharedMatr
     }
 }
 
-double ASCI::compute_spin_contamination(DeterminantHashVec& space, WFNOperator& op,
-                                        psi::SharedMatrix evecs, int nroot) {
-    auto spins = compute_spin(space, op, evecs, nroot);
-    double spin_contam = 0.0;
-    for (int n = 0; n < nroot; ++n) {
-        spin_contam += spins[n].second;
-    }
-    spin_contam /= static_cast<double>(nroot);
-    spin_contam -= (0.25 * (multiplicity_ * multiplicity_ - 1.0));
-
-    return spin_contam;
-}
-
 void ASCI::print_nos() {
     print_h2("NATURAL ORBITALS");
+
+    CI_RDMS ci_rdm( PQ_space_, as_ints_, PQ_evecs_, 0, 0);
+    ci_rdm.set_max_rdm(1);
+    std::vector<double> ordm_a_v;
+    std::vector<double> ordm_b_v;
+    ci_rdm.compute_1rdm(ordm_a_v, ordm_b_v, op_);
 
     std::shared_ptr<psi::Matrix> opdm_a(new psi::Matrix("OPDM_A", nirrep_, nactpi_, nactpi_));
     std::shared_ptr<psi::Matrix> opdm_b(new psi::Matrix("OPDM_B", nirrep_, nactpi_, nactpi_));
@@ -478,8 +464,8 @@ void ASCI::print_nos() {
     for (size_t h = 0; h < nirrep_; h++) {
         for (int u = 0; u < nactpi_[h]; u++) {
             for (int v = 0; v < nactpi_[h]; v++) {
-                opdm_a->set(h, u, v, ordm_a_.data()[(u + offset) * nact_ + v + offset]);
-                opdm_b->set(h, u, v, ordm_b_.data()[(u + offset) * nact_ + v + offset]);
+                opdm_a->set(h, u, v, ordm_a_v[(u + offset) * nact_ + v + offset]);
+                opdm_b->set(h, u, v, ordm_b_v[(u + offset) * nact_ + v + offset]);
             }
         }
         offset += nactpi_[h];
@@ -520,70 +506,6 @@ void ASCI::print_nos() {
     }
     outfile->Printf("\n\n");
 
-    // Compute active space weights
-    if (print_weights_) {
-        double no_thresh = options_->get_double("ACI_NO_THRESHOLD");
-
-        std::vector<int> active(nirrep_, 0);
-        std::vector<std::vector<int>> active_idx(nirrep_);
-        std::vector<int> docc(nirrep_, 0);
-
-        print_h2("Active Space Weights");
-        for (size_t h = 0; h < nirrep_; ++h) {
-            std::vector<double> weights(nactpi_[h], 0.0);
-            std::vector<double> oshell(nactpi_[h], 0.0);
-            for (int p = 0; p < nactpi_[h]; ++p) {
-                for (int q = 0; q < nactpi_[h]; ++q) {
-                    double occ = OCC_A->get(h, q) + OCC_B->get(h, q);
-                    if ((occ >= no_thresh) and (occ <= (2.0 - no_thresh))) {
-                        weights[p] += (NO_A->get(h, p, q)) * (NO_A->get(h, p, q));
-                        oshell[p] += (NO_A->get(h, p, q)) * (NO_A->get(h, p, q)) * (2 - occ) * occ;
-                    }
-                }
-            }
-
-            outfile->Printf("\n  Irrep %d:", h);
-            outfile->Printf("\n  Active idx     MO idx        Weight         OS-Weight");
-            outfile->Printf("\n ------------   --------   -------------    -------------");
-            for (int w = 0; w < nactpi_[h]; ++w) {
-                outfile->Printf("\n      %0.2d           %d       %1.9f      %1.9f", w + 1,
-                                w + frzcpi_[h] + 1, weights[w], oshell[w]);
-                if (weights[w] >= 0.9) {
-                    active[h]++;
-                    active_idx[h].push_back(w + frzcpi_[h] + 1);
-                }
-            }
-        }
-    }
-}
-
-void ASCI::compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints, DeterminantHashVec& dets,
-                        WFNOperator& op, psi::SharedMatrix& PQ_evecs, int root1, int root2,
-                        int rdm_level) {
-
-    CI_RDMS ci_rdms_(dets, fci_ints, PQ_evecs, root1, root2);
-
-    //    double total_time = 0.0;
-    ci_rdms_.set_max_rdm(rdm_level);
-
-    if (rdm_level >= 1) {
-        local_timer one_r;
-        ci_rdms_.compute_1rdm(ordm_a_.data(), ordm_b_.data(), op);
-        outfile->Printf("\n  1-RDM  took %2.6f s (determinant)", one_r.get());
-
-        print_nos();
-    }
-    if (rdm_level >= 2) {
-        local_timer two_r;
-        ci_rdms_.compute_2rdm(trdm_aa_.data(), trdm_ab_.data(), trdm_bb_.data(), op);
-        outfile->Printf("\n  2-RDMS took %2.6f s (determinant)", two_r.get());
-    }
-    if (rdm_level >= 3) {
-        local_timer tr;
-        ci_rdms_.compute_3rdm(trdm_aaa_.data(), trdm_aab_.data(), trdm_abb_.data(),
-                              trdm_bbb_.data(), op);
-        outfile->Printf("\n  3-RDMs took %2.6f s (determinant)", tr.get());
-    }
 }
 
 void ASCI::get_excited_determinants_sr(psi::SharedMatrix evecs, DeterminantHashVec& P_space,
@@ -769,33 +691,6 @@ std::vector<double> ASCI::get_multistate_pt2_energy_correction() {
     return multistate_pt2_energy_correction_;
 }
 
-void ASCI::add_bad_roots(DeterminantHashVec& dets) {
-    bad_roots_.clear();
-
-    // Look through each state, save common determinants/coeffs
-    int nroot = old_roots_.size();
-    for (int i = 0; i < nroot; ++i) {
-
-        std::vector<std::pair<size_t, double>> bad_root;
-        size_t nadd = 0;
-        std::vector<std::pair<Determinant, double>>& state = old_roots_[i];
-
-        for (size_t I = 0, max_I = state.size(); I < max_I; ++I) {
-            if (dets.has_det(state[I].first)) {
-                //                outfile->Printf("\n %zu, %f ", I,
-                //                detmapper[state[I].first] , state[I].second );
-                bad_root.push_back(std::make_pair(dets.get_idx(state[I].first), state[I].second));
-                nadd++;
-            }
-        }
-        bad_roots_.push_back(bad_root);
-
-        if (!quiet_mode_) {
-            outfile->Printf("\n  Added %zu determinants from root %zu", nadd, i);
-        }
-    }
-}
-
 int ASCI::root_follow(DeterminantHashVec& P_ref, std::vector<double>& P_ref_evecs,
                                 DeterminantHashVec& P_space, psi::SharedMatrix P_evecs,
                                 int num_ref_roots) {
@@ -902,5 +797,10 @@ void ASCI::diagonalize_PQ_space() {
     }
     print_wfn(PQ_space_, op_, PQ_evecs_, nroot_);
 }
+
+void ASCI::post_iter_process() {
+    print_nos();
+}
+
 
 } // namespace forte

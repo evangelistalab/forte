@@ -33,6 +33,9 @@ doc/doxygen/html
 doc/doxygen/latex
 docs/sphinx/_*
 
+*.html
+*/*/*.html
+
 CMakeCache.txt
 CMakeFiles/
 cmake_install.cmake
