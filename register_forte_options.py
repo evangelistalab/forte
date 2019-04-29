@@ -309,7 +309,7 @@ def register_aci_options(forte_options):
                           "The selection type for the Q-space")
     
     forte_options.add_str("ACI_SCREEN_ALG", "AVERAGE", 
-                        ['AVERAGE', 'SR', 'RESTRICTED', 'CORE', 'BATCH_HASH', 'BATCH_CORE', 'BATCH_VEC'],
+                        ['AVERAGE', 'SR', 'RESTRICTED', 'CORE', 'BATCH_HASH', 'BATCH_VEC'],
                         "The screening algorithm to use")
 
     forte_options.add_double("SIGMA", 0.01,
