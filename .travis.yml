@@ -29,6 +29,8 @@ before_script:
   - psi4 --version
   - psi4 --plugin-compile
   - cat ${HOME}/miniconda/envs/tenv/share/cmake/psi4/psi4PluginCache.cmake
+  - ls ${TRAVIS_BUILD_DIR} 
+  - cp ${TRAVIS_BUILD_DIR}/hack ${HOME}/miniconda/envs/tenv/share/cmake/TargetHDF5/TargetHDF5Targets.cmake 
   - cat ${HOME}/miniconda/envs/tenv/share/cmake/TargetHDF5/TargetHDF5Targets.cmake
   # Compile ambit
   - cd ${HOME}/build
