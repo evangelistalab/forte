@@ -33,7 +33,7 @@ include(autocmake_mpi)  # MPI option A
 
 #find_package(psi4 1.1 REQUIRED COMPONENTS ambit chemps2)
 find_package(pybind11 REQUIRED)
-find_package(psi4 1.3 REQUIRED COMPONENTS ambit)
+find_package(psi4 1.3 REQUIRED)
 find_package(TargetLAPACK REQUIRED)
 #find_package(ambit 0.3 REQUIRED)
 if(ENABLE_CheMPS2)
