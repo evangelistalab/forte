@@ -12,7 +12,7 @@ install:
   - hash -r
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
-  - conda info -a
+#  - conda info -a
   - conda create -q -n tenv python=$PYTHON_VER gcc_linux-64 gxx_linux-64 gfortran_linux-64 cmake mkl-devel hdf5 psi4 psi4-dev ci-psi4 boost -c psi4/label/dev
   - source activate tenv
   - conda install pytest pytest-cov codecov lcov -c conda-forge
@@ -45,7 +45,7 @@ before_script:
       -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
       -DPYTHON_EXECUTABLE=${HOME}/miniconda/envs/tenv/bin/python
       -DENABLE_CODECOV=ON
-  - make VERBOSE=1 -j2
+  - make -j2
   - export PYTHONPATH="${HOME}/build/evangelistalab:$PYTHONPATH"
 
 script:
