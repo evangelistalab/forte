@@ -50,7 +50,7 @@ before_script:
 
 script:
   - cd ${TRAVIS_BUILD_DIR}
-  - sh tools/forte_codecov
+  - bash tools/forte_codecov
   #- cd ${HOME}/build/evangelistalab/forte/tests/methods
   #- python run_forte_tests.py --bw --failed_dump
   - grep 'Size of Determinant class' aci-1/output.dat
