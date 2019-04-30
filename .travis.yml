@@ -6,9 +6,6 @@ matrix:
       - PYTHON_VER='3.6'
 
 install:
-  - cat $PYTHONPATH
-  - PYTHONPATH=${HOME}/build/evangelistalab:$PYTHONPATH
-  - cat $PYTHONPATH
   - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
   - bash miniconda.sh -b -p $HOME/miniconda
   - export PATH="$HOME/miniconda/bin:$PATH"
@@ -22,6 +19,9 @@ install:
   - pip install pytest-shutil
   - conda list
   - python -m pybind11 --includes
+  - cat $PYTHONPATH
+  - PYTHONPATH=${HOME}/build/evangelistalab:$PYTHONPATH
+  - cat $PYTHONPATH
   - ls ${HOME}/miniconda/envs/tenv/include
   - ls ${HOME}/miniconda/envs/tenv/include/ambit
   - ls ${HOME}/miniconda/envs/tenv/include/psi4
