@@ -13,29 +13,17 @@ install:
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
   - conda info -a
-  - conda create -q -n tenv python=$PYTHON_VER gcc_linux-64 gxx_linux-64 gfortran_linux-64 cmake mkl-devel hdf5 psi4 psi4-dev ci-psi4 boost pybind11 -c psi4/label/dev
+  - conda create -q -n tenv python=$PYTHON_VER gcc_linux-64 gxx_linux-64 gfortran_linux-64 cmake mkl-devel hdf5 psi4 psi4-dev ci-psi4 boost -c psi4/label/dev
   - source activate tenv
-  - conda install pytest pytest-cov codecov -c conda-forge
+  - conda install pytest pytest-cov codecov lcov -c conda-forge
   - pip install pytest-shutil
-# - conda list
-# - python -m pybind11 --includes
-# - ls ${HOME}/miniconda/envs/tenv/include
-# - ls ${HOME}/miniconda/envs/tenv/include/ambit
-# - ls ${HOME}/miniconda/envs/tenv/include/psi4
-# - ls ${HOME}/miniconda/envs/tenv/include/psi4/libmints
   
 before_script:
   - python -V
   - psi4 --version
   - psi4 --plugin-compile
-# - cat ${HOME}/miniconda/envs/tenv/share/cmake/psi4/psi4PluginCache.cmake
-# - cat ${HOME}/miniconda/envs/tenv/share/cmake/TargetHDF5/TargetHDF5Targets.cmake
-# - cat ${HOME}/miniconda/envs/tenv/share/cmake/TargetLAPACK/TargetLAPACKTargets.cmake
-# - ls ${TRAVIS_BUILD_DIR} 
   - cp ${TRAVIS_BUILD_DIR}/travis/TargetHDF5Targets.cmake ${HOME}/miniconda/envs/tenv/share/cmake/TargetHDF5/TargetHDF5Targets.cmake 
   - cp ${TRAVIS_BUILD_DIR}/travis/TargetLAPACKTargets.cmake ${HOME}/miniconda/envs/tenv/share/cmake/TargetLAPACK/TargetLAPACKTargets.cmake
-# - cat ${HOME}/miniconda/envs/tenv/share/cmake/TargetHDF5/TargetHDF5Targets.cmake
-# - cat ${HOME}/miniconda/envs/tenv/share/cmake/TargetLAPACK/TargetLAPACKTargets.cmake
 # # Compile ambit
 # - cd ${HOME}/build
 # - pwd
@@ -58,10 +46,12 @@ before_script:
       -DPYTHON_EXECUTABLE=${HOME}/miniconda/envs/tenv/bin/python
   - make VERBOSE=1 -j2
   - export PYTHONPATH="${HOME}/build/evangelistalab:$PYTHONPATH"
-#  - hash -r
+
 script:
-  - cd ${HOME}/build/evangelistalab/forte/tests/methods
-  - python run_forte_tests.py --bw --failed_dump
+  - cd ${TRAVIS_BUILD_DIR}
+  - sh tools/forte_codecov
+  #- cd ${HOME}/build/evangelistalab/forte/tests/methods
+  #- python run_forte_tests.py --bw --failed_dump
   - grep 'Size of Determinant class' aci-1/output.dat
   - if [ "$MAX_DET_ORB" -ge "128" ]; then
       cd ${HOME}/build/evangelistalab/forte/tests/large_det;
