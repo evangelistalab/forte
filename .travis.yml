@@ -6,9 +6,6 @@ matrix:
       - PYTHON_VER='3.6'
 
 install:
-  - echo $PYTHONPATH
-  - PYTHONPATH=${HOME}/build/evangelistalab:${PYTHONPATH}
-  - echo $PYTHONPATH
   - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
   - bash miniconda.sh -b -p $HOME/miniconda
   - export PATH="$HOME/miniconda/bin:$PATH"
@@ -61,11 +58,19 @@ before_script:
       -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
       -DPYTHON_EXECUTABLE=${HOME}/miniconda/envs/tenv/bin/python
   - make VERBOSE=1 -j2
-
+  - export PYTHONPATH="${HOME}/build/evangelistalab:$PYTHONPATH"
+  - hash -r
 script:
   - cd ${HOME}/build/evangelistalab/forte/tests/methods
   - python run_forte_tests.py --bw --failed_dump
-#  - PYTHONPATH=../:$PYTHONPATH psi4 --test
+  - grep 'Size of Determinant class' aci-1/output.dat
+  - if [ "$MAX_DET_ORB" -ge "128" ]; then
+      cd ${HOME}/build/evangelistalab/forte/tests/large_det;
+      python run_forte_tests_travis.py;
+    fi
+  - cd ${HOME}/build/evangelistalab/forte
+  - ./forte_tests
+  - ./forte_benchmarks
 
 # notifications:
 #   email: true
