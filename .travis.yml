@@ -4,6 +4,10 @@ matrix:
   include:
     - env:
       - PYTHON_VER='3.6'
+      - MAX_DET_ORB=64
+    - env:
+      - PYTHON_VER='3.6'
+      - MAX_DET_ORB=128
 
 install:
   - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
