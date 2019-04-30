@@ -31,6 +31,7 @@ before_script:
   - LAPACK_INTERJECT="${PREFIX}/lib/libmkl_rt.so" 
   - cat ${HOME}/miniconda/envs/tenv/share/cmake/psi4/psi4PluginCache.cmake
   - cat ${HOME}/miniconda/envs/tenv/share/cmake/TargetHDF5/TargetHDF5Targets.cmake
+  - cat ${HOME}/miniconda/envs/tenv/share/cmake/TargetLAPACK/TargetLAPACKTargets.cmake
   - ls ${TRAVIS_BUILD_DIR} 
   - cp ${TRAVIS_BUILD_DIR}/hack ${HOME}/miniconda/envs/tenv/share/cmake/TargetHDF5/TargetHDF5Targets.cmake 
   - cat ${HOME}/miniconda/envs/tenv/share/cmake/TargetHDF5/TargetHDF5Targets.cmake
