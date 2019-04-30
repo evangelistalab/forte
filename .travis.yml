@@ -6,6 +6,9 @@ matrix:
       - PYTHON_VER='3.6'
 
 install:
+  - cat ${PYTHONPATH}
+  - PYTHONPATH=${HOME}/build/evangelistalab:$PYTHONPATH
+  - cat ${PYTHONPATH}
   - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
   - bash miniconda.sh -b -p $HOME/miniconda
   - export PATH="$HOME/miniconda/bin:$PATH"
@@ -28,7 +31,6 @@ before_script:
   - python -V
   - psi4 --version
   - psi4 --plugin-compile
-  - LAPACK_INTERJECT="${PREFIX}/lib/libmkl_rt.so" 
   - cat ${HOME}/miniconda/envs/tenv/share/cmake/psi4/psi4PluginCache.cmake
   - cat ${HOME}/miniconda/envs/tenv/share/cmake/TargetHDF5/TargetHDF5Targets.cmake
   - cat ${HOME}/miniconda/envs/tenv/share/cmake/TargetLAPACK/TargetLAPACKTargets.cmake
@@ -63,7 +65,7 @@ before_script:
 script:
   - cd ${HOME}/build/evangelistalab/forte/tests/methods
   - python run_forte_tests.py --bw --failed_dump
-  - PYTHONPATH=../:$PYTHONPATH psi4 --test
+#  - PYTHONPATH=../:$PYTHONPATH psi4 --test
 
 # notifications:
 #   email: true
