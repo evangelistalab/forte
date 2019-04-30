@@ -44,6 +44,7 @@ before_script:
       -DCMAKE_CXX_FLAGS="-I${HOME}/miniconda/envs/tenv/include ${PYBIND_INCLUDE}"
       -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
       -DPYTHON_EXECUTABLE=${HOME}/miniconda/envs/tenv/bin/python
+      -DENABLE_CODECOV=ON
   - make VERBOSE=1 -j2
   - export PYTHONPATH="${HOME}/build/evangelistalab:$PYTHONPATH"
 
