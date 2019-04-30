@@ -34,7 +34,9 @@ before_script:
   - cat ${HOME}/miniconda/envs/tenv/share/cmake/TargetLAPACK/TargetLAPACKTargets.cmake
   - ls ${TRAVIS_BUILD_DIR} 
   - cp ${TRAVIS_BUILD_DIR}/hack ${HOME}/miniconda/envs/tenv/share/cmake/TargetHDF5/TargetHDF5Targets.cmake 
+  - cp ${TRAVIS_BUILD_DIR}/lapack_hack ${HOME}/miniconda/envs/tenv/share/cmake/TargetLAPACK/TargetLAPACKTargets.cmake
   - cat ${HOME}/miniconda/envs/tenv/share/cmake/TargetHDF5/TargetHDF5Targets.cmake
+  - cat ${HOME}/miniconda/envs/tenv/share/cmake/TargetLAPACK/TargetLAPACKTargets.cmake
 # # Compile ambit
 # - cd ${HOME}/build
 # - pwd
