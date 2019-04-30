@@ -58,7 +58,6 @@ before_script:
       -DCMAKE_CXX_FLAGS="-I${HOME}/miniconda/envs/tenv/include ${PYBIND_INCLUDE}"
       -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
       -DPYTHON_EXECUTABLE=${HOME}/miniconda/envs/tenv/bin/python
-      -DLAPACK_LIBRARIES="${HOME}/miniconda/envs/tenv/lib/libmkl_rt.so"
   - make VERBOSE=1 -j2
 
 script:
