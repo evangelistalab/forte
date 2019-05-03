@@ -102,6 +102,7 @@ install:
     -DOpenMP_CXX_FLAG="-fopenmp=libiomp5"
     -DLAPACK_LIBRARIES="${HOME}/miniconda/envs/p4env/lib/libmkl_rt.so;${HOME}/miniconda/envs/p4env/lib/libiomp5.so"
     -DLAPACK_INCLUDE_DIRS="${HOME}/miniconda/envs/p4env/include"
+    -DBUILD_SHARED_LIBS=ON
 - cd build
 - echo "Starting compilation of Psi4"
 - make -j2 -s 

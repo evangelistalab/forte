@@ -32,8 +32,8 @@ include(autocmake_mpi)  # MPI option A
 #include(custom_static_library)
 
 #find_package(psi4 1.1 REQUIRED COMPONENTS ambit chemps2)
-find_package(psi4 1.1 REQUIRED)
-
+find_package(psi4 1.3 REQUIRED)
+find_package(pybind11 REQUIRED)
 find_package(TargetLAPACK REQUIRED)
 find_package(ambit REQUIRED)
 if(ENABLE_CheMPS2)
@@ -58,7 +58,7 @@ include(cmake/git-version.cmake)
 check_cxx_compiler_flag("-msse4.2" SSE42_FLAG)
 if(SSE42_FLAG)
     message("-- Adding SSE4.2 Flag")
-    set(CMAKE_CXX_FLAGS "-msse4.2")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse4.2")
 endif()
 add_compile_options(-Wall -Wextra -pedantic) # -Werror)
 
@@ -67,7 +67,7 @@ if(ENABLE_CODECOV)
 endif()
 
 # List of CC files
-add_psi4_plugin(forte
+pybind11_add_module(forte
 src/base_classes/active_space_method.cc
 src/base_classes/active_space_solver.cc
 src/orbital-helpers/avas.cc
@@ -177,6 +177,9 @@ src/pci/pci_sigma.cc
 src/v2rdm/v2rdm.cc
 )
 
+target_link_libraries(forte PRIVATE psi4::core)
+target_link_libraries(forte PRIVATE tgt::MathOpenMP)
+set_target_properties(forte PROPERTIES PREFIX "")
 target_link_libraries(forte PRIVATE ambit::ambit)
 if(TARGET CheMPS2::chemps2)
     target_link_libraries(forte PRIVATE CheMPS2::chemps2)
