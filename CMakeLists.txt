@@ -67,7 +67,7 @@ if(ENABLE_CODECOV)
 endif()
 
 # List of CC files
-add_psi4_plugin(forte
+pybind11_add_module(forte
 src/base_classes/active_space_method.cc
 src/base_classes/active_space_solver.cc
 src/orbital-helpers/avas.cc
