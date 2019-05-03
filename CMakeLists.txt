@@ -32,7 +32,7 @@ include(autocmake_mpi)  # MPI option A
 #include(custom_static_library)
 
 #find_package(psi4 1.1 REQUIRED COMPONENTS ambit chemps2)
-#find_package(pybind11 REQUIRED)
+find_package(pybind11 REQUIRED)
 find_package(psi4 1.3 REQUIRED)
 find_package(TargetLAPACK REQUIRED)
 find_package(ambit 0.3 REQUIRED)
@@ -223,3 +223,8 @@ if (ENABLE_ForteTests)
     tests/benchmark/determinant_benchmark.cc)
 
 endif (ENABLE_ForteTests)
+
+get_property(dirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES)
+foreach(dir ${dirs})
+  message(STATUS "dir='${dir}'")
+endforeach()
