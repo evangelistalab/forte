@@ -177,6 +177,9 @@ src/pci/pci_sigma.cc
 src/v2rdm/v2rdm.cc
 )
 
+target_link_libraries(forte PRIVATE psi4::core)
+target_link_libraries(forte PRIVATE tgt::MathOpenMP)
+set_target_properties(forte PROPERTIES PREFIX "")
 target_link_libraries(forte PRIVATE ambit::ambit)
 if(TARGET CheMPS2::chemps2)
     target_link_libraries(forte PRIVATE CheMPS2::chemps2)
