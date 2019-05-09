@@ -63,6 +63,8 @@ script:
   - if [ "$MAX_DET_ORB" -ge "128" ]; then
      cd ${HOME}/build/evangelistalab/forte/tests/large_det;
      python run_forte_tests_travis.py --bw --failed_dump;
+     ls ${HOME}/build/evangelistalab/forte/tests/large_det/aci-1;
+     cat ${HOME}/build/evangelistalab/forte/tests/large_det/aci-1/output.dat;
     fi
   - cd ${HOME}/build/evangelistalab/forte
   - ./forte_tests
