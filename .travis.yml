@@ -60,13 +60,11 @@ script:
   - cd ${HOME}/build/evangelistalab/forte/tests/methods
   - pwd
   - ls
- #- grep 'Size of Determinant class' aci-1/output.dat
- #- if [ "$MAX_DET_ORB" -ge "128" ]; then
- #    cd ${HOME}/build/evangelistalab/forte/tests/large_det;
- #    python run_forte_tests_travis.py --bw --failed_dump;
- #    cd aci-1
- #    cat output.dat
- #  fi
+ - grep 'Size of Determinant class' aci-1/output.dat
+ - if [ "$MAX_DET_ORB" -ge "128" ]; then
+     cd ${HOME}/build/evangelistalab/forte/tests/large_det;
+     python run_forte_tests_travis.py --bw --failed_dump;
+   fi
   - cd ${HOME}/build/evangelistalab/forte
   - ./forte_tests
   - ./forte_benchmarks
