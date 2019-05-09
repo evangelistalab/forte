@@ -51,7 +51,6 @@ before_script:
   - make -j2
   - export PYTHONPATH="${HOME}/build/evangelistalab:$PYTHONPATH"
 
-
 script:
   - cd ${TRAVIS_BUILD_DIR}
   - bash tools/forte_codecov
@@ -68,6 +67,3 @@ script:
   - cd ${HOME}/build/evangelistalab/forte
   - ./forte_tests
   - ./forte_benchmarks
-
-#after_success:
-#  - codecov
