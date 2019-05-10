@@ -53,7 +53,7 @@ before_script:
 
 script:
   - cd ${TRAVIS_BUILD_DIR}
-  #- bash tools/forte_codecov
+  - bash tools/forte_codecov
   #- cd ${HOME}/build/evangelistalab/forte/tests/methods
   #- python run_forte_tests.py --bw --failed_dump
   #- cd ${HOME}/build/evangelistalab/forte/tests/methods
@@ -64,7 +64,8 @@ script:
      cd ${HOME}/build/evangelistalab/forte/tests/large_det;
      python run_forte_tests.py --bw --failed_dump;
     fi
-  - cd ${HOME}/build/evangelistalab/forte
+  - cd ${TRAVIS_BUILD_DIR}
+  #- cd ${HOME}/build/evangelistalab/forte
   - ./forte_tests
   - ./forte_benchmarks
     #ls ${HOME}/build/evangelistalab/forte/tests/large_det/aci-1;
