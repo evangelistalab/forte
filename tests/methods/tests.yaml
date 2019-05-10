@@ -120,8 +120,8 @@ dsrg-mrpt2:
    - aci-dsrg-mrpt2-2
    - aci-dsrg-mrpt2-3
    - aci-dsrg-mrpt2-4
-   - aci-dsrg-mrpt2-5
   long:
+   - aci-dsrg-mrpt2-5
    - dsrg-mrpt2-12-localized-actv
   unused:
    - dsrg-mrpt2-opt-findiff-1
