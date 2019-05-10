@@ -388,8 +388,8 @@ void DMRGSolver::compute_energy() {
                            "compatible with all symmetry sectors!");
     }
 
-    Prob->SetupReorderD2h();
-    Prob->SetupReorderC2v();
+    if(Prob->gSy() == 7){ Prob->SetupReorderD2h(); }
+    if(Prob->gSy() == 5){ Prob->SetupReorderC2v(); }
 
     // the list of ints for reordering
     if(options_.get_bool("REORDER_ORBS")){
