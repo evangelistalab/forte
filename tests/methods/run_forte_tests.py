@@ -150,7 +150,7 @@ def main():
         test_dict_file = 'failed_tests.yaml'
     # read the yaml file
     with open(test_dict_file, 'rt') as infile:
-        test_dict = yaml.load(infile)
+        test_dict = yaml.load(infile, Loader=yaml.FullLoader)
 
     tested_groups = test_dict.keys()
     if args.group != None:

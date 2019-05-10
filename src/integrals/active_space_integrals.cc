@@ -26,6 +26,8 @@
  * @END LICENSE
  */
 
+#include "psi4/libpsi4util/PsiOutStream.h"
+
 #include "base_classes/mo_space_info.h"
 #include "integrals/active_space_integrals.h"
 
@@ -642,6 +644,28 @@ double ActiveSpaceIntegrals::slater_rules_single_beta_abs(const Determinant& det
         }
     }
     return matrix_element;
+}
+
+void ActiveSpaceIntegrals::print() {
+    psi::outfile->Printf("nuclear repulsion energy = %20.12f", nuclear_repulsion_energy());
+    psi::outfile->Printf("frozen core energy = %20.12f", frozen_core_energy());
+    psi::outfile->Printf("scalar energy = %20.12f", scalar_energy());
+
+    for (size_t p = 0; p < nmo_; ++p) {
+        for (size_t q = 0; q < nmo_; ++q) {
+            psi::outfile->Printf("< %2d | h | %2d > = %20.12f", p, q, oei_a(p, q));
+        }
+    }
+
+    for (size_t p = 0; p < nmo_; ++p) {
+        for (size_t q = 0; q < nmo_; ++q) {
+            for (size_t r = 0; r < nmo_; ++r) {
+                for (size_t s = 0; s < nmo_; ++s) {
+                    psi::outfile->Printf("< %2d %2d | %2d %2d > = %20.12f", p, q, tei_aa(p, q, r, s));
+                }
+            }
+        }
+    }
 }
 
 std::shared_ptr<ActiveSpaceIntegrals>

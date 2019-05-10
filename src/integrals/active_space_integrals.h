@@ -161,6 +161,8 @@ class ActiveSpaceIntegrals {
     /// If you want more control, don't use this function.
     void set_active_integrals_and_restricted_docc();
 
+    void print();
+
   private:
     // ==> Class Private Data <==
 
