@@ -25,7 +25,7 @@ before_script:
   - python -V
   - psi4 --version
   - psi4 --plugin-compile
-  - cp ${TRAVIS_BUILD_DIR}/travis/TargetHDF5Targets.cmake ${HOME}/miniconda/envs/tenv/share/cmake/TargetHDF5/TargetHDF5Targets.cmake 
+  #- cp ${TRAVIS_BUILD_DIR}/travis/TargetHDF5Targets.cmake ${HOME}/miniconda/envs/tenv/share/cmake/TargetHDF5/TargetHDF5Targets.cmake 
   - cp ${TRAVIS_BUILD_DIR}/travis/TargetLAPACKTargets.cmake ${HOME}/miniconda/envs/tenv/share/cmake/TargetLAPACK/TargetLAPACKTargets.cmake
 # # Compile ambit
 # - cd ${HOME}/build
@@ -54,19 +54,11 @@ before_script:
 script:
   - cd ${TRAVIS_BUILD_DIR}
   - bash tools/forte_codecov
-  #- cd ${HOME}/build/evangelistalab/forte/tests/methods
-  #- python run_forte_tests.py --bw --failed_dump
-  #- cd ${HOME}/build/evangelistalab/forte/tests/methods
-  #- pwd
-  #- ls
-  #- grep 'Size of Determinant class' aci-1/output.dat
+  # Run tests for 128-bit determinants 
   - if [ "$MAX_DET_ORB" -ge "128" ]; then
      cd ${HOME}/build/evangelistalab/forte/tests/large_det;
      python run_forte_tests.py --bw --failed_dump;
     fi
   - cd ${TRAVIS_BUILD_DIR}
-  #- cd ${HOME}/build/evangelistalab/forte
   - ./forte_tests
   - ./forte_benchmarks
-    #ls ${HOME}/build/evangelistalab/forte/tests/large_det/aci-1;
-    #cd ${HOME}/build/evangelistalab/forte/tests/large_det/aci-1;
