@@ -172,6 +172,8 @@ PYBIND11_MODULE(forte, m) {
     m.def("make_dsrg_method", &make_dsrg_method,
           "Make a DSRG method (spin-integrated implementation)");
     m.def("make_dsrg_so", &make_dsrg_so, "Make a DSRG pointer (spin-orbital implementation)");
+    m.def("make_dsrg_spin_adapted", &make_dsrg_spin_adapted,
+          "Make a DSRG pointer (spin-adapted implementation)");
 
     export_ForteOptions(m);
 
@@ -258,8 +260,14 @@ PYBIND11_MODULE(forte, m) {
         .def("compute_Heff_actv", &MRDSRG_SO::compute_Heff_actv,
              "Return the DSRG dressed ActiveSpaceIntegrals");
 
-        // export DressedQuantity for dipole moments
-        py::class_<DressedQuantity>(m, "DressedQuantity")
+    // export DSRG_MRPT spin-adapted code
+    py::class_<DSRG_MRPT>(m, "DSRG_MRPT")
+        .def("compute_energy", &DSRG_MRPT::compute_energy, "Compute DSRG energy")
+        .def("compute_Heff_actv", &DSRG_MRPT::compute_Heff_actv,
+             "Return the DSRG dressed ActiveSpaceIntegrals");
+
+    // export DressedQuantity for dipole moments
+    py::class_<DressedQuantity>(m, "DressedQuantity")
         .def("contract_with_rdms", &DressedQuantity::contract_with_rdms, "reference"_a,
              "Contract densities with quantity");
 }

@@ -52,6 +52,11 @@ std::unique_ptr<MRDSRG_SO> make_dsrg_so(RDMs rdms, std::shared_ptr<SCFInfo> scf_
                                         std::shared_ptr<ForteIntegrals> ints,
                                         std::shared_ptr<MOSpaceInfo> mo_space_info);
 
+std::unique_ptr<DSRG_MRPT> make_dsrg_spin_adapted(RDMs rdms, std::shared_ptr<SCFInfo> scf_info,
+                                                  std::shared_ptr<ForteOptions> options,
+                                                  std::shared_ptr<ForteIntegrals> ints,
+                                                  std::shared_ptr<MOSpaceInfo> mo_space_info);
+
 } // namespace forte
 
 #endif // RUN_DSRG_H
