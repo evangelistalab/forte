@@ -169,7 +169,9 @@ PYBIND11_MODULE(forte, m) {
           "Make an object that holds the molecular orbital integrals for the active orbitals");
     m.def("make_dynamic_correlation_solver", &make_dynamic_correlation_solver,
           "Make a dynamical correlation solver");
-    m.def("make_dsrg_method", &make_dsrg_method, "Make a DSRG method");
+    m.def("make_dsrg_method", &make_dsrg_method,
+          "Make a DSRG method (spin-integrated implementation)");
+    m.def("make_dsrg_so", &make_dsrg_so, "Make a DSRG pointer (spin-orbital implementation)");
 
     export_ForteOptions(m);
 
@@ -250,8 +252,14 @@ PYBIND11_MODULE(forte, m) {
         .def("set_Uactv", &MASTER_DSRG::set_Uactv, "Ua"_a, "Ub"_a,
              "Set active part orbital rotation matrix (from original to semicanonical)");
 
-    // export DressedQuantity for dipole moments
-    py::class_<DressedQuantity>(m, "DressedQuantity")
+    // export MRDSRG_SO
+    py::class_<MRDSRG_SO>(m, "MRDSRG_SO")
+        .def("compute_energy", &MRDSRG_SO::compute_energy, "Compute DSRG energy")
+        .def("compute_Heff_actv", &MRDSRG_SO::compute_Heff_actv,
+             "Return the DSRG dressed ActiveSpaceIntegrals");
+
+        // export DressedQuantity for dipole moments
+        py::class_<DressedQuantity>(m, "DressedQuantity")
         .def("contract_with_rdms", &DressedQuantity::contract_with_rdms, "reference"_a,
              "Contract densities with quantity");
 }
