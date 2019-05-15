@@ -72,6 +72,11 @@ def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
             Edsrg = dsrg.compute_energy()
             psi4.core.set_scalar_variable('UNRELAXED ENERGY', Edsrg)
             return Edsrg
+        if correlation_solver_type == "DSRG_MRPT":
+            dsrg = forte.make_dsrg_spin_adapted(rdms, scf_info, options, ints, mo_space_info)
+            Edsrg = dsrg.compute_energy()
+            psi4.core.set_scalar_variable('UNRELAXED ENERGY', Edsrg)
+            return Edsrg
 
         dsrg = forte.make_dsrg_method(correlation_solver_type, rdms,
                                       scf_info, options, ints, mo_space_info)
