@@ -67,6 +67,12 @@ def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
         Ua = semi.Ua_t()
         Ub = semi.Ub_t()
 
+        if correlation_solver_type == "MRDSRG_SO":
+            dsrg = forte.make_dsrg_so(rdms, scf_info, options, ints, mo_space_info)
+            Edsrg = dsrg.compute_energy()
+            psi4.core.set_scalar_variable('UNRELAXED ENERGY', Edsrg)
+            return Edsrg
+
         dsrg = forte.make_dsrg_method(correlation_solver_type, rdms,
                                       scf_info, options, ints, mo_space_info)
         dsrg.set_Uactv(Ua, Ub)

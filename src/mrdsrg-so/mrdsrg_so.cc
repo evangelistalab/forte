@@ -42,34 +42,69 @@ using namespace psi;
 
 namespace forte {
 
-MRDSRG_SO::MRDSRG_SO(RDMs rdms, psi::Options& options,
-                     std::shared_ptr<ForteIntegrals> ints,
+MRDSRG_SO::MRDSRG_SO(RDMs rdms, std::shared_ptr<SCFInfo> scf_info,
+                     std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
                      std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : Wavefunction(options), rdms_(rdms), ints_(ints), mo_space_info_(mo_space_info),
-      tensor_type_(CoreTensor), BTF(new BlockedTensorFactory()) {
-    // Copy the wavefunction information
-    //    shallow_copy(ref_wfn);
-
+    : DynamicCorrelationSolver(rdms, scf_info, options, ints, mo_space_info),
+      BTF_(new BlockedTensorFactory()), tensor_type_(ambit::CoreTensor) {
     print_method_banner(
         {"SO-Based Multireference Driven Similarity Renormalization Group", "Chenyang Li"});
     startup();
     print_summary();
 }
 
+// MRDSRG_SO::MRDSRG_SO(RDMs rdms, psi::Options& options,
+//                     std::shared_ptr<ForteIntegrals> ints,
+//                     std::shared_ptr<MOSpaceInfo> mo_space_info)
+//    : Wavefunction(options), rdms_(rdms), ints_(ints), mo_space_info_(mo_space_info),
+//      tensor_type_(CoreTensor), BTF(new BlockedTensorFactory()) {
+//    // Copy the wavefunction information
+//    //    shallow_copy(ref_wfn);
+
+//    print_method_banner(
+//        {"SO-Based Multireference Driven Similarity Renormalization Group", "Chenyang Li"});
+//    startup();
+//    print_summary();
+//}
+
 MRDSRG_SO::~MRDSRG_SO() {}
+
+std::shared_ptr<ActiveSpaceIntegrals> MRDSRG_SO::compute_Heff_actv() {
+    throw psi::PSIEXCEPTION(
+        "Computing active-space Hamiltonian is not yet implemented for spin-orbital code.");
+
+    return std::make_shared<ActiveSpaceIntegrals>(
+        ints_, mo_space_info_->get_corr_abs_mo("ACTIVE"),
+        mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
+
+    //    // de-normal-order DSRG transformed Hamiltonian
+    //    double Edsrg = Eref_ + Hbar0_;
+    //    deGNO_ints("Hamiltonian", Edsrg, Hbar1_, Hbar2_);
+    //    rotate_ints_semi_to_origin("Hamiltonian", Hbar1_, Hbar2_);
+
+    //    // create FCIIntegral shared_ptr
+    //    std::shared_ptr<ActiveSpaceIntegrals> fci_ints =
+    //        std::make_shared<ActiveSpaceIntegrals>(ints_, actv_mos_, core_mos_);
+    //    fci_ints->set_active_integrals(Hbar2_.block("aaaa"), Hbar2_.block("aAaA"),
+    //                                   Hbar2_.block("AAAA"));
+    //    fci_ints->set_restricted_one_body_operator(Hbar1_.block("aa").data(),
+    //                                               Hbar1_.block("AA").data());
+    //    fci_ints->set_scalar_energy(Edsrg - Enuc_ - Efrzc_);
+
+    //    return fci_ints;
+}
 
 void MRDSRG_SO::startup() {
     Eref = compute_Eref_from_rdms(rdms_, ints_, mo_space_info_);
-    BlockedTensor::reset_mo_spaces();
 
     frozen_core_energy = ints_->frozen_core_energy();
 
-    s_ = options_.get_double("DSRG_S");
+    s_ = foptions_->get_double("DSRG_S");
     if (s_ < 0) {
         outfile->Printf("\n  S parameter for DSRG must >= 0!");
         throw psi::PSIEXCEPTION("S parameter for DSRG must >= 0!");
     }
-    taylor_threshold_ = options_.get_int("TAYLOR_THRESHOLD");
+    taylor_threshold_ = foptions_->get_int("TAYLOR_THRESHOLD");
     if (taylor_threshold_ <= 0) {
         outfile->Printf("\n  Threshold for Taylor expansion must be an integer "
                         "greater than 0!");
@@ -78,10 +113,10 @@ void MRDSRG_SO::startup() {
     }
     taylor_order_ = int(0.5 * (15.0 / taylor_threshold_ + 1)) + 1;
 
-    source_ = options_.get_str("SOURCE");
+    source_ = foptions_->get_str("SOURCE");
 
-    ntamp_ = options_.get_int("NTAMP");
-    intruder_tamp_ = options_.get_double("INTRUDER_TAMP");
+    ntamp_ = foptions_->get_int("NTAMP");
+    intruder_tamp_ = foptions_->get_double("INTRUDER_TAMP");
 
     // orbital spaces
     acore_sos = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
@@ -125,16 +160,16 @@ void MRDSRG_SO::startup() {
     size_t nmo = nso_ / 2;
     size_t na_mo = na_ / 2;
 
-    BTF->add_mo_space("c", "mn", core_sos, AlphaSpin);
-    BTF->add_mo_space("a", "uvwxyz", actv_sos, AlphaSpin);
-    BTF->add_mo_space("v", "ef", virt_sos, AlphaSpin);
+    BTF_->add_mo_space("c", "mn", core_sos, AlphaSpin);
+    BTF_->add_mo_space("a", "uvwxyz", actv_sos, AlphaSpin);
+    BTF_->add_mo_space("v", "ef", virt_sos, AlphaSpin);
 
-    BTF->add_composite_mo_space("h", "ijkl", {"c", "a"});
-    BTF->add_composite_mo_space("p", "abcd", {"a", "v"});
-    BTF->add_composite_mo_space("g", "pqrsto", {"c", "a", "v"});
+    BTF_->add_composite_mo_space("h", "ijkl", {"c", "a"});
+    BTF_->add_composite_mo_space("p", "abcd", {"a", "v"});
+    BTF_->add_composite_mo_space("g", "pqrsto", {"c", "a", "v"});
 
     // prepare one-electron integrals
-    H = BTF->build(tensor_type_, "H", {"gg"});
+    H = BTF_->build(tensor_type_, "H", {"gg"});
     H.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
         if (i[0] < nmo && i[1] < nmo) {
             value = ints_->oei_a(i[0], i[1]);
@@ -145,7 +180,7 @@ void MRDSRG_SO::startup() {
     });
 
     // prepare two-electron integrals
-    V = BTF->build(tensor_type_, "V", {"gggg"});
+    V = BTF_->build(tensor_type_, "V", {"gggg"});
     V.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
         bool spin0 = i[0] < nmo;
         bool spin1 = i[1] < nmo;
@@ -172,8 +207,8 @@ void MRDSRG_SO::startup() {
     });
 
     // prepare density matrices
-    Gamma1 = BTF->build(tensor_type_, "Gamma1", {"hh"});
-    Eta1 = BTF->build(tensor_type_, "Eta1", {"pp"});
+    Gamma1 = BTF_->build(tensor_type_, "Gamma1", {"hh"});
+    Eta1 = BTF_->build(tensor_type_, "Eta1", {"pp"});
     (Gamma1.block("cc")).iterate([&](const std::vector<size_t>& i, double& value) {
         value = (i[0] == i[1] ? 1.0 : 0.0);
     });
@@ -192,7 +227,7 @@ void MRDSRG_SO::startup() {
     });
 
     // prepare two-body density cumulant
-    Lambda2 = BTF->build(tensor_type_, "Lambda2", {"aaaa"});
+    Lambda2 = BTF_->build(tensor_type_, "Lambda2", {"aaaa"});
     (rdms_.L2aa()).citerate([&](const std::vector<size_t>& i, const double& value) {
         if (std::fabs(value) > 1.0e-15) {
             size_t index = 0;
@@ -231,8 +266,8 @@ void MRDSRG_SO::startup() {
     outfile->Printf("\n    Norm of L2: %12.8f.", Lambda2.norm());
 
     // prepare three-body density cumulant
-    if (options_.get_str("THREEPDC") != "ZERO") {
-        Lambda3 = BTF->build(tensor_type_, "Lambda3", {"aaaaaa"});
+    if (foptions_->get_str("THREEPDC") != "ZERO") {
+        Lambda3 = BTF_->build(tensor_type_, "Lambda3", {"aaaaaa"});
         (rdms_.L3aaa()).citerate([&](const std::vector<size_t>& i, const double& value) {
             if (std::fabs(value) > 1.0e-15) {
                 size_t index = 0;
@@ -351,7 +386,7 @@ void MRDSRG_SO::startup() {
     }
 
     // build Fock matrix (initial guess of one-body Hamiltonian)
-    F = BTF->build(tensor_type_, "Fock", {"gg"});
+    F = BTF_->build(tensor_type_, "Fock", {"gg"});
     F["pq"] = H["pq"];
     F["pq"] += V["pjqi"] * Gamma1["ij"];
 
@@ -375,7 +410,7 @@ void MRDSRG_SO::print_summary() {
         {"intruder_tamp", intruder_tamp_}};
 
     std::vector<std::pair<std::string, std::string>> calculation_info_string{
-        {"int_type", options_.get_str("INT_TYPE")}, {"source operator", source_}};
+        {"int_type", foptions_->get_str("INT_TYPE")}, {"source operator", source_}};
 
     // Print some information
     outfile->Printf("\n\n  ==> Calculation Information <==\n");
@@ -513,17 +548,17 @@ void MRDSRG_SO::update_t1() {
 double MRDSRG_SO::compute_energy() {
 
     // copy initial one-body Hamiltonian to Hbar1
-    Hbar1 = BTF->build(tensor_type_, "Hbar1", {"gg"});
+    Hbar1 = BTF_->build(tensor_type_, "Hbar1", {"gg"});
     Hbar1["pq"] = F["pq"];
 
     // copy initial two-body Hamiltonian to Hbar2
-    Hbar2 = BTF->build(tensor_type_, "Hbar2", {"gggg"});
+    Hbar2 = BTF_->build(tensor_type_, "Hbar2", {"gggg"});
     Hbar2["pqrs"] = V["pqrs"];
 
     // build initial amplitudes
     outfile->Printf("\n\n  ==> Build Initial Amplitude from DSRG-MRPT2 <==\n");
-    T1 = BTF->build(tensor_type_, "T1 Amplitudes", {"hp"});
-    T2 = BTF->build(tensor_type_, "T2 Amplitudes", {"hhpp"});
+    T1 = BTF_->build(tensor_type_, "T1 Amplitudes", {"hp"});
+    T2 = BTF_->build(tensor_type_, "T2 Amplitudes", {"hhpp"});
     guess_t2();
     guess_t1();
 
@@ -545,7 +580,7 @@ double MRDSRG_SO::compute_energy() {
 
     do {
         // compute hbar
-        if (options_.get_str("CORR_LEVEL") == "QDSRG2") {
+        if (foptions_->get_str("CORR_LEVEL") == "QDSRG2") {
             compute_qhbar();
         } else {
             // single-commutator by default
@@ -595,14 +630,14 @@ double MRDSRG_SO::compute_energy() {
 
         // test convergence
         double rms = rms_t1 > rms_t2 ? rms_t1 : rms_t2;
-        if (std::fabs(Edelta) < options_.get_double("E_CONVERGENCE") &&
-            rms < options_.get_double("R_CONVERGENCE")) {
+        if (std::fabs(Edelta) < foptions_->get_double("E_CONVERGENCE") &&
+            rms < foptions_->get_double("R_CONVERGENCE")) {
             converged = true;
         }
-        if (cycle > options_.get_int("MAXITER")) {
+        if (cycle > foptions_->get_int("MAXITER")) {
             outfile->Printf("\n\n\tThe calculation did not converge in %d "
                             "cycles\n\tQuitting.\n",
-                            options_.get_int("MAXITER"));
+                            foptions_->get_int("MAXITER"));
             converged = true;
         }
 
@@ -644,8 +679,8 @@ void MRDSRG_SO::compute_hbar() {
     //    %20e",0,Hbar0,Hbar1.norm(),Hbar2.norm());
 
     // iterator variables
-    int maxn = options_.get_int("DSRG_RSC_NCOMM");
-    double ct_threshold = options_.get_double("DSRG_RSC_THRESHOLD");
+    int maxn = foptions_->get_int("DSRG_RSC_NCOMM");
+    double ct_threshold = foptions_->get_double("DSRG_RSC_THRESHOLD");
     BlockedTensor C1 = ambit::BlockedTensor::build(tensor_type_, "C1", {"gg"});
     BlockedTensor C2 = ambit::BlockedTensor::build(tensor_type_, "C2", {"gggg"});
 
@@ -735,8 +770,8 @@ void MRDSRG_SO::compute_qhbar() {
     //    %20e",0,Hbar0,Hbar1.norm(),Hbar2.norm());
 
     // iterator variables
-    int maxn = options_.get_int("DSRG_RSC_NCOMM");
-    double ct_threshold = options_.get_double("DSRG_RSC_THRESHOLD");
+    int maxn = foptions_->get_int("DSRG_RSC_NCOMM");
+    double ct_threshold = foptions_->get_double("DSRG_RSC_THRESHOLD");
     BlockedTensor C1 = ambit::BlockedTensor::build(tensor_type_, "C1", {"gg"});
     BlockedTensor C2 = ambit::BlockedTensor::build(tensor_type_, "C2", {"gggg"});
     BlockedTensor C3 = ambit::BlockedTensor::build(tensor_type_, "C3", {"gggggg"});
@@ -914,7 +949,7 @@ void MRDSRG_SO::H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const double& alp
     E += temp2["uvxy"] * Lambda2["xyuv"];
 
     // <[Hbar2, T2]> C_6 C_2
-    if (options_.get_str("THREEPDC") != "ZERO") {
+    if (foptions_->get_str("THREEPDC") != "ZERO") {
         temp1 = ambit::BlockedTensor::build(tensor_type_, "temp", {"aaaaaa"});
         temp1["uvwxyz"] += H2["uviz"] * T2["iwxy"];
         temp1["uvwxyz"] += H2["waxy"] * T2["uvaz"];
