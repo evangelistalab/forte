@@ -55,15 +55,6 @@ class SOMRDSRG : public DynamicCorrelationSolver {
 
     int print_;
 
-//    /// The RDMs and cumulants of the reference wave function
-//    RDMs rdms_;
-
-//    /// The molecular integrals required by MethodBase
-//    std::shared_ptr<ForteIntegrals> ints_;
-
-//    /// The MOSpaceInfo object
-//    std::shared_ptr<MOSpaceInfo> mo_space_info_;
-
     /// The number of correlated orbitals per irrep (excluding frozen core and
     /// virtuals)
     psi::Dimension ncmopi_;
@@ -207,9 +198,6 @@ class SOMRDSRG : public DynamicCorrelationSolver {
 
     SOMRDSRG(RDMs rdms, std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
               std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
-
-//    SOMRDSRG(RDMs rdms, psi::SharedWavefunction ref_wfn, psi::Options& options,
-//             std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     ~SOMRDSRG();
 

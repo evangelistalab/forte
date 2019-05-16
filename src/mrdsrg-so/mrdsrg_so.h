@@ -61,15 +61,6 @@ class MRDSRG_SO : public DynamicCorrelationSolver {
     /// Print levels
     int print_;
 
-//    /// The RDMs and cumulants of the reference wave function
-//    RDMs rdms_;
-
-//    /// The molecular integrals required by MethodBase
-//    std::shared_ptr<ForteIntegrals> ints_;
-
-//    /// MO space info
-//    std::shared_ptr<MOSpaceInfo> mo_space_info_;
-
     /// List of alpha core SOs
     std::vector<size_t> acore_sos;
     /// List of alpha active SOs
@@ -282,9 +273,6 @@ class MRDSRG_SO : public DynamicCorrelationSolver {
 
     MRDSRG_SO(RDMs rdms, std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
               std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
-
-//    MRDSRG_SO(RDMs rdms, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
-//              std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     ~MRDSRG_SO();
 

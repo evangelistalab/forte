@@ -53,20 +53,6 @@ MRDSRG_SO::MRDSRG_SO(RDMs rdms, std::shared_ptr<SCFInfo> scf_info,
     print_summary();
 }
 
-// MRDSRG_SO::MRDSRG_SO(RDMs rdms, psi::Options& options,
-//                     std::shared_ptr<ForteIntegrals> ints,
-//                     std::shared_ptr<MOSpaceInfo> mo_space_info)
-//    : Wavefunction(options), rdms_(rdms), ints_(ints), mo_space_info_(mo_space_info),
-//      tensor_type_(CoreTensor), BTF(new BlockedTensorFactory()) {
-//    // Copy the wavefunction information
-//    //    shallow_copy(ref_wfn);
-
-//    print_method_banner(
-//        {"SO-Based Multireference Driven Similarity Renormalization Group", "Chenyang Li"});
-//    startup();
-//    print_summary();
-//}
-
 MRDSRG_SO::~MRDSRG_SO() {}
 
 std::shared_ptr<ActiveSpaceIntegrals> MRDSRG_SO::compute_Heff_actv() {
