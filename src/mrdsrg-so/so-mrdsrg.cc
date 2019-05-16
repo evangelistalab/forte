@@ -50,14 +50,11 @@ using namespace psi;
 
 namespace forte {
 
-SOMRDSRG::SOMRDSRG(RDMs rdms, psi::SharedWavefunction ref_wfn, psi::Options& options,
-                   std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : Wavefunction(options), rdms_(rdms), ints_(ints), mo_space_info_(mo_space_info),
+SOMRDSRG::SOMRDSRG(RDMs rdms, std::shared_ptr<SCFInfo> scf_info,
+                   std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
+                   std::shared_ptr<MOSpaceInfo> mo_space_info)
+    : DynamicCorrelationSolver(rdms, scf_info, options, ints, mo_space_info),
       tensor_type_(CoreTensor), BTF(new BlockedTensorFactory()) {
-    // Copy the wavefunction information
-    shallow_copy(ref_wfn);
-    reference_wavefunction_ = ref_wfn;
-
     BlockedTensor::reset_mo_spaces();
     BlockedTensor::set_expert_mode(true);
 
@@ -70,9 +67,38 @@ SOMRDSRG::SOMRDSRG(RDMs rdms, psi::SharedWavefunction ref_wfn, psi::Options& opt
     print_summary();
 }
 
+//SOMRDSRG::SOMRDSRG(RDMs rdms, psi::SharedWavefunction ref_wfn, psi::Options& options,
+//                   std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
+//    : Wavefunction(options), rdms_(rdms), ints_(ints), mo_space_info_(mo_space_info),
+//      tensor_type_(CoreTensor), BTF(new BlockedTensorFactory()) {
+//    // Copy the wavefunction information
+//    shallow_copy(ref_wfn);
+//    reference_wavefunction_ = ref_wfn;
+
+//    BlockedTensor::reset_mo_spaces();
+//    BlockedTensor::set_expert_mode(true);
+
+//    print_ = 2;
+
+//    print_method_banner({"Multireference Driven Similarity Renormalization Group",
+//                         "written by Francesco A. Evangelista"});
+
+//    startup();
+//    print_summary();
+//}
+
 SOMRDSRG::~SOMRDSRG() {
     cleanup();
     BlockedTensor::set_expert_mode(false);
+}
+
+std::shared_ptr<ActiveSpaceIntegrals> SOMRDSRG::compute_Heff_actv() {
+    throw psi::PSIEXCEPTION(
+        "Computing active-space Hamiltonian is not yet implemented for spin-adapted code.");
+
+    return std::make_shared<ActiveSpaceIntegrals>(
+        ints_, mo_space_info_->get_corr_abs_mo("ACTIVE"),
+        mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
 }
 
 void SOMRDSRG::startup() {
@@ -82,12 +108,12 @@ void SOMRDSRG::startup() {
 
     ncmopi_ = mo_space_info_->get_dimension("CORRELATED");
 
-    s_ = options_.get_double("DSRG_S");
+    s_ = foptions_->get_double("DSRG_S");
     if (s_ < 0) {
         outfile->Printf("\n  S parameter for DSRG must >= 0!");
         exit(1);
     }
-    taylor_threshold_ = options_.get_int("TAYLOR_THRESHOLD");
+    taylor_threshold_ = foptions_->get_int("TAYLOR_THRESHOLD");
     if (taylor_threshold_ <= 0) {
         outfile->Printf("\n  Threshold for Taylor expansion must be an integer "
                         "greater than 0!");
@@ -140,7 +166,7 @@ void SOMRDSRG::startup() {
     Gamma1 = BTF->build(tensor_type_, "Gamma1", {"hh"});
     Eta1 = BTF->build(tensor_type_, "Eta1", {"pp"});
     Lambda2 = BTF->build(tensor_type_, "Lambda2", {"aaaa"});
-    if (options_.get_str("THREEPDC") != "ZERO") {
+    if (foptions_->get_str("THREEPDC") != "ZERO") {
         Lambda3 = BTF->build(tensor_type_, "Lambda3", {"aaaaaa"});
     }
     F = BTF->build(tensor_type_, "Fock", {"gg"});
@@ -295,7 +321,7 @@ void SOMRDSRG::startup() {
         }
     });
 
-    if (options_.get_str("THREEPDC") != "ZERO") {
+    if (foptions_->get_str("THREEPDC") != "ZERO") {
         ambit::Tensor Lambda3_aaa = Lambda3.block("aaaaaa");
 
         Matrix lambda3_aaa("Lambda3_aaa", nactv * nactv * nactv, nactv * nactv * nactv);
@@ -552,7 +578,7 @@ void SOMRDSRG::startup() {
     Hbar2["pqrs"] = V["pqrs"];
 
     //    // Print levels
-    //    print_ = options_.get_int("PRINT");
+    //    print_ = foptions_->get_int("PRINT");
     //    if(print_ > 1){
     //        Gamma1.print(stdout);
     //        Eta1.print(stdout);
@@ -576,7 +602,7 @@ void SOMRDSRG::print_summary() {
         {"taylor expansion threshold", pow(10.0, -double(taylor_threshold_))}};
 
     std::vector<std::pair<std::string, std::string>> calculation_info_string{
-        {"int_type", options_.get_str("INT_TYPE")}, {"source operator", source_}};
+        {"int_type", foptions_->get_str("INT_TYPE")}, {"source operator", source_}};
 
     // Print some information
     outfile->Printf("\n\n  ==> Calculation Information <==\n");
@@ -739,14 +765,14 @@ double SOMRDSRG::compute_energy() {
                         "%7.4f %7.4f %7.4f %7.4f",
                         cycle, energy, delta_energy, 0, 0, norm_T1, norm_T2, max_T1, max_T2);
 
-        if (std::fabs(delta_energy) < options_.get_double("E_CONVERGENCE")) {
+        if (std::fabs(delta_energy) < foptions_->get_double("E_CONVERGENCE")) {
             converged = true;
         }
 
-        if (cycle > options_.get_int("MAXITER")) {
+        if (cycle > foptions_->get_int("MAXITER")) {
             outfile->Printf("\n\n\tThe calculation did not converge in %d "
                             "cycles\n\tQuitting.\n",
-                            options_.get_int("MAXITER"));
+                            foptions_->get_int("MAXITER"));
 
             converged = true;
             old_energy = 0.0;
@@ -811,8 +837,8 @@ double SOMRDSRG::compute_hbar() {
         outfile->Printf("\n  %2d %20.12f %20e %20e", 0, Hbar0, Hbar1.norm(), Hbar2.norm());
     }
 
-    int maxn = options_.get_int("DSRG_RSC_NCOMM");
-    double ct_threshold = options_.get_double("DSRG_RSC_THRESHOLD");
+    int maxn = foptions_->get_int("DSRG_RSC_NCOMM");
+    double ct_threshold = foptions_->get_double("DSRG_RSC_THRESHOLD");
     for (int n = 1; n <= maxn; ++n) {
         double factor = 1.0 / static_cast<double>(n);
 
@@ -867,7 +893,7 @@ void SOMRDSRG::H_eq_commutator_C_T(double factor, BlockedTensor& F, BlockedTenso
           T2["h2,h3,a2,a3"] * V["a0,a1,h0,h1"];
     H0 += 1.000000 * Eta1["p1,p0"] * Gamma1["h0,h1"] * Lambda2["a0,a2,a3,a1"] * T2["h1,a3,p1,a2"] *
           V["a1,p0,h0,a0"];
-    if (options_.get_str("THREEPDC") != "ZERO") {
+    if (foptions_->get_str("THREEPDC") != "ZERO") {
         H0 += 0.250000 * Lambda3["a3,a4,a0,a1,a2,a5"] * T2["h0,a5,a3,a4"] * V["a1,a2,h0,a0"];
         H0 += 0.250000 * Lambda3["a0,a1,a3,a4,a5,a2"] * T2["a4,a5,p0,a3"] * V["a2,p0,a0,a1"];
     }
@@ -978,4 +1004,4 @@ double SOMRDSRG::renormalized_denominator(double D) {
         return (1.0 - std::exp(-s_ * std::pow(D, 2.0))) / D;
     }
 }
-}
+} // namespace forte

@@ -26,7 +26,7 @@ set {
 
 set forte {
   active_space_solver    cas
-  correlation_solver     mrdsrg_so
+  correlation_solver     somrdsrg
   corr_level             ldsrg2
   frozen_docc            [0,0,0,0,0,0,0,0]
   restricted_docc        [0,0,0,0,0,0,0,0]
@@ -40,17 +40,4 @@ Ecas, wfn = energy('casscf', return_wfn=True)
 compare_values(Ecas0, variable("CURRENT ENERGY"), 7, "CASSCF energy")
 
 E_spin_orbital = energy('forte', ref_wfn=wfn)
-compare_values(Edsrg0, E_spin_orbital, 7, "MR-LDSRG(2) energy spin-orbital York")
-
-#set forte {
-#correlation_solver     somrdsrg
-#}
-#E_spin_orbital = energy('forte', ref_wfn=wfn)
-#compare_values(Edsrg0, E_spin_orbital, 7, "MR-LDSRG(2) energy spin-orbital Francesco")
-
-#set forte {
-#correlation_solver     mrdsrg
-#job_type newdriver
-#}
-#E_spin_integrated = energy('forte', ref_wfn=wfn)
-#compare_values(Edsrg0, E_spin_orbital, 7, "MR-LDSRG(2) energy spin-integrated")
+compare_values(Edsrg0, E_spin_orbital, 7, "MR-LDSRG(2) energy spin-orbital Francesco")
