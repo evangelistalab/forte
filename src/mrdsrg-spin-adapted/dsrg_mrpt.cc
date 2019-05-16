@@ -53,6 +53,21 @@ DSRG_MRPT::DSRG_MRPT(RDMs rdms, std::shared_ptr<SCFInfo> scf_info,
     startup();
 }
 
+//DSRG_MRPT::DSRG_MRPT(RDMs rdms, psi::SharedWavefunction ref_wfn, psi::Options& options,
+//                     std::shared_ptr<ForteIntegrals> ints,
+//                     std::shared_ptr<MOSpaceInfo> mo_space_info)
+//    : Wavefunction(options), rdms_(rdms), ints_(ints), mo_space_info_(mo_space_info),
+//      tensor_type_(ambit::CoreTensor) {
+//    shallow_copy(ref_wfn);
+//    // wfn_ = ref_wfn;
+//    print_method_banner({"Spin-Adapted 2nd- & 3rd-order DSRG-MRPT", "Chenyang Li"});
+//    print_citation();
+//    read_options();
+//    print_options();
+//    //    hack_doublet();
+//    startup();
+//}
+
 /*
 void DSRG_MRPT::hack_doublet() {
     // form spin multiplets averaged densities

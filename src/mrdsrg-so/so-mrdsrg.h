@@ -197,7 +197,7 @@ class SOMRDSRG : public DynamicCorrelationSolver {
     // => Constructors <= //
 
     SOMRDSRG(RDMs rdms, std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
-              std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
+             std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     ~SOMRDSRG();
 

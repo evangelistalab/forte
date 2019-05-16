@@ -67,6 +67,26 @@ SOMRDSRG::SOMRDSRG(RDMs rdms, std::shared_ptr<SCFInfo> scf_info,
     print_summary();
 }
 
+//SOMRDSRG::SOMRDSRG(RDMs rdms, psi::SharedWavefunction ref_wfn, psi::Options& options,
+//                   std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
+//    : Wavefunction(options), rdms_(rdms), ints_(ints), mo_space_info_(mo_space_info),
+//      tensor_type_(CoreTensor), BTF(new BlockedTensorFactory()) {
+//    // Copy the wavefunction information
+//    shallow_copy(ref_wfn);
+//    reference_wavefunction_ = ref_wfn;
+
+//    BlockedTensor::reset_mo_spaces();
+//    BlockedTensor::set_expert_mode(true);
+
+//    print_ = 2;
+
+//    print_method_banner({"Multireference Driven Similarity Renormalization Group",
+//                         "written by Francesco A. Evangelista"});
+
+//    startup();
+//    print_summary();
+//}
+
 SOMRDSRG::~SOMRDSRG() {
     cleanup();
     BlockedTensor::set_expert_mode(false);
