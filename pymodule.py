@@ -309,6 +309,26 @@ def orbital_projection(ref_wfn, options, mo_space_info):
     else:
         return mo_space_info
 
+def forte_sr_downfolding(state_weights_map, scf_info, options, ints, mo_space_info):
+
+    rdms = forte.RHF_DENSITY(scf_info, mo_space_info).rhf_rdms()
+
+    dsrg = forte.make_dsrg_method(options.get_str('CORRELATION_SOLVER'),
+                                  rdms, scf_info, options, ints, mo_space_info)
+    Edsrg = dsrg.compute_energy()
+    psi4.core.set_scalar_variable('UNRELAXED ENERGY', Edsrg)
+
+    ints_dressed = dsrg.compute_Heff_actv()
+    state_map = forte.to_state_nroots_map(state_weights_map)
+    as_solver_relaxed = forte.make_active_space_solver(options.get_str('ACTIVE_SPACE_SOLVER'),
+                                                       state_map, scf_info,
+                                                       mo_space_info, ints_dressed,
+                                                       options)
+    state_energies_list = as_solver_relaxed.compute_energy()
+    Erelax = forte.compute_average_state_energy(state_energies_list,state_weights_map)
+    psi4.core.set_scalar_variable('PARTIALLY RELAXED ENERGY', Erelax)
+    psi4.core.set_scalar_variable('CURRENT ENERGY', Erelax)
+    return Erelax
 
 def run_forte(name, **kwargs):
     r"""Function encoding sequence of PSI module and plugin calls so that
@@ -386,6 +406,11 @@ def run_forte(name, **kwargs):
     # Run a method
     if (job_type == 'NEWDRIVER'):
         energy = forte_driver(state_weights_map, scf_info, forte.forte_options, ints, mo_space_info)
+    elif (job_type == 'SR_DOWNFOLDING'):
+        options.set_str('FORTE', 'RELAX_REF', 'ONCE')
+        options.set_bool('FORTE', 'DSRG_SR_DOWNFOLD', True)
+        forte.forte_options.update_psi_options(options)
+        energy = forte_sr_downfolding(state_weights_map, scf_info, forte.forte_options, ints, mo_space_info)
     else:
         energy = forte.forte_old_methods(ref_wfn, options, ints, mo_space_info)
 
