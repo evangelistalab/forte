@@ -48,6 +48,7 @@
 #include "orbital-helpers/avas.h"
 
 #include "forte.h"
+#include "rhf_density.h"
 #include "fci/fci_solver.h"
 #include "base_classes/dynamic_correlation_solver.h"
 #include "base_classes/state_info.h"
@@ -254,6 +255,12 @@ PYBIND11_MODULE(forte, m) {
     py::class_<DressedQuantity>(m, "DressedQuantity")
         .def("contract_with_rdms", &DressedQuantity::contract_with_rdms, "reference"_a,
              "Contract densities with quantity");
+
+    // RHF density
+    py::class_<RHF_DENSITY>(m, "RHF_DENSITY")
+        .def(py::init<std::shared_ptr<SCFInfo>, std::shared_ptr<MOSpaceInfo>>(), "scf_info"_a,
+             "mo_space_info"_a)
+        .def("rhf_rdms", &RHF_DENSITY::rhf_rdms, "RHF RDMs in the active space");
 }
 
 } // namespace forte

@@ -174,6 +174,7 @@ src/orbital-helpers/semi_canonicalize.cc
 src/orbital-helpers/unpaired_density.cc
 src/pci/pci.cc
 src/pci/pci_sigma.cc
+src/rhf_density.cc
 src/v2rdm/v2rdm.cc
 )
 

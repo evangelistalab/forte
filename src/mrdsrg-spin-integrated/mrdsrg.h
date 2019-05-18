@@ -216,6 +216,8 @@ class MRDSRG : public MASTER_DSRG {
     void update_t2_std();
     void update_t2_noccvv();
     void update_t2_pt();
+    /// Zero amplitudes for SR downfolding
+    void zero_t2_sr_downfolding(BlockedTensor& T2);
 
     /// RMS of T1
     double T1rms_;
@@ -258,7 +260,7 @@ class MRDSRG : public MASTER_DSRG {
     void compute_hbar_sequential_rotation();
     /// Compute DSRG-transformed Hamiltonian Hbar truncated to quadratic nested
     /// commutator
-    void compute_hbar_qc();
+    void compute_hbar_qc(bool quadratic_two_body);
 
     /// Temporary one-body Hamiltonian
     ambit::BlockedTensor O1_;

@@ -851,7 +851,7 @@ double MRDSRG::compute_energy_ldsrg2() {
     return Ecorr;
 }
 
-void MRDSRG::compute_hbar_qc() {
+void MRDSRG::compute_hbar_qc(bool quadratic_two_body) {
     std::string dsrg_op = foptions_->get_str("DSRG_TRANS_TYPE");
 
     // initialize Hbar with bare H
@@ -866,8 +866,10 @@ void MRDSRG::compute_hbar_qc() {
     BlockedTensor S1 = BTF_->build(tensor_type_, "S1", spin_cases({"gg"}), true);
     H1_T1_C1(F_, T1_, 0.5, S1);
     H1_T2_C1(F_, T2_, 0.5, S1);
-    H2_T1_C1(V_, T1_, 0.5, S1);
-    H2_T2_C1(V_, T2_, 0.5, S1);
+    if (quadratic_two_body) {
+        H2_T1_C1(V_, T1_, 0.5, S1);
+        H2_T2_C1(V_, T2_, 0.5, S1);
+    }
 
     BlockedTensor temp;
     if (dsrg_op == "UNITARY") {
@@ -934,8 +936,10 @@ void MRDSRG::compute_hbar_qc() {
         // 0.5 * [H, T]
         BlockedTensor S2 = BTF_->build(tensor_type_, "S2", {block}, true);
         H1_T2_C2(F_, T2_, 0.5, S2);
-        H2_T1_C2(V_, T1_, 0.5, S2);
-        H2_T2_C2(V_, T2_, 0.5, S2);
+        if (quadratic_two_body) {
+            H2_T1_C2(V_, T1_, 0.5, S2);
+            H2_T2_C2(V_, T2_, 0.5, S2);
+        }
 
         // 0.5 * [H, T]^+
         if (dsrg_op == "UNITARY") {
@@ -1029,6 +1033,9 @@ double MRDSRG::compute_energy_ldsrg2_qc() {
     size_t numel = vector_size_diis(T1_, blocks1, T2_, blocks2);
     BlockedTensor::set_expert_mode(true);
 
+    // include two-body Hamiltonian in the quadratic term or not
+    bool quadratic_two_body = foptions_->get_bool("DSRG_QC_2BODY");
+
     // initialize V_ here
     if (eri_df_) {
         V_ = BTF_->build(tensor_type_, "V", spin_cases({"gggg"}));
@@ -1057,7 +1064,7 @@ double MRDSRG::compute_energy_ldsrg2_qc() {
     do {
         // compute Hbar
         local_timer t_hbar;
-        compute_hbar_qc();
+        compute_hbar_qc(quadratic_two_body);
         double Edelta = Hbar0_ - Ecorr;
         Ecorr = Hbar0_;
         double time_hbar = t_hbar.get();
@@ -1104,7 +1111,7 @@ double MRDSRG::compute_energy_ldsrg2_qc() {
             // rebuild Hbar because it is destroyed when updating amplitudes
             if (foptions_->get_str("RELAX_REF") != "NONE" ||
                 (foptions_->psi_options())["AVG_STATE"].size() != 0) {
-                compute_hbar_qc();
+                compute_hbar_qc(quadratic_two_body);
             }
         }
         if (cycle > maxiter) {
