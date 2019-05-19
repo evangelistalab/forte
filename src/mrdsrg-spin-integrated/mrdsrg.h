@@ -235,6 +235,8 @@ class MRDSRG : public MASTER_DSRG {
     /// Update T1 in every iteration
     void update_t1_std();
     void update_t1_nocv();
+    /// Zero amplitudes for SR downfolding
+    void zero_t1_sr_downfolding(BlockedTensor& T1);
 
     /// Write T2 to files MRDSRG_T2_XX.dat, XX = AA, AB, BB
     void write_t2_file(BlockedTensor& T2, const std::string& spin);

@@ -335,6 +335,10 @@ void MRDSRG::guess_t1_std(BlockedTensor& F, BlockedTensor& T2, BlockedTensor& T1
         value = 0.0;
     });
 
+    if (sr_downfold_) {
+        zero_t1_sr_downfolding(T1);
+    }
+
     // norms
     T1norm_ = std::sqrt(t1a_norm_ + t1b_norm_);
     t1a_norm_ = std::sqrt(t1a_norm_);
@@ -740,6 +744,10 @@ void MRDSRG::guess_t1_nocv(BlockedTensor& F, BlockedTensor& T2, BlockedTensor& T
         value = 0.0;
     });
 
+    if (sr_downfold_) {
+        zero_t1_sr_downfolding(T1);
+    }
+
     // norms
     T1norm_ = std::sqrt(t1a_norm_ + t1b_norm_);
     t1a_norm_ = std::sqrt(t1a_norm_);
@@ -975,6 +983,10 @@ void MRDSRG::update_t1_std() {
     // zero internal amplitudes
     for (const std::string& block : {"aa", "AA"}) {
         DT1_.block(block).iterate([&](const std::vector<size_t>&, double& value) { value = 0.0; });
+    }
+
+    if (sr_downfold_) {
+        zero_t1_sr_downfolding(DT1_);
     }
 
     // compute RMS
@@ -1277,6 +1289,10 @@ void MRDSRG::update_t1_nocv() {
         value = 0.0;
     });
 
+    if (sr_downfold_) {
+        zero_t1_sr_downfolding(R1);
+    }
+
     // compute RMS
     DT1_["ia"] = T1_["ia"] - R1["ia"];
     DT1_["IA"] = T1_["IA"] - R1["IA"];
@@ -1299,58 +1315,95 @@ void MRDSRG::zero_t2_sr_downfolding(BlockedTensor& T2) {
         size_t n3 = label_to_spacemo_[block.at(2)].size();
         size_t n4 = label_to_spacemo_[block.at(3)].size();
 
-        // blocks ACXX, X = A, V
-        if (std::towlower(block.at(0)) == 'a' and std::towlower(block.at(1)) == 'c') {
-            // zero when A belongs to active virtual
+        // blocks AYXX, X = A, V, Y = C, A
+        // zero when A belongs to active virtual
+        if (std::towlower(block.at(0)) == 'a') {
             for (auto x : actv_uocc_mos_) {
-                for (size_t m = 0; m < n2; ++m) {
+#pragma omp parallel for
+                for (size_t i = 0; i < n2; ++i) {
                     for (size_t a = 0; a < n3; ++a) {
                         for (size_t b = 0; b < n4; ++b) {
-                            T2.block(block).data()[x * n2 * n3 * n4 + m * n3 * n4 + a * n4 + b] = 0.0;
+                            T2.block(block).data()[x * n2 * n3 * n4 + i * n3 * n4 + a * n4 + b] =
+                                0.0;
                         }
                     }
                 }
             }
         }
 
-        // blocks CAXX, X = A, V
-        if (std::towlower(block.at(0)) == 'c' and std::towlower(block.at(1)) == 'a') {
-            // zero when A belongs to active virtual
+        // blocks YAXX, X = A, V, Y = C, A
+        // zero when A belongs to active virtual
+        if (std::towlower(block.at(1)) == 'a') {
             for (auto x : actv_uocc_mos_) {
-                for (size_t m = 0; m < n1; ++m) {
+#pragma omp parallel for
+                for (size_t i = 0; i < n1; ++i) {
                     for (size_t a = 0; a < n3; ++a) {
                         for (size_t b = 0; b < n4; ++b) {
-                            T2.block(block).data()[m * n2 * n3 * n4 + x * n3 * n4 + a * n4 + b] = 0.0;
+                            T2.block(block).data()[i * n2 * n3 * n4 + x * n3 * n4 + a * n4 + b] =
+                                0.0;
                         }
                     }
                 }
             }
         }
 
-        // blocks XXAV, X = C, A
-        if (std::towlower(block.at(2)) == 'a' and std::towlower(block.at(3)) == 'v') {
-            // zero when A belongs to active occupied
+        // blocks XXAY, X = C, A, Y = A, V
+        // zero when A belongs to active occupied
+        if (std::towlower(block.at(2)) == 'a') {
             for (auto x : actv_occ_mos_) {
-                for (size_t e = 0; e < n4; ++e) {
+#pragma omp parallel for
+                for (size_t a = 0; a < n4; ++a) {
                     for (size_t i = 0; i < n1; ++i) {
                         for (size_t j = 0; j < n2; ++j) {
-                            T2.block(block).data()[i * n2 * n3 * n4 + j * n3 * n4 + x * n4 + e] = 0.0;
+                            T2.block(block).data()[i * n2 * n3 * n4 + j * n3 * n4 + x * n4 + a] =
+                                0.0;
                         }
                     }
                 }
             }
         }
 
-        // blocks XXVA, X = C, A
-        if (std::towlower(block.at(2)) == 'v' and std::towlower(block.at(3)) == 'a') {
-            // zero when A belongs to active occupied
+        // blocks XXYA, X = C, A, Y = A, V
+        // zero when A belongs to active occupied
+        if (std::towlower(block.at(3)) == 'a') {
             for (auto x : actv_occ_mos_) {
-                for (size_t e = 0; e < n3; ++e) {
+#pragma omp parallel for
+                for (size_t a = 0; a < n3; ++a) {
                     for (size_t i = 0; i < n1; ++i) {
                         for (size_t j = 0; j < n2; ++j) {
-                            T2.block(block).data()[i * n2 * n3 * n4 + j * n3 * n4 + e * n4 + x] = 0.0;
+                            T2.block(block).data()[i * n2 * n3 * n4 + j * n3 * n4 + a * n4 + x] =
+                                0.0;
                         }
                     }
+                }
+            }
+        }
+    }
+}
+
+void MRDSRG::zero_t1_sr_downfolding(BlockedTensor& T1) {
+    for (const std::string& block : T1.block_labels()) {
+        size_t n1 = label_to_spacemo_[block.at(0)].size();
+        size_t n2 = label_to_spacemo_[block.at(1)].size();
+
+        // CA
+        // zero when A belongs to active occupied
+        if (std::towlower(block.at(1)) == 'a') {
+            for (auto x : actv_occ_mos_) {
+#pragma omp parallel for
+                for (size_t i = 0; i < n1; ++i) {
+                    T1.block(block).data()[i * n2 + x] = 0.0;
+                }
+            }
+        }
+
+        // AV
+        // zero when A belongs to active unoccupied
+        if (std::towlower(block.at(0)) == 'a') {
+            for (auto x : actv_uocc_mos_) {
+#pragma omp parallel for
+                for (size_t a = 0; a < n2; ++a) {
+                    T1.block(block).data()[x * n2 + a] = 0.0;
                 }
             }
         }
