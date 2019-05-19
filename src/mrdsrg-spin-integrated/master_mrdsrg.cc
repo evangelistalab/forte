@@ -161,7 +161,7 @@ void MASTER_DSRG::read_MOSpaceInfo() {
         auto doccpi = scf_info_->doccpi();
         auto rdoccpi = mo_space_info_->get_dimension("RESTRICTED_DOCC");
         auto actvpi = mo_space_info_->get_dimension("ACTIVE");
-        auto actvopi = doccpi - rdoccpi;
+        auto actvopi = doccpi - rdoccpi - mo_space_info_->get_dimension("FROZEN_DOCC");
 
         int nirrep = mo_space_info_->nirrep();
 
