@@ -804,11 +804,11 @@ void MRDSRG_SO::sr_comm_linear(double factor, BlockedTensor& H1, BlockedTensor& 
     C2.scale(factor);
 
     // add T dagger
-    C0 *= 2.0;
-    H1["pq"] = C1["pq"];
-    C1["pq"] += H1["qp"];
-    H2["pqrs"] = C2["pqrs"];
-    C2["pqrs"] += H2["rspq"];
+//    C0 *= 2.0;
+//    H1["pq"] = C1["pq"];
+//    C1["pq"] += H1["qp"];
+//    H2["pqrs"] = C2["pqrs"];
+//    C2["pqrs"] += H2["rspq"];
 }
 
 void MRDSRG_SO::sr_comm_quadratic(double factor, BlockedTensor& H1, BlockedTensor& H2,
@@ -1232,12 +1232,12 @@ void MRDSRG_SO::sr_comm_quadratic(double factor, BlockedTensor& H1, BlockedTenso
     C1.scale(factor);
     C2.scale(factor);
 
-    // add T dagger
-    C0 *= 2.0;
-    H1["pq"] = C1["pq"];
-    C1["pq"] += H1["qp"];
-    H2["pqrs"] = C2["pqrs"];
-    C2["pqrs"] += H2["rspq"];
+//    // add T dagger
+//    C0 *= 2.0;
+//    H1["pq"] = C1["pq"];
+//    C1["pq"] += H1["qp"];
+//    H2["pqrs"] = C2["pqrs"];
+//    C2["pqrs"] += H2["rspq"];
 }
 
 void MRDSRG_SO::sr_comm_cubic(double factor, BlockedTensor& H1, BlockedTensor& H2,
@@ -3651,12 +3651,12 @@ void MRDSRG_SO::sr_comm_cubic(double factor, BlockedTensor& H1, BlockedTensor& H
     C1.scale(factor);
     C2.scale(factor);
 
-    // add T dagger
-    C0 *= 2.0;
-    H1["pq"] = C1["pq"];
-    C1["pq"] += H1["qp"];
-    H2["pqrs"] = C2["pqrs"];
-    C2["pqrs"] += H2["rspq"];
+//    // add T dagger
+//    C0 *= 2.0;
+//    H1["pq"] = C1["pq"];
+//    C1["pq"] += H1["qp"];
+//    H2["pqrs"] = C2["pqrs"];
+//    C2["pqrs"] += H2["rspq"];
 }
 
 // void MRDSRG_SO:: sr_H1_A_C0(BlockedTensor& H1, const double alpha, double& C0) {

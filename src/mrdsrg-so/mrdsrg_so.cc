@@ -715,6 +715,10 @@ double MRDSRG_SO::compute_energy() {
     bool converged = false;
     int cycle = 0;
 
+    if (options_.get_str("CORR_LEVEL") == "ILDSRG2") {
+        outfile->Printf("ILDSRG2_LEVEL: %d", options_.get_int("ILDSRG2_LEVEL"));
+    }
+
     // start iteration
     outfile->Printf("\n\n  ==> Start Iterations <==\n");
     outfile->Printf("\n    "
@@ -730,7 +734,7 @@ double MRDSRG_SO::compute_energy() {
         // compute hbar
         if (options_.get_str("CORR_LEVEL") == "QDSRG2") {
             compute_qhbar();
-        } else if (options_.get_str("CORR_LEVEL") == "iLDSRG2") {
+        } else if (options_.get_str("CORR_LEVEL") == "ILDSRG2") {
             compute_ilhbar();
         }else {
             // single-commutator by default
@@ -1059,7 +1063,7 @@ void MRDSRG_SO::compute_ilhbar() {
     BlockedTensor C1 = ambit::BlockedTensor::build(tensor_type_, "C1", {"gg"});
     BlockedTensor C2 = ambit::BlockedTensor::build(tensor_type_, "C2", {"gggg"});
 
-    int ilevel = options_.get_int("iLDSRG2_LEVEL") > 3 ? 3 : options_.get_int("iLDSRG2_LEVEL");
+    int ilevel = options_.get_int("ILDSRG2_LEVEL") > 3 ? 3 : options_.get_int("ILDSRG2_LEVEL");
 
     // compute Hbar recursively
     for (int n = 1; n <= maxn; ++n) {
@@ -1080,13 +1084,17 @@ void MRDSRG_SO::compute_ilhbar() {
         }
 
         // Hbar += C
-        Hbar0 += C0;
+        Hbar0 += 2.0 * C0;
         Hbar1["pq"] += C1["pq"];
+        Hbar1["pq"] += C1["qp"];
         Hbar2["pqrs"] += C2["pqrs"];
+        Hbar2["pqrs"] += C2["rspq"];
 
         // copy C to O for next level commutator
         O1["pq"] = C1["pq"];
+        O1["pq"] += C1["qp"];
         O2["pqrs"] = C2["pqrs"];
+        O2["pqrs"] = C2["rspq"];
 
         // test convergence of C
         double norm_C1 = C1.norm();
