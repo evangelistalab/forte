@@ -547,9 +547,11 @@ def register_dsrg_options(forte_options):
 
     forte_options.add_str("CORR_LEVEL", "PT2",
                      ["PT2", "PT3", "LDSRG2", "LDSRG2_QC", "LSRG2", "SRG_PT2", "QDSRG2",
-                      "LDSRG2_P3", "QDSRG2_P3", "LDSRG3", "LDSRG3_1", "LDSRG3_0"],
+                      "LDSRG2_P3", "QDSRG2_P3", "LDSRG3", "LDSRG3_1", "LDSRG3_0", "iLDSRG2"],
                      "Correlation level of MR-DSRG (used in mrdsrg code, "
                      "LDSRG2_P3 and QDSRG2_P3 not implemented)")
+
+    forte_options.add_int("iLDSRG2_LEVEL", 1, "level of nested commutator after which the lineared commutator approximation is introduced")
 
     forte_options.add_bool("LDSRG2_QCOMM_CORR", False, "Quadratic commutator correction for LDSRG(2)")
 

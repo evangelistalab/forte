@@ -730,7 +730,9 @@ double MRDSRG_SO::compute_energy() {
         // compute hbar
         if (options_.get_str("CORR_LEVEL") == "QDSRG2") {
             compute_qhbar();
-        } else {
+        } else if (options_.get_str("CORR_LEVEL") == "iLDSRG2") {
+            compute_ilhbar();
+        }else {
             // single-commutator by default
             compute_lhbar();
         }
@@ -1024,6 +1026,74 @@ void MRDSRG_SO::compute_lhbar() {
         //        outfile->Printf("\n  %2d %20.12f %20e
         //        %20e",n,C0,norm_C1,norm_C2);
         if (std::sqrt(norm_C2 * norm_C2 + norm_C1 * norm_C1 + norm_C3 * norm_C3) < ct_threshold) {
+            break;
+        }
+    }
+    //    outfile->Printf("\n
+    //    -----------------------------------------------------------------");
+}
+
+void MRDSRG_SO::compute_ilhbar() {
+
+    //    outfile->Printf("\n\n  Computing the similarity-transformed
+    //    Hamiltonian");
+    //    outfile->Printf("\n
+    //    -----------------------------------------------------------------");
+    //    outfile->Printf("\n  nComm           C0                 |C1| |C2|" );
+    //    outfile->Printf("\n
+    //    -----------------------------------------------------------------");
+
+    // copy initial one-body Hamiltonian
+    Hbar0 = 0.0;
+    Hbar1["pq"] = F["pq"];
+    Hbar2["pqrs"] = V["pqrs"];
+
+    BlockedTensor O1 = ambit::BlockedTensor::build(tensor_type_, "O1", {"gg"});
+    BlockedTensor O2 = ambit::BlockedTensor::build(tensor_type_, "O2", {"gggg"});
+    O1["pq"] = F["pq"];
+    O2["pqrs"] = V["pqrs"];
+
+    // iterator variables
+    int maxn = options_.get_int("DSRG_RSC_NCOMM");
+    double ct_threshold = options_.get_double("DSRG_RSC_THRESHOLD");
+    BlockedTensor C1 = ambit::BlockedTensor::build(tensor_type_, "C1", {"gg"});
+    BlockedTensor C2 = ambit::BlockedTensor::build(tensor_type_, "C2", {"gggg"});
+
+    int ilevel = options_.get_int("iLDSRG2_LEVEL") > 3 ? 3 : options_.get_int("iLDSRG2_LEVEL");
+
+    // compute Hbar recursively
+    for (int n = 1; n <= maxn; ++n) {
+        // prefactor before n-nested commutator
+        double factor = 1.0 / n;
+
+        double C0 = 0.0;
+        if (n <= ilevel) {
+            if (n == 1) {
+                sr_comm_linear(1.0, F, V, T1, T2, C0, C1, C2);
+            } else if (n == 2) {
+                sr_comm_quadratic(1.0, F, V, T1, T2, C0, C1, C2);
+            } else if (n == 3) {
+                sr_comm_cubic(1.0, F, V, T1, T2, C0, C1, C2);
+            }
+        } else {
+            commutator_H_A_2(factor, O1, O2, T1, T2, C0, C1, C2);
+        }
+
+        // Hbar += C
+        Hbar0 += C0;
+        Hbar1["pq"] += C1["pq"];
+        Hbar2["pqrs"] += C2["pqrs"];
+
+        // copy C to O for next level commutator
+        O1["pq"] = C1["pq"];
+        O2["pqrs"] = C2["pqrs"];
+
+        // test convergence of C
+        double norm_C1 = C1.norm();
+        double norm_C2 = C2.norm();
+        //        outfile->Printf("\n  %2d %20.12f %20e
+        //        %20e",n,C0,norm_C1,norm_C2);
+        if (std::sqrt(norm_C2 * norm_C2 + norm_C1 * norm_C1) < ct_threshold) {
             break;
         }
     }
