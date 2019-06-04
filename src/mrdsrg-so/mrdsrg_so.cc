@@ -1080,21 +1080,17 @@ void MRDSRG_SO::compute_ilhbar() {
                 sr_comm_cubic(1.0, F, V, T1, T2, C0, C1, C2);
             }
         } else {
-            sr_comm_linear(factor, O1, O2, T1, T2, C0, C1, C2);
+            commutator_H_A_2(factor, O1, O2, T1, T2, C0, C1, C2);
         }
 
         // Hbar += C
-        Hbar0 += 2.0 * C0;
+        Hbar0 += C0;
         Hbar1["pq"] += C1["pq"];
-        Hbar1["pq"] += C1["qp"];
         Hbar2["pqrs"] += C2["pqrs"];
-        Hbar2["pqrs"] += C2["rspq"];
 
         // copy C to O for next level commutator
         O1["pq"] = C1["pq"];
-        O1["pq"] += C1["qp"];
         O2["pqrs"] = C2["pqrs"];
-        O2["pqrs"] = C2["rspq"];
 
         // test convergence of C
         double norm_C1 = C1.norm();
