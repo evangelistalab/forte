@@ -1080,7 +1080,7 @@ void MRDSRG_SO::compute_ilhbar() {
                 sr_comm_cubic(1.0, F, V, T1, T2, C0, C1, C2);
             }
         } else {
-            commutator_H_A_2(factor, O1, O2, T1, T2, C0, C1, C2);
+            sr_comm_linear(factor, O1, O2, T1, T2, C0, C1, C2);
         }
 
         // Hbar += C
