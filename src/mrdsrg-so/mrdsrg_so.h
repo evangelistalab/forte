@@ -282,6 +282,9 @@ class MRDSRG_SO : public psi::Wavefunction {
     void sr_comm_cubic(double factor, BlockedTensor& H1, BlockedTensor& H2,
                        BlockedTensor& T1, BlockedTensor& T2, double& C0,
                        BlockedTensor& C1, BlockedTensor& C2);
+    void sr_comm_quartic(double factor, BlockedTensor& H1, BlockedTensor& H2,
+                         BlockedTensor& T1, BlockedTensor& T2, double& C0,
+                         BlockedTensor& C1, BlockedTensor& C2);
     void compute_ilhbar();
 
     double compute_ldsrg2_4th_corr_t2_debug();

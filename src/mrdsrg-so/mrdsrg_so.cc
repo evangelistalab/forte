@@ -716,7 +716,8 @@ double MRDSRG_SO::compute_energy() {
     int cycle = 0;
 
     if (options_.get_str("CORR_LEVEL") == "ILDSRG2") {
-        outfile->Printf("ILDSRG2_LEVEL: %d", options_.get_int("ILDSRG2_LEVEL"));
+        int level = options_.get_int("ILDSRG2_LEVEL") > 4 ? 4 : options_.get_int("ILDSRG2_LEVEL");
+        outfile->Printf("ILDSRG2_LEVEL: %d", level);
     }
 
     // start iteration
@@ -1063,7 +1064,7 @@ void MRDSRG_SO::compute_ilhbar() {
     BlockedTensor C1 = ambit::BlockedTensor::build(tensor_type_, "C1", {"gg"});
     BlockedTensor C2 = ambit::BlockedTensor::build(tensor_type_, "C2", {"gggg"});
 
-    int ilevel = options_.get_int("ILDSRG2_LEVEL") > 3 ? 3 : options_.get_int("ILDSRG2_LEVEL");
+    int ilevel = options_.get_int("ILDSRG2_LEVEL") > 4 ? 4 : options_.get_int("ILDSRG2_LEVEL");
 
     // compute Hbar recursively
     for (int n = 1; n <= maxn; ++n) {
@@ -1078,6 +1079,8 @@ void MRDSRG_SO::compute_ilhbar() {
                 sr_comm_quadratic(1.0, F, V, T1, T2, C0, C1, C2);
             } else if (n == 3) {
                 sr_comm_cubic(1.0, F, V, T1, T2, C0, C1, C2);
+            } else if (n == 4) {
+                sr_comm_quartic(1.0, F, V, T1, T2, C0, C1, C2);
             }
         } else {
             commutator_H_A_2(factor, O1, O2, T1, T2, C0, C1, C2);
