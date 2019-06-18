@@ -690,7 +690,7 @@ void DMRGSolver::compute_energy() {
     file.close();
 
     std::ofstream file2;
-    file.open("spin_fluct.txt", std::ofstream::out | std::ofstream::trunc);
+    file2.open("spin_fluct.txt", std::ofstream::out | std::ofstream::trunc);
     for (int i = 0; i < nact; ++i) {
         for (int j = 0; j < nact; ++j) {
             file2 << std::setw(12) << std::setprecision(6) << spin_fluct->get(i, j) << " ";
