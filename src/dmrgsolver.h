@@ -29,6 +29,9 @@
 #ifndef DMRGSOLVER_H
 #define DMRGSOLVER_H
 
+#include <fstream>
+#include <iomanip>
+
 #include "psi4/liboptions/liboptions.h"
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/libfock/jk.h"
