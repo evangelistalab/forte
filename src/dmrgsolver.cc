@@ -649,6 +649,56 @@ void DMRGSolver::compute_energy() {
       // std::cout << "   (" << i << ")" << "  val4:  " << val4 << std::endl;
     }
 
+    // Now form the spin correlation
+    SharedMatrix spin_corr(new Matrix("Spin Correlation", nact, nact));
+    SharedMatrix spin_fluct(new Matrix("Spin Fluctuation", nact, nact));
+
+    for (int i = 0; i < nact; ++i) {
+        for (int j = 0; j < nact; ++j) {
+            double value = 0.0;
+            if (i == j) {
+                value += 0.75 * (opdm_a[nact * i + j] + opdm_b[nact * i + j]);
+            }
+            value -= 0.5 * (tpdm_ab[i * nact3 + j * nact2 + j * nact + i] +
+                            tpdm_ab[j * nact3 + i * nact2 + i * nact + j]);
+
+            value += 0.25 * (tpdm_aa[i * nact3 + j * nact2 + i * nact + j] +
+                             tpdm_bb[i * nact3 + j * nact2 + i * nact + j] -
+                             tpdm_ab[i * nact3 + j * nact2 + i * nact + j] -
+                             tpdm_ab[j * nact3 + i * nact2 + j * nact + i]);
+
+            spin_corr->set(i, j, value);
+            value -=
+                0.25 *
+                (opdm_a[i * nact + i] * opdm_a[j * nact + j] + opdm_b[i * nact + i] * opdm_b[j * nact + j] -
+                 opdm_a[i * nact + i] * opdm_b[j * nact + j] - opdm_b[i * nact + i] * opdm_a[j * nact + j]);
+            spin_fluct->set(i, j, value);
+        }
+    }
+    outfile->Printf("\n");
+    spin_corr->print();
+    spin_fluct->print();
+
+    std::ofstream file;
+    file.open("spin_mat.txt", std::ofstream::out | std::ofstream::trunc);
+    for (int i = 0; i < nact; ++i) {
+        for (int j = 0; j < nact; ++j) {
+            file << std::setw(12) << std::setprecision(6) << spin_corr->get(i, j) << " ";
+        }
+        file << "\n";
+    }
+    file.close();
+
+    std::ofstream file2;
+    file.open("spin_fluct.txt", std::ofstream::out | std::ofstream::trunc);
+    for (int i = 0; i < nact; ++i) {
+        for (int j = 0; j < nact; ++j) {
+            file2 << std::setw(12) << std::setprecision(6) << spin_fluct->get(i, j) << " ";
+        }
+        file2 << "\n";
+    }
+    file2.close();
+
     // want to compute energy form rdms (currently in dmrg_ref_)
     double nuclear_repulsion_energy =
       Process::environment.molecule()->nuclear_repulsion_energy({0, 0, 0});
