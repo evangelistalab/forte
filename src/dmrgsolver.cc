@@ -701,7 +701,7 @@ void DMRGSolver::compute_energy() {
 
     wfn_->Ca()->print();
 
-    // finding input2loc ordering
+    // finding ham2input ordering
 
     std::vector<int> ham2input;
     for(int j = 0; j<nact; j++){
@@ -716,6 +716,53 @@ void DMRGSolver::compute_energy() {
     for(int k = 0; k<nact; k++){
         outfile->Printf(" %i", ham2input[k]);
     }
+
+    // make reorderd Spin mat (with index ordering rather than hamiltonian ordering)
+    SharedMatrix spin_corr_input_idx(new Matrix("Spin Correlation input indexed", nact, nact));
+    for (int i = 0; i < nact; ++i) {
+        for (int j = 0; j < nact; ++j) {
+            int k = ham2input[i];
+            int l = ham2input[j];
+            spin_corr_input_idx->set(i, j, spin_corr->get(k,l));
+        }
+    }
+
+    std::ofstream file3;
+    file3.open("spin_mat_input_ordered.txt", std::ofstream::out | std::ofstream::trunc);
+    for (int i = 0; i < nact; ++i) {
+        for (int j = 0; j < nact; ++j) {
+            file3 << std::setw(12) << std::setprecision(6) << spin_corr_input_idx->get(i, j) << " ";
+        }
+        file3 << "\n";
+    }
+    file3.close();
+
+    // want to make Rij matrix
+    SharedMatrix Rij_input_idx(new Matrix("Rij input indexed", nact, nact));
+    for (int i = 0; i < nact; ++i) {
+        for (int j = 0; j < nact; ++j) {
+            double dx = 0.0;
+            double dy = 0.0;
+            double dz = 0.0;
+            dx = (wfn_->molecule()->x(i)) - (wfn_->molecule()->x(j));
+            dy = (wfn_->molecule()->y(i)) - (wfn_->molecule()->y(j));
+            dz = (wfn_->molecule()->z(i)) - (wfn_->molecule()->z(j));
+            dx *= dx;
+            dy *= dy;
+            dz *= dz;
+            double rij = std::sqrt(dx + dy + dz);
+            Rij_input_idx->set(i, j, rij);
+        }
+    }
+    std::ofstream file4;
+    file4.open("Rij_input_orderd.txt", std::ofstream::out | std::ofstream::trunc);
+    for (int i = 0; i < nact; ++i) {
+        for (int j = 0; j < nact; ++j) {
+            file4 << std::setw(12) << std::setprecision(6) << Rij_input_idx->get(i, j) << " ";
+        }
+        file4 << "\n";
+    }
+    file4.close();
 
     // want to compute energy form rdms (currently in dmrg_ref_)
     double nuclear_repulsion_energy =
