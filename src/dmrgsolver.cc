@@ -699,6 +699,24 @@ void DMRGSolver::compute_energy() {
     }
     file2.close();
 
+    wfn_->Ca()->print();
+
+    // finding input2loc ordering
+
+    std::vector<int> ham2input;
+    for(int j = 0; j<nact; j++){
+        std::vector<double> v;
+        for(int i = 0; i < nact; i++){
+            v.push_back(std::abs(wfn_->Ca()->get(i,j)));
+        }
+        int j_MO_ham2input_idx = std::max_element(v.begin(),v.end()) - v.begin();
+        ham2input.push_back(j_MO_ham2input_idx);
+    }
+
+    for(int k = 0; k<nact; k++){
+        outfile->Printf(" %i", ham2input[k]);
+    }
+
     // want to compute energy form rdms (currently in dmrg_ref_)
     double nuclear_repulsion_energy =
       Process::environment.molecule()->nuclear_repulsion_energy({0, 0, 0});
