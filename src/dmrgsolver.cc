@@ -791,7 +791,7 @@ void DMRGSolver::compute_energy() {
     file5.open("Rxyz.txt", std::ofstream::out | std::ofstream::trunc);
     for (int i = 0; i < nact; ++i) {
         for (int j = 0; j < 3; ++j) {
-            file5 << std::setw(12) << std::setprecision(6) << Rxyz->get(i, j) << " ";
+            file5 << std::setw(12) << std::setprecision(6) << (Rxyz->get(i, j)) / 1.889725989 << " ";
         }
         file5 << "\n";
     }
