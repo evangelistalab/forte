@@ -713,16 +713,34 @@ void DMRGSolver::compute_energy() {
         ham2input.push_back(j_MO_ham2input_idx);
     }
 
+    // finding input2ham ordering
+
+    std::vector<int> input2ham;
+    for(int i = 0; i<nact; i++){
+        std::vector<double> v;
+        for(int j = 0; j < nact; j++){
+            v.push_back(std::abs(wfn_->Ca()->get(i,j)));
+        }
+        int i_MO_input2ham_idx = std::max_element(v.begin(),v.end()) - v.begin();
+        input2ham.push_back(i_MO_input2ham_idx);
+    }
+
+    outfile->Printf("\nHam to Inpup idex reordeing:");
     for(int k = 0; k<nact; k++){
         outfile->Printf(" %i", ham2input[k]);
+    }
+
+    outfile->Printf("\nInput to Ham idex reordeing:");
+    for(int k = 0; k<nact; k++){
+        outfile->Printf(" %i", input2ham[k]);
     }
 
     // make reorderd Spin mat (with index ordering rather than hamiltonian ordering)
     SharedMatrix spin_corr_input_idx(new Matrix("Spin Correlation input indexed", nact, nact));
     for (int i = 0; i < nact; ++i) {
         for (int j = 0; j < nact; ++j) {
-            int k = ham2input[i];
-            int l = ham2input[j];
+            int k = input2ham[i];
+            int l = input2ham[j];
             spin_corr_input_idx->set(i, j, spin_corr->get(k,l));
         }
     }
@@ -751,6 +769,7 @@ void DMRGSolver::compute_energy() {
             dy *= dy;
             dz *= dz;
             double rij = std::sqrt(dx + dy + dz);
+            rij /= 1.889725989 // bohr to angstrom conversion
             Rij_input_idx->set(i, j, rij);
         }
     }
