@@ -769,7 +769,7 @@ void DMRGSolver::compute_energy() {
             dy *= dy;
             dz *= dz;
             double rij = std::sqrt(dx + dy + dz);
-            rij /= 1.889725989 // bohr to angstrom conversion
+            rij /= 1.889725989; // bohr to angstrom conversion
             Rij_input_idx->set(i, j, rij);
         }
     }
