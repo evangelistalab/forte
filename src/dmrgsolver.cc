@@ -757,7 +757,11 @@ void DMRGSolver::compute_energy() {
 
     // want to make Rij matrix
     SharedMatrix Rij_input_idx(new Matrix("Rij input indexed", nact, nact));
+    SharedMatrix Rxyz(new Matrix("x y z corrds of atom i", nact, 3));
     for (int i = 0; i < nact; ++i) {
+        Rxyz->set(i, 0, wfn_->molecule()->x(i));
+        Rxyz->set(i, 1, wfn_->molecule()->y(i));
+        Rxyz->set(i, 2, wfn_->molecule()->z(i));
         for (int j = 0; j < nact; ++j) {
             double dx = 0.0;
             double dy = 0.0;
@@ -782,6 +786,16 @@ void DMRGSolver::compute_energy() {
         file4 << "\n";
     }
     file4.close();
+
+    std::ofstream file5;
+    file5.open("Rxyz.txt", std::ofstream::out | std::ofstream::trunc);
+    for (int i = 0; i < nact; ++i) {
+        for (int j = 0; j < 3; ++j) {
+            file5 << std::setw(12) << std::setprecision(6) << Rxyz->get(i, j) << " ";
+        }
+        file5 << "\n";
+    }
+    file5.close();
 
     // want to compute energy form rdms (currently in dmrg_ref_)
     double nuclear_repulsion_energy =
