@@ -566,32 +566,39 @@ void DMRGSolver::compute_energy() {
             candidate_sites.erase(candidate_sites.begin() + idx_of_site2remove);
         } else { // if on the 2nd site or higher
 
-            std::vector<double> rnnn;
-            for(auto i : next_site){
-                rnn.push_back(Rij_input_idx->get(input_order.size()-2, i));
-                std::cout << "Ri_current_site: " << Rij_input_idx->get(input_order.size()-2, i) << std::endl;
+            if(next_site.size() > 1){
+                std::vector<double> rnnn;
+                for(auto i : next_site){
+                    rnn.push_back(Rij_input_idx->get(input_order.size()-2, i));
+                    std::cout << "Ri_current_site: " << Rij_input_idx->get(input_order.size()-2, i) << std::endl;
+                }
+                //order according to next nearest neighabor
+                std::vector<int> lowest_idx_nnn = min_indicies(rnnn);
+
+                for(auto i : lowest_idx_nnn){
+                    std::cout << "lowest_idx_nnn: " << i << std::endl;
+                }
+
+                //add the next site!
+                input_order.push_back(next_site[lowest_idx_nnn[0]]);
+
+                //erase form candidate_sites
+                std::vector<int>::iterator it = std::find(candidate_sites.begin(), candidate_sites.end(), next_site[lowest_idx_nnn[0]]);
+                int idx_of_site2remove = std::distance(candidate_sites.begin(), it);
+                candidate_sites.erase(candidate_sites.begin() + idx_of_site2remove);
+            } else {
+                input_order.push_back(next_site[0]);
+                // get index of next site in candidate_sites
+                std::vector<int>::iterator it = std::find(candidate_sites.begin(), candidate_sites.end(), next_site[0]);
+                int idx_of_site2remove = std::distance(candidate_sites.begin(), it);
+                candidate_sites.erase(candidate_sites.begin() + idx_of_site2remove);
             }
-            //order according to next nearest neighabor
-            std::vector<int> lowest_idx_nnn = min_indicies(rnnn);
-
-            for(auto i : lowest_idx_nnn){
-                std::cout << "lowest_idx_nnn: " << i << std::endl;
-            }
-
-            //add the next site!
-            input_order.push_back(next_site[lowest_idx_nnn[0]]);
-
-            //erase form candidate_sites
-            std::vector<int>::iterator it = std::find(candidate_sites.begin(), candidate_sites.end(), next_site[lowest_idx_nnn[0]]);
-            int idx_of_site2remove = std::distance(candidate_sites.begin(), it);
-            candidate_sites.erase(candidate_sites.begin() + idx_of_site2remove);
-
 
         }
 
-        std::cout << "\nHere are numbers 2" << std::endl;
-        for(auto j : candidate_sites) { std::cout << "candidate: " << j << std::endl; }
-        for(auto j : input_order) { std::cout << "input_order: " << j << std::endl; }
+        // std::cout << "\nHere are numbers 2" << std::endl;
+        // for(auto j : candidate_sites) { std::cout << "candidate: " << j << std::endl; }
+        // for(auto j : input_order) { std::cout << "input_order: " << j << std::endl; }
     }
 
 
