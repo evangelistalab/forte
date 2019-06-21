@@ -424,6 +424,7 @@ void DMRGSolver::compute_energy() {
     }
 
     /// IF AUTO ORBITAL REORDERING (ONLY IN FULLY LOCALIZED BASIS) ///
+    size_t nact = mo_space_info_->size("ACTIVE");
 
     // initalize approprate containers
     // want to make Rij matrix
@@ -450,7 +451,7 @@ void DMRGSolver::compute_energy() {
     }
 
     ///test1
-    std::vector<double> rnn = {1.25, 1.00, 1.25, 1.25, 2.25, 2.00, 1.25, 2.00}
+    std::vector<double> rnn = {1.25, 1.00, 1.25, 1.25, 2.25, 2.00, 1.25, 2.00};
     std::vector<int> mins = min_indicies(rnn);
     for(auto j : mins) { std::cout << "\n " << j << std::endl; }
 
@@ -640,7 +641,6 @@ void DMRGSolver::compute_energy() {
                     //////////////////////////////////////////
 
     // will involve dmrg_ref_.L1a.data();
-    size_t nact = mo_space_info_->size("ACTIVE");
     size_t nact2 = nact * nact;
     size_t nact3 = nact2 * nact;
     size_t nact4 = nact3 * nact;
