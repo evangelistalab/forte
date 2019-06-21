@@ -535,7 +535,7 @@ void DMRGSolver::compute_energy() {
     // major while loop
     while(!candidate_sites.empty()){
         int current_site = input_order[input_order.size()-1];
-        std::cout << "current_site: " << j << std::endl;
+        std::cout << "current_site: " << current_site << std::endl;
         std::vector<int> next_site;
         std::vector<double> rnn;
 
