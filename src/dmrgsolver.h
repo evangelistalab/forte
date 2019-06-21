@@ -56,7 +56,7 @@ class DMRGSolver {
     DMRGSolver(SharedWavefunction ref_wfn, Options& options,
                std::shared_ptr<MOSpaceInfo> mo_space_info);
 
-    bool pairCompare(const std::pair<double, int>& firstElem, const std::pair<double, int>& secondElem);
+
     std::vector<int> min_indicies(std::vector<double> r_nn);
 
     void compute_energy();
@@ -97,6 +97,8 @@ class DMRGSolver {
     std::vector<double> one_body_operator();
     bool use_user_integrals_ = false;
     void print_natural_orbitals(double* one_rdm);
+
+    static bool pairCompare(const std::pair<double, int>& firstElem, const std::pair<double, int>& secondElem);
 };
 }
 }
