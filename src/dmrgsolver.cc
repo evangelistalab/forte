@@ -93,7 +93,7 @@ bool DMRGSolver::pairCompare(const std::pair<double, int>& firstElem, const std:
 
 std::vector<int> DMRGSolver::min_indicies(std::vector<double> r_nn)
 {
-    int len = r_nn.size()
+    int len = r_nn.size();
     std::vector<std::pair<double,int>> vec;
     std::vector<int> min_value_indicies;
 
