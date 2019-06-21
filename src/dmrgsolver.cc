@@ -97,7 +97,7 @@ std::vector<int> DMRGSolver::min_indicies(std::vector<double> r_nn)
     std::vector<std::pair<double,int>> vec;
     std::vector<int> min_value_indicies;
 
-    std::cout << "\nlen: " << len << std::endl;
+    // std::cout << "\nlen: " << len << std::endl;
 
     for(int i=0; i < len; i++){
          vec.push_back(std::make_pair(r_nn[i],i));
@@ -106,16 +106,16 @@ std::vector<int> DMRGSolver::min_indicies(std::vector<double> r_nn)
 
     std::sort(vec.begin(), vec.end(), pairCompare); // sort in acending order
 
-    for(int i=0; i < len; i++){
-         std::cout << "\nr_nn_sorted[i]: " << vec[i].first << std::endl;
-    }
+    // for(int i=0; i < len; i++){
+    //      std::cout << "\nr_nn_sorted[i]: " << vec[i].first << std::endl;
+    // }
 
     double r_min = vec[0].first;
-    std::cout << "r_min: " << r_min << std::endl;
+    // std::cout << "r_min: " << r_min << std::endl;
 
     for(int i=0; std::abs(vec[i].first - r_min) < 1.0e-4; i++){
         min_value_indicies.push_back(vec[i].second);
-        std::cout << "\nmin_value_index: " << vec[i].first << std::endl;
+        // std::cout << "\nmin_value_index: " << vec[i].first << std::endl;
     }
 
     return min_value_indicies;
@@ -534,27 +534,27 @@ void DMRGSolver::compute_energy() {
 
     // major while loop
     while(!candidate_sites.empty()){
-        for(auto j : candidate_sites) { std::cout << "candidate: " << j << std::endl; }
-        for(auto j : input_order) { std::cout << "input_order: " << j << std::endl; }
-        std::cout << "\n\nNew cycle: " << std::endl;
+        // for(auto j : candidate_sites) { std::cout << "candidate: " << j << std::endl; }
+        // for(auto j : input_order) { std::cout << "input_order: " << j << std::endl; }
+        // std::cout << "\n\nNew cycle: " << std::endl;
 
         int current_site = input_order[input_order.size()-1];
-        std::cout << "current_site: " << current_site << std::endl;
+        // std::cout << "current_site: " << current_site << std::endl;
         std::vector<int> next_site;
         std::vector<double> rnn;
 
         for(auto i : candidate_sites){
             rnn.push_back(Rij_input_idx->get(current_site, i));
-            std::cout << "Ri_current_site: " << Rij_input_idx->get(current_site, i)<< " i: " << i << std::endl;
+            // std::cout << "Ri_current_site: " << Rij_input_idx->get(current_site, i)<< " i: " << i << std::endl;
         }
         std::vector<int> lowest_idx_nn = min_indicies(rnn);
 
-        for(auto i : lowest_idx_nn){
-            std::cout << "lowest_idx_nn: " << i << std::endl;
-        }
+        // for(auto i : lowest_idx_nn){
+        //     std::cout << "lowest_idx_nn: " << i << std::endl;
+        // }
         for(auto i : lowest_idx_nn){ next_site.push_back(candidate_sites[i]); }
 
-        for(auto j : next_site) { std::cout << "next_site: " << j << std::endl; }
+        // for(auto j : next_site) { std::cout << "next_site: " << j << std::endl; }
 
         //fine next nearest neighabor
         // if on 1st site
@@ -571,14 +571,14 @@ void DMRGSolver::compute_energy() {
                 int previous_site = input_order[input_order.size()-2];
                 for(auto i : next_site){
                     rnnn.push_back(Rij_input_idx->get(previous_site, i));
-                    std::cout << "Ri_current_site-1: " << Rij_input_idx->get(previous_site, i) << std::endl;
+                    // std::cout << "Ri_current_site-1: " << Rij_input_idx->get(previous_site, i) << std::endl;
                 }
                 //order according to next nearest neighabor
                 std::vector<int> lowest_idx_nnn = min_indicies(rnnn);
 
-                for(auto i : lowest_idx_nnn){
-                    std::cout << "lowest_idx_nnn: " << i << std::endl;
-                }
+                // for(auto i : lowest_idx_nnn){
+                //     std::cout << "lowest_idx_nnn: " << i << std::endl;
+                // }
 
                 //add the next site!
                 input_order.push_back(next_site[lowest_idx_nnn[0]]);
@@ -602,11 +602,21 @@ void DMRGSolver::compute_energy() {
         // for(auto j : input_order) { std::cout << "input_order: " << j << std::endl; }
     }
 
+    outfile->Printf("\nAutomated DMRG localized obrital order (input indexing):");
+    for(int k = 0; k<nact; k++){
+        outfile->Printf(" %i", input_order[k]);
+    }
 
+    // And F#&%&ING finally, reorder with hamiltonian ordering
+    std::vector<int> ham_order;
+    for(int k = 0; k<nact; k++){
+        ham_order.push_back(input2ham[input_order[k]]);
+    }
 
-
-
-
+    outfile->Printf("\nAutomated DMRG localized obrital order (hamiltonian indexing):");
+    for(int k = 0; k<nact; k++){
+        outfile->Printf(" %i", ham_order[k]);
+    }
 
     //// END AUTO REORDERING ////
 
