@@ -526,7 +526,7 @@ void DMRGSolver::compute_energy() {
 
     //add as first site and remove from candidates list
     input_order.push_back(max_dfo_idx);
-    candinate_sites.erase(max_dfo_idx); // after this candinate_sites[i] != i for i > max_dfo_idx.
+    candinate_sites.erase(candinate_sites.begin() + max_dfo_idx); // after this candinate_sites[i] != i for i > max_dfo_idx.
 
     std::cout << "\nHere are numbers" << std::endl;
     for(auto j : candinate_sites) { std::cout << "\n " << j << std::endl; }
