@@ -97,25 +97,25 @@ std::vector<int> DMRGSolver::min_indicies(std::vector<double> r_nn)
     std::vector<std::pair<double,int>> vec;
     std::vector<int> min_value_indicies;
 
-    // std::cout << "\nlen: " << len << std::endl;
+    std::cout << "\nlen: " << len << std::endl;
 
     for(int i=0; i < len; i++){
          vec.push_back(std::make_pair(r_nn[i],i));
-         // std::cout << "\nr_nn[i]: " << vec[i].first << std::endl;
+         std::cout << "\nr_nn[i]: " << vec[i].first << std::endl;
     }
 
     std::sort(vec.begin(), vec.end(), pairCompare); // sort in acending order
 
     for(int i=0; i < len; i++){
-         // std::cout << "\nr_nn_sorted[i]: " << vec[i].first << std::endl;
+         std::cout << "\nr_nn_sorted[i]: " << vec[i].first << std::endl;
     }
 
     double r_min = vec[0].first;
-    // std::cout << "r_min: " << r_min << std::endl;
+    std::cout << "r_min: " << r_min << std::endl;
 
     for(int i=0; vec[i].first == r_min; i++){
         min_value_indicies.push_back(vec[i].second);
-        // std::cout << "\nmin_value_index: " << vec[i].first << std::endl;
+        std::cout << "\nmin_value_index: " << vec[i].first << std::endl;
     }
 
     return min_value_indicies;
