@@ -550,7 +550,7 @@ void DMRGSolver::compute_energy() {
         }
         for(auto i : lowest_idx_nn){ next_site.push_back(candidate_sites[i]); }
 
-        for(auto j : input_order) { std::cout << "next_site: " << j << std::endl; }
+        for(auto j : next_site) { std::cout << "next_site: " << j << std::endl; }
         break;
     }
 
