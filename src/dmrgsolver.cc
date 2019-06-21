@@ -97,25 +97,25 @@ std::vector<int> DMRGSolver::min_indicies(std::vector<double> r_nn)
     std::vector<std::pair<double,int>> vec;
     std::vector<int> min_value_indicies;
 
-    std::cout << "\nlen: " << len << std::endl;
+    // std::cout << "\nlen: " << len << std::endl;
 
     for(int i=0; i < len; i++){
          vec.push_back(std::make_pair(r_nn[i],i));
-         std::cout << "\nr_nn[i]: " << vec[i].first << std::endl;
+         // std::cout << "\nr_nn[i]: " << vec[i].first << std::endl;
     }
 
     std::sort(vec.begin(), vec.end(), pairCompare); // sort in acending order
 
     for(int i=0; i < len; i++){
-         std::cout << "\nr_nn_sorted[i]: " << vec[i].first << std::endl;
+         // std::cout << "\nr_nn_sorted[i]: " << vec[i].first << std::endl;
     }
 
     double r_min = vec[0].first;
-    std::cout << "r_min: " << r_min << std::endl;
+    // std::cout << "r_min: " << r_min << std::endl;
 
     for(int i=0; vec[i].first == r_min; i++){
         min_value_indicies.push_back(vec[i].second);
-        std::cout << "\nmin_value_index: " << vec[i].first << std::endl;
+        // std::cout << "\nmin_value_index: " << vec[i].first << std::endl;
     }
 
     return min_value_indicies;
@@ -462,11 +462,80 @@ void DMRGSolver::compute_energy() {
         }
     }
 
-    ///test1
-    std::vector<double> rnn = {1.25, 2.00, 1.25, 1.25, 2.25, 2.00, 1.25, 2.00};
-    std::vector<int> mins = min_indicies(rnn);
+    ///test1 PASS!
+    // std::vector<double> rnn = {1.25, 2.00, 1.25, 1.25, 2.25, 2.00, 1.25, 2.00};
+    // std::vector<int> mins = min_indicies(rnn);
+    // std::cout << "\nHere are numbers" << std::endl;
+    // for(auto j : mins) { std::cout << "\n " << j << std::endl; }
+
+    /// Now need to begin the main part of the search algorithm
+    // get input2ham and ham2input ORDERING
+    // finding ham2input ordering
+
+    std::vector<int> ham2input;
+    for(int j = 0; j<nact; j++){
+        std::vector<double> v;
+        for(int i = 0; i < nact; i++){
+            v.push_back(std::abs(wfn_->Ca()->get(i,j)));
+        }
+        int j_MO_ham2input_idx = std::max_element(v.begin(),v.end()) - v.begin();
+        ham2input.push_back(j_MO_ham2input_idx);
+    }
+
+    // finding input2ham ordering
+
+    std::vector<int> input2ham;
+    for(int i = 0; i<nact; i++){
+        std::vector<double> v;
+        for(int j = 0; j < nact; j++){
+            v.push_back(std::abs(wfn_->Ca()->get(i,j)));
+        }
+        int i_MO_input2ham_idx = std::max_element(v.begin(),v.end()) - v.begin();
+        input2ham.push_back(i_MO_input2ham_idx);
+    }
+
+    outfile->Printf("\nHam to Inpup idex reordeing:");
+    for(int k = 0; k<nact; k++){
+        outfile->Printf(" %i", ham2input[k]);
+    }
+
+    outfile->Printf("\nInput to Ham idex reordeing:");
+    for(int k = 0; k<nact; k++){
+        outfile->Printf(" %i", input2ham[k]);
+    }
+
+    // Initialize containers
+    //all of the sites
+    std::vector<int> candinate_sites;
+    for(int i = 0; i < nact; i++){ candinate_sites.push_back(i); }
+    //the ordering for the dmrg orbitals with input indexing (will later be
+    // converted to hamiltioan energy indexing):
+    std::vector<int> input_order;
+
+    //find first site (distance from origin vector)
+    std::vector<int> dfo;
+    for(int i = 0; i < nact; i++){
+        double val = (Rxyz->get(i, 0))*(Rxyz->get(i, 0));
+        val += (Rxyz->get(i, 1))*(Rxyz->get(i, 1));
+        val += (Rxyz->get(i, 2))*(Rxyz->get(i, 2));
+        dfo.push_back(val);
+    }
+
+    // use the lowest input indexed site if there are several sites with equal max dfo.
+    int max_dfo_idx = std::max_element(dfo.begin(), dfo.end()) - dfo.begin();
+
+    //add as first site and remove from candidates list
+    input_order.push_back(max_dfo_idx);
+    candinate_sites.erase(max_dfo_idx); // after this candinate_sites[i] != i for i > max_dfo_idx.
+
     std::cout << "\nHere are numbers" << std::endl;
-    for(auto j : mins) { std::cout << "\n " << j << std::endl; }
+    for(auto j : candinate_sites) { std::cout << "\n " << j << std::endl; }
+    for(auto j : input_order) { std::cout << "\n " << j << std::endl; }
+
+
+
+
+
 
 
     //// END AUTO REORDERING ////
@@ -771,40 +840,6 @@ void DMRGSolver::compute_energy() {
     file2.close();
 
     wfn_->Ca()->print();
-
-    // finding ham2input ordering
-
-    std::vector<int> ham2input;
-    for(int j = 0; j<nact; j++){
-        std::vector<double> v;
-        for(int i = 0; i < nact; i++){
-            v.push_back(std::abs(wfn_->Ca()->get(i,j)));
-        }
-        int j_MO_ham2input_idx = std::max_element(v.begin(),v.end()) - v.begin();
-        ham2input.push_back(j_MO_ham2input_idx);
-    }
-
-    // finding input2ham ordering
-
-    std::vector<int> input2ham;
-    for(int i = 0; i<nact; i++){
-        std::vector<double> v;
-        for(int j = 0; j < nact; j++){
-            v.push_back(std::abs(wfn_->Ca()->get(i,j)));
-        }
-        int i_MO_input2ham_idx = std::max_element(v.begin(),v.end()) - v.begin();
-        input2ham.push_back(i_MO_input2ham_idx);
-    }
-
-    outfile->Printf("\nHam to Inpup idex reordeing:");
-    for(int k = 0; k<nact; k++){
-        outfile->Printf(" %i", ham2input[k]);
-    }
-
-    outfile->Printf("\nInput to Ham idex reordeing:");
-    for(int k = 0; k<nact; k++){
-        outfile->Printf(" %i", input2ham[k]);
-    }
 
     // make reorderd Spin mat (with index ordering rather than hamiltonian ordering)
     SharedMatrix spin_corr_input_idx(new Matrix("Spin Correlation input indexed", nact, nact));
