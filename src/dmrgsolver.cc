@@ -534,9 +534,9 @@ void DMRGSolver::compute_energy() {
 
     // major while loop
     while(!candidate_sites.empty()){
-        int current_site = input_order[current_site.size()-1];
+        int current_site = input_order[input_order.size()-1];
         std::vector<int> next_site;
-        std::vector<doubel> rnn;
+        std::vector<double> rnn;
 
         for(auto i : candidate_sites){ rnn.push_back(Rij_input_orderd->get(current_site, i)); }
         std::vector<int> lowest_idx_nn = min_indicies(rnn);
