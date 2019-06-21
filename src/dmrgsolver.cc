@@ -506,8 +506,8 @@ void DMRGSolver::compute_energy() {
 
     // Initialize containers
     //all of the sites
-    std::vector<int> candinate_sites;
-    for(int i = 0; i < nact; i++){ candinate_sites.push_back(i); }
+    std::vector<int> candidate_sites;
+    for(int i = 0; i < nact; i++){ candidate_sites.push_back(i); }
     //the ordering for the dmrg orbitals with input indexing (will later be
     // converted to hamiltioan energy indexing):
     std::vector<int> input_order;
@@ -526,11 +526,25 @@ void DMRGSolver::compute_energy() {
 
     //add as first site and remove from candidates list
     input_order.push_back(max_dfo_idx);
-    candinate_sites.erase(candinate_sites.begin() + max_dfo_idx); // after this candinate_sites[i] != i for i > max_dfo_idx.
+    candidate_sites.erase(candidate_sites.begin() + max_dfo_idx); // after this candidate_sites[i] != i for i > max_dfo_idx.
 
     std::cout << "\nHere are numbers" << std::endl;
-    for(auto j : candinate_sites) { std::cout << "\n " << j << std::endl; }
-    for(auto j : input_order) { std::cout << "\n " << j << std::endl; }
+    for(auto j : candidate_sites) { std::cout << "candidate: " << j << std::endl; }
+    for(auto j : input_order) { std::cout << "input_order: " << j << std::endl; }
+
+    // major while loop
+    while(!candidate_sites.empty()){
+        int current_site = input_order[current_site.size()-1];
+        std::vector<int> next_site;
+        std::vector<doubel> rnn;
+
+        for(auto i : candidate_sites){ rnn.push_back(Rij_input_orderd->get(current_site, i)); }
+        std::vector<int> lowest_idx_nn = min_indicies(rnn);
+        for(auto i : lowest_idx_nn){ next_site.push_back(candidate_sites[i]); }
+
+        for(auto j : input_order) { std::cout << "next_site: " << j << std::endl; }
+        break;
+    }
 
 
 
