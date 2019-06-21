@@ -559,7 +559,7 @@ void DMRGSolver::compute_energy() {
             // get index of next site in candidate_sites
             std::vector<int>::iterator it = std::find(candidate_sites.begin(), candidate_sites.end(), next_site[0]);
             int idx_of_site2remove = std::distance(candidate_sites.begin(), it);
-            candidate_sites.erase(idx_of_site2remove);
+            candidate_sites.erase(candidate_sites.begin() + idx_of_site2remove);
         } else { // if on the 2nd site or higher
 
             std::vector<double> rnnn;
@@ -580,7 +580,7 @@ void DMRGSolver::compute_energy() {
             //erase form candidate_sites
             std::vector<int>::iterator it = std::find(candidate_sites.begin(), candidate_sites.end(), next_site[lowest_idx_nnn[0]]);
             int idx_of_site2remove = std::distance(candidate_sites.begin(), it);
-            candidate_sites.erase(idx_of_site2remove);
+            candidate_sites.erase(candidate_sites.begin() + idx_of_site2remove);
 
 
         }
