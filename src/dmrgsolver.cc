@@ -570,7 +570,7 @@ void DMRGSolver::compute_energy() {
                 std::vector<double> rnnn;
                 int previous_site = input_order[input_order.size()-2];
                 for(auto i : next_site){
-                    rnn.push_back(Rij_input_idx->get(previous_site, i));
+                    rnnn.push_back(Rij_input_idx->get(previous_site, i));
                     std::cout << "Ri_current_site-1: " << Rij_input_idx->get(previous_site, i) << std::endl;
                 }
                 //order according to next nearest neighabor
