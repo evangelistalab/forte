@@ -85,6 +85,30 @@ DMRGSolver::DMRGSolver(SharedWavefunction ref_wfn, Options& options,
     : wfn_(ref_wfn), options_(options), mo_space_info_(mo_space_info) {
     print_method_banner({"Density Matrix Renormalization Group", "Sebastian Wouters"});
 }
+
+bool DMRGSolver::pairCompare(const std::pair<double, int>& firstElem, const std::pair<double, int>& secondElem)
+{
+    return firstElem.first < secondElem.first;
+}
+
+std::vector<int> DMRGSolver::min_indicies(std::vector<double> r_nn)
+{
+    int len = r_nn.size()
+    std::vector<std::pair<double,int>> vec;
+    std::vector<int> min_value_indicies;
+
+    for(int i=0; i < len; i++){ vec.push_back(std::make_pair(r_nn[i],i)); }
+
+    std::sort(vec.begin(), vec.end(), pairCompare); // sort in acending order
+
+    double r_min = vec[0].first;
+    for(int i=0; vec[i].first == r_min; i++){
+        min_value_indicies.push_back(vec[i].second);
+    }
+
+    return min_value_indicies;
+}
+
 void DMRGSolver::compute_reference(double* one_rdm, double* two_rdm, double* three_rdm,
                                    CheMPS2::DMRGSCFindices* iHandler) {
     // if(options_.get_int("MULTIPLICITY") != 1 &&
@@ -398,6 +422,40 @@ void DMRGSolver::compute_energy() {
         //   std::cout << "\n f2: " << Prob->gf2(i) << std::endl;
         // }
     }
+
+    /// IF AUTO ORBITAL REORDERING (ONLY IN FULLY LOCALIZED BASIS) ///
+
+    // initalize approprate containers
+    // want to make Rij matrix
+    SharedMatrix Rij_input_idx(new Matrix("Rij input indexed", nact, nact));
+    SharedMatrix Rxyz(new Matrix("x y z corrds of atom i", nact, 3));
+    for (int i = 0; i < nact; ++i) {
+        Rxyz->set(i, 0, wfn_->molecule()->x(i));
+        Rxyz->set(i, 1, wfn_->molecule()->y(i));
+        Rxyz->set(i, 2, wfn_->molecule()->z(i));
+        for (int j = 0; j < nact; ++j) {
+            double dx = 0.0;
+            double dy = 0.0;
+            double dz = 0.0;
+            dx = (wfn_->molecule()->x(i)) - (wfn_->molecule()->x(j));
+            dy = (wfn_->molecule()->y(i)) - (wfn_->molecule()->y(j));
+            dz = (wfn_->molecule()->z(i)) - (wfn_->molecule()->z(j));
+            dx *= dx;
+            dy *= dy;
+            dz *= dz;
+            double rij = std::sqrt(dx + dy + dz);
+            rij /= 1.889725989; // bohr to angstrom conversion
+            Rij_input_idx->set(i, j, rij);
+        }
+    }
+
+    ///test1
+    std::vector<double> rnn = {1.25, 1.00, 1.25, 1.25, 2.25, 2.00, 1.25, 2.00}
+    std::vector<int> mins = min_indicies(rnn);
+    for(auto j : mins) { std::cout << "\n " << j << std::endl; }
+
+
+    //// END AUTO REORDERING ////
 
     /// If one does not provide integrals when they call solver, compute them
     /// yourself
@@ -755,28 +813,7 @@ void DMRGSolver::compute_energy() {
     }
     file3.close();
 
-    // want to make Rij matrix
-    SharedMatrix Rij_input_idx(new Matrix("Rij input indexed", nact, nact));
-    SharedMatrix Rxyz(new Matrix("x y z corrds of atom i", nact, 3));
-    for (int i = 0; i < nact; ++i) {
-        Rxyz->set(i, 0, wfn_->molecule()->x(i));
-        Rxyz->set(i, 1, wfn_->molecule()->y(i));
-        Rxyz->set(i, 2, wfn_->molecule()->z(i));
-        for (int j = 0; j < nact; ++j) {
-            double dx = 0.0;
-            double dy = 0.0;
-            double dz = 0.0;
-            dx = (wfn_->molecule()->x(i)) - (wfn_->molecule()->x(j));
-            dy = (wfn_->molecule()->y(i)) - (wfn_->molecule()->y(j));
-            dz = (wfn_->molecule()->z(i)) - (wfn_->molecule()->z(j));
-            dx *= dx;
-            dy *= dy;
-            dz *= dz;
-            double rij = std::sqrt(dx + dy + dz);
-            rij /= 1.889725989; // bohr to angstrom conversion
-            Rij_input_idx->set(i, j, rij);
-        }
-    }
+
     std::ofstream file4;
     file4.open("Rij_input_orderd.txt", std::ofstream::out | std::ofstream::trunc);
     for (int i = 0; i < nact; ++i) {

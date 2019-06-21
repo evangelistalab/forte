@@ -31,6 +31,7 @@
 
 #include <fstream>
 #include <iomanip>
+#include <stdlib.h>
 
 #include "psi4/liboptions/liboptions.h"
 #include "psi4/libmints/wavefunction.h"
@@ -54,6 +55,10 @@ class DMRGSolver {
                std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ForteIntegrals> ints);
     DMRGSolver(SharedWavefunction ref_wfn, Options& options,
                std::shared_ptr<MOSpaceInfo> mo_space_info);
+
+    bool pairCompare(const std::pair<double, int>& firstElem, const std::pair<double, int>& secondElem);
+    std::vector<int> min_indicies(std::vector<double> r_nn);
+
     void compute_energy();
 
     Reference reference() { return dmrg_ref_; }
