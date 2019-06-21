@@ -113,7 +113,7 @@ std::vector<int> DMRGSolver::min_indicies(std::vector<double> r_nn)
     double r_min = vec[0].first;
     std::cout << "r_min: " << r_min << std::endl;
 
-    for(int i=0; vec[i].first == r_min; i++){
+    for(int i=0; std::abs(vec[i].first - r_min) < 1.0e-4; i++){
         min_value_indicies.push_back(vec[i].second);
         std::cout << "\nmin_value_index: " << vec[i].first << std::endl;
     }
