@@ -101,7 +101,7 @@ std::vector<int> DMRGSolver::min_indicies(std::vector<double> r_nn)
 
     for(int i=0; i < len; i++){
          vec.push_back(std::make_pair(r_nn[i],i));
-         std::cout << "\nr_nn[i]: " << vec[i].first << std::endl;
+         // std::cout << "\nr_nn[i]: " << vec[i].first << std::endl;
     }
 
     std::sort(vec.begin(), vec.end(), pairCompare); // sort in acending order
