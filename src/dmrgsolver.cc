@@ -453,6 +453,7 @@ void DMRGSolver::compute_energy() {
     ///test1
     std::vector<double> rnn = {1.25, 1.00, 1.25, 1.25, 2.25, 2.00, 1.25, 2.00};
     std::vector<int> mins = min_indicies(rnn);
+    std::cout << "\nHere are numbers" << std:: end;
     for(auto j : mins) { std::cout << "\n " << j << std::endl; }
 
 
