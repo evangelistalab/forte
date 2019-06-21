@@ -554,8 +554,8 @@ void DMRGSolver::compute_energy() {
 
         //fine next nearest neighabor
         // if on 1st site
-        if(input_order.size() = 1){
-            input_order.push_back(next_site[0])
+        if(input_order.size() == 1){
+            input_order.push_back(next_site[0]);
             // get index of next site in candidate_sites
             std::vector<int>::iterator it = std::find(candidate_sites.begin(), candidate_sites.end(), next_site[0]);
             int idx_of_site2remove = std::distance(candidate_sites.begin(), it);
