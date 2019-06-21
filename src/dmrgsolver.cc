@@ -528,12 +528,16 @@ void DMRGSolver::compute_energy() {
     input_order.push_back(max_dfo_idx);
     candidate_sites.erase(candidate_sites.begin() + max_dfo_idx); // after this candidate_sites[i] != i for i > max_dfo_idx.
 
-    std::cout << "\nHere are numbers 1" << std::endl;
-    for(auto j : candidate_sites) { std::cout << "candidate: " << j << std::endl; }
-    for(auto j : input_order) { std::cout << "input_order: " << j << std::endl; }
+    // std::cout << "\nHere are numbers 1" << std::endl;
+    // for(auto j : candidate_sites) { std::cout << "candidate: " << j << std::endl; }
+    // for(auto j : input_order) { std::cout << "input_order: " << j << std::endl; }
 
     // major while loop
     while(!candidate_sites.empty()){
+        for(auto j : candidate_sites) { std::cout << "candidate: " << j << std::endl; }
+        for(auto j : input_order) { std::cout << "input_order: " << j << std::endl; }
+        std::cout << "\n\nNew cycle: " << std::endl;
+
         int current_site = input_order[input_order.size()-1];
         std::cout << "current_site: " << current_site << std::endl;
         std::vector<int> next_site;
@@ -541,7 +545,7 @@ void DMRGSolver::compute_energy() {
 
         for(auto i : candidate_sites){
             rnn.push_back(Rij_input_idx->get(current_site, i));
-            std::cout << "Ri_current_site: " << Rij_input_idx->get(current_site, i) << std::endl;
+            std::cout << "Ri_current_site: " << Rij_input_idx->get(current_site, i)<< " i: " << i << std::endl;
         }
         std::vector<int> lowest_idx_nn = min_indicies(rnn);
 
@@ -585,7 +589,7 @@ void DMRGSolver::compute_energy() {
 
         }
 
-        std::cout << "\nHere are numbers 1" << std::endl;
+        std::cout << "\nHere are numbers 2" << std::endl;
         for(auto j : candidate_sites) { std::cout << "candidate: " << j << std::endl; }
         for(auto j : input_order) { std::cout << "input_order: " << j << std::endl; }
     }
