@@ -181,6 +181,9 @@ std::tuple<double, size_t, size_t> ui64_slater_sign_single(uint64_t l, uint64_t 
 
 UI64Determinant::UI64Determinant() : a_(0), b_(0) {}
 
+UI64Determinant::UI64Determinant(const UI64Determinant& original)
+    : a_(original.a_), b_(original.b_) {}
+
 UI64Determinant::UI64Determinant(const std::vector<bool>& occupation) : a_(0), b_(0) {
     int size = occupation.size() / 2;
     for (int p = 0; p < size; ++p)

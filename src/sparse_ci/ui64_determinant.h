@@ -39,7 +39,6 @@
 namespace forte {
 
 class ActiveSpaceIntegrals;
-// class STLBitsetDeterminant;
 
 class UI64Determinant {
   public:
@@ -48,6 +47,7 @@ class UI64Determinant {
     static constexpr int num_str_bits = 64;
 
     UI64Determinant();
+    UI64Determinant(const UI64Determinant& original);
     explicit UI64Determinant(const std::vector<bool>& occupation);
     /// Construct the determinant from an occupation vector that
     /// specifies the alpha and beta strings.  occupation = [Ia,Ib]
