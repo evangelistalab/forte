@@ -38,7 +38,7 @@
 
 namespace forte {
 
-class CI_Reference // : public psi::Wavefunction
+class CI_Reference
 {
   protected:
     // The wavefunction object

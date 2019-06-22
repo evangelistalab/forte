@@ -38,7 +38,6 @@ using namespace psi;
 #define ALFA(n) bits_[n]
 #define BETA(n) bits_[num_str_bits + n]
 
-
 namespace forte {
 
 STLBitsetDeterminant::bit_t make_mask(int nstr_bits, bool shift) {
@@ -79,11 +78,13 @@ STLBitsetDeterminant::STLBitsetDeterminant(const std::vector<bool>& occupation_a
 const STLBitsetDeterminant::bit_t& STLBitsetDeterminant::bits() const { return bits_; }
 
 std::bitset<STLBitsetDeterminant::num_str_bits> STLBitsetDeterminant::get_alfa_bits() const {
-    return std::bitset<STLBitsetDeterminant::num_str_bits>(bits_.to_string(), 0, STLBitsetDeterminant::num_str_bits);
+    return std::bitset<STLBitsetDeterminant::num_str_bits>(bits_.to_string(), 0,
+                                                           STLBitsetDeterminant::num_str_bits);
 }
 
 std::bitset<STLBitsetDeterminant::num_str_bits> STLBitsetDeterminant::get_beta_bits() const {
-    return std::bitset<STLBitsetDeterminant::num_str_bits>(bits_.to_string(), STLBitsetDeterminant::num_str_bits);
+    return std::bitset<STLBitsetDeterminant::num_str_bits>(bits_.to_string(),
+                                                           STLBitsetDeterminant::num_str_bits);
 }
 
 bool STLBitsetDeterminant::less_than(const STLBitsetDeterminant& rhs,
@@ -380,6 +381,7 @@ double STLBitsetDeterminant::slater_sign_b(int n) const {
         if (BETA(i))
             sign *= -1.0;
     }
+    sign *= (count_alfa() % 2 == 0 ? 1.0 : -1.0);
     return (sign);
 }
 
@@ -465,6 +467,30 @@ double STLBitsetDeterminant::double_excitation_bb(int i, int j, int a, int b) {
     BETA(b) = true;
     BETA(a) = true;
     return slater_sign_bbbb(i, j, a, b);
+}
+
+double STLBitsetDeterminant::gen_excitation(const std::vector<int>& aann,
+                                            const std::vector<int>& acre,
+                                            const std::vector<int>& bann,
+                                            const std::vector<int>& bcre) {
+    double sign = 1.0;
+    for (auto i : aann) {
+        sign *= slater_sign_a(i) * get_alfa_bit(i);
+        ALFA(i) = false;
+    }
+    for (auto i : acre) {
+        sign *= slater_sign_a(i) * (1 - get_alfa_bit(i));
+        ALFA(i) = true;
+    }
+    for (auto i : bann) {
+        sign *= slater_sign_b(i) * get_beta_bit(i);
+        BETA(i) = false;
+    }
+    for (auto i : bcre) {
+        sign *= slater_sign_b(i) * (1 - get_beta_bit(i));
+        BETA(i) = true;
+    }
+    return sign;
 }
 
 std::vector<std::pair<STLBitsetDeterminant, double>> STLBitsetDeterminant::spin_plus() const {
@@ -660,4 +686,3 @@ void enforce_spin_completeness(std::vector<STLBitsetDeterminant>& det_space, int
     //}
 }
 } // namespace forte
-

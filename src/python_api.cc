@@ -54,7 +54,10 @@
 #include "base_classes/scf_info.h"
 #include "mrdsrg-helper/run_dsrg.h"
 #include "mrdsrg-spin-integrated/master_mrdsrg.h"
+
 #include "sparse_ci/determinant.h"
+#include "sparse_ci/determinant_hashvector.h"
+#include "sparse_ci/determinant_sq_operator.h"
 
 namespace py = pybind11;
 using namespace pybind11::literals;
@@ -140,7 +143,25 @@ void export_Determinant(py::module& m) {
         .def("create_beta_bit", &Determinant::create_beta_bit, "n"_a, "Create a beta bit")
         .def("destroy_alfa_bit", &Determinant::destroy_alfa_bit, "n"_a, "Destroy an alpha bit")
         .def("destroy_beta_bit", &Determinant::destroy_beta_bit, "n"_a, "Destroy a beta bit")
-        .def("str", &Determinant::str, "Get the string representation of the Slater determinant");
+        .def("gen_excitation", &Determinant::gen_excitation, "Apply a generic excitation")
+        .def("str", &Determinant::str, "Get the string representation of the Slater determinant")
+        .def("__repr__", [](const Determinant& a) { return a.str(); })
+        .def("__str__", [](const Determinant& a) { return a.str(); })
+        .def("__eq__", [](const Determinant& a, const Determinant& b) { return a == b; })
+        .def("__lt__", [](const Determinant& a, const Determinant& b) { return a < b; })
+        .def("__hash__", [](const Determinant& a) { return Determinant::Hash()(a); });
+    py::class_<DeterminantHashVec>(m, "DeterminantHashVec")
+        .def(py::init<>())
+        .def(py::init<const std::vector<Determinant>&>())
+        .def(py::init<const det_hashvec&>())
+        .def("add", &DeterminantHashVec::add, "Add a determinant")
+        .def("size", &DeterminantHashVec::size, "Get the size of the vector")
+        .def("get_det", &DeterminantHashVec::get_det, "Return a specific determinant by reference")
+        .def("get_idx", &DeterminantHashVec::get_idx, " Return the index of a determinant");
+
+    py::class_<DeterminantSQOperator>(m, "DeterminantSQOperator")
+        .def(py::init<>())
+        .def("add_operator", &DeterminantSQOperator::add_operator, "Add an operator");
 }
 
 // TODO: export more classes using the function above

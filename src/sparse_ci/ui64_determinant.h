@@ -36,7 +36,6 @@
 
 #include "determinant_common.h"
 
-
 namespace forte {
 
 class ActiveSpaceIntegrals;
@@ -138,6 +137,22 @@ class UI64Determinant {
     double double_excitation_ab(int i, int j, int a, int b);
     /// Perform an beta-beta double excitation (IJ -> AB)
     double double_excitation_bb(int i, int j, int a, int b);
+    /**
+     * @brief Apply a general excitation operator to this determinant
+     *        Details:
+     *        (bc)_n ... (bc)_1 (ba)_n ... (ba)_1 (ac)_n ... (ac)_1 (aa)_n ... (aa)_1 |det>
+     *        where aa = alpha annihilation operator
+     *        where ac = alpha creation operator
+     *        where ba = alpha annihilation operator
+     *        where bc = alpha creation operator
+     * @param aann list of alpha orbitals to annihilate
+     * @param acre list of alpha orbitals to create
+     * @param bann list of beta orbitals to annihilate
+     * @param bcre list of beta orbitals to create
+     * @return the sign of the final determinant (+1, -1, or 0)
+     */
+    double gen_excitation(const std::vector<int>& aann, const std::vector<int>& acre,
+                          const std::vector<int>& bann, const std::vector<int>& bcre);
 
     /// Save the Slater determinant as a string
     /// @param n number of bits to print (number of MOs)
@@ -193,6 +208,6 @@ UI64Determinant union_occupation(const UI64Determinant& lhs, const UI64Determina
 void enforce_spin_completeness(std::vector<UI64Determinant>& det_space, int nmo);
 
 template <typename T1, typename T2> T1 make_det(const T2& d);
-}
+} // namespace forte
 
 #endif // _ui64_determinant_h_
