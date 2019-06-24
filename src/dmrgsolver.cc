@@ -270,6 +270,7 @@ void DMRGSolver::compute_energy() {
     int* dmrg_states = options_.get_int_array("DMRG_STATES");
     const bool reorder_orbs = options_.get_bool("REORDER_ORBS");
     int* dmrg_custom_orb_order = options_.get_int_array("DMRG_CUSTOM_ORB_ORDER");
+    const bool auto_loc_orb_reorder = options_.get_bool("AUTO_REORDER_LOC_ORBS");
     const int ndmrg_states = options_["DMRG_STATES"].size();
     double* dmrg_econv = options_.get_double_array("DMRG_ECONV");
     const int ndmrg_econv = options_["DMRG_ECONV"].size();
@@ -504,122 +505,123 @@ void DMRGSolver::compute_energy() {
         outfile->Printf(" %i", input2ham[k]);
     }
 
-    // Initialize containers
-    //all of the sites
-    std::vector<int> candidate_sites;
-    for(int i = 0; i < nact; i++){ candidate_sites.push_back(i); }
-    //the ordering for the dmrg orbitals with input indexing (will later be
-    // converted to hamiltioan energy indexing):
-    std::vector<int> input_order;
+    if(auto_loc_orb_reorder){
+        // Initialize containers
+        //all of the sites
+        std::vector<int> candidate_sites;
+        for(int i = 0; i < nact; i++){ candidate_sites.push_back(i); }
+        //the ordering for the dmrg orbitals with input indexing (will later be
+        // converted to hamiltioan energy indexing):
+        std::vector<int> input_order;
 
-    //find first site (distance from origin vector)
-    std::vector<int> dfo;
-    for(int i = 0; i < nact; i++){
-        double val = (Rxyz->get(i, 0))*(Rxyz->get(i, 0));
-        val += (Rxyz->get(i, 1))*(Rxyz->get(i, 1));
-        val += (Rxyz->get(i, 2))*(Rxyz->get(i, 2));
-        dfo.push_back(val);
-    }
+        //find first site (distance from origin vector)
+        std::vector<int> dfo;
+        for(int i = 0; i < nact; i++){
+            double val = (Rxyz->get(i, 0))*(Rxyz->get(i, 0));
+            val += (Rxyz->get(i, 1))*(Rxyz->get(i, 1));
+            val += (Rxyz->get(i, 2))*(Rxyz->get(i, 2));
+            dfo.push_back(val);
+        }
 
-    // use the lowest input indexed site if there are several sites with equal max dfo.
-    int max_dfo_idx = std::max_element(dfo.begin(), dfo.end()) - dfo.begin();
+        // use the lowest input indexed site if there are several sites with equal max dfo.
+        int max_dfo_idx = std::max_element(dfo.begin(), dfo.end()) - dfo.begin();
 
-    //add as first site and remove from candidates list
-    input_order.push_back(max_dfo_idx);
-    candidate_sites.erase(candidate_sites.begin() + max_dfo_idx); // after this candidate_sites[i] != i for i > max_dfo_idx.
+        //add as first site and remove from candidates list
+        input_order.push_back(max_dfo_idx);
+        candidate_sites.erase(candidate_sites.begin() + max_dfo_idx); // after this candidate_sites[i] != i for i > max_dfo_idx.
 
-    // std::cout << "\nHere are numbers 1" << std::endl;
-    // for(auto j : candidate_sites) { std::cout << "candidate: " << j << std::endl; }
-    // for(auto j : input_order) { std::cout << "input_order: " << j << std::endl; }
-
-    // major while loop
-    while(!candidate_sites.empty()){
+        // std::cout << "\nHere are numbers 1" << std::endl;
         // for(auto j : candidate_sites) { std::cout << "candidate: " << j << std::endl; }
         // for(auto j : input_order) { std::cout << "input_order: " << j << std::endl; }
-        // std::cout << "\n\nNew cycle: " << std::endl;
 
-        int current_site = input_order[input_order.size()-1];
-        // std::cout << "current_site: " << current_site << std::endl;
-        std::vector<int> next_site;
-        std::vector<double> rnn;
+        // major while loop
+        while(!candidate_sites.empty()){
+            // for(auto j : candidate_sites) { std::cout << "candidate: " << j << std::endl; }
+            // for(auto j : input_order) { std::cout << "input_order: " << j << std::endl; }
+            // std::cout << "\n\nNew cycle: " << std::endl;
 
-        for(auto i : candidate_sites){
-            rnn.push_back(Rij_input_idx->get(current_site, i));
-            // std::cout << "Ri_current_site: " << Rij_input_idx->get(current_site, i)<< " i: " << i << std::endl;
-        }
-        std::vector<int> lowest_idx_nn = min_indicies(rnn);
+            int current_site = input_order[input_order.size()-1];
+            // std::cout << "current_site: " << current_site << std::endl;
+            std::vector<int> next_site;
+            std::vector<double> rnn;
 
-        // for(auto i : lowest_idx_nn){
-        //     std::cout << "lowest_idx_nn: " << i << std::endl;
-        // }
-        for(auto i : lowest_idx_nn){ next_site.push_back(candidate_sites[i]); }
+            for(auto i : candidate_sites){
+                rnn.push_back(Rij_input_idx->get(current_site, i));
+                // std::cout << "Ri_current_site: " << Rij_input_idx->get(current_site, i)<< " i: " << i << std::endl;
+            }
+            std::vector<int> lowest_idx_nn = min_indicies(rnn);
 
-        // for(auto j : next_site) { std::cout << "next_site: " << j << std::endl; }
+            // for(auto i : lowest_idx_nn){
+            //     std::cout << "lowest_idx_nn: " << i << std::endl;
+            // }
+            for(auto i : lowest_idx_nn){ next_site.push_back(candidate_sites[i]); }
 
-        //fine next nearest neighabor
-        // if on 1st site
-        if(input_order.size() == 1){
-            input_order.push_back(next_site[0]);
-            // get index of next site in candidate_sites
-            std::vector<int>::iterator it = std::find(candidate_sites.begin(), candidate_sites.end(), next_site[0]);
-            int idx_of_site2remove = std::distance(candidate_sites.begin(), it);
-            candidate_sites.erase(candidate_sites.begin() + idx_of_site2remove);
-        } else { // if on the 2nd site or higher
+            // for(auto j : next_site) { std::cout << "next_site: " << j << std::endl; }
 
-            if(next_site.size() > 1){
-                std::vector<double> rnnn;
-                int previous_site = input_order[input_order.size()-2];
-                for(auto i : next_site){
-                    rnnn.push_back(Rij_input_idx->get(previous_site, i));
-                    // std::cout << "Ri_current_site-1: " << Rij_input_idx->get(previous_site, i) << std::endl;
-                }
-                //order according to next nearest neighabor
-                std::vector<int> lowest_idx_nnn = min_indicies(rnnn);
-
-                // for(auto i : lowest_idx_nnn){
-                //     std::cout << "lowest_idx_nnn: " << i << std::endl;
-                // }
-
-                //add the next site!
-                input_order.push_back(next_site[lowest_idx_nnn[0]]);
-
-                //erase form candidate_sites
-                std::vector<int>::iterator it = std::find(candidate_sites.begin(), candidate_sites.end(), next_site[lowest_idx_nnn[0]]);
-                int idx_of_site2remove = std::distance(candidate_sites.begin(), it);
-                candidate_sites.erase(candidate_sites.begin() + idx_of_site2remove);
-            } else {
+            //fine next nearest neighabor
+            // if on 1st site
+            if(input_order.size() == 1){
                 input_order.push_back(next_site[0]);
                 // get index of next site in candidate_sites
                 std::vector<int>::iterator it = std::find(candidate_sites.begin(), candidate_sites.end(), next_site[0]);
                 int idx_of_site2remove = std::distance(candidate_sites.begin(), it);
                 candidate_sites.erase(candidate_sites.begin() + idx_of_site2remove);
+            } else { // if on the 2nd site or higher
+
+                if(next_site.size() > 1){
+                    std::vector<double> rnnn;
+                    int previous_site = input_order[input_order.size()-2];
+                    for(auto i : next_site){
+                        rnnn.push_back(Rij_input_idx->get(previous_site, i));
+                        // std::cout << "Ri_current_site-1: " << Rij_input_idx->get(previous_site, i) << std::endl;
+                    }
+                    //order according to next nearest neighabor
+                    std::vector<int> lowest_idx_nnn = min_indicies(rnnn);
+
+                    // for(auto i : lowest_idx_nnn){
+                    //     std::cout << "lowest_idx_nnn: " << i << std::endl;
+                    // }
+
+                    //add the next site!
+                    input_order.push_back(next_site[lowest_idx_nnn[0]]);
+
+                    //erase form candidate_sites
+                    std::vector<int>::iterator it = std::find(candidate_sites.begin(), candidate_sites.end(), next_site[lowest_idx_nnn[0]]);
+                    int idx_of_site2remove = std::distance(candidate_sites.begin(), it);
+                    candidate_sites.erase(candidate_sites.begin() + idx_of_site2remove);
+                } else {
+                    input_order.push_back(next_site[0]);
+                    // get index of next site in candidate_sites
+                    std::vector<int>::iterator it = std::find(candidate_sites.begin(), candidate_sites.end(), next_site[0]);
+                    int idx_of_site2remove = std::distance(candidate_sites.begin(), it);
+                    candidate_sites.erase(candidate_sites.begin() + idx_of_site2remove);
+                }
+
             }
 
+            // std::cout << "\nHere are numbers 2" << std::endl;
+            // for(auto j : candidate_sites) { std::cout << "candidate: " << j << std::endl; }
+            // for(auto j : input_order) { std::cout << "input_order: " << j << std::endl; }
         }
 
-        // std::cout << "\nHere are numbers 2" << std::endl;
-        // for(auto j : candidate_sites) { std::cout << "candidate: " << j << std::endl; }
-        // for(auto j : input_order) { std::cout << "input_order: " << j << std::endl; }
+        outfile->Printf("\nAutomated DMRG localized obrital order (input indexing):");
+        for(int k = 0; k<nact; k++){
+            outfile->Printf(" %i", input_order[k]);
+        }
+
+        // And F#&%&ING finally, reorder with hamiltonian ordering
+        std::vector<int> ham_order;
+        for(int k = 0; k<nact; k++){
+            ham_order.push_back(input2ham[input_order[k]]);
+        }
+
+        outfile->Printf("\nAutomated DMRG localized obrital order (hamiltonian indexing):");
+        for(int k = 0; k<nact; k++){
+            outfile->Printf(" %i", ham_order[k]);
+        }
+
+        //// END AUTO REORDERING ////
     }
-
-    outfile->Printf("\nAutomated DMRG localized obrital order (input indexing):");
-    for(int k = 0; k<nact; k++){
-        outfile->Printf(" %i", input_order[k]);
-    }
-
-    // And F#&%&ING finally, reorder with hamiltonian ordering
-    std::vector<int> ham_order;
-    for(int k = 0; k<nact; k++){
-        ham_order.push_back(input2ham[input_order[k]]);
-    }
-
-    outfile->Printf("\nAutomated DMRG localized obrital order (hamiltonian indexing):");
-    for(int k = 0; k<nact; k++){
-        outfile->Printf(" %i", ham_order[k]);
-    }
-
-    //// END AUTO REORDERING ////
-
     /// If one does not provide integrals when they call solver, compute them
     /// yourself
     if (!use_user_integrals_) {
