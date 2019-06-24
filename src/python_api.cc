@@ -128,6 +128,7 @@ constexpr int Determinant::num_det_bits;
 void export_Determinant(py::module& m) {
     py::class_<Determinant>(m, "Determinant")
         .def(py::init<>())
+        .def(py::init<const Determinant&>())
         .def(py::init<const std::vector<bool>&, const std::vector<bool>&>())
         .def("get_alfa_bits", &Determinant::get_alfa_bits, "Get alpha bits")
         .def("get_beta_bits", &Determinant::get_beta_bits, "Get beta bits")

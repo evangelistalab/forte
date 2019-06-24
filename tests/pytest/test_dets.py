@@ -16,9 +16,84 @@ def det(s):
             d.create_beta_bit(k)
     return d
 
+def test_dets_constructors():
+    """Test class constructors"""
+    print("Testing determinant interface")
+    d1 = det("22")
+    d2 = forte.Determinant(d1)
+    d3 = forte.Determinant([True,True],[True,True])
+    assert d1 == d2
+    assert d1 == d3
+
+def test_dets_getset():
+    """Test get/set operations"""
+    print("Testing determinant interface")
+    d = det("")
+    assert d.get_alfa_bit(0) == 0
+    assert d.get_alfa_bit(7) == 0
+    assert d.get_beta_bit(0) == 0
+    assert d.get_beta_bit(7) == 0
+    d.set_alfa_bit(7, True)
+    assert d.get_alfa_bit(7) == 1
+    d.set_beta_bit(7, True)
+    assert d.get_beta_bit(7) == 1
+    d.set_alfa_bit(7, False)
+    assert d.get_alfa_bit(7) == 0
+    d.set_beta_bit(7, False)
+    assert d.get_beta_bit(7) == 0
+
+def test_dets_creann():
+    d = det("2200")
+    sign = d.create_alfa_bit(2)
+    assert d == det("22+0")
+    assert sign == +1.0
+
+    sign = d.create_alfa_bit(3)
+    assert d == det("22++")
+    assert sign == -1.0
+
+    sign = d.destroy_alfa_bit(0)
+    assert d == det("-2++")
+    assert sign == 1.0
+
+    sign = d.destroy_alfa_bit(2)
+    assert d == det("-20+")
+    assert sign == -1.0
+
+    sign = d.create_beta_bit(2)
+    assert d == det("-2-+")
+    assert sign == 1.0
+
+    sign = d.create_beta_bit(3)
+    assert d == det("-2-2")
+    assert sign == -1.0
+
+    sign = d.destroy_beta_bit(0)
+    assert d == det("02-2")
+    assert sign == 1.0
+
+    d = det("+")
+    sign = d.create_beta_bit(0)
+    assert d == det("2")
+    assert sign == -1.0
+
+    sign = d.create_beta_bit(0)
+    assert sign == 0.0
+
+    d = det("2")
+    sign = d.create_alfa_bit(0)
+    assert sign == 0.0
+
+    d = det("2")
+    sign = d.destroy_alfa_bit(1)
+    assert sign == 0.0
+
+    d = det("2")
+    sign = d.destroy_beta_bit(1)
+    assert sign == 0.0
+
 def test_dets_equality():
     """Test the __eq__ operator"""
-    print("Testing determinant interface")
     d1 = det("22")
     d2 = det("2+")
     d3 = det("22")

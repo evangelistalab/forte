@@ -57,7 +57,7 @@ const STLBitsetDeterminant::bit_t STLBitsetDeterminant::beta_mask =
 STLBitsetDeterminant::STLBitsetDeterminant() {}
 
 STLBitsetDeterminant::STLBitsetDeterminant(const STLBitsetDeterminant& original)
-    bits_(original.bits_) {}
+    : bits_(original.bits_) {}
 
 STLBitsetDeterminant::STLBitsetDeterminant(const bit_t& bits) { bits_ = bits; }
 
