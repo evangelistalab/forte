@@ -619,8 +619,10 @@ void DMRGSolver::compute_energy() {
         for(int k = 0; k<nact; k++){
             outfile->Printf(" %i", ham_order[k]);
         }
-
-        Prob->setup_reorder_custom(ham_order);
+        int ham_order_aray[nact];
+        for(int i=0; i < nact; i++){ ham_order_aray[i] = ham_order[i]; }
+        int* ham_order_ptr = ham_order_aray;
+        Prob->setup_reorder_custom(ham_order_ptr);
         //// END AUTO REORDERING ////
     }
 
