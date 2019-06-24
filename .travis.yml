@@ -62,3 +62,5 @@ script:
   - cd ${TRAVIS_BUILD_DIR}
   - ./forte_tests
   - ./forte_benchmarks
+  - cd ${TRAVIS_BUILD_DIR}/tests/pytest
+  - pytest
