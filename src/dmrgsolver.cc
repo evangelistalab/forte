@@ -622,6 +622,14 @@ void DMRGSolver::compute_energy() {
 
         //// END AUTO REORDERING ////
     }
+
+    if(auto_loc_orb_reorder){
+        Prob->setup_reorder_custom(ham_order);
+        // for(int i=0; i<mo_space_info_->size("ACTIVE"); i++){
+        //   std::cout << "\n f2: " << Prob->gf2(i) << std::endl;
+        // }
+    }
+
     /// If one does not provide integrals when they call solver, compute them
     /// yourself
     if (!use_user_integrals_) {
