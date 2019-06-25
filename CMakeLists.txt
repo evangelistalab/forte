@@ -75,10 +75,8 @@ src/casscf/casscf.cc
 src/ci_rdm/ci_rdms.cc
 src/ci_rdm/ci_rdms_dynamic.cc
 src/sparse_ci/ci_reference.cc
-src/helpers/davidson.cc
 src/sparse_ci/determinant_hashvector.cc
 src/sparse_ci/determinant_sq_operator.cc
-src/helpers/davidson.cc
 src/dmrg/dmrgscf.cc
 src/dmrg/dmrgsolver.cc
 src/base_classes/dynamic_correlation_solver.cc
