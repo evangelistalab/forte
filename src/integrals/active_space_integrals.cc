@@ -26,6 +26,8 @@
  * @END LICENSE
  */
 
+#include <cmath>
+
 #include "psi4/libpsi4util/PsiOutStream.h"
 
 #include "base_classes/mo_space_info.h"
