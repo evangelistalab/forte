@@ -103,6 +103,9 @@ df-dsrg-mrpt2:
    - df-dsrg-mrpt2-7-localized-actv
   unused:
    - df-dsrg-mrpt2-testccvv
+dsrg-mrpt2_spin_adapted:
+  short:
+   - dsrg-mrpt2_spin_adapted-1
 dsrg-mrpt2:
   short:
    - dsrg-mrpt2-1
@@ -187,6 +190,11 @@ mr-dsrg-pt2:
    - mr-dsrg-pt2-2
    - mr-dsrg-pt2-3
 #   - mr-dsrg-pt2-4
+mrdsrg_so:
+  short:
+   - mrdsrg_so-1
+  long:
+   - mrdsrg_so-2
 mrdsrg-ldsrg2-df:
   long:
    - mrdsrg-ldsrg2-df-seq-1

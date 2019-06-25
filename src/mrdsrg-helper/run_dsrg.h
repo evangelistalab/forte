@@ -9,6 +9,9 @@
 #include "mrdsrg-spin-integrated/master_mrdsrg.h"
 #include "mrdsrg-spin-integrated/three_dsrg_mrpt2.h"
 #include "mrdsrg-spin-integrated/mrdsrg.h"
+#include "mrdsrg-so/mrdsrg_so.h"
+#include "mrdsrg-so/so-mrdsrg.h"
+#include "mrdsrg-spin-adapted/dsrg_mrpt.h"
 
 namespace forte {
 
@@ -44,6 +47,21 @@ std::unique_ptr<MASTER_DSRG> make_dsrg_method(const std::string& method, RDMs rd
                                               std::shared_ptr<ForteOptions> options,
                                               std::shared_ptr<ForteIntegrals> ints,
                                               std::shared_ptr<MOSpaceInfo> mo_space_info);
+
+std::unique_ptr<MRDSRG_SO> make_dsrg_so_y(RDMs rdms, std::shared_ptr<SCFInfo> scf_info,
+                                        std::shared_ptr<ForteOptions> options,
+                                        std::shared_ptr<ForteIntegrals> ints,
+                                        std::shared_ptr<MOSpaceInfo> mo_space_info);
+
+std::unique_ptr<SOMRDSRG> make_dsrg_so_f(RDMs rdms, std::shared_ptr<SCFInfo> scf_info,
+                                        std::shared_ptr<ForteOptions> options,
+                                        std::shared_ptr<ForteIntegrals> ints,
+                                        std::shared_ptr<MOSpaceInfo> mo_space_info);
+
+std::unique_ptr<DSRG_MRPT> make_dsrg_spin_adapted(RDMs rdms, std::shared_ptr<SCFInfo> scf_info,
+                                                  std::shared_ptr<ForteOptions> options,
+                                                  std::shared_ptr<ForteIntegrals> ints,
+                                                  std::shared_ptr<MOSpaceInfo> mo_space_info);
 
 } // namespace forte
 

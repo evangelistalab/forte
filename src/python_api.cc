@@ -191,7 +191,12 @@ PYBIND11_MODULE(forte, m) {
           "Make an object that holds the molecular orbital integrals for the active orbitals");
     m.def("make_dynamic_correlation_solver", &make_dynamic_correlation_solver,
           "Make a dynamical correlation solver");
-    m.def("make_dsrg_method", &make_dsrg_method, "Make a DSRG method");
+    m.def("make_dsrg_method", &make_dsrg_method,
+          "Make a DSRG method (spin-integrated implementation)");
+    m.def("make_dsrg_so_y", &make_dsrg_so_y, "Make a DSRG pointer (spin-orbital implementation)");
+    m.def("make_dsrg_so_f", &make_dsrg_so_f, "Make a DSRG pointer (spin-orbital implementation)");
+    m.def("make_dsrg_spin_adapted", &make_dsrg_spin_adapted,
+          "Make a DSRG pointer (spin-adapted implementation)");
 
     export_ForteOptions(m);
 
@@ -276,6 +281,23 @@ PYBIND11_MODULE(forte, m) {
              "Return nuclear components of dipole moments")
         .def("set_Uactv", &MASTER_DSRG::set_Uactv, "Ua"_a, "Ub"_a,
              "Set active part orbital rotation matrix (from original to semicanonical)");
+
+    // export MRDSRG_SO
+    py::class_<MRDSRG_SO>(m, "MRDSRG_SO")
+        .def("compute_energy", &MRDSRG_SO::compute_energy, "Compute DSRG energy")
+        .def("compute_Heff_actv", &MRDSRG_SO::compute_Heff_actv,
+             "Return the DSRG dressed ActiveSpaceIntegrals");
+    // export SOMRDSRG
+    py::class_<SOMRDSRG>(m, "SOMRDSRG")
+        .def("compute_energy", &SOMRDSRG::compute_energy, "Compute DSRG energy")
+        .def("compute_Heff_actv", &SOMRDSRG::compute_Heff_actv,
+             "Return the DSRG dressed ActiveSpaceIntegrals");
+
+    // export DSRG_MRPT spin-adapted code
+    py::class_<DSRG_MRPT>(m, "DSRG_MRPT")
+        .def("compute_energy", &DSRG_MRPT::compute_energy, "Compute DSRG energy")
+        .def("compute_Heff_actv", &DSRG_MRPT::compute_Heff_actv,
+             "Return the DSRG dressed ActiveSpaceIntegrals");
 
     // export DressedQuantity for dipole moments
     py::class_<DressedQuantity>(m, "DressedQuantity")

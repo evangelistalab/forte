@@ -67,11 +67,12 @@ def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
         Ua = semi.Ua_t()
         Ub = semi.Ub_t()
 
-        dsrg = forte.make_dsrg_method(correlation_solver_type, rdms,
-                                      scf_info, options, ints, mo_space_info)
-        dsrg.set_Uactv(Ua, Ub)
-        Edsrg = dsrg.compute_energy()
-        psi4.core.set_scalar_variable('UNRELAXED ENERGY', Edsrg)
+        Edsrg, dsrg, Heff_actv_implemented = compute_dsrg_unrelaxed_energy(correlation_solver_type,
+                                                                           rdms, scf_info, options,
+                                                                           ints, mo_space_info,
+                                                                           Ua, Ub)
+        if not Heff_actv_implemented:
+            return Edsrg
 
         # dipole moment related
         do_dipole = options.get_bool("DSRG_DIPOLE")
@@ -261,6 +262,26 @@ def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
         return_en = average_energy
 
     return return_en
+
+def compute_dsrg_unrelaxed_energy(correlation_solver_type, rdms, scf_info, options,
+                                  ints, mo_space_info, Ua, Ub):
+    Heff_actv_implemented = False
+
+    if correlation_solver_type == "MRDSRG_SO":
+        dsrg = forte.make_dsrg_so_y(rdms, scf_info, options, ints, mo_space_info)
+    elif correlation_solver_type == "SOMRDSRG":
+        dsrg = forte.make_dsrg_so_f(rdms, scf_info, options, ints, mo_space_info)
+    elif correlation_solver_type == "DSRG_MRPT":
+        dsrg = forte.make_dsrg_spin_adapted(rdms, scf_info, options, ints, mo_space_info)
+    else:
+        Heff_actv_implemented = True
+        dsrg = forte.make_dsrg_method(correlation_solver_type, rdms, scf_info, options, ints, mo_space_info)
+        dsrg.set_Uactv(Ua, Ub)
+
+    Edsrg = dsrg.compute_energy()
+    psi4.core.set_scalar_variable('UNRELAXED ENERGY', Edsrg)
+
+    return Edsrg, dsrg, Heff_actv_implemented
 
 def orbital_projection(ref_wfn, options):
     r"""

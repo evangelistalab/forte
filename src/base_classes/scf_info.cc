@@ -4,7 +4,7 @@ namespace forte {
 
 SCFInfo::SCFInfo(psi::SharedWavefunction wfn)
     : doccpi_(wfn->doccpi()), soccpi_(wfn->soccpi()), nsopi_(wfn->nsopi()),
-      energy_(wfn->reference_energy()), epsilon_a_(wfn->epsilon_a()), epsilon_b_(wfn->epsilon_b()) {
+      energy_(wfn->energy()), epsilon_a_(wfn->epsilon_a()), epsilon_b_(wfn->epsilon_b()) {
 
 }
 
