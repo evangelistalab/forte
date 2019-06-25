@@ -49,12 +49,17 @@ namespace forte {
 /**
  * @brief tensor_to_matrix
  * @param t The input tensor
+ * @return A copy of the tensor data ignoring symmetry blocks
+ */
+psi::SharedMatrix tensor_to_matrix(ambit::Tensor t);
+
+/**
+ * @brief tensor_to_matrix
+ * @param t The input tensor
  * @param dims psi::Dimensions of the matrix extracted from the tensor
  * @return A copy of the tensor data in symmetry blocked form
  */
-psi::Matrix tensor_to_matrix(ambit::Tensor t, psi::Dimension dims);
-
-psi::SharedMatrix tensor_to_matrix(ambit::Tensor t);
+psi::SharedMatrix tensor_to_matrix(ambit::Tensor t, psi::Dimension dims);
 
 /// Save a vector of double to file
 void write_disk_vector_double(const std::string& filename, const std::vector<double>& data);
