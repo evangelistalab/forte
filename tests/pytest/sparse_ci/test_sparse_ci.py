@@ -35,6 +35,7 @@ def test_sparse_ci():
     mo_space_info = forte.make_mo_space_info(wfn, forte_options)
     ints = forte.make_forte_integrals(wfn, options, mo_space_info)
     as_ints = forte.make_active_space_ints(mo_space_info, ints, 'ACTIVE', ['RESTRICTED_DOCC'])
+    as_ints.print()
 
     print('\n\n  => Sparse FCI Test <=')
     print('  Number of irreps: {}'.format(nirrep))
@@ -90,7 +91,7 @@ def test_sparse_ci():
     # Find the lowest eigenvalue
     efci = np.linalg.eigh(H)[0][0]
 
-    print('  FCI Energy: {}'.format(efci))
+    print('\n  FCI Energy: {}\n'.format(efci))
 
     assert efci == pytest.approx(ref_fci, 1.0e-9)
 

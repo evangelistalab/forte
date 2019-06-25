@@ -53,10 +53,6 @@ class ActiveSpaceIntegrals {
     ActiveSpaceIntegrals(std::shared_ptr<ForteIntegrals> ints, std::vector<size_t> active_mo,
                          std::vector<size_t> rdocc_mo);
 
-    /// Constructor that needs to be deleted
-    ActiveSpaceIntegrals(std::shared_ptr<ForteIntegrals> ints,
-                         std::shared_ptr<MOSpaceInfo> mospace_info);
-
     // ==> Class Interface <==
 
     /// Return the
@@ -87,15 +83,15 @@ class ActiveSpaceIntegrals {
     /// Compute the matrix element of the Hamiltonian between this determinant
     /// and a given one
     double slater_rules(const Determinant& lhs, const Determinant& rhs) const;
-    /// Compute the matrix element of the Hamiltonian between this determinant
-    /// and a given one
-    double slater_rules_single_alpha(const Determinant& lhs, const Determinant& rhs) const;
-    double slater_rules_single_beta(const Determinant& lhs, const Determinant& rhs) const;
-    double slater_rules_double_alpha_alpha(const Determinant& lhs, const Determinant& rhs) const;
-    double slater_rules_double_beta_beta(const Determinant& lhs, const Determinant& rhs) const;
-    double slater_rules_double_alpha_beta(const Determinant& lhs, const Determinant& rhs) const;
-    double slater_rules_double_alpha_beta_pre(const Determinant& lhs, const Determinant& rhs, int i,
-                                              int k) const;
+//    /// Compute the matrix element of the Hamiltonian between this determinant
+//    /// and a given one
+//    double slater_rules_single_alpha(const Determinant& lhs, const Determinant& rhs) const;
+//    double slater_rules_single_beta(const Determinant& lhs, const Determinant& rhs) const;
+//    double slater_rules_double_alpha_alpha(const Determinant& lhs, const Determinant& rhs) const;
+//    double slater_rules_double_beta_beta(const Determinant& lhs, const Determinant& rhs) const;
+//    double slater_rules_double_alpha_beta(const Determinant& lhs, const Determinant& rhs) const;
+//    double slater_rules_double_alpha_beta_pre(const Determinant& lhs, const Determinant& rhs, int i,
+//                                              int k) const;
     /// Compute the matrix element of the Hamiltonian between this determinant
     /// and a given one
     double slater_rules_single_alpha(const Determinant& det, int i, int a) const;
@@ -167,6 +163,7 @@ class ActiveSpaceIntegrals {
     /// If you want more control, don't use this function.
     void set_active_integrals_and_restricted_docc();
 
+    /// Print the alpha-alpha integrals
     void print();
 
   private:
