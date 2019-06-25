@@ -137,7 +137,7 @@ def test_dets_sorting():
     assert sorted_list[2] == d4
     assert sorted_list[3] == d1
 
-def test_dets_sorting():
+def test_dets_exciting():
     """Test the gen_operator function"""
     # test a -> a excitation
     d1 = det("220")

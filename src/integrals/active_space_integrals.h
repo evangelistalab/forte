@@ -43,7 +43,13 @@ class ActiveSpaceIntegrals {
   public:
     // ==> Class Constructors <==
 
-    /// Generating a contructor to create the active integrals
+    /**
+     * @brief Contructor to create integrals for an active space
+     * @param ints forte integral object
+     * @param active_mo the list of active orbitals
+     * @param rdocc_mo the list of orbitals that are doubly occupied. This information is used
+     *                 to form the effective one-electron operator
+     */
     ActiveSpaceIntegrals(std::shared_ptr<ForteIntegrals> ints, std::vector<size_t> active_mo,
                          std::vector<size_t> rdocc_mo);
 

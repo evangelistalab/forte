@@ -239,7 +239,12 @@ PYBIND11_MODULE(forte, m) {
         .def("frozen_core_energy", &ActiveSpaceIntegrals::frozen_core_energy,
              "Get the frozen core energy (contribution from FROZEN_DOCC)")
         .def("scalar_energy", &ActiveSpaceIntegrals::scalar_energy,
-             "Get the scalar_energy energy (contribution from RESTRICTED_DOCC)");
+             "Get the scalar_energy energy (contribution from RESTRICTED_DOCC)")
+        .def("oei_a", &ActiveSpaceIntegrals::oei_a, "Get the alpha effective one-electron integral")
+        .def("oei_b", &ActiveSpaceIntegrals::oei_b, "Get the beta effective one-electron integral")
+        .def("tei_aa", &ActiveSpaceIntegrals::tei_aa, "alpha-alpha two-electron integral <pq||rs>")
+        .def("tei_ab", &ActiveSpaceIntegrals::tei_ab, "alpha-beta two-electron integral <pq|rs>")
+        .def("tei_bb", &ActiveSpaceIntegrals::tei_bb, "beta-beta two-electron integral <pq||rs>");
 
     // export SemiCanonical
     py::class_<SemiCanonical>(m, "SemiCanonical")
