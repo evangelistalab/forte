@@ -165,7 +165,6 @@ src/mrdsrg-spin-integrated/three_dsrg_mrpt2.cc
 src/mrdsrg-spin-integrated/active_dsrgpt2.cc
 src/mrdsrg-spin-integrated/dwms_mrpt2.cc
 src/orbital-helpers/ao_helper.cc
-src/orbital-helpers/es-nos.cc
 src/orbital-helpers/localize.cc
 src/orbital-helpers/iao_builder.cc
 src/orbital-helpers/mp2_nos.cc
