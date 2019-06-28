@@ -441,11 +441,16 @@ void DMRGSolver::compute_energy() {
 
     // initalize approprate containers
     // want to make Rij matrix
+    SharedMatrix Rij_input_idx(new Matrix("Rij input indexed", nact, nact));
+    SharedMatrix Rxyz(new Matrix("x y z corrds of atom i", nact, 3));
+
+    std::vector<int> ham2input;
+    std::vector<int> input2ham;
 
     if(options_.get_bool("FULLY_LOCALIZE")){
 
-        SharedMatrix Rij_input_idx(new Matrix("Rij input indexed", nact, nact));
-        SharedMatrix Rxyz(new Matrix("x y z corrds of atom i", nact, 3));
+        // SharedMatrix Rij_input_idx(new Matrix("Rij input indexed", nact, nact));
+        // SharedMatrix Rxyz(new Matrix("x y z corrds of atom i", nact, 3));
         for (int i = 0; i < nact; ++i) {
             Rxyz->set(i, 0, wfn_->molecule()->x(i));
             Rxyz->set(i, 1, wfn_->molecule()->y(i));
@@ -476,7 +481,7 @@ void DMRGSolver::compute_energy() {
         // get input2ham and ham2input ORDERING
         // finding ham2input ordering
 
-        std::vector<int> ham2input;
+        // std::vector<int> ham2input;
         for(int j = 0; j<nact; j++){
             std::vector<double> v;
             for(int i = 0; i < nact; i++){
@@ -488,7 +493,7 @@ void DMRGSolver::compute_energy() {
 
         // finding input2ham ordering
 
-        std::vector<int> input2ham;
+        // std::vector<int> input2ham;
         for(int i = 0; i<nact; i++){
             std::vector<double> v;
             for(int j = 0; j < nact; j++){
