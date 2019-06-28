@@ -442,7 +442,7 @@ void DMRGSolver::compute_energy() {
     // initalize approprate containers
     // want to make Rij matrix
 
-    if(options_.get_bool("FULLY_LOCALIZE"){
+    if(options_.get_bool("FULLY_LOCALIZE")){
 
         SharedMatrix Rij_input_idx(new Matrix("Rij input indexed", nact, nact));
         SharedMatrix Rxyz(new Matrix("x y z corrds of atom i", nact, 3));
@@ -880,7 +880,7 @@ void DMRGSolver::compute_energy() {
       // std::cout << "   (" << i << ")" << "  val4:  " << val4 << std::endl;
     }
 
-    if(options_.get_bool("FULLY_LOCALIZE"){
+    if(options_.get_bool("FULLY_LOCALIZE")){
 
         // Now form the spin correlation
         SharedMatrix spin_corr(new Matrix("Spin Correlation", nact, nact));
