@@ -441,189 +441,194 @@ void DMRGSolver::compute_energy() {
 
     // initalize approprate containers
     // want to make Rij matrix
-    SharedMatrix Rij_input_idx(new Matrix("Rij input indexed", nact, nact));
-    SharedMatrix Rxyz(new Matrix("x y z corrds of atom i", nact, 3));
-    for (int i = 0; i < nact; ++i) {
-        Rxyz->set(i, 0, wfn_->molecule()->x(i));
-        Rxyz->set(i, 1, wfn_->molecule()->y(i));
-        Rxyz->set(i, 2, wfn_->molecule()->z(i));
-        for (int j = 0; j < nact; ++j) {
-            double dx = 0.0;
-            double dy = 0.0;
-            double dz = 0.0;
-            dx = (wfn_->molecule()->x(i)) - (wfn_->molecule()->x(j));
-            dy = (wfn_->molecule()->y(i)) - (wfn_->molecule()->y(j));
-            dz = (wfn_->molecule()->z(i)) - (wfn_->molecule()->z(j));
-            dx *= dx;
-            dy *= dy;
-            dz *= dz;
-            double rij = std::sqrt(dx + dy + dz);
-            rij /= 1.889725989; // bohr to angstrom conversion
-            Rij_input_idx->set(i, j, rij);
-        }
-    }
 
-    ///test1 PASS!
-    // std::vector<double> rnn = {1.25, 2.00, 1.25, 1.25, 2.25, 2.00, 1.25, 2.00};
-    // std::vector<int> mins = min_indicies(rnn);
-    // std::cout << "\nHere are numbers" << std::endl;
-    // for(auto j : mins) { std::cout << "\n " << j << std::endl; }
+    if(options_.get_bool("FULLY_LOCALIZE"){
 
-    /// Now need to begin the main part of the search algorithm
-    // get input2ham and ham2input ORDERING
-    // finding ham2input ordering
-
-    std::vector<int> ham2input;
-    for(int j = 0; j<nact; j++){
-        std::vector<double> v;
-        for(int i = 0; i < nact; i++){
-            v.push_back(std::abs(wfn_->Ca()->get(i,j)));
-        }
-        int j_MO_ham2input_idx = std::max_element(v.begin(),v.end()) - v.begin();
-        ham2input.push_back(j_MO_ham2input_idx);
-    }
-
-    // finding input2ham ordering
-
-    std::vector<int> input2ham;
-    for(int i = 0; i<nact; i++){
-        std::vector<double> v;
-        for(int j = 0; j < nact; j++){
-            v.push_back(std::abs(wfn_->Ca()->get(i,j)));
-        }
-        int i_MO_input2ham_idx = std::max_element(v.begin(),v.end()) - v.begin();
-        input2ham.push_back(i_MO_input2ham_idx);
-    }
-
-    outfile->Printf("\nHam to Inpup idex reordeing:");
-    for(int k = 0; k<nact; k++){
-        outfile->Printf(" %i", ham2input[k]);
-    }
-
-    outfile->Printf("\nInput to Ham idex reordeing:");
-    for(int k = 0; k<nact; k++){
-        outfile->Printf(" %i", input2ham[k]);
-    }
-
-    if(auto_loc_orb_reorder){
-        // Initialize containers
-        //all of the sites
-        std::vector<int> candidate_sites;
-        for(int i = 0; i < nact; i++){ candidate_sites.push_back(i); }
-        //the ordering for the dmrg orbitals with input indexing (will later be
-        // converted to hamiltioan energy indexing):
-        std::vector<int> input_order;
-
-        //find first site (distance from origin vector)
-        std::vector<int> dfo;
-        for(int i = 0; i < nact; i++){
-            double val = (Rxyz->get(i, 0))*(Rxyz->get(i, 0));
-            val += (Rxyz->get(i, 1))*(Rxyz->get(i, 1));
-            val += (Rxyz->get(i, 2))*(Rxyz->get(i, 2));
-            dfo.push_back(val);
+        SharedMatrix Rij_input_idx(new Matrix("Rij input indexed", nact, nact));
+        SharedMatrix Rxyz(new Matrix("x y z corrds of atom i", nact, 3));
+        for (int i = 0; i < nact; ++i) {
+            Rxyz->set(i, 0, wfn_->molecule()->x(i));
+            Rxyz->set(i, 1, wfn_->molecule()->y(i));
+            Rxyz->set(i, 2, wfn_->molecule()->z(i));
+            for (int j = 0; j < nact; ++j) {
+                double dx = 0.0;
+                double dy = 0.0;
+                double dz = 0.0;
+                dx = (wfn_->molecule()->x(i)) - (wfn_->molecule()->x(j));
+                dy = (wfn_->molecule()->y(i)) - (wfn_->molecule()->y(j));
+                dz = (wfn_->molecule()->z(i)) - (wfn_->molecule()->z(j));
+                dx *= dx;
+                dy *= dy;
+                dz *= dz;
+                double rij = std::sqrt(dx + dy + dz);
+                rij /= 1.889725989; // bohr to angstrom conversion
+                Rij_input_idx->set(i, j, rij);
+            }
         }
 
-        // use the lowest input indexed site if there are several sites with equal max dfo.
-        int max_dfo_idx = std::max_element(dfo.begin(), dfo.end()) - dfo.begin();
+        ///test1 PASS!
+        // std::vector<double> rnn = {1.25, 2.00, 1.25, 1.25, 2.25, 2.00, 1.25, 2.00};
+        // std::vector<int> mins = min_indicies(rnn);
+        // std::cout << "\nHere are numbers" << std::endl;
+        // for(auto j : mins) { std::cout << "\n " << j << std::endl; }
 
-        //add as first site and remove from candidates list
-        input_order.push_back(max_dfo_idx);
-        candidate_sites.erase(candidate_sites.begin() + max_dfo_idx); // after this candidate_sites[i] != i for i > max_dfo_idx.
+        /// Now need to begin the main part of the search algorithm
+        // get input2ham and ham2input ORDERING
+        // finding ham2input ordering
 
-        // std::cout << "\nHere are numbers 1" << std::endl;
-        // for(auto j : candidate_sites) { std::cout << "candidate: " << j << std::endl; }
-        // for(auto j : input_order) { std::cout << "input_order: " << j << std::endl; }
+        std::vector<int> ham2input;
+        for(int j = 0; j<nact; j++){
+            std::vector<double> v;
+            for(int i = 0; i < nact; i++){
+                v.push_back(std::abs(wfn_->Ca()->get(i,j)));
+            }
+            int j_MO_ham2input_idx = std::max_element(v.begin(),v.end()) - v.begin();
+            ham2input.push_back(j_MO_ham2input_idx);
+        }
 
-        // major while loop
-        while(!candidate_sites.empty()){
+        // finding input2ham ordering
+
+        std::vector<int> input2ham;
+        for(int i = 0; i<nact; i++){
+            std::vector<double> v;
+            for(int j = 0; j < nact; j++){
+                v.push_back(std::abs(wfn_->Ca()->get(i,j)));
+            }
+            int i_MO_input2ham_idx = std::max_element(v.begin(),v.end()) - v.begin();
+            input2ham.push_back(i_MO_input2ham_idx);
+        }
+
+        outfile->Printf("\nHam to Inpup idex reordeing:");
+        for(int k = 0; k<nact; k++){
+            outfile->Printf(" %i", ham2input[k]);
+        }
+
+        outfile->Printf("\nInput to Ham idex reordeing:");
+        for(int k = 0; k<nact; k++){
+            outfile->Printf(" %i", input2ham[k]);
+        }
+
+        if(auto_loc_orb_reorder){
+            // Initialize containers
+            //all of the sites
+            std::vector<int> candidate_sites;
+            for(int i = 0; i < nact; i++){ candidate_sites.push_back(i); }
+            //the ordering for the dmrg orbitals with input indexing (will later be
+            // converted to hamiltioan energy indexing):
+            std::vector<int> input_order;
+
+            //find first site (distance from origin vector)
+            std::vector<int> dfo;
+            for(int i = 0; i < nact; i++){
+                double val = (Rxyz->get(i, 0))*(Rxyz->get(i, 0));
+                val += (Rxyz->get(i, 1))*(Rxyz->get(i, 1));
+                val += (Rxyz->get(i, 2))*(Rxyz->get(i, 2));
+                dfo.push_back(val);
+            }
+
+            // use the lowest input indexed site if there are several sites with equal max dfo.
+            int max_dfo_idx = std::max_element(dfo.begin(), dfo.end()) - dfo.begin();
+
+            //add as first site and remove from candidates list
+            input_order.push_back(max_dfo_idx);
+            candidate_sites.erase(candidate_sites.begin() + max_dfo_idx); // after this candidate_sites[i] != i for i > max_dfo_idx.
+
+            // std::cout << "\nHere are numbers 1" << std::endl;
             // for(auto j : candidate_sites) { std::cout << "candidate: " << j << std::endl; }
             // for(auto j : input_order) { std::cout << "input_order: " << j << std::endl; }
-            // std::cout << "\n\nNew cycle: " << std::endl;
 
-            int current_site = input_order[input_order.size()-1];
-            // std::cout << "current_site: " << current_site << std::endl;
-            std::vector<int> next_site;
-            std::vector<double> rnn;
+            // major while loop
+            while(!candidate_sites.empty()){
+                // for(auto j : candidate_sites) { std::cout << "candidate: " << j << std::endl; }
+                // for(auto j : input_order) { std::cout << "input_order: " << j << std::endl; }
+                // std::cout << "\n\nNew cycle: " << std::endl;
 
-            for(auto i : candidate_sites){
-                rnn.push_back(Rij_input_idx->get(current_site, i));
-                // std::cout << "Ri_current_site: " << Rij_input_idx->get(current_site, i)<< " i: " << i << std::endl;
-            }
-            std::vector<int> lowest_idx_nn = min_indicies(rnn);
+                int current_site = input_order[input_order.size()-1];
+                // std::cout << "current_site: " << current_site << std::endl;
+                std::vector<int> next_site;
+                std::vector<double> rnn;
 
-            // for(auto i : lowest_idx_nn){
-            //     std::cout << "lowest_idx_nn: " << i << std::endl;
-            // }
-            for(auto i : lowest_idx_nn){ next_site.push_back(candidate_sites[i]); }
+                for(auto i : candidate_sites){
+                    rnn.push_back(Rij_input_idx->get(current_site, i));
+                    // std::cout << "Ri_current_site: " << Rij_input_idx->get(current_site, i)<< " i: " << i << std::endl;
+                }
+                std::vector<int> lowest_idx_nn = min_indicies(rnn);
 
-            // for(auto j : next_site) { std::cout << "next_site: " << j << std::endl; }
+                // for(auto i : lowest_idx_nn){
+                //     std::cout << "lowest_idx_nn: " << i << std::endl;
+                // }
+                for(auto i : lowest_idx_nn){ next_site.push_back(candidate_sites[i]); }
 
-            //fine next nearest neighabor
-            // if on 1st site
-            if(input_order.size() == 1){
-                input_order.push_back(next_site[0]);
-                // get index of next site in candidate_sites
-                std::vector<int>::iterator it = std::find(candidate_sites.begin(), candidate_sites.end(), next_site[0]);
-                int idx_of_site2remove = std::distance(candidate_sites.begin(), it);
-                candidate_sites.erase(candidate_sites.begin() + idx_of_site2remove);
-            } else { // if on the 2nd site or higher
+                // for(auto j : next_site) { std::cout << "next_site: " << j << std::endl; }
 
-                if(next_site.size() > 1){
-                    std::vector<double> rnnn;
-                    int previous_site = input_order[input_order.size()-2];
-                    for(auto i : next_site){
-                        rnnn.push_back(Rij_input_idx->get(previous_site, i));
-                        // std::cout << "Ri_current_site-1: " << Rij_input_idx->get(previous_site, i) << std::endl;
-                    }
-                    //order according to next nearest neighabor
-                    std::vector<int> lowest_idx_nnn = min_indicies(rnnn);
-
-                    // for(auto i : lowest_idx_nnn){
-                    //     std::cout << "lowest_idx_nnn: " << i << std::endl;
-                    // }
-
-                    //add the next site!
-                    input_order.push_back(next_site[lowest_idx_nnn[0]]);
-
-                    //erase form candidate_sites
-                    std::vector<int>::iterator it = std::find(candidate_sites.begin(), candidate_sites.end(), next_site[lowest_idx_nnn[0]]);
-                    int idx_of_site2remove = std::distance(candidate_sites.begin(), it);
-                    candidate_sites.erase(candidate_sites.begin() + idx_of_site2remove);
-                } else {
+                //fine next nearest neighabor
+                // if on 1st site
+                if(input_order.size() == 1){
                     input_order.push_back(next_site[0]);
                     // get index of next site in candidate_sites
                     std::vector<int>::iterator it = std::find(candidate_sites.begin(), candidate_sites.end(), next_site[0]);
                     int idx_of_site2remove = std::distance(candidate_sites.begin(), it);
                     candidate_sites.erase(candidate_sites.begin() + idx_of_site2remove);
+                } else { // if on the 2nd site or higher
+
+                    if(next_site.size() > 1){
+                        std::vector<double> rnnn;
+                        int previous_site = input_order[input_order.size()-2];
+                        for(auto i : next_site){
+                            rnnn.push_back(Rij_input_idx->get(previous_site, i));
+                            // std::cout << "Ri_current_site-1: " << Rij_input_idx->get(previous_site, i) << std::endl;
+                        }
+                        //order according to next nearest neighabor
+                        std::vector<int> lowest_idx_nnn = min_indicies(rnnn);
+
+                        // for(auto i : lowest_idx_nnn){
+                        //     std::cout << "lowest_idx_nnn: " << i << std::endl;
+                        // }
+
+                        //add the next site!
+                        input_order.push_back(next_site[lowest_idx_nnn[0]]);
+
+                        //erase form candidate_sites
+                        std::vector<int>::iterator it = std::find(candidate_sites.begin(), candidate_sites.end(), next_site[lowest_idx_nnn[0]]);
+                        int idx_of_site2remove = std::distance(candidate_sites.begin(), it);
+                        candidate_sites.erase(candidate_sites.begin() + idx_of_site2remove);
+                    } else {
+                        input_order.push_back(next_site[0]);
+                        // get index of next site in candidate_sites
+                        std::vector<int>::iterator it = std::find(candidate_sites.begin(), candidate_sites.end(), next_site[0]);
+                        int idx_of_site2remove = std::distance(candidate_sites.begin(), it);
+                        candidate_sites.erase(candidate_sites.begin() + idx_of_site2remove);
+                    }
+
                 }
 
+                // std::cout << "\nHere are numbers 2" << std::endl;
+                // for(auto j : candidate_sites) { std::cout << "candidate: " << j << std::endl; }
+                // for(auto j : input_order) { std::cout << "input_order: " << j << std::endl; }
             }
 
-            // std::cout << "\nHere are numbers 2" << std::endl;
-            // for(auto j : candidate_sites) { std::cout << "candidate: " << j << std::endl; }
-            // for(auto j : input_order) { std::cout << "input_order: " << j << std::endl; }
+            outfile->Printf("\nAutomated DMRG localized obrital order (input indexing):");
+            for(int k = 0; k<nact; k++){
+                outfile->Printf(" %i", input_order[k]);
+            }
+
+            // And F#&%&ING finally, reorder with hamiltonian ordering
+            std::vector<int> ham_order;
+            for(int k = 0; k<nact; k++){
+                ham_order.push_back(input2ham[input_order[k]]);
+            }
+
+            outfile->Printf("\nAutomated DMRG localized obrital order (hamiltonian indexing):");
+            for(int k = 0; k<nact; k++){
+                outfile->Printf(" %i", ham_order[k]);
+            }
+            int ham_order_aray[nact];
+            for(int i=0; i < nact; i++){ ham_order_aray[i] = ham_order[i]; }
+            int* ham_order_ptr = ham_order_aray;
+            Prob->setup_reorder_custom(ham_order_ptr);
+            //// END AUTO REORDERING ////
         }
 
-        outfile->Printf("\nAutomated DMRG localized obrital order (input indexing):");
-        for(int k = 0; k<nact; k++){
-            outfile->Printf(" %i", input_order[k]);
-        }
-
-        // And F#&%&ING finally, reorder with hamiltonian ordering
-        std::vector<int> ham_order;
-        for(int k = 0; k<nact; k++){
-            ham_order.push_back(input2ham[input_order[k]]);
-        }
-
-        outfile->Printf("\nAutomated DMRG localized obrital order (hamiltonian indexing):");
-        for(int k = 0; k<nact; k++){
-            outfile->Printf(" %i", ham_order[k]);
-        }
-        int ham_order_aray[nact];
-        for(int i=0; i < nact; i++){ ham_order_aray[i] = ham_order[i]; }
-        int* ham_order_ptr = ham_order_aray;
-        Prob->setup_reorder_custom(ham_order_ptr);
-        //// END AUTO REORDERING ////
     }
 
     /// If one does not provide integrals when they call solver, compute them
@@ -875,98 +880,102 @@ void DMRGSolver::compute_energy() {
       // std::cout << "   (" << i << ")" << "  val4:  " << val4 << std::endl;
     }
 
-    // Now form the spin correlation
-    SharedMatrix spin_corr(new Matrix("Spin Correlation", nact, nact));
-    SharedMatrix spin_fluct(new Matrix("Spin Fluctuation", nact, nact));
+    if(options_.get_bool("FULLY_LOCALIZE"){
 
-    for (int i = 0; i < nact; ++i) {
-        for (int j = 0; j < nact; ++j) {
-            double value = 0.0;
-            if (i == j) {
-                value += 0.75 * (opdm_a[nact * i + j] + opdm_b[nact * i + j]);
+        // Now form the spin correlation
+        SharedMatrix spin_corr(new Matrix("Spin Correlation", nact, nact));
+        SharedMatrix spin_fluct(new Matrix("Spin Fluctuation", nact, nact));
+
+        for (int i = 0; i < nact; ++i) {
+            for (int j = 0; j < nact; ++j) {
+                double value = 0.0;
+                if (i == j) {
+                    value += 0.75 * (opdm_a[nact * i + j] + opdm_b[nact * i + j]);
+                }
+                value -= 0.5 * (tpdm_ab[i * nact3 + j * nact2 + j * nact + i] +
+                                tpdm_ab[j * nact3 + i * nact2 + i * nact + j]);
+
+                value += 0.25 * (tpdm_aa[i * nact3 + j * nact2 + i * nact + j] +
+                                 tpdm_bb[i * nact3 + j * nact2 + i * nact + j] -
+                                 tpdm_ab[i * nact3 + j * nact2 + i * nact + j] -
+                                 tpdm_ab[j * nact3 + i * nact2 + j * nact + i]);
+
+                spin_corr->set(i, j, value);
+                value -=
+                    0.25 *
+                    (opdm_a[i * nact + i] * opdm_a[j * nact + j] + opdm_b[i * nact + i] * opdm_b[j * nact + j] -
+                     opdm_a[i * nact + i] * opdm_b[j * nact + j] - opdm_b[i * nact + i] * opdm_a[j * nact + j]);
+                spin_fluct->set(i, j, value);
             }
-            value -= 0.5 * (tpdm_ab[i * nact3 + j * nact2 + j * nact + i] +
-                            tpdm_ab[j * nact3 + i * nact2 + i * nact + j]);
-
-            value += 0.25 * (tpdm_aa[i * nact3 + j * nact2 + i * nact + j] +
-                             tpdm_bb[i * nact3 + j * nact2 + i * nact + j] -
-                             tpdm_ab[i * nact3 + j * nact2 + i * nact + j] -
-                             tpdm_ab[j * nact3 + i * nact2 + j * nact + i]);
-
-            spin_corr->set(i, j, value);
-            value -=
-                0.25 *
-                (opdm_a[i * nact + i] * opdm_a[j * nact + j] + opdm_b[i * nact + i] * opdm_b[j * nact + j] -
-                 opdm_a[i * nact + i] * opdm_b[j * nact + j] - opdm_b[i * nact + i] * opdm_a[j * nact + j]);
-            spin_fluct->set(i, j, value);
         }
-    }
-    outfile->Printf("\n");
-    spin_corr->print();
-    spin_fluct->print();
+        outfile->Printf("\n");
+        spin_corr->print();
+        spin_fluct->print();
 
-    std::ofstream file;
-    file.open("spin_mat.txt", std::ofstream::out | std::ofstream::trunc);
-    for (int i = 0; i < nact; ++i) {
-        for (int j = 0; j < nact; ++j) {
-            file << std::setw(12) << std::setprecision(6) << spin_corr->get(i, j) << " ";
+        std::ofstream file;
+        file.open("spin_mat.txt", std::ofstream::out | std::ofstream::trunc);
+        for (int i = 0; i < nact; ++i) {
+            for (int j = 0; j < nact; ++j) {
+                file << std::setw(12) << std::setprecision(6) << spin_corr->get(i, j) << " ";
+            }
+            file << "\n";
         }
-        file << "\n";
-    }
-    file.close();
+        file.close();
 
-    std::ofstream file2;
-    file2.open("spin_fluct.txt", std::ofstream::out | std::ofstream::trunc);
-    for (int i = 0; i < nact; ++i) {
-        for (int j = 0; j < nact; ++j) {
-            file2 << std::setw(12) << std::setprecision(6) << spin_fluct->get(i, j) << " ";
+        std::ofstream file2;
+        file2.open("spin_fluct.txt", std::ofstream::out | std::ofstream::trunc);
+        for (int i = 0; i < nact; ++i) {
+            for (int j = 0; j < nact; ++j) {
+                file2 << std::setw(12) << std::setprecision(6) << spin_fluct->get(i, j) << " ";
+            }
+            file2 << "\n";
         }
-        file2 << "\n";
-    }
-    file2.close();
+        file2.close();
 
-    wfn_->Ca()->print();
+        wfn_->Ca()->print();
 
-    // make reorderd Spin mat (with index ordering rather than hamiltonian ordering)
-    SharedMatrix spin_corr_input_idx(new Matrix("Spin Correlation input indexed", nact, nact));
-    for (int i = 0; i < nact; ++i) {
-        for (int j = 0; j < nact; ++j) {
-            int k = input2ham[i];
-            int l = input2ham[j];
-            spin_corr_input_idx->set(i, j, spin_corr->get(k,l));
+        // make reorderd Spin mat (with index ordering rather than hamiltonian ordering)
+        SharedMatrix spin_corr_input_idx(new Matrix("Spin Correlation input indexed", nact, nact));
+        for (int i = 0; i < nact; ++i) {
+            for (int j = 0; j < nact; ++j) {
+                int k = input2ham[i];
+                int l = input2ham[j];
+                spin_corr_input_idx->set(i, j, spin_corr->get(k,l));
+            }
         }
-    }
 
-    std::ofstream file3;
-    file3.open("spin_mat_input_ordered.txt", std::ofstream::out | std::ofstream::trunc);
-    for (int i = 0; i < nact; ++i) {
-        for (int j = 0; j < nact; ++j) {
-            file3 << std::setw(12) << std::setprecision(6) << spin_corr_input_idx->get(i, j) << " ";
+        std::ofstream file3;
+        file3.open("spin_mat_input_ordered.txt", std::ofstream::out | std::ofstream::trunc);
+        for (int i = 0; i < nact; ++i) {
+            for (int j = 0; j < nact; ++j) {
+                file3 << std::setw(12) << std::setprecision(6) << spin_corr_input_idx->get(i, j) << " ";
+            }
+            file3 << "\n";
         }
-        file3 << "\n";
-    }
-    file3.close();
+        file3.close();
 
 
-    std::ofstream file4;
-    file4.open("Rij_input_orderd.txt", std::ofstream::out | std::ofstream::trunc);
-    for (int i = 0; i < nact; ++i) {
-        for (int j = 0; j < nact; ++j) {
-            file4 << std::setw(12) << std::setprecision(6) << Rij_input_idx->get(i, j) << " ";
+        std::ofstream file4;
+        file4.open("Rij_input_orderd.txt", std::ofstream::out | std::ofstream::trunc);
+        for (int i = 0; i < nact; ++i) {
+            for (int j = 0; j < nact; ++j) {
+                file4 << std::setw(12) << std::setprecision(6) << Rij_input_idx->get(i, j) << " ";
+            }
+            file4 << "\n";
         }
-        file4 << "\n";
-    }
-    file4.close();
+        file4.close();
 
-    std::ofstream file5;
-    file5.open("Rxyz.txt", std::ofstream::out | std::ofstream::trunc);
-    for (int i = 0; i < nact; ++i) {
-        for (int j = 0; j < 3; ++j) {
-            file5 << std::setw(12) << std::setprecision(6) << (Rxyz->get(i, j)) / 1.889725989 << " ";
+        std::ofstream file5;
+        file5.open("Rxyz.txt", std::ofstream::out | std::ofstream::trunc);
+        for (int i = 0; i < nact; ++i) {
+            for (int j = 0; j < 3; ++j) {
+                file5 << std::setw(12) << std::setprecision(6) << (Rxyz->get(i, j)) / 1.889725989 << " ";
+            }
+            file5 << "\n";
         }
-        file5 << "\n";
+        file5.close();
+
     }
-    file5.close();
 
     // want to compute energy form rdms (currently in dmrg_ref_)
     double nuclear_repulsion_energy =
