@@ -257,7 +257,7 @@ class DSRG_MRPT3 : public MASTER_DSRG {
     // => Reference relaxation <= //
 
     /// Transfer integrals for FCI
-    void transfer_integrals();
+//    void transfer_integrals();
     /// Diagonalize the diagonal blocks of the Fock matrix
     std::vector<std::vector<double>> diagonalize_Fock_diagblocks(BlockedTensor& U);
     /// Separate an 2D ambit::Tensor according to its irrep
@@ -273,8 +273,8 @@ class DSRG_MRPT3 : public MASTER_DSRG {
      * @param name The name of the returned sub tensor
      * @return A sub tensor of T with the same dimension
      */
-    ambit::Tensor sub_block(ambit::Tensor& T, const std::map<size_t, std::vector<size_t>>& P,
-                            const std::string& name);
+//    ambit::Tensor sub_block(ambit::Tensor& T, const std::map<size_t, std::vector<size_t>>& P,
+//                            const std::string& name);
 
     /// Rotate RDMs computed by eigens_ (in original basis) to semicanonical basis
     /// so that they are in the same basis as amplitudes (in semicanonical basis)
@@ -283,12 +283,12 @@ class DSRG_MRPT3 : public MASTER_DSRG {
 
     // => Dipole related <= //
 
-    /// Compute DSRG transformed dipole integrals from 1st-order amplitudes for a given direction
-    void compute_dm1d_pt3_1(BlockedTensor& M, double& Mbar0, double& Mbar0_pt2,
-                            BlockedTensor& Mbar1, BlockedTensor& Mbar2);
-    /// Compute DSRG transformed dipole integrals from 2nd-order amplitudes for a given direction
-    void compute_dm1d_pt3_2(BlockedTensor& M, double& Mbar0, double& Mbar0_pt2,
-                            BlockedTensor& Mbar1, BlockedTensor& Mbar2);
+//    /// Compute DSRG transformed dipole integrals from 1st-order amplitudes for a given direction
+//    void compute_dm1d_pt3_1(BlockedTensor& M, double& Mbar0, double& Mbar0_pt2,
+//                            BlockedTensor& Mbar1, BlockedTensor& Mbar2);
+//    /// Compute DSRG transformed dipole integrals from 2nd-order amplitudes for a given direction
+//    void compute_dm1d_pt3_2(BlockedTensor& M, double& Mbar0, double& Mbar0_pt2,
+//                            BlockedTensor& Mbar1, BlockedTensor& Mbar2);
     /// Print unrelaxed dipole
     void print_dm_pt3();
 

@@ -168,7 +168,6 @@ def register_pt2_options(forte_options):
     forte_options.add_double("PT2_MAX_MEM", 1.0,
                              " Maximum size of the determinant hash (GB)")
 
-
 def register_pci_options(forte_options):
     forte_options.add_str("PCI_GENERATOR", "WALL-CHEBYSHEV", [
         "LINEAR", "QUADRATIC", "CUBIC", "QUARTIC", "POWER", "TROTTER", "OLSEN",
@@ -668,6 +667,10 @@ def register_dsrg_options(forte_options):
                       "NIVO approximation: Omit tensor blocks with >= 3 virtual indices if true")
 
     forte_options.add_bool("PRINT_1BODY_EVALS", False, "Print eigenvalues of 1-body effective H")
+
+    forte_options.add_bool("DSRG_MRPT3_BATCHED", False, "Force running the DSRG-MRPT3 code using the batched algorithm")
+
+    forte_options.add_bool("IGNORE_MEMORY_WARNINGS", False, "Force running the DSRG-MRPT3 code using the batched algorithm")
 
 def register_dwms_options(forte_options):
     forte_options.add_double("DWMS_ZETA", 0.0, """Automatic Gaussian width cutoff for the density weights
