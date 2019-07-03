@@ -2784,9 +2784,6 @@ void DSRG_MRPT3::V_T2_C2_DF(BlockedTensor& B, BlockedTensor& T2, const double& a
         }
     }
 
-    outfile->Printf("\n\n** ==> particle-particle contractions <== %d %d\n\n",
-                    static_cast<int64_t>(nele_pp_max * sizeof(double)), mem_total_);
-
     // particle-particle contractions
     if (static_cast<int64_t>(nele_pp_max * sizeof(double)) < mem_total_) {
 
