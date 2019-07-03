@@ -3081,7 +3081,7 @@ void DSRG_MRPT3::V_T2_C2_DF(BlockedTensor& B, BlockedTensor& T2, const double& a
     }
 
     // compute exchange part
-    if (nele_ph_max * sizeof(double) < static_cast<size_t>(mem_total_)) {
+    if (static_cast<int64_t>(nele_ph_max * sizeof(double)) < mem_total_) {
         start_ = std::chrono::system_clock::now();
         tt1_ = std::chrono::system_clock::to_time_t(start_);
         if (profile_print_) {
