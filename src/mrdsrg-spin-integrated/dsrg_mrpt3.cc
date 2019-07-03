@@ -2832,6 +2832,8 @@ void DSRG_MRPT3::V_T2_C2_DF(BlockedTensor& B, BlockedTensor& T2, const double& a
 
     } else {
 
+        outfile->Printf("\n\nI was here! ========= \n\n");
+
         // "ab" indices in T2[ij|ab] are all active, no batching
         V_T2_C2_DF_AA(B, T2, alpha, C2);
 
