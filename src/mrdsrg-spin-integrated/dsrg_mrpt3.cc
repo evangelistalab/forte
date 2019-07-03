@@ -279,102 +279,105 @@ void DSRG_MRPT3::build_tei(BlockedTensor& V) {
     }
 }
 
-void DSRG_MRPT3::build_fock_half() {
-    for (const auto& block : F_.block_labels()) {
-        // lowercase: alpha spin
-        if (islower(block[0])) {
-            F_.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
-                size_t np = label_to_spacemo_[block[0]][i[0]];
-                size_t nq = label_to_spacemo_[block[1]][i[1]];
-                value = ints_->oei_a(np, nq);
+// void DSRG_MRPT3::build_fock_half() {
+//    for (const auto& block : F_.block_labels()) {
+//        // lowercase: alpha spin
+//        if (islower(block[0])) {
+//            F_.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
+//                size_t np = label_to_spacemo_[block[0]][i[0]];
+//                size_t nq = label_to_spacemo_[block[1]][i[1]];
+//                value = ints_->oei_a(np, nq);
 
-                for (const size_t& nm : core_mos_) {
-                    value += ints_->aptei_aa(np, nm, nq, nm);
-                    value += ints_->aptei_ab(np, nm, nq, nm);
-                }
-            });
-        } else {
-            F_.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
-                size_t np = label_to_spacemo_[block[0]][i[0]];
-                size_t nq = label_to_spacemo_[block[1]][i[1]];
-                value = ints_->oei_b(np, nq);
+//                for (const size_t& nm : core_mos_) {
+//                    value += ints_->aptei_aa(np, nm, nq, nm);
+//                    value += ints_->aptei_ab(np, nm, nq, nm);
+//                }
+//            });
+//        } else {
+//            F_.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
+//                size_t np = label_to_spacemo_[block[0]][i[0]];
+//                size_t nq = label_to_spacemo_[block[1]][i[1]];
+//                value = ints_->oei_b(np, nq);
 
-                for (const size_t& nm : core_mos_) {
-                    value += ints_->aptei_bb(np, nm, nq, nm);
-                    value += ints_->aptei_ab(nm, np, nm, nq);
-                }
-            });
-        }
-    }
+//                for (const size_t& nm : core_mos_) {
+//                    value += ints_->aptei_bb(np, nm, nq, nm);
+//                    value += ints_->aptei_ab(nm, np, nm, nq);
+//                }
+//            });
+//        }
+//    }
 
-    // core-core block
-    BlockedTensor VFock =
-        ambit::BlockedTensor::build(tensor_type_, "VFock", {"caca", "cAcA", "aCaC", "CACA"});
-    build_tei(VFock);
-    F_["mn"] += VFock["mvnu"] * Gamma1_["uv"];
-    F_["mn"] += VFock["mVnU"] * Gamma1_["UV"];
-    F_["MN"] += VFock["vMuN"] * Gamma1_["uv"];
-    F_["MN"] += VFock["MVNU"] * Gamma1_["UV"];
+//    // core-core block
+//    BlockedTensor VFock =
+//        ambit::BlockedTensor::build(tensor_type_, "VFock", {"caca", "cAcA", "aCaC", "CACA"});
+//    build_tei(VFock);
+//    F_["mn"] += VFock["mvnu"] * Gamma1_["uv"];
+//    F_["mn"] += VFock["mVnU"] * Gamma1_["UV"];
+//    F_["MN"] += VFock["vMuN"] * Gamma1_["uv"];
+//    F_["MN"] += VFock["MVNU"] * Gamma1_["UV"];
 
-    // virtual-virtual block
-    VFock = ambit::BlockedTensor::build(tensor_type_, "VFock", {"vava", "vAvA", "aVaV", "VAVA"});
-    build_tei(VFock);
-    F_["ef"] += VFock["evfu"] * Gamma1_["uv"];
-    F_["ef"] += VFock["eVfU"] * Gamma1_["UV"];
-    F_["EF"] += VFock["vEuF"] * Gamma1_["uv"];
-    F_["EF"] += VFock["EVFU"] * Gamma1_["UV"];
+//    // virtual-virtual block
+//    VFock = ambit::BlockedTensor::build(tensor_type_, "VFock", {"vava", "vAvA", "aVaV", "VAVA"});
+//    build_tei(VFock);
+//    F_["ef"] += VFock["evfu"] * Gamma1_["uv"];
+//    F_["ef"] += VFock["eVfU"] * Gamma1_["UV"];
+//    F_["EF"] += VFock["vEuF"] * Gamma1_["uv"];
+//    F_["EF"] += VFock["EVFU"] * Gamma1_["UV"];
 
-    // off-diagonal and all-active blocks
-    F_["ai"] += V_["aviu"] * Gamma1_["uv"];
-    F_["ai"] += V_["aViU"] * Gamma1_["UV"];
-    F_["AI"] += V_["vAuI"] * Gamma1_["uv"];
-    F_["AI"] += V_["AVIU"] * Gamma1_["UV"];
+//    // off-diagonal and all-active blocks
+//    F_["ai"] += V_["aviu"] * Gamma1_["uv"];
+//    F_["ai"] += V_["aViU"] * Gamma1_["UV"];
+//    F_["AI"] += V_["vAuI"] * Gamma1_["uv"];
+//    F_["AI"] += V_["AVIU"] * Gamma1_["UV"];
 
-    // obtain diagonal elements of Fock matrix
-    F_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
-        if (spin[0] == AlphaSpin and (i[0] == i[1])) {
-            Fa_[i[0]] = value;
-        }
-        if (spin[0] == BetaSpin and (i[0] == i[1])) {
-            Fb_[i[0]] = value;
-        }
-    });
-}
+//    // obtain diagonal elements of Fock matrix
+//    F_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value)
+//    {
+//        if (spin[0] == AlphaSpin and (i[0] == i[1])) {
+//            Fa_[i[0]] = value;
+//        }
+//        if (spin[0] == BetaSpin and (i[0] == i[1])) {
+//            Fb_[i[0]] = value;
+//        }
+//    });
+//}
 
-void DSRG_MRPT3::build_fock_full() {
-    // copy one-electron integrals and core part of two-electron integrals
-    F_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
-        if (spin[0] == AlphaSpin) {
-            value = ints_->oei_a(i[0], i[1]);
-            for (const size_t& nm : core_mos_) {
-                value += ints_->aptei_aa(i[0], nm, i[1], nm);
-                value += ints_->aptei_ab(i[0], nm, i[1], nm);
-            }
-        } else {
-            value = ints_->oei_b(i[0], i[1]);
-            for (const size_t& nm : core_mos_) {
-                value += ints_->aptei_bb(i[0], nm, i[1], nm);
-                value += ints_->aptei_ab(nm, i[0], nm, i[1]);
-            }
-        }
-    });
+// void DSRG_MRPT3::build_fock_full() {
+//    // copy one-electron integrals and core part of two-electron integrals
+//    F_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value)
+//    {
+//        if (spin[0] == AlphaSpin) {
+//            value = ints_->oei_a(i[0], i[1]);
+//            for (const size_t& nm : core_mos_) {
+//                value += ints_->aptei_aa(i[0], nm, i[1], nm);
+//                value += ints_->aptei_ab(i[0], nm, i[1], nm);
+//            }
+//        } else {
+//            value = ints_->oei_b(i[0], i[1]);
+//            for (const size_t& nm : core_mos_) {
+//                value += ints_->aptei_bb(i[0], nm, i[1], nm);
+//                value += ints_->aptei_ab(nm, i[0], nm, i[1]);
+//            }
+//        }
+//    });
 
-    // active part of two-electron integrals
-    F_["pq"] += V_["pvqu"] * Gamma1_["uv"];
-    F_["pq"] += V_["pVqU"] * Gamma1_["UV"];
-    F_["PQ"] += V_["vPuQ"] * Gamma1_["uv"];
-    F_["PQ"] += V_["PVQU"] * Gamma1_["UV"];
+//    // active part of two-electron integrals
+//    F_["pq"] += V_["pvqu"] * Gamma1_["uv"];
+//    F_["pq"] += V_["pVqU"] * Gamma1_["UV"];
+//    F_["PQ"] += V_["vPuQ"] * Gamma1_["uv"];
+//    F_["PQ"] += V_["PVQU"] * Gamma1_["UV"];
 
-    // obtain diagonal elements of Fock matrix
-    F_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
-        if (spin[0] == AlphaSpin and (i[0] == i[1])) {
-            Fa_[i[0]] = value;
-        }
-        if (spin[0] == BetaSpin and (i[0] == i[1])) {
-            Fb_[i[0]] = value;
-        }
-    });
-}
+//    // obtain diagonal elements of Fock matrix
+//    F_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value)
+//    {
+//        if (spin[0] == AlphaSpin and (i[0] == i[1])) {
+//            Fa_[i[0]] = value;
+//        }
+//        if (spin[0] == BetaSpin and (i[0] == i[1])) {
+//            Fb_[i[0]] = value;
+//        }
+//    });
+//}
 
 void DSRG_MRPT3::print_options_summary() {
     // Print a summary
@@ -2629,8 +2632,10 @@ void DSRG_MRPT3::V_T2_C2_DF(BlockedTensor& B, BlockedTensor& T2, const double& a
         sizeof(double) *
         (2 * (p * h - a * a) + 3 * (p * p * h * h - a * a * a * a)); // local memory used in pt3_2
     if (mem_total_ < 0 or static_cast<size_t>(mem_total_) < v * v * sizeof(double)) {
-        outfile->Printf("\n    Not enough memory for batching.");
-        throw psi::PSIEXCEPTION("Not enough memory for batching at DSRG-MRPT3 V_T2_C2_DF.");
+        if (not foptions_->get_bool("IGNORE_MEMORY_WARNINGS")) {
+            outfile->Printf("\n    Not enough memory for batching.");
+            throw psi::PSIEXCEPTION("Not enough memory for batching at DSRG-MRPT3 V_T2_C2_DF.");
+        }
     }
 
     // hole-hole contractions
@@ -2779,8 +2784,11 @@ void DSRG_MRPT3::V_T2_C2_DF(BlockedTensor& B, BlockedTensor& T2, const double& a
         }
     }
 
+    outfile->Printf("\n\n** ==> particle-particle contractions <== %d %d\n\n",
+                    static_cast<int64_t>(nele_pp_max * sizeof(double)), mem_total_);
+
     // particle-particle contractions
-    if (nele_pp_max * sizeof(double) < static_cast<size_t>(mem_total_)) {
+    if (static_cast<int64_t>(nele_pp_max * sizeof(double)) < mem_total_) {
 
         // set timer
         start_ = std::chrono::system_clock::now();
