@@ -249,9 +249,10 @@ class DSRG_MRPT3 : public MASTER_DSRG {
 
     /// Compute two-body term of commutator [V, T2], particle-hole contraction
     /// (exchange part), contracted particle index is virtual
-    void V_T2_C2_DF_VH_EX(BlockedTensor& B, BlockedTensor& T2, const double& alpha,
-                          BlockedTensor& C2, const std::vector<std::vector<std::string>>& qs,
-                          const std::vector<std::vector<std::string>>& jb);
+    //    void V_T2_C2_DF_VH_EX(BlockedTensor& B, BlockedTensor& T2, const double& alpha,
+    //                          BlockedTensor& C2, const std::vector<std::vector<std::string>>& qs,
+    //                          const std::vector<std::vector<std::string>>& jb);
+    // TODO: commented this out because it's never called
 
     // => Reference relaxation <= //
 

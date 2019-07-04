@@ -4716,499 +4716,499 @@ void DSRG_MRPT3::V_T2_C2_DF_VA_EX(BlockedTensor& B, BlockedTensor& T2, const dou
     } // end loop "qs"
 }
 
-void DSRG_MRPT3::V_T2_C2_DF_VH_EX(BlockedTensor& B, BlockedTensor& T2, const double& alpha,
-                                  BlockedTensor& C2,
-                                  const std::vector<std::vector<std::string>>& qs,
-                                  const std::vector<std::vector<std::string>>& jb) {
-
-    // We will do batches in "a". See V_T2_C2_DF_AH_EX for more comments.
-
-    size_t sc = core_mos_.size();
-    size_t sa = actv_mos_.size();
-    size_t sv = virt_mos_.size();
-    size_t sL = aux_mos_.size();
-
-    // figure out peak memory usage and how to separate the virtual index
-    size_t smax_jb = 0;
-    size_t smax_qs = 0, smax_q = 0, smax_s = 0;
-    size_t smax_hole = (sc > sa) ? sc : sa;
-
-    for (const std::string& hp : jb[0]) {
-        size_t smax = label_to_spacemo_[hp[0]].size() * label_to_spacemo_[hp[1]].size();
-
-        if (smax > smax_jb) {
-            smax_jb = smax;
-        }
-    }
-
-    for (const std::string& gg : qs[0]) {
-        size_t sq = label_to_spacemo_[gg[0]].size();
-        size_t ss = label_to_spacemo_[gg[1]].size();
-        size_t sqs = sq * ss;
-
-        if (sq > smax_q) {
-            smax_q = sq;
-        }
-
-        if (ss > smax_s) {
-            smax_s = ss;
-        }
-
-        if (sqs > smax_qs) {
-            smax_qs = sqs;
-        }
-    }
-
-    size_t nbatch = 1;
-    size_t svs = sv / nbatch;
-    size_t nele_total = sL * smax_s * svs + smax_qs * svs * smax_hole + smax_hole * smax_jb * svs +
-                        smax_jb * smax_qs;
-    while (nele_total * sizeof(double) > static_cast<size_t>(0.95 * mem_total_)) {
-        nbatch += 1;
-        svs = sv / nbatch;
-        nele_total = sL * smax_s * svs + smax_qs * svs * smax_hole + smax_hole * smax_jb * svs +
-                     smax_jb * smax_qs;
-    }
-
-    // if nbatch > sv, tensor is too large to be batched
-    if (nbatch > sv) {
-        outfile->Printf("\n    Not enough memory for batching tensor H2(%zu * "
-                        "%zu * %zu * %zu).",
-                        smax_q, smax_s, smax_hole, sv);
-        throw psi::PSIEXCEPTION("Not enough memory for batching at DSRG-MRPT3 V_T2_C2_DF_VH_EX.");
-    }
-
-    // memory usage
-    std::pair<double, std::string> mem_use = to_xb(nele_total, sizeof(double));
-
-    // fill the indices of sub virtuals
-    std::vector<std::vector<size_t>> sub_virt_mos; // relative virtual indices
-    size_t divisible = sv / nbatch;
-    size_t modulo = sv % nbatch;
-    for (size_t i = 0, start = 0; i < nbatch; ++i) {
-        size_t end;
-        if (i < modulo) {
-            end = start + (divisible + 1);
-        } else {
-            end = start + divisible;
-        }
-
-        std::vector<size_t> sub_virt;
-        for (size_t i = start; i < end; ++i) {
-            sub_virt.push_back(i);
-        }
-        sub_virt_mos.push_back(sub_virt);
-        start = end;
-    }
-
-    // set timer
-    start_ = std::chrono::system_clock::now();
-    tt1_ = std::chrono::system_clock::to_time_t(start_);
-    outfile->Printf("\n    Computing [V, T2] DF -> C2 PH(VH) exchange in "
-                    "batches (%zu, %.2f %s)",
-                    nbatch, mem_use.first, mem_use.second.c_str());
-    if (profile_print_) {
-        outfile->Printf("\n  [V, T2] DF -> C2 PH(VH) exchange started: %s", std::ctime(&tt1_));
-    }
-
-    // loop over spin pure "qs" indices
-    std::vector<std::string> qs_pure(qs[0]);
-    qs_pure.insert(qs_pure.end(), qs[1].begin(), qs[1].end());
-
-    for (const std::string& gg : qs_pure) {
-        const char& q = gg[0];
-        const char& s = gg[1];
-        size_t sq = label_to_spacemo_[q].size();
-        size_t ss = label_to_spacemo_[s].size();
-        bool beta = isupper(q);
-
-        std::vector<char> ih0{'c', 'a'};
-        std::vector<std::string> vec_hp = jb[0];
-        if (beta) {
-            ih0 = std::vector<char>{'C', 'A'};
-            vec_hp = jb[1];
-        }
-
-        // loop over possible choices of "i"
-        for (const char& i : ih0) {
-            size_t si = label_to_spacemo_[i].size();
-            std::string Blabel0{'L', 'v', s};
-            std::string Blabel1{'L', q, i};
-            if (beta) {
-                Blabel0 = std::string{'L', 'V', s};
-            }
-
-            // loop over partitioned index "a"
-            for (const auto& virt_mo_sub : sub_virt_mos) {
-                size_t svs = virt_mo_sub.size();
-
-                ambit::Tensor H2 = ambit::Tensor::build(tensor_type_, "H2s", {sq, ss, svs, si});
-
-                if (nbatch != 1) {
-                    ambit::Tensor Bs = ambit::Tensor::build(tensor_type_, "Bs", {sL, svs, ss});
-                    Bs.iterate([&](const std::vector<size_t>& i, double& value) {
-                        size_t idx = i[0] * sv * ss + virt_mo_sub[i[1]] * ss + i[2];
-                        value = B.block(Blabel0).data()[idx];
-                    });
-
-                    H2("qsei") = Bs("ges") * B.block(Blabel1)("gqi");
-                } else {
-                    H2("qsei") = B.block(Blabel0)("ges") * B.block(Blabel1)("gqi");
-                }
-
-                // loop over indices "jb"
-                for (const std::string& hp : vec_hp) {
-                    const char& j = hp[0];
-                    const char& b = hp[1];
-                    size_t sj = label_to_spacemo_[j].size();
-                    size_t sb = label_to_spacemo_[b].size();
-
-                    // C2 labels with permutations
-                    std::string C2label_P0{q, j, s, b};
-                    std::string C2label_P1{j, q, s, b};
-                    std::string C2label_P2{q, j, b, s};
-                    std::string C2label_P3{j, q, b, s};
-                    bool is_C2label_P0 = C2.is_block(C2label_P0);
-                    bool is_C2label_P1 = C2.is_block(C2label_P1);
-                    bool is_C2label_P2 = C2.is_block(C2label_P2);
-                    bool is_C2label_P3 = C2.is_block(C2label_P3);
-                    if (!is_C2label_P0 && !is_C2label_P1 && !is_C2label_P2 && !is_C2label_P3)
-                        continue;
-
-                    // T2 small
-                    std::string T2label{i, j, 'v', b};
-                    if (beta) {
-                        T2label = std::string{i, j, 'V', b};
-                    }
-
-                    ambit::Tensor T2s;
-                    if (nbatch != 1) {
-                        T2s = ambit::Tensor::build(tensor_type_, "T2s", {si, sj, svs, sb});
-                        T2s.iterate([&](const std::vector<size_t>& i, double& value) {
-                            size_t idx = i[0] * sj * sv * sb + i[1] * sv * sb +
-                                         virt_mo_sub[i[2]] * sb + i[3];
-                            value = T2.block(T2label).data()[idx];
-                        });
-
-                    } else {
-                        T2s = T2.block(T2label);
-                    }
-
-                    // O2 intermediate for C2 permutations
-                    ambit::Tensor O2s = ambit::Tensor::build(tensor_type_, "O2s", {sq, sj, ss, sb});
-
-                    if (i == 'c' || i == 'C') {
-                        O2s("qjsb") -= alpha * H2("qsam") * T2s("mjab");
-                    } else {
-                        std::string G1label = "aa";
-                        if (beta) {
-                            G1label = "AA";
-                        }
-
-                        ambit::Tensor Y2 =
-                            ambit::Tensor::build(tensor_type_, "T2s * Gamma1", {si, sj, svs, sb});
-                        Y2("xjab") = Gamma1_.block(G1label)("xy") * T2s("yjab");
-                        O2s("qjsb") -= alpha * H2("qsax") * Y2("xjab");
-                    }
-
-                    // adding O2sub to C2 with permutations
-                    O2s.iterate([&](const std::vector<size_t>& i, double& value) {
-                        if (is_C2label_P0) {
-                            size_t idx = i[0] * sj * ss * sb + i[1] * ss * sb + i[2] * sb + i[3];
-                            C2.block(C2label_P0).data()[idx] += value;
-                        }
-
-                        if (is_C2label_P1) {
-                            size_t idx = i[1] * sq * ss * sb + i[0] * ss * sb + i[2] * sb + i[3];
-                            C2.block(C2label_P1).data()[idx] -= value;
-                        }
-
-                        if (is_C2label_P2) {
-                            size_t idx = i[0] * sj * ss * sb + i[1] * ss * sb + i[3] * ss + i[2];
-                            C2.block(C2label_P2).data()[idx] -= value;
-                        }
-
-                        if (is_C2label_P3) {
-                            size_t idx = i[1] * sq * ss * sb + i[0] * ss * sb + i[3] * ss + i[2];
-                            C2.block(C2label_P3).data()[idx] += value;
-                        }
-                    });
-
-                } // end loop of "jb"
-
-                // part of the "qs" mixed spin are considered here because they
-                // share the same H2
-                if (!beta) {
-                    // "qs" spin aa, "jb" spin bb
-                    for (const std::string& hp : jb[1]) {
-                        const char& J = hp[0];
-                        const char& B = hp[1];
-                        size_t sJ = label_to_spacemo_[J].size();
-                        size_t sB = label_to_spacemo_[B].size();
-
-                        // make sure this C2label is available
-                        std::string C2label{q, J, s, B};
-                        if (!C2.is_block(C2label))
-                            continue;
-
-                        // form T2 small
-                        std::string T2label{i, J, 'v', B};
-                        ambit::Tensor T2s;
-
-                        if (nbatch != 1) {
-                            T2s = ambit::Tensor::build(tensor_type_, "T2s", {si, sJ, svs, sB});
-                            T2s.iterate([&](const std::vector<size_t>& i, double& value) {
-                                size_t idx = i[0] * sJ * sv * sB + i[1] * sv * sB +
-                                             virt_mo_sub[i[2]] * sB + i[3];
-                                value = T2.block(T2label).data()[idx];
-                            });
-
-                        } else {
-                            T2s = T2.block(T2label);
-                        }
-
-                        if (i == 'c') {
-                            C2.block(C2label)("qJsB") -= alpha * H2("qsam") * T2s("mJaB");
-                        } else {
-                            ambit::Tensor Y2 = ambit::Tensor::build(tensor_type_, "T2s * Gamma1",
-                                                                    {si, sJ, svs, sB});
-                            Y2("xJaB") = Gamma1_.block("aa")("xy") * T2s("yJaB");
-                            C2.block(C2label)("qJsB") -= alpha * H2("qsax") * Y2("xJaB");
-                        }
-                    }
-
-                } else {
-                    // "qs" spin bb, "jb" spin aa
-                    //  In this case, uncontracted indices are "ia". But we
-                    //  still use "jb" for consistency.
-                    for (const std::string& hp : jb[0]) {
-                        const char& j = hp[0];
-                        const char& b = hp[1];
-                        size_t sj = label_to_spacemo_[j].size();
-                        size_t sb = label_to_spacemo_[b].size();
-
-                        // make sure this C2 label is available
-                        std::string C2label{j, q, b, s};
-                        if (!C2.is_block(C2label))
-                            continue;
-
-                        // form T2 small
-                        std::string T2label{j, i, b, 'V'};
-                        ambit::Tensor T2s;
-
-                        if (nbatch != 1) {
-                            T2s = ambit::Tensor::build(tensor_type_, "T2s", {sj, si, sb, svs});
-                            T2s.iterate([&](const std::vector<size_t>& i, double& value) {
-                                size_t idx = i[0] * si * sv * sb + i[1] * sv * sb + i[2] * sv +
-                                             virt_mo_sub[i[3]];
-                                value = T2.block(T2label).data()[idx];
-                            });
-
-                        } else {
-                            T2s = T2.block(T2label);
-                        }
-
-                        if (i == 'C') {
-                            C2.block(C2label)("iQaS") -= alpha * H2("QSBM") * T2s("iMaB");
-                        } else {
-                            ambit::Tensor Y2 = ambit::Tensor::build(tensor_type_, "T2s * Gamma1",
-                                                                    {sj, si, sb, svs});
-                            Y2("iXaB") = Gamma1_.block("AA")("XY") * T2s("iYaB");
-                            C2.block(C2label)("iQaS") -= alpha * H2("QSBX") * Y2("iXaB");
-                        }
-                    }
-                } // end mixed spin of "qs"
-
-            } // end virtual "a" partition
-        }     // end hole index "i" in H2[qsai]
-    }         // end spin-pure general indices "q" and "s" in H2[qsai]
-
-    end_ = std::chrono::system_clock::now();
-    tt2_ = std::chrono::system_clock::to_time_t(end_);
-    if (profile_print_) {
-        outfile->Printf("  [V, T2] DF -> C2aa/bb PH exchange VP ended:   %s", std::ctime(&tt2_));
-        outfile->Printf("  [V, T2] DF -> C2aa/bb PH exchange VP wall time %.1f s.",
-                        compute_elapsed_time(start_, end_).count());
-    }
-
-    // "qs" spin ba, H2[sQaI]
-    start_ = std::chrono::system_clock::now();
-    tt1_ = std::chrono::system_clock::to_time_t(start_);
-    if (profile_print_) {
-        outfile->Printf("\n  [V, T2] DF -> C2ba PH exchange VP started: %s", std::ctime(&tt1_));
-    }
-
-    // loop over "qs" spin ba
-    for (const std::string& gg : qs[2]) {
-        const char& Q = gg[0];
-        const char& s = gg[1];
-        size_t sQ = label_to_spacemo_[Q].size();
-        size_t ss = label_to_spacemo_[s].size();
-
-        // loop over possible choices of "i"
-        for (const char& I : {'C', 'A'}) {
-            size_t sI = label_to_spacemo_[I].size();
-            std::string Blabel0{'L', 'v', s};
-            std::string Blabel1{'L', Q, I};
-
-            // loop over partitioned virtual index "b"
-            for (const auto& virt_mo_sub : sub_virt_mos) {
-                size_t svs = virt_mo_sub.size();
-
-                // compute H2
-                ambit::Tensor H2 = ambit::Tensor::build(tensor_type_, "H2s", {ss, sQ, svs, sI});
-
-                if (nbatch != 1) {
-                    ambit::Tensor Bs = ambit::Tensor::build(tensor_type_, "Bs", {sL, svs, ss});
-                    Bs.iterate([&](const std::vector<size_t>& i, double& value) {
-                        size_t idx = i[0] * sv * ss + virt_mo_sub[i[1]] * ss + i[2];
-                        value = B.block(Blabel0).data()[idx];
-                    });
-
-                    H2("sQaI") = Bs("gas") * B.block(Blabel1)("gQI");
-
-                } else {
-                    H2("sQaI") = B.block(Blabel0)("gas") * B.block(Blabel1)("gQI");
-                }
-
-                // loop over "jb" spin ab
-                for (const std::string& hp : jb[3]) {
-                    const char& j = hp[0];
-                    const char& b = hp[1];
-                    size_t sj = label_to_spacemo_[j].size();
-                    size_t sB = label_to_spacemo_[b].size();
-
-                    // make sure this C2 label is available
-                    std::string C2label{j, Q, s, b};
-                    if (!C2.is_block(C2label))
-                        continue;
-
-                    // form T2 small
-                    std::string T2label{j, I, 'v', b};
-                    ambit::Tensor T2s;
-
-                    if (nbatch != 1) {
-                        T2s = ambit::Tensor::build(tensor_type_, "T2s", {sj, sI, svs, sB});
-                        T2s.iterate([&](const std::vector<size_t>& i, double& value) {
-                            size_t idx = i[0] * sI * sv * sB + i[1] * sv * sB +
-                                         virt_mo_sub[i[2]] * sB + i[3];
-                            value = T2.block(T2label).data()[idx];
-                        });
-
-                    } else {
-                        T2s = T2.block(T2label);
-                    }
-
-                    if (I == 'C') {
-                        C2.block(C2label)("iQsB") -= alpha * H2("sQaM") * T2s("iMaB");
-                    } else {
-                        ambit::Tensor Y2 =
-                            ambit::Tensor::build(tensor_type_, "T2s * Gamma1", {sj, sI, svs, sB});
-                        Y2("iXaB") = Gamma1_.block("AA")("XY") * T2s("iYaB");
-                        C2.block(C2label)("iQsB") -= alpha * H2("sQaX") * Y2("iXaB");
-                    }
-                }
-
-            } // end virtual "a" partition
-        }     // end hole index "I" in H2[sQaI]
-    }         // end general indices "Q" and "s" in H2[sQaI]
-
-    end_ = std::chrono::system_clock::now();
-    tt2_ = std::chrono::system_clock::to_time_t(end_);
-    if (profile_print_) {
-        outfile->Printf("  [V, T2] DF -> C2ba PH exchange VP ended:   %s", std::ctime(&tt2_));
-        outfile->Printf("  [V, T2] DF -> C2ba PH exchange VP wall time %.1f s.",
-                        compute_elapsed_time(start_, end_).count());
-    }
-
-    // "qs" spin ab, H2[qSiA]
-    start_ = std::chrono::system_clock::now();
-    tt1_ = std::chrono::system_clock::to_time_t(start_);
-    if (profile_print_) {
-        outfile->Printf("\n  [V, T2] DF -> C2ab PH exchange VP started: %s", std::ctime(&tt1_));
-    }
-
-    for (const std::string& gg : qs[3]) {
-        const char& q = gg[0];
-        const char& S = gg[1];
-        size_t sq = label_to_spacemo_[q].size();
-        size_t sS = label_to_spacemo_[S].size();
-
-        // loop over possible choices of "i"
-        for (const char& i : {'c', 'a'}) {
-            size_t si = label_to_spacemo_[i].size();
-            std::string Blabel0{'L', 'V', S};
-            std::string Blabel1{'L', q, i};
-
-            // loop over partitioned virtual index "a"
-            for (const auto& virt_mo_sub : sub_virt_mos) {
-                size_t svs = virt_mo_sub.size();
-
-                // compute H2
-                ambit::Tensor H2 = ambit::Tensor::build(tensor_type_, "H2s", {sq, sS, si, svs});
-
-                if (nbatch != 1) {
-                    ambit::Tensor Bs = ambit::Tensor::build(tensor_type_, "Bs", {sL, svs, sS});
-                    Bs.iterate([&](const std::vector<size_t>& i, double& value) {
-                        size_t idx = i[0] * sv * sS + virt_mo_sub[i[1]] * sS + i[2];
-                        value = B.block(Blabel0).data()[idx];
-                    });
-
-                    H2("qSiA") = Bs("gAS") * B.block(Blabel1)("gqi");
-
-                } else {
-                    H2("qSiA") = B.block(Blabel0)("gAS") * B.block(Blabel1)("gqi");
-                }
-
-                // loop over "jb" spin ba
-                for (const std::string& hp : jb[2]) {
-                    const char& J = hp[0];
-                    const char& b = hp[1];
-                    size_t sJ = label_to_spacemo_[J].size();
-                    size_t sb = label_to_spacemo_[b].size();
-
-                    // make sure this C2 label is available
-                    std::string C2label{q, J, b, S};
-                    if (!C2.is_block(C2label))
-                        continue;
-
-                    // form T2 small
-                    std::string T2label{i, J, b, 'V'};
-                    ambit::Tensor T2s;
-
-                    if (nbatch != 1) {
-                        T2s = ambit::Tensor::build(tensor_type_, "T2s", {si, sJ, sb, svs});
-                        T2s.iterate([&](const std::vector<size_t>& i, double& value) {
-                            size_t idx = i[0] * sJ * sv * sb + i[1] * sv * sb + i[2] * sv +
-                                         virt_mo_sub[i[3]];
-                            value = T2.block(T2label).data()[idx];
-                        });
-                    } else {
-                        T2s = T2.block(T2label);
-                    }
-
-                    if (i == 'c') {
-                        C2.block(C2label)("qJaS") -= alpha * H2("qSmB") * T2s("mJaB");
-                    } else {
-                        ambit::Tensor Y2 =
-                            ambit::Tensor::build(tensor_type_, "T2s * Gamma1", {si, sJ, sb, svs});
-                        Y2("xJaB") = Gamma1_.block("aa")("xy") * T2s("yJaB");
-                        C2.block(C2label)("qJaS") -= alpha * H2("qSxB") * Y2("xJaB");
-                    }
-                }
-
-            } // end virtual "A" partition
-        }     // end hole index "i" in H2[qSiA]
-    }         // end general indices "q" and "S" in H2[qSiA]
-
-    end_ = std::chrono::system_clock::now();
-    tt2_ = std::chrono::system_clock::to_time_t(end_);
-    if (profile_print_) {
-        outfile->Printf("  [V, T2] DF -> C2 PH(VH) exchange ended:   %s", std::ctime(&tt2_));
-        outfile->Printf("  [V, T2] DF -> C2 PH(VH) exchange wall time %.1f s.",
-                        compute_elapsed_time(start_, end_).count());
-    }
-}
+//void DSRG_MRPT3::V_T2_C2_DF_VH_EX(BlockedTensor& B, BlockedTensor& T2, const double& alpha,
+//                                  BlockedTensor& C2,
+//                                  const std::vector<std::vector<std::string>>& qs,
+//                                  const std::vector<std::vector<std::string>>& jb) {
+
+//    // We will do batches in "a". See V_T2_C2_DF_AH_EX for more comments.
+
+//    size_t sc = core_mos_.size();
+//    size_t sa = actv_mos_.size();
+//    size_t sv = virt_mos_.size();
+//    size_t sL = aux_mos_.size();
+
+//    // figure out peak memory usage and how to separate the virtual index
+//    size_t smax_jb = 0;
+//    size_t smax_qs = 0, smax_q = 0, smax_s = 0;
+//    size_t smax_hole = (sc > sa) ? sc : sa;
+
+//    for (const std::string& hp : jb[0]) {
+//        size_t smax = label_to_spacemo_[hp[0]].size() * label_to_spacemo_[hp[1]].size();
+
+//        if (smax > smax_jb) {
+//            smax_jb = smax;
+//        }
+//    }
+
+//    for (const std::string& gg : qs[0]) {
+//        size_t sq = label_to_spacemo_[gg[0]].size();
+//        size_t ss = label_to_spacemo_[gg[1]].size();
+//        size_t sqs = sq * ss;
+
+//        if (sq > smax_q) {
+//            smax_q = sq;
+//        }
+
+//        if (ss > smax_s) {
+//            smax_s = ss;
+//        }
+
+//        if (sqs > smax_qs) {
+//            smax_qs = sqs;
+//        }
+//    }
+
+//    size_t nbatch = 1;
+//    size_t svs = sv / nbatch;
+//    size_t nele_total = sL * smax_s * svs + smax_qs * svs * smax_hole + smax_hole * smax_jb * svs +
+//                        smax_jb * smax_qs;
+//    while (nele_total * sizeof(double) > static_cast<size_t>(0.95 * mem_total_)) {
+//        nbatch += 1;
+//        svs = sv / nbatch;
+//        nele_total = sL * smax_s * svs + smax_qs * svs * smax_hole + smax_hole * smax_jb * svs +
+//                     smax_jb * smax_qs;
+//    }
+
+//    // if nbatch > sv, tensor is too large to be batched
+//    if (nbatch > sv) {
+//        outfile->Printf("\n    Not enough memory for batching tensor H2(%zu * "
+//                        "%zu * %zu * %zu).",
+//                        smax_q, smax_s, smax_hole, sv);
+//        throw psi::PSIEXCEPTION("Not enough memory for batching at DSRG-MRPT3 V_T2_C2_DF_VH_EX.");
+//    }
+
+//    // memory usage
+//    std::pair<double, std::string> mem_use = to_xb(nele_total, sizeof(double));
+
+//    // fill the indices of sub virtuals
+//    std::vector<std::vector<size_t>> sub_virt_mos; // relative virtual indices
+//    size_t divisible = sv / nbatch;
+//    size_t modulo = sv % nbatch;
+//    for (size_t i = 0, start = 0; i < nbatch; ++i) {
+//        size_t end;
+//        if (i < modulo) {
+//            end = start + (divisible + 1);
+//        } else {
+//            end = start + divisible;
+//        }
+
+//        std::vector<size_t> sub_virt;
+//        for (size_t i = start; i < end; ++i) {
+//            sub_virt.push_back(i);
+//        }
+//        sub_virt_mos.push_back(sub_virt);
+//        start = end;
+//    }
+
+//    // set timer
+//    start_ = std::chrono::system_clock::now();
+//    tt1_ = std::chrono::system_clock::to_time_t(start_);
+//    outfile->Printf("\n    Computing [V, T2] DF -> C2 PH(VH) exchange in "
+//                    "batches (%zu, %.2f %s)",
+//                    nbatch, mem_use.first, mem_use.second.c_str());
+//    if (profile_print_) {
+//        outfile->Printf("\n  [V, T2] DF -> C2 PH(VH) exchange started: %s", std::ctime(&tt1_));
+//    }
+
+//    // loop over spin pure "qs" indices
+//    std::vector<std::string> qs_pure(qs[0]);
+//    qs_pure.insert(qs_pure.end(), qs[1].begin(), qs[1].end());
+
+//    for (const std::string& gg : qs_pure) {
+//        const char& q = gg[0];
+//        const char& s = gg[1];
+//        size_t sq = label_to_spacemo_[q].size();
+//        size_t ss = label_to_spacemo_[s].size();
+//        bool beta = isupper(q);
+
+//        std::vector<char> ih0{'c', 'a'};
+//        std::vector<std::string> vec_hp = jb[0];
+//        if (beta) {
+//            ih0 = std::vector<char>{'C', 'A'};
+//            vec_hp = jb[1];
+//        }
+
+//        // loop over possible choices of "i"
+//        for (const char& i : ih0) {
+//            size_t si = label_to_spacemo_[i].size();
+//            std::string Blabel0{'L', 'v', s};
+//            std::string Blabel1{'L', q, i};
+//            if (beta) {
+//                Blabel0 = std::string{'L', 'V', s};
+//            }
+
+//            // loop over partitioned index "a"
+//            for (const auto& virt_mo_sub : sub_virt_mos) {
+//                size_t svs = virt_mo_sub.size();
+
+//                ambit::Tensor H2 = ambit::Tensor::build(tensor_type_, "H2s", {sq, ss, svs, si});
+
+//                if (nbatch != 1) {
+//                    ambit::Tensor Bs = ambit::Tensor::build(tensor_type_, "Bs", {sL, svs, ss});
+//                    Bs.iterate([&](const std::vector<size_t>& i, double& value) {
+//                        size_t idx = i[0] * sv * ss + virt_mo_sub[i[1]] * ss + i[2];
+//                        value = B.block(Blabel0).data()[idx];
+//                    });
+
+//                    H2("qsei") = Bs("ges") * B.block(Blabel1)("gqi");
+//                } else {
+//                    H2("qsei") = B.block(Blabel0)("ges") * B.block(Blabel1)("gqi");
+//                }
+
+//                // loop over indices "jb"
+//                for (const std::string& hp : vec_hp) {
+//                    const char& j = hp[0];
+//                    const char& b = hp[1];
+//                    size_t sj = label_to_spacemo_[j].size();
+//                    size_t sb = label_to_spacemo_[b].size();
+
+//                    // C2 labels with permutations
+//                    std::string C2label_P0{q, j, s, b};
+//                    std::string C2label_P1{j, q, s, b};
+//                    std::string C2label_P2{q, j, b, s};
+//                    std::string C2label_P3{j, q, b, s};
+//                    bool is_C2label_P0 = C2.is_block(C2label_P0);
+//                    bool is_C2label_P1 = C2.is_block(C2label_P1);
+//                    bool is_C2label_P2 = C2.is_block(C2label_P2);
+//                    bool is_C2label_P3 = C2.is_block(C2label_P3);
+//                    if (!is_C2label_P0 && !is_C2label_P1 && !is_C2label_P2 && !is_C2label_P3)
+//                        continue;
+
+//                    // T2 small
+//                    std::string T2label{i, j, 'v', b};
+//                    if (beta) {
+//                        T2label = std::string{i, j, 'V', b};
+//                    }
+
+//                    ambit::Tensor T2s;
+//                    if (nbatch != 1) {
+//                        T2s = ambit::Tensor::build(tensor_type_, "T2s", {si, sj, svs, sb});
+//                        T2s.iterate([&](const std::vector<size_t>& i, double& value) {
+//                            size_t idx = i[0] * sj * sv * sb + i[1] * sv * sb +
+//                                         virt_mo_sub[i[2]] * sb + i[3];
+//                            value = T2.block(T2label).data()[idx];
+//                        });
+
+//                    } else {
+//                        T2s = T2.block(T2label);
+//                    }
+
+//                    // O2 intermediate for C2 permutations
+//                    ambit::Tensor O2s = ambit::Tensor::build(tensor_type_, "O2s", {sq, sj, ss, sb});
+
+//                    if (i == 'c' || i == 'C') {
+//                        O2s("qjsb") -= alpha * H2("qsam") * T2s("mjab");
+//                    } else {
+//                        std::string G1label = "aa";
+//                        if (beta) {
+//                            G1label = "AA";
+//                        }
+
+//                        ambit::Tensor Y2 =
+//                            ambit::Tensor::build(tensor_type_, "T2s * Gamma1", {si, sj, svs, sb});
+//                        Y2("xjab") = Gamma1_.block(G1label)("xy") * T2s("yjab");
+//                        O2s("qjsb") -= alpha * H2("qsax") * Y2("xjab");
+//                    }
+
+//                    // adding O2sub to C2 with permutations
+//                    O2s.iterate([&](const std::vector<size_t>& i, double& value) {
+//                        if (is_C2label_P0) {
+//                            size_t idx = i[0] * sj * ss * sb + i[1] * ss * sb + i[2] * sb + i[3];
+//                            C2.block(C2label_P0).data()[idx] += value;
+//                        }
+
+//                        if (is_C2label_P1) {
+//                            size_t idx = i[1] * sq * ss * sb + i[0] * ss * sb + i[2] * sb + i[3];
+//                            C2.block(C2label_P1).data()[idx] -= value;
+//                        }
+
+//                        if (is_C2label_P2) {
+//                            size_t idx = i[0] * sj * ss * sb + i[1] * ss * sb + i[3] * ss + i[2];
+//                            C2.block(C2label_P2).data()[idx] -= value;
+//                        }
+
+//                        if (is_C2label_P3) {
+//                            size_t idx = i[1] * sq * ss * sb + i[0] * ss * sb + i[3] * ss + i[2];
+//                            C2.block(C2label_P3).data()[idx] += value;
+//                        }
+//                    });
+
+//                } // end loop of "jb"
+
+//                // part of the "qs" mixed spin are considered here because they
+//                // share the same H2
+//                if (!beta) {
+//                    // "qs" spin aa, "jb" spin bb
+//                    for (const std::string& hp : jb[1]) {
+//                        const char& J = hp[0];
+//                        const char& B = hp[1];
+//                        size_t sJ = label_to_spacemo_[J].size();
+//                        size_t sB = label_to_spacemo_[B].size();
+
+//                        // make sure this C2label is available
+//                        std::string C2label{q, J, s, B};
+//                        if (!C2.is_block(C2label))
+//                            continue;
+
+//                        // form T2 small
+//                        std::string T2label{i, J, 'v', B};
+//                        ambit::Tensor T2s;
+
+//                        if (nbatch != 1) {
+//                            T2s = ambit::Tensor::build(tensor_type_, "T2s", {si, sJ, svs, sB});
+//                            T2s.iterate([&](const std::vector<size_t>& i, double& value) {
+//                                size_t idx = i[0] * sJ * sv * sB + i[1] * sv * sB +
+//                                             virt_mo_sub[i[2]] * sB + i[3];
+//                                value = T2.block(T2label).data()[idx];
+//                            });
+
+//                        } else {
+//                            T2s = T2.block(T2label);
+//                        }
+
+//                        if (i == 'c') {
+//                            C2.block(C2label)("qJsB") -= alpha * H2("qsam") * T2s("mJaB");
+//                        } else {
+//                            ambit::Tensor Y2 = ambit::Tensor::build(tensor_type_, "T2s * Gamma1",
+//                                                                    {si, sJ, svs, sB});
+//                            Y2("xJaB") = Gamma1_.block("aa")("xy") * T2s("yJaB");
+//                            C2.block(C2label)("qJsB") -= alpha * H2("qsax") * Y2("xJaB");
+//                        }
+//                    }
+
+//                } else {
+//                    // "qs" spin bb, "jb" spin aa
+//                    //  In this case, uncontracted indices are "ia". But we
+//                    //  still use "jb" for consistency.
+//                    for (const std::string& hp : jb[0]) {
+//                        const char& j = hp[0];
+//                        const char& b = hp[1];
+//                        size_t sj = label_to_spacemo_[j].size();
+//                        size_t sb = label_to_spacemo_[b].size();
+
+//                        // make sure this C2 label is available
+//                        std::string C2label{j, q, b, s};
+//                        if (!C2.is_block(C2label))
+//                            continue;
+
+//                        // form T2 small
+//                        std::string T2label{j, i, b, 'V'};
+//                        ambit::Tensor T2s;
+
+//                        if (nbatch != 1) {
+//                            T2s = ambit::Tensor::build(tensor_type_, "T2s", {sj, si, sb, svs});
+//                            T2s.iterate([&](const std::vector<size_t>& i, double& value) {
+//                                size_t idx = i[0] * si * sv * sb + i[1] * sv * sb + i[2] * sv +
+//                                             virt_mo_sub[i[3]];
+//                                value = T2.block(T2label).data()[idx];
+//                            });
+
+//                        } else {
+//                            T2s = T2.block(T2label);
+//                        }
+
+//                        if (i == 'C') {
+//                            C2.block(C2label)("iQaS") -= alpha * H2("QSBM") * T2s("iMaB");
+//                        } else {
+//                            ambit::Tensor Y2 = ambit::Tensor::build(tensor_type_, "T2s * Gamma1",
+//                                                                    {sj, si, sb, svs});
+//                            Y2("iXaB") = Gamma1_.block("AA")("XY") * T2s("iYaB");
+//                            C2.block(C2label)("iQaS") -= alpha * H2("QSBX") * Y2("iXaB");
+//                        }
+//                    }
+//                } // end mixed spin of "qs"
+
+//            } // end virtual "a" partition
+//        }     // end hole index "i" in H2[qsai]
+//    }         // end spin-pure general indices "q" and "s" in H2[qsai]
+
+//    end_ = std::chrono::system_clock::now();
+//    tt2_ = std::chrono::system_clock::to_time_t(end_);
+//    if (profile_print_) {
+//        outfile->Printf("  [V, T2] DF -> C2aa/bb PH exchange VP ended:   %s", std::ctime(&tt2_));
+//        outfile->Printf("  [V, T2] DF -> C2aa/bb PH exchange VP wall time %.1f s.",
+//                        compute_elapsed_time(start_, end_).count());
+//    }
+
+//    // "qs" spin ba, H2[sQaI]
+//    start_ = std::chrono::system_clock::now();
+//    tt1_ = std::chrono::system_clock::to_time_t(start_);
+//    if (profile_print_) {
+//        outfile->Printf("\n  [V, T2] DF -> C2ba PH exchange VP started: %s", std::ctime(&tt1_));
+//    }
+
+//    // loop over "qs" spin ba
+//    for (const std::string& gg : qs[2]) {
+//        const char& Q = gg[0];
+//        const char& s = gg[1];
+//        size_t sQ = label_to_spacemo_[Q].size();
+//        size_t ss = label_to_spacemo_[s].size();
+
+//        // loop over possible choices of "i"
+//        for (const char& I : {'C', 'A'}) {
+//            size_t sI = label_to_spacemo_[I].size();
+//            std::string Blabel0{'L', 'v', s};
+//            std::string Blabel1{'L', Q, I};
+
+//            // loop over partitioned virtual index "b"
+//            for (const auto& virt_mo_sub : sub_virt_mos) {
+//                size_t svs = virt_mo_sub.size();
+
+//                // compute H2
+//                ambit::Tensor H2 = ambit::Tensor::build(tensor_type_, "H2s", {ss, sQ, svs, sI});
+
+//                if (nbatch != 1) {
+//                    ambit::Tensor Bs = ambit::Tensor::build(tensor_type_, "Bs", {sL, svs, ss});
+//                    Bs.iterate([&](const std::vector<size_t>& i, double& value) {
+//                        size_t idx = i[0] * sv * ss + virt_mo_sub[i[1]] * ss + i[2];
+//                        value = B.block(Blabel0).data()[idx];
+//                    });
+
+//                    H2("sQaI") = Bs("gas") * B.block(Blabel1)("gQI");
+
+//                } else {
+//                    H2("sQaI") = B.block(Blabel0)("gas") * B.block(Blabel1)("gQI");
+//                }
+
+//                // loop over "jb" spin ab
+//                for (const std::string& hp : jb[3]) {
+//                    const char& j = hp[0];
+//                    const char& b = hp[1];
+//                    size_t sj = label_to_spacemo_[j].size();
+//                    size_t sB = label_to_spacemo_[b].size();
+
+//                    // make sure this C2 label is available
+//                    std::string C2label{j, Q, s, b};
+//                    if (!C2.is_block(C2label))
+//                        continue;
+
+//                    // form T2 small
+//                    std::string T2label{j, I, 'v', b};
+//                    ambit::Tensor T2s;
+
+//                    if (nbatch != 1) {
+//                        T2s = ambit::Tensor::build(tensor_type_, "T2s", {sj, sI, svs, sB});
+//                        T2s.iterate([&](const std::vector<size_t>& i, double& value) {
+//                            size_t idx = i[0] * sI * sv * sB + i[1] * sv * sB +
+//                                         virt_mo_sub[i[2]] * sB + i[3];
+//                            value = T2.block(T2label).data()[idx];
+//                        });
+
+//                    } else {
+//                        T2s = T2.block(T2label);
+//                    }
+
+//                    if (I == 'C') {
+//                        C2.block(C2label)("iQsB") -= alpha * H2("sQaM") * T2s("iMaB");
+//                    } else {
+//                        ambit::Tensor Y2 =
+//                            ambit::Tensor::build(tensor_type_, "T2s * Gamma1", {sj, sI, svs, sB});
+//                        Y2("iXaB") = Gamma1_.block("AA")("XY") * T2s("iYaB");
+//                        C2.block(C2label)("iQsB") -= alpha * H2("sQaX") * Y2("iXaB");
+//                    }
+//                }
+
+//            } // end virtual "a" partition
+//        }     // end hole index "I" in H2[sQaI]
+//    }         // end general indices "Q" and "s" in H2[sQaI]
+
+//    end_ = std::chrono::system_clock::now();
+//    tt2_ = std::chrono::system_clock::to_time_t(end_);
+//    if (profile_print_) {
+//        outfile->Printf("  [V, T2] DF -> C2ba PH exchange VP ended:   %s", std::ctime(&tt2_));
+//        outfile->Printf("  [V, T2] DF -> C2ba PH exchange VP wall time %.1f s.",
+//                        compute_elapsed_time(start_, end_).count());
+//    }
+
+//    // "qs" spin ab, H2[qSiA]
+//    start_ = std::chrono::system_clock::now();
+//    tt1_ = std::chrono::system_clock::to_time_t(start_);
+//    if (profile_print_) {
+//        outfile->Printf("\n  [V, T2] DF -> C2ab PH exchange VP started: %s", std::ctime(&tt1_));
+//    }
+
+//    for (const std::string& gg : qs[3]) {
+//        const char& q = gg[0];
+//        const char& S = gg[1];
+//        size_t sq = label_to_spacemo_[q].size();
+//        size_t sS = label_to_spacemo_[S].size();
+
+//        // loop over possible choices of "i"
+//        for (const char& i : {'c', 'a'}) {
+//            size_t si = label_to_spacemo_[i].size();
+//            std::string Blabel0{'L', 'V', S};
+//            std::string Blabel1{'L', q, i};
+
+//            // loop over partitioned virtual index "a"
+//            for (const auto& virt_mo_sub : sub_virt_mos) {
+//                size_t svs = virt_mo_sub.size();
+
+//                // compute H2
+//                ambit::Tensor H2 = ambit::Tensor::build(tensor_type_, "H2s", {sq, sS, si, svs});
+
+//                if (nbatch != 1) {
+//                    ambit::Tensor Bs = ambit::Tensor::build(tensor_type_, "Bs", {sL, svs, sS});
+//                    Bs.iterate([&](const std::vector<size_t>& i, double& value) {
+//                        size_t idx = i[0] * sv * sS + virt_mo_sub[i[1]] * sS + i[2];
+//                        value = B.block(Blabel0).data()[idx];
+//                    });
+
+//                    H2("qSiA") = Bs("gAS") * B.block(Blabel1)("gqi");
+
+//                } else {
+//                    H2("qSiA") = B.block(Blabel0)("gAS") * B.block(Blabel1)("gqi");
+//                }
+
+//                // loop over "jb" spin ba
+//                for (const std::string& hp : jb[2]) {
+//                    const char& J = hp[0];
+//                    const char& b = hp[1];
+//                    size_t sJ = label_to_spacemo_[J].size();
+//                    size_t sb = label_to_spacemo_[b].size();
+
+//                    // make sure this C2 label is available
+//                    std::string C2label{q, J, b, S};
+//                    if (!C2.is_block(C2label))
+//                        continue;
+
+//                    // form T2 small
+//                    std::string T2label{i, J, b, 'V'};
+//                    ambit::Tensor T2s;
+
+//                    if (nbatch != 1) {
+//                        T2s = ambit::Tensor::build(tensor_type_, "T2s", {si, sJ, sb, svs});
+//                        T2s.iterate([&](const std::vector<size_t>& i, double& value) {
+//                            size_t idx = i[0] * sJ * sv * sb + i[1] * sv * sb + i[2] * sv +
+//                                         virt_mo_sub[i[3]];
+//                            value = T2.block(T2label).data()[idx];
+//                        });
+//                    } else {
+//                        T2s = T2.block(T2label);
+//                    }
+
+//                    if (i == 'c') {
+//                        C2.block(C2label)("qJaS") -= alpha * H2("qSmB") * T2s("mJaB");
+//                    } else {
+//                        ambit::Tensor Y2 =
+//                            ambit::Tensor::build(tensor_type_, "T2s * Gamma1", {si, sJ, sb, svs});
+//                        Y2("xJaB") = Gamma1_.block("aa")("xy") * T2s("yJaB");
+//                        C2.block(C2label)("qJaS") -= alpha * H2("qSxB") * Y2("xJaB");
+//                    }
+//                }
+
+//            } // end virtual "A" partition
+//        }     // end hole index "i" in H2[qSiA]
+//    }         // end general indices "q" and "S" in H2[qSiA]
+
+//    end_ = std::chrono::system_clock::now();
+//    tt2_ = std::chrono::system_clock::to_time_t(end_);
+//    if (profile_print_) {
+//        outfile->Printf("  [V, T2] DF -> C2 PH(VH) exchange ended:   %s", std::ctime(&tt2_));
+//        outfile->Printf("  [V, T2] DF -> C2 PH(VH) exchange wall time %.1f s.",
+//                        compute_elapsed_time(start_, end_).count());
+//    }
+//}
 
 std::vector<std::vector<double>> DSRG_MRPT3::diagonalize_Fock_diagblocks(BlockedTensor& U) {
     // diagonal blocks identifiers (C-A-V ordering)
