@@ -222,9 +222,6 @@ void SOMRDSRG::startup() {
     rdms_.g1b().iterate(
         [&](const std::vector<size_t>& i, double& value) { gamma_AA.set(i[0], i[1], value); });
 
-    gamma_aa.print();
-    gamma_AA.print();
-
     // Fill up the active part of Gamma
     Gamma1_aa.iterate([&](const std::vector<size_t>& i, double& value) {
         if (i[0] < nactv and i[1] < nactv) {
@@ -464,8 +461,6 @@ void SOMRDSRG::startup() {
     // Form the Fock matrix
     F["pq"] = H["pq"];
     F["pq"] += V["pjqi"] * Gamma1["ij"];
-
-    F.print();
 
     size_t ncmo_ = mo_space_info_->size("CORRELATED");
     std::vector<double> Fa(ncmo_);

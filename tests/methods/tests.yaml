@@ -24,6 +24,7 @@ aci:
    - aci-17
    - aci-18
    - aci-19
+   - aci-20
    - aci-local-20
    - aci_scf-1
    - aci-full-pt2-1
@@ -135,12 +136,13 @@ dsrg-mrpt3:
    - dsrg-mrpt3-1
    - dsrg-mrpt3-2
    - dsrg-mrpt3-5
+   - dsrg-mrpt3-9
+   - dsrg-mrpt3-7-CO
    - aci-dsrg-mrpt3-1
   long:
    - dsrg-mrpt3-3
    - dsrg-mrpt3-4
    - dsrg-mrpt3-6-sa
-   - dsrg-mrpt3-7-CO
    - dsrg-mrpt3-8-sa-C2H4
 dwms-dsrgpt:
 # short:
