@@ -3,10 +3,11 @@
 
 #include "psi4/liboptions/liboptions.h"
 
-#include "integrals/integrals.h"
-#include "base_classes/mo_space_info.h"
+#include "mrdsrg-spin-integrated/master_mrdsrg.h"
+//#include "integrals/integrals.h"
+//#include "base_classes/mo_space_info.h"
+//#include "sparse_ci/determinant.h"
 #include "sci/fci_mo.h"
-#include "sparse_ci/determinant.h"
 
 namespace forte {
 

@@ -26,6 +26,8 @@
  * @END LICENSE
  */
 
+#ifdef COMPILE_ACTIVE_DSRGPT2
+
 #ifndef _active_dsrgpt2_h_
 #define _active_dsrgpt2_h_
 
@@ -274,3 +276,5 @@ class ACTIVE_DSRGPT2 {
 } // namespace forte
 
 #endif // ACTIVE_DSRGPT2_H
+
+#endif
