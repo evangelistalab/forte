@@ -272,7 +272,6 @@ class MRDSRG : public MASTER_DSRG {
     /// Norm of off-diagonal Hbar1
     double Hbar1od_norm(const std::vector<std::string>& blocks);
 
-#ifdef ENABLE_UNTESTED_CODE
     /// Compute zero-body term of commutator [H2, T1]
     void H2_T1_C0_DF(BlockedTensor& B, BlockedTensor& T1, const double& alpha, double& C0);
     /// Compute zero-body term of commutator [H2, T2] with density fitting
@@ -285,7 +284,6 @@ class MRDSRG : public MASTER_DSRG {
     void H2_T1_C2_DF(BlockedTensor& B, BlockedTensor& T1, const double& alpha, BlockedTensor& C2);
     /// Compute two-body term of commutator [H2, T2] with density fitting
     void H2_T2_C2_DF(BlockedTensor& B, BlockedTensor& T2, const double& alpha, BlockedTensor& C2);
-#endif
 
     //    /// Compute zero-body term of commutator [H1, T1]
     //    void H1_T1_C0(BlockedTensor& H1, BlockedTensor& T1, const double& alpha, double& C0);

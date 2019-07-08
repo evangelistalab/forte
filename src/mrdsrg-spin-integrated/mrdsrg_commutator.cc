@@ -91,7 +91,6 @@ void MRDSRG::H1_G2_C0(BlockedTensor& H1, BlockedTensor& G2, const double& alpha,
     dsrg_time_.add("120", timer.get());
 }
 
-#ifdef ENABLE_UNTESTED_CODE
 void MRDSRG::H2_T2_C1_DF(BlockedTensor& B, BlockedTensor& T2, const double& alpha,
                          BlockedTensor& C1) {
     local_timer timer;
@@ -288,11 +287,6 @@ void MRDSRG::H2_T2_C1_DF(BlockedTensor& B, BlockedTensor& T2, const double& alph
     }
     dsrg_time_.add("221", timer.get());
 }
-
-
-
-
-
 
 void MRDSRG::H2_T1_C0_DF(BlockedTensor& B, BlockedTensor& T1, const double& alpha, double& C0) {
     local_timer timer;
@@ -714,6 +708,7 @@ void MRDSRG::H2_T2_C2_DF(BlockedTensor& B, BlockedTensor& T2, const double& alph
     dsrg_time_.add("222", timer.get());
 }
 
+#ifdef ENABLE_UNTESTED_CODE
 void MRDSRG::H2_G2_C0(BlockedTensor& H2, BlockedTensor& G2, const double& alpha, double& C0) {
     local_timer timer;
     double E = 0.0;
