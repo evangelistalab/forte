@@ -26,7 +26,7 @@
  * @END LICENSE
  */
 
-#ifdef COMPILE_ACTIVE_DSRGPT2
+#ifdef ENABLE_UNTESTED_CODE
 
 #include <algorithm>
 #include <iomanip>
