@@ -42,7 +42,6 @@ using namespace psi;
 
 namespace forte {
 
-
 void MRDSRG::H1_G1_C0(BlockedTensor& H1, BlockedTensor& G1, const double& alpha, double& C0) {
     local_timer timer;
 
@@ -596,7 +595,6 @@ void MRDSRG::H2_T2_C0_DF(BlockedTensor& B, BlockedTensor& T2, const double& alph
     dsrg_time_.add("220", timer.get());
 }
 
-
 void MRDSRG::H2_T2_C2_DF(BlockedTensor& B, BlockedTensor& T2, const double& alpha,
                          BlockedTensor& C2) {
     local_timer timer;
@@ -708,7 +706,6 @@ void MRDSRG::H2_T2_C2_DF(BlockedTensor& B, BlockedTensor& T2, const double& alph
     dsrg_time_.add("222", timer.get());
 }
 
-#ifdef ENABLE_UNTESTED_CODE
 void MRDSRG::H2_G2_C0(BlockedTensor& H2, BlockedTensor& G2, const double& alpha, double& C0) {
     local_timer timer;
     double E = 0.0;
@@ -1327,10 +1324,7 @@ void MRDSRG::H2_G2_C2(BlockedTensor& H2, BlockedTensor& G2, const double& alpha,
 
     dsrg_time_.add("222", timer.get());
 }
-#endif
-
 } // namespace forte
-
 
 // void MRDSRG::H1_T1_C0(BlockedTensor& H1, BlockedTensor& T1, const double& alpha, double& C0) {
 //    local_timer timer;
