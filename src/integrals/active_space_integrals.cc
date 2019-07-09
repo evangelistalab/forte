@@ -478,7 +478,7 @@ void ActiveSpaceIntegrals::print() {
             for (size_t r = 0; r < nmo_; ++r) {
                 for (size_t s = 0; s < nmo_; ++s) {
                     if (std::fabs(tei_aa(p, q, r, s)) > 1e-12)
-                        psi::outfile->Printf("  <%2d %2d|%2d %2d> = %20.12f\n", p, q,
+                        psi::outfile->Printf("  <%2d %2d|%2d %2d> = %20.12f\n", p, q, r, s,
                                              tei_aa(p, q, r, s));
                 }
             }
@@ -490,7 +490,7 @@ void ActiveSpaceIntegrals::print() {
             for (size_t r = 0; r < nmo_; ++r) {
                 for (size_t s = 0; s < nmo_; ++s) {
                     if (std::fabs(tei_bb(p, q, r, s)) > 1e-12)
-                        psi::outfile->Printf("  <%2d %2d|%2d %2d> = %20.12f\n", p, q,
+                        psi::outfile->Printf("  <%2d %2d|%2d %2d> = %20.12f\n", p, q, r, s,
                                              tei_bb(p, q, r, s));
                 }
             }
@@ -502,7 +502,7 @@ void ActiveSpaceIntegrals::print() {
             for (size_t r = 0; r < nmo_; ++r) {
                 for (size_t s = 0; s < nmo_; ++s) {
                     if (std::fabs(tei_ab(p, q, r, s)) > 1e-12)
-                        psi::outfile->Printf("  <%2d %2d|%2d %2d> = %20.12f\n", p, q,
+                        psi::outfile->Printf("  <%2d %2d|%2d %2d> = %20.12f\n", p, q, r, s,
                                              tei_ab(p, q, r, s));
                 }
             }
