@@ -198,6 +198,8 @@ mrdsrg_so:
   long:
    - mrdsrg_so-2
 mrdsrg-ldsrg2-df:
+  short:
+   - mrdsrg-ldsrg2-df-4
   long:
    - mrdsrg-ldsrg2-df-seq-1
    - mrdsrg-ldsrg2-df-seq-2

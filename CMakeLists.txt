@@ -25,6 +25,7 @@ option_with_print(ENABLE_MPI "Enable MPI parallelization" OFF)
 option_with_print(ENABLE_GA "Enable Global Arrays" OFF)
 option_with_print(MAX_DET_ORB "Set the maximum number of orbitals in a determinant" OFF)
 option_with_print(ENABLE_CODECOV "Enable compilation with code coverage flags" OFF)
+option_with_print(ENABLE_UNTESTED_CODE "Enable code not covered by code coverage" OFF)
 #option_with_print(ENABLE_GENERIC "Enable mostly static linking in shared library" OFF)
 
 include(autocmake_omp)
@@ -64,6 +65,10 @@ add_compile_options(-Wall -Wextra -pedantic) # -Werror)
 
 if(ENABLE_CODECOV)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage") # enabling coverage
+endif()
+
+if(ENABLE_UNTESTED_CODE)
+    add_definitions(-DENABLE_UNTESTED_CODE)
 endif()
 
 # List of CC files
@@ -162,8 +167,8 @@ src/mrdsrg-spin-integrated/mrdsrg_pt.cc
 src/mrdsrg-spin-integrated/mrdsrg_smart_s.cc
 src/mrdsrg-spin-integrated/mrdsrg_srg.cc
 src/mrdsrg-spin-integrated/three_dsrg_mrpt2.cc
-src/mrdsrg-spin-integrated/active_dsrgpt2.cc
 src/mrdsrg-spin-integrated/dwms_mrpt2.cc
+src/mrdsrg-spin-integrated/active_dsrgpt2.cc
 src/orbital-helpers/ao_helper.cc
 src/orbital-helpers/localize.cc
 src/orbital-helpers/iao_builder.cc
