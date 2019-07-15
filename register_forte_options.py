@@ -546,7 +546,7 @@ def register_dsrg_options(forte_options):
 
     forte_options.add_str("CORR_LEVEL", "PT2",
                      ["PT2", "PT3", "LDSRG2", "LDSRG2_QC", "LSRG2", "SRG_PT2", "QDSRG2",
-                      "LDSRG2_P3", "QDSRG2_P3"],
+                      "LDSRG2_P3", "QDSRG2_P3", "LDSRG3", "LDSRG3_2", "LDSRG3_1"],
                      "Correlation level of MR-DSRG (used in mrdsrg code, "
                      "LDSRG2_P3 and QDSRG2_P3 not implemented)")
 
@@ -615,7 +615,6 @@ def register_dsrg_options(forte_options):
     forte_options.add_str("INTERNAL_AMP", "NONE", ["NONE", "SINGLES_DOUBLES", "SINGLES", "DOUBLES"],
                      "Include internal amplitudes for VCIS/VCISD-DSRG acording to excitation level")
 
-
     forte_options.add_str("INTERNAL_AMP_SELECT", "AUTO", ["AUTO", "ALL", "OOVV"],
                      """Excitation types considered when internal amplitudes are included
                      - Select only part of the asked internal amplitudes (IAs) in
@@ -665,6 +664,11 @@ def register_dsrg_options(forte_options):
 
     forte_options.add_bool("DSRG_NIVO", False,
                       "NIVO approximation: Omit tensor blocks with >= 3 virtual indices if true")
+
+    forte_options.add_bool("LDSRG3_DDCA", False, "Distinguished diagonal component approximation for LDSRG3")
+
+    forte_options.add_bool("LDSRG3_2COMM_3BODY", False,
+                      "Truncate BCH expansion to 2-nested commutator for 3-body components in LDSRG3")
 
     forte_options.add_bool("PRINT_1BODY_EVALS", False, "Print eigenvalues of 1-body effective H")
 
