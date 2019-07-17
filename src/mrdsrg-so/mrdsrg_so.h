@@ -75,11 +75,11 @@ class MRDSRG_SO : public DynamicCorrelationSolver {
     std::vector<size_t> bvirt_sos;
 
     /// List of core SOs
-    std::vector<size_t> core_sos;
+    std::vector<size_t> core_sos_;
     /// List of active SOs
-    std::vector<size_t> actv_sos;
+    std::vector<size_t> actv_sos_;
     /// List of virtual SOs
-    std::vector<size_t> virt_sos;
+    std::vector<size_t> virt_sos_;
 
     /// Number of spin orbitals
     size_t nso_;
@@ -93,20 +93,6 @@ class MRDSRG_SO : public DynamicCorrelationSolver {
     size_t nh_;
     /// Number of particle spin orbitals
     size_t np_;
-
-    /// Map from all the MOs to the alpha core
-    std::map<size_t, size_t> mos_to_acore;
-    /// Map from all the MOs to the alpha active
-    std::map<size_t, size_t> mos_to_aactv;
-    /// Map from all the MOs to the alpha virtual
-    std::map<size_t, size_t> mos_to_avirt;
-
-    /// Map from all the MOs to the beta core
-    std::map<size_t, size_t> mos_to_bcore;
-    /// Map from all the MOs to the beta active
-    std::map<size_t, size_t> mos_to_bactv;
-    /// Map from all the MOs to the beta virtual
-    std::map<size_t, size_t> mos_to_bvirt;
 
     /// Map from space label to list of MOs
     std::map<char, std::vector<size_t>> label_to_spacemo;
@@ -125,21 +111,34 @@ class MRDSRG_SO : public DynamicCorrelationSolver {
     std::shared_ptr<BlockedTensorFactory> BTF_;
     TensorType tensor_type_;
 
+    // => triples related <= //
+
+    /// Include triples or not
+    bool do_t3_;
+    /// Use DDCA or not
+    bool ldsrg3_ddca_;
+    /// Truncate 3-body terms to given nested level of commutator
+    int ncomm_3body_;
+
+    std::vector<std::string> sr_ldsrg3_ddca_blocks();
+
     // => Tensors <= //
 
     ambit::BlockedTensor H;
     ambit::BlockedTensor F;
     ambit::BlockedTensor V;
-    ambit::BlockedTensor Gamma1;
+    ambit::BlockedTensor W;
+    ambit::BlockedTensor L1;
     ambit::BlockedTensor Eta1;
-    ambit::BlockedTensor Lambda2;
-    ambit::BlockedTensor Lambda3;
+    ambit::BlockedTensor L2;
+    ambit::BlockedTensor L3;
     ambit::BlockedTensor Delta1;
     ambit::BlockedTensor Delta2;
     ambit::BlockedTensor RDelta1;
     ambit::BlockedTensor RDelta2;
     ambit::BlockedTensor T1;
     ambit::BlockedTensor T2;
+    ambit::BlockedTensor T3;
     ambit::BlockedTensor RExp1; // < one-particle exponential for renormalized Fock matrix
     ambit::BlockedTensor RExp2; // < two-particle exponential for renormalized integral
 
@@ -193,6 +192,13 @@ class MRDSRG_SO : public DynamicCorrelationSolver {
     double T1norm;
     double T1max;
 
+    /// Compute T3 amplitudes
+    void guess_t3();
+    void update_t3();
+    double rms_t3 = 0.0;
+    double T3norm = 0.0;
+    double T3max = 0.0;
+
     /// Renormalize Fock matrix and two-electron integral
     void renormalize_F();
     void renormalize_V();
@@ -203,7 +209,8 @@ class MRDSRG_SO : public DynamicCorrelationSolver {
     double Hbar0;
     ambit::BlockedTensor Hbar1;
     ambit::BlockedTensor Hbar2;
-    void compute_hbar();
+    ambit::BlockedTensor Hbar3;
+    void compute_lhbar();
     void compute_qhbar();
 
     /// Compute zero-term term of commutator [H, T]
@@ -229,6 +236,16 @@ class MRDSRG_SO : public DynamicCorrelationSolver {
 
     /// Compute three-body term of commutator [H, T]
     void H2_T2_C3(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, BlockedTensor& C3);
+
+    /// Generated functions for commutator [H, A]
+    void comm_H_A_2(double factor, BlockedTensor& H1, BlockedTensor& H2, BlockedTensor& T1,
+                    BlockedTensor& T2, double& C0, BlockedTensor& C1, BlockedTensor& C2);
+    void comm_H_A_3(double factor, BlockedTensor& H1, BlockedTensor& H2, BlockedTensor& H3,
+                    BlockedTensor& T1, BlockedTensor& T2, BlockedTensor& T3, double& C0,
+                    BlockedTensor& C1, BlockedTensor& C2, BlockedTensor& C3);
+    void comm_H_A_3_sr(double factor, BlockedTensor& H1, BlockedTensor& H2, BlockedTensor& H3,
+                       BlockedTensor& T1, BlockedTensor& T2, BlockedTensor& T3, double& C0,
+                       BlockedTensor& C1, BlockedTensor& C2, BlockedTensor& C3);
 
     // Taylor Expansion of [1 - exp(-s * D^2)] / D = sqrt(s) * (\sum_{n=1}
     // \frac{1}{n!} (-1)^{n+1} Z^{2n-1})

@@ -667,8 +667,12 @@ def register_dsrg_options(forte_options):
 
     forte_options.add_bool("LDSRG3_DDCA", False, "Distinguished diagonal component approximation for LDSRG3")
 
-    forte_options.add_bool("LDSRG3_2COMM_3BODY", False,
-                      "Truncate BCH expansion to 2-nested commutator for 3-body components in LDSRG3")
+    forte_options.add_int("LDSRG3_NCOMM_3BODY", 0,
+                      """Truncate BCH expansion to n-nested commutator for 3-body components in LDSRG3
+                      n = 0: consider 3-body terms for all commutators
+                      n = 1: truncate to linear commutator term
+                      n = 2: truncate to quadratic commutator term
+                      n > 2: not allowed""")
 
     forte_options.add_bool("PRINT_1BODY_EVALS", False, "Print eigenvalues of 1-body effective H")
 
