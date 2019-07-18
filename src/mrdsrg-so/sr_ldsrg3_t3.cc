@@ -49,26 +49,19 @@ void MRDSRG_SO::direct_t3() {
     if (foptions_->get_str("CORR_LEVEL") == "LDSRG3_1")
         level = 1;
 
-    outfile->Printf("\n  T3 norm (direct t3 func): %22.15f", T3.norm());
-    outfile->Printf("\n  F norm = %22.15f", F.norm());
-    outfile->Printf("\n  V norm = %22.15f", V.norm());
-
     BlockedTensor C3 = ambit::BlockedTensor::build(ambit::CoreTensor, "T3 new", {"cccvvv"});
     BlockedTensor temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"cccvvv"});
 
     if (ncomm_3body_ == 1) {
-        outfile->Printf("\n  enter direct t3");
         temp["c0,c1,c2,v0,v1,v2"] = 1.0 * F["v3,v0"] * T3["c0,c1,c2,v1,v2,v3"];
         C3["c0,c1,c2,v0,v1,v2"] += temp["c0,c1,c2,v0,v1,v2"];
         C3["c0,c1,c2,v1,v0,v2"] -= temp["c0,c1,c2,v0,v1,v2"];
         C3["c0,c1,c2,v1,v2,v0"] += temp["c0,c1,c2,v0,v1,v2"];
-        outfile->Printf("\n  C3 norm Fv * T3 = %22.15f", C3.norm());
 
         temp["c0,c1,c2,v0,v1,v2"] = -1.0 * F["c3,c0"] * T3["c1,c2,c3,v0,v1,v2"];
         C3["c0,c1,c2,v0,v1,v2"] += temp["c0,c1,c2,v0,v1,v2"];
         C3["c1,c0,c2,v0,v1,v2"] -= temp["c0,c1,c2,v0,v1,v2"];
         C3["c1,c2,c0,v0,v1,v2"] += temp["c0,c1,c2,v0,v1,v2"];
-        outfile->Printf("\n  C3 norm Fc * T3 = %22.15f", C3.norm());
 
         temp["c0,c1,c2,v0,v1,v2"] = 1.0 * V["v3,c0,v0,v1"] * T2["c1,c2,v2,v3"];
         C3["c0,c1,c2,v0,v1,v2"] += temp["c0,c1,c2,v0,v1,v2"];
@@ -80,7 +73,6 @@ void MRDSRG_SO::direct_t3() {
         C3["c1,c2,c0,v0,v1,v2"] += temp["c0,c1,c2,v0,v1,v2"];
         C3["c1,c2,c0,v0,v2,v1"] -= temp["c0,c1,c2,v0,v1,v2"];
         C3["c1,c2,c0,v2,v0,v1"] += temp["c0,c1,c2,v0,v1,v2"];
-        outfile->Printf("\n  C3 norm Vv * T2 = %22.15f", C3.norm());
 
         temp["c0,c1,c2,v0,v1,v2"] = 1.0 * V["c0,c1,v0,c3"] * T2["c2,c3,v1,v2"];
         C3["c0,c1,c2,v0,v1,v2"] += temp["c0,c1,c2,v0,v1,v2"];
@@ -92,7 +84,6 @@ void MRDSRG_SO::direct_t3() {
         C3["c2,c0,c1,v0,v1,v2"] += temp["c0,c1,c2,v0,v1,v2"];
         C3["c2,c0,c1,v1,v0,v2"] -= temp["c0,c1,c2,v0,v1,v2"];
         C3["c2,c0,c1,v1,v2,v0"] += temp["c0,c1,c2,v0,v1,v2"];
-        outfile->Printf("\n  C3 norm Vc * T2 = %22.15f", C3.norm());
 
         if (level > 1) {
             temp["c0,c1,c2,v0,v1,v2"] = (1.0 / 2.0) * V["v3,v4,v0,v1"] * T3["c0,c1,c2,v2,v3,v4"];
@@ -116,7 +107,6 @@ void MRDSRG_SO::direct_t3() {
             C3["c1,c2,c0,v1,v0,v2"] -= temp["c0,c1,c2,v0,v1,v2"];
             C3["c1,c2,c0,v1,v2,v0"] += temp["c0,c1,c2,v0,v1,v2"];
         }
-        outfile->Printf("\n  exit direct t3");
     } else {
         double factor = (level == 1 ? -0.5 : -1.0);
 
@@ -353,7 +343,6 @@ void MRDSRG_SO::direct_t3() {
         C3["c2,c1,c0,v0,v2,v1"] += temp["c0,c1,c2,v0,v1,v2"];
         C3["c2,c1,c0,v2,v0,v1"] -= temp["c0,c1,c2,v0,v1,v2"];
     }
-    outfile->Printf("\n  C3 norm = %22.15f", C3.norm());
 
     C3.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
         value *= renormalized_denominator(Fd[i[0]] + Fd[i[1]] + Fd[i[2]] - Fd[i[3]] - Fd[i[4]] -
