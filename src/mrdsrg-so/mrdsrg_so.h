@@ -122,6 +122,8 @@ class MRDSRG_SO : public DynamicCorrelationSolver {
 
     std::vector<std::string> sr_ldsrg3_ddca_blocks();
 
+    bool debug_flag_ = false;
+
     // => Tensors <= //
 
     ambit::BlockedTensor H;
@@ -195,6 +197,7 @@ class MRDSRG_SO : public DynamicCorrelationSolver {
     /// Compute T3 amplitudes
     void guess_t3();
     void update_t3();
+    void direct_t3();
     double rms_t3 = 0.0;
     double T3norm = 0.0;
     double T3max = 0.0;
@@ -246,6 +249,21 @@ class MRDSRG_SO : public DynamicCorrelationSolver {
     void comm_H_A_3_sr(double factor, BlockedTensor& H1, BlockedTensor& H2, BlockedTensor& H3,
                        BlockedTensor& T1, BlockedTensor& T2, BlockedTensor& T3, double& C0,
                        BlockedTensor& C1, BlockedTensor& C2, BlockedTensor& C3);
+    /// remove all C3 from comm_H_A_3_sr
+    void comm_H_A_3_sr_2(double factor, BlockedTensor& H1, BlockedTensor& H2, BlockedTensor& T1,
+                         BlockedTensor& T2, BlockedTensor& T3, double& C0, BlockedTensor& C1,
+                         BlockedTensor& C2);
+
+    /// 0.5 * [[H, A]_3, A]_{0,1,2}
+    void comm2_l3(BlockedTensor& H1, BlockedTensor& H2, BlockedTensor& T1, BlockedTensor& T2,
+                  BlockedTensor& T3, double& C0, BlockedTensor& C1, BlockedTensor& C2);
+    /// 1/6 * [[[H, A]_{1,2,3}, A]_3, A]_{0,1,2}
+    void comm3_q3_lv1(BlockedTensor& H1, BlockedTensor& H2, BlockedTensor& T1, BlockedTensor& T2,
+                      BlockedTensor& T3, double& C0, BlockedTensor& C1, BlockedTensor& C2);
+    void comm3_q3_lv2(BlockedTensor& H1, BlockedTensor& H2, BlockedTensor& T1, BlockedTensor& T2,
+                      BlockedTensor& T3, double& C0, BlockedTensor& C1, BlockedTensor& C2);
+    void comm3_q3_lv3(BlockedTensor& H1, BlockedTensor& H2, BlockedTensor& T1, BlockedTensor& T2,
+                      BlockedTensor& T3, double& C0, BlockedTensor& C1, BlockedTensor& C2);
 
     // Taylor Expansion of [1 - exp(-s * D^2)] / D = sqrt(s) * (\sum_{n=1}
     // \frac{1}{n!} (-1)^{n+1} Z^{2n-1})

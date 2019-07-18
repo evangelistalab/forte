@@ -479,50 +479,50 @@ void MRDSRG_SO::guess_t1() {
 }
 
 void MRDSRG_SO::guess_t3() {
-    local_timer timer;
-    std::string str = "Computing T3 amplitudes     ...";
-    outfile->Printf("\n    %-35s", str.c_str());
+//    local_timer timer;
+//    std::string str = "Computing T3 amplitudes     ...";
+//    outfile->Printf("\n    %-35s", str.c_str());
 
-    ambit::BlockedTensor C3 = ambit::BlockedTensor::build(tensor_type_, "C3", {"hhhppp"});
-    auto temp = ambit::BlockedTensor::build(CoreTensor, "temp", {"hhhppp"});
-    temp["g2,c0,c1,g0,g1,v0"] += -1.0 * V["g2,v1,g0,g1"] * T2["c0,c1,v0,v1"];
-    C3["c0,c1,g2,g0,g1,v0"] += temp["g2,c0,c1,g0,g1,v0"];
-    C3["c0,g2,c1,g0,g1,v0"] -= temp["g2,c0,c1,g0,g1,v0"];
-    C3["g2,c0,c1,g0,g1,v0"] += temp["g2,c0,c1,g0,g1,v0"];
-    C3["c0,c1,g2,g0,v0,g1"] -= temp["g2,c0,c1,g0,g1,v0"];
-    C3["c0,g2,c1,g0,v0,g1"] += temp["g2,c0,c1,g0,g1,v0"];
-    C3["g2,c0,c1,g0,v0,g1"] -= temp["g2,c0,c1,g0,g1,v0"];
-    C3["c0,c1,g2,v0,g0,g1"] += temp["g2,c0,c1,g0,g1,v0"];
-    C3["c0,g2,c1,v0,g0,g1"] -= temp["g2,c0,c1,g0,g1,v0"];
-    C3["g2,c0,c1,v0,g0,g1"] += temp["g2,c0,c1,g0,g1,v0"];
+//    ambit::BlockedTensor C3 = ambit::BlockedTensor::build(tensor_type_, "C3", {"hhhppp"});
+//    auto temp = ambit::BlockedTensor::build(CoreTensor, "temp", {"hhhppp"});
+//    temp["g2,c0,c1,g0,g1,v0"] += -1.0 * V["g2,v1,g0,g1"] * T2["c0,c1,v0,v1"];
+//    C3["c0,c1,g2,g0,g1,v0"] += temp["g2,c0,c1,g0,g1,v0"];
+//    C3["c0,g2,c1,g0,g1,v0"] -= temp["g2,c0,c1,g0,g1,v0"];
+//    C3["g2,c0,c1,g0,g1,v0"] += temp["g2,c0,c1,g0,g1,v0"];
+//    C3["c0,c1,g2,g0,v0,g1"] -= temp["g2,c0,c1,g0,g1,v0"];
+//    C3["c0,g2,c1,g0,v0,g1"] += temp["g2,c0,c1,g0,g1,v0"];
+//    C3["g2,c0,c1,g0,v0,g1"] -= temp["g2,c0,c1,g0,g1,v0"];
+//    C3["c0,c1,g2,v0,g0,g1"] += temp["g2,c0,c1,g0,g1,v0"];
+//    C3["c0,g2,c1,v0,g0,g1"] -= temp["g2,c0,c1,g0,g1,v0"];
+//    C3["g2,c0,c1,v0,g0,g1"] += temp["g2,c0,c1,g0,g1,v0"];
 
-    temp.zero();
-    temp["g1,g2,c0,g0,v0,v1"] += 1.0 * V["g1,g2,g0,c1"] * T2["c0,c1,v0,v1"];
-    C3["c0,g1,g2,g0,v0,v1"] += temp["g1,g2,c0,g0,v0,v1"];
-    C3["g1,c0,g2,g0,v0,v1"] -= temp["g1,g2,c0,g0,v0,v1"];
-    C3["g1,g2,c0,g0,v0,v1"] += temp["g1,g2,c0,g0,v0,v1"];
-    C3["c0,g1,g2,v0,g0,v1"] -= temp["g1,g2,c0,g0,v0,v1"];
-    C3["g1,c0,g2,v0,g0,v1"] += temp["g1,g2,c0,g0,v0,v1"];
-    C3["g1,g2,c0,v0,g0,v1"] -= temp["g1,g2,c0,g0,v0,v1"];
-    C3["c0,g1,g2,v0,v1,g0"] += temp["g1,g2,c0,g0,v0,v1"];
-    C3["g1,c0,g2,v0,v1,g0"] -= temp["g1,g2,c0,g0,v0,v1"];
-    C3["g1,g2,c0,v0,v1,g0"] += temp["g1,g2,c0,g0,v0,v1"];
+//    temp.zero();
+//    temp["g1,g2,c0,g0,v0,v1"] += 1.0 * V["g1,g2,g0,c1"] * T2["c0,c1,v0,v1"];
+//    C3["c0,g1,g2,g0,v0,v1"] += temp["g1,g2,c0,g0,v0,v1"];
+//    C3["g1,c0,g2,g0,v0,v1"] -= temp["g1,g2,c0,g0,v0,v1"];
+//    C3["g1,g2,c0,g0,v0,v1"] += temp["g1,g2,c0,g0,v0,v1"];
+//    C3["c0,g1,g2,v0,g0,v1"] -= temp["g1,g2,c0,g0,v0,v1"];
+//    C3["g1,c0,g2,v0,g0,v1"] += temp["g1,g2,c0,g0,v0,v1"];
+//    C3["g1,g2,c0,v0,g0,v1"] -= temp["g1,g2,c0,g0,v0,v1"];
+//    C3["c0,g1,g2,v0,v1,g0"] += temp["g1,g2,c0,g0,v0,v1"];
+//    C3["g1,c0,g2,v0,v1,g0"] -= temp["g1,g2,c0,g0,v0,v1"];
+//    C3["g1,g2,c0,v0,v1,g0"] += temp["g1,g2,c0,g0,v0,v1"];
 
-    T3["ijkabc"] = C3["ijkabc"];
-    T3["ijkabc"] += C3["abcijk"];
+//    T3["ijkabc"] = C3["ijkabc"];
+//    T3["ijkabc"] += C3["abcijk"];
 
-    T3.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
-        value *= renormalized_denominator(Fd[i[0]] + Fd[i[1]] + Fd[i[2]] - Fd[i[3]] - Fd[i[4]] -
-                Fd[i[5]]);
-    });
+//    T3.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+//        value *= renormalized_denominator(Fd[i[0]] + Fd[i[1]] + Fd[i[2]] - Fd[i[3]] - Fd[i[4]] -
+//                Fd[i[5]]);
+//    });
 
-    // zero internal amplitudes
-    T3.block("aaaaaa").zero();
+//    // zero internal amplitudes
+//    T3.block("aaaaaa").zero();
 
-    // norm and max
-    T3max = T3.norm(0), T3norm = T3.norm();
+//    // norm and max
+//    T3max = T3.norm(0), T3norm = T3.norm();
 
-    outfile->Printf("  Done. Timing %10.3f s", timer.get());
+//    outfile->Printf("  Done. Timing %10.3f s", timer.get());
 }
 
 double MRDSRG_SO::renormalized_denominator(double D) {
@@ -530,29 +530,32 @@ double MRDSRG_SO::renormalized_denominator(double D) {
     if (std::fabs(Z) < std::pow(0.1, taylor_threshold_)) {
         return Taylor_Exp(Z, taylor_order_) * std::sqrt(s_);
     } else {
-        return (1.0 - std::exp(-s_ * std::pow(D, 2.0))) / D;
+        return (1.0 - std::exp(-s_ * D * D)) / D;
     }
 }
 
 void MRDSRG_SO::update_t2() {
-    BlockedTensor R2 = ambit::BlockedTensor::build(tensor_type_, "R2", {"hhpp"});
-    R2["ijab"] = T2["ijab"];
-    R2.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
-        value *= (Fd[i[0]] + Fd[i[1]] - Fd[i[2]] - Fd[i[3]]);
-    });
-    R2["ijab"] += Hbar2["ijab"];
-    R2.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+    // compute DT2 = Hbar2 * (1 - exp(-s * D * D)) / D - T2 * exp(-s * D * D)
+    BlockedTensor DT2 = ambit::BlockedTensor::build(tensor_type_, "DT2", {"hhpp"});
+    DT2["ijab"] = Hbar2["ijab"];
+    DT2.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
         value *= renormalized_denominator(Fd[i[0]] + Fd[i[1]] - Fd[i[2]] - Fd[i[3]]);
     });
 
-    // zero internal amplitudes
-    R2.block("aaaa").zero();
+    // copy T2 to Hbar2
+    Hbar2["ijab"] = T2["ijab"];
 
-    BlockedTensor D2 = ambit::BlockedTensor::build(tensor_type_, "DT2", {"hhpp"});
-    D2["ijab"] = R2["ijab"] - T2["ijab"];
-    rms_t2 = D2.norm();
+    // scale T2 by exp(-s * D * D)
+    T2.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+        double delta = Fd[i[0]] + Fd[i[1]] - Fd[i[2]] - Fd[i[3]];
+        value *= std::exp(-s_ * delta * delta);
+    });
 
-    T2["ijab"] = R2["ijab"];
+    DT2["ijab"] -= T2["ijab"];
+    DT2.block("aaaa").zero();
+    rms_t2 = DT2.norm();
+
+    T2["ijab"] = Hbar2["ijab"] + DT2["ijab"];
 
     // norm and max
     T2max = 0.0, T2norm = T2.norm();
@@ -591,25 +594,28 @@ void MRDSRG_SO::update_t1() {
 }
 
 void MRDSRG_SO::update_t3() {
-    BlockedTensor R3 = ambit::BlockedTensor::build(tensor_type_, "R3", {"hhhppp"});
-    R3["ijkabc"] = T3["ijkabc"];
-    R3.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
-        value *= (Fd[i[0]] + Fd[i[1]] + Fd[i[2]] - Fd[i[3]] - Fd[i[4]] - Fd[i[5]]);
-    });
-    R3["ijkabc"] += Hbar3["ijkabc"];
-    R3.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+    // compute DT3 = Hbar3 * (1 - exp(-s * D * D)) / D - T3 * exp(-s * D * D)
+    BlockedTensor DT3 = ambit::BlockedTensor::build(tensor_type_, "DT3", {"hhhppp"});
+    DT3["ijkabc"] = Hbar3["ijkabc"];
+    DT3.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
         value *= renormalized_denominator(Fd[i[0]] + Fd[i[1]] + Fd[i[2]] - Fd[i[3]] - Fd[i[4]] -
                 Fd[i[5]]);
     });
 
-    // zero internal amplitudes
-    R3.block("aaaaaa").zero();
+    // copy T3 to Hbar3
+    Hbar3["ijkabc"] = T3["ijkabc"];
 
-    BlockedTensor D3 = ambit::BlockedTensor::build(tensor_type_, "DT3", {"hhhppp"});
-    D3["ijkabc"] = R3["ijkabc"] - T3["ijkabc"];
-    rms_t3 = D3.norm();
+    // scale T3 by exp(-s * D * D)
+    T3.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+        double delta = Fd[i[0]] + Fd[i[1]] + Fd[i[2]] - Fd[i[3]] - Fd[i[4]] - Fd[i[5]];
+        value *= std::exp(-s_ * delta * delta);
+    });
 
-    T3["ijkabc"] = R3["ijkabc"];
+    DT3["ijkabc"] -= T3["ijkabc"];
+    DT3.block("aaaaaa").zero();
+    rms_t3 = DT3.norm();
+
+    T3["ijkabc"] = Hbar3["ijkabc"] + DT3["ijkabc"];
 
     // norm and max
     T3max = T3.norm(0), T3norm = T3.norm();
@@ -688,34 +694,16 @@ double MRDSRG_SO::compute_energy() {
         Etotal = Eref + Hbar0;
 
         // norm of non-diagonal Hbar
-        double Hbar1Nnorm = 0.0, Hbar2Nnorm = 0.0;
-        for (const std::string& block : Hbar1.block_labels()) {
-            bool idx0 = block[0] == 'c' || block[0] == 'a';
-            bool idx1 = block[1] == 'a' || block[0] == 'v';
-            if (idx0 && idx1) {
-                if (block != "aa") {
-                    Hbar1Nnorm += 2 * pow(Hbar1.block(block).norm(), 2.0);
-                } else {
-                    Hbar1Nnorm += pow(Hbar1.block(block).norm(), 2.0);
-                }
-            }
-        }
-        Hbar1Nnorm = sqrt(Hbar1Nnorm);
+        BlockedTensor temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"hv", "ca"});
+        temp["ia"] = Hbar1["ia"];
+        double Hbar1Nnorm = temp.norm();
 
-        for (const std::string& block : Hbar2.block_labels()) {
-            bool idx0 = block[0] == 'c' || block[0] == 'a';
-            bool idx1 = block[0] == 'c' || block[0] == 'a';
-            bool idx2 = block[1] == 'a' || block[0] == 'v';
-            bool idx3 = block[1] == 'a' || block[0] == 'v';
-            if (idx0 && idx1 && idx2 && idx3) {
-                if (block != "aaaa") {
-                    Hbar2Nnorm += 2 * pow(Hbar2.block(block).norm(), 2.0);
-                } else {
-                    Hbar2Nnorm += pow(Hbar2.block(block).norm(), 2.0);
-                }
-            }
+        temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"hhpv", "hhva", "hcaa", "ccaa"});
+        temp["ijab"] = Hbar2["ijab"];
+        double Hbar2Nnorm = temp.norm();
+        for (const std::string block: temp.block_labels()) {
+            temp.block(block).reset();
         }
-        Hbar2Nnorm = sqrt(Hbar2Nnorm);
 
         outfile->Printf("\n      @CT %4d %20.12f %11.3e %10.3e %10.3e %7.4f "
                         "%7.4f %7.4f %7.4f %7.4f %7.4f",
@@ -801,10 +789,21 @@ void MRDSRG_SO::compute_lhbar() {
         }
     }
 
+    outfile->Printf("\n  T3 norm: %22.15f", T3.norm());
+    outfile->Printf("\n  F norm (n = 0): %22.15f", F.norm());
+    outfile->Printf("\n  V norm (n = 0): %22.15f", V.norm());
+    outfile->Printf("\n  C3 norm (n = 0): %22.15f", O3.norm());
+    outfile->Printf("\n  Hbar3 norm (n = 0): %22.15f", Hbar3.norm());
+
     // compute Hbar recursively
     for (int n = 1; n <= maxn; ++n) {
         // prefactor before n-nested commutator
         double factor = 1.0 / n;
+
+        outfile->Printf("\n  O1 norm (n = %d): %22.15f", n, O1.norm());
+        outfile->Printf("\n  O2 norm (n = %d): %22.15f", n, O2.norm());
+        outfile->Printf("\n  O3 norm (n = %d): %22.15f", n, O3.norm());
+        debug_flag_ = (n == 2 ? true : false);
 
         double C0 = 0.0;
         if (do_t3_) {
@@ -836,6 +835,20 @@ void MRDSRG_SO::compute_lhbar() {
             Hbar3["g0,g1,g2,g3,g4,g5"] += C3["g0,g1,g2,g3,g4,g5"];
             O3["g0,g1,g2,g3,g4,g5"] = C3["g0,g1,g2,g3,g4,g5"];
             norm_C3 = C3.norm();
+
+            if (n <= 2) {
+                BlockedTensor temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"cccvvv"});
+                temp["ijkabc"] = C3["ijkabc"];
+                outfile->Printf("\n  C3 (n = %d) norm = %22.15f", n, temp.norm());
+                temp["ijkabc"] = Hbar3["ijkabc"];
+                outfile->Printf("\n  Hbar3 (n = %d) norm = %22.15f", n, temp.norm());
+
+                ncomm_3body_ = n;
+                temp["ijkabc"] = T3["ijkabc"];
+                direct_t3();
+                outfile->Printf("\n  Direct T3 (n = %d) norm = %22.15f", n, T3.norm());
+                T3["ijkabc"] = temp["ijkabc"];
+            }
         }
 
         if (std::sqrt(norm_C2 * norm_C2 + norm_C1 * norm_C1 + norm_C3 * norm_C3) < ct_threshold) {
