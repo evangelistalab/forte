@@ -113,6 +113,8 @@ class MRDSRG_SO : public DynamicCorrelationSolver {
 
     // => triples related <= //
 
+    /// Triples level
+    int ldsrg3_level_;
     /// Include triples or not
     bool do_t3_;
     /// Use DDCA or not

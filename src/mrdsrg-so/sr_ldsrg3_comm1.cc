@@ -46,12 +46,6 @@ void MRDSRG_SO::comm_H_A_3_sr(double factor, BlockedTensor& H1, BlockedTensor& H
                               BlockedTensor& H3, BlockedTensor& T1, BlockedTensor& T2,
                               BlockedTensor& T3, double& C0, BlockedTensor& C1, BlockedTensor& C2,
                               BlockedTensor& C3) {
-    int level = 3;
-    if (foptions_->get_str("CORR_LEVEL") == "LDSRG3_2")
-        level = 2;
-    if (foptions_->get_str("CORR_LEVEL") == "LDSRG3_1")
-        level = 1;
-
     C0 = 0.0;
     C1.zero();
     C2.zero();
@@ -100,7 +94,7 @@ void MRDSRG_SO::comm_H_A_3_sr(double factor, BlockedTensor& H1, BlockedTensor& H
     C2["g0,g1,g2,v0"] += temp["g0,g1,g2,v0"];
     C2["g0,g1,v0,g2"] -= temp["g0,g1,g2,v0"];
 
-    if (level == 1) {
+    if (ldsrg3_level_ == 1) {
         temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"gcgv"});
         temp["g0,c0,g1,v0"] += 1.0 * H2["g1,c1,g0,v1"] * T2["c0,c1,v0,v1"];
         C2["g0,c0,g1,v0"] += temp["g0,c0,g1,v0"];
@@ -206,7 +200,7 @@ void MRDSRG_SO::comm_H_A_3_sr(double factor, BlockedTensor& H1, BlockedTensor& H
         C3["c0,g0,g1,v0,g2,g3"] += temp["g0,g1,c0,g2,g3,v0"];
     }
 
-    if (level == 3) {
+    if (ldsrg3_level_ == 3) {
         C3["c0,c1,c2,g0,g1,g2"] += (1.0 / 6.0) * H3["v0,v1,v2,g0,g1,g2"] * T3["c0,c1,c2,v0,v1,v2"];
         C3["g0,g1,g2,v0,v1,v2"] += (-1.0 / 6.0) * H3["c0,c1,c2,g0,g1,g2"] * T3["c0,c1,c2,v0,v1,v2"];
 

@@ -91,10 +91,13 @@ void MRDSRG_SO::startup() {
     ldsrg3_ddca_ = foptions_->get_bool("LDSRG3_DDCA");
     ncomm_3body_ = foptions_->get_int("LDSRG3_NCOMM_3BODY");
     if (ncomm_3body_ > 2) {
-        ncomm_3body_ = 2;
-    } else if (ncomm_3body_ < 0) {
-        ncomm_3body_ = 0;
+        ncomm_3body_ = foptions_->get_int("DSRG_RSC_NCOMM");
     }
+    ldsrg3_level_ = 3;
+    if (foptions_->get_str("CORR_LEVEL") == "LDSRG3_2")
+        ldsrg3_level_ = 2;
+    if (foptions_->get_str("CORR_LEVEL") == "LDSRG3_1")
+        ldsrg3_level_ = 1;
 
     s_ = foptions_->get_double("DSRG_S");
     if (s_ < 0) {
@@ -411,9 +414,7 @@ void MRDSRG_SO::print_summary() {
         {"source operator", source_}};
 
     if (do_t3_) {
-        int ncomm = ncomm_3body_ != 0 ? ncomm_3body_ : foptions_->get_int("DSRG_RSC_NCOMM");
-        calculation_info.push_back({"LDSRG3_NCOMM_3BODY", ncomm});
-
+        calculation_info.push_back({"LDSRG3_NCOMM_3BODY", ncomm_3body_});
         calculation_info_string.push_back({"LDSRG_DDCA", ldsrg3_ddca_ ? "TRUE" : "FALSE"});
     }
 
@@ -656,7 +657,7 @@ double MRDSRG_SO::compute_energy() {
 
     if (do_t3_) {
         if (ldsrg3_ddca_) {
-            if (ncomm_3body_ == 0) {
+            if (ncomm_3body_ == foptions_->get_int("DSRG_RSC_NCOMM")) {
                 Hbar3 = BTF_->build(tensor_type_, "Hbar3", sr_ldsrg3_ddca_blocks());
             }
         } else {
@@ -779,7 +780,7 @@ void MRDSRG_SO::compute_lhbar() {
     if (do_t3_) {
         Hbar3.zero();
         if (ldsrg3_ddca_) {
-            if (ncomm_3body_ == 0) {
+            if (ncomm_3body_ == foptions_->get_int("DSRG_RSC_NCOMM")) {
                 std::vector<std::string> blocks = sr_ldsrg3_ddca_blocks();
                 O3 = ambit::BlockedTensor::build(tensor_type_, "O3", blocks);
                 C3 = ambit::BlockedTensor::build(tensor_type_, "C3", blocks);
@@ -938,7 +939,26 @@ void MRDSRG_SO::compute_lhbar() {
             Hbar1["pq"] += C1["pq"];
             Hbar2["pqrs"] += C2["pqrs"];
 
-            // copy C to O for next level commutator
+            // add C to O for next level commutator
+            O1["pq"] += C1["pq"];
+            O2["pqrs"] += C2["pqrs"];
+        }
+
+        if (n == 3) {
+            if (ldsrg3_level_ == 3) {
+                comm3_q3_lv3(F, V, T1, T2, T3, C0, C1, C2);
+            } else if (ldsrg3_level_ == 2) {
+                comm3_q3_lv2(F, V, T1, T2, T3, C0, C1, C2);
+            } else {
+                comm3_q3_lv1(F, V, T1, T2, T3, C0, C1, C2);
+            }
+
+            // add to Hbar
+            Hbar0 += C0;
+            Hbar1["pq"] += C1["pq"];
+            Hbar2["pqrs"] += C2["pqrs"];
+
+            // add C to O for next level commutator
             O1["pq"] += C1["pq"];
             O2["pqrs"] += C2["pqrs"];
         }
@@ -956,13 +976,14 @@ void MRDSRG_SO::compute_lhbar() {
         if (std::sqrt(norm_C2 * norm_C2 + norm_C1 * norm_C1) < ct_threshold) {
             break;
         }
+
+        outfile->Printf("\n  C0 comm%d = %22.15f", n, C0);
+        outfile->Printf("\n  C1 comm%d norm = %22.15f", n, C1.norm());
+        outfile->Printf("\n  C2 comm%d norm = %22.15f", n, C2.norm());
+        outfile->Printf("\n  Hbar0 comm%d = %22.15f", n, Hbar0);
+        outfile->Printf("\n  Hbar1 comm%d norm = %22.15f", n, Hbar1.norm());
+        outfile->Printf("\n  Hbar2 comm%d norm = %22.15f", n, Hbar2.norm());
     }
-    outfile->Printf("\n  C0 comm2 = %22.15f", C0);
-    outfile->Printf("\n  C1 comm2 norm = %22.15f", C1.norm());
-    outfile->Printf("\n  C2 comm2 norm = %22.15f", C2.norm());
-    outfile->Printf("\n  Hbar0 comm2 = %22.15f", Hbar0);
-    outfile->Printf("\n  Hbar1 comm2 norm = %22.15f", Hbar1.norm());
-    outfile->Printf("\n  Hbar2 comm2 norm = %22.15f", Hbar2.norm());
 
     //    outfile->Printf("\n
     //    -----------------------------------------------------------------");

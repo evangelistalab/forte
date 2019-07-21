@@ -44,12 +44,6 @@ namespace forte {
 
 void MRDSRG_SO::comm2_l3(BlockedTensor& H1, BlockedTensor& H2, BlockedTensor& T1, BlockedTensor& T2,
                          BlockedTensor& T3, double& C0, BlockedTensor& C1, BlockedTensor& C2) {
-    int level = 3;
-    if (foptions_->get_str("CORR_LEVEL") == "LDSRG3_2")
-        level = 2;
-    if (foptions_->get_str("CORR_LEVEL") == "LDSRG3_1")
-        level = 1;
-
     C0 = 0.0;
     C1.zero();
     C2.zero();
@@ -71,7 +65,7 @@ void MRDSRG_SO::comm2_l3(BlockedTensor& H1, BlockedTensor& H2, BlockedTensor& T1
     C1["v0,c0"] += (-1.0 / 4.0) * H2["v3,c1,v1,v2"] * T2["c0,c2,v0,v3"] * T2["c1,c2,v1,v2"];
     C1["v0,c0"] += (-1.0 / 4.0) * H2["c2,c3,v1,c1"] * T2["c0,c1,v0,v2"] * T2["c2,c3,v1,v2"];
 
-    if (level == 1) {
+    if (ldsrg3_level_ == 1) {
         C1["v0,c0"] += (1.0 / 8.0) * H1["v1,v0"] * T2["c1,c2,v2,v3"] * T3["c0,c1,c2,v1,v2,v3"];
         C1["v0,c0"] += (-1.0 / 8.0) * H1["c1,c0"] * T2["c2,c3,v1,v2"] * T3["c1,c2,c3,v0,v1,v2"];
 
