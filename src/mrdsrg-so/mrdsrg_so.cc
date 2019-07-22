@@ -90,7 +90,7 @@ void MRDSRG_SO::startup() {
     do_t3_ = foptions_->get_str("CORR_LEVEL").find("DSRG3") != std::string::npos;
     ldsrg3_ddca_ = foptions_->get_bool("LDSRG3_DDCA");
     ncomm_3body_ = foptions_->get_int("LDSRG3_NCOMM_3BODY");
-    if (ncomm_3body_ > 2) {
+    if (ncomm_3body_ > 2 or ncomm_3body_ <= 0) {
         ncomm_3body_ = foptions_->get_int("DSRG_RSC_NCOMM");
     }
     ldsrg3_level_ = 3;
@@ -655,13 +655,14 @@ double MRDSRG_SO::compute_energy() {
     guess_t2();
     guess_t1();
 
+    bool store_H3 = (ncomm_3body_ == foptions_->get_int("DSRG_RSC_NCOMM"));
     if (do_t3_) {
-        if (ldsrg3_ddca_) {
-            if (ncomm_3body_ == foptions_->get_int("DSRG_RSC_NCOMM")) {
+        if (store_H3) {
+            if (ldsrg3_ddca_) {
                 Hbar3 = BTF_->build(tensor_type_, "Hbar3", sr_ldsrg3_ddca_blocks());
+            } else {
+                Hbar3 = BTF_->build(tensor_type_, "Hbar3", {"gggggg"});
             }
-        } else {
-            Hbar3 = BTF_->build(tensor_type_, "Hbar3", {"gggggg"});
         }
         T3 = BTF_->build(tensor_type_, "T3 Amplitudes", {"hhhppp"});
         guess_t3();
@@ -715,7 +716,11 @@ double MRDSRG_SO::compute_energy() {
         update_t2();
         update_t1();
         if (do_t3_) {
-            update_t3();
+            if (store_H3) {
+                update_t3();
+            } else {
+                direct_t3();
+            }
         }
 
         // test convergence
@@ -777,40 +782,32 @@ void MRDSRG_SO::compute_lhbar() {
     BlockedTensor C2 = ambit::BlockedTensor::build(tensor_type_, "C2", {"gggg"});
 
     BlockedTensor O3, C3;
-    if (do_t3_) {
+    bool store_H3 = (ncomm_3body_ == foptions_->get_int("DSRG_RSC_NCOMM"));
+    if (do_t3_ and store_H3) {
         Hbar3.zero();
         if (ldsrg3_ddca_) {
-            if (ncomm_3body_ == foptions_->get_int("DSRG_RSC_NCOMM")) {
-                std::vector<std::string> blocks = sr_ldsrg3_ddca_blocks();
-                O3 = ambit::BlockedTensor::build(tensor_type_, "O3", blocks);
-                C3 = ambit::BlockedTensor::build(tensor_type_, "C3", blocks);
-            }
+            std::vector<std::string> blocks = sr_ldsrg3_ddca_blocks();
+            O3 = ambit::BlockedTensor::build(tensor_type_, "O3", blocks);
+            C3 = ambit::BlockedTensor::build(tensor_type_, "C3", blocks);
         } else {
             O3 = ambit::BlockedTensor::build(tensor_type_, "O3", {"gggggg"});
             C3 = ambit::BlockedTensor::build(tensor_type_, "C3", {"gggggg"});
         }
     }
 
-    outfile->Printf("\n  T3 norm: %22.15f", T3.norm());
-    outfile->Printf("\n  F norm (n = 0): %22.15f", F.norm());
-    outfile->Printf("\n  V norm (n = 0): %22.15f", V.norm());
-    outfile->Printf("\n  C3 norm (n = 0): %22.15f", O3.norm());
-    outfile->Printf("\n  Hbar3 norm (n = 0): %22.15f", Hbar3.norm());
-
     // compute Hbar recursively
     for (int n = 1; n <= maxn; ++n) {
         // prefactor before n-nested commutator
         double factor = 1.0 / n;
 
-        outfile->Printf("\n  O1 norm (n = %d): %22.15f", n, O1.norm());
-        outfile->Printf("\n  O2 norm (n = %d): %22.15f", n, O2.norm());
-        outfile->Printf("\n  O3 norm (n = %d): %22.15f", n, O3.norm());
-        debug_flag_ = (n == 2 ? true : false);
-
         if (do_t3_) {
             timer_on("3-body [H, A]");
             if (na_ == 0) {
-                comm_H_A_3_sr(factor, O1, O2, O3, T1, T2, T3, C0, C1, C2, C3);
+                if (store_H3) {
+                    comm_H_A_3_sr(factor, O1, O2, O3, T1, T2, T3, C0, C1, C2, C3);
+                } else {
+                    comm_H_A_3_sr_2(factor, O1, O2, T1, T2, T3, C0, C1, C2);
+                }
             } else {
                 comm_H_A_3(factor, O1, O2, O3, T1, T2, T3, C0, C1, C2, C3);
             }
@@ -828,11 +825,36 @@ void MRDSRG_SO::compute_lhbar() {
         O1["pq"] = C1["pq"];
         O2["pqrs"] = C2["pqrs"];
 
+        if (!store_H3 and (n == 2 or n == 3)) {
+            if (n == 2 and ncomm_3body_ >= 1) {
+                comm2_l3(F, V, T1, T2, T3, C0, C1, C2);
+            }
+
+            if (n == 3 and ncomm_3body_ >= 2) {
+                if (ldsrg3_level_ == 3) {
+                    comm3_q3_lv3(F, V, T1, T2, T3, C0, C1, C2);
+                } else if (ldsrg3_level_ == 2) {
+                    comm3_q3_lv2(F, V, T1, T2, T3, C0, C1, C2);
+                } else {
+                    comm3_q3_lv1(F, V, T1, T2, T3, C0, C1, C2);
+                }
+            }
+
+            // add to Hbar
+            Hbar0 += C0;
+            Hbar1["pq"] += C1["pq"];
+            Hbar2["pqrs"] += C2["pqrs"];
+
+            // add C to O for next level commutator
+            O1["pq"] += C1["pq"];
+            O2["pqrs"] += C2["pqrs"];
+        }
+
         // test convergence of C
         double norm_C1 = C1.norm();
         double norm_C2 = C2.norm();
         double norm_C3 = 0.0;
-        if (do_t3_) {
+        if (do_t3_ and store_H3) {
             Hbar3["g0,g1,g2,g3,g4,g5"] += C3["g0,g1,g2,g3,g4,g5"];
             O3["g0,g1,g2,g3,g4,g5"] = C3["g0,g1,g2,g3,g4,g5"];
             norm_C3 = C3.norm();
@@ -892,97 +914,6 @@ void MRDSRG_SO::compute_lhbar() {
 //        if (std::sqrt(norm_C2 * norm_C2 + norm_C1 * norm_C1) < ct_threshold) {
 //            break;
 //        }
-    }
-    outfile->Printf("\n  C0 = %22.15f", C0);
-    outfile->Printf("\n  C1 norm = %22.15f", C1.norm());
-    outfile->Printf("\n  C2 norm = %22.15f", C2.norm());
-    outfile->Printf("\n  Hbar0 = %22.15f", Hbar0);
-    outfile->Printf("\n  Hbar1 norm = %22.15f", Hbar1.norm());
-    outfile->Printf("\n  Hbar2 norm = %22.15f", Hbar2.norm());
-
-    Hbar0 = 0.0;
-    Hbar1["pq"] = F["pq"];
-    Hbar2["pqrs"] = V["pqrs"];
-    O1["pq"] = F["pq"];
-    O2["pqrs"] = V["pqrs"];
-
-    for (int n = 1; n <= maxn; ++n) {
-        // prefactor before n-nested commutator
-        double factor = 1.0 / n;
-
-        if (do_t3_) {
-            timer_on("3-body [H, A]");
-            if (na_ == 0) {
-                comm_H_A_3_sr_2(factor, O1, O2, T1, T2, T3, C0, C1, C2);
-            } else {
-                comm_H_A_3(factor, O1, O2, O3, T1, T2, T3, C0, C1, C2, C3);
-            }
-            timer_off("3-body [H, A]");
-        } else {
-            comm_H_A_2(factor, O1, O2, T1, T2, C0, C1, C2);
-        }
-
-        // add to Hbar
-        Hbar0 += C0;
-        Hbar1["pq"] += C1["pq"];
-        Hbar2["pqrs"] += C2["pqrs"];
-
-        // copy C to O for next level commutator
-        O1["pq"] = C1["pq"];
-        O2["pqrs"] = C2["pqrs"];
-
-        if (n == 2) {
-            comm2_l3(F, V, T1, T2, T3, C0, C1, C2);
-
-            // add to Hbar
-            Hbar0 += C0;
-            Hbar1["pq"] += C1["pq"];
-            Hbar2["pqrs"] += C2["pqrs"];
-
-            // add C to O for next level commutator
-            O1["pq"] += C1["pq"];
-            O2["pqrs"] += C2["pqrs"];
-        }
-
-        if (n == 3) {
-            if (ldsrg3_level_ == 3) {
-                comm3_q3_lv3(F, V, T1, T2, T3, C0, C1, C2);
-            } else if (ldsrg3_level_ == 2) {
-                comm3_q3_lv2(F, V, T1, T2, T3, C0, C1, C2);
-            } else {
-                comm3_q3_lv1(F, V, T1, T2, T3, C0, C1, C2);
-            }
-
-            // add to Hbar
-            Hbar0 += C0;
-            Hbar1["pq"] += C1["pq"];
-            Hbar2["pqrs"] += C2["pqrs"];
-
-            // add C to O for next level commutator
-            O1["pq"] += C1["pq"];
-            O2["pqrs"] += C2["pqrs"];
-        }
-
-        // test convergence of C
-        double norm_C1 = C1.norm();
-        double norm_C2 = C2.norm();
-//        double norm_C3 = 0.0;
-//        if (do_t3_) {
-//            Hbar3["g0,g1,g2,g3,g4,g5"] += C3["g0,g1,g2,g3,g4,g5"];
-//            O3["g0,g1,g2,g3,g4,g5"] = C3["g0,g1,g2,g3,g4,g5"];
-//            norm_C3 = C3.norm();
-//        }
-
-        if (std::sqrt(norm_C2 * norm_C2 + norm_C1 * norm_C1) < ct_threshold) {
-            break;
-        }
-
-        outfile->Printf("\n  C0 comm%d = %22.15f", n, C0);
-        outfile->Printf("\n  C1 comm%d norm = %22.15f", n, C1.norm());
-        outfile->Printf("\n  C2 comm%d norm = %22.15f", n, C2.norm());
-        outfile->Printf("\n  Hbar0 comm%d = %22.15f", n, Hbar0);
-        outfile->Printf("\n  Hbar1 comm%d norm = %22.15f", n, Hbar1.norm());
-        outfile->Printf("\n  Hbar2 comm%d norm = %22.15f", n, Hbar2.norm());
     }
 
     //    outfile->Printf("\n

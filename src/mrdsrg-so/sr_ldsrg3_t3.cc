@@ -103,6 +103,7 @@ void MRDSRG_SO::direct_t3() {
         }
     } else {
         double factor = (ldsrg3_level_ == 1 ? -0.5 : -1.0);
+        double ddca_factor = (ldsrg3_ddca_ ? 0.5 : 1.0);
 
         temp.zero();
         temp["c0,c1,c2,v0,v1,v2"] += 1.0 * F["v3,v0"] * T3["c0,c1,c2,v1,v2,v3"];
@@ -145,8 +146,8 @@ void MRDSRG_SO::direct_t3() {
                 (-1.0 / 2.0) * V["v3,c3,v0,v1"] * T1["c3,v4"] * T3["c0,c1,c2,v2,v3,v4"];
             temp["c0,c1,c2,v0,v1,v2"] +=
                 (1.0 / 8.0) * V["c3,c4,v0,v1"] * T2["c3,c4,v3,v4"] * T3["c0,c1,c2,v2,v3,v4"];
-            temp["c0,c1,c2,v0,v1,v2"] +=
-                (1.0 / 4.0) * V["c3,c4,v3,v4"] * T2["c3,c4,v0,v1"] * T3["c0,c1,c2,v2,v3,v4"];
+            temp["c0,c1,c2,v0,v1,v2"] += (ddca_factor / 4.0) * V["c3,c4,v3,v4"] *
+                                         T2["c3,c4,v0,v1"] * T3["c0,c1,c2,v2,v3,v4"];
             C3["c0,c1,c2,v0,v1,v2"] += temp["c0,c1,c2,v0,v1,v2"];
             C3["c0,c1,c2,v0,v2,v1"] -= temp["c0,c1,c2,v0,v1,v2"];
             C3["c0,c1,c2,v2,v0,v1"] += temp["c0,c1,c2,v0,v1,v2"];
@@ -157,8 +158,8 @@ void MRDSRG_SO::direct_t3() {
                 (1.0 / 8.0) * V["c0,c1,v3,v4"] * T2["c3,c4,v3,v4"] * T3["c2,c3,c4,v0,v1,v2"];
             temp["c0,c1,c2,v0,v1,v2"] +=
                 (-1.0 / 2.0) * V["c0,c1,v3,c3"] * T1["c4,v3"] * T3["c2,c3,c4,v0,v1,v2"];
-            temp["c0,c1,c2,v0,v1,v2"] +=
-                (1.0 / 4.0) * V["c3,c4,v3,v4"] * T2["c0,c1,v3,v4"] * T3["c2,c3,c4,v0,v1,v2"];
+            temp["c0,c1,c2,v0,v1,v2"] += (ddca_factor / 4.0) * V["c3,c4,v3,v4"] *
+                                         T2["c0,c1,v3,v4"] * T3["c2,c3,c4,v0,v1,v2"];
             C3["c0,c1,c2,v0,v1,v2"] += temp["c0,c1,c2,v0,v1,v2"];
             C3["c0,c2,c1,v0,v1,v2"] -= temp["c0,c1,c2,v0,v1,v2"];
             C3["c2,c0,c1,v0,v1,v2"] += temp["c0,c1,c2,v0,v1,v2"];
@@ -196,8 +197,8 @@ void MRDSRG_SO::direct_t3() {
         }
         temp["c0,c1,c2,v0,v1,v2"] += (ldsrg3_level_ == 3 ? 0.5 : 0.25) * V["c3,c4,v3,v4"] *
                                      T2["c0,c3,v0,v1"] * T3["c1,c2,c4,v2,v3,v4"];
-        temp["c0,c1,c2,v0,v1,v2"] +=
-            (ldsrg3_level_ != 1 ? 0.5 : 0.25) * V["c3,c4,v3,c0"] * T2["c3,c4,v0,v1"] * T2["c1,c2,v2,v3"];
+        temp["c0,c1,c2,v0,v1,v2"] += (ldsrg3_level_ > 1 ? 0.5 * ddca_factor : 0.25 * ddca_factor) *
+                                     V["c3,c4,v3,c0"] * T2["c3,c4,v0,v1"] * T2["c1,c2,v2,v3"];
         C3["c0,c1,c2,v0,v1,v2"] += temp["c0,c1,c2,v0,v1,v2"];
         C3["c0,c1,c2,v0,v2,v1"] -= temp["c0,c1,c2,v0,v1,v2"];
         C3["c0,c1,c2,v2,v0,v1"] += temp["c0,c1,c2,v0,v1,v2"];
@@ -209,8 +210,8 @@ void MRDSRG_SO::direct_t3() {
         C3["c1,c2,c0,v2,v0,v1"] += temp["c0,c1,c2,v0,v1,v2"];
 
         temp.zero();
-        temp["c0,c1,c2,v0,v1,v2"] +=
-            (ldsrg3_level_ != 1 ? 0.5 : 0.25) * V["v3,v4,v0,c3"] * T2["c0,c3,v1,v2"] * T2["c1,c2,v3,v4"];
+        temp["c0,c1,c2,v0,v1,v2"] += (ldsrg3_level_ > 1 ? 0.5 * ddca_factor : 0.25 * ddca_factor) *
+                                     V["v3,v4,v0,c3"] * T2["c0,c3,v1,v2"] * T2["c1,c2,v3,v4"];
         if (ldsrg3_level_ > 1) {
             temp["c0,c1,c2,v0,v1,v2"] += -1.0 * V["v3,c0,v0,c3"] * T3["c1,c2,c3,v1,v2,v3"];
             temp["c0,c1,c2,v0,v1,v2"] +=
@@ -257,7 +258,8 @@ void MRDSRG_SO::direct_t3() {
         C3["c2,c0,c1,v1,v0,v2"] -= temp["c0,c1,c2,v0,v1,v2"];
         C3["c2,c0,c1,v1,v2,v0"] += temp["c0,c1,c2,v0,v1,v2"];
 
-        temp["c0,c1,c2,v0,v1,v2"] = factor * V["v3,v4,v0,c3"] * T2["c0,c1,v1,v3"] * T2["c2,c3,v2,v4"];
+        temp["c0,c1,c2,v0,v1,v2"] =
+            factor * V["v3,v4,v0,c3"] * T2["c0,c1,v1,v3"] * T2["c2,c3,v2,v4"];
         C3["c0,c1,c2,v0,v1,v2"] += temp["c0,c1,c2,v0,v1,v2"];
         C3["c0,c1,c2,v0,v2,v1"] -= temp["c0,c1,c2,v0,v1,v2"];
         C3["c0,c1,c2,v1,v0,v2"] -= temp["c0,c1,c2,v0,v1,v2"];
@@ -317,7 +319,8 @@ void MRDSRG_SO::direct_t3() {
         C3["c1,c2,c0,v2,v0,v1"] += temp["c0,c1,c2,v0,v1,v2"];
         C3["c1,c2,c0,v2,v1,v0"] -= temp["c0,c1,c2,v0,v1,v2"];
 
-        temp["c0,c1,c2,v0,v1,v2"] = factor * V["c3,c4,v3,c0"] * T2["c1,c3,v0,v1"] * T2["c2,c4,v2,v3"];
+        temp["c0,c1,c2,v0,v1,v2"] =
+            factor * V["c3,c4,v3,c0"] * T2["c1,c3,v0,v1"] * T2["c2,c4,v2,v3"];
         C3["c0,c1,c2,v0,v1,v2"] += temp["c0,c1,c2,v0,v1,v2"];
         C3["c0,c1,c2,v0,v2,v1"] -= temp["c0,c1,c2,v0,v1,v2"];
         C3["c0,c1,c2,v2,v0,v1"] += temp["c0,c1,c2,v0,v1,v2"];
@@ -340,7 +343,7 @@ void MRDSRG_SO::direct_t3() {
 
     C3.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
         value *= renormalized_denominator(Fd[i[0]] + Fd[i[1]] + Fd[i[2]] - Fd[i[3]] - Fd[i[4]] -
-                Fd[i[5]]);
+                                          Fd[i[5]]);
     });
 
     temp["ijkabc"] = T3["ijkabc"];
