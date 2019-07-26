@@ -581,64 +581,671 @@ void MRDSRG_SO::comm_H_A_2(double factor, BlockedTensor& H1, BlockedTensor& H2, 
     C0 += (1.0 / 4.0) * H2["a0,a1,h0,h1"] * T2["h0,h2,a2,a3"] * L1["h2,h1"] * L2["a2,a3,a0,a1"];
     C0 += (-1.0 / 4.0) * H2["a1,a2,p0,a0"] * T2["a4,a5,p0,a3"] * L1["a3,a0"] * L2["a4,a5,a1,a2"];
     C0 += -1.0 * H2["a1,a2,h0,a0"] * T2["h0,a3,a4,a5"] * L1["a4,a1"] * L2["a2,a3,a0,a5"];
-    C0 += (-1.0 / 2.0) * H2["h0,h1,p0,a0"] * T2["h2,h3,p0,a1"] * L1["h2,h0"] * L1["h3,h1"] *
-          L1["a1,a0"];
-    C0 += (1.0 / 2.0) * H2["a0,a1,h0,h1"] * T2["h0,h2,a2,a3"] * L1["h2,h1"] * L1["a2,a0"] *
-          L1["a3,a1"];
+    C0 += (-1.0 / 2.0) * H2["h0,h1,p0,a0"] * T2["h2,h3,p0,a1"] * L1["h2,h0"] * L1["h3,h1"] * L1["a1,a0"];
+    C0 += (1.0 / 2.0) * H2["a0,a1,h0,h1"] * T2["h0,h2,a2,a3"] * L1["h2,h1"] * L1["a2,a0"] * L1["a3,a1"];
 
-    C1["g0,g1"] += 1.0 * H2["g1,h0,g0,p0"] * T1["h1,p0"] * L1["h1,h0"];
-    C1["g0,g1"] += -1.0 * H2["g1,h0,g0,a0"] * T1["h0,a1"] * L1["a1,a0"];
-    C1["g0,g1"] += (-1.0 / 2.0) * H2["g1,h0,g0,a0"] * T2["h0,a1,a2,a3"] * L2["a2,a3,a0,a1"];
-    C1["g0,g1"] += (1.0 / 2.0) * H2["g1,a0,g0,p0"] * T2["a2,a3,p0,a1"] * L2["a2,a3,a0,a1"];
-    C1["g0,p0"] += -1.0 * H1["h0,g0"] * T1["h0,p0"];
-    C1["g0,p0"] += (-1.0 / 2.0) * H2["h0,h1,g0,a0"] * T2["h0,h1,p0,a1"] * L1["a1,a0"];
-    C1["g0,p0"] += -1.0 * H2["h0,a1,g0,a0"] * T2["h0,a3,p0,a2"] * L2["a1,a2,a0,a3"];
-    C1["g0,p0"] += (-1.0 / 4.0) * H2["a0,a1,g0,p1"] * T2["a2,a3,p0,p1"] * L2["a2,a3,a0,a1"];
-    C1["g0,p0"] += (-1.0 / 2.0) * H2["h0,h1,g0,p1"] * T2["h2,h3,p0,p1"] * L1["h2,h0"] * L1["h3,h1"];
-    C1["g0,p0"] += 1.0 * H2["h0,h1,g0,a0"] * T2["h0,h2,p0,a1"] * L1["h2,h1"] * L1["a1,a0"];
-    C1["h0,g0"] += 1.0 * H1["p0,g0"] * T1["h0,p0"];
-    C1["h0,g0"] += (1.0 / 2.0) * H2["p0,p1,g0,h1"] * T2["h0,h2,p0,p1"] * L1["h2,h1"];
-    C1["h0,g0"] += 1.0 * H2["p0,a1,g0,a0"] * T2["h0,a3,p0,a2"] * L2["a1,a3,a0,a2"];
-    C1["h0,g0"] += (1.0 / 4.0) * H2["a0,a1,g0,h1"] * T2["h0,h1,a2,a3"] * L2["a2,a3,a0,a1"];
-    C1["h0,g0"] += -1.0 * H2["p0,a0,g0,h1"] * T2["h0,h2,p0,a1"] * L1["h2,h1"] * L1["a1,a0"];
-    C1["h0,g0"] += (1.0 / 2.0) * H2["a0,a1,g0,h1"] * T2["h0,h1,a2,a3"] * L1["a2,a0"] * L1["a3,a1"];
-    C1["h0,p0"] += 1.0 * H1["h1,p1"] * T2["h0,h2,p0,p1"] * L1["h2,h1"];
-    C1["h0,p0"] += -1.0 * H1["a0,h1"] * T2["h0,h1,p0,a1"] * L1["a1,a0"];
-    C1["h0,p0"] += (-1.0 / 2.0) * H2["a1,a2,p1,a0"] * T2["h0,a3,p0,p1"] * L2["a1,a2,a0,a3"];
-    C1["h0,p0"] += (1.0 / 2.0) * H2["a1,a2,h1,a0"] * T2["h0,h1,p0,a3"] * L2["a1,a2,a0,a3"];
+    C1["a0,a1"] += -1.0 * H1["a0,h0"] * T1["h0,a1"];
+    C1["a0,a1"] += 1.0 * H1["a1,p0"] * T1["a0,p0"];
+    C1["a0,a1"] += 1.0 * H1["h0,p0"] * T2["h1,a0,p0,a1"] * L1["h1,h0"];
+    C1["a0,a1"] += 1.0 * H1["a2,h0"] * T2["h0,a0,a1,a3"] * L1["a3,a2"];
+    C1["a0,a1"] += (1.0 / 2.0) * H2["h0,a1,p0,p1"] * T2["h1,a0,p0,p1"] * L1["h1,h0"];
+    C1["a0,a1"] += 1.0 * H2["h0,a1,p0,a0"] * T1["h1,p0"] * L1["h1,h0"];
+    C1["a0,a1"] += (-1.0 / 2.0) * H2["a0,a2,h0,h1"] * T2["h0,h1,a1,a3"] * L1["a3,a2"];
+    C1["a0,a1"] += 1.0 * H2["a0,a2,h0,a1"] * T1["h0,a3"] * L1["a3,a2"];
+    C1["a0,a1"] += (1.0 / 2.0) * H2["a0,a2,h0,a1"] * T2["h0,a3,a4,a5"] * L2["a4,a5,a2,a3"];
+    C1["a0,a1"] += -1.0 * H2["a0,a3,h0,a2"] * T2["h0,a4,a1,a5"] * L2["a3,a4,a2,a5"];
+    C1["a0,a1"] += (-1.0 / 2.0) * H2["a1,a2,p0,a0"] * T2["a4,a5,p0,a3"] * L2["a4,a5,a2,a3"];
+    C1["a0,a1"] += 1.0 * H2["a1,a3,p0,a2"] * T2["a0,a5,p0,a4"] * L2["a3,a4,a2,a5"];
+    C1["a0,a1"] += (-1.0 / 4.0) * H2["a2,a3,p0,a0"] * T2["a4,a5,p0,a1"] * L2["a4,a5,a2,a3"];
+    C1["a0,a1"] += (1.0 / 4.0) * H2["a2,a3,h0,a1"] * T2["h0,a0,a4,a5"] * L2["a4,a5,a2,a3"];
+    C1["a0,a1"] += (1.0 / 2.0) * H2["a3,a4,p0,a2"] * T2["a0,a5,p0,a1"] * L2["a3,a4,a2,a5"];
+    C1["a0,a1"] += (-1.0 / 2.0) * H2["a3,a4,h0,a2"] * T2["h0,a0,a1,a5"] * L2["a3,a4,a2,a5"];
+    C1["a0,a1"] += (-1.0 / 2.0) * H2["h0,h1,p0,a0"] * T2["h2,h3,p0,a1"] * L1["h2,h0"] * L1["h3,h1"];
+    C1["a0,a1"] += -1.0 * H2["h0,a1,p0,a2"] * T2["h1,a0,p0,a3"] * L1["h1,h0"] * L1["a3,a2"];
+    C1["a0,a1"] += 1.0 * H2["a0,a2,h0,h1"] * T2["h0,h2,a1,a3"] * L1["h2,h1"] * L1["a3,a2"];
+    C1["a0,a1"] += (1.0 / 2.0) * H2["a2,a3,h0,a1"] * T2["h0,a0,a4,a5"] * L1["a4,a2"] * L1["a5,a3"];
 
-    C2["g0,g1,p0,p1"] += (-1.0 / 2.0) * H2["h0,h1,g0,g1"] * T2["h0,h1,p0,p1"];
-    C2["g0,g1,p0,p1"] += 1.0 * H2["h0,h1,g0,g1"] * T2["h0,h2,p0,p1"] * L1["h2,h1"];
-    C2["h0,h1,g0,g1"] += (1.0 / 2.0) * H2["p0,p1,g0,g1"] * T2["h0,h1,p0,p1"];
-    C2["h0,h1,g0,g1"] += -1.0 * H2["p0,a0,g0,g1"] * T2["h0,h1,p0,a1"] * L1["a1,a0"];
+    C1["a0,c0"] += 1.0 * H1["c0,p0"] * T1["a0,p0"];
+    C1["a0,c0"] += (1.0 / 2.0) * H2["h0,c0,p0,p1"] * T2["h1,a0,p0,p1"] * L1["h1,h0"];
+    C1["a0,c0"] += 1.0 * H2["h0,c0,p0,a0"] * T1["h1,p0"] * L1["h1,h0"];
+    C1["a0,c0"] += (-1.0 / 2.0) * H2["c0,a1,p0,a0"] * T2["a3,a4,p0,a2"] * L2["a3,a4,a1,a2"];
+    C1["a0,c0"] += 1.0 * H2["c0,a2,p0,a1"] * T2["a0,a4,p0,a3"] * L2["a2,a3,a1,a4"];
+    C1["a0,c0"] += 1.0 * H2["a0,a1,h0,c0"] * T1["h0,a2"] * L1["a2,a1"];
+    C1["a0,c0"] += (1.0 / 2.0) * H2["a0,a1,h0,c0"] * T2["h0,a2,a3,a4"] * L2["a3,a4,a1,a2"];
+    C1["a0,c0"] += (1.0 / 4.0) * H2["a1,a2,h0,c0"] * T2["h0,a0,a3,a4"] * L2["a3,a4,a1,a2"];
+    C1["a0,c0"] += -1.0 * H2["h0,c0,p0,a1"] * T2["h1,a0,p0,a2"] * L1["h1,h0"] * L1["a2,a1"];
+    C1["a0,c0"] += (1.0 / 2.0) * H2["a1,a2,h0,c0"] * T2["h0,a0,a3,a4"] * L1["a3,a1"] * L1["a4,a2"];
 
-    temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"gggp"});
-    temp["g0,g1,g2,p0"] += -1.0 * H2["g2,h0,g0,g1"] * T1["h0,p0"];
-    C2["g0,g1,g2,p0"] += temp["g0,g1,g2,p0"];
-    C2["g0,g1,p0,g2"] -= temp["g0,g1,g2,p0"];
+    C1["a0,v0"] += 1.0 * H1["v0,p0"] * T1["a0,p0"];
+    C1["a0,v0"] += -1.0 * H1["a0,h0"] * T1["h0,v0"];
+    C1["a0,v0"] += 1.0 * H1["h0,p0"] * T2["h1,a0,p0,v0"] * L1["h1,h0"];
+    C1["a0,v0"] += 1.0 * H1["a1,h0"] * T2["h0,a0,v0,a2"] * L1["a2,a1"];
+    C1["a0,v0"] += (1.0 / 2.0) * H2["h0,v0,p0,p1"] * T2["h1,a0,p0,p1"] * L1["h1,h0"];
+    C1["a0,v0"] += 1.0 * H2["h0,v0,p0,a0"] * T1["h1,p0"] * L1["h1,h0"];
+    C1["a0,v0"] += (-1.0 / 2.0) * H2["v0,a1,p0,a0"] * T2["a3,a4,p0,a2"] * L2["a3,a4,a1,a2"];
+    C1["a0,v0"] += 1.0 * H2["v0,a2,p0,a1"] * T2["a0,a4,p0,a3"] * L2["a2,a3,a1,a4"];
+    C1["a0,v0"] += (-1.0 / 2.0) * H2["a0,a1,h0,h1"] * T2["h0,h1,v0,a2"] * L1["a2,a1"];
+    C1["a0,v0"] += 1.0 * H2["a0,a1,h0,v0"] * T1["h0,a2"] * L1["a2,a1"];
+    C1["a0,v0"] += (1.0 / 2.0) * H2["a0,a1,h0,v0"] * T2["h0,a2,a3,a4"] * L2["a3,a4,a1,a2"];
+    C1["a0,v0"] += -1.0 * H2["a0,a2,h0,a1"] * T2["h0,a3,v0,a4"] * L2["a2,a3,a1,a4"];
+    C1["a0,v0"] += (-1.0 / 4.0) * H2["a1,a2,p0,a0"] * T2["a3,a4,p0,v0"] * L2["a3,a4,a1,a2"];
+    C1["a0,v0"] += (1.0 / 4.0) * H2["a1,a2,h0,v0"] * T2["h0,a0,a3,a4"] * L2["a3,a4,a1,a2"];
+    C1["a0,v0"] += (1.0 / 2.0) * H2["a2,a3,p0,a1"] * T2["a0,a4,p0,v0"] * L2["a2,a3,a1,a4"];
+    C1["a0,v0"] += (-1.0 / 2.0) * H2["a2,a3,h0,a1"] * T2["h0,a0,v0,a4"] * L2["a2,a3,a1,a4"];
+    C1["a0,v0"] += (-1.0 / 2.0) * H2["h0,h1,p0,a0"] * T2["h2,h3,p0,v0"] * L1["h2,h0"] * L1["h3,h1"];
+    C1["a0,v0"] += -1.0 * H2["h0,v0,p0,a1"] * T2["h1,a0,p0,a2"] * L1["h1,h0"] * L1["a2,a1"];
+    C1["a0,v0"] += 1.0 * H2["a0,a1,h0,h1"] * T2["h0,h2,v0,a2"] * L1["h2,h1"] * L1["a2,a1"];
+    C1["a0,v0"] += (1.0 / 2.0) * H2["a1,a2,h0,v0"] * T2["h0,a0,a3,a4"] * L1["a3,a1"] * L1["a4,a2"];
 
-    temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"ghgg"});
-    temp["g0,h0,g1,g2"] += 1.0 * H2["g1,g2,g0,p0"] * T1["h0,p0"];
-    C2["g0,h0,g1,g2"] += temp["g0,h0,g1,g2"];
-    C2["h0,g0,g1,g2"] -= temp["g0,h0,g1,g2"];
+    C1["c0,a0"] += -1.0 * H1["c0,h0"] * T1["h0,a0"];
+    C1["c0,a0"] += 1.0 * H1["a0,p0"] * T1["c0,p0"];
+    C1["c0,a0"] += 1.0 * H1["h0,p0"] * T2["h1,c0,p0,a0"] * L1["h1,h0"];
+    C1["c0,a0"] += 1.0 * H1["a1,h0"] * T2["h0,c0,a0,a2"] * L1["a2,a1"];
+    C1["c0,a0"] += (1.0 / 2.0) * H2["h0,a0,p0,p1"] * T2["h1,c0,p0,p1"] * L1["h1,h0"];
+    C1["c0,a0"] += 1.0 * H2["h0,a0,p0,c0"] * T1["h1,p0"] * L1["h1,h0"];
+    C1["c0,a0"] += (-1.0 / 2.0) * H2["c0,a1,h0,h1"] * T2["h0,h1,a0,a2"] * L1["a2,a1"];
+    C1["c0,a0"] += 1.0 * H2["c0,a1,h0,a0"] * T1["h0,a2"] * L1["a2,a1"];
+    C1["c0,a0"] += (1.0 / 2.0) * H2["c0,a1,h0,a0"] * T2["h0,a2,a3,a4"] * L2["a3,a4,a1,a2"];
+    C1["c0,a0"] += -1.0 * H2["c0,a2,h0,a1"] * T2["h0,a3,a0,a4"] * L2["a2,a3,a1,a4"];
+    C1["c0,a0"] += (-1.0 / 2.0) * H2["a0,a1,p0,c0"] * T2["a3,a4,p0,a2"] * L2["a3,a4,a1,a2"];
+    C1["c0,a0"] += 1.0 * H2["a0,a2,p0,a1"] * T2["c0,a4,p0,a3"] * L2["a2,a3,a1,a4"];
+    C1["c0,a0"] += (-1.0 / 4.0) * H2["a1,a2,p0,c0"] * T2["a3,a4,p0,a0"] * L2["a3,a4,a1,a2"];
+    C1["c0,a0"] += (1.0 / 4.0) * H2["a1,a2,h0,a0"] * T2["h0,c0,a3,a4"] * L2["a3,a4,a1,a2"];
+    C1["c0,a0"] += (1.0 / 2.0) * H2["a2,a3,p0,a1"] * T2["c0,a4,p0,a0"] * L2["a2,a3,a1,a4"];
+    C1["c0,a0"] += (-1.0 / 2.0) * H2["a2,a3,h0,a1"] * T2["h0,c0,a0,a4"] * L2["a2,a3,a1,a4"];
+    C1["c0,a0"] += (-1.0 / 2.0) * H2["h0,h1,p0,c0"] * T2["h2,h3,p0,a0"] * L1["h2,h0"] * L1["h3,h1"];
+    C1["c0,a0"] += -1.0 * H2["h0,a0,p0,a1"] * T2["h1,c0,p0,a2"] * L1["h1,h0"] * L1["a2,a1"];
+    C1["c0,a0"] += 1.0 * H2["c0,a1,h0,h1"] * T2["h0,h2,a0,a2"] * L1["h2,h1"] * L1["a2,a1"];
+    C1["c0,a0"] += (1.0 / 2.0) * H2["a1,a2,h0,a0"] * T2["h0,c0,a3,a4"] * L1["a3,a1"] * L1["a4,a2"];
 
-    temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"ghpp"});
-    temp["g0,h0,p0,p1"] += 1.0 * H1["h1,g0"] * T2["h0,h1,p0,p1"];
-    C2["g0,h0,p0,p1"] += temp["g0,h0,p0,p1"];
-    C2["h0,g0,p0,p1"] -= temp["g0,h0,p0,p1"];
+    C1["c0,c1"] += 1.0 * H1["c1,p0"] * T1["c0,p0"];
+    C1["c0,c1"] += (1.0 / 2.0) * H2["h0,c1,p0,p1"] * T2["h1,c0,p0,p1"] * L1["h1,h0"];
+    C1["c0,c1"] += 1.0 * H2["h0,c1,p0,c0"] * T1["h1,p0"] * L1["h1,h0"];
+    C1["c0,c1"] += 1.0 * H2["c0,a0,h0,c1"] * T1["h0,a1"] * L1["a1,a0"];
+    C1["c0,c1"] += (1.0 / 2.0) * H2["c0,a0,h0,c1"] * T2["h0,a1,a2,a3"] * L2["a2,a3,a0,a1"];
+    C1["c0,c1"] += (-1.0 / 2.0) * H2["c1,a0,p0,c0"] * T2["a2,a3,p0,a1"] * L2["a2,a3,a0,a1"];
+    C1["c0,c1"] += 1.0 * H2["c1,a1,p0,a0"] * T2["c0,a3,p0,a2"] * L2["a1,a2,a0,a3"];
+    C1["c0,c1"] += (1.0 / 4.0) * H2["a0,a1,h0,c1"] * T2["h0,c0,a2,a3"] * L2["a2,a3,a0,a1"];
+    C1["c0,c1"] += -1.0 * H2["h0,c1,p0,a0"] * T2["h1,c0,p0,a1"] * L1["h1,h0"] * L1["a1,a0"];
+    C1["c0,c1"] += (1.0 / 2.0) * H2["a0,a1,h0,c1"] * T2["h0,c0,a2,a3"] * L1["a2,a0"] * L1["a3,a1"];
 
-    temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"hhgp"});
-    temp["h0,h1,g0,p0"] += -1.0 * H1["p1,g0"] * T2["h0,h1,p0,p1"];
-    C2["h0,h1,g0,p0"] += temp["h0,h1,g0,p0"];
-    C2["h0,h1,p0,g0"] -= temp["h0,h1,g0,p0"];
+    C1["c0,v0"] += 1.0 * H1["v0,p0"] * T1["c0,p0"];
+    C1["c0,v0"] += -1.0 * H1["c0,h0"] * T1["h0,v0"];
+    C1["c0,v0"] += 1.0 * H1["h0,p0"] * T2["h1,c0,p0,v0"] * L1["h1,h0"];
+    C1["c0,v0"] += 1.0 * H1["a0,h0"] * T2["h0,c0,v0,a1"] * L1["a1,a0"];
+    C1["c0,v0"] += (1.0 / 2.0) * H2["h0,v0,p0,p1"] * T2["h1,c0,p0,p1"] * L1["h1,h0"];
+    C1["c0,v0"] += 1.0 * H2["h0,v0,p0,c0"] * T1["h1,p0"] * L1["h1,h0"];
+    C1["c0,v0"] += (-1.0 / 2.0) * H2["v0,a0,p0,c0"] * T2["a2,a3,p0,a1"] * L2["a2,a3,a0,a1"];
+    C1["c0,v0"] += 1.0 * H2["v0,a1,p0,a0"] * T2["c0,a3,p0,a2"] * L2["a1,a2,a0,a3"];
+    C1["c0,v0"] += (-1.0 / 2.0) * H2["c0,a0,h0,h1"] * T2["h0,h1,v0,a1"] * L1["a1,a0"];
+    C1["c0,v0"] += 1.0 * H2["c0,a0,h0,v0"] * T1["h0,a1"] * L1["a1,a0"];
+    C1["c0,v0"] += (1.0 / 2.0) * H2["c0,a0,h0,v0"] * T2["h0,a1,a2,a3"] * L2["a2,a3,a0,a1"];
+    C1["c0,v0"] += -1.0 * H2["c0,a1,h0,a0"] * T2["h0,a2,v0,a3"] * L2["a1,a2,a0,a3"];
+    C1["c0,v0"] += (-1.0 / 4.0) * H2["a0,a1,p0,c0"] * T2["a2,a3,p0,v0"] * L2["a2,a3,a0,a1"];
+    C1["c0,v0"] += (1.0 / 4.0) * H2["a0,a1,h0,v0"] * T2["h0,c0,a2,a3"] * L2["a2,a3,a0,a1"];
+    C1["c0,v0"] += (1.0 / 2.0) * H2["a1,a2,p0,a0"] * T2["c0,a3,p0,v0"] * L2["a1,a2,a0,a3"];
+    C1["c0,v0"] += (-1.0 / 2.0) * H2["a1,a2,h0,a0"] * T2["h0,c0,v0,a3"] * L2["a1,a2,a0,a3"];
+    C1["c0,v0"] += (-1.0 / 2.0) * H2["h0,h1,p0,c0"] * T2["h2,h3,p0,v0"] * L1["h2,h0"] * L1["h3,h1"];
+    C1["c0,v0"] += -1.0 * H2["h0,v0,p0,a0"] * T2["h1,c0,p0,a1"] * L1["h1,h0"] * L1["a1,a0"];
+    C1["c0,v0"] += 1.0 * H2["c0,a0,h0,h1"] * T2["h0,h2,v0,a1"] * L1["h2,h1"] * L1["a1,a0"];
+    C1["c0,v0"] += (1.0 / 2.0) * H2["a0,a1,h0,v0"] * T2["h0,c0,a2,a3"] * L1["a2,a0"] * L1["a3,a1"];
 
-    temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"ghgp"});
-    temp["g0,h0,g1,p0"] += 1.0 * H2["g1,h1,g0,p1"] * T2["h0,h2,p0,p1"] * L1["h2,h1"];
-    temp["g0,h0,g1,p0"] += -1.0 * H2["g1,h1,g0,a0"] * T2["h0,h1,p0,a1"] * L1["a1,a0"];
-    C2["g0,h0,g1,p0"] += temp["g0,h0,g1,p0"];
-    C2["g0,h0,p0,g1"] -= temp["g0,h0,g1,p0"];
-    C2["h0,g0,g1,p0"] -= temp["g0,h0,g1,p0"];
-    C2["h0,g0,p0,g1"] += temp["g0,h0,g1,p0"];
+    C1["v0,a0"] += -1.0 * H1["v0,h0"] * T1["h0,a0"];
+    C1["v0,a0"] += 1.0 * H2["h0,a0,p0,v0"] * T1["h1,p0"] * L1["h1,h0"];
+    C1["v0,a0"] += (-1.0 / 2.0) * H2["v0,a1,h0,h1"] * T2["h0,h1,a0,a2"] * L1["a2,a1"];
+    C1["v0,a0"] += 1.0 * H2["v0,a1,h0,a0"] * T1["h0,a2"] * L1["a2,a1"];
+    C1["v0,a0"] += (1.0 / 2.0) * H2["v0,a1,h0,a0"] * T2["h0,a2,a3,a4"] * L2["a3,a4,a1,a2"];
+    C1["v0,a0"] += -1.0 * H2["v0,a2,h0,a1"] * T2["h0,a3,a0,a4"] * L2["a2,a3,a1,a4"];
+    C1["v0,a0"] += (-1.0 / 2.0) * H2["a0,a1,p0,v0"] * T2["a3,a4,p0,a2"] * L2["a3,a4,a1,a2"];
+    C1["v0,a0"] += (-1.0 / 4.0) * H2["a1,a2,p0,v0"] * T2["a3,a4,p0,a0"] * L2["a3,a4,a1,a2"];
+    C1["v0,a0"] += (-1.0 / 2.0) * H2["h0,h1,p0,v0"] * T2["h2,h3,p0,a0"] * L1["h2,h0"] * L1["h3,h1"];
+    C1["v0,a0"] += 1.0 * H2["v0,a1,h0,h1"] * T2["h0,h2,a0,a2"] * L1["h2,h1"] * L1["a2,a1"];
+
+    C1["v0,c0"] += 1.0 * H2["h0,c0,p0,v0"] * T1["h1,p0"] * L1["h1,h0"];
+    C1["v0,c0"] += 1.0 * H2["v0,a0,h0,c0"] * T1["h0,a1"] * L1["a1,a0"];
+    C1["v0,c0"] += (1.0 / 2.0) * H2["v0,a0,h0,c0"] * T2["h0,a1,a2,a3"] * L2["a2,a3,a0,a1"];
+    C1["v0,c0"] += (-1.0 / 2.0) * H2["c0,a0,p0,v0"] * T2["a2,a3,p0,a1"] * L2["a2,a3,a0,a1"];
+
+    C1["v0,v1"] += -1.0 * H1["v0,h0"] * T1["h0,v1"];
+    C1["v0,v1"] += 1.0 * H2["h0,v1,p0,v0"] * T1["h1,p0"] * L1["h1,h0"];
+    C1["v0,v1"] += (-1.0 / 2.0) * H2["v0,a0,h0,h1"] * T2["h0,h1,v1,a1"] * L1["a1,a0"];
+    C1["v0,v1"] += 1.0 * H2["v0,a0,h0,v1"] * T1["h0,a1"] * L1["a1,a0"];
+    C1["v0,v1"] += (1.0 / 2.0) * H2["v0,a0,h0,v1"] * T2["h0,a1,a2,a3"] * L2["a2,a3,a0,a1"];
+    C1["v0,v1"] += -1.0 * H2["v0,a1,h0,a0"] * T2["h0,a2,v1,a3"] * L2["a1,a2,a0,a3"];
+    C1["v0,v1"] += (-1.0 / 2.0) * H2["v1,a0,p0,v0"] * T2["a2,a3,p0,a1"] * L2["a2,a3,a0,a1"];
+    C1["v0,v1"] += (-1.0 / 4.0) * H2["a0,a1,p0,v0"] * T2["a2,a3,p0,v1"] * L2["a2,a3,a0,a1"];
+    C1["v0,v1"] += (-1.0 / 2.0) * H2["h0,h1,p0,v0"] * T2["h2,h3,p0,v1"] * L1["h2,h0"] * L1["h3,h1"];
+    C1["v0,v1"] += 1.0 * H2["v0,a0,h0,h1"] * T2["h0,h2,v1,a1"] * L1["h2,h1"] * L1["a1,a0"];
+
+    C2["a0,a1,a2,a3"] += (-1.0 / 2.0) * H2["a0,a1,h0,h1"] * T2["h0,h1,a2,a3"];
+    C2["a0,a1,a2,a3"] += (1.0 / 2.0) * H2["a2,a3,p0,p1"] * T2["a0,a1,p0,p1"];
+    C2["a0,a1,a2,a3"] += 1.0 * H2["a0,a1,h0,h1"] * T2["h0,h2,a2,a3"] * L1["h2,h1"];
+    C2["a0,a1,a2,a3"] += -1.0 * H2["a2,a3,p0,a4"] * T2["a0,a1,p0,a5"] * L1["a5,a4"];
+
+    C2["a0,a1,c0,c1"] += (1.0 / 2.0) * H2["c0,c1,p0,p1"] * T2["a0,a1,p0,p1"];
+    C2["a0,a1,c0,c1"] += -1.0 * H2["c0,c1,p0,a2"] * T2["a0,a1,p0,a3"] * L1["a3,a2"];
+
+    C2["a0,a1,v0,v1"] += (1.0 / 2.0) * H2["v0,v1,p0,p1"] * T2["a0,a1,p0,p1"];
+    C2["a0,a1,v0,v1"] += (-1.0 / 2.0) * H2["a0,a1,h0,h1"] * T2["h0,h1,v0,v1"];
+    C2["a0,a1,v0,v1"] += -1.0 * H2["v0,v1,p0,a2"] * T2["a0,a1,p0,a3"] * L1["a3,a2"];
+    C2["a0,a1,v0,v1"] += 1.0 * H2["a0,a1,h0,h1"] * T2["h0,h2,v0,v1"] * L1["h2,h1"];
+
+    C2["c0,c1,a0,a1"] += (-1.0 / 2.0) * H2["c0,c1,h0,h1"] * T2["h0,h1,a0,a1"];
+    C2["c0,c1,a0,a1"] += (1.0 / 2.0) * H2["a0,a1,p0,p1"] * T2["c0,c1,p0,p1"];
+    C2["c0,c1,a0,a1"] += 1.0 * H2["c0,c1,h0,h1"] * T2["h0,h2,a0,a1"] * L1["h2,h1"];
+    C2["c0,c1,a0,a1"] += -1.0 * H2["a0,a1,p0,a2"] * T2["c0,c1,p0,a3"] * L1["a3,a2"];
+
+    C2["c0,c1,c2,c3"] += (1.0 / 2.0) * H2["c2,c3,p0,p1"] * T2["c0,c1,p0,p1"];
+    C2["c0,c1,c2,c3"] += -1.0 * H2["c2,c3,p0,a0"] * T2["c0,c1,p0,a1"] * L1["a1,a0"];
+
+    C2["c0,c1,v0,v1"] += (1.0 / 2.0) * H2["v0,v1,p0,p1"] * T2["c0,c1,p0,p1"];
+    C2["c0,c1,v0,v1"] += (-1.0 / 2.0) * H2["c0,c1,h0,h1"] * T2["h0,h1,v0,v1"];
+    C2["c0,c1,v0,v1"] += -1.0 * H2["v0,v1,p0,a0"] * T2["c0,c1,p0,a1"] * L1["a1,a0"];
+    C2["c0,c1,v0,v1"] += 1.0 * H2["c0,c1,h0,h1"] * T2["h0,h2,v0,v1"] * L1["h2,h1"];
+
+    C2["v0,v1,a0,a1"] += (-1.0 / 2.0) * H2["v0,v1,h0,h1"] * T2["h0,h1,a0,a1"];
+    C2["v0,v1,a0,a1"] += 1.0 * H2["v0,v1,h0,h1"] * T2["h0,h2,a0,a1"] * L1["h2,h1"];
+
+    C2["v0,v1,v2,v3"] += (-1.0 / 2.0) * H2["v0,v1,h0,h1"] * T2["h0,h1,v2,v3"];
+    C2["v0,v1,v2,v3"] += 1.0 * H2["v0,v1,h0,h1"] * T2["h0,h2,v2,v3"] * L1["h2,h1"];
+
+    temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"aaaa"});
+    temp["a0,a1,a2,a3"] += -1.0 * H1["a0,h0"] * T2["h0,a1,a2,a3"];
+    temp["a0,a1,a2,a3"] += -1.0 * H2["a2,a3,p0,a0"] * T1["a1,p0"];
+    C2["a0,a1,a2,a3"] += temp["a0,a1,a2,a3"];
+    C2["a1,a0,a2,a3"] -= temp["a0,a1,a2,a3"];
+
+    temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"aaaa"});
+    temp["a0,a1,a2,a3"] += 1.0 * H1["a2,p0"] * T2["a0,a1,p0,a3"];
+    temp["a0,a1,a2,a3"] += 1.0 * H2["a0,a1,h0,a2"] * T1["h0,a3"];
+    C2["a0,a1,a2,a3"] += temp["a0,a1,a2,a3"];
+    C2["a0,a1,a3,a2"] -= temp["a0,a1,a2,a3"];
+
+    temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"aaca"});
+    temp["a0,a1,c0,a2"] += 1.0 * H1["c0,p0"] * T2["a0,a1,p0,a2"];
+    temp["a0,a1,c0,a2"] += (1.0 / 2.0) * H2["c0,a2,p0,p1"] * T2["a0,a1,p0,p1"];
+    temp["a0,a1,c0,a2"] += 1.0 * H2["a0,a1,h0,c0"] * T1["h0,a2"];
+    temp["a0,a1,c0,a2"] += -1.0 * H2["c0,a2,p0,a3"] * T2["a0,a1,p0,a4"] * L1["a4,a3"];
+    C2["a0,a1,c0,a2"] += temp["a0,a1,c0,a2"];
+    C2["a0,a1,a2,c0"] -= temp["a0,a1,c0,a2"];
+
+    temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"aacc"});
+    temp["a0,a1,c0,c1"] += -1.0 * H2["c0,c1,p0,a0"] * T1["a1,p0"];
+    C2["a0,a1,c0,c1"] += temp["a0,a1,c0,c1"];
+    C2["a1,a0,c0,c1"] -= temp["a0,a1,c0,c1"];
+
+    temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"aava"});
+    temp["a0,a1,v0,a2"] += 1.0 * H1["v0,p0"] * T2["a0,a1,p0,a2"];
+    temp["a0,a1,v0,a2"] += -1.0 * H1["a2,p0"] * T2["a0,a1,p0,v0"];
+    temp["a0,a1,v0,a2"] += (1.0 / 2.0) * H2["v0,a2,p0,p1"] * T2["a0,a1,p0,p1"];
+    temp["a0,a1,v0,a2"] += (-1.0 / 2.0) * H2["a0,a1,h0,h1"] * T2["h0,h1,v0,a2"];
+    temp["a0,a1,v0,a2"] += 1.0 * H2["a0,a1,h0,v0"] * T1["h0,a2"];
+    temp["a0,a1,v0,a2"] += -1.0 * H2["a0,a1,h0,a2"] * T1["h0,v0"];
+    temp["a0,a1,v0,a2"] += -1.0 * H2["v0,a2,p0,a3"] * T2["a0,a1,p0,a4"] * L1["a4,a3"];
+    temp["a0,a1,v0,a2"] += 1.0 * H2["a0,a1,h0,h1"] * T2["h0,h2,v0,a2"] * L1["h2,h1"];
+    C2["a0,a1,v0,a2"] += temp["a0,a1,v0,a2"];
+    C2["a0,a1,a2,v0"] -= temp["a0,a1,v0,a2"];
+
+    temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"aavc"});
+    temp["a0,a1,v0,c0"] += -1.0 * H1["c0,p0"] * T2["a0,a1,p0,v0"];
+    temp["a0,a1,v0,c0"] += (1.0 / 2.0) * H2["v0,c0,p0,p1"] * T2["a0,a1,p0,p1"];
+    temp["a0,a1,v0,c0"] += -1.0 * H2["a0,a1,h0,c0"] * T1["h0,v0"];
+    temp["a0,a1,v0,c0"] += -1.0 * H2["v0,c0,p0,a2"] * T2["a0,a1,p0,a3"] * L1["a3,a2"];
+    C2["a0,a1,v0,c0"] += temp["a0,a1,v0,c0"];
+    C2["a0,a1,c0,v0"] -= temp["a0,a1,v0,c0"];
+
+    temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"aavv"});
+    temp["a0,a1,v0,v1"] += 1.0 * H1["v0,p0"] * T2["a0,a1,p0,v1"];
+    temp["a0,a1,v0,v1"] += 1.0 * H2["a0,a1,h0,v0"] * T1["h0,v1"];
+    C2["a0,a1,v0,v1"] += temp["a0,a1,v0,v1"];
+    C2["a0,a1,v1,v0"] -= temp["a0,a1,v0,v1"];
+
+    temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"aavv"});
+    temp["a0,a1,v0,v1"] += -1.0 * H1["a0,h0"] * T2["h0,a1,v0,v1"];
+    temp["a0,a1,v0,v1"] += -1.0 * H2["v0,v1,p0,a0"] * T1["a1,p0"];
+    C2["a0,a1,v0,v1"] += temp["a0,a1,v0,v1"];
+    C2["a1,a0,v0,v1"] -= temp["a0,a1,v0,v1"];
+
+    temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"caaa"});
+    temp["c0,a0,a1,a2"] += -1.0 * H1["c0,h0"] * T2["h0,a0,a1,a2"];
+    temp["c0,a0,a1,a2"] += 1.0 * H1["a0,h0"] * T2["h0,c0,a1,a2"];
+    temp["c0,a0,a1,a2"] += (-1.0 / 2.0) * H2["c0,a0,h0,h1"] * T2["h0,h1,a1,a2"];
+    temp["c0,a0,a1,a2"] += (1.0 / 2.0) * H2["a1,a2,p0,p1"] * T2["c0,a0,p0,p1"];
+    temp["c0,a0,a1,a2"] += -1.0 * H2["a1,a2,p0,c0"] * T1["a0,p0"];
+    temp["c0,a0,a1,a2"] += 1.0 * H2["a1,a2,p0,a0"] * T1["c0,p0"];
+    temp["c0,a0,a1,a2"] += 1.0 * H2["c0,a0,h0,h1"] * T2["h0,h2,a1,a2"] * L1["h2,h1"];
+    temp["c0,a0,a1,a2"] += -1.0 * H2["a1,a2,p0,a3"] * T2["c0,a0,p0,a4"] * L1["a4,a3"];
+    C2["c0,a0,a1,a2"] += temp["c0,a0,a1,a2"];
+    C2["a0,c0,a1,a2"] -= temp["c0,a0,a1,a2"];
+
+    temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"cacc"});
+    temp["c0,a0,c1,c2"] += (1.0 / 2.0) * H2["c1,c2,p0,p1"] * T2["c0,a0,p0,p1"];
+    temp["c0,a0,c1,c2"] += -1.0 * H2["c1,c2,p0,c0"] * T1["a0,p0"];
+    temp["c0,a0,c1,c2"] += 1.0 * H2["c1,c2,p0,a0"] * T1["c0,p0"];
+    temp["c0,a0,c1,c2"] += -1.0 * H2["c1,c2,p0,a1"] * T2["c0,a0,p0,a2"] * L1["a2,a1"];
+    C2["c0,a0,c1,c2"] += temp["c0,a0,c1,c2"];
+    C2["a0,c0,c1,c2"] -= temp["c0,a0,c1,c2"];
+
+    temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"cavv"});
+    temp["c0,a0,v0,v1"] += -1.0 * H1["c0,h0"] * T2["h0,a0,v0,v1"];
+    temp["c0,a0,v0,v1"] += 1.0 * H1["a0,h0"] * T2["h0,c0,v0,v1"];
+    temp["c0,a0,v0,v1"] += (1.0 / 2.0) * H2["v0,v1,p0,p1"] * T2["c0,a0,p0,p1"];
+    temp["c0,a0,v0,v1"] += -1.0 * H2["v0,v1,p0,c0"] * T1["a0,p0"];
+    temp["c0,a0,v0,v1"] += 1.0 * H2["v0,v1,p0,a0"] * T1["c0,p0"];
+    temp["c0,a0,v0,v1"] += (-1.0 / 2.0) * H2["c0,a0,h0,h1"] * T2["h0,h1,v0,v1"];
+    temp["c0,a0,v0,v1"] += -1.0 * H2["v0,v1,p0,a1"] * T2["c0,a0,p0,a2"] * L1["a2,a1"];
+    temp["c0,a0,v0,v1"] += 1.0 * H2["c0,a0,h0,h1"] * T2["h0,h2,v0,v1"] * L1["h2,h1"];
+    C2["c0,a0,v0,v1"] += temp["c0,a0,v0,v1"];
+    C2["a0,c0,v0,v1"] -= temp["c0,a0,v0,v1"];
+
+    temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"ccaa"});
+    temp["c0,c1,a0,a1"] += -1.0 * H1["c0,h0"] * T2["h0,c1,a0,a1"];
+    temp["c0,c1,a0,a1"] += -1.0 * H2["a0,a1,p0,c0"] * T1["c1,p0"];
+    C2["c0,c1,a0,a1"] += temp["c0,c1,a0,a1"];
+    C2["c1,c0,a0,a1"] -= temp["c0,c1,a0,a1"];
+
+    temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"ccaa"});
+    temp["c0,c1,a0,a1"] += 1.0 * H1["a0,p0"] * T2["c0,c1,p0,a1"];
+    temp["c0,c1,a0,a1"] += 1.0 * H2["c0,c1,h0,a0"] * T1["h0,a1"];
+    C2["c0,c1,a0,a1"] += temp["c0,c1,a0,a1"];
+    C2["c0,c1,a1,a0"] -= temp["c0,c1,a0,a1"];
+
+    temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"ccca"});
+    temp["c0,c1,c2,a0"] += 1.0 * H1["c2,p0"] * T2["c0,c1,p0,a0"];
+    temp["c0,c1,c2,a0"] += 1.0 * H2["c0,c1,h0,c2"] * T1["h0,a0"];
+    temp["c0,c1,c2,a0"] += (1.0 / 2.0) * H2["c2,a0,p0,p1"] * T2["c0,c1,p0,p1"];
+    temp["c0,c1,c2,a0"] += -1.0 * H2["c2,a0,p0,a1"] * T2["c0,c1,p0,a2"] * L1["a2,a1"];
+    C2["c0,c1,c2,a0"] += temp["c0,c1,c2,a0"];
+    C2["c0,c1,a0,c2"] -= temp["c0,c1,c2,a0"];
+
+    temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"cccc"});
+    temp["c0,c1,c2,c3"] += -1.0 * H2["c2,c3,p0,c0"] * T1["c1,p0"];
+    C2["c0,c1,c2,c3"] += temp["c0,c1,c2,c3"];
+    C2["c1,c0,c2,c3"] -= temp["c0,c1,c2,c3"];
+
+    temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"ccva"});
+    temp["c0,c1,v0,a0"] += 1.0 * H1["v0,p0"] * T2["c0,c1,p0,a0"];
+    temp["c0,c1,v0,a0"] += -1.0 * H1["a0,p0"] * T2["c0,c1,p0,v0"];
+    temp["c0,c1,v0,a0"] += (1.0 / 2.0) * H2["v0,a0,p0,p1"] * T2["c0,c1,p0,p1"];
+    temp["c0,c1,v0,a0"] += (-1.0 / 2.0) * H2["c0,c1,h0,h1"] * T2["h0,h1,v0,a0"];
+    temp["c0,c1,v0,a0"] += 1.0 * H2["c0,c1,h0,v0"] * T1["h0,a0"];
+    temp["c0,c1,v0,a0"] += -1.0 * H2["c0,c1,h0,a0"] * T1["h0,v0"];
+    temp["c0,c1,v0,a0"] += -1.0 * H2["v0,a0,p0,a1"] * T2["c0,c1,p0,a2"] * L1["a2,a1"];
+    temp["c0,c1,v0,a0"] += 1.0 * H2["c0,c1,h0,h1"] * T2["h0,h2,v0,a0"] * L1["h2,h1"];
+    C2["c0,c1,v0,a0"] += temp["c0,c1,v0,a0"];
+    C2["c0,c1,a0,v0"] -= temp["c0,c1,v0,a0"];
+
+    temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"ccvc"});
+    temp["c0,c1,v0,c2"] += -1.0 * H1["c2,p0"] * T2["c0,c1,p0,v0"];
+    temp["c0,c1,v0,c2"] += (1.0 / 2.0) * H2["v0,c2,p0,p1"] * T2["c0,c1,p0,p1"];
+    temp["c0,c1,v0,c2"] += -1.0 * H2["c0,c1,h0,c2"] * T1["h0,v0"];
+    temp["c0,c1,v0,c2"] += -1.0 * H2["v0,c2,p0,a0"] * T2["c0,c1,p0,a1"] * L1["a1,a0"];
+    C2["c0,c1,v0,c2"] += temp["c0,c1,v0,c2"];
+    C2["c0,c1,c2,v0"] -= temp["c0,c1,v0,c2"];
+
+    temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"ccvv"});
+    temp["c0,c1,v0,v1"] += 1.0 * H1["v0,p0"] * T2["c0,c1,p0,v1"];
+    temp["c0,c1,v0,v1"] += 1.0 * H2["c0,c1,h0,v0"] * T1["h0,v1"];
+    C2["c0,c1,v0,v1"] += temp["c0,c1,v0,v1"];
+    C2["c0,c1,v1,v0"] -= temp["c0,c1,v0,v1"];
+
+    temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"ccvv"});
+    temp["c0,c1,v0,v1"] += -1.0 * H1["c0,h0"] * T2["h0,c1,v0,v1"];
+    temp["c0,c1,v0,v1"] += -1.0 * H2["v0,v1,p0,c0"] * T1["c1,p0"];
+    C2["c0,c1,v0,v1"] += temp["c0,c1,v0,v1"];
+    C2["c1,c0,v0,v1"] -= temp["c0,c1,v0,v1"];
+
+    temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"vaaa"});
+    temp["v0,a0,a1,a2"] += -1.0 * H1["v0,h0"] * T2["h0,a0,a1,a2"];
+    temp["v0,a0,a1,a2"] += (-1.0 / 2.0) * H2["v0,a0,h0,h1"] * T2["h0,h1,a1,a2"];
+    temp["v0,a0,a1,a2"] += -1.0 * H2["a1,a2,p0,v0"] * T1["a0,p0"];
+    temp["v0,a0,a1,a2"] += 1.0 * H2["v0,a0,h0,h1"] * T2["h0,h2,a1,a2"] * L1["h2,h1"];
+    C2["v0,a0,a1,a2"] += temp["v0,a0,a1,a2"];
+    C2["a0,v0,a1,a2"] -= temp["v0,a0,a1,a2"];
+
+    temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"vacc"});
+    temp["v0,a0,c0,c1"] += -1.0 * H2["c0,c1,p0,v0"] * T1["a0,p0"];
+    C2["v0,a0,c0,c1"] += temp["v0,a0,c0,c1"];
+    C2["a0,v0,c0,c1"] -= temp["v0,a0,c0,c1"];
+
+    temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"vavv"});
+    temp["v0,a0,v1,v2"] += -1.0 * H1["v0,h0"] * T2["h0,a0,v1,v2"];
+    temp["v0,a0,v1,v2"] += (-1.0 / 2.0) * H2["v0,a0,h0,h1"] * T2["h0,h1,v1,v2"];
+    temp["v0,a0,v1,v2"] += -1.0 * H2["v1,v2,p0,v0"] * T1["a0,p0"];
+    temp["v0,a0,v1,v2"] += 1.0 * H2["v0,a0,h0,h1"] * T2["h0,h2,v1,v2"] * L1["h2,h1"];
+    C2["v0,a0,v1,v2"] += temp["v0,a0,v1,v2"];
+    C2["a0,v0,v1,v2"] -= temp["v0,a0,v1,v2"];
+
+    temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"vcaa"});
+    temp["v0,c0,a0,a1"] += -1.0 * H1["v0,h0"] * T2["h0,c0,a0,a1"];
+    temp["v0,c0,a0,a1"] += (-1.0 / 2.0) * H2["v0,c0,h0,h1"] * T2["h0,h1,a0,a1"];
+    temp["v0,c0,a0,a1"] += -1.0 * H2["a0,a1,p0,v0"] * T1["c0,p0"];
+    temp["v0,c0,a0,a1"] += 1.0 * H2["v0,c0,h0,h1"] * T2["h0,h2,a0,a1"] * L1["h2,h1"];
+    C2["v0,c0,a0,a1"] += temp["v0,c0,a0,a1"];
+    C2["c0,v0,a0,a1"] -= temp["v0,c0,a0,a1"];
+
+    temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"vccc"});
+    temp["v0,c0,c1,c2"] += -1.0 * H2["c1,c2,p0,v0"] * T1["c0,p0"];
+    C2["v0,c0,c1,c2"] += temp["v0,c0,c1,c2"];
+    C2["c0,v0,c1,c2"] -= temp["v0,c0,c1,c2"];
+
+    temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"vcvv"});
+    temp["v0,c0,v1,v2"] += -1.0 * H1["v0,h0"] * T2["h0,c0,v1,v2"];
+    temp["v0,c0,v1,v2"] += (-1.0 / 2.0) * H2["v0,c0,h0,h1"] * T2["h0,h1,v1,v2"];
+    temp["v0,c0,v1,v2"] += -1.0 * H2["v1,v2,p0,v0"] * T1["c0,p0"];
+    temp["v0,c0,v1,v2"] += 1.0 * H2["v0,c0,h0,h1"] * T2["h0,h2,v1,v2"] * L1["h2,h1"];
+    C2["v0,c0,v1,v2"] += temp["v0,c0,v1,v2"];
+    C2["c0,v0,v1,v2"] -= temp["v0,c0,v1,v2"];
+
+    temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"vvaa"});
+    temp["v0,v1,a0,a1"] += 1.0 * H2["v0,v1,h0,a0"] * T1["h0,a1"];
+    C2["v0,v1,a0,a1"] += temp["v0,v1,a0,a1"];
+    C2["v0,v1,a1,a0"] -= temp["v0,v1,a0,a1"];
+
+    temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"vvca"});
+    temp["v0,v1,c0,a0"] += 1.0 * H2["v0,v1,h0,c0"] * T1["h0,a0"];
+    C2["v0,v1,c0,a0"] += temp["v0,v1,c0,a0"];
+    C2["v0,v1,a0,c0"] -= temp["v0,v1,c0,a0"];
+
+    temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"vvva"});
+    temp["v0,v1,v2,a0"] += (-1.0 / 2.0) * H2["v0,v1,h0,h1"] * T2["h0,h1,v2,a0"];
+    temp["v0,v1,v2,a0"] += 1.0 * H2["v0,v1,h0,v2"] * T1["h0,a0"];
+    temp["v0,v1,v2,a0"] += -1.0 * H2["v0,v1,h0,a0"] * T1["h0,v2"];
+    temp["v0,v1,v2,a0"] += 1.0 * H2["v0,v1,h0,h1"] * T2["h0,h2,v2,a0"] * L1["h2,h1"];
+    C2["v0,v1,v2,a0"] += temp["v0,v1,v2,a0"];
+    C2["v0,v1,a0,v2"] -= temp["v0,v1,v2,a0"];
+
+    temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"vvvc"});
+    temp["v0,v1,v2,c0"] += -1.0 * H2["v0,v1,h0,c0"] * T1["h0,v2"];
+    C2["v0,v1,v2,c0"] += temp["v0,v1,v2,c0"];
+    C2["v0,v1,c0,v2"] -= temp["v0,v1,v2,c0"];
+
+    temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"vvvv"});
+    temp["v0,v1,v2,v3"] += 1.0 * H2["v0,v1,h0,v2"] * T1["h0,v3"];
+    C2["v0,v1,v2,v3"] += temp["v0,v1,v2,v3"];
+    C2["v0,v1,v3,v2"] -= temp["v0,v1,v2,v3"];
+
+    temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"aaaa"});
+    temp["a0,a1,a2,a3"] += 1.0 * H2["h0,a2,p0,a0"] * T2["h1,a1,p0,a3"] * L1["h1,h0"];
+    temp["a0,a1,a2,a3"] += -1.0 * H2["a0,a4,h0,a2"] * T2["h0,a1,a3,a5"] * L1["a5,a4"];
+    C2["a0,a1,a2,a3"] += temp["a0,a1,a2,a3"];
+    C2["a0,a1,a3,a2"] -= temp["a0,a1,a2,a3"];
+    C2["a1,a0,a2,a3"] -= temp["a0,a1,a2,a3"];
+    C2["a1,a0,a3,a2"] += temp["a0,a1,a2,a3"];
+
+    temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"aaca"});
+    temp["a0,a1,c0,a2"] += -1.0 * H2["c0,a2,p0,a0"] * T1["a1,p0"];
+    temp["a0,a1,c0,a2"] += 1.0 * H2["h0,c0,p0,a0"] * T2["h1,a1,p0,a2"] * L1["h1,h0"];
+    temp["a0,a1,c0,a2"] += -1.0 * H2["a0,a3,h0,c0"] * T2["h0,a1,a2,a4"] * L1["a4,a3"];
+    C2["a0,a1,c0,a2"] += temp["a0,a1,c0,a2"];
+    C2["a0,a1,a2,c0"] -= temp["a0,a1,c0,a2"];
+    C2["a1,a0,c0,a2"] -= temp["a0,a1,c0,a2"];
+    C2["a1,a0,a2,c0"] += temp["a0,a1,c0,a2"];
+
+    temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"aava"});
+    temp["a0,a1,v0,a2"] += -1.0 * H1["a0,h0"] * T2["h0,a1,v0,a2"];
+    temp["a0,a1,v0,a2"] += -1.0 * H2["v0,a2,p0,a0"] * T1["a1,p0"];
+    temp["a0,a1,v0,a2"] += 1.0 * H2["h0,v0,p0,a0"] * T2["h1,a1,p0,a2"] * L1["h1,h0"];
+    temp["a0,a1,v0,a2"] += -1.0 * H2["h0,a2,p0,a0"] * T2["h1,a1,p0,v0"] * L1["h1,h0"];
+    temp["a0,a1,v0,a2"] += -1.0 * H2["a0,a3,h0,v0"] * T2["h0,a1,a2,a4"] * L1["a4,a3"];
+    temp["a0,a1,v0,a2"] += 1.0 * H2["a0,a3,h0,a2"] * T2["h0,a1,v0,a4"] * L1["a4,a3"];
+    C2["a0,a1,v0,a2"] += temp["a0,a1,v0,a2"];
+    C2["a0,a1,a2,v0"] -= temp["a0,a1,v0,a2"];
+    C2["a1,a0,v0,a2"] -= temp["a0,a1,v0,a2"];
+    C2["a1,a0,a2,v0"] += temp["a0,a1,v0,a2"];
+
+    temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"aavc"});
+    temp["a0,a1,v0,c0"] += -1.0 * H2["v0,c0,p0,a0"] * T1["a1,p0"];
+    temp["a0,a1,v0,c0"] += -1.0 * H2["h0,c0,p0,a0"] * T2["h1,a1,p0,v0"] * L1["h1,h0"];
+    temp["a0,a1,v0,c0"] += 1.0 * H2["a0,a2,h0,c0"] * T2["h0,a1,v0,a3"] * L1["a3,a2"];
+    C2["a0,a1,v0,c0"] += temp["a0,a1,v0,c0"];
+    C2["a0,a1,c0,v0"] -= temp["a0,a1,v0,c0"];
+    C2["a1,a0,v0,c0"] -= temp["a0,a1,v0,c0"];
+    C2["a1,a0,c0,v0"] += temp["a0,a1,v0,c0"];
+
+    temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"aavv"});
+    temp["a0,a1,v0,v1"] += 1.0 * H2["h0,v0,p0,a0"] * T2["h1,a1,p0,v1"] * L1["h1,h0"];
+    temp["a0,a1,v0,v1"] += -1.0 * H2["a0,a2,h0,v0"] * T2["h0,a1,v1,a3"] * L1["a3,a2"];
+    C2["a0,a1,v0,v1"] += temp["a0,a1,v0,v1"];
+    C2["a0,a1,v1,v0"] -= temp["a0,a1,v0,v1"];
+    C2["a1,a0,v0,v1"] -= temp["a0,a1,v0,v1"];
+    C2["a1,a0,v1,v0"] += temp["a0,a1,v0,v1"];
+
+    temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"caaa"});
+    temp["c0,a0,a1,a2"] += 1.0 * H1["a1,p0"] * T2["c0,a0,p0,a2"];
+    temp["c0,a0,a1,a2"] += 1.0 * H2["c0,a0,h0,a1"] * T1["h0,a2"];
+    temp["c0,a0,a1,a2"] += 1.0 * H2["h0,a1,p0,c0"] * T2["h1,a0,p0,a2"] * L1["h1,h0"];
+    temp["c0,a0,a1,a2"] += -1.0 * H2["h0,a1,p0,a0"] * T2["h1,c0,p0,a2"] * L1["h1,h0"];
+    temp["c0,a0,a1,a2"] += -1.0 * H2["c0,a3,h0,a1"] * T2["h0,a0,a2,a4"] * L1["a4,a3"];
+    temp["c0,a0,a1,a2"] += 1.0 * H2["a0,a3,h0,a1"] * T2["h0,c0,a2,a4"] * L1["a4,a3"];
+    C2["c0,a0,a1,a2"] += temp["c0,a0,a1,a2"];
+    C2["c0,a0,a2,a1"] -= temp["c0,a0,a1,a2"];
+    C2["a0,c0,a1,a2"] -= temp["c0,a0,a1,a2"];
+    C2["a0,c0,a2,a1"] += temp["c0,a0,a1,a2"];
+
+    temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"caca"});
+    temp["c0,a0,c1,a1"] += 1.0 * H1["c1,p0"] * T2["c0,a0,p0,a1"];
+    temp["c0,a0,c1,a1"] += 1.0 * H2["c0,a0,h0,c1"] * T1["h0,a1"];
+    temp["c0,a0,c1,a1"] += (1.0 / 2.0) * H2["c1,a1,p0,p1"] * T2["c0,a0,p0,p1"];
+    temp["c0,a0,c1,a1"] += -1.0 * H2["c1,a1,p0,c0"] * T1["a0,p0"];
+    temp["c0,a0,c1,a1"] += 1.0 * H2["c1,a1,p0,a0"] * T1["c0,p0"];
+    temp["c0,a0,c1,a1"] += 1.0 * H2["h0,c1,p0,c0"] * T2["h1,a0,p0,a1"] * L1["h1,h0"];
+    temp["c0,a0,c1,a1"] += -1.0 * H2["h0,c1,p0,a0"] * T2["h1,c0,p0,a1"] * L1["h1,h0"];
+    temp["c0,a0,c1,a1"] += -1.0 * H2["c0,a2,h0,c1"] * T2["h0,a0,a1,a3"] * L1["a3,a2"];
+    temp["c0,a0,c1,a1"] += -1.0 * H2["c1,a1,p0,a2"] * T2["c0,a0,p0,a3"] * L1["a3,a2"];
+    temp["c0,a0,c1,a1"] += 1.0 * H2["a0,a2,h0,c1"] * T2["h0,c0,a1,a3"] * L1["a3,a2"];
+    C2["c0,a0,c1,a1"] += temp["c0,a0,c1,a1"];
+    C2["c0,a0,a1,c1"] -= temp["c0,a0,c1,a1"];
+    C2["a0,c0,c1,a1"] -= temp["c0,a0,c1,a1"];
+    C2["a0,c0,a1,c1"] += temp["c0,a0,c1,a1"];
+
+    temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"cava"});
+    temp["c0,a0,v0,a1"] += 1.0 * H1["v0,p0"] * T2["c0,a0,p0,a1"];
+    temp["c0,a0,v0,a1"] += -1.0 * H1["c0,h0"] * T2["h0,a0,v0,a1"];
+    temp["c0,a0,v0,a1"] += 1.0 * H1["a0,h0"] * T2["h0,c0,v0,a1"];
+    temp["c0,a0,v0,a1"] += -1.0 * H1["a1,p0"] * T2["c0,a0,p0,v0"];
+    temp["c0,a0,v0,a1"] += (1.0 / 2.0) * H2["v0,a1,p0,p1"] * T2["c0,a0,p0,p1"];
+    temp["c0,a0,v0,a1"] += -1.0 * H2["v0,a1,p0,c0"] * T1["a0,p0"];
+    temp["c0,a0,v0,a1"] += 1.0 * H2["v0,a1,p0,a0"] * T1["c0,p0"];
+    temp["c0,a0,v0,a1"] += (-1.0 / 2.0) * H2["c0,a0,h0,h1"] * T2["h0,h1,v0,a1"];
+    temp["c0,a0,v0,a1"] += 1.0 * H2["c0,a0,h0,v0"] * T1["h0,a1"];
+    temp["c0,a0,v0,a1"] += -1.0 * H2["c0,a0,h0,a1"] * T1["h0,v0"];
+    temp["c0,a0,v0,a1"] += 1.0 * H2["h0,v0,p0,c0"] * T2["h1,a0,p0,a1"] * L1["h1,h0"];
+    temp["c0,a0,v0,a1"] += -1.0 * H2["h0,v0,p0,a0"] * T2["h1,c0,p0,a1"] * L1["h1,h0"];
+    temp["c0,a0,v0,a1"] += -1.0 * H2["h0,a1,p0,c0"] * T2["h1,a0,p0,v0"] * L1["h1,h0"];
+    temp["c0,a0,v0,a1"] += 1.0 * H2["h0,a1,p0,a0"] * T2["h1,c0,p0,v0"] * L1["h1,h0"];
+    temp["c0,a0,v0,a1"] += -1.0 * H2["v0,a1,p0,a2"] * T2["c0,a0,p0,a3"] * L1["a3,a2"];
+    temp["c0,a0,v0,a1"] += 1.0 * H2["c0,a0,h0,h1"] * T2["h0,h2,v0,a1"] * L1["h2,h1"];
+    temp["c0,a0,v0,a1"] += -1.0 * H2["c0,a2,h0,v0"] * T2["h0,a0,a1,a3"] * L1["a3,a2"];
+    temp["c0,a0,v0,a1"] += 1.0 * H2["c0,a2,h0,a1"] * T2["h0,a0,v0,a3"] * L1["a3,a2"];
+    temp["c0,a0,v0,a1"] += 1.0 * H2["a0,a2,h0,v0"] * T2["h0,c0,a1,a3"] * L1["a3,a2"];
+    temp["c0,a0,v0,a1"] += -1.0 * H2["a0,a2,h0,a1"] * T2["h0,c0,v0,a3"] * L1["a3,a2"];
+    C2["c0,a0,v0,a1"] += temp["c0,a0,v0,a1"];
+    C2["c0,a0,a1,v0"] -= temp["c0,a0,v0,a1"];
+    C2["a0,c0,v0,a1"] -= temp["c0,a0,v0,a1"];
+    C2["a0,c0,a1,v0"] += temp["c0,a0,v0,a1"];
+
+    temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"cavc"});
+    temp["c0,a0,v0,c1"] += -1.0 * H1["c1,p0"] * T2["c0,a0,p0,v0"];
+    temp["c0,a0,v0,c1"] += (1.0 / 2.0) * H2["v0,c1,p0,p1"] * T2["c0,a0,p0,p1"];
+    temp["c0,a0,v0,c1"] += -1.0 * H2["v0,c1,p0,c0"] * T1["a0,p0"];
+    temp["c0,a0,v0,c1"] += 1.0 * H2["v0,c1,p0,a0"] * T1["c0,p0"];
+    temp["c0,a0,v0,c1"] += -1.0 * H2["c0,a0,h0,c1"] * T1["h0,v0"];
+    temp["c0,a0,v0,c1"] += -1.0 * H2["h0,c1,p0,c0"] * T2["h1,a0,p0,v0"] * L1["h1,h0"];
+    temp["c0,a0,v0,c1"] += 1.0 * H2["h0,c1,p0,a0"] * T2["h1,c0,p0,v0"] * L1["h1,h0"];
+    temp["c0,a0,v0,c1"] += -1.0 * H2["v0,c1,p0,a1"] * T2["c0,a0,p0,a2"] * L1["a2,a1"];
+    temp["c0,a0,v0,c1"] += 1.0 * H2["c0,a1,h0,c1"] * T2["h0,a0,v0,a2"] * L1["a2,a1"];
+    temp["c0,a0,v0,c1"] += -1.0 * H2["a0,a1,h0,c1"] * T2["h0,c0,v0,a2"] * L1["a2,a1"];
+    C2["c0,a0,v0,c1"] += temp["c0,a0,v0,c1"];
+    C2["c0,a0,c1,v0"] -= temp["c0,a0,v0,c1"];
+    C2["a0,c0,v0,c1"] -= temp["c0,a0,v0,c1"];
+    C2["a0,c0,c1,v0"] += temp["c0,a0,v0,c1"];
+
+    temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"cavv"});
+    temp["c0,a0,v0,v1"] += 1.0 * H1["v0,p0"] * T2["c0,a0,p0,v1"];
+    temp["c0,a0,v0,v1"] += 1.0 * H2["c0,a0,h0,v0"] * T1["h0,v1"];
+    temp["c0,a0,v0,v1"] += 1.0 * H2["h0,v0,p0,c0"] * T2["h1,a0,p0,v1"] * L1["h1,h0"];
+    temp["c0,a0,v0,v1"] += -1.0 * H2["h0,v0,p0,a0"] * T2["h1,c0,p0,v1"] * L1["h1,h0"];
+    temp["c0,a0,v0,v1"] += -1.0 * H2["c0,a1,h0,v0"] * T2["h0,a0,v1,a2"] * L1["a2,a1"];
+    temp["c0,a0,v0,v1"] += 1.0 * H2["a0,a1,h0,v0"] * T2["h0,c0,v1,a2"] * L1["a2,a1"];
+    C2["c0,a0,v0,v1"] += temp["c0,a0,v0,v1"];
+    C2["c0,a0,v1,v0"] -= temp["c0,a0,v0,v1"];
+    C2["a0,c0,v0,v1"] -= temp["c0,a0,v0,v1"];
+    C2["a0,c0,v1,v0"] += temp["c0,a0,v0,v1"];
+
+    temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"ccaa"});
+    temp["c0,c1,a0,a1"] += 1.0 * H2["h0,a0,p0,c0"] * T2["h1,c1,p0,a1"] * L1["h1,h0"];
+    temp["c0,c1,a0,a1"] += -1.0 * H2["c0,a2,h0,a0"] * T2["h0,c1,a1,a3"] * L1["a3,a2"];
+    C2["c0,c1,a0,a1"] += temp["c0,c1,a0,a1"];
+    C2["c0,c1,a1,a0"] -= temp["c0,c1,a0,a1"];
+    C2["c1,c0,a0,a1"] -= temp["c0,c1,a0,a1"];
+    C2["c1,c0,a1,a0"] += temp["c0,c1,a0,a1"];
+
+    temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"ccca"});
+    temp["c0,c1,c2,a0"] += -1.0 * H2["c2,a0,p0,c0"] * T1["c1,p0"];
+    temp["c0,c1,c2,a0"] += 1.0 * H2["h0,c2,p0,c0"] * T2["h1,c1,p0,a0"] * L1["h1,h0"];
+    temp["c0,c1,c2,a0"] += -1.0 * H2["c0,a1,h0,c2"] * T2["h0,c1,a0,a2"] * L1["a2,a1"];
+    C2["c0,c1,c2,a0"] += temp["c0,c1,c2,a0"];
+    C2["c0,c1,a0,c2"] -= temp["c0,c1,c2,a0"];
+    C2["c1,c0,c2,a0"] -= temp["c0,c1,c2,a0"];
+    C2["c1,c0,a0,c2"] += temp["c0,c1,c2,a0"];
+
+    temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"ccva"});
+    temp["c0,c1,v0,a0"] += -1.0 * H1["c0,h0"] * T2["h0,c1,v0,a0"];
+    temp["c0,c1,v0,a0"] += -1.0 * H2["v0,a0,p0,c0"] * T1["c1,p0"];
+    temp["c0,c1,v0,a0"] += 1.0 * H2["h0,v0,p0,c0"] * T2["h1,c1,p0,a0"] * L1["h1,h0"];
+    temp["c0,c1,v0,a0"] += -1.0 * H2["h0,a0,p0,c0"] * T2["h1,c1,p0,v0"] * L1["h1,h0"];
+    temp["c0,c1,v0,a0"] += -1.0 * H2["c0,a1,h0,v0"] * T2["h0,c1,a0,a2"] * L1["a2,a1"];
+    temp["c0,c1,v0,a0"] += 1.0 * H2["c0,a1,h0,a0"] * T2["h0,c1,v0,a2"] * L1["a2,a1"];
+    C2["c0,c1,v0,a0"] += temp["c0,c1,v0,a0"];
+    C2["c0,c1,a0,v0"] -= temp["c0,c1,v0,a0"];
+    C2["c1,c0,v0,a0"] -= temp["c0,c1,v0,a0"];
+    C2["c1,c0,a0,v0"] += temp["c0,c1,v0,a0"];
+
+    temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"ccvc"});
+    temp["c0,c1,v0,c2"] += -1.0 * H2["v0,c2,p0,c0"] * T1["c1,p0"];
+    temp["c0,c1,v0,c2"] += -1.0 * H2["h0,c2,p0,c0"] * T2["h1,c1,p0,v0"] * L1["h1,h0"];
+    temp["c0,c1,v0,c2"] += 1.0 * H2["c0,a0,h0,c2"] * T2["h0,c1,v0,a1"] * L1["a1,a0"];
+    C2["c0,c1,v0,c2"] += temp["c0,c1,v0,c2"];
+    C2["c0,c1,c2,v0"] -= temp["c0,c1,v0,c2"];
+    C2["c1,c0,v0,c2"] -= temp["c0,c1,v0,c2"];
+    C2["c1,c0,c2,v0"] += temp["c0,c1,v0,c2"];
+
+    temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"ccvv"});
+    temp["c0,c1,v0,v1"] += 1.0 * H2["h0,v0,p0,c0"] * T2["h1,c1,p0,v1"] * L1["h1,h0"];
+    temp["c0,c1,v0,v1"] += -1.0 * H2["c0,a0,h0,v0"] * T2["h0,c1,v1,a1"] * L1["a1,a0"];
+    C2["c0,c1,v0,v1"] += temp["c0,c1,v0,v1"];
+    C2["c0,c1,v1,v0"] -= temp["c0,c1,v0,v1"];
+    C2["c1,c0,v0,v1"] -= temp["c0,c1,v0,v1"];
+    C2["c1,c0,v1,v0"] += temp["c0,c1,v0,v1"];
+
+    temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"vaaa"});
+    temp["v0,a0,a1,a2"] += 1.0 * H2["v0,a0,h0,a1"] * T1["h0,a2"];
+    temp["v0,a0,a1,a2"] += 1.0 * H2["h0,a1,p0,v0"] * T2["h1,a0,p0,a2"] * L1["h1,h0"];
+    temp["v0,a0,a1,a2"] += -1.0 * H2["v0,a3,h0,a1"] * T2["h0,a0,a2,a4"] * L1["a4,a3"];
+    C2["v0,a0,a1,a2"] += temp["v0,a0,a1,a2"];
+    C2["v0,a0,a2,a1"] -= temp["v0,a0,a1,a2"];
+    C2["a0,v0,a1,a2"] -= temp["v0,a0,a1,a2"];
+    C2["a0,v0,a2,a1"] += temp["v0,a0,a1,a2"];
+
+    temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"vaca"});
+    temp["v0,a0,c0,a1"] += 1.0 * H2["v0,a0,h0,c0"] * T1["h0,a1"];
+    temp["v0,a0,c0,a1"] += -1.0 * H2["c0,a1,p0,v0"] * T1["a0,p0"];
+    temp["v0,a0,c0,a1"] += 1.0 * H2["h0,c0,p0,v0"] * T2["h1,a0,p0,a1"] * L1["h1,h0"];
+    temp["v0,a0,c0,a1"] += -1.0 * H2["v0,a2,h0,c0"] * T2["h0,a0,a1,a3"] * L1["a3,a2"];
+    C2["v0,a0,c0,a1"] += temp["v0,a0,c0,a1"];
+    C2["v0,a0,a1,c0"] -= temp["v0,a0,c0,a1"];
+    C2["a0,v0,c0,a1"] -= temp["v0,a0,c0,a1"];
+    C2["a0,v0,a1,c0"] += temp["v0,a0,c0,a1"];
+
+    temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"vava"});
+    temp["v0,a0,v1,a1"] += -1.0 * H1["v0,h0"] * T2["h0,a0,v1,a1"];
+    temp["v0,a0,v1,a1"] += (-1.0 / 2.0) * H2["v0,a0,h0,h1"] * T2["h0,h1,v1,a1"];
+    temp["v0,a0,v1,a1"] += 1.0 * H2["v0,a0,h0,v1"] * T1["h0,a1"];
+    temp["v0,a0,v1,a1"] += -1.0 * H2["v0,a0,h0,a1"] * T1["h0,v1"];
+    temp["v0,a0,v1,a1"] += -1.0 * H2["v1,a1,p0,v0"] * T1["a0,p0"];
+    temp["v0,a0,v1,a1"] += 1.0 * H2["h0,v1,p0,v0"] * T2["h1,a0,p0,a1"] * L1["h1,h0"];
+    temp["v0,a0,v1,a1"] += -1.0 * H2["h0,a1,p0,v0"] * T2["h1,a0,p0,v1"] * L1["h1,h0"];
+    temp["v0,a0,v1,a1"] += 1.0 * H2["v0,a0,h0,h1"] * T2["h0,h2,v1,a1"] * L1["h2,h1"];
+    temp["v0,a0,v1,a1"] += -1.0 * H2["v0,a2,h0,v1"] * T2["h0,a0,a1,a3"] * L1["a3,a2"];
+    temp["v0,a0,v1,a1"] += 1.0 * H2["v0,a2,h0,a1"] * T2["h0,a0,v1,a3"] * L1["a3,a2"];
+    C2["v0,a0,v1,a1"] += temp["v0,a0,v1,a1"];
+    C2["v0,a0,a1,v1"] -= temp["v0,a0,v1,a1"];
+    C2["a0,v0,v1,a1"] -= temp["v0,a0,v1,a1"];
+    C2["a0,v0,a1,v1"] += temp["v0,a0,v1,a1"];
+
+    temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"vavc"});
+    temp["v0,a0,v1,c0"] += -1.0 * H2["v0,a0,h0,c0"] * T1["h0,v1"];
+    temp["v0,a0,v1,c0"] += -1.0 * H2["v1,c0,p0,v0"] * T1["a0,p0"];
+    temp["v0,a0,v1,c0"] += -1.0 * H2["h0,c0,p0,v0"] * T2["h1,a0,p0,v1"] * L1["h1,h0"];
+    temp["v0,a0,v1,c0"] += 1.0 * H2["v0,a1,h0,c0"] * T2["h0,a0,v1,a2"] * L1["a2,a1"];
+    C2["v0,a0,v1,c0"] += temp["v0,a0,v1,c0"];
+    C2["v0,a0,c0,v1"] -= temp["v0,a0,v1,c0"];
+    C2["a0,v0,v1,c0"] -= temp["v0,a0,v1,c0"];
+    C2["a0,v0,c0,v1"] += temp["v0,a0,v1,c0"];
+
+    temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"vavv"});
+    temp["v0,a0,v1,v2"] += 1.0 * H2["v0,a0,h0,v1"] * T1["h0,v2"];
+    temp["v0,a0,v1,v2"] += 1.0 * H2["h0,v1,p0,v0"] * T2["h1,a0,p0,v2"] * L1["h1,h0"];
+    temp["v0,a0,v1,v2"] += -1.0 * H2["v0,a1,h0,v1"] * T2["h0,a0,v2,a2"] * L1["a2,a1"];
+    C2["v0,a0,v1,v2"] += temp["v0,a0,v1,v2"];
+    C2["v0,a0,v2,v1"] -= temp["v0,a0,v1,v2"];
+    C2["a0,v0,v1,v2"] -= temp["v0,a0,v1,v2"];
+    C2["a0,v0,v2,v1"] += temp["v0,a0,v1,v2"];
+
+    temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"vcaa"});
+    temp["v0,c0,a0,a1"] += 1.0 * H2["v0,c0,h0,a0"] * T1["h0,a1"];
+    temp["v0,c0,a0,a1"] += 1.0 * H2["h0,a0,p0,v0"] * T2["h1,c0,p0,a1"] * L1["h1,h0"];
+    temp["v0,c0,a0,a1"] += -1.0 * H2["v0,a2,h0,a0"] * T2["h0,c0,a1,a3"] * L1["a3,a2"];
+    C2["v0,c0,a0,a1"] += temp["v0,c0,a0,a1"];
+    C2["v0,c0,a1,a0"] -= temp["v0,c0,a0,a1"];
+    C2["c0,v0,a0,a1"] -= temp["v0,c0,a0,a1"];
+    C2["c0,v0,a1,a0"] += temp["v0,c0,a0,a1"];
+
+    temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"vcca"});
+    temp["v0,c0,c1,a0"] += 1.0 * H2["v0,c0,h0,c1"] * T1["h0,a0"];
+    temp["v0,c0,c1,a0"] += -1.0 * H2["c1,a0,p0,v0"] * T1["c0,p0"];
+    temp["v0,c0,c1,a0"] += 1.0 * H2["h0,c1,p0,v0"] * T2["h1,c0,p0,a0"] * L1["h1,h0"];
+    temp["v0,c0,c1,a0"] += -1.0 * H2["v0,a1,h0,c1"] * T2["h0,c0,a0,a2"] * L1["a2,a1"];
+    C2["v0,c0,c1,a0"] += temp["v0,c0,c1,a0"];
+    C2["v0,c0,a0,c1"] -= temp["v0,c0,c1,a0"];
+    C2["c0,v0,c1,a0"] -= temp["v0,c0,c1,a0"];
+    C2["c0,v0,a0,c1"] += temp["v0,c0,c1,a0"];
+
+    temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"vcva"});
+    temp["v0,c0,v1,a0"] += -1.0 * H1["v0,h0"] * T2["h0,c0,v1,a0"];
+    temp["v0,c0,v1,a0"] += (-1.0 / 2.0) * H2["v0,c0,h0,h1"] * T2["h0,h1,v1,a0"];
+    temp["v0,c0,v1,a0"] += 1.0 * H2["v0,c0,h0,v1"] * T1["h0,a0"];
+    temp["v0,c0,v1,a0"] += -1.0 * H2["v0,c0,h0,a0"] * T1["h0,v1"];
+    temp["v0,c0,v1,a0"] += -1.0 * H2["v1,a0,p0,v0"] * T1["c0,p0"];
+    temp["v0,c0,v1,a0"] += 1.0 * H2["h0,v1,p0,v0"] * T2["h1,c0,p0,a0"] * L1["h1,h0"];
+    temp["v0,c0,v1,a0"] += -1.0 * H2["h0,a0,p0,v0"] * T2["h1,c0,p0,v1"] * L1["h1,h0"];
+    temp["v0,c0,v1,a0"] += 1.0 * H2["v0,c0,h0,h1"] * T2["h0,h2,v1,a0"] * L1["h2,h1"];
+    temp["v0,c0,v1,a0"] += -1.0 * H2["v0,a1,h0,v1"] * T2["h0,c0,a0,a2"] * L1["a2,a1"];
+    temp["v0,c0,v1,a0"] += 1.0 * H2["v0,a1,h0,a0"] * T2["h0,c0,v1,a2"] * L1["a2,a1"];
+    C2["v0,c0,v1,a0"] += temp["v0,c0,v1,a0"];
+    C2["v0,c0,a0,v1"] -= temp["v0,c0,v1,a0"];
+    C2["c0,v0,v1,a0"] -= temp["v0,c0,v1,a0"];
+    C2["c0,v0,a0,v1"] += temp["v0,c0,v1,a0"];
+
+    temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"vcvc"});
+    temp["v0,c0,v1,c1"] += -1.0 * H2["v0,c0,h0,c1"] * T1["h0,v1"];
+    temp["v0,c0,v1,c1"] += -1.0 * H2["v1,c1,p0,v0"] * T1["c0,p0"];
+    temp["v0,c0,v1,c1"] += -1.0 * H2["h0,c1,p0,v0"] * T2["h1,c0,p0,v1"] * L1["h1,h0"];
+    temp["v0,c0,v1,c1"] += 1.0 * H2["v0,a0,h0,c1"] * T2["h0,c0,v1,a1"] * L1["a1,a0"];
+    C2["v0,c0,v1,c1"] += temp["v0,c0,v1,c1"];
+    C2["v0,c0,c1,v1"] -= temp["v0,c0,v1,c1"];
+    C2["c0,v0,v1,c1"] -= temp["v0,c0,v1,c1"];
+    C2["c0,v0,c1,v1"] += temp["v0,c0,v1,c1"];
+
+    temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"vcvv"});
+    temp["v0,c0,v1,v2"] += 1.0 * H2["v0,c0,h0,v1"] * T1["h0,v2"];
+    temp["v0,c0,v1,v2"] += 1.0 * H2["h0,v1,p0,v0"] * T2["h1,c0,p0,v2"] * L1["h1,h0"];
+    temp["v0,c0,v1,v2"] += -1.0 * H2["v0,a0,h0,v1"] * T2["h0,c0,v2,a1"] * L1["a1,a0"];
+    C2["v0,c0,v1,v2"] += temp["v0,c0,v1,v2"];
+    C2["v0,c0,v2,v1"] -= temp["v0,c0,v1,v2"];
+    C2["c0,v0,v1,v2"] -= temp["v0,c0,v1,v2"];
+    C2["c0,v0,v2,v1"] += temp["v0,c0,v1,v2"];
 
     // scale by factor
     C0 *= factor;
