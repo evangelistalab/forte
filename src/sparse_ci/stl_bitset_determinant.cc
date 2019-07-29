@@ -26,6 +26,7 @@
  * @END LICENSE
  */
 
+#if 0
 #include <algorithm>
 
 #include "psi4/psi4-dec.h"
@@ -689,3 +690,5 @@ void enforce_spin_completeness(std::vector<STLBitsetDeterminant>& det_space, int
     //}
 }
 } // namespace forte
+
+#endif

@@ -628,8 +628,8 @@ std::vector<bool> FCI_MO::Form_String_Ref(const bool& print) {
     return String;
 }
 
-std::vector<std::vector<std::vector<bool>>> FCI_MO::Form_String_Singles(const std::vector<bool>& ref_string,
-                                                         const bool& print) {
+std::vector<std::vector<std::vector<bool>>>
+FCI_MO::Form_String_Singles(const std::vector<bool>& ref_string, const bool& print) {
     timer_on("FORM String Singles");
     std::vector<std::vector<std::vector<bool>>> String(nirrep_, std::vector<std::vector<bool>>());
 
@@ -673,8 +673,8 @@ std::vector<std::vector<std::vector<bool>>> FCI_MO::Form_String_Singles(const st
     return String;
 }
 
-std::vector<std::vector<std::vector<bool>>> FCI_MO::Form_String_IP(const std::vector<bool>& ref_string,
-                                                    const bool& print) {
+std::vector<std::vector<std::vector<bool>>>
+FCI_MO::Form_String_IP(const std::vector<bool>& ref_string, const bool& print) {
     timer_on("FORM String Singles IP");
     std::vector<std::vector<std::vector<bool>>> String(nirrep_, std::vector<std::vector<bool>>());
 
@@ -706,8 +706,8 @@ std::vector<std::vector<std::vector<bool>>> FCI_MO::Form_String_IP(const std::ve
     return String;
 }
 
-std::vector<std::vector<std::vector<bool>>> FCI_MO::Form_String_EA(const std::vector<bool>& ref_string,
-                                                    const bool& print) {
+std::vector<std::vector<std::vector<bool>>>
+FCI_MO::Form_String_EA(const std::vector<bool>& ref_string, const bool& print) {
     timer_on("FORM String Singles EA");
     std::vector<std::vector<std::vector<bool>>> String(nirrep_, std::vector<std::vector<bool>>());
 
@@ -740,8 +740,8 @@ std::vector<std::vector<std::vector<bool>>> FCI_MO::Form_String_EA(const std::ve
     return String;
 }
 
-std::vector<std::vector<std::vector<bool>>> FCI_MO::Form_String_Doubles(const std::vector<bool>& ref_string,
-                                                         const bool& print) {
+std::vector<std::vector<std::vector<bool>>>
+FCI_MO::Form_String_Doubles(const std::vector<bool>& ref_string, const bool& print) {
     timer_on("FORM String Doubles");
     std::vector<std::vector<std::vector<bool>>> String(nirrep_, std::vector<std::vector<bool>>());
 
@@ -2426,7 +2426,8 @@ void FCI_MO::set_sa_info(const std::vector<std::tuple<int, int, int, std::vector
     }
 }
 
-void FCI_MO::set_eigens(const std::vector<std::vector<std::pair<psi::SharedVector, double>>>& eigens) {
+void FCI_MO::set_eigens(
+    const std::vector<std::vector<std::pair<psi::SharedVector, double>>>& eigens) {
     size_t nentry = sa_info_.size();
     if (eigens.size() == nentry) {
         for (size_t n = 0; n < nentry; ++n) {
@@ -2650,7 +2651,8 @@ RDMs FCI_MO::transition_reference(int root1, int root2, bool multi_state, int en
     }
 
     vecdet& p_space = multi_state ? p_spaces_[entry] : determinant_;
-    std::vector<std::pair<psi::SharedVector, double>>& eigen = multi_state ? eigens_[entry] : eigen_;
+    std::vector<std::pair<psi::SharedVector, double>>& eigen =
+        multi_state ? eigens_[entry] : eigen_;
 
     // prepare eigenvectors
     size_t dim = p_space.size();
@@ -2683,13 +2685,13 @@ RDMs FCI_MO::transition_reference(int root1, int root2, bool multi_state, int en
 void FCI_MO::print_det(const vecdet& dets) {
     print_h2("Determinants |alpha|beta>");
     for (const Determinant& x : dets) {
-        outfile->Printf("\n  %s", x.str().c_str());
+        outfile->Printf("\n  %s", str(x).c_str());
     }
     outfile->Printf("\n");
 }
 
-void FCI_MO::print_occupation_strings_perirrep(std::string name,
-                                               const vector<std::vector<std::vector<bool>>>& string) {
+void FCI_MO::print_occupation_strings_perirrep(
+    std::string name, const vector<std::vector<std::vector<bool>>>& string) {
     print_h2(name);
     for (size_t i = 0; i != string.size(); ++i) {
         if (string[i].size() != 0) {

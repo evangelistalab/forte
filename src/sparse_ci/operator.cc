@@ -427,10 +427,10 @@ double WFNOperator::s2_direct(DeterminantHashVec& wfn, psi::SharedMatrix& evecs,
     SortedStringList_UI64 a_sorted_string_list(wfn, fci_ints_, DetSpinType::Alpha);
     const auto& sorted_half_dets = a_sorted_string_list.sorted_half_dets();
     const auto& sorted_dets = a_sorted_string_list.sorted_dets();
-    Determinant::String detIJa_common;
-    Determinant::String Ib;
-    Determinant::String Jb;
-    Determinant::String IJb;
+    String detIJa_common;
+    String Ib;
+    String Jb;
+    String IJb;
 
     for (const auto& detIa : sorted_half_dets) {
         const auto& range_I = a_sorted_string_list.range(detIa);
@@ -450,7 +450,7 @@ double WFNOperator::s2_direct(DeterminantHashVec& wfn, psi::SharedMatrix& evecs,
                         a = ra_p ? p : a;
                     }
                 }
-                double sign_ia = ui64_slater_sign(detIa, i, a);
+                double sign_ia = detIa.slater_sign(i, a);
                 const auto& range_J = a_sorted_string_list.range(detJa);
                 size_t first_J = range_J.first;
                 size_t last_J = range_J.second;
@@ -460,14 +460,14 @@ double WFNOperator::s2_direct(DeterminantHashVec& wfn, psi::SharedMatrix& evecs,
                     for (size_t posJ = first_J; posJ < last_J; ++posJ) {
                         Jb = sorted_dets[posJ].get_beta_bits();
                         IJb = Jb ^ Ib;
-                        int ndiff = ui64_bit_count(IJb);
+                        int ndiff = IJb.count();
                         if (ndiff == 2) {
                             auto Ib_sub = Ib & IJb;
-                            auto j = lowest_one_idx(Ib_sub);
+                            auto j = Ib_sub.lowest_one_index();
                             auto Jb_sub = Jb & IJb;
-                            auto b = lowest_one_idx(Jb_sub);
+                            auto b = Jb_sub.lowest_one_index();
                             if ((i != j) and (a != b) and (i == b) and (j == a)) {
-                                double sign = sign_ia * ui64_slater_sign(Ib, j, b);
+                                double sign = sign_ia * Ib.slater_sign(j, b);
                                 S2 -= sign * CI * evecs->get(a_sorted_string_list.add(posJ), root);
                             }
                         }

@@ -71,7 +71,7 @@ uint64_t lowest_one_idx(uint64_t x) {
 #endif
 }
 
-uint64_t clear_lowest_one(uint64_t x)
+uint64_t clear_lowest_one_bit(uint64_t x)
 // Return word where the lowest bit set in x is cleared
 // Return 0 for input == 0
 {

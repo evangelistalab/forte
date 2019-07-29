@@ -39,7 +39,6 @@
 #include "ui64_determinant.h"
 #include "stl_bitset_determinant.h"
 
-
 namespace forte {
 
 double slater_rules_single_alpha(uint64_t Ib, uint64_t Ia, uint64_t Ja,
@@ -225,18 +224,4 @@ void enforce_spin_completeness(std::vector<UI64Determinant>& det_space, int nmo)
     //    outfile->Printf("\n\n  Determinant space is spin complete.");
     //}
 }
-
-template <>
-UI64Determinant make_det<UI64Determinant, STLBitsetDeterminant>(const STLBitsetDeterminant& d) {
-    UI64Determinant ui64_d;
-    for (int i = 0; i < 64; ++i) {
-        ui64_d.set_alfa_bit(i, d.get_alfa_bit(i));
-        ui64_d.set_beta_bit(i, d.get_beta_bit(i));
-    }
-    return ui64_d;
-}
-
-template <> UI64Determinant make_det<UI64Determinant, UI64Determinant>(const UI64Determinant& d) {
-    return d;
-}
-}
+} // namespace forte

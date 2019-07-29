@@ -31,7 +31,6 @@
 #include "helpers/helpers.h"
 #include "sorted_string_list.h"
 
-
 namespace forte {
 
 SortedStringList_UI64::SortedStringList_UI64() {}
@@ -44,16 +43,16 @@ SortedStringList_UI64::SortedStringList_UI64(const DeterminantHashVec& space,
     auto dets = space.determinants();
     num_dets_ = dets.size();
     sorted_dets_.reserve(num_dets_);
-    for (const auto& d : dets) {
-        sorted_dets_.push_back(make_det<UI64Determinant, Determinant>(d));
+    for (const auto& d : dets) { // TODO: this appears redundant now (Francesco)
+        sorted_dets_.push_back(d);
     }
     if (sorted_string_spin == DetSpinType::Alpha) {
-        map_to_hashdets_ = sort_permutation(sorted_dets_, UI64Determinant::reverse_less_than);
+        map_to_hashdets_ = sort_permutation(sorted_dets_, Determinant::reverse_less_than);
         apply_permutation_in_place(sorted_dets_, map_to_hashdets_);
         //        std::sort(sorted_dets_.begin(), sorted_dets_.end(),
         //        UI64Determinant::reverse_less_then);
     } else {
-        map_to_hashdets_ = sort_permutation(sorted_dets_, UI64Determinant::less_than);
+        map_to_hashdets_ = sort_permutation(sorted_dets_, Determinant::less_than);
         apply_permutation_in_place(sorted_dets_, map_to_hashdets_);
         //        std::sort(sorted_dets_.begin(), sorted_dets_.end());
     }
@@ -64,8 +63,8 @@ SortedStringList_UI64::SortedStringList_UI64(const DeterminantHashVec& space,
 
     sorted_spin_type_ =
         sorted_string_spin == DetSpinType::Alpha ? DetSpinType::Alpha : DetSpinType::Beta;
-    Determinant::String first_string = sorted_dets_[0].get_bits(sorted_spin_type_);
-    Determinant::String old_first_string = first_string;
+    String first_string = sorted_dets_[0].get_bits(sorted_spin_type_);
+    String old_first_string = first_string;
 
     first_string_range_[old_first_string] = std::make_pair(0, 0);
     sorted_half_dets_.push_back(old_first_string);
@@ -112,15 +111,13 @@ const std::vector<UI64Determinant>& SortedStringList_UI64::sorted_dets() const {
     return sorted_dets_;
 }
 
-const std::vector<Determinant::String>& SortedStringList_UI64::sorted_half_dets() const {
+const std::vector<String>& SortedStringList_UI64::sorted_half_dets() const {
     return sorted_half_dets_;
 }
 
-const std::pair<size_t, size_t>&
-SortedStringList_UI64::range(const Determinant::String& d) const {
+const std::pair<size_t, size_t>& SortedStringList_UI64::range(const String& d) const {
     return first_string_range_.at(d);
 }
 
 size_t SortedStringList_UI64::add(size_t pos) const { return map_to_hashdets_[pos]; }
-}
-
+} // namespace forte

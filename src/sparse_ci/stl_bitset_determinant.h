@@ -26,6 +26,8 @@
  * @END LICENSE
  */
 
+#if 0
+
 #ifndef _stl_determinant_h_
 #define _stl_determinant_h_
 
@@ -39,6 +41,8 @@
 #include <vector>
 
 #include "determinant_common.h"
+
+enum class DetSpinType { Alpha, Beta };
 
 namespace forte {
 
@@ -241,3 +245,5 @@ double spin2(const STLBitsetDeterminant& lhs, const STLBitsetDeterminant& rhs);
 } // namespace forte
 
 #endif // _bitset_determinant_h_
+
+#endif

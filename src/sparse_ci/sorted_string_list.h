@@ -51,20 +51,19 @@ class SortedStringList_UI64 {
     ~SortedStringList_UI64();
 
     const std::vector<Determinant>& sorted_dets() const;
-    const std::vector<Determinant::String>& sorted_half_dets() const;
+    const std::vector<String>& sorted_half_dets() const;
 
-    const std::pair<size_t, size_t>& range(const Determinant::String& d) const;
+    const std::pair<size_t, size_t>& range(const String& d) const;
     size_t add(size_t pos) const;
 
   protected:
     int nmo_ = 0;
     size_t num_dets_ = 0;
     DetSpinType sorted_spin_type_;
-    std::vector<Determinant::String> sorted_half_dets_;
+    std::vector<String> sorted_half_dets_;
     std::vector<Determinant> sorted_dets_;
     std::vector<size_t> map_to_hashdets_;
-    std::unordered_map<Determinant::String, std::pair<size_t, size_t>, Determinant::String::Hash>
-        first_string_range_;
+    std::unordered_map<String, std::pair<size_t, size_t>, String::Hash> first_string_range_;
 };
 } // namespace forte
 

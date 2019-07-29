@@ -26,6 +26,8 @@
  * @END LICENSE
  */
 
+#if 0
+
 #include "psi4/libmints/matrix.h"
 #include "psi4/psi4-dec.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
@@ -154,3 +156,4 @@ double STLBitsetString::SlaterSign(int n) {
     return (sign);
 }
 }
+#endif

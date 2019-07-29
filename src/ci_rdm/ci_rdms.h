@@ -270,7 +270,7 @@ class CI_RDMS {
 
     // Function to build non-trivial mixed-spin components of 1-, 2-, and 3- RDMs
     void make_ab(SortedStringList_UI64 a_sorted_string_list_,
-                 const std::vector<Determinant::String>& sorted_astr,
+                 const std::vector<String>& sorted_astr,
                  const std::vector<Determinant>& sorted_a_dets, std::vector<double>& tprdm_ab,
                  std::vector<double>& tprdm_aab, std::vector<double>& tprdm_abb);
 };

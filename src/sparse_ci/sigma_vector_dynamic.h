@@ -33,7 +33,6 @@
 #include "sigma_vector.h"
 #include "sorted_string_list.h"
 
-
 namespace forte {
 
 enum class SigmaVectorMode { Dynamic, OnTheFly };
@@ -44,8 +43,8 @@ enum class SigmaVectorMode { Dynamic, OnTheFly };
  */
 class SigmaVectorDynamic : public SigmaVector {
   public:
-    SigmaVectorDynamic(const DeterminantHashVec& space, std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
-                       size_t max_memory);
+    SigmaVectorDynamic(const DeterminantHashVec& space,
+                       std::shared_ptr<ActiveSpaceIntegrals> fci_ints, size_t max_memory);
     ~SigmaVectorDynamic();
     void compute_sigma(psi::SharedVector sigma, psi::SharedVector b);
     void get_diagonal(psi::Vector& diag);
@@ -71,7 +70,6 @@ class SigmaVectorDynamic : public SigmaVector {
     std::shared_ptr<ActiveSpaceIntegrals> fci_ints_;
     SortedStringList_UI64 a_sorted_string_list_;
     SortedStringList_UI64 b_sorted_string_list_;
-
 
     /// The Hamiltonian stored as a list of pairs (H_IJ, I, J)
     std::vector<std::tuple<double, std::uint32_t, std::uint32_t>> H_IJ_list_;
@@ -115,17 +113,17 @@ class SigmaVectorDynamic : public SigmaVector {
     /// Task to compute sigma_abab. Computes sigma using a dynamic approach
     void sigma_abab_dynamic_task(size_t task_id, size_t num_tasks);
 
-    bool compute_aa_coupling_and_store(const Determinant::String& Ib,
-                                       const std::vector<double>& b, size_t task_id);
-    bool compute_bb_coupling_and_store(const Determinant::String& Ia,
-                                       const std::vector<double>& b, size_t task_id);
-    bool compute_abab_coupling_and_store(const Determinant::String& detIa,
-                                         const std::vector<double>& b, size_t task_id);
+    bool compute_aa_coupling_and_store(const String& Ib, const std::vector<double>& b,
+                                       size_t task_id);
+    bool compute_bb_coupling_and_store(const String& Ia, const std::vector<double>& b,
+                                       size_t task_id);
+    bool compute_abab_coupling_and_store(const String& detIa, const std::vector<double>& b,
+                                         size_t task_id);
 
-    void compute_aa_coupling(const Determinant::String& detIb, const std::vector<double>& b);
-    void compute_bb_coupling(const Determinant::String& detIa, const std::vector<double>& b);
-    void compute_abab_coupling(const Determinant::String& detIa, const std::vector<double>& b);
+    void compute_aa_coupling(const String& detIb, const std::vector<double>& b);
+    void compute_bb_coupling(const String& detIa, const std::vector<double>& b);
+    void compute_abab_coupling(const String& detIa, const std::vector<double>& b);
 };
-}
+} // namespace forte
 
 #endif // _sigma_vector_dynamic_h_

@@ -8,9 +8,197 @@
 
 #include "bitwise_operations.hpp"
 
+namespace forte {
+
 #define PERFORMANCE_OPTIMIZATION 0
 
 enum class DetSpinType { Alpha, Beta };
+
+template <size_t N> class StringImpl {
+  public:
+    /// the type used to represent a word (a 64 bit unsigned integer)
+    using word_t = uint64_t;
+    /// the number of bits
+    static constexpr size_t nbits = N;
+    /// the number of bits in one word
+    static constexpr size_t bits_per_word = 8 * sizeof(word_t);
+
+    static_assert(bits_per_word == 64, "The size of a word must be 64 bits");
+
+    static_assert(N % (128) == 0,
+                  "The number of bits in the Determinant class must be a multiple of 128");
+
+    /// the number of words needed to store n bits
+    static constexpr size_t nwords(size_t n) {
+        return n / bits_per_word + (n % bits_per_word == 0 ? 0 : 1);
+    }
+    /// the number of words used to store the bits
+    static constexpr size_t nwords_ = nwords(nbits);
+
+    StringImpl() {}
+
+    bool get_bit(size_t pos) const { return this->getword(pos) & maskbit(pos); }
+
+    void set_word(size_t pos, word_t word) { words_[pos] = word; }
+
+    /// Return the sign of a_n applied to this determinant
+    /// This function ignores if bit n is set or not
+    double slater_sign(int n) const {
+        // with constexpr we compile only one of these cases
+        size_t count = 0;
+        // count all the preceeding bits only if we are looking past the first word
+        if (n >= bits_per_word) {
+            size_t last_full_word = whichword(n);
+            for (size_t k = 0; k < last_full_word; ++k) {
+                count += ui64_bit_count(words_[k]);
+            }
+        }
+        return (count % 2 == 0) ? ui64_sign(getword(n), whichbit(n))
+                                : -ui64_sign(getword(n), whichbit(n));
+    }
+
+    /// Return the sign for a pair of second quantized operators
+    /// The sign depends only on the number of bits = 1 between n and m
+    double slater_sign(int n, int m) const {
+        // let's first order the numbers so that m <= n
+        if (n < m)
+            std::swap(m, n);
+        size_t word_m = whichword(m);
+        size_t word_n = whichword(n);
+        // if both bits are in the same word use an optimized version
+        if (word_n == word_m) {
+            return ui64_sign(words_[word_n], whichbit(n), whichbit(m));
+        }
+        size_t count = 0;
+        // count the number of bits in bitween the words of m and n
+        for (size_t k = word_m + 1; k < word_n; ++k) {
+            count += ui64_bit_count(words_[k]);
+        }
+        // count the bits after m in word[m]
+        // count the bits before n in word[n]
+        double sign =
+            ui64_sign_reverse(words_[word_m], whichbit(m)) * ui64_sign(words_[word_n], whichbit(n));
+        return (count % 2 == 0) ? sign : -sign;
+    }
+
+    int count() const {
+        int c = 0;
+        for (auto const w : words_) {
+            c += ui64_bit_count(w);
+        }
+        return c;
+    }
+
+    /// Comparison operator
+    bool operator==(const StringImpl<N>& lhs) const {
+        for (size_t n = 0; n < nwords_; n++) {
+            if (this->words_[n] != lhs.words_[n])
+                return false;
+        }
+        return true;
+    }
+
+    /// Less than operator
+    bool operator<(const StringImpl<N>& lhs) const {
+        for (size_t n = nwords_; n > 1;) {
+            --n;
+            if (this->words_[n] > lhs.words_[n])
+                return false;
+            if (this->words_[n] < lhs.words_[n])
+                return true;
+        }
+        return this->words_[0] < lhs.words_[0];
+    }
+
+    /// Bitwise XOR operator (^)
+    StringImpl<N> operator^(const StringImpl<N>& lhs) const {
+        StringImpl<N> result;
+        for (size_t n = 0; n < nwords_; n++) {
+            result.words_[n] = this->words_[n] ^ lhs.words_[n];
+        }
+        return result;
+    }
+
+    /// Bitwise XOR operator (^)
+    StringImpl<N> operator^=(const StringImpl<N>& lhs) {
+        for (size_t n = 0; n < nwords_; n++) {
+            this->words_[n] ^= lhs.words_[n];
+        }
+        return *this;
+    }
+
+    /// Bitwise AND operator (&)
+    StringImpl<N> operator&(const StringImpl<N>& lhs) const {
+        StringImpl<N> result;
+        for (size_t n = 0; n < nwords_; n++) {
+            result.words_[n] = this->words_[n] & lhs.words_[n];
+        }
+        return result;
+    }
+
+    /// Bitwise AND operator (&)
+    StringImpl<N> operator&=(const StringImpl<N>& lhs) {
+        StringImpl<N> result;
+        for (size_t n = 0; n < nwords_; n++) {
+            this->words_[n] &= lhs.words_[n];
+        }
+        return result;
+    }
+
+    uint64_t lowest_one_index() const {
+        for (size_t n = 0; n < nwords_; n++) {
+            uint64_t idx = lowest_one_idx(words_[n]);
+            if (idx != ~uint64_t(0)) {
+                return idx;
+            }
+        }
+        return ~uint64_t(0);
+    }
+
+    void clear_lowest_one() {
+        for (size_t n = 0; n < nwords_; n++) {
+            if (this->words_[n] != uint64_t(0)) {
+                this->words_[n] = clear_lowest_one_bit(this->words_[n]);
+                return;
+            }
+        }
+    }
+
+    /// Hash function
+    struct Hash {
+        std::size_t operator()(const StringImpl<N>& s) const {
+            if constexpr (N == 128) {
+                return s.words_[0];
+            } else {
+                std::uint64_t seed = 0;
+                for (auto& w : s.words_) {
+                    hash_combine_uint64(seed, w);
+                }
+                return seed;
+            }
+        }
+    };
+
+  private:
+    // ==> Private Functions <==
+
+    /// the index of the word where bit pos is found
+    static constexpr size_t whichword(size_t pos) noexcept { return pos / bits_per_word; }
+
+    /// the word where bit pos is found
+    word_t& getword(size_t pos) { return words_[whichword(pos)]; }
+    const word_t& getword(size_t pos) const { return words_[whichword(pos)]; }
+
+    /// the index of a bit within a word
+    static constexpr size_t whichbit(size_t pos) noexcept { return pos % bits_per_word; }
+
+    /// a mask for bit pos in its corresponding word
+    static constexpr word_t maskbit(size_t pos) {
+        return (static_cast<word_t>(1)) << whichbit(pos);
+    }
+
+    word_t words_[nwords_];
+};
 
 /**
  * @brief A class to represent a Slater determinant with N spin orbitals
@@ -53,6 +241,18 @@ template <size_t N> class DeterminantImpl {
 
     /// Default constructor
     DeterminantImpl() {}
+
+    //    explicit DeterminantImpl(const std::vector<bool>& occupation);
+    /// Construct the determinant from an occupation vector that
+    /// specifies the alpha and beta strings.  occupation = [Ia,Ib]
+    explicit DeterminantImpl(const std::vector<bool>& occupation_a,
+                             const std::vector<bool>& occupation_b) {
+        int size = occupation_a.size();
+        for (int p = 0; p < size; ++p) {
+            this->set_alfa_bit(p, occupation_a[p]);
+            this->set_beta_bit(p, occupation_b[p]);
+        }
+    }
 
     /// String constructor. Convert a std::string to a determinant.
     /// E.g. DeterminantImpl<64>("0011") gives the determinant|0011>
@@ -137,6 +337,35 @@ template <size_t N> class DeterminantImpl {
                 return true;
         }
         return this->words_[0] < lhs.words_[0];
+    }
+
+    bool less_than(const DeterminantImpl<N>& rhs, const DeterminantImpl<N>& lhs) {
+        for (size_t n = nwords_; n > 1;) {
+            --n;
+            if (this->words_[n] > lhs.words_[n])
+                return false;
+            if (this->words_[n] < lhs.words_[n])
+                return true;
+        }
+        return this->words_[0] < lhs.words_[0];
+    }
+
+    bool reverse_less_than(const DeterminantImpl<N>& rhs, const DeterminantImpl<N>& lhs) {
+        for (size_t n = nwords_half; n > 0;) {
+            --n;
+            if (this->words_[n] > lhs.words_[n])
+                return false;
+            if (this->words_[n] < lhs.words_[n])
+                return true;
+        }
+        for (size_t n = nwords_; n > nwords_half + 1;) {
+            --n;
+            if (this->words_[n] > lhs.words_[n])
+                return false;
+            if (this->words_[n] < lhs.words_[n])
+                return true;
+        }
+        return this->words_[nwords_half] < lhs.words_[nwords_half];
     }
 
     /// Return a vector of occupied alpha orbitals
@@ -494,102 +723,18 @@ template <size_t N> class DeterminantImpl {
         }
     };
 
-    class String {
-      public:
-        String() {}
-
-        const word_t& getword(size_t pos) const { return string_words_[whichword(pos)]; }
-
-        bool get_bit(size_t pos) const { return this->getword(pos) & maskbit(pos); }
-
-        int count() const {
-            int c = 0;
-            for (auto const w : string_words_) {
-                c += ui64_bit_count(w);
-            }
-            return c;
-        }
-
-        /// Comparison operator
-        bool operator==(const DeterminantImpl<N>::String& lhs) const {
-            for (size_t n = 0; n < nwords_half; n++) {
-                if (this->string_words_[n] != lhs.string_words_[n])
-                    return false;
-            }
-            return true;
-        }
-
-        /// Less than operator
-        bool operator<(const DeterminantImpl<N>::String& lhs) const {
-            for (size_t n = nwords_half; n > 1;) {
-                --n;
-                if (this->string_words_[n] > lhs.string_words_[n])
-                    return false;
-                if (this->string_words_[n] < lhs.string_words_[n])
-                    return true;
-            }
-            return this->string_words_[0] < lhs.string_words_[0];
-        }
-
-        /// Bitwise and operator (^)
-        DeterminantImpl<N>::String operator^(const DeterminantImpl<N>::String& lhs) const {
-            DeterminantImpl<N>::String result;
-            for (size_t n = 0; n < nwords_half; n++) {
-                result.string_words_[n] = this->string_words_[n] ^ lhs.string_words_[n];
-            }
-            return result;
-        }
-
-        uint64_t lowest_one_index() const {
-            for (size_t n = 0; n < nwords_half; n++) {
-                uint64_t idx = lowest_one_idx(string_words_[n]);
-                if (idx != ~uint64_t(0)) {
-                    return idx;
-                }
-            }
-            return ~uint64_t(0);
-        }
-
-        void clear_lowest_one() {
-            for (size_t n = 0; n < nwords_half; n++) {
-                if (this->string_words_[n] != uint64_t(0)) {
-                    this->string_words_[n] = clear_lowest_one(this->string_words_[n]);
-                    return;
-                }
-            }
-        }
-
-        /// Hash function
-        struct Hash {
-            std::size_t operator()(const DeterminantImpl<N>::String& s) const {
-                if constexpr (N == 128) {
-                    return s.string_words_[0];
-                } else {
-                    std::uint64_t seed = 0;
-                    for (auto& w : s.string_words_) {
-                        hash_combine_uint64(seed, w);
-                    }
-                    return seed;
-                }
-            }
-        };
-
-      private:
-        word_t string_words_[nwords_half];
-    };
-
-    DeterminantImpl<N>::String get_alfa_bits() const {
-        String s;
+    StringImpl<nbits_half> get_alfa_bits() const {
+        StringImpl<nbits_half> s;
         for (int i = 0; i < nwords_half; i++) {
-            s.words_[i] = words_[i];
+            s.set_word(i, words_[i]);
         }
         return s;
     }
 
-    DeterminantImpl<N>::String get_beta_bits() const {
-        String s;
+    StringImpl<nbits_half> get_beta_bits() const {
+        StringImpl<nbits_half> s;
         for (int i = 0; i < nwords_half; i++) {
-            s.words_[i] = words_[nwords_half + i];
+            s.set_word(i, words_[nwords_half + i]);
         }
         return s;
     }
@@ -704,5 +849,247 @@ template <size_t N> void set_str(DeterminantImpl<N>& d, const std::string& str) 
                                "between the number of bits in d and those passed in str\n");
     }
 }
+
+template <size_t N>
+std::vector<std::vector<int>> get_asym_occ(const DeterminantImpl<N>& d, std::vector<int> act_mo) {
+
+    size_t nirrep = act_mo.size();
+    std::vector<std::vector<int>> occ(nirrep);
+
+    int abs = 0;
+    for (size_t h = 0; h < nirrep; ++h) {
+        for (int p = 0; p < act_mo[h]; ++p) {
+            if (d.get_alfa_bit(abs)) {
+                occ[h].push_back(abs);
+            }
+            abs++;
+        }
+    }
+    return occ;
+}
+
+template <size_t N>
+std::vector<std::vector<int>> get_bsym_occ(const DeterminantImpl<N>& d, std::vector<int> act_mo) {
+    size_t nirrep = act_mo.size();
+    std::vector<std::vector<int>> occ(nirrep);
+
+    int abs = 0;
+    for (size_t h = 0; h < nirrep; ++h) {
+        for (int p = 0; p < act_mo[h]; ++p) {
+            if (d.get_beta_bit(abs)) {
+                occ[h].push_back(abs);
+            }
+            abs++;
+        }
+    }
+    return occ;
+}
+
+template <size_t N>
+std::vector<std::vector<int>> get_asym_vir(const DeterminantImpl<N>& d, std::vector<int> act_mo) {
+    size_t nirrep = act_mo.size();
+    std::vector<std::vector<int>> occ(nirrep);
+
+    int abs = 0;
+    for (size_t h = 0; h < nirrep; ++h) {
+        for (int p = 0; p < act_mo[h]; ++p) {
+            if (not d.get_alfa_bit(abs)) {
+                occ[h].push_back(abs);
+            }
+            abs++;
+        }
+    }
+    return occ;
+}
+
+template <size_t N>
+std::vector<std::vector<int>> get_bsym_vir(const DeterminantImpl<N>& d, std::vector<int> act_mo) {
+    size_t nirrep = act_mo.size();
+    std::vector<std::vector<int>> occ(nirrep);
+
+    int abs = 0;
+    for (size_t h = 0; h < nirrep; ++h) {
+        for (int p = 0; p < act_mo[h]; ++p) {
+            if (not d.get_beta_bit(abs)) {
+                occ[h].push_back(abs);
+            }
+            abs++;
+        }
+    }
+    return occ;
+}
+
+/**
+ * @brief Apply a general excitation operator to this determinant
+ *        Details:
+ *        (bc)_n ... (bc)_1 (ba)_n ... (ba)_1 (ac)_n ... (ac)_1 (aa)_n ... (aa)_1 |det>
+ *        where aa = alpha annihilation operator
+ *        where ac = alpha creation operator
+ *        where ba = alpha annihilation operator
+ *        where bc = alpha creation operator
+ * @param aann list of alpha orbitals to annihilate
+ * @param acre list of alpha orbitals to create
+ * @param bann list of beta orbitals to annihilate
+ * @param bcre list of beta orbitals to create
+ * @return the sign of the final determinant (+1, -1, or 0)
+ */
+template <size_t N>
+double gen_excitation(DeterminantImpl<N>& d, const std::vector<int>& aann,
+                      const std::vector<int>& acre, const std::vector<int>& bann,
+                      const std::vector<int>& bcre) {
+    double sign = 1.0;
+    for (auto i : aann) {
+        sign *= d.slater_sign_a(i) * d.get_alfa_bit(i);
+        d.set_alfa_bit(i, false);
+    }
+    for (auto i : acre) {
+        sign *= d.slater_sign_a(i) * (1 - d.get_alfa_bit(i));
+        d.set_alfa_bit(i, true);
+    }
+    for (auto i : bann) {
+        sign *= d.slater_sign_b(i) * d.get_beta_bit(i);
+        d.set_beta_bit(i, false);
+    }
+    for (auto i : bcre) {
+        sign *= d.slater_sign_b(i) * (1 - d.get_beta_bit(i));
+        d.set_beta_bit(i, true);
+    }
+    return sign;
+}
+
+double spin2(const Determinant& lhs, const Determinant& rhs) {
+    int num_str_bits = Determinant::nbits;
+    int size = num_str_bits;
+    const STLBitsetDeterminant::bit_t& I = lhs.bits();
+    const STLBitsetDeterminant::bit_t& J = rhs.bits();
+
+    // Compute the matrix elements of the operator S^2
+    // S^2 = S- S+ + Sz (Sz + 1)
+    //     = Sz (Sz + 1) + Nbeta + Npairs - sum_pq' a+(qa) a+(pb) a-(qb) a-(pa)
+    double matrix_element = 0.0;
+
+    int nadiff = 0;
+    int nbdiff = 0;
+    int na = 0;
+    int nb = 0;
+    int npair = 0;
+    // Count how many differences in mos are there and the number of alpha/beta
+    // electrons
+    for (int n = 0; n < size; ++n) {
+        if (I[n] != J[n])
+            nadiff++;
+        if (I[num_str_bits + n] != J[num_str_bits + n])
+            nbdiff++;
+        if (I[n])
+            na++;
+        if (I[num_str_bits + n])
+            nb++;
+        if ((I[n] and I[num_str_bits + n]))
+            npair += 1;
+    }
+    nadiff /= 2;
+    nbdiff /= 2;
+
+    double Ms = 0.5 * static_cast<double>(na - nb);
+
+    // PhiI = PhiJ -> S^2 = Sz (Sz + 1) + Nbeta - Npairs
+    if ((nadiff == 0) and (nbdiff == 0)) {
+        matrix_element += Ms * (Ms + 1.0) + double(nb) - double(npair);
+    }
+
+    // PhiI = a+(qa) a+(pb) a-(qb) a-(pa) PhiJ
+    if ((nadiff == 1) and (nbdiff == 1)) {
+        // Find a pair of spin coupled electrons
+        int i = -1;
+        int j = -1;
+        // The logic here is a bit complex
+        for (int p = 0; p < size; ++p) {
+            if (J[p] and I[num_str_bits + p] and (not J[num_str_bits + p]) and (not I[p]))
+                i = p;
+            if (J[num_str_bits + p] and I[p] and (not J[p]) and (not I[num_str_bits + p]))
+                j = p;
+        }
+        if (i != j and i >= 0 and j >= 0) {
+            double sign = rhs.slater_sign_a(i) * rhs.slater_sign_b(j) * lhs.slater_sign_a(j) *
+                          lhs.slater_sign_b(i);
+            matrix_element -= sign;
+        }
+    }
+    return (matrix_element);
+}
+
+void enforce_spin_completeness(std::vector<Determinant>& det_space, int nmo) {
+    std::unordered_map<Determinant, bool, Determinant::Hash> det_map;
+    // Add all determinants to the map, assume set is mostly spin complete
+    for (auto& I : det_space) {
+        det_map[I] = true;
+    }
+    // Loop over determinants
+    size_t ndet_added = 0;
+    std::vector<size_t> closed(nmo, 0);
+    std::vector<size_t> open(nmo, 0);
+    std::vector<size_t> open_bits(nmo, 0);
+    for (size_t I = 0, det_size = det_space.size(); I < det_size; ++I) {
+        const STLBitsetDeterminant& det = det_space[I];
+        // outfile->Printf("\n  Original determinant: %s", det.str().c_str());
+        for (int i = 0; i < nmo; ++i) {
+            closed[i] = open[i] = 0;
+            open_bits[i] = false;
+        }
+        int naopen = 0;
+        int nbopen = 0;
+        int nclosed = 0;
+        for (int i = 0; i < nmo; ++i) {
+            if (det.get_alfa_bit(i) and (not det.get_beta_bit(i))) {
+                open[naopen + nbopen] = i;
+                naopen += 1;
+            } else if ((not det.get_alfa_bit(i)) and det.get_beta_bit(i)) {
+                open[naopen + nbopen] = i;
+                nbopen += 1;
+            } else if (det.get_alfa_bit(i) and det.get_beta_bit(i)) {
+                closed[nclosed] = i;
+                nclosed += 1;
+            }
+        }
+
+        if (naopen + nbopen == 0)
+            continue;
+
+        // Generate the strings 1111100000
+        //                      {nao}{nbo}
+        for (int i = 0; i < nbopen; ++i)
+            open_bits[i] = false; // 0
+        for (int i = nbopen; i < naopen + nbopen; ++i)
+            open_bits[i] = true; // 1
+        do {
+            STLBitsetDeterminant new_det;
+            for (int c = 0; c < nclosed; ++c) {
+                new_det.set_alfa_bit(closed[c], true);
+                new_det.set_beta_bit(closed[c], true);
+            }
+            for (int o = 0; o < naopen + nbopen; ++o) {
+                if (open_bits[o]) { //? not
+                    new_det.set_alfa_bit(open[o], true);
+                } else {
+                    new_det.set_beta_bit(open[o], true);
+                }
+            }
+            if (det_map.count(new_det) == 0) {
+                det_space.push_back(new_det);
+                det_map[new_det] = true;
+                // outfile->Printf("\n  added determinant:    %s", new_det.str().c_str());
+                ndet_added++;
+            }
+        } while (std::next_permutation(open_bits.begin(), open_bits.begin() + naopen + nbopen));
+    }
+    // if( ndet_added > 0 ){
+    //    outfile->Printf("\n\n  Determinant space is spin incomplete!");
+    //    outfile->Printf("\n  %zu more determinants were needed.", ndet_added);
+    //}else{
+    //    outfile->Printf("\n\n  Determinant space is spin complete.");
+    //}
+}
+
+} // namespace forte
 
 #endif // _determinant_hpp_

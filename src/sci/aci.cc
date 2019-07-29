@@ -41,15 +41,14 @@ using namespace psi;
 
 namespace forte {
 
-bool pairComp(const std::pair<double, Determinant> E1, const std::pair<double, Determinant> E2){
+bool pairComp(const std::pair<double, Determinant> E1, const std::pair<double, Determinant> E2) {
     return E1.first < E2.first;
 }
 
-
 AdaptiveCI::AdaptiveCI(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
-                               std::shared_ptr<ForteOptions> options,
-                               std::shared_ptr<MOSpaceInfo> mo_space_info,
-                               std::shared_ptr<ActiveSpaceIntegrals> as_ints)
+                       std::shared_ptr<ForteOptions> options,
+                       std::shared_ptr<MOSpaceInfo> mo_space_info,
+                       std::shared_ptr<ActiveSpaceIntegrals> as_ints)
     : SelectedCIMethod(state, nroot, scf_info, mo_space_info, as_ints), sparse_solver_(as_ints_),
       options_(options) {
     mo_symmetry_ = mo_space_info_->symmetry("ACTIVE");
@@ -268,7 +267,7 @@ void AdaptiveCI::unpaired_density(ambit::Tensor Ua, ambit::Tensor Ub) {
 }
 
 void AdaptiveCI::find_q_space_batched(DeterminantHashVec& P_space, DeterminantHashVec& PQ_space,
-                                          psi::SharedVector evals, psi::SharedMatrix evecs) {
+                                      psi::SharedVector evals, psi::SharedMatrix evecs) {
 
     timer find_q("ACI:Build Model Space");
     local_timer build;
@@ -342,7 +341,7 @@ void AdaptiveCI::find_q_space_batched(DeterminantHashVec& P_space, DeterminantHa
 }
 
 void AdaptiveCI::default_find_q_space(DeterminantHashVec& P_space, DeterminantHashVec& PQ_space,
-                                          psi::SharedVector evals, psi::SharedMatrix evecs) {
+                                      psi::SharedVector evals, psi::SharedMatrix evecs) {
     timer find_q("ACI:Build Model Space");
     local_timer build;
 
@@ -440,9 +439,9 @@ void AdaptiveCI::default_find_q_space(DeterminantHashVec& P_space, DeterminantHa
     }
 }
 
-void AdaptiveCI::find_q_space_multiroot(DeterminantHashVec& P_space,
-                                            DeterminantHashVec& PQ_space, int nroot,
-                                            psi::SharedVector evals, psi::SharedMatrix evecs) {
+void AdaptiveCI::find_q_space_multiroot(DeterminantHashVec& P_space, DeterminantHashVec& PQ_space,
+                                        int nroot, psi::SharedVector evals,
+                                        psi::SharedMatrix evecs) {
     timer find_q("ACI:Build Model Space");
     local_timer t_ms_build;
 
@@ -601,8 +600,7 @@ void AdaptiveCI::find_q_space_multiroot(DeterminantHashVec& P_space,
     }
 }
 
-double AdaptiveCI::average_q_values(int nroot, std::vector<double>& C1,
-                                        std::vector<double>& E2) {
+double AdaptiveCI::average_q_values(int nroot, std::vector<double>& C1, std::vector<double>& E2) {
     // f_E2 and f_C1 will store the selected function of the chosen q criteria
     // This functions should only be called when nroot_ > 1
 
@@ -669,7 +667,7 @@ double AdaptiveCI::root_select(int nroot, std::vector<double>& C1, std::vector<d
 }
 
 bool AdaptiveCI::check_convergence(std::vector<std::vector<double>>& energy_history,
-                                       psi::SharedVector evals) {
+                                   psi::SharedVector evals) {
     int nroot = evals->dim();
     int ref = 0;
 
@@ -710,7 +708,7 @@ bool AdaptiveCI::check_convergence(std::vector<std::vector<double>>& energy_hist
 }
 
 void AdaptiveCI::prune_q_space(DeterminantHashVec& PQ_space, DeterminantHashVec& P_space,
-                                   psi::SharedMatrix evecs, int nroot) {
+                               psi::SharedMatrix evecs, int nroot) {
     // Select the new reference space using the sorted CI coefficients
     P_space.clear();
 
@@ -804,7 +802,7 @@ void AdaptiveCI::prune_q_space(DeterminantHashVec& PQ_space, DeterminantHashVec&
 }
 
 bool AdaptiveCI::check_stuck(const std::vector<std::vector<double>>& energy_history,
-                                 psi::SharedVector evals) {
+                             psi::SharedVector evals) {
     bool stuck = false;
     int nroot = evals->dim();
     if (cycle_ < 4) {
@@ -833,9 +831,9 @@ bool AdaptiveCI::check_stuck(const std::vector<std::vector<double>>& energy_hist
 }
 
 std::vector<std::pair<double, double>> AdaptiveCI::compute_spin(DeterminantHashVec& space,
-                                                                    WFNOperator& op,
-                                                                    psi::SharedMatrix evecs,
-                                                                    int nroot) {
+                                                                WFNOperator& op,
+                                                                psi::SharedMatrix evecs,
+                                                                int nroot) {
     // WFNOperator op(mo_symmetry_);
 
     // op.build_strings(space);
@@ -868,7 +866,7 @@ std::vector<std::pair<double, double>> AdaptiveCI::compute_spin(DeterminantHashV
 }
 
 void AdaptiveCI::print_wfn(DeterminantHashVec& space, WFNOperator& op, psi::SharedMatrix evecs,
-                               int nroot) {
+                           int nroot) {
     std::string state_label;
     std::vector<std::string> s2_labels({"singlet", "doublet", "triplet", "quartet", "quintet",
                                         "sextet", "septet", "octet", "nonet", "decatet"});
@@ -887,7 +885,7 @@ void AdaptiveCI::print_wfn(DeterminantHashVec& space, WFNOperator& op, psi::Shar
         for (size_t I = 0; I < max_dets; ++I) {
             outfile->Printf("\n  %3zu  %9.6f %.9f  %10zu %s", I, tmp_evecs[I],
                             tmp_evecs[I] * tmp_evecs[I], space.get_idx(tmp.get_det(I)),
-                            tmp.get_det(I).str(nact_).c_str());
+                            str(tmp.get_det(I), nact_).c_str());
         }
         state_label = s2_labels[std::round(spins[n].first * 2.0)];
         root_spin_vec_[n] = std::make_pair(spins[n].first, spins[n].second);
@@ -897,10 +895,10 @@ void AdaptiveCI::print_wfn(DeterminantHashVec& space, WFNOperator& op, psi::Shar
 }
 
 std::vector<double> AdaptiveCI::davidson_correction(std::vector<Determinant>& P_dets,
-                                                        psi::SharedVector P_evals,
-                                                        psi::SharedMatrix PQ_evecs,
-                                                        std::vector<Determinant>& PQ_dets,
-                                                        psi::SharedVector PQ_evals) {
+                                                    psi::SharedVector P_evals,
+                                                    psi::SharedMatrix PQ_evecs,
+                                                    std::vector<Determinant>& PQ_dets,
+                                                    psi::SharedVector PQ_evals) {
     outfile->Printf("\n  There are %zu PQ dets.", PQ_dets.size());
     outfile->Printf("\n  There are %zu P dets.", P_dets.size());
 
@@ -1083,8 +1081,8 @@ void AdaptiveCI::convert_to_string(const std::vector<Determinant>& space) {
 */
 
 int AdaptiveCI::root_follow(DeterminantHashVec& P_ref, std::vector<double>& P_ref_evecs,
-                                DeterminantHashVec& P_space, psi::SharedMatrix P_evecs,
-                                int num_ref_roots) {
+                            DeterminantHashVec& P_space, psi::SharedMatrix P_evecs,
+                            int num_ref_roots) {
     int ndets = P_space.size();
     int max_dim = std::min(ndets, 1000);
     //    int max_dim = ndets;
@@ -1167,7 +1165,7 @@ void AdaptiveCI::pre_iter_preparation() {
         Determinant det = initial_reference_[0];
         Determinant detb(det);
         std::vector<int> avir = det.get_alfa_vir(nact_); // TODO check this
-        outfile->Printf("\n  %s", det.str(nact_).c_str());
+        outfile->Printf("\n  %s", str(det, nact_).c_str());
         outfile->Printf("\n  Freezing alpha orbital %d", hole_);
         outfile->Printf("\n  Exciting electron from %d to %d", hole_, avir[particle]);
         det.set_alfa_bit(hole_, false);
@@ -1180,8 +1178,8 @@ void AdaptiveCI::pre_iter_preparation() {
                 break;
             }
         }
-        outfile->Printf("\n  %s", det.str(nact_).c_str());
-        outfile->Printf("\n  %s", detb.str(nact_).c_str());
+        outfile->Printf("\n  %s", str(det, nact_).c_str());
+        outfile->Printf("\n  %s", str(detb, nact_).c_str());
         P_space_.add(det);
         P_space_.add(detb);
     }
@@ -1366,9 +1364,8 @@ void AdaptiveCI::diagonalize_PQ_space() {
             outfile->Printf("\n    PQ-space CI Energy + EPT2 Root %3d = %.12f Eh = "
                             "%8.4f eV",
                             i, abs_energy + multistate_pt2_energy_correction_[i],
-                            exc_energy +
-                                pc_hartree2ev * (multistate_pt2_energy_correction_[i] -
-                                                 multistate_pt2_energy_correction_[0]));
+                            exc_energy + pc_hartree2ev * (multistate_pt2_energy_correction_[i] -
+                                                          multistate_pt2_energy_correction_[0]));
         }
         outfile->Printf("\n");
     }
@@ -1420,7 +1417,7 @@ void AdaptiveCI::prune_PQ_to_P() {
 
 std::vector<std::pair<size_t, double>>
 AdaptiveCI::dl_initial_guess(std::vector<Determinant>& old_dets, std::vector<Determinant>& dets,
-                                 psi::SharedMatrix& evecs, int root) {
+                             psi::SharedMatrix& evecs, int root) {
     std::vector<std::pair<size_t, double>> guess;
 
     // Build a hash of new dets
@@ -1467,9 +1464,8 @@ void AdaptiveCI::add_bad_roots(DeterminantHashVec& dets) {
 }
 
 DeterminantHashVec AdaptiveCI::approximate_wfn(DeterminantHashVec& PQ_space,
-                                                   psi::SharedMatrix& evecs,
-                                                   psi::SharedVector& evals,
-                                                   psi::SharedMatrix& new_evecs) {
+                                               psi::SharedMatrix& evecs, psi::SharedVector& evals,
+                                               psi::SharedMatrix& new_evecs) {
     DeterminantHashVec new_wfn;
     new_wfn.copy(PQ_space);
 
@@ -1870,9 +1866,8 @@ void AdaptiveCI::spin_analysis() {
 void AdaptiveCI::update_sigma() { sigma_ = options_->get_double("ACI_RELAX_SIGMA"); }
 
 void AdaptiveCI::full_mrpt2() {
-    if( options_->get_bool("FULL_MRPT2") ){
-        MRPT2 pt(options_, as_ints_, mo_space_info_, PQ_space_, PQ_evecs_,
-                 PQ_evals_, nroot_);
+    if (options_->get_bool("FULL_MRPT2")) {
+        MRPT2 pt(options_, as_ints_, mo_space_info_, PQ_space_, PQ_evecs_, PQ_evals_, nroot_);
         std::vector<double> pt2 = pt.compute_energy();
         multistate_pt2_energy_correction_ = pt2;
     }
@@ -1886,8 +1881,6 @@ size_t AdaptiveCI::get_ref_root() { return ref_root_; }
 std::vector<double> AdaptiveCI::get_multistate_pt2_energy_correction() {
     return multistate_pt2_energy_correction_;
 }
-void AdaptiveCI::post_iter_process() {
-    full_mrpt2();
-}
+void AdaptiveCI::post_iter_process() { full_mrpt2(); }
 
 } // namespace forte

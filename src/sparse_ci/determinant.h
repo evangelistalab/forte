@@ -37,8 +37,10 @@
 namespace forte {
 
 #ifdef SMALL_BITSET
+using String = StringImpl<64>;
 using Determinant = DeterminantImpl<128>;
 #else
+using String = StringImpl<128>;
 using Determinant = DeterminantImpl<256>;
 #endif
 
