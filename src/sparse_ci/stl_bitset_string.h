@@ -26,6 +26,8 @@
  * @END LICENSE
  */
 
+#if 0
+
 #ifndef _bitset_string_h_
 #define _bitset_string_h_
 
@@ -127,3 +129,5 @@ using string_hash_it = std::unordered_map<STLBitsetString, double, STLBitsetStri
 }
 
 #endif // _bitset_string_h_
+
+#endif

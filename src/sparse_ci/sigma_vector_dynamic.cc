@@ -423,7 +423,7 @@ void SigmaVectorDynamic::sigma_abab_dynamic_task(size_t task_id, size_t num_task
     }
 }
 
-bool SigmaVectorDynamic::compute_aa_coupling_and_store(const UI64Determinant::bit_t& Ib,
+bool SigmaVectorDynamic::compute_aa_coupling_and_store(const Determinant::String& Ib,
                                                        const std::vector<double>& b,
                                                        size_t task_id) {
     bool stored = true;
@@ -432,9 +432,9 @@ bool SigmaVectorDynamic::compute_aa_coupling_and_store(const UI64Determinant::bi
 
     const auto& sorted_dets = b_sorted_string_list_.sorted_dets();
     const auto& range_I = b_sorted_string_list_.range(Ib);
-    UI64Determinant::bit_t Ia;
-    UI64Determinant::bit_t Ja;
-    UI64Determinant::bit_t IJa;
+    Determinant::String Ia;
+    Determinant::String Ja;
+    Determinant::String IJa;
     size_t first_I = range_I.first;
     size_t last_I = range_I.second;
     double sigma_I = 0.0;
@@ -492,13 +492,13 @@ bool SigmaVectorDynamic::compute_aa_coupling_and_store(const UI64Determinant::bi
     return stored;
 }
 
-void SigmaVectorDynamic::compute_aa_coupling(const UI64Determinant::bit_t& Ib,
+void SigmaVectorDynamic::compute_aa_coupling(const Determinant::String& Ib,
                                              const std::vector<double>& b) {
     const auto& sorted_dets = b_sorted_string_list_.sorted_dets();
     const auto& range_I = b_sorted_string_list_.range(Ib);
-    UI64Determinant::bit_t Ia;
-    UI64Determinant::bit_t Ja;
-    UI64Determinant::bit_t IJa;
+    Determinant::String Ia;
+    Determinant::String Ja;
+    Determinant::String IJa;
     size_t first_I = range_I.first;
     size_t last_I = range_I.second;
     double sigma_I = 0.0;
@@ -533,7 +533,7 @@ void SigmaVectorDynamic::compute_aa_coupling(const UI64Determinant::bit_t& Ib,
     }
 }
 
-bool SigmaVectorDynamic::compute_bb_coupling_and_store(const UI64Determinant::bit_t& Ia,
+bool SigmaVectorDynamic::compute_bb_coupling_and_store(const Determinant::String& Ia,
                                                        const std::vector<double>& b,
                                                        size_t task_id) {
     bool stored = true;
@@ -542,9 +542,9 @@ bool SigmaVectorDynamic::compute_bb_coupling_and_store(const UI64Determinant::bi
 
     const auto& sorted_dets = a_sorted_string_list_.sorted_dets();
     const auto& range_I = a_sorted_string_list_.range(Ia);
-    UI64Determinant::bit_t Ib;
-    UI64Determinant::bit_t Jb;
-    UI64Determinant::bit_t IJb;
+    Determinant::String Ib;
+    Determinant::String Jb;
+    Determinant::String IJb;
     size_t first_I = range_I.first;
     size_t last_I = range_I.second;
     double sigma_I = 0.0;
@@ -602,13 +602,13 @@ bool SigmaVectorDynamic::compute_bb_coupling_and_store(const UI64Determinant::bi
     return stored;
 }
 
-void SigmaVectorDynamic::compute_bb_coupling(const UI64Determinant::bit_t& Ia,
+void SigmaVectorDynamic::compute_bb_coupling(const Determinant::String& Ia,
                                              const std::vector<double>& b) {
     const auto& sorted_dets = a_sorted_string_list_.sorted_dets();
     const auto& range_I = a_sorted_string_list_.range(Ia);
-    UI64Determinant::bit_t Ib;
-    UI64Determinant::bit_t Jb;
-    UI64Determinant::bit_t IJb;
+    Determinant::String Ib;
+    Determinant::String Jb;
+    Determinant::String IJb;
     size_t first_I = range_I.first;
     size_t last_I = range_I.second;
     double sigma_I = 0.0;
@@ -643,7 +643,7 @@ void SigmaVectorDynamic::compute_bb_coupling(const UI64Determinant::bit_t& Ia,
     }
 }
 
-bool SigmaVectorDynamic::compute_abab_coupling_and_store(const UI64Determinant::bit_t& detIa,
+bool SigmaVectorDynamic::compute_abab_coupling_and_store(const Determinant::String& detIa,
                                                          const std::vector<double>& b,
                                                          size_t task_id) {
     const auto& sorted_half_dets = a_sorted_string_list_.sorted_half_dets();
@@ -652,10 +652,10 @@ bool SigmaVectorDynamic::compute_abab_coupling_and_store(const UI64Determinant::
     bool stored = true;
     size_t end = H_IJ_abab_list_thread_end_[task_id];
     size_t limit = H_IJ_list_thread_limit_[task_id];
-    UI64Determinant::bit_t detIJa_common;
-    UI64Determinant::bit_t Ib;
-    UI64Determinant::bit_t Jb;
-    UI64Determinant::bit_t IJb;
+    Determinant::String detIJa_common;
+    Determinant::String Ib;
+    Determinant::String Jb;
+    Determinant::String IJb;
 
     size_t group_num_elements = 0;
     for (const auto& detJa : sorted_half_dets) {
@@ -719,15 +719,15 @@ bool SigmaVectorDynamic::compute_abab_coupling_and_store(const UI64Determinant::
     return stored;
 }
 
-void SigmaVectorDynamic::compute_abab_coupling(const UI64Determinant::bit_t& detIa,
+void SigmaVectorDynamic::compute_abab_coupling(const Determinant::String& detIa,
                                                const std::vector<double>& b) {
     const auto& sorted_half_dets = a_sorted_string_list_.sorted_half_dets();
     const auto& sorted_dets = a_sorted_string_list_.sorted_dets();
     const auto& range_I = a_sorted_string_list_.range(detIa);
-    UI64Determinant::bit_t detIJa_common;
-    UI64Determinant::bit_t Ib;
-    UI64Determinant::bit_t Jb;
-    UI64Determinant::bit_t IJb;
+    Determinant::String detIJa_common;
+    Determinant::String Ib;
+    Determinant::String Jb;
+    Determinant::String IJb;
 
     for (const auto& detJa : sorted_half_dets) {
         detIJa_common = detIa ^ detJa;

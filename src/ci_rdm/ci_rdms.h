@@ -42,7 +42,6 @@
 #include "fci/string_lists.h"
 #include "integrals/active_space_integrals.h"
 
-
 namespace forte {
 
 class CI_RDMS {
@@ -90,8 +89,8 @@ class CI_RDMS {
     void compute_2rdm(std::vector<double>& tprdm_aa, std::vector<double>& tprdm_ab,
                       std::vector<double>& tprdm_bb);
 
-//    void compute_2rdm_dynamic(std::vector<double>& tprdm_aa, std::vector<double>& tprdm_ab,
-//                      std::vector<double>& tprdm_bb);
+    //    void compute_2rdm_dynamic(std::vector<double>& tprdm_aa, std::vector<double>& tprdm_ab,
+    //                      std::vector<double>& tprdm_bb);
 
     void compute_2rdm(std::vector<double>& tprdm_aa, std::vector<double>& tprdm_ab,
                       std::vector<double>& tprdm_bb, WFNOperator& op);
@@ -101,8 +100,8 @@ class CI_RDMS {
     void compute_3rdm(std::vector<double>& tprdm_aaa, std::vector<double>& tprdm_aab,
                       std::vector<double>& tprdm_abb, std::vector<double>& tprdm_bbb);
 
-//    void compute_3rdm_dynamic(std::vector<double>& tprdm_aaa, std::vector<double>& tprdm_aab,
-//                      std::vector<double>& tprdm_abb, std::vector<double>& tprdm_bbb);
+    //    void compute_3rdm_dynamic(std::vector<double>& tprdm_aaa, std::vector<double>& tprdm_aab,
+    //                      std::vector<double>& tprdm_abb, std::vector<double>& tprdm_bbb);
 
     void compute_3rdm(std::vector<double>& tprdm_aaa, std::vector<double>& tprdm_aab,
                       std::vector<double>& tprdm_abb, std::vector<double>& tprdm_bbb,
@@ -111,14 +110,10 @@ class CI_RDMS {
     //                          std::vector<double>& tprdm_aab,
     //                          std::vector<double>& tprdm_abb,
     //                          std::vector<double>& tprdm_bbb);
-    void compute_rdms_dynamic(std::vector<double>& oprdm_a,
-                              std::vector<double>& oprdm_b,
-                              std::vector<double>& tprdm_aa,
-                              std::vector<double>& tprdm_ab,
-                              std::vector<double>& tprdm_bb,
-                              std::vector<double>& tprdm_aaa,
-                              std::vector<double>& tprdm_aab,
-                              std::vector<double>& tprdm_abb,
+    void compute_rdms_dynamic(std::vector<double>& oprdm_a, std::vector<double>& oprdm_b,
+                              std::vector<double>& tprdm_aa, std::vector<double>& tprdm_ab,
+                              std::vector<double>& tprdm_bb, std::vector<double>& tprdm_aaa,
+                              std::vector<double>& tprdm_aab, std::vector<double>& tprdm_abb,
                               std::vector<double>& tprdm_bbb);
 
     double get_energy(std::vector<double>& oprdm_a, std::vector<double>& oprdm_b,
@@ -145,7 +140,6 @@ class CI_RDMS {
     DeterminantHashVec wfn_;
     // The FCI integrals
     std::shared_ptr<ActiveSpaceIntegrals> fci_ints_;
-
 
     // The Determinant Space
     const std::vector<Determinant> det_space_;
@@ -189,9 +183,8 @@ class CI_RDMS {
     int max_rdm_;
 
     // Objects for dynamic builds
-//    SortedStringList_UI64 a_sorted_string_list_;
-//    SortedStringList_UI64 b_sorted_string_list_;
-
+    //    SortedStringList_UI64 a_sorted_string_list_;
+    //    SortedStringList_UI64 b_sorted_string_list_;
 
     // The list of a_p |N>
     std::vector<std::vector<std::pair<size_t, short>>> a_ann_list_;
@@ -272,12 +265,15 @@ class CI_RDMS {
     //*- Functions for Dynamic RDM builds -*//
 
     // Function to fill 3rdm with all (or half of all) permutations of the 6 indices
-    void fill_3rdm( std::vector<double>& tprdm, double value, int p, int q, int r, int s, int t, int u , bool half = false);
+    void fill_3rdm(std::vector<double>& tprdm, double value, int p, int q, int r, int s, int t,
+                   int u, bool half = false);
 
     // Function to build non-trivial mixed-spin components of 1-, 2-, and 3- RDMs
-    void make_ab(SortedStringList_UI64 a_sorted_string_list_,const  std::vector<UI64Determinant::bit_t>& sorted_astr,const std::vector<UI64Determinant>& sorted_a_dets,
-                std::vector<double>& tprdm_ab, std::vector<double>& tprdm_aab,std::vector<double>& tprdm_abb);
+    void make_ab(SortedStringList_UI64 a_sorted_string_list_,
+                 const std::vector<Determinant::String>& sorted_astr,
+                 const std::vector<Determinant>& sorted_a_dets, std::vector<double>& tprdm_ab,
+                 std::vector<double>& tprdm_aab, std::vector<double>& tprdm_abb);
 };
-}
+} // namespace forte
 
 #endif // _ci_rdms_h_

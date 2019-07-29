@@ -61,8 +61,7 @@ void CI_RDMS::compute_rdms_dynamic(std::vector<double>& oprdm_a, std::vector<dou
 
     SortedStringList_UI64 a_sorted_string_list_(wfn_, fci_ints_, DetSpinType::Alpha);
     SortedStringList_UI64 b_sorted_string_list_(wfn_, fci_ints_, DetSpinType::Beta);
-    const std::vector<UI64Determinant::bit_t>& sorted_bstr =
-        b_sorted_string_list_.sorted_half_dets();
+    const std::vector<Determinant::String>& sorted_bstr = b_sorted_string_list_.sorted_half_dets();
     size_t num_bstr = sorted_bstr.size();
     const auto& sorted_b_dets = b_sorted_string_list_.sorted_dets();
     const auto& sorted_a_dets = a_sorted_string_list_.sorted_dets();
@@ -71,36 +70,36 @@ void CI_RDMS::compute_rdms_dynamic(std::vector<double>& oprdm_a, std::vector<dou
     for (size_t I = 0; I < dim_space_; ++I) {
         size_t Ia = b_sorted_string_list_.add(I);
         double CIa = evecs_->get(Ia, root1_) * evecs_->get(Ia, root2_);
-        UI64Determinant::bit_t det_a = sorted_b_dets[I].get_alfa_bits();
-        UI64Determinant::bit_t det_b = sorted_b_dets[I].get_beta_bits();
+        Determinant::String det_a = sorted_b_dets[I].get_alfa_bits();
+        Determinant::String det_b = sorted_b_dets[I].get_beta_bits();
 
         for (size_t nda = 0; nda < na_; ++nda) {
-            int p = lowest_one_idx(det_a);
+            int p = det_a.lowest_one_index();
             oprdm_a[p * ncmo_ + p] += CIa;
 
-            uint64_t det_ac(det_a);
-            det_a = clear_lowest_one(det_a);
+            Determinant::String det_ac(det_a);
+            det_a.clear_lowest_one();
             for (size_t ndaa = nda; ndaa < na_; ++ndaa) {
-                int q = lowest_one_idx(det_ac);
+                int q = det_ac.lowest_one_index();
                 // aa 2-rdm
                 tprdm_aa[p * ncmo3_ + q * ncmo2_ + p * ncmo_ + q] += CIa;
                 tprdm_aa[q * ncmo3_ + p * ncmo2_ + q * ncmo_ + p] += CIa;
                 tprdm_aa[p * ncmo3_ + q * ncmo2_ + q * ncmo_ + p] -= CIa;
                 tprdm_aa[q * ncmo3_ + p * ncmo2_ + p * ncmo_ + q] -= CIa;
 
-                det_ac = clear_lowest_one(det_ac);
+                det_ac.clear_lowest_one();
                 // aaa 3rdm
-                uint64_t det_acc(det_ac);
+                Determinant::String det_acc(det_ac);
                 for (size_t ndaaa = ndaa + 1; ndaaa < na_; ++ndaaa) {
-                    size_t r = lowest_one_idx(det_acc);
+                    size_t r = det_acc.lowest_one_index();
                     fill_3rdm(tprdm_aaa, CIa, p, q, r, p, q, r, true);
-                    det_acc = clear_lowest_one(det_acc);
+                    det_acc.clear_lowest_one();
                 }
 
                 // aab 3rdm
-                uint64_t det_bc(det_b);
+                Determinant::String det_bc(det_b);
                 for (size_t n = 0; n < nb_; ++n) {
-                    size_t r = lowest_one_idx(det_bc);
+                    size_t r = det_bc.lowest_one_index();
                     tprdm_aab[p * ncmo5_ + q * ncmo4_ + r * ncmo3_ + p * ncmo2_ + q * ncmo_ + r] +=
                         CIa;
                     tprdm_aab[p * ncmo5_ + q * ncmo4_ + r * ncmo3_ + q * ncmo2_ + p * ncmo_ + r] -=
@@ -110,15 +109,15 @@ void CI_RDMS::compute_rdms_dynamic(std::vector<double>& oprdm_a, std::vector<dou
                     tprdm_aab[q * ncmo5_ + p * ncmo4_ + r * ncmo3_ + q * ncmo2_ + p * ncmo_ + r] +=
                         CIa;
 
-                    det_bc = clear_lowest_one(det_bc);
+                    det_bc.clear_lowest_one();
                 }
             }
 
-            uint64_t det_bc(det_b);
+            Determinant::String det_bc(det_b);
             for (size_t n = 0; n < nb_; ++n) {
-                size_t q = lowest_one_idx(det_bc);
+                size_t q = det_bc.lowest_one_index();
                 tprdm_ab[p * ncmo3_ + q * ncmo2_ + p * ncmo_ + q] += CIa;
-                det_bc = clear_lowest_one(det_bc);
+                det_bc.clear_lowest_one();
             }
         }
         det_a = sorted_b_dets[I].get_alfa_bits();
@@ -126,30 +125,30 @@ void CI_RDMS::compute_rdms_dynamic(std::vector<double>& oprdm_a, std::vector<dou
         size_t Ib = a_sorted_string_list_.add(I);
         double CIb = evecs_->get(Ib, root1_) * evecs_->get(Ib, root2_);
         for (size_t ndb = 0; ndb < nb_; ++ndb) {
-            int p = lowest_one_idx(det_b);
+            int p = det_b.lowest_one_index();
 
             // b -1rdm
             oprdm_b[p * ncmo_ + p] += CIb;
-            uint64_t det_bc(det_b);
+            Determinant::String det_bc(det_b);
             for (size_t ndbb = ndb; ndbb < nb_; ++ndbb) {
-                size_t q = lowest_one_idx(det_bc);
+                size_t q = det_bc.lowest_one_index();
                 // bb-2rdm
                 tprdm_bb[p * ncmo3_ + q * ncmo2_ + p * ncmo_ + q] += CIb;
                 tprdm_bb[q * ncmo3_ + p * ncmo2_ + q * ncmo_ + p] += CIb;
                 tprdm_bb[p * ncmo3_ + q * ncmo2_ + q * ncmo_ + p] -= CIb;
                 tprdm_bb[q * ncmo3_ + p * ncmo2_ + p * ncmo_ + q] -= CIb;
-                det_bc = clear_lowest_one(det_bc);
+                det_bc.clear_lowest_one();
 
                 // bbb-3rdm
-                uint64_t det_bcc(det_bc);
+                Determinant::String det_bcc(det_bc);
                 for (size_t ndbbb = ndbb + 1; ndbbb < nb_; ++ndbbb) {
-                    size_t r = lowest_one_idx(det_bcc);
+                    size_t r = det_bcc.lowest_one_index();
                     fill_3rdm(tprdm_bbb, CIa, p, q, r, p, q, r, true);
-                    det_bcc = clear_lowest_one(det_bcc);
+                    det_bcc.clear_lowest_one();
                 }
 
                 // abb - 3rdm
-                uint64_t det_ac(det_a);
+                Determinant::String det_ac(det_a);
                 for (size_t n = 0; n < na_; ++n) {
                     size_t r = lowest_one_idx(det_ac);
                     tprdm_abb[r * ncmo5_ + p * ncmo4_ + q * ncmo3_ + r * ncmo2_ + p * ncmo_ + q] +=
@@ -174,11 +173,11 @@ void CI_RDMS::compute_rdms_dynamic(std::vector<double>& oprdm_a, std::vector<dou
 
     // loop through all beta strings
     for (size_t bstr = 0; bstr < num_bstr; ++bstr) {
-        const UI64Determinant::bit_t& Ib = sorted_bstr[bstr];
+        const Determinant::String& Ib = sorted_bstr[bstr];
         const auto& range_I = b_sorted_string_list_.range(Ib);
 
-        UI64Determinant::bit_t Ia;
-        UI64Determinant::bit_t Ja;
+        Determinant::String Ia;
+        Determinant::String Ja;
         size_t first_I = range_I.first;
         size_t last_I = range_I.second;
 
@@ -188,7 +187,7 @@ void CI_RDMS::compute_rdms_dynamic(std::vector<double>& oprdm_a, std::vector<dou
             double CI = evecs_->get(b_sorted_string_list_.add(I), root1_);
             for (size_t J = I + 1; J < last_I; ++J) {
                 Ja = sorted_b_dets[J].get_alfa_bits();
-                UI64Determinant::bit_t IJa = Ia ^ Ja;
+                Determinant::String IJa = Ia ^ Ja;
 
                 int ndiff = ui64_bit_count(IJa);
 
@@ -372,16 +371,15 @@ void CI_RDMS::compute_rdms_dynamic(std::vector<double>& oprdm_a, std::vector<dou
     //- All beta RDMs -//
     local_timer bbb;
     // loop through all alpha strings
-    const std::vector<UI64Determinant::bit_t>& sorted_astr =
-        a_sorted_string_list_.sorted_half_dets();
+    const std::vector<Determinant::String>& sorted_astr = a_sorted_string_list_.sorted_half_dets();
     size_t num_astr = sorted_astr.size();
     for (size_t astr = 0; astr < num_astr; ++astr) {
-        const UI64Determinant::bit_t& Ia = sorted_astr[astr];
+        const Determinant::String& Ia = sorted_astr[astr];
         const auto& range_I = a_sorted_string_list_.range(Ia);
 
-        UI64Determinant::bit_t Ib;
-        UI64Determinant::bit_t Jb;
-        UI64Determinant::bit_t IJb;
+        Determinant::String Ib;
+        Determinant::String Jb;
+        Determinant::String IJb;
         size_t first_I = range_I.first;
         size_t last_I = range_I.second;
 
@@ -569,19 +567,18 @@ void CI_RDMS::compute_rdms_dynamic(std::vector<double>& oprdm_a, std::vector<dou
 }
 //*- Alpha/Beta  -*//
 void CI_RDMS::make_ab(SortedStringList_UI64 a_sorted_string_list_,
-                      const std::vector<UI64Determinant::bit_t>& sorted_astr,
-                      const std::vector<UI64Determinant>& sorted_a_dets,
-                      std::vector<double>& tprdm_ab, std::vector<double>& tprdm_aab,
-                      std::vector<double>& tprdm_abb) {
+                      const std::vector<Determinant::String>& sorted_astr,
+                      const std::vector<Determinant>& sorted_a_dets, std::vector<double>& tprdm_ab,
+                      std::vector<double>& tprdm_aab, std::vector<double>& tprdm_abb) {
     local_timer mix;
     double d2 = 0.0;
     double d4 = 0.0;
     for (auto& detIa : sorted_astr) {
         const auto& range_I = a_sorted_string_list_.range(detIa);
-        UI64Determinant::bit_t detIJa_common;
-        UI64Determinant::bit_t Ib;
-        UI64Determinant::bit_t Jb;
-        UI64Determinant::bit_t IJb;
+        Determinant::String detIJa_common;
+        Determinant::String Ib;
+        Determinant::String Jb;
+        Determinant::String IJb;
         for (auto& detJa : sorted_astr) {
             detIJa_common = detIa ^ detJa;
             int ndiff = ui64_bit_count(detIJa_common);
@@ -834,4 +831,4 @@ void CI_RDMS::fill_3rdm(std::vector<double>& tprdm, double el, int p, int q, int
 //                                   std::vector<double>& tprdm_bbb){
 //
 //}
-}
+} // namespace forte

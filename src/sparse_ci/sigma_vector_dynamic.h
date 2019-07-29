@@ -115,16 +115,16 @@ class SigmaVectorDynamic : public SigmaVector {
     /// Task to compute sigma_abab. Computes sigma using a dynamic approach
     void sigma_abab_dynamic_task(size_t task_id, size_t num_tasks);
 
-    bool compute_aa_coupling_and_store(const UI64Determinant::bit_t& Ib,
+    bool compute_aa_coupling_and_store(const Determinant::String& Ib,
                                        const std::vector<double>& b, size_t task_id);
-    bool compute_bb_coupling_and_store(const UI64Determinant::bit_t& Ia,
+    bool compute_bb_coupling_and_store(const Determinant::String& Ia,
                                        const std::vector<double>& b, size_t task_id);
-    bool compute_abab_coupling_and_store(const UI64Determinant::bit_t& detIa,
+    bool compute_abab_coupling_and_store(const Determinant::String& detIa,
                                          const std::vector<double>& b, size_t task_id);
 
-    void compute_aa_coupling(const UI64Determinant::bit_t& detIb, const std::vector<double>& b);
-    void compute_bb_coupling(const UI64Determinant::bit_t& detIa, const std::vector<double>& b);
-    void compute_abab_coupling(const UI64Determinant::bit_t& detIa, const std::vector<double>& b);
+    void compute_aa_coupling(const Determinant::String& detIb, const std::vector<double>& b);
+    void compute_bb_coupling(const Determinant::String& detIa, const std::vector<double>& b);
+    void compute_abab_coupling(const Determinant::String& detIa, const std::vector<double>& b);
 };
 }
 

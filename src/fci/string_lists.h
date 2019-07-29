@@ -88,7 +88,7 @@ struct H3StringSubstitution {
 };
 
 typedef std::shared_ptr<BinaryGraph> GraphPtr;
-typedef std::vector<std::vector<std::bitset<Determinant::num_str_bits>>> StringList;
+typedef std::vector<std::vector<std::bitset<Determinant::nbits_half>>> StringList;
 typedef std::map<std::tuple<size_t, size_t, int>, std::vector<StringSubstitution>> VOList;
 typedef std::map<std::tuple<size_t, size_t, size_t, size_t, int>, std::vector<StringSubstitution>>
     VOVOList;
@@ -144,10 +144,10 @@ class StringLists {
     GraphPtr alfa_graph_3h() { return alfa_graph_3h_; }
     GraphPtr beta_graph_3h() { return beta_graph_3h_; }
 
-    std::bitset<Determinant::num_str_bits> alfa_str(size_t h, size_t I) const {
+    std::bitset<Determinant::nbits_half> alfa_str(size_t h, size_t I) const {
         return alfa_list_[h][I];
     }
-    std::bitset<Determinant::num_str_bits> beta_str(size_t h, size_t I) const {
+    std::bitset<Determinant::nbits_half> beta_str(size_t h, size_t I) const {
         return beta_list_[h][I];
     }
 

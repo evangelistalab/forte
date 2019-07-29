@@ -275,8 +275,8 @@ double FCISolver::compute_energy() {
                 if (ci_abs < 0.1)
                     continue;
 
-                std::bitset<Determinant::num_str_bits> Ia_v = lists_->alfa_str(h, add_Ia);
-                std::bitset<Determinant::num_str_bits> Ib_v =
+                std::bitset<Determinant::nbits_half> Ia_v = lists_->alfa_str(h, add_Ia);
+                std::bitset<Determinant::nbits_half> Ib_v =
                     lists_->beta_str(h ^ symmetry_, add_Ib);
 
                 outfile->Printf("\n    ");
@@ -383,8 +383,8 @@ FCISolver::initial_guess(FCIVector& diag, size_t n,
         double e;
         size_t h, add_Ia, add_Ib;
         std::tie(e, h, add_Ia, add_Ib) = det;
-        std::bitset<Determinant::num_str_bits> Ia_v = lists_->alfa_str(h, add_Ia);
-        std::bitset<Determinant::num_str_bits> Ib_v = lists_->beta_str(h ^ symmetry_, add_Ib);
+        std::bitset<Determinant::nbits_half> Ia_v = lists_->alfa_str(h, add_Ia);
+        std::bitset<Determinant::nbits_half> Ib_v = lists_->beta_str(h ^ symmetry_, add_Ib);
 
         std::vector<bool> Ia(nact, false);
         std::vector<bool> Ib(nact, false);

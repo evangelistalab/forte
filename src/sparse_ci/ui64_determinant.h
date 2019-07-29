@@ -34,7 +34,10 @@
 #include <memory>
 #include <vector>
 
-#include "determinant_common.h"
+//#include "determinant_common.h"
+
+enum class DetSpinType { Alpha, Beta };
+
 
 namespace forte {
 
@@ -211,3 +214,4 @@ template <typename T1, typename T2> T1 make_det(const T2& d);
 } // namespace forte
 
 #endif // _ui64_determinant_h_
+

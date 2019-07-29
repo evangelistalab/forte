@@ -64,8 +64,8 @@ SortedStringList_UI64::SortedStringList_UI64(const DeterminantHashVec& space,
 
     sorted_spin_type_ =
         sorted_string_spin == DetSpinType::Alpha ? DetSpinType::Alpha : DetSpinType::Beta;
-    UI64Determinant::bit_t first_string = sorted_dets_[0].get_bits(sorted_spin_type_);
-    UI64Determinant::bit_t old_first_string = first_string;
+    Determinant::String first_string = sorted_dets_[0].get_bits(sorted_spin_type_);
+    Determinant::String old_first_string = first_string;
 
     first_string_range_[old_first_string] = std::make_pair(0, 0);
     sorted_half_dets_.push_back(old_first_string);
@@ -112,12 +112,12 @@ const std::vector<UI64Determinant>& SortedStringList_UI64::sorted_dets() const {
     return sorted_dets_;
 }
 
-const std::vector<UI64Determinant::bit_t>& SortedStringList_UI64::sorted_half_dets() const {
+const std::vector<Determinant::String>& SortedStringList_UI64::sorted_half_dets() const {
     return sorted_half_dets_;
 }
 
 const std::pair<size_t, size_t>&
-SortedStringList_UI64::range(const UI64Determinant::bit_t& d) const {
+SortedStringList_UI64::range(const Determinant::String& d) const {
     return first_string_range_.at(d);
 }
 

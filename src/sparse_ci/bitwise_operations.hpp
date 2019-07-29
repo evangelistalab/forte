@@ -1,19 +1,24 @@
-#ifndef BITWISE_OPERATIONS_HPP
-#define BITWISE_OPERATIONS_HPP
+#ifndef _bitwise_operations_hpp_
+#define _bitwise_operations_hpp_
 
 #include "nmmintrin.h"
 
 #define USE_builtin_popcountll 1
 
-double parity(uint64_t x) {
-    return (x & 1) ? 1.0 : -1.0;
-}
+// double parity(uint64_t x) { return (x & 1) ? 1.0 : -1.0; }
+
+// double parity(uint64_t x) {
+//    x ^= x >> 1;
+//    x ^= x >> 2;
+//    x = (x & 0x1111111111111111UL) * 0x1111111111111111UL;
+//    return (x >> 60) & 1;
+//}
 
 uint64_t ui64_bit_count(uint64_t x) {
 //    return _mm_popcnt_u64(x);
 #ifdef USE_builtin_popcountll
-// optimized version using popcnt
- return __builtin_popcountll(x);
+    // optimized version using popcnt
+    return __builtin_popcountll(x);
 #else
     // version based on bitwise operations
     x = (0x5555555555555555UL & x) + (0x5555555555555555UL & (x >> 1));
@@ -37,35 +42,6 @@ uint64_t ui64_bit_count(uint64_t x) {
     //    x = ((x>>4) + x) & 0x0f0f0f0f0f0f0f0fUL; // 0-8 in 8 bits
     //    x *= 0x0101010101010101UL;
     //    return x>>56;
-}
-
-/**
- * @brief ui64_count Count the number of true bits
- * @param x input word
- * @param n position
- * @return the number of bits set to true from position 0 to n (included)
- */
-double ui64_bit_count(uint64_t x, int n) {
-    // TODO PERF: speedup by avoiding the mask altogether
-    // Example for 16 bit string
-    //                 n            (n = 5)
-    // x          ABCDEFGH IJKLMNOP
-    // x << 10    00000000 00ABCDEF 10 = 15 - 5
-    //
-    // Note: This strategy does not work when n = 0 because ~0 << 64 = ~0 (!!!)
-    // so we treat this case separately
-    x = x << (63 - n);
-    return ui64_bit_count(x);
-}
-
-double ui64_bit_count_reverse(uint64_t x, int n) {
-    // TODO PERF: speedup by avoiding the mask altogether
-    // Example for 16 bit string
-    //                 n            (n = 5)
-    // x          ABCDEFGH IJKLMNOP
-    // x >> 5     FGHIJKLM NOP00000
-    x = x >> n;
-    return ui64_bit_count(x);
 }
 
 /// Returns the index of the least significant 1-bit of x, or if x is zero, returns ~0.
@@ -169,4 +145,33 @@ double ui64_sign(uint64_t x, int m, int n) {
     return (mask % 2 == 0) ? 1.0 : -1.0;        // compute sign
 }
 
-#endif // BITWISE_OPERATIONS_HPP
+#endif // _bitwise_operations_hpp_
+
+///**
+// * @brief ui64_count Count the number of true bits
+// * @param x input word
+// * @param n position
+// * @return the number of bits set to true from position 0 to n (included)
+// */
+// double ui64_bit_count(uint64_t x, int n) {
+//    // TODO PERF: speedup by avoiding the mask altogether
+//    // Example for 16 bit string
+//    //                 n            (n = 5)
+//    // x          ABCDEFGH IJKLMNOP
+//    // x << 10    00000000 00ABCDEF 10 = 15 - 5
+//    //
+//    // Note: This strategy does not work when n = 0 because ~0 << 64 = ~0 (!!!)
+//    // so we treat this case separately
+//    x = x << (63 - n);
+//    return ui64_bit_count(x);
+//}
+
+// double ui64_bit_count_reverse(uint64_t x, int n) {
+//    // TODO PERF: speedup by avoiding the mask altogether
+//    // Example for 16 bit string
+//    //                 n            (n = 5)
+//    // x          ABCDEFGH IJKLMNOP
+//    // x >> 5     FGHIJKLM NOP00000
+//    x = x >> n;
+//    return ui64_bit_count(x);
+//}

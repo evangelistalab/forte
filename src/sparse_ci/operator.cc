@@ -54,7 +54,8 @@ WFNOperator::WFNOperator() {}
 
 void WFNOperator::set_quiet_mode(bool mode) { quiet_ = mode; }
 
-void WFNOperator::initialize(std::vector<int>& symmetry, std::shared_ptr<ActiveSpaceIntegrals> fci_ints) {
+void WFNOperator::initialize(std::vector<int>& symmetry,
+                             std::shared_ptr<ActiveSpaceIntegrals> fci_ints) {
     ncmo_ = fci_ints->nmo();
     mo_symmetry_ = symmetry;
     fci_ints_ = fci_ints;
@@ -426,10 +427,10 @@ double WFNOperator::s2_direct(DeterminantHashVec& wfn, psi::SharedMatrix& evecs,
     SortedStringList_UI64 a_sorted_string_list(wfn, fci_ints_, DetSpinType::Alpha);
     const auto& sorted_half_dets = a_sorted_string_list.sorted_half_dets();
     const auto& sorted_dets = a_sorted_string_list.sorted_dets();
-    UI64Determinant::bit_t detIJa_common;
-    UI64Determinant::bit_t Ib;
-    UI64Determinant::bit_t Jb;
-    UI64Determinant::bit_t IJb;
+    Determinant::String detIJa_common;
+    Determinant::String Ib;
+    Determinant::String Jb;
+    Determinant::String IJb;
 
     for (const auto& detIa : sorted_half_dets) {
         const auto& range_I = a_sorted_string_list.range(detIa);
@@ -438,12 +439,12 @@ double WFNOperator::s2_direct(DeterminantHashVec& wfn, psi::SharedMatrix& evecs,
 
         for (const auto& detJa : sorted_half_dets) {
             detIJa_common = detIa ^ detJa;
-            int ndiff = ui64_bit_count(detIJa_common);
+            int ndiff = detIJa_common.count();
             if (ndiff == 2) {
                 size_t i, a;
                 for (size_t p = 0; p < ncmo_; ++p) {
-                    const bool la_p = ui64_get_bit(detIa, p);
-                    const bool ra_p = ui64_get_bit(detJa, p);
+                    const bool la_p = detIa.get_bit(p);
+                    const bool ra_p = detJa.get_bit(p);
                     if (la_p ^ ra_p) {
                         i = la_p ? p : i;
                         a = ra_p ? p : a;
@@ -1862,4 +1863,4 @@ void WFNOperator::three_lists(DeterminantHashVec& wfn) {
 //
 //
 //}
-}
+} // namespace forte
