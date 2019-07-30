@@ -40,7 +40,7 @@
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/libpsio/psio.hpp"
 
-#include "fragmentprojector.h"
+#include "fragment_projector.h"
 
 using namespace psi;
 

@@ -50,21 +50,21 @@ namespace forte {
 		// ==> Constructors <==
 
 		// Simple constructor
-		FragmentProjector(std::shared_ptr<Molecule> molecule, std::shared_ptr<BasisSet> basis);
+		FragmentProjector(std::shared_ptr<psi::Molecule> molecule, std::shared_ptr<psi::BasisSet> basis);
 		// Constructor with minAO
 		//FragmentProjector::FragmentProjector(std::shared_ptr<Molecule> molecule, std::shared_ptr<BasisSet> minao_basis, 
 		//	std::shared_ptr<BasisSet> prime_basis);
 
 		// Build projector and return AO basis matrix Pf_AO
-		SharedMatrix build_f_projector(std::shared_ptr<Molecule> molecule,
-			std::shared_ptr<BasisSet> basis);
+		psi::SharedMatrix build_f_projector(std::shared_ptr<psi::Molecule> molecule,
+			std::shared_ptr<psi::BasisSet> basis);
 
 
 	private:
 		/// The molecule
-		std::shared_ptr<Molecule> molecule_;
+		std::shared_ptr<psi::Molecule> molecule_;
 		/// The AO basis set
-		std::shared_ptr<BasisSet> basis_;
+		std::shared_ptr<psi::BasisSet> basis_;
 
 		int nbf_;
 
@@ -80,5 +80,5 @@ namespace forte {
         psi::SharedMatrix make_fragment_projector(psi::SharedWavefunction ref_wfn, psi::Options& options);
 
 } //namespace forte
-#endif // _fragmentprojector_h_
+#endif // _fragment_projector_h_
 

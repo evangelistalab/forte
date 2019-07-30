@@ -43,7 +43,7 @@ using namespace psi;
 
 namespace forte {
 
-void make_embedding(psi::SharedWavefunction ref_wfn, std::shared_ptr<ForteOptions> options, psi::SharedMatrix Pf, std::shared_ptr<MOSpaceInfo> mo_space_info) {
+void make_embedding(psi::SharedWavefunction ref_wfn, psi::Options& options, psi::SharedMatrix Pf, std::shared_ptr<MOSpaceInfo> mo_space_info) {
 	outfile->Printf("\n ------ Orbital Localization and Embedding ------ \n");
 
 	// 1. Get necessary information
@@ -64,4 +64,5 @@ void make_embedding(psi::SharedWavefunction ref_wfn, std::shared_ptr<ForteOption
 	else {
 		throw PSIEXCEPTION("No projector (matrix) found!");
 	}
+}
 }
