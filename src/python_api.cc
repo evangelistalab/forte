@@ -46,6 +46,8 @@
 #include "orbital-helpers/mp2_nos.h"
 #include "orbital-helpers/semi_canonicalize.h"
 #include "orbital-helpers/avas.h"
+#include "orbital-helpers/embedding.h"
+#include "orbital-helpers/fragment_projector.h"
 
 #include "forte.h"
 #include "fci/fci_solver.h"
@@ -175,6 +177,8 @@ PYBIND11_MODULE(forte, m) {
     m.def("make_mo_space_info", &make_mo_space_info, "Make a MOSpaceInfo object");
     m.def("make_aosubspace_projector", &make_aosubspace_projector, "Make a AOSubspace projector");
     m.def("make_avas", &make_avas, "Make AVAS orbitals");
+    m.def("make_fragment_projector", &make_fragment_projector, "Make a fragment(embedding) projector");
+    m.def("make_embedding", &make_embedding, "Apply fragment projector to embed");
     m.def("make_forte_integrals", &make_forte_integrals, "Make Forte integrals");
     m.def("forte_old_methods", &forte_old_methods, "Run Forte methods");
     m.def("make_active_space_method", &make_active_space_method, "Make an active space method");
