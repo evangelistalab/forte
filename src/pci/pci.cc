@@ -2034,7 +2034,7 @@ void ProjectorCI::compute_couplings_half(const det_hashvec& dets, size_t cut_siz
     andBits.flip();
     for (size_t i = 0; i < cut_size; ++i) {
         andBits = andBits & dets[i]; // common_occupation(andBits, dets[i]);
-        orBits = orBits | dets[i]    // union_occupation(orBits, dets[i]);
+        orBits = orBits | dets[i];    // union_occupation(orBits, dets[i]);
     }
     Determinant actBits = andBits ^ orBits; // different_occupation(andBits, orBits);
 

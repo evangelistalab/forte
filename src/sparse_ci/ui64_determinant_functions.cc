@@ -27,6 +27,8 @@
  * @END LICENSE
  */
 
+#if 0
+
 #include <algorithm>
 #include <unordered_map>
 
@@ -225,3 +227,5 @@ void enforce_spin_completeness(std::vector<UI64Determinant>& det_space, int nmo)
     //}
 }
 } // namespace forte
+
+#endif

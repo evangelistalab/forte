@@ -79,8 +79,10 @@ src/casscf/casscf.cc
 src/ci_rdm/ci_rdms.cc
 src/ci_rdm/ci_rdms_dynamic.cc
 src/sparse_ci/ci_reference.cc
+src/sparse_ci/bitwise_operations.cc
 src/sparse_ci/determinant_hashvector.cc
 src/sparse_ci/determinant_sq_operator.cc
+src/sparse_ci/determinant_functions.cc
 src/dmrg/dmrgscf.cc
 src/dmrg/dmrgsolver.cc
 src/base_classes/dynamic_correlation_solver.cc
@@ -220,13 +222,13 @@ if (ENABLE_ForteTests)
   project (forte_tests)
   include_directories(${CMAKE_BINARY_DIR} ${CMAKE_BINARY_DIR}/catch2/src/catch2/single_include)
   add_executable(forte_tests
-    src/sparse_ci/ui64_determinant.cc
+    src/sparse_ci/bitwise_operations.cc
     tests/code/test_determinant.cc)
 
   project (forte_benchmarks)
   include_directories(${CMAKE_BINARY_DIR})
   add_executable(forte_benchmarks
-    src/sparse_ci/ui64_determinant.cc
+    src/sparse_ci/bitwise_operations.cc
     tests/benchmark/determinant_benchmark.cc)
 
 endif (ENABLE_ForteTests)

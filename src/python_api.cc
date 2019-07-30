@@ -124,9 +124,6 @@ void export_OrbitalTransform(py::module& m) {
         .def("get_Ub", &OrbitalTransform::get_Ub, "Get Ub rotation");
 }
 
-// constexpr int Determinant::nbits_half;
-// constexpr int Determinant::num_det_bits;
-
 /// Export the Determinant class
 void export_Determinant(py::module& m) {
     py::class_<Determinant>(m, "Determinant")
@@ -135,8 +132,8 @@ void export_Determinant(py::module& m) {
         .def(py::init<const std::vector<bool>&, const std::vector<bool>&>())
         .def("get_alfa_bits", &Determinant::get_alfa_bits, "Get alpha bits")
         .def("get_beta_bits", &Determinant::get_beta_bits, "Get beta bits")
-        .def_readonly_static("nbits_half", &Determinant::nbits_half)
-        .def_readonly_static("nbits", &Determinant::nbits)
+        .def("nbits", &Determinant::get_nbits)
+        .def("nbits_half", &Determinant::get_nbits_half)
         .def("get_alfa_bit", &Determinant::get_alfa_bit, "n"_a, "Get the value of an alpha bit")
         .def("get_beta_bit", &Determinant::get_beta_bit, "n"_a, "Get the value of a beta bit")
         .def("set_alfa_bit", &Determinant::set_alfa_bit, "n"_a, "value"_a,

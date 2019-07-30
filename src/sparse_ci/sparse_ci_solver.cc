@@ -39,6 +39,7 @@
 #include "helpers/iterative_solvers.h"
 #include "sparse_ci_solver.h"
 #include "sigma_vector_dynamic.h"
+#include "determinant_functions.hpp"
 
 struct PairHash {
     size_t operator()(const std::pair<size_t, size_t>& p) const {
@@ -73,8 +74,9 @@ void SparseCISolver::set_force_diag(bool value) { force_diag_ = value; }
 void SparseCISolver::set_max_memory(size_t value) { max_memory_ = value; }
 
 void SparseCISolver::diagonalize_hamiltonian(const std::vector<Determinant>& space,
-                                             psi::SharedVector& evals, psi::SharedMatrix& evecs, int nroot,
-                                             int multiplicity, DiagonalizationMethod diag_method) {
+                                             psi::SharedVector& evals, psi::SharedMatrix& evecs,
+                                             int nroot, int multiplicity,
+                                             DiagonalizationMethod diag_method) {
     timer diag("H Diagonalization");
     if ((!force_diag_ and (space.size() <= 200)) or diag_method == Full) {
         diagonalize_full(space, evals, evecs, nroot, multiplicity);
@@ -98,7 +100,7 @@ void SparseCISolver::diagonalize_hamiltonian_map(const DeterminantHashVec& space
         //    } else if (diag_method == Direct) {
         //        diagonalize_dl_direct(space, op, evals, evecs, nroot, multiplicity);
     } else if (diag_method == Dynamic) {
-        diagonalize_dl_dynamic(space,evals, evecs, nroot, multiplicity);
+        diagonalize_dl_dynamic(space, evals, evecs, nroot, multiplicity);
     } else {
         diagonalize_dl(space, op, evals, evecs, nroot, multiplicity);
     }
@@ -160,8 +162,8 @@ void SparseCISolver::diagonalize_dl(const DeterminantHashVec& space, WFNOperator
 }
 
 void SparseCISolver::diagonalize_dl_dynamic(const DeterminantHashVec& space,
-                                            psi::SharedVector& evals, psi::SharedMatrix& evecs, int nroot,
-                                            int multiplicity) {
+                                            psi::SharedVector& evals, psi::SharedMatrix& evecs,
+                                            int nroot, int multiplicity) {
     if (print_details_) {
         outfile->Printf("\n\n  Davidson-Liu solver algorithm with dynamic sigma builds");
     }
@@ -175,8 +177,9 @@ void SparseCISolver::diagonalize_dl_dynamic(const DeterminantHashVec& space,
     davidson_liu_solver_map(space, sigma_vector, evals, evecs, nroot, multiplicity);
 }
 
-void SparseCISolver::diagonalize_full(const std::vector<Determinant>& space, psi::SharedVector& evals,
-                                      psi::SharedMatrix& evecs, int nroot, int multiplicity) {
+void SparseCISolver::diagonalize_full(const std::vector<Determinant>& space,
+                                      psi::SharedVector& evals, psi::SharedMatrix& evecs, int nroot,
+                                      int multiplicity) {
 
     size_t dim_space = space.size();
     evecs.reset(new psi::Matrix("U", dim_space, nroot));
@@ -232,11 +235,13 @@ void SparseCISolver::diagonalize_full(const std::vector<Determinant>& space, psi
             outfile->Printf("\n  Error: ask for %d roots with 2S+1 = %d but only "
                             "%d were found!",
                             nroot, multiplicity, nfound);
-            throw psi::PSIEXCEPTION("Too many roots of interest in full diag. of sparce_ci_solver.");
+            throw psi::PSIEXCEPTION(
+                "Too many roots of interest in full diag. of sparce_ci_solver.");
         }
 
         // Select sub eigen vectors of S^2 with correct multiplicity
-        psi::SharedMatrix S2vecs_sub(new psi::Matrix("Spin Selected S^2 Eigen Vectors", dim_space, nfound));
+        psi::SharedMatrix S2vecs_sub(
+            new psi::Matrix("Spin Selected S^2 Eigen Vectors", dim_space, nfound));
         for (int i = 0; i < nfound; ++i) {
             psi::SharedVector vec = S2vecs.get_column(0, multi_list[multiplicity][i]);
             S2vecs_sub->set_column(0, i, vec);
@@ -274,8 +279,9 @@ void SparseCISolver::diagonalize_full(const std::vector<Determinant>& space, psi
 }
 
 void SparseCISolver::diagonalize_davidson_liu_solver(const std::vector<Determinant>& space,
-                                                     psi::SharedVector& evals, psi::SharedMatrix& evecs,
-                                                     int nroot, int multiplicity) {
+                                                     psi::SharedVector& evals,
+                                                     psi::SharedMatrix& evecs, int nroot,
+                                                     int multiplicity) {
     if (print_details_) {
         outfile->Printf("\n\n  Davidson-liu solver algorithm");
     }
@@ -353,7 +359,7 @@ SparseCISolver::build_sparse_hamiltonian(const std::vector<Determinant>& space) 
 
     outfile->Printf("\n  Building H using OpenMP");
 
-// Form the Hamiltonian matrix
+    // Form the Hamiltonian matrix
 
 #pragma omp parallel for schedule(dynamic)
     for (size_t I = 0; I < dim_space; ++I) {
@@ -700,7 +706,8 @@ void SparseCISolver::set_num_vecs(size_t value) { nvec_ = value; }
 
 bool SparseCISolver::davidson_liu_solver(const std::vector<Determinant>& space,
                                          SigmaVector* sigma_vector, psi::SharedVector Eigenvalues,
-                                         psi::SharedMatrix Eigenvectors, int nroot, int multiplicity) {
+                                         psi::SharedMatrix Eigenvectors, int nroot,
+                                         int multiplicity) {
     //    print_details_ = true;
     size_t fci_size = sigma_vector->size();
     DavidsonLiuSolver dls(fci_size, nroot);
@@ -731,7 +738,7 @@ bool SparseCISolver::davidson_liu_solver(const std::vector<Determinant>& space,
 
         if (nguess == 0) {
             throw psi::PSIEXCEPTION("\n\n  Found zero FCI guesses with the "
-                               "requested multiplicity.\n\n");
+                                    "requested multiplicity.\n\n");
         }
 
         for (size_t n = 0; n < nguess; ++n) {
@@ -831,7 +838,8 @@ bool SparseCISolver::davidson_liu_solver(const std::vector<Determinant>& space,
 }
 
 bool SparseCISolver::davidson_liu_solver_map(const DeterminantHashVec& space,
-                                             SigmaVector* sigma_vector, psi::SharedVector Eigenvalues,
+                                             SigmaVector* sigma_vector,
+                                             psi::SharedVector Eigenvalues,
                                              psi::SharedMatrix Eigenvectors, int nroot,
                                              int multiplicity) {
     //    print_details_ = true;
@@ -865,7 +873,7 @@ bool SparseCISolver::davidson_liu_solver_map(const DeterminantHashVec& space,
 
         if (nguess == 0) {
             throw psi::PSIEXCEPTION("\n\n  Found zero FCI guesses with the "
-                               "requested multiplicity.\n\n");
+                                    "requested multiplicity.\n\n");
         }
 
         for (size_t n = 0; n < nguess; ++n) {
@@ -969,8 +977,8 @@ bool SparseCISolver::davidson_liu_solver_map(const DeterminantHashVec& space,
 }
 
 void SparseCISolver::diagonalize_dl_sparse(const DeterminantHashVec& space, WFNOperator& op,
-                                           psi::SharedVector& evals, psi::SharedMatrix& evecs, int nroot,
-                                           int multiplicity) {
+                                           psi::SharedVector& evals, psi::SharedMatrix& evecs,
+                                           int nroot, int multiplicity) {
     if (print_details_) {
         outfile->Printf("\n\n  Davidson-liu sparse algorithm");
     }
@@ -994,4 +1002,4 @@ void SparseCISolver::diagonalize_dl_sparse(const DeterminantHashVec& space, WFNO
     sigma_vector->add_bad_roots(bad_states_);
     davidson_liu_solver_map(space, sigma_vector, evals, evecs, nroot, multiplicity);
 }
-}
+} // namespace forte

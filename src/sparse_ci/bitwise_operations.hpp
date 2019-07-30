@@ -1,7 +1,13 @@
 #ifndef _bitwise_operations_hpp_
 #define _bitwise_operations_hpp_
 
+#include <cstdint>
+#include <cmath>
+#include <algorithm>
+
 #include "nmmintrin.h"
+
+//#include "bitwise_operations.hpp"
 
 #define USE_builtin_popcountll 1
 
@@ -14,7 +20,7 @@
 //    return (x >> 60) & 1;
 //}
 
-uint64_t ui64_bit_count(uint64_t x) {
+inline uint64_t ui64_bit_count(uint64_t x) {
 //    return _mm_popcnt_u64(x);
 #ifdef USE_builtin_popcountll
     // optimized version using popcnt
@@ -45,7 +51,7 @@ uint64_t ui64_bit_count(uint64_t x) {
 }
 
 /// Returns the index of the least significant 1-bit of x, or if x is zero, returns ~0.
-uint64_t lowest_one_idx(uint64_t x) {
+inline uint64_t lowest_one_idx(uint64_t x) {
 #if defined(__GNUC__) || defined(__clang__)
     // optimized version using builtin functions
     return __builtin_ffsll(x) - 1;
@@ -71,14 +77,14 @@ uint64_t lowest_one_idx(uint64_t x) {
 #endif
 }
 
-uint64_t clear_lowest_one_bit(uint64_t x)
+inline uint64_t clear_lowest_one_bit(uint64_t x)
 // Return word where the lowest bit set in x is cleared
 // Return 0 for input == 0
 {
     return x & (x - 1);
 }
 
-double ui64_sign(uint64_t x, int n) {
+inline double ui64_sign(uint64_t x, int n) {
     // TODO PERF: speedup by avoiding the mask altogether
     // This implementation is 20 x times faster than one based on for loops
     // First build a mask with n bit set. Then & with string and count.
@@ -101,7 +107,7 @@ double ui64_sign(uint64_t x, int n) {
     return (mask % 2 == 0) ? 1.0 : -1.0; // compute sign
 }
 
-double ui64_sign_reverse(uint64_t x, int n) {
+inline double ui64_sign_reverse(uint64_t x, int n) {
     // TODO PERF: speedup by avoiding the mask altogether
     // This implementation is 20 x times faster than one based on for loops
     // First build a mask with n bit set. Then & with string and count.
@@ -122,7 +128,7 @@ double ui64_sign_reverse(uint64_t x, int n) {
     return (mask % 2 == 0) ? 1.0 : -1.0; // compute sign
 }
 
-double ui64_sign(uint64_t x, int m, int n) {
+inline double ui64_sign(uint64_t x, int m, int n) {
     // TODO PERF: speedup by avoiding the mask altogether
     // This implementation is a bit faster than one based on for loops
     // First build a mask with bit set between positions m and n. Then & with string and count.
@@ -144,8 +150,6 @@ double ui64_sign(uint64_t x, int m, int n) {
     mask = ui64_bit_count(mask);                // count bits in between
     return (mask % 2 == 0) ? 1.0 : -1.0;        // compute sign
 }
-
-#endif // _bitwise_operations_hpp_
 
 ///**
 // * @brief ui64_count Count the number of true bits
@@ -175,3 +179,19 @@ double ui64_sign(uint64_t x, int m, int n) {
 //    x = x >> n;
 //    return ui64_bit_count(x);
 //}
+
+
+//uint64_t ui64_bit_count(uint64_t x);
+
+///// Returns the index of the least significant 1-bit of x, or if x is zero, returns ~0.
+//uint64_t lowest_one_idx(uint64_t x);
+
+//uint64_t clear_lowest_one_bit(uint64_t x);
+
+//double ui64_sign(uint64_t x, int n);
+
+//double ui64_sign_reverse(uint64_t x, int n);
+
+//double ui64_sign(uint64_t x, int m, int n);
+
+#endif // _bitwise_operations_hpp_

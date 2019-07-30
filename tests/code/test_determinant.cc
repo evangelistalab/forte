@@ -5,12 +5,12 @@
 
 #include "catch.hpp"
 
-#include "../../src/sparse_ci/ui64_determinant.h"
+#include "../../src/sparse_ci/determinant.h"
 
 using namespace forte;
 
-UI64Determinant make_det_from_string(std::string s) {
-    UI64Determinant d;
+Determinant make_det_from_string(std::string s) {
+    Determinant d;
     size_t n = s.size() / 2;
     if (n % 2 == 0) {
         for (std::string::size_type i = 0; i < n; ++i) {
@@ -24,8 +24,8 @@ UI64Determinant make_det_from_string(std::string s) {
     return d;
 }
 
-UI64Determinant make_det_from_string(std::string s_a, std::string s_b) {
-    UI64Determinant d;
+Determinant make_det_from_string(std::string s_a, std::string s_b) {
+    Determinant d;
     if (s_a.size() == s_b.size()) {
         for (std::string::size_type i = 0; i < s_a.size(); ++i) {
             d.set_alfa_bit(i, s_a[i] == '0' ? 0 : 1);
@@ -58,9 +58,9 @@ unsigned int Factorial(unsigned int number) {
     return number <= 1 ? number : Factorial(number - 1) * number;
 }
 
-TEST_CASE("Empty determinant", "[UI64Determinant]") {
-    UI64Determinant det_test;
-    UI64Determinant det_ref =
+TEST_CASE("Empty determinant", "[Determinant]") {
+    Determinant det_test;
+    Determinant det_ref =
         make_det_from_string("0000000000000000000000000000000000000000000000000000000000000000",
                              "0000000000000000000000000000000000000000000000000000000000000000");
 
@@ -69,8 +69,8 @@ TEST_CASE("Empty determinant", "[UI64Determinant]") {
     REQUIRE(det_test.count_beta() == 0);
     REQUIRE(det_test.npair() == 0);
 
-    std::vector<int> aocc = det_test.get_alfa_occ(UI64Determinant::num_str_bits);
-    std::vector<int> bocc = det_test.get_beta_occ(UI64Determinant::num_str_bits);
+    std::vector<int> aocc = det_test.get_alfa_occ(Determinant::nbits_half);
+    std::vector<int> bocc = det_test.get_beta_occ(Determinant::nbits_half);
 
     std::vector<int> aocc_ref{};
     std::vector<int> bocc_ref{};
@@ -88,8 +88,8 @@ TEST_CASE("Empty determinant", "[UI64Determinant]") {
     REQUIRE(det_test.slater_sign_b(63) == 1.0);
 }
 
-TEST_CASE("Bit counting", "[UI64Determinant]") {
-    UI64Determinant det_test =
+TEST_CASE("Bit counting", "[Determinant]") {
+    Determinant det_test =
         make_det_from_string("1001100000000000000000000000000000000000000000000000000000010000",
                              "0001000000000000001000000000000000000000000000000000000000000001");
 
@@ -97,10 +97,10 @@ TEST_CASE("Bit counting", "[UI64Determinant]") {
     REQUIRE(det_test.count_beta() == 3);
     REQUIRE(det_test.npair() == 1);
 
-    std::vector<int> aocc = det_test.get_alfa_occ(UI64Determinant::num_str_bits);
-    std::vector<int> bocc = det_test.get_beta_occ(UI64Determinant::num_str_bits);
-    std::vector<int> avir = det_test.get_alfa_vir(UI64Determinant::num_str_bits);
-    std::vector<int> bvir = det_test.get_beta_vir(UI64Determinant::num_str_bits);
+    std::vector<int> aocc = det_test.get_alfa_occ(Determinant::nbits_half);
+    std::vector<int> bocc = det_test.get_beta_occ(Determinant::nbits_half);
+    std::vector<int> avir = det_test.get_alfa_vir(Determinant::nbits_half);
+    std::vector<int> bvir = det_test.get_beta_vir(Determinant::nbits_half);
 
     std::vector<int> aocc_ref{0, 3, 4, 59};
     std::vector<int> bocc_ref{3, 18, 63};
@@ -132,8 +132,8 @@ TEST_CASE("Bit counting", "[UI64Determinant]") {
     REQUIRE(det_test.slater_sign_b(63) == 1.0);
 }
 
-TEST_CASE("Full determinant", "[UI64Determinant]") {
-    UI64Determinant det_test =
+TEST_CASE("Full determinant", "[Determinant]") {
+    Determinant det_test =
         make_det_from_string("1111111111111111111111111111111111111111111111111111111111111111",
                              "1111111111111111111111111111111111111111111111111111111111111111");
 
@@ -141,10 +141,10 @@ TEST_CASE("Full determinant", "[UI64Determinant]") {
     REQUIRE(det_test.count_beta() == 64);
     REQUIRE(det_test.npair() == 64);
 
-    std::vector<int> aocc = det_test.get_alfa_occ(UI64Determinant::num_str_bits);
-    std::vector<int> bocc = det_test.get_beta_occ(UI64Determinant::num_str_bits);
-    std::vector<int> avir = det_test.get_alfa_vir(UI64Determinant::num_str_bits);
-    std::vector<int> bvir = det_test.get_beta_vir(UI64Determinant::num_str_bits);
+    std::vector<int> aocc = det_test.get_alfa_occ(Determinant::nbits_half);
+    std::vector<int> bocc = det_test.get_beta_occ(Determinant::nbits_half);
+    std::vector<int> avir = det_test.get_alfa_vir(Determinant::nbits_half);
+    std::vector<int> bvir = det_test.get_beta_vir(Determinant::nbits_half);
 
     std::vector<int> avir_ref{};
     std::vector<int> bvir_ref{};

@@ -32,8 +32,8 @@
 
 #include <unordered_map>
 
+#include "determinant_string.hpp"
 #include "determinant.hpp"
-//#include "determinant_functions.hpp"
 
 namespace forte {
 

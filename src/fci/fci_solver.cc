@@ -37,6 +37,7 @@
 
 #include "integrals/active_space_integrals.h"
 #include "sparse_ci/determinant.h"
+#include "sparse_ci/determinant_functions.hpp"
 #include "helpers/iterative_solvers.h"
 
 #include "fci_solver.h"
@@ -276,8 +277,7 @@ double FCISolver::compute_energy() {
                     continue;
 
                 std::bitset<Determinant::nbits_half> Ia_v = lists_->alfa_str(h, add_Ia);
-                std::bitset<Determinant::nbits_half> Ib_v =
-                    lists_->beta_str(h ^ symmetry_, add_Ib);
+                std::bitset<Determinant::nbits_half> Ib_v = lists_->beta_str(h ^ symmetry_, add_Ib);
 
                 outfile->Printf("\n    ");
                 size_t offset = 0;

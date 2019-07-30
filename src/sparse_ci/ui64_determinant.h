@@ -30,6 +30,7 @@
 #ifndef _ui64_determinant_h_
 #define _ui64_determinant_h_
 
+#if 0
 #include <cstdint>
 #include <memory>
 #include <vector>
@@ -213,5 +214,6 @@ void enforce_spin_completeness(std::vector<UI64Determinant>& det_space, int nmo)
 template <typename T1, typename T2> T1 make_det(const T2& d);
 } // namespace forte
 
-#endif // _ui64_determinant_h_
+#endif
 
+#endif // _ui64_determinant_h_

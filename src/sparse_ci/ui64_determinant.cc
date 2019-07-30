@@ -27,6 +27,8 @@
  * @END LICENSE
  */
 
+#if 0
+
 #ifdef __SSE4_2__
 #include <nmmintrin.h>
 #endif
@@ -587,3 +589,4 @@ double spin2(const UI64Determinant& lhs, const UI64Determinant& rhs) {
 }
 } // namespace forte
 
+#endif
