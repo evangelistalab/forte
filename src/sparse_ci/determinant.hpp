@@ -110,6 +110,15 @@ template <size_t N> class StringImpl {
         return this->words_[0] < lhs.words_[0];
     }
 
+    /// Bitwise OR operator (|)
+    StringImpl<N> operator|(const StringImpl<N>& lhs) const {
+        StringImpl<N> result;
+        for (size_t n = 0; n < nwords_; n++) {
+            result.words_[n] = this->words_[n] | lhs.words_[n];
+        }
+        return result;
+    }
+
     /// Bitwise XOR operator (^)
     StringImpl<N> operator^(const StringImpl<N>& lhs) const {
         StringImpl<N> result;
@@ -339,33 +348,33 @@ template <size_t N> class DeterminantImpl {
         return this->words_[0] < lhs.words_[0];
     }
 
-    bool less_than(const DeterminantImpl<N>& rhs, const DeterminantImpl<N>& lhs) {
+    static bool less_than(const DeterminantImpl<N>& rhs, const DeterminantImpl<N>& lhs) {
         for (size_t n = nwords_; n > 1;) {
             --n;
-            if (this->words_[n] > lhs.words_[n])
+            if (rhs.words_[n] > lhs.words_[n])
                 return false;
-            if (this->words_[n] < lhs.words_[n])
+            if (rhs.words_[n] < lhs.words_[n])
                 return true;
         }
-        return this->words_[0] < lhs.words_[0];
+        return rhs.words_[0] < lhs.words_[0];
     }
 
-    bool reverse_less_than(const DeterminantImpl<N>& rhs, const DeterminantImpl<N>& lhs) {
+    static bool reverse_less_than(const DeterminantImpl<N>& rhs, const DeterminantImpl<N>& lhs) {
         for (size_t n = nwords_half; n > 0;) {
             --n;
-            if (this->words_[n] > lhs.words_[n])
+            if (rhs.words_[n] > lhs.words_[n])
                 return false;
-            if (this->words_[n] < lhs.words_[n])
+            if (rhs.words_[n] < lhs.words_[n])
                 return true;
         }
         for (size_t n = nwords_; n > nwords_half + 1;) {
             --n;
-            if (this->words_[n] > lhs.words_[n])
+            if (rhs.words_[n] > lhs.words_[n])
                 return false;
-            if (this->words_[n] < lhs.words_[n])
+            if (rhs.words_[n] < lhs.words_[n])
                 return true;
         }
-        return this->words_[nwords_half] < lhs.words_[nwords_half];
+        return rhs.words_[nwords_half] < lhs.words_[nwords_half];
     }
 
     /// Return a vector of occupied alpha orbitals
@@ -739,6 +748,10 @@ template <size_t N> class DeterminantImpl {
         return s;
     }
 
+    StringImpl<nbits_half> get_bits(DetSpinType spin_type) {
+        return (spin_type == DetSpinType::Alpha ? this->get_alfa_bits() : this->get_beta_bits());
+    }
+
     /// Zero the alpha or beta part of a determinant
     [[deprecated(
         "The zero_spin function should be replaced with methods from the String class")]] void
@@ -957,11 +970,10 @@ double gen_excitation(DeterminantImpl<N>& d, const std::vector<int>& aann,
     return sign;
 }
 
-double spin2(const Determinant& lhs, const Determinant& rhs) {
-    int num_str_bits = Determinant::nbits;
-    int size = num_str_bits;
-    const STLBitsetDeterminant::bit_t& I = lhs.bits();
-    const STLBitsetDeterminant::bit_t& J = rhs.bits();
+template <size_t N> double spin2(const DeterminantImpl<N>& lhs, const DeterminantImpl<N>& rhs) {
+    int size = DeterminantImpl<N>::nbits_half;
+    const DeterminantImpl<N>& I = lhs;
+    const DeterminantImpl<N>& J = rhs;
 
     // Compute the matrix elements of the operator S^2
     // S^2 = S- S+ + Sz (Sz + 1)
@@ -976,15 +988,15 @@ double spin2(const Determinant& lhs, const Determinant& rhs) {
     // Count how many differences in mos are there and the number of alpha/beta
     // electrons
     for (int n = 0; n < size; ++n) {
-        if (I[n] != J[n])
+        if (I.get_alfa_bit(n) != J.get_alfa_bit(n))
             nadiff++;
-        if (I[num_str_bits + n] != J[num_str_bits + n])
+        if (I.get_beta_bit(n) != J.get_beta_bit(n))
             nbdiff++;
-        if (I[n])
+        if (I.get_alfa_bit(n))
             na++;
-        if (I[num_str_bits + n])
+        if (I.get_beta_bit(n))
             nb++;
-        if ((I[n] and I[num_str_bits + n]))
+        if ((I.get_alfa_bit(n) and I.get_beta_bit(n)))
             npair += 1;
     }
     nadiff /= 2;
@@ -1004,9 +1016,11 @@ double spin2(const Determinant& lhs, const Determinant& rhs) {
         int j = -1;
         // The logic here is a bit complex
         for (int p = 0; p < size; ++p) {
-            if (J[p] and I[num_str_bits + p] and (not J[num_str_bits + p]) and (not I[p]))
+            if (J.get_alfa_bit(p) and I.get_beta_bit(p) and (not J.get_beta_bit(p)) and
+                (not I.get_alfa_bit(p)))
                 i = p;
-            if (J[num_str_bits + p] and I[p] and (not J[p]) and (not I[num_str_bits + p]))
+            if (J.get_beta_bit(p) and I.get_alfa_bit(p) and (not J.get_alfa_bit(p)) and
+                (not I.get_beta_bit(p)))
                 j = p;
         }
         if (i != j and i >= 0 and j >= 0) {
@@ -1018,76 +1032,79 @@ double spin2(const Determinant& lhs, const Determinant& rhs) {
     return (matrix_element);
 }
 
-void enforce_spin_completeness(std::vector<Determinant>& det_space, int nmo) {
-    std::unordered_map<Determinant, bool, Determinant::Hash> det_map;
-    // Add all determinants to the map, assume set is mostly spin complete
-    for (auto& I : det_space) {
-        det_map[I] = true;
-    }
-    // Loop over determinants
-    size_t ndet_added = 0;
-    std::vector<size_t> closed(nmo, 0);
-    std::vector<size_t> open(nmo, 0);
-    std::vector<size_t> open_bits(nmo, 0);
-    for (size_t I = 0, det_size = det_space.size(); I < det_size; ++I) {
-        const STLBitsetDeterminant& det = det_space[I];
-        // outfile->Printf("\n  Original determinant: %s", det.str().c_str());
-        for (int i = 0; i < nmo; ++i) {
-            closed[i] = open[i] = 0;
-            open_bits[i] = false;
+template <size_t N>
+void enforce_spin_completeness(std::vector<DeterminantImpl<N>>& det_space, int nmo) {
+    /*
+        std::unordered_map<DeterminantImpl<N>, bool, DeterminantImpl<N>::Hash> det_map;
+        // Add all determinants to the map, assume set is mostly spin complete
+        for (auto& I : det_space) {
+            det_map[I] = true;
         }
-        int naopen = 0;
-        int nbopen = 0;
-        int nclosed = 0;
-        for (int i = 0; i < nmo; ++i) {
-            if (det.get_alfa_bit(i) and (not det.get_beta_bit(i))) {
-                open[naopen + nbopen] = i;
-                naopen += 1;
-            } else if ((not det.get_alfa_bit(i)) and det.get_beta_bit(i)) {
-                open[naopen + nbopen] = i;
-                nbopen += 1;
-            } else if (det.get_alfa_bit(i) and det.get_beta_bit(i)) {
-                closed[nclosed] = i;
-                nclosed += 1;
+        // Loop over determinants
+        size_t ndet_added = 0;
+        std::vector<size_t> closed(nmo, 0);
+        std::vector<size_t> open(nmo, 0);
+        std::vector<size_t> open_bits(nmo, 0);
+        for (size_t I = 0, det_size = det_space.size(); I < det_size; ++I) {
+            const DeterminantImpl<N>& det = det_space[I];
+            // outfile->Printf("\n  Original determinant: %s", det.str().c_str());
+            for (int i = 0; i < nmo; ++i) {
+                closed[i] = open[i] = 0;
+                open_bits[i] = false;
             }
-        }
-
-        if (naopen + nbopen == 0)
-            continue;
-
-        // Generate the strings 1111100000
-        //                      {nao}{nbo}
-        for (int i = 0; i < nbopen; ++i)
-            open_bits[i] = false; // 0
-        for (int i = nbopen; i < naopen + nbopen; ++i)
-            open_bits[i] = true; // 1
-        do {
-            STLBitsetDeterminant new_det;
-            for (int c = 0; c < nclosed; ++c) {
-                new_det.set_alfa_bit(closed[c], true);
-                new_det.set_beta_bit(closed[c], true);
-            }
-            for (int o = 0; o < naopen + nbopen; ++o) {
-                if (open_bits[o]) { //? not
-                    new_det.set_alfa_bit(open[o], true);
-                } else {
-                    new_det.set_beta_bit(open[o], true);
+            int naopen = 0;
+            int nbopen = 0;
+            int nclosed = 0;
+            for (int i = 0; i < nmo; ++i) {
+                if (det.get_alfa_bit(i) and (not det.get_beta_bit(i))) {
+                    open[naopen + nbopen] = i;
+                    naopen += 1;
+                } else if ((not det.get_alfa_bit(i)) and det.get_beta_bit(i)) {
+                    open[naopen + nbopen] = i;
+                    nbopen += 1;
+                } else if (det.get_alfa_bit(i) and det.get_beta_bit(i)) {
+                    closed[nclosed] = i;
+                    nclosed += 1;
                 }
             }
-            if (det_map.count(new_det) == 0) {
-                det_space.push_back(new_det);
-                det_map[new_det] = true;
-                // outfile->Printf("\n  added determinant:    %s", new_det.str().c_str());
-                ndet_added++;
-            }
-        } while (std::next_permutation(open_bits.begin(), open_bits.begin() + naopen + nbopen));
-    }
-    // if( ndet_added > 0 ){
-    //    outfile->Printf("\n\n  Determinant space is spin incomplete!");
-    //    outfile->Printf("\n  %zu more determinants were needed.", ndet_added);
-    //}else{
-    //    outfile->Printf("\n\n  Determinant space is spin complete.");
-    //}
+
+            if (naopen + nbopen == 0)
+                continue;
+
+            // Generate the strings 1111100000
+            //                      {nao}{nbo}
+            for (int i = 0; i < nbopen; ++i)
+                open_bits[i] = false; // 0
+            for (int i = nbopen; i < naopen + nbopen; ++i)
+                open_bits[i] = true; // 1
+            do {
+                DeterminantImpl<N> new_det;
+                for (int c = 0; c < nclosed; ++c) {
+                    new_det.set_alfa_bit(closed[c], true);
+                    new_det.set_beta_bit(closed[c], true);
+                }
+                for (int o = 0; o < naopen + nbopen; ++o) {
+                    if (open_bits[o]) { //? not
+                        new_det.set_alfa_bit(open[o], true);
+                    } else {
+                        new_det.set_beta_bit(open[o], true);
+                    }
+                }
+                if (det_map.count(new_det) == 0) {
+                    det_space.push_back(new_det);
+                    det_map[new_det] = true;
+                    // outfile->Printf("\n  added determinant:    %s", new_det.str().c_str());
+                    ndet_added++;
+                }
+            } while (std::next_permutation(open_bits.begin(), open_bits.begin() + naopen + nbopen));
+        }
+        // if( ndet_added > 0 ){
+        //    outfile->Printf("\n\n  Determinant space is spin incomplete!");
+        //    outfile->Printf("\n  %zu more determinants were needed.", ndet_added);
+        //}else{
+        //    outfile->Printf("\n\n  Determinant space is spin complete.");
+        //}
+        */ // TODO onedet: re-enable this function
 }
 
 } // namespace forte

@@ -107,7 +107,7 @@ SortedStringList_UI64::SortedStringList_UI64(const DeterminantHashVec& space,
 
 SortedStringList_UI64::~SortedStringList_UI64() {}
 
-const std::vector<UI64Determinant>& SortedStringList_UI64::sorted_dets() const {
+const std::vector<Determinant>& SortedStringList_UI64::sorted_dets() const {
     return sorted_dets_;
 }
 

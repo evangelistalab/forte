@@ -36,9 +36,8 @@
 #include <utility>
 
 #include "binary_graph.hpp"
-#include "sparse_ci/stl_bitset_string.h"
 #include "helpers/timer.h"
-
+#include "sparse_ci/determinant.h"
 
 namespace forte {
 
@@ -292,6 +291,6 @@ class StringLists {
 
     void print_string(bool* I, size_t n);
 };
-}
+} // namespace forte
 
 #endif // _string_lists_
