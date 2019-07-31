@@ -34,6 +34,7 @@
 #include <map>
 #include <vector>
 #include <utility>
+#include <bitset>
 
 #include "binary_graph.hpp"
 #include "helpers/timer.h"
