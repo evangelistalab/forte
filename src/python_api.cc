@@ -151,7 +151,7 @@ void export_Determinant(py::module& m) {
                const std::vector<int>& bcre) { return gen_excitation(d, aann, acre, bann, bcre); },
             "Apply a generic excitation")
         .def(
-            "str", [](const Determinant& a) { return str(a); },
+            "str", [](const Determinant& a, int n) { return str(a, n); }, "n"_a = 64,
             "Get the string representation of the Slater determinant")
         .def("__repr__", [](const Determinant& a) { return str(a); })
         .def("__str__", [](const Determinant& a) { return str(a); })

@@ -424,7 +424,7 @@ double WFNOperator::s2_direct(DeterminantHashVec& wfn, psi::SharedMatrix& evecs,
     }
 
     // abab contribution
-    SortedStringList_UI64 a_sorted_string_list(wfn, fci_ints_, DetSpinType::Alpha);
+    SortedStringList a_sorted_string_list(wfn, fci_ints_, DetSpinType::Alpha);
     const auto& sorted_half_dets = a_sorted_string_list.sorted_half_dets();
     const auto& sorted_dets = a_sorted_string_list.sorted_dets();
     String detIJa_common;

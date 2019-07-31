@@ -33,9 +33,9 @@
 
 namespace forte {
 
-SortedStringList_UI64::SortedStringList_UI64() {}
+SortedStringList::SortedStringList() {}
 
-SortedStringList_UI64::SortedStringList_UI64(const DeterminantHashVec& space,
+SortedStringList::SortedStringList(const DeterminantHashVec& space,
                                              std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
                                              DetSpinType sorted_string_spin) {
     nmo_ = fci_ints->nmo();
@@ -95,7 +95,7 @@ SortedStringList_UI64::SortedStringList_UI64(const DeterminantHashVec& space,
         max_per_string = std::max(max_per_string, range);
     }
 
-    //   outfile->Printf("\n\n  SortedStringList_UI64 Summary:");
+    //   outfile->Printf("\n\n  SortedStringList Summary:");
     //   outfile->Printf("\n    Number of determinants: %zu", num_dets_);
     //   outfile->Printf("\n    Number of strings:      %zu (%.2f %%)", sorted_half_dets_.size(),
     //                   100.0 * double(sorted_half_dets_.size()) / double(num_dets_));
@@ -105,19 +105,19 @@ SortedStringList_UI64::SortedStringList_UI64(const DeterminantHashVec& space,
     //                   double(num_dets_) / double(sorted_half_dets_.size()));
 }
 
-SortedStringList_UI64::~SortedStringList_UI64() {}
+SortedStringList::~SortedStringList() {}
 
-const std::vector<Determinant>& SortedStringList_UI64::sorted_dets() const {
+const std::vector<Determinant>& SortedStringList::sorted_dets() const {
     return sorted_dets_;
 }
 
-const std::vector<String>& SortedStringList_UI64::sorted_half_dets() const {
+const std::vector<String>& SortedStringList::sorted_half_dets() const {
     return sorted_half_dets_;
 }
 
-const std::pair<size_t, size_t>& SortedStringList_UI64::range(const String& d) const {
+const std::pair<size_t, size_t>& SortedStringList::range(const String& d) const {
     return first_string_range_.at(d);
 }
 
-size_t SortedStringList_UI64::add(size_t pos) const { return map_to_hashdets_[pos]; }
+size_t SortedStringList::add(size_t pos) const { return map_to_hashdets_[pos]; }
 } // namespace forte

@@ -5,9 +5,9 @@
 #include <cmath>
 #include <algorithm>
 
-#include "nmmintrin.h"
-
-//#include "bitwise_operations.hpp"
+#ifdef __SSE4_2__
+#include <nmmintrin.h>
+#endif
 
 #define USE_builtin_popcountll 1
 
@@ -20,13 +20,18 @@
 //    return (x >> 60) & 1;
 //}
 
+/**
+ * @brief Count the number of bit set to 1 in a uint64_t
+ * @param x the uint64_t integer to test
+ * @return the number of bits that are set to 1
+ *
+ * If available, this function uses SSE4.2 instructions (_mm_popcnt_u64) to speed up the evaluation.
+ */
 inline uint64_t ui64_bit_count(uint64_t x) {
-//    return _mm_popcnt_u64(x);
-#ifdef USE_builtin_popcountll
-    // optimized version using popcnt
-    return __builtin_popcountll(x);
+#ifdef __SSE4_2__
+    // this version is 2.6 times faster than the one below
+    return _mm_popcnt_u64(x);
 #else
-    // version based on bitwise operations
     x = (0x5555555555555555UL & x) + (0x5555555555555555UL & (x >> 1));
     x = (0x3333333333333333UL & x) + (0x3333333333333333UL & (x >> 2));
     x = (0x0f0f0f0f0f0f0f0fUL & x) + (0x0f0f0f0f0f0f0f0fUL & (x >> 4));
@@ -35,22 +40,13 @@ inline uint64_t ui64_bit_count(uint64_t x) {
     x = (0x00000000ffffffffUL & x) + (0x00000000ffffffffUL & (x >> 32));
     return x;
 #endif
-    //    x = ((x>>1) & 0x5555555555555555UL) + (x & 0x5555555555555555UL);
-    //    x = ((x>>2) & 0x3333333333333333UL) + (x & 0x3333333333333333UL);
-    //    x = ((x>>4) + x) & 0x0f0f0f0f0f0f0f0fUL;
-    //    x+=x>>8;
-    //    x += x>>16;
-    //    x += x>>32;
-    //    return x & 0xff;
-
-    //    x -= (x>>1) & 0x5555555555555555UL;
-    //    x = ((x>>2) & 0x3333333333333333UL) + (x & 0x3333333333333333UL); // 0-4 in 4 bits
-    //    x = ((x>>4) + x) & 0x0f0f0f0f0f0f0f0fUL; // 0-8 in 8 bits
-    //    x *= 0x0101010101010101UL;
-    //    return x>>56;
 }
 
-/// Returns the index of the least significant 1-bit of x, or if x is zero, returns ~0.
+/**
+ * @brief Bit-scan to find next set bit
+ * @param x the uint64_t integer to test
+ * @return the index of the least significant 1-bit of x, or if x is zero, returns ~0
+ */
 inline uint64_t lowest_one_idx(uint64_t x) {
 #if defined(__GNUC__) || defined(__clang__)
     // optimized version using builtin functions
@@ -77,13 +73,31 @@ inline uint64_t lowest_one_idx(uint64_t x) {
 #endif
 }
 
-inline uint64_t clear_lowest_one_bit(uint64_t x)
-// Return word where the lowest bit set in x is cleared
-// Return 0 for input == 0
-{
-    return x & (x - 1);
+/**
+ * @brief Clear the lowest bit set in a uint64_t word
+ * @param x the uint64_t word
+ * @return a modified version of x with the lowest bit set to 1 turned into a 0
+ */
+inline uint64_t clear_lowest_one_bit(uint64_t x) { return x & (x - 1); }
+
+/**
+ * @brief Find the index of the lowest bit set in a uint64_t word and clear it. A modified version
+ *        of x with the lowest bit set to 1 turned into a 0 is stored in x
+ * @param x the uint64_t integer to test
+ * @return the index of the least significant 1-bit of x, or if x is zero, returns ~0
+ */
+inline uint64_t find_and_clear_lowest_one_bit(uint64_t& x) {
+    uint64_t result = lowest_one_idx(x);
+    x = x & (x - 1);
+    return result;
 }
 
+/**
+ * @brief Count the number of 1 from position 0 up to n - 1 and return the parity of this number.
+ * @param x the uint64_t integer to test
+ * @param n the end position (not counted)
+ * @return the parity defined as parity = (-1)^(number of bits set between position 0 and n - 1)
+ */
 inline double ui64_sign(uint64_t x, int n) {
     // TODO PERF: speedup by avoiding the mask altogether
     // This implementation is 20 x times faster than one based on for loops
@@ -107,27 +121,14 @@ inline double ui64_sign(uint64_t x, int n) {
     return (mask % 2 == 0) ? 1.0 : -1.0; // compute sign
 }
 
-inline double ui64_sign_reverse(uint64_t x, int n) {
-    // TODO PERF: speedup by avoiding the mask altogether
-    // This implementation is 20 x times faster than one based on for loops
-    // First build a mask with n bit set. Then & with string and count.
-    // Example for 16 bit string
-    //                 n            (n = 5)
-    // want       00000011 11111111
-    // mask       11111111 11111111
-    // mask << 6  00000011 11111111 6 = 5 + 1
-    //
-    // Note: This strategy does not work when n = 0 because ~0 << 64 = ~0 (!!!)
-    // so we treat this case separately
-    if (n == 63)
-        return 1.0;
-    uint64_t mask = ~0;
-    mask = mask << (n + 1);              // make a string with 64 - n - 1 bits set
-    mask = x & mask;                     // intersect with string
-    mask = ui64_bit_count(mask);         // count bits in between
-    return (mask % 2 == 0) ? 1.0 : -1.0; // compute sign
-}
-
+/**
+ * @brief Count the number of 1 from position m + 1 up to n - 1 and return the parity of this
+ * number.
+ * @param x the uint64_t integer to test
+ * @param m the starting position (not counted)
+ * @param n the end position (not counted)
+ * @return the parity defined as parity = (-1)^(number of bits set between position m + 1 and n - 1)
+ */
 inline double ui64_sign(uint64_t x, int m, int n) {
     // TODO PERF: speedup by avoiding the mask altogether
     // This implementation is a bit faster than one based on for loops
@@ -149,6 +150,33 @@ inline double ui64_sign(uint64_t x, int m, int n) {
     mask = x & mask;                            // intersect with string
     mask = ui64_bit_count(mask);                // count bits in between
     return (mask % 2 == 0) ? 1.0 : -1.0;        // compute sign
+}
+
+/**
+ * @brief Count the number of 1 from position n + 1 up to 63 and return the parity of this number.
+ * @param x the uint64_t integer to test
+ * @param n the start position (not counted)
+ * @return the parity defined as parity = (-1)^(number of bits set between position n + 1 and 63)
+ */
+inline double ui64_sign_reverse(uint64_t x, int n) {
+    // TODO PERF: speedup by avoiding the mask altogether
+    // This implementation is 20 x times faster than one based on for loops
+    // First build a mask with n bit set. Then & with string and count.
+    // Example for 16 bit string
+    //                 n            (n = 5)
+    // want       00000011 11111111
+    // mask       11111111 11111111
+    // mask << 6  00000011 11111111 6 = 5 + 1
+    //
+    // Note: This strategy does not work when n = 0 because ~0 << 64 = ~0 (!!!)
+    // so we treat this case separately
+    if (n == 63)
+        return 1.0;
+    uint64_t mask = ~0;
+    mask = mask << (n + 1);              // make a string with 64 - n - 1 bits set
+    mask = x & mask;                     // intersect with string
+    mask = ui64_bit_count(mask);         // count bits in between
+    return (mask % 2 == 0) ? 1.0 : -1.0; // compute sign
 }
 
 ///**
@@ -179,19 +207,5 @@ inline double ui64_sign(uint64_t x, int m, int n) {
 //    x = x >> n;
 //    return ui64_bit_count(x);
 //}
-
-
-//uint64_t ui64_bit_count(uint64_t x);
-
-///// Returns the index of the least significant 1-bit of x, or if x is zero, returns ~0.
-//uint64_t lowest_one_idx(uint64_t x);
-
-//uint64_t clear_lowest_one_bit(uint64_t x);
-
-//double ui64_sign(uint64_t x, int n);
-
-//double ui64_sign_reverse(uint64_t x, int n);
-
-//double ui64_sign(uint64_t x, int m, int n);
 
 #endif // _bitwise_operations_hpp_

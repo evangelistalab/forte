@@ -183,8 +183,8 @@ class CI_RDMS {
     int max_rdm_;
 
     // Objects for dynamic builds
-    //    SortedStringList_UI64 a_sorted_string_list_;
-    //    SortedStringList_UI64 b_sorted_string_list_;
+    //    SortedStringList a_sorted_string_list_;
+    //    SortedStringList b_sorted_string_list_;
 
     // The list of a_p |N>
     std::vector<std::vector<std::pair<size_t, short>>> a_ann_list_;
@@ -269,7 +269,7 @@ class CI_RDMS {
                    int u, bool half = false);
 
     // Function to build non-trivial mixed-spin components of 1-, 2-, and 3- RDMs
-    void make_ab(SortedStringList_UI64 a_sorted_string_list_,
+    void make_ab(SortedStringList a_sorted_string_list_,
                  const std::vector<String>& sorted_astr,
                  const std::vector<Determinant>& sorted_a_dets, std::vector<double>& tprdm_ab,
                  std::vector<double>& tprdm_aab, std::vector<double>& tprdm_abb);

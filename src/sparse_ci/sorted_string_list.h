@@ -30,7 +30,6 @@
 #ifndef _sorted_string_list_h_
 #define _sorted_string_list_h_
 
-#include "stl_bitset_string.h"
 #include "determinant.h"
 #include "sparse_ci/determinant_hashvector.h"
 #include "integrals/active_space_integrals.h"
@@ -41,14 +40,14 @@ namespace forte {
  * @brief The SortedStringList class
  * Stores determinants as a sorted string list.
  */
-class SortedStringList_UI64 {
+class SortedStringList {
   public:
-    SortedStringList_UI64(const DeterminantHashVec& space,
+    SortedStringList(const DeterminantHashVec& space,
                           std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
                           DetSpinType sorted_string_spin);
 
-    SortedStringList_UI64();
-    ~SortedStringList_UI64();
+    SortedStringList();
+    ~SortedStringList();
 
     const std::vector<Determinant>& sorted_dets() const;
     const std::vector<String>& sorted_half_dets() const;

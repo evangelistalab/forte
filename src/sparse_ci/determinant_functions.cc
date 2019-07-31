@@ -20,8 +20,6 @@ double slater_rules_single_alpha(String Ib, String Ia, String Ja,
 
     // Diagonal contribution
     double matrix_element = ints->oei_b(i, a);
-    // find common bits
-    IJa = Ia & Ja;
     for (int p = 0; p < N; ++p) {
         if (Ia.get_bit(p)) {
             matrix_element += ints->tei_aa(i, p, a, p);
@@ -43,8 +41,6 @@ double slater_rules_single_beta(String Ia, String Ib, String Jb,
 
     // Diagonal contribution
     double matrix_element = ints->oei_b(i, a);
-    // find common bits
-    IJb = Ib & Jb;
     for (int p = 0; p < N; ++p) {
         if (Ia.get_bit(p)) {
             matrix_element += ints->tei_ab(p, i, p, a);

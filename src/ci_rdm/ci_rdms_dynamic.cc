@@ -59,8 +59,8 @@ void CI_RDMS::compute_rdms_dynamic(std::vector<double>& oprdm_a, std::vector<dou
     tprdm_abb.resize(ncmo5_ * ncmo_, 0.0);
     tprdm_bbb.resize(ncmo5_ * ncmo_, 0.0);
 
-    SortedStringList_UI64 a_sorted_string_list_(wfn_, fci_ints_, DetSpinType::Alpha);
-    SortedStringList_UI64 b_sorted_string_list_(wfn_, fci_ints_, DetSpinType::Beta);
+    SortedStringList a_sorted_string_list_(wfn_, fci_ints_, DetSpinType::Alpha);
+    SortedStringList b_sorted_string_list_(wfn_, fci_ints_, DetSpinType::Beta);
     const std::vector<String>& sorted_bstr = b_sorted_string_list_.sorted_half_dets();
     size_t num_bstr = sorted_bstr.size();
     const auto& sorted_b_dets = b_sorted_string_list_.sorted_dets();
@@ -567,7 +567,7 @@ void CI_RDMS::compute_rdms_dynamic(std::vector<double>& oprdm_a, std::vector<dou
     make_ab(a_sorted_string_list_, sorted_astr, sorted_a_dets, tprdm_ab, tprdm_aab, tprdm_abb);
 }
 //*- Alpha/Beta  -*//
-void CI_RDMS::make_ab(SortedStringList_UI64 a_sorted_string_list_,
+void CI_RDMS::make_ab(SortedStringList a_sorted_string_list_,
                       const std::vector<String>& sorted_astr,
                       const std::vector<Determinant>& sorted_a_dets, std::vector<double>& tprdm_ab,
                       std::vector<double>& tprdm_aab, std::vector<double>& tprdm_abb) {

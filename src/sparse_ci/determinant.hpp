@@ -854,7 +854,7 @@ double gen_excitation(DeterminantImpl<N>& d, const std::vector<int>& aann,
 }
 
 template <size_t N> double spin2(const DeterminantImpl<N>& lhs, const DeterminantImpl<N>& rhs) {
-    int size = DeterminantImpl<N>::nbits_half;
+    int nmo = DeterminantImpl<N>::nbits_half;
     const DeterminantImpl<N>& I = lhs;
     const DeterminantImpl<N>& J = rhs;
 
@@ -863,27 +863,13 @@ template <size_t N> double spin2(const DeterminantImpl<N>& lhs, const Determinan
     //     = Sz (Sz + 1) + Nbeta + Npairs - sum_pq' a+(qa) a+(pb) a-(qb) a-(pa)
     double matrix_element = 0.0;
 
-    int nadiff = 0;
-    int nbdiff = 0;
-    int na = 0;
-    int nb = 0;
-    int npair = 0;
-    // Count how many differences in mos are there and the number of alpha/beta
-    // electrons
-    for (int n = 0; n < size; ++n) {
-        if (I.get_alfa_bit(n) != J.get_alfa_bit(n))
-            nadiff++;
-        if (I.get_beta_bit(n) != J.get_beta_bit(n))
-            nbdiff++;
-        if (I.get_alfa_bit(n))
-            na++;
-        if (I.get_beta_bit(n))
-            nb++;
-        if ((I.get_alfa_bit(n) and I.get_beta_bit(n)))
-            npair += 1;
-    }
-    nadiff /= 2;
-    nbdiff /= 2;
+    DeterminantImpl<N> lr_diff = lhs ^ rhs;
+
+    int nadiff = lr_diff.count_alfa() / 2;
+    int nbdiff = lr_diff.count_beta() / 2;
+    int na = lhs.count_alfa();
+    int nb = lhs.count_beta();
+    int npair = lhs.npair();
 
     double Ms = 0.5 * static_cast<double>(na - nb);
 
@@ -898,7 +884,7 @@ template <size_t N> double spin2(const DeterminantImpl<N>& lhs, const Determinan
         int i = -1;
         int j = -1;
         // The logic here is a bit complex
-        for (int p = 0; p < size; ++p) {
+        for (int p = 0; p < nmo; ++p) {
             if (J.get_alfa_bit(p) and I.get_beta_bit(p) and (not J.get_beta_bit(p)) and
                 (not I.get_alfa_bit(p)))
                 i = p;

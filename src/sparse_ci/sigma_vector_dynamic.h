@@ -68,8 +68,8 @@ class SigmaVectorDynamic : public SigmaVector {
     std::vector<double> temp_sigma_;
     const DeterminantHashVec& space_;
     std::shared_ptr<ActiveSpaceIntegrals> fci_ints_;
-    SortedStringList_UI64 a_sorted_string_list_;
-    SortedStringList_UI64 b_sorted_string_list_;
+    SortedStringList a_sorted_string_list_;
+    SortedStringList b_sorted_string_list_;
 
     /// The Hamiltonian stored as a list of pairs (H_IJ, I, J)
     std::vector<std::tuple<double, std::uint32_t, std::uint32_t>> H_IJ_list_;
