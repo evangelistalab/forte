@@ -436,7 +436,7 @@ template <size_t N> class DeterminantImpl {
         } else {
             int na = 0;
             // count the number of bits in the alpha words
-            for (int k = 0; k < nwords_half; ++k) {
+            for (size_t k = 0; k < nwords_half; ++k) {
                 na += ui64_bit_count(words_[k]);
             }
             return na;
@@ -453,7 +453,7 @@ template <size_t N> class DeterminantImpl {
         } else {
             int nb = 0;
             // count the number of bits in the beta words
-            for (int k = nwords_half; k < nwords_; ++k) {
+            for (size_t k = nwords_half; k < nwords_; ++k) {
                 nb += ui64_bit_count(words_[k]);
             }
             return nb;
@@ -549,6 +549,53 @@ template <size_t N> class DeterminantImpl {
         return result;
     }
 
+    //    uint64_t MurmurHash64A(const word_t[] & key, int len, uint64_t seed) {
+    //        const uint64_t m = BIG_CONSTANT(0xc6a4a7935bd1e995);
+    //        const int r = 47;
+
+    //        uint64_t h = seed ^ (len * m);
+
+    //        const uint64_t* data = (const uint64_t*)key;
+    //        const uint64_t* end = data + (len / 8);
+
+    //        while (data != end) {
+    //            uint64_t k = *data++;
+
+    //            k *= m;
+    //            k ^= k >> r;
+    //            k *= m;
+
+    //            h ^= k;
+    //            h *= m;
+    //        }
+
+    //        const unsigned char* data2 = (const unsigned char*)data;
+
+    //        switch (len & 7) {
+    //        case 7:
+    //            h ^= uint64_t(data2[6]) << 48;
+    //        case 6:
+    //            h ^= uint64_t(data2[5]) << 40;
+    //        case 5:
+    //            h ^= uint64_t(data2[4]) << 32;
+    //        case 4:
+    //            h ^= uint64_t(data2[3]) << 24;
+    //        case 3:
+    //            h ^= uint64_t(data2[2]) << 16;
+    //        case 2:
+    //            h ^= uint64_t(data2[1]) << 8;
+    //        case 1:
+    //            h ^= uint64_t(data2[0]);
+    //            h *= m;
+    //        };
+
+    //        h ^= h >> r;
+    //        h *= m;
+    //        h ^= h >> r;
+
+    //        return h;
+    //    }
+
     /// Save the Slater determinant as a string
     /// @param n number of bits to print (number of MOs)
     //    std::string str(int n = nbits_half) const { return str(*this, n); }
@@ -559,7 +606,7 @@ template <size_t N> class DeterminantImpl {
             if constexpr (N == 128) {
                 return ((d.words_[0] * 13466917) + d.words_[1]) % 1405695061;
             } else {
-                std::uint64_t seed = 0;
+                std::uint64_t seed = nwords_;
                 for (auto& w : d.words_) {
                     hash_combine_uint64(seed, w);
                 }
@@ -623,17 +670,17 @@ template <size_t N> class DeterminantImpl {
 
     /// a function to accumulate hash values of 64 bit unsigned integers
     /// based on boost/functional/hash/hash.hpp
-    static inline void hash_combine_uint64(uint64_t& seed, uint64_t value) {
-        const uint64_t m = 0xc6a4a7935bd1e995ULL;
-        const int r = 47;
-        value *= m;
-        value ^= value >> r;
-        value *= m;
-        seed ^= value;
-        seed *= m;
-        seed += 0xe6546b64;
+    static inline void hash_combine_uint64(uint64_t& seed, size_t value) {
+        //        const uint64_t m = 0xc6a4a7935bd1e995ULL;
+        //        const int r = 47;
+        //        value *= m;
+        //        value ^= value >> r;
+        //        value *= m;
+        //        seed ^= value;
+        //        seed *= m;
+        //        seed += 0xe6546b64;
         // alternative one-liner
-        // seed ^= value + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+        seed ^= value + 0x9e3779b9 + (seed << 6) + (seed >> 2);
     }
 
 // ==> Private Data <==
@@ -867,8 +914,6 @@ template <size_t N> double spin2(const DeterminantImpl<N>& lhs, const Determinan
     }
     return (matrix_element);
 }
-
-
 
 } // namespace forte
 
