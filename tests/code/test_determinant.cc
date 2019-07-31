@@ -74,8 +74,8 @@ TEST_CASE("Empty determinant", "[Determinant]") {
 
     std::vector<int> aocc_ref{};
     std::vector<int> bocc_ref{};
-    std::vector<int> avir_ref = get_complementary_occupation(aocc, 64);
-    std::vector<int> bvir_ref = get_complementary_occupation(bocc, 64);
+    std::vector<int> avir_ref = get_complementary_occupation(aocc, Determinant::nbits_half);
+    std::vector<int> bvir_ref = get_complementary_occupation(bocc, Determinant::nbits_half);
 
     REQUIRE(aocc == aocc_ref);
     REQUIRE(bocc == bocc_ref);
@@ -104,8 +104,8 @@ TEST_CASE("Bit counting", "[Determinant]") {
 
     std::vector<int> aocc_ref{0, 3, 4, 59};
     std::vector<int> bocc_ref{3, 18, 63};
-    std::vector<int> avir_ref = get_complementary_occupation(aocc_ref, 64);
-    std::vector<int> bvir_ref = get_complementary_occupation(bocc_ref, 64);
+    std::vector<int> avir_ref = get_complementary_occupation(aocc_ref, Determinant::nbits_half);
+    std::vector<int> bvir_ref = get_complementary_occupation(bocc_ref, Determinant::nbits_half);
 
     REQUIRE(aocc == aocc_ref);
     REQUIRE(bocc == bocc_ref);
@@ -146,10 +146,12 @@ TEST_CASE("Full determinant", "[Determinant]") {
     std::vector<int> avir = det_test.get_alfa_vir(Determinant::nbits_half);
     std::vector<int> bvir = det_test.get_beta_vir(Determinant::nbits_half);
 
-    std::vector<int> avir_ref{};
-    std::vector<int> bvir_ref{};
-    std::vector<int> aocc_ref = get_complementary_occupation(avir_ref, 64);
-    std::vector<int> bocc_ref = get_complementary_occupation(bvir_ref, 64);
+    std::vector<int> aocc_ref(64);
+    std::vector<int> bocc_ref(64);
+    std::iota(aocc_ref.begin(), aocc_ref.end(), 0);
+    std::iota(bocc_ref.begin(), bocc_ref.end(), 0);
+    std::vector<int> avir_ref = get_complementary_occupation(aocc_ref, Determinant::nbits_half);
+    std::vector<int> bvir_ref = get_complementary_occupation(bocc_ref, Determinant::nbits_half);
 
     REQUIRE(aocc == aocc_ref);
     REQUIRE(bocc == bocc_ref);
