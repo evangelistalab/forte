@@ -57,9 +57,106 @@ void make_embedding(psi::SharedWavefunction ref_wfn, psi::Options& options, psi:
 	if (!ref_wfn)
 		throw PSIEXCEPTION("SCF has not been run yet!");
 
-	// 2. Apply projector
+	// 2. Apply projector to rotate the orbitals
         if (Pf) {
-                //Embedding codes will be here
+			Dimension nmopi = ref_wfn->nmopi();
+			Dimension zeropi = nmopi - nmopi;
+			int nirrep = ref_wfn->nirrep();
+			if (nirrep > 1) {
+				throw PSIEXCEPTION("Fragment projection works only without symmetry! (symmetry C1)");
+			}
+
+			// Get information of rocc, actv and rvir from MOSpaceInfo
+			Dimension nroccpi = mo_space_info.get_dimension("RESTRICTED_DOCC");
+			Dimension actv_a = mo_space_info.get_dimension("ACTIVE");
+			Dimension nrvirpi = mo_space_info.get_dimension("RESTRICTED_UOCC");;
+
+			// Create corresponding blocks (slices)
+			Slice occ(zeropi, nroccpi);
+			Slice vir(nroccpi + actv_a, nmopi);
+			Slice actv(nroccpi, nroccpi + actv_a);
+
+			// Transform Pf to MO basis
+			SharedMatrix Ca_t = ref_wfn->Ca();
+			Pf->transform(Ca_t);
+
+			// Diagonalize Pf_pq for occ and vir part, respectively.
+			SharedMatrix P_oo = Pf->get_block(occ, occ);
+			SharedMatrix Uo(new Matrix("Uo", nirrep, nroccpi, nroccpi));
+			SharedVector lo(new Vector("lo", nirrep, nroccpi));
+			P_oo->diagonalize(Uo, lo, descending);
+			// lo->print();
+
+			SharedMatrix P_vv = Pf->get_block(vir, vir);
+			SharedMatrix Uv(new Matrix("Uv", nirrep, nrvirpi, nrvirpi));
+			SharedVector lv(new Vector("lv", nirrep, nrvirpi));
+			P_vv->diagonalize(Uv, lv, descending);
+			// lv->print();
+
+			SharedMatrix U_all(new Matrix("U with Pab", nirrep, nmopi, nmopi));
+			U_all->set_block(occ, occ, Uo);
+			U_all->set_block(vir, vir, Uv);
+
+			// Based on threshold or num_occ/num_vir, decide the partition
+			std::vector<int> index_trace_occ = {};
+			std::vector<int> index_trace_vir = {};
+			if (options.get_str("CUTOFF_BY") == "THRESHOLD") {
+				for (int i = 0; i < nroccpi[0]; i++) {
+					if (lo->get(0, i) > thresh) {
+						index_trace_occ.push_back(i);
+						outfile->Printf("\n Occupied orbital %d is partitioned to A with eigenvalue %8.8f",
+							i, lo->get(0, i));
+					}
+				}
+				for (int i = 0; i < nrvirpi[0]; i++) {
+					if (lv->get(0, i) > thresh) {
+						index_trace_vir.push_back(i);
+						outfile->Printf("\n Virtual orbital %d is partitioned to A with eigenvalue %8.8f",
+							i, lv->get(0, i));
+					}
+				}
+			}
+
+			if (options.get_str("CUTOFF_BY") == "CUM_THRESHOLD") {
+				double tmp = 0.0;
+				double sum_lo = 0.0;
+				double sum_lv = 0.0;
+				for (int i = 0; i < nroccpi[0]; i++) {
+					sum_lo += lo->get(0, i);
+				}
+				for (int i = 0; i < nrvirpi[0]; i++) {
+					sum_lv += lv->get(0, i);
+				}
+
+				double cum_l_o = 0.0;
+				for (int i = 0; i < nroccpi[0]; i++) {
+					tmp += lo->get(0, i);
+					cum_l_o = tmp / sum_lo;
+					if (cum_l_o < thresh) {
+						index_trace_occ.push_back(i);
+						outfile->Printf("\n Occupied orbital %d is partitioned to A with cumulative eigenvalue %8.8f",
+							i, cum_l_o);
+					}
+				}
+				tmp = 0.0;
+				double cum_l_v = 0.0;
+				for (int i = 0; i < nrvirpi[0]; i++) {
+					tmp += lv->get(0, i);
+					cum_l_v = tmp / sum_lv;
+					if (cum_l_v < thresh) {
+						index_trace_vir.push_back(i);
+						outfile->Printf("\n Virtual orbital %d is partitioned to A with cumulative eigenvalue %8.8f",
+							i, cum_l_v);
+					}
+				}
+			}
+
+			// Build new Ca with the selected blocks
+
+			// Semi-canonicalize with functions
+
+			// Write new MOSpaceInfo
+
         }
 	else {
 		throw PSIEXCEPTION("No projector (matrix) found!");
