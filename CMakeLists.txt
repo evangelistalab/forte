@@ -75,7 +75,6 @@ endif()
 pybind11_add_module(forte
 src/base_classes/active_space_method.cc
 src/base_classes/active_space_solver.cc
-src/orbital-helpers/avas.cc
 src/casscf/casscf.cc
 src/ci_rdm/ci_rdms.cc
 src/ci_rdm/ci_rdms_dynamic.cc
@@ -173,10 +172,10 @@ src/orbital-helpers/ao_helper.cc
 src/orbital-helpers/localize.cc
 src/orbital-helpers/iao_builder.cc
 src/orbital-helpers/mp2_nos.cc
+src/orbital-helpers/orbital_space.cc
 src/orbital-helpers/semi_canonicalize.cc
 src/orbital-helpers/unpaired_density.cc
 src/orbital-helpers/fragment_projector.cc
-src/orbital-helpers/embedding.cc
 src/pci/pci.cc
 src/pci/pci_sigma.cc
 src/v2rdm/v2rdm.cc

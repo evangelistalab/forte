@@ -37,7 +37,7 @@
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libpsio/psio.hpp"
 #include "embedding.h"
-//#include "avas.h"
+#include "avas.h"
 
 using namespace psi;
 
@@ -96,23 +96,35 @@ void make_embedding(psi::SharedWavefunction ref_wfn, psi::Options& options, psi:
 			SharedMatrix U_all(new Matrix("U with Pab", nirrep, nmopi, nmopi));
 			U_all->set_block(occ, occ, Uo);
 			U_all->set_block(vir, vir, Uv);
+			
+			// Rotate MOs
+			ref_wfn->Ca()->copy(Matrix::doublet(Ca_t, U_all, false, false));
 
 			// Based on threshold or num_occ/num_vir, decide the partition
-			std::vector<int> index_trace_occ = {};
-			std::vector<int> index_trace_vir = {};
+			std::vector<int> index_A_occ = {};
+			std::vector<int> index_A_vir = {};
+			std::vector<int> index_B_occ = {};
+			std::vector<int> index_B_vir = {};
+
 			if (options.get_str("CUTOFF_BY") == "THRESHOLD") {
 				for (int i = 0; i < nroccpi[0]; i++) {
 					if (lo->get(0, i) > thresh) {
-						index_trace_occ.push_back(i);
+						index_A_occ.push_back(i);
 						outfile->Printf("\n Occupied orbital %d is partitioned to A with eigenvalue %8.8f",
 							i, lo->get(0, i));
+					}
+					else {
+						index_B_occ.push_back(i);
 					}
 				}
 				for (int i = 0; i < nrvirpi[0]; i++) {
 					if (lv->get(0, i) > thresh) {
-						index_trace_vir.push_back(i);
+						index_A_vir.push_back(i);
 						outfile->Printf("\n Virtual orbital %d is partitioned to A with eigenvalue %8.8f",
 							i, lv->get(0, i));
+					}
+					else {
+						index_B_vir.push_back(i);
 					}
 				}
 			}
@@ -133,9 +145,12 @@ void make_embedding(psi::SharedWavefunction ref_wfn, psi::Options& options, psi:
 					tmp += lo->get(0, i);
 					cum_l_o = tmp / sum_lo;
 					if (cum_l_o < thresh) {
-						index_trace_occ.push_back(i);
+						index_A_occ.push_back(i);
 						outfile->Printf("\n Occupied orbital %d is partitioned to A with cumulative eigenvalue %8.8f",
 							i, cum_l_o);
+					}
+					else {
+						index_B_occ.push_back(i);
 					}
 				}
 				tmp = 0.0;
@@ -148,12 +163,56 @@ void make_embedding(psi::SharedWavefunction ref_wfn, psi::Options& options, psi:
 						outfile->Printf("\n Virtual orbital %d is partitioned to A with cumulative eigenvalue %8.8f",
 							i, cum_l_v);
 					}
+					else {
+						index_B_vir.push_back(i);
+					}
 				}
 			}
 
+
+
 			// Build new Ca with the selected blocks
+			    // Formulate C to BO-AO-A-AV-BV:
+			    // 1. Take index_trace_occ and index_trace_vir from Ca() to build AO, AV
+				// 2. Take untraced indices from Ca() to build BO, BV
+				// 3. Take active indices from Ca_t(original Ca) to build A
+
+			SharedMatrix Ca_Rt(new Matrix("Ca_Rt", nirrep, nmopi, nmopi);  //initialize Ca_Rt: fomulated results
+
+			// If reference have active, write active from Ca_t
+			if (options.get_str("REFERENCE") == "CASSCF") {
+				for (int i = 0; i < num_actv; ++i) {
+					Ca_Rt->set_column(
+						0, nroccpi[0] + i,
+						Ca_t->get_column(0, nroccpi[0] + i));
+				}
+			}
+
+			// Write Bocc
+			for (int i = 0; i < sizeBO; ++i) {
+				Ca_Rt->set_column(0, i, ref_wfn->Ca()->get_column(0, sizeAO + i));
+			}
+
+			// Write Aocc
+			for (int i = 0; i < sizeAO; ++i) {
+				Ca_Rt->set_column(0, i + sizeBO, ref_wfn->Ca()->get_column(0, i));
+			}
+
+			// Write Avir
+			for (int i = 0; i < sizeAV; ++i) {
+				Ca_Rt->set_column(0, i + AO_BO_A[0], ref_wfn->Ca()->get_column(0, i + AO_BO_A[0]));
+			}
+
+			// Write Bvir
+			for (int i = 0; i < sizeBV; ++i) {
+				Ca_Rt->set_column(0, i + AO_BO_A_AV[0], ref_wfn->Ca()->get_column(0, AO_BO_A_AV[0] + i));
+			}
+
+			// Update Ca_
+			ref_wfn->Ca()->copy(Ca_Rt); // Ca_: BO-AO-A-AV-BV
 
 			// Semi-canonicalize with functions
+
 
 			// Write new MOSpaceInfo
 

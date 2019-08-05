@@ -26,18 +26,22 @@
  * @END LICENSE
  */
 
-#ifndef _avas_h_
-#define _avas_h_
+#ifndef _orbital_space_h_
+#define _orbital_space_h_
 
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/liboptions/liboptions.h"
 
 #include "base_classes/forte_options.h"
+#include "base_classes/mo_space_info.h"
 
 namespace forte {
 
 void make_avas(psi::SharedWavefunction ref_wfn, psi::Options& options, psi::SharedMatrix Ps);
+
+void make_embedding(psi::SharedWavefunction ref_wfn, psi::Options& options, psi::SharedMatrix Pf, MOSpaceInfo mo_space_info);
+
 } // namespace forte
 
-#endif // _avas_h_
+#endif // _orbital_space_h_
