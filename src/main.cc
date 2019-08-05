@@ -32,7 +32,7 @@
 #include "psi4/libpsi4util/process.h"
 
 #include "orbital-helpers/aosubspace.h"
-#include "orbital-helpers/avas.h"
+#include "orbital-helpers/orbital_space.h"
 #include "base_classes/forte_options.h"
 #include "base_classes/mo_space_info.h"
 #include "helpers/timer.h"

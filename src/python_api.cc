@@ -45,8 +45,7 @@
 #include "orbital-helpers/localize.h"
 #include "orbital-helpers/mp2_nos.h"
 #include "orbital-helpers/semi_canonicalize.h"
-#include "orbital-helpers/avas.h"
-#include "orbital-helpers/embedding.h"
+#include "orbital-helpers/orbital_space.h"
 #include "orbital-helpers/fragment_projector.h"
 
 #include "forte.h"

@@ -304,13 +304,12 @@ void make_avas(psi::SharedWavefunction ref_wfn, psi::Options& options, psi::Shar
     }
 }
 
-void make_embedding(psi::SharedWavefunction ref_wfn, psi::Options& options, psi::SharedMatrix Pf, MOSpaceInfo mo_space_info) {
+void make_embedding(psi::SharedWavefunction ref_wfn, psi::Options& options, psi::SharedMatrix Pf, std::shared_ptr<MOSpaceInfo> mo_space_info) {
 	outfile->Printf("\n ------ Orbital Localization and Embedding ------ \n");
 
 	// 1. Get necessary information
+	outfile->Printf("\n Reading options ------ \n");
 	double thresh = options.get_double("THRESHOLD");
-	int num_occ = options.get_int("NUM_OCC");
-	int num_vir = options.get_int("NUM_VIR");
 	int frz_sys_docc = options.get_int("FROZEN_SYS_DOCC");
 	int frz_sys_uocc = options.get_int("FROZEN_SYS_UOCC");
 
@@ -320,6 +319,7 @@ void make_embedding(psi::SharedWavefunction ref_wfn, psi::Options& options, psi:
 
 	// 2. Apply projector to rotate the orbitals
 	if (Pf) {
+		outfile->Printf("\n Find fragment projector Pf ------ \n");
 		Dimension nmopi = ref_wfn->nmopi();
 		Dimension zeropi = nmopi - nmopi;
 		int nirrep = ref_wfn->nirrep();
@@ -328,44 +328,59 @@ void make_embedding(psi::SharedWavefunction ref_wfn, psi::Options& options, psi:
 		}
 
 		// Get information of rocc, actv and rvir from MOSpaceInfo
-		Dimension nroccpi = mo_space_info.get_dimension("RESTRICTED_DOCC");
-		Dimension actv_a = mo_space_info.get_dimension("ACTIVE");
-		Dimension nrvirpi = mo_space_info.get_dimension("RESTRICTED_UOCC");;
+		Dimension frzopi = mo_space_info->get_dimension("FROZEN_DOCC");
+		Dimension nroccpi = mo_space_info->get_dimension("RESTRICTED_DOCC");
+		Dimension actv_a = mo_space_info->get_dimension("ACTIVE");
+		Dimension nrvirpi = mo_space_info->get_dimension("RESTRICTED_UOCC");
+		Dimension frzvpi = mo_space_info->get_dimension("FROZEN_UOCC");
 
-		// Create corresponding blocks (slices)
+		outfile->Printf("\n MOSpaceInfo read ------ \n");
+
+		// Define corresponding blocks (slices)
+		nroccpi = nroccpi + frzopi; // Merge frozen and restricted occupied orbitals to take care of initial frozen core
 		Slice occ(zeropi, nroccpi);
 		Slice vir(nroccpi + actv_a, nmopi);
 		Slice actv(nroccpi, nroccpi + actv_a);
 
 		// Transform Pf to MO basis
-		SharedMatrix Ca_t = ref_wfn->Ca();
-		Pf->transform(Ca_t);
+		SharedMatrix Ca_ori = ref_wfn->Ca();
+		Pf->transform(Ca_ori);
+
+		outfile->Printf("\n Projector transformed ------ \n");
 
 		// Diagonalize Pf_pq for occ and vir part, respectively.
 		SharedMatrix P_oo = Pf->get_block(occ, occ);
 		SharedMatrix Uo(new Matrix("Uo", nirrep, nroccpi, nroccpi));
 		SharedVector lo(new Vector("lo", nirrep, nroccpi));
 		P_oo->diagonalize(Uo, lo, descending);
-		// lo->print();
+		lo->print();
 
 		SharedMatrix P_vv = Pf->get_block(vir, vir);
 		SharedMatrix Uv(new Matrix("Uv", nirrep, nrvirpi, nrvirpi));
 		SharedVector lv(new Vector("lv", nirrep, nrvirpi));
 		P_vv->diagonalize(Uv, lv, descending);
-		// lv->print();
+		lv->print();
 
 		SharedMatrix U_all(new Matrix("U with Pab", nirrep, nmopi, nmopi));
 		U_all->set_block(occ, occ, Uo);
 		U_all->set_block(vir, vir, Uv);
 
 		// Rotate MOs
-		ref_wfn->Ca()->copy(Matrix::doublet(Ca_t, U_all, false, false));
+		ref_wfn->Ca()->copy(psi::linalg::doublet(Ca_ori, U_all, false, false));
+		outfile->Printf("\n MOs rotated ------ \n");
 
 		// Based on threshold or num_occ/num_vir, decide the partition
 		std::vector<int> index_A_occ = {};
 		std::vector<int> index_A_vir = {};
 		std::vector<int> index_B_occ = {};
 		std::vector<int> index_B_vir = {};
+		std::vector<int> index_actv = {};
+
+		if (options.get_str("REFERENCE") == "CASSCF") {
+			for (int i = 0; i < actv_a[0]; ++i) {
+				index_actv.push_back(nroccpi[0] + i);
+			}
+		}
 
 		if (options.get_str("CUTOFF_BY") == "THRESHOLD") {
 			for (int i = 0; i < nroccpi[0]; i++) {
@@ -420,7 +435,7 @@ void make_embedding(psi::SharedWavefunction ref_wfn, psi::Options& options, psi:
 				tmp += lv->get(0, i);
 				cum_l_v = tmp / sum_lv;
 				if (cum_l_v < thresh) {
-					index_trace_vir.push_back(i);
+					index_A_vir.push_back(i);
 					outfile->Printf("\n Virtual orbital %d is partitioned to A with cumulative eigenvalue %8.8f",
 						i, cum_l_v);
 				}
@@ -430,8 +445,106 @@ void make_embedding(psi::SharedWavefunction ref_wfn, psi::Options& options, psi:
 			}
 		}
 
-		outfile->Printf("\n =======Functionalilty test end here=========")
+		int num_Ao = index_A_occ.size();
+		int num_Bo = index_B_occ.size();
+		int num_Av = index_A_vir.size();
+		int num_Bv = index_B_vir.size();
 
+		outfile->Printf("\n Build and semi-canonocalize new orbitals ------ \n");
+		SharedMatrix Ca_tilde(ref_wfn->Ca()->clone());
+
+		// Build and semi-canonicalize BO, AO, AV and BV blocks
+		auto C_bo = semicanonicalize_block(ref_wfn, Ca_tilde, index_B_occ, 0);
+		auto C_ao = semicanonicalize_block(ref_wfn, Ca_tilde, index_A_occ, 0);
+		auto C_av = semicanonicalize_block(ref_wfn, Ca_tilde, index_A_vir, 0);
+		auto C_bv = semicanonicalize_block(ref_wfn, Ca_tilde, index_B_vir, 0);
+
+		SharedMatrix C_A(new Matrix("Active_coeff_block", nirrep, nmopi, actv_a));
+
+		// Build the active block
+		if (options.get_str("REFERENCE") == "CASSCF") {
+			if (options.get_bool("SEMICANON") == true) {
+				// Read active orbitals from original Ca and semi-canonicalize
+				C_A->copy(semicanonicalize_block(ref_wfn, Ca_ori, index_actv, 0));
+			}
+			else {
+				// Read active orbitals from original Ca
+				for (int i = 0; i < actv_a[0]; ++i) {
+					C_A->set_column(0, i, Ca_ori->get_column(0, nroccpi[0] + i));
+				}
+			}
+		}
+
+		// Form new C matrix
+		SharedMatrix Ca_Rt(new Matrix("Ca rotated tilde", nirrep, nmopi, nmopi));
+
+		int offset = 0;
+		for (auto& C_block : { C_bo, C_ao, C_A, C_av, C_bv }) {
+			int nmo_block = C_block->ncol();
+			for (int i = 0; i < nmo_block; ++i) {
+				for (int mu = 0; mu < nmopi[0]; ++mu) {
+					double value = C_block->get(mu, i);
+					Ca_Rt->set(mu, offset, value);
+				}
+				offset += 1;
+			}
+		}
+
+		psi::SharedMatrix Fa = ref_wfn->Fa(); // get AO basis Fock matrix
+		psi::SharedMatrix Fa_mo = Fa->clone();
+		Fa_mo->transform(Ca_Rt);
+
+		// Update both the alpha and beta orbitals
+		ref_wfn->Ca()->copy(Ca_Rt);
+		ref_wfn->Cb()->copy(Ca_Rt);
+
+		// Write new MOSpaceInfo
+		std::map<std::string, std::vector<size_t>> mo_space_map;
+
+		// Frozen docc space
+		size_t freeze_o = static_cast<size_t>(num_Bo + frz_sys_docc); // Add the original frozen core to B
+		std::vector<size_t> fo_vec;
+		fo_vec.push_back(freeze_o);
+		mo_space_map["FROZEN_DOCC"] = fo_vec;
+
+		// Restricted docc space
+		size_t ro = static_cast<size_t>(num_Ao);
+		std::vector<size_t> ro_vec;
+		ro_vec.push_back(ro);
+		mo_space_map["RESTRICTED_DOCC"] = ro_vec;
+
+		// Active space
+		size_t a = static_cast<size_t>(actv_a[0]);
+		std::vector<size_t> a_vec;
+		a_vec.push_back(a);
+		mo_space_map["ACTIVE"] = a_vec;
+
+		// Restricted uocc space
+		size_t rv = static_cast<size_t>(num_Av);
+		std::vector<size_t> rv_vec;
+		rv_vec.push_back(rv);
+		mo_space_map["RESTRICTED_UOCC"] = rv_vec;
+
+		// Frozen uocc space
+		size_t freeze_v = static_cast<size_t>(num_Bv + frz_sys_uocc); // Add the original frozen core to B
+		std::vector<size_t> fv_vec;
+		fv_vec.push_back(freeze_v);
+		mo_space_map["FROZEN_UOCC"] = fv_vec;
+
+		// Write new MOSpaceInfo
+		std::vector<size_t> reorder;
+		mo_space_info = make_mo_space_info_map(ref_wfn, mo_space_map, reorder);
+
+		// Print summary of embedding MO spaces
+		outfile->Printf("    ============================\n");
+		outfile->Printf("\n  ==> EMBEDDING MO space Information <==");
+		outfile->Printf("\n    frozen_docc     = [%d]", mo_space_info->get_dimension("FROZEN_DOCC")[0]);
+		outfile->Printf("\n    restricted_docc = [%d]", mo_space_info->get_dimension("RESTRICTED_DOCC")[0]);
+		outfile->Printf("\n    active          = [%d]", mo_space_info->get_dimension("ACTIVE")[0]);
+		outfile->Printf("\n    restricted_uocc = [%d]", mo_space_info->get_dimension("RESTRICTED_UOCC")[0]);
+		outfile->Printf("\n    frozen_uocc     = [%d]", mo_space_info->get_dimension("FROZEN_UOCC")[0]);
+		outfile->Printf("\n");
+		outfile->Printf("    ============================\n");
 	}
 	else {
 		throw PSIEXCEPTION("No projector (matrix) found!");
