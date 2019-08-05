@@ -430,7 +430,7 @@ void make_embedding(psi::SharedWavefunction ref_wfn, psi::Options& options, psi:
 			}
 		}
 
-
+		outfile->Printf("\n =======Functionalilty test end here=========")
 
 	}
 	else {
