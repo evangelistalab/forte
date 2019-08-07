@@ -353,9 +353,8 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
 		Pf->transform(Ca_ori);
 		outfile->Printf("\n Projector transformed ------ ");
 
-		// Diagonalize Pf_pq for occ and vir part, respectively.
+		// Diagonalize Pf_pq for occ and vir space, respectively.
 		SharedMatrix P_oo = Pf->get_block(occ, occ);
-		P_oo->print();
 		SharedMatrix Uo(new Matrix("Uo", nirrep, nroccpi, nroccpi));
 		SharedVector lo(new Vector("lo", nirrep, nroccpi));
 		P_oo->diagonalize(Uo, lo, descending); 
@@ -503,11 +502,11 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
 		ref_wfn->Ca()->copy(Ca_Rt);
 		ref_wfn->Cb()->copy(Ca_Rt);
 
-		// Write new MOSpaceInfo
+		// Write new MOSpaceInfo:
 		std::map<std::string, std::vector<size_t>> mo_space_map;
 
 		// Frozen docc space
-		size_t freeze_o = static_cast<size_t>(num_Bo + frz_sys_docc); // Add the additional frozen core to B
+		size_t freeze_o = static_cast<size_t>(num_Bo + frz_sys_docc); // Add the additional frozen core to Bo
 		std::vector<size_t> fo_vec;
 		fo_vec.push_back(freeze_o);
 		mo_space_map["FROZEN_DOCC"] = fo_vec;
@@ -531,7 +530,7 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
 		mo_space_map["RESTRICTED_UOCC"] = rv_vec;
 
 		// Frozen uocc space
-		size_t freeze_v = static_cast<size_t>(num_Bv + frz_sys_uocc); // Add the original frozen core to B
+		size_t freeze_v = static_cast<size_t>(num_Bv + frz_sys_uocc); // Add the additional frozen virtual to Bv
 		std::vector<size_t> fv_vec;
 		fv_vec.push_back(freeze_v);
 		mo_space_map["FROZEN_UOCC"] = fv_vec;

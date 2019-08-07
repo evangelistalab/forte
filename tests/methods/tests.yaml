@@ -59,6 +59,11 @@ avas:
    - avas-3
    - avas-4
    - avas-5
+embedding:
+  short:
+   - embedding-1
+   - embedding-2
+   - embedding-3
 casscf:
   short:
    - casscf

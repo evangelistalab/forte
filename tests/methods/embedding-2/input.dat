@@ -1,0 +1,85 @@
+import forte
+
+refmcscf =   -301.545040778292105
+refdsrgpt2 = -301.566367325487192
+
+molecule {
+nx=3.55273183
+ny=0.11180974
+nz=0.62229249
+h1x=4.35978902
+h1y=0.69460257
+h1z=0.31531915
+    -1 1
+    N            nx     ny     nz
+    H            h1x     h1y     h1z
+    N            2.551638392149     0.179376262929    -0.483578555611
+    --
+    1 1
+    C           -3.742706525570    -0.206932142521     0.243118308478
+    C           -2.417114962788     0.539280296153     0.075740989793
+    C           -1.201249008950    -0.392170226504     0.022528633847
+    C            0.126703057493     0.351037188412    -0.149984867926
+    C            1.335635361401    -0.589369502197    -0.183745476907
+    H           -3.754858669622    -0.797572844995     1.175100718058
+    H           -4.596264923902     0.488982556379     0.278608447421
+    H           -3.917040402931    -0.906216472145    -0.592493615890
+    H           -2.288709243933     1.256346321552     0.907404804210
+    H           -2.448744841709     1.147928276726    -0.846739517415
+    H           -1.328920567391    -1.111536308682    -0.808611625368
+    H           -1.166458642364    -0.999479206849     0.946530710811
+    H            0.262874946662     1.071667389538     0.676666612740
+    H            0.111129307590     0.944760034810    -1.080973820996
+    H            1.217212218688    -1.312325957482    -1.010736767302
+    H            1.454032176963    -1.140650017173     0.766612446719
+
+     units angstrom
+     no_reorient
+     symmetry c1
+}
+
+set {
+  basis                  sto-3g
+  reference              rhf
+  diis                   true
+  diis_start             30
+  maxiter                300
+  damping_percentage     30
+  fail_on_maxiter        false
+  e_convergence          10
+  d_convergence          10
+  docc                   [28]
+  freeze_core            true
+  frozen_docc            [7]
+  frozen_uocc            [0]
+  restricted_docc        [19]
+  active                 [4]
+  mcscf_maxiter          200
+  mcscf_algorithm        ts
+  mcscf_type             df
+  mcscf_r_convergence    9
+  mcscf_e_convergence    9
+  mcscf_diis_start       60
+  mcscf_max_rot          0.15
+}
+
+E, wfn_cas = energy('casscf', return_wfn = True)
+compare_values(refmcscf,variable("CURRENT ENERGY"),8,"MCSCF energy")
+
+set forte {
+  embedding true
+  reference casscf
+  CUTOFF_BY cum_threshold
+  threshold 0.99
+  semicanon true
+  active_space_solver  fci
+  correlation_solver   dsrg-mrpt2
+  root_sym           0
+  nroot              1
+  root               0
+  d_convergence      10
+  dsrg_s             0.5
+}
+
+energy('forte', ref_wfn = wfn_cas, return_wfn=True)
+compare_values(refdsrgpt2,variable("CURRENT ENERGY"),8,"PT2-in-CASSCF energy")
