@@ -45,7 +45,7 @@ using namespace psi;
 namespace forte {
 
 psi::SharedMatrix semicanonicalize_block(psi::SharedWavefunction ref_wfn, psi::SharedMatrix C_tilde,
-                                         std::vector<int>& mos, int offset);
+                                         std::vector<int>& mos, int offset, bool prevent_rotate = false);
 
 void make_avas(psi::SharedWavefunction ref_wfn, psi::Options& options, psi::SharedMatrix Ps) {
     if (Ps) {
@@ -304,12 +304,14 @@ void make_avas(psi::SharedWavefunction ref_wfn, psi::Options& options, psi::Shar
     }
 }
 
-void make_embedding(psi::SharedWavefunction ref_wfn, psi::Options& options, psi::SharedMatrix Pf, std::shared_ptr<MOSpaceInfo> mo_space_info) {
+std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi::Options& options, psi::SharedMatrix Pf, std::shared_ptr<MOSpaceInfo> mo_space_info) {
 	outfile->Printf("\n ------ Orbital Localization and Embedding ------ \n");
 
 	// 1. Get necessary information
 	outfile->Printf("\n Reading options ------ \n");
 	double thresh = options.get_double("THRESHOLD");
+
+	// Additional input parameters used to control numbers of orbitals in A/B space
 	int frz_sys_docc = options.get_int("FROZEN_SYS_DOCC");
 	int frz_sys_uocc = options.get_int("FROZEN_SYS_UOCC");
 
@@ -319,7 +321,7 @@ void make_embedding(psi::SharedWavefunction ref_wfn, psi::Options& options, psi:
 
 	// 2. Apply projector to rotate the orbitals
 	if (Pf) {
-		outfile->Printf("\n Find fragment projector Pf ------ \n");
+		outfile->Printf("\n Find fragment projector Pf ------ ");
 		Dimension nmopi = ref_wfn->nmopi();
 		Dimension zeropi = nmopi - nmopi;
 		int nirrep = ref_wfn->nirrep();
@@ -334,40 +336,42 @@ void make_embedding(psi::SharedWavefunction ref_wfn, psi::Options& options, psi:
 		Dimension nrvirpi = mo_space_info->get_dimension("RESTRICTED_UOCC");
 		Dimension frzvpi = mo_space_info->get_dimension("FROZEN_UOCC");
 
-		outfile->Printf("\n MOSpaceInfo read ------ \n");
+		outfile->Printf("\n MOSpaceInfo read ------ ");
 
 		// Define corresponding blocks (slices)
 		nroccpi = nroccpi + frzopi; // Merge frozen and restricted occupied orbitals to take care of initial frozen core
 		Slice occ(zeropi, nroccpi);
 		Slice vir(nroccpi + actv_a, nmopi);
 		Slice actv(nroccpi, nroccpi + actv_a);
+		Slice mo(zeropi, nmopi);
+		SharedMatrix Ca_ori = ref_wfn->Ca();
+
+		// Save original active orbitals
+		SharedMatrix Ca_save = Ca_ori->clone();
 
 		// Transform Pf to MO basis
-		SharedMatrix Ca_ori = ref_wfn->Ca();
 		Pf->transform(Ca_ori);
-
-		outfile->Printf("\n Projector transformed ------ \n");
+		outfile->Printf("\n Projector transformed ------ ");
 
 		// Diagonalize Pf_pq for occ and vir part, respectively.
 		SharedMatrix P_oo = Pf->get_block(occ, occ);
+		P_oo->print();
 		SharedMatrix Uo(new Matrix("Uo", nirrep, nroccpi, nroccpi));
 		SharedVector lo(new Vector("lo", nirrep, nroccpi));
-		P_oo->diagonalize(Uo, lo, descending);
-		lo->print();
+		P_oo->diagonalize(Uo, lo, descending); 
 
 		SharedMatrix P_vv = Pf->get_block(vir, vir);
 		SharedMatrix Uv(new Matrix("Uv", nirrep, nrvirpi, nrvirpi));
 		SharedVector lv(new Vector("lv", nirrep, nrvirpi));
 		P_vv->diagonalize(Uv, lv, descending);
-		lv->print();
 
 		SharedMatrix U_all(new Matrix("U with Pab", nirrep, nmopi, nmopi));
 		U_all->set_block(occ, occ, Uo);
 		U_all->set_block(vir, vir, Uv);
 
 		// Rotate MOs
-		ref_wfn->Ca()->copy(psi::linalg::doublet(Ca_ori, U_all, false, false));
-		outfile->Printf("\n MOs rotated ------ \n");
+		ref_wfn->Ca()->copy(psi::linalg::doublet(Ca_ori, U_all, false, false)); 
+		outfile->Printf("\n MOs rotated ------ ");
 
 		// Based on threshold or num_occ/num_vir, decide the partition
 		std::vector<int> index_A_occ = {};
@@ -379,8 +383,11 @@ void make_embedding(psi::SharedWavefunction ref_wfn, psi::Options& options, psi:
 		if (options.get_str("REFERENCE") == "CASSCF") {
 			for (int i = 0; i < actv_a[0]; ++i) {
 				index_actv.push_back(nroccpi[0] + i);
+				outfile->Printf("\n Active orbital %d keep fixed", nroccpi[0] + i);
 			}
 		}
+
+		int offset_vec = nroccpi[0] + actv_a[0];
 
 		if (options.get_str("CUTOFF_BY") == "THRESHOLD") {
 			for (int i = 0; i < nroccpi[0]; i++) {
@@ -395,12 +402,12 @@ void make_embedding(psi::SharedWavefunction ref_wfn, psi::Options& options, psi:
 			}
 			for (int i = 0; i < nrvirpi[0]; i++) {
 				if (lv->get(0, i) > thresh) {
-					index_A_vir.push_back(i);
+					index_A_vir.push_back(i + offset_vec);
 					outfile->Printf("\n Virtual orbital %d is partitioned to A with eigenvalue %8.8f",
-						i, lv->get(0, i));
+						i + offset_vec, lv->get(0, i));
 				}
 				else {
-					index_B_vir.push_back(i);
+					index_B_vir.push_back(i + offset_vec);
 				}
 			}
 		}
@@ -435,12 +442,12 @@ void make_embedding(psi::SharedWavefunction ref_wfn, psi::Options& options, psi:
 				tmp += lv->get(0, i);
 				cum_l_v = tmp / sum_lv;
 				if (cum_l_v < thresh) {
-					index_A_vir.push_back(i);
+					index_A_vir.push_back(i + offset_vec);
 					outfile->Printf("\n Virtual orbital %d is partitioned to A with cumulative eigenvalue %8.8f",
-						i, cum_l_v);
+						i + offset_vec, cum_l_v);
 				}
 				else {
-					index_B_vir.push_back(i);
+					index_B_vir.push_back(i + offset_vec);
 				}
 			}
 		}
@@ -453,24 +460,23 @@ void make_embedding(psi::SharedWavefunction ref_wfn, psi::Options& options, psi:
 		outfile->Printf("\n Build and semi-canonocalize new orbitals ------ \n");
 		SharedMatrix Ca_tilde(ref_wfn->Ca()->clone());
 
-		// Build and semi-canonicalize BO, AO, AV and BV blocks
-		auto C_bo = semicanonicalize_block(ref_wfn, Ca_tilde, index_B_occ, 0);
-		auto C_ao = semicanonicalize_block(ref_wfn, Ca_tilde, index_A_occ, 0);
-		auto C_av = semicanonicalize_block(ref_wfn, Ca_tilde, index_A_vir, 0);
-		auto C_bv = semicanonicalize_block(ref_wfn, Ca_tilde, index_B_vir, 0);
+		// Build and semi-canonicalize BO, AO, AV and BV blocks from rotated Ca()
+		auto C_bo = semicanonicalize_block(ref_wfn, Ca_tilde, index_B_occ, 0, true);
+		auto C_ao = semicanonicalize_block(ref_wfn, Ca_tilde, index_A_occ, 0, false);
+		auto C_av = semicanonicalize_block(ref_wfn, Ca_tilde, index_A_vir, 0, false);
+		auto C_bv = semicanonicalize_block(ref_wfn, Ca_tilde, index_B_vir, 0, true);
 
+		// Build the active block from original Ca_save
 		SharedMatrix C_A(new Matrix("Active_coeff_block", nirrep, nmopi, actv_a));
-
-		// Build the active block
 		if (options.get_str("REFERENCE") == "CASSCF") {
 			if (options.get_bool("SEMICANON") == true) {
-				// Read active orbitals from original Ca and semi-canonicalize
-				C_A->copy(semicanonicalize_block(ref_wfn, Ca_ori, index_actv, 0));
+				// Read active orbitals from original Ca and semi-canonicalize 
+				C_A->copy(semicanonicalize_block(ref_wfn, Ca_save, index_actv, 0, false));
 			}
 			else {
-				// Read active orbitals from original Ca
+				// Read active orbitals from original Ca and do not semi-canonicalize
 				for (int i = 0; i < actv_a[0]; ++i) {
-					C_A->set_column(0, i, Ca_ori->get_column(0, nroccpi[0] + i));
+					C_A->copy(semicanonicalize_block(ref_wfn, Ca_save, index_actv, 0, true));
 				}
 			}
 		}
@@ -490,9 +496,8 @@ void make_embedding(psi::SharedWavefunction ref_wfn, psi::Options& options, psi:
 			}
 		}
 
-		psi::SharedMatrix Fa = ref_wfn->Fa(); // get AO basis Fock matrix
-		psi::SharedMatrix Fa_mo = Fa->clone();
-		Fa_mo->transform(Ca_Rt);
+		// Transform Fock matrix
+		ref_wfn->Fa()->transform(Ca_Rt);
 
 		// Update both the alpha and beta orbitals
 		ref_wfn->Ca()->copy(Ca_Rt);
@@ -502,13 +507,13 @@ void make_embedding(psi::SharedWavefunction ref_wfn, psi::Options& options, psi:
 		std::map<std::string, std::vector<size_t>> mo_space_map;
 
 		// Frozen docc space
-		size_t freeze_o = static_cast<size_t>(num_Bo + frz_sys_docc); // Add the original frozen core to B
+		size_t freeze_o = static_cast<size_t>(num_Bo + frz_sys_docc); // Add the additional frozen core to B
 		std::vector<size_t> fo_vec;
 		fo_vec.push_back(freeze_o);
 		mo_space_map["FROZEN_DOCC"] = fo_vec;
 
 		// Restricted docc space
-		size_t ro = static_cast<size_t>(num_Ao);
+		size_t ro = static_cast<size_t>(num_Ao - frz_sys_docc);
 		std::vector<size_t> ro_vec;
 		ro_vec.push_back(ro);
 		mo_space_map["RESTRICTED_DOCC"] = ro_vec;
@@ -520,7 +525,7 @@ void make_embedding(psi::SharedWavefunction ref_wfn, psi::Options& options, psi:
 		mo_space_map["ACTIVE"] = a_vec;
 
 		// Restricted uocc space
-		size_t rv = static_cast<size_t>(num_Av);
+		size_t rv = static_cast<size_t>(num_Av - frz_sys_uocc);
 		std::vector<size_t> rv_vec;
 		rv_vec.push_back(rv);
 		mo_space_map["RESTRICTED_UOCC"] = rv_vec;
@@ -533,18 +538,20 @@ void make_embedding(psi::SharedWavefunction ref_wfn, psi::Options& options, psi:
 
 		// Write new MOSpaceInfo
 		std::vector<size_t> reorder;
-		mo_space_info = make_mo_space_info_map(ref_wfn, mo_space_map, reorder);
+		std::shared_ptr<MOSpaceInfo> mo_space_info_emb = make_mo_space_info_map(ref_wfn, mo_space_map, reorder);
 
 		// Print summary of embedding MO spaces
-		outfile->Printf("    ============================\n");
+		outfile->Printf("\n    ============================");
 		outfile->Printf("\n  ==> EMBEDDING MO space Information <==");
-		outfile->Printf("\n    frozen_docc     = [%d]", mo_space_info->get_dimension("FROZEN_DOCC")[0]);
-		outfile->Printf("\n    restricted_docc = [%d]", mo_space_info->get_dimension("RESTRICTED_DOCC")[0]);
-		outfile->Printf("\n    active          = [%d]", mo_space_info->get_dimension("ACTIVE")[0]);
-		outfile->Printf("\n    restricted_uocc = [%d]", mo_space_info->get_dimension("RESTRICTED_UOCC")[0]);
-		outfile->Printf("\n    frozen_uocc     = [%d]", mo_space_info->get_dimension("FROZEN_UOCC")[0]);
+		outfile->Printf("\n    B_docc     = [%d]", mo_space_info_emb->get_dimension("FROZEN_DOCC")[0]);
+		outfile->Printf("\n    A_docc     = [%d]", mo_space_info_emb->get_dimension("RESTRICTED_DOCC")[0]);
+		outfile->Printf("\n    active     = [%d]", mo_space_info_emb->get_dimension("ACTIVE")[0]);
+		outfile->Printf("\n    A_uocc     = [%d]", mo_space_info_emb->get_dimension("RESTRICTED_UOCC")[0]);
+		outfile->Printf("\n    B_uocc     = [%d]", mo_space_info_emb->get_dimension("FROZEN_UOCC")[0]);
 		outfile->Printf("\n");
 		outfile->Printf("    ============================\n");
+
+		return mo_space_info_emb;
 	}
 	else {
 		throw PSIEXCEPTION("No projector (matrix) found!");
@@ -552,7 +559,7 @@ void make_embedding(psi::SharedWavefunction ref_wfn, psi::Options& options, psi:
 }
 
 psi::SharedMatrix semicanonicalize_block(psi::SharedWavefunction ref_wfn, psi::SharedMatrix C_tilde,
-                                         std::vector<int>& mos, int offset) {
+                                         std::vector<int>& mos, int offset, bool prevent_rotate) {
     int nso = ref_wfn->nso();
     int nmo_block = mos.size();
     auto C_block = std::make_shared<psi::Matrix>("C block", nso, nmo_block);
@@ -565,14 +572,19 @@ psi::SharedMatrix semicanonicalize_block(psi::SharedWavefunction ref_wfn, psi::S
         }
         mo_count += 1;
     }
-    // compute (C_block)^T F C_block
-    auto Foi = psi::linalg::triplet(C_block, ref_wfn->Fa(), C_block, true, false, false);
+	if (!prevent_rotate) {
+		// compute (C_block)^T F C_block
+		auto Foi = psi::linalg::triplet(C_block, ref_wfn->Fa(), C_block, true, false, false);
 
-    auto U_block = std::make_shared<psi::Matrix>("U block", nmo_block, nmo_block);
-    auto epsilon_block = std::make_shared<Vector>("epsilon block", nmo_block);
-    Foi->diagonalize(U_block, epsilon_block);
-    auto C_block_prime = psi::linalg::doublet(C_block, U_block);
-    return C_block_prime;
+		auto U_block = std::make_shared<psi::Matrix>("U block", nmo_block, nmo_block);
+		auto epsilon_block = std::make_shared<Vector>("epsilon block", nmo_block);
+		Foi->diagonalize(U_block, epsilon_block);
+		auto C_block_prime = psi::linalg::doublet(C_block, U_block);
+		return C_block_prime;
+	}
+	else {
+		return C_block;
+	}
 }
 } // namespace forte
 

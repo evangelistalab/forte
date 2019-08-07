@@ -292,11 +292,12 @@ def orbital_projection(ref_wfn, options, mo_space_info):
     #Apply the projector to rotate orbitals
     if options.get_bool("AVAS"):
         forte.make_avas(ref_wfn, options, ps)
+        return mo_space_info
 
     # Create the fragment(embedding) projector and apply to rotate orbitals
     if options.get_bool("EMBEDDING"):
         pf = forte.make_fragment_projector(ref_wfn, options)
-        forte.make_embedding(ref_wfn, options, pf, mo_space_info)
+        return forte.make_embedding(ref_wfn, options, pf, mo_space_info)
 
 
 def run_forte(name, **kwargs):
@@ -342,7 +343,7 @@ def run_forte(name, **kwargs):
     mo_space_info = forte.make_mo_space_info(ref_wfn, forte.forte_options)
 
     # Call methods that project the orbitals (AVAS, embedding)
-    orbital_projection(ref_wfn, options, mo_space_info)
+    mo_space_info = orbital_projection(ref_wfn, options, mo_space_info)
 
     state = forte.make_state_info_from_psi_wfn(ref_wfn)
     scf_info = forte.SCFInfo(ref_wfn)
