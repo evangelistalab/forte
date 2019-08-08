@@ -134,20 +134,26 @@ void make_embedding(psi::SharedWavefunction ref_wfn, psi::Options& options, psi:
 
 		// Diagonalize Pf_pq for occ and vir part, respectively.
 		SharedMatrix P_oo = Pf->get_block(occ, occ);
+                P_oo->print();
 		SharedMatrix Uo(new Matrix("Uo", nirrep, nroccpi, nroccpi));
 		SharedVector lo(new Vector("lo", nirrep, nroccpi));
 		P_oo->diagonalize(Uo, lo, descending);
-		// lo->print();
+		lo->print();
 
 		SharedMatrix P_vv = Pf->get_block(vir, vir);
 		SharedMatrix Uv(new Matrix("Uv", nirrep, nrvirpi, nrvirpi));
 		SharedVector lv(new Vector("lv", nirrep, nrvirpi));
 		P_vv->diagonalize(Uv, lv, descending);
-		// lv->print();
+		lv->print();
 
 		SharedMatrix U_all(new Matrix("U with Pab", nirrep, nmopi, nmopi));
 		U_all->set_block(occ, occ, Uo);
 		U_all->set_block(vir, vir, Uv);
+
+		outfile->Printf("\n check original MOs \n");
+		Ca_t->print();
+		outfile->Printf("\n check U_all \n");
+		U_all->print();
 
 		// Based on threshold or num_occ/num_vir, decide the partition (change to a function soon)
 		std::vector<int> index_trace_occ = {};
@@ -245,6 +251,8 @@ void make_embedding(psi::SharedWavefunction ref_wfn, psi::Options& options, psi:
 
 		// Rotate MO coeffs
 		ref_wfn->Ca()->copy(Matrix::doublet(Ca_t, U_all, false, false)); // Structure becomes AO-BO-0-AV-BV
+		outfile->Printf("\n check rotated MOs \n");
+		ref_wfn->Ca()->print();
 
 		if (options.get_str("REFERENCE") == "CASSCF" || options.get_str("REFERENCE") == "CINOACTV") {
 			// SharedMatrix Ua(new Matrix("Uv", nirrep, actv_a, actv_a));
@@ -350,9 +358,12 @@ void make_embedding(psi::SharedWavefunction ref_wfn, psi::Options& options, psi:
 				Fa_loc->set_block(actv, actv, Fa_AAAA);
 			}
 
+                        Fa_loc->print();
+
 			ref_wfn->Fa()->copy(Fa_loc);
 
 			ref_wfn->Ca()->copy(Matrix::doublet(Ca_Rt, U_all_2, false, false));
+                        ref_wfn->Ca()->print();
 		}
 
 		//Apply frozen system core/virtual

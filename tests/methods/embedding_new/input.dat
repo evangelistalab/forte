@@ -45,15 +45,15 @@ set {
   e_convergence          10
   d_convergence          7
   docc                   [32]
-  restricted_docc        [23]
+  restricted_docc        [31]
   active                 [2]
   mcscf_maxiter          100
   mcscf_r_convergence    10
   mcscf_e_convergence    10
   mcscf_diis_start       5
-  freeze_core            true
-  frozen_docc            [8]
-  frozen_uocc            [0]
+#  freeze_core            true
+#  frozen_docc            [8]
+#  frozen_uocc            [0]
 }
 
 E, wfn_cas = energy('casscf', return_wfn = True)
