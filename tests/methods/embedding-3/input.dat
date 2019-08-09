@@ -40,13 +40,13 @@ compare_values(refscf,variable("CURRENT ENERGY"),8,"SCF energy")
 
 set forte {
   embedding true
-  reference hf
-  CUTOFF_BY threshold
-  threshold 0.5
-  semicanon true
+  embedding_reference hf
+  embedding_cutoff_method threshold
+  embedding_threshold 0.5
+  embedding_semicanonicalize_active true
   restricted_docc        [8]
   active                 [2]
-  frozen_sys_docc        2
+  embedding_adjust_B_docc        2
   active_space_solver  fci
   correlation_solver   dsrg-mrpt2
   root_sym           0

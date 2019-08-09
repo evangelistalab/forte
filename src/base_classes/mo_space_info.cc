@@ -27,6 +27,8 @@
  * @END LICENSE
  */
 
+#include <iomanip>
+
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/libpsi4util/process.h"
@@ -316,9 +318,8 @@ MOSpaceInfo::read_mo_space_from_map(const std::string& space,
             read = true;
         } else {
             throw std::runtime_error(
-                "\n  The size of space \"%s\" (%d) does not match the number of "
-                "irreducible representations (% zu).",
-                space.c_str(), dim.size(), nirrep_);
+                "\n  The size of space vector does not match the number of "
+                "irreducible representations.");
         }
     }
     SpaceInfo space_info(space_dim, vec_mo_info);

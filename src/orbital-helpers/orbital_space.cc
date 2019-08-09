@@ -312,11 +312,11 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
 
     // 1. Get necessary information
     outfile->Printf("\n Reading options ------ \n");
-    double thresh = options.get_double("THRESHOLD");
+    double thresh = options.get_double("EMBEDDING_THRESHOLD");
 
     // Additional input parameters used to control numbers of orbitals in A/B space
-    int frz_sys_docc = options.get_int("FROZEN_SYS_DOCC");
-    int frz_sys_uocc = options.get_int("FROZEN_SYS_UOCC");
+    int frz_sys_docc = options.get_int("EMBEDDING_ADJUST_B_DOCC");
+    int frz_sys_uocc = options.get_int("EMBEDDING_ADJUST_B_UOCC");
 
     std::shared_ptr<PSIO> psio(_default_psio_lib_);
     if (!ref_wfn)
@@ -383,7 +383,7 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
         std::vector<int> index_B_vir = {};
         std::vector<int> index_actv = {};
 
-        if (options.get_str("REFERENCE") == "CASSCF") {
+        if (options.get_str("EMBEDDING_REFERENCE") == "CASSCF") {
             for (int i = 0; i < actv_a[0]; ++i) {
                 index_actv.push_back(nroccpi[0] + i);
                 outfile->Printf("\n Active orbital %d keep fixed", nroccpi[0] + i);
@@ -392,7 +392,7 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
 
         int offset_vec = nroccpi[0] + actv_a[0];
 
-        if (options.get_str("CUTOFF_BY") == "THRESHOLD") {
+        if (options.get_str("EMBEDDING_CUTOFF_METHOD") == "THRESHOLD") {
             for (int i = 0; i < nroccpi[0]; i++) {
                 if (lo->get(0, i) > thresh) {
                     index_A_occ.push_back(i);
@@ -415,7 +415,7 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
             }
         }
 
-        if (options.get_str("CUTOFF_BY") == "CUM_THRESHOLD") {
+        if (options.get_str("EMBEDDING_CUTOFF_METHOD") == "CUM_THRESHOLD") {
             double tmp = 0.0;
             double sum_lo = 0.0;
             double sum_lv = 0.0;
@@ -471,8 +471,8 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
 
         // Build the active block from original Ca_save
         SharedMatrix C_A(new Matrix("Active_coeff_block", nirrep, nmopi, actv_a));
-        if (options.get_str("REFERENCE") == "CASSCF") {
-            if (options.get_bool("SEMICANON") == true) {
+        if (options.get_str("EMBDDING_REFERENCE") == "CASSCF") {
+            if (options.get_bool("EMBEDDING_SEMICANONICALIZE_ACTIVE") == true) {
                 // Read active orbitals from original Ca and semi-canonicalize
                 C_A->copy(semicanonicalize_block(ref_wfn, Ca_save, index_actv, 0, false));
             } else {
@@ -543,7 +543,7 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
         // Write new MOSpaceInfo
         std::vector<size_t> reorder;
         std::shared_ptr<MOSpaceInfo> mo_space_info_emb =
-            make_mo_space_info_map(ref_wfn, mo_space_map, reorder);
+            make_mo_space_info_from_map(ref_wfn, mo_space_map, reorder);
 
         // Print summary of embedding MO spaces
         outfile->Printf("\n    ============================");
