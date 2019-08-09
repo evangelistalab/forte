@@ -471,7 +471,7 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
 
         // Build the active block from original Ca_save
         SharedMatrix C_A(new Matrix("Active_coeff_block", nirrep, nmopi, actv_a));
-        if (options.get_str("EMBDDING_REFERENCE") == "CASSCF") {
+        if (options.get_str("EMBEDDING_REFERENCE") == "CASSCF") {
             if (options.get_bool("EMBEDDING_SEMICANONICALIZE_ACTIVE") == true) {
                 // Read active orbitals from original Ca and semi-canonicalize
                 C_A->copy(semicanonicalize_block(ref_wfn, Ca_save, index_actv, 0, false));
