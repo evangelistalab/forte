@@ -284,7 +284,13 @@ def compute_dsrg_unrelaxed_energy(correlation_solver_type, rdms, scf_info, optio
     return Edsrg, dsrg, Heff_actv_implemented
 
 def orbital_projection(ref_wfn, options, mo_space_info):
-    r"""
+    r"""Functions that pre-rotate orbitals before calculations;
+    Requires a set of reference orbitals and mo_space_info.
+
+    AVAS: an automatic active space selection and projection;
+    Embedding: simple frozen-orbital embedding with the overlap projector.
+
+    Return a mo_space_info (forte::MOSpaceInfo)
     """
     # Create the AO subspace projector
     ps = forte.make_aosubspace_projector(ref_wfn, options)

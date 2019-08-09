@@ -44,41 +44,39 @@ namespace forte {
  * A class to store information about a (system) fragment
  */
 
+class FragmentProjector {
+  public:
+    // ==> Constructors <==
 
-	class FragmentProjector {
-	public:
-		// ==> Constructors <==
+    // Simple constructor
+    FragmentProjector(std::shared_ptr<psi::Molecule> molecule,
+                      std::shared_ptr<psi::BasisSet> basis);
+    // Constructor with minAO
+    // FragmentProjector::FragmentProjector(std::shared_ptr<Molecule> molecule,
+    // std::shared_ptr<BasisSet> minao_basis, 	std::shared_ptr<BasisSet> prime_basis);
 
-		// Simple constructor
-		FragmentProjector(std::shared_ptr<psi::Molecule> molecule, std::shared_ptr<psi::BasisSet> basis);
-		// Constructor with minAO
-		//FragmentProjector::FragmentProjector(std::shared_ptr<Molecule> molecule, std::shared_ptr<BasisSet> minao_basis, 
-		//	std::shared_ptr<BasisSet> prime_basis);
+    // Build projector and return AO basis matrix Pf_AO
+    psi::SharedMatrix build_f_projector(std::shared_ptr<psi::Molecule> molecule,
+                                        std::shared_ptr<psi::BasisSet> basis);
 
-		// Build projector and return AO basis matrix Pf_AO
-		psi::SharedMatrix build_f_projector(std::shared_ptr<psi::Molecule> molecule,
-			std::shared_ptr<psi::BasisSet> basis);
+  private:
+    /// The molecule
+    std::shared_ptr<psi::Molecule> molecule_;
+    /// The AO basis set
+    std::shared_ptr<psi::BasisSet> basis_;
 
+    int nbf_;
 
-	private:
-		/// The molecule
-		std::shared_ptr<psi::Molecule> molecule_;
-		/// The AO basis set
-		std::shared_ptr<psi::BasisSet> basis_;
+    int nbf_A_;
 
-		int nbf_;
+    int natom_A_;
 
-		int nbf_A_;
+    /// The startup function
+    void startup();
+};
 
-		int natom_A_;
+// Helper function
+psi::SharedMatrix make_fragment_projector(psi::SharedWavefunction ref_wfn, psi::Options& options);
 
-		/// The startup function
-		void startup();
-	};
-
-	// Helper function
-        psi::SharedMatrix make_fragment_projector(psi::SharedWavefunction ref_wfn, psi::Options& options);
-
-} //namespace forte
+} // namespace forte
 #endif // _fragment_projector_h_
-

@@ -315,9 +315,10 @@ MOSpaceInfo::read_mo_space_from_map(const std::string& space,
             }
             read = true;
         } else {
-            outfile->Printf("\n  The size of space \"%s\" (%d) does not match the number of "
-                            "irreducible representations (% zu).",
-                            space.c_str(), dim.size(), nirrep_);
+            throw std::runtime_error(
+                "\n  The size of space \"%s\" (%d) does not match the number of "
+                "irreducible representations (% zu).",
+                space.c_str(), dim.size(), nirrep_);
         }
     }
     SpaceInfo space_info(space_dim, vec_mo_info);
@@ -334,9 +335,9 @@ std::shared_ptr<MOSpaceInfo> make_mo_space_info(psi::SharedWavefunction ref_wfn,
 }
 
 std::shared_ptr<MOSpaceInfo>
-make_mo_space_info_map(std::shared_ptr<psi::Wavefunction> ref_wfn,
-                       std::map<std::string, std::vector<size_t>>& mo_space_map,
-                       std::vector<size_t> reorder) {
+make_mo_space_info_from_map(std::shared_ptr<psi::Wavefunction> ref_wfn,
+                            std::map<std::string, std::vector<size_t>>& mo_space_map,
+                            std::vector<size_t> reorder) {
     psi::Dimension nmopi = ref_wfn->nmopi();
     auto mo_space_info = std::make_shared<MOSpaceInfo>(nmopi);
     mo_space_info->set_reorder(reorder);

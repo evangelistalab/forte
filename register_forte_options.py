@@ -119,13 +119,27 @@ def register_mrcino_options(forte_options):
         "or not")
 
 def register_embedding_options(forte_options):
-        forte_options.add_bool("EMBEDDING", False, "Whether to perform embedding partition and projection")
-        forte_options.add_str("CUTOFF_BY", "THRESHOLD", "Cut off by: threshold or number.")
-        forte_options.add_double("THRESHOLD", 0.5, "Projector eigenvalue threshold, 0.5 as default")
-        forte_options.add_str("REFERENCE", "HF", "HF, ROHF, UHF(not implemented), MCSCF, CASSCF")
-        forte_options.add_bool("SEMICANON", True, "Perform semi-canonicalization on active space or not")
-        forte_options.add_int("FROZEN_SYS_DOCC", 0, "Freeze system occ orbitals")
-        forte_options.add_int("FROZEN_SYS_UOCC", 0, "Freeze system vir orbitals")
+    forte_options.add_bool(
+        "EMBEDDING", False, 
+        "Whether to perform embedding partition and projection")
+    forte_options.add_str(
+        "EMBEDDING_CUTOFF_METHOD", "THRESHOLD", 
+        "Cut off by: threshold or cum_threshold.")
+    forte_options.add_double(
+        "EMBEDDING_THRESHOLD", 0.5, 
+        "Projector eigenvalue threshold for both simple and cumulative threshold")
+    forte_options.add_str(
+        "EMBEDDING_REFERENCE", "CASSCF", 
+        "HF for any reference without active, CASSCF for any reference with an active space.")
+    forte_options.add_bool(
+        "EMBEDDING_SEMICANONICALIZE_ACTIVE", True, 
+        "Perform semi-canonicalization on active space or not")
+    forte_options.add_int(
+        "EMBEDDING_ADJUST_B_DOCC", 0, 
+        "Adjust number of occupied orbitals between A and B, +: move to B, -: move to A")
+    forte_options.add_int(
+        "EMBEDDING_ADJUST_B_UOCC", 0,
+        "Adjust number of virtual orbitals between A and B, +: move to B, -: move to A")
 
 def register_mo_space_info_options(forte_options):
     forte_options.add_array(
