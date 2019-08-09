@@ -20,6 +20,12 @@
 //    return (x >> 60) & 1;
 //}
 
+/// a function to accumulate hash values of 64 bit unsigned integers
+/// based on boost/functional/hash/hash.hpp
+inline void hash_combine_uint64(uint64_t& seed, size_t value) {
+    seed ^= value + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+}
+
 /**
  * @brief Count the number of bit set to 1 in a uint64_t
  * @param x the uint64_t integer to test

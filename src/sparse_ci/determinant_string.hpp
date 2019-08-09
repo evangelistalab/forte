@@ -35,7 +35,7 @@ template <size_t N> class StringImpl {
 
     StringImpl() {}
 
-    bool get_bit(size_t pos) const { return this->getword(pos) & maskbit(pos); }
+    bool get_bit(size_t pos) const { return getword(pos) & maskbit(pos); }
 
     void set_word(size_t pos, word_t word) { words_[pos] = word; }
 
@@ -45,7 +45,7 @@ template <size_t N> class StringImpl {
         // with constexpr we compile only one of these cases
         size_t count = 0;
         // count all the preceeding bits only if we are looking past the first word
-        if (n >= bits_per_word) {
+        if (static_cast<size_t>(n) >= bits_per_word) {
             size_t last_full_word = whichword(n);
             for (size_t k = 0; k < last_full_word; ++k) {
                 count += ui64_bit_count(words_[k]);
@@ -90,7 +90,7 @@ template <size_t N> class StringImpl {
     /// Comparison operator
     bool operator==(const StringImpl<N>& lhs) const {
         for (size_t n = 0; n < nwords_; n++) {
-            if (this->words_[n] != lhs.words_[n])
+            if (words_[n] != lhs.words_[n])
                 return false;
         }
         return true;
@@ -100,19 +100,19 @@ template <size_t N> class StringImpl {
     bool operator<(const StringImpl<N>& lhs) const {
         for (size_t n = nwords_; n > 1;) {
             --n;
-            if (this->words_[n] > lhs.words_[n])
+            if (words_[n] > lhs.words_[n])
                 return false;
-            if (this->words_[n] < lhs.words_[n])
+            if (words_[n] < lhs.words_[n])
                 return true;
         }
-        return this->words_[0] < lhs.words_[0];
+        return words_[0] < lhs.words_[0];
     }
 
     /// Bitwise OR operator (|)
     StringImpl<N> operator|(const StringImpl<N>& lhs) const {
         StringImpl<N> result;
         for (size_t n = 0; n < nwords_; n++) {
-            result.words_[n] = this->words_[n] | lhs.words_[n];
+            result.words_[n] = words_[n] | lhs.words_[n];
         }
         return result;
     }
@@ -121,7 +121,7 @@ template <size_t N> class StringImpl {
     StringImpl<N> operator^(const StringImpl<N>& lhs) const {
         StringImpl<N> result;
         for (size_t n = 0; n < nwords_; n++) {
-            result.words_[n] = this->words_[n] ^ lhs.words_[n];
+            result.words_[n] = words_[n] ^ lhs.words_[n];
         }
         return result;
     }
@@ -129,7 +129,7 @@ template <size_t N> class StringImpl {
     /// Bitwise XOR operator (^)
     StringImpl<N> operator^=(const StringImpl<N>& lhs) {
         for (size_t n = 0; n < nwords_; n++) {
-            this->words_[n] ^= lhs.words_[n];
+            words_[n] ^= lhs.words_[n];
         }
         return *this;
     }
@@ -138,7 +138,7 @@ template <size_t N> class StringImpl {
     StringImpl<N> operator&(const StringImpl<N>& lhs) const {
         StringImpl<N> result;
         for (size_t n = 0; n < nwords_; n++) {
-            result.words_[n] = this->words_[n] & lhs.words_[n];
+            result.words_[n] = words_[n] & lhs.words_[n];
         }
         return result;
     }
@@ -147,7 +147,7 @@ template <size_t N> class StringImpl {
     StringImpl<N> operator&=(const StringImpl<N>& lhs) {
         StringImpl<N> result;
         for (size_t n = 0; n < nwords_; n++) {
-            this->words_[n] &= lhs.words_[n];
+            words_[n] &= lhs.words_[n];
         }
         return result;
     }
@@ -164,8 +164,8 @@ template <size_t N> class StringImpl {
 
     void clear_lowest_one() {
         for (size_t n = 0; n < nwords_; n++) {
-            if (this->words_[n] != uint64_t(0)) {
-                this->words_[n] = clear_lowest_one_bit(this->words_[n]);
+            if (words_[n] != uint64_t(0)) {
+                words_[n] = clear_lowest_one_bit(words_[n]);
                 return;
             }
         }
