@@ -57,11 +57,10 @@ psi::SharedMatrix make_fragment_projector(SharedWavefunction wfn, Options& optio
                            "for embedding!");
     }
     outfile->Printf(
-        "\n The input molecule have %d fragments, assigning the first fragment as system! \n",
+        "\n The input molecule has %d fragments, treating the first fragment as the system! \n",
         nfrag);
 
     std::shared_ptr<BasisSet> prime_basis = wfn->basisset();
-    // std::shared_ptr<BasisSet> minao_basis = wfn->get_basisset("MINAO_BASIS");
 
     // Create a fragmentprojector object
     FragmentProjector FP(molecule, prime_basis);
