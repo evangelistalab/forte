@@ -80,16 +80,14 @@ FragmentProjector::FragmentProjector(std::shared_ptr<Molecule> molecule,
 
 void FragmentProjector::startup() {
 
-    std::vector<int> none_list = {};
-    std::vector<int> sys_list = {0};
-    std::vector<int> env_list = {1};
+    std::vector<int> sys_list = {0};  // the first fragment in the input is the system
+    std::vector<int> ghost_list = {}; // leave empty to include no fragments with ghost atoms
 
-    std::shared_ptr<Molecule> mol_sys = molecule_->extract_subsets(sys_list, none_list);
-    std::shared_ptr<Molecule> mol_env = molecule_->extract_subsets(env_list, none_list);
+    // extract the sys molecule objects
+    std::shared_ptr<Molecule> mol_sys = molecule_->extract_subsets(sys_list, ghost_list);
+
     outfile->Printf("\n System Fragment \n");
     mol_sys->print();
-    // outfile->Printf("\n Environment Fragment(s) \n");
-    // mol_env->print();
 
     nbf_ = basis_->nbf();
     outfile->Printf("\n number of basis on all atoms: %d", nbf_);
@@ -103,10 +101,8 @@ void FragmentProjector::startup() {
             count_basis += 1;
         }
     }
-    outfile->Printf("\n number of basis in \"system\": %d", count_basis);
+    outfile->Printf("\n number of basis in the system fragment: %d", count_basis);
     nbf_A_ = count_basis;
-
-    // Create fragment slice (0 -> nbf_A, AA block)
 }
 
 SharedMatrix FragmentProjector::build_f_projector(std::shared_ptr<Molecule> molecule,
@@ -125,15 +121,15 @@ SharedMatrix FragmentProjector::build_f_projector(std::shared_ptr<Molecule> mole
 
     Slice fragA(A_begin, A_end);
 
-    // Construct S_A
+    // Construct the system portion of S (S_A)
     SharedMatrix S_A = S_nn->get_block(fragA, fragA);
 
-    // Construct S_A^-1 in n*n size
+    // Construct S_A^-1 and store it in a matrix of size nbf x nbf
     S_A->general_invert();
     SharedMatrix S_A_nn(new Matrix("S system in fullsize", nbf_, nbf_));
     S_A_nn->set_block(fragA, fragA, S_A);
 
-    // Evaluate AO basis projector
+    // Evaluate AO basis projector  P = S^T (S_A)^{-1} S
     S_A_nn->transform(S_nn);
 
     return S_A_nn;

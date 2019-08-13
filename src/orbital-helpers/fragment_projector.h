@@ -65,10 +65,11 @@ class FragmentProjector {
     /// The AO basis set
     std::shared_ptr<psi::BasisSet> basis_;
 
+    /// Total number of basis functions (sys + env)
     int nbf_;
-
+    /// Number of basis functions in the system
     int nbf_A_;
-
+    /// Number of atoms in the system
     int natom_A_;
 
     /// The startup function

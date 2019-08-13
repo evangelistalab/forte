@@ -38,6 +38,9 @@
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libpsio/psio.hpp"
 
+#include "helpers/helpers.h"
+#include "helpers/printing.h"
+
 #include "orbital_space.h"
 
 using namespace psi;
@@ -308,10 +311,16 @@ void make_avas(psi::SharedWavefunction ref_wfn, psi::Options& options, psi::Shar
 std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi::Options& options,
                                             psi::SharedMatrix Pf,
                                             std::shared_ptr<MOSpaceInfo> mo_space_info) {
-    outfile->Printf("\n ------ Orbital Localization and Embedding ------ \n");
+    print_h2("Orbital Localization and Embedding");
+
+    if (not ref_wfn)
+        throw PSIEXCEPTION("make_embedding: SCF has not been run yet!");
+
+    if (not Pf) {
+        throw PSIEXCEPTION("make_embedding: No projector (matrix) found!");
+    }
 
     // 1. Get necessary information
-    outfile->Printf("\n Reading options ------ \n");
     double thresh = options.get_double("EMBEDDING_THRESHOLD");
 
     // Additional input parameters used to control numbers of orbitals in A/B space
@@ -319,251 +328,249 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
     int frz_sys_uocc = options.get_int("EMBEDDING_ADJUST_B_UOCC");
 
     std::shared_ptr<PSIO> psio(_default_psio_lib_);
-    if (!ref_wfn)
-        throw PSIEXCEPTION("SCF has not been run yet!");
+
+    Dimension nmopi = ref_wfn->nmopi();
+    Dimension zeropi = nmopi - nmopi;
+    int nirrep = ref_wfn->nirrep();
+    if (nirrep > 1) {
+        throw PSIEXCEPTION("Fragment projection works only without symmetry! (symmetry C1)");
+    }
 
     // 2. Apply projector to rotate the orbitals
-    if (Pf) {
-        outfile->Printf("\n Find fragment projector Pf ------ ");
-        Dimension nmopi = ref_wfn->nmopi();
-        Dimension zeropi = nmopi - nmopi;
-        int nirrep = ref_wfn->nirrep();
-        if (nirrep > 1) {
-            throw PSIEXCEPTION("Fragment projection works only without symmetry! (symmetry C1)");
+
+    // Get information of rocc, actv and rvir from MOSpaceInfo
+    Dimension frzopi = mo_space_info->get_dimension("FROZEN_DOCC");
+    Dimension nroccpi = mo_space_info->get_dimension("RESTRICTED_DOCC");
+    Dimension actv_a = mo_space_info->get_dimension("ACTIVE");
+    Dimension nrvirpi = mo_space_info->get_dimension("RESTRICTED_UOCC");
+    Dimension frzvpi = mo_space_info->get_dimension("FROZEN_UOCC");
+
+    // Define corresponding blocks (slices)
+    nroccpi = nroccpi + frzopi; // Merge frozen and restricted occupied orbitals to take care of
+                                // initial frozen core
+    Slice occ(zeropi, nroccpi);
+    Slice vir(nroccpi + actv_a, nmopi);
+    Slice actv(nroccpi, nroccpi + actv_a);
+    Slice mo(zeropi, nmopi);
+    SharedMatrix Ca_ori = ref_wfn->Ca();
+
+    // Save original active orbitals
+    SharedMatrix Ca_save = Ca_ori->clone();
+
+    // Transform Pf to MO basis
+    Pf->transform(Ca_ori);
+
+    // Diagonalize Pf_pq for occ and vir space, respectively.
+    SharedMatrix P_oo = Pf->get_block(occ, occ);
+    SharedMatrix Uo(new Matrix("Uo", nirrep, nroccpi, nroccpi));
+    SharedVector lo(new Vector("lo", nirrep, nroccpi));
+    P_oo->diagonalize(Uo, lo, descending);
+
+    SharedMatrix P_vv = Pf->get_block(vir, vir);
+    SharedMatrix Uv(new Matrix("Uv", nirrep, nrvirpi, nrvirpi));
+    SharedVector lv(new Vector("lv", nirrep, nrvirpi));
+    P_vv->diagonalize(Uv, lv, descending);
+
+    SharedMatrix U_all(new Matrix("U with Pab", nirrep, nmopi, nmopi));
+    U_all->set_block(occ, occ, Uo);
+    U_all->set_block(vir, vir, Uv);
+
+    // Rotate MOs
+    ref_wfn->Ca()->copy(psi::linalg::doublet(Ca_ori, U_all, false, false));
+
+    // Based on threshold or num_occ/num_vir, decide the partition
+    std::vector<int> index_A_occ = {};
+    std::vector<int> index_A_vir = {};
+    std::vector<int> index_B_occ = {};
+    std::vector<int> index_B_vir = {};
+    std::vector<int> index_actv = {};
+
+    if (options.get_str("EMBEDDING_REFERENCE") == "CASSCF") {
+        for (int i = 0; i < actv_a[0]; ++i) {
+            index_actv.push_back(nroccpi[0] + i);
+            //                outfile->Printf("\n Active orbital %d keep fixed", nroccpi[0] +
+            //                i);
         }
-
-        // Get information of rocc, actv and rvir from MOSpaceInfo
-        Dimension frzopi = mo_space_info->get_dimension("FROZEN_DOCC");
-        Dimension nroccpi = mo_space_info->get_dimension("RESTRICTED_DOCC");
-        Dimension actv_a = mo_space_info->get_dimension("ACTIVE");
-        Dimension nrvirpi = mo_space_info->get_dimension("RESTRICTED_UOCC");
-        Dimension frzvpi = mo_space_info->get_dimension("FROZEN_UOCC");
-
-        outfile->Printf("\n MOSpaceInfo read ------ ");
-
-        // Define corresponding blocks (slices)
-        nroccpi = nroccpi + frzopi; // Merge frozen and restricted occupied orbitals to take care of
-                                    // initial frozen core
-        Slice occ(zeropi, nroccpi);
-        Slice vir(nroccpi + actv_a, nmopi);
-        Slice actv(nroccpi, nroccpi + actv_a);
-        Slice mo(zeropi, nmopi);
-        SharedMatrix Ca_ori = ref_wfn->Ca();
-
-        // Save original active orbitals
-        SharedMatrix Ca_save = Ca_ori->clone();
-
-        // Transform Pf to MO basis
-        Pf->transform(Ca_ori);
-        outfile->Printf("\n Projector transformed ------ ");
-
-        // Diagonalize Pf_pq for occ and vir space, respectively.
-        SharedMatrix P_oo = Pf->get_block(occ, occ);
-        SharedMatrix Uo(new Matrix("Uo", nirrep, nroccpi, nroccpi));
-        SharedVector lo(new Vector("lo", nirrep, nroccpi));
-        P_oo->diagonalize(Uo, lo, descending);
-
-        SharedMatrix P_vv = Pf->get_block(vir, vir);
-        SharedMatrix Uv(new Matrix("Uv", nirrep, nrvirpi, nrvirpi));
-        SharedVector lv(new Vector("lv", nirrep, nrvirpi));
-        P_vv->diagonalize(Uv, lv, descending);
-
-        SharedMatrix U_all(new Matrix("U with Pab", nirrep, nmopi, nmopi));
-        U_all->set_block(occ, occ, Uo);
-        U_all->set_block(vir, vir, Uv);
-
-        // Rotate MOs
-        ref_wfn->Ca()->copy(psi::linalg::doublet(Ca_ori, U_all, false, false));
-        outfile->Printf("\n MOs rotated ------ ");
-
-        // Based on threshold or num_occ/num_vir, decide the partition
-        std::vector<int> index_A_occ = {};
-        std::vector<int> index_A_vir = {};
-        std::vector<int> index_B_occ = {};
-        std::vector<int> index_B_vir = {};
-        std::vector<int> index_actv = {};
-
-        if (options.get_str("EMBEDDING_REFERENCE") == "CASSCF") {
-            for (int i = 0; i < actv_a[0]; ++i) {
-                index_actv.push_back(nroccpi[0] + i);
-                outfile->Printf("\n Active orbital %d keep fixed", nroccpi[0] + i);
-            }
-        }
-
-        int offset_vec = nroccpi[0] + actv_a[0];
-
-        if (options.get_str("EMBEDDING_CUTOFF_METHOD") == "THRESHOLD") {
-            for (int i = 0; i < nroccpi[0]; i++) {
-                if (lo->get(0, i) > thresh) {
-                    index_A_occ.push_back(i);
-                    outfile->Printf(
-                        "\n Occupied orbital %d is partitioned to A with eigenvalue %8.8f", i,
-                        lo->get(0, i));
-                } else {
-                    index_B_occ.push_back(i);
-                }
-            }
-            for (int i = 0; i < nrvirpi[0]; i++) {
-                if (lv->get(0, i) > thresh) {
-                    index_A_vir.push_back(i + offset_vec);
-                    outfile->Printf(
-                        "\n Virtual orbital %d is partitioned to A with eigenvalue %8.8f",
-                        i + offset_vec, lv->get(0, i));
-                } else {
-                    index_B_vir.push_back(i + offset_vec);
-                }
-            }
-        }
-
-        if (options.get_str("EMBEDDING_CUTOFF_METHOD") == "CUM_THRESHOLD") {
-            double tmp = 0.0;
-            double sum_lo = 0.0;
-            double sum_lv = 0.0;
-            for (int i = 0; i < nroccpi[0]; i++) {
-                sum_lo += lo->get(0, i);
-            }
-            for (int i = 0; i < nrvirpi[0]; i++) {
-                sum_lv += lv->get(0, i);
-            }
-
-            double cum_l_o = 0.0;
-            for (int i = 0; i < nroccpi[0]; i++) {
-                tmp += lo->get(0, i);
-                cum_l_o = tmp / sum_lo;
-                if (cum_l_o < thresh) {
-                    index_A_occ.push_back(i);
-                    outfile->Printf("\n Occupied orbital %d is partitioned to A with cumulative "
-                                    "eigenvalue %8.8f",
-                                    i, cum_l_o);
-                } else {
-                    index_B_occ.push_back(i);
-                }
-            }
-            tmp = 0.0;
-            double cum_l_v = 0.0;
-            for (int i = 0; i < nrvirpi[0]; i++) {
-                tmp += lv->get(0, i);
-                cum_l_v = tmp / sum_lv;
-                if (cum_l_v < thresh) {
-                    index_A_vir.push_back(i + offset_vec);
-                    outfile->Printf("\n Virtual orbital %d is partitioned to A with cumulative "
-                                    "eigenvalue %8.8f",
-                                    i + offset_vec, cum_l_v);
-                } else {
-                    index_B_vir.push_back(i + offset_vec);
-                }
-            }
-        }
-
-        int num_Ao = index_A_occ.size();
-        int num_Bo = index_B_occ.size();
-        int num_Av = index_A_vir.size();
-        int num_Bv = index_B_vir.size();
-
-        outfile->Printf("\n Build and semi-canonocalize new orbitals ------ \n");
-        SharedMatrix Ca_tilde(ref_wfn->Ca()->clone());
-
-        // Build and semi-canonicalize BO, AO, AV and BV blocks from rotated Ca()
-        auto C_bo = semicanonicalize_block(ref_wfn, Ca_tilde, index_B_occ, 0, true);
-        auto C_ao = semicanonicalize_block(ref_wfn, Ca_tilde, index_A_occ, 0, false);
-        auto C_av = semicanonicalize_block(ref_wfn, Ca_tilde, index_A_vir, 0, false);
-        auto C_bv = semicanonicalize_block(ref_wfn, Ca_tilde, index_B_vir, 0, true);
-
-        // Build the active block from original Ca_save
-        SharedMatrix C_A(new Matrix("Active_coeff_block", nirrep, nmopi, actv_a));
-        if (options.get_str("EMBEDDING_REFERENCE") == "CASSCF") {
-            if (options.get_bool("EMBEDDING_SEMICANONICALIZE_ACTIVE") == true) {
-                // Read active orbitals from original Ca and semi-canonicalize
-                C_A->copy(semicanonicalize_block(ref_wfn, Ca_save, index_actv, 0, false));
-            } else {
-                // Read active orbitals from original Ca and do not semi-canonicalize
-                for (int i = 0; i < actv_a[0]; ++i) {
-                    C_A->copy(semicanonicalize_block(ref_wfn, Ca_save, index_actv, 0, true));
-                }
-            }
-        }
-
-        // Form new C matrix
-        SharedMatrix Ca_Rt(new Matrix("Ca rotated tilde", nirrep, nmopi, nmopi));
-
-        int offset = 0;
-        for (auto& C_block : {C_bo, C_ao, C_A, C_av, C_bv}) {
-            int nmo_block = C_block->ncol();
-            for (int i = 0; i < nmo_block; ++i) {
-                for (int mu = 0; mu < nmopi[0]; ++mu) {
-                    double value = C_block->get(mu, i);
-                    Ca_Rt->set(mu, offset, value);
-                }
-                offset += 1;
-            }
-        }
-
-        // Transform Fock matrix
-        ref_wfn->Fa()->transform(Ca_Rt);
-
-        // Update both the alpha and beta orbitals
-        ref_wfn->Ca()->copy(Ca_Rt);
-        ref_wfn->Cb()->copy(Ca_Rt);
-
-        // Write new MOSpaceInfo:
-        std::map<std::string, std::vector<size_t>> mo_space_map;
-
-        // Frozen docc space
-        size_t freeze_o =
-            static_cast<size_t>(num_Bo + frz_sys_docc); // Add the additional frozen core to Bo
-        std::vector<size_t> fo_vec;
-        fo_vec.push_back(freeze_o);
-        mo_space_map["FROZEN_DOCC"] = fo_vec;
-
-        // Restricted docc space
-        size_t ro = static_cast<size_t>(num_Ao - frz_sys_docc);
-        std::vector<size_t> ro_vec;
-        ro_vec.push_back(ro);
-        mo_space_map["RESTRICTED_DOCC"] = ro_vec;
-
-        // Active space
-        size_t a = static_cast<size_t>(actv_a[0]);
-        std::vector<size_t> a_vec;
-        a_vec.push_back(a);
-        mo_space_map["ACTIVE"] = a_vec;
-
-        // Restricted uocc space
-        size_t rv = static_cast<size_t>(num_Av - frz_sys_uocc);
-        std::vector<size_t> rv_vec;
-        rv_vec.push_back(rv);
-        mo_space_map["RESTRICTED_UOCC"] = rv_vec;
-
-        // Frozen uocc space
-        size_t freeze_v =
-            static_cast<size_t>(num_Bv + frz_sys_uocc); // Add the additional frozen virtual to Bv
-        std::vector<size_t> fv_vec;
-        fv_vec.push_back(freeze_v);
-        mo_space_map["FROZEN_UOCC"] = fv_vec;
-
-        // Write new MOSpaceInfo
-        std::vector<size_t> reorder;
-        std::shared_ptr<MOSpaceInfo> mo_space_info_emb =
-            make_mo_space_info_from_map(ref_wfn, mo_space_map, reorder);
-
-        // Print summary of embedding MO spaces
-        outfile->Printf("\n    ============================");
-        outfile->Printf("\n  ==> EMBEDDING MO space Information <==");
-        outfile->Printf("\n    B_docc     = [%d]",
-                        mo_space_info_emb->get_dimension("FROZEN_DOCC")[0]);
-        outfile->Printf("\n    A_docc     = [%d]",
-                        mo_space_info_emb->get_dimension("RESTRICTED_DOCC")[0]);
-        outfile->Printf("\n    active     = [%d]", mo_space_info_emb->get_dimension("ACTIVE")[0]);
-        outfile->Printf("\n    A_uocc     = [%d]",
-                        mo_space_info_emb->get_dimension("RESTRICTED_UOCC")[0]);
-        outfile->Printf("\n    B_uocc     = [%d]",
-                        mo_space_info_emb->get_dimension("FROZEN_UOCC")[0]);
-        outfile->Printf("\n");
-        outfile->Printf("    ============================\n");
-
-        return mo_space_info_emb;
-    } else {
-        throw PSIEXCEPTION("No projector (matrix) found!");
+//        std::vector<std::string> actv_str_vec;
+//        std::transform(index_actv.begin(), index_actv.end(), std::back_inserter(actv_str_vec),
+//                       [](const int n) { return std::to_string(n); });
+//        outfile->Printf("\n  Active orbitals: [%s]", to_string(actv_str_vec).c_str());
     }
+
+    int offset_vec = nroccpi[0] + actv_a[0];
+
+    if (options.get_str("EMBEDDING_CUTOFF_METHOD") == "THRESHOLD") {
+        for (int i = 0; i < nroccpi[0]; i++) {
+            if (lo->get(0, i) > thresh) {
+                index_A_occ.push_back(i);
+//                outfile->Printf("\n Occupied orbital %d is partitioned to A with eigenvalue %8.8f",
+//                                i, lo->get(0, i));
+            } else {
+                index_B_occ.push_back(i);
+            }
+        }
+        for (int i = 0; i < nrvirpi[0]; i++) {
+            if (lv->get(0, i) > thresh) {
+                index_A_vir.push_back(i + offset_vec);
+//                outfile->Printf("\n Virtual orbital %d is partitioned to A with eigenvalue %8.8f",
+//                                i + offset_vec, lv->get(0, i));
+            } else {
+                index_B_vir.push_back(i + offset_vec);
+            }
+        }
+    }
+
+    if (options.get_str("EMBEDDING_CUTOFF_METHOD") == "CUM_THRESHOLD") {
+        double tmp = 0.0;
+        double sum_lo = 0.0;
+        double sum_lv = 0.0;
+        for (int i = 0; i < nroccpi[0]; i++) {
+            sum_lo += lo->get(0, i);
+        }
+        for (int i = 0; i < nrvirpi[0]; i++) {
+            sum_lv += lv->get(0, i);
+        }
+
+        double cum_l_o = 0.0;
+        for (int i = 0; i < nroccpi[0]; i++) {
+            tmp += lo->get(0, i);
+            cum_l_o = tmp / sum_lo;
+            if (cum_l_o < thresh) {
+                index_A_occ.push_back(i);
+//                outfile->Printf("\n Occupied orbital %d is partitioned to A with cumulative "
+//                                "eigenvalue %8.8f",
+//                                i, cum_l_o);
+            } else {
+                index_B_occ.push_back(i);
+            }
+        }
+        tmp = 0.0;
+        double cum_l_v = 0.0;
+        for (int i = 0; i < nrvirpi[0]; i++) {
+            tmp += lv->get(0, i);
+            cum_l_v = tmp / sum_lv;
+            if (cum_l_v < thresh) {
+                index_A_vir.push_back(i + offset_vec);
+//                outfile->Printf("\n Virtual orbital %d is partitioned to A with cumulative "
+//                                "eigenvalue %8.8f",
+//                                i + offset_vec, cum_l_v);
+            } else {
+                index_B_vir.push_back(i + offset_vec);
+            }
+        }
+    }
+
+    outfile->Printf("\n    Frozen-orbital Embedding MOs\n");
+    outfile->Printf("    ============================\n");
+    outfile->Printf("      MO     Type    <phi|P|phi>\n");
+    outfile->Printf("    ----------------------------\n");
+    for (int i : index_A_occ) {
+        outfile->Printf("    %4d   %8s   %.6f\n", i + 1, "Occupied", lo->get(i));
+    }
+    for (int i : index_actv) {
+        outfile->Printf("    %4d   %8s      --\n", i + 1, "Active");
+    }
+    for (int i : index_A_vir) {
+        outfile->Printf("    %4d   %8s   %.6f\n", i + 1, "Virtual", lv->get(i - offset_vec));
+    }
+    outfile->Printf("    ============================\n");
+
+    int num_Ao = index_A_occ.size();
+    int num_Bo = index_B_occ.size();
+    int num_Av = index_A_vir.size();
+    int num_Bv = index_B_vir.size();
+
+    SharedMatrix Ca_tilde(ref_wfn->Ca()->clone());
+
+    // Build and semi-canonicalize BO, AO, AV and BV blocks from rotated Ca()
+    auto C_bo = semicanonicalize_block(ref_wfn, Ca_tilde, index_B_occ, 0, true);
+    auto C_ao = semicanonicalize_block(ref_wfn, Ca_tilde, index_A_occ, 0, false);
+    auto C_av = semicanonicalize_block(ref_wfn, Ca_tilde, index_A_vir, 0, false);
+    auto C_bv = semicanonicalize_block(ref_wfn, Ca_tilde, index_B_vir, 0, true);
+
+    // Build the active block from original Ca_save
+    SharedMatrix C_A(new Matrix("Active_coeff_block", nirrep, nmopi, actv_a));
+    if (options.get_str("EMBEDDING_REFERENCE") == "CASSCF") {
+        if (options.get_bool("EMBEDDING_SEMICANONICALIZE_ACTIVE") == true) {
+            // Read active orbitals from original Ca and semi-canonicalize
+            C_A->copy(semicanonicalize_block(ref_wfn, Ca_save, index_actv, 0, false));
+        } else {
+            // Read active orbitals from original Ca and do not semi-canonicalize
+            for (int i = 0; i < actv_a[0]; ++i) {
+                C_A->copy(semicanonicalize_block(ref_wfn, Ca_save, index_actv, 0, true));
+            }
+        }
+    }
+
+    // Form new C matrix
+    SharedMatrix Ca_Rt(new Matrix("Ca rotated tilde", nirrep, nmopi, nmopi));
+
+    int offset = 0;
+    for (auto& C_block : {C_bo, C_ao, C_A, C_av, C_bv}) {
+        int nmo_block = C_block->ncol();
+        for (int i = 0; i < nmo_block; ++i) {
+            for (int mu = 0; mu < nmopi[0]; ++mu) {
+                double value = C_block->get(mu, i);
+                Ca_Rt->set(mu, offset, value);
+            }
+            offset += 1;
+        }
+    }
+
+    // Update both the alpha and beta orbitals
+    ref_wfn->Ca()->copy(Ca_Rt);
+    ref_wfn->Cb()->copy(Ca_Rt);
+
+    // Write a new MOSpaceInfo:
+    std::map<std::string, std::vector<size_t>> mo_space_map;
+
+    // Frozen docc space
+    size_t freeze_o =
+        static_cast<size_t>(num_Bo + frz_sys_docc); // Add the additional frozen core to Bo
+    mo_space_map["FROZEN_DOCC"] = {freeze_o};
+
+    // Restricted docc space
+    size_t ro = static_cast<size_t>(num_Ao - frz_sys_docc);
+    mo_space_map["RESTRICTED_DOCC"] = {ro};
+
+    // Active space
+    size_t a = static_cast<size_t>(actv_a[0]);
+    std::vector<size_t> a_vec;
+    a_vec.push_back(a);
+    mo_space_map["ACTIVE"] = a_vec;
+
+    // Restricted uocc space
+    size_t rv = static_cast<size_t>(num_Av - frz_sys_uocc);
+    std::vector<size_t> rv_vec;
+    rv_vec.push_back(rv);
+    mo_space_map["RESTRICTED_UOCC"] = rv_vec;
+
+    // Frozen uocc space
+    size_t freeze_v =
+        static_cast<size_t>(num_Bv + frz_sys_uocc); // Add the additional frozen virtual to Bv
+    std::vector<size_t> fv_vec;
+    fv_vec.push_back(freeze_v);
+    mo_space_map["FROZEN_UOCC"] = fv_vec;
+
+    // Write new MOSpaceInfo
+    std::vector<size_t> reorder;
+    std::shared_ptr<MOSpaceInfo> mo_space_info_emb =
+        make_mo_space_info_from_map(ref_wfn, mo_space_map, reorder);
+
+    // Print summary of embedding MO spaces
+    outfile->Printf("\n    ============================");
+    outfile->Printf("\n  ==> EMBEDDING MO space Information <==");
+    outfile->Printf("\n    B_docc     = [%d]", mo_space_info_emb->get_dimension("FROZEN_DOCC")[0]);
+    outfile->Printf("\n    A_docc     = [%d]",
+                    mo_space_info_emb->get_dimension("RESTRICTED_DOCC")[0]);
+    outfile->Printf("\n    active     = [%d]", mo_space_info_emb->get_dimension("ACTIVE")[0]);
+    outfile->Printf("\n    A_uocc     = [%d]",
+                    mo_space_info_emb->get_dimension("RESTRICTED_UOCC")[0]);
+    outfile->Printf("\n    B_uocc     = [%d]", mo_space_info_emb->get_dimension("FROZEN_UOCC")[0]);
+    outfile->Printf("\n");
+    outfile->Printf("    ============================\n");
+
+    return mo_space_info_emb;
 }
 
 psi::SharedMatrix semicanonicalize_block(psi::SharedWavefunction ref_wfn, psi::SharedMatrix C_tilde,

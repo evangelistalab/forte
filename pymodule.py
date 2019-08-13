@@ -292,15 +292,18 @@ def orbital_projection(ref_wfn, options, mo_space_info):
 
     Return a mo_space_info (forte::MOSpaceInfo)
     """
+
     # Create the AO subspace projector
     ps = forte.make_aosubspace_projector(ref_wfn, options)
 
     #Apply the projector to rotate orbitals
     if options.get_bool("AVAS"):
+        forte.print_method_banner(["Atomic Valence Active Space (AVAS)", "Chenxi Cai"]);
         forte.make_avas(ref_wfn, options, ps)
 
     # Create the fragment(embedding) projector and apply to rotate orbitals
     if options.get_bool("EMBEDDING"):
+        forte.print_method_banner(["Frozen-orbital Embedding", "Nan He"]);
         pf = forte.make_fragment_projector(ref_wfn, options)
         return forte.make_embedding(ref_wfn, options, pf, mo_space_info)
     else:
