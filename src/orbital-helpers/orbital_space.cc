@@ -501,7 +501,7 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
 	for (int i : index_B_vir) {
 		outfile->Printf("    %4d   %8s   %.6f\n", i + 1, "Virtual", lv->get(i - offset_vec));
 	}
-	for (int i = offset_vec + nvirpi[0]; i < nmopi[0]; ++i) {
+	for (int i = offset_vec + nrvirpi[0]; i < nmopi[0]; ++i) {
 		outfile->Printf("    %4d   %8s      --\n", i + 1, "Frozen virtual");
 	}
 	outfile->Printf("    ============================\n");
@@ -579,7 +579,7 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
 
     // Active space
     size_t a = static_cast<size_t>(actv_a[0]);
-	mo_space_map["ACTIVE"] = { a };
+	mo_space_map["ACTIVE"] = {a};
 
     // Restricted uocc space
     size_t rv = static_cast<size_t>(num_Av - adj_sys_uocc);
