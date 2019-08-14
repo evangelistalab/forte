@@ -93,11 +93,20 @@ void MRDSRG_SO::startup() {
     if (ncomm_3body_ > 2 or ncomm_3body_ <= 0) {
         ncomm_3body_ = foptions_->get_int("DSRG_RSC_NCOMM");
     }
+
     ldsrg3_level_ = 3;
     if (foptions_->get_str("CORR_LEVEL") == "LDSRG3_2")
         ldsrg3_level_ = 2;
     if (foptions_->get_str("CORR_LEVEL") == "LDSRG3_1")
         ldsrg3_level_ = 1;
+
+    ldsrg3_fink_order_ = foptions_->get_int("LDSRG3_FINK_ORDER");
+    if (ldsrg3_fink_order_ < 4) {
+        ldsrg3_fink_order_ = 4;
+    }
+    if (ldsrg3_fink_order_ > 8) {
+        ldsrg3_fink_order_ = 8;
+    }
 
     s_ = foptions_->get_double("DSRG_S");
     if (s_ < 0) {
@@ -415,6 +424,7 @@ void MRDSRG_SO::print_summary() {
 
     if (do_t3_) {
         calculation_info.push_back({"LDSRG3_NCOMM_3BODY", ncomm_3body_});
+        calculation_info.push_back({"LDSRG3_FINK_ORDER", ldsrg3_fink_order_});
         calculation_info_string.push_back({"LDSRG_DDCA", ldsrg3_ddca_ ? "TRUE" : "FALSE"});
     }
 
@@ -811,7 +821,7 @@ void MRDSRG_SO::compute_lhbar() {
         if (do_t3_) {
             timer_on("3-body [H, A]");
             if (na_ == 0) {
-                comm_H_A_3_sr(factor, O1, O2, O3, T1, T2, T3, C0, C1, C2, C3);
+                comm_H_A_3_sr_fink(factor, O1, O2, O3, T1, T2, T3, C0, C1, C2, C3);
                 if (n > ncomm_3body_) {
                     C3.zero();
                 }

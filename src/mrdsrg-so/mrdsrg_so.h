@@ -121,6 +121,8 @@ class MRDSRG_SO : public DynamicCorrelationSolver {
     bool ldsrg3_ddca_;
     /// Truncate 3-body terms to given nested level of commutator
     int ncomm_3body_;
+    /// perturbation order based on Fink Hamiltonian
+    int ldsrg3_fink_order_;
 
     std::vector<std::string> sr_ldsrg3_ddca_blocks();
 
@@ -255,6 +257,10 @@ class MRDSRG_SO : public DynamicCorrelationSolver {
     void comm_H_A_3_sr_2(double factor, BlockedTensor& H1, BlockedTensor& H2, BlockedTensor& T1,
                          BlockedTensor& T2, BlockedTensor& T3, double& C0, BlockedTensor& C1,
                          BlockedTensor& C2);
+    /// Fink order categorized
+    void comm_H_A_3_sr_fink(double factor, BlockedTensor& H1, BlockedTensor& H2, BlockedTensor& H3,
+                            BlockedTensor& T1, BlockedTensor& T2, BlockedTensor& T3, double& C0,
+                            BlockedTensor& C1, BlockedTensor& C2, BlockedTensor& C3);
 
     /// 0.5 * [[H, A]_3, A]_{0,1,2}
     void comm2_l3(BlockedTensor& H1, BlockedTensor& H2, BlockedTensor& T1, BlockedTensor& T2,
