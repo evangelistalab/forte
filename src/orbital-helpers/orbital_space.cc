@@ -353,13 +353,13 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
     //		Ca_ori = Ca_ori->get_block(nmopi, restricted);
     //	}
 
-    // Define corresponding blocks (slices)
+    // Define corresponding blocks (slices), occ slick will start at frzopi
     Slice occ(frzopi, nroccpi + frzopi);
     Slice vir(frzopi + nroccpi + actv_a, nmopi - frzvpi);
     Slice actv(frzopi + nroccpi, frzopi + nroccpi + actv_a);
     Slice mo(zeropi, nmopi);
 
-    // Save original active orbitals
+    // Save original orbitals for frozen and active orbital reconstruction
     SharedMatrix Ca_save = Ca_ori->clone();
 
     // Transform Pf to MO basis
@@ -523,7 +523,7 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
     auto C_av = semicanonicalize_block(ref_wfn, Ca_tilde, index_A_vir, 0, false);
     auto C_bv = semicanonicalize_block(ref_wfn, Ca_tilde, index_B_vir, 0, true);
 
-    // Build the active block from original Ca_save
+    // Copy the active block (if any) from original Ca_save
     SharedMatrix C_A(new Matrix("Active_coeff_block", nirrep, nmopi, actv_a));
     if (options.get_str("EMBEDDING_REFERENCE") == "CASSCF") {
         if (options.get_bool("EMBEDDING_SEMICANONICALIZE_ACTIVE") == true) {
@@ -531,32 +531,30 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
             C_A->copy(semicanonicalize_block(ref_wfn, Ca_save, index_actv, 0, false));
         } else {
             // Read active orbitals from original Ca and do not semi-canonicalize
-            for (int i = 0; i < actv_a[0]; ++i) {
-                C_A->copy(semicanonicalize_block(ref_wfn, Ca_save, index_actv, 0, true));
-            }
+            C_A->copy(semicanonicalize_block(ref_wfn, Ca_save, index_actv, 0, true));
         }
     }
 
-    // Build the frozen blocks from original Ca_save without any changes
+    // Copy the frozen blocks (if any) from original Ca_save without any changes
     SharedMatrix C_Fo(new Matrix("Fo_coeff_block", nirrep, nmopi, frzopi));
     if (options.get_bool("EMBEDDING_SEMICANONICALIZE_FROZEN") == true) {
-        for (int i = 0; i < frzopi[0]; ++i) {
-            C_Fo->copy(semicanonicalize_block(ref_wfn, Ca_save, index_frozen_core, 0, false));
-        }
+        // Read frozen core orbitals from original Ca and semi-canonicalize
+        C_Fo->copy(semicanonicalize_block(ref_wfn, Ca_save, index_frozen_core, 0, false));
     } else {
+        // Read frozen core orbitals from original Ca and do not semi-canonicalize
         C_Fo->copy(semicanonicalize_block(ref_wfn, Ca_save, index_frozen_core, 0, true));
     }
 
     SharedMatrix C_Fv(new Matrix("Fv_coeff_block", nirrep, nmopi, frzvpi));
     if (options.get_bool("EMBEDDING_SEMICANONICALIZE_FROZEN") == true) {
-        for (int i = 0; i < frzvpi[0]; ++i) {
-            C_Fv->copy(semicanonicalize_block(ref_wfn, Ca_save, index_frozen_virtual, 0, false));
-        }
+        // Read frozen virtual orbitals from original Ca and semi-canonicalize
+        C_Fv->copy(semicanonicalize_block(ref_wfn, Ca_save, index_frozen_virtual, 0, false));
     } else {
+        // Read frozen virtual orbitals from original Ca and do not semi-canonicalize
         C_Fv->copy(semicanonicalize_block(ref_wfn, Ca_save, index_frozen_virtual, 0, true));
     }
 
-    // Form new C matrix
+    // Form new C matrix: Frozen-core, B_occ, A_occ, Active, A_vir, B_vir, Frozen-virtual
     SharedMatrix Ca_Rt(new Matrix("Ca rotated tilde", nirrep, nmopi, nmopi));
 
     int offset = 0;
@@ -618,6 +616,7 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
     outfile->Printf("\n");
     outfile->Printf("    ============================\n");
 
+    // Return the new embedding MOSpaceInfo to pymodule
     return mo_space_info_emb;
 }
 
@@ -627,6 +626,7 @@ psi::SharedMatrix semicanonicalize_block(psi::SharedWavefunction ref_wfn, psi::S
     int nmo_block = mos.size();
     auto C_block = std::make_shared<psi::Matrix>("C block", nso, nmo_block);
 
+    // Extract corresponding elements from C with respect to the index vector
     int mo_count = 0;
     for (int i : mos) {
         for (int mu = 0; mu < nso; ++mu) {
@@ -644,7 +644,7 @@ psi::SharedMatrix semicanonicalize_block(psi::SharedWavefunction ref_wfn, psi::S
         Foi->diagonalize(U_block, epsilon_block);
         auto C_block_prime = psi::linalg::doublet(C_block, U_block);
         return C_block_prime;
-    } else {
+    } else { // If true, only form the block matrix but avoid diagonalization
         return C_block;
     }
 }
