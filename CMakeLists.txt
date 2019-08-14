@@ -172,7 +172,7 @@ src/orbital-helpers/ao_helper.cc
 src/orbital-helpers/localize.cc
 src/orbital-helpers/iao_builder.cc
 src/orbital-helpers/mp2_nos.cc
-src/orbital-helpers/orbital_space.cc
+src/orbital-helpers/orbital_embedding.cc
 src/orbital-helpers/semi_canonicalize.cc
 src/orbital-helpers/unpaired_density.cc
 src/orbital-helpers/fragment_projector.cc
