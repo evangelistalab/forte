@@ -20,13 +20,14 @@ def register_forte_options(forte_options):
     register_localize_options(forte_options)
     register_casscf_options(forte_options)
     register_old_options(forte_options)
+    register_cc_so_options(forte_options)
 
 def register_driver_options(forte_options):
     forte_options.add_str('JOB_TYPE', 'NEWDRIVER', [
         'NONE', 'ACI', 'PCI', 'CAS', 'DMRG', 'SR-DSRG', 'SR-DSRG-ACI',
         'SR-DSRG-PCI', 'DSRG-MRPT2', 'DSRG-MRPT3', 'MR-DSRG-PT2',
         'THREE-DSRG-MRPT2', 'SOMRDSRG', 'MRDSRG', 'MRDSRG_SO', 'CASSCF',
-        'ACTIVE-DSRGPT2', 'DWMS-DSRGPT2', 'DSRG_MRPT', 'TASKS'
+        'ACTIVE-DSRGPT2', 'DWMS-DSRGPT2', 'DSRG_MRPT', 'CC_SO', 'TASKS'
     ], 'Specify the job type')
 
     forte_options.add_str(
@@ -806,10 +807,7 @@ def register_old_options(forte_options):
 
     forte_options.add_bool("MEMORY_SUMMARY", False, "Print summary of memory")
 
-
-
     forte_options.add_double("RELAX_E_CONVERGENCE", 1.0e-8, "The energy relaxation convergence criterion")
-
 
     forte_options.add_bool("USE_DMRGSCF", False,
                            "Use the older DMRGSCF algorithm?")
@@ -823,6 +821,20 @@ def register_old_options(forte_options):
                           "The form of the three-particle density cumulant")
     #    /*- Select a modified commutator -*/
     forte_options.add_str("SRG_COMM", "STANDARD", "STANDARD FO FO2")
+
+
+def register_cc_so_options(forte_options):
+    forte_options.add_str("CC_LEVEL", "CCSD", ["CCSD", "CCSDT", "LUCCSD", "QUCCSD",
+                                               "LUCCSDT"],
+                          "Coupled cluster level")
+
+    forte_options.add_int("LUCCSDT_FINK_ORDER", 8,
+                          """The perturbation order of energy terms included in L-UCCSDT
+                          single commutator based on Fink Hamiltonian
+                          n = 4: minimal order
+                          n = 5-7: increasing orders
+                          n = 8: maximum order
+                          other values: automatically change to 4 or 8""")
 
 
     #    /*- The minimum excitation level (Default value: 0) -*/

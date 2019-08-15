@@ -59,6 +59,8 @@
 #include "sparse_ci/determinant_hashvector.h"
 #include "sparse_ci/determinant_sq_operator.h"
 
+#include "cc-so/cc.h"
+
 namespace py = pybind11;
 using namespace pybind11::literals;
 
@@ -197,6 +199,7 @@ PYBIND11_MODULE(forte, m) {
     m.def("make_dsrg_so_f", &make_dsrg_so_f, "Make a DSRG pointer (spin-orbital implementation)");
     m.def("make_dsrg_spin_adapted", &make_dsrg_spin_adapted,
           "Make a DSRG pointer (spin-adapted implementation)");
+    m.def("make_cc_so", &make_cc_so, "Make a CC pointer (spin-orbital implementation)");
 
     export_ForteOptions(m);
 
@@ -287,6 +290,7 @@ PYBIND11_MODULE(forte, m) {
         .def("compute_energy", &MRDSRG_SO::compute_energy, "Compute DSRG energy")
         .def("compute_Heff_actv", &MRDSRG_SO::compute_Heff_actv,
              "Return the DSRG dressed ActiveSpaceIntegrals");
+
     // export SOMRDSRG
     py::class_<SOMRDSRG>(m, "SOMRDSRG")
         .def("compute_energy", &SOMRDSRG::compute_energy, "Compute DSRG energy")
@@ -303,6 +307,12 @@ PYBIND11_MODULE(forte, m) {
     py::class_<DressedQuantity>(m, "DressedQuantity")
         .def("contract_with_rdms", &DressedQuantity::contract_with_rdms, "reference"_a,
              "Contract densities with quantity");
+
+    // export CC_SO
+    py::class_<CC_SO>(m, "CC_SO")
+        .def("compute_energy", &CC_SO::compute_energy, "Compute CC energy")
+        .def("compute_Heff_actv", &CC_SO::compute_Heff_actv,
+             "Return the CC dressed ActiveSpaceIntegrals");
 }
 
 } // namespace forte
