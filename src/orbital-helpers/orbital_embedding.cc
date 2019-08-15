@@ -311,17 +311,41 @@ void make_avas(psi::SharedWavefunction ref_wfn, psi::Options& options, psi::Shar
 std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi::Options& options,
                                             psi::SharedMatrix Pf,
                                             std::shared_ptr<MOSpaceInfo> mo_space_info) {
-    print_h2("Orbital Localization and Embedding");
 
-    if (not ref_wfn)
+    // 1. Get necessary information, print method initialization information and exceptions
+    double thresh = options.get_double("EMBEDDING_THRESHOLD");
+    if (thresh > 1.0 || thresh < 0.0) {
+        throw PSIEXCEPTION("make_embedding: Embedding threshold must be between 0.0 and 1.0 !");
+    }
+
+    int A_docc = 0;
+    int A_uocc = 0;
+
+    if (options.get_str("EMBEDDING_CUTOFF_METHOD") == "THRESHOLD") {
+        print_h2("Orbital partition done according to simple threshold");
+        outfile->Printf("\n --------Simple threshold t = %8.8f--------", thresh);
+    } else if (options.get_str("EMBEDDING_CUTOFF_METHOD") == "CUM_THRESHOLD") {
+        print_h2("Orbital partition done according to cumulative threshold");
+        outfile->Printf("\n --------Cumulative threshold t = %8.8f--------", thresh);
+    } else if (options.get_str("EMBEDDING_CUTOFF_METHOD") == "MUN_OF_ORBITALS") {
+        print_h2(
+            "Orbital partition done according to fixed number of occupied and virtual orbitals");
+        A_docc = options.get_int("NUM_A_DOCC");
+        A_uocc = options.get_int("NUM_A_UOCC");
+        outfile->Printf(
+            "\n --------Number of A occupied fixed to %d, number of A virtual fixed to %d--------",
+            A_docc, A_uocc);
+    } else {
+        throw PSIEXCEPTION("make_embedding: Impossible embedding cutoff method!");
+    }
+
+    if (not ref_wfn) {
         throw PSIEXCEPTION("make_embedding: SCF has not been run yet!");
+    }
 
     if (not Pf) {
         throw PSIEXCEPTION("make_embedding: No projector (matrix) found!");
     }
-
-    // 1. Get necessary information
-    double thresh = options.get_double("EMBEDDING_THRESHOLD");
 
     // Additional input parameters used to control numbers of orbitals in A/B space
     int adj_sys_docc = options.get_int("EMBEDDING_ADJUST_B_DOCC");
@@ -345,14 +369,6 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
     Dimension nrvirpi = mo_space_info->get_dimension("RESTRICTED_UOCC");
     Dimension frzvpi = mo_space_info->get_dimension("FROZEN_UOCC");
 
-    Slice restricted(frzopi, nmopi - frzvpi);
-    SharedMatrix Ca_ori = ref_wfn->Ca();
-
-    // Deal with the original frozen orbitals
-    //	if (frzopi != 0 || frzvpi != 0) {
-    //		Ca_ori = Ca_ori->get_block(nmopi, restricted);
-    //	}
-
     // Define corresponding blocks (slices), occ slick will start at frzopi
     Slice occ(frzopi, nroccpi + frzopi);
     Slice vir(frzopi + nroccpi + actv_a, nmopi - frzvpi);
@@ -360,6 +376,7 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
     Slice mo(zeropi, nmopi);
 
     // Save original orbitals for frozen and active orbital reconstruction
+    SharedMatrix Ca_ori = ref_wfn->Ca();
     SharedMatrix Ca_save = Ca_ori->clone();
 
     // Transform Pf to MO basis
@@ -433,6 +450,33 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
         }
     }
 
+    if (options.get_str("EMBEDDING_CUTOFF_METHOD") == "NUM_OF_ORBITALS") {
+        for (int i = 0; i < nroccpi[0]; i++) {
+            if (i < A_docc) {
+                index_A_occ.push_back(i + frzopi[0]);
+            } else {
+                index_B_occ.push_back(i + frzopi[0]);
+                if (lo->get(0, i) > 0.5) {
+                    outfile->Printf("\n Warning! Occupied orbital %d have eigenvalue (%8.8f) "
+                                    "larger than 0.5 are partitioned to B!",
+                                    i + frzopi[0], lo->get(0, i));
+                }
+            }
+        }
+        for (int i = 0; i < nrvirpi[0]; i++) {
+            if (i < A_uocc) {
+                index_A_vir.push_back(i + offset_vec);
+            } else {
+                index_B_vir.push_back(i + offset_vec);
+                if (lv->get(0, i) > 0.5) {
+                    outfile->Printf("\n Warning! Virtual orbital %d have eigenvalue (%8.8f) "
+                                    "larger than 0.5 are partitioned to B!",
+                                    i + offset_vec, lv->get(0, i));
+                }
+            }
+        }
+    }
+
     if (options.get_str("EMBEDDING_CUTOFF_METHOD") == "CUM_THRESHOLD") {
         double tmp = 0.0;
         double sum_lo = 0.0;
@@ -456,6 +500,11 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
                 //                                i, cum_l_o);
             } else {
                 index_B_occ.push_back(i + frzopi[0]);
+                if (lo->get(0, i) > 0.5) {
+                    outfile->Printf("\n Warning! Occupied orbital %d have eigenvalue (%8.8f) "
+                                    "larger than 0.5 are partitioned to B!",
+                                    i + frzopi[0], lo->get(0, i));
+                }
             }
         }
         tmp = 0.0;
@@ -471,10 +520,24 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
                 //                                i + offset_vec, cum_l_v);
             } else {
                 index_B_vir.push_back(i + offset_vec);
+                if (lv->get(0, i) > 0.5) {
+                    outfile->Printf("\n Warning! Virtual orbital %d have eigenvalue (%8.8f) "
+                                    "larger than 0.5 are partitioned to B!",
+                                    i + offset_vec, lv->get(0, i));
+                }
             }
         }
     }
 
+    // Collect the size of each space
+    int num_Fo = index_frozen_core.size();
+    int num_Ao = index_A_occ.size();
+    int num_Bo = index_B_occ.size();
+    int num_Av = index_A_vir.size();
+    int num_Bv = index_B_vir.size();
+    int num_Fv = index_frozen_virtual.size();
+
+    // Print system orbital information
     outfile->Printf("\n    Frozen-orbital Embedding MOs (System A)\n");
     outfile->Printf("    ============================\n");
     outfile->Printf("      MO     Type    <phi|P|phi>\n");
@@ -490,30 +553,29 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
     }
     outfile->Printf("    ============================\n");
 
-    outfile->Printf("\n    Frozen-orbital Embedding MOs (Environment B)\n");
-    outfile->Printf("    ============================\n");
-    outfile->Printf("      MO     Type    <phi|P|phi>\n");
-    outfile->Printf("    ----------------------------\n");
-    for (int i = 0; i < frzopi[0]; ++i) {
-        outfile->Printf("    %4d   %8s      --\n", i + 1, "Frozen core");
+    // If less than 50 frozen environment orbitals, print the environment orbital
+    if (num_Bo + num_Bv < 50) {
+        outfile->Printf("\n    Frozen-orbital Embedding MOs (Environment B)\n");
+        outfile->Printf("    ============================\n");
+        outfile->Printf("      MO     Type    <phi|P|phi>\n");
+        outfile->Printf("    ----------------------------\n");
+        for (int i : index_B_occ) {
+            outfile->Printf("    %4d   %8s   %.6f\n", i + 1, "Occupied", lo->get(i - frzopi[0]));
+        }
+        for (int i : index_B_vir) {
+            outfile->Printf("    %4d   %8s   %.6f\n", i + 1, "Virtual", lv->get(i - offset_vec));
+        }
+        outfile->Printf("    ============================\n");
+    } else {
+        outfile->Printf(
+            "\n    Frozen-orbital Embedding MOs (Environment B) more than 50, no printing. \n");
     }
-    for (int i : index_B_occ) {
-        outfile->Printf("    %4d   %8s   %.6f\n", i + 1, "Occupied", lo->get(i - frzopi[0]));
-    }
-    for (int i : index_B_vir) {
-        outfile->Printf("    %4d   %8s   %.6f\n", i + 1, "Virtual", lv->get(i - offset_vec));
-    }
-    for (int i = offset_vec + nrvirpi[0]; i < nmopi[0]; ++i) {
-        outfile->Printf("    %4d   %8s      --\n", i + 1, "Frozen virtual");
-    }
-    outfile->Printf("    ============================\n");
 
-    int num_Fo = index_frozen_core.size();
-    int num_Ao = index_A_occ.size();
-    int num_Bo = index_B_occ.size();
-    int num_Av = index_A_vir.size();
-    int num_Bv = index_B_vir.size();
-    int num_Fv = index_frozen_virtual.size();
+    outfile->Printf("\n Summary: ");
+    outfile->Printf("\n System A: Occupied: %d, Active: %d, Virtual: %d ", num_Ao, actv_a[0],
+                    num_Av);
+    outfile->Printf("\n Environment B: Occupied: %d, Virtual: %d \n", num_Bo, num_Bv);
+    outfile->Printf("\n Frozen core/virtual: Core: %d, Virtual: %d \n", num_Fo, num_Fv);
 
     SharedMatrix Ca_tilde(ref_wfn->Ca()->clone());
 
@@ -527,6 +589,7 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
     SharedMatrix C_A(new Matrix("Active_coeff_block", nirrep, nmopi, actv_a));
     if (options.get_str("EMBEDDING_REFERENCE") == "CASSCF") {
         if (options.get_bool("EMBEDDING_SEMICANONICALIZE_ACTIVE") == true) {
+            print_h2("Semi-canonicalize active orbitals");
             // Read active orbitals from original Ca and semi-canonicalize
             C_A->copy(semicanonicalize_block(ref_wfn, Ca_save, index_actv, 0, false));
         } else {
@@ -537,20 +600,16 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
 
     // Copy the frozen blocks (if any) from original Ca_save without any changes
     SharedMatrix C_Fo(new Matrix("Fo_coeff_block", nirrep, nmopi, frzopi));
+    SharedMatrix C_Fv(new Matrix("Fv_coeff_block", nirrep, nmopi, frzvpi));
+
     if (options.get_bool("EMBEDDING_SEMICANONICALIZE_FROZEN") == true) {
+        print_h2("Semi-canonicalize frozen orbitals");
         // Read frozen core orbitals from original Ca and semi-canonicalize
         C_Fo->copy(semicanonicalize_block(ref_wfn, Ca_save, index_frozen_core, 0, false));
+        C_Fv->copy(semicanonicalize_block(ref_wfn, Ca_save, index_frozen_virtual, 0, false));
     } else {
         // Read frozen core orbitals from original Ca and do not semi-canonicalize
         C_Fo->copy(semicanonicalize_block(ref_wfn, Ca_save, index_frozen_core, 0, true));
-    }
-
-    SharedMatrix C_Fv(new Matrix("Fv_coeff_block", nirrep, nmopi, frzvpi));
-    if (options.get_bool("EMBEDDING_SEMICANONICALIZE_FROZEN") == true) {
-        // Read frozen virtual orbitals from original Ca and semi-canonicalize
-        C_Fv->copy(semicanonicalize_block(ref_wfn, Ca_save, index_frozen_virtual, 0, false));
-    } else {
-        // Read frozen virtual orbitals from original Ca and do not semi-canonicalize
         C_Fv->copy(semicanonicalize_block(ref_wfn, Ca_save, index_frozen_virtual, 0, true));
     }
 
@@ -599,26 +658,14 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
     mo_space_map["FROZEN_UOCC"] = {freeze_v};
 
     // Write new MOSpaceInfo
+    print_h2("Update MOSpaceInfo");
     std::vector<size_t> reorder;
     std::shared_ptr<MOSpaceInfo> mo_space_info_emb =
         make_mo_space_info_from_map(ref_wfn, mo_space_map, reorder);
 
-    // Print summary of embedding MO spaces
-    outfile->Printf("\n    ============================");
-    outfile->Printf("\n  ==> EMBEDDING MO space Information <==");
-    outfile->Printf("\n    B_docc     = [%d]", mo_space_info_emb->get_dimension("FROZEN_DOCC")[0]);
-    outfile->Printf("\n    A_docc     = [%d]",
-                    mo_space_info_emb->get_dimension("RESTRICTED_DOCC")[0]);
-    outfile->Printf("\n    active     = [%d]", mo_space_info_emb->get_dimension("ACTIVE")[0]);
-    outfile->Printf("\n    A_uocc     = [%d]",
-                    mo_space_info_emb->get_dimension("RESTRICTED_UOCC")[0]);
-    outfile->Printf("\n    B_uocc     = [%d]", mo_space_info_emb->get_dimension("FROZEN_UOCC")[0]);
-    outfile->Printf("\n");
-    outfile->Printf("    ============================\n");
-
     // Return the new embedding MOSpaceInfo to pymodule
     return mo_space_info_emb;
-}
+} // namespace forte
 
 psi::SharedMatrix semicanonicalize_block(psi::SharedWavefunction ref_wfn, psi::SharedMatrix C_tilde,
                                          std::vector<int>& mos, int offset, bool prevent_rotate) {

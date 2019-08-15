@@ -124,10 +124,16 @@ def register_embedding_options(forte_options):
         "Whether to perform embedding partition and projection")
     forte_options.add_str(
         "EMBEDDING_CUTOFF_METHOD", "THRESHOLD", 
-        "Cut off by: threshold or cum_threshold.")
+        "Cut off by: threshold ,cum_threshold or num_of_orbitals.")
     forte_options.add_double(
         "EMBEDDING_THRESHOLD", 0.5, 
         "Projector eigenvalue threshold for both simple and cumulative threshold")
+    forte_options.add_int(
+        "NUM_A_DOCC", 0, 
+        "Number of occupied orbitals in A fixed to this value when embedding method is num_of_orbitals")
+    forte_options.add_int(
+        "Num_A_UOCC", 0,
+        "Number of virtual orbitals in A fixed to this value when embedding method is num_of_orbitals")
     forte_options.add_str(
         "EMBEDDING_REFERENCE", "CASSCF", 
         "HF for any reference without active, CASSCF for any reference with an active space.")
@@ -161,7 +167,7 @@ def register_mo_space_info_options(forte_options):
         "FROZEN_UOCC",
         "Number of frozen unoccupied orbitals per irrep (in Cotton order)")
 
-    #    /*- Molecular orbitals to swap -
+#    /*- Molecular orbitals to swap -
     #     *  Swap mo_1 with mo_2 in irrep symmetry
     #     *  Swap mo_3 with mo_4 in irrep symmetry
     #     *  Format: [irrep, mo_1, mo_2, irrep, mo_3, mo_4]
