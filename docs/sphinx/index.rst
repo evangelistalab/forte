@@ -28,6 +28,7 @@ correlated electrons.
    aosubspace
    dsrg-mrpt
    mr-dsrg
+   embedding
    options
 
 Indices and tables
