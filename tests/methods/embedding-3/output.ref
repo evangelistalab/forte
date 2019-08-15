@@ -23,9 +23,9 @@
     -----------------------------------------------------------------------
 
 
-    Psi4 started on: Wednesday, 14 August 2019 06:17PM
+    Psi4 started on: Thursday, 15 August 2019 11:47AM
 
-    Process ID: 21784
+    Process ID: 29492
     Host:       master
     PSIDATADIR: /opt/software/psi4/psi4-github-bin-icpc-2019.1-opt-c++14/share/psi4
     Memory:     500.0 MiB
@@ -97,7 +97,7 @@ compare_values(refdsrgpt2,variable("CURRENT ENERGY"),8,"CASCI-PT2-in-RHF energy"
 --------------------------------------------------------------------------
 
 *** tstart() called on master
-*** at Wed Aug 14 18:17:49 2019
+*** at Thu Aug 15 11:47:13 2019
 
    => Loading Basis Set <=
 
@@ -216,16 +216,16 @@ compare_values(refdsrgpt2,variable("CURRENT ENERGY"),8,"CASCI-PT2-in-RHF energy"
                         Total Energy        Delta E     RMS |[F,P]|
 
    @RHF iter SAD:  -113.01139725317707   -1.13011e+02   0.00000e+00 
-   @RHF iter   1:  -115.64966521141432   -2.63827e+00   3.99282e-03 DIIS
-   @RHF iter   2:  -115.65493387516415   -5.26866e-03   1.17375e-03 DIIS
-   @RHF iter   3:  -115.65533750000196   -4.03625e-04   4.44958e-04 DIIS
-   @RHF iter   4:  -115.65540021875638   -6.27188e-05   6.73684e-05 DIIS
-   @RHF iter   5:  -115.65540151590307   -1.29715e-06   1.27858e-05 DIIS
-   @RHF iter   6:  -115.65540159921353   -8.33105e-08   4.57726e-06 DIIS
-   @RHF iter   7:  -115.65540160956564   -1.03521e-08   1.05250e-06 DIIS
-   @RHF iter   8:  -115.65540161018521   -6.19565e-10   1.41832e-07 DIIS
-   @RHF iter   9:  -115.65540161019676   -1.15534e-11   1.61174e-08 DIIS
-   @RHF iter  10:  -115.65540161019692   -1.56319e-13   1.32696e-09 DIIS
+   @RHF iter   1:  -115.64966521141449   -2.63827e+00   3.99282e-03 DIIS
+   @RHF iter   2:  -115.65493387516410   -5.26866e-03   1.17375e-03 DIIS
+   @RHF iter   3:  -115.65533750000199   -4.03625e-04   4.44958e-04 DIIS
+   @RHF iter   4:  -115.65540021875628   -6.27188e-05   6.73684e-05 DIIS
+   @RHF iter   5:  -115.65540151590309   -1.29715e-06   1.27858e-05 DIIS
+   @RHF iter   6:  -115.65540159921348   -8.33104e-08   4.57726e-06 DIIS
+   @RHF iter   7:  -115.65540160956570   -1.03522e-08   1.05250e-06 DIIS
+   @RHF iter   8:  -115.65540161018535   -6.19650e-10   1.41832e-07 DIIS
+   @RHF iter   9:  -115.65540161019690   -1.15534e-11   1.61174e-08 DIIS
+   @RHF iter  10:  -115.65540161019693   -2.84217e-14   1.32696e-09 DIIS
   Energy and wave function converged.
 
 
@@ -251,14 +251,14 @@ compare_values(refdsrgpt2,variable("CURRENT ENERGY"),8,"CASCI-PT2-in-RHF energy"
               A 
     DOCC [    12 ]
 
-  @RHF Final Energy:  -115.65540161019692
+  @RHF Final Energy:  -115.65540161019693
 
    => Energetics <=
 
     Nuclear Repulsion Energy =             71.0086001807970462
     One-Electron Energy =                -296.1115980454634382
-    Two-Electron Energy =                 109.4475962544694880
-    Total Energy =                       -115.6554016101969182
+    Two-Electron Energy =                 109.4475962544694738
+    Total Energy =                       -115.6554016101969324
 
 Computation Completed
 
@@ -280,13 +280,13 @@ Properties computed using the SCF density matrix
      X:     0.2217      Y:    -0.0557      Z:    -0.0328     Total:     0.2309
 
 
-*** tstop() called on master at Wed Aug 14 18:17:50 2019
+*** tstop() called on master at Thu Aug 15 11:47:14 2019
 Module time:
-	user time   =       0.96 seconds =       0.02 minutes
+	user time   =       0.95 seconds =       0.02 minutes
 	system time =       0.02 seconds =       0.00 minutes
 	total time  =          1 seconds =       0.02 minutes
 Total time:
-	user time   =       0.96 seconds =       0.02 minutes
+	user time   =       0.95 seconds =       0.02 minutes
 	system time =       0.02 seconds =       0.00 minutes
 	total time  =          1 seconds =       0.02 minutes
 	SCF energy........................................................PASSED
@@ -303,7 +303,7 @@ Total time:
   ----------------------------------------------------------------------------
   A suite of quantum chemistry methods for strongly correlated electrons
 
-    git branch: fragment_embedding - git commit: 3a2cfbd
+    git branch: fragment_embedding - git commit: ca54510
 
   Developed by:
     Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
@@ -355,8 +355,9 @@ Total time:
  number of basis on all atoms: 21
  number of basis in the system fragment: 13
 
-  ==> Orbital Localization and Embedding <==
+  ==> Orbital partition done according to simple threshold <==
 
+ --------Simple threshold t = 0.50000000--------
     Frozen-orbital Embedding MOs (System A)
     ============================
       MO     Type    <phi|P|phi>
@@ -376,9 +377,6 @@ Total time:
     ============================
       MO     Type    <phi|P|phi>
     ----------------------------
-       1   Frozen core      --
-       2   Frozen core      --
-       3   Frozen core      --
        9   Occupied   0.127486
       10   Occupied   0.016077
       11   Occupied   0.001394
@@ -387,6 +385,17 @@ Total time:
       20    Virtual   0.000585
       21    Virtual   0.000016
     ============================
+
+ Summary: 
+ System A: Occupied: 5, Active: 2, Virtual: 4 
+ Environment B: Occupied: 3, Virtual: 4 
+ Frozen core/virtual: Core: 3, Virtual: 0 
+
+
+  ==> Semi-canonicalize frozen orbitals <==
+
+
+  ==> Update MOSpaceInfo <==
 
 
   ==> MO Space Information <==
@@ -401,15 +410,7 @@ Total time:
     FROZEN_UOCC         4     4
     Total              21    21
   -------------------------------
-    ============================
-  ==> EMBEDDING MO space Information <==
-    B_docc     = [6]
-    A_docc     = [5]
-    active     = [2]
-    A_uocc     = [4]
-    B_uocc     = [4]
-    ============================
-
+ ---------------End of embedding treatment--------------- 
 
   ==> Integral Transformation <==
 
@@ -431,7 +432,7 @@ Total time:
 	Starting second half-transformation.
 	Two-electron integral transformation complete.
 
-  Integral transformation done. 0.02479947 s
+  Integral transformation done. 0.02025190 s
   Reading the two-electron integrals from disk
   Size of two-electron integrals:   0.004347 GB  Using in-core PK algorithm.
    Calculation information:
@@ -451,10 +452,10 @@ Total time:
 
 
   Frozen-core energy           -154.178790068807 a.u.
-  Timing for frozen one-body operator:                        0.103 s.
+  Timing for frozen one-body operator:                        0.093 s.
   Resorting integrals after freezing core.
-  Timing for freezing core and virtual orbitals:              0.107 s.
-  Conventional integrals take 0.27226854 s
+  Timing for freezing core and virtual orbitals:              0.097 s.
+  Conventional integrals take 0.24991376 s
 
   ==> Summary of Active Space Solver Input <==
 
@@ -522,7 +523,7 @@ Total time:
 
     20      1.00000000
 
-    Total Energy:      -114.574788989649974
+    Total Energy:      -114.574788989649946
 
   ==> Energy Summary <==
 
@@ -547,7 +548,7 @@ Total time:
          Chenyang Li, Jeffrey B. Schriber and Francesco A. Evangelista
        -----------------------------------------------------------------
 
-  Took 0.000074 s to build Fock matrix
+  Took 0.000073 s to build Fock matrix
 
   ==> Checking Fock Matrix Diagonal Blocks <==
 
@@ -571,7 +572,7 @@ Total time:
 	Starting second half-transformation.
 	Two-electron integral transformation complete.
 
-  Integral transformation done. 0.02279042 s
+  Integral transformation done. 0.02190606 s
   Reading the two-electron integrals from disk
   Size of two-electron integrals:   0.004347 GB
  Integrals are about to be updated.  Using in-core PK algorithm.
@@ -592,15 +593,15 @@ Total time:
 
 
   Frozen-core energy           -154.178790068807 a.u.
-  Timing for frozen one-body operator:                        0.103 s.
+  Timing for frozen one-body operator:                        0.104 s.
   Resorting integrals after freezing core.
-  Timing for freezing core and virtual orbitals:              0.106 s.
+  Timing for freezing core and virtual orbitals:              0.107 s.
 
   ==> RDMs Transformation to Semicanonical Basis <==
 
     Transformed 2 RDMs.
     Transformed 3 cumulants.
-  SemiCanonicalize takes 1.022038 s.
+  SemiCanonicalize takes 1.002702 s.
 
   ==> Multireference Driven Similarity Renormalization Group <==
 
@@ -650,18 +651,18 @@ Total time:
 
   ==> Computing DSRG-MRPT2 ... <==
 
-    Computing T2 amplitudes                  ...  Done. Timing        0.001611 s
-    Computing T1 amplitudes                  ...  Done. Timing        0.002195 s
-    Renormalizing two-electron integrals     ...  Done. Timing        0.000661 s
-    Renormalizing Fock matrix elements       ...  Done. Timing        0.002306 s
-    Computing <[F, T1]>                      ...  Done. Timing        0.001118 s
-    Computing <[F, T2]>                      ...  Done. Timing        0.002328 s
-    Computing <[V, T1]>                      ...  Done. Timing        0.002298 s
+    Computing T2 amplitudes                  ...  Done. Timing        0.001693 s
+    Computing T1 amplitudes                  ...  Done. Timing        0.002181 s
+    Renormalizing two-electron integrals     ...  Done. Timing        0.000694 s
+    Renormalizing Fock matrix elements       ...  Done. Timing        0.002303 s
+    Computing <[F, T1]>                      ...  Done. Timing        0.001099 s
+    Computing <[F, T2]>                      ...  Done. Timing        0.002362 s
+    Computing <[V, T1]>                      ...  Done. Timing        0.002285 s
     Computing <[V, T2]> (C_2)^4              ...  Done. Timing        0.013961 s
-    Computing <[V, T2]> C_4 (C_2)^2 HH       ...  Done. Timing        0.003251 s
-    Computing <[V, T2]> C_4 (C_2)^2 PP       ...  Done. Timing        0.003238 s
-    Computing <[V, T2]> C_4 (C_2)^2 PH       ...  Done. Timing        0.013566 s
-    Computing <[V, T2]> C_6 C_2              ...  Done. Timing        0.012261 s
+    Computing <[V, T2]> C_4 (C_2)^2 HH       ...  Done. Timing        0.003242 s
+    Computing <[V, T2]> C_4 (C_2)^2 PP       ...  Done. Timing        0.003210 s
+    Computing <[V, T2]> C_4 (C_2)^2 PH       ...  Done. Timing        0.013464 s
+    Computing <[V, T2]> C_6 C_2              ...  Done. Timing        0.012138 s
 
   ==> Excitation Amplitudes Summary <==
 
@@ -675,7 +676,7 @@ Total time:
     [  2       8    ]-0.017828 [  4       8    ]-0.017535 [  4       9    ]-0.015714 
     [  3       7    ]-0.015585 [  1       9    ] 0.013770 [  3      10    ]-0.010609 
     --------------------------------------------------------------------------------
-    Norm of T1A vector: (nonzero elements: 20)                    0.115202852419420.
+    Norm of T1A vector: (nonzero elements: 20)                    0.115202852419421.
     --------------------------------------------------------------------------------
     Largest T1 amplitudes for spin case B:
        _       _                  _       _                  _       _               
@@ -687,7 +688,7 @@ Total time:
     [  2       8    ]-0.017828 [  4       8    ]-0.017535 [  4       9    ]-0.015714 
     [  3       7    ]-0.015585 [  1       9    ] 0.013770 [  3      10    ]-0.010609 
     --------------------------------------------------------------------------------
-    Norm of T1B vector: (nonzero elements: 20)                    0.115202852419420.
+    Norm of T1B vector: (nonzero elements: 20)                    0.115202852419421.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case AA:
        i   j   a   b              i   j   a   b              i   j   a   b           
@@ -722,7 +723,7 @@ Total time:
     [  0   2   8  10] 0.004067 [  0   1   8   9] 0.003706 [  1   4   7  10]-0.003676 
     [  2   3   8  10] 0.003668 [  0   2   7  10]-0.003619 [  2   3   7   9] 0.003607 
     --------------------------------------------------------------------------------
-    Norm of T2BB vector: (nonzero elements: 240)                  0.041882512168639.
+    Norm of T2BB vector: (nonzero elements: 240)                  0.041882512168640.
     --------------------------------------------------------------------------------
 
   ==> Possible Intruders <==
@@ -735,22 +736,22 @@ Total time:
 
   ==> DSRG-MRPT2 Energy Summary <==
 
-    E0 (reference)                 =   -114.574788989650060
-    <[F, T1]>                      =     -0.084713321001361
+    E0 (reference)                 =   -114.574788989650003
+    <[F, T1]>                      =     -0.084713321001363
     <[F, T2]>                      =      0.000000000000000
     <[V, T1]>                      =      0.000000000000000
-    <[V, T2]> (C_2)^4              =     -0.044803315768402
+    <[V, T2]> (C_2)^4              =     -0.044803315768403
     <[V, T2]> C_4 (C_2)^2 HH       =      0.000000000000000
     <[V, T2]> C_4 (C_2)^2 PP       =      0.000000000000000
     <[V, T2]> C_4 (C_2)^2 PH       =      0.000000000000000
     <[V, T2]> C_6 C_2              =      0.000000000000000
-    <[V, T2]>                      =     -0.044803315768402
-    DSRG-MRPT2 correlation energy  =     -0.129516636769764
-    DSRG-MRPT2 total energy        =   -114.704305626419824
-    max(T1)                        =      0.061378479275430
-    max(T2)                        =      0.024063350112794
-    ||T1||                         =      0.162921436315609
-    ||T2||                         =      0.246294132469509
+    <[V, T2]>                      =     -0.044803315768403
+    DSRG-MRPT2 correlation energy  =     -0.129516636769766
+    DSRG-MRPT2 total energy        =   -114.704305626419767
+    max(T1)                        =      0.061378479275429
+    max(T2)                        =      0.024063350112793
+    ||T1||                         =      0.162921436315611
+    ||T2||                         =      0.246294132469510
 
   Energy took      0.064 s
 
@@ -765,7 +766,7 @@ Total time:
     -----------------------------------------------------
 	CASCI-PT2-in-RHF energy...........................................PASSED
 
-    Psi4 stopped on: Wednesday, 14 August 2019 06:17PM
-    Psi4 wall time for execution: 0:00:02.68
+    Psi4 stopped on: Thursday, 15 August 2019 11:47AM
+    Psi4 wall time for execution: 0:00:02.63
 
 *** Psi4 exiting successfully. Buy a developer a beer!

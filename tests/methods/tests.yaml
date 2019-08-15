@@ -64,6 +64,7 @@ embedding:
    - embedding-1
    - embedding-2
    - embedding-3
+   - embedding-4
 casscf:
   short:
    - casscf

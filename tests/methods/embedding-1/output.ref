@@ -23,9 +23,9 @@
     -----------------------------------------------------------------------
 
 
-    Psi4 started on: Wednesday, 14 August 2019 06:15PM
+    Psi4 started on: Thursday, 15 August 2019 11:46AM
 
-    Process ID: 21692
+    Process ID: 29427
     Host:       master
     PSIDATADIR: /opt/software/psi4/psi4-github-bin-icpc-2019.1-opt-c++14/share/psi4
     Memory:     500.0 MiB
@@ -97,7 +97,7 @@ compare_values(refdsrgpt2,variable("CURRENT ENERGY"),8,"PT2-in-CASSCF energy")
 --------------------------------------------------------------------------
 
 *** tstart() called on master
-*** at Wed Aug 14 18:15:57 2019
+*** at Thu Aug 15 11:46:23 2019
 
    => Loading Basis Set <=
 
@@ -217,14 +217,14 @@ compare_values(refdsrgpt2,variable("CURRENT ENERGY"),8,"PT2-in-CASSCF energy")
 
    @RHF iter SAD:  -113.01139725317707   -1.13011e+02   0.00000e+00 
    @RHF iter   1:  -115.64966521141449   -2.63827e+00   3.99282e-03 DIIS
-   @RHF iter   2:  -115.65493387516410   -5.26866e-03   1.17375e-03 DIIS
-   @RHF iter   3:  -115.65533750000199   -4.03625e-04   4.44958e-04 DIIS
-   @RHF iter   4:  -115.65540021875624   -6.27188e-05   6.73684e-05 DIIS
-   @RHF iter   5:  -115.65540151590305   -1.29715e-06   1.27858e-05 DIIS
-   @RHF iter   6:  -115.65540159921345   -8.33104e-08   4.57726e-06 DIIS
-   @RHF iter   7:  -115.65540160956559   -1.03521e-08   1.05250e-06 DIIS
-   @RHF iter   8:  -115.65540161018519   -6.19607e-10   1.41832e-07 DIIS
-   @RHF iter   9:  -115.65540161019680   -1.16103e-11   1.61174e-08 DIIS
+   @RHF iter   2:  -115.65493387516425   -5.26866e-03   1.17375e-03 DIIS
+   @RHF iter   3:  -115.65533750000201   -4.03625e-04   4.44958e-04 DIIS
+   @RHF iter   4:  -115.65540021875631   -6.27188e-05   6.73684e-05 DIIS
+   @RHF iter   5:  -115.65540151590319   -1.29715e-06   1.27858e-05 DIIS
+   @RHF iter   6:  -115.65540159921349   -8.33103e-08   4.57726e-06 DIIS
+   @RHF iter   7:  -115.65540160956569   -1.03522e-08   1.05250e-06 DIIS
+   @RHF iter   8:  -115.65540161018528   -6.19593e-10   1.41832e-07 DIIS
+   @RHF iter   9:  -115.65540161019683   -1.15534e-11   1.61174e-08 DIIS
   Energy and wave function converged.
 
 
@@ -250,14 +250,14 @@ compare_values(refdsrgpt2,variable("CURRENT ENERGY"),8,"PT2-in-CASSCF energy")
               A 
     DOCC [    12 ]
 
-  @RHF Final Energy:  -115.65540161019680
+  @RHF Final Energy:  -115.65540161019683
 
    => Energetics <=
 
     Nuclear Repulsion Energy =             71.0086001807970462
-    One-Electron Energy =                -296.1115980017495417
-    Two-Electron Energy =                 109.4475962107557052
-    Total Energy =                       -115.6554016101968045
+    One-Electron Energy =                -296.1115980017496554
+    Two-Electron Energy =                 109.4475962107557905
+    Total Energy =                       -115.6554016101968330
 
 Computation Completed
 
@@ -279,13 +279,13 @@ Properties computed using the SCF density matrix
      X:     0.2217      Y:    -0.0557      Z:    -0.0328     Total:     0.2309
 
 
-*** tstop() called on master at Wed Aug 14 18:15:58 2019
+*** tstop() called on master at Thu Aug 15 11:46:24 2019
 Module time:
-	user time   =       0.98 seconds =       0.02 minutes
+	user time   =       0.95 seconds =       0.02 minutes
 	system time =       0.03 seconds =       0.00 minutes
 	total time  =          1 seconds =       0.02 minutes
 Total time:
-	user time   =       0.98 seconds =       0.02 minutes
+	user time   =       0.95 seconds =       0.02 minutes
 	system time =       0.03 seconds =       0.00 minutes
 	total time  =          1 seconds =       0.02 minutes
  MINTS: Wrapper to libmints.
@@ -422,37 +422,37 @@ Total time:
    ==> Starting MCSCF iterations <==
 
         Iter         Total Energy       Delta E   Orb RMS    CI RMS  NCI NORB
-   @MCSCF  1:   -115.692866548135   -3.7465e-02  4.36e-03  5.25e-14    1    1  Initial CI
-   @MCSCF  2:   -115.698430643180   -5.5641e-03  1.67e-03  1.41e-14    2    1  TS
-   @MCSCF  3:   -115.698753176764   -3.2253e-04  6.23e-04  1.53e-14    2    1  TS
-   @MCSCF  4:   -115.698776941113   -2.3764e-05  2.14e-04  1.42e-14    2    1  TS
+   @MCSCF  1:   -115.692866548135   -3.7465e-02  4.36e-03  2.32e-14    1    1  Initial CI
+   @MCSCF  2:   -115.698430643180   -5.5641e-03  1.67e-03  6.36e-15    2    1  TS
+   @MCSCF  3:   -115.698753176764   -3.2253e-04  6.23e-04  6.69e-15    2    1  TS
+   @MCSCF  4:   -115.698776941113   -2.3764e-05  2.14e-04  6.62e-15    2    1  TS
    @MCSCF  5:   -115.698778983085   -2.0420e-06  7.05e-05  4.23e-09    1    1  TS
-   @MCSCF  6:   -115.698779173255   -1.9017e-07  2.30e-05  1.32e-14    2    1  TS, DIIS
-   @MCSCF  7:   -115.698779191749   -1.8494e-08  7.48e-06  1.25e-14    2    1  TS, DIIS
-   @MCSCF  8:   -115.698779193599   -1.8505e-09  2.32e-06  1.27e-14    2    1  TS, DIIS
-   @MCSCF  9:   -115.698779193802   -2.0262e-10  5.06e-07  1.19e-14    2    1  TS, DIIS
-   @MCSCF 10:   -115.698779193810   -8.5265e-12  1.81e-07  9.40e-15    2    1  TS, DIIS
-   @MCSCF 11:   -115.698779193811   -1.1511e-12  5.78e-08  8.97e-15    2    1  TS, DIIS
-   @MCSCF 12:   -115.698779193811   -4.2633e-14  8.34e-09  7.43e-15    2    1  TS, DIIS
-   @MCSCF 13:   -115.698779193812   -8.5265e-14  7.47e-09  7.77e-15    2    1  TS, DIIS
-   @MCSCF 14:   -115.698779193811    7.1054e-14  1.54e-10  8.40e-15    2    1  TS, DIIS
-   @MCSCF 15:   -115.698779193812   -7.1054e-14  1.08e-10  8.29e-15    2    1  TS, DIIS
-   @MCSCF 16:   -115.698779193811    5.6843e-14  1.27e-11  8.03e-15    2    1  TS, DIIS
+   @MCSCF  6:   -115.698779173255   -1.9017e-07  2.30e-05  7.86e-15    2    1  TS, DIIS
+   @MCSCF  7:   -115.698779191748   -1.8494e-08  7.48e-06  7.40e-15    2    1  TS, DIIS
+   @MCSCF  8:   -115.698779193599   -1.8506e-09  2.32e-06  6.91e-15    2    1  TS, DIIS
+   @MCSCF  9:   -115.698779193802   -2.0255e-10  5.06e-07  6.90e-15    2    1  TS, DIIS
+   @MCSCF 10:   -115.698779193810   -8.5407e-12  1.81e-07  5.34e-15    2    1  TS, DIIS
+   @MCSCF 11:   -115.698779193811   -1.1227e-12  5.78e-08  3.42e-15    2    1  TS, DIIS
+   @MCSCF 12:   -115.698779193811    0.0000e+00  8.34e-09  2.67e-15    2    1  TS, DIIS
+   @MCSCF 13:   -115.698779193811   -1.2790e-13  7.47e-09  2.87e-15    2    1  TS, DIIS
+   @MCSCF 14:   -115.698779193811    1.4211e-14  1.54e-10  3.26e-15    2    1  TS, DIIS
+   @MCSCF 15:   -115.698779193811   -7.1054e-14  1.08e-10  2.69e-15    2    1  TS, DIIS
+   @MCSCF 16:   -115.698779193811    2.8422e-14  1.27e-11  2.52e-15    2    1  TS, DIIS
 
           @MCSCF has converged!
 
-   @MCSCF Final Energy: -115.698779193811461
+   @MCSCF Final Energy: -115.698779193811433
 
    Computing CI Semicanonical Orbitals
 
    ==> Energetics <==
 
-    SCF energy =         -115.655401610196805
-    Total MCSCF energy = -115.698779193811461
+    SCF energy =         -115.655401610196833
+    Total MCSCF energy = -115.698779193811433
 
    ==> MCSCF root 0 information <==
 
-    MCSCF Root 0 energy =  -115.698779193811475
+    MCSCF Root 0 energy =  -115.698779193811376
 
    Active Space Natural occupation numbers:
 
@@ -497,7 +497,7 @@ Properties computed using the CASSCF density matrix
   ----------------------------------------------------------------------------
   A suite of quantum chemistry methods for strongly correlated electrons
 
-    git branch: fragment_embedding - git commit: 3a2cfbd
+    git branch: fragment_embedding - git commit: ca54510
 
   Developed by:
     Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
@@ -547,8 +547,9 @@ Properties computed using the CASSCF density matrix
  number of basis on all atoms: 21
  number of basis in the system fragment: 13
 
-  ==> Orbital Localization and Embedding <==
+  ==> Orbital partition done according to simple threshold <==
 
+ --------Simple threshold t = 0.10000000--------
     Frozen-orbital Embedding MOs (System A)
     ============================
       MO     Type    <phi|P|phi>
@@ -582,6 +583,20 @@ Properties computed using the CASSCF density matrix
       21    Virtual   0.000016
     ============================
 
+ Summary: 
+ System A: Occupied: 7, Active: 2, Virtual: 5 
+ Environment B: Occupied: 4, Virtual: 3 
+ Frozen core/virtual: Core: 0, Virtual: 0 
+
+
+  ==> Semi-canonicalize active orbitals <==
+
+
+  ==> Semi-canonicalize frozen orbitals <==
+
+
+  ==> Update MOSpaceInfo <==
+
 
   ==> MO Space Information <==
 
@@ -595,15 +610,7 @@ Properties computed using the CASSCF density matrix
     FROZEN_UOCC         3     3
     Total              21    21
   -------------------------------
-    ============================
-  ==> EMBEDDING MO space Information <==
-    B_docc     = [4]
-    A_docc     = [7]
-    active     = [2]
-    A_uocc     = [5]
-    B_uocc     = [3]
-    ============================
-
+ ---------------End of embedding treatment--------------- 
 
   ==> Integral Transformation <==
 
@@ -625,7 +632,7 @@ Properties computed using the CASSCF density matrix
 	Starting second half-transformation.
 	Two-electron integral transformation complete.
 
-  Integral transformation done. 0.02757271 s
+  Integral transformation done. 0.01850873 s
   Reading the two-electron integrals from disk
   Size of two-electron integrals:   0.004347 GB  Using in-core PK algorithm.
    Calculation information:
@@ -644,11 +651,11 @@ Properties computed using the CASSCF density matrix
   Whereas there are 7260 unique shell quartets.
 
 
-  Frozen-core energy            -76.018781113759 a.u.
-  Timing for frozen one-body operator:                        0.105 s.
+  Frozen-core energy            -76.018781113758 a.u.
+  Timing for frozen one-body operator:                        0.091 s.
   Resorting integrals after freezing core.
-  Timing for freezing core and virtual orbitals:              0.112 s.
-  Conventional integrals take 0.28605688 s
+  Timing for freezing core and virtual orbitals:              0.098 s.
+  Conventional integrals take 0.25323188 s
 
   ==> Summary of Active Space Solver Input <==
 
@@ -706,8 +713,8 @@ Properties computed using the CASSCF density matrix
   ----------------------------------------
     Iter.      Avg. Energy       Delta_E
   ----------------------------------------
-      1     -115.698779193812  -1.157e+02
-      2     -115.698779193812  +0.000e+00
+      1     -115.698779193811  -1.157e+02
+      2     -115.698779193811  +1.421e-14
   ----------------------------------------
   The Davidson-Liu algorithm converged in 3 iterations.
 
@@ -716,13 +723,13 @@ Properties computed using the CASSCF density matrix
     20      0.96884960
     02     -0.24755069
 
-    Total Energy:      -115.698779193811504
+    Total Energy:      -115.698779193811419
 
   ==> Energy Summary <==
 
     Multi.  Irrep.  No.               Energy
     -----------------------------------------
-       1       A     0      -115.698779193812
+       1       A     0      -115.698779193811
     -----------------------------------------
 
   ==> Computing RDMs for Root No. 0 <==
@@ -765,7 +772,7 @@ Properties computed using the CASSCF density matrix
 	Starting second half-transformation.
 	Two-electron integral transformation complete.
 
-  Integral transformation done. 0.02448548 s
+  Integral transformation done. 0.02438921 s
   Reading the two-electron integrals from disk
   Size of two-electron integrals:   0.004347 GB
  Integrals are about to be updated.  Using in-core PK algorithm.
@@ -785,7 +792,7 @@ Properties computed using the CASSCF density matrix
   Whereas there are 7260 unique shell quartets.
 
 
-  Frozen-core energy            -76.018781113759 a.u.
+  Frozen-core energy            -76.018781113758 a.u.
   Timing for frozen one-body operator:                        0.104 s.
   Resorting integrals after freezing core.
   Timing for freezing core and virtual orbitals:              0.108 s.
@@ -794,7 +801,7 @@ Properties computed using the CASSCF density matrix
 
     Transformed 2 RDMs.
     Transformed 3 cumulants.
-  SemiCanonicalize takes 1.061434 s.
+  SemiCanonicalize takes 1.042228 s.
 
   ==> Multireference Driven Similarity Renormalization Group <==
 
@@ -844,18 +851,18 @@ Properties computed using the CASSCF density matrix
 
   ==> Computing DSRG-MRPT2 ... <==
 
-    Computing T2 amplitudes                  ...  Done. Timing        0.002941 s
-    Computing T1 amplitudes                  ...  Done. Timing        0.002193 s
-    Renormalizing two-electron integrals     ...  Done. Timing        0.001958 s
-    Renormalizing Fock matrix elements       ...  Done. Timing        0.002328 s
-    Computing <[F, T1]>                      ...  Done. Timing        0.001125 s
-    Computing <[F, T2]>                      ...  Done. Timing        0.002328 s
-    Computing <[V, T1]>                      ...  Done. Timing        0.002259 s
-    Computing <[V, T2]> (C_2)^4              ...  Done. Timing        0.014069 s
-    Computing <[V, T2]> C_4 (C_2)^2 HH       ...  Done. Timing        0.003279 s
-    Computing <[V, T2]> C_4 (C_2)^2 PP       ...  Done. Timing        0.003234 s
-    Computing <[V, T2]> C_4 (C_2)^2 PH       ...  Done. Timing        0.013576 s
-    Computing <[V, T2]> C_6 C_2              ...  Done. Timing        0.012225 s
+    Computing T2 amplitudes                  ...  Done. Timing        0.003016 s
+    Computing T1 amplitudes                  ...  Done. Timing        0.002183 s
+    Renormalizing two-electron integrals     ...  Done. Timing        0.001983 s
+    Renormalizing Fock matrix elements       ...  Done. Timing        0.002298 s
+    Computing <[F, T1]>                      ...  Done. Timing        0.001114 s
+    Computing <[F, T2]>                      ...  Done. Timing        0.002335 s
+    Computing <[V, T1]>                      ...  Done. Timing        0.002245 s
+    Computing <[V, T2]> (C_2)^4              ...  Done. Timing        0.013994 s
+    Computing <[V, T2]> C_4 (C_2)^2 HH       ...  Done. Timing        0.003227 s
+    Computing <[V, T2]> C_4 (C_2)^2 PP       ...  Done. Timing        0.003209 s
+    Computing <[V, T2]> C_4 (C_2)^2 PH       ...  Done. Timing        0.013495 s
+    Computing <[V, T2]> C_6 C_2              ...  Done. Timing        0.012083 s
 
   ==> Excitation Amplitudes Summary <==
 
@@ -863,36 +870,36 @@ Properties computed using the CASSCF density matrix
     Largest T1 amplitudes for spin case A:
        i       a                  i       a                  i       a               
     --------------------------------------------------------------------------------
-    [  5      13    ] 0.000009 [  2      10    ]-0.000004 [  5      11    ]-0.000004 
-    [  3      10    ]-0.000003 [  6      13    ]-0.000003 [  2      11    ] 0.000003 
-    [  6       9    ]-0.000002 [  5      12    ] 0.000002 [  4      12    ] 0.000002 
-    [  3       7    ]-0.000001 [  4      13    ]-0.000001 [  2       9    ]-0.000001 
-    [  6      12    ] 0.000001 [  4      11    ] 0.000001 [  5      10    ] 0.000001 
+    [  5      13    ] 0.000009 [  2      10    ] 0.000004 [  5      11    ]-0.000004 
+    [  3      10    ] 0.000003 [  6      13    ] 0.000003 [  2      11    ]-0.000003 
+    [  6       9    ] 0.000002 [  5      12    ] 0.000002 [  4      12    ]-0.000002 
+    [  3       7    ] 0.000001 [  4      13    ] 0.000001 [  2       9    ] 0.000001 
+    [  6      12    ]-0.000001 [  4      11    ]-0.000001 [  5      10    ] 0.000001 
     --------------------------------------------------------------------------------
-    Norm of T1A vector: (nonzero elements: 59)                    0.000012963415126.
+    Norm of T1A vector: (nonzero elements: 59)                    0.000012963415140.
     --------------------------------------------------------------------------------
     Largest T1 amplitudes for spin case B:
        _       _                  _       _                  _       _               
        i       a                  i       a                  i       a               
     --------------------------------------------------------------------------------
-    [  5      13    ] 0.000009 [  2      10    ]-0.000004 [  5      11    ]-0.000004 
-    [  3      10    ]-0.000003 [  6      13    ]-0.000003 [  2      11    ] 0.000003 
-    [  6       9    ]-0.000002 [  5      12    ] 0.000002 [  4      12    ] 0.000002 
-    [  3       7    ]-0.000001 [  4      13    ]-0.000001 [  2       9    ]-0.000001 
-    [  6      12    ] 0.000001 [  4      11    ] 0.000001 [  5      10    ] 0.000001 
+    [  5      13    ] 0.000009 [  2      10    ] 0.000004 [  5      11    ]-0.000004 
+    [  3      10    ] 0.000003 [  6      13    ] 0.000003 [  2      11    ]-0.000003 
+    [  6       9    ] 0.000002 [  5      12    ] 0.000002 [  4      12    ]-0.000002 
+    [  3       7    ] 0.000001 [  4      13    ] 0.000001 [  2       9    ] 0.000001 
+    [  6      12    ]-0.000001 [  4      11    ]-0.000001 [  5      10    ] 0.000001 
     --------------------------------------------------------------------------------
-    Norm of T1B vector: (nonzero elements: 59)                    0.000012963415126.
+    Norm of T1B vector: (nonzero elements: 59)                    0.000012963415140.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case AA:
        i   j   a   b              i   j   a   b              i   j   a   b           
     --------------------------------------------------------------------------------
-    [  6   7   7  12]-0.035166 [  5   7   8  13] 0.034972 [  6   8   8  12]-0.034971 
-    [  4   7   7   9] 0.031716 [  4   8   8   9] 0.031491 [  5   8   7  13] 0.027742 
+    [  6   7   7  12] 0.035166 [  5   7   8  13] 0.034972 [  6   8   8  12] 0.034971 
+    [  4   7   7   9]-0.031716 [  4   8   8   9]-0.031491 [  5   8   7  13] 0.027742 
     [  5   7   7  10] 0.018125 [  5   8   8  10] 0.017477 [  5   7   7  11] 0.016899 
-    [  5   8   8  11] 0.016678 [  3   7   7  11]-0.016401 [  3   7   7  10] 0.015200 
-    [  4   7   8  12] 0.014897 [  3   8   8  11]-0.013757 [  4   8   7  12] 0.013629 
+    [  5   8   8  11] 0.016678 [  3   7   7  11] 0.016401 [  3   7   7  10]-0.015200 
+    [  4   7   8  12]-0.014897 [  3   8   8  11] 0.013757 [  4   8   7  12]-0.013629 
     --------------------------------------------------------------------------------
-    Norm of T2AA vector: (nonzero elements: 3020)                 0.218862791512276.
+    Norm of T2AA vector: (nonzero elements: 3020)                 0.218862791512275.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case AB:
            _       _                  _       _                  _       _           
@@ -902,21 +909,21 @@ Properties computed using the CASSCF density matrix
     [  4   4   9   9]-0.021834 [  6   6  12  12]-0.021590 [  6   6   9   9]-0.020685 
     [  2   3   7   8] 0.020269 [  4   6   9  12] 0.018641 [  5   5  10  10]-0.017666 
     [  3   3   8   8]-0.016823 [  5   5   9   9]-0.016751 [  3   3  10  10]-0.016670 
-    [  2   8   7  13] 0.016656 [  4   4  11  11]-0.016343 [  4   4  12  12]-0.016067 
+    [  2   8   7  13]-0.016656 [  4   4  11  11]-0.016343 [  4   4  12  12]-0.016067 
     --------------------------------------------------------------------------------
-    Norm of T2AB vector: (nonzero elements: 3953)                 0.259264811903620.
+    Norm of T2AB vector: (nonzero elements: 3953)                 0.259264811903618.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case BB:
        _   _   _   _              _   _   _   _              _   _   _   _           
        i   j   a   b              i   j   a   b              i   j   a   b           
     --------------------------------------------------------------------------------
-    [  6   7   7  12]-0.035166 [  5   7   8  13] 0.034972 [  6   8   8  12]-0.034971 
-    [  4   7   7   9] 0.031716 [  4   8   8   9] 0.031491 [  5   8   7  13] 0.027742 
+    [  6   7   7  12] 0.035166 [  5   7   8  13] 0.034972 [  6   8   8  12] 0.034971 
+    [  4   7   7   9]-0.031716 [  4   8   8   9]-0.031491 [  5   8   7  13] 0.027742 
     [  5   7   7  10] 0.018125 [  5   8   8  10] 0.017477 [  5   7   7  11] 0.016899 
-    [  5   8   8  11] 0.016678 [  3   7   7  11]-0.016401 [  3   7   7  10] 0.015200 
-    [  4   7   8  12] 0.014897 [  3   8   8  11]-0.013757 [  4   8   7  12] 0.013629 
+    [  5   8   8  11] 0.016678 [  3   7   7  11] 0.016401 [  3   7   7  10]-0.015200 
+    [  4   7   8  12]-0.014897 [  3   8   8  11] 0.013757 [  4   8   7  12]-0.013629 
     --------------------------------------------------------------------------------
-    Norm of T2BB vector: (nonzero elements: 3020)                 0.218862791512276.
+    Norm of T2BB vector: (nonzero elements: 3020)                 0.218862791512275.
     --------------------------------------------------------------------------------
 
   ==> Possible Intruders <==
@@ -929,22 +936,22 @@ Properties computed using the CASSCF density matrix
 
   ==> DSRG-MRPT2 Energy Summary <==
 
-    E0 (reference)                 =   -115.698779193811447
+    E0 (reference)                 =   -115.698779193811362
     <[F, T1]>                      =     -0.000000000244522
     <[F, T2]>                      =      0.000000000006165
     <[V, T1]>                      =      0.000000000010028
-    <[V, T2]> (C_2)^4              =     -0.098355033050146
+    <[V, T2]> (C_2)^4              =     -0.098355033050142
     <[V, T2]> C_4 (C_2)^2 HH       =      0.001092387767576
     <[V, T2]> C_4 (C_2)^2 PP       =      0.000877786512080
-    <[V, T2]> C_4 (C_2)^2 PH       =      0.016248739430983
+    <[V, T2]> C_4 (C_2)^2 PH       =      0.016248739430973
     <[V, T2]> C_6 C_2              =     -0.000000000008264
-    <[V, T2]>                      =     -0.080136119347771
-    DSRG-MRPT2 correlation energy  =     -0.080136119576100
-    DSRG-MRPT2 total energy        =   -115.778915313387543
-    max(T1)                        =      0.000009155261540
+    <[V, T2]>                      =     -0.080136119347778
+    DSRG-MRPT2 correlation energy  =     -0.080136119576107
+    DSRG-MRPT2 total energy        =   -115.778915313387472
+    max(T1)                        =      0.000009155261550
     max(T2)                        =      0.039691326958885
-    ||T1||                         =      0.000018333037485
-    ||T2||                         =      0.603883112682222
+    ||T1||                         =      0.000018333037505
+    ||T2||                         =      0.603883112682218
 
   Energy took      0.091 s
 
@@ -959,7 +966,7 @@ Properties computed using the CASSCF density matrix
     -----------------------------------------------------
 	PT2-in-CASSCF energy..............................................PASSED
 
-    Psi4 stopped on: Wednesday, 14 August 2019 06:16PM
-    Psi4 wall time for execution: 0:00:03.45
+    Psi4 stopped on: Thursday, 15 August 2019 11:46AM
+    Psi4 wall time for execution: 0:00:03.32
 
 *** Psi4 exiting successfully. Buy a developer a beer!

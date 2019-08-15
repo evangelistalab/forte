@@ -327,7 +327,7 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
     } else if (options.get_str("EMBEDDING_CUTOFF_METHOD") == "CUM_THRESHOLD") {
         print_h2("Orbital partition done according to cumulative threshold");
         outfile->Printf("\n --------Cumulative threshold t = %8.8f--------", thresh);
-    } else if (options.get_str("EMBEDDING_CUTOFF_METHOD") == "MUN_OF_ORBITALS") {
+    } else if (options.get_str("EMBEDDING_CUTOFF_METHOD") == "NUM_OF_ORBITALS") {
         print_h2(
             "Orbital partition done according to fixed number of occupied and virtual orbitals");
         A_docc = options.get_int("NUM_A_DOCC");
@@ -574,7 +574,7 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
     outfile->Printf("\n Summary: ");
     outfile->Printf("\n System A: Occupied: %d, Active: %d, Virtual: %d ", num_Ao, actv_a[0],
                     num_Av);
-    outfile->Printf("\n Environment B: Occupied: %d, Virtual: %d \n", num_Bo, num_Bv);
+    outfile->Printf("\n Environment B: Occupied: %d, Virtual: %d ", num_Bo, num_Bv);
     outfile->Printf("\n Frozen core/virtual: Core: %d, Virtual: %d \n", num_Fo, num_Fv);
 
     SharedMatrix Ca_tilde(ref_wfn->Ca()->clone());
@@ -664,6 +664,7 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
         make_mo_space_info_from_map(ref_wfn, mo_space_map, reorder);
 
     // Return the new embedding MOSpaceInfo to pymodule
+    outfile->Printf("\n ---------------End of embedding treatment--------------- ");
     return mo_space_info_emb;
 } // namespace forte
 
