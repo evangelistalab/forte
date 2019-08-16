@@ -2209,6 +2209,9 @@ void MRDSRG_SO::comm_H_A_3_sr_fink(double factor, BlockedTensor& H1, BlockedTens
         C3["c2,c0,c1,v1,v0,v2"] -= temp["c0,c1,c2,v0,v1,v2"];
         C3["c2,c0,c1,v1,v2,v0"] += temp["c0,c1,c2,v0,v1,v2"];
 
+        C3["c0,c1,c2,v0,v1,v2"] += (1.0 / 6.0) * H3["v3,v4,v5,v0,v1,v2"] * T3["c0,c1,c2,v3,v4,v5"];
+        C3["c0,c1,c2,v0,v1,v2"] += (-1.0 / 6.0) * H3["c3,c4,c5,c0,c1,c2"] * T3["c3,c4,c5,v0,v1,v2"];
+
         temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"cccvvv"});
         temp["c0,c1,c2,v0,v1,v2"] += (-1.0 / 2.0) * H3["v3,v4,c0,v0,v1,c3"] * T3["c1,c2,c3,v2,v3,v4"];
         C3["c0,c1,c2,v0,v1,v2"] += temp["c0,c1,c2,v0,v1,v2"];
@@ -2244,6 +2247,7 @@ void MRDSRG_SO::comm_H_A_3_sr_fink(double factor, BlockedTensor& H1, BlockedTens
 
         temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"cccvvc"});
         temp["c0,c1,c2,v0,v1,c3"] += 1.0 * H1["c3,v2"] * T3["c0,c1,c2,v0,v1,v2"];
+        temp["c0,c1,c2,v0,v1,c3"] += (1.0 / 2.0) * H3["c3,c4,c5,c0,c1,c2"] * T2["c4,c5,v0,v1"];
         C3["c0,c1,c2,v0,v1,c3"] += temp["c0,c1,c2,v0,v1,c3"];
         C3["c0,c1,c2,v0,c3,v1"] -= temp["c0,c1,c2,v0,v1,c3"];
         C3["c0,c1,c2,c3,v0,v1"] += temp["c0,c1,c2,v0,v1,c3"];
@@ -2299,6 +2303,7 @@ void MRDSRG_SO::comm_H_A_3_sr_fink(double factor, BlockedTensor& H1, BlockedTens
         temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"cccvcc"});
         temp["c0,c1,c2,v0,c3,c4"] += (1.0 / 2.0) * H2["c3,c4,v1,v2"] * T3["c0,c1,c2,v0,v1,v2"];
         temp["c0,c1,c2,v0,c3,c4"] += (1.0 / 6.0) * H3["v1,v2,v3,v0,c3,c4"] * T3["c0,c1,c2,v1,v2,v3"];
+        temp["c0,c1,c2,v0,c3,c4"] += -1.0 * H3["c3,c4,c5,c0,c1,c2"] * T1["c5,v0"];
         C3["c0,c1,c2,v0,c3,c4"] += temp["c0,c1,c2,v0,c3,c4"];
         C3["c0,c1,c2,c3,v0,c4"] -= temp["c0,c1,c2,v0,c3,c4"];
         C3["c0,c1,c2,c3,c4,v0"] += temp["c0,c1,c2,v0,c3,c4"];
@@ -2330,6 +2335,7 @@ void MRDSRG_SO::comm_H_A_3_sr_fink(double factor, BlockedTensor& H1, BlockedTens
 
         temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"vccvvv"});
         temp["v0,c0,c1,v1,v2,v3"] += -1.0 * H1["c2,v0"] * T3["c0,c1,c2,v1,v2,v3"];
+        temp["v0,c0,c1,v1,v2,v3"] += (1.0 / 2.0) * H3["v1,v2,v3,v0,v4,v5"] * T2["c0,c1,v4,v5"];
         C3["v0,c0,c1,v1,v2,v3"] += temp["v0,c0,c1,v1,v2,v3"];
         C3["c0,v0,c1,v1,v2,v3"] -= temp["v0,c0,c1,v1,v2,v3"];
         C3["c0,c1,v0,v1,v2,v3"] += temp["v0,c0,c1,v1,v2,v3"];
@@ -2405,6 +2411,7 @@ void MRDSRG_SO::comm_H_A_3_sr_fink(double factor, BlockedTensor& H1, BlockedTens
 
         temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"vvcvvv"});
         temp["v0,v1,c0,v2,v3,v4"] += (1.0 / 2.0) * H2["c1,c2,v0,v1"] * T3["c0,c1,c2,v2,v3,v4"];
+        temp["v0,v1,c0,v2,v3,v4"] += 1.0 * H3["v2,v3,v4,v0,v1,v5"] * T1["c0,v5"];
         temp["v0,v1,c0,v2,v3,v4"] += (-1.0 / 6.0) * H3["c1,c2,c3,v0,v1,c0"] * T3["c1,c2,c3,v2,v3,v4"];
         C3["v0,v1,c0,v2,v3,v4"] += temp["v0,v1,c0,v2,v3,v4"];
         C3["v0,c0,v1,v2,v3,v4"] -= temp["v0,v1,c0,v2,v3,v4"];
@@ -2473,9 +2480,6 @@ void MRDSRG_SO::comm_H_A_3_sr_fink(double factor, BlockedTensor& H1, BlockedTens
     }
 
     if (ldsrg3_fink_order_ > 6) {
-        C3["c0,c1,c2,v0,v1,v2"] += (1.0 / 6.0) * H3["v3,v4,v5,v0,v1,v2"] * T3["c0,c1,c2,v3,v4,v5"];
-        C3["c0,c1,c2,v0,v1,v2"] += (-1.0 / 6.0) * H3["c3,c4,c5,c0,c1,c2"] * T3["c3,c4,c5,v0,v1,v2"];
-
         temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"cccvvc"});
         temp["c0,c1,c2,v0,v1,c3"] += (1.0 / 2.0) * H3["c3,c4,c5,v2,c0,c1"] * T3["c2,c4,c5,v0,v1,v2"];
         C3["c0,c1,c2,v0,v1,c3"] += temp["c0,c1,c2,v0,v1,c3"];
@@ -2490,7 +2494,6 @@ void MRDSRG_SO::comm_H_A_3_sr_fink(double factor, BlockedTensor& H1, BlockedTens
 
         temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"cccvvc"});
         temp["c0,c1,c2,v0,v1,c3"] += (1.0 / 6.0) * H3["v2,v3,v4,v0,v1,c3"] * T3["c0,c1,c2,v2,v3,v4"];
-        temp["c0,c1,c2,v0,v1,c3"] += (1.0 / 2.0) * H3["c3,c4,c5,c0,c1,c2"] * T2["c4,c5,v0,v1"];
         C3["c0,c1,c2,v0,v1,c3"] += temp["c0,c1,c2,v0,v1,c3"];
         C3["c0,c1,c2,v0,c3,v1"] -= temp["c0,c1,c2,v0,v1,c3"];
         C3["c0,c1,c2,c3,v0,v1"] += temp["c0,c1,c2,v0,v1,c3"];
@@ -2516,11 +2519,23 @@ void MRDSRG_SO::comm_H_A_3_sr_fink(double factor, BlockedTensor& H1, BlockedTens
         C3["c1,c2,c0,c3,v0,v1"] += temp["c0,c1,c2,v0,v1,c3"];
         C3["c1,c2,c0,c3,v1,v0"] -= temp["c0,c1,c2,v0,v1,c3"];
 
-        temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"cccvcc"});
-        temp["c0,c1,c2,v0,c3,c4"] += -1.0 * H3["c3,c4,c5,c0,c1,c2"] * T1["c5,v0"];
-        C3["c0,c1,c2,v0,c3,c4"] += temp["c0,c1,c2,v0,c3,c4"];
-        C3["c0,c1,c2,c3,v0,c4"] -= temp["c0,c1,c2,v0,c3,c4"];
-        C3["c0,c1,c2,c3,c4,v0"] += temp["c0,c1,c2,v0,c3,c4"];
+        temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"vccvvv"});
+        temp["v0,c0,c1,v1,v2,v3"] += (-1.0 / 6.0) * H3["c2,c3,c4,v0,c0,c1"] * T3["c2,c3,c4,v1,v2,v3"];
+        C3["v0,c0,c1,v1,v2,v3"] += temp["v0,c0,c1,v1,v2,v3"];
+        C3["c0,v0,c1,v1,v2,v3"] -= temp["v0,c0,c1,v1,v2,v3"];
+        C3["c0,c1,v0,v1,v2,v3"] += temp["v0,c0,c1,v1,v2,v3"];
+
+        temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"vccvvv"});
+        temp["v0,c0,c1,v1,v2,v3"] += (-1.0 / 2.0) * H3["v1,v2,c2,v0,v4,v5"] * T3["c0,c1,c2,v3,v4,v5"];
+        C3["v0,c0,c1,v1,v2,v3"] += temp["v0,c0,c1,v1,v2,v3"];
+        C3["v0,c0,c1,v1,v3,v2"] -= temp["v0,c0,c1,v1,v2,v3"];
+        C3["v0,c0,c1,v3,v1,v2"] += temp["v0,c0,c1,v1,v2,v3"];
+        C3["c0,v0,c1,v1,v2,v3"] -= temp["v0,c0,c1,v1,v2,v3"];
+        C3["c0,v0,c1,v1,v3,v2"] += temp["v0,c0,c1,v1,v2,v3"];
+        C3["c0,v0,c1,v3,v1,v2"] -= temp["v0,c0,c1,v1,v2,v3"];
+        C3["c0,c1,v0,v1,v2,v3"] += temp["v0,c0,c1,v1,v2,v3"];
+        C3["c0,c1,v0,v1,v3,v2"] -= temp["v0,c0,c1,v1,v2,v3"];
+        C3["c0,c1,v0,v3,v1,v2"] += temp["v0,c0,c1,v1,v2,v3"];
 
         temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"vccvvv"});
         temp["v0,c0,c1,v1,v2,v3"] += (-1.0 / 2.0) * H3["v1,c2,c3,v0,v4,c0"] * T3["c1,c2,c3,v2,v3,v4"];
@@ -2543,31 +2558,6 @@ void MRDSRG_SO::comm_H_A_3_sr_fink(double factor, BlockedTensor& H1, BlockedTens
         C3["c1,c0,v0,v2,v1,v3"] += temp["v0,c0,c1,v1,v2,v3"];
         C3["c1,c0,v0,v2,v3,v1"] -= temp["v0,c0,c1,v1,v2,v3"];
 
-        temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"vccvvv"});
-        temp["v0,c0,c1,v1,v2,v3"] += (1.0 / 2.0) * H3["v1,v2,v3,v0,v4,v5"] * T2["c0,c1,v4,v5"];
-        temp["v0,c0,c1,v1,v2,v3"] += (-1.0 / 6.0) * H3["c2,c3,c4,v0,c0,c1"] * T3["c2,c3,c4,v1,v2,v3"];
-        C3["v0,c0,c1,v1,v2,v3"] += temp["v0,c0,c1,v1,v2,v3"];
-        C3["c0,v0,c1,v1,v2,v3"] -= temp["v0,c0,c1,v1,v2,v3"];
-        C3["c0,c1,v0,v1,v2,v3"] += temp["v0,c0,c1,v1,v2,v3"];
-
-        temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"vccvvv"});
-        temp["v0,c0,c1,v1,v2,v3"] += (-1.0 / 2.0) * H3["v1,v2,c2,v0,v4,v5"] * T3["c0,c1,c2,v3,v4,v5"];
-        C3["v0,c0,c1,v1,v2,v3"] += temp["v0,c0,c1,v1,v2,v3"];
-        C3["v0,c0,c1,v1,v3,v2"] -= temp["v0,c0,c1,v1,v2,v3"];
-        C3["v0,c0,c1,v3,v1,v2"] += temp["v0,c0,c1,v1,v2,v3"];
-        C3["c0,v0,c1,v1,v2,v3"] -= temp["v0,c0,c1,v1,v2,v3"];
-        C3["c0,v0,c1,v1,v3,v2"] += temp["v0,c0,c1,v1,v2,v3"];
-        C3["c0,v0,c1,v3,v1,v2"] -= temp["v0,c0,c1,v1,v2,v3"];
-        C3["c0,c1,v0,v1,v2,v3"] += temp["v0,c0,c1,v1,v2,v3"];
-        C3["c0,c1,v0,v1,v3,v2"] -= temp["v0,c0,c1,v1,v2,v3"];
-        C3["c0,c1,v0,v3,v1,v2"] += temp["v0,c0,c1,v1,v2,v3"];
-
-        temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"vvcvvv"});
-        temp["v0,v1,c0,v2,v3,v4"] += 1.0 * H3["v2,v3,v4,v0,v1,v5"] * T1["c0,v5"];
-        C3["v0,v1,c0,v2,v3,v4"] += temp["v0,v1,c0,v2,v3,v4"];
-        C3["v0,c0,v1,v2,v3,v4"] -= temp["v0,v1,c0,v2,v3,v4"];
-        C3["c0,v0,v1,v2,v3,v4"] += temp["v0,v1,c0,v2,v3,v4"];
-
         temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"vvvvvv"});
         temp["v0,v1,v2,v3,v4,v5"] += -1.0 * H3["v3,v4,c0,v0,v1,v2"] * T1["c0,v5"];
         C3["v0,v1,v2,v3,v4,v5"] += temp["v0,v1,v2,v3,v4,v5"];
@@ -2579,6 +2569,7 @@ void MRDSRG_SO::comm_H_A_3_sr_fink(double factor, BlockedTensor& H1, BlockedTens
         C3["c0,c1,c2,c3,c4,c5"] += temp["c0,c1,c2,c3,c4,c5"];
         C3["c0,c2,c1,c3,c4,c5"] -= temp["c0,c1,c2,c3,c4,c5"];
         C3["c2,c0,c1,c3,c4,c5"] += temp["c0,c1,c2,c3,c4,c5"];
+
     }
 
     if (ldsrg3_fink_order_ > 7) {
