@@ -25,11 +25,13 @@ The input file should at least include two fragment::
       symmetry c1 # Currently it is suggested to disable symmetry for embedding calculations
     }
 
-In the forte options, turn on embedding procedure by adding::
+In the forte options, turn on embedding procedure by adding options to forte::
 
-    Embedding    true
-    Embedding_cutoff_method    threshold # threshold/cum_threshold/num_of_orbitals
-    Embedding_threshold    0.5 # threshold t
+    set forte{
+      embedding    true
+      embedding_cutoff_method    threshold # threshold/cum_threshold/num_of_orbitals
+      embedding_threshold    0.5 # threshold t
+    }
 
 This is the minimum input required to run the embedding calculation. The embedding procedure will 
 update the wavefunction coefficients and the MOSpaceInfo before running general forte calculations.
