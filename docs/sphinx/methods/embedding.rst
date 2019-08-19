@@ -1,6 +1,6 @@
 .. _`sec:methods:embedding`:
 
-Embedding Theory
+Active Space Embedding Theory
 =======================================
 
 .. codeauthor:: Nan He
