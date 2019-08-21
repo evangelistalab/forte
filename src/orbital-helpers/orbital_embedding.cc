@@ -492,10 +492,6 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
             cum_l_o = tmp / sum_lo;
             if (cum_l_o < thresh) {
                 index_A_occ.push_back(i + frzopi[0]);
-                //                outfile->Printf("\n Occupied orbital %d is partitioned to A with
-                //                cumulative "
-                //                                "eigenvalue %8.8f",
-                //                                i, cum_l_o);
             } else {
                 index_B_occ.push_back(i + frzopi[0]);
                 if (lo->get(0, i) > 0.5) {
@@ -512,10 +508,6 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
             cum_l_v = tmp / sum_lv;
             if (cum_l_v < thresh) {
                 index_A_vir.push_back(i + offset_vec);
-                //                outfile->Printf("\n Virtual orbital %d is partitioned to A with
-                //                cumulative "
-                //                                "eigenvalue %8.8f",
-                //                                i + offset_vec, cum_l_v);
             } else {
                 index_B_vir.push_back(i + offset_vec);
                 if (lv->get(0, i) > 0.5) {

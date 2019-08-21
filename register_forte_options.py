@@ -167,7 +167,7 @@ def register_mo_space_info_options(forte_options):
         "FROZEN_UOCC",
         "Number of frozen unoccupied orbitals per irrep (in Cotton order)")
 
-#    /*- Molecular orbitals to swap -
+    #    /*- Molecular orbitals to swap -
     #     *  Swap mo_1 with mo_2 in irrep symmetry
     #     *  Swap mo_3 with mo_4 in irrep symmetry
     #     *  Format: [irrep, mo_1, mo_2, irrep, mo_3, mo_4]
