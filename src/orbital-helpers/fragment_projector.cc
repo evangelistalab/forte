@@ -57,7 +57,7 @@ psi::SharedMatrix make_fragment_projector(SharedWavefunction wfn, Options& optio
                            "for embedding!");
     }
     outfile->Printf(
-        "\n The input molecule has %d fragments, treating the first fragment as the system! \n",
+        "\n  The input molecule has %d fragments, treating the first fragment as the system.\n",
         nfrag);
 
     std::shared_ptr<BasisSet> prime_basis = wfn->basisset();
@@ -86,11 +86,11 @@ void FragmentProjector::startup() {
     // extract the sys molecule objects
     std::shared_ptr<Molecule> mol_sys = molecule_->extract_subsets(sys_list, ghost_list);
 
-    outfile->Printf("\n System Fragment \n");
+    outfile->Printf("\n  System Fragment \n");
     mol_sys->print();
 
     nbf_ = basis_->nbf();
-    outfile->Printf("\n number of basis on all atoms: %d", nbf_);
+    outfile->Printf("\n  Number of basis on all atoms: %d", nbf_);
 
     natom_A_ = mol_sys->natom();
     int count_basis = 0;
@@ -101,7 +101,7 @@ void FragmentProjector::startup() {
             count_basis += 1;
         }
     }
-    outfile->Printf("\n number of basis in the system fragment: %d", count_basis);
+    outfile->Printf("\n  Number of basis in the system fragment: %d", count_basis);
     nbf_A_ = count_basis;
 }
 
