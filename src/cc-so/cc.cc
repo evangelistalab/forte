@@ -74,10 +74,11 @@ void CC_SO::startup() {
     BlockedTensor::set_expert_mode(true);
 
     Eref_ = compute_Eref_from_rdms(rdms_, ints_, mo_space_info_);
+    Enuc_ = ints_->nuclear_repulsion_energy();
     Efrzc_ = ints_->frozen_core_energy();
 
     corr_level_ = foptions_->get_str("CC_LEVEL");
-    do_triples_ = corr_level_.find("CCSDT") != std::string::npos;
+    do_triples_ = corr_level_.find("CCSDT") != std::string::npos or corr_level_.find("CC3") != std::string::npos;
 
     e_convergence_ = foptions_->get_double("E_CONVERGENCE");
     r_convergence_ = foptions_->get_double("R_CONVERGENCE");
@@ -370,7 +371,7 @@ void CC_SO::update_t3() {
 }
 
 double CC_SO::compute_energy() {
-    if (corr_level_ == "CCSD" or corr_level_ == "CCSDT") {
+    if (corr_level_ == "CCSD" or corr_level_ == "CCSDT" or corr_level_ == "UCC3" or corr_level_ == "VUCCSD5") {
         Hbar1_ = BTF_->build(tensor_type_, "Hbar1", {"cv"});
         Hbar2_ = BTF_->build(tensor_type_, "Hbar2", {"ccvv"});
     } else {
@@ -392,7 +393,7 @@ double CC_SO::compute_energy() {
     guess_t1();
 
     if (do_triples_) {
-        if (corr_level_ == "CCSDT") {
+        if (corr_level_ == "CCSDT" or corr_level_ == "UCC3") {
             Hbar3_ = BTF_->build(tensor_type_, "Hbar3", {"cccvvv"});
         } else {
             Hbar3_ = BTF_->build(tensor_type_, "Hbar3", {"gggggg"});
@@ -422,10 +423,24 @@ double CC_SO::compute_energy() {
             compute_ccsd_amp(F_, V_, T1_, T2_, Hbar0_, Hbar1_, Hbar2_);
         } else if (corr_level_ == "CCSDT") {
             compute_ccsdt_amp(F_, V_, T1_, T2_, T3_, Hbar0_, Hbar1_, Hbar2_, Hbar3_);
-        }
+        } else if (corr_level_ == "UCC3") {
+            double Eeff = 0.0;
+            ambit::BlockedTensor Frot = BTF_->build(tensor_type_, "Frot", {"gg"});
+            ambit::BlockedTensor Vrot = BTF_->build(tensor_type_, "Vrot", {"gggg"});
+            rotate_hamiltonian(Eeff, Frot, Vrot);
+//            outfile->Printf("\n  Eeff = %.15f", Eeff);
 
-        Hbar1_["pq"] += F_["pq"];
-        Hbar2_["pqrs"] += V_["pqrs"];
+            compute_ucc3_amp(Frot, Vrot, T2_, T3_, Hbar0_, Hbar1_, Hbar2_, Hbar3_);
+
+            Hbar0_ += Eeff;
+        } else if (corr_level_ == "VUCCSD5") {
+            double Eeff = 0.0;
+            ambit::BlockedTensor Frot = BTF_->build(tensor_type_, "Frot", {"gg"});
+            ambit::BlockedTensor Vrot = BTF_->build(tensor_type_, "Vrot", {"gggg"});
+            rotate_hamiltonian(Eeff, Frot, Vrot);
+            compute_uccsd5_amp(Frot, Vrot, T2_, Hbar0_, Hbar1_, Hbar2_);
+            Hbar0_ += Eeff;
+        }
 
         double Edelta = Eref_ + Hbar0_ - Etotal;
         Etotal = Eref_ + Hbar0_;
@@ -478,6 +493,54 @@ double CC_SO::compute_energy() {
     psi::Process::environment.globals["CURRENT ENERGY"] = Etotal;
 
     return Etotal;
+}
+
+void CC_SO::rotate_hamiltonian(double& Eeff, BlockedTensor& Fnew, BlockedTensor& Vnew) {
+    ambit::BlockedTensor A1 = BTF_->build(tensor_type_, "A1 Amplitudes", {"gg"});
+    A1["ia"] = T1_["ia"];
+    A1["ai"] -= T1_["ia"];
+
+    psi::SharedMatrix A1_m(new psi::Matrix("A1", nso_, nso_));
+    A1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+        A1_m->set(i[0], i[1], value);
+    });
+
+    // >=3 is required for high energy convergence
+    A1_m->expm(3);
+
+    ambit::BlockedTensor U1 = BTF_->build(tensor_type_, "Transformer", {"gg"});
+    U1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+        value = A1_m->get(i[0], i[1]);
+    });
+
+    // Recompute Hbar0 (ref. energy + T1 correlation), Fnew (Fock), and Vnew (aptei)
+    // E = 0.5 * ( H["ji"] + F["ji] ) * D1["ij"]
+
+    Fnew["rs"] = U1["rp"] * H_["pq"] * U1["sq"];
+
+    Eeff = 0.0;
+    Fnew.block("cc").iterate([&](const std::vector<size_t>& i, double& value) {
+        if (i[0] == i[1]) {
+            Eeff += 0.5 * value;
+        }
+    });
+
+    Vnew["g0,g1,g2,g3"] = U1["g0,g4"] * U1["g1,g5"] * V_["g4,g5,g6,g7"] * U1["g2,g6"] * U1["g3,g7"];
+
+    auto K1 = BTF_->build(tensor_type_, "Kronecker delta", {"cc"});
+    (K1.block("cc")).iterate([&](const std::vector<size_t>& i, double& value) {
+        value = (i[0] == i[1] ? 1.0 : 0.0);
+    });
+    Fnew["pq"] += Vnew["pjqi"] * K1["ij"];
+
+    // compute fully contracted term from T1
+    Fnew.block("cc").iterate([&](const std::vector<size_t>& i, double& value) {
+        if (i[0] == i[1]) {
+            Eeff += 0.5 * value;
+        }
+    });
+
+    Eeff += Efrzc_ + Enuc_ - Eref_;
 }
 
 //void CC_SO::compute_lhbar() {

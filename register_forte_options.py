@@ -675,9 +675,20 @@ def register_dsrg_options(forte_options):
                       n = 2: truncate to quadratic commutator term
                       n > 2: not allowed""")
 
+    forte_options.add_str("LDSRG3_PERTURB_TYPE", "FOCK", ["FOCK", "FINK"],
+                      "The perturbation type for truncating LDSRG3 terms")
+
     forte_options.add_int("LDSRG3_FINK_ORDER", 8,
                       """The perturbation order of energy terms included in LDSRG3 single commutator
                       based on Fink Hamiltonian
+                      n = 4: minimal order
+                      n = 5-7: increasing orders
+                      n = 8: maximum order
+                      other values: not allowed""")
+
+    forte_options.add_int("LDSRG3_FOCK_ORDER", 8,
+                      """The perturbation order of energy terms included in LDSRG3 single commutator
+                      based on diagonal Fock Hamiltonian
                       n = 4: minimal order
                       n = 5-7: increasing orders
                       n = 8: maximum order
@@ -825,7 +836,7 @@ def register_old_options(forte_options):
 
 def register_cc_so_options(forte_options):
     forte_options.add_str("CC_LEVEL", "CCSD", ["CCSD", "CCSDT", "LUCCSD", "QUCCSD",
-                                               "LUCCSDT"],
+                                               "LUCCSDT", "UCC3", "VUCCSD5"],
                           "Coupled cluster level")
 
     forte_options.add_int("LUCCSDT_FINK_ORDER", 8,

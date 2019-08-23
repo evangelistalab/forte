@@ -100,12 +100,22 @@ void MRDSRG_SO::startup() {
     if (foptions_->get_str("CORR_LEVEL") == "LDSRG3_1")
         ldsrg3_level_ = 1;
 
+    ldsrg3_perturb_type_ = foptions_->get_str("LDSRG3_PERTURB_TYPE");
+
     ldsrg3_fink_order_ = foptions_->get_int("LDSRG3_FINK_ORDER");
     if (ldsrg3_fink_order_ < 4) {
         ldsrg3_fink_order_ = 4;
     }
     if (ldsrg3_fink_order_ > 8) {
         ldsrg3_fink_order_ = 8;
+    }
+
+    ldsrg3_fock_order_ = foptions_->get_int("LDSRG3_FOCK_ORDER");
+    if (ldsrg3_fock_order_ < 4) {
+        ldsrg3_fock_order_ = 4;
+    }
+    if (ldsrg3_fock_order_ > 8) {
+        ldsrg3_fock_order_ = 8;
     }
 
     s_ = foptions_->get_double("DSRG_S");
@@ -424,8 +434,10 @@ void MRDSRG_SO::print_summary() {
 
     if (do_t3_) {
         calculation_info.push_back({"LDSRG3_NCOMM_3BODY", ncomm_3body_});
+        calculation_info.push_back({"LDSRG3_FOCK_ORDER", ldsrg3_fock_order_});
         calculation_info.push_back({"LDSRG3_FINK_ORDER", ldsrg3_fink_order_});
         calculation_info_string.push_back({"LDSRG_DDCA", ldsrg3_ddca_ ? "TRUE" : "FALSE"});
+        calculation_info_string.push_back({"LDSRG3_PERTURB_TYPE", ldsrg3_perturb_type_});
     }
 
     // Print some information
@@ -821,7 +833,11 @@ void MRDSRG_SO::compute_lhbar() {
         if (do_t3_) {
             timer_on("3-body [H, A]");
             if (na_ == 0) {
-                comm_H_A_3_sr_fink(factor, O1, O2, O3, T1, T2, T3, C0, C1, C2, C3);
+                if (ldsrg3_perturb_type_ == "FOCK") {
+                    comm_H_A_3_sr_fock(factor, O1, O2, O3, T1, T2, T3, C0, C1, C2, C3);
+                } else {
+                    comm_H_A_3_sr_fink(factor, O1, O2, O3, T1, T2, T3, C0, C1, C2, C3);
+                }
                 if (n > ncomm_3body_) {
                     C3.zero();
                 }

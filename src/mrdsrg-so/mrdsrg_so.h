@@ -121,8 +121,12 @@ class MRDSRG_SO : public DynamicCorrelationSolver {
     bool ldsrg3_ddca_;
     /// Truncate 3-body terms to given nested level of commutator
     int ncomm_3body_;
+    /// perturbation type
+    std::string ldsrg3_perturb_type_;
     /// perturbation order based on Fink Hamiltonian
     int ldsrg3_fink_order_;
+    /// perturbation order based on diagonal Fock Hamiltonian
+    int ldsrg3_fock_order_;
 
     std::vector<std::string> sr_ldsrg3_ddca_blocks();
 
@@ -250,15 +254,16 @@ class MRDSRG_SO : public DynamicCorrelationSolver {
     void comm_H_A_3(double factor, BlockedTensor& H1, BlockedTensor& H2, BlockedTensor& H3,
                     BlockedTensor& T1, BlockedTensor& T2, BlockedTensor& T3, double& C0,
                     BlockedTensor& C1, BlockedTensor& C2, BlockedTensor& C3);
-    void comm_H_A_3_sr(double factor, BlockedTensor& H1, BlockedTensor& H2, BlockedTensor& H3,
-                       BlockedTensor& T1, BlockedTensor& T2, BlockedTensor& T3, double& C0,
-                       BlockedTensor& C1, BlockedTensor& C2, BlockedTensor& C3);
     /// remove all C3 from comm_H_A_3_sr
     void comm_H_A_3_sr_2(double factor, BlockedTensor& H1, BlockedTensor& H2, BlockedTensor& T1,
                          BlockedTensor& T2, BlockedTensor& T3, double& C0, BlockedTensor& C1,
                          BlockedTensor& C2);
     /// Fink order categorized
     void comm_H_A_3_sr_fink(double factor, BlockedTensor& H1, BlockedTensor& H2, BlockedTensor& H3,
+                            BlockedTensor& T1, BlockedTensor& T2, BlockedTensor& T3, double& C0,
+                            BlockedTensor& C1, BlockedTensor& C2, BlockedTensor& C3);
+    /// Fock order categorized
+    void comm_H_A_3_sr_fock(double factor, BlockedTensor& H1, BlockedTensor& H2, BlockedTensor& H3,
                             BlockedTensor& T1, BlockedTensor& T2, BlockedTensor& T3, double& C0,
                             BlockedTensor& C1, BlockedTensor& C2, BlockedTensor& C3);
 

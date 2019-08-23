@@ -77,7 +77,8 @@ class CC_SO : public DynamicCorrelationSolver {
 
     /// The energy of the reference
     double Eref_;
-
+    /// The nuclear repulsion energy
+    double Enuc_;
     /// The frozen-core energy
     double Efrzc_;
 
@@ -180,9 +181,13 @@ class CC_SO : public DynamicCorrelationSolver {
                            BlockedTensor& T2, BlockedTensor& T3, double& C0, BlockedTensor& C1,
                            BlockedTensor& C2, BlockedTensor& C3);
 
-    void amplitudes(double factor, BlockedTensor& H1, BlockedTensor& H2, BlockedTensor& H3,
-                    BlockedTensor& T1, BlockedTensor& T2, BlockedTensor& T3, double& C0,
-                    BlockedTensor& C1, BlockedTensor& C2, BlockedTensor& C3);
+    void rotate_hamiltonian(double& Eeff, BlockedTensor& Fnew, BlockedTensor& Vnew);
+    void compute_ucc3_amp(BlockedTensor& H1, BlockedTensor& H2, BlockedTensor& T2,
+                          BlockedTensor& T3, double& C0, BlockedTensor& C1, BlockedTensor& C2,
+                          BlockedTensor& C3);
+
+    void compute_uccsd5_amp(BlockedTensor& H1, BlockedTensor& H2, BlockedTensor& T2, double& C0,
+                            BlockedTensor& C1, BlockedTensor& C2);
 };
 
 std::unique_ptr<CC_SO> make_cc_so(RDMs rdms, std::shared_ptr<SCFInfo> scf_info,
