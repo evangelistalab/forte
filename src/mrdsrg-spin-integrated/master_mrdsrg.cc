@@ -4,6 +4,7 @@
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/dipole.h"
 
+#include "base_classes/scf_info.h"
 #include "helpers/helpers.h"
 #include "helpers/timer.h"
 
@@ -141,6 +142,8 @@ void MASTER_DSRG::read_options() {
         }
     }
 
+    sr_downfold_ = foptions_->get_bool("DSRG_SR_DOWNFOLD");
+
     outfile->Printf("Done");
 }
 
@@ -152,6 +155,28 @@ void MASTER_DSRG::read_MOSpaceInfo() {
     if (eri_df_) {
         aux_mos_ = std::vector<size_t>(ints_->nthree());
         std::iota(aux_mos_.begin(), aux_mos_.end(), 0);
+    }
+
+    if (sr_downfold_) {
+        auto doccpi = scf_info_->doccpi();
+        auto rdoccpi = mo_space_info_->get_dimension("RESTRICTED_DOCC");
+        auto actvpi = mo_space_info_->get_dimension("ACTIVE");
+        auto actvopi = doccpi - rdoccpi;
+
+        int nirrep = mo_space_info_->nirrep();
+
+        actv_occ_mos_.clear();
+        actv_uocc_mos_.clear();
+
+        for (int h = 0, shift = 0; h < nirrep; ++h) {
+            for (int i = 0; i < actvopi[h]; ++i) {
+                actv_occ_mos_.push_back(shift + i);
+            }
+            for (int i = actvopi[h]; i < actvpi[h]; ++i) {
+                actv_uocc_mos_.push_back(shift + i);
+            }
+            shift += actvpi[h];
+        }
     }
 }
 

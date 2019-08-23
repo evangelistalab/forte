@@ -148,6 +148,10 @@ void MRDSRG::guess_t2_std(BlockedTensor& V, BlockedTensor& T2) {
         value = 0.0;
     });
 
+    if (sr_downfold_) {
+        zero_t2_sr_downfolding(T2);
+    }
+
     // norms
     T2norm_ = std::sqrt(t2aa_norm_ + t2bb_norm_ + 4 * t2ab_norm_);
     t2aa_norm_ = std::sqrt(t2aa_norm_);
@@ -227,6 +231,10 @@ void MRDSRG::guess_t2_std_df(BlockedTensor& B, BlockedTensor& T2) {
         t2bb_norm_ -= value * value;
         value = 0.0;
     });
+
+    if (sr_downfold_) {
+        zero_t2_sr_downfolding(T2);
+    }
 
     // norms
     T2norm_ = std::sqrt(t2aa_norm_ + t2bb_norm_ + 4 * t2ab_norm_);
@@ -457,6 +465,10 @@ void MRDSRG::guess_t2_noccvv(BlockedTensor& V, BlockedTensor& T2) {
         value = 0.0;
     });
 
+    if (sr_downfold_) {
+        zero_t2_sr_downfolding(T2);
+    }
+
     // norms
     T2norm_ = std::sqrt(t2aa_norm_ + t2bb_norm_ + 4 * t2ab_norm_);
     t2aa_norm_ = std::sqrt(t2aa_norm_);
@@ -589,6 +601,10 @@ void MRDSRG::guess_t2_noccvv_df(BlockedTensor& B, BlockedTensor& T2) {
         t2bb_norm_ -= value * value;
         value = 0.0;
     });
+
+    if (sr_downfold_) {
+        zero_t2_sr_downfolding(T2);
+    }
 
     // norms
     T2norm_ = std::sqrt(t2aa_norm_ + t2bb_norm_ + 4 * t2ab_norm_);
@@ -837,6 +853,10 @@ void MRDSRG::update_t2_std() {
     // zero internal amplitudes
     for (const std::string& block : {"aaaa", "aAaA", "AAAA"}) {
         DT2_.block(block).iterate([&](const std::vector<size_t>&, double& value) { value = 0.0; });
+    }
+
+    if (sr_downfold_) {
+        zero_t2_sr_downfolding(DT2_);
     }
     t8.stop();
 
@@ -1130,6 +1150,10 @@ void MRDSRG::update_t2_noccvv() {
         value = 0.0;
     });
 
+    if (sr_downfold_) {
+        zero_t2_sr_downfolding(R2);
+    }
+
     // compute RMS
     DT2_["ijab"] = T2_["ijab"] - R2["ijab"];
     DT2_["iJaB"] = T2_["iJaB"] - R2["iJaB"];
@@ -1266,6 +1290,71 @@ void MRDSRG::update_t1_nocv() {
     T1norm_ = std::sqrt(t1a_norm_ + t1b_norm_);
     t1a_norm_ = std::sqrt(t1a_norm_);
     t1b_norm_ = std::sqrt(t1b_norm_);
+}
+
+void MRDSRG::zero_t2_sr_downfolding(BlockedTensor& T2) {
+    for (const std::string& block : T2.block_labels()) {
+        size_t n1 = label_to_spacemo_[block.at(0)].size();
+        size_t n2 = label_to_spacemo_[block.at(1)].size();
+        size_t n3 = label_to_spacemo_[block.at(2)].size();
+        size_t n4 = label_to_spacemo_[block.at(3)].size();
+
+        // blocks ACXX, X = A, V
+        if (std::towlower(block.at(0)) == 'a' and std::towlower(block.at(1)) == 'c') {
+            // zero when A belongs to active virtual
+            for (auto x : actv_uocc_mos_) {
+                for (size_t m = 0; m < n2; ++m) {
+                    for (size_t a = 0; a < n3; ++a) {
+                        for (size_t b = 0; b < n4; ++b) {
+                            T2.block(block).data()[x * n2 * n3 * n4 + m * n3 * n4 + a * n4 + b] = 0.0;
+                        }
+                    }
+                }
+            }
+        }
+
+        // blocks CAXX, X = A, V
+        if (std::towlower(block.at(0)) == 'c' and std::towlower(block.at(1)) == 'a') {
+            // zero when A belongs to active virtual
+            for (auto x : actv_uocc_mos_) {
+                for (size_t m = 0; m < n1; ++m) {
+                    for (size_t a = 0; a < n3; ++a) {
+                        for (size_t b = 0; b < n4; ++b) {
+                            T2.block(block).data()[m * n2 * n3 * n4 + x * n3 * n4 + a * n4 + b] = 0.0;
+                        }
+                    }
+                }
+            }
+        }
+
+        // blocks XXAV, X = C, A
+        if (std::towlower(block.at(2)) == 'a' and std::towlower(block.at(3)) == 'v') {
+            // zero when A belongs to active occupied
+            for (auto x : actv_occ_mos_) {
+                for (size_t e = 0; e < n4; ++e) {
+                    for (size_t i = 0; i < n1; ++i) {
+                        for (size_t j = 0; j < n2; ++j) {
+                            T2.block(block).data()[i * n2 * n3 * n4 + j * n3 * n4 + x * n4 + e] = 0.0;
+                        }
+                    }
+                }
+            }
+        }
+
+        // blocks XXVA, X = C, A
+        if (std::towlower(block.at(2)) == 'v' and std::towlower(block.at(3)) == 'a') {
+            // zero when A belongs to active occupied
+            for (auto x : actv_occ_mos_) {
+                for (size_t e = 0; e < n3; ++e) {
+                    for (size_t i = 0; i < n1; ++i) {
+                        for (size_t j = 0; j < n2; ++j) {
+                            T2.block(block).data()[i * n2 * n3 * n4 + j * n3 * n4 + e * n4 + x] = 0.0;
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 void MRDSRG::analyze_amplitudes(std::string name, BlockedTensor& T1, BlockedTensor& T2) {
@@ -1552,9 +1641,10 @@ void MRDSRG::print_intruder(const std::string& name,
             double down = fi + fj - fa - fb;
             double v = datapair.second;
 
-            output += "\n" + indent + str(boost::format("[%3d %3d %3d %3d] %13.8f (%10.6f + "
-                                                        "%10.6f - %10.6f - %10.6f = %10.6f)") %
-                                          i % j % a % b % v % fi % fj % fa % fb % down);
+            output += "\n" + indent +
+                      str(boost::format("[%3d %3d %3d %3d] %13.8f (%10.6f + "
+                                        "%10.6f - %10.6f - %10.6f = %10.6f)") %
+                          i % j % a % b % v % fi % fj % fa % fb % down);
         }
     } else {
         outfile->Printf("\n    Printing of amplitude is implemented only for T1 and T2!");
@@ -1568,4 +1658,4 @@ void MRDSRG::print_intruder(const std::string& name,
     }
     outfile->Printf("\n%s", output.c_str());
 }
-}
+} // namespace forte

@@ -27,7 +27,7 @@ def register_driver_options(forte_options):
         'NONE', 'ACI', 'PCI', 'CAS', 'DMRG', 'SR-DSRG', 'SR-DSRG-ACI',
         'SR-DSRG-PCI', 'DSRG-MRPT2', 'DSRG-MRPT3', 'MR-DSRG-PT2',
         'THREE-DSRG-MRPT2', 'SOMRDSRG', 'MRDSRG', 'MRDSRG_SO', 'CASSCF',
-        'ACTIVE-DSRGPT2', 'DWMS-DSRGPT2', 'DSRG_MRPT', 'TASKS'
+        'ACTIVE-DSRGPT2', 'DWMS-DSRGPT2', 'DSRG_MRPT', 'TASKS', 'SR_DOWNFOLDING'
     ], 'Specify the job type')
 
     forte_options.add_str(
@@ -36,7 +36,8 @@ def register_driver_options(forte_options):
     )  # TODO: why is PCI running even if it is not in this list (Francesco)
     forte_options.add_str(
         'CORRELATION_SOLVER', 'NONE',
-        ['DSRG-MRPT2', 'THREE-DSRG-MRPT2', 'DSRG-MRPT3', 'MRDSRG'],
+        ['DSRG-MRPT2', 'THREE-DSRG-MRPT2', 'DSRG-MRPT3', 'MRDSRG',
+         'SOMRDSRG', 'MRDSRG_SO', 'DSRG_MRPT'],
         'Dynamical correlation solver type')
     forte_options.add_str('CALC_TYPE', 'SS', ['SS', 'SA', 'MS', 'DWMS'],
                           'The type of computation')
@@ -519,7 +520,6 @@ def register_aci_options(forte_options):
     forte_options.add_bool("FORCE_DIAG_METHOD", False,
                            "Force the diagonalization procedure?")
 
-
 def register_davidson_liu_options(forte_options):
     forte_options.add_int("DL_MAXITER", 100,
                           "The maximum number of Davidson-Liu iterations")
@@ -530,7 +530,6 @@ def register_davidson_liu_options(forte_options):
                           "The maxim number of trial vectors")
     forte_options.add_int("SIGMA_VECTOR_MAX_MEMORY", 10000000,
                           "The maxim number of trial vectors")
-
 
 def register_asci_options(forte_options):
     forte_options.add_double("ASCI_E_CONVERGENCE", 1e-5, "ASCI energy convergence threshold")
@@ -549,6 +548,8 @@ def register_fci_mo_options(forte_options):
 
     forte_options.add_bool("FCIMO_CISD_NOHF", True,
                       "Ground state: HF; Excited states: no HF determinant in CISD space")
+
+    forte_options.add_bool("FCIMO_HARTREE_FOCK", False, "Only use HF reference")
 
     forte_options.add_str("FCIMO_IPEA", "NONE", ["NONE", "IP", "EA"], "Generate IP/EA CIS/CISD space")
 
@@ -575,6 +576,7 @@ def register_integral_options(forte_options):
 
 def register_dsrg_options(forte_options):
     forte_options.add_double("DSRG_S", 1.0e10,"The end value of the integration parameter s")
+
     forte_options.add_double("DSRG_POWER", 2.0, "The power of the parameter s in the regularizer")
 
     forte_options.add_str("CORR_LEVEL", "PT2",
@@ -598,6 +600,11 @@ def register_dsrg_options(forte_options):
 
     forte_options.add_str("H0TH", "FDIAG", ["FDIAG", "FFULL", "FDIAG_VACTV", "FDIAG_VDIAG"],
                      "Different Zeroth-order Hamiltonian of DSRG-MRPT (used in mrdsrg code)")
+
+    forte_options.add_bool("DSRG_SR_DOWNFOLD", False, "SR MR downfolding")
+
+    forte_options.add_bool("DSRG_QC_2BODY", True,
+                     "Include two-body Hamiltonian in 0.5 * [[V, A], A] if True (used in LDSRG2_QC)")
 
     forte_options.add_bool("DSRG_DIPOLE", False, "Compute (if true) DSRG dipole moments")
 
@@ -647,7 +654,6 @@ def register_dsrg_options(forte_options):
 
     forte_options.add_str("INTERNAL_AMP", "NONE", ["NONE", "SINGLES_DOUBLES", "SINGLES", "DOUBLES"],
                      "Include internal amplitudes for VCIS/VCISD-DSRG acording to excitation level")
-
 
     forte_options.add_str("INTERNAL_AMP_SELECT", "AUTO", ["AUTO", "ALL", "OOVV"],
                      """Excitation types considered when internal amplitudes are included
@@ -823,10 +829,7 @@ def register_old_options(forte_options):
 
     forte_options.add_bool("MEMORY_SUMMARY", False, "Print summary of memory")
 
-
-
     forte_options.add_double("RELAX_E_CONVERGENCE", 1.0e-8, "The energy relaxation convergence criterion")
-
 
     forte_options.add_bool("USE_DMRGSCF", False,
                            "Use the older DMRGSCF algorithm?")
@@ -1123,7 +1126,7 @@ def register_old_options(forte_options):
     #    /*- The absolute error tollerance for the ode solver -*/
     #    forte_options.add_double("SRG_ODEINT_RELERR", 1.0e-12)
     #    /*- Select a modified commutator -*/
-    #    forte_options.add_str("SRG_COMM", "STANDARD", "STANDARD FO FO2")
+    forte_options.add_str("SRG_COMM", "STANDARD", "STANDARD FO FO2")
 
     #    /*- Save Hbar? -*/
     #    forte_options.add_bool("SAVE_HBAR", False)

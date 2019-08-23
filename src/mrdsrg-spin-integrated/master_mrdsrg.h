@@ -156,6 +156,9 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     /// Threshold for amplitudes considered as intruders
     double intruder_tamp_;
 
+    /// Perform single-reference downfolding
+    bool sr_downfold_;
+
     /// Relaxation type
     std::string relax_ref_;
 
