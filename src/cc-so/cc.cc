@@ -371,7 +371,9 @@ void CC_SO::update_t3() {
 }
 
 double CC_SO::compute_energy() {
-    if (corr_level_ == "CCSD" or corr_level_ == "CCSDT" or corr_level_ == "UCC3" or corr_level_ == "VUCCSD5") {
+    if (corr_level_ == "CCSD" or corr_level_ == "CCSDT" or
+        corr_level_ == "CCSDT_1A" or corr_level_ == "CCSDT_1B" or
+        corr_level_ == "UCC3" or corr_level_ == "VUCCSD5") {
         Hbar1_ = BTF_->build(tensor_type_, "Hbar1", {"cv"});
         Hbar2_ = BTF_->build(tensor_type_, "Hbar2", {"ccvv"});
     } else {
@@ -393,14 +395,15 @@ double CC_SO::compute_energy() {
     guess_t1();
 
     if (do_triples_) {
-        if (corr_level_ == "CCSDT" or corr_level_ == "UCC3") {
+        if (corr_level_ == "CCSDT" or corr_level_ == "CCSDT_1A" or
+            corr_level_ == "CCSDT_1B" or corr_level_ == "UCC3") {
             Hbar3_ = BTF_->build(tensor_type_, "Hbar3", {"cccvvv"});
         } else {
             Hbar3_ = BTF_->build(tensor_type_, "Hbar3", {"gggggg"});
         }
 
         T3_ = BTF_->build(tensor_type_, "T3 Amplitudes", {"cccvvv"});
-        guess_t3();
+//        guess_t3();
     }
 
     // iteration variables
@@ -423,6 +426,8 @@ double CC_SO::compute_energy() {
             compute_ccsd_amp(F_, V_, T1_, T2_, Hbar0_, Hbar1_, Hbar2_);
         } else if (corr_level_ == "CCSDT") {
             compute_ccsdt_amp(F_, V_, T1_, T2_, T3_, Hbar0_, Hbar1_, Hbar2_, Hbar3_);
+        } else if (corr_level_ == "CCSDT_1A" or corr_level_ == "CCSDT_1B") {
+            compute_ccsdt1_amp(F_, V_, T1_, T2_, T3_, Hbar0_, Hbar1_, Hbar2_, Hbar3_);
         } else if (corr_level_ == "UCC3") {
             double Eeff = 0.0;
             ambit::BlockedTensor Frot = BTF_->build(tensor_type_, "Frot", {"gg"});
@@ -457,7 +462,7 @@ double CC_SO::compute_energy() {
             temp.block(block).reset();
         }
 
-        outfile->Printf("\n      @CT %4d %20.12f %11.3e %10.3e %10.3e %7.4f "
+        outfile->Printf("\n      @CC %4d %20.12f %11.3e %10.3e %10.3e %7.4f "
                         "%7.4f %7.4f %7.4f %7.4f %7.4f",
                         cycle, Etotal, Edelta, Hbar1Nnorm, Hbar2Nnorm, T1norm_, T2norm_,
                         T3norm_, T1max_, T2max_, T3max_);

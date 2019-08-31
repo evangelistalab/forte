@@ -180,6 +180,9 @@ class CC_SO : public DynamicCorrelationSolver {
     void compute_ccsdt_amp(BlockedTensor& H1, BlockedTensor& H2, BlockedTensor& T1,
                            BlockedTensor& T2, BlockedTensor& T3, double& C0, BlockedTensor& C1,
                            BlockedTensor& C2, BlockedTensor& C3);
+    void compute_ccsdt1_amp(BlockedTensor& H1, BlockedTensor& H2, BlockedTensor& T1,
+                            BlockedTensor& T2, BlockedTensor& T3, double& C0, BlockedTensor& C1,
+                            BlockedTensor& C2, BlockedTensor& C3);
 
     void rotate_hamiltonian(double& Eeff, BlockedTensor& Fnew, BlockedTensor& Vnew);
     void compute_ucc3_amp(BlockedTensor& H1, BlockedTensor& H2, BlockedTensor& T2,

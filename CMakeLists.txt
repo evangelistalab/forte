@@ -80,6 +80,7 @@ src/casscf/casscf.cc
 src/cc-so/cc.cc
 src/cc-so/ccsd.cc
 src/cc-so/ccsdt.cc
+src/cc-so/ccsdt-1.cc
 src/cc-so/ucc3.cc
 src/cc-so/vuccsd5.cc
 src/ci_rdm/ci_rdms.cc

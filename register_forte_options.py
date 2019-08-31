@@ -835,7 +835,8 @@ def register_old_options(forte_options):
 
 
 def register_cc_so_options(forte_options):
-    forte_options.add_str("CC_LEVEL", "CCSD", ["CCSD", "CCSDT", "LUCCSD", "QUCCSD",
+    forte_options.add_str("CC_LEVEL", "CCSD", ["CCSD", "CCSDT", "CCSDT_1A", "CCSDT_1B",
+                                               "LUCCSD", "QUCCSD",
                                                "LUCCSDT", "UCC3", "VUCCSD5"],
                           "Coupled cluster level")
 
