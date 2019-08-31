@@ -90,9 +90,9 @@ void MRDSRG_SO::startup() {
     do_t3_ = foptions_->get_str("CORR_LEVEL").find("DSRG3") != std::string::npos;
     ldsrg3_ddca_ = foptions_->get_bool("LDSRG3_DDCA");
     ncomm_3body_ = foptions_->get_int("LDSRG3_NCOMM_3BODY");
-    if (ncomm_3body_ > 2 or ncomm_3body_ <= 0) {
-        ncomm_3body_ = foptions_->get_int("DSRG_RSC_NCOMM");
-    }
+//    if (ncomm_3body_ > 2 or ncomm_3body_ <= 0) {
+//        ncomm_3body_ = foptions_->get_int("DSRG_RSC_NCOMM");
+//    }
 
     ldsrg3_level_ = 3;
     if (foptions_->get_str("CORR_LEVEL") == "LDSRG3_2")
