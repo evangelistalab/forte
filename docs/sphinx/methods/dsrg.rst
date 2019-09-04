@@ -4,7 +4,16 @@ Driven Similarity Renormalization Group
 =======================================
 
 .. codeauthor:: Francesco A. Evangelista, Chenyang Li, Kevin Hannon, Tianyuan Zhang
-.. sectionauthor:: Chenyang Li, Kevin P. Hannon, Tianyuan Zhang
+.. sectionauthor:: Chenyang Li, Tianyuan Zhang, Kevin P. Hannon
+
+.. important::
+  Any publication utilizing the DSRG code should acknowledge the following articles:
+
+  * F. A. Evangelista, *J. Chem. Phys.* **141**, 054109 (2014).
+
+  * C. Li and F. A. Evangelista, *Annu. Rev. Phys. Chem.* **70**, 245-273 (2019).
+
+  Depending on the features used, the user is encouraged to cite the corresponding articles listed :ref:`here <dsrg_ref>`.
 
 .. caution::
   The current implementation does not employ spin-adapted equations and it does not work for even multiplicities.
@@ -29,19 +38,21 @@ transformation (vaguely speaking).
 The operator :math:`\hat{S}` can be any operator in general.
 For example, if :math:`\hat{S} = \hat{T}` is the cluster substitution operator, the DSRG :math:`\bar{H}(s)`
 is identical to coupled-cluster (CC) similarity transformed Hamiltonian except for the :math:`s`
-dependence. See Table I for different flavours of :math:`\hat{S}`.
+dependence. See :ref:`Table I <table:dsrg_cc_connect>` for different flavours of :math:`\hat{S}`.
 
-Table I. Connections of DSRG to CC theories when using different types of :math:`\hat{S}`:
+.. _`table:dsrg_cc_connect`:
 
-+-----------------+-----------------------------------------------+----------------+
-| :math:`\hat{S}` |                Explanation                    |   CC Theories  |
-+=================+===============================================+================+
-| :math:`\hat{T}` |             cluster operator                  | traditional CC |
-+-----------------+-----------------------------------------------+----------------+
-| :math:`\hat{A}` | :math:`\hat{A} = \hat{T} - \hat{T}^{\dagger}` | unitary CC, CT |
-+-----------------+-----------------------------------------------+----------------+
-| :math:`\hat{G}` |             general operator                  | generalized CC |
-+-----------------+-----------------------------------------------+----------------+
+.. table:: Table I. Connections of DSRG to CC theories when using different types of :math:`\hat{S}`.
+
+    +-----------------+-----------------------------------------------+----------------+
+    | :math:`\hat{S}` |                Explanation                    |   CC Theories  |
+    +=================+===============================================+================+
+    | :math:`\hat{T}` |             cluster operator                  | traditional CC |
+    +-----------------+-----------------------------------------------+----------------+
+    | :math:`\hat{A}` | :math:`\hat{A} = \hat{T} - \hat{T}^{\dagger}` | unitary CC, CT |
+    +-----------------+-----------------------------------------------+----------------+
+    | :math:`\hat{G}` |             general operator                  | generalized CC |
+    +-----------------+-----------------------------------------------+----------------+
 
 In the current implementation, we choose the **anti-hermitian** parametrization, i.e., :math:`\hat{S} = \hat{A}`.
 
@@ -85,24 +96,27 @@ various DSRG perturbation theories (e.g., 2nd-order or 3rd-order).
 Note we use the RSC approximated BCH equation for computational cost considerations.
 As such, the implemented DSRG-PT3 is **not** a complete PT3 but a companion PT3 of the LDSRG(2) method.
 
-To conclude this subsection, we discuss the computational cost and current implementation limit.
-These aspects are summarized in Table II.
+To conclude this subsection, we discuss the computational cost and current implementation limit,
+which are summarized in :ref:`Table II <table:dsrg_cost>`.
 
-Table II. Cost of the various implemented DSRG methods:
+.. _`table:dsrg_cost`:
 
-+----------+-----------------------+----------------------------------+-----------------------------------+
-|  Method  |  Computational Cost   |  System Size (full 2e-ints)      |      System Size (DF/CD)          |
-+==========+=======================+==================================+===================================+
-|    PT2   | one-shot :math:`N^5`  | :math:`\sim 250` basis functions | :math:`\sim 1800` basis functions |
-+----------+-----------------------+----------------------------------+-----------------------------------+
-|    PT3   | one-shot :math:`N^6`  | :math:`\sim 250` basis functions | :math:`\sim 700` basis functions  |
-+----------+-----------------------+----------------------------------+-----------------------------------+
-| LDSRG(2) | iterative :math:`N^6` | :math:`\sim 200` basis functions | :math:`\sim 550` basis functions  |
-+----------+-----------------------+----------------------------------+-----------------------------------+
+.. table:: Table II. Cost of the various implemented DSRG methods.
+
+    +----------+-----------------------+----------------------------------+-----------------------------------+
+    |  Method  |  Computational Cost   |  System Size (full 2e-ints)      |      System Size (DF/CD)          |
+    +==========+=======================+==================================+===================================+
+    |    PT2   | one-shot :math:`N^5`  | :math:`\sim 250` basis functions | :math:`\sim 1800` basis functions |
+    +----------+-----------------------+----------------------------------+-----------------------------------+
+    |    PT3   | one-shot :math:`N^6`  | :math:`\sim 250` basis functions | :math:`\sim 700` basis functions  |
+    +----------+-----------------------+----------------------------------+-----------------------------------+
+    | LDSRG(2) | iterative :math:`N^6` | :math:`\sim 200` basis functions | :math:`\sim 550` basis functions  |
+    +----------+-----------------------+----------------------------------+-----------------------------------+
 
 
 2. Input Examples
 +++++++++++++++++
+
 
 
 3. General DSRG Options
@@ -113,7 +127,7 @@ Table II. Cost of the various implemented DSRG methods:
 Correlation level of MR-DSRG.
 
 * Type: string
-* Options: PT2, PT3, LDSRG2, LDSRG2_QC, LSRG2, SRG_PT2, QDSRG2, LDSRG2_P3, QDSRG2_P3
+* Options: PT2, PT3, LDSRG2, LDSRG2_QC, LSRG2, SRG_PT2, QDSRG2
 * Default: PT2
 
 **DSRG_S**
@@ -174,8 +188,8 @@ Apply non-interacting virtual orbital (NIVO) approximation in evaluating the tra
 * Default: false
 
 
-Integral Factorization
-^^^^^^^^^^^^^^^^^^^^^^
+Integral Factorization Implementation
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 1. Theory
 +++++++++
@@ -203,7 +217,7 @@ There are several limitations of the current implementation.
 
 We store the entire three-index integrals in memory by default.
 Consequently, we can treat about 1000 basis functions.
-For larger systems, please use the **DiskDF** approach where these integrals are loaded to memory only when necessary.
+For larger systems, please use the :code:`DiskDF` keyword where these integrals are loaded to memory only when necessary.
 In general, we can treat about 2000 basis functions (with DiskDF) using DSRG-MRPT2.
 
 Density fitting is more suited to spin-adapted equations while the current code uses spin-integrated equations.
@@ -214,14 +228,16 @@ The batching algorithms of DSRG-MRPT3 (manually tuned) and MR-LDSRG(2) (Ambit) a
 3. Examples
 +++++++++++
 
-.. caution::
-  For DSRG-MRPT3 and MR-LDSRG(2), DF/CD will automatically turn on if **INT_TYPE** is set to **DF**, **CD**, or **DISKDF**.
-  For DSRG-MRPT2 computations, please set the **CORRELATION_SOLVER** keyword to **THREE-DSRG-MRPT2** besides the **INT_TYPE** option.
+.. tip::
+  For DSRG-MRPT3 and MR-LDSRG(2), DF/CD will automatically turn on if
+  :code:`INT_TYPE` is set to :code:`DF`, :code:`CD`, or :code:`DISKDF`.
+  For DSRG-MRPT2 computations, please set the :code:`CORRELATION_SOLVER` keyword to
+  :code:`THREE-DSRG-MRPT2` besides the :code:`INT_TYPE` option.
 
 The following input performs a DF-DSRG-MRPT2 calculation on nitrogen molecule.
 This example is modified from the df-dsrg-mrpt2-4 test case.
 
-.. note:: In test case df-dsrg-mrpt2-4, **SCF_TYPE** is specified to **PK**, which is incorrect for a real computation.
+.. warning:: In test case df-dsrg-mrpt2-4, :code:`SCF_TYPE` is specified to :code:`PK`, which is incorrect for a real computation.
 
 ::
 
@@ -262,15 +278,18 @@ To perform a DF computation, we need to specify the following options:
 
 
 1. Psi4 options:
-   **SCF_TYPE**, **DF_BASIS_SCF**, **DF_BASIS_MP2**
+   :code:`SCF_TYPE`, :code:`DF_BASIS_SCF`, :code:`DF_BASIS_MP2`
 2. Forte options:
-   **CORRELATION_SOLVER**, **INT_TYPE**
-We recommend using consistent **DF_BASIS_SCF** and **DF_BASIS_MP2** due to orbital canonicalization.
-Otherwise, the orbitals will be re-canonicalized before DSRG-MRPT2 computaionis.
+   :code:`CORRELATION_SOLVER`, :code:`INT_TYPE`
 
-.. note::
-  Frozen orbitals will be left unchanged (in the original DF_BASIS_SCF basis) for orbital canonicalization.
-  Thus, using inconsistent DF basis sets leads to inconsistent frozen-core energies.
+.. attention::
+  Here we use different basis sets for :code:`DF_BASIS_SCF` and :code:`DF_BASIS_MP2`.
+  There is no consensus on what basis sets should be used for MR computations.
+  However, there is one caveat of using inconsistent DF basis sets in Forte due to orbital canonicalization:
+  Frozen orbitals are left unchanged (i.e., canonical for :code:`DF_BASIS_SCF`)
+  while DSRG (and orbital canonicalization) only reads :code:`DF_BASIS_MP2`.
+  This inconsistency leads to slight deviations to the frozen-core energies (:math:`< 10^{-4}` Hartree)
+  comparing to using identical DF basis sets.
 
 The output produced by this input: ::
 
@@ -291,14 +310,66 @@ The output produced by this input: ::
       max(T1)                        =      0.002234583100143
       ||T1||                         =      0.007061738508652
 
-To use Cholesky integrals, set **INT_TYPE** to **CHOLESKY** and specify **CHOLESKY_TOLERANCE**.
-Running cholesky_tolerance with 1e-5 provides energies accurate to this tolerance comparing to conventional four-index 2-electron integrals.
-The cholesky algorithm, as currently written, does not allow application to large systems (> 1000 basis functions).
+To use Cholesky integrals, set :code:`INT_TYPE` to :code:`CHOLESKY` and specify :code:`CHOLESKY_TOLERANCE`.
+For example, a CD equivalence of the above example is ::
+
+    # same molecule input ...
+
+    set globals{
+       reference               rhf
+       basis                   cc-pvdz
+       scf_type                cd
+       cholesky_tolerance      5
+       d_convergence           8
+       e_convergence           10
+    }
+
+    set forte {
+       active_space_solver     cas
+       int_type                cholesky
+       cholesky_tolerance      1.0e-5
+       restricted_docc         [2,0,0,0,0,2,0,0]
+       active                  [1,0,1,1,0,1,1,1]
+       correlation_solver      three-dsrg-mrpt2
+       dsrg_s                  1.0
+    }
+
+    Escf, wfn = energy('scf', return_wfn=True)
+    energy('forte', ref_wfn=wfn)
+
+The output energies are: ::
+
+    E0 (reference)                 =   -109.021897967354022
+    <[F, T1]>                      =     -0.000032540691765
+    <[F, T2]>                      =     -0.000142994609256
+    <[V, T1]>                      =     -0.000183465740515
+    <[V, T2]> C_4 (C_2)^2 HH       =      0.003650100208830
+    <[V, T2]> C_4 (C_2)^2 PP       =      0.015968913296725
+    <[V, T2]> C_4 (C_2)^2 PH       =      0.017513562268293
+    <[V, T2]> C_6 C_2              =     -0.000208443941614
+    <[V, T2]> (C_2)^4              =     -0.265074619128327
+    <[V, T2]>                      =     -0.228150487296094
+    DSRG-MRPT2 correlation energy  =     -0.228509488337630
+    DSRG-MRPT2 total energy        =   -109.250407455691658
+
+The energies computed using conventional integrals are: ::
+
+    E0 (reference)                 =   -109.021904986168678
+    DSRG-MRPT2 total energy        =   -109.250416722481461
+
+The energy error of using CD integrals (threshold = :math:`10^{-5}` a.u.) is thus around :math:`\sim 10^{-5}` Hartree.
+In general, comparing to conventional 4-index 2-electron integrals, the use of CD integrals yields
+energy errors to the same decimal points as :code:`CHOLESKY_TOLERANCE`.
+
+.. caution:: The cholesky algorithm, as currently written, does not allow applications to large systems (> 1000 basis functions).
 
 4. Options
 ++++++++++
 
-Please check the basic options in :ref:`sec:integrals`.
+General Keywords
+''''''''''''''''
+
+For basic options of factorized integrals, please check :ref:`sec:integrals`.
 
 Advanced Keywords
 '''''''''''''''''
@@ -311,8 +382,8 @@ By default, the number of batches are automatically computed using the remaining
 * Type: integer
 * Default: -1
 
-State-Averaged and Multi-State Approaches
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+State-Averaged and Multi-State Approaches for Excited States
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 TODOs
@@ -328,3 +399,104 @@ This is done for unrelaxed DSRG-MRPT2 but not complete for general LDSRG(2).
 
 3. MR-DSRG(T) with Perturbative Triples
 +++++++++++++++++++++++++++++++++++++++
+
+
+.. _dsrg_ref:
+
+References
+^^^^^^^^^^
+
+The seminal work of DSRG is given in:
+
+* "A driven similarity renormalization group approach to quantum many-body problems",
+  F. A. Evangelista, *J. Chem. Phys.* **141**, 054109 (2014).
+  (doi: `10.1063/1.4890660 <http://dx.doi.org/10.1063/1.4890660>`_).
+
+A general and pedagogical discussion of MR-DSRG is presented in:
+
+* "Multireference Theories of Electron Correlation Based
+  on the Driven Similarity Renormalization Group", C. Li and F. A. Evangelista,
+  *Annu. Rev. Phys. Chem.* **70**, 245-273 (2019).
+  (doi: `10.1146/annurev-physchem-042018-052416
+  <http://dx.doi.org/10.1146/annurev-physchem-042018-052416>`_).
+
+The theories of different DSRG correlation levels are discussed in the following articles:
+
+    DSRG-MRPT2 (without reference relaxation):
+
+    * "Multireference Driven Similarity Renormalization Group:
+      A Second-Order Perturbative Analysis", C. Li and F. A. Evangelista,
+      *J. Chem. Theory Compt.* **11**, 2097-2108 (2015).
+      (doi: `10.1021/acs.jctc.5b00134 <http://dx.doi.org/10.1021/acs.jctc.5b00134>`_).
+
+    DSRG-MRPT3 and variants of reference relaxations:
+
+    * "Driven similarity renormalization group: Third-order multireference perturbation theory",
+      C. Li and F. A. Evangelista, *J. Chem. Phys.* **146**, 124132 (2017).
+      (doi: `10.1063/1.4979016 <http://dx.doi.org/10.1063/1.4979016>`_).
+      Erratum: **148**, 079902 (2018).
+      (doi: `10.1063/1.5023904 <http://dx.doi.org/10.1063/1.5023904>`_).
+
+    MR-LDSRG(2):
+
+    * "Towards numerically robust multireference theories: The driven similarity renormalization
+      group truncated to one- and two-body operators", C. Li and F. A. Evangelista,
+      *J. Chem. Phys.* **144**, 164114 (2016).
+      (doi: `10.1063/1.4947218 <http://dx.doi.org/10.1063/1.4947218>`_).
+      Erratum: **148**, 079903 (2018).
+      (doi: `10.1063/1.5023493 <http://dx.doi.org/10.1063/1.5023493>`_).
+
+The DSRG extensions for excited state are discussed in the following articles:
+
+    SA-DSRG framework and its PT2 and PT3 applications:
+
+    * "Driven similarity renormalization group for excited states:
+      A state-averaged perturbation theory", C. Li and F. A. Evangelista,
+      *J. Chem. Phys.* **148**, 124106 (2018).
+      (doi: `10.1063/1.5019793 <http://dx.doi.org/10.1063/1.5019793>`_).
+
+    MS-DSRG and DWMS-DSRG:
+
+    * "Dynamically weighted multireference perturbation theory: Combining the advantages
+      of multi-state and state- averaged methods", C. Li and F. A. Evangelista,
+      *J. Chem. Phys.* **150**, 144107 (2019).
+      (doi: `10.1063/1.5088120 <http://dx.doi.org/10.1063/1.5088120>`_).
+
+The DSRG analytic energy gradients are described in the following series of papers:
+
+    Single reference DSRG-PT2:
+
+    * "Analytic gradients for the single-reference driven similarity renormalization group
+      second-order perturbation theory", S. Wang, C. Li, and F. A. Evangelista,
+      *J. Chem. Phys.* **151**, 044118 (2019).
+      (doi: `10.1063/1.5100175 <http://dx.doi.org/10.1063/1.5100175>`_).
+
+The integral-factorized implementation of DSRG is firstly achieved in:
+
+* "An integral-factorized implementation of the driven similarity renormalization group
+  second-order multireference perturbation theory", K. P. Hannon, C. Li, and F. A. Evangelista,
+  *J. Chem. Phys.* **144**, 204111 (2016).
+  (doi: `10.1063/1.4951684 <http://dx.doi.org/10.1063/1.4951684>`_).
+
+The sequential variant of MR-LDSRG(2) and NIVO approximation are described in:
+
+* "Improving the Efficiency of the Multireference Driven Similarity Renormalization Group
+  via Sequential Transformation, Density Fitting, and the Noninteracting Virtual Orbital
+  Approximation", T. Zhang, C. Li, and F. A. Evangelista,
+  *J. Chem. Theory Compt.* **15**, 4399-4414 (2019).
+  (doi: `10.1021/acs.jctc.9b00353 <http://dx.doi.org/10.1021/acs.jctc.9b00353>`_).
+
+Combination between DSRG and adaptive configuration interaction with applications to acenes:
+
+* "A Combined Selected Configuration Interaction and Many-Body Treatment of Static and Dynamical
+  Correlation in Oligoacenes", J. B. Schriber, K. P. Hannon, C. Li, and F. A. Evangelista,
+  *J. Chem. Theory Compt.* **14**, 6295-6305 (2018).
+  (doi: `10.1021/acs.jctc.8b00877 <http://dx.doi.org/10.1021/acs.jctc.8b00877>`_).
+
+Benchmark of state-specific unrelaxed DSRG-MRPT2 (tested 34 active orbitals):
+
+* "A low-cost approach to electronic excitation energies based on the driven
+  similarity renormalization group", C. Li, P. Verma, K. P. Hannon, and
+  F. A. Evangelista, *J. Chem. Phys.* **147**, 074107 (2017).
+  (doi: `10.1063/1.4997480 <http://dx.doi.org/10.1063/1.4997480>`_).
+
