@@ -92,7 +92,7 @@ where 0, 1, 2 indicate scalar, 1-body, and 2-body contributions.
 We term the DSRG method that uses RSC as LDSRG(2).
 
 Alternatively, we can perform a perturbative analysis on the **approximated** BCH equation of :math:`\bar{H}` and obtain
-various DSRG perturbation theories (e.g., 2nd-order or 3rd-order).
+various DSRG perturbation theories [e.g., 2nd-order (PT2) or 3rd-order (PT3)].
 Note we use the RSC approximated BCH equation for computational cost considerations.
 As such, the implemented DSRG-PT3 is **not** a complete PT3 but a companion PT3 of the LDSRG(2) method.
 
@@ -117,7 +117,108 @@ which are summarized in :ref:`Table II <table:dsrg_cost>`.
 2. Input Examples
 +++++++++++++++++
 
+**Minimal Example**
 
+Let us first see an example with minimal keywords.
+In particular, we compute hydrogen fluoride using DSRG multireference (MR) PT2
+with complete active space self-consistent field (CASSCF) reference.
+
+::
+
+    import forte
+
+    molecule mol{
+      0 1
+      F
+      H  1 R
+    }
+    mol.R = 1.50  # this is a neat way to specify H-F bond lengths
+
+    set globals{
+       basis                   cc-pvdz
+       reference               rhf
+       scf_type                pk
+       d_convergence           8
+       e_convergence           10
+       restricted_docc         [2,0,1,1]
+       active                  [2,0,0,0]
+    }
+
+    set forte{
+       active_space_solver     fci
+       correlation_solver      dsrg-mrpt2
+       dsrg_s                  0.5
+       frozen_docc             [1,0,0,0]
+       restricted_docc         [1,0,1,1]
+       active                  [2,0,0,0]
+    }
+
+    Emcscf, wfn = energy('casscf', return_wfn=True)
+    energy('forte', ref_wfn=wfn)
+
+There are three blocks in the input:
+
+1. The :code:`molecule` block specifies the geometry, charge, multiplicity, etc. (see Psi4 manual for details).
+
+2. The second block specifies Psi4 global options.
+
+3. The last block shows options specifically for Forte.
+
+In this example, we use Psi4 to compute CASSCF reference.
+Psi4 provides the freedom to specify the core (a.k.a. internal) and active orbitals
+using :code:`RESTRICTED_DOCC` and :code:`ACTIVE` options,
+but *it is generally the user's responsibility for a correct orbital ordering*.
+The :code:`RESTRICTED_DOCC` array :code:`[2,0,1,1]` indicates two :math:`a_1`,
+zero :math:`a_2`, one :math:`b_1`, and one :math:`b_2` orbitals, because the computation is
+performed in :math:`C_{2v}` point group.
+The actual CASSCF computation is invoked by
+:code:`Emcscf, wfn = energy('casscf', return_wfn=True)`, where we also ask for
+wave function besides energy.
+The wave function :code:`wfn` will be read by Forte via argument :code:`ref_wfn`.
+
+Forte generally recomputes the reference using the provided wave function parameters.
+To perform a DSRG computation, the user is expected to specify the following keywords:
+
+* :code:`ACTIVE_SPACE_SOLVER`:
+  Here we use :code:`FCI` to perform a CAS configuration interaction (CASCI)
+  within the active orbitals.
+
+* :code:`CORRELATION_SOLVER`:
+  This option determines which code to run. The four well-tested DSRG solvers are:
+  :code:`DSRG-MRPT2`, :code:`THREE-DSRG-MRPT2`, :code:`DSRG-MRPT3`, and :code:`MRDSRG`.
+  The density-fitted DSRG-MRPT2 is implemented in :code:`THREE-DSRG-MRPT2`.
+  The :code:`MRDSRG` is mainly designed to perform MR-LDSRG(2) computations.
+
+* :code:`DSRG_S`:
+  This keyword specify the DSRG flow parameter in a.u.
+  For general MR-DSRG computations, the user should change the value to :math:`0.5 \sim 2` a.u.
+
+  .. caution::
+    By default, :code:`DSRG_S` is set to :math:`10^8` a.u.
+    The user should always set this keyword by hand!
+
+* Orbital spaces:
+  Here we also specify frozen core orbitals besides core and active orbitals.
+  Note that in this example, we optimize the 1s-like core orbital in CASSCF but
+  later freeze for DSRG treatments for dynamical correlation.
+  Details regarding to orbital spaces can be found :ref:`sec:mospaceinfo`.
+
+  .. tip::
+    To perform a single-reference (SR) DSRG computation, the user only needs to set
+    :code:`ACTIVE` to zero. In the above example, the SR DSRG-PT2 energy can be obtained
+    by modifying :code:`RESTRICTED_DOCC` to :code:`[2,0,1,1]`
+    and :code:`ACTIVE` to :code:`[0,0,0,0]`. The MP2 energy can be reproduced
+    if we further change :code:`DSRG_S` to :math:`10^8` a.u.
+
+
+**A More Advanced Example**
+
+
+
+**Other Examples**
+
+There are plenty of examples in the tests/method folder.
+A complete list of the DSRG test cases can be found here (TODO).
 
 3. General DSRG Options
 +++++++++++++++++++++++
@@ -340,16 +441,6 @@ For example, a CD equivalence of the above example is ::
 The output energies are: ::
 
     E0 (reference)                 =   -109.021897967354022
-    <[F, T1]>                      =     -0.000032540691765
-    <[F, T2]>                      =     -0.000142994609256
-    <[V, T1]>                      =     -0.000183465740515
-    <[V, T2]> C_4 (C_2)^2 HH       =      0.003650100208830
-    <[V, T2]> C_4 (C_2)^2 PP       =      0.015968913296725
-    <[V, T2]> C_4 (C_2)^2 PH       =      0.017513562268293
-    <[V, T2]> C_6 C_2              =     -0.000208443941614
-    <[V, T2]> (C_2)^4              =     -0.265074619128327
-    <[V, T2]>                      =     -0.228150487296094
-    DSRG-MRPT2 correlation energy  =     -0.228509488337630
     DSRG-MRPT2 total energy        =   -109.250407455691658
 
 The energies computed using conventional integrals are: ::
