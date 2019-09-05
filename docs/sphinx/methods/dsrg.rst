@@ -194,7 +194,7 @@ To perform a DSRG computation, the user is expected to specify the following key
   For general MR-DSRG computations, the user should change the value to :math:`0.5 \sim 2` a.u.
 
   .. caution::
-    By default, :code:`DSRG_S` is set to :math:`10^8` a.u.
+    By default, :code:`DSRG_S` is set to :math:`10^{10}` a.u.
     The user should always set this keyword by hand!
 
 * Orbital spaces:
@@ -389,7 +389,7 @@ To perform a DF computation, we need to specify the following options:
   However, there is one caveat of using inconsistent DF basis sets in Forte due to orbital canonicalization:
   Frozen orbitals are left unchanged (i.e., canonical for :code:`DF_BASIS_SCF`)
   while DSRG (and orbital canonicalization) only reads :code:`DF_BASIS_MP2`.
-  This inconsistency leads to slight deviations to the frozen-core energies (:math:`< 10^{-4}` Hartree)
+  This inconsistency leads to slight deviations to the frozen-core energies (:math:`< 10^{-4}` a.u.)
   comparing to using identical DF basis sets.
 
 The output produced by this input: ::
@@ -448,7 +448,7 @@ The energies computed using conventional integrals are: ::
     E0 (reference)                 =   -109.021904986168678
     DSRG-MRPT2 total energy        =   -109.250416722481461
 
-The energy error of using CD integrals (threshold = :math:`10^{-5}` a.u.) is thus around :math:`\sim 10^{-5}` Hartree.
+The energy error of using CD integrals (threshold = :math:`10^{-5}` a.u.) is thus around :math:`\sim 10^{-5}` a.u..
 In general, comparing to conventional 4-index 2-electron integrals, the use of CD integrals yields
 energy errors to the same decimal points as :code:`CHOLESKY_TOLERANCE`.
 
