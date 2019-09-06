@@ -158,9 +158,9 @@ with complete active space self-consistent field (CASSCF) reference.
 
 There are three blocks in the input:
 
-1. The :code:`molecule` block specifies the geometry, charge, multiplicity, etc. (see Psi4 manual for details).
+1. The :code:`molecule` block specifies the geometry, charge, multiplicity, etc.
 
-2. The second block specifies Psi4 global options.
+2. The second block specifies Psi4 options (see Psi4 manual for details).
 
 3. The last block shows options specifically for Forte.
 
@@ -180,8 +180,8 @@ Forte generally recomputes the reference using the provided wave function parame
 To perform a DSRG computation, the user is expected to specify the following keywords:
 
 * :code:`ACTIVE_SPACE_SOLVER`:
-  Here we use :code:`FCI` to perform a CAS configuration interaction (CASCI)
-  within the active orbitals.
+  Here we use :code:`FCI` to perform a CAS configuration interaction (CASCI),
+  i.e., a full CI within the active orbitals.
 
 * :code:`CORRELATION_SOLVER`:
   This option determines which code to run. The four well-tested DSRG solvers are:
@@ -190,8 +190,9 @@ To perform a DSRG computation, the user is expected to specify the following key
   The :code:`MRDSRG` is mainly designed to perform MR-LDSRG(2) computations.
 
 * :code:`DSRG_S`:
-  This keyword specify the DSRG flow parameter in a.u.
-  For general MR-DSRG computations, the user should change the value to :math:`0.5 \sim 2` a.u.
+  This keyword specifies the DSRG flow parameter in a.u.
+  For general MR-DSRG computations, the user should change the value to :math:`0.5 \sim 1.5` a.u.
+  Most of our computations in :ref:`dsrg_ref` are performed using 0.5 or 1.0 a.u.
 
   .. caution::
     By default, :code:`DSRG_S` is set to :math:`10^{10}` a.u.
@@ -208,7 +209,107 @@ To perform a DSRG computation, the user is expected to specify the following key
     :code:`ACTIVE` to zero. In the above example, the SR DSRG-PT2 energy can be obtained
     by modifying :code:`RESTRICTED_DOCC` to :code:`[2,0,1,1]`
     and :code:`ACTIVE` to :code:`[0,0,0,0]`. The MP2 energy can be reproduced
-    if we further change :code:`DSRG_S` to :math:`10^8` a.u.
+    if we further change :code:`DSRG_S` to very large values (e.g., :math:`10^8` a.u.).
+
+The output of the above example consists of several parts:
+
+* Perform a active-space computation: ::
+
+    ==> Root No. 0 <==
+
+      20     -0.95086442
+      02      0.29288371
+
+      Total Energy:       -99.939316382616340
+
+    ==> Energy Summary <==
+
+      Multi.  Irrep.  No.               Energy
+      -----------------------------------------
+         1      A1     0       -99.939316382616
+      -----------------------------------------
+
+  Here we print out the CASCI configurations and its energy.
+  Since we read orbitals from Psi4's CASSCF, this energy should coincide with Psi4's CASSCF energy.
+
+* Compute 1-, 2-, and 3-body reduced density matrices: ::
+
+    ==> Computing RDMs for Root No. 0 <==
+
+      Timing for 1-RDM: 0.000 s
+      Timing for 2-RDM: 0.000 s
+      Timing for 3-RDM: 0.000 s
+
+* Canonicalize orbitals: ::
+
+    ==> Checking Fock Matrix Diagonal Blocks <==
+
+      Off-Diag. Elements       Max           2-Norm
+      ------------------------------------------------
+      Fa actv              0.0000000000   0.0000000000
+      Fb actv              0.0000000000   0.0000000000
+      ------------------------------------------------
+      Fa core              0.0000000000   0.0000000000
+      Fb core              0.0000000000   0.0000000000
+      ------------------------------------------------
+      Fa virt              0.0000000000   0.0000000000
+      Fb virt              0.0000000000   0.0000000000
+      ------------------------------------------------
+    Orbitals are already semicanonicalized.
+
+  Since Psi4's CASSCF will canonicalize orbitals at the end, here Forte just tests the Fock matrix
+  but does not perform an actual orbital rotation.
+
+* Compute DSRG-MRPT2 energy:
+
+  - The output first prints out a summary of several largest amplitudes and possible intruders: ::
+
+      ==> Excitation Amplitudes Summary <==
+
+      Active Indices:    1    2
+      ...  # ommit output for T1 alpha, T1 beta, T2 alpha-alpha, T2 beta-beta
+      Largest T2 amplitudes for spin case AB:
+             _       _                  _       _                  _       _
+         i   j   a   b              i   j   a   b              i   j   a   b
+      --------------------------------------------------------------------------------
+      [  1   2   2   4] 0.055381 [  0   0   1   1]-0.053806 [  1   2   1   4] 0.048919
+      [  1  14   1  15] 0.047592 [  1  10   1  11] 0.047592 [  2   2   4   4]-0.044138
+      [  2  14   1  15] 0.042704 [  2  10   1  11] 0.042704 [  1  10   1  12]-0.040985
+      [  1  14   1  16]-0.040985 [  2   2   1   4] 0.040794 [  1   1   1   5] 0.040479
+      [  1  14   2  15] 0.036004 [  1  10   2  11] 0.036004 [  2  10   2  12]-0.035392
+      --------------------------------------------------------------------------------
+      Norm of T2AB vector: (nonzero elements: 1487)                 0.369082532477979.
+      --------------------------------------------------------------------------------
+
+    Here, {i, j} are generalized hole indices and {a, b} indicate generalized particle indices.
+    The active indices are given at the beginning of this printing block.
+    Thus, the largest amplitude in this case [(1,2) -> (2,4)] is a semi-internal excitation
+    from (active, active) to (active, virtual).
+    In general, semi-internal excitations tend to be large and they are suppressed by DSRG.
+
+  - An energy summary is given later in the output: ::
+
+      ==> DSRG-MRPT2 Energy Summary <==
+
+        E0 (reference)                 =    -99.939316382616383
+        <[F, T1]>                      =     -0.010942204196708
+        <[F, T2]>                      =      0.011247157867728
+        <[V, T1]>                      =      0.010183611834684
+        <[V, T2]> (C_2)^4              =     -0.213259856801491
+        <[V, T2]> C_4 (C_2)^2 HH       =      0.002713363798054
+        <[V, T2]> C_4 (C_2)^2 PP       =      0.012979097502477
+        <[V, T2]> C_4 (C_2)^2 PH       =      0.027792466274407
+        <[V, T2]> C_6 C_2              =     -0.003202673882957
+        <[V, T2]>                      =     -0.172977603109510
+        DSRG-MRPT2 correlation energy  =     -0.162489037603806
+        DSRG-MRPT2 total energy        =   -100.101805420220188
+        max(T1)                        =      0.097879100308377
+        max(T2)                        =      0.055380911136950
+        ||T1||                         =      0.170534584213259
+        ||T2||                         =      0.886328961933259
+
+   Here we show all contributions to the energy. Specifically, those labeled by C_4
+   involves 2-body density cumulants, and those of C_6 are of 3-body cumnulants.
 
 
 **A More Advanced Example**
@@ -338,8 +439,6 @@ The batching algorithms of DSRG-MRPT3 (manually tuned) and MR-LDSRG(2) (Ambit) a
 The following input performs a DF-DSRG-MRPT2 calculation on nitrogen molecule.
 This example is modified from the df-dsrg-mrpt2-4 test case.
 
-.. warning:: In test case df-dsrg-mrpt2-4, :code:`SCF_TYPE` is specified to :code:`PK`, which is incorrect for a real computation.
-
 ::
 
     import forte
@@ -377,9 +476,10 @@ This example is modified from the df-dsrg-mrpt2-4 test case.
 
 To perform a DF computation, we need to specify the following options:
 
-
 1. Psi4 options:
    :code:`SCF_TYPE`, :code:`DF_BASIS_SCF`, :code:`DF_BASIS_MP2`
+.. warning:: In test case df-dsrg-mrpt2-4, :code:`SCF_TYPE` is specified to :code:`PK`, which is incorrect for a real computation.
+
 2. Forte options:
    :code:`CORRELATION_SOLVER`, :code:`INT_TYPE`
 
@@ -411,6 +511,8 @@ The output produced by this input: ::
       max(T1)                        =      0.002234583100143
       ||T1||                         =      0.007061738508652
 
+.. note:: :code:`THREE-DSRG-MRPT2` currently does not print a summary for the largest amplitudes.
+
 To use Cholesky integrals, set :code:`INT_TYPE` to :code:`CHOLESKY` and specify :code:`CHOLESKY_TOLERANCE`.
 For example, a CD equivalence of the above example is ::
 
@@ -419,16 +521,16 @@ For example, a CD equivalence of the above example is ::
     set globals{
        reference               rhf
        basis                   cc-pvdz
-       scf_type                cd
-       cholesky_tolerance      5
+       scf_type                cd                  # <=
+       cholesky_tolerance      5                   # <=
        d_convergence           8
        e_convergence           10
     }
 
     set forte {
        active_space_solver     cas
-       int_type                cholesky
-       cholesky_tolerance      1.0e-5
+       int_type                cholesky           # <=
+       cholesky_tolerance      1.0e-5             # <=
        restricted_docc         [2,0,0,0,0,2,0,0]
        active                  [1,0,1,1,0,1,1,1]
        correlation_solver      three-dsrg-mrpt2
