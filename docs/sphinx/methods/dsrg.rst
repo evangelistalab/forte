@@ -314,7 +314,108 @@ The output of the above example consists of several parts:
 
 **A More Advanced Example**
 
+Here we look at a more advanced example of MR-LDSRG(2) using the same molecule. ::
 
+    # We just show the input block of Forte here.
+    # The remaining input is identical to the previous example.
+
+    set forte{
+       active_space_solver     fci
+       correlation_solver      mrdsrg
+       corr_level              ldsrg2
+       frozen_docc             [1,0,0,0]
+       restricted_docc         [1,0,1,1]
+       active                  [2,0,0,0]
+       dsrg_s                  0.5
+       e_convergence           1.0e-8
+       dsrg_rsc_threshold      1.0e-9
+       relax_ref               iterate
+    }
+
+.. warning::
+  This example takes a long time to finish (~30 min on a laptop using 8 threads).
+
+There are several things to notice.
+
+1. To run a MR-LDSRG(2) computation, we need to change :code:`CORRELATION_SOLVER` to :code:`MRDSRG`.
+   Additionally, the :code:`CORR_LEVEL` should be specified as :code:`LDSRG2`.
+   There are other choices of :code:`CORR_LEVEL` but they are mainly for testing ideas.
+
+2. We specify the energy convergence keyword :code:`E_CONVERGENCE` and the RSC threshold :code:`DSRG_RSC_THRESHOLD`.
+   In general, the value of :code:`DSRG_RSC_THRESHOLD` should be smaller than that of :code:`E_CONVERGENCE`.
+   Making :code:`DSRG_RSC_THRESHOLD` larger will stop the BCH series earlier and thus saves some time.
+   It is OK to leave :code:`DSRG_RSC_THRESHOLD` as the default value, which is :math:`10^{-12}` a.u.
+
+3. The MR-LDSRG(2) method includes reference relaxation effects.
+   There are several variants of reference relaxation levels (see :ref:`dsrg_variants`).
+   Here we use the fully relaxed version, which is done by setting :code:`RELAX_REF` to :code:`ITERATE`.
+
+.. note::
+  The reference relaxation procedure is performed in a tick-tock way (see :ref:`dsrg_variants`).
+  This procedure is potentially not numerically stable for a strict energy convergence.
+  We therefore suggest using a moderate the energy threshold for iterative reference relaxation,
+  which is controlled by :code:`RELAX_E_CONVERGENCE` (:math:`\geq 10^{-8}` a.u.).
+
+For a given reference wave function, the output prints out:
+
+1. The iterations of amplitudes, where each step involves building a DSRG transformed Hamiltonian.
+
+2. A summary of the MR-LDSRG(2) energy: ::
+
+    ==> MR-LDSRG(2) Energy Summary <==
+
+      E0 (reference)                 =     -99.939316382616383
+      MR-LDSRG(2) correlation energy =      -0.171613035562048
+      MR-LDSRG(2) total energy       =    -100.110929418178429
+
+3. A summary of the MR-LDSRG(2) converged amplitudes: ::
+
+    ==> Final Excitation Amplitudes Summary <==
+
+      Active Indices:    1    2 
+      ...  # ommit output for T1 alpha, T1 beta, T2 alpha-alpha, T2 beta-beta
+      Largest T2 amplitudes for spin case AB:
+             _       _                  _       _                  _       _           
+         i   j   a   b              i   j   a   b              i   j   a   b           
+      --------------------------------------------------------------------------------
+      [  0   0   1   1]-0.060059 [  1   2   2   4] 0.046578 [  1  10   1  11] 0.039502 
+      [  1  14   1  15] 0.039502 [  0   0   1   2]-0.038678 [  1   1   1   5] 0.037546 
+      [  2   2   4   4]-0.033871 [  1   2   1   4] 0.033125 [  1  14   2  15] 0.032868 
+      [  1  10   2  11] 0.032868 [  1  10   1  12]-0.032602 [  1  14   1  16]-0.032602 
+      [ 14  14  15  15]-0.030255 [ 10  10  11  11]-0.030255 [  2  14   1  15] 0.029241 
+      --------------------------------------------------------------------------------
+      Norm of T2AB vector: (nonzero elements: 1487)                 0.330204946109119.
+      --------------------------------------------------------------------------------
+
+4. The reference relaxation summary at the end: ::
+
+    => MRDSRG Reference Relaxation Energy Summary <=
+
+                           Fixed Ref. (a.u.)              Relaxed Ref. (a.u.)
+             -------------------------------  -------------------------------
+      Iter.          Total Energy      Delta          Total Energy      Delta
+      -----------------------------------------------------------------------
+          1     -100.110929418178 -1.001e+02     -100.114343552853 -1.001e+02
+          2     -100.113565563124 -2.636e-03     -100.113571036112  7.725e-04
+          3     -100.113534597590  3.097e-05     -100.113534603824  3.643e-05
+          4     -100.113533334887  1.263e-06     -100.113533334895  1.269e-06
+          5     -100.113533290863  4.402e-08     -100.113533290864  4.403e-08
+          6     -100.113533289341  1.522e-09     -100.113533289341  1.522e-09
+      -----------------------------------------------------------------------
+
+   Let us introduce the nomenclature for reference relaxation.
+
+   =================  =========================  ========================
+          Name              Example Value               Description
+   =================  =========================  ========================
+   Unrelaxed          :code:`-100.110929418178`  1st iter.; fixed ref.
+   Partially Relaxed  :code:`-100.114343552853`  1st iter.; relaxed ref.
+   Relaxed            :code:`-100.113565563124`  2nd iter.; fixed ref.
+   Fully Relaxed      :code:`-100.113533289341`  last iter.; relaxed ref.
+   =================  =========================  ========================
+
+   In the example, and usually, the fully relaxed energy is well reproduced by
+   the relaxed energy with a small error (:math:`< 10^{-4}` a.u.).
 
 **Other Examples**
 
@@ -343,9 +444,54 @@ The value of the flow parameter :math:`s`.
 
 Max iterations for MR-DSRG amplitudes update.
 
-* Type: int
+* Type: integer
 * Default: 50
 
+**DSRG_RSC_NCOMM**
+
+The maximum number of commutators in the recursive single commutator approximation to the BCH formula.
+
+* Type: integer
+* Default: 20
+
+**DSRG_RSC_THRESHOLD**
+
+The threshold of considering the BCH expansion converged based on the recursive single commutator approximation.
+
+* Type: double
+* Default: 1.0e-12
+
+**R_CONVERGENCE**
+
+The convergence criteria for the amplitudes.
+
+* Type: double
+* Default: 1.0e-6
+
+**NTAMP**
+
+The number of largest amplitudes printed in the amplitudes summary.
+
+* Type: integer
+* Default: 15
+
+**INTRUDER_TAMP**
+
+A threshold for amplitudes that are considered as intruders for printing.
+
+* Type: double
+* Default: 0.1
+
+**TAYLOR_THRESHOLD**
+
+A threshold for small energy denominators that are computed using Taylor expansion
+(instead of direct reciprocal of the energy denominator).
+For example, 3 means Taylor expansion is performed if denominators are smaller than 1.0e-3.
+
+* Type: integer
+* Default: 3
+
+.. _dsrg_variants:
 
 Theoretical Variants and Technical Details
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -367,11 +513,25 @@ Theoretical Variants and Technical Details
 
 **RELAX_REF**
 
-Relax the reference for MR-DSRG.
+Different approaches for MR-DSRG reference relaxation.
 
 * Type: string
 * Options: NONE, ONCE, TWICE, ITERATE
 * Default: NONE
+
+**RELAX_E_CONVERGENCE**
+
+The energy convergence criteria for MR-DSRG reference relaxation.
+
+* Type: double
+* Default: 1.0e-8
+
+**MAXITER_RELAX_REF**
+
+Max macro iterations for MR-DSRG reference relaxation.
+
+* Type: integer
+* Default: 15
 
 **DSRG_HBAR_SEQ**
 
@@ -407,7 +567,7 @@ Note that we use physicists' notation here but the DF/CD literature use chemist 
 The main difference between DF and CD is how the :math:`B` tensor is formed.
 In DF, the :math:`B` tensor is defined as
 
-.. math:: B_{pq}^{Q} = \sum_P^{N_\text{aux}} (pq | P)[(P | Q)^{-1/2}]_{PQ}.
+.. math:: B_{pq}^{Q} = \sum_P^{N_\text{aux}} (pq | P) (P | Q)^{-1/2}.
 
 In the CD approach, the :math:`B` tensor is formed by performing a pivoted incomplete Cholesky decomposition of the 2-electron integrals.
 The accuracy of this decomposition is determined by a user defined tolerance, which directly determines the accuracy of the 2-electron integrals.
@@ -478,6 +638,7 @@ To perform a DF computation, we need to specify the following options:
 
 1. Psi4 options:
    :code:`SCF_TYPE`, :code:`DF_BASIS_SCF`, :code:`DF_BASIS_MP2`
+
 .. warning:: In test case df-dsrg-mrpt2-4, :code:`SCF_TYPE` is specified to :code:`PK`, which is incorrect for a real computation.
 
 2. Forte options:
@@ -559,13 +720,7 @@ energy errors to the same decimal points as :code:`CHOLESKY_TOLERANCE`.
 4. Options
 ++++++++++
 
-General Keywords
-''''''''''''''''
-
 For basic options of factorized integrals, please check :ref:`sec:integrals`.
-
-Advanced Keywords
-'''''''''''''''''
 
 **CCVV_BATCH_NUMBER**
 
