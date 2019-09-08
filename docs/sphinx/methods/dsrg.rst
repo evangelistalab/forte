@@ -21,6 +21,8 @@ Driven Similarity Renormalization Group
   For those who are desperate to perform computations on doublet, an alternative way is to add a hydrogen atom at long distance away from the system and perform a singlet computation.
   Spin adaptation is on the TODO list.
 
+.. _`basic_dsrg`:
+
 Basic DSRG
 ^^^^^^^^^^
 
@@ -113,6 +115,7 @@ which are summarized in :ref:`Table II <table:dsrg_cost>`.
     | LDSRG(2) | iterative :math:`N^6` | :math:`\sim 200` basis functions | :math:`\sim 550` basis functions  |
     +----------+-----------------------+----------------------------------+-----------------------------------+
 
+.. _`basic_dsrg_example`:
 
 2. Input Examples
 +++++++++++++++++
@@ -232,7 +235,7 @@ The output of the above example consists of several parts:
   Here we print out the CASCI configurations and its energy.
   Since we read orbitals from Psi4's CASSCF, this energy should coincide with Psi4's CASSCF energy.
 
-* Compute 1-, 2-, and 3-body reduced density matrices: ::
+* Compute 1-, 2-, and 3-body reduced density matrices (RDMs): ::
 
     ==> Computing RDMs for Root No. 0 <==
 
@@ -499,8 +502,49 @@ Theoretical Variants and Technical Details
 1. Reference Relaxation
 +++++++++++++++++++++++
 
+For MR methods, it is necessary to consider reference relaxation effects
+due to coupling between static and dynamical correlation.
+This can be introduced by requiring the reference wave function,
+:math:`\Psi_0` to be the eigenfunction of :math:`\bar{H}(s)`.
+The current implementation uses the uncoupled two-step (tick-tock) approach, where
+the DSRG transformed Hamiltonian :math:`\bar{H}(s)` is built using the RDMs of a given :math:`\Psi_0`,
+and then diagonalize :math:`\bar{H}(s)` within the active space yielding a new :math:`\Psi_0`.
+These two steps can be iteratively performed until convergence.
+
+Denoting the :math:`i`-th iteration of reference relaxation by superscript :math:`[i]`,
+the variants of reference relaxation procedure introduced above can be expressed as
+
+   =================  ===================================================================
+          Name                               Energy Expression
+   =================  ===================================================================
+   Unrelaxed          :math:`\langle \Psi_0^{[0]} | \bar{H}^{[0]} | \Psi_0^{[0]} \rangle`
+   Partially Relaxed  :math:`\langle \Psi_0^{[1]} | \bar{H}^{[0]} | \Psi_0^{[1]} \rangle`
+   Relaxed            :math:`\langle \Psi_0^{[1]} | \bar{H}^{[1]} | \Psi_0^{[1]} \rangle`
+   Fully Relaxed      :math:`\langle \Psi_0^{[n]} | \bar{H}^{[n]} | \Psi_0^{[n]} \rangle`
+   =================  ===================================================================
+
+where :math:`[0]` uses the original reference wave function and :math:`[n]` suggests converged results.
+
+By default, :code:`MRDSRG` only performs an unrelaxed computation.
+To obtain partially relaxed energy, the user needs to change :code:`RELAX_REF` to :code:`ONCE`.
+For relaxed energy, :code:`RELAX_REF` should be switched to :code:`TWICE`.
+For fully relaxed energy, :code:`RELAX_REF` should be set to :code:`ITERATE`.
+
+.. tip::
+  These energies can be conveniently obtained in the input file.
+  For example, :code:`Eu = variable("UNRELAXED ENERGY")` puts unrelaxed energy to a variable :code:`Eu`.
+  The avaible keys are :code:`"UNRELAXED ENERGY"`, :code:`PARTIALLY RELAXED ENERGY`,
+  :code:`"RELAXED ENERGY"`, and :code:`"FULLY RELAXED ENERGY"`.
+
 2. Orbital Rotations
 ++++++++++++++++++++
+
+The DSRG equations are defined in the semicanonical orbital basis,
+and thus it is not generally orbital invariant.
+All DSRG solvers, except for :code:`THREE-DSRG-MRPT2`, automatically rotates the integrals to semicanonical basis
+even if the input integrals are not canonicalized (if keyword :code:`SEMI_CANONICAL` is set to :code:`FALSE`).
+However, it is recommended a careful inspection to the printings regarding to the semicanonical orbitals.
+An example printing of orbital canonicalization can be found in :ref:`Minimal Example <basic_dsrg_example>`.
 
 3. Sequential Transformation
 ++++++++++++++++++++++++++++
@@ -508,7 +552,35 @@ Theoretical Variants and Technical Details
 4. Non-Interacting Virtual Orbital Approximation
 ++++++++++++++++++++++++++++++++++++++++++++++++
 
-5. Related Options
+
+5. Examples
++++++++++++
+
+Here we slightly modify the more advanced example in :ref:`General DSRG Examples <basic_dsrg_example>`
+to adopt the sequential transformation and NIVO approximation. ::
+
+    # We just show the input block of Forte here.
+
+    set forte{
+       active_space_solver     fci
+       correlation_solver      mrdsrg
+       corr_level              ldsrg2
+       frozen_docc             [1,0,0,0]
+       restricted_docc         [1,0,1,1]
+       active                  [2,0,0,0]
+       dsrg_s                  0.5
+       e_convergence           1.0e-8
+       dsrg_rsc_threshold      1.0e-9
+       relax_ref               iterate
+       dsrg_nivo               true
+       dsrg_hbar_seq           true
+    }
+
+.. note::
+  Since the test case is very small, invoking these two keywords does not make the computation faster.
+  A significant speed improvement can be observed for a decent amout of basis functions (:math:`\sim 150`).
+
+6. Related Options
 ++++++++++++++++++
 
 **RELAX_REF**
@@ -533,20 +605,27 @@ Max macro iterations for MR-DSRG reference relaxation.
 * Type: integer
 * Default: 15
 
+**SEMI_CANONICAL**
+
+Semicanonicalize orbitals after solving the active-space eigenvalue problem.
+
+* Type: boolean
+* Default: True
+
 **DSRG_HBAR_SEQ**
 
 Apply the sequential transformation algorithm in evaluating the transformed Hamiltonian :math:`\bar{H}(s)`, i.e.,
 
 .. math:: \bar{H}(s) = e^{-\hat{A}_n(s)} \cdots e^{-\hat{A}_2(s)} e^{-\hat{A}_1(s)} \hat{H} e^{\hat{A}_1(s)} e^{\hat{A}_2(s)} \cdots e^{\hat{A}_n(s)}.
 
-* Type: bool
+* Type: boolean
 * Default: false
 
 **DSRG_NIVO**
 
 Apply non-interacting virtual orbital (NIVO) approximation in evaluating the transformed Hamiltonian.
 
-* Type: bool
+* Type: boolean
 * Default: false
 
 
@@ -717,14 +796,14 @@ energy errors to the same decimal points as :code:`CHOLESKY_TOLERANCE`.
 
 .. caution:: The cholesky algorithm, as currently written, does not allow applications to large systems (> 1000 basis functions).
 
-4. Options
-++++++++++
+4. Related Options
+++++++++++++++++++
 
 For basic options of factorized integrals, please check :ref:`sec:integrals`.
 
 **CCVV_BATCH_NUMBER**
 
-Manually specify the number of batches for computing THREE-DSRG-MRPT2 energies.
+Manually specify the number of batches for computing :code:`THREE-DSRG-MRPT2` energies.
 By default, the number of batches are automatically computed using the remaining memory estimate.
 
 * Type: integer
@@ -733,6 +812,20 @@ By default, the number of batches are automatically computed using the remaining
 State-Averaged and Multi-State Approaches for Excited States
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1. State-Averaged Formalism
++++++++++++++++++++++++++++
+
+2. Multi-State Formalism
+++++++++++++++++++++++++
+
+3. Dynamically Weighted Formalism
++++++++++++++++++++++++++++++++++
+
+4. Examples
++++++++++++
+
+5. Related Options
+++++++++++++++++++
 
 TODOs
 ^^^^^
