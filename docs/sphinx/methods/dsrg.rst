@@ -423,7 +423,7 @@ For a given reference wave function, the output prints out:
 **Other Examples**
 
 There are plenty of examples in the tests/method folder.
-A complete list of the DSRG test cases can be found here (TODO).
+A complete list of the DSRG test cases can be found :ref:`here <dsrg_example>`.
 
 3. General DSRG Options
 +++++++++++++++++++++++
@@ -514,14 +514,14 @@ These two steps can be iteratively performed until convergence.
 Denoting the :math:`i`-th iteration of reference relaxation by superscript :math:`[i]`,
 the variants of reference relaxation procedure introduced above can be expressed as
 
-   =================  ===================================================================
+   =================  ===============================================================================
           Name                               Energy Expression
-   =================  ===================================================================
-   Unrelaxed          :math:`\langle \Psi_0^{[0]} | \bar{H}^{[0]} | \Psi_0^{[0]} \rangle`
-   Partially Relaxed  :math:`\langle \Psi_0^{[1]} | \bar{H}^{[0]} | \Psi_0^{[1]} \rangle`
-   Relaxed            :math:`\langle \Psi_0^{[1]} | \bar{H}^{[1]} | \Psi_0^{[1]} \rangle`
-   Fully Relaxed      :math:`\langle \Psi_0^{[n]} | \bar{H}^{[n]} | \Psi_0^{[n]} \rangle`
-   =================  ===================================================================
+   =================  ===============================================================================
+   Unrelaxed          :math:`\langle \Psi_0^{[0]} | \bar{H}^{[0]} (s) | \Psi_0^{[0]} \rangle`
+   Partially Relaxed  :math:`\langle \Psi_0^{[1]} (s) | \bar{H}^{[0]} (s) | \Psi_0^{[1]} (s) \rangle`
+   Relaxed            :math:`\langle \Psi_0^{[1]} (s) | \bar{H}^{[1]} (s) | \Psi_0^{[1]} (s) \rangle`
+   Fully Relaxed      :math:`\langle \Psi_0^{[n]} (s) | \bar{H}^{[n]} (s) | \Psi_0^{[n]} (s) \rangle`
+   =================  ===============================================================================
 
 where :math:`[0]` uses the original reference wave function and :math:`[n]` suggests converged results.
 
@@ -529,6 +529,10 @@ By default, :code:`MRDSRG` only performs an unrelaxed computation.
 To obtain partially relaxed energy, the user needs to change :code:`RELAX_REF` to :code:`ONCE`.
 For relaxed energy, :code:`RELAX_REF` should be switched to :code:`TWICE`.
 For fully relaxed energy, :code:`RELAX_REF` should be set to :code:`ITERATE`.
+
+For other DSRG solvers aimed for perturbation theories, only the unrelaxed and partially relaxed energies are available.
+In the literature, we term the partially relaxed version as the default DSRG-MRPT,
+while the unrelaxed version as uDSRG-MRPT.
 
 .. tip::
   These energies can be conveniently obtained in the input file.
@@ -578,7 +582,7 @@ to adopt the sequential transformation and NIVO approximation. ::
 
 .. note::
   Since the test case is very small, invoking these two keywords does not make the computation faster.
-  A significant speed improvement can be observed for a decent amout of basis functions (:math:`\sim 150`).
+  A significant speed improvement can be observed for a decent amout of basis functions (:math:`\sim 100`).
 
 6. Related Options
 ++++++++++++++++++
@@ -809,14 +813,16 @@ By default, the number of batches are automatically computed using the remaining
 * Type: integer
 * Default: -1
 
-State-Averaged and Multi-State Approaches for Excited States
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+MR-DSRG Approaches for Excited States
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+There are several MR-DSRG methods available for computing excited states.
 
 1. State-Averaged Formalism
 +++++++++++++++++++++++++++
 
-2. Multi-State Formalism
-++++++++++++++++++++++++
+2. Multi-State and Extended Formalisms
+++++++++++++++++++++++++++++++++++++++
 
 3. Dynamically Weighted Formalism
 +++++++++++++++++++++++++++++++++
@@ -838,11 +844,137 @@ This is done for unrelaxed DSRG-MRPT2 but not complete for general LDSRG(2).
 2. DSRG-MRPT2 Analytic Energy Gradients
 +++++++++++++++++++++++++++++++++++++++
 
+This is an ongoing project.
+
 3. MR-DSRG(T) with Perturbative Triples
 +++++++++++++++++++++++++++++++++++++++
 
+This is an ongoing project.
 
-.. _dsrg_ref:
+.. _`dsrg_example`:
+
+A Complete List of DSRG Teset Cases
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Acronyms used in the following text:
+
+* Integrals
+
+  DF: density fitting;
+  DiskDF: density fitting (disk algorithm);
+  CD: Cholesky decomposition;
+
+* Reference Relaxation
+
+  U: unrelaxed;
+  PR: partially relaxed;
+  R: relaxed;
+  FR: fully relaxed;
+
+* Single-State / Multi-State
+
+  SS: state-specific;
+  SA: state-averaged;
+  SAc: state-averaged with constrained reference;
+  MS: multi-state;
+  XMS: extended multi-state;
+  DWMS: dynamically weighted multi-state;
+
+* Run Time:
+
+  long: more than 30 s to finish;
+  Long: more than 5 min to finish;
+  LONG: more than 20 min to finish;
+
+1. DSRG-MRPT2 Test Cases
+++++++++++++++++++++++++
+
+  ============================  =========  ============================================  =================================================
+              Name               Variant     Molecule                                      Notes
+  ============================  =========  ============================================  =================================================
+  dsrg-mrpt2-1                   U, SS     :math:`\text{BeH}_{2}`                        large :math:`s` value, user defined basis set
+  dsrg-mrpt2-2                   U, SS     :math:`\text{HF}`
+  dsrg-mrpt2-3                   U, SS     :math:`\text{H}_4` (rectangular)
+  dsrg-mrpt2-4                   U, SS     :math:`\text{N}_2`
+  dsrg-mrpt2-5                   U, SS     benzyne :math:`\text{C}_6 \text{H}_4`
+  dsrg-mrpt2-6                   PR, SS    :math:`\text{N}_2`
+  dsrg-mrpt2-7-casscf-natorbs    PR, SS    :math:`\text{N}_2`                            CASSCF natural orbitals
+  dsrg-mrpt2-8-sa                SA, SAc   :math:`\text{LiF}`                            lowest two singlet states, user defined basis set
+  dsrg-mrpt2-9-xms               MS, XMS   :math:`\text{LiF}`                            lowest two singlet states
+  dsrg-mrpt2-10-CO               PR, SS    :math:`\text{CO}`                             dipole moment (not linear response)
+  dsrg-mrpt2-11-C2H4             SA        ethylene :math:`\text{C}_2\text{H}_4`         lowest three singlet states
+  dsrg-mrpt2-12-localized-actv   SA        butadiene :math:`\text{C}_4\text{H}_6`        long, localized active orbitals
+  aci-dsrg-mrpt2-1               U, SS     :math:`\text{N}_2`                            ACI(:math:`\sigma=0`)
+  aci-dsrg-mrpt2-2               U, SS     :math:`\text{H}_4` (rectangular)              ACI(:math:`\sigma=0`)
+  aci-dsrg-mrpt2-3               PR, SS    :math:`\text{H}_4` (rectangular)              ACI(:math:`\sigma=0`)
+  aci-dsrg-mrpt2-4               U, SS     octatetraene :math:`\text{C}_8\text{H}_{10}`  DF, ACI(:math:`\sigma=0.001`), ACI batching
+  aci-dsrg-mrpt2-5               PR, SS    octatetraene :math:`\text{C}_8\text{H}_{10}`  long, DF, ACI(:math:`\sigma=0.001`), ACI batching
+  ============================  =========  ============================================  =================================================
+
+2. DF/CD-DSRG-MRPT2 Test Cases
+++++++++++++++++++++++++++++++
+
+   - cd-dsrg-mrpt2-1
+   - cd-dsrg-mrpt2-2
+   - cd-dsrg-mrpt2-3
+   - cd-dsrg-mrpt2-4
+   - cd-dsrg-mrpt2-5
+   - cd-dsrg-mrpt2-6
+   - cd-dsrg-mrpt2-7-sa
+   - df-dsrg-mrpt2-1
+   - df-dsrg-mrpt2-2
+   - df-dsrg-mrpt2-3
+   - df-dsrg-mrpt2-4
+   - df-dsrg-mrpt2-5
+   - df-dsrg-mrpt2-6, LONG
+   - df-dsrg-mrpt2-7-localized-actv, LONG
+   - df-dsrg-mrpt2-threading1
+   - df-dsrg-mrpt2-threading2
+   - df-dsrg-mrpt2-threading4
+   - diskdf-dsrg-mrpt2-1
+   - diskdf-dsrg-mrpt2-2
+   - diskdf-dsrg-mrpt2-3
+   - diskdf-dsrg-mrpt2-4
+   - diskdf-dsrg-mrpt2-5
+   - diskdf-dsrg-mrpt2-threading1
+   - diskdf-dsrg-mrpt2-threading4
+   - df-aci-dsrg-mrpt2-1
+   - df-aci-dsrg-mrpt2-2
+
+3. DSRG-MRPT3 Test Cases
+++++++++++++++++++++++++
+
+   - dsrg-mrpt3-1
+   - dsrg-mrpt3-2
+   - dsrg-mrpt3-3, LONG
+   - dsrg-mrpt3-4, LONG
+   - dsrg-mrpt3-5
+   - dsrg-mrpt3-6-sa, LONG
+   - dsrg-mrpt3-8-sa-C2H4, LONG
+   - dsrg-mrpt3-7-CO
+   - dsrg-mrpt3-9
+   - aci-dsrg-mrpt3-1
+
+4. MR-DSRG Test Cases
++++++++++++++++++++++
+
+   - mrdsrg-pt2-1
+   - mrdsrg-pt2-2
+   - mrdsrg-pt2-3, LONG
+   - mrdsrg-pt2-4
+   - mrdsrg-srgpt2-1, LONG
+   - mrdsrg-srgpt2-2, LONG
+   - mrdsrg-ldsrg2-df-4
+   - mrdsrg-ldsrg2-df-seq-1, LONG
+   - mrdsrg-ldsrg2-df-seq-2, LONG
+   - mrdsrg-ldsrg2-df-seq-3, LONG
+   - mrdsrg-ldsrg2-df-seq-nivo-1, LONG
+   - mrdsrg-ldsrg2-df-seq-nivo-2, LONG
+   - mrdsrg-ldsrg2-df-seq-nivo-3, LONG
+   - mrdsrg-ldsrg2-qc-1, LONG
+   - mrdsrg-ldsrg2-qc-2, LONG
+
+.. _`dsrg_ref`:
 
 References
 ^^^^^^^^^^
