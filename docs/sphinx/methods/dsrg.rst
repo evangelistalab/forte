@@ -443,6 +443,20 @@ The value of the flow parameter :math:`s`.
 * Type: double
 * Default: 1.0e10
 
+**DSRG_HBAR_SEQ**
+
+Flag to compute :math:`\bar{H}` sequentially as :math:`e^{-\hat{A}_2(s)} e^{-\hat{A}_1(s)} \hat{H} e^{\hat{A}_1(s)} e^{\hat{A}_2(s)}` instead of traditionally :math:`e^{-\hat{A}_1(s)-\hat{A}_2(s)} \hat{H} e^{\hat{A}_1(s)-\hat{A}_2(s)}`
+
+* Type: bool
+* Default: False
+
+**DSRG_NIVO**
+
+Flag for using the highly efficient low-memory-scaling non-interacting virtual orbital (NIVO) approximation to compute :math:`\bar{H}`.
+
+* Type: bool
+* Default: False
+
 **DSRG_MAXITER**
 
 Max iterations for MR-DSRG amplitudes update.
