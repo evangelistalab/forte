@@ -223,15 +223,6 @@ mrdsrg-ldsrg2-df:
    - mrdsrg-ldsrg2-df-nivo-2
    - mrdsrg-ldsrg2-df-nivo-3
    - mrdsrg-ldsrg2-df-seq-4
-   - mrdsrg-ldsrg2-df-seq-linear-1
-   - mrdsrg-ldsrg2-df-seq-linear-2
-   - mrdsrg-ldsrg2-df-seq-linear-3
-   - mrdsrg-ldsrg2-df-seq-linear-4
-   - mrdsrg-ldsrg2-df-seq-linear-5
-   - mrdsrg-ldsrg2-df-seq-linear-6
-   - mrdsrg-ldsrg2-df-seq-noV3-1
-   - mrdsrg-ldsrg2-df-seq-noV3-2
-   - mrdsrg-ldsrg2-df-seq-noV3-3
    - mrdsrg-ldsrg2-qc-df-2
 mrdsrg-pt2:
   short:
