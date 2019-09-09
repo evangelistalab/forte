@@ -606,6 +606,20 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
     // Form new C matrix: Frozen-core, B_occ, A_occ, Active, A_vir, B_vir, Frozen-virtual
     SharedMatrix Ca_Rt(new Matrix("Ca rotated tilde", nirrep, nmopi, nmopi));
 
+    if(options.get_str("EMBEDDING_SPECIAL") == "SWAPAB") {
+    int offset = 0;
+    for (auto& C_block : {C_Fo, C_ao, C_bo, C_A, C_bv, C_av, C_Fv}) {
+        int nmo_block = C_block->ncol();
+        for (int i = 0; i < nmo_block; ++i) {
+            for (int mu = 0; mu < nmopi[0]; ++mu) {
+                double value = C_block->get(mu, i);
+                Ca_Rt->set(mu, offset, value);
+            }
+            offset += 1;
+        }
+    }
+    }
+    else {
     int offset = 0;
     for (auto& C_block : {C_Fo, C_bo, C_ao, C_A, C_av, C_bv, C_Fv}) {
         int nmo_block = C_block->ncol();
@@ -617,6 +631,7 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
             offset += 1;
         }
     }
+    }
 
     // Update both the alpha and beta orbitals
     ref_wfn->Ca()->copy(Ca_Rt);
@@ -625,27 +640,81 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
     // Write a new MOSpaceInfo:
     std::map<std::string, std::vector<size_t>> mo_space_map;
 
-    // Frozen docc space
-    size_t freeze_o =
-        static_cast<size_t>(num_Fo + num_Bo + adj_sys_docc); // Add the additional frozen core to Bo
-    mo_space_map["FROZEN_DOCC"] = {freeze_o};
+    if(options.get_str("EMBEDDING_SPECIAL") == "SWAPAB") {
+        size_t freeze_o =
+            static_cast<size_t>(num_Fo + num_Ao + adj_sys_docc); // Add the additional frozen core to Bo
+        mo_space_map["FROZEN_DOCC"] = {freeze_o};
+    
+        size_t ro = static_cast<size_t>(num_Bo - adj_sys_docc);
+        mo_space_map["RESTRICTED_DOCC"] = {ro};
+    
+        size_t a = static_cast<size_t>(actv_a[0]);
+        mo_space_map["ACTIVE"] = {a};
+    
+        size_t rv = static_cast<size_t>(num_Bv - adj_sys_uocc);
+        mo_space_map["RESTRICTED_UOCC"] = {rv};
+    
+        size_t freeze_v = static_cast<size_t>(num_Fv + num_Av +
+                                              adj_sys_uocc); // Add the additional frozen virtual to Bv
+        mo_space_map["FROZEN_UOCC"] = {freeze_v};
+    }
 
-    // Restricted docc space
-    size_t ro = static_cast<size_t>(num_Ao - adj_sys_docc);
-    mo_space_map["RESTRICTED_DOCC"] = {ro};
+    if(options.get_str("EMBEDDING_SPECIAL") == "SYSFCI") {
+        size_t freeze_o =
+            static_cast<size_t>(num_Fo + adj_sys_docc); // Add the additional frozen core to Bo
+        mo_space_map["FROZEN_DOCC"] = {freeze_o};
+    
+        size_t ro = static_cast<size_t>(num_Bo - adj_sys_docc);
+        mo_space_map["RESTRICTED_DOCC"] = {ro};
+    
+        size_t a = static_cast<size_t>(actv_a[0] + num_Ao + num_Av);
+        mo_space_map["ACTIVE"] = {a};
+    
+        size_t rv = static_cast<size_t>(num_Bv - adj_sys_uocc);
+        mo_space_map["RESTRICTED_UOCC"] = {rv};
+    
+        size_t freeze_v = static_cast<size_t>(num_Fv +
+                                              adj_sys_uocc); // Add the additional frozen virtual to Bv
+        mo_space_map["FROZEN_UOCC"] = {freeze_v};
+    }
 
-    // Active space
-    size_t a = static_cast<size_t>(actv_a[0]);
-    mo_space_map["ACTIVE"] = {a};
+    if(options.get_str("EMBEDDING_SPECIAL") == "ENVFCI") {
+        size_t freeze_o =
+            static_cast<size_t>(num_Fo + adj_sys_docc); // Add the additional frozen core to Bo
+        mo_space_map["FROZEN_DOCC"] = {freeze_o};
+    
+        size_t ro = static_cast<size_t>(num_Ao - adj_sys_docc);
+        mo_space_map["RESTRICTED_DOCC"] = {ro};
+    
+        size_t a = static_cast<size_t>(actv_a[0] + num_Bo + num_Bv);
+        mo_space_map["ACTIVE"] = {a};
+    
+        size_t rv = static_cast<size_t>(num_Av - adj_sys_uocc);
+        mo_space_map["RESTRICTED_UOCC"] = {rv};
+    
+        size_t freeze_v = static_cast<size_t>(num_Fv +
+                                              adj_sys_uocc); // Add the additional frozen virtual to Bv
+        mo_space_map["FROZEN_UOCC"] = {freeze_v};
+    }
 
-    // Restricted uocc space
-    size_t rv = static_cast<size_t>(num_Av - adj_sys_uocc);
-    mo_space_map["RESTRICTED_UOCC"] = {rv};
-
-    // Frozen uocc space
-    size_t freeze_v = static_cast<size_t>(num_Fv + num_Bv +
-                                          adj_sys_uocc); // Add the additional frozen virtual to Bv
-    mo_space_map["FROZEN_UOCC"] = {freeze_v};
+    if(options.get_str("EMBEDDING_SPECIAL") == "NONE") {
+        size_t freeze_o =
+            static_cast<size_t>(num_Fo + num_Bo + adj_sys_docc); // Add the additional frozen core to Bo
+        mo_space_map["FROZEN_DOCC"] = {freeze_o};
+    
+        size_t ro = static_cast<size_t>(num_Ao - adj_sys_docc);
+        mo_space_map["RESTRICTED_DOCC"] = {ro};
+    
+        size_t a = static_cast<size_t>(actv_a[0]);
+        mo_space_map["ACTIVE"] = {a};
+    
+        size_t rv = static_cast<size_t>(num_Av - adj_sys_uocc);
+        mo_space_map["RESTRICTED_UOCC"] = {rv};
+    
+        size_t freeze_v = static_cast<size_t>(num_Fv + num_Bv +
+                                              adj_sys_uocc); // Add the additional frozen virtual to Bv
+        mo_space_map["FROZEN_UOCC"] = {freeze_v};
+    }
 
     // Write new MOSpaceInfo
     outfile->Printf("\n  Updating MOSpaceInfo");

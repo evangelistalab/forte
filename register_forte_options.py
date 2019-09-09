@@ -150,6 +150,9 @@ def register_embedding_options(forte_options):
     forte_options.add_int(
         "EMBEDDING_ADJUST_B_UOCC", 0,
         "Adjust number of virtual orbitals between A and B, +: move to B, -: move to A")
+    forte_options.add_str(
+        "EMBEDDING_SPECIAL", "NONE",
+        "Special test functions for PT2 embedding: SWAPAB, SYSFCI, ENVFCI")
 
 def register_mo_space_info_options(forte_options):
     forte_options.add_array(
