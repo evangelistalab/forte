@@ -989,22 +989,27 @@ Acronyms used in the following text:
   =================================  =======================  ============================================  =================================================
   mrdsrg-pt2-1                        U, SS                    :math:`\text{BeH}_{2}`                        PT2
   mrdsrg-pt2-2                        PR, SS                   :math:`\text{BeH}_{2}`                        PT2
-  mrdsrg-pt2-3                        FR, SS                   :math:`\text{BeH}_{2}`                        LONG, PT2
+  mrdsrg-pt2-3                        FR, SS                   :math:`\text{BeH}_{2}`                        long, PT2
   mrdsrg-pt2-4                        FR, SS                   :math:`\text{HF}`                             PT2
-  mrdsrg-srgpt2-1                     U, SS                    :math:`\text{BeH}_{2}`                        LONG, SRG_PT2
+  mrdsrg-srgpt2-1                     U, SS                    :math:`\text{BeH}_{2}`                        Long, SRG_PT2
   mrdsrg-srgpt2-2                     U, SS                    :math:`\text{BeH}_{2}`                        LONG, SRG_PT2, h0th=fdiag_vactv
+  mrdsrg-ldsrg2-df-1                  CD, R, SS                :math:`\text{BeH}_{2}`                        long
+  mrdsrg-ldsrg2-df-2                  CD, R, SS                :math:`\text{HF}`                             long
+  mrdsrg-ldsrg2-df-3                  CD, U, SS                :math:`\text{H}_4` (rectangular)              long
   mrdsrg-ldsrg2-df-4                  CD, PR, SS               :math:`\text{H}_{2}`
-  mrdsrg-ldsrg2-df-seq-1              CD, PR, SS, SQ           :math:`\text{BeH}_{2}`                        LONG
-  mrdsrg-ldsrg2-df-seq-2              CD, R, SS, SQ            :math:`\text{HF}`                             LONG
-  mrdsrg-ldsrg2-df-seq-3              CD, U, SS, SQ            :math:`\text{H}_4` (rectangular)              LONG
-  mrdsrg-ldsrg2-df-nivo-1             CD, PR, SS, NIVO         :math:`\text{BeH}_{2}`                        LONG
-  mrdsrg-ldsrg2-df-nivo-2             CD, R, SS, NIVO          :math:`\text{HF}`                             LONG
-  mrdsrg-ldsrg2-df-nivo-3             CD, U, SS, NIVO          :math:`\text{H}_4` (rectangular)              LONG
-  mrdsrg-ldsrg2-df-seq-nivo-1         CD, PR, SS, SQ, NIVO     :math:`\text{BeH}_{2}`                        LONG
-  mrdsrg-ldsrg2-df-seq-nivo-2         CD, R, SS, SQ, NIVO      :math:`\text{HF}`                             LONG
-  mrdsrg-ldsrg2-df-seq-nivo-3         CD, U, SS, SQ, NIVO      :math:`\text{H}_4` (rectangular)              LONG
-  mrdsrg-ldsrg2-qc-1                  FR, QC, SS               :math:`\text{HF}`                             LONG
-  mrdsrg-ldsrg2-qc-2                  U, QC, SS                :math:`\text{HF}`                             LONG
+  mrdsrg-ldsrg2-df-seq-1              CD, PR, SS, SQ           :math:`\text{BeH}_{2}`                        Long
+  mrdsrg-ldsrg2-df-seq-2              CD, R, SS, SQ            :math:`\text{HF}`                             Long
+  mrdsrg-ldsrg2-df-seq-3              CD, U, SS, SQ            :math:`\text{H}_4` (rectangular)              long
+  mrdsrg-ldsrg2-df-seq-4              CD, FR, SS, SQ           :math:`\text{H}_4` (rectangular)              Long
+  mrdsrg-ldsrg2-df-nivo-1             CD, PR, SS, NIVO         :math:`\text{BeH}_{2}`                        long
+  mrdsrg-ldsrg2-df-nivo-2             CD, R, SS, NIVO          :math:`\text{HF}`                             long
+  mrdsrg-ldsrg2-df-nivo-3             CD, U, SS, NIVO          :math:`\text{H}_4` (rectangular)              long
+  mrdsrg-ldsrg2-df-seq-nivo-1         CD, PR, SS, SQ, NIVO     :math:`\text{BeH}_{2}`                        long
+  mrdsrg-ldsrg2-df-seq-nivo-2         CD, R, SS, SQ, NIVO      :math:`\text{HF}`                             Long
+  mrdsrg-ldsrg2-df-seq-nivo-3         CD, U, SS, SQ, NIVO      :math:`\text{H}_4` (rectangular)              long
+  mrdsrg-ldsrg2-qc-1                  FR, QC, SS               :math:`\text{HF}`                             long
+  mrdsrg-ldsrg2-qc-2                  U, QC, SS                :math:`\text{HF}`                             long
+  mrdsrg-ldsrg2-qc-df-2               CD, U, QC, SS            :math:`\text{HF}`                             long
   =================================  =======================  ============================================  =================================================
 
 .. _`dsrg_ref`:
