@@ -443,20 +443,6 @@ The value of the flow parameter :math:`s`.
 * Type: double
 * Default: 1.0e10
 
-**DSRG_HBAR_SEQ**
-
-Flag to compute :math:`\bar{H}` sequentially as :math:`e^{-\hat{A}_2(s)} e^{-\hat{A}_1(s)} \hat{H} e^{\hat{A}_1(s)} e^{\hat{A}_2(s)}` instead of traditionally :math:`e^{-\hat{A}_1(s)-\hat{A}_2(s)} \hat{H} e^{\hat{A}_1(s)-\hat{A}_2(s)}`
-
-* Type: bool
-* Default: False
-
-**DSRG_NIVO**
-
-Flag for using the highly efficient low-memory-scaling non-interacting virtual orbital (NIVO) approximation to compute :math:`\bar{H}`.
-
-* Type: bool
-* Default: False
-
 **DSRG_MAXITER**
 
 Max iterations for MR-DSRG amplitudes update.
@@ -632,19 +618,17 @@ Semicanonicalize orbitals after solving the active-space eigenvalue problem.
 
 **DSRG_HBAR_SEQ**
 
-Apply the sequential transformation algorithm in evaluating the transformed Hamiltonian :math:`\bar{H}(s)`, i.e.,
-
-.. math:: \bar{H}(s) = e^{-\hat{A}_n(s)} \cdots e^{-\hat{A}_2(s)} e^{-\hat{A}_1(s)} \hat{H} e^{\hat{A}_1(s)} e^{\hat{A}_2(s)} \cdots e^{\hat{A}_n(s)}.
+Flag to compute :math:`\bar{H}` sequentially as :math:`e^{-\hat{A}_2(s)} e^{-\hat{A}_1(s)} \hat{H} e^{\hat{A}_1(s)} e^{\hat{A}_2(s)}` instead of traditionally :math:`e^{-\hat{A}_1(s)-\hat{A}_2(s)} \hat{H} e^{\hat{A}_1(s)-\hat{A}_2(s)}`
 
 * Type: boolean
-* Default: false
+* Default: False
 
 **DSRG_NIVO**
 
-Apply non-interacting virtual orbital (NIVO) approximation in evaluating the transformed Hamiltonian.
+Flag for using the highly efficient low-memory-scaling non-interacting virtual orbital (NIVO) approximation to compute :math:`\bar{H}`.
 
 * Type: boolean
-* Default: false
+* Default: False
 
 
 Integral Factorization Implementation
@@ -896,9 +880,9 @@ Acronyms used in the following text:
 
 * Run Time:
 
-  long: more than 30 s to finish;
-  Long: more than 5 min to finish;
-  LONG: more than 20 min to finish;
+  long: > 30 s to finish;
+  Long: > 5 min to finish;
+  LONG: > 20 min to finish;
 
 1. DSRG-MRPT2 Test Cases
 ++++++++++++++++++++++++
@@ -906,23 +890,23 @@ Acronyms used in the following text:
   ============================  =========  ============================================  =================================================
               Name               Variant     Molecule                                      Notes
   ============================  =========  ============================================  =================================================
-  dsrg-mrpt2-1                   U, SS     :math:`\text{BeH}_{2}`                        large :math:`s` value, user defined basis set
-  dsrg-mrpt2-2                   U, SS     :math:`\text{HF}`
-  dsrg-mrpt2-3                   U, SS     :math:`\text{H}_4` (rectangular)
-  dsrg-mrpt2-4                   U, SS     :math:`\text{N}_2`
-  dsrg-mrpt2-5                   U, SS     benzyne :math:`\text{C}_6 \text{H}_4`
-  dsrg-mrpt2-6                   PR, SS    :math:`\text{N}_2`
-  dsrg-mrpt2-7-casscf-natorbs    PR, SS    :math:`\text{N}_2`                            CASSCF natural orbitals
+  dsrg-mrpt2-1                   SS, U     :math:`\text{BeH}_{2}`                        large :math:`s` value, user defined basis set
+  dsrg-mrpt2-2                   SS, U     :math:`\text{HF}`
+  dsrg-mrpt2-3                   SS, U     :math:`\text{H}_4` (rectangular)
+  dsrg-mrpt2-4                   SS, U     :math:`\text{N}_2`
+  dsrg-mrpt2-5                   SS, U     benzyne :math:`\text{C}_6 \text{H}_4`
+  dsrg-mrpt2-6                   SS, PR    :math:`\text{N}_2`
+  dsrg-mrpt2-7-casscf-natorbs    SS, PR    :math:`\text{N}_2`                            CASSCF natural orbitals
   dsrg-mrpt2-8-sa                SA, SAc   :math:`\text{LiF}`                            lowest two singlet states, user defined basis set
   dsrg-mrpt2-9-xms               MS, XMS   :math:`\text{LiF}`                            lowest two singlet states
-  dsrg-mrpt2-10-CO               PR, SS    :math:`\text{CO}`                             dipole moment (not linear response)
+  dsrg-mrpt2-10-CO               SS, PR    :math:`\text{CO}`                             dipole moment (not linear response)
   dsrg-mrpt2-11-C2H4             SA        ethylene :math:`\text{C}_2\text{H}_4`         lowest three singlet states
   dsrg-mrpt2-12-localized-actv   SA        butadiene :math:`\text{C}_4\text{H}_6`        long, localized active orbitals
-  aci-dsrg-mrpt2-1               U, SS     :math:`\text{N}_2`                            ACI(:math:`\sigma=0`)
-  aci-dsrg-mrpt2-2               U, SS     :math:`\text{H}_4` (rectangular)              ACI(:math:`\sigma=0`)
-  aci-dsrg-mrpt2-3               PR, SS    :math:`\text{H}_4` (rectangular)              ACI(:math:`\sigma=0`)
-  aci-dsrg-mrpt2-4               U, SS     octatetraene :math:`\text{C}_8\text{H}_{10}`  DF, ACI(:math:`\sigma=0.001`), ACI batching
-  aci-dsrg-mrpt2-5               PR, SS    octatetraene :math:`\text{C}_8\text{H}_{10}`  long, DF, ACI(:math:`\sigma=0.001`), ACI batching
+  aci-dsrg-mrpt2-1               SS, U     :math:`\text{N}_2`                            ACI(:math:`\sigma=0`)
+  aci-dsrg-mrpt2-2               SS, U     :math:`\text{H}_4` (rectangular)              ACI(:math:`\sigma=0`)
+  aci-dsrg-mrpt2-3               SS, PR    :math:`\text{H}_4` (rectangular)              ACI(:math:`\sigma=0`)
+  aci-dsrg-mrpt2-4               SS, U     octatetraene :math:`\text{C}_8\text{H}_{10}`  DF, ACI(:math:`\sigma=0.001`), ACI batching
+  aci-dsrg-mrpt2-5               SS, PR    octatetraene :math:`\text{C}_8\text{H}_{10}`  long, DF, ACI(:math:`\sigma=0.001`), ACI batching
   ============================  =========  ============================================  =================================================
 
 2. DF/CD-DSRG-MRPT2 Test Cases
