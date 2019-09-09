@@ -851,8 +851,8 @@ This is an ongoing project.
 
 .. _`dsrg_example`:
 
-A Complete List of DSRG Teset Cases
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+A Complete List of DSRG Test Cases
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Acronyms used in the following text:
 
