@@ -816,6 +816,10 @@ MR-DSRG Approaches for Excited States
 
 There are several MR-DSRG methods available for computing excited states.
 
+.. warning::
+  The current only supports SA-DSRG due to the revamp of Forte structure.
+  MS-, XMS-, DWMS-DSRG will be available soon.
+
 1. State-Averaged Formalism
 +++++++++++++++++++++++++++
 
