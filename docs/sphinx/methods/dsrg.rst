@@ -900,6 +900,12 @@ Acronyms used in the following text:
   XMS: extended multi-state;
   DWMS: dynamically weighted multi-state;
 
+* Misc.
+  
+  QC: quadratic convergence;
+  SQ: sequential transformation;
+  NIVO: non-interacting virtual orbital approximation;
+
 * Run Time:
 
   long: more than 30 s to finish;
@@ -978,25 +984,28 @@ Acronyms used in the following text:
 4. MR-DSRG Test Cases
 +++++++++++++++++++++
 
-  =================================  =========  ============================================  =================================================
-              Name                    Variant     Molecule                                      Notes
-  =================================  =========  ============================================  =================================================
-  mrdsrg-pt2-1                                                                                
-  mrdsrg-pt2-2                                  
-  mrdsrg-pt2-3, LONG                            
-  mrdsrg-pt2-4                                  
-  mrdsrg-srgpt2-1, LONG                         
-  mrdsrg-srgpt2-2, LONG                         
-  mrdsrg-ldsrg2-df-4                            
-  mrdsrg-ldsrg2-df-seq-1, LONG                  
-  mrdsrg-ldsrg2-df-seq-2, LONG                  
-  mrdsrg-ldsrg2-df-seq-3, LONG                  
-  mrdsrg-ldsrg2-df-seq-nivo-1, LONG             
-  mrdsrg-ldsrg2-df-seq-nivo-2, LONG             
-  mrdsrg-ldsrg2-df-seq-nivo-3, LONG             
-  mrdsrg-ldsrg2-qc-1, LONG                      
-  mrdsrg-ldsrg2-qc-2, LONG                      
-  =================================  =========  ============================================  =================================================
+  =================================  =======================  ============================================  =================================================
+              Name                           Variant            Molecule                                      Notes
+  =================================  =======================  ============================================  =================================================
+  mrdsrg-pt2-1                        U, SS                    :math:`\text{BeH}_{2}`                        PT2
+  mrdsrg-pt2-2                        PR, SS                   :math:`\text{BeH}_{2}`                        PT2
+  mrdsrg-pt2-3                        FR, SS                   :math:`\text{BeH}_{2}`                        LONG, PT2
+  mrdsrg-pt2-4                        FR, SS                   :math:`\text{HF}`                             PT2
+  mrdsrg-srgpt2-1                     U, SS                    :math:`\text{BeH}_{2}`                        LONG, SRG_PT2
+  mrdsrg-srgpt2-2                     U, SS                    :math:`\text{BeH}_{2}`                        LONG, SRG_PT2, h0th=fdiag_vactv
+  mrdsrg-ldsrg2-df-4                  CD, PR, SS               :math:`\text{H}_{2}`
+  mrdsrg-ldsrg2-df-seq-1              CD, PR, SS, SQ           :math:`\text{BeH}_{2}`                        LONG
+  mrdsrg-ldsrg2-df-seq-2              CD, R, SS, SQ            :math:`\text{HF}`                             LONG
+  mrdsrg-ldsrg2-df-seq-3              CD, U, SS, SQ            :math:`\text{H}_4` (rectangular)              LONG
+  mrdsrg-ldsrg2-df-nivo-1             CD, PR, SS, NIVO         :math:`\text{BeH}_{2}`                        LONG
+  mrdsrg-ldsrg2-df-nivo-2             CD, R, SS, NIVO          :math:`\text{HF}`                             LONG
+  mrdsrg-ldsrg2-df-nivo-3             CD, U, SS, NIVO          :math:`\text{H}_4` (rectangular)              LONG
+  mrdsrg-ldsrg2-df-seq-nivo-1         CD, PR, SS, SQ, NIVO     :math:`\text{BeH}_{2}`                        LONG
+  mrdsrg-ldsrg2-df-seq-nivo-2         CD, R, SS, SQ, NIVO      :math:`\text{HF}`                             LONG
+  mrdsrg-ldsrg2-df-seq-nivo-3         CD, U, SS, SQ, NIVO      :math:`\text{H}_4` (rectangular)              LONG
+  mrdsrg-ldsrg2-qc-1                  FR, QC, SS               :math:`\text{HF}`                             LONG
+  mrdsrg-ldsrg2-qc-2                  U, QC, SS                :math:`\text{HF}`                             LONG
+  =================================  =======================  ============================================  =================================================
 
 .. _`dsrg_ref`:
 
