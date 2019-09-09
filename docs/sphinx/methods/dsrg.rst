@@ -553,9 +553,29 @@ An example printing of orbital canonicalization can be found in :ref:`Minimal Ex
 3. Sequential Transformation
 ++++++++++++++++++++++++++++
 
+In sequential transformation ansatz, we compute :math:`\bar{H}` sequentially as
+
+.. math:: \bar{H}(s) = e^{-\hat{A}_n(s)} \cdots e^{-\hat{A}_2(s)} e^{-\hat{A}_1(s)} \hat{H} e^{\hat{A}_1(s)} e^{\hat{A}_2(s)} \cdots e^{\hat{A}_n(s)}
+
+instead of traditionally
+
+.. math:: \bar{H}(s) = e^{-\hat{A}_1(s)-\hat{A}_2(s) - \cdots - \hat{A}_n(s)} \hat{H} e^{\hat{A}_1(s)+\hat{A}_2(s)+\cdots+\hat{A}_n(s)}
+
+In the limit of :math:`s \rightarrow \infty` and no truncation of :math:`\hat{A}(s)`, both the traditional and sequential MR-DSRG can approach the full configuration interaction limit. The difference between their truncated results are also usually small.
+
+Computationally, sequential transformation simplifies the evaluation of one-body contribution as a unitary transformation rather than conventional BCH expansion. If combined with integral factorization, the unitary transformation is further accelerated (scaling reduction).
+
 4. Non-Interacting Virtual Orbital Approximation
 ++++++++++++++++++++++++++++++++++++++++++++++++
 
+In the non-interacting virtual orbital (NIVO) approximation, we neglect the operator components of all rank-4 intermediate tensors and :math:`\bar{H}` with three or more virtual orbital indices (:math:`\mathbf{VVVV}`, :math:`\mathbf{VCVV}`, :math:`\mathbf{VVVA}`, etc.).
+
+Removing these blocks, the number of elements in each NIVO-approximated tensor is reduced from :math:`{\cal O}(N^4)` to :math:`{\cal O}(N^2N_\mathbf{H}^2)`, a size comparable to that of the $\hat{A}_2(s)$ tensor.
+Thus, the memory scaling of :code:`LDSRG(2)` can be reduced to be lower than :math:`\mathcal{O}(N^4)`, where :math:`N` is the number of correlated orbitals, when we apply NIVO approximation and combine with integral factorization and batched algorithm of tensor contraction.
+
+Since much less number of tensor elements are involved, NIVO approximation dramatically reduces computation time. However, the overall time scaling of :code:`LDSRG(2)` remain unchanged (prefector reduction).
+
+Despite a significant reduction on the tensor size, the error introduced is usually negligible.
 
 5. Examples
 +++++++++++
@@ -618,17 +638,19 @@ Semicanonicalize orbitals after solving the active-space eigenvalue problem.
 
 **DSRG_HBAR_SEQ**
 
-Flag to compute :math:`\bar{H}` sequentially as :math:`e^{-\hat{A}_2(s)} e^{-\hat{A}_1(s)} \hat{H} e^{\hat{A}_1(s)} e^{\hat{A}_2(s)}` instead of traditionally :math:`e^{-\hat{A}_1(s)-\hat{A}_2(s)} \hat{H} e^{\hat{A}_1(s)-\hat{A}_2(s)}`
+Apply the sequential transformation algorithm in evaluating the transformed Hamiltonian :math:`\bar{H}(s)`, i.e.,
+
+.. math:: \bar{H}(s) = e^{-\hat{A}_n(s)} \cdots e^{-\hat{A}_2(s)} e^{-\hat{A}_1(s)} \hat{H} e^{\hat{A}_1(s)} e^{\hat{A}_2(s)} \cdots e^{\hat{A}_n(s)}.
 
 * Type: boolean
-* Default: False
+* Default: false
 
 **DSRG_NIVO**
 
-Flag for using the highly efficient low-memory-scaling non-interacting virtual orbital (NIVO) approximation to compute :math:`\bar{H}`.
+Apply non-interacting virtual orbital (NIVO) approximation in evaluating the transformed Hamiltonian.
 
 * Type: boolean
-* Default: False
+* Default: false
 
 
 Integral Factorization Implementation
@@ -851,8 +873,8 @@ This is an ongoing project.
 
 .. _`dsrg_example`:
 
-A Complete List of DSRG Test Cases
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+A Complete List of DSRG Teset Cases
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Acronyms used in the following text:
 
@@ -880,9 +902,9 @@ Acronyms used in the following text:
 
 * Run Time:
 
-  long: > 30 s to finish;
-  Long: > 5 min to finish;
-  LONG: > 20 min to finish;
+  long: more than 30 s to finish;
+  Long: more than 5 min to finish;
+  LONG: more than 20 min to finish;
 
 1. DSRG-MRPT2 Test Cases
 ++++++++++++++++++++++++
@@ -890,23 +912,23 @@ Acronyms used in the following text:
   ============================  =========  ============================================  =================================================
               Name               Variant     Molecule                                      Notes
   ============================  =========  ============================================  =================================================
-  dsrg-mrpt2-1                   SS, U     :math:`\text{BeH}_{2}`                        large :math:`s` value, user defined basis set
-  dsrg-mrpt2-2                   SS, U     :math:`\text{HF}`
-  dsrg-mrpt2-3                   SS, U     :math:`\text{H}_4` (rectangular)
-  dsrg-mrpt2-4                   SS, U     :math:`\text{N}_2`
-  dsrg-mrpt2-5                   SS, U     benzyne :math:`\text{C}_6 \text{H}_4`
-  dsrg-mrpt2-6                   SS, PR    :math:`\text{N}_2`
-  dsrg-mrpt2-7-casscf-natorbs    SS, PR    :math:`\text{N}_2`                            CASSCF natural orbitals
+  dsrg-mrpt2-1                   U, SS     :math:`\text{BeH}_{2}`                        large :math:`s` value, user defined basis set
+  dsrg-mrpt2-2                   U, SS     :math:`\text{HF}`
+  dsrg-mrpt2-3                   U, SS     :math:`\text{H}_4` (rectangular)
+  dsrg-mrpt2-4                   U, SS     :math:`\text{N}_2`
+  dsrg-mrpt2-5                   U, SS     benzyne :math:`\text{C}_6 \text{H}_4`
+  dsrg-mrpt2-6                   PR, SS    :math:`\text{N}_2`
+  dsrg-mrpt2-7-casscf-natorbs    PR, SS    :math:`\text{N}_2`                            CASSCF natural orbitals
   dsrg-mrpt2-8-sa                SA, SAc   :math:`\text{LiF}`                            lowest two singlet states, user defined basis set
   dsrg-mrpt2-9-xms               MS, XMS   :math:`\text{LiF}`                            lowest two singlet states
-  dsrg-mrpt2-10-CO               SS, PR    :math:`\text{CO}`                             dipole moment (not linear response)
+  dsrg-mrpt2-10-CO               PR, SS    :math:`\text{CO}`                             dipole moment (not linear response)
   dsrg-mrpt2-11-C2H4             SA        ethylene :math:`\text{C}_2\text{H}_4`         lowest three singlet states
   dsrg-mrpt2-12-localized-actv   SA        butadiene :math:`\text{C}_4\text{H}_6`        long, localized active orbitals
-  aci-dsrg-mrpt2-1               SS, U     :math:`\text{N}_2`                            ACI(:math:`\sigma=0`)
-  aci-dsrg-mrpt2-2               SS, U     :math:`\text{H}_4` (rectangular)              ACI(:math:`\sigma=0`)
-  aci-dsrg-mrpt2-3               SS, PR    :math:`\text{H}_4` (rectangular)              ACI(:math:`\sigma=0`)
-  aci-dsrg-mrpt2-4               SS, U     octatetraene :math:`\text{C}_8\text{H}_{10}`  DF, ACI(:math:`\sigma=0.001`), ACI batching
-  aci-dsrg-mrpt2-5               SS, PR    octatetraene :math:`\text{C}_8\text{H}_{10}`  long, DF, ACI(:math:`\sigma=0.001`), ACI batching
+  aci-dsrg-mrpt2-1               U, SS     :math:`\text{N}_2`                            ACI(:math:`\sigma=0`)
+  aci-dsrg-mrpt2-2               U, SS     :math:`\text{H}_4` (rectangular)              ACI(:math:`\sigma=0`)
+  aci-dsrg-mrpt2-3               PR, SS    :math:`\text{H}_4` (rectangular)              ACI(:math:`\sigma=0`)
+  aci-dsrg-mrpt2-4               U, SS     octatetraene :math:`\text{C}_8\text{H}_{10}`  DF, ACI(:math:`\sigma=0.001`), ACI batching
+  aci-dsrg-mrpt2-5               PR, SS    octatetraene :math:`\text{C}_8\text{H}_{10}`  long, DF, ACI(:math:`\sigma=0.001`), ACI batching
   ============================  =========  ============================================  =================================================
 
 2. DF/CD-DSRG-MRPT2 Test Cases
