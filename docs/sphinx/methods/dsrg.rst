@@ -978,21 +978,25 @@ Acronyms used in the following text:
 4. MR-DSRG Test Cases
 +++++++++++++++++++++
 
-   - mrdsrg-pt2-1
-   - mrdsrg-pt2-2
-   - mrdsrg-pt2-3, LONG
-   - mrdsrg-pt2-4
-   - mrdsrg-srgpt2-1, LONG
-   - mrdsrg-srgpt2-2, LONG
-   - mrdsrg-ldsrg2-df-4
-   - mrdsrg-ldsrg2-df-seq-1, LONG
-   - mrdsrg-ldsrg2-df-seq-2, LONG
-   - mrdsrg-ldsrg2-df-seq-3, LONG
-   - mrdsrg-ldsrg2-df-seq-nivo-1, LONG
-   - mrdsrg-ldsrg2-df-seq-nivo-2, LONG
-   - mrdsrg-ldsrg2-df-seq-nivo-3, LONG
-   - mrdsrg-ldsrg2-qc-1, LONG
-   - mrdsrg-ldsrg2-qc-2, LONG
+  =================================  =========  ============================================  =================================================
+              Name                    Variant     Molecule                                      Notes
+  =================================  =========  ============================================  =================================================
+  mrdsrg-pt2-1                                                                                
+  mrdsrg-pt2-2                                  
+  mrdsrg-pt2-3, LONG                            
+  mrdsrg-pt2-4                                  
+  mrdsrg-srgpt2-1, LONG                         
+  mrdsrg-srgpt2-2, LONG                         
+  mrdsrg-ldsrg2-df-4                            
+  mrdsrg-ldsrg2-df-seq-1, LONG                  
+  mrdsrg-ldsrg2-df-seq-2, LONG                  
+  mrdsrg-ldsrg2-df-seq-3, LONG                  
+  mrdsrg-ldsrg2-df-seq-nivo-1, LONG             
+  mrdsrg-ldsrg2-df-seq-nivo-2, LONG             
+  mrdsrg-ldsrg2-df-seq-nivo-3, LONG             
+  mrdsrg-ldsrg2-qc-1, LONG                      
+  mrdsrg-ldsrg2-qc-2, LONG                      
+  =================================  =========  ============================================  =================================================
 
 .. _`dsrg_ref`:
 
