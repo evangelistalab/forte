@@ -986,16 +986,20 @@ Acronyms used in the following text:
 3. DSRG-MRPT3 Test Cases
 ++++++++++++++++++++++++
 
-   - dsrg-mrpt3-1
-   - dsrg-mrpt3-2
-   - dsrg-mrpt3-3, LONG
-   - dsrg-mrpt3-4, LONG
-   - dsrg-mrpt3-5
-   - dsrg-mrpt3-6-sa, LONG
-   - dsrg-mrpt3-8-sa-C2H4, LONG
-   - dsrg-mrpt3-7-CO
-   - dsrg-mrpt3-9
-   - aci-dsrg-mrpt3-1
+  ============================  =========  ============================================  =================================================
+              Name               Variant     Molecule                                      Notes
+  ============================  =========  ============================================  =================================================
+   dsrg-mrpt3-1                  SS, PR     :math:`\text{HF}`
+   dsrg-mrpt3-2                  SS, PR     :math:`\text{HF}`                             CD(:math:`\sigma=10^{-8}`)
+   dsrg-mrpt3-3                  SS, PR     :math:`\text{N}_2`                            CD(:math:`\sigma=10^{-8}`), long, time printing
+   dsrg-mrpt3-4                  SS, PR     :math:`\text{N}_2`
+   dsrg-mrpt3-5                  SA         :math:`\text{LiF}`                            CAS(2e,2o), default cc-pVDZ of Li is seg-opt
+   dsrg-mrpt3-6-sa               SA         :math:`\text{LiF}`                            CAS(8e,7o), user defined cc-pVDZ for Li
+   dsrg-mrpt3-7-CO               SS, PR     :math:`\text{CO}`                             dipole moment (not linear response)
+   dsrg-mrpt3-8-sa-C2H4          SA         ethylene :math:`\text{C}_2\text{H}_4`         long, lowest three singlet states
+   dsrg-mrpt3-9                  SS, PR     :math:`\text{HF}`                             CD(:math:`\sigma=10^{-14}`), batching
+   aci-dsrg-mrpt3-1              SS, PR     :math:`\text{N}_2`                            ACI(:math:`\sigma=0`)
+  ============================  =========  ============================================  =================================================
 
 4. MR-DSRG Test Cases
 +++++++++++++++++++++
