@@ -553,29 +553,37 @@ An example printing of orbital canonicalization can be found in :ref:`Minimal Ex
 3. Sequential Transformation
 ++++++++++++++++++++++++++++
 
-In sequential transformation ansatz, we compute :math:`\bar{H}` sequentially as
+In the sequential transformation ansatz, we compute :math:`\bar{H}` sequentially as
 
-.. math:: \bar{H}(s) = e^{-\hat{A}_n(s)} \cdots e^{-\hat{A}_2(s)} e^{-\hat{A}_1(s)} \hat{H} e^{\hat{A}_1(s)} e^{\hat{A}_2(s)} \cdots e^{\hat{A}_n(s)}
+.. math:: \bar{H}(s) = e^{-\hat{A}_n} \cdots e^{-\hat{A}_2} e^{-\hat{A}_1} \hat{H} e^{\hat{A}_1} e^{\hat{A}_2} \cdots e^{\hat{A}_n}
 
-instead of traditionally
+instead of the traditional approach:
 
-.. math:: \bar{H}(s) = e^{-\hat{A}_1(s)-\hat{A}_2(s) - \cdots - \hat{A}_n(s)} \hat{H} e^{\hat{A}_1(s)+\hat{A}_2(s)+\cdots+\hat{A}_n(s)}
+.. math:: \bar{H}(s) = e^{-\hat{A}_1 - \hat{A}_2 - \cdots - \hat{A}_n} \hat{H} e^{\hat{A}_1 + \hat{A}_2 + \cdots + \hat{A}_n}
 
-In the limit of :math:`s \rightarrow \infty` and no truncation of :math:`\hat{A}(s)`, both the traditional and sequential MR-DSRG can approach the full configuration interaction limit. The difference between their truncated results are also usually small.
+For clarity, we ignore the indication of :math:`s` dependence on :math:`\bar{H}(s)` and :math:`\hat{A}(s)`.
+In the limit of :math:`s \rightarrow \infty` and no truncation of :math:`\hat{A}(s)`,
+both the traditional and sequential MR-DSRG methods can approach the full configuration interaction limit.
+The difference between their truncated results are also usually small.
 
-Computationally, sequential transformation simplifies the evaluation of one-body contribution as a unitary transformation rather than conventional BCH expansion. If combined with integral factorization, the unitary transformation is further accelerated (scaling reduction).
+In the sequential approach, :math:`e^{-\hat{A}_1} \hat{H} e^{\hat{A}_1}` is computed as a unitary transformation to the bare Hamiltonian,
+which is very efficient when combined with integral factorization techniques (scaling reduction).
 
 4. Non-Interacting Virtual Orbital Approximation
 ++++++++++++++++++++++++++++++++++++++++++++++++
 
-In the non-interacting virtual orbital (NIVO) approximation, we neglect the operator components of all rank-4 intermediate tensors and :math:`\bar{H}` with three or more virtual orbital indices (:math:`\mathbf{VVVV}`, :math:`\mathbf{VCVV}`, :math:`\mathbf{VVVA}`, etc.).
+In the non-interacting virtual orbital (NIVO) approximation,
+we neglect the operator components of all rank-4 intermediate tensors and
+:math:`\bar{H}` with three or more virtual orbital indices
+(:math:`\mathbf{VVVV}`, :math:`\mathbf{VCVV}`, :math:`\mathbf{VVVA}`, etc.).
+Consequently, the number of elements in the intermediates are reduced from :math:`{\cal O}(N^4)` to :math:`{\cal O}(N^2N_\mathbf{H}^2)`,
+which is of similar size to the :math:`\hat{T}_2` amplitudes.
+As such, the memory requirement of MR-LDSRG(2) is significantly reduced when we apply NIVO approximation
+and combine with integral factorization techniques with a batched algorithm for tensor contractions.
 
-Removing these blocks, the number of elements in each NIVO-approximated tensor is reduced from :math:`{\cal O}(N^4)` to :math:`{\cal O}(N^2N_\mathbf{H}^2)`, a size comparable to that of the $\hat{A}_2(s)$ tensor.
-Thus, the memory scaling of :code:`LDSRG(2)` can be reduced to be lower than :math:`\mathcal{O}(N^4)`, where :math:`N` is the number of correlated orbitals, when we apply NIVO approximation and combine with integral factorization and batched algorithm of tensor contraction.
-
-Since much less number of tensor elements are involved, NIVO approximation dramatically reduces computation time. However, the overall time scaling of :code:`LDSRG(2)` remain unchanged (prefector reduction).
-
-Despite a significant reduction on the tensor size, the error introduced is usually negligible.
+Since much less number of tensor elements are involved, NIVO approximation dramatically reduces computation time.
+However, the overall time scaling of MR-LDSRG(2) remain unchanged (prefector reduction).
+The error introduced by the NIVO approximation is usually negligible.
 
 5. Examples
 +++++++++++
@@ -643,14 +651,14 @@ Apply the sequential transformation algorithm in evaluating the transformed Hami
 .. math:: \bar{H}(s) = e^{-\hat{A}_n(s)} \cdots e^{-\hat{A}_2(s)} e^{-\hat{A}_1(s)} \hat{H} e^{\hat{A}_1(s)} e^{\hat{A}_2(s)} \cdots e^{\hat{A}_n(s)}.
 
 * Type: boolean
-* Default: false
+* Default: False
 
 **DSRG_NIVO**
 
 Apply non-interacting virtual orbital (NIVO) approximation in evaluating the transformed Hamiltonian.
 
 * Type: boolean
-* Default: false
+* Default: False
 
 
 Integral Factorization Implementation
@@ -904,17 +912,17 @@ Acronyms used in the following text:
   XMS: extended multi-state;
   DWMS: dynamically weighted multi-state;
 
-* Misc.
-  
-  QC: quadratic convergence;
+* Theoretical Variants
+
+  QC: commutator truncated to doubly nested level (i.e., :math:`\bar{H} = \hat{H} + [\hat{H}, \hat{A}] + \frac{1}{2} [[\hat{H}, \hat{A}], \hat{A}]`);
   SQ: sequential transformation;
   NIVO: non-interacting virtual orbital approximation;
 
 * Run Time:
 
-  long: more than 30 s to finish;
-  Long: more than 5 min to finish;
-  LONG: more than 20 min to finish;
+  long: > 30 s to finish;
+  Long: > 5 min to finish;
+  LONG: > 20 min to finish;
 
 1. DSRG-MRPT2 Test Cases
 ++++++++++++++++++++++++
@@ -922,54 +930,58 @@ Acronyms used in the following text:
   ============================  =========  ============================================  =================================================
               Name               Variant     Molecule                                      Notes
   ============================  =========  ============================================  =================================================
-  dsrg-mrpt2-1                   U, SS     :math:`\text{BeH}_{2}`                        large :math:`s` value, user defined basis set
-  dsrg-mrpt2-2                   U, SS     :math:`\text{HF}`
-  dsrg-mrpt2-3                   U, SS     :math:`\text{H}_4` (rectangular)
-  dsrg-mrpt2-4                   U, SS     :math:`\text{N}_2`
-  dsrg-mrpt2-5                   U, SS     benzyne :math:`\text{C}_6 \text{H}_4`
-  dsrg-mrpt2-6                   PR, SS    :math:`\text{N}_2`
-  dsrg-mrpt2-7-casscf-natorbs    PR, SS    :math:`\text{N}_2`                            CASSCF natural orbitals
+  dsrg-mrpt2-1                   SS, U     :math:`\text{BeH}_{2}`                        large :math:`s` value, user defined basis set
+  dsrg-mrpt2-2                   SS, U     :math:`\text{HF}`
+  dsrg-mrpt2-3                   SS, U     :math:`\text{H}_4` (rectangular)
+  dsrg-mrpt2-4                   SS, U     :math:`\text{N}_2`
+  dsrg-mrpt2-5                   SS, U     benzyne :math:`\text{C}_6 \text{H}_4`
+  dsrg-mrpt2-6                   SS, PR    :math:`\text{N}_2`
+  dsrg-mrpt2-7-casscf-natorbs    SS, PR    :math:`\text{N}_2`                            CASSCF natural orbitals
   dsrg-mrpt2-8-sa                SA, SAc   :math:`\text{LiF}`                            lowest two singlet states, user defined basis set
   dsrg-mrpt2-9-xms               MS, XMS   :math:`\text{LiF}`                            lowest two singlet states
-  dsrg-mrpt2-10-CO               PR, SS    :math:`\text{CO}`                             dipole moment (not linear response)
+  dsrg-mrpt2-10-CO               SS, PR    :math:`\text{CO}`                             dipole moment (not linear response)
   dsrg-mrpt2-11-C2H4             SA        ethylene :math:`\text{C}_2\text{H}_4`         lowest three singlet states
   dsrg-mrpt2-12-localized-actv   SA        butadiene :math:`\text{C}_4\text{H}_6`        long, localized active orbitals
-  aci-dsrg-mrpt2-1               U, SS     :math:`\text{N}_2`                            ACI(:math:`\sigma=0`)
-  aci-dsrg-mrpt2-2               U, SS     :math:`\text{H}_4` (rectangular)              ACI(:math:`\sigma=0`)
-  aci-dsrg-mrpt2-3               PR, SS    :math:`\text{H}_4` (rectangular)              ACI(:math:`\sigma=0`)
-  aci-dsrg-mrpt2-4               U, SS     octatetraene :math:`\text{C}_8\text{H}_{10}`  DF, ACI(:math:`\sigma=0.001`), ACI batching
-  aci-dsrg-mrpt2-5               PR, SS    octatetraene :math:`\text{C}_8\text{H}_{10}`  long, DF, ACI(:math:`\sigma=0.001`), ACI batching
+  aci-dsrg-mrpt2-1               SS, U     :math:`\text{N}_2`                            ACI(:math:`\sigma=0`)
+  aci-dsrg-mrpt2-2               SS, U     :math:`\text{H}_4` (rectangular)              ACI(:math:`\sigma=0`)
+  aci-dsrg-mrpt2-3               SS, PR    :math:`\text{H}_4` (rectangular)              ACI(:math:`\sigma=0`)
+  aci-dsrg-mrpt2-4               SS, U     octatetraene :math:`\text{C}_8\text{H}_{10}`  DF, ACI(:math:`\sigma=0.001`), ACI batching
+  aci-dsrg-mrpt2-5               SS, PR    octatetraene :math:`\text{C}_8\text{H}_{10}`  long, DF, ACI(:math:`\sigma=0.001`), ACI batching
   ============================  =========  ============================================  =================================================
 
 2. DF/CD-DSRG-MRPT2 Test Cases
 ++++++++++++++++++++++++++++++
 
-   - cd-dsrg-mrpt2-1
-   - cd-dsrg-mrpt2-2
-   - cd-dsrg-mrpt2-3
-   - cd-dsrg-mrpt2-4
-   - cd-dsrg-mrpt2-5
-   - cd-dsrg-mrpt2-6
-   - cd-dsrg-mrpt2-7-sa
-   - df-dsrg-mrpt2-1
-   - df-dsrg-mrpt2-2
-   - df-dsrg-mrpt2-3
-   - df-dsrg-mrpt2-4
-   - df-dsrg-mrpt2-5
-   - df-dsrg-mrpt2-6, LONG
-   - df-dsrg-mrpt2-7-localized-actv, LONG
-   - df-dsrg-mrpt2-threading1
-   - df-dsrg-mrpt2-threading2
-   - df-dsrg-mrpt2-threading4
-   - diskdf-dsrg-mrpt2-1
-   - diskdf-dsrg-mrpt2-2
-   - diskdf-dsrg-mrpt2-3
-   - diskdf-dsrg-mrpt2-4
-   - diskdf-dsrg-mrpt2-5
-   - diskdf-dsrg-mrpt2-threading1
-   - diskdf-dsrg-mrpt2-threading4
-   - df-aci-dsrg-mrpt2-1
-   - df-aci-dsrg-mrpt2-2
+  ================================  =========  ============================================  =================================================
+              Name                   Variant     Molecule                                      Notes
+  ================================  =========  ============================================  =================================================
+  cd-dsrg-mrpt2-1                    SS, U      :math:`\text{BeH}_{2}`                        CD(:math:`\sigma=10^{-14}`)
+  cd-dsrg-mrpt2-2                    SS, U      :math:`\text{HF}`                             CD(:math:`\sigma=10^{-14}`)
+  cd-dsrg-mrpt2-3                    SS, U      :math:`\text{H}_4` (rectangular)              CD(:math:`\sigma=10^{-14}`)
+  cd-dsrg-mrpt2-4                    SS, U      :math:`\text{N}_2`                            CD(:math:`\sigma=10^{-12}`)
+  cd-dsrg-mrpt2-5                    SS, U      benzyne :math:`\text{C}_6 \text{H}_4`         CD(:math:`\sigma=10^{-11}`)
+  cd-dsrg-mrpt2-6                    SS, PR     :math:`\text{BeH}_{2}`                        CD(:math:`\sigma=10^{-14}`)
+  cd-dsrg-mrpt2-7-sa                 SA         :math:`\text{LiF}`                            CD(:math:`\sigma=10^{-14}`)
+  df-dsrg-mrpt2-1                    SS, U      :math:`\text{BeH}_{2}`
+  df-dsrg-mrpt2-2                    SS, U      :math:`\text{HF}`
+  df-dsrg-mrpt2-3                    SS, U      :math:`\text{H}_4` (rectangular)
+  df-dsrg-mrpt2-4                    SS, U      :math:`\text{N}_2`
+  df-dsrg-mrpt2-5                    SS, U      benzyne :math:`\text{C}_6 \text{H}_4`
+  df-dsrg-mrpt2-6                    SS, PR     :math:`\text{N}_2`
+  df-dsrg-mrpt2-7-localized-actv     SA         butadiene :math:`\text{C}_4\text{H}_6`        long, localized active orbitals
+  df-dsrg-mrpt2-threading1           SS, U      benzyne :math:`\text{C}_6 \text{H}_4`
+  df-dsrg-mrpt2-threading2           SS, U      benzyne :math:`\text{C}_6 \text{H}_4`
+  df-dsrg-mrpt2-threading4           SS, U      benzyne :math:`\text{C}_6 \text{H}_4`
+  diskdf-dsrg-mrpt2-1                SS, U      :math:`\text{BeH}_{2}`
+  diskdf-dsrg-mrpt2-2                SS, U      :math:`\text{HF}`
+  diskdf-dsrg-mrpt2-3                SS, U      :math:`\text{H}_4` (rectangular)
+  diskdf-dsrg-mrpt2-4                SS, PR     :math:`\text{N}_2`
+  diskdf-dsrg-mrpt2-5                SS, U      benzyne :math:`\text{C}_6 \text{H}_4`
+  diskdf-dsrg-mrpt2-threading1       SS, U      benzyne :math:`\text{C}_6 \text{H}_4`
+  diskdf-dsrg-mrpt2-threading4       SS, U      benzyne :math:`\text{C}_6 \text{H}_4`
+  df-aci-dsrg-mrpt2-1                SS, U      benzyne :math:`\text{C}_6 \text{H}_4`         ACI(:math:`\sigma=0`)
+  df-aci-dsrg-mrpt2-2                SS, U      :math:`\text{HF}`                             ACI(:math:`\sigma=0.0001`)
+  ================================  =========  ============================================  =================================================
 
 3. DSRG-MRPT3 Test Cases
 ++++++++++++++++++++++++
@@ -991,29 +1003,29 @@ Acronyms used in the following text:
   =================================  =======================  ============================================  =================================================
               Name                           Variant            Molecule                                      Notes
   =================================  =======================  ============================================  =================================================
-  mrdsrg-pt2-1                        U, SS                    :math:`\text{BeH}_{2}`                        PT2
-  mrdsrg-pt2-2                        PR, SS                   :math:`\text{BeH}_{2}`                        PT2
-  mrdsrg-pt2-3                        FR, SS                   :math:`\text{BeH}_{2}`                        long, PT2
-  mrdsrg-pt2-4                        FR, SS                   :math:`\text{HF}`                             PT2
-  mrdsrg-srgpt2-1                     U, SS                    :math:`\text{BeH}_{2}`                        Long, SRG_PT2
-  mrdsrg-srgpt2-2                     U, SS                    :math:`\text{BeH}_{2}`                        LONG, SRG_PT2, h0th=fdiag_vactv
-  mrdsrg-ldsrg2-df-1                  CD, R, SS                :math:`\text{BeH}_{2}`                        long
-  mrdsrg-ldsrg2-df-2                  CD, R, SS                :math:`\text{HF}`                             long
-  mrdsrg-ldsrg2-df-3                  CD, U, SS                :math:`\text{H}_4` (rectangular)              long
-  mrdsrg-ldsrg2-df-4                  CD, PR, SS               :math:`\text{H}_{2}`
-  mrdsrg-ldsrg2-df-seq-1              CD, PR, SS, SQ           :math:`\text{BeH}_{2}`                        Long
-  mrdsrg-ldsrg2-df-seq-2              CD, R, SS, SQ            :math:`\text{HF}`                             Long
-  mrdsrg-ldsrg2-df-seq-3              CD, U, SS, SQ            :math:`\text{H}_4` (rectangular)              long
-  mrdsrg-ldsrg2-df-seq-4              CD, FR, SS, SQ           :math:`\text{H}_4` (rectangular)              Long
-  mrdsrg-ldsrg2-df-nivo-1             CD, PR, SS, NIVO         :math:`\text{BeH}_{2}`                        long
-  mrdsrg-ldsrg2-df-nivo-2             CD, R, SS, NIVO          :math:`\text{HF}`                             long
-  mrdsrg-ldsrg2-df-nivo-3             CD, U, SS, NIVO          :math:`\text{H}_4` (rectangular)              long
-  mrdsrg-ldsrg2-df-seq-nivo-1         CD, PR, SS, SQ, NIVO     :math:`\text{BeH}_{2}`                        long
-  mrdsrg-ldsrg2-df-seq-nivo-2         CD, R, SS, SQ, NIVO      :math:`\text{HF}`                             Long
-  mrdsrg-ldsrg2-df-seq-nivo-3         CD, U, SS, SQ, NIVO      :math:`\text{H}_4` (rectangular)              long
-  mrdsrg-ldsrg2-qc-1                  FR, QC, SS               :math:`\text{HF}`                             long
-  mrdsrg-ldsrg2-qc-2                  U, QC, SS                :math:`\text{HF}`                             long
-  mrdsrg-ldsrg2-qc-df-2               CD, U, QC, SS            :math:`\text{HF}`                             long
+  mrdsrg-pt2-1                        SS, U                    :math:`\text{BeH}_{2}`                        PT2
+  mrdsrg-pt2-2                        SS, PR                   :math:`\text{BeH}_{2}`                        PT2
+  mrdsrg-pt2-3                        SS, FR                   :math:`\text{BeH}_{2}`                        long, PT2
+  mrdsrg-pt2-4                        SS, FR                   :math:`\text{HF}`                             PT2
+  mrdsrg-srgpt2-1                     SS, U                    :math:`\text{BeH}_{2}`                        Long, SRG_PT2
+  mrdsrg-srgpt2-2                     SS, U                    :math:`\text{BeH}_{2}`                        LONG, SRG_PT2, Dyall Hamiltonian
+  mrdsrg-ldsrg2-df-1                  SS, R                    :math:`\text{BeH}_{2}`                        CD, long
+  mrdsrg-ldsrg2-df-2                  SS, R                    :math:`\text{HF}`                             CD, long
+  mrdsrg-ldsrg2-df-3                  SS, U                    :math:`\text{H}_4` (rectangular)              CD, long
+  mrdsrg-ldsrg2-df-4                  SS, PR                   :math:`\text{H}_{2}`                          CD
+  mrdsrg-ldsrg2-df-seq-1              SS, PR, SQ               :math:`\text{BeH}_{2}`                        CD, Long
+  mrdsrg-ldsrg2-df-seq-2              SS, R, SQ                :math:`\text{HF}`                             CD, Long
+  mrdsrg-ldsrg2-df-seq-3              SS, U, SQ                :math:`\text{H}_4` (rectangular)              CD, long
+  mrdsrg-ldsrg2-df-seq-4              SS, FR, SQ               :math:`\text{H}_4` (rectangular)              CD, Long
+  mrdsrg-ldsrg2-df-nivo-1             SS, PR, NIVO             :math:`\text{BeH}_{2}`                        CD, long
+  mrdsrg-ldsrg2-df-nivo-2             SS, R, NIVO              :math:`\text{HF}`                             CD, long
+  mrdsrg-ldsrg2-df-nivo-3             SS, U, NIVO              :math:`\text{H}_4` (rectangular)              CD, long
+  mrdsrg-ldsrg2-df-seq-nivo-1         SS, PR, SQ, NIVO         :math:`\text{BeH}_{2}`                        CD, long
+  mrdsrg-ldsrg2-df-seq-nivo-2         SS, R, SQ, NIVO          :math:`\text{HF}`                             CD, Long
+  mrdsrg-ldsrg2-df-seq-nivo-3         SS, U, SQ, NIVO          :math:`\text{H}_4` (rectangular)              CD, long
+  mrdsrg-ldsrg2-qc-1                  SS, FR, QC               :math:`\text{HF}`                             long
+  mrdsrg-ldsrg2-qc-2                  SS, U, QC                :math:`\text{HF}`                             long
+  mrdsrg-ldsrg2-qc-df-2               SS, U, QC                :math:`\text{HF}`                             CD, long
   =================================  =======================  ============================================  =================================================
 
 .. _`dsrg_ref`:
