@@ -892,10 +892,11 @@ till convergence is reached.
   When that happens, a simple fix is to include more states in the ensemble,
   which may reduce the accuracy yet usually OK if only a few low-lying states are of interest.
 
-2. Multi-State and Extended Formalisms
-++++++++++++++++++++++++++++++++++++++
+2. Multi-State, Extended Multi-State Formalisms
++++++++++++++++++++++++++++++++++++++++++++++++
 
-.. note:: Available only at the PT2 level of theory.
+.. warning:: Not available at the moment.
+.. note:: Only support at the PT2 level of theory.
 
 In multi-state (MS) DSRG, we adopt the single-state parametrization where the effective Hamiltonian is built as
 
@@ -904,8 +905,11 @@ In multi-state (MS) DSRG, we adopt the single-state parametrization where the ef
 where :math:`\hat{T}_{M}` is the state-specific cluster amplitudes for state :math:`M`,
 that is, we solve DSRG-PT2 amplitudes :math:`\hat{T}_{M}` normal ordered to :math:`| \Phi_M \rangle`.
 The MS-DSRG-PT2 energies are then obtained by diagonalizing this effective Hamiltonian.
+However, it is known this approach leaves wiggles on the potential energy surface (PES) near
+the strong coupling region of the reference wave functions.
 
-In extended MS DSRG, the reference states :math:`\tilde{\Phi}_M` are linear combinations of CASCI states
+A simple way to cure these artificial wiggles is to use the extended MS (XMS) approach.
+In XMS DSRG, the reference states :math:`\tilde{\Phi}_M` are linear combinations of CASCI states
 :math:`\Phi_M` such that the Fock matrix is diagonal.
 Specifically, the Fock matrix is built according to
 
@@ -915,10 +919,42 @@ where :math:`\hat{F}` is the state-average Fock operator.
 Then in the mixed state basis, we have :math:`\langle \tilde{\Phi}_M | \hat{F} | \tilde{\Phi}_N \rangle = 0`, if :math:`M \neq N`.
 The effective Hamiltonian is built similarly to that of MS-DSRG-PT2, except that :math:`\tilde{\Phi}_M` is used.
 
-3. Dynamically Weighted Formalism
-+++++++++++++++++++++++++++++++++
+3. Dynamically Weighted Multi-State Formalism
++++++++++++++++++++++++++++++++++++++++++++++
 
-.. note:: Available only at the PT2 level of theory.
+.. warning:: Not available at the moment.
+.. note:: Only support at the PT2 level of theory.
+
+As shown by the XMS approach, mixing states is able to remove the wiggles on the PES.
+Dynamically weighted MS (DWMS) approach provides an alternative way to mix zeroth-order states.
+The idea of DWMS is closely related to SA-DSRG.
+In DWMS, we choose an ensemble of zeroth-order reference states,
+where the weights are automatically determined according to the energy separations between these reference states.
+Specifically, the weight for target state :math:`M` is given by
+
+.. math:: \omega_{MN} (\zeta) = \frac{e^{-\zeta (E_M^{(0)} - E_N^{(0)})^2}}{\sum_{P=1}^{n} e^{-\zeta(E_M^{(0)} - E_P^{(0)})^2}},
+
+where :math:`E_M^{(0)} = \langle \Phi_M| \hat{H} | \Phi_M \rangle` is the zeroth-order energy of state :math:`M`
+and :math:`\zeta` is a parameter to be set by the user.
+Then we follow the MS approach to form an effective Hamiltonian
+where the amplitudes are solved for the ensemble tuned to that particular state.
+
+For a given value of :math:`zeta`, the weights of two reference states :math:`\Phi_M` and :math:`\Phi_N` will be equal
+if they are degenerate in energy.
+On the other limit where they are energetically far apart,
+the ensemble used to determine :math:`\hat{T}_M` mainly consists of :math:`\Phi_M` with a little weight on :math:`\Phi_N`,
+and vice versa.
+
+For two non-degenerate states, by sending :math:`\zeta` to zero,
+both states in the ensemble have equal weights (general for :math:`n` states),
+which is equivalent to the SA formalism.
+If we send :math:`\zeta` to :math:`\infty`, then the ensemble becomes state-specific.
+Thus, parameter :math:`\zeta` can be understood as how drastic between the transition from MS to SA schemes.
+
+.. caution::
+  It is not guaranteed that the DWMS energy (for one adiabatic state) lies in between the MS and SA values.
+  When DWMS energies go out of the bounds of MS and SA,
+  a small :math:`\zeta` value is preferable to avoid rather drastic energy changes in a small geometric region.
 
 4. Examples
 +++++++++++
@@ -1143,13 +1179,23 @@ The SA-DSRG-PT2c ground state is :math:`0.75 |\Phi_1\rangle - 0.66 |\Phi2\rangle
 Algorithms to compute excited states.
 
 * Type: string
+* Options: SA_FULL, SA_SUB, MS, XMS
 * Default: SA_FULL
+
+**DWMS_ZETA**
+
+Automatic Gaussian width cutoff for the density weights.
+
+* Type: double
+* Default: 0.0
+
+.. note:: Add options when DWMS is re-enabled.
 
 TODOs
 ^^^^^
 
 0. Re-enable MS, XMS, and DWMS
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+++++++++++++++++++++++++++++++
 
 These are disabled due to a infrastructure change.
 
@@ -1316,6 +1362,11 @@ Acronyms used in the following text:
   mrdsrg-ldsrg2-qc-2                  SS, U, QC                :math:`\text{HF}`                             long
   mrdsrg-ldsrg2-qc-df-2               SS, U, QC                :math:`\text{HF}`                             CD, long
   =================================  =======================  ============================================  =================================================
+
+5. DWMS-DSRG-PT2 Test Cases
++++++++++++++++++++++++++++
+
+Add test cases when DWMS is back to life.
 
 .. _`dsrg_ref`:
 
