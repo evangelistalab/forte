@@ -853,20 +853,305 @@ There are several MR-DSRG methods available for computing excited states.
 1. State-Averaged Formalism
 +++++++++++++++++++++++++++
 
+In state-averaged (SA) DSRG, the MK vacuum is an ensemble of electronic states,
+which are typically obtained by an SA-CASSCF computation.
+For example, we want to study two states, :math:`\Phi_1` and :math:`\Phi_2`,
+described qualitatively by a CASCI with SA-CASSCF orbitals.
+The ensemble of states (assuming equal weights) is characterized by the density operator
+
+.. math:: \hat{\rho} = \frac{1}{2} | \Phi_1 \rangle \langle \Phi_1 | + \frac{1}{2} | \Phi_2 \rangle \langle \Phi_2 |
+
+Note that :math:`\Phi_1` and :math:`\Phi_2` are just two of the many states (say, :math:`n`) in CASCI.
+
+The bare Hamiltonian and cluster operators are normal ordered with respect to this ensemble,
+whose information is embedded in the state-averaged densities.
+An effective Hamiltonian :math:`\bar{H}` is then built by solving the DSRG cluster amplitudes.
+In this way, the dynamical correlation is described for all the states lying in the ensemble.
+Here, the DSRG solver and correlation levels remain the same to those of state-specific cases.
+For example, we use :code:`DSRG-MRPT3` to do SA-DSRG-PT3.
+
+Now we have many ways to proceed and obtain the excited states, two of which have been implemented.
+
+- One approach is to diagonalize :math:`\bar{H}` using :math:`\Phi_1` and :math:`\Phi_2`.
+  As such, the new states are just linear combinations of states in the ensemble and
+  the CI coefficients are then constrained to be combined using :math:`\Phi_1` and :math:`\Phi_2`.
+  We term this approach constrained SA, with a letter "c" appended at the end of a method name (e.g., SA-DSRG-PT2c).
+  and in Forte we use the option :code:`SA_SUB` to specify this SA variant.
+
+- The other approach is to diagonalize :math:`\bar{H}` using all configurations in CASCI,
+  which allows all CI coefficients to relax.
+  This approach is the default SA-DSRG approach, which is also the default in Forte.
+  The corresponding option is :code:`SA_FULL`.
+
+For both approaches, one could iterate these two-step (DSRG + diagoanlization) procedure
+till convergence is reached.
+
+.. note::
+  For SA-DSRG, a careful inspection of the output CI coefficients is usually necessary.
+  This is because the ordering of states may change after dynamical correlation is included.
+  When that happens, a simple fix is to include more states in the ensemble,
+  which may reduce the accuracy yet usually OK if only a few low-lying states are of interest.
+
 2. Multi-State and Extended Formalisms
 ++++++++++++++++++++++++++++++++++++++
+
+.. note:: Available only at the PT2 level of theory.
+
+In multi-state (MS) DSRG, we adopt the single-state parametrization where the effective Hamiltonian is built as
+
+.. math:: H^{\rm eff}_{MN} = \langle \Phi_M | \hat{H} | \Phi_N \rangle + \frac{1}{2} \left[ \langle \Phi_M | \hat{T}_{M}^\dagger \hat{H} | \Phi_N \rangle + \langle \Phi_M | \hat{H} \hat{T}_N | \Phi_N \rangle \right],
+
+where :math:`\hat{T}_{M}` is the state-specific cluster amplitudes for state :math:`M`,
+that is, we solve DSRG-PT2 amplitudes :math:`\hat{T}_{M}` normal ordered to :math:`| \Phi_M \rangle`.
+The MS-DSRG-PT2 energies are then obtained by diagonalizing this effective Hamiltonian.
+
+In extended MS DSRG, the reference states :math:`\tilde{\Phi}_M` are linear combinations of CASCI states
+:math:`\Phi_M` such that the Fock matrix is diagonal.
+Specifically, the Fock matrix is built according to
+
+.. math:: F_{MN} = \langle \Phi_M | \hat{F} | \Phi_N \rangle,
+
+where :math:`\hat{F}` is the state-average Fock operator.
+Then in the mixed state basis, we have :math:`\langle \tilde{\Phi}_M | \hat{F} | \tilde{\Phi}_N \rangle = 0`, if :math:`M \neq N`.
+The effective Hamiltonian is built similarly to that of MS-DSRG-PT2, except that :math:`\tilde{\Phi}_M` is used.
 
 3. Dynamically Weighted Formalism
 +++++++++++++++++++++++++++++++++
 
+.. note:: Available only at the PT2 level of theory.
+
 4. Examples
 +++++++++++
+
+A simple example is to compute the lowest two states of :math:`\text{LiF}` molecule using SA-DSRG-PT2. ::
+
+  import forte
+
+  molecule {
+    0 1
+    Li
+    F  1 R
+    R = 10.000
+
+    units bohr
+  }
+
+  basis {
+    assign Li Li-cc-pvdz
+    assign F  aug-cc-pvdz
+  [ Li-cc-pvdz ]
+  spherical
+  ****
+  Li     0
+  S   8   1.00
+     1469.0000000              0.0007660
+      220.5000000              0.0058920
+       50.2600000              0.0296710
+       14.2400000              0.1091800
+        4.5810000              0.2827890
+        1.5800000              0.4531230
+        0.5640000              0.2747740
+        0.0734500              0.0097510
+  S   8   1.00
+     1469.0000000             -0.0001200
+      220.5000000             -0.0009230
+       50.2600000             -0.0046890
+       14.2400000             -0.0176820
+        4.5810000             -0.0489020
+        1.5800000             -0.0960090
+        0.5640000             -0.1363800
+        0.0734500              0.5751020
+  S   1   1.00
+        0.0280500              1.0000000
+  P   3   1.00
+        1.5340000              0.0227840
+        0.2749000              0.1391070
+        0.0736200              0.5003750
+  P   1   1.00
+        0.0240300              1.0000000
+  D   1   1.00
+        0.1239000              1.0000000
+  ****
+  }
+
+  set globals{
+    reference           rhf
+    scf_type            pk
+    maxiter             300
+    e_convergence       10
+    d_convergence       10
+    docc                [4,0,1,1]
+    restricted_docc     [3,0,1,1]
+    active              [2,0,0,0]
+    mcscf_r_convergence 7
+    mcscf_e_convergence 10
+    mcscf_maxiter       250
+    mcscf_diis_start    25
+    num_roots           2
+    avg_states          [0,1]
+  }
+
+  set forte{
+    active_space_solver cas
+    correlation_solver  dsrg-mrpt2
+    frozen_docc        [2,0,0,0]
+    restricted_docc    [1,0,0,0]
+    active             [3,0,2,2]
+    dsrg_s             0.5
+    avg_state          [[0,1,2]]
+    dsrg_multi_state   sa_full
+    calc_type          sa
+  }
+
+  Emcscf, wfn = energy('casscf', return_wfn=True)
+  energy('forte',ref_wfn=wfn)
+
+Here, we explicitly specify the cc-pVDZ basis set of Li since Psi4 uses seg-opt basis (at least at some time).
+For simplicity, we do an SA-CASSCF(2,2) computation in Psi4 but the active space in Forte is CASCI(8e,7o),
+which should be clearly stated in the publication if this kind of special procedure is used.
+
+To perform an SA-DSRG-PT2 computation, the following keywords should be specified
+(besides those already mentioned in the state-specific DSRG-MRPT2):
+
+- :code:`CALC_TYPE`:
+  The type of computation should be set to state averaging, i.e., SA.
+  Multi-state and dynamically weighted computations should be set correspondingly.
+
+- :code:`AVG_STATE`:
+  This specifies the states to be averaged, given in arrays of triplets [[A1, B1, C1], [A2, B2, C2], ...].
+  Each triplet corresponds to the *state irrep*, *state multiplicity*, and the *nubmer of states*, in sequence.
+  The number of states are counted from the lowest energy one in the given symmetry.
+
+- :code:`DSRG_MULTI_STATE`:
+  This options specifies the methods used in DSRG computations.
+  By default, it will use :code:`SA_FULL`.
+
+The output of this example will print out the CASCI(8e,7o) configurations ::
+
+  ==> Root No. 0 <==
+
+    ba0 20 20         -0.6992227471
+    ab0 20 20         -0.6992227471
+    200 20 20         -0.1460769052
+
+    Total Energy:   -106.772573855919561
+
+
+  ==> Root No. 1 <==
+
+    200 20 20          0.9609078151
+    b0a 20 20          0.1530225853
+    a0b 20 20          0.1530225853
+    ba0 20 20         -0.1034194675
+    ab0 20 20         -0.1034194675
+
+    Total Energy:   -106.735798144523812
+
+Then the 1-, 2-, and 3-RDMs for each state are computed and then sent to orbital canonicalizer.
+The DSRG-PT2 computation will still print out the energy contributions,
+which now correspond to the corrections to the average of the ensemble. ::
+
+  ==> DSRG-MRPT2 Energy Summary <==
+
+    E0 (reference)                 =   -106.754186000221665
+    <[F, T1]>                      =     -0.000345301150943
+    <[F, T2]>                      =      0.000293904835970
+    <[V, T1]>                      =      0.000300892512596
+    <[V, T2]> (C_2)^4              =     -0.246574892923286
+    <[V, T2]> C_4 (C_2)^2 HH       =      0.000911300780649
+    <[V, T2]> C_4 (C_2)^2 PP       =      0.002971830422787
+    <[V, T2]> C_4 (C_2)^2 PH       =      0.010722949661906
+    <[V, T2]> C_6 C_2              =      0.000099208259233
+    <[V, T2]>                      =     -0.231869603798710
+    DSRG-MRPT2 correlation energy  =     -0.231620107601087
+    DSRG-MRPT2 total energy        =   -106.985806107822754
+
+Finally, a CASCI is performed using DSRG-PT2 dressed integrals. ::
+
+  ==> Root No. 0 <==
+
+    200 20 20          0.8017660337
+    ba0 20 20          0.4169816393
+    ab0 20 20          0.4169816393
+
+    Total Energy:   -106.990992362637314
+
+
+  ==> Root No. 1 <==
+
+    200 20 20         -0.5846182713
+    ba0 20 20          0.5708699624
+    ab0 20 20          0.5708699624
+
+    Total Energy:   -106.981903302649229
+
+Here we observe the ordering of states changes by comparing the configurations.
+In fact, it is near the avoided crossing region and we see the CI coefficients
+between these two states are very similar (comparing to the original CASCI coefficients).
+An automatic way to correspond states before and after DSRG treatments for dynamical correlation is not implemented.
+A simple approach is to compute the overlap, which should usually suffice.
+
+At the end, we print the energy summary of the states of interest. ::
+
+  ==> Energy Summary <==
+
+    Multi.  Irrep.  No.               Energy
+    -----------------------------------------
+       1      A1     0      -106.990992362637
+       1      A1     1      -106.981903302649
+    -----------------------------------------
+
+The printing for SA-DSRG-PT2c (set :code:`DSRG_MULTI_STATE` to :code:`SA_SUB`) is slightly different from above.
+After the DSRG-PT2 computation, we build the effective Hamiltonian using the original CASCI states. ::
+
+  ==> Building Effective Hamiltonian for Singlet A1 <==
+
+  Computing  1RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.001090 s
+  Computing  2RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.001884 s
+  Computing 1TrDMs (0 Singlet A1 - 1 Singlet A1) ... Done. Timing        0.001528 s
+  Computing 2TrDMs (0 Singlet A1 - 1 Singlet A1) ... Done. Timing        0.002151 s
+  Computing  1RDMs (1 Singlet A1 - 1 Singlet A1) ... Done. Timing        0.001114 s
+  Computing  2RDMs (1 Singlet A1 - 1 Singlet A1) ... Done. Timing        0.001757 s
+
+  ==> Effective Hamiltonian for Singlet A1 <==
+
+  ## Heff Singlet A1 (Symmetry 0) ##
+  Irrep: 1 Size: 2 x 2
+
+                 1                   2
+
+    1  -106.98637816344888     0.00443421124030
+    2     0.00443421124030  -106.98523405219674
+
+  ## Eigen Vectors of Heff for Singlet A1 with eigenvalues ##
+
+           1           2
+
+    1  -0.7509824  -0.6603222
+    2   0.6603222  -0.7509824
+
+     -106.9902771-106.9813351
+
+Here, we see a strong coupling between the two states at this geometry:
+The SA-DSRG-PT2c ground state is :math:`0.75 |\Phi_1\rangle - 0.66 |\Phi2\rangle`.
 
 5. Related Options
 ++++++++++++++++++
 
+**DSRG_MULTI_STATE**
+
+Algorithms to compute excited states.
+
+* Type: string
+* Default: SA_FULL
+
 TODOs
 ^^^^^
+
+0. Re-enable MS, XMS, and DWMS
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+These are disabled due to a infrastructure change.
 
 1. Spin Adaptation
 ++++++++++++++++++
