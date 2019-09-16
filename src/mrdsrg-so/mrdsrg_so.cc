@@ -90,6 +90,9 @@ void MRDSRG_SO::startup() {
     do_t3_ = foptions_->get_str("CORR_LEVEL").find("DSRG3") != std::string::npos;
     ldsrg3_ddca_ = foptions_->get_bool("LDSRG3_DDCA");
     ncomm_3body_ = foptions_->get_int("LDSRG3_NCOMM_3BODY");
+    if (ncomm_3body_ <= 0) {
+        ncomm_3body_ = foptions_->get_int("DSRG_RSC_NCOMM");
+    }
 //    if (ncomm_3body_ > 2 or ncomm_3body_ <= 0) {
 //        ncomm_3body_ = foptions_->get_int("DSRG_RSC_NCOMM");
 //    }
@@ -117,6 +120,8 @@ void MRDSRG_SO::startup() {
     if (ldsrg3_fock_order_ > 8) {
         ldsrg3_fock_order_ = 8;
     }
+
+    zero_t3_ = foptions_->get_bool("LDSRG3_ZERO_T3");
 
     s_ = foptions_->get_double("DSRG_S");
     if (s_ < 0) {
@@ -687,7 +692,9 @@ double MRDSRG_SO::compute_energy() {
 //            }
 //        }
         T3 = BTF_->build(tensor_type_, "T3 Amplitudes", {"hhhppp"});
-        guess_t3();
+        if (!zero_t3_) {
+            guess_t3();
+        }
 
         if (ldsrg3_ddca_) {
             Hbar3 = BTF_->build(tensor_type_, "Hbar3", sr_ldsrg3_ddca_blocks());
@@ -744,7 +751,9 @@ double MRDSRG_SO::compute_energy() {
         update_t2();
         update_t1();
         if (do_t3_) {
-            update_t3();
+            if (!zero_t3_) {
+                update_t3();
+            }
 //            if (store_H3) {
 //                update_t3();
 //            } else {

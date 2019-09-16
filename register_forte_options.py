@@ -694,6 +694,8 @@ def register_dsrg_options(forte_options):
                       n = 8: maximum order
                       other values: not allowed""")
 
+    forte_options.add_bool("LDSRG3_ZERO_T3", False, "Zero all T3 amplitudes for testing")
+
     forte_options.add_bool("PRINT_1BODY_EVALS", False, "Print eigenvalues of 1-body effective H")
 
     forte_options.add_bool("DSRG_MRPT3_BATCHED", False, "Force running the DSRG-MRPT3 code using the batched algorithm")

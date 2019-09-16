@@ -203,6 +203,7 @@ class MRDSRG_SO : public DynamicCorrelationSolver {
     double T1max;
 
     /// Compute T3 amplitudes
+    bool zero_t3_;
     void guess_t3();
     void update_t3();
     void direct_t3();
