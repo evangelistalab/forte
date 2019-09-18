@@ -577,6 +577,21 @@ void DSRG_MRPT2::compute_t2() {
         T2_["IJCD"] = tempT2["IJAB"] * U_["BD"] * U_["AC"];
     }
 
+
+    if(foptions_->get_str("DSRG_FOLD") == "ONE") {
+        std::string fold_T1 = foptions_->get_str("DSRG_FOLD_T1");   
+        std::string fold_T2 = foptions_->get_str("DSRG_FOLD_T2");
+        T1_.block(fold_T1).zero();
+        T2_.block(fold_T2).zero();
+    }
+
+    if(foptions_->get_str("DSRG_FOLD") == "NONE") {
+    }
+
+    if(foptions_->get_str("DSRG_FOLD") == "ALL") {
+
+    }
+
     // internal amplitudes (AA->AA)
     std::string internal_amp = foptions_->get_str("INTERNAL_AMP");
     if (internal_amp.find("DOUBLES") != string::npos) {

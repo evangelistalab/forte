@@ -1331,10 +1331,44 @@ void MRDSRG::zero_t2_sr_downfolding(BlockedTensor& T2) {
             }
         }
 
+        // Add_1
+        // blocks AYXX, X = A, V, Y = C, A
+        // zero when A belongs to active occupied
+        if (std::towlower(block.at(0)) == 'a') {
+            for (auto x : actv_occ_mos_) {
+#pragma omp parallel for
+                for (size_t i = 0; i < n2; ++i) {
+                    for (size_t a = 0; a < n3; ++a) {
+                        for (size_t b = 0; b < n4; ++b) {
+                            T2.block(block).data()[x * n2 * n3 * n4 + i * n3 * n4 + a * n4 + b] =
+                                0.0;
+                        }
+                    }
+                }
+            }
+        }
+
         // blocks YAXX, X = A, V, Y = C, A
         // zero when A belongs to active virtual
         if (std::towlower(block.at(1)) == 'a') {
             for (auto x : actv_uocc_mos_) {
+#pragma omp parallel for
+                for (size_t i = 0; i < n1; ++i) {
+                    for (size_t a = 0; a < n3; ++a) {
+                        for (size_t b = 0; b < n4; ++b) {
+                            T2.block(block).data()[i * n2 * n3 * n4 + x * n3 * n4 + a * n4 + b] =
+                                0.0;
+                        }
+                    }
+                }
+            }
+        }
+
+        // Add_2
+        // blocks YAXX, X = A, V, Y = C, A
+        // zero when A belongs to active occupied
+        if (std::towlower(block.at(1)) == 'a') {
+            for (auto x : actv_occ_mos_) {
 #pragma omp parallel for
                 for (size_t i = 0; i < n1; ++i) {
                     for (size_t a = 0; a < n3; ++a) {
@@ -1363,10 +1397,44 @@ void MRDSRG::zero_t2_sr_downfolding(BlockedTensor& T2) {
             }
         }
 
+        // Add_3
+        // blocks XXAY, X = C, A, Y = A, V
+        // zero when A belongs to active virtual
+        if (std::towlower(block.at(2)) == 'a') {
+            for (auto x : actv_uocc_mos_) {
+#pragma omp parallel for
+                for (size_t a = 0; a < n4; ++a) {
+                    for (size_t i = 0; i < n1; ++i) {
+                        for (size_t j = 0; j < n2; ++j) {
+                            T2.block(block).data()[i * n2 * n3 * n4 + j * n3 * n4 + x * n4 + a] =
+                                0.0;
+                        }
+                    }
+                }
+            }
+        }
+
         // blocks XXYA, X = C, A, Y = A, V
         // zero when A belongs to active occupied
         if (std::towlower(block.at(3)) == 'a') {
             for (auto x : actv_occ_mos_) {
+#pragma omp parallel for
+                for (size_t a = 0; a < n3; ++a) {
+                    for (size_t i = 0; i < n1; ++i) {
+                        for (size_t j = 0; j < n2; ++j) {
+                            T2.block(block).data()[i * n2 * n3 * n4 + j * n3 * n4 + a * n4 + x] =
+                                0.0;
+                        }
+                    }
+                }
+            }
+        }
+
+        // Add_4
+        // blocks XXYA, X = C, A, Y = A, V
+        // zero when A belongs to active virtual
+        if (std::towlower(block.at(3)) == 'a') {
+            for (auto x : actv_uocc_mos_) {
 #pragma omp parallel for
                 for (size_t a = 0; a < n3; ++a) {
                     for (size_t i = 0; i < n1; ++i) {
@@ -1386,7 +1454,7 @@ void MRDSRG::zero_t1_sr_downfolding(BlockedTensor& T1) {
         size_t n1 = label_to_spacemo_[block.at(0)].size();
         size_t n2 = label_to_spacemo_[block.at(1)].size();
 
-        // CA
+        // Core->Active_core
         // zero when A belongs to active occupied
         if (std::towlower(block.at(1)) == 'a') {
             for (auto x : actv_occ_mos_) {
@@ -1397,10 +1465,31 @@ void MRDSRG::zero_t1_sr_downfolding(BlockedTensor& T1) {
             }
         }
 
-        // AV
+        // Core->Active_virtual
+        // zero when A belongs to active occupied
+        if (std::towlower(block.at(1)) == 'a') {
+            for (auto x : actv_uocc_mos_) {
+#pragma omp parallel for
+                for (size_t i = 0; i < n1; ++i) {
+                    T1.block(block).data()[i * n2 + x] = 0.0;
+                }
+            }
+        }
+
+        // Active_virtual->Virtual
         // zero when A belongs to active unoccupied
         if (std::towlower(block.at(0)) == 'a') {
             for (auto x : actv_uocc_mos_) {
+#pragma omp parallel for
+                for (size_t a = 0; a < n2; ++a) {
+                    T1.block(block).data()[x * n2 + a] = 0.0;
+                }
+            }
+        }
+        // Active_core->Virtual 
+        // zero when A belongs to active unoccupied
+        if (std::towlower(block.at(0)) == 'a') {
+            for (auto x : actv_occ_mos_) {
 #pragma omp parallel for
                 for (size_t a = 0; a < n2; ++a) {
                     T1.block(block).data()[x * n2 + a] = 0.0;
