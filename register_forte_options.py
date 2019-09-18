@@ -714,6 +714,14 @@ def register_dsrg_options(forte_options):
 
     forte_options.add_bool("IGNORE_MEMORY_WARNINGS", False, "Force running the DSRG-MRPT3 code using the batched algorithm")
 
+    forte_options.add_str("DSRG_FOLD_T1", "AA", "Any C,A,V combinations: [AA, CA, AV]",                                                                                                                              "Zero out corresponding blocks in T2")
+
+    forte_options.add_str("DSRG_FOLD_T2", "AAAA", "Any C,A,V combinations",
+                     "Zero out corresponding blocks in T2")
+
+    forte_options.add_str("DSRG_FOLD", "NONE", "[NONE, ONE, ALL]",
+                     "Trigger folding T blocks")
+
 def register_dwms_options(forte_options):
     forte_options.add_double("DWMS_ZETA", 0.0, """Automatic Gaussian width cutoff for the density weights
           Weights of state α:
