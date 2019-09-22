@@ -279,6 +279,19 @@ class MRDSRG_SO : public DynamicCorrelationSolver {
     void comm3_q3_lv3(BlockedTensor& H1, BlockedTensor& H2, BlockedTensor& T1, BlockedTensor& T2,
                       BlockedTensor& T3, double& C0, BlockedTensor& C1, BlockedTensor& C2);
 
+    // => LDSRG(2*) corrections <=
+    int ldsrg2_correction_ = 0;
+
+    /// 0.5 * [[H, A]_3, T]_{1,2}
+    void sr_ldsrg2star_comm2(BlockedTensor& C1, BlockedTensor& C2);
+    void sr_ldsrg2star_comm2_fock(BlockedTensor& C1, BlockedTensor& C2);
+    void sr_ldsrg2star_comm2_fink(BlockedTensor& C1, BlockedTensor& C2);
+
+    /// 1/6 * [[[H, A]_{1,2,3}, A]_3, T]_{0,1,2}
+    void sr_ldsrg2star_comm3(BlockedTensor& C1, BlockedTensor& C2);
+    void sr_ldsrg2star_comm3_fock(BlockedTensor& C1, BlockedTensor& C2);
+    void sr_ldsrg2star_comm3_fink(BlockedTensor& C1, BlockedTensor& C2);
+
     // Taylor Expansion of [1 - exp(-s * D^2)] / D = sqrt(s) * (\sum_{n=1}
     // \frac{1}{n!} (-1)^{n+1} Z^{2n-1})
     double Taylor_Exp(const double& Z, const int& n) {

@@ -543,13 +543,13 @@ def register_integral_options(forte_options):
 
 def register_dsrg_options(forte_options):
     forte_options.add_double("DSRG_S", 1.0e10,"The end value of the integration parameter s")
+
     forte_options.add_double("DSRG_POWER", 2.0, "The power of the parameter s in the regularizer")
 
     forte_options.add_str("CORR_LEVEL", "PT2",
                      ["PT2", "PT3", "LDSRG2", "LDSRG2_QC", "LSRG2", "SRG_PT2", "QDSRG2",
-                      "LDSRG2_P3", "QDSRG2_P3", "LDSRG3", "LDSRG3_2", "LDSRG3_1"],
-                     "Correlation level of MR-DSRG (used in mrdsrg code, "
-                     "LDSRG2_P3 and QDSRG2_P3 not implemented)")
+                      "LDSRG2*", "LDSRG3", "LDSRG3_2", "LDSRG3_1"],
+                     "Correlation level of MR-DSRG")
 
     forte_options.add_str("SOURCE", "STANDARD",
                      ["STANDARD", "LABS", "DYSON", "AMP", "EMP2", "LAMP", "LEMP2"],

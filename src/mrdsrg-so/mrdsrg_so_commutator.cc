@@ -1252,6 +1252,12 @@ void MRDSRG_SO::comm_H_A_2(double factor, BlockedTensor& H1, BlockedTensor& H2, 
     C1.scale(factor);
     C2.scale(factor);
 
+    if (ldsrg2_correction_ == 2) {
+        sr_ldsrg2star_comm2(C1, C2);
+    } else if (ldsrg2_correction_ == 3) {
+        sr_ldsrg2star_comm3(C1, C2);
+    }
+
     // add T dagger
     C0 *= 2.0;
     H1["pq"] = C1["pq"];

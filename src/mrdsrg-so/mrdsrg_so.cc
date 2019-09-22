@@ -860,6 +860,9 @@ void MRDSRG_SO::compute_lhbar() {
             }
             timer_off("3-body [H, A]");
         } else {
+            if (foptions_->get_str("CORR_LEVEL") == "LDSRG2*") {
+                ldsrg2_correction_ = n;
+            }
             comm_H_A_2(factor, O1, O2, T1, T2, C0, C1, C2);
         }
 
@@ -1073,5 +1076,21 @@ void MRDSRG_SO::compute_qhbar() {
     }
     //    outfile->Printf("\n
     //    -----------------------------------------------------------------");
+}
+
+void MRDSRG_SO::sr_ldsrg2star_comm2(BlockedTensor &C1, BlockedTensor &C2) {
+    if (ldsrg3_perturb_type_ == "FOCK") {
+        sr_ldsrg2star_comm2_fock(C1, C2);
+    } else if (ldsrg3_perturb_type_ == "FINK") {
+        sr_ldsrg2star_comm2_fink(C1, C2);
+    }
+}
+
+void MRDSRG_SO::sr_ldsrg2star_comm3(BlockedTensor &C1, BlockedTensor &C2) {
+    if (ldsrg3_perturb_type_ == "FOCK") {
+        sr_ldsrg2star_comm3_fock(C1, C2);
+    } else if (ldsrg3_perturb_type_ == "FINK") {
+        sr_ldsrg2star_comm3_fink(C1, C2);
+    }
 }
 } // namespace forte

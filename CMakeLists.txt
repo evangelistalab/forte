@@ -157,6 +157,10 @@ src/mrdsrg-helper/run_dsrg.cc
 src/mrdsrg-so/mrdsrg_so.cc
 src/mrdsrg-so/mrdsrg_so_commutator.cc
 src/mrdsrg-so/sr_ldsrg3_comm1.cc
+src/mrdsrg-so/sr_ldsrg2_correction/comm2_fock.cc
+src/mrdsrg-so/sr_ldsrg2_correction/comm2_fink.cc
+src/mrdsrg-so/sr_ldsrg2_correction/comm3_fock.cc
+src/mrdsrg-so/sr_ldsrg2_correction/comm3_fink.cc
 src/mrdsrg-so/so-mrdsrg.cc
 src/mrdsrg-spin-adapted/dsrg_mrpt.cc
 src/mrdsrg-spin-adapted/dsrg_mrpt_2nd.cc
