@@ -16,29 +16,27 @@ Driven Similarity Renormalization Group
   Depending on the features used, the user is encouraged to cite the corresponding articles listed :ref:`here <dsrg_ref>`.
 
 .. caution::
-  The current implementation does not employ spin-adapted equations and it does not work for even multiplicities.
-  For odd multiplicities, we assume low-spin configurations (by default, no need to set up).
-  For those who are desperate to perform computations on doublet, an alternative way is to add a hydrogen atom at long distance away from the system and perform a singlet computation.
+  The current implementation does not employ spin-adapted equations and it does not work for even spin multiplicities (doublet, quartets, etc.).
+  For odd multiplicities, we assume low-spin configurations (by default, no need to specify in the input file).
+  For those in desperate need to perform computations on doublets, an alternative way is to add a hydrogen atom far away from the system and perform a singlet computation.
   Spin adaptation is on the TODO list.
 
 .. _`basic_dsrg`:
 
-Basic DSRG
-^^^^^^^^^^
+Basics of  DSRG
+^^^^^^^^^^^^^^^
 
 1. Overview of DSRG Theory
 ++++++++++++++++++++++++++
 
-Driven similarity renormalization group (DSRG) is a numerically robust approach to consider
-dynamical (or weak) electron correlation effects. Specifically, the DSRG performs a *continuous*
-similarity transformation to the bare Born-Oppenheimer Hamiltonian :math:`\hat{H}`,
+Driven similarity renormalization group (DSRG) is a numerically robust approach to treat dynamical (or weak) electron correlation.
+Specifically, the DSRG performs a *continuous* similarity transformation of the bare Born-Oppenheimer Hamiltonian :math:`\hat{H}`,
 
 .. math:: \bar{H}(s) = e^{-\hat{S}(s)} \hat{H} e^{\hat{S}(s)},
 
-where :math:`s` is the flow parameter defined in the range :math:`[0, +\infty)` that controls the
-transformation (vaguely speaking).
+where :math:`s` is the flow parameter defined in the range :math:`[0, +\infty)`. The value of :math:`s` controls the amount of dynamical correlation included in :math:`\bar{H}(s)`, with :math:`s = 0` corresponding to no correlation included.
 The operator :math:`\hat{S}` can be any operator in general.
-For example, if :math:`\hat{S} = \hat{T}` is the cluster substitution operator, the DSRG :math:`\bar{H}(s)`
+For example, if :math:`\hat{S} = \hat{T}` is the coupled cluster substitution operator, the DSRG :math:`\bar{H}(s)`
 is identical to coupled-cluster (CC) similarity transformed Hamiltonian except for the :math:`s`
 dependence. See :ref:`Table I <table:dsrg_cc_connect>` for different flavours of :math:`\hat{S}`.
 
@@ -58,14 +56,14 @@ dependence. See :ref:`Table I <table:dsrg_cc_connect>` for different flavours of
 
 In the current implementation, we choose the **anti-hermitian** parametrization, i.e., :math:`\hat{S} = \hat{A}`.
 
-The DSRG transformed Hamiltonian contains many-body (> 2-body) interactions in general.
+The DSRG transformed Hamiltonian :math:`\bar{H}(s)` contains many-body (> 2-body) interactions in general.
 We can express it as
 
 .. math:: \bar{H} = \bar{h}_0 + \bar{h}^{p}_{q} \{ a^{q}_{p} \} + \frac{1}{4} \bar{h}^{pq}_{rs} \{ a^{rs}_{pq} \} + \frac{1}{36} \bar{h}^{pqr}_{stu} \{ a^{stu}_{pqr} \} + ...
 
 where :math:`a^{pq...}_{rs...} = a_{p}^{\dagger} a_{q}^{\dagger} \dots a_s a_r` is a string of creation and annihilation operators
 and :math:`\{\cdot\}` represents normal-ordered operators. In particular, we use Mukherjee-Kutzelnigg normal ordering
-[see J. Chem. Phys. 107, 432 (1997)]. Here we also assume summations over repeated indices for brevity.
+[see J. Chem. Phys. 107, 432 (1997)] with respect to a general multideterminantal reference :math:`\Psi_0`. Here we also assume summations over repeated indices for brevity.
 Also note that :math:`\bar{h}_0` is the energy dressed by dynamical correlation effects.
 
 In DSRG, we require the off-diagonal components of :math:`\bar{H}` gradually go to zero (from :math:`\hat{H}`) as :math:`s` grows (from 0).
@@ -96,17 +94,17 @@ We term the DSRG method that uses RSC as LDSRG(2).
 Alternatively, we can perform a perturbative analysis on the **approximated** BCH equation of :math:`\bar{H}` and obtain
 various DSRG perturbation theories [e.g., 2nd-order (PT2) or 3rd-order (PT3)].
 Note we use the RSC approximated BCH equation for computational cost considerations.
-As such, the implemented DSRG-PT3 is **not** a complete PT3 but a companion PT3 of the LDSRG(2) method.
+As such, the implemented DSRG-PT3 is **not** a formally complete PT3, but a numerically efficient companion theory to the LDSRG(2) method.
 
 To conclude this subsection, we discuss the computational cost and current implementation limit,
 which are summarized in :ref:`Table II <table:dsrg_cost>`.
 
 .. _`table:dsrg_cost`:
 
-.. table:: Table II. Cost of the various implemented DSRG methods.
+.. table:: Table II. Cost and maximum system size for the DSRG methods implemented in Forte.
 
     +----------+-----------------------+----------------------------------+-----------------------------------+
-    |  Method  |  Computational Cost   |  System Size (full 2e-ints)      |      System Size (DF/CD)          |
+    |  Method  |  Computational Cost   |   Conventional 2-el. integrals   |   Density-fitted/Cholesky (DF/CD) |
     +==========+=======================+==================================+===================================+
     |    PT2   | one-shot :math:`N^5`  | :math:`\sim 250` basis functions | :math:`\sim 1800` basis functions |
     +----------+-----------------------+----------------------------------+-----------------------------------+
@@ -123,8 +121,8 @@ which are summarized in :ref:`Table II <table:dsrg_cost>`.
 **Minimal Example**
 
 Let us first see an example with minimal keywords.
-In particular, we compute hydrogen fluoride using DSRG multireference (MR) PT2
-with complete active space self-consistent field (CASSCF) reference.
+In particular, we compute the energy of hydrogen fluoride using DSRG multireference (MR) PT2
+using a complete active space self-consistent field (CASSCF) reference.
 
 ::
 
@@ -170,14 +168,13 @@ There are three blocks in the input:
 In this example, we use Psi4 to compute CASSCF reference.
 Psi4 provides the freedom to specify the core (a.k.a. internal) and active orbitals
 using :code:`RESTRICTED_DOCC` and :code:`ACTIVE` options,
-but *it is generally the user's responsibility for a correct orbital ordering*.
+but *it is generally the user's responsibility to select and verify correct orbital ordering*.
 The :code:`RESTRICTED_DOCC` array :code:`[2,0,1,1]` indicates two :math:`a_1`,
-zero :math:`a_2`, one :math:`b_1`, and one :math:`b_2` orbitals, because the computation is
-performed in :math:`C_{2v}` point group.
-The actual CASSCF computation is invoked by
-:code:`Emcscf, wfn = energy('casscf', return_wfn=True)`, where we also ask for
-wave function besides energy.
-The wave function :code:`wfn` will be read by Forte via argument :code:`ref_wfn`.
+zero :math:`a_2`, one :math:`b_1`, and one :math:`b_2` doubly occupied orbitals.
+There are four irreps because the computation is performed using :math:`C_{2v}` point group symmetry.
+
+The computation begins with the execution of Psi4's CASSCF code, invoked by
+:code:`Emcscf, wfn = energy('casscf', return_wfn=True)`. This function call returns the energy and CASSCF wave function. In the second call to the energy function, :code:`energy('forte', ref_wfn=wfn)`, we ask the Psi4 driver to call Forte. The wave function stored in :code:`wfn` will is passed to Forte via argument :code:`ref_wfn`.
 
 Forte generally recomputes the reference using the provided wave function parameters.
 To perform a DSRG computation, the user is expected to specify the following keywords:
@@ -204,12 +201,12 @@ To perform a DSRG computation, the user is expected to specify the following key
 * Orbital spaces:
   Here we also specify frozen core orbitals besides core and active orbitals.
   Note that in this example, we optimize the 1s-like core orbital in CASSCF but
-  later freeze for DSRG treatments for dynamical correlation.
-  Details regarding to orbital spaces can be found :ref:`sec:mospaceinfo`.
+  later freeze it in the DSRG treatments of dynamical correlation.
+  Details regarding to orbital spaces can be found in the section :ref:`sec:mospaceinfo`.
 
   .. tip::
-    To perform a single-reference (SR) DSRG computation, the user only needs to set
-    :code:`ACTIVE` to zero. In the above example, the SR DSRG-PT2 energy can be obtained
+    To perform a single-reference (SR) DSRG computation, set the array :code:`ACTIVE` to zero.
+    In the above example, the SR DSRG-PT2 energy can be obtained
     by modifying :code:`RESTRICTED_DOCC` to :code:`[2,0,1,1]`
     and :code:`ACTIVE` to :code:`[0,0,0,0]`. The MP2 energy can be reproduced
     if we further change :code:`DSRG_S` to very large values (e.g., :math:`10^8` a.u.).
@@ -375,17 +372,17 @@ For a given reference wave function, the output prints out:
 
     ==> Final Excitation Amplitudes Summary <==
 
-      Active Indices:    1    2 
+      Active Indices:    1    2
       ...  # ommit output for T1 alpha, T1 beta, T2 alpha-alpha, T2 beta-beta
       Largest T2 amplitudes for spin case AB:
-             _       _                  _       _                  _       _           
-         i   j   a   b              i   j   a   b              i   j   a   b           
+             _       _                  _       _                  _       _
+         i   j   a   b              i   j   a   b              i   j   a   b
       --------------------------------------------------------------------------------
-      [  0   0   1   1]-0.060059 [  1   2   2   4] 0.046578 [  1  10   1  11] 0.039502 
-      [  1  14   1  15] 0.039502 [  0   0   1   2]-0.038678 [  1   1   1   5] 0.037546 
-      [  2   2   4   4]-0.033871 [  1   2   1   4] 0.033125 [  1  14   2  15] 0.032868 
-      [  1  10   2  11] 0.032868 [  1  10   1  12]-0.032602 [  1  14   1  16]-0.032602 
-      [ 14  14  15  15]-0.030255 [ 10  10  11  11]-0.030255 [  2  14   1  15] 0.029241 
+      [  0   0   1   1]-0.060059 [  1   2   2   4] 0.046578 [  1  10   1  11] 0.039502
+      [  1  14   1  15] 0.039502 [  0   0   1   2]-0.038678 [  1   1   1   5] 0.037546
+      [  2   2   4   4]-0.033871 [  1   2   1   4] 0.033125 [  1  14   2  15] 0.032868
+      [  1  10   2  11] 0.032868 [  1  10   1  12]-0.032602 [  1  14   1  16]-0.032602
+      [ 14  14  15  15]-0.030255 [ 10  10  11  11]-0.030255 [  2  14   1  15] 0.029241
       --------------------------------------------------------------------------------
       Norm of T2AB vector: (nonzero elements: 1487)                 0.330204946109119.
       --------------------------------------------------------------------------------
@@ -1466,4 +1463,3 @@ Benchmark of state-specific unrelaxed DSRG-MRPT2 (tested 34 active orbitals):
   similarity renormalization group", C. Li, P. Verma, K. P. Hannon, and
   F. A. Evangelista, *J. Chem. Phys.* **147**, 074107 (2017).
   (doi: `10.1063/1.4997480 <http://dx.doi.org/10.1063/1.4997480>`_).
-
