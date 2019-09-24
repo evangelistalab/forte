@@ -118,7 +118,7 @@ which are summarized in :ref:`Table II <table:dsrg_cost>`.
 2. Input Examples
 +++++++++++++++++
 
-**Minimal Example**
+**Minimal Example - DSRG-MPT2 energy of HF**
 
 Let us first see an example with minimal keywords.
 In particular, we compute the energy of hydrogen fluoride using DSRG multireference (MR) PT2
@@ -213,7 +213,7 @@ To perform a DSRG computation, the user is expected to specify the following key
 
 The output of the above example consists of several parts:
 
-* Perform a active-space computation: ::
+* The active-space FCI computation: ::
 
     ==> Root No. 0 <==
 
@@ -229,10 +229,10 @@ The output of the above example consists of several parts:
          1      A1     0       -99.939316382616
       -----------------------------------------
 
-  Here we print out the CASCI configurations and its energy.
+  Forte prints out the largest determinants in the CASCI wave function and its energy.
   Since we read orbitals from Psi4's CASSCF, this energy should coincide with Psi4's CASSCF energy.
 
-* Compute 1-, 2-, and 3-body reduced density matrices (RDMs): ::
+* The computation of 1-, 2-, and 3-body reduced density matrices (RDMs) of the CASCI reference: ::
 
     ==> Computing RDMs for Root No. 0 <==
 
@@ -240,7 +240,7 @@ The output of the above example consists of several parts:
       Timing for 2-RDM: 0.000 s
       Timing for 3-RDM: 0.000 s
 
-* Canonicalize orbitals: ::
+* Canonicalization of the orbitals: ::
 
     ==> Checking Fock Matrix Diagonal Blocks <==
 
@@ -257,10 +257,12 @@ The output of the above example consists of several parts:
       ------------------------------------------------
     Orbitals are already semicanonicalized.
 
-  Since Psi4's CASSCF will canonicalize orbitals at the end, here Forte just tests the Fock matrix
+  All DSRG procedures require the orbitals to be canonicalized. In this basis, the core, active, and virtual diagonal blocks of the average Fock matrix are diagonal.
+  Forte will test if the orbitals provided are canonical, and if not it will perform a canonicalization.
+  In this example, since Psi4's CASSCF orbitals are already canonical, Forte just tests the Fock matrix
   but does not perform an actual orbital rotation.
 
-* Compute DSRG-MRPT2 energy:
+* Computation of the DSRG-MRPT2 energy:
 
   - The output first prints out a summary of several largest amplitudes and possible intruders: ::
 
@@ -309,10 +311,10 @@ The output of the above example consists of several parts:
         ||T2||                         =      0.886328961933259
 
    Here we show all contributions to the energy. Specifically, those labeled by C_4
-   involves 2-body density cumulants, and those of C_6 are of 3-body cumnulants.
+   involve 2-body density cumulants, and those labeled by C_6 involve 3-body cumulants.
 
 
-**A More Advanced Example**
+**A More Advanced Example - MR-LDSRG(2) energy of HF**
 
 Here we look at a more advanced example of MR-LDSRG(2) using the same molecule. ::
 
@@ -339,9 +341,10 @@ There are several things to notice.
 
 1. To run a MR-LDSRG(2) computation, we need to change :code:`CORRELATION_SOLVER` to :code:`MRDSRG`.
    Additionally, the :code:`CORR_LEVEL` should be specified as :code:`LDSRG2`.
-   There are other choices of :code:`CORR_LEVEL` but they are mainly for testing ideas.
+   There are other choices of :code:`CORR_LEVEL` but they are mainly for testing new ideas.
 
-2. We specify the energy convergence keyword :code:`E_CONVERGENCE` and the RSC threshold :code:`DSRG_RSC_THRESHOLD`.
+2. We specify the energy convergence keyword :code:`E_CONVERGENCE` and the RSC threshold :code:`DSRG_RSC_THRESHOLD`,
+which controls the truncation of the recursive single commutator (RSC) approximation of the DSRG Hamiltonian.
    In general, the value of :code:`DSRG_RSC_THRESHOLD` should be smaller than that of :code:`E_CONVERGENCE`.
    Making :code:`DSRG_RSC_THRESHOLD` larger will stop the BCH series earlier and thus saves some time.
    It is OK to leave :code:`DSRG_RSC_THRESHOLD` as the default value, which is :math:`10^{-12}` a.u.
@@ -351,16 +354,15 @@ There are several things to notice.
    Here we use the fully relaxed version, which is done by setting :code:`RELAX_REF` to :code:`ITERATE`.
 
 .. note::
-  The reference relaxation procedure is performed in a tick-tock way (see :ref:`dsrg_variants`).
-  This procedure is potentially not numerically stable for a strict energy convergence.
-  We therefore suggest using a moderate the energy threshold for iterative reference relaxation,
-  which is controlled by :code:`RELAX_E_CONVERGENCE` (:math:`\geq 10^{-8}` a.u.).
+  The reference relaxation procedure is performed in a tick-tock way (see :ref:`dsrg_variants`), by alternatinge the solution of the DSRG amplitude equations and the diagonalization of the DSRG Hamiltonian.
+  This procedure may not monotonically converge and is potentially numerically unstable.
+  We therefore suggest using a moderate energy threshold (:math:`\geq 10^{-8}` a.u.) for the iterative reference relaxation, which is controlled by the option :code:`RELAX_E_CONVERGENCE` .
 
-For a given reference wave function, the output prints out:
+For a given reference wave function, the output prints out a summary of:
 
-1. The iterations of amplitudes, where each step involves building a DSRG transformed Hamiltonian.
+1. The iterations for solving the amplitudes, where each step involves building a DSRG transformed Hamiltonian.
 
-2. A summary of the MR-LDSRG(2) energy: ::
+2. The MR-LDSRG(2) energy: ::
 
     ==> MR-LDSRG(2) Energy Summary <==
 
@@ -368,7 +370,7 @@ For a given reference wave function, the output prints out:
       MR-LDSRG(2) correlation energy =      -0.171613035562048
       MR-LDSRG(2) total energy       =    -100.110929418178429
 
-3. A summary of the MR-LDSRG(2) converged amplitudes: ::
+3. The MR-LDSRG(2) converged amplitudes: ::
 
     ==> Final Excitation Amplitudes Summary <==
 
@@ -387,34 +389,34 @@ For a given reference wave function, the output prints out:
       Norm of T2AB vector: (nonzero elements: 1487)                 0.330204946109119.
       --------------------------------------------------------------------------------
 
-4. The reference relaxation summary at the end: ::
+At the end of the computation, Forte prints a summary of the energy during the reference relaxation iterations: ::
 
     => MRDSRG Reference Relaxation Energy Summary <=
 
-                           Fixed Ref. (a.u.)              Relaxed Ref. (a.u.)
-             -------------------------------  -------------------------------
-      Iter.          Total Energy      Delta          Total Energy      Delta
-      -----------------------------------------------------------------------
-          1     -100.110929418178 -1.001e+02     -100.114343552853 -1.001e+02
-          2     -100.113565563124 -2.636e-03     -100.113571036112  7.725e-04
-          3     -100.113534597590  3.097e-05     -100.113534603824  3.643e-05
-          4     -100.113533334887  1.263e-06     -100.113533334895  1.269e-06
-          5     -100.113533290863  4.402e-08     -100.113533290864  4.403e-08
-          6     -100.113533289341  1.522e-09     -100.113533289341  1.522e-09
-      -----------------------------------------------------------------------
+                           Fixed Ref. (a.u.)                  Relaxed Ref. (a.u.)
+             -----------------------------------  -----------------------------------
+      Iter.          Total Energy          Delta          Total Energy          Delta
+      -------------------------------------------------------------------------------
+          1     -100.110929418178 (a) -1.001e+02     -100.114343552853 (b) -1.001e+02
+          2     -100.113565563124 (c) -2.636e-03     -100.113571036112      7.725e-04
+          3     -100.113534597590      3.097e-05     -100.113534603824      3.643e-05
+          4     -100.113533334887      1.263e-06     -100.113533334895      1.269e-06
+          5     -100.113533290863      4.402e-08     -100.113533290864      4.403e-08
+          6     -100.113533289341      1.522e-09     -100.113533289341 (d)  1.522e-09
+      -------------------------------------------------------------------------------
 
-   Let us introduce the nomenclature for reference relaxation.
+Let us introduce the nomenclature for reference relaxation.
 
-   =================  =========================  ========================
+   ====================  =========================  =============================
           Name              Example Value               Description
-   =================  =========================  ========================
-   Unrelaxed          :code:`-100.110929418178`  1st iter.; fixed ref.
-   Partially Relaxed  :code:`-100.114343552853`  1st iter.; relaxed ref.
-   Relaxed            :code:`-100.113565563124`  2nd iter.; fixed ref.
-   Fully Relaxed      :code:`-100.113533289341`  last iter.; relaxed ref.
-   =================  =========================  ========================
+   ====================  =========================  =============================
+   a) Unrelaxed          :code:`-100.110929418178`  1st iter.; fixed CASCI ref.
+   b) Partially Relaxed  :code:`-100.114343552853`  1st iter.; relaxed CASCI ref.
+   c) Relaxed            :code:`-100.113565563124`  2nd iter.; fixed ref.
+   d) Fully Relaxed      :code:`-100.113533289341`  last iter.; relaxed ref.
+   ====================  =========================  =============================
 
-   In the example, and usually, the fully relaxed energy is well reproduced by
+   The unrelaxed energy is a diagonalize-then-perturb scheme, while the partially relaxed energy corresponds to a diagonalize-then-perturb-then-diagonalize method. In this example, the fully relaxed energy is well reproduced by
    the relaxed energy with a small error (:math:`< 10^{-4}` a.u.).
 
 **Other Examples**
@@ -658,8 +660,8 @@ Apply non-interacting virtual orbital (NIVO) approximation in evaluating the tra
 * Default: False
 
 
-Integral Factorization Implementation
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Density Fitted (DF) and Cholesky Decomposition (CD) Implementations
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 1. Theory
 +++++++++
