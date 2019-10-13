@@ -156,7 +156,14 @@ src/mrdsrg-helper/dsrg_transformed.cc
 src/mrdsrg-helper/run_dsrg.cc
 src/mrdsrg-so/mrdsrg_so.cc
 src/mrdsrg-so/mrdsrg_so_commutator.cc
+src/mrdsrg-so/sr_ldsrg2_lambda.cc
+src/mrdsrg-so/sr_ldsrg2_lambda_comm3.cc
+src/mrdsrg-so/sr_ldsrg2_lambda_comm4_1.cc
+src/mrdsrg-so/sr_ldsrg2_lambda_comm4_2.cc
+src/mrdsrg-so/sr_ldsrg2_lambda_comm4_3.cc
+src/mrdsrg-so/sr_ldsrg2_lambda_comm5_e.cc
 src/mrdsrg-so/sr_ldsrg3_comm1.cc
+src/mrdsrg-so/sr_e4th_t3_correction.cc
 src/mrdsrg-so/sr_ldsrg2_correction/comm2_fock.cc
 src/mrdsrg-so/sr_ldsrg2_correction/comm2_fink.cc
 src/mrdsrg-so/sr_ldsrg2_correction/comm3_fock.cc

@@ -279,6 +279,14 @@ class MRDSRG_SO : public DynamicCorrelationSolver {
     void comm3_q3_lv3(BlockedTensor& H1, BlockedTensor& H2, BlockedTensor& T1, BlockedTensor& T2,
                       BlockedTensor& T3, double& C0, BlockedTensor& C1, BlockedTensor& C2);
 
+    /// DSRG(T) correction
+    std::vector<double> E4th_correction();
+    double E4th_correction_t2(BlockedTensor& C1, BlockedTensor& C2);
+    double E4th_correction_t3();
+    void compute_3rd_order_hbar(BlockedTensor& X1, BlockedTensor& X2);
+    void compute_2nd_order_t3();
+    double E4th_correction_lambda(BlockedTensor& C1, BlockedTensor& C2);
+
     // => LDSRG(2*) corrections <=
     int ldsrg2_correction_ = 0;
 
@@ -291,6 +299,37 @@ class MRDSRG_SO : public DynamicCorrelationSolver {
     void sr_ldsrg2star_comm3(BlockedTensor& C1, BlockedTensor& C2);
     void sr_ldsrg2star_comm3_fock(BlockedTensor& C1, BlockedTensor& C2);
     void sr_ldsrg2star_comm3_fink(BlockedTensor& C1, BlockedTensor& C2);
+
+    // => Lambda equation for LDSRG(2*) truncated to comm-5 energy <=
+    BlockedTensor Tbar1;
+    BlockedTensor Tbar2;
+    double Tbar1_diff;
+    double Tbar2_diff;
+
+    void compute_lambda();
+    void update_lambda(BlockedTensor& C1, BlockedTensor& C2);
+    void compute_lambda_comm1(BlockedTensor& H1, BlockedTensor& H2, BlockedTensor& L1,
+                              BlockedTensor& L2, BlockedTensor& C1, BlockedTensor& C2);
+    void compute_lambda_comm2(BlockedTensor& H1, BlockedTensor& H2, BlockedTensor& T1,
+                              BlockedTensor& T2, BlockedTensor& L1, BlockedTensor& L2,
+                              BlockedTensor& C1, BlockedTensor& C2);
+    void compute_lambda_comm3(BlockedTensor& H1, BlockedTensor& H2, BlockedTensor& T1,
+                              BlockedTensor& T2, BlockedTensor& L1, BlockedTensor& L2,
+                              BlockedTensor& C1, BlockedTensor& C2);
+    void compute_lambda_comm4(BlockedTensor& H1, BlockedTensor& H2, BlockedTensor& T1,
+                              BlockedTensor& T2, BlockedTensor& L1, BlockedTensor& L2,
+                              BlockedTensor& C1, BlockedTensor& C2);
+    void compute_lambda_comm4_part1(BlockedTensor& H1, BlockedTensor& H2, BlockedTensor& T1,
+                                    BlockedTensor& T2, BlockedTensor& L1, BlockedTensor& L2,
+                                    BlockedTensor& C1);
+    void compute_lambda_comm4_part2(BlockedTensor& H1, BlockedTensor& H2, BlockedTensor& T1,
+                                    BlockedTensor& T2, BlockedTensor& L1, BlockedTensor& L2,
+                                    BlockedTensor& C2);
+    void compute_lambda_comm4_part3(BlockedTensor& H1, BlockedTensor& H2, BlockedTensor& T1,
+                                    BlockedTensor& T2, BlockedTensor& L1, BlockedTensor& L2,
+                                    BlockedTensor& C2);
+    void compute_lambda_comm5(BlockedTensor& H1, BlockedTensor& H2, BlockedTensor& T1,
+                              BlockedTensor& T2, BlockedTensor& C1, BlockedTensor& C2);
 
     // Taylor Expansion of [1 - exp(-s * D^2)] / D = sqrt(s) * (\sum_{n=1}
     // \frac{1}{n!} (-1)^{n+1} Z^{2n-1})
