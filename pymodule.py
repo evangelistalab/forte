@@ -309,9 +309,19 @@ def orbital_projection(ref_wfn, options, mo_space_info):
     else:
         return mo_space_info
 
+def twolayer_embedding_driver(mo_space_info, options):
+    # Options: inner layer method and partition
+    # Do FC embedding projection for E, F, with sysfull
+    # build new spaceinfo from options, CAV calculations in F, say LDSRG2 -> E_high(Unrelaxed)
+    # forte_sr_downfolding, with CASSCF density
+    # CAV calculations in F, say LDSRG2 -> E_high(relaxed, or PT2 embedding)
+
 def forte_sr_downfolding(state_weights_map, scf_info, options, ints, mo_space_info):
 
     rdms = forte.RHF_DENSITY(scf_info, mo_space_info).rhf_rdms()
+    if options.get_str('downfold_density') == "CASSCF":
+        # Build and run a CASSCF computation
+        # Compute CASSCF density
 
     dsrg = forte.make_dsrg_method(options.get_str('CORRELATION_SOLVER'),
                                   rdms, scf_info, options, ints, mo_space_info)
