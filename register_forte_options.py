@@ -620,7 +620,7 @@ def register_dsrg_options(forte_options):
 #    forte_options.add_str("DSRG_FOLD", "NONE", "[NONE, ONE, ALL]",
 #                     "Trigger folding T blocks")
 
-    forte_options.add_bool("DSRG_FOLD", "Turn on/off folding any blocks")
+    forte_options.add_bool("DSRG_FOLD", False, "Turn on/off folding any blocks")
     forte_options.add_array("DSRG_FOLD_T1", "An array to assign which block(s) will be folded in T1")
     forte_options.add_array("DSRG_FOLD_T2", "An array to assign which block(s) will be folded in T2")
 

@@ -134,7 +134,7 @@ void MRDSRG::guess_t2_std(BlockedTensor& V, BlockedTensor& T2) {
         T2["IJCD"] = tempT2["IJAB"] * U_["BD"] * U_["AC"];
     }
 
-    if(foptions_->get_str("DSRG_FOLD")) {
+    if(foptions_->get_bool("DSRG_FOLD")) {
         //zero T2 here
     }
 
@@ -329,7 +329,7 @@ void MRDSRG::guess_t1_std(BlockedTensor& F, BlockedTensor& T2, BlockedTensor& T1
         T1["IA"] = tempT1["IA"];
     }
 
-    if(foptions_->get_str("DSRG_FOLD")) {
+    if(foptions_->get_bool("DSRG_FOLD")) {
         // Zero T1 here
     }
 

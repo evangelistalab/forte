@@ -577,7 +577,7 @@ void DSRG_MRPT2::compute_t2() {
         T2_["IJCD"] = tempT2["IJAB"] * U_["BD"] * U_["AC"];
     }
 
-    if(foptions_->get_str("DSRG_FOLD")) {
+    if(foptions_->get_bool("DSRG_FOLD")) {
         // Fold T2 blocks here
     }
 
@@ -908,7 +908,7 @@ void DSRG_MRPT2::compute_t1() {
         T1_["IA"] = tempT1["IA"];
     }
 
-    if(foptions_->get_str("DSRG_FOLD")) {
+    if(foptions_->get_bool("DSRG_FOLD")) {
         //Fold T1 blocks here
     }
 
