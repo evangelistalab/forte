@@ -314,9 +314,9 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
 
     // 1. Get necessary information, print method initialization information and exceptions
     double thresh = options.get_double("EMBEDDING_THRESHOLD");
-    if (thresh > 1.0 || thresh < 0.0) {
-        throw PSIEXCEPTION("make_embedding: Embedding threshold must be between 0.0 and 1.0 !");
-    }
+//    if (thresh > 1.0 || thresh < 0.0) {
+//        throw PSIEXCEPTION("make_embedding: Embedding threshold must be between 0.0 and 1.0 !");
+//    }
 
     int A_docc = 0;
     int A_uocc = 0;
@@ -367,6 +367,19 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
     Dimension nrvirpi = mo_space_info->get_dimension("RESTRICTED_UOCC");
     Dimension frzvpi = mo_space_info->get_dimension("FROZEN_UOCC");
 
+    Dimension doc = ref_wfn->doccpi();
+    int diff = doc[0] - frzopi[0] - nroccpi[0];
+    int diff2 = actv_a[0] - diff;
+
+    // If single-reference, do not fix active orbitals
+    if (options.get_str("EMBEDDING_REFERENCE") == "HF") {
+        nroccpi[0] += diff;
+        nrvirpi[0] += diff2;
+        actv_a[0] = 0;
+    }
+
+    outfile->Printf("\n nroccpi[0] = %d, actv_a[0] = %d, nrvirpi[0] = %d, diff = %d, diff2 = %d.", nroccpi[0], actv_a[0], nrvirpi[0], diff, diff2);
+
     // Define corresponding blocks (slices), occ slick will start at frzopi
     Slice occ(frzopi, nroccpi + frzopi);
     Slice vir(frzopi + nroccpi + actv_a, nmopi - frzvpi);
@@ -409,10 +422,8 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
     std::vector<int> index_actv = {};
 
     // Create the active orbital index vector
-    if (options.get_str("EMBEDDING_REFERENCE") == "CASSCF") {
-        for (int i = 0; i < actv_a[0]; ++i) {
-            index_actv.push_back(frzopi[0] + nroccpi[0] + i);
-        }
+    for (int i = 0; i < actv_a[0]; ++i) {
+        index_actv.push_back(frzopi[0] + nroccpi[0] + i);
     }
 
     int offset_vec = frzopi[0] + nroccpi[0] + actv_a[0];
@@ -703,12 +714,22 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
         mo_space_map["FROZEN_DOCC"] = {freeze_o};
     
         size_t ro = static_cast<size_t>(num_Ao - adj_sys_docc);
+        if (options.get_str("EMBEDDING_REFERENCE") == "HF") {
+            ro -= diff;
+        }
         mo_space_map["RESTRICTED_DOCC"] = {ro};
     
         size_t a = static_cast<size_t>(actv_a[0]);
+        if (options.get_str("EMBEDDING_REFERENCE") == "HF") {
+            a += diff;
+            a += diff2;
+        }
         mo_space_map["ACTIVE"] = {a};
     
         size_t rv = static_cast<size_t>(num_Av - adj_sys_uocc);
+        if (options.get_str("EMBEDDING_REFERENCE") == "HF") {
+            rv -= diff2;
+        }
         mo_space_map["RESTRICTED_UOCC"] = {rv};
     
         size_t freeze_v = static_cast<size_t>(num_Fv + num_Bv +

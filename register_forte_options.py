@@ -153,6 +153,10 @@ def register_embedding_options(forte_options):
     forte_options.add_str(
         "EMBEDDING_SPECIAL", "NONE",
         "Special test functions for PT2 embedding: SWAPAB, SYSFCI, ENVFCI")
+    forte_options.add_bool("ADV_EMBEDDING", False, "Turn on/off the multilayer PT2 effective Hamiltonian rotation")
+    forte_options.add_array("ADV_SYS_RDOCC", "fragment restricted_docc")
+    forte_options.add_array("ADV_SYS_ACTIVE", "fragment active")
+    forte_options.add_array("ADV_SYS_RUOCC", "fragment restricted_uocc")
 
 def register_mo_space_info_options(forte_options):
     forte_options.add_array(
@@ -606,6 +610,20 @@ def register_dsrg_options(forte_options):
 
     forte_options.add_bool("DSRG_SR_DOWNFOLD", False, "SR MR downfolding")
 
+    forte_options.add_str("DOWNFOLD_DENSITY", "RHF", ["RHF", "CASSCF", "FCI"], "the source of downfolding reference density (RDMs)")
+
+#    forte_options.add_str("DSRG_FOLD_T1", "AA", "Any C,A,V combinations: [AA, CA, AV]", "Zero out corresponding blocks in T2")
+
+#    forte_options.add_str("DSRG_FOLD_T2", "AAAA", "Any C,A,V combinations",
+#                     "Zero out corresponding blocks in T2")
+
+#    forte_options.add_str("DSRG_FOLD", "NONE", "[NONE, ONE, ALL]",
+#                     "Trigger folding T blocks")
+
+    forte_options.add_bool("DSRG_FOLD", "Turn on/off folding any blocks")
+    forte_options.add_array("DSRG_FOLD_T1", "An array to assign which block(s) will be folded in T1")
+    forte_options.add_array("DSRG_FOLD_T2", "An array to assign which block(s) will be folded in T2")
+
     forte_options.add_bool("DSRG_QC_2BODY", True,
                      "Include two-body Hamiltonian in 0.5 * [[V, A], A] if True (used in LDSRG2_QC)")
 
@@ -714,13 +732,6 @@ def register_dsrg_options(forte_options):
 
     forte_options.add_bool("IGNORE_MEMORY_WARNINGS", False, "Force running the DSRG-MRPT3 code using the batched algorithm")
 
-    forte_options.add_str("DSRG_FOLD_T1", "AA", "Any C,A,V combinations: [AA, CA, AV]",                                                                                                                              "Zero out corresponding blocks in T2")
-
-    forte_options.add_str("DSRG_FOLD_T2", "AAAA", "Any C,A,V combinations",
-                     "Zero out corresponding blocks in T2")
-
-    forte_options.add_str("DSRG_FOLD", "NONE", "[NONE, ONE, ALL]",
-                     "Trigger folding T blocks")
 
 def register_dwms_options(forte_options):
     forte_options.add_double("DWMS_ZETA", 0.0, """Automatic Gaussian width cutoff for the density weights

@@ -134,6 +134,10 @@ void MRDSRG::guess_t2_std(BlockedTensor& V, BlockedTensor& T2) {
         T2["IJCD"] = tempT2["IJAB"] * U_["BD"] * U_["AC"];
     }
 
+    if(foptions_->get_str("DSRG_FOLD")) {
+        //zero T2 here
+    }
+
     // zero internal amplitudes
     T2.block("aaaa").iterate([&](const std::vector<size_t>&, double& value) {
         t2aa_norm_ -= value * value;
@@ -323,6 +327,10 @@ void MRDSRG::guess_t1_std(BlockedTensor& F, BlockedTensor& T2, BlockedTensor& T1
         tempT1["JB"] = U_["IJ"] * T1["IA"] * U_["AB"];
         T1["ia"] = tempT1["ia"];
         T1["IA"] = tempT1["IA"];
+    }
+
+    if(foptions_->get_str("DSRG_FOLD")) {
+        // Zero T1 here
     }
 
     // zero internal amplitudes
@@ -1315,6 +1323,7 @@ void MRDSRG::zero_t2_sr_downfolding(BlockedTensor& T2) {
         size_t n3 = label_to_spacemo_[block.at(2)].size();
         size_t n4 = label_to_spacemo_[block.at(3)].size();
 
+
         // blocks AYXX, X = A, V, Y = C, A
         // zero when A belongs to active virtual
         if (std::towlower(block.at(0)) == 'a') {
@@ -1331,6 +1340,8 @@ void MRDSRG::zero_t2_sr_downfolding(BlockedTensor& T2) {
             }
         }
 
+
+/*
         // Add_1
         // blocks AYXX, X = A, V, Y = C, A
         // zero when A belongs to active occupied
@@ -1347,6 +1358,8 @@ void MRDSRG::zero_t2_sr_downfolding(BlockedTensor& T2) {
                 }
             }
         }
+*/
+
 
         // blocks YAXX, X = A, V, Y = C, A
         // zero when A belongs to active virtual
@@ -1364,6 +1377,7 @@ void MRDSRG::zero_t2_sr_downfolding(BlockedTensor& T2) {
             }
         }
 
+/*
         // Add_2
         // blocks YAXX, X = A, V, Y = C, A
         // zero when A belongs to active occupied
@@ -1380,6 +1394,7 @@ void MRDSRG::zero_t2_sr_downfolding(BlockedTensor& T2) {
                 }
             }
         }
+*/
 
         // blocks XXAY, X = C, A, Y = A, V
         // zero when A belongs to active occupied
@@ -1397,6 +1412,7 @@ void MRDSRG::zero_t2_sr_downfolding(BlockedTensor& T2) {
             }
         }
 
+/*
         // Add_3
         // blocks XXAY, X = C, A, Y = A, V
         // zero when A belongs to active virtual
@@ -1413,6 +1429,7 @@ void MRDSRG::zero_t2_sr_downfolding(BlockedTensor& T2) {
                 }
             }
         }
+*/
 
         // blocks XXYA, X = C, A, Y = A, V
         // zero when A belongs to active occupied
@@ -1430,6 +1447,7 @@ void MRDSRG::zero_t2_sr_downfolding(BlockedTensor& T2) {
             }
         }
 
+/*
         // Add_4
         // blocks XXYA, X = C, A, Y = A, V
         // zero when A belongs to active virtual
@@ -1446,6 +1464,7 @@ void MRDSRG::zero_t2_sr_downfolding(BlockedTensor& T2) {
                 }
             }
         }
+*/
     }
 }
 
@@ -1465,6 +1484,7 @@ void MRDSRG::zero_t1_sr_downfolding(BlockedTensor& T1) {
             }
         }
 
+/*
         // Core->Active_virtual
         // zero when A belongs to active occupied
         if (std::towlower(block.at(1)) == 'a') {
@@ -1475,6 +1495,7 @@ void MRDSRG::zero_t1_sr_downfolding(BlockedTensor& T1) {
                 }
             }
         }
+*/
 
         // Active_virtual->Virtual
         // zero when A belongs to active unoccupied
@@ -1486,6 +1507,8 @@ void MRDSRG::zero_t1_sr_downfolding(BlockedTensor& T1) {
                 }
             }
         }
+
+/*
         // Active_core->Virtual 
         // zero when A belongs to active unoccupied
         if (std::towlower(block.at(0)) == 'a') {
@@ -1496,6 +1519,7 @@ void MRDSRG::zero_t1_sr_downfolding(BlockedTensor& T1) {
                 }
             }
         }
+*/
     }
 }
 
