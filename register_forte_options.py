@@ -151,12 +151,21 @@ def register_embedding_options(forte_options):
         "EMBEDDING_ADJUST_B_UOCC", 0,
         "Adjust number of virtual orbitals between A and B, +: move to B, -: move to A")
     forte_options.add_str(
-        "EMBEDDING_SPECIAL", "NONE",
-        "Special test functions for PT2 embedding: SWAPAB, SYSFCI, ENVFCI")
+        "EMBEDDING_SPECIAL", "NONE", ["NONE", "SWAPAB", "INNER_LAYER"],
+        "Special test functions for PT2 embedding")
     forte_options.add_bool("ADV_EMBEDDING", False, "Turn on/off the multilayer PT2 effective Hamiltonian rotation")
-    forte_options.add_array("ADV_SYS_RDOCC", "fragment restricted_docc")
-    forte_options.add_array("ADV_SYS_ACTIVE", "fragment active")
-    forte_options.add_array("ADV_SYS_RUOCC", "fragment restricted_uocc")
+    forte_options.add_int("FRAGMENT_RDOCC", "fragment restricted_docc")
+    forte_options.add_int("FRAGMENT_ACTIVE", "fragment active")
+    forte_options.add_int("FRAGMENT_RUOCC", "fragment restricted_uocc")
+    forte_options.add_str(
+        'FRAGMENT_ACTIVE_SPACE_SOLVER', '', ['FCI', 'ACI', 'CAS'],
+        'Active space solver type'
+    )
+    forte_options.add_str(
+        'FRAGMENT_CORRELATION_SOLVER', 'NONE',
+        ['DSRG-MRPT2', 'THREE-DSRG-MRPT2', 'DSRG-MRPT3', 'MRDSRG',
+         'SOMRDSRG', 'MRDSRG_SO', 'DSRG_MRPT'],
+        'Dynamical correlation solver type')
 
 def register_mo_space_info_options(forte_options):
     forte_options.add_array(
