@@ -309,17 +309,33 @@ def orbital_projection(ref_wfn, options, mo_space_info):
     else:
         return mo_space_info
 
-def twolayer_embedding_driver(mo_space_info, options):
-    # Options: inner layer method and partition
-    # Do FC embedding projection for E, F, with sysfull
-    # build new spaceinfo from options, CAV calculations in F, say LDSRG2 -> E_high(Unrelaxed)
-    # forte_sr_downfolding, with CASSCF density
-    # CAV calculations in F, say LDSRG2 -> E_high(relaxed, or PT2 embedding)
+def adv_embedding_driver(ref_wfn, mo_space_info, options):
+    options.set_str('FORTE', 'EMBEDDING', True)
+    options.set_str('FORTE', 'EMBEDDING_CUTOFF_METHOD', 'CORRELATED_BATH')
+    options.set_str('FORTE', 'EMBEDDING_SPECIAL', 'INNER_LAYER')
+
+    # mo_space_info: fragment all active, environment restricted, core frozen
+    # mo_space_info_active: fragment-C,A,V, environment and core frozen
+    mo_space_info = orbital_projection(ref_wfn, options, mo_space_info)
+    mo_space_info_active = forte.build_inner_space(mo_space_info, options)
+
+    # compute higher-level with mo_space_info_active, -> E_high(origin)
+    # MRDSRG(mo_space_info_active)
+
+    # compute PT2 corrections (E, or CB)
+    # rdms_casscf = CASSCF(mo_space_info_active)
+    # DSRG-MRPT2(mo_space_info, rdms_casscf)
+    # Compute MRDSRG-in-PT2 energy (unfolded)
+
+    # Test new MRDSRG energy (with rotated Heff/ints)
+    # eH rotation
+    # MRDSRG(mo_space_info_active)
+    # Compute MRDSRG-in-PT2 energy (folded)
 
 def forte_sr_downfolding(state_weights_map, scf_info, options, ints, mo_space_info):
 
     rdms = forte.RHF_DENSITY(scf_info, mo_space_info).rhf_rdms()
-    if options.get_str('downfold_density') == "CASSCF":
+#    if options.get_str('downfold_density') == "CASSCF": # Working here
         # Build and run a CASSCF computation
         # Compute CASSCF density
 
@@ -421,6 +437,8 @@ def run_forte(name, **kwargs):
         options.set_bool('FORTE', 'DSRG_SR_DOWNFOLD', True)
         forte.forte_options.update_psi_options(options)
         energy = forte_sr_downfolding(state_weights_map, scf_info, forte.forte_options, ints, mo_space_info)
+    elif (job_type == 'ADV_EMBEDDING'):
+        energy_df = adv_embedding_driver(state_weights_map, scf_info, mo_space_info, forte.forte_options)
     else:
         energy = forte.forte_old_methods(ref_wfn, options, ints, mo_space_info)
 

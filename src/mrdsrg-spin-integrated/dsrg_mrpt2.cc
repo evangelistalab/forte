@@ -577,8 +577,38 @@ void DSRG_MRPT2::compute_t2() {
         T2_["IJCD"] = tempT2["IJAB"] * U_["BD"] * U_["AC"];
     }
 
-    if(foptions_->get_bool("DSRG_FOLD")) {
-        // Fold T2 blocks here
+    if (foptions_->get_bool("DSRG_FOLD")) {
+        // Fold T2 blocks
+        auto t2_fold_list = foptions_->get_int_vec("DSRG_FOLD_T2");
+        std::vector<std::string> block_list = {"AAAA", "CCVV", "AAAV", "AAVA", "AAVV", "ACAA",
+                                               "ACAV", "ACVA", "ACVV", "CAAA", "CAAV", "CAVA",
+                                               "CAVV", "CCAA", "CCAV", "CCVA"};
+        for (auto t2 : t2_fold_list) {
+			std::string t2_block = block_list[t2];
+            // zero bbbb
+            T2_.block(t2_block).zero();
+            outfile->Printf("\n Block %s zeroed", t2_block.c_str());
+
+            // zero abab
+            std::string onestr_1 = t2_block.substr(0, 1);
+            std::string onestr_2 = t2_block.substr(2, 1);
+            onestr_1[0] = std::tolower(onestr_1[0]);
+            onestr_2[0] = std::tolower(onestr_2[0]);
+            t2_block.replace(0, 1, onestr_1);
+            t2_block.replace(2, 1, onestr_2);
+            T2_.block(t2_block).zero();
+            outfile->Printf("\n Block %s zeroed", t2_block.c_str());
+
+            // zero aaaa
+            std::string twostr_1 = t2_block.substr(1, 1);
+            std::string twostr_2 = t2_block.substr(3, 1);
+            twostr_1[0] = std::tolower(twostr_1[0]);
+            twostr_2[0] = std::tolower(twostr_2[0]);
+            t2_block.replace(1, 1, twostr_1);
+            t2_block.replace(3, 1, twostr_2);
+            T2_.block(t2_block).zero();
+            outfile->Printf("\n Block %s zeroed \n", t2_block.c_str());
+        }
     }
 
  //   if(foptions_->get_str("DSRG_FOLD") == "ONE") {
@@ -908,8 +938,27 @@ void DSRG_MRPT2::compute_t1() {
         T1_["IA"] = tempT1["IA"];
     }
 
-    if(foptions_->get_bool("DSRG_FOLD")) {
-        //Fold T1 blocks here
+    if (foptions_->get_bool("DSRG_FOLD")) {
+        // Fold T1 blocks here
+		auto t1_fold_list = foptions_->get_int_vec("DSRG_FOLD_T1");
+		std::vector<std::string> block_list = { "AA", "CV", "CA", "AV"};
+		for (auto t1: t1_fold_list) {
+			std::string t1_block = block_list[t1];
+
+            // zero beta
+            T1_.block(t1_block).zero();
+            outfile->Printf("\n block %s zeroed", t1_block.c_str());
+
+            // zero alpha
+            std::string onestr = t1_block.substr(0, 1);
+            onestr[0] = std::tolower(onestr[0]);
+            t1_block.replace(0, 1, onestr);
+            std::string twostr = t1_block.substr(1, 1);
+            twostr[0] = std::tolower(twostr[0]);
+            t1_block.replace(1, 1, twostr);
+            T1_.block(t1_block).zero();
+            outfile->Printf("\n block %s zeroed", t1_block.c_str());
+        }
     }
 
     // internal amplitudes (A->A)
