@@ -309,7 +309,7 @@ def orbital_projection(ref_wfn, options, mo_space_info):
     else:
         return mo_space_info
 
-def adv_embedding_driver(ref_wfn, mo_space_info, options):
+def adv_embedding_driver(state, state_weights_map, scf_info, ref_wfn, mo_space_info, options, ints):
     options.set_str('FORTE', 'EMBEDDING', True)
     options.set_str('FORTE', 'EMBEDDING_CUTOFF_METHOD', 'CORRELATED_BATH')
     options.set_str('FORTE', 'EMBEDDING_SPECIAL', 'INNER_LAYER')
@@ -317,20 +317,35 @@ def adv_embedding_driver(ref_wfn, mo_space_info, options):
     # mo_space_info: fragment all active, environment restricted, core frozen
     # mo_space_info_active: fragment-C,A,V, environment and core frozen
     mo_space_info = orbital_projection(ref_wfn, options, mo_space_info)
-    mo_space_info_active = forte.build_inner_space(mo_space_info, options)
+    mo_space_info_active = forte.build_inner_space(ref_wfn, mo_space_info, options)
 
-    # compute higher-level with mo_space_info_active, -> E_high(origin)
-    # MRDSRG(mo_space_info_active)
+    # compute higher-level with mo_space_info_active and methods in options, -> E_high(origin)
+    energy_high = forte_driver(state_weights_map, scf_info, forte.forte_options, ints, mo_space_info_active)
 
     # compute PT2 corrections (E, or CB)
     # rdms_casscf = CASSCF(mo_space_info_active)
+    rdms = forte.build_casscf_density(state, scf_info, options, mo_space_info_active, ints)
+
     # DSRG-MRPT2(mo_space_info, rdms_casscf)
+    dsrg = forte.make_dsrg_method(options.get_str('FRAGMENT_CORRELATION_SOLVER'),
+                                  rdms, scf_info, options, ints, mo_space_info)
+    Edsrg = dsrg.compute_energy()
+    # E_corr = Edsrg - E_cas_ref
     # Compute MRDSRG-in-PT2 energy (unfolded)
+    # E_emb = E(MRDSRG) + E(Corr)
 
     # Test new MRDSRG energy (with rotated Heff/ints)
     # eH rotation
-    # MRDSRG(mo_space_info_active)
+    ints_dressed = dsrg.compute_Heff_actv()
+    state_map = forte.to_state_nroots_map(state_weights_map)
+    as_solver_relaxed = forte.make_active_space_solver(options.get_str('ACTIVE_SPACE_SOLVER'),
+                                                       state_map, scf_info,
+                                                       mo_space_info_active, ints_dressed,
+                                                       options)
+    state_energies_list = as_solver_relaxed.compute_energy()
+    Erelax = forte.compute_average_state_energy(state_energies_list,state_weights_map)
     # Compute MRDSRG-in-PT2 energy (folded)
+    # E_emb = E(MRDSRG_folded) + E(Corr)
 
 def forte_sr_downfolding(state_weights_map, scf_info, options, ints, mo_space_info):
 
@@ -438,7 +453,7 @@ def run_forte(name, **kwargs):
         forte.forte_options.update_psi_options(options)
         energy = forte_sr_downfolding(state_weights_map, scf_info, forte.forte_options, ints, mo_space_info)
     elif (job_type == 'ADV_EMBEDDING'):
-        energy_df = adv_embedding_driver(state_weights_map, scf_info, mo_space_info, forte.forte_options)
+        energy_df = adv_embedding_driver(state, state_weights_map, scf_info, ref_wfn, mo_space_info, forte.forte_options, ints)
     else:
         energy = forte.forte_old_methods(ref_wfn, options, ints, mo_space_info)
 

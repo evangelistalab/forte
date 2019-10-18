@@ -308,20 +308,16 @@ void make_avas(psi::SharedWavefunction ref_wfn, psi::Options& options, psi::Shar
     }
 }
 
-std::shared_ptr<MOSpaceInfo> build_inner_space(psi::Options& options,
-	std::shared_ptr<MOSpaceInfo> mo_space_info) {
-	// This function modify mo_space_info according to inner C, A, V from options.
-}
-
 std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi::Options& options,
                                             psi::SharedMatrix Pf,
                                             std::shared_ptr<MOSpaceInfo> mo_space_info) {
 
     // 1. Get necessary information, print method initialization information and exceptions
     double thresh = options.get_double("EMBEDDING_THRESHOLD");
-//    if (thresh > 1.0 || thresh < 0.0) {
-//        throw PSIEXCEPTION("make_embedding: Embedding threshold must be between 0.0 and 1.0 !");
-//    }
+    //    if (thresh > 1.0 || thresh < 0.0) {
+    //        throw PSIEXCEPTION("make_embedding: Embedding threshold must be between 0.0 and 1.0
+    //        !");
+    //    }
 
     int A_docc = 0;
     int A_uocc = 0;
@@ -356,8 +352,8 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
 
     std::shared_ptr<PSIO> psio(_default_psio_lib_);
 
-    Dimension nmopi = ref_wfn->nmopi();
-    Dimension zeropi = nmopi - nmopi;
+    psi::Dimension nmopi = ref_wfn->nmopi();
+    psi::Dimension zeropi = nmopi - nmopi;
     int nirrep = ref_wfn->nirrep();
     if (nirrep > 1) {
         throw PSIEXCEPTION("Fragment projection works only without symmetry! (symmetry C1)");
@@ -366,13 +362,13 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
     // 2. Apply projector to rotate the orbitals
 
     // Get information of rocc, actv and rvir from MOSpaceInfo
-    Dimension frzopi = mo_space_info->get_dimension("FROZEN_DOCC");
-    Dimension nroccpi = mo_space_info->get_dimension("RESTRICTED_DOCC");
-    Dimension actv_a = mo_space_info->get_dimension("ACTIVE");
-    Dimension nrvirpi = mo_space_info->get_dimension("RESTRICTED_UOCC");
-    Dimension frzvpi = mo_space_info->get_dimension("FROZEN_UOCC");
+    psi::Dimension frzopi = mo_space_info->get_dimension("FROZEN_DOCC");
+    psi::Dimension nroccpi = mo_space_info->get_dimension("RESTRICTED_DOCC");
+    psi::Dimension actv_a = mo_space_info->get_dimension("ACTIVE");
+    psi::Dimension nrvirpi = mo_space_info->get_dimension("RESTRICTED_UOCC");
+    psi::Dimension frzvpi = mo_space_info->get_dimension("FROZEN_UOCC");
 
-    Dimension doc = ref_wfn->doccpi();
+    psi::Dimension doc = ref_wfn->doccpi();
     int diff = doc[0] - frzopi[0] - nroccpi[0];
     int diff2 = actv_a[0] - diff;
 
@@ -383,7 +379,8 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
         actv_a[0] = 0;
     }
 
-    outfile->Printf("\n nroccpi[0] = %d, actv_a[0] = %d, nrvirpi[0] = %d, diff = %d, diff2 = %d.", nroccpi[0], actv_a[0], nrvirpi[0], diff, diff2);
+    outfile->Printf("\n nroccpi[0] = %d, actv_a[0] = %d, nrvirpi[0] = %d, diff = %d, diff2 = %d.",
+                    nroccpi[0], actv_a[0], nrvirpi[0], diff, diff2);
 
     // Define corresponding blocks (slices), occ slick will start at frzopi
     Slice occ(frzopi, nroccpi + frzopi);
@@ -535,36 +532,32 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
         }
     }
 
-	if (options.get_str("EMBEDDING_CUTOFF_METHOD") == "CORRELATED_BATH") {
-		// Use t1 and t2 to partition: t1 = t, t2 = t/1000 .
-		// This option must be used with INNER_LAYER which set A as active and B as restricted!
-		double thresh_tail = thresh/1000.0;
-		for (int i = 0; i < nroccpi[0]; i++) {
-			double lb = lo->get(0, i);
-			if (lb < thresh_tail) {
-				index_frozen_core.push_back(i + frzopi[0]);
-			}
-			else if (lb > thresh_tail && lb < thresh) {
-				index_B_occ.push_back(i + frzopi[0]);
-			}
-			else {
-				index_A_occ.push_back(i + frzopi[0]);
-			}
-		}
+    if (options.get_str("EMBEDDING_CUTOFF_METHOD") == "CORRELATED_BATH") {
+        // Use t1 and t2 to partition: t1 = t, t2 = t/1000 .
+        // This option must be used with INNER_LAYER which set A as active and B as restricted!
+        double thresh_tail = thresh / 1000.0;
+        for (int i = 0; i < nroccpi[0]; i++) {
+            double lb = lo->get(0, i);
+            if (lb < thresh_tail) {
+                index_frozen_core.push_back(i + frzopi[0]);
+            } else if (lb > thresh_tail && lb < thresh) {
+                index_B_occ.push_back(i + frzopi[0]);
+            } else {
+                index_A_occ.push_back(i + frzopi[0]);
+            }
+        }
 
-		for (int i = 0; i < nrvirpi[0]; i++) {
-			double lb = lv->get(0, i);
-			if (lb < thresh_tail) {
-				index_frozen_virtual.push_back(i + offset_vec);
-			}
-			else if (lb > thresh_tail && lb < thresh) {
-				index_B_vir.push_back(i + offset_vec);
-			}
-			else {
-				index_A_vir.push_back(i + offset_vec);
-			}
-		}
-	}
+        for (int i = 0; i < nrvirpi[0]; i++) {
+            double lb = lv->get(0, i);
+            if (lb < thresh_tail) {
+                index_frozen_virtual.push_back(i + offset_vec);
+            } else if (lb > thresh_tail && lb < thresh) {
+                index_B_vir.push_back(i + offset_vec);
+            } else {
+                index_A_vir.push_back(i + offset_vec);
+            }
+        }
+    }
 
     // Collect the size of each space
     int num_Fo = index_frozen_core.size();
@@ -617,15 +610,15 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
     SharedMatrix Ca_tilde(ref_wfn->Ca()->clone());
 
     // Build and semi-canonicalize BO, AO, AV and BV blocks from rotated Ca()
-	auto C_ao = semicanonicalize_block(ref_wfn, Ca_tilde, index_A_occ, 0, false);
-	auto C_av = semicanonicalize_block(ref_wfn, Ca_tilde, index_A_vir, 0, false);
+    auto C_ao = semicanonicalize_block(ref_wfn, Ca_tilde, index_A_occ, 0, false);
+    auto C_av = semicanonicalize_block(ref_wfn, Ca_tilde, index_A_vir, 0, false);
 
-	auto C_bo = semicanonicalize_block(ref_wfn, Ca_tilde, index_B_occ, 0, true);
-	auto C_bv = semicanonicalize_block(ref_wfn, Ca_tilde, index_B_vir, 0, true);
-	if (options.get_bool("EMBEDDING_SEMICANONICALIZE_FROZEN") == true) {
-		C_bo = semicanonicalize_block(ref_wfn, Ca_tilde, index_B_occ, 0, false);
-		C_bv = semicanonicalize_block(ref_wfn, Ca_tilde, index_B_vir, 0, false);
-	}
+    auto C_bo = semicanonicalize_block(ref_wfn, Ca_tilde, index_B_occ, 0, true);
+    auto C_bv = semicanonicalize_block(ref_wfn, Ca_tilde, index_B_vir, 0, true);
+    if (options.get_bool("EMBEDDING_SEMICANONICALIZE_FROZEN") == true) {
+        C_bo = semicanonicalize_block(ref_wfn, Ca_tilde, index_B_occ, 0, false);
+        C_bv = semicanonicalize_block(ref_wfn, Ca_tilde, index_B_vir, 0, false);
+    }
 
     // Copy the active block (if any) from original Ca_save
     SharedMatrix C_A(new Matrix("Active_coeff_block", nirrep, nmopi, actv_a));
@@ -658,31 +651,30 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
     // Form new C matrix: Frozen-core, B_occ, A_occ, Active, A_vir, B_vir, Frozen-virtual
     SharedMatrix Ca_Rt(new Matrix("Ca rotated tilde", nirrep, nmopi, nmopi));
 
-    if(options.get_str("EMBEDDING_SPECIAL") == "SWAPAB") {
-    int offset = 0;
-    for (auto& C_block : {C_Fo, C_ao, C_bo, C_A, C_bv, C_av, C_Fv}) {
-        int nmo_block = C_block->ncol();
-        for (int i = 0; i < nmo_block; ++i) {
-            for (int mu = 0; mu < nmopi[0]; ++mu) {
-                double value = C_block->get(mu, i);
-                Ca_Rt->set(mu, offset, value);
+    if (options.get_str("EMBEDDING_SPECIAL") == "SWAPAB") {
+        int offset = 0;
+        for (auto& C_block : {C_Fo, C_ao, C_bo, C_A, C_bv, C_av, C_Fv}) {
+            int nmo_block = C_block->ncol();
+            for (int i = 0; i < nmo_block; ++i) {
+                for (int mu = 0; mu < nmopi[0]; ++mu) {
+                    double value = C_block->get(mu, i);
+                    Ca_Rt->set(mu, offset, value);
+                }
+                offset += 1;
             }
-            offset += 1;
         }
-    }
-    }
-    else {
-    int offset = 0;
-    for (auto& C_block : {C_Fo, C_bo, C_ao, C_A, C_av, C_bv, C_Fv}) {
-        int nmo_block = C_block->ncol();
-        for (int i = 0; i < nmo_block; ++i) {
-            for (int mu = 0; mu < nmopi[0]; ++mu) {
-                double value = C_block->get(mu, i);
-                Ca_Rt->set(mu, offset, value);
+    } else {
+        int offset = 0;
+        for (auto& C_block : {C_Fo, C_bo, C_ao, C_A, C_av, C_bv, C_Fv}) {
+            int nmo_block = C_block->ncol();
+            for (int i = 0; i < nmo_block; ++i) {
+                for (int mu = 0; mu < nmopi[0]; ++mu) {
+                    double value = C_block->get(mu, i);
+                    Ca_Rt->set(mu, offset, value);
+                }
+                offset += 1;
             }
-            offset += 1;
         }
-    }
     }
 
     // Update both the alpha and beta orbitals
@@ -692,73 +684,69 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
     // Write a new MOSpaceInfo:
     std::map<std::string, std::vector<size_t>> mo_space_map;
 
-    if(options.get_str("EMBEDDING_SPECIAL") == "SWAPAB") {
-		// This will swap the fragment (A) and environment (B)
-        size_t freeze_o =
-            static_cast<size_t>(num_Fo + num_Ao + adj_sys_docc);
+    if (options.get_str("EMBEDDING_SPECIAL") == "SWAPAB") {
+        // This will swap the fragment (A) and environment (B)
+        size_t freeze_o = static_cast<size_t>(num_Fo + num_Ao + adj_sys_docc);
         mo_space_map["FROZEN_DOCC"] = {freeze_o};
-    
+
         size_t ro = static_cast<size_t>(num_Bo - adj_sys_docc);
         mo_space_map["RESTRICTED_DOCC"] = {ro};
-    
+
         size_t a = static_cast<size_t>(actv_a[0]);
         mo_space_map["ACTIVE"] = {a};
-    
+
         size_t rv = static_cast<size_t>(num_Bv - adj_sys_uocc);
         mo_space_map["RESTRICTED_UOCC"] = {rv};
-    
-        size_t freeze_v = static_cast<size_t>(num_Fv + num_Av +
-                                              adj_sys_uocc);
+
+        size_t freeze_v = static_cast<size_t>(num_Fv + num_Av + adj_sys_uocc);
         mo_space_map["FROZEN_UOCC"] = {freeze_v};
     }
 
-    if(options.get_str("EMBEDDING_SPECIAL") == "INNER_LAYER") {
-		// This will make A->active, B->restricted, for multilayer embedding/downfolding tests
-        size_t freeze_o =
-            static_cast<size_t>(num_Fo + adj_sys_docc);
+    if (options.get_str("EMBEDDING_SPECIAL") == "INNER_LAYER") {
+        // This will make A->active, B->restricted, for multilayer embedding/downfolding tests
+        size_t freeze_o = static_cast<size_t>(num_Fo + adj_sys_docc);
         mo_space_map["FROZEN_DOCC"] = {freeze_o};
-    
+
         size_t ro = static_cast<size_t>(num_Bo - adj_sys_docc);
         mo_space_map["RESTRICTED_DOCC"] = {ro};
-    
+
         size_t a = static_cast<size_t>(actv_a[0] + num_Ao + num_Av);
         mo_space_map["ACTIVE"] = {a};
-    
+
         size_t rv = static_cast<size_t>(num_Bv - adj_sys_uocc);
         mo_space_map["RESTRICTED_UOCC"] = {rv};
-    
-        size_t freeze_v = static_cast<size_t>(num_Fv +
-                                              adj_sys_uocc);
+
+        size_t freeze_v = static_cast<size_t>(num_Fv + adj_sys_uocc);
         mo_space_map["FROZEN_UOCC"] = {freeze_v};
     }
 
-    if(options.get_str("EMBEDDING_SPECIAL") == "NONE") {
-		// Normal partition for Frozen-Core embedding
-        size_t freeze_o =
-            static_cast<size_t>(num_Fo + num_Bo + adj_sys_docc); // Add the additional frozen core to Bo
+    if (options.get_str("EMBEDDING_SPECIAL") == "NONE") {
+        // Normal partition for Frozen-Core embedding
+        size_t freeze_o = static_cast<size_t>(num_Fo + num_Bo +
+                                              adj_sys_docc); // Add the additional frozen core to Bo
         mo_space_map["FROZEN_DOCC"] = {freeze_o};
-    
+
         size_t ro = static_cast<size_t>(num_Ao - adj_sys_docc);
         if (options.get_str("EMBEDDING_REFERENCE") == "HF") {
             ro -= diff;
         }
         mo_space_map["RESTRICTED_DOCC"] = {ro};
-    
+
         size_t a = static_cast<size_t>(actv_a[0]);
         if (options.get_str("EMBEDDING_REFERENCE") == "HF") {
             a += diff;
             a += diff2;
         }
         mo_space_map["ACTIVE"] = {a};
-    
+
         size_t rv = static_cast<size_t>(num_Av - adj_sys_uocc);
         if (options.get_str("EMBEDDING_REFERENCE") == "HF") {
             rv -= diff2;
         }
         mo_space_map["RESTRICTED_UOCC"] = {rv};
-    
-        size_t freeze_v = static_cast<size_t>(num_Fv + num_Bv +
-                                              adj_sys_uocc); // Add the additional frozen virtual to Bv
+
+        size_t freeze_v = static_cast<size_t>(
+            num_Fv + num_Bv + adj_sys_uocc); // Add the additional frozen virtual to Bv
         mo_space_map["FROZEN_UOCC"] = {freeze_v};
     }
 
@@ -801,4 +789,62 @@ psi::SharedMatrix semicanonicalize_block(psi::SharedWavefunction ref_wfn, psi::S
         return C_block;
     }
 }
+
+RDMs build_casscf_density(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
+                          std::shared_ptr<ForteOptions> options,
+                          std::shared_ptr<MOSpaceInfo> mo_space_info,
+                          std::shared_ptr<ActiveSpaceIntegrals> as_ints) {
+    // Return 3-RDM from a CASSCF computation
+
+    CASSCF cas_1(state, nroot, scf_info, options, mo_space_info, as_ints);
+    cas_1.compute_energy();
+
+    std::vector<std::pair<size_t, size_t>> root_list;
+    std::vector<RDMs> rdms_vec = cas_1.rdms(root_list, 3);
+    return rdms_vec[0];
+}
+
+std::shared_ptr<MOSpaceInfo> build_inner_space(psi::SharedWavefunction ref_wfn,
+                                               psi::Options& options,
+                                               std::shared_ptr<MOSpaceInfo> mo_space_info) {
+
+    int fragment_rocc = options.get_int("FRAGMENT_RDOCC");
+    int fragment_active = options.get_int("FRAGMENT_ACTIVE");
+    // int fragment_rvir = options.get_int("FRAGMENT_RUOCC");
+
+    psi::Dimension frzopi = mo_space_info->get_dimension("FROZEN_DOCC");
+    psi::Dimension nroccpi = mo_space_info->get_dimension("RESTRICTED_DOCC");
+    psi::Dimension actv_a = mo_space_info->get_dimension("ACTIVE");
+    psi::Dimension nrvirpi = mo_space_info->get_dimension("RESTRICTED_UOCC");
+    psi::Dimension frzvpi = mo_space_info->get_dimension("FROZEN_UOCC");
+
+    // Write the new active (inner-layer) MOSpaceInfo:
+    std::map<std::string, std::vector<size_t>> mo_space_map_active;
+
+    size_t freeze_o = static_cast<size_t>(frzopi[0]);
+    mo_space_map_active["FROZEN_DOCC"] = {freeze_o};
+
+    size_t ro = static_cast<size_t>(nroccpi[0] + fragment_rocc);
+    mo_space_map_active["RESTRICTED_DOCC"] = {ro};
+
+    size_t a = static_cast<size_t>(fragment_active);
+    mo_space_map_active["ACTIVE"] = {a};
+
+    size_t rv = static_cast<size_t>(nrvirpi[0] + actv_a[0] - fragment_rocc -
+                                    fragment_active); // Compute fragment_rvir instead
+    mo_space_map_active["RESTRICTED_UOCC"] = {rv};
+
+    size_t freeze_v = static_cast<size_t>(frzvpi[0]);
+    mo_space_map_active["FROZEN_UOCC"] = {freeze_v};
+
+    outfile->Printf("\n  Generating inner-layer MOSpaceInfo");
+    std::vector<size_t> reorder;
+    std::shared_ptr<MOSpaceInfo> mo_space_info_active =
+        make_mo_space_info_from_map(ref_wfn, mo_space_map_active, reorder);
+
+    // Return the new embedding MOSpaceInfo to pymodule
+    outfile->Printf("\n\n  --------------- Entering inner-layer computation --------------- ");
+    return mo_space_info_active;
+}
+
 } // namespace forte

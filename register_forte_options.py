@@ -158,14 +158,13 @@ def register_embedding_options(forte_options):
     forte_options.add_int("FRAGMENT_ACTIVE", "fragment active")
     forte_options.add_int("FRAGMENT_RUOCC", "fragment restricted_uocc")
     forte_options.add_str(
-        'FRAGMENT_ACTIVE_SPACE_SOLVER', '', ['FCI', 'ACI', 'CAS'],
-        'Active space solver type'
-    )
+        'FRAGMENT_DENSITY', 'CASSCF', ['CASSCF', 'RHF', 'MRDSRG'],
+        'The real/approximate RDMs used in the correlative environment computation')
     forte_options.add_str(
         'FRAGMENT_CORRELATION_SOLVER', 'NONE',
         ['DSRG-MRPT2', 'THREE-DSRG-MRPT2', 'DSRG-MRPT3', 'MRDSRG',
          'SOMRDSRG', 'MRDSRG_SO', 'DSRG_MRPT'],
-        'Dynamical correlation solver type')
+        'Dynamical correlation solver type for Fragment-environment correlation')
 
 def register_mo_space_info_options(forte_options):
     forte_options.add_array(

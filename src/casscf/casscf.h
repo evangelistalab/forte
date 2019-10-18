@@ -135,7 +135,7 @@ class CASSCF : public ActiveSpaceMethod {
     /// The JK object.  Built in constructor
     std::shared_ptr<psi::JK> JK_;
     /// Perform a CAS-CI with the updated MO coefficients
-    void cas_ci();
+    void cas_ci(int cas_max_rdm_level);
     /// Sets up the FCI
     void set_up_fci();
     /// Set up a SA-FCI
