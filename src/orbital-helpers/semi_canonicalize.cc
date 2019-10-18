@@ -74,15 +74,25 @@ SemiCanonical::SemiCanonical(std::shared_ptr<MOSpaceInfo> mo_space_info,
 
 void SemiCanonical::startup() {
     // some basics
+    outfile->Printf("\n Flag #0");
     nirrep_ = mo_space_info_->nirrep();
+    outfile->Printf("\n Flag #1, %d", nirrep_);
     ncmo_ = mo_space_info_->size("CORRELATED");
+    outfile->Printf("\n Flag #2, %d", ncmo_);
     nact_ = mo_space_info_->size("ACTIVE");
+    outfile->Printf("\n Flag #3, %d", nact_);
     nmopi_ = mo_space_info_->get_dimension("ALL");
+    outfile->Printf("\n Flag #4, %d", nmopi_[0]);
     ncmopi_ = mo_space_info_->get_dimension("CORRELATED");
+    outfile->Printf("\n Flag #5, %d", ncmopi_[0]);
     fdocc_ = mo_space_info_->get_dimension("FROZEN_DOCC");
+    outfile->Printf("\n Flag #6, %d", fdocc_[0]);
     rdocc_ = mo_space_info_->get_dimension("RESTRICTED_DOCC");
+    outfile->Printf("\n Flag #7, %d", rdocc_[0]);
     actv_ = mo_space_info_->get_dimension("ACTIVE");
+    outfile->Printf("\n Flag #8, %d", actv_[0]);
     ruocc_ = mo_space_info_->get_dimension("RESTRICTED_UOCC");
+    outfile->Printf("\n Flag #9, %d", ruocc_[0]);
 
     // Preapare orbital rotation matrix, which transforms all MOs
     Ua_ = std::make_shared<psi::Matrix>("Ua", nmopi_, nmopi_);

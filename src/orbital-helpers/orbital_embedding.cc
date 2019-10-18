@@ -334,6 +334,10 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
         A_docc = options.get_int("NUM_A_DOCC");
         A_uocc = options.get_int("NUM_A_UOCC");
         outfile->Printf("\n  Number of A occupied/virtual MOs set to %d and %d\n", A_docc, A_uocc);
+    } else if (options.get_str("EMBEDDING_CUTOFF_METHOD") == "CORRELATED_BATH") {
+        print_h2(
+            "Orbital partition to fragment, correlated bathe and frozen environment according to two threshold");
+        outfile->Printf("\n  t1 = %8.8f; t2 = %8.8f \n", thresh, thresh/1000.0);
     } else {
         throw PSIEXCEPTION("make_embedding: Impossible embedding cutoff method!");
     }
@@ -821,20 +825,20 @@ std::shared_ptr<MOSpaceInfo> build_inner_space(psi::SharedWavefunction ref_wfn,
     // Write the new active (inner-layer) MOSpaceInfo:
     std::map<std::string, std::vector<size_t>> mo_space_map_active;
 
-    size_t freeze_o = static_cast<size_t>(frzopi[0]);
+    size_t freeze_o = static_cast<size_t>(frzopi[0] + nroccpi[0]);
     mo_space_map_active["FROZEN_DOCC"] = {freeze_o};
 
-    size_t ro = static_cast<size_t>(nroccpi[0] + fragment_rocc);
+    size_t ro = static_cast<size_t>(fragment_rocc);
     mo_space_map_active["RESTRICTED_DOCC"] = {ro};
 
     size_t a = static_cast<size_t>(fragment_active);
     mo_space_map_active["ACTIVE"] = {a};
 
-    size_t rv = static_cast<size_t>(nrvirpi[0] + actv_a[0] - fragment_rocc -
+    size_t rv = static_cast<size_t>(actv_a[0] - fragment_rocc -
                                     fragment_active); // Compute fragment_rvir instead
     mo_space_map_active["RESTRICTED_UOCC"] = {rv};
 
-    size_t freeze_v = static_cast<size_t>(frzvpi[0]);
+    size_t freeze_v = static_cast<size_t>(frzvpi[0] + nrvirpi[0]);
     mo_space_map_active["FROZEN_UOCC"] = {freeze_v};
 
     outfile->Printf("\n  Generating inner-layer MOSpaceInfo");
