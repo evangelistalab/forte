@@ -310,16 +310,21 @@ def orbital_projection(ref_wfn, options, mo_space_info):
         return mo_space_info
 
 def adv_embedding_driver(state, state_weights_map, scf_info, ref_wfn, mo_space_info, options, ints):
-    options.set_str('FORTE', 'EMBEDDING', True)
-    options.set_str('FORTE', 'EMBEDDING_CUTOFF_METHOD', 'CORRELATED_BATH')
-    options.set_str('FORTE', 'EMBEDDING_SPECIAL', 'INNER_LAYER')
+    # options.set_bool('FORTE', 'EMBEDDING', True)
+    # options.set_str('FORTE', 'EMBEDDING_CUTOFF_METHOD', 'CORRELATED_BATH')
+    # options.set_str('FORTE', 'EMBEDDING_SPECIAL', 'INNER_LAYER')
+
+    frag_corr_level = options.get_str('FRAG_CORR_LEVEL')
+    env_corr_level = options.get_str('ENV_CORR_LEVEL')
 
     # mo_space_info: fragment all active, environment restricted, core frozen
     # mo_space_info_active: fragment-C,A,V, environment and core frozen
-    mo_space_info = orbital_projection(ref_wfn, options, mo_space_info)
-    mo_space_info_active = forte.build_inner_space(ref_wfn, mo_space_info, options)
+    # mo_space_info = orbital_projection(ref_wfn, options, mo_space_info)
+    mo_space_info_active = forte.build_inner_space(ref_wfn, options, mo_space_info)
 
     # compute higher-level with mo_space_info_active and methods in options, -> E_high(origin)
+    options.set_str('FORTE', 'CORR_LEVEL', frag_corr_level)
+    forte.forte_options.update_psi_options(options)
     energy_high = forte_driver(state_weights_map, scf_info, forte.forte_options, ints, mo_space_info_active)
 
     # compute PT2 corrections (E, or CB)
@@ -327,7 +332,9 @@ def adv_embedding_driver(state, state_weights_map, scf_info, ref_wfn, mo_space_i
     rdms = forte.build_casscf_density(state, scf_info, options, mo_space_info_active, ints)
 
     # DSRG-MRPT2(mo_space_info, rdms_casscf)
-    dsrg = forte.make_dsrg_method(options.get_str('FRAGMENT_CORRELATION_SOLVER'),
+    options.set_str('FORTE', 'CORR_LEVEL', env_corr_level)
+    forte.forte_options.update_psi_options(options)
+    dsrg = forte.make_dsrg_method(options.get_str('ENV_CORRELATION_SOLVER'),
                                   rdms, scf_info, options, ints, mo_space_info)
     Edsrg = dsrg.compute_energy()
     # E_corr = Edsrg - E_cas_ref
@@ -453,7 +460,7 @@ def run_forte(name, **kwargs):
         forte.forte_options.update_psi_options(options)
         energy = forte_sr_downfolding(state_weights_map, scf_info, forte.forte_options, ints, mo_space_info)
     elif (job_type == 'ADV_EMBEDDING'):
-        energy_df = adv_embedding_driver(state, state_weights_map, scf_info, ref_wfn, mo_space_info, forte.forte_options, ints)
+        energy_df = adv_embedding_driver(state, state_weights_map, scf_info, ref_wfn, mo_space_info, options, ints)
     else:
         energy = forte.forte_old_methods(ref_wfn, options, ints, mo_space_info)
 

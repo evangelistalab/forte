@@ -154,17 +154,27 @@ def register_embedding_options(forte_options):
         "EMBEDDING_SPECIAL", "NONE", ["NONE", "SWAPAB", "INNER_LAYER"],
         "Special test functions for PT2 embedding")
     forte_options.add_bool("ADV_EMBEDDING", False, "Turn on/off the multilayer PT2 effective Hamiltonian rotation")
-    forte_options.add_int("FRAGMENT_RDOCC", "fragment restricted_docc")
-    forte_options.add_int("FRAGMENT_ACTIVE", "fragment active")
-    forte_options.add_int("FRAGMENT_RUOCC", "fragment restricted_uocc")
+    forte_options.add_int("FRAGMENT_RDOCC", 0, "fragment restricted_docc")
+    forte_options.add_int("FRAGMENT_ACTIVE", 0, "fragment active")
+    forte_options.add_int("FRAGMENT_RUOCC", 0, "fragment restricted_uocc")
     forte_options.add_str(
         'FRAGMENT_DENSITY', 'CASSCF', ['CASSCF', 'RHF', 'MRDSRG'],
         'The real/approximate RDMs used in the correlative environment computation')
     forte_options.add_str(
-        'FRAGMENT_CORRELATION_SOLVER', 'NONE',
+        'ENV_CORRELATION_SOLVER', 'MRDSRG',
         ['DSRG-MRPT2', 'THREE-DSRG-MRPT2', 'DSRG-MRPT3', 'MRDSRG',
          'SOMRDSRG', 'MRDSRG_SO', 'DSRG_MRPT'],
         'Dynamical correlation solver type for Fragment-environment correlation')
+    forte_options.add_str("FRAG_CORR_LEVEL", "LDSRG2",
+        ["PT2", "PT3", "LDSRG2", "LDSRG2_QC", "LSRG2", "SRG_PT2", "QDSRG2",
+         "LDSRG2_P3", "QDSRG2_P3"],
+        "Correlation level of fragment MR-DSRG (used in mrdsrg code, "
+        "LDSRG2_P3 and QDSRG2_P3 not implemented)")
+    forte_options.add_str("ENV_CORR_LEVEL", "PT2",
+        ["PT2", "PT3", "LDSRG2", "LDSRG2_QC", "LSRG2", "SRG_PT2", "QDSRG2",
+         "LDSRG2_P3", "QDSRG2_P3"],
+        "Correlation level of environment (interactive) MR-DSRG (used in mrdsrg code, "
+        "LDSRG2_P3 and QDSRG2_P3 not implemented)")
 
 def register_mo_space_info_options(forte_options):
     forte_options.add_array(
