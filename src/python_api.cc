@@ -185,6 +185,7 @@ PYBIND11_MODULE(forte, m) {
           "Make a fragment(embedding) projector");
     m.def("make_embedding", &make_embedding, "Apply fragment projector to embed");
     m.def("build_inner_space", &build_inner_space, "Build C, A, V for inner layer from options");
+	m.def("build_casscf_density", &build_casscf_density, "Build rdms from a CASSCF computation");
     m.def("make_forte_integrals", &make_forte_integrals, "Make Forte integrals");
     m.def("forte_old_methods", &forte_old_methods, "Run Forte methods");
     m.def("make_active_space_method", &make_active_space_method, "Make an active space method");
