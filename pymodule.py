@@ -27,7 +27,7 @@
 # @END LICENSE
 #
 
-import timeit
+import time
 import math
 import warnings
 
@@ -368,10 +368,12 @@ def run_forte(name, **kwargs):
         forte.cleanup()
         return ref_wfn
 
-    start = timeit.timeit()
+    start_pre_ints = time.time()
 
     # Make an integral object
     ints = forte.make_forte_integrals(ref_wfn, options, mo_space_info)
+
+    start = time.time()
 
     # Rotate orbitals before computation
     orb_type = options.get_str("ORBITAL_TYPE")
@@ -389,13 +391,16 @@ def run_forte(name, **kwargs):
     else:
         energy = forte.forte_old_methods(ref_wfn, options, ints, mo_space_info)
 
-    end = timeit.timeit()
-    #print('\n\n  Your calculation took ', (end - start), ' seconds');
+    end = time.time()
 
     # Close ambit, etc.
     forte.cleanup()
 
     psi4.core.set_scalar_variable('CURRENT ENERGY', energy)
+
+    psi4.core.print_out(f'\n\n  Time to prepare integrals: {start - start_pre_ints} seconds')
+    psi4.core.print_out(f  '\n  Time to run job          : {end - start} seconds')
+    psi4.core.print_out(f  '\n  Total                    : {end - start} seconds')
     return ref_wfn
 
 # Integration with driver routines
