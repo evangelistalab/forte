@@ -151,6 +151,9 @@ class ForteIntegrals {
     /// Set printing level
     void set_print(int print);
 
+    /// Update mo_space_info
+    void update_mo_space_info(std::shared_ptr<MOSpaceInfo> mo_space_info);
+
     /// Return the number of auxiliary functions
     virtual size_t nthree() const = 0;
 
