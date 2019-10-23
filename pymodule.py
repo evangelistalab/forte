@@ -325,17 +325,19 @@ def adv_embedding_driver(state, state_weights_map, scf_info, ref_wfn, mo_space_i
     # compute higher-level with mo_space_info_active and methods in options, -> E_high(origin)
     options.set_str('FORTE', 'CORR_LEVEL', frag_corr_level)
     forte.forte_options.update_psi_options(options)
-    energy_high = forte_driver(state_weights_map, scf_info, forte.forte_options, ints, mo_space_info_active)
+    ints_f = forte.make_forte_integrals(ref_wfn, options, mo_space_info_active)
+    energy_high = forte_driver(state_weights_map, scf_info, forte.forte_options, ints_f, mo_space_info_active)
 
     # compute PT2 corrections (E, or CB)
     # rdms_casscf = CASSCF(mo_space_info_active)
-    rdms = forte.build_casscf_density(state, scf_info, options, mo_space_info_active, ints)
+    rdms = forte.build_casscf_density(state, scf_info, options, mo_space_info_active, ints_f)
 
     # DSRG-MRPT2(mo_space_info, rdms_casscf)
     options.set_str('FORTE', 'CORR_LEVEL', env_corr_level)
     forte.forte_options.update_psi_options(options)
+    ints_e = forte.make_forte_integrals(ref_wfn, options, mo_space_info)
     dsrg = forte.make_dsrg_method(options.get_str('ENV_CORRELATION_SOLVER'),
-                                  rdms, scf_info, options, ints, mo_space_info)
+                                  rdms, scf_info, options, ints_e, mo_space_info)
     Edsrg = dsrg.compute_energy()
     # E_corr = Edsrg - E_cas_ref
     # Compute MRDSRG-in-PT2 energy (unfolded)
