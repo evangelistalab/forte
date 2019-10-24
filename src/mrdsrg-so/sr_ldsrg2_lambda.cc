@@ -106,7 +106,12 @@ void MRDSRG_SO::compute_lambda() {
 
 void MRDSRG_SO::build_lambda_numerical(BlockedTensor& C1, BlockedTensor& C2) {
     // 4-point formula: f'(x) = [-f(x+2h) + 8f(x+h) - 8f(x-h) + f(x-2h)] / 12h
-    double h = foptions_->get_double("DSRG_NUMERICAL_LAMBDA_STEPSIZE");
+    double h = foptions_->get_double("DSRG_LAMBDA_FINDIFF_STEPSIZE");
+    int npt = foptions_->get_int("DSRG_LAMBDA_FINDIFF_FORM");
+    std::vector<int> factors {1, -1};
+    if (npt >= 4) {
+        factors = std::vector<int> {2, 1, -1, -2};
+    }
 
     BlockedTensor O1 = ambit::BlockedTensor::build(tensor_type_, "O1", {"cv"});
     BlockedTensor O2 = ambit::BlockedTensor::build(tensor_type_, "O2", {"ccvv"});
@@ -124,25 +129,14 @@ void MRDSRG_SO::build_lambda_numerical(BlockedTensor& C1, BlockedTensor& C2) {
             }
             outfile->Printf("\n  working on %2zu -> %2zu:", i, a);
 
-            std::vector<double> p2;
-            for (int factor: {1, -1}) {
+            std::vector<double> pts;
+            std::vector<double> diag;
+            for (int factor: factors) {
                 T1.block("cv").data()[idx] = t + factor * h;
                 compute_lhbar();
 
                 O1["ia"] = Hbar1["ia"];
                 O2["ijab"] = Hbar2["ijab"];
-
-                T1.block("cv").data()[idx] = t;
-                O1["c0,v0"] -= 1.0 * F["v1,v0"] * T1["c0,v1"];
-                O1["c0,v0"] += 1.0 * F["c1,c0"] * T1["c1,v0"];
-
-                temp["c0,c1,v0,v1"] = 1.0 * F["v2,v0"] * T2["c0,c1,v1,v2"];
-                O2["c0,c1,v0,v1"] += temp["c0,c1,v0,v1"];
-                O2["c0,c1,v1,v0"] -= temp["c0,c1,v0,v1"];
-
-                temp["c0,c1,v0,v1"] = -1.0 * F["c2,c0"] * T2["c1,c2,v0,v1"];
-                O2["c0,c1,v0,v1"] += temp["c0,c1,v0,v1"];
-                O2["c1,c0,v0,v1"] -= temp["c0,c1,v0,v1"];
 
                 O1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
                     double D = Fd[i[0]] - Fd[i[1]];
@@ -154,17 +148,33 @@ void MRDSRG_SO::build_lambda_numerical(BlockedTensor& C1, BlockedTensor& C2) {
                     value *= 1.0 - std::exp(-s_ * D * D);
                 });
 
+                // zero diagonal element
+                double diag_elem = O1.block("cv").data()[idx];
+                O1.block("cv").data()[idx] = 0.0;
+                diag.push_back(diag_elem);
+
                 // add lambda contribution
                 Hbar0 += O1["ia"] * Tbar1["ia"];
                 Hbar0 += 0.25 * O2["ijab"] * Tbar2["ijab"];
 
-                p2.push_back(Hbar0);
+                pts.push_back(Hbar0);
                 outfile->Printf(" X");
             }
+            T1.block("cv").data()[idx] = t;
 
-            double grad = (p2[0] - p2[1]) / (2 * h);
-            C1.block("cv").data()[idx] = grad;
-            C1.block("cv").data()[(i + nc_nmo) * nv_ + (a + nv_nmo)] = grad;
+            double grad, diag_grad;
+            if (npt >= 4) {
+                grad = (-pts[0] + 8 * pts[1] - 8 * pts[2] + pts[3]) / (12 * h);
+                diag_grad = (-diag[0] + 8 * diag[1] - 8 * diag[2] + diag[3]) / (12 * h);
+            } else {
+                grad = (pts[0] - pts[1]) / (2 * h);
+                diag_grad = (diag[0] - diag[1]) / (2 * h);
+            }
+
+            double mp = Fd[acore_sos[i]] - Fd[avirt_sos[a]];
+            double denom = mp * std::exp(-s_ * mp * mp) - diag_grad;
+            C1.block("cv").data()[idx] = grad / denom;
+            C1.block("cv").data()[(i + nc_nmo) * nv_ + (a + nv_nmo)] = grad / denom;
 
             outfile->Printf(" %20.15f, Done.", grad);
         }
@@ -181,8 +191,9 @@ void MRDSRG_SO::build_lambda_numerical(BlockedTensor& C1, BlockedTensor& C2) {
                     }
                     outfile->Printf("\n  working on (%2zu,%2zu) -> (%2zu,%2zu):", i, (j + nc_nmo), a, (b + nv_nmo));
 
-                    std::vector<double> p2;
-                    for (int factor: {1, -1}) {
+                    std::vector<double> pts;
+                    std::vector<double> diag;
+                    for (int factor: factors) {
                         T2.block("ccvv").data()[idx] = t + factor * h;
                         T2.block("ccvv").data()[i * nc_ * nv_ * nv_ + (j + nc_nmo) * nv_ * nv_ + (b + nv_nmo) * nv_ + a] = -t - factor * h;
                         T2.block("ccvv").data()[(j + nc_nmo) * nc_ * nv_ * nv_ + i * nv_ * nv_ + a * nv_ + (b + nv_nmo)] = -t - factor * h;
@@ -191,21 +202,6 @@ void MRDSRG_SO::build_lambda_numerical(BlockedTensor& C1, BlockedTensor& C2) {
 
                         O1["ia"] = Hbar1["ia"];
                         O2["ijab"] = Hbar2["ijab"];
-
-                        T2.block("ccvv").data()[idx] = t;
-                        T2.block("ccvv").data()[i * nc_ * nv_ * nv_ + (j + nc_nmo) * nv_ * nv_ + (b + nv_nmo) * nv_ + a] = -t;
-                        T2.block("ccvv").data()[(j + nc_nmo) * nc_ * nv_ * nv_ + i * nv_ * nv_ + a * nv_ + (b + nv_nmo)] = -t;
-                        T2.block("ccvv").data()[(j + nc_nmo) * nc_ * nv_ * nv_ + i * nv_ * nv_ + (b + nv_nmo) * nv_ + a] = t;
-                        O1["c0,v0"] -= 1.0 * F["v1,v0"] * T1["c0,v1"];
-                        O1["c0,v0"] += 1.0 * F["c1,c0"] * T1["c1,v0"];
-
-                        temp["c0,c1,v0,v1"] = 1.0 * F["v2,v0"] * T2["c0,c1,v1,v2"];
-                        O2["c0,c1,v0,v1"] += temp["c0,c1,v0,v1"];
-                        O2["c0,c1,v1,v0"] -= temp["c0,c1,v0,v1"];
-
-                        temp["c0,c1,v0,v1"] = -1.0 * F["c2,c0"] * T2["c1,c2,v0,v1"];
-                        O2["c0,c1,v0,v1"] += temp["c0,c1,v0,v1"];
-                        O2["c1,c0,v0,v1"] -= temp["c0,c1,v0,v1"];
 
                         O1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
                             double D = Fd[i[0]] - Fd[i[1]];
@@ -217,20 +213,39 @@ void MRDSRG_SO::build_lambda_numerical(BlockedTensor& C1, BlockedTensor& C2) {
                             value *= 1.0 - std::exp(-s_ * D * D);
                         });
 
+                        // zero diagonal element
+                        double diag_elem = O2.block("ccvv").data()[idx];
+                        O2.block("ccvv").data()[idx] = 0.0;
+                        diag.push_back(diag_elem);
+
                         // add lambda contribution
                         Hbar0 *= 4.0;
                         Hbar0 += 4.0 * O1["ia"] * Tbar1["ia"];
                         Hbar0 += O2["ijab"] * Tbar2["ijab"];
 
-                        p2.push_back(Hbar0);
+                        pts.push_back(Hbar0);
                         outfile->Printf(" X");
                     }
+                    T2.block("ccvv").data()[idx] = t;
+                    T2.block("ccvv").data()[i * nc_ * nv_ * nv_ + (j + nc_nmo) * nv_ * nv_ + (b + nv_nmo) * nv_ + a] = -t;
+                    T2.block("ccvv").data()[(j + nc_nmo) * nc_ * nv_ * nv_ + i * nv_ * nv_ + a * nv_ + (b + nv_nmo)] = -t;
+                    T2.block("ccvv").data()[(j + nc_nmo) * nc_ * nv_ * nv_ + i * nv_ * nv_ + (b + nv_nmo) * nv_ + a] = t;
 
-                    double grad = (p2[0] - p2[1]) / (2 * h);
-                    C2.block("ccvv").data()[idx] = grad;
-                    C2.block("ccvv").data()[i * nc_ * nv_ * nv_ + (j + nc_nmo) * nv_ * nv_ + (b + nv_nmo) * nv_ + a] = -grad;
-                    C2.block("ccvv").data()[(j + nc_nmo) * nc_ * nv_ * nv_ + i * nv_ * nv_ + a * nv_ + (b + nv_nmo)] = -grad;
-                    C2.block("ccvv").data()[(j + nc_nmo) * nc_ * nv_ * nv_ + i * nv_ * nv_ + (b + nv_nmo) * nv_ + a] = grad;
+                    double grad, diag_grad;
+                    if (npt >= 4) {
+                        grad = (-pts[0] + 8 * pts[1] - 8 * pts[2] + pts[3]) / (12 * h);
+                        diag_grad = (-diag[0] + 8 * diag[1] - 8 * diag[2] + diag[3]) / (12 * h);
+                    } else {
+                        grad = (pts[0] - pts[1]) / (2 * h);
+                        diag_grad = (diag[0] - diag[1]) / (2 * h);
+                    }
+
+                    double mp = Fd[acore_sos[i]] + Fd[acore_sos[j]] - Fd[avirt_sos[a]] - Fd[avirt_sos[b]];
+                    double denom = mp * std::exp(-s_ * mp * mp) - diag_grad;
+                    C2.block("ccvv").data()[idx] = grad / denom;
+                    C2.block("ccvv").data()[i * nc_ * nv_ * nv_ + (j + nc_nmo) * nv_ * nv_ + (b + nv_nmo) * nv_ + a] = -grad / denom;
+                    C2.block("ccvv").data()[(j + nc_nmo) * nc_ * nv_ * nv_ + i * nv_ * nv_ + a * nv_ + (b + nv_nmo)] = -grad / denom;
+                    C2.block("ccvv").data()[(j + nc_nmo) * nc_ * nv_ * nv_ + i * nv_ * nv_ + (b + nv_nmo) * nv_ + a] = grad / denom;
 
                     outfile->Printf(" %20.15f, Done.", grad);
                 }
