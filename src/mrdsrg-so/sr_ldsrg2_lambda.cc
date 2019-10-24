@@ -50,9 +50,6 @@ void MRDSRG_SO::compute_lambda() {
     BlockedTensor C1 = BTF_->build(tensor_type_, "C1 Lambda", {"cv"});
     BlockedTensor C2 = BTF_->build(tensor_type_, "C2 Lambda", {"ccvv"});
 
-    Tbar1["ia"] = T1["ia"];
-    Tbar2["ijab"] = T2["ijab"];
-
     // start iteration
     outfile->Printf("\n\n  ==> Lambda Iterations <==\n");
     outfile->Printf("\n    "
@@ -65,17 +62,24 @@ void MRDSRG_SO::compute_lambda() {
 
     int maxiter = foptions_->get_int("MAXITER");
     int cycle = 0;
+    T1norm = 0.0;
+    T2norm = 0.0;
+    T1max = 0.0;
+    T2max = 0.0;
     Tbar1_diff = 0.0;
     Tbar2_diff = 0.0;
+
     for (int i = 0; i < maxiter; ++i) {
         C1.zero();
         C2.zero();
 
-        compute_lambda_comm1(F, V, Tbar1, Tbar2, C1, C2);
-        compute_lambda_comm2(F, V, T1, T2, Tbar1, Tbar2, C1, C2);
-        compute_lambda_comm3(F, V, T1, T2, Tbar1, Tbar2, C1, C2);
-        compute_lambda_comm4(F, V, T1, T2, Tbar1, Tbar2, C1, C2);
-        compute_lambda_comm5(F, V, T1, T2, C1, C2);
+        build_lambda_numerical(C1, C2);
+
+        //        compute_lambda_comm1(F, V, Tbar1, Tbar2, C1, C2);
+        //        compute_lambda_comm2(F, V, T1, T2, Tbar1, Tbar2, C1, C2);
+        //        compute_lambda_comm3(F, V, T1, T2, Tbar1, Tbar2, C1, C2);
+        //        compute_lambda_comm4(F, V, T1, T2, Tbar1, Tbar2, C1, C2);
+        //        compute_lambda_comm5(F, V, T1, T2, C1, C2);
 
         outfile->Printf("\n      @CT %4d %7.4f %7.4f %7.4f %7.4f %7.4f %7.4f", cycle, T1norm,
                         T2norm, Tbar1_diff, Tbar2_diff, T1max, T2max);
@@ -97,6 +101,172 @@ void MRDSRG_SO::compute_lambda() {
         outfile->Printf("\n\n\tThe calculation did not converge in %d "
                         "cycles\n\tQuitting.\n",
                         maxiter);
+    }
+}
+
+void MRDSRG_SO::build_lambda_numerical(BlockedTensor& C1, BlockedTensor& C2) {
+    // 4-point formula: f'(x) = [-f(x+2h) + 8f(x+h) - 8f(x-h) + f(x-2h)] / 12h
+    double h = foptions_->get_double("DSRG_NUMERICAL_LAMBDA_STEPSIZE");
+
+    BlockedTensor O1 = ambit::BlockedTensor::build(tensor_type_, "O1", {"cv"});
+    BlockedTensor O2 = ambit::BlockedTensor::build(tensor_type_, "O2", {"ccvv"});
+
+    // T1 gradient
+    size_t nc_nmo = acore_sos.size();
+    size_t nv_nmo = avirt_sos.size();
+    for (size_t i = 0; i < nc_nmo; ++i) {
+        for (size_t a = 0; a < nv_nmo; ++a) {
+            size_t idx = i * nv_ + a;
+
+            outfile->Printf("\n  working on %2zu -> %2zu:", acore_sos[i], avirt_sos[a]);
+            double t = T1.block("cv").data()[idx];
+            if (fabs(t) < 1.0e-12) {
+                continue;
+            }
+
+            std::vector<double> quartet;
+
+            for (double factor: {2, 1, -1, 2}) {
+                T1.block("cv").data()[idx] = t + factor * h;
+
+                compute_lhbar();
+
+                // Htilde = Hbar - [F, A]
+                O1["ia"] = Hbar1["ia"];
+                O2["ijab"] = Hbar2["ijab"];
+
+                O1["c0,v0"] += -1.0 * F["v0,v1"] * T1["c0,v1"];
+                O1["c0,v0"] += 1.0 * F["c0,c1"] * T1["c1,v0"];
+
+                O2["c0,c1,v0,v1"] += -1.0 * F["v0,v2"] * T2["c0,c1,v2,v1"];
+                O2["c0,c1,v1,v0"] += 1.0 * F["v0,v2"] * T2["c0,c1,v2,v1"];
+                O2["c0,c1,v0,v1"] += 1.0 * F["c0,c2"] * T2["c2,c1,v0,v1"];
+                O2["c1,c0,v0,v1"] += -1.0 * F["c0,c2"] * T2["c2,c1,v0,v1"];
+
+                // scale Htilde by (1 - e^(-s * D^2))
+                O1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+                    double D = Fd[i[0]] - Fd[i[1]];
+                    value *= 1.0 - std::exp(-s_ * D * D);
+                });
+
+                O2.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+                    double D = Fd[i[0]] + Fd[i[1]] - Fd[i[2]] - Fd[i[3]];
+                    value *= 1.0 - std::exp(-s_ * D * D);
+                });
+
+                // add lambda contribution
+                Hbar0 += O1["ia"] * Tbar1["ia"];
+                Hbar0 += 0.25 * O2["ijab"] * Tbar2["ijab"];
+
+                quartet.push_back(Hbar0);
+                outfile->Printf(" X");
+            }
+
+            double grad = (-quartet[0] + 8 * quartet[1] - 8 * quartet[2] + quartet[3]) / (12 * h);
+            C1.block("cv").data()[idx] = grad;
+            C1.block("cv").data()[(i + nc_nmo) * nv_ + a + nv_] = grad;
+
+            T1.block("cv").data()[idx] = t;
+            outfile->Printf(" %20.15f, Done.", grad);
+        }
+    }
+
+    // T2 gradient (alpha-beta)
+    for (size_t i = 0; i < nc_nmo; ++i) {
+        for (size_t j = 0; j < nc_nmo; ++j) {
+            bool ij = j < i;
+
+            for (size_t a = 0; a < nv_nmo; ++a) {
+                for (size_t b = 0; b < nv_nmo; ++b) {
+                    bool ab = a != b;
+
+                    size_t idx = i * nc_ * nv_ * nv_ + (j + nc_nmo) * nv_ * nv_ + a * nv_ + (b + nv_nmo);
+
+                    outfile->Printf("\n  working on (%2zu,%2zu) -> (%2zu,%2zu):", acore_sos[i], acore_sos[j],
+                                    avirt_sos[a], avirt_sos[b]);
+                    double t = T2.block("ccvv").data()[idx];
+                    if (fabs(t) < 1.0e-12) {
+                        continue;
+                    }
+
+                    std::vector<double> quartet;
+
+                    for (double factor: {2, 1, -1, 2}) {
+                        T2.block("ccvv").data()[idx] = t + factor * h;
+
+                        compute_lhbar();
+
+                        // Htilde = Hbar - [F, A]
+                        O1["ia"] = Hbar1["ia"];
+                        O2["ijab"] = Hbar2["ijab"];
+
+                        O1["c0,v0"] += -1.0 * F["v0,v1"] * T1["c0,v1"];
+                        O1["c0,v0"] += 1.0 * F["c0,c1"] * T1["c1,v0"];
+
+                        O2["c0,c1,v0,v1"] += -1.0 * F["v0,v2"] * T2["c0,c1,v2,v1"];
+                        O2["c0,c1,v1,v0"] += 1.0 * F["v0,v2"] * T2["c0,c1,v2,v1"];
+                        O2["c0,c1,v0,v1"] += 1.0 * F["c0,c2"] * T2["c2,c1,v0,v1"];
+                        O2["c1,c0,v0,v1"] += -1.0 * F["c0,c2"] * T2["c2,c1,v0,v1"];
+
+                        // scale Htilde by (1 - e^(-s * D^2))
+                        O1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+                            double D = Fd[i[0]] - Fd[i[1]];
+                            value *= 1.0 - std::exp(-s_ * D * D);
+                        });
+
+                        O2.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+                            double D = Fd[i[0]] + Fd[i[1]] - Fd[i[2]] - Fd[i[3]];
+                            value *= 1.0 - std::exp(-s_ * D * D);
+                        });
+
+                        // add lambda contribution
+                        Hbar0 *= 4.0;
+                        Hbar0 += 4.0 * O1["ia"] * Tbar1["ia"];
+                        Hbar0 += O2["ijab"] * Tbar2["ijab"];
+
+                        quartet.push_back(Hbar0);
+                        outfile->Printf(" X");
+                    }
+
+                    double grad = (-quartet[0] + 8 * quartet[1] - 8 * quartet[2] + quartet[3]) / (12 * h);
+                    C2.block("ccvv").data()[idx] = grad;
+
+//                    if (ij and ab) {
+//                        C2.block("ccvv").data()[j * nc_ * nv_ * nv_ + (i + nc_) * nv_ * nv_ + b * nv_ + (a + nv_)] = grad;
+//                    }
+
+//                    if (ij) {
+//                        C2.block("ccvv").data()[j * nc_ * nv_ * nv_ + (i + nc_) * nv_ * nv_ + a * nv_ + (b + nv_)] = -grad;
+//                    }
+
+//                    if (ab) {
+//                        C2.block("ccvv").data()[i * nc_ * nv_ * nv_ + (j + nc_) * nv_ * nv_ + b * nv_ + (a + nv_)] = -grad;
+//                    }
+
+                    T2.block("ccvv").data()[idx] = t;
+                    outfile->Printf(" %20.15f, Done.", grad);
+                }
+            }
+        }
+    }
+
+    for (size_t i = 0; i < nc_nmo; ++i) {
+        for (size_t j = 0; j < nc_nmo; ++j) {
+            for (size_t a = 0; a < nv_nmo; ++a) {
+                for (size_t b = 0; b < nv_nmo; ++b) {
+
+                    auto ijab = C2.block("ccvv").data()[i * nc_ * nv_ * nv_ + (j + nc_nmo) * nv_ * nv_ + a * nv_ + (b + nv_nmo)];
+                    auto ijba = C2.block("ccvv").data()[i * nc_ * nv_ * nv_ + (j + nc_nmo) * nv_ * nv_ + b * nv_ + (a + nv_nmo)];
+
+                    C2.block("ccvv").data()[i * nc_ * nv_ * nv_ + j * nv_ * nv_ + a * nv_ + b] = ijab - ijba;
+                    C2.block("ccvv").data()[(i + nc_nmo) * nc_ * nv_ * nv_ + (j + nc_nmo) * nv_ * nv_ + (a + nv_nmo) * nv_ + (b + nv_nmo)] = ijab - ijba;
+
+                    C2.block("ccvv").data()[(i + nc_nmo) * nc_ * nv_ * nv_ + j * nv_ * nv_ + (a + nv_nmo) * nv_ + b] = ijab;
+                    C2.block("ccvv").data()[i * nc_ * nv_ * nv_ + (j + nc_nmo) * nv_ * nv_ + (a + nv_nmo) * nv_ + b] = -ijba;
+                    C2.block("ccvv").data()[(i + nc_nmo) * nc_ * nv_ * nv_ + j * nv_ * nv_ + a * nv_ + (b + nv_nmo)] = -ijba;
+                }
+            }
+        }
     }
 }
 

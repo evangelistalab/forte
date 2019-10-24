@@ -285,7 +285,9 @@ class MRDSRG_SO : public DynamicCorrelationSolver {
     double E4th_correction_t3();
     void compute_3rd_order_hbar(BlockedTensor& X1, BlockedTensor& X2);
     void compute_2nd_order_t3();
-    double E4th_correction_lambda(BlockedTensor& C1, BlockedTensor& C2);
+    double E4th_correction_lambda(BlockedTensor& C1, BlockedTensor& C2); // Lambda-(T) variant
+    double E4th_correction_lambda_1(BlockedTensor& C1, BlockedTensor& C2); // (T) variant
+    double E4th_correction_lambda_2(BlockedTensor& C1, BlockedTensor& C2); // [T] variant
 
     // => LDSRG(2*) corrections <=
     int ldsrg2_correction_ = 0;
@@ -307,6 +309,7 @@ class MRDSRG_SO : public DynamicCorrelationSolver {
     double Tbar2_diff;
 
     void compute_lambda();
+    void build_lambda_numerical(BlockedTensor& C1, BlockedTensor& C2);
     void update_lambda(BlockedTensor& C1, BlockedTensor& C2);
     void compute_lambda_comm1(BlockedTensor& H1, BlockedTensor& H2, BlockedTensor& L1,
                               BlockedTensor& L2, BlockedTensor& C1, BlockedTensor& C2);

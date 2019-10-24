@@ -57,10 +57,12 @@ std::vector<double> MRDSRG_SO::E4th_correction(){
     // compute 3rd-order T2 contribution
     double e2 = E4th_correction_t2(C1, C2);
 
-    // compute lambda contribution (alternative to 3rd-order T2)
-    double e3 = E4th_correction_lambda(C1, C2);
+    // compute lambda contribution (T variant)
+    double e3 = E4th_correction_lambda_1(C1, C2);
+    double e4 = E4th_correction_lambda_2(C1, C2);
+    double e5 = E4th_correction_lambda(C1, C2);
 
-    return {e1, e2, e3};
+    return {e1, e2, e3, e4, e5};
 }
 
 void MRDSRG_SO::compute_2nd_order_t3(){
@@ -138,30 +140,6 @@ double MRDSRG_SO::E4th_correction_t3(){
     C0 += (-1.0 / 4.0) * F["c1,c0"] * T1["c0,v0"] * T2["c2,c3,v1,v2"] * T3["c1,c2,c3,v0,v1,v2"];
     C0 += (1.0 / 2.0) * F["c1,c0"] * T1["c2,v0"] * T2["c0,c3,v1,v2"] * T3["c1,c2,c3,v0,v1,v2"];
 
-//    C0 += (1.0 / 12.0) * F["v1,v0"] * T3["c0,c1,c2,v0,v2,v3"] * T3["c0,c1,c2,v1,v2,v3"];
-//    C0 += (-1.0 / 12.0) * F["c1,c0"] * T3["c0,c2,c3,v0,v1,v2"] * T3["c1,c2,c3,v0,v1,v2"];
-//    C0 += (-1.0 / 4.0) * V["v1,c1,v0,c0"] * T3["c0,c2,c3,v1,v2,v3"] * T3["c1,c2,c3,v0,v2,v3"];
-//    C0 += (1.0 / 24.0) * V["v2,v3,v0,v1"] * T3["c0,c1,c2,v0,v1,v4"] * T3["c0,c1,c2,v2,v3,v4"];
-//    C0 += (1.0 / 24.0) * V["c2,c3,c0,c1"] * T3["c0,c1,c4,v0,v1,v2"] * T3["c2,c3,c4,v0,v1,v2"];
-
-//    C0 += (1.0 / 4.0) * F["c0,v0"] * T2["c1,c2,v1,v2"] * T3["c0,c1,c2,v0,v1,v2"];
-//    C0 += (-1.0 / 2.0) * V["v2,c0,v0,v1"] * T2["c1,c2,v2,v3"] * T3["c0,c1,c2,v0,v1,v3"];
-//    C0 += (1.0 / 4.0) * V["c0,c1,v0,v1"] * T1["c2,v2"] * T3["c0,c1,c2,v0,v1,v2"];
-//    C0 += (-1.0 / 2.0) * V["c1,c2,v0,c0"] * T2["c0,c3,v1,v2"] * T3["c1,c2,c3,v0,v1,v2"];
-
-//    C0 += (1.0 / 4.0) * F["v1,v0"] * T1["c0,v0"] * T2["c1,c2,v2,v3"] * T3["c0,c1,c2,v1,v2,v3"];
-//    C0 += (-1.0 / 2.0) * F["v1,v0"] * T1["c0,v2"] * T2["c1,c2,v0,v3"] * T3["c0,c1,c2,v1,v2,v3"];
-//    C0 += (-1.0 / 4.0) * F["c1,c0"] * T1["c0,v0"] * T2["c2,c3,v1,v2"] * T3["c1,c2,c3,v0,v1,v2"];
-//    C0 += (1.0 / 2.0) * F["c1,c0"] * T1["c2,v0"] * T2["c0,c3,v1,v2"] * T3["c1,c2,c3,v0,v1,v2"];
-//    C0 += 1.0 * V["v1,c1,v0,c0"] * T1["c0,v2"] * T2["c2,c3,v1,v3"] * T3["c1,c2,c3,v0,v2,v3"];
-//    C0 += (-1.0 / 4.0) * V["v1,c1,v0,c0"] * T1["c1,v0"] * T2["c2,c3,v2,v3"] * T3["c0,c2,c3,v1,v2,v3"];
-//    C0 += 1.0 * V["v1,c1,v0,c0"] * T1["c2,v0"] * T2["c1,c3,v2,v3"] * T3["c0,c2,c3,v1,v2,v3"];
-//    C0 += -1.0 * V["v1,c1,v0,c0"] * T1["c2,v2"] * T2["c1,c3,v0,v3"] * T3["c0,c2,c3,v1,v2,v3"];
-//    C0 += (1.0 / 2.0) * V["v2,v3,v0,v1"] * T1["c0,v0"] * T2["c1,c2,v1,v4"] * T3["c0,c1,c2,v2,v3,v4"];
-//    C0 += (1.0 / 8.0) * V["v2,v3,v0,v1"] * T1["c0,v4"] * T2["c1,c2,v0,v1"] * T3["c0,c1,c2,v2,v3,v4"];
-//    C0 += (1.0 / 2.0) * V["c2,c3,c0,c1"] * T1["c0,v0"] * T2["c1,c4,v1,v2"] * T3["c2,c3,c4,v0,v1,v2"];
-//    C0 += (1.0 / 8.0) * V["c2,c3,c0,c1"] * T1["c4,v0"] * T2["c0,c1,v1,v2"] * T3["c2,c3,c4,v0,v1,v2"];
-
     return C0;
 }
 
@@ -194,21 +172,87 @@ void MRDSRG_SO::compute_3rd_order_hbar(BlockedTensor& C1, BlockedTensor& C2){
 
 double MRDSRG_SO::E4th_correction_lambda(BlockedTensor& C1, BlockedTensor& C2){
     double C0 = 0.0;
+    Tbar1 = BTF_->build(tensor_type_, "Tbar1", {"cv"});
+    Tbar2 = BTF_->build(tensor_type_, "Tbar2", {"ccvv"});
+
+    compute_lambda();
 
     C1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
         double D = Fd[i[0]] - Fd[i[1]];
-        value *= 1.0 + std::exp(-s_ * D * D);
+        value *= 1.0 - std::exp(-s_ * D * D);
     });
 
     C2.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
         double D = Fd[i[0]] + Fd[i[1]] - Fd[i[2]] - Fd[i[3]];
-        value *= 1.0 + std::exp(-s_ * D * D);
+        value *= 1.0 - std::exp(-s_ * D * D);
     });
-
-    compute_lambda();
 
     C0 += C1["ia"] * Tbar1["ia"];
     C0 += 0.25 * C2["ijab"] * Tbar2["ijab"];
+
+    return C0;
+}
+
+double MRDSRG_SO::E4th_correction_lambda_1(BlockedTensor& C1, BlockedTensor& C2){
+    double C0 = 0.0;
+
+    Tbar1 = BTF_->build(tensor_type_, "Tbar1", {"cv"});
+    Tbar2 = BTF_->build(tensor_type_, "Tbar2", {"ccvv"});
+
+    Tbar1["ia"] = T1["ia"];
+    Tbar2["ijab"] = T2["ijab"];
+
+    Tbar1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+        double D = Fd[i[0]] - Fd[i[1]];
+        value *= 1.0 - std::exp(-s_ * D * D);
+    });
+
+    Tbar2.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+        double D = Fd[i[0]] + Fd[i[1]] - Fd[i[2]] - Fd[i[3]];
+        value *= 1.0 - std::exp(-s_ * D * D);
+    });
+
+    C0 -= 2.0 * C1["ia"] * Tbar1["ia"];
+    C0 -= 0.5 * C2["ijab"] * Tbar2["ijab"];
+
+    Tbar1["ia"] = F["ia"];
+    Tbar2["ijab"] = V["ijab"];
+
+    Tbar1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+        value *= renormalized_denominator(Fd[i[0]] - Fd[i[1]]);
+    });
+
+    Tbar2.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+        value *= renormalized_denominator(Fd[i[0]] + Fd[i[1]] - Fd[i[2]] - Fd[i[3]]);
+    });
+
+    C0 += 2.0 * C1["ia"] * Tbar1["ia"];
+    C0 += 0.5 * C2["ijab"] * Tbar2["ijab"];
+
+    return C0;
+}
+
+double MRDSRG_SO::E4th_correction_lambda_2(BlockedTensor& C1, BlockedTensor& C2){
+    double C0 = 0.0;
+
+    Tbar1 = BTF_->build(tensor_type_, "Tbar1", {"cv"});
+    Tbar2 = BTF_->build(tensor_type_, "Tbar2", {"ccvv"});
+
+    Tbar1["ia"] = T1["ia"];
+    Tbar2["ijab"] = T2["ijab"];
+
+    Tbar1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+        double D = Fd[i[0]] - Fd[i[1]];
+        value *= std::exp(-s_ * D * D);
+    });
+
+    Tbar2.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+        double D = Fd[i[0]] + Fd[i[1]] - Fd[i[2]] - Fd[i[3]];
+        value *= std::exp(-s_ * D * D);
+    });
+
+    C0 += 2.0 * C1["ia"] * Tbar1["ia"];
+    C0 += 0.5 * C2["ijab"] * Tbar2["ijab"];
 
     return C0;
 }

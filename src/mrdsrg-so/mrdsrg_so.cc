@@ -785,18 +785,23 @@ double MRDSRG_SO::compute_energy() {
     outfile->Printf("\n  * Total energy            = %25.15f\n", Etotal);
 
     std::vector<double> e4th_corr = E4th_correction();
-    outfile->Printf("\n\n    T corr. 2nd-order T3  = %25.15f", e4th_corr[0]);
+    outfile->Printf("\n\n    T corr. direct  = %25.15f", e4th_corr[0]);
     outfile->Printf("\n    T corr. 3rd-order T   = %25.15f", e4th_corr[1]);
-    outfile->Printf("\n    T corr. 1st-order L   = %25.15f", e4th_corr[2]);
+    outfile->Printf("\n    T corr. 1st-order L/1 = %25.15f", e4th_corr[2]);
+    outfile->Printf("\n    T corr. 1st-order L/2 = %25.15f", e4th_corr[3]);
+    outfile->Printf("\n    T corr. 1st-order L   = %25.15f", e4th_corr[4]);
 
-    double t1 = e4th_corr[0] + e4th_corr[1];
+    double t1 = e4th_corr[0] + e4th_corr[3];
     double t2 = e4th_corr[0] + e4th_corr[2];
+    double t3 = e4th_corr[0] + e4th_corr[4];
     outfile->Printf("\n  * [T] correction        = %25.15f", t1);
     outfile->Printf("\n  * (T) correction        = %25.15f", t2);
+    outfile->Printf("\n  * λ(T) correction       = %25.15f", t3);
 
     psi::Process::environment.globals["CURRENT ENERGY"] = Etotal;
     psi::Process::environment.globals["[T] ENERGY"] = Etotal + t1;
     psi::Process::environment.globals["(T) ENERGY"] = Etotal + t2;
+    psi::Process::environment.globals["L-(T) ENERGY"] = Etotal + t3;
 
     return Etotal;
 }
