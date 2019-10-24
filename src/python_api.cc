@@ -229,7 +229,7 @@ PYBIND11_MODULE(forte, m) {
         .def("rotate_orbitals", &ForteIntegrals::rotate_orbitals)
         .def("nmo", &ForteIntegrals::nmo)
         .def("ncmo", &ForteIntegrals::ncmo)
-        .def("update_mo_space_info", &ForteIntegrals::update_mo_space_info);
+        .def("build_from_asints", &ForteIntegrals::build_from_asints);
 
     // export StateInfo
     py::class_<StateInfo, std::shared_ptr<StateInfo>>(m, "StateInfo")

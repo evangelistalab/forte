@@ -40,6 +40,7 @@
 #include "helpers/timer.h"
 
 #include "conventional_integrals.h"
+#include "integrals/active_space_integrals.h"
 
 #define ID(x) integral_transform->DPD_ID(x)
 
@@ -191,6 +192,32 @@ void ConventionalIntegrals::set_tei(size_t p, size_t q, size_t r, size_t s, doub
         aphys_tei_ab[index] = value;
     if (alpha1 == false and alpha2 == false)
         aphys_tei_bb[index] = value;
+}
+
+void ConventionalIntegrals::set_tei_from_asints(std::shared_ptr<ActiveSpaceIntegrals> as_ints, bool alpha1, bool alpha2) {
+    for (size_t p = 0; p < ncmo_; ++p) {
+        for (size_t q = 0; q < ncmo_; ++q) {
+            for (size_t r = 0; r < ncmo_; ++r) {
+                for (size_t s = 0; s < ncmo_; ++s) {
+                    size_t index = aptei_index(p, q, r, s);
+                    if (alpha1 == true and alpha2 == true)
+                        aphys_tei_aa[index] = as_ints->tei_aa(p, q, r, s);
+                    if (alpha1 == true and alpha2 == false)
+                        aphys_tei_ab[index] = as_ints->tei_ab(p, q, r, s);
+                    if (alpha1 == false and alpha2 == false)
+                        aphys_tei_bb[index] = as_ints->tei_bb(p, q, r, s);
+                }
+            }
+        }
+    }
+}
+
+void ConventionalIntegrals::build_from_asints(std::shared_ptr<ActiveSpaceIntegrals> as_ints) {
+    set_oei_from_asints(as_ints, true);
+    set_oei_from_asints(as_ints, false);
+    set_tei_from_asints(as_ints, true, true);
+    set_tei_from_asints(as_ints, true, false);
+    set_tei_from_asints(as_ints, false, false);
 }
 
 void ConventionalIntegrals::gather_integrals() {

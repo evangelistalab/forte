@@ -158,7 +158,7 @@ def register_embedding_options(forte_options):
     forte_options.add_int("FRAGMENT_ACTIVE", 0, "fragment active")
     forte_options.add_int("FRAGMENT_RUOCC", 0, "fragment restricted_uocc")
     forte_options.add_str(
-        'FRAGMENT_DENSITY', 'CASSCF', ['CASSCF', 'RHF', 'MRDSRG'],
+        'FRAGMENT_DENSITY', 'RHF', ['CASSCF', 'RHF', 'FCI'],
         'The real/approximate RDMs used in the correlative environment computation')
     forte_options.add_str(
         'ENV_CORRELATION_SOLVER', 'MRDSRG',

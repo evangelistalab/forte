@@ -51,6 +51,7 @@
 #include "helpers/timer.h"
 #include "integrals.h"
 #include "memory.h"
+#include "integrals/active_space_integrals.h"
 
 #ifdef HAVE_GA
 #include <ga.h>
@@ -304,6 +305,15 @@ void ForteIntegrals::set_oei(double** ints, bool alpha) {
     for (size_t p = 0; p < aptei_idx_; ++p) {
         for (size_t q = 0; q < aptei_idx_; ++q) {
             p_oei[p * aptei_idx_ + q] = ints[p][q];
+        }
+    }
+}
+
+void ForteIntegrals::set_oei_from_asints(std::shared_ptr<ActiveSpaceIntegrals> as_ints, bool alpha) {
+    std::vector<double>& p_oei = alpha ? one_electron_integrals_a_ : one_electron_integrals_b_;
+    for (size_t p = 0; p < aptei_idx_; ++p) {
+        for (size_t q = 0; q < aptei_idx_; ++q) {
+            p_oei[p * aptei_idx_ + q] = alpha ? as_ints->oei_a(p, q) : as_ints->oei_b(p, q);
         }
     }
 }

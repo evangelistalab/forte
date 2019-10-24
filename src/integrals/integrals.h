@@ -50,6 +50,7 @@ namespace forte {
 
 class ForteOptions;
 class MOSpaceInfo;
+class ActiveSpaceIntegrals;
 
 /**
  * @brief The IntegralSpinRestriction enum
@@ -242,9 +243,16 @@ class ForteIntegrals {
     /// @param alpha the spin type of the integrals
     void set_oei(size_t p, size_t q, double value, bool alpha);
 
+    /// Set the value of the one-electron integrals from an as_ints
+    void set_oei_from_asints(std::shared_ptr<ActiveSpaceIntegrals> as_ints, bool alpha);
+
     /// Set the value of the two-electron integrals
     virtual void set_tei(size_t p, size_t q, size_t r, size_t s, double value, bool alpha1,
                          bool alpha2) = 0;
+
+    virtual void set_tei_from_asints(std::shared_ptr<ActiveSpaceIntegrals> as_ints, bool alpha1, bool alpha2);
+
+    virtual void build_from_asints(std::shared_ptr<ActiveSpaceIntegrals> as_ints);
 
     /// Rotate the MO coefficients, update psi::Wavefunction, and re-transform integrals
     /// @param Ua the alpha unitary transformation matrix
