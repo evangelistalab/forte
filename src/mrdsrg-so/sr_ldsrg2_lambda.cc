@@ -110,40 +110,37 @@ void MRDSRG_SO::build_lambda_numerical(BlockedTensor& C1, BlockedTensor& C2) {
 
     BlockedTensor O1 = ambit::BlockedTensor::build(tensor_type_, "O1", {"cv"});
     BlockedTensor O2 = ambit::BlockedTensor::build(tensor_type_, "O2", {"ccvv"});
+    auto temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"ccvv"});
 
-    // T1 gradient
-    size_t nc_nmo = acore_sos.size();
-    size_t nv_nmo = avirt_sos.size();
-    for (size_t i = 0; i < nc_nmo; ++i) {
-        for (size_t a = 0; a < nv_nmo; ++a) {
+    for (size_t i = 0; i < nc_; ++i) {
+        for (size_t a = 0; a < nv_; ++a) {
             size_t idx = i * nv_ + a;
-
-            outfile->Printf("\n  working on %2zu -> %2zu:", acore_sos[i], avirt_sos[a]);
             double t = T1.block("cv").data()[idx];
-            if (fabs(t) < 1.0e-12) {
+            if(fabs(t) < 1.0e-12) {
                 continue;
             }
+            outfile->Printf("\n  working on %2zu -> %2zu:", i, a);
 
-            std::vector<double> quartet;
-
-            for (double factor: {2, 1, -1, 2}) {
+            std::vector<double> p2;
+            for (int factor: {1, -1}) {
                 T1.block("cv").data()[idx] = t + factor * h;
-
                 compute_lhbar();
 
-                // Htilde = Hbar - [F, A]
                 O1["ia"] = Hbar1["ia"];
                 O2["ijab"] = Hbar2["ijab"];
 
-                O1["c0,v0"] += -1.0 * F["v0,v1"] * T1["c0,v1"];
-                O1["c0,v0"] += 1.0 * F["c0,c1"] * T1["c1,v0"];
+                T1.block("cv").data()[idx] = t;
+                O1["c0,v0"] -= 1.0 * F["v1,v0"] * T1["c0,v1"];
+                O1["c0,v0"] += 1.0 * F["c1,c0"] * T1["c1,v0"];
 
-                O2["c0,c1,v0,v1"] += -1.0 * F["v0,v2"] * T2["c0,c1,v2,v1"];
-                O2["c0,c1,v1,v0"] += 1.0 * F["v0,v2"] * T2["c0,c1,v2,v1"];
-                O2["c0,c1,v0,v1"] += 1.0 * F["c0,c2"] * T2["c2,c1,v0,v1"];
-                O2["c1,c0,v0,v1"] += -1.0 * F["c0,c2"] * T2["c2,c1,v0,v1"];
+                temp["c0,c1,v0,v1"] = 1.0 * F["v2,v0"] * T2["c0,c1,v1,v2"];
+                O2["c0,c1,v0,v1"] += temp["c0,c1,v0,v1"];
+                O2["c0,c1,v1,v0"] -= temp["c0,c1,v0,v1"];
 
-                // scale Htilde by (1 - e^(-s * D^2))
+                temp["c0,c1,v0,v1"] = -1.0 * F["c2,c0"] * T2["c1,c2,v0,v1"];
+                O2["c0,c1,v0,v1"] += temp["c0,c1,v0,v1"];
+                O2["c1,c0,v0,v1"] -= temp["c0,c1,v0,v1"];
+
                 O1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
                     double D = Fd[i[0]] - Fd[i[1]];
                     value *= 1.0 - std::exp(-s_ * D * D);
@@ -158,57 +155,48 @@ void MRDSRG_SO::build_lambda_numerical(BlockedTensor& C1, BlockedTensor& C2) {
                 Hbar0 += O1["ia"] * Tbar1["ia"];
                 Hbar0 += 0.25 * O2["ijab"] * Tbar2["ijab"];
 
-                quartet.push_back(Hbar0);
+                p2.push_back(Hbar0);
                 outfile->Printf(" X");
             }
 
-            double grad = (-quartet[0] + 8 * quartet[1] - 8 * quartet[2] + quartet[3]) / (12 * h);
+            double grad = (p2[0] - p2[1]) / (2 * h);
             C1.block("cv").data()[idx] = grad;
-            C1.block("cv").data()[(i + nc_nmo) * nv_ + a + nv_] = grad;
 
-            T1.block("cv").data()[idx] = t;
             outfile->Printf(" %20.15f, Done.", grad);
         }
     }
 
-    // T2 gradient (alpha-beta)
-    for (size_t i = 0; i < nc_nmo; ++i) {
-        for (size_t j = 0; j < nc_nmo; ++j) {
-            bool ij = j < i;
-
-            for (size_t a = 0; a < nv_nmo; ++a) {
-                for (size_t b = 0; b < nv_nmo; ++b) {
-                    bool ab = a != b;
-
-                    size_t idx = i * nc_ * nv_ * nv_ + (j + nc_nmo) * nv_ * nv_ + a * nv_ + (b + nv_nmo);
-
-                    outfile->Printf("\n  working on (%2zu,%2zu) -> (%2zu,%2zu):", acore_sos[i], acore_sos[j],
-                                    avirt_sos[a], avirt_sos[b]);
+    for (size_t i = 0; i < nc_; ++i) {
+        for (size_t j = 0; i < nc_; ++i) {
+            for (size_t a = 0; a < nv_; ++a) {
+                for (size_t b = 0; b < nv_; ++b) {
+                    size_t idx = i * nc_ * nv_ * nv_ + j * nv_ * nv_ + a * nv_ + b;
                     double t = T2.block("ccvv").data()[idx];
-                    if (fabs(t) < 1.0e-12) {
+                    if(fabs(t) < 1.0e-12) {
                         continue;
                     }
+                    outfile->Printf("\n  working on (%2zu,%2zu) -> (%2zu,%2zu):", i, j, a, b);
 
-                    std::vector<double> quartet;
-
-                    for (double factor: {2, 1, -1, 2}) {
+                    std::vector<double> p2;
+                    for (int factor: {1, -1}) {
                         T2.block("ccvv").data()[idx] = t + factor * h;
-
                         compute_lhbar();
 
-                        // Htilde = Hbar - [F, A]
                         O1["ia"] = Hbar1["ia"];
                         O2["ijab"] = Hbar2["ijab"];
 
-                        O1["c0,v0"] += -1.0 * F["v0,v1"] * T1["c0,v1"];
-                        O1["c0,v0"] += 1.0 * F["c0,c1"] * T1["c1,v0"];
+                        T2.block("ccvv").data()[idx] = t;
+                        O1["c0,v0"] -= 1.0 * F["v1,v0"] * T1["c0,v1"];
+                        O1["c0,v0"] += 1.0 * F["c1,c0"] * T1["c1,v0"];
 
-                        O2["c0,c1,v0,v1"] += -1.0 * F["v0,v2"] * T2["c0,c1,v2,v1"];
-                        O2["c0,c1,v1,v0"] += 1.0 * F["v0,v2"] * T2["c0,c1,v2,v1"];
-                        O2["c0,c1,v0,v1"] += 1.0 * F["c0,c2"] * T2["c2,c1,v0,v1"];
-                        O2["c1,c0,v0,v1"] += -1.0 * F["c0,c2"] * T2["c2,c1,v0,v1"];
+                        temp["c0,c1,v0,v1"] = 1.0 * F["v2,v0"] * T2["c0,c1,v1,v2"];
+                        O2["c0,c1,v0,v1"] += temp["c0,c1,v0,v1"];
+                        O2["c0,c1,v1,v0"] -= temp["c0,c1,v0,v1"];
 
-                        // scale Htilde by (1 - e^(-s * D^2))
+                        temp["c0,c1,v0,v1"] = -1.0 * F["c2,c0"] * T2["c1,c2,v0,v1"];
+                        O2["c0,c1,v0,v1"] += temp["c0,c1,v0,v1"];
+                        O2["c1,c0,v0,v1"] -= temp["c0,c1,v0,v1"];
+
                         O1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
                             double D = Fd[i[0]] - Fd[i[1]];
                             value *= 1.0 - std::exp(-s_ * D * D);
@@ -224,50 +212,176 @@ void MRDSRG_SO::build_lambda_numerical(BlockedTensor& C1, BlockedTensor& C2) {
                         Hbar0 += 4.0 * O1["ia"] * Tbar1["ia"];
                         Hbar0 += O2["ijab"] * Tbar2["ijab"];
 
-                        quartet.push_back(Hbar0);
+                        p2.push_back(Hbar0);
                         outfile->Printf(" X");
                     }
 
-                    double grad = (-quartet[0] + 8 * quartet[1] - 8 * quartet[2] + quartet[3]) / (12 * h);
+                    double grad = (p2[0] - p2[1]) / (2 * h);
                     C2.block("ccvv").data()[idx] = grad;
 
-//                    if (ij and ab) {
-//                        C2.block("ccvv").data()[j * nc_ * nv_ * nv_ + (i + nc_) * nv_ * nv_ + b * nv_ + (a + nv_)] = grad;
-//                    }
-
-//                    if (ij) {
-//                        C2.block("ccvv").data()[j * nc_ * nv_ * nv_ + (i + nc_) * nv_ * nv_ + a * nv_ + (b + nv_)] = -grad;
-//                    }
-
-//                    if (ab) {
-//                        C2.block("ccvv").data()[i * nc_ * nv_ * nv_ + (j + nc_) * nv_ * nv_ + b * nv_ + (a + nv_)] = -grad;
-//                    }
-
-                    T2.block("ccvv").data()[idx] = t;
                     outfile->Printf(" %20.15f, Done.", grad);
                 }
             }
         }
     }
 
-    for (size_t i = 0; i < nc_nmo; ++i) {
-        for (size_t j = 0; j < nc_nmo; ++j) {
-            for (size_t a = 0; a < nv_nmo; ++a) {
-                for (size_t b = 0; b < nv_nmo; ++b) {
+//    // T1 gradient
+//    size_t nc_nmo = acore_sos.size();
+//    size_t nv_nmo = avirt_sos.size();
+//    for (size_t i = 0; i < nc_nmo; ++i) {
+//        for (size_t a = 0; a < nv_nmo; ++a) {
+//            size_t idx = i * nv_ + a;
 
-                    auto ijab = C2.block("ccvv").data()[i * nc_ * nv_ * nv_ + (j + nc_nmo) * nv_ * nv_ + a * nv_ + (b + nv_nmo)];
-                    auto ijba = C2.block("ccvv").data()[i * nc_ * nv_ * nv_ + (j + nc_nmo) * nv_ * nv_ + b * nv_ + (a + nv_nmo)];
+//            outfile->Printf("\n  working on %2zu -> %2zu:", acore_sos[i], avirt_sos[a]);
+//            double t = T1.block("cv").data()[idx];
+//            if (fabs(t) < 1.0e-12) {
+//                continue;
+//            }
 
-                    C2.block("ccvv").data()[i * nc_ * nv_ * nv_ + j * nv_ * nv_ + a * nv_ + b] = ijab - ijba;
-                    C2.block("ccvv").data()[(i + nc_nmo) * nc_ * nv_ * nv_ + (j + nc_nmo) * nv_ * nv_ + (a + nv_nmo) * nv_ + (b + nv_nmo)] = ijab - ijba;
+//            std::vector<double> quartet;
 
-                    C2.block("ccvv").data()[(i + nc_nmo) * nc_ * nv_ * nv_ + j * nv_ * nv_ + (a + nv_nmo) * nv_ + b] = ijab;
-                    C2.block("ccvv").data()[i * nc_ * nv_ * nv_ + (j + nc_nmo) * nv_ * nv_ + (a + nv_nmo) * nv_ + b] = -ijba;
-                    C2.block("ccvv").data()[(i + nc_nmo) * nc_ * nv_ * nv_ + j * nv_ * nv_ + a * nv_ + (b + nv_nmo)] = -ijba;
-                }
-            }
-        }
-    }
+//            for (double factor: {2, 1, -1, 2}) {
+//                T1.block("cv").data()[idx] = t + factor * h;
+
+//                compute_lhbar();
+
+//                // Htilde = Hbar - [F, A]
+//                O1["ia"] = Hbar1["ia"];
+//                O2["ijab"] = Hbar2["ijab"];
+
+//                O1["c0,v0"] += -1.0 * F["v0,v1"] * T1["c0,v1"];
+//                O1["c0,v0"] += 1.0 * F["c0,c1"] * T1["c1,v0"];
+
+//                O2["c0,c1,v0,v1"] += -1.0 * F["v0,v2"] * T2["c0,c1,v2,v1"];
+//                O2["c0,c1,v1,v0"] += 1.0 * F["v0,v2"] * T2["c0,c1,v2,v1"];
+//                O2["c0,c1,v0,v1"] += 1.0 * F["c0,c2"] * T2["c2,c1,v0,v1"];
+//                O2["c1,c0,v0,v1"] += -1.0 * F["c0,c2"] * T2["c2,c1,v0,v1"];
+
+//                // scale Htilde by (1 - e^(-s * D^2))
+//                O1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+//                    double D = Fd[i[0]] - Fd[i[1]];
+//                    value *= 1.0 - std::exp(-s_ * D * D);
+//                });
+
+//                O2.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+//                    double D = Fd[i[0]] + Fd[i[1]] - Fd[i[2]] - Fd[i[3]];
+//                    value *= 1.0 - std::exp(-s_ * D * D);
+//                });
+
+//                // add lambda contribution
+//                Hbar0 += O1["ia"] * Tbar1["ia"];
+//                Hbar0 += 0.25 * O2["ijab"] * Tbar2["ijab"];
+
+//                quartet.push_back(Hbar0);
+//                outfile->Printf(" X");
+//            }
+
+//            double grad = (-quartet[0] + 8 * quartet[1] - 8 * quartet[2] + quartet[3]) / (12 * h);
+//            C1.block("cv").data()[idx] = grad;
+//            C1.block("cv").data()[(i + nc_nmo) * nv_ + a + nv_] = grad;
+
+//            T1.block("cv").data()[idx] = t;
+//            outfile->Printf(" %20.15f, Done.", grad);
+//        }
+//    }
+
+//    // T2 gradient (alpha-beta)
+//    for (size_t i = 0; i < nc_nmo; ++i) {
+//        for (size_t j = 0; j < nc_nmo; ++j) {
+//            bool ij = j < i;
+
+//            for (size_t a = 0; a < nv_nmo; ++a) {
+//                for (size_t b = 0; b < nv_nmo; ++b) {
+//                    bool ab = a != b;
+
+//                    size_t idx = i * nc_ * nv_ * nv_ + (j + nc_nmo) * nv_ * nv_ + a * nv_ + (b + nv_nmo);
+
+//                    outfile->Printf("\n  working on (%2zu,%2zu) -> (%2zu,%2zu):", acore_sos[i], acore_sos[j],
+//                                    avirt_sos[a], avirt_sos[b]);
+//                    double t = T2.block("ccvv").data()[idx];
+//                    if (fabs(t) < 1.0e-12) {
+//                        continue;
+//                    }
+
+//                    std::vector<double> quartet;
+
+//                    for (double factor: {2, 1, -1, 2}) {
+//                        T2.block("ccvv").data()[idx] = t + factor * h;
+
+//                        compute_lhbar();
+
+//                        // Htilde = Hbar - [F, A]
+//                        O1["ia"] = Hbar1["ia"];
+//                        O2["ijab"] = Hbar2["ijab"];
+
+//                        O1["c0,v0"] += -1.0 * F["v0,v1"] * T1["c0,v1"];
+//                        O1["c0,v0"] += 1.0 * F["c0,c1"] * T1["c1,v0"];
+
+//                        O2["c0,c1,v0,v1"] += -1.0 * F["v0,v2"] * T2["c0,c1,v2,v1"];
+//                        O2["c0,c1,v1,v0"] += 1.0 * F["v0,v2"] * T2["c0,c1,v2,v1"];
+//                        O2["c0,c1,v0,v1"] += 1.0 * F["c0,c2"] * T2["c2,c1,v0,v1"];
+//                        O2["c1,c0,v0,v1"] += -1.0 * F["c0,c2"] * T2["c2,c1,v0,v1"];
+
+//                        // scale Htilde by (1 - e^(-s * D^2))
+//                        O1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+//                            double D = Fd[i[0]] - Fd[i[1]];
+//                            value *= 1.0 - std::exp(-s_ * D * D);
+//                        });
+
+//                        O2.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+//                            double D = Fd[i[0]] + Fd[i[1]] - Fd[i[2]] - Fd[i[3]];
+//                            value *= 1.0 - std::exp(-s_ * D * D);
+//                        });
+
+//                        // add lambda contribution
+//                        Hbar0 *= 4.0;
+//                        Hbar0 += 4.0 * O1["ia"] * Tbar1["ia"];
+//                        Hbar0 += O2["ijab"] * Tbar2["ijab"];
+
+//                        quartet.push_back(Hbar0);
+//                        outfile->Printf(" X");
+//                    }
+
+//                    double grad = (-quartet[0] + 8 * quartet[1] - 8 * quartet[2] + quartet[3]) / (12 * h);
+//                    C2.block("ccvv").data()[idx] = grad;
+
+////                    if (ij and ab) {
+////                        C2.block("ccvv").data()[j * nc_ * nv_ * nv_ + (i + nc_) * nv_ * nv_ + b * nv_ + (a + nv_)] = grad;
+////                    }
+
+////                    if (ij) {
+////                        C2.block("ccvv").data()[j * nc_ * nv_ * nv_ + (i + nc_) * nv_ * nv_ + a * nv_ + (b + nv_)] = -grad;
+////                    }
+
+////                    if (ab) {
+////                        C2.block("ccvv").data()[i * nc_ * nv_ * nv_ + (j + nc_) * nv_ * nv_ + b * nv_ + (a + nv_)] = -grad;
+////                    }
+
+//                    T2.block("ccvv").data()[idx] = t;
+//                    outfile->Printf(" %20.15f, Done.", grad);
+//                }
+//            }
+//        }
+//    }
+
+//    for (size_t i = 0; i < nc_nmo; ++i) {
+//        for (size_t j = 0; j < nc_nmo; ++j) {
+//            for (size_t a = 0; a < nv_nmo; ++a) {
+//                for (size_t b = 0; b < nv_nmo; ++b) {
+
+//                    auto ijab = C2.block("ccvv").data()[i * nc_ * nv_ * nv_ + (j + nc_nmo) * nv_ * nv_ + a * nv_ + (b + nv_nmo)];
+//                    auto ijba = C2.block("ccvv").data()[i * nc_ * nv_ * nv_ + (j + nc_nmo) * nv_ * nv_ + b * nv_ + (a + nv_nmo)];
+
+//                    C2.block("ccvv").data()[i * nc_ * nv_ * nv_ + j * nv_ * nv_ + a * nv_ + b] = ijab - ijba;
+//                    C2.block("ccvv").data()[(i + nc_nmo) * nc_ * nv_ * nv_ + (j + nc_nmo) * nv_ * nv_ + (a + nv_nmo) * nv_ + (b + nv_nmo)] = ijab - ijba;
+
+//                    C2.block("ccvv").data()[(i + nc_nmo) * nc_ * nv_ * nv_ + j * nv_ * nv_ + (a + nv_nmo) * nv_ + b] = ijab;
+//                    C2.block("ccvv").data()[i * nc_ * nv_ * nv_ + (j + nc_nmo) * nv_ * nv_ + (a + nv_nmo) * nv_ + b] = -ijba;
+//                    C2.block("ccvv").data()[(i + nc_nmo) * nc_ * nv_ * nv_ + j * nv_ * nv_ + a * nv_ + (b + nv_nmo)] = -ijba;
+//                }
+//            }
+//        }
+//    }
 }
 
 void MRDSRG_SO::update_lambda(BlockedTensor& C1, BlockedTensor& C2) {
