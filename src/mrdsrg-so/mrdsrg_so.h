@@ -308,6 +308,7 @@ class MRDSRG_SO : public DynamicCorrelationSolver {
     double Tbar1_diff;
     double Tbar2_diff;
 
+    void compute_lhbar_lambda_test();
     void compute_lambda();
     void build_lambda_numerical(BlockedTensor& C1, BlockedTensor& C2);
     void update_lambda(BlockedTensor& C1, BlockedTensor& C2);

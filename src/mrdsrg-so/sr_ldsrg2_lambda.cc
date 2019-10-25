@@ -115,7 +115,19 @@ void MRDSRG_SO::build_lambda_numerical(BlockedTensor& C1, BlockedTensor& C2) {
 
     BlockedTensor O1 = ambit::BlockedTensor::build(tensor_type_, "O1", {"cv"});
     BlockedTensor O2 = ambit::BlockedTensor::build(tensor_type_, "O2", {"ccvv"});
-    auto temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"ccvv"});
+
+    auto ST1 = ambit::BlockedTensor::build(ambit::CoreTensor, "scaled t1", {"cv"});
+    auto ST2 = ambit::BlockedTensor::build(ambit::CoreTensor, "scaled t2", {"ccvv"});
+    ST1["ia"] = T1["ia"];
+    ST2["ijab"] = T2["ijab"];
+    ST1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+        double D = Fd[i[0]] - Fd[i[1]];
+        value *= D * std::exp(-s_ * D * D);
+    });
+    ST2.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+        double D = Fd[i[0]] + Fd[i[1]] - Fd[i[2]] - Fd[i[3]];
+        value *= D * std::exp(-s_ * D * D);
+    });
 
     size_t nc_nmo = acore_sos.size();
     size_t nv_nmo = avirt_sos.size();
@@ -133,7 +145,7 @@ void MRDSRG_SO::build_lambda_numerical(BlockedTensor& C1, BlockedTensor& C2) {
             std::vector<double> diag;
             for (int factor: factors) {
                 T1.block("cv").data()[idx] = t + factor * h;
-                compute_lhbar();
+                compute_lhbar_lambda_test();
 
                 O1["ia"] = Hbar1["ia"];
                 O2["ijab"] = Hbar2["ijab"];
@@ -147,6 +159,9 @@ void MRDSRG_SO::build_lambda_numerical(BlockedTensor& C1, BlockedTensor& C2) {
                     double D = Fd[i[0]] + Fd[i[1]] - Fd[i[2]] - Fd[i[3]];
                     value *= 1.0 - std::exp(-s_ * D * D);
                 });
+
+                O1["ia"] -= ST1["ia"];
+                O2["ijab"] -= ST2["ijab"];
 
                 // zero diagonal element
                 double diag_elem = O1.block("cv").data()[idx];
@@ -171,12 +186,10 @@ void MRDSRG_SO::build_lambda_numerical(BlockedTensor& C1, BlockedTensor& C2) {
                 diag_grad = (diag[0] - diag[1]) / (2 * h);
             }
 
-            double mp = Fd[acore_sos[i]] - Fd[avirt_sos[a]];
-            double denom = mp * std::exp(-s_ * mp * mp) - diag_grad;
-            C1.block("cv").data()[idx] = grad / denom;
-            C1.block("cv").data()[(i + nc_nmo) * nv_ + (a + nv_nmo)] = grad / denom;
+            C1.block("cv").data()[idx] = grad / (-diag_grad);
+            C1.block("cv").data()[(i + nc_nmo) * nv_ + (a + nv_nmo)] = grad / (-diag_grad);
 
-            outfile->Printf(" %20.15f, Done.", grad);
+            outfile->Printf(" %20.15f, denominator = %20.15f, Done.", C1.block("cv").data()[idx], -diag_grad);
         }
     }
 
@@ -198,7 +211,7 @@ void MRDSRG_SO::build_lambda_numerical(BlockedTensor& C1, BlockedTensor& C2) {
                         T2.block("ccvv").data()[i * nc_ * nv_ * nv_ + (j + nc_nmo) * nv_ * nv_ + (b + nv_nmo) * nv_ + a] = -t - factor * h;
                         T2.block("ccvv").data()[(j + nc_nmo) * nc_ * nv_ * nv_ + i * nv_ * nv_ + a * nv_ + (b + nv_nmo)] = -t - factor * h;
                         T2.block("ccvv").data()[(j + nc_nmo) * nc_ * nv_ * nv_ + i * nv_ * nv_ + (b + nv_nmo) * nv_ + a] = t + factor * h;
-                        compute_lhbar();
+                        compute_lhbar_lambda_test();
 
                         O1["ia"] = Hbar1["ia"];
                         O2["ijab"] = Hbar2["ijab"];
@@ -212,6 +225,9 @@ void MRDSRG_SO::build_lambda_numerical(BlockedTensor& C1, BlockedTensor& C2) {
                             double D = Fd[i[0]] + Fd[i[1]] - Fd[i[2]] - Fd[i[3]];
                             value *= 1.0 - std::exp(-s_ * D * D);
                         });
+
+                        O1["ia"] -= ST1["ia"];
+                        O2["ijab"] -= ST2["ijab"];
 
                         // zero diagonal element
                         double diag_elem = O2.block("ccvv").data()[idx];
@@ -240,14 +256,12 @@ void MRDSRG_SO::build_lambda_numerical(BlockedTensor& C1, BlockedTensor& C2) {
                         diag_grad = (diag[0] - diag[1]) / (2 * h);
                     }
 
-                    double mp = Fd[acore_sos[i]] + Fd[acore_sos[j]] - Fd[avirt_sos[a]] - Fd[avirt_sos[b]];
-                    double denom = mp * std::exp(-s_ * mp * mp) - diag_grad;
-                    C2.block("ccvv").data()[idx] = grad / denom;
-                    C2.block("ccvv").data()[i * nc_ * nv_ * nv_ + (j + nc_nmo) * nv_ * nv_ + (b + nv_nmo) * nv_ + a] = -grad / denom;
-                    C2.block("ccvv").data()[(j + nc_nmo) * nc_ * nv_ * nv_ + i * nv_ * nv_ + a * nv_ + (b + nv_nmo)] = -grad / denom;
-                    C2.block("ccvv").data()[(j + nc_nmo) * nc_ * nv_ * nv_ + i * nv_ * nv_ + (b + nv_nmo) * nv_ + a] = grad / denom;
+                    C2.block("ccvv").data()[idx] = grad / (-diag_grad);
+                    C2.block("ccvv").data()[i * nc_ * nv_ * nv_ + (j + nc_nmo) * nv_ * nv_ + (b + nv_nmo) * nv_ + a] = grad / diag_grad;
+                    C2.block("ccvv").data()[(j + nc_nmo) * nc_ * nv_ * nv_ + i * nv_ * nv_ + a * nv_ + (b + nv_nmo)] = grad / diag_grad;
+                    C2.block("ccvv").data()[(j + nc_nmo) * nc_ * nv_ * nv_ + i * nv_ * nv_ + (b + nv_nmo) * nv_ + a] = grad / (-diag_grad);
 
-                    outfile->Printf(" %20.15f, Done.", grad);
+                    outfile->Printf(" %20.15f, denominator = %20.15f, Done.", C2.block("ccvv").data()[idx], -diag_grad);
                 }
             }
         }
@@ -269,21 +283,47 @@ void MRDSRG_SO::build_lambda_numerical(BlockedTensor& C1, BlockedTensor& C2) {
     }
 }
 
+void MRDSRG_SO::compute_lhbar_lambda_test(){
+    Hbar0 = 0.0;
+    Hbar1["pq"] = F["pq"];
+    Hbar2["pqrs"] = V["pqrs"];
+
+    Hbar1["c0,v0"] += 1.0 * F["v0,p0"] * T1["c0,p0"];
+    Hbar1["c0,v0"] += -1.0 * F["c0,h0"] * T1["h0,v0"];
+
+    auto temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"ccvv"});
+    temp["c0,c1,v0,v1"] += 1.0 * F["v0,p0"] * T2["c0,c1,p0,v1"];
+    Hbar2["c0,c1,v0,v1"] += temp["c0,c1,v0,v1"];
+    Hbar2["c0,c1,v1,v0"] -= temp["c0,c1,v0,v1"];
+
+    temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"ccvv"});
+    temp["c0,c1,v0,v1"] += -1.0 * F["c0,h0"] * T2["h0,c1,v0,v1"];
+    Hbar2["c0,c1,v0,v1"] += temp["c0,c1,v0,v1"];
+    Hbar2["c1,c0,v0,v1"] -= temp["c0,c1,v0,v1"];
+
+    Hbar0 += 2.0 * F["c0,v0"] * T1["c0,v0"];
+    Hbar0 += (1.0 / 2.0) * V["c0,c1,v0,v1"] * T2["c0,c1,v0,v1"];
+    Hbar0 += 1.0 * F["v1,v0"] * T1["c0,v0"] * T1["c0,v1"];
+    Hbar0 += (1.0 / 2.0) * F["v1,v0"] * T2["c0,c1,v0,v2"] * T2["c0,c1,v1,v2"];
+    Hbar0 += -1.0 * F["c1,c0"] * T1["c0,v0"] * T1["c1,v0"];
+    Hbar0 += (-1.0 / 2.0) * F["c1,c0"] * T2["c0,c2,v0,v1"] * T2["c1,c2,v0,v1"];
+}
+
 void MRDSRG_SO::update_lambda(BlockedTensor& C1, BlockedTensor& C2) {
     BlockedTensor X1 = ambit::BlockedTensor::build(tensor_type_, "X1", {"cv"});
     BlockedTensor X2 = ambit::BlockedTensor::build(tensor_type_, "X2", {"ccvv"});
     X1["ia"] = C1["ia"];
     X2["ijab"] = C2["ijab"];
 
-    X1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
-        double delta = Fd[i[0]] - Fd[i[1]];
-        value /= delta;
-    });
+//    X1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+//        double delta = Fd[i[0]] - Fd[i[1]];
+//        value /= delta;
+//    });
 
-    X2.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
-        double delta = Fd[i[0]] + Fd[i[1]] - Fd[i[2]] - Fd[i[3]];
-        value /= delta;
-    });
+//    X2.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+//        double delta = Fd[i[0]] + Fd[i[1]] - Fd[i[2]] - Fd[i[3]];
+//        value /= delta;
+//    });
 
     T1max = X1.norm(0);
     T2max = X2.norm(0);
