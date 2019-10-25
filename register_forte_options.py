@@ -161,6 +161,11 @@ def register_embedding_options(forte_options):
         'FRAGMENT_DENSITY', 'RHF', ['CASSCF', 'RHF', 'FCI'],
         'The real/approximate RDMs used in the correlative environment computation')
     forte_options.add_str(
+        'FRAG_CORRELATION_SOLVER', 'MRDSRG',
+        ['DSRG-MRPT2', 'THREE-DSRG-MRPT2', 'DSRG-MRPT3', 'MRDSRG',
+         'SOMRDSRG', 'MRDSRG_SO', 'DSRG_MRPT'],
+        'Dynamical correlation solver type for Fragment-environment correlation')
+    forte_options.add_str(
         'ENV_CORRELATION_SOLVER', 'MRDSRG',
         ['DSRG-MRPT2', 'THREE-DSRG-MRPT2', 'DSRG-MRPT3', 'MRDSRG',
          'SOMRDSRG', 'MRDSRG_SO', 'DSRG_MRPT'],

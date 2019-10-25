@@ -317,13 +317,13 @@ def adv_embedding_driver(state, state_weights_map, scf_info, ref_wfn, mo_space_i
     frag_corr_level = options.get_str('FRAG_CORR_LEVEL')
     env_corr_level = options.get_str('ENV_CORR_LEVEL')
 
-    ints_f = forte.make_forte_integrals(ref_wfn, options, mo_space_info_active)
-    ints_e = forte.make_forte_integrals(ref_wfn, options, mo_space_info)
-
     # mo_space_info: fragment all active, environment restricted, core frozen
     # mo_space_info_active: fragment-C,A,V, environment and core frozen
-    # mo_space_info = orbital_projection(ref_wfn, options, mo_space_info)
     mo_space_info_active = forte.build_inner_space(ref_wfn, options, mo_space_info)
+
+    # Build fragment and f-e integrals
+    ints_f = forte.make_forte_integrals(ref_wfn, options, mo_space_info_active)
+    ints_e = forte.make_forte_integrals(ref_wfn, options, mo_space_info)
 
     # compute higher-level with mo_space_info_active(inner) and methods in options, -> E_high(origin)
     options.set_str('FORTE', 'CORR_LEVEL', frag_corr_level)
@@ -360,23 +360,26 @@ def adv_embedding_driver(state, state_weights_map, scf_info, ref_wfn, mo_space_i
     # eH rotation
     ints_dressed = dsrg.compute_Heff_actv()
     state_map = forte.to_state_nroots_map(state_weights_map)
-    ints_f.build_from_asints(int_dressed)
+    ints_f.build_from_asints(ints_dressed)
 
-    # forte_driver(state_weights_map, scf_info, forte.forte_options, ints_f, mo_space_info_active) # Should use int_f_dressed here!
+    # Compute MRDSRG-in-PT2 energy (folded)
+    options.set_str('FORTE', 'CORR_LEVEL', frag_corr_level)
+    forte.forte_options.update_psi_options(options)
+    forte_driver(state_weights_map, scf_info, forte.forte_options, ints_f, mo_space_info_active)
 
     # Compute folded casci (should use a general forte_driver instead!)
-    as_solver_relaxed = forte.make_active_space_solver(options.get_str('ACTIVE_SPACE_SOLVER'),
-                                                       state_map, scf_info,
-                                                       mo_space_info_active, ints_dressed,
-                                                       forte.forte_options)
-    state_energies_list = as_solver_relaxed.compute_energy()
-    Erelax = forte.compute_average_state_energy(state_energies_list,state_weights_map)
-
+ #   as_solver_relaxed = forte.make_active_space_solver(options.get_str('ACTIVE_SPACE_SOLVER'),
+ #                                                      state_map, scf_info,
+ #                                                      mo_space_info_active, ints_dressed,
+ #                                                      forte.forte_options)
+ #   state_energies_list = as_solver_relaxed.compute_energy()
+ #   Erelax = forte.compute_average_state_energy(state_energies_list,state_weights_map)
+#
     # Compute relaxed(folded) MRDSRG energy 
-    rdms_fold = as_solver_relaxed.compute_average_rdms(state_weights_map, 3)
-    dsrg_high_fold = forte.make_dsrg_method(options.get_str('FRAG_CORRELATION_SOLVER'),
-                                  rdms_fold, scf_info, forte.forte_options, ints_f, mo_space_info_active) # Should use int_f_dressed here!
-    energy_high_fold = dsrg_high_fold.compute_energy()
+ #   rdms_fold = as_solver_relaxed.compute_average_rdms(state_weights_map, 3)
+ #   dsrg_high_fold = forte.make_dsrg_method(options.get_str('FRAG_CORRELATION_SOLVER'),
+ #                                 rdms_fold, scf_info, forte.forte_options, ints_f, mo_space_info_active) # Should use int_f_dressed here!
+ #   energy_high_fold = dsrg_high_fold.compute_energy()
     # Compute MRDSRG-in-PT2 energy (folded)
     # E_emb = E(MRDSRG_folded) + E(Corr)
 
