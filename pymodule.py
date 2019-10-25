@@ -350,6 +350,7 @@ def adv_embedding_driver(state, state_weights_map, scf_info, ref_wfn, mo_space_i
     forte.forte_options.update_psi_options(options)
     dsrg = forte.make_dsrg_method(options.get_str('ENV_CORRELATION_SOLVER'),
                                   rdms, scf_info, forte.forte_options, ints_e, mo_space_info)
+
     Edsrg = dsrg.compute_energy()
     # E_corr = Edsrg - E_cas_ref
     # Compute MRDSRG-in-PT2 energy (unfolded)
@@ -359,10 +360,11 @@ def adv_embedding_driver(state, state_weights_map, scf_info, ref_wfn, mo_space_i
     # eH rotation
     ints_dressed = dsrg.compute_Heff_actv()
     state_map = forte.to_state_nroots_map(state_weights_map)
-    # ints_f_dressed = transform_intclass(ints_dressed, mo_space_info_active)
+    ints_f.build_from_asints(int_dressed)
 
     # forte_driver(state_weights_map, scf_info, forte.forte_options, ints_f, mo_space_info_active) # Should use int_f_dressed here!
 
+    # Compute folded casci (should use a general forte_driver instead!)
     as_solver_relaxed = forte.make_active_space_solver(options.get_str('ACTIVE_SPACE_SOLVER'),
                                                        state_map, scf_info,
                                                        mo_space_info_active, ints_dressed,
@@ -370,6 +372,7 @@ def adv_embedding_driver(state, state_weights_map, scf_info, ref_wfn, mo_space_i
     state_energies_list = as_solver_relaxed.compute_energy()
     Erelax = forte.compute_average_state_energy(state_energies_list,state_weights_map)
 
+    # Compute relaxed(folded) MRDSRG energy 
     rdms_fold = as_solver_relaxed.compute_average_rdms(state_weights_map, 3)
     dsrg_high_fold = forte.make_dsrg_method(options.get_str('FRAG_CORRELATION_SOLVER'),
                                   rdms_fold, scf_info, forte.forte_options, ints_f, mo_space_info_active) # Should use int_f_dressed here!
