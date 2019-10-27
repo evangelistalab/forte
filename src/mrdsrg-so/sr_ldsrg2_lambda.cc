@@ -118,16 +118,6 @@ void MRDSRG_SO::build_lambda_numerical(BlockedTensor& C1, BlockedTensor& C2) {
 
     auto ST1 = ambit::BlockedTensor::build(ambit::CoreTensor, "scaled t1", {"cv"});
     auto ST2 = ambit::BlockedTensor::build(ambit::CoreTensor, "scaled t2", {"ccvv"});
-    ST1["ia"] = T1["ia"];
-    ST2["ijab"] = T2["ijab"];
-    ST1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
-        double D = Fd[i[0]] - Fd[i[1]];
-        value *= D * std::exp(-s_ * D * D);
-    });
-    ST2.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
-        double D = Fd[i[0]] + Fd[i[1]] - Fd[i[2]] - Fd[i[3]];
-        value *= D * std::exp(-s_ * D * D);
-    });
 
     size_t nc_nmo = acore_sos.size();
     size_t nv_nmo = avirt_sos.size();
@@ -160,6 +150,17 @@ void MRDSRG_SO::build_lambda_numerical(BlockedTensor& C1, BlockedTensor& C2) {
                     value *= 1.0 - std::exp(-s_ * D * D);
                 });
 
+                ST1["ia"] = T1["ia"];
+                ST2["ijab"] = T2["ijab"];
+                ST1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+                    double D = Fd[i[0]] - Fd[i[1]];
+                    value *= D * std::exp(-s_ * D * D);
+                });
+                ST2.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+                    double D = Fd[i[0]] + Fd[i[1]] - Fd[i[2]] - Fd[i[3]];
+                    value *= D * std::exp(-s_ * D * D);
+                });
+
                 O1["ia"] -= ST1["ia"];
                 O2["ijab"] -= ST2["ijab"];
 
@@ -189,7 +190,12 @@ void MRDSRG_SO::build_lambda_numerical(BlockedTensor& C1, BlockedTensor& C2) {
             C1.block("cv").data()[idx] = grad / (-diag_grad);
             C1.block("cv").data()[(i + nc_nmo) * nv_ + (a + nv_nmo)] = grad / (-diag_grad);
 
-            outfile->Printf(" %20.15f, denominator = %20.15f, Done.", C1.block("cv").data()[idx], -diag_grad);
+            double d = Fd[acore_sos[i]] - Fd[avirt_sos[a]];
+            double ref_nu = 2.0 * (F.block("cv").data()[idx] - d * T1.block("cv").data()[idx]);
+            double ref_de = -d;
+            double ref = ref_nu / (-ref_de);
+            outfile->Printf("\n ref = %20.15f = %20.15f / %20.15f", ref, ref_nu, ref_de);
+            outfile->Printf("\n val = %20.15f = %20.15f / %20.15f", C1.block("cv").data()[idx], grad, diag_grad);
         }
     }
 
@@ -197,71 +203,105 @@ void MRDSRG_SO::build_lambda_numerical(BlockedTensor& C1, BlockedTensor& C2) {
         for (size_t j = 0; j < nc_nmo; ++j) {
             for (size_t a = 0; a < nv_nmo; ++a) {
                 for (size_t b = 0; b < nv_nmo; ++b) {
-                    size_t idx = i * nc_ * nv_ * nv_ + (j + nc_nmo) * nv_ * nv_ + a * nv_ + (b + nv_nmo);
-                    double t = T2.block("ccvv").data()[idx];
-                    if(fabs(t) < 1.0e-12) {
+
+                    size_t idxx = i * nc_ * nv_ * nv_ + (j + nc_nmo) * nv_ * nv_ + a * nv_ + (b + nv_nmo);
+                    double tx = T2.block("ccvv").data()[idxx];
+                    if(fabs(tx) < 1.0e-12) {
                         continue;
                     }
                     outfile->Printf("\n  working on (%2zu,%2zu) -> (%2zu,%2zu):", i, (j + nc_nmo), a, (b + nv_nmo));
 
-                    std::vector<double> pts;
-                    std::vector<double> diag;
-                    for (int factor: factors) {
-                        T2.block("ccvv").data()[idx] = t + factor * h;
-                        T2.block("ccvv").data()[i * nc_ * nv_ * nv_ + (j + nc_nmo) * nv_ * nv_ + (b + nv_nmo) * nv_ + a] = -t - factor * h;
-                        T2.block("ccvv").data()[(j + nc_nmo) * nc_ * nv_ * nv_ + i * nv_ * nv_ + a * nv_ + (b + nv_nmo)] = -t - factor * h;
-                        T2.block("ccvv").data()[(j + nc_nmo) * nc_ * nv_ * nv_ + i * nv_ * nv_ + (b + nv_nmo) * nv_ + a] = t + factor * h;
-                        compute_lhbar_lambda_test();
+                    double numerator = 0.0;
+                    double denominator = 0.0;
 
-                        O1["ia"] = Hbar1["ia"];
-                        O2["ijab"] = Hbar2["ijab"];
+                    std::vector<std::vector<size_t>> indices;
+                    indices.push_back(std::vector<size_t> {i, j + nc_nmo, a, b + nv_nmo});
+                    indices.push_back(std::vector<size_t> {j + nc_nmo, i, a, b + nv_nmo});
+                    indices.push_back(std::vector<size_t> {j + nc_nmo, i, b + nv_nmo, a});
+                    indices.push_back(std::vector<size_t> {i, j + nc_nmo, b + nv_nmo, a});
 
-                        O1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
-                            double D = Fd[i[0]] - Fd[i[1]];
-                            value *= 1.0 - std::exp(-s_ * D * D);
-                        });
+                    for (int x = 0; x < 4; ++x) {
+                        size_t idx = indices[x][0] * nc_ * nv_ * nv_ + indices[x][1] * nv_ * nv_ + indices[x][2] * nv_ + indices[x][3];
+                        double t = T2.block("ccvv").data()[idx];
 
-                        O2.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
-                            double D = Fd[i[0]] + Fd[i[1]] - Fd[i[2]] - Fd[i[3]];
-                            value *= 1.0 - std::exp(-s_ * D * D);
-                        });
+                        std::vector<double> pts;
+                        std::vector<double> diag;
+                        for (int factor: factors) {
+                            T2.block("ccvv").data()[idx] = t + factor * h;
+                            compute_lhbar();
 
-                        O1["ia"] -= ST1["ia"];
-                        O2["ijab"] -= ST2["ijab"];
+                            O1["ia"] = Hbar1["ia"];
+                            O2["ijab"] = Hbar2["ijab"];
 
-                        // zero diagonal element
-                        double diag_elem = O2.block("ccvv").data()[idx];
-                        O2.block("ccvv").data()[idx] = 0.0;
-                        diag.push_back(diag_elem);
+                            O1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+                                double D = Fd[i[0]] - Fd[i[1]];
+                                value *= 1.0 - std::exp(-s_ * D * D);
+                            });
 
-                        // add lambda contribution
-                        Hbar0 *= 4.0;
-                        Hbar0 += 4.0 * O1["ia"] * Tbar1["ia"];
-                        Hbar0 += O2["ijab"] * Tbar2["ijab"];
+                            O2.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+                                double D = Fd[i[0]] + Fd[i[1]] - Fd[i[2]] - Fd[i[3]];
+                                value *= 1.0 - std::exp(-s_ * D * D);
+                            });
 
-                        pts.push_back(Hbar0);
-                        outfile->Printf(" X");
+                            ST1["ia"] = T1["ia"];
+                            ST2["ijab"] = T2["ijab"];
+                            ST1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+                                double D = Fd[i[0]] - Fd[i[1]];
+                                value *= D * std::exp(-s_ * D * D);
+                            });
+                            ST2.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+                                double D = Fd[i[0]] + Fd[i[1]] - Fd[i[2]] - Fd[i[3]];
+                                value *= D * std::exp(-s_ * D * D);
+                            });
+
+                            O1["ia"] -= ST1["ia"];
+                            O2["ijab"] -= ST2["ijab"];
+
+                            // zero diagonal element
+                            double diag_elem = O2.block("ccvv").data()[idx];
+                            diag_elem -= O2.block("ccvv").data()[indices[x][1] * nc_ * nv_ * nv_ + indices[x][0] * nv_ * nv_ + indices[x][2] * nv_ + indices[x][3]];
+                            diag_elem -= O2.block("ccvv").data()[indices[x][0] * nc_ * nv_ * nv_ + indices[x][1] * nv_ * nv_ + indices[x][3] * nv_ + indices[x][2]];
+                            diag_elem += O2.block("ccvv").data()[indices[x][1] * nc_ * nv_ * nv_ + indices[x][0] * nv_ * nv_ + indices[x][3] * nv_ + indices[x][2]];
+                            diag.push_back(diag_elem);
+
+                            O2.block("ccvv").data()[idx] = 0.0;
+                            O2.block("ccvv").data()[indices[x][1] * nc_ * nv_ * nv_ + indices[x][0] * nv_ * nv_ + indices[x][2] * nv_ + indices[x][3]] = 0.0;
+                            O2.block("ccvv").data()[indices[x][0] * nc_ * nv_ * nv_ + indices[x][1] * nv_ * nv_ + indices[x][3] * nv_ + indices[x][2]] = 0.0;
+                            O2.block("ccvv").data()[indices[x][1] * nc_ * nv_ * nv_ + indices[x][0] * nv_ * nv_ + indices[x][3] * nv_ + indices[x][2]] = 0.0;
+
+                            // add lambda contribution
+                            Hbar0 += O1["ia"] * Tbar1["ia"];
+                            Hbar0 += 0.25 * O2["ijab"] * Tbar2["ijab"];
+
+                            pts.push_back(Hbar0);
+                            outfile->Printf(" X");
+                        }
+                        T2.block("ccvv").data()[idx] = t;
+
+                        double grad, diag_grad;
+                        if (npt >= 4) {
+                            grad = (-pts[0] + 8 * pts[1] - 8 * pts[2] + pts[3]) / (12 * h);
+                            diag_grad = (-diag[0] + 8 * diag[1] - 8 * diag[2] + diag[3]) / (12 * h);
+                        } else {
+                            grad = (pts[0] - pts[1]) / (2 * h);
+                            diag_grad = (diag[0] - diag[1]) / (2 * h);
+                        }
+
+                        numerator += std::pow(-1, x) * grad;
+                        denominator += diag_grad;
                     }
-                    T2.block("ccvv").data()[idx] = t;
-                    T2.block("ccvv").data()[i * nc_ * nv_ * nv_ + (j + nc_nmo) * nv_ * nv_ + (b + nv_nmo) * nv_ + a] = -t;
-                    T2.block("ccvv").data()[(j + nc_nmo) * nc_ * nv_ * nv_ + i * nv_ * nv_ + a * nv_ + (b + nv_nmo)] = -t;
-                    T2.block("ccvv").data()[(j + nc_nmo) * nc_ * nv_ * nv_ + i * nv_ * nv_ + (b + nv_nmo) * nv_ + a] = t;
 
-                    double grad, diag_grad;
-                    if (npt >= 4) {
-                        grad = (-pts[0] + 8 * pts[1] - 8 * pts[2] + pts[3]) / (12 * h);
-                        diag_grad = (-diag[0] + 8 * diag[1] - 8 * diag[2] + diag[3]) / (12 * h);
-                    } else {
-                        grad = (pts[0] - pts[1]) / (2 * h);
-                        diag_grad = (diag[0] - diag[1]) / (2 * h);
-                    }
+                    C2.block("ccvv").data()[idxx] += numerator / (-0.25 * denominator);
+                    C2.block("ccvv").data()[i * nc_ * nv_ * nv_ + (j + nc_nmo) * nv_ * nv_ + (b + nv_nmo) * nv_ + a] = -C2.block("ccvv").data()[idxx];
+                    C2.block("ccvv").data()[(j + nc_nmo) * nc_ * nv_ * nv_ + i * nv_ * nv_ + a * nv_ + (b + nv_nmo)] = -C2.block("ccvv").data()[idxx];
+                    C2.block("ccvv").data()[(j + nc_nmo) * nc_ * nv_ * nv_ + i * nv_ * nv_ + (b + nv_nmo) * nv_ + a] = C2.block("ccvv").data()[idxx];
 
-                    C2.block("ccvv").data()[idx] = grad / (-diag_grad);
-                    C2.block("ccvv").data()[i * nc_ * nv_ * nv_ + (j + nc_nmo) * nv_ * nv_ + (b + nv_nmo) * nv_ + a] = grad / diag_grad;
-                    C2.block("ccvv").data()[(j + nc_nmo) * nc_ * nv_ * nv_ + i * nv_ * nv_ + a * nv_ + (b + nv_nmo)] = grad / diag_grad;
-                    C2.block("ccvv").data()[(j + nc_nmo) * nc_ * nv_ * nv_ + i * nv_ * nv_ + (b + nv_nmo) * nv_ + a] = grad / (-diag_grad);
-
-                    outfile->Printf(" %20.15f, denominator = %20.15f, Done.", C2.block("ccvv").data()[idx], -diag_grad);
+                    double d = Fd[core_sos_[i]] + Fd[core_sos_[j]] - Fd[virt_sos_[a]] - Fd[virt_sos_[b]];
+                    double ref_nu = 0.5 * (V.block("ccvv").data()[idxx] - d * T2.block("ccvv").data()[idxx]);
+                    double ref_de = -d;
+                    double ref = ref_nu / (-0.25 * ref_de);
+                    outfile->Printf("\n ref = %20.15f = -4 * %20.15f / %20.15f", ref, ref_nu, ref_de);
+                    outfile->Printf("\n val = %20.15f", C2.block("ccvv").data()[idxx]);
                 }
             }
         }
@@ -288,18 +328,24 @@ void MRDSRG_SO::compute_lhbar_lambda_test(){
     Hbar1["pq"] = F["pq"];
     Hbar2["pqrs"] = V["pqrs"];
 
-    Hbar1["c0,v0"] += 1.0 * F["v0,p0"] * T1["c0,p0"];
-    Hbar1["c0,v0"] += -1.0 * F["c0,h0"] * T1["h0,v0"];
+    Hbar1["c0,v0"] += 1.0 * F["v1,v0"] * T1["c0,v1"];
+    Hbar1["c0,v0"] += -1.0 * F["c1,c0"] * T1["c1,v0"];
+    Hbar1["v0,c0"] += 1.0 * F["v1,v0"] * T1["c0,v1"];
+    Hbar1["v0,c0"] += -1.0 * F["c1,c0"] * T1["c1,v0"];
 
     auto temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"ccvv"});
-    temp["c0,c1,v0,v1"] += 1.0 * F["v0,p0"] * T2["c0,c1,p0,v1"];
+    temp["c0,c1,v0,v1"] += -1.0 * F["v2,v0"] * T2["c0,c1,v1,v2"];
     Hbar2["c0,c1,v0,v1"] += temp["c0,c1,v0,v1"];
     Hbar2["c0,c1,v1,v0"] -= temp["c0,c1,v0,v1"];
+    Hbar2["v0,v1,c0,c1"] += temp["c0,c1,v0,v1"];
+    Hbar2["v1,v0,c0,c1"] -= temp["c0,c1,v0,v1"];
 
     temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"ccvv"});
-    temp["c0,c1,v0,v1"] += -1.0 * F["c0,h0"] * T2["h0,c1,v0,v1"];
+    temp["c0,c1,v0,v1"] += 1.0 * F["c2,c0"] * T2["c1,c2,v0,v1"];
     Hbar2["c0,c1,v0,v1"] += temp["c0,c1,v0,v1"];
     Hbar2["c1,c0,v0,v1"] -= temp["c0,c1,v0,v1"];
+    Hbar2["v0,v1,c0,c1"] += temp["c0,c1,v0,v1"];
+    Hbar2["v0,v1,c1,c0"] -= temp["c0,c1,v0,v1"];
 
     Hbar0 += 2.0 * F["c0,v0"] * T1["c0,v0"];
     Hbar0 += (1.0 / 2.0) * V["c0,c1,v0,v1"] * T2["c0,c1,v0,v1"];

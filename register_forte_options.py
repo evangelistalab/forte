@@ -666,6 +666,8 @@ def register_dsrg_options(forte_options):
     forte_options.add_bool("DSRG_NIVO", False,
                       "NIVO approximation: Omit tensor blocks with >= 3 virtual indices if true")
 
+    forte_options.add_bool("DSRG_LAMBDA_FINDIFF", False, "Solve DSRG lambda equation using finite difference if true")
+
     forte_options.add_double("DSRG_LAMBDA_FINDIFF_STEPSIZE", 1.0e-5, "Step size for DSRG numerical lambda equation")
 
     forte_options.add_int("DSRG_LAMBDA_FINDIFF_FORM", 2, "2-point or 4-point formula for DSRG numerical lambda equation")

@@ -60,7 +60,10 @@ std::vector<double> MRDSRG_SO::E4th_correction(){
     // compute lambda contribution (T variant)
     double e3 = E4th_correction_lambda_1(C1, C2);
     double e4 = E4th_correction_lambda_2(C1, C2);
-    double e5 = E4th_correction_lambda(C1, C2);
+    double e5 = 0.0;
+    if (foptions_->get_bool("DSRG_LAMBDA_FINDIFF")) {
+        e5 = E4th_correction_lambda(C1, C2);
+    }
 
     return {e1, e2, e3, e4, e5};
 }

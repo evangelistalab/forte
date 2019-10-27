@@ -799,9 +799,9 @@ double MRDSRG_SO::compute_energy() {
     outfile->Printf("\n  * λ(T) correction       = %25.15f", t3);
 
     psi::Process::environment.globals["CURRENT ENERGY"] = Etotal;
-    psi::Process::environment.globals["[T] ENERGY"] = Etotal + t1;
-    psi::Process::environment.globals["(T) ENERGY"] = Etotal + t2;
-    psi::Process::environment.globals["L-(T) ENERGY"] = Etotal + t3;
+    psi::Process::environment.globals["DSRG[T] ENERGY"] = Etotal + t1;
+    psi::Process::environment.globals["DSRG(T) ENERGY"] = Etotal + t2;
+    psi::Process::environment.globals["LAMBDA-DSRG(T) ENERGY"] = Etotal + t3;
 
     return Etotal;
 }
