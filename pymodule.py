@@ -334,7 +334,7 @@ def adv_embedding_driver(state, state_weights_map, scf_info, ref_wfn, mo_space_i
     rdms = forte.RHF_DENSITY(scf_info, mo_space_info).rhf_rdms()
     if options.get_str('fragment_density') == "CASSCF": 
         as_ints = forte.make_active_space_ints(mo_space_info_active, ints_f, "ACTIVE", ["RESTRICTED_DOCC"])
-        rdms = forte.build_casscf_density(state, 1, scf_info, forte.forte_options, mo_space_info_active, as_ints) # TODO:Fix this function
+        rdms = forte.build_casscf_density(state, 2, scf_info, forte.forte_options, mo_space_info_active, mo_space_info, as_ints) # TODO:Fix this function
     if options.get_str('fragment_density') == "FCI":
         as_ints_full = forte.make_active_space_ints(mo_space_info, ints_e, "ACTIVE", ["RESTRICTED_DOCC"])
         as_solver_full = forte.make_active_space_solver(options.get_str('ACTIVE_SPACE_SOLVER'),

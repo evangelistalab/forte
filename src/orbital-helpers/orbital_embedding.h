@@ -55,8 +55,9 @@ std::shared_ptr<MOSpaceInfo> build_inner_space(psi::SharedWavefunction ref_wfn,
 // Return 3-RDM from a CASSCF computation
 RDMs build_casscf_density(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
                           std::shared_ptr<ForteOptions> options,
-                          std::shared_ptr<MOSpaceInfo> mo_space_info,
+                          std::shared_ptr<MOSpaceInfo> mo_space_info_active, std::shared_ptr<MOSpaceInfo> mo_space_info,
                           std::shared_ptr<ActiveSpaceIntegrals> as_ints);
+
 } // namespace forte
 
 #endif // _orbital_embedding_h_

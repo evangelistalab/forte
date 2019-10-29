@@ -65,7 +65,6 @@ SemiCanonical::SemiCanonical(std::shared_ptr<MOSpaceInfo> mo_space_info,
     // compute thresholds from options
     double econv = foptions->get_double("E_CONVERGENCE");
     threshold_tight_ = (econv < 1.0e-12) ? 1.0e-12 : econv;
-    outfile->Printf("\n CHK #7");
     if (ints_->integral_type() == Cholesky) {
         double cd_tlr = foptions->get_double("CHOLESKY_TOLERANCE");
         threshold_tight_ = (threshold_tight_ < 0.5 * cd_tlr) ? 0.5 * cd_tlr : threshold_tight_;
@@ -75,25 +74,15 @@ SemiCanonical::SemiCanonical(std::shared_ptr<MOSpaceInfo> mo_space_info,
 
 void SemiCanonical::startup() {
     // some basics
-    outfile->Printf("\n Flag #0");
     nirrep_ = mo_space_info_->nirrep();
-    outfile->Printf("\n Flag #1, %d", nirrep_);
     ncmo_ = mo_space_info_->size("CORRELATED");
-    outfile->Printf("\n Flag #2, %d", ncmo_);
     nact_ = mo_space_info_->size("ACTIVE");
-    outfile->Printf("\n Flag #3, %d", nact_);
     nmopi_ = mo_space_info_->get_dimension("ALL");
-    outfile->Printf("\n Flag #4, %d", nmopi_[0]);
     ncmopi_ = mo_space_info_->get_dimension("CORRELATED");
-    outfile->Printf("\n Flag #5, %d", ncmopi_[0]);
     fdocc_ = mo_space_info_->get_dimension("FROZEN_DOCC");
-    outfile->Printf("\n Flag #6, %d", fdocc_[0]);
     rdocc_ = mo_space_info_->get_dimension("RESTRICTED_DOCC");
-    outfile->Printf("\n Flag #7, %d", rdocc_[0]);
     actv_ = mo_space_info_->get_dimension("ACTIVE");
-    outfile->Printf("\n Flag #8, %d", actv_[0]);
     ruocc_ = mo_space_info_->get_dimension("RESTRICTED_UOCC");
-    outfile->Printf("\n Flag #9, %d", ruocc_[0]);
 
     // Preapare orbital rotation matrix, which transforms all MOs
     Ua_ = std::make_shared<psi::Matrix>("Ua", nmopi_, nmopi_);
@@ -101,12 +90,10 @@ void SemiCanonical::startup() {
 
     Ua_->identity();
     Ub_->identity();
-    outfile->Printf("\n CHK #1");
 
     // Preapare orbital rotation matrix, which transforms only active MOs
     Ua_t_ = ambit::Tensor::build(ambit::CoreTensor, "Ua", {nact_, nact_});
     Ub_t_ = ambit::Tensor::build(ambit::CoreTensor, "Ub", {nact_, nact_});
-    outfile->Printf("\n CHK #2");
 
     // Initialize U to identity
     set_U_to_identity();
@@ -115,19 +102,16 @@ void SemiCanonical::startup() {
     mo_dims_["core"] = rdocc_;
     mo_dims_["actv"] = actv_;
     mo_dims_["virt"] = ruocc_;
-    outfile->Printf("\n CHK #3");
 
     // index map
     cmo_idx_["core"] = idx_space(rdocc_, psi::Dimension(std::vector<int>(nirrep_, 0)), ncmopi_);
     cmo_idx_["actv"] = idx_space(actv_, rdocc_, ncmopi_);
     cmo_idx_["virt"] = idx_space(ruocc_, rdocc_ + actv_, ncmopi_);
-    outfile->Printf("\n CHK #4");
 
     // offsets map
     offsets_["core"] = fdocc_;
     offsets_["virt"] = fdocc_ + rdocc_ + actv_;
     offsets_["actv"] = fdocc_ + rdocc_;
-    outfile->Printf("\n CHK #5");
 
     std::vector<int> actv_off;
     for (size_t h = 0, offset = 0; h < nirrep_; ++h) {
@@ -135,7 +119,6 @@ void SemiCanonical::startup() {
         offset += actv_[h];
     }
     actv_offsets_["actv"] = actv_off;
-    outfile->Printf("\n CHK #6");
 }
 
 std::vector<std::vector<size_t>> SemiCanonical::idx_space(const psi::Dimension& npi,
@@ -161,7 +144,6 @@ void SemiCanonical::set_actv_dims(const psi::Dimension& actv_docc,
     if (actv != actv_) {
         throw psi::PSIEXCEPTION("ACTIVE_DOCC and ACTIVE_VIRT do not add up to ACTIVE!");
     }
-    outfile->Printf("\n BDCHK #1");
 
     // delete original active maps
     mo_dims_.erase("actv");
@@ -194,33 +176,27 @@ void SemiCanonical::set_actv_dims(const psi::Dimension& actv_docc,
     }
     actv_offsets_["actv_docc"] = actvh_off;
     actv_offsets_["actv_virt"] = actvp_off;
-    outfile->Printf("\n BDCHK #2");
 }
 
 RDMs SemiCanonical::semicanonicalize(RDMs& rdms, const int& max_rdm_level, const bool& build_fock,
                                      const bool& transform) {
     local_timer SemiCanonicalize;
-    outfile->Printf("\n CHK #8");
 
     // 1. Build the Fock matrix from ForteIntegral
     if (build_fock) {
         build_fock_matrix(rdms);
     }
-    outfile->Printf("\n CHK #9");
 
     // Check Fock matrix
     bool semi = check_fock_matrix();
-    outfile->Printf("\n CHK #10");
 
     if (semi) {
         outfile->Printf("\n  Orbitals are already semicanonicalized.");
         set_U_to_identity();
     } else {
-        outfile->Printf("\n CHK #10");
         // 2. Build transformation matrices from diagononalizing blocks in F
         build_transformation_matrices(Ua_, Ub_, Ua_t_, Ub_t_);
 
-        outfile->Printf("\n CHK #11");
         // 3. Retransform integrals and cumulants/RDMs
         if (transform) {
             ints_->rotate_orbitals(Ua_, Ua_);
@@ -233,7 +209,6 @@ RDMs SemiCanonical::semicanonicalize(RDMs& rdms, const int& max_rdm_level, const
 
 void SemiCanonical::build_fock_matrix(RDMs& rdms) {
     // 1. Build the Fock matrix
-    outfile->Printf("\n FBCHK #1");
 
     psi::SharedMatrix Da(new psi::Matrix("Da", ncmo_, ncmo_));
     psi::SharedMatrix Db(new psi::Matrix("Db", ncmo_, ncmo_));
@@ -241,7 +216,6 @@ void SemiCanonical::build_fock_matrix(RDMs& rdms) {
     auto L1a = tensor_to_matrix(rdms.g1a(), actv_);
     auto L1b = tensor_to_matrix(rdms.g1b(), actv_);
 
-    outfile->Printf("\n FBCHK #2");
 
     for (size_t h = 0, offset = 0; h < nirrep_; ++h) {
         // core block (diagonal)
@@ -262,7 +236,6 @@ void SemiCanonical::build_fock_matrix(RDMs& rdms) {
 
         offset += ncmopi_[h] - rdocc_[h];
     }
-    outfile->Printf("\n FBCHK #1");
 
     local_timer FockTime;
     ints_->make_fock_matrix(Da, Db);

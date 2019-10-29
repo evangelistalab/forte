@@ -794,18 +794,125 @@ psi::SharedMatrix semicanonicalize_block(psi::SharedWavefunction ref_wfn, psi::S
     }
 }
 
+size_t index_exp(size_t na, size_t p, size_t q, size_t r, size_t s) {
+    return na * na * na * p + na * na * q + na * r + s;
+}
+
 RDMs build_casscf_density(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
                           std::shared_ptr<ForteOptions> options,
-                          std::shared_ptr<MOSpaceInfo> mo_space_info,
+                          std::shared_ptr<MOSpaceInfo> mo_space_info_active, std::shared_ptr<MOSpaceInfo> mo_space_info, 
                           std::shared_ptr<ActiveSpaceIntegrals> as_ints) {
     // Return 3-RDM from a CASSCF computation
 
-    CASSCF cas_1(state, nroot, scf_info, options, mo_space_info, as_ints);
+    CASSCF cas_1(state, nroot, scf_info, options, mo_space_info_active, as_ints);
     cas_1.compute_energy();
+    outfile->Printf("\n ===================CASSCF Done====================");
 
     std::vector<std::pair<size_t, size_t>> root_list;
     std::vector<RDMs> rdms_vec = cas_1.rdms(root_list, 3);
-    return rdms_vec[0];
+
+    // Build RDMs with mo_space_info size, fill the blocks
+    size_t na = mo_space_info->size("ACTIVE");
+    size_t na_in = mo_space_info_active->size("ACTIVE");
+
+    // Outer-layer mospace
+    auto doccpi = scf_info->doccpi();
+    auto rdoccpi = mo_space_info->get_dimension("RESTRICTED_DOCC");
+    auto actvpi = mo_space_info->get_dimension("ACTIVE");
+    auto actvopi = doccpi - rdoccpi - mo_space_info->get_dimension("FROZEN_DOCC");
+
+    // Inner-layer mospace
+    auto rdoccpi_in = mo_space_info_active->get_dimension("RESTRICTED_DOCC");
+    auto actvpi_in = mo_space_info_active->get_dimension("ACTIVE");
+    auto actvopi_in = doccpi - rdoccpi - mo_space_info_active->get_dimension("FROZEN_DOCC");
+
+    std::vector<size_t> mos_actv_o;
+    for (int i = 0; i < actvopi[0]; ++i) {
+        mos_actv_o.push_back(i);
+    }
+
+    std::vector<size_t> mos_actv_o_in;
+    for (int i = 0; i < actvopi[0]; ++i) {
+        mos_actv_o_in.push_back(rdoccpi_in[0] + i);
+    }
+
+    // 1-RDM
+    auto D1a = ambit::Tensor::build(ambit::CoreTensor, "D1a", std::vector<size_t>(2, na));
+    auto D1b = ambit::Tensor::build(ambit::CoreTensor, "D1b", std::vector<size_t>(2, na));
+
+    for (auto i : mos_actv_o) {
+        for (auto j : mos_actv_o) {
+            if (i >= rdoccpi_in[0] && j >= rdoccpi_in[0]) {
+                size_t ip = i - rdoccpi_in[0];
+                size_t jp = j - rdoccpi_in[0];
+                D1a.data()[i * na + j] = rdms_vec[0].g1a().data()[ip * na_in + jp];
+                D1b.data()[i * na + j] = rdms_vec[0].g1b().data()[ip * na_in + jp];
+            }
+            else if (i == j) {
+                D1a.data()[i * na + j] = 1.0;
+                D1b.data()[i * na + j] = 1.0;
+            }
+            else {
+                D1a.data()[i * na + j] = 0.0;
+                D1b.data()[i * na + j] = 0.0;
+            }
+        }
+    }
+
+    // 2-RDM
+    auto D2aa = ambit::Tensor::build(ambit::CoreTensor, "D2aa", std::vector<size_t>(4, na));
+    auto D2ab = ambit::Tensor::build(ambit::CoreTensor, "D2ab", std::vector<size_t>(4, na));
+    auto D2bb = ambit::Tensor::build(ambit::CoreTensor, "D2bb", std::vector<size_t>(4, na));
+
+    D2aa("pqrs") += D1a("pr") * D1a("qs");
+    D2aa("pqrs") -= D1a("ps") * D1a("qr");
+
+    D2bb("pqrs") += D1b("pr") * D1b("qs");
+    D2bb("pqrs") -= D1b("ps") * D1b("qr");
+
+    D2ab("pqrs") = D1a("pr") * D1b("qs");
+
+    size_t v = rdoccpi_in[0];
+
+    for (auto p : mos_actv_o_in) {
+        for (auto q : mos_actv_o_in) {
+            for (auto r : mos_actv_o_in) {
+                for (auto s : mos_actv_o_in) {
+                    D2aa.data()[index_exp(na, p+v, q+v, r+v, s+v)] = rdms_vec[0].g2aa().data()[index_exp(na_in, p, q, r, s)];
+                    D2bb.data()[index_exp(na, p+v, q+v, r+v, s+v)] = rdms_vec[0].g2bb().data()[index_exp(na_in, p, q, r, s)];
+                    D2ab.data()[index_exp(na, p+v, q+v, r+v, s+v)] = rdms_vec[0].g2ab().data()[index_exp(na_in, p, q, r, s)];
+		}
+            }
+        }
+    }
+
+    // 3-RDM # Leave at RHF level !
+    auto D3aaa = ambit::Tensor::build(ambit::CoreTensor, "D3aaa", std::vector<size_t>(6, na));
+    auto D3aab = ambit::Tensor::build(ambit::CoreTensor, "D3aab", std::vector<size_t>(6, na));
+    auto D3abb = ambit::Tensor::build(ambit::CoreTensor, "D3abb", std::vector<size_t>(6, na));
+    auto D3bbb = ambit::Tensor::build(ambit::CoreTensor, "D3bbb", std::vector<size_t>(6, na));
+
+    D3aaa("pqrstu") += D1a("ps") * D1a("qt") * D1a("ru");
+    D3aaa("pqrstu") -= D1a("ps") * D1a("rt") * D1a("qu");
+    D3aaa("pqrstu") -= D1a("qs") * D1a("pt") * D1a("ru");
+    D3aaa("pqrstu") += D1a("qs") * D1a("rt") * D1a("pu");
+    D3aaa("pqrstu") -= D1a("rs") * D1a("qt") * D1a("pu");
+    D3aaa("pqrstu") += D1a("rs") * D1a("pt") * D1a("qu");
+
+    D3bbb("pqrstu") += D1b("ps") * D1b("qt") * D1b("ru");
+    D3bbb("pqrstu") -= D1b("ps") * D1b("rt") * D1b("qu");
+    D3bbb("pqrstu") -= D1b("qs") * D1b("pt") * D1b("ru");
+    D3bbb("pqrstu") += D1b("qs") * D1b("rt") * D1b("pu");
+    D3bbb("pqrstu") -= D1b("rs") * D1b("qt") * D1b("pu");
+    D3bbb("pqrstu") += D1b("rs") * D1b("pt") * D1b("qu");
+
+    D3aab("pqrstu") += D1a("ps") * D1a("qt") * D1b("ru");
+    D3aab("pqrstu") -= D1a("qs") * D1a("pt") * D1b("ru");
+
+    D3abb("pqrstu") += D1a("ps") * D1b("qt") * D1b("ru");
+    D3abb("pqrstu") -= D1a("ps") * D1b("rt") * D1b("qu");
+
+    return RDMs(D1a, D1b, D2aa, D2ab, D2bb, D3aaa, D3aab, D3abb, D3bbb);
 }
 
 std::shared_ptr<MOSpaceInfo> build_inner_space(psi::SharedWavefunction ref_wfn,
