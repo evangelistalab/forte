@@ -30,6 +30,7 @@
 #define _mrdsrg_so_h_
 
 #include <cmath>
+#include <unordered_set>
 
 #include "psi4/liboptions/liboptions.h"
 #include "psi4/libmints/wavefunction.h"
@@ -308,9 +309,10 @@ class MRDSRG_SO : public DynamicCorrelationSolver {
     double Tbar1_diff;
     double Tbar2_diff;
 
+    std::unordered_set<std::string> lambda_files_;
     void compute_lhbar_lambda_test();
     void compute_lambda();
-    void build_lambda_numerical(BlockedTensor& C1, BlockedTensor& C2);
+    void build_lambda_numerical(BlockedTensor& C1, BlockedTensor& C2, int iter);
     void update_lambda(BlockedTensor& C1, BlockedTensor& C2);
     void compute_lambda_comm1(BlockedTensor& H1, BlockedTensor& H2, BlockedTensor& L1,
                               BlockedTensor& L2, BlockedTensor& C1, BlockedTensor& C2);

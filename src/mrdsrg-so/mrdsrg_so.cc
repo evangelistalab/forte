@@ -791,16 +791,16 @@ double MRDSRG_SO::compute_energy() {
     outfile->Printf("\n    T corr. 1st-order L/1  c3 = %25.15f", e4th_corr[2]);
     outfile->Printf("\n    T corr. 1st-order L/2  c4 = %25.15f", e4th_corr[3]);
     outfile->Printf("\n    T corr. 1st-order L    c5 = %25.15f", e4th_corr[4]);
-
-    double t1 = e4th_corr[0] + e4th_corr[3];
-    double t2 = e4th_corr[0] + e4th_corr[2];
-    double t3 = e4th_corr[0] + e4th_corr[4];
-    outfile->Printf("\n");
     if (fabs(e4th_corr[1] - e4th_corr[2]) > foptions_->get_double("E_CONVERGENCE")) {
         outfile->Printf("\n  Warning: c2 != c3, something might be broken!");
     }
-    outfile->Printf("\n    [T] correction:  c1 + c4 = %25.15f", t1);
-    outfile->Printf("\n    (T) correction   c1 + c3 = %25.15f", t2);
+
+    double t1 = e4th_corr[0] + e4th_corr[2];
+    double t2 = e4th_corr[0] + e4th_corr[3];
+    double t3 = e4th_corr[0] + e4th_corr[4];
+    outfile->Printf("\n");
+    outfile->Printf("\n    [T] correction:  c1 + c3 = %25.15f", t1);
+    outfile->Printf("\n    (T) correction   c1 + c4 = %25.15f", t2);
     outfile->Printf("\n    λ(T) correction: c1 + c5 = %25.15f", t3);
 
     outfile->Printf("\n");
@@ -809,6 +809,7 @@ double MRDSRG_SO::compute_energy() {
     outfile->Printf("\n  * λDSRG(T) energy       = %25.15f", Etotal + t3);
 
     psi::Process::environment.globals["CURRENT ENERGY"] = Etotal;
+    psi::Process::environment.globals["DSRG[T]-D ENERGY"] = Etotal + e4th_corr[0];
     psi::Process::environment.globals["DSRG[T] ENERGY"] = Etotal + t1;
     psi::Process::environment.globals["DSRG(T) ENERGY"] = Etotal + t2;
     psi::Process::environment.globals["LAMBDA-DSRG(T) ENERGY"] = Etotal + t3;

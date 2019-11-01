@@ -32,8 +32,11 @@
 
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libmints/molecule.h"
+#include "psi4/libpsio/psio.hpp"
+#include "psi4/libpsio/psio.h"
 
 #include "base_classes/mo_space_info.h"
+#include "helpers/helpers.h"
 #include "helpers/printing.h"
 #include "helpers/timer.h"
 #include "mrdsrg_so.h"
@@ -73,7 +76,7 @@ void MRDSRG_SO::compute_lambda() {
         C1.zero();
         C2.zero();
 
-        build_lambda_numerical(C1, C2);
+        build_lambda_numerical(C1, C2, i);
 
         //        compute_lambda_comm1(F, V, Tbar1, Tbar2, C1, C2);
         //        compute_lambda_comm2(F, V, T1, T2, Tbar1, Tbar2, C1, C2);
@@ -102,9 +105,19 @@ void MRDSRG_SO::compute_lambda() {
                         "cycles\n\tQuitting.\n",
                         maxiter);
     }
+
+    // revmove all lambda files on disk
+    for (const std::string& filename : lambda_files_) {
+        lambda_files_.erase(filename);
+        if (remove(filename.c_str()) != 0) {
+            std::stringstream ss;
+            ss << "Error deleting file " << filename << ": No such file or directory";
+            throw psi::PSIEXCEPTION(ss.str());
+        }
+    }
 }
 
-void MRDSRG_SO::build_lambda_numerical(BlockedTensor& C1, BlockedTensor& C2) {
+void MRDSRG_SO::build_lambda_numerical(BlockedTensor& C1, BlockedTensor& C2, int iter) {
     // 4-point formula: f'(x) = [-f(x+2h) + 8f(x+h) - 8f(x-h) + f(x-2h)] / 12h
     double h = foptions_->get_double("DSRG_LAMBDA_FINDIFF_STEPSIZE");
     int npt = foptions_->get_int("DSRG_LAMBDA_FINDIFF_FORM");
@@ -122,6 +135,9 @@ void MRDSRG_SO::build_lambda_numerical(BlockedTensor& C1, BlockedTensor& C2) {
     size_t nc_nmo = acore_sos.size();
     size_t nv_nmo = avirt_sos.size();
 
+    std::string path0 = PSIOManager::shared_object()->get_default_path() + "psi." +
+                        psio_getpid() + "." + psi::Process::environment.molecule()->name();
+
     for (size_t i = 0; i < nc_nmo; ++i) {
         for (size_t a = 0; a < nv_nmo; ++a) {
             size_t idx = i * nv_ + a;
@@ -134,35 +150,63 @@ void MRDSRG_SO::build_lambda_numerical(BlockedTensor& C1, BlockedTensor& C2) {
             std::vector<double> pts;
             std::vector<double> diag;
             for (int factor: factors) {
-                T1.block("cv").data()[idx] = t + factor * h;
-                compute_lhbar_lambda_test();
+                // filenames for dump and read
+                std::string step = "step" + std::to_string(factor);
+                std::vector<std::string> name_comp {"T1L1", std::to_string(i), std::to_string(a), step, "bin"};
 
-                O1["ia"] = Hbar1["ia"];
-                O2["ijab"] = Hbar2["ijab"];
+                std::string filename1 = path0;
+                for (const std::string& str: name_comp) {
+                    filename1 += "." + str;
+                }
 
-                O1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
-                    double D = Fd[i[0]] - Fd[i[1]];
-                    value *= 1.0 - std::exp(-s_ * D * D);
-                });
+                name_comp[0] = "T1L2";
+                std::string filename2 = path0;
+                for (const std::string& str: name_comp) {
+                    filename2 += "." + str;
+                }
 
-                O2.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
-                    double D = Fd[i[0]] + Fd[i[1]] - Fd[i[2]] - Fd[i[3]];
-                    value *= 1.0 - std::exp(-s_ * D * D);
-                });
+                if (iter != 0) {
+                    // read from disk
+                    read_disk_vector_double(filename1, O1.block("cv").data());
+                    read_disk_vector_double(filename2, O2.block("ccvv").data());
+                } else {
+                    T1.block("cv").data()[idx] = t + factor * h;
+                    compute_lhbar();
 
-                ST1["ia"] = T1["ia"];
-                ST2["ijab"] = T2["ijab"];
-                ST1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
-                    double D = Fd[i[0]] - Fd[i[1]];
-                    value *= D * std::exp(-s_ * D * D);
-                });
-                ST2.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
-                    double D = Fd[i[0]] + Fd[i[1]] - Fd[i[2]] - Fd[i[3]];
-                    value *= D * std::exp(-s_ * D * D);
-                });
+                    O1["ia"] = Hbar1["ia"];
+                    O2["ijab"] = Hbar2["ijab"];
 
-                O1["ia"] -= ST1["ia"];
-                O2["ijab"] -= ST2["ijab"];
+                    O1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+                        double D = Fd[i[0]] - Fd[i[1]];
+                        value *= 1.0 - std::exp(-s_ * D * D);
+                    });
+
+                    O2.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+                        double D = Fd[i[0]] + Fd[i[1]] - Fd[i[2]] - Fd[i[3]];
+                        value *= 1.0 - std::exp(-s_ * D * D);
+                    });
+
+                    ST1["ia"] = T1["ia"];
+                    ST2["ijab"] = T2["ijab"];
+                    ST1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+                        double D = Fd[i[0]] - Fd[i[1]];
+                        value *= D * std::exp(-s_ * D * D);
+                    });
+                    ST2.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+                        double D = Fd[i[0]] + Fd[i[1]] - Fd[i[2]] - Fd[i[3]];
+                        value *= D * std::exp(-s_ * D * D);
+                    });
+
+                    O1["ia"] -= ST1["ia"];
+                    O2["ijab"] -= ST2["ijab"];
+
+                    // dump to disk
+                    lambda_files_.insert(filename1);
+                    write_disk_vector_double(filename1, O1.block("cv").data());
+
+                    lambda_files_.insert(filename2);
+                    write_disk_vector_double(filename2, O2.block("ccvv").data());
+                }
 
                 // zero diagonal element
                 double diag_elem = O1.block("cv").data()[idx];
@@ -220,6 +264,7 @@ void MRDSRG_SO::build_lambda_numerical(BlockedTensor& C1, BlockedTensor& C2) {
                     indices.push_back(std::vector<size_t> {j + nc_nmo, i, b + nv_nmo, a});
                     indices.push_back(std::vector<size_t> {i, j + nc_nmo, b + nv_nmo, a});
 
+                    // need to consider permutations
                     for (int x = 0; x < 4; ++x) {
                         size_t idx = indices[x][0] * nc_ * nv_ * nv_ + indices[x][1] * nv_ * nv_ + indices[x][2] * nv_ + indices[x][3];
                         double t = T2.block("ccvv").data()[idx];
@@ -227,35 +272,65 @@ void MRDSRG_SO::build_lambda_numerical(BlockedTensor& C1, BlockedTensor& C2) {
                         std::vector<double> pts;
                         std::vector<double> diag;
                         for (int factor: factors) {
-                            T2.block("ccvv").data()[idx] = t + factor * h;
-                            compute_lhbar();
+                            // filenames for dump and read
+                            std::string perm = "perm" + std::to_string(x);
+                            std::string step = "step" + std::to_string(factor);
+                            std::vector<std::string> name_comp {"T2L1", std::to_string(i), std::to_string(j),
+                                        std::to_string(a), std::to_string(b), perm, step, "bin"};
 
-                            O1["ia"] = Hbar1["ia"];
-                            O2["ijab"] = Hbar2["ijab"];
+                            std::string filename1 = path0;
+                            for (const std::string& str: name_comp) {
+                                filename1 += "." + str;
+                            }
 
-                            O1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
-                                double D = Fd[i[0]] - Fd[i[1]];
-                                value *= 1.0 - std::exp(-s_ * D * D);
-                            });
+                            name_comp[0] = "T2L2";
+                            std::string filename2 = path0;
+                            for (const std::string& str: name_comp) {
+                                filename2 += "." + str;
+                            }
 
-                            O2.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
-                                double D = Fd[i[0]] + Fd[i[1]] - Fd[i[2]] - Fd[i[3]];
-                                value *= 1.0 - std::exp(-s_ * D * D);
-                            });
+                            if (iter != 0) {
+                                // read from disk
+                                read_disk_vector_double(filename1, O1.block("cv").data());
+                                read_disk_vector_double(filename2, O2.block("ccvv").data());
+                            } else {
+                                T2.block("ccvv").data()[idx] = t + factor * h;
+                                compute_lhbar();
 
-                            ST1["ia"] = T1["ia"];
-                            ST2["ijab"] = T2["ijab"];
-                            ST1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
-                                double D = Fd[i[0]] - Fd[i[1]];
-                                value *= D * std::exp(-s_ * D * D);
-                            });
-                            ST2.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
-                                double D = Fd[i[0]] + Fd[i[1]] - Fd[i[2]] - Fd[i[3]];
-                                value *= D * std::exp(-s_ * D * D);
-                            });
+                                O1["ia"] = Hbar1["ia"];
+                                O2["ijab"] = Hbar2["ijab"];
 
-                            O1["ia"] -= ST1["ia"];
-                            O2["ijab"] -= ST2["ijab"];
+                                O1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+                                    double D = Fd[i[0]] - Fd[i[1]];
+                                    value *= 1.0 - std::exp(-s_ * D * D);
+                                });
+
+                                O2.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+                                    double D = Fd[i[0]] + Fd[i[1]] - Fd[i[2]] - Fd[i[3]];
+                                    value *= 1.0 - std::exp(-s_ * D * D);
+                                });
+
+                                ST1["ia"] = T1["ia"];
+                                ST2["ijab"] = T2["ijab"];
+                                ST1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+                                    double D = Fd[i[0]] - Fd[i[1]];
+                                    value *= D * std::exp(-s_ * D * D);
+                                });
+                                ST2.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+                                    double D = Fd[i[0]] + Fd[i[1]] - Fd[i[2]] - Fd[i[3]];
+                                    value *= D * std::exp(-s_ * D * D);
+                                });
+
+                                O1["ia"] -= ST1["ia"];
+                                O2["ijab"] -= ST2["ijab"];
+
+                                // dump to disk
+                                lambda_files_.insert(filename1);
+                                write_disk_vector_double(filename1, O1.block("cv").data());
+
+                                lambda_files_.insert(filename2);
+                                write_disk_vector_double(filename2, O2.block("ccvv").data());
+                            }
 
                             // zero diagonal element
                             double diag_elem = O2.block("ccvv").data()[idx];
@@ -301,7 +376,7 @@ void MRDSRG_SO::build_lambda_numerical(BlockedTensor& C1, BlockedTensor& C2) {
                     double ref_de = -d;
                     double ref = ref_nu / (-0.25 * ref_de);
                     outfile->Printf("\n ref = %20.15f = -4 * %20.15f / %20.15f", ref, ref_nu, ref_de);
-                    outfile->Printf("\n val = %20.15f", C2.block("ccvv").data()[idxx]);
+                    outfile->Printf("\n val = %20.15f = -4 * %20.15f / %20.15f", C2.block("ccvv").data()[idxx], numerator, denominator);
                 }
             }
         }
