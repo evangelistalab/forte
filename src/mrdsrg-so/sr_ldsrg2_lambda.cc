@@ -29,11 +29,10 @@
 #include <algorithm>
 #include <map>
 #include <vector>
+#include <unistd.h>
 
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libmints/molecule.h"
-#include "psi4/libpsio/psio.hpp"
-#include "psi4/libpsio/psio.h"
 
 #include "base_classes/mo_space_info.h"
 #include "helpers/helpers.h"
@@ -136,7 +135,8 @@ void MRDSRG_SO::build_lambda_numerical(BlockedTensor& C1, BlockedTensor& C2, int
     size_t nv_nmo = avirt_sos.size();
 
     std::string path0 = PSIOManager::shared_object()->get_default_path() + "psi." +
-                        psio_getpid() + "." + psi::Process::environment.molecule()->name();
+                        std::to_string(getpid()) + "." +
+                        psi::Process::environment.molecule()->name();
 
     for (size_t i = 0; i < nc_nmo; ++i) {
         for (size_t a = 0; a < nv_nmo; ++a) {
