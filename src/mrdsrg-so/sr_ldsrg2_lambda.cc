@@ -106,13 +106,13 @@ void MRDSRG_SO::compute_lambda() {
     }
 
     // revmove all lambda files on disk
-    for (const std::string& filename : lambda_files_) {
-        lambda_files_.erase(filename);
+    for (const std::string& filename : std::unordered_set<std::string> (lambda_files_)) {
         if (remove(filename.c_str()) != 0) {
             std::stringstream ss;
             ss << "Error deleting file " << filename << ": No such file or directory";
             throw psi::PSIEXCEPTION(ss.str());
         }
+        lambda_files_.erase(filename);
     }
 }
 
