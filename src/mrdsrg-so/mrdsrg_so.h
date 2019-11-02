@@ -310,6 +310,7 @@ class MRDSRG_SO : public DynamicCorrelationSolver {
     double Tbar2_diff;
 
     std::unordered_set<std::string> lambda_files_;
+    std::unordered_map<std::string, double> lambda_Hbar0_;
     void compute_lhbar_lambda_test();
     void compute_lambda();
     void build_lambda_numerical(BlockedTensor& C1, BlockedTensor& C2, int iter);

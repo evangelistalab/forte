@@ -83,7 +83,7 @@ void MRDSRG_SO::compute_lambda() {
         //        compute_lambda_comm4(F, V, T1, T2, Tbar1, Tbar2, C1, C2);
         //        compute_lambda_comm5(F, V, T1, T2, C1, C2);
 
-        outfile->Printf("\n      @CT %4d %7.4f %7.4f %7.4f %7.4f %7.4f %7.4f", cycle, T1norm,
+        outfile->Printf("\n      @CT %4d %10.4e %10.4e %10.4e %10.4e %10.4e %10.4e", cycle, T1norm,
                         T2norm, Tbar1_diff, Tbar2_diff, T1max, T2max);
 
         update_lambda(C1, C2);
@@ -152,21 +152,13 @@ void MRDSRG_SO::build_lambda_numerical(BlockedTensor& C1, BlockedTensor& C2, int
             for (int factor: factors) {
                 // filenames for dump and read
                 std::string step = "step" + std::to_string(factor);
-                std::vector<std::string> name_comp {"T1L1", std::to_string(i), std::to_string(a), step, "bin"};
-
-                std::string filename1 = path0;
-                for (const std::string& str: name_comp) {
-                    filename1 += "." + str;
-                }
-
-                name_comp[0] = "T1L2";
-                std::string filename2 = path0;
-                for (const std::string& str: name_comp) {
-                    filename2 += "." + str;
-                }
+                std::string key_Hbar0 = std::to_string(i) + "." + std::to_string(a) + "." + step;
+                std::string filename1 = path0 + ".T1L1." + key_Hbar0 + ".bin";
+                std::string filename2 = path0 + ".T1L2." + key_Hbar0 + ".bin";
 
                 if (iter != 0) {
-                    // read from disk
+                    // read from saved data or disk
+                    Hbar0 = lambda_Hbar0_[key_Hbar0];
                     read_disk_vector_double(filename1, O1.block("cv").data());
                     read_disk_vector_double(filename2, O2.block("ccvv").data());
                 } else {
@@ -200,7 +192,9 @@ void MRDSRG_SO::build_lambda_numerical(BlockedTensor& C1, BlockedTensor& C2, int
                     O1["ia"] -= ST1["ia"];
                     O2["ijab"] -= ST2["ijab"];
 
-                    // dump to disk
+                    // save data or dump to disk
+                    lambda_Hbar0_[key_Hbar0] = Hbar0;
+
                     lambda_files_.insert(filename1);
                     write_disk_vector_double(filename1, O1.block("cv").data());
 
@@ -275,22 +269,15 @@ void MRDSRG_SO::build_lambda_numerical(BlockedTensor& C1, BlockedTensor& C2, int
                             // filenames for dump and read
                             std::string perm = "perm" + std::to_string(x);
                             std::string step = "step" + std::to_string(factor);
-                            std::vector<std::string> name_comp {"T2L1", std::to_string(i), std::to_string(j),
-                                        std::to_string(a), std::to_string(b), perm, step, "bin"};
-
-                            std::string filename1 = path0;
-                            for (const std::string& str: name_comp) {
-                                filename1 += "." + str;
-                            }
-
-                            name_comp[0] = "T2L2";
-                            std::string filename2 = path0;
-                            for (const std::string& str: name_comp) {
-                                filename2 += "." + str;
-                            }
+                            std::string key_Hbar0 = std::to_string(i) + "." + std::to_string(j)
+                                    + "." + std::to_string(a) + "." + std::to_string(b)
+                                    + "." + step + "." + perm;
+                            std::string filename1 = path0 + ".T2L1." + key_Hbar0 + ".bin";
+                            std::string filename2 = path0 + ".T2L2." + key_Hbar0 + ".bin";
 
                             if (iter != 0) {
-                                // read from disk
+                                // read from saved data or disk
+                                Hbar0 = lambda_Hbar0_[key_Hbar0];
                                 read_disk_vector_double(filename1, O1.block("cv").data());
                                 read_disk_vector_double(filename2, O2.block("ccvv").data());
                             } else {
@@ -324,7 +311,9 @@ void MRDSRG_SO::build_lambda_numerical(BlockedTensor& C1, BlockedTensor& C2, int
                                 O1["ia"] -= ST1["ia"];
                                 O2["ijab"] -= ST2["ijab"];
 
-                                // dump to disk
+                                // save data or dump to disk
+                                lambda_Hbar0_[key_Hbar0] = Hbar0;
+
                                 lambda_files_.insert(filename1);
                                 write_disk_vector_double(filename1, O1.block("cv").data());
 
