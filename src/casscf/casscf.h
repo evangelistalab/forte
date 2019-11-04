@@ -125,6 +125,45 @@ class CASSCF : public ActiveSpaceMethod {
     /// The number of NMO including frozen core
     size_t all_nmo_;
 
+
+
+/*************************/
+/*                       */
+/*  New added variables  */
+/*                       */
+/*************************/
+
+
+    /// Set Ambit tensor labels
+    void set_ambit_space();
+
+    /// List of core MOs
+    std::vector<size_t> core_mos_;
+    /// List of active MOs
+    std::vector<size_t> actv_mos_;
+    /// List of virtual MOs
+    std::vector<size_t> virt_mos_;
+
+    /// Alpha core label
+    std::string acore_label_;
+    /// Alpha active label
+    std::string aactv_label_;
+    /// Alpha virtual label
+    std::string avirt_label_;
+    /// Beta core label
+    std::string bcore_label_;
+    /// Beta active label
+    std::string bactv_label_;
+    /// Beta virtual label
+    std::string bvirt_label_;
+
+    /// Kevin's Tensor Wrapper
+    std::shared_ptr<BlockedTensorFactory> BTF_;
+
+
+
+
+
     /// These member variables are all summarized in Algorithm 1
     /// Equation 9
 
