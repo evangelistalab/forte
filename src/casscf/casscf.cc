@@ -65,6 +65,8 @@ CASSCF::CASSCF(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
     startup();
 }
 
+
+
 double CASSCF::compute_energy() {
     if (na_ == 0) {
         outfile->Printf("\n\n\n Please set the active space");
