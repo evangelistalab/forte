@@ -127,15 +127,18 @@ class CASSCF : public ActiveSpaceMethod {
 
 
 
-/*************************/
-/*                       */
-/*  New added variables  */
-/*                       */
-/*************************/
-
+/*********************************/
+/*                               */
+/*  New added variables (Begin)  */
+/*                               */
+/*********************************/
 
     /// Set Ambit tensor labels
     void set_ambit_space();
+    /// Set up omega matrix entries of core-core and core-active blocks
+    void set_Lagrangian_CX();
+    /// Set density and Fock matrix
+    void setup_DensityAndFock(); 
 
     /// List of core MOs
     std::vector<size_t> core_mos_;
@@ -157,10 +160,34 @@ class CASSCF : public ActiveSpaceMethod {
     /// Beta virtual label
     std::string bvirt_label_;
 
+
+
+    // Correlated MOs
+    psi::Dimension ncmopi_;
+    // Restricted DOCC
+    psi::Dimension rdocc_;
+    // Active MOs
+    psi::Dimension actv_;
+
+    // Density matrix alpha
+    psi::SharedMatrix Da;
+    // Density matrix beta
+    psi::SharedMatrix Db;
+
+    // Fock matrix alpha
+    ambit::Tensor fock_a;
+    // Fock matrix beta
+    ambit::Tensor fock_b;
+
+
     /// Kevin's Tensor Wrapper
     std::shared_ptr<BlockedTensorFactory> BTF_;
 
-
+/*******************************/
+/*                             */
+/*  New added variables (End)  */
+/*                             */
+/*******************************/
 
 
 

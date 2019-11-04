@@ -38,6 +38,12 @@ namespace forte {
 
 void CASSCF::set_ambit_space() {
 
+/****************************/
+/*                          */
+/*  set up ambit MO space   */
+/*                          */
+/****************************/
+
     outfile->Printf("\n    Setting ambit MO space .......................... ");
     BlockedTensor::reset_mo_spaces();
     BlockedTensor::set_expert_mode(true);
@@ -75,7 +81,96 @@ void CASSCF::set_ambit_space() {
     outfile->Printf("Done");	
 }
 
+void CASSCF::setup_DensityAndFock() {
 
+ // ambit::Tensor fock_ = 
+ //     ambit::Tensor::build(ambit::CoreTensor, "Fock Tensor", {nmo_, nmo_} );
+
+    SharedMatrix Da(new psi::Matrix("Da", nmo_, nmo_));
+    SharedMatrix Db(new psi::Matrix("Db", nmo_, nmo_));
+    auto L1a = tensor_to_matrix(cas_ref_.g1a(), na_);
+    auto L1b = tensor_to_matrix(cas_ref_.g1b(), na_);
+
+    ncmopi_ = mo_space_info_->get_dimension("CORRELATED");
+    rdocc_ = mo_space_info_->get_dimension("RESTRICTED_DOCC");
+    actv_ = mo_space_info_->get_dimension("ACTIVE");
+
+    for (size_t h = 0, offset = 0; h < nirrep_; ++h) {
+        // core block (diagonal)
+        for (size_t i = 0; i < rdocc_[h]; ++i) {
+            Da->set(offset + i, offset + i, 1.0);
+            Db->set(offset + i, offset + i, 1.0);
+        }
+
+        offset += rdocc_[h];
+
+        // active block
+        for (size_t u = 0; u < actv_[h]; ++u) {
+            for (size_t v = 0; v < actv_[h]; ++v) {
+                Da->set(offset + u, offset + v, L1a->get(h, u, v));
+                Db->set(offset + u, offset + v, L1b->get(h, u, v));
+            }
+        }
+
+        offset += ncmopi_[h] - rdocc_[h];
+    }
+
+    ints_->make_fock_matrix(Da, Db);
+
+    ambit::Tensor fock_a = 
+        ambit::Tensor::build(ambit::CoreTensor, "Fock alpha Tensor", {nmo_, nmo_} );   
+    ambit::Tensor fock_b = 
+        ambit::Tensor::build(ambit::CoreTensor, "Fock beta Tensor", {nmo_, nmo_} ); 
+    
+    for(int p = 0; p < nmo_; ++p) {
+        for(int q = 0; q < nmo_; ++q) {
+            fock_a.data()[p * nmo_ + q] = ints_->get_fock_a(p, q);
+            fock_b.data()[p * nmo_ + q] = ints_->get_fock_b(p, q);
+        }
+    } 
+
+}
+
+void CASSCF::set_Lagrangian_CX() {
+
+/*********************************************************************/
+/*                                                                   */
+/*  set up omega matrix entries of core-core and core-active blocks  */
+/*                                                                   */
+/*********************************************************************/
+
+    // for (auto m : core_) {
+    //     for (auto n : core_) {
+    //         double omega = - f[m,n]; 
+
+    //         L->set(m, n, omega);
+    //         L->set(n, m, omega);
+    //     }
+    // }
+
+    // for (auto m : core_) {
+    //     for (auto u : active_) {
+    //         double omega = - f[m,u]; 
+
+    //         L->set(m, u, omega);
+    //         L->set(u, m, omega);
+    //     }
+    // }
+
+
+    // ambit::Tensor omega_CX_a = 
+    //     ambit::Tensor::build(ambit::CoreTensor, "omega core-x alpha", {core_ + actv_, core_} );
+    // ambit::Tensor omega_CX_b = 
+    //     ambit::Tensor::build(ambit::CoreTensor, "omega core-x beta", {core_ + actv_, core_} );
+
+    // for(int m = 0; m < core_; ++m) {
+    //  for(int p = 0, uplim = core_ + actv_; p < uplim; ++p) {
+    //      omega_CX_a.data()[m * nmo_ + p] = - fock_a.data()[m * nmo_ + p];
+    //      omega_CX_b.data()[m * nmo_ + p] = - fock_b.data()[m * nmo_ + p];
+    //  }
+    // }
+
+}
 
 
 // SharedMatrix CASSCF::convert_1rdm_so2mo(SharedMatrix D) {
@@ -92,98 +187,9 @@ void CASSCF::set_ambit_space() {
 // }
 
 
-// void CASSCF::setup_DensityAndFock() {
-
-// 	// ambit::Tensor fock_ = 
-// 	//     ambit::Tensor::build(ambit::CoreTensor, "Fock Tensor", {nmo_, nmo_} );
-
-//     psi::SharedMatrix Da(new psi::Matrix("Da", ncmo_, ncmo_));
-//     psi::SharedMatrix Db(new psi::Matrix("Db", ncmo_, ncmo_));
-//     auto L1a = tensor_to_matrix(cas_ref_.g1a(), actv_);
-//     auto L1b = tensor_to_matrix(cas_ref_.g1b(), actv_);
-
-//     for (size_t h = 0, offset = 0; h < nirrep_; ++h) {
-//         // core block (diagonal)
-//         for (int i = 0; i < rdocc_[h]; ++i) {
-//             Da->set(offset + i, offset + i, 1.0);
-//             Db->set(offset + i, offset + i, 1.0);
-//         }
-
-//         offset += rdocc_[h];
-
-//         // active block
-//         for (int u = 0; u < actv_[h]; ++u) {
-//             for (int v = 0; v < actv_[h]; ++v) {
-//                 Da->set(offset + u, offset + v, L1a->get(h, u, v));
-//                 Db->set(offset + u, offset + v, L1b->get(h, u, v));
-//             }
-//         }
-
-//         offset += ncmopi_[h] - rdocc_[h];
-//     }
-
-//     ints_->make_fock_matrix(Da, Db);
-
-// 	ambit::Tensor fock_a = 
-// 	    ambit::Tensor::build(ambit::CoreTensor, "Fock alpha Tensor", {nmo_, nmo_} );   
-// 	ambit::Tensor fock_b = 
-// 	    ambit::Tensor::build(ambit::CoreTensor, "Fock beta Tensor", {nmo_, nmo_} ); 
-	
-// 	for(int p = 0; p < nmo_; ++p) {
-// 		for(int q = 0; q < nmo_; ++q) {
-// 			fock_a.data()[p * nmo_ + q] = ints_->get_fock_a(p, q);
-// 			fock_b.data()[p * nmo_ + q] = ints_->get_fock_b(p, q);
-// 		}
-// 	} 
-
-// }
 
 
 
-
-
-// void CASSCF::compute_Lagrangian_CX(SharedMatrix L, SharedMatrix D1) {
-
-// /*******************************************************/
-// /*                                                     */
-// /*  compute omega of core-core and core-active blocks  */
-// /*                                                     */
-// /*******************************************************/
-
-//     // for (auto m : core_) {
-//     //     for (auto n : core_) {
-//     //         double omega = - f[m,n]; 
-
-//     //         L->set(m, n, omega);
-//     //         L->set(n, m, omega);
-//     //     }
-//     // }
-
-//     // for (auto m : core_) {
-//     //     for (auto u : active_) {
-//     //         double omega = - f[m,u]; 
-
-//     //         L->set(m, u, omega);
-//     //         L->set(u, m, omega);
-//     //     }
-//     // }
-
-
-// 	ambit::Tensor omega_CX_a = 
-// 	    ambit::Tensor::build(ambit::CoreTensor, "omega core-x alpha", {core_ + actv_, core_} );
-// 	ambit::Tensor omega_CX_b = 
-// 	    ambit::Tensor::build(ambit::CoreTensor, "omega core-x beta", {core_ + actv_, core_} );
-
-// 	for(int m = 0; m < core_; ++m) {
-// 		for(int p = 0, uplim = core_ + actv_; p < uplim; ++p) {
-// 			omega_CX_a.data()[m * nmo_ + p] = - fock_a.data()[m * nmo_ + p];
-// 			omega_CX_b.data()[m * nmo_ + p] = - fock_b.data()[m * nmo_ + p];
-// 		}
-// 	}
-
-
-
-// }
 
 // void CASSCF::compute_Lagrangian_AA(SharedMatrix L, SharedMatrix D1) {
 
