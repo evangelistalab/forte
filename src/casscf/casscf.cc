@@ -156,6 +156,7 @@ double CASSCF::compute_energy() {
         Ca = ints_->Ca();
         Cb = ints_->Cb();
 
+
         CASSCFOrbitalOptimizer orbital_optimizer(gamma1_, gamma2_, tei_paaa_, options_,
                                                  mo_space_info_);
 

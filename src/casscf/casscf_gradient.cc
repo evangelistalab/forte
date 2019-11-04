@@ -4,6 +4,8 @@
 
 void CASSCF::set_ambit_space() {
 
+    c = 0
+
     outfile->Printf("\n    Setting ambit MO space .......................... ");
     BlockedTensor::reset_mo_spaces();
     BlockedTensor::set_expert_mode(true);
@@ -341,7 +343,6 @@ void CASSCF::write_2rdm_spin_dependent(SharedMatrix D1) {
             }
         }
     }
-
 
 
     outfile->Printf("\n Done");
