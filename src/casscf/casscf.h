@@ -137,6 +137,8 @@ class CASSCF : public ActiveSpaceMethod {
     void set_ambit_space();
     /// Set up omega matrix entries of core-core and core-active blocks
     void set_Lagrangian_CX();
+    /// Set up omega matrix entries of active-active blocks
+    void set_Lagrangian_AA();
     /// Set density and Fock matrix
     void setup_DensityAndFock(); 
 
