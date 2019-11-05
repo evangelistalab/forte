@@ -139,65 +139,26 @@ void CASSCF::set_Lagrangian_CX() {
 /*                                                                   */
 /*********************************************************************/
 
-    // for (auto m : core_) {
-    //     for (auto n : core_) {
-    //         double omega = - f[m,n]; 
+    ambit::Tensor omega_CX_a = 
+        ambit::Tensor::build(ambit::CoreTensor, "omega core-x alpha", {nrdocc_ + na_, nrdocc_} );
+    ambit::Tensor omega_CX_b = 
+        ambit::Tensor::build(ambit::CoreTensor, "omega core-x beta", {nrdocc_ + na_, nrdocc_} );
 
-    //         L->set(m, n, omega);
-    //         L->set(n, m, omega);
-    //     }
-    // }
-
-    // for (auto m : core_) {
-    //     for (auto u : active_) {
-    //         double omega = - f[m,u]; 
-
-    //         L->set(m, u, omega);
-    //         L->set(u, m, omega);
-    //     }
-    // }
-
-
-    // ambit::Tensor omega_CX_a = 
-    //     ambit::Tensor::build(ambit::CoreTensor, "omega core-x alpha", {core_ + actv_, core_} );
-    // ambit::Tensor omega_CX_b = 
-    //     ambit::Tensor::build(ambit::CoreTensor, "omega core-x beta", {core_ + actv_, core_} );
-
-    // for(int m = 0; m < core_; ++m) {
-    //  for(int p = 0, uplim = core_ + actv_; p < uplim; ++p) {
-    //      omega_CX_a.data()[m * nmo_ + p] = - fock_a.data()[m * nmo_ + p];
-    //      omega_CX_b.data()[m * nmo_ + p] = - fock_b.data()[m * nmo_ + p];
-    //  }
-    // }
-
+    for(int p = 0, uplim = nrdocc_ + na_; p < uplim; ++p) {
+        for(int m = 0; m < nrdocc_; ++m) {
+            omega_CX_a.data()[p * nrdocc_ + m] = - fock_a.data()[p * nmo_ + m];
+            omega_CX_b.data()[p * nrdocc_ + m] = - fock_b.data()[p * nmo_ + m];
+        }
+    }
 }
 
+void CASSCF::set_Lagrangian_AA() {
 
-// SharedMatrix CASSCF::convert_1rdm_so2mo(SharedMatrix D) {
-
-//     SharedMatrix Dmo(new Matrix(D->name() + " MO", nmo_, nmo_));
-//     for (int p = 0; p < nmo_; ++p) {
-//         for (int q = 0; q < nmo_; ++q) {
-//             double v1 = D->get(2 * p, 2 * q);
-//             double v2 = D->get(2 * p + 1, 2 * q + 1);
-//             Dmo->set(p, q, v1 + v2);
-//         }
-//     }
-//     return Dmo;
-// }
-
-
-
-
-
-
-// void CASSCF::compute_Lagrangian_AA(SharedMatrix L, SharedMatrix D1) {
-
-// /**********************************************/
-// /*                                            */
-// /*  compute omega of the active-active block  */
-// /*                                            */
-// ********************************************
+/**********************************************/
+/*                                            */
+/*  compute omega of the active-active block  */
+/*                                            */
+/**********************************************/
 
 //     // for (auto u : active_) {
 //     //     for (auto v : active_) {
@@ -258,12 +219,28 @@ void CASSCF::set_Lagrangian_CX() {
 
 // 	temp_1 += v_temp_aa;
 
+}
 
 
 
+// SharedMatrix CASSCF::convert_1rdm_so2mo(SharedMatrix D) {
 
-
+//     SharedMatrix Dmo(new Matrix(D->name() + " MO", nmo_, nmo_));
+//     for (int p = 0; p < nmo_; ++p) {
+//         for (int q = 0; q < nmo_; ++q) {
+//             double v1 = D->get(2 * p, 2 * q);
+//             double v2 = D->get(2 * p + 1, 2 * q + 1);
+//             Dmo->set(p, q, v1 + v2);
+//         }
+//     }
+//     return Dmo;
 // }
+
+
+
+
+
+
 
 
 
