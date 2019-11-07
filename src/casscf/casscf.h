@@ -135,12 +135,25 @@ class CASSCF : public ActiveSpaceMethod {
 
     /// Set Ambit tensor labels
     void set_ambit_space();
+    /// Set density
+    void init_density();
+    /// fill density from RDMs
+    void fill_density();
+    /// Set Fock matrix
+    void init_fock();
+    /// Set Hamiltonian
+    void init_h();
+    /// Set two-electron integrals
+    void init_v();  
     /// Set up omega matrix entries of core-core and core-active blocks
-    void set_Lagrangian_CX();
+    void set_lagrangian_1();
     /// Set up omega matrix entries of active-active blocks
-    void set_Lagrangian_AA();
-    /// Set density and Fock matrix
-    void setup_DensityAndFock(); 
+    void set_lagrangian_2();
+    /// Set up the total Lagrangian
+    void set_lagrangian();
+
+
+
 
     /// List of core MOs
     std::vector<size_t> core_mos_;
@@ -171,15 +184,26 @@ class CASSCF : public ActiveSpaceMethod {
     // Active MOs
     psi::Dimension actv_;
 
-    // Density matrix alpha
-    psi::SharedMatrix Da;
-    // Density matrix beta
-    psi::SharedMatrix Db;
 
     // Fock matrix alpha
     ambit::Tensor fock_a;
     // Fock matrix beta
     ambit::Tensor fock_b;
+
+    // Fock matrix 
+    ambit::BlockedTensor F_;
+    /// One-particle density matrix
+    ambit::BlockedTensor Gamma1_;
+    /// Two-body denisty tensor
+    ambit::BlockedTensor Gamma2_;
+    // Lagrangian tensor
+    ambit::BlockedTensor W_;
+    // core Hamiltonian
+    ambit::BlockedTensor H_;
+    // two-electron integrals
+    ambit::BlockedTensor V_;
+
+   
 
 
     /// Kevin's Tensor Wrapper
