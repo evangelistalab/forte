@@ -68,8 +68,6 @@ void CASSCF::set_ambit_space() {
     BTF_->add_mo_space(avirt_label_, "ef", virt_mos_, AlphaSpin);
     BTF_->add_mo_space(bvirt_label_, "EF", virt_mos_, BetaSpin);
 
-
-
     // define composite spaces
     BTF_->add_composite_mo_space("h", "ijkl", {acore_label_, aactv_label_});
     BTF_->add_composite_mo_space("H", "IJKL", {bcore_label_, bactv_label_});
@@ -81,10 +79,78 @@ void CASSCF::set_ambit_space() {
     outfile->Printf("Done");	
 }
 
-void CASSCF::setup_DensityAndFock() {
 
- // ambit::Tensor fock_ = 
- //     ambit::Tensor::build(ambit::CoreTensor, "Fock Tensor", {nmo_, nmo_} );
+
+void CASSCF::init_density() {
+    outfile->Printf("\n    Initializing density tensors ......... ");
+    Gamma1_ = BTF_->build(CoreTensor, "Gamma1", spin_cases({"aa"}));
+    Gamma2_ = BTF_->build(CoreTensor, "Gamma2", spin_cases({"aaaa"}));
+    fill_density();
+    outfile->Printf("Done");    
+}
+
+void CASSCF::fill_density() {
+    // 1-body density 
+    Gamma1_.block("aa")("pq") = cas_ref_.g1a()("pq");
+    Gamma1_.block("AA")("pq") = cas_ref_.g1b()("pq");
+
+    // 2-body density 
+    Gamma2_.block("aaaa")("pqrs") = cas_ref_.g2aa()("pqrs");
+    Gamma2_.block("aAaA")("pqrs") = cas_ref_.g2ab()("pqrs");
+    Gamma2_.block("AAAA")("pqrs") = cas_ref_.g2bb()("pqrs");
+}
+
+
+
+void CASSCF::init_h() {
+
+    outfile->Printf("\n    Building Hamiltonian ............................ ");
+    H_ = BTF_->build(ambit::CoreTensor, "Hamiltonian", spin_cases({"gg"}));
+
+    H_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+        if (spin[0] == AlphaSpin) {
+            value = ints_->oei_a(i[0], i[1]);
+        } 
+        else {
+            value = ints_->oei_b(i[0], i[1]);
+        }
+    });
+
+    outfile->Printf("Done");
+}
+
+
+void CASSCF::init_v() {
+
+    outfile->Printf("\n    Building electron repulsion integrals ............................ ");
+    V_ = BTF_->build(ambit::CoreTensor, "Hamiltonian", spin_cases({"gggg"}));
+
+    V_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+        if (spin[0] == AlphaSpin && spin[1] == AlphaSpin) {
+            value = ints_->aptei_aa(i[0], i[1], i[2], i[3]);
+        } 
+        else if (spin[0] == AlphaSpin && spin[1] == BetaSpin) {
+            value = ints_->aptei_ab(i[0], i[1], i[2], i[3]);
+        }
+        else if (spin[0] == BetaSpin && spin[1] == BetaSpin) {
+            value = ints_->aptei_bb(i[0], i[1], i[2], i[3]);
+        }
+    });
+
+    outfile->Printf("Done");
+}
+
+
+
+void CASSCF::init_fock() {
+
+/*****************************/
+/*                           */
+/*  Initialize fock matrix   */
+/*                           */
+/*****************************/
+
+    outfile->Printf("\n    Building Fock matrix ............................ ");
 
     SharedMatrix Da(new psi::Matrix("Da", nmo_, nmo_));
     SharedMatrix Db(new psi::Matrix("Db", nmo_, nmo_));
@@ -117,21 +183,33 @@ void CASSCF::setup_DensityAndFock() {
 
     ints_->make_fock_matrix(Da, Db);
 
-    ambit::Tensor fock_a = 
-        ambit::Tensor::build(ambit::CoreTensor, "Fock alpha Tensor", {nmo_, nmo_} );   
-    ambit::Tensor fock_b = 
-        ambit::Tensor::build(ambit::CoreTensor, "Fock beta Tensor", {nmo_, nmo_} ); 
-    
-    for(int p = 0; p < nmo_; ++p) {
-        for(int q = 0; q < nmo_; ++q) {
-            fock_a.data()[p * nmo_ + q] = ints_->get_fock_a(p, q);
-            fock_b.data()[p * nmo_ + q] = ints_->get_fock_b(p, q);
+    F_ = BTF_->build(ambit::CoreTensor, "Fock", spin_cases({"gg"}));
+
+    F_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+        if (spin[0] == AlphaSpin) {
+            value = ints_->get_fock_a(i[0], i[1]);
+        } 
+        else {
+            value = ints_->get_fock_b(i[0], i[1]);
         }
-    } 
+    });    
+
+    outfile->Printf("Done");
 
 }
 
-void CASSCF::set_Lagrangian_CX() {
+
+void CASSCF::set_lagrangian() {
+
+
+    outfile->Printf("\n    Building Lagrangian ............................ ");
+    W_ = BTF_->build(CoreTensor, "Lagrangian", spin_cases({"gg"}));
+    set_lagrangian_1();
+    set_lagrangian_2();
+    outfile->Printf("Done");
+}
+
+void CASSCF::set_lagrangian_1() {
 
 /*********************************************************************/
 /*                                                                   */
@@ -139,20 +217,12 @@ void CASSCF::set_Lagrangian_CX() {
 /*                                                                   */
 /*********************************************************************/
 
-    ambit::Tensor omega_CX_a = 
-        ambit::Tensor::build(ambit::CoreTensor, "omega core-x alpha", {nrdocc_ + na_, nrdocc_} );
-    ambit::Tensor omega_CX_b = 
-        ambit::Tensor::build(ambit::CoreTensor, "omega core-x beta", {nrdocc_ + na_, nrdocc_} );
+    W_["mp"] = F_["mp"];
+    W_["MP"] = F_["MP"];
 
-    for(int p = 0, uplim = nrdocc_ + na_; p < uplim; ++p) {
-        for(int m = 0; m < nrdocc_; ++m) {
-            omega_CX_a.data()[p * nrdocc_ + m] = - fock_a.data()[p * nmo_ + m];
-            omega_CX_b.data()[p * nrdocc_ + m] = - fock_b.data()[p * nmo_ + m];
-        }
-    }
 }
 
-void CASSCF::set_Lagrangian_AA() {
+void CASSCF::set_lagrangian_2() {
 
 /**********************************************/
 /*                                            */
@@ -160,45 +230,72 @@ void CASSCF::set_Lagrangian_AA() {
 /*                                            */
 /**********************************************/
 
-//     // for (auto u : active_) {
-//     //     for (auto v : active_) {
+    BlockedTensor temp = BTF_->build(CoreTensor, "temporal tensor", spin_cases({"gg"}));
+    BlockedTensor I = BTF_->build(CoreTensor, "identity matrix", spin_cases({"gg"}));
 
-//     //         double temp = 0.0;
-//     //         for(auto v1 : active_) {
+    I.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& , double& value) {
+        value = (i[0] == i[1]) ? 1.0 : 0.0;
+    });
 
-//     //             double temp_1 = 0.0;
-//     //             for(auto m : core_) {
-//     //                 temp_1 += v[v, m, v1, m];
-//     //             }
+    temp["vp"] = H_["vp"];
+    temp["vp"] += V_["vmpn"] * I["mn"];
+    temp["vp"] += V_["vMpN"] * I["MN"];
+    W_["up"] -= temp["vp"] * Gamma1_["uv"];
+    W_["up"] -= V_["xypv"] * Gamma2_["uvxy"];
+    W_["up"] -= V_["xYpV"] * Gamma2_["uVxY"];
+    W_["up"] -= V_["XypV"] * Gamma2_["uVXy"];
 
-//     //             temp += (h[v, v1] + temp_1) * gamma_[v1, u];
-//     //         }
+    temp["VP"] = H_["VP"];
+    temp["VP"] += V_["VmPn"] * I["mn"];
+    temp["VP"] += V_["VMPN"] * I["MN"];
+    W_["UP"] -= temp["VP"] * Gamma1_["UV"];
+    W_["UP"] -= V_["XYPV"] * Gamma2_["UVXY"];
+    W_["UP"] -= V_["XyPv"] * Gamma2_["UvXy"];
+    W_["UP"] -= V_["xYPv"] * Gamma2_["UvxY"];
 
-//     //         for(auto v1 : active_) {
-//     //             for(auto x : active_) {
-//     //                 for(auto y : active_) {
 
-//     //                     temp += 0.5 * v[v, v1, x, y] * gamma_[x, y, u, v1]; 
-//     //                 }
-//     //             }
-//     //         }
 
-//     //         double omega = - temp; 
-//     //         L->set(u, v, omega);
-//     //         L->set(v, u, omega);
-//     //     }
-//     // }
 
-// 	ambit::Tensor omega_AA_a = 
-// 	    ambit::Tensor::build(ambit::CoreTensor, "omega active-active alpha", {actv_, actv_} );
-// 	ambit::Tensor omega_AA_b = 
-// 	    ambit::Tensor::build(ambit::CoreTensor, "omega active-active beta", {actv_, actv_} );
 
-// 	nmo2_ = nmo_ * nmo_;
-// 	nmo3_ = nmo2_ * nmo_;
+    // for (auto u : active_) {
+    //     for (auto v : active_) {
 
-// 	ambit::Tensor v_temp_aa = 
-// 	    ambit::Tensor::build(ambit::CoreTensor, "v_temp_aa", {actv_, nmo_} );
+    //         double temp = 0.0;
+    //         for(auto v1 : active_) {
+
+    //             double temp_1 = 0.0;
+    //             for(auto m : core_) {
+    //                 temp_1 += v[v, m, v1, m];
+    //             }
+
+    //             temp += (h[v, v1] + temp_1) * gamma_[v1, u];
+    //         }
+
+    //         for(auto v1 : active_) {
+    //             for(auto x : active_) {
+    //                 for(auto y : active_) {
+
+    //                     temp += 0.5 * v[v, v1, x, y] * gamma_[x, y, u, v1]; 
+    //                 }
+    //             }
+    //         }
+
+    //         double omega = - temp; 
+    //         L->set(u, v, omega);
+    //         L->set(v, u, omega);
+    //     }
+    // }
+
+	// ambit::Tensor omega_AA_a = 
+	//     ambit::Tensor::build(ambit::CoreTensor, "omega active-active alpha", {na_, na_} );
+	// ambit::Tensor omega_AA_b = 
+	//     ambit::Tensor::build(ambit::CoreTensor, "omega active-active beta", {na_, na_} );
+
+	// nmo2_ = nmo_ * nmo_;
+	// nmo3_ = nmo2_ * nmo_;
+
+	// ambit::Tensor v_temp_aa = 
+	//     ambit::Tensor::build(ambit::CoreTensor, "v_temp_aa", {actv_, nmo_} );
 	
 // 	for(int v = core_, uplim = core_ + actv_; v < uplim; ++v) {
 // 		for(int p = 0; p < nmo_; ++p) {
