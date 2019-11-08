@@ -134,18 +134,25 @@ void MRDSRG_SO::build_lambda_numerical(BlockedTensor& C1, BlockedTensor& C2, int
     size_t nc_nmo = acore_sos.size();
     size_t nv_nmo = avirt_sos.size();
 
+    auto acore_irrep = mo_space_info_->get_relative_mo("RESTRICTED_DOCC");
+    auto avirt_irrep = mo_space_info_->get_relative_mo("RESTRICTED_UOCC");
+
     std::string path0 = PSIOManager::shared_object()->get_default_path() + "psi." +
                         std::to_string(getpid()) + "." +
                         psi::Process::environment.molecule()->name();
 
     for (size_t i = 0; i < nc_nmo; ++i) {
+        auto h_i = std::get<0>(acore_irrep[i]);
         for (size_t a = 0; a < nv_nmo; ++a) {
-            size_t idx = i * nv_ + a;
-            double t = T1.block("cv").data()[idx];
-            if(fabs(t) < 1.0e-12) {
+            auto h_a = std::get<0>(avirt_irrep[a]);
+            if(h_i ^ h_a) {
                 continue;
             }
+
             outfile->Printf("\n  working on %2zu -> %2zu:", i, a);
+
+            size_t idx = i * nv_ + a;
+            double t = T1.block("cv").data()[idx];
 
             std::vector<double> pts;
             std::vector<double> diag;
@@ -238,16 +245,20 @@ void MRDSRG_SO::build_lambda_numerical(BlockedTensor& C1, BlockedTensor& C2, int
     }
 
     for (size_t i = 0; i < nc_nmo; ++i) {
+        auto h_i = std::get<0>(acore_irrep[i]);
         for (size_t j = 0; j < nc_nmo; ++j) {
+            auto h_j = std::get<0>(acore_irrep[j]);
             for (size_t a = 0; a < nv_nmo; ++a) {
+                auto h_a = std::get<0>(acore_irrep[a]);
                 for (size_t b = 0; b < nv_nmo; ++b) {
-
-                    size_t idxx = i * nc_ * nv_ * nv_ + (j + nc_nmo) * nv_ * nv_ + a * nv_ + (b + nv_nmo);
-                    double tx = T2.block("ccvv").data()[idxx];
-                    if(fabs(tx) < 1.0e-12) {
+                    auto h_b = std::get<0>(acore_irrep[b]);
+                    if(h_i ^ h_j ^ h_a ^ h_b) {
                         continue;
                     }
+
                     outfile->Printf("\n  working on (%2zu,%2zu) -> (%2zu,%2zu):", i, (j + nc_nmo), a, (b + nv_nmo));
+
+                    size_t idxx = i * nc_ * nv_ * nv_ + (j + nc_nmo) * nv_ * nv_ + a * nv_ + (b + nv_nmo);
 
                     double numerator = 0.0;
                     double denominator = 0.0;
