@@ -42,7 +42,54 @@ using namespace psi;
 
 namespace forte {
 
-void MRDSRG_SO::sr_ldsrg2star_comm2_fock(BlockedTensor &C1, BlockedTensor &C2) {
+void MRDSRG_SO::sr_ldsrg2plus(double factor, BlockedTensor& H2, BlockedTensor& T1,
+                              BlockedTensor& T2, BlockedTensor& C1, BlockedTensor& C2) {
+    C1.zero();
+    C2.zero();
+
+    C1["c0,v0"] += -1.0 * H2["v2,c0,v0,v1"] * T2["c1,c2,v1,v3"] * T2["c1,c2,v2,v3"];
+    C1["c0,v0"] += 1.0 * H2["v2,c1,v0,v1"] * T2["c0,c2,v2,v3"] * T2["c1,c2,v1,v3"];
+    C1["c0,v0"] += (1.0 / 4.0) * H2["v3,c0,v1,v2"] * T2["c1,c2,v0,v3"] * T2["c1,c2,v1,v2"];
+    C1["c0,v0"] += (-1.0 / 2.0) * H2["v3,c1,v1,v2"] * T2["c0,c2,v0,v3"] * T2["c1,c2,v1,v2"];
+    C1["c0,v0"] += -1.0 * H2["c0,c2,v0,c1"] * T2["c1,c3,v1,v2"] * T2["c2,c3,v1,v2"];
+    C1["c0,v0"] += 1.0 * H2["c0,c2,v1,c1"] * T2["c1,c3,v0,v2"] * T2["c2,c3,v1,v2"];
+    C1["c0,v0"] += (1.0 / 4.0) * H2["c2,c3,v0,c1"] * T2["c0,c1,v1,v2"] * T2["c2,c3,v1,v2"];
+    C1["c0,v0"] += (-1.0 / 2.0) * H2["c2,c3,v1,c1"] * T2["c0,c1,v0,v2"] * T2["c2,c3,v1,v2"];
+
+    auto temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"ccvv"});
+    temp["c0,c1,v0,v1"] += -1.0 * H2["v3,c0,v0,v2"] * T1["c2,v2"] * T2["c1,c2,v1,v3"];
+    temp["c0,c1,v0,v1"] += -1.0 * H2["c0,c3,v0,c2"] * T1["c3,v2"] * T2["c1,c2,v1,v2"];
+    C2["c0,c1,v0,v1"] += temp["c0,c1,v0,v1"];
+    C2["c0,c1,v1,v0"] -= temp["c0,c1,v0,v1"];
+    C2["c1,c0,v0,v1"] -= temp["c0,c1,v0,v1"];
+    C2["c1,c0,v1,v0"] += temp["c0,c1,v0,v1"];
+
+    temp.zero();
+    temp["c0,c1,v0,v1"] += 1.0 * H2["v2,v3,v0,c2"] * T1["c2,v2"] * T2["c0,c1,v1,v3"];
+    temp["c0,c1,v0,v1"] += -1.0 * H2["v3,c2,v0,v2"] * T1["c2,v2"] * T2["c0,c1,v1,v3"];
+    temp["c0,c1,v0,v1"] += (-1.0 / 2.0) * H2["c0,c1,v0,v2"] * T2["c2,c3,v1,v3"] * T2["c2,c3,v2,v3"];
+    temp["c0,c1,v0,v1"] += -1.0 * H2["c0,c1,v0,c2"] * T1["c3,v2"] * T2["c2,c3,v1,v2"];
+    temp["c0,c1,v0,v1"] += (-1.0 / 2.0) * H2["c2,c3,v2,v3"] * T2["c0,c1,v0,v2"] * T2["c2,c3,v1,v3"];
+    C2["c0,c1,v0,v1"] += temp["c0,c1,v0,v1"];
+    C2["c0,c1,v1,v0"] -= temp["c0,c1,v0,v1"];
+
+    temp.zero();
+    temp["c0,c1,v0,v1"] += -1.0 * H2["v2,c0,v0,v1"] * T1["c2,v3"] * T2["c1,c2,v2,v3"];
+    temp["c0,c1,v0,v1"] += (-1.0 / 2.0) * H2["c0,c2,v0,v1"] * T2["c1,c3,v2,v3"] * T2["c2,c3,v2,v3"];
+    temp["c0,c1,v0,v1"] += -1.0 * H2["c0,c3,v2,c2"] * T1["c3,v2"] * T2["c1,c2,v0,v1"];
+    temp["c0,c1,v0,v1"] += (-1.0 / 2.0) * H2["c2,c3,v2,v3"] * T2["c0,c2,v0,v1"] * T2["c1,c3,v2,v3"];
+    temp["c0,c1,v0,v1"] += 1.0 * H2["c2,c3,v2,c0"] * T1["c2,v2"] * T2["c1,c3,v0,v1"];
+    C2["c0,c1,v0,v1"] += temp["c0,c1,v0,v1"];
+    C2["c1,c0,v0,v1"] -= temp["c0,c1,v0,v1"];
+
+    C2["c0,c1,v0,v1"] += -1.0 * H2["v2,c2,v0,v1"] * T1["c2,v3"] * T2["c0,c1,v2,v3"];
+    C2["c0,c1,v0,v1"] += -1.0 * H2["c0,c1,v2,c2"] * T1["c3,v2"] * T2["c2,c3,v0,v1"];
+
+    C1.scale(factor);
+    C2.scale(factor);
+}
+
+void MRDSRG_SO::sr_ldsrg2star_comm2_fock(BlockedTensor& C1, BlockedTensor& C2) {
     C1["c0,v0"] += (-1.0 / 4.0) * V["v2,c0,v0,v1"] * T2["c1,c2,v1,v3"] * T2["c1,c2,v2,v3"];
     C1["c0,v0"] += (-1.0 / 4.0) * V["c0,c2,v0,c1"] * T2["c1,c3,v1,v2"] * T2["c2,c3,v1,v2"];
 

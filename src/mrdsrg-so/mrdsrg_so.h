@@ -251,7 +251,7 @@ class MRDSRG_SO : public DynamicCorrelationSolver {
     void H2_T2_C3(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, BlockedTensor& C3);
 
     /// Generated functions for commutator [H, A]
-    void comm_H_A_2(double factor, BlockedTensor& H1, BlockedTensor& H2, BlockedTensor& T1,
+    void comm_H_A_2(int n, BlockedTensor& H1, BlockedTensor& H2, BlockedTensor& T1,
                     BlockedTensor& T2, double& C0, BlockedTensor& C1, BlockedTensor& C2);
     void comm_H_A_3(double factor, BlockedTensor& H1, BlockedTensor& H2, BlockedTensor& H3,
                     BlockedTensor& T1, BlockedTensor& T2, BlockedTensor& T3, double& C0,
@@ -302,6 +302,12 @@ class MRDSRG_SO : public DynamicCorrelationSolver {
     void sr_ldsrg2star_comm3(BlockedTensor& C1, BlockedTensor& C2);
     void sr_ldsrg2star_comm3_fock(BlockedTensor& C1, BlockedTensor& C2);
     void sr_ldsrg2star_comm3_fink(BlockedTensor& C1, BlockedTensor& C2);
+
+    // => LDSRG(2+) corrections <=
+    BlockedTensor W1;
+    BlockedTensor W2;
+    void sr_ldsrg2plus(double factor, BlockedTensor& H2, BlockedTensor& T1,
+                       BlockedTensor& T2, BlockedTensor& C1, BlockedTensor& C2);
 
     // => Lambda equation for LDSRG(2*) truncated to comm-5 energy <=
     BlockedTensor Tbar1;

@@ -558,12 +558,13 @@ void MRDSRG_SO::H3_T2_C2(BlockedTensor& H3, BlockedTensor& T2, const double& alp
     C2["toqr"] -= alpha * temp["mx"] * H3["xtomqr"];
 }
 
-void MRDSRG_SO::comm_H_A_2(double factor, BlockedTensor& H1, BlockedTensor& H2, BlockedTensor& T1,
+void MRDSRG_SO::comm_H_A_2(int n, BlockedTensor& H1, BlockedTensor& H2, BlockedTensor& T1,
                            BlockedTensor& T2, double& C0, BlockedTensor& C1, BlockedTensor& C2) {
     C0 = 0.0;
     C1.zero();
     C2.zero();
     BlockedTensor temp;
+    double factor = 1.0 / n;
 
     C0 += 1.0 * H1["h0,p0"] * T1["h1,p0"] * L1["h1,h0"];
     C0 += (1.0 / 2.0) * H1["a0,p0"] * T2["a2,a3,p0,a1"] * L2["a2,a3,a0,a1"];
@@ -1252,10 +1253,22 @@ void MRDSRG_SO::comm_H_A_2(double factor, BlockedTensor& H1, BlockedTensor& H2, 
     C1.scale(factor);
     C2.scale(factor);
 
-    if (ldsrg2_correction_ == 2) {
-        sr_ldsrg2star_comm2(C1, C2);
-    } else if (ldsrg2_correction_ == 3) {
-        sr_ldsrg2star_comm3(C1, C2);
+    // LDSRG(2*)
+    if (foptions_->get_str("CORR_LEVEL") == "LDSRG2*") {
+        if (n == 2) {
+            sr_ldsrg2star_comm2(C1, C2);
+        } else if (n == 3) {
+            sr_ldsrg2star_comm3(C1, C2);
+        }
+    }
+
+    // LDSRG(2+)
+    if (foptions_->get_str("CORR_LEVEL") == "LDSRG2+") {
+        C1["pq"] += W1["pq"];
+        C2["pqrs"] += W2["pqrs"];
+
+        double f = factor / (n + 1.0);
+        sr_ldsrg2plus(f, H2, T1, T2, W1, W2);
     }
 
     // add T dagger

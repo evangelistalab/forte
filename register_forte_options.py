@@ -548,7 +548,7 @@ def register_dsrg_options(forte_options):
 
     forte_options.add_str("CORR_LEVEL", "PT2",
                      ["PT2", "PT3", "LDSRG2", "LDSRG2_QC", "LSRG2", "SRG_PT2", "QDSRG2",
-                      "LDSRG2*", "LDSRG3", "LDSRG3_2", "LDSRG3_1"],
+                      "LDSRG2*", "LDSRG2+", "LDSRG3", "LDSRG3_2", "LDSRG3_1"],
                      "Correlation level of MR-DSRG")
 
     forte_options.add_str("SOURCE", "STANDARD",
@@ -701,6 +701,8 @@ def register_dsrg_options(forte_options):
                       other values: not allowed""")
 
     forte_options.add_bool("LDSRG3_ZERO_T3", False, "Zero all T3 amplitudes for testing")
+
+    forte_options.add_bool("LDSRG2STAR_DO_DIAGONAL", True, "Compute diagonal components of Hbar when doing LDSRG(2*)")
 
     forte_options.add_bool("PRINT_1BODY_EVALS", False, "Print eigenvalues of 1-body effective H")
 

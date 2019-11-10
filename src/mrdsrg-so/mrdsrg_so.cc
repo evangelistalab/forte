@@ -93,9 +93,9 @@ void MRDSRG_SO::startup() {
     if (ncomm_3body_ <= 0) {
         ncomm_3body_ = foptions_->get_int("DSRG_RSC_NCOMM");
     }
-//    if (ncomm_3body_ > 2 or ncomm_3body_ <= 0) {
-//        ncomm_3body_ = foptions_->get_int("DSRG_RSC_NCOMM");
-//    }
+    //    if (ncomm_3body_ > 2 or ncomm_3body_ <= 0) {
+    //        ncomm_3body_ = foptions_->get_int("DSRG_RSC_NCOMM");
+    //    }
 
     ldsrg3_level_ = 3;
     if (foptions_->get_str("CORR_LEVEL") == "LDSRG3_2")
@@ -541,7 +541,7 @@ void MRDSRG_SO::guess_t3() {
 
     T3.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
         value *= renormalized_denominator(Fd[i[0]] + Fd[i[1]] + Fd[i[2]] - Fd[i[3]] - Fd[i[4]] -
-                Fd[i[5]]);
+                                          Fd[i[5]]);
     });
 
     // zero internal amplitudes
@@ -627,7 +627,7 @@ void MRDSRG_SO::update_t3() {
     DT3["ijkabc"] = Hbar3["ijkabc"];
     DT3.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
         value *= renormalized_denominator(Fd[i[0]] + Fd[i[1]] + Fd[i[2]] - Fd[i[3]] - Fd[i[4]] -
-                Fd[i[5]]);
+                                          Fd[i[5]]);
     });
 
     // copy T3 to Hbar3
@@ -650,19 +650,13 @@ void MRDSRG_SO::update_t3() {
 }
 
 std::vector<std::string> MRDSRG_SO::sr_ldsrg3_ddca_blocks() {
-    return {"ccccvv","cccvcv","cccvvc","cccvvv",
-        "ccvccv","ccvcvc","ccvcvv","ccvvcc",
-        "ccvvcv","ccvvvc","ccvvvv","cvcccv",
-        "cvccvc","cvccvv","cvcvcc","cvcvcv",
-        "cvcvvc","cvcvvv","cvvccc","cvvccv",
-        "cvvcvc","cvvcvv","cvvvcc","cvvvcv",
-        "cvvvvc","vccccv","vcccvc","vcccvv",
-        "vccvcc","vccvcv","vccvvc","vccvvv",
-        "vcvccc","vcvccv","vcvcvc","vcvcvv",
-        "vcvvcc","vcvvcv","vcvvvc","vvcccc",
-        "vvcccv","vvccvc","vvccvv","vvcvcc",
-        "vvcvcv","vvcvvc","vvvccc","vvvccv",
-        "vvvcvc","vvvvcc"};
+    return {"ccccvv", "cccvcv", "cccvvc", "cccvvv", "ccvccv", "ccvcvc", "ccvcvv", "ccvvcc",
+            "ccvvcv", "ccvvvc", "ccvvvv", "cvcccv", "cvccvc", "cvccvv", "cvcvcc", "cvcvcv",
+            "cvcvvc", "cvcvvv", "cvvccc", "cvvccv", "cvvcvc", "cvvcvv", "cvvvcc", "cvvvcv",
+            "cvvvvc", "vccccv", "vcccvc", "vcccvv", "vccvcc", "vccvcv", "vccvvc", "vccvvv",
+            "vcvccc", "vcvccv", "vcvcvc", "vcvcvv", "vcvvcc", "vcvvcv", "vcvvvc", "vvcccc",
+            "vvcccv", "vvccvc", "vvccvv", "vvcvcc", "vvcvcv", "vvcvvc", "vvvccc", "vvvccv",
+            "vvvcvc", "vvvvcc"};
 }
 
 double MRDSRG_SO::compute_energy() {
@@ -682,15 +676,15 @@ double MRDSRG_SO::compute_energy() {
     guess_t2();
     guess_t1();
 
-//    bool store_H3 = (ncomm_3body_ == foptions_->get_int("DSRG_RSC_NCOMM"));
+    //    bool store_H3 = (ncomm_3body_ == foptions_->get_int("DSRG_RSC_NCOMM"));
     if (do_t3_) {
-//        if (store_H3) {
-//            if (ldsrg3_ddca_) {
-//                Hbar3 = BTF_->build(tensor_type_, "Hbar3", sr_ldsrg3_ddca_blocks());
-//            } else {
-//                Hbar3 = BTF_->build(tensor_type_, "Hbar3", {"gggggg"});
-//            }
-//        }
+        //        if (store_H3) {
+        //            if (ldsrg3_ddca_) {
+        //                Hbar3 = BTF_->build(tensor_type_, "Hbar3", sr_ldsrg3_ddca_blocks());
+        //            } else {
+        //                Hbar3 = BTF_->build(tensor_type_, "Hbar3", {"gggggg"});
+        //            }
+        //        }
         T3 = BTF_->build(tensor_type_, "T3 Amplitudes", {"hhhppp"});
         if (!zero_t3_) {
             guess_t3();
@@ -719,9 +713,10 @@ double MRDSRG_SO::compute_energy() {
                     "----------------------------------------------------------"
                     "----------------------------------------");
 
+    std::string corr_level = foptions_->get_str("CORR_LEVEL");
     do {
         // compute hbar
-        if (foptions_->get_str("CORR_LEVEL") == "QDSRG2") {
+        if (corr_level == "QDSRG2") {
             compute_qhbar();
         } else {
             // single-commutator by default
@@ -738,14 +733,14 @@ double MRDSRG_SO::compute_energy() {
         temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"hhpv", "hhva", "hcaa", "ccaa"});
         temp["ijab"] = Hbar2["ijab"];
         double Hbar2Nnorm = temp.norm();
-        for (const std::string block: temp.block_labels()) {
+        for (const std::string block : temp.block_labels()) {
             temp.block(block).reset();
         }
 
         outfile->Printf("\n      @CT %4d %20.12f %11.3e %10.3e %10.3e %7.4f "
                         "%7.4f %7.4f %7.4f %7.4f %7.4f",
-                        cycle, Etotal, Edelta, Hbar1Nnorm, Hbar2Nnorm, T1norm, T2norm,
-                        T3norm, T1max, T2max, T3max);
+                        cycle, Etotal, Edelta, Hbar1Nnorm, Hbar2Nnorm, T1norm, T2norm, T3norm,
+                        T1max, T2max, T3max);
 
         // update amplitudes
         update_t2();
@@ -754,11 +749,11 @@ double MRDSRG_SO::compute_energy() {
             if (!zero_t3_) {
                 update_t3();
             }
-//            if (store_H3) {
-//                update_t3();
-//            } else {
-//                direct_t3();
-//            }
+            //            if (store_H3) {
+            //                update_t3();
+            //            } else {
+            //                direct_t3();
+            //            }
         }
 
         // test convergence
@@ -780,39 +775,41 @@ double MRDSRG_SO::compute_energy() {
     outfile->Printf("\n    "
                     "----------------------------------------------------------"
                     "----------------------------------------");
-    outfile->Printf("\n\n\n    %s Energy Summary", foptions_->get_str("CORR_LEVEL").c_str());
+    outfile->Printf("\n\n\n    %s Energy Summary", corr_level.c_str());
     outfile->Printf("\n    Correlation energy      = %25.15f", Etotal - Eref);
     outfile->Printf("\n  * Total energy            = %25.15f\n", Etotal);
 
-    std::vector<double> e4th_corr = E4th_correction();
-    outfile->Printf("\n");
-    outfile->Printf("\n    T corr. direct         c1 = %25.15f", e4th_corr[0]);
-    outfile->Printf("\n    T corr. 3rd-order T    c2 = %25.15f", e4th_corr[1]);
-    outfile->Printf("\n    T corr. 1st-order L/1  c3 = %25.15f", e4th_corr[2]);
-    outfile->Printf("\n    T corr. 1st-order L/2  c4 = %25.15f", e4th_corr[3]);
-    outfile->Printf("\n    T corr. 1st-order L    c5 = %25.15f", e4th_corr[4]);
-    if (fabs(e4th_corr[1] - e4th_corr[2]) > foptions_->get_double("E_CONVERGENCE")) {
-        outfile->Printf("\n  Warning: c2 != c3, something might be broken!");
+    if (corr_level == "LDSRG2*" or corr_level == "LDSRG2+") {
+        std::vector<double> e4th_corr = E4th_correction();
+        outfile->Printf("\n");
+        outfile->Printf("\n    T corr. direct         c1 = %25.15f", e4th_corr[0]);
+        outfile->Printf("\n    T corr. 3rd-order T    c2 = %25.15f", e4th_corr[1]);
+        outfile->Printf("\n    T corr. 1st-order L/1  c3 = %25.15f", e4th_corr[2]);
+        outfile->Printf("\n    T corr. 1st-order L/2  c4 = %25.15f", e4th_corr[3]);
+        outfile->Printf("\n    T corr. 1st-order L    c5 = %25.15f", e4th_corr[4]);
+        if (fabs(e4th_corr[1] - e4th_corr[2]) > foptions_->get_double("E_CONVERGENCE")) {
+            outfile->Printf("\n  Warning: c2 != c3, something might be broken!");
+        }
+
+        double t1 = e4th_corr[0] + e4th_corr[2];
+        double t2 = e4th_corr[0] + e4th_corr[3];
+        double t3 = e4th_corr[0] + e4th_corr[4];
+        outfile->Printf("\n");
+        outfile->Printf("\n    [T] correction:  c1 + c3 = %25.15f", t1);
+        outfile->Printf("\n    (T) correction   c1 + c4 = %25.15f", t2);
+        outfile->Printf("\n    λ(T) correction: c1 + c5 = %25.15f", t3);
+
+        outfile->Printf("\n");
+        outfile->Printf("\n  * DSRG[T] energy        = %25.15f", Etotal + t1);
+        outfile->Printf("\n  * DSRG(T) energy        = %25.15f", Etotal + t2);
+        outfile->Printf("\n  * λDSRG(T) energy       = %25.15f", Etotal + t3);
+
+        psi::Process::environment.globals["DSRG[T]-D ENERGY"] = Etotal + e4th_corr[0];
+        psi::Process::environment.globals["DSRG[T] ENERGY"] = Etotal + t1;
+        psi::Process::environment.globals["DSRG(T) ENERGY"] = Etotal + t2;
+        psi::Process::environment.globals["LAMBDA-DSRG(T) ENERGY"] = Etotal + t3;
     }
-
-    double t1 = e4th_corr[0] + e4th_corr[2];
-    double t2 = e4th_corr[0] + e4th_corr[3];
-    double t3 = e4th_corr[0] + e4th_corr[4];
-    outfile->Printf("\n");
-    outfile->Printf("\n    [T] correction:  c1 + c3 = %25.15f", t1);
-    outfile->Printf("\n    (T) correction   c1 + c4 = %25.15f", t2);
-    outfile->Printf("\n    λ(T) correction: c1 + c5 = %25.15f", t3);
-
-    outfile->Printf("\n");
-    outfile->Printf("\n  * DSRG[T] energy        = %25.15f", Etotal + t1);
-    outfile->Printf("\n  * DSRG(T) energy        = %25.15f", Etotal + t2);
-    outfile->Printf("\n  * λDSRG(T) energy       = %25.15f", Etotal + t3);
-
     psi::Process::environment.globals["CURRENT ENERGY"] = Etotal;
-    psi::Process::environment.globals["DSRG[T]-D ENERGY"] = Etotal + e4th_corr[0];
-    psi::Process::environment.globals["DSRG[T] ENERGY"] = Etotal + t1;
-    psi::Process::environment.globals["DSRG(T) ENERGY"] = Etotal + t2;
-    psi::Process::environment.globals["LAMBDA-DSRG(T) ENERGY"] = Etotal + t3;
 
     return Etotal;
 }
@@ -837,9 +834,6 @@ void MRDSRG_SO::compute_lhbar() {
     O1["pq"] = F["pq"];
     O2["pqrs"] = V["pqrs"];
 
-    //    outfile->Printf("\n  %2d %20.12f %20e
-    //    %20e",0,Hbar0,Hbar1.norm(),Hbar2.norm());
-
     // iterator variables
     int maxn = foptions_->get_int("DSRG_RSC_NCOMM");
     double ct_threshold = foptions_->get_double("DSRG_RSC_THRESHOLD");
@@ -847,8 +841,13 @@ void MRDSRG_SO::compute_lhbar() {
     BlockedTensor C1 = ambit::BlockedTensor::build(tensor_type_, "C1", {"gg"});
     BlockedTensor C2 = ambit::BlockedTensor::build(tensor_type_, "C2", {"gggg"});
 
+    if (foptions_->get_str("CORR_LEVEL") == "LDSRG2+") {
+        W1 = ambit::BlockedTensor::build(tensor_type_, "W1", {"cv"});
+        W2 = ambit::BlockedTensor::build(tensor_type_, "W2", {"ccvv"});
+    }
+
     BlockedTensor O3, C3;
-//    bool store_H3 = (ncomm_3body_ == foptions_->get_int("DSRG_RSC_NCOMM"));
+    //    bool store_H3 = (ncomm_3body_ == foptions_->get_int("DSRG_RSC_NCOMM"));
     bool store_H3 = true;
     if (do_t3_ and store_H3) {
         Hbar3.zero();
@@ -878,21 +877,20 @@ void MRDSRG_SO::compute_lhbar() {
                 if (n > ncomm_3body_) {
                     C3.zero();
                 }
-//                if (store_H3) {
-//                    comm_H_A_3_sr(factor, O1, O2, O3, T1, T2, T3, C0, C1, C2, C3);
-//                } else {
-//                    comm_H_A_3_sr_2(factor, O1, O2, T1, T2, T3, C0, C1, C2);
-//                }
+                //                if (store_H3) {
+                //                    comm_H_A_3_sr(factor, O1, O2, O3, T1, T2, T3, C0, C1, C2, C3);
+                //                } else {
+                //                    comm_H_A_3_sr_2(factor, O1, O2, T1, T2, T3, C0, C1, C2);
+                //                }
             } else {
                 comm_H_A_3(factor, O1, O2, O3, T1, T2, T3, C0, C1, C2, C3);
             }
             timer_off("3-body [H, A]");
         } else {
-            if (foptions_->get_str("CORR_LEVEL") == "LDSRG2*") {
-                ldsrg2_correction_ = n;
-            }
-            comm_H_A_2(factor, O1, O2, T1, T2, C0, C1, C2);
+            comm_H_A_2(n, O1, O2, T1, T2, C0, C1, C2);
         }
+        //        outfile->Printf("\n n=%2d, O2=%20.15f, C1=%20.15f, C2=%20.15f", n, O2.norm(),
+        //        C1.norm(), C2.norm());
 
         // add to Hbar
         Hbar0 += C0;
@@ -903,30 +901,30 @@ void MRDSRG_SO::compute_lhbar() {
         O1["pq"] = C1["pq"];
         O2["pqrs"] = C2["pqrs"];
 
-//        if (!store_H3 and (n == 2 or n == 3)) {
-//            if (n == 2 and ncomm_3body_ >= 1) {
-//                comm2_l3(F, V, T1, T2, T3, C0, C1, C2);
-//            }
+        //        if (!store_H3 and (n == 2 or n == 3)) {
+        //            if (n == 2 and ncomm_3body_ >= 1) {
+        //                comm2_l3(F, V, T1, T2, T3, C0, C1, C2);
+        //            }
 
-//            if (n == 3 and ncomm_3body_ >= 2) {
-//                if (ldsrg3_level_ == 3) {
-//                    comm3_q3_lv3(F, V, T1, T2, T3, C0, C1, C2);
-//                } else if (ldsrg3_level_ == 2) {
-//                    comm3_q3_lv2(F, V, T1, T2, T3, C0, C1, C2);
-//                } else {
-//                    comm3_q3_lv1(F, V, T1, T2, T3, C0, C1, C2);
-//                }
-//            }
+        //            if (n == 3 and ncomm_3body_ >= 2) {
+        //                if (ldsrg3_level_ == 3) {
+        //                    comm3_q3_lv3(F, V, T1, T2, T3, C0, C1, C2);
+        //                } else if (ldsrg3_level_ == 2) {
+        //                    comm3_q3_lv2(F, V, T1, T2, T3, C0, C1, C2);
+        //                } else {
+        //                    comm3_q3_lv1(F, V, T1, T2, T3, C0, C1, C2);
+        //                }
+        //            }
 
-//            // add to Hbar
-//            Hbar0 += C0;
-//            Hbar1["pq"] += C1["pq"];
-//            Hbar2["pqrs"] += C2["pqrs"];
+        //            // add to Hbar
+        //            Hbar0 += C0;
+        //            Hbar1["pq"] += C1["pq"];
+        //            Hbar2["pqrs"] += C2["pqrs"];
 
-//            // add C to O for next level commutator
-//            O1["pq"] += C1["pq"];
-//            O2["pqrs"] += C2["pqrs"];
-//        }
+        //            // add C to O for next level commutator
+        //            O1["pq"] += C1["pq"];
+        //            O2["pqrs"] += C2["pqrs"];
+        //        }
 
         // test convergence of C
         double norm_C1 = C1.norm();
@@ -942,56 +940,56 @@ void MRDSRG_SO::compute_lhbar() {
             break;
         }
 
-//        // Compute the commutator C = 1/n [O,T]
-//        double C0 = 0.0;
-//        C1.zero();
-//        C2.zero();
+        //        // Compute the commutator C = 1/n [O,T]
+        //        double C0 = 0.0;
+        //        C1.zero();
+        //        C2.zero();
 
-//        // zero-body
-//        H1_T1_C0(O1, T1, factor, C0);
-//        H1_T2_C0(O1, T2, factor, C0);
-//        H2_T1_C0(O2, T1, factor, C0);
-//        H2_T2_C0(O2, T2, factor, C0);
+        //        // zero-body
+        //        H1_T1_C0(O1, T1, factor, C0);
+        //        H1_T2_C0(O1, T2, factor, C0);
+        //        H2_T1_C0(O2, T1, factor, C0);
+        //        H2_T2_C0(O2, T2, factor, C0);
 
-//        // one-body
-//        H1_T1_C1(O1, T1, factor, C1);
-//        H1_T2_C1(O1, T2, factor, C1);
-//        H2_T1_C1(O2, T1, factor, C1);
-//        H2_T2_C1(O2, T2, factor, C1);
+        //        // one-body
+        //        H1_T1_C1(O1, T1, factor, C1);
+        //        H1_T2_C1(O1, T2, factor, C1);
+        //        H2_T1_C1(O2, T1, factor, C1);
+        //        H2_T2_C1(O2, T2, factor, C1);
 
-//        // two-body
-//        H1_T2_C2(O1, T2, factor, C2);
-//        H2_T1_C2(O2, T1, factor, C2);
-//        H2_T2_C2(O2, T2, factor, C2);
+        //        // two-body
+        //        H1_T2_C2(O1, T2, factor, C2);
+        //        H2_T1_C2(O2, T1, factor, C2);
+        //        H2_T2_C2(O2, T2, factor, C2);
 
-//        //        outfile->Printf("\n   H0  = %20.12f", C0);
-//        //        outfile->Printf("\n  |H1| = %20.12f", C1.norm(1));
-//        //        outfile->Printf("\n  |H2| = %20.12f", C2.norm(1));
-//        //        outfile->Printf("\n  --------------------------------");
+        //        //        outfile->Printf("\n   H0  = %20.12f", C0);
+        //        //        outfile->Printf("\n  |H1| = %20.12f", C1.norm(1));
+        //        //        outfile->Printf("\n  |H2| = %20.12f", C2.norm(1));
+        //        //        outfile->Printf("\n  --------------------------------");
 
-//        // [H, A] = [H, T] + [H, T]^dagger
-//        C0 *= 2.0;
-//        O1["pq"] = C1["pq"];
-//        C1["pq"] += O1["qp"];
-//        O2["pqrs"] = C2["pqrs"];
-//        C2["pqrs"] += O2["rspq"];
+        //        // [H, A] = [H, T] + [H, T]^dagger
+        //        C0 *= 2.0;
+        //        O1["pq"] = C1["pq"];
+        //        C1["pq"] += O1["qp"];
+        //        O2["pqrs"] = C2["pqrs"];
+        //        C2["pqrs"] += O2["rspq"];
 
-//        // Hbar += C
-//        Hbar0 += C0;
-//        Hbar1["pq"] += C1["pq"];
-//        Hbar2["pqrs"] += C2["pqrs"];
+        //        // Hbar += C
+        //        Hbar0 += C0;
+        //        Hbar1["pq"] += C1["pq"];
+        //        Hbar2["pqrs"] += C2["pqrs"];
 
-//        // copy C to O for next level commutator
-//        O1["pq"] = C1["pq"];
-//        O2["pqrs"] = C2["pqrs"];
+        //        // copy C to O for next level commutator
+        //        O1["pq"] = C1["pq"];
+        //        O2["pqrs"] = C2["pqrs"];
 
-//        // test convergence of C
-//        double norm_C1 = C1.norm();
-//        double norm_C2 = C2.norm();
-//        //        outfile->Printf("\n  %2d %20.12f %20e %20e",n,C0,norm_C1,norm_C2);
-//        if (std::sqrt(norm_C2 * norm_C2 + norm_C1 * norm_C1) < ct_threshold) {
-//            break;
-//        }
+        //        // test convergence of C
+        //        double norm_C1 = C1.norm();
+        //        double norm_C2 = C2.norm();
+        //        //        outfile->Printf("\n  %2d %20.12f %20e %20e",n,C0,norm_C1,norm_C2);
+        //        if (std::sqrt(norm_C2 * norm_C2 + norm_C1 * norm_C1) < ct_threshold) {
+        //            break;
+        //        }
     }
 
     //    outfile->Printf("\n
@@ -1106,7 +1104,7 @@ void MRDSRG_SO::compute_qhbar() {
     //    -----------------------------------------------------------------");
 }
 
-void MRDSRG_SO::sr_ldsrg2star_comm2(BlockedTensor &C1, BlockedTensor &C2) {
+void MRDSRG_SO::sr_ldsrg2star_comm2(BlockedTensor& C1, BlockedTensor& C2) {
     if (ldsrg3_perturb_type_ == "FOCK") {
         sr_ldsrg2star_comm2_fock(C1, C2);
     } else if (ldsrg3_perturb_type_ == "FINK") {
@@ -1114,7 +1112,7 @@ void MRDSRG_SO::sr_ldsrg2star_comm2(BlockedTensor &C1, BlockedTensor &C2) {
     }
 }
 
-void MRDSRG_SO::sr_ldsrg2star_comm3(BlockedTensor &C1, BlockedTensor &C2) {
+void MRDSRG_SO::sr_ldsrg2star_comm3(BlockedTensor& C1, BlockedTensor& C2) {
     if (ldsrg3_perturb_type_ == "FOCK") {
         sr_ldsrg2star_comm3_fock(C1, C2);
     } else if (ldsrg3_perturb_type_ == "FINK") {
