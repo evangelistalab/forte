@@ -253,69 +253,6 @@ void CASSCF::set_lagrangian_2() {
     W_["UP"] -= V_["XyPv"] * Gamma2_["UvXy"];
     W_["UP"] -= V_["xYPv"] * Gamma2_["UvxY"];
 
-
-
-
-
-    // for (auto u : active_) {
-    //     for (auto v : active_) {
-
-    //         double temp = 0.0;
-    //         for(auto v1 : active_) {
-
-    //             double temp_1 = 0.0;
-    //             for(auto m : core_) {
-    //                 temp_1 += v[v, m, v1, m];
-    //             }
-
-    //             temp += (h[v, v1] + temp_1) * gamma_[v1, u];
-    //         }
-
-    //         for(auto v1 : active_) {
-    //             for(auto x : active_) {
-    //                 for(auto y : active_) {
-
-    //                     temp += 0.5 * v[v, v1, x, y] * gamma_[x, y, u, v1]; 
-    //                 }
-    //             }
-    //         }
-
-    //         double omega = - temp; 
-    //         L->set(u, v, omega);
-    //         L->set(v, u, omega);
-    //     }
-    // }
-
-	// ambit::Tensor omega_AA_a = 
-	//     ambit::Tensor::build(ambit::CoreTensor, "omega active-active alpha", {na_, na_} );
-	// ambit::Tensor omega_AA_b = 
-	//     ambit::Tensor::build(ambit::CoreTensor, "omega active-active beta", {na_, na_} );
-
-	// nmo2_ = nmo_ * nmo_;
-	// nmo3_ = nmo2_ * nmo_;
-
-	// ambit::Tensor v_temp_aa = 
-	//     ambit::Tensor::build(ambit::CoreTensor, "v_temp_aa", {actv_, nmo_} );
-	
-// 	for(int v = core_, uplim = core_ + actv_; v < uplim; ++v) {
-// 		for(int p = 0; p < nmo_; ++p) {
-// 			for(int m = 0; m < core_; ++m) {
-// 				v_temp_aa.data()[(v - core_) * nmo_ + p] += ints_->aptei_aa().data()[v * nmo3_ + m * nmo2_ + p * nmo_ + m];
-// 			}	
-// 		}	
-// 	}	
-
-// 	ambit::Tensor temp_1 = 
-// 		ambit::Tensor::build(ambit::CoreTensor, "temp_1", {actv_, nmo_} );
-
-// 	for(int v = core_, uplim = core_ + actv_; v < uplim; ++v) {
-// 		for(int p = 0; p < nmo_; ++p) {
-// 			temp_1.data()[(v - core_) * nmo_ + p] = ints_->oei_a().data()[v * nmo_ + p];	
-// 		}	
-// 	}	
-
-// 	temp_1 += v_temp_aa;
-
 }
 
 
@@ -371,24 +308,29 @@ void CASSCF::set_lagrangian_2() {
 
 
 
+void CASSCF::set_parameters() {
+    init_density();
+    fill_density();
+    init_h();
+    init_v();
+    init_fock();
+}
 
 
 
 
 
 
+SharedMatrix CASSCF::compute_gradient() {
 
-// double CASSCF::compute_gradient() {
+	set_ambit_space();
+    set_parameters();
+    set_lagrangian();
 
-// 	setup_DensityAndFock();
+    // more codes required
 
-//     compute_Lagrangian();
-
-//     write_2rdm_spin_dependent();
-
-//     return std::make_shared<Matrix>("nullptr", 0, 0);
-
-// }
+    return std::make_shared<Matrix>("nullptr", 0, 0);
+}
 
 
 

@@ -151,6 +151,10 @@ class CASSCF : public ActiveSpaceMethod {
     void set_lagrangian_2();
     /// Set up the total Lagrangian
     void set_lagrangian();
+    /// Initialize matrices and tensors
+    void set_parameters();
+    /// Compute the gradient
+    psi::SharedMatrix compute_gradient();
 
 
 
