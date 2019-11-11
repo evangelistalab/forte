@@ -249,9 +249,9 @@ void MRDSRG_SO::build_lambda_numerical(BlockedTensor& C1, BlockedTensor& C2, int
         for (size_t j = 0; j < nc_nmo; ++j) {
             auto h_j = std::get<0>(acore_irrep[j]);
             for (size_t a = 0; a < nv_nmo; ++a) {
-                auto h_a = std::get<0>(acore_irrep[a]);
+                auto h_a = std::get<0>(avirt_irrep[a]);
                 for (size_t b = 0; b < nv_nmo; ++b) {
-                    auto h_b = std::get<0>(acore_irrep[b]);
+                    auto h_b = std::get<0>(avirt_irrep[b]);
                     if(h_i ^ h_j ^ h_a ^ h_b) {
                         continue;
                     }
