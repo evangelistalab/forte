@@ -149,13 +149,16 @@ class CASSCF : public ActiveSpaceMethod {
     void set_lagrangian_1();
     /// Set up omega matrix entries of active-active blocks
     void set_lagrangian_2();
-    /// Set up the total Lagrangian
+    /// Set up the Lagrangian
     void set_lagrangian();
+    /// Compute and backtransform the total Lagrangian
+    void compute_lagrangian();
     /// Initialize matrices and tensors
     void set_parameters();
     /// Compute the gradient
     psi::SharedMatrix compute_gradient();
-
+    /// write IWL 
+    void write_2rdm_spin_dependent();
 
 
 

@@ -1,4 +1,5 @@
 #include "casscf/casscf.h"
+#include "casscf/backtransform_tpdm.h"
 #include "ambit/tensor.h"
 #include "ambit/blocked_tensor.h"
 
@@ -29,6 +30,11 @@
 #include "psi4/libdiis/diisentry.h"
 #include "psi4/libdiis/diismanager.h"
 #include "psi4/libmints/factory.h"
+
+
+#include "psi4/psifiles.h"
+#include "psi4/libiwl/iwl.hpp"
+#include "psi4/libpsio/psio.hpp"
 
 using namespace ambit;
 using namespace psi;
@@ -82,6 +88,7 @@ void CASSCF::set_ambit_space() {
 
 
 void CASSCF::init_density() {
+
     outfile->Printf("\n    Initializing density tensors ......... ");
     Gamma1_ = BTF_->build(CoreTensor, "Gamma1", spin_cases({"aa"}));
     Gamma2_ = BTF_->build(CoreTensor, "Gamma2", spin_cases({"aaaa"}));
@@ -200,7 +207,6 @@ void CASSCF::init_fock() {
 
 
 void CASSCF::set_lagrangian() {
-
 
     outfile->Printf("\n    Building Lagrangian ............................ ");
     W_ = BTF_->build(CoreTensor, "Lagrangian", spin_cases({"gg"}));
@@ -325,92 +331,132 @@ SharedMatrix CASSCF::compute_gradient() {
 
 	set_ambit_space();
     set_parameters();
-    set_lagrangian();
 
+    // NEED to overwrite the Da_ and Db_ (here)
     // more codes required
+
+
+    compute_lagrangian();
+    write_2rdm_spin_dependent();
+
 
     return std::make_shared<Matrix>("nullptr", 0, 0);
 }
 
 
+void CASSCF::compute_lagrangian() {
+
+    set_lagrangian();
+
+    outfile->Printf("\n  Computing Lagrangian ... ");
+    //backtransform
+
+    outfile->Printf("Done");
+
+}
 
 
-// void CASSCF::write_2rdm_spin_dependent(SharedMatrix D1) {
-//     outfile->Printf("\n  Writing D2 on disk");
 
 
-//     psio_ = _default_psio_lib_;
-//     IWL d2aa(psio_.get(), PSIF_MO_AA_TPDM, 1.0e-14, 0, 0);
-//     IWL d2ab(psio_.get(), PSIF_MO_AB_TPDM, 1.0e-14, 0, 0);
-//     IWL d2bb(psio_.get(), PSIF_MO_BB_TPDM, 1.0e-14, 0, 0);
+
+
+void CASSCF::write_2rdm_spin_dependent() {
+
+    outfile->Printf("\n  Writing 2RDM on disk");
+
+    auto psio_ = _default_psio_lib_;
+    IWL d2aa(psio_.get(), PSIF_MO_AA_TPDM, 1.0e-14, 0, 0);
+    IWL d2ab(psio_.get(), PSIF_MO_AB_TPDM, 1.0e-14, 0, 0);
+    IWL d2bb(psio_.get(), PSIF_MO_BB_TPDM, 1.0e-14, 0, 0);
   
+    std::vector<size_t> core_all_ = mo_space_info_->get_absolute_mo("RESTRICTED_DOCC");
+    std::vector<size_t> actv_all_ = mo_space_info_->get_absolute_mo("ACTIVE");
+    std::vector<size_t> virt_all_ = mo_space_info_->get_absolute_mo("RESTRICTED_UOCC");
 
-//     for (auto p : core_1) {
-//         for (auto q : core_1) {
-//             for (auto r : virt_1) {
-//                 for (auto s : virt_1) {
-//                     double t1 = T2_aa->get(p * nmo_ + q, r * nmo_ + s)*(1.0+pow(e,-s_const*eps_aa->get(p * nmo_ + q, r * nmo_ + s)*eps_aa->get(p * nmo_ + q, r * nmo_ + s)));
-//                     double t2 = T2_bb->get(p * nmo_ + q, r * nmo_ + s)*(1.0+pow(e,-s_const*eps_bb->get(p * nmo_ + q, r * nmo_ + s)*eps_bb->get(p * nmo_ + q, r * nmo_ + s)));
-//                     double t3 = T2_ab->get(p * nmo_ + q, r * nmo_ + s)*(1.0+pow(e,-s_const*eps_ab->get(p * nmo_ + q, r * nmo_ + s)*eps_ab->get(p * nmo_ + q, r * nmo_ + s)));
+    for(size_t i = 0, size_c = core_all_.size(); i < size_c; ++i) {
+        for(size_t j = 0; j < size_c; ++j) {
+
+            auto m = core_all_[i];
+            auto n = core_all_[j];
+
+            d2aa.write_value(m, m, n, n, 0.25, 0, "NULL", 0);
+            d2ab.write_value(m, m, n, n, 0.50, 0, "NULL", 0);
+            d2bb.write_value(m, m, n, n, 0.25, 0, "NULL", 0);
+
+            d2aa.write_value(m, n, n, m, -0.25, 0, "NULL", 0);
+            d2ab.write_value(m, n, n, m, -0.50, 0, "NULL", 0);
+            d2bb.write_value(m, n, n, m, -0.25, 0, "NULL", 0);
+
+        }
+    }
+
+
+
+    for(size_t i = 0, size_c = core_all_.size(), size_a = actv_all_.size(); i < size_a; ++i) {
+        for(size_t j = 0; j < size_a; ++j) {
+
+            auto idx = actv_mos_[i] * na_ + actv_mos_[j];
+            auto u = actv_all_[i];
+            auto v = actv_all_[j];
+            
+            auto gamma_a = Gamma1_.block("aa").data()[idx];
+            auto gamma_b = Gamma1_.block("AA").data()[idx];
+
+            for(size_t k = 0; k < size_c; ++k) {
+
+                auto m = core_all_[k];
+
+
+                d2aa.write_value(v, u, m, m, 0.5 * gamma_a, 0, "NULL", 0);
+                /// this need to be checked, inconsistency exists
+                d2ab.write_value(v, u, m, m, 0.5 * (gamma_a + gamma_b), 0, "NULL", 0);
+                d2bb.write_value(v, u, m, m, 0.5 * gamma_b, 0, "NULL", 0);
+
+                d2aa.write_value(v, m, m, u, -0.5 * gamma_a, 0, "NULL", 0);
+                d2bb.write_value(v, m, m, u, -0.5 * gamma_b, 0, "NULL", 0);
+            }
+        }
+    }
+
+    for(size_t i = 0, size_a = actv_all_.size(); i < size_a; ++i) {
+        for(size_t j = 0; j < size_a; ++j) {
+            for(size_t k = 0; k < size_a; ++k) {
+                for(size_t l = 0; l < size_a; ++l) {
+
+                    auto u = actv_all_[i];
+                    auto v = actv_all_[j];
+                    auto x = actv_all_[k];
+                    auto y = actv_all_[l];
+                    auto idx = u * na_ * na_ * na_ + v * na_ * na_ + x * na_ + y;
+                    auto gamma_aa = Gamma2_.block("aaaa").data()[idx];
+                    auto gamma_bb = Gamma1_.block("AAAA").data()[idx];
+                    auto gamma_ab = Gamma1_.block("aAaA").data()[idx];
+
                     
-//                     double vaa = t1;
-//                     double vab = t3;
-//                     double vbb = t2;
+                    d2aa.write_value(x, u, y, v, 0.25 * gamma_aa, 0, "NULL", 0);
+                    d2bb.write_value(x, u, y, v, 0.25 * gamma_bb, 0, "NULL", 0);
 
-//                     d2aa.write_value(p, r, q, s, 0.5 * vaa, 0, "NULL", 0);
-//                     d2ab.write_value(p, r, q, s, 2.0 * vab, 0, "NULL", 0);
-//                     d2bb.write_value(p, r, q, s, 0.5 * vbb, 0, "NULL", 0);
-//                 }
-//             }
-//         }
-//     }
+                    //need to be checked 0.5 or 1.0
+                    d2ab.write_value(x, u, y, v, 0.5 * gamma_ab, 0, "NULL", 0);
+                }
+            }
+        }
+    }
+  
+    outfile->Printf("\n Done");
 
-    
-   
-//   for (int p = 0; p < nmo_; ++p) {
-//         auto pa = 2 * p;
-//         auto pb = 2 * p + 1;
+    d2aa.flush(1);
+    d2bb.flush(1);
+    d2ab.flush(1);
 
-//         for (int q = 0; q < nmo_; ++q) {
-//             auto qa = 2 * q;
-//             auto qb = 2 * q + 1;
+    d2aa.set_keep_flag(1);
+    d2bb.set_keep_flag(1);
+    d2ab.set_keep_flag(1);
 
-//             double va = D1_->get(pa, qa);
-//             double vb = D1_->get(pb, qb);
-//             if ((p == q) and (p < ndocc_)) {
-//                 va += 0.5;
-//                 vb += 0.5;
-//             }
-
-//             for (int i = 0; i < ndocc_; ++i) {
-//                 if (i != q) {
-//                     d2aa.write_value(p, q, i, i, 0.5 * va, 0, "NULL", 0);
-//                     d2bb.write_value(p, q, i, i, 0.5 * vb, 0, "NULL", 0);
-
-//                     d2aa.write_value(p, i, i, q, -0.5 * va, 0, "NULL", 0);
-//                     d2bb.write_value(p, i, i, q, -0.5 * vb, 0, "NULL", 0);
-//                 }
-
-//                 d2ab.write_value(p, q, i, i, 2.0 * va, 0, "NULL", 0);
-//             }
-//         }
-//     }
-
-
-//     outfile->Printf("\n Done");
-
-//     d2aa.flush(1);
-//     d2bb.flush(1);
-//     d2ab.flush(1);
-
-//     d2aa.set_keep_flag(1);
-//     d2bb.set_keep_flag(1);
-//     d2ab.set_keep_flag(1);
-
-//     d2aa.close();
-//     d2bb.close();
-//     d2ab.close();
-// }
+    d2aa.close();
+    d2bb.close();
+    d2ab.close();
+}
 
 
 }
