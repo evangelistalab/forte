@@ -132,7 +132,9 @@ void MRDSRG_SO::sr_ldsrg2star_comm3_fink(BlockedTensor &C1, BlockedTensor &C2) {
     temp["c0,c1,v0,v1"] += (1.0 / 12.0) * V["v2,c3,v0,c2"] * T2["c0,c1,v3,v4"] * T2["c2,c4,v1,v2"] * T2["c3,c4,v3,v4"];
     temp["c0,c1,v0,v1"] += (1.0 / 3.0) * V["v3,v4,v0,v2"] * T1["c2,v2"] * T1["c2,v3"] * T2["c0,c1,v1,v4"];
     temp["c0,c1,v0,v1"] += (-1.0 / 12.0) * V["v3,v4,v0,v2"] * T2["c0,c1,v3,v4"] * T2["c2,c3,v1,v5"] * T2["c2,c3,v2,v5"];
-    temp["c0,c1,v0,v1"] += (-1.0 / 6.0) * V["v3,v4,v0,v2"] * T2["c0,c1,v4,v5"] * T2["c2,c3,v1,v3"] * T2["c2,c3,v2,v5"];
+    if (foptions_->get_bool("LDSRG2STAR_DO_HIGH_SCALING_TERMS")) {
+        temp["c0,c1,v0,v1"] += (-1.0 / 6.0) * V["v3,v4,v0,v2"] * T2["c0,c1,v4,v5"] * T2["c2,c3,v1,v3"] * T2["c2,c3,v2,v5"];
+    }
     temp["c0,c1,v0,v1"] += (1.0 / 6.0) * V["v3,c2,v0,v2"] * T1["c3,v3"] * T2["c0,c1,v1,v4"] * T2["c2,c3,v2,v4"];
     temp["c0,c1,v0,v1"] += (-1.0 / 6.0) * V["v3,c2,v0,v2"] * T1["c3,v4"] * T2["c0,c1,v1,v3"] * T2["c2,c3,v2,v4"];
     temp["c0,c1,v0,v1"] += (1.0 / 3.0) * V["v3,c3,v2,c2"] * T2["c0,c1,v0,v2"] * T2["c2,c4,v3,v4"] * T2["c3,c4,v1,v4"];
@@ -415,18 +417,20 @@ void MRDSRG_SO::sr_ldsrg2star_comm3_fink(BlockedTensor &C1, BlockedTensor &C2) {
 
         temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"vvvv"});
         temp["v0,v1,v2,v3"] += (1.0 / 12.0) * V["v2,v4,v0,c0"] * T1["c0,v1"] * T2["c1,c2,v3,v5"] * T2["c1,c2,v4,v5"];
-        temp["v0,v1,v2,v3"] += (1.0 / 12.0) * V["v2,v4,v0,c0"] * T1["c0,v5"] * T2["c1,c2,v1,v4"] * T2["c1,c2,v3,v5"];
         temp["v0,v1,v2,v3"] += (1.0 / 6.0) * V["v2,v4,v0,c0"] * T1["c1,v4"] * T2["c0,c2,v1,v5"] * T2["c1,c2,v3,v5"];
-        temp["v0,v1,v2,v3"] += (1.0 / 12.0) * V["v2,c0,v0,v4"] * T1["c0,v5"] * T2["c1,c2,v1,v5"] * T2["c1,c2,v3,v4"];
         temp["v0,v1,v2,v3"] += (1.0 / 6.0) * V["v2,c0,v0,v4"] * T1["c1,v4"] * T2["c0,c2,v3,v5"] * T2["c1,c2,v1,v5"];
-        temp["v0,v1,v2,v3"] += (-1.0 / 12.0) * V["v5,c0,v0,v4"] * T1["c0,v2"] * T2["c1,c2,v1,v5"] * T2["c1,c2,v3,v4"];
-        temp["v0,v1,v2,v3"] += (-1.0 / 12.0) * V["v5,c0,v2,v4"] * T1["c0,v0"] * T2["c1,c2,v1,v4"] * T2["c1,c2,v3,v5"];
-        temp["v0,v1,v2,v3"] += (1.0 / 24.0) * V["c0,c1,v0,v4"] * T2["c0,c1,v3,v5"] * T2["c2,c3,v1,v5"] * T2["c2,c3,v2,v4"];
         temp["v0,v1,v2,v3"] += (-1.0 / 6.0) * V["c0,c1,v0,v4"] * T2["c0,c2,v2,v4"] * T2["c1,c3,v3,v5"] * T2["c2,c3,v1,v5"];
-        temp["v0,v1,v2,v3"] += (1.0 / 24.0) * V["c0,c1,v2,v4"] * T2["c0,c1,v1,v5"] * T2["c2,c3,v0,v4"] * T2["c2,c3,v3,v5"];
         temp["v0,v1,v2,v3"] += (-1.0 / 6.0) * V["c0,c1,v2,v4"] * T2["c0,c2,v0,v4"] * T2["c1,c3,v1,v5"] * T2["c2,c3,v3,v5"];
         temp["v0,v1,v2,v3"] += (-1.0 / 6.0) * V["c1,c2,v0,c0"] * T1["c1,v2"] * T2["c0,c3,v1,v4"] * T2["c2,c3,v3,v4"];
         temp["v0,v1,v2,v3"] += (-1.0 / 6.0) * V["c1,c2,v2,c0"] * T1["c1,v0"] * T2["c0,c3,v3,v4"] * T2["c2,c3,v1,v4"];
+        if (foptions_->get_bool("LDSRG2STAR_DO_HIGH_SCALING_TERMS")) {
+            temp["v0,v1,v2,v3"] += (1.0 / 12.0) * V["v2,v4,v0,c0"] * T1["c0,v5"] * T2["c1,c2,v1,v4"] * T2["c1,c2,v3,v5"];
+            temp["v0,v1,v2,v3"] += (1.0 / 12.0) * V["v2,c0,v0,v4"] * T1["c0,v5"] * T2["c1,c2,v1,v5"] * T2["c1,c2,v3,v4"];
+            temp["v0,v1,v2,v3"] += (-1.0 / 12.0) * V["v5,c0,v0,v4"] * T1["c0,v2"] * T2["c1,c2,v1,v5"] * T2["c1,c2,v3,v4"];
+            temp["v0,v1,v2,v3"] += (-1.0 / 12.0) * V["v5,c0,v2,v4"] * T1["c0,v0"] * T2["c1,c2,v1,v4"] * T2["c1,c2,v3,v5"];
+            temp["v0,v1,v2,v3"] += (1.0 / 24.0) * V["c0,c1,v0,v4"] * T2["c0,c1,v3,v5"] * T2["c2,c3,v1,v5"] * T2["c2,c3,v2,v4"];
+            temp["v0,v1,v2,v3"] += (1.0 / 24.0) * V["c0,c1,v2,v4"] * T2["c0,c1,v1,v5"] * T2["c2,c3,v0,v4"] * T2["c2,c3,v3,v5"];
+        }
         C2["v0,v1,v2,v3"] += temp["v0,v1,v2,v3"];
         C2["v0,v1,v3,v2"] -= temp["v0,v1,v2,v3"];
         C2["v1,v0,v2,v3"] -= temp["v0,v1,v2,v3"];

@@ -702,7 +702,11 @@ def register_dsrg_options(forte_options):
 
     forte_options.add_bool("LDSRG3_ZERO_T3", False, "Zero all T3 amplitudes for testing")
 
-    forte_options.add_bool("LDSRG2STAR_DO_DIAGONAL", True, "Compute diagonal components of Hbar when doing LDSRG(2*)")
+    forte_options.add_bool("LDSRG2STAR_DO_DIAGONAL", True,
+                           "Compute diagonal components of Hbar when doing LDSRG(2*) if True")
+
+    forte_options.add_bool("LDSRG2STAR_DO_HIGH_SCALING_TERMS", True,
+                           "Compute all N^6 and O*N^5 terms of Hbar when doing LDSRG(2*) if True")
 
     forte_options.add_bool("PRINT_1BODY_EVALS", False, "Print eigenvalues of 1-body effective H")
 

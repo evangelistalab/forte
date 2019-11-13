@@ -122,7 +122,9 @@ void MRDSRG_SO::sr_ldsrg2star_comm2_fink(BlockedTensor &C1, BlockedTensor &C2) {
         C2["c0,v0,c1,v1"] += temp["v0,c0,v1,c1"];
 
         temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"vvvv"});
-        temp["v0,v1,v2,v3"] += (-1.0 / 4.0) * V["v2,v5,v0,v4"] * T2["c0,c1,v1,v5"] * T2["c0,c1,v3,v4"];
+        if (foptions_->get_bool("LDSRG2STAR_DO_HIGH_SCALING_TERMS")) {
+            temp["v0,v1,v2,v3"] += (-1.0 / 4.0) * V["v2,v5,v0,v4"] * T2["c0,c1,v1,v5"] * T2["c0,c1,v3,v4"];
+        }
         temp["v0,v1,v2,v3"] += (1.0 / 2.0) * V["v2,c1,v0,c0"] * T2["c0,c2,v1,v4"] * T2["c1,c2,v3,v4"];
         C2["v0,v1,v2,v3"] += temp["v0,v1,v2,v3"];
         C2["v0,v1,v3,v2"] -= temp["v0,v1,v2,v3"];
