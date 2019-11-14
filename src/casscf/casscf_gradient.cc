@@ -368,6 +368,10 @@ void CASSCF::write_2rdm_spin_dependent() {
     IWL d2aa(psio_.get(), PSIF_MO_AA_TPDM, 1.0e-14, 0, 0);
     IWL d2ab(psio_.get(), PSIF_MO_AB_TPDM, 1.0e-14, 0, 0);
     IWL d2bb(psio_.get(), PSIF_MO_BB_TPDM, 1.0e-14, 0, 0);
+
+/*************************************************************************/
+/*!!!  coefficients in d2aa and d2bb need to multiply additional 1/2  !!!*/
+/*************************************************************************/
   
     std::vector<size_t> core_all_ = mo_space_info_->get_absolute_mo("RESTRICTED_DOCC");
     std::vector<size_t> actv_all_ = mo_space_info_->get_absolute_mo("ACTIVE");
@@ -406,14 +410,14 @@ void CASSCF::write_2rdm_spin_dependent() {
 
                 auto m = core_all_[k];
 
-
                 d2aa.write_value(v, u, m, m, 0.5 * gamma_a, 0, "NULL", 0);
-                /// this need to be checked, inconsistency exists
-                d2ab.write_value(v, u, m, m, 0.5 * (gamma_a + gamma_b), 0, "NULL", 0);
                 d2bb.write_value(v, u, m, m, 0.5 * gamma_b, 0, "NULL", 0);
 
                 d2aa.write_value(v, m, m, u, -0.5 * gamma_a, 0, "NULL", 0);
                 d2bb.write_value(v, m, m, u, -0.5 * gamma_b, 0, "NULL", 0);
+
+                /// this need to be checked, inconsistency exists
+                d2ab.write_value(v, u, m, m, (gamma_a + gamma_b), 0, "NULL", 0);
             }
         }
     }
@@ -436,8 +440,7 @@ void CASSCF::write_2rdm_spin_dependent() {
                     d2aa.write_value(x, u, y, v, 0.25 * gamma_aa, 0, "NULL", 0);
                     d2bb.write_value(x, u, y, v, 0.25 * gamma_bb, 0, "NULL", 0);
 
-                    //need to be checked 0.5 or 1.0
-                    d2ab.write_value(x, u, y, v, 0.5 * gamma_ab, 0, "NULL", 0);
+                    d2ab.write_value(x, u, y, v, gamma_ab, 0, "NULL", 0);
                 }
             }
         }
