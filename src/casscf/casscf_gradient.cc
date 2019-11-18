@@ -67,6 +67,7 @@ void CASSCF::set_ambit_space() {
     bvirt_label_ = "V";
 
     // add Ambit index labels
+    BTF_= std::make_shared<BlockedTensorFactory>();
     BTF_->add_mo_space(acore_label_, "mn", core_mos_, AlphaSpin);
     BTF_->add_mo_space(bcore_label_, "MN", core_mos_, BetaSpin);
     BTF_->add_mo_space(aactv_label_, "uvwxyz123", actv_mos_, AlphaSpin);
@@ -89,7 +90,7 @@ void CASSCF::set_ambit_space() {
 
 void CASSCF::init_density() {
 
-    outfile->Printf("\n    Initializing density tensors ......... ");
+    outfile->Printf("\n    Initializing density tensors .................... ");
     Gamma1_ = BTF_->build(CoreTensor, "Gamma1", spin_cases({"aa"}));
     Gamma2_ = BTF_->build(CoreTensor, "Gamma2", spin_cases({"aaaa"}));
     fill_density();
@@ -129,7 +130,7 @@ void CASSCF::init_h() {
 
 void CASSCF::init_v() {
 
-    outfile->Printf("\n    Building electron repulsion integrals ............................ ");
+    outfile->Printf("\n    Building electron repulsion integrals ........... ");
     V_ = BTF_->build(ambit::CoreTensor, "Hamiltonian", spin_cases({"gggg"}));
 
     V_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
@@ -159,38 +160,54 @@ void CASSCF::init_fock() {
 
     outfile->Printf("\n    Building Fock matrix ............................ ");
 
-    SharedMatrix Da(new psi::Matrix("Da", nmo_, nmo_));
-    SharedMatrix Db(new psi::Matrix("Db", nmo_, nmo_));
-    auto L1a = tensor_to_matrix(cas_ref_.g1a(), na_);
-    auto L1b = tensor_to_matrix(cas_ref_.g1b(), na_);
+    F_ = BTF_->build(ambit::CoreTensor, "Fock", spin_cases({"gg"}));
 
-    ncmopi_ = mo_space_info_->get_dimension("CORRELATED");
-    rdocc_ = mo_space_info_->get_dimension("RESTRICTED_DOCC");
-    actv_ = mo_space_info_->get_dimension("ACTIVE");
+    // SharedMatrix Da(new psi::Matrix("Da", nmo_, nmo_));
+    // SharedMatrix Db(new psi::Matrix("Db", nmo_, nmo_));
+    // auto L1a = tensor_to_matrix(cas_ref_.g1a(), na_);
+    // auto L1b = tensor_to_matrix(cas_ref_.g1b(), na_);
 
-    for (size_t h = 0, offset = 0; h < nirrep_; ++h) {
-        // core block (diagonal)
-        for (size_t i = 0; i < rdocc_[h]; ++i) {
-            Da->set(offset + i, offset + i, 1.0);
-            Db->set(offset + i, offset + i, 1.0);
-        }
+    // ncmopi_ = mo_space_info_->get_dimension("CORRELATED");
+    // rdocc_ = mo_space_info_->get_dimension("RESTRICTED_DOCC");
+    // actv_ = mo_space_info_->get_dimension("ACTIVE");
 
-        offset += rdocc_[h];
+    // for (size_t h = 0, offset = 0; h < nirrep_; ++h) {
+    //     // core block (diagonal)
+    //     for (size_t i = 0; i < rdocc_[h]; ++i) {
+    //         Da->set(offset + i, offset + i, 1.0);
+    //         Db->set(offset + i, offset + i, 1.0);
+    //     }
 
-        // active block
-        for (size_t u = 0; u < actv_[h]; ++u) {
-            for (size_t v = 0; v < actv_[h]; ++v) {
-                Da->set(offset + u, offset + v, L1a->get(h, u, v));
-                Db->set(offset + u, offset + v, L1b->get(h, u, v));
-            }
-        }
+        // offset += rdocc_[h];
+        // // active block
+        // for (size_t u = 0; u < actv_[h]; ++u) {
+        //     for (size_t v = 0; v < actv_[h]; ++v) {
+        //         Da->set(offset + u, offset + v, L1a->get(u, v));
+        //         Db->set(offset + u, offset + v, L1b->get(u, v));
+        //     }
+        // }
 
-        offset += ncmopi_[h] - rdocc_[h];
+    //     offset += ncmopi_[h] - rdocc_[h];
+    // }
+
+    // for convenience, directly call make_fock_matrix in ForteIntegral
+    psi::SharedMatrix D1a(new psi::Matrix("D1a", nmo_, nmo_));
+    psi::SharedMatrix D1b(new psi::Matrix("D1b", nmo_, nmo_));
+    for (size_t m = 0, ncore = core_mos_.size(); m < ncore; m++) {
+        D1a->set(core_mos_[m], core_mos_[m], 1.0);
+        D1b->set(core_mos_[m], core_mos_[m], 1.0);
     }
 
-    ints_->make_fock_matrix(Da, Db);
+    Gamma1_.block("aa").citerate([&](const std::vector<size_t>& i, const double& value) {
+        D1a->set(actv_mos_[i[0]], actv_mos_[i[1]], value);
+    });
+    Gamma1_.block("AA").citerate([&](const std::vector<size_t>& i, const double& value) {
+        D1b->set(actv_mos_[i[0]], actv_mos_[i[1]], value);
+    });
 
-    F_ = BTF_->build(ambit::CoreTensor, "Fock", spin_cases({"gg"}));
+
+
+    ints_->make_fock_matrix(D1a, D1b);
 
     F_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
         if (spin[0] == AlphaSpin) {
@@ -208,7 +225,7 @@ void CASSCF::init_fock() {
 
 void CASSCF::set_lagrangian() {
 
-    outfile->Printf("\n    Building Lagrangian ............................ ");
+    outfile->Printf("\n    Building Lagrangian ............................. ");
     W_ = BTF_->build(CoreTensor, "Lagrangian", spin_cases({"gg"}));
     set_lagrangian_1();
     set_lagrangian_2();
@@ -339,6 +356,8 @@ SharedMatrix CASSCF::compute_gradient() {
     compute_lagrangian();
     write_2rdm_spin_dependent();
 
+    outfile->Printf("\n    TPD Backtransformation .......................... ");
+
     std::vector<std::shared_ptr<psi::MOSpace> > spaces;
     spaces.push_back(psi::MOSpace::all);
     std::shared_ptr<TPDMBackTransform> transform = std::shared_ptr<TPDMBackTransform>(
@@ -349,6 +368,8 @@ SharedMatrix CASSCF::compute_gradient() {
                 IntegralTransform::FrozenOrbitals::None));           // Frozen orbitals?
     transform->backtransform_density();
     transform.reset();
+    outfile->Printf("Done");
+    outfile->Printf("\n    Computing gradients ............................. Done\n");
 
 
     return std::make_shared<Matrix>("nullptr", 0, 0);
@@ -357,7 +378,7 @@ SharedMatrix CASSCF::compute_gradient() {
 
 void CASSCF::compute_1rdm_coeff() {
 
-    outfile->Printf("\n  Computing 1rdm coefficients ... ");
+    outfile->Printf("\n    Computing 1rdm coefficients ..................... ");
 
     SharedMatrix D1(new Matrix("1rdm coefficients contribution", nmo_, nmo_));
 
@@ -395,7 +416,7 @@ void CASSCF::compute_lagrangian() {
 
     set_lagrangian();
 
-    outfile->Printf("\n  Computing Lagrangian ... ");
+    outfile->Printf("\n    Computing Lagrangian ............................ ");
     //backtransform
 
     SharedMatrix L(new Matrix("2rdm coefficients contribution", nmo_, nmo_));
@@ -418,7 +439,7 @@ void CASSCF::compute_lagrangian() {
 
 void CASSCF::write_2rdm_spin_dependent() {
 
-    outfile->Printf("\n  Writing 2RDM on disk");
+    outfile->Printf("\n    Writing 2RDM on disk ............................ ");
 
     auto psio_ = _default_psio_lib_;
     IWL d2aa(psio_.get(), PSIF_MO_AA_TPDM, 1.0e-14, 0, 0);
@@ -502,7 +523,7 @@ void CASSCF::write_2rdm_spin_dependent() {
         }
     }
   
-    outfile->Printf("\n Done");
+    outfile->Printf("Done");
 
     d2aa.flush(1);
     d2bb.flush(1);
