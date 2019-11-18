@@ -155,6 +155,8 @@ class CASSCF : public ActiveSpaceMethod {
     void compute_lagrangian();
     /// Initialize matrices and tensors
     void set_parameters();
+    /// Compute the z coefficients
+    void compute_1rdm_coeff();
     /// Compute the gradient
     psi::SharedMatrix compute_gradient();
     /// write IWL 
