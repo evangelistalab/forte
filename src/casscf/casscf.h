@@ -73,6 +73,9 @@ class CASSCF : public ActiveSpaceMethod {
     ambit::Tensor gamma2() { return gamma2_; }
     double compute_energy() override;
 
+    /// Compute the gradient
+    psi::SharedMatrix compute_gradient();
+
     void set_options(std::shared_ptr<ForteOptions>) override{};
 
     /// Returns the reduced density matrices up to a given level (max_rdm_level)
@@ -157,8 +160,6 @@ class CASSCF : public ActiveSpaceMethod {
     void set_parameters();
     /// Compute the z coefficients
     void compute_1rdm_coeff();
-    /// Compute the gradient
-    psi::SharedMatrix compute_gradient();
     /// write IWL 
     void write_2rdm_spin_dependent();
 
@@ -186,12 +187,12 @@ class CASSCF : public ActiveSpaceMethod {
 
 
 
-    // Correlated MOs
-    psi::Dimension ncmopi_;
-    // Restricted DOCC
-    psi::Dimension rdocc_;
-    // Active MOs
-    psi::Dimension actv_;
+    // // Correlated MOs
+    // psi::Dimension ncmopi_;
+    // // Restricted DOCC
+    // psi::Dimension rdocc_;
+    // // Active MOs
+    // psi::Dimension actv_;
 
 
     // Fock matrix alpha
