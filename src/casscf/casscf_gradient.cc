@@ -335,13 +335,60 @@ SharedMatrix CASSCF::compute_gradient() {
     // NEED to overwrite the Da_ and Db_ (here)
     // more codes required
 
-
+    compute_1rdm_coeff();
     compute_lagrangian();
     write_2rdm_spin_dependent();
+
+    std::vector<std::shared_ptr<psi::MOSpace> > spaces;
+    spaces.push_back(psi::MOSpace::all);
+    std::shared_ptr<TPDMBackTransform> transform = std::shared_ptr<TPDMBackTransform>(
+    new TPDMBackTransform(ints_->wfn(), spaces,
+                IntegralTransform::TransformationType::Unrestricted, // Transformation type
+                IntegralTransform::OutputType::DPDOnly,              // Output buffer
+                IntegralTransform::MOOrdering::QTOrder,              // MO ordering
+                IntegralTransform::FrozenOrbitals::None));           // Frozen orbitals?
+    transform->backtransform_density();
+    transform.reset();
 
 
     return std::make_shared<Matrix>("nullptr", 0, 0);
 }
+
+
+void CASSCF::compute_1rdm_coeff() {
+
+    outfile->Printf("\n  Computing 1rdm coefficients ... ");
+
+    SharedMatrix D1(new Matrix("1rdm coefficients contribution", nmo_, nmo_));
+
+    // We force "Da == Db". The code below need changed if this constraint is revoked.
+
+    std::vector<size_t> core_all_ = mo_space_info_->get_absolute_mo("RESTRICTED_DOCC");
+    std::vector<size_t> actv_all_ = mo_space_info_->get_absolute_mo("ACTIVE");
+    std::vector<size_t> virt_all_ = mo_space_info_->get_absolute_mo("RESTRICTED_UOCC");
+
+    for(size_t i = 0, size_c = core_all_.size(); i < size_c; ++i) {
+        auto m = core_all_[i];
+        D1->set(m, m, 1.0);
+    }
+
+    for(size_t i = 0, size_a = actv_all_.size(); i < size_a; ++i) {
+        for(size_t j = 0; j < size_a; ++j) {
+            auto u = core_all_[i];
+            auto v = core_all_[j];
+            D1->set(u, v, Gamma1_.block("aa").data()[u * na_ + v]);
+        }
+    }
+
+    D1->back_transform(ints_->Ca());
+
+    ints_->wfn()->Da()->copy(D1->clone());
+    ints_->wfn()->Db()->copy(ints_->wfn()->Da());
+
+    outfile->Printf("Done");
+}
+
+
 
 
 void CASSCF::compute_lagrangian() {
@@ -351,8 +398,17 @@ void CASSCF::compute_lagrangian() {
     outfile->Printf("\n  Computing Lagrangian ... ");
     //backtransform
 
-    outfile->Printf("Done");
+    SharedMatrix L(new Matrix("2rdm coefficients contribution", nmo_, nmo_));
 
+    // The code below need be changed if frozen approximation is considered
+
+    W_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {           
+        L->add(i[0], i[1], value);
+    }); 
+
+    L->back_transform(ints_->Ca());
+    ints_->wfn()->Lagrangian()->copy(L->clone());
+    outfile->Printf("Done");
 }
 
 
@@ -433,8 +489,8 @@ void CASSCF::write_2rdm_spin_dependent() {
                     auto y = actv_all_[l];
                     auto idx = u * na_ * na_ * na_ + v * na_ * na_ + x * na_ + y;
                     auto gamma_aa = Gamma2_.block("aaaa").data()[idx];
-                    auto gamma_bb = Gamma1_.block("AAAA").data()[idx];
-                    auto gamma_ab = Gamma1_.block("aAaA").data()[idx];
+                    auto gamma_bb = Gamma2_.block("AAAA").data()[idx];
+                    auto gamma_ab = Gamma2_.block("aAaA").data()[idx];
 
                     
                     d2aa.write_value(x, u, y, v, 0.25 * gamma_aa, 0, "NULL", 0);
