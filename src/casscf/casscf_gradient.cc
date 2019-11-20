@@ -102,10 +102,22 @@ void CASSCF::fill_density() {
     Gamma1_.block("aa")("pq") = cas_ref_.g1a()("pq");
     Gamma1_.block("AA")("pq") = cas_ref_.g1b()("pq");
 
+
+/// Test needs delete !!!!!
+// outfile->Printf("\n");
+// for(size_t i = 0; i< na_; ++i) {
+//     for (size_t j = 0; j<na_; ++j) {
+//         outfile->Printf("%.4f  ", Gamma1_.block("aa").data()[i * na_ + j]);
+//     }
+//     outfile->Printf("\n");
+// }
+/// Test needs delete !!!!!
+
     // 2-body density 
     Gamma2_.block("aaaa")("pqrs") = cas_ref_.g2aa()("pqrs");
     Gamma2_.block("aAaA")("pqrs") = cas_ref_.g2ab()("pqrs");
     Gamma2_.block("AAAA")("pqrs") = cas_ref_.g2bb()("pqrs");
+
 }
 
 
@@ -190,7 +202,7 @@ void CASSCF::init_fock() {
     //     offset += ncmopi_[h] - rdocc_[h];
     // }
 
-    // for convenience, directly call make_fock_matrix in ForteIntegral
+
     psi::SharedMatrix D1a(new psi::Matrix("D1a", nmo_, nmo_));
     psi::SharedMatrix D1b(new psi::Matrix("D1b", nmo_, nmo_));
     for (size_t m = 0, ncore = core_mos_.size(); m < ncore; m++) {
@@ -219,7 +231,6 @@ void CASSCF::init_fock() {
     });    
 
     outfile->Printf("Done");
-
 }
 
 
@@ -240,8 +251,8 @@ void CASSCF::set_lagrangian_1() {
 /*                                                                   */
 /*********************************************************************/
 
-    W_["mp"] = F_["mp"];
-    W_["MP"] = F_["MP"];
+    W_["mp"] -= F_["mp"];
+    W_["MP"] -= F_["MP"];
 
 }
 
@@ -264,17 +275,19 @@ void CASSCF::set_lagrangian_2() {
     temp["vp"] += V_["vmpn"] * I["mn"];
     temp["vp"] += V_["vMpN"] * I["MN"];
     W_["up"] -= temp["vp"] * Gamma1_["uv"];
-    W_["up"] -= V_["xypv"] * Gamma2_["uvxy"];
+    W_["up"] -= 0.5 * V_["xypv"] * Gamma2_["uvxy"];
     W_["up"] -= V_["xYpV"] * Gamma2_["uVxY"];
-    W_["up"] -= V_["XypV"] * Gamma2_["uVXy"];
+    // W_["up"] -= 0.5 * V_["XypV"] * Gamma2_["uVXy"];
 
     temp["VP"] = H_["VP"];
-    temp["VP"] += V_["VmPn"] * I["mn"];
+    temp["VP"] += V_["mVnP"] * I["mn"];
     temp["VP"] += V_["VMPN"] * I["MN"];
     W_["UP"] -= temp["VP"] * Gamma1_["UV"];
-    W_["UP"] -= V_["XYPV"] * Gamma2_["UVXY"];
-    W_["UP"] -= V_["XyPv"] * Gamma2_["UvXy"];
-    W_["UP"] -= V_["xYPv"] * Gamma2_["UvxY"];
+    W_["UP"] -= 0.5 * V_["XYPV"] * Gamma2_["UVXY"];
+    // W_["UP"] -= 0.5 * V_["XyPv"] * Gamma2_["UvXy"];
+    W_["UP"] -= V_["yXvP"] * Gamma2_["vUyX"];
+    // W_["UP"] -= 0.5 * V_["xYPv"] * Gamma2_["UvxY"];
+
 
 }
 
@@ -292,13 +305,6 @@ void CASSCF::set_lagrangian_2() {
 //     }
 //     return Dmo;
 // }
-
-
-
-
-
-
-
 
 
 
@@ -333,7 +339,6 @@ void CASSCF::set_lagrangian_2() {
 
 void CASSCF::set_parameters() {
     init_density();
-    fill_density();
     init_h();
     init_v();
     init_fock();
@@ -354,9 +359,10 @@ SharedMatrix CASSCF::compute_gradient() {
 
     compute_1rdm_coeff();
     compute_lagrangian();
+    W_.print();
+    // F_.print();
     write_2rdm_spin_dependent();
-
-    outfile->Printf("\n    TPD Backtransformation .......................... ");
+    
 
     std::vector<std::shared_ptr<psi::MOSpace> > spaces;
     spaces.push_back(psi::MOSpace::all);
@@ -366,14 +372,18 @@ SharedMatrix CASSCF::compute_gradient() {
                 IntegralTransform::OutputType::DPDOnly,              // Output buffer
                 IntegralTransform::MOOrdering::QTOrder,              // MO ordering
                 IntegralTransform::FrozenOrbitals::None));           // Frozen orbitals?
+    
+    // transform->set_psio(ints_->wfn()->psio());
     transform->backtransform_density();
     transform.reset();
-    outfile->Printf("Done");
+    outfile->Printf("\n    TPD Backtransformation .......................... Done");
     outfile->Printf("\n    Computing gradients ............................. Done\n");
 
 
     return std::make_shared<Matrix>("nullptr", 0, 0);
 }
+
+
 
 
 void CASSCF::compute_1rdm_coeff() {
@@ -395,11 +405,13 @@ void CASSCF::compute_1rdm_coeff() {
 
     for(size_t i = 0, size_a = actv_all_.size(); i < size_a; ++i) {
         for(size_t j = 0; j < size_a; ++j) {
-            auto u = core_all_[i];
-            auto v = core_all_[j];
-            D1->set(u, v, Gamma1_.block("aa").data()[u * na_ + v]);
+            auto u = actv_all_[i];
+            auto v = actv_all_[j];
+            D1->set(u, v, Gamma1_.block("aa").data()[i * na_ + j]);
         }
     }
+
+
 
     D1->back_transform(ints_->Ca());
 
@@ -419,7 +431,7 @@ void CASSCF::compute_lagrangian() {
     outfile->Printf("\n    Computing Lagrangian ............................ ");
     //backtransform
 
-    SharedMatrix L(new Matrix("2rdm coefficients contribution", nmo_, nmo_));
+    SharedMatrix L(new Matrix("Lagrangian", nmo_, nmo_));
 
     // The code below need be changed if frozen approximation is considered
 
@@ -439,9 +451,11 @@ void CASSCF::compute_lagrangian() {
 
 void CASSCF::write_2rdm_spin_dependent() {
 
-    outfile->Printf("\n    Writing 2RDM on disk ............................ ");
+    outfile->Printf("\n    Writing 2RDM into disk .......................... ");
 
-    auto psio_ = _default_psio_lib_;
+    ints_->wfn()->psio() = _default_psio_lib_;
+    auto psio_ = ints_->wfn()->psio();
+
     IWL d2aa(psio_.get(), PSIF_MO_AA_TPDM, 1.0e-14, 0, 0);
     IWL d2ab(psio_.get(), PSIF_MO_AB_TPDM, 1.0e-14, 0, 0);
     IWL d2bb(psio_.get(), PSIF_MO_BB_TPDM, 1.0e-14, 0, 0);
@@ -476,7 +490,7 @@ void CASSCF::write_2rdm_spin_dependent() {
     for(size_t i = 0, size_c = core_all_.size(), size_a = actv_all_.size(); i < size_a; ++i) {
         for(size_t j = 0; j < size_a; ++j) {
 
-            auto idx = actv_mos_[i] * na_ + actv_mos_[j];
+            auto idx = i * na_ + j;
             auto u = actv_all_[i];
             auto v = actv_all_[j];
             
@@ -495,6 +509,7 @@ void CASSCF::write_2rdm_spin_dependent() {
 
                 /// this need to be checked, inconsistency exists
                 d2ab.write_value(v, u, m, m, (gamma_a + gamma_b), 0, "NULL", 0);
+
             }
         }
     }
@@ -508,7 +523,7 @@ void CASSCF::write_2rdm_spin_dependent() {
                     auto v = actv_all_[j];
                     auto x = actv_all_[k];
                     auto y = actv_all_[l];
-                    auto idx = u * na_ * na_ * na_ + v * na_ * na_ + x * na_ + y;
+                    auto idx = i * na_ * na_ * na_ + j * na_ * na_ + k * na_ + l;
                     auto gamma_aa = Gamma2_.block("aaaa").data()[idx];
                     auto gamma_bb = Gamma2_.block("AAAA").data()[idx];
                     auto gamma_ab = Gamma2_.block("aAaA").data()[idx];
