@@ -68,8 +68,8 @@ void CASSCF::set_ambit_space() {
 
     // add Ambit index labels
     BTF_= std::make_shared<BlockedTensorFactory>();
-    BTF_->add_mo_space(acore_label_, "mn", core_mos_, AlphaSpin);
-    BTF_->add_mo_space(bcore_label_, "MN", core_mos_, BetaSpin);
+    BTF_->add_mo_space(acore_label_, "mn$%", core_mos_, AlphaSpin);
+    BTF_->add_mo_space(bcore_label_, "MN<>", core_mos_, BetaSpin);
     BTF_->add_mo_space(aactv_label_, "uvwxyz123", actv_mos_, AlphaSpin);
     BTF_->add_mo_space(bactv_label_, "UVWXYZ!@#", actv_mos_, BetaSpin);
     BTF_->add_mo_space(avirt_label_, "ef", virt_mos_, AlphaSpin);
@@ -102,16 +102,6 @@ void CASSCF::fill_density() {
     Gamma1_.block("aa")("pq") = cas_ref_.g1a()("pq");
     Gamma1_.block("AA")("pq") = cas_ref_.g1b()("pq");
 
-
-/// Test needs delete !!!!!
-// outfile->Printf("\n");
-// for(size_t i = 0; i< na_; ++i) {
-//     for (size_t j = 0; j<na_; ++j) {
-//         outfile->Printf("%.4f  ", Gamma1_.block("aa").data()[i * na_ + j]);
-//     }
-//     outfile->Printf("\n");
-// }
-/// Test needs delete !!!!!
 
     // 2-body density 
     Gamma2_.block("aaaa")("pqrs") = cas_ref_.g2aa()("pqrs");
@@ -254,6 +244,30 @@ void CASSCF::set_lagrangian_1() {
     W_["mp"] -= F_["mp"];
     W_["MP"] -= F_["MP"];
 
+
+    // BlockedTensor I = BTF_->build(CoreTensor, "identity matrix", spin_cases({"gg"}));
+
+    // I.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& , double& value) {
+    //     value = (i[0] == i[1]) ? 1.0 : 0.0;
+    // });
+
+    // BlockedTensor temp = BTF_->build(CoreTensor, "temporal tensor", spin_cases({"gg"}));
+
+    // W_["mp"] = -H_["mp"];
+    // W_["mp"] -= V_["pnm$"] * I["n$"];
+    // W_["mp"] -= V_["pNm<"] * I["N<"];
+    // W_["mp"] -= V_["pvmu"] * Gamma1_["uv"];
+    // W_["mp"] -= V_["pVmU"] * Gamma1_["UV"];
+
+
+
+    // W_["MP"] = -H_["MP"];
+    // W_["MP"] -= V_["nP$M"] * I["n$"];
+    // W_["MP"] -= V_["PNM<"] * I["N<"];
+    // W_["MP"] -= V_["vPuM"] * Gamma1_["uv"];
+    // W_["MP"] -= V_["PVMU"] * Gamma1_["UV"];
+
+
 }
 
 void CASSCF::set_lagrangian_2() {
@@ -288,51 +302,41 @@ void CASSCF::set_lagrangian_2() {
     W_["UP"] -= V_["yXvP"] * Gamma2_["vUyX"];
     // W_["UP"] -= 0.5 * V_["xYPv"] * Gamma2_["UvxY"];
 
+    //need to add symmetric parts !!!!!!!
+
+
+
+
+    double energy = ints_->nuclear_repulsion_energy();
+
+    energy += H_["mn"] * I["mn"];
+    energy += H_["MN"] * I["MN"];
+
+    energy += 0.5 * V_["mn$%"] * I["m$"] * I["n%"];
+    energy += 0.5 * V_["MN<>"] * I["M<"] * I["N>"];
+    energy += V_["mN$>"] * I["m$"] * I["N>"];
+
+    BlockedTensor temp1 = BTF_->build(CoreTensor, "temporal tensor", spin_cases({"gg"}));
+
+    temp["vu"] = H_["vu"];
+    temp["vu"] += V_["vmun"] * I["mn"];
+    temp["vu"] += V_["vMuN"] * I["MN"];
+    energy += temp["vu"] * Gamma1_["uv"];   
+    
+    temp["VU"] = H_["VU"];
+    temp["VU"] += V_["mVnU"] * I["mn"];
+    temp["VU"] += V_["VMUN"] * I["MN"];
+    energy += temp["VU"] * Gamma1_["UV"];
+    
+    energy += 0.25 * V_["xyuv"] * Gamma2_["uvxy"];
+    energy += 0.25 * V_["XYUV"] * Gamma2_["UVXY"];
+    energy += V_["xYuV"] * Gamma2_["uVxY"];
+
+    outfile->Printf("\n\n    My stupid energy = %.12f\n\n", energy);
 
 }
 
 
-
-// SharedMatrix CASSCF::convert_1rdm_so2mo(SharedMatrix D) {
-
-//     SharedMatrix Dmo(new Matrix(D->name() + " MO", nmo_, nmo_));
-//     for (int p = 0; p < nmo_; ++p) {
-//         for (int q = 0; q < nmo_; ++q) {
-//             double v1 = D->get(2 * p, 2 * q);
-//             double v2 = D->get(2 * p + 1, 2 * q + 1);
-//             Dmo->set(p, q, v1 + v2);
-//         }
-//     }
-//     return Dmo;
-// }
-
-
-
-
-
-// void CASSCF::compute_Lagrangian() {
-//     outfile->Printf("\n  Computing Lagrangian ... ");
-
-//     SharedMatrix L(new Matrix("Lagrangian Matrix", nso_, nso_));
-//     compute_Lagrangian_CX(L);
-//     compute_Lagrangian_AA(L);
-
-
-//     // convert spin-orbital Lagrangian to MO
-//     SharedMatrix Lmo = convert_1rdm_so2mo(L);
-
-//     // add reference part
-//     for (int i = 0; i < nfrzc_ + ncore_; ++i) {
-//         Lmo->add(i, i, 2.0 * epsilon_a_->get(i));
-//     }
-
-//     // transform to AO and pass to Lagrangian_
-//     Lagrangian_ = Lmo->clone();
-//     Lagrangian_->set_name("Lagrangian Matrix AO");
-//     Lagrangian_->back_transform(Ca_);
-
-//     outfile->Printf("Done.");
-// }
 
 
 
@@ -359,10 +363,20 @@ SharedMatrix CASSCF::compute_gradient() {
 
     compute_1rdm_coeff();
     compute_lagrangian();
-    W_.print();
-    // F_.print();
+
     write_2rdm_spin_dependent();
     
+
+
+
+    ints_->wfn()->set_reference_wavefunction(ints_->wfn());
+    auto temp = ints_->wfn()->reference_wavefunction();
+    if(!temp) outfile->Printf("XXXXXXXXXX");
+
+
+
+
+
 
     std::vector<std::shared_ptr<psi::MOSpace> > spaces;
     spaces.push_back(psi::MOSpace::all);
@@ -378,7 +392,6 @@ SharedMatrix CASSCF::compute_gradient() {
     transform.reset();
     outfile->Printf("\n    TPD Backtransformation .......................... Done");
     outfile->Printf("\n    Computing gradients ............................. Done\n");
-
 
     return std::make_shared<Matrix>("nullptr", 0, 0);
 }
@@ -440,7 +453,7 @@ void CASSCF::compute_lagrangian() {
     }); 
 
     L->back_transform(ints_->Ca());
-    ints_->wfn()->Lagrangian()->copy(L->clone());
+    ints_->wfn()->Lagrangian()->copy(L);
     outfile->Printf("Done");
 }
 
@@ -453,8 +466,7 @@ void CASSCF::write_2rdm_spin_dependent() {
 
     outfile->Printf("\n    Writing 2RDM into disk .......................... ");
 
-    ints_->wfn()->psio() = _default_psio_lib_;
-    auto psio_ = ints_->wfn()->psio();
+    auto psio_ = _default_psio_lib_;
 
     IWL d2aa(psio_.get(), PSIF_MO_AA_TPDM, 1.0e-14, 0, 0);
     IWL d2ab(psio_.get(), PSIF_MO_AB_TPDM, 1.0e-14, 0, 0);
@@ -466,7 +478,7 @@ void CASSCF::write_2rdm_spin_dependent() {
   
     std::vector<size_t> core_all_ = mo_space_info_->get_absolute_mo("RESTRICTED_DOCC");
     std::vector<size_t> actv_all_ = mo_space_info_->get_absolute_mo("ACTIVE");
-    std::vector<size_t> virt_all_ = mo_space_info_->get_absolute_mo("RESTRICTED_UOCC");
+    // std::vector<size_t> virt_all_ = mo_space_info_->get_absolute_mo("RESTRICTED_UOCC");
 
     for(size_t i = 0, size_c = core_all_.size(); i < size_c; ++i) {
         for(size_t j = 0; j < size_c; ++j) {
