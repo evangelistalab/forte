@@ -139,28 +139,30 @@ class CASSCF : public ActiveSpaceMethod {
     /// Set Ambit tensor labels
     void set_ambit_space();
     /// Set density
-    void init_density();
+    void set_density();
     /// fill density from RDMs
     void fill_density();
     /// Set Fock matrix
-    void init_fock();
+    void set_fock();
     /// Set Hamiltonian
-    void init_h();
+    void set_h();
     /// Set two-electron integrals
-    void init_v();  
-    /// Set up omega matrix entries of core-core and core-active blocks
-    void set_lagrangian_1();
-    /// Set up omega matrix entries of active-active blocks
-    void set_lagrangian_2();
-    /// Set up the Lagrangian
+    void set_v();  
+    /// Set omega matrix entries of core-core and core-active blocks
+    void set_lagrangian_cx();
+    /// Set omega matrix entries of active-active blocks
+    void set_lagrangian_aa();
+    /// Set the Lagrangian
     void set_lagrangian();
-    /// Compute and backtransform the total Lagrangian
-    void compute_lagrangian();
-    /// Initialize matrices and tensors
-    void set_parameters();
-    /// Compute the z coefficients
-    void compute_1rdm_coeff();
-    /// write IWL 
+    /// Write the Lagrangian
+    void write_lagrangian();
+    /// Initialize variables, such as ambit tensors and shared matrices 
+    void init_variable();
+    /// Set H, V, F and densities using ambit tensors
+    void set_tensor();
+    /// Write spin_dependent one-RDMs coefficients
+    void write_1rdm_spin_dependent();
+    /// Write spin_dependent two-RDMs coefficients using IWL 
     void write_2rdm_spin_dependent();
 
 
@@ -185,14 +187,6 @@ class CASSCF : public ActiveSpaceMethod {
     /// Beta virtual label
     std::string bvirt_label_;
 
-
-
-    // // Correlated MOs
-    // psi::Dimension ncmopi_;
-    // // Restricted DOCC
-    // psi::Dimension rdocc_;
-    // // Active MOs
-    // psi::Dimension actv_;
 
 
     // Fock matrix alpha

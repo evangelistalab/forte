@@ -39,16 +39,14 @@
 using namespace ambit;
 using namespace psi;
 
-namespace forte {
+namespace forte 
+{
 
-
+/**
+/* Set up MO spaces using ambit. 
+*/
 void CASSCF::set_ambit_space() {
 
-/****************************/
-/*                          */
-/*  set up ambit MO space   */
-/*                          */
-/****************************/
 
     outfile->Printf("\n    Setting ambit MO space .......................... ");
     BlockedTensor::reset_mo_spaces();
@@ -86,9 +84,17 @@ void CASSCF::set_ambit_space() {
     outfile->Printf("Done");	
 }
 
+void CASSCF::init_variable()
+{
+
+}
 
 
-void CASSCF::init_density() {
+
+/**
+/* Set one-body and two-body densities.
+*/
+void CASSCF::set_density() {
 
     outfile->Printf("\n    Initializing density tensors .................... ");
     Gamma1_ = BTF_->build(CoreTensor, "Gamma1", spin_cases({"aa"}));
@@ -97,6 +103,9 @@ void CASSCF::init_density() {
     outfile->Printf("Done");    
 }
 
+/**
+/* Fill one-body and two-body densities.
+*/
 void CASSCF::fill_density() {
     // 1-body density 
     Gamma1_.block("aa")("pq") = cas_ref_.g1a()("pq");
@@ -111,8 +120,10 @@ void CASSCF::fill_density() {
 }
 
 
-
-void CASSCF::init_h() {
+/**
+/* Set one-electron integrals.
+*/
+void CASSCF::set_h() {
 
     outfile->Printf("\n    Building Hamiltonian ............................ ");
     H_ = BTF_->build(ambit::CoreTensor, "Hamiltonian", spin_cases({"gg"}));
@@ -130,7 +141,10 @@ void CASSCF::init_h() {
 }
 
 
-void CASSCF::init_v() {
+/**
+/* Set two electron repulsion integrals.
+*/
+void CASSCF::set_v() {
 
     outfile->Printf("\n    Building electron repulsion integrals ........... ");
     V_ = BTF_->build(ambit::CoreTensor, "Hamiltonian", spin_cases({"gggg"}));
@@ -151,47 +165,14 @@ void CASSCF::init_v() {
 }
 
 
-
-void CASSCF::init_fock() {
-
-/*****************************/
-/*                           */
-/*  Initialize fock matrix   */
-/*                           */
-/*****************************/
+/**
+/* Set Fock matrices.
+*/
+void CASSCF::set_fock() {
 
     outfile->Printf("\n    Building Fock matrix ............................ ");
 
     F_ = BTF_->build(ambit::CoreTensor, "Fock", spin_cases({"gg"}));
-
-    // SharedMatrix Da(new psi::Matrix("Da", nmo_, nmo_));
-    // SharedMatrix Db(new psi::Matrix("Db", nmo_, nmo_));
-    // auto L1a = tensor_to_matrix(cas_ref_.g1a(), na_);
-    // auto L1b = tensor_to_matrix(cas_ref_.g1b(), na_);
-
-    // ncmopi_ = mo_space_info_->get_dimension("CORRELATED");
-    // rdocc_ = mo_space_info_->get_dimension("RESTRICTED_DOCC");
-    // actv_ = mo_space_info_->get_dimension("ACTIVE");
-
-    // for (size_t h = 0, offset = 0; h < nirrep_; ++h) {
-    //     // core block (diagonal)
-    //     for (size_t i = 0; i < rdocc_[h]; ++i) {
-    //         Da->set(offset + i, offset + i, 1.0);
-    //         Db->set(offset + i, offset + i, 1.0);
-    //     }
-
-        // offset += rdocc_[h];
-        // // active block
-        // for (size_t u = 0; u < actv_[h]; ++u) {
-        //     for (size_t v = 0; v < actv_[h]; ++v) {
-        //         Da->set(offset + u, offset + v, L1a->get(u, v));
-        //         Db->set(offset + u, offset + v, L1b->get(u, v));
-        //     }
-        // }
-
-    //     offset += ncmopi_[h] - rdocc_[h];
-    // }
-
 
     psi::SharedMatrix D1a(new psi::Matrix("D1a", nmo_, nmo_));
     psi::SharedMatrix D1b(new psi::Matrix("D1b", nmo_, nmo_));
@@ -208,7 +189,6 @@ void CASSCF::init_fock() {
     });
 
 
-
     ints_->make_fock_matrix(D1a, D1b);
 
     F_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
@@ -223,60 +203,34 @@ void CASSCF::init_fock() {
     outfile->Printf("Done");
 }
 
-
+/**
+/* Initialize and set the Lagrangian.
+*/
 void CASSCF::set_lagrangian() {
 
     outfile->Printf("\n    Building Lagrangian ............................. ");
     W_ = BTF_->build(CoreTensor, "Lagrangian", spin_cases({"gg"}));
-    set_lagrangian_1();
-    set_lagrangian_2();
+    set_lagrangian_cx();
+    set_lagrangian_aa();
     outfile->Printf("Done");
 }
 
-void CASSCF::set_lagrangian_1() {
 
-/*********************************************************************/
-/*                                                                   */
-/*  set up omega matrix entries of core-core and core-active blocks  */
-/*                                                                   */
-/*********************************************************************/
+/**
+/* Set core-core and core-active block entries of Lagrangian.
+*/
+void CASSCF::set_lagrangian_cx() {
 
     W_["mp"] = F_["mp"];
     W_["MP"] = F_["MP"];
 
-
-    // BlockedTensor I = BTF_->build(CoreTensor, "identity matrix", spin_cases({"gg"}));
-
-    // I.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& , double& value) {
-    //     value = (i[0] == i[1]) ? 1.0 : 0.0;
-    // });
-
-    // BlockedTensor temp = BTF_->build(CoreTensor, "temporal tensor", spin_cases({"gg"}));
-
-    // W_["mp"] = -H_["mp"];
-    // W_["mp"] -= V_["pnm$"] * I["n$"];
-    // W_["mp"] -= V_["pNm<"] * I["N<"];
-    // W_["mp"] -= V_["pvmu"] * Gamma1_["uv"];
-    // W_["mp"] -= V_["pVmU"] * Gamma1_["UV"];
-
-
-
-    // W_["MP"] = -H_["MP"];
-    // W_["MP"] -= V_["nP$M"] * I["n$"];
-    // W_["MP"] -= V_["PNM<"] * I["N<"];
-    // W_["MP"] -= V_["vPuM"] * Gamma1_["uv"];
-    // W_["MP"] -= V_["PVMU"] * Gamma1_["UV"];
-
-
 }
 
-void CASSCF::set_lagrangian_2() {
 
-/**********************************************/
-/*                                            */
-/*  compute omega of the active-active block  */
-/*                                            */
-/**********************************************/
+/**
+/* Set active-active block entries of Lagrangian.
+*/
+void CASSCF::set_lagrangian_aa() {
 
     BlockedTensor temp = BTF_->build(CoreTensor, "temporal tensor", spin_cases({"gg"}));
     BlockedTensor I = BTF_->build(CoreTensor, "identity matrix", spin_cases({"gg"}));
@@ -291,49 +245,16 @@ void CASSCF::set_lagrangian_2() {
     W_["up"] += temp["vp"] * Gamma1_["uv"];
     W_["up"] += 0.5 * V_["xypv"] * Gamma2_["uvxy"];
     W_["up"] += V_["xYpV"] * Gamma2_["uVxY"];
-    // W_["up"] -= 0.5 * V_["XypV"] * Gamma2_["uVXy"];
 
     temp["VP"] = H_["VP"];
     temp["VP"] += V_["mVnP"] * I["mn"];
     temp["VP"] += V_["VMPN"] * I["MN"];
     W_["UP"] += temp["VP"] * Gamma1_["UV"];
     W_["UP"] += 0.5 * V_["XYPV"] * Gamma2_["UVXY"];
-    // W_["UP"] -= 0.5 * V_["XyPv"] * Gamma2_["UvXy"];
     W_["UP"] += V_["yXvP"] * Gamma2_["vUyX"];
-    // W_["UP"] -= 0.5 * V_["xYPv"] * Gamma2_["UvxY"];
 
     //need to add symmetric parts !!!!!!!
 
-
-
-
-    // double energy = ints_->nuclear_repulsion_energy();
-
-    // energy += H_["mn"] * I["mn"];
-    // energy += H_["MN"] * I["MN"];
-
-    // energy += 0.5 * V_["mn$%"] * I["m$"] * I["n%"];
-    // energy += 0.5 * V_["MN<>"] * I["M<"] * I["N>"];
-    // energy += V_["mN$>"] * I["m$"] * I["N>"];
-
-    // BlockedTensor temp1 = BTF_->build(CoreTensor, "temporal tensor", spin_cases({"gg"}));
-
-    // temp["vu"] = H_["vu"];
-    // temp["vu"] += V_["vmun"] * I["mn"];
-    // temp["vu"] += V_["vMuN"] * I["MN"];
-    // energy += temp["vu"] * Gamma1_["uv"];   
-    
-    // temp["VU"] = H_["VU"];
-    // temp["VU"] += V_["mVnU"] * I["mn"];
-    // temp["VU"] += V_["VMUN"] * I["MN"];
-    // energy += temp["VU"] * Gamma1_["UV"];
-    
-    // energy += 0.25 * V_["xyuv"] * Gamma2_["uvxy"];
-    // energy += 0.25 * V_["XYUV"] * Gamma2_["UVXY"];
-    // energy += V_["xYuV"] * Gamma2_["uVxY"];
-
-    // outfile->Printf("\n\n    My stupid energy = %.12f\n\n", energy);
-
 }
 
 
@@ -341,37 +262,34 @@ void CASSCF::set_lagrangian_2() {
 
 
 
-void CASSCF::set_parameters() {
-    init_density();
-    init_h();
-    init_v();
-    init_fock();
+/**
+/* Set densities, one-electron integrals, two-electron integrals and Fock matrices.
+*/
+void CASSCF::set_tensor() {
+    set_density();
+    set_h();
+    set_v();
+    set_fock();
 }
 
 
 
-
-
-
+/**
+/* The procedure of computing gradients
+*/
 SharedMatrix CASSCF::compute_gradient() {
 
 	set_ambit_space();
-    set_parameters();
-
-    // NEED to overwrite the Da_ and Db_ (here)
-    // more codes required
-
-    compute_1rdm_coeff();
-    compute_lagrangian();
-
+    set_tensor();
+    write_lagrangian();
+    write_1rdm_spin_dependent();
     write_2rdm_spin_dependent();
     
 
 
-
+    // This line of code is to deceive Psi4 and avoid computing scf gradient
     ints_->wfn()->set_reference_wavefunction(ints_->wfn());
-    auto temp = ints_->wfn()->reference_wavefunction();
-    if(!temp) outfile->Printf("XXXXXXXXXX");
+
 
 
 
@@ -398,8 +316,10 @@ SharedMatrix CASSCF::compute_gradient() {
 
 
 
-
-void CASSCF::compute_1rdm_coeff() {
+/**
+/* Write spin_dependent one-RDMs coefficients.
+*/
+void CASSCF::write_1rdm_spin_dependent() {
 
     outfile->Printf("\n    Computing 1rdm coefficients ..................... ");
 
@@ -436,8 +356,12 @@ void CASSCF::compute_1rdm_coeff() {
 
 
 
-
-void CASSCF::compute_lagrangian() {
+/**
+/* Write the Lagrangian.
+/*
+/* This function needs to be changed if frozen approximation is considered!
+*/
+void CASSCF::write_lagrangian() {
 
     set_lagrangian();
 
@@ -446,7 +370,6 @@ void CASSCF::compute_lagrangian() {
 
     SharedMatrix L(new Matrix("Lagrangian", nmo_, nmo_));
 
-    // The code below need be changed if frozen approximation is considered
 
     W_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {           
         L->add(i[0], i[1], value);
@@ -461,7 +384,11 @@ void CASSCF::compute_lagrangian() {
 
 
 
-
+/**
+/* Write spin_dependent two-RDMs coefficients using IWL.
+/*
+/* Coefficients in d2aa and d2bb need be multiplied with additional 1/2! 
+*/
 void CASSCF::write_2rdm_spin_dependent() {
 
     outfile->Printf("\n    Writing 2RDM into disk .......................... ");
@@ -471,10 +398,6 @@ void CASSCF::write_2rdm_spin_dependent() {
     IWL d2aa(psio_.get(), PSIF_MO_AA_TPDM, 1.0e-14, 0, 0);
     IWL d2ab(psio_.get(), PSIF_MO_AB_TPDM, 1.0e-14, 0, 0);
     IWL d2bb(psio_.get(), PSIF_MO_BB_TPDM, 1.0e-14, 0, 0);
-
-/*************************************************************************/
-/*!!!  coefficients in d2aa and d2bb need to multiply additional 1/2  !!!*/
-/*************************************************************************/
   
     std::vector<size_t> core_all_ = mo_space_info_->get_absolute_mo("RESTRICTED_DOCC");
     std::vector<size_t> actv_all_ = mo_space_info_->get_absolute_mo("ACTIVE");
