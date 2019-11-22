@@ -73,7 +73,7 @@ class CASSCF : public ActiveSpaceMethod {
     ambit::Tensor gamma2() { return gamma2_; }
     double compute_energy() override;
 
-    /// Compute the gradient
+    /// Compute CASSCF gradient
     psi::SharedMatrix compute_gradient();
 
     void set_options(std::shared_ptr<ForteOptions>) override{};
@@ -129,73 +129,41 @@ class CASSCF : public ActiveSpaceMethod {
     size_t all_nmo_;
 
 
-
-/*********************************/
-/*                               */
-/*  New added variables (Begin)  */
-/*                               */
-/*********************************/
-
+    // These are essential variables and functions for computing CASSCF gradient. 
     /// Set Ambit tensor labels
     void set_ambit_space();
     /// Set density
     void set_density();
-    /// fill density from RDMs
-    void fill_density();
     /// Set Fock matrix
     void set_fock();
     /// Set Hamiltonian
     void set_h();
     /// Set two-electron integrals
     void set_v();  
-    /// Set omega matrix entries of core-core and core-active blocks
-    void set_lagrangian_cx();
-    /// Set omega matrix entries of active-active blocks
-    void set_lagrangian_aa();
     /// Set the Lagrangian
     void set_lagrangian();
     /// Write the Lagrangian
     void write_lagrangian();
-    /// Initialize variables, such as ambit tensors and shared matrices 
-    void init_variable();
+    /// Set MO space environment and global variables 
+    void set_all_variables();
     /// Set H, V, F and densities using ambit tensors
     void set_tensor();
     /// Write spin_dependent one-RDMs coefficients
     void write_1rdm_spin_dependent();
     /// Write spin_dependent two-RDMs coefficients using IWL 
     void write_2rdm_spin_dependent();
-
-
-
-    /// List of core MOs
+    /// TPDM backtransform
+    void tpdm_backtransform();
+    /// List of core MOs (Correlated)
     std::vector<size_t> core_mos_;
-    /// List of active MOs
+    /// List of active MOs (Correlated)
     std::vector<size_t> actv_mos_;
-    /// List of virtual MOs
+    /// List of virtual MOs (Correlated)
     std::vector<size_t> virt_mos_;
-
-    /// Alpha core label
-    std::string acore_label_;
-    /// Alpha active label
-    std::string aactv_label_;
-    /// Alpha virtual label
-    std::string avirt_label_;
-    /// Beta core label
-    std::string bcore_label_;
-    /// Beta active label
-    std::string bactv_label_;
-    /// Beta virtual label
-    std::string bvirt_label_;
-
-
-
-    // Fock matrix alpha
-    ambit::Tensor fock_a;
-    // Fock matrix beta
-    ambit::Tensor fock_b;
-
-    // Fock matrix 
-    ambit::BlockedTensor F_;
+    /// List of core MOs (Absolute)
+    std::vector<size_t> core_all_;
+    /// List of active MOs (Absolute)    
+    std::vector<size_t> actv_all_;
     /// One-particle density matrix
     ambit::BlockedTensor Gamma1_;
     /// Two-body denisty tensor
@@ -206,19 +174,10 @@ class CASSCF : public ActiveSpaceMethod {
     ambit::BlockedTensor H_;
     // two-electron integrals
     ambit::BlockedTensor V_;
-
-   
-
-
+    // Fock matrix 
+    ambit::BlockedTensor F_;
     /// Kevin's Tensor Wrapper
     std::shared_ptr<BlockedTensorFactory> BTF_;
-
-/*******************************/
-/*                             */
-/*  New added variables (End)  */
-/*                             */
-/*******************************/
-
 
 
     /// These member variables are all summarized in Algorithm 1
