@@ -1,3 +1,14 @@
+/**
+ * CASSCF gradient code by Shuhe Wang
+ *
+ * The computation procedure is listed as belows:
+ * (1), Set MOs spaces;
+ * (2), Set Tensors (F, H, V etc.); 
+ * (3), Compute and write the Lagrangian;
+ * (4), Write 1RDMs and 2RDMs coefficients;
+ * (5), Back-transform the TPDM. 
+ */
+
 #include "casscf/casscf.h"
 #include "casscf/backtransform_tpdm.h"
 #include "ambit/tensor.h"
@@ -30,8 +41,6 @@
 #include "psi4/libdiis/diisentry.h"
 #include "psi4/libdiis/diismanager.h"
 #include "psi4/libmints/factory.h"
-
-
 #include "psi4/psifiles.h"
 #include "psi4/libiwl/iwl.hpp"
 #include "psi4/libpsio/psio.hpp"
@@ -42,30 +51,53 @@ using namespace psi;
 namespace forte 
 {
 
+
 /**
-/* Set up MO spaces using ambit. 
-*/
-void CASSCF::set_ambit_space() {
-
-
-    outfile->Printf("\n    Setting ambit MO space .......................... ");
-    BlockedTensor::reset_mo_spaces();
-    BlockedTensor::set_expert_mode(true);
-
+ * Initialize global variables. 
+ */
+void CASSCF::set_all_variables()
+{
+    // Set MOs containers.
     core_mos_ = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
     actv_mos_ = mo_space_info_->get_corr_abs_mo("ACTIVE");
     virt_mos_ = mo_space_info_->get_corr_abs_mo("RESTRICTED_UOCC");
+    core_all_ = mo_space_info_->get_absolute_mo("RESTRICTED_DOCC");
+    actv_all_ = mo_space_info_->get_absolute_mo("ACTIVE");
+    
+    // Set MO spaces.
+    set_ambit_space();
+    
+    // Initialize tensors.
+    Gamma1_ = BTF_->build(CoreTensor, "Gamma1", spin_cases({"aa"}));
+    Gamma2_ = BTF_->build(CoreTensor, "Gamma2", spin_cases({"aaaa"}));
+    H_ = BTF_->build(CoreTensor, "One-Electron Integral", spin_cases({"gg"}));
+    V_ = BTF_->build(CoreTensor, "Electron Repulsion Integral", spin_cases({"gggg"}));
+    F_ = BTF_->build(CoreTensor, "Fock Matrix", spin_cases({"gg"}));
+    W_ = BTF_->build(CoreTensor, "Lagrangian", spin_cases({"gg"}));
 
-    // define space labels
-    acore_label_ = "c";
-    aactv_label_ = "a";
-    avirt_label_ = "v";
-    bcore_label_ = "C";
-    bactv_label_ = "A";
-    bvirt_label_ = "V";
+    // Set tensors.
+    set_tensor();
+}
 
-    // add Ambit index labels
+
+/**
+ * Set ambit MO spaces. 
+ */
+void CASSCF::set_ambit_space() 
+{
+    outfile->Printf("\n    Setting Ambit MO Space .......................... ");
+    
+    BlockedTensor::reset_mo_spaces();
+    BlockedTensor::set_expert_mode(true);
     BTF_= std::make_shared<BlockedTensorFactory>();
+    std::string acore_label_ = "c";
+    std::string aactv_label_ = "a";
+    std::string avirt_label_ = "v";
+    std::string bcore_label_ = "C";
+    std::string bactv_label_ = "A";
+    std::string bvirt_label_ = "V";
+
+    // Add Ambit index labels.
     BTF_->add_mo_space(acore_label_, "mn$%", core_mos_, AlphaSpin);
     BTF_->add_mo_space(bcore_label_, "MN<>", core_mos_, BetaSpin);
     BTF_->add_mo_space(aactv_label_, "uvwxyz123", actv_mos_, AlphaSpin);
@@ -73,7 +105,7 @@ void CASSCF::set_ambit_space() {
     BTF_->add_mo_space(avirt_label_, "ef", virt_mos_, AlphaSpin);
     BTF_->add_mo_space(bvirt_label_, "EF", virt_mos_, BetaSpin);
 
-    // define composite spaces
+    // Define composite spaces.
     BTF_->add_composite_mo_space("h", "ijkl", {acore_label_, aactv_label_});
     BTF_->add_composite_mo_space("H", "IJKL", {bcore_label_, bactv_label_});
     BTF_->add_composite_mo_space("p", "abcd", {aactv_label_, avirt_label_});
@@ -84,57 +116,38 @@ void CASSCF::set_ambit_space() {
     outfile->Printf("Done");	
 }
 
-void CASSCF::init_variable()
+
+/**
+ * Set one-body and two-body densities.
+ */
+void CASSCF::set_density() 
 {
+    outfile->Printf("\n    Setting One- and Two-Body Density ............... ");
 
-}
-
-
-
-/**
-/* Set one-body and two-body densities.
-*/
-void CASSCF::set_density() {
-
-    outfile->Printf("\n    Initializing density tensors .................... ");
-    Gamma1_ = BTF_->build(CoreTensor, "Gamma1", spin_cases({"aa"}));
-    Gamma2_ = BTF_->build(CoreTensor, "Gamma2", spin_cases({"aaaa"}));
-    fill_density();
-    outfile->Printf("Done");    
-}
-
-/**
-/* Fill one-body and two-body densities.
-*/
-void CASSCF::fill_density() {
     // 1-body density 
     Gamma1_.block("aa")("pq") = cas_ref_.g1a()("pq");
     Gamma1_.block("AA")("pq") = cas_ref_.g1b()("pq");
-
 
     // 2-body density 
     Gamma2_.block("aaaa")("pqrs") = cas_ref_.g2aa()("pqrs");
     Gamma2_.block("aAaA")("pqrs") = cas_ref_.g2ab()("pqrs");
     Gamma2_.block("AAAA")("pqrs") = cas_ref_.g2bb()("pqrs");
 
+    outfile->Printf("Done");    
 }
 
 
 /**
-/* Set one-electron integrals.
-*/
-void CASSCF::set_h() {
+ * Set one-electron integrals.
+ */
+void CASSCF::set_h() 
+{
+    outfile->Printf("\n    Setting One-Electron Integral ................... ");
 
-    outfile->Printf("\n    Building Hamiltonian ............................ ");
-    H_ = BTF_->build(ambit::CoreTensor, "Hamiltonian", spin_cases({"gg"}));
-
-    H_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
-        if (spin[0] == AlphaSpin) {
-            value = ints_->oei_a(i[0], i[1]);
-        } 
-        else {
-            value = ints_->oei_b(i[0], i[1]);
-        }
+    H_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) 
+    {
+        if (spin[0] == AlphaSpin) { value = ints_->oei_a(i[0], i[1]);} 
+        else { value = ints_->oei_b(i[0], i[1]);}
     });
 
     outfile->Printf("Done");
@@ -142,23 +155,20 @@ void CASSCF::set_h() {
 
 
 /**
-/* Set two electron repulsion integrals.
-*/
-void CASSCF::set_v() {
+ * Set two electron repulsion integrals.
+ */
+void CASSCF::set_v() 
+{
+    outfile->Printf("\n    Setting Two-Electron Integral ................... ");
 
-    outfile->Printf("\n    Building electron repulsion integrals ........... ");
-    V_ = BTF_->build(ambit::CoreTensor, "Hamiltonian", spin_cases({"gggg"}));
-
-    V_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
-        if (spin[0] == AlphaSpin && spin[1] == AlphaSpin) {
-            value = ints_->aptei_aa(i[0], i[1], i[2], i[3]);
+    V_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) 
+    {
+        if (spin[0] == AlphaSpin)
+        {
+            if (spin[1] == AlphaSpin) { value = ints_->aptei_aa(i[0], i[1], i[2], i[3]);}
+            else { value = ints_->aptei_ab(i[0], i[1], i[2], i[3]);}
         } 
-        else if (spin[0] == AlphaSpin && spin[1] == BetaSpin) {
-            value = ints_->aptei_ab(i[0], i[1], i[2], i[3]);
-        }
-        else if (spin[0] == BetaSpin && spin[1] == BetaSpin) {
-            value = ints_->aptei_bb(i[0], i[1], i[2], i[3]);
-        }
+        else if (spin[1] == BetaSpin) { value = ints_->aptei_bb(i[0], i[1], i[2], i[3]);}
     });
 
     outfile->Printf("Done");
@@ -166,86 +176,72 @@ void CASSCF::set_v() {
 
 
 /**
-/* Set Fock matrices.
-*/
-void CASSCF::set_fock() {
-
-    outfile->Printf("\n    Building Fock matrix ............................ ");
-
-    F_ = BTF_->build(ambit::CoreTensor, "Fock", spin_cases({"gg"}));
+ * Set Fock matrices.
+ */
+void CASSCF::set_fock() 
+{
+    outfile->Printf("\n    Setting Fock matrix ............................. ");
 
     psi::SharedMatrix D1a(new psi::Matrix("D1a", nmo_, nmo_));
     psi::SharedMatrix D1b(new psi::Matrix("D1b", nmo_, nmo_));
-    for (size_t m = 0, ncore = core_mos_.size(); m < ncore; m++) {
+
+    // Fill core-core blocks
+    for (size_t m = 0, ncore = core_mos_.size(); m < ncore; m++) 
+    {
         D1a->set(core_mos_[m], core_mos_[m], 1.0);
         D1b->set(core_mos_[m], core_mos_[m], 1.0);
     }
 
-    Gamma1_.block("aa").citerate([&](const std::vector<size_t>& i, const double& value) {
+    // Fill active-active blocks
+    Gamma1_.block("aa").citerate([&](const std::vector<size_t>& i, const double& value) 
+    {
         D1a->set(actv_mos_[i[0]], actv_mos_[i[1]], value);
     });
-    Gamma1_.block("AA").citerate([&](const std::vector<size_t>& i, const double& value) {
+    Gamma1_.block("AA").citerate([&](const std::vector<size_t>& i, const double& value) 
+    {
         D1b->set(actv_mos_[i[0]], actv_mos_[i[1]], value);
     });
 
-
+    // Make Fock matrices
     ints_->make_fock_matrix(D1a, D1b);
-
-    F_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
-        if (spin[0] == AlphaSpin) {
-            value = ints_->get_fock_a(i[0], i[1]);
-        } 
-        else {
-            value = ints_->get_fock_b(i[0], i[1]);
-        }
+    F_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) 
+    {
+        if (spin[0] == AlphaSpin) { value = ints_->get_fock_a(i[0], i[1]);} 
+        else { value = ints_->get_fock_b(i[0], i[1]);}
     });    
 
     outfile->Printf("Done");
 }
 
-/**
-/* Initialize and set the Lagrangian.
-*/
-void CASSCF::set_lagrangian() {
-
-    outfile->Printf("\n    Building Lagrangian ............................. ");
-    W_ = BTF_->build(CoreTensor, "Lagrangian", spin_cases({"gg"}));
-    set_lagrangian_cx();
-    set_lagrangian_aa();
-    outfile->Printf("Done");
-}
-
 
 /**
-/* Set core-core and core-active block entries of Lagrangian.
-*/
-void CASSCF::set_lagrangian_cx() {
-
-    W_["mp"] = F_["mp"];
-    W_["MP"] = F_["MP"];
-
-}
-
-
-/**
-/* Set active-active block entries of Lagrangian.
-*/
-void CASSCF::set_lagrangian_aa() {
-
+ * Initialize and set the Lagrangian.
+ */
+void CASSCF::set_lagrangian() 
+{
+    // Create a temporal container and an identity matrix
     BlockedTensor temp = BTF_->build(CoreTensor, "temporal tensor", spin_cases({"gg"}));
     BlockedTensor I = BTF_->build(CoreTensor, "identity matrix", spin_cases({"gg"}));
-
-    I.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& , double& value) {
+    I.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& , double& value) 
+    {
         value = (i[0] == i[1]) ? 1.0 : 0.0;
     });
 
+    // Set core-core and core-active block entries of Lagrangian.
+    // Alpha.
+    W_["mp"] = F_["mp"];
+    // Beta.
+    W_["MP"] = F_["MP"];
+
+    // Set active-active block entries of Lagrangian.
+    // Alpha.
     temp["vp"] = H_["vp"];
     temp["vp"] += V_["vmpn"] * I["mn"];
     temp["vp"] += V_["vMpN"] * I["MN"];
     W_["up"] += temp["vp"] * Gamma1_["uv"];
     W_["up"] += 0.5 * V_["xypv"] * Gamma2_["uvxy"];
     W_["up"] += V_["xYpV"] * Gamma2_["uVxY"];
-
+    // Beta.
     temp["VP"] = H_["VP"];
     temp["VP"] += V_["mVnP"] * I["mn"];
     temp["VP"] += V_["VMPN"] * I["MN"];
@@ -254,18 +250,14 @@ void CASSCF::set_lagrangian_aa() {
     W_["UP"] += V_["yXvP"] * Gamma2_["vUyX"];
 
     //need to add symmetric parts !!!!!!!
-
 }
 
 
-
-
-
-
 /**
-/* Set densities, one-electron integrals, two-electron integrals and Fock matrices.
-*/
-void CASSCF::set_tensor() {
+ * Set densities, one-electron integrals, two-electron integrals and Fock matrices.
+ */
+void CASSCF::set_tensor() 
+{
     set_density();
     set_h();
     set_v();
@@ -273,28 +265,13 @@ void CASSCF::set_tensor() {
 }
 
 
-
 /**
-/* The procedure of computing gradients
-*/
-SharedMatrix CASSCF::compute_gradient() {
-
-	set_ambit_space();
-    set_tensor();
-    write_lagrangian();
-    write_1rdm_spin_dependent();
-    write_2rdm_spin_dependent();
-    
-
-
+ * The procedure of TPDM back-transformation
+ */
+void CASSCF::tpdm_backtransform()
+{
     // This line of code is to deceive Psi4 and avoid computing scf gradient
     ints_->wfn()->set_reference_wavefunction(ints_->wfn());
-
-
-
-
-
-
 
     std::vector<std::shared_ptr<psi::MOSpace> > spaces;
     spaces.push_back(psi::MOSpace::all);
@@ -303,180 +280,164 @@ SharedMatrix CASSCF::compute_gradient() {
                 IntegralTransform::TransformationType::Unrestricted, // Transformation type
                 IntegralTransform::OutputType::DPDOnly,              // Output buffer
                 IntegralTransform::MOOrdering::QTOrder,              // MO ordering
-                IntegralTransform::FrozenOrbitals::None));           // Frozen orbitals?
-    
-    // transform->set_psio(ints_->wfn()->psio());
+                IntegralTransform::FrozenOrbitals::None));           // Frozen orbitals?    
     transform->backtransform_density();
     transform.reset();
-    outfile->Printf("\n    TPD Backtransformation .......................... Done");
-    outfile->Printf("\n    Computing gradients ............................. Done\n");
 
+    outfile->Printf("\n    TPDM Backtransformation ......................... Done");
+}
+
+
+/**
+ * The procedure of computing gradients
+ */
+SharedMatrix CASSCF::compute_gradient() 
+{
+    print_method_banner({"Complete Active Space Self Consistent Field Gradient", "Shuhe Wang"});
+    set_all_variables();
+    write_lagrangian();
+    write_1rdm_spin_dependent();
+    write_2rdm_spin_dependent();
+    tpdm_backtransform();
+    
+    outfile->Printf("\n    Computing Gradient .............................. Done\n");
     return std::make_shared<Matrix>("nullptr", 0, 0);
 }
 
 
-
 /**
-/* Write spin_dependent one-RDMs coefficients.
-*/
-void CASSCF::write_1rdm_spin_dependent() {
-
-    outfile->Printf("\n    Computing 1rdm coefficients ..................... ");
+ * Write spin_dependent one-RDMs coefficients.
+ *
+ * We force "Da == Db". This function needs be changed if such constraint is revoked.
+ */
+void CASSCF::write_1rdm_spin_dependent() 
+{
+    outfile->Printf("\n    Writing 1RDM Coefficients ....................... ");
 
     SharedMatrix D1(new Matrix("1rdm coefficients contribution", nmo_, nmo_));
 
-    // We force "Da == Db". The code below need changed if this constraint is revoked.
-
-    std::vector<size_t> core_all_ = mo_space_info_->get_absolute_mo("RESTRICTED_DOCC");
-    std::vector<size_t> actv_all_ = mo_space_info_->get_absolute_mo("ACTIVE");
-    std::vector<size_t> virt_all_ = mo_space_info_->get_absolute_mo("RESTRICTED_UOCC");
-
-    for(size_t i = 0, size_c = core_all_.size(); i < size_c; ++i) {
+    for(size_t i = 0, size_c = core_all_.size(); i < size_c; ++i) 
+    {
         auto m = core_all_[i];
         D1->set(m, m, 1.0);
     }
 
-    for(size_t i = 0, size_a = actv_all_.size(); i < size_a; ++i) {
-        for(size_t j = 0; j < size_a; ++j) {
-            auto u = actv_all_[i];
+    for(size_t i = 0, size_a = actv_all_.size(); i < size_a; ++i) 
+    {
+        auto u = actv_all_[i];
+        for(size_t j = 0; j < size_a; ++j) 
+        {
             auto v = actv_all_[j];
             D1->set(u, v, Gamma1_.block("aa").data()[i * na_ + j]);
         }
     }
 
-
-
     D1->back_transform(ints_->Ca());
-
     ints_->wfn()->Da()->copy(D1);
-    ints_->wfn()->Db()->copy(ints_->wfn()->Da());
+    ints_->wfn()->Db()->copy(D1);
 
     outfile->Printf("Done");
 }
 
 
-
 /**
-/* Write the Lagrangian.
-/*
-/* This function needs to be changed if frozen approximation is considered!
-*/
-void CASSCF::write_lagrangian() {
-
-    set_lagrangian();
-
-    outfile->Printf("\n    Computing Lagrangian ............................ ");
-    //backtransform
+ * Write the Lagrangian.
+ *
+ * This function needs to be changed if frozen approximation is considered!
+ */
+void CASSCF::write_lagrangian() 
+{
+    outfile->Printf("\n    Writing Lagrangian .............................. ");
 
     SharedMatrix L(new Matrix("Lagrangian", nmo_, nmo_));
-
-
+    
+    set_lagrangian();
     W_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {           
         L->add(i[0], i[1], value);
     }); 
-
     L->back_transform(ints_->Ca());
     ints_->wfn()->Lagrangian()->copy(L);
+
     outfile->Printf("Done");
 }
 
 
-
-
-
 /**
-/* Write spin_dependent two-RDMs coefficients using IWL.
-/*
-/* Coefficients in d2aa and d2bb need be multiplied with additional 1/2! 
-*/
-void CASSCF::write_2rdm_spin_dependent() {
-
-    outfile->Printf("\n    Writing 2RDM into disk .......................... ");
+ * Write spin_dependent two-RDMs coefficients using IWL.
+ *
+ * Coefficients in d2aa and d2bb need be multiplied with additional 1/2! 
+ */
+void CASSCF::write_2rdm_spin_dependent() 
+{
+    outfile->Printf("\n    Writing 2RDM Coefficients ....................... ");
 
     auto psio_ = _default_psio_lib_;
-
     IWL d2aa(psio_.get(), PSIF_MO_AA_TPDM, 1.0e-14, 0, 0);
     IWL d2ab(psio_.get(), PSIF_MO_AB_TPDM, 1.0e-14, 0, 0);
     IWL d2bb(psio_.get(), PSIF_MO_BB_TPDM, 1.0e-14, 0, 0);
   
-    std::vector<size_t> core_all_ = mo_space_info_->get_absolute_mo("RESTRICTED_DOCC");
-    std::vector<size_t> actv_all_ = mo_space_info_->get_absolute_mo("ACTIVE");
-    // std::vector<size_t> virt_all_ = mo_space_info_->get_absolute_mo("RESTRICTED_UOCC");
-
-    for(size_t i = 0, size_c = core_all_.size(); i < size_c; ++i) {
-        for(size_t j = 0; j < size_c; ++j) {
-
-            auto m = core_all_[i];
+    for(size_t i = 0, size_c = core_all_.size(); i < size_c; ++i) 
+    {
+        auto m = core_all_[i];
+        for(size_t j = 0; j < size_c; ++j) 
+        {
             auto n = core_all_[j];
-
-            if (m!=n) {
-
+            if (m != n) 
+            {
                 d2aa.write_value(m, m, n, n, 0.25, 0, "NULL", 0);
                 d2bb.write_value(m, m, n, n, 0.25, 0, "NULL", 0);
-
                 d2aa.write_value(m, n, n, m, -0.25, 0, "NULL", 0);
                 d2bb.write_value(m, n, n, m, -0.25, 0, "NULL", 0);
-
-            }
-                
+            }    
             d2ab.write_value(m, m, n, n, 1.00, 0, "NULL", 0);
         }
     }
 
-
-
-    for(size_t i = 0, size_c = core_all_.size(), size_a = actv_all_.size(); i < size_a; ++i) {
-        for(size_t j = 0; j < size_a; ++j) {
-
-            auto idx = i * na_ + j;
-            auto u = actv_all_[i];
+    for(size_t i = 0, size_c = core_all_.size(), size_a = actv_all_.size(); i < size_a; ++i) 
+    {
+        auto u = actv_all_[i];
+        for(size_t j = 0; j < size_a; ++j) 
+        {
             auto v = actv_all_[j];
-            
+            auto idx = i * na_ + j;
             auto gamma_a = Gamma1_.block("aa").data()[idx];
             auto gamma_b = Gamma1_.block("AA").data()[idx];
 
-            for(size_t k = 0; k < size_c; ++k) {
-
+            for(size_t k = 0; k < size_c; ++k) 
+            {
                 auto m = core_all_[k];
-
                 d2aa.write_value(v, u, m, m, 0.5 * gamma_a, 0, "NULL", 0);
                 d2bb.write_value(v, u, m, m, 0.5 * gamma_b, 0, "NULL", 0);
-
                 d2aa.write_value(v, m, m, u, -0.5 * gamma_a, 0, "NULL", 0);
                 d2bb.write_value(v, m, m, u, -0.5 * gamma_b, 0, "NULL", 0);
-
-                /// this need to be checked, inconsistency exists
                 d2ab.write_value(v, u, m, m, (gamma_a + gamma_b), 0, "NULL", 0);
-
             }
         }
     }
 
-    for(size_t i = 0, size_a = actv_all_.size(); i < size_a; ++i) {
-        for(size_t j = 0; j < size_a; ++j) {
-            for(size_t k = 0; k < size_a; ++k) {
-                for(size_t l = 0; l < size_a; ++l) {
-
-                    auto u = actv_all_[i];
-                    auto v = actv_all_[j];
-                    auto x = actv_all_[k];
+    for(size_t i = 0, size_a = actv_all_.size(); i < size_a; ++i) 
+    {
+        auto u = actv_all_[i];
+        for(size_t j = 0; j < size_a; ++j) 
+        {
+            auto v = actv_all_[j];
+            for(size_t k = 0; k < size_a; ++k) 
+            {
+                auto x = actv_all_[k];
+                for(size_t l = 0; l < size_a; ++l) 
+                {
                     auto y = actv_all_[l];
                     auto idx = i * na_ * na_ * na_ + j * na_ * na_ + k * na_ + l;
                     auto gamma_aa = Gamma2_.block("aaaa").data()[idx];
                     auto gamma_bb = Gamma2_.block("AAAA").data()[idx];
-                    auto gamma_ab = Gamma2_.block("aAaA").data()[idx];
-
-                    
+                    auto gamma_ab = Gamma2_.block("aAaA").data()[idx];               
                     d2aa.write_value(x, u, y, v, 0.25 * gamma_aa, 0, "NULL", 0);
                     d2bb.write_value(x, u, y, v, 0.25 * gamma_bb, 0, "NULL", 0);
-
                     d2ab.write_value(x, u, y, v, gamma_ab, 0, "NULL", 0);
                 }
             }
         }
     }
-  
-    outfile->Printf("Done");
 
     d2aa.flush(1);
     d2bb.flush(1);
@@ -489,6 +450,8 @@ void CASSCF::write_2rdm_spin_dependent() {
     d2aa.close();
     d2bb.close();
     d2ab.close();
+
+    outfile->Printf("Done");
 }
 
 
