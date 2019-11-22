@@ -241,8 +241,8 @@ void CASSCF::set_lagrangian_1() {
 /*                                                                   */
 /*********************************************************************/
 
-    W_["mp"] -= F_["mp"];
-    W_["MP"] -= F_["MP"];
+    W_["mp"] = F_["mp"];
+    W_["MP"] = F_["MP"];
 
 
     // BlockedTensor I = BTF_->build(CoreTensor, "identity matrix", spin_cases({"gg"}));
@@ -288,18 +288,18 @@ void CASSCF::set_lagrangian_2() {
     temp["vp"] = H_["vp"];
     temp["vp"] += V_["vmpn"] * I["mn"];
     temp["vp"] += V_["vMpN"] * I["MN"];
-    W_["up"] -= temp["vp"] * Gamma1_["uv"];
-    W_["up"] -= 0.5 * V_["xypv"] * Gamma2_["uvxy"];
-    W_["up"] -= V_["xYpV"] * Gamma2_["uVxY"];
+    W_["up"] += temp["vp"] * Gamma1_["uv"];
+    W_["up"] += 0.5 * V_["xypv"] * Gamma2_["uvxy"];
+    W_["up"] += V_["xYpV"] * Gamma2_["uVxY"];
     // W_["up"] -= 0.5 * V_["XypV"] * Gamma2_["uVXy"];
 
     temp["VP"] = H_["VP"];
     temp["VP"] += V_["mVnP"] * I["mn"];
     temp["VP"] += V_["VMPN"] * I["MN"];
-    W_["UP"] -= temp["VP"] * Gamma1_["UV"];
-    W_["UP"] -= 0.5 * V_["XYPV"] * Gamma2_["UVXY"];
+    W_["UP"] += temp["VP"] * Gamma1_["UV"];
+    W_["UP"] += 0.5 * V_["XYPV"] * Gamma2_["UVXY"];
     // W_["UP"] -= 0.5 * V_["XyPv"] * Gamma2_["UvXy"];
-    W_["UP"] -= V_["yXvP"] * Gamma2_["vUyX"];
+    W_["UP"] += V_["yXvP"] * Gamma2_["vUyX"];
     // W_["UP"] -= 0.5 * V_["xYPv"] * Gamma2_["UvxY"];
 
     //need to add symmetric parts !!!!!!!
@@ -307,32 +307,32 @@ void CASSCF::set_lagrangian_2() {
 
 
 
-    double energy = ints_->nuclear_repulsion_energy();
+    // double energy = ints_->nuclear_repulsion_energy();
 
-    energy += H_["mn"] * I["mn"];
-    energy += H_["MN"] * I["MN"];
+    // energy += H_["mn"] * I["mn"];
+    // energy += H_["MN"] * I["MN"];
 
-    energy += 0.5 * V_["mn$%"] * I["m$"] * I["n%"];
-    energy += 0.5 * V_["MN<>"] * I["M<"] * I["N>"];
-    energy += V_["mN$>"] * I["m$"] * I["N>"];
+    // energy += 0.5 * V_["mn$%"] * I["m$"] * I["n%"];
+    // energy += 0.5 * V_["MN<>"] * I["M<"] * I["N>"];
+    // energy += V_["mN$>"] * I["m$"] * I["N>"];
 
-    BlockedTensor temp1 = BTF_->build(CoreTensor, "temporal tensor", spin_cases({"gg"}));
+    // BlockedTensor temp1 = BTF_->build(CoreTensor, "temporal tensor", spin_cases({"gg"}));
 
-    temp["vu"] = H_["vu"];
-    temp["vu"] += V_["vmun"] * I["mn"];
-    temp["vu"] += V_["vMuN"] * I["MN"];
-    energy += temp["vu"] * Gamma1_["uv"];   
+    // temp["vu"] = H_["vu"];
+    // temp["vu"] += V_["vmun"] * I["mn"];
+    // temp["vu"] += V_["vMuN"] * I["MN"];
+    // energy += temp["vu"] * Gamma1_["uv"];   
     
-    temp["VU"] = H_["VU"];
-    temp["VU"] += V_["mVnU"] * I["mn"];
-    temp["VU"] += V_["VMUN"] * I["MN"];
-    energy += temp["VU"] * Gamma1_["UV"];
+    // temp["VU"] = H_["VU"];
+    // temp["VU"] += V_["mVnU"] * I["mn"];
+    // temp["VU"] += V_["VMUN"] * I["MN"];
+    // energy += temp["VU"] * Gamma1_["UV"];
     
-    energy += 0.25 * V_["xyuv"] * Gamma2_["uvxy"];
-    energy += 0.25 * V_["XYUV"] * Gamma2_["UVXY"];
-    energy += V_["xYuV"] * Gamma2_["uVxY"];
+    // energy += 0.25 * V_["xyuv"] * Gamma2_["uvxy"];
+    // energy += 0.25 * V_["XYUV"] * Gamma2_["UVXY"];
+    // energy += V_["xYuV"] * Gamma2_["uVxY"];
 
-    outfile->Printf("\n\n    My stupid energy = %.12f\n\n", energy);
+    // outfile->Printf("\n\n    My stupid energy = %.12f\n\n", energy);
 
 }
 
@@ -428,7 +428,7 @@ void CASSCF::compute_1rdm_coeff() {
 
     D1->back_transform(ints_->Ca());
 
-    ints_->wfn()->Da()->copy(D1->clone());
+    ints_->wfn()->Da()->copy(D1);
     ints_->wfn()->Db()->copy(ints_->wfn()->Da());
 
     outfile->Printf("Done");
@@ -486,14 +486,17 @@ void CASSCF::write_2rdm_spin_dependent() {
             auto m = core_all_[i];
             auto n = core_all_[j];
 
-            d2aa.write_value(m, m, n, n, 0.25, 0, "NULL", 0);
-            d2ab.write_value(m, m, n, n, 0.50, 0, "NULL", 0);
-            d2bb.write_value(m, m, n, n, 0.25, 0, "NULL", 0);
+            if (m!=n) {
 
-            d2aa.write_value(m, n, n, m, -0.25, 0, "NULL", 0);
-            d2ab.write_value(m, n, n, m, -0.50, 0, "NULL", 0);
-            d2bb.write_value(m, n, n, m, -0.25, 0, "NULL", 0);
+                d2aa.write_value(m, m, n, n, 0.25, 0, "NULL", 0);
+                d2bb.write_value(m, m, n, n, 0.25, 0, "NULL", 0);
 
+                d2aa.write_value(m, n, n, m, -0.25, 0, "NULL", 0);
+                d2bb.write_value(m, n, n, m, -0.25, 0, "NULL", 0);
+
+            }
+                
+            d2ab.write_value(m, m, n, n, 1.00, 0, "NULL", 0);
         }
     }
 
