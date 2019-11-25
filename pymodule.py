@@ -400,106 +400,12 @@ def run_forte(name, **kwargs):
 
 
 
-def run_casscf_gradient(name, **kwargs):
-    # r"""Function encoding sequence of PSI module and plugin calls so that
-    # forte can be called via :py:func:`~driver.energy`. For post-scf plugins.
-
-    # >>> gradient('forte')
-
-    # """
-    # lowername = name.lower()
-    # kwargs = p4util.kwargs_lower(kwargs)
-
-    # # Compute a SCF reference, a wavefunction is return which holds the molecule used, orbitals
-    # # Fock matrices, and more
-    # ref_wfn = kwargs.get('ref_wfn', None)
-    # if ref_wfn is None:
-    #     ref_wfn = psi4.driver.scf_helper(name, **kwargs)
-
-    # # Get the option object
-    # options = psi4.core.get_options()
-    # options.set_current_module('FORTE')
-    # forte.forte_options.update_psi_options(options)
-
-    # if ('DF' in options.get_str('INT_TYPE')):
-    #     aux_basis = psi4.core.BasisSet.build(ref_wfn.molecule(), 'DF_BASIS_MP2',
-    #                                      psi4.core.get_global_option('DF_BASIS_MP2'),
-    #                                      'RIFIT', psi4.core.get_global_option('BASIS'))
-    #     ref_wfn.set_basisset('DF_BASIS_MP2', aux_basis)
-
-    # if (options.get_str('MINAO_BASIS')):
-    #     minao_basis = psi4.core.BasisSet.build(ref_wfn.molecule(), 'MINAO_BASIS',
-    #                                            options.get_str('MINAO_BASIS'))
-    #     ref_wfn.set_basisset('MINAO_BASIS', minao_basis)
-
-    # # Start Forte, initialize ambit
-    # my_proc_n_nodes = forte.startup()
-    # my_proc, n_nodes = my_proc_n_nodes
-
-    # # Print the banner
-    # forte.banner()
-
-    # # Create the MOSpaceInfo object
-    # mo_space_info = forte.make_mo_space_info(ref_wfn, forte.forte_options)
-
-    # # Call methods that project the orbitals (AVAS, embedding)
-    # mo_space_info = orbital_projection(ref_wfn, options, mo_space_info)
-
-    # state = forte.make_state_info_from_psi_wfn(ref_wfn)
-    # scf_info = forte.SCFInfo(ref_wfn)
-    # state_weights_map = forte.make_state_weights_map(forte.forte_options,ref_wfn)
-
-    # # Run a method
-    # job_type = options.get_str('JOB_TYPE')
-
-    # energy = 0.0
-
-    # if job_type == 'NONE':
-    #     forte.cleanup()
-    #     return ref_wfn
-
-    # start = timeit.timeit()
-
-    # # Make an integral object
-    # ints = forte.make_forte_integrals(ref_wfn, options, mo_space_info)
-
-    # # Rotate orbitals before computation
-    # orb_type = options.get_str("ORBITAL_TYPE")
-    # if orb_type != 'CANONICAL':
-    #     orb_t = forte.make_orbital_transformation(orb_type, scf_info, forte.forte_options, ints, mo_space_info)
-    #     orb_t.compute_transformation()
-    #     Ua = orb_t.get_Ua()
-    #     Ub = orb_t.get_Ub()
-
-    #     ints.rotate_orbitals(Ua,Ub)
-
-    # optstash = p4util.OptionsState(
-    #     ['GLOBALS', 'DERTYPE'])
-    # # Run a method
-    # if (job_type == 'CASSCF'):
-    #     energy = forte.forte_old_methods(ref_wfn, options, ints, mo_space_info)
-        
-    #     derivobj = psi4.core.Deriv(ref_wfn)
-    #     derivobj.set_deriv_density_backtransformed(True)
-    #     derivobj.set_ignore_reference(True)
-    #     grad = derivobj.compute()
-
-    #     ref_wfn.set_gradient(grad)
-
-    #     optstash.restore()        
-
-    # end = timeit.timeit()
-    # #print('\n\n  Your calculation took ', (end - start), ' seconds');
-
-    # # Close ambit, etc.
-    # forte.cleanup()
-
-    # psi4.core.set_scalar_variable('CURRENT ENERGY', energy)
-    # return ref_wfn
+def gradient_forte(name, **kwargs):
     r"""Function encoding sequence of PSI module and plugin calls so that
     forte can be called via :py:func:`~driver.energy`. For post-scf plugins.
 
-    >>> energy('forte')
+    >>> gradient('forte') 
+        available for : CASSCF
 
     """
     lowername = name.lower()
@@ -518,10 +424,7 @@ def run_casscf_gradient(name, **kwargs):
     forte.forte_options.update_psi_options(options)
 
     if ('DF' in options.get_str('INT_TYPE')):
-        aux_basis = psi4.core.BasisSet.build(ref_wfn.molecule(), 'DF_BASIS_MP2',
-                                         psi4.core.get_global_option('DF_BASIS_MP2'),
-                                         'RIFIT', psi4.core.get_global_option('BASIS'))
-        ref_wfn.set_basisset('DF_BASIS_MP2', aux_basis)
+        raise Exception('analytic gradient is not implemented for density fitting')
 
     if (options.get_str('MINAO_BASIS')):
         minao_basis = psi4.core.BasisSet.build(ref_wfn.molecule(), 'MINAO_BASIS',
@@ -550,9 +453,8 @@ def run_casscf_gradient(name, **kwargs):
 
     energy = 0.0
 
-    if job_type == 'NONE':
-        forte.cleanup()
-        return ref_wfn
+    if not job_type == 'CASSCF':
+        raise Exception('analytic gradient is only implemented for CASSCF')
 
     start = timeit.timeit()
 
@@ -568,21 +470,14 @@ def run_casscf_gradient(name, **kwargs):
         Ub = orb_t.get_Ub()
 
         ints.rotate_orbitals(Ua,Ub)
-    # Run a method
-    if (job_type == 'NEWDRIVER'):
-        energy = forte_driver(state_weights_map, scf_info, forte.forte_options, ints, mo_space_info)
-    else:
-        energy = forte.forte_old_methods(ref_wfn, options, ints, mo_space_info)
-        derivobj = psi4.core.Deriv(ref_wfn)
-        derivobj.set_deriv_density_backtransformed(True)
-        derivobj.set_ignore_reference(True)
-        grad = derivobj.compute()
-
-        ref_wfn.set_gradient(grad)
-    
+    # Run gradient computation
+    energy = forte.forte_old_methods(ref_wfn, options, ints, mo_space_info)
+    derivobj = psi4.core.Deriv(ref_wfn)
+    derivobj.set_deriv_density_backtransformed(True)
+    derivobj.set_ignore_reference(True)
+    grad = derivobj.compute()
+    ref_wfn.set_gradient(grad)    
     optstash.restore()        
-
-        
 
     end = timeit.timeit()
     #print('\n\n  Your calculation took ', (end - start), ' seconds');
@@ -590,16 +485,10 @@ def run_casscf_gradient(name, **kwargs):
     # Close ambit, etc.
     forte.cleanup()
 
-    psi4.core.set_scalar_variable('CURRENT ENERGY', energy)
     return ref_wfn
-
-
-
-
-
 
 
 # Integration with driver routines
 psi4.driver.procedures['energy']['forte'] = run_forte
-psi4.driver.procedures['gradient']['forte'] = run_casscf_gradient
+psi4.driver.procedures['gradient']['forte'] = gradient_forte
 

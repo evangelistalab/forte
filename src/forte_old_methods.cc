@@ -116,7 +116,7 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
         auto casscf = std::make_shared<CASSCF>(state, nroot, std::make_shared<SCFInfo>(ref_wfn),
                                                forte_options, mo_space_info, as_ints);
         final_energy = casscf->compute_energy();
-        casscf->compute_gradient();
+        if (options.get_str("DERTYPE") == "FIRST") { casscf->compute_gradient();}
     }
     if (options.get_str("JOB_TYPE") == "MR-DSRG-PT2") {
         std::string cas_type = options.get_str("ACTIVE_SPACE_SOLVER");
