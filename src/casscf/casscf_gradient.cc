@@ -10,7 +10,7 @@
  */
 
 #include "casscf/casscf.h"
-#include "casscf/backtransform_tpdm.h"
+#include "gradient_tpdm/backtransform_tpdm.h"
 #include "ambit/tensor.h"
 #include "ambit/blocked_tensor.h"
 
@@ -248,8 +248,7 @@ void CASSCF::set_lagrangian()
     W_["UP"] += temp["VP"] * Gamma1_["UV"];
     W_["UP"] += 0.5 * V_["XYPV"] * Gamma2_["UVXY"];
     W_["UP"] += V_["yXvP"] * Gamma2_["vUyX"];
-
-    //need to add symmetric parts !!!!!!!
+    // No need to set the rest symmetric blocks since they are 0
 }
 
 
