@@ -164,6 +164,14 @@ class CASSCF : public ActiveSpaceMethod {
     std::vector<size_t> core_all_;
     /// List of active MOs (Absolute)    
     std::vector<size_t> actv_all_;
+    /// List of relative core MOs
+    std::vector<std::__1::pair<unsigned long, unsigned long>,
+            std::allocator<std::__1::pair<unsigned long, unsigned long>>> core_mos_relative;
+    /// List of relative active MOs
+    std::vector<std::__1::pair<unsigned long, unsigned long>,
+            std::allocator<std::__1::pair<unsigned long, unsigned long>>> actv_mos_relative;
+    /// Dimension of different irreps
+    psi::Dimension irrep_vec;
     /// One-particle density matrix
     ambit::BlockedTensor Gamma1_;
     /// Two-body denisty tensor

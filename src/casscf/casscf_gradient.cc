@@ -63,6 +63,9 @@ void CASSCF::set_all_variables()
     virt_mos_ = mo_space_info_->get_corr_abs_mo("RESTRICTED_UOCC");
     core_all_ = mo_space_info_->get_absolute_mo("RESTRICTED_DOCC");
     actv_all_ = mo_space_info_->get_absolute_mo("ACTIVE");
+    core_mos_relative = mo_space_info_->get_relative_mo("RESTRICTED_DOCC");
+    actv_mos_relative = mo_space_info_->get_relative_mo("ACTIVE");
+    irrep_vec = mo_space_info_->get_dimension("ALL");
     
     // Set MO spaces.
     set_ambit_space();
@@ -313,23 +316,21 @@ void CASSCF::write_1rdm_spin_dependent()
 {
     outfile->Printf("\n    Writing 1RDM Coefficients ....................... ");
 
-    SharedMatrix D1(new Matrix("1rdm coefficients contribution", nmo_, nmo_));
+    SharedMatrix D1(new Matrix("1rdm coefficients contribution", nirrep_, irrep_vec, irrep_vec));
 
-    for(size_t i = 0, size_c = core_all_.size(); i < size_c; ++i) 
+    for(size_t i = 0, size_c = core_mos_relative.size(); i < size_c; ++i) 
     {
-        auto m = core_all_[i];
-        D1->set(m, m, 1.0);
+        auto m = core_mos_relative[i].second;
+        D1->set(core_mos_relative[i].first, core_mos_relative[i].second, core_mos_relative[i].second, 1.0);
     }
 
-    for(size_t i = 0, size_a = actv_all_.size(); i < size_a; ++i) 
+    (Gamma1_.block("aa")).iterate([&](const std::vector<size_t>& i, double& value)
     {
-        auto u = actv_all_[i];
-        for(size_t j = 0; j < size_a; ++j) 
+        if (actv_mos_relative[i[0]].first == actv_mos_relative[i[1]].first)
         {
-            auto v = actv_all_[j];
-            D1->set(u, v, Gamma1_.block("aa").data()[i * na_ + j]);
+            D1->set(actv_mos_relative[i[0]].first, actv_mos_relative[i[0]].second, actv_mos_relative[i[1]].second, value);
         }
-    }
+    });
 
     D1->back_transform(ints_->Ca());
     ints_->wfn()->Da()->copy(D1);
@@ -337,6 +338,7 @@ void CASSCF::write_1rdm_spin_dependent()
 
     outfile->Printf("Done");
 }
+
 
 
 /**
@@ -348,12 +350,28 @@ void CASSCF::write_lagrangian()
 {
     outfile->Printf("\n    Writing Lagrangian .............................. ");
 
-    SharedMatrix L(new Matrix("Lagrangian", nmo_, nmo_));
-    
     set_lagrangian();
-    W_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {           
-        L->add(i[0], i[1], value);
-    }); 
+    SharedMatrix L(new Matrix("Lagrangian", nirrep_, irrep_vec, irrep_vec));
+
+    for (const std::string& block : {"cc", "CC", "aa", "AA", "ca", "ac", "CA", "AC"}) 
+    {
+        std::vector<std::vector<std::__1::pair<unsigned long, unsigned long>,
+            std::allocator<std::__1::pair<unsigned long, unsigned long>>>> spin_pair;
+        for (size_t idx: {0, 1})
+        {            
+            auto spin = std::tolower(block.at(idx));
+            if (spin == 'c') { spin_pair.push_back(core_mos_relative);}
+            else if (spin == 'a') { spin_pair.push_back(actv_mos_relative);}
+        }
+
+        (W_.block(block)).iterate([&](const std::vector<size_t>& i, double& value)
+        {           
+            if (spin_pair[0][i[0]].first == spin_pair[1][i[1]].first)
+            {
+                L->add(spin_pair[0][i[0]].first, spin_pair[0][i[0]].second, spin_pair[1][i[1]].second, value);
+            }
+        });                
+    }   
     L->back_transform(ints_->Ca());
     ints_->wfn()->Lagrangian()->copy(L);
 
@@ -452,7 +470,6 @@ void CASSCF::write_2rdm_spin_dependent()
 
     outfile->Printf("Done");
 }
-
 
 }
 
