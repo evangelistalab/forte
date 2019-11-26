@@ -101,20 +101,20 @@ void CASSCF::set_ambit_space()
     std::string bvirt_label_ = "V";
 
     // Add Ambit index labels.
-    BTF_->add_mo_space(acore_label_, "mn$%", core_mos_, AlphaSpin);
-    BTF_->add_mo_space(bcore_label_, "MN<>", core_mos_, BetaSpin);
-    BTF_->add_mo_space(aactv_label_, "uvwxyz123", actv_mos_, AlphaSpin);
-    BTF_->add_mo_space(bactv_label_, "UVWXYZ!@#", actv_mos_, BetaSpin);
-    BTF_->add_mo_space(avirt_label_, "ef", virt_mos_, AlphaSpin);
-    BTF_->add_mo_space(bvirt_label_, "EF", virt_mos_, BetaSpin);
+    BTF_->add_mo_space(acore_label_, "m, n", core_mos_, AlphaSpin);
+    BTF_->add_mo_space(bcore_label_, "M, N", core_mos_, BetaSpin);
+    BTF_->add_mo_space(aactv_label_, "u, v, w, x, y, z", actv_mos_, AlphaSpin);
+    BTF_->add_mo_space(bactv_label_, "U, V, W, X, Y, Z", actv_mos_, BetaSpin);
+    BTF_->add_mo_space(avirt_label_, "e, f", virt_mos_, AlphaSpin);
+    BTF_->add_mo_space(bvirt_label_, "E, F", virt_mos_, BetaSpin);
 
     // Define composite spaces.
-    BTF_->add_composite_mo_space("h", "ijkl", {acore_label_, aactv_label_});
-    BTF_->add_composite_mo_space("H", "IJKL", {bcore_label_, bactv_label_});
-    BTF_->add_composite_mo_space("p", "abcd", {aactv_label_, avirt_label_});
-    BTF_->add_composite_mo_space("P", "ABCD", {bactv_label_, bvirt_label_});
-    BTF_->add_composite_mo_space("g", "pqrsto456", {acore_label_, aactv_label_, avirt_label_});
-    BTF_->add_composite_mo_space("G", "PQRSTO789", {bcore_label_, bactv_label_, bvirt_label_});
+    BTF_->add_composite_mo_space("h", "i, j, k, l", {acore_label_, aactv_label_});
+    BTF_->add_composite_mo_space("H", "I, J, K, L", {bcore_label_, bactv_label_});
+    BTF_->add_composite_mo_space("p", "a, b, c, d", {aactv_label_, avirt_label_});
+    BTF_->add_composite_mo_space("P", "A, B, C, D", {bactv_label_, bvirt_label_});
+    BTF_->add_composite_mo_space("g", "p, q, r, s", {acore_label_, aactv_label_, avirt_label_});
+    BTF_->add_composite_mo_space("G", "P, Q, R, S", {bcore_label_, bactv_label_, bvirt_label_});
 
     outfile->Printf("Done");	
 }
@@ -320,7 +320,6 @@ void CASSCF::write_1rdm_spin_dependent()
 
     for(size_t i = 0, size_c = core_mos_relative.size(); i < size_c; ++i) 
     {
-        auto m = core_mos_relative[i].second;
         D1->set(core_mos_relative[i].first, core_mos_relative[i].second, core_mos_relative[i].second, 1.0);
     }
 
