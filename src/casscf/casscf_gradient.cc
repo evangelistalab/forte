@@ -8,50 +8,22 @@
  * (4), Write 1RDMs and 2RDMs coefficients;
  * (5), Back-transform the TPDM. 
  */
-
 #include "casscf/casscf.h"
 #include "gradient_tpdm/backtransform_tpdm.h"
-#include "ambit/tensor.h"
-#include "ambit/blocked_tensor.h"
-
-#include "integrals/integrals.h"
-#include "base_classes/rdms.h"
-
-#include "psi4/libfock/jk.h"
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/wavefunction.h"
-#include "psi4/libqt/qt.h"
 #include "psi4/psifiles.h"
-
 #include "helpers/printing.h"
-#include "helpers/helpers.h"
-#include "helpers/timer.h"
 #include "sci/aci.h"
-#include "fci/fci_solver.h"
 #include "base_classes/active_space_solver.h"
-
-#include "sci/fci_mo.h"
-#include "orbital-helpers/mp2_nos.h"
-#include "orbital-helpers/orbitaloptimizer.h"
-#include "orbital-helpers/semi_canonicalize.h"
-
-#ifdef HAVE_CHEMPS2
-#include "dmrg/dmrgsolver.h"
-#endif
-#include "psi4/libdiis/diisentry.h"
-#include "psi4/libdiis/diismanager.h"
 #include "psi4/libmints/factory.h"
-#include "psi4/psifiles.h"
 #include "psi4/libiwl/iwl.hpp"
 #include "psi4/libpsio/psio.hpp"
 
 using namespace ambit;
 using namespace psi;
-
 namespace forte 
 {
-
-
 /**
  * Initialize global variables. 
  */
@@ -382,6 +354,11 @@ void CASSCF::write_lagrangian()
  * Write spin_dependent two-RDMs coefficients using IWL.
  *
  * Coefficients in d2aa and d2bb need be multiplied with additional 1/2! 
+ * Specifically: 
+ * If you have v_aa as coefficients before 2-RDMs_alpha_alpha, v_bb before 
+ * 2-RDMs_beta_beta and v_bb before 2-RDMs_alpha_beta, you need to write
+ * 0.5 * v_aa, 0.5 * v_bb and v_ab into the IWL file instead of using
+ * the original coefficients v_aa, v_bb and v_ab.
  */
 void CASSCF::write_2rdm_spin_dependent() 
 {
