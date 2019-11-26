@@ -475,7 +475,7 @@ def gradient_forte(name, **kwargs):
     derivobj = psi4.core.Deriv(ref_wfn)
     derivobj.set_deriv_density_backtransformed(True)
     derivobj.set_ignore_reference(True)
-    grad = derivobj.compute()
+    grad = derivobj.compute(psi4.core.DerivCalcType.Correlated)
     ref_wfn.set_gradient(grad)    
     optstash.restore()        
 
