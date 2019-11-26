@@ -355,8 +355,8 @@ void CASSCF::write_lagrangian()
 
     for (const std::string& block : {"cc", "CC", "aa", "AA", "ca", "ac", "CA", "AC"}) 
     {
-        std::vector<std::vector<std::__1::pair<unsigned long, unsigned long>,
-            std::allocator<std::__1::pair<unsigned long, unsigned long>>>> spin_pair;
+        std::vector<std::vector<std::pair<unsigned long, unsigned long>,
+            std::allocator<std::pair<unsigned long, unsigned long>>>> spin_pair;
         for (size_t idx: {0, 1})
         {            
             auto spin = std::tolower(block.at(idx));
