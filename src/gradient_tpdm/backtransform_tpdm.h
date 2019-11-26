@@ -28,7 +28,6 @@
 #ifndef BACKTRANSFORM_TPDM_H
 #define BACKTRANSFORM_TPDM_H
 
-
 #include <map>
 #include <vector>
 #include <string>
@@ -38,7 +37,6 @@
 
 #include <psi4/libtrans/integraltransform.h>
 
-
 namespace psi {
 
 struct dpdfile4;
@@ -47,9 +45,9 @@ class Matrix;
 class Dimension;
 class Wavefunction;
 
-typedef std::vector<std::shared_ptr< MOSpace> > SpaceVec;
+typedef std::vector<std::shared_ptr<MOSpace>> SpaceVec;
 
-class TPDMBackTransform: public IntegralTransform{
+class TPDMBackTransform : public IntegralTransform {
 
   public:
     /**
@@ -69,27 +67,25 @@ class TPDMBackTransform: public IntegralTransform{
      * @param initialize         Whether to initialize during construction or not.  Useful if some
      *                           options need to be tweaked before initialization.
      */
-    TPDMBackTransform(SharedWavefunction wfn,
-                      SpaceVec spaces,
-                      TransformationType transformationType = IntegralTransform::TransformationType::Restricted,
-                      OutputType outputType = IntegralTransform::OutputType::DPDOnly,
-                      MOOrdering moOrdering = IntegralTransform::MOOrdering::QTOrder,
-                      FrozenOrbitals frozenOrbitals = IntegralTransform::FrozenOrbitals::OccAndVir,
-                      bool initialize = true);
+    TPDMBackTransform(
+        SharedWavefunction wfn, SpaceVec spaces,
+        TransformationType transformationType = IntegralTransform::TransformationType::Restricted,
+        OutputType outputType = IntegralTransform::OutputType::DPDOnly,
+        MOOrdering moOrdering = IntegralTransform::MOOrdering::QTOrder,
+        FrozenOrbitals frozenOrbitals = IntegralTransform::FrozenOrbitals::OccAndVir,
+        bool initialize = true);
     ~TPDMBackTransform();
 
     void backtransform_density();
 
   protected:
-
     void backtransform_tpdm_unrestricted();
     void presort_mo_tpdm_unrestricted();
-    void sort_so_tpdm(const dpdbuf4 *B, int irrep, size_t first_row, size_t num_rows, bool first_run);
-    void setup_tpdm_buffer(const dpdbuf4 *D);
-
+    void sort_so_tpdm(const dpdbuf4* B, int irrep, size_t first_row, size_t num_rows,
+                      bool first_run);
+    void setup_tpdm_buffer(const dpdbuf4* D);
 };
 
-}
+} // namespace psi
 
 #endif
-

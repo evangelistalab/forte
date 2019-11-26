@@ -128,8 +128,7 @@ class CASSCF : public ActiveSpaceMethod {
     /// The number of NMO including frozen core
     size_t all_nmo_;
 
-
-    // These are essential variables and functions for computing CASSCF gradient. 
+    // These are essential variables and functions for computing CASSCF gradient.
     /// Set Ambit tensor labels
     void set_ambit_space();
     /// Set density
@@ -139,18 +138,18 @@ class CASSCF : public ActiveSpaceMethod {
     /// Set Hamiltonian
     void set_h();
     /// Set two-electron integrals
-    void set_v();  
+    void set_v();
     /// Set the Lagrangian
     void set_lagrangian();
     /// Write the Lagrangian
     void write_lagrangian();
-    /// Set MO space environment and global variables 
+    /// Set MO space environment and global variables
     void set_all_variables();
     /// Set H, V, F and densities using ambit tensors
     void set_tensor();
     /// Write spin_dependent one-RDMs coefficients
     void write_1rdm_spin_dependent();
-    /// Write spin_dependent two-RDMs coefficients using IWL 
+    /// Write spin_dependent two-RDMs coefficients using IWL
     void write_2rdm_spin_dependent();
     /// TPDM backtransform
     void tpdm_backtransform();
@@ -162,14 +161,16 @@ class CASSCF : public ActiveSpaceMethod {
     std::vector<size_t> virt_mos_;
     /// List of core MOs (Absolute)
     std::vector<size_t> core_all_;
-    /// List of active MOs (Absolute)    
+    /// List of active MOs (Absolute)
     std::vector<size_t> actv_all_;
     /// List of relative core MOs
     std::vector<std::pair<unsigned long, unsigned long>,
-            std::allocator<std::pair<unsigned long, unsigned long>>> core_mos_relative;
+                std::allocator<std::pair<unsigned long, unsigned long>>>
+        core_mos_relative;
     /// List of relative active MOs
     std::vector<std::pair<unsigned long, unsigned long>,
-            std::allocator<std::pair<unsigned long, unsigned long>>> actv_mos_relative;
+                std::allocator<std::pair<unsigned long, unsigned long>>>
+        actv_mos_relative;
     /// Dimension of different irreps
     psi::Dimension irrep_vec;
     /// One-particle density matrix
@@ -182,11 +183,10 @@ class CASSCF : public ActiveSpaceMethod {
     ambit::BlockedTensor H_;
     // two-electron integrals
     ambit::BlockedTensor V_;
-    // Fock matrix 
+    // Fock matrix
     ambit::BlockedTensor F_;
     /// Kevin's Tensor Wrapper
     std::shared_ptr<BlockedTensorFactory> BTF_;
-
 
     /// These member variables are all summarized in Algorithm 1
     /// Equation 9

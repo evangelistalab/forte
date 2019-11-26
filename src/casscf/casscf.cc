@@ -65,8 +65,6 @@ CASSCF::CASSCF(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
     startup();
 }
 
-
-
 double CASSCF::compute_energy() {
     if (na_ == 0) {
         outfile->Printf("\n\n\n Please set the active space");
@@ -155,7 +153,6 @@ double CASSCF::compute_energy() {
         }
         Ca = ints_->Ca();
         Cb = ints_->Cb();
-
 
         CASSCFOrbitalOptimizer orbital_optimizer(gamma1_, gamma2_, tei_paaa_, options_,
                                                  mo_space_info_);
@@ -1016,9 +1013,9 @@ std::vector<RDMs> CASSCF::rdms(const std::vector<std::pair<size_t, size_t>>& /*r
     return refs;
 }
 
-std::vector<RDMs> CASSCF::transition_rdms(const std::vector<std::pair<size_t, size_t>>& /*root_list*/,
-                                          std::shared_ptr<ActiveSpaceMethod> /*method2*/,
-                                          int /*max_rdm_level*/) {
+std::vector<RDMs>
+CASSCF::transition_rdms(const std::vector<std::pair<size_t, size_t>>& /*root_list*/,
+                        std::shared_ptr<ActiveSpaceMethod> /*method2*/, int /*max_rdm_level*/) {
     std::vector<RDMs> refs;
     throw std::runtime_error("FCISolver::transition_rdms is not implemented!");
     return refs;
