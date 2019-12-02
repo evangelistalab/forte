@@ -178,6 +178,8 @@ PYBIND11_MODULE(forte, m) {
     m.def("print_method_banner", &print_method_banner, "text"_a, "separator"_a = "-",
           "Print a method banner");
     m.def("make_mo_space_info", &make_mo_space_info, "Make a MOSpaceInfo object");
+    m.def("make_mo_space_info_from_map", &make_mo_space_info_from_map,
+          "Make a MOSpaceInfo object from a map");
     m.def("make_aosubspace_projector", &make_aosubspace_projector, "Make a AOSubspace projector");
     m.def("make_avas", &make_avas, "Make AVAS orbitals");
     m.def("make_fragment_projector", &make_fragment_projector,
@@ -252,11 +254,25 @@ PYBIND11_MODULE(forte, m) {
              "Get the frozen core energy (contribution from FROZEN_DOCC)")
         .def("scalar_energy", &ActiveSpaceIntegrals::scalar_energy,
              "Get the scalar_energy energy (contribution from RESTRICTED_DOCC)")
+        .def("nmo", &ActiveSpaceIntegrals::nmo, "The number of orbitals")
         .def("oei_a", &ActiveSpaceIntegrals::oei_a, "Get the alpha effective one-electron integral")
         .def("oei_b", &ActiveSpaceIntegrals::oei_b, "Get the beta effective one-electron integral")
-        .def("tei_aa", &ActiveSpaceIntegrals::tei_aa, "alpha-alpha two-electron integral <pq||rs>")
-        .def("tei_ab", &ActiveSpaceIntegrals::tei_ab, "alpha-beta two-electron integral <pq|rs>")
-        .def("tei_bb", &ActiveSpaceIntegrals::tei_bb, "beta-beta two-electron integral <pq||rs>")
+        .def("tei_aa", &ActiveSpaceIntegrals::tei_aa,
+             "Get the alpha-alpha two-electron integral <pq||rs>")
+        .def("tei_ab", &ActiveSpaceIntegrals::tei_ab,
+             "Get the alpha-beta two-electron integral <pq|rs>")
+        .def("tei_bb", &ActiveSpaceIntegrals::tei_bb,
+             "Get the beta-beta two-electron integral <pq||rs>")
+        .def("set_oei_a", &ActiveSpaceIntegrals::set_oei_a,
+             "Set the alpha effective one-electron integral")
+        .def("set_oei_b", &ActiveSpaceIntegrals::set_oei_b,
+             "Set the beta effective one-electron integral")
+        .def("set_tei_aa", &ActiveSpaceIntegrals::set_tei_aa,
+             "Set the alpha-alpha two-electron integral <pq||rs>")
+        .def("set_tei_ab", &ActiveSpaceIntegrals::set_tei_ab,
+             "Set the alpha-beta two-electron integral <pq|rs>")
+        .def("set_tei_bb", &ActiveSpaceIntegrals::set_tei_bb,
+             "Set the beta-beta two-electron integral <pq||rs>")
         .def("print", &ActiveSpaceIntegrals::print, "Print the integrals (alpha-alpha case)");
 
     // export SemiCanonical

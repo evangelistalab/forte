@@ -136,6 +136,13 @@ class ActiveSpaceIntegrals {
         return tei_bb_[p * nmo3_ + q * nmo2_ + p * nmo_ + q];
     }
     IntegralType get_integral_type() { return integral_type_; }
+
+    void set_oei_a(const std::vector<double> values);
+    void set_oei_b(const std::vector<double> values);
+    void set_tei_aa(const std::vector<double> values);
+    void set_tei_ab(const std::vector<double> values);
+    void set_tei_bb(const std::vector<double> values);
+
     /// Set the active integrals
     void set_active_integrals(const ambit::Tensor& tei_aa, const ambit::Tensor& tei_ab,
                               const ambit::Tensor& tei_bb);

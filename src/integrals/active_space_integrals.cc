@@ -154,6 +154,12 @@ void ActiveSpaceIntegrals::set_active_integrals_and_restricted_docc() {
     RestrictedOneBodyOperator(oei_a_, oei_b_);
 }
 
+void ActiveSpaceIntegrals::set_oei_a(const std::vector<double> values) { oei_a_ = values; }
+void ActiveSpaceIntegrals::set_oei_b(const std::vector<double> values) { oei_b_ = values; }
+void ActiveSpaceIntegrals::set_tei_aa(const std::vector<double> values) { tei_aa_ = values; }
+void ActiveSpaceIntegrals::set_tei_ab(const std::vector<double> values) { tei_ab_ = values; }
+void ActiveSpaceIntegrals::set_tei_bb(const std::vector<double> values) { tei_bb_ = values; }
+
 std::vector<size_t> ActiveSpaceIntegrals::active_mo() const { return active_mo_; }
 
 std::vector<size_t> ActiveSpaceIntegrals::restricted_docc_mo() const { return restricted_docc_mo_; }
