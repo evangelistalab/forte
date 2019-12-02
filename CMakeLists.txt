@@ -159,6 +159,7 @@ src/mrdsrg-spin-adapted/dsrg_mrpt_amp.cc
 src/mrdsrg-spin-adapted/dsrg_mrpt_comm.cc
 src/mrdsrg-spin-integrated/master_mrdsrg.cc
 src/mrdsrg-spin-integrated/dsrg_mrpt2.cc
+src/mrdsrg-spin-integrated/dsrg_mrpt2_gradient.cc
 src/mrdsrg-spin-integrated/dsrg_mrpt2_ms.cc
 src/mrdsrg-spin-integrated/dsrg_mrpt3.cc
 src/mrdsrg-spin-integrated/mcsrgpt2_mo.cc

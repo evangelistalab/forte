@@ -76,6 +76,9 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     /// Compute the DSRG-MRPT2 energy
     virtual double compute_energy();
 
+    /// Compute the DSRG-MRPT2 gradient
+    psi::SharedMatrix compute_gradient();
+
     /// Compute second-order effective Hamiltonian couplings
     /// <M|H + HA(N)|N> = Heff1 * TrD1 + Heff2 * TrD2 + Heff3 * TrD3 if CAS
     virtual void compute_Heff_2nd_coupling(double& H0, ambit::Tensor& H1a, ambit::Tensor& H1b,
@@ -193,6 +196,80 @@ class DSRG_MRPT2 : public MASTER_DSRG {
 
     /// Unitary matrix to block diagonal Fock
     ambit::BlockedTensor U_;
+
+
+
+
+
+
+    // These are essential variables and functions for computing DSRG-MRPT2 gradient.
+    // Some variables may be redundant thus need further elimination
+    /// Set Ambit tensor labels
+    void set_ambit_space();
+    /// Set density
+    void set_density();
+    /// Set Fock matrix
+    void set_fock();
+    /// Set Hamiltonian
+    void set_h();
+    /// Set two-electron integrals
+    void set_v();
+    /// Set the Lagrangian
+    void set_lagrangian();
+    /// Write the Lagrangian
+    void write_lagrangian();
+    /// Set MO space environment and global variables
+    void set_all_variables();
+    /// Set H, V, F and densities using ambit tensors
+    void set_tensor();
+    /// Write spin_dependent one-RDMs coefficients
+    void write_1rdm_spin_dependent();
+    /// Write spin_dependent two-RDMs coefficients using IWL
+    void write_2rdm_spin_dependent();
+    /// TPDM backtransform
+    void tpdm_backtransform();
+    /// List of core MOs (Correlated)
+    std::vector<size_t> core_mos_;
+    /// List of active MOs (Correlated)
+    std::vector<size_t> actv_mos_;
+    /// List of virtual MOs (Correlated)
+    std::vector<size_t> virt_mos_;
+    /// List of core MOs (Absolute)
+    std::vector<size_t> core_all_;
+    /// List of active MOs (Absolute)
+    std::vector<size_t> actv_all_;
+    /// List of relative core MOs
+    std::vector<std::pair<unsigned long, unsigned long>,
+                std::allocator<std::pair<unsigned long, unsigned long>>>
+        core_mos_relative;
+    /// List of relative active MOs
+    std::vector<std::pair<unsigned long, unsigned long>,
+                std::allocator<std::pair<unsigned long, unsigned long>>>
+        actv_mos_relative;
+    /// Dimension of different irreps
+    psi::Dimension irrep_vec;
+    /// One-particle density matrix
+    ambit::BlockedTensor Gamma1_;
+    /// Two-body denisty tensor
+    ambit::BlockedTensor Gamma2_;
+    // Lagrangian tensor
+    ambit::BlockedTensor W_;
+    // core Hamiltonian
+    ambit::BlockedTensor H_;
+    // // two-electron integrals
+    // ambit::BlockedTensor V_;
+    // // Fock matrix
+    // ambit::BlockedTensor F_;
+    /// Kevin's Tensor Wrapper
+    std::shared_ptr<BlockedTensorFactory> BTF_;
+
+
+
+
+
+
+
+
 
     // => Amplitude <= //
 
