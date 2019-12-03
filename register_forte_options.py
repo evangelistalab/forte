@@ -702,6 +702,11 @@ def register_dsrg_options(forte_options):
 
     forte_options.add_bool("LDSRG3_ZERO_T3", False, "Zero all T3 amplitudes for testing")
 
+    forte_options.add_bool("LDSRG3_DIAG_HBAR3_ONLY", False,
+                           """Only include the diagonal three-body elements (Hbar^{pqr}_{pqr}) throughout
+                           the recursive evaluation of the commutator for LDSRG(3) if True
+                           (only zeroing off-diagonal elements, not optimal implementation)""")
+
     forte_options.add_bool("LDSRG2STAR_DO_DIAGONAL", True,
                            "Compute diagonal components of Hbar when doing LDSRG(2*) if True")
 
