@@ -283,15 +283,31 @@ def compute_dsrg_unrelaxed_energy(correlation_solver_type, rdms, scf_info, optio
 
     return Edsrg, dsrg, Heff_actv_implemented
 
-def orbital_projection(ref_wfn, options):
-    r"""
+def orbital_projection(ref_wfn, options, mo_space_info):
+    r"""Functions that pre-rotate orbitals before calculations;
+    Requires a set of reference orbitals and mo_space_info.
+
+    AVAS: an automatic active space selection and projection;
+    Embedding: simple frozen-orbital embedding with the overlap projector.
+
+    Return a mo_space_info (forte::MOSpaceInfo)
     """
+
     # Create the AO subspace projector
     ps = forte.make_aosubspace_projector(ref_wfn, options)
 
     #Apply the projector to rotate orbitals
     if options.get_bool("AVAS"):
+        forte.print_method_banner(["Atomic Valence Active Space (AVAS)", "Chenxi Cai"]);
         forte.make_avas(ref_wfn, options, ps)
+
+    # Create the fragment(embedding) projector and apply to rotate orbitals
+    if options.get_bool("EMBEDDING"):
+        forte.print_method_banner(["Frozen-orbital Embedding", "Nan He"]);
+        pf = forte.make_fragment_projector(ref_wfn, options)
+        return forte.make_embedding(ref_wfn, options, pf, mo_space_info)
+    else:
+        return mo_space_info
 
 
 def run_forte(name, **kwargs):
@@ -337,7 +353,7 @@ def run_forte(name, **kwargs):
     mo_space_info = forte.make_mo_space_info(ref_wfn, forte.forte_options)
 
     # Call methods that project the orbitals (AVAS, embedding)
-    orbital_projection(ref_wfn, options)
+    mo_space_info = orbital_projection(ref_wfn, options, mo_space_info)
 
     state = forte.make_state_info_from_psi_wfn(ref_wfn)
     scf_info = forte.SCFInfo(ref_wfn)

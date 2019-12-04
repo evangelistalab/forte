@@ -59,6 +59,12 @@ avas:
    - avas-3
    - avas-4
    - avas-5
+embedding:
+  short:
+   - embedding-1
+   - embedding-2
+   - embedding-3
+   - embedding-4
 casscf:
   short:
    - casscf
@@ -198,6 +204,8 @@ mrdsrg_so:
   long:
    - mrdsrg_so-2
 mrdsrg-ldsrg2-df:
+  short:
+   - mrdsrg-ldsrg2-df-4
   long:
    - mrdsrg-ldsrg2-df-seq-1
    - mrdsrg-ldsrg2-df-seq-2
@@ -215,15 +223,6 @@ mrdsrg-ldsrg2-df:
    - mrdsrg-ldsrg2-df-nivo-2
    - mrdsrg-ldsrg2-df-nivo-3
    - mrdsrg-ldsrg2-df-seq-4
-   - mrdsrg-ldsrg2-df-seq-linear-1
-   - mrdsrg-ldsrg2-df-seq-linear-2
-   - mrdsrg-ldsrg2-df-seq-linear-3
-   - mrdsrg-ldsrg2-df-seq-linear-4
-   - mrdsrg-ldsrg2-df-seq-linear-5
-   - mrdsrg-ldsrg2-df-seq-linear-6
-   - mrdsrg-ldsrg2-df-seq-noV3-1
-   - mrdsrg-ldsrg2-df-seq-noV3-2
-   - mrdsrg-ldsrg2-df-seq-noV3-3
    - mrdsrg-ldsrg2-qc-df-2
 mrdsrg-pt2:
   short:

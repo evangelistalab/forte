@@ -6,6 +6,7 @@ def register_forte_options(forte_options):
     register_avas_options(forte_options)
     register_cino_options(forte_options)
     register_mrcino_options(forte_options)
+    register_embedding_options(forte_options)
     register_integral_options(forte_options)
     register_pt2_options(forte_options)
     register_pci_options(forte_options)
@@ -116,6 +117,38 @@ def register_mrcino_options(forte_options):
         "whether pass frozen_docc"
         "actice_docc and restricted_docc"
         "or not")
+
+def register_embedding_options(forte_options):
+    forte_options.add_bool(
+        "EMBEDDING", False, 
+        "Whether to perform embedding partition and projection")
+    forte_options.add_str(
+        "EMBEDDING_CUTOFF_METHOD", "THRESHOLD", 
+        "Cut off by: threshold ,cum_threshold or num_of_orbitals.")
+    forte_options.add_double(
+        "EMBEDDING_THRESHOLD", 0.5, 
+        "Projector eigenvalue threshold for both simple and cumulative threshold")
+    forte_options.add_int(
+        "NUM_A_DOCC", 0, 
+        "Number of occupied orbitals in A fixed to this value when embedding method is num_of_orbitals")
+    forte_options.add_int(
+        "Num_A_UOCC", 0,
+        "Number of virtual orbitals in A fixed to this value when embedding method is num_of_orbitals")
+    forte_options.add_str(
+        "EMBEDDING_REFERENCE", "CASSCF", 
+        "HF for any reference without active, CASSCF for any reference with an active space.")
+    forte_options.add_bool(
+        "EMBEDDING_SEMICANONICALIZE_ACTIVE", True, 
+        "Perform semi-canonicalization on active space or not")
+    forte_options.add_bool(
+        "EMBEDDING_SEMICANONICALIZE_FROZEN", True, 
+        "Perform semi-canonicalization on frozen core/virtual space or not")
+    forte_options.add_int(
+        "EMBEDDING_ADJUST_B_DOCC", 0, 
+        "Adjust number of occupied orbitals between A and B, +: move to B, -: move to A")
+    forte_options.add_int(
+        "EMBEDDING_ADJUST_B_UOCC", 0,
+        "Adjust number of virtual orbitals between A and B, +: move to B, -: move to A")
 
 def register_mo_space_info_options(forte_options):
     forte_options.add_array(

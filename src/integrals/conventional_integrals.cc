@@ -41,7 +41,7 @@
 
 #include "conventional_integrals.h"
 
-#define ID(x) integral_transform_->DPD_ID(x)
+#define ID(x) integral_transform->DPD_ID(x)
 
 using namespace psi;
 
@@ -75,20 +75,16 @@ ConventionalIntegrals::ConventionalIntegrals(psi::Options& options,
     outfile->Printf("\n  Conventional integrals take %8.8f s", ConvTime.get());
 }
 
-void ConventionalIntegrals::transform_integrals() {
+std::shared_ptr<psi::IntegralTransform> ConventionalIntegrals::transform_integrals() {
 
-    // For now, we'll just transform for closed shells and generate all
-    // integrals.
+    // For now, we'll just transform for closed shells and generate all integrals
     std::vector<std::shared_ptr<MOSpace>> spaces;
     spaces.push_back(MOSpace::all);
 
-    // Reset the integral transform object if one was opened before
-    if (integral_transform_) {
-        integral_transform_.reset();
-    }
+    std::shared_ptr<psi::IntegralTransform> integral_transform;
 
     if (spin_restriction_ == IntegralSpinRestriction::Restricted) {
-        integral_transform_ = std::make_shared<psi::IntegralTransform>(
+        integral_transform = std::make_shared<psi::IntegralTransform>(
             wfn_, spaces, psi::IntegralTransform::TransformationType::Restricted,
             psi::IntegralTransform::OutputType::DPDOnly,
             psi::IntegralTransform::MOOrdering::PitzerOrder,
@@ -97,7 +93,7 @@ void ConventionalIntegrals::transform_integrals() {
         outfile->Printf("\n  Unrestricted orbitals are currently disabled");
         throw psi::PSIEXCEPTION("Unrestricted orbitals are currently disabled in "
                                 "ConventionalIntegrals");
-        integral_transform_ = std::make_shared<psi::IntegralTransform>(
+        integral_transform = std::make_shared<psi::IntegralTransform>(
             wfn_, spaces, psi::IntegralTransform::TransformationType::Unrestricted,
             psi::IntegralTransform::OutputType::DPDOnly,
             psi::IntegralTransform::MOOrdering::PitzerOrder,
@@ -105,14 +101,15 @@ void ConventionalIntegrals::transform_integrals() {
     }
 
     // Keep the SO integrals on disk in case we want to retransform them
-    integral_transform_->set_keep_iwl_so_ints(true);
+    integral_transform->set_keep_iwl_so_ints(true);
     local_timer int_timer;
-    integral_transform_->transform_tei(MOSpace::all, MOSpace::all, MOSpace::all, MOSpace::all);
+    integral_transform->transform_tei(MOSpace::all, MOSpace::all, MOSpace::all, MOSpace::all);
 
-    dpd_set_default(integral_transform_->get_dpd_id());
+    dpd_set_default(integral_transform->get_dpd_id());
     if (print_ > 0) {
         outfile->Printf("\n  Integral transformation done. %8.8f s", int_timer.get());
     }
+    return integral_transform;
 }
 
 double ConventionalIntegrals::aptei_aa(size_t p, size_t q, size_t r, size_t s) {
@@ -199,7 +196,7 @@ void ConventionalIntegrals::set_tei(size_t p, size_t q, size_t r, size_t s, doub
 void ConventionalIntegrals::gather_integrals() {
     MintsHelper mints = MintsHelper(wfn_->basisset());
     mints.integrals();
-    transform_integrals();
+    auto integral_transform = transform_integrals();
 
     if (print_ > 0) {
         outfile->Printf("\n  Reading the two-electron integrals from disk");
