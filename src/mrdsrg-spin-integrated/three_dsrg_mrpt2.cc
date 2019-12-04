@@ -517,34 +517,6 @@ double THREE_DSRG_MRPT2::compute_energy() {
     return Etotal;
 }
 
-double THREE_DSRG_MRPT2::compute_ref() {
-    double E = 0.0;
-
-    for (const std::string block : {"cc", "CC"}) {
-        F_.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
-            if (i[0] == i[1]) {
-                E += 0.5 * value;
-            }
-        });
-        H_.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
-            if (i[0] == i[1]) {
-                E += 0.5 * value;
-            }
-        });
-    }
-
-    E = 0.5 * H_["uv"] * Gamma1_["vu"];
-    E += 0.5 * F_["uv"] * Gamma1_["vu"];
-    E += 0.5 * H_["UV"] * Gamma1_["VU"];
-    E += 0.5 * F_["UV"] * Gamma1_["VU"];
-
-    E += 0.25 * V_["uvxy"] * Lambda2_["uvxy"];
-    E += 0.25 * V_["UVXY"] * Lambda2_["UVXY"];
-    E += V_["uVxY"] * Lambda2_["uVxY"];
-
-    return E + Efrzc_ + Enuc_;
-}
-
 void THREE_DSRG_MRPT2::compute_t2() {
     outfile->Printf("\n    %-40s ...", "Computing T2");
     local_timer timer;

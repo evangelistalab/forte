@@ -90,7 +90,7 @@ class AdaptiveCI : public SelectedCIMethod {
 
     /// Set options from an option object
     /// @param options the options passed in
-    void set_options(std::shared_ptr<ForteOptions> options) override {}
+    void set_options(std::shared_ptr<ForteOptions>) override {}
 
     // Interfaces of SCI algorithm
     /// Print the banner and starting information.
@@ -108,7 +108,9 @@ class AdaptiveCI : public SelectedCIMethod {
     /// Step 5. Prune the P + Q space to get an updated P space
     void prune_PQ_to_P() override;
     /// Post-iter process
-    void post_iter_process() override {}
+    void post_iter_process() override;
+    /// Full PT2 correction
+    void full_mrpt2();
 
     // Temporarily added interface to ExcitedStateSolver
     /// Set the class variable
@@ -269,6 +271,7 @@ class AdaptiveCI : public SelectedCIMethod {
     psi::SharedMatrix evecs_;
 
     bool build_lists_;
+    
 
     /// A map of determinants in the P space
     std::unordered_map<Determinant, int, Determinant::Hash> P_space_map_;

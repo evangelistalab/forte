@@ -55,7 +55,6 @@ double SelectedCIMethod::compute_energy() {
 
         // Step 3. Diagonalize the Hamiltonian in the P + Q space
         diagonalize_PQ_space();
-
         // Step 4. Check convergence and break if needed
         if (check_convergence())
             break;

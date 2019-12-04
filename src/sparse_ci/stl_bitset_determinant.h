@@ -40,7 +40,6 @@
 
 #include "determinant_common.h"
 
-
 namespace forte {
 
 /**
@@ -74,6 +73,8 @@ class STLBitsetDeterminant {
     explicit STLBitsetDeterminant();
     STLBitsetDeterminant(int n) = delete;
     STLBitsetDeterminant(size_t n) = delete;
+    STLBitsetDeterminant(const STLBitsetDeterminant& original);
+
     /// Construct a determinant from a bitset object
     explicit STLBitsetDeterminant(const bit_t& bits);
     /// Construct the determinant from an occupation vector that
@@ -189,6 +190,22 @@ class STLBitsetDeterminant {
     double double_excitation_ab(int i, int j, int a, int b);
     /// Perform an beta-beta double excitation (IJ -> AB)
     double double_excitation_bb(int i, int j, int a, int b);
+    /**
+     * @brief Apply a general excitation operator to this determinant
+     *        Details:
+     *        (bc)_n ... (bc)_1 (ba)_n ... (ba)_1 (ac)_n ... (ac)_1 (aa)_n ... (aa)_1 |det>
+     *        where aa = alpha annihilation operator
+     *        where ac = alpha creation operator
+     *        where ba = alpha annihilation operator
+     *        where bc = alpha creation operator
+     * @param aann list of alpha orbitals to annihilate
+     * @param acre list of alpha orbitals to create
+     * @param bann list of beta orbitals to annihilate
+     * @param bcre list of beta orbitals to create
+     * @return the sign of the final determinant (+1, -1, or 0)
+     */
+    double gen_excitation(const std::vector<int>& aann, const std::vector<int>& acre,
+                          const std::vector<int>& bann, const std::vector<int>& bcre);
 
     struct Hash {
         std::size_t operator()(const forte::STLBitsetDeterminant& bs) const {
@@ -221,6 +238,6 @@ STLBitsetDeterminant union_occupation(const STLBitsetDeterminant& lhs,
 void enforce_spin_completeness(std::vector<STLBitsetDeterminant>& det_space, int nmo);
 /// Compute the matrix element of the S^2 operator between two determinants
 double spin2(const STLBitsetDeterminant& lhs, const STLBitsetDeterminant& rhs);
-}
+} // namespace forte
 
 #endif // _bitset_determinant_h_

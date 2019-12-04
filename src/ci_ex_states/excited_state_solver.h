@@ -114,6 +114,8 @@ class ExcitedStateSolver : public ActiveSpaceMethod {
     bool save_final_wfn_ = false;
     /// Compute all roots on first iteration?
     bool first_iter_roots_ = false;
+    /// Do full EN-MRPT2 correction?
+    bool full_pt2_ = false;
 
   private:
     /// Print information about this calculation

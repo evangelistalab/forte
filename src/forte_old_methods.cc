@@ -52,7 +52,6 @@
 #include "casscf/casscf.h"
 
 #include "orbital-helpers/localize.h"
-#include "orbital-helpers/es-nos.h"
 #include "orbital-helpers/mp2_nos.h"
 #include "orbital-helpers/semi_canonicalize.h"
 

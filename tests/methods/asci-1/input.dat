@@ -26,6 +26,7 @@ set forte {
   multiplicity 1
   active_space_solver asci                          
   frozen_docc [1,0,0,0,0,1,0,0]
+  multiplicity 1
   charge 0                               
   root_sym 0
   nroot 1
@@ -40,4 +41,4 @@ set forte {
 Escf, scf_wfn = energy('scf', return_wfn=True)
 compare_values(refscf, variable("CURRENT ENERGY"),9, "SCF energy")
 energy('forte', ref_wfn = scf_wfn) 
-compare_values(refasci,variable("ASCI ENERGY"),9,"ASCI ENERGY")
+compare_values(refasci,variable("CURRENT ENERGY"),9,"ASCI ENERGY")

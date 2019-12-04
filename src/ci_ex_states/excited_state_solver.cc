@@ -52,8 +52,15 @@ void ExcitedStateSolver::set_options(std::shared_ptr<ForteOptions> options) {
     // TODO: This shouldn't come from options
     root_ = options->get_int("ROOT");
 
+    full_pt2_ = options->get_bool("FULL_MRPT2");
+
     // TODO: move all ACI_* options to SCI_* and update register_forte_options.py
     ex_alg_ = options->get_str("SCI_EXCITED_ALGORITHM");
+    // set a default 
+    if( (nroot_ > 1) and (ex_alg_ == "NONE") ){
+        ex_alg_ = "ROOT_ORTHOGONALIZE";
+    }    
+
     core_ex_ = options->get_bool("SCI_CORE_EX");
     quiet_mode_ = options->get_bool("ACI_QUIET_MODE");
     direct_rdms_ = options->get_bool("SCI_DIRECT_RDMS");
@@ -363,13 +370,24 @@ void ExcitedStateSolver::print_final(DeterminantHashVec& dets, psi::SharedMatrix
         double abs_energy = PQ_evals->get(i) + as_ints_->ints()->nuclear_repulsion_energy() +
                             as_ints_->scalar_energy();
         double exc_energy = pc_hartree2ev * (PQ_evals->get(i) - PQ_evals->get(0));
-        psi::outfile->Printf("\n  * Selected-CI Energy Root %3d        = %.12f Eh = %8.4f eV", i,
-                             abs_energy, exc_energy);
-        psi::outfile->Printf("\n  * Selected-CI Energy Root %3d + EPT2 = %.12f Eh = %8.4f eV", i,
-                             abs_energy + multistate_pt2_energy_correction_[i],
-                             exc_energy +
-                                 pc_hartree2ev * (multistate_pt2_energy_correction_[i] -
-                                                  multistate_pt2_energy_correction_[0]));
+
+        if( full_pt2_ ){
+            psi::outfile->Printf("\n  * Selected-CI Energy Root %3d             = %.12f Eh = %8.4f eV", i,
+                                 abs_energy, exc_energy);
+            psi::outfile->Printf("\n  * Selected-CI Energy Root %3d + full EPT2 = %.12f Eh = %8.4f eV", i,
+                                 abs_energy + multistate_pt2_energy_correction_[i],
+                                 exc_energy +
+                                     pc_hartree2ev * (multistate_pt2_energy_correction_[i] -
+                                                      multistate_pt2_energy_correction_[0]));
+        } else {
+            psi::outfile->Printf("\n  * Selected-CI Energy Root %3d        = %.12f Eh = %8.4f eV", i,
+                                 abs_energy, exc_energy);
+            psi::outfile->Printf("\n  * Selected-CI Energy Root %3d + EPT2 = %.12f Eh = %8.4f eV", i,
+                                 abs_energy + multistate_pt2_energy_correction_[i],
+                                 exc_energy +
+                                     pc_hartree2ev * (multistate_pt2_energy_correction_[i] -
+                                                      multistate_pt2_energy_correction_[0]));
+        }
     }
 
     if ((ex_alg_ != "ROOT_ORTHOGONALIZE") or (nroot_ == 1)) {

@@ -1,0 +1,945 @@
+
+    -----------------------------------------------------------------------
+          Psi4: An Open-Source Ab Initio Electronic Structure Package
+                               Psi4 undefined 
+
+                         Git: Rev {master} 45315cb 
+
+
+    R. M. Parrish, L. A. Burns, D. G. A. Smith, A. C. Simmonett,
+    A. E. DePrince III, E. G. Hohenstein, U. Bozkaya, A. Yu. Sokolov,
+    R. Di Remigio, R. M. Richard, J. F. Gonthier, A. M. James,
+    H. R. McAlexander, A. Kumar, M. Saitow, X. Wang, B. P. Pritchard,
+    P. Verma, H. F. Schaefer III, K. Patkowski, R. A. King, E. F. Valeev,
+    F. A. Evangelista, J. M. Turney, T. D. Crawford, and C. D. Sherrill,
+    J. Chem. Theory Comput. 13(7) pp 3185--3197 (2017).
+    (doi: 10.1021/acs.jctc.7b00174)
+
+
+                         Additional Contributions by
+    P. Kraus, H. Kruse, M. H. Lechner, M. C. Schieber, R. A. Shaw,
+    A. Alenaizan, R. Galvelis, Z. L. Glick, S. Lehtola, and J. P. Misiewicz
+
+    -----------------------------------------------------------------------
+
+
+    Psi4 started on: Friday, 19 April 2019 03:04PM
+
+    Process ID: 2230
+    Host:       jeffschriber.local
+    PSIDATADIR: /Users/jeffschriber/src/psi4-debug-install/share/psi4
+    Memory:     500.0 MiB
+    Threads:    1
+    
+  ==> Input File <==
+
+--------------------------------------------------------------------------
+import forte                              
+
+# This test reproduces the ASCI energy of C2 reported in the Table 2 of the following paper:
+#   Tubman, N. M., Lee, J., Takeshita, T. Y., Head-Gordon, M., & Whaley, K. B. (2016). 
+#   J. Chem. Phys., 145 (4), 044112. http://doi.org/doi: 10.1063/1.4955109
+
+refscf = -75.34896498316222 
+refasci = -75.625005495823 
+                                         
+molecule CH2{                            
+0 1
+C
+C 1 1.27273
+
+}                                        
+                                         
+set {                                    
+  scf_type pk                            
+  #multiplicity 1                         
+  basis 6-31g                      
+  reference rohf
+  e_convergence 10
+}                                        
+                                         
+set forte {                              
+  multiplicity 1
+  active_space_solver asci                          
+  frozen_docc [1,0,0,0,0,1,0,0]
+  multiplicity 1
+  charge 0                               
+  root_sym 0
+  nroot 1
+  active_ref_type hf
+  dl_maxiter 500
+  asci_cdet 100
+  asci_tdet 1000
+  asci_max_cycle 8   
+  asci_e_convergence 1e-5
+}                                        
+                                         
+Escf, scf_wfn = energy('scf', return_wfn=True)
+compare_values(refscf, variable("CURRENT ENERGY"),9, "SCF energy")
+energy('forte', ref_wfn = scf_wfn) 
+compare_values(refasci,variable("CURRENT ENERGY"),9,"ASCI ENERGY")
+--------------------------------------------------------------------------
+
+*** tstart() called on jeffschriber.local
+*** at Fri Apr 19 15:04:16 2019
+
+   => Loading Basis Set <=
+
+    Name: 6-31G
+    Role: ORBITAL
+    Keyword: BASIS
+    atoms 1-2 entry C          line    87 file /Users/jeffschriber/src/psi4-debug-install/share/psi4/basis/6-31g.gbs 
+
+
+         ---------------------------------------------------------
+                                   SCF
+               by Justin Turney, Rob Parrish, Andy Simmonett
+                          and Daniel G. A. Smith
+                             ROHF Reference
+                        1 Threads,    500 MiB Core
+         ---------------------------------------------------------
+
+  ==> Geometry <==
+
+    Molecular point group: d2h
+    Full point group: D_inf_h
+
+    Geometry (in Angstrom), charge = 0, multiplicity = 1:
+
+       Center              X                  Y                   Z               Mass       
+    ------------   -----------------  -----------------  -----------------  -----------------
+         C            0.000000000000     0.000000000000    -0.636365000000    12.000000000000
+         C            0.000000000000     0.000000000000     0.636365000000    12.000000000000
+
+  Running in d2h symmetry.
+
+  Rotational constants: A = ************  B =      1.73449  C =      1.73449 [cm^-1]
+  Rotational constants: A = ************  B =  51998.80782  C =  51998.80782 [MHz]
+  Nuclear repulsion =   14.968123312972903
+
+  Charge       = 0
+  Multiplicity = 1
+  Electrons    = 12
+  Nalpha       = 6
+  Nbeta        = 6
+
+  ==> Algorithm <==
+
+  SCF Algorithm Type is PK.
+  DIIS enabled.
+  MOM disabled.
+  Fractional occupation disabled.
+  Guess Type is SAD.
+  Energy threshold   = 1.00e-10
+  Density threshold  = 1.00e-06
+  Integral threshold = 0.00e+00
+
+  ==> Primary Basis <==
+
+  Basis Set: 6-31G
+    Blend: 6-31G
+    Number of shells: 10
+    Number of basis function: 18
+    Number of Cartesian functions: 18
+    Spherical Harmonics?: false
+    Max angular momentum: 1
+
+  ==> Pre-Iterations <==
+
+   -------------------------------------------------------
+    Irrep   Nso     Nmo     Nalpha   Nbeta   Ndocc  Nsocc
+   -------------------------------------------------------
+     Ag         5       5       0       0       0       0
+     B1g        0       0       0       0       0       0
+     B2g        2       2       0       0       0       0
+     B3g        2       2       0       0       0       0
+     Au         0       0       0       0       0       0
+     B1u        5       5       0       0       0       0
+     B2u        2       2       0       0       0       0
+     B3u        2       2       0       0       0       0
+   -------------------------------------------------------
+    Total      18      18       6       6       6       0
+   -------------------------------------------------------
+
+  ==> Integral Setup <==
+
+  Using in-core PK algorithm.
+   Calculation information:
+      Number of atoms:                   2
+      Number of AO shells:              10
+      Number of primitives:             28
+      Number of atomic orbitals:        18
+      Number of basis functions:        18
+
+      Integral cutoff                 1.00e-12
+      Number of threads:                 1
+
+  Performing in-core PK
+  Using 29412 doubles for integral storage.
+  We computed 1540 shell quartets total.
+  Whereas there are 1540 unique shell quartets.
+
+  ==> DiskJK: Disk-Based J/K Matrices <==
+
+    J tasked:                  Yes
+    K tasked:                  Yes
+    wK tasked:                  No
+    Memory [MiB]:              375
+    Schwarz Cutoff:          1E-12
+
+    OpenMP threads:              1
+
+  Minimum eigenvalue in the overlap matrix is 8.1654782430E-03.
+  Using Symmetric Orthogonalization.
+
+  SCF Guess: Superposition of Atomic Densities via on-the-fly atomic UHF.
+
+  ==> Iterations <==
+
+                        Total Energy        Delta E     RMS |[F,P]|
+
+   @ROHF iter SAD:   -74.45836509848714   -7.44584e+01   0.00000e+00 
+   @ROHF iter   1:   -75.32939636648349   -8.71031e-01   1.04491e-02 DIIS
+   @ROHF iter   2:   -75.34597940819388   -1.65830e-02   3.95161e-03 DIIS
+   @ROHF iter   3:   -75.34884785923138   -2.86845e-03   8.05455e-04 DIIS
+   @ROHF iter   4:   -75.34896369452103   -1.15835e-04   1.00186e-04 DIIS
+   @ROHF iter   5:   -75.34896496562531   -1.27110e-06   1.14093e-05 DIIS
+   @ROHF iter   6:   -75.34896498309304   -1.74677e-08   6.85408e-07 DIIS
+   @ROHF iter   7:   -75.34896498316222   -6.91784e-11   1.29246e-07 DIIS
+  Energy and wave function converged.
+
+
+  ==> Post-Iterations <==
+
+    Orbital Energies [Eh]
+    ---------------------
+
+    Doubly Occupied:                                                      
+
+       1Ag   -11.374749     1B1u  -11.372901     2Ag    -1.067339  
+       2B1u   -0.515173     1B2u   -0.445729     1B3u   -0.445729  
+
+    Singly Occupied:                                                      
+
+    
+
+    Virtual:                                                              
+
+       3Ag    -0.100631     1B2g    0.159461     1B3g    0.159461  
+       3B1u    0.469746     4Ag     0.669083     2B3u    0.721913  
+       2B2u    0.721913     5Ag     0.774793     2B3g    0.841965  
+       2B2g    0.841965     4B1u    0.964988     5B1u    1.329300  
+
+    Final Occupation by Irrep:
+             Ag   B1g   B2g   B3g    Au   B1u   B2u   B3u 
+    DOCC [     2,    0,    0,    0,    0,    2,    1,    1 ]
+    SOCC [     0,    0,    0,    0,    0,    0,    0,    0 ]
+
+  @ROHF Final Energy:   -75.34896498316222
+
+   => Energetics <=
+
+    Nuclear Repulsion Energy =             14.9681233129729030
+    One-Electron Energy =                -130.1909365116239883
+    Two-Electron Energy =                  39.8738482154888558
+    Total Energy =                        -75.3489649831622330
+
+Computation Completed
+
+
+Properties will be evaluated at   0.000000,   0.000000,   0.000000 [a0]
+
+Properties computed using the SCF density matrix
+
+  Nuclear Dipole Moment: [e a0]
+     X:     0.0000      Y:     0.0000      Z:     0.0000
+
+  Electronic Dipole Moment: [e a0]
+     X:     0.0000      Y:     0.0000      Z:     0.0000
+
+  Dipole Moment: [e a0]
+     X:     0.0000      Y:     0.0000      Z:     0.0000     Total:     0.0000
+
+  Dipole Moment: [D]
+     X:     0.0000      Y:     0.0000      Z:     0.0000     Total:     0.0000
+
+
+*** tstop() called on jeffschriber.local at Fri Apr 19 15:04:16 2019
+Module time:
+	user time   =       0.35 seconds =       0.01 minutes
+	system time =       0.02 seconds =       0.00 minutes
+	total time  =          0 seconds =       0.00 minutes
+Total time:
+	user time   =       0.35 seconds =       0.01 minutes
+	system time =       0.02 seconds =       0.00 minutes
+	total time  =          0 seconds =       0.00 minutes
+	SCF energy........................................................PASSED
+   => Loading Basis Set <=
+
+    Name: STO-3G
+    Role: ORBITAL
+    Keyword: MINAO_BASIS
+    atoms 1-2 entry C          line    61 file /Users/jeffschriber/src/psi4-debug-install/share/psi4/basis/sto-3g.gbs 
+
+
+  Forte
+  ----------------------------------------------------------------------------
+  A suite of quantum chemistry methods for strongly correlated electrons
+
+    git branch: mrpt - git commit: 656a6673
+
+  Developed by:
+    Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
+    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai,
+    Nan He, Nicholas Stair, Shuhe Wang, Renke Huang
+  ----------------------------------------------------------------------------
+
+  Size of Determinant class: 16
+
+  ==> MO Space Information <==
+
+  Read options for space FROZEN_DOCC
+  -------------------------------------------------------------------------
+                       Ag   B1g   B2g   B3g    Au   B1u   B2u   B3u   Sum
+  -------------------------------------------------------------------------
+    FROZEN_DOCC         1     0     0     0     0     1     0     0     2
+    RESTRICTED_DOCC     0     0     0     0     0     0     0     0     0
+    ACTIVE              4     0     2     2     0     4     2     2    16
+    RESTRICTED_UOCC     0     0     0     0     0     0     0     0     0
+    FROZEN_UOCC         0     0     0     0     0     0     0     0     0
+    Total               5     0     2     2     0     5     2     2    18
+  -------------------------------------------------------------------------
+
+  ==> Integral Transformation <==
+
+  Number of molecular orbitals:                    18
+  Number of correlated molecular orbitals:         16
+  Number of frozen occupied orbitals:               2
+  Number of frozen unoccupied orbitals:             0
+  Two-electron integral type:              Conventional
+
+
+  Overall Conventional Integrals timings
+
+	Presorting SO-basis two-electron integrals.
+	Sorting File: SO Ints (nn|nn) nbuckets = 1
+	Transforming the one-electron integrals and constructing Fock matrices
+	Starting first half-transformation.
+	Sorting half-transformed integrals.
+	First half integral transformation complete.
+	Starting second half-transformation.
+	Two-electron integral transformation complete.
+
+  Integral transformation done. 0.01842997 s
+  Reading the two-electron integrals from disk
+  Size of two-electron integrals:   0.002346 GB  Using in-core PK algorithm.
+   Calculation information:
+      Number of atoms:                   2
+      Number of AO shells:              10
+      Number of primitives:             28
+      Number of atomic orbitals:        18
+      Number of basis functions:        18
+
+      Integral cutoff                 1.00e-12
+      Number of threads:                 1
+
+  Performing in-core PK
+  Using 29412 doubles for integral storage.
+  We computed 1540 shell quartets total.
+  Whereas there are 1540 unique shell quartets.
+
+
+  Frozen-core energy            -73.029691612789 a.u.
+  Timing for frozen one-body operator:                        0.051 s.
+  Resorting integrals after freezing core.
+  Timing for freezing core and virtual orbitals:              0.059 s.
+  Conventional integrals take 0.12992067 s
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.  Nstates
+    -------------------------
+      Ag       1        1
+    -------------------------
+    Total number of states: 1
+    -------------------------
+
+  Number of active alpha electrons: 4
+  Number of active beta electrons: 4
+  Maximum reference space size: 1000
+  |2000000020002020>
+
+        ---------------------------------------------------------------
+                                     ASCI
+          written by Jeffrey B. Schriber and Francesco A. Evangelista
+        ---------------------------------------------------------------
+
+  ==> Reference Information <==
+
+  There are 2 frozen orbitals.
+  There are 16 active orbitals.
+
+  ==> Calculation Information <==
+
+  -----------------------------------------------------------------
+    Multiplicity                             1    
+    Symmetry                                 0    
+    Number of roots                          1    
+    CDet                                     100  
+    TDet                                     1000 
+    Convergence threshold                    1.00e-05
+    Ms                                       0
+    Diagonalization algorithm                SOLVER
+  -----------------------------------------------------------------
+  Using 1 threads
+
+  ==> Cycle 0 <==
+
+  Initial P space dimension: 1
+
+  ==> Computing Coupling Lists <==
+  --------------------------------
+        α          0.000033 s
+        β          0.000011 s
+        αα         0.000024 s
+        ββ         0.000017 s
+        αβ         0.000031 s
+  --------------------------------
+  Time spent diagonalizing H:   0.000069 s
+
+    P-space  CI Energy Root 0       = -75.348964983165 
+
+  Time spent forming F space:             0.000440
+  Time spent merging thread F spaces:             0.000250
+  psi::Dimension of the Ref + SD space: 452 determinants
+  Time spent building the external space (default): 0.000762 s
+
+  Time spent building sorting list: 0.001086
+  Time spent sorting: 0.000072
+  Time spent selecting: 0.000349
+  psi::Dimension of the P + Q space: 453 determinants
+  Time spent screening the model space: 0.001539 s
+  Time spent building the model space: 0.002361
+
+  ==> Computing Coupling Lists <==
+  --------------------------------
+        α          0.002898 s
+        β          0.002463 s
+        αα         0.003552 s
+        ββ         0.003345 s
+        αβ         0.008926 s
+  --------------------------------
+
+  Davidson-Liu solver algorithm
+  Using SPARSE sigma builder
+  Initial guess space is incomplete!
+  Trying to add 4 determinant(s).  4 determinant(s) added.
+  Initial guess found 46 solutions with 2S+1 = 1 *
+  Initial guess found 47 solutions with 2S+1 = 3  
+  Initial guess found 11 solutions with 2S+1 = 5  
+  Adding guess 0 (multiplicity = 1.000000)
+  Adding guess 1 (multiplicity = 1.000000)
+
+  ==> Diagonalizing Hamiltonian <==
+
+  ----------------------------------------
+    Iter.      Avg. Energy       Delta_E
+  ----------------------------------------
+      1      -90.499969673901  -9.050e+01
+      2      -90.547722694267  -4.775e-02
+      3      -90.550212708949  -2.490e-03
+      4      -90.550741739051  -5.290e-04
+      5      -90.550897812892  -1.561e-04
+      6      -90.550919420138  -2.161e-05
+      7      -90.550922952246  -3.532e-06
+      8      -90.550923992164  -1.040e-06
+      9      -90.550924380145  -3.880e-07
+     10      -90.550924459284  -7.914e-08
+     11      -90.550924474330  -1.505e-08
+     12      -90.550924479138  -4.808e-09
+     13      -90.550924481006  -1.868e-09
+     14      -90.550924481426  -4.204e-10
+     15      -90.550924481515  -8.822e-11
+  ----------------------------------------
+  The Davidson-Liu algorithm converged in 16 iterations.
+  Davidson-Liu procedure took  0.074565 s
+  Total time spent diagonalizing H:   0.075825 s
+
+    PQ-space CI Energy Root 0        = -75.582801168542 Eh
+
+
+  Most important contributions to root 0:
+    0   0.901299 0.812339744           2 |2000000020002020>
+    1  -0.254167 0.064601110           3 |2200000000002020>
+    2  -0.092985 0.008646301           9 |2000200020002000>
+    3  -0.092985 0.008646262           8 |2000002020000020>
+    4   0.075511 0.005701896           4 |2-0000+0+000-020>
+    5   0.075511 0.005701896           5 |2+0000-0-000+020>
+    6  -0.075511 0.005701891           7 |2+00-000-00020+0>
+    7  -0.075511 0.005701891           6 |2-00+000+00020-0>
+    8  -0.071928 0.005173575          21 |2-00+000-00020+0>
+    9  -0.071928 0.005173575          20 |2+00-000+00020-0>
+
+  Spin state for root 0: S^2 = 0.000000, S = 0.000, singlet 
+
+  Cycle 0 took: 0.102705 s
+
+  ==> Cycle 1 <==
+
+  Initial P space dimension: 100
+
+  ==> Computing Coupling Lists <==
+  --------------------------------
+        α          0.000593 s
+        β          0.000598 s
+        αα         0.000789 s
+        ββ         0.000804 s
+        αβ         0.002128 s
+  --------------------------------
+  Time spent diagonalizing H:   0.008531 s
+
+    P-space  CI Energy Root 0       = -75.554897023917 
+
+  Time spent forming F space:             0.072251
+  Time spent merging thread F spaces:             0.020670
+  psi::Dimension of the Ref + SD space: 17376 determinants
+  Time spent building the external space (default): 0.094809 s
+
+  Time spent building sorting list: 0.043710
+  Time spent sorting: 0.003638
+  Time spent selecting: 0.000705
+  psi::Dimension of the P + Q space: 1000 determinants
+  Time spent screening the model space: 0.048301 s
+  Time spent building the model space: 0.144788
+
+  ==> Computing Coupling Lists <==
+  --------------------------------
+        α          0.005551 s
+        β          0.005896 s
+        αα         0.007246 s
+        ββ         0.007444 s
+        αβ         0.019501 s
+  --------------------------------
+
+  Davidson-Liu solver algorithm
+  Using SPARSE sigma builder
+  Initial guess space is incomplete!
+  Trying to add 70 determinant(s).  34 determinant(s) added.
+  Found a guess vector with spin not close to integer value (2.236068)
+  Found a guess vector with spin not close to integer value (2.236068)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.582576)
+  Found a guess vector with spin not close to integer value (4.582576)
+  Found a guess vector with spin not close to integer value (6.403124)
+  Initial guess found 52 solutions with 2S+1 = 1 *
+  Initial guess found 57 solutions with 2S+1 = 3  
+  Initial guess found 13 solutions with 2S+1 = 5  
+  Adding guess 0 (multiplicity = 1.000000)
+  Adding guess 1 (multiplicity = 1.000000)
+
+  ==> Diagonalizing Hamiltonian <==
+
+  ----------------------------------------
+    Iter.      Avg. Energy       Delta_E
+  ----------------------------------------
+      1      -90.502020292190  -9.050e+01
+      2      -90.584876949907  -8.286e-02
+      3      -90.589727030404  -4.850e-03
+      4      -90.590420340661  -6.933e-04
+      5      -90.590781352186  -3.610e-04
+      6      -90.590850656416  -6.930e-05
+      7      -90.590877634947  -2.698e-05
+      8      -90.590886456126  -8.821e-06
+      9      -90.590890831278  -4.375e-06
+     10      -90.590892268331  -1.437e-06
+     11      -90.590892767056  -4.987e-07
+     12      -90.590892963181  -1.961e-07
+     13      -90.590893064545  -1.014e-07
+     14      -90.590893097031  -3.249e-08
+     15      -90.590893107496  -1.046e-08
+     16      -90.590893112088  -4.593e-09
+     17      -90.590893115222  -3.133e-09
+     18      -90.590893115940  -7.182e-10
+     19      -90.590893116078  -1.381e-10
+     20      -90.590893116163  -8.528e-11
+  ----------------------------------------
+  The Davidson-Liu algorithm converged in 21 iterations.
+  Davidson-Liu procedure took  0.155939 s
+  Total time spent diagonalizing H:   0.158989 s
+
+    PQ-space CI Energy Root 0        = -75.622769803190 Eh
+
+
+  Most important contributions to root 0:
+    0  -0.842169 0.709248819           0 |2000000020002020>
+    1   0.342988 0.117640599           1 |2200000000002020>
+    2   0.110560 0.012223546           2 |2000002020000020>
+    3   0.110447 0.012198431           3 |2000200020002000>
+    4   0.087119 0.007589780          11 |2-00+000-00020+0>
+    5   0.087119 0.007589780           9 |2+00-000+00020-0>
+    6  -0.087119 0.007589646           8 |2+0000-0+000-020>
+    7  -0.087119 0.007589646          10 |2-0000+0-000+020>
+    8   0.084877 0.007204049           4 |2-00+000+00020-0>
+    9   0.084877 0.007204049           5 |2+00-000-00020+0>
+
+  Spin state for root 0: S^2 = 0.002662, S = 0.003, singlet 
+
+  Cycle 1 took: 0.369582 s
+
+  ==> Cycle 2 <==
+
+  Initial P space dimension: 100
+
+  ==> Computing Coupling Lists <==
+  --------------------------------
+        α          0.000739 s
+        β          0.000653 s
+        αα         0.000818 s
+        ββ         0.000804 s
+        αβ         0.002121 s
+  --------------------------------
+  Time spent diagonalizing H:   0.008325 s
+
+    P-space  CI Energy Root 0       = -75.568668661447 
+
+  Time spent forming F space:             0.082631
+  Time spent merging thread F spaces:             0.025918
+  psi::Dimension of the Ref + SD space: 19649 determinants
+  Time spent building the external space (default): 0.110535 s
+
+  Time spent building sorting list: 0.050564
+  Time spent sorting: 0.004215
+  Time spent selecting: 0.000692
+  psi::Dimension of the P + Q space: 1000 determinants
+  Time spent screening the model space: 0.055745 s
+  Time spent building the model space: 0.168018
+
+  ==> Computing Coupling Lists <==
+  --------------------------------
+        α          0.005640 s
+        β          0.005368 s
+        αα         0.007546 s
+        ββ         0.007344 s
+        αβ         0.019038 s
+  --------------------------------
+
+  Davidson-Liu solver algorithm
+  Using SPARSE sigma builder
+  Initial guess space is incomplete!
+  Trying to add 58 determinant(s).  30 determinant(s) added.
+  Found a guess vector with spin not close to integer value (2.236068)
+  Found a guess vector with spin not close to integer value (2.236068)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.582576)
+  Found a guess vector with spin not close to integer value (4.582576)
+  Initial guess found 52 solutions with 2S+1 = 1 *
+  Initial guess found 54 solutions with 2S+1 = 3  
+  Initial guess found 15 solutions with 2S+1 = 5  
+  Initial guess found 1 solutions with 2S+1 = 7  
+  Adding guess 0 (multiplicity = 1.000000)
+  Adding guess 1 (multiplicity = 1.000000)
+
+  ==> Diagonalizing Hamiltonian <==
+
+  ----------------------------------------
+    Iter.      Avg. Energy       Delta_E
+  ----------------------------------------
+      1      -90.502366819229  -9.050e+01
+      2      -90.586982577624  -8.462e-02
+      3      -90.591677942948  -4.695e-03
+      4      -90.592417298817  -7.394e-04
+      5      -90.592898104433  -4.808e-04
+      6      -90.592998855310  -1.008e-04
+      7      -90.593038446382  -3.959e-05
+      8      -90.593052174020  -1.373e-05
+      9      -90.593059946213  -7.772e-06
+     10      -90.593062588846  -2.643e-06
+     11      -90.593063478800  -8.900e-07
+     12      -90.593063865537  -3.867e-07
+     13      -90.593064098452  -2.329e-07
+     14      -90.593064181874  -8.342e-08
+     15      -90.593064209034  -2.716e-08
+     16      -90.593064222802  -1.377e-08
+     17      -90.593064233734  -1.093e-08
+     18      -90.593064238095  -4.362e-09
+     19      -90.593064239257  -1.162e-09
+     20      -90.593064239904  -6.471e-10
+     21      -90.593064241104  -1.200e-09
+     22      -90.593064241713  -6.081e-10
+     23      -90.593064241819  -1.066e-10
+     24      -90.593064242079  -2.599e-10
+     25      -90.593064243542  -1.463e-09
+     26      -90.593064243829  -2.866e-10
+     27      -90.593064244018  -1.896e-10
+     28      -90.593064244035  -1.687e-11
+  ----------------------------------------
+  The Davidson-Liu algorithm converged in 29 iterations.
+  Davidson-Liu procedure took  0.191530 s
+  Total time spent diagonalizing H:   0.194575 s
+
+    PQ-space CI Energy Root 0        = -75.624940931062 Eh
+
+
+  Most important contributions to root 0:
+    0  -0.835030 0.697274702           0 |2000000020002020>
+    1   0.351544 0.123583356           1 |2200000000002020>
+    2   0.111718 0.012480860           2 |2000002020000020>
+    3   0.111718 0.012480860           3 |2000200020002000>
+    4   0.088351 0.007805941          10 |2+00-000+00020-0>
+    5   0.088351 0.007805941           9 |2-00+000-00020+0>
+    6  -0.088351 0.007805941          11 |2-0000+0-000+020>
+    7  -0.088351 0.007805941           8 |2+0000-0+000-020>
+    8   0.085404 0.007293855           4 |2-00+000+00020-0>
+    9   0.085404 0.007293855           6 |2+00-000-00020+0>
+
+  Spin state for root 0: S^2 = 0.002248, S = 0.002, singlet 
+
+  Cycle 2 took: 0.428220 s
+
+  ==> Cycle 3 <==
+
+  Initial P space dimension: 100
+
+  ==> Computing Coupling Lists <==
+  --------------------------------
+        α          0.000602 s
+        β          0.000588 s
+        αα         0.000872 s
+        ββ         0.000880 s
+        αβ         0.002510 s
+  --------------------------------
+  Time spent diagonalizing H:   0.008226 s
+
+    P-space  CI Energy Root 0       = -75.569086891624 
+
+  Time spent forming F space:             0.079690
+  Time spent merging thread F spaces:             0.026018
+  psi::Dimension of the Ref + SD space: 19668 determinants
+  Time spent building the external space (default): 0.107858 s
+
+  Time spent building sorting list: 0.050507
+  Time spent sorting: 0.004302
+  Time spent selecting: 0.000724
+  psi::Dimension of the P + Q space: 1000 determinants
+  Time spent screening the model space: 0.055804 s
+  Time spent building the model space: 0.165293
+
+  ==> Computing Coupling Lists <==
+  --------------------------------
+        α          0.005420 s
+        β          0.005469 s
+        αα         0.007365 s
+        ββ         0.007192 s
+        αβ         0.020319 s
+  --------------------------------
+
+  Davidson-Liu solver algorithm
+  Using SPARSE sigma builder
+  Initial guess space is incomplete!
+  Trying to add 58 determinant(s).  30 determinant(s) added.
+  Found a guess vector with spin not close to integer value (2.236068)
+  Found a guess vector with spin not close to integer value (2.236068)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.582576)
+  Found a guess vector with spin not close to integer value (4.582576)
+  Initial guess found 52 solutions with 2S+1 = 1 *
+  Initial guess found 54 solutions with 2S+1 = 3  
+  Initial guess found 15 solutions with 2S+1 = 5  
+  Initial guess found 1 solutions with 2S+1 = 7  
+  Adding guess 0 (multiplicity = 1.000000)
+  Adding guess 1 (multiplicity = 1.000000)
+
+  ==> Diagonalizing Hamiltonian <==
+
+  ----------------------------------------
+    Iter.      Avg. Energy       Delta_E
+  ----------------------------------------
+      1      -90.502366819229  -9.050e+01
+      2      -90.587089799412  -8.472e-02
+      3      -90.591721014766  -4.631e-03
+      4      -90.592472781946  -7.518e-04
+      5      -90.592963913999  -4.911e-04
+      6      -90.593065183602  -1.013e-04
+      7      -90.593103854512  -3.867e-05
+      8      -90.593117205227  -1.335e-05
+      9      -90.593124703766  -7.499e-06
+     10      -90.593127259038  -2.555e-06
+     11      -90.593128092109  -8.331e-07
+     12      -90.593128459456  -3.673e-07
+     13      -90.593128676410  -2.170e-07
+     14      -90.593128754001  -7.759e-08
+     15      -90.593128779182  -2.518e-08
+     16      -90.593128791903  -1.272e-08
+     17      -90.593128801634  -9.732e-09
+     18      -90.593128805460  -3.826e-09
+     19      -90.593128806510  -1.050e-09
+     20      -90.593128807123  -6.124e-10
+     21      -90.593128808205  -1.082e-09
+     22      -90.593128808724  -5.196e-10
+     23      -90.593128808796  -7.201e-11
+  ----------------------------------------
+  The Davidson-Liu algorithm converged in 24 iterations.
+  Davidson-Liu procedure took  0.167235 s
+  Total time spent diagonalizing H:   0.170352 s
+
+    PQ-space CI Energy Root 0        = -75.625005495823 Eh
+
+
+  Most important contributions to root 0:
+    0  -0.834943 0.697129204           0 |2000000020002020>
+    1   0.351499 0.123551463           1 |2200000000002020>
+    2   0.111961 0.012535319           2 |2000002020000020>
+    3   0.111961 0.012535319           3 |2000200020002000>
+    4  -0.088386 0.007812130          11 |2-0000+0-000+020>
+    5  -0.088386 0.007812130           8 |2+0000-0+000-020>
+    6   0.088386 0.007812130           9 |2-00+000-00020+0>
+    7   0.088386 0.007812130          10 |2+00-000+00020-0>
+    8  -0.085329 0.007281081           6 |2+0000-0-000+020>
+    9  -0.085329 0.007281081           4 |2-0000+0+000-020>
+
+  Spin state for root 0: S^2 = 0.002273, S = 0.002, singlet 
+
+  Cycle 3 took: 0.402046 s
+
+  ==> Cycle 4 <==
+
+  Initial P space dimension: 100
+
+  ==> Computing Coupling Lists <==
+  --------------------------------
+        α          0.000590 s
+        β          0.000602 s
+        αα         0.000826 s
+        ββ         0.000973 s
+        αβ         0.002347 s
+  --------------------------------
+  Time spent diagonalizing H:   0.008325 s
+
+    P-space  CI Energy Root 0       = -75.569086891624 
+
+  Time spent forming F space:             0.080073
+  Time spent merging thread F spaces:             0.026311
+  psi::Dimension of the Ref + SD space: 19668 determinants
+  Time spent building the external space (default): 0.108672 s
+
+  Time spent building sorting list: 0.050723
+  Time spent sorting: 0.004188
+  Time spent selecting: 0.000686
+  psi::Dimension of the P + Q space: 1000 determinants
+  Time spent screening the model space: 0.055886 s
+  Time spent building the model space: 0.166156
+
+  ==> Computing Coupling Lists <==
+  --------------------------------
+        α          0.005522 s
+        β          0.005622 s
+        αα         0.007117 s
+        ββ         0.007616 s
+        αβ         0.018987 s
+  --------------------------------
+
+  Davidson-Liu solver algorithm
+  Using SPARSE sigma builder
+  Initial guess space is incomplete!
+  Trying to add 58 determinant(s).  30 determinant(s) added.
+  Found a guess vector with spin not close to integer value (2.236068)
+  Found a guess vector with spin not close to integer value (2.236068)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.123106)
+  Found a guess vector with spin not close to integer value (4.582576)
+  Found a guess vector with spin not close to integer value (4.582576)
+  Initial guess found 52 solutions with 2S+1 = 1 *
+  Initial guess found 54 solutions with 2S+1 = 3  
+  Initial guess found 15 solutions with 2S+1 = 5  
+  Initial guess found 1 solutions with 2S+1 = 7  
+  Adding guess 0 (multiplicity = 1.000000)
+  Adding guess 1 (multiplicity = 1.000000)
+
+  ==> Diagonalizing Hamiltonian <==
+
+  ----------------------------------------
+    Iter.      Avg. Energy       Delta_E
+  ----------------------------------------
+      1      -90.502366819228  -9.050e+01
+      2      -90.587089799412  -8.472e-02
+      3      -90.591721014766  -4.631e-03
+      4      -90.592472781946  -7.518e-04
+      5      -90.592963913999  -4.911e-04
+      6      -90.593065183602  -1.013e-04
+      7      -90.593103854512  -3.867e-05
+      8      -90.593117205227  -1.335e-05
+      9      -90.593124703766  -7.499e-06
+     10      -90.593127259038  -2.555e-06
+     11      -90.593128092109  -8.331e-07
+     12      -90.593128459456  -3.673e-07
+     13      -90.593128676410  -2.170e-07
+     14      -90.593128754001  -7.759e-08
+     15      -90.593128779181  -2.518e-08
+     16      -90.593128791903  -1.272e-08
+     17      -90.593128801634  -9.732e-09
+     18      -90.593128805460  -3.826e-09
+     19      -90.593128806510  -1.051e-09
+     20      -90.593128807123  -6.124e-10
+     21      -90.593128808205  -1.082e-09
+     22      -90.593128808724  -5.196e-10
+     23      -90.593128808796  -7.202e-11
+  ----------------------------------------
+  The Davidson-Liu algorithm converged in 24 iterations.
+  Davidson-Liu procedure took  0.165718 s
+  Total time spent diagonalizing H:   0.168469 s
+
+    PQ-space CI Energy Root 0        = -75.625005495823 Eh
+
+  ***** Calculation Converged *****
+
+  ASCI ran in : 1.700360 s
+
+  ==> ASCI Summary <==
+
+  Iterations required:                         4
+  psi::Dimension of optimized determinant space:    1000
+
+  * AS-CI Energy Root 0        = -75.625005495823 Eh
+
+  ==> Wavefunction Information <==
+
+  Most important contributions to root 0:
+    0   0.834943 0.697129204           0 |2000000020002020>
+    1  -0.351499 0.123551463           1 |2200000000002020>
+    2  -0.111961 0.012535319           2 |2000200020002000>
+    3  -0.111961 0.012535319           3 |2000002020000020>
+    4   0.088386 0.007812130          10 |2-0000+0-000+020>
+    5   0.088386 0.007812130           9 |2+0000-0+000-020>
+    6  -0.088386 0.007812130          11 |2+00-000+00020-0>
+    7  -0.088386 0.007812130           8 |2-00+000-00020+0>
+    8   0.085329 0.007281081           6 |2+0000-0-000+020>
+    9   0.085329 0.007281081           4 |2-0000+0+000-020>
+
+  Spin state for root 0: S^2 = 0.002273, S = 0.002, singlet 
+
+
+  ==> Energy Summary <==
+
+    Multi.  Irrep.  No.               Energy
+    -----------------------------------------
+       1      Ag     0       -75.625005495823
+    -----------------------------------------	ASCI ENERGY.......................................................PASSED
+
+    Psi4 stopped on: Friday, 19 April 2019 03:04PM
+    Psi4 wall time for execution: 0:00:02.40
+
+*** Psi4 exiting successfully. Buy a developer a beer!

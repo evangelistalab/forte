@@ -32,6 +32,7 @@
 #include <iomanip>
 #include <numeric>
 #include <sstream>
+#include <string>
 
 #include "psi4/libmints/vector.h"
 #include "psi4/libmints/dipole.h"
@@ -42,6 +43,7 @@
 #include "fci/fci_vector.h"
 #include "fci_mo.h"
 #include "base_classes/forte_options.h"
+#include "base_classes/scf_info.h"
 #include "boost/algorithm/string/predicate.hpp"
 #include "sparse_ci/operator.h"
 #include "orbital-helpers/semi_canonicalize.h"
@@ -50,6 +52,7 @@
 #include "helpers/timer.h"
 
 using namespace psi;
+using namespace ambit;
 
 namespace forte {
 
@@ -269,7 +272,7 @@ void FCI_MO::print_options() {
     }
 
     print_h2("Orbital Spaces");
-    auto print_irrep = [&](const string& str, const psi::Dimension& array) {
+    auto print_irrep = [&](const std::string& str, const psi::Dimension& array) {
         outfile->Printf("\n    %-30s", str.c_str());
         outfile->Printf("[");
         for (int h = 0; h < nirrep_; ++h) {
@@ -394,8 +397,8 @@ void FCI_MO::form_det() {
     if (!quiet_) {
         outfile->Printf("\n  %-35s ...", "Forming alpha and beta strings");
     }
-    std::vector<vector<vector<bool>>> a_string = Form_String(na_a);
-    std::vector<vector<vector<bool>>> b_string = Form_String(nb_a);
+    std::vector<std::vector<std::vector<bool>>> a_string = Form_String(na_a);
+    std::vector<std::vector<std::vector<bool>>> b_string = Form_String(nb_a);
     if (!quiet_) {
         outfile->Printf("  Done. Timing %15.6f s", tstrings.get());
     }
@@ -434,9 +437,10 @@ void FCI_MO::form_det() {
     }
 }
 
-vector<vector<vector<bool>>> FCI_MO::Form_String(const int& active_elec, const bool& print) {
+std::vector<std::vector<std::vector<bool>>> FCI_MO::Form_String(const int& active_elec,
+                                                                const bool& print) {
     timer_on("FORM String");
-    std::vector<vector<vector<bool>>> String(nirrep_, std::vector<vector<bool>>());
+    std::vector<std::vector<std::vector<bool>>> String(nirrep_, std::vector<std::vector<bool>>());
 
     // initalize the string (only active)
     int symmetry = 0;
@@ -473,7 +477,7 @@ void FCI_MO::form_det_cis() {
     std::vector<bool> string_ref = Form_String_Ref();
 
     // singles string
-    std::vector<vector<vector<bool>>> string_singles;
+    std::vector<std::vector<std::vector<bool>>> string_singles;
     if (ipea_ == "IP") {
         string_singles = Form_String_IP(string_ref);
     } else if (ipea_ == "EA") {
@@ -518,8 +522,8 @@ void FCI_MO::form_det_cisd() {
     std::vector<bool> string_ref = Form_String_Ref();
 
     // singles string
-    std::vector<vector<vector<bool>>> string_singles = Form_String_Singles(string_ref);
-    std::vector<vector<vector<bool>>> string_singles_ipea;
+    std::vector<std::vector<std::vector<bool>>> string_singles = Form_String_Singles(string_ref);
+    std::vector<std::vector<std::vector<bool>>> string_singles_ipea;
     if (ipea_ == "IP") {
         string_singles_ipea = Form_String_IP(string_ref);
     } else if (ipea_ == "EA") {
@@ -527,7 +531,7 @@ void FCI_MO::form_det_cisd() {
     }
 
     // doubles string
-    std::vector<vector<vector<bool>>> string_doubles = Form_String_Doubles(string_ref);
+    std::vector<std::vector<std::vector<bool>>> string_doubles = Form_String_Doubles(string_ref);
 
     // symmetry of ref (just active)
     int symmetry = 0;
@@ -600,7 +604,7 @@ void FCI_MO::form_det_cisd() {
     }
 }
 
-vector<bool> FCI_MO::Form_String_Ref(const bool& print) {
+std::vector<bool> FCI_MO::Form_String_Ref(const bool& print) {
     timer_on("FORM String Ref");
 
     std::vector<bool> String;
@@ -624,10 +628,10 @@ vector<bool> FCI_MO::Form_String_Ref(const bool& print) {
     return String;
 }
 
-vector<vector<vector<bool>>> FCI_MO::Form_String_Singles(const std::vector<bool>& ref_string,
+std::vector<std::vector<std::vector<bool>>> FCI_MO::Form_String_Singles(const std::vector<bool>& ref_string,
                                                          const bool& print) {
     timer_on("FORM String Singles");
-    std::vector<vector<vector<bool>>> String(nirrep_, std::vector<vector<bool>>());
+    std::vector<std::vector<std::vector<bool>>> String(nirrep_, std::vector<std::vector<bool>>());
 
     // occupied and unoccupied indices, symmetry (active)
     int symmetry = 0;
@@ -669,10 +673,10 @@ vector<vector<vector<bool>>> FCI_MO::Form_String_Singles(const std::vector<bool>
     return String;
 }
 
-vector<vector<vector<bool>>> FCI_MO::Form_String_IP(const std::vector<bool>& ref_string,
+std::vector<std::vector<std::vector<bool>>> FCI_MO::Form_String_IP(const std::vector<bool>& ref_string,
                                                     const bool& print) {
     timer_on("FORM String Singles IP");
-    std::vector<vector<vector<bool>>> String(nirrep_, std::vector<vector<bool>>());
+    std::vector<std::vector<std::vector<bool>>> String(nirrep_, std::vector<std::vector<bool>>());
 
     // occupied and unoccupied indices, symmetry (active)
     int symmetry = 0;
@@ -702,10 +706,10 @@ vector<vector<vector<bool>>> FCI_MO::Form_String_IP(const std::vector<bool>& ref
     return String;
 }
 
-vector<vector<vector<bool>>> FCI_MO::Form_String_EA(const std::vector<bool>& ref_string,
+std::vector<std::vector<std::vector<bool>>> FCI_MO::Form_String_EA(const std::vector<bool>& ref_string,
                                                     const bool& print) {
     timer_on("FORM String Singles EA");
-    std::vector<vector<vector<bool>>> String(nirrep_, std::vector<vector<bool>>());
+    std::vector<std::vector<std::vector<bool>>> String(nirrep_, std::vector<std::vector<bool>>());
 
     // occupied and unoccupied indices, symmetry (active)
     int symmetry = 0;
@@ -736,10 +740,10 @@ vector<vector<vector<bool>>> FCI_MO::Form_String_EA(const std::vector<bool>& ref
     return String;
 }
 
-vector<vector<vector<bool>>> FCI_MO::Form_String_Doubles(const std::vector<bool>& ref_string,
+std::vector<std::vector<std::vector<bool>>> FCI_MO::Form_String_Doubles(const std::vector<bool>& ref_string,
                                                          const bool& print) {
     timer_on("FORM String Doubles");
-    std::vector<vector<vector<bool>>> String(nirrep_, std::vector<vector<bool>>());
+    std::vector<std::vector<std::vector<bool>>> String(nirrep_, std::vector<std::vector<bool>>());
 
     // occupied and unoccupied indices, symmetry (active)
     int symmetry = 0;
@@ -796,7 +800,7 @@ vector<vector<vector<bool>>> FCI_MO::Form_String_Doubles(const std::vector<bool>
     return String;
 }
 
-vector<double> FCI_MO::compute_T1_percentage() {
+std::vector<double> FCI_MO::compute_T1_percentage() {
     std::vector<double> out;
 
     if (actv_space_type_ != "CISD") {
@@ -819,7 +823,7 @@ vector<double> FCI_MO::compute_T1_percentage() {
 }
 
 void FCI_MO::Diagonalize_H_noHF(const vecdet& p_space, const int& multi, const int& nroot,
-                                std::vector<pair<psi::SharedVector, double>>& eigen) {
+                                std::vector<std::pair<psi::SharedVector, double>>& eigen) {
     // recompute RHF determinant
     std::vector<bool> string_ref = Form_String_Ref();
     Determinant rhf(string_ref, string_ref);
@@ -846,14 +850,14 @@ void FCI_MO::Diagonalize_H_noHF(const vecdet& p_space, const int& multi, const i
             int nroot_noHF = nroot - 1;
             vecdet p_space_noHF(p_space);
             p_space_noHF.pop_back();
-            std::vector<pair<psi::SharedVector, double>> eigen_noHF;
+            std::vector<std::pair<psi::SharedVector, double>> eigen_noHF;
             Diagonalize_H(p_space_noHF, multi, nroot_noHF, eigen_noHF);
 
             for (int i = 0; i < nroot_noHF; ++i) {
                 psi::SharedVector vec_noHF = eigen_noHF[i].first;
                 double Ethis = eigen_noHF[i].second;
 
-                string name = "Root " + std::to_string(i) + " Eigen Vector";
+                std::string name = "Root " + std::to_string(i) + " Eigen Vector";
                 psi::SharedVector vec(new psi::Vector(name, det_size));
                 for (size_t n = 0; n < det_size - 1; ++n) {
                     vec->set(n, vec_noHF->get(n));
@@ -872,7 +876,7 @@ void FCI_MO::Diagonalize_H_noHF(const vecdet& p_space, const int& multi, const i
 }
 
 void FCI_MO::Diagonalize_H(const vecdet& p_space, const int& multi, const int& nroot,
-                           std::vector<pair<psi::SharedVector, double>>& eigen) {
+                           std::vector<std::pair<psi::SharedVector, double>>& eigen) {
     timer_on("Diagonalize H");
     local_timer tdiagH;
     if (!quiet_) {
@@ -884,7 +888,7 @@ void FCI_MO::Diagonalize_H(const vecdet& p_space, const int& multi, const int& n
     // DL solver
     SparseCISolver sparse_solver(fci_ints_);
     DiagonalizationMethod diag_method = DLSolver;
-    string sigma_method = options_->get_str("SIGMA_BUILD_TYPE");
+    std::string sigma_method = options_->get_str("SIGMA_BUILD_TYPE");
     sparse_solver.set_e_convergence(econv_);
     sparse_solver.set_spin_project(true);
     sparse_solver.set_maxiter_davidson(options_->get_int("DL_MAXITER"));
@@ -944,7 +948,7 @@ void FCI_MO::Diagonalize_H(const vecdet& p_space, const int& multi, const int& n
 }
 
 void FCI_MO::print_CI(const int& nroot, const double& CI_threshold,
-                      const std::vector<pair<psi::SharedVector, double>>& eigen,
+                      const std::vector<std::pair<psi::SharedVector, double>>& eigen,
                       const vecdet& det) {
     timer_on("Print CI Vectors");
     if (!quiet_) {
@@ -1693,7 +1697,7 @@ ambit::BlockedTensor FCI_MO::compute_n_rdm(CI_RDMS& cirdm, const int& order) {
         cirdm.compute_2rdm(out.block("aaaa").data(), out.block("aAaA").data(),
                            out.block("AAAA").data());
     } else if (order == 3) {
-        out = ambit::BlockedTensor::build(ambit::CoreTensor, "D3", spin_cases({"aaaaaa"}));
+        out = ambit::BlockedTensor::build(ambit::CoreTensor, "D3", ambit::spin_cases({"aaaaaa"}));
         cirdm.compute_3rdm(out.block("aaaaaa").data(), out.block("aaAaaA").data(),
                            out.block("aAAaAA").data(), out.block("AAAAAA").data());
     }
@@ -2422,7 +2426,7 @@ void FCI_MO::set_sa_info(const std::vector<std::tuple<int, int, int, std::vector
     }
 }
 
-void FCI_MO::set_eigens(const std::vector<vector<pair<psi::SharedVector, double>>>& eigens) {
+void FCI_MO::set_eigens(const std::vector<std::vector<std::pair<psi::SharedVector, double>>>& eigens) {
     size_t nentry = sa_info_.size();
     if (eigens.size() == nentry) {
         for (size_t n = 0; n < nentry; ++n) {
@@ -2646,7 +2650,7 @@ RDMs FCI_MO::transition_reference(int root1, int root2, bool multi_state, int en
     }
 
     vecdet& p_space = multi_state ? p_spaces_[entry] : determinant_;
-    std::vector<pair<psi::SharedVector, double>>& eigen = multi_state ? eigens_[entry] : eigen_;
+    std::vector<std::pair<psi::SharedVector, double>>& eigen = multi_state ? eigens_[entry] : eigen_;
 
     // prepare eigenvectors
     size_t dim = p_space.size();
@@ -2685,7 +2689,7 @@ void FCI_MO::print_det(const vecdet& dets) {
 }
 
 void FCI_MO::print_occupation_strings_perirrep(std::string name,
-                                               const vector<vector<vector<bool>>>& string) {
+                                               const vector<std::vector<std::vector<bool>>>& string) {
     print_h2(name);
     for (size_t i = 0; i != string.size(); ++i) {
         if (string[i].size() != 0) {

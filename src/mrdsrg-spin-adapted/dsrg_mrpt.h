@@ -37,9 +37,10 @@
 #include "psi4/libpsio/psio.h"
 #include "ambit/blocked_tensor.h"
 
+#include "base_classes/rdms.h"
+#include "base_classes/dynamic_correlation_solver.h"
 #include "boost/assign.hpp"
 #include "integrals/integrals.h"
-#include "base_classes/rdms.h"
 #include "mrdsrg-helper/dsrg_source.h"
 #include "mrdsrg-helper/dsrg_time.h"
 #include "base_classes/mo_space_info.h"
@@ -49,16 +50,17 @@ using namespace ambit;
 
 namespace forte {
 
-class DSRG_MRPT : public psi::Wavefunction {
+class DSRG_MRPT : public DynamicCorrelationSolver {
   public:
     /**
      * DSRG-MRPT Constructor
-     * @param ref_wfn The reference wavefunction object
+     * @param rdms The reference reduced density matrices
+     * @param scf_info The SCF info
      * @param options The main options object
      * @param ints A pointer to an allocated integral object
      * @param mo_space_info The MOSpaceInfo object
      */
-    DSRG_MRPT(RDMs rdms, psi::SharedWavefunction ref_wfn, psi::Options& options,
+    DSRG_MRPT(RDMs rdms, std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
               std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Destructor
@@ -66,6 +68,9 @@ class DSRG_MRPT : public psi::Wavefunction {
 
     /// Compute energy with fixed reference
     double compute_energy();
+
+    /// DSRG transformed Hamiltonian (not implemented)
+    std::shared_ptr<ActiveSpaceIntegrals> compute_Heff_actv();
 
   protected:
     // void hack_doublet();
@@ -83,23 +88,14 @@ class DSRG_MRPT : public psi::Wavefunction {
     /// Print levels
     int print_;
 
-    /// The RDMs and cumulants of the reference wave function
-    RDMs rdms_;
-
     /// The energy of the rdms
     double Eref_;
 
     /// The frozen-core energy
     double frozen_core_energy_;
 
-    /// The molecular integrals required by MethodBase
-    std::shared_ptr<ForteIntegrals> ints_;
-
     /// Are orbitals semi-canonicalized?
     bool semi_canonical_;
-
-    /// MO space info
-    std::shared_ptr<MOSpaceInfo> mo_space_info_;
 
     /// List of core MOs
     std::vector<size_t> core_mos_;

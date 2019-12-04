@@ -22,6 +22,8 @@ correlated electrons.
    integrals
    methods/fci
    methods/dsrg
+   methods/embedding
+   methods/avas
    programming/index
    aci
    pci
