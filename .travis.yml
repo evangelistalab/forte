@@ -16,7 +16,7 @@ install:
   - hash -r
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
-  - conda create -q -n tenv python=$PYTHON_VER gcc_linux-64 gxx_linux-64 gfortran_linux-64 cmake mkl-devel hdf5 boost
+  - conda create -q -n tenv python=$PYTHON_VER gcc_linux-64 gxx_linux-64 gfortran_linux-64 cmake mkl-devel hdf5 boost -c psi4 libint
   - source activate tenv
   - conda install pytest pytest-cov codecov lcov -c conda-forge
   - pip install pytest-shutil
@@ -31,9 +31,12 @@ before_script:
       -DCMAKE_BUILD_TYPE=Debug
       -DMAX_AM_ERI=4
       -DBUILD_SHARED_LIBS=ON
+      -DCMAKE_INSTALL_PREFIX=${HOME}/build/psi4-bin
   - ls objdir
   - cd objdir
-  - make -j4
+  - make -j2
+  - make install >& psi4_install.log
+  - export PATH="$HOME/build/psi4-bin/bin:$PATH"
   - python -V
   - psi4 --version
   - psi4 --plugin-compile
