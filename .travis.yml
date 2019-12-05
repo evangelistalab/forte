@@ -32,6 +32,8 @@ before_script:
       -DMAX_AM_ERI=4
       -DBUILD_SHARED_LIBS=ON
   - ls objdir
+  - cd objdir
+  - make -j4
   - python -V
   - psi4 --version
   - psi4 --plugin-compile
