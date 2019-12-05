@@ -212,6 +212,8 @@ class ForteOptions {
      */
     pybind11::dict dict();
 
+    void set_dict(pybind11::dict dict) { dict_ = dict; }
+
   private:
     pybind11::dict dict_;
     std::string group_ = "";
