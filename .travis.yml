@@ -18,7 +18,7 @@ install:
   - conda update -q conda
   - conda create -q -n tenv python=$PYTHON_VER gcc_linux-64 gxx_linux-64 gfortran_linux-64 cmake mkl-devel hdf5 boost 
   - source activate tenv
-  - conda install gau2grid libint -c psi4
+  - conda install gau2grid libint libxc -c psi4
   - conda install pytest pytest-cov codecov lcov qcelemental -c conda-forge
   - pip install pytest-shutil
   
