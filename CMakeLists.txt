@@ -73,7 +73,7 @@ endif()
 
 add_subdirectory(pybind11)
 # List of CC files
-pybind11_add_module(forte
+pybind11_add_module(forte NO_EXTRAS
 src/base_classes/active_space_method.cc
 src/base_classes/active_space_solver.cc
 src/casscf/casscf.cc
