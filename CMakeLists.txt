@@ -33,7 +33,7 @@ include(autocmake_mpi)  # MPI option A
 #include(custom_static_library)
 
 #find_package(psi4 1.1 REQUIRED COMPONENTS ambit chemps2)
-find_package(pybind11 REQUIRED)
+#find_package(pybind11 REQUIRED)
 find_package(psi4 1.3 REQUIRED)
 find_package(TargetLAPACK REQUIRED)
 find_package(ambit 0.3 REQUIRED)
@@ -71,6 +71,7 @@ if(ENABLE_UNTESTED_CODE)
     add_definitions(-DENABLE_UNTESTED_CODE)
 endif()
 
+add_subdirectory(pybind11)
 # List of CC files
 pybind11_add_module(forte
 src/base_classes/active_space_method.cc
