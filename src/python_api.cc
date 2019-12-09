@@ -225,7 +225,7 @@ PYBIND11_MODULE(forte, m) {
         .def("read_from_map", &MOSpaceInfo::read_from_map, "Read the space info from a map of spacename-dimension_vector")
         .def("set_reorder", &MOSpaceInfo::set_reorder, "Reorder MOs according to the input indexing vector")
         .def("compute_space_info", &MOSpaceInfo::compute_space_info, "Processing current MOSpaceInfo: calculate frozen core, count and assign orbitals")
-        .def("nirrep", &MOSpaceInfo::nirrep, "return The number of irreps");
+        .def("nirrep", &MOSpaceInfo::nirrep, "return The number of irreps")
         .def("get_relative_mo", &MOSpaceInfo::get_relative_mo, "Return the relative MOs")
         .def("read_options", &MOSpaceInfo::read_options, "Read options")
         ;
