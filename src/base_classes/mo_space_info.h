@@ -139,7 +139,7 @@ class MOSpaceInfo {
     /// Reorder MOs according to the input indexing vector
     void set_reorder(const std::vector<size_t>& reorder);
 
-    /// Processing current MOSpaceInfo: calculate frozen core, count and assign orbitals
+    /// Process current MOSpaceInfo: calculate frozen core, count, and assign orbitals
     void compute_space_info();
 
     /// @return The number of irreps
