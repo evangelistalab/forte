@@ -227,18 +227,18 @@ PYBIND11_MODULE(forte, m) {
         .def("get_absolute_mo", &MOSpaceInfo::get_absolute_mo,
              "Return the list of the absolute index of the molecular orbitals in a space excluding "
              "the frozen core/virtual orbitals")
-        .def("get_corr_abs_mo", &MOSpaceInfo::get_corr_abs_mo,
-             "Return the list of the absolute index of the molecular orbitals in a correlated space")
+        .def(
+            "get_corr_abs_mo", &MOSpaceInfo::get_corr_abs_mo,
+            "Return the list of the absolute index of the molecular orbitals in a correlated space")
         .def("get_relative_mo", &MOSpaceInfo::get_relative_mo, "Return the relative MOs")
-        .def("read_from_map", &MOSpaceInfo::read_from_map, "Read the space info from a map of spacename-dimension_vector")
-        .def("set_reorder", &MOSpaceInfo::set_reorder, "Reorder MOs according to the input indexing vector")
-        .def("compute_space_info", &MOSpaceInfo::compute_space_info, "Processing current MOSpaceInfo: calculate frozen core, count and assign orbitals")
+        .def("read_from_map", &MOSpaceInfo::read_from_map,
+             "Read the space info from a map {spacename -> dimension vector}")
+        .def("set_reorder", &MOSpaceInfo::set_reorder,
+             "Reorder MOs according to the input indexing vector")
+        .def("compute_space_info", &MOSpaceInfo::compute_space_info,
+             "Processing current MOSpaceInfo: calculate frozen core, count and assign orbitals")
         .def("nirrep", &MOSpaceInfo::nirrep, "return The number of irreps")
-
-        .def("read_options", &MOSpaceInfo::read_options, "Read options")
-        ;
-
-
+        .def("read_options", &MOSpaceInfo::read_options, "Read options");
 
     // export ForteIntegrals
     py::class_<ForteIntegrals, std::shared_ptr<ForteIntegrals>>(m, "ForteIntegrals")
