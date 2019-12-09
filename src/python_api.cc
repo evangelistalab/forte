@@ -222,6 +222,8 @@ PYBIND11_MODULE(forte, m) {
     // export MOSpaceInfo
     py::class_<MOSpaceInfo, std::shared_ptr<MOSpaceInfo>>(m, "MOSpaceInfo")
         .def("size", &MOSpaceInfo::size, "Return the number of orbitals in a space")
+        .def("get_relative_mo", &MOSpaceInfo::get_relative_mo, "Return the relative MOs")
+        .def("read_options", &MOSpaceInfo::read_options, "Read options")
         ;
 
     // export ForteIntegrals
