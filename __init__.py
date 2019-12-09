@@ -53,21 +53,21 @@ if 'psi4' in sys.modules:
     psi_options = psi4.core.get_options()
     psi_options.set_current_module('FORTE')
 
-    for key, value in forte_options.dict().items():
-        v_type = value['type']
-        v_default = value['default_value']
-        if v_type == 'bool':
-            psi_options.add_bool(key, v_default)
-        elif v_type == 'int':
-            psi_options.add_int(key, v_default)
-        elif v_type == 'float':
-            psi_options.set_double('FORTE', key, v_default)
-        elif v_type == 'str':
-            allowed = ''
-            if 'allowed_values' in value:
-                allowed = ' '.join(value['allowed_values'])
-            psi_options.add_str(key, v_default, allowed)
-        else:
-            psi_options.add_array(key)
+#   for key, value in forte_options.dict().items():
+#       v_type = value['type']
+#       v_default = value['default_value']
+#       if v_type == 'bool':
+#           psi_options.add_bool(key, v_default)
+#       elif v_type == 'int':
+#           psi_options.add_int(key, v_default)
+#       elif v_type == 'float':
+#           psi_options.set_double('FORTE', key, v_default)
+#       elif v_type == 'str':
+#           allowed = ''
+#           if 'allowed_values' in value:
+#               allowed = ' '.join(value['allowed_values'])
+#           psi_options.add_str(key, v_default, allowed)
+#       else:
+#           psi_options.add_array(key)
 
-#   forte_options.push_options_to_psi4(psi_options)
+    forte_options.push_options_to_psi4(psi_options)
