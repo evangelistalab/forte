@@ -222,8 +222,13 @@ PYBIND11_MODULE(forte, m) {
     // export MOSpaceInfo
     py::class_<MOSpaceInfo, std::shared_ptr<MOSpaceInfo>>(m, "MOSpaceInfo")
         .def("size", &MOSpaceInfo::size, "Return the number of orbitals in a space")
-        ;
+        .def("get_absolute_mo", &MOSpaceInfo::get_absolute_mo,
+             "Return the list of the absolute index of the molecular orbitals in a space excluding "
+             "the frozen core/virtual orbitals")
+        .def("get_corr_abs_mo", &MOSpaceInfo::get_corr_abs_mo,
+             "Return the list of the absolute index of the molecular orbitals in a correlated space");
 
+        
     // export ForteIntegrals
     py::class_<ForteIntegrals, std::shared_ptr<ForteIntegrals>>(m, "ForteIntegrals")
         .def("rotate_orbitals", &ForteIntegrals::rotate_orbitals)
