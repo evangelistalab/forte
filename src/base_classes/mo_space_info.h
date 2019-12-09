@@ -114,7 +114,7 @@ class MOSpaceInfo {
 
     /// @return The names of orbital spaces
     std::vector<std::string> space_names() const { return space_names_; }
-    /// @return The number of orbitals in space
+    /// @return The number of orbitals in a space
     size_t size(const std::string& space);
     /// @return The psi::Dimension object for space
     psi::Dimension get_dimension(const std::string& space);
