@@ -294,7 +294,25 @@ PYBIND11_MODULE(forte, m) {
         .def("Ub_t", &SemiCanonical::Ub_t, "Return the beta rotation matrix in the active space");
 
     // export RDMs
-    py::class_<RDMs>(m, "RDMs");
+    py::class_<RDMs>(m, "RDMs")
+        .def("max_rdm_level", &RDMs::max_rdm_level, "Return the max RDM level")
+        .def("g1a_data", &RDMs::g1a_data, "Return the alpha 1RDM data")
+        .def("g1b_data", &RDMs::g1a_data, "Return the beta 1RDM data")
+        .def("g2aa_data", &RDMs::g2aa_data, "Return the alpha-alpha 2RDM data")
+        .def("g2ab_data", &RDMs::g2ab_data, "Return the alpha-beta 2RDM data")
+        .def("g2bb_data", &RDMs::g2bb_data, "Return the beta-beta 2RDM data")
+        .def("g3aaa_data", &RDMs::g3aaa_data, "Return the alpha-alpha-alpha 3RDM data")
+        .def("g3aab_data", &RDMs::g3aab_data, "Return the alpha-alpha-beta 3RDM data")
+        .def("g3abb_data", &RDMs::g3abb_data, "Return the alpha-beta-beta 3RDM data")
+        .def("g3bbb_data", &RDMs::g3bbb_data, "Return the beta-beta-beta 3RDM data")
+        .def("SFg2_data", &RDMs::SFg2_data, "Return the spin-free 2-RDM")
+        .def("L2aa_data", &RDMs::L2aa_data, "Return the alpha-alpha 2-cumulant data")
+        .def("L2ab_data", &RDMs::L2ab_data, "Return the alpha-beta 2-cumulant data")
+        .def("L2bb_data", &RDMs::L2bb_data, "Return the beta-beta 2-cumulant data")
+        .def("L3aaa_data", &RDMs::L3aaa_data, "Return the alpha-alpha-alpha 3-cumulant data")
+        .def("L3aab_data", &RDMs::L3aab_data, "Return the alpha-alpha-beta 3-cumulant data")
+        .def("L3abb_data", &RDMs::L3abb_data, "Return the alpha-beta-beta 3-cumulant data")
+        .def("L3bbb_data", &RDMs::L3bbb_data, "Return the beta-beta-beta 3-cumulant data");
 
     // export ambit::Tensor
     py::class_<ambit::Tensor>(m, "ambitTensor");
