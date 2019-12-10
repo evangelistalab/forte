@@ -76,8 +76,12 @@ pybind11_add_module(forte
 src/base_classes/active_space_method.cc
 src/base_classes/active_space_solver.cc
 src/casscf/casscf.cc
+src/casscf/casscf_gradient.cc
 src/ci_rdm/ci_rdms.cc
 src/ci_rdm/ci_rdms_dynamic.cc
+src/gradient_tpdm/backtransform_tpdm.cc
+src/gradient_tpdm/integraltransform_sort_so_tpdm.cc
+src/gradient_tpdm/integraltransform_tpdm_unrestricted.cc
 src/sparse_ci/ci_reference.cc
 src/sparse_ci/determinant_hashvector.cc
 src/sparse_ci/determinant_sq_operator.cc
