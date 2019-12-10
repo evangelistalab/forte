@@ -272,10 +272,15 @@ PYBIND11_MODULE(forte, m) {
         .def("scalar_energy", &ActiveSpaceIntegrals::scalar_energy,
              "Get the scalar_energy energy (contribution from RESTRICTED_DOCC)")
         .def("oei_a", &ActiveSpaceIntegrals::oei_a, "Get the alpha effective one-electron integral")
+        .def("oei_a_vector", &ActiveSpaceIntegrals::oei_a_vector, "Get the vectorized alpha effective one-electron integral")
         .def("oei_b", &ActiveSpaceIntegrals::oei_b, "Get the beta effective one-electron integral")
+        .def("oei_b_vector", &ActiveSpaceIntegrals::oei_b_vector, "Get the vectorized beta effective one-electron integral")
         .def("tei_aa", &ActiveSpaceIntegrals::tei_aa, "alpha-alpha two-electron integral <pq||rs>")
+        .def("tei_aa_vector", &ActiveSpaceIntegrals::tei_aa_vector, "Vectorized alpha-alpha two-electron integral <pq||rs>")
         .def("tei_ab", &ActiveSpaceIntegrals::tei_ab, "alpha-beta two-electron integral <pq|rs>")
+        .def("tei_ab_vector", &ActiveSpaceIntegrals::tei_ab_vector, "Vectorized alpha-beta two-electron integral <pq||rs>")
         .def("tei_bb", &ActiveSpaceIntegrals::tei_bb, "beta-beta two-electron integral <pq||rs>")
+        .def("tei_bb_vector", &ActiveSpaceIntegrals::tei_bb_vector, "Vectorized beta-beta two-electron integral <pq||rs>")
         .def("print", &ActiveSpaceIntegrals::print, "Print the integrals (alpha-alpha case)");
 
     // export SemiCanonical
