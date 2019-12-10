@@ -178,6 +178,8 @@ PYBIND11_MODULE(forte, m) {
     m.def("print_method_banner", &print_method_banner, "text"_a, "separator"_a = "-",
           "Print a method banner");
     m.def("make_mo_space_info", &make_mo_space_info, "Make a MOSpaceInfo object");
+    m.def("make_mo_space_info_from_map", &make_mo_space_info_from_map,
+          "Make a MOSpaceInfo object from a map of space name (string) to a vector");
     m.def("make_aosubspace_projector", &make_aosubspace_projector, "Make a AOSubspace projector");
     m.def("make_avas", &make_avas, "Make AVAS orbitals");
     m.def("make_fragment_projector", &make_fragment_projector,
