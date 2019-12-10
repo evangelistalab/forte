@@ -1,15 +1,17 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import psi4
-import forte
-from forte import forte_options
-
 def test_mospaceinfo():
-    """Test class constructors"""
-    print("Testing mospaceinfo")
+    """Test the MOSpaceInfo python API"""
+    import psi4
+    import forte
+    from forte import forte_options
+
+    print("Testing the MOSpaceInfo python API")
 
     geom = "H 0.0 0.0 0.0\nH 0.0 0.0 1.0"""
+
+    psi4.core.clean()
 
     mol = psi4.geometry(geom)
 
@@ -22,8 +24,6 @@ def test_mospaceinfo():
     # run scf and return the energy and a wavefunction object (will work only if pass return_wfn=True)
     E_scf, wfn = psi4.energy('scf', return_wfn=True)
 
-
-
     options = psi4.core.get_options() # options = psi4 option object
     options.set_current_module('FORTE') # read options labeled 'FORTE'
     forte_options.update_psi_options(options)
@@ -34,9 +34,18 @@ def test_mospaceinfo():
                   'FROZEN_UOCC' :     [1,0,0,0,0,0,0,0]}
     mo_space_info = forte.make_mo_space_info_from_map(wfn,mos_spaces,[])
 
+    assert mo_space_info.nirrep() == 8
+
     assert mo_space_info.size('FROZEN_DOCC') == 1
     assert mo_space_info.size('RESTRICTED_DOCC') == 1
     assert mo_space_info.size('ACTIVE') == 7
     assert mo_space_info.size('RESTRICTED_UOCC') == 0
     assert mo_space_info.size('FROZEN_UOCC') == 1
-#    assert d1 == d3
+
+    assert mo_space_info.get_dimension('FROZEN_DOCC').to_tuple() == (1,0,0,0,0,0,0,0)
+    assert mo_space_info.get_dimension('RESTRICTED_DOCC').to_tuple() == (0,0,0,0,0,1,0,0)
+    assert mo_space_info.get_dimension('ACTIVE').to_tuple() == (1,0,1,1,0,2,1,1)
+    assert mo_space_info.get_dimension('RESTRICTED_UOCC').to_tuple() == (0,0,0,0,0,0,0,0)
+    assert mo_space_info.get_dimension('FROZEN_UOCC').to_tuple() == (1,0,0,0,0,0,0,0)
+
+    assert mo_space_info.space_names() == ['FROZEN_DOCC','RESTRICTED_DOCC','ACTIVE','RESTRICTED_UOCC','FROZEN_UOCC']

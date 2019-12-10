@@ -217,8 +217,6 @@ PYBIND11_MODULE(forte, m) {
 
     export_Determinant(m);
 
-    //    export_FCISolver(m);
-
     // export MOSpaceInfo
     py::class_<MOSpaceInfo, std::shared_ptr<MOSpaceInfo>>(m, "MOSpaceInfo")
         .def("get_dimension", &MOSpaceInfo::get_dimension,

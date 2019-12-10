@@ -113,7 +113,7 @@ class MOSpaceInfo {
     // ==> Class Interface <==
 
     /// @return The names of orbital spaces
-    std::vector<std::string> space_names() const { return space_names_; }
+    std::vector<std::string> space_names() const { return elementary_spaces_; }
     /// @return The number of orbitals in a space
     size_t size(const std::string& space);
     /// @return The psi::Dimension object for space
@@ -172,9 +172,6 @@ class MOSpaceInfo {
         {"GENERALIZED PARTICLE", {"ACTIVE", "RESTRICTED_UOCC"}},
         {"CORE", {"RESTRICTED_DOCC"}},
         {"VIRTUAL", {"RESTRICTED_UOCC"}}};
-
-    /// The names of the orbital spaces
-    std::vector<std::string> space_names_;
 
     /// The map from all MO to the correlated MOs (excludes frozen core/virtual)
     std::vector<size_t> mo_to_cmo_;
