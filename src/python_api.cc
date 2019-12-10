@@ -242,9 +242,17 @@ PYBIND11_MODULE(forte, m) {
 
     // export ForteIntegrals
     py::class_<ForteIntegrals, std::shared_ptr<ForteIntegrals>>(m, "ForteIntegrals")
-        .def("rotate_orbitals", &ForteIntegrals::rotate_orbitals)
-        .def("nmo", &ForteIntegrals::nmo)
-        .def("ncmo", &ForteIntegrals::ncmo);
+        .def("rotate_orbitals", &ForteIntegrals::rotate_orbitals, "Rotate MOs during contructor")
+        .def("nmo", &ForteIntegrals::nmo, "Return the total number of moleuclar orbitals")
+        .def("ncmo", &ForteIntegrals::ncmo, "Return the number of correlated orbitals")
+        .def("oei_a_block", &ForteIntegrals::oei_a_block_data, "Return the alpha 1e-integrals")
+        .def("oei_b_block", &ForteIntegrals::oei_b_block_data, "Return the beta 1e-integrals")
+        .def("tei_aa_block", &ForteIntegrals::aptei_aa_block_data,
+             "Return the alpha-alpha 2e-integrals in physicists' notation")
+        .def("tei_ab_block", &ForteIntegrals::aptei_ab_block_data,
+             "Return the alpha-beta 2e-integrals in physicists' notation")
+        .def("tei_bb_block", &ForteIntegrals::aptei_bb_block_data,
+             "Return the beta-beta 2e-integrals in physicists' notation");
 
     // export StateInfo
     py::class_<StateInfo, std::shared_ptr<StateInfo>>(m, "StateInfo")

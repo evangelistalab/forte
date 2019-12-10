@@ -287,6 +287,36 @@ class ForteIntegrals {
     std::vector<std::shared_ptr<psi::Matrix>> compute_MOdipole_ints(const bool& alpha = true,
                                                                     const bool& resort = false);
 
+    // interface one- and two-electron integrals for pybind 11
+
+    /// @return the data in alpha one-electron integrals
+    std::vector<double> oei_a_block_data(const std::vector<size_t>& p,
+                                         const std::vector<size_t>& q);
+    /// @return the data in beta one-electron integrals
+    std::vector<double> oei_b_block_data(const std::vector<size_t>& p,
+                                         const std::vector<size_t>& q);
+    /// @return the data in alpha-alpha two-electron integrals
+    std::vector<double> aptei_aa_block_data(const std::vector<size_t>& p,
+                                            const std::vector<size_t>& q,
+                                            const std::vector<size_t>& r,
+                                            const std::vector<size_t>& s) {
+        return aptei_aa_block(p, q, r, s).data();
+    }
+    /// @return the data in alpha-beta two-electron integrals
+    std::vector<double> aptei_ab_block_data(const std::vector<size_t>& p,
+                                            const std::vector<size_t>& q,
+                                            const std::vector<size_t>& r,
+                                            const std::vector<size_t>& s) {
+        return aptei_ab_block(p, q, r, s).data();
+    }
+    /// @return the data in beta-beta two-electron integrals
+    std::vector<double> aptei_bb_block_data(const std::vector<size_t>& p,
+                                            const std::vector<size_t>& q,
+                                            const std::vector<size_t>& r,
+                                            const std::vector<size_t>& s) {
+        return aptei_bb_block(p, q, r, s).data();
+    }
+
   protected:
     // ==> Class data <==
 
