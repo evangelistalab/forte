@@ -105,7 +105,6 @@ void export_ActiveSpaceSolver(py::module& m) {
     py::class_<ActiveSpaceSolver>(m, "ActiveSpaceSolver")
         .def("compute_energy", &ActiveSpaceSolver::compute_energy)
         .def("rdms", &ActiveSpaceSolver::rdms)
-        .def("compute_average_rdms", &ActiveSpaceSolver::compute_average_rdms)
         .def("compute_contracted_energy", &ActiveSpaceSolver::compute_contracted_energy,
              "as_ints"_a, "max_body"_a,
              "Solve the contracted CI eigenvalue problem using given integrals")
@@ -257,7 +256,8 @@ PYBIND11_MODULE(forte, m) {
     // export StateInfo
     py::class_<StateInfo, std::shared_ptr<StateInfo>>(m, "StateInfo")
         .def(py::init<int, int, int, int, int>(), "na"_a, "nb"_a, "multiplicity"_a, "twice_ms"_a,
-             "irrep"_a);
+             "irrep"_a)
+        .def("__repr__", &StateInfo::repr, "Representation of StateInfo");
 
     // export SCFInfo
     py::class_<SCFInfo, std::shared_ptr<SCFInfo>>(m, "SCFInfo")

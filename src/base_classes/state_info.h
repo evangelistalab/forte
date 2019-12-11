@@ -69,6 +69,9 @@ class StateInfo {
     /// Comparison operator for StateInfo objects
     bool operator==(const StateInfo& rhs) const;
 
+    /// representation for python
+    std::string repr();
+
   private:
     // number of alpha electrons (including core, excludes ecp)
     int na_;
