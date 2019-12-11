@@ -29,6 +29,7 @@
 #ifndef _rdms_h_
 #define _rdms_h_
 
+#include <vector>
 #include <ambit/tensor.h>
 
 namespace forte {
@@ -74,11 +75,11 @@ class RDMs {
     RDMs(ambit::Tensor g1a, ambit::Tensor g1b);
     /// @brief Construct a RDMs object with the 1- and 2-rdms
     RDMs(ambit::Tensor g1a, ambit::Tensor g1b, ambit::Tensor g2aa, ambit::Tensor g2ab,
-              ambit::Tensor g2bb);
+         ambit::Tensor g2bb);
     /// @brief Construct a RDMs object with the 1-, 2-, and 3-rdms
     RDMs(ambit::Tensor g1a, ambit::Tensor g1b, ambit::Tensor g2aa, ambit::Tensor g2ab,
-              ambit::Tensor g2bb, ambit::Tensor g3aaa, ambit::Tensor g3aab, ambit::Tensor g3abb,
-              ambit::Tensor g3bbb);
+         ambit::Tensor g2bb, ambit::Tensor g3aaa, ambit::Tensor g3aab, ambit::Tensor g3abb,
+         ambit::Tensor g3bbb);
 
     // ==> Class Interface <==
 
@@ -106,6 +107,30 @@ class RDMs {
     /// @return the spin-free 2-RDM
     ambit::Tensor SFg2() const { return SFg2_; }
 
+    // RDMs data
+
+    /// @return the alpha 1-RDM data as a vector of double
+    std::vector<double> g1a_data() const { return g1a_.data(); }
+    /// @return the beta 1-RDM data as a vector of double
+    std::vector<double> g1b_data() const { return g1b_.data(); }
+    /// @return the alpha-alpha 2-RDM data as a vector of double
+    std::vector<double> g2aa_data() const { return g2aa_.data(); }
+    /// @return the alpha-beta 2-RDM data as a vector of double
+    std::vector<double> g2ab_data() const { return g2ab_.data(); }
+    /// @return the beta-beta 2-RDM data as a vector of double
+    std::vector<double> g2bb_data() const { return g2bb_.data(); }
+    /// @return the alpha-alpha-alpha 3-RDM data as a vector of double
+    std::vector<double> g3aaa_data() const { return g3aaa_.data(); }
+    /// @return the alpha-alpha-beta 3-RDM data as a vector of double
+    std::vector<double> g3aab_data() const { return g3aab_.data(); }
+    /// @return the alpha-beta-beta 3-RDM data as a vector of double
+    std::vector<double> g3abb_data() const { return g3abb_.data(); }
+    /// @return the beta-beta-beta 3-RDM data as a vector of double
+    std::vector<double> g3bbb_data() const { return g3bbb_.data(); }
+
+    /// @return the spin-free 2-RDM data as a vector of double
+    std::vector<double> SFg2_data() const { return SFg2_.data(); }
+
     // Reduced density cumulants (RDCs)
 
     /// @return the alpha-alpha 2-RDC
@@ -122,6 +147,24 @@ class RDMs {
     ambit::Tensor L3abb();
     /// @return the beta-beta-beta 3-RDC
     ambit::Tensor L3bbb();
+
+    // n-body density cumulants data
+    /// @return the alpha-alpha 2-RDC as a vector of double
+    std::vector<double> L2aa_data() { return L2aa().data(); }
+    /// @return the alpha-beta 2-RDC as a vector of double
+    std::vector<double> L2ab_data() { return L2ab().data(); }
+    /// @return the beta-beta 2-RDC as a vector of double
+    std::vector<double> L2bb_data() { return L2bb().data(); }
+    /// @return the alpha-alpha-alpha 3-RDC as a vector of double
+    std::vector<double> L3aaa_data() { return L3aaa().data(); }
+    /// @return the alpha-alpha-beta 3-RDC as a vector of double
+    std::vector<double> L3aab_data() { return L3aab().data(); }
+    /// @return the alpha-beta-beta 3-RDC as a vector of double
+    std::vector<double> L3abb_data() { return L3abb().data(); }
+    /// @return the beta-beta-beta 3-RDC as a vector of double
+    std::vector<double> L3bbb_data() { return L3bbb().data(); }
+
+    // class variables
 
     size_t max_rdm_level() { return max_rdm_; }
 

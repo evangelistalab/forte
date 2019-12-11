@@ -31,6 +31,8 @@ def register_driver_options(forte_options):
         'ACTIVE-DSRGPT2', 'DWMS-DSRGPT2', 'DSRG_MRPT', 'TASKS'
     ], 'Specify the job type')
 
+    forte_options.add_str('DERTYPE', 'NONE', ['NONE', 'FIRST'], 'Derivative order')
+
     forte_options.add_str(
         'ACTIVE_SPACE_SOLVER', 'NONE', ['NONE','FCI', 'ACI', 'CAS'],
         'Active space solver type'

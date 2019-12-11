@@ -75,6 +75,7 @@ casscf:
    - casscf-6
    - casscf-7
    - df-casscf-1
+   - casscf-gradient-1
   unused:
    - casscf-8
 cd-dsrg-mrpt2:
