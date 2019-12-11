@@ -66,10 +66,7 @@ void AdaptiveCI::set_fci_ints(std::shared_ptr<ActiveSpaceIntegrals> fci_ints) {
 }
 
 void AdaptiveCI::startup() {
-    quiet_mode_ = false;
-    if (options_->has_changed("ACI_QUIET_MODE")) {
-        quiet_mode_ = options_->get_bool("ACI_QUIET_MODE");
-    }
+    quiet_mode_ = options_->get_bool("ACI_QUIET_MODE");
 
     //    if (!set_ints_) {
     //        set_aci_ints(ints_); // TODO: maybe a BUG?
@@ -105,14 +102,9 @@ void AdaptiveCI::startup() {
     project_out_spin_contaminants_ = options_->get_bool("SCI_PROJECT_OUT_SPIN_CONTAMINANTS");
     spin_complete_ = options_->get_bool("ACI_ENFORCE_SPIN_COMPLETE");
 
-    max_cycle_ = 20;
-    if (options_->has_changed("SCI_MAX_CYCLE")) {
-        max_cycle_ = options_->get_int("SCI_MAX_CYCLE");
-    }
-    pre_iter_ = 0;
-    if (options_->has_changed("ACI_PREITERATIONS")) {
-        pre_iter_ = options_->get_int("ACI_PREITERATIONS");
-    }
+    max_cycle_ = options_->get_int("SCI_MAX_CYCLE");
+
+    pre_iter_ = options_->get_int("ACI_PREITERATIONS");
 
     spin_tol_ = options_->get_double("ACI_SPIN_TOL");
     // set the initial S^@ guess as input multiplicity
@@ -131,18 +123,16 @@ void AdaptiveCI::startup() {
     hole_ = 0;
 
     diag_method_ = DLSolver;
-    if (options_->has_changed("DIAG_ALGORITHM")) {
-        if (options_->get_str("DIAG_ALGORITHM") == "FULL") {
-            diag_method_ = Full;
-        } else if (options_->get_str("DIAG_ALGORITHM") == "DLSTRING") {
-            diag_method_ = DLString;
-        } else if (options_->get_str("DIAG_ALGORITHM") == "SPARSE") {
-            diag_method_ = Sparse;
-        } else if (options_->get_str("DIAG_ALGORITHM") == "SOLVER") {
-            diag_method_ = DLSolver;
-        } else if (options_->get_str("DIAG_ALGORITHM") == "DYNAMIC") {
-            diag_method_ = Dynamic;
-        }
+    if (options_->get_str("DIAG_ALGORITHM") == "FULL") {
+        diag_method_ = Full;
+    } else if (options_->get_str("DIAG_ALGORITHM") == "DLSTRING") {
+        diag_method_ = DLString;
+    } else if (options_->get_str("DIAG_ALGORITHM") == "SPARSE") {
+        diag_method_ = Sparse;
+    } else if (options_->get_str("DIAG_ALGORITHM") == "SOLVER") {
+        diag_method_ = DLSolver;
+    } else if (options_->get_str("DIAG_ALGORITHM") == "DYNAMIC") {
+        diag_method_ = Dynamic;
     }
     aimed_selection_ = false;
     energy_selection_ = false;
@@ -315,8 +305,8 @@ void AdaptiveCI::find_q_space_batched(DeterminantHashVec& P_space, DeterminantHa
         }
     }
     // Add missing determinants
+    size_t num_extra = 0;
     if (add_aimed_degenerate_) {
-        size_t num_extra = 0;
         for (size_t I = 0, max_I = last_excluded; I < max_I; ++I) {
             size_t J = last_excluded - I;
             if (std::fabs(F_space[last_excluded + 1].first - F_space[J].first) < 1.0e-9) {
@@ -330,6 +320,17 @@ void AdaptiveCI::find_q_space_batched(DeterminantHashVec& P_space, DeterminantHa
             outfile->Printf("\n  Added %zu missing determinants in aimed selection.", num_extra);
         }
     }
+
+    if (PQ_space.size() < nroot_) {
+        size_t nadd = 0;
+        for (size_t I = 0, max_I = nroot_; I < max_I; ++I) {
+            size_t J = last_excluded + num_extra - I;
+            PQ_space.add(F_space[J].second);
+            nadd++;
+        }
+        outfile->Printf("\n  Added %zu missing determinants.", nadd);
+    }
+
     outfile->Printf("\n  Time spent selecting: %1.6f", select.get());
     multistate_pt2_energy_correction_.resize(nroot_);
     multistate_pt2_energy_correction_[0] = ept2;
@@ -414,8 +415,8 @@ void AdaptiveCI::default_find_q_space(DeterminantHashVec& P_space, DeterminantHa
         }
     }
     // Add missing determinants
+    size_t num_extra = 0;
     if (add_aimed_degenerate_) {
-        size_t num_extra = 0;
         for (size_t I = 0, max_I = last_excluded; I < max_I; ++I) {
             size_t J = last_excluded - I;
             if (std::fabs(F_space[last_excluded + 1].first - F_space[J].first) < 1.0e-9) {
@@ -428,6 +429,15 @@ void AdaptiveCI::default_find_q_space(DeterminantHashVec& P_space, DeterminantHa
         if (num_extra > 0 and (!quiet_mode_)) {
             outfile->Printf("\n  Added %zu missing determinants in aimed selection.", num_extra);
         }
+    }
+    if (PQ_space.size() < nroot_) {
+        size_t nadd = 0;
+        for (size_t I = 0, max_I = nroot_; I < max_I; ++I) {
+            size_t J = last_excluded + num_extra - I;
+            PQ_space.add(F_space[J].second);
+            nadd++;
+        }
+        outfile->Printf("\n  Added %zu missing determinants.", nadd);
     }
     outfile->Printf("\n  Time spent selecting: %1.6f", select.get());
     multistate_pt2_energy_correction_.resize(nroot_);
@@ -547,6 +557,7 @@ void AdaptiveCI::find_q_space_multiroot(DeterminantHashVec& P_space,
     } // end loop over determinants
 
     if (aimed_selection_) {
+        size_t num_extra = 0;
         // Sort the CI coefficients in ascending order
         std::sort(sorted_dets.begin(), sorted_dets.end(), pairComp);
 
@@ -574,7 +585,6 @@ void AdaptiveCI::find_q_space_multiroot(DeterminantHashVec& P_space,
         // add missing determinants that have the same weight as the last one
         // included
         if (add_aimed_degenerate_) {
-            size_t num_extra = 0;
             for (size_t I = 0, max_I = last_excluded; I < max_I; ++I) {
                 size_t J = last_excluded - I;
                 if (std::fabs(sorted_dets[last_excluded + 1].first - sorted_dets[J].first) <
@@ -589,6 +599,16 @@ void AdaptiveCI::find_q_space_multiroot(DeterminantHashVec& P_space,
                 outfile->Printf("\n  Added %zu missing determinants in aimed selection.",
                                 num_extra);
             }
+        }
+        outfile->Printf("pq: %zu, nroot: %zu", PQ_space.size(), nroot);
+        if (PQ_space.size() < nroot) {
+            size_t nadd = 0;
+            for (size_t I = 0, max_I = nroot; I < max_I; ++I) {
+                size_t J = last_excluded + num_extra - I;
+                PQ_space.add(sorted_dets[J].second);
+                nadd++;
+            }
+            outfile->Printf("\n  Added %zu missing determinants.", nadd);
         }
     }
 
@@ -1147,8 +1167,8 @@ int AdaptiveCI::root_follow(DeterminantHashVec& P_ref, std::vector<double>& P_re
 
 void AdaptiveCI::pre_iter_preparation() {
     // Build the reference determinant and compute its energy
-    CI_Reference ref(scf_info_, options_, mo_space_info_, as_ints_, multiplicity_, twice_ms_,
-                     wavefunction_symmetry_);
+    CI_Reference ref(state_, scf_info_, options_, mo_space_info_, as_ints_, multiplicity_, twice_ms_,
+                wavefunction_symmetry_);
     ref.build_reference(initial_reference_);
     P_space_ = initial_reference_;
 
@@ -1213,7 +1233,9 @@ void AdaptiveCI::pre_iter_preparation() {
 void AdaptiveCI::diagonalize_P_space() {
     cycle_time_.reset();
     // Step 1. Diagonalize the Hamiltonian in the P space
-    num_ref_roots_ = std::min(nroot_, int(P_space_.size()));
+//    num_ref_roots_ = std::min(nroot_, int(P_space_.size()));
+    num_ref_roots_ = nroot_; // TODO: why this change here ? (Francesco)
+
     std::string cycle_h = "Cycle " + std::to_string(cycle_);
 
     follow_ = false;

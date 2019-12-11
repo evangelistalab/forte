@@ -309,6 +309,25 @@ def orbital_projection(ref_wfn, options, mo_space_info):
     else:
         return mo_space_info
 
+def get_options_from_psi(forte_options, psi_options):
+    forte_dict = forte_options.dict()
+    for key, value in forte_dict.items():
+        v_type = value['type']
+        if v_type == 'bool':
+            forte_dict[key]['value'] = psi_options.get_bool(key)
+        elif v_type == 'int':
+            forte_dict[key]['value'] = psi_options.get_int(key)
+        elif v_type == 'float':
+            forte_dict[key]['value'] = psi_options.get_double(key)
+        elif v_type == 'str':
+            forte_dict[key]['value'] = psi_options.get_str(key)
+        elif v_type == 'int_list':
+            forte_dict[key]['value'] = [i for i in psi_options.get_int_vector(key)]
+        else:
+            # TODO: need to do this recursively
+            print(key, value, type(psi_options.get_int_vector(key)))
+            #forte_dict[key]['value'] = [i for i in psi_options.get_int_vector(key)]
+    return forte_dict
 
 def run_forte(name, **kwargs):
     r"""Function encoding sequence of PSI module and plugin calls so that
@@ -329,7 +348,9 @@ def run_forte(name, **kwargs):
     # Get the option object
     options = psi4.core.get_options()
     options.set_current_module('FORTE')
+#   forte.forte_options.set_dict(get_options_from_psi(forte.forte_options, options))
     forte.forte_options.update_psi_options(options)
+    forte.forte_options.get_options_from_psi4(options)
 
     if ('DF' in options.get_str('INT_TYPE')):
         aux_basis = psi4.core.BasisSet.build(ref_wfn.molecule(), 'DF_BASIS_MP2',
@@ -387,7 +408,7 @@ def run_forte(name, **kwargs):
     if (job_type == 'NEWDRIVER'):
         energy = forte_driver(state_weights_map, scf_info, forte.forte_options, ints, mo_space_info)
     else:
-        energy = forte.forte_old_methods(ref_wfn, options, ints, mo_space_info)
+        energy = forte.forte_old_methods(ref_wfn, forte.forte_options, ints, mo_space_info)
 
     end = timeit.timeit()
     #print('\n\n  Your calculation took ', (end - start), ' seconds');

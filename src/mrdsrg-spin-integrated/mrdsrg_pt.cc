@@ -164,9 +164,10 @@ std::vector<std::pair<std::string, double>> MRDSRG::compute_energy_pt2_Fdiag() {
     energy.push_back({"DSRG-MRPT2 correlation energy", Ecorr});
     energy.push_back({"DSRG-MRPT2 total energy", Eref_ + Ecorr});
 
+    bool multi_state = foptions_->get_gen_list("AVG_STATE").size() != 0;
+
     // reference relaxation
-    if (foptions_->get_str("RELAX_REF") != "NONE" ||
-        (foptions_->psi_options())["AVG_STATE"].size() != 0) {
+    if (foptions_->get_str("RELAX_REF") != "NONE" || multi_state) {
         O1_.zero();
         O2_.zero();
 
@@ -415,9 +416,10 @@ std::vector<std::pair<std::string, double>> MRDSRG::compute_energy_pt2_FdiagV() 
     energy.push_back({"DSRG-MRPT2 correlation energy", Ecorr});
     energy.push_back({"DSRG-MRPT2 total energy", Eref_ + Ecorr});
 
+    bool multi_state = foptions_->get_gen_list("AVG_STATE").size() != 0;
+
     // reference relaxation
-    if (foptions_->get_str("RELAX_REF") != "NONE" ||
-        (foptions_->psi_options())["AVG_STATE"].size() != 0) {
+    if (foptions_->get_str("RELAX_REF") != "NONE" || multi_state) {
         O1_ = BTF_->build(tensor_type_, "O1", spin_cases({"hh"}));
         O2_ = BTF_->build(tensor_type_, "O2", spin_cases({"hhhh"}));
 
@@ -654,9 +656,10 @@ std::vector<std::pair<std::string, double>> MRDSRG::compute_energy_pt2_FdiagVdia
     energy.push_back({"DSRG-MRPT2 correlation energy", Ecorr});
     energy.push_back({"DSRG-MRPT2 total energy", Eref_ + Ecorr});
 
+    bool multi_state = foptions_->get_gen_list("AVG_STATE").size() != 0;
+
     // reference relaxation
-    if (foptions_->get_str("RELAX_REF") != "NONE" ||
-        (foptions_->psi_options())["AVG_STATE"].size() != 0) {
+    if (foptions_->get_str("RELAX_REF") != "NONE" || multi_state) {
         // save the hole part of [H^0th, A^1st]
         BlockedTensor H0A1_1 = BTF_->build(tensor_type_, "H0A1_1", spin_cases({"gg"}));
         BlockedTensor H0A1_2 = BTF_->build(tensor_type_, "H0A1_2", spin_cases({"gggg"}));
@@ -1152,9 +1155,10 @@ std::vector<std::pair<std::string, double>> MRDSRG::compute_energy_pt2_Ffull() {
     energy.push_back({"DSRG-MRPT2 correlation energy", Ecorr});
     energy.push_back({"DSRG-MRPT2 total energy", Eref_ + Ecorr});
 
+    bool multi_state = foptions_->get_gen_list("AVG_STATE").size() != 0;
+
     // reference relaxation
-    if (foptions_->get_str("RELAX_REF") != "NONE" ||
-        (foptions_->psi_options())["AVG_STATE"].size() != 0) {
+    if (foptions_->get_str("RELAX_REF") != "NONE" || multi_state) {
         Hbar1_["pq"] += F_["pq"];
         Hbar1_["PQ"] += F_["PQ"];
         Hbar2_["pqrs"] += V_["pqrs"];
@@ -1376,8 +1380,9 @@ double MRDSRG::compute_energy_pt3() {
         outfile->Printf("\n    %-30s = %22.15f", str_dim.first.c_str(), str_dim.second);
     }
 
-    if (foptions_->get_str("RELAX_REF") != "NONE" ||
-        (foptions_->psi_options())["AVG_STATE"].size() != 0) {
+    bool multi_state = foptions_->get_gen_list("AVG_STATE").size() != 0;
+
+    if (foptions_->get_str("RELAX_REF") != "NONE" || multi_state) {
         O1_.zero();
         O2_.zero();
 

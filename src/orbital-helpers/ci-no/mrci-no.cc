@@ -149,21 +149,21 @@ void MRCINO::compute_transformation() {
 
 void MRCINO::startup() {
     wavefunction_multiplicity_ = 1;
-    if (options_->has_changed("MULTIPLICITY")) {
+    if (options_->get_int("MULTIPLICITY") >= 0) {
         wavefunction_multiplicity_ = options_->get_int("MULTIPLICITY");
+        // TODO: potentially a if MULTIPLICITY is not defined
     }
 
     nirrep_ = ints_->nirrep();
 
     diag_method_ = DLSolver;
-    if (options_->has_changed("DIAG_ALGORITHM")) {
-        if (options_->get_str("DIAG_ALGORITHM") == "FULL") {
-            diag_method_ = Full;
-        } else if (options_->get_str("DIAG_ALGORITHM") == "DLSTRING") {
-            diag_method_ = DLString;
-        } else if (options_->get_str("DIAG_ALGORITHM") == "DLDISK") {
-            diag_method_ = DLDisk;
-        }
+
+    if (options_->get_str("DIAG_ALGORITHM") == "FULL") {
+        diag_method_ = Full;
+    } else if (options_->get_str("DIAG_ALGORITHM") == "DLSTRING") {
+        diag_method_ = DLString;
+    } else if (options_->get_str("DIAG_ALGORITHM") == "DLDISK") {
+        diag_method_ = DLDisk;
     }
     // Read Options
     rdm_level_ = options_->get_int("ACI_MAX_RDM");

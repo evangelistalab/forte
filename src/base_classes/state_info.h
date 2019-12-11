@@ -41,7 +41,8 @@ namespace forte {
 class StateInfo {
   public:
     /// Constructor
-    StateInfo(int na, int nb, int multiplicity, int twice_ms, int irrep, const std::string& irrep_label = "");
+    StateInfo(int na, int nb, int multiplicity, int twice_ms, int irrep,
+              const std::string& irrep_label = "");
 
     StateInfo() = default;
 
@@ -62,6 +63,8 @@ class StateInfo {
     const std::string& multiplicity_label() const;
     /// return the irrep symbol
     const std::string& irrep_label() const;
+    /// return a string representation of this object
+    std::string str() const;
     /// Comparison operator for StateInfo objects
     bool operator<(const StateInfo& rhs) const;
     /// Comparison operator for StateInfo objects

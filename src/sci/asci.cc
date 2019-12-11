@@ -67,7 +67,7 @@ void ASCI::set_fci_ints(std::shared_ptr<ActiveSpaceIntegrals> fci_ints) {
 void ASCI::pre_iter_preparation(){
     outfile->Printf("\n  Using %d threads", omp_get_max_threads());
 
-    CI_Reference ref(scf_info_, options_, mo_space_info_, as_ints_, multiplicity_, twice_ms_,
+    CI_Reference ref(state_, scf_info_, options_, mo_space_info_, as_ints_, multiplicity_, twice_ms_,
                      wavefunction_symmetry_);
     ref.build_reference(initial_reference_);
     P_space_ = initial_reference_;
@@ -107,41 +107,30 @@ void ASCI::startup() {
     frzcpi_ = mo_space_info_->get_dimension("INACTIVE_DOCC");
     nfrzc_ = mo_space_info_->size("INACTIVE_DOCC");
 
-    twice_ms_ = multiplicity_ - 1;
-    if (options_->has_changed("MS")) {
-        twice_ms_ = std::round(2.0 * options_->get_double("MS"));
-    }
+    twice_ms_ = state_.twice_ms();
 
     // Build the reference determinant and compute its energy
-    CI_Reference ref(scf_info_, options_, mo_space_info_, as_ints_, multiplicity_, twice_ms_,
-                wavefunction_symmetry_);
+    CI_Reference ref(state_, scf_info_, options_, mo_space_info_, as_ints_, multiplicity_,
+                     twice_ms_, wavefunction_symmetry_);
     ref.build_reference(initial_reference_);
 
     // Read options
-    nroot_ = options_->get_int("NROOT");
+    //    nroot_ = options_->get_int("NROOT");
 
-    max_cycle_ = 20;
-    if (options_->has_changed("ASCI_MAX_CYCLE")) {
-        max_cycle_ = options_->get_int("ASCI_MAX_CYCLE");
-    }
-    pre_iter_ = 0;
-    if (options_->has_changed("ACI_PREITERATIONS")) {
-        pre_iter_ = options_->get_int("ACI_PREITERATIONS");
-    }
+    max_cycle_ = options_->get_int("ASCI_MAX_CYCLE");
+    pre_iter_ = options_->get_int("ACI_PREITERATIONS");
 
     diag_method_ = DLSolver;
-    if (options_->has_changed("DIAG_ALGORITHM")) {
-        if (options_->get_str("DIAG_ALGORITHM") == "FULL") {
-            diag_method_ = Full;
-        } else if (options_->get_str("DIAG_ALGORITHM") == "DLSTRING") {
-            diag_method_ = DLString;
-        } else if (options_->get_str("DIAG_ALGORITHM") == "SPARSE") {
-            diag_method_ = Sparse;
-        } else if (options_->get_str("DIAG_ALGORITHM") == "SOLVER") {
-            diag_method_ = DLSolver;
-        } else if (options_->get_str("DIAG_ALGORITHM") == "DYNAMIC") {
-            diag_method_ = Dynamic;
-        }
+    if (options_->get_str("DIAG_ALGORITHM") == "FULL") {
+        diag_method_ = Full;
+    } else if (options_->get_str("DIAG_ALGORITHM") == "DLSTRING") {
+        diag_method_ = DLString;
+    } else if (options_->get_str("DIAG_ALGORITHM") == "SPARSE") {
+        diag_method_ = Sparse;
+    } else if (options_->get_str("DIAG_ALGORITHM") == "SOLVER") {
+        diag_method_ = DLSolver;
+    } else if (options_->get_str("DIAG_ALGORITHM") == "DYNAMIC") {
+        diag_method_ = Dynamic;
     }
     // Decide when to compute coupling lists
     build_lists_ = true;
@@ -197,7 +186,6 @@ void ASCI::diagonalize_P_space() {
 
     follow_ = false;
     if (ex_alg_ == "ROOT_COMBINE" or ex_alg_ == "MULTISTATE" or ex_alg_ == "ROOT_ORTHOGONALIZE") {
-
         follow_ = true;
     }
 
@@ -566,23 +554,75 @@ void ASCI::compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints, Determin
     //    double total_time = 0.0;
     ci_rdms_.set_max_rdm(rdm_level);
 
-    if (rdm_level >= 1) {
-        local_timer one_r;
-        ci_rdms_.compute_1rdm(ordm_a_.data(), ordm_b_.data(), op);
-        outfile->Printf("\n  1-RDM  took %2.6f s (determinant)", one_r.get());
+    if (options_->get_bool("SCI_DIRECT_RDMS")) {
+        // TODO: Implemente order-by-order version of direct algorithm
+        ordm_a_ = ambit::Tensor::build(ambit::CoreTensor, "g1a", {nact_, nact_});
+        ordm_b_ = ambit::Tensor::build(ambit::CoreTensor, "g1b", {nact_, nact_});
 
+        trdm_aa_ = ambit::Tensor::build(ambit::CoreTensor, "g2aa", {nact_, nact_, nact_, nact_});
+        trdm_ab_ = ambit::Tensor::build(ambit::CoreTensor, "g2ab", {nact_, nact_, nact_, nact_});
+        trdm_bb_ = ambit::Tensor::build(ambit::CoreTensor, "g2bb", {nact_, nact_, nact_, nact_});
+
+        trdm_aaa_ = ambit::Tensor::build(ambit::CoreTensor, "g2aaa",
+                                         {nact_, nact_, nact_, nact_, nact_, nact_});
+        trdm_aab_ = ambit::Tensor::build(ambit::CoreTensor, "g2aab",
+                                         {nact_, nact_, nact_, nact_, nact_, nact_});
+        trdm_abb_ = ambit::Tensor::build(ambit::CoreTensor, "g2abb",
+                                         {nact_, nact_, nact_, nact_, nact_, nact_});
+        trdm_bbb_ = ambit::Tensor::build(ambit::CoreTensor, "g2bbb",
+                                         {nact_, nact_, nact_, nact_, nact_, nact_});
+
+        ci_rdms_.compute_rdms_dynamic(ordm_a_.data(), ordm_b_.data(), trdm_aa_.data(),
+                                      trdm_ab_.data(), trdm_bb_.data(), trdm_aaa_.data(),
+                                      trdm_aab_.data(), trdm_abb_.data(), trdm_bbb_.data());
         print_nos();
+        // double dt = dyn.get();
+        // outfile->Printf("\n  RDMS (bits) took           %1.6f", dt);
+    } else {
+        if (rdm_level >= 1) {
+            local_timer one_r;
+            ordm_a_ = ambit::Tensor::build(ambit::CoreTensor, "g1a", {nact_, nact_});
+            ordm_b_ = ambit::Tensor::build(ambit::CoreTensor, "g1b", {nact_, nact_});
+
+            ci_rdms_.compute_1rdm(ordm_a_.data(), ordm_b_.data(), op);
+            outfile->Printf("\n  1-RDM  took %2.6f s (determinant)", one_r.get());
+
+            if (options_->get_bool("ACI_PRINT_NO")) {
+                print_nos();
+            }
+        }
+        if (rdm_level >= 2) {
+            local_timer two_r;
+            trdm_aa_ =
+                ambit::Tensor::build(ambit::CoreTensor, "g2aa", {nact_, nact_, nact_, nact_});
+            trdm_ab_ =
+                ambit::Tensor::build(ambit::CoreTensor, "g2ab", {nact_, nact_, nact_, nact_});
+            trdm_bb_ =
+                ambit::Tensor::build(ambit::CoreTensor, "g2bb", {nact_, nact_, nact_, nact_});
+
+            ci_rdms_.compute_2rdm(trdm_aa_.data(), trdm_ab_.data(), trdm_bb_.data(), op);
+            outfile->Printf("\n  2-RDMS took %2.6f s (determinant)", two_r.get());
+        }
+        if (rdm_level >= 3) {
+            local_timer tr;
+            trdm_aaa_ = ambit::Tensor::build(ambit::CoreTensor, "g2aaa",
+                                             {nact_, nact_, nact_, nact_, nact_, nact_});
+            trdm_aab_ = ambit::Tensor::build(ambit::CoreTensor, "g2aab",
+                                             {nact_, nact_, nact_, nact_, nact_, nact_});
+            trdm_abb_ = ambit::Tensor::build(ambit::CoreTensor, "g2abb",
+                                             {nact_, nact_, nact_, nact_, nact_, nact_});
+            trdm_bbb_ = ambit::Tensor::build(ambit::CoreTensor, "g2bbb",
+                                             {nact_, nact_, nact_, nact_, nact_, nact_});
+
+            ci_rdms_.compute_3rdm(trdm_aaa_.data(), trdm_aab_.data(), trdm_abb_.data(),
+                                  trdm_bbb_.data(), op);
+            outfile->Printf("\n  3-RDMs took %2.6f s (determinant)", tr.get());
+        }
     }
-    if (rdm_level >= 2) {
-        local_timer two_r;
-        ci_rdms_.compute_2rdm(trdm_aa_.data(), trdm_ab_.data(), trdm_bb_.data(), op);
-        outfile->Printf("\n  2-RDMS took %2.6f s (determinant)", two_r.get());
-    }
-    if (rdm_level >= 3) {
-        local_timer tr;
-        ci_rdms_.compute_3rdm(trdm_aaa_.data(), trdm_aab_.data(), trdm_abb_.data(),
-                              trdm_bbb_.data(), op);
-        outfile->Printf("\n  3-RDMs took %2.6f s (determinant)", tr.get());
+    if (options_->get_bool("SCI_TEST_RDMS")) {
+        ci_rdms_.rdm_test(ordm_a_.data(), ordm_b_.data(), trdm_aa_.data(), trdm_bb_.data(),
+                          trdm_ab_.data(), trdm_aaa_.data(), trdm_aab_.data(), trdm_abb_.data(),
+                          trdm_bbb_.data());
     }
 }
 
