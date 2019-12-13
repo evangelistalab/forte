@@ -37,7 +37,7 @@ import psi4.driver.p4util as p4util
 from psi4.driver.procrouting import proc_util
 
 def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
-    max_rdm_level = 3 # TODO: set this (Francesco)
+    max_rdm_level = 2 if options.get_str('THREEPDC') == 'ZERO' else 3
     return_en = 0.0
 
     state_map = forte.to_state_nroots_map(state_weights_map)
@@ -58,7 +58,7 @@ def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
     correlation_solver_type = options.get_str('CORRELATION_SOLVER')
     if correlation_solver_type != 'NONE':
         # Grab the reference
-        rdms = active_space_solver.compute_average_rdms(state_weights_map, 3) # TODO: max_rdm_level should be chosen in a smart way
+        rdms = active_space_solver.compute_average_rdms(state_weights_map, max_rdm_level)
 
         # Compute unitary matrices Ua and Ub that rotate the orbitals to the semicanonical basis
         semi = forte.SemiCanonical(mo_space_info, ints, options)
@@ -255,7 +255,7 @@ def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
                     psi4.core.set_scalar_variable('FULLY RELAXED DIPOLE', dsrg_dipoles[-1][1][-1])
 
         return Erelax
-    else : 
+    else:
 
         average_energy = forte.compute_average_state_energy(state_energies_list,state_weights_map)
         return_en = average_energy
