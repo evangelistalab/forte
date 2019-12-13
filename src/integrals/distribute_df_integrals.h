@@ -81,6 +81,10 @@ class DistDFIntegrals : public ForteIntegrals {
         throw psi::PSIEXCEPTION("DistDF can not use set_tei");
     }
 
+    void build_from_asints(std::shared_ptr<ActiveSpaceIntegrals> as_ints) {}
+
+    void set_tei_from_asints(std::shared_ptr<ActiveSpaceIntegrals> as_ints, bool alpha1, bool alpha2) {}
+
     virtual void make_fock_matrix(std::shared_ptr<psi::Matrix> /*gamma_a*/,
                                   std::shared_ptr<psi::Matrix> /*gamma_b*/) {}
 

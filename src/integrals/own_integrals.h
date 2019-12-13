@@ -88,6 +88,10 @@ class OwnIntegrals : public ForteIntegrals {
 
     void set_tei(size_t, size_t, size_t, size_t, double, bool, bool) override {}
 
+    void build_from_asints(std::shared_ptr<ActiveSpaceIntegrals> as_ints) {}
+
+    void set_tei_from_asints(std::shared_ptr<ActiveSpaceIntegrals> as_ints, bool alpha1, bool alpha2) {}
+
     void make_fock_matrix(std::shared_ptr<psi::Matrix> /*gamma_a*/,
                           std::shared_ptr<psi::Matrix> /*gamma_b*/) override {}
     size_t nthree() const override { return 1; }

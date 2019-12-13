@@ -6,6 +6,7 @@ def register_forte_options(forte_options):
     register_avas_options(forte_options)
     register_cino_options(forte_options)
     register_mrcino_options(forte_options)
+    register_embedding_options(forte_options)
     register_integral_options(forte_options)
     register_pt2_options(forte_options)
     register_pci_options(forte_options)
@@ -118,6 +119,68 @@ def register_mrcino_options(forte_options):
         "actice_docc and restricted_docc"
         "or not")
 
+def register_embedding_options(forte_options):
+    forte_options.add_bool(
+        "EMBEDDING", False, 
+        "Whether to perform embedding partition and projection")
+    forte_options.add_str(
+        "EMBEDDING_CUTOFF_METHOD", "THRESHOLD", 
+        "Cut off by: threshold ,cum_threshold or num_of_orbitals.")
+    forte_options.add_double(
+        "EMBEDDING_THRESHOLD", 0.5, 
+        "Projector eigenvalue threshold for both simple and cumulative threshold")
+    forte_options.add_int(
+        "NUM_A_DOCC", 0, 
+        "Number of occupied orbitals in A fixed to this value when embedding method is num_of_orbitals")
+    forte_options.add_int(
+        "Num_A_UOCC", 0,
+        "Number of virtual orbitals in A fixed to this value when embedding method is num_of_orbitals")
+    forte_options.add_str(
+        "EMBEDDING_REFERENCE", "CASSCF", 
+        "HF for any reference without active, CASSCF for any reference with an active space.")
+    forte_options.add_bool(
+        "EMBEDDING_SEMICANONICALIZE_ACTIVE", True, 
+        "Perform semi-canonicalization on active space or not")
+    forte_options.add_bool(
+        "EMBEDDING_SEMICANONICALIZE_FROZEN", True, 
+        "Perform semi-canonicalization on frozen core/virtual space or not")
+    forte_options.add_int(
+        "EMBEDDING_ADJUST_B_DOCC", 0, 
+        "Adjust number of occupied orbitals between A and B, +: move to B, -: move to A")
+    forte_options.add_int(
+        "EMBEDDING_ADJUST_B_UOCC", 0,
+        "Adjust number of virtual orbitals between A and B, +: move to B, -: move to A")
+    forte_options.add_str(
+        "EMBEDDING_SPECIAL", "NONE", ["NONE", "SWAPAB", "INNER_LAYER"],
+        "Special test functions for PT2 embedding")
+    forte_options.add_bool("ADV_EMBEDDING", False, "Turn on/off the multilayer PT2 effective Hamiltonian rotation")
+    forte_options.add_int("FRAGMENT_RDOCC", 0, "fragment restricted_docc")
+    forte_options.add_int("FRAGMENT_ACTIVE", 0, "fragment active")
+    forte_options.add_int("FRAGMENT_RUOCC", 0, "fragment restricted_uocc")
+    forte_options.add_str(
+        'FRAGMENT_DENSITY', 'RHF', ['CASSCF', 'RHF', 'FCI'],
+        'The real/approximate RDMs used in the correlative environment computation')
+    forte_options.add_str(
+        'FRAG_CORRELATION_SOLVER', 'MRDSRG',
+        ['DSRG-MRPT2', 'THREE-DSRG-MRPT2', 'DSRG-MRPT3', 'MRDSRG',
+         'SOMRDSRG', 'MRDSRG_SO', 'DSRG_MRPT'],
+        'Dynamical correlation solver type for Fragment-environment correlation')
+    forte_options.add_str(
+        'ENV_CORRELATION_SOLVER', 'MRDSRG',
+        ['DSRG-MRPT2', 'THREE-DSRG-MRPT2', 'DSRG-MRPT3', 'MRDSRG',
+         'SOMRDSRG', 'MRDSRG_SO', 'DSRG_MRPT'],
+        'Dynamical correlation solver type for Fragment-environment correlation')
+    forte_options.add_str("FRAG_CORR_LEVEL", "LDSRG2",
+        ["PT2", "PT3", "LDSRG2", "LDSRG2_QC", "LSRG2", "SRG_PT2", "QDSRG2",
+         "LDSRG2_P3", "QDSRG2_P3"],
+        "Correlation level of fragment MR-DSRG (used in mrdsrg code, "
+        "LDSRG2_P3 and QDSRG2_P3 not implemented)")
+    forte_options.add_str("ENV_CORR_LEVEL", "PT2",
+        ["PT2", "PT3", "LDSRG2", "LDSRG2_QC", "LSRG2", "SRG_PT2", "QDSRG2",
+         "LDSRG2_P3", "QDSRG2_P3"],
+        "Correlation level of environment (interactive) MR-DSRG (used in mrdsrg code, "
+        "LDSRG2_P3 and QDSRG2_P3 not implemented)")
+
 def register_mo_space_info_options(forte_options):
     forte_options.add_array(
         "FROZEN_DOCC",
@@ -168,7 +231,6 @@ def register_active_space_solver_options(forte_options):
 def register_pt2_options(forte_options):
     forte_options.add_double("PT2_MAX_MEM", 1.0,
                              " Maximum size of the determinant hash (GB)")
-
 
 def register_pci_options(forte_options):
     forte_options.add_str("PCI_GENERATOR", "WALL-CHEBYSHEV", [
@@ -571,6 +633,20 @@ def register_dsrg_options(forte_options):
 
     forte_options.add_bool("DSRG_SR_DOWNFOLD", False, "SR MR downfolding")
 
+    forte_options.add_str("DOWNFOLD_DENSITY", "RHF", ["RHF", "CASSCF", "FCI"], "the source of downfolding reference density (RDMs)")
+
+#    forte_options.add_str("DSRG_FOLD_T1", "AA", "Any C,A,V combinations: [AA, CA, AV]", "Zero out corresponding blocks in T2")
+
+#    forte_options.add_str("DSRG_FOLD_T2", "AAAA", "Any C,A,V combinations",
+#                     "Zero out corresponding blocks in T2")
+
+#    forte_options.add_str("DSRG_FOLD", "NONE", "[NONE, ONE, ALL]",
+#                     "Trigger folding T blocks")
+
+    forte_options.add_bool("DSRG_FOLD", False, "Turn on/off folding any blocks")
+    forte_options.add_array("DSRG_FOLD_T1", "An array to assign which block(s) will be folded in T1")
+    forte_options.add_array("DSRG_FOLD_T2", "An array to assign which block(s) will be folded in T2")
+
     forte_options.add_bool("DSRG_QC_2BODY", True,
                      "Include two-body Hamiltonian in 0.5 * [[V, A], A] if True (used in LDSRG2_QC)")
 
@@ -674,6 +750,11 @@ def register_dsrg_options(forte_options):
                       "NIVO approximation: Omit tensor blocks with >= 3 virtual indices if true")
 
     forte_options.add_bool("PRINT_1BODY_EVALS", False, "Print eigenvalues of 1-body effective H")
+
+    forte_options.add_bool("DSRG_MRPT3_BATCHED", False, "Force running the DSRG-MRPT3 code using the batched algorithm")
+
+    forte_options.add_bool("IGNORE_MEMORY_WARNINGS", False, "Force running the DSRG-MRPT3 code using the batched algorithm")
+
 
 def register_dwms_options(forte_options):
     forte_options.add_double("DWMS_ZETA", 0.0, """Automatic Gaussian width cutoff for the density weights
@@ -805,6 +886,9 @@ def register_old_options(forte_options):
                           "The form of the two-particle density cumulant")
     forte_options.add_str("THREEPDC", "MK", ["MK", "MK_DECOMP", "ZERO"],
                           "The form of the three-particle density cumulant")
+    #    /*- Select a modified commutator -*/
+    forte_options.add_str("SRG_COMM", "STANDARD", "STANDARD FO FO2")
+
 
     #    /*- The minimum excitation level (Default value: 0) -*/
     #    forte_options.add_int("MIN_EXC_LEVEL", 0)

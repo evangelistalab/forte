@@ -27,6 +27,8 @@
  * @END LICENSE
  */
 
+#include <iomanip>
+
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/libpsi4util/process.h"
@@ -146,8 +148,6 @@ std::vector<std::pair<size_t, size_t>> MOSpaceInfo::get_relative_mo(const std::s
 }
 
 void MOSpaceInfo::read_options(std::shared_ptr<ForteOptions> options) {
-    outfile->Printf("\n\n  ==> MO Space Information <==\n");
-
     // Read the elementary spaces
     for (std::string& space : elementary_spaces_) {
         std::pair<SpaceInfo, bool> result = read_mo_space(space, options);
@@ -155,6 +155,23 @@ void MOSpaceInfo::read_options(std::shared_ptr<ForteOptions> options) {
             mo_spaces_[space] = result.first;
         }
     }
+}
+
+void MOSpaceInfo::read_from_map(std::map<std::string, std::vector<size_t>>& mo_space_map) {
+
+    // Read the elementary spaces
+    for (std::string& space : elementary_spaces_) {
+        std::pair<SpaceInfo, bool> result = read_mo_space_from_map(space, mo_space_map);
+        if (result.second) {
+            mo_spaces_[space] = result.first;
+        }
+    }
+}
+
+void MOSpaceInfo::set_reorder(const std::vector<size_t>& reorder) { reorder_ = reorder; }
+
+void MOSpaceInfo::compute_space_info() {
+    outfile->Printf("\n\n  ==> MO Space Information <==\n");
 
     // Handle frozen core
 
@@ -198,7 +215,12 @@ void MOSpaceInfo::read_options(std::shared_ptr<ForteOptions> options) {
         for (std::string space : elementary_spaces_) {
             size_t n = mo_spaces_[space].first[h];
             for (size_t q = 0; q < n; ++q) {
-                mo_spaces_[space].second.push_back(std::make_tuple(p_abs, h, p_rel));
+                size_t p_order = p_abs;
+                // If a reordering array is provided, use it to determine the index
+                if (reorder_.size() > 0) {
+                    p_order = reorder_[p_order];
+                }
+                mo_spaces_[space].second.push_back(std::make_tuple(p_order, h, p_rel));
                 p_abs += 1;
                 p_rel += 1;
             }
@@ -263,7 +285,7 @@ std::pair<SpaceInfo, bool> MOSpaceInfo::read_mo_space(const std::string& space,
     bool read = false;
     psi::Dimension space_dim(nirrep_);
     std::vector<MOInfo> vec_mo_info;
-    if ((options->has_changed(space)) && (options->get_int_vec(space).size() == nirrep_)) {
+    if (options->get_int_vec(space).size() == nirrep_) {
         for (size_t h = 0; h < nirrep_; ++h) {
             space_dim[h] = options->get_int_vec(space)[h];
         }
@@ -278,11 +300,50 @@ std::pair<SpaceInfo, bool> MOSpaceInfo::read_mo_space(const std::string& space,
     return std::make_pair(space_info, read);
 }
 
+std::pair<SpaceInfo, bool>
+MOSpaceInfo::read_mo_space_from_map(const std::string& space,
+                                    std::map<std::string, std::vector<size_t>>& mo_space_map) {
+    bool read = false;
+    psi::Dimension space_dim(nirrep_);
+    std::vector<MOInfo> vec_mo_info;
+
+    // lookup the space
+    auto it = mo_space_map.find(space);
+    if (it != mo_space_map.end()) {
+        const auto& dim = mo_space_map[space];
+        if (dim.size() == nirrep_) {
+            for (size_t h = 0; h < nirrep_; ++h) {
+                space_dim[h] = dim[h];
+            }
+            read = true;
+        } else {
+            throw std::runtime_error(
+                "\n  The size of space vector does not match the number of "
+                "irreducible representations.");
+        }
+    }
+    SpaceInfo space_info(space_dim, vec_mo_info);
+    return std::make_pair(space_info, read);
+}
+
 std::shared_ptr<MOSpaceInfo> make_mo_space_info(psi::SharedWavefunction ref_wfn,
                                                 std::shared_ptr<ForteOptions> options) {
     psi::Dimension nmopi = ref_wfn->nmopi();
     auto mo_space_info = std::make_shared<MOSpaceInfo>(nmopi);
     mo_space_info->read_options(options);
+    mo_space_info->compute_space_info();
+    return mo_space_info;
+}
+
+std::shared_ptr<MOSpaceInfo>
+make_mo_space_info_from_map(std::shared_ptr<psi::Wavefunction> ref_wfn,
+                            std::map<std::string, std::vector<size_t>>& mo_space_map,
+                            std::vector<size_t> reorder) {
+    psi::Dimension nmopi = ref_wfn->nmopi();
+    auto mo_space_info = std::make_shared<MOSpaceInfo>(nmopi);
+    mo_space_info->set_reorder(reorder);
+    mo_space_info->read_from_map(mo_space_map);
+    mo_space_info->compute_space_info();
     return mo_space_info;
 }
 

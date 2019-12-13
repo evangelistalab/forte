@@ -218,6 +218,7 @@ class MRDSRG : public MASTER_DSRG {
     void update_t2_pt();
     /// Zero amplitudes for SR downfolding
     void zero_t2_sr_downfolding(BlockedTensor& T2);
+    void zero_t2_simple(BlockedTensor& T2);
 
     /// RMS of T1
     double T1rms_;
@@ -237,6 +238,7 @@ class MRDSRG : public MASTER_DSRG {
     void update_t1_nocv();
     /// Zero amplitudes for SR downfolding
     void zero_t1_sr_downfolding(BlockedTensor& T1);
+    void zero_t1_simple(BlockedTensor& T1);
 
     /// Write T2 to files MRDSRG_T2_XX.dat, XX = AA, AB, BB
     void write_t2_file(BlockedTensor& T2, const std::string& spin);
@@ -276,6 +278,19 @@ class MRDSRG : public MASTER_DSRG {
     /// Norm of off-diagonal Hbar1
     double Hbar1od_norm(const std::vector<std::string>& blocks);
 
+    /// Compute zero-body term of commutator [H2, T1]
+    void H2_T1_C0_DF(BlockedTensor& B, BlockedTensor& T1, const double& alpha, double& C0);
+    /// Compute zero-body term of commutator [H2, T2] with density fitting
+    void H2_T2_C0_DF(BlockedTensor& B, BlockedTensor& T2, const double& alpha, double& C0);
+    /// Compute one-body term of commutator [H2, T1]
+    void H2_T1_C1_DF(BlockedTensor& B, BlockedTensor& T1, const double& alpha, BlockedTensor& C1);
+    /// Compute one-body term of commutator [H2, T2] with density fitting
+    void H2_T2_C1_DF(BlockedTensor& B, BlockedTensor& T2, const double& alpha, BlockedTensor& C1);
+    /// Compute two-body term of commutator [H2, T1]
+    void H2_T1_C2_DF(BlockedTensor& B, BlockedTensor& T1, const double& alpha, BlockedTensor& C2);
+    /// Compute two-body term of commutator [H2, T2] with density fitting
+    void H2_T2_C2_DF(BlockedTensor& B, BlockedTensor& T2, const double& alpha, BlockedTensor& C2);
+
     //    /// Compute zero-body term of commutator [H1, T1]
     //    void H1_T1_C0(BlockedTensor& H1, BlockedTensor& T1, const double& alpha, double& C0);
     //    /// Compute zero-body term of commutator [H1, T2]
@@ -284,10 +299,6 @@ class MRDSRG : public MASTER_DSRG {
     //    void H2_T1_C0(BlockedTensor& H2, BlockedTensor& T1, const double& alpha, double& C0);
     //    /// Compute zero-body term of commutator [H2, T2]
     //    void H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, double& C0);
-    /// Compute zero-body term of commutator [H2, T1]
-    void H2_T1_C0_DF(BlockedTensor& B, BlockedTensor& T1, const double& alpha, double& C0);
-    /// Compute zero-body term of commutator [H2, T2] with density fitting
-    void H2_T2_C0_DF(BlockedTensor& B, BlockedTensor& T2, const double& alpha, double& C0);
 
     //    /// Compute one-body term of commutator [H1, T1]
     //    void H1_T1_C1(BlockedTensor& H1, BlockedTensor& T1, const double& alpha, BlockedTensor&
@@ -301,10 +312,6 @@ class MRDSRG : public MASTER_DSRG {
     //    /// Compute one-body term of commutator [H2, T2]
     //    void H2_T2_C1(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, BlockedTensor&
     //    C1);
-    /// Compute one-body term of commutator [H2, T1]
-    void H2_T1_C1_DF(BlockedTensor& B, BlockedTensor& T1, const double& alpha, BlockedTensor& C1);
-    /// Compute one-body term of commutator [H2, T2] with density fitting
-    void H2_T2_C1_DF(BlockedTensor& B, BlockedTensor& T2, const double& alpha, BlockedTensor& C1);
 
     //    /// Compute two-body term of commutator [H2, T1]
     //    void H2_T1_C2(BlockedTensor& H2, BlockedTensor& T1, const double& alpha, BlockedTensor&
@@ -315,10 +322,6 @@ class MRDSRG : public MASTER_DSRG {
     //    /// Compute two-body term of commutator [H2, T2]
     //    void H2_T2_C2(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, BlockedTensor&
     //    C2);
-    /// Compute two-body term of commutator [H2, T1]
-    void H2_T1_C2_DF(BlockedTensor& B, BlockedTensor& T1, const double& alpha, BlockedTensor& C2);
-    /// Compute two-body term of commutator [H2, T2] with density fitting
-    void H2_T2_C2_DF(BlockedTensor& B, BlockedTensor& T2, const double& alpha, BlockedTensor& C2);
 
     /// Copy T1 and T2 to a big vector for DIIS
     std::vector<double> copy_amp_diis(BlockedTensor& T1, const std::vector<std::string>& label1,

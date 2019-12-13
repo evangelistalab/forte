@@ -213,8 +213,9 @@ void SemiCanonical::build_fock_matrix(RDMs& rdms) {
     psi::SharedMatrix Da(new psi::Matrix("Da", ncmo_, ncmo_));
     psi::SharedMatrix Db(new psi::Matrix("Db", ncmo_, ncmo_));
 
-    Matrix L1a = tensor_to_matrix(rdms.g1a(), actv_);
-    Matrix L1b = tensor_to_matrix(rdms.g1b(), actv_);
+    auto L1a = tensor_to_matrix(rdms.g1a(), actv_);
+    auto L1b = tensor_to_matrix(rdms.g1b(), actv_);
+
 
     for (size_t h = 0, offset = 0; h < nirrep_; ++h) {
         // core block (diagonal)
@@ -228,8 +229,8 @@ void SemiCanonical::build_fock_matrix(RDMs& rdms) {
         // active block
         for (int u = 0; u < actv_[h]; ++u) {
             for (int v = 0; v < actv_[h]; ++v) {
-                Da->set(offset + u, offset + v, L1a.get(h, u, v));
-                Db->set(offset + u, offset + v, L1b.get(h, u, v));
+                Da->set(offset + u, offset + v, L1a->get(h, u, v));
+                Db->set(offset + u, offset + v, L1b->get(h, u, v));
             }
         }
 

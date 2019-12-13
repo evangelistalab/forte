@@ -82,11 +82,12 @@ class ConventionalIntegrals : public ForteIntegrals {
     void set_tei(size_t p, size_t q, size_t r, size_t s, double value, bool alpha1,
                  bool alpha2) override;
 
+    void set_tei_from_asints(std::shared_ptr<ActiveSpaceIntegrals> as_ints, bool alpha1, bool alpha2) override;
+
+    void build_from_asints(std::shared_ptr<ActiveSpaceIntegrals> as_ints) override;
+
   private:
     // ==> Class data <==
-
-    /// The IntegralTransform object used by this class
-    std::shared_ptr<psi::IntegralTransform> integral_transform_;
 
     /// Two-electron integrals stored as a vector
     std::vector<double> aphys_tei_aa;
@@ -96,7 +97,7 @@ class ConventionalIntegrals : public ForteIntegrals {
     // ==> Class private functions <==
 
     /// Transform the integrals
-    void transform_integrals();
+    std::shared_ptr<psi::IntegralTransform> transform_integrals();
     void resort_four(std::vector<double>& tei, std::vector<size_t>& map);
 
     /// An addressing function to for two-electron integrals

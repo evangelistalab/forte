@@ -24,6 +24,7 @@ aci:
    - aci-17
    - aci-18
    - aci-19
+   - aci-20
    - aci-local-20
    - aci_scf-1
    - aci-full-pt2-1
@@ -58,6 +59,12 @@ avas:
    - avas-3
    - avas-4
    - avas-5
+embedding:
+  short:
+   - embedding-1
+   - embedding-2
+   - embedding-3
+   - embedding-4
 casscf:
   short:
    - casscf
@@ -103,6 +110,9 @@ df-dsrg-mrpt2:
    - df-dsrg-mrpt2-7-localized-actv
   unused:
    - df-dsrg-mrpt2-testccvv
+dsrg-mrpt2_spin_adapted:
+  short:
+   - dsrg-mrpt2_spin_adapted-1
 dsrg-mrpt2:
   short:
    - dsrg-mrpt2-1
@@ -132,12 +142,13 @@ dsrg-mrpt3:
    - dsrg-mrpt3-1
    - dsrg-mrpt3-2
    - dsrg-mrpt3-5
+   - dsrg-mrpt3-9
+   - dsrg-mrpt3-7-CO
    - aci-dsrg-mrpt3-1
   long:
    - dsrg-mrpt3-3
    - dsrg-mrpt3-4
    - dsrg-mrpt3-6-sa
-   - dsrg-mrpt3-7-CO
    - dsrg-mrpt3-8-sa-C2H4
 dwms-dsrgpt:
 # short:
@@ -187,7 +198,14 @@ mr-dsrg-pt2:
    - mr-dsrg-pt2-2
    - mr-dsrg-pt2-3
 #   - mr-dsrg-pt2-4
+mrdsrg_so:
+  short:
+   - mrdsrg_so-1
+  long:
+   - mrdsrg_so-2
 mrdsrg-ldsrg2-df:
+  short:
+   - mrdsrg-ldsrg2-df-4
   long:
    - mrdsrg-ldsrg2-df-seq-1
    - mrdsrg-ldsrg2-df-seq-2
@@ -205,15 +223,6 @@ mrdsrg-ldsrg2-df:
    - mrdsrg-ldsrg2-df-nivo-2
    - mrdsrg-ldsrg2-df-nivo-3
    - mrdsrg-ldsrg2-df-seq-4
-   - mrdsrg-ldsrg2-df-seq-linear-1
-   - mrdsrg-ldsrg2-df-seq-linear-2
-   - mrdsrg-ldsrg2-df-seq-linear-3
-   - mrdsrg-ldsrg2-df-seq-linear-4
-   - mrdsrg-ldsrg2-df-seq-linear-5
-   - mrdsrg-ldsrg2-df-seq-linear-6
-   - mrdsrg-ldsrg2-df-seq-noV3-1
-   - mrdsrg-ldsrg2-df-seq-noV3-2
-   - mrdsrg-ldsrg2-df-seq-noV3-3
    - mrdsrg-ldsrg2-qc-df-2
 mrdsrg-pt2:
   short:

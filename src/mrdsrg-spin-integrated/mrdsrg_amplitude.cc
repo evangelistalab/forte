@@ -152,6 +152,10 @@ void MRDSRG::guess_t2_std(BlockedTensor& V, BlockedTensor& T2) {
         zero_t2_sr_downfolding(T2);
     }
 
+	if (foptions_->get_bool("DSRG_FOLD")) {
+		zero_t2_simple(T2);
+	}
+
     // norms
     T2norm_ = std::sqrt(t2aa_norm_ + t2bb_norm_ + 4 * t2ab_norm_);
     t2aa_norm_ = std::sqrt(t2aa_norm_);
@@ -235,6 +239,10 @@ void MRDSRG::guess_t2_std_df(BlockedTensor& B, BlockedTensor& T2) {
     if (sr_downfold_) {
         zero_t2_sr_downfolding(T2);
     }
+
+	if (foptions_->get_bool("DSRG_FOLD")) {
+		zero_t2_simple(T2);
+	}
 
     // norms
     T2norm_ = std::sqrt(t2aa_norm_ + t2bb_norm_ + 4 * t2ab_norm_);
@@ -338,6 +346,10 @@ void MRDSRG::guess_t1_std(BlockedTensor& F, BlockedTensor& T2, BlockedTensor& T1
     if (sr_downfold_) {
         zero_t1_sr_downfolding(T1);
     }
+
+	if (foptions_->get_bool("DSRG_FOLD")) {
+		zero_t1_simple(T1);
+	}
 
     // norms
     T1norm_ = std::sqrt(t1a_norm_ + t1b_norm_);
@@ -472,6 +484,10 @@ void MRDSRG::guess_t2_noccvv(BlockedTensor& V, BlockedTensor& T2) {
     if (sr_downfold_) {
         zero_t2_sr_downfolding(T2);
     }
+
+	if (foptions_->get_bool("DSRG_FOLD")) {
+		zero_t2_simple(T2);
+	}
 
     // norms
     T2norm_ = std::sqrt(t2aa_norm_ + t2bb_norm_ + 4 * t2ab_norm_);
@@ -609,6 +625,10 @@ void MRDSRG::guess_t2_noccvv_df(BlockedTensor& B, BlockedTensor& T2) {
     if (sr_downfold_) {
         zero_t2_sr_downfolding(T2);
     }
+
+	if (foptions_->get_bool("DSRG_FOLD")) {
+		zero_t2_simple(T2);
+	}
 
     // norms
     T2norm_ = std::sqrt(t2aa_norm_ + t2bb_norm_ + 4 * t2ab_norm_);
@@ -748,6 +768,10 @@ void MRDSRG::guess_t1_nocv(BlockedTensor& F, BlockedTensor& T2, BlockedTensor& T
         zero_t1_sr_downfolding(T1);
     }
 
+	if (foptions_->get_bool("DSRG_FOLD")) {
+		zero_t1_simple(T1);
+	}
+
     // norms
     T1norm_ = std::sqrt(t1a_norm_ + t1b_norm_);
     t1a_norm_ = std::sqrt(t1a_norm_);
@@ -866,6 +890,9 @@ void MRDSRG::update_t2_std() {
     if (sr_downfold_) {
         zero_t2_sr_downfolding(DT2_);
     }
+	if (foptions_->get_bool("DSRG_FOLD")) {
+		zero_t2_simple(DT2_);
+	}
     t8.stop();
 
     // compute RMS
@@ -988,6 +1015,9 @@ void MRDSRG::update_t1_std() {
     if (sr_downfold_) {
         zero_t1_sr_downfolding(DT1_);
     }
+	if (foptions_->get_bool("DSRG_FOLD")) {
+		zero_t1_simple(DT1_);
+	}
 
     // compute RMS
     T1rms_ = DT1_.norm();
@@ -1165,6 +1195,9 @@ void MRDSRG::update_t2_noccvv() {
     if (sr_downfold_) {
         zero_t2_sr_downfolding(R2);
     }
+	if (foptions_->get_bool("DSRG_FOLD")) {
+		zero_t2_simple(R2);
+	}
 
     // compute RMS
     DT2_["ijab"] = T2_["ijab"] - R2["ijab"];
@@ -1292,6 +1325,9 @@ void MRDSRG::update_t1_nocv() {
     if (sr_downfold_) {
         zero_t1_sr_downfolding(R1);
     }
+	if (foptions_->get_bool("DSRG_FOLD")) {
+		zero_t1_simple(R1);
+	}
 
     // compute RMS
     DT1_["ia"] = T1_["ia"] - R1["ia"];
@@ -1308,12 +1344,68 @@ void MRDSRG::update_t1_nocv() {
     t1b_norm_ = std::sqrt(t1b_norm_);
 }
 
+void MRDSRG::zero_t2_simple(BlockedTensor& T2) {
+	auto t2_fold_list = foptions_->get_int_vec("DSRG_FOLD_T2");
+	std::vector<std::string> block_list = { "AAAA", "CCVV", "AAAV", "AAVA", "AAVV", "ACAA",
+		"ACAV", "ACVA", "ACVV", "CAAA", "CAAV", "CAVA",
+		"CAVV", "CCAA", "CCAV", "CCVA" };
+	for (auto t2 : t2_fold_list) {
+		std::string t2_block = block_list[t2];
+
+		// zero bbbb
+		T2.block(t2_block).zero();
+		outfile->Printf("\n Block %s zeroed", t2_block.c_str());
+
+		// zero abab
+		std::string onestr_1 = t2_block.substr(0, 1);
+		std::string onestr_2 = t2_block.substr(2, 1);
+		onestr_1[0] = std::tolower(onestr_1[0]);
+		onestr_2[0] = std::tolower(onestr_2[0]);
+		t2_block.replace(0, 1, onestr_1);
+		t2_block.replace(2, 1, onestr_2);
+		T2.block(t2_block).zero();
+		outfile->Printf("\n Block %s zeroed", t2_block.c_str());
+
+		// zero aaaa
+		std::string twostr_1 = t2_block.substr(1, 1);
+		std::string twostr_2 = t2_block.substr(3, 1);
+		twostr_1[0] = std::tolower(twostr_1[0]);
+		twostr_2[0] = std::tolower(twostr_2[0]);
+		t2_block.replace(1, 1, twostr_1);
+		t2_block.replace(3, 1, twostr_2);
+		T2.block(t2_block).zero();
+		outfile->Printf("\n Block %s zeroed \n", t2_block.c_str());
+	}
+}
+
+void MRDSRG::zero_t1_simple(BlockedTensor& T1) {
+	auto t1_fold_list = foptions_->get_int_vec("DSRG_FOLD_T1");
+	std::vector<std::string> block_list = { "AA", "CV", "CA", "AV" };
+	for (auto t1 : t1_fold_list) {
+		std::string t1_block = block_list[t1];
+		// zero beta
+		T1.block(t1_block).zero();
+		outfile->Printf("\n block %s zeroed", t1_block.c_str());
+
+		// zero alpha
+		std::string onestr = t1_block.substr(0, 1);
+		onestr[0] = std::tolower(onestr[0]);
+		t1_block.replace(0, 1, onestr);
+		std::string twostr = t1_block.substr(1, 1);
+		twostr[0] = std::tolower(twostr[0]);
+		t1_block.replace(1, 1, twostr);
+		T1.block(t1_block).zero();
+		outfile->Printf("\n block %s zeroed", t1_block.c_str());
+	}
+}
+
 void MRDSRG::zero_t2_sr_downfolding(BlockedTensor& T2) {
     for (const std::string& block : T2.block_labels()) {
         size_t n1 = label_to_spacemo_[block.at(0)].size();
         size_t n2 = label_to_spacemo_[block.at(1)].size();
         size_t n3 = label_to_spacemo_[block.at(2)].size();
         size_t n4 = label_to_spacemo_[block.at(3)].size();
+
 
         // blocks AYXX, X = A, V, Y = C, A
         // zero when A belongs to active virtual
@@ -1331,6 +1423,27 @@ void MRDSRG::zero_t2_sr_downfolding(BlockedTensor& T2) {
             }
         }
 
+
+/*
+        // Add_1
+        // blocks AYXX, X = A, V, Y = C, A
+        // zero when A belongs to active occupied
+        if (std::towlower(block.at(0)) == 'a') {
+            for (auto x : actv_occ_mos_) {
+#pragma omp parallel for
+                for (size_t i = 0; i < n2; ++i) {
+                    for (size_t a = 0; a < n3; ++a) {
+                        for (size_t b = 0; b < n4; ++b) {
+                            T2.block(block).data()[x * n2 * n3 * n4 + i * n3 * n4 + a * n4 + b] =
+                                0.0;
+                        }
+                    }
+                }
+            }
+        }
+*/
+
+
         // blocks YAXX, X = A, V, Y = C, A
         // zero when A belongs to active virtual
         if (std::towlower(block.at(1)) == 'a') {
@@ -1346,6 +1459,25 @@ void MRDSRG::zero_t2_sr_downfolding(BlockedTensor& T2) {
                 }
             }
         }
+
+/*
+        // Add_2
+        // blocks YAXX, X = A, V, Y = C, A
+        // zero when A belongs to active occupied
+        if (std::towlower(block.at(1)) == 'a') {
+            for (auto x : actv_occ_mos_) {
+#pragma omp parallel for
+                for (size_t i = 0; i < n1; ++i) {
+                    for (size_t a = 0; a < n3; ++a) {
+                        for (size_t b = 0; b < n4; ++b) {
+                            T2.block(block).data()[i * n2 * n3 * n4 + x * n3 * n4 + a * n4 + b] =
+                                0.0;
+                        }
+                    }
+                }
+            }
+        }
+*/
 
         // blocks XXAY, X = C, A, Y = A, V
         // zero when A belongs to active occupied
@@ -1363,6 +1495,25 @@ void MRDSRG::zero_t2_sr_downfolding(BlockedTensor& T2) {
             }
         }
 
+/*
+        // Add_3
+        // blocks XXAY, X = C, A, Y = A, V
+        // zero when A belongs to active virtual
+        if (std::towlower(block.at(2)) == 'a') {
+            for (auto x : actv_uocc_mos_) {
+#pragma omp parallel for
+                for (size_t a = 0; a < n4; ++a) {
+                    for (size_t i = 0; i < n1; ++i) {
+                        for (size_t j = 0; j < n2; ++j) {
+                            T2.block(block).data()[i * n2 * n3 * n4 + j * n3 * n4 + x * n4 + a] =
+                                0.0;
+                        }
+                    }
+                }
+            }
+        }
+*/
+
         // blocks XXYA, X = C, A, Y = A, V
         // zero when A belongs to active occupied
         if (std::towlower(block.at(3)) == 'a') {
@@ -1378,6 +1529,25 @@ void MRDSRG::zero_t2_sr_downfolding(BlockedTensor& T2) {
                 }
             }
         }
+
+/*
+        // Add_4
+        // blocks XXYA, X = C, A, Y = A, V
+        // zero when A belongs to active virtual
+        if (std::towlower(block.at(3)) == 'a') {
+            for (auto x : actv_uocc_mos_) {
+#pragma omp parallel for
+                for (size_t a = 0; a < n3; ++a) {
+                    for (size_t i = 0; i < n1; ++i) {
+                        for (size_t j = 0; j < n2; ++j) {
+                            T2.block(block).data()[i * n2 * n3 * n4 + j * n3 * n4 + a * n4 + x] =
+                                0.0;
+                        }
+                    }
+                }
+            }
+        }
+*/
     }
 }
 
@@ -1386,7 +1556,7 @@ void MRDSRG::zero_t1_sr_downfolding(BlockedTensor& T1) {
         size_t n1 = label_to_spacemo_[block.at(0)].size();
         size_t n2 = label_to_spacemo_[block.at(1)].size();
 
-        // CA
+        // Core->Active_core
         // zero when A belongs to active occupied
         if (std::towlower(block.at(1)) == 'a') {
             for (auto x : actv_occ_mos_) {
@@ -1397,7 +1567,20 @@ void MRDSRG::zero_t1_sr_downfolding(BlockedTensor& T1) {
             }
         }
 
-        // AV
+/*
+        // Core->Active_virtual
+        // zero when A belongs to active occupied
+        if (std::towlower(block.at(1)) == 'a') {
+            for (auto x : actv_uocc_mos_) {
+#pragma omp parallel for
+                for (size_t i = 0; i < n1; ++i) {
+                    T1.block(block).data()[i * n2 + x] = 0.0;
+                }
+            }
+        }
+*/
+
+        // Active_virtual->Virtual
         // zero when A belongs to active unoccupied
         if (std::towlower(block.at(0)) == 'a') {
             for (auto x : actv_uocc_mos_) {
@@ -1407,6 +1590,19 @@ void MRDSRG::zero_t1_sr_downfolding(BlockedTensor& T1) {
                 }
             }
         }
+
+/*
+        // Active_core->Virtual 
+        // zero when A belongs to active unoccupied
+        if (std::towlower(block.at(0)) == 'a') {
+            for (auto x : actv_occ_mos_) {
+#pragma omp parallel for
+                for (size_t a = 0; a < n2; ++a) {
+                    T1.block(block).data()[x * n2 + a] = 0.0;
+                }
+            }
+        }
+*/
     }
 }
 

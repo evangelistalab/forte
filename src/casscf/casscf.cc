@@ -143,10 +143,10 @@ double CASSCF::compute_energy() {
         /// TODO:  Maybe make this run the orbital optimization
         if (ci_step) {
             if ((iter < casscf_freq) || (iter % casscf_freq) == 0) {
-                cas_ci();
+                cas_ci(2);
             }
         } else {
-            cas_ci();
+            cas_ci(2);
         }
         if (print_ > 0) {
             outfile->Printf("\n\n CAS took %8.6f seconds.", cas_timer.get());
@@ -341,7 +341,7 @@ void CASSCF::startup() {
         outfile->Printf("\n     JK takes %5.5f s to initialize while using %s", JK_initialize.get(),
                         options_->get_str("SCF_TYPE").c_str());
 }
-void CASSCF::cas_ci() {
+void CASSCF::cas_ci(int cas_max_rdm_level) {
     /// Calls francisco's FCI code and does a CAS-CI with the active given in
     /// the input
     // tei_paaa_ = transform_integrals();
@@ -360,7 +360,8 @@ void CASSCF::cas_ci() {
     auto active_space_solver = make_active_space_solver(casscf_ci_type, state_map, scf_info_,
                                                         mo_space_info_, fci_ints, options_);
     const auto state_energies_map = active_space_solver->compute_energy();
-    cas_ref_ = active_space_solver->compute_average_rdms(state_weights_map, 2);
+    cas_ref_ = active_space_solver->compute_average_rdms(state_weights_map, cas_max_rdm_level);
+    cas_ref_.g2aa().print();
     double average_energy = compute_average_state_energy(state_energies_map, state_weights_map);
     // return the average energy
     E_casscf_ = average_energy;
@@ -444,7 +445,7 @@ void CASSCF::cas_ci_final() {
     if (print_ > 0) {
         quiet = false;
     }
-    cas_ci();
+    cas_ci(3);
     //    if (options_->get_str("CASSCF_CI_SOLVER") == "FCI") {
     //        // Used to grab the computed energy and RDMs.
     //        //        if (options_->psi_options()["AVG_STATE"].size() == 0) {
@@ -1009,13 +1010,15 @@ std::vector<RDMs> CASSCF::rdms(const std::vector<std::pair<size_t, size_t>>& /*r
                                int /*max_rdm_level*/) {
     // TODO (York): this does not seem the correct thing to do.
     std::vector<RDMs> refs;
+    cas_ref_.g1a().print();
+    cas_ref_.g2aa().print();
     refs.push_back(cas_ref_);
     return refs;
 }
 
-std::vector<RDMs> CASSCF::transition_rdms(const std::vector<std::pair<size_t, size_t>>& /*root_list*/,
-                                          std::shared_ptr<ActiveSpaceMethod> /*method2*/,
-                                          int /*max_rdm_level*/) {
+std::vector<RDMs>
+CASSCF::transition_rdms(const std::vector<std::pair<size_t, size_t>>& /*root_list*/,
+                        std::shared_ptr<ActiveSpaceMethod> /*method2*/, int /*max_rdm_level*/) {
     std::vector<RDMs> refs;
     throw std::runtime_error("FCISolver::transition_rdms is not implemented!");
     return refs;

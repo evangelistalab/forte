@@ -35,12 +35,12 @@
 #include "psi4/libmints/wavefunction.h"
 #include "ambit/blocked_tensor.h"
 
-#include "boost/assign.hpp"
+#include "base_classes/dynamic_correlation_solver.h"
 #include "base_classes/mo_space_info.h"
+#include "boost/assign.hpp"
 #include "integrals/integrals.h"
 #include "base_classes/rdms.h"
 #include "helpers/blockedtensorfactory.h"
-
 
 
 namespace forte {
@@ -49,18 +49,11 @@ namespace forte {
  * @brief The SOMRDSRG class
  * This class implements the MR-DSRG(2) using a spin orbital formalism
  */
-class SOMRDSRG : public psi::Wavefunction {
+class SOMRDSRG : public DynamicCorrelationSolver {
   protected:
     // => Class data <= //
 
-    /// The RDMs and cumulants of the reference wave function
-    RDMs rdms_;
-
-    /// The molecular integrals required by MethodBase
-    std::shared_ptr<ForteIntegrals> ints_;
-
-    /// The MOSpaceInfo object
-    std::shared_ptr<MOSpaceInfo> mo_space_info_;
+    int print_;
 
     /// The number of correlated orbitals per irrep (excluding frozen core and
     /// virtuals)
@@ -203,13 +196,16 @@ class SOMRDSRG : public psi::Wavefunction {
   public:
     // => Constructors <= //
 
-    SOMRDSRG(RDMs rdms, psi::SharedWavefunction ref_wfn, psi::Options& options,
+    SOMRDSRG(RDMs rdms, std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
              std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     ~SOMRDSRG();
 
     /// Compute the DSRG-MRPT2 energy
     double compute_energy();
+
+    /// DSRG transformed Hamiltonian (not implemented)
+    std::shared_ptr<ActiveSpaceIntegrals> compute_Heff_actv();
 
     /// The energy of the reference
     double Eref;

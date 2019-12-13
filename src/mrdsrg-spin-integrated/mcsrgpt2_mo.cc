@@ -88,7 +88,7 @@ double MCSRGPT2_MO::compute_energy() {
     }
 }
 
-void MCSRGPT2_MO::prepare_mo_space(){
+void MCSRGPT2_MO::prepare_mo_space() {
     // MO space
     ncmo_ = mo_space_info_->size("CORRELATED");
     nactv_ = mo_space_info_->size("ACTIVE");
@@ -119,7 +119,6 @@ void MCSRGPT2_MO::prepare_mo_space(){
             sym_ncmo_.push_back(h);
         }
     }
-
 }
 
 void MCSRGPT2_MO::startup() {
@@ -162,7 +161,7 @@ void MCSRGPT2_MO::startup() {
 
     // Print Original Orbital Indices
     print_h2("Correlated Subspace Indices");
-    auto print_idx = [&](const string& str, const std::vector<size_t>& vec) {
+    auto print_idx = [&](const std::string& str, const std::vector<size_t>& vec) {
         outfile->Printf("\n    %-30s", str.c_str());
         size_t c = 0;
         for (size_t x : vec) {
@@ -185,7 +184,7 @@ void MCSRGPT2_MO::startup() {
     outfile->Printf("\t\t\tDone.");
 
     // 2-Particle Density Cumulant
-    string twopdc = options_->get_str("TWOPDC");
+    std::string twopdc = options_->get_str("TWOPDC");
     if (twopdc == "ZERO") {
         L2aa_ = d4(nactv_, d3(nactv_, d2(nactv_, d1(nactv_))));
         L2ab_ = d4(nactv_, d3(nactv_, d2(nactv_, d1(nactv_))));
@@ -193,7 +192,7 @@ void MCSRGPT2_MO::startup() {
     }
 }
 
-double MCSRGPT2_MO::ElementRH(const string& source, const double& D, const double& V) {
+double MCSRGPT2_MO::ElementRH(const std::string& source, const double& D, const double& V) {
     if (std::fabs(V) < 1.0e-12)
         return 0.0;
     switch (sourcemap[source]) {
@@ -215,7 +214,9 @@ double MCSRGPT2_MO::ElementRH(const string& source, const double& D, const doubl
         double RD = D / (V * V);
         return V * exp(-s_ * std::fabs(RD));
     }
-    default: { return V * exp(-s_ * pow(std::fabs(D), expo_delta_)); }
+    default: {
+        return V * exp(-s_ * pow(std::fabs(D), expo_delta_));
+    }
     }
 }
 
@@ -395,7 +396,7 @@ void MCSRGPT2_MO::compute_ref() {
     timer_off("Compute Ref");
 }
 
-double MCSRGPT2_MO::ElementT(const string& source, const double& D, const double& V) {
+double MCSRGPT2_MO::ElementT(const std::string& source, const double& D, const double& V) {
     if (std::fabs(V) < 1.0e-12)
         return 0.0;
     switch (sourcemap[source]) {
@@ -446,7 +447,7 @@ double MCSRGPT2_MO::ElementT(const string& source, const double& D, const double
     }
 }
 
-void MCSRGPT2_MO::Form_T2_DSRG(d4& AA, d4& AB, d4& BB, string& T_ALGOR) {
+void MCSRGPT2_MO::Form_T2_DSRG(d4& AA, d4& AB, d4& BB, std::string& T_ALGOR) {
     timer_on("Form T2");
     for (size_t i = 0; i < nhole_; ++i) {
         size_t ni = hole_mos_[i];
@@ -756,12 +757,12 @@ void MCSRGPT2_MO::Form_T1_ISA(d2& A, d2& B, const double& b_const) {
     timer_off("Form T1");
 }
 
-inline bool ReverseSortT2(const tuple<double, size_t, size_t, size_t, size_t>& lhs,
-                          const tuple<double, size_t, size_t, size_t, size_t>& rhs) {
+inline bool ReverseSortT2(const std::tuple<double, size_t, size_t, size_t, size_t>& lhs,
+                          const std::tuple<double, size_t, size_t, size_t, size_t>& rhs) {
     return std::fabs(std::get<0>(rhs)) < std::fabs(std::get<0>(lhs));
 }
 
-void MCSRGPT2_MO::Check_T2(const string& x, const d4& M, double& Norm, double& MaxT,
+void MCSRGPT2_MO::Check_T2(const std::string& x, const d4& M, double& Norm, double& MaxT,
                            std::shared_ptr<ForteOptions> options) {
     timer_on("Check T2");
     size_t ntamp = options->get_int("NTAMP");
@@ -862,12 +863,12 @@ void MCSRGPT2_MO::Check_T2(const string& x, const d4& M, double& Norm, double& M
     timer_off("Check T2");
 }
 
-inline bool ReverseSortT1(const tuple<double, size_t, size_t>& lhs,
-                          const tuple<double, size_t, size_t>& rhs) {
+inline bool ReverseSortT1(const std::tuple<double, size_t, size_t>& lhs,
+                          const std::tuple<double, size_t, size_t>& rhs) {
     return std::fabs(std::get<0>(rhs)) < std::fabs(std::get<0>(lhs));
 }
 
-void MCSRGPT2_MO::Check_T1(const string& x, const d2& M, double& Norm, double& MaxT,
+void MCSRGPT2_MO::Check_T1(const std::string& x, const d2& M, double& Norm, double& MaxT,
                            std::shared_ptr<ForteOptions> options) {
     timer_on("Check T1");
     size_t ntamp = options->get_int("NTAMP");
@@ -1583,7 +1584,7 @@ void MCSRGPT2_MO::Form_AMP_DSRG() {
     T1a_ = d2(nhole_, d1(npart_));
     T1b_ = d2(nhole_, d1(npart_));
 
-    string t_algorithm = options_->get_str("T_ALGORITHM");
+    std::string t_algorithm = options_->get_str("T_ALGORITHM");
     t1_amp_ = options_->get_str("T1_AMP");
     bool t1_zero = t1_amp_ == "ZERO";
     outfile->Printf("\n");
@@ -3305,17 +3306,17 @@ double MCSRGPT2_MO::compute_energy_srg() {
     return Etotal;
 }
 
-void MCSRGPT2_MO::print_Fock(const string& spin, const d2& Fock) {
-    string name = "Fock " + spin;
+void MCSRGPT2_MO::print_Fock(const std::string& spin, const d2& Fock) {
+    std::string name = "Fock " + spin;
     outfile->Printf("  ==> %s <==\n\n", name.c_str());
     double econv = options_->get_double("E_CONVERGENCE");
 
     // print Fock block
-    auto print_Fock_block = [&](const string& name1, const string& name2,
+    auto print_Fock_block = [&](const std::string& name1, const std::string& name2,
                                 const std::vector<size_t>& idx1, const std::vector<size_t>& idx2) {
         size_t dim1 = idx1.size();
         size_t dim2 = idx2.size();
-        string bname = name1 + "-" + name2;
+        std::string bname = name1 + "-" + name2;
 
         psi::Matrix F(bname, dim1, dim2);
         for (size_t i = 0; i < dim1; ++i) {
@@ -3329,7 +3330,7 @@ void MCSRGPT2_MO::print_Fock(const string& spin, const d2& Fock) {
         F.print();
 
         if (dim1 != dim2) {
-            string bnamer = name2 + "-" + name1;
+            std::string bnamer = name2 + "-" + name1;
             psi::Matrix Fr(bnamer, dim2, dim1);
             for (size_t i = 0; i < dim2; ++i) {
                 size_t ni = idx2[i];
@@ -3558,8 +3559,8 @@ void MCSRGPT2_MO::fill_three_cumulant(ambit::Tensor& L3aaa, ambit::Tensor& L3aab
     fill(L3bbb_, L3bbb);
 }
 
-void MCSRGPT2_MO::print_density(const string& spin, const d2& density) {
-    string name = "Density " + spin;
+void MCSRGPT2_MO::print_density(const std::string& spin, const d2& density) {
+    std::string name = "Density " + spin;
     outfile->Printf("  ==> %s <==\n\n", name.c_str());
 
     psi::SharedMatrix dens(new psi::Matrix("A-A", nactv_, nactv_));
@@ -3574,7 +3575,7 @@ void MCSRGPT2_MO::print_density(const string& spin, const d2& density) {
     dens->print();
 }
 
-void MCSRGPT2_MO::print2PDC(const string& str, const d4& TwoPDC, const int& PRINT) {
+void MCSRGPT2_MO::print2PDC(const std::string& str, const d4& TwoPDC, const int& PRINT) {
     timer_on("PRINT 2-Cumulant");
     outfile->Printf("\n  ** %s **", str.c_str());
     size_t count = 0;
@@ -3601,7 +3602,7 @@ void MCSRGPT2_MO::print2PDC(const string& str, const d4& TwoPDC, const int& PRIN
     timer_off("PRINT 2-Cumulant");
 }
 
-void MCSRGPT2_MO::print3PDC(const string& str, const d6& ThreePDC, const int& PRINT) {
+void MCSRGPT2_MO::print3PDC(const std::string& str, const d6& ThreePDC, const int& PRINT) {
     timer_on("PRINT 3-Cumulant");
     outfile->Printf("\n  ** %s **", str.c_str());
     size_t count = 0;

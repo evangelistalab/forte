@@ -73,6 +73,10 @@ class CholeskyIntegrals : public ForteIntegrals {
     /// Do not use this if you are using CD/DF integrals
     void set_tei(size_t p, size_t q, size_t r, size_t s, double value, bool alpha1,
                  bool alpha2) override;
+    
+    void build_from_asints(std::shared_ptr<ActiveSpaceIntegrals> as_ints) {}
+
+    void set_tei_from_asints(std::shared_ptr<ActiveSpaceIntegrals> as_ints, bool alpha1, bool alpha2) {}
 
     void make_fock_matrix(std::shared_ptr<psi::Matrix> gamma_a,
                           std::shared_ptr<psi::Matrix> gamma_b) override;

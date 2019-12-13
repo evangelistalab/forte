@@ -26,18 +26,38 @@
  * @END LICENSE
  */
 
-#ifndef _avas_h_
-#define _avas_h_
+#ifndef _orbital_embedding_h_
+#define _orbital_embedding_h_
 
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/liboptions/liboptions.h"
 
 #include "base_classes/forte_options.h"
+#include "base_classes/mo_space_info.h"
+#include "base_classes/rdms.h"
+#include "base_classes/scf_info.h"
+#include "base_classes/active_space_solver.h"
+#include "casscf/casscf.h"
 
 namespace forte {
 
 void make_avas(psi::SharedWavefunction ref_wfn, psi::Options& options, psi::SharedMatrix Ps);
+
+std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi::Options& options,
+                                            psi::SharedMatrix Pf,
+                                            std::shared_ptr<MOSpaceInfo> mo_space_info);
+
+std::shared_ptr<MOSpaceInfo> build_inner_space(psi::SharedWavefunction ref_wfn,
+                                               psi::Options& options,
+                                               std::shared_ptr<MOSpaceInfo> mo_space_info);
+
+// Return 3-RDM from a CASSCF computation
+RDMs build_casscf_density(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
+                          std::shared_ptr<ForteOptions> options,
+                          std::shared_ptr<MOSpaceInfo> mo_space_info_active, std::shared_ptr<MOSpaceInfo> mo_space_info,
+                          std::shared_ptr<ActiveSpaceIntegrals> as_ints);
+
 } // namespace forte
 
-#endif // _avas_h_
+#endif // _orbital_embedding_h_

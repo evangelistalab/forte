@@ -67,11 +67,12 @@ def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
         Ua = semi.Ua_t()
         Ub = semi.Ub_t()
 
-        dsrg = forte.make_dsrg_method(correlation_solver_type, rdms,
-                                      scf_info, options, ints, mo_space_info)
-        dsrg.set_Uactv(Ua, Ub)
-        Edsrg = dsrg.compute_energy()
-        psi4.core.set_scalar_variable('UNRELAXED ENERGY', Edsrg)
+        Edsrg, dsrg, Heff_actv_implemented = compute_dsrg_unrelaxed_energy(correlation_solver_type,
+                                                                           rdms, scf_info, options,
+                                                                           ints, mo_space_info,
+                                                                           Ua, Ub)
+        if not Heff_actv_implemented:
+            return Edsrg
 
         # dipole moment related
         do_dipole = options.get_bool("DSRG_DIPOLE")
@@ -262,19 +263,147 @@ def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
 
     return return_en
 
-def orbital_projection(ref_wfn, options):
-    r"""
+def compute_dsrg_unrelaxed_energy(correlation_solver_type, rdms, scf_info, options,
+                                  ints, mo_space_info, Ua, Ub):
+    Heff_actv_implemented = False
+
+    if correlation_solver_type == "MRDSRG_SO":
+        dsrg = forte.make_dsrg_so_y(rdms, scf_info, options, ints, mo_space_info)
+    elif correlation_solver_type == "SOMRDSRG":
+        dsrg = forte.make_dsrg_so_f(rdms, scf_info, options, ints, mo_space_info)
+    elif correlation_solver_type == "DSRG_MRPT":
+        dsrg = forte.make_dsrg_spin_adapted(rdms, scf_info, options, ints, mo_space_info)
+    else:
+        Heff_actv_implemented = True
+        dsrg = forte.make_dsrg_method(correlation_solver_type, rdms, scf_info, options, ints, mo_space_info)
+        dsrg.set_Uactv(Ua, Ub)
+
+    Edsrg = dsrg.compute_energy()
+    psi4.core.set_scalar_variable('UNRELAXED ENERGY', Edsrg)
+
+    return Edsrg, dsrg, Heff_actv_implemented
+
+def orbital_projection(ref_wfn, options, mo_space_info):
+    r"""Functions that pre-rotate orbitals before calculations;
+    Requires a set of reference orbitals and mo_space_info.
+
+    AVAS: an automatic active space selection and projection;
+    Embedding: simple frozen-orbital embedding with the overlap projector.
+
+    Return a mo_space_info (forte::MOSpaceInfo)
     """
+
     # Create the AO subspace projector
     ps = forte.make_aosubspace_projector(ref_wfn, options)
 
     #Apply the projector to rotate orbitals
     if options.get_bool("AVAS"):
+        forte.print_method_banner(["Atomic Valence Active Space (AVAS)", "Chenxi Cai"]);
         forte.make_avas(ref_wfn, options, ps)
+
+    # Create the fragment(embedding) projector and apply to rotate orbitals
+    if options.get_bool("EMBEDDING"):
+        forte.print_method_banner(["Frozen-orbital Embedding", "Nan He"]);
+        pf = forte.make_fragment_projector(ref_wfn, options)
+        return forte.make_embedding(ref_wfn, options, pf, mo_space_info)
+    else:
+        return mo_space_info
+
+def adv_embedding_driver(state, state_weights_map, scf_info, ref_wfn, mo_space_info, options, ints):
+    # options.set_bool('FORTE', 'EMBEDDING', True)
+    # options.set_str('FORTE', 'EMBEDDING_CUTOFF_METHOD', 'CORRELATED_BATH')
+    # options.set_str('FORTE', 'EMBEDDING_SPECIAL', 'INNER_LAYER')
+
+    frag_corr_level = options.get_str('FRAG_CORR_LEVEL')
+    env_corr_level = options.get_str('ENV_CORR_LEVEL')
+
+    # mo_space_info: fragment all active, environment restricted, core frozen
+    # mo_space_info_active: fragment-C,A,V, environment and core frozen
+    mo_space_info_active = forte.build_inner_space(ref_wfn, options, mo_space_info)
+
+    # Build fragment and f-e integrals
+    ints_f = forte.make_forte_integrals(ref_wfn, options, mo_space_info_active)
+    ints_e = forte.make_forte_integrals(ref_wfn, options, mo_space_info)
+
+    # compute higher-level with mo_space_info_active(inner) and methods in options, -> E_high(origin)
+    options.set_str('FORTE', 'CORR_LEVEL', frag_corr_level)
+    forte.forte_options.update_psi_options(options)
+    energy_high = forte_driver(state_weights_map, scf_info, forte.forte_options, ints_f, mo_space_info_active)
+
+    # Form rdms for interaction correlation computation
+    rdms = forte.RHF_DENSITY(scf_info, mo_space_info).rhf_rdms()
+    if options.get_str('fragment_density') == "CASSCF": 
+        as_ints = forte.make_active_space_ints(mo_space_info_active, ints_f, "ACTIVE", ["RESTRICTED_DOCC"])
+        rdms = forte.build_casscf_density(state, 2, scf_info, forte.forte_options, mo_space_info_active, mo_space_info, as_ints) # TODO:Fix this function
+    if options.get_str('fragment_density') == "FCI":
+        state_map = forte.to_state_nroots_map(state_weights_map)
+        as_ints_full = forte.make_active_space_ints(mo_space_info, ints_e, "ACTIVE", ["RESTRICTED_DOCC"])
+        as_solver_full = forte.make_active_space_solver(options.get_str('ACTIVE_SPACE_SOLVER'),
+                                                       state_map, scf_info,
+                                                       mo_space_info, as_ints_full,
+                                                       forte.forte_options)
+        state_energies_list = as_solver_full.compute_energy()
+        rdms = as_solver_full.compute_average_rdms(state_weights_map, 3)
+    # if options.get_str('downfold_density') == "MRDSRG": NotImplemented
+        
+    # DSRG-MRPT2(mo_space_info(outer), rdms)
+    options.set_str('FORTE', 'CORR_LEVEL', env_corr_level)
+    forte.forte_options.update_psi_options(options)
+    dsrg = forte.make_dsrg_method(options.get_str('ENV_CORRELATION_SOLVER'),
+                                  rdms, scf_info, forte.forte_options, ints_e, mo_space_info)
+
+    Edsrg = dsrg.compute_energy()
+    E_ref1 = psi4.core.scalar_variable("DSRG REFERENCE ENERGY")
+    E_corr = Edsrg - E_ref1
+    # E_corr = Edsrg - E_cas_ref
+    # Compute MRDSRG-in-PT2 energy (unfolded)
+    # E_emb = E(MRDSRG) + E(Corr)
+
+    # Test new MRDSRG energy (with rotated Heff/ints)
+    # eH rotation
+    ints_dressed = dsrg.compute_Heff_actv()
+    state_map = forte.to_state_nroots_map(state_weights_map)
+    ints_f.build_from_asints(ints_dressed)
+
+    # Compute MRDSRG-in-PT2 energy (folded)
+    options.set_str('FORTE', 'CORR_LEVEL', frag_corr_level)
+    forte.forte_options.update_psi_options(options)
+    energy_high_relaxed = forte_driver(state_weights_map, scf_info, forte.forte_options, ints_f, mo_space_info_active)
+
+    psi4.core.print_out("\n ==============Embedding Summary==============")
+    psi4.core.print_out("\n E(fragment, unrelaxed) = {:10.8f}".format(energy_high))
+    psi4.core.print_out("\n E_corr(env correlation) = {:10.8f}".format(E_corr))
+    psi4.core.print_out("\n E(embedding, unrelaxed) = {:10.8f}".format(energy_high + E_corr))
+    psi4.core.print_out("\n E(fragment, Hbar2 relaxed) = {:10.8f}".format(energy_high_relaxed))
+    psi4.core.print_out("\n E(embedding, Hbar2 relaxed) = {:10.8f}".format(energy_high_relaxed + E_corr))
+    psi4.core.print_out("\n ==============MRDSRG embedding done============== \n")
+
+    # To do iteratively: 
+    # ints_e = build_from_fragment_ints(ints_f)
+    # Do ENV MRDSRG with ints_e
+
+    # Compute folded casci (should use a general forte_driver instead!)
+ #   as_solver_relaxed = forte.make_active_space_solver(options.get_str('ACTIVE_SPACE_SOLVER'),
+ #                                                      state_map, scf_info,
+ #                                                      mo_space_info_active, ints_dressed,
+ #                                                      forte.forte_options)
+ #   state_energies_list = as_solver_relaxed.compute_energy()
+ #   Erelax = forte.compute_average_state_energy(state_energies_list,state_weights_map)
+#
+    # Compute relaxed(folded) MRDSRG energy 
+ #   rdms_fold = as_solver_relaxed.compute_average_rdms(state_weights_map, 3)
+ #   dsrg_high_fold = forte.make_dsrg_method(options.get_str('FRAG_CORRELATION_SOLVER'),
+ #                                 rdms_fold, scf_info, forte.forte_options, ints_f, mo_space_info_active) # Should use int_f_dressed here!
+ #   energy_high_fold = dsrg_high_fold.compute_energy()
+    # Compute MRDSRG-in-PT2 energy (folded)
+    # E_emb = E(MRDSRG_folded) + E(Corr)
 
 def forte_sr_downfolding(state_weights_map, scf_info, options, ints, mo_space_info):
 
     rdms = forte.RHF_DENSITY(scf_info, mo_space_info).rhf_rdms()
+#    if options.get_str('downfold_density') == "CASSCF": # Working here
+        # Build and run a CASSCF computation
+        # Compute CASSCF density
 
     dsrg = forte.make_dsrg_method(options.get_str('CORRELATION_SOLVER'),
                                   rdms, scf_info, options, ints, mo_space_info)
@@ -336,7 +465,7 @@ def run_forte(name, **kwargs):
     mo_space_info = forte.make_mo_space_info(ref_wfn, forte.forte_options)
 
     # Call methods that project the orbitals (AVAS, embedding)
-    orbital_projection(ref_wfn, options)
+    mo_space_info = orbital_projection(ref_wfn, options, mo_space_info)
 
     state = forte.make_state_info_from_psi_wfn(ref_wfn)
     scf_info = forte.SCFInfo(ref_wfn)
@@ -374,6 +503,8 @@ def run_forte(name, **kwargs):
         options.set_bool('FORTE', 'DSRG_SR_DOWNFOLD', True)
         forte.forte_options.update_psi_options(options)
         energy = forte_sr_downfolding(state_weights_map, scf_info, forte.forte_options, ints, mo_space_info)
+    elif (job_type == 'ADV_EMBEDDING'):
+        energy_df = adv_embedding_driver(state, state_weights_map, scf_info, ref_wfn, mo_space_info, options, ints)
     else:
         energy = forte.forte_old_methods(ref_wfn, options, ints, mo_space_info)
 
