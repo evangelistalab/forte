@@ -787,6 +787,7 @@ psi::SharedMatrix semicanonicalize_block(psi::SharedWavefunction ref_wfn, psi::S
         auto U_block = std::make_shared<psi::Matrix>("U block", nmo_block, nmo_block);
         auto epsilon_block = std::make_shared<Vector>("epsilon block", nmo_block);
         Foi->diagonalize(U_block, epsilon_block);
+        epsilon_block->print();
         auto C_block_prime = psi::linalg::doublet(C_block, U_block);
         return C_block_prime;
     } else { // If true, only form the block matrix but avoid diagonalization
@@ -824,24 +825,28 @@ RDMs build_casscf_density(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo
     // Inner-layer mospace
     auto rdoccpi_in = mo_space_info_active->get_dimension("RESTRICTED_DOCC");
     auto actvpi_in = mo_space_info_active->get_dimension("ACTIVE");
-    auto actvopi_in = doccpi - rdoccpi - mo_space_info_active->get_dimension("FROZEN_DOCC");
+    //auto actvopi_in = doccpi - rdoccpi_in - mo_space_info_active->get_dimension("FROZEN_DOCC");
 
-    std::vector<size_t> mos_actv_o;
-    for (int i = 0; i < actvopi[0]; ++i) {
-        mos_actv_o.push_back(i);
+    std::vector<size_t> mos_oa;
+    for (int i = 0; i < rdoccpi_in[0]+actvpi_in[0]; ++i) {
+        mos_oa.push_back(i);
     }
 
-    std::vector<size_t> mos_actv_o_in;
-    for (int i = 0; i < actvopi[0]; ++i) {
-        mos_actv_o_in.push_back(rdoccpi_in[0] + i);
+    std::vector<size_t> mos_actv_in;
+    for (int i = 0; i < actvpi_in[0]; ++i) {
+        mos_actv_in.push_back(i);
     }
+
+    outfile->Printf("\n active/out: %d, active/in: %d", actvpi[0], actvpi_in[0]);
+    outfile->Printf("\n rdoccpi/out: %d, rdoccpi/in: %d", rdoccpi[0], rdoccpi_in[0]);
+    outfile->Printf("\n na/out: %d, na_in/in: %d", na, na_in);
 
     // 1-RDM
     auto D1a = ambit::Tensor::build(ambit::CoreTensor, "D1a", std::vector<size_t>(2, na));
     auto D1b = ambit::Tensor::build(ambit::CoreTensor, "D1b", std::vector<size_t>(2, na));
 
-    for (auto i : mos_actv_o) {
-        for (auto j : mos_actv_o) {
+    for (auto i : mos_oa) {
+        for (auto j : mos_oa) {
             if (i >= rdoccpi_in[0] && j >= rdoccpi_in[0]) {
                 size_t ip = i - rdoccpi_in[0];
                 size_t jp = j - rdoccpi_in[0];
@@ -859,6 +864,8 @@ RDMs build_casscf_density(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo
         }
     }
 
+    D1a.print();
+
     // 2-RDM
     auto D2aa = ambit::Tensor::build(ambit::CoreTensor, "D2aa", std::vector<size_t>(4, na));
     auto D2ab = ambit::Tensor::build(ambit::CoreTensor, "D2ab", std::vector<size_t>(4, na));
@@ -874,10 +881,12 @@ RDMs build_casscf_density(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo
 
     size_t v = rdoccpi_in[0];
 
-    for (auto p : mos_actv_o_in) {
-        for (auto q : mos_actv_o_in) {
-            for (auto r : mos_actv_o_in) {
-                for (auto s : mos_actv_o_in) {
+    rdms_vec[0].g2aa().print();
+
+    for (auto p : mos_actv_in) {
+        for (auto q : mos_actv_in) {
+            for (auto r : mos_actv_in) {
+                for (auto s : mos_actv_in) {
                     D2aa.data()[index_exp(na, p+v, q+v, r+v, s+v)] = rdms_vec[0].g2aa().data()[index_exp(na_in, p, q, r, s)];
                     D2bb.data()[index_exp(na, p+v, q+v, r+v, s+v)] = rdms_vec[0].g2bb().data()[index_exp(na_in, p, q, r, s)];
                     D2ab.data()[index_exp(na, p+v, q+v, r+v, s+v)] = rdms_vec[0].g2ab().data()[index_exp(na_in, p, q, r, s)];
@@ -885,6 +894,8 @@ RDMs build_casscf_density(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo
             }
         }
     }
+
+    D2aa.print();
 
     // 3-RDM # Leave at RHF level !
     auto D3aaa = ambit::Tensor::build(ambit::CoreTensor, "D3aaa", std::vector<size_t>(6, na));

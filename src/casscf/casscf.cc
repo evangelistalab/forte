@@ -361,6 +361,7 @@ void CASSCF::cas_ci(int cas_max_rdm_level) {
                                                         mo_space_info_, fci_ints, options_);
     const auto state_energies_map = active_space_solver->compute_energy();
     cas_ref_ = active_space_solver->compute_average_rdms(state_weights_map, cas_max_rdm_level);
+    cas_ref_.g2aa().print();
     double average_energy = compute_average_state_energy(state_energies_map, state_weights_map);
     // return the average energy
     E_casscf_ = average_energy;
@@ -1009,6 +1010,8 @@ std::vector<RDMs> CASSCF::rdms(const std::vector<std::pair<size_t, size_t>>& /*r
                                int /*max_rdm_level*/) {
     // TODO (York): this does not seem the correct thing to do.
     std::vector<RDMs> refs;
+    cas_ref_.g1a().print();
+    cas_ref_.g2aa().print();
     refs.push_back(cas_ref_);
     return refs;
 }
