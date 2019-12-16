@@ -898,32 +898,37 @@ RDMs build_casscf_density(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo
     D2aa.print();
 
     // 3-RDM # Leave at RHF level !
-    auto D3aaa = ambit::Tensor::build(ambit::CoreTensor, "D3aaa", std::vector<size_t>(6, na));
-    auto D3aab = ambit::Tensor::build(ambit::CoreTensor, "D3aab", std::vector<size_t>(6, na));
-    auto D3abb = ambit::Tensor::build(ambit::CoreTensor, "D3abb", std::vector<size_t>(6, na));
-    auto D3bbb = ambit::Tensor::build(ambit::CoreTensor, "D3bbb", std::vector<size_t>(6, na));
-
-    D3aaa("pqrstu") += D1a("ps") * D1a("qt") * D1a("ru");
-    D3aaa("pqrstu") -= D1a("ps") * D1a("rt") * D1a("qu");
-    D3aaa("pqrstu") -= D1a("qs") * D1a("pt") * D1a("ru");
-    D3aaa("pqrstu") += D1a("qs") * D1a("rt") * D1a("pu");
-    D3aaa("pqrstu") -= D1a("rs") * D1a("qt") * D1a("pu");
-    D3aaa("pqrstu") += D1a("rs") * D1a("pt") * D1a("qu");
-
-    D3bbb("pqrstu") += D1b("ps") * D1b("qt") * D1b("ru");
-    D3bbb("pqrstu") -= D1b("ps") * D1b("rt") * D1b("qu");
-    D3bbb("pqrstu") -= D1b("qs") * D1b("pt") * D1b("ru");
-    D3bbb("pqrstu") += D1b("qs") * D1b("rt") * D1b("pu");
-    D3bbb("pqrstu") -= D1b("rs") * D1b("qt") * D1b("pu");
-    D3bbb("pqrstu") += D1b("rs") * D1b("pt") * D1b("qu");
-
-    D3aab("pqrstu") += D1a("ps") * D1a("qt") * D1b("ru");
-    D3aab("pqrstu") -= D1a("qs") * D1a("pt") * D1b("ru");
-
-    D3abb("pqrstu") += D1a("ps") * D1b("qt") * D1b("ru");
-    D3abb("pqrstu") -= D1a("ps") * D1b("rt") * D1b("qu");
-
-    return RDMs(D1a, D1b, D2aa, D2ab, D2bb, D3aaa, D3aab, D3abb, D3bbb);
+    if (options->get_str("THREEPDC") == "ZERO") {
+        auto D3aaa = ambit::Tensor::build(ambit::CoreTensor, "D3aaa", std::vector<size_t>(6, na));
+        auto D3aab = ambit::Tensor::build(ambit::CoreTensor, "D3aab", std::vector<size_t>(6, na));
+        auto D3abb = ambit::Tensor::build(ambit::CoreTensor, "D3abb", std::vector<size_t>(6, na));
+        auto D3bbb = ambit::Tensor::build(ambit::CoreTensor, "D3bbb", std::vector<size_t>(6, na));
+    
+        D3aaa("pqrstu") += D1a("ps") * D1a("qt") * D1a("ru");
+        D3aaa("pqrstu") -= D1a("ps") * D1a("rt") * D1a("qu");
+        D3aaa("pqrstu") -= D1a("qs") * D1a("pt") * D1a("ru");
+        D3aaa("pqrstu") += D1a("qs") * D1a("rt") * D1a("pu");
+        D3aaa("pqrstu") -= D1a("rs") * D1a("qt") * D1a("pu");
+        D3aaa("pqrstu") += D1a("rs") * D1a("pt") * D1a("qu");
+    
+        D3bbb("pqrstu") += D1b("ps") * D1b("qt") * D1b("ru");
+        D3bbb("pqrstu") -= D1b("ps") * D1b("rt") * D1b("qu");
+        D3bbb("pqrstu") -= D1b("qs") * D1b("pt") * D1b("ru");
+        D3bbb("pqrstu") += D1b("qs") * D1b("rt") * D1b("pu");
+        D3bbb("pqrstu") -= D1b("rs") * D1b("qt") * D1b("pu");
+        D3bbb("pqrstu") += D1b("rs") * D1b("pt") * D1b("qu");
+    
+        D3aab("pqrstu") += D1a("ps") * D1a("qt") * D1b("ru");
+        D3aab("pqrstu") -= D1a("qs") * D1a("pt") * D1b("ru");
+    
+        D3abb("pqrstu") += D1a("ps") * D1b("qt") * D1b("ru");
+        D3abb("pqrstu") -= D1a("ps") * D1b("rt") * D1b("qu");
+    
+        return RDMs(D1a, D1b, D2aa, D2ab, D2bb, D3aaa, D3aab, D3abb, D3bbb);
+    }
+    else {
+        return RDMs(D1a, D1b, D2aa, D2ab, D2bb);
+   }
 }
 
 std::shared_ptr<MOSpaceInfo> build_inner_space(psi::SharedWavefunction ref_wfn,
