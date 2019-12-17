@@ -30,6 +30,7 @@
 #include "sci/asci.h"
 #include "sci/tdaci.h"
 #include "orbital-helpers/avas.h"
+#include "orbital-helpers/orbital_embedding.h"
 #include "orbital-helpers/ci-no/ci-no.h"
 #include "orbital-helpers/ci-no/mrci-no.h"
 #include "fci/fci_solver.h"

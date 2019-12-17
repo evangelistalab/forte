@@ -40,14 +40,12 @@ using namespace psi;
 
 namespace forte {
 
-DSRG_MRPT::DSRG_MRPT(RDMs rdms, psi::SharedWavefunction ref_wfn, psi::Options& options,
-                     std::shared_ptr<ForteIntegrals> ints,
+DSRG_MRPT::DSRG_MRPT(RDMs rdms, std::shared_ptr<SCFInfo> scf_info,
+                     std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
                      std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : Wavefunction(options), rdms_(rdms), ints_(ints), mo_space_info_(mo_space_info),
+    : DynamicCorrelationSolver(rdms, scf_info, options, ints, mo_space_info),
       tensor_type_(ambit::CoreTensor) {
-    shallow_copy(ref_wfn);
-    // wfn_ = ref_wfn;
-    print_method_banner({"Spin-Adapted 2nd- & 3rd-order DSRG-MRPT", "Chenyang Li"});
+    print_method_banner({"Spin-Adapted 2nd-order DSRG-MRPT", "Chenyang Li"});
     print_citation();
     read_options();
     print_options();
@@ -147,9 +145,9 @@ DSRG_MRPT::~DSRG_MRPT() { cleanup(); }
 void DSRG_MRPT::cleanup() { dsrg_time_.print_comm_time(); }
 
 void DSRG_MRPT::read_options() {
-    print_ = options_.get_int("PRINT");
+    print_ = foptions_->get_int("PRINT");
 
-    corr_lv_ = options_.get_str("CORR_LEVEL");
+    corr_lv_ = foptions_->get_str("CORR_LEVEL");
     if (corr_lv_ != "PT2" && corr_lv_ != "PT3") {
         outfile->Printf("\n  Warning: CORR_LEVEL option \"%s\" is not "
                         "available in DSRG_MRPT. Changed to PT2.",
@@ -157,7 +155,7 @@ void DSRG_MRPT::read_options() {
         corr_lv_ = "PT2";
     }
 
-    ref_relax_ = options_.get_str("RELAX_REF");
+    ref_relax_ = foptions_->get_str("RELAX_REF");
     if (ref_relax_ != "NONE" && ref_relax_ != "ONCE") {
         outfile->Printf("\n  Warning: RELAX_REF option \"%s\" is not available "
                         "in DSRG_MRPT. Changed to ONCE",
@@ -165,23 +163,23 @@ void DSRG_MRPT::read_options() {
         ref_relax_ = "ONCE";
     }
 
-    s_ = options_.get_double("DSRG_S");
+    s_ = foptions_->get_double("DSRG_S");
     if (s_ < 0) {
         outfile->Printf("\n  Error: S parameter for DSRG must >= 0!");
         throw psi::PSIEXCEPTION("S parameter for DSRG must >= 0!");
     }
-    taylor_threshold_ = options_.get_int("TAYLOR_THRESHOLD");
+    taylor_threshold_ = foptions_->get_int("TAYLOR_THRESHOLD");
     if (taylor_threshold_ <= 0) {
         outfile->Printf("\n  Error: Threshold for Taylor expansion must be an "
                         "integer greater than 0!");
         throw psi::PSIEXCEPTION("Threshold for Taylor expansion must be an integer "
-                           "greater than 0!");
+                                "greater than 0!");
     }
 
-    ntamp_ = options_.get_int("NTAMP");
-    intruder_tamp_ = options_.get_double("INTRUDER_TAMP");
+    ntamp_ = foptions_->get_int("NTAMP");
+    intruder_tamp_ = foptions_->get_double("INTRUDER_TAMP");
 
-    source_ = options_.get_str("SOURCE");
+    source_ = foptions_->get_str("SOURCE");
     if (source_ != "STANDARD" && source_ != "LABS" && source_ != "DYSON") {
         outfile->Printf("\n  Warning: SOURCE option \"%s\" is not implemented "
                         "in DSRG_MRPT. Changed to STANDARD.",
@@ -196,7 +194,7 @@ void DSRG_MRPT::read_options() {
         dsrg_source_ = std::make_shared<DYSON_SOURCE>(s_, taylor_threshold_);
     }
 
-    ccvv_source_ = options_.get_str("CCVV_SOURCE");
+    ccvv_source_ = foptions_->get_str("CCVV_SOURCE");
 }
 
 void DSRG_MRPT::print_options() {
@@ -210,7 +208,7 @@ void DSRG_MRPT::print_options() {
 
     std::vector<std::pair<std::string, std::string>> calculation_info_string{
         {"corr_level", corr_lv_},
-        {"int_type", options_.get_str("INT_TYPE")},
+        {"int_type", foptions_->get_str("INT_TYPE")},
         {"source operator", source_},
         {"reference relaxation", ref_relax_},
         {"core virtual source type", ccvv_source_}};
@@ -265,7 +263,7 @@ void DSRG_MRPT::startup() {
     L1_ = ambit::BlockedTensor::build(tensor_type_, "OPDC", {"aa"});
     Eta1_ = ambit::BlockedTensor::build(tensor_type_, "Eta1", {"aa"});
     L2_ = ambit::BlockedTensor::build(tensor_type_, "T2PDC", {"aaaa"});
-    if (options_.get_str("THREEPDC") != "ZERO") {
+    if (foptions_->get_str("THREEPDC") != "ZERO") {
         L3_ = ambit::BlockedTensor::build(tensor_type_, "T3PDC", {"aaaaaa"});
     }
     build_density();
@@ -318,6 +316,15 @@ double DSRG_MRPT::compute_energy() {
     return Etotal;
 }
 
+std::shared_ptr<ActiveSpaceIntegrals> DSRG_MRPT::compute_Heff_actv() {
+    throw psi::PSIEXCEPTION(
+        "Computing active-space Hamiltonian is not yet implemented for spin-adapted code.");
+
+    return std::make_shared<ActiveSpaceIntegrals>(
+        ints_, mo_space_info_->get_corr_abs_mo("ACTIVE"),
+        mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
+}
+
 void DSRG_MRPT::build_ints() {
     // fill two-eletron integrals
     V_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
@@ -351,8 +358,7 @@ void DSRG_MRPT::build_density() {
 
     // test T2PDC
     diff = ambit::Tensor::build(tensor_type_, "diff_L2", rdms_.L2aa().dims());
-    diff("pqrs") =
-        rdms_.L2aa()("pqrs") - rdms_.L2ab()("pqrs") + rdms_.L2ab()("pqsr");
+    diff("pqrs") = rdms_.L2aa()("pqrs") - rdms_.L2ab()("pqrs") + rdms_.L2ab()("pqsr");
     if (diff.norm() > 1.0e-8) {
         outfile->Printf("\n  Error: two-particle density cumulant cannot be spin-adapted!");
         outfile->Printf("\n  |L2[pqrs] - (L2[pQrS] - L2[pQsR])| = %20.15f  <== "
@@ -367,15 +373,15 @@ void DSRG_MRPT::build_density() {
     L2aa("pqrs") -= 2.0 * rdms_.L2ab()("pqsr");
 
     // T3PDC
-    if (options_.get_str("THREEPDC") != "ZERO") {
+    if (foptions_->get_str("THREEPDC") != "ZERO") {
         // test spin adaptation
         diff = ambit::Tensor::build(tensor_type_, "diff_L3", rdms_.L3aaa().dims());
-        diff("pqrstu") += rdms_.L3aab()("pqrstu") - rdms_.L3aab()("pqrsut") +
-                          rdms_.L3aab()("pqrtus");
-        diff("pqrstu") -= rdms_.L3aab()("prqstu") - rdms_.L3aab()("prqsut") +
-                          rdms_.L3aab()("prqtus");
-        diff("pqrstu") += rdms_.L3aab()("qrpstu") - rdms_.L3aab()("qrpsut") +
-                          rdms_.L3aab()("qrptus");
+        diff("pqrstu") +=
+            rdms_.L3aab()("pqrstu") - rdms_.L3aab()("pqrsut") + rdms_.L3aab()("pqrtus");
+        diff("pqrstu") -=
+            rdms_.L3aab()("prqstu") - rdms_.L3aab()("prqsut") + rdms_.L3aab()("prqtus");
+        diff("pqrstu") +=
+            rdms_.L3aab()("qrpstu") - rdms_.L3aab()("qrpsut") + rdms_.L3aab()("qrptus");
         diff.scale(1.0 / 3.0);
         diff("pqrstu") -= rdms_.L3aaa()("pqrstu");
         if (diff.norm() > 1.0e-8) {
@@ -463,7 +469,7 @@ bool DSRG_MRPT::check_semicanonical() {
     }
 
     double Fd_od_sum = std::accumulate(Fd_od_norm.begin(), Fd_od_norm.end(), 0.0);
-    double threshold = 10.0 * options_.get_double("D_CONVERGENCE");
+    double threshold = 10.0 * foptions_->get_double("D_CONVERGENCE");
     bool semi = false;
     if (Fd_od_sum > threshold) {
         outfile->Printf("     NO.\n");
@@ -531,7 +537,7 @@ void DSRG_MRPT::test_memory(const size_t& c, const size_t& a, const size_t& v) {
     }
 
     // consider L3
-    if (options_.get_str("THREEPDC") != "ZERO") {
+    if (foptions_->get_str("THREEPDC") != "ZERO") {
         required += static_cast<size_t>(aaaa * aa);
         leftover -= static_cast<size_t>(aaaa * aa * sizeof(double));
     }
@@ -582,7 +588,7 @@ void DSRG_MRPT::test_memory(const size_t& c, const size_t& a, const size_t& v) {
         {"memory required", converter(required)},
         {"memory available", converter(total, true)},
         {"memory leftover", converter(leftover, true)}};
-    if (options_.get_str("THREEPDC") != "ZERO") {
+    if (foptions_->get_str("THREEPDC") != "ZERO") {
         mem_summary.insert(mem_summary.begin() + 6, {"L3", converter(aa * aaaa)});
     }
 
@@ -646,4 +652,4 @@ void DSRG_MRPT::print_citation() {
     }
     outfile->Printf("\n");
 }
-}
+} // namespace forte

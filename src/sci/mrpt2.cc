@@ -27,6 +27,8 @@
  * @END LICENSE
  */
 
+#include <cmath>
+
 #include "base_classes/forte_options.h"
 #include "mrpt2.h"
 #include "helpers/timer.h"

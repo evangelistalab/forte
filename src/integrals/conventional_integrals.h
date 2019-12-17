@@ -85,9 +85,6 @@ class ConventionalIntegrals : public ForteIntegrals {
   private:
     // ==> Class data <==
 
-    /// The IntegralTransform object used by this class
-    std::shared_ptr<psi::IntegralTransform> integral_transform_;
-
     /// Two-electron integrals stored as a vector
     std::vector<double> aphys_tei_aa;
     std::vector<double> aphys_tei_ab;
@@ -96,7 +93,7 @@ class ConventionalIntegrals : public ForteIntegrals {
     // ==> Class private functions <==
 
     /// Transform the integrals
-    void transform_integrals();
+    std::shared_ptr<psi::IntegralTransform> transform_integrals();
     void resort_four(std::vector<double>& tei, std::vector<size_t>& map);
 
     /// An addressing function to for two-electron integrals

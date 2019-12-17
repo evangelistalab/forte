@@ -90,7 +90,7 @@ class AdaptiveCI : public SelectedCIMethod {
 
     /// Set options from an option object
     /// @param options the options passed in
-    void set_options(std::shared_ptr<ForteOptions> options) override {}
+    void set_options(std::shared_ptr<ForteOptions>) override {}
 
     // Interfaces of SCI algorithm
     /// Print the banner and starting information.
@@ -272,6 +272,7 @@ class AdaptiveCI : public SelectedCIMethod {
     psi::SharedMatrix evecs_;
 
     bool build_lists_;
+    
 
     /// A map of determinants in the P space
     std::unordered_map<Determinant, int, Determinant::Hash> P_space_map_;

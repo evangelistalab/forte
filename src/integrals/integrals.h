@@ -111,7 +111,6 @@ class ForteIntegrals {
     /// Virtual destructor to enable deletion of a Derived* through a Base*
     virtual ~ForteIntegrals() = default;
 
-  public:
     // ==> Class Interface <==
 
     /// Return Ca

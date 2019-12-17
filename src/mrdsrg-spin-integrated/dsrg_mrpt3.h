@@ -63,9 +63,8 @@ class DSRG_MRPT3 : public MASTER_DSRG {
      * @param ints A pointer to an allocated integral object
      * @param mo_space_info The MOSpaceInfo object
      */
-    DSRG_MRPT3(RDMs rdms, std::shared_ptr<SCFInfo> scf_info,
-               std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
-               std::shared_ptr<MOSpaceInfo> mo_space_info);
+    DSRG_MRPT3(RDMs rdms, std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
+               std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Destructor
     virtual ~DSRG_MRPT3();
@@ -250,14 +249,15 @@ class DSRG_MRPT3 : public MASTER_DSRG {
 
     /// Compute two-body term of commutator [V, T2], particle-hole contraction
     /// (exchange part), contracted particle index is virtual
-    void V_T2_C2_DF_VH_EX(BlockedTensor& B, BlockedTensor& T2, const double& alpha,
-                          BlockedTensor& C2, const std::vector<std::vector<std::string>>& qs,
-                          const std::vector<std::vector<std::string>>& jb);
+    //    void V_T2_C2_DF_VH_EX(BlockedTensor& B, BlockedTensor& T2, const double& alpha,
+    //                          BlockedTensor& C2, const std::vector<std::vector<std::string>>& qs,
+    //                          const std::vector<std::vector<std::string>>& jb);
+    // TODO: commented this out because it's never called
 
     // => Reference relaxation <= //
 
     /// Transfer integrals for FCI
-    void transfer_integrals();
+    //    void transfer_integrals();
     /// Diagonalize the diagonal blocks of the Fock matrix
     std::vector<std::vector<double>> diagonalize_Fock_diagblocks(BlockedTensor& U);
     /// Separate an 2D ambit::Tensor according to its irrep
@@ -273,8 +273,8 @@ class DSRG_MRPT3 : public MASTER_DSRG {
      * @param name The name of the returned sub tensor
      * @return A sub tensor of T with the same dimension
      */
-    ambit::Tensor sub_block(ambit::Tensor& T, const std::map<size_t, std::vector<size_t>>& P,
-                            const std::string& name);
+    //    ambit::Tensor sub_block(ambit::Tensor& T, const std::map<size_t, std::vector<size_t>>& P,
+    //                            const std::string& name);
 
     /// Rotate RDMs computed by eigens_ (in original basis) to semicanonical basis
     /// so that they are in the same basis as amplitudes (in semicanonical basis)
