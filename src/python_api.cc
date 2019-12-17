@@ -278,12 +278,11 @@ PYBIND11_MODULE(forte, m) {
         .def("get_dimension", &MOSpaceInfo::get_dimension,
              "Return a psi::Dimension object for the given space")
         .def("get_absolute_mo", &MOSpaceInfo::get_absolute_mo,
-             "Return the list of the absolute index of the molecular orbitals in a space "
-             "excluding "
+             "Return the list of the absolute index of the molecular orbitals in a space excluding "
              "the frozen core/virtual orbitals")
-        .def("get_corr_abs_mo", &MOSpaceInfo::get_corr_abs_mo,
-             "Return the list of the absolute index of the molecular orbitals in a correlated "
-             "space")
+        .def(
+            "get_corr_abs_mo", &MOSpaceInfo::get_corr_abs_mo,
+            "Return the list of the absolute index of the molecular orbitals in a correlated space")
         .def("get_relative_mo", &MOSpaceInfo::get_relative_mo, "Return the relative MOs")
         .def("read_options", &MOSpaceInfo::read_options, "Read options")
         .def("read_from_map", &MOSpaceInfo::read_from_map,
