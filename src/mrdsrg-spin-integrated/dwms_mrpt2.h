@@ -29,6 +29,9 @@ class DWMS_DSRGPT2 {
     /// compute energy and return the ground state energy
     double compute_energy();
 
+    /// Compute gradient
+    psi::SharedMatrix compute_gradient();
+
   private:
     /// The molecular integrals
     std::shared_ptr<ForteIntegrals> ints_;

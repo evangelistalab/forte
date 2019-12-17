@@ -279,6 +279,13 @@ void DSRG_MRPT3::build_tei(BlockedTensor& V) {
     }
 }
 
+SharedMatrix DSRG_MRPT3::compute_gradient() {   
+    outfile->Printf("\n Oh no!, you tried to compute gradient but this "
+                    "is not there!!");
+    throw psi::PSIEXCEPTION("gradient is not implemented");
+    return std::make_shared<Matrix>("nullptr", 0, 0);
+}
+
 // void DSRG_MRPT3::build_fock_half() {
 //    for (const auto& block : F_.block_labels()) {
 //        // lowercase: alpha spin

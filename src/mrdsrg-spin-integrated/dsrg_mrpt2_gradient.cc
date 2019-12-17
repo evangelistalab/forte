@@ -35,6 +35,8 @@
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/psifiles.h"
 
+#include "master_mrdsrg.h"
+
 using namespace ambit;
 using namespace psi;
 
@@ -43,6 +45,7 @@ namespace forte {
 void DSRG_MRPT2::set_all_variables() {
 	// TODO: set global variables for future use.
 	// NOTICE: This function may better be merged into "dsrg_mrpt2.cc" in the future!!
+
 }
 
 
@@ -81,14 +84,16 @@ void DSRG_MRPT2::tpdm_backtransform() {
 
 SharedMatrix DSRG_MRPT2::compute_gradient() {
 	// TODO: compute the DSRG_MRPT2 gradient 
-    print_method_banner({"DSRG-MRPT2 Gradient", "Shuhe Wang"});
-    set_all_variables();
-    write_lagrangian();
-    write_1rdm_spin_dependent();
-    write_2rdm_spin_dependent();
-    tpdm_backtransform();
+    // print_method_banner({"DSRG-MRPT2 Gradient", "Shuhe Wang"});
+    // set_all_variables();
+    // write_lagrangian();
+    // write_1rdm_spin_dependent();
+    // write_2rdm_spin_dependent();
+    // tpdm_backtransform();
 
     outfile->Printf("\n    Computing Gradient .............................. Done\n");
+
+
     return std::make_shared<Matrix>("nullptr", 0, 0);
 }
 

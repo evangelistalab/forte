@@ -83,6 +83,9 @@ class ACTIVE_DSRGPT2 {
     /// Compute energy
     double compute_energy();
 
+    /// Compute gradient
+    psi::SharedMatrix compute_gradient() override;
+
   private:
     /// Basic Preparation
     void startup();

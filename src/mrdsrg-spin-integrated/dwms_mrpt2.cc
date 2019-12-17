@@ -255,6 +255,16 @@ double DWMS_DSRGPT2::compute_energy() {
     return Ept_[0][0];
 }
 
+
+SharedMatrix DWMS_DSRGPT2::compute_gradient() {   
+    outfile->Printf("\n Oh no!, you tried to compute gradient but this "
+                    "is not there!!");
+    throw psi::PSIEXCEPTION("gradient is not implemented");
+    return std::make_shared<Matrix>("nullptr", 0, 0);
+}
+
+
+
 std::shared_ptr<FCI_MO> DWMS_DSRGPT2::precompute_energy() {
     // perform CASCI using user-defined weights
     auto fci_mo = std::make_shared<FCI_MO>(scf_info_, foptions_, ints_, mo_space_info_);

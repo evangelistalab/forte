@@ -342,6 +342,13 @@ void THREE_DSRG_MRPT2::print_options_summary() {
 
 void THREE_DSRG_MRPT2::cleanup() {}
 
+SharedMatrix THREE_DSRG_MRPT2::compute_gradient() {   
+    outfile->Printf("\n Oh no!, you tried to compute gradient but this "
+                    "is not there!!");
+    throw psi::PSIEXCEPTION("gradient is not implemented");
+    return std::make_shared<Matrix>("nullptr", 0, 0);
+}
+
 double THREE_DSRG_MRPT2::compute_energy() {
     int my_proc = 0;
 //    int nproc = 1;

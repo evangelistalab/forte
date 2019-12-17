@@ -318,6 +318,7 @@ PYBIND11_MODULE(forte, m) {
     // export MASTER_DSRG
     py::class_<MASTER_DSRG>(m, "MASTER_DSRG")
         .def("compute_energy", &MASTER_DSRG::compute_energy, "Compute the DSRG energy")
+        .def("compute_gradient", &MASTER_DSRG::compute_gradient, "Compute the DSRG gradient")
         .def("compute_Heff_actv", &MASTER_DSRG::compute_Heff_actv,
              "Return the DSRG dressed ActiveSpaceIntegrals")
         .def("deGNO_DMbar_actv", &MASTER_DSRG::deGNO_DMbar_actv,

@@ -71,6 +71,9 @@ def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
                                                                            rdms, scf_info, options,
                                                                            ints, mo_space_info,
                                                                            Ua, Ub)
+        if True:     # need to be substituted with the gradient option
+            dsrg.compute_gradient()
+
         if not Heff_actv_implemented:
             return Edsrg
 
@@ -188,6 +191,8 @@ def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
                                               scf_info, options, ints, mo_space_info)
                 dsrg.set_Uactv(Ua, Ub)
                 Edsrg = dsrg.compute_energy()
+                
+                
 
                 if do_dipole:
                     udm_x = psi4.core.variable('UNRELAXED DIPOLE X')

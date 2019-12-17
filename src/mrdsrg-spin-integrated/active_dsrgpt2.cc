@@ -629,6 +629,13 @@ void ACTIVE_DSRGPT2::compute_osc_ref(
     }
 }
 
+SharedMatrix ACTIVE_DSRGPT2::compute_gradient() {   
+    outfile->Printf("\n Oh no!, you tried to compute gradient but this "
+                    "is not there!!");
+    throw psi::PSIEXCEPTION("gradient is not implemented");
+    return std::make_shared<Matrix>("nullptr", 0, 0);
+}
+
 std::string ACTIVE_DSRGPT2::transition_type(const int& n0, const int& irrep0, const int& n1,
                                             const int& irrep1) {
     CharacterTable ct = psi::Process::environment.molecule()->point_group()->char_table();

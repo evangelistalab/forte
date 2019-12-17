@@ -42,6 +42,9 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     /// Compute energy
     virtual double compute_energy() = 0;
 
+    /// Compute the DSRG gradient
+    virtual psi::SharedMatrix compute_gradient() = 0;
+
     /// Compute DSRG transformed Hamiltonian
     virtual std::shared_ptr<ActiveSpaceIntegrals> compute_Heff_actv();
 
