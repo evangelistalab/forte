@@ -7,7 +7,7 @@ Active Space Embedding Theory
 .. sectionauthor:: Nan He
 
 Simple active space frozen-orbital embedding
-^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 This embedding procedure provides an automatic way to embed one fragment into 
 an environment, by an active space embedding theory that allows multireference method 
@@ -41,7 +41,7 @@ frozen and active orbitals, if this is not intended, one can disable this semi-c
 corresponding options.
 
 EMBEDDING Options
-~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~
 
 **EMBEDDING**
 

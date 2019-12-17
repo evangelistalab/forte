@@ -182,6 +182,8 @@ PYBIND11_MODULE(forte, m) {
     m.def("print_method_banner", &print_method_banner, "text"_a, "separator"_a = "-",
           "Print a method banner");
     m.def("make_mo_space_info", &make_mo_space_info, "Make a MOSpaceInfo object");
+    m.def("make_mo_space_info_from_map", &make_mo_space_info_from_map,
+          "Make a MOSpaceInfo object from a map of space name (string) to a vector");
     m.def("make_aosubspace_projector", &make_aosubspace_projector, "Make a AOSubspace projector");
     m.def("make_avas", &make_avas, "Make AVAS orbitals");
     m.def("make_fragment_projector", &make_fragment_projector,
@@ -219,11 +221,28 @@ PYBIND11_MODULE(forte, m) {
 
     export_Determinant(m);
 
-    //    export_FCISolver(m);
-
     // export MOSpaceInfo
     py::class_<MOSpaceInfo, std::shared_ptr<MOSpaceInfo>>(m, "MOSpaceInfo")
-        .def("size", &MOSpaceInfo::size);
+        .def("get_dimension", &MOSpaceInfo::get_dimension,
+             "Return a psi::Dimension object for the given space")
+        .def("get_absolute_mo", &MOSpaceInfo::get_absolute_mo,
+             "Return the list of the absolute index of the molecular orbitals in a space excluding "
+             "the frozen core/virtual orbitals")
+        .def(
+            "get_corr_abs_mo", &MOSpaceInfo::get_corr_abs_mo,
+            "Return the list of the absolute index of the molecular orbitals in a correlated space")
+        .def("get_relative_mo", &MOSpaceInfo::get_relative_mo, "Return the relative MOs")
+        .def("read_options", &MOSpaceInfo::read_options, "Read options")
+        .def("read_from_map", &MOSpaceInfo::read_from_map,
+             "Read the space info from a map {spacename -> dimension vector}")
+        .def("set_reorder", &MOSpaceInfo::set_reorder,
+             "Reorder MOs according to the input indexing vector")
+        .def("compute_space_info", &MOSpaceInfo::compute_space_info,
+             "Processing current MOSpaceInfo: calculate frozen core, count and assign orbitals")
+        .def("size", &MOSpaceInfo::size, "Return the number of orbitals in a space")
+        .def("nirrep", &MOSpaceInfo::nirrep, "Return the number of irreps")
+        .def("symmetry", &MOSpaceInfo::symmetry, "Return the symmetry of each orbital")
+        .def("space_names", &MOSpaceInfo::space_names, "Return the names of orbital spaces");
 
     // export ForteIntegrals
     py::class_<ForteIntegrals, std::shared_ptr<ForteIntegrals>>(m, "ForteIntegrals")
@@ -277,7 +296,25 @@ PYBIND11_MODULE(forte, m) {
         .def("Ub_t", &SemiCanonical::Ub_t, "Return the beta rotation matrix in the active space");
 
     // export RDMs
-    py::class_<RDMs>(m, "RDMs");
+    py::class_<RDMs>(m, "RDMs")
+        .def("max_rdm_level", &RDMs::max_rdm_level, "Return the max RDM level")
+        .def("g1a_data", &RDMs::g1a_data, "Return the alpha 1RDM data")
+        .def("g1b_data", &RDMs::g1a_data, "Return the beta 1RDM data")
+        .def("g2aa_data", &RDMs::g2aa_data, "Return the alpha-alpha 2RDM data")
+        .def("g2ab_data", &RDMs::g2ab_data, "Return the alpha-beta 2RDM data")
+        .def("g2bb_data", &RDMs::g2bb_data, "Return the beta-beta 2RDM data")
+        .def("g3aaa_data", &RDMs::g3aaa_data, "Return the alpha-alpha-alpha 3RDM data")
+        .def("g3aab_data", &RDMs::g3aab_data, "Return the alpha-alpha-beta 3RDM data")
+        .def("g3abb_data", &RDMs::g3abb_data, "Return the alpha-beta-beta 3RDM data")
+        .def("g3bbb_data", &RDMs::g3bbb_data, "Return the beta-beta-beta 3RDM data")
+        .def("SFg2_data", &RDMs::SFg2_data, "Return the spin-free 2-RDM")
+        .def("L2aa_data", &RDMs::L2aa_data, "Return the alpha-alpha 2-cumulant data")
+        .def("L2ab_data", &RDMs::L2ab_data, "Return the alpha-beta 2-cumulant data")
+        .def("L2bb_data", &RDMs::L2bb_data, "Return the beta-beta 2-cumulant data")
+        .def("L3aaa_data", &RDMs::L3aaa_data, "Return the alpha-alpha-alpha 3-cumulant data")
+        .def("L3aab_data", &RDMs::L3aab_data, "Return the alpha-alpha-beta 3-cumulant data")
+        .def("L3abb_data", &RDMs::L3abb_data, "Return the alpha-beta-beta 3-cumulant data")
+        .def("L3bbb_data", &RDMs::L3bbb_data, "Return the beta-beta-beta 3-cumulant data");
 
     // export ambit::Tensor
     py::class_<ambit::Tensor>(m, "ambitTensor");

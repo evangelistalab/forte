@@ -7,7 +7,7 @@ Atomic Valence Active Space (AVAS)
 .. sectionauthor:: Nan He
 
 A simple and well-defined automated technique for constructing active orbital spaces
-^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 This AVAS procedure provides an automatic way to generate an active space for correlation 
 computations by projecting MOs to an AO subspace, computing and sorting the overlaps for 
