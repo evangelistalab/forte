@@ -34,7 +34,6 @@
 #include <string>
 #include "ui64_determinant.h"
 
-
 namespace forte {
 
 /**
@@ -181,6 +180,9 @@ std::tuple<double, size_t, size_t> ui64_slater_sign_single(uint64_t l, uint64_t 
 }
 
 UI64Determinant::UI64Determinant() : a_(0), b_(0) {}
+
+UI64Determinant::UI64Determinant(const UI64Determinant& original)
+    : a_(original.a_), b_(original.b_) {}
 
 UI64Determinant::UI64Determinant(const std::vector<bool>& occupation) : a_(0), b_(0) {
     int size = occupation.size() / 2;
@@ -483,6 +485,28 @@ double UI64Determinant::double_excitation_bb(int i, int j, int a, int b) {
     return slater_sign_bbbb(i, j, a, b);
 }
 
+double UI64Determinant::gen_excitation(const std::vector<int>& aann, const std::vector<int>& acre,
+                                       const std::vector<int>& bann, const std::vector<int>& bcre) {
+    double sign = 1.0;
+    for (auto i : aann) {
+        sign *= slater_sign_a(i) * get_alfa_bit(i);
+        set_alfa_bit(i, false);
+    }
+    for (auto i : acre) {
+        sign *= slater_sign_a(i) * (1 - get_alfa_bit(i));
+        set_alfa_bit(i, true);
+    }
+    for (auto i : bann) {
+        sign *= slater_sign_b(i) * get_beta_bit(i);
+        set_beta_bit(i, false);
+    }
+    for (auto i : bcre) {
+        sign *= slater_sign_b(i) * (1 - get_beta_bit(i));
+        set_beta_bit(i, true);
+    }
+    return sign;
+}
+
 UI64Determinant& UI64Determinant::flip() {
     a_ = ~a_;
     b_ = ~b_;
@@ -562,4 +586,3 @@ double spin2(const UI64Determinant& lhs, const UI64Determinant& rhs) {
     return (matrix_element);
 }
 } // namespace forte
-

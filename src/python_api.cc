@@ -41,11 +41,14 @@
 #include "integrals/integrals.h"
 #include "integrals/make_integrals.h"
 
+#include "helpers/printing.h"
+
 #include "orbital-helpers/aosubspace.h"
 #include "orbital-helpers/localize.h"
 #include "orbital-helpers/mp2_nos.h"
 #include "orbital-helpers/semi_canonicalize.h"
-#include "orbital-helpers/avas.h"
+#include "orbital-helpers/orbital_embedding.h"
+#include "orbital-helpers/fragment_projector.h"
 
 #include "forte.h"
 #include "fci/fci_solver.h"
@@ -54,8 +57,11 @@
 #include "base_classes/scf_info.h"
 #include "mrdsrg-helper/run_dsrg.h"
 #include "mrdsrg-spin-integrated/master_mrdsrg.h"
+
 #include "sparse_ci/determinant.h"
 #include "post_process/spin_corr.h"
+#include "sparse_ci/determinant_hashvector.h"
+#include "sparse_ci/determinant_sq_operator.h"
 
 namespace py = pybind11;
 using namespace pybind11::literals;
@@ -126,6 +132,7 @@ constexpr int Determinant::num_det_bits;
 void export_Determinant(py::module& m) {
     py::class_<Determinant>(m, "Determinant")
         .def(py::init<>())
+        .def(py::init<const Determinant&>())
         .def(py::init<const std::vector<bool>&, const std::vector<bool>&>())
         .def("get_alfa_bits", &Determinant::get_alfa_bits, "Get alpha bits")
         .def("get_beta_bits", &Determinant::get_beta_bits, "Get beta bits")
@@ -141,7 +148,25 @@ void export_Determinant(py::module& m) {
         .def("create_beta_bit", &Determinant::create_beta_bit, "n"_a, "Create a beta bit")
         .def("destroy_alfa_bit", &Determinant::destroy_alfa_bit, "n"_a, "Destroy an alpha bit")
         .def("destroy_beta_bit", &Determinant::destroy_beta_bit, "n"_a, "Destroy a beta bit")
-        .def("str", &Determinant::str, "Get the string representation of the Slater determinant");
+        .def("gen_excitation", &Determinant::gen_excitation, "Apply a generic excitation")
+        .def("str", &Determinant::str, "Get the string representation of the Slater determinant")
+        .def("__repr__", [](const Determinant& a) { return a.str(); })
+        .def("__str__", [](const Determinant& a) { return a.str(); })
+        .def("__eq__", [](const Determinant& a, const Determinant& b) { return a == b; })
+        .def("__lt__", [](const Determinant& a, const Determinant& b) { return a < b; })
+        .def("__hash__", [](const Determinant& a) { return Determinant::Hash()(a); });
+    py::class_<DeterminantHashVec>(m, "DeterminantHashVec")
+        .def(py::init<>())
+        .def(py::init<const std::vector<Determinant>&>())
+        .def(py::init<const det_hashvec&>())
+        .def("add", &DeterminantHashVec::add, "Add a determinant")
+        .def("size", &DeterminantHashVec::size, "Get the size of the vector")
+        .def("get_det", &DeterminantHashVec::get_det, "Return a specific determinant by reference")
+        .def("get_idx", &DeterminantHashVec::get_idx, " Return the index of a determinant");
+
+    py::class_<DeterminantSQOperator>(m, "DeterminantSQOperator")
+        .def(py::init<>())
+        .def("add_operator", &DeterminantSQOperator::add_operator, "Add an operator");
 }
 
 // TODO: export more classes using the function above
@@ -151,9 +176,16 @@ PYBIND11_MODULE(forte, m) {
     m.def("startup", &startup);
     m.def("cleanup", &cleanup);
     m.def("banner", &banner, "Print forte banner");
+    m.def("print_method_banner", &print_method_banner, "text"_a, "separator"_a = "-",
+          "Print a method banner");
     m.def("make_mo_space_info", &make_mo_space_info, "Make a MOSpaceInfo object");
+    m.def("make_mo_space_info_from_map", &make_mo_space_info_from_map,
+          "Make a MOSpaceInfo object from a map of space name (string) to a vector");
     m.def("make_aosubspace_projector", &make_aosubspace_projector, "Make a AOSubspace projector");
     m.def("make_avas", &make_avas, "Make AVAS orbitals");
+    m.def("make_fragment_projector", &make_fragment_projector,
+          "Make a fragment(embedding) projector");
+    m.def("make_embedding", &make_embedding, "Apply fragment projector to embed");
     m.def("make_forte_integrals", &make_forte_integrals, "Make Forte integrals");
     m.def("forte_old_methods", &forte_old_methods, "Run Forte methods");
     m.def("make_active_space_method", &make_active_space_method, "Make an active space method");
@@ -170,8 +202,13 @@ PYBIND11_MODULE(forte, m) {
           "Make an object that holds the molecular orbital integrals for the active orbitals");
     m.def("make_dynamic_correlation_solver", &make_dynamic_correlation_solver,
           "Make a dynamical correlation solver");
-    m.def("make_dsrg_method", &make_dsrg_method, "Make a DSRG method");
     m.def("perform_spin_analysis", &perform_spin_analysis, "Do spin analysis");    
+    m.def("make_dsrg_method", &make_dsrg_method,
+          "Make a DSRG method (spin-integrated implementation)");
+    m.def("make_dsrg_so_y", &make_dsrg_so_y, "Make a DSRG pointer (spin-orbital implementation)");
+    m.def("make_dsrg_so_f", &make_dsrg_so_f, "Make a DSRG pointer (spin-orbital implementation)");
+    m.def("make_dsrg_spin_adapted", &make_dsrg_spin_adapted,
+          "Make a DSRG pointer (spin-adapted implementation)");
 
     export_ForteOptions(m);
 
@@ -182,11 +219,28 @@ PYBIND11_MODULE(forte, m) {
 
     export_Determinant(m);
 
-    //    export_FCISolver(m);
-
     // export MOSpaceInfo
     py::class_<MOSpaceInfo, std::shared_ptr<MOSpaceInfo>>(m, "MOSpaceInfo")
-        .def("size", &MOSpaceInfo::size);
+        .def("get_dimension", &MOSpaceInfo::get_dimension,
+             "Return a psi::Dimension object for the given space")
+        .def("get_absolute_mo", &MOSpaceInfo::get_absolute_mo,
+             "Return the list of the absolute index of the molecular orbitals in a space excluding "
+             "the frozen core/virtual orbitals")
+        .def(
+            "get_corr_abs_mo", &MOSpaceInfo::get_corr_abs_mo,
+            "Return the list of the absolute index of the molecular orbitals in a correlated space")
+        .def("get_relative_mo", &MOSpaceInfo::get_relative_mo, "Return the relative MOs")
+        .def("read_options", &MOSpaceInfo::read_options, "Read options")
+        .def("read_from_map", &MOSpaceInfo::read_from_map,
+             "Read the space info from a map {spacename -> dimension vector}")
+        .def("set_reorder", &MOSpaceInfo::set_reorder,
+             "Reorder MOs according to the input indexing vector")
+        .def("compute_space_info", &MOSpaceInfo::compute_space_info,
+             "Processing current MOSpaceInfo: calculate frozen core, count and assign orbitals")
+        .def("size", &MOSpaceInfo::size, "Return the number of orbitals in a space")
+        .def("nirrep", &MOSpaceInfo::nirrep, "Return the number of irreps")
+        .def("symmetry", &MOSpaceInfo::symmetry, "Return the symmetry of each orbital")
+        .def("space_names", &MOSpaceInfo::space_names, "Return the names of orbital spaces");
 
     // export ForteIntegrals
     py::class_<ForteIntegrals, std::shared_ptr<ForteIntegrals>>(m, "ForteIntegrals")
@@ -211,7 +265,6 @@ PYBIND11_MODULE(forte, m) {
     // export ActiveSpaceIntegrals
     py::class_<ActiveSpaceIntegrals, std::shared_ptr<ActiveSpaceIntegrals>>(m,
                                                                             "ActiveSpaceIntegrals")
-        .def(py::init<std::shared_ptr<ForteIntegrals>, std::shared_ptr<MOSpaceInfo>>())
         .def("slater_rules", &ActiveSpaceIntegrals::slater_rules,
              "Compute the matrix element of the Hamiltonian between two determinants")
         .def("nuclear_repulsion_energy", &ActiveSpaceIntegrals::nuclear_repulsion_energy,
@@ -219,7 +272,13 @@ PYBIND11_MODULE(forte, m) {
         .def("frozen_core_energy", &ActiveSpaceIntegrals::frozen_core_energy,
              "Get the frozen core energy (contribution from FROZEN_DOCC)")
         .def("scalar_energy", &ActiveSpaceIntegrals::scalar_energy,
-             "Get the scalar_energy energy (contribution from RESTRICTED_DOCC)");
+             "Get the scalar_energy energy (contribution from RESTRICTED_DOCC)")
+        .def("oei_a", &ActiveSpaceIntegrals::oei_a, "Get the alpha effective one-electron integral")
+        .def("oei_b", &ActiveSpaceIntegrals::oei_b, "Get the beta effective one-electron integral")
+        .def("tei_aa", &ActiveSpaceIntegrals::tei_aa, "alpha-alpha two-electron integral <pq||rs>")
+        .def("tei_ab", &ActiveSpaceIntegrals::tei_ab, "alpha-beta two-electron integral <pq|rs>")
+        .def("tei_bb", &ActiveSpaceIntegrals::tei_bb, "beta-beta two-electron integral <pq||rs>")
+        .def("print", &ActiveSpaceIntegrals::print, "Print the integrals (alpha-alpha case)");
 
     // export SemiCanonical
     py::class_<SemiCanonical>(m, "SemiCanonical")
@@ -235,7 +294,25 @@ PYBIND11_MODULE(forte, m) {
         .def("Ub_t", &SemiCanonical::Ub_t, "Return the beta rotation matrix in the active space");
 
     // export RDMs
-    py::class_<RDMs>(m, "RDMs");
+    py::class_<RDMs>(m, "RDMs")
+        .def("max_rdm_level", &RDMs::max_rdm_level, "Return the max RDM level")
+        .def("g1a_data", &RDMs::g1a_data, "Return the alpha 1RDM data")
+        .def("g1b_data", &RDMs::g1a_data, "Return the beta 1RDM data")
+        .def("g2aa_data", &RDMs::g2aa_data, "Return the alpha-alpha 2RDM data")
+        .def("g2ab_data", &RDMs::g2ab_data, "Return the alpha-beta 2RDM data")
+        .def("g2bb_data", &RDMs::g2bb_data, "Return the beta-beta 2RDM data")
+        .def("g3aaa_data", &RDMs::g3aaa_data, "Return the alpha-alpha-alpha 3RDM data")
+        .def("g3aab_data", &RDMs::g3aab_data, "Return the alpha-alpha-beta 3RDM data")
+        .def("g3abb_data", &RDMs::g3abb_data, "Return the alpha-beta-beta 3RDM data")
+        .def("g3bbb_data", &RDMs::g3bbb_data, "Return the beta-beta-beta 3RDM data")
+        .def("SFg2_data", &RDMs::SFg2_data, "Return the spin-free 2-RDM")
+        .def("L2aa_data", &RDMs::L2aa_data, "Return the alpha-alpha 2-cumulant data")
+        .def("L2ab_data", &RDMs::L2ab_data, "Return the alpha-beta 2-cumulant data")
+        .def("L2bb_data", &RDMs::L2bb_data, "Return the beta-beta 2-cumulant data")
+        .def("L3aaa_data", &RDMs::L3aaa_data, "Return the alpha-alpha-alpha 3-cumulant data")
+        .def("L3aab_data", &RDMs::L3aab_data, "Return the alpha-alpha-beta 3-cumulant data")
+        .def("L3abb_data", &RDMs::L3abb_data, "Return the alpha-beta-beta 3-cumulant data")
+        .def("L3bbb_data", &RDMs::L3bbb_data, "Return the beta-beta-beta 3-cumulant data");
 
     // export ambit::Tensor
     py::class_<ambit::Tensor>(m, "ambitTensor");
@@ -251,6 +328,23 @@ PYBIND11_MODULE(forte, m) {
              "Return nuclear components of dipole moments")
         .def("set_Uactv", &MASTER_DSRG::set_Uactv, "Ua"_a, "Ub"_a,
              "Set active part orbital rotation matrix (from original to semicanonical)");
+
+    // export MRDSRG_SO
+    py::class_<MRDSRG_SO>(m, "MRDSRG_SO")
+        .def("compute_energy", &MRDSRG_SO::compute_energy, "Compute DSRG energy")
+        .def("compute_Heff_actv", &MRDSRG_SO::compute_Heff_actv,
+             "Return the DSRG dressed ActiveSpaceIntegrals");
+    // export SOMRDSRG
+    py::class_<SOMRDSRG>(m, "SOMRDSRG")
+        .def("compute_energy", &SOMRDSRG::compute_energy, "Compute DSRG energy")
+        .def("compute_Heff_actv", &SOMRDSRG::compute_Heff_actv,
+             "Return the DSRG dressed ActiveSpaceIntegrals");
+
+    // export DSRG_MRPT spin-adapted code
+    py::class_<DSRG_MRPT>(m, "DSRG_MRPT")
+        .def("compute_energy", &DSRG_MRPT::compute_energy, "Compute DSRG energy")
+        .def("compute_Heff_actv", &DSRG_MRPT::compute_Heff_actv,
+             "Return the DSRG dressed ActiveSpaceIntegrals");
 
     // export DressedQuantity for dipole moments
     py::class_<DressedQuantity>(m, "DressedQuantity")

@@ -6,6 +6,7 @@ def register_forte_options(forte_options):
     register_avas_options(forte_options)
     register_cino_options(forte_options)
     register_mrcino_options(forte_options)
+    register_embedding_options(forte_options)
     register_integral_options(forte_options)
     register_pt2_options(forte_options)
     register_pci_options(forte_options)
@@ -28,6 +29,8 @@ def register_driver_options(forte_options):
         'THREE-DSRG-MRPT2', 'SOMRDSRG', 'MRDSRG', 'MRDSRG_SO', 'CASSCF',
         'ACTIVE-DSRGPT2', 'DWMS-DSRGPT2', 'DSRG_MRPT', 'TASKS'
     ], 'Specify the job type')
+
+    forte_options.add_str('DERTYPE', 'NONE', ['NONE', 'FIRST'], 'Derivative order')
 
     forte_options.add_str(
         'ACTIVE_SPACE_SOLVER', '', ['FCI', 'ACI', 'CAS'],
@@ -117,6 +120,38 @@ def register_mrcino_options(forte_options):
         "actice_docc and restricted_docc"
         "or not")
 
+def register_embedding_options(forte_options):
+    forte_options.add_bool(
+        "EMBEDDING", False, 
+        "Whether to perform embedding partition and projection")
+    forte_options.add_str(
+        "EMBEDDING_CUTOFF_METHOD", "THRESHOLD", 
+        "Cut off by: threshold ,cum_threshold or num_of_orbitals.")
+    forte_options.add_double(
+        "EMBEDDING_THRESHOLD", 0.5, 
+        "Projector eigenvalue threshold for both simple and cumulative threshold")
+    forte_options.add_int(
+        "NUM_A_DOCC", 0, 
+        "Number of occupied orbitals in A fixed to this value when embedding method is num_of_orbitals")
+    forte_options.add_int(
+        "Num_A_UOCC", 0,
+        "Number of virtual orbitals in A fixed to this value when embedding method is num_of_orbitals")
+    forte_options.add_str(
+        "EMBEDDING_REFERENCE", "CASSCF", 
+        "HF for any reference without active, CASSCF for any reference with an active space.")
+    forte_options.add_bool(
+        "EMBEDDING_SEMICANONICALIZE_ACTIVE", True, 
+        "Perform semi-canonicalization on active space or not")
+    forte_options.add_bool(
+        "EMBEDDING_SEMICANONICALIZE_FROZEN", True, 
+        "Perform semi-canonicalization on frozen core/virtual space or not")
+    forte_options.add_int(
+        "EMBEDDING_ADJUST_B_DOCC", 0, 
+        "Adjust number of occupied orbitals between A and B, +: move to B, -: move to A")
+    forte_options.add_int(
+        "EMBEDDING_ADJUST_B_UOCC", 0,
+        "Adjust number of virtual orbitals between A and B, +: move to B, -: move to A")
+
 def register_mo_space_info_options(forte_options):
     forte_options.add_array(
         "FROZEN_DOCC",
@@ -167,7 +202,6 @@ def register_active_space_solver_options(forte_options):
 def register_pt2_options(forte_options):
     forte_options.add_double("PT2_MAX_MEM", 1.0,
                              " Maximum size of the determinant hash (GB)")
-
 
 def register_pci_options(forte_options):
     forte_options.add_str("PCI_GENERATOR", "WALL-CHEBYSHEV", [
@@ -669,6 +703,10 @@ def register_dsrg_options(forte_options):
 
     forte_options.add_bool("PRINT_1BODY_EVALS", False, "Print eigenvalues of 1-body effective H")
 
+    forte_options.add_bool("DSRG_MRPT3_BATCHED", False, "Force running the DSRG-MRPT3 code using the batched algorithm")
+
+    forte_options.add_bool("IGNORE_MEMORY_WARNINGS", False, "Force running the DSRG-MRPT3 code using the batched algorithm")
+
 def register_dwms_options(forte_options):
     forte_options.add_double("DWMS_ZETA", 0.0, """Automatic Gaussian width cutoff for the density weights
           Weights of state α:
@@ -802,6 +840,9 @@ def register_old_options(forte_options):
                           "The form of the two-particle density cumulant")
     forte_options.add_str("THREEPDC", "MK", ["MK", "MK_DECOMP", "ZERO"],
                           "The form of the three-particle density cumulant")
+    #    /*- Select a modified commutator -*/
+    forte_options.add_str("SRG_COMM", "STANDARD", "STANDARD FO FO2")
+
 
     #    /*- The minimum excitation level (Default value: 0) -*/
     #    forte_options.add_int("MIN_EXC_LEVEL", 0)

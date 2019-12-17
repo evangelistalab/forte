@@ -37,15 +37,17 @@
 #include "psi4/libpsio/psio.h"
 #include "ambit/blocked_tensor.h"
 
-#include "integrals/integrals.h"
+#include "base_classes/forte_options.h"
+#include "base_classes/dynamic_correlation_solver.h"
 #include "base_classes/rdms.h"
+#include "integrals/integrals.h"
 #include "helpers/blockedtensorfactory.h"
 
 using namespace ambit;
 
 namespace forte {
 
-class MRDSRG_SO : public psi::Wavefunction {
+class MRDSRG_SO : public DynamicCorrelationSolver {
   protected:
     // => Class initialization and termination <= //
 
@@ -58,15 +60,6 @@ class MRDSRG_SO : public psi::Wavefunction {
 
     /// Print levels
     int print_;
-
-    /// The RDMs and cumulants of the reference wave function
-    RDMs rdms_;
-
-    /// The molecular integrals required by MethodBase
-    std::shared_ptr<ForteIntegrals> ints_;
-
-    /// MO space info
-    std::shared_ptr<MOSpaceInfo> mo_space_info_;
 
     /// List of alpha core SOs
     std::vector<size_t> acore_sos;
@@ -129,8 +122,8 @@ class MRDSRG_SO : public psi::Wavefunction {
     /// Order of the Taylor expansion of f(z) = (1-exp(-z^2))/z
     int taylor_order_;
 
+    std::shared_ptr<BlockedTensorFactory> BTF_;
     TensorType tensor_type_;
-    std::shared_ptr<BlockedTensorFactory> BTF;
 
     // => Tensors <= //
 
@@ -278,13 +271,16 @@ class MRDSRG_SO : public psi::Wavefunction {
   public:
     // => Constructors <= //
 
-    MRDSRG_SO(RDMs rdms, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
-              std::shared_ptr<MOSpaceInfo> mo_space_info);
+    MRDSRG_SO(RDMs rdms, std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
+              std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     ~MRDSRG_SO();
 
     /// Compute the DSRG-MRPT2 energy
     double compute_energy();
+
+    /// DSRG transformed Hamiltonian (not implemented)
+    std::shared_ptr<ActiveSpaceIntegrals> compute_Heff_actv();
 
     /// The energy of the reference
     double Eref;
@@ -292,6 +288,6 @@ class MRDSRG_SO : public psi::Wavefunction {
     /// The frozen-core energy
     double frozen_core_energy;
 };
-}
+} // namespace forte
 
 #endif // _mrdsrg_so_h_

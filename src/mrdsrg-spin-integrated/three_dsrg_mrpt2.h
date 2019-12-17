@@ -196,7 +196,6 @@ class THREE_DSRG_MRPT2 : public MASTER_DSRG {
 
     /// Compute DSRG-PT2 correlation energy - Group of functions to calculate
     /// individual pieces of energy
-    double compute_ref();
     double E_FT1();
     double E_VT1();
     double E_FT2();

@@ -26,6 +26,8 @@
  * @END LICENSE
  */
 
+#ifdef ENABLE_UNTESTED_CODE
+
 #include <algorithm>
 #include <iomanip>
 #include <map>
@@ -1904,3 +1906,5 @@ double ACTIVE_DSRGPT2::compute_overlap(std::map<Determinant, double> wfn1,
     return value;
 }
 } // namespace forte
+
+#endif
