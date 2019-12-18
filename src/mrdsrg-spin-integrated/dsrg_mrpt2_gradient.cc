@@ -46,7 +46,158 @@ void DSRG_MRPT2::set_all_variables() {
 	// TODO: set global variables for future use.
 	// NOTICE: This function may better be merged into "dsrg_mrpt2.cc" in the future!!
 
+    nmo_ = mo_space_info_->size("CORRELATED");
+
+    core_mos_ = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
+    actv_mos_ = mo_space_info_->get_corr_abs_mo("ACTIVE");
+    virt_mos_ = mo_space_info_->get_corr_abs_mo("RESTRICTED_UOCC");
+    core_all_ = mo_space_info_->get_absolute_mo("RESTRICTED_DOCC");
+    actv_all_ = mo_space_info_->get_absolute_mo("ACTIVE");
+    core_mos_relative = mo_space_info_->get_relative_mo("RESTRICTED_DOCC");
+    actv_mos_relative = mo_space_info_->get_relative_mo("ACTIVE");
+    irrep_vec = mo_space_info_->get_dimension("ALL");
+
+    // // Set MO spaces.
+    // set_ambit_space();
+
+    // Initialize tensors.
+    Gamma1 = BTF_->build(CoreTensor, "Gamma1", spin_cases({"aa"}));
+    Gamma2 = BTF_->build(CoreTensor, "Gamma2", spin_cases({"aaaa"}));
+    H = BTF_->build(CoreTensor, "One-Electron Integral", spin_cases({"gg"}));
+    V = BTF_->build(CoreTensor, "Electron Repulsion Integral", spin_cases({"gggg"}));
+    F = BTF_->build(CoreTensor, "Fock Matrix", spin_cases({"gg"}));
+    W_ = BTF_->build(CoreTensor, "Lagrangian", spin_cases({"gg"}));
+
+
+    Gamma1.block("aa")("pq") = rdms_.g1a()("pq");
+    Gamma1.block("AA")("pq") = rdms_.g1b()("pq");
+    // 2-body density
+    Gamma2.block("aaaa")("pqrs") = rdms_.g2aa()("pqrs");
+    Gamma2.block("aAaA")("pqrs") = rdms_.g2ab()("pqrs");
+    Gamma2.block("AAAA")("pqrs") = rdms_.g2bb()("pqrs");
+
+    set_tensor();
+
+
 }
+
+void DSRG_MRPT2::set_tensor() {
+
+
+    H.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+        if (spin[0] == AlphaSpin) {
+            value = ints_->oei_a(i[0], i[1]);
+        } else {
+            value = ints_->oei_b(i[0], i[1]);
+        }
+    });
+
+    V.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+        if (spin[0] == AlphaSpin) {
+            if (spin[1] == AlphaSpin) {
+                value = ints_->aptei_aa(i[0], i[1], i[2], i[3]);
+            } else {
+                value = ints_->aptei_ab(i[0], i[1], i[2], i[3]);
+            }
+        } else if (spin[1] == BetaSpin) {
+            value = ints_->aptei_bb(i[0], i[1], i[2], i[3]);
+        }
+    });
+
+
+
+    psi::SharedMatrix D1a(new psi::Matrix("D1a", nmo_, nmo_));
+    psi::SharedMatrix D1b(new psi::Matrix("D1b", nmo_, nmo_));
+
+    // Fill core-core blocks
+    for (size_t m = 0, ncore = core_mos_.size(); m < ncore; m++) {
+        D1a->set(core_mos_[m], core_mos_[m], 1.0);
+        D1b->set(core_mos_[m], core_mos_[m], 1.0);
+    }
+
+    // Fill active-active blocks
+    Gamma1.block("aa").citerate([&](const std::vector<size_t>& i, const double& value) {
+        D1a->set(actv_mos_[i[0]], actv_mos_[i[1]], value);
+    });
+    Gamma1.block("AA").citerate([&](const std::vector<size_t>& i, const double& value) {
+        D1b->set(actv_mos_[i[0]], actv_mos_[i[1]], value);
+    });
+
+    // Make Fock matrices
+    ints_->make_fock_matrix(D1a, D1b);
+    F.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+        if (spin[0] == AlphaSpin) {
+            value = ints_->get_fock_a(i[0], i[1]);
+        } else {
+            value = ints_->get_fock_b(i[0], i[1]);
+        }
+    });
+
+}
+
+
+
+
+
+
+//NOTICE Only for test use, need to delete when done
+void DSRG_MRPT2::compute_test_energy() {
+
+    double casscf_energy = ints_->nuclear_repulsion_energy();
+
+    BlockedTensor temp = BTF_->build(CoreTensor, "temporal tensor", spin_cases({"gg"}));
+    BlockedTensor I = BTF_->build(CoreTensor, "identity matrix", spin_cases({"gg"}));
+    I.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+        value = (i[0] == i[1]) ? 1.0 : 0.0;
+    });
+
+    casscf_energy += H["m,n"] * I["m,n"];
+    casscf_energy += H["M,N"] * I["M,N"];
+
+    casscf_energy += 0.5 * V["m,n,m1,n1"] * I["m,m1"] * I["n,n1"];
+    casscf_energy += 0.5 * V["M,N,M1,N1"] * I["M,M1"] * I["N,N1"];
+    casscf_energy +=       V["m,N,m1,N1"] * I["m,m1"] * I["N,N1"];
+
+    temp["uv"]  = H["uv"];
+    temp["uv"] += V["umvn"] * I["mn"];
+    temp["uv"] += V["uMvN"] * I["MN"];
+
+    casscf_energy += temp["uv"] * Gamma1["vu"];
+
+    temp["UV"]  = H["UV"];
+    temp["UV"] += V["mUnV"] * I["mn"];
+    temp["UV"] += V["UMVN"] * I["MN"];
+
+    casscf_energy += temp["UV"] * Gamma1["VU"];
+
+    casscf_energy += 0.25 * V["uvxy"] * Gamma2["xyuv"];
+    casscf_energy += 0.25 * V["UVXY"] * Gamma2["XYUV"];
+    casscf_energy +=        V["uVxY"] * Gamma2["xYuV"];
+
+    outfile->Printf("\n\n  Tested CASSCF Energy is %.12f", casscf_energy);
+
+    double temp_energy = 0.0;
+    double E=0.0;
+
+    temp_energy += F_["bj"] * T1_["ia"] * Gamma1_["ji"] * Eta1_["ab"];
+    temp_energy += F_["BJ"] * T1_["IA"] * Gamma1_["JI"] * Eta1_["AB"];
+
+    E += F_["em"] * T1_["me"];
+    E += F_["ex"] * T1_["ye"] * Gamma1_["xy"];
+    E += F_["xm"] * T1_["my"] * Eta1_["yx"];
+
+    E += F_["EM"] * T1_["ME"];
+    E += F_["EX"] * T1_["YE"] * Gamma1_["XY"];
+    E += F_["XM"] * T1_["MY"] * Eta1_["YX"];
+
+    outfile->Printf("\n\n  First term Energy is %.12f", E);
+    
+}
+
+
+
+
+
 
 
 
@@ -58,6 +209,36 @@ void DSRG_MRPT2::set_all_variables() {
 
 void DSRG_MRPT2::set_lagrangian() {
 	// TODO: set coefficients before the overlap integral
+
+    // Create a temporal container and an identity matrix
+    // BlockedTensor temp = BTF_->build(CoreTensor, "temporal tensor", spin_cases({"gg"}));
+    // BlockedTensor I = BTF_->build(CoreTensor, "identity matrix", spin_cases({"gg"}));
+    // I.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+    //     value = (i[0] == i[1]) ? 1.0 : 0.0;
+    // });
+
+    // // Set core-core and core-active block entries of Lagrangian.
+    // // Alpha.
+    // W_["mp"] = F_["mp"];
+    // // Beta.
+    // W_["MP"] = F_["MP"];
+
+    // // Set active-active block entries of Lagrangian.
+    // // Alpha.
+    // temp["vp"] = Hoei_["vp"];
+    // temp["vp"] += V_["vmpn"] * I["mn"];
+    // temp["vp"] += V_["vMpN"] * I["MN"];
+    // W_["up"] += temp["vp"] * Gamma1_["uv"];
+    // W_["up"] += 0.5 * V_["xypv"] * Gamma2_["uvxy"];
+    // W_["up"] += V_["xYpV"] * Gamma2_["uVxY"];
+    // // Beta.
+    // temp["VP"] = Hoei_["VP"];
+    // temp["VP"] += V_["mVnP"] * I["mn"];
+    // temp["VP"] += V_["VMPN"] * I["MN"];
+    // W_["UP"] += temp["VP"] * Gamma1_["UV"];
+    // W_["UP"] += 0.5 * V_["XYPV"] * Gamma2_["UVXY"];
+    // W_["UP"] += V_["yXvP"] * Gamma2_["vUyX"];
+    // No need to set the rest symmetric blocks since they are 0
 }
 
 // It's not necessary to define set_tensor
@@ -84,18 +265,25 @@ void DSRG_MRPT2::tpdm_backtransform() {
 
 SharedMatrix DSRG_MRPT2::compute_gradient() {
 	// TODO: compute the DSRG_MRPT2 gradient 
-    // print_method_banner({"DSRG-MRPT2 Gradient", "Shuhe Wang"});
-    // set_all_variables();
+    print_method_banner({"DSRG-MRPT2 Gradient", "Shuhe Wang"});
+    set_all_variables();
     // write_lagrangian();
     // write_1rdm_spin_dependent();
     // write_2rdm_spin_dependent();
     // tpdm_backtransform();
+
+
+
+    //NOTICE Just for test
+    compute_test_energy();
 
     outfile->Printf("\n    Computing Gradient .............................. Done\n");
 
 
     return std::make_shared<Matrix>("nullptr", 0, 0);
 }
+
+
 
 
 void DSRG_MRPT2::write_lagrangian() {

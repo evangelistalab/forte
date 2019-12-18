@@ -169,8 +169,8 @@ void MASTER_DSRG::set_ambit_MOSpace() {
     bvirt_label_ = "V";
 
     // add Ambit index labels
-    BTF_->add_mo_space(acore_label_, "mn", core_mos_, AlphaSpin);
-    BTF_->add_mo_space(bcore_label_, "MN", core_mos_, BetaSpin);
+    BTF_->add_mo_space(acore_label_, "m, n, m1, n1", core_mos_, AlphaSpin);
+    BTF_->add_mo_space(bcore_label_, "M, N, M1, N1", core_mos_, BetaSpin);
     BTF_->add_mo_space(aactv_label_, "uvwxyz123", actv_mos_, AlphaSpin);
     BTF_->add_mo_space(bactv_label_, "UVWXYZ!@#", actv_mos_, BetaSpin);
     BTF_->add_mo_space(avirt_label_, "ef", virt_mos_, AlphaSpin);

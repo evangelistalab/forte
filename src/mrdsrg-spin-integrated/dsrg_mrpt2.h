@@ -202,10 +202,17 @@ class DSRG_MRPT2 : public MASTER_DSRG {
 
 
 
-    // These are essential variables and functions for computing DSRG-MRPT2 gradient.
+
+
+
+    // NOTICE These are essential variables and functions for computing DSRG-MRPT2 gradient.
     // Some variables may be redundant thus need further elimination
-    /// Set Ambit tensor labels
+    ///NOTICE for test
+    void compute_test_energy();
+    /// Set ambit tensor labels
     void set_ambit_space();
+    /// Set tensors
+    void set_tensor();
     /// Set density
     void set_density();
     /// Set Fock matrix
@@ -217,9 +224,8 @@ class DSRG_MRPT2 : public MASTER_DSRG {
 
     /// Set MO space environment and global variables
     void set_all_variables();
-    /// Set H, V, F and densities using ambit tensors
-    void set_tensor();
-    /// Write spin_dependent one-RDMs coefficients
+    size_t nmo_;
+
    
     /// Set the Lagrangian
     void set_lagrangian();
@@ -231,6 +237,7 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     void write_2rdm_spin_dependent();
     /// TPDM backtransform
     void tpdm_backtransform();
+
     /// List of core MOs (Correlated)
     std::vector<size_t> core_mos_;
     /// List of active MOs (Correlated)
@@ -238,9 +245,11 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     /// List of virtual MOs (Correlated)
     std::vector<size_t> virt_mos_;
     /// List of core MOs (Absolute)
+   
     std::vector<size_t> core_all_;
     /// List of active MOs (Absolute)
     std::vector<size_t> actv_all_;
+
     /// List of relative core MOs
     std::vector<std::pair<unsigned long, unsigned long>,
                 std::allocator<std::pair<unsigned long, unsigned long>>>
@@ -249,22 +258,34 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     std::vector<std::pair<unsigned long, unsigned long>,
                 std::allocator<std::pair<unsigned long, unsigned long>>>
         actv_mos_relative;
+
     /// Dimension of different irreps
     psi::Dimension irrep_vec;
     /// One-particle density matrix This has been predefined
     // ambit::BlockedTensor Gamma1_;
-    
+
+    /// One-body denisty tensor
+    ambit::BlockedTensor Gamma1;  
     /// Two-body denisty tensor
-    ambit::BlockedTensor Gamma2_;
+    ambit::BlockedTensor Gamma2;
     /// Lagrangian tensor
     ambit::BlockedTensor W_;
+
+
     // core Hamiltonian
-    ambit::BlockedTensor H_;
+    ambit::BlockedTensor H;
+    // two-electron integrals
+    ambit::BlockedTensor V;
+    // Fock matrix
+    ambit::BlockedTensor F;
 
 
 
-    // /// Kevin's Tensor Wrapper I don't understand why this is not needed
-    // std::shared_ptr<BlockedTensorFactory> BTF_;
+
+
+
+
+
 
 
 
