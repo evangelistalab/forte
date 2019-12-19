@@ -226,6 +226,9 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     void set_all_variables();
     size_t nmo_;
 
+
+    void set_dsrg_tensor();
+
    
     /// Set the Lagrangian
     void set_lagrangian();
@@ -280,6 +283,9 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     // Fock matrix
     ambit::BlockedTensor F;
 
+    ambit::BlockedTensor Eeps1;
+
+    ambit::BlockedTensor Delta1;
 
 
 

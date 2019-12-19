@@ -68,10 +68,10 @@ void DSRG_MRPT2::set_all_variables() {
     V = BTF_->build(CoreTensor, "Electron Repulsion Integral", spin_cases({"gggg"}));
     F = BTF_->build(CoreTensor, "Fock Matrix", spin_cases({"gg"}));
     W_ = BTF_->build(CoreTensor, "Lagrangian", spin_cases({"gg"}));
-
+    Eeps1 = BTF_->build(CoreTensor, "e^[eps(Delta1)]", spin_cases({"gg"}));
+    Delta1 = BTF_->build(CoreTensor, "Delta1", spin_cases({"gg"}));
 
     set_tensor();
-
 
 }
 
@@ -81,7 +81,7 @@ void DSRG_MRPT2::set_tensor() {
     set_h();
     set_v();
     set_fock();
-
+    set_dsrg_tensor();
 }
 
 
@@ -106,6 +106,34 @@ void DSRG_MRPT2::set_density() {
 
 }
 
+
+
+void DSRG_MRPT2::set_h() {
+
+    H.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+        if (spin[0] == AlphaSpin) {
+            value = ints_->oei_a(i[0], i[1]);
+        } else {
+            value = ints_->oei_b(i[0], i[1]);
+        }
+    });
+}
+
+
+void DSRG_MRPT2::set_v() {
+
+    V.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+        if (spin[0] == AlphaSpin) {
+            if (spin[1] == AlphaSpin) {
+                value = ints_->aptei_aa(i[0], i[1], i[2], i[3]);
+            } else {
+                value = ints_->aptei_ab(i[0], i[1], i[2], i[3]);
+            }
+        } else if (spin[1] == BetaSpin) {
+            value = ints_->aptei_bb(i[0], i[1], i[2], i[3]);
+        }
+    });
+}
 
 void DSRG_MRPT2::set_fock() {
 
@@ -137,36 +165,22 @@ void DSRG_MRPT2::set_fock() {
     });
 }
 
+void DSRG_MRPT2::set_dsrg_tensor() {
 
-void DSRG_MRPT2::set_h() {
-
-    H.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
-        if (spin[0] == AlphaSpin) {
-            value = ints_->oei_a(i[0], i[1]);
-        } else {
-            value = ints_->oei_b(i[0], i[1]);
+    Eeps1.iterate(
+        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+            if (spin[0] == AlphaSpin) { value = dsrg_source_->compute_renormalized(Fa_[i[0]] - Fa_[i[1]]);}
+            else { value = dsrg_source_->compute_renormalized(Fb_[i[0]] - Fb_[i[1]]);}
         }
-    });
-}
+    );
 
-
-void DSRG_MRPT2::set_v() {
-
-    V.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
-        if (spin[0] == AlphaSpin) {
-            if (spin[1] == AlphaSpin) {
-                value = ints_->aptei_aa(i[0], i[1], i[2], i[3]);
-            } else {
-                value = ints_->aptei_ab(i[0], i[1], i[2], i[3]);
-            }
-        } else if (spin[1] == BetaSpin) {
-            value = ints_->aptei_bb(i[0], i[1], i[2], i[3]);
+    Delta1.iterate(
+        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+            if (spin[0] == AlphaSpin) { value = Fa_[i[0]] - Fa_[i[1]];}
+            else { value = Fb_[i[0]] - Fb_[i[1]];}
         }
-    });
+    );
 }
-
-
-
 
 
 //NOTICE Only for test use, need to delete when done
@@ -207,13 +221,41 @@ void DSRG_MRPT2::compute_test_energy() {
 
     double x1_energy = 0.0;
 
-    x1_energy += F_["em"] * T1_["me"];
-    x1_energy += F_["ym"] * T1_["mx"] * Eta1["xy"];
-    x1_energy += F_["ey"] * T1_["xe"] * Gamma1["yx"];
 
-    x1_energy += F_["EM"] * T1_["ME"];
-    x1_energy += F_["YM"] * T1_["MX"] * Eta1["XY"];
-    x1_energy += F_["EY"] * T1_["XE"] * Gamma1["YX"];
+    /************ NOTICE My Test ************/
+    BlockedTensor f_t = BTF_->build(CoreTensor, "temporal tensor", spin_cases({"gg"}));
+    BlockedTensor temp2 = BTF_->build(CoreTensor, "temp2", spin_cases({"gg"}));
+   
+    temp2["xu"] = Gamma1_["xu"] * Delta1["xu"];
+    temp2["XU"] = Gamma1_["XU"] * Delta1["XU"];
+    
+    f_t["ia"]  = F["ia"]; 
+    f_t["ia"] += F["ia"] * Eeps1["ia"];
+    f_t["ia"] += T2_["iuax"] * temp2["xu"] * Eeps1["ia"];
+    f_t["ia"] += T2_["iUaX"] * temp2["XU"] * Eeps1["ia"];
+    f_t["IA"]  = F["IA"]; 
+    f_t["IA"] += F["IA"] * Eeps1["IA"];
+    f_t["IA"] += T2_["uIxA"] * temp2["xu"] * Eeps1["IA"];
+    f_t["IA"] += T2_["IUAX"] * temp2["XU"] * Eeps1["IA"];
+
+    x1_energy += f_t["me"] * T1_["me"];
+    x1_energy += f_t["my"] * T1_["mx"] * Eta1["xy"];
+    x1_energy += f_t["ye"] * T1_["xe"] * Gamma1["yx"];
+
+    x1_energy += f_t["ME"] * T1_["ME"];
+    x1_energy += f_t["MY"] * T1_["MX"] * Eta1["XY"];
+    x1_energy += f_t["YE"] * T1_["XE"] * Gamma1["YX"];
+    /************ NOTICE My Test ************/
+
+
+    /************ NOTICE Using York's code ************/
+    // x1_energy += F_["em"] * T1_["me"];
+    // x1_energy += F_["ym"] * T1_["mx"] * Eta1["xy"];
+    // x1_energy += F_["ey"] * T1_["xe"] * Gamma1["yx"];
+    // x1_energy += F_["EM"] * T1_["ME"];
+    // x1_energy += F_["YM"] * T1_["MX"] * Eta1["XY"];
+    // x1_energy += F_["EY"] * T1_["XE"] * Gamma1["YX"];
+    /************ NOTICE Using York's code ************/
 
     outfile->Printf("\n    <[F, T1]>                      =  %6.12lf", x1_energy);
 
