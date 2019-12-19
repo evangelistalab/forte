@@ -63,18 +63,12 @@ void DSRG_MRPT2::set_all_variables() {
     // Initialize tensors.
     Gamma1 = BTF_->build(CoreTensor, "Gamma1", spin_cases({"aa"}));
     Gamma2 = BTF_->build(CoreTensor, "Gamma2", spin_cases({"aaaa"}));
+    Eta1 = BTF_->build(CoreTensor, "Eta1", spin_cases({"aa"}));
     H = BTF_->build(CoreTensor, "One-Electron Integral", spin_cases({"gg"}));
     V = BTF_->build(CoreTensor, "Electron Repulsion Integral", spin_cases({"gggg"}));
     F = BTF_->build(CoreTensor, "Fock Matrix", spin_cases({"gg"}));
     W_ = BTF_->build(CoreTensor, "Lagrangian", spin_cases({"gg"}));
 
-
-    Gamma1.block("aa")("pq") = rdms_.g1a()("pq");
-    Gamma1.block("AA")("pq") = rdms_.g1b()("pq");
-    // 2-body density
-    Gamma2.block("aaaa")("pqrs") = rdms_.g2aa()("pqrs");
-    Gamma2.block("aAaA")("pqrs") = rdms_.g2ab()("pqrs");
-    Gamma2.block("AAAA")("pqrs") = rdms_.g2bb()("pqrs");
 
     set_tensor();
 
@@ -83,28 +77,37 @@ void DSRG_MRPT2::set_all_variables() {
 
 void DSRG_MRPT2::set_tensor() {
 
+    set_density();
+    set_h();
+    set_v();
+    set_fock();
 
-    H.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
-        if (spin[0] == AlphaSpin) {
-            value = ints_->oei_a(i[0], i[1]);
-        } else {
-            value = ints_->oei_b(i[0], i[1]);
-        }
-    });
-
-    V.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
-        if (spin[0] == AlphaSpin) {
-            if (spin[1] == AlphaSpin) {
-                value = ints_->aptei_aa(i[0], i[1], i[2], i[3]);
-            } else {
-                value = ints_->aptei_ab(i[0], i[1], i[2], i[3]);
-            }
-        } else if (spin[1] == BetaSpin) {
-            value = ints_->aptei_bb(i[0], i[1], i[2], i[3]);
-        }
-    });
+}
 
 
+void DSRG_MRPT2::set_density() {
+
+    Gamma1.block("aa")("pq") = rdms_.g1a()("pq");
+    Gamma1.block("AA")("pq") = rdms_.g1b()("pq");
+
+    for (const std::string& block : {"aa", "AA"}) {
+        (Eta1.block(block)).iterate([&](const std::vector<size_t>& i, double& value) {
+            value = (i[0] == i[1]) ? 1.0 : 0.0;
+        });
+    }
+    Eta1["uv"] -= Gamma1["uv"];
+    Eta1["UV"] -= Gamma1["UV"];
+
+
+    // 2-body density
+    Gamma2.block("aaaa")("pqrs") = rdms_.g2aa()("pqrs");
+    Gamma2.block("aAaA")("pqrs") = rdms_.g2ab()("pqrs");
+    Gamma2.block("AAAA")("pqrs") = rdms_.g2bb()("pqrs");
+
+}
+
+
+void DSRG_MRPT2::set_fock() {
 
     psi::SharedMatrix D1a(new psi::Matrix("D1a", nmo_, nmo_));
     psi::SharedMatrix D1b(new psi::Matrix("D1b", nmo_, nmo_));
@@ -132,9 +135,35 @@ void DSRG_MRPT2::set_tensor() {
             value = ints_->get_fock_b(i[0], i[1]);
         }
     });
-
 }
 
+
+void DSRG_MRPT2::set_h() {
+
+    H.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+        if (spin[0] == AlphaSpin) {
+            value = ints_->oei_a(i[0], i[1]);
+        } else {
+            value = ints_->oei_b(i[0], i[1]);
+        }
+    });
+}
+
+
+void DSRG_MRPT2::set_v() {
+
+    V.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+        if (spin[0] == AlphaSpin) {
+            if (spin[1] == AlphaSpin) {
+                value = ints_->aptei_aa(i[0], i[1], i[2], i[3]);
+            } else {
+                value = ints_->aptei_ab(i[0], i[1], i[2], i[3]);
+            }
+        } else if (spin[1] == BetaSpin) {
+            value = ints_->aptei_bb(i[0], i[1], i[2], i[3]);
+        }
+    });
+}
 
 
 
@@ -174,23 +203,33 @@ void DSRG_MRPT2::compute_test_energy() {
     casscf_energy += 0.25 * V["UVXY"] * Gamma2["XYUV"];
     casscf_energy +=        V["uVxY"] * Gamma2["xYuV"];
 
-    outfile->Printf("\n\n  Tested CASSCF Energy is %.12f", casscf_energy);
+    outfile->Printf("\n    E0 (reference)                 =  %6.12lf", casscf_energy);
 
-    double temp_energy = 0.0;
-    double E=0.0;
+    double x1_energy = 0.0;
 
-    temp_energy += F_["bj"] * T1_["ia"] * Gamma1_["ji"] * Eta1_["ab"];
-    temp_energy += F_["BJ"] * T1_["IA"] * Gamma1_["JI"] * Eta1_["AB"];
+    x1_energy += F_["em"] * T1_["me"];
+    x1_energy += F_["ym"] * T1_["mx"] * Eta1["xy"];
+    x1_energy += F_["ey"] * T1_["xe"] * Gamma1["yx"];
 
-    E += F_["em"] * T1_["me"];
-    E += F_["ex"] * T1_["ye"] * Gamma1_["xy"];
-    E += F_["xm"] * T1_["my"] * Eta1_["yx"];
+    x1_energy += F_["EM"] * T1_["ME"];
+    x1_energy += F_["YM"] * T1_["MX"] * Eta1["XY"];
+    x1_energy += F_["EY"] * T1_["XE"] * Gamma1["YX"];
 
-    E += F_["EM"] * T1_["ME"];
-    E += F_["EX"] * T1_["YE"] * Gamma1_["XY"];
-    E += F_["XM"] * T1_["MY"] * Eta1_["YX"];
+    outfile->Printf("\n    <[F, T1]>                      =  %6.12lf", x1_energy);
 
-    outfile->Printf("\n\n  First term Energy is %.12f", E);
+    double x2_energy = 0.0;
+
+    x2_energy += 0.5 * F_["ex"] * T2_["uvey"] * Lambda2_["xyuv"];
+    x2_energy +=       F_["ex"] * T2_["uVeY"] * Lambda2_["xYuV"];
+    x2_energy += 0.5 * F_["EX"] * T2_["UVEY"] * Lambda2_["XYUV"];
+    x2_energy +=       F_["EX"] * T2_["vUyE"] * Lambda2_["yXvU"];
+
+    x2_energy -= 0.5 * F_["vm"] * T2_["umxy"] * Lambda2_["xyuv"];
+    x2_energy -=       F_["vm"] * T2_["mUyX"] * Lambda2_["yXvU"];
+    x2_energy -= 0.5 * F_["VM"] * T2_["UMXY"] * Lambda2_["XYUV"];
+    x2_energy -=       F_["VM"] * T2_["uMxY"] * Lambda2_["xYuV"];
+
+    outfile->Printf("\n    <[F, T2]>                      =  %6.12lf", x2_energy);
     
 }
 
@@ -198,14 +237,6 @@ void DSRG_MRPT2::compute_test_energy() {
 
 
 
-
-
-
-// set_ambit_space has been defined in "master_mrdsrg.cc"
-// set_density has been defined in "dsrg_mrpt2.cc"
-// set_h has been defined in "dsrg_mrpt2.cc"
-// set_v has been defined in "dsrg_mrpt2.cc"
-// set_fock has been defined in "dsrg_mrpt2.cc"
 
 void DSRG_MRPT2::set_lagrangian() {
 	// TODO: set coefficients before the overlap integral
