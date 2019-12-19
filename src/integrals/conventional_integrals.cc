@@ -201,6 +201,7 @@ void ConventionalIntegrals::set_tei_from_asints(std::shared_ptr<ActiveSpaceInteg
                 for (size_t s = 0; s < ncmo_; ++s) {
                     size_t index = aptei_index(p, q, r, s);
                     if (alpha1 == true and alpha2 == true)
+                        //outfile->Printf("\n  Writing %d, %d, %d, %d", p, q, r, s);
                         aphys_tei_aa[index] = as_ints->tei_aa(p, q, r, s);
                     if (alpha1 == true and alpha2 == false)
                         aphys_tei_ab[index] = as_ints->tei_ab(p, q, r, s);
@@ -213,8 +214,10 @@ void ConventionalIntegrals::set_tei_from_asints(std::shared_ptr<ActiveSpaceInteg
 }
 
 void ConventionalIntegrals::build_from_asints(std::shared_ptr<ActiveSpaceIntegrals> as_ints) {
+    outfile->Printf("\n  Updating one-electron integrals from Hbar2");
     set_oei_from_asints(as_ints, true);
     set_oei_from_asints(as_ints, false);
+    outfile->Printf("\n  Updating two-electron integrals from Hbar2");
     set_tei_from_asints(as_ints, true, true);
     set_tei_from_asints(as_ints, true, false);
     set_tei_from_asints(as_ints, false, false);

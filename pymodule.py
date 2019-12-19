@@ -378,6 +378,23 @@ def adv_embedding_driver(state, state_weights_map, scf_info, ref_wfn, mo_space_i
     psi4.core.print_out("\n E(embedding, Hbar2 relaxed) = {:10.8f}".format(energy_high_relaxed + E_corr))
     psi4.core.print_out("\n ==============MRDSRG embedding done============== \n")
 
+    # Update RDMs
+    psi4.core.print_out("\n")
+    psi4.core.print_out("\n ==============Update and Verify RDMs============== \n")
+    rdms = forte.RHF_DENSITY(scf_info, mo_space_info).rhf_rdms()
+    if options.get_str('fragment_density') == "CASSCF":
+        as_ints = forte.make_active_space_ints(mo_space_info_active, ints_f, "ACTIVE", ["RESTRICTED_DOCC"])
+        rdms = forte.build_casscf_density(state, 2, scf_info, forte.forte_options, mo_space_info_active, mo_space_info, as_ints) # TODO:Fix this function
+    if options.get_str('fragment_density') == "FCI":
+        state_map = forte.to_state_nroots_map(state_weights_map)
+        as_ints_full = forte.make_active_space_ints(mo_space_info, ints_e, "ACTIVE", ["RESTRICTED_DOCC"])
+        as_solver_full = forte.make_active_space_solver(options.get_str('ACTIVE_SPACE_SOLVER'),
+                                                       state_map, scf_info,
+                                                       mo_space_info, as_ints_full,
+                                                       forte.forte_options)
+        state_energies_list = as_solver_full.compute_energy()
+        rdms = as_solver_full.compute_average_rdms(state_weights_map, 3)
+
     # To do iteratively: 
     # ints_e = build_from_fragment_ints(ints_f)
     # Do ENV MRDSRG with ints_e
