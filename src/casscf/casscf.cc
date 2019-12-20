@@ -309,11 +309,7 @@ void CASSCF::startup() {
     psi::SharedMatrix OneInt = T;
     OneInt->zero();
 
-    T->load(psio_, PSIF_OEI);
-    V->load(psio_, PSIF_OEI);
-    Hcore_ = ints_->wfn()->matrix_factory()->create_shared_matrix("Core Hamiltonian");
-    Hcore_->add(T);
-    Hcore_->add(V);
+    Hcore_ = SharedMatrix(ints_->wfn()->H()->clone());
 
     local_timer JK_initialize;
     if (options_->get_str("SCF_TYPE") == "GTFOCK") {

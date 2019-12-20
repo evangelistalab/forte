@@ -68,9 +68,7 @@ using namespace pybind11::literals;
 
 namespace forte {
 
-py::array_t<double> ambit_to_np(ambit::Tensor t) {
-    return py::array_t<double>(t.dims(), &(t.data()[0]));
-}
+void export_RDMs(py::module& m);
 
 /// Export the ForteOptions class
 void export_ForteOptions(py::module& m) {
@@ -172,56 +170,6 @@ void export_Determinant(py::module& m) {
         .def("add_operator", &DeterminantSQOperator::add_operator, "Add an operator");
 }
 
-/// Export the RDMs class
-void export_RDMs(py::module& m) {
-    py::class_<RDMs>(m, "RDMs")
-        .def("max_rdm_level", &RDMs::max_rdm_level, "Return the max RDM level")
-        .def("g1a_data", &RDMs::g1a_data, "Return the alpha 1RDM data")
-        .def("g1b_data", &RDMs::g1a_data, "Return the beta 1RDM data")
-        .def("g2aa_data", &RDMs::g2aa_data, "Return the alpha-alpha 2RDM data")
-        .def("g2ab_data", &RDMs::g2ab_data, "Return the alpha-beta 2RDM data")
-        .def("g2bb_data", &RDMs::g2bb_data, "Return the beta-beta 2RDM data")
-        .def("g3aaa_data", &RDMs::g3aaa_data, "Return the alpha-alpha-alpha 3RDM data")
-        .def("g3aab_data", &RDMs::g3aab_data, "Return the alpha-alpha-beta 3RDM data")
-        .def("g3abb_data", &RDMs::g3abb_data, "Return the alpha-beta-beta 3RDM data")
-        .def("g3bbb_data", &RDMs::g3bbb_data, "Return the beta-beta-beta 3RDM data")
-        .def("SFg2_data", &RDMs::SFg2_data, "Return the spin-free 2-RDM")
-        .def("L2aa_data", &RDMs::L2aa_data, "Return the alpha-alpha 2-cumulant data")
-        .def("L2ab_data", &RDMs::L2ab_data, "Return the alpha-beta 2-cumulant data")
-        .def("L2bb_data", &RDMs::L2bb_data, "Return the beta-beta 2-cumulant data")
-        .def("L3aaa_data", &RDMs::L3aaa_data, "Return the alpha-alpha-alpha 3-cumulant data")
-        .def("L3aab_data", &RDMs::L3aab_data, "Return the alpha-alpha-beta 3-cumulant data")
-        .def("L3abb_data", &RDMs::L3abb_data, "Return the alpha-beta-beta 3-cumulant data")
-        .def("L3bbb_data", &RDMs::L3bbb_data, "Return the beta-beta-beta 3-cumulant data")
-        .def(
-            "g1a_np", [](const RDMs& rdm) { return ambit_to_np(rdm.g1a()); },
-            "Return the alpha 1RDM (data, shape)")
-        .def(
-            "g1b_np", [](const RDMs& rdm) { return ambit_to_np(rdm.g1b()); },
-            "Return the beta 1RDM (data, shape)")
-        .def(
-            "g2aa_np", [](const RDMs& rdm) { return ambit_to_np(rdm.g2aa()); },
-            "Return the alpha-alpha 2RDM (data, shape)")
-        .def(
-            "g2ab_np", [](const RDMs& rdm) { return ambit_to_np(rdm.g2ab()); },
-            "Return the alpha-beta 2RDM (data, shape)")
-        .def(
-            "g2bb_np", [](const RDMs& rdm) { return ambit_to_np(rdm.g2bb()); },
-            "Return the beta-beta 2RDM (data, shape)")
-        .def(
-            "g2aaa_np", [](const RDMs& rdm) { return ambit_to_np(rdm.g3aaa()); },
-            "Return the alpha-alpha-alpha 3RDM (data, shape)")
-        .def(
-            "g2aab_np", [](const RDMs& rdm) { return ambit_to_np(rdm.g3aab()); },
-            "Return the alpha-alpha-beta 3RDM (data, shape)")
-        .def(
-            "g2abb_np", [](const RDMs& rdm) { return ambit_to_np(rdm.g3abb()); },
-            "Return the alpha-beta-beta 3RDM (data, shape)")
-        .def(
-            "g2bbb_np", [](const RDMs& rdm) { return ambit_to_np(rdm.g3bbb()); },
-            "Return the beta-beta-beta 3RDM (data, shape)");
-}
-
 // TODO: export more classes using the function above
 PYBIND11_MODULE(forte, m) {
     m.doc() = "pybind11 Forte module"; // module docstring
@@ -279,11 +227,12 @@ PYBIND11_MODULE(forte, m) {
         .def("get_dimension", &MOSpaceInfo::get_dimension,
              "Return a psi::Dimension object for the given space")
         .def("get_absolute_mo", &MOSpaceInfo::get_absolute_mo,
-             "Return the list of the absolute index of the molecular orbitals in a space excluding "
+             "Return the list of the absolute index of the molecular orbitals in a space "
+             "excluding "
              "the frozen core/virtual orbitals")
-        .def(
-            "get_corr_abs_mo", &MOSpaceInfo::get_corr_abs_mo,
-            "Return the list of the absolute index of the molecular orbitals in a correlated space")
+        .def("get_corr_abs_mo", &MOSpaceInfo::get_corr_abs_mo,
+             "Return the list of the absolute index of the molecular orbitals in a correlated "
+             "space")
         .def("get_relative_mo", &MOSpaceInfo::get_relative_mo, "Return the relative MOs")
         .def("read_options", &MOSpaceInfo::read_options, "Read options")
         .def("read_from_map", &MOSpaceInfo::read_from_map,

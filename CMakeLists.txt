@@ -73,6 +73,7 @@ endif()
 
 # List of CC files
 pybind11_add_module(forte
+src/api/rdms_api.cc
 src/base_classes/active_space_method.cc
 src/base_classes/active_space_solver.cc
 src/casscf/casscf.cc

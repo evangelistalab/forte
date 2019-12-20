@@ -586,11 +586,12 @@ std::vector<double> DMRGSolver::one_body_operator() {
     psi::SharedMatrix OneInt = T;
     OneInt->zero();
 
-    T->load(psio_, PSIF_OEI);
-    V->load(psio_, PSIF_OEI);
-    psi::SharedMatrix Hcore_ = ints_->wfn()->matrix_factory()->create_shared_matrix("Core Hamiltonian");
-    Hcore_->add(T);
-    Hcore_->add(V);
+//    T->load(psio_, PSIF_OEI);
+//    V->load(psio_, PSIF_OEI);
+//    psi::SharedMatrix Hcore_ = ints_->wfn()->matrix_factory()->create_shared_matrix("Core Hamiltonian");
+//    Hcore_->add(T);
+//    Hcore_->add(V);
+    Hcore_ = psi::SharedMatrix(ints_->wfn()->H()->clone());
 
     psi::SharedMatrix Hcore(Hcore_->clone());
     F_restricted->add(Hcore);
