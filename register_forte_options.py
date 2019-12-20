@@ -755,7 +755,7 @@ def register_dwms_options(forte_options):
 
 def register_localize_options(forte_options):
     forte_options.add_str("LOCALIZE", "PIPEK_MEZEY", ["PIPEK_MEZEY", "BOYS"],
-                          "One option to determine localization scheme")
+                          "The method used to localize the orbitals")
     forte_options.add_array("LOCALIZE_SPACE",
                             "Sets the orbital space for localization")
 

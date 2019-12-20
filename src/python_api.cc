@@ -30,6 +30,7 @@
 #define _python_api_h_
 
 #include <pybind11/pybind11.h>
+#include <pybind11/numpy.h>
 #include <pybind11/stl.h>
 
 #include "psi4/libpsi4util/process.h"
@@ -67,8 +68,8 @@ using namespace pybind11::literals;
 
 namespace forte {
 
-std::pair<std::vector<double>, std::vector<size_t>> ambit_to_np(ambit::Tensor t) {
-    return make_pair(t.data(), t.dims());
+py::array_t<double> ambit_to_np(ambit::Tensor t) {
+    return py::array_t<double>(t.dims(), &(t.data()[0]));
 }
 
 /// Export the ForteOptions class
