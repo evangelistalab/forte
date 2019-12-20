@@ -26,22 +26,16 @@
  * @END LICENSE
  */
 
-//#ifndef _python_api_h_
-//#define _python_api_h_
-
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
 
+#include "helpers/helpers.h"
 #include "base_classes/rdms.h"
 
 namespace py = pybind11;
 using namespace pybind11::literals;
 
 namespace forte {
-
-py::array_t<double> ambit_to_np(ambit::Tensor t) {
-    return py::array_t<double>(t.dims(), &(t.data()[0]));
-}
 
 /// Export the RDMs class
 void export_RDMs(py::module& m) {

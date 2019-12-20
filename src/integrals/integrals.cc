@@ -200,30 +200,20 @@ double ForteIntegrals::oei_b(size_t p, size_t q) const {
     return one_electron_integrals_b_[p * aptei_idx_ + q];
 }
 
-std::vector<double> ForteIntegrals::oei_a_block_data(const std::vector<size_t>& p,
-                                                     const std::vector<size_t>& q) {
-    size_t p_size = p.size();
-    size_t q_size = q.size();
-    std::vector<double> out(p_size * q_size);
-    for (size_t i = 0; i < p_size; ++i) {
-        for (size_t j = 0; j < q_size; ++j) {
-            out[i * q_size + j] = one_electron_integrals_a_[p[i] * aptei_idx_ + q[j]];
-        }
-    }
-    return out;
+ambit::Tensor ForteIntegrals::oei_a_block(const std::vector<size_t>& p,
+                                                const std::vector<size_t>& q) {
+    ambit::Tensor t = ambit::Tensor::build(ambit::CoreTensor, "oei_a", {p.size(), q.size()});
+    t.iterate(
+        [&](const std::vector<size_t>& i, double& value) { value = oei_a(p[i[0]], q[i[1]]); });
+    return t;
 }
 
-std::vector<double> ForteIntegrals::oei_b_block_data(const std::vector<size_t>& p,
-                                                     const std::vector<size_t>& q) {
-    size_t p_size = p.size();
-    size_t q_size = q.size();
-    std::vector<double> out(p_size * q_size);
-    for (size_t i = 0; i < p_size; ++i) {
-        for (size_t j = 0; j < q_size; ++j) {
-            out[i * q_size + j] = one_electron_integrals_b_[p[i] * aptei_idx_ + q[j]];
-        }
-    }
-    return out;
+ambit::Tensor ForteIntegrals::oei_b_block(const std::vector<size_t>& p,
+                                                const std::vector<size_t>& q) {
+    ambit::Tensor t = ambit::Tensor::build(ambit::CoreTensor, "oei_b", {p.size(), q.size()});
+    t.iterate(
+        [&](const std::vector<size_t>& i, double& value) { value = oei_b(p[i[0]], q[i[1]]); });
+    return t;
 }
 
 double ForteIntegrals::get_fock_a(size_t p, size_t q) const {

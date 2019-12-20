@@ -26,8 +26,6 @@
  * @END LICENSE
  */
 
-#ifndef _python_api_h_
-#define _python_api_h_
 
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
@@ -39,7 +37,7 @@
 #include "base_classes/active_space_solver.h"
 #include "base_classes/mo_space_info.h"
 #include "base_classes/orbital_transform.h"
-#include "integrals/integrals.h"
+//#include "integrals/integrals.h"
 #include "integrals/make_integrals.h"
 
 #include "helpers/printing.h"
@@ -68,6 +66,8 @@ using namespace pybind11::literals;
 
 namespace forte {
 
+// see the files in src/api for the implementation of the following methods
+void export_ForteIntegrals(py::module& m);
 void export_RDMs(py::module& m);
 
 /// Export the ForteOptions class
@@ -215,6 +215,7 @@ PYBIND11_MODULE(forte, m) {
 
     export_ActiveSpaceMethod(m);
     export_ActiveSpaceSolver(m);
+    export_ForteIntegrals(m);
 
     export_OrbitalTransform(m);
 
@@ -245,20 +246,6 @@ PYBIND11_MODULE(forte, m) {
         .def("nirrep", &MOSpaceInfo::nirrep, "Return the number of irreps")
         .def("symmetry", &MOSpaceInfo::symmetry, "Return the symmetry of each orbital")
         .def("space_names", &MOSpaceInfo::space_names, "Return the names of orbital spaces");
-
-    // export ForteIntegrals
-    py::class_<ForteIntegrals, std::shared_ptr<ForteIntegrals>>(m, "ForteIntegrals")
-        .def("rotate_orbitals", &ForteIntegrals::rotate_orbitals, "Rotate MOs during contructor")
-        .def("nmo", &ForteIntegrals::nmo, "Return the total number of moleuclar orbitals")
-        .def("ncmo", &ForteIntegrals::ncmo, "Return the number of correlated orbitals")
-        .def("oei_a_block", &ForteIntegrals::oei_a_block_data, "Return the alpha 1e-integrals")
-        .def("oei_b_block", &ForteIntegrals::oei_b_block_data, "Return the beta 1e-integrals")
-        .def("tei_aa_block", &ForteIntegrals::aptei_aa_block_data,
-             "Return the alpha-alpha 2e-integrals in physicists' notation")
-        .def("tei_ab_block", &ForteIntegrals::aptei_ab_block_data,
-             "Return the alpha-beta 2e-integrals in physicists' notation")
-        .def("tei_bb_block", &ForteIntegrals::aptei_bb_block_data,
-             "Return the beta-beta 2e-integrals in physicists' notation");
 
     // export StateInfo
     py::class_<StateInfo, std::shared_ptr<StateInfo>>(m, "StateInfo")
@@ -345,5 +332,3 @@ PYBIND11_MODULE(forte, m) {
 }
 
 } // namespace forte
-
-#endif // _python_api_h_

@@ -43,6 +43,7 @@
 #include "psi4/libpsio/psio.h"
 
 #include "base_classes/mo_space_info.h"
+#include "helpers/helpers.h"
 
 using namespace psi;
 
@@ -78,6 +79,10 @@ std::string get_ms_string(double twice_ms) {
         ms_str += "2";
     }
     return ms_str;
+}
+
+py::array_t<double> ambit_to_np(ambit::Tensor t) {
+    return py::array_t<double>(t.dims(), &(t.data()[0]));
 }
 
 psi::SharedMatrix tensor_to_matrix(ambit::Tensor t) {
