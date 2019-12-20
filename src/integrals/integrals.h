@@ -243,16 +243,22 @@ class ForteIntegrals {
     /// @param alpha the spin type of the integrals
     void set_oei(size_t p, size_t q, double value, bool alpha);
 
-    /// Set the value of the one-electron integrals from an as_ints
-    void set_oei_from_asints(std::shared_ptr<ActiveSpaceIntegrals> as_ints, bool alpha);
-
     /// Set the value of the two-electron integrals
     virtual void set_tei(size_t p, size_t q, size_t r, size_t s, double value, bool alpha1,
                          bool alpha2) = 0;
 
+    /// Set the value of the one-electron integrals from an as_ints
+    void set_oei_from_asints(std::shared_ptr<ActiveSpaceIntegrals> as_ints, bool alpha);
+
+    void set_oei_from_another_ints(std::shared_ptr<ForteIntegrals> ints_b, bool alpha, int ncmo_star);
+
     virtual void build_from_asints(std::shared_ptr<ActiveSpaceIntegrals> as_ints) = 0;
 
     virtual void set_tei_from_asints(std::shared_ptr<ActiveSpaceIntegrals> as_ints, bool alpha1, bool alpha2) = 0;
+
+    virtual void build_from_another_ints(std::shared_ptr<ForteIntegrals> ints_b, int ncmo_star) = 0;
+
+    virtual void set_tei_from_another_ints(std::shared_ptr<ForteIntegrals> ints_b, bool alpha1, bool alpha2, int ncmo_star) = 0;
 
     /// Rotate the MO coefficients, update psi::Wavefunction, and re-transform integrals
     /// @param Ua the alpha unitary transformation matrix

@@ -313,8 +313,20 @@ void ForteIntegrals::set_oei_from_asints(std::shared_ptr<ActiveSpaceIntegrals> a
     std::vector<double>& p_oei = alpha ? one_electron_integrals_a_ : one_electron_integrals_b_;
     for (size_t p = 0; p < aptei_idx_; ++p) {
         for (size_t q = 0; q < aptei_idx_; ++q) {
-            outfile->Printf("\n  Writing %d, %d", p, q);
+            outfile->Printf("\n Older value for (%d, %d): %8.8f", p, q, p_oei[p * aptei_idx_ + q]);
             p_oei[p * aptei_idx_ + q] = alpha ? as_ints->oei_a(p, q) : as_ints->oei_b(p, q);
+            outfile->Printf("Updated value for (%d, %d): %8.8f", p, q, p_oei[p * aptei_idx_ + q]);
+        }
+    }
+}
+
+void ForteIntegrals::set_oei_from_another_ints(std::shared_ptr<ForteIntegrals> ints_b, bool alpha, int ncmo_star) {
+    std::vector<double>& p_oei = alpha ? one_electron_integrals_a_ : one_electron_integrals_b_;
+    for (size_t p = 0; p < aptei_idx_; ++p) {
+        for (size_t q = 0; q < aptei_idx_; ++q) {
+            if (p > ncmo_star - 1 && q > ncmo_star - 1) {
+                p_oei[p * aptei_idx_ + q] = alpha ? ints_b->oei_a(p - ncmo_star, q - ncmo_star) : ints_b->oei_b(p - ncmo_star, q - ncmo_star);
+            }
         }
     }
 }

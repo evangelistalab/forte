@@ -79,6 +79,9 @@ class DISKDFIntegrals : public ForteIntegrals {
 
     void set_tei_from_asints(std::shared_ptr<ActiveSpaceIntegrals> as_ints, bool alpha1, bool alpha2) {}
 
+    void set_tei_from_another_ints(std::shared_ptr<ForteIntegrals> as_ints, bool alpha1, bool alpha2, int ncmo_star) {}                                                             
+    void build_from_another_ints(std::shared_ptr<ForteIntegrals> as_ints, int ncmo_star) {}
+
     void make_fock_matrix(std::shared_ptr<psi::Matrix> gamma_a,
                           std::shared_ptr<psi::Matrix> gamma_b) override;
 

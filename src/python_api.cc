@@ -229,9 +229,12 @@ PYBIND11_MODULE(forte, m) {
         .def("rotate_orbitals", &ForteIntegrals::rotate_orbitals)
         .def("nmo", &ForteIntegrals::nmo)
         .def("ncmo", &ForteIntegrals::ncmo)
+        .def("oei_a", &ForteIntegrals::oei_a, "Get the alpha one-electron integral")
+        .def("oei_b", &ForteIntegrals::oei_b, "Get the beta one-electron integral")
         //.def("set_oei_from_asints", &ForteIntegrals::set_oei_from_asints)
         //.def("set_tei_from_asints", &ForteIntegrals::set_tei_from_asints)
-        .def("build_from_asints", &ForteIntegrals::build_from_asints);
+        .def("build_from_asints", &ForteIntegrals::build_from_asints)
+        .def("build_from_another_ints", &ForteIntegrals::build_from_another_ints);
 
     // export StateInfo
     py::class_<StateInfo, std::shared_ptr<StateInfo>>(m, "StateInfo")

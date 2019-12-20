@@ -201,7 +201,6 @@ void ConventionalIntegrals::set_tei_from_asints(std::shared_ptr<ActiveSpaceInteg
                 for (size_t s = 0; s < ncmo_; ++s) {
                     size_t index = aptei_index(p, q, r, s);
                     if (alpha1 == true and alpha2 == true)
-                        //outfile->Printf("\n  Writing %d, %d, %d, %d", p, q, r, s);
                         aphys_tei_aa[index] = as_ints->tei_aa(p, q, r, s);
                     if (alpha1 == true and alpha2 == false)
                         aphys_tei_ab[index] = as_ints->tei_ab(p, q, r, s);
@@ -213,14 +212,44 @@ void ConventionalIntegrals::set_tei_from_asints(std::shared_ptr<ActiveSpaceInteg
     }
 }
 
+void ConventionalIntegrals::set_tei_from_another_ints(std::shared_ptr<ForteIntegrals> ints_b, bool alpha1, bool alpha2, int ncmo_star) {
+    for (size_t p = 0; p < ncmo_; ++p) {
+        for (size_t q = 0; q < ncmo_; ++q) {
+            for (size_t r = 0; r < ncmo_; ++r) {
+                for (size_t s = 0; s < ncmo_; ++s) {
+                    if (p > ncmo_star - 1 && q > ncmo_star - 1) {
+                        size_t index = aptei_index(p, q, r, s);
+                        if (alpha1 == true and alpha2 == true)
+                            aphys_tei_aa[index] = ints_b->aptei_aa(p - ncmo_star, q - ncmo_star, r - ncmo_star, s - ncmo_star);
+                        if (alpha1 == true and alpha2 == false)
+                            aphys_tei_ab[index] = ints_b->aptei_ab(p - ncmo_star, q - ncmo_star, r - ncmo_star, s - ncmo_star);
+                        if (alpha1 == false and alpha2 == false)
+                            aphys_tei_bb[index] = ints_b->aptei_bb(p - ncmo_star, q - ncmo_star, r - ncmo_star, s - ncmo_star);
+                    }
+                }
+            }
+        }
+    }
+}
+
 void ConventionalIntegrals::build_from_asints(std::shared_ptr<ActiveSpaceIntegrals> as_ints) {
-    outfile->Printf("\n  Updating one-electron integrals from Hbar2");
+    outfile->Printf("\n  Updating one-electron integrals from Hbar");
     set_oei_from_asints(as_ints, true);
     set_oei_from_asints(as_ints, false);
-    outfile->Printf("\n  Updating two-electron integrals from Hbar2");
+    outfile->Printf("\n  Updating two-electron integrals from Hbar");
     set_tei_from_asints(as_ints, true, true);
     set_tei_from_asints(as_ints, true, false);
     set_tei_from_asints(as_ints, false, false);
+}
+
+void ConventionalIntegrals::build_from_another_ints(std::shared_ptr<ForteIntegrals> ints_b, int ncmo_star) {
+    outfile->Printf("\n  Updating one-electron integrals from new ints");
+    set_oei_from_another_ints(ints_b, true, ncmo_star);
+    set_oei_from_another_ints(ints_b, false, ncmo_star);
+    outfile->Printf("\n  Updating two-electron integrals from new ints");
+    set_tei_from_another_ints(ints_b, true, true, ncmo_star);
+    set_tei_from_another_ints(ints_b, true, false, ncmo_star);
+    set_tei_from_another_ints(ints_b, false, false, ncmo_star);
 }
 
 void ConventionalIntegrals::gather_integrals() {

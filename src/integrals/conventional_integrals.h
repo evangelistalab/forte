@@ -86,6 +86,10 @@ class ConventionalIntegrals : public ForteIntegrals {
 
     void build_from_asints(std::shared_ptr<ActiveSpaceIntegrals> as_ints) override;
 
+    void set_tei_from_another_ints(std::shared_ptr<ForteIntegrals> as_ints, bool alpha1, bool alpha2, int ncmo_star) override;
+
+    void build_from_another_ints(std::shared_ptr<ForteIntegrals> as_ints, int ncmo_star) override;
+
   private:
     // ==> Class data <==
 
