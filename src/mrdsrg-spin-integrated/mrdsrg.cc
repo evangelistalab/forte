@@ -389,13 +389,13 @@ std::vector<std::vector<double>> MRDSRG::diagonalize_Fock_diagblocks(BlockedTens
 
     // map MO space label to its psi::Dimension
     std::map<std::string, psi::Dimension> MOlabel_to_dimension;
-    MOlabel_to_dimension[acore_label_] = mo_space_info_->get_dimension("RESTRICTED_DOCC");
-    MOlabel_to_dimension[aactv_label_] = mo_space_info_->get_dimension("ACTIVE");
-    MOlabel_to_dimension[avirt_label_] = mo_space_info_->get_dimension("RESTRICTED_UOCC");
+    MOlabel_to_dimension[acore_label_] = mo_space_info_->dimension("RESTRICTED_DOCC");
+    MOlabel_to_dimension[aactv_label_] = mo_space_info_->dimension("ACTIVE");
+    MOlabel_to_dimension[avirt_label_] = mo_space_info_->dimension("RESTRICTED_UOCC");
 
     // eigen values to be returned
     size_t ncmo = mo_space_info_->size("CORRELATED");
-    psi::Dimension corr = mo_space_info_->get_dimension("CORRELATED");
+    psi::Dimension corr = mo_space_info_->dimension("CORRELATED");
     std::vector<double> eigenvalues_a(ncmo, 0.0);
     std::vector<double> eigenvalues_b(ncmo, 0.0);
 
@@ -403,9 +403,9 @@ std::vector<std::vector<double>> MRDSRG::diagonalize_Fock_diagblocks(BlockedTens
     std::map<std::string, psi::Dimension> MOlabel_to_offset_dimension;
     int nirrep = corr.n();
     MOlabel_to_offset_dimension[acore_label_] = psi::Dimension(std::vector<int>(nirrep, 0));
-    MOlabel_to_offset_dimension[aactv_label_] = mo_space_info_->get_dimension("RESTRICTED_DOCC");
+    MOlabel_to_offset_dimension[aactv_label_] = mo_space_info_->dimension("RESTRICTED_DOCC");
     MOlabel_to_offset_dimension[avirt_label_] =
-        mo_space_info_->get_dimension("RESTRICTED_DOCC") + mo_space_info_->get_dimension("ACTIVE");
+        mo_space_info_->dimension("RESTRICTED_DOCC") + mo_space_info_->dimension("ACTIVE");
 
     // figure out index
     auto fill_eigen = [&](std::string block_label, int irrep, std::vector<double> values) {

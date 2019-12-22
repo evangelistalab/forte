@@ -54,7 +54,8 @@ class Options;
 namespace forte {
 
 /**
- * @brief Convert an ambit tensor to a numpy ndarray
+ * @brief Convert an ambit tensor to a numpy ndarray.
+ *        The returned tensors are stored according to the C storage convention.
  * @param t The input tensor
  * @return A numpy array
  */

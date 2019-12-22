@@ -77,8 +77,8 @@ std::shared_ptr<ActiveSpaceIntegrals> SOMRDSRG::compute_Heff_actv() {
         "Computing active-space Hamiltonian is not yet implemented for spin-adapted code.");
 
     return std::make_shared<ActiveSpaceIntegrals>(
-        ints_, mo_space_info_->get_corr_abs_mo("ACTIVE"),
-        mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
+        ints_, mo_space_info_->corr_absolute_mo("ACTIVE"),
+        mo_space_info_->corr_absolute_mo("RESTRICTED_DOCC"));
 }
 
 void SOMRDSRG::startup() {
@@ -86,7 +86,7 @@ void SOMRDSRG::startup() {
 
     frozen_core_energy = ints_->frozen_core_energy();
 
-    ncmopi_ = mo_space_info_->get_dimension("CORRELATED");
+    ncmopi_ = mo_space_info_->dimension("CORRELATED");
 
     s_ = foptions_->get_double("DSRG_S");
     if (s_ < 0) {
@@ -101,9 +101,9 @@ void SOMRDSRG::startup() {
     }
     taylor_order_ = int(0.5 * (15.0 / taylor_threshold_ + 1)) + 1;
 
-    std::vector<size_t> rdocc = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
-    std::vector<size_t> actv = mo_space_info_->get_corr_abs_mo("ACTIVE");
-    std::vector<size_t> ruocc = mo_space_info_->get_corr_abs_mo("RESTRICTED_UOCC");
+    std::vector<size_t> rdocc = mo_space_info_->corr_absolute_mo("RESTRICTED_DOCC");
+    std::vector<size_t> actv = mo_space_info_->corr_absolute_mo("ACTIVE");
+    std::vector<size_t> ruocc = mo_space_info_->corr_absolute_mo("RESTRICTED_UOCC");
 
     for (auto& space : {rdocc, actv, ruocc}) {
         outfile->Printf("\n");

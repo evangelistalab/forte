@@ -70,8 +70,8 @@ FCI_MO::FCI_MO(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
         fci_ints_ = as_ints;
     } else {
         fci_ints_ = std::make_shared<ActiveSpaceIntegrals>(
-            integral_, mo_space_info_->get_corr_abs_mo("ACTIVE"),
-            mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
+            integral_, mo_space_info_->corr_absolute_mo("ACTIVE"),
+            mo_space_info_->corr_absolute_mo("RESTRICTED_DOCC"));
         ambit::Tensor tei_active_aa =
             integral_->aptei_aa_block(actv_mos_, actv_mos_, actv_mos_, actv_mos_);
         ambit::Tensor tei_active_ab =
@@ -95,8 +95,8 @@ FCI_MO::FCI_MO(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> 
 
     // setup integrals
     fci_ints_ =
-        std::make_shared<ActiveSpaceIntegrals>(integral_, mo_space_info_->get_corr_abs_mo("ACTIVE"),
-                                               mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
+        std::make_shared<ActiveSpaceIntegrals>(integral_, mo_space_info_->corr_absolute_mo("ACTIVE"),
+                                               mo_space_info_->corr_absolute_mo("RESTRICTED_DOCC"));
     ambit::Tensor tei_active_aa =
         integral_->aptei_aa_block(actv_mos_, actv_mos_, actv_mos_, actv_mos_);
     ambit::Tensor tei_active_ab =
@@ -122,8 +122,8 @@ FCI_MO::FCI_MO(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> 
         fci_ints_ = fci_ints;
     } else {
         fci_ints_ = std::make_shared<ActiveSpaceIntegrals>(
-            integral_, mo_space_info_->get_corr_abs_mo("ACTIVE"),
-            mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
+            integral_, mo_space_info_->corr_absolute_mo("ACTIVE"),
+            mo_space_info_->corr_absolute_mo("RESTRICTED_DOCC"));
         ambit::Tensor tei_active_aa =
             integral_->aptei_aa_block(actv_mos_, actv_mos_, actv_mos_, actv_mos_);
         ambit::Tensor tei_active_ab =
@@ -186,23 +186,23 @@ void FCI_MO::read_options() {
 
     // obtain MOs
     nmo_ = mo_space_info_->size("ALL");
-    nmopi_ = mo_space_info_->get_dimension("ALL");
+    nmopi_ = mo_space_info_->dimension("ALL");
     ncmo_ = mo_space_info_->size("CORRELATED");
-    ncmopi_ = mo_space_info_->get_dimension("CORRELATED");
+    ncmopi_ = mo_space_info_->dimension("CORRELATED");
 
     // obtain frozen orbitals
-    frzc_dim_ = mo_space_info_->get_dimension("FROZEN_DOCC");
-    frzv_dim_ = mo_space_info_->get_dimension("FROZEN_UOCC");
+    frzc_dim_ = mo_space_info_->dimension("FROZEN_DOCC");
+    frzv_dim_ = mo_space_info_->dimension("FROZEN_UOCC");
     nfrzc_ = mo_space_info_->size("FROZEN_DOCC");
     nfrzv_ = mo_space_info_->size("FROZEN_UOCC");
 
     // obtain active orbitals
-    actv_dim_ = mo_space_info_->get_dimension("ACTIVE");
+    actv_dim_ = mo_space_info_->dimension("ACTIVE");
     nactv_ = actv_dim_.sum();
 
     // obitan inactive orbitals
-    core_dim_ = mo_space_info_->get_dimension("RESTRICTED_DOCC");
-    virt_dim_ = mo_space_info_->get_dimension("RESTRICTED_UOCC");
+    core_dim_ = mo_space_info_->dimension("RESTRICTED_DOCC");
+    virt_dim_ = mo_space_info_->dimension("RESTRICTED_UOCC");
     ncore_ = core_dim_.sum();
     nvirt_ = virt_dim_.sum();
 
@@ -226,8 +226,8 @@ void FCI_MO::read_options() {
     }
 
     // obtain absolute indices of core, active and virtual
-    core_mos_ = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
-    actv_mos_ = mo_space_info_->get_corr_abs_mo("ACTIVE");
+    core_mos_ = mo_space_info_->corr_absolute_mo("RESTRICTED_DOCC");
+    actv_mos_ = mo_space_info_->corr_absolute_mo("ACTIVE");
 
     // active hole and active particle indices
     if (actv_space_type_ == "CIS" || actv_space_type_ == "CISD") {

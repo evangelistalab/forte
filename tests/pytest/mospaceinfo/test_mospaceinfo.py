@@ -42,10 +42,10 @@ def test_mospaceinfo():
     assert mo_space_info.size('RESTRICTED_UOCC') == 0
     assert mo_space_info.size('FROZEN_UOCC') == 1
 
-    assert mo_space_info.get_dimension('FROZEN_DOCC').to_tuple() == (1,0,0,0,0,0,0,0)
-    assert mo_space_info.get_dimension('RESTRICTED_DOCC').to_tuple() == (0,0,0,0,0,1,0,0)
-    assert mo_space_info.get_dimension('ACTIVE').to_tuple() == (1,0,1,1,0,2,1,1)
-    assert mo_space_info.get_dimension('RESTRICTED_UOCC').to_tuple() == (0,0,0,0,0,0,0,0)
-    assert mo_space_info.get_dimension('FROZEN_UOCC').to_tuple() == (1,0,0,0,0,0,0,0)
+    assert mo_space_info.dimension('FROZEN_DOCC').to_tuple() == (1,0,0,0,0,0,0,0)
+    assert mo_space_info.dimension('RESTRICTED_DOCC').to_tuple() == (0,0,0,0,0,1,0,0)
+    assert mo_space_info.dimension('ACTIVE').to_tuple() == (1,0,1,1,0,2,1,1)
+    assert mo_space_info.dimension('RESTRICTED_UOCC').to_tuple() == (0,0,0,0,0,0,0,0)
+    assert mo_space_info.dimension('FROZEN_UOCC').to_tuple() == (1,0,0,0,0,0,0,0)
 
     assert mo_space_info.space_names() == ['FROZEN_DOCC','RESTRICTED_DOCC','ACTIVE','RESTRICTED_UOCC','FROZEN_UOCC']

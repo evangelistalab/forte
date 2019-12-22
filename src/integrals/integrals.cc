@@ -110,9 +110,9 @@ void ForteIntegrals::startup() {
     nmo_ = wfn_->nmo();
     nsopi_ = wfn_->nsopi();
     nmopi_ = wfn_->nmopi();
-    frzcpi_ = mo_space_info_->get_dimension("FROZEN_DOCC");
-    frzvpi_ = mo_space_info_->get_dimension("FROZEN_UOCC");
-    ncmopi_ = mo_space_info_->get_dimension("CORRELATED");
+    frzcpi_ = mo_space_info_->dimension("FROZEN_DOCC");
+    frzvpi_ = mo_space_info_->dimension("FROZEN_UOCC");
+    ncmopi_ = mo_space_info_->dimension("CORRELATED");
 
     ncmo_ = ncmopi_.sum();
 
@@ -332,8 +332,8 @@ void ForteIntegrals::set_oei(size_t p, size_t q, double value, bool alpha) {
 void ForteIntegrals::compute_frozen_one_body_operator() {
     local_timer timer_frozen_one_body;
 
-    psi::Dimension frozen_dim = mo_space_info_->get_dimension("FROZEN_DOCC");
-    psi::Dimension nmopi = mo_space_info_->get_dimension("ALL");
+    psi::Dimension frozen_dim = mo_space_info_->dimension("FROZEN_DOCC");
+    psi::Dimension nmopi = mo_space_info_->dimension("ALL");
     // Need to get the inactive block of the C matrix
     psi::Dimension nsopi = wfn_->nsopi();
     std::shared_ptr<psi::Matrix> C_core(new psi::Matrix("C_core", nirrep_, nsopi, frozen_dim));

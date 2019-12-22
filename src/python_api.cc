@@ -26,7 +26,6 @@
  * @END LICENSE
  */
 
-
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
 #include <pybind11/stl.h>
@@ -37,7 +36,6 @@
 #include "base_classes/active_space_solver.h"
 #include "base_classes/mo_space_info.h"
 #include "base_classes/orbital_transform.h"
-//#include "integrals/integrals.h"
 #include "integrals/make_integrals.h"
 
 #include "helpers/printing.h"
@@ -67,6 +65,7 @@ using namespace pybind11::literals;
 namespace forte {
 
 // see the files in src/api for the implementation of the following methods
+void export_ambit(py::module& m);
 void export_ForteIntegrals(py::module& m);
 void export_RDMs(py::module& m);
 
@@ -251,7 +250,8 @@ PYBIND11_MODULE(forte, m) {
     py::class_<StateInfo, std::shared_ptr<StateInfo>>(m, "StateInfo")
         .def(py::init<int, int, int, int, int>(), "na"_a, "nb"_a, "multiplicity"_a, "twice_ms"_a,
              "irrep"_a)
-        .def("__repr__", &StateInfo::repr, "Representation of StateInfo");
+        .def("__str__", &StateInfo::str, "Representation of StateInfo")
+        .def("__repr__", &StateInfo::str, "Representation of StateInfo");
 
     // export SCFInfo
     py::class_<SCFInfo, std::shared_ptr<SCFInfo>>(m, "SCFInfo")
@@ -292,9 +292,6 @@ PYBIND11_MODULE(forte, m) {
              "max_rdm_level"_a, "Transform the RDMs by input rotation matrices")
         .def("Ua_t", &SemiCanonical::Ua_t, "Return the alpha rotation matrix in the active space")
         .def("Ub_t", &SemiCanonical::Ub_t, "Return the beta rotation matrix in the active space");
-
-    // export ambit::Tensor
-    py::class_<ambit::Tensor>(m, "ambitTensor");
 
     // export MASTER_DSRG
     py::class_<MASTER_DSRG>(m, "MASTER_DSRG")

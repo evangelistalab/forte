@@ -231,11 +231,11 @@ ProjectorCI::ProjectorCI(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo>
 
 void ProjectorCI::startup() {
     // The number of correlated molecular orbitals
-    nact_ = mo_space_info_->get_corr_abs_mo("ACTIVE").size();
-    nactpi_ = mo_space_info_->get_dimension("ACTIVE");
+    nact_ = mo_space_info_->corr_absolute_mo("ACTIVE").size();
+    nactpi_ = mo_space_info_->dimension("ACTIVE");
 
     // Include frozen_docc and restricted_docc
-    frzcpi_ = mo_space_info_->get_dimension("INACTIVE_DOCC");
+    frzcpi_ = mo_space_info_->dimension("INACTIVE_DOCC");
     nfrzc_ = mo_space_info_->size("INACTIVE_DOCC");
 
     nuclear_repulsion_energy_ = as_ints_->ints()->nuclear_repulsion_energy();
