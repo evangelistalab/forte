@@ -8,8 +8,8 @@ lcov --directory . --zerocounters
 cd tests/methods
 python run_forte_tests.py
 cd ../..
-forte_tests
-forte_benchmarks
+./forte_tests
+./forte_benchmarks
 cd tests/pytest
 pytest
 
