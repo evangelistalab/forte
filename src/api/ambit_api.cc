@@ -37,5 +37,21 @@ namespace forte {
 void export_ambit(py::module& m) {
     // export ambit::Tensor
     py::class_<ambit::Tensor>(m, "ambitTensor");
+
+    m.def(
+        "test_ambit_3d",
+        []() {
+            size_t n1 = 3;
+            size_t n2 = 4;
+            size_t n3 = 5;
+            auto t = ambit::Tensor::build(ambit::CoreTensor, "L1a_sa", {n1, n2, n3});
+            int sum = 0;
+            t.iterate([&](const std::vector<size_t>&, double& value) {
+                value = sum;
+                sum += 1;
+            });
+            return ambit_to_np(t);
+        },
+        "Test a 3d ambit tensor");
 }
 } // namespace forte
