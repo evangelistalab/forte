@@ -210,6 +210,8 @@ PYBIND11_MODULE(forte, m) {
     m.def("make_dsrg_spin_adapted", &make_dsrg_spin_adapted,
           "Make a DSRG pointer (spin-adapted implementation)");
 
+    export_ambit(m);
+
     export_ForteOptions(m);
 
     export_ActiveSpaceMethod(m);
@@ -224,13 +226,13 @@ PYBIND11_MODULE(forte, m) {
 
     // export MOSpaceInfo
     py::class_<MOSpaceInfo, std::shared_ptr<MOSpaceInfo>>(m, "MOSpaceInfo")
-        .def("get_dimension", &MOSpaceInfo::get_dimension,
+        .def("dimension", &MOSpaceInfo::dimension,
              "Return a psi::Dimension object for the given space")
-        .def("get_absolute_mo", &MOSpaceInfo::get_absolute_mo,
+        .def("absolute_mo", &MOSpaceInfo::absolute_mo,
              "Return the list of the absolute index of the molecular orbitals in a space "
              "excluding "
              "the frozen core/virtual orbitals")
-        .def("get_corr_abs_mo", &MOSpaceInfo::get_corr_abs_mo,
+        .def("corr_absolute_mo", &MOSpaceInfo::corr_absolute_mo,
              "Return the list of the absolute index of the molecular orbitals in a correlated "
              "space")
         .def("get_relative_mo", &MOSpaceInfo::get_relative_mo, "Return the relative MOs")

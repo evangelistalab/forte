@@ -58,6 +58,13 @@ def register_driver_options(forte_options):
     forte_options.add_str("ORBITAL_TYPE", "CANONICAL",
                           ['CANONICAL', 'LOCAL', 'MP2_NO'],
                           'Type of orbitals to use')
+    forte_options.add_str('MINAO_BASIS', 'STO-3G', "The basis used to define an orbital subspace");
+
+    forte_options.add_array("SUBSPACE", "A list of orbital subspaces");
+
+    forte_options.add_double("MS", 0.0, "Projection of spin onto the z axis");
+
+    forte_options.add_str("ACTIVE_REF_TYPE", "CAS", "Initial guess for active space wave functions");
 
 
 def register_avas_options(forte_options):
