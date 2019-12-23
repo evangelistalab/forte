@@ -228,6 +228,10 @@ void CASSCF::set_tensor() {
  * The procedure of TPDM back-transformation
  */
 void CASSCF::tpdm_backtransform() {
+    // This line of code is to deceive Psi4 and avoid computing scf gradient
+    // Remove once TravisCI is updated
+     ints_->wfn()->set_reference_wavefunction(ints_->wfn());
+
     std::vector<std::shared_ptr<psi::MOSpace>> spaces;
     spaces.push_back(psi::MOSpace::all);
     std::shared_ptr<TPDMBackTransform> transform =
