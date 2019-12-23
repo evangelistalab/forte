@@ -6,7 +6,7 @@ lcov --directory . --zerocounters
 
 # Run tests
 cd tests/methods
-python run_forte_tests.py
+python run_forte_tests.py --failed_dump --bw
 cd ../..
 ./forte_tests
 ./forte_benchmarks
