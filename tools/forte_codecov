@@ -1,5 +1,7 @@
 #! usr/bin/env bash
 
+set -e
+
 export CODECOV_TOKEN="f2ca5872-66d7-48dc-8464-e286452dd05b"
 
 lcov --directory . --zerocounters
