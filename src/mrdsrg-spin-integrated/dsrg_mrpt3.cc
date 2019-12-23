@@ -3754,9 +3754,9 @@ void DSRG_MRPT3::V_T2_C2_DF_VV(BlockedTensor& B, BlockedTensor& T2, const double
 
                 if (nbatch0 != 1) {
 
-                    ambit::Tensor B0 =
+                    ambit::Tensor B0vv =
                         ambit::Tensor::build(tensor_type_, "B0 vv", {sL, sv_sub0, sh0});
-                    B0.iterate([&](const std::vector<size_t>& i, double& value) {
+                    B0vv.iterate([&](const std::vector<size_t>& i, double& value) {
                         size_t idx = i[0] * sv * sh0 + virt_mo_sub0[i[1]] * sh0 + i[2];
                         value = B.block(Blabel0).data()[idx];
                     });
@@ -3770,10 +3770,10 @@ void DSRG_MRPT3::V_T2_C2_DF_VV(BlockedTensor& B, BlockedTensor& T2, const double
                             value = B.block(Blabel1).data()[idx];
                         });
 
-                        H2("rsef") = B0("ger") * B1("gfs");
+                        H2("rsef") = B0vv("ger") * B1("gfs");
                     } else {
 
-                        H2("rsef") = B0("ger") * B.block(Blabel1)("gfs");
+                        H2("rsef") = B0vv("ger") * B.block(Blabel1)("gfs");
                     }
 
                 } else {
@@ -4716,7 +4716,7 @@ void DSRG_MRPT3::V_T2_C2_DF_VA_EX(BlockedTensor& B, BlockedTensor& T2, const dou
     } // end loop "qs"
 }
 
-//void DSRG_MRPT3::V_T2_C2_DF_VH_EX(BlockedTensor& B, BlockedTensor& T2, const double& alpha,
+// void DSRG_MRPT3::V_T2_C2_DF_VH_EX(BlockedTensor& B, BlockedTensor& T2, const double& alpha,
 //                                  BlockedTensor& C2,
 //                                  const std::vector<std::vector<std::string>>& qs,
 //                                  const std::vector<std::vector<std::string>>& jb) {
@@ -4761,7 +4761,8 @@ void DSRG_MRPT3::V_T2_C2_DF_VA_EX(BlockedTensor& B, BlockedTensor& T2, const dou
 
 //    size_t nbatch = 1;
 //    size_t svs = sv / nbatch;
-//    size_t nele_total = sL * smax_s * svs + smax_qs * svs * smax_hole + smax_hole * smax_jb * svs +
+//    size_t nele_total = sL * smax_s * svs + smax_qs * svs * smax_hole + smax_hole * smax_jb * svs
+//    +
 //                        smax_jb * smax_qs;
 //    while (nele_total * sizeof(double) > static_cast<size_t>(0.95 * mem_total_)) {
 //        nbatch += 1;
@@ -4895,7 +4896,8 @@ void DSRG_MRPT3::V_T2_C2_DF_VA_EX(BlockedTensor& B, BlockedTensor& T2, const dou
 //                    }
 
 //                    // O2 intermediate for C2 permutations
-//                    ambit::Tensor O2s = ambit::Tensor::build(tensor_type_, "O2s", {sq, sj, ss, sb});
+//                    ambit::Tensor O2s = ambit::Tensor::build(tensor_type_, "O2s", {sq, sj, ss,
+//                    sb});
 
 //                    if (i == 'c' || i == 'C') {
 //                        O2s("qjsb") -= alpha * H2("qsam") * T2s("mjab");

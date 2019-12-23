@@ -68,6 +68,7 @@ namespace forte {
 void export_ambit(py::module& m);
 void export_ForteIntegrals(py::module& m);
 void export_RDMs(py::module& m);
+void export_StateInfo(py::module& m);
 
 /// Export the ForteOptions class
 void export_ForteOptions(py::module& m) {
@@ -224,6 +225,8 @@ PYBIND11_MODULE(forte, m) {
 
     export_RDMs(m);
 
+    export_StateInfo(m);
+
     // export MOSpaceInfo
     py::class_<MOSpaceInfo, std::shared_ptr<MOSpaceInfo>>(m, "MOSpaceInfo")
         .def("dimension", &MOSpaceInfo::dimension,
@@ -247,13 +250,6 @@ PYBIND11_MODULE(forte, m) {
         .def("nirrep", &MOSpaceInfo::nirrep, "Return the number of irreps")
         .def("symmetry", &MOSpaceInfo::symmetry, "Return the symmetry of each orbital")
         .def("space_names", &MOSpaceInfo::space_names, "Return the names of orbital spaces");
-
-    // export StateInfo
-    py::class_<StateInfo, std::shared_ptr<StateInfo>>(m, "StateInfo")
-        .def(py::init<int, int, int, int, int>(), "na"_a, "nb"_a, "multiplicity"_a, "twice_ms"_a,
-             "irrep"_a)
-        .def("__str__", &StateInfo::str, "Representation of StateInfo")
-        .def("__repr__", &StateInfo::str, "Representation of StateInfo");
 
     // export SCFInfo
     py::class_<SCFInfo, std::shared_ptr<SCFInfo>>(m, "SCFInfo")
