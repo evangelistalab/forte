@@ -373,14 +373,13 @@ def run_forte(name, **kwargs):
     # Make an integral object
     ints = forte.make_forte_integrals(ref_wfn, options, mo_space_info)
 
-    # Rotate orbitals before computation
+    # Rotate orbitals before computation (e.g. localization, MP2 natural orbitals, etc.)
     orb_type = options.get_str("ORBITAL_TYPE")
     if orb_type != 'CANONICAL':
         orb_t = forte.make_orbital_transformation(orb_type, scf_info, forte.forte_options, ints, mo_space_info)
         orb_t.compute_transformation()
         Ua = orb_t.get_Ua()
         Ub = orb_t.get_Ub()
-
         ints.rotate_orbitals(Ua,Ub)
 
     # Run a method
@@ -475,7 +474,7 @@ def gradient_forte(name, **kwargs):
     derivobj = psi4.core.Deriv(ref_wfn)
     derivobj.set_deriv_density_backtransformed(True)
     derivobj.set_ignore_reference(True)
-    grad = derivobj.compute(psi4.core.DerivCalcType.Correlated)
+    grad = derivobj.compute() #psi4.core.DerivCalcType.Correlated
     ref_wfn.set_gradient(grad)    
     optstash.restore()        
 

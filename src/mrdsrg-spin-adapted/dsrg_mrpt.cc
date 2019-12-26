@@ -235,9 +235,9 @@ void DSRG_MRPT::startup() {
     Eref_ = compute_Eref_from_rdms(rdms_, ints_, mo_space_info_);
 
     // orbital spaces
-    core_mos_ = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
-    actv_mos_ = mo_space_info_->get_corr_abs_mo("ACTIVE");
-    virt_mos_ = mo_space_info_->get_corr_abs_mo("RESTRICTED_UOCC");
+    core_mos_ = mo_space_info_->corr_absolute_mo("RESTRICTED_DOCC");
+    actv_mos_ = mo_space_info_->corr_absolute_mo("ACTIVE");
+    virt_mos_ = mo_space_info_->corr_absolute_mo("RESTRICTED_UOCC");
 
     // define space labels
     ambit::BlockedTensor::reset_mo_spaces();
@@ -321,8 +321,8 @@ std::shared_ptr<ActiveSpaceIntegrals> DSRG_MRPT::compute_Heff_actv() {
         "Computing active-space Hamiltonian is not yet implemented for spin-adapted code.");
 
     return std::make_shared<ActiveSpaceIntegrals>(
-        ints_, mo_space_info_->get_corr_abs_mo("ACTIVE"),
-        mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
+        ints_, mo_space_info_->corr_absolute_mo("ACTIVE"),
+        mo_space_info_->corr_absolute_mo("RESTRICTED_DOCC"));
 }
 
 void DSRG_MRPT::build_ints() {

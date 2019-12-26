@@ -37,14 +37,29 @@
 #include <string>
 #include <vector>
 
+#include <pybind11/pybind11.h>
+#include <pybind11/numpy.h>
+
+#include "ambit/tensor.h"
 #include "ambit/blocked_tensor.h"
+
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/vector.h"
 #include "psi4/libqt/qt.h"
 
+namespace py = pybind11;
+
 class Options;
 
 namespace forte {
+
+/**
+ * @brief Convert an ambit tensor to a numpy ndarray.
+ *        The returned tensors are stored according to the C storage convention.
+ * @param t The input tensor
+ * @return A numpy array
+ */
+py::array_t<double> ambit_to_np(ambit::Tensor t);
 
 /**
  * @brief tensor_to_matrix

@@ -77,12 +77,12 @@ void SemiCanonical::startup() {
     nirrep_ = mo_space_info_->nirrep();
     ncmo_ = mo_space_info_->size("CORRELATED");
     nact_ = mo_space_info_->size("ACTIVE");
-    nmopi_ = mo_space_info_->get_dimension("ALL");
-    ncmopi_ = mo_space_info_->get_dimension("CORRELATED");
-    fdocc_ = mo_space_info_->get_dimension("FROZEN_DOCC");
-    rdocc_ = mo_space_info_->get_dimension("RESTRICTED_DOCC");
-    actv_ = mo_space_info_->get_dimension("ACTIVE");
-    ruocc_ = mo_space_info_->get_dimension("RESTRICTED_UOCC");
+    nmopi_ = mo_space_info_->dimension("ALL");
+    ncmopi_ = mo_space_info_->dimension("CORRELATED");
+    fdocc_ = mo_space_info_->dimension("FROZEN_DOCC");
+    rdocc_ = mo_space_info_->dimension("RESTRICTED_DOCC");
+    actv_ = mo_space_info_->dimension("ACTIVE");
+    ruocc_ = mo_space_info_->dimension("RESTRICTED_UOCC");
 
     // Preapare orbital rotation matrix, which transforms all MOs
     Ua_ = std::make_shared<psi::Matrix>("Ua", nmopi_, nmopi_);

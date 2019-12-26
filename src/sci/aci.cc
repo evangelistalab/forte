@@ -81,10 +81,10 @@ void AdaptiveCI::startup() {
     multiplicity_ = state_.multiplicity();
 
     nact_ = mo_space_info_->size("ACTIVE");
-    nactpi_ = mo_space_info_->get_dimension("ACTIVE");
+    nactpi_ = mo_space_info_->dimension("ACTIVE");
 
     // Include frozen_docc and restricted_docc
-    frzcpi_ = mo_space_info_->get_dimension("INACTIVE_DOCC");
+    frzcpi_ = mo_space_info_->dimension("INACTIVE_DOCC");
     nfrzc_ = mo_space_info_->size("INACTIVE_DOCC");
 
     nalpha_ = state_.na() - nfrzc_;
@@ -229,7 +229,7 @@ void AdaptiveCI::print_info() {
         outfile->Printf("\n  Reference orbital energies:");
         std::shared_ptr<Vector> epsilon_a = scf_info_->epsilon_a();
 
-        auto actmo = mo_space_info_->get_absolute_mo("ACTIVE");
+        auto actmo = mo_space_info_->absolute_mo("ACTIVE");
 
         for (int n = 0, maxn = actmo.size(); n < maxn; ++n) {
             outfile->Printf("\n   %da: %1.6f ", n, epsilon_a->get(actmo[n]));
@@ -1506,11 +1506,11 @@ void AdaptiveCI::compute_nos() {
 
     print_h2("ACI NO Transformation");
 
-    psi::Dimension nmopi = mo_space_info_->get_dimension("ALL");
-    psi::Dimension ncmopi = mo_space_info_->get_dimension("CORRELATED");
-    psi::Dimension fdocc = mo_space_info_->get_dimension("FROZEN_DOCC");
-    psi::Dimension rdocc = mo_space_info_->get_dimension("RESTRICTED_DOCC");
-    psi::Dimension ruocc = mo_space_info_->get_dimension("RESTRICTED_UOCC");
+    psi::Dimension nmopi = mo_space_info_->dimension("ALL");
+    psi::Dimension ncmopi = mo_space_info_->dimension("CORRELATED");
+    psi::Dimension fdocc = mo_space_info_->dimension("FROZEN_DOCC");
+    psi::Dimension rdocc = mo_space_info_->dimension("RESTRICTED_DOCC");
+    psi::Dimension ruocc = mo_space_info_->dimension("RESTRICTED_UOCC");
 
     std::shared_ptr<psi::Matrix> opdm_a(new psi::Matrix("OPDM_A", nirrep_, nactpi_, nactpi_));
     std::shared_ptr<psi::Matrix> opdm_b(new psi::Matrix("OPDM_B", nirrep_, nactpi_, nactpi_));
@@ -1559,10 +1559,10 @@ void AdaptiveCI::compute_nos() {
 }
 
 void AdaptiveCI::upcast_reference(DeterminantHashVec& ref) {
-    psi::Dimension act_dim = mo_space_info_->get_dimension("ACTIVE");
-    psi::Dimension corr_dim = mo_space_info_->get_dimension("CORRELATED");
-    psi::Dimension core_dim = mo_space_info_->get_dimension("RESTRICTED_DOCC");
-    psi::Dimension vir_dim = mo_space_info_->get_dimension("RESTRICTED_UOCC");
+    psi::Dimension act_dim = mo_space_info_->dimension("ACTIVE");
+    psi::Dimension corr_dim = mo_space_info_->dimension("CORRELATED");
+    psi::Dimension core_dim = mo_space_info_->dimension("RESTRICTED_DOCC");
+    psi::Dimension vir_dim = mo_space_info_->dimension("RESTRICTED_UOCC");
 
     size_t nact = mo_space_info_->size("ACTIVE");
     size_t ncmo = mo_space_info_->size("CORRELATED");
@@ -1652,7 +1652,7 @@ void AdaptiveCI::spin_analysis() {
         //     }
         // }
 
-        // std::vector<size_t> active_mo = mo_space_info_->get_absolute_mo("ACTIVE");
+        // std::vector<size_t> active_mo = mo_space_info_->absolute_mo("ACTIVE");
         // for (size_t i = 0; i < nact; ++i) {
         //     int idx = IAO_inds[i];
         //     outfile->Printf("\n Using IAO %d", idx);
@@ -1692,8 +1692,8 @@ void AdaptiveCI::spin_analysis() {
         Ua_full->identity();
         Ub_full->identity();
 
-        auto actpi = mo_space_info_->get_absolute_mo("ACTIVE");
-        auto nactpi = mo_space_info_->get_dimension("ACTIVE");
+        auto actpi = mo_space_info_->absolute_mo("ACTIVE");
+        auto nactpi = mo_space_info_->dimension("ACTIVE");
         for (size_t h = 0; h < nirrep_; ++h) {
             // skip frozen/restricted docc
             int nact = nactpi[h];
@@ -1719,7 +1719,7 @@ void AdaptiveCI::spin_analysis() {
 
         auto loc = std::make_shared<LOCALIZE>(options_, as_ints_->ints(), mo_space_info_);
 
-        std::vector<size_t> actmo = mo_space_info_->get_absolute_mo("ACTIVE");
+        std::vector<size_t> actmo = mo_space_info_->absolute_mo("ACTIVE");
         std::vector<int> loc_mo(2);
         loc_mo[0] = static_cast<int>(actmo[0]);
         loc_mo[1] = static_cast<int>(actmo.back());
@@ -1842,8 +1842,8 @@ void AdaptiveCI::spin_analysis() {
     /*
         // Build spin-correlation densities
         psi::SharedMatrix Ca = reference_wavefunction_->Ca();
-        psi::Dimension nactpi = mo_space_info_->get_dimension("ACTIVE");
-        std::vector<size_t> actpi = mo_space_info_->get_absolute_mo("ACTIVE");
+        psi::Dimension nactpi = mo_space_info_->dimension("ACTIVE");
+        std::vector<size_t> actpi = mo_space_info_->absolute_mo("ACTIVE");
         psi::SharedMatrix Ca_copy = Ca->clone();
         for( int i = 0; i < nact; ++i ){
             psi::SharedVector vec = std::make_shared<Vector>(nmo_);

@@ -84,10 +84,10 @@ std::shared_ptr<FCIIntegrals> FCIQMC::fci_ints_ = nullptr;
 
 void FCIQMC::startup() {
     // Connect the integrals to the determinant class
-    fci_ints_ = std::make_shared<FCIIntegrals>(ints_, mo_space_info_->get_corr_abs_mo("ACTIVE"),
-                                               mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
+    fci_ints_ = std::make_shared<FCIIntegrals>(ints_, mo_space_info_->corr_absolute_mo("ACTIVE"),
+                                               mo_space_info_->corr_absolute_mo("RESTRICTED_DOCC"));
 
-    auto active_mo = mo_space_info_->get_corr_abs_mo("ACTIVE");
+    auto active_mo = mo_space_info_->corr_absolute_mo("ACTIVE");
     ambit::Tensor tei_active_aa = ints_->aptei_aa_block(active_mo, active_mo, active_mo, active_mo);
     ambit::Tensor tei_active_ab = ints_->aptei_ab_block(active_mo, active_mo, active_mo, active_mo);
     ambit::Tensor tei_active_bb = ints_->aptei_bb_block(active_mo, active_mo, active_mo, active_mo);
@@ -95,12 +95,12 @@ void FCIQMC::startup() {
     fci_ints_->compute_restricted_one_body_operator();
 
     // The number of correlated molecular orbitals
-    ncmo_ = mo_space_info_->get_corr_abs_mo("ACTIVE").size();
-    ncmopi_ = mo_space_info_->get_dimension("ACTIVE");
+    ncmo_ = mo_space_info_->corr_absolute_mo("ACTIVE").size();
+    ncmopi_ = mo_space_info_->dimension("ACTIVE");
 
     // Overwrite the frozen orbitals arrays
-    frzcpi_ = mo_space_info_->get_dimension("FROZEN_DOCC");
-    frzvpi_ = mo_space_info_->get_dimension("FROZEN_UOCC");
+    frzcpi_ = mo_space_info_->dimension("FROZEN_DOCC");
+    frzvpi_ = mo_space_info_->dimension("FROZEN_UOCC");
 
     // Create the array with mo symmetry
     for (int h = 0; h < nirrep_; ++h) {

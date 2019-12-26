@@ -145,9 +145,9 @@ void MASTER_DSRG::read_options() {
 }
 
 void MASTER_DSRG::read_MOSpaceInfo() {
-    core_mos_ = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
-    actv_mos_ = mo_space_info_->get_corr_abs_mo("ACTIVE");
-    virt_mos_ = mo_space_info_->get_corr_abs_mo("RESTRICTED_UOCC");
+    core_mos_ = mo_space_info_->corr_absolute_mo("RESTRICTED_DOCC");
+    actv_mos_ = mo_space_info_->corr_absolute_mo("ACTIVE");
+    virt_mos_ = mo_space_info_->corr_absolute_mo("RESTRICTED_UOCC");
 
     if (eri_df_) {
         aux_mos_ = std::vector<size_t>(ints_->nthree());
@@ -466,7 +466,7 @@ void MASTER_DSRG::init_dm_ints() {
 void MASTER_DSRG::fill_MOdm(std::vector<psi::SharedMatrix>& dm_a,
                             std::vector<psi::SharedMatrix>& dm_b) {
     // consider frozen-core part
-    std::vector<size_t> frzc_mos = mo_space_info_->get_absolute_mo("FROZEN_DOCC");
+    std::vector<size_t> frzc_mos = mo_space_info_->absolute_mo("FROZEN_DOCC");
     for (int z = 0; z < 3; ++z) {
         double dipole = 0.0;
         for (const auto& p : frzc_mos) {
@@ -478,9 +478,9 @@ void MASTER_DSRG::fill_MOdm(std::vector<psi::SharedMatrix>& dm_a,
 
     // find out correspondance between ncmo and nmo
     std::vector<size_t> cmo_to_mo;
-    psi::Dimension frzcpi = mo_space_info_->get_dimension("FROZEN_DOCC");
-    psi::Dimension frzvpi = mo_space_info_->get_dimension("FROZEN_UOCC");
-    psi::Dimension ncmopi = mo_space_info_->get_dimension("CORRELATED");
+    psi::Dimension frzcpi = mo_space_info_->dimension("FROZEN_DOCC");
+    psi::Dimension frzvpi = mo_space_info_->dimension("FROZEN_UOCC");
+    psi::Dimension ncmopi = mo_space_info_->dimension("CORRELATED");
     for (int h = 0, p = 0, nirrep = mo_space_info_->nirrep(); h < nirrep; ++h) {
         p += frzcpi[h];
         for (int r = 0; r < ncmopi[h]; ++r) {

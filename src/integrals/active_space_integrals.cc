@@ -516,10 +516,10 @@ make_active_space_ints(std::shared_ptr<MOSpaceInfo> mo_space_info,
                        const std::vector<std::string>& core_spaces) {
 
     // get the active/core vectors
-    auto active_mo = mo_space_info->get_corr_abs_mo(active_space);
+    auto active_mo = mo_space_info->corr_absolute_mo(active_space);
     std::vector<size_t> core_mo;
     for (const auto space : core_spaces) {
-        auto mos = mo_space_info->get_corr_abs_mo(space);
+        auto mos = mo_space_info->corr_absolute_mo(space);
         core_mo.insert(core_mo.end(), mos.begin(), mos.end());
     }
 

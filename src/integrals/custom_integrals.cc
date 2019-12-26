@@ -300,9 +300,9 @@ void CustomIntegrals::custom_integrals_allocate(int norb, const std::vector<int>
     nsopi_ = nmopi;
     nmopi_ = nmopi;
 
-    frzcpi_ = mo_space_info_->get_dimension("FROZEN_DOCC");
-    frzvpi_ = mo_space_info_->get_dimension("FROZEN_UOCC");
-    ncmopi_ = mo_space_info_->get_dimension("CORRELATED");
+    frzcpi_ = mo_space_info_->dimension("FROZEN_DOCC");
+    frzvpi_ = mo_space_info_->dimension("FROZEN_UOCC");
+    ncmopi_ = mo_space_info_->dimension("CORRELATED");
 
     ncmo_ = ncmopi_.sum();
 
