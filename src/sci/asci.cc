@@ -100,11 +100,11 @@ void ASCI::startup() {
     multiplicity_ = state_.multiplicity();
 
     nact_ = mo_space_info_->size("ACTIVE");
-    nactpi_ = mo_space_info_->get_dimension("ACTIVE");
+    nactpi_ = mo_space_info_->dimension("ACTIVE");
 
     nirrep_ = mo_space_info_->nirrep();
     // Include frozen_docc and restricted_docc
-    frzcpi_ = mo_space_info_->get_dimension("INACTIVE_DOCC");
+    frzcpi_ = mo_space_info_->dimension("INACTIVE_DOCC");
     nfrzc_ = mo_space_info_->size("INACTIVE_DOCC");
 
     twice_ms_ = multiplicity_ - 1;

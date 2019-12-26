@@ -106,13 +106,13 @@ void FiniteTemperatureHF::frac_occupation() {
     if (nmo_ > 0) {
         ef_ = bisection(ni, T);
     }
-    auto active_vector = mo_space_info_->get_absolute_mo("ALL");
+    auto active_vector = mo_space_info_->absolute_mo("ALL");
     /// Fill the occupation for active with variable occupations
     for (auto& active_array : active_vector) {
         fermidirac_[active_array] = ni[active_array];
     }
 
-    psi::Dimension nmopi = mo_space_info_->get_dimension("ALL");
+    psi::Dimension nmopi = mo_space_info_->dimension("ALL");
     psi::SharedVector Dirac_sym(new Vector("Dirac_Symmetry", nirrep_, nmopi));
 
     int offset = 0;
@@ -149,14 +149,14 @@ void FiniteTemperatureHF::frac_occupation() {
     C_occ_a_ = C_no_scale;
 }
 void FiniteTemperatureHF::initialize_occupation_vector(std::vector<double>& dirac) {
-    auto nmo_vector = mo_space_info_->get_absolute_mo("ALL");
+    auto nmo_vector = mo_space_info_->absolute_mo("ALL");
     for (auto& active_array : nmo_vector) {
         dirac[active_array] = 1.0;
     }
 }
 std::vector<std::pair<double, int>> FiniteTemperatureHF::get_active_orbital_energy() {
     int nirrep = this->nirrep();
-    psi::Dimension nmopi = mo_space_info_->get_dimension("ALL");
+    psi::Dimension nmopi = mo_space_info_->dimension("ALL");
     std::vector<std::pair<double, int>> nmo_vec;
     int offset = 0;
     for (int h = 0; h < nirrep; h++) {

@@ -54,12 +54,12 @@ UPDensity::UPDensity(std::shared_ptr<ForteIntegrals> ints,
 void UPDensity::compute_unpaired_density(std::vector<double>& oprdm_a,
                                          std::vector<double>& oprdm_b) {
     // TODO: re-enable this code
-    //    psi::Dimension nactpi = mo_space_info_->get_dimension("ACTIVE");
-    //    psi::Dimension nmopi = mo_space_info_->get_dimension("ALL");
-    //    psi::Dimension ncmopi = mo_space_info_->get_dimension("CORRELATED");
+    //    psi::Dimension nactpi = mo_space_info_->dimension("ACTIVE");
+    //    psi::Dimension nmopi = mo_space_info_->dimension("ALL");
+    //    psi::Dimension ncmopi = mo_space_info_->dimension("CORRELATED");
     //    size_t nirrep = ints_->nirrep();
-    //    psi::Dimension rdocc = mo_space_info_->get_dimension("RESTRICTED_DOCC");
-    //    psi::Dimension fdocc = mo_space_info_->get_dimension("FROZEN_DOCC");
+    //    psi::Dimension rdocc = mo_space_info_->dimension("RESTRICTED_DOCC");
+    //    psi::Dimension fdocc = mo_space_info_->dimension("FROZEN_DOCC");
     //
     //    size_t nact = nactpi.sum();
     //
@@ -168,12 +168,12 @@ void UPDensity::compute_unpaired_density(std::vector<double>& oprdm_a,
     //        }
     //    }
 
-    psi::Dimension nactpi = mo_space_info_->get_dimension("ACTIVE");
-    psi::Dimension nmopi = mo_space_info_->get_dimension("ALL");
-    psi::Dimension ncmopi = mo_space_info_->get_dimension("CORRELATED");
+    psi::Dimension nactpi = mo_space_info_->dimension("ACTIVE");
+    psi::Dimension nmopi = mo_space_info_->dimension("ALL");
+    psi::Dimension ncmopi = mo_space_info_->dimension("CORRELATED");
     size_t nirrep = ints_->nirrep();
-    psi::Dimension rdocc = mo_space_info_->get_dimension("RESTRICTED_DOCC");
-    psi::Dimension fdocc = mo_space_info_->get_dimension("FROZEN_DOCC");
+    psi::Dimension rdocc = mo_space_info_->dimension("RESTRICTED_DOCC");
+    psi::Dimension fdocc = mo_space_info_->dimension("FROZEN_DOCC");
 
     size_t nact = nactpi.sum();
 
@@ -236,7 +236,7 @@ void UPDensity::compute_unpaired_density(std::vector<double>& oprdm_a,
     // Grab matrix that takes the transforms from the NO basis to our local basis
     auto loc = std::make_shared<LOCALIZE>(options_, ints_, mo_space_info_);
 
-    std::vector<size_t> actmo = mo_space_info_->get_absolute_mo("ACTIVE");
+    std::vector<size_t> actmo = mo_space_info_->absolute_mo("ACTIVE");
     std::vector<int> loc_mo(2);
     loc_mo[0] = static_cast<int>(actmo[0]);
     loc_mo[1] = static_cast<int>(actmo.back());
@@ -328,7 +328,7 @@ void UPDensity::compute_unpaired_density(std::vector<double>& oprdm_a,
     //            IAO_inds.push_back(i);
     //        }
     //    }
-    //    std::vector<size_t> active_mo = mo_space_info_->get_absolute_mo("ACTIVE");
+    //    std::vector<size_t> active_mo = mo_space_info_->absolute_mo("ACTIVE");
     //    for (int i = 0; i < nact; ++i) {
     //        int idx = IAO_inds[i];
     //        outfile->Printf("\n Using IAO %d", idx);

@@ -57,11 +57,11 @@ void ESNO::startup() {
     nirrep_ = mo_space_info_->nirrep();
 
     // Define the correlated space
-    auto correlated_mo = mo_space_info_->get_corr_abs_mo("GENERALIZED PARTICLE");
+    auto correlated_mo = mo_space_info_->corr_absolute_mo("GENERALIZED PARTICLE");
     std::sort(correlated_mo.begin(), correlated_mo.end());
 
     fci_ints_ = std::make_shared<ActiveSpaceIntegrals>(
-        ints_, correlated_mo, mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
+        ints_, correlated_mo, mo_space_info_->corr_absolute_mo("RESTRICTED_DOCC"));
 
     // Set the integrals
     outfile->Printf("\n  Resetting FCI integrals");
@@ -130,9 +130,9 @@ void ESNO::compute_nos() {
     ci_rdms.set_max_rdm(1);
 
     size_t ncmo = mo_space_info_->size("GENERALIZED PARTICLE");
-    psi::Dimension ncmopi = mo_space_info_->get_dimension("GENERALIZED PARTICLE");
-    psi::Dimension fdocc = mo_space_info_->get_dimension("FROZEN_DOCC");
-    psi::Dimension nmopi = mo_space_info_->get_dimension("ALL");
+    psi::Dimension ncmopi = mo_space_info_->dimension("GENERALIZED PARTICLE");
+    psi::Dimension fdocc = mo_space_info_->dimension("FROZEN_DOCC");
+    psi::Dimension nmopi = mo_space_info_->dimension("ALL");
 
     std::vector<double> ordm_a(ncmo * ncmo, 0.0);
     std::vector<double> ordm_b(ncmo * ncmo, 0.0);
@@ -189,8 +189,8 @@ void ESNO::compute_nos() {
 void ESNO::get_excited_determinants() {
     // Only excite into the restricted uocc
 
-    auto ruocc = mo_space_info_->get_corr_abs_mo("RESTRICTED_UOCC");
-    psi::Dimension rdoccpi = mo_space_info_->get_dimension("RESTRICTED_DOCC");
+    auto ruocc = mo_space_info_->corr_absolute_mo("RESTRICTED_UOCC");
+    psi::Dimension rdoccpi = mo_space_info_->dimension("RESTRICTED_DOCC");
     size_t nrdo = mo_space_info_->size("RESTRICTED_DOCC");
     size_t nact = mo_space_info_->size("ACTIVE");
 
@@ -250,8 +250,8 @@ void ESNO::get_excited_determinants() {
 void ESNO::upcast_reference() {
     auto mo_sym = mo_space_info_->symmetry("GENERALIZED PARTICLE");
 
-    psi::Dimension old_dim = mo_space_info_->get_dimension("ACTIVE");
-    psi::Dimension new_dim = mo_space_info_->get_dimension("GENERALIZED PARTICLE");
+    psi::Dimension old_dim = mo_space_info_->dimension("ACTIVE");
+    psi::Dimension new_dim = mo_space_info_->dimension("GENERALIZED PARTICLE");
     size_t nact = mo_space_info_->size("ACTIVE");
     int n_irrep = old_dim.n();
 
@@ -300,8 +300,8 @@ std::vector<size_t> ESNO::get_excitation_space() {
     std::vector<size_t> ex_space;
 
     // First get a list of absolute position of RUOCC
-    std::vector<size_t> ruocc = mo_space_info_->get_corr_abs_mo("RESTRICTED_UOCC");
-    psi::Dimension rdocc_dim = mo_space_info_->get_dimension("RESTRICTED_DOCC");
+    std::vector<size_t> ruocc = mo_space_info_->corr_absolute_mo("RESTRICTED_UOCC");
+    psi::Dimension rdocc_dim = mo_space_info_->dimension("RESTRICTED_DOCC");
     std::vector<int> c_sym = mo_space_info_->symmetry("CORRELATED");
 
     int max_n = ruocc.size();

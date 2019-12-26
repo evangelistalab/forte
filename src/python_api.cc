@@ -26,10 +26,8 @@
  * @END LICENSE
  */
 
-#ifndef _python_api_h_
-#define _python_api_h_
-
 #include <pybind11/pybind11.h>
+#include <pybind11/numpy.h>
 #include <pybind11/stl.h>
 
 #include "psi4/libpsi4util/process.h"
@@ -38,7 +36,6 @@
 #include "base_classes/active_space_solver.h"
 #include "base_classes/mo_space_info.h"
 #include "base_classes/orbital_transform.h"
-#include "integrals/integrals.h"
 #include "integrals/make_integrals.h"
 
 #include "helpers/printing.h"
@@ -66,6 +63,12 @@ namespace py = pybind11;
 using namespace pybind11::literals;
 
 namespace forte {
+
+// see the files in src/api for the implementation of the following methods
+void export_ambit(py::module& m);
+void export_ForteIntegrals(py::module& m);
+void export_RDMs(py::module& m);
+void export_StateInfo(py::module& m);
 
 /// Export the ForteOptions class
 void export_ForteOptions(py::module& m) {
@@ -105,7 +108,6 @@ void export_ActiveSpaceSolver(py::module& m) {
     py::class_<ActiveSpaceSolver>(m, "ActiveSpaceSolver")
         .def("compute_energy", &ActiveSpaceSolver::compute_energy)
         .def("rdms", &ActiveSpaceSolver::rdms)
-        .def("compute_average_rdms", &ActiveSpaceSolver::compute_average_rdms)
         .def("compute_contracted_energy", &ActiveSpaceSolver::compute_contracted_energy,
              "as_ints"_a, "max_body"_a,
              "Solve the contracted CI eigenvalue problem using given integrals")
@@ -194,7 +196,8 @@ PYBIND11_MODULE(forte, m) {
     m.def("make_state_info_from_psi_wfn", &make_state_info_from_psi_wfn,
           "Make a state info object from a psi4 Wavefunction");
     m.def("to_state_nroots_map", &to_state_nroots_map,
-          "Convert a map of StateInfo to weight lists to a map of StateInfo to number of states.");
+          "Convert a map of StateInfo to weight lists to a map of StateInfo to number of "
+          "states.");
     m.def("make_state_weights_map", &make_state_weights_map,
           "Make a list of target states with their weigth");
     m.def("make_active_space_ints", &make_active_space_ints,
@@ -208,25 +211,33 @@ PYBIND11_MODULE(forte, m) {
     m.def("make_dsrg_spin_adapted", &make_dsrg_spin_adapted,
           "Make a DSRG pointer (spin-adapted implementation)");
 
+    export_ambit(m);
+
     export_ForteOptions(m);
 
     export_ActiveSpaceMethod(m);
     export_ActiveSpaceSolver(m);
+    export_ForteIntegrals(m);
 
     export_OrbitalTransform(m);
 
     export_Determinant(m);
 
+    export_RDMs(m);
+
+    export_StateInfo(m);
+
     // export MOSpaceInfo
     py::class_<MOSpaceInfo, std::shared_ptr<MOSpaceInfo>>(m, "MOSpaceInfo")
-        .def("get_dimension", &MOSpaceInfo::get_dimension,
+        .def("dimension", &MOSpaceInfo::dimension,
              "Return a psi::Dimension object for the given space")
-        .def("get_absolute_mo", &MOSpaceInfo::get_absolute_mo,
-             "Return the list of the absolute index of the molecular orbitals in a space excluding "
+        .def("absolute_mo", &MOSpaceInfo::absolute_mo,
+             "Return the list of the absolute index of the molecular orbitals in a space "
+             "excluding "
              "the frozen core/virtual orbitals")
-        .def(
-            "get_corr_abs_mo", &MOSpaceInfo::get_corr_abs_mo,
-            "Return the list of the absolute index of the molecular orbitals in a correlated space")
+        .def("corr_absolute_mo", &MOSpaceInfo::corr_absolute_mo,
+             "Return the list of the absolute index of the molecular orbitals in a correlated "
+             "space")
         .def("get_relative_mo", &MOSpaceInfo::get_relative_mo, "Return the relative MOs")
         .def("read_options", &MOSpaceInfo::read_options, "Read options")
         .def("read_from_map", &MOSpaceInfo::read_from_map,
@@ -239,17 +250,6 @@ PYBIND11_MODULE(forte, m) {
         .def("nirrep", &MOSpaceInfo::nirrep, "Return the number of irreps")
         .def("symmetry", &MOSpaceInfo::symmetry, "Return the symmetry of each orbital")
         .def("space_names", &MOSpaceInfo::space_names, "Return the names of orbital spaces");
-
-    // export ForteIntegrals
-    py::class_<ForteIntegrals, std::shared_ptr<ForteIntegrals>>(m, "ForteIntegrals")
-        .def("rotate_orbitals", &ForteIntegrals::rotate_orbitals)
-        .def("nmo", &ForteIntegrals::nmo)
-        .def("ncmo", &ForteIntegrals::ncmo);
-
-    // export StateInfo
-    py::class_<StateInfo, std::shared_ptr<StateInfo>>(m, "StateInfo")
-        .def(py::init<int, int, int, int, int>(), "na"_a, "nb"_a, "multiplicity"_a, "twice_ms"_a,
-             "irrep"_a);
 
     // export SCFInfo
     py::class_<SCFInfo, std::shared_ptr<SCFInfo>>(m, "SCFInfo")
@@ -291,30 +291,6 @@ PYBIND11_MODULE(forte, m) {
         .def("Ua_t", &SemiCanonical::Ua_t, "Return the alpha rotation matrix in the active space")
         .def("Ub_t", &SemiCanonical::Ub_t, "Return the beta rotation matrix in the active space");
 
-    // export RDMs
-    py::class_<RDMs>(m, "RDMs")
-        .def("max_rdm_level", &RDMs::max_rdm_level, "Return the max RDM level")
-        .def("g1a_data", &RDMs::g1a_data, "Return the alpha 1RDM data")
-        .def("g1b_data", &RDMs::g1a_data, "Return the beta 1RDM data")
-        .def("g2aa_data", &RDMs::g2aa_data, "Return the alpha-alpha 2RDM data")
-        .def("g2ab_data", &RDMs::g2ab_data, "Return the alpha-beta 2RDM data")
-        .def("g2bb_data", &RDMs::g2bb_data, "Return the beta-beta 2RDM data")
-        .def("g3aaa_data", &RDMs::g3aaa_data, "Return the alpha-alpha-alpha 3RDM data")
-        .def("g3aab_data", &RDMs::g3aab_data, "Return the alpha-alpha-beta 3RDM data")
-        .def("g3abb_data", &RDMs::g3abb_data, "Return the alpha-beta-beta 3RDM data")
-        .def("g3bbb_data", &RDMs::g3bbb_data, "Return the beta-beta-beta 3RDM data")
-        .def("SFg2_data", &RDMs::SFg2_data, "Return the spin-free 2-RDM")
-        .def("L2aa_data", &RDMs::L2aa_data, "Return the alpha-alpha 2-cumulant data")
-        .def("L2ab_data", &RDMs::L2ab_data, "Return the alpha-beta 2-cumulant data")
-        .def("L2bb_data", &RDMs::L2bb_data, "Return the beta-beta 2-cumulant data")
-        .def("L3aaa_data", &RDMs::L3aaa_data, "Return the alpha-alpha-alpha 3-cumulant data")
-        .def("L3aab_data", &RDMs::L3aab_data, "Return the alpha-alpha-beta 3-cumulant data")
-        .def("L3abb_data", &RDMs::L3abb_data, "Return the alpha-beta-beta 3-cumulant data")
-        .def("L3bbb_data", &RDMs::L3bbb_data, "Return the beta-beta-beta 3-cumulant data");
-
-    // export ambit::Tensor
-    py::class_<ambit::Tensor>(m, "ambitTensor");
-
     // export MASTER_DSRG
     py::class_<MASTER_DSRG>(m, "MASTER_DSRG")
         .def("compute_energy", &MASTER_DSRG::compute_energy, "Compute the DSRG energy")
@@ -351,5 +327,3 @@ PYBIND11_MODULE(forte, m) {
 }
 
 } // namespace forte
-
-#endif // _python_api_h_

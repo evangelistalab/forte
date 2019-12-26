@@ -63,7 +63,7 @@ void LOCALIZE::set_orbital_space(std::vector<int>& orbital_spaces) {
 void LOCALIZE::set_orbital_space(std::vector<std::string>& labels) {
 
     for( const auto& label : labels ){
-        std::vector<size_t> mos = mo_space_info_->get_corr_abs_mo(label);
+        std::vector<size_t> mos = mo_space_info_->corr_absolute_mo(label);
         orbital_spaces_.push_back(mos[0]); 
         orbital_spaces_.push_back(mos.back()); 
     }

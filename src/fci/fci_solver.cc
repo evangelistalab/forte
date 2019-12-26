@@ -62,7 +62,7 @@ class MOSpaceInfo;
 FCISolver::FCISolver(StateInfo state, size_t nroot, std::shared_ptr<MOSpaceInfo> mo_space_info,
                      std::shared_ptr<ActiveSpaceIntegrals> as_ints)
     : ActiveSpaceMethod(state, nroot, mo_space_info, as_ints),
-      active_dim_(mo_space_info->get_dimension("ACTIVE")), nirrep_(as_ints->ints()->nirrep()),
+      active_dim_(mo_space_info->dimension("ACTIVE")), nirrep_(as_ints->ints()->nirrep()),
       symmetry_(state.irrep()), multiplicity_(state.multiplicity()) {
     // TODO: read this info from the base class
     na_ = state.na() - core_mo_.size() - mo_space_info->size("FROZEN_DOCC");
@@ -265,7 +265,7 @@ double FCISolver::compute_energy() {
             C_->copy(dls.eigenvector(r));
             std::vector<std::tuple<double, double, size_t, size_t, size_t>> dets_config =
                 C_->max_abs_elements(guess_size * ntrial_per_root_);
-            // psi::Dimension nactvpi = mo_space_info_->get_dimension("ACTIVE");
+            // psi::Dimension nactvpi = mo_space_info_->dimension("ACTIVE");
 
             for (auto& det_config : dets_config) {
                 double ci_abs, ci;

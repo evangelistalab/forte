@@ -980,7 +980,7 @@ det_hash<double> AdaptiveCI::get_bin_F_space_old(int bin, int nbin, psi::SharedM
 
     const size_t n_dets = P_space.size();
     const det_hashvec& dets = P_space.wfn_hash();
-    std::vector<int> act_mo = mo_space_info_->get_dimension("ACTIVE").blocks();
+    std::vector<int> act_mo = mo_space_info_->dimension("ACTIVE").blocks();
     det_hash<double> A_b;
 
     // Loop over P space determinants
@@ -1476,7 +1476,7 @@ evecs,DeterminantHashVec& P_space) {
     const size_t n_dets = P_space.size();
     const det_hashvec& dets = P_space.wfn_hash();
     int nmo = as_ints_->nmo();
-    std::vector<int> act_mo = mo_space_info_->get_dimension("ACTIVE").blocks();
+    std::vector<int> act_mo = mo_space_info_->dimension("ACTIVE").blocks();
 
     std::vector<det_hash<double>> A_b_t;
 
@@ -1739,7 +1739,7 @@ det_hash<double> AdaptiveCI::get_bin_F_space(int bin, int nbin, psi::SharedMatri
 
     const size_t n_dets = P_space.size();
     const det_hashvec& dets = P_space.wfn_hash();
-    std::vector<int> act_mo = mo_space_info_->get_dimension("ACTIVE").blocks();
+    std::vector<int> act_mo = mo_space_info_->dimension("ACTIVE").blocks();
 
     std::vector<det_hash<double>> A_b_t;
 
@@ -2006,7 +2006,7 @@ AdaptiveCI::get_bin_F_space_vecsort(int bin, int nbin, psi::SharedMatrix evecs,
     const size_t n_dets = P_space.size();
     const det_hashvec& dets = P_space.wfn_hash();
     int nmo = as_ints_->nmo();
-    std::vector<int> act_mo = mo_space_info_->get_dimension("ACTIVE").blocks();
+    std::vector<int> act_mo = mo_space_info_->dimension("ACTIVE").blocks();
 
     std::vector<std::vector<std::pair<Determinant, double>>> vec_A_b_t;
     std::vector<size_t> dets_t;

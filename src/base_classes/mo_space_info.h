@@ -117,15 +117,15 @@ class MOSpaceInfo {
     /// @return The number of orbitals in a space
     size_t size(const std::string& space);
     /// @return The psi::Dimension object for space
-    psi::Dimension get_dimension(const std::string& space);
+    psi::Dimension dimension(const std::string& space);
     /// @return The symmetry of each orbital
     std::vector<int> symmetry(const std::string& space);
     /// @return The list of the absolute index of the molecular orbitals in a
     /// space
-    std::vector<size_t> get_absolute_mo(const std::string& space);
+    std::vector<size_t> absolute_mo(const std::string& space);
     /// @return The list of the absolute index of the molecular orbitals in a
     /// space excluding the frozen core/virtual orbitals
-    std::vector<size_t> get_corr_abs_mo(const std::string& space);
+    std::vector<size_t> corr_absolute_mo(const std::string& space);
     /// @return The list of the relative index (h,p_rel) of the molecular
     /// orbitals in space
     std::vector<std::pair<size_t, size_t>> get_relative_mo(const std::string& space);

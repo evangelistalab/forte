@@ -58,14 +58,14 @@ CI_Reference::CI_Reference(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<Fo
 
     // Frozen DOCC + RDOCC
     size_t ninact = mo_space_info_->size("INACTIVE_DOCC");
-    frzcpi_ = mo_space_info_->get_dimension("INACTIVE_DOCC");
+    frzcpi_ = mo_space_info_->dimension("INACTIVE_DOCC");
 
     // Symmetry of each MO
     mo_symmetry_ = mo_space_info_->symmetry("ACTIVE");
 
     // Size of total active space
     nact_ = mo_space_info_->size("ACTIVE");
-    nactpi_ = mo_space_info_->get_dimension("ACTIVE");
+    nactpi_ = mo_space_info_->dimension("ACTIVE");
 
     // Size of subspace
     subspace_size_ = options->get_int("ACTIVE_GUESS_SIZE");

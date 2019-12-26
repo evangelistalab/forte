@@ -361,11 +361,11 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
     // 2. Apply projector to rotate the orbitals
 
     // Get information of rocc, actv and rvir from MOSpaceInfo
-    Dimension frzopi = mo_space_info->get_dimension("FROZEN_DOCC");
-    Dimension nroccpi = mo_space_info->get_dimension("RESTRICTED_DOCC");
-    Dimension actv_a = mo_space_info->get_dimension("ACTIVE");
-    Dimension nrvirpi = mo_space_info->get_dimension("RESTRICTED_UOCC");
-    Dimension frzvpi = mo_space_info->get_dimension("FROZEN_UOCC");
+    Dimension frzopi = mo_space_info->dimension("FROZEN_DOCC");
+    Dimension nroccpi = mo_space_info->dimension("RESTRICTED_DOCC");
+    Dimension actv_a = mo_space_info->dimension("ACTIVE");
+    Dimension nrvirpi = mo_space_info->dimension("RESTRICTED_UOCC");
+    Dimension frzvpi = mo_space_info->dimension("FROZEN_UOCC");
 
     // Define corresponding blocks (slices), occ slick will start at frzopi
     Slice occ(frzopi, nroccpi + frzopi);
