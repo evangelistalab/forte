@@ -170,12 +170,12 @@ void MRCINO::startup() {
     nactv_ = mo_space_info_->size("ACTIVE");
     corr_ = mo_space_info_->size("CORRELATED");
 
-    actvpi_ = mo_space_info_->get_dimension("ACTIVE");
-    fdoccpi_ = mo_space_info_->get_dimension("FROZEN_DOCC");
-    rdoccpi_ = mo_space_info_->get_dimension("RESTRICTED_DOCC");
-    fuoccpi_ = mo_space_info_->get_dimension("FROZEN_UOCC");
-    ruoccpi_ = mo_space_info_->get_dimension("RESTRICTED_UOCC");
-    corrpi_ = mo_space_info_->get_dimension("CORRELATED");
+    actvpi_ = mo_space_info_->dimension("ACTIVE");
+    fdoccpi_ = mo_space_info_->dimension("FROZEN_DOCC");
+    rdoccpi_ = mo_space_info_->dimension("RESTRICTED_DOCC");
+    fuoccpi_ = mo_space_info_->dimension("FROZEN_UOCC");
+    ruoccpi_ = mo_space_info_->dimension("RESTRICTED_UOCC");
+    corrpi_ = mo_space_info_->dimension("CORRELATED");
 
     ncmo2_ = corr_ * corr_;
 
@@ -524,7 +524,7 @@ MRCINO::build_density_matrix(const std::vector<Determinant>& dets, psi::SharedMa
     }
     // Invert vector to matrix
     //    psi::Dimension nmopi = reference_wavefunction_->nmopi();
-    //    psi::Dimension ncmopi = mo_space_info_->get_dimension("CORRELATED");
+    //    psi::Dimension ncmopi = mo_space_info_->dimension("CORRELATED");
 
     std::shared_ptr<psi::Matrix> opdm_a(new psi::Matrix("OPDM_A", corrpi_, corrpi_));
     std::shared_ptr<psi::Matrix> opdm_b(new psi::Matrix("OPDM_B", corrpi_, corrpi_));
@@ -620,7 +620,7 @@ MRCINO::diagonalize_density_matrix(std::pair<psi::SharedMatrix, psi::SharedMatri
 void MRCINO::find_active_space_and_transform(
     std::tuple<psi::SharedVector, psi::SharedMatrix, psi::SharedVector, psi::SharedMatrix> no_U) {
 
-    auto nmopi = mo_space_info_->get_dimension("ALL");
+    auto nmopi = mo_space_info_->dimension("ALL");
     Ua_.reset(new psi::Matrix("U", nmopi, nmopi));
     Ub_.reset(new psi::Matrix("U", nmopi, nmopi));
     psi::SharedMatrix NO_A = std::get<1>(no_U);

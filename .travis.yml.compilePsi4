@@ -1,0 +1,79 @@
+language: cpp
+sudo: false
+matrix:
+  include:
+    - env:
+      - PYTHON_VER='3.6'
+      - MAX_DET_ORB=64
+    - env:
+      - PYTHON_VER='3.6'
+      - MAX_DET_ORB=128
+
+install:
+  - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
+  - bash miniconda.sh -b -p $HOME/miniconda
+  - export PATH="$HOME/miniconda/bin:$PATH"
+  - hash -r
+  - conda config --set always_yes yes --set changeps1 no
+  - conda update -q conda
+  - conda create -q -n tenv python=$PYTHON_VER gcc_linux-64 gxx_linux-64 gfortran_linux-64 cmake mkl-devel hdf5 boost 
+  - source activate tenv
+  - conda install gau2grid libint libxc -c psi4
+  - conda install pytest pytest-cov codecov lcov qcelemental -c conda-forge
+  - pip install pytest-shutil
+  
+before_script:
+  # Compile psi4
+  - cd ${HOME}/build
+  - git clone https://github.com/psi4/psi4.git psi4
+  - cd psi4
+  - >
+      cmake -H. -Bobjdir
+      -DCMAKE_BUILD_TYPE=Debug
+      -DMAX_AM_ERI=4
+      -DBUILD_SHARED_LIBS=ON
+      -DCMAKE_INSTALL_PREFIX=${HOME}/build/psi4-bin
+  - ls objdir
+  - cd objdir
+  - make -j2
+  - make install >& psi4_install.log
+  - export PATH="$HOME/build/psi4-bin/bin:$PATH"
+  - python -V
+  - psi4 --version
+  - psi4 --plugin-compile
+# # Compile ambit
+# - cd ${HOME}/build
+# - pwd
+# - cd ambit
+# - cmake -H. -Bobjdir -DCMAKE_C_COMPILER=${C_COMPILER} -DCMAKE_CXX_COMPILER=${CXX_COMPILER} -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=/home/travis/build/ambit-bin -DPYTHON_EXECUTABLE=${HOME}/miniconda/envs/tenv/bin/python
+# - cd objdir
+# - make -j2
+# - make install
+  - cd ${TRAVIS_BUILD_DIR}
+  - PYBIND_INCLUDE=$(python -m pybind11 --includes)
+  - echo $PYBIND_INCLUDE
+  - >
+      cmake -H. -B.
+      -C${HOME}/miniconda/envs/tenv/share/cmake/psi4/psi4PluginCache.cmake
+      -Dambit_DIR=/home/travis/build/ambit-bin/share/cmake/ambit/
+      -DCMAKE_BUILD_TYPE=Debug 
+      -DCMAKE_CXX_FLAGS="-I${HOME}/miniconda/envs/tenv/include ${PYBIND_INCLUDE}"
+      -DPYTHON_EXECUTABLE=${HOME}/miniconda/envs/tenv/bin/python
+      -DENABLE_CODECOV=ON
+      -DMAX_DET_ORB=${MAX_DET_ORB}
+  - make -j2
+  - export PYTHONPATH="${HOME}/build/evangelistalab:$PYTHONPATH"
+
+script:
+  - cd ${TRAVIS_BUILD_DIR}
+  - bash tools/forte_codecov
+  # Run tests for 128-bit determinants 
+  - if [ "$MAX_DET_ORB" -ge "128" ]; then
+     cd ${HOME}/build/evangelistalab/forte/tests/large_det;
+     python run_forte_tests.py --bw --failed_dump;
+    fi
+  - cd ${TRAVIS_BUILD_DIR}
+  - ./forte_tests
+  - ./forte_benchmarks
+  - cd ${TRAVIS_BUILD_DIR}/tests/pytest
+  - pytest

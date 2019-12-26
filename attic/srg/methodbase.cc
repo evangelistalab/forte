@@ -56,8 +56,8 @@ void MethodBase::startup() {
     BlockedTensor::set_expert_mode(true);
 
     size_t ncmo_ = mo_space_info_->size("CORRELATED");
-    Dimension ncmopi_ = mo_space_info_->get_dimension("CORRELATED");
-    frzcpi_ = mo_space_info_->get_dimension("FROZEN_DOCC");
+    Dimension ncmopi_ = mo_space_info_->dimension("CORRELATED");
+    frzcpi_ = mo_space_info_->dimension("FROZEN_DOCC");
 
     Dimension corr_docc(doccpi_);
     corr_docc -= frzcpi_;

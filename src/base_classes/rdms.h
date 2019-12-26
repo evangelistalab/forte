@@ -29,6 +29,7 @@
 #ifndef _rdms_h_
 #define _rdms_h_
 
+#include <vector>
 #include <ambit/tensor.h>
 
 namespace forte {
@@ -74,11 +75,11 @@ class RDMs {
     RDMs(ambit::Tensor g1a, ambit::Tensor g1b);
     /// @brief Construct a RDMs object with the 1- and 2-rdms
     RDMs(ambit::Tensor g1a, ambit::Tensor g1b, ambit::Tensor g2aa, ambit::Tensor g2ab,
-              ambit::Tensor g2bb);
+         ambit::Tensor g2bb);
     /// @brief Construct a RDMs object with the 1-, 2-, and 3-rdms
     RDMs(ambit::Tensor g1a, ambit::Tensor g1b, ambit::Tensor g2aa, ambit::Tensor g2ab,
-              ambit::Tensor g2bb, ambit::Tensor g3aaa, ambit::Tensor g3aab, ambit::Tensor g3abb,
-              ambit::Tensor g3bbb);
+         ambit::Tensor g2bb, ambit::Tensor g3aaa, ambit::Tensor g3aab, ambit::Tensor g3abb,
+         ambit::Tensor g3bbb);
 
     // ==> Class Interface <==
 
@@ -103,10 +104,12 @@ class RDMs {
     /// @return the beta-beta-beta 3-RDM
     ambit::Tensor g3bbb() const { return g3bbb_; }
 
+    // Spin-free RDMs
+
     /// @return the spin-free 2-RDM
     ambit::Tensor SFg2() const { return SFg2_; }
 
-    // Reduced density cumulants (RDCs)
+    // Reduced density cumulants
 
     /// @return the alpha-alpha 2-RDC
     ambit::Tensor L2aa();
@@ -122,6 +125,8 @@ class RDMs {
     ambit::Tensor L3abb();
     /// @return the beta-beta-beta 3-RDC
     ambit::Tensor L3bbb();
+
+    // class variables
 
     size_t max_rdm_level() { return max_rdm_; }
 
@@ -278,7 +283,7 @@ void make_cumulant_L3bbb_in_place(const ambit::Tensor& g1b, const ambit::Tensor&
  * @return the reference energy
  */
 double compute_Eref_from_rdms(RDMs& ref, std::shared_ptr<ForteIntegrals> ints,
-                                   std::shared_ptr<MOSpaceInfo> mo_space_info);
+                              std::shared_ptr<MOSpaceInfo> mo_space_info);
 } // namespace forte
 
 #endif // _reference_h_
