@@ -1,11 +1,6 @@
 #ifndef _determinant_hpp_
 #define _determinant_hpp_
 
-#include <string>
-#include <cstddef>
-#include <iostream>
-#include <vector>
-
 #include "bitarray.hpp"
 #include "bitwise_operations.hpp"
 
@@ -14,6 +9,9 @@ namespace forte {
 #define PERFORMANCE_OPTIMIZATION 0
 
 enum class DetSpinType { Alpha, Beta };
+
+//    /// the type used to represent a word (a 64 bit unsigned integer)
+//    using word_t = uint64_t;
 
 /**
  * @brief A class to represent a Slater determinant with N spin orbitals
@@ -27,10 +25,25 @@ enum class DetSpinType { Alpha, Beta };
  */
 template <size_t N> class DeterminantImpl : public BitArray<N> {
   public:
-    //    /// the type used to represent a word (a 64 bit unsigned integer)
-    //    using word_t = uint64_t;
-    /// the number of bits
-    static constexpr size_t nbits = N;
+    // Since the template parent (BitArray) of this template class is not instantiated during the
+    // compilation pass, here we declare all the member variables and functions inherited and used
+    using BitArray<N>::nbits;
+    using BitArray<N>::bits_per_word;
+    using BitArray<N>::nwords_;
+    using BitArray<N>::words_;
+    using BitArray<N>::count;
+    using BitArray<N>::get_bit;
+    using BitArray<N>::set_bit;
+    using BitArray<N>::maskbit;
+    using BitArray<N>::whichbit;
+    using BitArray<N>::whichword;
+    using BitArray<N>::getword;
+    using BitArray<N>::slater_sign;
+    using BitArray<N>::operator|;
+    using BitArray<N>::operator^;
+    using BitArray<N>::operator&;
+    //    using BitArray<N>::Hash;
+
     /// the number of bits divided by two
     static constexpr size_t nbits_half = N / 2;
 
@@ -45,8 +58,13 @@ template <size_t N> class DeterminantImpl : public BitArray<N> {
 
     size_t get_nbits_half() const { return nbits_half; }
 
+    static constexpr size_t parity(size_t n) { return 1 - 2 * ((n & 1) == 1); }
+
     /// Default constructor
     DeterminantImpl() : BitArray<N>() {}
+
+    /// Default constructor
+    DeterminantImpl(const BitArray<N>& ba) : BitArray<N>(ba) {}
 
     //    explicit DeterminantImpl(const std::vector<bool>& occupation);
     /// Construct the determinant from an occupation vector that
@@ -66,27 +84,12 @@ template <size_t N> class DeterminantImpl : public BitArray<N> {
 
     // Functions to access bits
 
-    // Since the template parent (BitArray) of this template class is not instantiated during the
-    // compilation pass, here we declare all the member variables and functions inherited and used
-    using BitArray<N>::bits_per_word;
-    using BitArray<N>::nwords_;
-    using BitArray<N>::words_;
-
-    using BitArray<N>::count;
-    using BitArray<N>::get_bit;
-
-    using BitArray<N>::maskbit;
-    using BitArray<N>::whichbit;
-    using BitArray<N>::whichword;
-    using BitArray<N>::getword;
-
     /// get the value of alfa bit pos
     bool get_alfa_bit(size_t pos) const {
         if constexpr (nbits == 128) {
             return words_[0] & maskbit(pos);
         } else {
             return get_bit(pos);
-            // getword(pos) & maskbit(pos);
         }
     }
     /// get the value of beta bit pos
@@ -95,50 +98,29 @@ template <size_t N> class DeterminantImpl : public BitArray<N> {
             return words_[1] & maskbit(pos);
         } else {
             return get_bit(pos + beta_bit_offset);
-            // getword(pos + beta_bit_offset) & maskbit(pos);
         }
     }
 
     // Functions to set bits
 
-    /// set bit pos to val
-    DeterminantImpl<nbits>& set_bit(size_t pos, bool val) {
-        if (val)
-            getword(pos) |= maskbit(pos);
-        else
-            getword(pos) &= ~maskbit(pos);
-        return *this;
-    }
-
     /// set alfa bit pos to val
-    DeterminantImpl<nbits>& set_alfa_bit(size_t pos, bool val) {
-        if (val)
-            getword(pos) |= maskbit(pos);
-        else
-            getword(pos) &= ~maskbit(pos);
-        return *this;
-    }
+    void set_alfa_bit(size_t pos, bool val) { set_bit(pos, val); }
 
     /// set beta bit pos to val
-    DeterminantImpl<nbits>& set_beta_bit(size_t pos, bool val) {
-        if (val)
-            getword(pos + beta_bit_offset) |= maskbit(pos);
-        else
-            getword(pos + beta_bit_offset) &= ~maskbit(pos);
-        return *this;
-    }
+    void set_beta_bit(size_t pos, bool val) { set_bit(pos + beta_bit_offset, val); }
 
     // Comparison operators
 
     static bool less_than(const DeterminantImpl<N>& rhs, const DeterminantImpl<N>& lhs) {
-        for (size_t n = nwords_; n > 1;) {
-            --n;
-            if (rhs.words_[n] > lhs.words_[n])
-                return false;
-            if (rhs.words_[n] < lhs.words_[n])
-                return true;
-        }
-        return rhs.words_[0] < lhs.words_[0];
+        //        for (size_t n = nwords_; n > 1;) {
+        //            --n;
+        //            if (rhs.words_[n] > lhs.words_[n])
+        //                return false;
+        //            if (rhs.words_[n] < lhs.words_[n])
+        //                return true;
+        //        }
+        //        return rhs.words_[0] < lhs.words_[0];
+        return rhs < lhs;
     }
 
     static bool reverse_less_than(const DeterminantImpl<N>& rhs, const DeterminantImpl<N>& lhs) {
@@ -265,22 +247,6 @@ template <size_t N> class DeterminantImpl : public BitArray<N> {
         return (count % 2 == 0) ? 1.0 : -1.0;
     }
 
-    /// Return the sign of a_n applied to this determinant
-    /// This function ignores if bit n is set or not
-    double slater_sign(int n) const {
-        // with constexpr we compile only one of these cases
-        size_t count = 0;
-        // count all the preceeding bits only if we are looking past the first word
-        if (static_cast<size_t>(n) >= bits_per_word) {
-            size_t last_full_word = whichword(n);
-            for (size_t k = 0; k < last_full_word; ++k) {
-                count += ui64_bit_count(words_[k]);
-            }
-        }
-        return (count % 2 == 0) ? ui64_sign(getword(n), whichbit(n))
-                                : -ui64_sign(getword(n), whichbit(n));
-    }
-
     /// Return the sign for a single second quantized operator
     /// This function ignores if bit n is set or not
     double slater_sign_a(int n) const {
@@ -297,34 +263,10 @@ template <size_t N> class DeterminantImpl : public BitArray<N> {
     double slater_sign_b(int n) const {
         if constexpr (nbits == 128) {
             // specialization for 64 + 64 bits
-            return ui64_sign(words_[1], n) * (ui64_bit_count(words_[0]) % 2 == 0 ? 1.0 : -1.0);
+            return ui64_sign(words_[1], n) * parity(ui64_bit_count(words_[0]));
         } else {
             return slater_sign(n + beta_bit_offset);
         }
-    }
-
-    /// Return the sign for a pair of second quantized operators
-    /// The sign depends only on the number of bits = 1 between n and m
-    double slater_sign(int n, int m) const {
-        // let's first order the numbers so that m <= n
-        if (n < m)
-            std::swap(m, n);
-        size_t word_m = whichword(m);
-        size_t word_n = whichword(n);
-        // if both bits are in the same word use an optimized version
-        if (word_n == word_m) {
-            return ui64_sign(words_[word_n], whichbit(n), whichbit(m));
-        }
-        size_t count = 0;
-        // count the number of bits in bitween the words of m and n
-        for (size_t k = word_m + 1; k < word_n; ++k) {
-            count += ui64_bit_count(words_[k]);
-        }
-        // count the bits after m in word[m]
-        // count the bits before n in word[n]
-        double sign =
-            ui64_sign_reverse(words_[word_m], whichbit(m)) * ui64_sign(words_[word_n], whichbit(n));
-        return (count % 2 == 0) ? sign : -sign;
     }
 
     /// Return the sign for a pair of alpha second quantized operators
@@ -418,7 +360,7 @@ template <size_t N> class DeterminantImpl : public BitArray<N> {
     /// Return the number of alpha/beta pairs
     int npair() const {
         int count = 0;
-        for (int k = 0; k < nwords_half; ++k) {
+        for (size_t k = 0; k < nwords_half; ++k) {
             count += ui64_bit_count(words_[k] & words_[k + nwords_half]);
         }
         return count;
@@ -469,50 +411,23 @@ template <size_t N> class DeterminantImpl : public BitArray<N> {
         return slater_sign_bbbb(i, j, a, b);
     }
 
-    /// Bitwise OR operator (|)
-    DeterminantImpl<N> operator|(const DeterminantImpl<N>& lhs) const {
-        DeterminantImpl<N> result;
-        for (size_t n = 0; n < nwords_; n++) {
-            result.words_[n] = words_[n] | lhs.words_[n];
-        }
-        return result;
-    }
-
-    /// Bitwise XOR operator (^)
-    DeterminantImpl<N> operator^(const DeterminantImpl<N>& lhs) const {
-        DeterminantImpl<N> result;
-        for (size_t n = 0; n < nwords_; n++) {
-            result.words_[n] = words_[n] ^ lhs.words_[n];
-        }
-        return result;
-    }
-
-    /// Bitwise AND operator (&)
-    DeterminantImpl<N> operator&(const DeterminantImpl<N>& lhs) const {
-        DeterminantImpl<N> result;
-        for (size_t n = 0; n < nwords_; n++) {
-            result.words_[n] = words_[n] & lhs.words_[n];
-        }
-        return result;
-    }
-
-    StringImpl<nbits_half> get_alfa_bits() const {
-        StringImpl<nbits_half> s;
+    BitArray<nbits_half> get_alfa_bits() const {
+        BitArray<nbits_half> s;
         for (size_t i = 0; i < nwords_half; i++) {
             s.set_word(i, words_[i]);
         }
         return s;
     }
 
-    StringImpl<nbits_half> get_beta_bits() const {
-        StringImpl<nbits_half> s;
+    BitArray<nbits_half> get_beta_bits() const {
+        BitArray<nbits_half> s;
         for (size_t i = 0; i < nwords_half; i++) {
             s.set_word(i, words_[nwords_half + i]);
         }
         return s;
     }
 
-    StringImpl<nbits_half> get_bits(DetSpinType spin_type) {
+    BitArray<nbits_half> get_bits(DetSpinType spin_type) {
         return (spin_type == DetSpinType::Alpha ? get_alfa_bits() : get_beta_bits());
     }
 

@@ -49,6 +49,28 @@ inline uint64_t ui64_bit_count(uint64_t x) {
 }
 
 /**
+ * @brief Count the number of bit set to 1 in a uint64_t
+ * @param x the uint64_t integer to test
+ * @return the number of bits that are set to 1
+ *
+ * If available, this function uses SSE4.2 instructions (_mm_popcnt_u64) to speed up the evaluation.
+ */
+inline double ui64_bit_parity(uint64_t x) {
+#ifdef __SSE4_2__
+    // this version is 2.6 times faster than the one below
+    return 1 - 2 * ((_mm_popcnt_u64(x) & 1) == 1);
+#else
+    x = (0x5555555555555555UL & x) + (0x5555555555555555UL & (x >> 1));
+    x = (0x3333333333333333UL & x) + (0x3333333333333333UL & (x >> 2));
+    x = (0x0f0f0f0f0f0f0f0fUL & x) + (0x0f0f0f0f0f0f0f0fUL & (x >> 4));
+    x = (0x00ff00ff00ff00ffUL & x) + (0x00ff00ff00ff00ffUL & (x >> 8));
+    x = (0x0000ffff0000ffffUL & x) + (0x0000ffff0000ffffUL & (x >> 16));
+    x = (0x00000000ffffffffUL & x) + (0x00000000ffffffffUL & (x >> 32));
+    return 1 - 2 * ((x & 1) == 1);
+#endif
+}
+
+/**
  * @brief Bit-scan to find next set bit
  * @param x the uint64_t integer to test
  * @return the index of the least significant 1-bit of x, or if x is zero, returns ~0

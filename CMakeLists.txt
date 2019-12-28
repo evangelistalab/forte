@@ -71,6 +71,8 @@ if(ENABLE_UNTESTED_CODE)
     add_definitions(-DENABLE_UNTESTED_CODE)
 endif()
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-c++1z-extensions") # enabling coverage
+
 # List of CC files
 pybind11_add_module(forte
 src/api/ambit_api.cc
