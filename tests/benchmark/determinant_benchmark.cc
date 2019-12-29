@@ -54,19 +54,19 @@ Determinant det_test =
     make_det_from_string("1001100000000000000000000000000000000000000000000000000000010000",
                          "0001000000000000001000000000000000000000000000000000000000000001");
 
-BENCHMARK(Determinant, count, 10, 10000) {
+BENCHMARK(Determinant, count, 10, 100000) {
     det_test.count_alfa();
     det_test.count_beta();
 }
 
-BENCHMARK_P(Determinant, sign_a, 10, 10000, (std::size_t n)) { det_test.slater_sign_a(n); }
+BENCHMARK_P(Determinant, sign_a, 10, 100000, (std::size_t n)) { det_test.slater_sign_a(n); }
 
 BENCHMARK_P_INSTANCE(Determinant, sign_a, (2));
 BENCHMARK_P_INSTANCE(Determinant, sign_a, (16));
 BENCHMARK_P_INSTANCE(Determinant, sign_a, (32));
 BENCHMARK_P_INSTANCE(Determinant, sign_a, (63));
 
-BENCHMARK_P(Determinant, sign_aa, 10, 10000, (std::size_t m, std::size_t n)) {
+BENCHMARK_P(Determinant, sign_aa, 10, 100000, (std::size_t m, std::size_t n)) {
     det_test.slater_sign_aa(m, n);
 }
 
@@ -75,7 +75,7 @@ BENCHMARK_P_INSTANCE(Determinant, sign_aa, (8, 16));
 BENCHMARK_P_INSTANCE(Determinant, sign_aa, (16, 32));
 BENCHMARK_P_INSTANCE(Determinant, sign_aa, (32, 63));
 
-BENCHMARK_P(Determinant, sign_aaaa, 10, 10000, (int i, int j, int a, int b)) {
+BENCHMARK_P(Determinant, sign_aaaa, 10, 100000, (int i, int j, int a, int b)) {
     det_test.slater_sign_aaaa(i, j, a, b);
 }
 

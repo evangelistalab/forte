@@ -463,9 +463,9 @@ double WFNOperator::s2_direct(DeterminantHashVec& wfn, psi::SharedMatrix& evecs,
                         int ndiff = IJb.count();
                         if (ndiff == 2) {
                             auto Ib_sub = Ib & IJb;
-                            auto j = Ib_sub.lowest_one_index();
+                            auto j = Ib_sub.find_first_one();
                             auto Jb_sub = Jb & IJb;
-                            auto b = Jb_sub.lowest_one_index();
+                            auto b = Jb_sub.find_first_one();
                             if ((i != j) and (a != b) and (i == b) and (j == a)) {
                                 double sign = sign_ia * Ib.slater_sign(j, b);
                                 S2 -= sign * CI * evecs->get(a_sorted_string_list.add(posJ), root);

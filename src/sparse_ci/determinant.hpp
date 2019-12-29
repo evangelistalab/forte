@@ -236,17 +236,6 @@ template <size_t N> class DeterminantImpl : public BitArray<N> {
     /// Return the dimensions for virtual beta orbitals
     std::vector<std::vector<int>> get_bsym_vir(int norb, std::vector<int> act_mo) const;
 
-    /// Return the sign of a_n applied to this determinant
-    /// this version is inefficient and should be used only for testing/debugging
-    double slater_sign_safe(int n) const {
-        size_t count = 0;
-        for (size_t k = 0; k < n; ++k) {
-            if (get_bit(k))
-                count++;
-        }
-        return (count % 2 == 0) ? 1.0 : -1.0;
-    }
-
     /// Return the sign for a single second quantized operator
     /// This function ignores if bit n is set or not
     double slater_sign_a(int n) const {
@@ -263,7 +252,10 @@ template <size_t N> class DeterminantImpl : public BitArray<N> {
     double slater_sign_b(int n) const {
         if constexpr (nbits == 128) {
             // specialization for 64 + 64 bits
-            return ui64_sign(words_[1], n) * parity(ui64_bit_count(words_[0]));
+            return ui64_sign(words_[1], n) * ui64_bit_parity(words_[0]);
+            // the lines below have a bug
+            // static constexpr size_t parity(size_t n) { return 1 - 2 * ((n & 1) == 1); }
+            // return ui64_sign(words_[1], n) * parity(ui64_bit_count(words_[0]));
         } else {
             return slater_sign(n + beta_bit_offset);
         }

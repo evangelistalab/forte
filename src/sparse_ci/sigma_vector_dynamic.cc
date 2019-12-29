@@ -749,7 +749,6 @@ void SigmaVectorDynamic::compute_abab_coupling(const String& detIa, const std::v
             size_t first_J = range_J.first;
             size_t last_J = range_J.second;
             double sigma_I = 0.0;
-            //    size_t num_elements = 0;
             for (size_t posI = first_I; posI < last_I; ++posI) {
                 sigma_I = 0.0;
                 Ib = sorted_dets[posI].get_beta_bits();
@@ -759,18 +758,21 @@ void SigmaVectorDynamic::compute_abab_coupling(const String& detIa, const std::v
                     count_abab_total++;
 #endif
                     // find common bits
-                    IJb = Jb ^ Ib;
+                    IJb = Ib ^ Jb;
                     int ndiff = IJb.count();
                     if (ndiff == 2) {
-                        double H_IJ =
-                            sign_ia * slater_rules_double_alpha_beta_pre(i, a, Ib, Jb, fci_ints_);
+                        uint64_t j = IJb.find_and_clear_first_one();
+                        uint64_t bb = IJb.find_first_one();
+                        const double H_IJ = Ib.slater_sign(j, bb) * fci_ints_->tei_ab(i, j, a, bb);
+//                        double H_IJ =
+//                            sign_ia * slater_rules_double_alpha_beta_pre2(i, a, IJb, fci_ints_);
                         sigma_I += H_IJ * b[posJ];
 #if SIGMA_VEC_DEBUG
                         count_abab++;
 #endif
                     }
                 }
-                temp_sigma_[posI] += sigma_I;
+                temp_sigma_[posI] += sign_ia * sigma_I;
             }
         }
     }

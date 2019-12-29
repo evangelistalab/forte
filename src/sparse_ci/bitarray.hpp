@@ -159,62 +159,122 @@ template <size_t N> class BitArray {
         return c;
     }
 
-    uint64_t lowest_one_index() const {
+    /// Find the first bit set to one
+    /// @return the index of the the first bit, or if all bits are zero, returns ~0
+    uint64_t find_first_one() const {
         for (size_t n = 0; n < nwords_; n++) {
-            uint64_t idx = lowest_one_idx(words_[n]);
-            if (idx != ~uint64_t(0)) {
-                return idx;
+            // find the first word != 0
+            if (words_[n] != uint64_t(0)) {
+                return ui64_find_lowest_one_bit(words_[n]);
             }
         }
         return ~uint64_t(0);
     }
 
-    void clear_lowest_one() {
+    /// Clear the first bit set to one
+    void clear_first_one() {
         for (size_t n = 0; n < nwords_; n++) {
+            // find the first word != 0
             if (words_[n] != uint64_t(0)) {
-                words_[n] = clear_lowest_one_bit(words_[n]);
+                words_[n] = ui64_clear_lowest_one_bit(words_[n]);
                 return;
             }
         }
     }
 
+    /// Find the first bit set to one and clear it
+    /// @return the index of the the first bit, or if all bits are zero, returns ~0
+    uint64_t find_and_clear_first_one() {
+        for (size_t n = 0; n < nwords_; n++) {
+            // find a word that is not 0
+            if (words_[n] != uint64_t(0)) {
+                // get the lowest set bit
+                return ui64_find_and_clear_lowest_one_bit(words_[n]);
+            }
+        }
+        // if the BitArray object is zero then return ~0
+        return ~uint64_t(0);
+    }
+
     /// Return the sign of a_n applied to this determinant
     /// This function ignores if bit n is set or not
     double slater_sign(int n) const {
-        size_t count = 0;
-        // count all the preceeding bits only if we are looking past the first word
-        if (static_cast<size_t>(n) >= bits_per_word) {
-            size_t last_full_word = whichword(n);
-            for (size_t k = 0; k < last_full_word; ++k) {
-                count += ui64_bit_count(words_[k]);
+        if constexpr (N == 64) {
+            return ui64_sign(words_[0], n);
+        } else {
+            size_t count = 0;
+            // count all the preceeding bits only if we are looking past the first word
+            if (static_cast<size_t>(n) >= bits_per_word) {
+                size_t last_full_word = whichword(n);
+                for (size_t k = 0; k < last_full_word; ++k) {
+                    count += ui64_bit_count(words_[k]);
+                }
             }
+            return (count % 2 == 0) ? ui64_sign(getword(n), whichbit(n))
+                                    : -ui64_sign(getword(n), whichbit(n));
         }
-        return (count % 2 == 0) ? ui64_sign(getword(n), whichbit(n))
-                                : -ui64_sign(getword(n), whichbit(n));
     }
 
     /// Return the sign for a pair of second quantized operators
     /// The sign depends only on the number of bits = 1 between n and m
+    /// There are no restrictions on n and m
     double slater_sign(int n, int m) const {
-        // let's first order the numbers so that m <= n
-        if (n < m)
-            std::swap(m, n);
-        size_t word_m = whichword(m);
-        size_t word_n = whichword(n);
-        // if both bits are in the same word use an optimized version
-        if (word_n == word_m) {
-            return ui64_sign(words_[word_n], whichbit(n), whichbit(m));
+        if constexpr (N == 64) {
+            return ui64_sign(words_[0], n, m);
+        } else if constexpr (N == 128) {
+            // XXXXXXXX YYYYYYYY
+            // XmXXXXnX YYYYYYYY (case 1)
+            //   cccc
+            // XmXXXXnX YYYYYYYY (case 1)
+            //   cccccc
+            // cccccc
+            // XmXXXXXX YYYYYnYY (case 2)
+            //   cccccc ccccc
+            // let's first order the numbers so that m <= n
+            if (n < m)
+                std::swap(m, n);
+            size_t word_m = whichword(m);
+            size_t word_n = whichword(n);
+            // if both bits are in the same word use an optimized version
+            if (word_n == word_m) {
+                return ui64_sign(words_[word_n], whichbit(n), whichbit(m));
+            }
+            // count the bits after m in word[m]
+            // count the bits before n in word[n]
+            return ui64_sign_reverse(words_[word_m], whichbit(m)) *
+                   ui64_sign(words_[word_n], whichbit(n));
+        } else {
+            // let's first order the numbers so that m <= n
+            if (n < m)
+                std::swap(m, n);
+            size_t word_m = whichword(m);
+            size_t word_n = whichword(n);
+            // if both bits are in the same word use an optimized version
+            if (word_n == word_m) {
+                return ui64_sign(words_[word_n], whichbit(n), whichbit(m));
+            }
+            size_t count = 0;
+            // count the number of bits in bitween the words of m and n
+            for (size_t k = word_m + 1; k < word_n; ++k) {
+                count += ui64_bit_count(words_[k]);
+            }
+            // count the bits after m in word[m]
+            // count the bits before n in word[n]
+            double sign = ui64_sign_reverse(words_[word_m], whichbit(m)) *
+                          ui64_sign(words_[word_n], whichbit(n));
+            return (count % 2 == 0) ? sign : -sign;
         }
+    }
+
+    /// Return the sign of a_n applied to this determinant
+    /// this version is inefficient and should be used only for testing/debugging
+    double slater_sign_safe(int n) const {
         size_t count = 0;
-        // count the number of bits in bitween the words of m and n
-        for (size_t k = word_m + 1; k < word_n; ++k) {
-            count += ui64_bit_count(words_[k]);
+        for (int k = 0; k < n; ++k) {
+            if (get_bit(k))
+                count++;
         }
-        // count the bits after m in word[m]
-        // count the bits before n in word[n]
-        double sign =
-            ui64_sign_reverse(words_[word_m], whichbit(m)) * ui64_sign(words_[word_n], whichbit(n));
-        return (count % 2 == 0) ? sign : -sign;
+        return (count % 2 == 0) ? 1.0 : -1.0;
     }
 
     struct Hash {

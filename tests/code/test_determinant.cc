@@ -6,6 +6,9 @@
 #include "catch.hpp"
 
 #include "../../src/sparse_ci/determinant.h"
+#include "../../src/sparse_ci/determinant.hpp"
+#include "../../src/sparse_ci/bitarray.hpp"
+#include "test_determinant.hpp"
 
 using namespace forte;
 
@@ -56,6 +59,44 @@ std::vector<int> get_complementary_occupation(const std::vector<int>& occupation
 
 unsigned int Factorial(unsigned int number) {
     return number <= 1 ? number : Factorial(number - 1) * number;
+}
+
+// ==> TESTS <==
+
+// Test that a BitArray object is initialized to zero
+TEST_CASE("Initialization [BitArray]", "[BitArray]") {
+    test_bitarray_init<64>();
+    test_bitarray_init<128>();
+    test_bitarray_init<192>();
+    test_bitarray_init<256>();
+    test_bitarray_init<320>();
+    test_bitarray_init<384>();
+    test_bitarray_init<448>();
+    test_bitarray_init<512>();
+    test_bitarray_init<1024>();
+}
+
+// Test that a BitArray object is initialized to zero
+TEST_CASE("Initialization [DeterminantImpl]", "[DeterminantImpl]") {
+    test_determinantimpl_init<128>();
+    test_determinantimpl_init<256>();
+    test_determinantimpl_init<384>();
+    test_determinantimpl_init<512>();
+    test_determinantimpl_init<640>();
+    test_determinantimpl_init<768>();
+    test_determinantimpl_init<896>();
+    test_determinantimpl_init<1024>();
+}
+
+TEST_CASE("Determinant sign [DeterminantImpl]", "[DeterminantImpl]") {
+    test_determinantimpl_sign_functions<128>();
+    test_determinantimpl_sign_functions<256>();
+    test_determinantimpl_sign_functions<384>();
+    test_determinantimpl_sign_functions<512>();
+    test_determinantimpl_sign_functions<640>();
+    test_determinantimpl_sign_functions<768>();
+    test_determinantimpl_sign_functions<896>();
+    test_determinantimpl_sign_functions<1024>();
 }
 
 TEST_CASE("Empty determinant", "[Determinant]") {

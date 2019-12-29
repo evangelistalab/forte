@@ -36,13 +36,16 @@
 
 namespace forte {
 
-#ifdef SMALL_BITSET
-using String = BitArray<64>;
-using Determinant = DeterminantImpl<128>;
-#else
-using String = BitArray<128>;
-using Determinant = DeterminantImpl<256>;
-#endif
+size_t constexpr Norb = MAX_DET_ORB;
+size_t constexpr Norb2 = 2 * Norb;
+
+//#ifdef SMALL_BITSET
+//using String = BitArray<64>;
+//using Determinant = DeterminantImpl<128>;
+//#else
+using String = BitArray<Norb>;
+using Determinant = DeterminantImpl<Norb2>;
+//#endif
 
 using det_vec = std::vector<Determinant>;
 template <typename T = double>

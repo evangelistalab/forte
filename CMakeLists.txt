@@ -205,7 +205,6 @@ if(MAX_DET_ORB)
     add_definitions(-DMAX_DET_ORB=${MAX_DET_ORB})
 else()
     add_definitions(-DMAX_DET_ORB=64)
-    add_definitions(-DSMALL_BITSET)
 endif()
 
 if(ENABLE_MPI)
@@ -229,7 +228,8 @@ if (ENABLE_ForteTests)
   include_directories(${CMAKE_BINARY_DIR} ${CMAKE_BINARY_DIR}/catch2/src/catch2/single_include)
   add_executable(forte_tests
     src/sparse_ci/bitwise_operations.cc
-    tests/code/test_determinant.cc)
+    tests/code/test_determinant.cc
+    tests/code/test_uint64.cc)
 
   project (forte_benchmarks)
   include_directories(${CMAKE_BINARY_DIR})

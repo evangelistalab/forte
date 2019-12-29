@@ -74,32 +74,32 @@ void CI_RDMS::compute_rdms_dynamic(std::vector<double>& oprdm_a, std::vector<dou
         String det_b = sorted_b_dets[I].get_beta_bits();
 
         for (size_t nda = 0; nda < na_; ++nda) {
-            int p = det_a.lowest_one_index();
+            int p = det_a.find_first_one();
             oprdm_a[p * ncmo_ + p] += CIa;
 
             String det_ac(det_a);
-            det_a.clear_lowest_one();
+            det_a.clear_first_one();
             for (size_t ndaa = nda; ndaa < na_; ++ndaa) {
-                int q = det_ac.lowest_one_index();
+                int q = det_ac.find_first_one();
                 // aa 2-rdm
                 tprdm_aa[p * ncmo3_ + q * ncmo2_ + p * ncmo_ + q] += CIa;
                 tprdm_aa[q * ncmo3_ + p * ncmo2_ + q * ncmo_ + p] += CIa;
                 tprdm_aa[p * ncmo3_ + q * ncmo2_ + q * ncmo_ + p] -= CIa;
                 tprdm_aa[q * ncmo3_ + p * ncmo2_ + p * ncmo_ + q] -= CIa;
 
-                det_ac.clear_lowest_one();
+                det_ac.clear_first_one();
                 // aaa 3rdm
                 String det_acc(det_ac);
                 for (size_t ndaaa = ndaa + 1; ndaaa < na_; ++ndaaa) {
-                    size_t r = det_acc.lowest_one_index();
+                    size_t r = det_acc.find_first_one();
                     fill_3rdm(tprdm_aaa, CIa, p, q, r, p, q, r, true);
-                    det_acc.clear_lowest_one();
+                    det_acc.clear_first_one();
                 }
 
                 // aab 3rdm
                 String det_bc(det_b);
                 for (size_t n = 0; n < nb_; ++n) {
-                    size_t r = det_bc.lowest_one_index();
+                    size_t r = det_bc.find_first_one();
                     tprdm_aab[p * ncmo5_ + q * ncmo4_ + r * ncmo3_ + p * ncmo2_ + q * ncmo_ + r] +=
                         CIa;
                     tprdm_aab[p * ncmo5_ + q * ncmo4_ + r * ncmo3_ + q * ncmo2_ + p * ncmo_ + r] -=
@@ -109,15 +109,15 @@ void CI_RDMS::compute_rdms_dynamic(std::vector<double>& oprdm_a, std::vector<dou
                     tprdm_aab[q * ncmo5_ + p * ncmo4_ + r * ncmo3_ + q * ncmo2_ + p * ncmo_ + r] +=
                         CIa;
 
-                    det_bc.clear_lowest_one();
+                    det_bc.clear_first_one();
                 }
             }
 
             String det_bc(det_b);
             for (size_t n = 0; n < nb_; ++n) {
-                size_t q = det_bc.lowest_one_index();
+                size_t q = det_bc.find_first_one();
                 tprdm_ab[p * ncmo3_ + q * ncmo2_ + p * ncmo_ + q] += CIa;
-                det_bc.clear_lowest_one();
+                det_bc.clear_first_one();
             }
         }
         det_a = sorted_b_dets[I].get_alfa_bits();
@@ -125,32 +125,32 @@ void CI_RDMS::compute_rdms_dynamic(std::vector<double>& oprdm_a, std::vector<dou
         size_t Ib = a_sorted_string_list_.add(I);
         double CIb = evecs_->get(Ib, root1_) * evecs_->get(Ib, root2_);
         for (size_t ndb = 0; ndb < nb_; ++ndb) {
-            int p = det_b.lowest_one_index();
+            int p = det_b.find_first_one();
 
             // b -1rdm
             oprdm_b[p * ncmo_ + p] += CIb;
             String det_bc(det_b);
             for (size_t ndbb = ndb; ndbb < nb_; ++ndbb) {
-                size_t q = det_bc.lowest_one_index();
+                size_t q = det_bc.find_first_one();
                 // bb-2rdm
                 tprdm_bb[p * ncmo3_ + q * ncmo2_ + p * ncmo_ + q] += CIb;
                 tprdm_bb[q * ncmo3_ + p * ncmo2_ + q * ncmo_ + p] += CIb;
                 tprdm_bb[p * ncmo3_ + q * ncmo2_ + q * ncmo_ + p] -= CIb;
                 tprdm_bb[q * ncmo3_ + p * ncmo2_ + p * ncmo_ + q] -= CIb;
-                det_bc.clear_lowest_one();
+                det_bc.clear_first_one();
 
                 // bbb-3rdm
                 String det_bcc(det_bc);
                 for (size_t ndbbb = ndbb + 1; ndbbb < nb_; ++ndbbb) {
-                    size_t r = det_bcc.lowest_one_index();
+                    size_t r = det_bcc.find_first_one();
                     fill_3rdm(tprdm_bbb, CIa, p, q, r, p, q, r, true);
-                    det_bcc.clear_lowest_one();
+                    det_bcc.clear_first_one();
                 }
 
                 // abb - 3rdm
                 String det_ac(det_a);
                 for (size_t n = 0; n < na_; ++n) {
-                    size_t r = det_ac.lowest_one_index();
+                    size_t r = det_ac.find_first_one();
                     tprdm_abb[r * ncmo5_ + p * ncmo4_ + q * ncmo3_ + r * ncmo2_ + p * ncmo_ + q] +=
                         CIb;
                     tprdm_abb[r * ncmo5_ + p * ncmo4_ + q * ncmo3_ + r * ncmo2_ + q * ncmo_ + p] -=
@@ -160,10 +160,10 @@ void CI_RDMS::compute_rdms_dynamic(std::vector<double>& oprdm_a, std::vector<dou
                     tprdm_abb[r * ncmo5_ + q * ncmo4_ + p * ncmo3_ + r * ncmo2_ + q * ncmo_ + p] +=
                         CIb;
 
-                    det_ac.clear_lowest_one();
+                    det_ac.clear_first_one();
                 }
             }
-            det_b.clear_lowest_one();
+            det_b.clear_first_one();
         }
     }
     outfile->Printf("\n  Diag takes %1.6f", diag.get());
@@ -194,9 +194,9 @@ void CI_RDMS::compute_rdms_dynamic(std::vector<double>& oprdm_a, std::vector<dou
                 if (ndiff == 2) {
                     // 1-rdm
                     String Ia_sub = Ia & IJa;
-                    u_int64_t p = Ia_sub.lowest_one_index();
+                    u_int64_t p = Ia_sub.find_first_one();
                     String Ja_sub = Ja & IJa;
-                    u_int64_t q = Ja_sub.lowest_one_index();
+                    u_int64_t q = Ja_sub.find_first_one();
 
                     double Csq = CI * evecs_->get(b_sorted_string_list_.add(J), root2_);
                     double value = Csq * Ia.slater_sign(p, q);
@@ -207,7 +207,7 @@ void CI_RDMS::compute_rdms_dynamic(std::vector<double>& oprdm_a, std::vector<dou
                     auto Iac = Ia;
                     Iac ^= Ia_sub;
                     for (size_t nbit_a = 1; nbit_a < na_; nbit_a++) {
-                        uint64_t m = Iac.lowest_one_index();
+                        uint64_t m = Iac.find_first_one();
                         tprdm_aa[p * ncmo3_ + m * ncmo2_ + q * ncmo_ + m] += value;
                         tprdm_aa[m * ncmo3_ + p * ncmo2_ + q * ncmo_ + m] -= value;
                         tprdm_aa[m * ncmo3_ + p * ncmo2_ + m * ncmo_ + q] += value;
@@ -218,11 +218,11 @@ void CI_RDMS::compute_rdms_dynamic(std::vector<double>& oprdm_a, std::vector<dou
                         tprdm_aa[m * ncmo3_ + q * ncmo2_ + m * ncmo_ + p] += value;
                         tprdm_aa[q * ncmo3_ + m * ncmo2_ + m * ncmo_ + p] -= value;
 
-                        Iac.clear_lowest_one();
+                        Iac.clear_first_one();
 
                         auto Ibc = Ib;
                         for (size_t idx = 0; idx < nb_; ++idx) {
-                            uint64_t n = Ibc.lowest_one_index();
+                            uint64_t n = Ibc.find_first_one();
                             tprdm_aab[p * ncmo5_ + m * ncmo4_ + n * ncmo3_ + q * ncmo2_ +
                                       m * ncmo_ + n] += value;
                             tprdm_aab[p * ncmo5_ + m * ncmo4_ + n * ncmo3_ + m * ncmo2_ +
@@ -240,19 +240,19 @@ void CI_RDMS::compute_rdms_dynamic(std::vector<double>& oprdm_a, std::vector<dou
                                       p * ncmo_ + n] += value;
                             tprdm_aab[m * ncmo5_ + q * ncmo4_ + n * ncmo3_ + p * ncmo2_ +
                                       m * ncmo_ + n] -= value;
-                            Ibc.clear_lowest_one();
+                            Ibc.clear_first_one();
                         }
                     }
                     auto Ibc = Ib;
                     for (size_t nidx = 0; nidx < nb_; ++nidx) {
-                        uint64_t n = Ibc.lowest_one_index();
+                        uint64_t n = Ibc.find_first_one();
                         tprdm_ab[p * ncmo3_ + n * ncmo2_ + q * ncmo_ + n] += value;
                         tprdm_ab[q * ncmo3_ + n * ncmo2_ + p * ncmo_ + n] += value;
-                        Ibc.clear_lowest_one();
+                        Ibc.clear_first_one();
 
                         String Ibcc = Ibc;
                         for (size_t idx = nidx + 1; idx < nb_; ++idx) {
-                            uint64_t m = Ibcc.lowest_one_index();
+                            uint64_t m = Ibcc.find_first_one();
                             tprdm_abb[p * ncmo5_ + m * ncmo4_ + n * ncmo3_ + q * ncmo2_ +
                                       m * ncmo_ + n] += value;
                             tprdm_abb[p * ncmo5_ + m * ncmo4_ + n * ncmo3_ + q * ncmo2_ +
@@ -270,35 +270,35 @@ void CI_RDMS::compute_rdms_dynamic(std::vector<double>& oprdm_a, std::vector<dou
                                       n * ncmo_ + m] += value;
                             tprdm_abb[q * ncmo5_ + n * ncmo4_ + m * ncmo3_ + p * ncmo2_ +
                                       m * ncmo_ + n] -= value;
-                            Ibcc.clear_lowest_one();
+                            Ibcc.clear_first_one();
                         }
                     }
                     // 3-rdm
                     String Iacc = Ia ^ Ia_sub;
                     for (size_t id = 1; id < na_; ++id) {
-                        uint64_t n = Iacc.lowest_one_index();
+                        uint64_t n = Iacc.find_first_one();
                         String I_n(Iacc);
-                        I_n.clear_lowest_one(); // TODO: not clear what is going on here (Francesco)
+                        I_n.clear_first_one(); // TODO: not clear what is going on here (Francesco)
                         for (size_t idd = id + 1; idd < na_; ++idd) {
                             // while( I_n > 0 ){
-                            uint64_t m = I_n.lowest_one_index();
+                            uint64_t m = I_n.find_first_one();
                             fill_3rdm(tprdm_aaa, value, p, n, m, q, n, m, false);
-                            I_n.clear_lowest_one();
+                            I_n.clear_first_one();
                         }
-                        Iacc.clear_lowest_one();
+                        Iacc.clear_first_one();
                     }
 
                 } else if (ndiff == 4) {
                     // 2-rdm
                     auto Ia_sub = Ia & IJa;
-                    uint64_t p = Ia_sub.lowest_one_index();
-                    Ia_sub.clear_lowest_one();
-                    uint64_t q = Ia_sub.lowest_one_index();
+                    uint64_t p = Ia_sub.find_first_one();
+                    Ia_sub.clear_first_one();
+                    uint64_t q = Ia_sub.find_first_one();
 
                     auto Ja_sub = Ja & IJa;
-                    uint64_t r = Ja_sub.lowest_one_index();
-                    Ja_sub.clear_lowest_one();
-                    uint64_t s = Ja_sub.lowest_one_index();
+                    uint64_t r = Ja_sub.find_first_one();
+                    Ja_sub.clear_first_one();
+                    uint64_t s = Ja_sub.find_first_one();
 
                     double Csq = CI * evecs_->get(b_sorted_string_list_.add(J), root2_);
                     double value = Csq * Ia.slater_sign(p, q) * Ja.slater_sign(r, s);
@@ -317,14 +317,14 @@ void CI_RDMS::compute_rdms_dynamic(std::vector<double>& oprdm_a, std::vector<dou
                     String Iac(Ia);
                     Iac ^= Ia_sub;
                     for (size_t nda = 1; nda < na_; ++nda) {
-                        uint64_t n = Iac.lowest_one_index();
+                        uint64_t n = Iac.find_first_one();
                         fill_3rdm(tprdm_aaa, value, p, q, n, r, s, n, false);
-                        Iac.clear_lowest_one();
+                        Iac.clear_first_one();
                     }
 
                     String Ibc = Ib;
                     for (size_t ndb = 0; ndb < nb_; ++ndb) {
-                        uint64_t n = Ibc.lowest_one_index();
+                        uint64_t n = Ibc.find_first_one();
                         tprdm_aab[p * ncmo5_ + q * ncmo4_ + n * ncmo3_ + r * ncmo2_ + s * ncmo_ +
                                   n] += value;
                         tprdm_aab[p * ncmo5_ + q * ncmo4_ + n * ncmo3_ + s * ncmo2_ + r * ncmo_ +
@@ -342,23 +342,23 @@ void CI_RDMS::compute_rdms_dynamic(std::vector<double>& oprdm_a, std::vector<dou
                                   n] += value;
                         tprdm_aab[r * ncmo5_ + s * ncmo4_ + n * ncmo3_ + q * ncmo2_ + p * ncmo_ +
                                   n] -= value;
-                        Ibc.clear_lowest_one();
+                        Ibc.clear_first_one();
                     }
 
                 } else if (ndiff == 6) {
                     auto Ia_sub = Ia & IJa;
-                    uint64_t p = Ia_sub.lowest_one_index();
-                    Ia_sub.clear_lowest_one();
-                    uint64_t q = Ia_sub.lowest_one_index();
-                    Ia_sub.clear_lowest_one();
-                    uint64_t r = Ia_sub.lowest_one_index();
+                    uint64_t p = Ia_sub.find_first_one();
+                    Ia_sub.clear_first_one();
+                    uint64_t q = Ia_sub.find_first_one();
+                    Ia_sub.clear_first_one();
+                    uint64_t r = Ia_sub.find_first_one();
 
                     auto Ja_sub = Ja & IJa;
-                    uint64_t s = Ja_sub.lowest_one_index();
-                    Ja_sub.clear_lowest_one();
-                    uint64_t t = Ja_sub.lowest_one_index();
-                    Ja_sub.clear_lowest_one();
-                    uint64_t u = Ja_sub.lowest_one_index();
+                    uint64_t s = Ja_sub.find_first_one();
+                    Ja_sub.clear_first_one();
+                    uint64_t t = Ja_sub.find_first_one();
+                    Ja_sub.clear_first_one();
+                    uint64_t u = Ja_sub.find_first_one();
                     double Csq = CI * evecs_->get(b_sorted_string_list_.add(J), root2_);
                     double el = Csq * Ia.slater_sign(p, q) * Ia.slater_sign(r) *
                                 Ja.slater_sign(s, t) * Ja.slater_sign(u);
@@ -395,9 +395,9 @@ void CI_RDMS::compute_rdms_dynamic(std::vector<double>& oprdm_a, std::vector<dou
 
                 if (ndiff == 2) {
                     auto Ib_sub = Ib & IJb;
-                    uint64_t p = Ib_sub.lowest_one_index();
+                    uint64_t p = Ib_sub.find_first_one();
                     auto Jb_sub = Jb & IJb;
-                    uint64_t q = Jb_sub.lowest_one_index();
+                    uint64_t q = Jb_sub.find_first_one();
                     double Csq = CI * evecs_->get(a_sorted_string_list_.add(J), root2_);
 
                     double value = Csq * Ib.slater_sign(p, q);
@@ -406,7 +406,7 @@ void CI_RDMS::compute_rdms_dynamic(std::vector<double>& oprdm_a, std::vector<dou
                     auto Ibc = Ib;
                     Ibc ^= Ib_sub;
                     for (size_t ndb = 1; ndb < nb_; ++ndb) {
-                        uint64_t m = Ibc.lowest_one_index();
+                        uint64_t m = Ibc.find_first_one();
                         tprdm_bb[p * ncmo3_ + m * ncmo2_ + q * ncmo_ + m] += value;
                         tprdm_bb[m * ncmo3_ + p * ncmo2_ + q * ncmo_ + m] -= value;
                         tprdm_bb[m * ncmo3_ + p * ncmo2_ + m * ncmo_ + q] += value;
@@ -417,11 +417,11 @@ void CI_RDMS::compute_rdms_dynamic(std::vector<double>& oprdm_a, std::vector<dou
                         tprdm_bb[m * ncmo3_ + q * ncmo2_ + m * ncmo_ + p] += value;
                         tprdm_bb[q * ncmo3_ + m * ncmo2_ + m * ncmo_ + p] -= value;
 
-                        Ibc.clear_lowest_one();
+                        Ibc.clear_first_one();
 
                         String Iac = Ia;
                         for (size_t idx = 0; idx < na_; ++idx) {
-                            uint64_t n = Iac.lowest_one_index();
+                            uint64_t n = Iac.find_first_one();
                             tprdm_abb[n * ncmo5_ + p * ncmo4_ + m * ncmo3_ + n * ncmo2_ +
                                       q * ncmo_ + m] += value;
                             tprdm_abb[n * ncmo5_ + p * ncmo4_ + m * ncmo3_ + n * ncmo2_ +
@@ -439,19 +439,19 @@ void CI_RDMS::compute_rdms_dynamic(std::vector<double>& oprdm_a, std::vector<dou
                                       m * ncmo_ + p] += value;
                             tprdm_abb[n * ncmo5_ + m * ncmo4_ + q * ncmo3_ + n * ncmo2_ +
                                       p * ncmo_ + m] -= value;
-                            Iac.clear_lowest_one();
+                            Iac.clear_first_one();
                         }
                     }
                     auto Iac = Ia;
                     for (size_t nidx = 0; nidx < na_; ++nidx) {
-                        uint64_t n = Iac.lowest_one_index();
+                        uint64_t n = Iac.find_first_one();
                         tprdm_ab[n * ncmo3_ + p * ncmo2_ + n * ncmo_ + q] += value;
                         tprdm_ab[n * ncmo3_ + q * ncmo2_ + n * ncmo_ + p] += value;
-                        Iac.clear_lowest_one();
+                        Iac.clear_first_one();
 
                         auto Iacc = Iac;
                         for (size_t midx = nidx + 1; midx < na_; ++midx) {
-                            uint64_t m = Iacc.lowest_one_index();
+                            uint64_t m = Iacc.find_first_one();
                             tprdm_aab[n * ncmo5_ + m * ncmo4_ + p * ncmo3_ + n * ncmo2_ +
                                       m * ncmo_ + q] += value;
                             tprdm_aab[n * ncmo5_ + m * ncmo4_ + p * ncmo3_ + m * ncmo2_ +
@@ -469,7 +469,7 @@ void CI_RDMS::compute_rdms_dynamic(std::vector<double>& oprdm_a, std::vector<dou
                                       n * ncmo_ + p] += value;
                             tprdm_aab[m * ncmo5_ + n * ncmo4_ + q * ncmo3_ + n * ncmo2_ +
                                       m * ncmo_ + p] -= value;
-                            Iacc.clear_lowest_one();
+                            Iacc.clear_first_one();
                         }
                     }
                     // 3-rdm
@@ -477,26 +477,26 @@ void CI_RDMS::compute_rdms_dynamic(std::vector<double>& oprdm_a, std::vector<dou
                     Ibcc ^= Ib_sub;
                     for (size_t ndb = 1; ndb < nb_; ++ndb) {
                         // while(Ibcc >0){
-                        uint64_t n = Ibcc.lowest_one_index();
-                        Ibcc.clear_lowest_one();
+                        uint64_t n = Ibcc.find_first_one();
+                        Ibcc.clear_first_one();
                         String I_n = Ibcc;
                         for (size_t ndbb = ndb + 1; ndbb < nb_; ++ndbb) {
                             // while( I_n > 0){
-                            uint64_t m = I_n.lowest_one_index();
+                            uint64_t m = I_n.find_first_one();
                             fill_3rdm(tprdm_bbb, value, p, m, n, q, m, n, false);
-                            I_n.clear_lowest_one();
+                            I_n.clear_first_one();
                         }
                     }
                 } else if (ndiff == 4) {
                     auto Ib_sub = Ib & IJb;
-                    uint64_t p = Ib_sub.lowest_one_index();
-                    Ib_sub.clear_lowest_one();
-                    uint64_t q = Ib_sub.lowest_one_index();
+                    uint64_t p = Ib_sub.find_first_one();
+                    Ib_sub.clear_first_one();
+                    uint64_t q = Ib_sub.find_first_one();
 
                     auto Jb_sub = Jb & IJb;
-                    uint64_t r = Jb_sub.lowest_one_index();
-                    Jb_sub.clear_lowest_one();
-                    uint64_t s = Jb_sub.lowest_one_index();
+                    uint64_t r = Jb_sub.find_first_one();
+                    Jb_sub.clear_first_one();
+                    uint64_t s = Jb_sub.find_first_one();
 
                     double Csq = CI * evecs_->get(a_sorted_string_list_.add(J), root2_);
                     double value = Csq * Ib.slater_sign(p, q) * Jb.slater_sign(r, s);
@@ -514,13 +514,13 @@ void CI_RDMS::compute_rdms_dynamic(std::vector<double>& oprdm_a, std::vector<dou
                     auto Ibc = Ib;
                     Ibc ^= Ib_sub;
                     for (size_t ndb = 1; ndb < nb_; ++ndb) {
-                        uint64_t n = Ibc.lowest_one_index();
+                        uint64_t n = Ibc.find_first_one();
                         fill_3rdm(tprdm_bbb, value, p, q, n, r, s, n, false);
-                        Ibc.clear_lowest_one();
+                        Ibc.clear_first_one();
                     }
                     auto Iac = Ia;
                     for (size_t nda = 0; nda < na_; ++nda) {
-                        uint64_t n = Iac.lowest_one_index();
+                        uint64_t n = Iac.find_first_one();
                         tprdm_abb[n * ncmo5_ + p * ncmo4_ + q * ncmo3_ + n * ncmo2_ + r * ncmo_ +
                                   s] += value;
                         tprdm_abb[n * ncmo5_ + p * ncmo4_ + q * ncmo3_ + n * ncmo2_ + s * ncmo_ +
@@ -539,22 +539,22 @@ void CI_RDMS::compute_rdms_dynamic(std::vector<double>& oprdm_a, std::vector<dou
                         tprdm_abb[n * ncmo5_ + s * ncmo4_ + r * ncmo3_ + n * ncmo2_ + p * ncmo_ +
                                   q] -= value;
 
-                        Iac.clear_lowest_one();
+                        Iac.clear_first_one();
                     }
                 } else if (ndiff == 6) {
                     auto Ib_sub = Ib & IJb;
-                    uint64_t p = Ib_sub.lowest_one_index();
-                    Ib_sub.clear_lowest_one();
-                    uint64_t q = Ib_sub.lowest_one_index();
-                    Ib_sub.clear_lowest_one();
-                    uint64_t r = Ib_sub.lowest_one_index();
+                    uint64_t p = Ib_sub.find_first_one();
+                    Ib_sub.clear_first_one();
+                    uint64_t q = Ib_sub.find_first_one();
+                    Ib_sub.clear_first_one();
+                    uint64_t r = Ib_sub.find_first_one();
 
                     auto Jb_sub = Jb & IJb;
-                    uint64_t s = Jb_sub.lowest_one_index();
-                    Jb_sub.clear_lowest_one();
-                    uint64_t t = Jb_sub.lowest_one_index();
-                    Jb_sub.clear_lowest_one();
-                    uint64_t u = Jb_sub.lowest_one_index();
+                    uint64_t s = Jb_sub.find_first_one();
+                    Jb_sub.clear_first_one();
+                    uint64_t t = Jb_sub.find_first_one();
+                    Jb_sub.clear_first_one();
+                    uint64_t u = Jb_sub.find_first_one();
                     double Csq = CI * evecs_->get(a_sorted_string_list_.add(J), root2_);
                     double el = Csq * Ib.slater_sign(p, q) * Ib.slater_sign(r) *
                                 Jb.slater_sign(s, t) * Jb.slater_sign(u);
@@ -586,9 +586,9 @@ void CI_RDMS::make_ab(SortedStringList a_sorted_string_list_,
             if (ndiff == 2) {
                 local_timer t2;
                 auto Ia_d = detIa & detIJa_common;
-                uint64_t p = Ia_d.lowest_one_index();
+                uint64_t p = Ia_d.find_first_one();
                 auto Ja_d = detJa & detIJa_common;
-                uint64_t s = Ja_d.lowest_one_index();
+                uint64_t s = Ja_d.find_first_one();
 
                 const auto& range_J = a_sorted_string_list_.range(detJa);
                 size_t first_I = range_I.first;
@@ -607,9 +607,9 @@ void CI_RDMS::make_ab(SortedStringList a_sorted_string_list_,
                         if (nbdiff == 2) {
                             double Csq = CI * evecs_->get(a_sorted_string_list_.add(J), root2_);
                             auto Ib_sub = Ib & IJb;
-                            uint64_t q = Ib_sub.lowest_one_index();
+                            uint64_t q = Ib_sub.find_first_one();
                             auto Jb_sub = Jb & IJb;
-                            uint64_t r = Jb_sub.lowest_one_index();
+                            uint64_t r = Jb_sub.find_first_one();
 
                             double value =
                                 Csq * sign_Ips * Ib.slater_sign(q, r); // * ui64_slater_sign(Jb,r);
@@ -618,7 +618,7 @@ void CI_RDMS::make_ab(SortedStringList a_sorted_string_list_,
                             auto Iac(detIa);
                             Iac ^= Ia_d;
                             for (size_t d = 1; d < na_; ++d) {
-                                uint64_t n = Iac.lowest_one_index();
+                                uint64_t n = Iac.find_first_one();
                                 tprdm_aab[p * ncmo5_ + n * ncmo4_ + q * ncmo3_ + s * ncmo2_ +
                                           n * ncmo_ + r] += value;
                                 tprdm_aab[n * ncmo5_ + p * ncmo4_ + q * ncmo3_ + s * ncmo2_ +
@@ -628,12 +628,12 @@ void CI_RDMS::make_ab(SortedStringList a_sorted_string_list_,
                                 tprdm_aab[p * ncmo5_ + n * ncmo4_ + q * ncmo3_ + n * ncmo2_ +
                                           s * ncmo_ + r] -= value;
 
-                                Iac.clear_lowest_one();
+                                Iac.clear_first_one();
                             }
                             auto Ibc(Ib);
                             Ibc ^= Ib_sub;
                             for (size_t d = 1; d < nb_; ++d) {
-                                uint64_t n = Ibc.lowest_one_index();
+                                uint64_t n = Ibc.find_first_one();
                                 tprdm_abb[p * ncmo5_ + q * ncmo4_ + n * ncmo3_ + s * ncmo2_ +
                                           r * ncmo_ + n] += value;
                                 tprdm_abb[p * ncmo5_ + q * ncmo4_ + n * ncmo3_ + s * ncmo2_ +
@@ -643,19 +643,19 @@ void CI_RDMS::make_ab(SortedStringList a_sorted_string_list_,
                                 tprdm_abb[p * ncmo5_ + n * ncmo4_ + q * ncmo3_ + s * ncmo2_ +
                                           r * ncmo_ + n] -= value;
 
-                                Ibc.clear_lowest_one();
+                                Ibc.clear_first_one();
                             }
                         } else if (nbdiff == 4) {
                             double Csq = CI * evecs_->get(a_sorted_string_list_.add(J), root2_);
                             auto Ib_sub = Ib & IJb;
-                            uint64_t q = Ib_sub.lowest_one_index();
-                            Ib_sub.clear_lowest_one();
-                            uint64_t r = Ib_sub.lowest_one_index();
+                            uint64_t q = Ib_sub.find_first_one();
+                            Ib_sub.clear_first_one();
+                            uint64_t r = Ib_sub.find_first_one();
 
                             auto Jb_sub = Jb & IJb;
-                            uint64_t t = Jb_sub.lowest_one_index();
-                            Jb_sub.clear_lowest_one();
-                            uint64_t u = Jb_sub.lowest_one_index();
+                            uint64_t t = Jb_sub.find_first_one();
+                            Jb_sub.clear_first_one();
+                            uint64_t u = Jb_sub.find_first_one();
 
                             double value = Csq * sign_IJ *
                                            Ib.slater_sign(q, r) * // ui64_slater_sign(Ib,r) *
@@ -676,14 +676,14 @@ void CI_RDMS::make_ab(SortedStringList a_sorted_string_list_,
                 local_timer t4;
                 // Get aa-aa part of aab 3rdm
                 auto Ia_sub = detIa & detIJa_common;
-                uint64_t p = Ia_sub.lowest_one_index();
-                Ia_sub.clear_lowest_one();
-                uint64_t q = Ia_sub.lowest_one_index();
+                uint64_t p = Ia_sub.find_first_one();
+                Ia_sub.clear_first_one();
+                uint64_t q = Ia_sub.find_first_one();
 
                 auto Ja_sub = detJa & detIJa_common;
-                uint64_t s = Ja_sub.lowest_one_index();
-                Ja_sub.clear_lowest_one();
-                uint64_t t = Ja_sub.lowest_one_index();
+                uint64_t s = Ja_sub.find_first_one();
+                Ja_sub.clear_first_one();
+                uint64_t t = Ja_sub.find_first_one();
 
                 const auto& range_J = a_sorted_string_list_.range(detJa);
                 size_t first_I = range_I.first;
@@ -706,9 +706,9 @@ void CI_RDMS::make_ab(SortedStringList a_sorted_string_list_,
                         if (nbdiff == 2) {
                             double Csq = CI * evecs_->get(a_sorted_string_list_.add(J), root2_);
                             auto Ib_sub = Ib & IJb;
-                            uint64_t r = Ib_sub.lowest_one_index();
+                            uint64_t r = Ib_sub.find_first_one();
                             auto Jb_sub = Jb & IJb;
-                            uint64_t u = Jb_sub.lowest_one_index();
+                            uint64_t u = Jb_sub.find_first_one();
                             double el = Csq * sign * Ib.slater_sign(r) * Jb.slater_sign(u);
 
                             tprdm_aab[p * ncmo5_ + q * ncmo4_ + r * ncmo3_ + s * ncmo2_ +

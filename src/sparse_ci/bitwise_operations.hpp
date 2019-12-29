@@ -75,7 +75,7 @@ inline double ui64_bit_parity(uint64_t x) {
  * @param x the uint64_t integer to test
  * @return the index of the least significant 1-bit of x, or if x is zero, returns ~0
  */
-inline uint64_t lowest_one_idx(uint64_t x) {
+inline uint64_t ui64_find_lowest_one_bit(uint64_t x) {
 #if defined(__GNUC__) || defined(__clang__)
     // optimized version using builtin functions
     return __builtin_ffsll(x) - 1;
@@ -106,7 +106,7 @@ inline uint64_t lowest_one_idx(uint64_t x) {
  * @param x the uint64_t word
  * @return a modified version of x with the lowest bit set to 1 turned into a 0
  */
-inline uint64_t clear_lowest_one_bit(uint64_t x) { return x & (x - 1); }
+inline uint64_t ui64_clear_lowest_one_bit(uint64_t x) { return x & (x - 1); }
 
 /**
  * @brief Find the index of the lowest bit set in a uint64_t word and clear it. A modified version
@@ -114,8 +114,8 @@ inline uint64_t clear_lowest_one_bit(uint64_t x) { return x & (x - 1); }
  * @param x the uint64_t integer to test
  * @return the index of the least significant 1-bit of x, or if x is zero, returns ~0
  */
-inline uint64_t find_and_clear_lowest_one_bit(uint64_t& x) {
-    uint64_t result = lowest_one_idx(x);
+inline uint64_t ui64_find_and_clear_lowest_one_bit(uint64_t& x) {
+    uint64_t result = ui64_find_lowest_one_bit(x);
     x = x & (x - 1);
     return result;
 }

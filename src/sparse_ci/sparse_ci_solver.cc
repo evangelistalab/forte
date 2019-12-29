@@ -101,7 +101,7 @@ void SparseCISolver::diagonalize_hamiltonian_map(const DeterminantHashVec& space
         //        diagonalize_dl_direct(space, op, evals, evecs, nroot, multiplicity);
     } else if (diag_method == Dynamic) {
         diagonalize_dl_dynamic(space, evals, evecs, nroot, multiplicity);
-    } else {
+    } else { // DLSolver
         diagonalize_dl(space, op, evals, evecs, nroot, multiplicity);
     }
 }
