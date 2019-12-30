@@ -93,10 +93,21 @@ TEST_CASE("Determinant sign [DeterminantImpl]", "[DeterminantImpl]") {
     test_determinantimpl_sign_functions<256>();
     test_determinantimpl_sign_functions<384>();
     test_determinantimpl_sign_functions<512>();
-    test_determinantimpl_sign_functions<640>();
-    test_determinantimpl_sign_functions<768>();
-    test_determinantimpl_sign_functions<896>();
+//    test_determinantimpl_sign_functions<640>();
+//    test_determinantimpl_sign_functions<768>();
+//    test_determinantimpl_sign_functions<896>();
     test_determinantimpl_sign_functions<1024>();
+}
+
+TEST_CASE("Determinant count [DeterminantImpl]", "[DeterminantImpl]") {
+    test_determinantimpl_count_functions<128>();
+    test_determinantimpl_count_functions<256>();
+    test_determinantimpl_count_functions<384>();
+    test_determinantimpl_count_functions<512>();
+    test_determinantimpl_count_functions<640>();
+    test_determinantimpl_count_functions<768>();
+    test_determinantimpl_count_functions<896>();
+    test_determinantimpl_count_functions<1024>();
 }
 
 TEST_CASE("Empty determinant", "[Determinant]") {
