@@ -196,10 +196,10 @@ double FCISolver::compute_energy() {
     SolverStatus converged = SolverStatus::NotConverged;
 
     if (print_) {
-        outfile->Printf("\n  ==> Diagonalizing Hamiltonian <==\n");
-        outfile->Printf("\n  ----------------------------------------");
-        outfile->Printf("\n    Iter.      Avg. Energy       Delta_E");
-        outfile->Printf("\n  ----------------------------------------");
+        outfile->Printf("\n\n  ==> Diagonalizing Hamiltonian <==\n");
+        outfile->Printf("\n  -----------------------------------------------------");
+        outfile->Printf("\n    Iter.      Avg. Energy       Delta_E     Res. Norm");
+        outfile->Printf("\n  -----------------------------------------------------");
     }
 
     double old_avg_energy = 0.0;
@@ -217,14 +217,21 @@ double FCISolver::compute_energy() {
         converged = dls.update();
 
         if (converged != SolverStatus::Collapse) {
+            // compute the average energy
             double avg_energy = 0.0;
             for (size_t r = 0; r < nroot_; ++r) {
                 avg_energy += dls.eigenvalues()->get(r);
             }
             avg_energy /= static_cast<double>(nroot_);
+
+            // compute the average residual
+            auto r = dls.residuals();
+            double avg_residual =
+                std::accumulate(r.begin(), r.end(), 0.0) / static_cast<double>(nroot_);
+
             if (print_) {
-                outfile->Printf("\n    %3d  %20.12f  %+.3e", real_cycle, avg_energy,
-                                avg_energy - old_avg_energy);
+                outfile->Printf("\n    %3d  %20.12f  %+.3e  %+.3e", real_cycle, avg_energy,
+                                avg_energy - old_avg_energy, avg_residual);
             }
             old_avg_energy = avg_energy;
             real_cycle++;
@@ -235,7 +242,7 @@ double FCISolver::compute_energy() {
     }
 
     if (print_) {
-        outfile->Printf("\n  ----------------------------------------");
+        outfile->Printf("\n  -----------------------------------------------------");
         if (converged == SolverStatus::Converged) {
             outfile->Printf("\n  The Davidson-Liu algorithm converged in %d iterations.",
                             real_cycle);

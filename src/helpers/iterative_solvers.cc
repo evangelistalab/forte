@@ -242,6 +242,25 @@ void DavidsonLiuSolver::form_correction_vectors() {
     }
 }
 
+void DavidsonLiuSolver::compute_residual_norm() {
+    double* lambda_p = lambda->pointer();
+    double** b_p = b_->pointer();
+    double** alpha_p = alpha->pointer();
+    double** sigma_p = sigma_->pointer();
+
+    for (size_t k = 0; k < nroot_; k++) { // loop over roots
+        residual_[k] = 0.0;
+        for (size_t I = 0; I < size_; I++) { // loop over elements
+            double r = 0.0;
+            for (size_t i = 0; i < basis_size_; i++) {
+                r += alpha_p[i][k] * (sigma_p[I][i] - lambda_p[k] * b_p[i][I]);
+            }
+            residual_[k] += std::pow(r, 2.0);
+        }
+        residual_[k] = std::sqrt(residual_[k]);
+    }
+}
+
 void DavidsonLiuSolver::project_out_roots(psi::SharedMatrix v) {
     double** v_p = v->pointer();
     for (size_t k = 0; k < nroot_; k++) {
@@ -350,6 +369,7 @@ void DavidsonLiuSolver::collapse_vectors() {
 }
 
 bool DavidsonLiuSolver::check_convergence() {
+    compute_residual_norm();
     // check convergence on all roots
     bool has_converged = false;
     converged_ = 0;

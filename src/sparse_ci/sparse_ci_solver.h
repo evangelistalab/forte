@@ -45,7 +45,6 @@
 #define BIGNUM 1E100
 #define MAXIT 100
 
-
 namespace forte {
 
 enum DiagonalizationMethod { Full, DLSolver, DLString, DLDisk, MPI, Sparse, Direct, Dynamic };
@@ -94,8 +93,11 @@ class SparseCISolver {
     /// Enable/disable root projection
     void set_root_project(bool value);
 
-    /// Set convergence threshold
+    /// Set the energy convergence threshold
     void set_e_convergence(double value);
+
+    /// Set the residual 2-norm convergence threshold
+    void set_r_convergence(double value);
 
     /// The maximum number of iterations for the Davidson algorithm
     void set_maxiter_davidson(int value);
@@ -145,12 +147,12 @@ class SparseCISolver {
                                psi::SharedVector& evals, psi::SharedMatrix& evecs, int nroot,
                                int multiplicity);
     /// Use a dynamic algorithm that does not require substitution lists
-    void diagonalize_dl_dynamic(const DeterminantHashVec& space,
-                                psi::SharedVector& evals, psi::SharedMatrix& evecs, int nroot,
-                                int multiplicity);
+    void diagonalize_dl_dynamic(const DeterminantHashVec& space, psi::SharedVector& evals,
+                                psi::SharedMatrix& evecs, int nroot, int multiplicity);
 
-    void diagonalize_davidson_liu_solver(const std::vector<Determinant>& space, psi::SharedVector& evals,
-                                         psi::SharedMatrix& evecs, int nroot, int multiplicity);
+    void diagonalize_davidson_liu_solver(const std::vector<Determinant>& space,
+                                         psi::SharedVector& evals, psi::SharedMatrix& evecs,
+                                         int nroot, int multiplicity);
 
     //   void diagonalize_davidson_liu_string(
     //       const std::vector<Determinant>& space, psi::SharedVector& evals,
@@ -165,12 +167,12 @@ class SparseCISolver {
 
     /// The Davidson-Liu algorithm
     bool davidson_liu_solver(const std::vector<Determinant>& space, SigmaVector* sigma_vector,
-                             psi::SharedVector Eigenvalues, psi::SharedMatrix Eigenvectors, int nroot,
-                             int multiplicity);
+                             psi::SharedVector Eigenvalues, psi::SharedMatrix Eigenvectors,
+                             int nroot, int multiplicity);
 
     bool davidson_liu_solver_map(const DeterminantHashVec& space, SigmaVector* sigma_vector,
-                                 psi::SharedVector Eigenvalues, psi::SharedMatrix Eigenvectors, int nroot,
-                                 int multiplicity);
+                                 psi::SharedVector Eigenvalues, psi::SharedMatrix Eigenvectors,
+                                 int nroot, int multiplicity);
     /// Use a OMP parallel algorithm?
     bool parallel_ = false;
     /// Print details?
@@ -183,6 +185,8 @@ class SparseCISolver {
     bool root_project_ = false;
     /// The energy convergence threshold
     double e_convergence_ = 1.0e-12;
+    /// The residual 2-norm convergence threshold
+    double r_convergence_ = 1.0e-6;
     /// Number of collapse vectors per roots
     int ncollapse_per_root_ = 2;
     /// Number of max subspace vectors per roots
@@ -209,6 +213,6 @@ class SparseCISolver {
     /// The SigmaVector object for Davidson-Liu algorithm
     SigmaVector* sigma_vec_ = nullptr;
 };
-}
+} // namespace forte
 
 #endif // _sparse_ci_h_

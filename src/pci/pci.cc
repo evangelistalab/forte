@@ -404,6 +404,7 @@ void ProjectorCI::set_options(std::shared_ptr<ForteOptions> options) {
     }
 
     sparse_solver_.set_e_convergence(options->get_double("PCI_E_CONVERGENCE"));
+    sparse_solver_.set_r_convergence(options->get_double("PCI_R_CONVERGENCE"));
     sparse_solver_.set_maxiter_davidson(options->get_int("DL_MAXITER"));
 }
 
@@ -2034,7 +2035,7 @@ void ProjectorCI::compute_couplings_half(const det_hashvec& dets, size_t cut_siz
     andBits.flip();
     for (size_t i = 0; i < cut_size; ++i) {
         andBits = andBits & dets[i]; // common_occupation(andBits, dets[i]);
-        orBits = orBits | dets[i];    // union_occupation(orBits, dets[i]);
+        orBits = orBits | dets[i];   // union_occupation(orBits, dets[i]);
     }
     Determinant actBits = andBits ^ orBits; // different_occupation(andBits, orBits);
 

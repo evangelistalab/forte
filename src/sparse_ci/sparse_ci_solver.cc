@@ -63,6 +63,8 @@ void SparseCISolver::set_spin_project(bool value) { spin_project_ = value; }
 
 void SparseCISolver::set_e_convergence(double value) { e_convergence_ = value; }
 
+void SparseCISolver::set_r_convergence(double value) { r_convergence_ = value; }
+
 void SparseCISolver::set_maxiter_davidson(int value) { maxiter_davidson_ = value; }
 
 void SparseCISolver::set_spin_project_full(bool value) { spin_project_full_ = value; }
@@ -708,10 +710,10 @@ bool SparseCISolver::davidson_liu_solver(const std::vector<Determinant>& space,
                                          SigmaVector* sigma_vector, psi::SharedVector Eigenvalues,
                                          psi::SharedMatrix Eigenvectors, int nroot,
                                          int multiplicity) {
-    //    print_details_ = true;
     size_t fci_size = sigma_vector->size();
     DavidsonLiuSolver dls(fci_size, nroot);
     dls.set_e_convergence(e_convergence_);
+    dls.set_r_convergence(r_convergence_);
     dls.set_print_level(0);
 
     // allocate vectors
@@ -855,6 +857,7 @@ bool SparseCISolver::davidson_liu_solver_map(const DeterminantHashVec& space,
     size_t fci_size = sigma_vector->size();
     DavidsonLiuSolver dls(fci_size, nroot);
     dls.set_e_convergence(e_convergence_);
+    dls.set_r_convergence(r_convergence_);
     dls.set_print_level(0);
 
     // allocate vectors

@@ -129,6 +129,8 @@ class DavidsonLiuSolver {
     bool check_convergence();
     /// Build the correction vectors
     void form_correction_vectors();
+    /// Compute the residual
+    void compute_residual_norm();
     /// Project out undesired roots
     void project_out_roots(psi::SharedMatrix v);
     /// Normalize the correction vectors

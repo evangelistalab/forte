@@ -241,6 +241,8 @@ def register_pci_options(forte_options):
 
     forte_options.add_double("PCI_E_CONVERGENCE", 1.0e-8,
                              "The energy convergence criterion")
+    forte_options.add_double("PCI_R_CONVERGENCE", 1.0,
+                             "The residual 2-norm convergence criterion")
 
     forte_options.add_bool("PCI_FAST_EVAR", False,
                            "Use a fast (sparse) estimate of the energy?")
