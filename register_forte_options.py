@@ -535,10 +535,10 @@ def register_davidson_liu_options(forte_options):
     forte_options.add_int(
         "DL_COLLAPSE_PER_ROOT", 2,
         "The number of trial vector to retain after collapsing")
-    forte_options.add_int("DL_SUBSPACE_PER_ROOT", 8,
+    forte_options.add_int("DL_SUBSPACE_PER_ROOT", 10,
                           "The maxim number of trial vectors")
-    forte_options.add_int("SIGMA_VECTOR_MAX_MEMORY", 10000000,
-                          "The maxim number of trial vectors")
+    forte_options.add_int("SIGMA_VECTOR_MAX_MEMORY", 67108864,
+                          "The maximum number of doubles stored in memory in the sigma vector algorithm")
 
 
 def register_asci_options(forte_options):

@@ -73,11 +73,23 @@ template <size_t N> class BitArray {
 
     /// equal operator
     bool operator==(const BitArray<N>& lhs) const {
-        for (size_t n = 0; n < nwords_; ++n) {
-            if (this->words_[n] != lhs.words_[n])
-                return false;
+        if constexpr (N == 64) {
+            return (this->words_[0] == lhs.words_[0]);
+        } else if constexpr (N == 128) {
+            return ((this->words_[0] == lhs.words_[0]) and (this->words_[1] == lhs.words_[1]));
+        } else if constexpr (N == 192) {
+            return ((this->words_[0] == lhs.words_[0]) and (this->words_[1] == lhs.words_[1]) and
+                    (this->words_[2] == lhs.words_[2]));
+        } else if constexpr (N == 256) {
+            return ((this->words_[0] == lhs.words_[0]) and (this->words_[1] == lhs.words_[1]) and
+                    (this->words_[2] == lhs.words_[2]) and (this->words_[3] == lhs.words_[3]));
+        } else {
+            for (size_t n = 0; n < nwords_; ++n) {
+                if (this->words_[n] != lhs.words_[n])
+                    return false;
+            }
+            return true;
         }
-        return true;
         //        // a possibly faster version without if
         //        bool val(true);
         //        for (size_t n = 0, bool val = true; n < nwords_; ++n) {
@@ -89,14 +101,36 @@ template <size_t N> class BitArray {
     /// Less than operator
     // TODO PERF: speedup with templated loop unrolling or avoid if
     bool operator<(const BitArray<N>& lhs) const {
-        for (size_t n = nwords_; n > 1;) {
-            --n;
-            if (this->words_[n] > lhs.words_[n])
-                return false;
-            if (this->words_[n] < lhs.words_[n])
-                return true;
+        if constexpr (N == 64) {
+            return (this->words_[0] < lhs.words_[0]);
+        } else if constexpr (N == 128) {
+            //  W1  W0  <
+            //  >   >   F
+            //  >   =   F
+            //  >   <   F
+            //  =   >   F
+            //  =   =   F
+            //  <   =   T
+            //  <   >   T
+            //  <   <   T
+            //  =   <   T
+            return (this->words_[1] < lhs.words_[1]) or
+                   ((this->words_[1] == lhs.words_[1]) and (this->words_[0] < lhs.words_[0]));
+            //            if (this->words_[1] > lhs.words_[1])
+            //                return false;
+            //            if (this->words_[1] < lhs.words_[1])
+            //                return true;
+            //            return this->words_[0] < lhs.words_[0];
+        } else {
+            for (size_t n = nwords_; n > 1;) {
+                --n;
+                if (this->words_[n] > lhs.words_[n])
+                    return false;
+                if (this->words_[n] < lhs.words_[n])
+                    return true;
+            }
+            return this->words_[0] < lhs.words_[0];
         }
-        return this->words_[0] < lhs.words_[0];
     }
 
     /// Bitwise OR operator (|)

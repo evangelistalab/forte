@@ -154,7 +154,7 @@ class DavidsonLiuSolver {
     /// The number of collapse vectors for each root
     size_t collapse_per_root_ = 2;
     /// The maximum subspace size for each root
-    size_t subspace_per_root_ = 4;
+    size_t subspace_per_root_ = 5;
     /// The number of vectors to retain after collapse
     size_t collapse_size_;
     /// The maximum subspace size
