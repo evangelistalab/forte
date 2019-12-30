@@ -33,7 +33,6 @@
 #include "psi4/libmints/vector.h"
 #include "psi4/libmints/matrix.h"
 
-
 namespace forte {
 
 /// Result of the update step
@@ -119,6 +118,8 @@ class DavidsonLiuSolver {
     /// Produce the final eigenvectors and eigenvalues
     void get_results();
 
+    std::vector<double> residuals() const;
+
   private:
     // ==> Class Private Functions <==
 
@@ -189,10 +190,12 @@ class DavidsonLiuSolver {
     psi::SharedVector lambda_old;
     /// Diagonal elements of the Hamiltonian
     psi::SharedVector h_diag;
+    /// Norm of the residuals
+    std::vector<double> residual_;
 
     /// Approximate eigenstates to project out
     std::vector<sparse_vec> project_out_;
 };
-}
+} // namespace forte
 
 #endif // _iterative_solvers_h_
