@@ -117,6 +117,7 @@ void FCISolver::set_options(std::shared_ptr<ForteOptions> options) {
     set_ntrial_per_root(options->get_int("NTRIAL_PER_ROOT"));
     set_print(options->get_int("PRINT"));
     set_e_convergence(options->get_double("E_CONVERGENCE"));
+    set_r_convergence(options->get_double("R_CONVERGENCE"));
 }
 
 /*
@@ -143,6 +144,7 @@ double FCISolver::compute_energy() {
 
     DavidsonLiuSolver dls(fci_size, nroot_);
     dls.set_e_convergence(e_convergence_);
+    dls.set_r_convergence(r_convergence_);
     dls.set_print_level(print_);
     dls.set_collapse_per_root(collapse_per_root_);
     dls.set_subspace_per_root(subspace_per_root_);

@@ -174,6 +174,9 @@ void FCI_MO::read_options() {
     // energy convergence
     econv_ = options_->get_double("E_CONVERGENCE");
 
+    // residual 2-norm convergence
+    rconv_ = options_->get_double("R_CONVERGENCE");
+
     // nuclear repulsion
     e_nuc_ = integral_->nuclear_repulsion_energy();
 
@@ -890,6 +893,7 @@ void FCI_MO::Diagonalize_H(const vecdet& p_space, const int& multi, const int& n
     DiagonalizationMethod diag_method = DLSolver;
     std::string sigma_method = options_->get_str("SIGMA_BUILD_TYPE");
     sparse_solver.set_e_convergence(econv_);
+    sparse_solver.set_r_convergence(rconv_);
     sparse_solver.set_spin_project(true);
     sparse_solver.set_maxiter_davidson(options_->get_int("DL_MAXITER"));
     sparse_solver.set_guess_dimension(options_->get_int("DL_GUESS_SIZE"));

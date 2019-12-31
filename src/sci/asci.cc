@@ -79,6 +79,7 @@ void ASCI::pre_iter_preparation() {
     sparse_solver_.set_parallel(true);
     sparse_solver_.set_force_diag(options_->get_bool("FORCE_DIAG_METHOD"));
     sparse_solver_.set_e_convergence(options_->get_double("E_CONVERGENCE"));
+    sparse_solver_.set_r_convergence(options_->get_double("R_CONVERGENCE"));
     sparse_solver_.set_maxiter_davidson(options_->get_int("DL_MAXITER"));
     sparse_solver_.set_spin_project_full(options_->get_bool("SPIN_PROJECT_FULL"));
     sparse_solver_.set_spin_project(options_->get_bool("SCI_PROJECT_OUT_SPIN_CONTAMINANTS"));

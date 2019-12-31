@@ -299,6 +299,9 @@ class FCI_MO : public ActiveSpaceMethod {
     /// Convergence
     double econv_;
 
+    /// Convergence
+    double rconv_;
+
     /// Multiplicity
     int multi_;
     int twice_ms_;
