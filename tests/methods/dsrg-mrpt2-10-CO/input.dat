@@ -3,7 +3,7 @@
 import forte
 
 refcasscf    = -112.881481489289456
-refpt2       = -113.10564937477
+refpt2       = -113.10564937040 #-113.10564937477
 refpt2_relax = -113.10890275212
 refdm        =    0.078159
 refdm_relax  =    0.008678
@@ -46,6 +46,7 @@ set forte {
   relax_ref          once
   dsrg_dipole        true
   e_convergence      12
+  r_convergence      10
 }
 
 Eforte, wfn_cas = energy('forte', ref_wfn=wfn_cas, return_wfn=True)
