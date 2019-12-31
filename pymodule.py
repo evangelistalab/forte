@@ -310,6 +310,91 @@ def orbital_projection(ref_wfn, options, mo_space_info):
         return mo_space_info
 
 
+def ASET2_embedding_driver(state, state_weights_map, scf_info, ref_wfn, mo_space_info, options, ints):
+    # options.set_bool('FORTE', 'EMBEDDING', True)
+    # options.set_str('FORTE', 'EMBEDDING_CUTOFF_METHOD', 'CORRELATED_BATH')
+    # options.set_str('FORTE', 'EMBEDDING_SPECIAL', 'INNER_LAYER')
+
+    frag_corr_level = options.get_str('FRAG_CORR_LEVEL')
+    env_corr_level = options.get_str('ENV_CORR_LEVEL')
+
+    # mo_space_info: fragment all active, environment restricted, core frozen
+    # mo_space_info_active: fragment-C,A,V, environment and core frozen
+    mo_space_info_active = forte.build_inner_space(ref_wfn, options, mo_space_info)
+
+    # Build fragment and f-e integrals
+    ints_f = forte.make_forte_integrals(ref_wfn, options, mo_space_info_active)
+    #ints_f_1 = ints_f # TODO: How the hell can I deep copy this!!!!?>??>?
+    ints_e = forte.make_forte_integrals(ref_wfn, options, mo_space_info)
+    # compute higher-level with mo_space_info_active(inner) and methods in options, -> E_high(origin)
+    options.set_str('FORTE', 'CORR_LEVEL', frag_corr_level)
+    options.set_bool('FORTE', 'SEMI_CANONICAL', False)
+    forte.forte_options.update_psi_options(options)
+    energy_high = forte_driver(state_weights_map, scf_info, forte.forte_options, ints_f, mo_space_info_active)
+
+    # Form rdms for interaction correlation computation
+    rdms = forte.RHF_DENSITY(scf_info, mo_space_info).rhf_rdms()
+    if options.get_str('fragment_density') == "CASSCF":
+        as_ints = forte.make_active_space_ints(mo_space_info_active, ints_f, "ACTIVE", ["RESTRICTED_DOCC"])
+        rdms = forte.build_casscf_density(state, 2, scf_info, forte.forte_options, mo_space_info_active, mo_space_info, as_ints) # TODO:Fix this function
+    if options.get_str('fragment_density') == "FCI":
+        state_map = forte.to_state_nroots_map(state_weights_map)
+        as_ints_full = forte.make_active_space_ints(mo_space_info, ints_e, "ACTIVE", ["RESTRICTED_DOCC"])
+        as_solver_full = forte.make_active_space_solver(options.get_str('ACTIVE_SPACE_SOLVER'),
+                                                       state_map, scf_info,
+                                                       mo_space_info, as_ints_full,
+                                                       forte.forte_options)
+        state_energies_list = as_solver_full.compute_energy()
+        rdms = as_solver_full.compute_average_rdms(state_weights_map, 3)
+    # if options.get_str('downfold_density') == "MRDSRG": NotImplemented
+
+    # DSRG-MRPT2(mo_space_info(outer), rdms)
+    options.set_str('FORTE', 'CORR_LEVEL', env_corr_level)
+    forte.forte_options.update_psi_options(options)
+
+    # Semi-Canonicalize A+B
+    semi = forte.SemiCanonical(mo_space_info, ints_e, forte.forte_options)
+    semi.semicanonicalize(rdms, 2) # TODO: should automatically determine max_rdm_level
+    dsrg = forte.make_dsrg_method(options.get_str('ENV_CORRELATION_SOLVER'), # TODO: ensure here always run canonical mr-dsrg
+                                  rdms, scf_info, forte.forte_options, ints_e, mo_space_info)
+
+    Edsrg = dsrg.compute_energy()
+    E_ref1 = psi4.core.scalar_variable("DSRG REFERENCE ENERGY")
+    E_corr = Edsrg - E_ref1
+
+    # eH rotation
+    ints_dressed = dsrg.compute_Heff_actv()
+    state_map = forte.to_state_nroots_map(state_weights_map)
+    ints_f.build_from_asints(ints_dressed)
+
+    # Compute MRDSRG-in-PT2 energy (folded)
+    options.set_str('FORTE', 'CORR_LEVEL', frag_corr_level)
+    forte.forte_options.update_psi_options(options)
+    energy_high_relaxed = forte_driver(state_weights_map, scf_info, forte.forte_options, ints_f, mo_space_info_active)
+
+    psi4.core.print_out("\n ==============Embedding Summary==============")
+    psi4.core.print_out("\n E(fragment, unrelaxed) = {:10.8f}".format(energy_high))
+    psi4.core.print_out("\n E_corr(env correlation) = {:10.8f}".format(E_corr))
+    psi4.core.print_out("\n E(embedding, unrelaxed) = {:10.8f}".format(energy_high + E_corr))
+    psi4.core.print_out("\n E(fragment, Hbar2 relaxed) = {:10.8f}".format(energy_high_relaxed))
+    psi4.core.print_out("\n E(embedding, Hbar2 relaxed) = {:10.8f}".format(energy_high_relaxed + E_corr))
+    psi4.core.print_out("\n ==============MRDSRG embedding done============== \n")
+
+    # Update RDMs
+    ints_f.build_from_asints(ints_dressed)
+
+    # Update Integrals
+    ints_e.build_from_another_ints(ints_f, 44)
+
+    psi4.core.print_out("\n")
+    psi4.core.print_out("\n ==============Update and Verify RDMs============== \n")
+    rdms = forte.RHF_DENSITY(scf_info, mo_space_info).rhf_rdms()
+    if options.get_str('fragment_density') == "CASSCF":
+        as_ints = forte.make_active_space_ints(mo_space_info_active, ints_f, "ACTIVE", ["RESTRICTED_DOCC"])
+        rdms = forte.build_casscf_density(state, 2, scf_info, forte.forte_options, mo_space_info_active, mo_space_info, as_ints)
+
+    return energy_high_relaxed + E_corr
+
 def run_forte(name, **kwargs):
     r"""Function encoding sequence of PSI module and plugin calls so that
     forte can be called via :py:func:`~driver.energy`. For post-scf plugins.
@@ -385,6 +470,8 @@ def run_forte(name, **kwargs):
     # Run a method
     if (job_type == 'NEWDRIVER'):
         energy = forte_driver(state_weights_map, scf_info, forte.forte_options, ints, mo_space_info)
+    elif (job_type == 'ASET2_EMBEDDING'):
+        energy = aset2_embedding_driver(state, state_weights_map, scf_info, ref_wfn, mo_space_info, options, ints)
     else:
         energy = forte.forte_old_methods(ref_wfn, options, ints, mo_space_info)
 
