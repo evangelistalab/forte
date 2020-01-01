@@ -29,6 +29,9 @@ set globals{
   mcscf_diis_start       8
 }
 
+Ecasscf, wfn = energy('casscf', return_wfn=True)
+compare_values(refcasscf,variable("CURRENT ENERGY"),9,"MCSCF energy") #TEST
+
 set forte{
   active_space_solver     fci    
   correlation_solver      dsrg-mrpt3
@@ -46,10 +49,9 @@ set forte{
   int_type               cholesky
   cholesky_tolerance     1e-8
   print_time_profile     true
+  r_convergence          0.1
+  e_convergence          11
 }
-
-Ecasscf, wfn = energy('casscf', return_wfn=True)
-compare_values(refcasscf,variable("CURRENT ENERGY"),9,"MCSCF energy") #TEST
 
 energy('forte', ref_wfn=wfn)
 compare_values(refdsrgpt3,variable("CURRENT ENERGY"),8,"DSRG-MRPT3 relaxed energy") #TEST

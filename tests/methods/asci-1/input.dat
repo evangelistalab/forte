@@ -36,6 +36,8 @@ set forte {
   asci_tdet 10000
   asci_max_cycle 6   
   asci_e_convergence 1e-5
+  r_convergence 1e-1
+  diag_algorithm dynamic
 }                                        
                                          
 Escf, scf_wfn = energy('scf', return_wfn=True)

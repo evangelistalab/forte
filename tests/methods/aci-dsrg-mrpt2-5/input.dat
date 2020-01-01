@@ -64,6 +64,7 @@ set forte {
   charge 0
   print_no true
   relax_ref once
+  r_convergence 0.1
 }
 set_num_threads(8)
 
