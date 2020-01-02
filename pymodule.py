@@ -330,7 +330,7 @@ def adv_embedding_driver(state, state_weights_map, scf_info, ref_wfn, mo_space_i
     psi4.core.print_out("\n Integral test (e original): int_e ncmo: {:d}".format(ints_e.ncmo()))
     # compute higher-level with mo_space_info_active(inner) and methods in options, -> E_high(origin)
     options.set_str('FORTE', 'CORR_LEVEL', frag_corr_level)
-    options.set_bool('FORTE', 'SEMI_CANONICAL', False)
+    #options.set_bool('FORTE', 'SEMI_CANONICAL', False)
     forte.forte_options.update_psi_options(options)
     energy_high = forte_driver(state_weights_map, scf_info, forte.forte_options, ints_f, mo_space_info_active)
     psi4.core.print_out("\n Integral test (f_1, after ldsrg2): oei_a(4, 13) = {:10.8f}".format(ints_f.oei_a(4, 13)))
@@ -356,12 +356,13 @@ def adv_embedding_driver(state, state_weights_map, scf_info, ref_wfn, mo_space_i
     forte.forte_options.update_psi_options(options)
 
     # Semi-Canonicalize A+B
-    semi = forte.SemiCanonical(mo_space_info, ints_e, forte.forte_options)
-    semi.semicanonicalize(rdms, 2) # TODO: should automatically determine max_rdm_level
+    # semi = forte.SemiCanonical(mo_space_info, ints_e, forte.forte_options)
+    # semi.semicanonicalize(rdms, 2) # TODO: should automatically determine max_rdm_level
     dsrg = forte.make_dsrg_method(options.get_str('ENV_CORRELATION_SOLVER'), # TODO: ensure here always run canonical mr-dsrg
                                   rdms, scf_info, forte.forte_options, ints_e, mo_space_info)
 
     Edsrg = dsrg.compute_energy()
+    psi4.core.set_scalar_variable('UNRELAXED ENERGY', Edsrg)
     E_ref1 = psi4.core.scalar_variable("DSRG REFERENCE ENERGY")
     E_corr = Edsrg - E_ref1
     # E_corr = Edsrg - E_cas_ref
