@@ -3,8 +3,8 @@
 import forte
 memory 500 mb
 
-refcasscf    = -108.951281241892289
-refdsrgpt3   = -109.195144609553296
+refcasscf    = -108.951281241892
+refdsrgpt3   = -109.195144643926 
 
 molecule N2{
   0 1
@@ -49,8 +49,6 @@ set forte{
   int_type               cholesky
   cholesky_tolerance     1e-8
   print_time_profile     true
-  r_convergence          0.1
-  e_convergence          11
 }
 
 energy('forte', ref_wfn=wfn)
