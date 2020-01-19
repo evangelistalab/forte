@@ -551,7 +551,6 @@ SparseCISolver::initial_guess_map(const DeterminantHashVec& space, int nroot, in
     const det_hashvec& detmap = space.wfn_hash();
 
     for (const Determinant& det : detmap) {
-        outfile->Printf("\n%s -> %+12.9f", str(det, 128).c_str(), fci_ints_->energy(det));
         smallest.push_back(std::make_pair(fci_ints_->energy(det), det));
     }
     std::sort(smallest.begin(), smallest.end());
@@ -590,11 +589,6 @@ SparseCISolver::initial_guess_map(const DeterminantHashVec& space, int nroot, in
         nguess = guess_dets_pos.size();
     }
 
-    for (size_t I = 0; I < nguess; I++) {
-        const Determinant& detI = guess_dets_pos[I].first;
-        outfile->Printf("\n|%3d> = %s", I, str(detI, 128).c_str());
-    }
-
     // Form the S^2 operator matrix and diagonalize it
     Matrix S2("S^2", nguess, nguess);
     for (size_t I = 0; I < nguess; I++) {
@@ -602,9 +596,6 @@ SparseCISolver::initial_guess_map(const DeterminantHashVec& space, int nroot, in
             const Determinant& detI = guess_dets_pos[I].first;
             const Determinant& detJ = guess_dets_pos[J].first;
             double S2IJ = spin2(detI, detJ);
-            if (std::fabs(S2IJ) > 1.0e-6) {
-                outfile->Printf("\n <%3d| S^2 |%3d> = %+12.9f", I, J, S2IJ);
-            }
             S2.set(I, J, S2IJ);
             S2.set(J, I, S2IJ);
         }
