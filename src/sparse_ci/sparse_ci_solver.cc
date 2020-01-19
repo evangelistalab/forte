@@ -551,6 +551,7 @@ SparseCISolver::initial_guess_map(const DeterminantHashVec& space, int nroot, in
     const det_hashvec& detmap = space.wfn_hash();
 
     for (const Determinant& det : detmap) {
+        outfile->Printf("\n%s -> %+12.9f", str(det, 128).c_str(), fci_ints_->energy(det));
         smallest.push_back(std::make_pair(fci_ints_->energy(det), det));
     }
     std::sort(smallest.begin(), smallest.end());
