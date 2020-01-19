@@ -199,7 +199,7 @@ template <size_t N> class BitArray {
         for (size_t n = 0; n < nwords_; n++) {
             // find the first word != 0
             if (words_[n] != uint64_t(0)) {
-                return ui64_find_lowest_one_bit(words_[n]);
+                return ui64_find_lowest_one_bit(words_[n]) + n * bits_per_word;
             }
         }
         return ~uint64_t(0);
@@ -223,7 +223,7 @@ template <size_t N> class BitArray {
             // find a word that is not 0
             if (words_[n] != uint64_t(0)) {
                 // get the lowest set bit
-                return ui64_find_and_clear_lowest_one_bit(words_[n]);
+                return ui64_find_and_clear_lowest_one_bit(words_[n]) + n * bits_per_word;
             }
         }
         // if the BitArray object is zero then return ~0
