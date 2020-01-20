@@ -59,8 +59,13 @@ template <size_t N> class BitArray {
 
     /// set all bits (including unused) to zero
     void zero() {
-        for (size_t n = 0; n < nwords_; n++) {
-            this->words_[n] = word_t(0);
+        if constexpr (N == 64) {
+            words_[0] = word_t(0);
+        } else if constexpr (N == 128) {
+            words_[0] = word_t(0);
+            words_[1] = word_t(0);
+        } else {
+            words_.fill(word_t(0));
         }
     }
 
