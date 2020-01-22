@@ -385,11 +385,11 @@ def adv_embedding_driver(state, state_weights_map, scf_info, ref_wfn, mo_space_i
     psi4.core.print_out("\n Integral test (f_1 after relaxed ldsrg2): oei_a(4, 13) = {:10.8f}".format(ints_f.oei_a(4, 13)))
 
     psi4.core.print_out("\n ==============Embedding Summary==============")
-    psi4.core.print_out("\n E(fragment, unrelaxed) = {:10.8f}".format(energy_high))
-    psi4.core.print_out("\n E_corr(env correlation) = {:10.8f}".format(E_corr))
-    psi4.core.print_out("\n E(embedding, unrelaxed) = {:10.8f}".format(energy_high + E_corr))
-    psi4.core.print_out("\n E(fragment, Hbar2 relaxed) = {:10.8f}".format(energy_high_relaxed))
-    psi4.core.print_out("\n E(embedding, Hbar2 relaxed) = {:10.8f}".format(energy_high_relaxed + E_corr))
+    psi4.core.print_out("\n E(fragment, unrelaxed) = {:10.12f}".format(energy_high))
+    psi4.core.print_out("\n E_corr(env correlation) = {:10.12f}".format(E_corr))
+    psi4.core.print_out("\n E(embedding, unrelaxed) = {:10.12f}".format(energy_high + E_corr))
+    psi4.core.print_out("\n E(fragment, Hbar2 relaxed) = {:10.12f}".format(energy_high_relaxed))
+    psi4.core.print_out("\n E(embedding, Hbar2 relaxed) = {:10.12f}".format(energy_high_relaxed + E_corr))
     psi4.core.print_out("\n ==============MRDSRG embedding done============== \n")
 
     # Update RDMs

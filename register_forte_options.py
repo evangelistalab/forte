@@ -180,6 +180,9 @@ def register_embedding_options(forte_options):
          "LDSRG2_P3", "QDSRG2_P3"],
         "Correlation level of environment (interactive) MR-DSRG (used in mrdsrg code, "
         "LDSRG2_P3 and QDSRG2_P3 not implemented)")
+    forte_options.add_int(
+        "embedding_iterations", 1,
+        "Number of iterations to relax H_bar, use higher number for stronger correlated environment")
 
 def register_mo_space_info_options(forte_options):
     forte_options.add_array(
