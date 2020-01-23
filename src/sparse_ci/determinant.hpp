@@ -1,6 +1,9 @@
 #ifndef _determinant_hpp_
 #define _determinant_hpp_
 
+#include <string>
+#include <vector>
+
 #include "bitarray.hpp"
 #include "bitwise_operations.hpp"
 
@@ -9,9 +12,6 @@ namespace forte {
 #define PERFORMANCE_OPTIMIZATION 0
 
 enum class DetSpinType { Alpha, Beta };
-
-//    /// the type used to represent a word (a 64 bit unsigned integer)
-//    using word_t = uint64_t;
 
 /**
  * @brief A class to represent a Slater determinant with N spin orbitals
@@ -42,7 +42,6 @@ template <size_t N> class DeterminantImpl : public BitArray<N> {
     using BitArray<N>::operator|;
     using BitArray<N>::operator^;
     using BitArray<N>::operator&;
-    //    using BitArray<N>::Hash;
 
     /// the number of bits divided by two
     static constexpr size_t nbits_half = N / 2;
@@ -110,16 +109,7 @@ template <size_t N> class DeterminantImpl : public BitArray<N> {
     void set_beta_bit(size_t pos, bool val) { set_bit(pos + beta_bit_offset, val); }
 
     // Comparison operators
-
     static bool less_than(const DeterminantImpl<N>& rhs, const DeterminantImpl<N>& lhs) {
-        //        for (size_t n = nwords_; n > 1;) {
-        //            --n;
-        //            if (rhs.words_[n] > lhs.words_[n])
-        //                return false;
-        //            if (rhs.words_[n] < lhs.words_[n])
-        //                return true;
-        //        }
-        //        return rhs.words_[0] < lhs.words_[0];
         return rhs < lhs;
     }
 

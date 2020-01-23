@@ -1,8 +1,3 @@
-//#include <string>
-//#include <cstddef>
-//#include <iostream>
-//#include <vector>
-
 #include "sparse_ci/determinant.h"
 #include "integrals/active_space_integrals.h"
 

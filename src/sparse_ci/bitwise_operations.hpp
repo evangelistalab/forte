@@ -1,10 +1,6 @@
 #ifndef _bitwise_operations_hpp_
 #define _bitwise_operations_hpp_
 
-#include <cstdint>
-#include <cmath>
-#include <algorithm>
-
 #ifdef __SSE4_2__
 #include <nmmintrin.h>
 #endif

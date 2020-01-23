@@ -1,10 +1,35 @@
+/*
+ * @BEGIN LICENSE
+ *
+ * Forte: an open-source plugin to Psi4 (https://github.com/psi4/psi4)
+ * that implements a variety of quantum chemistry methods for strongly
+ * correlated electrons.
+ *
+ * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER,
+ * AUTHORS).
+ *
+ * The copyrights for code used from other parties are included in
+ * the corresponding files.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program.  If not, see http://www.gnu.org/licenses/.
+ *
+ * @END LICENSE
+ */
+
 #ifndef _bitarray_hpp_
 #define _bitarray_hpp_
 
-#include <string>
-#include <cstddef>
-#include <iostream>
-#include <vector>
 #include <array>
 
 #include "bitwise_operations.hpp"
@@ -15,21 +40,31 @@ namespace forte {
 
 /**
  * @brief This class represents an array of N bits. The bits are stored in
- *        groups called "words". Each word contains 64 bits.
+ *        groups called "words". Each word contains 64 bits stored as
+ *        64-bit unsigned integers.
+ *
+ *        Words are store in a std::array object:
+ *          std::array<word_t, nwords_> words_ = {};
+ *
+ *        BirArray = |--64 bits--| |--64 bits--| |--64 bits--| ...
+ *                       word[0]       word[1]       word[2]
  */
 template <size_t N> class BitArray {
   public:
-    /// the type used to represent a word (a 64 bit unsigned integer)
+    /// alias for the type used to represent a word (a 64 bit unsigned integer)
     using word_t = uint64_t;
 
-    /// the number of bits
+    /// the total number of bits (must be a multiple of 64)
     static constexpr size_t nbits = N;
 
-    /// the number of bits in one word
+    /// the number of bits in one word (64)
     static constexpr size_t bits_per_word = 8 * sizeof(word_t);
 
-    /// this tests that N is a multiple of 64
+    /// this tests that a word has 64 bits
     static_assert(bits_per_word == 64, "The size of a word must be 64 bits");
+
+    /// this tests that N is a multiple of 64
+    static_assert(N % bits_per_word == 0, "The size of the BitArray (N) must be a multiple of 64");
 
     /// the number of words needed to store n bits
     static constexpr size_t bits_to_words(size_t n) {
@@ -44,14 +79,17 @@ template <size_t N> class BitArray {
 
     /// set bit in position pos to the value val
     void set_bit(size_t pos, bool val) {
-        if (val)
-            getword(pos) |= maskbit(pos);
-        else
-            getword(pos) &= ~maskbit(pos);
+        getword(pos) ^= (-val ^ getword(pos)) & maskbit(pos);
+        //        if (val)
+        //            getword(pos) |= maskbit(pos);
+        //        else
+        //            getword(pos) &= ~maskbit(pos);
     }
 
+    /// set a word in position pos
     void set_word(size_t pos, word_t word) { words_[pos] = word; }
 
+    /// return the number of bits
     size_t get_nbits() const { return nbits; }
 
     /// default constructor
@@ -71,9 +109,8 @@ template <size_t N> class BitArray {
 
     /// flip all bits
     void flip() {
-        for (size_t n = 0; n < nwords_; n++) {
-            words_[n] = ~words_[n];
-        }
+        for (word_t& w : words_)
+            w = ~w;
     }
 
     /// equal operator
@@ -104,7 +141,6 @@ template <size_t N> class BitArray {
     }
 
     /// Less than operator
-    // TODO PERF: speedup with templated loop unrolling or avoid if
     bool operator<(const BitArray<N>& lhs) const {
         if constexpr (N == 64) {
             return (this->words_[0] < lhs.words_[0]);
@@ -121,11 +157,6 @@ template <size_t N> class BitArray {
             //  =   <   T
             return (this->words_[1] < lhs.words_[1]) or
                    ((this->words_[1] == lhs.words_[1]) and (this->words_[0] < lhs.words_[0]));
-            //            if (this->words_[1] > lhs.words_[1])
-            //                return false;
-            //            if (this->words_[1] < lhs.words_[1])
-            //                return true;
-            //            return this->words_[0] < lhs.words_[0];
         } else {
             for (size_t n = nwords_; n > 1;) {
                 --n;
@@ -198,41 +229,41 @@ template <size_t N> class BitArray {
         return c;
     }
 
-    /// Find the first bit set to one
+    /// Find the first bit set to one (starting from the lowest index)
     /// @return the index of the the first bit, or if all bits are zero, returns ~0
     uint64_t find_first_one() const {
         for (size_t n = 0; n < nwords_; n++) {
             // find the first word != 0
-            if (words_[n] != uint64_t(0)) {
+            if (words_[n] != word_t(0)) {
                 return ui64_find_lowest_one_bit(words_[n]) + n * bits_per_word;
             }
         }
-        return ~uint64_t(0);
+        return ~word_t(0);
     }
 
-    /// Clear the first bit set to one
+    /// Clear the first bit set to one (starting from the lowest index)
     void clear_first_one() {
         for (size_t n = 0; n < nwords_; n++) {
             // find the first word != 0
-            if (words_[n] != uint64_t(0)) {
+            if (words_[n] != word_t(0)) {
                 words_[n] = ui64_clear_lowest_one_bit(words_[n]);
                 return;
             }
         }
     }
 
-    /// Find the first bit set to one and clear it
+    /// Find the first bit set to one and clear it (starting from the lowest index)
     /// @return the index of the the first bit, or if all bits are zero, returns ~0
     uint64_t find_and_clear_first_one() {
         for (size_t n = 0; n < nwords_; n++) {
             // find a word that is not 0
-            if (words_[n] != uint64_t(0)) {
+            if (words_[n] != word_t(0)) {
                 // get the lowest set bit
                 return ui64_find_and_clear_lowest_one_bit(words_[n]) + n * bits_per_word;
             }
         }
         // if the BitArray object is zero then return ~0
-        return ~uint64_t(0);
+        return ~word_t(0);
     }
 
     /// Return the sign of a_n applied to this determinant
@@ -316,6 +347,7 @@ template <size_t N> class BitArray {
         return (count % 2 == 0) ? 1.0 : -1.0;
     }
 
+    /// Returns a hash value for a BitArray object
     struct Hash {
         std::size_t operator()(const BitArray<N>& d) const {
             if constexpr (N == 64) {
@@ -335,11 +367,16 @@ template <size_t N> class BitArray {
   protected:
     // ==> Private Functions <==
 
+    // These functions are used to address bits in the BitArray.
+    // They should not be used outside the class because they contain details of the implementation.
+
     /// the index of the word where the bit in position pos is found
     static constexpr size_t whichword(size_t pos) noexcept { return pos / bits_per_word; }
 
     /// the word where bit in position pos is found
     word_t& getword(size_t pos) { return words_[whichword(pos)]; }
+
+    /// the word where bit in position pos is found (const version)
     const word_t& getword(size_t pos) const { return words_[whichword(pos)]; }
 
     /// the index of a bit within a word
@@ -352,11 +389,11 @@ template <size_t N> class BitArray {
 
     // ==> Private Data <==
 
-/// The bits stored as a vector of words
 #if PERFORMANCE_OPTIMIZATION
-    word_t words_[nwords_];
+    /// The bits stored as a vector of words (uninitialized)
+    std::array<word_t, nwords_> words_;
 #else
-    //    word_t words_[nwords_] = {}; // all bits are set to zero
+    /// The bits stored as a vector of words (initialized to zero at construction)
     std::array<word_t, nwords_> words_ = {};
 #endif
 };

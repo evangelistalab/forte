@@ -89,7 +89,6 @@ src/gradient_tpdm/backtransform_tpdm.cc
 src/gradient_tpdm/integraltransform_sort_so_tpdm.cc
 src/gradient_tpdm/integraltransform_tpdm_unrestricted.cc
 src/sparse_ci/ci_reference.cc
-src/sparse_ci/bitwise_operations.cc
 src/sparse_ci/determinant_hashvector.cc
 src/sparse_ci/determinant_sq_operator.cc
 src/sparse_ci/determinant_functions.cc
@@ -227,14 +226,12 @@ if (ENABLE_ForteTests)
   project (forte_tests)
   include_directories(${CMAKE_BINARY_DIR} ${CMAKE_BINARY_DIR}/catch2/src/catch2/single_include)
   add_executable(forte_tests
-    src/sparse_ci/bitwise_operations.cc
     tests/code/test_determinant.cc
     tests/code/test_uint64.cc)
 
   project (forte_benchmarks)
   include_directories(${CMAKE_BINARY_DIR})
   add_executable(forte_benchmarks
-    src/sparse_ci/bitwise_operations.cc
     tests/benchmark/determinant_benchmark.cc)
 
 endif (ENABLE_ForteTests)
