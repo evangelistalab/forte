@@ -88,14 +88,31 @@ TEST_CASE("Initialization [DeterminantImpl]", "[DeterminantImpl]") {
     test_determinantimpl_init<1024>();
 }
 
+TEST_CASE("Set/get [BitArray]", "[BitArray]") {
+    test_bitarray_setget<64>();
+    test_bitarray_setget<128>();
+    test_bitarray_setget<192>();
+    test_bitarray_setget<256>();
+    test_bitarray_setget<320>();
+    test_bitarray_setget<384>();
+    test_bitarray_setget<448>();
+    test_bitarray_setget<512>();
+    test_bitarray_setget<1024>();
+}
+
+TEST_CASE("Set/get [DeterminantImpl]", "[DeterminantImpl]") {
+    test_determinantimpl_setget<128>();
+    test_determinantimpl_setget<256>();
+    test_determinantimpl_setget<384>();
+    test_determinantimpl_setget<512>();
+    test_determinantimpl_setget<1024>();
+}
+
 TEST_CASE("Determinant sign [DeterminantImpl]", "[DeterminantImpl]") {
     test_determinantimpl_sign_functions<128>();
     test_determinantimpl_sign_functions<256>();
     test_determinantimpl_sign_functions<384>();
     test_determinantimpl_sign_functions<512>();
-//    test_determinantimpl_sign_functions<640>();
-//    test_determinantimpl_sign_functions<768>();
-//    test_determinantimpl_sign_functions<896>();
     test_determinantimpl_sign_functions<1024>();
 }
 

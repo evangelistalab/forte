@@ -62,7 +62,7 @@ inline double ui64_bit_parity(uint64_t x) {
     x = (0x00ff00ff00ff00ffUL & x) + (0x00ff00ff00ff00ffUL & (x >> 8));
     x = (0x0000ffff0000ffffUL & x) + (0x0000ffff0000ffffUL & (x >> 16));
     x = (0x00000000ffffffffUL & x) + (0x00000000ffffffffUL & (x >> 32));
-    return 1 - 2 * ((x & 1) == 1);
+    return 1. - 2. * ((x & 1) == 1);
 #endif
 }
 

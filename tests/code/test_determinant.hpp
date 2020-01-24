@@ -81,6 +81,7 @@ template <size_t N> std::vector<DeterminantImpl<N>> generate_test_determinants(i
 // Test that a BitArray object is initialized to zero
 template <size_t N> void test_bitarray_init() {
     auto ba = forte::BitArray<N>();
+
     for (size_t i = 0; i < N; i++) {
         REQUIRE(ba.get_bit(i) == 0);
     }
@@ -116,6 +117,46 @@ template <size_t N> void test_determinantimpl_init() {
             REQUIRE(d.slater_sign_aa(i, j) == +1.0);
             REQUIRE(d.slater_sign_bb(i, j) == +1.0);
         }
+    }
+}
+
+// Test that a BitArray object is initialized to zero
+template <size_t N> void test_bitarray_setget() {
+    auto ba = forte::BitArray<N>();
+    std::vector<bool> vals;
+    for (size_t i = 0; i < N; i++) {
+        vals.push_back(rand() % 2);
+        ba.set_bit(i, vals[i]);
+    }
+    for (size_t i = 0; i < N; i++) {
+        REQUIRE(ba.get_bit(i) == vals[i]);
+    }
+    ba.flip();
+    for (size_t i = 0; i < N; i++) {
+        REQUIRE(ba.get_bit(i) == !vals[i]);
+    }
+    ba.zero();
+    for (size_t i = 0; i < N; i++) {
+        REQUIRE(ba.get_bit(i) == 0);
+    }
+}
+
+// Test that a BitArray object is initialized to zero
+template <size_t N> void test_determinantimpl_setget() {
+    auto [d, vals] = generate_random_determinant<N>();
+    for (size_t i = 0; i < N; i++) {
+        d.set_bit(i, vals[i]);
+    }
+    for (size_t i = 0; i < N; i++) {
+        REQUIRE(d.get_bit(i) == vals[i]);
+    }
+    d.flip();
+    for (size_t i = 0; i < N; i++) {
+        REQUIRE(d.get_bit(i) == !vals[i]);
+    }
+    d.zero();
+    for (size_t i = 0; i < N; i++) {
+        REQUIRE(d.get_bit(i) == 0);
     }
 }
 

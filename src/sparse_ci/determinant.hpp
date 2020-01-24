@@ -46,35 +46,34 @@ template <size_t N> class DeterminantImpl : public BitArray<N> {
     /// the number of bits divided by two
     static constexpr size_t nbits_half = N / 2;
 
-    static_assert(N % (128) == 0,
+    static_assert(N % 128 == 0,
                   "The number of bits in the Determinant class must be a multiple of 128");
 
     /// half of the words used to store the bits
-    static constexpr size_t nwords_half = BitArray<N>::nwords_ / 2; // bits_to_words(nbits_half);
+    static constexpr size_t nwords_half = BitArray<N>::nwords_ / 2;
 
     /// the starting bit for beta orbitals
     static constexpr size_t beta_bit_offset = nwords_half * BitArray<N>::bits_per_word;
 
+    /// returns half the number of bits
     size_t get_nbits_half() const { return nbits_half; }
-
-    static constexpr size_t parity(size_t n) { return 1 - 2 * ((n & 1) == 1); }
 
     /// Default constructor
     DeterminantImpl() : BitArray<N>() {}
 
-    /// Default constructor
+    /// Constructor from a bit array
     DeterminantImpl(const BitArray<N>& ba) : BitArray<N>(ba) {}
 
-    //    explicit DeterminantImpl(const std::vector<bool>& occupation);
     /// Construct the determinant from an occupation vector that
     /// specifies the alpha and beta strings.  occupation = [Ia,Ib]
     explicit DeterminantImpl(const std::vector<bool>& occupation_a,
                              const std::vector<bool>& occupation_b) {
-        int size = occupation_a.size();
-        for (int p = 0; p < size; ++p) {
+        int a_size = occupation_a.size();
+        for (int p = 0; p < a_size; ++p)
             set_alfa_bit(p, occupation_a[p]);
+        int b_size = occupation_b.size();
+        for (int p = 0; p < b_size; ++p)
             set_beta_bit(p, occupation_b[p]);
-        }
     }
 
     /// String constructor. Convert a std::string to a determinant.
@@ -91,6 +90,7 @@ template <size_t N> class DeterminantImpl : public BitArray<N> {
             return get_bit(pos);
         }
     }
+
     /// get the value of beta bit pos
     bool get_beta_bit(size_t pos) const {
         if constexpr (nbits == 128) {
@@ -114,21 +114,26 @@ template <size_t N> class DeterminantImpl : public BitArray<N> {
     }
 
     static bool reverse_less_than(const DeterminantImpl<N>& rhs, const DeterminantImpl<N>& lhs) {
-        for (size_t n = nwords_half; n > 0;) {
-            --n;
-            if (rhs.words_[n] > lhs.words_[n])
-                return false;
-            if (rhs.words_[n] < lhs.words_[n])
-                return true;
+        if constexpr (nbits == 128) {
+            return (rhs.words_[0] < lhs.words_[0]) or
+                   ((rhs.words_[0] == lhs.words_[0]) and (rhs.words_[1] < lhs.words_[1]));
+        } else {
+            for (size_t n = nwords_half; n > 0;) {
+                --n;
+                if (rhs.words_[n] > lhs.words_[n])
+                    return false;
+                if (rhs.words_[n] < lhs.words_[n])
+                    return true;
+            }
+            for (size_t n = nwords_; n > nwords_half + 1;) {
+                --n;
+                if (rhs.words_[n] > lhs.words_[n])
+                    return false;
+                if (rhs.words_[n] < lhs.words_[n])
+                    return true;
+            }
+            return rhs.words_[nwords_half] < lhs.words_[nwords_half];
         }
-        for (size_t n = nwords_; n > nwords_half + 1;) {
-            --n;
-            if (rhs.words_[n] > lhs.words_[n])
-                return false;
-            if (rhs.words_[n] < lhs.words_[n])
-                return true;
-        }
-        return rhs.words_[nwords_half] < lhs.words_[nwords_half];
     }
 
     /// Return a vector of occupied alpha orbitals
@@ -243,9 +248,6 @@ template <size_t N> class DeterminantImpl : public BitArray<N> {
         if constexpr (nbits == 128) {
             // specialization for 64 + 64 bits
             return ui64_sign(words_[1], n) * ui64_bit_parity(words_[0]);
-            // the lines below have a bug
-            // static constexpr size_t parity(size_t n) { return 1 - 2 * ((n & 1) == 1); }
-            // return ui64_sign(words_[1], n) * parity(ui64_bit_count(words_[0]));
         } else {
             return slater_sign(n + beta_bit_offset);
         }

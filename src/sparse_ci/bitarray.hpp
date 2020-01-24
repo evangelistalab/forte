@@ -79,11 +79,7 @@ template <size_t N> class BitArray {
 
     /// set bit in position pos to the value val
     void set_bit(size_t pos, bool val) {
-        getword(pos) ^= (-val ^ getword(pos)) & maskbit(pos);
-        //        if (val)
-        //            getword(pos) |= maskbit(pos);
-        //        else
-        //            getword(pos) &= ~maskbit(pos);
+        getword(pos) ^= (-val ^ getword(pos)) & maskbit(pos); // if-free implementation
     }
 
     /// set a word in position pos
