@@ -764,8 +764,6 @@ void SigmaVectorDynamic::compute_abab_coupling(const String& detIa, const std::v
                         uint64_t j = IJb.find_and_clear_first_one();
                         uint64_t bb = IJb.find_first_one();
                         const double H_IJ = Ib.slater_sign(j, bb) * fci_ints_->tei_ab(i, j, a, bb);
-//                        double H_IJ =
-//                            sign_ia * slater_rules_double_alpha_beta_pre2(i, a, IJb, fci_ints_);
                         sigma_I += H_IJ * b[posJ];
 #if SIGMA_VEC_DEBUG
                         count_abab++;

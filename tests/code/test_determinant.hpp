@@ -82,6 +82,8 @@ template <size_t N> std::vector<DeterminantImpl<N>> generate_test_determinants(i
 template <size_t N> void test_bitarray_init() {
     auto ba = forte::BitArray<N>();
 
+    REQUIRE(ba.get_nbits() == N);
+
     for (size_t i = 0; i < N; i++) {
         REQUIRE(ba.get_bit(i) == 0);
     }
@@ -92,6 +94,9 @@ template <size_t N> void test_bitarray_init() {
 template <size_t N> void test_determinantimpl_init() {
     size_t Nhalf = N / 2;
     forte::DeterminantImpl<N> d;
+
+    REQUIRE(d.get_nbits_half() == Nhalf);
+
     for (size_t i = 0; i < N; i++) {
         REQUIRE(d.get_bit(i) == 0);
     }

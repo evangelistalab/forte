@@ -84,32 +84,20 @@ class CI_RDMS {
     void compute_1rdm(std::vector<double>& oprdm_a, std::vector<double>& oprdm_b);
 
     void compute_1rdm(std::vector<double>& oprdm_a, std::vector<double>& oprdm_b, WFNOperator& op);
-    //    void compute_1rdm_str(std::vector<double>& oprdm_a,
-    //                          std::vector<double>& oprdm_b);
+
     void compute_2rdm(std::vector<double>& tprdm_aa, std::vector<double>& tprdm_ab,
                       std::vector<double>& tprdm_bb);
 
-    //    void compute_2rdm_dynamic(std::vector<double>& tprdm_aa, std::vector<double>& tprdm_ab,
-    //                      std::vector<double>& tprdm_bb);
-
     void compute_2rdm(std::vector<double>& tprdm_aa, std::vector<double>& tprdm_ab,
                       std::vector<double>& tprdm_bb, WFNOperator& op);
-    //    void compute_2rdm_str(std::vector<double>& tprdm_aa,
-    //                          std::vector<double>& tprdm_ab,
-    //                          std::vector<double>& tprdm_bb);
+
     void compute_3rdm(std::vector<double>& tprdm_aaa, std::vector<double>& tprdm_aab,
                       std::vector<double>& tprdm_abb, std::vector<double>& tprdm_bbb);
-
-    //    void compute_3rdm_dynamic(std::vector<double>& tprdm_aaa, std::vector<double>& tprdm_aab,
-    //                      std::vector<double>& tprdm_abb, std::vector<double>& tprdm_bbb);
 
     void compute_3rdm(std::vector<double>& tprdm_aaa, std::vector<double>& tprdm_aab,
                       std::vector<double>& tprdm_abb, std::vector<double>& tprdm_bbb,
                       WFNOperator& op);
-    //    void compute_3rdm_str(std::vector<double>& tprdm_aaa,
-    //                          std::vector<double>& tprdm_aab,
-    //                          std::vector<double>& tprdm_abb,
-    //                          std::vector<double>& tprdm_bbb);
+
     void compute_rdms_dynamic(std::vector<double>& oprdm_a, std::vector<double>& oprdm_b,
                               std::vector<double>& tprdm_aa, std::vector<double>& tprdm_ab,
                               std::vector<double>& tprdm_bb, std::vector<double>& tprdm_aaa,
@@ -182,10 +170,6 @@ class CI_RDMS {
 
     int max_rdm_;
 
-    // Objects for dynamic builds
-    //    SortedStringList a_sorted_string_list_;
-    //    SortedStringList b_sorted_string_list_;
-
     // The list of a_p |N>
     std::vector<std::vector<std::pair<size_t, short>>> a_ann_list_;
     std::vector<std::vector<std::pair<size_t, short>>> b_ann_list_;
@@ -197,10 +181,6 @@ class CI_RDMS {
     // The list of a^(+)_q |N-1>
     std::vector<std::vector<std::pair<size_t, short>>> a_cre_list_;
     std::vector<std::vector<std::pair<size_t, short>>> b_cre_list_;
-
-    // The list of a^(+)_q |N-1>
-    //    std::vector<std::pair<size_t, short>> a_cre_list_s_;
-    //    std::vector<std::pair<size_t, short>> b_cre_list_s_;
 
     // The list of a_q a_p|N>
     std::vector<std::vector<std::tuple<size_t, short, short>>> aa_ann_list_;
@@ -216,11 +196,6 @@ class CI_RDMS {
     std::vector<std::vector<std::tuple<size_t, short, short>>> aa_cre_list_;
     std::vector<std::vector<std::tuple<size_t, short, short>>> ab_cre_list_;
     std::vector<std::vector<std::tuple<size_t, short, short>>> bb_cre_list_;
-
-    // The list of a_q^(+) a_p^(+)|N-2>
-    //    std::vector<std::tuple<size_t, short, short>> aa_cre_list_s_;
-    //    std::vector<std::tuple<size_t, size_t, short, short>> ab_cre_list_s_;
-    //    std::vector<std::tuple<size_t, short, short>> bb_cre_list_s_;
 
     // The list of a_r a_q a_p |N>
     std::vector<std::vector<std::tuple<size_t, short, short, short>>> aaa_ann_list_;
@@ -239,14 +214,6 @@ class CI_RDMS {
     std::vector<std::tuple<size_t, short, short, short>> aab_ann_list_s_;
     std::vector<std::tuple<size_t, short, short, short>> abb_ann_list_s_;
     std::vector<std::tuple<size_t, short, short, short>> bbb_ann_list_s_;
-
-    // The list of a^(+)_r a^(+)_q a^(+)_p |N-3>
-    //    std::vector<std::tuple<size_t, short, short, short>> aaa_cre_list_s_;
-    //    std::vector<std::tuple<size_t, size_t, short, short, short>>
-    //        aab_cre_list_s_;
-    //    std::vector<std::tuple<size_t, size_t, short, short, short>>
-    //        abb_cre_list_s_;
-    //    std::vector<std::tuple<size_t, short, short, short>> bbb_cre_list_s_;
 
     /* Class functions*/
 

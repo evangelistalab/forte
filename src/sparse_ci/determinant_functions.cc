@@ -40,8 +40,7 @@ double slater_rules_single_alpha(String Ib, String Ia, String Ja,
                                  const std::shared_ptr<ActiveSpaceIntegrals>& ints) {
     size_t N = Determinant::nbits_half;
     String IJa = Ia ^ Ja;
-    uint64_t i = IJa.find_first_one();
-    IJa.clear_first_one();
+    uint64_t i = IJa.find_and_clear_first_one();
     uint64_t a = IJa.find_first_one();
 
     // Diagonal contribution
@@ -61,8 +60,7 @@ double slater_rules_single_beta(String Ia, String Ib, String Jb,
                                 const std::shared_ptr<ActiveSpaceIntegrals>& ints) {
     size_t N = Determinant::nbits_half;
     String IJb = Ib ^ Jb;
-    uint64_t i = IJb.find_first_one();
-    IJb.clear_first_one();
+    uint64_t i = IJb.find_and_clear_first_one();
     uint64_t a = IJb.find_first_one();
 
     // Diagonal contribution
@@ -84,13 +82,11 @@ double slater_rules_double_alpha_alpha(String Ia, String Ja,
     String IJb = Ia ^ Ja;
 
     String Ia_sub = Ia & IJb;
-    uint64_t i = Ia_sub.find_first_one();
-    Ia_sub.clear_first_one();
+    uint64_t i = Ia_sub.find_and_clear_first_one();
     uint64_t j = Ia_sub.find_first_one();
 
     String Ja_sub = Ja & IJb;
-    uint64_t k = Ja_sub.find_first_one();
-    Ja_sub.clear_first_one();
+    uint64_t k = Ja_sub.find_and_clear_first_one();
     uint64_t l = Ja_sub.find_first_one();
 
     return Ia.slater_sign(i, j) * Ja.slater_sign(k, l) * ints->tei_aa(i, j, k, l);
@@ -101,13 +97,11 @@ double slater_rules_double_beta_beta(String Ib, String Jb,
     String IJb = Ib ^ Jb;
 
     String Ib_sub = Ib & IJb;
-    uint64_t i = Ib_sub.find_first_one();
-    Ib_sub.clear_first_one();
+    uint64_t i = Ib_sub.find_and_clear_first_one();
     uint64_t j = Ib_sub.find_first_one();
 
     String Jb_sub = Jb & IJb;
-    uint64_t k = Jb_sub.find_first_one();
-    Jb_sub.clear_first_one();
+    uint64_t k = Jb_sub.find_and_clear_first_one();
     uint64_t l = Jb_sub.find_first_one();
 
     return Ib.slater_sign(i, j) * Jb.slater_sign(k, l) * ints->tei_bb(i, j, k, l);
@@ -115,41 +109,20 @@ double slater_rules_double_beta_beta(String Ib, String Jb,
 
 double slater_rules_double_alpha_beta_pre(int i, int a, String Ib, String Jb,
                                           const std::shared_ptr<ActiveSpaceIntegrals>& ints) {
-    //    outfile->Printf("\n %zu %zu", Ib, Jb);
     String Ib_xor_Jb = Ib ^ Jb;
-    uint64_t j = Ib_xor_Jb.find_first_one();
-    Ib_xor_Jb.clear_first_one();
+    uint64_t j = Ib_xor_Jb.find_and_clear_first_one();
     uint64_t b = Ib_xor_Jb.find_first_one();
-    //    outfile->Printf("\n  i = %d, j = %d, a = %d, b = %d", i, j, a, b);
     return Ib.slater_sign(j, b) * ints->tei_ab(i, j, a, b);
 }
 
-//double slater_rules_double_alpha_beta_pre2(int i, int a, String IJb,
-//                                           const std::shared_ptr<ActiveSpaceIntegrals>& ints) {
-//    //    outfile->Printf("\n %zu %zu", Ib, Jb);
-//    String Ib_xor_Jb = Ib ^ Jb;
-//    uint64_t j = Ib_xor_Jb.find_first_one();
-//    Ib_xor_Jb.clear_first_one();
-//    uint64_t b = Ib_xor_Jb.find_first_one();
-//    //    outfile->Printf("\n  i = %d, j = %d, a = %d, b = %d", i, j, a, b);
-//    return Ib.slater_sign(j, b) * ints->tei_ab(i, j, a, b);
-//}
-
-Determinant common_occupation(const Determinant& lhs, const Determinant& rhs) {
-    Determinant result = lhs & rhs;
-    return result;
-}
+Determinant common_occupation(const Determinant& lhs, const Determinant& rhs) { return lhs & rhs; }
 
 Determinant different_occupation(const Determinant& lhs, const Determinant& rhs) {
-    //    Determinant result; = lhs ^ rhs;
     return lhs ^ rhs;
 }
 
 /// Find the spin orbitals that are occupied only one determinant (performs a bitwise OR, |)
-Determinant union_occupation(const Determinant& lhs, const Determinant& rhs) {
-    Determinant result = lhs | rhs;
-    return result;
-}
+Determinant union_occupation(const Determinant& lhs, const Determinant& rhs) { return lhs | rhs; }
 
 void enforce_spin_completeness(std::vector<Determinant>& det_space, int nmo) {
     std::unordered_map<Determinant, bool, Determinant::Hash> det_map;
@@ -215,12 +188,6 @@ void enforce_spin_completeness(std::vector<Determinant>& det_space, int nmo) {
             }
         } while (std::next_permutation(open_bits.begin(), open_bits.begin() + naopen + nbopen));
     }
-    // if( ndet_added > 0 ){
-    //    outfile->Printf("\n\n  Determinant space is spin incomplete!");
-    //    outfile->Printf("\n  %zu more determinants were needed.", ndet_added);
-    //}else{
-    //    outfile->Printf("\n\n  Determinant space is spin complete.");
-    //}
 }
 
 } // namespace forte

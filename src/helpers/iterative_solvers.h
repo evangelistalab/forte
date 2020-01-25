@@ -118,6 +118,7 @@ class DavidsonLiuSolver {
     /// Produce the final eigenvectors and eigenvalues
     void get_results();
 
+    /// A vector with the 2-norm of the residual for each root
     std::vector<double> residuals() const;
 
   private:
@@ -129,7 +130,7 @@ class DavidsonLiuSolver {
     bool check_convergence();
     /// Build the correction vectors
     void form_correction_vectors();
-    /// Compute the residual
+    /// Compute the 2-norm of the residual
     void compute_residual_norm();
     /// Project out undesired roots
     void project_out_roots(psi::SharedMatrix v);
@@ -192,7 +193,7 @@ class DavidsonLiuSolver {
     psi::SharedVector lambda_old;
     /// Diagonal elements of the Hamiltonian
     psi::SharedVector h_diag;
-    /// Norm of the residuals
+    /// 2-Norm of the residuals
     std::vector<double> residual_;
 
     /// Approximate eigenstates to project out

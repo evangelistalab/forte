@@ -4,7 +4,6 @@
 #include "hayai/hayai.hpp"
 #include "hayai/hayai_main.hpp"
 
-//#include "src/sparse_ci/bitwise_operations.hpp"
 #include "src/sparse_ci/determinant.h"
 
 using namespace forte;

@@ -9,13 +9,6 @@
 
 // double parity(uint64_t x) { return (x & 1) ? 1.0 : -1.0; }
 
-// double parity(uint64_t x) {
-//    x ^= x >> 1;
-//    x ^= x >> 2;
-//    x = (x & 0x1111111111111111UL) * 0x1111111111111111UL;
-//    return (x >> 60) & 1;
-//}
-
 /// a function to accumulate hash values of 64 bit unsigned integers
 /// based on boost/functional/hash/hash.hpp
 inline void hash_combine_uint64(uint64_t& seed, size_t value) {
@@ -202,34 +195,5 @@ inline double ui64_sign_reverse(uint64_t x, int n) {
     mask = ui64_bit_count(mask);         // count bits in between
     return (mask % 2 == 0) ? 1.0 : -1.0; // compute sign
 }
-
-///**
-// * @brief ui64_count Count the number of true bits
-// * @param x input word
-// * @param n position
-// * @return the number of bits set to true from position 0 to n (included)
-// */
-// double ui64_bit_count(uint64_t x, int n) {
-//    // TODO PERF: speedup by avoiding the mask altogether
-//    // Example for 16 bit string
-//    //                 n            (n = 5)
-//    // x          ABCDEFGH IJKLMNOP
-//    // x << 10    00000000 00ABCDEF 10 = 15 - 5
-//    //
-//    // Note: This strategy does not work when n = 0 because ~0 << 64 = ~0 (!!!)
-//    // so we treat this case separately
-//    x = x << (63 - n);
-//    return ui64_bit_count(x);
-//}
-
-// double ui64_bit_count_reverse(uint64_t x, int n) {
-//    // TODO PERF: speedup by avoiding the mask altogether
-//    // Example for 16 bit string
-//    //                 n            (n = 5)
-//    // x          ABCDEFGH IJKLMNOP
-//    // x >> 5     FGHIJKLM NOP00000
-//    x = x >> n;
-//    return ui64_bit_count(x);
-//}
 
 #endif // _bitwise_operations_hpp_
