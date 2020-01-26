@@ -27,7 +27,7 @@
 # @END LICENSE
 #
 
-import timeit
+import time
 import math
 import warnings
 
@@ -368,10 +368,12 @@ def run_forte(name, **kwargs):
         forte.cleanup()
         return ref_wfn
 
-    start = timeit.timeit()
+    start_pre_ints = time.time()
 
     # Make an integral object
     ints = forte.make_forte_integrals(ref_wfn, options, mo_space_info)
+
+    start = time.time()
 
     # Rotate orbitals before computation (e.g. localization, MP2 natural orbitals, etc.)
     orb_type = options.get_str("ORBITAL_TYPE")
@@ -388,13 +390,16 @@ def run_forte(name, **kwargs):
     else:
         energy = forte.forte_old_methods(ref_wfn, options, ints, mo_space_info)
 
-    end = timeit.timeit()
-    #print('\n\n  Your calculation took ', (end - start), ' seconds');
+    end = time.time()
 
     # Close ambit, etc.
     forte.cleanup()
 
     psi4.core.set_scalar_variable('CURRENT ENERGY', energy)
+
+    psi4.core.print_out(f'\n\n  Time to prepare integrals: {start - start_pre_ints} seconds')
+    psi4.core.print_out(f'\n  Time to run job          : {end - start} seconds')
+    psi4.core.print_out(f'\n  Total                    : {end - start} seconds')
     return ref_wfn
 
 
@@ -455,7 +460,7 @@ def gradient_forte(name, **kwargs):
     if not job_type == 'CASSCF':
         raise Exception('analytic gradient is only implemented for CASSCF')
 
-    start = timeit.timeit()
+    start = time.time()
 
     # Make an integral object
     ints = forte.make_forte_integrals(ref_wfn, options, mo_space_info)
@@ -478,7 +483,7 @@ def gradient_forte(name, **kwargs):
     ref_wfn.set_gradient(grad)    
     optstash.restore()        
 
-    end = timeit.timeit()
+    end = time.time()
     #print('\n\n  Your calculation took ', (end - start), ' seconds');
 
     # Close ambit, etc.

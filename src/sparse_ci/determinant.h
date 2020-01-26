@@ -32,25 +32,20 @@
 
 #include <unordered_map>
 
-#ifdef SMALL_BITSET
-#include "ui64_determinant.h"
-#else
-#include "stl_bitset_determinant.h"
-#endif
-
+#include "determinant.hpp"
 
 namespace forte {
 
-#ifdef SMALL_BITSET
-using Determinant = UI64Determinant;
-#else
-using Determinant = STLBitsetDeterminant;
-#endif
+size_t constexpr Norb = MAX_DET_ORB;
+size_t constexpr Norb2 = 2 * Norb;
+
+using String = BitArray<Norb>;
+using Determinant = DeterminantImpl<Norb2>;
 
 using det_vec = std::vector<Determinant>;
 template <typename T = double>
 using det_hash = std::unordered_map<Determinant, T, Determinant::Hash>;
 using det_hash_it = std::unordered_map<Determinant, double, Determinant::Hash>::iterator;
-}
+} // namespace forte
 
 #endif // _determinant_h_

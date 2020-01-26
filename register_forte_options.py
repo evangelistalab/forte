@@ -241,6 +241,8 @@ def register_pci_options(forte_options):
 
     forte_options.add_double("PCI_E_CONVERGENCE", 1.0e-8,
                              "The energy convergence criterion")
+    forte_options.add_double("PCI_R_CONVERGENCE", 1.0,
+                             "The residual 2-norm convergence criterion")
 
     forte_options.add_bool("PCI_FAST_EVAR", False,
                            "Use a fast (sparse) estimate of the energy?")
@@ -535,10 +537,10 @@ def register_davidson_liu_options(forte_options):
     forte_options.add_int(
         "DL_COLLAPSE_PER_ROOT", 2,
         "The number of trial vector to retain after collapsing")
-    forte_options.add_int("DL_SUBSPACE_PER_ROOT", 8,
+    forte_options.add_int("DL_SUBSPACE_PER_ROOT", 10,
                           "The maxim number of trial vectors")
-    forte_options.add_int("SIGMA_VECTOR_MAX_MEMORY", 10000000,
-                          "The maxim number of trial vectors")
+    forte_options.add_int("SIGMA_VECTOR_MAX_MEMORY", 67108864,
+                          "The maximum number of doubles stored in memory in the sigma vector algorithm")
 
 
 def register_asci_options(forte_options):
@@ -850,6 +852,15 @@ def register_old_options(forte_options):
     #    /*- Select a modified commutator -*/
     forte_options.add_str("SRG_COMM", "STANDARD", "STANDARD FO FO2")
 
+    #    /*- The initial time step used by the ode solver -*/
+    forte_options.add_double("SRG_DT", 0.001, "The initial time step used by the ode solver")
+    #    /*- The absolute error tollerance for the ode solver -*/
+    forte_options.add_double("SRG_ODEINT_ABSERR", 1.0e-12, "The absolute error tollerance for the ode solver")
+    #    /*- The absolute error tollerance for the ode solver -*/
+    forte_options.add_double("SRG_ODEINT_RELERR", 1.0e-12, "The absolute error tollerance for the ode solver")
+    #    /*- Select a modified commutator -*/
+    forte_options.add_str("SRG_COMM", "STANDARD", ["STANDARD", "FO", "FO2"], "Select a modified commutator")
+
 
     #    /*- The minimum excitation level (Default value: 0) -*/
     #    forte_options.add_int("MIN_EXC_LEVEL", 0)
@@ -1115,9 +1126,9 @@ def register_old_options(forte_options):
     #    /*- The flow generator to use in the SRG equations -*/
     #    forte_options.add_str("SRG_ETA", "WHITE", "WEGNER_BLOCK WHITE")
     #    /*- The integrator used to propagate the SRG equations -*/
-    #    forte_options.add_str("SRG_ODEINT", "FEHLBERG78", "DOPRI5 CASHKARP FEHLBERG78")
+    forte_options.add_str("SRG_ODEINT", "FEHLBERG78", ["DOPRI5","CASHKARP", "FEHLBERG78"], "The integrator used to propagate the SRG equations")
     #    /*- The end value of the integration parameter s -*/
-    #    forte_options.add_double("SRG_SMAX", 10.0)
+    forte_options.add_double("SRG_SMAX", 10.0, "The end value of the integration parameter s")
 
     #    /*-  -*/
 
@@ -1125,14 +1136,7 @@ def register_old_options(forte_options):
     #    // --------------------------- SRG EXPERT OPTIONS
     #    // ---------------------------
 
-    #    /*- The initial time step used by the ode solver -*/
-    #    forte_options.add_double("SRG_DT", 0.001)
-    #    /*- The absolute error tollerance for the ode solver -*/
-    #    forte_options.add_double("SRG_ODEINT_ABSERR", 1.0e-12)
-    #    /*- The absolute error tollerance for the ode solver -*/
-    #    forte_options.add_double("SRG_ODEINT_RELERR", 1.0e-12)
-    #    /*- Select a modified commutator -*/
-    #    forte_options.add_str("SRG_COMM", "STANDARD", "STANDARD FO FO2")
+
 
     #    /*- Save Hbar? -*/
     #    forte_options.add_bool("SAVE_HBAR", False)

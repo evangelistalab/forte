@@ -161,69 +161,40 @@ std::vector<size_t> ActiveSpaceIntegrals::restricted_docc_mo() const { return re
 double ActiveSpaceIntegrals::energy(const Determinant& det) const {
     double energy = frozen_core_energy_;
 
-#ifdef SMALL_BITSET
-    uint64_t Ia = det.get_alfa_bits();
-    uint64_t Ib = det.get_beta_bits();
+    String Ia = det.get_alfa_bits();
+    String Ib = det.get_beta_bits();
+    String Iac;
+    String Ibc;
 
-    int naocc = det.count_alfa();
-    int nbocc = det.count_beta();
+    int naocc = Ia.count();
+    int nbocc = Ib.count();
 
     for (int A = 0; A < naocc; ++A) {
-        int p = lowest_one_idx(Ia);
+        int p = Ia.find_and_clear_first_one();
         energy += oei_a_[p * nmo_ + p];
-        Ia = clear_lowest_one(Ia);
-        uint64_t Iac = Ia;
 
+        Iac = Ia;
         for (int AA = A + 1; AA < naocc; ++AA) {
-            int q = lowest_one_idx(Iac);
+            int q = Iac.find_and_clear_first_one();
             energy += tei_aa_[p * nmo3_ + q * nmo2_ + p * nmo_ + q];
-            Iac = clear_lowest_one(Iac);
         }
 
-        uint64_t Ibc = Ib;
+        Ibc = Ib;
         for (int B = 0; B < nbocc; ++B) {
-            int q = lowest_one_idx(Ibc);
+            int q = Ibc.find_and_clear_first_one();
             energy += tei_ab_[p * nmo3_ + q * nmo2_ + p * nmo_ + q];
-            Ibc = clear_lowest_one(Ibc);
         }
     }
 
     for (int B = 0; B < nbocc; ++B) {
-        int p = lowest_one_idx(Ib);
+        int p = Ib.find_and_clear_first_one();
         energy += oei_b_[p * nmo_ + p];
-        Ib = clear_lowest_one(Ib);
-        uint64_t Ibc = Ib;
+        Ibc = Ib;
         for (int BB = B + 1; BB < nbocc; ++BB) {
-            int q = lowest_one_idx(Ibc);
+            int q = Ibc.find_and_clear_first_one();
             energy += tei_bb_[p * nmo3_ + q * nmo2_ + p * nmo_ + q];
-            Ibc = clear_lowest_one(Ibc);
         }
     }
-#else
-    for (size_t p = 0; p < nmo_; p++) {
-        if (det.get_alfa_bit(p)) {
-            energy += oei_a_[p * nmo_ + p];
-            for (size_t q = p + 1; q < nmo_; ++q) {
-                if (det.get_alfa_bit(q)) {
-                    energy += tei_aa_[p * nmo3_ + q * nmo2_ + p * nmo_ + q];
-                }
-            }
-            for (size_t q = 0; q < nmo_; ++q) {
-                if (det.get_beta_bit(q)) {
-                    energy += tei_ab_[p * nmo3_ + q * nmo2_ + p * nmo_ + q];
-                }
-            }
-        }
-        if (det.get_beta_bit(p)) {
-            energy += oei_b_[p * nmo_ + p];
-            for (size_t q = p + 1; q < nmo_; ++q) {
-                if (det.get_beta_bit(q)) {
-                    energy += tei_bb_[p * nmo3_ + q * nmo2_ + p * nmo_ + q];
-                }
-            }
-        }
-    }
-#endif
 
     return energy;
 }

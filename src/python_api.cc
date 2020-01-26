@@ -126,9 +126,6 @@ void export_OrbitalTransform(py::module& m) {
         .def("get_Ub", &OrbitalTransform::get_Ub, "Get Ub rotation");
 }
 
-constexpr int Determinant::num_str_bits;
-constexpr int Determinant::num_det_bits;
-
 /// Export the Determinant class
 void export_Determinant(py::module& m) {
     py::class_<Determinant>(m, "Determinant")
@@ -137,8 +134,8 @@ void export_Determinant(py::module& m) {
         .def(py::init<const std::vector<bool>&, const std::vector<bool>&>())
         .def("get_alfa_bits", &Determinant::get_alfa_bits, "Get alpha bits")
         .def("get_beta_bits", &Determinant::get_beta_bits, "Get beta bits")
-        .def_readonly_static("num_str_bits", &Determinant::num_str_bits)
-        .def_readonly_static("num_det_bits", &Determinant::num_det_bits)
+        .def("nbits", &Determinant::get_nbits)
+        .def("nbits_half", &Determinant::get_nbits_half)
         .def("get_alfa_bit", &Determinant::get_alfa_bit, "n"_a, "Get the value of an alpha bit")
         .def("get_beta_bit", &Determinant::get_beta_bit, "n"_a, "Get the value of a beta bit")
         .def("set_alfa_bit", &Determinant::set_alfa_bit, "n"_a, "value"_a,
@@ -149,10 +146,17 @@ void export_Determinant(py::module& m) {
         .def("create_beta_bit", &Determinant::create_beta_bit, "n"_a, "Create a beta bit")
         .def("destroy_alfa_bit", &Determinant::destroy_alfa_bit, "n"_a, "Destroy an alpha bit")
         .def("destroy_beta_bit", &Determinant::destroy_beta_bit, "n"_a, "Destroy a beta bit")
-        .def("gen_excitation", &Determinant::gen_excitation, "Apply a generic excitation")
-        .def("str", &Determinant::str, "Get the string representation of the Slater determinant")
-        .def("__repr__", [](const Determinant& a) { return a.str(); })
-        .def("__str__", [](const Determinant& a) { return a.str(); })
+        .def(
+            "gen_excitation",
+            [](Determinant& d, const std::vector<int>& aann, const std::vector<int>& acre,
+               const std::vector<int>& bann,
+               const std::vector<int>& bcre) { return gen_excitation(d, aann, acre, bann, bcre); },
+            "Apply a generic excitation")
+        .def(
+            "str", [](const Determinant& a, int n) { return str(a, n); }, "n"_a = 64,
+            "Get the string representation of the Slater determinant")
+        .def("__repr__", [](const Determinant& a) { return str(a); })
+        .def("__str__", [](const Determinant& a) { return str(a); })
         .def("__eq__", [](const Determinant& a, const Determinant& b) { return a == b; })
         .def("__lt__", [](const Determinant& a, const Determinant& b) { return a < b; })
         .def("__hash__", [](const Determinant& a) { return Determinant::Hash()(a); });

@@ -71,6 +71,8 @@ if(ENABLE_UNTESTED_CODE)
     add_definitions(-DENABLE_UNTESTED_CODE)
 endif()
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-c++1z-extensions") # avoid warnings for C++17
+
 # List of CC files
 pybind11_add_module(forte
 src/api/ambit_api.cc
@@ -89,6 +91,7 @@ src/gradient_tpdm/integraltransform_tpdm_unrestricted.cc
 src/sparse_ci/ci_reference.cc
 src/sparse_ci/determinant_hashvector.cc
 src/sparse_ci/determinant_sq_operator.cc
+src/sparse_ci/determinant_functions.cc
 src/dmrg/dmrgscf.cc
 src/dmrg/dmrgsolver.cc
 src/base_classes/dynamic_correlation_solver.cc
@@ -117,11 +120,7 @@ src/ci_ex_states/excited_state_solver.cc
 src/sparse_ci/sparse_ci_solver.cc
 src/sparse_ci/sigma_vector.cc
 src/sparse_ci/sigma_vector_dynamic.cc
-src/sparse_ci/stl_bitset_determinant.cc
-src/sparse_ci/stl_bitset_string.cc
 src/sparse_ci/sorted_string_list.cc
-src/sparse_ci/ui64_determinant.cc
-src/sparse_ci/ui64_determinant_functions.cc
 src/orbital-helpers/aosubspace.cc
 src/orbital-helpers/ci-no/ci-no.cc
 src/orbital-helpers/ci-no/mrci-no.cc
@@ -205,7 +204,6 @@ if(MAX_DET_ORB)
     add_definitions(-DMAX_DET_ORB=${MAX_DET_ORB})
 else()
     add_definitions(-DMAX_DET_ORB=64)
-    add_definitions(-DSMALL_BITSET)
 endif()
 
 if(ENABLE_MPI)
@@ -228,13 +226,12 @@ if (ENABLE_ForteTests)
   project (forte_tests)
   include_directories(${CMAKE_BINARY_DIR} ${CMAKE_BINARY_DIR}/catch2/src/catch2/single_include)
   add_executable(forte_tests
-    src/sparse_ci/ui64_determinant.cc
-    tests/code/test_determinant.cc)
+    tests/code/test_determinant.cc
+    tests/code/test_uint64.cc)
 
   project (forte_benchmarks)
   include_directories(${CMAKE_BINARY_DIR})
   add_executable(forte_benchmarks
-    src/sparse_ci/ui64_determinant.cc
     tests/benchmark/determinant_benchmark.cc)
 
 endif (ENABLE_ForteTests)

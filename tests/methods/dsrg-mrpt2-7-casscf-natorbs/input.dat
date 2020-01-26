@@ -5,9 +5,9 @@ import forte
 #refcasscf    = -108.942347617743536
 refcasscf    = -108.942347620681673
 #refpt2       = -109.103635472000661
-refpt2       = -109.103635474751030
+refpt2       = -109.103635316015 # -109.103635328695 #-109.103635474751030
 #refpt2_relax = -109.105159486775122
-refpt2_relax = -109.105159489522237
+refpt2_relax = -109.105159371470 #-109.105159381397 # -109.105159489522237
 
 molecule N2{
   0 1
@@ -27,7 +27,7 @@ set {
   active                 [2,0,1,1,0,2,1,1]
   mcscf_maxiter          100
   mcscf_r_convergence    10
-  mcscf_e_convergence    10
+  mcscf_e_convergence    12
   mcscf_diis_start       5
 }
 
@@ -42,7 +42,8 @@ set forte {
   nroot              1
   dsrg_s             0.5
   relax_ref          once
-  e_convergence      10
+  e_convergence      12
+  r_convergence      9
 }
 
 Ecasscf, wfn_cas = energy('casscf', return_wfn=True)

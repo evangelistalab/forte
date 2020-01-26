@@ -3,8 +3,8 @@
 import forte
 memory 500 mb
 
-refcasscf    = -108.951281241892289
-refdsrgpt3   = -109.195144609553296
+refcasscf    = -108.951281241892
+refdsrgpt3   = -109.195144643926 
 
 molecule N2{
   0 1
@@ -29,6 +29,9 @@ set globals{
   mcscf_diis_start       8
 }
 
+Ecasscf, wfn = energy('casscf', return_wfn=True)
+compare_values(refcasscf,variable("CURRENT ENERGY"),9,"MCSCF energy") #TEST
+
 set forte{
   active_space_solver     fci    
   correlation_solver      dsrg-mrpt3
@@ -47,9 +50,6 @@ set forte{
   cholesky_tolerance     1e-8
   print_time_profile     true
 }
-
-Ecasscf, wfn = energy('casscf', return_wfn=True)
-compare_values(refcasscf,variable("CURRENT ENERGY"),9,"MCSCF energy") #TEST
 
 energy('forte', ref_wfn=wfn)
 compare_values(refdsrgpt3,variable("CURRENT ENERGY"),8,"DSRG-MRPT3 relaxed energy") #TEST
