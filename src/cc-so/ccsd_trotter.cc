@@ -40,15 +40,8 @@ void CC_SO::compute_ccsd_trotter(BlockedTensor& H1, BlockedTensor& H2, BlockedTe
 
         double Z0 = X0;
 
-        if (trotter_sym_) {
-            Y1["pq"] = 0.5 * X1["pq"];
-            Y1["pq"] += 0.5 * X1["qp"];
-            Y2["pqrs"] = 0.5 * X2["pqrs"];
-            Y2["pqrs"] += 0.5 * X2["rspq"];
-        } else {
-            Y1["pq"] = X1["qp"];
-            Y2["pqrs"] = X2["rspq"];
-        }
+        Y1["pq"] = X1["qp"];
+        Y2["pqrs"] = X2["rspq"];
 
         compute_ccsd_hamiltonian(Y1, Y2, T1, T2, X0, X1, X2);
 
@@ -63,14 +56,15 @@ void CC_SO::compute_ccsd_trotter(BlockedTensor& H1, BlockedTensor& H2, BlockedTe
             Y2["pqrs"] = X2["rspq"];
         }
 
-        outfile->Printf("\n    Trotter iter. %2d corr. energy: %20.12f = %20.12f + %20.12f", i, Z0 + X0, Z0, X0);
+        outfile->Printf("\n    Trotter iter. %2d corr. energy: %20.12f = %20.12f + %20.12f", i,
+                        Z0 + X0, Z0, X0);
     }
 
     // symmetrize Hamiltonian
     C1["pq"] = 0.5 * Y1["pq"];
     C1["pq"] += 0.5 * Y1["qp"];
     C2["pqrs"] = 0.5 * Y2["pqrs"];
-    C2["rspq"] += 0.5 * Y2["rspq"];
+    C2["pqrs"] += 0.5 * Y2["rspq"];
 
     // unscale amplitudes
     T1.scale(trotter_level_);
