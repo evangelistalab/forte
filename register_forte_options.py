@@ -855,9 +855,13 @@ def register_old_options(forte_options):
 
 def register_cc_so_options(forte_options):
     forte_options.add_str("CC_LEVEL", "CCSD", ["CCSD", "CCSDT", "CCSDT_1A", "CCSDT_1B",
+                                               "CCSD_TROTTER",
                                                "LUCCSD", "QUCCSD",
                                                "LUCCSDT", "UCC3", "VUCCSD5"],
                           "Coupled cluster level")
+
+    forte_options.add_int("CCSD_TROTTER_LEVEL", 1, "Number of Trotter level")
+    forte_options.add_bool("CCSD_TROTTER_SYMM", False, "Symmetrize Hamiltonian at each step if true")
 
     forte_options.add_int("LUCCSDT_FINK_ORDER", 8,
                           """The perturbation order of energy terms included in L-UCCSDT

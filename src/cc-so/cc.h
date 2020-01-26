@@ -87,6 +87,19 @@ class CC_SO : public DynamicCorrelationSolver {
     double r_convergence_;
     int maxiter_;
 
+    // => Trotter CCSD options <= //
+    int trotter_level_;
+    bool trotter_sym_;
+
+    void compute_ccsd_trotter(BlockedTensor& H1, BlockedTensor& H2, BlockedTensor& T1,
+                              BlockedTensor& T2, double& C0, BlockedTensor& C1, BlockedTensor& C2);
+    void compute_ccsd_trotter_symm(BlockedTensor& H1, BlockedTensor& H2, BlockedTensor& T1,
+                                   BlockedTensor& T2, double& C0, BlockedTensor& C1,
+                                   BlockedTensor& C2);
+    void compute_ccsd_trotter_asymm(BlockedTensor& H1, BlockedTensor& H2, BlockedTensor& T1,
+                                    BlockedTensor& T2, double& C0, BlockedTensor& C1,
+                                    BlockedTensor& C2);
+
     // => Triples related testing options <= //
 
     /// Include triples or not
@@ -177,6 +190,11 @@ class CC_SO : public DynamicCorrelationSolver {
 
     void compute_ccsd_amp(BlockedTensor& H1, BlockedTensor& H2, BlockedTensor& T1,
                           BlockedTensor& T2, double& C0, BlockedTensor& C1, BlockedTensor& C2);
+
+    void compute_ccsd_hamiltonian(BlockedTensor& H1, BlockedTensor& H2, BlockedTensor& T1,
+                                  BlockedTensor& T2, double& C0, BlockedTensor& C1,
+                                  BlockedTensor& C2);
+
     void compute_ccsdt_amp(BlockedTensor& H1, BlockedTensor& H2, BlockedTensor& T1,
                            BlockedTensor& T2, BlockedTensor& T3, double& C0, BlockedTensor& C1,
                            BlockedTensor& C2, BlockedTensor& C3);

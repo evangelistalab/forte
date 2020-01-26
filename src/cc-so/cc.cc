@@ -51,13 +51,11 @@ std::unique_ptr<CC_SO> make_cc_so(RDMs rdms, std::shared_ptr<SCFInfo> scf_info,
     return std::make_unique<CC_SO>(rdms, scf_info, options, ints, mo_space_info);
 }
 
-CC_SO::CC_SO(RDMs rdms, std::shared_ptr<SCFInfo> scf_info,
-                     std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
-                     std::shared_ptr<MOSpaceInfo> mo_space_info)
+CC_SO::CC_SO(RDMs rdms, std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
+             std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
     : DynamicCorrelationSolver(rdms, scf_info, options, ints, mo_space_info),
       BTF_(new BlockedTensorFactory()), tensor_type_(ambit::CoreTensor) {
-    print_method_banner(
-        {"Spin-Orbital Coupled Cluster Using Generated Equations", "Chenyang Li"});
+    print_method_banner({"Spin-Orbital Coupled Cluster Using Generated Equations", "Chenyang Li"});
     startup();
     print_summary();
 }
@@ -78,7 +76,10 @@ void CC_SO::startup() {
     Efrzc_ = ints_->frozen_core_energy();
 
     corr_level_ = foptions_->get_str("CC_LEVEL");
-    do_triples_ = corr_level_.find("CCSDT") != std::string::npos or corr_level_.find("CC3") != std::string::npos;
+    do_triples_ = corr_level_.find("CCSDT") != std::string::npos or
+                  corr_level_.find("CC3") != std::string::npos;
+    trotter_level_ = foptions_->get_int("CCSD_TROTTER_LEVEL");
+    trotter_sym_ = foptions_->get_bool("CCSD_TROTTER_SYMM");
 
     e_convergence_ = foptions_->get_double("E_CONVERGENCE");
     r_convergence_ = foptions_->get_double("R_CONVERGENCE");
@@ -201,7 +202,8 @@ void CC_SO::startup() {
     outfile->Printf("\n     MO     Alpha           Beta");
     outfile->Printf("\n    ---------------------------------");
     for (size_t i = 0; i < nmo_; ++i) {
-        outfile->Printf("\n    %3zu %11.6f(%d) %11.6f(%d)", i + 1, Fd_[i], i < nc_a, Fd_[i + nmo_], i < nc_b);
+        outfile->Printf("\n    %3zu %11.6f(%d) %11.6f(%d)", i + 1, Fd_[i], i < nc_a, Fd_[i + nmo_],
+                        i < nc_b);
     }
     outfile->Printf("\n    ---------------------------------");
 }
@@ -209,16 +211,13 @@ void CC_SO::startup() {
 void CC_SO::print_summary() {
     // Print a summary
     std::vector<std::pair<std::string, int>> calculation_info_int{
-        {"Max Iteration", maxiter_},
-        {"Number of Printed T Amplitudes", ntamp_}};
+        {"Max Iteration", maxiter_}, {"Number of Printed T Amplitudes", ntamp_}};
 
     std::vector<std::pair<std::string, double>> calculation_info_double{
-        {"Energy Convergence", e_convergence_},
-        {"Residue Convergence", r_convergence_}};
+        {"Energy Convergence", e_convergence_}, {"Residue Convergence", r_convergence_}};
 
     std::vector<std::pair<std::string, std::string>> calculation_info_string{
-        {"Correlation Level", corr_level_},
-        {"Integral Type", foptions_->get_str("INT_TYPE")}};
+        {"Correlation Level", corr_level_}, {"Integral Type", foptions_->get_str("INT_TYPE")}};
 
     if (do_triples_) {
         calculation_info_int.push_back({"Perturbation Order (Fink)", fink_order_});
@@ -250,10 +249,11 @@ void CC_SO::guess_t2() {
 
     // norm and max
     T2max_ = 0.0, T2norm_ = T2_.norm();
-    T2_.citerate([&](const std::vector<size_t>&, const std::vector<SpinType>&, const double& value) {
-        if (std::fabs(value) > std::fabs(T2max_))
-            T2max_ = value;
-    });
+    T2_.citerate(
+        [&](const std::vector<size_t>&, const std::vector<SpinType>&, const double& value) {
+            if (std::fabs(value) > std::fabs(T2max_))
+                T2max_ = value;
+        });
 
     outfile->Printf("  Done. Timing %10.3f s", timer.get());
 }
@@ -271,10 +271,11 @@ void CC_SO::guess_t1() {
 
     // norm and max
     T1max_ = 0.0, T1norm_ = T1_.norm();
-    T1_.citerate([&](const std::vector<size_t>&, const std::vector<SpinType>&, const double& value) {
-        if (std::fabs(value) > std::fabs(T1max_))
-            T1max_ = value;
-    });
+    T1_.citerate(
+        [&](const std::vector<size_t>&, const std::vector<SpinType>&, const double& value) {
+            if (std::fabs(value) > std::fabs(T1max_))
+                T1max_ = value;
+        });
 
     outfile->Printf("  Done. Timing %10.3f s", timer.get());
 }
@@ -371,9 +372,9 @@ void CC_SO::update_t3() {
 }
 
 double CC_SO::compute_energy() {
-    if (corr_level_ == "CCSD" or corr_level_ == "CCSDT" or
-        corr_level_ == "CCSDT_1A" or corr_level_ == "CCSDT_1B" or
-        corr_level_ == "UCC3" or corr_level_ == "VUCCSD5") {
+    if (corr_level_ == "CCSD" or corr_level_ == "CCSD_TROTTER" or corr_level_ == "CCSDT" or
+        corr_level_ == "CCSDT_1A" or corr_level_ == "CCSDT_1B" or corr_level_ == "UCC3" or
+        corr_level_ == "VUCCSD5") {
         Hbar1_ = BTF_->build(tensor_type_, "Hbar1", {"cv"});
         Hbar2_ = BTF_->build(tensor_type_, "Hbar2", {"ccvv"});
     } else {
@@ -382,10 +383,10 @@ double CC_SO::compute_energy() {
         Hbar2_ = BTF_->build(tensor_type_, "Hbar2", {"gggg"});
     }
 
-//    // initialize Hbar with bare Hamiltonian
-//    Hbar0_ = 0.0;
-//    Hbar1_["pq"] = F_["pq"];
-//    Hbar2_["pqrs"] = V_["pqrs"];
+    //    // initialize Hbar with bare Hamiltonian
+    //    Hbar0_ = 0.0;
+    //    Hbar1_["pq"] = F_["pq"];
+    //    Hbar2_["pqrs"] = V_["pqrs"];
 
     // build initial amplitudes
     print_h2("Build Initial Cluster Amplitudes");
@@ -395,15 +396,15 @@ double CC_SO::compute_energy() {
     guess_t1();
 
     if (do_triples_) {
-        if (corr_level_ == "CCSDT" or corr_level_ == "CCSDT_1A" or
-            corr_level_ == "CCSDT_1B" or corr_level_ == "UCC3") {
+        if (corr_level_ == "CCSDT" or corr_level_ == "CCSDT_1A" or corr_level_ == "CCSDT_1B" or
+            corr_level_ == "UCC3") {
             Hbar3_ = BTF_->build(tensor_type_, "Hbar3", {"cccvvv"});
         } else {
             Hbar3_ = BTF_->build(tensor_type_, "Hbar3", {"gggggg"});
         }
 
         T3_ = BTF_->build(tensor_type_, "T3 Amplitudes", {"cccvvv"});
-//        guess_t3();
+        //        guess_t3();
     }
 
     // iteration variables
@@ -424,6 +425,8 @@ double CC_SO::compute_energy() {
     for (int cycle = 1; cycle <= maxiter_; ++cycle) {
         if (corr_level_ == "CCSD") {
             compute_ccsd_amp(F_, V_, T1_, T2_, Hbar0_, Hbar1_, Hbar2_);
+        } else if (corr_level_ == "CCSD_TROTTER") {
+            compute_ccsd_trotter(F_, V_, T1_, T2_, Hbar0_, Hbar1_, Hbar2_);
         } else if (corr_level_ == "CCSDT") {
             compute_ccsdt_amp(F_, V_, T1_, T2_, T3_, Hbar0_, Hbar1_, Hbar2_, Hbar3_);
         } else if (corr_level_ == "CCSDT_1A" or corr_level_ == "CCSDT_1B") {
@@ -433,7 +436,7 @@ double CC_SO::compute_energy() {
             ambit::BlockedTensor Frot = BTF_->build(tensor_type_, "Frot", {"gg"});
             ambit::BlockedTensor Vrot = BTF_->build(tensor_type_, "Vrot", {"gggg"});
             rotate_hamiltonian(Eeff, Frot, Vrot);
-//            outfile->Printf("\n  Eeff = %.15f", Eeff);
+            //            outfile->Printf("\n  Eeff = %.15f", Eeff);
 
             compute_ucc3_amp(Frot, Vrot, T2_, T3_, Hbar0_, Hbar1_, Hbar2_, Hbar3_);
 
@@ -458,14 +461,14 @@ double CC_SO::compute_energy() {
         temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"ccvv"});
         temp["ijab"] = Hbar2_["ijab"];
         double Hbar2Nnorm = temp.norm();
-        for (const std::string block: temp.block_labels()) {
+        for (const std::string block : temp.block_labels()) {
             temp.block(block).reset();
         }
 
         outfile->Printf("\n      @CC %4d %20.12f %11.3e %10.3e %10.3e %7.4f "
                         "%7.4f %7.4f %7.4f %7.4f %7.4f",
-                        cycle, Etotal, Edelta, Hbar1Nnorm, Hbar2Nnorm, T1norm_, T2norm_,
-                        T3norm_, T1max_, T2max_, T3max_);
+                        cycle, Etotal, Edelta, Hbar1Nnorm, Hbar2Nnorm, T1norm_, T2norm_, T3norm_,
+                        T1max_, T2max_, T3max_);
 
         update_t2();
         update_t1();
@@ -548,7 +551,7 @@ void CC_SO::rotate_hamiltonian(double& Eeff, BlockedTensor& Fnew, BlockedTensor&
     Eeff += Efrzc_ + Enuc_ - Eref_;
 }
 
-//void CC_SO::compute_lhbar() {
+// void CC_SO::compute_lhbar() {
 
 //    //    outfile->Printf("\n\n  Computing the similarity-transformed
 //    //    Hamiltonian");
@@ -722,7 +725,7 @@ void CC_SO::rotate_hamiltonian(double& Eeff, BlockedTensor& Fnew, BlockedTensor&
 //    //    -----------------------------------------------------------------");
 //}
 
-//void CC_SO::compute_qhbar() {
+// void CC_SO::compute_qhbar() {
 
 //    //    outfile->Printf("\n\n  Computing the similarity-transformed
 //    //    Hamiltonian");

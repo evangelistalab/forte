@@ -469,13 +469,13 @@ void MRDSRG_SO::update_lambda(BlockedTensor& C1, BlockedTensor& C2) {
     Tbar2["ijab"] = X2["ijab"];
 }
 
-void MRDSRG_SO::compute_lambda_comm4(BlockedTensor& H1, BlockedTensor& H2, BlockedTensor& T1,
-                                     BlockedTensor& T2, BlockedTensor& L1, BlockedTensor& L2,
-                                     BlockedTensor& C1, BlockedTensor& C2) {
-    compute_lambda_comm4_part1(H1, H2, T1, T2, L1, L2, C1);
-    compute_lambda_comm4_part2(H1, H2, T1, T2, L1, L2, C2);
-    compute_lambda_comm4_part3(H1, H2, T1, T2, L1, L2, C2);
-}
+//void MRDSRG_SO::compute_lambda_comm4(BlockedTensor& H1, BlockedTensor& H2, BlockedTensor& T1,
+//                                     BlockedTensor& T2, BlockedTensor& L1, BlockedTensor& L2,
+//                                     BlockedTensor& C1, BlockedTensor& C2) {
+//    compute_lambda_comm4_part1(H1, H2, T1, T2, L1, L2, C1);
+//    compute_lambda_comm4_part2(H1, H2, T1, T2, L1, L2, C2);
+//    compute_lambda_comm4_part3(H1, H2, T1, T2, L1, L2, C2);
+//}
 
 void MRDSRG_SO::compute_lambda_comm1(BlockedTensor& H1, BlockedTensor& H2, BlockedTensor& L1,
                                      BlockedTensor& L2, BlockedTensor& C1, BlockedTensor& C2) {
