@@ -61,15 +61,22 @@ void DSRG_MRPT2::set_all_variables() {
     // set_ambit_space();
 
     // Initialize tensors.
-    Gamma1 = BTF_->build(CoreTensor, "Gamma1", spin_cases({"aa"}));
+    // NOTICE: Space of Gamma and Eta is extended at this time.
+    Gamma1 = BTF_->build(CoreTensor, "Gamma1", spin_cases({"gg"}));
     Gamma2 = BTF_->build(CoreTensor, "Gamma2", spin_cases({"aaaa"}));
-    Eta1 = BTF_->build(CoreTensor, "Eta1", spin_cases({"aa"}));
+    Eta1 = BTF_->build(CoreTensor, "Eta1", spin_cases({"gg"}));
     H = BTF_->build(CoreTensor, "One-Electron Integral", spin_cases({"gg"}));
     V = BTF_->build(CoreTensor, "Electron Repulsion Integral", spin_cases({"gggg"}));
     F = BTF_->build(CoreTensor, "Fock Matrix", spin_cases({"gg"}));
     W_ = BTF_->build(CoreTensor, "Lagrangian", spin_cases({"gg"}));
-    Eeps1 = BTF_->build(CoreTensor, "e^[eps(Delta1)]", spin_cases({"gg"}));
-    Delta1 = BTF_->build(CoreTensor, "Delta1", spin_cases({"gg"}));
+    Eeps1 = BTF_->build(CoreTensor, "e^[eps(Delta1)]", spin_cases({"hp"}));
+    Eeps2 = BTF_->build(CoreTensor, "e^[eps(Delta2)]", spin_cases({"hhpp"}));
+    Delta1 = BTF_->build(CoreTensor, "Delta1", spin_cases({"hp"}));
+    Delta2 = BTF_->build(CoreTensor, "Delta2", spin_cases({"hhpp"}));
+
+    //NOTICE: The dimension can be further reduced.
+    Kappa = BTF_->build(CoreTensor, "Kappa", spin_cases({"pphh"}));
+    Tau = BTF_->build(CoreTensor, "Tau", spin_cases({"pphh"}));
 
     set_tensor();
 
@@ -90,11 +97,18 @@ void DSRG_MRPT2::set_density() {
     Gamma1.block("aa")("pq") = rdms_.g1a()("pq");
     Gamma1.block("AA")("pq") = rdms_.g1b()("pq");
 
-    for (const std::string& block : {"aa", "AA"}) {
+    for (const std::string& block : {"aa", "AA", "vv", "VV"}) {
         (Eta1.block(block)).iterate([&](const std::vector<size_t>& i, double& value) {
             value = (i[0] == i[1]) ? 1.0 : 0.0;
         });
     }
+
+    for (const std::string& block : {"cc", "CC"}) {
+        (Gamma1.block(block)).iterate([&](const std::vector<size_t>& i, double& value) {
+            value = (i[0] == i[1]) ? 1.0 : 0.0;
+        });
+    }
+
     Eta1["uv"] -= Gamma1["uv"];
     Eta1["UV"] -= Gamma1["UV"];
 
@@ -180,7 +194,58 @@ void DSRG_MRPT2::set_dsrg_tensor() {
             else { value = Fb_[i[0]] - Fb_[i[1]];}
         }
     );
+
+    Delta2.iterate(
+        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+            if (spin[0] == AlphaSpin&& spin[1] == AlphaSpin) 
+                { value = Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]];}
+            else if (spin[0] == BetaSpin&& spin[1] == BetaSpin)
+                { value = Fb_[i[0]] + Fb_[i[1]] - Fb_[i[2]] - Fb_[i[3]];}
+            else { value = Fa_[i[0]] + Fb_[i[1]] - Fa_[i[2]] - Fb_[i[3]];}
+        }
+    );
+
+    Eeps2.iterate(
+        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+            if (spin[0] == AlphaSpin&& spin[1] == AlphaSpin) 
+                { value = dsrg_source_->compute_renormalized(Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]]);}
+            else if (spin[0] == BetaSpin&& spin[1] == BetaSpin)
+                { value = dsrg_source_->compute_renormalized(Fb_[i[0]] + Fb_[i[1]] - Fb_[i[2]] - Fb_[i[3]]);}
+            else { value = dsrg_source_->compute_renormalized(Fa_[i[0]] + Fb_[i[1]] - Fa_[i[2]] - Fb_[i[3]]);}
+        }
+    );
+
+
 }
+
+
+
+
+
+void DSRG_MRPT2::set_multiplier() {
+    set_z();
+    set_w();
+}
+
+
+void DSRG_MRPT2::set_z() {
+  
+
+}
+
+
+void DSRG_MRPT2::set_w() {
+
+}
+
+
+
+
+
+
+
+
+
 
 
 //NOTICE Only for test use, need to delete when done
@@ -224,19 +289,19 @@ void DSRG_MRPT2::compute_test_energy() {
 
     /************ NOTICE My Test ************/
     BlockedTensor f_t = BTF_->build(CoreTensor, "temporal tensor", spin_cases({"gg"}));
-    BlockedTensor temp2 = BTF_->build(CoreTensor, "temp2", spin_cases({"gg"}));
+    temp.zero();
    
-    temp2["xu"] = Gamma1_["xu"] * Delta1["xu"];
-    temp2["XU"] = Gamma1_["XU"] * Delta1["XU"];
+    temp["xu"] = Gamma1_["xu"] * Delta1["xu"];
+    temp["XU"] = Gamma1_["XU"] * Delta1["XU"];
     
     f_t["ia"]  = F["ia"]; 
     f_t["ia"] += F["ia"] * Eeps1["ia"];
-    f_t["ia"] += T2_["iuax"] * temp2["xu"] * Eeps1["ia"];
-    f_t["ia"] += T2_["iUaX"] * temp2["XU"] * Eeps1["ia"];
+    f_t["ia"] += T2_["iuax"] * temp["xu"] * Eeps1["ia"];
+    f_t["ia"] += T2_["iUaX"] * temp["XU"] * Eeps1["ia"];
     f_t["IA"]  = F["IA"]; 
     f_t["IA"] += F["IA"] * Eeps1["IA"];
-    f_t["IA"] += T2_["uIxA"] * temp2["xu"] * Eeps1["IA"];
-    f_t["IA"] += T2_["IUAX"] * temp2["XU"] * Eeps1["IA"];
+    f_t["IA"] += T2_["uIxA"] * temp["xu"] * Eeps1["IA"];
+    f_t["IA"] += T2_["IUAX"] * temp["XU"] * Eeps1["IA"];
 
     x1_energy += f_t["me"] * T1_["me"];
     x1_energy += f_t["my"] * T1_["mx"] * Eta1["xy"];
@@ -272,7 +337,104 @@ void DSRG_MRPT2::compute_test_energy() {
     x2_energy -=       F_["VM"] * T2_["uMxY"] * Lambda2_["xYuV"];
 
     outfile->Printf("\n    <[F, T2]>                      =  %6.12lf", x2_energy);
+
+    /************ NOTICE The MP2-like term ************/
+    double E = 0.0;
+
+    E += 0.25 * V_["efmn"] * T2_["mnef"];
+    E += 0.25 * V_["EFMN"] * T2_["MNEF"];
+    E += V_["eFmN"] * T2_["mNeF"];
+
+    temp = BTF_->build(CoreTensor, "temporal tensor", spin_cases({"aa"}));
+    temp["vu"] += 0.5 * V_["efmu"] * T2_["mvef"];
+    temp["vu"] += V_["fEuM"] * T2_["vMfE"];
+    temp["VU"] += 0.5 * V_["EFMU"] * T2_["MVEF"];
+    temp["VU"] += V_["eFmU"] * T2_["mVeF"];
+    E += temp["vu"] * Gamma1["uv"];
+    E += temp["VU"] * Gamma1["UV"];
+
+    temp.zero();
+    temp["vu"] += 0.5 * V_["vemn"] * T2_["mnue"];
+    temp["vu"] += V_["vEmN"] * T2_["mNuE"];
+    temp["VU"] += 0.5 * V_["VEMN"] * T2_["MNUE"];
+    temp["VU"] += V_["eVnM"] * T2_["nMeU"];
+    E += temp["vu"] * Eta1["uv"];
+    E += temp["VU"] * Eta1["UV"];
+
+
+    E += 0.25 * V_["efxu"] * T2_["yvef"] * Gamma1["xy"] * Gamma1["uv"];
+    E += 0.25 * V_["EFXU"] * T2_["YVEF"] * Gamma1["XY"] * Gamma1["UV"];
+    E += V_["eFxU"] * T2_["yVeF"] * Gamma1["xy"] * Gamma1["UV"];
+
+    E += 0.25 * V_["xumn"] * T2_["mnyv"] * Eta1["vu"] * Eta1["yx"];
+    E += 0.25 * V_["XUMN"] * T2_["MNYV"] * Eta1["VU"] * Eta1["YX"];
+    E += V_["xUmN"] * T2_["mNyV"] * Eta1["VU"] * Eta1["yx"];
+
+
+    temp = BTF_->build(CoreTensor, "temp", spin_cases({"aaaa"}));
     
+    temp["yvxu"] += V_["evmx"] * T2_["myeu"];
+    temp["yvxu"] += V_["vExM"] * T2_["yMuE"];
+    E += temp["yvxu"] * Gamma1["xy"] * Eta1["uv"];
+
+    temp["YVXU"] += V_["EVMX"] * T2_["MYEU"];
+    temp["YVXU"] += V_["eVmX"] * T2_["mYeU"];
+    E += temp["YVXU"] * Gamma1["XY"] * Eta1["UV"];
+   
+    E += V_["eVxM"] * T2_["yMeU"] * Gamma1["xy"] * Eta1["UV"];
+    E += V_["vEmX"] * T2_["mYuE"] * Gamma1["XY"] * Eta1["uv"];
+
+    // York's code
+    temp.zero();
+    temp["yvxu"] += 0.5 * Gamma1["wz"] * V_["vexw"] * T2_["yzue"];
+    temp["yvxu"] += Gamma1["WZ"] * V_["vExW"] * T2_["yZuE"];
+    temp["yvxu"] += 0.5 * Eta1["wz"] * T2_["myuw"] * V_["vzmx"];
+    temp["yvxu"] += Eta1["WZ"] * T2_["yMuW"] * V_["vZxM"];
+    E += temp["yvxu"] * Gamma1["xy"] * Eta1["uv"];
+
+    temp["YVXU"] += 0.5 * Gamma1["WZ"] * V_["VEXW"] * T2_["YZUE"];
+    temp["YVXU"] += Gamma1["wz"] * V_["eVwX"] * T2_["zYeU"];
+    temp["YVXU"] += 0.5 * Eta1["WZ"] * T2_["MYUW"] * V_["VZMX"];
+    temp["YVXU"] += Eta1["wz"] * V_["zVmX"] * T2_["mYwU"];
+    E += temp["YVXU"] * Gamma1["XY"] * Eta1["UV"];
+
+
+    outfile->Printf("\n    MP2-like term                  =  %6.12lf", E);
+
+    //NOTICE we are not saving the memory at this time
+    double Em = 0.0;
+    Em += 0.25 * V_["cdkl"] * T2_["ijab"] * Gamma1["ki"] * Gamma1["lj"] * Eta1["ac"] *Eta1["bd"];
+    Em += 0.25 * V_["CDKL"] * T2_["IJAB"] * Gamma1["KI"] * Gamma1["LJ"] * Eta1["AC"] *Eta1["BD"];
+    Em += V_["cDkL"] * T2_["iJaB"] * Gamma1["ki"] * Gamma1["LJ"] * Eta1["ac"] * Eta1["BD"];
+
+    outfile->Printf("\n    MP2-like term more memory      =  %6.12lf", Em);
+
+
+
+    temp = BTF_->build(CoreTensor, "temp", spin_cases({"pphh"}));
+    temp["cdkl"] = V["cdkl"];
+    temp["cdkl"] += V["cdkl"] * Eeps2["klcd"];
+    temp["CDKL"] = V["CDKL"];
+    temp["CDKL"] += V["CDKL"] * Eeps2["KLCD"];
+    temp["cDkL"] = V["cDkL"];
+    temp["cDkL"] += V["cDkL"] * Eeps2["kLcD"];
+
+    double Eg = 0.0;
+    Eg += 0.25 * temp["cdkl"] * T2_["ijab"] * Gamma1["ki"] * Gamma1["lj"] * Eta1["ac"] *Eta1["bd"];
+    Eg += 0.25 * temp["CDKL"] * T2_["IJAB"] * Gamma1["KI"] * Gamma1["LJ"] * Eta1["AC"] *Eta1["BD"];
+    Eg += temp["cDkL"] * T2_["iJaB"] * Gamma1["ki"] * Gamma1["LJ"] * Eta1["ac"] * Eta1["BD"];
+
+    outfile->Printf("\n    Energy in Lagrangian           =  %6.12lf", Eg);
+
+
+
+
+
+    double E_lag = 0.0;
+
+
+
+    outfile->Printf("\n    Energy in Lagrangian           =  %6.12lf", E_lag);
 }
 
 
@@ -340,6 +502,7 @@ SharedMatrix DSRG_MRPT2::compute_gradient() {
 	// TODO: compute the DSRG_MRPT2 gradient 
     print_method_banner({"DSRG-MRPT2 Gradient", "Shuhe Wang"});
     set_all_variables();
+    set_multiplier();
     // write_lagrangian();
     // write_1rdm_spin_dependent();
     // write_2rdm_spin_dependent();

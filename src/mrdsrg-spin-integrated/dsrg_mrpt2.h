@@ -241,6 +241,13 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     /// TPDM backtransform
     void tpdm_backtransform();
 
+   
+    void set_multiplier(); 
+
+    void set_z();
+    void set_w();
+
+
     /// List of core MOs (Correlated)
     std::vector<size_t> core_mos_;
     /// List of active MOs (Correlated)
@@ -284,8 +291,15 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     ambit::BlockedTensor F;
 
     ambit::BlockedTensor Eeps1;
+    ambit::BlockedTensor Eeps2;
+
 
     ambit::BlockedTensor Delta1;
+    ambit::BlockedTensor Delta2;
+
+    // Lagrange multiplier
+    ambit::BlockedTensor Kappa;
+    ambit::BlockedTensor Tau;
 
 
 
