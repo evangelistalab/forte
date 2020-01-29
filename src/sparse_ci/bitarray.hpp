@@ -199,6 +199,29 @@ template <size_t N> class BitArray {
         return *this;
     }
 
+    /// Bitwise XOR operator (^) that saves the result in a BitArray
+    void copy_xor(const BitArray<N>& lhs, BitArray<N>& result) const {
+        if constexpr (N == 64) {
+            result.words_[0] = words_[0] ^ lhs.words_[0];
+        } else if constexpr (N == 128) {
+            result.words_[0] = words_[0] ^ lhs.words_[0];
+            result.words_[1] = words_[1] ^ lhs.words_[1];
+        } else if constexpr (N == 192) {
+            result.words_[0] = words_[0] ^ lhs.words_[0];
+            result.words_[1] = words_[1] ^ lhs.words_[1];
+            result.words_[2] = words_[2] ^ lhs.words_[2];
+        } else if constexpr (N == 256) {
+            result.words_[0] = words_[0] ^ lhs.words_[0];
+            result.words_[1] = words_[1] ^ lhs.words_[1];
+            result.words_[2] = words_[2] ^ lhs.words_[2];
+            result.words_[3] = words_[3] ^ lhs.words_[3];
+        } else {
+            for (size_t n = 0; n < nwords_; n++) {
+                result.words_[n] = words_[n] ^ lhs.words_[n];
+            }
+        }
+    }
+
     /// Bitwise AND operator (&)
     BitArray<N> operator&(const BitArray<N>& lhs) const {
         BitArray<N> result;

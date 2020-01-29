@@ -440,6 +440,19 @@ template <size_t N> class DeterminantImpl : public BitArray<N> {
         return s;
     }
 
+    void copy_beta_bits(BitArray<nbits_half>& ba) const {
+        if constexpr (N == 128) {
+            ba.set_word(0, words_[1]);
+        } else if constexpr (N == 256) {
+            ba.set_word(0, words_[2]);
+            ba.set_word(1, words_[3]);
+        } else {
+            for (size_t i = 0; i < nwords_half; i++) {
+                ba.set_word(i, words_[nwords_half + i]);
+            }
+        }
+    }
+
     BitArray<nbits_half> get_bits(DetSpinType spin_type) {
         return (spin_type == DetSpinType::Alpha ? get_alfa_bits() : get_beta_bits());
     }

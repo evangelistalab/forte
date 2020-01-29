@@ -751,14 +751,14 @@ void SigmaVectorDynamic::compute_abab_coupling(const String& detIa, const std::v
             double sigma_I = 0.0;
             for (size_t posI = first_I; posI < last_I; ++posI) {
                 sigma_I = 0.0;
-                Ib = sorted_dets[posI].get_beta_bits();
+                sorted_dets[posI].copy_beta_bits(Ib);
                 for (size_t posJ = first_J; posJ < last_J; ++posJ) {
-                    Jb = sorted_dets[posJ].get_beta_bits();
+                    sorted_dets[posJ].copy_beta_bits(Jb);
 #if SIGMA_VEC_DEBUG
                     count_abab_total++;
 #endif
                     // find common bits
-                    IJb = Ib ^ Jb;
+                    Ib.copy_xor(Jb, IJb);
                     int ndiff = IJb.count();
                     if (ndiff == 2) {
                         uint64_t j = IJb.find_and_clear_first_one();
