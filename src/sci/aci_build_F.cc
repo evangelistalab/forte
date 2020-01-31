@@ -192,7 +192,7 @@ void AdaptiveCI::get_excited_determinants_sr(SharedMatrix evecs, SharedVector ev
             outfile->Printf("\n  Time spent merging thread F spaces: %20.6f", merge_t.get());
     } // Close threads
 
-    // Remove P space 
+    // Remove P space
     const det_hashvec& pdets = P_space.wfn_hash();
     for( det_hashvec::iterator it = pdets.begin(), endit = pdets.end(); it != endit; ++it ){
         V_hash.erase(*it);
@@ -224,9 +224,10 @@ void AdaptiveCI::get_excited_determinants_sr(SharedMatrix evecs, SharedVector ev
     outfile->Printf("\n  Size of F space: %zu", F_space.size());
 }
 
-void AdaptiveCI::get_excited_determinants(int nroot, psi::SharedMatrix evecs,
+void AdaptiveCI::get_excited_determinants_avg(int nroot, SharedMatrix evecs,
+                                          SharedVector evals,
                                           DeterminantHashVec& P_space,
-                                          det_hash<std::vector<double>>& V_hash) {
+                                          std::vector<std::pair<double,Determinant>>& F_space) {
     size_t max_P = P_space.size();
     const det_hashvec& P_dets = P_space.wfn_hash();
 
@@ -445,7 +446,7 @@ void AdaptiveCI::get_excited_determinants(int nroot, psi::SharedMatrix evecs,
     {
         int tid = omp_get_thread_num();
         int ntd = omp_get_num_threads();
-    
+
         size_t N = 0;
         for( const auto& detpair : V_hash ){
             if( (N%ntd) == tid ){
@@ -463,7 +464,7 @@ void AdaptiveCI::get_excited_determinants(int nroot, psi::SharedMatrix evecs,
             }
             N++;
         }
-    }   
+    }
     outfile->Printf("\n  Time spent building sorting list: %1.6f", convert.get());
     outfile->Printf("\n  Size of F space: %zu", F_space.size());
 
@@ -475,7 +476,7 @@ void AdaptiveCI::get_excited_determinants_core(SharedMatrix evecs, SharedVector 
     size_t max_P = P_space.size();
     const det_hashvec& P_dets = P_space.wfn_hash();
     int nroot = 1;
-    det_hash<std::vector<double>> V_hash; 
+    det_hash<std::vector<double>> V_hash;
 // Loop over reference determinants
 #pragma omp parallel
     {
@@ -693,7 +694,7 @@ void AdaptiveCI::get_excited_determinants_core(SharedMatrix evecs, SharedVector 
     {
         int tid = omp_get_thread_num();
         int ntd = omp_get_num_threads();
-    
+
         size_t N = 0;
         for( const auto& detpair : V_hash ){
             if( (N%ntd) == tid ){
@@ -711,7 +712,7 @@ void AdaptiveCI::get_excited_determinants_core(SharedMatrix evecs, SharedVector 
             }
             N++;
         }
-    }   
+    }
     outfile->Printf("\n  Time spent building sorting list: %1.6f", convert.get());
     outfile->Printf("\n  Size of F space: %zu", F_space.size());
 }
@@ -817,7 +818,7 @@ AdaptiveCI::get_excited_determinants_batch_vecsort(SharedMatrix evecs, SharedVec
             int tid = omp_get_thread_num();
 
             auto& A_b = A_b_t.first[tid];
-        
+
             #pragma omp critical
             {
         //        outfile->Printf("\n Ab(%d) size = %zu", tid, A_b.size());
@@ -834,7 +835,7 @@ AdaptiveCI::get_excited_determinants_batch_vecsort(SharedMatrix evecs, SharedVec
 
         for( auto& pair : master ){
             const double& en = pair.second;
-            const auto& det = pair.first;    
+            const auto& det = pair.first;
             if (excluded + en < b_sigma) {
                 excluded += en;
             } else {
@@ -973,9 +974,9 @@ det_hash<double> AdaptiveCI::get_bin_F_space(int bin, int nbin,double E0, Shared
         int thread_id = omp_get_thread_num();
 
 #pragma omp critical
-        { 
-            A_b_t.resize(n_threads); 
-            //E_b_t.resize(n_threads); 
+        {
+            A_b_t.resize(n_threads);
+            //E_b_t.resize(n_threads);
         }
 
         det_hash<double>& A_b = A_b_t[thread_id];
@@ -1002,10 +1003,10 @@ det_hash<double> AdaptiveCI::get_bin_F_space(int bin, int nbin,double E0, Shared
         for (size_t I = start_idx; I < end_idx; ++I) {
             double c_I = evecs->get(I, 0);
             const Determinant& det = dets[I];
-            std::vector<std::vector<int>> noalpha = det.get_asym_occ(act_mo);
-            std::vector<std::vector<int>> nobeta = det.get_bsym_occ(act_mo);
-            std::vector<std::vector<int>> nvalpha = det.get_asym_vir(act_mo);
-            std::vector<std::vector<int>> nvbeta = det.get_bsym_vir(act_mo);
+            std::vector<std::vector<int>> noalpha = get_asym_occ(det,act_mo);
+            std::vector<std::vector<int>> nobeta = get_bsym_occ(det, act_mo);
+            std::vector<std::vector<int>> nvalpha = get_asym_vir(det,act_mo);
+            std::vector<std::vector<int>> nvbeta = get_bsym_vir(det,act_mo);
 
             Determinant new_det(det);
             // Generate alpha excitations
@@ -1217,7 +1218,7 @@ det_hash<double> AdaptiveCI::get_bin_F_space(int bin, int nbin,double E0, Shared
 
         //size_t idx = 0;
         //for( auto& pair : bin_E_space ){
-        //    if( (idx % n_threads) == thread_id ){ 
+        //    if( (idx % n_threads) == thread_id ){
         //        auto& det = pair.first;
         //        double& V = pair.second;
 
@@ -1241,7 +1242,7 @@ AdaptiveCI::get_bin_F_space_vecsort(int bin, int nbin, SharedMatrix evecs, Deter
     const size_t n_dets = P_space.size();
     const det_hashvec& dets = P_space.wfn_hash();
     int nmo = as_ints_->nmo();
-    std::vector<int> act_mo = mo_space_info_->get_dimension("ACTIVE").blocks();
+    std::vector<int> act_mo = mo_space_info_->dimension("ACTIVE").blocks();
 
     std::vector<std::vector<std::pair<Determinant, double>>> vec_A_b_t;
     std::vector<size_t> dets_t;
@@ -1613,7 +1614,7 @@ outfile->Printf("\n  Inter-thread merge: %1.6f", merget.get());
 std::vector<std::pair<int, Determinant>> AdaptiveCI::ras_masks() {
 
     // Get the number of masks;
-    // Input => [ <irrep>, <min mo>, <max mo>, <ndiff>, ... ] 
+    // Input => [ <irrep>, <min mo>, <max mo>, <ndiff>, ... ]
     std::vector<int> ras_spaces = options_->get_int_vector("ACI_RAS_SPACES");
     size_t total_size = ras_spaces.size();
 
@@ -1631,7 +1632,7 @@ std::vector<std::pair<int, Determinant>> AdaptiveCI::ras_masks() {
     for( int m = 0; m < n_mask; ++m ){
         uint64_t mask;
         UI64Determinant tmp_det;
-            
+
         int min = ras_spaces[m*3];
         size_t max = ras_spaces[m*3 +1];
         size_t r = ras_spaces[m*3 +2];
@@ -1642,7 +1643,7 @@ std::vector<std::pair<int, Determinant>> AdaptiveCI::ras_masks() {
             tmp_det.set_beta_bit(n, true);
         }
         ras_pairs.push_back(std::make_pair(r, tmp_det));
-    } 
+    }
 
     return ras_pairs;
 
@@ -1865,7 +1866,7 @@ void AdaptiveCI::get_excited_determinants_restrict(int nroot, SharedMatrix evecs
     {
         size_t tid = omp_get_thread_num();
         size_t ntd = omp_get_num_threads();
-    
+
         size_t N = 0;
         for( const auto& detpair : V_hash ){
             if( (N%ntd) == tid ){
@@ -1883,7 +1884,7 @@ void AdaptiveCI::get_excited_determinants_restrict(int nroot, SharedMatrix evecs
             }
             N++;
         }
-    }   
+    }
     outfile->Printf("\n  Time spent building sorting list: %1.6f", convert.get());
     outfile->Printf("\n  Size of F space: %zu", F_space.size());
 }

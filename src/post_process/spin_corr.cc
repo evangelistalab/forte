@@ -43,7 +43,7 @@ SpinCorr::SpinCorr(RDMs rdms, std::shared_ptr<ForteOptions> options, std::shared
     std::shared_ptr<ActiveSpaceIntegrals> as_ints)
       : rdms_(rdms), options_(options), mo_space_info_(mo_space_info), as_ints_(as_ints) {
 
-    nactpi_ = mo_space_info_->get_dimension("ACTIVE");
+    nactpi_ = mo_space_info_->dimension("ACTIVE");
     nirrep_ = nactpi_.n(); 
     nact_ = nactpi_.sum();
 }
@@ -59,9 +59,9 @@ std::pair<psi::SharedMatrix, psi::SharedMatrix> SpinCorr::compute_nos() {
     psi::SharedMatrix Ua, Ub;
 
 
-    psi::Dimension nmopi = mo_space_info_->get_dimension("ALL");
-    psi::Dimension fdocc = mo_space_info_->get_dimension("FROZEN_DOCC");
-    psi::Dimension rdocc = mo_space_info_->get_dimension("RESTRICTED_DOCC");
+    psi::Dimension nmopi = mo_space_info_->dimension("ALL");
+    psi::Dimension fdocc = mo_space_info_->dimension("FROZEN_DOCC");
+    psi::Dimension rdocc = mo_space_info_->dimension("RESTRICTED_DOCC");
 
 
     std::shared_ptr<psi::Matrix> opdm_a(new psi::Matrix("OPDM_A", nirrep_, nactpi_, nactpi_));
@@ -179,7 +179,7 @@ void SpinCorr::spin_analysis() {
         Ua_full->identity();
         Ub_full->identity();
 
-        auto actpi = mo_space_info_->get_absolute_mo("ACTIVE");
+        auto actpi = mo_space_info_->absolute_mo("ACTIVE");
         for (size_t h = 0; h < nirrep_; ++h) {
             // skip frozen/restricted docc
             int nact_i = nactpi_[h];
@@ -205,7 +205,7 @@ void SpinCorr::spin_analysis() {
 
         auto loc = std::make_shared<LOCALIZE>(options_, as_ints_->ints(), mo_space_info_);
 
-        std::vector<size_t> actmo = mo_space_info_->get_absolute_mo("ACTIVE");
+        std::vector<size_t> actmo = mo_space_info_->absolute_mo("ACTIVE");
         std::vector<int> loc_mo(2);
         loc_mo[0] = static_cast<int>(actmo[0]);
         loc_mo[1] = static_cast<int>(actmo.back());
