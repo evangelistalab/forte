@@ -42,6 +42,7 @@
 #include "helpers/printing.h"
 
 #include "orbital_embedding.h"
+#include "pao_builder.h"
 
 using namespace psi;
 
@@ -386,9 +387,9 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
     SharedVector lo(new Vector("lo", nirrep, nroccpi));
     P_oo->diagonalize(Uo, lo, descending);
 
-    SharedMatrix P_vv = Pf->get_block(vir, vir);
     SharedMatrix Uv(new Matrix("Uv", nirrep, nrvirpi, nrvirpi));
     SharedVector lv(new Vector("lv", nirrep, nrvirpi));
+    SharedMatrix P_vv = Pf->get_block(vir, vir);
     P_vv->diagonalize(Uv, lv, descending);
 
     SharedMatrix U_all(new Matrix("U with Pab", nirrep, nmopi, nmopi));
@@ -518,6 +519,14 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
             }
         }
     }
+
+	if (options.get_str("EMBEDDING_VIRTUAL_SPACE") == "PAO") {
+		// Call build_PAOs
+		double tau = options.get_double("PAO_THRESHOLD");
+
+		// Form new index_A_vir and index_B_vir
+
+	}
 
     // Collect the size of each space
     int num_Fo = index_frozen_core.size();

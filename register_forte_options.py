@@ -158,6 +158,12 @@ def register_embedding_options(forte_options):
     forte_options.add_int(
         "EMBEDDING_ADJUST_B_UOCC", 0,
         "Adjust number of virtual orbitals between A and B, +: move to B, -: move to A")
+    forte_options.add_str(
+        "EMBEDDING_VIRTUAL_SPACE", "DIRECT", 
+        "Vitual space scheme, DIRECT, PAO or IAO.")
+    forte_options.add_double(
+        "PAO_THRESHOLD", 1e-8, 
+        "Virtual space truncation threshold for PAO.")
 
 def register_mo_space_info_options(forte_options):
     forte_options.add_array(

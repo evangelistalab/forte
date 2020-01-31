@@ -178,6 +178,7 @@ src/mrdsrg-spin-integrated/active_dsrgpt2.cc
 src/orbital-helpers/ao_helper.cc
 src/orbital-helpers/localize.cc
 src/orbital-helpers/iao_builder.cc
+src/orbital-helpers/pao_builder.cc
 src/orbital-helpers/mp2_nos.cc
 src/orbital-helpers/orbital_embedding.cc
 src/orbital-helpers/semi_canonicalize.cc
