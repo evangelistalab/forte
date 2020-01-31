@@ -40,6 +40,8 @@
 #include "forte-def.h"
 #include "helpers/iterative_solvers.h"
 #include "sigma_vector_dynamic.h"
+#include "integrals/active_space_integrals.h"
+#include "sparse_ci/determinant_functions.hpp"
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -72,7 +74,8 @@ size_t count_bbbb = 0;
 void print_SigmaVectorDynamic_stats();
 
 SigmaVectorDynamic::SigmaVectorDynamic(const DeterminantHashVec& space,
-                                       std::shared_ptr<ActiveSpaceIntegrals> fci_ints, size_t max_memory)
+                                       std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
+                                       size_t max_memory)
     : SigmaVector(space.size()), space_(space), fci_ints_(fci_ints),
       a_sorted_string_list_(space, fci_ints, DetSpinType::Alpha),
       b_sorted_string_list_(space, fci_ints, DetSpinType::Beta) {
@@ -423,7 +426,7 @@ void SigmaVectorDynamic::sigma_abab_dynamic_task(size_t task_id, size_t num_task
     }
 }
 
-bool SigmaVectorDynamic::compute_aa_coupling_and_store(const UI64Determinant::bit_t& Ib,
+bool SigmaVectorDynamic::compute_aa_coupling_and_store(const String& Ib,
                                                        const std::vector<double>& b,
                                                        size_t task_id) {
     bool stored = true;
@@ -432,9 +435,9 @@ bool SigmaVectorDynamic::compute_aa_coupling_and_store(const UI64Determinant::bi
 
     const auto& sorted_dets = b_sorted_string_list_.sorted_dets();
     const auto& range_I = b_sorted_string_list_.range(Ib);
-    UI64Determinant::bit_t Ia;
-    UI64Determinant::bit_t Ja;
-    UI64Determinant::bit_t IJa;
+    String Ia;
+    String Ja;
+    String IJa;
     size_t first_I = range_I.first;
     size_t last_I = range_I.second;
     double sigma_I = 0.0;
@@ -449,7 +452,7 @@ bool SigmaVectorDynamic::compute_aa_coupling_and_store(const UI64Determinant::bi
 #endif
             // find common bits
             IJa = Ja ^ Ia;
-            int ndiff = ui64_bit_count(IJa);
+            int ndiff = IJa.count();
             if (ndiff == 2) {
                 double H_IJ = slater_rules_single_alpha(Ib, Ia, Ja, fci_ints_);
                 sigma_I += H_IJ * b[posJ];
@@ -492,13 +495,12 @@ bool SigmaVectorDynamic::compute_aa_coupling_and_store(const UI64Determinant::bi
     return stored;
 }
 
-void SigmaVectorDynamic::compute_aa_coupling(const UI64Determinant::bit_t& Ib,
-                                             const std::vector<double>& b) {
+void SigmaVectorDynamic::compute_aa_coupling(const String& Ib, const std::vector<double>& b) {
     const auto& sorted_dets = b_sorted_string_list_.sorted_dets();
     const auto& range_I = b_sorted_string_list_.range(Ib);
-    UI64Determinant::bit_t Ia;
-    UI64Determinant::bit_t Ja;
-    UI64Determinant::bit_t IJa;
+    String Ia;
+    String Ja;
+    String IJa;
     size_t first_I = range_I.first;
     size_t last_I = range_I.second;
     double sigma_I = 0.0;
@@ -512,7 +514,7 @@ void SigmaVectorDynamic::compute_aa_coupling(const UI64Determinant::bit_t& Ib,
 #endif
             // find common bits
             IJa = Ja ^ Ia;
-            int ndiff = ui64_bit_count(IJa);
+            int ndiff = IJa.count();
             if (ndiff == 2) {
                 double H_IJ = slater_rules_single_alpha(Ib, Ia, Ja, fci_ints_);
                 sigma_I += H_IJ * b[posJ];
@@ -533,7 +535,7 @@ void SigmaVectorDynamic::compute_aa_coupling(const UI64Determinant::bit_t& Ib,
     }
 }
 
-bool SigmaVectorDynamic::compute_bb_coupling_and_store(const UI64Determinant::bit_t& Ia,
+bool SigmaVectorDynamic::compute_bb_coupling_and_store(const String& Ia,
                                                        const std::vector<double>& b,
                                                        size_t task_id) {
     bool stored = true;
@@ -542,9 +544,9 @@ bool SigmaVectorDynamic::compute_bb_coupling_and_store(const UI64Determinant::bi
 
     const auto& sorted_dets = a_sorted_string_list_.sorted_dets();
     const auto& range_I = a_sorted_string_list_.range(Ia);
-    UI64Determinant::bit_t Ib;
-    UI64Determinant::bit_t Jb;
-    UI64Determinant::bit_t IJb;
+    String Ib;
+    String Jb;
+    String IJb;
     size_t first_I = range_I.first;
     size_t last_I = range_I.second;
     double sigma_I = 0.0;
@@ -559,7 +561,7 @@ bool SigmaVectorDynamic::compute_bb_coupling_and_store(const UI64Determinant::bi
 #endif
             // find common bits
             IJb = Jb ^ Ib;
-            int ndiff = ui64_bit_count(IJb);
+            int ndiff = IJb.count();
             if (ndiff == 2) {
                 double H_IJ = slater_rules_single_beta(Ia, Ib, Jb, fci_ints_);
                 sigma_I += H_IJ * b[posJ];
@@ -602,13 +604,12 @@ bool SigmaVectorDynamic::compute_bb_coupling_and_store(const UI64Determinant::bi
     return stored;
 }
 
-void SigmaVectorDynamic::compute_bb_coupling(const UI64Determinant::bit_t& Ia,
-                                             const std::vector<double>& b) {
+void SigmaVectorDynamic::compute_bb_coupling(const String& Ia, const std::vector<double>& b) {
     const auto& sorted_dets = a_sorted_string_list_.sorted_dets();
     const auto& range_I = a_sorted_string_list_.range(Ia);
-    UI64Determinant::bit_t Ib;
-    UI64Determinant::bit_t Jb;
-    UI64Determinant::bit_t IJb;
+    String Ib;
+    String Jb;
+    String IJb;
     size_t first_I = range_I.first;
     size_t last_I = range_I.second;
     double sigma_I = 0.0;
@@ -622,7 +623,7 @@ void SigmaVectorDynamic::compute_bb_coupling(const UI64Determinant::bit_t& Ia,
 #endif
             // find common bits
             IJb = Jb ^ Ib;
-            int ndiff = ui64_bit_count(IJb);
+            int ndiff = IJb.count();
             if (ndiff == 2) {
                 double H_IJ = slater_rules_single_beta(Ia, Ib, Jb, fci_ints_);
                 sigma_I += H_IJ * b[posJ];
@@ -643,7 +644,7 @@ void SigmaVectorDynamic::compute_bb_coupling(const UI64Determinant::bit_t& Ia,
     }
 }
 
-bool SigmaVectorDynamic::compute_abab_coupling_and_store(const UI64Determinant::bit_t& detIa,
+bool SigmaVectorDynamic::compute_abab_coupling_and_store(const String& detIa,
                                                          const std::vector<double>& b,
                                                          size_t task_id) {
     const auto& sorted_half_dets = a_sorted_string_list_.sorted_half_dets();
@@ -652,26 +653,26 @@ bool SigmaVectorDynamic::compute_abab_coupling_and_store(const UI64Determinant::
     bool stored = true;
     size_t end = H_IJ_abab_list_thread_end_[task_id];
     size_t limit = H_IJ_list_thread_limit_[task_id];
-    UI64Determinant::bit_t detIJa_common;
-    UI64Determinant::bit_t Ib;
-    UI64Determinant::bit_t Jb;
-    UI64Determinant::bit_t IJb;
+    String detIJa_common;
+    String Ib;
+    String Jb;
+    String IJb;
 
     size_t group_num_elements = 0;
     for (const auto& detJa : sorted_half_dets) {
         detIJa_common = detIa ^ detJa;
-        int ndiff = ui64_bit_count(detIJa_common);
+        int ndiff = detIJa_common.count();
         if (ndiff == 2) {
             int i, a;
             for (int p = 0; p < nmo_; ++p) {
-                const bool la_p = ui64_get_bit(detIa, p);
-                const bool ra_p = ui64_get_bit(detJa, p);
+                const bool la_p = detIa.get_bit(p);
+                const bool ra_p = detJa.get_bit(p);
                 if (la_p ^ ra_p) {
                     i = la_p ? p : i;
                     a = ra_p ? p : a;
                 }
             }
-            double sign_ia = ui64_slater_sign(detIa, i, a);
+            double sign_ia = detIa.slater_sign(i, a);
             const auto& range_J = a_sorted_string_list_.range(detJa);
 
             size_t first_I = range_I.first;
@@ -690,7 +691,7 @@ bool SigmaVectorDynamic::compute_abab_coupling_and_store(const UI64Determinant::
 #endif
                     // find common bits
                     IJb = Jb ^ Ib;
-                    int ndiff = ui64_bit_count(IJb);
+                    int ndiff = IJb.count();
                     if (ndiff == 2) {
                         double H_IJ =
                             sign_ia * slater_rules_double_alpha_beta_pre(i, a, Ib, Jb, fci_ints_);
@@ -719,37 +720,35 @@ bool SigmaVectorDynamic::compute_abab_coupling_and_store(const UI64Determinant::
     return stored;
 }
 
-void SigmaVectorDynamic::compute_abab_coupling(const UI64Determinant::bit_t& detIa,
-                                               const std::vector<double>& b) {
+void SigmaVectorDynamic::compute_abab_coupling(const String& detIa, const std::vector<double>& b) {
     const auto& sorted_half_dets = a_sorted_string_list_.sorted_half_dets();
     const auto& sorted_dets = a_sorted_string_list_.sorted_dets();
     const auto& range_I = a_sorted_string_list_.range(detIa);
-    UI64Determinant::bit_t detIJa_common;
-    UI64Determinant::bit_t Ib;
-    UI64Determinant::bit_t Jb;
-    UI64Determinant::bit_t IJb;
+    String detIJa_common;
+    String Ib;
+    String Jb;
+    String IJb;
 
     for (const auto& detJa : sorted_half_dets) {
         detIJa_common = detIa ^ detJa;
-        int ndiff = ui64_bit_count(detIJa_common);
+        int ndiff = detIJa_common.count();
         if (ndiff == 2) {
             int i, a;
             for (int p = 0; p < nmo_; ++p) {
-                const bool la_p = ui64_get_bit(detIa, p);
-                const bool ra_p = ui64_get_bit(detJa, p);
+                const bool la_p = detIa.get_bit(p);
+                const bool ra_p = detJa.get_bit(p);
                 if (la_p ^ ra_p) {
                     i = la_p ? p : i;
                     a = ra_p ? p : a;
                 }
             }
-            double sign_ia = ui64_slater_sign(detIa, i, a);
+            double sign_ia = detIa.slater_sign(i, a);
             const auto& range_J = a_sorted_string_list_.range(detJa);
             size_t first_I = range_I.first;
             size_t last_I = range_I.second;
             size_t first_J = range_J.first;
             size_t last_J = range_J.second;
             double sigma_I = 0.0;
-            //    size_t num_elements = 0;
             for (size_t posI = first_I; posI < last_I; ++posI) {
                 sigma_I = 0.0;
                 Ib = sorted_dets[posI].get_beta_bits();
@@ -759,20 +758,21 @@ void SigmaVectorDynamic::compute_abab_coupling(const UI64Determinant::bit_t& det
                     count_abab_total++;
 #endif
                     // find common bits
-                    IJb = Jb ^ Ib;
-                    int ndiff = ui64_bit_count(IJb);
+                    IJb = Ib ^ Jb;
+                    int ndiff = IJb.count();
                     if (ndiff == 2) {
-                        double H_IJ =
-                            sign_ia * slater_rules_double_alpha_beta_pre(i, a, Ib, Jb, fci_ints_);
+                        uint64_t j = IJb.find_and_clear_first_one();
+                        uint64_t bb = IJb.find_first_one();
+                        const double H_IJ = Ib.slater_sign(j, bb) * fci_ints_->tei_ab(i, j, a, bb);
                         sigma_I += H_IJ * b[posJ];
 #if SIGMA_VEC_DEBUG
                         count_abab++;
 #endif
                     }
                 }
-                temp_sigma_[posI] += sigma_I;
+                temp_sigma_[posI] += sign_ia * sigma_I;
             }
         }
     }
 }
-}
+} // namespace forte

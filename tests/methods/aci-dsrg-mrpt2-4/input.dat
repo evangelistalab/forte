@@ -3,7 +3,7 @@ import forte
 memory 2 gb
 
 escf = -304.9057795504939463
-eaci = -305.390029668114892 
+eaci = -305.39002965581
 
 molecule ene2{
 0 1

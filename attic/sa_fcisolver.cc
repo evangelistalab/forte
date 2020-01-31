@@ -214,9 +214,9 @@ double SA_FCISolver::compute_energy() {
         int nroot;
         std::tie(symmetry, multiplicity, nroot, std::ignore) = cas_solutions;
 
-        psi::Dimension active_dim = mo_space_info_->get_dimension("ACTIVE");
-        std::vector<size_t> rdocc = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
-        std::vector<size_t> active = mo_space_info_->get_corr_abs_mo("ACTIVE");
+        psi::Dimension active_dim = mo_space_info_->dimension("ACTIVE");
+        std::vector<size_t> rdocc = mo_space_info_->corr_absolute_mo("RESTRICTED_DOCC");
+        std::vector<size_t> active = mo_space_info_->corr_absolute_mo("ACTIVE");
 
         int charge = psi::Process::environment.molecule()->molecular_charge();
         if (options_["CHARGE"].has_changed()) {

@@ -224,10 +224,9 @@ void AdaptiveCI::get_excited_determinants_sr(SharedMatrix evecs, SharedVector ev
     outfile->Printf("\n  Size of F space: %zu", F_space.size());
 }
 
-void AdaptiveCI::get_excited_determinants_avg(int nroot, SharedMatrix evecs,
-                                          SharedVector evals,
+void AdaptiveCI::get_excited_determinants(int nroot, psi::SharedMatrix evecs,
                                           DeterminantHashVec& P_space,
-                                          std::vector<std::pair<double,Determinant>>& F_space) {
+                                          det_hash<std::vector<double>>& V_hash) {
     size_t max_P = P_space.size();
     const det_hashvec& P_dets = P_space.wfn_hash();
 
@@ -741,8 +740,8 @@ AdaptiveCI::get_excited_determinants_batch_vecsort(SharedMatrix evecs, SharedVec
     size_t nvir2 = (nmo - nalpha_) * (nmo - nalpha_);
     size_t guess_size = n_dets * nocc2 * nvir2;
 
-    double guess_mem = guess_size * (4.0 + double(Determinant::num_det_bits)) * 1.25e-7 *
-                       1.4; // Est of map size in MB
+    double guess_mem =
+        guess_size * (4.0 + double(Determinant::nbits)) * 1.25e-7 * 1.4; // Est of map size in MB
     int nruns = static_cast<int>(std::ceil(guess_mem / max_mem));
 
     double total_excluded = 0.0;
@@ -868,8 +867,8 @@ AdaptiveCI::get_excited_determinants_batch(SharedMatrix evecs, SharedVector eval
     size_t nvir2 = (nmo - nalpha_) * (nmo - nalpha_);
     size_t guess_size = n_dets * nocc2 * nvir2;
     // outfile->Printf("\n  guess_size: %zu o: %zu, v: %zu", guess_size, nocc2, nvir2);
-    double guess_mem = guess_size * (4.0 + double(Determinant::num_det_bits)) * 1.25e-7 *
-                       1.4; // Est of map size in MB
+    double guess_mem =
+        guess_size * (4.0 + double(Determinant::nbits)) * 1.25e-7 * 1.4; // Est of map size in MB
     int nruns = static_cast<int>(std::ceil(guess_mem / max_mem));
 
     double total_excluded = 0.0;
@@ -962,7 +961,7 @@ det_hash<double> AdaptiveCI::get_bin_F_space(int bin, int nbin,double E0, Shared
     const size_t n_dets = P_space.size();
     const det_hashvec& dets = P_space.wfn_hash();
     int nmo = as_ints_->nmo();
-    std::vector<int> act_mo = mo_space_info_->get_dimension("ACTIVE").blocks();
+    std::vector<int> act_mo = mo_space_info_->dimension("ACTIVE").blocks();
 
     std::vector<det_hash<double>> A_b_t;
     //std::vector<det_hash<double>> E_b_t;
@@ -1237,7 +1236,6 @@ det_hash<double> AdaptiveCI::get_bin_F_space(int bin, int nbin,double E0, Shared
 
 std::pair<std::vector<std::vector<std::pair<Determinant, double>>>, std::vector<size_t>>
 AdaptiveCI::get_bin_F_space_vecsort(int bin, int nbin, SharedMatrix evecs, DeterminantHashVec& P_space) {
-
     det_hash<double> bin_f_space;
     local_timer build;
     const size_t n_dets = P_space.size();
@@ -1286,10 +1284,10 @@ AdaptiveCI::get_bin_F_space_vecsort(int bin, int nbin, SharedMatrix evecs, Deter
         for (size_t I = start_idx; I < end_idx; ++I) {
             double c_I = evecs->get(I, 0);
             const Determinant& det = dets[I];
-            std::vector<std::vector<int>> noalpha = det.get_asym_occ(act_mo);
-            std::vector<std::vector<int>> nobeta = det.get_bsym_occ(act_mo);
-            std::vector<std::vector<int>> nvalpha = det.get_asym_vir(act_mo);
-            std::vector<std::vector<int>> nvbeta = det.get_bsym_vir(act_mo);
+            std::vector<std::vector<int>> noalpha = get_asym_occ(det, act_mo);
+            std::vector<std::vector<int>> nobeta = get_bsym_occ(det, act_mo);
+            std::vector<std::vector<int>> nvalpha = get_asym_vir(det, act_mo);
+            std::vector<std::vector<int>> nvbeta = get_bsym_vir(det, act_mo);
             Determinant new_det(det);
 
             // Generate alpha excitations

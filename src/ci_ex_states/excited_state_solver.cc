@@ -56,10 +56,10 @@ void ExcitedStateSolver::set_options(std::shared_ptr<ForteOptions> options) {
 
     // TODO: move all ACI_* options to SCI_* and update register_forte_options.py
     ex_alg_ = options->get_str("SCI_EXCITED_ALGORITHM");
-    // set a default 
-    if( (nroot_ > 1) and (ex_alg_ == "NONE") ){
+    // set a default
+    if ((nroot_ > 1) and (ex_alg_ == "NONE")) {
         ex_alg_ = "ROOT_ORTHOGONALIZE";
-    }    
+    }
 
     core_ex_ = options->get_bool("SCI_CORE_EX");
     if (options->has_changed("ACI_QUIET_MODE")) {
@@ -373,19 +373,20 @@ void ExcitedStateSolver::print_final(DeterminantHashVec& dets, psi::SharedMatrix
                             as_ints_->scalar_energy();
         double exc_energy = pc_hartree2ev * (PQ_evals->get(i) - PQ_evals->get(0));
 
-        if( full_pt2_ ){
-            psi::outfile->Printf("\n  * Selected-CI Energy Root %3d             = %.12f Eh = %8.4f eV", i,
-                                 abs_energy, exc_energy);
-            psi::outfile->Printf("\n  * Selected-CI Energy Root %3d + full EPT2 = %.12f Eh = %8.4f eV", i,
-                                 abs_energy + multistate_pt2_energy_correction_[i],
-                                 exc_energy +
-                                     pc_hartree2ev * (multistate_pt2_energy_correction_[i] -
-                                                      multistate_pt2_energy_correction_[0]));
+        if (full_pt2_) {
+            psi::outfile->Printf(
+                "\n  * Selected-CI Energy Root %3d             = %.12f Eh = %8.4f eV", i,
+                abs_energy, exc_energy);
+            psi::outfile->Printf(
+                "\n  * Selected-CI Energy Root %3d + full EPT2 = %.12f Eh = %8.4f eV", i,
+                abs_energy + multistate_pt2_energy_correction_[i],
+                exc_energy + pc_hartree2ev * (multistate_pt2_energy_correction_[i] -
+                                              multistate_pt2_energy_correction_[0]));
         } else {
-            psi::outfile->Printf("\n  * Selected-CI Energy Root %3d        = %.12f Eh = %8.4f eV", i,
-                                 abs_energy, exc_energy);
-            psi::outfile->Printf("\n  * Selected-CI Energy Root %3d + EPT2 = %.12f Eh = %8.4f eV", i,
-                                 abs_energy + multistate_pt2_energy_correction_[i],
+            psi::outfile->Printf("\n  * Selected-CI Energy Root %3d        = %.12f Eh = %8.4f eV",
+                                 i, abs_energy, exc_energy);
+            psi::outfile->Printf("\n  * Selected-CI Energy Root %3d + EPT2 = %.12f Eh = %8.4f eV",
+                                 i, abs_energy + multistate_pt2_energy_correction_[i],
                                  exc_energy +
                                      pc_hartree2ev * (multistate_pt2_energy_correction_[i] -
                                                       multistate_pt2_energy_correction_[0]));
@@ -421,7 +422,7 @@ void ExcitedStateSolver::print_wfn(DeterminantHashVec& space, WFNOperator& op,
         for (size_t I = 0; I < max_dets; ++I) {
             psi::outfile->Printf("\n  %3zu  %9.6f %.9f  %10zu %s", I, tmp_evecs[I],
                                  tmp_evecs[I] * tmp_evecs[I], space.get_idx(tmp.get_det(I)),
-                                 tmp.get_det(I).str(nact_).c_str());
+                                 str(tmp.get_det(I), nact_).c_str());
         }
         state_label = s2_labels[std::round(spins[n].first * 2.0)];
         psi::outfile->Printf("\n\n  Spin state for root %zu: S^2 = %5.6f, S = %5.3f, %s", n,
@@ -437,7 +438,7 @@ void ExcitedStateSolver::wfn_to_file(DeterminantHashVec& det_space, psi::SharedM
     const det_hashvec& detmap = det_space.wfn_hash();
     for (size_t I = 0, maxI = detmap.size(); I < maxI; ++I) {
         final_wfn << std::scientific << std::setw(20) << std::setprecision(11)
-                  << evecs->get(I, root) << " \t " << detmap[I].str(nact_).c_str() << std::endl;
+                  << evecs->get(I, root) << " \t " << str(detmap[I], nact_).c_str() << std::endl;
     }
     final_wfn.close();
 }
@@ -645,4 +646,4 @@ void ExcitedStateSolver::set_excitation_algorithm(std::string ex_alg) { ex_alg_ 
 void ExcitedStateSolver::set_core_excitation(bool core_ex) { core_ex_ = core_ex; }
 
 void ExcitedStateSolver::set_quiet(bool quiet) { quiet_mode_ = quiet; }
-}
+} // namespace forte

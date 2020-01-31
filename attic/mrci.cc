@@ -55,11 +55,11 @@ void MRCI::startup() {
     mo_symmetry_ = mo_space_info_->symmetry("GENERALIZED PARTICLE");
 
     // Define the correlated space
-    auto correlated_mo = mo_space_info_->get_corr_abs_mo("GENERALIZED PARTICLE");
+    auto correlated_mo = mo_space_info_->corr_absolute_mo("GENERALIZED PARTICLE");
     std::sort(correlated_mo.begin(), correlated_mo.end());
 
     fci_ints_ = std::make_shared<ActiveSpaceIntegrals>(ints_, correlated_mo,
-                                               mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
+                                               mo_space_info_->corr_absolute_mo("RESTRICTED_DOCC"));
 
     // Set the integrals
     ambit::Tensor tei_active_aa =
@@ -137,7 +137,7 @@ double MRCI::compute_energy() {
 void MRCI::get_excited_determinants() {
     // Only excite into the restricted uocc
 
-    auto external_mo = mo_space_info_->get_corr_abs_mo("RESTRICTED_UOCC");
+    auto external_mo = mo_space_info_->corr_absolute_mo("RESTRICTED_UOCC");
     size_t nact = mo_space_info_->size("ACTIVE");
 
     DeterminantHashVec external;
@@ -260,8 +260,8 @@ void MRCI::get_excited_determinants() {
 void MRCI::upcast_reference() {
     //    auto mo_sym = mo_space_info_->symmetry("GENERALIZED PARTICLE");
 
-    //    psi::Dimension old_dim = mo_space_info_->get_dimension("ACTIVE");
-    //    psi::Dimension new_dim = mo_space_info_->get_dimension("GENERALIZED PARTICLE");
+    //    psi::Dimension old_dim = mo_space_info_->dimension("ACTIVE");
+    //    psi::Dimension new_dim = mo_space_info_->dimension("GENERALIZED PARTICLE");
     //    size_t nact = mo_space_info_->size("ACTIVE");
     //    size_t ncorr = mo_space_info_->size("GENERALIZED PARTICLE");
     //    int n_irrep = old_dim.n();

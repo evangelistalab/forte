@@ -48,8 +48,8 @@ bool pairCompDescend(const std::pair<double, Determinant> E1,
 ASCI::ASCI(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
            std::shared_ptr<ForteOptions> options, std::shared_ptr<MOSpaceInfo> mo_space_info,
            std::shared_ptr<ActiveSpaceIntegrals> as_ints)
-    : SelectedCIMethod(state, nroot, scf_info, mo_space_info, as_ints), scf_info_(scf_info), sparse_solver_(as_ints_),
-      options_(options) {
+    : SelectedCIMethod(state, nroot, scf_info, mo_space_info, as_ints), scf_info_(scf_info),
+      sparse_solver_(as_ints_), options_(options) {
 
     mo_symmetry_ = mo_space_info_->symmetry("ACTIVE");
     nuclear_repulsion_energy_ = as_ints->ints()->nuclear_repulsion_energy();
@@ -64,7 +64,7 @@ void ASCI::set_fci_ints(std::shared_ptr<ActiveSpaceIntegrals> fci_ints) {
     set_ints_ = true;
 }
 
-void ASCI::pre_iter_preparation(){
+void ASCI::pre_iter_preparation() {
     outfile->Printf("\n  Using %d threads", omp_get_max_threads());
 
     CI_Reference ref(scf_info_, options_, mo_space_info_, as_ints_, multiplicity_, twice_ms_,
@@ -79,6 +79,7 @@ void ASCI::pre_iter_preparation(){
     sparse_solver_.set_parallel(true);
     sparse_solver_.set_force_diag(options_->get_bool("FORCE_DIAG_METHOD"));
     sparse_solver_.set_e_convergence(options_->get_double("E_CONVERGENCE"));
+    sparse_solver_.set_r_convergence(options_->get_double("R_CONVERGENCE"));
     sparse_solver_.set_maxiter_davidson(options_->get_int("DL_MAXITER"));
     sparse_solver_.set_spin_project_full(options_->get_bool("SPIN_PROJECT_FULL"));
     sparse_solver_.set_spin_project(options_->get_bool("SCI_PROJECT_OUT_SPIN_CONTAMINANTS"));
@@ -100,11 +101,11 @@ void ASCI::startup() {
     multiplicity_ = state_.multiplicity();
 
     nact_ = mo_space_info_->size("ACTIVE");
-    nactpi_ = mo_space_info_->get_dimension("ACTIVE");
+    nactpi_ = mo_space_info_->dimension("ACTIVE");
 
     nirrep_ = mo_space_info_->nirrep();
     // Include frozen_docc and restricted_docc
-    frzcpi_ = mo_space_info_->get_dimension("INACTIVE_DOCC");
+    frzcpi_ = mo_space_info_->dimension("INACTIVE_DOCC");
     nfrzc_ = mo_space_info_->size("INACTIVE_DOCC");
 
     twice_ms_ = multiplicity_ - 1;
@@ -114,7 +115,7 @@ void ASCI::startup() {
 
     // Build the reference determinant and compute its energy
     CI_Reference ref(scf_info_, options_, mo_space_info_, as_ints_, multiplicity_, twice_ms_,
-                wavefunction_symmetry_);
+                     wavefunction_symmetry_);
     ref.build_reference(initial_reference_);
 
     // Read options
@@ -281,10 +282,10 @@ void ASCI::find_q_space() {
 
     local_timer build_sort;
     size_t N = 0;
-    if( options_->get_str("SCI_EXCITED_ALGORITHM") == "AVERAGE" ){
+    if (options_->get_str("SCI_EXCITED_ALGORITHM") == "AVERAGE") {
         for (const auto& I : V_hash) {
             double criteria = 0.0;
-            for( int n = 0; n < nroot_; ++n ){
+            for (int n = 0; n < nroot_; ++n) {
                 double delta = as_ints_->energy(I.first) - P_evals_->get(n);
                 double V = I.second;
 
@@ -425,7 +426,7 @@ void ASCI::print_wfn(DeterminantHashVec& space, WFNOperator& op, psi::SharedMatr
                                         "sextet", "septet", "octet", "nonet", "decatet"});
 
     std::vector<std::pair<double, double>> spins = compute_spin(space, op, evecs, nroot);
-    for( int n = 0; n < nroot; ++n ){
+    for (int n = 0; n < nroot; ++n) {
 
         DeterminantHashVec tmp;
         std::vector<double> tmp_evecs;
@@ -438,12 +439,12 @@ void ASCI::print_wfn(DeterminantHashVec& space, WFNOperator& op, psi::SharedMatr
         for (size_t I = 0; I < max_dets; ++I) {
             outfile->Printf("\n  %3zu  %9.6f %.9f  %10zu %s", I, tmp_evecs[I],
                             tmp_evecs[I] * tmp_evecs[I], space.get_idx(tmp.get_det(I)),
-                            tmp.get_det(I).str(nact_).c_str());
+                            str(tmp.get_det(I), nact_).c_str());
         }
         state_label = s2_labels[std::round(spins[n].first * 2.0)];
         root_spin_vec_.clear();
         root_spin_vec_[n] = std::make_pair(spins[n].first, spins[n].second);
-        outfile->Printf("\n\n  Spin state for root %d: S^2 = %5.6f, S = %5.3f, %s \n",n,
+        outfile->Printf("\n\n  Spin state for root %d: S^2 = %5.6f, S = %5.3f, %s \n", n,
                         root_spin_vec_[n].first, root_spin_vec_[n].second, state_label.c_str());
     }
 }
@@ -658,21 +659,12 @@ void ASCI::get_excited_determinants_sr(psi::SharedMatrix evecs, DeterminantHashV
     } // Close threads
 }
 
+DeterminantHashVec ASCI::get_PQ_space() { return PQ_space_; }
 
-DeterminantHashVec ASCI::get_PQ_space() {
-    return PQ_space_;
-}
+psi::SharedMatrix ASCI::get_PQ_evecs() { return PQ_evecs_; }
+psi::SharedVector ASCI::get_PQ_evals() { return PQ_evals_; }
 
-psi::SharedMatrix ASCI::get_PQ_evecs() {
-    return PQ_evecs_;
-}
-psi::SharedVector ASCI::get_PQ_evals() {
-    return PQ_evals_;
-}
-
-WFNOperator ASCI::get_op() {
-    return op_;
-}
+WFNOperator ASCI::get_op() { return op_; }
 
 void ASCI::set_method_variables(
     std::string ex_alg, size_t nroot_method, size_t root,
@@ -692,8 +684,7 @@ std::vector<double> ASCI::get_multistate_pt2_energy_correction() {
 }
 
 int ASCI::root_follow(DeterminantHashVec& P_ref, std::vector<double>& P_ref_evecs,
-                                DeterminantHashVec& P_space, psi::SharedMatrix P_evecs,
-                                int num_ref_roots) {
+                      DeterminantHashVec& P_space, psi::SharedMatrix P_evecs, int num_ref_roots) {
     int ndets = P_space.size();
     int max_dim = std::min(ndets, 1000);
     //    int max_dim = ndets;

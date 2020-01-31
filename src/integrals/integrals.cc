@@ -110,9 +110,9 @@ void ForteIntegrals::startup() {
     nmo_ = wfn_->nmo();
     nsopi_ = wfn_->nsopi();
     nmopi_ = wfn_->nmopi();
-    frzcpi_ = mo_space_info_->get_dimension("FROZEN_DOCC");
-    frzvpi_ = mo_space_info_->get_dimension("FROZEN_UOCC");
-    ncmopi_ = mo_space_info_->get_dimension("CORRELATED");
+    frzcpi_ = mo_space_info_->dimension("FROZEN_DOCC");
+    frzvpi_ = mo_space_info_->dimension("FROZEN_UOCC");
+    ncmopi_ = mo_space_info_->dimension("CORRELATED");
 
     ncmo_ = ncmopi_.sum();
 
@@ -198,6 +198,22 @@ double ForteIntegrals::oei_a(size_t p, size_t q) const {
 
 double ForteIntegrals::oei_b(size_t p, size_t q) const {
     return one_electron_integrals_b_[p * aptei_idx_ + q];
+}
+
+ambit::Tensor ForteIntegrals::oei_a_block(const std::vector<size_t>& p,
+                                                const std::vector<size_t>& q) {
+    ambit::Tensor t = ambit::Tensor::build(ambit::CoreTensor, "oei_a", {p.size(), q.size()});
+    t.iterate(
+        [&](const std::vector<size_t>& i, double& value) { value = oei_a(p[i[0]], q[i[1]]); });
+    return t;
+}
+
+ambit::Tensor ForteIntegrals::oei_b_block(const std::vector<size_t>& p,
+                                                const std::vector<size_t>& q) {
+    ambit::Tensor t = ambit::Tensor::build(ambit::CoreTensor, "oei_b", {p.size(), q.size()});
+    t.iterate(
+        [&](const std::vector<size_t>& i, double& value) { value = oei_b(p[i[0]], q[i[1]]); });
+    return t;
 }
 
 double ForteIntegrals::get_fock_a(size_t p, size_t q) const {
@@ -316,8 +332,8 @@ void ForteIntegrals::set_oei(size_t p, size_t q, double value, bool alpha) {
 void ForteIntegrals::compute_frozen_one_body_operator() {
     local_timer timer_frozen_one_body;
 
-    psi::Dimension frozen_dim = mo_space_info_->get_dimension("FROZEN_DOCC");
-    psi::Dimension nmopi = mo_space_info_->get_dimension("ALL");
+    psi::Dimension frozen_dim = mo_space_info_->dimension("FROZEN_DOCC");
+    psi::Dimension nmopi = mo_space_info_->dimension("ALL");
     // Need to get the inactive block of the C matrix
     psi::Dimension nsopi = wfn_->nsopi();
     std::shared_ptr<psi::Matrix> C_core(new psi::Matrix("C_core", nirrep_, nsopi, frozen_dim));

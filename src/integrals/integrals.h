@@ -195,18 +195,23 @@ class ForteIntegrals {
     /// notation <pq||rs>
     virtual double aptei_bb(size_t p, size_t q, size_t r, size_t s) = 0;
 
+    /// @return a tensor with a block of the alpha one-electron integrals
+    ambit::Tensor oei_a_block(const std::vector<size_t>& p, const std::vector<size_t>& q);
+    /// @return a tensor with a block of the beta one-electron integrals
+    ambit::Tensor oei_b_block(const std::vector<size_t>& p, const std::vector<size_t>& q);
+
     /// Grab a block of the integrals and return a tensor
     /// p, q, r, s correspond to the vector of indices you want for your tensor
     /// if p, q, r, s is equal to an array of all of the mos, then this will
-    /// return a tensor of dimension nmo^4.
+    /// @return a tensor with a block of the alpha-alpha antisymmetrized two-electron integrals
     virtual ambit::Tensor aptei_aa_block(const std::vector<size_t>& p, const std::vector<size_t>& q,
                                          const std::vector<size_t>& r,
                                          const std::vector<size_t>& s) = 0;
-    /// Same as above but reads alpha-beta chunck
+    /// @return a tensor with a block of the alpha-beta antisymmetrized two-electron integrals
     virtual ambit::Tensor aptei_ab_block(const std::vector<size_t>& p, const std::vector<size_t>& q,
                                          const std::vector<size_t>& r,
                                          const std::vector<size_t>& s) = 0;
-    /// The beta-beta integrals
+    /// @return a tensor with a block of the beta-beta antisymmetrized two-electron integrals
     virtual ambit::Tensor aptei_bb_block(const std::vector<size_t>& p, const std::vector<size_t>& q,
                                          const std::vector<size_t>& r,
                                          const std::vector<size_t>& s) = 0;
@@ -214,8 +219,7 @@ class ForteIntegrals {
     virtual ambit::Tensor three_integral_block(const std::vector<size_t>& A,
                                                const std::vector<size_t>& p,
                                                const std::vector<size_t>& q) = 0;
-    /// This function is only used by DiskDF and it is used to go from a Apq->Aq
-    /// tensor
+    /// This function is only used by DiskDF and it is used to go from a Apq->Aq tensor
     virtual ambit::Tensor three_integral_block_two_index(const std::vector<size_t>& A, size_t p,
                                                          const std::vector<size_t>& q) = 0;
 
