@@ -41,6 +41,7 @@ set forte {
   aci_enforce_spin_complete false
   active_ref_type hf 
   ACI_LOW_MEM_SCREENING true
+  r_convergence 1
 }
 
 energy('scf')
