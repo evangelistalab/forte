@@ -24,7 +24,6 @@ aci:
    - aci-17
    - aci-18
    - aci-19
-   - aci-20
    - aci-local-20
    - aci_scf-1
    - aci-full-pt2-1
