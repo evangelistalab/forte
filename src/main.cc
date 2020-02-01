@@ -28,11 +28,10 @@
 
 #include <fstream>
 
-
 #include "psi4/libpsi4util/process.h"
 
 #include "orbital-helpers/aosubspace.h"
-#include "orbital-helpers/avas.h"
+#include "orbital-helpers/orbital_embedding.h"
 #include "base_classes/forte_options.h"
 #include "base_classes/mo_space_info.h"
 #include "helpers/timer.h"
@@ -133,7 +132,7 @@ void banner() {
         "    Nan He, Nicholas Stair, Shuhe Wang, Renke Huang\n"
         "  ----------------------------------------------------------------------------\n",
         GIT_BRANCH, GIT_COMMIT_HASH);
-    outfile->Printf("\n  Size of Determinant class: %d", sizeof(Determinant));
+    outfile->Printf("\n  Size of Determinant class: %d bits", sizeof(Determinant) * 8);
 }
 
 } // namespace forte

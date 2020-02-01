@@ -26,7 +26,7 @@
  * @END LICENSE
  */
 
-#include "psi4/libmints/wavefunction.h"
+#include <psi4/libmints/wavefunction.h>
 
 #include "base_classes/mo_space_info.h"
 #include "base_classes/forte_options.h"
@@ -60,6 +60,8 @@ const std::vector<double>& ActiveSpaceMethod::energies() const { return energies
 
 void ActiveSpaceMethod::set_e_convergence(double value) { e_convergence_ = value; }
 
+void ActiveSpaceMethod::set_r_convergence(double value) { r_convergence_ = value; }
+
 void ActiveSpaceMethod::set_root(int value) { root_ = value; }
 
 void ActiveSpaceMethod::set_print(int level) { print_ = level; }
@@ -78,15 +80,13 @@ std::unique_ptr<ActiveSpaceMethod> make_active_space_method(
         //            as_ints);
         solver = std::make_unique<ExcitedStateSolver>(
             state, nroot, mo_space_info, as_ints,
-            std::make_unique<AdaptiveCI>(state, nroot, scf_info, options, mo_space_info,
-                                             as_ints));
+            std::make_unique<AdaptiveCI>(state, nroot, scf_info, options, mo_space_info, as_ints));
     } else if (type == "CAS") {
         solver = std::make_unique<FCI_MO>(state, nroot, scf_info, options, mo_space_info, as_ints);
     } else if (type == "ASCI") {
         solver = std::make_unique<ExcitedStateSolver>(
             state, nroot, mo_space_info, as_ints,
-            std::make_unique<ASCI>(state, nroot, scf_info, options, mo_space_info,
-                                             as_ints));
+            std::make_unique<ASCI>(state, nroot, scf_info, options, mo_space_info, as_ints));
     } else if (type == "CASSCF") {
         solver = std::make_unique<CASSCF>(state, nroot, scf_info, options, mo_space_info, as_ints);
     } else if (type == "PCI") {

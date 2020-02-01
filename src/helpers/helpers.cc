@@ -43,6 +43,7 @@
 #include "psi4/libpsio/psio.h"
 
 #include "base_classes/mo_space_info.h"
+#include "helpers/helpers.h"
 
 using namespace psi;
 
@@ -80,32 +81,34 @@ std::string get_ms_string(double twice_ms) {
     return ms_str;
 }
 
-Matrix tensor_to_matrix(ambit::Tensor t, psi::Dimension dims) {
-    // Copy the tensor to a plain matrix
-    size_t size = dims.sum();
-    Matrix M("M", size, size);
-    t.iterate([&](const std::vector<size_t>& i, double& value) { M.set(i[0], i[1], value); });
-
-    Matrix M_sym("M", dims, dims);
-    size_t offset = 0;
-    for (size_t h = 0; h < static_cast<size_t>(dims.n()); ++h) {
-        for (size_t p = 0; p < static_cast<size_t>(dims[h]); ++p) {
-            for (size_t q = 0; q < static_cast<size_t>(dims[h]); ++q) {
-                double value = M.get(p + offset, q + offset);
-                M_sym.set(h, p, q, value);
-            }
-        }
-        offset += dims[h];
-    }
-    return M_sym;
+py::array_t<double> ambit_to_np(ambit::Tensor t) {
+    return py::array_t<double>(t.dims(), &(t.data()[0]));
 }
 
 psi::SharedMatrix tensor_to_matrix(ambit::Tensor t) {
     size_t size1 = t.dim(0);
     size_t size2 = t.dim(1);
-    psi::SharedMatrix M(new psi::Matrix("M", size1, size2));
+    auto M = std::make_shared<psi::Matrix>("M", size1, size2);
     t.iterate([&](const std::vector<size_t>& i, double& value) { M->set(i[0], i[1], value); });
     return M;
+}
+
+psi::SharedMatrix tensor_to_matrix(ambit::Tensor t, psi::Dimension dims) {
+    auto M = tensor_to_matrix(t);
+
+    auto M_sym = std::make_shared<psi::Matrix>("M", dims, dims);
+
+    size_t offset = 0;
+    for (size_t h = 0; h < static_cast<size_t>(dims.n()); ++h) {
+        for (size_t p = 0; p < static_cast<size_t>(dims[h]); ++p) {
+            for (size_t q = 0; q < static_cast<size_t>(dims[h]); ++q) {
+                double value = M->get(p + offset, q + offset);
+                M_sym->set(h, p, q, value);
+            }
+        }
+        offset += dims[h];
+    }
+    return M_sym;
 }
 
 void write_disk_vector_double(const std::string& filename, const std::vector<double>& data) {

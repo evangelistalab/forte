@@ -26,6 +26,10 @@
  * @END LICENSE
  */
 
+#include <cmath>
+
+#include "psi4/libpsi4util/PsiOutStream.h"
+
 #include "base_classes/mo_space_info.h"
 #include "integrals/active_space_integrals.h"
 
@@ -34,10 +38,11 @@ namespace forte {
 ActiveSpaceIntegrals::ActiveSpaceIntegrals(std::shared_ptr<ForteIntegrals> ints,
                                            std::vector<size_t> active_mo,
                                            std::vector<size_t> restricted_docc_mo)
-    : ints_(ints), active_mo_(active_mo), restricted_docc_mo_(restricted_docc_mo) {
-    nmo_ = active_mo_.size();
+    : nmo_(active_mo.size()), ints_(ints), active_mo_(active_mo),
+      restricted_docc_mo_(restricted_docc_mo) {
     startup();
 }
+
 void ActiveSpaceIntegrals::RestrictedOneBodyOperator(std::vector<double>& oei_a,
                                                      std::vector<double>& oei_b) {
 
@@ -106,48 +111,6 @@ void ActiveSpaceIntegrals::RestrictedOneBodyOperator(std::vector<double>& oei_a,
     }
 }
 
-ActiveSpaceIntegrals::ActiveSpaceIntegrals(std::shared_ptr<ForteIntegrals> ints,
-                                           std::shared_ptr<MOSpaceInfo> mospace_info)
-    : ints_(ints) {
-    std::vector<size_t> cmo_to_mo;
-    std::vector<size_t> fomo_to_mo;
-
-    nmo_ = mospace_info->size("ACTIVE");
-    cmo_to_mo = mospace_info->get_corr_abs_mo("ACTIVE");
-    fomo_to_mo = mospace_info->get_corr_abs_mo("RESTRICTED_DOCC");
-
-    // TODO: rewrite using other constructor above
-
-    nmo2_ = nmo_ * nmo_;
-    nmo3_ = nmo_ * nmo_ * nmo_;
-    nmo4_ = nmo_ * nmo_ * nmo_ * nmo_;
-
-    // size_t nfomo =  mospace_info->size("RESTRICTED_DOCC");
-
-    oei_a_.resize(nmo2_);
-    oei_b_.resize(nmo2_);
-    tei_aa_.resize(nmo4_);
-    tei_ab_.resize(nmo4_);
-    tei_bb_.resize(nmo4_);
-    diag_tei_aa_.resize(nmo2_);
-    diag_tei_ab_.resize(nmo2_);
-    diag_tei_bb_.resize(nmo2_);
-
-    frozen_core_energy_ = ints->frozen_core_energy();
-    // Initialize tei_rdocc vectors, but don't store them as global variable
-
-    // Grab all integrals in blocks
-    ambit::Tensor act_aa = ints->aptei_aa_block(cmo_to_mo, cmo_to_mo, cmo_to_mo, cmo_to_mo);
-    ambit::Tensor act_ab = ints->aptei_ab_block(cmo_to_mo, cmo_to_mo, cmo_to_mo, cmo_to_mo);
-    ambit::Tensor act_bb = ints->aptei_bb_block(cmo_to_mo, cmo_to_mo, cmo_to_mo, cmo_to_mo);
-    tei_aa_ = act_aa.data();
-    tei_ab_ = act_ab.data();
-    tei_bb_ = act_bb.data();
-
-    scalar_energy_ = ints->scalar();
-
-    RestrictedOneBodyOperator(oei_a_, oei_b_);
-}
 void ActiveSpaceIntegrals::startup() {
 
     nmo2_ = nmo_ * nmo_;
@@ -164,6 +127,7 @@ void ActiveSpaceIntegrals::startup() {
     diag_tei_bb_.resize(nmo2_);
     frozen_core_energy_ = ints_->frozen_core_energy();
 }
+
 void ActiveSpaceIntegrals::set_active_integrals(const ambit::Tensor& act_aa,
                                                 const ambit::Tensor& act_ab,
                                                 const ambit::Tensor& act_bb) {
@@ -171,6 +135,7 @@ void ActiveSpaceIntegrals::set_active_integrals(const ambit::Tensor& act_aa,
     tei_ab_ = act_ab.data();
     tei_bb_ = act_bb.data();
 }
+
 void ActiveSpaceIntegrals::compute_restricted_one_body_operator() {
     nmo2_ = nmo_ * nmo_;
     oei_a_.resize(nmo2_);
@@ -196,69 +161,40 @@ std::vector<size_t> ActiveSpaceIntegrals::restricted_docc_mo() const { return re
 double ActiveSpaceIntegrals::energy(const Determinant& det) const {
     double energy = frozen_core_energy_;
 
-#ifdef SMALL_BITSET
-    uint64_t Ia = det.get_alfa_bits();
-    uint64_t Ib = det.get_beta_bits();
+    String Ia = det.get_alfa_bits();
+    String Ib = det.get_beta_bits();
+    String Iac;
+    String Ibc;
 
-    int naocc = det.count_alfa();
-    int nbocc = det.count_beta();
+    int naocc = Ia.count();
+    int nbocc = Ib.count();
 
     for (int A = 0; A < naocc; ++A) {
-        int p = lowest_one_idx(Ia);
+        int p = Ia.find_and_clear_first_one();
         energy += oei_a_[p * nmo_ + p];
-        Ia = clear_lowest_one(Ia);
-        uint64_t Iac = Ia;
 
+        Iac = Ia;
         for (int AA = A + 1; AA < naocc; ++AA) {
-            int q = lowest_one_idx(Iac);
+            int q = Iac.find_and_clear_first_one();
             energy += tei_aa_[p * nmo3_ + q * nmo2_ + p * nmo_ + q];
-            Iac = clear_lowest_one(Iac);
         }
 
-        uint64_t Ibc = Ib;
+        Ibc = Ib;
         for (int B = 0; B < nbocc; ++B) {
-            int q = lowest_one_idx(Ibc);
+            int q = Ibc.find_and_clear_first_one();
             energy += tei_ab_[p * nmo3_ + q * nmo2_ + p * nmo_ + q];
-            Ibc = clear_lowest_one(Ibc);
         }
     }
 
     for (int B = 0; B < nbocc; ++B) {
-        int p = lowest_one_idx(Ib);
+        int p = Ib.find_and_clear_first_one();
         energy += oei_b_[p * nmo_ + p];
-        Ib = clear_lowest_one(Ib);
-        uint64_t Ibc = Ib;
+        Ibc = Ib;
         for (int BB = B + 1; BB < nbocc; ++BB) {
-            int q = lowest_one_idx(Ibc);
+            int q = Ibc.find_and_clear_first_one();
             energy += tei_bb_[p * nmo3_ + q * nmo2_ + p * nmo_ + q];
-            Ibc = clear_lowest_one(Ibc);
         }
     }
-#else
-    for (size_t p = 0; p < nmo_; p++) {
-        if (det.get_alfa_bit(p)) {
-            energy += oei_a_[p * nmo_ + p];
-            for (size_t q = p + 1; q < nmo_; ++q) {
-                if (det.get_alfa_bit(q)) {
-                    energy += tei_aa_[p * nmo3_ + q * nmo2_ + p * nmo_ + q];
-                }
-            }
-            for (size_t q = 0; q < nmo_; ++q) {
-                if (det.get_beta_bit(q)) {
-                    energy += tei_ab_[p * nmo3_ + q * nmo2_ + p * nmo_ + q];
-                }
-            }
-        }
-        if (det.get_beta_bit(p)) {
-            energy += oei_b_[p * nmo_ + p];
-            for (size_t q = p + 1; q < nmo_; ++q) {
-                if (det.get_beta_bit(q)) {
-                    energy += tei_bb_[p * nmo3_ + q * nmo2_ + p * nmo_ + q];
-                }
-            }
-        }
-    }
-#endif
 
     return energy;
 }
@@ -426,164 +362,6 @@ double ActiveSpaceIntegrals::slater_rules(const Determinant& lhs, const Determin
     return (matrix_element);
 }
 
-double ActiveSpaceIntegrals::slater_rules_single_alpha(const Determinant& lhs,
-                                                       const Determinant& rhs) const {
-    // Slater rule 2 PhiI = j_a^+ i_a PhiJ
-    size_t i = 0;
-    size_t j = 0;
-    for (size_t p = 0; p < nmo_; ++p) {
-        if ((lhs.get_alfa_bit(p) != rhs.get_alfa_bit(p)) and lhs.get_alfa_bit(p))
-            i = p;
-        if ((lhs.get_alfa_bit(p) != rhs.get_alfa_bit(p)) and rhs.get_alfa_bit(p))
-            j = p;
-    }
-    double sign = lhs.slater_sign_aa(i, j);
-    // Diagonal contribution
-    double matrix_element = oei_a_[i * nmo_ + j];
-    for (size_t p = 0; p < nmo_; ++p) {
-        if (lhs.get_alfa_bit(p) and rhs.get_alfa_bit(p)) {
-            matrix_element += tei_aa_[i * nmo3_ + p * nmo2_ + j * nmo_ + p];
-        }
-        if (lhs.get_beta_bit(p) and rhs.get_beta_bit(p)) {
-            matrix_element += tei_ab_[i * nmo3_ + p * nmo2_ + j * nmo_ + p];
-        }
-    }
-    return (sign * matrix_element);
-}
-
-double ActiveSpaceIntegrals::slater_rules_single_beta(const Determinant& lhs,
-                                                      const Determinant& rhs) const {
-    // Slater rule 2 PhiI = j_b^+ i_b PhiJ
-    size_t i = 0;
-    size_t j = 0;
-    for (size_t p = 0; p < nmo_; ++p) {
-        if ((lhs.get_beta_bit(p) != rhs.get_beta_bit(p)) and lhs.get_beta_bit(p))
-            i = p;
-        if ((lhs.get_beta_bit(p) != rhs.get_beta_bit(p)) and rhs.get_beta_bit(p))
-            j = p;
-    }
-    double sign = lhs.slater_sign_bb(i, j);
-    // Diagonal contribution
-    double matrix_element = oei_b_[i * nmo_ + j];
-    for (size_t p = 0; p < nmo_; ++p) {
-        if (lhs.get_alfa_bit(p) and rhs.get_alfa_bit(p)) {
-            matrix_element += tei_ab_[p * nmo3_ + i * nmo2_ + p * nmo_ + j];
-        }
-        if (lhs.get_beta_bit(p) and rhs.get_beta_bit(p)) {
-            matrix_element += tei_bb_[i * nmo3_ + p * nmo2_ + j * nmo_ + p];
-        }
-    }
-
-    return (sign * matrix_element);
-}
-
-double ActiveSpaceIntegrals::slater_rules_double_alpha_alpha(const Determinant& lhs,
-                                                             const Determinant& rhs) const {
-    // Slater rule 3 PhiI = k_a^+ l_a^+ j_a i_a PhiJ
-    // Diagonal contribution
-    int i = -1;
-    int k = -1;
-    int j, l;
-    for (size_t p = 0; p < nmo_; ++p) {
-        if ((lhs.get_alfa_bit(p) != rhs.get_alfa_bit(p)) and lhs.get_alfa_bit(p)) {
-            if (i == -1) {
-                i = p;
-            } else {
-                j = p;
-            }
-        }
-        if ((lhs.get_alfa_bit(p) != rhs.get_alfa_bit(p)) and rhs.get_alfa_bit(p)) {
-            if (k == -1) {
-                k = p;
-            } else {
-                l = p;
-            }
-        }
-    }
-    double sign = lhs.slater_sign_aaaa(i, j, k, l);
-    return (sign * tei_aa_[i * nmo3_ + j * nmo2_ + k * nmo_ + l]);
-}
-
-double ActiveSpaceIntegrals::slater_rules_double_beta_beta(const Determinant& lhs,
-                                                           const Determinant& rhs) const {
-    // Slater rule 3 PhiI = k_a^+ l_a^+ j_a i_a PhiJ
-    // Diagonal contribution
-    int i = -1;
-    int k = -1;
-    int j, l;
-    for (size_t p = 0; p < nmo_; ++p) {
-        if ((lhs.get_beta_bit(p) != rhs.get_beta_bit(p)) and lhs.get_beta_bit(p)) {
-            if (i == -1) {
-                i = p;
-            } else {
-                j = p;
-            }
-        }
-        if ((lhs.get_beta_bit(p) != rhs.get_beta_bit(p)) and rhs.get_beta_bit(p)) {
-            if (k == -1) {
-                k = p;
-            } else {
-                l = p;
-            }
-        }
-    }
-    // double sign = SlaterSign(I, nmo_ + i, nmo_ + j, nmo_ + k, nmo_ + l);
-    double sign = lhs.slater_sign_bbbb(i, j, k, l);
-    return sign * tei_bb_[i * nmo3_ + j * nmo2_ + k * nmo_ + l];
-}
-
-double ActiveSpaceIntegrals::slater_rules_double_alpha_beta(const Determinant& lhs,
-                                                            const Determinant& rhs) const {
-    // Slater rule 3 PhiI = j_a^+ i_a PhiJ
-    int i, j, k, l;
-    for (size_t p = 0; p < nmo_; ++p) {
-        const bool la_p = lhs.get_alfa_bit(p);
-        const bool ra_p = rhs.get_alfa_bit(p);
-        if (la_p ^ ra_p) {
-            i = la_p ? p : i; // i += la_p * p;
-            k = ra_p ? p : k; // k += ra_p * p;
-        }
-        const bool lb_p = lhs.get_beta_bit(p);
-        const bool rb_p = rhs.get_beta_bit(p);
-        if (lb_p ^ rb_p) {
-            j = lb_p ? p : j;
-            l = rb_p ? p : l;
-            //            j += lb_p * p;
-            //            l += rb_p * p;
-        }
-        //        if (lhs.get_alfa_bit(p) ^ rhs.get_alfa_bit(p)) {
-        //            i += lhs.get_alfa_bit(p) * p;
-        //            k += rhs.get_alfa_bit(p) * p;
-        //        }
-        //        if (lhs.get_beta_bit(p) ^ rhs.get_beta_bit(p)) {
-        //            j += lhs.get_beta_bit(p) * p;
-        //            l += rhs.get_beta_bit(p) * p;
-        //        }
-    }
-    double sign = lhs.slater_sign_aa(i, k) * lhs.slater_sign_bb(j, l);
-    return sign * tei_ab_[i * nmo3_ + j * nmo2_ + k * nmo_ + l];
-}
-
-double ActiveSpaceIntegrals::slater_rules_double_alpha_beta_pre(const Determinant& lhs,
-                                                                const Determinant& rhs, int i,
-                                                                int k) const {
-    // Slater rule 3 PhiI = j_a^+ i_a PhiJ
-    int j, l;
-    int n = 0;
-    for (size_t p = 0; p < nmo_; ++p) {
-        const bool lb_p = lhs.get_beta_bit(p);
-        const bool rb_p = rhs.get_beta_bit(p);
-        if (lb_p ^ rb_p) {
-            j = lb_p ? p : j;
-            l = rb_p ? p : l;
-            n += 1;
-            if (n == 2)
-                break;
-        }
-    }
-    return lhs.slater_sign_bb(j, l) * tei_ab_[i * nmo3_ + j * nmo2_ + k * nmo_ + l];
-}
-
 double ActiveSpaceIntegrals::slater_rules_single_alpha(const Determinant& det, int i, int a) const {
     // Slater rule 2 PhiI = j_a^+ i_a PhiJ
     double sign = det.slater_sign_aa(i, a);
@@ -644,16 +422,75 @@ double ActiveSpaceIntegrals::slater_rules_single_beta_abs(const Determinant& det
     return matrix_element;
 }
 
+void ActiveSpaceIntegrals::print() {
+    psi::outfile->Printf("\n\n  ==> Active Space Integrals <==\n");
+    psi::outfile->Printf("\n  Nuclear repulsion energy:   %20.12f\n", nuclear_repulsion_energy());
+    psi::outfile->Printf("  Frozen core energy:         %20.12f\n", frozen_core_energy());
+    psi::outfile->Printf("  Scalar energy:              %20.12f\n", scalar_energy());
+
+    psi::outfile->Printf("\nOne-electron integrals (alpha) <p|h|q> (includes restricted docc)\n");
+    for (size_t p = 0; p < nmo_; ++p) {
+        for (size_t q = 0; q < nmo_; ++q) {
+            if (std::fabs(oei_a(p, q)) > 1e-12)
+                psi::outfile->Printf("  <%2d|h|%2d> = %20.12f\n", p, q, oei_a(p, q));
+        }
+    }
+    psi::outfile->Printf("\nOne-electron integrals (beta) <p|h|q> (includes restricted docc)\n");
+    for (size_t p = 0; p < nmo_; ++p) {
+        for (size_t q = 0; q < nmo_; ++q) {
+            if (std::fabs(oei_b(p, q)) > 1e-12)
+                psi::outfile->Printf("  <%2d|h|%2d> = %20.12f\n", p, q, oei_b(p, q));
+        }
+    }
+
+    psi::outfile->Printf("\nAntisymmetrized two-electron integrals (alpha-alpha) <pq||rs>\n");
+    for (size_t p = 0; p < nmo_; ++p) {
+        for (size_t q = 0; q < nmo_; ++q) {
+            for (size_t r = 0; r < nmo_; ++r) {
+                for (size_t s = 0; s < nmo_; ++s) {
+                    if (std::fabs(tei_aa(p, q, r, s)) > 1e-12)
+                        psi::outfile->Printf("  <%2d %2d|%2d %2d> = %20.12f\n", p, q, r, s,
+                                             tei_aa(p, q, r, s));
+                }
+            }
+        }
+    }
+    psi::outfile->Printf("\nAntisymmetrized two-electron integrals (beta-beta) <pq||rs>\n");
+    for (size_t p = 0; p < nmo_; ++p) {
+        for (size_t q = 0; q < nmo_; ++q) {
+            for (size_t r = 0; r < nmo_; ++r) {
+                for (size_t s = 0; s < nmo_; ++s) {
+                    if (std::fabs(tei_bb(p, q, r, s)) > 1e-12)
+                        psi::outfile->Printf("  <%2d %2d|%2d %2d> = %20.12f\n", p, q, r, s,
+                                             tei_bb(p, q, r, s));
+                }
+            }
+        }
+    }
+    psi::outfile->Printf("\nTwo-electron integrals (alpha-beta) <pq|rs>\n");
+    for (size_t p = 0; p < nmo_; ++p) {
+        for (size_t q = 0; q < nmo_; ++q) {
+            for (size_t r = 0; r < nmo_; ++r) {
+                for (size_t s = 0; s < nmo_; ++s) {
+                    if (std::fabs(tei_ab(p, q, r, s)) > 1e-12)
+                        psi::outfile->Printf("  <%2d %2d|%2d %2d> = %20.12f\n", p, q, r, s,
+                                             tei_ab(p, q, r, s));
+                }
+            }
+        }
+    }
+}
+
 std::shared_ptr<ActiveSpaceIntegrals>
 make_active_space_ints(std::shared_ptr<MOSpaceInfo> mo_space_info,
                        std::shared_ptr<ForteIntegrals> ints, const std::string& active_space,
                        const std::vector<std::string>& core_spaces) {
 
     // get the active/core vectors
-    auto active_mo = mo_space_info->get_corr_abs_mo(active_space);
+    auto active_mo = mo_space_info->corr_absolute_mo(active_space);
     std::vector<size_t> core_mo;
     for (const auto space : core_spaces) {
-        auto mos = mo_space_info->get_corr_abs_mo(space);
+        auto mos = mo_space_info->corr_absolute_mo(space);
         core_mo.insert(core_mo.end(), mos.begin(), mos.end());
     }
 

@@ -49,6 +49,7 @@
 
 #include "helpers/timer.h"
 #include "sparse_ci/ci_reference.h"
+#include "sparse_ci/determinant_functions.hpp"
 #include "pci.h"
 #include "pci_sigma.h"
 
@@ -231,11 +232,11 @@ ProjectorCI::ProjectorCI(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo>
 
 void ProjectorCI::startup() {
     // The number of correlated molecular orbitals
-    nact_ = mo_space_info_->get_corr_abs_mo("ACTIVE").size();
-    nactpi_ = mo_space_info_->get_dimension("ACTIVE");
+    nact_ = mo_space_info_->corr_absolute_mo("ACTIVE").size();
+    nactpi_ = mo_space_info_->dimension("ACTIVE");
 
     // Include frozen_docc and restricted_docc
-    frzcpi_ = mo_space_info_->get_dimension("INACTIVE_DOCC");
+    frzcpi_ = mo_space_info_->dimension("INACTIVE_DOCC");
     nfrzc_ = mo_space_info_->size("INACTIVE_DOCC");
 
     nuclear_repulsion_energy_ = as_ints_->ints()->nuclear_repulsion_energy();
@@ -403,6 +404,7 @@ void ProjectorCI::set_options(std::shared_ptr<ForteOptions> options) {
     }
 
     sparse_solver_.set_e_convergence(options->get_double("PCI_E_CONVERGENCE"));
+    sparse_solver_.set_r_convergence(options->get_double("PCI_R_CONVERGENCE"));
     sparse_solver_.set_maxiter_davidson(options->get_int("DL_MAXITER"));
 }
 
@@ -609,7 +611,7 @@ double ProjectorCI::estimate_high_energy() {
     lambda_h_ = lambda_h_G;
     psi::outfile->Printf("\n\n  ==> Estimate highest excitation energy <==");
     psi::outfile->Printf("\n  Highest Excited determinant:");
-    psi::outfile->Printf("\n  %s", high_det.str().c_str());
+    psi::outfile->Printf("\n  %s", str(high_det).c_str());
     psi::outfile->Printf("\n  Determinant Energy                    :  %.12f",
                          as_ints_->energy(high_det));
     psi::outfile->Printf("\n  Highest Energy Gershgorin circle Est. :  %.12f", lambda_h_);
@@ -636,8 +638,7 @@ void ProjectorCI::compute_characteristic_function() {
 void ProjectorCI::print_characteristic_function() {
     psi::outfile->Printf("\n\n  ==> Characteristic Function <==");
     print_polynomial(cha_func_coefs_);
-    psi::outfile->Printf("\n    with shift = %.12f, range = %.12f", shift_,
-                         range_);
+    psi::outfile->Printf("\n    with shift = %.12f, range = %.12f", shift_, range_);
     psi::outfile->Printf("\n    Initial guess: lambda_1= %s%.12f", lambda_1_ >= 0.0 ? " " : "",
                          lambda_1_);
     psi::outfile->Printf("\n    Est. Highest eigenvalue= %s%.12f", lambda_h_ >= 0.0 ? " " : "",
@@ -754,8 +755,7 @@ bool ProjectorCI::check_convergence() {
 
         proj_energy_ = results["PROJECTIVE ENERGY"];
 
-        double proj_energy_gradient =
-            (proj_energy_ - old_proj_energy_) / energy_estimate_freq_;
+        double proj_energy_gradient = (proj_energy_ - old_proj_energy_) / energy_estimate_freq_;
         double approx_energy_gradient =
             (approx_energy_ - old_approx_energy_) / energy_estimate_freq_;
         if (cycle_ == 0)
@@ -769,16 +769,14 @@ bool ProjectorCI::check_convergence() {
                                  approx_energy_gradient);
             break;
         default:
-            psi::outfile->Printf("\n%9d %8.2f %10zu %13zu %20.12f %10.3e", cycle_,
-                                 cycle_, C_.size(), num_off_diag_elem_, proj_energy_,
-                                 proj_energy_gradient);
+            psi::outfile->Printf("\n%9d %8.2f %10zu %13zu %20.12f %10.3e", cycle_, cycle_,
+                                 C_.size(), num_off_diag_elem_, proj_energy_, proj_energy_gradient);
             break;
         }
 
         if (variational_estimate_) {
             var_energy_ = results["VARIATIONAL ENERGY"];
-            double var_energy_gradient =
-                (var_energy_ - old_var_energy_) / energy_estimate_freq_;
+            double var_energy_gradient = (var_energy_ - old_var_energy_) / energy_estimate_freq_;
             psi::outfile->Printf(" %20.12f %10.3e", var_energy_, var_energy_gradient);
         }
 
@@ -820,9 +818,9 @@ void ProjectorCI::post_iter_process() {
     if (converged_) {
         psi::outfile->Printf("\n\n  Calculation converged.");
     } else {
-        psi::outfile->Printf("\n\n  Calculation %s",
-                             cycle_ != max_cycle_ ? "stoped in appearance of higher new low."
-                                                  : "did not converge!");
+        psi::outfile->Printf("\n\n  Calculation %s", cycle_ != max_cycle_
+                                                         ? "stoped in appearance of higher new low."
+                                                         : "did not converge!");
     }
 
     if (do_shift_) {
@@ -1089,8 +1087,7 @@ void ProjectorCI::propagate_wallCh(det_hashvec& dets_hashvec, std::vector<double
         CHC_energy = CHC_energy / -1.0 + (range_ * root + shift_) + as_ints_->scalar_energy() +
                      nuclear_repulsion_energy_;
         psi::timer_off("PCI:<E>a");
-        double CHC_energy_gradient =
-            (CHC_energy - approx_energy_) / energy_estimate_freq_;
+        double CHC_energy_gradient = (CHC_energy - approx_energy_) / energy_estimate_freq_;
         old_approx_energy_ = approx_energy_;
         approx_energy_ = CHC_energy;
         approx_E_flag_ = false;
@@ -1349,9 +1346,8 @@ double ProjectorCI::estimate_var_energy_sparse(const det_hashvec& dets_hashvec,
         energy[omp_get_thread_num()] += form_H_C(dets_hashvec, C, I, thread_num_off_diag_elem);
         full_num_off_diag_elem += thread_num_off_diag_elem;
     }
-    psi::outfile->Printf(
-        "\n  * Subspace Hamiltonian number of off-diagonal elements = %zu",
-        full_num_off_diag_elem);
+    psi::outfile->Printf("\n  * Subspace Hamiltonian number of off-diagonal elements = %zu",
+                         full_num_off_diag_elem);
     for (int t = 0; t < num_threads_; ++t) {
         variational_energy_estimator += energy[t];
     }
@@ -1366,7 +1362,7 @@ void ProjectorCI::print_wfn(const det_hashvec& space_hashvec, std::vector<double
     size_t max_dets = std::min(int(max_output), int(C.size()));
     for (size_t I = 0; I < max_dets; ++I) {
         psi::outfile->Printf("\n  %3zu  %13.6g %13.6g  %10zu %s  %18.12f", I, C[I], C[I] * C[I], I,
-                             space_hashvec[I].str().c_str(),
+                             str(space_hashvec[I]).c_str(),
                              as_ints_->energy(space_hashvec[I]) + as_ints_->scalar_energy());
     }
 
@@ -1451,7 +1447,8 @@ void ProjectorCI::orthogonalize(
     //    normalize(C);
 }
 
-double ProjectorCI::form_H_C(const det_hashvec& dets_hashvec, std::vector<double>& C, size_t I, size_t &thread_num_off_diag_elem) {
+double ProjectorCI::form_H_C(const det_hashvec& dets_hashvec, std::vector<double>& C, size_t I,
+                             size_t& thread_num_off_diag_elem) {
     const Determinant& detI = dets_hashvec[I];
     double CI = C[I];
 
@@ -2037,10 +2034,10 @@ void ProjectorCI::compute_couplings_half(const det_hashvec& dets, size_t cut_siz
     Determinant andBits(dets[0]), orBits(dets[0]);
     andBits.flip();
     for (size_t i = 0; i < cut_size; ++i) {
-        andBits = common_occupation(andBits, dets[i]);
-        orBits = union_occupation(orBits, dets[i]);
+        andBits = andBits & dets[i]; // common_occupation(andBits, dets[i]);
+        orBits = orBits | dets[i];   // union_occupation(orBits, dets[i]);
     }
-    Determinant actBits = different_occupation(andBits, orBits);
+    Determinant actBits = andBits ^ orBits; // different_occupation(andBits, orBits);
 
     a_couplings_.clear();
     a_couplings_.resize(nact_);
@@ -2216,7 +2213,7 @@ std::vector<std::tuple<double, int, int>> ProjectorCI::sym_labeled_orbitals(std:
 void ProjectorCI::set_method_variables(
     std::string ex_alg, size_t nroot_method, size_t root,
     const std::vector<std::vector<std::pair<Determinant, double>>>& old_roots) {
-    if ( !((ex_alg == "ROOT_ORTHOGONALIZE") or (ex_alg == "NONE")) ) {
+    if (!((ex_alg == "ROOT_ORTHOGONALIZE") or (ex_alg == "NONE"))) {
         throw psi::PSIEXCEPTION(ex_alg + " has not been implemented in PCI.");
     }
     nroot_ = nroot_method;

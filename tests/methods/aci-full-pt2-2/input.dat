@@ -5,7 +5,7 @@ import forte
 
 refscf = -75.38690237772380 #TEST
 refaci = -75.698210279822 #TEST
-refacipt2 = -75.727673237812 #TEST
+refacipt2 = -75.7276734750 # -75.727673237812 #TEST
 
 molecule li2{
 0 1
@@ -38,6 +38,7 @@ set forte {
   root_sym 0
   charge 0
   full_mrpt2 true
+  r_convergence 8
 }
 set_num_threads(2)
 

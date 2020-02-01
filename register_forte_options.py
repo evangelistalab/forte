@@ -6,6 +6,7 @@ def register_forte_options(forte_options):
     register_avas_options(forte_options)
     register_cino_options(forte_options)
     register_mrcino_options(forte_options)
+    register_embedding_options(forte_options)
     register_integral_options(forte_options)
     register_pt2_options(forte_options)
     register_pci_options(forte_options)
@@ -28,6 +29,8 @@ def register_driver_options(forte_options):
         'THREE-DSRG-MRPT2', 'SOMRDSRG', 'MRDSRG', 'MRDSRG_SO', 'CASSCF',
         'ACTIVE-DSRGPT2', 'DWMS-DSRGPT2', 'DSRG_MRPT', 'TASKS'
     ], 'Specify the job type')
+
+    forte_options.add_str('DERTYPE', 'NONE', ['NONE', 'FIRST'], 'Derivative order')
 
     forte_options.add_str(
         'ACTIVE_SPACE_SOLVER', '', ['FCI', 'ACI', 'CAS'],
@@ -55,6 +58,13 @@ def register_driver_options(forte_options):
     forte_options.add_str("ORBITAL_TYPE", "CANONICAL",
                           ['CANONICAL', 'LOCAL', 'MP2_NO'],
                           'Type of orbitals to use')
+    forte_options.add_str('MINAO_BASIS', 'STO-3G', "The basis used to define an orbital subspace");
+
+    forte_options.add_array("SUBSPACE", "A list of orbital subspaces");
+
+    forte_options.add_double("MS", 0.0, "Projection of spin onto the z axis");
+
+    forte_options.add_str("ACTIVE_REF_TYPE", "CAS", "Initial guess for active space wave functions");
 
 
 def register_avas_options(forte_options):
@@ -117,6 +127,38 @@ def register_mrcino_options(forte_options):
         "actice_docc and restricted_docc"
         "or not")
 
+def register_embedding_options(forte_options):
+    forte_options.add_bool(
+        "EMBEDDING", False, 
+        "Whether to perform embedding partition and projection")
+    forte_options.add_str(
+        "EMBEDDING_CUTOFF_METHOD", "THRESHOLD", 
+        "Cut off by: threshold ,cum_threshold or num_of_orbitals.")
+    forte_options.add_double(
+        "EMBEDDING_THRESHOLD", 0.5, 
+        "Projector eigenvalue threshold for both simple and cumulative threshold")
+    forte_options.add_int(
+        "NUM_A_DOCC", 0, 
+        "Number of occupied orbitals in A fixed to this value when embedding method is num_of_orbitals")
+    forte_options.add_int(
+        "Num_A_UOCC", 0,
+        "Number of virtual orbitals in A fixed to this value when embedding method is num_of_orbitals")
+    forte_options.add_str(
+        "EMBEDDING_REFERENCE", "CASSCF", 
+        "HF for any reference without active, CASSCF for any reference with an active space.")
+    forte_options.add_bool(
+        "EMBEDDING_SEMICANONICALIZE_ACTIVE", True, 
+        "Perform semi-canonicalization on active space or not")
+    forte_options.add_bool(
+        "EMBEDDING_SEMICANONICALIZE_FROZEN", True, 
+        "Perform semi-canonicalization on frozen core/virtual space or not")
+    forte_options.add_int(
+        "EMBEDDING_ADJUST_B_DOCC", 0, 
+        "Adjust number of occupied orbitals between A and B, +: move to B, -: move to A")
+    forte_options.add_int(
+        "EMBEDDING_ADJUST_B_UOCC", 0,
+        "Adjust number of virtual orbitals between A and B, +: move to B, -: move to A")
+
 def register_mo_space_info_options(forte_options):
     forte_options.add_array(
         "FROZEN_DOCC",
@@ -168,7 +210,6 @@ def register_pt2_options(forte_options):
     forte_options.add_double("PT2_MAX_MEM", 1.0,
                              " Maximum size of the determinant hash (GB)")
 
-
 def register_pci_options(forte_options):
     forte_options.add_str("PCI_GENERATOR", "WALL-CHEBYSHEV", [
         "LINEAR", "QUADRATIC", "CUBIC", "QUARTIC", "POWER", "TROTTER", "OLSEN",
@@ -200,6 +241,8 @@ def register_pci_options(forte_options):
 
     forte_options.add_double("PCI_E_CONVERGENCE", 1.0e-8,
                              "The energy convergence criterion")
+    forte_options.add_double("PCI_R_CONVERGENCE", 1.0,
+                             "The residual 2-norm convergence criterion")
 
     forte_options.add_bool("PCI_FAST_EVAR", False,
                            "Use a fast (sparse) estimate of the energy?")
@@ -494,10 +537,10 @@ def register_davidson_liu_options(forte_options):
     forte_options.add_int(
         "DL_COLLAPSE_PER_ROOT", 2,
         "The number of trial vector to retain after collapsing")
-    forte_options.add_int("DL_SUBSPACE_PER_ROOT", 8,
+    forte_options.add_int("DL_SUBSPACE_PER_ROOT", 10,
                           "The maxim number of trial vectors")
-    forte_options.add_int("SIGMA_VECTOR_MAX_MEMORY", 10000000,
-                          "The maxim number of trial vectors")
+    forte_options.add_int("SIGMA_VECTOR_MAX_MEMORY", 67108864,
+                          "The maximum number of doubles stored in memory in the sigma vector algorithm")
 
 
 def register_asci_options(forte_options):
@@ -669,6 +712,10 @@ def register_dsrg_options(forte_options):
 
     forte_options.add_bool("PRINT_1BODY_EVALS", False, "Print eigenvalues of 1-body effective H")
 
+    forte_options.add_bool("DSRG_MRPT3_BATCHED", False, "Force running the DSRG-MRPT3 code using the batched algorithm")
+
+    forte_options.add_bool("IGNORE_MEMORY_WARNINGS", False, "Force running the DSRG-MRPT3 code using the batched algorithm")
+
 def register_dwms_options(forte_options):
     forte_options.add_double("DWMS_ZETA", 0.0, """Automatic Gaussian width cutoff for the density weights
           Weights of state α:
@@ -717,7 +764,7 @@ def register_dwms_options(forte_options):
 
 def register_localize_options(forte_options):
     forte_options.add_str("LOCALIZE", "PIPEK_MEZEY", ["PIPEK_MEZEY", "BOYS"],
-                          "One option to determine localization scheme")
+                          "The method used to localize the orbitals")
     forte_options.add_array("LOCALIZE_SPACE",
                             "Sets the orbital space for localization")
 
@@ -802,6 +849,18 @@ def register_old_options(forte_options):
                           "The form of the two-particle density cumulant")
     forte_options.add_str("THREEPDC", "MK", ["MK", "MK_DECOMP", "ZERO"],
                           "The form of the three-particle density cumulant")
+    #    /*- Select a modified commutator -*/
+    forte_options.add_str("SRG_COMM", "STANDARD", "STANDARD FO FO2")
+
+    #    /*- The initial time step used by the ode solver -*/
+    forte_options.add_double("SRG_DT", 0.001, "The initial time step used by the ode solver")
+    #    /*- The absolute error tollerance for the ode solver -*/
+    forte_options.add_double("SRG_ODEINT_ABSERR", 1.0e-12, "The absolute error tollerance for the ode solver")
+    #    /*- The absolute error tollerance for the ode solver -*/
+    forte_options.add_double("SRG_ODEINT_RELERR", 1.0e-12, "The absolute error tollerance for the ode solver")
+    #    /*- Select a modified commutator -*/
+    forte_options.add_str("SRG_COMM", "STANDARD", ["STANDARD", "FO", "FO2"], "Select a modified commutator")
+
 
     #    /*- The minimum excitation level (Default value: 0) -*/
     #    forte_options.add_int("MIN_EXC_LEVEL", 0)
@@ -1067,9 +1126,9 @@ def register_old_options(forte_options):
     #    /*- The flow generator to use in the SRG equations -*/
     #    forte_options.add_str("SRG_ETA", "WHITE", "WEGNER_BLOCK WHITE")
     #    /*- The integrator used to propagate the SRG equations -*/
-    #    forte_options.add_str("SRG_ODEINT", "FEHLBERG78", "DOPRI5 CASHKARP FEHLBERG78")
+    forte_options.add_str("SRG_ODEINT", "FEHLBERG78", ["DOPRI5","CASHKARP", "FEHLBERG78"], "The integrator used to propagate the SRG equations")
     #    /*- The end value of the integration parameter s -*/
-    #    forte_options.add_double("SRG_SMAX", 10.0)
+    forte_options.add_double("SRG_SMAX", 10.0, "The end value of the integration parameter s")
 
     #    /*-  -*/
 
@@ -1077,14 +1136,7 @@ def register_old_options(forte_options):
     #    // --------------------------- SRG EXPERT OPTIONS
     #    // ---------------------------
 
-    #    /*- The initial time step used by the ode solver -*/
-    #    forte_options.add_double("SRG_DT", 0.001)
-    #    /*- The absolute error tollerance for the ode solver -*/
-    #    forte_options.add_double("SRG_ODEINT_ABSERR", 1.0e-12)
-    #    /*- The absolute error tollerance for the ode solver -*/
-    #    forte_options.add_double("SRG_ODEINT_RELERR", 1.0e-12)
-    #    /*- Select a modified commutator -*/
-    #    forte_options.add_str("SRG_COMM", "STANDARD", "STANDARD FO FO2")
+
 
     #    /*- Save Hbar? -*/
     #    forte_options.add_bool("SAVE_HBAR", False)

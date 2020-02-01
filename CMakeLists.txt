@@ -25,6 +25,7 @@ option_with_print(ENABLE_MPI "Enable MPI parallelization" OFF)
 option_with_print(ENABLE_GA "Enable Global Arrays" OFF)
 option_with_print(MAX_DET_ORB "Set the maximum number of orbitals in a determinant" OFF)
 option_with_print(ENABLE_CODECOV "Enable compilation with code coverage flags" OFF)
+option_with_print(ENABLE_UNTESTED_CODE "Enable code not covered by code coverage" OFF)
 #option_with_print(ENABLE_GENERIC "Enable mostly static linking in shared library" OFF)
 
 include(autocmake_omp)
@@ -32,10 +33,10 @@ include(autocmake_mpi)  # MPI option A
 #include(custom_static_library)
 
 #find_package(psi4 1.1 REQUIRED COMPONENTS ambit chemps2)
-find_package(psi4 1.3 REQUIRED)
 find_package(pybind11 REQUIRED)
+find_package(psi4 1.3 REQUIRED)
 find_package(TargetLAPACK REQUIRED)
-find_package(ambit REQUIRED)
+find_package(ambit 0.3 REQUIRED)
 if(ENABLE_CheMPS2)
     find_package(CheMPS2 1.8.3 CONFIG REQUIRED)
 endif()
@@ -66,18 +67,31 @@ if(ENABLE_CODECOV)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage") # enabling coverage
 endif()
 
+if(ENABLE_UNTESTED_CODE)
+    add_definitions(-DENABLE_UNTESTED_CODE)
+endif()
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-c++1z-extensions") # avoid warnings for C++17
+
 # List of CC files
 pybind11_add_module(forte
+src/api/ambit_api.cc
+src/api/integrals_api.cc
+src/api/rdms_api.cc
+src/api/state_info_api.cc
 src/base_classes/active_space_method.cc
 src/base_classes/active_space_solver.cc
-src/orbital-helpers/avas.cc
 src/casscf/casscf.cc
+src/casscf/casscf_gradient.cc
 src/ci_rdm/ci_rdms.cc
 src/ci_rdm/ci_rdms_dynamic.cc
+src/gradient_tpdm/backtransform_tpdm.cc
+src/gradient_tpdm/integraltransform_sort_so_tpdm.cc
+src/gradient_tpdm/integraltransform_tpdm_unrestricted.cc
 src/sparse_ci/ci_reference.cc
-src/helpers/davidson.cc
 src/sparse_ci/determinant_hashvector.cc
-src/helpers/davidson.cc
+src/sparse_ci/determinant_sq_operator.cc
+src/sparse_ci/determinant_functions.cc
 src/dmrg/dmrgscf.cc
 src/dmrg/dmrgsolver.cc
 src/base_classes/dynamic_correlation_solver.cc
@@ -106,11 +120,7 @@ src/ci_ex_states/excited_state_solver.cc
 src/sparse_ci/sparse_ci_solver.cc
 src/sparse_ci/sigma_vector.cc
 src/sparse_ci/sigma_vector_dynamic.cc
-src/sparse_ci/stl_bitset_determinant.cc
-src/sparse_ci/stl_bitset_string.cc
 src/sparse_ci/sorted_string_list.cc
-src/sparse_ci/ui64_determinant.cc
-src/sparse_ci/ui64_determinant_functions.cc
 src/orbital-helpers/aosubspace.cc
 src/orbital-helpers/ci-no/ci-no.cc
 src/orbital-helpers/ci-no/mrci-no.cc
@@ -163,15 +173,16 @@ src/mrdsrg-spin-integrated/mrdsrg_pt.cc
 src/mrdsrg-spin-integrated/mrdsrg_smart_s.cc
 src/mrdsrg-spin-integrated/mrdsrg_srg.cc
 src/mrdsrg-spin-integrated/three_dsrg_mrpt2.cc
-src/mrdsrg-spin-integrated/active_dsrgpt2.cc
 src/mrdsrg-spin-integrated/dwms_mrpt2.cc
+src/mrdsrg-spin-integrated/active_dsrgpt2.cc
 src/orbital-helpers/ao_helper.cc
-src/orbital-helpers/es-nos.cc
 src/orbital-helpers/localize.cc
 src/orbital-helpers/iao_builder.cc
 src/orbital-helpers/mp2_nos.cc
+src/orbital-helpers/orbital_embedding.cc
 src/orbital-helpers/semi_canonicalize.cc
 src/orbital-helpers/unpaired_density.cc
+src/orbital-helpers/fragment_projector.cc
 src/pci/pci.cc
 src/pci/pci_sigma.cc
 src/post_process/spin_corr.cc
@@ -194,7 +205,6 @@ if(MAX_DET_ORB)
     add_definitions(-DMAX_DET_ORB=${MAX_DET_ORB})
 else()
     add_definitions(-DMAX_DET_ORB=64)
-    add_definitions(-DSMALL_BITSET)
 endif()
 
 if(ENABLE_MPI)
@@ -217,13 +227,17 @@ if (ENABLE_ForteTests)
   project (forte_tests)
   include_directories(${CMAKE_BINARY_DIR} ${CMAKE_BINARY_DIR}/catch2/src/catch2/single_include)
   add_executable(forte_tests
-    src/sparse_ci/ui64_determinant.cc
-    tests/code/test_determinant.cc)
+    tests/code/test_determinant.cc
+    tests/code/test_uint64.cc)
 
   project (forte_benchmarks)
   include_directories(${CMAKE_BINARY_DIR})
   add_executable(forte_benchmarks
-    src/sparse_ci/ui64_determinant.cc
     tests/benchmark/determinant_benchmark.cc)
 
 endif (ENABLE_ForteTests)
+
+get_property(dirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES)
+foreach(dir ${dirs})
+  message(STATUS "dir='${dir}'")
+endforeach()

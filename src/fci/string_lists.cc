@@ -26,6 +26,8 @@
  * @END LICENSE
  */
 
+#include <algorithm>
+
 #include "psi4/psi4-dec.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
 
@@ -218,7 +220,7 @@ void StringLists::make_pair_list(NNList& list) {
 
 void StringLists::make_strings(GraphPtr graph, StringList& list) {
     for (int h = 0; h < nirrep_; ++h) {
-        list.push_back(std::vector<std::bitset<Determinant::num_str_bits>>(graph->strpi(h)));
+        list.push_back(std::vector<std::bitset<Determinant::nbits_half>>(graph->strpi(h)));
     }
 
     int n = graph->nbits();
@@ -226,7 +228,7 @@ void StringLists::make_strings(GraphPtr graph, StringList& list) {
 
     if ((k >= 0) and (k <= n)) { // check that (n > 0) makes sense.
         bool* I = new bool[n];
-        std::bitset<Determinant::num_str_bits> I_bs(n);
+        std::bitset<Determinant::nbits_half> I_bs(n);
 
         // Generate the strings 1111100000
         //                      { k }{n-k}

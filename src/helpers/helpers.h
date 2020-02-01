@@ -37,14 +37,36 @@
 #include <string>
 #include <vector>
 
+#include <pybind11/pybind11.h>
+#include <pybind11/numpy.h>
+
+#include "ambit/tensor.h"
 #include "ambit/blocked_tensor.h"
+
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/vector.h"
 #include "psi4/libqt/qt.h"
 
+namespace py = pybind11;
+
 class Options;
 
 namespace forte {
+
+/**
+ * @brief Convert an ambit tensor to a numpy ndarray.
+ *        The returned tensors are stored according to the C storage convention.
+ * @param t The input tensor
+ * @return A numpy array
+ */
+py::array_t<double> ambit_to_np(ambit::Tensor t);
+
+/**
+ * @brief tensor_to_matrix
+ * @param t The input tensor
+ * @return A copy of the tensor data ignoring symmetry blocks
+ */
+psi::SharedMatrix tensor_to_matrix(ambit::Tensor t);
 
 /**
  * @brief tensor_to_matrix
@@ -52,9 +74,7 @@ namespace forte {
  * @param dims psi::Dimensions of the matrix extracted from the tensor
  * @return A copy of the tensor data in symmetry blocked form
  */
-psi::Matrix tensor_to_matrix(ambit::Tensor t, psi::Dimension dims);
-
-psi::SharedMatrix tensor_to_matrix(ambit::Tensor t);
+psi::SharedMatrix tensor_to_matrix(ambit::Tensor t, psi::Dimension dims);
 
 /// Save a vector of double to file
 void write_disk_vector_double(const std::string& filename, const std::vector<double>& data);

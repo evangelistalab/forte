@@ -33,7 +33,6 @@
 #include "psi4/libmints/vector.h"
 #include "psi4/libmints/matrix.h"
 
-
 namespace forte {
 
 /// Result of the update step
@@ -119,6 +118,9 @@ class DavidsonLiuSolver {
     /// Produce the final eigenvectors and eigenvalues
     void get_results();
 
+    /// A vector with the 2-norm of the residual for each root
+    std::vector<double> residuals() const;
+
   private:
     // ==> Class Private Functions <==
 
@@ -128,6 +130,8 @@ class DavidsonLiuSolver {
     bool check_convergence();
     /// Build the correction vectors
     void form_correction_vectors();
+    /// Compute the 2-norm of the residual
+    void compute_residual_norm();
     /// Project out undesired roots
     void project_out_roots(psi::SharedMatrix v);
     /// Normalize the correction vectors
@@ -154,7 +158,7 @@ class DavidsonLiuSolver {
     /// The number of collapse vectors for each root
     size_t collapse_per_root_ = 2;
     /// The maximum subspace size for each root
-    size_t subspace_per_root_ = 4;
+    size_t subspace_per_root_ = 5;
     /// The number of vectors to retain after collapse
     size_t collapse_size_;
     /// The maximum subspace size
@@ -189,10 +193,12 @@ class DavidsonLiuSolver {
     psi::SharedVector lambda_old;
     /// Diagonal elements of the Hamiltonian
     psi::SharedVector h_diag;
+    /// 2-Norm of the residuals
+    std::vector<double> residual_;
 
     /// Approximate eigenstates to project out
     std::vector<sparse_vec> project_out_;
 };
-}
+} // namespace forte
 
 #endif // _iterative_solvers_h_

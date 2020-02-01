@@ -41,15 +41,14 @@ using namespace psi;
 
 namespace forte {
 
-bool pairComp(const std::pair<double, Determinant> E1, const std::pair<double, Determinant> E2){
+bool pairComp(const std::pair<double, Determinant> E1, const std::pair<double, Determinant> E2) {
     return E1.first < E2.first;
 }
 
-
 AdaptiveCI::AdaptiveCI(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
-                               std::shared_ptr<ForteOptions> options,
-                               std::shared_ptr<MOSpaceInfo> mo_space_info,
-                               std::shared_ptr<ActiveSpaceIntegrals> as_ints)
+                       std::shared_ptr<ForteOptions> options,
+                       std::shared_ptr<MOSpaceInfo> mo_space_info,
+                       std::shared_ptr<ActiveSpaceIntegrals> as_ints)
     : SelectedCIMethod(state, nroot, scf_info, mo_space_info, as_ints), sparse_solver_(as_ints_),
       options_(options) {
     mo_symmetry_ = mo_space_info_->symmetry("ACTIVE");
@@ -72,10 +71,10 @@ void AdaptiveCI::startup() {
     multiplicity_ = state_.multiplicity();
 
     nact_ = mo_space_info_->size("ACTIVE");
-    nactpi_ = mo_space_info_->get_dimension("ACTIVE");
+    nactpi_ = mo_space_info_->dimension("ACTIVE");
 
     // Include frozen_docc and restricted_docc
-    frzcpi_ = mo_space_info_->get_dimension("INACTIVE_DOCC");
+    frzcpi_ = mo_space_info_->dimension("INACTIVE_DOCC");
     nfrzc_ = mo_space_info_->size("INACTIVE_DOCC");
 
     nalpha_ = state_.na() - nfrzc_;
@@ -187,7 +186,7 @@ void AdaptiveCI::print_info() {
         outfile->Printf("\n  Reference orbital energies:");
         std::shared_ptr<Vector> epsilon_a = scf_info_->epsilon_a();
 
-        auto actmo = mo_space_info_->get_absolute_mo("ACTIVE");
+        auto actmo = mo_space_info_->absolute_mo("ACTIVE");
 
         for (int n = 0, maxn = actmo.size(); n < maxn; ++n) {
             outfile->Printf("\n   %da: %1.6f ", n, epsilon_a->get(actmo[n]));
@@ -316,8 +315,7 @@ void AdaptiveCI::find_q_space() {
         for( int n = 0; n < nroot_; ++n ){
            multistate_pt2_energy_correction_[n] = ept2;
         }
-    }   
-
+    }
 
     outfile->Printf("\n  Time spent building the model space: %1.6f", build_space.get());
     // Check if P+Q space is spin complete
@@ -333,7 +331,6 @@ void AdaptiveCI::find_q_space() {
         sparse_solver_.add_bad_states(bad_roots_);
     }
 }
-
 
 double AdaptiveCI::average_q_values(std::vector<double>& E2) {
     // f_E2 and f_C1 will store the selected function of the chosen q criteria
@@ -370,7 +367,7 @@ double AdaptiveCI::average_q_values(std::vector<double>& E2) {
 }
 
 bool AdaptiveCI::check_convergence(std::vector<std::vector<double>>& energy_history,
-                                       psi::SharedVector evals) {
+                                   psi::SharedVector evals) {
     int nroot = evals->dim();
     int ref = 0;
 
@@ -411,7 +408,7 @@ bool AdaptiveCI::check_convergence(std::vector<std::vector<double>>& energy_hist
 }
 
 void AdaptiveCI::prune_q_space(DeterminantHashVec& PQ_space, DeterminantHashVec& P_space,
-                                   psi::SharedMatrix evecs, int nroot) {
+                               psi::SharedMatrix evecs, int nroot) {
     // Select the new reference space using the sorted CI coefficients
     P_space.clear();
 
@@ -495,7 +492,7 @@ void AdaptiveCI::prune_q_space(DeterminantHashVec& PQ_space, DeterminantHashVec&
 }
 
 bool AdaptiveCI::check_stuck(const std::vector<std::vector<double>>& energy_history,
-                                 psi::SharedVector evals) {
+                             psi::SharedVector evals) {
     bool stuck = false;
     int nroot = evals->dim();
     if (cycle_ < 4) {
@@ -524,9 +521,9 @@ bool AdaptiveCI::check_stuck(const std::vector<std::vector<double>>& energy_hist
 }
 
 std::vector<std::pair<double, double>> AdaptiveCI::compute_spin(DeterminantHashVec& space,
-                                                                    WFNOperator& op,
-                                                                    psi::SharedMatrix evecs,
-                                                                    int nroot) {
+                                                                WFNOperator& op,
+                                                                psi::SharedMatrix evecs,
+                                                                int nroot) {
     // WFNOperator op(mo_symmetry_);
 
     // op.build_strings(space);
@@ -559,7 +556,7 @@ std::vector<std::pair<double, double>> AdaptiveCI::compute_spin(DeterminantHashV
 }
 
 void AdaptiveCI::print_wfn(DeterminantHashVec& space, WFNOperator& op, psi::SharedMatrix evecs,
-                               int nroot) {
+                           int nroot) {
     std::string state_label;
     std::vector<std::string> s2_labels({"singlet", "doublet", "triplet", "quartet", "quintet",
                                         "sextet", "septet", "octet", "nonet", "decatet"});
@@ -578,7 +575,7 @@ void AdaptiveCI::print_wfn(DeterminantHashVec& space, WFNOperator& op, psi::Shar
         for (size_t I = 0; I < max_dets; ++I) {
             outfile->Printf("\n  %3zu  %9.6f %.9f  %10zu %s", I, tmp_evecs[I],
                             tmp_evecs[I] * tmp_evecs[I], space.get_idx(tmp.get_det(I)),
-                            tmp.get_det(I).str(nact_).c_str());
+                            str(tmp.get_det(I), nact_).c_str());
         }
         state_label = s2_labels[std::round(spins[n].first * 2.0)];
         root_spin_vec_[n] = std::make_pair(spins[n].first, spins[n].second);
@@ -654,8 +651,8 @@ void AdaptiveCI::convert_to_string(const std::vector<Determinant>& space) {
 */
 
 int AdaptiveCI::root_follow(DeterminantHashVec& P_ref, std::vector<double>& P_ref_evecs,
-                                DeterminantHashVec& P_space, psi::SharedMatrix P_evecs,
-                                int num_ref_roots) {
+                            DeterminantHashVec& P_space, psi::SharedMatrix P_evecs,
+                            int num_ref_roots) {
     int ndets = P_space.size();
     int max_dim = std::min(ndets, 1000);
     //    int max_dim = ndets;
@@ -738,7 +735,7 @@ void AdaptiveCI::pre_iter_preparation() {
         Determinant det = initial_reference_[0];
         Determinant detb(det);
         std::vector<int> avir = det.get_alfa_vir(nact_); // TODO check this
-        outfile->Printf("\n  %s", det.str(nact_).c_str());
+        outfile->Printf("\n  %s", str(det, nact_).c_str());
         outfile->Printf("\n  Freezing alpha orbital %d", hole_);
         outfile->Printf("\n  Exciting electron from %d to %d", hole_, avir[particle]);
         det.set_alfa_bit(hole_, false);
@@ -751,8 +748,8 @@ void AdaptiveCI::pre_iter_preparation() {
                 break;
             }
         }
-        outfile->Printf("\n  %s", det.str(nact_).c_str());
-        outfile->Printf("\n  %s", detb.str(nact_).c_str());
+        outfile->Printf("\n  %s", str(det, nact_).c_str());
+        outfile->Printf("\n  %s", str(detb, nact_).c_str());
         P_space_.add(det);
         P_space_.add(detb);
     }
@@ -763,6 +760,7 @@ void AdaptiveCI::pre_iter_preparation() {
     sparse_solver_.set_parallel(true);
     sparse_solver_.set_force_diag(options_->get_bool("FORCE_DIAG_METHOD"));
     sparse_solver_.set_e_convergence(options_->get_double("E_CONVERGENCE"));
+    sparse_solver_.set_r_convergence(options_->get_double("R_CONVERGENCE"));
     sparse_solver_.set_maxiter_davidson(options_->get_int("DL_MAXITER"));
     sparse_solver_.set_spin_project(project_out_spin_contaminants_);
     //    sparse_solver.set_spin_project_full(project_out_spin_contaminants_);
@@ -906,9 +904,8 @@ void AdaptiveCI::diagonalize_PQ_space() {
             outfile->Printf("\n    PQ-space CI Energy + EPT2 Root %3d = %.12f Eh = "
                             "%8.4f eV",
                             i, abs_energy + multistate_pt2_energy_correction_[i],
-                            exc_energy +
-                                pc_hartree2ev * (multistate_pt2_energy_correction_[i] -
-                                                 multistate_pt2_energy_correction_[0]));
+                            exc_energy + pc_hartree2ev * (multistate_pt2_energy_correction_[i] -
+                                                          multistate_pt2_energy_correction_[0]));
         }
         outfile->Printf("\n");
     }
@@ -985,7 +982,6 @@ void AdaptiveCI::add_bad_roots(DeterminantHashVec& dets) {
     }
 }
 
-
 void AdaptiveCI::print_nos() {
 
     print_h2("ACI Natural Orbitals"); 
@@ -1000,9 +996,9 @@ void AdaptiveCI::print_nos() {
     ci_rdm.compute_1rdm(ordm_a_v, ordm_b_v, op_);
 
 
-    psi::Dimension nmopi = mo_space_info_->get_dimension("ALL");
-    psi::Dimension ncmopi = mo_space_info_->get_dimension("CORRELATED");
-    psi::Dimension fdocc = mo_space_info_->get_dimension("FROZEN_DOCC");
+    psi::Dimension nmopi = mo_space_info_->dimension("ALL");
+    psi::Dimension ncmopi = mo_space_info_->dimension("CORRELATED");
+    psi::Dimension fdocc = mo_space_info_->dimension("FROZEN_DOCC");
 
     std::shared_ptr<psi::Matrix> opdm_a(new psi::Matrix("OPDM_A", nirrep_, nactpi_, nactpi_));
     std::shared_ptr<psi::Matrix> opdm_b(new psi::Matrix("OPDM_B", nirrep_, nactpi_, nactpi_));
@@ -1053,9 +1049,8 @@ void AdaptiveCI::print_nos() {
 void AdaptiveCI::update_sigma() { sigma_ = options_->get_double("ACI_RELAX_SIGMA"); }
 
 void AdaptiveCI::full_mrpt2() {
-    if( options_->get_bool("FULL_MRPT2") ){
-        MRPT2 pt(options_, as_ints_, mo_space_info_, PQ_space_, PQ_evecs_,
-                 PQ_evals_, nroot_);
+    if (options_->get_bool("FULL_MRPT2")) {
+        MRPT2 pt(options_, as_ints_, mo_space_info_, PQ_space_, PQ_evecs_, PQ_evals_, nroot_);
         std::vector<double> pt2 = pt.compute_energy();
         multistate_pt2_energy_correction_ = pt2;
     }

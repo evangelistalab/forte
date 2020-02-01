@@ -3,13 +3,14 @@
 
 import forte
 
-refscf = -14.8435208330370827 #TEST
-refaci = -14.880521233114 #TEST
-refacipt2 = -14.880583937553 #TEST
+refscf = -14.84351701863007 
+refaci = -14.880501440898 #-14.880501440889
+refacipt2 = -14.880559933778 #-14.880559935217
 
 molecule li2{
-   Li
-   Li 1 2.0000
+  Li
+  Li 1 3.7794522658
+  units bohr
 }
 
 set {
@@ -17,12 +18,12 @@ set {
   e_convergence 10
   d_convergence 10
   r_convergence 10
-}
-
-set scf {
   scf_type pk
   reference rhf
   docc = [2,0,0,0,0,1,0,0]
+}
+
+set scf {
 }
 
 set forte {

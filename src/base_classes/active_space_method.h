@@ -155,6 +155,10 @@ class ActiveSpaceMethod {
     /// @param value the convergence criterion in a.u.
     void set_e_convergence(double value);
 
+    /// Set the residual 2-norm convergence criterion
+    /// @param value the convergence criterion in a.u.
+    void set_r_convergence(double value);
+
     /// Set the root that will be used to compute the properties
     /// @param the root (root = 0, 1, 2, ...)
     void set_root(int value);
@@ -189,6 +193,9 @@ class ActiveSpaceMethod {
 
     /// The energy convergence criterion
     double e_convergence_ = 1.0e-12;
+
+    /// The residual 2-norm convergence criterion
+    double r_convergence_ = 1.0e-6;
 
     /// The root used to compute properties (zero based, default = 0)
     int root_ = 0;

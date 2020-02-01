@@ -80,11 +80,11 @@ void MP2_NOS::compute_transformation() {
     /// Map from all the MOs to the beta virtual
     std::map<size_t, size_t> mos_to_bvir;
 
-    psi::Dimension ncmopi_ = mo_space_info_->get_dimension("CORRELATED");
-    psi::Dimension frzcpi = mo_space_info_->get_dimension("FROZEN_DOCC");
-    psi::Dimension frzvpi = mo_space_info_->get_dimension("FROZEN_UOCC");
+    psi::Dimension ncmopi_ = mo_space_info_->dimension("CORRELATED");
+    psi::Dimension frzcpi = mo_space_info_->dimension("FROZEN_DOCC");
+    psi::Dimension frzvpi = mo_space_info_->dimension("FROZEN_UOCC");
 
-    psi::Dimension nmopi = mo_space_info_->get_dimension("ALL");
+    psi::Dimension nmopi = mo_space_info_->dimension("ALL");
     psi::Dimension doccpi = scf_info_->doccpi();
     psi::Dimension soccpi = scf_info_->soccpi();
 
@@ -235,10 +235,10 @@ void MP2_NOS::compute_transformation() {
     D1["IJ"] -= 1.0 * T2["kIaB"] * T2["kJaB"];
 
     // Copy the density matrix to matrix objects
-    Matrix D1oo = tensor_to_matrix(D1.block("oo"), aoccpi);
-    Matrix D1OO = tensor_to_matrix(D1.block("OO"), boccpi);
-    Matrix D1vv = tensor_to_matrix(D1.block("vv"), avirpi);
-    Matrix D1VV = tensor_to_matrix(D1.block("VV"), bvirpi);
+    auto D1oo = tensor_to_matrix(D1.block("oo"), aoccpi);
+    auto D1OO = tensor_to_matrix(D1.block("OO"), boccpi);
+    auto D1vv = tensor_to_matrix(D1.block("vv"), avirpi);
+    auto D1VV = tensor_to_matrix(D1.block("VV"), bvirpi);
 
     Matrix D1oo_evecs("D1oo_evecs", aoccpi, aoccpi);
     Matrix D1OO_evecs("D1OO_evecs", boccpi, boccpi);
@@ -250,10 +250,10 @@ void MP2_NOS::compute_transformation() {
     Vector D1vv_evals("D1vv_evals", avirpi);
     Vector D1VV_evals("D1VV_evals", bvirpi);
 
-    D1oo.diagonalize(D1oo_evecs, D1oo_evals);
-    D1vv.diagonalize(D1vv_evecs, D1vv_evals);
-    D1OO.diagonalize(D1OO_evecs, D1OO_evals);
-    D1VV.diagonalize(D1VV_evecs, D1VV_evals);
+    D1oo->diagonalize(D1oo_evecs, D1oo_evals);
+    D1vv->diagonalize(D1vv_evecs, D1vv_evals);
+    D1OO->diagonalize(D1OO_evecs, D1OO_evals);
+    D1VV->diagonalize(D1VV_evecs, D1VV_evals);
 
     // Print natural orbitals
     if (options_->get_bool("NAT_ORBS_PRINT"))

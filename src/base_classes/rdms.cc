@@ -219,11 +219,10 @@ double compute_Eref_from_rdms(RDMs& ref, std::shared_ptr<ForteIntegrals> ints,
                                    std::shared_ptr<MOSpaceInfo> mo_space_info) {
     // similar to MASTER_DSRG::compute_reference_energy_from_ints (use Fock and cumulants)
     // here I form two density and directly use bare Hamiltonian
-
     double E = ints->nuclear_repulsion_energy() + ints->frozen_core_energy();
 
-    std::vector<size_t> core_mos = mo_space_info->get_corr_abs_mo("RESTRICTED_DOCC");
-    std::vector<size_t> actv_mos = mo_space_info->get_corr_abs_mo("ACTIVE");
+    std::vector<size_t> core_mos = mo_space_info->corr_absolute_mo("RESTRICTED_DOCC");
+    std::vector<size_t> actv_mos = mo_space_info->corr_absolute_mo("ACTIVE");
     size_t ncore = core_mos.size();
     size_t nactv = actv_mos.size();
 

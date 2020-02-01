@@ -59,10 +59,10 @@ CINO::CINO(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> opti
       mo_space_info_(mo_space_info) {
 
     fci_ints_ =
-        std::make_shared<ActiveSpaceIntegrals>(ints, mo_space_info_->get_corr_abs_mo("ACTIVE"),
-                                               mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
+        std::make_shared<ActiveSpaceIntegrals>(ints, mo_space_info_->corr_absolute_mo("ACTIVE"),
+                                               mo_space_info_->corr_absolute_mo("RESTRICTED_DOCC"));
 
-    auto active_mo = mo_space_info_->get_corr_abs_mo("ACTIVE");
+    auto active_mo = mo_space_info_->corr_absolute_mo("ACTIVE");
     ambit::Tensor tei_active_aa = ints->aptei_aa_block(active_mo, active_mo, active_mo, active_mo);
     ambit::Tensor tei_active_ab = ints->aptei_ab_block(active_mo, active_mo, active_mo, active_mo);
     ambit::Tensor tei_active_bb = ints->aptei_bb_block(active_mo, active_mo, active_mo, active_mo);
@@ -154,11 +154,11 @@ void CINO::startup() {
            mo_space_info_->size("ACTIVE") + mo_space_info_->size("FROZEN_UOCC") +
            mo_space_info_->size("RESTRICTED_UOCC");
 
-    actvpi_ = mo_space_info_->get_dimension("ACTIVE");
-    fdoccpi_ = mo_space_info_->get_dimension("FROZEN_DOCC");
-    rdoccpi_ = mo_space_info_->get_dimension("RESTRICTED_DOCC");
-    fuoccpi_ = mo_space_info_->get_dimension("FROZEN_UOCC");
-    ruoccpi_ = mo_space_info_->get_dimension("RESTRICTED_UOCC");
+    actvpi_ = mo_space_info_->dimension("ACTIVE");
+    fdoccpi_ = mo_space_info_->dimension("FROZEN_DOCC");
+    rdoccpi_ = mo_space_info_->dimension("RESTRICTED_DOCC");
+    fuoccpi_ = mo_space_info_->dimension("FROZEN_UOCC");
+    ruoccpi_ = mo_space_info_->dimension("RESTRICTED_UOCC");
 
     ncmo2_ = nactv_ * nactv_;
 
@@ -362,7 +362,7 @@ CINO::build_density_matrix(const std::vector<Determinant>& dets, psi::SharedMatr
     }
     // Invert vector to matrix
     //    psi::Dimension nmopi = reference_wavefunction_->nmopi();
-    //    psi::Dimension ncmopi = mo_space_info_->get_dimension("CORRELATED");
+    //    psi::Dimension ncmopi = mo_space_info_->dimension("CORRELATED");
 
     std::shared_ptr<psi::Matrix> opdm_a(new psi::Matrix("OPDM_A", actvpi_, actvpi_));
     std::shared_ptr<psi::Matrix> opdm_b(new psi::Matrix("OPDM_B", actvpi_, actvpi_));
@@ -487,7 +487,7 @@ CINO::diagonalize_density_matrix(std::pair<psi::SharedMatrix, psi::SharedMatrix>
 void CINO::find_active_space_and_transform(
     std::tuple<psi::SharedVector, psi::SharedMatrix, psi::SharedVector, psi::SharedMatrix> no_U) {
 
-    auto nmopi = mo_space_info_->get_dimension("ALL");
+    auto nmopi = mo_space_info_->dimension("ALL");
 
     Ua_.reset(new psi::Matrix("U", nmopi, nmopi));
     psi::SharedMatrix NO_A = std::get<1>(no_U);

@@ -27,7 +27,7 @@
 # @END LICENSE
 #
 
-import timeit
+import time
 import math
 import warnings
 
@@ -70,11 +70,12 @@ def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
         Ua = semi.Ua_t()
         Ub = semi.Ub_t()
 
-        dsrg = forte.make_dsrg_method(correlation_solver_type, rdms,
-                                      scf_info, options, ints, mo_space_info)
-        dsrg.set_Uactv(Ua, Ub)
-        Edsrg = dsrg.compute_energy()
-        psi4.core.set_scalar_variable('UNRELAXED ENERGY', Edsrg)
+        Edsrg, dsrg, Heff_actv_implemented = compute_dsrg_unrelaxed_energy(correlation_solver_type,
+                                                                           rdms, scf_info, options,
+                                                                           ints, mo_space_info,
+                                                                           Ua, Ub)
+        if not Heff_actv_implemented:
+            return Edsrg
 
         # dipole moment related
         do_dipole = options.get_bool("DSRG_DIPOLE")
@@ -258,22 +259,58 @@ def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
                     psi4.core.set_scalar_variable('FULLY RELAXED DIPOLE', dsrg_dipoles[-1][1][-1])
 
         return Erelax
-    else : 
+    else :
 
         average_energy = forte.compute_average_state_energy(state_energies_list,state_weights_map)
         return_en = average_energy
 
     return return_en
 
-def orbital_projection(ref_wfn, options):
-    r"""
+def compute_dsrg_unrelaxed_energy(correlation_solver_type, rdms, scf_info, options,
+                                  ints, mo_space_info, Ua, Ub):
+    Heff_actv_implemented = False
+
+    if correlation_solver_type == "MRDSRG_SO":
+        dsrg = forte.make_dsrg_so_y(rdms, scf_info, options, ints, mo_space_info)
+    elif correlation_solver_type == "SOMRDSRG":
+        dsrg = forte.make_dsrg_so_f(rdms, scf_info, options, ints, mo_space_info)
+    elif correlation_solver_type == "DSRG_MRPT":
+        dsrg = forte.make_dsrg_spin_adapted(rdms, scf_info, options, ints, mo_space_info)
+    else:
+        Heff_actv_implemented = True
+        dsrg = forte.make_dsrg_method(correlation_solver_type, rdms, scf_info, options, ints, mo_space_info)
+        dsrg.set_Uactv(Ua, Ub)
+
+    Edsrg = dsrg.compute_energy()
+    psi4.core.set_scalar_variable('UNRELAXED ENERGY', Edsrg)
+
+    return Edsrg, dsrg, Heff_actv_implemented
+
+def orbital_projection(ref_wfn, options, mo_space_info):
+    r"""Functions that pre-rotate orbitals before calculations;
+    Requires a set of reference orbitals and mo_space_info.
+
+    AVAS: an automatic active space selection and projection;
+    Embedding: simple frozen-orbital embedding with the overlap projector.
+
+    Return a mo_space_info (forte::MOSpaceInfo)
     """
+
     # Create the AO subspace projector
     ps = forte.make_aosubspace_projector(ref_wfn, options)
 
     #Apply the projector to rotate orbitals
     if options.get_bool("AVAS"):
+        forte.print_method_banner(["Atomic Valence Active Space (AVAS)", "Chenxi Cai"]);
         forte.make_avas(ref_wfn, options, ps)
+
+    # Create the fragment(embedding) projector and apply to rotate orbitals
+    if options.get_bool("EMBEDDING"):
+        forte.print_method_banner(["Frozen-orbital Embedding", "Nan He"]);
+        pf = forte.make_fragment_projector(ref_wfn, options)
+        return forte.make_embedding(ref_wfn, options, pf, mo_space_info)
+    else:
+        return mo_space_info
 
 
 def run_forte(name, **kwargs):
@@ -319,7 +356,7 @@ def run_forte(name, **kwargs):
     mo_space_info = forte.make_mo_space_info(ref_wfn, forte.forte_options)
 
     # Call methods that project the orbitals (AVAS, embedding)
-    orbital_projection(ref_wfn, options)
+    mo_space_info = orbital_projection(ref_wfn, options, mo_space_info)
 
     state = forte.make_state_info_from_psi_wfn(ref_wfn)
     scf_info = forte.SCFInfo(ref_wfn)
@@ -334,7 +371,99 @@ def run_forte(name, **kwargs):
         forte.cleanup()
         return ref_wfn
 
-    start = timeit.timeit()
+    start_pre_ints = time.time()
+
+    # Make an integral object
+    ints = forte.make_forte_integrals(ref_wfn, options, mo_space_info)
+
+    start = time.time()
+
+    # Rotate orbitals before computation (e.g. localization, MP2 natural orbitals, etc.)
+    orb_type = options.get_str("ORBITAL_TYPE")
+    if orb_type != 'CANONICAL':
+        orb_t = forte.make_orbital_transformation(orb_type, scf_info, forte.forte_options, ints, mo_space_info)
+        orb_t.compute_transformation()
+        Ua = orb_t.get_Ua()
+        Ub = orb_t.get_Ub()
+        ints.rotate_orbitals(Ua,Ub)
+
+    # Run a method
+    if (job_type == 'NEWDRIVER'):
+        energy = forte_driver(state_weights_map, scf_info, forte.forte_options, ints, mo_space_info)
+    else:
+        energy = forte.forte_old_methods(ref_wfn, options, ints, mo_space_info)
+
+    end = time.time()
+
+    # Close ambit, etc.
+    forte.cleanup()
+
+    psi4.core.set_scalar_variable('CURRENT ENERGY', energy)
+
+    psi4.core.print_out(f'\n\n  Time to prepare integrals: {start - start_pre_ints} seconds')
+    psi4.core.print_out(f'\n  Time to run job          : {end - start} seconds')
+    psi4.core.print_out(f'\n  Total                    : {end - start} seconds')
+    return ref_wfn
+
+
+
+def gradient_forte(name, **kwargs):
+    r"""Function encoding sequence of PSI module and plugin calls so that
+    forte can be called via :py:func:`~driver.energy`. For post-scf plugins.
+
+    >>> gradient('forte') 
+        available for : CASSCF
+
+    """
+    lowername = name.lower()
+    kwargs = p4util.kwargs_lower(kwargs)
+
+    # Compute a SCF reference, a wavefunction is return which holds the molecule used, orbitals
+    # Fock matrices, and more
+    ref_wfn = kwargs.get('ref_wfn', None)
+    if ref_wfn is None:
+        ref_wfn = psi4.driver.scf_helper(name, **kwargs)
+
+    # Get the option object
+    optstash = p4util.OptionsState(['GLOBALS', 'DERTYPE'])
+    options = psi4.core.get_options()
+    options.set_current_module('FORTE')
+    forte.forte_options.update_psi_options(options)
+
+    if ('DF' in options.get_str('INT_TYPE')):
+        raise Exception('analytic gradient is not implemented for density fitting')
+
+    if (options.get_str('MINAO_BASIS')):
+        minao_basis = psi4.core.BasisSet.build(ref_wfn.molecule(), 'MINAO_BASIS',
+                                               options.get_str('MINAO_BASIS'))
+        ref_wfn.set_basisset('MINAO_BASIS', minao_basis)
+
+    # Start Forte, initialize ambit
+    my_proc_n_nodes = forte.startup()
+    my_proc, n_nodes = my_proc_n_nodes
+
+    # Print the banner
+    forte.banner()
+
+    # Create the MOSpaceInfo object
+    mo_space_info = forte.make_mo_space_info(ref_wfn, forte.forte_options)
+
+    # Call methods that project the orbitals (AVAS, embedding)
+    mo_space_info = orbital_projection(ref_wfn, options, mo_space_info)
+
+    state = forte.make_state_info_from_psi_wfn(ref_wfn)
+    scf_info = forte.SCFInfo(ref_wfn)
+    state_weights_map = forte.make_state_weights_map(forte.forte_options,ref_wfn)
+
+    # Run a method
+    job_type = options.get_str('JOB_TYPE')
+
+    energy = 0.0
+
+    if not job_type == 'CASSCF':
+        raise Exception('analytic gradient is only implemented for CASSCF')
+
+    start = time.time()
 
     # Make an integral object
     ints = forte.make_forte_integrals(ref_wfn, options, mo_space_info)
@@ -348,22 +477,25 @@ def run_forte(name, **kwargs):
         Ub = orb_t.get_Ub()
 
         ints.rotate_orbitals(Ua,Ub)
+    # Run gradient computation
+    energy = forte.forte_old_methods(ref_wfn, options, ints, mo_space_info)
+    derivobj = psi4.core.Deriv(ref_wfn)
+    derivobj.set_deriv_density_backtransformed(True)
+    derivobj.set_ignore_reference(True)
+    grad = derivobj.compute() #psi4.core.DerivCalcType.Correlated
+    ref_wfn.set_gradient(grad)    
+    optstash.restore()        
 
-    # Run a method
-    if (job_type == 'NEWDRIVER'):
-        energy = forte_driver(state_weights_map, scf_info, forte.forte_options, ints, mo_space_info)
-    else:
-        energy = forte.forte_old_methods(ref_wfn, options, ints, mo_space_info)
-
-    end = timeit.timeit()
+    end = time.time()
     #print('\n\n  Your calculation took ', (end - start), ' seconds');
 
     # Close ambit, etc.
     forte.cleanup()
 
-    psi4.core.set_scalar_variable('CURRENT ENERGY', energy)
     return ref_wfn
+
 
 # Integration with driver routines
 psi4.driver.procedures['energy']['forte'] = run_forte
+psi4.driver.procedures['gradient']['forte'] = gradient_forte
 

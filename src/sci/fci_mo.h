@@ -47,7 +47,6 @@
 #include "sparse_ci/sparse_ci_solver.h"
 #include "integrals/active_space_integrals.h"
 #include "sparse_ci/determinant.h"
-#include "mrdsrg-spin-integrated/active_dsrgpt2.h"
 
 using d1 = std::vector<double>;
 using d2 = std::vector<d1>;
@@ -299,6 +298,9 @@ class FCI_MO : public ActiveSpaceMethod {
 
     /// Convergence
     double econv_;
+
+    /// Convergence
+    double rconv_;
 
     /// Multiplicity
     int multi_;
