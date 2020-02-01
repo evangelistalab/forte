@@ -31,7 +31,6 @@ set {
 set forte {
   active_space_solver aci
   multiplicity 1
-  aci_select_type aimed_energy
   e_convergence 12
   r_convergence 7
   frozen_docc     [2]

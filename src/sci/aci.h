@@ -141,7 +141,6 @@ class AdaptiveCI : public SelectedCIMethod {
 
     void unpaired_density(psi::SharedMatrix Ua, psi::SharedMatrix Ub);
     void unpaired_density(ambit::Tensor Ua, ambit::Tensor Ub);
-    void spin_analysis();
 
   private:
     // Temporarily added
