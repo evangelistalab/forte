@@ -310,7 +310,7 @@ void make_avas(psi::SharedWavefunction ref_wfn, psi::Options& options, psi::Shar
 }
 
 std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi::Options& options,
-                                            psi::SharedMatrix Pf,
+                                            psi::SharedMatrix Pf, int nbf_A,
                                             std::shared_ptr<MOSpaceInfo> mo_space_info) {
 
     // 1. Get necessary information, print method initialization information and exceptions
@@ -353,6 +353,7 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
     std::shared_ptr<PSIO> psio(_default_psio_lib_);
 
     Dimension nmopi = ref_wfn->nmopi();
+    Dimension noccpi = ref_wfn->doccpi();
     Dimension zeropi = nmopi - nmopi;
     int nirrep = ref_wfn->nirrep();
     if (nirrep > 1) {
@@ -373,6 +374,7 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
     Slice vir(frzopi + nroccpi + actv_a, nmopi - frzvpi);
     Slice actv(frzopi + nroccpi, frzopi + nroccpi + actv_a);
     Slice mo(zeropi, nmopi);
+    Slice dvir(noccpi, nmopi);
 
     // Save original orbitals for frozen and active orbital reconstruction
     SharedMatrix Ca_ori = ref_wfn->Ca();
@@ -520,13 +522,40 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
         }
     }
 
-	if (options.get_str("EMBEDDING_VIRTUAL_SPACE") == "PAO") {
-		// Call build_PAOs
-		double tau = options.get_double("PAO_THRESHOLD");
+    if (options.get_str("EMBEDDING_VIRTUAL_SPACE") == "PAO") {
+		outfile->Printf("\n ****** Build PAOs for virtual space ******");
 
+        // Call build_PAOs
+        double tau = options.get_double("PAO_THRESHOLD");
+        PAObuilder pao(Ca_save, noccpi, ref_wfn->basisset());
+
+		outfile->Printf("\n ****** Update C_vir ******");
+        // Write Ca
+        SharedMatrix C_pao = pao.build_A_virtual(nbf_A, tau);
+        ref_wfn->Ca()->set_block(mo, dvir, C_pao);
+
+        // B_vir ignored for now
+
+		outfile->Printf("\n ****** Create index lists ******");
 		// Form new index_A_vir and index_B_vir
+		int n_pao = C_pao->ncol();
+		int nactv_vir = offset_vec - noccpi[0];
+		int sizeAu = n_pao - nactv_vir;
+		index_A_vir.clear();
+		index_B_vir.clear();
 
-	}
+		// Number of virtual PAOs should be PAOs - active_virtual (?)
+		for (int i = 0; i < nrvirpi[0]; i++) {
+			if (i < sizeAu) {
+				index_A_vir.push_back(i + offset_vec);
+			}
+			else {
+				index_B_vir.push_back(i + offset_vec);
+			}
+		}
+
+		outfile->Printf("\n ****** PAOs done ******");
+    }
 
     // Collect the size of each space
     int num_Fo = index_frozen_core.size();
@@ -547,9 +576,11 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
     for (int i : index_actv) {
         outfile->Printf("    %4d   %8s      --\n", i + 1, "Active");
     }
-    for (int i : index_A_vir) {
-        outfile->Printf("    %4d   %8s   %.6f\n", i + 1, "Virtual", lv->get(i - offset_vec));
-    }
+	if (options.get_str("EMBEDDING_VIRTUAL_SPACE") == "DIRECT") {
+		for (int i : index_A_vir) {
+			outfile->Printf("    %4d   %8s   %.6f\n", i + 1, "Virtual", lv->get(i - offset_vec));
+		}
+	}
     outfile->Printf("    ============================\n");
 
     // If less than 50 frozen environment orbitals, print the environment orbital
@@ -571,9 +602,15 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
     }
 
     outfile->Printf("\n  Summary: ");
-    outfile->Printf("\n    System (A): %d Occupied MOs, %d Active MOs, %d Virtual MOs", num_Ao,
-                    actv_a[0], num_Av);
-    outfile->Printf("\n    Environment (B): %d Occupied MOs, %d Virtual MOs", num_Bo, num_Bv);
+	if (options.get_str("EMBEDDING_VIRTUAL_SPACE") == "DIRECT") {
+		outfile->Printf("\n    System (A): %d Occupied MOs, %d Active MOs, %d Virtual MOs", num_Ao,
+			actv_a[0], num_Av);
+	}
+	if (options.get_str("EMBEDDING_VIRTUAL_SPACE") == "PAO") {
+		outfile->Printf("\n    System (A): %d Occupied MOs, %d Active MOs, %d orthogonalized PAOs", num_Ao,
+			actv_a[0], num_Av);
+	}
+	outfile->Printf("\n    Environment (B): %d Occupied MOs, %d Virtual MOs", num_Bo, num_Bv);
     outfile->Printf("\n    Frozen Orbitals: %d Core MOs, %d Virtual MOs\n", num_Fo, num_Fv);
 
     SharedMatrix Ca_tilde(ref_wfn->Ca()->clone());

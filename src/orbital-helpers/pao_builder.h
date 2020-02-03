@@ -47,36 +47,38 @@ namespace forte {
 class PAObuilder {
   public:
     // ==> Constructors <==
-    PAObuilder(psi::SharedMatrix C, psi::Dimension noccpi,
-               std::shared_ptr<psi::BasisSet> basis);
+    PAObuilder(psi::SharedMatrix C, psi::Dimension noccpi, std::shared_ptr<psi::BasisSet> basis);
 
     // Build PAO_A and return C_virtual_A
     psi::SharedMatrix build_A_virtual(int nbf_A, double pao_threshold);
 
-	// Build PAO_B and return C_virtual_B
-	psi::SharedMatrix build_B_virtual();
+    // Build PAO_B and return C_virtual_B
+    psi::SharedMatrix build_B_virtual();
 
   private:
     /// The AO basis set
     std::shared_ptr<psi::BasisSet> basis_;
 
-	/// The original coefficients
-	psi::SharedMatrix C_;
+    /// The original coefficients
+    psi::SharedMatrix C_;
 
-	/// Symmetry info
-	int nirrep_;
+    /// Symmetry info
+    int nirrep_;
+
+    /// Basis size info
+    int nbf_;
 
     /// MO info
     psi::Dimension nmopi_;
 
-	/// Docc info
-	psi::Dimension noccpi_;
+    /// Docc info
+    psi::Dimension noccpi_;
 
-	/// Density
-	psi::SharedMatrix D_;
+    /// Density
+    psi::SharedMatrix D_;
 
-	/// AO Overlap
-	psi::SharedMatrix S_;
+    /// AO Overlap
+    psi::SharedMatrix S_;
 
     /// The startup function
     void startup();
