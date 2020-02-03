@@ -369,6 +369,16 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
     Dimension nrvirpi = mo_space_info->dimension("RESTRICTED_UOCC");
     Dimension frzvpi = mo_space_info->dimension("FROZEN_UOCC");
 
+	// When doing single-reference, put actv to 0
+	Dimension doc = ref_wfn->doccpi();
+	int diff = doc[0] - frzopi[0] - nroccpi[0];
+	int diff2 = actv_a[0] - diff;
+	if (options.get_str("EMBEDDING_REFERENCE") == "HF") {
+		nroccpi[0] += diff;
+		nrvirpi[0] += diff2;
+		actv_a[0] = 0;
+	}
+
     // Define corresponding blocks (slices), occ slick will start at frzopi
     Slice occ(frzopi, nroccpi + frzopi);
     Slice vir(frzopi + nroccpi + actv_a, nmopi - frzvpi);
@@ -411,12 +421,10 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
     std::vector<int> index_B_vir = {};
     std::vector<int> index_actv = {};
 
-    // Create the active orbital index vector
-    if (options.get_str("EMBEDDING_REFERENCE") == "CASSCF") {
-        for (int i = 0; i < actv_a[0]; ++i) {
-            index_actv.push_back(frzopi[0] + nroccpi[0] + i);
-        }
-    }
+    // Create the active orbital index vector (for any reference)
+	for (int i = 0; i < actv_a[0]; ++i) {
+		index_actv.push_back(frzopi[0] + nroccpi[0] + i);
+	}
 
     int offset_vec = frzopi[0] + nroccpi[0] + actv_a[0];
 
@@ -615,23 +623,22 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
 
     SharedMatrix Ca_tilde(ref_wfn->Ca()->clone());
 
+	bool semi_f = options.get_bool("EMBEDDING_SEMICANONICALIZE_FROZEN");
+	bool semi_a = options.get_bool("EMBEDDING_SEMICANONICALIZE_ACTIVE");
+
     // Build and semi-canonicalize BO, AO, AV and BV blocks from rotated Ca()
-    auto C_bo = semicanonicalize_block(ref_wfn, Ca_tilde, index_B_occ, 0, true);
+    auto C_bo = semicanonicalize_block(ref_wfn, Ca_tilde, index_B_occ, 0, !semi_f);
     auto C_ao = semicanonicalize_block(ref_wfn, Ca_tilde, index_A_occ, 0, false);
     auto C_av = semicanonicalize_block(ref_wfn, Ca_tilde, index_A_vir, 0, false);
-    auto C_bv = semicanonicalize_block(ref_wfn, Ca_tilde, index_B_vir, 0, true);
+    auto C_bv = semicanonicalize_block(ref_wfn, Ca_tilde, index_B_vir, 0, !semi_f);
 
     // Copy the active block (if any) from original Ca_save
     SharedMatrix C_A(new Matrix("Active_coeff_block", nirrep, nmopi, actv_a));
     if (options.get_str("EMBEDDING_REFERENCE") == "CASSCF") {
-        if (options.get_bool("EMBEDDING_SEMICANONICALIZE_ACTIVE") == true) {
+		C_A->copy(semicanonicalize_block(ref_wfn, Ca_save, index_actv, 0, !semi_a));
+        if (semi_a) {
             outfile->Printf("\n  Semi-canonicalizing active orbitals");
-            // Read active orbitals from original Ca and semi-canonicalize
-            C_A->copy(semicanonicalize_block(ref_wfn, Ca_save, index_actv, 0, false));
-        } else {
-            // Read active orbitals from original Ca and do not semi-canonicalize
-            C_A->copy(semicanonicalize_block(ref_wfn, Ca_save, index_actv, 0, true));
-        }
+        } 
     }
 
     // Copy the frozen blocks (if any) from original Ca_save without any changes
@@ -678,14 +685,24 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
 
     // Restricted docc space
     size_t ro = static_cast<size_t>(num_Ao - adj_sys_docc);
+	if (options.get_str("EMBEDDING_REFERENCE") == "HF") {
+		ro -= diff;
+	}
     mo_space_map["RESTRICTED_DOCC"] = {ro};
 
     // Active space
     size_t a = static_cast<size_t>(actv_a[0]);
+	if (options.get_str("EMBEDDING_REFERENCE") == "HF") {
+		a += diff;
+		a += diff2;
+	}
     mo_space_map["ACTIVE"] = {a};
 
     // Restricted uocc space
     size_t rv = static_cast<size_t>(num_Av - adj_sys_uocc);
+	if (options.get_str("EMBEDDING_REFERENCE") == "HF") {
+		rv -= diff2;
+	}
     mo_space_map["RESTRICTED_UOCC"] = {rv};
 
     // Frozen uocc space

@@ -77,8 +77,6 @@ void PAObuilder::startup() {
     }
     D_ = D;
 
-    D->print();
-
     // Build S
     outfile->Printf("\n ****** Build overlap ******");
     std::shared_ptr<IntegralFactory> integral_pp(
@@ -89,7 +87,6 @@ void PAObuilder::startup() {
     S_int->compute(S_nn);
     S_ = S_nn;
 
-    S_nn->print();
     outfile->Printf("\n ****** Initialization done! ******");
 }
 
@@ -129,6 +126,7 @@ SharedMatrix PAObuilder::build_A_virtual(int nbf_A, double pao_threshold) {
     int num_pao_B = 0;
 
     lambda->print();
+	outfile->Printf("\n PAO truncation: %8.6f", pao_threshold);
 
     for (int i = 0; i < nbf_A; ++i) {
         double leig = lambda->get(0, i);
@@ -137,7 +135,7 @@ SharedMatrix PAObuilder::build_A_virtual(int nbf_A, double pao_threshold) {
             lambda->set(0, i, 1.0 / sqrt(leig));
         } else {
             ++num_pao_B;
-            lambda->set(0, i, 100000.0); // Debug
+            lambda->set(0, i, 100000.0); // Debug, delete when finish
         }
     }
 
@@ -155,10 +153,10 @@ SharedMatrix PAObuilder::build_A_virtual(int nbf_A, double pao_threshold) {
     SharedMatrix C_short = linalg::doublet(CU->get_block(AB, Ashort), L->get_block(Ashort, Ashort));
 
     // Verify orthogonality (Debug, remove after test)
-    outfile->Printf("\n ****** Test orthogonality ******");
+    outfile->Printf("\n ****** Test orthogonality ****** \n");
     SharedMatrix It = linalg::triplet(C_short, S_, C_short, true, false, false);
     It->print();
-
+	
     outfile->Printf("\n ****** PAOs generated ******");
     return C_short;
 }
