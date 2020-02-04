@@ -384,7 +384,6 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
     Slice vir(frzopi + nroccpi + actv_a, nmopi - frzvpi);
     Slice actv(frzopi + nroccpi, frzopi + nroccpi + actv_a);
     Slice mo(zeropi, nmopi);
-    Slice dvir(noccpi, nmopi);
 
     // Save original orbitals for frozen and active orbital reconstruction
     SharedMatrix Ca_ori = ref_wfn->Ca();
@@ -535,27 +534,37 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
 
         // Call build_PAOs
         double tau = options.get_double("PAO_THRESHOLD");
-        PAObuilder pao(Ca_save, noccpi, ref_wfn->basisset());
+        PAObuilder pao(Ca_save, noccpi+actv_a, ref_wfn->basisset());
 
+		ref_wfn->Ca()->print();
 		outfile->Printf("\n ****** Update C_vir ******");
         // Write Ca
         SharedMatrix C_pao = pao.build_A_virtual(nbf_A, tau);
+
+		int n_pao = C_pao->ncol();
+		Dimension nshortpi = nmopi;
+		nshortpi[0] = offset_vec + n_pao;
+		Dimension vir_start = nmopi;
+		vir_start[0] = offset_vec;
+
+		Slice dvir(vir_start, nshortpi);
+
         ref_wfn->Ca()->set_block(mo, dvir, C_pao);
+		outfile->Printf("\n");
+		ref_wfn->Ca()->print();
 
         // B_vir ignored for now
 
 		outfile->Printf("\n ****** Create index lists ******");
 		// Form new index_A_vir and index_B_vir
-		int n_pao = C_pao->ncol();
-		int nactv_vir = offset_vec - noccpi[0];
-		int sizeAu = n_pao - nactv_vir;
 		index_A_vir.clear();
 		index_B_vir.clear();
 
 		// Number of virtual PAOs should be PAOs - active_virtual (?)
 		for (int i = 0; i < nrvirpi[0]; i++) {
-			if (i < sizeAu) {
+			if (i < n_pao) {
 				index_A_vir.push_back(i + offset_vec);
+				outfile->Printf("\n Orbital %d built as PAO");
 			}
 			else {
 				index_B_vir.push_back(i + offset_vec);
