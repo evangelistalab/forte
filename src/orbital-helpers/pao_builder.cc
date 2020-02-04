@@ -100,19 +100,24 @@ SharedMatrix PAObuilder::build_A_virtual(int nbf_A, double pao_threshold) {
     Slice A(zeropi, nbfA);
     Slice AB(zeropi, nmopi_);
 
+    
     outfile->Printf("\n ****** Compute C_pao ******");
     SharedMatrix I_aa(new Matrix("Identity with A*A size", nirrep_, nbfA, nbfA));
     I_aa->identity();
 
     SharedMatrix S_na = S_->get_block(AB, A);
+    outfile->Printf("\n ****** Check S_na ******\n");
+    S_na->print();
 
     SharedMatrix C_pao(new Matrix("C_pao, with N*A size", nirrep_, nmopi_, nbfA));
     C_pao->set_block(A, A, I_aa);
+    outfile->Printf("\n ****** Check I_na ******\n");
+    C_pao->print();
 
 	// Build C_pao = I - DS
 	C_pao->subtract(linalg::doublet(D_, S_na));
 	outfile->Printf("\n ****** Check non-ortho C_pao ******\n");
-	C_pao->print();
+	// C_pao->print();
 
     outfile->Printf("\n ****** Orthogonalize C_pao ******");
     // Orthogonalize C_pao
@@ -160,8 +165,8 @@ SharedMatrix PAObuilder::build_A_virtual(int nbf_A, double pao_threshold) {
     SharedMatrix It = linalg::triplet(C_short, S_, C_short, true, false, false);
     It->print();
 
-	outfile->Printf("\n ****** Check C_opao ****** \n");
-	C_short->print();
+	// outfile->Printf("\n ****** Check C_opao ****** \n");
+	// C_short->print();
 	
 	//C_short->zero();
     outfile->Printf("\n ****** PAOs generated ******");

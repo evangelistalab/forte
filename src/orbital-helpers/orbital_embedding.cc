@@ -535,7 +535,7 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
         double tau = options.get_double("PAO_THRESHOLD");
         PAObuilder pao(Ca_save, frzvpi + nroccpi + actv_a, ref_wfn->basisset());
 
-		ref_wfn->Ca()->print();
+		// ref_wfn->Ca()->print();
 		outfile->Printf("\n ****** Update C_vir ******");
         // Write Ca
         SharedMatrix C_pao = pao.build_A_virtual(nbf_A, tau);
@@ -550,7 +550,7 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
 
         ref_wfn->Ca()->set_block(mo, dvir, C_pao);
 		outfile->Printf("\n");
-		ref_wfn->Ca()->print();
+		// ref_wfn->Ca()->print();
 
         // B_vir ignored for now
 
@@ -637,7 +637,13 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
     // Build and semi-canonicalize BO, AO, AV and BV blocks from rotated Ca()
     auto C_bo = semicanonicalize_block(ref_wfn, Ca_tilde, index_B_occ, 0, !semi_f);
     auto C_ao = semicanonicalize_block(ref_wfn, Ca_tilde, index_A_occ, 0, false);
-    auto C_av = semicanonicalize_block(ref_wfn, Ca_tilde, index_A_vir, 0, false);
+    
+    bool preserve_virtual = false;
+    if (options.get_str("EMBEDDING_VIRTUAL_SPACE") == "PAO") {
+        preserve_virtual = true;
+    }
+
+    auto C_av = semicanonicalize_block(ref_wfn, Ca_tilde, index_A_vir, 0, preserve_virtual);
     auto C_bv = semicanonicalize_block(ref_wfn, Ca_tilde, index_B_vir, 0, !semi_f);
 
     // Copy the active block (if any) from original Ca_save
@@ -682,6 +688,8 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
     // Update both the alpha and beta orbitals
     ref_wfn->Ca()->copy(Ca_Rt);
     ref_wfn->Cb()->copy(Ca_Rt);
+
+    // ref_wfn->Ca()->print();
 
     // Write a new MOSpaceInfo:
     std::map<std::string, std::vector<size_t>> mo_space_map;
