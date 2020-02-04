@@ -680,8 +680,13 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
     }
 
     // Update both the alpha and beta orbitals
-    ref_wfn->Ca()->copy(Ca_Rt);
-    ref_wfn->Cb()->copy(Ca_Rt);
+    //ref_wfn->Ca()->copy(Ca_Rt);
+    //ref_wfn->Cb()->copy(Ca_Rt); recover after test!
+	double tau = options.get_double("PAO_THRESHOLD");
+	PAObuilder pao(Ca_save, frzvpi + nroccpi + actv_a, ref_wfn->basisset());
+	SharedMatrix C_pao = pao.build_A_virtual(nbf_A, tau);
+	ref_wfn->Ca()->set_block(mo, mo, C_pao);
+	ref_wfn->Cb()->set_block(mo, mo, C_pao);
 
     // Write a new MOSpaceInfo:
     std::map<std::string, std::vector<size_t>> mo_space_map;

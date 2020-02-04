@@ -104,14 +104,24 @@ SharedMatrix PAObuilder::build_A_virtual(int nbf_A, double pao_threshold) {
     SharedMatrix I_aa(new Matrix("Identity with A*A size", nirrep_, nbfA, nbfA));
     I_aa->identity();
 
+	/*
     SharedMatrix S_na = S_->get_block(AB, A);
 
     SharedMatrix C_pao(new Matrix("C_pao, with N*A size", nirrep_, nmopi_, nbfA));
     C_pao->set_block(A, A, I_aa);
 
-    // Build C_pao = I - DS
-    C_pao->subtract(linalg::doublet(D_, S_na));
+	// Build C_pao = I - DS
+	C_pao->subtract(linalg::doublet(D_, S_na));
+	*/
 
+	// Test full PAOs (Delete after test!)
+	SharedMatrix C_pao(new Matrix("C_pao, with N*A size", nirrep_, nmopi_, nmopi_));
+	C_pao->identity();
+	C_pao->subtract(linalg::doublet(D_, S_));
+
+	return C_pao;
+
+	/*
     outfile->Printf("\n ****** Orthogonalize C_pao ******");
     // Orthogonalize C_pao
     SharedMatrix U(new Matrix("U", nirrep_, nbfA, nbfA));
@@ -158,9 +168,10 @@ SharedMatrix PAObuilder::build_A_virtual(int nbf_A, double pao_threshold) {
     SharedMatrix It = linalg::triplet(C_short, S_, C_short, true, false, false);
     It->print();
 	
-	C_short->zero();
+	//C_short->zero();
     outfile->Printf("\n ****** PAOs generated ******");
     return C_short;
+	*/
 }
 
 SharedMatrix PAObuilder::build_B_virtual() {
