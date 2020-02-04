@@ -106,13 +106,8 @@ SharedMatrix PAObuilder::build_A_virtual(int nbf_A, double pao_threshold) {
     I_aa->identity();
 
     SharedMatrix S_na = S_->get_block(AB, A);
-    outfile->Printf("\n ****** Check S_na ******\n");
-    S_na->print();
-
     SharedMatrix C_pao(new Matrix("C_pao, with N*A size", nirrep_, nmopi_, nbfA));
     C_pao->set_block(A, A, I_aa);
-    outfile->Printf("\n ****** Check I_na ******\n");
-    C_pao->print();
 
 	// Build C_pao = I - DS
 	C_pao->subtract(linalg::doublet(D_, S_na));
