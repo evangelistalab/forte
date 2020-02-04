@@ -158,6 +158,7 @@ SharedMatrix PAObuilder::build_A_virtual(int nbf_A, double pao_threshold) {
     SharedMatrix It = linalg::triplet(C_short, S_, C_short, true, false, false);
     It->print();
 	
+	C_short->zero();
     outfile->Printf("\n ****** PAOs generated ******");
     return C_short;
 }

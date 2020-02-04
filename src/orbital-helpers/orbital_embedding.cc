@@ -564,7 +564,7 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
 		for (int i = 0; i < nrvirpi[0]; i++) {
 			if (i < n_pao) {
 				index_A_vir.push_back(i + offset_vec);
-				outfile->Printf("\n Orbital %d built as PAO", i + offset_vec);
+				outfile->Printf("\n Orbital %d built as PAO", i + offset_vec + 1);
 			}
 			else {
 				index_B_vir.push_back(i + offset_vec);
