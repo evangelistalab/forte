@@ -681,7 +681,7 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
 
     // Update both the alpha and beta orbitals
     ref_wfn->Ca()->copy(Ca_Rt);
-    ref_wfn->Cb()->copy(Ca_Rt); recover after test!
+    ref_wfn->Cb()->copy(Ca_Rt);
 
     // Write a new MOSpaceInfo:
     std::map<std::string, std::vector<size_t>> mo_space_map;
