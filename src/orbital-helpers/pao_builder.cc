@@ -133,6 +133,7 @@ SharedMatrix PAObuilder::build_A_virtual(int nbf_A, double pao_threshold) {
         if (leig > pao_threshold) {
             ++num_pao_A;
             lambda->set(0, i, 1.0 / sqrt(leig));
+			outfile->Printf("\n PAO %d: %8.8f", i, leig);
         } else {
             ++num_pao_B;
             lambda->set(0, i, 0.0); // Debug, delete when finish
@@ -148,7 +149,6 @@ SharedMatrix PAObuilder::build_A_virtual(int nbf_A, double pao_threshold) {
     SharedMatrix L(new Matrix("Lambda^-1/2, with Ashort*Ashort size", nirrep_, VA_short, VA_short));
     for (int i = 0; i < num_pao_A; ++i) {
         L->set(0, i, i, lambda->get(0, i));
-		outfile->Printf("\n PAO %d: %8.8f", i, lambda->get(0, i));
     }
 
     SharedMatrix C_short = linalg::doublet(CU->get_block(AB, Ashort), L->get_block(Ashort, Ashort));
