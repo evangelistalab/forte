@@ -368,15 +368,15 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
     Dimension nrvirpi = mo_space_info->dimension("RESTRICTED_UOCC");
     Dimension frzvpi = mo_space_info->dimension("FROZEN_UOCC");
 
-	// When doing single-reference, put actv to 0
-	Dimension doc = ref_wfn->doccpi();
-	int diff = doc[0] - frzopi[0] - nroccpi[0];
-	int diff2 = actv_a[0] - diff;
-	if (options.get_str("EMBEDDING_REFERENCE") == "HF") {
-		nroccpi[0] += diff;
-		nrvirpi[0] += diff2;
-		actv_a[0] = 0;
-	}
+    // When doing single-reference, put actv to 0
+    Dimension doc = ref_wfn->doccpi();
+    int diff = doc[0] - frzopi[0] - nroccpi[0];
+    int diff2 = actv_a[0] - diff;
+    if (options.get_str("EMBEDDING_REFERENCE") == "HF") {
+        nroccpi[0] += diff;
+        nrvirpi[0] += diff2;
+        actv_a[0] = 0;
+    }
 
     // Define corresponding blocks (slices), occ slick will start at frzopi
     Slice occ(frzopi, nroccpi + frzopi);
@@ -420,9 +420,9 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
     std::vector<int> index_actv = {};
 
     // Create the active orbital index vector (for any reference)
-	for (int i = 0; i < actv_a[0]; ++i) {
-		index_actv.push_back(frzopi[0] + nroccpi[0] + i);
-	}
+    for (int i = 0; i < actv_a[0]; ++i) {
+        index_actv.push_back(frzopi[0] + nroccpi[0] + i);
+    }
 
     int offset_vec = frzopi[0] + nroccpi[0] + actv_a[0];
 
@@ -529,48 +529,47 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
     }
 
     if (options.get_str("EMBEDDING_VIRTUAL_SPACE") == "PAO") {
-		outfile->Printf("\n ****** Build PAOs for virtual space ******");
+        outfile->Printf("\n ****** Build PAOs for virtual space ******");
 
         // Call build_PAOs
         double tau = options.get_double("PAO_THRESHOLD");
         PAObuilder pao(Ca_save, frzvpi + nroccpi + actv_a, ref_wfn->basisset());
 
-		// ref_wfn->Ca()->print();
-		outfile->Printf("\n ****** Update C_vir ******");
+        // ref_wfn->Ca()->print();
+        outfile->Printf("\n ****** Update C_vir ******");
         // Write Ca
         SharedMatrix C_pao = pao.build_A_virtual(nbf_A, tau);
 
-		int n_pao = C_pao->ncol();
-		Dimension nshortpi = nmopi;
-		nshortpi[0] = offset_vec + n_pao;
-		Dimension vir_start = nmopi;
-		vir_start[0] = offset_vec;
+        int n_pao = C_pao->ncol();
+        Dimension nshortpi = nmopi;
+        nshortpi[0] = offset_vec + n_pao;
+        Dimension vir_start = nmopi;
+        vir_start[0] = offset_vec;
 
-		Slice dvir(vir_start, nshortpi);
+        Slice dvir(vir_start, nshortpi);
 
         ref_wfn->Ca()->set_block(mo, dvir, C_pao);
-		outfile->Printf("\n");
-		// ref_wfn->Ca()->print();
+        outfile->Printf("\n");
+        // ref_wfn->Ca()->print();
 
         // B_vir ignored for now
 
-		outfile->Printf("\n ****** Create index lists ******");
-		// Form new index_A_vir and index_B_vir
-		index_A_vir.clear();
-		index_B_vir.clear();
+        outfile->Printf("\n ****** Create index lists ******");
+        // Form new index_A_vir and index_B_vir
+        index_A_vir.clear();
+        index_B_vir.clear();
 
-		// Number of virtual PAOs should be PAOs - active_virtual (?)
-		for (int i = 0; i < nrvirpi[0]; i++) {
-			if (i < n_pao) {
-				index_A_vir.push_back(i + offset_vec);
-				outfile->Printf("\n Orbital %d built as PAO", i + offset_vec + 1);
-			}
-			else {
-				index_B_vir.push_back(i + offset_vec);
-			}
-		}
+        // Number of virtual PAOs should be PAOs - active_virtual (?)
+        for (int i = 0; i < nrvirpi[0]; i++) {
+            if (i < n_pao) {
+                index_A_vir.push_back(i + offset_vec);
+                outfile->Printf("\n Orbital %d built as PAO", i + offset_vec + 1);
+            } else {
+                index_B_vir.push_back(i + offset_vec);
+            }
+        }
 
-		outfile->Printf("\n ****** PAOs done ******");
+        outfile->Printf("\n ****** PAOs done ******");
     }
 
     // Collect the size of each space
@@ -592,11 +591,11 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
     for (int i : index_actv) {
         outfile->Printf("    %4d   %8s      --\n", i + 1, "Active");
     }
-	if (options.get_str("EMBEDDING_VIRTUAL_SPACE") == "DIRECT") {
-		for (int i : index_A_vir) {
-			outfile->Printf("    %4d   %8s   %.6f\n", i + 1, "Virtual", lv->get(i - offset_vec));
-		}
-	}
+    if (options.get_str("EMBEDDING_VIRTUAL_SPACE") == "DIRECT") {
+        for (int i : index_A_vir) {
+            outfile->Printf("    %4d   %8s   %.6f\n", i + 1, "Virtual", lv->get(i - offset_vec));
+        }
+    }
     outfile->Printf("    ============================\n");
 
     // If less than 50 frozen environment orbitals, print the environment orbital
@@ -618,26 +617,26 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
     }
 
     outfile->Printf("\n  Summary: ");
-	if (options.get_str("EMBEDDING_VIRTUAL_SPACE") == "DIRECT") {
-		outfile->Printf("\n    System (A): %d Occupied MOs, %d Active MOs, %d Virtual MOs", num_Ao,
-			actv_a[0], num_Av);
-	}
-	if (options.get_str("EMBEDDING_VIRTUAL_SPACE") == "PAO") {
-		outfile->Printf("\n    System (A): %d Occupied MOs, %d Active MOs, %d orthogonalized PAOs", num_Ao,
-			actv_a[0], num_Av);
-	}
-	outfile->Printf("\n    Environment (B): %d Occupied MOs, %d Virtual MOs", num_Bo, num_Bv);
+    if (options.get_str("EMBEDDING_VIRTUAL_SPACE") == "DIRECT") {
+        outfile->Printf("\n    System (A): %d Occupied MOs, %d Active MOs, %d Virtual MOs", num_Ao,
+                        actv_a[0], num_Av);
+    }
+    if (options.get_str("EMBEDDING_VIRTUAL_SPACE") == "PAO") {
+        outfile->Printf("\n    System (A): %d Occupied MOs, %d Active MOs, %d orthogonalized PAOs",
+                        num_Ao, actv_a[0], num_Av);
+    }
+    outfile->Printf("\n    Environment (B): %d Occupied MOs, %d Virtual MOs", num_Bo, num_Bv);
     outfile->Printf("\n    Frozen Orbitals: %d Core MOs, %d Virtual MOs\n", num_Fo, num_Fv);
 
     SharedMatrix Ca_tilde(ref_wfn->Ca()->clone());
 
-	bool semi_f = options.get_bool("EMBEDDING_SEMICANONICALIZE_FROZEN");
-	bool semi_a = options.get_bool("EMBEDDING_SEMICANONICALIZE_ACTIVE");
+    bool semi_f = options.get_bool("EMBEDDING_SEMICANONICALIZE_FROZEN");
+    bool semi_a = options.get_bool("EMBEDDING_SEMICANONICALIZE_ACTIVE");
 
     // Build and semi-canonicalize BO, AO, AV and BV blocks from rotated Ca()
     auto C_bo = semicanonicalize_block(ref_wfn, Ca_tilde, index_B_occ, 0, !semi_f);
     auto C_ao = semicanonicalize_block(ref_wfn, Ca_tilde, index_A_occ, 0, false);
-    
+
     bool preserve_virtual = false;
     if (options.get_str("EMBEDDING_VIRTUAL_SPACE") == "PAO") {
         preserve_virtual = true;
@@ -649,10 +648,10 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
     // Copy the active block (if any) from original Ca_save
     SharedMatrix C_A(new Matrix("Active_coeff_block", nirrep, nmopi, actv_a));
     if (options.get_str("EMBEDDING_REFERENCE") == "CASSCF") {
-		C_A->copy(semicanonicalize_block(ref_wfn, Ca_save, index_actv, 0, !semi_a));
+        C_A->copy(semicanonicalize_block(ref_wfn, Ca_save, index_actv, 0, !semi_a));
         if (semi_a) {
             outfile->Printf("\n  Semi-canonicalizing active orbitals");
-        } 
+        }
     }
 
     // Copy the frozen blocks (if any) from original Ca_save without any changes
@@ -701,24 +700,24 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
 
     // Restricted docc space
     size_t ro = static_cast<size_t>(num_Ao - adj_sys_docc);
-	if (options.get_str("EMBEDDING_REFERENCE") == "HF") {
-		ro -= diff;
-	}
+    if (options.get_str("EMBEDDING_REFERENCE") == "HF") {
+        ro -= diff;
+    }
     mo_space_map["RESTRICTED_DOCC"] = {ro};
 
     // Active space
     size_t a = static_cast<size_t>(actv_a[0]);
-	if (options.get_str("EMBEDDING_REFERENCE") == "HF") {
-		a += diff;
-		a += diff2;
-	}
+    if (options.get_str("EMBEDDING_REFERENCE") == "HF") {
+        a += diff;
+        a += diff2;
+    }
     mo_space_map["ACTIVE"] = {a};
 
     // Restricted uocc space
     size_t rv = static_cast<size_t>(num_Av - adj_sys_uocc);
-	if (options.get_str("EMBEDDING_REFERENCE") == "HF") {
-		rv -= diff2;
-	}
+    if (options.get_str("EMBEDDING_REFERENCE") == "HF") {
+        rv -= diff2;
+    }
     mo_space_map["RESTRICTED_UOCC"] = {rv};
 
     // Frozen uocc space

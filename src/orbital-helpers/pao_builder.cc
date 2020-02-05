@@ -100,7 +100,6 @@ SharedMatrix PAObuilder::build_A_virtual(int nbf_A, double pao_threshold) {
     Slice A(zeropi, nbfA);
     Slice AB(zeropi, nmopi_);
 
-    
     outfile->Printf("\n ****** Compute C_pao ******");
     SharedMatrix I_aa(new Matrix("Identity with A*A size", nirrep_, nbfA, nbfA));
     I_aa->identity();
@@ -109,10 +108,10 @@ SharedMatrix PAObuilder::build_A_virtual(int nbf_A, double pao_threshold) {
     SharedMatrix C_pao(new Matrix("C_pao, with N*A size", nirrep_, nmopi_, nbfA));
     C_pao->set_block(A, A, I_aa);
 
-	// Build C_pao = I - DS
-	C_pao->subtract(linalg::doublet(D_, S_na));
-	outfile->Printf("\n ****** Check non-ortho C_pao ******\n");
-	// C_pao->print();
+    // Build C_pao = I - DS
+    C_pao->subtract(linalg::doublet(D_, S_na));
+    outfile->Printf("\n ****** Check non-ortho C_pao ******\n");
+    // C_pao->print();
 
     outfile->Printf("\n ****** Orthogonalize C_pao ******");
     // Orthogonalize C_pao
@@ -128,14 +127,14 @@ SharedMatrix PAObuilder::build_A_virtual(int nbf_A, double pao_threshold) {
     int num_pao_B = 0;
 
     lambda->print();
-	outfile->Printf("\n PAO truncation: %8.6f", pao_threshold);
+    outfile->Printf("\n PAO truncation: %8.6f", pao_threshold);
 
     for (int i = 0; i < nbf_A; ++i) {
         double leig = lambda->get(0, i);
         if (leig > pao_threshold) {
             ++num_pao_A;
             lambda->set(0, i, 1.0 / sqrt(leig));
-			outfile->Printf("\n PAO %d: %8.8f", i, leig);
+            outfile->Printf("\n PAO %d: %8.8f", i, leig);
         } else {
             ++num_pao_B;
             lambda->set(0, i, 0.0); // Debug, delete when finish
@@ -154,16 +153,6 @@ SharedMatrix PAObuilder::build_A_virtual(int nbf_A, double pao_threshold) {
     }
 
     SharedMatrix C_short = linalg::doublet(CU->get_block(AB, Ashort), L->get_block(Ashort, Ashort));
-
-    // Verify orthogonality (Debug, remove after test)
-    outfile->Printf("\n ****** Test orthogonality ****** \n");
-    SharedMatrix It = linalg::triplet(C_short, S_, C_short, true, false, false);
-    It->print();
-
-	// outfile->Printf("\n ****** Check C_opao ****** \n");
-	// C_short->print();
-	
-	//C_short->zero();
     outfile->Printf("\n ****** PAOs generated ******");
     return C_short;
 }
