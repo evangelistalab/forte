@@ -533,7 +533,7 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
 
         // Call build_PAOs
         double tau = options.get_double("PAO_THRESHOLD");
-        PAObuilder pao(Ca_save, frzvpi + nroccpi + actv_a, ref_wfn->basisset());
+        PAObuilder pao(Ca_save, frzopi + nroccpi + actv_a, ref_wfn->basisset());
 
         // ref_wfn->Ca()->print();
         outfile->Printf("\n ****** Update C_vir ******");

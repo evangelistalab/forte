@@ -110,7 +110,7 @@ SharedMatrix PAObuilder::build_A_virtual(int nbf_A, double pao_threshold) {
 
     // Build C_pao = I - DS
     C_pao->subtract(linalg::doublet(D_, S_na));
-    outfile->Printf("\n ****** Check non-ortho C_pao ******\n");
+    // outfile->Printf("\n ****** Check non-ortho C_pao ******\n");
     // C_pao->print();
 
     outfile->Printf("\n ****** Orthogonalize C_pao ******");
