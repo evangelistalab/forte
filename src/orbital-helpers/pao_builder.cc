@@ -110,8 +110,6 @@ SharedMatrix PAObuilder::build_A_virtual(int nbf_A, double pao_threshold) {
 
     // Build C_pao = I - DS
     C_pao->subtract(linalg::doublet(D_, S_na));
-    // outfile->Printf("\n ****** Check non-ortho C_pao ******\n");
-    // C_pao->print();
 
     outfile->Printf("\n ****** Orthogonalize C_pao ******");
     // Orthogonalize C_pao
@@ -120,13 +118,11 @@ SharedMatrix PAObuilder::build_A_virtual(int nbf_A, double pao_threshold) {
     SharedMatrix S_pao_A = linalg::triplet(C_pao, S_, C_pao, true, false, false);
     S_pao_A->diagonalize(U, lambda, descending);
 
-    // static inline double ComputeInvSqrt(double x) { return 1.0 / sqrt(x); }
 
     // Truncate A_virtual and build s_-1/2
     int num_pao_A = 0;
     int num_pao_B = 0;
 
-    lambda->print();
     outfile->Printf("\n PAO truncation: %8.6f", pao_threshold);
 
     for (int i = 0; i < nbf_A; ++i) {
@@ -137,7 +133,6 @@ SharedMatrix PAObuilder::build_A_virtual(int nbf_A, double pao_threshold) {
             outfile->Printf("\n PAO %d: %8.8f", i, leig);
         } else {
             ++num_pao_B;
-            lambda->set(0, i, 0.0); // Debug, delete when finish
         }
     }
 
