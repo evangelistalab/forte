@@ -645,9 +645,6 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
 
     SharedMatrix Ca_tilde(ref_wfn->Ca()->clone());
 
-    bool semi_f = options.get_bool("EMBEDDING_SEMICANONICALIZE_FROZEN");
-    bool semi_a = options.get_bool("EMBEDDING_SEMICANONICALIZE_ACTIVE");
-
     // Build and semi-canonicalize BO, AO, AV and BV blocks from rotated Ca()
     auto C_bo = semicanonicalize_block(ref_wfn, Ca_tilde, index_B_occ, 0, !semi_f);
     auto C_ao = semicanonicalize_block(ref_wfn, Ca_tilde, index_A_occ, 0, false);
@@ -659,6 +656,9 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
 
     auto C_av = semicanonicalize_block(ref_wfn, Ca_tilde, index_A_vir, 0, preserve_virtual);
     auto C_bv = semicanonicalize_block(ref_wfn, Ca_tilde, index_B_vir, 0, !semi_f);
+
+	bool semi_f = options.get_bool("EMBEDDING_SEMICANONICALIZE_FROZEN");
+	bool semi_a = options.get_bool("EMBEDDING_SEMICANONICALIZE_ACTIVE");
 
     // Copy the active block (if any) from original Ca_save
     SharedMatrix C_A(new Matrix("Active_coeff_block", nirrep, nmopi, actv_a));
@@ -673,16 +673,8 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
     SharedMatrix C_Fo(new Matrix("Fo_coeff_block", nirrep, nmopi, frzopi));
     SharedMatrix C_Fv(new Matrix("Fv_coeff_block", nirrep, nmopi, frzvpi));
 
-    if (options.get_bool("EMBEDDING_SEMICANONICALIZE_FROZEN") == true) {
-        outfile->Printf("\n  Semi-canonicalizing frozen orbitals");
-        // Read frozen core orbitals from original Ca and semi-canonicalize
-        C_Fo->copy(semicanonicalize_block(ref_wfn, Ca_save, index_frozen_core, 0, false));
-        C_Fv->copy(semicanonicalize_block(ref_wfn, Ca_save, index_frozen_virtual, 0, false));
-    } else {
-        // Read frozen core orbitals from original Ca and do not semi-canonicalize
-        C_Fo->copy(semicanonicalize_block(ref_wfn, Ca_save, index_frozen_core, 0, true));
-        C_Fv->copy(semicanonicalize_block(ref_wfn, Ca_save, index_frozen_virtual, 0, true));
-    }
+	C_Fo->copy(semicanonicalize_block(ref_wfn, Ca_save, index_frozen_core, 0, !semi_f));
+	C_Fv->copy(semicanonicalize_block(ref_wfn, Ca_save, index_frozen_virtual, 0, !semi_f));
 
     // Form new C matrix: Frozen-core, B_occ, A_occ, Active, A_vir, B_vir, Frozen-virtual
     SharedMatrix Ca_Rt(new Matrix("Ca rotated tilde", nirrep, nmopi, nmopi));
@@ -702,8 +694,6 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
     // Update both the alpha and beta orbitals
     ref_wfn->Ca()->copy(Ca_Rt);
     ref_wfn->Cb()->copy(Ca_Rt);
-
-    // ref_wfn->Ca()->print();
 
     // Write a new MOSpaceInfo:
     std::map<std::string, std::vector<size_t>> mo_space_map;
