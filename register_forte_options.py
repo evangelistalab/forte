@@ -164,6 +164,9 @@ def register_embedding_options(forte_options):
     forte_options.add_double(
         "PAO_THRESHOLD", 1e-8, 
         "Virtual space truncation threshold for PAO.")
+    forte_options.add_bool(
+        "PAO_FIX_VIRTUAL_NUMBER", False, 
+        "Enable this option will generate PAOs equivlent to ASET virtuals, instead of using threshold")
 
 def register_mo_space_info_options(forte_options):
     forte_options.add_array(

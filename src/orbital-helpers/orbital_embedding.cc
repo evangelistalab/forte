@@ -535,12 +535,21 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
         double tau = options.get_double("PAO_THRESHOLD");
         PAObuilder pao(Ca_save, frzopi + nroccpi + actv_a, ref_wfn->basisset());
 
+		bool fix_number = options.get_bool("PAO_FIX_VIRTUAL_NUMBER");
+
         // ref_wfn->Ca()->print();
         outfile->Printf("\n ****** Update C_vir ******");
         // Write Ca
         SharedMatrix C_pao = pao.build_A_virtual(nbf_A, tau);
 
-        int n_pao = C_pao->ncol();
+		int n_pao = 0;
+		if (!fix_number) {
+			n_pao = C_pao->ncol();
+		}
+		else {
+			n_pao = index_A_vir.size();; // Fix virtual space to be equal to ASET partitioned virtual
+		}
+
         Dimension nshortpi = nmopi;
         nshortpi[0] = offset_vec + n_pao;
         Dimension vir_start = nmopi;
@@ -548,9 +557,16 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
 
         Slice dvir(vir_start, nshortpi);
 
-        ref_wfn->Ca()->set_block(mo, dvir, C_pao);
-        outfile->Printf("\n");
-        // ref_wfn->Ca()->print();
+		if (!fix_number) {
+			ref_wfn->Ca()->set_block(mo, dvir, C_pao);
+		}
+		else {
+			Dimension npao_fix = nmopi;
+			npao_fix[0] = n_pao;
+			Slice pao_fix(zeropi, npao_fix);
+			SharedMatrix C_pao_fix = C_pao->get_block(mo, pao_fix);
+			ref_wfn->Ca()->set_block(mo, dvir, C_pao_fix);
+		}
 
         // B_vir ignored for now
 
@@ -559,15 +575,16 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
         index_A_vir.clear();
         index_B_vir.clear();
 
-        // Number of virtual PAOs should be PAOs - active_virtual (?)
-        for (int i = 0; i < nrvirpi[0]; i++) {
-            if (i < n_pao) {
-                index_A_vir.push_back(i + offset_vec);
-                outfile->Printf("\n Orbital %d built as PAO", i + offset_vec + 1);
-            } else {
-                index_B_vir.push_back(i + offset_vec);
-            }
-        }
+			// Number of virtual PAOs should be PAOs - active_virtual (?)
+			for (int i = 0; i < nrvirpi[0]; i++) {
+				if (i < n_pao) {
+					index_A_vir.push_back(i + offset_vec);
+					outfile->Printf("\n Orbital %d built as PAO", i + offset_vec + 1);
+				}
+				else {
+					index_B_vir.push_back(i + offset_vec);
+				}
+			}
 
         outfile->Printf("\n ****** PAOs done ******");
     }
