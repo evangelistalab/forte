@@ -645,6 +645,9 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
 
     SharedMatrix Ca_tilde(ref_wfn->Ca()->clone());
 
+	bool semi_f = options.get_bool("EMBEDDING_SEMICANONICALIZE_FROZEN");
+	bool semi_a = options.get_bool("EMBEDDING_SEMICANONICALIZE_ACTIVE");
+
     // Build and semi-canonicalize BO, AO, AV and BV blocks from rotated Ca()
     auto C_bo = semicanonicalize_block(ref_wfn, Ca_tilde, index_B_occ, 0, !semi_f);
     auto C_ao = semicanonicalize_block(ref_wfn, Ca_tilde, index_A_occ, 0, false);
@@ -656,9 +659,6 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
 
     auto C_av = semicanonicalize_block(ref_wfn, Ca_tilde, index_A_vir, 0, preserve_virtual);
     auto C_bv = semicanonicalize_block(ref_wfn, Ca_tilde, index_B_vir, 0, !semi_f);
-
-	bool semi_f = options.get_bool("EMBEDDING_SEMICANONICALIZE_FROZEN");
-	bool semi_a = options.get_bool("EMBEDDING_SEMICANONICALIZE_ACTIVE");
 
     // Copy the active block (if any) from original Ca_save
     SharedMatrix C_A(new Matrix("Active_coeff_block", nirrep, nmopi, actv_a));
