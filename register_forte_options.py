@@ -346,10 +346,10 @@ def register_fci_options(forte_options):
 def register_aci_options(forte_options):
     forte_options.add_double("ACI_CONVERGENCE", 1e-9,
                              "ACI Convergence threshold")
-
-    forte_options.add_str("ACI_SELECT_TYPE", "AIMED_ENERGY",
-                          ['AIMED_AMP', 'AIMED_ENERGY', 'ENERGY', 'AMP'],
-                          "The selection type for the Q-space")
+    
+    forte_options.add_str("ACI_SCREEN_ALG", "AVERAGE", 
+                        ['AVERAGE', 'SR', 'RESTRICTED', 'CORE', 'BATCH_HASH', 'BATCH_VEC'],
+                        "The screening algorithm to use")
 
     forte_options.add_double("SIGMA", 0.01,
                              "The energy selection threshold for the P space")
@@ -359,9 +359,6 @@ def register_aci_options(forte_options):
 
     forte_options.add_double("ACI_PRESCREEN_THRESHOLD", 1e-12,
                              "The SD space prescreening threshold")
-
-    forte_options.add_bool("ACI_PERTURB_SELECT", False,
-                           "Type of energy selection")
 
     forte_options.add_str("ACI_PQ_FUNCTION", "AVERAGE", ['AVERAGE', 'MAX'],
                           "Function of q-space criteria, per root for SA-ACI")
@@ -398,8 +395,8 @@ def register_aci_options(forte_options):
     forte_options.add_bool("ACI_QUIET_MODE", False,
                            "Print during ACI procedure?")
 
-    forte_options.add_bool("ACI_STREAMLINE_Q", False,
-                           "Do streamlined algorithm?")
+   # forte_options.add_bool("ACI_STREAMLINE_Q", False,
+   #                        "Do streamlined algorithm?")
 
     forte_options.add_int("ACI_PREITERATIONS", 0,
                           "Number of iterations to run SA-ACI before SS-ACI")
@@ -443,16 +440,6 @@ def register_aci_options(forte_options):
     forte_options.add_bool("UNPAIRED_DENSITY", False,
                            "Compute unpaired electron density?")
 
-    forte_options.add_bool(
-        "ACI_ADD_SINGLES", False,
-        "Adds all active single excitations to the final wave function")
-
-    forte_options.add_bool("ESNOS", False,
-                           "Compute external single natural orbitals (ESNO)")
-
-    forte_options.add_int("ESNO_MAX_SIZE", 0,
-                          "Number of external orbitals to correlate")
-
     forte_options.add_bool("ACI_LOW_MEM_SCREENING", False,
                            "Use low-memory screening algorithm?")
 
@@ -468,7 +455,9 @@ def register_aci_options(forte_options):
     forte_options.add_int("ACI_ROOTS_PER_CORE", 1,
                           "Number of roots to compute per frozen orbital")
 
-    forte_options.add_bool("ACI_SPIN_ANALYSIS", False, "Do spin correlation analysis?")
+    forte_options.add_bool("SPIN_ANALYSIS", False, "Do spin correlation analysis?")
+
+    forte_options.add_bool("SPIN_TEST", False, "Do test validity of correlation analysis")
 
     forte_options.add_bool("ACI_RELAXED_SPIN", False,
                       "Do spin correlation analysis for relaxed wave function?")
@@ -498,9 +487,6 @@ def register_aci_options(forte_options):
     forte_options.add_double("ACI_RELAX_SIGMA", 0.01,
                              "Sigma for reference relaxation")
 
-    forte_options.add_bool("ACI_BATCHED_SCREENING", False,
-                           "Control batched screeing?")
-
     forte_options.add_int("ACI_NBATCH", 1, "Number of batches in screening")
 
     forte_options.add_int("ACI_MAX_MEM", 1000,
@@ -511,9 +497,6 @@ def register_aci_options(forte_options):
 
     forte_options.add_bool("SCI_DIRECT_RDMS", False,
                            "Computes RDMs without coupling lists?")
-
-    forte_options.add_str("ACI_BATCH_ALG", "HASH", ['HASH', 'VECSORT'],
-                          "Algorithm to use for batching")
 
     forte_options.add_int("ACTIVE_GUESS_SIZE", 1000,
                           "Number of determinants for CI guess")

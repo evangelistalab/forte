@@ -249,17 +249,6 @@ template <size_t N> class DeterminantImpl : public BitArray<N> {
         return slater_sign_b(n);
     }
 
-    // THE FOLLOWING FUNCTIONS ARE NOT TESTED
-
-    /// Return the dimensions for occupied alpha orbitals
-    std::vector<std::vector<int>> get_asym_occ(int norb, std::vector<int> act_mo) const;
-    /// Return the dimensions for occupied beta orbitals
-    std::vector<std::vector<int>> get_bsym_occ(int norb, std::vector<int> act_mo) const;
-    /// Return the dimensions for virtual alpha orbitals
-    std::vector<std::vector<int>> get_asym_vir(int norb, std::vector<int> act_mo) const;
-    /// Return the dimensions for virtual beta orbitals
-    std::vector<std::vector<int>> get_bsym_vir(int norb, std::vector<int> act_mo) const;
-
     /// Return the sign for a single second quantized operator
     /// This function ignores if bit n is set or not
     double slater_sign_a(int n) const {
@@ -512,7 +501,7 @@ template <size_t N> void set_str(DeterminantImpl<N>& d, const std::string& str) 
 }
 
 template <size_t N>
-std::vector<std::vector<int>> get_asym_occ(const DeterminantImpl<N>& d, std::vector<int> act_mo) {
+std::vector<std::vector<int>> get_asym_occ(const DeterminantImpl<N>& d, const std::vector<int>& act_mo) {
 
     size_t nirrep = act_mo.size();
     std::vector<std::vector<int>> occ(nirrep);
@@ -530,7 +519,7 @@ std::vector<std::vector<int>> get_asym_occ(const DeterminantImpl<N>& d, std::vec
 }
 
 template <size_t N>
-std::vector<std::vector<int>> get_bsym_occ(const DeterminantImpl<N>& d, std::vector<int> act_mo) {
+std::vector<std::vector<int>> get_bsym_occ(const DeterminantImpl<N>& d, const std::vector<int>& act_mo) {
     size_t nirrep = act_mo.size();
     std::vector<std::vector<int>> occ(nirrep);
 
@@ -547,7 +536,7 @@ std::vector<std::vector<int>> get_bsym_occ(const DeterminantImpl<N>& d, std::vec
 }
 
 template <size_t N>
-std::vector<std::vector<int>> get_asym_vir(const DeterminantImpl<N>& d, std::vector<int> act_mo) {
+std::vector<std::vector<int>> get_asym_vir(const DeterminantImpl<N>& d, const std::vector<int>& act_mo) {
     size_t nirrep = act_mo.size();
     std::vector<std::vector<int>> occ(nirrep);
 
@@ -564,7 +553,7 @@ std::vector<std::vector<int>> get_asym_vir(const DeterminantImpl<N>& d, std::vec
 }
 
 template <size_t N>
-std::vector<std::vector<int>> get_bsym_vir(const DeterminantImpl<N>& d, std::vector<int> act_mo) {
+std::vector<std::vector<int>> get_bsym_vir(const DeterminantImpl<N>& d, const std::vector<int>& act_mo) {
     size_t nirrep = act_mo.size();
     std::vector<std::vector<int>> occ(nirrep);
 

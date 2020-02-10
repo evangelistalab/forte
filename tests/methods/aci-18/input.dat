@@ -1,63 +1,44 @@
-#! Generated using commit GITCOMMIT
-#! Perform aci on benzyne 
+import forte                              
+                                         
+e_scf = -39.72595399459846
+en_ref0 = -39.805891312415
+en_ref1 = -28.91727348053
 
-import forte
-
-memory 500 mb
-
-refscf    = -229.20378006852584 
-refaci    = -229.359450812283
-refacipt2 = -229.360444943286
-
-molecule mbenzyne{
-  0 1
-   C   0.0000000000  -2.5451795941   0.0000000000
-   C   0.0000000000   2.5451795941   0.0000000000
-   C  -2.2828001669  -1.3508352528   0.0000000000
-   C   2.2828001669  -1.3508352528   0.0000000000
-   C   2.2828001669   1.3508352528   0.0000000000
-   C  -2.2828001669   1.3508352528   0.0000000000
-   H  -4.0782187459  -2.3208602146   0.0000000000
-   H   4.0782187459  -2.3208602146   0.0000000000
-   H   4.0782187459   2.3208602146   0.0000000000
-   H  -4.0782187459   2.3208602146   0.0000000000
-
-  units bohr
-}
-
-set globals{
-   basis                   DZ
-   df_basis_mp2            cc-pvdz-ri
-   reference               uhf 
-   scf_type                pk
-   d_convergence           10
-   e_convergence           12
-   guess gwh
-}
-
-set forte {
-  multiplicity 1
-  frozen_docc                       [2,1,0,0,0,0,2,1]
-  restricted_docc	                [3,2,0,0,0,0,2,3]
-  active                            [1,0,1,2,1,2,1,0]
-  root_sym                          0
-  nroot                         1
-  active_space_solver              aci
-  sigma	                            0.001
-  aci_add_aimed_degenerate          false
-  sci_project_out_spin_contaminants false
-  diag_algorithm                    full
-  aci_batched_screening             true
-  aci_nbatch                        2
-  active_guess_size                 100
-}
-set_num_threads(1)
-
-scf = energy('scf')
-compare_values(refscf, scf,10,"SCF Energy")
-
-energy('forte')
-compare_values(refaci, variable("ACI ENERGY"),10,"ACI energy")
-compare_values(refacipt2, variable("ACI+PT2 ENERGY"),8,"ACI+PT2 energy")
-
-
+molecule CH2{                            
+0 1
+    C            0.000000693335    -0.000000363394    -0.000000000009
+    H            0.366524074786    -1.036732855743    -0.000000000330
+    H            0.366542113094     0.518360906411     0.897833209426
+    H            0.366542112780     0.518360905680    -0.897833208819
+    H           -1.099616556084     0.000015370523    -0.000000000164
+no_reorient
+units angstrom                              
+symmetry c1                             
+}                                        
+                                         
+set {                                    
+  scf_type pk                            
+#  basis cc-pcvdz                     
+  basis sto-3g
+}                                        
+                                         
+                                         
+set forte {                              
+  active_space_solver aci                           
+  sigma 0.005                           
+  nroot 2
+  aci_nfrozen_core 1
+  aci_roots_per_core 1
+  aci_preiterations 2
+  charge 0                               
+  aci_add_aimed_degenerate false
+  aci_screen_alg core
+  sci_core_ex true 
+  active_ref_type hf
+  dl_maxiter 500
+}                                        
+                                         
+Escf, scf_wfn = energy('scf', return_wfn=True)
+compare_values(e_scf, variable("CURRENT ENERGY"), 9, "SCF Energy")
+energy('forte', ref_wfn = scf_wfn) 
+compare_values(en_ref1, variable("ACI ENERGY"), 9, "Core EX Energy")

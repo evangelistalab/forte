@@ -185,6 +185,7 @@ src/orbital-helpers/unpaired_density.cc
 src/orbital-helpers/fragment_projector.cc
 src/pci/pci.cc
 src/pci/pci_sigma.cc
+src/post_process/spin_corr.cc
 src/v2rdm/v2rdm.cc
 )
 

@@ -44,7 +44,6 @@ set forte {
   nroot                  1
   active_space_solver    aci
   sigma	                  0.001
-  aci_select_type            aimed_energy	 
   aci_enforce_spin_complete  true
   aci_add_aimed_degenerate false
   sci_project_out_spin_contaminants false
