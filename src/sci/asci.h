@@ -91,7 +91,7 @@ class ASCI : public SelectedCIMethod {
     void pre_iter_preparation() override;
     void diagonalize_P_space() override;
     void diagonalize_PQ_space() override;
-    void post_iter_process() override{};
+    void post_iter_process() override;
 
     void set_method_variables(
         std::string ex_alg, size_t nroot_method, size_t root,
@@ -243,10 +243,6 @@ class ASCI : public SelectedCIMethod {
     /// Computes spin
     std::vector<std::pair<double, double>> compute_spin(DeterminantHashVec& space, WFNOperator& op,
                                                         psi::SharedMatrix evecs, int nroot);
-
-    /// Check for spin contamination
-    double compute_spin_contamination(DeterminantHashVec& space, WFNOperator& op,
-                                      psi::SharedMatrix evecs, int nroot);
 
     /// Print natural orbitals
     void print_nos();

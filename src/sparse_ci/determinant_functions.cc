@@ -28,134 +28,104 @@
  */
 
 #include <algorithm>
-#include <unordered_map>
 
-#include "psi4/libmints/dimension.h"
-#include "psi4/libpsi4util/PsiOutStream.h"
-#include "psi4/psi4-dec.h"
-
+#include "sparse_ci/determinant.h"
 #include "integrals/active_space_integrals.h"
-
-#include "ui64_determinant.h"
-#include "stl_bitset_determinant.h"
-
 
 namespace forte {
 
-double slater_rules_single_alpha(uint64_t Ib, uint64_t Ia, uint64_t Ja,
+#define PERFORMANCE_OPTIMIZATION 0
+
+double slater_rules_single_alpha(String Ib, String Ia, String Ja,
                                  const std::shared_ptr<ActiveSpaceIntegrals>& ints) {
-    uint64_t IJa = Ia ^ Ja;
-    uint64_t i = lowest_one_idx(IJa);
-    IJa = clear_lowest_one(IJa);
-    uint64_t a = lowest_one_idx(IJa);
+    size_t N = Determinant::nbits_half;
+    String IJa = Ia ^ Ja;
+    uint64_t i = IJa.find_and_clear_first_one();
+    uint64_t a = IJa.find_first_one();
 
     // Diagonal contribution
     double matrix_element = ints->oei_b(i, a);
-    // find common bits
-    IJa = Ia & Ja;
-    for (int p = 0; p < 64; ++p) {
-        if (ui64_get_bit(Ia, p)) {
+    for (int p = 0; p < N; ++p) {
+        if (Ia.get_bit(p)) {
             matrix_element += ints->tei_aa(i, p, a, p);
         }
-        if (ui64_get_bit(Ib, p)) {
+        if (Ib.get_bit(p)) {
             matrix_element += ints->tei_ab(i, p, a, p);
         }
     }
-    return (ui64_slater_sign(Ia, i, a) * matrix_element);
+    return (Ia.slater_sign(i, a) * matrix_element);
 }
 
-double slater_rules_single_beta(uint64_t Ia, uint64_t Ib, uint64_t Jb,
+double slater_rules_single_beta(String Ia, String Ib, String Jb,
                                 const std::shared_ptr<ActiveSpaceIntegrals>& ints) {
-    uint64_t IJb = Ib ^ Jb;
-    uint64_t i = lowest_one_idx(IJb);
-    IJb = clear_lowest_one(IJb);
-    uint64_t a = lowest_one_idx(IJb);
+    size_t N = Determinant::nbits_half;
+    String IJb = Ib ^ Jb;
+    uint64_t i = IJb.find_and_clear_first_one();
+    uint64_t a = IJb.find_first_one();
 
     // Diagonal contribution
     double matrix_element = ints->oei_b(i, a);
-    // find common bits
-    IJb = Ib & Jb;
-    for (int p = 0; p < 64; ++p) {
-        if (ui64_get_bit(Ia, p)) {
+    for (int p = 0; p < N; ++p) {
+        if (Ia.get_bit(p)) {
             matrix_element += ints->tei_ab(p, i, p, a);
         }
-        if (ui64_get_bit(Ib, p)) {
+        if (Ib.get_bit(p)) {
             matrix_element += ints->tei_bb(p, i, p, a);
         }
     }
-    return (ui64_slater_sign(Ib, i, a) * matrix_element);
+    return (Ib.slater_sign(i, a) * matrix_element);
 }
 
-double slater_rules_double_alpha_alpha(uint64_t Ia, uint64_t Ja,
+double slater_rules_double_alpha_alpha(String Ia, String Ja,
                                        const std::shared_ptr<ActiveSpaceIntegrals>& ints) {
-    uint64_t IJb = Ia ^ Ja;
 
-    uint64_t Ia_sub = Ia & IJb;
-    uint64_t i = lowest_one_idx(Ia_sub);
-    Ia_sub = clear_lowest_one(Ia_sub);
-    uint64_t j = lowest_one_idx(Ia_sub);
+    String IJb = Ia ^ Ja;
 
-    uint64_t Ja_sub = Ja & IJb;
-    uint64_t k = lowest_one_idx(Ja_sub);
-    Ja_sub = clear_lowest_one(Ja_sub);
-    uint64_t l = lowest_one_idx(Ja_sub);
+    String Ia_sub = Ia & IJb;
+    uint64_t i = Ia_sub.find_and_clear_first_one();
+    uint64_t j = Ia_sub.find_first_one();
 
-    return ui64_slater_sign(Ia, i, j) * ui64_slater_sign(Ja, k, l) * ints->tei_aa(i, j, k, l);
+    String Ja_sub = Ja & IJb;
+    uint64_t k = Ja_sub.find_and_clear_first_one();
+    uint64_t l = Ja_sub.find_first_one();
+
+    return Ia.slater_sign(i, j) * Ja.slater_sign(k, l) * ints->tei_aa(i, j, k, l);
 }
 
-double slater_rules_double_beta_beta(uint64_t Ib, uint64_t Jb,
+double slater_rules_double_beta_beta(String Ib, String Jb,
                                      const std::shared_ptr<ActiveSpaceIntegrals>& ints) {
-    uint64_t IJb = Ib ^ Jb;
+    String IJb = Ib ^ Jb;
 
-    uint64_t Ib_sub = Ib & IJb;
-    uint64_t i = lowest_one_idx(Ib_sub);
-    Ib_sub = clear_lowest_one(Ib_sub);
-    uint64_t j = lowest_one_idx(Ib_sub);
+    String Ib_sub = Ib & IJb;
+    uint64_t i = Ib_sub.find_and_clear_first_one();
+    uint64_t j = Ib_sub.find_first_one();
 
-    uint64_t Jb_sub = Jb & IJb;
-    uint64_t k = lowest_one_idx(Jb_sub);
-    Jb_sub = clear_lowest_one(Jb_sub);
-    uint64_t l = lowest_one_idx(Jb_sub);
+    String Jb_sub = Jb & IJb;
+    uint64_t k = Jb_sub.find_and_clear_first_one();
+    uint64_t l = Jb_sub.find_first_one();
 
-    return ui64_slater_sign(Ib, i, j) * ui64_slater_sign(Jb, k, l) * ints->tei_bb(i, j, k, l);
+    return Ib.slater_sign(i, j) * Jb.slater_sign(k, l) * ints->tei_bb(i, j, k, l);
 }
 
-double slater_rules_double_alpha_beta_pre(int i, int a, uint64_t Ib, uint64_t Jb,
+double slater_rules_double_alpha_beta_pre(int i, int a, String Ib, String Jb,
                                           const std::shared_ptr<ActiveSpaceIntegrals>& ints) {
-    //    outfile->Printf("\n %zu %zu", Ib, Jb);
-    uint64_t Ib_xor_Jb = Ib ^ Jb;
-    uint64_t j = lowest_one_idx(Ib_xor_Jb);
-    Ib_xor_Jb = clear_lowest_one(Ib_xor_Jb);
-    uint64_t b = lowest_one_idx(Ib_xor_Jb);
-    //    outfile->Printf("\n  i = %d, j = %d, a = %d, b = %d", i, j, a, b);
-    return ui64_slater_sign(Ib, j, b) * ints->tei_ab(i, j, a, b);
+    String Ib_xor_Jb = Ib ^ Jb;
+    uint64_t j = Ib_xor_Jb.find_and_clear_first_one();
+    uint64_t b = Ib_xor_Jb.find_first_one();
+    return Ib.slater_sign(j, b) * ints->tei_ab(i, j, a, b);
 }
 
-UI64Determinant common_occupation(const UI64Determinant& lhs, const UI64Determinant& rhs) {
-    UI64Determinant result;
-    result.set_alfa_bits(lhs.get_alfa_bits() & rhs.get_alfa_bits());
-    result.set_beta_bits(lhs.get_beta_bits() & rhs.get_beta_bits());
-    return result;
-}
+Determinant common_occupation(const Determinant& lhs, const Determinant& rhs) { return lhs & rhs; }
 
-UI64Determinant different_occupation(const UI64Determinant& lhs, const UI64Determinant& rhs) {
-    UI64Determinant result;
-    result.set_alfa_bits(lhs.get_alfa_bits() ^ rhs.get_alfa_bits());
-    result.set_beta_bits(lhs.get_beta_bits() ^ rhs.get_beta_bits());
-    return result;
+Determinant different_occupation(const Determinant& lhs, const Determinant& rhs) {
+    return lhs ^ rhs;
 }
 
 /// Find the spin orbitals that are occupied only one determinant (performs a bitwise OR, |)
-UI64Determinant union_occupation(const UI64Determinant& lhs, const UI64Determinant& rhs) {
-    UI64Determinant result;
-    result.set_alfa_bits(lhs.get_alfa_bits() | rhs.get_alfa_bits());
-    result.set_beta_bits(lhs.get_beta_bits() | rhs.get_beta_bits());
-    return result;
-}
+Determinant union_occupation(const Determinant& lhs, const Determinant& rhs) { return lhs | rhs; }
 
-void enforce_spin_completeness(std::vector<UI64Determinant>& det_space, int nmo) {
-    std::unordered_map<UI64Determinant, bool, UI64Determinant::Hash> det_map;
-
+void enforce_spin_completeness(std::vector<Determinant>& det_space, int nmo) {
+    std::unordered_map<Determinant, bool, Determinant::Hash> det_map;
     // Add all determinants to the map, assume set is mostly spin complete
     for (auto& I : det_space) {
         det_map[I] = true;
@@ -166,7 +136,7 @@ void enforce_spin_completeness(std::vector<UI64Determinant>& det_space, int nmo)
     std::vector<size_t> open(nmo, 0);
     std::vector<size_t> open_bits(nmo, 0);
     for (size_t I = 0, det_size = det_space.size(); I < det_size; ++I) {
-        const UI64Determinant& det = det_space[I];
+        const Determinant& det = det_space[I];
         // outfile->Printf("\n  Original determinant: %s", det.str().c_str());
         for (int i = 0; i < nmo; ++i) {
             closed[i] = open[i] = 0;
@@ -198,7 +168,7 @@ void enforce_spin_completeness(std::vector<UI64Determinant>& det_space, int nmo)
         for (int i = nbopen; i < naopen + nbopen; ++i)
             open_bits[i] = true; // 1
         do {
-            UI64Determinant new_det;
+            Determinant new_det;
             for (int c = 0; c < nclosed; ++c) {
                 new_det.set_alfa_bit(closed[c], true);
                 new_det.set_beta_bit(closed[c], true);
@@ -218,25 +188,6 @@ void enforce_spin_completeness(std::vector<UI64Determinant>& det_space, int nmo)
             }
         } while (std::next_permutation(open_bits.begin(), open_bits.begin() + naopen + nbopen));
     }
-    // if( ndet_added > 0 ){
-    //    outfile->Printf("\n\n  Determinant space is spin incomplete!");
-    //    outfile->Printf("\n  %zu more determinants were needed.", ndet_added);
-    //}else{
-    //    outfile->Printf("\n\n  Determinant space is spin complete.");
-    //}
 }
 
-template <>
-UI64Determinant make_det<UI64Determinant, STLBitsetDeterminant>(const STLBitsetDeterminant& d) {
-    UI64Determinant ui64_d;
-    for (int i = 0; i < 64; ++i) {
-        ui64_d.set_alfa_bit(i, d.get_alfa_bit(i));
-        ui64_d.set_beta_bit(i, d.get_beta_bit(i));
-    }
-    return ui64_d;
-}
-
-template <> UI64Determinant make_det<UI64Determinant, UI64Determinant>(const UI64Determinant& d) {
-    return d;
-}
-}
+} // namespace forte

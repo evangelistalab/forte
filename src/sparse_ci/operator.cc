@@ -54,7 +54,8 @@ WFNOperator::WFNOperator() {}
 
 void WFNOperator::set_quiet_mode(bool mode) { quiet_ = mode; }
 
-void WFNOperator::initialize(std::vector<int>& symmetry, std::shared_ptr<ActiveSpaceIntegrals> fci_ints) {
+void WFNOperator::initialize(std::vector<int>& symmetry,
+                             std::shared_ptr<ActiveSpaceIntegrals> fci_ints) {
     ncmo_ = fci_ints->nmo();
     mo_symmetry_ = symmetry;
     fci_ints_ = fci_ints;
@@ -423,13 +424,13 @@ double WFNOperator::s2_direct(DeterminantHashVec& wfn, psi::SharedMatrix& evecs,
     }
 
     // abab contribution
-    SortedStringList_UI64 a_sorted_string_list(wfn, fci_ints_, DetSpinType::Alpha);
+    SortedStringList a_sorted_string_list(wfn, fci_ints_, DetSpinType::Alpha);
     const auto& sorted_half_dets = a_sorted_string_list.sorted_half_dets();
     const auto& sorted_dets = a_sorted_string_list.sorted_dets();
-    UI64Determinant::bit_t detIJa_common;
-    UI64Determinant::bit_t Ib;
-    UI64Determinant::bit_t Jb;
-    UI64Determinant::bit_t IJb;
+    String detIJa_common;
+    String Ib;
+    String Jb;
+    String IJb;
 
     for (const auto& detIa : sorted_half_dets) {
         const auto& range_I = a_sorted_string_list.range(detIa);
@@ -438,18 +439,18 @@ double WFNOperator::s2_direct(DeterminantHashVec& wfn, psi::SharedMatrix& evecs,
 
         for (const auto& detJa : sorted_half_dets) {
             detIJa_common = detIa ^ detJa;
-            int ndiff = ui64_bit_count(detIJa_common);
+            int ndiff = detIJa_common.count();
             if (ndiff == 2) {
                 size_t i, a;
                 for (size_t p = 0; p < ncmo_; ++p) {
-                    const bool la_p = ui64_get_bit(detIa, p);
-                    const bool ra_p = ui64_get_bit(detJa, p);
+                    const bool la_p = detIa.get_bit(p);
+                    const bool ra_p = detJa.get_bit(p);
                     if (la_p ^ ra_p) {
                         i = la_p ? p : i;
                         a = ra_p ? p : a;
                     }
                 }
-                double sign_ia = ui64_slater_sign(detIa, i, a);
+                double sign_ia = detIa.slater_sign(i, a);
                 const auto& range_J = a_sorted_string_list.range(detJa);
                 size_t first_J = range_J.first;
                 size_t last_J = range_J.second;
@@ -459,14 +460,14 @@ double WFNOperator::s2_direct(DeterminantHashVec& wfn, psi::SharedMatrix& evecs,
                     for (size_t posJ = first_J; posJ < last_J; ++posJ) {
                         Jb = sorted_dets[posJ].get_beta_bits();
                         IJb = Jb ^ Ib;
-                        int ndiff = ui64_bit_count(IJb);
+                        int ndiff = IJb.count();
                         if (ndiff == 2) {
                             auto Ib_sub = Ib & IJb;
-                            auto j = lowest_one_idx(Ib_sub);
+                            auto j = Ib_sub.find_first_one();
                             auto Jb_sub = Jb & IJb;
-                            auto b = lowest_one_idx(Jb_sub);
+                            auto b = Jb_sub.find_first_one();
                             if ((i != j) and (a != b) and (i == b) and (j == a)) {
-                                double sign = sign_ia * ui64_slater_sign(Ib, j, b);
+                                double sign = sign_ia * Ib.slater_sign(j, b);
                                 S2 -= sign * CI * evecs->get(a_sorted_string_list.add(posJ), root);
                             }
                         }
@@ -1862,4 +1863,4 @@ void WFNOperator::three_lists(DeterminantHashVec& wfn) {
 //
 //
 //}
-}
+} // namespace forte

@@ -80,11 +80,11 @@ void MP2_NOS::compute_transformation() {
     /// Map from all the MOs to the beta virtual
     std::map<size_t, size_t> mos_to_bvir;
 
-    psi::Dimension ncmopi_ = mo_space_info_->get_dimension("CORRELATED");
-    psi::Dimension frzcpi = mo_space_info_->get_dimension("FROZEN_DOCC");
-    psi::Dimension frzvpi = mo_space_info_->get_dimension("FROZEN_UOCC");
+    psi::Dimension ncmopi_ = mo_space_info_->dimension("CORRELATED");
+    psi::Dimension frzcpi = mo_space_info_->dimension("FROZEN_DOCC");
+    psi::Dimension frzvpi = mo_space_info_->dimension("FROZEN_UOCC");
 
-    psi::Dimension nmopi = mo_space_info_->get_dimension("ALL");
+    psi::Dimension nmopi = mo_space_info_->dimension("ALL");
     psi::Dimension doccpi = scf_info_->doccpi();
     psi::Dimension soccpi = scf_info_->soccpi();
 

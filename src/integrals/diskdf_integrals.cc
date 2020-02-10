@@ -453,7 +453,7 @@ void DISKDFIntegrals::make_fock_matrix(std::shared_ptr<psi::Matrix> gamma_aM,
 
     ////Figure out exactly what I need to contract the Coloumb term
     /// Only h + a is nonzero for RDM
-    std::vector<size_t> generalized_hole = mo_space_info_->get_corr_abs_mo("GENERALIZED HOLE");
+    std::vector<size_t> generalized_hole = mo_space_info_->corr_absolute_mo("GENERALIZED HOLE");
 
     fock_a.iterate([&](const std::vector<size_t>& i, double& value) {
         value = one_electron_integrals_a_[i[0] * aptei_idx_ + i[1]];

@@ -39,17 +39,17 @@ DSRG_WICK::DSRG_WICK(std::shared_ptr<MOSpaceInfo> mo_space_info, ambit::BlockedT
     size_t mo_shift = mo_space_info_->size("RESTRICTED_DOCC") + mo_space_info_->size("ACTIVE") +
                       mo_space_info_->size("RESTRICTED_UOCC");
 
-    acore_mos = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
+    acore_mos = mo_space_info_->corr_absolute_mo("RESTRICTED_DOCC");
     for (size_t idx : acore_mos) {
         bcore_mos.push_back(idx + mo_shift);
     }
 
-    aactv_mos = mo_space_info_->get_corr_abs_mo("ACTIVE");
+    aactv_mos = mo_space_info_->corr_absolute_mo("ACTIVE");
     for (size_t idx : aactv_mos) {
         bactv_mos.push_back(idx + mo_shift);
     }
 
-    avirt_mos = mo_space_info_->get_corr_abs_mo("RESTRICTED_UOCC");
+    avirt_mos = mo_space_info_->corr_absolute_mo("RESTRICTED_UOCC");
     for (size_t idx : avirt_mos) {
         bvirt_mos.push_back(idx + mo_shift);
     }

@@ -70,8 +70,8 @@ FCI_MO::FCI_MO(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
         fci_ints_ = as_ints;
     } else {
         fci_ints_ = std::make_shared<ActiveSpaceIntegrals>(
-            integral_, mo_space_info_->get_corr_abs_mo("ACTIVE"),
-            mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
+            integral_, mo_space_info_->corr_absolute_mo("ACTIVE"),
+            mo_space_info_->corr_absolute_mo("RESTRICTED_DOCC"));
         ambit::Tensor tei_active_aa =
             integral_->aptei_aa_block(actv_mos_, actv_mos_, actv_mos_, actv_mos_);
         ambit::Tensor tei_active_ab =
@@ -95,8 +95,8 @@ FCI_MO::FCI_MO(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> 
 
     // setup integrals
     fci_ints_ =
-        std::make_shared<ActiveSpaceIntegrals>(integral_, mo_space_info_->get_corr_abs_mo("ACTIVE"),
-                                               mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
+        std::make_shared<ActiveSpaceIntegrals>(integral_, mo_space_info_->corr_absolute_mo("ACTIVE"),
+                                               mo_space_info_->corr_absolute_mo("RESTRICTED_DOCC"));
     ambit::Tensor tei_active_aa =
         integral_->aptei_aa_block(actv_mos_, actv_mos_, actv_mos_, actv_mos_);
     ambit::Tensor tei_active_ab =
@@ -122,8 +122,8 @@ FCI_MO::FCI_MO(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> 
         fci_ints_ = fci_ints;
     } else {
         fci_ints_ = std::make_shared<ActiveSpaceIntegrals>(
-            integral_, mo_space_info_->get_corr_abs_mo("ACTIVE"),
-            mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
+            integral_, mo_space_info_->corr_absolute_mo("ACTIVE"),
+            mo_space_info_->corr_absolute_mo("RESTRICTED_DOCC"));
         ambit::Tensor tei_active_aa =
             integral_->aptei_aa_block(actv_mos_, actv_mos_, actv_mos_, actv_mos_);
         ambit::Tensor tei_active_ab =
@@ -174,6 +174,9 @@ void FCI_MO::read_options() {
     // energy convergence
     econv_ = options_->get_double("E_CONVERGENCE");
 
+    // residual 2-norm convergence
+    rconv_ = options_->get_double("R_CONVERGENCE");
+
     // nuclear repulsion
     e_nuc_ = integral_->nuclear_repulsion_energy();
 
@@ -186,23 +189,23 @@ void FCI_MO::read_options() {
 
     // obtain MOs
     nmo_ = mo_space_info_->size("ALL");
-    nmopi_ = mo_space_info_->get_dimension("ALL");
+    nmopi_ = mo_space_info_->dimension("ALL");
     ncmo_ = mo_space_info_->size("CORRELATED");
-    ncmopi_ = mo_space_info_->get_dimension("CORRELATED");
+    ncmopi_ = mo_space_info_->dimension("CORRELATED");
 
     // obtain frozen orbitals
-    frzc_dim_ = mo_space_info_->get_dimension("FROZEN_DOCC");
-    frzv_dim_ = mo_space_info_->get_dimension("FROZEN_UOCC");
+    frzc_dim_ = mo_space_info_->dimension("FROZEN_DOCC");
+    frzv_dim_ = mo_space_info_->dimension("FROZEN_UOCC");
     nfrzc_ = mo_space_info_->size("FROZEN_DOCC");
     nfrzv_ = mo_space_info_->size("FROZEN_UOCC");
 
     // obtain active orbitals
-    actv_dim_ = mo_space_info_->get_dimension("ACTIVE");
+    actv_dim_ = mo_space_info_->dimension("ACTIVE");
     nactv_ = actv_dim_.sum();
 
     // obitan inactive orbitals
-    core_dim_ = mo_space_info_->get_dimension("RESTRICTED_DOCC");
-    virt_dim_ = mo_space_info_->get_dimension("RESTRICTED_UOCC");
+    core_dim_ = mo_space_info_->dimension("RESTRICTED_DOCC");
+    virt_dim_ = mo_space_info_->dimension("RESTRICTED_UOCC");
     ncore_ = core_dim_.sum();
     nvirt_ = virt_dim_.sum();
 
@@ -226,8 +229,8 @@ void FCI_MO::read_options() {
     }
 
     // obtain absolute indices of core, active and virtual
-    core_mos_ = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
-    actv_mos_ = mo_space_info_->get_corr_abs_mo("ACTIVE");
+    core_mos_ = mo_space_info_->corr_absolute_mo("RESTRICTED_DOCC");
+    actv_mos_ = mo_space_info_->corr_absolute_mo("ACTIVE");
 
     // active hole and active particle indices
     if (actv_space_type_ == "CIS" || actv_space_type_ == "CISD") {
@@ -628,8 +631,8 @@ std::vector<bool> FCI_MO::Form_String_Ref(const bool& print) {
     return String;
 }
 
-std::vector<std::vector<std::vector<bool>>> FCI_MO::Form_String_Singles(const std::vector<bool>& ref_string,
-                                                         const bool& print) {
+std::vector<std::vector<std::vector<bool>>>
+FCI_MO::Form_String_Singles(const std::vector<bool>& ref_string, const bool& print) {
     timer_on("FORM String Singles");
     std::vector<std::vector<std::vector<bool>>> String(nirrep_, std::vector<std::vector<bool>>());
 
@@ -673,8 +676,8 @@ std::vector<std::vector<std::vector<bool>>> FCI_MO::Form_String_Singles(const st
     return String;
 }
 
-std::vector<std::vector<std::vector<bool>>> FCI_MO::Form_String_IP(const std::vector<bool>& ref_string,
-                                                    const bool& print) {
+std::vector<std::vector<std::vector<bool>>>
+FCI_MO::Form_String_IP(const std::vector<bool>& ref_string, const bool& print) {
     timer_on("FORM String Singles IP");
     std::vector<std::vector<std::vector<bool>>> String(nirrep_, std::vector<std::vector<bool>>());
 
@@ -706,8 +709,8 @@ std::vector<std::vector<std::vector<bool>>> FCI_MO::Form_String_IP(const std::ve
     return String;
 }
 
-std::vector<std::vector<std::vector<bool>>> FCI_MO::Form_String_EA(const std::vector<bool>& ref_string,
-                                                    const bool& print) {
+std::vector<std::vector<std::vector<bool>>>
+FCI_MO::Form_String_EA(const std::vector<bool>& ref_string, const bool& print) {
     timer_on("FORM String Singles EA");
     std::vector<std::vector<std::vector<bool>>> String(nirrep_, std::vector<std::vector<bool>>());
 
@@ -740,8 +743,8 @@ std::vector<std::vector<std::vector<bool>>> FCI_MO::Form_String_EA(const std::ve
     return String;
 }
 
-std::vector<std::vector<std::vector<bool>>> FCI_MO::Form_String_Doubles(const std::vector<bool>& ref_string,
-                                                         const bool& print) {
+std::vector<std::vector<std::vector<bool>>>
+FCI_MO::Form_String_Doubles(const std::vector<bool>& ref_string, const bool& print) {
     timer_on("FORM String Doubles");
     std::vector<std::vector<std::vector<bool>>> String(nirrep_, std::vector<std::vector<bool>>());
 
@@ -890,6 +893,7 @@ void FCI_MO::Diagonalize_H(const vecdet& p_space, const int& multi, const int& n
     DiagonalizationMethod diag_method = DLSolver;
     std::string sigma_method = options_->get_str("SIGMA_BUILD_TYPE");
     sparse_solver.set_e_convergence(econv_);
+    sparse_solver.set_r_convergence(rconv_);
     sparse_solver.set_spin_project(true);
     sparse_solver.set_maxiter_davidson(options_->get_int("DL_MAXITER"));
     sparse_solver.set_guess_dimension(options_->get_int("DL_GUESS_SIZE"));
@@ -2426,7 +2430,8 @@ void FCI_MO::set_sa_info(const std::vector<std::tuple<int, int, int, std::vector
     }
 }
 
-void FCI_MO::set_eigens(const std::vector<std::vector<std::pair<psi::SharedVector, double>>>& eigens) {
+void FCI_MO::set_eigens(
+    const std::vector<std::vector<std::pair<psi::SharedVector, double>>>& eigens) {
     size_t nentry = sa_info_.size();
     if (eigens.size() == nentry) {
         for (size_t n = 0; n < nentry; ++n) {
@@ -2650,7 +2655,8 @@ RDMs FCI_MO::transition_reference(int root1, int root2, bool multi_state, int en
     }
 
     vecdet& p_space = multi_state ? p_spaces_[entry] : determinant_;
-    std::vector<std::pair<psi::SharedVector, double>>& eigen = multi_state ? eigens_[entry] : eigen_;
+    std::vector<std::pair<psi::SharedVector, double>>& eigen =
+        multi_state ? eigens_[entry] : eigen_;
 
     // prepare eigenvectors
     size_t dim = p_space.size();
@@ -2683,13 +2689,13 @@ RDMs FCI_MO::transition_reference(int root1, int root2, bool multi_state, int en
 void FCI_MO::print_det(const vecdet& dets) {
     print_h2("Determinants |alpha|beta>");
     for (const Determinant& x : dets) {
-        outfile->Printf("\n  %s", x.str().c_str());
+        outfile->Printf("\n  %s", str(x).c_str());
     }
     outfile->Printf("\n");
 }
 
-void FCI_MO::print_occupation_strings_perirrep(std::string name,
-                                               const vector<std::vector<std::vector<bool>>>& string) {
+void FCI_MO::print_occupation_strings_perirrep(
+    std::string name, const vector<std::vector<std::vector<bool>>>& string) {
     print_h2(name);
     for (size_t i = 0; i != string.size(); ++i) {
         if (string[i].size() != 0) {

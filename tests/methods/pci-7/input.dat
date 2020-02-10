@@ -26,7 +26,7 @@ set forte {
   pci_USE_INTER_NORM true
   orbital_type MP2_NOS
   sci_max_cycle 100000.00
-  pci_e_convergence 8
+  pci_e_convergence 1.0e-10
   PCI_STOP_HIGHER_NEW_LOW true
 }
 

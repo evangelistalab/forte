@@ -232,7 +232,7 @@ namespace forte {
 //                auto na = (nelec_actv + ms) / 2;
 //                auto nb = nelec_actv - na;
 
-//                psi::Dimension active_dim = mo_space_info_->get_dimension("ACTIVE");
+//                psi::Dimension active_dim = mo_space_info_->dimension("ACTIVE");
 //                int ntrial_per_root = foptions_->get_int("NTRIAL_PER_ROOT");
 
 //                StateInfo state(na, nb, multi, multi - 1, irrep); // assumes highes Ms
