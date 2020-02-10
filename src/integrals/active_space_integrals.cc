@@ -33,6 +33,8 @@
 #include "base_classes/mo_space_info.h"
 #include "integrals/active_space_integrals.h"
 
+#define FAST_SLATER_RULES 0
+
 namespace forte {
 
 ActiveSpaceIntegrals::ActiveSpaceIntegrals(std::shared_ptr<ForteIntegrals> ints,
@@ -200,8 +202,15 @@ double ActiveSpaceIntegrals::energy(const Determinant& det) const {
 }
 
 double ActiveSpaceIntegrals::slater_rules(const Determinant& lhs, const Determinant& rhs) const {
+    // we first check that the two determinants have equal Ms
+    if ((lhs.count_alfa() != rhs.count_alfa()) or (lhs.count_beta() != rhs.count_beta()))
+        return 0.0;
+
     int nadiff = 0;
     int nbdiff = 0;
+
+#if FAST_SLATER_RULES
+#else
     // Count how many differences in mos are there
     for (size_t n = 0; n < nmo_; ++n) {
         if (lhs.get_alfa_bit(n) != rhs.get_alfa_bit(n))
@@ -359,6 +368,7 @@ double ActiveSpaceIntegrals::slater_rules(const Determinant& lhs, const Determin
         double sign = lhs.slater_sign_aa(i, k) * lhs.slater_sign_bb(j, l);
         matrix_element = sign * tei_ab_[i * nmo3_ + j * nmo2_ + k * nmo_ + l];
     }
+#endif
     return (matrix_element);
 }
 
