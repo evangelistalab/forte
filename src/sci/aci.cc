@@ -58,6 +58,14 @@ AdaptiveCI::AdaptiveCI(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> s
     startup();
 }
 
+void AdaptiveCI::set_fci_ints(std::shared_ptr<ActiveSpaceIntegrals> fci_ints) {
+    as_ints_ = fci_ints;
+    nuclear_repulsion_energy_ = as_ints_->ints()->nuclear_repulsion_energy();
+    set_ints_ = true;
+}
+
+std::shared_ptr<ActiveSpaceIntegrals> AdaptiveCI::get_aci_ints() { return as_ints_; }
+
 void AdaptiveCI::startup() {
     quiet_mode_ = false;
     if (options_->has_changed("ACI_QUIET_MODE")) {
@@ -742,7 +750,7 @@ void AdaptiveCI::pre_iter_preparation() {
         detb.set_beta_bit(hole_, false);
 
         for (int n = 0, max_n = avir.size(); n < max_n; ++n) {
-            if ((mo_symmetry_[hole_] ^ mo_symmetry_[avir[n]]) == 0) {
+            if ((mo_symmetry_[hole_] ^ mo_symmetry_[avir[particle]]) == 0) {
                 det.set_alfa_bit(avir[particle], true);
                 detb.set_beta_bit(avir[particle], true);
                 break;
