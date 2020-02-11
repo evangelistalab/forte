@@ -225,6 +225,9 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     /// Set MO space environment and global variables
     void set_all_variables();
     size_t nmo_;
+    size_t ncore_;
+    size_t nvirt_;
+    size_t na_;
 
 
     void set_dsrg_tensor();
@@ -245,7 +248,12 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     void set_multiplier(); 
 
     void set_z();
+    void set_z_cc();
+    void set_z_vv();
+    void set_z_aa();
     void set_w();
+
+    double s;
 
 
     /// List of core MOs (Correlated)
@@ -292,14 +300,17 @@ class DSRG_MRPT2 : public MASTER_DSRG {
 
     ambit::BlockedTensor Eeps1;
     ambit::BlockedTensor Eeps2;
+    ambit::BlockedTensor Eeps2_p;
+    ambit::BlockedTensor Eeps2_m1;
+    ambit::BlockedTensor Eeps2_m2;
+
 
 
     ambit::BlockedTensor Delta1;
     ambit::BlockedTensor Delta2;
 
     // Lagrange multiplier
-    ambit::BlockedTensor Kappa;
-    ambit::BlockedTensor Tau;
+    ambit::BlockedTensor Z;
 
 
 
