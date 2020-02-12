@@ -357,6 +357,8 @@ class MRDSRG : public MASTER_DSRG {
 
     /// Zeroth-order Hamiltonian
     ambit::BlockedTensor H0th_;
+    /// DSRG-MRPT2 zeroth-order Hamiltonian
+    std::string pt2_h0th_;
     /// Compute DSRG-MRPT2 energy
     double compute_energy_pt2();
     /// Compute DSRG-MRPT3 energy
@@ -368,8 +370,6 @@ class MRDSRG : public MASTER_DSRG {
     std::vector<std::pair<std::string, double>> compute_energy_pt2_Ffull();
     /// Compute DSRG-MRPT2 energy using Fdiag_Vactv or Fdiag_Vdiag as H0th
     std::vector<std::pair<std::string, double>> compute_energy_pt2_FdiagV();
-    /// Compute DSRG-MRPT2 energy using Fdiag_Vdiag as H0th
-    std::vector<std::pair<std::string, double>> compute_energy_pt2_FdiagVdiag();
 
     // => MR-SRG <= //
 

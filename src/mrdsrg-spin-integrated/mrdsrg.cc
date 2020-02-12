@@ -85,6 +85,11 @@ void MRDSRG::read_options() {
 
     sequential_Hbar_ = foptions_->get_bool("DSRG_HBAR_SEQ");
     nivo_ = foptions_->get_bool("DSRG_NIVO");
+
+    pt2_h0th_ = foptions_->get_str("DSRG_PT2_H0TH");
+    if (pt2_h0th_ != "FFULL" and pt2_h0th_ != "FDIAG_VACTV" and pt2_h0th_ != "FDIAG_VDIAG") {
+        pt2_h0th_ = "FDIAG";
+    }
 }
 
 void MRDSRG::startup() {
@@ -146,6 +151,10 @@ void MRDSRG::print_options() {
         {"Reference relaxation", relax_ref_},
         {"DSRG transformation type", dsrg_trans_type_},
         {"Core-Virtual source type", foptions_->get_str("CCVV_SOURCE")}};
+
+    if (corrlv_string_ == "PT2") {
+        calculation_info_string.push_back({"PT2 0-order Hamiltonian", pt2_h0th_});
+    }
 
     auto true_false_string = [](bool x) {
         if (x) {

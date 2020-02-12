@@ -590,7 +590,7 @@ def register_dsrg_options(forte_options):
                      "The way of forming T amplitudes (DSRG_NOSEMI, SELEC, ISA "
                      "only available in toy code mcsrgpt2)")
 
-    forte_options.add_str("H0TH", "FDIAG", ["FDIAG", "FFULL", "FDIAG_VACTV", "FDIAG_VDIAG"],
+    forte_options.add_str("DSRG_PT2_H0TH", "FDIAG", ["FDIAG", "FFULL", "FDIAG_VACTV", "FDIAG_VDIAG"],
                      "Different Zeroth-order Hamiltonian of DSRG-MRPT (used in mrdsrg code)")
 
     forte_options.add_bool("DSRG_DIPOLE", False, "Compute (if true) DSRG dipole moments")

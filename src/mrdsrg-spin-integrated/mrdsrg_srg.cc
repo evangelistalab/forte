@@ -409,7 +409,7 @@ double MRDSRG::compute_energy_srgpt2() {
     outfile->Printf("\n%s", title.c_str());
 
     // some options
-    std::string Hzero = foptions_->get_str("H0TH");
+    std::string Hzero = foptions_->get_str("DSRG_PT2_H0TH");
     bool relax_ref = foptions_->get_str("RELAX_REF") != "NONE" ||
                      (foptions_->psi_options())["AVG_STATE"].size() != 0;
 

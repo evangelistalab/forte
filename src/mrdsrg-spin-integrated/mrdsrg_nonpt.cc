@@ -40,7 +40,6 @@
 
 #include "helpers/timer.h"
 #include "base_classes/mo_space_info.h"
-#include "boost/format.hpp"
 #include "mrdsrg.h"
 
 using namespace psi;
@@ -774,7 +773,7 @@ double MRDSRG::compute_energy_ldsrg2() {
         // DIIS amplitudes
         if (diis_start_ > 0 and cycle >= diis_start_) {
             diis_manager_add_entry();
-            outfile->Printf("   A");
+            outfile->Printf("  S");
 
             if ((cycle - diis_start_) % diis_freq_ == 0 and
                 diis_manager_->subspace_size() >= diis_min_vec_) {
@@ -1053,7 +1052,7 @@ double MRDSRG::compute_energy_ldsrg2_qc() {
         // DIIS amplitudes
         if (diis_start_ > 0 and cycle >= diis_start_) {
             diis_manager_add_entry();
-            outfile->Printf("   A");
+            outfile->Printf("  S");
 
             if ((cycle - diis_start_) % diis_freq_ == 0 and
                 diis_manager_->subspace_size() >= diis_min_vec_) {
