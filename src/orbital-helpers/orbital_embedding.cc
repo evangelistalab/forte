@@ -606,7 +606,7 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
     for (int i : index_actv) {
         outfile->Printf("    %4d   %8s      --\n", i + 1, "Active");
     }
-    if (options.get_str("EMBEDDING_VIRTUAL_SPACE") == "DIRECT") {
+    if (options.get_str("EMBEDDING_VIRTUAL_SPACE") == "ASET") {
         for (int i : index_A_vir) {
             outfile->Printf("    %4d   %8s   %.6f\n", i + 1, "Virtual", lv->get(i - offset_vec));
         }
@@ -632,7 +632,7 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
     }
 
     outfile->Printf("\n  Summary: ");
-    if (options.get_str("EMBEDDING_VIRTUAL_SPACE") == "DIRECT") {
+    if (options.get_str("EMBEDDING_VIRTUAL_SPACE") == "ASET") {
         outfile->Printf("\n    System (A): %d Occupied MOs, %d Active MOs, %d Virtual MOs", num_Ao,
                         actv_a[0], num_Av);
     }

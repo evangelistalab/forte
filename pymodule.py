@@ -304,8 +304,8 @@ def orbital_projection(ref_wfn, options, mo_space_info):
     # Create the fragment(embedding) projector and apply to rotate orbitals
     if options.get_bool("EMBEDDING"):
         forte.print_method_banner(["Frozen-orbital Embedding", "Nan He"]);
-        pf, nbfA = forte.make_fragment_projector(ref_wfn, options)
-        return forte.make_embedding(ref_wfn, options, pf, nbfA, mo_space_info)
+        fragment_projector, fragment_nbf = forte.make_fragment_projector(ref_wfn, options)
+        return forte.make_embedding(ref_wfn, options, fragment_projector, fragment_nbf, mo_space_info)
     else:
         return mo_space_info
 

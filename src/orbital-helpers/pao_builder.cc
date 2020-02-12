@@ -25,14 +25,10 @@
  *
  * @END LICENSE
  */
-#include <map>
-#include <numeric>
-#include <regex>
 #include <vector>
 
 #include "psi4/libmints/vector.h"
 #include "psi4/libmints/matrix.h"
-#include "psi4/libmints/molecule.h"
 #include "psi4/libmints/basisset.h"
 #include "psi4/libmints/dimension.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
@@ -53,13 +49,11 @@ PAObuilder::PAObuilder(const psi::SharedMatrix C, psi::Dimension noccpi,
 
 void PAObuilder::startup() {
     // Read info
-    // TODO: Fix
     nirrep_ = noccpi_.n();
     nbf_ = basis_->nbf();
     nmopi_ = noccpi_; // This will keep other sym unchange
     nmopi_[0] = nbf_; // Assume all virtual to be A1
 
-    // Note: it is better to build D and S instead of pass and save them
     // Build D
     outfile->Printf("\n ****** Build Density ******");
 
@@ -117,7 +111,6 @@ SharedMatrix PAObuilder::build_A_virtual(int nbf_A, double pao_threshold) {
     SharedVector lambda(new Vector("lambda", nirrep_, nbfA));
     SharedMatrix S_pao_A = linalg::triplet(C_pao, S_, C_pao, true, false, false);
     S_pao_A->diagonalize(U, lambda, descending);
-
 
     // Truncate A_virtual and build s_-1/2
     int num_pao_A = 0;

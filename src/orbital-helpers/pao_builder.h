@@ -39,20 +39,20 @@
 namespace forte {
 
 /**
- * @brief The fragment_projector class
+ * @brief The PAObuilder class
  *
- * A class to store information about a (system) fragment
+ * A class to build projected atomic orbitals for virtual space
  */
 
 class PAObuilder {
   public:
-    // ==> Constructors <==
+    // ==> Constructor <==
     PAObuilder(psi::SharedMatrix C, psi::Dimension noccpi, std::shared_ptr<psi::BasisSet> basis);
 
-    // Build PAO_A and return C_virtual_A
+    // Build C_PAO_A, return virtual orbitals within a fragment (rectangle shape: nmo*npao)
     psi::SharedMatrix build_A_virtual(int nbf_A, double pao_threshold);
 
-    // Build PAO_B and return C_virtual_B
+    // Build C_PAO_B, return other orthogonalized virtual orbitals (rectangle)
     psi::SharedMatrix build_B_virtual();
 
   private:
