@@ -46,9 +46,8 @@ using namespace psi;
 
 namespace forte {
 
-MRDSRG::MRDSRG(RDMs rdms, std::shared_ptr<SCFInfo> scf_info,
-               std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
-               std::shared_ptr<MOSpaceInfo> mo_space_info)
+MRDSRG::MRDSRG(RDMs rdms, std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
+               std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
     : MASTER_DSRG(rdms, scf_info, options, ints, mo_space_info) {
 
     print_method_banner({"Multireference Driven Similarity Renormalization Group", "Chenyang Li"});
@@ -128,23 +127,25 @@ void MRDSRG::startup() {
 void MRDSRG::print_options() {
     // fill in information
     std::vector<std::pair<std::string, int>> calculation_info{
-        {"ntamp", ntamp_},
-        {"diis_min_vecs", foptions_->get_int("DIIS_MIN_VECS")},
-        {"diis_max_vecs", foptions_->get_int("DIIS_MAX_VECS")}};
+        {"Number of T amplitudes", ntamp_},
+        {"DIIS start", diis_start_},
+        {"Min DIIS vectors", diis_min_vec_},
+        {"Max DIIS vectors", diis_max_vec_},
+        {"DIIS extrapolating freq", diis_freq_}};
 
     std::vector<std::pair<std::string, double>> calculation_info_double{
-        {"flow parameter", s_},
-        {"taylor expansion threshold", pow(10.0, -double(taylor_threshold_))},
-        {"intruder_tamp", intruder_tamp_}};
+        {"Flow parameter", s_},
+        {"Taylor expansion threshold", pow(10.0, -double(taylor_threshold_))},
+        {"Intruder amplitudes threshold", intruder_tamp_}};
 
     std::vector<std::pair<std::string, std::string>> calculation_info_string{
-        {"corr_level", corrlv_string_},
-        {"int_type", ints_type_},
-        {"source operator", source_},
-        {"smart_dsrg_s", foptions_->get_str("SMART_DSRG_S")},
-        {"reference relaxation", relax_ref_},
-        {"dsrg transformation type", dsrg_trans_type_},
-        {"core virtual source type", foptions_->get_str("CCVV_SOURCE")}};
+        {"Correlation level", corrlv_string_},
+        {"Integral type", ints_type_},
+        {"Source operator", source_},
+        {"Adaptive DSRG flow type", foptions_->get_str("SMART_DSRG_S")},
+        {"Reference relaxation", relax_ref_},
+        {"DSRG transformation type", dsrg_trans_type_},
+        {"Core-Virtual source type", foptions_->get_str("CCVV_SOURCE")}};
 
     auto true_false_string = [](bool x) {
         if (x) {
@@ -154,20 +155,20 @@ void MRDSRG::print_options() {
         }
     };
     calculation_info_string.push_back(
-        {"sequential dsrg transformation", true_false_string(sequential_Hbar_)});
+        {"Sequential DSRG transformation", true_false_string(sequential_Hbar_)});
     calculation_info_string.push_back(
-        {"omit blocks of >= 3 virtual indices", true_false_string(nivo_)});
+        {"Omit blocks of >= 3 virtual indices", true_false_string(nivo_)});
 
     // print some information
     print_h2("Calculation Information");
     for (auto& str_dim : calculation_info) {
-        outfile->Printf("\n    %-35s %15d", str_dim.first.c_str(), str_dim.second);
+        outfile->Printf("\n    %-40s %15d", str_dim.first.c_str(), str_dim.second);
     }
     for (auto& str_dim : calculation_info_double) {
-        outfile->Printf("\n    %-35s %15.3e", str_dim.first.c_str(), str_dim.second);
+        outfile->Printf("\n    %-40s %15.3e", str_dim.first.c_str(), str_dim.second);
     }
     for (auto& str_dim : calculation_info_string) {
-        outfile->Printf("\n    %-35s %15s", str_dim.first.c_str(), str_dim.second.c_str());
+        outfile->Printf("\n    %-40s %15s", str_dim.first.c_str(), str_dim.second.c_str());
     }
     outfile->Printf("\n");
 }
@@ -184,11 +185,6 @@ void MRDSRG::build_ints() {
     // prepare two-electron integrals or three-index B
     if (eri_df_) {
         fill_three_index_ints(B_);
-
-        //        B_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double&
-        //        value) {
-        ////            value = ints_->three_integral(i[0], i[1], i[2]);
-        //        });
     } else {
         V_.iterate(
             [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
@@ -353,9 +349,7 @@ double MRDSRG::compute_energy() {
         Etotal += compute_energy_pt3();
         break;
     }
-    default: {
-        Etotal += compute_energy_pt2();
-    }
+    default: { Etotal += compute_energy_pt2(); }
     }
 
     return Etotal;

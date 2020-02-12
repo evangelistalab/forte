@@ -141,6 +141,11 @@ void MASTER_DSRG::read_options() {
         }
     }
 
+    diis_start_ = foptions_->get_int("DSRG_DIIS_START");
+    diis_freq_ = foptions_->get_int("DSRG_DIIS_FREQ");
+    diis_min_vec_ = foptions_->get_int("DSRG_DIIS_MIN_VEC");
+    diis_max_vec_ = foptions_->get_int("DSRG_DIIS_MAX_VEC");
+
     outfile->Printf("Done");
 }
 

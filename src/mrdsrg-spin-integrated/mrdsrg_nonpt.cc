@@ -676,17 +676,30 @@ double MRDSRG::compute_energy_ldsrg2() {
     if (foptions_->get_str("THREEPDC") == "ZERO") {
         outfile->Printf("\n    Skip Lambda3 contributions in [Hbar2, T2].");
     }
+
     std::string indent(4, ' ');
-    std::string dash(99, '-');
+    std::string dash(105, '-');
     std::string title;
-    title += indent + str(boost::format("%5c  %=27s  %=21s  %=21s  %=17s\n") % ' ' %
-                          "Energy (a.u.)" % "Non-Diagonal Norm" % "Amplitude RMS" % "Timings (s)");
-    title += indent + std::string(7, ' ') + std::string(27, '-') + "  " + std::string(21, '-') +
-             "  " + std::string(21, '-') + "  " + std::string(17, '-') + "\n";
-    title += indent +
-             str(boost::format("%5s  %=16s %=10s  %=10s %=10s  %=10s %=10s  %=8s %=8s\n") %
-                 "Iter." % "Corr." % "Delta" % "Hbar1" % "Hbar2" % "T1" % "T2" % "Hbar" % "Amp.");
+
+    title += indent + "              Energy (a.u.)           Non-Diagonal Norm        Amplitude "
+                      "RMS         Timings (s)\n";
+    title += indent + "       ---------------------------  ---------------------  "
+                      "---------------------  -----------------\n";
+    title += indent + "Iter.        Corr.         Delta       Hbar1      Hbar2        T1         "
+                      "T2        Hbar     Amp.    DIIS\n";
     title += indent + dash;
+
+    //    title += indent + str(boost::format("%5c  %=27s  %=21s  %=21s  %=17s\n") % ' ' %
+    //                          "Energy (a.u.)" % "Non-Diagonal Norm" % "Amplitude RMS" % "Timings
+    //                          (s)");
+    //    title += indent + std::string(7, ' ') + std::string(27, '-') + "  " + std::string(21, '-')
+    //    +
+    //             "  " + std::string(21, '-') + "  " + std::string(17, '-') + "\n";
+    //    title += indent +
+    //             str(boost::format("%5s  %=16s %=10s  %=10s %=10s  %=10s %=10s  %=8s %=8s\n") %
+    //                 "Iter." % "Corr." % "Delta" % "Hbar1" % "Hbar2" % "T1" % "T2" % "Hbar" %
+    //                 "Amp.");
+    //    title += indent + dash;
     outfile->Printf("\n%s", title.c_str());
 
     // figure out off-diagonal block labels for Hbar1
@@ -724,10 +737,10 @@ double MRDSRG::compute_energy_ldsrg2() {
 
     // iteration variables
     double Ecorr = 0.0;
-    int cycle = 0, maxiter = foptions_->get_int("MAXITER");
+    int maxiter = foptions_->get_int("MAXITER");
     double e_conv = foptions_->get_double("E_CONVERGENCE");
     double r_conv = foptions_->get_double("R_CONVERGENCE");
-    bool converged = false, failed = false;
+    bool converged = false;
     Hbar1_ = BTF_->build(tensor_type_, "Hbar1", spin_cases({"gg"}));
     O1_ = BTF_->build(tensor_type_, "O1", spin_cases({"gg"}));
     C1_ = BTF_->build(tensor_type_, "C1", spin_cases({"gg"}));
@@ -738,17 +751,15 @@ double MRDSRG::compute_energy_ldsrg2() {
 
     // setup DIIS
     std::shared_ptr<DIISManager> diis_manager;
-    int max_diis_vectors = foptions_->get_int("DIIS_MAX_VECS");
-    int min_diis_vectors = foptions_->get_int("DIIS_MIN_VECS");
-    if (max_diis_vectors > 0) {
-        diis_manager = std::shared_ptr<DIISManager>(new DIISManager(
-            max_diis_vectors, "LDSRG2 DIIS T", DIISManager::LargestError, DIISManager::InCore));
+    if (diis_start_ > 0) {
+        diis_manager = std::make_shared<DIISManager>(
+            diis_max_vec_, "LDSRG2 DIIS T", DIISManager::LargestError, DIISManager::InCore);
         diis_manager->set_error_vector_size(1, DIISEntry::Pointer, numel);
         diis_manager->set_vector_size(1, DIISEntry::Pointer, numel);
     }
 
     // start iteration
-    do {
+    for (int cycle = 1; cycle <= maxiter; ++cycle) {
         // compute Hbar
         local_timer t_hbar;
         timer hbar("Compute Hbar");
@@ -773,32 +784,42 @@ double MRDSRG::compute_energy_ldsrg2() {
         double time_amp = t_amp.get();
         od.stop();
 
-        // copy amplitudes to the big vector
-        timer diis("DIIS");
-        big_T = copy_amp_diis(T1_, blocks1, T2_, blocks2);
-        big_DT = copy_amp_diis(DT1_, blocks1, DT2_, blocks2);
-
-        // DIIS amplitudes
-        if (diis_manager) {
-            if (cycle >= min_diis_vectors) {
-                diis_manager->add_entry(2, &(big_DT[0]), &(big_T[0]));
-            }
-            if (cycle > max_diis_vectors) {
-                if (diis_manager->subspace_size() >= min_diis_vectors && cycle) {
-                    outfile->Printf(" -> DIIS");
-
-                    diis_manager->extrapolate(1, &(big_T[0]));
-                    return_amp_diis(T1_, blocks1, T2_, blocks2, big_T);
-                }
-            }
-        }
-        diis.stop();
-
         // printing
-        outfile->Printf("\n    %5d  %16.12f %10.3e  %10.3e %10.3e  %10.3e "
-                        "%10.3e  %8.3f %8.3f",
+        outfile->Printf("\n    %4d   %16.12f %10.3e  %10.3e %10.3e  %10.3e %10.3e  %8.3f %8.3f",
                         cycle, Ecorr, Edelta, Hbar1od, Hbar2od, T1rms_, T2rms_, time_hbar,
                         time_amp);
+
+        timer diis("DIIS");
+        // DIIS amplitudes
+        if (diis_manager and cycle >= diis_start_) {
+            // copy amplitudes to the big vector
+            big_T = copy_amp_diis(T1_, blocks1, T2_, blocks2);
+            big_DT = copy_amp_diis(DT1_, blocks1, DT2_, blocks2);
+
+            diis_manager->add_entry(2, &(big_DT[0]), &(big_T[0]));
+            outfile->Printf("   A");
+
+            if ((cycle - diis_start_) % diis_freq_ == 0 and
+                diis_manager->subspace_size() >= diis_min_vec_) {
+
+                diis_manager->extrapolate(1, &(big_T[0]));
+                return_amp_diis(T1_, blocks1, T2_, blocks2, big_T);
+                outfile->Printf("/E");
+            }
+
+            //            if (cycle >= diis_min_vec_) {
+            //                diis_manager->add_entry(2, &(big_DT[0]), &(big_T[0]));
+            //            }
+            //            if (cycle > diis_max_vec_) {
+            //                if (diis_manager->subspace_size() >= diis_min_vec_ && cycle) {
+            //                    outfile->Printf(" -> DIIS");
+
+            //                    diis_manager->extrapolate(1, &(big_T[0]));
+            //                    return_amp_diis(T1_, blocks1, T2_, blocks2, big_T);
+            //                }
+            //            }
+        }
+        diis.stop();
 
         // test convergence
         double rms = T1rms_ > T2rms_ ? T1rms_ : T2rms_;
@@ -814,17 +835,18 @@ double MRDSRG::compute_energy_ldsrg2() {
                     compute_hbar();
                 }
             }
-        }
-        if (cycle > maxiter) {
-            outfile->Printf("\n\n    The computation does not converge in %d "
-                            "iterations! Quitting.\n",
-                            maxiter);
-            converged = true;
-            failed = true;
+
+            break;
         }
 
-        ++cycle;
-    } while (!converged);
+        if (cycle == maxiter) {
+            outfile->Printf(
+                "\n\n    The computation does not converge in %d iterations! Quitting.\n", maxiter);
+        }
+        if (cycle > 5 and std::fabs(rms) > 10.0) {
+            outfile->Printf("\n\n    Large RMS for amplitudes. Likely no convergence. Quitting.\n");
+        }
+    }
 
     timer final("Summary");
     // print summary
@@ -842,7 +864,7 @@ double MRDSRG::compute_energy_ldsrg2() {
     analyze_amplitudes("Final", T1_, T2_);
 
     // fail to converge
-    if (failed) {
+    if (!converged) {
         throw psi::PSIEXCEPTION("The MR-LDSRG(2) computation does not converge.");
     }
     final.stop();

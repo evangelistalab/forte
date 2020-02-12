@@ -699,6 +699,15 @@ def register_dsrg_options(forte_options):
 
     forte_options.add_bool("IGNORE_MEMORY_WARNINGS", False, "Force running the DSRG-MRPT3 code using the batched algorithm")
 
+    forte_options.add_int("DSRG_DIIS_START", 2,
+                          "Iteration cycle to start adding error vectors for DSRG DIIS (< 1 for not doing DIIS)")
+
+    forte_options.add_int("DSRG_DIIS_FREQ", 1, "Frequency of extrapolating error vectors for DSRG DIIS")
+
+    forte_options.add_int("DSRG_DIIS_MIN_VEC", 2, "Minimum size of DIIS vectors")
+
+    forte_options.add_int("DSRG_DIIS_MAX_VEC", 6, "Maximum size of DIIS vectors")
+
 def register_dwms_options(forte_options):
     forte_options.add_double("DWMS_ZETA", 0.0, """Automatic Gaussian width cutoff for the density weights
           Weights of state α:
