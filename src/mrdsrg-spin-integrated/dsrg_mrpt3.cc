@@ -160,14 +160,14 @@ void DSRG_MRPT3::startup() {
     mem_total_ -= nelement * sizeof(double);
 
     // Prepare Hbar
-    if (relax_ref_ != "NONE" && relax_ref_ != "ONCE") {
-        outfile->Printf("\n\n  Warning: RELAX_REF option \"%s\" is not supported. Change to ONCE.",
-                        relax_ref_.c_str());
-        relax_ref_ = "ONCE";
+    //    if (relax_ref_ != "NONE" && relax_ref_ != "ONCE") {
+    //        outfile->Printf("\n\n  Warning: RELAX_REF option \"%s\" is not supported. Change to
+    //        ONCE.", relax_ref_.c_str());
+    //        relax_ref_ = "ONCE";
 
-        warnings_.push_back(std::make_tuple("Unsupported RELAX_REF", "Change to ONCE",
-                                            "Change options in input.dat"));
-    }
+    //        warnings_.push_back(std::make_tuple("Unsupported RELAX_REF", "Change to ONCE",
+    //                                            "Change options in input.dat"));
+    //    }
 
     if (relax_ref_ != "NONE" || multi_state_) {
         Hbar1_ = BTF_->build(tensor_type_, "One-body Hbar", spin_cases({"aa"}));

@@ -85,14 +85,14 @@ void DSRG_MRPT2::startup() {
     Fb_ = Fdiag_b_;
 
     // test options for reference relaxation
-    if (relax_ref_ != "NONE" && relax_ref_ != "ONCE") {
-        outfile->Printf("\n\n  Warning: RELAX_REF option \"%s\" is not supported. Change to ONCE.",
-                        relax_ref_.c_str());
-        relax_ref_ = "ONCE";
+    //    if (relax_ref_ != "NONE" && relax_ref_ != "ONCE") {
+    //        outfile->Printf("\n\n  Warning: RELAX_REF option \"%s\" is not supported. Change to
+    //        ONCE.", relax_ref_.c_str());
+    //        relax_ref_ = "ONCE";
 
-        warnings_.push_back(std::make_tuple("Unsupported RELAX_REF", "Change to ONCE",
-                                            "Change options in input.dat"));
-    }
+    //        warnings_.push_back(std::make_tuple("Unsupported RELAX_REF", "Change to ONCE",
+    //                                            "Change options in input.dat"));
+    //    }
 
     // Prepare Hbar
     if (relax_ref_ != "NONE" || multi_state_) {
@@ -1698,7 +1698,7 @@ void DSRG_MRPT2::compute_dm1d_pt2(BlockedTensor& M, double& Mbar0, BlockedTensor
     }
 }
 
-//double DSRG_MRPT2::compute_energy_relaxed() {
+// double DSRG_MRPT2::compute_energy_relaxed() {
 //    double Edsrg = 0.0, Erelax = 0.0;
 
 //    // compute energy with fixed ref.

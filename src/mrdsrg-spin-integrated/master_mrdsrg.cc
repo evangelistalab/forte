@@ -145,6 +145,15 @@ void MASTER_DSRG::read_options() {
     diis_freq_ = foptions_->get_int("DSRG_DIIS_FREQ");
     diis_min_vec_ = foptions_->get_int("DSRG_DIIS_MIN_VEC");
     diis_max_vec_ = foptions_->get_int("DSRG_DIIS_MAX_VEC");
+    if (diis_min_vec_ < 1) {
+        diis_min_vec_ = 1;
+    }
+    if (diis_max_vec_ <= diis_min_vec_) {
+        diis_max_vec_ = diis_min_vec_ + 4;
+    }
+    if (diis_freq_ < 1) {
+        diis_freq_ = 1;
+    }
 
     outfile->Printf("Done");
 }
