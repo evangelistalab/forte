@@ -168,6 +168,7 @@ src/mrdsrg-spin-integrated/mcsrgpt2_mo.cc
 src/mrdsrg-spin-integrated/mrdsrg.cc
 src/mrdsrg-spin-integrated/mrdsrg_amplitude.cc
 src/mrdsrg-spin-integrated/mrdsrg_commutator.cc
+src/mrdsrg-spin-integrated/mrdsrg_diis.cc
 src/mrdsrg-spin-integrated/mrdsrg_nonpt.cc
 src/mrdsrg-spin-integrated/mrdsrg_pt.cc
 src/mrdsrg-spin-integrated/mrdsrg_smart_s.cc

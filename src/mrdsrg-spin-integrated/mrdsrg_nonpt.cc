@@ -689,17 +689,6 @@ double MRDSRG::compute_energy_ldsrg2() {
                       "T2        Hbar     Amp.    DIIS\n";
     title += indent + dash;
 
-    //    title += indent + str(boost::format("%5c  %=27s  %=21s  %=21s  %=17s\n") % ' ' %
-    //                          "Energy (a.u.)" % "Non-Diagonal Norm" % "Amplitude RMS" % "Timings
-    //                          (s)");
-    //    title += indent + std::string(7, ' ') + std::string(27, '-') + "  " + std::string(21, '-')
-    //    +
-    //             "  " + std::string(21, '-') + "  " + std::string(17, '-') + "\n";
-    //    title += indent +
-    //             str(boost::format("%5s  %=16s %=10s  %=10s %=10s  %=10s %=10s  %=8s %=8s\n") %
-    //                 "Iter." % "Corr." % "Delta" % "Hbar1" % "Hbar2" % "T1" % "T2" % "Hbar" %
-    //                 "Amp.");
-    //    title += indent + dash;
     outfile->Printf("\n%s", title.c_str());
 
     // figure out off-diagonal block labels for Hbar1
@@ -708,6 +697,7 @@ double MRDSRG::compute_energy_ldsrg2() {
     // figure out off-diagonal block labels for Hbar2
     std::vector<std::string> blocks2 = od_two_labels_hhpp();
 
+    BlockedTensor::set_expert_mode(true);
     if (nivo_) {
         // Generate blocks for Hbar2_, O2_ and C2_
         std::vector<std::string> blocks_exclude_V3;
@@ -723,9 +713,6 @@ double MRDSRG::compute_energy_ldsrg2() {
                 }
             }
         }
-
-        BlockedTensor::set_expert_mode(true);
-
         Hbar2_ = BTF_->build(tensor_type_, "Hbar2", spin_cases(blocks_exclude_V3));
         O2_ = BTF_->build(tensor_type_, "O2", spin_cases(blocks_exclude_V3));
         C2_ = BTF_->build(tensor_type_, "C2", spin_cases(blocks_exclude_V3));
@@ -746,16 +733,10 @@ double MRDSRG::compute_energy_ldsrg2() {
     C1_ = BTF_->build(tensor_type_, "C1", spin_cases({"gg"}));
     DT1_ = BTF_->build(tensor_type_, "DT1", spin_cases({"hp"}));
     DT2_ = BTF_->build(tensor_type_, "DT2", spin_cases({"hhpp"}));
-    std::vector<double> big_T, big_DT;
-    size_t numel = vector_size_diis(T1_, blocks1, T2_, blocks2);
 
     // setup DIIS
-    std::shared_ptr<DIISManager> diis_manager;
     if (diis_start_ > 0) {
-        diis_manager = std::make_shared<DIISManager>(
-            diis_max_vec_, "LDSRG2 DIIS T", DIISManager::LargestError, DIISManager::InCore);
-        diis_manager->set_error_vector_size(1, DIISEntry::Pointer, numel);
-        diis_manager->set_vector_size(1, DIISEntry::Pointer, numel);
+        diis_manager_init();
     }
 
     // start iteration
@@ -791,33 +772,15 @@ double MRDSRG::compute_energy_ldsrg2() {
 
         timer diis("DIIS");
         // DIIS amplitudes
-        if (diis_manager and cycle >= diis_start_) {
-            // copy amplitudes to the big vector
-            big_T = copy_amp_diis(T1_, blocks1, T2_, blocks2);
-            big_DT = copy_amp_diis(DT1_, blocks1, DT2_, blocks2);
-
-            diis_manager->add_entry(2, &(big_DT[0]), &(big_T[0]));
+        if (diis_start_ > 0 and cycle >= diis_start_) {
+            diis_manager_add_entry();
             outfile->Printf("   A");
 
             if ((cycle - diis_start_) % diis_freq_ == 0 and
-                diis_manager->subspace_size() >= diis_min_vec_) {
-
-                diis_manager->extrapolate(1, &(big_T[0]));
-                return_amp_diis(T1_, blocks1, T2_, blocks2, big_T);
+                diis_manager_->subspace_size() >= diis_min_vec_) {
+                diis_manager_extrapolate();
                 outfile->Printf("/E");
             }
-
-            //            if (cycle >= diis_min_vec_) {
-            //                diis_manager->add_entry(2, &(big_DT[0]), &(big_T[0]));
-            //            }
-            //            if (cycle > diis_max_vec_) {
-            //                if (diis_manager->subspace_size() >= diis_min_vec_ && cycle) {
-            //                    outfile->Printf(" -> DIIS");
-
-            //                    diis_manager->extrapolate(1, &(big_T[0]));
-            //                    return_amp_diis(T1_, blocks1, T2_, blocks2, big_T);
-            //                }
-            //            }
         }
         diis.stop();
 
@@ -825,17 +788,6 @@ double MRDSRG::compute_energy_ldsrg2() {
         double rms = T1rms_ > T2rms_ ? T1rms_ : T2rms_;
         if (std::fabs(Edelta) < e_conv && rms < r_conv) {
             converged = true;
-
-            // rebuild Hbar because it is destroyed when updating amplitudes
-            if (foptions_->get_str("RELAX_REF") != "NONE" ||
-                (foptions_->psi_options())["AVG_STATE"].size() != 0) {
-                if (sequential_Hbar_) {
-                    compute_hbar_sequential_rotation();
-                } else {
-                    compute_hbar();
-                }
-            }
-
             break;
         }
 
@@ -846,6 +798,11 @@ double MRDSRG::compute_energy_ldsrg2() {
         if (cycle > 5 and std::fabs(rms) > 10.0) {
             outfile->Printf("\n\n    Large RMS for amplitudes. Likely no convergence. Quitting.\n");
         }
+    }
+
+    // clean up raw pointers used in DIIS
+    if (diis_start_ > 0) {
+        diis_manager_cleanup();
     }
 
     timer final("Summary");
@@ -1019,17 +976,19 @@ double MRDSRG::compute_energy_ldsrg2_qc() {
                     "quadratic nested commutator.");
     outfile->Printf("\n    Reference:");
     outfile->Printf("\n      J. Chem. Phys. (in preparation)\n");
+
     std::string indent(4, ' ');
-    std::string dash(99, '-');
+    std::string dash(105, '-');
     std::string title;
-    title += indent + str(boost::format("%5c  %=27s  %=21s  %=21s  %=17s\n") % ' ' %
-                          "Energy (a.u.)" % "Non-Diagonal Norm" % "Amplitude RMS" % "Timings (s)");
-    title += indent + std::string(7, ' ') + std::string(27, '-') + "  " + std::string(21, '-') +
-             "  " + std::string(21, '-') + "  " + std::string(17, '-') + "\n";
-    title += indent +
-             str(boost::format("%5s  %=16s %=10s  %=10s %=10s  %=10s %=10s  %=8s %=8s\n") %
-                 "Iter." % "Corr." % "Delta" % "Hbar1" % "Hbar2" % "T1" % "T2" % "Hbar" % "Amp.");
+
+    title += indent + "              Energy (a.u.)           Non-Diagonal Norm        Amplitude "
+                      "RMS         Timings (s)\n";
+    title += indent + "       ---------------------------  ---------------------  "
+                      "---------------------  -----------------\n";
+    title += indent + "Iter.        Corr.         Delta       Hbar1      Hbar2        T1         "
+                      "T2        Hbar     Amp.    DIIS\n";
     title += indent + dash;
+
     outfile->Printf("\n%s", title.c_str());
 
     // figure out off-diagonal blocks labels
@@ -1038,17 +997,15 @@ double MRDSRG::compute_energy_ldsrg2_qc() {
 
     // iteration variables
     double Ecorr = 0.0;
-    int cycle = 0, maxiter = foptions_->get_int("MAXITER");
+    int maxiter = foptions_->get_int("MAXITER");
     double e_conv = foptions_->get_double("E_CONVERGENCE");
     double r_conv = foptions_->get_double("R_CONVERGENCE");
-    bool converged = false, failed = false;
+    bool converged = false;
     Hbar1_ = BTF_->build(tensor_type_, "Hbar1", spin_cases({"hp"}));
     Hbar2_ = BTF_->build(tensor_type_, "Hbar2", spin_cases({"hhpp"}));
     O1_ = BTF_->build(tensor_type_, "O1", spin_cases({"aa"}));
     DT1_ = BTF_->build(tensor_type_, "DT1", spin_cases({"hp"}));
     DT2_ = BTF_->build(tensor_type_, "DT2", spin_cases({"hhpp"}));
-    std::vector<double> big_T, big_DT;
-    size_t numel = vector_size_diis(T1_, blocks1, T2_, blocks2);
     BlockedTensor::set_expert_mode(true);
 
     // initialize V_ here
@@ -1065,18 +1022,12 @@ double MRDSRG::compute_energy_ldsrg2_qc() {
     }
 
     // setup DIIS
-    std::shared_ptr<DIISManager> diis_manager;
-    int max_diis_vectors = foptions_->get_int("DIIS_MAX_VECS");
-    int min_diis_vectors = foptions_->get_int("DIIS_MIN_VECS");
-    if (max_diis_vectors > 0) {
-        diis_manager = std::shared_ptr<DIISManager>(new DIISManager(
-            max_diis_vectors, "LDSRG2 DIIS T", DIISManager::LargestError, DIISManager::InCore));
-        diis_manager->set_error_vector_size(1, DIISEntry::Pointer, numel);
-        diis_manager->set_vector_size(1, DIISEntry::Pointer, numel);
+    if (diis_start_ > 0) {
+        diis_manager_init();
     }
 
     // start iteration
-    do {
+    for (int cycle = 1; cycle <= maxiter; ++cycle) {
         // compute Hbar
         local_timer t_hbar;
         compute_hbar_qc();
@@ -1093,52 +1044,44 @@ double MRDSRG::compute_energy_ldsrg2_qc() {
         update_t();
         double time_amp = t_amp.get();
 
-        // copy amplitudes to the big vector
-        big_T = copy_amp_diis(T1_, blocks1, T2_, blocks2);
-        big_DT = copy_amp_diis(DT1_, blocks1, DT2_, blocks2);
-
-        // DIIS amplitudes
-        if (diis_manager) {
-            if (cycle >= min_diis_vectors) {
-                diis_manager->add_entry(2, &(big_DT[0]), &(big_T[0]));
-            }
-            if (cycle > max_diis_vectors) {
-                if (diis_manager->subspace_size() >= min_diis_vectors && cycle) {
-                    outfile->Printf(" -> DIIS");
-
-                    diis_manager->extrapolate(1, &(big_T[0]));
-                    return_amp_diis(T1_, blocks1, T2_, blocks2, big_T);
-                }
-            }
-        }
-
         // printing
         outfile->Printf("\n    %5d  %16.12f %10.3e  %10.3e %10.3e  %10.3e "
                         "%10.3e  %8.3f %8.3f",
                         cycle, Ecorr, Edelta, Hbar1od, Hbar2od, T1rms_, T2rms_, time_hbar,
                         time_amp);
 
+        // DIIS amplitudes
+        if (diis_start_ > 0 and cycle >= diis_start_) {
+            diis_manager_add_entry();
+            outfile->Printf("   A");
+
+            if ((cycle - diis_start_) % diis_freq_ == 0 and
+                diis_manager_->subspace_size() >= diis_min_vec_) {
+                diis_manager_extrapolate();
+                outfile->Printf("/E");
+            }
+        }
+
         // test convergence
         double rms = T1rms_ > T2rms_ ? T1rms_ : T2rms_;
         if (std::fabs(Edelta) < e_conv && rms < r_conv) {
             converged = true;
-
-            // rebuild Hbar because it is destroyed when updating amplitudes
-            if (foptions_->get_str("RELAX_REF") != "NONE" ||
-                (foptions_->psi_options())["AVG_STATE"].size() != 0) {
-                compute_hbar_qc();
-            }
-        }
-        if (cycle > maxiter) {
-            outfile->Printf("\n\n    The computation does not converge in %d "
-                            "iterations! Quitting.\n",
-                            maxiter);
-            converged = true;
-            failed = true;
+            break;
         }
 
-        ++cycle;
-    } while (!converged);
+        if (cycle == maxiter) {
+            outfile->Printf(
+                "\n\n    The computation does not converge in %d iterations! Quitting.\n", maxiter);
+        }
+        if (cycle > 5 and std::fabs(rms) > 10.0) {
+            outfile->Printf("\n\n    Large RMS for amplitudes. Likely no convergence. Quitting.\n");
+        }
+    }
+
+    // clean up raw pointers used in DIIS
+    if (diis_start_ > 0) {
+        diis_manager_cleanup();
+    }
 
     // print summary
     outfile->Printf("\n    %s", dash.c_str());
@@ -1155,7 +1098,7 @@ double MRDSRG::compute_energy_ldsrg2_qc() {
     analyze_amplitudes("Final", T1_, T2_);
 
     // fail to converge
-    if (failed) {
+    if (!converged) {
         throw psi::PSIEXCEPTION("The MR-LDSRG(2)-QC computation does not converge.");
     }
 
@@ -1309,91 +1252,4 @@ void MRDSRG::tensor_add_HC_ab(BlockedTensor& H2) {
     }
 }
 
-double MRDSRG::Hbar1od_norm(const std::vector<std::string>& blocks) {
-    double norm = 0.0;
-
-    for (auto& block : blocks) {
-        double norm_block = Hbar1_.block(block).norm();
-        norm += 2.0 * norm_block * norm_block;
-    }
-    norm = std::sqrt(norm);
-
-    return norm;
-}
-
-double MRDSRG::Hbar2od_norm(const std::vector<std::string>& blocks) {
-    double norm = 0.0;
-
-    for (auto& block : blocks) {
-        double norm_block = Hbar2_.block(block).norm();
-        norm += 2.0 * norm_block * norm_block;
-    }
-    norm = std::sqrt(norm);
-
-    return norm;
-}
-
-std::vector<double> MRDSRG::copy_amp_diis(BlockedTensor& T1, const std::vector<std::string>& label1,
-                                          BlockedTensor& T2,
-                                          const std::vector<std::string>& label2) {
-    std::vector<double> out;
-
-    for (const auto& block : label1) {
-        out.insert(out.end(), T1.block(block).data().begin(), T1.block(block).data().end());
-    }
-    for (const auto& block : label2) {
-        out.insert(out.end(), T2.block(block).data().begin(), T2.block(block).data().end());
-    }
-
-    return out;
-}
-
-size_t MRDSRG::vector_size_diis(BlockedTensor& T1, const std::vector<std::string>& label1,
-                                BlockedTensor& T2, const std::vector<std::string>& label2) {
-    size_t total_elements = 0;
-    for (const auto& block : label1) {
-        total_elements += T1.block(block).numel();
-    }
-    for (const auto& block : label2) {
-        total_elements += T2.block(block).numel();
-    }
-    return total_elements;
-}
-
-void MRDSRG::return_amp_diis(BlockedTensor& T1, const std::vector<std::string>& label1,
-                             BlockedTensor& T2, const std::vector<std::string>& label2,
-                             const std::vector<double>& data) {
-    // test data
-    std::map<std::string, size_t> num_elements;
-    size_t total_elements = 0;
-
-    for (const auto& block : label1) {
-        size_t numel = T1.block(block).numel();
-        num_elements[block] = total_elements;
-        total_elements += numel;
-    }
-    for (const auto& block : label2) {
-        size_t numel = T2.block(block).numel();
-        num_elements[block] = total_elements;
-        total_elements += numel;
-    }
-
-    if (data.size() != total_elements) {
-        throw psi::PSIEXCEPTION("Number of elements in T1 and T2 do not match the bid data vector");
-    }
-
-    // transfer data
-    for (const auto& block : label1) {
-        std::vector<double>::const_iterator start = data.begin() + num_elements[block];
-        std::vector<double>::const_iterator end = start + T1.block(block).numel();
-        std::vector<double> T1_this_block(start, end);
-        T1.block(block).data() = T1_this_block;
-    }
-    for (const auto& block : label2) {
-        std::vector<double>::const_iterator start = data.begin() + num_elements[block];
-        std::vector<double>::const_iterator end = start + T2.block(block).numel();
-        std::vector<double> T2_this_block(start, end);
-        T2.block(block).data() = T2_this_block;
-    }
-}
 } // namespace forte

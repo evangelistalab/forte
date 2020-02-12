@@ -32,6 +32,7 @@
 #include <cmath>
 #include <memory>
 
+#include "psi4/libdiis/diismanager.h"
 #include "psi4/liboptions/liboptions.h"
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/libpsio/psio.hpp"
@@ -327,6 +328,21 @@ class MRDSRG : public MASTER_DSRG {
     void return_amp_diis(BlockedTensor& T1, const std::vector<std::string>& label1,
                          BlockedTensor& T2, const std::vector<std::string>& label2,
                          const std::vector<double>& data);
+
+    /// Shared pointer of DIISManager object from Psi4
+    std::shared_ptr<psi::DIISManager> diis_manager_;
+    /// Amplitudes pointers
+    std::vector<double*> amp_ptrs_;
+    /// Residual pointers
+    std::vector<double*> res_ptrs_;
+    /// Initialize DIISManager
+    void diis_manager_init();
+    /// Add entry for DIISManager
+    void diis_manager_add_entry();
+    /// Extrapolate for DIISManager
+    void diis_manager_extrapolate();
+    /// Clean up for pointers used for DIIS
+    void diis_manager_cleanup();
 
     /// Add H2's Hermitian conjugate to itself, H2 need to contain gggg (or
     /// GGGG) block

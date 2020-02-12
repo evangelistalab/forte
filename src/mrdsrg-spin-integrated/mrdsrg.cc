@@ -628,4 +628,29 @@ void MRDSRG::check_density(BlockedTensor& D, const std::string& name) {
     output += indent + sep;
     outfile->Printf("%s", output.c_str());
 }
+
+double MRDSRG::Hbar1od_norm(const std::vector<std::string>& blocks) {
+    double norm = 0.0;
+
+    for (auto& block : blocks) {
+        double norm_block = Hbar1_.block(block).norm();
+        norm += 2.0 * norm_block * norm_block;
+    }
+    norm = std::sqrt(norm);
+
+    return norm;
+}
+
+double MRDSRG::Hbar2od_norm(const std::vector<std::string>& blocks) {
+    double norm = 0.0;
+
+    for (auto& block : blocks) {
+        double norm_block = Hbar2_.block(block).norm();
+        norm += 2.0 * norm_block * norm_block;
+    }
+    norm = std::sqrt(norm);
+
+    return norm;
+}
+
 } // namespace forte
