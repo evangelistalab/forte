@@ -91,12 +91,12 @@ void FastAdaptivePathIntegralCI::startup() {
     FastDeterminant::set_ints(ints_);
 
     // The number of correlated molecular orbitals
-    ncmo_ = mo_space_info_->get_corr_abs_mo("ACTIVE").size();
-    ncmopi_ = mo_space_info_->get_dimension("ACTIVE");
+    ncmo_ = mo_space_info_->corr_absolute_mo("ACTIVE").size();
+    ncmopi_ = mo_space_info_->dimension("ACTIVE");
 
     // Overwrite the frozen orbitals arrays
-    frzcpi_ = mo_space_info_->get_dimension("FROZEN_DOCC");
-    frzvpi_ = mo_space_info_->get_dimension("FROZEN_UOCC");
+    frzcpi_ = mo_space_info_->dimension("FROZEN_DOCC");
+    frzvpi_ = mo_space_info_->dimension("FROZEN_UOCC");
 
     nuclear_repulsion_energy_ = molecule_->nuclear_repulsion_energy();
 

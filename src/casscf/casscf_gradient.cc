@@ -28,14 +28,14 @@ namespace forte {
  */
 void CASSCF::set_all_variables() {
     // Set MOs containers.
-    core_mos_ = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
-    actv_mos_ = mo_space_info_->get_corr_abs_mo("ACTIVE");
-    virt_mos_ = mo_space_info_->get_corr_abs_mo("RESTRICTED_UOCC");
-    core_all_ = mo_space_info_->get_absolute_mo("RESTRICTED_DOCC");
-    actv_all_ = mo_space_info_->get_absolute_mo("ACTIVE");
+    core_mos_ = mo_space_info_->corr_absolute_mo("RESTRICTED_DOCC");
+    actv_mos_ = mo_space_info_->corr_absolute_mo("ACTIVE");
+    virt_mos_ = mo_space_info_->corr_absolute_mo("RESTRICTED_UOCC");
+    core_all_ = mo_space_info_->absolute_mo("RESTRICTED_DOCC");
+    actv_all_ = mo_space_info_->absolute_mo("ACTIVE");
     core_mos_relative = mo_space_info_->get_relative_mo("RESTRICTED_DOCC");
     actv_mos_relative = mo_space_info_->get_relative_mo("ACTIVE");
-    irrep_vec = mo_space_info_->get_dimension("ALL");
+    irrep_vec = mo_space_info_->dimension("ALL");
 
     // Set MO spaces.
     set_ambit_space();
@@ -228,6 +228,10 @@ void CASSCF::set_tensor() {
  * The procedure of TPDM back-transformation
  */
 void CASSCF::tpdm_backtransform() {
+    // This line of code is to deceive Psi4 and avoid computing scf gradient
+    // Remove once TravisCI is updated
+     ints_->wfn()->set_reference_wavefunction(ints_->wfn());
+
     std::vector<std::shared_ptr<psi::MOSpace>> spaces;
     spaces.push_back(psi::MOSpace::all);
     std::shared_ptr<TPDMBackTransform> transform =

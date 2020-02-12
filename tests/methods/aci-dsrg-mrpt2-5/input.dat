@@ -3,8 +3,8 @@ import forte
 memory 2 gb
 
 escf = -304.9057795504940600
-efix = -305.390029668114494 
-eaci = -305.398101397722598 
+efix = -305.39002965567 #-305.390029668114494 
+eaci = -305.39810141321 # -305.398101397722598 
 
 molecule ene2{
 0 1
@@ -56,14 +56,15 @@ set forte {
   sigma 0.001
   diag_algorithm dynamic
   sci_direct_rdms true
-  aci_batched_screening true
-  aci_batch_alg vecsort
+  aci_screen_alg batch_vec
   aci_nbatch 4
   nroot 1
   root_sym 0
   charge 0
   print_no true
   relax_ref once
+  r_convergence 0.1
+  e_convergence 13
 }
 set_num_threads(8)
 
@@ -72,8 +73,8 @@ e, scf_wfn = energy('scf', return_wfn=True)
 compare_values(escf,variable("CURRENT ENERGY"), 9, "SCF energy") 
 
 ea, awfn = energy('forte', ref_wfn=scf_wfn, return_wfn=True)
-compare_values(efix,variable("UNRELAXED ENERGY"), 9, "ACI-DSRG-MRPT2 fixed energy")
-compare_values(eaci,variable("CURRENT ENERGY"), 9, "ACI-DSRG-MRPT2 relaxed energy") 
+compare_values(efix,variable("UNRELAXED ENERGY"), 8, "ACI-DSRG-MRPT2 fixed energy")
+compare_values(eaci,variable("CURRENT ENERGY"), 8, "ACI-DSRG-MRPT2 relaxed energy") 
 
 
 

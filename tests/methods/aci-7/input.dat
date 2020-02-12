@@ -31,7 +31,6 @@ set {
 set forte {
   active_space_solver aci
   multiplicity 1
-  aci_select_type aimed_energy
   frozen_docc [1,0,0,0,0,1,0,0]
   sigma 0.08
   sci_excited_algorithm average

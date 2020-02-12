@@ -129,7 +129,7 @@ class AdaptiveCI : public SelectedCIMethod {
     void set_quiet(bool quiet) { quiet_mode_ = quiet; }
 
     /// Compute the ACI-NOs
-    void compute_nos();
+    void print_nos();
 
     void semi_canonicalize();
     void set_fci_ints(std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
@@ -141,7 +141,6 @@ class AdaptiveCI : public SelectedCIMethod {
 
     void unpaired_density(psi::SharedMatrix Ua, psi::SharedMatrix Ub);
     void unpaired_density(ambit::Tensor Ua, ambit::Tensor Ub);
-    void spin_analysis();
 
   private:
     // Temporarily added
@@ -299,7 +298,7 @@ class AdaptiveCI : public SelectedCIMethod {
     bool print_weights_;
 
     /// The alpha MO always unoccupied
-    int hole_;
+    size_t hole_;
 
     /// Timing variables
     double build_H_;
@@ -337,77 +336,50 @@ class AdaptiveCI : public SelectedCIMethod {
     /// Print a wave function
     void print_wfn(DeterminantHashVec& space, WFNOperator& op, psi::SharedMatrix evecs, int nroot);
 
-    /// Batched version of find q space
-    void find_q_space_batched(DeterminantHashVec& P_space, DeterminantHashVec& PQ_space,
-                              psi::SharedVector evals, psi::SharedMatrix evecs);
-
-    /// Streamlined version of find q space
-    void default_find_q_space(DeterminantHashVec& P_space, DeterminantHashVec& PQ_space,
-                              psi::SharedVector evals, psi::SharedMatrix evecs);
-
-    /// Find all the relevant excitations out of the P space
-    void find_q_space_multiroot(DeterminantHashVec& P_space, DeterminantHashVec& PQ_space,
-                                int nroot, psi::SharedVector evals, psi::SharedMatrix evecs);
-
     /// Generate set of state-averaged q-criteria and determinants
-    double average_q_values(int nroot, std::vector<double>& C1, std::vector<double>& E2);
+    double average_q_values(std::vector<double>& E2);
 
     /// Get criteria for a specific root
     double root_select(int nroot, std::vector<double>& C1, std::vector<double>& E2);
 
-    /// Find all the relevant excitations out of the P space - single root
-    /// version
-    void find_q_space_single_root(int nroot, psi::SharedVector evals, psi::SharedMatrix evecs);
-
     /// Basic determinant generator (threaded, no batching, all determinants stored)
-    void get_excited_determinants(int nroot, psi::SharedMatrix evecs, DeterminantHashVec& P_space,
-                                  det_hash<std::vector<double>>& V_hash);
+    void get_excited_determinants_avg(int nroot, psi::SharedMatrix evecs, psi::SharedVector evals,  DeterminantHashVec& P_space,
+                                           std::vector<std::pair<double, Determinant>>& F_space);
 
-    /// Alternate/experimental determinant generator (threaded, each thread builds part of F)
-    void get_excited_determinants_seq(int nroot, psi::SharedMatrix evecs,
-                                      DeterminantHashVec& P_space,
-                                      det_hash<std::vector<double>>& V_hash);
     /// Get excited determinants with a specified hole
-    void get_core_excited_determinants(psi::SharedMatrix evecs, DeterminantHashVec& P_space,
-                                       det_hash<std::vector<double>>& V_hash);
+  //  void get_excited_determinants_restrict(int nroot, psi::SharedMatrix evecs, psi::SharedVector evals,  DeterminantHashVec& P_space,
+  //                                         std::vector<std::pair<double, Determinant>>& F_space);
+    /// Get excited determinants with a specified hole
+    void get_excited_determinants_core(psi::SharedMatrix evecs, psi::SharedVector evals,  DeterminantHashVec& P_space,
+                                           std::vector<std::pair<double, Determinant>>& F_space);
 
     // Optimized for a single root
-    void get_excited_determinants_sr(psi::SharedMatrix evecs, DeterminantHashVec& P_space,
-                                     det_hash<double>& V_hash);
+    void get_excited_determinants_sr(psi::SharedMatrix evecs, psi::SharedVector evals,  DeterminantHashVec& P_space,
+                                           std::vector<std::pair<double, Determinant>>& F_space);
 
-    // Primitive batching algorithm, each thread does one bin, to be removed
-    double get_excited_determinants_batch_old(psi::SharedMatrix evecs, psi::SharedVector evals,
-                                              DeterminantHashVec& P_space,
-                                              std::vector<std::pair<double, Determinant>>& F_space);
-
-    // (DEFAULT in batching) Optimized batching algorithm, prescreens the batches to significantly
-    // reduce storage, based on hashes
+    // (DEFAULT in batching) Optimized batching algorithm, prescreens the batches to significantly reduce storage, based on hashes
     double get_excited_determinants_batch(psi::SharedMatrix evecs, psi::SharedVector evals,
-                                          DeterminantHashVec& P_space,
-                                          std::vector<std::pair<double, Determinant>>& F_space);
-
-    // Gets excited determinants using sorting of vectors
-    double
-    get_excited_determinants_batch_vecsort(psi::SharedMatrix evecs, psi::SharedVector evals,
                                            DeterminantHashVec& P_space,
                                            std::vector<std::pair<double, Determinant>>& F_space);
 
-    /// Builds excited determinants for a bin, no threading, hash-based, to be removed
-    det_hash<double> get_bin_F_space_old(int bin, int nbin, psi::SharedMatrix evecs,
-                                         DeterminantHashVec& P_space);
+    // Gets excited determinants using sorting of vectors
+    double get_excited_determinants_batch_vecsort(psi::SharedMatrix evecs, psi::SharedVector evals,
+                                           DeterminantHashVec& P_space,
+                                           std::vector<std::pair<double, Determinant>>& F_space);
+
 
     /// (DEFAULT)  Builds excited determinants for a bin, uses all threads, hash-based
-    det_hash<double> get_bin_F_space(int bin, int nbin, psi::SharedMatrix evecs,
+    det_hash<double> get_bin_F_space(int bin, int nbin, double E0, psi::SharedMatrix evecs,
                                      DeterminantHashVec& P_space);
 
+    /// Builds core excited determinants for a bin, uses all threads, hash-based
+    det_hash<double> get_bin_F_space_core(int bin, int nbin, double E0, psi::SharedMatrix evecs,
+                                     DeterminantHashVec& P_space);
     /// Builds excited determinants in batch using sorting of vectors
     std::pair<std::vector<std::vector<std::pair<Determinant, double>>>, std::vector<size_t>>
     get_bin_F_space_vecsort(int bin, int nbin, psi::SharedMatrix evecs,
                             DeterminantHashVec& P_space);
 
-    /// Prescreening algorithm, aware of sigma, very experimental
-    // double prescreen_F(int bin, int nbin, double E0, psi::SharedMatrix evecs,DeterminantHashVec&
-    // P_space);
 
     /// Prune the space of determinants
     void prune_q_space(DeterminantHashVec& PQ_space, DeterminantHashVec& P_space,
@@ -425,68 +397,20 @@ class AdaptiveCI : public SelectedCIMethod {
     std::vector<std::pair<double, double>> compute_spin(DeterminantHashVec& space, WFNOperator& op,
                                                         psi::SharedMatrix evecs, int nroot);
 
-    /// Compute 1-RDM
-    void compute_1rdm(psi::SharedMatrix A, psi::SharedMatrix B, std::vector<Determinant>& det_space,
-                      psi::SharedMatrix evecs, int nroot);
-
-    /// Compute full S^2 matrix and diagonalize it
-    // void full_spin_transform(DeterminantHashVec& det_space, psi::SharedMatrix cI, int nroot);
-
     /// Check for spin contamination
     double compute_spin_contamination(DeterminantHashVec& space, WFNOperator& op,
                                       psi::SharedMatrix evecs, int nroot);
 
-    /// Compute the Davidson correction
-    std::vector<double> davidson_correction(std::vector<Determinant>& P_dets,
-                                            psi::SharedVector P_evals, psi::SharedMatrix PQ_evecs,
-                                            std::vector<Determinant>& PQ_dets,
-                                            psi::SharedVector PQ_evals);
-
-    //    void compute_H_expectation_val(const
-    //    std::vector<Determinant>& space,
-    //                                    psi::SharedVector& evals,
-    //                                    const psi::SharedMatrix evecs,
-    //                                    int nroot,
-    //                                    DiagonalizationMethod diag_method);
-    //
-
-    /// Print natural orbitals
-    void print_nos();
-
     /// Convert from determinant to string representation
-    void convert_to_string(const std::vector<Determinant>& space);
+    //void convert_to_string(const std::vector<Determinant>& space);
 
     /// Compute overlap for root following
     int root_follow(DeterminantHashVec& P_ref, std::vector<double>& P_ref_evecs,
                     DeterminantHashVec& P_space, psi::SharedMatrix P_evecs, int num_ref_roots);
 
-    /// Project ACI wavefunction
-    void project_determinant_space(DeterminantHashVec& space, psi::SharedMatrix evecs,
-                                   psi::SharedVector evals, int nroot);
-
     /// Add roots to be projected out in DL
     void add_bad_roots(DeterminantHashVec& dets);
 
-    void block_diagonalize_fock(const d2& Fa, const d2& Fb, psi::SharedMatrix& Ua,
-                                psi::SharedMatrix& Ub, const std::string& name);
-
-    DeterminantHashVec approximate_wfn(DeterminantHashVec& PQ_space, psi::SharedMatrix& evecs,
-                                       psi::SharedVector& PQ_evals, psi::SharedMatrix& new_evecs);
-
-    std::vector<std::pair<size_t, double>> dl_initial_guess(std::vector<Determinant>& old_dets,
-                                                            std::vector<Determinant>& dets,
-                                                            psi::SharedMatrix& evecs, int nroot);
-
-    //    int david2(double **A, int N, int M, double *eps, double **v,double
-    //    cutoff, int print);
-    //    /// Perform a Davidson-Liu diagonalization
-    //    void davidson_liu(psi::SharedMatrix H,psi::SharedVector Eigenvalues,psi::SharedMatrix
-    //    Eigenvectors,int nroots);
-
-    //    /// Perform a Davidson-Liu diagonalization on a sparse matrix
-    //    bool davidson_liu_sparse(std::vector<std::vector<std::pair<int,double>
-    //    > > H_sparse,psi::SharedVector Eigenvalues,psi::SharedMatrix Eigenvectors,int
-    //    nroots);
 };
 
 } // namespace forte

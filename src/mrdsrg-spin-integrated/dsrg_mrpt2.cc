@@ -1505,7 +1505,7 @@ void DSRG_MRPT2::compute_dm1d_pt2(BlockedTensor& M, double& Mbar0, BlockedTensor
     //    for (const std::string& block: {"RESTRICTED_DOCC", "ACTIVE", "RESTRICTED_UOCC"}) {
     //        size_t size = mo_space_info_->size(block);
     //        for (size_t i = 0; i < size; ++i) {
-    //            momap[mo_space_info_->get_corr_abs_mo(block)[i]] =
+    //            momap[mo_space_info_->corr_absolute_mo(block)[i]] =
     //            mo_space_info_->get_relative_mo(block)[i];
     //        }
     //    }
@@ -2642,13 +2642,13 @@ std::vector<std::vector<double>> DSRG_MRPT2::diagonalize_Fock_diagblocks(Blocked
 
     // map MO space label to its psi::Dimension
     std::map<std::string, psi::Dimension> MOlabel_to_dimension;
-    MOlabel_to_dimension[acore_label_] = mo_space_info_->get_dimension("RESTRICTED_DOCC");
-    MOlabel_to_dimension[aactv_label_] = mo_space_info_->get_dimension("ACTIVE");
-    MOlabel_to_dimension[avirt_label_] = mo_space_info_->get_dimension("RESTRICTED_UOCC");
+    MOlabel_to_dimension[acore_label_] = mo_space_info_->dimension("RESTRICTED_DOCC");
+    MOlabel_to_dimension[aactv_label_] = mo_space_info_->dimension("ACTIVE");
+    MOlabel_to_dimension[avirt_label_] = mo_space_info_->dimension("RESTRICTED_UOCC");
 
     // eigen values to be returned
     size_t ncmo = mo_space_info_->size("CORRELATED");
-    psi::Dimension corr = mo_space_info_->get_dimension("CORRELATED");
+    psi::Dimension corr = mo_space_info_->dimension("CORRELATED");
     std::vector<double> eigenvalues_a(ncmo, 0.0);
     std::vector<double> eigenvalues_b(ncmo, 0.0);
 
@@ -2656,9 +2656,9 @@ std::vector<std::vector<double>> DSRG_MRPT2::diagonalize_Fock_diagblocks(Blocked
     std::map<std::string, psi::Dimension> MOlabel_to_offset_dimension;
     int nirrep = corr.n();
     MOlabel_to_offset_dimension["c"] = psi::Dimension(std::vector<int>(nirrep, 0));
-    MOlabel_to_offset_dimension["a"] = mo_space_info_->get_dimension("RESTRICTED_DOCC");
+    MOlabel_to_offset_dimension["a"] = mo_space_info_->dimension("RESTRICTED_DOCC");
     MOlabel_to_offset_dimension["v"] =
-        mo_space_info_->get_dimension("RESTRICTED_DOCC") + mo_space_info_->get_dimension("ACTIVE");
+        mo_space_info_->dimension("RESTRICTED_DOCC") + mo_space_info_->dimension("ACTIVE");
 
     // figure out index
     auto fill_eigen = [&](std::string block_label, int irrep, std::vector<double> values) {

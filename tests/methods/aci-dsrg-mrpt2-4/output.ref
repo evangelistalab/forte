@@ -3,7 +3,7 @@
           Psi4: An Open-Source Ab Initio Electronic Structure Package
                                Psi4 undefined 
 
-                         Git: Rev {master} 3c26e8e 
+                         Git: Rev {mints_oei} 4aa373e 
 
 
     R. M. Parrish, L. A. Burns, D. G. A. Smith, A. C. Simmonett,
@@ -17,16 +17,17 @@
 
 
                          Additional Contributions by
-    P. Kraus, H. Kruse, M. H. Lechner, M. C. Schieber, and R. A. Shaw
+    P. Kraus, H. Kruse, M. H. Lechner, M. C. Schieber, R. A. Shaw,
+    A. Alenaizan, R. Galvelis, Z. L. Glick, S. Lehtola, and J. P. Misiewicz
 
     -----------------------------------------------------------------------
 
 
-    Psi4 started on: Thursday, 25 October 2018 03:45PM
+    Psi4 started on: Sunday, 19 January 2020 05:48PM
 
-    Process ID: 92224
-    Host:       jeffschriber
-    PSIDATADIR: /Users/jeffschriber/src/psi4-debug-install/share/psi4
+    Process ID: 82218
+    Host:       CHE-FEVANGE-01I (2)
+    PSIDATADIR: /Users/fevange/Source/psi4/objdir-Debug/stage/share/psi4
     Memory:     500.0 MiB
     Threads:    1
     
@@ -38,7 +39,7 @@ import forte
 memory 2 gb
 
 escf = -304.9057795504939463
-eaci = -305.390029668114892 
+eaci = -305.39002965581
 
 molecule ene2{
 0 1
@@ -82,30 +83,29 @@ set {
 set forte {
   multiplicity 1
   int_type df
-  job_type three-dsrg-mrpt2
+  correlation_solver three-dsrg-mrpt2
+  active_space_solver  aci
   frozen_docc      [8]
   restricted_docc  [17]
   active           [8]
-  cas_type aci
   sigma 0.001
   diag_algorithm dynamic
-  aci_direct_rdms true
+  sci_direct_rdms true
   aci_batched_screening true
   aci_nbatch 4
   nroot 1
   root_sym 0
   charge 0
-  print_no true
 }
 
 set_num_threads(8)
 
 e, scf_wfn = energy('scf', return_wfn=True)
 
-compare_values(escf,get_variable("CURRENT ENERGY"), 9, "SCF energy") 
+compare_values(escf,variable("CURRENT ENERGY"), 9, "SCF energy") 
 
 energy('forte', ref_wfn=scf_wfn)
-compare_values(eaci,get_variable("CURRENT ENERGY"), 9, "ACI-DSRG-MRPT2 energy") 
+compare_values(eaci,variable("CURRENT ENERGY"), 9, "ACI-DSRG-MRPT2 energy") 
 
 
 
@@ -114,22 +114,24 @@ compare_values(eaci,get_variable("CURRENT ENERGY"), 9, "ACI-DSRG-MRPT2 energy")
   Memory set to   1.863 GiB by Python driver.
   Threads set to 8 by Python driver.
 
-*** tstart() called on jeffschriber
-*** at Thu Oct 25 15:45:39 2018
+Scratch directory: /tmp/
+
+*** tstart() called on CHE-FEVANGE-01I (2)
+*** at Sun Jan 19 17:48:08 2020
 
    => Loading Basis Set <=
 
     Name: STO-3G
     Role: ORBITAL
     Keyword: BASIS
-    atoms 1, 3, 5, 7, 10, 12, 14, 16      entry C          line    61 file /Users/jeffschriber/src/psi4-debug-install/share/psi4/basis/sto-3g.gbs 
-    atoms 2, 4, 6, 8-9, 11, 13, 15, 17-18 entry H          line    19 file /Users/jeffschriber/src/psi4-debug-install/share/psi4/basis/sto-3g.gbs 
+    atoms 1, 3, 5, 7, 10, 12, 14, 16      entry C          line    61 file /Users/fevange/Source/psi4/objdir-Debug/stage/share/psi4/basis/sto-3g.gbs 
+    atoms 2, 4, 6, 8-9, 11, 13, 15, 17-18 entry H          line    19 file /Users/fevange/Source/psi4/objdir-Debug/stage/share/psi4/basis/sto-3g.gbs 
 
 
          ---------------------------------------------------------
                                    SCF
-            by Justin Turney, Rob Parrish, Andy Simmonett
-                             and Daniel Smith
+               by Justin Turney, Rob Parrish, Andy Simmonett
+                          and Daniel G. A. Smith
                               RHF Reference
                         8 Threads,   1907 MiB Core
          ---------------------------------------------------------
@@ -144,29 +146,29 @@ compare_values(eaci,get_variable("CURRENT ENERGY"), 9, "ACI-DSRG-MRPT2 energy")
        Center              X                  Y                   Z               Mass       
     ------------   -----------------  -----------------  -----------------  -----------------
          C            0.335863347908    -0.638024351991     0.000000000207    12.000000000000
-         H            1.432938644893    -0.620850793123     0.000000000280     1.007825032070
+         H            1.432938644893    -0.620850793123     0.000000000280     1.007825032230
          C           -0.296842800370    -1.839541056853     0.000000000164    12.000000000000
-         H           -1.393739522764    -1.860704439495     0.000000000280     1.007825032070
+         H           -1.393739522764    -1.860704439495     0.000000000280     1.007825032230
          C            0.383204758655    -3.118962138239     0.000000000233    12.000000000000
-         H            1.479554406702    -3.087254985300     0.000000001289     1.007825032070
+         H            1.479554406702    -3.087254985300     0.000000001289     1.007825032230
          C           -0.237579194060    -4.313790051647    -0.000000000740    12.000000000000
-         H            0.325161338012    -5.249189944735    -0.000000000503     1.007825032070
-         H           -1.329245280272    -4.386987205251    -0.000000001655     1.007825032070
+         H            0.325161338012    -5.249189944735    -0.000000000503     1.007825032230
+         H           -1.329245280272    -4.386987205251    -0.000000001655     1.007825032230
          C           -0.335863360640     0.638024352182     0.000000000468    12.000000000000
-         H           -1.432938656420     0.620850793004     0.000000000922     1.007825032070
+         H           -1.432938656420     0.620850793004     0.000000000922     1.007825032230
          C            0.296842792408     1.839541055584     0.000000000041    12.000000000000
-         H            1.393739512934     1.860704430863    -0.000000000539     1.007825032070
+         H            1.393739512934     1.860704430863    -0.000000000539     1.007825032230
          C           -0.383204755743     3.118962141979     0.000000000141    12.000000000000
-         H           -1.479554404938     3.087254999541     0.000000000472     1.007825032070
+         H           -1.479554404938     3.087254999541     0.000000000472     1.007825032230
          C            0.237579209937     4.313790049182    -0.000000000431    12.000000000000
-         H            1.329245296894     4.386987192215    -0.000000001010     1.007825032070
-         H           -0.325161312367     5.249189949931    -0.000000000534     1.007825032070
+         H            1.329245296894     4.386987192215    -0.000000001010     1.007825032230
+         H           -0.325161312367     5.249189949931    -0.000000000534     1.007825032230
 
   Running in c1 symmetry.
 
   Rotational constants: A =      0.65101  B =      0.01889  C =      0.01836 [cm^-1]
   Rotational constants: A =  19516.70371  B =    566.30750  C =    550.33857 [MHz]
-  Nuclear repulsion =  296.638713598584616
+  Nuclear repulsion =  296.638713598584559
 
   Charge       = 0
   Multiplicity = 1
@@ -200,8 +202,8 @@ compare_values(eaci,get_variable("CURRENT ENERGY"), 9, "ACI-DSRG-MRPT2 energy")
     Name: CC-PVDZ-JKFIT
     Role: JKFIT
     Keyword: DF_BASIS_SCF
-    atoms 1, 3, 5, 7, 10, 12, 14, 16      entry C          line   121 file /Users/jeffschriber/src/psi4-debug-install/share/psi4/basis/cc-pvdz-jkfit.gbs 
-    atoms 2, 4, 6, 8-9, 11, 13, 15, 17-18 entry H          line    51 file /Users/jeffschriber/src/psi4-debug-install/share/psi4/basis/cc-pvdz-jkfit.gbs 
+    atoms 1, 3, 5, 7, 10, 12, 14, 16      entry C          line   121 file /Users/fevange/Source/psi4/objdir-Debug/stage/share/psi4/basis/cc-pvdz-jkfit.gbs 
+    atoms 2, 4, 6, 8-9, 11, 13, 15, 17-18 entry H          line    51 file /Users/fevange/Source/psi4/objdir-Debug/stage/share/psi4/basis/cc-pvdz-jkfit.gbs 
 
   ==> Pre-Iterations <==
 
@@ -215,7 +217,7 @@ compare_values(eaci,get_variable("CURRENT ENERGY"), 9, "ACI-DSRG-MRPT2 energy")
 
   ==> Integral Setup <==
 
-  DFHelper Memory: AOs need 0.014 GiB; user supplied 1.397 GiB. Using in-core AOs.
+  DFHelper Memory: AOs need 0.019 GiB; user supplied 1.397 GiB. Using in-core AOs.
 
   ==> MemDFJK: Density-Fitted J/K Matrices <==
 
@@ -227,7 +229,7 @@ compare_values(eaci,get_variable("CURRENT ENERGY"), 9, "ACI-DSRG-MRPT2 energy")
     Algorithm:                 Core
     Schwarz Cutoff:           1E-12
     Mask sparsity (%):       9.0400
-    Fitting Condition:        1E-12
+    Fitting Condition:        1E-10
 
    => Auxiliary Basis Set <=
 
@@ -240,30 +242,28 @@ compare_values(eaci,get_variable("CURRENT ENERGY"), 9, "ACI-DSRG-MRPT2 energy")
     Max angular momentum: 3
 
   Minimum eigenvalue in the overlap matrix is 1.8898432078E-01.
-  Using Symmetric Orthogonalization.
-
+    Using symmetric orthogonalization.
   SCF Guess: Superposition of Atomic Densities via on-the-fly atomic UHF.
 
   ==> Iterations <==
 
                            Total Energy        Delta E     RMS |[F,P]|
 
-   @DF-RHF iter   0:  -306.83632951290400   -3.06836e+02   8.48524e-02 
-   @DF-RHF iter   1:  -304.85805473161258    1.97827e+00   4.33264e-03 
-   @DF-RHF iter   2:  -304.89993859393348   -4.18839e-02   1.44204e-03 DIIS
-   @DF-RHF iter   3:  -304.90464026200641   -4.70167e-03   6.04253e-04 DIIS
-   @DF-RHF iter   4:  -304.90568025287564   -1.03999e-03   1.38889e-04 DIIS
-   @DF-RHF iter   5:  -304.90577357652796   -9.33237e-05   3.35095e-05 DIIS
-   @DF-RHF iter   6:  -304.90577925963220   -5.68310e-06   8.71153e-06 DIIS
-   @DF-RHF iter   7:  -304.90577951435745   -2.54725e-07   3.06779e-06 DIIS
-   @DF-RHF iter   8:  -304.90577954332326   -2.89658e-08   1.28115e-06 DIIS
-   @DF-RHF iter   9:  -304.90577955035678   -7.03352e-09   1.63144e-07 DIIS
-   @DF-RHF iter  10:  -304.90577955049019   -1.33412e-10   2.75656e-08 DIIS
-   @DF-RHF iter  11:  -304.90577955049400   -3.80851e-12   5.90119e-09 DIIS
-   @DF-RHF iter  12:  -304.90577955049423   -2.27374e-13   1.58505e-09 DIIS
-   @DF-RHF iter  13:  -304.90577955049378    4.54747e-13   3.28090e-10 DIIS
-   @DF-RHF iter  14:  -304.90577955049389   -1.13687e-13   4.18493e-11 DIIS
-  Energy converged.
+   @DF-RHF iter SAD:  -298.84537634299329   -2.98845e+02   0.00000e+00 
+   @DF-RHF iter   1:  -304.88498515521587   -6.03961e+00   2.57412e-03 DIIS
+   @DF-RHF iter   2:  -304.90316313978059   -1.81780e-02   7.56006e-04 DIIS
+   @DF-RHF iter   3:  -304.90539663871340   -2.23350e-03   3.32911e-04 DIIS
+   @DF-RHF iter   4:  -304.90573394126045   -3.37303e-04   8.71046e-05 DIIS
+   @DF-RHF iter   5:  -304.90577839002668   -4.44488e-05   1.42895e-05 DIIS
+   @DF-RHF iter   6:  -304.90577953973468   -1.14971e-06   1.89821e-06 DIIS
+   @DF-RHF iter   7:  -304.90577954993370   -1.01990e-08   4.96180e-07 DIIS
+   @DF-RHF iter   8:  -304.90577955049093   -5.57236e-10   1.92489e-07 DIIS
+   @DF-RHF iter   9:  -304.90577955056858   -7.76481e-11   6.81505e-08 DIIS
+   @DF-RHF iter  10:  -304.90577955058234   -1.37561e-11   1.25982e-08 DIIS
+   @DF-RHF iter  11:  -304.90577955058285   -5.11591e-13   1.52489e-09 DIIS
+   @DF-RHF iter  12:  -304.90577955058302   -1.70530e-13   2.06578e-10 DIIS
+   @DF-RHF iter  13:  -304.90577955058291    1.13687e-13   2.74671e-11 DIIS
+  Energy and wave function converged.
 
 
   ==> Post-Iterations <==
@@ -298,14 +298,14 @@ compare_values(eaci,get_variable("CURRENT ENERGY"), 9, "ACI-DSRG-MRPT2 energy")
               A 
     DOCC [    29 ]
 
-  @DF-RHF Final Energy:  -304.90577955049389
+  @DF-RHF Final Energy:  -304.90577955058291
 
    => Energetics <=
 
-    Nuclear Repulsion Energy =            296.6387135985846157
-    One-Electron Energy =               -1000.9691385375917889
-    Two-Electron Energy =                 399.4246453885132269
-    Total Energy =                       -304.9057795504938895
+    Nuclear Repulsion Energy =            296.6387135985845589
+    One-Electron Energy =               -1000.9691385412065756
+    Two-Electron Energy =                 399.4246453920391104
+    Total Energy =                       -304.9057795505829063
 
 Computation Completed
 
@@ -327,56 +327,54 @@ Properties computed using the SCF density matrix
      X:     0.0000      Y:     0.0000      Z:     0.0000     Total:     0.0000
 
 
-*** tstop() called on jeffschriber at Thu Oct 25 15:45:43 2018
+*** tstop() called on CHE-FEVANGE-01I (2) at Sun Jan 19 17:48:10 2020
 Module time:
-	user time   =       5.58 seconds =       0.09 minutes
-	system time =       2.73 seconds =       0.05 minutes
-	total time  =          4 seconds =       0.07 minutes
+	user time   =       4.32 seconds =       0.07 minutes
+	system time =       0.83 seconds =       0.01 minutes
+	total time  =          2 seconds =       0.03 minutes
 Total time:
-	user time   =       5.58 seconds =       0.09 minutes
-	system time =       2.73 seconds =       0.05 minutes
-	total time  =          4 seconds =       0.07 minutes
-	SCF energy........................................................PASSED
+	user time   =       4.32 seconds =       0.07 minutes
+	system time =       0.83 seconds =       0.01 minutes
+	total time  =          2 seconds =       0.03 minutes
+    SCF energy........................................................PASSED
+
+Scratch directory: /tmp/
    => Loading Basis Set <=
 
     Name: CC-PVDZ-RI
     Role: RIFIT
     Keyword: DF_BASIS_MP2
-    atoms 1, 3, 5, 7, 10, 12, 14, 16      entry C          line   159 file /Users/jeffschriber/src/psi4-debug-install/share/psi4/basis/cc-pvdz-ri.gbs 
-    atoms 2, 4, 6, 8-9, 11, 13, 15, 17-18 entry H          line    19 file /Users/jeffschriber/src/psi4-debug-install/share/psi4/basis/cc-pvdz-ri.gbs 
+    atoms 1, 3, 5, 7, 10, 12, 14, 16      entry C          line   159 file /Users/fevange/Source/psi4/objdir-Debug/stage/share/psi4/basis/cc-pvdz-ri.gbs 
+    atoms 2, 4, 6, 8-9, 11, 13, 15, 17-18 entry H          line    19 file /Users/fevange/Source/psi4/objdir-Debug/stage/share/psi4/basis/cc-pvdz-ri.gbs 
 
    => Loading Basis Set <=
 
     Name: STO-3G
     Role: ORBITAL
     Keyword: MINAO_BASIS
-    atoms 1, 3, 5, 7, 10, 12, 14, 16      entry C          line    61 file /Users/jeffschriber/src/psi4-debug-install/share/psi4/basis/sto-3g.gbs 
-    atoms 2, 4, 6, 8-9, 11, 13, 15, 17-18 entry H          line    19 file /Users/jeffschriber/src/psi4-debug-install/share/psi4/basis/sto-3g.gbs 
-
-
-Reading options from the FORTE block
-Calling plugin forte.so.
-
+    atoms 1, 3, 5, 7, 10, 12, 14, 16      entry C          line    61 file /Users/fevange/Source/psi4/objdir-Debug/stage/share/psi4/basis/sto-3g.gbs 
+    atoms 2, 4, 6, 8-9, 11, 13, 15, 17-18 entry H          line    19 file /Users/fevange/Source/psi4/objdir-Debug/stage/share/psi4/basis/sto-3g.gbs 
 
 
   Forte
   ----------------------------------------------------------------------------
   A suite of quantum chemistry methods for strongly correlated electrons
 
-    git branch: master - git commit: 9480afcf
+    git branch: onedet - git commit: f245d93e
 
   Developed by:
     Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
-    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai
+    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai,
+    Nan He, Nicholas Stair, Shuhe Wang, Renke Huang
   ----------------------------------------------------------------------------
 
-  Size of Determinant class: 16
-
-  ==> MO Space Information <==
-
+  Size of Determinant class: 256 bits
   Read options for space FROZEN_DOCC
   Read options for space RESTRICTED_DOCC
   Read options for space ACTIVE
+
+  ==> MO Space Information <==
+
   -------------------------------
                         A   Sum
   -------------------------------
@@ -401,25 +399,47 @@ Calling plugin forte.so.
 
   Number of auxiliary basis functions:  588
   Need 11.76 MB to store DF integrals
-  DFHelper Memory: AOs need 0.010 GiB; user supplied 1.907 GiB. Using in-core AOs.
+  DFHelper Memory: AOs need 0.013 GiB; user supplied 1.907 GiB. Using in-core AOs.
 
 
   Transforming DF Integrals            ......Done.
-  Timing for density-fitting transformation:                  0.066 s.
-  DFHelper Memory: AOs need 0.011 GiB; user supplied 11.921 GiB. Using in-core AOs.
+  Timing for density-fitting transformation:                  0.077 s.
+  DFHelper Memory: AOs need 0.013 GiB; user supplied 11.921 GiB. Using in-core AOs.
 
 
-  Frozen-core energy           -397.044912338556 a.u.
-  Timing for frozen one-body operator:                        0.848 s.
+  Frozen-core energy           -397.044912338559 a.u.
+  Timing for frozen one-body operator:                        0.521 s.
   Resorting integrals after freezing core.
-  Timing for resorting DF integrals:                          0.064 s.
-  Timing for freezing core and virtual orbitals:              0.915 s.
-  Timing for computing density-fitted integrals:              2.023 s.
-  Number of active alpha electrons: 4
-  Number of active beta electrons: 4
-  Maximum reference space size: 1000
-  Number of reference determinants: 225
-  Reference generated from 7 MOs
+  Timing for resorting DF integrals:                          0.048 s.
+  Timing for freezing core and virtual orbitals:              0.571 s.
+  Timing for computing density-fitted integrals:              1.455 s.
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.  Nstates
+    -------------------------
+       A       1        1
+    -------------------------
+    Total number of states: 1
+    -------------------------
+
+
+-------------------------------------------------------------------------------
+               Selected Configuration Interaction Excited States
+  written by Jeffrey B. Schriber, Tianyuan Zhang and Francesco A. Evangelista
+-------------------------------------------------------------------------------
+
+  ==> Reference Information <==
+
+  ==> Calculation Information <==
+
+  -----------------------------------------------------------------
+    Multiplicity                             1    
+    Symmetry                                 0    
+    Number of roots                          1    
+    Ms                                       0
+    Excited Algorithm                        NONE
+  -----------------------------------------------------------------
 
         ---------------------------------------------------------------
                       Adaptive Configuration Interaction
@@ -445,13 +465,16 @@ Calling plugin forte.so.
     Diagonalization algorithm                DYNAMIC
     Determinant selection criterion          Second-order Energy
     Selection criterion                      Aimed selection
-    Excited Algorithm                        ROOT_ORTHOGONALIZE
+    Excited Algorithm                        NONE
     Project out spin contaminants            True
     Enforce spin completeness of basis       True
     Enforce complete aimed selection         True
   -----------------------------------------------------------------
-  Using 8 threads
-  Computing wavefunction for root 0
+  Number of active alpha electrons: 4
+  Number of active beta electrons: 4
+  Maximum reference space size: 1000
+  Number of reference determinants: 225
+  Reference generated from 7 MOs
   Using streamlined Q-space builder.
 
   ==> Cycle 0 <==
@@ -462,7 +485,7 @@ Calling plugin forte.so.
   Davidson-Liu solver algorithm with dynamic sigma builds
 
  SigmaVectorDynamic:
- Maximum memory   : 10000000 double
+ Maximum memory   : 67108864 double
  Number of threads: 8
 
   Initial guess space is incomplete!
@@ -475,80 +498,90 @@ Calling plugin forte.so.
 
   ==> Diagonalizing Hamiltonian <==
 
-  ----------------------------------------
-    Iter.      Avg. Energy       Delta_E
-  ----------------------------------------
-      1     -405.500712739363  -4.055e+02
-      2     -405.504333228431  -3.620e-03
-      3     -405.504512514239  -1.793e-04
-      4     -405.504533523485  -2.101e-05
-      5     -405.504538590759  -5.067e-06
-      6     -405.504538914385  -3.236e-07
-      7     -405.504538953078  -3.869e-08
-      8     -405.504538960440  -7.362e-09
-      9     -405.504538962257  -1.817e-09
-     10     -405.504538962485  -2.285e-10
-     11     -405.504538962516  -3.035e-11
-  ----------------------------------------
-  The Davidson-Liu algorithm converged in 12 iterations.
-  Davidson-Liu procedure took  0.042398 s
-  Time spent diagonalizing H:   0.333877 s
+  -----------------------------------------------------
+    Iter.      Avg. Energy       Delta_E     Res. Norm
+  -----------------------------------------------------
+      1     -405.500712739437  -4.055e+02  +6.852e-02
+      2     -405.504333228492  -3.620e-03  +1.537e-02
+      3     -405.504512514299  -1.793e-04  +4.760e-03
+      4     -405.504536666255  -2.415e-05  +1.538e-03
+      5     -405.504538601666  -1.935e-06  +5.807e-04
+      6     -405.504538911198  -3.095e-07  +2.476e-04
+      7     -405.504538958667  -4.747e-08  +6.718e-05
+      8     -405.504538962106  -3.438e-09  +2.200e-05
+      9     -405.504538962509  -4.035e-10  +8.295e-06
+     10     -405.504538962574  -6.480e-11  +3.228e-06
+     11     -405.504538962583  -8.811e-12  +1.227e-06
+     12     -405.504538962584  -1.307e-12  +5.296e-07
+     13     -405.504538962584  -4.547e-13  +1.877e-07
+     14     -405.504538962584  +0.000e+00  +6.501e-08
+     15     -405.504538962584  +0.000e+00  +2.302e-08
+     16     -405.504538962584  +2.274e-13  +9.686e-09
+     17     -405.504538962584  +0.000e+00  +3.850e-09
+     18     -405.504538962584  +0.000e+00  +1.615e-09
+     19     -405.504538962584  -1.137e-13  +6.058e-10
+     20     -405.504538962584  +5.684e-14  +2.204e-10
+     21     -405.504538962584  -1.137e-13  +7.605e-11
+  -----------------------------------------------------
+  The Davidson-Liu algorithm converged in 22 iterations.
+  Davidson-Liu procedure took  0.052330 s
+  Time spent diagonalizing H:   1.301689 s
 
-    P-space  CI Energy Root   0        = -304.961117486801 Eh =   0.0000 eV
+    P-space  CI Energy Root   0        = -304.961117486799 Eh =   0.0000 eV
 
   Using batched Q_space algorithm
-  Setting nbin to 1 based on estimated memory ( 1.331 MB)
+  Setting nbin to 1 based on estimated memory ( 2.621 MB)
   Overwriting nbin to 4 based on user input
  -----------------------------------------
                 Bin 0
-  Build: 0.005869
-  Merge: 0.000079
-    Build F                  0.006554 
-    Build criteria vector    0.000296
-    Sort vector              0.000104
-    Screening                0.000018
-    Added 122 dets of 717 from bin 0
+  Build: 0.002678
+  Merge: 0.003611
+    Build F                  0.006734 
+    Build criteria vector    0.000404
+    Sort vector              0.000174
+    Screening                0.000017
+    Added 75 dets of 701 from bin 0
                 Bin 1
-  Build: 0.001368
-  Merge: 0.001801
-    Build F                  0.003586 
-    Build criteria vector    0.000232
-    Sort vector              0.000073
-    Screening                0.000010
-    Added 205 dets of 560 from bin 1
+  Build: 0.002555
+  Merge: 0.003409
+    Build F                  0.006375 
+    Build criteria vector    0.000376
+    Sort vector              0.000164
+    Screening                0.000012
+    Added 178 dets of 706 from bin 1
                 Bin 2
-  Build: 0.001283
-  Merge: 0.001958
-    Build F                  0.003559 
-    Build criteria vector    0.000322
-    Sort vector              0.000091
-    Screening                0.000006
-    Added 232 dets of 645 from bin 2
+  Build: 0.002499
+  Merge: 0.002957
+    Build F                  0.005838 
+    Build criteria vector    0.000367
+    Sort vector              0.000148
+    Screening                0.000012
+    Added 260 dets of 680 from bin 2
                 Bin 3
-  Build: 0.002329
-  Merge: 0.001172
-    Build F                  0.003958 
-    Build criteria vector    0.000335
-    Sort vector              0.000116
-    Screening                0.000014
-    Added 347 dets of 834 from bin 3
+  Build: 0.002136
+  Merge: 0.003690
+    Build F                  0.006191 
+    Build criteria vector    0.000344
+    Sort vector              0.000144
+    Screening                0.000008
+    Added 344 dets of 671 from bin 3
  ------------------------------------
-  Screened out 0.0004929198 Eh of correlation
-  Dimension of the truncated SD space: 347 determinants
-  Time spent building the external space (default): 0.020490 s
+  Screened out 0.0004927680 Eh of correlation
+  Dimension of the truncated SD space: 344 determinants
+  Time spent building the external space (default): 0.027612 s
 
-  Time spent sorting: 0.000057
+  Time spent sorting: 0.000101
   Added 1 missing determinants in aimed selection.
-  Time spent selecting: 0.000090
+  Time spent selecting: 0.000088
   Dimension of the P + Q space: 464 determinants
-  Time spent screening the model space: 0.000159 s
-  Time spent building the model space: 0.021295
+  Time spent screening the model space: 0.000103 s
+  Time spent building the model space: 0.027863
   Spin-complete dimension of the PQ space: 620
 
   Davidson-Liu solver algorithm with dynamic sigma builds
 
  SigmaVectorDynamic:
- Maximum memory   : 10000000 double
+ Maximum memory   : 67108864 double
  Number of threads: 8
 
   Initial guess space is incomplete!
@@ -561,48 +594,63 @@ Calling plugin forte.so.
 
   ==> Diagonalizing Hamiltonian <==
 
-  ----------------------------------------
-    Iter.      Avg. Energy       Delta_E
-  ----------------------------------------
-      1     -405.530961001277  -4.055e+02
-      2     -405.605069421735  -7.411e-02
-      3     -405.610720485442  -5.651e-03
-      4     -405.611593813469  -8.733e-04
-      5     -405.611850395995  -2.566e-04
-      6     -405.611877849067  -2.745e-05
-      7     -405.611886342814  -8.494e-06
-      8     -405.611888125507  -1.783e-06
-      9     -405.611888604729  -4.792e-07
-     10     -405.611888703203  -9.847e-08
-     11     -405.611888729831  -2.663e-08
-     12     -405.611888736613  -6.782e-09
-     13     -405.611888738773  -2.160e-09
-     14     -405.611888739362  -5.896e-10
-     15     -405.611888739529  -1.667e-10
-     16     -405.611888739578  -4.934e-11
-  ----------------------------------------
-  The Davidson-Liu algorithm converged in 17 iterations.
-  Davidson-Liu procedure took  0.067442 s
-  Total time spent diagonalizing H:   0.351128 s
+  -----------------------------------------------------
+    Iter.      Avg. Energy       Delta_E     Res. Norm
+  -----------------------------------------------------
+      1     -405.530961001376  -4.055e+02  +2.685e-01
+      2     -405.605069421828  -7.411e-02  +9.286e-02
+      3     -405.610720485537  -5.651e-03  +3.958e-02
+      4     -405.611750782630  -1.030e-03  +1.192e-02
+      5     -405.611846637266  -9.585e-05  +5.954e-03
+      6     -405.611879961347  -3.332e-05  +3.088e-03
+      7     -405.611887246319  -7.285e-06  +1.184e-03
+      8     -405.611888354468  -1.108e-06  +5.989e-04
+      9     -405.611888680613  -3.261e-07  +2.413e-04
+     10     -405.611888724143  -4.353e-08  +1.166e-04
+     11     -405.611888734452  -1.031e-08  +6.504e-05
+     12     -405.611888738734  -4.282e-09  +3.022e-05
+     13     -405.611888739477  -7.433e-10  +1.484e-05
+     14     -405.611888739638  -1.604e-10  +7.091e-06
+     15     -405.611888739684  -4.644e-11  +2.955e-06
+     16     -405.611888739691  -7.105e-12  +1.672e-06
+     17     -405.611888739693  -2.046e-12  +9.219e-07
+     18     -405.611888739694  -8.527e-13  +4.369e-07
+     19     -405.611888739695  -3.979e-13  +2.279e-07
+     20     -405.611888739695  +0.000e+00  +1.047e-07
+     21     -405.611888739695  +0.000e+00  +4.469e-08
+     22     -405.611888739695  +1.137e-13  +2.674e-08
+     23     -405.611888739695  +0.000e+00  +1.456e-08
+     24     -405.611888739695  +5.684e-14  +6.969e-09
+     25     -405.611888739694  +1.705e-13  +3.746e-09
+     26     -405.611888739694  -5.684e-14  +1.709e-09
+     27     -405.611888739694  +1.137e-13  +7.298e-10
+     28     -405.611888739695  -4.547e-13  +4.441e-10
+     29     -405.611888739695  +0.000e+00  +2.393e-10
+     30     -405.611888739695  -1.137e-13  +1.154e-10
+     31     -405.611888739695  +1.137e-13  +6.292e-11
+  -----------------------------------------------------
+  The Davidson-Liu algorithm converged in 32 iterations.
+  Davidson-Liu procedure took  0.103106 s
+  Total time spent diagonalizing H:   1.378476 s
 
-    PQ-space CI Energy Root   0        = -305.068467263864 Eh =   0.0000 eV
-    PQ-space CI Energy + EPT2 Root   0 = -305.069462403895 Eh =   0.0000 eV
+    PQ-space CI Energy Root   0        = -305.068467263910 Eh =   0.0000 eV
+    PQ-space CI Energy + EPT2 Root   0 = -305.069462402963 Eh =   0.0000 eV
 
 
   Most important contributions to root   0:
-    0   0.880772 0.775760115         224 |22220000>
-    1  -0.199099 0.039640603         208 |22202000>
-    2   0.105304 0.011088828         189 |22+--+00>
-    3   0.105304 0.011088828         147 |22-++-00>
-    4  -0.095393 0.009099914         128 |22020200>
-    5  -0.077741 0.006043605         460 |2+2--0+0>
-    6  -0.077741 0.006043605         459 |2-2++0-0>
-    7   0.076980 0.005925963         461 |-22++00->
-    8   0.076980 0.005925963         462 |+22--00+>
-    9   0.073502 0.005402473         203 |22+-+-00>
+    0   0.880772 0.775759663         224 |22220000>
+    1  -0.199099 0.039640384         208 |22202000>
+    2   0.105305 0.011089082         147 |22-++-00>
+    3   0.105305 0.011089082         189 |22+--+00>
+    4  -0.095394 0.009100058         128 |22020200>
+    5  -0.077741 0.006043632         460 |2+2--0+0>
+    6  -0.077741 0.006043632         459 |2-2++0-0>
+    7   0.076980 0.005925970         462 |-22++00->
+    8   0.076980 0.005925970         461 |+22--00+>
+    9   0.073502 0.005402611         203 |22+-+-00>
 
   Spin state for root 0: S^2 = 0.000000, S = 0.000, singlet
-  Cycle 0 took: 0.717388 s
+  Cycle 0 took: 2.724090 s
 
   ==> Cycle 1 <==
 
@@ -612,7 +660,7 @@ Calling plugin forte.so.
   Davidson-Liu solver algorithm with dynamic sigma builds
 
  SigmaVectorDynamic:
- Maximum memory   : 10000000 double
+ Maximum memory   : 67108864 double
  Number of threads: 8
 
   Initial guess space is incomplete!
@@ -625,84 +673,95 @@ Calling plugin forte.so.
 
   ==> Diagonalizing Hamiltonian <==
 
-  ----------------------------------------
-    Iter.      Avg. Energy       Delta_E
-  ----------------------------------------
-      1     -405.567694482452  -4.056e+02
-      2     -405.606340410471  -3.865e-02
-      3     -405.610520630561  -4.180e-03
-      4     -405.611092264599  -5.716e-04
-      5     -405.611295216501  -2.030e-04
-      6     -405.611315565675  -2.035e-05
-      7     -405.611319299833  -3.734e-06
-      8     -405.611319983074  -6.832e-07
-      9     -405.611320170528  -1.875e-07
-     10     -405.611320204276  -3.375e-08
-     11     -405.611320211986  -7.710e-09
-     12     -405.611320213931  -1.945e-09
-     13     -405.611320214535  -6.036e-10
-     14     -405.611320214668  -1.332e-10
-     15     -405.611320214699  -3.121e-11
-  ----------------------------------------
-  The Davidson-Liu algorithm converged in 16 iterations.
-  Davidson-Liu procedure took  0.048332 s
-  Time spent diagonalizing H:   0.329903 s
+  -----------------------------------------------------
+    Iter.      Avg. Energy       Delta_E     Res. Norm
+  -----------------------------------------------------
+      1     -405.567694482532  -4.056e+02  +2.172e-01
+      2     -405.606340410562  -3.865e-02  +7.972e-02
+      3     -405.610520630653  -4.180e-03  +2.931e-02
+      4     -405.611174634345  -6.540e-04  +1.188e-02
+      5     -405.611281745987  -1.071e-04  +5.898e-03
+      6     -405.611315060091  -3.331e-05  +2.567e-03
+      7     -405.611319857622  -4.798e-06  +6.444e-04
+      8     -405.611320148559  -2.909e-07  +2.537e-04
+      9     -405.611320201824  -5.327e-08  +1.090e-04
+     10     -405.611320212457  -1.063e-08  +5.231e-05
+     11     -405.611320214263  -1.806e-09  +2.091e-05
+     12     -405.611320214704  -4.416e-10  +9.729e-06
+     13     -405.611320214785  -8.077e-11  +4.463e-06
+     14     -405.611320214799  -1.410e-11  +1.890e-06
+     15     -405.611320214802  -3.013e-12  +7.691e-07
+     16     -405.611320214803  -6.821e-13  +4.140e-07
+     17     -405.611320214803  -1.137e-13  +1.665e-07
+     18     -405.611320214803  -1.705e-13  +7.683e-08
+     19     -405.611320214803  -5.684e-14  +3.764e-08
+     20     -405.611320214803  -5.684e-14  +1.615e-08
+     21     -405.611320214803  +1.137e-13  +6.617e-09
+     22     -405.611320214803  -1.705e-13  +3.692e-09
+     23     -405.611320214803  +0.000e+00  +1.494e-09
+     24     -405.611320214803  -5.684e-14  +6.878e-10
+     25     -405.611320214803  +2.274e-13  +3.400e-10
+     26     -405.611320214803  -5.684e-14  +1.476e-10
+     27     -405.611320214803  +5.684e-14  +6.006e-11
+  -----------------------------------------------------
+  The Davidson-Liu algorithm converged in 28 iterations.
+  Davidson-Liu procedure took  0.065273 s
+  Time spent diagonalizing H:   1.331621 s
 
-    P-space  CI Energy Root   0        = -305.067898738985 Eh =   0.0000 eV
+    P-space  CI Energy Root   0        = -305.067898739018 Eh =   0.0000 eV
 
   Using batched Q_space algorithm
-  Setting nbin to 1 based on estimated memory ( 2.271 MB)
+  Setting nbin to 1 based on estimated memory ( 4.473 MB)
   Overwriting nbin to 4 based on user input
  -----------------------------------------
                 Bin 0
-  Build: 0.001855
-  Merge: 0.005985
-    Build F                  0.008678 
-    Build criteria vector    0.000399
-    Sort vector              0.000123
-    Screening                0.000023
-    Added 153 dets of 990 from bin 0
+  Build: 0.004905
+  Merge: 0.006735
+    Build F                  0.012534 
+    Build criteria vector    0.000556
+    Sort vector              0.000228
+    Screening                0.000025
+    Added 156 dets of 1011 from bin 0
                 Bin 1
-  Build: 0.003576
-  Merge: 0.002556
-    Build F                  0.006980 
-    Build criteria vector    0.000389
-    Sort vector              0.000126
+  Build: 0.005319
+  Merge: 0.004757
+    Build F                  0.010843 
+    Build criteria vector    0.000476
+    Sort vector              0.000195
     Screening                0.000017
-    Added 307 dets of 982 from bin 1
+    Added 324 dets of 968 from bin 1
                 Bin 2
-  Build: 0.002535
-  Merge: 0.003955
-    Build F                  0.007356 
-    Build criteria vector    0.000395
-    Sort vector              0.000117
+  Build: 0.004093
+  Merge: 0.005425
+    Build F                  0.010275 
+    Build criteria vector    0.000483
+    Sort vector              0.000204
     Screening                0.000013
-    Added 469 dets of 973 from bin 2
+    Added 471 dets of 975 from bin 2
                 Bin 3
-  Build: 0.002481
-  Merge: 0.003659
-    Build F                  0.006976 
-    Build criteria vector    0.000391
-    Sort vector              0.000127
-    Screening                0.000019
-    Added 625 dets of 987 from bin 3
+  Build: 0.004068
+  Merge: 0.005577
+    Build F                  0.010483 
+    Build criteria vector    0.000494
+    Sort vector              0.000189
+    Screening                0.000049
+    Added 624 dets of 978 from bin 3
  ------------------------------------
-  Screened out 0.0004954037 Eh of correlation
-  Dimension of the truncated SD space: 625 determinants
-  Time spent building the external space (default): 0.032589 s
+  Screened out 0.0004949257 Eh of correlation
+  Dimension of the truncated SD space: 624 determinants
+  Time spent building the external space (default): 0.047415 s
 
-  Time spent sorting: 0.000116
-  Added 2 missing determinants in aimed selection.
-  Time spent selecting: 0.000143
-  Dimension of the P + Q space: 853 determinants
-  Time spent screening the model space: 0.000162 s
-  Time spent building the model space: 0.032934
+  Time spent sorting: 0.000183
+  Time spent selecting: 0.000144
+  Dimension of the P + Q space: 851 determinants
+  Time spent screening the model space: 0.000158 s
+  Time spent building the model space: 0.047803
   Spin-complete dimension of the PQ space: 1207
 
   Davidson-Liu solver algorithm with dynamic sigma builds
 
  SigmaVectorDynamic:
- Maximum memory   : 10000000 double
+ Maximum memory   : 67108864 double
  Number of threads: 8
 
   Initial guess space is incomplete!
@@ -715,50 +774,66 @@ Calling plugin forte.so.
 
   ==> Diagonalizing Hamiltonian <==
 
-  ----------------------------------------
-    Iter.      Avg. Energy       Delta_E
-  ----------------------------------------
-      1     -405.564290373981  -4.056e+02
-      2     -405.611513385156  -4.722e-02
-      3     -405.619321611124  -7.808e-03
-      4     -405.620468850341  -1.147e-03
-      5     -405.620809256787  -3.404e-04
-      6     -405.620851203053  -4.195e-05
-      7     -405.620864074054  -1.287e-05
-      8     -405.620867670567  -3.597e-06
-      9     -405.620868928219  -1.258e-06
-     10     -405.620869250816  -3.226e-07
-     11     -405.620869348163  -9.735e-08
-     12     -405.620869377553  -2.939e-08
-     13     -405.620869389161  -1.161e-08
-     14     -405.620869392902  -3.741e-09
-     15     -405.620869394220  -1.318e-09
-     16     -405.620869394693  -4.732e-10
-     17     -405.620869394885  -1.919e-10
-     18     -405.620869394948  -6.344e-11
-  ----------------------------------------
-  The Davidson-Liu algorithm converged in 19 iterations.
-  Davidson-Liu procedure took  0.107582 s
-  Total time spent diagonalizing H:   0.394368 s
+  -----------------------------------------------------
+    Iter.      Avg. Energy       Delta_E     Res. Norm
+  -----------------------------------------------------
+      1     -405.564290374064  -4.056e+02  +2.403e-01
+      2     -405.611513385247  -4.722e-02  +1.118e-01
+      3     -405.619321611218  -7.808e-03  +4.844e-02
+      4     -405.620659077560  -1.337e-03  +1.639e-02
+      5     -405.620805328610  -1.463e-04  +7.926e-03
+      6     -405.620853896771  -4.857e-05  +4.566e-03
+      7     -405.620866885526  -1.299e-05  +1.846e-03
+      8     -405.620868680456  -1.795e-06  +1.045e-03
+      9     -405.620869250588  -5.701e-07  +4.173e-04
+     10     -405.620869358130  -1.075e-07  +2.000e-04
+     11     -405.620869381841  -2.371e-08  +1.077e-04
+     12     -405.620869391692  -9.851e-09  +6.731e-05
+     13     -405.620869394215  -2.523e-09  +3.543e-05
+     14     -405.620869394813  -5.980e-10  +1.850e-05
+     15     -405.620869395008  -1.951e-10  +8.491e-06
+     16     -405.620869395056  -4.809e-11  +4.851e-06
+     17     -405.620869395069  -1.296e-11  +2.499e-06
+     18     -405.620869395074  -4.832e-12  +1.498e-06
+     19     -405.620869395076  -1.648e-12  +8.293e-07
+     20     -405.620869395076  -3.411e-13  +4.181e-07
+     21     -405.620869395076  -2.274e-13  +1.904e-07
+     22     -405.620869395075  +7.958e-13  +1.183e-07
+     23     -405.620869395075  +5.684e-14  +5.982e-08
+     24     -405.620869395076  -1.137e-13  +3.569e-08
+     25     -405.620869395076  +0.000e+00  +2.062e-08
+     26     -405.620869395075  +5.684e-14  +1.033e-08
+     27     -405.620869395075  +5.684e-14  +4.708e-09
+     28     -405.620869395076  -5.116e-13  +3.014e-09
+     29     -405.620869395076  -5.684e-14  +1.528e-09
+     30     -405.620869395076  +1.137e-13  +9.083e-10
+     31     -405.620869395076  -2.274e-13  +5.330e-10
+     32     -405.620869395076  +0.000e+00  +2.667e-10
+     33     -405.620869395076  -5.684e-14  +1.213e-10
+     34     -405.620869395076  +5.684e-14  +7.866e-11
+  -----------------------------------------------------
+  The Davidson-Liu algorithm converged in 35 iterations.
+  Davidson-Liu procedure took  0.161627 s
+  Total time spent diagonalizing H:   1.435201 s
 
-    PQ-space CI Energy Root   0        = -305.077447919234 Eh =   0.0000 eV
-    PQ-space CI Energy + EPT2 Root   0 = -305.078444695680 Eh =   0.0000 eV
+    PQ-space CI Energy Root   0        = -305.077447919291 Eh =   0.0000 eV
+    PQ-space CI Energy + EPT2 Root   0 = -305.078444697756 Eh =   0.0000 eV
 
 
   Most important contributions to root   0:
-    0   0.868754 0.754733293         281 |22220000>
-    1  -0.194942 0.038002234         280 |22202000>
-    2   0.103959 0.010807434         278 |22-++-00>
-    3   0.103959 0.010807434         279 |22+--+00>
-    4  -0.093449 0.008732773         277 |22020200>
-    5   0.079629 0.006340719         273 |+22--00+>
-    6   0.079629 0.006340719         274 |-22++00->
-    7  -0.079087 0.006254694         275 |2-2++0-0>
-    8  -0.079087 0.006254694         276 |2+2--0+0>
-    9   0.075467 0.005695193         272 |22+-+-00>
+    0  -0.868753 0.754732264         281 |22220000>
+    1   0.194943 0.038002605         280 |22202000>
+    2  -0.103959 0.010807530         279 |22-++-00>
+    3  -0.103959 0.010807530         278 |22+--+00>
+    4   0.093448 0.008732464         277 |22020200>
+    5  -0.079629 0.006340714         274 |-22++00->
+    6  -0.079629 0.006340714         273 |+22--00+>
+    7   0.079086 0.006254642         275 |2+2--0+0>
+    8   0.079086 0.006254642         276 |2-2++0-0>
+    9  -0.075468 0.005695355         272 |22+-+-00>
 
   Spin state for root 0: S^2 = 0.000000, S = 0.000, singlet
-  Cycle 1 took: 0.770618 s
+  Cycle 1 took: 2.852927 s
 
   ==> Cycle 2 <==
 
@@ -768,7 +843,7 @@ Calling plugin forte.so.
   Davidson-Liu solver algorithm with dynamic sigma builds
 
  SigmaVectorDynamic:
- Maximum memory   : 10000000 double
+ Maximum memory   : 67108864 double
  Number of threads: 8
 
   Initial guess space is incomplete!
@@ -781,86 +856,101 @@ Calling plugin forte.so.
 
   ==> Diagonalizing Hamiltonian <==
 
-  ----------------------------------------
-    Iter.      Avg. Energy       Delta_E
-  ----------------------------------------
-      1     -405.564290373981  -4.056e+02
-      2     -405.611044885835  -4.675e-02
-      3     -405.618607502018  -7.563e-03
-      4     -405.619664129231  -1.057e-03
-      5     -405.619984705079  -3.206e-04
-      6     -405.620026210407  -4.151e-05
-      7     -405.620038558773  -1.235e-05
-      8     -405.620041704542  -3.146e-06
-      9     -405.620042649132  -9.446e-07
-     10     -405.620042866059  -2.169e-07
-     11     -405.620042927266  -6.121e-08
-     12     -405.620042943717  -1.645e-08
-     13     -405.620042949384  -5.666e-09
-     14     -405.620042951095  -1.711e-09
-     15     -405.620042951674  -5.790e-10
-     16     -405.620042951863  -1.888e-10
-     17     -405.620042951931  -6.798e-11
-  ----------------------------------------
-  The Davidson-Liu algorithm converged in 18 iterations.
-  Davidson-Liu procedure took  0.083622 s
-  Time spent diagonalizing H:   0.363802 s
+  -----------------------------------------------------
+    Iter.      Avg. Energy       Delta_E     Res. Norm
+  -----------------------------------------------------
+      1     -405.564290374064  -4.056e+02  +2.394e-01
+      2     -405.611044885925  -4.675e-02  +1.091e-01
+      3     -405.618607502111  -7.563e-03  +4.564e-02
+      4     -405.619830217769  -1.223e-03  +1.597e-02
+      5     -405.619976582912  -1.464e-04  +7.836e-03
+      6     -405.620029089455  -5.251e-05  +4.292e-03
+      7     -405.620041089249  -1.200e-05  +1.598e-03
+      8     -405.620042510477  -1.421e-06  +8.412e-04
+      9     -405.620042871824  -3.613e-07  +3.226e-04
+     10     -405.620042933636  -6.181e-08  +1.386e-04
+     11     -405.620042946000  -1.236e-08  +7.423e-05
+     12     -405.620042950666  -4.667e-09  +4.476e-05
+     13     -405.620042951742  -1.076e-09  +2.166e-05
+     14     -405.620042951968  -2.251e-10  +1.071e-05
+     15     -405.620042952034  -6.634e-11  +4.779e-06
+     16     -405.620042952050  -1.631e-11  +2.624e-06
+     17     -405.620042952054  -4.036e-12  +1.289e-06
+     18     -405.620042952056  -1.421e-12  +7.548e-07
+     19     -405.620042952056  -2.274e-13  +4.111e-07
+     20     -405.620042952056  -1.137e-13  +1.981e-07
+     21     -405.620042952056  +0.000e+00  +8.655e-08
+     22     -405.620042952056  +3.411e-13  +5.194e-08
+     23     -405.620042952056  +0.000e+00  +2.534e-08
+     24     -405.620042952056  +0.000e+00  +1.464e-08
+     25     -405.620042952055  +2.274e-13  +8.295e-09
+     26     -405.620042952055  +5.684e-14  +3.995e-09
+     27     -405.620042952055  +0.000e+00  +1.738e-09
+     28     -405.620042952056  -4.547e-13  +1.073e-09
+     29     -405.620042952056  -5.684e-14  +5.251e-10
+     30     -405.620042952056  +5.684e-14  +3.005e-10
+     31     -405.620042952056  -1.705e-13  +1.728e-10
+     32     -405.620042952056  -5.684e-14  +8.341e-11
+  -----------------------------------------------------
+  The Davidson-Liu algorithm converged in 33 iterations.
+  Davidson-Liu procedure took  0.134917 s
+  Time spent diagonalizing H:   1.417196 s
 
-    P-space  CI Energy Root   0        = -305.076621476217 Eh =   0.0000 eV
+    P-space  CI Energy Root   0        = -305.076621476271 Eh =   0.0000 eV
 
   Using batched Q_space algorithm
-  Setting nbin to 1 based on estimated memory ( 6.138 MB)
+  Setting nbin to 1 based on estimated memory (12.091 MB)
   Overwriting nbin to 4 based on user input
  -----------------------------------------
                 Bin 0
-  Build: 0.004460
-  Merge: 0.013519
-    Build F                  0.018779 
-    Build criteria vector    0.000393
-    Sort vector              0.000098
-    Screening                0.000019
-    Added 79 dets of 888 from bin 0
+  Build: 0.020198
+  Merge: 0.005338
+    Build F                  0.026299 
+    Build criteria vector    0.000458
+    Sort vector              0.000156
+    Screening                0.000018
+    Added 82 dets of 917 from bin 0
                 Bin 1
-  Build: 0.006391
-  Merge: 0.008175
-    Build F                  0.015328 
-    Build criteria vector    0.000354
-    Sort vector              0.000094
-    Screening                0.000013
-    Added 163 dets of 883 from bin 1
+  Build: 0.011041
+  Merge: 0.012551
+    Build F                  0.024196 
+    Build criteria vector    0.000401
+    Sort vector              0.000127
+    Screening                0.000012
+    Added 151 dets of 836 from bin 1
                 Bin 2
-  Build: 0.006421
-  Merge: 0.007623
-    Build F                  0.014743 
-    Build criteria vector    0.000339
-    Sort vector              0.000080
+  Build: 0.010091
+  Merge: 0.012801
+    Build F                  0.023563 
+    Build criteria vector    0.000401
+    Sort vector              0.000136
     Screening                0.000008
-    Added 212 dets of 839 from bin 2
+    Added 214 dets of 857 from bin 2
                 Bin 3
-  Build: 0.006491
-  Merge: 0.009435
-    Build F                  0.016663 
-    Build criteria vector    0.000349
-    Sort vector              0.000089
+  Build: 0.007780
+  Merge: 0.015454
+    Build F                  0.023876 
+    Build criteria vector    0.000420
+    Sort vector              0.000131
     Screening                0.000013
-    Added 281 dets of 872 from bin 3
+    Added 282 dets of 878 from bin 3
  ------------------------------------
-  Screened out 0.0004954566 Eh of correlation
-  Dimension of the truncated SD space: 281 determinants
-  Time spent building the external space (default): 0.067843 s
+  Screened out 0.0004942354 Eh of correlation
+  Dimension of the truncated SD space: 282 determinants
+  Time spent building the external space (default): 0.100569 s
 
-  Time spent sorting: 0.000047
+  Time spent sorting: 0.000068
   Added 1 missing determinants in aimed selection.
-  Time spent selecting: 0.000043
+  Time spent selecting: 0.000039
   Dimension of the P + Q space: 1174 determinants
-  Time spent screening the model space: 0.000062 s
-  Time spent building the model space: 0.068009
+  Time spent screening the model space: 0.000051 s
+  Time spent building the model space: 0.100730
   Spin-complete dimension of the PQ space: 1286
 
   Davidson-Liu solver algorithm with dynamic sigma builds
 
  SigmaVectorDynamic:
- Maximum memory   : 10000000 double
+ Maximum memory   : 67108864 double
  Number of threads: 8
 
   Initial guess space is incomplete!
@@ -873,50 +963,67 @@ Calling plugin forte.so.
 
   ==> Diagonalizing Hamiltonian <==
 
-  ----------------------------------------
-    Iter.      Avg. Energy       Delta_E
-  ----------------------------------------
-      1     -405.564290373981  -4.056e+02
-      2     -405.611572528435  -4.728e-02
-      3     -405.619614620960  -8.042e-03
-      4     -405.620868159192  -1.254e-03
-      5     -405.621268513645  -4.004e-04
-      6     -405.621314482081  -4.597e-05
-      7     -405.621327575786  -1.309e-05
-      8     -405.621331442261  -3.866e-06
-      9     -405.621332959831  -1.518e-06
-     10     -405.621333352857  -3.930e-07
-     11     -405.621333465647  -1.128e-07
-     12     -405.621333501240  -3.559e-08
-     13     -405.621333516228  -1.499e-08
-     14     -405.621333520904  -4.677e-09
-     15     -405.621333522490  -1.586e-09
-     16     -405.621333523088  -5.979e-10
-     17     -405.621333523351  -2.635e-10
-     18     -405.621333523438  -8.703e-11
-  ----------------------------------------
-  The Davidson-Liu algorithm converged in 19 iterations.
-  Davidson-Liu procedure took  0.158251 s
-  Total time spent diagonalizing H:   0.441285 s
+  -----------------------------------------------------
+    Iter.      Avg. Energy       Delta_E     Res. Norm
+  -----------------------------------------------------
+      1     -405.564290374064  -4.056e+02  +2.406e-01
+      2     -405.611572528526  -4.728e-02  +1.135e-01
+      3     -405.619614621053  -8.042e-03  +5.102e-02
+      4     -405.621091850283  -1.477e-03  +1.836e-02
+      5     -405.621263348149  -1.715e-04  +8.685e-03
+      6     -405.621316153784  -5.281e-05  +4.666e-03
+      7     -405.621330326954  -1.417e-05  +2.032e-03
+      8     -405.621332541548  -2.215e-06  +1.202e-03
+      9     -405.621333316378  -7.748e-07  +5.153e-04
+     10     -405.621333473737  -1.574e-07  +2.452e-04
+     11     -405.621333506801  -3.306e-08  +1.257e-04
+     12     -405.621333518958  -1.216e-08  +7.494e-05
+     13     -405.621333522268  -3.309e-09  +4.315e-05
+     14     -405.621333523147  -8.793e-10  +2.295e-05
+     15     -405.621333523458  -3.112e-10  +1.139e-05
+     16     -405.621333523543  -8.515e-11  +6.812e-06
+     17     -405.621333523567  -2.348e-11  +3.355e-06
+     18     -405.621333523575  -8.129e-12  +1.943e-06
+     19     -405.621333523576  -1.421e-12  +1.155e-06
+     20     -405.621333523577  -6.253e-13  +5.928e-07
+     21     -405.621333523577  -2.274e-13  +2.875e-07
+     22     -405.621333523578  -5.116e-13  +1.826e-07
+     23     -405.621333523578  -5.684e-14  +8.775e-08
+     24     -405.621333523578  +0.000e+00  +5.064e-08
+     25     -405.621333523578  -5.684e-14  +3.134e-08
+     26     -405.621333523578  -5.684e-14  +1.594e-08
+     27     -405.621333523578  +5.684e-14  +7.763e-09
+     28     -405.621333523578  +1.705e-13  +5.069e-09
+     29     -405.621333523578  -5.684e-14  +2.427e-09
+     30     -405.621333523578  +5.684e-14  +1.407e-09
+     31     -405.621333523578  -5.684e-14  +8.800e-10
+     32     -405.621333523578  +0.000e+00  +4.461e-10
+     33     -405.621333523578  -5.684e-14  +2.173e-10
+     34     -405.621333523578  -1.705e-13  +1.433e-10
+     35     -405.621333523578  +0.000e+00  +6.858e-11
+  -----------------------------------------------------
+  The Davidson-Liu algorithm converged in 36 iterations.
+  Davidson-Liu procedure took  0.181348 s
+  Total time spent diagonalizing H:   1.434840 s
 
-    PQ-space CI Energy Root   0        = -305.077912047724 Eh =   0.0000 eV
-    PQ-space CI Energy + EPT2 Root   0 = -305.078907559389 Eh =   0.0000 eV
+    PQ-space CI Energy Root   0        = -305.077912047793 Eh =   0.0000 eV
+    PQ-space CI Energy + EPT2 Root   0 = -305.078907543186 Eh =   0.0000 eV
 
 
   Most important contributions to root   0:
-    0   0.868036 0.753487342         685 |22220000>
-    1  -0.194213 0.037718521         684 |22202000>
-    2   0.103957 0.010807155         683 |22-++-00>
-    3   0.103957 0.010807155         682 |22+--+00>
-    4  -0.093189 0.008684220         681 |22020200>
-    5   0.079809 0.006369459         680 |+22--00+>
-    6   0.079809 0.006369459         679 |-22++00->
-    7  -0.079011 0.006242783         678 |2-2++0-0>
-    8  -0.079011 0.006242783         677 |2+2--0+0>
-    9   0.075551 0.005707883         676 |22+-+-00>
+    0   0.868036 0.753486217         685 |22220000>
+    1  -0.194214 0.037718919         684 |22202000>
+    2   0.103958 0.010807245         683 |22-++-00>
+    3   0.103958 0.010807245         682 |22+--+00>
+    4  -0.093187 0.008683827         681 |22020200>
+    5   0.079809 0.006369449         680 |-22++00->
+    6   0.079809 0.006369449         679 |+22--00+>
+    7  -0.079011 0.006242714         678 |2+2--0+0>
+    8  -0.079011 0.006242714         677 |2-2++0-0>
+    9   0.075552 0.005708062         676 |22+-+-00>
 
   Spin state for root 0: S^2 = 0.000000, S = 0.000, singlet
-  Cycle 2 took: 0.889165 s
+  Cycle 2 took: 2.996319 s
 
   ==> Cycle 3 <==
 
@@ -926,7 +1033,7 @@ Calling plugin forte.so.
   Davidson-Liu solver algorithm with dynamic sigma builds
 
  SigmaVectorDynamic:
- Maximum memory   : 10000000 double
+ Maximum memory   : 67108864 double
  Number of threads: 8
 
   Initial guess space is incomplete!
@@ -939,87 +1046,102 @@ Calling plugin forte.so.
 
   ==> Diagonalizing Hamiltonian <==
 
-  ----------------------------------------
-    Iter.      Avg. Energy       Delta_E
-  ----------------------------------------
-      1     -405.564290373981  -4.056e+02
-      2     -405.611256842252  -4.697e-02
-      3     -405.618940324463  -7.683e-03
-      4     -405.620097557415  -1.157e-03
-      5     -405.620461051797  -3.635e-04
-      6     -405.620506739157  -4.569e-05
-      7     -405.620519738267  -1.300e-05
-      8     -405.620523309022  -3.571e-06
-      9     -405.620524516508  -1.207e-06
-     10     -405.620524800270  -2.838e-07
-     11     -405.620524878511  -7.824e-08
-     12     -405.620524901139  -2.263e-08
-     13     -405.620524909724  -8.585e-09
-     14     -405.620524912310  -2.586e-09
-     15     -405.620524913163  -8.528e-10
-     16     -405.620524913457  -2.943e-10
-     17     -405.620524913573  -1.158e-10
-     18     -405.620524913609  -3.638e-11
-  ----------------------------------------
-  The Davidson-Liu algorithm converged in 19 iterations.
-  Davidson-Liu procedure took  0.098704 s
-  Time spent diagonalizing H:   0.381352 s
+  -----------------------------------------------------
+    Iter.      Avg. Energy       Delta_E     Res. Norm
+  -----------------------------------------------------
+      1     -405.564290374064  -4.056e+02  +2.397e-01
+      2     -405.611256842343  -4.697e-02  +1.108e-01
+      3     -405.618940324557  -7.683e-03  +4.819e-02
+      4     -405.620295074941  -1.355e-03  +1.701e-02
+      5     -405.620454971184  -1.599e-04  +8.258e-03
+      6     -405.620509293751  -5.432e-05  +4.573e-03
+      7     -405.620522566422  -1.327e-05  +1.809e-03
+      8     -405.620524301801  -1.735e-06  +9.793e-04
+      9     -405.620524798342  -4.965e-07  +3.844e-04
+     10     -405.620524885908  -8.757e-08  +1.748e-04
+     11     -405.620524904376  -1.847e-08  +9.210e-05
+     12     -405.620524911456  -7.079e-09  +5.570e-05
+     13     -405.620524913167  -1.711e-09  +2.920e-05
+     14     -405.620524913558  -3.912e-10  +1.448e-05
+     15     -405.620524913679  -1.212e-10  +6.596e-06
+     16     -405.620524913709  -3.001e-11  +3.785e-06
+     17     -405.620524913717  -7.901e-12  +1.848e-06
+     18     -405.620524913720  -2.672e-12  +1.083e-06
+     19     -405.620524913721  -7.390e-13  +6.157e-07
+     20     -405.620524913721  -1.705e-13  +2.943e-07
+     21     -405.620524913721  -1.137e-13  +1.317e-07
+     22     -405.620524913721  +2.274e-13  +8.166e-08
+     23     -405.620524913721  -5.684e-14  +3.921e-08
+     24     -405.620524913721  +1.137e-13  +2.282e-08
+     25     -405.620524913720  +2.274e-13  +1.346e-08
+     26     -405.620524913720  +5.684e-14  +6.394e-09
+     27     -405.620524913721  -1.137e-13  +2.864e-09
+     28     -405.620524913721  -1.137e-13  +1.823e-09
+     29     -405.620524913721  -5.684e-14  +8.755e-10
+     30     -405.620524913721  +5.684e-14  +5.081e-10
+     31     -405.620524913721  +0.000e+00  +3.029e-10
+     32     -405.620524913721  +0.000e+00  +1.438e-10
+     33     -405.620524913721  -5.684e-14  +6.430e-11
+  -----------------------------------------------------
+  The Davidson-Liu algorithm converged in 34 iterations.
+  Davidson-Liu procedure took  0.148849 s
+  Time spent diagonalizing H:   1.392825 s
 
-    P-space  CI Energy Root   0        = -305.077103437895 Eh =   0.0000 eV
+    P-space  CI Energy Root   0        = -305.077103437936 Eh =   0.0000 eV
 
   Using batched Q_space algorithm
-  Setting nbin to 1 based on estimated memory ( 6.653 MB)
+  Setting nbin to 1 based on estimated memory (13.104 MB)
   Overwriting nbin to 4 based on user input
  -----------------------------------------
                 Bin 0
-  Build: 0.012896
-  Merge: 0.005078
-    Build F                  0.018750 
-    Build criteria vector    0.000349
-    Sort vector              0.000088
-    Screening                0.000016
-    Added 63 dets of 866 from bin 0
+  Build: 0.023801
+  Merge: 0.002255
+    Build F                  0.026791 
+    Build criteria vector    0.000429
+    Sort vector              0.000140
+    Screening                0.000017
+    Added 70 dets of 901 from bin 0
                 Bin 1
-  Build: 0.006964
-  Merge: 0.010655
-    Build F                  0.018355 
-    Build criteria vector    0.000352
-    Sort vector              0.000083
-    Screening                0.000012
-    Added 119 dets of 852 from bin 1
+  Build: 0.012090
+  Merge: 0.012443
+    Build F                  0.025196 
+    Build criteria vector    0.000795
+    Sort vector              0.000125
+    Screening                0.000008
+    Added 124 dets of 818 from bin 1
                 Bin 2
-  Build: 0.010080
-  Merge: 0.006874
-    Build F                  0.017653 
-    Build criteria vector    0.000332
-    Sort vector              0.000079
+  Build: 0.026904
+  Merge: 0.000077
+    Build F                  0.027634 
+    Build criteria vector    0.000399
+    Sort vector              0.000131
     Screening                0.000011
-    Added 160 dets of 832 from bin 2
+    Added 173 dets of 836 from bin 2
                 Bin 3
-  Build: 0.007092
-  Merge: 0.009716
-    Build F                  0.017543 
-    Build criteria vector    0.000346
-    Sort vector              0.000085
-    Screening                0.000009
-    Added 222 dets of 859 from bin 3
+  Build: 0.020926
+  Merge: 0.009800
+    Build F                  0.031379 
+    Build criteria vector    0.000410
+    Sort vector              0.000129
+    Screening                0.000008
+    Added 222 dets of 854 from bin 3
  ------------------------------------
-  Screened out 0.0004952869 Eh of correlation
+  Screened out 0.0004947653 Eh of correlation
   Dimension of the truncated SD space: 222 determinants
-  Time spent building the external space (default): 0.074617 s
+  Time spent building the external space (default): 0.113980 s
 
-  Time spent sorting: 0.000035
+  Time spent sorting: 0.000053
   Added 1 missing determinants in aimed selection.
-  Time spent selecting: 0.000032
+  Time spent selecting: 0.000030
   Dimension of the P + Q space: 1212 determinants
-  Time spent screening the model space: 0.000051 s
-  Time spent building the model space: 0.074760
+  Time spent screening the model space: 0.000041 s
+  Time spent building the model space: 0.114115
   Spin-complete dimension of the PQ space: 1280
 
   Davidson-Liu solver algorithm with dynamic sigma builds
 
  SigmaVectorDynamic:
- Maximum memory   : 10000000 double
+ Maximum memory   : 67108864 double
  Number of threads: 8
 
   Initial guess space is incomplete!
@@ -1032,50 +1154,67 @@ Calling plugin forte.so.
 
   ==> Diagonalizing Hamiltonian <==
 
-  ----------------------------------------
-    Iter.      Avg. Energy       Delta_E
-  ----------------------------------------
-      1     -405.564290373981  -4.056e+02
-      2     -405.611496811845  -4.721e-02
-      3     -405.619562301481  -8.065e-03
-      4     -405.620837825207  -1.276e-03
-      5     -405.621254821295  -4.170e-04
-      6     -405.621303434901  -4.861e-05
-      7     -405.621316992193  -1.356e-05
-      8     -405.621320999877  -4.008e-06
-      9     -405.621322582382  -1.583e-06
-     10     -405.621322990602  -4.082e-07
-     11     -405.621323106221  -1.156e-07
-     12     -405.621323142826  -3.660e-08
-     13     -405.621323158278  -1.545e-08
-     14     -405.621323163045  -4.766e-09
-     15     -405.621323164635  -1.590e-09
-     16     -405.621323165234  -5.988e-10
-     17     -405.621323165497  -2.636e-10
-     18     -405.621323165583  -8.595e-11
-  ----------------------------------------
-  The Davidson-Liu algorithm converged in 19 iterations.
-  Davidson-Liu procedure took  0.112374 s
-  Total time spent diagonalizing H:   0.396463 s
+  -----------------------------------------------------
+    Iter.      Avg. Energy       Delta_E     Res. Norm
+  -----------------------------------------------------
+      1     -405.564290374064  -4.056e+02  +2.406e-01
+      2     -405.611496811935  -4.721e-02  +1.138e-01
+      3     -405.619562301574  -8.065e-03  +5.141e-02
+      4     -405.621069349879  -1.507e-03  +1.888e-02
+      5     -405.621248950291  -1.796e-04  +9.023e-03
+      6     -405.621305171472  -5.622e-05  +4.741e-03
+      7     -405.621319876790  -1.471e-05  +2.033e-03
+      8     -405.621322161726  -2.285e-06  +1.207e-03
+      9     -405.621322956653  -7.949e-07  +5.241e-04
+     10     -405.621323115178  -1.585e-07  +2.491e-04
+     11     -405.621323148848  -3.367e-08  +1.286e-04
+     12     -405.621323161123  -1.228e-08  +7.374e-05
+     13     -405.621323164401  -3.278e-09  +4.279e-05
+     14     -405.621323165288  -8.874e-10  +2.282e-05
+     15     -405.621323165603  -3.149e-10  +1.139e-05
+     16     -405.621323165686  -8.333e-11  +6.843e-06
+     17     -405.621323165710  -2.348e-11  +3.395e-06
+     18     -405.621323165718  -8.015e-12  +1.891e-06
+     19     -405.621323165720  -2.331e-12  +1.123e-06
+     20     -405.621323165721  -6.253e-13  +5.741e-07
+     21     -405.621323165721  -1.705e-13  +2.793e-07
+     22     -405.621323165721  +1.705e-13  +1.770e-07
+     23     -405.621323165721  +0.000e+00  +8.527e-08
+     24     -405.621323165721  +0.000e+00  +4.739e-08
+     25     -405.621323165721  -1.705e-13  +2.930e-08
+     26     -405.621323165721  -5.684e-14  +1.483e-08
+     27     -405.621323165721  +1.137e-13  +7.269e-09
+     28     -405.621323165721  +2.842e-13  +4.729e-09
+     29     -405.621323165721  +0.000e+00  +2.261e-09
+     30     -405.621323165721  -1.137e-13  +1.265e-09
+     31     -405.621323165721  +1.137e-13  +7.907e-10
+     32     -405.621323165721  +0.000e+00  +3.984e-10
+     33     -405.621323165721  +0.000e+00  +1.956e-10
+     34     -405.621323165721  -2.274e-13  +1.285e-10
+     35     -405.621323165721  +0.000e+00  +6.126e-11
+  -----------------------------------------------------
+  The Davidson-Liu algorithm converged in 36 iterations.
+  Davidson-Liu procedure took  0.180180 s
+  Total time spent diagonalizing H:   1.419473 s
 
-    PQ-space CI Energy Root   0        = -305.077901689869 Eh =   0.0000 eV
-    PQ-space CI Energy + EPT2 Root   0 = -305.078896689603 Eh =   0.0000 eV
+    PQ-space CI Energy Root   0        = -305.077901689936 Eh =   0.0000 eV
+    PQ-space CI Energy + EPT2 Root   0 = -305.078896686840 Eh =   0.0000 eV
 
 
   Most important contributions to root   0:
-    0   0.867977 0.753384330         732 |22220000>
-    1  -0.194298 0.037751748         731 |22202000>
-    2   0.103938 0.010803116         730 |22-++-00>
-    3   0.103938 0.010803116         729 |22+--+00>
-    4  -0.093059 0.008660044         728 |22020200>
-    5   0.079812 0.006369958         727 |+22--00+>
-    6   0.079812 0.006369958         726 |-22++00->
-    7  -0.078982 0.006238190         725 |2-2++0-0>
-    8  -0.078982 0.006238190         724 |2+2--0+0>
-    9   0.075611 0.005717071         723 |22+-+-00>
+    0   0.867976 0.753383188         732 |22220000>
+    1  -0.194299 0.037752133         731 |22202000>
+    2   0.103938 0.010803204         730 |22-++-00>
+    3   0.103938 0.010803204         729 |22+--+00>
+    4  -0.093057 0.008659655         728 |22020200>
+    5   0.079812 0.006369943         727 |-22++00->
+    6   0.079812 0.006369943         726 |+22--00+>
+    7  -0.078982 0.006238123         725 |2+2--0+0>
+    8  -0.078982 0.006238123         724 |2-2++0-0>
+    9   0.075613 0.005717252         723 |22+-+-00>
 
   Spin state for root 0: S^2 = 0.000000, S = 0.000, singlet
-  Cycle 3 took: 0.868634 s
+  Cycle 3 took: 2.969271 s
 
   ==> Cycle 4 <==
 
@@ -1085,7 +1224,7 @@ Calling plugin forte.so.
   Davidson-Liu solver algorithm with dynamic sigma builds
 
  SigmaVectorDynamic:
- Maximum memory   : 10000000 double
+ Maximum memory   : 67108864 double
  Number of threads: 8
 
   Initial guess space is incomplete!
@@ -1098,87 +1237,102 @@ Calling plugin forte.so.
 
   ==> Diagonalizing Hamiltonian <==
 
-  ----------------------------------------
-    Iter.      Avg. Energy       Delta_E
-  ----------------------------------------
-      1     -405.564290373981  -4.056e+02
-      2     -405.611256842252  -4.697e-02
-      3     -405.618940324463  -7.683e-03
-      4     -405.620097557415  -1.157e-03
-      5     -405.620461051797  -3.635e-04
-      6     -405.620506739158  -4.569e-05
-      7     -405.620519738267  -1.300e-05
-      8     -405.620523309022  -3.571e-06
-      9     -405.620524516508  -1.207e-06
-     10     -405.620524800270  -2.838e-07
-     11     -405.620524878511  -7.824e-08
-     12     -405.620524901139  -2.263e-08
-     13     -405.620524909724  -8.585e-09
-     14     -405.620524912310  -2.586e-09
-     15     -405.620524913163  -8.531e-10
-     16     -405.620524913457  -2.943e-10
-     17     -405.620524913573  -1.154e-10
-     18     -405.620524913609  -3.638e-11
-  ----------------------------------------
-  The Davidson-Liu algorithm converged in 19 iterations.
-  Davidson-Liu procedure took  0.099456 s
-  Time spent diagonalizing H:   0.381424 s
+  -----------------------------------------------------
+    Iter.      Avg. Energy       Delta_E     Res. Norm
+  -----------------------------------------------------
+      1     -405.564290374064  -4.056e+02  +2.397e-01
+      2     -405.611256842343  -4.697e-02  +1.108e-01
+      3     -405.618940324557  -7.683e-03  +4.819e-02
+      4     -405.620295074941  -1.355e-03  +1.701e-02
+      5     -405.620454971184  -1.599e-04  +8.258e-03
+      6     -405.620509293751  -5.432e-05  +4.573e-03
+      7     -405.620522566422  -1.327e-05  +1.809e-03
+      8     -405.620524301801  -1.735e-06  +9.793e-04
+      9     -405.620524798343  -4.965e-07  +3.844e-04
+     10     -405.620524885908  -8.757e-08  +1.748e-04
+     11     -405.620524904376  -1.847e-08  +9.210e-05
+     12     -405.620524911456  -7.079e-09  +5.570e-05
+     13     -405.620524913167  -1.712e-09  +2.920e-05
+     14     -405.620524913558  -3.912e-10  +1.448e-05
+     15     -405.620524913680  -1.212e-10  +6.596e-06
+     16     -405.620524913710  -2.996e-11  +3.785e-06
+     17     -405.620524913717  -7.901e-12  +1.848e-06
+     18     -405.620524913720  -2.615e-12  +1.083e-06
+     19     -405.620524913720  -2.274e-13  +6.157e-07
+     20     -405.620524913720  -1.705e-13  +2.943e-07
+     21     -405.620524913721  -1.137e-13  +1.317e-07
+     22     -405.620524913721  -2.274e-13  +8.166e-08
+     23     -405.620524913721  -5.684e-14  +3.921e-08
+     24     -405.620524913721  +5.684e-14  +2.282e-08
+     25     -405.620524913721  +2.842e-13  +1.346e-08
+     26     -405.620524913721  -5.684e-14  +6.394e-09
+     27     -405.620524913721  +0.000e+00  +2.864e-09
+     28     -405.620524913721  -2.274e-13  +1.823e-09
+     29     -405.620524913721  -5.684e-14  +8.755e-10
+     30     -405.620524913721  +0.000e+00  +5.081e-10
+     31     -405.620524913721  -5.684e-14  +3.028e-10
+     32     -405.620524913721  +0.000e+00  +1.439e-10
+     33     -405.620524913721  +0.000e+00  +6.430e-11
+  -----------------------------------------------------
+  The Davidson-Liu algorithm converged in 34 iterations.
+  Davidson-Liu procedure took  0.146419 s
+  Time spent diagonalizing H:   1.410024 s
 
-    P-space  CI Energy Root   0        = -305.077103437895 Eh =   0.0000 eV
+    P-space  CI Energy Root   0        = -305.077103437936 Eh =   0.0000 eV
 
   Using batched Q_space algorithm
-  Setting nbin to 1 based on estimated memory ( 6.653 MB)
+  Setting nbin to 1 based on estimated memory (13.104 MB)
   Overwriting nbin to 4 based on user input
  -----------------------------------------
                 Bin 0
-  Build: 0.004783
-  Merge: 0.014045
-    Build F                  0.019586 
-    Build criteria vector    0.000374
-    Sort vector              0.000089
-    Screening                0.000017
-    Added 63 dets of 866 from bin 0
+  Build: 0.025135
+  Merge: 0.003782
+    Build F                  0.029708 
+    Build criteria vector    0.000785
+    Sort vector              0.000151
+    Screening                0.000018
+    Added 70 dets of 901 from bin 0
                 Bin 1
-  Build: 0.006913
-  Merge: 0.009174
-    Build F                  0.016807 
-    Build criteria vector    0.000337
-    Sort vector              0.000084
-    Screening                0.000011
-    Added 119 dets of 852 from bin 1
+  Build: 0.011266
+  Merge: 0.015994
+    Build F                  0.027880 
+    Build criteria vector    0.000387
+    Sort vector              0.000120
+    Screening                0.000008
+    Added 124 dets of 818 from bin 1
                 Bin 2
-  Build: 0.008904
-  Merge: 0.008052
-    Build F                  0.017706 
-    Build criteria vector    0.000342
-    Sort vector              0.000080
-    Screening                0.000011
-    Added 160 dets of 832 from bin 2
+  Build: 0.011810
+  Merge: 0.013056
+    Build F                  0.025488 
+    Build criteria vector    0.000396
+    Sort vector              0.000131
+    Screening                0.000012
+    Added 173 dets of 836 from bin 2
                 Bin 3
-  Build: 0.006974
-  Merge: 0.010121
-    Build F                  0.017832 
-    Build criteria vector    0.000355
-    Sort vector              0.000087
-    Screening                0.000009
-    Added 222 dets of 859 from bin 3
+  Build: 0.009257
+  Merge: 0.018601
+    Build F                  0.028513 
+    Build criteria vector    0.000509
+    Sort vector              0.000123
+    Screening                0.000008
+    Added 222 dets of 854 from bin 3
  ------------------------------------
-  Screened out 0.0004952869 Eh of correlation
+  Screened out 0.0004947653 Eh of correlation
   Dimension of the truncated SD space: 222 determinants
-  Time spent building the external space (default): 0.074188 s
+  Time spent building the external space (default): 0.114607 s
 
-  Time spent sorting: 0.000036
+  Time spent sorting: 0.000053
   Added 1 missing determinants in aimed selection.
-  Time spent selecting: 0.000032
+  Time spent selecting: 0.000030
   Dimension of the P + Q space: 1212 determinants
-  Time spent screening the model space: 0.000051 s
-  Time spent building the model space: 0.074331
+  Time spent screening the model space: 0.000042 s
+  Time spent building the model space: 0.114745
   Spin-complete dimension of the PQ space: 1280
 
   Davidson-Liu solver algorithm with dynamic sigma builds
 
  SigmaVectorDynamic:
- Maximum memory   : 10000000 double
+ Maximum memory   : 67108864 double
  Number of threads: 8
 
   Initial guess space is incomplete!
@@ -1191,132 +1345,138 @@ Calling plugin forte.so.
 
   ==> Diagonalizing Hamiltonian <==
 
-  ----------------------------------------
-    Iter.      Avg. Energy       Delta_E
-  ----------------------------------------
-      1     -405.564290373981  -4.056e+02
-      2     -405.611496811845  -4.721e-02
-      3     -405.619562301481  -8.065e-03
-      4     -405.620837825207  -1.276e-03
-      5     -405.621254821296  -4.170e-04
-      6     -405.621303434902  -4.861e-05
-      7     -405.621316992193  -1.356e-05
-      8     -405.621320999877  -4.008e-06
-      9     -405.621322582383  -1.583e-06
-     10     -405.621322990602  -4.082e-07
-     11     -405.621323106221  -1.156e-07
-     12     -405.621323142826  -3.660e-08
-     13     -405.621323158278  -1.545e-08
-     14     -405.621323163045  -4.766e-09
-     15     -405.621323164635  -1.590e-09
-     16     -405.621323165234  -5.988e-10
-     17     -405.621323165497  -2.635e-10
-     18     -405.621323165583  -8.595e-11
-  ----------------------------------------
-  The Davidson-Liu algorithm converged in 19 iterations.
-  Davidson-Liu procedure took  0.111201 s
-  Total time spent diagonalizing H:   0.392468 s
+  -----------------------------------------------------
+    Iter.      Avg. Energy       Delta_E     Res. Norm
+  -----------------------------------------------------
+      1     -405.564290374064  -4.056e+02  +2.406e-01
+      2     -405.611496811935  -4.721e-02  +1.138e-01
+      3     -405.619562301574  -8.065e-03  +5.141e-02
+      4     -405.621069349879  -1.507e-03  +1.888e-02
+      5     -405.621248950291  -1.796e-04  +9.023e-03
+      6     -405.621305171472  -5.622e-05  +4.741e-03
+      7     -405.621319876790  -1.471e-05  +2.033e-03
+      8     -405.621322161726  -2.285e-06  +1.207e-03
+      9     -405.621322956653  -7.949e-07  +5.241e-04
+     10     -405.621323115178  -1.585e-07  +2.491e-04
+     11     -405.621323148848  -3.367e-08  +1.286e-04
+     12     -405.621323161123  -1.228e-08  +7.374e-05
+     13     -405.621323164401  -3.278e-09  +4.279e-05
+     14     -405.621323165288  -8.874e-10  +2.282e-05
+     15     -405.621323165603  -3.149e-10  +1.139e-05
+     16     -405.621323165686  -8.328e-11  +6.843e-06
+     17     -405.621323165710  -2.342e-11  +3.395e-06
+     18     -405.621323165718  -8.129e-12  +1.891e-06
+     19     -405.621323165720  -2.217e-12  +1.123e-06
+     20     -405.621323165721  -6.253e-13  +5.741e-07
+     21     -405.621323165721  -1.705e-13  +2.793e-07
+     22     -405.621323165721  -5.684e-14  +1.770e-07
+     23     -405.621323165721  +0.000e+00  +8.527e-08
+     24     -405.621323165721  +0.000e+00  +4.739e-08
+     25     -405.621323165721  +5.684e-14  +2.930e-08
+     26     -405.621323165721  -5.684e-14  +1.483e-08
+     27     -405.621323165721  +1.137e-13  +7.269e-09
+     28     -405.621323165721  +5.684e-14  +4.729e-09
+     29     -405.621323165721  +0.000e+00  +2.261e-09
+     30     -405.621323165721  +0.000e+00  +1.265e-09
+     31     -405.621323165721  +1.137e-13  +7.907e-10
+     32     -405.621323165721  -5.684e-14  +3.984e-10
+     33     -405.621323165721  +5.684e-14  +1.956e-10
+     34     -405.621323165721  -2.274e-13  +1.285e-10
+     35     -405.621323165721  +0.000e+00  +6.126e-11
+  -----------------------------------------------------
+  The Davidson-Liu algorithm converged in 36 iterations.
+  Davidson-Liu procedure took  0.176094 s
+  Total time spent diagonalizing H:   1.514666 s
 
-    PQ-space CI Energy Root   0        = -305.077901689869 Eh =   0.0000 eV
-    PQ-space CI Energy + EPT2 Root   0 = -305.078896689603 Eh =   0.0000 eV
+    PQ-space CI Energy Root   0        = -305.077901689936 Eh =   0.0000 eV
+    PQ-space CI Energy + EPT2 Root   0 = -305.078896686840 Eh =   0.0000 eV
 
   ***** Calculation Converged *****
-  Saving root 0, ref_root is 0
-  Number of old roots: 1
 
-  ==> ACI Summary <==
+  ==> Excited state solver summary <==
 
   Iterations required:                         4
   Dimension of optimized determinant space:    1280
 
-  * Adaptive-CI Energy Root   0        = -305.077901689869 Eh =   0.0000 eV
-  * Adaptive-CI Energy Root   0 + EPT2 = -305.078896689603 Eh =   0.0000 eV
+  * Selected-CI Energy Root   0        = -305.077901689936 Eh =   0.0000 eV
+  * Selected-CI Energy Root   0 + EPT2 = -305.078896686840 Eh =   0.0000 eV
 
   ==> Wavefunction Information <==
 
   Most important contributions to root   0:
-    0   0.867977 0.753384330         732 |22220000>
-    1  -0.194298 0.037751748         731 |22202000>
-    2   0.103938 0.010803116         730 |22-++-00>
-    3   0.103938 0.010803116         729 |22+--+00>
-    4  -0.093059 0.008660044         728 |22020200>
-    5   0.079812 0.006369958         727 |+22--00+>
-    6   0.079812 0.006369958         726 |-22++00->
-    7  -0.078982 0.006238190         725 |2-2++0-0>
-    8  -0.078982 0.006238190         724 |2+2--0+0>
-    9   0.075611 0.005717071         723 |22+-+-00>
+    0   0.867976 0.753383188         732 |22220000>
+    1  -0.194299 0.037752133         731 |22202000>
+    2   0.103938 0.010803204         730 |22-++-00>
+    3   0.103938 0.010803204         729 |22+--+00>
+    4  -0.093057 0.008659655         728 |22020200>
+    5   0.079812 0.006369943         727 |-22++00->
+    6   0.079812 0.006369943         726 |+22--00+>
+    7  -0.078982 0.006238123         725 |2+2--0+0>
+    8  -0.078982 0.006238123         724 |2-2++0-0>
+    9   0.075613 0.005717252         723 |22+-+-00>
 
-  Spin state for root 0: S^2 = 0.000000, S = 0.000, singlet
-  Diag takes 0.008738
- all alpha takes 0.020020
- all beta takes 0.019408
-  2dif: 0.042907  
-  4dif: 0.022915
- all alpha/beta takes 0.066260
-
-  ==> NATURAL ORBITALS <==
-
-        1A      1.922094      2A      1.902605      3A      1.860987  
-        4A      1.779353      5A      0.224866      6A      0.139353  
-        7A      0.095540      8A      0.075201  
-
-
-  RDMS took 0.126916
-
-  Adaptive-CI ran in : 4.267454 s
+  Spin state for root 0: S^2 = 0.255873, S = 0.321, doublet
 
   Saving information for root: 0
-  energy: -305.077901690
+
+  ==> Energy Summary <==
+
+    Multi.  Irrep.  No.               Energy
+    -----------------------------------------
+       1       A     0      -305.077901689936
+    -----------------------------------------
+  Diag takes 0.010945
+ all alpha takes 0.024176
+ all beta takes 0.022941
+  2dif: 0.087543  
+  4dif: 0.065046
+ all alpha/beta takes 0.153156
 
        -----------------------------------------------------------------
                             Semi-Canonical Orbitals
          Chenyang Li, Jeffrey B. Schriber and Francesco A. Evangelista
        -----------------------------------------------------------------
 
-  Took 0.151776 s to build Fock matrix
+  Took 0.225975 s to build Fock matrix
 
   ==> Checking Fock Matrix Diagonal Blocks <==
 
     Off-Diag. Elements       Max           2-Norm
     ------------------------------------------------
-    Fa actv              0.0042942368   0.0114917482
-    Fb actv              0.0042942368   0.0114917482
+    Fa actv              0.0042944310   0.0114922887
+    Fb actv              0.0042944310   0.0114922887
     ------------------------------------------------
-    Fa core              0.0007210754   0.0031844351
-    Fb core              0.0007210754   0.0031844351
+    Fa core              0.0007210775   0.0031843373
+    Fb core              0.0007210775   0.0031843373
     ------------------------------------------------
-    Fa virt              0.0011085142   0.0048237228
-    Fb virt              0.0011085142   0.0048237228
+    Fa virt              0.0011085633   0.0048236950
+    Fb virt              0.0011085633   0.0048236950
     ------------------------------------------------
-
-  ==> Integral Transformation to Semicanonical Basis <==
-
  Integrals are about to be computed.
   Computing Density fitted integrals 
 
   Number of auxiliary basis functions:  588
   Need 11.76 MB to store DF integrals
-  DFHelper Memory: AOs need 0.010 GiB; user supplied 1.907 GiB. Using in-core AOs.
+  DFHelper Memory: AOs need 0.013 GiB; user supplied 1.907 GiB. Using in-core AOs.
 
 
   Transforming DF Integrals            ......Done.
-  Timing for density-fitting transformation:                  0.063 s.
+  Timing for density-fitting transformation:                  0.108 s.
 
- Integrals are about to be updated.  DFHelper Memory: AOs need 0.011 GiB; user supplied 11.921 GiB. Using in-core AOs.
+ Integrals are about to be updated.  DFHelper Memory: AOs need 0.013 GiB; user supplied 11.921 GiB. Using in-core AOs.
 
 
-  Frozen-core energy           -397.044912338556 a.u.
-  Timing for frozen one-body operator:                        0.851 s.
+  Frozen-core energy           -397.044912338559 a.u.
+  Timing for frozen one-body operator:                        3.213 s.
   Resorting integrals after freezing core.
-  Timing for resorting DF integrals:                          0.061 s.
-  Timing for freezing core and virtual orbitals:              0.914 s.
+  Timing for resorting DF integrals:                          0.055 s.
+  Timing for freezing core and virtual orbitals:              3.269 s.
 
-  ==> Reference Transformation to Semicanonical Basis <==
+  ==> RDMs Transformation to Semicanonical Basis <==
 
-    Transformed 1 cumulants.
-    Transformed 2 cumulants and RDMs.
+    Transformed 2 RDMs.
     Transformed 3 cumulants.
-  SemiCanonicalize takes 2.790695 s.
+  SemiCanonicalize takes 8.992065 s.
 
   ==> Multireference Driven Similarity Renormalization Group <==
 
@@ -1324,7 +1484,6 @@ Calling plugin forte.so.
     Setting ambit MO space .......................... Done
     Preparing tensors for density cumulants ......... Done
     Building Fock matrix ............................ Done
-    Checking reference energy ....................... Done
 
                   --------------------------------------------
                       Density Fitted / Cholesky Decomposed
@@ -1351,6 +1510,7 @@ Calling plugin forte.so.
     CCVV source                                       NORMAL
     Reference relaxation                                NONE
     State type                                STATE-SPECIFIC
+    form Hbar3                                         FALSE
 
   ==> Checking Semicanonical Orbitals <==
 
@@ -1372,51 +1532,54 @@ Calling plugin forte.so.
 
   ==> Computing DSRG-MRPT2 Energy <==
 
-  Reference Energy = -305.077901689868781
-    Computing T2                             ...... Done. Timing        0.103524 s
-    Renormalizing V                          ...... Done. Timing        0.090962 s
-    Computing T1                             ...... Done. Timing        0.003488 s
-    Renormalizing F                          ...... Done. Timing        0.004089 s
-    Computing <[F, T1]>                      ...... Done. Timing        0.002091 s
-    Computing <[F, T2]>                      ...... Done. Timing        0.003989 s
-    Computing <[V, T1]>                      ...... Done. Timing        0.003439 s
-    Computing <[V, T2]> 4HH                  ...... Done. Timing        0.005116 s
-    Computing <V, T2]> 4PP                   ...... Done. Timing        0.005334 s
-    Computing [V, T2] 4PH                    ...... Done. Timing        0.023652 s
-    Computing [V, T2] λ3                     ...... Done. Timing        0.061184 s
-    Computing <[V, T2]> (C_2)^4 (no ccvv)    ...... Done. Timing        0.021225 s
-    Computing <[V, T2]> (C_2)^4 ccvv         ...... Done. Timing        0.025093 s
+  Reference Energy = -305.077901689935970
+    Computing T2                             ...... Done. Timing        0.188277 s
+    Renormalizing V                          ...... Done. Timing        0.153415 s
+    Computing T1                             ...... Done. Timing        0.009210 s
+    Renormalizing F                          ...... Done. Timing        0.009184 s
+    Computing <[F, T1]>                      ...... Done. Timing        0.001482 s
+    Computing <[F, T2]>                      ...... Done. Timing        0.007573 s
+    Computing <[V, T1]>                      ...... Done. Timing        0.006789 s
+    Computing <[V, T2]> 4HH                  ...... Done. Timing        0.010519 s
+    Computing <V, T2]> 4PP                   ...... Done. Timing        0.009573 s
+    Computing [V, T2] 4PH                    ...... Done. Timing        0.053133 s
+    Computing [V, T2] λ3                     ...... Done. Timing        1.079098 s
+    Computing <[V, T2]> (C_2)^4 (no ccvv)    ...... Done. Timing        0.075785 s
+    Computing <[V, T2]> (C_2)^4 ccvv         ...... Done. Timing        0.072255 s
   Eccvv: -0.2177086582
 
   ==> DSRG-MRPT2 (DF/CD) Energy Summary <==
 
-    E0 (reference)                 =   -305.077901689868781
-    <[F, T1]>                      =     -0.000016917488865
+    E0 (reference)                 =   -305.077901689935970
+    <[F, T1]>                      =     -0.000016917218010
     <[F, T2]>                      =      0.000000000000000
     <[V, T1]>                      =     -0.000000000000000
-    <[V, T2]> C_4 (C_2)^2 HH       =      0.005491706806723
-    <[V, T2]> C_4 (C_2)^2 PP       =      0.004395539876604
-    <[V, T2]> C_4 (C_2)^2 PH       =      0.100267706726339
+    <[V, T2]> C_4 (C_2)^2 HH       =      0.005491705723357
+    <[V, T2]> C_4 (C_2)^2 PP       =      0.004395539798085
+    <[V, T2]> C_4 (C_2)^2 PH       =      0.100267871899530
     <[V, T2]> C_6 C_2              =     -0.000000000000000
-    <[V, T2]> (C_2)^4              =     -0.422266014166541
-    <[V, T2]>                      =     -0.312111060756875
-    DSRG-MRPT2 correlation energy  =     -0.312127978245740
-    DSRG-MRPT2 total energy        =   -305.390029668114494
-    max(T1)                        =      0.000645008769319
-    ||T1||                         =      0.003322586154612
+    <[V, T2]> (C_2)^4              =     -0.422266166076293
+    <[V, T2]>                      =     -0.312111048655322
+    DSRG-MRPT2 correlation energy  =     -0.312127965873332
+    DSRG-MRPT2 total energy        =   -305.390029655809315
+    max(T1)                        =      0.000645016089426
+    ||T1||                         =      0.003322540877363
 
   ==> Total Timings (s) for Computing Commutators <==
 
              [H1, T1]    [H1, T2]    [H2, T1]    [H2, T2]
     -----------------------------------------------------
-    -> C0       0.002       0.004       0.003       0.081
+    -> C0       0.001       0.008       0.007       0.222
     -> C1       0.000       0.000       0.000       0.000
     -> C2                   0.000       0.000       0.000
     -----------------------------------------------------
 
- CD/DF DSRG-MRPT2 took  8.11943 s.	ACI-DSRG-MRPT2 energy.............................................PASSED
 
-    Psi4 stopped on: Thursday, 25 October 2018 03:45PM
-    Psi4 wall time for execution: 0:00:14.32
+  Time to prepare integrals: 1.47894287109375 seconds
+  Time to run job          : 977.7816400527954 seconds
+  Total                    : 977.7816400527954 seconds    ACI-DSRG-MRPT2 energy.............................................PASSED
+
+    Psi4 stopped on: Sunday, 19 January 2020 06:04PM
+    Psi4 wall time for execution: 0:16:21.83
 
 *** Psi4 exiting successfully. Buy a developer a beer!
