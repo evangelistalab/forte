@@ -1,8 +1,7 @@
 import forte
 
 refscf =   -115.6554016101969893
-#refdsrgpt2 = -114.704305626419853
-refdsrgpt2 = -115.7618648965 # New value, should be lower than SCF energy
+refdsrgpt2 = -115.7618648965
 
 molecule {
 -1 1

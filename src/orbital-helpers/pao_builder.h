@@ -41,7 +41,26 @@ namespace forte {
 /**
  * @brief The PAObuilder class
  *
- * A class to build projected atomic orbitals for virtual space
+ * A class to build projected atomic orbitals for virtual space.
+ *
+ * The PAO builder will build the PAOs by:
+ *
+ * 1. Build density (D_) and AO overlap (S_)
+ * 2. Build PAOs using C_pao = I - D_ * S_(truncated according to nbf_A)
+ * 3. Orthogonalize PAOs, truncate the number of PAOs to n_pao, according to PAO_THRESHOLD
+ * 4. Return a rectangle matrix C with size nmo*n_pao
+ *
+ * Typical usage:
+ *
+ *    // Build projected atomic orbitals for fragment virtual space
+ *    double tau = options.get_double("PAO_THRESHOLD"); // set a PAO threshold
+ *
+ *    PAObuilder pao(ref_wfn->Ca(), dimension_of_occupied_orbital, ref_wfn->basisset());
+ *    SharedMatrix C_pao = pao.build_A_virtual(nbf_A, tau); // nbf_A: number of fragment AO basis
+ *
+ *    // Replace the original virtual orbitals with PAOs
+ *    ref_wfn->Ca()->set_block(nmopi, dimension_of_fragment_virtual, C_pao);
+ *
  */
 
 class PAObuilder {
