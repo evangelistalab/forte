@@ -1,7 +1,7 @@
 import forte
 
 refscf =   -115.6554016101969893
-refdsrgpt2 = -114.704305626419853
+refdsrgpt2 = -115.7618648965
 
 molecule {
 -1 1
@@ -40,11 +40,9 @@ compare_values(refscf,variable("CURRENT ENERGY"),8,"SCF energy")
 
 set forte {
   embedding true
-  embedding_reference hf
+  embedding_reference hf # Only with CAS reference can we mix or fix ref! In HF reference, there is no active!
   embedding_cutoff_method threshold
   embedding_threshold 0.5
-  embedding_semicanonicalize_active true
-  embedding_semicanonicalize_active false
   restricted_docc        [8]
   active                 [2]
   active_space_solver  fci
