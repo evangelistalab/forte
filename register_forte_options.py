@@ -158,6 +158,13 @@ def register_embedding_options(forte_options):
     forte_options.add_int(
         "EMBEDDING_ADJUST_B_UOCC", 0,
         "Adjust number of virtual orbitals between A and B, +: move to B, -: move to A")
+    forte_options.add_str("EMBEDDING_VIRTUAL_SPACE", "ASET", ["ASET", "PAO", "IAO"], "Vitual space scheme")
+    forte_options.add_double(
+        "PAO_THRESHOLD", 1e-8, 
+        "Virtual space truncation threshold for PAO.")
+    forte_options.add_bool(
+        "PAO_FIX_VIRTUAL_NUMBER", False, 
+        "Enable this option will generate PAOs equivlent to ASET virtuals, instead of using threshold")
 
 def register_mo_space_info_options(forte_options):
     forte_options.add_array(
@@ -176,7 +183,7 @@ def register_mo_space_info_options(forte_options):
         "FROZEN_UOCC",
         "Number of frozen unoccupied orbitals per irrep (in Cotton order)")
 
-    #    /*- Molecular orbitals to swap -
+#    /*- Molecular orbitals to swap -
     #     *  Swap mo_1 with mo_2 in irrep symmetry
     #     *  Swap mo_3 with mo_4 in irrep symmetry
     #     *  Format: [irrep, mo_1, mo_2, irrep, mo_3, mo_4]
