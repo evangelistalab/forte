@@ -230,15 +230,15 @@ void AdaptiveCI::find_q_space() {
     std::vector<std::pair<double, Determinant>> F_space;
     std::string screen_alg = options_->get_str("ACI_SCREEN_ALG");
 
-    if( (nroot_ == 1) and (screen_alg == "AVERAGE") ){
+    if ((nroot_ == 1) and (screen_alg == "AVERAGE")) {
         screen_alg = "SR";
     }
 
-    if( (screen_alg == "CORE") and (root_ == 0) ) {
+    if ((screen_alg == "CORE") and (root_ == 0)) {
         screen_alg = "SR";
     }
 
-    if( (ex_alg_ == "AVERAGE") and (screen_alg != "CORE" )){
+    if ((ex_alg_ == "AVERAGE") and (screen_alg != "CORE")) {
         screen_alg = "AVERAGE";
     }
 
@@ -246,23 +246,23 @@ void AdaptiveCI::find_q_space() {
 
     // Get the excited determiants
     double remainder = 0.0;
-    if ( screen_alg == "AVERAGE" ){
-        //multiroot 
+    if (screen_alg == "AVERAGE") {
+        // multiroot
         get_excited_determinants_avg(nroot_, P_evecs_, P_evals_, P_space_, F_space);
-    } else if ( screen_alg == "SR" ){
-        //single-root optimized
+    } else if (screen_alg == "SR") {
+        // single-root optimized
         get_excited_determinants_sr(P_evecs_, P_evals_, P_space_, F_space);
-//    } else if ( (screen_alg == "RESTRICTED")){
-//        // restricted
-//        get_excited_determinants_restrict(nroot_, P_evecs_, P_evals_, P_space_, F_space);
-    } else if (screen_alg == "CORE" ){
+        //    } else if ( (screen_alg == "RESTRICTED")){
+        //        // restricted
+        //        get_excited_determinants_restrict(nroot_, P_evecs_, P_evals_, P_space_, F_space);
+    } else if (screen_alg == "CORE") {
         get_excited_determinants_core(P_evecs_, P_evals_, P_space_, F_space);
-    } else if ( screen_alg == "BATCH_HASH" or screen_alg == "BATCH_CORE" ){
+    } else if (screen_alg == "BATCH_HASH" or screen_alg == "BATCH_CORE") {
         // hash batch
-        remainder = get_excited_determinants_batch( P_evecs_, P_evals_, P_space_, F_space);
-    } else if ( screen_alg == "BATCH_VEC" ){
+        remainder = get_excited_determinants_batch(P_evecs_, P_evals_, P_space_, F_space);
+    } else if (screen_alg == "BATCH_VEC") {
         // vec batch
-        remainder = get_excited_determinants_batch_vecsort( P_evecs_, P_evals_, P_space_, F_space);
+        remainder = get_excited_determinants_batch_vecsort(P_evecs_, P_evals_, P_space_, F_space);
     } else {
         std::string except = screen_alg + " is not a valid screening algorithm";
         throw psi::PSIEXCEPTION(except);
@@ -291,7 +291,6 @@ void AdaptiveCI::find_q_space() {
     }
     // Add missing determinants
 
-
     if (add_aimed_degenerate_) {
         size_t num_extra = 0;
         for (size_t I = 0, max_I = last_excluded; I < max_I; ++I) {
@@ -311,9 +310,9 @@ void AdaptiveCI::find_q_space() {
     multistate_pt2_energy_correction_.resize(nroot_);
     multistate_pt2_energy_correction_[ref_root_] = ept2;
 
-    if( screen_alg == "AVERAGE" ){
-        for( int n = 0; n < nroot_; ++n ){
-           multistate_pt2_energy_correction_[n] = ept2;
+    if (screen_alg == "AVERAGE") {
+        for (int n = 0; n < nroot_; ++n) {
+            multistate_pt2_energy_correction_[n] = ept2;
         }
     }
 
@@ -476,8 +475,7 @@ void AdaptiveCI::prune_q_space(DeterminantHashVec& PQ_space, DeterminantHashVec&
         size_t num_extra = 0;
         for (size_t I = 0, max_I = last_excluded; I < max_I; ++I) {
             size_t J = last_excluded - I;
-            if (std::fabs(dm_det_list[last_excluded + 1].first - dm_det_list[J].first) <
-                1.0e-9) {
+            if (std::fabs(dm_det_list[last_excluded + 1].first - dm_det_list[J].first) < 1.0e-9) {
                 P_space.add(dm_det_list[J].second);
                 num_extra += 1;
             } else {
@@ -485,8 +483,7 @@ void AdaptiveCI::prune_q_space(DeterminantHashVec& PQ_space, DeterminantHashVec&
             }
         }
         if (num_extra > 0 and !quiet_mode_) {
-            outfile->Printf("\n  Added %zu missing determinants in aimed selection.",
-                            num_extra);
+            outfile->Printf("\n  Added %zu missing determinants in aimed selection.", num_extra);
         }
     }
 }
@@ -769,7 +766,6 @@ void AdaptiveCI::pre_iter_preparation() {
     sparse_solver_.set_sigma_method(options_->get_str("SIGMA_BUILD_TYPE"));
     sparse_solver_.set_spin_project_full(false);
     sparse_solver_.set_max_memory(options_->get_int("SIGMA_VECTOR_MAX_MEMORY"));
-
 }
 
 void AdaptiveCI::diagonalize_P_space() {
@@ -860,8 +856,12 @@ void AdaptiveCI::diagonalize_P_space() {
         print_wfn(P_space_, op_, P_evecs_, num_ref_roots_);
 }
 
-
 void AdaptiveCI::diagonalize_PQ_space() {
+    outfile->Printf("\n\n  ==> Diagonalize the Hamiltonian in the P + Q space <==");
+
+    num_ref_roots_ = std::min(nroot_, int(PQ_space_.size()));
+
+
     // Step 3. Diagonalize the Hamiltonian in the P + Q space
     if (sparse_solver_.sigma_method_ == "HZ") {
         op_.clear_op_lists();
@@ -880,6 +880,7 @@ void AdaptiveCI::diagonalize_PQ_space() {
     }
     local_timer diag_pq;
 
+    outfile->Printf("\n  Number of reference roots: %d", num_ref_roots_);
     sparse_solver_.diagonalize_hamiltonian_map(PQ_space_, op_, PQ_evals_, PQ_evecs_, num_ref_roots_,
                                                multiplicity_, diag_method_);
 
@@ -984,17 +985,15 @@ void AdaptiveCI::add_bad_roots(DeterminantHashVec& dets) {
 
 void AdaptiveCI::print_nos() {
 
-    print_h2("ACI Natural Orbitals"); 
-
+    print_h2("ACI Natural Orbitals");
 
     // Compute a 1-rdm
-    CI_RDMS ci_rdm( PQ_space_, as_ints_, PQ_evecs_, 0, 0);
+    CI_RDMS ci_rdm(PQ_space_, as_ints_, PQ_evecs_, 0, 0);
     ci_rdm.set_max_rdm(1);
     std::vector<double> ordm_a_v;
     std::vector<double> ordm_b_v;
 
     ci_rdm.compute_1rdm(ordm_a_v, ordm_b_v, op_);
-
 
     psi::Dimension nmopi = mo_space_info_->dimension("ALL");
     psi::Dimension ncmopi = mo_space_info_->dimension("CORRELATED");
