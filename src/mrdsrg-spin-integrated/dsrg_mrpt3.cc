@@ -1582,7 +1582,6 @@ void DSRG_MRPT3::renormalize_F(const bool& plusone) {
 //        auto state = make_state_info_from_psi_wfn(ints_->wfn());
 //        size_t nroot = foptions_->get_int("NROOT");
 //        AdaptiveCI aci(state, nroot, scf_info_, foptions_, mo_space_info_, fci_ints);
-//        aci.set_fci_ints(fci_ints);
 //        if ((foptions_->psi_options())["ACI_RELAX_SIGMA"].has_changed()) {
 //            aci.update_sigma();
 //        }

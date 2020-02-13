@@ -56,6 +56,7 @@
 #include "mrdsrg-spin-integrated/master_mrdsrg.h"
 
 #include "sparse_ci/determinant.h"
+#include "post_process/spin_corr.h"
 #include "sparse_ci/determinant_hashvector.h"
 #include "sparse_ci/determinant_sq_operator.h"
 
@@ -208,6 +209,7 @@ PYBIND11_MODULE(forte, m) {
           "Make an object that holds the molecular orbital integrals for the active orbitals");
     m.def("make_dynamic_correlation_solver", &make_dynamic_correlation_solver,
           "Make a dynamical correlation solver");
+    m.def("perform_spin_analysis", &perform_spin_analysis, "Do spin analysis");    
     m.def("make_dsrg_method", &make_dsrg_method,
           "Make a DSRG method (spin-integrated implementation)");
     m.def("make_dsrg_so_y", &make_dsrg_so_y, "Make a DSRG pointer (spin-orbital implementation)");

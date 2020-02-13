@@ -31,7 +31,6 @@ set {
 set forte {
   active_space_solver aci
   multiplicity 1
-  aci_SELECT_TYPE aimed_energy
   sigma 0.07
   nroot 1
   charge 0

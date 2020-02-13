@@ -29,7 +29,6 @@ set scf {
 set forte {
   active_space_solver aci
   frozen_docc [1,0,0,0,0,1,0,0]
-  ACI_SELECT_TYPE aimed_energy
   diag_algorithm davidsonliulist
   sigma 0.0015
   gamma 0.0015

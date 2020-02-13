@@ -27,8 +27,6 @@ set {
 
 set forte {
   active_space_solver aci
-  aci_SELECT_TYPE aimed_energy
-  aci_perturb_select false
   sci_excited_algorithm state_average
   aci_pq_function average
   root 0
@@ -39,6 +37,7 @@ set forte {
   charge 0
   aci_enforce_spin_complete false
   active_guess_size 56
+  sigma_build_type hz
 }
 
 energy('scf')
