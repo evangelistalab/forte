@@ -165,6 +165,36 @@ def register_embedding_options(forte_options):
     forte_options.add_bool(
         "PAO_FIX_VIRTUAL_NUMBER", False, 
         "Enable this option will generate PAOs equivlent to ASET virtuals, instead of using threshold")
+    forte_options.add_bool("ASET2_EMBEDDING", False, "Turn on/off the multilayer PT2 embedding")
+    forte_options.add_int("FRAGMENT_RDOCC", 0, "fragment restricted_docc")
+    forte_options.add_int("FRAGMENT_ACTIVE", 0, "fragment active")
+    forte_options.add_int("FRAGMENT_RUOCC", 0, "fragment restricted_uocc")
+    forte_options.add_str(
+        'FRAGMENT_DENSITY', 'RHF', ['CASSCF', 'RHF', 'FCI'],
+        'The real/approximate RDMs used in the correlative environment computation')
+    forte_options.add_str(
+        'FRAG_CORRELATION_SOLVER', 'MRDSRG',
+        ['DSRG-MRPT2', 'THREE-DSRG-MRPT2', 'DSRG-MRPT3', 'MRDSRG',
+         'SOMRDSRG', 'MRDSRG_SO', 'DSRG_MRPT'],
+        'Dynamical correlation solver type for Fragment-environment correlation')
+    forte_options.add_str(
+        'ENV_CORRELATION_SOLVER', 'MRDSRG',
+        ['DSRG-MRPT2', 'THREE-DSRG-MRPT2', 'DSRG-MRPT3', 'MRDSRG',
+         'SOMRDSRG', 'MRDSRG_SO', 'DSRG_MRPT'],
+        'Dynamical correlation solver type for Fragment-environment correlation')
+    forte_options.add_str("FRAG_CORR_LEVEL", "LDSRG2",
+        ["PT2", "PT3", "LDSRG2", "LDSRG2_QC", "LSRG2", "SRG_PT2", "QDSRG2",
+         "LDSRG2_P3", "QDSRG2_P3"],
+        "Correlation level of fragment MR-DSRG (used in mrdsrg code, "
+        "LDSRG2_P3 and QDSRG2_P3 not implemented)")
+    forte_options.add_str("ENV_CORR_LEVEL", "PT2",
+        ["PT2", "PT3", "LDSRG2", "LDSRG2_QC", "LSRG2", "SRG_PT2", "QDSRG2",
+         "LDSRG2_P3", "QDSRG2_P3"],
+        "Correlation level of environment (interactive) MR-DSRG (used in mrdsrg code, "
+        "LDSRG2_P3 and QDSRG2_P3 not implemented)")
+    forte_options.add_int(
+        "embedding_iterations", 1,
+        "Number of iterations to relax H_bar, use higher number for stronger correlated environment")
 
 def register_mo_space_info_options(forte_options):
     forte_options.add_array(
