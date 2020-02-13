@@ -244,6 +244,7 @@ mrdsrg-pt2:
    - mrdsrg-pt2-4
   long:
    - mrdsrg-pt2-3
+   - mrdsrg-pt2-5
    - mrdsrg-srgpt2-1
    - mrdsrg-srgpt2-2
 pci:

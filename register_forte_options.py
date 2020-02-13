@@ -597,7 +597,7 @@ def register_dsrg_options(forte_options):
                      "The way of forming T amplitudes (DSRG_NOSEMI, SELEC, ISA "
                      "only available in toy code mcsrgpt2)")
 
-    forte_options.add_str("H0TH", "FDIAG", ["FDIAG", "FFULL", "FDIAG_VACTV", "FDIAG_VDIAG"],
+    forte_options.add_str("DSRG_PT2_H0TH", "FDIAG", ["FDIAG", "FFULL", "FDIAG_VACTV", "FDIAG_VDIAG"],
                      "Different Zeroth-order Hamiltonian of DSRG-MRPT (used in mrdsrg code)")
 
     forte_options.add_bool("DSRG_DIPOLE", False, "Compute (if true) DSRG dipole moments")
@@ -705,6 +705,15 @@ def register_dsrg_options(forte_options):
     forte_options.add_bool("DSRG_MRPT3_BATCHED", False, "Force running the DSRG-MRPT3 code using the batched algorithm")
 
     forte_options.add_bool("IGNORE_MEMORY_WARNINGS", False, "Force running the DSRG-MRPT3 code using the batched algorithm")
+
+    forte_options.add_int("DSRG_DIIS_START", 2,
+                          "Iteration cycle to start adding error vectors for DSRG DIIS (< 1 for not doing DIIS)")
+
+    forte_options.add_int("DSRG_DIIS_FREQ", 1, "Frequency of extrapolating error vectors for DSRG DIIS")
+
+    forte_options.add_int("DSRG_DIIS_MIN_VEC", 2, "Minimum size of DIIS vectors")
+
+    forte_options.add_int("DSRG_DIIS_MAX_VEC", 6, "Maximum size of DIIS vectors")
 
 def register_dwms_options(forte_options):
     forte_options.add_double("DWMS_ZETA", 0.0, """Automatic Gaussian width cutoff for the density weights

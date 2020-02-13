@@ -141,6 +141,20 @@ void MASTER_DSRG::read_options() {
         }
     }
 
+    diis_start_ = foptions_->get_int("DSRG_DIIS_START");
+    diis_freq_ = foptions_->get_int("DSRG_DIIS_FREQ");
+    diis_min_vec_ = foptions_->get_int("DSRG_DIIS_MIN_VEC");
+    diis_max_vec_ = foptions_->get_int("DSRG_DIIS_MAX_VEC");
+    if (diis_min_vec_ < 1) {
+        diis_min_vec_ = 1;
+    }
+    if (diis_max_vec_ <= diis_min_vec_) {
+        diis_max_vec_ = diis_min_vec_ + 4;
+    }
+    if (diis_freq_ < 1) {
+        diis_freq_ = 1;
+    }
+
     outfile->Printf("Done");
 }
 
@@ -169,12 +183,14 @@ void MASTER_DSRG::set_ambit_MOSpace() {
     bvirt_label_ = "V";
 
     // add Ambit index labels
-    BTF_->add_mo_space(acore_label_, "mn", core_mos_, AlphaSpin);
-    BTF_->add_mo_space(bcore_label_, "MN", core_mos_, BetaSpin);
-    BTF_->add_mo_space(aactv_label_, "uvwxyz123", actv_mos_, AlphaSpin);
-    BTF_->add_mo_space(bactv_label_, "UVWXYZ!@#", actv_mos_, BetaSpin);
-    BTF_->add_mo_space(avirt_label_, "ef", virt_mos_, AlphaSpin);
-    BTF_->add_mo_space(bvirt_label_, "EF", virt_mos_, BetaSpin);
+    BTF_->add_mo_space(acore_label_, "m,n,c0,c1,c2,c3,c4,c5,c6,c7,c8,c9", core_mos_, AlphaSpin);
+    BTF_->add_mo_space(bcore_label_, "M,N,C0,C1,C2,C3,C4,C5,C6,C7,C8,C9", core_mos_, BetaSpin);
+    BTF_->add_mo_space(aactv_label_, "u,v,w,x,y,z,1,2,3,a0,a1,a2,a3,a4,a5,a6,a7,a8,a9", actv_mos_,
+                       AlphaSpin);
+    BTF_->add_mo_space(bactv_label_, "U,V,W,X,Y,Z,!,@,#,A0,A1,A2,A3,A4,A5,A6,A7,A8,A9", actv_mos_,
+                       BetaSpin);
+    BTF_->add_mo_space(avirt_label_, "e,f,v0,v1,v2,v3,v4,v5,v6,v7,v8,v9", virt_mos_, AlphaSpin);
+    BTF_->add_mo_space(bvirt_label_, "E,F,V0,V1,V2,V3,V4,V5,V6,V7,V8,V9", virt_mos_, BetaSpin);
 
     // map space labels to mo spaces
     label_to_spacemo_[acore_label_[0]] = core_mos_;
@@ -185,12 +201,18 @@ void MASTER_DSRG::set_ambit_MOSpace() {
     label_to_spacemo_[bvirt_label_[0]] = virt_mos_;
 
     // define composite spaces
-    BTF_->add_composite_mo_space("h", "ijkl", {acore_label_, aactv_label_});
-    BTF_->add_composite_mo_space("H", "IJKL", {bcore_label_, bactv_label_});
-    BTF_->add_composite_mo_space("p", "abcd", {aactv_label_, avirt_label_});
-    BTF_->add_composite_mo_space("P", "ABCD", {bactv_label_, bvirt_label_});
-    BTF_->add_composite_mo_space("g", "pqrsto456", {acore_label_, aactv_label_, avirt_label_});
-    BTF_->add_composite_mo_space("G", "PQRSTO789", {bcore_label_, bactv_label_, bvirt_label_});
+    BTF_->add_composite_mo_space("h", "i,j,k,l,h0,h1,h2,h3,h4,h5,h6,h7,h8,h9",
+                                 {acore_label_, aactv_label_});
+    BTF_->add_composite_mo_space("H", "I,J,K,L,H0,H1,H2,H3,H4,H5,H6,H7,H8,H9",
+                                 {bcore_label_, bactv_label_});
+    BTF_->add_composite_mo_space("p", "a,b,c,d,p0,p1,p2,p3,p4,p5,p6,p7,p8,p9",
+                                 {aactv_label_, avirt_label_});
+    BTF_->add_composite_mo_space("P", "A,B,C,D,P0,P1,P2,P3,P4,P5,P6,P7,P8,P9",
+                                 {bactv_label_, bvirt_label_});
+    BTF_->add_composite_mo_space("g", "p,q,r,s,t,o,4,5,6,g0,g1,g2,g3,g4,g5,g6,g7,g8,g9",
+                                 {acore_label_, aactv_label_, avirt_label_});
+    BTF_->add_composite_mo_space("G", "P,Q,R,S,T,O,7,8,9,G0,G1,G2,G3,G4,G5,G6,G7,G8,G9",
+                                 {bcore_label_, bactv_label_, bvirt_label_});
 
     // if DF/CD
     if (eri_df_) {
