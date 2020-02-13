@@ -56,8 +56,16 @@ class FragmentProjector {
     // std::shared_ptr<BasisSet> minao_basis, 	std::shared_ptr<BasisSet> prime_basis);
 
     // Build projector and return AO basis matrix Pf_AO
-    psi::SharedMatrix build_f_projector(std::shared_ptr<psi::Molecule> molecule,
-                                        std::shared_ptr<psi::BasisSet> basis);
+    psi::SharedMatrix build_f_projector(std::shared_ptr<psi::BasisSet> basis);
+
+    /// Return number of system (fragment) basis functions
+    int get_nbf_A() { return nbf_A_; }
+
+    /// Return number of atoms in the system
+    int get_natom_A() { return natom_A_; }
+
+    /// eturn the AO overlap matrix (S_)
+    psi::SharedMatrix get_Snn() { return S_; }
 
   private:
     /// The molecule
@@ -72,12 +80,16 @@ class FragmentProjector {
     /// Number of atoms in the system
     int natom_A_;
 
+    /// AO Overlap
+    psi::SharedMatrix S_;
+
     /// The startup function
     void startup();
 };
 
 // Helper function
-psi::SharedMatrix make_fragment_projector(psi::SharedWavefunction ref_wfn, psi::Options& options);
+std::pair<psi::SharedMatrix, int> make_fragment_projector(psi::SharedWavefunction ref_wfn,
+                                                          psi::Options& options);
 
 } // namespace forte
 #endif // _fragment_projector_h_
