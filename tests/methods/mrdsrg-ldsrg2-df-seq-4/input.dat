@@ -28,7 +28,8 @@ set globals{
 }
 
 set forte{
-   job_type                mrdsrg
+   active_space_solver     fci
+   correlation_solver      mrdsrg
    int_type                cholesky
    cholesky_tolerance      1e-4
    corr_level              ldsrg2
@@ -43,7 +44,7 @@ set forte{
 }
 
 Escf, wfn = energy('scf', return_wfn=True)
-compare_values(refrhf,variable("CURRENT ENERGY"),10,"SCF energy")
+compare_values(refrhf,variable("CURRENT ENERGY"),8,"SCF energy")
 
 energy('forte', ref_wfn=wfn)
 compare_values(refudsrg,variable("UNRELAXED ENERGY"),8,"MRDSRG unrelaxed energy")
