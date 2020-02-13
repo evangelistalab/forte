@@ -32,9 +32,8 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
      * @param ints A pointer to an allocated integral object
      * @param mo_space_info The MOSpaceInfo object
      */
-    MASTER_DSRG(RDMs rdms, std::shared_ptr<SCFInfo> scf_info,
-                std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
-                std::shared_ptr<MOSpaceInfo> mo_space_info);
+    MASTER_DSRG(RDMs rdms, std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
+                std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Destructor
     virtual ~MASTER_DSRG();
@@ -357,6 +356,17 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     std::array<ambit::BlockedTensor, 3> Mbar2_;
     /// DSRG transformed 3-body dipole integrals (active only)
     std::array<ambit::BlockedTensor, 3> Mbar3_;
+
+    // ==> DIIS control <==
+
+    /// Cycle number to start DIIS
+    int diis_start_;
+    /// Minimum number of DIIS vectors
+    int diis_min_vec_;
+    /// Maximum number of DIIS vectors
+    int diis_max_vec_;
+    /// Frequency of extrapolating the current DIIS vectors
+    int diis_freq_;
 
     // ==> commutators <==
     /**
