@@ -84,16 +84,6 @@ void DSRG_MRPT2::startup() {
     Fa_ = Fdiag_a_;
     Fb_ = Fdiag_b_;
 
-    // test options for reference relaxation
-    //    if (relax_ref_ != "NONE" && relax_ref_ != "ONCE") {
-    //        outfile->Printf("\n\n  Warning: RELAX_REF option \"%s\" is not supported. Change to
-    //        ONCE.", relax_ref_.c_str());
-    //        relax_ref_ = "ONCE";
-
-    //        warnings_.push_back(std::make_tuple("Unsupported RELAX_REF", "Change to ONCE",
-    //                                            "Change options in input.dat"));
-    //    }
-
     // Prepare Hbar
     if (relax_ref_ != "NONE" || multi_state_) {
         Hbar1_ = BTF_->build(tensor_type_, "1-body Hbar", spin_cases({"aa"}));
