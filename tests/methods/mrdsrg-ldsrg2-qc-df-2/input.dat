@@ -33,7 +33,8 @@ set mcscf{
 }
 
 set forte{
-   job_type               mrdsrg
+   active_space_solver    fci
+   correlation_solver     mrdsrg
    int_type               cholesky
    cholesky_tolerance     1e-4
    corr_level             ldsrg2_qc
@@ -49,7 +50,7 @@ set forte{
 }
 
 Emcscf, wfn = energy('mcscf', return_wfn=True)
-compare_values(refmcscf,variable("CURRENT ENERGY"),10,"MCSCF energy") #TEST
+compare_values(refmcscf,variable("CURRENT ENERGY"),8,"MCSCF energy") #TEST
 
 energy('forte', ref_wfn=wfn)
 compare_values(refdsrg,variable("CURRENT ENERGY"),8,"MRDSRG relaxed energy") #TEST
