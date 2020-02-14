@@ -1,0 +1,99 @@
+#! Generated using commit GITCOMMIT
+
+import forte
+
+refmcscf     = -99.406065223639
+
+memory 1 gb
+
+molecule HF{
+  0 1
+  F
+  H  1 R
+  R = 1.50
+}
+
+set globals{
+   basis                  3-21g
+   reference              twocon
+   scf_type               pk
+   e_convergence          8
+   maxiter                100
+   docc                   [3,0,1,1]
+}
+
+set mcscf{
+   docc                   [2,0,1,1]
+   socc                   [2,0,0,0]
+   maxiter                1000
+   level_shift            0.5
+   d_convergence          10
+   e_convergence          12
+}
+
+set forte{
+   correlation_solver     mrdsrg
+   active_space_solver    cas
+   frozen_docc            [1,0,0,0]
+   restricted_docc        [1,0,1,1]
+   active                 [2,0,0,0]
+   dsrg_s                 1.0
+   relax_ref              twice
+   maxiter                100
+   e_convergence          10
+   r_convergence          8
+   dsrg_diis_start        3
+   dsrg_diis_min_vec      4
+   dsrg_diis_max_vec      8
+}
+
+Emcscf, wfn = energy('mcscf', return_wfn=True)
+compare_values(refmcscf,variable("CURRENT ENERGY"),10,"MCSCF energy") #TEST
+
+# Diagonal Fock
+refudsrg   = -99.494994198864 # unrelaxed
+refprdsrg  = -99.496756048230 # partially relaxed
+refrdsrg   = -99.496203826164 # relaxed
+
+set forte DSRG_PT2_H0TH Fdiag
+energy('forte', ref_wfn=wfn)
+
+compare_values(refudsrg,variable("UNRELAXED ENERGY"),8,"PT2 Fdiag unrelaxed energy")
+compare_values(refprdsrg,variable("PARTIALLY RELAXED ENERGY"),8,"PT2 Fdiag partially relaxed energy")
+compare_values(refrdsrg,variable("RELAXED ENERGY"),8,"PT2 Fdiag relaxed energy")
+
+# Full Fock
+refudsrg   = -99.486303007568 # unrelaxed
+refprdsrg  = -99.490161575487 # partially relaxed
+refrdsrg   = -99.489589283328 # relaxed
+
+set forte DSRG_PT2_H0TH Ffull
+energy('forte', ref_wfn=wfn)
+
+compare_values(refudsrg,variable("UNRELAXED ENERGY"),8,"PT2 Ffull unrelaxed energy")
+compare_values(refprdsrg,variable("PARTIALLY RELAXED ENERGY"),8,"PT2 Ffull partially relaxed energy")
+compare_values(refrdsrg,variable("RELAXED ENERGY"),8,"PT2 Ffull relaxed energy")
+
+# Dyall
+refudsrg   = -99.497428098025 # unrelaxed
+refprdsrg  = -99.498940714352 # partially relaxed
+refrdsrg   = -99.499401759436 # relaxed
+
+set forte DSRG_PT2_H0TH Fdiag_Vactv
+energy('forte', ref_wfn=wfn)
+
+compare_values(refudsrg,variable("UNRELAXED ENERGY"),8,"PT2 Dyall unrelaxed energy")
+compare_values(refprdsrg,variable("PARTIALLY RELAXED ENERGY"),8,"PT2 Dyall partially relaxed energy")
+compare_values(refrdsrg,variable("RELAXED ENERGY"),8,"PT2 Dyall relaxed energy")
+
+# Fink
+refudsrg   = -99.505722156023 # unrelaxed
+refprdsrg  = -99.508758486331 # partially relaxed
+refrdsrg   = -99.508678296680 # relaxed
+
+set forte DSRG_PT2_H0TH Fdiag_Vdiag
+energy('forte', ref_wfn=wfn)
+
+compare_values(refudsrg,variable("UNRELAXED ENERGY"),8,"PT2 Fink unrelaxed energy")
+compare_values(refprdsrg,variable("PARTIALLY RELAXED ENERGY"),8,"PT2 Fink partially relaxed energy")
+compare_values(refrdsrg,variable("RELAXED ENERGY"),8,"PT2 Fink relaxed energy")

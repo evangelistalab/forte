@@ -47,4 +47,4 @@ Escf, wfn = energy('scf', return_wfn=True)
 compare_values(refrhf,variable("CURRENT ENERGY"),10,"SCF energy")
 
 energy('forte', ref_wfn=wfn)
-compare_values(refudsrg,variable("UNRELAXED ENERGY"),10,"MRDSRG unrelaxed energy")
+compare_values(refudsrg,variable("UNRELAXED ENERGY"),8,"MRDSRG unrelaxed energy")
