@@ -16,30 +16,31 @@ molecule H4{
 }
 
 set globals{
-   basis                   cc-pvdz
-   reference               rhf
-   scf_type                pk
-   d_convergence           12
-   e_convergence           15
-   maxiter                 300
+  basis                   cc-pvdz
+  reference               rhf
+  scf_type                pk
+  d_convergence           12
+  e_convergence           15
+  maxiter                 300
 }
 
 set forte{
-   job_type                mrdsrg
-   int_type                cholesky
-   cholesky_tolerance      1e-4
-   corr_level              ldsrg2
-   restricted_docc         [0,0,0,0,0,0,0,0]
-   active                  [1,0,0,1,0,1,1,0]
-   root_sym                0
-   nroot                   1
-   dsrg_s                  0.5
-   e_convergence           8
-   relax_ref               none
+  correlation_solver     mrdsrg
+  active_space_solver    fci
+  int_type               cholesky
+  cholesky_tolerance     1e-4
+  corr_level             ldsrg2
+  restricted_docc        [0,0,0,0,0,0,0,0]
+  active                 [1,0,0,1,0,1,1,0]
+  root_sym               0
+  nroot                  1
+  dsrg_s                 0.5
+  e_convergence          8
+  relax_ref              none
 }
 
 Escf, wfn = energy('scf', return_wfn=True)
-compare_values(refrhf,variable("CURRENT ENERGY"),10,"SCF energy")
+compare_values(refrhf,variable("CURRENT ENERGY"),8,"SCF energy")
 
 energy('forte', ref_wfn=wfn)
-compare_values(refudsrg,variable("UNRELAXED ENERGY"),10,"MRDSRG unrelaxed energy")
+compare_values(refudsrg,variable("UNRELAXED ENERGY"),8,"MRDSRG unrelaxed energy")

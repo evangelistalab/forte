@@ -2,10 +2,9 @@
 
 import forte
 
-refrohf    = -15.611546532146
-refudsrg   = -15.545392859359275 # unrelaxed
-refprdsrg  = -15.545411508493 # partially relaxed
-refrdsrg   = -15.545381352943 # relaxed
+refrohf    = -1.1264031243547474
+refudsrg   = -1.151561672179 # unrelaxed
+refprdsrg  = -1.151676729051 # partially relaxed
 
 molecule {
   0 1
@@ -42,9 +41,8 @@ set forte {
 }
 
 Escf, wfn = energy('scf', return_wfn=True)
-#compare_values(refrohf,variable("CURRENT ENERGY"),10,"ROHF energy")
+compare_values(refrohf,variable("CURRENT ENERGY"),10,"ROHF energy")
 
 energy('forte', ref_wfn=wfn)
-#compare_values(refudsrg,variable("UNRELAXED ENERGY"),8,"MRDSRG unrelaxed energy")
-#compare_values(refprdsrg,variable("PARTIALLY RELAXED ENERGY"),8,"MRDSRG partially relaxed energy")
-#compare_values(refrdsrg,variable("RELAXED ENERGY"),8,"MRDSRG relaxed energy")
+compare_values(refudsrg,variable("UNRELAXED ENERGY"),8,"MRDSRG unrelaxed energy")
+compare_values(refprdsrg,variable("PARTIALLY RELAXED ENERGY"),8,"MRDSRG partially relaxed energy")

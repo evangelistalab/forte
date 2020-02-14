@@ -354,9 +354,11 @@ which controls the truncation of the recursive single commutator (RSC) approxima
    Here we use the fully relaxed version, which is done by setting :code:`RELAX_REF` to :code:`ITERATE`.
 
 .. note::
-  The reference relaxation procedure is performed in a tick-tock way (see :ref:`dsrg_variants`), by alternatinge the solution of the DSRG amplitude equations and the diagonalization of the DSRG Hamiltonian.
+  The reference relaxation procedure is performed in a tick-tock way (see :ref:`dsrg_variants`),
+  by alternating the solution of the DSRG amplitude equations and the diagonalization of the DSRG Hamiltonian.
   This procedure may not monotonically converge and is potentially numerically unstable.
-  We therefore suggest using a moderate energy threshold (:math:`\geq 10^{-8}` a.u.) for the iterative reference relaxation, which is controlled by the option :code:`RELAX_E_CONVERGENCE` .
+  We therefore suggest using a moderate energy threshold (:math:`\geq 10^{-8}` a.u.) for the iterative reference relaxation,
+  which is controlled by the option :code:`RELAX_E_CONVERGENCE` .
 
 For a given reference wave function, the output prints out a summary of:
 
@@ -416,7 +418,9 @@ Let us introduce the nomenclature for reference relaxation.
    d) Fully Relaxed      :code:`-100.113533289341`  last iter.; relaxed ref.
    ====================  =========================  =============================
 
-   The unrelaxed energy is a diagonalize-then-perturb scheme, while the partially relaxed energy corresponds to a diagonalize-then-perturb-then-diagonalize method. In this example, the fully relaxed energy is well reproduced by
+   The unrelaxed energy is a diagonalize-then-perturb scheme,
+   while the partially relaxed energy corresponds to a diagonalize-then-perturb-then-diagonalize method.
+   In this example, the fully relaxed energy is well reproduced by
    the relaxed energy with a small error (:math:`< 10^{-4}` a.u.).
 
 **Other Examples**
@@ -492,6 +496,36 @@ For example, 3 means Taylor expansion is performed if denominators are smaller t
 
 * Type: integer
 * Default: 3
+
+**DSRG_DIIS_START**
+
+The minimum iteration to start storing DIIS vectors for MRDSRG amplitudes.
+Any number smaller than 1 will turn off the DIIS procedure.
+
+* Type: int
+* Default: 2
+
+**DSRG_DIIS_FREQ**
+
+How often to do a DIIS extrapolation in MRDSRG iterations.
+For example, 1 means do DIIS every iteration and 2 is for every other iteration, etc.
+
+* Type: int
+* Default: 1
+
+**DSRG_DIIS_MIN_VEC**
+
+Minimum number of error vectors stored for DIIS extrapolation in MRDSRG.
+
+* Type: int
+* Default: 2
+
+**DSRG_DIIS_MAX_VEC**
+
+Maximum number of error vectors stored for DIIS extrapolation in MRDSRG.
+
+* Type: int
+* Default: 6
 
 .. _dsrg_variants:
 
@@ -584,7 +618,43 @@ Since much less number of tensor elements are involved, NIVO approximation drama
 However, the overall time scaling of MR-LDSRG(2) remain unchanged (prefector reduction).
 The error introduced by the NIVO approximation is usually negligible.
 
-5. Examples
+5. Zeroth-order Hamiltonian of DSRG-MRPT2 in MRDSRG Class
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+DSRG-MRPT2 is also implemented in the MRDSRG class for testing other zeroth-order Hamiltonian.
+The general equation for all choices is to compute the summed second-order Hamiltonian:
+
+.. math:: \bar{H}^{[2]} = \hat{H} + [\hat{H}, \hat{A}^{(1)}] + [\hat{H}^{(0)}, \hat{A}^{(2)}] + \frac{1}{2} [[\hat{H}^{(0)}, \hat{A}^{(1)}], \hat{A}^{(1)}]
+
+where for brevity the :math:`(s)` notation is ignored and the superscripts of parentheses indicate the orders of perturbation.
+We have implemented the following choices for the zeroth-order Hamiltonian.
+
+**Diagonal Fock operator (Fdiag)**
+
+  This choice contains the three diagonal blocks of the Fock matrix,
+  that is, core-core, active-active, and virtual-virtual.
+  Due to its simplicity, :math:`\bar{H}^{[2]}` can be obtained in a non-iterative manner in the semicanonical basis.
+
+**Fock operator (Ffull)**
+
+  This choice contains all the blocks of the Fock matrix.
+  Since Fock matrix contains non-diagonal contributions, :math:`[\hat{H}^{(0)}, \hat{A}^{(2)}]` can contribute to the energy.
+  As such, both first- and second-order amplitudes are solved iteratively.
+
+**Dyall Hamiltonian (Fdiag_Vactv)**
+
+  This choice contains the diagonal Fock matrix and the part of V labeled only by active indices.
+  We solve the first-order amplitudes iteratively.
+  However, :math:`[\hat{H}^{(0)}, \hat{A}]` will neither contribute to the energy nor the active part of the :math:`\bar{H}^{[2]}`.
+
+**Fink Hamiltonian (Fdiag_Vdiag)**
+
+  This choice contains all the blocks of Dyall Hamiltonian plus other parts of V that do not change the excitation level.
+  For example, these additional blocks include: cccc, aaaa, vvvv, caca, caac, acac, acca,
+  cvcv, cvvc, vcvc, vccv, avav, avva, vava, and vaav.
+  The computation procedure is similar to that of Dyall Hamiltonian.
+
+6. Examples
 +++++++++++
 
 Here we slightly modify the more advanced example in :ref:`General DSRG Examples <basic_dsrg_example>`
@@ -611,7 +681,7 @@ to adopt the sequential transformation and NIVO approximation. ::
   Since the test case is very small, invoking these two keywords does not make the computation faster.
   A significant speed improvement can be observed for a decent amout of basis functions (:math:`\sim 100`).
 
-6. Related Options
+7. Related Options
 ++++++++++++++++++
 
 **RELAX_REF**
@@ -658,6 +728,14 @@ Apply non-interacting virtual orbital (NIVO) approximation in evaluating the tra
 
 * Type: boolean
 * Default: False
+
+**DSRG_PT2_H0TH**
+
+The zeroth-order Hamiltonian used in the MRDSRG code for computing DSRG-MRPT2 energy.
+
+* Type: string
+* Options: FDIAG, FFULL, FDIAG_VACTV, FDIAG_VDIAG
+* Default: FDIAG
 
 
 Density Fitted (DF) and Cholesky Decomposition (CD) Implementations
@@ -1341,6 +1419,7 @@ Acronyms used in the following text:
   mrdsrg-pt2-2                        SS, PR                   :math:`\text{BeH}_{2}`                        PT2
   mrdsrg-pt2-3                        SS, FR                   :math:`\text{BeH}_{2}`                        long, PT2
   mrdsrg-pt2-4                        SS, FR                   :math:`\text{HF}`                             PT2
+  mrdsrg-pt2-5                        SS, R                    :math:`\text{HF}`                             long, PT2, DIIS, 0th-order Hamiltonian
   mrdsrg-srgpt2-1                     SS, U                    :math:`\text{BeH}_{2}`                        Long, SRG_PT2
   mrdsrg-srgpt2-2                     SS, U                    :math:`\text{BeH}_{2}`                        LONG, SRG_PT2, Dyall Hamiltonian
   mrdsrg-ldsrg2-df-1                  SS, R                    :math:`\text{BeH}_{2}`                        CD, long
