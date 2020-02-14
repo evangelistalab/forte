@@ -21,7 +21,9 @@ pytest
 test4=$?
 
 # Gather data
-lcov --directory . --capture --output-file coverage.info
+cd ../../
+lcov --directory tests/methods --capture --output-file coverage.info
+lcov --directory tests/pytest --capture --output-file coverage.info
 lcov --remove coverage.info '/usr/*' --output-file coverage.info # filter system-files
 lcov --list coverage.info #debug info
 bash <(curl -s https://codecov.io/bash) -f coverage.info || echo "Codecov did not collect coverage reports"
