@@ -64,7 +64,7 @@ endif()
 add_compile_options(-Wall -Wextra -pedantic) # -Werror)
 
 if(ENABLE_CODECOV)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage") # enabling coverage
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage")
 endif()
 
 if(ENABLE_UNTESTED_CODE)
@@ -236,10 +236,9 @@ if (ENABLE_ForteTests)
   include_directories(${CMAKE_BINARY_DIR})
   add_executable(forte_benchmarks
     tests/benchmark/determinant_benchmark.cc)
-
 endif (ENABLE_ForteTests)
 
-get_property(dirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES)
-foreach(dir ${dirs})
-  message(STATUS "dir='${dir}'")
-endforeach()
+#get_property(dirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES)
+#foreach(dir ${dirs})
+#  message(STATUS "dir='${dir}'")
+#endforeach()
