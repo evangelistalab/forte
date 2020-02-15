@@ -328,6 +328,10 @@ PYBIND11_MODULE(forte, m) {
     py::class_<DressedQuantity>(m, "DressedQuantity")
         .def("contract_with_rdms", &DressedQuantity::contract_with_rdms, "reference"_a,
              "Contract densities with quantity");
+
+                 // export ambit::Tensor
+    py::class_<psi::Options>(m, "psi4.core.Options");
+
 }
 
 } // namespace forte
