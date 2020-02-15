@@ -86,48 +86,6 @@ class SigmaVectorSparse : public SigmaVector {
     std::shared_ptr<ActiveSpaceIntegrals> fci_ints_;
 };
 
-/**
- * @brief The SigmaVectorList class
- * Computes the sigma vector from a sparse Hamiltonian.
- */
-class SigmaVectorList : public SigmaVector {
-  public:
-    SigmaVectorList(const std::vector<Determinant>& space, bool print_detail,
-                    std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
-
-    void compute_sigma(psi::SharedVector sigma, psi::SharedVector b);
-    //  void compute_sigma(Matrix& sigma, Matrix& b, int nroot);
-    void get_diagonal(psi::Vector& diag);
-    void get_hamiltonian(psi::Matrix& H);
-    std::vector<std::pair<std::vector<int>, std::vector<double>>> get_sparse_hamiltonian();
-    void add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& bad_states);
-
-    std::vector<std::vector<std::pair<size_t, double>>> bad_states_;
-
-  protected:
-    const std::vector<Determinant>& space_;
-    std::shared_ptr<ActiveSpaceIntegrals> fci_ints_;
-
-    // Create the list of a_p|N>
-    std::vector<std::vector<std::pair<size_t, short>>> a_ann_list;
-    std::vector<std::vector<std::pair<size_t, short>>> b_ann_list;
-    // Create the list of a+_q |N-1>
-    std::vector<std::vector<std::pair<size_t, short>>> a_cre_list;
-    std::vector<std::vector<std::pair<size_t, short>>> b_cre_list;
-
-    // Create the list of a_q a_p|N>
-    std::vector<std::vector<std::tuple<size_t, short, short>>> aa_ann_list;
-    std::vector<std::vector<std::tuple<size_t, short, short>>> ab_ann_list;
-    std::vector<std::vector<std::tuple<size_t, short, short>>> bb_ann_list;
-    // Create the list of a+_s a+_r |N-2>
-    std::vector<std::vector<std::tuple<size_t, short, short>>> aa_cre_list;
-    std::vector<std::vector<std::tuple<size_t, short, short>>> ab_cre_list;
-    std::vector<std::vector<std::tuple<size_t, short, short>>> bb_cre_list;
-    std::vector<double> diag_;
-
-    bool print_details_ = true;
-};
-
 /* Uses ann/cre lists in sigma builds (Harrison and Zarrabian method) */
 class SigmaVectorWfn1 : public SigmaVector {
   public:
@@ -190,6 +148,7 @@ class SigmaVectorWfn2 : public SigmaVector {
     std::vector<std::vector<std::tuple<size_t, short, short>>>& ab_list_;
     std::vector<std::vector<std::tuple<size_t, short, short>>>& bb_list_;
 };
+
 /* Uses only cre lists, DGEMM sigma build */
 class SigmaVectorWfn3 : public SigmaVector {
   public:

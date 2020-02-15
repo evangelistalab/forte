@@ -90,7 +90,6 @@ src/gradient_tpdm/integraltransform_sort_so_tpdm.cc
 src/gradient_tpdm/integraltransform_tpdm_unrestricted.cc
 src/sparse_ci/ci_reference.cc
 src/sparse_ci/determinant_hashvector.cc
-src/sparse_ci/determinant_sq_operator.cc
 src/sparse_ci/determinant_functions.cc
 src/dmrg/dmrgscf.cc
 src/dmrg/dmrgsolver.cc
