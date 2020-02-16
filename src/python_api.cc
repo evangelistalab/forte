@@ -58,7 +58,6 @@
 #include "sparse_ci/determinant.h"
 #include "post_process/spin_corr.h"
 #include "sparse_ci/determinant_hashvector.h"
-#include "sparse_ci/determinant_sq_operator.h"
 
 namespace py = pybind11;
 using namespace pybind11::literals;
@@ -168,11 +167,7 @@ void export_Determinant(py::module& m) {
         .def("add", &DeterminantHashVec::add, "Add a determinant")
         .def("size", &DeterminantHashVec::size, "Get the size of the vector")
         .def("get_det", &DeterminantHashVec::get_det, "Return a specific determinant by reference")
-        .def("get_idx", &DeterminantHashVec::get_idx, " Return the index of a determinant");
-
-    py::class_<DeterminantSQOperator>(m, "DeterminantSQOperator")
-        .def(py::init<>())
-        .def("add_operator", &DeterminantSQOperator::add_operator, "Add an operator");
+        .def("get_idx", &DeterminantHashVec::get_idx, " Return the index of a determinant");    
 }
 
 // TODO: export more classes using the function above
