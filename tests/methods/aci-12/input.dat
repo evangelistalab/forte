@@ -5,8 +5,8 @@
 import forte
 
 refscf = -75.0525898286472284 
-refaci = -75.446109544292
-refacipt2  = -75.456107928402
+refaci = -75.383717530874
+refacipt2  = -75.433623094732
 
 molecule N2{
 C 
@@ -32,7 +32,7 @@ set forte {
   multiplicity 1
   frozen_docc [1,0,0,0,0,1,0,0]
   sci_excited_algorithm average
-  sigma 0.01
+  sigma 0.05
   nroot 3
   charge 0
   aci_enforce_spin_complete true
@@ -47,3 +47,5 @@ compare_values(refscf, variable("CURRENT ENERGY"),9, "SCF energy") #TEST
 
 energy('forte')
 compare_values(refaci, variable("ACI ENERGY"),9, "ACI energy") #TEST
+compare_values(refacipt2, variable("ACI+PT2 ENERGY"),7, "ACI+PT2 energy") #TEST
+

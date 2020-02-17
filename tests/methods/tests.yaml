@@ -16,6 +16,7 @@ aci:
    - aci-9
    - aci-10
    - aci-11
+   - aci-12
    - aci-13
    - aci-14
    - aci-15
@@ -31,7 +32,6 @@ aci:
    - cis-aci-1
    - aci-full-pt2-2
   unused:
-   - aci-12
    - aci-mrcisd-1
    - aci-mrcisd-2
 asci:
