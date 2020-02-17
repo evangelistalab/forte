@@ -35,6 +35,7 @@
 #include "base_classes/state_info.h"
 #include "sparse_ci/determinant_hashvector.h"
 #include "sparse_ci/operator.h"
+#include "sparse_ci/sigma_vector.h"
 
 namespace forte {
 class ActiveSpaceIntegrals;
@@ -89,10 +90,15 @@ class SelectedCIMethod {
     virtual DeterminantHashVec get_PQ_space() = 0;
     virtual psi::SharedMatrix get_PQ_evecs() = 0;
     virtual psi::SharedVector get_PQ_evals() = 0;
-    virtual WFNOperator get_op() = 0;
+    virtual std::shared_ptr<WFNOperator> get_op() = 0;
     virtual size_t get_ref_root() = 0;
     virtual std::vector<double> get_multistate_pt2_energy_correction() = 0;
     virtual size_t get_cycle();
+
+    void set_sigma_vector(std::string type);
+    SigmaVectorType sigma_vector_type() const;
+    /// Return the maximum amount of memory allowed
+    size_t max_memory() const;
 
   protected:
     /// The state to calculate
@@ -100,6 +106,9 @@ class SelectedCIMethod {
 
     /// The number of roots (default = 1)
     size_t nroot_ = 1;
+
+    /// The sigma vector type
+    SigmaVectorType sigma_vector_type_ = SigmaVectorType::Dynamic;
 
     /// The MOSpaceInfo object
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
@@ -118,6 +127,9 @@ class SelectedCIMethod {
 
     /// Maximum number of SCI iterations
     size_t max_cycle_;
-};
+
+    /// Maximum memory size
+    size_t max_memory_ = 0;
+}; // namespace forte
 } // namespace forte
 #endif // _sci_h_

@@ -1292,10 +1292,7 @@ double ProjectorCI::estimate_var_energy_within_error_sigma(const det_hashvec& de
     op.build_strings(det_map);
     op.op_s_lists(det_map);
     op.tp_s_lists(det_map);
-    //    std::vector<std::pair<std::vector<size_t>, std::vector<double>>> H =
-    //    op.build_H_sparse(det_map);
-    //    SigmaVectorSparse svs(H);
-    SigmaVectorWfn2 svs(det_map, op, as_ints_);
+    SigmaVectorSparseList svs(det_map, op, as_ints_);
     size_t sub_size = svs.size();
     // allocate vectors
     psi::SharedVector b(new psi::Vector("b", sub_size));
@@ -2246,7 +2243,7 @@ psi::SharedVector ProjectorCI::get_PQ_evals() {
     evals->set(0, approx_energy_ - as_ints_->scalar_energy() - nuclear_repulsion_energy_);
     return evals;
 }
-WFNOperator ProjectorCI::get_op() { return WFNOperator(); }
+std::shared_ptr<WFNOperator> ProjectorCI::get_op() { return WFNOperator(); }
 size_t ProjectorCI::get_ref_root() { return current_root_; }
 std::vector<double> ProjectorCI::get_multistate_pt2_energy_correction() {
     return std::vector<double>(nroot_);

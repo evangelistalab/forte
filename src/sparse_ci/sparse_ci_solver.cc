@@ -69,119 +69,39 @@ void SparseCISolver::set_maxiter_davidson(int value) { maxiter_davidson_ = value
 
 void SparseCISolver::set_spin_project_full(bool value) { spin_project_full_ = value; }
 
-void SparseCISolver::set_sigma_method(std::string value) { sigma_method_ = value; }
-
 void SparseCISolver::set_force_diag(bool value) { force_diag_ = value; }
 
-void SparseCISolver::set_max_memory(size_t value) { max_memory_ = value; }
-
-void SparseCISolver::diagonalize_hamiltonian(const std::vector<Determinant>& space,
+void SparseCISolver::diagonalize_hamiltonian(const DeterminantHashVec& space,
+                                             std::shared_ptr<SigmaVector> sigma_vector,
                                              psi::SharedVector& evals, psi::SharedMatrix& evecs,
-                                             int nroot, int multiplicity,
-                                             DiagonalizationMethod diag_method) {
-    timer diag("H Diagonalization");
-    if ((!force_diag_ and (space.size() <= 200)) or diag_method == Full) {
-        diagonalize_full(space, evals, evecs, nroot, multiplicity);
-    } else {
-        diagonalize_davidson_liu_solver(space, evals, evecs, nroot, multiplicity);
-    }
-}
-
-void SparseCISolver::diagonalize_hamiltonian_map(const DeterminantHashVec& space, WFNOperator& op,
-                                                 psi::SharedVector& evals, psi::SharedMatrix& evecs,
-                                                 int nroot, int multiplicity,
-                                                 DiagonalizationMethod diag_method) {
-    timer diag("H Diagonalization");
-    if ((!force_diag_ and (space.size() <= 200)) or diag_method == Full) {
-        const std::vector<Determinant> dets = space.determinants();
-        diagonalize_full(dets, evals, evecs, nroot, multiplicity);
-    } else if (diag_method == Sparse) {
-        diagonalize_dl_sparse(space, op, evals, evecs, nroot, multiplicity);
-        //    } else if (diag_method == MPI) {
-        //        diagonalize_mpi(space, op, evals, evecs, nroot, multiplicity);
-        //    } else if (diag_method == Direct) {
-        //        diagonalize_dl_direct(space, op, evals, evecs, nroot, multiplicity);
-    } else if (diag_method == Dynamic) {
-        diagonalize_dl_dynamic(space, evals, evecs, nroot, multiplicity);
-    } else { // DLSolver
-        diagonalize_dl(space, op, evals, evecs, nroot, multiplicity);
-    }
-}
-#ifdef HAVE_MPI
-void SparseCISolver::diagonalize_mpi(const DeterminantHashVec& space, WFNOperator& op,
-                                     psi::SharedVector& evals, psi::SharedMatrix& evecs, int nroot,
-                                     int multiplicity) {
-
+                                             int nroot, int multiplicity) {
     if (print_details_) {
-        outfile->Printf("\n\n  Distributed Davidson-Liu algorithm");
+        outfile->Printf("\n\n  Davidson-Liu solver algorithm using %s sigma algorithm",
+                        sigma_vector->type().c_str());
     }
-
     size_t dim_space = space.size();
     evecs.reset(new psi::Matrix("U", dim_space, nroot));
     evals.reset(new Vector("e", nroot));
-
-    SigmaVectorMPI sv(space, op);
-    SigmaVector* sigma_vector = &sv;
     sigma_vector->add_bad_roots(bad_states_);
     davidson_liu_solver_map(space, sigma_vector, evals, evecs, nroot, multiplicity);
-}
-#endif
 
-void SparseCISolver::diagonalize_dl(const DeterminantHashVec& space, WFNOperator& op,
-                                    psi::SharedVector& evals, psi::SharedMatrix& evecs, int nroot,
-                                    int multiplicity) {
-    if (print_details_) {
-        outfile->Printf("\n\n  Davidson-Liu solver algorithm");
-        outfile->Printf("\n  Using %s sigma builder", sigma_method_.c_str());
-    }
-    size_t dim_space = space.size();
-    evecs.reset(new psi::Matrix("U", dim_space, nroot));
-    evals.reset(new Vector("e", nroot));
-    SigmaVector* sigma_vector = nullptr;
-
-    if (sigma_vec_ != nullptr) {
-        sigma_vec_->add_bad_roots(bad_states_);
-        davidson_liu_solver_map(space, sigma_vec_, evals, evecs, nroot, multiplicity);
-        return;
-    }
-
-    if (sigma_method_ == "HZ") {
-        SigmaVectorWfn1 svw(space, op, fci_ints_);
-        sigma_vector = &svw;
-        sigma_vector->add_bad_roots(bad_states_);
-        davidson_liu_solver_map(space, sigma_vector, evals, evecs, nroot, multiplicity);
-    } else if (sigma_method_ == "SPARSE") {
-        SigmaVectorWfn2 svw(space, op, fci_ints_);
-        sigma_vector = &svw;
-        sigma_vector->add_bad_roots(bad_states_);
-        davidson_liu_solver_map(space, sigma_vector, evals, evecs, nroot, multiplicity);
-    } else if (sigma_method_ == "MMULT") {
-        SigmaVectorWfn3 svw(space, op, fci_ints_);
-        sigma_vector = &svw;
-        sigma_vector->add_bad_roots(bad_states_);
-        davidson_liu_solver_map(space, sigma_vector, evals, evecs, nroot, multiplicity);
-    }
+    //    timer diag("H Diagonalization");
+    //    if ((!force_diag_ and (space.size() <= 200)) or diag_method == Full) {
+    //        const std::vector<Determinant> dets = space.determinants();
+    //        diagonalize_full(dets, evals, evecs, nroot, multiplicity);
+    //    } else if (diag_method == Sparse) {
+    //        diagonalize_dl_sparse(space, sigma_vec_, evals, evecs, nroot, multiplicity);
+    //    } else if (diag_method == Dynamic) {
+    //        diagonalize_dl_dynamic(space, evals, evecs, nroot, multiplicity);
+    //    } else { // DLSolver
+    //        diagonalize_dl(space, sigma_vec_, evals, evecs, nroot, multiplicity);
+    //    }
 }
 
-void SparseCISolver::diagonalize_dl_dynamic(const DeterminantHashVec& space,
-                                            psi::SharedVector& evals, psi::SharedMatrix& evecs,
-                                            int nroot, int multiplicity) {
-    if (print_details_) {
-        outfile->Printf("\n\n  Davidson-Liu solver algorithm with dynamic sigma builds");
-    }
-    size_t dim_space = space.size();
-    evecs.reset(new psi::Matrix("U", dim_space, nroot));
-    evals.reset(new Vector("e", nroot));
-
-    SigmaVectorDynamic svd(space, fci_ints_, max_memory_);
-    SigmaVector* sigma_vector = &svd;
-    sigma_vector->add_bad_roots(bad_states_);
-    davidson_liu_solver_map(space, sigma_vector, evals, evecs, nroot, multiplicity);
-}
-
-void SparseCISolver::diagonalize_full(const std::vector<Determinant>& space,
-                                      psi::SharedVector& evals, psi::SharedMatrix& evecs, int nroot,
-                                      int multiplicity) {
+void SparseCISolver::diagonalize_hamiltonian_full(const std::vector<Determinant>& space,
+                                                  psi::SharedVector& evals,
+                                                  psi::SharedMatrix& evecs, int nroot,
+                                                  int multiplicity) {
 
     size_t dim_space = space.size();
     evecs.reset(new psi::Matrix("U", dim_space, nroot));
@@ -278,31 +198,6 @@ void SparseCISolver::diagonalize_full(const std::vector<Determinant>& space,
         // Diagonalize H
         H->diagonalize(evecs, evals);
     }
-}
-
-void SparseCISolver::diagonalize_davidson_liu_solver(const std::vector<Determinant>& space,
-                                                     psi::SharedVector& evals,
-                                                     psi::SharedMatrix& evecs, int nroot,
-                                                     int multiplicity) {
-    if (print_details_) {
-        outfile->Printf("\n\n  Davidson-liu solver algorithm");
-    }
-
-    size_t dim_space = space.size();
-    evecs.reset(new psi::Matrix("U", dim_space, nroot));
-    evals.reset(new Vector("e", nroot));
-
-    // Diagonalize H
-    if (sigma_vec_ != nullptr) {
-        sigma_vec_->add_bad_roots(bad_states_);
-        davidson_liu_solver(space, sigma_vec_, evals, evecs, nroot, multiplicity);
-        return;
-    }
-
-    SigmaVectorList svl(space, print_details_, fci_ints_);
-    SigmaVector* sigma_vector = &svl;
-    sigma_vector->add_bad_roots(bad_states_);
-    davidson_liu_solver(space, sigma_vector, evals, evecs, nroot, multiplicity);
 }
 
 psi::SharedMatrix SparseCISolver::build_full_hamiltonian(const std::vector<Determinant>& space) {
@@ -848,7 +743,7 @@ bool SparseCISolver::davidson_liu_solver(const std::vector<Determinant>& space,
 }
 
 bool SparseCISolver::davidson_liu_solver_map(const DeterminantHashVec& space,
-                                             SigmaVector* sigma_vector,
+                                             std::shared_ptr<SigmaVector> sigma_vector,
                                              psi::SharedVector Eigenvalues,
                                              psi::SharedMatrix Eigenvectors, int nroot,
                                              int multiplicity) {
@@ -995,30 +890,30 @@ bool SparseCISolver::davidson_liu_solver_map(const DeterminantHashVec& space,
     return true;
 }
 
-void SparseCISolver::diagonalize_dl_sparse(const DeterminantHashVec& space, WFNOperator& op,
-                                           psi::SharedVector& evals, psi::SharedMatrix& evecs,
-                                           int nroot, int multiplicity) {
-    if (print_details_) {
-        outfile->Printf("\n\n  Davidson-liu sparse algorithm");
-    }
+// void SparseCISolver::diagonalize_dl_sparse(const DeterminantHashVec& space, WFNOperator& op,
+//                                           psi::SharedVector& evals, psi::SharedMatrix& evecs,
+//                                           int nroot, int multiplicity) {
+//    if (print_details_) {
+//        outfile->Printf("\n\n  Davidson-liu sparse algorithm");
+//    }
 
-    // Find all the eigenvalues and eigenvectors of the Hamiltonian
-    std::vector<std::pair<std::vector<size_t>, std::vector<double>>> H = op.build_H_sparse(space);
+//    // Find all the eigenvalues and eigenvectors of the Hamiltonian
+//    std::vector<std::pair<std::vector<size_t>, std::vector<double>>> H = op.build_H_sparse(space);
 
-    size_t dim_space = space.size();
-    evecs.reset(new psi::Matrix("U", dim_space, nroot));
-    evals.reset(new Vector("e", nroot));
+//    size_t dim_space = space.size();
+//    evecs.reset(new psi::Matrix("U", dim_space, nroot));
+//    evals.reset(new Vector("e", nroot));
 
-    // Diagonalize H
-    if (sigma_vec_ != nullptr) {
-        sigma_vec_->add_bad_roots(bad_states_);
-        davidson_liu_solver_map(space, sigma_vec_, evals, evecs, nroot, multiplicity);
-        return;
-    }
+//    // Diagonalize H
+//    if (sigma_vec_ != nullptr) {
+//        sigma_vec_->add_bad_roots(bad_states_);
+//        davidson_liu_solver_map(space, sigma_vec_, evals, evecs, nroot, multiplicity);
+//        return;
+//    }
 
-    SigmaVectorSparse svs(H, fci_ints_);
-    SigmaVector* sigma_vector = &svs;
-    sigma_vector->add_bad_roots(bad_states_);
-    davidson_liu_solver_map(space, sigma_vector, evals, evecs, nroot, multiplicity);
-}
+//    SigmaVectorSparse svs(H, fci_ints_);
+//    SigmaVector* sigma_vector = &svs;
+//    sigma_vector->add_bad_roots(bad_states_);
+//    davidson_liu_solver_map(space, sigma_vector, evals, evecs, nroot, multiplicity);
+//}
 } // namespace forte

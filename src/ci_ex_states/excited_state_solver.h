@@ -44,6 +44,7 @@
 
 namespace forte {
 class SelectedCIMethod;
+class WFNOperator;
 
 class ExcitedStateSolver : public ActiveSpaceMethod {
   public:
@@ -86,7 +87,7 @@ class ExcitedStateSolver : public ActiveSpaceMethod {
 
   protected:
     DeterminantHashVec final_wfn_;
-    WFNOperator op_;
+    std::shared_ptr<WFNOperator> op_;
 
     /// The number of active orbitals
     size_t nact_;
@@ -102,8 +103,6 @@ class ExcitedStateSolver : public ActiveSpaceMethod {
     std::vector<std::vector<std::pair<Determinant, double>>> old_roots_;
     /// The PT2 energy correction
     std::vector<double> multistate_pt2_energy_correction_;
-    /// The eigensolver type
-    DiagonalizationMethod diag_method_ = DLString;
     /// The CI coeffiecients
     psi::SharedMatrix evecs_;
     /// Computes RDMs without coupling lists
@@ -137,12 +136,13 @@ class ExcitedStateSolver : public ActiveSpaceMethod {
     /// Save a wave function
     void wfn_to_file(DeterminantHashVec& det_space, psi::SharedMatrix evecs, int root);
     /// Print a wave function
-    void print_wfn(DeterminantHashVec& space, WFNOperator& op, psi::SharedMatrix evecs, int nroot);
+    void print_wfn(DeterminantHashVec& space, std::shared_ptr<WFNOperator>& op,
+                   psi::SharedMatrix evecs, int nroot);
 
     /// Compute the RDMs
     RDMs compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints, DeterminantHashVec& dets,
                       WFNOperator& op, psi::SharedMatrix& PQ_evecs, int root1, int root2,
                       int max_rdm_level);
 };
-}
+} // namespace forte
 #endif // _excited_state_solver_h_

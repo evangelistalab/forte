@@ -27,15 +27,29 @@
  * @END LICENSE
  */
 
-#include "psi4/libpsi4util/process.h"
+//#include "psi4/libpsi4util/process.h"
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/pointgrp.h"
-#include "psi4/libpsio/psio.hpp"
+//#include "psi4/libpsio/psio.hpp"
+#include "psi4/physconst.h"
 
 #include "base_classes/forte_options.h"
+#include "base_classes/scf_info.h"
 #include "helpers/printing.h"
 #include "helpers/helpers.h"
-#include "sci/aci.h"
+#include "ci_rdm/ci_rdms.h"
+#include "sparse_ci/ci_reference.h"
+
+#include "mrpt2.h"
+#include "aci.h"
+
+#ifdef _OPENMP
+#include <omp.h>
+#else
+#define omp_get_max_threads() 1
+#define omp_get_thread_num() 0
+#define omp_get_num_threads() 1
+#endif
 
 using namespace psi;
 
@@ -49,8 +63,9 @@ AdaptiveCI::AdaptiveCI(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> s
                        std::shared_ptr<ForteOptions> options,
                        std::shared_ptr<MOSpaceInfo> mo_space_info,
                        std::shared_ptr<ActiveSpaceIntegrals> as_ints)
-    : SelectedCIMethod(state, nroot, scf_info, mo_space_info, as_ints), sparse_solver_(as_ints_),
-      options_(options) {
+    : SelectedCIMethod(state, nroot, scf_info, mo_space_info, as_ints), options_(options) {
+    // select the sigma vector type
+    set_sigma_vector(options_->get_str("DIAG_ALGORITHM"));
     mo_symmetry_ = mo_space_info_->symmetry("ACTIVE");
     sigma_ = options_->get_double("SIGMA");
     nuclear_repulsion_energy_ = as_ints->ints()->nuclear_repulsion_energy();
@@ -64,8 +79,8 @@ void AdaptiveCI::startup() {
         quiet_mode_ = options_->get_bool("ACI_QUIET_MODE");
     }
 
-    op_.initialize(mo_symmetry_, as_ints_);
-    op_.set_quiet_mode(quiet_mode_);
+    op_->initialize(mo_symmetry_, as_ints_);
+    op_->set_quiet_mode(quiet_mode_);
 
     wavefunction_symmetry_ = state_.irrep();
     multiplicity_ = state_.multiplicity();
@@ -117,24 +132,12 @@ void AdaptiveCI::startup() {
 
     hole_ = 0;
 
-    diag_method_ = DLSolver;
-    if (options_->has_changed("DIAG_ALGORITHM")) {
-        if (options_->get_str("DIAG_ALGORITHM") == "FULL") {
-            diag_method_ = Full;
-        } else if (options_->get_str("DIAG_ALGORITHM") == "DLSTRING") {
-            diag_method_ = DLString;
-        } else if (options_->get_str("DIAG_ALGORITHM") == "SPARSE") {
-            diag_method_ = Sparse;
-        } else if (options_->get_str("DIAG_ALGORITHM") == "SOLVER") {
-            diag_method_ = DLSolver;
-        } else if (options_->get_str("DIAG_ALGORITHM") == "DYNAMIC") {
-            diag_method_ = Dynamic;
-        }
-    }
+    max_memory_ = options_->get_int("SIGMA_VECTOR_MAX_MEMORY");
 
     // Decide when to compute coupling lists
     build_lists_ = true;
-    if (diag_method_ == Dynamic) {
+    // The Dynamic algorithm does not need lists
+    if (sigma_vector_type_ == SigmaVectorType::Dynamic) {
         build_lists_ = false;
     }
 }
@@ -518,7 +521,7 @@ bool AdaptiveCI::check_stuck(const std::vector<std::vector<double>>& energy_hist
 }
 
 std::vector<std::pair<double, double>> AdaptiveCI::compute_spin(DeterminantHashVec& space,
-                                                                WFNOperator& op,
+                                                                std::shared_ptr<WFNOperator> op,
                                                                 psi::SharedMatrix evecs,
                                                                 int nroot) {
     // WFNOperator op(mo_symmetry_);
@@ -528,23 +531,16 @@ std::vector<std::pair<double, double>> AdaptiveCI::compute_spin(DeterminantHashV
     // op.tp_lists(space);
 
     std::vector<std::pair<double, double>> spin_vec(nroot);
-    if (options_->get_str("SIGMA_BUILD_TYPE") == "HZ") {
-        op.clear_op_s_lists();
-        op.clear_tp_s_lists();
-        op.build_strings(space);
-        op.op_lists(space);
-        op.tp_lists(space);
-    }
 
     if (!build_lists_) {
         for (int n = 0; n < nroot_; ++n) {
-            double S2 = op.s2_direct(space, evecs, n);
+            double S2 = op->s2_direct(space, evecs, n);
             double S = std::fabs(0.5 * (std::sqrt(1.0 + 4.0 * S2) - 1.0));
             spin_vec[n] = std::make_pair(S, S2);
         }
     } else {
         for (int n = 0; n < nroot_; ++n) {
-            double S2 = op.s2(space, evecs, n);
+            double S2 = op->s2(space, evecs, n);
             double S = std::fabs(0.5 * (std::sqrt(1.0 + 4.0 * S2) - 1.0));
             spin_vec[n] = std::make_pair(S, S2);
         }
@@ -552,8 +548,8 @@ std::vector<std::pair<double, double>> AdaptiveCI::compute_spin(DeterminantHashV
     return spin_vec;
 }
 
-void AdaptiveCI::print_wfn(DeterminantHashVec& space, WFNOperator& op, psi::SharedMatrix evecs,
-                           int nroot) {
+void AdaptiveCI::print_wfn(DeterminantHashVec& space, std::shared_ptr<WFNOperator> op,
+                           psi::SharedMatrix evecs, int nroot) {
     std::string state_label;
     std::vector<std::string> s2_labels({"singlet", "doublet", "triplet", "quartet", "quintet",
                                         "sextet", "septet", "octet", "nonet", "decatet"});
@@ -763,9 +759,7 @@ void AdaptiveCI::pre_iter_preparation() {
     //    sparse_solver.set_spin_project_full(project_out_spin_contaminants_);
     sparse_solver_.set_guess_dimension(options_->get_int("DL_GUESS_SIZE"));
     sparse_solver_.set_num_vecs(options_->get_int("N_GUESS_VEC"));
-    sparse_solver_.set_sigma_method(options_->get_str("SIGMA_BUILD_TYPE"));
     sparse_solver_.set_spin_project_full(false);
-    sparse_solver_.set_max_memory(options_->get_int("SIGMA_VECTOR_MAX_MEMORY"));
 }
 
 void AdaptiveCI::diagonalize_P_space() {
@@ -802,24 +796,21 @@ void AdaptiveCI::diagonalize_P_space() {
         sparse_solver_.add_bad_states(bad_roots_);
     }
 
-    if (sparse_solver_.sigma_method_ == "HZ") {
-        op_.clear_op_lists();
-        op_.clear_tp_lists();
-        op_.build_strings(P_space_);
-        op_.op_lists(P_space_);
-        op_.tp_lists(P_space_);
-    } else if (diag_method_ != Dynamic) {
-        op_.clear_op_s_lists();
-        op_.clear_tp_s_lists();
-        op_.build_strings(P_space_);
-        op_.op_s_lists(P_space_);
-        op_.tp_s_lists(P_space_);
+    if (sigma_vector_type_ != SigmaVectorType::Dynamic) {
+        op_->clear_op_s_lists();
+        op_->clear_tp_s_lists();
+        op_->build_strings(P_space_);
+        op_->op_s_lists(P_space_);
+        op_->tp_s_lists(P_space_);
     }
 
     sparse_solver_.manual_guess(false);
     local_timer diag;
-    sparse_solver_.diagonalize_hamiltonian_map(P_space_, op_, P_evals_, P_evecs_, num_ref_roots_,
-                                               multiplicity_, diag_method_);
+
+    auto sigma_vector = make_sigma_vector(P_space_, as_ints_, max_memory_, sigma_vector_type_, op_);
+    sparse_solver_.diagonalize_hamiltonian(P_space_, sigma_vector, P_evals_, P_evecs_,
+                                           num_ref_roots_, multiplicity_);
+
     if (!quiet_mode_)
         outfile->Printf("\n  Time spent diagonalizing H:   %1.6f s", diag.get());
 
@@ -861,28 +852,24 @@ void AdaptiveCI::diagonalize_PQ_space() {
 
     num_ref_roots_ = std::min(nroot_, int(PQ_space_.size()));
 
-
     // Step 3. Diagonalize the Hamiltonian in the P + Q space
-    if (sparse_solver_.sigma_method_ == "HZ") {
-        op_.clear_op_lists();
-        op_.clear_tp_lists();
+    if (sigma_vector_type_ != SigmaVectorType::Dynamic) {
+        op_->clear_op_s_lists();
+        op_->clear_tp_s_lists();
         local_timer str;
-        op_.build_strings(PQ_space_);
+        op_->build_strings(PQ_space_);
         outfile->Printf("\n  Time spent building strings      %1.6f s", str.get());
-        op_.op_lists(PQ_space_);
-        op_.tp_lists(PQ_space_);
-    } else if (diag_method_ != Dynamic) {
-        op_.clear_op_s_lists();
-        op_.clear_tp_s_lists();
-        op_.build_strings(PQ_space_);
-        op_.op_s_lists(PQ_space_);
-        op_.tp_s_lists(PQ_space_);
+        op_->op_s_lists(PQ_space_);
+        op_->tp_s_lists(PQ_space_);
     }
     local_timer diag_pq;
 
     outfile->Printf("\n  Number of reference roots: %d", num_ref_roots_);
-    sparse_solver_.diagonalize_hamiltonian_map(PQ_space_, op_, PQ_evals_, PQ_evecs_, num_ref_roots_,
-                                               multiplicity_, diag_method_);
+
+    auto sigma_vector =
+        make_sigma_vector(PQ_space_, as_ints_, max_memory_, sigma_vector_type_, op_);
+    sparse_solver_.diagonalize_hamiltonian(PQ_space_, sigma_vector, PQ_evals_, PQ_evecs_,
+                                           num_ref_roots_, multiplicity_);
 
     if (!quiet_mode_)
         outfile->Printf("\n  Total time spent diagonalizing H:   %1.6f s", diag_pq.get());
@@ -1058,7 +1045,7 @@ void AdaptiveCI::full_mrpt2() {
 DeterminantHashVec AdaptiveCI::get_PQ_space() { return PQ_space_; }
 psi::SharedMatrix AdaptiveCI::get_PQ_evecs() { return PQ_evecs_; }
 psi::SharedVector AdaptiveCI::get_PQ_evals() { return PQ_evals_; }
-WFNOperator AdaptiveCI::get_op() { return op_; }
+std::shared_ptr<WFNOperator> AdaptiveCI::get_op() { return op_; }
 size_t AdaptiveCI::get_ref_root() { return ref_root_; }
 std::vector<double> AdaptiveCI::get_multistate_pt2_energy_correction() {
     return multistate_pt2_energy_correction_;

@@ -78,9 +78,6 @@ void ExcitedStateSolver::set_options(std::shared_ptr<ForteOptions> options) {
     sparse_solver_->set_spin_project_full(options->get_bool("SCI_PROJECT_OUT_SPIN_CONTAMINANTS"));
     sparse_solver_->set_guess_dimension(options->get_int("DL_GUESS_SIZE"));
     sparse_solver_->set_num_vecs(options->get_int("N_GUESS_VEC"));
-    sparse_solver_->set_sigma_method(options->get_str("SIGMA_BUILD_TYPE"));
-    sparse_solver_->set_max_memory(options->get_int("SIGMA_VECTOR_MAX_MEMORY"));
-
     sci_->set_options(options);
 }
 
@@ -207,8 +204,8 @@ double ExcitedStateSolver::compute_energy() {
         PQ_evals = energies;
     }
 
-    std::vector<int> mo_symmetry = mo_space_info_->symmetry("ACTIVE");
-    WFNOperator op_c(mo_symmetry, as_ints_);
+    std::shared_ptr<WFNOperator> op_c = std::make_shared<WFNOperator>(as_ints_);
+
     if (ex_alg_ == "ROOT_COMBINE") {
         psi::outfile->Printf("\n\n  ==> Diagonalizing Final Space <==");
         dim = full_space.size();
@@ -219,13 +216,18 @@ double ExcitedStateSolver::compute_energy() {
 
         psi::outfile->Printf("\n  Size of combined space: %zu", dim);
 
-        if (diag_method_ != Dynamic) {
-            op_c.build_strings(full_space);
-            op_c.op_lists(full_space);
-            op_c.tp_lists(full_space);
+        auto sigma_type = sci_->sigma_vector_type();
+        if (sigma_type != SigmaVectorType::Dynamic) {
+            op_c->build_strings(full_space);
+            op_c->op_lists(full_space);
+            op_c->tp_lists(full_space);
         }
-        sparse_solver_->diagonalize_hamiltonian_map(full_space, op_c, PQ_evals, PQ_evecs, nroot_,
-                                                    state_.multiplicity(), diag_method_);
+
+        size_t max_memory = sci_->max_memory();
+
+        auto sigma_vector = make_sigma_vector(full_space, as_ints_, max_memory, sigma_type, op_c);
+        sparse_solver_->diagonalize_hamiltonian(full_space, sigma_vector, PQ_evals, PQ_evecs,
+                                                nroot_, state_.multiplicity());
     }
 
     if (ex_alg_ == "MULTISTATE") {
@@ -400,7 +402,7 @@ void ExcitedStateSolver::print_final(DeterminantHashVec& dets, psi::SharedMatrix
     }
 }
 
-void ExcitedStateSolver::print_wfn(DeterminantHashVec& space, WFNOperator& op,
+void ExcitedStateSolver::print_wfn(DeterminantHashVec& space, std::shared_ptr<WFNOperator>& op,
                                    psi::SharedMatrix evecs, int nroot) {
     std::string state_label;
     std::vector<std::string> s2_labels({"singlet", "doublet", "triplet", "quartet", "quintet",
@@ -447,22 +449,9 @@ std::vector<std::pair<double, double>> ExcitedStateSolver::compute_spin(Determin
                                                                         WFNOperator& op,
                                                                         psi::SharedMatrix evecs,
                                                                         int nroot) {
-    // WFNOperator op(mo_symmetry_);
-
-    // op.build_strings(space);
-    // op.op_lists(space);
-    // op.tp_lists(space);
-
     std::vector<std::pair<double, double>> spin_vec(nroot);
-    if (sparse_solver_->sigma_method_ == "HZ") {
-        op.clear_op_s_lists();
-        op.clear_tp_s_lists();
-        op.build_strings(space);
-        op.op_lists(space);
-        op.tp_lists(space);
-    }
 
-    if (diag_method_ == Dynamic) {
+    if (sci_->sigma_vector_type() == SigmaVectorType::Dynamic) {
         for (size_t n = 0; n < nroot_; ++n) {
             double S2 = op.s2_direct(space, evecs, n);
             double S = std::fabs(0.5 * (std::sqrt(1.0 + 4.0 * S2) - 1.0));
@@ -517,10 +506,11 @@ RDMs ExcitedStateSolver::compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_
                                       psi::SharedMatrix& PQ_evecs, int root1, int root2,
                                       int max_rdm_level) {
 
+    // TODO: this code might be OBSOLETE (Francesco)
     if (!direct_rdms_) {
         op.clear_op_s_lists();
         op.clear_tp_s_lists();
-        if (diag_method_ == Dynamic) {
+        if (sci_->sigma_vector_type() == SigmaVectorType::Dynamic) {
             op.build_strings(dets);
         }
         op.op_s_lists(dets);

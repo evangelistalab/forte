@@ -83,20 +83,20 @@ class CI_RDMS {
     // Compute rdms
     void compute_1rdm(std::vector<double>& oprdm_a, std::vector<double>& oprdm_b);
 
-    void compute_1rdm(std::vector<double>& oprdm_a, std::vector<double>& oprdm_b, WFNOperator& op);
+    void compute_1rdm(std::vector<double>& oprdm_a, std::vector<double>& oprdm_b, std::shared_ptr<WFNOperator> op);
 
     void compute_2rdm(std::vector<double>& tprdm_aa, std::vector<double>& tprdm_ab,
                       std::vector<double>& tprdm_bb);
 
     void compute_2rdm(std::vector<double>& tprdm_aa, std::vector<double>& tprdm_ab,
-                      std::vector<double>& tprdm_bb, WFNOperator& op);
+                      std::vector<double>& tprdm_bb, std::shared_ptr<WFNOperator> op);
 
     void compute_3rdm(std::vector<double>& tprdm_aaa, std::vector<double>& tprdm_aab,
                       std::vector<double>& tprdm_abb, std::vector<double>& tprdm_bbb);
 
     void compute_3rdm(std::vector<double>& tprdm_aaa, std::vector<double>& tprdm_aab,
                       std::vector<double>& tprdm_abb, std::vector<double>& tprdm_bbb,
-                      WFNOperator& op);
+                      std::shared_ptr<WFNOperator> op);
 
     void compute_rdms_dynamic(std::vector<double>& oprdm_a, std::vector<double>& oprdm_b,
                               std::vector<double>& tprdm_aa, std::vector<double>& tprdm_ab,

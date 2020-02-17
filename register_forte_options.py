@@ -508,14 +508,8 @@ def register_aci_options(forte_options):
     forte_options.add_int("ACTIVE_GUESS_SIZE", 1000,
                           "Number of determinants for CI guess")
 
-    forte_options.add_str(
-        "DIAG_ALGORITHM", "SOLVER",
-        ["DAVIDSON", "FULL", "DAVIDSONLIST", "SPARSE", "SOLVER"],
+    forte_options.add_str("DIAG_ALGORITHM", "DYNAMIC",["DYNAMIC","SPARSE"],
         "The diagonalization method")
-
-    forte_options.add_str("SIGMA_BUILD_TYPE", "SPARSE",
-                          ["SPARSE", "HZ", "MMULT"],
-                          "The sigma builder algorithm")
 
     forte_options.add_bool("FORCE_DIAG_METHOD", False,
                            "Force the diagonalization procedure?")

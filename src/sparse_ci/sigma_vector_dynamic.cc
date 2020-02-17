@@ -31,13 +31,14 @@
 #include <thread>
 #include <future>
 
-#include "psi4/libciomr/libciomr.h"
-#include "psi4/libmints/matrix.h"
-#include "psi4/libmints/vector.h"
-#include "psi4/libpsio/psio.hpp"
-#include "psi4/libqt/qt.h"
+//#include "psi4/libciomr/libciomr.h"
+//#include "psi4/libmints/matrix.h"
+//#include "psi4/libmints/vector.h"
+//#include "psi4/libpsio/psio.hpp"
+//#include "psi4/libqt/qt.h"
 
 #include "forte-def.h"
+#include "helpers/timer.h"
 #include "helpers/iterative_solvers.h"
 #include "sigma_vector_dynamic.h"
 #include "integrals/active_space_integrals.h"
@@ -76,7 +77,7 @@ void print_SigmaVectorDynamic_stats();
 SigmaVectorDynamic::SigmaVectorDynamic(const DeterminantHashVec& space,
                                        std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
                                        size_t max_memory)
-    : SigmaVector(space.size()), space_(space), fci_ints_(fci_ints),
+    : SigmaVector(space, fci_ints, "SigmaVectorDynamic"),
       a_sorted_string_list_(space, fci_ints, DetSpinType::Alpha),
       b_sorted_string_list_(space, fci_ints, DetSpinType::Beta) {
 

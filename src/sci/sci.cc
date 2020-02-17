@@ -71,4 +71,17 @@ double SelectedCIMethod::compute_energy() {
 
 size_t SelectedCIMethod::get_cycle() { return cycle_; }
 
+void SelectedCIMethod::set_sigma_vector(std::string type) {
+    if (type == "FULL") {
+        sigma_vector_type_ = SigmaVectorType::Full;
+    } else if (type == "SPARSE") {
+        sigma_vector_type_ = SigmaVectorType::SparseList;
+    } else if (type == "DYNAMIC") {
+        sigma_vector_type_ = SigmaVectorType::Dynamic;
+    }
+}
+
+SigmaVectorType SelectedCIMethod::sigma_vector_type() const { return sigma_vector_type_; }
+
+size_t SelectedCIMethod::max_memory() const { return max_memory_; }
 } // namespace forte

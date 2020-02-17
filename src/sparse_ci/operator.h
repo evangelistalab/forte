@@ -49,7 +49,7 @@ using wfn_hash = det_hash<double>;
 class WFNOperator {
   public:
     /// Default constructor
-    WFNOperator(std::vector<int>& symmetry, std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
+    WFNOperator(std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
 
     /// Empty constructor
     WFNOperator();

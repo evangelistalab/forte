@@ -66,8 +66,6 @@ class SigmaVectorDynamic : public SigmaVector {
     std::vector<double> temp_b_;
     /// A temporary sigma vector of size N_det
     std::vector<double> temp_sigma_;
-    const DeterminantHashVec& space_;
-    std::shared_ptr<ActiveSpaceIntegrals> fci_ints_;
     SortedStringList a_sorted_string_list_;
     SortedStringList b_sorted_string_list_;
 

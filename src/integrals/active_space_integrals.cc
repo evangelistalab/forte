@@ -38,10 +38,11 @@
 namespace forte {
 
 ActiveSpaceIntegrals::ActiveSpaceIntegrals(std::shared_ptr<ForteIntegrals> ints,
-                                           std::vector<size_t> active_mo,
-                                           std::vector<size_t> restricted_docc_mo)
+                                           const std::vector<size_t>& active_mo,
+                                           const std::vector<int>& active_mo_symmetry,
+                                           const std::vector<size_t>& restricted_docc_mo)
     : nmo_(active_mo.size()), ints_(ints), active_mo_(active_mo),
-      restricted_docc_mo_(restricted_docc_mo) {
+      active_mo_symmetry_(active_mo_symmetry), restricted_docc_mo_(restricted_docc_mo) {
     startup();
 }
 

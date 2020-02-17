@@ -185,11 +185,11 @@ void CI_RDMS::compute_1rdm(std::vector<double>& oprdm_a, std::vector<double>& op
 }
 
 void CI_RDMS::compute_1rdm(std::vector<double>& oprdm_a, std::vector<double>& oprdm_b,
-                           WFNOperator& op) {
+                           std::shared_ptr<WFNOperator> op) {
 
     // Get the references to the coupling lists
-    std::vector<std::vector<std::pair<size_t, short>>>& a_list = op.a_list_;
-    std::vector<std::vector<std::pair<size_t, short>>>& b_list = op.b_list_;
+    std::vector<std::vector<std::pair<size_t, short>>>& a_list = op->a_list_;
+    std::vector<std::vector<std::pair<size_t, short>>>& b_list = op->b_list_;
 
     local_timer build;
     oprdm_a.assign(ncmo2_, 0.0);
@@ -341,7 +341,7 @@ void CI_RDMS::compute_2rdm(std::vector<double>& tprdm_aa, std::vector<double>& t
 }
 
 void CI_RDMS::compute_2rdm(std::vector<double>& tprdm_aa, std::vector<double>& tprdm_ab,
-                           std::vector<double>& tprdm_bb, WFNOperator& op) {
+                           std::vector<double>& tprdm_bb, std::shared_ptr<WFNOperator> op) {
     local_timer build;
 
     const det_hashvec& dets = wfn_.wfn_hash();
@@ -350,9 +350,9 @@ void CI_RDMS::compute_2rdm(std::vector<double>& tprdm_aa, std::vector<double>& t
     tprdm_ab.assign(ncmo4_, 0.0);
     tprdm_bb.assign(ncmo4_, 0.0);
 
-    std::vector<std::vector<std::tuple<size_t, short, short>>>& aa_list = op.aa_list_;
-    std::vector<std::vector<std::tuple<size_t, short, short>>>& ab_list = op.ab_list_;
-    std::vector<std::vector<std::tuple<size_t, short, short>>>& bb_list = op.bb_list_;
+    std::vector<std::vector<std::tuple<size_t, short, short>>>& aa_list = op->aa_list_;
+    std::vector<std::vector<std::tuple<size_t, short, short>>>& ab_list = op->ab_list_;
+    std::vector<std::vector<std::tuple<size_t, short, short>>>& bb_list = op->bb_list_;
 
     for (size_t J = 0; J < dim_space_; ++J) {
         double cJ_sq = evecs_->get(J, root1_) * evecs_->get(J, root2_);
@@ -694,7 +694,7 @@ void CI_RDMS::compute_3rdm(std::vector<double>& tprdm_aaa, std::vector<double>& 
 
 void CI_RDMS::compute_3rdm(std::vector<double>& tprdm_aaa, std::vector<double>& tprdm_aab,
                            std::vector<double>& tprdm_abb, std::vector<double>& tprdm_bbb,
-                           WFNOperator& op) {
+                           std::shared_ptr<WFNOperator> op) {
     size_t ncmo5 = ncmo4_ * ncmo_;
     size_t ncmo6 = ncmo3_ * ncmo3_;
 
@@ -703,10 +703,10 @@ void CI_RDMS::compute_3rdm(std::vector<double>& tprdm_aaa, std::vector<double>& 
     tprdm_abb.assign(ncmo6, 0.0);
     tprdm_bbb.assign(ncmo6, 0.0);
 
-    std::vector<std::vector<std::tuple<size_t, short, short, short>>>& aaa_list = op.aaa_list_;
-    std::vector<std::vector<std::tuple<size_t, short, short, short>>>& aab_list = op.aab_list_;
-    std::vector<std::vector<std::tuple<size_t, short, short, short>>>& abb_list = op.abb_list_;
-    std::vector<std::vector<std::tuple<size_t, short, short, short>>>& bbb_list = op.bbb_list_;
+    std::vector<std::vector<std::tuple<size_t, short, short, short>>>& aaa_list = op->aaa_list_;
+    std::vector<std::vector<std::tuple<size_t, short, short, short>>>& aab_list = op->aab_list_;
+    std::vector<std::vector<std::tuple<size_t, short, short, short>>>& abb_list = op->abb_list_;
+    std::vector<std::vector<std::tuple<size_t, short, short, short>>>& bbb_list = op->bbb_list_;
 
     // Build the diagonal part
     const det_hashvec& dets = wfn_.wfn_hash();
