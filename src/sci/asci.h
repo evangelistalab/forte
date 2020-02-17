@@ -216,7 +216,7 @@ class ASCI : public SelectedCIMethod {
     void startup();
 
     /// Print information about this calculation
-    void print_info();
+    void print_info() override;
 
     /// Print a wave function
     void print_wfn(DeterminantHashVec& space, std::shared_ptr<WFNOperator> op,
@@ -227,7 +227,7 @@ class ASCI : public SelectedCIMethod {
                                      det_hash<double>& V_hash);
 
     /// Prune the space of determinants
-    void prune_PQ_to_P();
+    void prune_PQ_to_P() override;
 
     /// Computes spin
     std::vector<std::pair<double, double>> compute_spin(DeterminantHashVec& space,

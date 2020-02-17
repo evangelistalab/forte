@@ -199,6 +199,8 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     std::vector<size_t> actv_mos_;
     /// List of virtual MOs
     std::vector<size_t> virt_mos_;
+    /// List of the symmetry of the active MOs
+    std::vector<int> actv_mos_sym_;
 
     /// List of active active occupied MOs (relative to active)
     std::vector<size_t> actv_occ_mos_;

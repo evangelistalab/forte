@@ -46,6 +46,7 @@
 #include "base_classes/scf_info.h"
 #include "boost/algorithm/string/predicate.hpp"
 #include "sparse_ci/operator.h"
+#include "sparse_ci/sigma_vector.h"
 #include "orbital-helpers/semi_canonicalize.h"
 #include "orbital-helpers/iao_builder.h"
 #include "helpers/printing.h"
@@ -71,6 +72,7 @@ FCI_MO::FCI_MO(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
     } else {
         fci_ints_ = std::make_shared<ActiveSpaceIntegrals>(
             integral_, mo_space_info_->corr_absolute_mo("ACTIVE"),
+            mo_space_info_->symmetry("ACTIVE"),
             mo_space_info_->corr_absolute_mo("RESTRICTED_DOCC"));
         ambit::Tensor tei_active_aa =
             integral_->aptei_aa_block(actv_mos_, actv_mos_, actv_mos_, actv_mos_);
@@ -95,7 +97,7 @@ FCI_MO::FCI_MO(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> 
 
     // setup integrals
     fci_ints_ = std::make_shared<ActiveSpaceIntegrals>(
-        integral_, mo_space_info_->corr_absolute_mo("ACTIVE"),
+        integral_, mo_space_info_->corr_absolute_mo("ACTIVE"), mo_space_info_->symmetry("ACTIVE"),
         mo_space_info_->corr_absolute_mo("RESTRICTED_DOCC"));
     ambit::Tensor tei_active_aa =
         integral_->aptei_aa_block(actv_mos_, actv_mos_, actv_mos_, actv_mos_);
@@ -123,6 +125,7 @@ FCI_MO::FCI_MO(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> 
     } else {
         fci_ints_ = std::make_shared<ActiveSpaceIntegrals>(
             integral_, mo_space_info_->corr_absolute_mo("ACTIVE"),
+            mo_space_info_->symmetry("ACTIVE"),
             mo_space_info_->corr_absolute_mo("RESTRICTED_DOCC"));
         ambit::Tensor tei_active_aa =
             integral_->aptei_aa_block(actv_mos_, actv_mos_, actv_mos_, actv_mos_);
@@ -920,8 +923,8 @@ void FCI_MO::Diagonalize_H(const vecdet& p_space, const int& multi, const int& n
     op->build_strings(detmap);
     op->op_s_lists(detmap);
     op->tp_s_lists(detmap);
-    auto sigma_vector = make_sigma_vector(detmap, as_ints_, 0, SigmaVectorType::SparseList, op_);
-    sparse_solver_.diagonalize_hamiltonian(detmap, sigma_vector, evals, evecs, nroot, multi);
+    auto sigma_vector = make_sigma_vector(detmap, as_ints_, 0, SigmaVectorType::SparseList, op);
+    sparse_solver.diagonalize_hamiltonian(detmap, sigma_vector, evals, evecs, nroot, multi);
 
     // fill in eigen (spin is purified in DL solver)
     double energy_offset = fci_ints_->scalar_energy() + e_nuc_;

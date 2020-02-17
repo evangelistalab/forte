@@ -39,7 +39,17 @@
 #include "helpers/helpers.h"
 #include "helpers/printing.h"
 #include "ci_rdm/ci_rdms.h"
+
+#ifdef _OPENMP
+#include <omp.h>
+#else
+#define omp_get_max_threads() 1
+#define omp_get_thread_num() 0
+#define omp_get_num_threads() 1
+#endif
+
 namespace forte {
+
 ExcitedStateSolver::ExcitedStateSolver(StateInfo state, size_t nroot,
                                        std::shared_ptr<MOSpaceInfo> mo_space_info,
                                        std::shared_ptr<ActiveSpaceIntegrals> as_ints,
@@ -69,7 +79,7 @@ void ExcitedStateSolver::set_options(std::shared_ptr<ForteOptions> options) {
     test_rdms_ = options->get_bool("SCI_TEST_RDMS");
     save_final_wfn_ = options->get_bool("SCI_SAVE_FINAL_WFN");
     first_iter_roots_ = options->get_bool("SCI_FIRST_ITER_ROOTS");
-    sparse_solver_ = std::make_shared<SparseCISolver>(as_ints_);
+    sparse_solver_ = std::make_shared<SparseCISolver>();
     sparse_solver_->set_parallel(true);
     sparse_solver_->set_force_diag(options->get_bool("FORCE_DIAG_METHOD"));
     sparse_solver_->set_e_convergence(options->get_double("E_CONVERGENCE"));
@@ -402,7 +412,7 @@ void ExcitedStateSolver::print_final(DeterminantHashVec& dets, psi::SharedMatrix
     }
 }
 
-void ExcitedStateSolver::print_wfn(DeterminantHashVec& space, std::shared_ptr<WFNOperator>& op,
+void ExcitedStateSolver::print_wfn(DeterminantHashVec& space, std::shared_ptr<WFNOperator> op,
                                    psi::SharedMatrix evecs, int nroot) {
     std::string state_label;
     std::vector<std::string> s2_labels({"singlet", "doublet", "triplet", "quartet", "quintet",
@@ -445,21 +455,20 @@ void ExcitedStateSolver::wfn_to_file(DeterminantHashVec& det_space, psi::SharedM
     final_wfn.close();
 }
 
-std::vector<std::pair<double, double>> ExcitedStateSolver::compute_spin(DeterminantHashVec& space,
-                                                                        WFNOperator& op,
-                                                                        psi::SharedMatrix evecs,
-                                                                        int nroot) {
+std::vector<std::pair<double, double>>
+ExcitedStateSolver::compute_spin(DeterminantHashVec& space, std::shared_ptr<WFNOperator> op,
+                                 psi::SharedMatrix evecs, int nroot) {
     std::vector<std::pair<double, double>> spin_vec(nroot);
 
     if (sci_->sigma_vector_type() == SigmaVectorType::Dynamic) {
         for (size_t n = 0; n < nroot_; ++n) {
-            double S2 = op.s2_direct(space, evecs, n);
+            double S2 = op->s2_direct(space, evecs, n);
             double S = std::fabs(0.5 * (std::sqrt(1.0 + 4.0 * S2) - 1.0));
             spin_vec[n] = std::make_pair(S, S2);
         }
     } else {
         for (size_t n = 0; n < nroot_; ++n) {
-            double S2 = op.s2(space, evecs, n);
+            double S2 = op->s2(space, evecs, n);
             double S = std::fabs(0.5 * (std::sqrt(1.0 + 4.0 * S2) - 1.0));
             spin_vec[n] = std::make_pair(S, S2);
         }
@@ -467,7 +476,8 @@ std::vector<std::pair<double, double>> ExcitedStateSolver::compute_spin(Determin
     return spin_vec;
 }
 
-double ExcitedStateSolver::compute_spin_contamination(DeterminantHashVec& space, WFNOperator& op,
+double ExcitedStateSolver::compute_spin_contamination(DeterminantHashVec& space,
+                                                      std::shared_ptr<WFNOperator> op,
                                                       psi::SharedMatrix evecs, int nroot) {
     auto spins = compute_spin(space, op, evecs, nroot);
     double spin_contam = 0.0;
@@ -502,24 +512,24 @@ ExcitedStateSolver::transition_rdms(const std::vector<std::pair<size_t, size_t>>
 }
 
 RDMs ExcitedStateSolver::compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
-                                      DeterminantHashVec& dets, WFNOperator& op,
+                                      DeterminantHashVec& dets, std::shared_ptr<WFNOperator> op,
                                       psi::SharedMatrix& PQ_evecs, int root1, int root2,
                                       int max_rdm_level) {
 
     // TODO: this code might be OBSOLETE (Francesco)
     if (!direct_rdms_) {
-        op.clear_op_s_lists();
-        op.clear_tp_s_lists();
+        op->clear_op_s_lists();
+        op->clear_tp_s_lists();
         if (sci_->sigma_vector_type() == SigmaVectorType::Dynamic) {
-            op.build_strings(dets);
+            op->build_strings(dets);
         }
-        op.op_s_lists(dets);
-        op.tp_s_lists(dets);
+        op->op_s_lists(dets);
+        op->tp_s_lists(dets);
 
         if (max_rdm_level >= 3) {
             psi::outfile->Printf("\n  Computing 3-list...    ");
             local_timer l3;
-            op_.three_s_lists(final_wfn_);
+            op_->three_s_lists(final_wfn_);
             psi::outfile->Printf(" done (%1.5f s)", l3.get());
         }
     }

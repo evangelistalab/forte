@@ -38,7 +38,7 @@
 #include "sparse_ci/determinant.h"
 #include "mrci-no.h"
 #include "ci-no.h"
-//#include "hash_vector.h"
+#include "sparse_ci/sigma_vector.h"
 
 using namespace psi;
 
@@ -73,11 +73,10 @@ MRCINO::MRCINO(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> 
     std::vector<size_t> active_mo(mo_space_info_->size("CORRELATED"));
     std::iota(active_mo.begin(), active_mo.end(), 0);
 
-    fci_ints_ = std::make_shared<ActiveSpaceIntegrals>(ints, active_mo, std::vector<size_t>());
+    auto active_mo_symmetry = mo_space_info_->symmetry("CORRELATED");
 
-    //    for (auto& i: active_mo){
-    //        outfile->Printf("\n %zu", i);
-    //    }
+    fci_ints_ = std::make_shared<ActiveSpaceIntegrals>(ints, active_mo, active_mo_symmetry,
+                                                       std::vector<size_t>());
 
     ambit::Tensor tei_active_aa = ints->aptei_aa_block(active_mo, active_mo, active_mo, active_mo);
     ambit::Tensor tei_active_ab = ints->aptei_ab_block(active_mo, active_mo, active_mo, active_mo);
@@ -155,16 +154,6 @@ void MRCINO::startup() {
 
     nirrep_ = ints_->nirrep();
 
-    diag_method_ = DLSolver;
-    if (options_->has_changed("DIAG_ALGORITHM")) {
-        if (options_->get_str("DIAG_ALGORITHM") == "FULL") {
-            diag_method_ = Full;
-        } else if (options_->get_str("DIAG_ALGORITHM") == "DLSTRING") {
-            diag_method_ = DLString;
-        } else if (options_->get_str("DIAG_ALGORITHM") == "DLDISK") {
-            diag_method_ = DLDisk;
-        }
-    }
     // Read Options
     rdm_level_ = options_->get_int("ACI_MAX_RDM");
     nactv_ = mo_space_info_->size("ACTIVE");
@@ -463,7 +452,7 @@ MRCINO::diagonalize_hamiltonian(const std::vector<Determinant>& dets, int nsolut
 
     std::pair<psi::SharedVector, psi::SharedMatrix> evals_evecs;
 
-    SparseCISolver sparse_solver(fci_ints_);
+    SparseCISolver sparse_solver;
     sparse_solver.set_parallel(true);
     sparse_solver.set_e_convergence(options_->get_double("E_CONVERGENCE"));
     sparse_solver.set_maxiter_davidson(options_->get_int("DL_MAXITER"));
@@ -473,8 +462,18 @@ MRCINO::diagonalize_hamiltonian(const std::vector<Determinant>& dets, int nsolut
     sparse_solver.set_print_details(true);
 
     outfile->Printf("\n size is %d\n", dets.size());
-    sparse_solver.diagonalize_hamiltonian(dets, evals_evecs.first, evals_evecs.second, nsolutions,
-                                          wavefunction_multiplicity_, DLSolver);
+
+    // Here we use the SparseList algorithm to diagonalize the Hamiltonian
+    std::shared_ptr<WFNOperator> op = std::make_shared<WFNOperator>(fci_ints_);
+    DeterminantHashVec detmap(dets);
+    op->build_strings(detmap);
+    op->op_s_lists(detmap);
+    op->tp_s_lists(detmap);
+
+    auto sigma_vector = make_sigma_vector(detmap, fci_ints_, 0, SigmaVectorType::SparseList, op);
+    sparse_solver.diagonalize_hamiltonian(detmap, sigma_vector, evals_evecs.first,
+                                          evals_evecs.second, nsolutions,
+                                          wavefunction_multiplicity_);
 
     outfile->Printf("\n\n    STATE      CI ENERGY");
     outfile->Printf("\n  ----------------------------");

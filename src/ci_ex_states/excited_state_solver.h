@@ -34,14 +34,6 @@
 #include "base_classes/rdms.h"
 #include "sparse_ci/sparse_ci_solver.h"
 
-#ifdef _OPENMP
-#include <omp.h>
-#else
-#define omp_get_max_threads() 1
-#define omp_get_thread_num() 0
-#define omp_get_num_threads() 1
-#endif
-
 namespace forte {
 class SelectedCIMethod;
 class WFNOperator;
@@ -125,10 +117,11 @@ class ExcitedStateSolver : public ActiveSpaceMethod {
 
     void compute_multistate(psi::SharedVector& PQ_evals);
     /// Computes spin
-    std::vector<std::pair<double, double>> compute_spin(DeterminantHashVec& space, WFNOperator& op,
+    std::vector<std::pair<double, double>> compute_spin(DeterminantHashVec& space,
+                                                        std::shared_ptr<WFNOperator> op,
                                                         psi::SharedMatrix evecs, int nroot);
     /// Check for spin contamination
-    double compute_spin_contamination(DeterminantHashVec& space, WFNOperator& op,
+    double compute_spin_contamination(DeterminantHashVec& space, std::shared_ptr<WFNOperator> op,
                                       psi::SharedMatrix evecs, int nroot);
     /// Print Summary
     void print_final(DeterminantHashVec& dets, psi::SharedMatrix& PQ_evecs,
@@ -136,13 +129,13 @@ class ExcitedStateSolver : public ActiveSpaceMethod {
     /// Save a wave function
     void wfn_to_file(DeterminantHashVec& det_space, psi::SharedMatrix evecs, int root);
     /// Print a wave function
-    void print_wfn(DeterminantHashVec& space, std::shared_ptr<WFNOperator>& op,
+    void print_wfn(DeterminantHashVec& space, std::shared_ptr<WFNOperator> op,
                    psi::SharedMatrix evecs, int nroot);
 
     /// Compute the RDMs
     RDMs compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints, DeterminantHashVec& dets,
-                      WFNOperator& op, psi::SharedMatrix& PQ_evecs, int root1, int root2,
-                      int max_rdm_level);
+                      std::shared_ptr<WFNOperator> op, psi::SharedMatrix& PQ_evecs, int root1,
+                      int root2, int max_rdm_level);
 };
 } // namespace forte
 #endif // _excited_state_solver_h_

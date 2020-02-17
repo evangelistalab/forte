@@ -162,6 +162,7 @@ void MASTER_DSRG::read_MOSpaceInfo() {
     core_mos_ = mo_space_info_->corr_absolute_mo("RESTRICTED_DOCC");
     actv_mos_ = mo_space_info_->corr_absolute_mo("ACTIVE");
     virt_mos_ = mo_space_info_->corr_absolute_mo("RESTRICTED_UOCC");
+    actv_mos_sym_ = mo_space_info_->symmetry("ACTIVE");
 
     if (eri_df_) {
         aux_mos_ = std::vector<size_t>(ints_->nthree());
@@ -554,7 +555,7 @@ std::shared_ptr<ActiveSpaceIntegrals> MASTER_DSRG::compute_Heff_actv() {
 
     // create FCIIntegral shared_ptr
     std::shared_ptr<ActiveSpaceIntegrals> fci_ints =
-        std::make_shared<ActiveSpaceIntegrals>(ints_, actv_mos_, core_mos_);
+        std::make_shared<ActiveSpaceIntegrals>(ints_, actv_mos_, actv_mos_sym_, core_mos_);
     fci_ints->set_active_integrals(Hbar2_.block("aaaa"), Hbar2_.block("aAaA"),
                                    Hbar2_.block("AAAA"));
     fci_ints->set_restricted_one_body_operator(Hbar1_.block("aa").data(),

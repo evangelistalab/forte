@@ -44,6 +44,7 @@
 namespace forte {
 
 class SigmaVector;
+class ActiveSpaceIntegrals;
 
 /**
  * @brief The SparseCISolver class
@@ -71,6 +72,7 @@ class SparseCISolver {
                                  psi::SharedMatrix& evecs, int nroot, int multiplicity);
 
     void diagonalize_hamiltonian_full(const std::vector<Determinant>& space,
+                                      std::shared_ptr<ActiveSpaceIntegrals> as_ints,
                                       psi::SharedVector& evals, psi::SharedMatrix& evecs, int nroot,
                                       int multiplicity);
 
@@ -97,9 +99,8 @@ class SparseCISolver {
 
     /// The maximum number of iterations for the Davidson algorithm
     void set_maxiter_davidson(int value);
-    psi::SharedMatrix build_full_hamiltonian(const std::vector<Determinant>& space);
-    std::vector<std::pair<std::vector<int>, std::vector<double>>>
-    build_sparse_hamiltonian(const std::vector<Determinant>& space);
+    psi::SharedMatrix build_full_hamiltonian(const std::vector<Determinant>& space,
+                                             std::shared_ptr<forte::ActiveSpaceIntegrals> as_ints);
 
     /// Add roots to project out during Davidson-Liu procedure
     void add_bad_states(std::vector<std::vector<std::pair<size_t, double>>>& roots);
@@ -120,7 +121,8 @@ class SparseCISolver {
     initial_guess(const std::vector<Determinant>& space, int nroot, int multiplicity);
 
     std::vector<std::pair<double, std::vector<std::pair<size_t, double>>>>
-    initial_guess_map(const DeterminantHashVec& space, int nroot, int multiplicity);
+    initial_guess_map(const DeterminantHashVec& space, std::shared_ptr<SigmaVector> sigma_vector,
+                      int nroot, int multiplicity);
 
     bool davidson_liu_solver_map(const DeterminantHashVec& space,
                                  std::shared_ptr<SigmaVector> sigma_vector,

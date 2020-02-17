@@ -52,6 +52,8 @@ class SigmaVector {
 
     size_t size() { return size_; }
 
+    std::shared_ptr<ActiveSpaceIntegrals> as_ints() { return fci_ints_; }
+
     std::string type() { return type_; }
 
     virtual void compute_sigma(psi::SharedVector sigma, psi::SharedVector b) = 0;

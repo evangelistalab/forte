@@ -225,7 +225,7 @@ void ProjectorCI::sortHashVecByCoefficient(det_hashvec& dets_hashvec, std::vecto
 ProjectorCI::ProjectorCI(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
                          std::shared_ptr<MOSpaceInfo> mo_space_info,
                          std::shared_ptr<ActiveSpaceIntegrals> as_ints)
-    : SelectedCIMethod(state, nroot, scf_info, mo_space_info, as_ints), sparse_solver_(as_ints_) {
+    : SelectedCIMethod(state, nroot, scf_info, mo_space_info, as_ints) {
     // Copy the wavefunction information
     startup();
 }

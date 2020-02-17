@@ -499,6 +499,7 @@ make_active_space_ints(std::shared_ptr<MOSpaceInfo> mo_space_info,
 
     // get the active/core vectors
     auto active_mo = mo_space_info->corr_absolute_mo(active_space);
+    auto active_mo_symmetry = mo_space_info->symmetry(active_space);
     std::vector<size_t> core_mo;
     for (const auto space : core_spaces) {
         auto mos = mo_space_info->corr_absolute_mo(space);
@@ -506,7 +507,8 @@ make_active_space_ints(std::shared_ptr<MOSpaceInfo> mo_space_info,
     }
 
     // allocate the active space integral object
-    auto as_ints = std::make_shared<ActiveSpaceIntegrals>(ints, active_mo, core_mo);
+    auto as_ints =
+        std::make_shared<ActiveSpaceIntegrals>(ints, active_mo, active_mo_symmetry, core_mo);
 
     // grab the integrals from the ForteIntegrals object
     ambit::Tensor tei_active_aa = ints->aptei_aa_block(active_mo, active_mo, active_mo, active_mo);
