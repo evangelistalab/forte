@@ -60,9 +60,6 @@ SigmaVectorSparseList::SigmaVectorSparseList(const DeterminantHashVec& space,
     op_->op_s_lists(space_);
     op_->tp_s_lists(space_);
     //    op_->set_quiet_mode(quiet_mode_);
-    //    a_list_(op->a_list_), b_list_(op->b_list_), aa_list_(op->aa_list_),
-    //    ab_list_(op->ab_list_),
-    //        bb_list_(op->bb_list_)
 
     const det_hashvec& detmap = space_.wfn_hash();
     diag_.resize(space_.size());
