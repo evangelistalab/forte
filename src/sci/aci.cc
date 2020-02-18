@@ -78,7 +78,7 @@ void AdaptiveCI::startup() {
     if (options_->has_changed("ACI_QUIET_MODE")) {
         quiet_mode_ = options_->get_bool("ACI_QUIET_MODE");
     }
-
+    op_ = std::make_shared<WFNOperator>(as_ints_);
     op_->initialize(mo_symmetry_, as_ints_);
     op_->set_quiet_mode(quiet_mode_);
 

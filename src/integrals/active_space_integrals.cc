@@ -159,6 +159,8 @@ void ActiveSpaceIntegrals::set_active_integrals_and_restricted_docc() {
 
 std::vector<size_t> ActiveSpaceIntegrals::active_mo() const { return active_mo_; }
 
+std::vector<int> ActiveSpaceIntegrals::active_mo_symmetry() const { return active_mo_symmetry_; }
+
 std::vector<size_t> ActiveSpaceIntegrals::restricted_docc_mo() const { return restricted_docc_mo_; }
 
 double ActiveSpaceIntegrals::energy(const Determinant& det) const {

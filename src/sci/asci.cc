@@ -118,6 +118,7 @@ void ASCI::startup() {
     //        set_asci_ints(ints_); // TODO: maybe a BUG?
     //    }
 
+    op_ = std::make_shared<WFNOperator>(as_ints_);
     op_->initialize(mo_symmetry_, as_ints_);
 
     wavefunction_symmetry_ = state_.irrep();

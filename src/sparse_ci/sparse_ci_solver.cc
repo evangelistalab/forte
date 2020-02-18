@@ -61,6 +61,8 @@ namespace forte {
 #define omp_get_num_threads() 1
 #endif
 
+SparseCISolver::SparseCISolver() {}
+
 void SparseCISolver::set_spin_project(bool value) { spin_project_ = value; }
 
 void SparseCISolver::set_e_convergence(double value) { e_convergence_ = value; }
@@ -84,8 +86,15 @@ void SparseCISolver::diagonalize_hamiltonian(const DeterminantHashVec& space,
     size_t dim_space = space.size();
     evecs.reset(new psi::Matrix("U", dim_space, nroot));
     evals.reset(new Vector("e", nroot));
-    sigma_vector->add_bad_roots(bad_states_);
-    davidson_liu_solver_map(space, sigma_vector, evals, evecs, nroot, multiplicity);
+
+    if ((!force_diag_ and (space.size() <= 200))) {
+        const std::vector<Determinant> dets = space.determinants();
+        diagonalize_hamiltonian_full(dets, sigma_vector->as_ints(), evals, evecs, nroot,
+                                     multiplicity);
+    } else {
+        sigma_vector->add_bad_roots(bad_states_);
+        davidson_liu_solver_map(space, sigma_vector, evals, evecs, nroot, multiplicity);
+    }
 
     //    timer diag("H Diagonalization");
     //    if ((!force_diag_ and (space.size() <= 200)) or diag_method == Full) {
