@@ -61,7 +61,7 @@ class SigmaVector {
     virtual void compute_sigma(psi::SharedVector sigma, psi::SharedVector b) = 0;
     virtual void get_diagonal(psi::Vector& diag) = 0;
     virtual void add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& bad_states) = 0;
-    virtual void compute_spin(psi::SharedVector c) = 0;
+    virtual double compute_spin(psi::SharedVector c) = 0;
 
   protected:
     const DeterminantHashVec& space_;
@@ -79,10 +79,11 @@ class SigmaVectorFull : public SigmaVector {
     SigmaVectorFull(const DeterminantHashVec& space,
                     std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
 
-    void compute_sigma(psi::SharedVector sigma, psi::SharedVector b);
+    void compute_sigma(psi::SharedVector, psi::SharedVector);
     // void compute_sigma(Matrix& sigma, Matrix& b, int nroot);
     void get_diagonal(psi::Vector& diag);
     void add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& bad_states_);
+    double compute_spin(psi::SharedVector c) override {}
 };
 
 std::shared_ptr<SigmaVector>

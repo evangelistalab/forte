@@ -49,7 +49,7 @@ class SigmaVectorDynamic : public SigmaVector {
     void compute_sigma(psi::SharedVector sigma, psi::SharedVector b) override;
     void get_diagonal(psi::Vector& diag) override;
     void add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& bad_states) override;
-    void compute_spin(psi::SharedVector c) override;
+    double compute_spin(psi::SharedVector c) override;
 
     std::vector<std::vector<std::pair<size_t, double>>> bad_states_;
 

@@ -78,7 +78,7 @@ void SigmaVectorFull::add_bad_roots(std::vector<std::vector<std::pair<size_t, do
 
 void SigmaVectorFull::get_diagonal(psi::Vector& diag) {}
 
-void SigmaVectorFull::compute_sigma(psi::SharedVector sigma, psi::SharedVector b) {}
+void SigmaVectorFull::compute_sigma(psi::SharedVector, psi::SharedVector) {}
 
 } // namespace forte
 

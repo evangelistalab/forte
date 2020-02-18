@@ -1002,7 +1002,7 @@ double ProjectorCI::initial_guess(det_hashvec& dets_hashvec, std::vector<double>
     sparse_solver_.set_force_diag(false);
 
     std::shared_ptr<WFNOperator> op = std::make_shared<WFNOperator>(as_ints_);
-    DeterminantHashVec det_map(std::move(dets_hashvec_));
+    DeterminantHashVec det_map(dets_hashvec_);
     op->build_strings(det_map);
     op->op_s_lists(det_map);
     op->tp_s_lists(det_map);

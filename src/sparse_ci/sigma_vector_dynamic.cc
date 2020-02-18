@@ -794,9 +794,9 @@ double SigmaVectorDynamic::compute_spin(psi::SharedVector c) {
     }
 
     // abab contribution
-    SortedStringList a_sorted_string_list(wfn, fci_ints_, DetSpinType::Alpha);
-    const auto& sorted_half_dets = a_sorted_string_list.sorted_half_dets();
-    const auto& sorted_dets = a_sorted_string_list.sorted_dets();
+    //    SortedStringList a_sorted_string_list(space_, fci_ints_, DetSpinType::Alpha);
+    const auto& sorted_half_dets = a_sorted_string_list_.sorted_half_dets();
+    const auto& sorted_dets = a_sorted_string_list_.sorted_dets();
     String detIJa_common;
     String Ib;
     String Jb;
@@ -804,7 +804,7 @@ double SigmaVectorDynamic::compute_spin(psi::SharedVector c) {
 
     // Loop over all the sorted I alpha strings
     for (const auto& detIa : sorted_half_dets) {
-        const auto& range_I = a_sorted_string_list.range(detIa);
+        const auto& range_I = a_sorted_string_list_.range(detIa);
         size_t first_I = range_I.first;
         size_t last_I = range_I.second;
 
@@ -814,7 +814,7 @@ double SigmaVectorDynamic::compute_spin(psi::SharedVector c) {
             int ndiff = detIJa_common.count();
             if (ndiff == 2) {
                 size_t i, a;
-                for (size_t p = 0; p < ncmo_; ++p) {
+                for (size_t p = 0; p < nmo_; ++p) {
                     const bool la_p = detIa.get_bit(p);
                     const bool ra_p = detJa.get_bit(p);
                     if (la_p ^ ra_p) {
@@ -823,12 +823,12 @@ double SigmaVectorDynamic::compute_spin(psi::SharedVector c) {
                     }
                 }
                 double sign_ia = detIa.slater_sign(i, a);
-                const auto& range_J = a_sorted_string_list.range(detJa);
+                const auto& range_J = a_sorted_string_list_.range(detJa);
                 size_t first_J = range_J.first;
                 size_t last_J = range_J.second;
                 for (size_t posI = first_I; posI < last_I; ++posI) {
                     Ib = sorted_dets[posI].get_beta_bits();
-                    double CI = evecs->get(a_sorted_string_list.add(posI), root);
+                    double CI = c->get(a_sorted_string_list_.add(posI));
                     for (size_t posJ = first_J; posJ < last_J; ++posJ) {
                         Jb = sorted_dets[posJ].get_beta_bits();
                         IJb = Jb ^ Ib;
@@ -840,7 +840,7 @@ double SigmaVectorDynamic::compute_spin(psi::SharedVector c) {
                             auto b = Jb_sub.find_first_one();
                             if ((i != j) and (a != b) and (i == b) and (j == a)) {
                                 double sign = sign_ia * Ib.slater_sign(j, b);
-                                S2 -= sign * CI * evecs->get(a_sorted_string_list.add(posJ), root);
+                                S2 -= sign * CI * c->get(a_sorted_string_list_.add(posJ));
                             }
                         }
                     }

@@ -47,6 +47,7 @@ class SigmaVectorSparseList : public SigmaVector {
     // void compute_sigma(Matrix& sigma, Matrix& b, int nroot);
     void get_diagonal(psi::Vector& diag);
     void add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& bad_states_);
+    double compute_spin(psi::SharedVector c) override {}
 
     std::vector<std::vector<std::pair<size_t, double>>> bad_states_;
 

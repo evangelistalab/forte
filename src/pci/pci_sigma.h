@@ -58,6 +58,7 @@ class PCISigmaVector : public SigmaVector {
     void compute_sigma(psi::SharedVector sigma, psi::SharedVector b) override;
     void get_diagonal(psi::Vector& diag) override;
     void add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& bad_states) override;
+    double compute_spin(psi::SharedVector c) override {}
 
     void reset(std::vector<double>& ref_C);
     void compute_sigma_with_diag(psi::SharedVector sigma, psi::SharedVector b);
@@ -138,5 +139,5 @@ class PCISigmaVector : public SigmaVector {
         double ref_CI, const size_t overlap_size, std::vector<double>& result_C,
         const std::pair<double, double>& max_coupling);
 };
-}
+} // namespace forte
 #endif // _pci_sigma_h_
