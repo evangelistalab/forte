@@ -995,7 +995,6 @@ psi::SharedMatrix AdaptiveCI::get_PQ_evecs() { return PQ_evecs_; }
 
 psi::SharedVector AdaptiveCI::get_PQ_evals() { return PQ_evals_; }
 
-// std::shared_ptr<WFNOperator> AdaptiveCI::get_op() { return op_; }
 size_t AdaptiveCI::get_ref_root() { return ref_root_; }
 
 std::vector<double> AdaptiveCI::get_multistate_pt2_energy_correction() {

@@ -66,8 +66,6 @@ class SigmaVectorDynamic : public SigmaVector {
     /// Number of sigma builds
     int num_builds_ = 0;
     double H_threshold_ = 1.0e-14;
-    /// Diagonal elements of the Hamiltonian
-    std::vector<double> diag_;
     /// A temporary sigma vector of size N_det
     std::vector<double> temp_b_;
     /// A temporary sigma vector of size N_det

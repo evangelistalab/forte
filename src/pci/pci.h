@@ -104,7 +104,6 @@ class ProjectorCI : public SelectedCIMethod {
     DeterminantHashVec get_PQ_space() override;
     psi::SharedMatrix get_PQ_evecs() override;
     psi::SharedVector get_PQ_evals() override;
-//    std::shared_ptr<WFNOperator> get_op() override;
     size_t get_ref_root() override;
     std::vector<double> get_multistate_pt2_energy_correction() override;
 

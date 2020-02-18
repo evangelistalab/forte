@@ -1128,7 +1128,10 @@ void ProjectorCI::propagate_DL(det_hashvec& dets_hashvec, std::vector<double>& C
         a_couplings_, b_couplings_, aa_couplings_, ab_couplings_, bb_couplings_,
         dets_max_couplings_, dets_single_max_coupling_, dets_double_max_coupling_, solutions_);
     num_off_diag_elem_ = sigma_vector->get_num_off_diag();
-    size_t ref_size = C.size(), result_size = sigma_vector->size();
+    size_t ref_size = C.size();
+
+    //    outfile->Printf("\n\n result_size = %zu", result_size);
+
     std::vector<std::pair<size_t, double>> guess(ref_size);
     for (size_t I = 0; I < ref_size; ++I) {
         guess[I] = std::make_pair(I, C[I]);
@@ -1139,18 +1142,18 @@ void ProjectorCI::propagate_DL(det_hashvec& dets_hashvec, std::vector<double>& C
     psi::SharedMatrix PQ_evecs_;
     psi::SharedVector PQ_evals_;
 
-    std::shared_ptr<WFNOperator> op = std::make_shared<WFNOperator>(as_ints_);
-    DeterminantHashVec det_map(std::move(dets_hashvec_));
-    op->build_strings(det_map);
-    op->op_s_lists(det_map);
-    op->tp_s_lists(det_map);
+    DeterminantHashVec det_map(dets_hashvec_);
 
     // set SparseCISolver options
     sparse_solver_.set_spin_project(true);
     sparse_solver_.manual_guess(false);
     sparse_solver_.set_force_diag(false);
 
-    sparse_solver_.diagonalize_hamiltonian(det_map, sigma_vector, PQ_evals_, PQ_evecs_, nroot_,
+    auto sigma_vector2 = make_sigma_vector(det_map, as_ints_, 0, SigmaVectorType::SparseList);
+
+    size_t result_size = sigma_vector->size();
+
+    sparse_solver_.diagonalize_hamiltonian(det_map, sigma_vector2, PQ_evals_, PQ_evecs_, nroot_,
                                            state_.multiplicity());
 
     current_davidson_iter_ = sigma_vector->get_sigma_build_count();
@@ -1290,7 +1293,6 @@ double ProjectorCI::estimate_var_energy_within_error_sigma(const det_hashvec& de
     sub_dets.erase(sub_dets.begin() + cut_index + 1, sub_dets.end());
     DeterminantHashVec det_map(sub_dets);
     auto sigma_vector = make_sigma_vector(det_map, as_ints_, 0, SigmaVectorType::SparseList);
-    //    SigmaVectorSparseList svs(det_map, op, as_ints_);
     size_t sub_size = sigma_vector->size();
     // allocate vectors
     psi::SharedVector b(new psi::Vector("b", sub_size));
@@ -2243,10 +2245,6 @@ psi::SharedVector ProjectorCI::get_PQ_evals() {
     evals->set(0, approx_energy_ - as_ints_->scalar_energy() - nuclear_repulsion_energy_);
     return evals;
 }
-
-//std::shared_ptr<WFNOperator> ProjectorCI::get_op() {
-//    return std::make_shared<WFNOperator>(as_ints_);
-//}
 
 size_t ProjectorCI::get_ref_root() { return current_root_; }
 std::vector<double> ProjectorCI::get_multistate_pt2_energy_correction() {

@@ -62,7 +62,6 @@ class WFNOperator {
     /// Build the coupling lists for three-particle operators
     void three_s_lists(const DeterminantHashVec& wfn);
 
-
     void clear_op_s_lists();
     void clear_tp_s_lists();
     /*- Operators -*/
@@ -83,14 +82,6 @@ class WFNOperator {
     double s2_direct(DeterminantHashVec& wfn, psi::SharedMatrix& evecs, int root);
 
     void build_strings(const DeterminantHashVec& wfn);
-
-    /// Build the sparse Hamiltonian
-    std::vector<std::pair<std::vector<size_t>, std::vector<double>>>
-    build_H_sparse(const DeterminantHashVec& wfn);
-
-    /// Build the sparse Hamiltonian -v2
-    std::vector<std::pair<std::vector<size_t>, std::vector<double>>>
-    build_H_sparse2(const DeterminantHashVec& wfn);
 
     std::vector<std::vector<std::pair<size_t, short>>> a_list_;
     std::vector<std::vector<std::pair<size_t, short>>> b_list_;

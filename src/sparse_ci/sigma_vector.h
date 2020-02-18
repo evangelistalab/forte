@@ -72,6 +72,8 @@ class SigmaVector {
     const DeterminantHashVec& space_;
     /// the active space integrals
     std::shared_ptr<ActiveSpaceIntegrals> fci_ints_;
+    /// Diagonal elements of the Hamiltonian
+    std::vector<double> diag_;
     /// the length of the C/sigma vector (number of determinants)
     size_t size_;
     const SigmaVectorType sigma_vector_type_;
@@ -98,25 +100,3 @@ std::shared_ptr<SigmaVector> make_sigma_vector(DeterminantHashVec& space,
 } // namespace forte
 
 #endif // _sigma_vector_h_
-
-///**
-// * @brief The SigmaVectorSparse class
-// * Computes the sigma vector from a sparse Hamiltonian.
-// */
-// class SigmaVectorSparse : public SigmaVector {
-//  public:
-//    SigmaVectorSparse(std::vector<std::pair<std::vector<size_t>, std::vector<double>>>& H,
-//                      std::shared_ptr<ActiveSpaceIntegrals> fci_ints)
-//        : SigmaVector(H.size()), H_(H), fci_ints_(fci_ints){};
-
-//    void compute_sigma(psi::SharedVector sigma, psi::SharedVector b);
-//    //   void compute_sigma(Matrix& sigma, Matrix& b, int nroot) {}
-//    void get_diagonal(psi::Vector& diag);
-//    void add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& bad_states);
-
-//    std::vector<std::vector<std::pair<size_t, double>>> bad_states_;
-
-//  protected:
-//    std::vector<std::pair<std::vector<size_t>, std::vector<double>>>& H_;
-//    std::shared_ptr<ActiveSpaceIntegrals> fci_ints_;
-//};

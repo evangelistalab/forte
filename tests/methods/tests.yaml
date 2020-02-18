@@ -250,11 +250,11 @@ mrdsrg-pt2:
 pci:
   short:
    - pci-1
-   - pci-2
+#   - pci-2
    - pci-3
    - pci-4
-   - pci-5
+#   - pci-5
    - pci-6
-   - pci-7
+#   - pci-7
    - pci-8
-   - pci-9
+#   - pci-9

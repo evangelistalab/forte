@@ -47,7 +47,6 @@ class SigmaVectorSparseList : public SigmaVector {
                           std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
 
     void compute_sigma(std::shared_ptr<psi::Vector> sigma, std::shared_ptr<psi::Vector> b);
-    // void compute_sigma(Matrix& sigma, Matrix& b, int nroot);
     void get_diagonal(psi::Vector& diag);
     void add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& bad_states_);
     double compute_spin(const std::vector<double>& c) override;
@@ -57,9 +56,7 @@ class SigmaVectorSparseList : public SigmaVector {
   protected:
     bool print_;
     bool use_disk_ = false;
-
-    std::vector<double> diag_;
-
+    /// Substitutions lists
     std::shared_ptr<WFNOperator> op_;
 };
 
