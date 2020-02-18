@@ -108,7 +108,7 @@ class AdaptiveCI : public SelectedCIMethod {
     DeterminantHashVec get_PQ_space() override;
     psi::SharedMatrix get_PQ_evecs() override;
     psi::SharedVector get_PQ_evals() override;
-    std::shared_ptr<WFNOperator> get_op() override;
+//    std::shared_ptr<WFNOperator> get_op() override;
     size_t get_ref_root() override;
     std::vector<double> get_multistate_pt2_energy_correction() override;
 
@@ -149,8 +149,6 @@ class AdaptiveCI : public SelectedCIMethod {
     DeterminantHashVec PQ_space_;
 
     // ==> Class data <==
-    std::shared_ptr<WFNOperator> op_;
-
     /// Forte options
     std::shared_ptr<ForteOptions> options_;
     /// The wave function symmetry
@@ -178,8 +176,6 @@ class AdaptiveCI : public SelectedCIMethod {
     psi::Dimension rdoccpi_;
     /// The number of active orbitals per irrep
     psi::Dimension nactpi_;
-    /// The number of active orbitals
-    size_t nact_;
     /// The number of restricted docc
     size_t rdocc_;
     /// The number of restricted virtual
@@ -316,10 +312,6 @@ class AdaptiveCI : public SelectedCIMethod {
 
     /// All that happens before we compute the energy
     void startup();
-
-    /// Print a wave function
-    void print_wfn(DeterminantHashVec& space, std::shared_ptr<WFNOperator> op,
-                   psi::SharedMatrix evecs, int nroot);
 
     /// Generate set of state-averaged q-criteria and determinants
     double average_q_values(std::vector<double>& E2);

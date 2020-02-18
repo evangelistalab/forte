@@ -26,44 +26,20 @@
  * @END LICENSE
  */
 
-//#include <cmath>
-
-//#include "psi4/libciomr/libciomr.h"
-//#include "psi4/libmints/matrix.h"
-//#include "psi4/libmints/vector.h"
-//#include "psi4/libpsio/psio.hpp"
-
-//#include "forte-def.h"
-//#include "helpers/iterative_solvers.h"
-
 #include "integrals/active_space_integrals.h"
 #include "sigma_vector_dynamic.h"
 #include "sigma_vector_sparse_list.h"
-
-// struct PairHash {
-//    size_t operator()(const std::pair<size_t, size_t>& p) const {
-//        return (p.first * 1000) + p.second;
-//    }
-//};
-
-// using namespace psi;
 
 namespace forte {
 
 std::shared_ptr<SigmaVector> make_sigma_vector(DeterminantHashVec& space,
                                                std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
-                                               size_t max_memory, SigmaVectorType sigma_type,
-                                               std::shared_ptr<WFNOperator> op) {
+                                               size_t max_memory, SigmaVectorType sigma_type) {
     std::shared_ptr<SigmaVector> sigma_vector;
     if (sigma_type == SigmaVectorType::Dynamic) {
         sigma_vector = std::make_shared<SigmaVectorDynamic>(space, fci_ints, max_memory);
     } else if (sigma_type == SigmaVectorType::SparseList) {
-        if (op) {
-            sigma_vector = std::make_shared<SigmaVectorSparseList>(space, fci_ints, op);
-        } else {
-            throw std::runtime_error(
-                "\n  make_sigma_vector called with sigma_type == SPARSE but no operator list");
-        }
+        sigma_vector = std::make_shared<SigmaVectorSparseList>(space, fci_ints);
     } else if (sigma_type == SigmaVectorType::Full) {
         sigma_vector = std::make_shared<SigmaVectorFull>(space, fci_ints);
     }
@@ -78,7 +54,7 @@ void SigmaVectorFull::add_bad_roots(std::vector<std::vector<std::pair<size_t, do
 
 void SigmaVectorFull::get_diagonal(psi::Vector& diag) {}
 
-void SigmaVectorFull::compute_sigma(psi::SharedVector, psi::SharedVector) {}
+void SigmaVectorFull::compute_sigma(std::shared_ptr<psi::Vector>, std::shared_ptr<psi::Vector>) {}
 
 } // namespace forte
 
@@ -94,7 +70,8 @@ void SigmaVectorFull::compute_sigma(psi::SharedVector, psi::SharedVector) {}
 // SigmaVectorMPI::SigmaVectorMPI(const DeterminantHashVec& space, WFNOperator& op)
 //    : SigmaVector(space.size()), space_(space) {}
 
-// void SigmaVectorMPI::compute_sigma(psi::SharedVector sigma, psi::SharedVector b) {}
+// void SigmaVectorMPI::compute_sigma(std::shared_ptr<psi::Vector> sigma,
+// std::shared_ptr<psi::Vector> b) {}
 
 //#endif
 
@@ -125,7 +102,8 @@ void SigmaVectorFull::compute_sigma(psi::SharedVector, psi::SharedVector) {}
 //    }
 //}
 
-// void SigmaVectorSparseList::compute_sigma(psi::SharedVector sigma, psi::SharedVector b) {
+// void SigmaVectorSparseList::compute_sigma(std::shared_ptr<psi::Vector> sigma,
+// std::shared_ptr<psi::Vector> b) {
 //    sigma->zero();
 
 //    double* sigma_p = sigma->pointer();
@@ -335,7 +313,8 @@ void SigmaVectorFull::compute_sigma(psi::SharedVector, psi::SharedVector) {}
 //}
 
 ///*  Sigma Vector Sparse functions */
-// void SigmaVectorSparse::compute_sigma(psi::SharedVector sigma, psi::SharedVector b) {
+// void SigmaVectorSparse::compute_sigma(std::shared_ptr<psi::Vector> sigma,
+// std::shared_ptr<psi::Vector> b) {
 //    sigma->zero();
 //    double* sigma_p = sigma->pointer();
 //    double* b_p = b->pointer();

@@ -31,6 +31,8 @@
 #include <thread>
 #include <future>
 
+#include "psi4/libpsi4util/PsiOutStream.h"
+
 //#include "psi4/libciomr/libciomr.h"
 //#include "psi4/libmints/matrix.h"
 //#include "psi4/libmints/vector.h"
@@ -777,7 +779,7 @@ void SigmaVectorDynamic::compute_abab_coupling(const String& detIa, const std::v
     }
 }
 
-double SigmaVectorDynamic::compute_spin(psi::SharedVector c) {
+double SigmaVectorDynamic::compute_spin(const std::vector<double>& c) {
     double S2 = 0.0;
     const det_hashvec& wfn_map = space_.wfn_hash();
 
@@ -785,7 +787,7 @@ double SigmaVectorDynamic::compute_spin(psi::SharedVector c) {
         // Compute the diagonal contribution
         // PhiI = PhiJ
         const Determinant& PhiI = wfn_map[i];
-        double CI = c->get(i);
+        double CI = c[i];
         int npair = PhiI.npair();
         int na = PhiI.count_alfa();
         int nb = PhiI.count_beta();
@@ -828,7 +830,7 @@ double SigmaVectorDynamic::compute_spin(psi::SharedVector c) {
                 size_t last_J = range_J.second;
                 for (size_t posI = first_I; posI < last_I; ++posI) {
                     Ib = sorted_dets[posI].get_beta_bits();
-                    double CI = c->get(a_sorted_string_list_.add(posI));
+                    double CI = c[a_sorted_string_list_.add(posI)];
                     for (size_t posJ = first_J; posJ < last_J; ++posJ) {
                         Jb = sorted_dets[posJ].get_beta_bits();
                         IJb = Jb ^ Ib;
@@ -840,7 +842,7 @@ double SigmaVectorDynamic::compute_spin(psi::SharedVector c) {
                             auto b = Jb_sub.find_first_one();
                             if ((i != j) and (a != b) and (i == b) and (j == a)) {
                                 double sign = sign_ia * Ib.slater_sign(j, b);
-                                S2 -= sign * CI * c->get(a_sorted_string_list_.add(posJ));
+                                S2 -= sign * CI * c[a_sorted_string_list_.add(posJ)];
                             }
                         }
                     }

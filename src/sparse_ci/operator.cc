@@ -611,7 +611,7 @@ void WFNOperator::add_doubles(DeterminantHashVec& wfn) {
     wfn.merge(external);
 }
 
-void WFNOperator::build_strings(DeterminantHashVec& wfn) {
+void WFNOperator::build_strings(const DeterminantHashVec& wfn) {
     beta_strings_.clear();
     alpha_strings_.clear();
     alpha_a_strings_.clear();
@@ -689,7 +689,7 @@ void WFNOperator::build_strings(DeterminantHashVec& wfn) {
     }
 }
 
-void WFNOperator::op_s_lists(DeterminantHashVec& wfn) {
+void WFNOperator::op_s_lists(const DeterminantHashVec& wfn) {
     timer ops("Single sub. lists");
 
     if (!quiet_) {
@@ -784,7 +784,7 @@ void WFNOperator::op_s_lists(DeterminantHashVec& wfn) {
     }
 }
 
-void WFNOperator::op_lists(DeterminantHashVec& wfn) {
+void WFNOperator::op_lists(const DeterminantHashVec& wfn) {
     size_t ndets = wfn.size();
     a_ann_list_.resize(ndets);
     b_ann_list_.resize(ndets);
@@ -894,7 +894,7 @@ void WFNOperator::op_lists(DeterminantHashVec& wfn) {
     b_cre_list_.shrink_to_fit();
 }
 
-void WFNOperator::tp_s_lists(DeterminantHashVec& wfn) {
+void WFNOperator::tp_s_lists(const DeterminantHashVec& wfn) {
 
     timer ops("Double sub. lists");
     const det_hashvec& dets = wfn.wfn_hash();
@@ -1056,7 +1056,7 @@ void WFNOperator::tp_s_lists(DeterminantHashVec& wfn) {
     }
 }
 
-void WFNOperator::tp_lists(DeterminantHashVec& wfn) {
+void WFNOperator::tp_lists(const DeterminantHashVec& wfn) {
 
     size_t ndets = wfn.size();
     aa_ann_list_.resize(ndets);
@@ -1274,7 +1274,7 @@ void WFNOperator::clear_tp_s_lists() {
     ab_list_.clear();
 }
 
-void WFNOperator::three_s_lists(DeterminantHashVec& wfn) {
+void WFNOperator::three_s_lists(const DeterminantHashVec& wfn) {
 
     timer ops("Triple sub. lists");
     const det_hashvec& dets = wfn.wfn_hash();
@@ -1541,7 +1541,7 @@ void WFNOperator::three_s_lists(DeterminantHashVec& wfn) {
     }
 }
 
-void WFNOperator::three_lists(DeterminantHashVec& wfn) {
+void WFNOperator::three_lists(const DeterminantHashVec& wfn) {
     size_t ndets = wfn.size();
     const det_hashvec& dets = wfn.wfn_hash();
     /// Compute aaa coupling

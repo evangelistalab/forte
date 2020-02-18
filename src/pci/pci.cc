@@ -666,7 +666,7 @@ void ProjectorCI::pre_iter_preparation() {
     sortHashVecByCoefficient(dets_hashvec_, C_);
     psi::timer_off("PCI:sort");
 
-    print_wfn(dets_hashvec_, C_);
+    //    print_wfn(dets_hashvec_, C_, 1); TODO: re-enable [sci_cleanup]
     //    det_hash<> old_space_map;
     //    for (size_t I = 0; I < dets_hashvec.size(); ++I) {
     //        old_space_map[dets_hashvec[I]] = C[I];
@@ -831,9 +831,9 @@ void ProjectorCI::post_iter_process() {
     psi::timer_off("PCI:sort");
 
     if (print_full_wavefunction_) {
-        print_wfn(dets_hashvec_, C_, C_.size());
+        //        print_wfn(dets_hashvec_, C_, 1, C_.size()); TODO: re-enable [sci_cleanup]
     } else {
-        print_wfn(dets_hashvec_, C_);
+        //        print_wfn(dets_hashvec_, C_, 1); TODO: re-enable [sci_cleanup]
     }
 
     psi::outfile->Printf("\n  %s: %f s\n", "ProjectorCI (bitset) steps finished in  ",
@@ -867,19 +867,14 @@ void ProjectorCI::post_iter_process() {
         psi::SharedMatrix apfci_evecs(new psi::Matrix("Eigenvectors", C_.size(), nroot_));
         psi::SharedVector apfci_evals(new psi::Vector("Eigenvalues", nroot_));
 
-        std::shared_ptr<WFNOperator> op = std::make_shared<WFNOperator>(as_ints_);
         DeterminantHashVec det_map(std::move(dets_hashvec_));
-        op->build_strings(det_map);
-        op->op_s_lists(det_map);
-        op->tp_s_lists(det_map);
 
         // set SparseCISolver options
         sparse_solver_.set_spin_project(true);
         sparse_solver_.manual_guess(false);
         sparse_solver_.set_force_diag(false);
 
-        auto sigma_vector =
-            make_sigma_vector(det_map, as_ints_, 0, SigmaVectorType::SparseList, op);
+        auto sigma_vector = make_sigma_vector(det_map, as_ints_, 0, SigmaVectorType::SparseList);
         sparse_solver_.diagonalize_hamiltonian(det_map, sigma_vector, apfci_evals, apfci_evecs,
                                                nroot_, wavefunction_multiplicity_);
         det_map.swap(dets_hashvec_);
@@ -896,20 +891,21 @@ void ProjectorCI::post_iter_process() {
                              post_diag_energy - as_ints_->energy(reference_determinant_) -
                                  nuclear_repulsion_energy_ - as_ints_->scalar_energy());
 
-        std::vector<double> diag_C(C_.size());
+        //        std::vector<double> diag_C(C_.size());
 
-        for (size_t I = 0; I < C_.size(); ++I) {
-            diag_C[I] = apfci_evecs->get(I, current_root_);
-        }
+        //        for (size_t I = 0; I < C_.size(); ++I) {
+        //            diag_C[I] = apfci_evecs->get(I, current_root_);
+        //        }
 
         psi::timer_on("PCI:sort");
         sortHashVecByCoefficient(dets_hashvec_, C_);
         psi::timer_off("PCI:sort");
 
         if (print_full_wavefunction_) {
-            print_wfn(dets_hashvec_, diag_C, diag_C.size());
+            //            print_wfn(dets_hashvec_, apfci_evecs, 1, diag_C.size()); TODO: re-enable
+            //            [sci_cleanup]
         } else {
-            print_wfn(dets_hashvec_, diag_C);
+            //            print_wfn(dets_hashvec_, apfci_evecs, 1); TODO: re-enable [sci_cleanup]
         }
     }
 }
@@ -1001,13 +997,8 @@ double ProjectorCI::initial_guess(det_hashvec& dets_hashvec, std::vector<double>
     sparse_solver_.manual_guess(false);
     sparse_solver_.set_force_diag(false);
 
-    std::shared_ptr<WFNOperator> op = std::make_shared<WFNOperator>(as_ints_);
     DeterminantHashVec det_map(dets_hashvec_);
-    op->build_strings(det_map);
-    op->op_s_lists(det_map);
-    op->tp_s_lists(det_map);
-    auto sigma_vector_diag =
-        make_sigma_vector(det_map, as_ints_, 0, SigmaVectorType::SparseList, op);
+    auto sigma_vector_diag = make_sigma_vector(det_map, as_ints_, 0, SigmaVectorType::SparseList);
     sparse_solver_.diagonalize_hamiltonian(det_map, sigma_vector_diag, evals, evecs, nroot_,
                                            wavefunction_multiplicity_);
 
@@ -1295,14 +1286,10 @@ double ProjectorCI::estimate_var_energy_within_error_sigma(const det_hashvec& de
         cut_index + 1, max_error);
     double variational_energy_estimator = 0.0;
 
-    std::shared_ptr<WFNOperator> op = std::make_shared<WFNOperator>(as_ints_);
     std::vector<Determinant> sub_dets = dets_hashvec.toVector();
     sub_dets.erase(sub_dets.begin() + cut_index + 1, sub_dets.end());
     DeterminantHashVec det_map(sub_dets);
-    op->build_strings(det_map);
-    op->op_s_lists(det_map);
-    op->tp_s_lists(det_map);
-    auto sigma_vector = make_sigma_vector(det_map, as_ints_, 0, SigmaVectorType::SparseList, op);
+    auto sigma_vector = make_sigma_vector(det_map, as_ints_, 0, SigmaVectorType::SparseList);
     //    SigmaVectorSparseList svs(det_map, op, as_ints_);
     size_t sub_size = sigma_vector->size();
     // allocate vectors
@@ -1363,63 +1350,64 @@ double ProjectorCI::estimate_var_energy_sparse(const det_hashvec& dets_hashvec,
     return variational_energy_estimator + nuclear_repulsion_energy_ + as_ints_->scalar_energy();
 }
 
-void ProjectorCI::print_wfn(const det_hashvec& space_hashvec, std::vector<double>& C,
-                            size_t max_output) {
-    psi::outfile->Printf("\n\n  Most important contributions to the wave function:\n");
+// void ProjectorCI::print_wfn(const det_hashvec& space_hashvec, std::vector<double>& C,
+//                            size_t max_output) {
+//    psi::outfile->Printf("\n\n  Most important contributions to the wave function:\n");
 
-    size_t max_dets = std::min(int(max_output), int(C.size()));
-    for (size_t I = 0; I < max_dets; ++I) {
-        psi::outfile->Printf("\n  %3zu  %13.6g %13.6g  %10zu %s  %18.12f", I, C[I], C[I] * C[I], I,
-                             str(space_hashvec[I]).c_str(),
-                             as_ints_->energy(space_hashvec[I]) + as_ints_->scalar_energy());
-    }
+//    size_t max_dets = std::min(int(max_output), int(C.size()));
+//    for (size_t I = 0; I < max_dets; ++I) {
+//        psi::outfile->Printf("\n  %3zu  %13.6g %13.6g  %10zu %s  %18.12f", I, C[I], C[I] * C[I],
+//        I,
+//                             str(space_hashvec[I]).c_str(),
+//                             as_ints_->energy(space_hashvec[I]) + as_ints_->scalar_energy());
+//    }
 
-    // Compute the expectation value of the spin
-    size_t max_sample = 1000;
-    size_t max_I = 0;
-    double sum_weight = 0.0;
-    double wfn_threshold = 0.95;
-    for (size_t I = 0; I < space_hashvec.size(); ++I) {
-        if ((sum_weight < wfn_threshold) and (I < max_sample)) {
-            sum_weight += C[I] * C[I];
-            max_I++;
-        } else if (std::fabs(C[I - 1]) - std::fabs(C[I]) < 1.0e-6) {
-            // Special case, if there are several equivalent determinants
-            sum_weight += C[I] * C[I];
-            max_I++;
-        } else {
-            break;
-        }
-    }
+//    // Compute the expectation value of the spin
+//    size_t max_sample = 1000;
+//    size_t max_I = 0;
+//    double sum_weight = 0.0;
+//    double wfn_threshold = 0.95;
+//    for (size_t I = 0; I < space_hashvec.size(); ++I) {
+//        if ((sum_weight < wfn_threshold) and (I < max_sample)) {
+//            sum_weight += C[I] * C[I];
+//            max_I++;
+//        } else if (std::fabs(C[I - 1]) - std::fabs(C[I]) < 1.0e-6) {
+//            // Special case, if there are several equivalent determinants
+//            sum_weight += C[I] * C[I];
+//            max_I++;
+//        } else {
+//            break;
+//        }
+//    }
 
-    double norm = 0.0;
-    double S2 = 0.0;
-    for (size_t I = 0; I < max_I; ++I) {
-        for (size_t J = 0; J < max_I; ++J) {
-            if (std::fabs(C[I] * C[J]) > 1.0e-12) {
-                const double S2IJ = spin2(space_hashvec[I], space_hashvec[J]);
-                S2 += C[I] * C[J] * S2IJ;
-            }
-        }
-        norm += C[I] * C[I];
-    }
-    S2 /= norm;
-    double S = std::fabs(0.5 * (std::sqrt(1.0 + 4.0 * S2) - 1.0));
+//    double norm = 0.0;
+//    double S2 = 0.0;
+//    for (size_t I = 0; I < max_I; ++I) {
+//        for (size_t J = 0; J < max_I; ++J) {
+//            if (std::fabs(C[I] * C[J]) > 1.0e-12) {
+//                const double S2IJ = spin2(space_hashvec[I], space_hashvec[J]);
+//                S2 += C[I] * C[J] * S2IJ;
+//            }
+//        }
+//        norm += C[I] * C[I];
+//    }
+//    S2 /= norm;
+//    double S = std::fabs(0.5 * (std::sqrt(1.0 + 4.0 * S2) - 1.0));
 
-    std::vector<std::string> s2_labels({"singlet", "doublet", "triplet", "quartet", "quintet",
-                                        "sextet", "septet", "octet", "nonet", "decaet"});
-    size_t nLet = std::round(S * 2.0);
-    std::string state_label;
-    if (nLet < 10) {
-        state_label = s2_labels[nLet];
-    } else {
-        state_label = std::to_string(nLet) + "-let";
-    }
+//    std::vector<std::string> s2_labels({"singlet", "doublet", "triplet", "quartet", "quintet",
+//                                        "sextet", "septet", "octet", "nonet", "decaet"});
+//    size_t nLet = std::round(S * 2.0);
+//    std::string state_label;
+//    if (nLet < 10) {
+//        state_label = s2_labels[nLet];
+//    } else {
+//        state_label = std::to_string(nLet) + "-let";
+//    }
 
-    psi::outfile->Printf("\n\n  Spin State: S^2 = %5.3f, S = %5.3f, %s (from %zu "
-                         "determinants,%.2f%%)",
-                         S2, S, state_label.c_str(), max_I, 100.0 * sum_weight);
-}
+//    psi::outfile->Printf("\n\n  Spin State: S^2 = %5.3f, S = %5.3f, %s (from %zu "
+//                         "determinants,%.2f%%)",
+//                         S2, S, state_label.c_str(), max_I, 100.0 * sum_weight);
+//}
 
 void ProjectorCI::save_wfn(det_hashvec& space, std::vector<double>& C,
                            std::vector<std::pair<det_hashvec, std::vector<double>>>& solutions) {
@@ -2256,9 +2244,9 @@ psi::SharedVector ProjectorCI::get_PQ_evals() {
     return evals;
 }
 
-std::shared_ptr<WFNOperator> ProjectorCI::get_op() {
-    return std::make_shared<WFNOperator>(as_ints_);
-}
+//std::shared_ptr<WFNOperator> ProjectorCI::get_op() {
+//    return std::make_shared<WFNOperator>(as_ints_);
+//}
 
 size_t ProjectorCI::get_ref_root() { return current_root_; }
 std::vector<double> ProjectorCI::get_multistate_pt2_energy_correction() {

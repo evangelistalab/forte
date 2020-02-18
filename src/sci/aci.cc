@@ -78,8 +78,6 @@ void AdaptiveCI::startup() {
     if (options_->has_changed("ACI_QUIET_MODE")) {
         quiet_mode_ = options_->get_bool("ACI_QUIET_MODE");
     }
-    op_ = std::make_shared<WFNOperator>(as_ints_);
-    op_->set_quiet_mode(quiet_mode_);
 
     wavefunction_symmetry_ = state_.irrep();
     multiplicity_ = state_.multiplicity();
@@ -523,12 +521,6 @@ std::vector<std::pair<double, double>> AdaptiveCI::compute_spin(DeterminantHashV
                                                                 std::shared_ptr<WFNOperator> op,
                                                                 psi::SharedMatrix evecs,
                                                                 int nroot) {
-    // WFNOperator op(mo_symmetry_);
-
-    // op.build_strings(space);
-    // op.op_lists(space);
-    // op.tp_lists(space);
-
     std::vector<std::pair<double, double>> spin_vec(nroot);
 
     if (!build_lists_) {
@@ -545,35 +537,6 @@ std::vector<std::pair<double, double>> AdaptiveCI::compute_spin(DeterminantHashV
         }
     }
     return spin_vec;
-}
-
-void AdaptiveCI::print_wfn(DeterminantHashVec& space, std::shared_ptr<WFNOperator> op,
-                           psi::SharedMatrix evecs, int nroot) {
-    std::string state_label;
-    std::vector<std::string> s2_labels({"singlet", "doublet", "triplet", "quartet", "quintet",
-                                        "sextet", "septet", "octet", "nonet", "decatet"});
-
-    std::vector<std::pair<double, double>> spins = compute_spin(space, op, evecs, nroot);
-
-    for (int n = 0; n < nroot; ++n) {
-        DeterminantHashVec tmp;
-        std::vector<double> tmp_evecs;
-
-        outfile->Printf("\n\n  Most important contributions to root %3d:", n);
-
-        size_t max_dets = std::min(10, evecs->nrow());
-        tmp.subspace(space, evecs, tmp_evecs, max_dets, n);
-
-        for (size_t I = 0; I < max_dets; ++I) {
-            outfile->Printf("\n  %3zu  %9.6f %.9f  %10zu %s", I, tmp_evecs[I],
-                            tmp_evecs[I] * tmp_evecs[I], space.get_idx(tmp.get_det(I)),
-                            str(tmp.get_det(I), nact_).c_str());
-        }
-        state_label = s2_labels[std::round(spins[n].first * 2.0)];
-        root_spin_vec_[n] = std::make_pair(spins[n].first, spins[n].second);
-        outfile->Printf("\n\n  Spin state for root %zu: S^2 = %5.6f, S = %5.3f, %s", n,
-                        root_spin_vec_[n].first, root_spin_vec_[n].second, state_label.c_str());
-    }
 }
 
 /*
@@ -795,20 +758,13 @@ void AdaptiveCI::diagonalize_P_space() {
         sparse_solver_.add_bad_states(bad_roots_);
     }
 
-    if (sigma_vector_type_ != SigmaVectorType::Dynamic) {
-        op_->clear_op_s_lists();
-        op_->clear_tp_s_lists();
-        op_->build_strings(P_space_);
-        op_->op_s_lists(P_space_);
-        op_->tp_s_lists(P_space_);
-    }
-
     sparse_solver_.manual_guess(false);
     local_timer diag;
 
-    auto sigma_vector = make_sigma_vector(P_space_, as_ints_, max_memory_, sigma_vector_type_, op_);
+    auto sigma_vector = make_sigma_vector(P_space_, as_ints_, max_memory_, sigma_vector_type_);
     sparse_solver_.diagonalize_hamiltonian(P_space_, sigma_vector, P_evals_, P_evecs_,
                                            num_ref_roots_, multiplicity_);
+    auto spin = sparse_solver_.spin();
 
     if (!quiet_mode_)
         outfile->Printf("\n  Time spent diagonalizing H:   %1.6f s", diag.get());
@@ -836,14 +792,14 @@ void AdaptiveCI::diagonalize_P_space() {
                 P_evals_->get(i) + nuclear_repulsion_energy_ + as_ints_->scalar_energy();
             double exc_energy = pc_hartree2ev * (P_evals_->get(i) - P_evals_->get(0));
             outfile->Printf("\n    P-space  CI Energy Root %3d        = "
-                            "%.12f Eh = %8.4f eV",
-                            i, abs_energy, exc_energy);
+                            "%.12f Eh = %8.4f eV, S^2 = %5.6f",
+                            i, abs_energy, exc_energy, spin[i]);
         }
         outfile->Printf("\n");
     }
 
     if (!quiet_mode_ and options_->get_bool("ACI_PRINT_REFS"))
-        print_wfn(P_space_, op_, P_evecs_, num_ref_roots_);
+        print_wfn(P_space_, P_evecs_, num_ref_roots_);
 }
 
 void AdaptiveCI::diagonalize_PQ_space() {
@@ -852,21 +808,11 @@ void AdaptiveCI::diagonalize_PQ_space() {
     num_ref_roots_ = std::min(nroot_, int(PQ_space_.size()));
 
     // Step 3. Diagonalize the Hamiltonian in the P + Q space
-    if (sigma_vector_type_ != SigmaVectorType::Dynamic) {
-        op_->clear_op_s_lists();
-        op_->clear_tp_s_lists();
-        local_timer str;
-        op_->build_strings(PQ_space_);
-        outfile->Printf("\n  Time spent building strings      %1.6f s", str.get());
-        op_->op_s_lists(PQ_space_);
-        op_->tp_s_lists(PQ_space_);
-    }
     local_timer diag_pq;
 
     outfile->Printf("\n  Number of reference roots: %d", num_ref_roots_);
 
-    auto sigma_vector =
-        make_sigma_vector(PQ_space_, as_ints_, max_memory_, sigma_vector_type_, op_);
+    auto sigma_vector = make_sigma_vector(PQ_space_, as_ints_, max_memory_, sigma_vector_type_);
     sparse_solver_.diagonalize_hamiltonian(PQ_space_, sigma_vector, PQ_evals_, PQ_evecs_,
                                            num_ref_roots_, multiplicity_);
 
@@ -878,6 +824,8 @@ void AdaptiveCI::diagonalize_PQ_space() {
     //        old_dets = PQ_space_;
     //        old_evecs = PQ_evecs->clone();
 
+    auto spin = sparse_solver_.spin();
+
     if (!quiet_mode_) {
         // Print the energy
         outfile->Printf("\n");
@@ -886,8 +834,8 @@ void AdaptiveCI::diagonalize_PQ_space() {
                 PQ_evals_->get(i) + nuclear_repulsion_energy_ + as_ints_->scalar_energy();
             double exc_energy = pc_hartree2ev * (PQ_evals_->get(i) - PQ_evals_->get(0));
             outfile->Printf("\n    PQ-space CI Energy Root %3d        = "
-                            "%.12f Eh = %8.4f eV",
-                            i, abs_energy, exc_energy);
+                            "%.12f Eh = %8.4f eV, S^2 = %8.6f",
+                            i, abs_energy, exc_energy, spin[i]);
             outfile->Printf("\n    PQ-space CI Energy + EPT2 Root %3d = %.12f Eh = "
                             "%8.4f eV",
                             i, abs_energy + multistate_pt2_energy_correction_[i],
@@ -937,7 +885,7 @@ void AdaptiveCI::prune_PQ_to_P() {
 
     // Print information about the wave function
     if (!quiet_mode_) {
-        print_wfn(PQ_space_, op_, PQ_evecs_, num_ref_roots_);
+        print_wfn(PQ_space_, PQ_evecs_, num_ref_roots_);
         outfile->Printf("\n  Cycle %d took: %1.6f s", cycle_, cycle_time_.get());
     }
 }
@@ -979,7 +927,7 @@ void AdaptiveCI::print_nos() {
     std::vector<double> ordm_a_v;
     std::vector<double> ordm_b_v;
 
-    ci_rdm.compute_1rdm(ordm_a_v, ordm_b_v, op_);
+    ci_rdm.compute_1rdm_op(ordm_a_v, ordm_b_v);
 
     psi::Dimension nmopi = mo_space_info_->dimension("ALL");
     psi::Dimension ncmopi = mo_space_info_->dimension("CORRELATED");
@@ -1044,7 +992,7 @@ void AdaptiveCI::full_mrpt2() {
 DeterminantHashVec AdaptiveCI::get_PQ_space() { return PQ_space_; }
 psi::SharedMatrix AdaptiveCI::get_PQ_evecs() { return PQ_evecs_; }
 psi::SharedVector AdaptiveCI::get_PQ_evals() { return PQ_evals_; }
-std::shared_ptr<WFNOperator> AdaptiveCI::get_op() { return op_; }
+//std::shared_ptr<WFNOperator> AdaptiveCI::get_op() { return op_; }
 size_t AdaptiveCI::get_ref_root() { return ref_root_; }
 std::vector<double> AdaptiveCI::get_multistate_pt2_energy_correction() {
     return multistate_pt2_energy_correction_;

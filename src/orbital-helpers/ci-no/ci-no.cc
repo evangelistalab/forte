@@ -27,6 +27,9 @@
  * @END LICENSE
  */
 
+#include "psi4/libpsi4util/PsiOutStream.h"
+
+#include "base_classes/mo_space_info.h"
 #include "sparse_ci/sigma_vector.h"
 
 #include "ci-no.h"
@@ -59,8 +62,8 @@ CINO::CINO(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> opti
            std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
     : OrbitalTransform(ints, mo_space_info), options_(options), mo_space_info_(mo_space_info) {
     fci_ints_ = std::make_shared<ActiveSpaceIntegrals>(
-        ints, mo_space_info_->corr_absolute_mo("ACTIVE"),
-        mo_space_info_->symmetry("ACTIVE"), mo_space_info_->corr_absolute_mo("RESTRICTED_DOCC"));
+        ints, mo_space_info_->corr_absolute_mo("ACTIVE"), mo_space_info_->symmetry("ACTIVE"),
+        mo_space_info_->corr_absolute_mo("RESTRICTED_DOCC"));
 
     auto active_mo = mo_space_info_->corr_absolute_mo("ACTIVE");
     ambit::Tensor tei_active_aa = ints->aptei_aa_block(active_mo, active_mo, active_mo, active_mo);
@@ -302,13 +305,8 @@ CINO::diagonalize_hamiltonian(const std::vector<Determinant>& dets, int nsolutio
     sparse_solver.set_print_details(true);
 
     // Here we use the SparseList algorithm to diagonalize the Hamiltonian
-    std::shared_ptr<WFNOperator> op = std::make_shared<WFNOperator>(fci_ints_);
     DeterminantHashVec detmap(dets);
-    op->build_strings(detmap);
-    op->op_s_lists(detmap);
-    op->tp_s_lists(detmap);
-
-    auto sigma_vector = make_sigma_vector(detmap, fci_ints_, 0, SigmaVectorType::SparseList, op);
+    auto sigma_vector = make_sigma_vector(detmap, fci_ints_, 0, SigmaVectorType::SparseList);
     sparse_solver.diagonalize_hamiltonian(detmap, sigma_vector, evals_evecs.first,
                                           evals_evecs.second, nsolutions,
                                           wavefunction_multiplicity_);

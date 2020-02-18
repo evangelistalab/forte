@@ -29,12 +29,12 @@
 #ifndef _determinant_hashvector_h_
 #define _determinant_hashvector_h_
 
-#include "psi4/libpsi4util/PsiOutStream.h"
-#include "psi4/libmints/matrix.h"
-#include "psi4/psi4-dec.h"
 #include "sparse_ci/determinant.h"
 #include "helpers/hash_vector.h"
 
+namespace psi {
+class Matrix;
+}
 
 namespace forte {
 
@@ -90,7 +90,7 @@ class DeterminantHashVec {
     std::vector<Determinant> determinants() const;
 
     /// Return a vector of the determinants and their indices
-    std::vector<std::pair<Determinant,size_t>> determinant_index_pairs() const;
+    std::vector<std::pair<Determinant, size_t>> determinant_index_pairs() const;
 
     // Make this spin complete
     void make_spin_complete(int nmo);
@@ -100,14 +100,14 @@ class DeterminantHashVec {
 
     // Compute overlap between this and input wfn
     double overlap(std::vector<double>& det1_evecs, DeterminantHashVec& det2,
-                   psi::SharedMatrix det2_evecs, int root);
+                   std::shared_ptr<psi::Matrix> det2_evecs, int root);
 
     // Compute overlap between this and input wfn
-    double overlap(psi::SharedMatrix det1_evecs, int root1, DeterminantHashVec& det2,
-                   psi::SharedMatrix det2_evecs, int root2);
+    double overlap(std::shared_ptr<psi::Matrix> det1_evecs, int root1, DeterminantHashVec& det2,
+                   std::shared_ptr<psi::Matrix> det2_evecs, int root2);
 
     // Save most important subspace as this
-    void subspace(DeterminantHashVec& dets, psi::SharedMatrix evecs, std::vector<double>& new_evecs,
+    void subspace(DeterminantHashVec& dets, std::shared_ptr<psi::Matrix> evecs, std::vector<double>& new_evecs,
                   size_t dim, int root);
 
     // Merge a wavefunction into this
@@ -126,6 +126,6 @@ class DeterminantHashVec {
     /// A hashvector of determinants
     det_hashvec wfn_;
 };
-}
+} // namespace forte
 
 #endif // _determinant_hashvector_h_

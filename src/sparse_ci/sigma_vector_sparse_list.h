@@ -31,6 +31,10 @@
 
 #include "sigma_vector.h"
 
+namespace psi {
+class Vector;
+}
+
 namespace forte {
 
 /**
@@ -40,14 +44,13 @@ namespace forte {
 class SigmaVectorSparseList : public SigmaVector {
   public:
     SigmaVectorSparseList(const DeterminantHashVec& space,
-                          std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
-                          std::shared_ptr<WFNOperator> op);
+                          std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
 
-    void compute_sigma(psi::SharedVector sigma, psi::SharedVector b);
+    void compute_sigma(std::shared_ptr<psi::Vector> sigma, std::shared_ptr<psi::Vector> b);
     // void compute_sigma(Matrix& sigma, Matrix& b, int nroot);
     void get_diagonal(psi::Vector& diag);
     void add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& bad_states_);
-    double compute_spin(psi::SharedVector c) override {}
+    double compute_spin(const std::vector<double>& c) override;
 
     std::vector<std::vector<std::pair<size_t, double>>> bad_states_;
 
@@ -56,11 +59,8 @@ class SigmaVectorSparseList : public SigmaVector {
     bool use_disk_ = false;
 
     std::vector<double> diag_;
-    std::vector<std::vector<std::pair<size_t, short>>>& a_list_;
-    std::vector<std::vector<std::pair<size_t, short>>>& b_list_;
-    std::vector<std::vector<std::tuple<size_t, short, short>>>& aa_list_;
-    std::vector<std::vector<std::tuple<size_t, short, short>>>& ab_list_;
-    std::vector<std::vector<std::tuple<size_t, short, short>>>& bb_list_;
+
+    std::shared_ptr<WFNOperator> op_;
 };
 
 } // namespace forte

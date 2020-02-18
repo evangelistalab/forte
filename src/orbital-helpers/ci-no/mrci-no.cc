@@ -27,13 +27,17 @@
  * @END LICENSE
  */
 
-#include "psi4/psi4-dec.h"
-#include "psi4/libmints/molecule.h"
-#include "psi4/libmints/pointgrp.h"
+#include "psi4/libpsi4util/PsiOutStream.h"
+
+//#include "psi4/psi4-dec.h"
+#include "psi4/libmints/vector.h"
+//#include "psi4/libmints/pointgrp.h"
 #include "helpers/timer.h"
 #include "ci_rdm/ci_rdms.h"
+#include "base_classes/mo_space_info.h"
 #include "integrals/active_space_integrals.h"
-#include "base_classes/forte_options.h"
+
+//#include "base_classes/forte_options.h"
 #include "sparse_ci/sparse_ci_solver.h"
 #include "sparse_ci/determinant.h"
 #include "mrci-no.h"
@@ -464,13 +468,8 @@ MRCINO::diagonalize_hamiltonian(const std::vector<Determinant>& dets, int nsolut
     outfile->Printf("\n size is %d\n", dets.size());
 
     // Here we use the SparseList algorithm to diagonalize the Hamiltonian
-    std::shared_ptr<WFNOperator> op = std::make_shared<WFNOperator>(fci_ints_);
     DeterminantHashVec detmap(dets);
-    op->build_strings(detmap);
-    op->op_s_lists(detmap);
-    op->tp_s_lists(detmap);
-
-    auto sigma_vector = make_sigma_vector(detmap, fci_ints_, 0, SigmaVectorType::SparseList, op);
+    auto sigma_vector = make_sigma_vector(detmap, fci_ints_, 0, SigmaVectorType::SparseList);
     sparse_solver.diagonalize_hamiltonian(detmap, sigma_vector, evals_evecs.first,
                                           evals_evecs.second, nsolutions,
                                           wavefunction_multiplicity_);

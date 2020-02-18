@@ -32,13 +32,16 @@
 
 #include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/physconst.h"
-#include "excited_state_solver.h"
-#include "sci/sci.h"
+
 #include "base_classes/mo_space_info.h"
+#include "sci/sci.h"
 #include "sparse_ci/operator.h"
 #include "helpers/helpers.h"
 #include "helpers/printing.h"
+#include "helpers/timer.h"
 #include "ci_rdm/ci_rdms.h"
+
+#include "excited_state_solver.h"
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -200,7 +203,7 @@ double ExcitedStateSolver::compute_energy() {
             root_ = i;
         }
     }
-    op_ = sci_->get_op();
+    //    op_ = sci_->get_op();
     multistate_pt2_energy_correction_ = sci_->get_multistate_pt2_energy_correction();
 
     dim = PQ_space.size();
@@ -226,16 +229,10 @@ double ExcitedStateSolver::compute_energy() {
 
         psi::outfile->Printf("\n  Size of combined space: %zu", dim);
 
-        auto sigma_type = sci_->sigma_vector_type();
-        if (sigma_type != SigmaVectorType::Dynamic) {
-            op_c->build_strings(full_space);
-            op_c->op_lists(full_space);
-            op_c->tp_lists(full_space);
-        }
-
         size_t max_memory = sci_->max_memory();
 
-        auto sigma_vector = make_sigma_vector(full_space, as_ints_, max_memory, sigma_type, op_c);
+        auto sigma_type = sci_->sigma_vector_type();
+        auto sigma_vector = make_sigma_vector(full_space, as_ints_, max_memory, sigma_type);
         sparse_solver_->diagonalize_hamiltonian(full_space, sigma_vector, PQ_evals, PQ_evecs,
                                                 nroot_, state_.multiplicity());
     }
@@ -408,17 +405,17 @@ void ExcitedStateSolver::print_final(DeterminantHashVec& dets, psi::SharedMatrix
     if ((ex_alg_ != "ROOT_ORTHOGONALIZE") or (nroot_ == 1)) {
         psi::outfile->Printf("\n\n  ==> Wavefunction Information <==");
 
-        print_wfn(dets, op_, PQ_evecs, nroot_);
+        print_wfn(dets, PQ_evecs, nroot_);
     }
 }
 
-void ExcitedStateSolver::print_wfn(DeterminantHashVec& space, std::shared_ptr<WFNOperator> op,
-                                   psi::SharedMatrix evecs, int nroot) {
+void ExcitedStateSolver::print_wfn(DeterminantHashVec& space, std::shared_ptr<psi::Matrix> evecs,
+                                   int nroot) {
     std::string state_label;
     std::vector<std::string> s2_labels({"singlet", "doublet", "triplet", "quartet", "quintet",
                                         "sextet", "septet", "octet", "nonet", "decatet"});
 
-    std::vector<std::pair<double, double>> spins = compute_spin(space, op, evecs, nroot);
+    //    std::vector<std::pair<double, double>> spins = compute_spin(space, op, evecs, nroot);
 
     //    std::vector<std::pair<double, double>> root_spin_vec;
 
@@ -436,9 +433,10 @@ void ExcitedStateSolver::print_wfn(DeterminantHashVec& space, std::shared_ptr<WF
                                  tmp_evecs[I] * tmp_evecs[I], space.get_idx(tmp.get_det(I)),
                                  str(tmp.get_det(I), nact_).c_str());
         }
-        state_label = s2_labels[std::round(spins[n].first * 2.0)];
-        psi::outfile->Printf("\n\n  Spin state for root %zu: S^2 = %5.6f, S = %5.3f, %s", n,
-                             spins[n].first, spins[n].second, state_label.c_str());
+        //        state_label = s2_labels[std::round(spins[n].first * 2.0)];
+        //        psi::outfile->Printf("\n\n  Spin state for root %zu: S^2 = %5.6f, S = %5.3f, %s",
+        //        n,
+        //                             spins[n].first, spins[n].second, state_label.c_str());
     }
 }
 
@@ -496,9 +494,8 @@ std::vector<RDMs> ExcitedStateSolver::rdms(const std::vector<std::pair<size_t, s
     std::vector<RDMs> refs;
 
     for (const auto& root_pair : root_list) {
-
-        refs.push_back(compute_rdms(as_ints_, final_wfn_, op_, evecs_, root_pair.first,
-                                    root_pair.second, max_rdm_level));
+        refs.push_back(compute_rdms(as_ints_, final_wfn_, evecs_, root_pair.first, root_pair.second,
+                                    max_rdm_level));
     }
     return refs;
 }
@@ -512,24 +509,25 @@ ExcitedStateSolver::transition_rdms(const std::vector<std::pair<size_t, size_t>>
 }
 
 RDMs ExcitedStateSolver::compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
-                                      DeterminantHashVec& dets, std::shared_ptr<WFNOperator> op,
-                                      psi::SharedMatrix& PQ_evecs, int root1, int root2,
-                                      int max_rdm_level) {
+                                      DeterminantHashVec& dets, psi::SharedMatrix& PQ_evecs,
+                                      int root1, int root2, int max_rdm_level) {
 
     // TODO: this code might be OBSOLETE (Francesco)
     if (!direct_rdms_) {
-        op->clear_op_s_lists();
-        op->clear_tp_s_lists();
+        auto op = std::make_shared<WFNOperator>(fci_ints);
         if (sci_->sigma_vector_type() == SigmaVectorType::Dynamic) {
             op->build_strings(dets);
         }
         op->op_s_lists(dets);
-        op->tp_s_lists(dets);
+
+        if (max_rdm_level >= 2) {
+            op->tp_s_lists(dets);
+        }
 
         if (max_rdm_level >= 3) {
             psi::outfile->Printf("\n  Computing 3-list...    ");
             local_timer l3;
-            op_->three_s_lists(final_wfn_);
+            op->three_s_lists(final_wfn_);
             psi::outfile->Printf(" done (%1.5f s)", l3.get());
         }
     }
@@ -576,7 +574,7 @@ RDMs ExcitedStateSolver::compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_
             ordm_a = ambit::Tensor::build(ambit::CoreTensor, "g1a", {nact_, nact_});
             ordm_b = ambit::Tensor::build(ambit::CoreTensor, "g1b", {nact_, nact_});
 
-            ci_rdms.compute_1rdm(ordm_a.data(), ordm_b.data(), op);
+            ci_rdms.compute_1rdm_op(ordm_a.data(), ordm_b.data());
             psi::outfile->Printf("\n  1-RDM  took %2.6f s (determinant)", one_r.get());
 
             //            if (options_->get_bool("ACI_PRINT_NO")) {
@@ -589,7 +587,7 @@ RDMs ExcitedStateSolver::compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_
             trdm_ab = ambit::Tensor::build(ambit::CoreTensor, "g2ab", {nact_, nact_, nact_, nact_});
             trdm_bb = ambit::Tensor::build(ambit::CoreTensor, "g2bb", {nact_, nact_, nact_, nact_});
 
-            ci_rdms.compute_2rdm(trdm_aa.data(), trdm_ab.data(), trdm_bb.data(), op);
+            ci_rdms.compute_2rdm_op(trdm_aa.data(), trdm_ab.data(), trdm_bb.data());
             psi::outfile->Printf("\n  2-RDMS took %2.6f s (determinant)", two_r.get());
         }
         if (max_rdm_level >= 3) {
@@ -603,8 +601,8 @@ RDMs ExcitedStateSolver::compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_
             trdm_bbb = ambit::Tensor::build(ambit::CoreTensor, "g2bbb",
                                             {nact_, nact_, nact_, nact_, nact_, nact_});
 
-            ci_rdms.compute_3rdm(trdm_aaa.data(), trdm_aab.data(), trdm_abb.data(), trdm_bbb.data(),
-                                 op);
+            ci_rdms.compute_3rdm_op(trdm_aaa.data(), trdm_aab.data(), trdm_abb.data(),
+                                 trdm_bbb.data());
             psi::outfile->Printf("\n  3-RDMs took %2.6f s (determinant)", tr.get());
         }
     }

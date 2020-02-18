@@ -54,24 +54,24 @@ class WFNOperator {
     void set_quiet_mode(bool mode);
 
     /// Build the coupling lists for one-particle operators
-    void op_lists(DeterminantHashVec& wfn);
-    void op_s_lists(DeterminantHashVec& wfn);
+    void op_s_lists(const DeterminantHashVec& wfn);
 
     /// Build the coupling lists for two-particle operators
-    void tp_lists(DeterminantHashVec& wfn);
-    void tp_s_lists(DeterminantHashVec& wfn);
+    void tp_s_lists(const DeterminantHashVec& wfn);
 
     /// Build the coupling lists for three-particle operators
-    void three_lists(DeterminantHashVec& wfn);
-    void three_s_lists(DeterminantHashVec& wfn);
+    void three_s_lists(const DeterminantHashVec& wfn);
 
-    void clear_op_lists();
-    void clear_tp_lists();
 
     void clear_op_s_lists();
     void clear_tp_s_lists();
     /*- Operators -*/
 
+    void op_lists(const DeterminantHashVec& wfn);
+    void tp_lists(const DeterminantHashVec& wfn);
+    void three_lists(const DeterminantHashVec& wfn);
+    void clear_op_lists();
+    void clear_tp_lists();
     /// Single excitations, a_p^(+) a_q|>
     void add_singles(DeterminantHashVec& wfn);
 
@@ -82,7 +82,7 @@ class WFNOperator {
     double s2(DeterminantHashVec& wfn, psi::SharedMatrix& evecs, int root);
     double s2_direct(DeterminantHashVec& wfn, psi::SharedMatrix& evecs, int root);
 
-    void build_strings(DeterminantHashVec& wfn);
+    void build_strings(const DeterminantHashVec& wfn);
 
     /// Build the sparse Hamiltonian
     std::vector<std::pair<std::vector<size_t>, std::vector<double>>>

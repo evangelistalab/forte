@@ -90,10 +90,13 @@ class SelectedCIMethod {
     virtual DeterminantHashVec get_PQ_space() = 0;
     virtual psi::SharedMatrix get_PQ_evecs() = 0;
     virtual psi::SharedVector get_PQ_evals() = 0;
-    virtual std::shared_ptr<WFNOperator> get_op() = 0;
+//    virtual std::shared_ptr<WFNOperator> get_op() = 0;
     virtual size_t get_ref_root() = 0;
     virtual std::vector<double> get_multistate_pt2_energy_correction() = 0;
     virtual size_t get_cycle();
+
+    void print_wfn(DeterminantHashVec& space, psi::SharedMatrix evecs, int nroot,
+                   size_t max_dets_to_print = 10);
 
     void set_sigma_vector(std::string type);
     SigmaVectorType sigma_vector_type() const;
@@ -130,6 +133,9 @@ class SelectedCIMethod {
 
     /// Maximum memory size
     size_t max_memory_ = 0;
+
+    /// The number of active orbitals
+    size_t nact_;
 }; // namespace forte
 } // namespace forte
 #endif // _sci_h_

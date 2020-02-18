@@ -26,9 +26,13 @@
  * @END LICENSE
  */
 
-#include "sci.h"
-#include "helpers/timer.h"
+#include <algorithm>
+
 #include "psi4/libpsi4util/PsiOutStream.h"
+
+#include "helpers/timer.h"
+#include "sci.h"
+
 namespace forte {
 SelectedCIMethod::SelectedCIMethod(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
                                    std::shared_ptr<MOSpaceInfo> mo_space_info,
@@ -85,4 +89,28 @@ void SelectedCIMethod::set_sigma_vector(std::string type) {
 SigmaVectorType SelectedCIMethod::sigma_vector_type() const { return sigma_vector_type_; }
 
 size_t SelectedCIMethod::max_memory() const { return max_memory_; }
+
+void SelectedCIMethod::print_wfn(DeterminantHashVec& space, psi::SharedMatrix evecs, int nroot,
+                                 size_t max_dets_to_print) {
+    std::string state_label;
+    std::vector<std::string> s2_labels({"singlet", "doublet", "triplet", "quartet", "quintet",
+                                        "sextet", "septet", "octet", "nonet", "decatet"});
+
+    for (int n = 0; n < nroot; ++n) {
+        DeterminantHashVec tmp;
+        std::vector<double> tmp_evecs;
+
+        psi::outfile->Printf("\n\n  Most important contributions to root %3d:", n);
+
+        size_t max_dets = std::min(max_dets_to_print, static_cast<size_t>(evecs->nrow()));
+        tmp.subspace(space, evecs, tmp_evecs, max_dets, n);
+
+        for (size_t I = 0; I < max_dets; ++I) {
+            psi::outfile->Printf("\n  %3zu  %9.6f %.9f  %10zu %s", I, tmp_evecs[I],
+                                 tmp_evecs[I] * tmp_evecs[I], space.get_idx(tmp.get_det(I)),
+                                 str(tmp.get_det(I), nact_).c_str());
+        }
+    }
+}
+
 } // namespace forte

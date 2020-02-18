@@ -919,11 +919,7 @@ void FCI_MO::Diagonalize_H(const vecdet& p_space, const int& multi, const int& n
     DeterminantHashVec detmap(p_space);
 
     // Here we use the SparseList algorithm to diagonalize the Hamiltonian
-    std::shared_ptr<WFNOperator> op = std::make_shared<WFNOperator>(fci_ints_);
-    op->build_strings(detmap);
-    op->op_s_lists(detmap);
-    op->tp_s_lists(detmap);
-    auto sigma_vector = make_sigma_vector(detmap, as_ints_, 0, SigmaVectorType::SparseList, op);
+    auto sigma_vector = make_sigma_vector(detmap, as_ints_, 0, SigmaVectorType::SparseList);
     sparse_solver.diagonalize_hamiltonian(detmap, sigma_vector, evals, evecs, nroot, multi);
 
     // fill in eigen (spin is purified in DL solver)

@@ -51,11 +51,18 @@ using namespace psi;
 namespace forte {
 
 SigmaVectorSparseList::SigmaVectorSparseList(const DeterminantHashVec& space,
-                                             std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
-                                             std::shared_ptr<WFNOperator> op)
-    : SigmaVector(space, fci_ints, SigmaVectorType::SparseList, "SigmaVectorSparseList"),
-      a_list_(op->a_list_), b_list_(op->b_list_), aa_list_(op->aa_list_), ab_list_(op->ab_list_),
-      bb_list_(op->bb_list_) {
+                                             std::shared_ptr<ActiveSpaceIntegrals> fci_ints)
+    : SigmaVector(space, fci_ints, SigmaVectorType::SparseList, "SigmaVectorSparseList") {
+
+    op_ = std::make_shared<WFNOperator>(fci_ints_);
+    /// Build the coupling lists for 1- and 2-particle operators
+    op_->build_strings(space_);
+    op_->op_s_lists(space_);
+    op_->tp_s_lists(space_);
+    //    op_->set_quiet_mode(quiet_mode_);
+    //    a_list_(op->a_list_), b_list_(op->b_list_), aa_list_(op->aa_list_),
+    //    ab_list_(op->ab_list_),
+    //        bb_list_(op->bb_list_)
 
     const det_hashvec& detmap = space_.wfn_hash();
     diag_.resize(space_.size());
@@ -79,6 +86,12 @@ void SigmaVectorSparseList::get_diagonal(psi::Vector& diag) {
 }
 
 void SigmaVectorSparseList::compute_sigma(psi::SharedVector sigma, psi::SharedVector b) {
+    auto a_list_ = op_->a_list_;
+    auto b_list_ = op_->b_list_;
+    auto aa_list_ = op_->aa_list_;
+    auto ab_list_ = op_->ab_list_;
+    auto bb_list_ = op_->bb_list_;
+
     sigma->zero();
 
     double* sigma_p = sigma->pointer();
@@ -286,4 +299,54 @@ void SigmaVectorSparseList::compute_sigma(psi::SharedVector sigma, psi::SharedVe
         //        }
     }
 }
+
+double SigmaVectorSparseList::compute_spin(const std::vector<double>& c) {
+    auto ab_list_ = op_->ab_list_;
+
+    double S2 = 0.0;
+    const det_hashvec& wfn_map = space_.wfn_hash();
+
+    for (size_t i = 0, max_i = wfn_map.size(); i < max_i; ++i) {
+        // Compute diagonal
+        // PhiI = PhiJ
+        const Determinant& PhiI = wfn_map[i];
+        double CI = c[i];
+        int npair = PhiI.npair();
+        int na = PhiI.count_alfa();
+        int nb = PhiI.count_beta();
+        double ms = 0.5 * static_cast<double>(na - nb);
+        S2 += (ms * ms + ms + static_cast<double>(nb) - static_cast<double>(npair)) * CI * CI;
+    }
+
+    // Loop directly through all determinants with
+    // spin-coupled electrons, i.e:
+    // |PhiI> = a+(qa) a+(pb) a-(qb) a-(pa) |PhiJ>
+
+    for (size_t K = 0, max_K = ab_list_.size(); K < max_K; ++K) {
+        const std::vector<std::tuple<size_t, short, short>>& c_dets = ab_list_[K];
+        for (auto& detI : c_dets) {
+            const size_t I = std::get<0>(detI);
+            double sign_pq = std::get<1>(detI) > 0.0 ? 1.0 : -1.0;
+            short p = std::fabs(std::get<1>(detI)) - 1;
+            short q = std::get<2>(detI);
+            if (p == q)
+                continue;
+            for (auto& detJ : c_dets) {
+                const size_t J = std::get<0>(detJ);
+                if (I == J)
+                    continue;
+                double sign_rs = std::get<1>(detJ) > 0.0 ? 1.0 : -1.0;
+                short r = std::fabs(std::get<1>(detJ)) - 1;
+                short s = std::get<2>(detJ);
+                if ((r != s) and (p == s) and (q == r)) {
+                    sign_pq *= sign_rs;
+                    S2 -= sign_pq * c[I] * c[J];
+                }
+            }
+        }
+    }
+    outfile->Printf("\n\nspin = %f\n", S2);
+    return S2;
+}
+
 } // namespace forte

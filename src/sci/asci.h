@@ -31,6 +31,7 @@
 
 #include "sci/sci.h"
 #include "sparse_ci/sparse_ci_solver.h"
+#include "helpers/timer.h"
 //#include "base_classes/forte_options.h"
 //#include "ci_rdm/ci_rdms.h"
 //#include "sparse_ci/ci_reference.h"
@@ -93,7 +94,7 @@ class ASCI : public SelectedCIMethod {
     psi::SharedMatrix get_PQ_evecs() override;
     psi::SharedVector get_PQ_evals() override;
 
-    std::shared_ptr<WFNOperator> get_op() override;
+    //    std::shared_ptr<WFNOperator> get_op() override;
 
     size_t get_ref_root() override;
 
@@ -109,9 +110,6 @@ class ASCI : public SelectedCIMethod {
     // ==> Class data <==
 
     DeterminantHashVec final_wfn_;
-
-    std::shared_ptr<WFNOperator> op_;
-
     // Temporarily added
     psi::SharedMatrix P_evecs_;
     psi::SharedVector P_evals_;
@@ -159,8 +157,6 @@ class ASCI : public SelectedCIMethod {
     psi::Dimension frzcpi_;
     /// The number of active orbitals per irrep
     psi::Dimension nactpi_;
-    /// The number of active orbitals
-    size_t nact_;
     /// The nuclear repulsion energy
     double nuclear_repulsion_energy_;
     /// The reference determinant
@@ -217,10 +213,6 @@ class ASCI : public SelectedCIMethod {
 
     /// Print information about this calculation
     void print_info() override;
-
-    /// Print a wave function
-    void print_wfn(DeterminantHashVec& space, std::shared_ptr<WFNOperator> op,
-                   psi::SharedMatrix evecs, int nroot);
 
     // Optimized for a single root
     void get_excited_determinants_sr(psi::SharedMatrix evecs, DeterminantHashVec& P_space,

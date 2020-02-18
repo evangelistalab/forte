@@ -118,8 +118,6 @@ void ASCI::startup() {
     //        set_asci_ints(ints_); // TODO: maybe a BUG?
     //    }
 
-    op_ = std::make_shared<WFNOperator>(as_ints_);
-
     wavefunction_symmetry_ = state_.irrep();
     multiplicity_ = state_.multiplicity();
 
@@ -219,18 +217,10 @@ void ASCI::diagonalize_P_space() {
         outfile->Printf("\n  Initial P space dimension: %zu", P_space_.size());
     }
 
-    if (sigma_vector_type_ != SigmaVectorType::Dynamic) {
-        op_->clear_op_s_lists();
-        op_->clear_tp_s_lists();
-        op_->build_strings(P_space_);
-        op_->op_s_lists(P_space_);
-        op_->tp_s_lists(P_space_);
-    }
-
     sparse_solver_.manual_guess(false);
     local_timer diag;
 
-    auto sigma_vector = make_sigma_vector(P_space_, as_ints_, max_memory_, sigma_vector_type_, op_);
+    auto sigma_vector = make_sigma_vector(P_space_, as_ints_, max_memory_, sigma_vector_type_);
     sparse_solver_.diagonalize_hamiltonian(P_space_, sigma_vector, P_evals_, P_evecs_,
                                            num_ref_roots_, multiplicity_);
 
@@ -260,7 +250,7 @@ void ASCI::diagonalize_P_space() {
     }
 
     if (!quiet_mode_ and options_->get_bool("ACI_PRINT_REFS"))
-        print_wfn(P_space_, op_, P_evecs_, num_ref_roots_);
+        print_wfn(P_space_, P_evecs_, num_ref_roots_);
 }
 
 void ASCI::find_q_space() {
@@ -398,12 +388,6 @@ void ASCI::prune_PQ_to_P() {
 std::vector<std::pair<double, double>> ASCI::compute_spin(DeterminantHashVec& space,
                                                           std::shared_ptr<WFNOperator> op,
                                                           psi::SharedMatrix evecs, int nroot) {
-    // WFNOperator op(mo_symmetry_);
-
-    // op.build_strings(space);
-    // op.op_lists(space);
-    // op.tp_lists(space);
-
     std::vector<std::pair<double, double>> spin_vec(nroot);
 
     if (!build_lists_) {
@@ -422,36 +406,6 @@ std::vector<std::pair<double, double>> ASCI::compute_spin(DeterminantHashVec& sp
     return spin_vec;
 }
 
-void ASCI::print_wfn(DeterminantHashVec& space, std::shared_ptr<WFNOperator> op,
-                     psi::SharedMatrix evecs, int nroot) {
-    std::string state_label;
-    std::vector<std::string> s2_labels({"singlet", "doublet", "triplet", "quartet", "quintet",
-                                        "sextet", "septet", "octet", "nonet", "decatet"});
-
-    std::vector<std::pair<double, double>> spins = compute_spin(space, op, evecs, nroot);
-    for (int n = 0; n < nroot; ++n) {
-
-        DeterminantHashVec tmp;
-        std::vector<double> tmp_evecs;
-
-        outfile->Printf("\n\n  Most important contributions to root %d:", n);
-
-        size_t max_dets = std::min(10, evecs->nrow());
-        tmp.subspace(space, evecs, tmp_evecs, max_dets, n);
-
-        for (size_t I = 0; I < max_dets; ++I) {
-            outfile->Printf("\n  %3zu  %9.6f %.9f  %10zu %s", I, tmp_evecs[I],
-                            tmp_evecs[I] * tmp_evecs[I], space.get_idx(tmp.get_det(I)),
-                            str(tmp.get_det(I), nact_).c_str());
-        }
-        state_label = s2_labels[std::round(spins[n].first * 2.0)];
-        root_spin_vec_.clear();
-        root_spin_vec_[n] = std::make_pair(spins[n].first, spins[n].second);
-        outfile->Printf("\n\n  Spin state for root %d: S^2 = %5.6f, S = %5.3f, %s \n", n,
-                        root_spin_vec_[n].first, root_spin_vec_[n].second, state_label.c_str());
-    }
-}
-
 void ASCI::print_nos() {
     print_h2("NATURAL ORBITALS");
 
@@ -459,7 +413,7 @@ void ASCI::print_nos() {
     ci_rdm.set_max_rdm(1);
     std::vector<double> ordm_a_v;
     std::vector<double> ordm_b_v;
-    ci_rdm.compute_1rdm(ordm_a_v, ordm_b_v, op_);
+    ci_rdm.compute_1rdm_op(ordm_a_v, ordm_b_v);
 
     std::shared_ptr<psi::Matrix> opdm_a(new psi::Matrix("OPDM_A", nirrep_, nactpi_, nactpi_));
     std::shared_ptr<psi::Matrix> opdm_b(new psi::Matrix("OPDM_B", nirrep_, nactpi_, nactpi_));
@@ -666,7 +620,7 @@ DeterminantHashVec ASCI::get_PQ_space() { return PQ_space_; }
 psi::SharedMatrix ASCI::get_PQ_evecs() { return PQ_evecs_; }
 psi::SharedVector ASCI::get_PQ_evals() { return PQ_evals_; }
 
-std::shared_ptr<WFNOperator> ASCI::get_op() { return op_; }
+// std::shared_ptr<WFNOperator> ASCI::get_op() { return op_; }
 
 void ASCI::set_method_variables(
     std::string ex_alg, size_t nroot_method, size_t root,
@@ -734,19 +688,9 @@ int ASCI::root_follow(DeterminantHashVec& P_ref, std::vector<double>& P_ref_evec
 
 void ASCI::diagonalize_PQ_space() {
     // Step 3. Diagonalize the Hamiltonian in the P + Q space
-    if (sigma_vector_type_ != SigmaVectorType::Dynamic) {
-        op_->clear_op_s_lists();
-        op_->clear_tp_s_lists();
-        local_timer str;
-        op_->build_strings(PQ_space_);
-        outfile->Printf("\n  Time spent building strings      %1.6f s", str.get());
-        op_->op_s_lists(PQ_space_);
-        op_->tp_s_lists(PQ_space_);
-    }
     local_timer diag_pq;
 
-    auto sigma_vector =
-        make_sigma_vector(PQ_space_, as_ints_, max_memory_, sigma_vector_type_, op_);
+    auto sigma_vector = make_sigma_vector(PQ_space_, as_ints_, max_memory_, sigma_vector_type_);
     sparse_solver_.diagonalize_hamiltonian(PQ_space_, sigma_vector, PQ_evals_, PQ_evecs_,
                                            num_ref_roots_, multiplicity_);
 
@@ -784,7 +728,7 @@ void ASCI::diagonalize_PQ_space() {
     if (follow_ and (num_ref_roots_ > 1) and (cycle_ >= pre_iter_)) {
         ref_root_ = root_follow(P_ref_, P_ref_evecs_, PQ_space_, PQ_evecs_, num_ref_roots_);
     }
-    print_wfn(PQ_space_, op_, PQ_evecs_, nroot_);
+    print_wfn(PQ_space_, PQ_evecs_, nroot_);
 }
 
 void ASCI::post_iter_process() { print_nos(); }

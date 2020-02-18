@@ -33,6 +33,10 @@
 
 #include "sparse_ci/determinant_hashvector.h"
 
+namespace psi {
+class Vector;
+}
+
 namespace forte {
 
 enum class SigmaVectorType { Dynamic, SparseList, Full };
@@ -58,10 +62,11 @@ class SigmaVector {
     SigmaVectorType sigma_vector_type() const { return sigma_vector_type_; }
     std::string label() const { return label_; }
 
-    virtual void compute_sigma(psi::SharedVector sigma, psi::SharedVector b) = 0;
+    virtual void compute_sigma(std::shared_ptr<psi::Vector> sigma,
+                               std::shared_ptr<psi::Vector> b) = 0;
     virtual void get_diagonal(psi::Vector& diag) = 0;
     virtual void add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& bad_states) = 0;
-    virtual double compute_spin(psi::SharedVector c) = 0;
+    virtual double compute_spin(const std::vector<double>& c) = 0;
 
   protected:
     const DeterminantHashVec& space_;
@@ -79,17 +84,16 @@ class SigmaVectorFull : public SigmaVector {
     SigmaVectorFull(const DeterminantHashVec& space,
                     std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
 
-    void compute_sigma(psi::SharedVector, psi::SharedVector);
+    void compute_sigma(std::shared_ptr<psi::Vector>, std::shared_ptr<psi::Vector>) override;
     // void compute_sigma(Matrix& sigma, Matrix& b, int nroot);
-    void get_diagonal(psi::Vector& diag);
-    void add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& bad_states_);
-    double compute_spin(psi::SharedVector c) override {}
+    void get_diagonal(psi::Vector& diag) override;
+    void add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& bad_states_) override;
+    double compute_spin(const std::vector<double>& c) override { return 0.0; }
 };
 
-std::shared_ptr<SigmaVector>
-make_sigma_vector(DeterminantHashVec& space, std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
-                  size_t max_memory, SigmaVectorType sigma_type,
-                  std::shared_ptr<WFNOperator> op = std::shared_ptr<WFNOperator>());
+std::shared_ptr<SigmaVector> make_sigma_vector(DeterminantHashVec& space,
+                                               std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
+                                               size_t max_memory, SigmaVectorType sigma_type);
 
 } // namespace forte
 

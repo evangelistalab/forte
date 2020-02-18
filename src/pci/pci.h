@@ -104,7 +104,7 @@ class ProjectorCI : public SelectedCIMethod {
     DeterminantHashVec get_PQ_space() override;
     psi::SharedMatrix get_PQ_evecs() override;
     psi::SharedVector get_PQ_evals() override;
-    std::shared_ptr<WFNOperator> get_op() override;
+//    std::shared_ptr<WFNOperator> get_op() override;
     size_t get_ref_root() override;
     std::vector<double> get_multistate_pt2_energy_correction() override;
 
@@ -275,10 +275,6 @@ class ProjectorCI : public SelectedCIMethod {
 
     /// All that happens before we compute the energy
     void startup();
-
-    /// Print a wave function
-    void print_wfn(const det_hashvec& space_hashvec, std::vector<double>& C,
-                   size_t max_output = 10);
 
     /// Save a wave function
     void save_wfn(det_hashvec& space, std::vector<double>& C,

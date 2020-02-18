@@ -30,11 +30,12 @@
 #include <algorithm>
 #include <numeric>
 
-#include "psi4/libciomr/libciomr.h"
-#include "psi4/libmints/matrix.h"
-#include "psi4/libmints/vector.h"
-#include "psi4/libpsio/psio.hpp"
-#include "psi4/libqt/qt.h"
+#include "psi4/libpsi4util/PsiOutStream.h"
+//#include "psi4/libciomr/libciomr.h"
+//#include "psi4/libmints/matrix.h"
+//#include "psi4/libmints/vector.h"
+//#include "psi4/libpsio/psio.hpp"
+//#include "psi4/libqt/qt.h"
 
 #include "forte-def.h"
 #include "helpers/iterative_solvers.h"
@@ -42,12 +43,6 @@
 #include "sparse_ci_solver.h"
 #include "sigma_vector_dynamic.h"
 #include "determinant_functions.hpp"
-
-struct PairHash {
-    size_t operator()(const std::pair<size_t, size_t>& p) const {
-        return (p.first * 1000) + p.second;
-    }
-};
 
 using namespace psi;
 
@@ -75,6 +70,28 @@ void SparseCISolver::set_spin_project_full(bool value) { spin_project_full_ = va
 
 void SparseCISolver::set_force_diag(bool value) { force_diag_ = value; }
 
+void SparseCISolver::add_bad_states(std::vector<std::vector<std::pair<size_t, double>>>& roots) {
+    bad_states_.clear();
+    for (int i = 0, max_i = roots.size(); i < max_i; ++i) {
+        bad_states_.push_back(roots[i]);
+    }
+}
+
+void SparseCISolver::set_root_project(bool value) { root_project_ = value; }
+
+void SparseCISolver::manual_guess(bool value) { set_guess_ = value; }
+
+void SparseCISolver::set_initial_guess(std::vector<std::pair<size_t, double>>& guess) {
+    set_guess_ = true;
+    guess_.clear();
+
+    for (size_t I = 0, max_I = guess.size(); I < max_I; ++I) {
+        guess_.push_back(guess[I]);
+    }
+}
+
+void SparseCISolver::set_num_vecs(size_t value) { nvec_ = value; }
+
 void SparseCISolver::diagonalize_hamiltonian(const DeterminantHashVec& space,
                                              std::shared_ptr<SigmaVector> sigma_vector,
                                              psi::SharedVector& evals, psi::SharedMatrix& evecs,
@@ -94,20 +111,8 @@ void SparseCISolver::diagonalize_hamiltonian(const DeterminantHashVec& space,
                                      multiplicity);
     } else {
         sigma_vector->add_bad_roots(bad_states_);
-        davidson_liu_solver_map(space, sigma_vector, evals, evecs, nroot, multiplicity);
+        davidson_liu_solver(space, sigma_vector, evals, evecs, nroot, multiplicity);
     }
-
-    //    timer diag("H Diagonalization");
-    //    if ((!force_diag_ and (space.size() <= 200)) or diag_method == Full) {
-    //        const std::vector<Determinant> dets = space.determinants();
-    //        diagonalize_full(dets, evals, evecs, nroot, multiplicity);
-    //    } else if (diag_method == Sparse) {
-    //        diagonalize_dl_sparse(space, sigma_vec_, evals, evecs, nroot, multiplicity);
-    //    } else if (diag_method == Dynamic) {
-    //        diagonalize_dl_dynamic(space, evals, evecs, nroot, multiplicity);
-    //    } else { // DLSolver
-    //        diagonalize_dl(space, sigma_vec_, evals, evecs, nroot, multiplicity);
-    //    }
 }
 
 void SparseCISolver::diagonalize_hamiltonian_full(const std::vector<Determinant>& space,
@@ -210,6 +215,20 @@ void SparseCISolver::diagonalize_hamiltonian_full(const std::vector<Determinant>
 
         // Diagonalize H
         H->diagonalize(evecs, evals);
+        spin_ = std::vector<double>(nroot, 0.5 * (static_cast<double>(multiplicity) - 1.0));
+    }
+
+    // Fill in results
+    spin_.clear();
+    for (int i = 0; i < nroot; ++i) {
+        double s2 = 0.0;
+        auto c = evecs->get_column(0, i);
+        for (size_t I = 0; I < dim_space; ++I) {
+            for (size_t J = 0; J < dim_space; ++J) {
+                s2 += spin2(space[I], space[J]) * c->get(I) * c->get(J);
+            }
+        }
+        spin_.push_back(s2);
     }
 }
 
@@ -259,9 +278,9 @@ SparseCISolver::build_full_hamiltonian(const std::vector<Determinant>& space,
 }
 
 std::vector<std::pair<double, std::vector<std::pair<size_t, double>>>>
-SparseCISolver::initial_guess_map(const DeterminantHashVec& space,
-                                  std::shared_ptr<SigmaVector> sigma_vector, int nroot,
-                                  int multiplicity) {
+SparseCISolver::initial_guess(const DeterminantHashVec& space,
+                              std::shared_ptr<SigmaVector> sigma_vector, int nroot,
+                              int multiplicity) {
     size_t ndets = space.size();
     size_t nguess = std::min(static_cast<size_t>(nroot) * dl_guess_, ndets);
     std::vector<std::pair<double, std::vector<std::pair<size_t, double>>>> guess(nguess);
@@ -407,38 +426,18 @@ SparseCISolver::initial_guess_map(const DeterminantHashVec& space,
     return guess;
 }
 
-void SparseCISolver::add_bad_states(std::vector<std::vector<std::pair<size_t, double>>>& roots) {
-    bad_states_.clear();
-    for (int i = 0, max_i = roots.size(); i < max_i; ++i) {
-        bad_states_.push_back(roots[i]);
-    }
-}
-
-void SparseCISolver::set_root_project(bool value) { root_project_ = value; }
-
-void SparseCISolver::manual_guess(bool value) { set_guess_ = value; }
-
-void SparseCISolver::set_initial_guess(std::vector<std::pair<size_t, double>>& guess) {
-    set_guess_ = true;
-    guess_.clear();
-
-    for (size_t I = 0, max_I = guess.size(); I < max_I; ++I) {
-        guess_.push_back(guess[I]);
-    }
-}
-
-void SparseCISolver::set_num_vecs(size_t value) { nvec_ = value; }
-
-bool SparseCISolver::davidson_liu_solver_map(const DeterminantHashVec& space,
-                                             std::shared_ptr<SigmaVector> sigma_vector,
-                                             psi::SharedVector Eigenvalues,
-                                             psi::SharedMatrix Eigenvectors, int nroot,
-                                             int multiplicity) {
+bool SparseCISolver::davidson_liu_solver(const DeterminantHashVec& space,
+                                         std::shared_ptr<SigmaVector> sigma_vector,
+                                         psi::SharedVector Eigenvalues,
+                                         psi::SharedMatrix Eigenvectors, int nroot,
+                                         int multiplicity) {
     local_timer dl;
     size_t fci_size = sigma_vector->size();
     DavidsonLiuSolver dls(fci_size, nroot);
     dls.set_e_convergence(e_convergence_);
     dls.set_r_convergence(r_convergence_);
+
+    outfile->Printf("\n r_convergence_ = %20.12f \n", r_convergence_);
     dls.set_print_level(0);
 
     // allocate vectors
@@ -452,7 +451,7 @@ bool SparseCISolver::davidson_liu_solver_map(const DeterminantHashVec& space,
     std::vector<std::vector<std::pair<size_t, double>>> bad_roots;
     size_t guess_size = std::min(nvec_, dls.collapse_size());
 
-    auto guess = initial_guess_map(space, sigma_vector, nroot, multiplicity);
+    auto guess = initial_guess(space, sigma_vector, nroot, multiplicity);
     if (!set_guess_) {
         std::vector<int> guess_list;
         for (size_t g = 0; g < guess.size(); ++g) {
@@ -561,6 +560,7 @@ bool SparseCISolver::davidson_liu_solver_map(const DeterminantHashVec& space,
     }
 
     //    dls.get_results();
+    spin_.clear();
     psi::SharedVector evals = dls.eigenvalues();
     psi::SharedMatrix evecs = dls.eigenvectors();
     for (int r = 0; r < nroot; ++r) {
@@ -568,6 +568,13 @@ bool SparseCISolver::davidson_liu_solver_map(const DeterminantHashVec& space,
         for (size_t I = 0; I < fci_size; ++I) {
             Eigenvectors->set(I, r, evecs->get(r, I));
         }
+        energies_.push_back(evals->get(r));
+        std::vector<double> c(sigma_vector->size());
+        for (size_t I = 0; I < fci_size; ++I) {
+            c[I] = evecs->get(r, I);
+        }
+        double s2 = sigma_vector->compute_spin(c);
+        spin_.push_back(s2);
     }
     if (print_details_) {
         outfile->Printf("\n  Davidson-Liu procedure took  %1.6f s", dl.get());

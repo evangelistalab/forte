@@ -41,6 +41,10 @@
 #define BIGNUM 1E100
 #define MAXIT 100
 
+namespace psi {
+class Matrix;
+}
+
 namespace forte {
 
 class SigmaVector;
@@ -67,14 +71,18 @@ class SparseCISolver {
 
     SparseCISolver();
 
+    /// Diagonalize the Hamiltonian
     void diagonalize_hamiltonian(const DeterminantHashVec& space,
                                  std::shared_ptr<SigmaVector> sigma_vec, psi::SharedVector& evals,
-                                 psi::SharedMatrix& evecs, int nroot, int multiplicity);
+                                 std::shared_ptr<psi::Matrix>& evecs, int nroot, int multiplicity);
 
+    /// Diagonalize the full Hamiltonian
     void diagonalize_hamiltonian_full(const std::vector<Determinant>& space,
                                       std::shared_ptr<ActiveSpaceIntegrals> as_ints,
-                                      psi::SharedVector& evals, psi::SharedMatrix& evecs, int nroot,
+                                      psi::SharedVector& evals, std::shared_ptr<psi::Matrix>& evecs, int nroot,
                                       int multiplicity);
+
+    std::vector<double> spin() { return spin_; }
 
     /// Enable/disable the parallel algorithms
     void set_parallel(bool parallel) { parallel_ = parallel; }
@@ -99,7 +107,9 @@ class SparseCISolver {
 
     /// The maximum number of iterations for the Davidson algorithm
     void set_maxiter_davidson(int value);
-    psi::SharedMatrix build_full_hamiltonian(const std::vector<Determinant>& space,
+
+    /// Build the full Hamiltonian matrix
+    std::shared_ptr<psi::Matrix> build_full_hamiltonian(const std::vector<Determinant>& space,
                                              std::shared_ptr<forte::ActiveSpaceIntegrals> as_ints);
 
     /// Add roots to project out during Davidson-Liu procedure
@@ -118,16 +128,18 @@ class SparseCISolver {
 
   private:
     std::vector<std::pair<double, std::vector<std::pair<size_t, double>>>>
-    initial_guess(const std::vector<Determinant>& space, int nroot, int multiplicity);
+    initial_guess(const DeterminantHashVec& space, std::shared_ptr<SigmaVector> sigma_vector,
+                  int nroot, int multiplicity);
 
-    std::vector<std::pair<double, std::vector<std::pair<size_t, double>>>>
-    initial_guess_map(const DeterminantHashVec& space, std::shared_ptr<SigmaVector> sigma_vector,
-                      int nroot, int multiplicity);
+    bool davidson_liu_solver(const DeterminantHashVec& space,
+                             std::shared_ptr<SigmaVector> sigma_vector,
+                             psi::SharedVector Eigenvalues, std::shared_ptr<psi::Matrix> Eigenvectors,
+                             int nroot, int multiplicity);
 
-    bool davidson_liu_solver_map(const DeterminantHashVec& space,
-                                 std::shared_ptr<SigmaVector> sigma_vector,
-                                 psi::SharedVector Eigenvalues, psi::SharedMatrix Eigenvectors,
-                                 int nroot, int multiplicity);
+    /// The eneergy of each state
+    std::vector<double> energies_;
+    /// The expectation value of S^2 for each state
+    std::vector<double> spin_;
     /// Use a OMP parallel algorithm?
     bool parallel_ = false;
     /// Print details?

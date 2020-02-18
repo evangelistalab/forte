@@ -26,15 +26,17 @@
  * @END LICENSE
  */
 
-#include "psi4/libmints/molecule.h"
-#include "psi4/libmints/wavefunction.h"
-#include "psi4/liboptions/liboptions.h"
-#include "psi4/libpsi4util/process.h"
+//#include "psi4/libmints/molecule.h"
+//#include "psi4/libmints/wavefunction.h"
+//#include "psi4/liboptions/liboptions.h"
+//#include "psi4/libpsi4util/process.h"
 
 #include "helpers/timer.h"
+#include "sparse_ci/operator.h"
+
 #include "ci_rdms.h"
-#include "base_classes/rdms.h"
-#include "sparse_ci/determinant.h"
+//#include "base_classes/rdms.h"
+//#include "sparse_ci/determinant.h"
 
 using namespace psi;
 
@@ -184,8 +186,10 @@ void CI_RDMS::compute_1rdm(std::vector<double>& oprdm_a, std::vector<double>& op
         outfile->Printf("\n  Time spent building 1-rdm:   %1.6f", build.get());
 }
 
-void CI_RDMS::compute_1rdm(std::vector<double>& oprdm_a, std::vector<double>& oprdm_b,
-                           std::shared_ptr<WFNOperator> op) {
+void CI_RDMS::compute_1rdm_op(std::vector<double>& oprdm_a, std::vector<double>& oprdm_b) {
+
+    auto op = std::make_shared<WFNOperator>(fci_ints_);
+    op->op_s_lists(wfn_);
 
     // Get the references to the coupling lists
     std::vector<std::vector<std::pair<size_t, short>>>& a_list = op->a_list_;
@@ -340,9 +344,12 @@ void CI_RDMS::compute_2rdm(std::vector<double>& tprdm_aa, std::vector<double>& t
         outfile->Printf("\n  Time spent building 2-rdm:   %1.6f", build.get());
 }
 
-void CI_RDMS::compute_2rdm(std::vector<double>& tprdm_aa, std::vector<double>& tprdm_ab,
-                           std::vector<double>& tprdm_bb, std::shared_ptr<WFNOperator> op) {
+void CI_RDMS::compute_2rdm_op(std::vector<double>& tprdm_aa, std::vector<double>& tprdm_ab,
+                              std::vector<double>& tprdm_bb) {
     local_timer build;
+
+    auto op = std::make_shared<WFNOperator>(fci_ints_);
+    op->tp_s_lists(wfn_);
 
     const det_hashvec& dets = wfn_.wfn_hash();
 
@@ -692,9 +699,12 @@ void CI_RDMS::compute_3rdm(std::vector<double>& tprdm_aaa, std::vector<double>& 
         outfile->Printf("\n  Time spent building 3-rdm:   %1.6f", build.get());
 }
 
-void CI_RDMS::compute_3rdm(std::vector<double>& tprdm_aaa, std::vector<double>& tprdm_aab,
-                           std::vector<double>& tprdm_abb, std::vector<double>& tprdm_bbb,
-                           std::shared_ptr<WFNOperator> op) {
+void CI_RDMS::compute_3rdm_op(std::vector<double>& tprdm_aaa, std::vector<double>& tprdm_aab,
+                              std::vector<double>& tprdm_abb, std::vector<double>& tprdm_bbb) {
+
+    auto op = std::make_shared<WFNOperator>(fci_ints_);
+    op->three_s_lists(wfn_);
+
     size_t ncmo5 = ncmo4_ * ncmo_;
     size_t ncmo6 = ncmo3_ * ncmo3_;
 
