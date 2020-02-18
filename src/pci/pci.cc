@@ -281,16 +281,6 @@ void ProjectorCI::set_options(std::shared_ptr<ForteOptions> options) {
     //    reference_determinant_.print();
 
     post_diagonalization_ = options->get_bool("PCI_POST_DIAGONALIZE");
-    diag_method_ = DLSolver;
-    if (options->has_changed("DIAG_ALGORITHM")) {
-        if (options->get_str("DIAG_ALGORITHM") == "FULL") {
-            diag_method_ = Full;
-        } else if (options->get_str("DIAG_ALGORITHM") == "DLSTRING") {
-            diag_method_ = DLString;
-        } else if (options->get_str("DIAG_ALGORITHM") == "DLDISK") {
-            diag_method_ = DLDisk;
-        }
-    }
     //    /-> Define appropriate variable: post_diagonalization_ =
     //    options_->get_bool("EX_ALGORITHM");
 
@@ -877,21 +867,21 @@ void ProjectorCI::post_iter_process() {
         psi::SharedMatrix apfci_evecs(new psi::Matrix("Eigenvectors", C_.size(), nroot_));
         psi::SharedVector apfci_evals(new psi::Vector("Eigenvalues", nroot_));
 
-        WFNOperator op(mo_symmetry_, as_ints_);
+        std::shared_ptr<WFNOperator> op = std::make_shared<WFNOperator>(as_ints_);
         DeterminantHashVec det_map(std::move(dets_hashvec_));
-        op.build_strings(det_map);
-        op.op_s_lists(det_map);
-        op.tp_s_lists(det_map);
+        op->build_strings(det_map);
+        op->op_s_lists(det_map);
+        op->tp_s_lists(det_map);
 
         // set SparseCISolver options
-        sparse_solver_.set_sigma_vector(nullptr);
         sparse_solver_.set_spin_project(true);
-        sparse_solver_.set_sigma_method("SPARSE");
         sparse_solver_.manual_guess(false);
         sparse_solver_.set_force_diag(false);
 
-        sparse_solver_.diagonalize_hamiltonian_map(det_map, op, apfci_evals, apfci_evecs, nroot_,
-                                                   wavefunction_multiplicity_, diag_method_);
+        auto sigma_vector =
+            make_sigma_vector(det_map, as_ints_, 0, SigmaVectorType::SparseList, op);
+        sparse_solver_.diagonalize_hamiltonian(det_map, sigma_vector, apfci_evals, apfci_evecs,
+                                               nroot_, wavefunction_multiplicity_);
         det_map.swap(dets_hashvec_);
 
         psi::timer_off("PCI:Post_Diag");
@@ -1007,12 +997,20 @@ double ProjectorCI::initial_guess(det_hashvec& dets_hashvec, std::vector<double>
     //   DynamicBitsetDeterminant dbs = d.to_dynamic_bitset();
     //  dyn_dets.push_back(dbs);
     // }
-    sparse_solver_.set_sigma_vector(nullptr);
     sparse_solver_.set_spin_project(true);
     sparse_solver_.manual_guess(false);
     sparse_solver_.set_force_diag(false);
-    sparse_solver_.diagonalize_hamiltonian(dets_hashvec.toVector(), evals, evecs, nroot_,
-                                           wavefunction_multiplicity_, DLSolver);
+
+    std::shared_ptr<WFNOperator> op = std::make_shared<WFNOperator>(as_ints_);
+    DeterminantHashVec det_map(std::move(dets_hashvec_));
+    op->build_strings(det_map);
+    op->op_s_lists(det_map);
+    op->tp_s_lists(det_map);
+    auto sigma_vector_diag =
+        make_sigma_vector(det_map, as_ints_, 0, SigmaVectorType::SparseList, op);
+    sparse_solver_.diagonalize_hamiltonian(det_map, sigma_vector_diag, evals, evecs, nroot_,
+                                           wavefunction_multiplicity_);
+
     double var_energy =
         evals->get(current_root_) + nuclear_repulsion_energy_ + as_ints_->scalar_energy();
     psi::outfile->Printf("\n\n  Initial guess energy (variational) = %20.12f Eh (root = %d)",
@@ -1134,25 +1132,37 @@ void ProjectorCI::propagate_wallCh(det_hashvec& dets_hashvec, std::vector<double
 
 void ProjectorCI::propagate_DL(det_hashvec& dets_hashvec, std::vector<double>& C,
                                double spawning_threshold) {
-    PCISigmaVector sigma_vector(dets_hashvec, C, spawning_threshold, as_ints_, prescreen_H_CI_,
-                                important_H_CI_CJ_, a_couplings_, b_couplings_, aa_couplings_,
-                                ab_couplings_, bb_couplings_, dets_max_couplings_,
-                                dets_single_max_coupling_, dets_double_max_coupling_, solutions_);
-    num_off_diag_elem_ = sigma_vector.get_num_off_diag();
-    size_t ref_size = C.size(), result_size = sigma_vector.size();
+    auto sigma_vector = std::make_shared<PCISigmaVector>(
+        dets_hashvec, C, spawning_threshold, as_ints_, prescreen_H_CI_, important_H_CI_CJ_,
+        a_couplings_, b_couplings_, aa_couplings_, ab_couplings_, bb_couplings_,
+        dets_max_couplings_, dets_single_max_coupling_, dets_double_max_coupling_, solutions_);
+    num_off_diag_elem_ = sigma_vector->get_num_off_diag();
+    size_t ref_size = C.size(), result_size = sigma_vector->size();
     std::vector<std::pair<size_t, double>> guess(ref_size);
     for (size_t I = 0; I < ref_size; ++I) {
         guess[I] = std::make_pair(I, C[I]);
     }
-    sparse_solver_.set_sigma_vector(&sigma_vector);
     sparse_solver_.set_initial_guess(guess);
     sparse_solver_.set_spin_project(false);
     sparse_solver_.set_force_diag(true);
     psi::SharedMatrix PQ_evecs_;
     psi::SharedVector PQ_evals_;
-    sparse_solver_.diagonalize_hamiltonian(dets_hashvec.toVector(), PQ_evals_, PQ_evecs_, nroot_,
-                                           state_.multiplicity(), Sparse);
-    current_davidson_iter_ = sigma_vector.get_sigma_build_count();
+
+    std::shared_ptr<WFNOperator> op = std::make_shared<WFNOperator>(as_ints_);
+    DeterminantHashVec det_map(std::move(dets_hashvec_));
+    op->build_strings(det_map);
+    op->op_s_lists(det_map);
+    op->tp_s_lists(det_map);
+
+    // set SparseCISolver options
+    sparse_solver_.set_spin_project(true);
+    sparse_solver_.manual_guess(false);
+    sparse_solver_.set_force_diag(false);
+
+    sparse_solver_.diagonalize_hamiltonian(det_map, sigma_vector, PQ_evals_, PQ_evecs_, nroot_,
+                                           state_.multiplicity());
+
+    current_davidson_iter_ = sigma_vector->get_sigma_build_count();
     old_approx_energy_ = approx_energy_;
     approx_energy_ = PQ_evals_->get(0) + as_ints_->scalar_energy() + nuclear_repulsion_energy_;
     C.resize(result_size);
@@ -1285,22 +1295,23 @@ double ProjectorCI::estimate_var_energy_within_error_sigma(const det_hashvec& de
         cut_index + 1, max_error);
     double variational_energy_estimator = 0.0;
 
-    WFNOperator op(mo_symmetry_, as_ints_);
+    std::shared_ptr<WFNOperator> op = std::make_shared<WFNOperator>(as_ints_);
     std::vector<Determinant> sub_dets = dets_hashvec.toVector();
     sub_dets.erase(sub_dets.begin() + cut_index + 1, sub_dets.end());
     DeterminantHashVec det_map(sub_dets);
-    op.build_strings(det_map);
-    op.op_s_lists(det_map);
-    op.tp_s_lists(det_map);
-    SigmaVectorSparseList svs(det_map, op, as_ints_);
-    size_t sub_size = svs.size();
+    op->build_strings(det_map);
+    op->op_s_lists(det_map);
+    op->tp_s_lists(det_map);
+    auto sigma_vector = make_sigma_vector(det_map, as_ints_, 0, SigmaVectorType::SparseList, op);
+    //    SigmaVectorSparseList svs(det_map, op, as_ints_);
+    size_t sub_size = sigma_vector->size();
     // allocate vectors
     psi::SharedVector b(new psi::Vector("b", sub_size));
     psi::SharedVector sigma(new psi::Vector("sigma", sub_size));
     for (size_t i = 0; i < sub_size; ++i) {
         b->set(i, C[i]);
     }
-    svs.compute_sigma(sigma, b);
+    sigma_vector->compute_sigma(sigma, b);
     variational_energy_estimator = sigma->dot(b.get());
 
     variational_energy_estimator /= 1.0 - cume_ignore;
@@ -2243,7 +2254,7 @@ psi::SharedVector ProjectorCI::get_PQ_evals() {
     evals->set(0, approx_energy_ - as_ints_->scalar_energy() - nuclear_repulsion_energy_);
     return evals;
 }
-std::shared_ptr<WFNOperator> ProjectorCI::get_op() { return WFNOperator(); }
+std::shared_ptr<WFNOperator> ProjectorCI::get_op() { return std::make_shared<WFNOperator>(); }
 size_t ProjectorCI::get_ref_root() { return current_root_; }
 std::vector<double> ProjectorCI::get_multistate_pt2_energy_correction() {
     return std::vector<double>(nroot_);
