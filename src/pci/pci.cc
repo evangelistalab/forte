@@ -2249,12 +2249,17 @@ psi::SharedMatrix ProjectorCI::get_PQ_evecs() {
     }
     return evecs;
 }
+
 psi::SharedVector ProjectorCI::get_PQ_evals() {
     psi::SharedVector evals = std::make_shared<psi::Vector>("e", nroot_);
     evals->set(0, approx_energy_ - as_ints_->scalar_energy() - nuclear_repulsion_energy_);
     return evals;
 }
-std::shared_ptr<WFNOperator> ProjectorCI::get_op() { return std::make_shared<WFNOperator>(); }
+
+std::shared_ptr<WFNOperator> ProjectorCI::get_op() {
+    return std::make_shared<WFNOperator>(as_ints_);
+}
+
 size_t ProjectorCI::get_ref_root() { return current_root_; }
 std::vector<double> ProjectorCI::get_multistate_pt2_energy_correction() {
     return std::vector<double>(nroot_);

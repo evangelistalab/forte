@@ -47,14 +47,16 @@ class WFNOperator;
 class SigmaVector {
   public:
     SigmaVector(const DeterminantHashVec& space, std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
-                std::string sigma_type)
-        : space_(space), fci_ints_(fci_ints), size_(space.size()), type_(sigma_type) {}
+                SigmaVectorType sigma_vector_type, std::string label)
+        : space_(space), fci_ints_(fci_ints), size_(space.size()),
+          sigma_vector_type_(sigma_vector_type), label_(label) {}
 
     size_t size() { return size_; }
 
     std::shared_ptr<ActiveSpaceIntegrals> as_ints() { return fci_ints_; }
 
-    std::string type() { return type_; }
+    SigmaVectorType sigma_vector_type() const { return sigma_vector_type_; }
+    std::string label() const { return label_; }
 
     virtual void compute_sigma(psi::SharedVector sigma, psi::SharedVector b) = 0;
     virtual void get_diagonal(psi::Vector& diag) = 0;
@@ -66,8 +68,20 @@ class SigmaVector {
     std::shared_ptr<ActiveSpaceIntegrals> fci_ints_;
     /// the length of the C/sigma vector (number of determinants)
     size_t size_;
+    const SigmaVectorType sigma_vector_type_;
     /// the type of sigma vector algorithm
-    std::string type_;
+    const std::string label_;
+};
+
+class SigmaVectorFull : public SigmaVector {
+  public:
+    SigmaVectorFull(const DeterminantHashVec& space,
+                    std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
+
+    void compute_sigma(psi::SharedVector sigma, psi::SharedVector b);
+    // void compute_sigma(Matrix& sigma, Matrix& b, int nroot);
+    void get_diagonal(psi::Vector& diag);
+    void add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& bad_states_);
 };
 
 std::shared_ptr<SigmaVector>

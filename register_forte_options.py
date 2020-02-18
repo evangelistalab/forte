@@ -508,7 +508,7 @@ def register_aci_options(forte_options):
     forte_options.add_int("ACTIVE_GUESS_SIZE", 1000,
                           "Number of determinants for CI guess")
 
-    forte_options.add_str("DIAG_ALGORITHM", "DYNAMIC",["DYNAMIC","SPARSE"],
+    forte_options.add_str("DIAG_ALGORITHM", "SPARSE",["DYNAMIC","FULL","SPARSE"],
         "The diagonalization method")
 
     forte_options.add_bool("FORCE_DIAG_METHOD", False,

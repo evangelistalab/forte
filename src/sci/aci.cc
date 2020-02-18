@@ -79,7 +79,6 @@ void AdaptiveCI::startup() {
         quiet_mode_ = options_->get_bool("ACI_QUIET_MODE");
     }
     op_ = std::make_shared<WFNOperator>(as_ints_);
-    op_->initialize(mo_symmetry_, as_ints_);
     op_->set_quiet_mode(quiet_mode_);
 
     wavefunction_symmetry_ = state_.irrep();

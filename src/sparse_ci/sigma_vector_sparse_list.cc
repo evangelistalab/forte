@@ -53,8 +53,9 @@ namespace forte {
 SigmaVectorSparseList::SigmaVectorSparseList(const DeterminantHashVec& space,
                                              std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
                                              std::shared_ptr<WFNOperator> op)
-    : SigmaVector(space, fci_ints, "SigmaVectorSparseList"), a_list_(op->a_list_),
-      b_list_(op->b_list_), aa_list_(op->aa_list_), ab_list_(op->ab_list_), bb_list_(op->bb_list_) {
+    : SigmaVector(space, fci_ints, SigmaVectorType::SparseList, "SigmaVectorSparseList"),
+      a_list_(op->a_list_), b_list_(op->b_list_), aa_list_(op->aa_list_), ab_list_(op->ab_list_),
+      bb_list_(op->bb_list_) {
 
     const det_hashvec& detmap = space_.wfn_hash();
     diag_.resize(space_.size());

@@ -81,13 +81,14 @@ void SparseCISolver::diagonalize_hamiltonian(const DeterminantHashVec& space,
                                              int nroot, int multiplicity) {
     if (print_details_) {
         outfile->Printf("\n\n  Davidson-Liu solver algorithm using %s sigma algorithm",
-                        sigma_vector->type().c_str());
+                        sigma_vector->label().c_str());
     }
     size_t dim_space = space.size();
     evecs.reset(new psi::Matrix("U", dim_space, nroot));
     evals.reset(new Vector("e", nroot));
 
-    if ((!force_diag_ and (space.size() <= 200))) {
+    if ((!force_diag_ and (space.size() <= 200)) or
+        sigma_vector->sigma_vector_type() == SigmaVectorType::Full) {
         const std::vector<Determinant> dets = space.determinants();
         diagonalize_hamiltonian_full(dets, sigma_vector->as_ints(), evals, evecs, nroot,
                                      multiplicity);

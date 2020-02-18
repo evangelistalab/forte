@@ -36,7 +36,6 @@
 #include "sparse_ci/sorted_string_list.h"
 #include "base_classes/mo_space_info.h"
 
-
 namespace forte {
 
 /**
@@ -50,12 +49,6 @@ class WFNOperator {
   public:
     /// Default constructor
     WFNOperator(std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
-
-    /// Empty constructor
-    WFNOperator();
-
-    /// Initializer
-    void initialize(std::vector<int>& symmetry, std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
 
     /// Set print level
     void set_quiet_mode(bool mode);
@@ -161,6 +154,6 @@ class WFNOperator {
     /// The integrals
     std::shared_ptr<ActiveSpaceIntegrals> fci_ints_;
 };
-}
+} // namespace forte
 
 #endif // _wfn_operator_h_

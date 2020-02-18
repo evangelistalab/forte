@@ -55,7 +55,6 @@ class SigmaVectorSparseList : public SigmaVector {
     bool use_disk_ = false;
 
     std::vector<double> diag_;
-    std::shared_ptr<ActiveSpaceIntegrals> fci_ints_;
     std::vector<std::vector<std::pair<size_t, short>>>& a_list_;
     std::vector<std::vector<std::pair<size_t, short>>>& b_list_;
     std::vector<std::vector<std::tuple<size_t, short, short>>>& aa_list_;

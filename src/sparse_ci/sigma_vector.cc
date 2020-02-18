@@ -64,9 +64,21 @@ std::shared_ptr<SigmaVector> make_sigma_vector(DeterminantHashVec& space,
             throw std::runtime_error(
                 "\n  make_sigma_vector called with sigma_type == SPARSE but no operator list");
         }
+    } else if (sigma_type == SigmaVectorType::Full) {
+        sigma_vector = std::make_shared<SigmaVectorFull>(space, fci_ints);
     }
     return sigma_vector;
 }
+
+SigmaVectorFull::SigmaVectorFull(const DeterminantHashVec& space,
+                                 std::shared_ptr<ActiveSpaceIntegrals> fci_ints)
+    : SigmaVector(space, fci_ints, SigmaVectorType::Full, "SigmaVectorFull") {}
+
+void SigmaVectorFull::add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& roots) {}
+
+void SigmaVectorFull::get_diagonal(psi::Vector& diag) {}
+
+void SigmaVectorFull::compute_sigma(psi::SharedVector sigma, psi::SharedVector b) {}
 
 } // namespace forte
 
