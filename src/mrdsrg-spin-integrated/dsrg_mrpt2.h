@@ -248,10 +248,19 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     void set_multiplier(); 
 
     void set_z();
+    void iter_z();
     void set_z_cc();
     void set_z_vv();
-    void set_z_aa();
+    void set_z_aa_diag();
     void set_w();
+
+    void compute_z_cv();
+    void compute_z_av();
+    void compute_z_ca();
+    void compute_z_aa();
+
+
+
 
     double s;
 
