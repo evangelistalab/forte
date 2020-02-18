@@ -776,4 +776,78 @@ void SigmaVectorDynamic::compute_abab_coupling(const String& detIa, const std::v
         }
     }
 }
+
+double SigmaVectorDynamic::compute_spin(psi::SharedVector c) {
+    double S2 = 0.0;
+    const det_hashvec& wfn_map = space_.wfn_hash();
+
+    for (size_t i = 0, max_i = wfn_map.size(); i < max_i; ++i) {
+        // Compute the diagonal contribution
+        // PhiI = PhiJ
+        const Determinant& PhiI = wfn_map[i];
+        double CI = c->get(i);
+        int npair = PhiI.npair();
+        int na = PhiI.count_alfa();
+        int nb = PhiI.count_beta();
+        double ms = 0.5 * static_cast<double>(na - nb);
+        S2 += (ms * ms - ms + static_cast<double>(na) - static_cast<double>(npair)) * CI * CI;
+    }
+
+    // abab contribution
+    SortedStringList a_sorted_string_list(wfn, fci_ints_, DetSpinType::Alpha);
+    const auto& sorted_half_dets = a_sorted_string_list.sorted_half_dets();
+    const auto& sorted_dets = a_sorted_string_list.sorted_dets();
+    String detIJa_common;
+    String Ib;
+    String Jb;
+    String IJb;
+
+    // Loop over all the sorted I alpha strings
+    for (const auto& detIa : sorted_half_dets) {
+        const auto& range_I = a_sorted_string_list.range(detIa);
+        size_t first_I = range_I.first;
+        size_t last_I = range_I.second;
+
+        // Loop over all the sorted J alpha strings
+        for (const auto& detJa : sorted_half_dets) {
+            detIJa_common = detIa ^ detJa;
+            int ndiff = detIJa_common.count();
+            if (ndiff == 2) {
+                size_t i, a;
+                for (size_t p = 0; p < ncmo_; ++p) {
+                    const bool la_p = detIa.get_bit(p);
+                    const bool ra_p = detJa.get_bit(p);
+                    if (la_p ^ ra_p) {
+                        i = la_p ? p : i;
+                        a = ra_p ? p : a;
+                    }
+                }
+                double sign_ia = detIa.slater_sign(i, a);
+                const auto& range_J = a_sorted_string_list.range(detJa);
+                size_t first_J = range_J.first;
+                size_t last_J = range_J.second;
+                for (size_t posI = first_I; posI < last_I; ++posI) {
+                    Ib = sorted_dets[posI].get_beta_bits();
+                    double CI = evecs->get(a_sorted_string_list.add(posI), root);
+                    for (size_t posJ = first_J; posJ < last_J; ++posJ) {
+                        Jb = sorted_dets[posJ].get_beta_bits();
+                        IJb = Jb ^ Ib;
+                        int ndiff = IJb.count();
+                        if (ndiff == 2) {
+                            auto Ib_sub = Ib & IJb;
+                            auto j = Ib_sub.find_first_one();
+                            auto Jb_sub = Jb & IJb;
+                            auto b = Jb_sub.find_first_one();
+                            if ((i != j) and (a != b) and (i == b) and (j == a)) {
+                                double sign = sign_ia * Ib.slater_sign(j, b);
+                                S2 -= sign * CI * evecs->get(a_sorted_string_list.add(posJ), root);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return S2;
+}
 } // namespace forte

@@ -46,9 +46,11 @@ class SigmaVectorDynamic : public SigmaVector {
     SigmaVectorDynamic(const DeterminantHashVec& space,
                        std::shared_ptr<ActiveSpaceIntegrals> fci_ints, size_t max_memory);
     ~SigmaVectorDynamic();
-    void compute_sigma(psi::SharedVector sigma, psi::SharedVector b);
-    void get_diagonal(psi::Vector& diag);
-    void add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& bad_states);
+    void compute_sigma(psi::SharedVector sigma, psi::SharedVector b) override;
+    void get_diagonal(psi::Vector& diag) override;
+    void add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& bad_states) override;
+    void compute_spin(psi::SharedVector c) override;
+
     std::vector<std::vector<std::pair<size_t, double>>> bad_states_;
 
   protected:

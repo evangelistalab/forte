@@ -61,6 +61,7 @@ class SigmaVector {
     virtual void compute_sigma(psi::SharedVector sigma, psi::SharedVector b) = 0;
     virtual void get_diagonal(psi::Vector& diag) = 0;
     virtual void add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& bad_states) = 0;
+    virtual void compute_spin(psi::SharedVector c) = 0;
 
   protected:
     const DeterminantHashVec& space_;
