@@ -520,9 +520,9 @@ RDMs ExcitedStateSolver::compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_
         }
         op->op_s_lists(dets);
 
-        if (max_rdm_level >= 2) {
+//        if (max_rdm_level >= 2) {
             op->tp_s_lists(dets);
-        }
+//        }
 
         if (max_rdm_level >= 3) {
             psi::outfile->Printf("\n  Computing 3-list...    ");

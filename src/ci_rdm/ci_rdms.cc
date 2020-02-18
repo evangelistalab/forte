@@ -189,6 +189,7 @@ void CI_RDMS::compute_1rdm(std::vector<double>& oprdm_a, std::vector<double>& op
 void CI_RDMS::compute_1rdm_op(std::vector<double>& oprdm_a, std::vector<double>& oprdm_b) {
 
     auto op = std::make_shared<WFNOperator>(fci_ints_);
+    op->build_strings(wfn_);
     op->op_s_lists(wfn_);
 
     // Get the references to the coupling lists
@@ -349,6 +350,7 @@ void CI_RDMS::compute_2rdm_op(std::vector<double>& tprdm_aa, std::vector<double>
     local_timer build;
 
     auto op = std::make_shared<WFNOperator>(fci_ints_);
+    op->build_strings(wfn_);
     op->tp_s_lists(wfn_);
 
     const det_hashvec& dets = wfn_.wfn_hash();
@@ -703,6 +705,7 @@ void CI_RDMS::compute_3rdm_op(std::vector<double>& tprdm_aaa, std::vector<double
                               std::vector<double>& tprdm_abb, std::vector<double>& tprdm_bbb) {
 
     auto op = std::make_shared<WFNOperator>(fci_ints_);
+    op->build_strings(wfn_);
     op->three_s_lists(wfn_);
 
     size_t ncmo5 = ncmo4_ * ncmo_;
