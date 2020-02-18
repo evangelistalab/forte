@@ -26,18 +26,12 @@
  * @END LICENSE
  */
 
-//#include "psi4/libmints/molecule.h"
-//#include "psi4/libmints/wavefunction.h"
-//#include "psi4/liboptions/liboptions.h"
-//#include "psi4/libpsi4util/process.h"
 #include <cmath>
 
 #include "helpers/timer.h"
 #include "sparse_ci/operator.h"
 
 #include "ci_rdms.h"
-//#include "base_classes/rdms.h"
-//#include "sparse_ci/determinant.h"
 
 using namespace psi;
 

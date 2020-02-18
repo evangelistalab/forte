@@ -27,6 +27,8 @@
  * @END LICENSE
  */
 
+#include <cmath>
+
 #include "sci/aci.h"
 
 #ifdef _OPENMP
