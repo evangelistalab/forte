@@ -26,8 +26,8 @@
  * @END LICENSE
  */
 
-#ifndef _wfn_operator_h_
-#define _wfn_operator_h_
+#ifndef _determinant_substitution_lists_h_
+#define _determinant_substitution_lists_h_
 
 #include "psi4/libpsi4util/process.h"
 #include "integrals/active_space_integrals.h"
@@ -44,10 +44,10 @@ namespace forte {
 
 using wfn_hash = det_hash<double>;
 
-class WFNOperator {
+class DeterminantSubstitutionLists {
   public:
     /// Default constructor
-    WFNOperator(std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
+    DeterminantSubstitutionLists(std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
 
     /// Set print level
     void set_quiet_mode(bool mode);
@@ -64,9 +64,6 @@ class WFNOperator {
     void clear_op_s_lists();
     void clear_tp_s_lists();
     /*- Operators -*/
-    /// Compute total spin expectation value <|S^2|>
-    double s2(DeterminantHashVec& wfn, psi::SharedMatrix& evecs, int root);
-    double s2_direct(DeterminantHashVec& wfn, psi::SharedMatrix& evecs, int root);
 
     void build_strings(const DeterminantHashVec& wfn);
 
@@ -105,4 +102,4 @@ class WFNOperator {
 };
 } // namespace forte
 
-#endif // _wfn_operator_h_
+#endif // _determinant_substitution_lists_h_

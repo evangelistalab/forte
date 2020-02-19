@@ -35,7 +35,7 @@
 
 #include "base_classes/mo_space_info.h"
 #include "sci/sci.h"
-#include "sparse_ci/operator.h"
+#include "sparse_ci/determinant_substitution_lists.h"
 #include "helpers/helpers.h"
 #include "helpers/printing.h"
 #include "helpers/timer.h"
@@ -217,7 +217,7 @@ double ExcitedStateSolver::compute_energy() {
         PQ_evals = energies;
     }
 
-    std::shared_ptr<WFNOperator> op_c = std::make_shared<WFNOperator>(as_ints_);
+    std::shared_ptr<DeterminantSubstitutionLists> op_c = std::make_shared<DeterminantSubstitutionLists>(as_ints_);
 
     if (ex_alg_ == "ROOT_COMBINE") {
         psi::outfile->Printf("\n\n  ==> Diagonalizing Final Space <==");
@@ -475,7 +475,7 @@ void ExcitedStateSolver::wfn_to_file(DeterminantHashVec& det_space, psi::SharedM
 //}
 
 double ExcitedStateSolver::compute_spin_contamination(DeterminantHashVec& space,
-                                                      std::shared_ptr<WFNOperator> op,
+                                                      std::shared_ptr<DeterminantSubstitutionLists> op,
                                                       psi::SharedMatrix evecs, int nroot) {
     auto spin = sparse_solver_->spin(); /*compute_spin(space, op, evecs, nroot);*/
     double spin_contam = 0.0;
@@ -514,7 +514,7 @@ RDMs ExcitedStateSolver::compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_
 
     // TODO: this code might be OBSOLETE (Francesco)
     if (!direct_rdms_) {
-        auto op = std::make_shared<WFNOperator>(fci_ints);
+        auto op = std::make_shared<DeterminantSubstitutionLists>(fci_ints);
         if (sci_->sigma_vector_type() == SigmaVectorType::Dynamic) {
             op->build_strings(dets);
         }

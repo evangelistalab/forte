@@ -29,21 +29,12 @@
 #ifndef _ci_rdms_h_
 #define _ci_rdms_h_
 
-//#include <cmath>
-//#include <numeric>
-
-//#include "psi4/libmints/wavefunction.h"
-//#include "psi4/liboptions/liboptions.h"
-
 #include "psi4/libmints/matrix.h"
 
 #include "integrals/active_space_integrals.h"
 
 #include "sparse_ci/determinant_hashvector.h"
 #include "sparse_ci/sorted_string_list.h"
-//#include "sparse_ci/operator.h"
-//#include "sparse_ci/determinant.h"
-//#include "fci/string_lists.h"
 
 namespace forte {
 

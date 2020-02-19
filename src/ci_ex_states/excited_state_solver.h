@@ -40,7 +40,7 @@ class Matrix;
 
 namespace forte {
 class SelectedCIMethod;
-class WFNOperator;
+class DeterminantSubstitutionLists;
 
 class ExcitedStateSolver : public ActiveSpaceMethod {
   public:
@@ -125,7 +125,7 @@ class ExcitedStateSolver : public ActiveSpaceMethod {
 //                                                        std::shared_ptr<psi::Matrix> evecs,
 //                                                        int nroot);
     /// Check for spin contamination
-    double compute_spin_contamination(DeterminantHashVec& space, std::shared_ptr<WFNOperator> op,
+    double compute_spin_contamination(DeterminantHashVec& space, std::shared_ptr<DeterminantSubstitutionLists> op,
                                       std::shared_ptr<psi::Matrix> evecs, int nroot);
     /// Print Summary
     void print_final(DeterminantHashVec& dets, std::shared_ptr<psi::Matrix>& PQ_evecs,

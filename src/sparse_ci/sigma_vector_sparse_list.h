@@ -57,7 +57,7 @@ class SigmaVectorSparseList : public SigmaVector {
     bool print_;
     bool use_disk_ = false;
     /// Substitutions lists
-    std::shared_ptr<WFNOperator> op_;
+    std::shared_ptr<DeterminantSubstitutionLists> op_;
 };
 
 } // namespace forte

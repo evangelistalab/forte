@@ -366,7 +366,7 @@ class AdaptiveCI : public SelectedCIMethod {
                      psi::SharedVector evals);
 
     /// Check for spin contamination
-    double compute_spin_contamination(DeterminantHashVec& space, WFNOperator& op,
+    double compute_spin_contamination(DeterminantHashVec& space, DeterminantSubstitutionLists& op,
                                       psi::SharedMatrix evecs, int nroot);
 
     /// Convert from determinant to string representation

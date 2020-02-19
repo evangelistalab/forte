@@ -30,7 +30,7 @@
 
 #include "psi4/libmints/dimension.h"
 
-#include "sparse_ci/operator.h"
+#include "sparse_ci/determinant_substitution_lists.h"
 #include "forte-def.h"
 #include "helpers/timer.h"
 #include "helpers/helpers.h"
@@ -47,133 +47,12 @@ using namespace psi;
 
 namespace forte {
 
-WFNOperator::WFNOperator(std::shared_ptr<ActiveSpaceIntegrals> fci_ints)
+DeterminantSubstitutionLists::DeterminantSubstitutionLists(std::shared_ptr<ActiveSpaceIntegrals> fci_ints)
     : ncmo_(fci_ints->nmo()), mo_symmetry_(fci_ints->active_mo_symmetry()), fci_ints_(fci_ints) {}
 
-void WFNOperator::set_quiet_mode(bool mode) { quiet_ = mode; }
+void DeterminantSubstitutionLists::set_quiet_mode(bool mode) { quiet_ = mode; }
 
-double WFNOperator::s2(DeterminantHashVec& wfn, psi::SharedMatrix& evecs, int root) {
-    double S2 = 0.0;
-    const det_hashvec& wfn_map = wfn.wfn_hash();
-
-    for (size_t i = 0, max_i = wfn_map.size(); i < max_i; ++i) {
-        // Compute diagonal
-        // PhiI = PhiJ
-        Determinant PhiI(wfn_map[i]);
-        int npair = PhiI.npair();
-        int na = PhiI.count_alfa();
-        int nb = PhiI.count_beta();
-        double ms = 0.5 * static_cast<double>(na - nb);
-        S2 += (ms * ms + ms + static_cast<double>(nb) - static_cast<double>(npair)) *
-              evecs->get(i, root) * evecs->get(i, root);
-    }
-
-    // Loop directly through all determinants with
-    // spin-coupled electrons, i.e:
-    // |PhiI> = a+(qa) a+(pb) a-(qb) a-(pa) |PhiJ>
-
-    for (size_t K = 0, max_K = ab_list_.size(); K < max_K; ++K) {
-        const std::vector<std::tuple<size_t, short, short>>& c_dets = ab_list_[K];
-        for (auto& detI : c_dets) {
-            const size_t I = std::get<0>(detI);
-            double sign_pq = std::get<1>(detI) > 0.0 ? 1.0 : -1.0;
-            short p = std::fabs(std::get<1>(detI)) - 1;
-            short q = std::get<2>(detI);
-            if (p == q)
-                continue;
-            for (auto& detJ : c_dets) {
-                const size_t J = std::get<0>(detJ);
-                if (I == J)
-                    continue;
-                double sign_rs = std::get<1>(detJ) > 0.0 ? 1.0 : -1.0;
-                short r = std::fabs(std::get<1>(detJ)) - 1;
-                short s = std::get<2>(detJ);
-                if ((r != s) and (p == s) and (q == r)) {
-                    sign_pq *= sign_rs;
-                    S2 -= sign_pq * evecs->get(I, root) * evecs->get(J, root);
-                }
-            }
-        }
-    }
-
-    S2 = std::fabs(S2);
-    return S2;
-}
-
-double WFNOperator::s2_direct(DeterminantHashVec& wfn, psi::SharedMatrix& evecs, int root) {
-    double S2 = 0.0;
-    const det_hashvec& wfn_map = wfn.wfn_hash();
-
-    for (size_t i = 0, max_i = wfn_map.size(); i < max_i; ++i) {
-        // Compute diagonal
-        // PhiI = PhiJ
-        Determinant PhiI(wfn_map[i]);
-        int npair = PhiI.npair();
-        int na = PhiI.count_alfa();
-        int nb = PhiI.count_beta();
-        double ms = 0.5 * static_cast<double>(na - nb);
-        S2 += (ms * ms + ms + static_cast<double>(nb) - static_cast<double>(npair)) *
-              evecs->get(i, root) * evecs->get(i, root);
-    }
-
-    // abab contribution
-    SortedStringList a_sorted_string_list(wfn, fci_ints_, DetSpinType::Alpha);
-    const auto& sorted_half_dets = a_sorted_string_list.sorted_half_dets();
-    const auto& sorted_dets = a_sorted_string_list.sorted_dets();
-    String detIJa_common;
-    String Ib;
-    String Jb;
-    String IJb;
-
-    for (const auto& detIa : sorted_half_dets) {
-        const auto& range_I = a_sorted_string_list.range(detIa);
-        size_t first_I = range_I.first;
-        size_t last_I = range_I.second;
-
-        for (const auto& detJa : sorted_half_dets) {
-            detIJa_common = detIa ^ detJa;
-            int ndiff = detIJa_common.count();
-            if (ndiff == 2) {
-                size_t i, a;
-                for (size_t p = 0; p < ncmo_; ++p) {
-                    const bool la_p = detIa.get_bit(p);
-                    const bool ra_p = detJa.get_bit(p);
-                    if (la_p ^ ra_p) {
-                        i = la_p ? p : i;
-                        a = ra_p ? p : a;
-                    }
-                }
-                double sign_ia = detIa.slater_sign(i, a);
-                const auto& range_J = a_sorted_string_list.range(detJa);
-                size_t first_J = range_J.first;
-                size_t last_J = range_J.second;
-                for (size_t posI = first_I; posI < last_I; ++posI) {
-                    Ib = sorted_dets[posI].get_beta_bits();
-                    double CI = evecs->get(a_sorted_string_list.add(posI), root);
-                    for (size_t posJ = first_J; posJ < last_J; ++posJ) {
-                        Jb = sorted_dets[posJ].get_beta_bits();
-                        IJb = Jb ^ Ib;
-                        int ndiff = IJb.count();
-                        if (ndiff == 2) {
-                            auto Ib_sub = Ib & IJb;
-                            auto j = Ib_sub.find_first_one();
-                            auto Jb_sub = Jb & IJb;
-                            auto b = Jb_sub.find_first_one();
-                            if ((i != j) and (a != b) and (i == b) and (j == a)) {
-                                double sign = sign_ia * Ib.slater_sign(j, b);
-                                S2 -= sign * CI * evecs->get(a_sorted_string_list.add(posJ), root);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    return std::fabs(S2);
-}
-
-void WFNOperator::build_strings(const DeterminantHashVec& wfn) {
+void DeterminantSubstitutionLists::build_strings(const DeterminantHashVec& wfn) {
     beta_strings_.clear();
     alpha_strings_.clear();
     alpha_a_strings_.clear();
@@ -251,7 +130,7 @@ void WFNOperator::build_strings(const DeterminantHashVec& wfn) {
     }
 }
 
-void WFNOperator::op_s_lists(const DeterminantHashVec& wfn) {
+void DeterminantSubstitutionLists::op_s_lists(const DeterminantHashVec& wfn) {
     timer ops("Single sub. lists");
 
     if (!quiet_) {
@@ -346,7 +225,7 @@ void WFNOperator::op_s_lists(const DeterminantHashVec& wfn) {
     }
 }
 
-void WFNOperator::tp_s_lists(const DeterminantHashVec& wfn) {
+void DeterminantSubstitutionLists::tp_s_lists(const DeterminantHashVec& wfn) {
 
     timer ops("Double sub. lists");
     const det_hashvec& dets = wfn.wfn_hash();
@@ -508,18 +387,18 @@ void WFNOperator::tp_s_lists(const DeterminantHashVec& wfn) {
     }
 }
 
-void WFNOperator::clear_op_s_lists() {
+void DeterminantSubstitutionLists::clear_op_s_lists() {
     a_list_.clear();
     b_list_.clear();
 }
 
-void WFNOperator::clear_tp_s_lists() {
+void DeterminantSubstitutionLists::clear_tp_s_lists() {
     aa_list_.clear();
     bb_list_.clear();
     ab_list_.clear();
 }
 
-void WFNOperator::three_s_lists(const DeterminantHashVec& wfn) {
+void DeterminantSubstitutionLists::three_s_lists(const DeterminantHashVec& wfn) {
 
     timer ops("Triple sub. lists");
     const det_hashvec& dets = wfn.wfn_hash();

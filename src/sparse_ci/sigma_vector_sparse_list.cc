@@ -33,7 +33,7 @@
 #include "psi4/libmints/vector.h"
 
 #include "sigma_vector_sparse_list.h"
-#include "sparse_ci/operator.h"
+#include "sparse_ci/determinant_substitution_lists.h"
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -51,7 +51,7 @@ SigmaVectorSparseList::SigmaVectorSparseList(const DeterminantHashVec& space,
                                              std::shared_ptr<ActiveSpaceIntegrals> fci_ints)
     : SigmaVector(space, fci_ints, SigmaVectorType::SparseList, "SigmaVectorSparseList") {
 
-    op_ = std::make_shared<WFNOperator>(fci_ints_);
+    op_ = std::make_shared<DeterminantSubstitutionLists>(fci_ints_);
     /// Build the coupling lists for 1- and 2-particle operators
     op_->build_strings(space_);
     op_->op_s_lists(space_);

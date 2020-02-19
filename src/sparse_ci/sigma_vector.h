@@ -43,7 +43,7 @@ namespace forte {
 enum class SigmaVectorType { Dynamic, SparseList, Full };
 
 class ActiveSpaceIntegrals;
-class WFNOperator;
+class DeterminantSubstitutionLists;
 
 /**
  * @brief The SigmaVector class

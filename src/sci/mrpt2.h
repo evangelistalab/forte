@@ -33,7 +33,7 @@
 #include "sparse_ci/determinant.h"
 #include "integrals/active_space_integrals.h"
 #include "sparse_ci/determinant_hashvector.h"
-#include "sparse_ci/operator.h"
+#include "sparse_ci/determinant_substitution_lists.h"
 
 namespace forte {
 

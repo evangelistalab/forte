@@ -35,7 +35,7 @@
 #include "base_classes/active_space_method.h"
 #include "base_classes/state_info.h"
 #include "sparse_ci/determinant_hashvector.h"
-#include "sparse_ci/operator.h"
+#include "sparse_ci/determinant_substitution_lists.h"
 #include "sparse_ci/sigma_vector.h"
 
 namespace forte {

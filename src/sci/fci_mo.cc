@@ -49,7 +49,7 @@
 #include "base_classes/forte_options.h"
 #include "base_classes/scf_info.h"
 #include "boost/algorithm/string/predicate.hpp"
-#include "sparse_ci/operator.h"
+#include "sparse_ci/determinant_substitution_lists.h"
 #include "sparse_ci/sigma_vector.h"
 #include "orbital-helpers/semi_canonicalize.h"
 #include "orbital-helpers/iao_builder.h"

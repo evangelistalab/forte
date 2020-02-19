@@ -215,7 +215,7 @@ class ASCI : public SelectedCIMethod {
 
     /// Compute the RDMs
     void compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints, DeterminantHashVec& dets,
-                      WFNOperator& op, psi::SharedMatrix& PQ_evecs, int root1, int root2,
+                      DeterminantSubstitutionLists& op, psi::SharedMatrix& PQ_evecs, int root1, int root2,
                       int max_level);
 
     void add_bad_roots(DeterminantHashVec& dets);

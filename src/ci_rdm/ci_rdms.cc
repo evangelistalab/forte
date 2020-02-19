@@ -29,7 +29,7 @@
 #include <cmath>
 
 #include "helpers/timer.h"
-#include "sparse_ci/operator.h"
+#include "sparse_ci/determinant_substitution_lists.h"
 
 #include "ci_rdms.h"
 
@@ -183,7 +183,7 @@ void CI_RDMS::compute_1rdm(std::vector<double>& oprdm_a, std::vector<double>& op
 
 void CI_RDMS::compute_1rdm_op(std::vector<double>& oprdm_a, std::vector<double>& oprdm_b) {
 
-    auto op = std::make_shared<WFNOperator>(fci_ints_);
+    auto op = std::make_shared<DeterminantSubstitutionLists>(fci_ints_);
     op->build_strings(wfn_);
     op->op_s_lists(wfn_);
 
@@ -344,7 +344,7 @@ void CI_RDMS::compute_2rdm_op(std::vector<double>& tprdm_aa, std::vector<double>
                               std::vector<double>& tprdm_bb) {
     local_timer build;
 
-    auto op = std::make_shared<WFNOperator>(fci_ints_);
+    auto op = std::make_shared<DeterminantSubstitutionLists>(fci_ints_);
     op->build_strings(wfn_);
     op->tp_s_lists(wfn_);
 
@@ -699,7 +699,7 @@ void CI_RDMS::compute_3rdm(std::vector<double>& tprdm_aaa, std::vector<double>& 
 void CI_RDMS::compute_3rdm_op(std::vector<double>& tprdm_aaa, std::vector<double>& tprdm_aab,
                               std::vector<double>& tprdm_abb, std::vector<double>& tprdm_bbb) {
 
-    auto op = std::make_shared<WFNOperator>(fci_ints_);
+    auto op = std::make_shared<DeterminantSubstitutionLists>(fci_ints_);
     op->build_strings(wfn_);
     op->three_s_lists(wfn_);
 
