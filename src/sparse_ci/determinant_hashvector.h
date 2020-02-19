@@ -29,6 +29,8 @@
 #ifndef _determinant_hashvector_h_
 #define _determinant_hashvector_h_
 
+#include <memory>
+
 #include "sparse_ci/determinant.h"
 #include "helpers/hash_vector.h"
 
@@ -107,8 +109,8 @@ class DeterminantHashVec {
                    std::shared_ptr<psi::Matrix> det2_evecs, int root2);
 
     // Save most important subspace as this
-    void subspace(DeterminantHashVec& dets, std::shared_ptr<psi::Matrix> evecs, std::vector<double>& new_evecs,
-                  size_t dim, int root);
+    void subspace(DeterminantHashVec& dets, std::shared_ptr<psi::Matrix> evecs,
+                  std::vector<double>& new_evecs, size_t dim, int root);
 
     // Merge a wavefunction into this
     void merge(DeterminantHashVec& dets);

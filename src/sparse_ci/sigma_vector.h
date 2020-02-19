@@ -29,6 +29,7 @@
 #ifndef _sigma_vector_h_
 #define _sigma_vector_h_
 
+#include <memory>
 #include <string>
 
 #include "sparse_ci/determinant_hashvector.h"
