@@ -88,6 +88,14 @@ void DSRG_MRPT2::set_all_variables() {
 
     //NOTICE: The dimension may be further reduced.
     Z = BTF_->build(CoreTensor, "Z Matrix", spin_cases({"gg"}));
+    Z_b = BTF_->build(CoreTensor, "b(AX=b)", spin_cases({"gg"}));
+
+    I = BTF_->build(CoreTensor, "identity matrix", spin_cases({"gg"}));
+    I.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+        value = (i[0] == i[1]) ? 1.0 : 0.0;
+    });
+
+
 
     set_tensor();
 
@@ -1089,7 +1097,6 @@ void DSRG_MRPT2::iter_z() {
     double convergence = 1e-6;
 
     //TODO: beta-beta part not done yet
-    BlockedTensor Z_b = BTF_->build(CoreTensor, "b(AX=b)", spin_cases({"gg"}));
 
     //NOTICE: constant b for z_cv
     BlockedTensor temp1 = BTF_->build(CoreTensor, "temporal tensor 1", {"ppch", "pPcH"});
@@ -1141,7 +1148,7 @@ void DSRG_MRPT2::iter_z() {
 
     Z_b["me"] = Z_b["em"];
 
-outfile->Printf("\n    norm                  =  %6.12lf", Z_b.norm());
+    outfile->Printf("\n    norm                  =  %6.12lf", Z_b.norm());
     Z_b.print();
 
     while (iter <= maxiter) {
@@ -1167,7 +1174,68 @@ outfile->Printf("\n    norm                  =  %6.12lf", Z_b.norm());
 }
 
 
-void DSRG_MRPT2::compute_z_cv() {}
+void DSRG_MRPT2::compute_z_cv() {
+    BlockedTensor temp = BTF_->build(CoreTensor, "temporal tensor", {"vc"});
+
+    temp["em"] = Z_b["em"];
+
+    temp["em"] += Z["mu"] * F["ue"];
+
+    temp["em"] += Z["n1,u"] * V["u,e,n1,m"];
+    temp["em"] += Z["N1,U"] * V["e,U,m,N1"];
+    temp["em"] += Z["n1,u"] * V["u,m,n1,e"];
+    temp["em"] += Z["N1,U"] * V["m,U,e,N1"];
+
+    temp["em"] -= Z["n1,u"] * Gamma1["uv"] * V["v,e,n1,m"];
+    temp["em"] -= Z["N1,U"] * Gamma1["UV"] * V["e,V,m,N1"];
+    temp["em"] -= Z["n1,u"] * Gamma1["uv"] * V["v,m,n1,e"];
+    temp["em"] -= Z["N1,U"] * Gamma1["UV"] * V["m,V,e,N1"];
+
+    temp["em"] += Z["e1,u"] * Gamma1["uv"] * V["v,m,e1,e"];
+    temp["em"] += Z["E1,U"] * Gamma1["UV"] * V["m,V,e,E1"];
+    temp["em"] += Z["e1,u"] * Gamma1["uv"] * V["v,e,e1,m"];
+    temp["em"] += Z["E1,U"] * Gamma1["UV"] * V["e,V,m,E1"]; 
+
+    temp["em"] += Z["uv"] * V["veum"];
+    temp["em"] += Z["UV"] * V["eVmU"];
+
+    temp["em"] -= Z["eu"] * F["um"];
+
+    temp["em"] += Z["e1,m1"] * V["m1,m,e1,e"];
+    temp["em"] += Z["E1,M1"] * V["m,M1,e,E1"];  
+    temp["em"] += Z["e1,m1"] * V["m1,e,e1,m"];
+    temp["em"] += Z["E1,M1"] * V["e,M1,m,E1"]; 
+
+    // Denominator
+    BlockedTensor dnt = BTF_->build(CoreTensor, "temporal denominator", {"vc"});
+    dnt["em"] -= V["m1,m,e1,e"] * I["m1,m"] * I["e1,e"];
+    dnt["em"] -= V["m1,e,e1,m"] * I["m1,m"] * I["e1,e"];
+
+    // Move z{em} terms to the other side of the equation
+    temp["em"] += Z["em"] * dnt["em"];
+
+    // Denominator
+    dnt["em"] += Delta1["me"];
+
+    for (const std::string& block : {"vc"}) {
+        (Z.block(block)).iterate([&](const std::vector<size_t>& i, double& value) {
+            value = temp.block(block).data()[i[0] * ncore_ + i[1]]/ dnt.block(block).data()[i[0] * ncore_ + i[1]];
+        });
+    } 
+
+    Z["me"] = Z["em"];
+
+}
+
+
+
+
+
+
+
+
+
+
 void DSRG_MRPT2::compute_z_av() {}
 void DSRG_MRPT2::compute_z_ca() {}
 void DSRG_MRPT2::compute_z_aa() {}

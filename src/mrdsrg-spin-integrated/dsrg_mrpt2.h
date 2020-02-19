@@ -317,8 +317,11 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     ambit::BlockedTensor Delta2;
 
 
+    ambit::BlockedTensor I;
+
     // Lagrange multiplier
     ambit::BlockedTensor Z;
+    ambit::BlockedTensor Z_b;
 
 
 
