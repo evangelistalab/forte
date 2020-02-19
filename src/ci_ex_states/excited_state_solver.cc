@@ -453,34 +453,34 @@ void ExcitedStateSolver::wfn_to_file(DeterminantHashVec& det_space, psi::SharedM
     final_wfn.close();
 }
 
-std::vector<std::pair<double, double>>
-ExcitedStateSolver::compute_spin(DeterminantHashVec& space, std::shared_ptr<WFNOperator> op,
-                                 psi::SharedMatrix evecs, int nroot) {
-    std::vector<std::pair<double, double>> spin_vec(nroot);
+// std::vector<std::pair<double, double>>
+// ExcitedStateSolver::compute_spin(DeterminantHashVec& space, std::shared_ptr<WFNOperator> op,
+//                                 psi::SharedMatrix evecs, int nroot) {
+//    std::vector<std::pair<double, double>> spin_vec(nroot);
 
-    if (sci_->sigma_vector_type() == SigmaVectorType::Dynamic) {
-        for (size_t n = 0; n < nroot_; ++n) {
-            double S2 = op->s2_direct(space, evecs, n);
-            double S = std::fabs(0.5 * (std::sqrt(1.0 + 4.0 * S2) - 1.0));
-            spin_vec[n] = std::make_pair(S, S2);
-        }
-    } else {
-        for (size_t n = 0; n < nroot_; ++n) {
-            double S2 = op->s2(space, evecs, n);
-            double S = std::fabs(0.5 * (std::sqrt(1.0 + 4.0 * S2) - 1.0));
-            spin_vec[n] = std::make_pair(S, S2);
-        }
-    }
-    return spin_vec;
-}
+//    if (sci_->sigma_vector_type() == SigmaVectorType::Dynamic) {
+//        for (size_t n = 0; n < nroot_; ++n) {
+//            double S2 = op->s2_direct(space, evecs, n);
+//            double S = std::fabs(0.5 * (std::sqrt(1.0 + 4.0 * S2) - 1.0));
+//            spin_vec[n] = std::make_pair(S, S2);
+//        }
+//    } else {
+//        for (size_t n = 0; n < nroot_; ++n) {
+//            double S2 = op->s2(space, evecs, n);
+//            double S = std::fabs(0.5 * (std::sqrt(1.0 + 4.0 * S2) - 1.0));
+//            spin_vec[n] = std::make_pair(S, S2);
+//        }
+//    }
+//    return spin_vec;
+//}
 
 double ExcitedStateSolver::compute_spin_contamination(DeterminantHashVec& space,
                                                       std::shared_ptr<WFNOperator> op,
                                                       psi::SharedMatrix evecs, int nroot) {
-    auto spins = compute_spin(space, op, evecs, nroot);
+    auto spin = sparse_solver_->spin(); /*compute_spin(space, op, evecs, nroot);*/
     double spin_contam = 0.0;
     for (int n = 0; n < nroot; ++n) {
-        spin_contam += spins[n].second;
+        spin_contam += spin[n];
     }
     spin_contam /= static_cast<double>(nroot);
     spin_contam -= (0.25 * (state_.multiplicity() * state_.multiplicity() - 1.0));
@@ -520,9 +520,9 @@ RDMs ExcitedStateSolver::compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_
         }
         op->op_s_lists(dets);
 
-//        if (max_rdm_level >= 2) {
-            op->tp_s_lists(dets);
-//        }
+        //        if (max_rdm_level >= 2) {
+        op->tp_s_lists(dets);
+        //        }
 
         if (max_rdm_level >= 3) {
             psi::outfile->Printf("\n  Computing 3-list...    ");
@@ -602,7 +602,7 @@ RDMs ExcitedStateSolver::compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_
                                             {nact_, nact_, nact_, nact_, nact_, nact_});
 
             ci_rdms.compute_3rdm_op(trdm_aaa.data(), trdm_aab.data(), trdm_abb.data(),
-                                 trdm_bbb.data());
+                                    trdm_bbb.data());
             psi::outfile->Printf("\n  3-RDMs took %2.6f s (determinant)", tr.get());
         }
     }

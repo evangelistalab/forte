@@ -32,6 +32,7 @@
 #include "psi4/libmints/matrix.h"
 
 #include "helpers/timer.h"
+#include "sparse_ci/sparse_ci_solver.h"
 #include "sci.h"
 
 namespace forte {
@@ -39,7 +40,7 @@ SelectedCIMethod::SelectedCIMethod(StateInfo state, size_t nroot, std::shared_pt
                                    std::shared_ptr<MOSpaceInfo> mo_space_info,
                                    std::shared_ptr<ActiveSpaceIntegrals> as_ints)
     : state_(state), nroot_(nroot), mo_space_info_(mo_space_info), as_ints_(as_ints),
-      scf_info_(scf_info) {}
+      scf_info_(scf_info), sparse_solver_(std::make_shared<SparseCISolver>()) {}
 
 double SelectedCIMethod::compute_energy() {
     timer energy_timer("SelectedCIMethod:Energy");
@@ -111,6 +112,12 @@ void SelectedCIMethod::print_wfn(DeterminantHashVec& space, psi::SharedMatrix ev
                                  tmp_evecs[I] * tmp_evecs[I], space.get_idx(tmp.get_det(I)),
                                  str(tmp.get_det(I), nact_).c_str());
         }
+        auto spin = sparse_solver_->spin();
+        double S2 = spin[n];
+        double S = std::fabs(0.5 * (std::sqrt(1.0 + 4.0 * std::fabs(S2)) - 1.0));
+        state_label = s2_labels[std::round(S * 2.0)];
+        psi::outfile->Printf("\n\n  Spin state for root %zu: S^2 = %5.6f, S = %5.3f, %s", n, S2, S,
+                             state_label.c_str());
     }
 }
 

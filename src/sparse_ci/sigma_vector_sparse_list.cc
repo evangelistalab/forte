@@ -339,7 +339,6 @@ double SigmaVectorSparseList::compute_spin(const std::vector<double>& c) {
             }
         }
     }
-    psi::outfile->Printf("\n\nspin = %f\n", S2);
     return S2;
 }
 

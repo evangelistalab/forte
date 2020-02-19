@@ -119,11 +119,11 @@ class ExcitedStateSolver : public ActiveSpaceMethod {
                        int ref_root);
 
     void compute_multistate(psi::SharedVector& PQ_evals);
-    /// Computes spin
-    std::vector<std::pair<double, double>> compute_spin(DeterminantHashVec& space,
-                                                        std::shared_ptr<WFNOperator> op,
-                                                        std::shared_ptr<psi::Matrix> evecs,
-                                                        int nroot);
+//    /// Computes spin
+//    std::vector<std::pair<double, double>> compute_spin(DeterminantHashVec& space,
+//                                                        std::shared_ptr<WFNOperator> op,
+//                                                        std::shared_ptr<psi::Matrix> evecs,
+//                                                        int nroot);
     /// Check for spin contamination
     double compute_spin_contamination(DeterminantHashVec& space, std::shared_ptr<WFNOperator> op,
                                       std::shared_ptr<psi::Matrix> evecs, int nroot);

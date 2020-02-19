@@ -103,6 +103,7 @@ void AdaptiveCI::startup() {
     add_aimed_degenerate_ = options_->get_bool("ACI_ADD_AIMED_DEGENERATE");
     project_out_spin_contaminants_ = options_->get_bool("SCI_PROJECT_OUT_SPIN_CONTAMINANTS");
     spin_complete_ = options_->get_bool("ACI_ENFORCE_SPIN_COMPLETE");
+    spin_complete_P_ = options_->get_bool("ACI_ENFORCE_SPIN_COMPLETE_P");
 
     max_cycle_ = 20;
     if (options_->has_changed("SCI_MAX_CYCLE")) {
@@ -323,9 +324,9 @@ void AdaptiveCI::find_q_space() {
     }
 
     if ((ex_alg_ == "ROOT_ORTHOGONALIZE") and (root_ > 0) and cycle_ >= pre_iter_) {
-        sparse_solver_.set_root_project(true);
+        sparse_solver_->set_root_project(true);
         add_bad_roots(PQ_space_);
-        sparse_solver_.add_bad_states(bad_roots_);
+        sparse_solver_->add_bad_states(bad_roots_);
     }
 }
 
@@ -515,94 +516,6 @@ bool AdaptiveCI::check_stuck(const std::vector<std::vector<double>>& energy_hist
     return stuck;
 }
 
-std::vector<std::pair<double, double>> AdaptiveCI::compute_spin(DeterminantHashVec& space,
-                                                                std::shared_ptr<WFNOperator> op,
-                                                                psi::SharedMatrix evecs,
-                                                                int nroot) {
-    std::vector<std::pair<double, double>> spin_vec(nroot);
-
-    if (!build_lists_) {
-        for (int n = 0; n < nroot_; ++n) {
-            double S2 = op->s2_direct(space, evecs, n);
-            double S = std::fabs(0.5 * (std::sqrt(1.0 + 4.0 * S2) - 1.0));
-            spin_vec[n] = std::make_pair(S, S2);
-        }
-    } else {
-        for (int n = 0; n < nroot_; ++n) {
-            double S2 = op->s2(space, evecs, n);
-            double S = std::fabs(0.5 * (std::sqrt(1.0 + 4.0 * S2) - 1.0));
-            spin_vec[n] = std::make_pair(S, S2);
-        }
-    }
-    return spin_vec;
-}
-
-/*
-void AdaptiveCI::convert_to_string(const std::vector<Determinant>& space) {
-    size_t space_size = space.size();
-    size_t nalfa_str = 0;
-    size_t nbeta_str = 0;
-
-    alfa_list_.clear();
-    beta_list_.clear();
-
-    a_to_b_.clear();
-    b_to_a_.clear();
-
-    string_hash<size_t> alfa_map;
-    string_hash<size_t> beta_map;
-
-    for (size_t I = 0; I < space_size; ++I) {
-
-        Determinant det = space[I];
-        STLBitsetString alfa;
-        STLBitsetString beta;
-
-        alfa.set_nmo(ncmo_);
-        beta.set_nmo(ncmo_);
-
-        for (int i = 0; i < ncmo_; ++i) {
-            alfa.set_bit(i, det.get_alfa_bit(i));
-            beta.set_bit(i, det.get_alfa_bit(i));
-        }
-
-        size_t a_id;
-        size_t b_id;
-
-        // Once we find a new alfa string, add it to the list
-        string_hash<size_t>::iterator a_it = alfa_map.find(alfa);
-        if (a_it == alfa_map.end()) {
-            a_id = nalfa_str;
-            alfa_map[alfa] = a_id;
-            nalfa_str++;
-        } else {
-            a_id = a_it->second;
-        }
-
-        string_hash<size_t>::iterator b_it = beta_map.find(beta);
-        if (b_it == beta_map.end()) {
-            b_id = nbeta_str;
-            beta_map[beta] = b_id;
-            nbeta_str++;
-        } else {
-            b_id = b_it->second;
-        }
-
-        a_to_b_.resize(nalfa_str);
-        b_to_a_.resize(nbeta_str);
-
-        alfa_list_.resize(nalfa_str);
-        beta_list_.resize(nbeta_str);
-
-        alfa_list_[a_id] = alfa;
-        beta_list_[b_id] = beta;
-
-        a_to_b_[a_id].push_back(b_id);
-        b_to_a_[b_id].push_back(a_id);
-    }
-}
-*/
-
 int AdaptiveCI::root_follow(DeterminantHashVec& P_ref, std::vector<double>& P_ref_evecs,
                             DeterminantHashVec& P_space, psi::SharedMatrix P_evecs,
                             int num_ref_roots) {
@@ -708,18 +621,18 @@ void AdaptiveCI::pre_iter_preparation() {
     }
 
     if (quiet_mode_) {
-        sparse_solver_.set_print_details(false);
+        sparse_solver_->set_print_details(false);
     }
-    sparse_solver_.set_parallel(true);
-    sparse_solver_.set_force_diag(options_->get_bool("FORCE_DIAG_METHOD"));
-    sparse_solver_.set_e_convergence(options_->get_double("E_CONVERGENCE"));
-    sparse_solver_.set_r_convergence(options_->get_double("R_CONVERGENCE"));
-    sparse_solver_.set_maxiter_davidson(options_->get_int("DL_MAXITER"));
-    sparse_solver_.set_spin_project(project_out_spin_contaminants_);
+    sparse_solver_->set_parallel(true);
+    sparse_solver_->set_force_diag(options_->get_bool("FORCE_DIAG_METHOD"));
+    sparse_solver_->set_e_convergence(options_->get_double("E_CONVERGENCE"));
+    sparse_solver_->set_r_convergence(options_->get_double("R_CONVERGENCE"));
+    sparse_solver_->set_maxiter_davidson(options_->get_int("DL_MAXITER"));
+    sparse_solver_->set_spin_project(project_out_spin_contaminants_);
     //    sparse_solver.set_spin_project_full(project_out_spin_contaminants_);
-    sparse_solver_.set_guess_dimension(options_->get_int("DL_GUESS_SIZE"));
-    sparse_solver_.set_num_vecs(options_->get_int("N_GUESS_VEC"));
-    sparse_solver_.set_spin_project_full(false);
+    sparse_solver_->set_guess_dimension(options_->get_int("DL_GUESS_SIZE"));
+    sparse_solver_->set_num_vecs(options_->get_int("N_GUESS_VEC"));
+    sparse_solver_->set_spin_project_full(false);
 }
 
 void AdaptiveCI::diagonalize_P_space() {
@@ -730,7 +643,6 @@ void AdaptiveCI::diagonalize_P_space() {
 
     follow_ = false;
     if (ex_alg_ == "ROOT_COMBINE" or ex_alg_ == "MULTISTATE" or ex_alg_ == "ROOT_ORTHOGONALIZE") {
-
         follow_ = true;
     }
 
@@ -740,7 +652,7 @@ void AdaptiveCI::diagonalize_P_space() {
     }
 
     // Check that the initial space is spin-complete
-    if (spin_complete_) {
+    if (spin_complete_ or spin_complete_P_) {
         // assumes P_space handles determinants with only active space orbitals
         P_space_.make_spin_complete(nact_);
         if (!quiet_mode_)
@@ -751,18 +663,18 @@ void AdaptiveCI::diagonalize_P_space() {
     }
     // Diagonalize H in the P space
     if (ex_alg_ == "ROOT_ORTHOGONALIZE" and root_ > 0 and cycle_ >= pre_iter_) {
-        sparse_solver_.set_root_project(true);
+        sparse_solver_->set_root_project(true);
         add_bad_roots(P_space_);
-        sparse_solver_.add_bad_states(bad_roots_);
+        sparse_solver_->add_bad_states(bad_roots_);
     }
 
-    sparse_solver_.manual_guess(false);
+    sparse_solver_->manual_guess(false);
     local_timer diag;
 
     auto sigma_vector = make_sigma_vector(P_space_, as_ints_, max_memory_, sigma_vector_type_);
-    sparse_solver_.diagonalize_hamiltonian(P_space_, sigma_vector, P_evals_, P_evecs_,
-                                           num_ref_roots_, multiplicity_);
-    auto spin = sparse_solver_.spin();
+    sparse_solver_->diagonalize_hamiltonian(P_space_, sigma_vector, P_evals_, P_evecs_,
+                                            num_ref_roots_, multiplicity_);
+    auto spin = sparse_solver_->spin();
 
     if (!quiet_mode_)
         outfile->Printf("\n  Time spent diagonalizing H:   %1.6f s", diag.get());
@@ -811,8 +723,8 @@ void AdaptiveCI::diagonalize_PQ_space() {
     outfile->Printf("\n  Number of reference roots: %d", num_ref_roots_);
 
     auto sigma_vector = make_sigma_vector(PQ_space_, as_ints_, max_memory_, sigma_vector_type_);
-    sparse_solver_.diagonalize_hamiltonian(PQ_space_, sigma_vector, PQ_evals_, PQ_evecs_,
-                                           num_ref_roots_, multiplicity_);
+    sparse_solver_->diagonalize_hamiltonian(PQ_space_, sigma_vector, PQ_evals_, PQ_evecs_,
+                                            num_ref_roots_, multiplicity_);
 
     if (!quiet_mode_)
         outfile->Printf("\n  Total time spent diagonalizing H:   %1.6f s", diag_pq.get());
@@ -822,7 +734,7 @@ void AdaptiveCI::diagonalize_PQ_space() {
     //        old_dets = PQ_space_;
     //        old_evecs = PQ_evecs->clone();
 
-    auto spin = sparse_solver_.spin();
+    auto spin = sparse_solver_->spin();
 
     if (!quiet_mode_) {
         // Print the energy

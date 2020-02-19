@@ -46,6 +46,7 @@ class ForteOptions;
 class MOSpaceInfo;
 class Reference;
 class SCFInfo;
+class SparseCISolver;
 
 class SelectedCIMethod {
   public:
@@ -126,6 +127,9 @@ class SelectedCIMethod {
 
     /// Some HF info
     std::shared_ptr<SCFInfo> scf_info_;
+
+    /// The sparse CI solver (allocated at creation by the base class)
+    std::shared_ptr<SparseCISolver> sparse_solver_;
 
     /// The current iteration
     size_t cycle_;

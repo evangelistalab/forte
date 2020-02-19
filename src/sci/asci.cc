@@ -88,18 +88,18 @@ void ASCI::pre_iter_preparation() {
     P_space_ = initial_reference_;
 
     if (quiet_mode_) {
-        sparse_solver_.set_print_details(false);
+        sparse_solver_->set_print_details(false);
     }
 
-    sparse_solver_.set_parallel(true);
-    sparse_solver_.set_force_diag(options_->get_bool("FORCE_DIAG_METHOD"));
-    sparse_solver_.set_e_convergence(options_->get_double("E_CONVERGENCE"));
-    sparse_solver_.set_r_convergence(options_->get_double("R_CONVERGENCE"));
-    sparse_solver_.set_maxiter_davidson(options_->get_int("DL_MAXITER"));
-    sparse_solver_.set_spin_project_full(options_->get_bool("SPIN_PROJECT_FULL"));
-    sparse_solver_.set_spin_project(options_->get_bool("SCI_PROJECT_OUT_SPIN_CONTAMINANTS"));
-    sparse_solver_.set_guess_dimension(options_->get_int("DL_GUESS_SIZE"));
-    sparse_solver_.set_num_vecs(options_->get_int("N_GUESS_VEC"));
+    sparse_solver_->set_parallel(true);
+    sparse_solver_->set_force_diag(options_->get_bool("FORCE_DIAG_METHOD"));
+    sparse_solver_->set_e_convergence(options_->get_double("E_CONVERGENCE"));
+    sparse_solver_->set_r_convergence(options_->get_double("R_CONVERGENCE"));
+    sparse_solver_->set_maxiter_davidson(options_->get_int("DL_MAXITER"));
+    sparse_solver_->set_spin_project_full(options_->get_bool("SPIN_PROJECT_FULL"));
+    sparse_solver_->set_spin_project(options_->get_bool("SCI_PROJECT_OUT_SPIN_CONTAMINANTS"));
+    sparse_solver_->set_guess_dimension(options_->get_int("DL_GUESS_SIZE"));
+    sparse_solver_->set_num_vecs(options_->get_int("N_GUESS_VEC"));
 }
 
 void ASCI::startup() {
@@ -207,11 +207,11 @@ void ASCI::diagonalize_P_space() {
         outfile->Printf("\n  Initial P space dimension: %zu", P_space_.size());
     }
 
-    sparse_solver_.manual_guess(false);
+    sparse_solver_->manual_guess(false);
     local_timer diag;
 
     auto sigma_vector = make_sigma_vector(P_space_, as_ints_, max_memory_, sigma_vector_type_);
-    sparse_solver_.diagonalize_hamiltonian(P_space_, sigma_vector, P_evals_, P_evecs_,
+    sparse_solver_->diagonalize_hamiltonian(P_space_, sigma_vector, P_evals_, P_evecs_,
                                            num_ref_roots_, multiplicity_);
 
     if (!quiet_mode_)
@@ -373,27 +373,6 @@ void ASCI::prune_PQ_to_P() {
     for (size_t I = 0; I < Imax; ++I) {
         P_space_.add(dm_det_list[I].second);
     }
-}
-
-std::vector<std::pair<double, double>> ASCI::compute_spin(DeterminantHashVec& space,
-                                                          std::shared_ptr<WFNOperator> op,
-                                                          psi::SharedMatrix evecs, int nroot) {
-    std::vector<std::pair<double, double>> spin_vec(nroot);
-
-    if (!build_lists_) {
-        for (size_t n = 0; n < nroot_; ++n) {
-            double S2 = op->s2_direct(space, evecs, n);
-            double S = std::fabs(0.5 * (std::sqrt(1.0 + 4.0 * S2) - 1.0));
-            spin_vec[n] = std::make_pair(S, S2);
-        }
-    } else {
-        for (size_t n = 0; n < nroot_; ++n) {
-            double S2 = op->s2(space, evecs, n);
-            double S = std::fabs(0.5 * (std::sqrt(1.0 + 4.0 * S2) - 1.0));
-            spin_vec[n] = std::make_pair(S, S2);
-        }
-    }
-    return spin_vec;
 }
 
 void ASCI::print_nos() {
@@ -681,7 +660,7 @@ void ASCI::diagonalize_PQ_space() {
     local_timer diag_pq;
 
     auto sigma_vector = make_sigma_vector(PQ_space_, as_ints_, max_memory_, sigma_vector_type_);
-    sparse_solver_.diagonalize_hamiltonian(PQ_space_, sigma_vector, PQ_evals_, PQ_evecs_,
+    sparse_solver_->diagonalize_hamiltonian(PQ_space_, sigma_vector, PQ_evals_, PQ_evecs_,
                                            num_ref_roots_, multiplicity_);
 
     if (!quiet_mode_)

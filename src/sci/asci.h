@@ -32,16 +32,6 @@
 #include "sci/sci.h"
 #include "sparse_ci/sparse_ci_solver.h"
 #include "helpers/timer.h"
-//#include "base_classes/forte_options.h"
-//#include "ci_rdm/ci_rdms.h"
-//#include "sparse_ci/ci_reference.h"
-//#include "integrals/active_space_integrals.h"
-//#include "mrpt2.h"
-//#include "orbital-helpers/unpaired_density.h"
-//#include "sparse_ci/determinant_hashvector.h"
-//#include "base_classes/rdms.h"
-//#include "base_classes/active_space_method.h"
-//#include "orbital-helpers/localize.h"
 
 namespace forte {
 
@@ -118,7 +108,6 @@ class ASCI : public SelectedCIMethod {
     std::vector<double> P_ref_evecs_;
     std::vector<double> P_energies_;
     std::vector<std::vector<double>> energy_history_;
-    SparseCISolver sparse_solver_;
     size_t ref_root_;
     size_t root_;
     std::string ex_alg_;
@@ -220,11 +209,6 @@ class ASCI : public SelectedCIMethod {
 
     /// Prune the space of determinants
     void prune_PQ_to_P() override;
-
-    /// Computes spin
-    std::vector<std::pair<double, double>> compute_spin(DeterminantHashVec& space,
-                                                        std::shared_ptr<WFNOperator> op,
-                                                        psi::SharedMatrix evecs, int nroot);
 
     /// Print natural orbitals
     void print_nos();

@@ -431,8 +431,6 @@ bool SparseCISolver::davidson_liu_solver(const DeterminantHashVec& space,
     DavidsonLiuSolver dls(fci_size, nroot);
     dls.set_e_convergence(e_convergence_);
     dls.set_r_convergence(r_convergence_);
-
-    outfile->Printf("\n r_convergence_ = %20.12f \n", r_convergence_);
     dls.set_print_level(0);
 
     // allocate vectors
