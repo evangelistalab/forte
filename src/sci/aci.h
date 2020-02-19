@@ -32,20 +32,9 @@
 #include <fstream>
 #include <iomanip>
 
-//#include "psi4/libmints/wavefunction.h"
-//#include "psi4/liboptions/liboptions.h"
-
 #include "sci/sci.h"
 #include "sparse_ci/sparse_ci_solver.h"
 #include "helpers/timer.h"
-//#include "base_classes/forte_options.h"
-//#include "integrals/active_space_integrals.h"
-//#include "orbital-helpers/unpaired_density.h"
-//#include "sparse_ci/determinant_hashvector.h"
-//#include "sparse_ci/determinant.h"
-//#include "orbital-helpers/iao_builder.h"
-//#include "orbital-helpers/localize.h"
-//#include "base_classes/active_space_method.h"
 
 using d1 = std::vector<double>;
 using d2 = std::vector<d1>;

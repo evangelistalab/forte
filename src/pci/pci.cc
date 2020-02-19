@@ -36,17 +36,6 @@
 #include <unordered_map>
 #include <utility>
 
-#include "boost/format.hpp"
-
-#include "psi4/libpsi4util/process.h"
-#include "psi4/libciomr/libciomr.h"
-#include "psi4/libmints/matrix.h"
-#include "psi4/libmints/molecule.h"
-#include "psi4/libmints/vector.h"
-#include "psi4/libpsio/psio.h"
-#include "psi4/libpsio/psio.hpp"
-#include "psi4/libqt/qt.h"
-
 #include "helpers/timer.h"
 #include "sparse_ci/ci_reference.h"
 #include "sparse_ci/determinant_functions.hpp"
@@ -1153,7 +1142,7 @@ void ProjectorCI::propagate_DL(det_hashvec& dets_hashvec, std::vector<double>& C
 
     size_t result_size = sigma_vector->size();
 
-    sparse_solver_.diagonalize_hamiltonian(det_map, sigma_vector2, PQ_evals_, PQ_evecs_, nroot_,
+    sparse_solver_.diagonalize_hamiltonian(det_map, sigma_vector, PQ_evals_, PQ_evecs_, nroot_,
                                            state_.multiplicity());
 
     current_davidson_iter_ = sigma_vector->get_sigma_build_count();

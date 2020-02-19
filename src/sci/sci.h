@@ -28,6 +28,7 @@
 
 #ifndef _sci_h_
 #define _sci_h_
+
 #include <memory>
 #include <vector>
 
@@ -38,6 +39,7 @@
 #include "sparse_ci/sigma_vector.h"
 
 namespace forte {
+
 class ActiveSpaceIntegrals;
 class ForteIntegrals;
 class ForteOptions;
@@ -90,7 +92,7 @@ class SelectedCIMethod {
     virtual DeterminantHashVec get_PQ_space() = 0;
     virtual psi::SharedMatrix get_PQ_evecs() = 0;
     virtual psi::SharedVector get_PQ_evals() = 0;
-//    virtual std::shared_ptr<WFNOperator> get_op() = 0;
+    //    virtual std::shared_ptr<WFNOperator> get_op() = 0;
     virtual size_t get_ref_root() = 0;
     virtual std::vector<double> get_multistate_pt2_energy_correction() = 0;
     virtual size_t get_cycle();
@@ -136,6 +138,7 @@ class SelectedCIMethod {
 
     /// The number of active orbitals
     size_t nact_;
-}; // namespace forte
+};
 } // namespace forte
+
 #endif // _sci_h_

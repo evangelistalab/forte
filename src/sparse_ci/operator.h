@@ -34,7 +34,6 @@
 #include "sparse_ci/determinant_hashvector.h"
 #include "sparse_ci/determinant.h"
 #include "sparse_ci/sorted_string_list.h"
-#include "base_classes/mo_space_info.h"
 
 namespace forte {
 
@@ -65,18 +64,6 @@ class WFNOperator {
     void clear_op_s_lists();
     void clear_tp_s_lists();
     /*- Operators -*/
-
-    void op_lists(const DeterminantHashVec& wfn);
-    void tp_lists(const DeterminantHashVec& wfn);
-    void three_lists(const DeterminantHashVec& wfn);
-    void clear_op_lists();
-    void clear_tp_lists();
-    /// Single excitations, a_p^(+) a_q|>
-    void add_singles(DeterminantHashVec& wfn);
-
-    /// Double excitations, a_p^(+) a_q^(+) a_r a_s|>
-    void add_doubles(DeterminantHashVec& wfn);
-
     /// Compute total spin expectation value <|S^2|>
     double s2(DeterminantHashVec& wfn, psi::SharedMatrix& evecs, int root);
     double s2_direct(DeterminantHashVec& wfn, psi::SharedMatrix& evecs, int root);
@@ -85,41 +72,12 @@ class WFNOperator {
 
     std::vector<std::vector<std::pair<size_t, short>>> a_list_;
     std::vector<std::vector<std::pair<size_t, short>>> b_list_;
+
     std::vector<std::vector<std::tuple<size_t, short, short>>> aa_list_;
     std::vector<std::vector<std::tuple<size_t, short, short>>> bb_list_;
     std::vector<std::vector<std::tuple<size_t, short, short>>> ab_list_;
 
-    /// The alpha single-annihilation/creation list
-    std::vector<std::vector<std::pair<size_t, short>>> a_ann_list_;
-    std::vector<std::vector<std::pair<size_t, short>>> a_cre_list_;
-
-    /// The beta single-annihilation/creation list
-    std::vector<std::vector<std::pair<size_t, short>>> b_ann_list_;
-    std::vector<std::vector<std::pair<size_t, short>>> b_cre_list_;
-
-    /// The alpha-alpha double-annihilation/creation list
-    std::vector<std::vector<std::tuple<size_t, short, short>>> aa_ann_list_;
-    std::vector<std::vector<std::tuple<size_t, short, short>>> aa_cre_list_;
-
-    /// The beta-beta single-annihilation/creation list
-    std::vector<std::vector<std::tuple<size_t, short, short>>> bb_ann_list_;
-    std::vector<std::vector<std::tuple<size_t, short, short>>> bb_cre_list_;
-
-    /// The alfa-beta single-annihilation/creation list
-    std::vector<std::vector<std::tuple<size_t, short, short>>> ab_ann_list_;
-    std::vector<std::vector<std::tuple<size_t, short, short>>> ab_cre_list_;
-
     /// Three particle lists
-    std::vector<std::vector<std::tuple<size_t, short, short, short>>> aaa_ann_list_;
-    std::vector<std::vector<std::tuple<size_t, short, short, short>>> aab_ann_list_;
-    std::vector<std::vector<std::tuple<size_t, short, short, short>>> abb_ann_list_;
-    std::vector<std::vector<std::tuple<size_t, short, short, short>>> bbb_ann_list_;
-
-    std::vector<std::vector<std::tuple<size_t, short, short, short>>> aaa_cre_list_;
-    std::vector<std::vector<std::tuple<size_t, short, short, short>>> aab_cre_list_;
-    std::vector<std::vector<std::tuple<size_t, short, short, short>>> abb_cre_list_;
-    std::vector<std::vector<std::tuple<size_t, short, short, short>>> bbb_cre_list_;
-
     std::vector<std::vector<std::tuple<size_t, short, short, short>>> aaa_list_;
     std::vector<std::vector<std::tuple<size_t, short, short, short>>> aab_list_;
     std::vector<std::vector<std::tuple<size_t, short, short, short>>> abb_list_;

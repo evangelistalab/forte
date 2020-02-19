@@ -29,6 +29,11 @@
 
 #include <cmath>
 
+#include "psi4/libmints/matrix.h"
+
+#include "base_classes/forte_options.h"
+#include "base_classes/mo_space_info.h"
+
 #include "sci/aci.h"
 
 #ifdef _OPENMP

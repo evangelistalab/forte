@@ -32,7 +32,6 @@
 #include "psi4/lib3index/cholesky.h"
 #include "psi4/libfock/jk.h"
 #include "psi4/libmints/matrix.h"
-#include "psi4/libqt/qt.h"
 #include "psi4/psifiles.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
 

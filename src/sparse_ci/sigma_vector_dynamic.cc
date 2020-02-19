@@ -33,12 +33,6 @@
 
 #include "psi4/libpsi4util/PsiOutStream.h"
 
-//#include "psi4/libciomr/libciomr.h"
-//#include "psi4/libmints/matrix.h"
-//#include "psi4/libmints/vector.h"
-//#include "psi4/libpsio/psio.hpp"
-//#include "psi4/libqt/qt.h"
-
 #include "forte-def.h"
 #include "helpers/timer.h"
 #include "helpers/iterative_solvers.h"

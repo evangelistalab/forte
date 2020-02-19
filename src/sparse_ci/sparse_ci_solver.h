@@ -30,13 +30,6 @@
 #define _sparse_ci_h_
 
 #include "sparse_ci/determinant_hashvector.h"
-//#include "integrals/active_space_integrals.h"
-//#include "operator.h"
-//#include "sparse_ci/operator.h"
-//#include "base_classes/mo_space_info.h"
-
-//#include "determinant.h"
-//#include "sigma_vector.h"
 
 #define BIGNUM 1E100
 #define MAXIT 100

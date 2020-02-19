@@ -28,13 +28,10 @@
 
 #include <cmath>
 
-//#include "psi4/libciomr/libciomr.h"
-//#include "psi4/libmints/matrix.h"
-//#include "psi4/libmints/vector.h"
-//#include "psi4/libpsio/psio.hpp"
+#include "psi4/psi4-dec.h"
+#include "psi4/libpsi4util/PsiOutStream.h"
+#include "psi4/libmints/vector.h"
 
-//#include "forte-def.h"
-//#include "helpers/iterative_solvers.h"
 #include "sigma_vector_sparse_list.h"
 #include "sparse_ci/operator.h"
 
@@ -342,7 +339,7 @@ double SigmaVectorSparseList::compute_spin(const std::vector<double>& c) {
             }
         }
     }
-    outfile->Printf("\n\nspin = %f\n", S2);
+    psi::outfile->Printf("\n\nspin = %f\n", S2);
     return S2;
 }
 
