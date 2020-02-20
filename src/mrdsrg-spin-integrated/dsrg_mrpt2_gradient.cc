@@ -1098,7 +1098,7 @@ void DSRG_MRPT2::iter_z() {
 
     //TODO: beta-beta part not done yet
 
-    //NOTICE: constant b for z_cv
+    //NOTICE: constant b for z{core-virtual}
     BlockedTensor temp1 = BTF_->build(CoreTensor, "temporal tensor 1", {"ppch", "pPcH"});
     BlockedTensor temp2 = BTF_->build(CoreTensor, "temporal tensor 2", {"ppvch", "pPvcH"});
 
@@ -1143,34 +1143,127 @@ void DSRG_MRPT2::iter_z() {
     Z_b["em"] += Z["e1,f"] * V["f,e,e1,m"];
     Z_b["em"] += Z["E1,F"] * V["e,F,m,E1"];
 
-
-
-
     Z_b["me"] = Z_b["em"];
 
-    outfile->Printf("\n    norm                  =  %6.12lf", Z_b.norm());
+    //NOTICE: constant b for z{active-active}
+    temp1 = BTF_->build(CoreTensor, "temporal tensor 1", {"pphh", "pPhH"});
+    temp2 = BTF_->build(CoreTensor, "temporal tensor 2", {"aaphh", "aaPhH"});
+
+    temp1["cdkl"] = V["cdkl"] * Eeps2_p["klcd"];
+    temp1["cDkL"] = V["cDkL"] * Eeps2_p["kLcD"];
+    temp2["wzbij"] = V["wbij"] * Eeps2_m1["ijzb"];
+    temp2["wzBiJ"] = V["wBiJ"] * Eeps2_m1["iJzB"];
+    Z_b["wz"] += 0.25 * temp1["cdkl"] * temp2["wzbij"] * Gamma1["ki"] * Gamma1["lj"] * Eta1["zc"] * Eta1["bd"]; 
+    Z_b["wz"] += 0.50 * temp1["cDkL"] * temp2["wzBiJ"] * Gamma1["ki"] * Gamma1["LJ"] * Eta1["zc"] * Eta1["BD"]; 
+    temp1.zero();
+    temp2.zero();
+
+    temp1["cdkl"] = V["cdkl"] * Eeps2_m1["klcd"];
+    temp1["cDkL"] = V["cDkL"] * Eeps2_m1["kLcD"];
+    temp2["wzbij"] = V["wbij"] * Eeps2_p["ijzb"];
+    temp2["wzBiJ"] = V["wBiJ"] * Eeps2_p["iJzB"];
+    Z_b["wz"] += 0.25 * temp1["cdkl"] * temp2["wzbij"] * Gamma1["ki"] * Gamma1["lj"] * Eta1["zc"] * Eta1["bd"]; 
+    Z_b["wz"] += 0.50 * temp1["cDkL"] * temp2["wzBiJ"] * Gamma1["ki"] * Gamma1["LJ"] * Eta1["zc"] * Eta1["BD"]; 
+
+    temp1 = BTF_->build(CoreTensor, "temporal tensor 1", {"pphh", "pPhH"});
+    temp2 = BTF_->build(CoreTensor, "temporal tensor 2", {"ppaah", "pPaaH"});
+
+    temp1["cdkl"] = V["cdkl"] * Eeps2_p["klcd"];
+    temp1["cDkL"] = V["cDkL"] * Eeps2_p["kLcD"];
+    temp2["abwzj"] = V["abwj"] * Eeps2_m1["zjab"];
+    temp2["aBwzJ"] = V["aBwJ"] * Eeps2_m1["zJaB"];
+    Z_b["wz"] += 0.25 * temp1["cdkl"] * temp2["abwzj"] * Gamma1["kz"] * Gamma1["lj"] * Eta1["ac"] * Eta1["bd"];
+    Z_b["wz"] += 0.50 * temp1["cDkL"] * temp2["aBwzJ"] * Gamma1["kz"] * Gamma1["LJ"] * Eta1["ac"] * Eta1["BD"];
+    temp1.zero();
+    temp2.zero();
+
+    temp1["cdkl"] = V["cdkl"] * Eeps2_m1["klcd"];
+    temp1["cDkL"] = V["cDkL"] * Eeps2_m1["kLcD"];
+    temp2["abwzj"] = V["abwj"] * Eeps2_p["zjab"];
+    temp2["aBwzJ"] = V["aBwJ"] * Eeps2_p["zJaB"];
+    Z_b["wz"] += 0.25 * temp1["cdkl"] * temp2["abwzj"] * Gamma1["kz"] * Gamma1["lj"] * Eta1["ac"] * Eta1["bd"];
+    Z_b["wz"] += 0.50 * temp1["cDkL"] * temp2["aBwzJ"] * Gamma1["kz"] * Gamma1["LJ"] * Eta1["ac"] * Eta1["BD"];   
+
+    temp1 = BTF_->build(CoreTensor, "temporal tensor 1", {"pphh", "pPhH"});
+    temp2 = BTF_->build(CoreTensor, "temporal tensor 2", {"aaphh", "aaPhH"});
+
+    temp1["cdkl"] = V["cdkl"] * Eeps2_p["klcd"];
+    temp1["cDkL"] = V["cDkL"] * Eeps2_p["kLcD"];
+    temp2["zwbij"] = V["zbij"] * Eeps2_m1["ijwb"];
+    temp2["zwBiJ"] = V["zBiJ"] * Eeps2_m1["iJwB"];
+    Z_b["wz"] -= 0.25 * temp1["cdkl"] * temp2["zwbij"] * Gamma1["ki"] * Gamma1["lj"] * Eta1["wc"] * Eta1["bd"]; 
+    Z_b["wz"] -= 0.50 * temp1["cDkL"] * temp2["zwBiJ"] * Gamma1["ki"] * Gamma1["LJ"] * Eta1["wc"] * Eta1["BD"]; 
+    temp1.zero();
+    temp2.zero();
+
+    temp1["cdkl"] = V["cdkl"] * Eeps2_m1["klcd"];
+    temp1["cDkL"] = V["cDkL"] * Eeps2_m1["kLcD"];
+    temp2["zwbij"] = V["zbij"] * Eeps2_p["ijwb"];
+    temp2["zwBiJ"] = V["zBiJ"] * Eeps2_p["iJwB"];
+    Z_b["wz"] -= 0.25 * temp1["cdkl"] * temp2["zwbij"] * Gamma1["ki"] * Gamma1["lj"] * Eta1["wc"] * Eta1["bd"]; 
+    Z_b["wz"] -= 0.50 * temp1["cDkL"] * temp2["zwBiJ"] * Gamma1["ki"] * Gamma1["LJ"] * Eta1["wc"] * Eta1["BD"]; 
+ 
+    temp1 = BTF_->build(CoreTensor, "temporal tensor 1", {"pphh", "pPhH"});
+    temp2 = BTF_->build(CoreTensor, "temporal tensor 2", {"ppaah", "pPaaH"});
+
+    temp1["cdkl"] = V["cdkl"] * Eeps2_p["klcd"];
+    temp1["cDkL"] = V["cDkL"] * Eeps2_p["kLcD"];
+    temp2["abzwj"] = V["abzj"] * Eeps2_m1["wjab"];
+    temp2["aBzwJ"] = V["aBzJ"] * Eeps2_m1["wJaB"];
+    Z_b["wz"] -= 0.25 * temp1["cdkl"] * temp2["abzwj"] * Gamma1["kw"] * Gamma1["lj"] * Eta1["ac"] * Eta1["bd"];
+    Z_b["wz"] -= 0.50 * temp1["cDkL"] * temp2["aBzwJ"] * Gamma1["kw"] * Gamma1["LJ"] * Eta1["ac"] * Eta1["BD"];
+    temp1.zero();
+    temp2.zero();
+
+    temp1["cdkl"] = V["cdkl"] * Eeps2_m1["klcd"];
+    temp1["cDkL"] = V["cDkL"] * Eeps2_m1["kLcD"];
+    temp2["abzwj"] = V["abzj"] * Eeps2_p["wjab"];
+    temp2["aBzwJ"] = V["aBzJ"] * Eeps2_p["wJaB"];
+    Z_b["wz"] -= 0.25 * temp1["cdkl"] * temp2["abzwj"] * Gamma1["kw"] * Gamma1["lj"] * Eta1["ac"] * Eta1["bd"];
+    Z_b["wz"] -= 0.50 * temp1["cDkL"] * temp2["aBzwJ"] * Gamma1["kw"] * Gamma1["LJ"] * Eta1["ac"] * Eta1["BD"]; 
+
+    Z_b["wz"] += Z["m1,n1"] * V["n1,v,m1,w"] * Gamma1["zv"];
+    Z_b["wz"] += Z["M1,N1"] * V["v,N1,w,M1"] * Gamma1["zv"];
+
+    Z_b["wz"] += Z["e1,f1"] * V["f1,v,e1,w"] * Gamma1["zv"];
+    Z_b["wz"] += Z["E1,F1"] * V["v,F1,w,E1"] * Gamma1["zv"];
+
+    Z_b["wz"] -= Z["m1,n1"] * V["n1,v,m1,z"] * Gamma1["wv"];
+    Z_b["wz"] -= Z["M1,N1"] * V["v,N1,z,M1"] * Gamma1["wv"];
+
+    Z_b["wz"] -= Z["e1,f1"] * V["f1,v,e1,z"] * Gamma1["wv"];
+    Z_b["wz"] -= Z["E1,F1"] * V["v,F1,z,E1"] * Gamma1["wv"];
+
+    //NOTICE: constant b for z{core-active}
+
+
+
+
+
     Z_b.print();
 
-    while (iter <= maxiter) {
-        // Zold = Z->clone();
 
+    BlockedTensor Zold = BTF_->build(CoreTensor, "Old Z Matrix", spin_cases({"gg"}));
+    while (iter <= maxiter) {
+        Zold["pq"] = Z["pq"];
 
         compute_z_cv();
         compute_z_av();
         compute_z_ca();
         compute_z_aa();
 
+        Zold["pq"] -= Z["pq"];
 
-        // Zold->subtract(Z);
-        // double Znorm = Zold->rms();
-        double Znorm = 0.0;
-        // outfile->Printf("\n    * %4d    %12.4e *", iter, Znorm);
+
+        double Znorm = Zold.norm();
+
         if (Znorm < convergence) {
             converged = true;
             break;
         }
         iter++;
     }
+    outfile->Printf("\n    iterations                     =  %d", iter);
 }
 
 
@@ -1225,6 +1318,15 @@ void DSRG_MRPT2::compute_z_cv() {
 
     Z["me"] = Z["em"];
 
+    // Beta part
+    for (const std::string& block : {"VC"}) {
+        (Z.block(block)).iterate([&](const std::vector<size_t>& i, double& value) {
+            value = Z.block("vc").data()[i[0] * ncore_ + i[1]];
+        });
+    } 
+    Z["ME"] = Z["EM"];
+
+
 }
 
 
@@ -1238,7 +1340,46 @@ void DSRG_MRPT2::compute_z_cv() {
 
 void DSRG_MRPT2::compute_z_av() {}
 void DSRG_MRPT2::compute_z_ca() {}
-void DSRG_MRPT2::compute_z_aa() {}
+
+
+
+void DSRG_MRPT2::compute_z_aa() {
+    BlockedTensor temp = BTF_->build(CoreTensor, "temporal tensor", {"aa"});
+
+    temp["wz"] = Z_b["wz"];
+
+    temp["wz"] += Z["e1,m1"] * V["m1,w,e1,u"] * Gamma1["uz"];
+    temp["wz"] += Z["E1,M1"] * V["w,M1,u,E1"] * Gamma1["uz"];
+    temp["wz"] += Z["e1,m1"] * V["m1,u,e1,w"] * Gamma1["uz"];
+    temp["wz"] += Z["E1,M1"] * V["u,M1,w,E1"] * Gamma1["uz"];
+    temp["wz"] -= Z["e1,m1"] * V["m1,z,e1,u"] * Gamma1["uw"];
+    temp["wz"] -= Z["E1,M1"] * V["z,M1,u,E1"] * Gamma1["uw"];
+    temp["wz"] -= Z["e1,m1"] * V["m1,u,e1,z"] * Gamma1["uw"];
+    temp["wz"] -= Z["E1,M1"] * V["u,M1,z,E1"] * Gamma1["uw"];
+
+    temp["wz"] += Z["n1,z"] * F["w,n1"];
+    temp["wz"] -= Z["n1,w"] * F["z,n1"];
+
+    temp["wz"] += Z["n1,u"] * V["u,v,n1,w"] * Gamma1["zv"];
+    temp["wz"] += Z["N1,U"] * V["v,U,w,N1"] * Gamma1["zv"];
+    temp["wz"] += Z["n1,u"] * V["u,w,n1,v"] * Gamma1["zv"];
+    temp["wz"] += Z["N1,U"] * V["w,U,v,N1"] * Gamma1["zv"];
+    temp["wz"] -= Z["n1,u"] * V["u,v,n1,z"] * Gamma1["wv"];
+    temp["wz"] -= Z["N1,U"] * V["v,U,z,N1"] * Gamma1["wv"];
+    temp["wz"] -= Z["n1,u"] * V["u,z,n1,v"] * Gamma1["wv"];
+    temp["wz"] -= Z["N1,U"] * V["z,U,v,N1"] * Gamma1["wv"];
+
+
+    for (const std::string& block : {"aa"}) {
+        (Z.block(block)).iterate([&](const std::vector<size_t>& i, double& value) {
+            if (i[0] != i[1]) {   
+                value = temp.block(block).data()[i[0] * ncore_ + i[1]];
+            }
+        });
+    }     
+
+
+}
 
 
 
