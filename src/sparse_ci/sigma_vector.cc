@@ -46,6 +46,13 @@ std::shared_ptr<SigmaVector> make_sigma_vector(DeterminantHashVec& space,
     return sigma_vector;
 }
 
+std::shared_ptr<SigmaVector> make_sigma_vector(const std::vector<Determinant>& space,
+                                               std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
+                                               size_t max_memory, SigmaVectorType sigma_type) {
+    DeterminantHashVec dhv(space);
+    return make_sigma_vector(dhv, fci_ints, max_memory, sigma_type);
+}
+
 SigmaVectorFull::SigmaVectorFull(const DeterminantHashVec& space,
                                  std::shared_ptr<ActiveSpaceIntegrals> fci_ints)
     : SigmaVector(space, fci_ints, SigmaVectorType::Full, "SigmaVectorFull") {}

@@ -69,6 +69,8 @@ void export_ambit(py::module& m);
 void export_ForteIntegrals(py::module& m);
 void export_RDMs(py::module& m);
 void export_StateInfo(py::module& m);
+void export_SigmaVector(py::module& m);
+void export_SparseCISolver(py::module& m);
 
 /// Export the ForteOptions class
 void export_ForteOptions(py::module& m) {
@@ -167,7 +169,7 @@ void export_Determinant(py::module& m) {
         .def("add", &DeterminantHashVec::add, "Add a determinant")
         .def("size", &DeterminantHashVec::size, "Get the size of the vector")
         .def("get_det", &DeterminantHashVec::get_det, "Return a specific determinant by reference")
-        .def("get_idx", &DeterminantHashVec::get_idx, " Return the index of a determinant");    
+        .def("get_idx", &DeterminantHashVec::get_idx, " Return the index of a determinant");
 }
 
 // TODO: export more classes using the function above
@@ -204,7 +206,7 @@ PYBIND11_MODULE(forte, m) {
           "Make an object that holds the molecular orbital integrals for the active orbitals");
     m.def("make_dynamic_correlation_solver", &make_dynamic_correlation_solver,
           "Make a dynamical correlation solver");
-    m.def("perform_spin_analysis", &perform_spin_analysis, "Do spin analysis");    
+    m.def("perform_spin_analysis", &perform_spin_analysis, "Do spin analysis");
     m.def("make_dsrg_method", &make_dsrg_method,
           "Make a DSRG method (spin-integrated implementation)");
     m.def("make_dsrg_so_y", &make_dsrg_so_y, "Make a DSRG pointer (spin-orbital implementation)");
@@ -227,6 +229,9 @@ PYBIND11_MODULE(forte, m) {
     export_RDMs(m);
 
     export_StateInfo(m);
+
+    export_SigmaVector(m);
+    export_SparseCISolver(m);
 
     // export MOSpaceInfo
     py::class_<MOSpaceInfo, std::shared_ptr<MOSpaceInfo>>(m, "MOSpaceInfo")

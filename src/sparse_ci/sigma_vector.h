@@ -98,6 +98,10 @@ std::shared_ptr<SigmaVector> make_sigma_vector(DeterminantHashVec& space,
                                                std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
                                                size_t max_memory, SigmaVectorType sigma_type);
 
+std::shared_ptr<SigmaVector> make_sigma_vector(const std::vector<Determinant>& space,
+                                               std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
+                                               size_t max_memory, SigmaVectorType sigma_type);
+
 } // namespace forte
 
 #endif // _sigma_vector_h_

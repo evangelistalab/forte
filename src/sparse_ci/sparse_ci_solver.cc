@@ -110,6 +110,14 @@ void SparseCISolver::diagonalize_hamiltonian(const DeterminantHashVec& space,
     }
 }
 
+void SparseCISolver::diagonalize_hamiltonian(const std::vector<Determinant>& space,
+                                             std::shared_ptr<SigmaVector> sigma_vector,
+                                             psi::SharedVector& evals, psi::SharedMatrix& evecs,
+                                             int nroot, int multiplicity) {
+    DeterminantHashVec dhv(space);
+    diagonalize_hamiltonian(dhv, sigma_vector, evals, evecs, nroot, multiplicity);
+}
+
 void SparseCISolver::diagonalize_hamiltonian_full(const std::vector<Determinant>& space,
                                                   std::shared_ptr<ActiveSpaceIntegrals> as_ints,
                                                   psi::SharedVector& evals,
@@ -214,8 +222,10 @@ void SparseCISolver::diagonalize_hamiltonian_full(const std::vector<Determinant>
     }
 
     // Fill in results
+    energies_.clear();
     spin_.clear();
     for (int i = 0; i < nroot; ++i) {
+        energies_.push_back(evals->get(i));
         double s2 = 0.0;
         auto c = evecs->get_column(0, i);
         for (size_t I = 0; I < dim_space; ++I) {

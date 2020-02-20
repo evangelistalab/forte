@@ -36,7 +36,8 @@
 
 namespace psi {
 class Matrix;
-}
+class Vector;
+} // namespace psi
 
 namespace forte {
 
@@ -66,16 +67,25 @@ class SparseCISolver {
 
     /// Diagonalize the Hamiltonian
     void diagonalize_hamiltonian(const DeterminantHashVec& space,
-                                 std::shared_ptr<SigmaVector> sigma_vec, psi::SharedVector& evals,
+                                 std::shared_ptr<SigmaVector> sigma_vec,
+                                 std::shared_ptr<psi::Vector>& evals,
+                                 std::shared_ptr<psi::Matrix>& evecs, int nroot, int multiplicity);
+
+    void diagonalize_hamiltonian(const std::vector<Determinant>& space,
+                                 std::shared_ptr<SigmaVector> sigma_vec,
+                                 std::shared_ptr<psi::Vector>& evals,
                                  std::shared_ptr<psi::Matrix>& evecs, int nroot, int multiplicity);
 
     /// Diagonalize the full Hamiltonian
     void diagonalize_hamiltonian_full(const std::vector<Determinant>& space,
                                       std::shared_ptr<ActiveSpaceIntegrals> as_ints,
-                                      psi::SharedVector& evals, std::shared_ptr<psi::Matrix>& evecs, int nroot,
+                                      std::shared_ptr<psi::Vector>& evals,
+                                      std::shared_ptr<psi::Matrix>& evecs, int nroot,
                                       int multiplicity);
 
     std::vector<double> spin() { return spin_; }
+
+    std::vector<double> energy() { return energies_; }
 
     /// Enable/disable the parallel algorithms
     void set_parallel(bool parallel) { parallel_ = parallel; }
@@ -102,8 +112,9 @@ class SparseCISolver {
     void set_maxiter_davidson(int value);
 
     /// Build the full Hamiltonian matrix
-    std::shared_ptr<psi::Matrix> build_full_hamiltonian(const std::vector<Determinant>& space,
-                                             std::shared_ptr<forte::ActiveSpaceIntegrals> as_ints);
+    std::shared_ptr<psi::Matrix>
+    build_full_hamiltonian(const std::vector<Determinant>& space,
+                           std::shared_ptr<forte::ActiveSpaceIntegrals> as_ints);
 
     /// Add roots to project out during Davidson-Liu procedure
     void add_bad_states(std::vector<std::vector<std::pair<size_t, double>>>& roots);
@@ -126,10 +137,11 @@ class SparseCISolver {
 
     bool davidson_liu_solver(const DeterminantHashVec& space,
                              std::shared_ptr<SigmaVector> sigma_vector,
-                             psi::SharedVector Eigenvalues, std::shared_ptr<psi::Matrix> Eigenvectors,
-                             int nroot, int multiplicity);
+                             std::shared_ptr<psi::Vector> Eigenvalues,
+                             std::shared_ptr<psi::Matrix> Eigenvectors, int nroot,
+                             int multiplicity);
 
-    /// The eneergy of each state
+    /// The energy of each state
     std::vector<double> energies_;
     /// The expectation value of S^2 for each state
     std::vector<double> spin_;
