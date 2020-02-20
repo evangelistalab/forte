@@ -26,11 +26,12 @@
  * @END LICENSE
  */
 
+#include <algorithm>
 #include <vector>
 #include <string>
+#include <iostream>
 
 #include "string_algorithms.h"
-
 
 namespace forte {
 
@@ -50,4 +51,13 @@ std::vector<std::string> split_string(const std::string& str, const std::string&
 
     return strings;
 }
+
+void to_upper_string(std::string& s) {
+    for (auto& c : s) {
+        std::cout << " " << c << " ";
+        //        c = ::toupper(c);
+    }
+    //    std::transform(s.begin(), s.end(), s.begin(), ::toupper);
 }
+
+} // namespace forte

@@ -26,11 +26,25 @@
  * @END LICENSE
  */
 
+#include "helpers/string_algorithms.h"
 #include "integrals/active_space_integrals.h"
 #include "sigma_vector_dynamic.h"
 #include "sigma_vector_sparse_list.h"
 
 namespace forte {
+
+SigmaVectorType string_to_sigma_vector_type(std::string type) {
+//    to_upper_string(type);
+    if (type == "FULL") {
+        return SigmaVectorType::Full;
+    } else if (type == "SPARSE") {
+        return SigmaVectorType::SparseList;
+    } else if (type == "DYNAMIC") {
+        return SigmaVectorType::Dynamic;
+    }
+    throw std::runtime_error("string_to_sigma_vector_type() called with incorrect type: " + type);
+    return SigmaVectorType::Dynamic;
+}
 
 std::shared_ptr<SigmaVector> make_sigma_vector(DeterminantHashVec& space,
                                                std::shared_ptr<ActiveSpaceIntegrals> fci_ints,

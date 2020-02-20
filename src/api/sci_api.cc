@@ -61,10 +61,10 @@ void export_SparseCISolver(py::module& m) {
     py::class_<SparseCISolver, std::shared_ptr<SparseCISolver>>(m, "SparseCISolver")
         .def(py::init<>())
         .def("diagonalize_hamiltonian",
-             (void (SparseCISolver::*)(
-                 const std::vector<Determinant>& space, std::shared_ptr<SigmaVector> sigma_vec,
-                 std::shared_ptr<psi::Vector>& evals, std::shared_ptr<psi::Matrix>& evecs,
-                 int nroot, int multiplicity)) &
+             (std::pair<std::shared_ptr<psi::Vector>, std::shared_ptr<psi::Matrix>>(
+                 SparseCISolver::*)(const std::vector<Determinant>& space,
+                                    std::shared_ptr<SigmaVector> sigma_vec, int nroot,
+                                    int multiplicity)) &
                  SparseCISolver::diagonalize_hamiltonian,
              "Diagonalize the Hamiltonian")
         .def("diagonalize_hamiltonian_full", &SparseCISolver::diagonalize_hamiltonian_full,
@@ -72,40 +72,26 @@ void export_SparseCISolver(py::module& m) {
         .def("spin", &SparseCISolver::spin,
              "Return a vector with the average of the S^2 operator for each state")
         .def("energy", &SparseCISolver::energy, "Return a vector with the energy of each state");
-    /*        .def("nmo", &ForteIntegrals::nmo, "Return the total number of moleuclar orbitals")
-            .def("ncmo", &ForteIntegrals::ncmo, "Return the number of correlated orbitals")
-            .def(
-                "oei_a_block",
-                [](ForteIntegrals& ints, const std::vector<size_t>& p, const std::vector<size_t>& q)
-       { return ambit_to_np(ints.oei_a_block(p, q));
-                },
-                "Return the alpha 1e-integrals")
-            .def(
-                "oei_b_block",
-                [](ForteIntegrals& ints, const std::vector<size_t>& p, const std::vector<size_t>& q)
-       { return ambit_to_np(ints.oei_b_block(p, q));
-                },
-                "Return the beta 1e-integrals")
-            .def(
-                "tei_aa_block",
-                [](ForteIntegrals& ints, const std::vector<size_t>& p, const std::vector<size_t>& q,
-                   const std::vector<size_t>& r, const std::vector<size_t>& s) {
-                    return ambit_to_np(ints.aptei_aa_block(p, q, r, s));
-                },
-                "Return the alpha-alpha 2e-integrals in physicists' notation")
-            .def(
-                "tei_ab_block",
-                [](ForteIntegrals& ints, const std::vector<size_t>& p, const std::vector<size_t>& q,
-                   const std::vector<size_t>& r, const std::vector<size_t>& s) {
-                    return ambit_to_np(ints.aptei_ab_block(p, q, r, s));
-                },
-                "Return the alpha-beta 2e-integrals in physicists' notation")
-            .def(
-                "tei_bb_block",
-                [](ForteIntegrals& ints, const std::vector<size_t>& p, const std::vector<size_t>& q,
-                   const std::vector<size_t>& r, const std::vector<size_t>& s) {
-                    return ambit_to_np(ints.aptei_bb_block(p, q, r, s));
-                },
-                "Return the beta-beta 2e-integrals in physicists' notation")*/
+    /// Define a convenient function that diagonalizes the Hamiltonian
+    m.def(
+        "diag",
+        [](const std::vector<Determinant>& dets, std::shared_ptr<ActiveSpaceIntegrals> as_ints,
+           int multiplicity, int nroot, std::string diag_algorithm) {
+//            int multiplicity = 1;
+//            int nroot = 1;
+//            std::string diag_algorithm = "FULL";
+//            //            //                           int multiplicity, int nroot, std::string
+//            //            diag_algorithm
+            SigmaVectorType type = string_to_sigma_vector_type(diag_algorithm);
+            SparseCISolver sparse_solver;
+            auto sigma_vector = make_sigma_vector(dets, as_ints, 10000000, type);
+            size_t ndets = dets.size();
+            auto [evals, evecs] =
+                sparse_solver.diagonalize_hamiltonian(dets, sigma_vector, nroot, multiplicity);
+            std::vector<double> energy = sparse_solver.energy();
+            std::vector<double> spin = sparse_solver.spin();
+            return std::make_tuple(energy, evals, evecs, spin);
+        },
+        "Diagonalize the Hamiltonian in a basis of determinants");
 }
 } // namespace forte

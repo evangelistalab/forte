@@ -27,7 +27,6 @@
  * @END LICENSE
  */
 
-
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/pointgrp.h"
 #include "psi4/physconst.h"
@@ -65,7 +64,7 @@ ASCI::ASCI(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
     : SelectedCIMethod(state, nroot, scf_info, mo_space_info, as_ints), scf_info_(scf_info),
       options_(options) {
     // select the sigma vector type
-    set_sigma_vector(options_->get_str("DIAG_ALGORITHM"));
+    sigma_vector_type_ = string_to_sigma_vector_type(options_->get_str("DIAG_ALGORITHM"));
     mo_symmetry_ = mo_space_info_->symmetry("ACTIVE");
     nuclear_repulsion_energy_ = as_ints->ints()->nuclear_repulsion_energy();
     startup();
@@ -211,8 +210,8 @@ void ASCI::diagonalize_P_space() {
     local_timer diag;
 
     auto sigma_vector = make_sigma_vector(P_space_, as_ints_, max_memory_, sigma_vector_type_);
-    sparse_solver_->diagonalize_hamiltonian(P_space_, sigma_vector, P_evals_, P_evecs_,
-                                           num_ref_roots_, multiplicity_);
+    std::tie(P_evals_, P_evecs_) = sparse_solver_->diagonalize_hamiltonian(
+        P_space_, sigma_vector, num_ref_roots_, multiplicity_);
 
     if (!quiet_mode_)
         outfile->Printf("\n  Time spent diagonalizing H:   %1.6f s", diag.get());
@@ -274,7 +273,7 @@ void ASCI::find_q_space() {
     if (options_->get_str("SCI_EXCITED_ALGORITHM") == "AVERAGE") {
         for (const auto& I : V_hash) {
             double criteria = 0.0;
-            for (int n = 0; n < nroot_; ++n) {
+            for (size_t n = 0; n < nroot_; ++n) {
                 double delta = as_ints_->energy(I.first) - P_evals_->get(n);
                 double V = I.second;
 
@@ -660,8 +659,8 @@ void ASCI::diagonalize_PQ_space() {
     local_timer diag_pq;
 
     auto sigma_vector = make_sigma_vector(PQ_space_, as_ints_, max_memory_, sigma_vector_type_);
-    sparse_solver_->diagonalize_hamiltonian(PQ_space_, sigma_vector, PQ_evals_, PQ_evecs_,
-                                           num_ref_roots_, multiplicity_);
+    std::tie(PQ_evals_, PQ_evecs_) = sparse_solver_->diagonalize_hamiltonian(
+        PQ_space_, sigma_vector, num_ref_roots_, multiplicity_);
 
     if (!quiet_mode_)
         outfile->Printf("\n  Total time spent diagonalizing H:   %1.6f s", diag_pq.get());

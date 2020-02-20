@@ -94,6 +94,8 @@ class SigmaVectorFull : public SigmaVector {
     double compute_spin(const std::vector<double>& c) override { return 0.0; }
 };
 
+SigmaVectorType string_to_sigma_vector_type(std::string type);
+
 std::shared_ptr<SigmaVector> make_sigma_vector(DeterminantHashVec& space,
                                                std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
                                                size_t max_memory, SigmaVectorType sigma_type);

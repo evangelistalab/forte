@@ -63,7 +63,7 @@ AdaptiveCI::AdaptiveCI(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> s
                        std::shared_ptr<ActiveSpaceIntegrals> as_ints)
     : SelectedCIMethod(state, nroot, scf_info, mo_space_info, as_ints), options_(options) {
     // select the sigma vector type
-    set_sigma_vector(options_->get_str("DIAG_ALGORITHM"));
+    //    sigma_vector_type_ = string_to_sigma_vector_type(options_->get_str("DIAG_ALGORITHM"));
     mo_symmetry_ = mo_space_info_->symmetry("ACTIVE");
     sigma_ = options_->get_double("SIGMA");
     nuclear_repulsion_energy_ = as_ints->ints()->nuclear_repulsion_energy();
@@ -672,8 +672,8 @@ void AdaptiveCI::diagonalize_P_space() {
     local_timer diag;
 
     auto sigma_vector = make_sigma_vector(P_space_, as_ints_, max_memory_, sigma_vector_type_);
-    sparse_solver_->diagonalize_hamiltonian(P_space_, sigma_vector, P_evals_, P_evecs_,
-                                            num_ref_roots_, multiplicity_);
+    std::tie(P_evals_, P_evecs_) = sparse_solver_->diagonalize_hamiltonian(
+        P_space_, sigma_vector, num_ref_roots_, multiplicity_);
     auto spin = sparse_solver_->spin();
 
     if (!quiet_mode_)
@@ -723,8 +723,8 @@ void AdaptiveCI::diagonalize_PQ_space() {
     outfile->Printf("\n  Number of reference roots: %d", num_ref_roots_);
 
     auto sigma_vector = make_sigma_vector(PQ_space_, as_ints_, max_memory_, sigma_vector_type_);
-    sparse_solver_->diagonalize_hamiltonian(PQ_space_, sigma_vector, PQ_evals_, PQ_evecs_,
-                                            num_ref_roots_, multiplicity_);
+    std::tie(PQ_evals_, PQ_evecs_) = sparse_solver_->diagonalize_hamiltonian(
+        PQ_space_, sigma_vector, num_ref_roots_, multiplicity_);
 
     if (!quiet_mode_)
         outfile->Printf("\n  Total time spent diagonalizing H:   %1.6f s", diag_pq.get());

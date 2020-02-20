@@ -864,8 +864,8 @@ void ProjectorCI::post_iter_process() {
         sparse_solver_.set_force_diag(false);
 
         auto sigma_vector = make_sigma_vector(det_map, as_ints_, 0, SigmaVectorType::SparseList);
-        sparse_solver_.diagonalize_hamiltonian(det_map, sigma_vector, apfci_evals, apfci_evecs,
-                                               nroot_, wavefunction_multiplicity_);
+        std::tie(apfci_evals, apfci_evecs) = sparse_solver_.diagonalize_hamiltonian(
+            det_map, sigma_vector, nroot_, wavefunction_multiplicity_);
         det_map.swap(dets_hashvec_);
 
         psi::timer_off("PCI:Post_Diag");
@@ -988,8 +988,8 @@ double ProjectorCI::initial_guess(det_hashvec& dets_hashvec, std::vector<double>
 
     DeterminantHashVec det_map(dets_hashvec_);
     auto sigma_vector_diag = make_sigma_vector(det_map, as_ints_, 0, SigmaVectorType::SparseList);
-    sparse_solver_.diagonalize_hamiltonian(det_map, sigma_vector_diag, evals, evecs, nroot_,
-                                           wavefunction_multiplicity_);
+    std::tie(evals, evecs) = sparse_solver_.diagonalize_hamiltonian(
+        det_map, sigma_vector_diag, nroot_, wavefunction_multiplicity_);
 
     double var_energy =
         evals->get(current_root_) + nuclear_repulsion_energy_ + as_ints_->scalar_energy();
@@ -1142,8 +1142,8 @@ void ProjectorCI::propagate_DL(det_hashvec& dets_hashvec, std::vector<double>& C
 
     size_t result_size = sigma_vector->size();
 
-    sparse_solver_.diagonalize_hamiltonian(det_map, sigma_vector, PQ_evals_, PQ_evecs_, nroot_,
-                                           state_.multiplicity());
+    std::tie(PQ_evals_, PQ_evecs_) = sparse_solver_.diagonalize_hamiltonian(
+        det_map, sigma_vector, nroot_, state_.multiplicity());
 
     current_davidson_iter_ = sigma_vector->get_sigma_build_count();
     old_approx_energy_ = approx_energy_;

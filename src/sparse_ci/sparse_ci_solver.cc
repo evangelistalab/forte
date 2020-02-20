@@ -87,46 +87,47 @@ void SparseCISolver::set_initial_guess(std::vector<std::pair<size_t, double>>& g
 
 void SparseCISolver::set_num_vecs(size_t value) { nvec_ = value; }
 
-void SparseCISolver::diagonalize_hamiltonian(const DeterminantHashVec& space,
-                                             std::shared_ptr<SigmaVector> sigma_vector,
-                                             psi::SharedVector& evals, psi::SharedMatrix& evecs,
-                                             int nroot, int multiplicity) {
+std::pair<std::shared_ptr<psi::Vector>, std::shared_ptr<psi::Matrix>>
+SparseCISolver::diagonalize_hamiltonian(const DeterminantHashVec& space,
+                                        std::shared_ptr<SigmaVector> sigma_vector, int nroot,
+                                        int multiplicity) {
     if (print_details_) {
         outfile->Printf("\n\n  Davidson-Liu solver algorithm using %s sigma algorithm",
                         sigma_vector->label().c_str());
     }
-    size_t dim_space = space.size();
-    evecs.reset(new psi::Matrix("U", dim_space, nroot));
-    evals.reset(new Vector("e", nroot));
 
     if ((!force_diag_ and (space.size() <= 200)) or
         sigma_vector->sigma_vector_type() == SigmaVectorType::Full) {
         const std::vector<Determinant> dets = space.determinants();
-        diagonalize_hamiltonian_full(dets, sigma_vector->as_ints(), evals, evecs, nroot,
-                                     multiplicity);
-    } else {
-        sigma_vector->add_bad_roots(bad_states_);
-        davidson_liu_solver(space, sigma_vector, evals, evecs, nroot, multiplicity);
+        return diagonalize_hamiltonian_full(dets, sigma_vector->as_ints(), nroot, multiplicity);
     }
-}
-
-void SparseCISolver::diagonalize_hamiltonian(const std::vector<Determinant>& space,
-                                             std::shared_ptr<SigmaVector> sigma_vector,
-                                             psi::SharedVector& evals, psi::SharedMatrix& evecs,
-                                             int nroot, int multiplicity) {
-    DeterminantHashVec dhv(space);
-    diagonalize_hamiltonian(dhv, sigma_vector, evals, evecs, nroot, multiplicity);
-}
-
-void SparseCISolver::diagonalize_hamiltonian_full(const std::vector<Determinant>& space,
-                                                  std::shared_ptr<ActiveSpaceIntegrals> as_ints,
-                                                  psi::SharedVector& evals,
-                                                  psi::SharedMatrix& evecs, int nroot,
-                                                  int multiplicity) {
 
     size_t dim_space = space.size();
-    evecs.reset(new psi::Matrix("U", dim_space, nroot));
-    evals.reset(new Vector("e", nroot));
+    auto evecs = std::make_shared<psi::Matrix>("U", dim_space, nroot);
+    auto evals = std::make_shared<psi::Vector>("e", nroot);
+
+    sigma_vector->add_bad_roots(bad_states_);
+    davidson_liu_solver(space, sigma_vector, evals, evecs, nroot, multiplicity);
+
+    return std::make_tuple(evals, evecs);
+}
+
+std::pair<std::shared_ptr<psi::Vector>, std::shared_ptr<psi::Matrix>>
+SparseCISolver::diagonalize_hamiltonian(const std::vector<Determinant>& space,
+                                        std::shared_ptr<SigmaVector> sigma_vector, int nroot,
+                                        int multiplicity) {
+    DeterminantHashVec dhv(space);
+    return diagonalize_hamiltonian(dhv, sigma_vector, nroot, multiplicity);
+}
+
+std::pair<std::shared_ptr<psi::Vector>, std::shared_ptr<psi::Matrix>>
+SparseCISolver::diagonalize_hamiltonian_full(const std::vector<Determinant>& space,
+                                             std::shared_ptr<ActiveSpaceIntegrals> as_ints,
+                                             int nroot, int multiplicity) {
+
+    size_t dim_space = space.size();
+    auto evecs = std::make_shared<psi::Matrix>("U", dim_space, nroot);
+    auto evals = std::make_shared<psi::Vector>("e", nroot);
 
     if (spin_project_full_) {
         // Diagonalize S^2 matrix
@@ -235,6 +236,7 @@ void SparseCISolver::diagonalize_hamiltonian_full(const std::vector<Determinant>
         }
         spin_.push_back(s2);
     }
+    return std::make_pair(evals, evecs);
 }
 
 psi::SharedMatrix

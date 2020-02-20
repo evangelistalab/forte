@@ -101,7 +101,6 @@ class SelectedCIMethod {
     void print_wfn(DeterminantHashVec& space, psi::SharedMatrix evecs, int nroot,
                    size_t max_dets_to_print = 10);
 
-    void set_sigma_vector(std::string type);
     SigmaVectorType sigma_vector_type() const;
     /// Return the maximum amount of memory allowed
     size_t max_memory() const;

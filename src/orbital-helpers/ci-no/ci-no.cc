@@ -293,7 +293,6 @@ std::vector<Determinant> CINO::build_dets(int irrep) {
 /// Diagonalize the Hamiltonian in this basis
 std::pair<psi::SharedVector, psi::SharedMatrix>
 CINO::diagonalize_hamiltonian(const std::vector<Determinant>& dets, int nsolutions) {
-    std::pair<psi::SharedVector, psi::SharedMatrix> evals_evecs;
 
     SparseCISolver sparse_solver;
     sparse_solver.set_parallel(true);
@@ -307,9 +306,8 @@ CINO::diagonalize_hamiltonian(const std::vector<Determinant>& dets, int nsolutio
     // Here we use the SparseList algorithm to diagonalize the Hamiltonian
     DeterminantHashVec detmap(dets);
     auto sigma_vector = make_sigma_vector(detmap, fci_ints_, 0, SigmaVectorType::SparseList);
-    sparse_solver.diagonalize_hamiltonian(detmap, sigma_vector, evals_evecs.first,
-                                          evals_evecs.second, nsolutions,
-                                          wavefunction_multiplicity_);
+    auto evals_evecs = sparse_solver.diagonalize_hamiltonian(detmap, sigma_vector, nsolutions,
+                                                             wavefunction_multiplicity_);
 
     outfile->Printf("\n\n    STATE      CI ENERGY");
     outfile->Printf("\n  ----------------------------");

@@ -66,22 +66,19 @@ class SparseCISolver {
     SparseCISolver();
 
     /// Diagonalize the Hamiltonian
-    void diagonalize_hamiltonian(const DeterminantHashVec& space,
-                                 std::shared_ptr<SigmaVector> sigma_vec,
-                                 std::shared_ptr<psi::Vector>& evals,
-                                 std::shared_ptr<psi::Matrix>& evecs, int nroot, int multiplicity);
+    std::pair<std::shared_ptr<psi::Vector>, std::shared_ptr<psi::Matrix>>
+    diagonalize_hamiltonian(const DeterminantHashVec& space, std::shared_ptr<SigmaVector> sigma_vec,
+                            int nroot, int multiplicity);
 
-    void diagonalize_hamiltonian(const std::vector<Determinant>& space,
-                                 std::shared_ptr<SigmaVector> sigma_vec,
-                                 std::shared_ptr<psi::Vector>& evals,
-                                 std::shared_ptr<psi::Matrix>& evecs, int nroot, int multiplicity);
+    std::pair<std::shared_ptr<psi::Vector>, std::shared_ptr<psi::Matrix>>
+    diagonalize_hamiltonian(const std::vector<Determinant>& space,
+                            std::shared_ptr<SigmaVector> sigma_vec, int nroot, int multiplicity);
 
     /// Diagonalize the full Hamiltonian
-    void diagonalize_hamiltonian_full(const std::vector<Determinant>& space,
-                                      std::shared_ptr<ActiveSpaceIntegrals> as_ints,
-                                      std::shared_ptr<psi::Vector>& evals,
-                                      std::shared_ptr<psi::Matrix>& evecs, int nroot,
-                                      int multiplicity);
+    std::pair<std::shared_ptr<psi::Vector>, std::shared_ptr<psi::Matrix>>
+    diagonalize_hamiltonian_full(const std::vector<Determinant>& space,
+                                 std::shared_ptr<ActiveSpaceIntegrals> as_ints, int nroot,
+                                 int multiplicity);
 
     std::vector<double> spin() { return spin_; }
 

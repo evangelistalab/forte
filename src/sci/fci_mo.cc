@@ -924,7 +924,8 @@ void FCI_MO::Diagonalize_H(const vecdet& p_space, const int& multi, const int& n
 
     // Here we use the SparseList algorithm to diagonalize the Hamiltonian
     auto sigma_vector = make_sigma_vector(detmap, as_ints_, 0, SigmaVectorType::SparseList);
-    sparse_solver.diagonalize_hamiltonian(detmap, sigma_vector, evals, evecs, nroot, multi);
+    std::tie(evals, evecs) =
+        sparse_solver.diagonalize_hamiltonian(detmap, sigma_vector, nroot, multi);
 
     // fill in eigen (spin is purified in DL solver)
     double energy_offset = fci_ints_->scalar_energy() + e_nuc_;

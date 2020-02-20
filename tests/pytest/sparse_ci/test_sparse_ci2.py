@@ -10,16 +10,16 @@ def test_sparse_ci():
     import pytest
     from forte import forte_options
 
-    ref_fci = -1.101150330132956
+    ref_fci = -5.623851783330647
 
     psi4.core.clean()
 
     h2o = psi4.geometry("""
-     H
-     H 1 1.0
+     He
+     He 1 1.0
     """)
 
-    psi4.set_options({'basis': 'sto-3g'})
+    psi4.set_options({'basis': 'cc-pVDZ'})
     E_scf, wfn = psi4.energy('scf', return_wfn=True)
     na = wfn.nalpha()
     nb = wfn.nbeta()
@@ -37,7 +37,6 @@ def test_sparse_ci():
     mo_space_info = forte.make_mo_space_info(wfn, forte_options)
     ints = forte.make_forte_integrals(wfn, options, mo_space_info)
     as_ints = forte.make_active_space_ints(mo_space_info, ints, 'ACTIVE', ['RESTRICTED_DOCC'])
-    as_ints.print()
 
     print('\n\n  => Sparse FCI Test <=')
     print('  Number of irreps: {}'.format(nirrep))
@@ -55,7 +54,7 @@ def test_sparse_ci():
     hf_reference = forte.Determinant()
     hf_reference.create_alfa_bit(0)
     hf_reference.create_beta_bit(0)
-    print('  Hartree-Fock determinant: {}'.format(hf_reference.str(2)))
+    print('  Hartree-Fock determinant: {}'.format(hf_reference.str(10)))
 
     # Compute the HF energy
     hf_energy = as_ints.nuclear_repulsion_energy() + as_ints.slater_rules(hf_reference,hf_reference)
@@ -79,31 +78,16 @@ def test_sparse_ci():
                 dets.append(d)
                 print('  Determinant {} has symmetry {}'.format(d.str(nmo),sym))
 
-    sigma_vector = forte.make_sigma_vector(dets,as_ints,0,forte.SigmaVectorType.Full)
-    sparse_solver = forte.SparseCISolver()
-    nfci = len(dets)
-    evals = psi4.core.Vector(1)
-    evecs = psi4.core.Matrix(nfci,1)
-    sparse_solver.diagonalize_hamiltonian(dets,sigma_vector,evals, evecs, 1, 1)
-    energies = sparse_solver.energy()
-    efci = energies[0] + as_ints.nuclear_repulsion_energy()
-#    # Build the Hamiltonian matrix using 'slater_rules'
-#    nfci = len(dets)
-#    H = np.ndarray((nfci,nfci))
-#    for I in range(nfci):
-#        # off-diagonal terms
-#        for J in range(I + 1, nfci):
-#            HIJ = as_ints.slater_rules(dets[I],dets[J])
-#            H[I][J] = H[J][I] = HIJ
-#        # diagonal term
-#        H[I][I] = as_ints.nuclear_repulsion_energy() + as_ints.slater_rules(dets[I],dets[I])
 
-#    # Find the lowest eigenvalue
-#    efci = np.linalg.eigh(H)[0][0]
+    print(f'\n  Size of the derminant basis: {len(dets)}')
+
+    energy, evals, evecs, spin = forte.diag(dets,as_ints,1,1,"FULL")
+
+    efci = energy[0] + as_ints.nuclear_repulsion_energy()
 
     print('\n  FCI Energy: {}\n'.format(efci))
 
-    assert efci == pytest.approx(ref_fci, 1.0e-9)
+    assert efci == pytest.approx(ref_fci, abs=1e-9)
 
     # Clean up forte (necessary)
     forte.cleanup()

@@ -217,7 +217,8 @@ double ExcitedStateSolver::compute_energy() {
         PQ_evals = energies;
     }
 
-    std::shared_ptr<DeterminantSubstitutionLists> op_c = std::make_shared<DeterminantSubstitutionLists>(as_ints_);
+    std::shared_ptr<DeterminantSubstitutionLists> op_c =
+        std::make_shared<DeterminantSubstitutionLists>(as_ints_);
 
     if (ex_alg_ == "ROOT_COMBINE") {
         psi::outfile->Printf("\n\n  ==> Diagonalizing Final Space <==");
@@ -233,8 +234,8 @@ double ExcitedStateSolver::compute_energy() {
 
         auto sigma_type = sci_->sigma_vector_type();
         auto sigma_vector = make_sigma_vector(full_space, as_ints_, max_memory, sigma_type);
-        sparse_solver_->diagonalize_hamiltonian(full_space, sigma_vector, PQ_evals, PQ_evecs,
-                                                nroot_, state_.multiplicity());
+        std::tie(PQ_evals, PQ_evecs) = sparse_solver_->diagonalize_hamiltonian(
+            full_space, sigma_vector, nroot_, state_.multiplicity());
     }
 
     if (ex_alg_ == "MULTISTATE") {
@@ -474,9 +475,10 @@ void ExcitedStateSolver::wfn_to_file(DeterminantHashVec& det_space, psi::SharedM
 //    return spin_vec;
 //}
 
-double ExcitedStateSolver::compute_spin_contamination(DeterminantHashVec& space,
-                                                      std::shared_ptr<DeterminantSubstitutionLists> op,
-                                                      psi::SharedMatrix evecs, int nroot) {
+double
+ExcitedStateSolver::compute_spin_contamination(DeterminantHashVec& space,
+                                               std::shared_ptr<DeterminantSubstitutionLists> op,
+                                               psi::SharedMatrix evecs, int nroot) {
     auto spin = sparse_solver_->spin(); /*compute_spin(space, op, evecs, nroot);*/
     double spin_contam = 0.0;
     for (int n = 0; n < nroot; ++n) {
