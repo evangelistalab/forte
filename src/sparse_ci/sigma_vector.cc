@@ -26,6 +26,8 @@
  * @END LICENSE
  */
 
+#include <vector>
+
 #include "helpers/string_algorithms.h"
 #include "integrals/active_space_integrals.h"
 #include "sigma_vector_dynamic.h"
@@ -34,7 +36,7 @@
 namespace forte {
 
 SigmaVectorType string_to_sigma_vector_type(std::string type) {
-//    to_upper_string(type);
+    //    to_upper_string(type);
     if (type == "FULL") {
         return SigmaVectorType::Full;
     } else if (type == "SPARSE") {
