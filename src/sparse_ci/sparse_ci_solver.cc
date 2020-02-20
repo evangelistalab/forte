@@ -109,7 +109,7 @@ SparseCISolver::diagonalize_hamiltonian(const DeterminantHashVec& space,
     sigma_vector->add_bad_roots(bad_states_);
     davidson_liu_solver(space, sigma_vector, evals, evecs, nroot, multiplicity);
 
-    return std::make_tuple(evals, evecs);
+    return std::make_pair(evals, evecs);
 }
 
 std::pair<std::shared_ptr<psi::Vector>, std::shared_ptr<psi::Matrix>>
