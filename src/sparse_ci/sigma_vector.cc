@@ -26,8 +26,6 @@
  * @END LICENSE
  */
 
-#include <vector>
-
 #include "helpers/string_algorithms.h"
 #include "integrals/active_space_integrals.h"
 #include "sigma_vector_dynamic.h"

@@ -30,6 +30,7 @@
 #define _string_algorithms_h_
 
 #include <string>
+#include <vector>
 
 namespace forte {
 
