@@ -60,7 +60,7 @@ std::string dimension_to_string(psi::Dimension dim) {
 
 CINO::CINO(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
            std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : OrbitalTransform(ints, mo_space_info), options_(options), mo_space_info_(mo_space_info) {
+    : OrbitalTransform(ints, mo_space_info), options_(options) {
     fci_ints_ = std::make_shared<ActiveSpaceIntegrals>(
         ints, mo_space_info_->corr_absolute_mo("ACTIVE"), mo_space_info_->symmetry("ACTIVE"),
         mo_space_info_->corr_absolute_mo("RESTRICTED_DOCC"));

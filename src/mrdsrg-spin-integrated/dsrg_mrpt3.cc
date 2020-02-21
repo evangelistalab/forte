@@ -447,9 +447,9 @@ double DSRG_MRPT3::compute_energy() {
     // compute DSRG dipole integrals part 1
     if (do_dm_) {
         print_h2("Computing 3rd-Order Dipole Moment Contribution (1/2)");
-        Mbar0_ = {dm_ref_[0], dm_ref_[1], dm_ref_[2]};
-        Mbar0_pt2_ = {dm_ref_[0], dm_ref_[1], dm_ref_[2]};
-        Mbar0_pt2c_ = {dm_ref_[0], dm_ref_[1], dm_ref_[2]};
+        Mbar0_ = {{dm_ref_[0], dm_ref_[1], dm_ref_[2]}};
+        Mbar0_pt2_ = {{dm_ref_[0], dm_ref_[1], dm_ref_[2]}};
+        Mbar0_pt2c_ = {{dm_ref_[0], dm_ref_[1], dm_ref_[2]}};
         for (int i = 0; i < 3; ++i) {
             local_timer timer;
             std::string name = "Computing direction " + dm_dirs_[i];

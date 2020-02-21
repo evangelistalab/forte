@@ -77,15 +77,9 @@ void export_SparseCISolver(py::module& m) {
         "diag",
         [](const std::vector<Determinant>& dets, std::shared_ptr<ActiveSpaceIntegrals> as_ints,
            int multiplicity, int nroot, std::string diag_algorithm) {
-//            int multiplicity = 1;
-//            int nroot = 1;
-//            std::string diag_algorithm = "FULL";
-//            //            //                           int multiplicity, int nroot, std::string
-//            //            diag_algorithm
             SigmaVectorType type = string_to_sigma_vector_type(diag_algorithm);
             SparseCISolver sparse_solver;
             auto sigma_vector = make_sigma_vector(dets, as_ints, 10000000, type);
-            size_t ndets = dets.size();
             auto [evals, evecs] =
                 sparse_solver.diagonalize_hamiltonian(dets, sigma_vector, nroot, multiplicity);
             std::vector<double> energy = sparse_solver.energy();

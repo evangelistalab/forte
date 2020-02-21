@@ -91,7 +91,7 @@ class SigmaVectorFull : public SigmaVector {
     // void compute_sigma(Matrix& sigma, Matrix& b, int nroot);
     void get_diagonal(psi::Vector& diag) override;
     void add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& bad_states_) override;
-    double compute_spin(const std::vector<double>& c) override { return 0.0; }
+    double compute_spin(const std::vector<double>&) override { return 0.0; }
 };
 
 SigmaVectorType string_to_sigma_vector_type(std::string type);
