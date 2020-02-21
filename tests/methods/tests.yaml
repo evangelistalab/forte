@@ -89,12 +89,8 @@ cd-dsrg-mrpt2:
    - cd-dsrg-mrpt2-7-sa
 diag-alg:
   short:
-   - diag-alg-1-dlstring
-   - diag-alg-2-dlstring
    - diag-alg-1-dynamic
    - diag-alg-2-dynamic
-   - diag-alg-1-solver
-   - diag-alg-2-solver
    - diag-alg-1-sparse
    - diag-alg-2-sparse
   long:
