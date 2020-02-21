@@ -203,25 +203,6 @@ void AdaptiveCI::set_method_variables(
     old_roots_ = old_roots;
 }
 
-void AdaptiveCI::unpaired_density(psi::SharedMatrix Ua, psi::SharedMatrix Ub) {
-    //    UPDensity density(as_ints_->ints(), mo_space_info_, options_, Ua, Ub);
-    //    density.compute_unpaired_density(ordm_a_, ordm_b_);
-}
-void AdaptiveCI::unpaired_density(ambit::Tensor Ua, ambit::Tensor Ub) {
-    //
-    //    Matrix am = tensor_to_matrix(Ua, nactpi_);
-    //    Matrix bm = tensor_to_matrix(Ub, nactpi_);
-    //
-    //    psi::SharedMatrix Uam(new psi::Matrix(nactpi_, nactpi_));
-    //    psi::SharedMatrix Ubm(new psi::Matrix(nactpi_, nactpi_));
-    //
-    //    Uam->copy(am);
-    //    Ubm->copy(bm);
-    //
-    //    UPDensity density(as_ints_->ints(), mo_space_info_, options_, Uam, Ubm);
-    //    density.compute_unpaired_density(ordm_a_, ordm_b_);
-}
-
 void AdaptiveCI::find_q_space() {
     local_timer build_space;
 
@@ -629,7 +610,6 @@ void AdaptiveCI::pre_iter_preparation() {
     sparse_solver_->set_r_convergence(options_->get_double("R_CONVERGENCE"));
     sparse_solver_->set_maxiter_davidson(options_->get_int("DL_MAXITER"));
     sparse_solver_->set_spin_project(project_out_spin_contaminants_);
-    //    sparse_solver.set_spin_project_full(project_out_spin_contaminants_);
     sparse_solver_->set_guess_dimension(options_->get_int("DL_GUESS_SIZE"));
     sparse_solver_->set_num_vecs(options_->get_int("N_GUESS_VEC"));
     sparse_solver_->set_spin_project_full(false);

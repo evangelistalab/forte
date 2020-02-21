@@ -115,9 +115,6 @@ class AdaptiveCI : public SelectedCIMethod {
     // Update sigma
     void update_sigma();
 
-    void unpaired_density(psi::SharedMatrix Ua, psi::SharedMatrix Ub);
-    void unpaired_density(ambit::Tensor Ua, ambit::Tensor Ub);
-
   private:
     // Temporarily added
     psi::SharedMatrix P_evecs_;
