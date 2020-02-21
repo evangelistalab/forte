@@ -68,11 +68,6 @@ void replace_free(void* ptr) { free(ptr); }
 #endif
 
 /**
- * @brief Read options from the input file. Called by psi4 before everything else.
- */
-void read_options(ForteOptions& options) { forte_options(options); }
-
-/**
  * @brief Initialize ambit, MPI, and GA. All functions that need to be called
  * once before running forte should go here.
  * @return The pair (my_proc,n_nodes)

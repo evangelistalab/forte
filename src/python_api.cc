@@ -175,7 +175,6 @@ void export_Determinant(py::module& m) {
 // TODO: export more classes using the function above
 PYBIND11_MODULE(forte, m) {
     m.doc() = "pybind11 Forte module"; // module docstring
-    m.def("read_options", &read_options, "Read Forte options");
     m.def("startup", &startup);
     m.def("cleanup", &cleanup);
     m.def("banner", &banner, "Print forte banner");
