@@ -1312,7 +1312,7 @@ void DSRG_MRPT2::compute_z_cv() {
 
     for (const std::string& block : {"vc"}) {
         (Z.block(block)).iterate([&](const std::vector<size_t>& i, double& value) {
-            value = temp.block(block).data()[i[0] * ncore_ + i[1]]/ dnt.block(block).data()[i[0] * ncore_ + i[1]];
+            value = temp.block(block).data()[i[0] * ncore_ + i[1]] / dnt.block(block).data()[i[0] * ncore_ + i[1]];
         });
     } 
 
@@ -1369,15 +1369,82 @@ void DSRG_MRPT2::compute_z_aa() {
     temp["wz"] -= Z["n1,u"] * V["u,z,n1,v"] * Gamma1["wv"];
     temp["wz"] -= Z["N1,U"] * V["z,U,v,N1"] * Gamma1["wv"];
 
+    temp["wz"] -= Z["n1,u"] * H["w,n1"] * Gamma1["uz"];
+    temp["wz"] -= Z["n1,u"] * V["w,m1,n1,m"] * Gamma1["uz"] * I["m1,m"];
+    temp["wz"] -= Z["n1,u"] * V["w,M1,n1,M"] * Gamma1["uz"] * I["M1,M"];
+    temp["wz"] -= 0.5 * Z["n1,u"] * V["x,y,n1,w"] * Gamma2["u,z,x,y"];
+    temp["wz"] -= Z["N1,U"] * V["y,X,w,N1"] * Gamma2["z,U,y,X"];
+    temp["wz"] -= Z["n1,u"] * V["w,y,n1,v"] * Gamma2["u,v,z,y"];
+    temp["wz"] -= 2.0 * Z["n1,u"] * V["w,Y,n1,V"] * Gamma2["u,V,z,Y"];
+
+    temp["wz"] += Z["e1,u"] * H["w,e1"] * Gamma1["uz"];
+    temp["wz"] += Z["e1,u"] * V["w,m1,e1,m"] * Gamma1["uz"] * I["m1,m"];
+    temp["wz"] += Z["e1,u"] * V["w,M1,e1,M"] * Gamma1["uz"] * I["M1,M"];
+    temp["wz"] += 0.5 * Z["e1,u"] * V["x,y,e1,w"] * Gamma2["u,z,x,y"];
+    temp["wz"] += Z["E1,U"] * V["y,X,w,E1"] * Gamma2["z,U,y,X"];
+    temp["wz"] += Z["e1,u"] * V["w,y,e1,v"] * Gamma2["u,v,z,y"];
+    temp["wz"] += 2.0 * Z["e1,u"] * V["w,Y,e1,V"] * Gamma2["u,V,z,Y"];
+
+    temp["wz"] += Z["n1,u"] * H["z,n1"] * Gamma1["uw"];
+    temp["wz"] += Z["n1,u"] * V["z,m1,n1,m"] * Gamma1["uw"] * I["m1,m"];
+    temp["wz"] += Z["n1,u"] * V["z,M1,n1,M"] * Gamma1["uw"] * I["M1,M"];
+    temp["wz"] += 0.5 * Z["n1,u"] * V["x,y,n1,z"] * Gamma2["u,w,x,y"];
+    temp["wz"] += Z["N1,U"] * V["y,X,z,N1"] * Gamma2["w,U,y,X"];
+    temp["wz"] += Z["n1,u"] * V["z,y,n1,v"] * Gamma2["u,v,w,y"];
+    temp["wz"] += 2.0 * Z["n1,u"] * V["z,Y,n1,V"] * Gamma2["u,V,w,Y"];
+
+    temp["wz"] -= Z["e1,u"] * H["z,e1"] * Gamma1["uw"];
+    temp["wz"] -= Z["e1,u"] * V["z,m1,e1,m"] * Gamma1["uw"] * I["m1,m"];
+    temp["wz"] -= Z["e1,u"] * V["z,M1,e1,M"] * Gamma1["uw"] * I["M1,M"];
+    temp["wz"] -= 0.5 * Z["e1,u"] * V["x,y,e1,z"] * Gamma2["u,w,x,y"];
+    temp["wz"] -= Z["E1,U"] * V["y,X,z,E1"] * Gamma2["w,U,y,X"];
+    temp["wz"] -= Z["e1,u"] * V["z,y,e1,v"] * Gamma2["u,v,w,y"];
+    temp["wz"] -= 2.0 * Z["e1,u"] * V["z,Y,e1,V"] * Gamma2["u,V,w,Y"];
+
+    temp["wz"] += Z["u1,v1"] * V["v1,v,u1,w"] * Gamma1["zv"];
+    temp["wz"] += Z["U1,V1"] * V["v,V1,w,U1"] * Gamma1["zv"];
+
+    temp["wz"] -= Z["u1,v1"] * V["v1,v,u1,z"] * Gamma1["wv"];
+    temp["wz"] -= Z["U1,V1"] * V["v,V1,z,U1"] * Gamma1["wv"];
+
+    // move to the left side
+    temp["wz"] -= Z["zw"] * V["w,v,z,u1"] * I["w,u1"] * Gamma1["zv"];
+    temp["wz"] -= Z["zw"] * V["z,v,w,u1"] * I["w,u1"] * Gamma1["zv"];
+    temp["wz"] += Z["zw"] * V["w,v,z,u1"] * I["z,u1"] * Gamma1["wv"];
+    temp["wz"] += Z["zw"] * V["z,v,w,u1"] * I["z,u1"] * Gamma1["wv"];
+
+    // Denominator
+    BlockedTensor dnt = BTF_->build(CoreTensor, "temporal denominator", {"aa"});
+    dnt["wz"] = Delta1["zw"];
+    dnt["wz"] -= V["w,v,z,u1"] * I["w,u1"] * Gamma1["zv"];
+    dnt["wz"] -= V["z,v,w,u1"] * I["w,u1"] * Gamma1["zv"];
+    dnt["wz"] += V["w,v,z,u1"] * I["z,u1"] * Gamma1["wv"];
+    dnt["wz"] += V["z,v,w,u1"] * I["z,u1"] * Gamma1["wv"];
+
 
     for (const std::string& block : {"aa"}) {
         (Z.block(block)).iterate([&](const std::vector<size_t>& i, double& value) {
-            if (i[0] != i[1]) {   
-                value = temp.block(block).data()[i[0] * ncore_ + i[1]];
+            if (i[0] != i[1]) {
+                double val = temp.block(block).data()[i[0] * na_ + i[1]];
+                if (fabs(val) < 1e-7) {
+                    value = 0.0;
+                }
+                else{       
+                    value = temp.block(block).data()[i[0] * na_ + i[1]] / dnt.block(block).data()[i[0] * na_ + i[1]];
+                }
             }
         });
     }     
 
+    // Beta part
+    for (const std::string& block : {"AA"}) {
+        (Z.block(block)).iterate([&](const std::vector<size_t>& i, double& value) {
+            if (i[0] != i[1]) {
+                value = Z.block("aa").data()[i[0] * na_ + i[1]];
+            }
+        });
+    } 
+   
 
 }
 
