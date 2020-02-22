@@ -34,10 +34,14 @@
 #include <sstream>
 #include <string>
 
+#include "psi4/libmints/basisset.h"
 #include "psi4/libmints/vector.h"
 #include "psi4/libmints/dipole.h"
 #include "psi4/libmints/oeprop.h"
+#include "psi4/libmints/integral.h"
 #include "psi4/libmints/petitelist.h"
+#include "psi4/libmints/molecule.h"
+#include "psi4/libpsio/psio.hpp"
 
 #include "sparse_ci/determinant_hashvector.h"
 #include "fci/fci_vector.h"
@@ -45,7 +49,8 @@
 #include "base_classes/forte_options.h"
 #include "base_classes/scf_info.h"
 #include "boost/algorithm/string/predicate.hpp"
-#include "sparse_ci/operator.h"
+#include "sparse_ci/determinant_substitution_lists.h"
+#include "sparse_ci/sigma_vector.h"
 #include "orbital-helpers/semi_canonicalize.h"
 #include "orbital-helpers/iao_builder.h"
 #include "helpers/printing.h"
@@ -71,6 +76,7 @@ FCI_MO::FCI_MO(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
     } else {
         fci_ints_ = std::make_shared<ActiveSpaceIntegrals>(
             integral_, mo_space_info_->corr_absolute_mo("ACTIVE"),
+            mo_space_info_->symmetry("ACTIVE"),
             mo_space_info_->corr_absolute_mo("RESTRICTED_DOCC"));
         ambit::Tensor tei_active_aa =
             integral_->aptei_aa_block(actv_mos_, actv_mos_, actv_mos_, actv_mos_);
@@ -94,9 +100,9 @@ FCI_MO::FCI_MO(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> 
     startup();
 
     // setup integrals
-    fci_ints_ =
-        std::make_shared<ActiveSpaceIntegrals>(integral_, mo_space_info_->corr_absolute_mo("ACTIVE"),
-                                               mo_space_info_->corr_absolute_mo("RESTRICTED_DOCC"));
+    fci_ints_ = std::make_shared<ActiveSpaceIntegrals>(
+        integral_, mo_space_info_->corr_absolute_mo("ACTIVE"), mo_space_info_->symmetry("ACTIVE"),
+        mo_space_info_->corr_absolute_mo("RESTRICTED_DOCC"));
     ambit::Tensor tei_active_aa =
         integral_->aptei_aa_block(actv_mos_, actv_mos_, actv_mos_, actv_mos_);
     ambit::Tensor tei_active_ab =
@@ -123,6 +129,7 @@ FCI_MO::FCI_MO(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> 
     } else {
         fci_ints_ = std::make_shared<ActiveSpaceIntegrals>(
             integral_, mo_space_info_->corr_absolute_mo("ACTIVE"),
+            mo_space_info_->symmetry("ACTIVE"),
             mo_space_info_->corr_absolute_mo("RESTRICTED_DOCC"));
         ambit::Tensor tei_active_aa =
             integral_->aptei_aa_block(actv_mos_, actv_mos_, actv_mos_, actv_mos_);
@@ -889,15 +896,12 @@ void FCI_MO::Diagonalize_H(const vecdet& p_space, const int& multi, const int& n
     eigen.clear();
 
     // DL solver
-    SparseCISolver sparse_solver(fci_ints_);
-    DiagonalizationMethod diag_method = DLSolver;
-    std::string sigma_method = options_->get_str("SIGMA_BUILD_TYPE");
+    SparseCISolver sparse_solver;
     sparse_solver.set_e_convergence(econv_);
     sparse_solver.set_r_convergence(rconv_);
     sparse_solver.set_spin_project(true);
     sparse_solver.set_maxiter_davidson(options_->get_int("DL_MAXITER"));
     sparse_solver.set_guess_dimension(options_->get_int("DL_GUESS_SIZE"));
-    sparse_solver.set_sigma_method(sigma_method);
     if (projected_roots_.size() != 0) {
         sparse_solver.set_root_project(true);
         sparse_solver.add_bad_states(projected_roots_);
@@ -915,28 +919,13 @@ void FCI_MO::Diagonalize_H(const vecdet& p_space, const int& multi, const int& n
     psi::SharedMatrix evecs;
     psi::SharedVector evals;
 
-    // diagnoalize the Hamiltonian
-    if (det_size <= 200) {
-        // full Hamiltonian if detsize <= 200
-        diag_method = Full;
-        sparse_solver.diagonalize_hamiltonian(p_space, evals, evecs, nroot, multi, diag_method);
-    } else {
-        // use determinant map
-        DeterminantHashVec detmap(p_space);
-        auto act_mo = mo_space_info_->symmetry("ACTIVE");
-        WFNOperator op(act_mo, fci_ints_);
-        op.build_strings(detmap);
-        if (sigma_method == "HZ") {
-            op.op_lists(detmap);
-            op.tp_lists(detmap);
-        } else {
-            op.op_s_lists(detmap);
-            op.tp_s_lists(detmap);
-        }
+    // use determinant map
+    DeterminantHashVec detmap(p_space);
 
-        sparse_solver.diagonalize_hamiltonian_map(detmap, op, evals, evecs, nroot, multi,
-                                                  diag_method);
-    }
+    // Here we use the SparseList algorithm to diagonalize the Hamiltonian
+    auto sigma_vector = make_sigma_vector(detmap, as_ints_, 0, SigmaVectorType::SparseList);
+    std::tie(evals, evecs) =
+        sparse_solver.diagonalize_hamiltonian(detmap, sigma_vector, nroot, multi);
 
     // fill in eigen (spin is purified in DL solver)
     double energy_offset = fci_ints_->scalar_energy() + e_nuc_;

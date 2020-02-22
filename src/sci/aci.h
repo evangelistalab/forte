@@ -32,32 +32,9 @@
 #include <fstream>
 #include <iomanip>
 
-#include "psi4/libmints/wavefunction.h"
-#include "psi4/liboptions/liboptions.h"
-#include "psi4/physconst.h"
-
 #include "sci/sci.h"
-#include "base_classes/forte_options.h"
-#include "ci_rdm/ci_rdms.h"
-#include "sparse_ci/ci_reference.h"
-#include "integrals/active_space_integrals.h"
-#include "mrpt2.h"
-#include "orbital-helpers/unpaired_density.h"
-#include "sparse_ci/determinant_hashvector.h"
 #include "sparse_ci/sparse_ci_solver.h"
-#include "sparse_ci/determinant.h"
-#include "orbital-helpers/iao_builder.h"
-#include "orbital-helpers/localize.h"
 #include "helpers/timer.h"
-#include "base_classes/active_space_method.h"
-
-#ifdef _OPENMP
-#include <omp.h>
-#else
-#define omp_get_max_threads() 1
-#define omp_get_thread_num() 0
-#define omp_get_num_threads() 1
-#endif
 
 using d1 = std::vector<double>;
 using d2 = std::vector<d1>;
@@ -82,9 +59,8 @@ class AdaptiveCI : public SelectedCIMethod {
      * @param mo_space_info A pointer to the MOSpaceInfo object
      */
     AdaptiveCI(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
-                   std::shared_ptr<ForteOptions> options,
-                   std::shared_ptr<MOSpaceInfo> mo_space_info,
-                   std::shared_ptr<ActiveSpaceIntegrals> as_ints);
+               std::shared_ptr<ForteOptions> options, std::shared_ptr<MOSpaceInfo> mo_space_info,
+               std::shared_ptr<ActiveSpaceIntegrals> as_ints);
 
     // ==> Class Interface <==
 
@@ -121,7 +97,7 @@ class AdaptiveCI : public SelectedCIMethod {
     DeterminantHashVec get_PQ_space() override;
     psi::SharedMatrix get_PQ_evecs() override;
     psi::SharedVector get_PQ_evals() override;
-    WFNOperator get_op() override;
+    //    std::shared_ptr<WFNOperator> get_op() override;
     size_t get_ref_root() override;
     std::vector<double> get_multistate_pt2_energy_correction() override;
 
@@ -139,9 +115,6 @@ class AdaptiveCI : public SelectedCIMethod {
     // Update sigma
     void update_sigma();
 
-    void unpaired_density(psi::SharedMatrix Ua, psi::SharedMatrix Ub);
-    void unpaired_density(ambit::Tensor Ua, ambit::Tensor Ub);
-
   private:
     // Temporarily added
     psi::SharedMatrix P_evecs_;
@@ -151,7 +124,6 @@ class AdaptiveCI : public SelectedCIMethod {
     std::vector<double> P_ref_evecs_;
     std::vector<double> P_energies_;
     std::vector<std::vector<double>> energy_history_;
-    SparseCISolver sparse_solver_;
     int num_ref_roots_;
     bool follow_;
     local_timer cycle_time_;
@@ -162,8 +134,6 @@ class AdaptiveCI : public SelectedCIMethod {
     DeterminantHashVec PQ_space_;
 
     // ==> Class data <==
-    WFNOperator op_;
-
     /// Forte options
     std::shared_ptr<ForteOptions> options_;
     /// The wave function symmetry
@@ -191,8 +161,6 @@ class AdaptiveCI : public SelectedCIMethod {
     psi::Dimension rdoccpi_;
     /// The number of active orbitals per irrep
     psi::Dimension nactpi_;
-    /// The number of active orbitals
-    size_t nact_;
     /// The number of restricted docc
     size_t rdocc_;
     /// The number of restricted virtual
@@ -234,8 +202,6 @@ class AdaptiveCI : public SelectedCIMethod {
     std::string q_reference_;
     /// Algorithm for computing excited states
     std::string ex_alg_;
-    /// The eigensolver type
-    DiagonalizationMethod diag_method_ = DLString;
     /// The reference root
     int ref_root_;
     /// The reference root
@@ -254,8 +220,10 @@ class AdaptiveCI : public SelectedCIMethod {
     double spin_tol_;
     /// Compute 1-RDM?
     bool compute_rdms_;
-    /// Enforce spin completeness?
+    /// Enforce spin completeness of the P and P + Q spaces?
     bool spin_complete_;
+    /// Enforce spin completeness of the P space?
+    bool spin_complete_P_ = false;
     /// Print a determinant analysis?
     bool det_hist_;
     /// Save dets to file?
@@ -270,7 +238,6 @@ class AdaptiveCI : public SelectedCIMethod {
     psi::SharedMatrix evecs_;
 
     bool build_lists_;
-    
 
     /// A map of determinants in the P space
     std::unordered_map<Determinant, int, Determinant::Hash> P_space_map_;
@@ -333,9 +300,6 @@ class AdaptiveCI : public SelectedCIMethod {
     /// All that happens before we compute the energy
     void startup();
 
-    /// Print a wave function
-    void print_wfn(DeterminantHashVec& space, WFNOperator& op, psi::SharedMatrix evecs, int nroot);
-
     /// Generate set of state-averaged q-criteria and determinants
     double average_q_values(std::vector<double>& E2);
 
@@ -343,30 +307,36 @@ class AdaptiveCI : public SelectedCIMethod {
     double root_select(int nroot, std::vector<double>& C1, std::vector<double>& E2);
 
     /// Basic determinant generator (threaded, no batching, all determinants stored)
-    void get_excited_determinants_avg(int nroot, psi::SharedMatrix evecs, psi::SharedVector evals,  DeterminantHashVec& P_space,
-                                           std::vector<std::pair<double, Determinant>>& F_space);
+    void get_excited_determinants_avg(int nroot, psi::SharedMatrix evecs, psi::SharedVector evals,
+                                      DeterminantHashVec& P_space,
+                                      std::vector<std::pair<double, Determinant>>& F_space);
 
     /// Get excited determinants with a specified hole
-  //  void get_excited_determinants_restrict(int nroot, psi::SharedMatrix evecs, psi::SharedVector evals,  DeterminantHashVec& P_space,
-  //                                         std::vector<std::pair<double, Determinant>>& F_space);
+    //  void get_excited_determinants_restrict(int nroot, psi::SharedMatrix evecs, psi::SharedVector
+    //  evals,  DeterminantHashVec& P_space,
+    //                                         std::vector<std::pair<double, Determinant>>&
+    //                                         F_space);
     /// Get excited determinants with a specified hole
-    void get_excited_determinants_core(psi::SharedMatrix evecs, psi::SharedVector evals,  DeterminantHashVec& P_space,
-                                           std::vector<std::pair<double, Determinant>>& F_space);
+    void get_excited_determinants_core(psi::SharedMatrix evecs, psi::SharedVector evals,
+                                       DeterminantHashVec& P_space,
+                                       std::vector<std::pair<double, Determinant>>& F_space);
 
     // Optimized for a single root
-    void get_excited_determinants_sr(psi::SharedMatrix evecs, psi::SharedVector evals,  DeterminantHashVec& P_space,
-                                           std::vector<std::pair<double, Determinant>>& F_space);
+    void get_excited_determinants_sr(psi::SharedMatrix evecs, psi::SharedVector evals,
+                                     DeterminantHashVec& P_space,
+                                     std::vector<std::pair<double, Determinant>>& F_space);
 
-    // (DEFAULT in batching) Optimized batching algorithm, prescreens the batches to significantly reduce storage, based on hashes
+    // (DEFAULT in batching) Optimized batching algorithm, prescreens the batches to significantly
+    // reduce storage, based on hashes
     double get_excited_determinants_batch(psi::SharedMatrix evecs, psi::SharedVector evals,
-                                           DeterminantHashVec& P_space,
-                                           std::vector<std::pair<double, Determinant>>& F_space);
+                                          DeterminantHashVec& P_space,
+                                          std::vector<std::pair<double, Determinant>>& F_space);
 
     // Gets excited determinants using sorting of vectors
-    double get_excited_determinants_batch_vecsort(psi::SharedMatrix evecs, psi::SharedVector evals,
+    double
+    get_excited_determinants_batch_vecsort(psi::SharedMatrix evecs, psi::SharedVector evals,
                                            DeterminantHashVec& P_space,
                                            std::vector<std::pair<double, Determinant>>& F_space);
-
 
     /// (DEFAULT)  Builds excited determinants for a bin, uses all threads, hash-based
     det_hash<double> get_bin_F_space(int bin, int nbin, double E0, psi::SharedMatrix evecs,
@@ -374,12 +344,11 @@ class AdaptiveCI : public SelectedCIMethod {
 
     /// Builds core excited determinants for a bin, uses all threads, hash-based
     det_hash<double> get_bin_F_space_core(int bin, int nbin, double E0, psi::SharedMatrix evecs,
-                                     DeterminantHashVec& P_space);
+                                          DeterminantHashVec& P_space);
     /// Builds excited determinants in batch using sorting of vectors
     std::pair<std::vector<std::vector<std::pair<Determinant, double>>>, std::vector<size_t>>
     get_bin_F_space_vecsort(int bin, int nbin, psi::SharedMatrix evecs,
                             DeterminantHashVec& P_space);
-
 
     /// Prune the space of determinants
     void prune_q_space(DeterminantHashVec& PQ_space, DeterminantHashVec& P_space,
@@ -393,24 +362,12 @@ class AdaptiveCI : public SelectedCIMethod {
     bool check_stuck(const std::vector<std::vector<double>>& energy_history,
                      psi::SharedVector evals);
 
-    /// Computes spin
-    std::vector<std::pair<double, double>> compute_spin(DeterminantHashVec& space, WFNOperator& op,
-                                                        psi::SharedMatrix evecs, int nroot);
-
-    /// Check for spin contamination
-    double compute_spin_contamination(DeterminantHashVec& space, WFNOperator& op,
-                                      psi::SharedMatrix evecs, int nroot);
-
-    /// Convert from determinant to string representation
-    //void convert_to_string(const std::vector<Determinant>& space);
-
     /// Compute overlap for root following
     int root_follow(DeterminantHashVec& P_ref, std::vector<double>& P_ref_evecs,
                     DeterminantHashVec& P_space, psi::SharedMatrix P_evecs, int num_ref_roots);
 
     /// Add roots to be projected out in DL
     void add_bad_roots(DeterminantHashVec& dets);
-
 };
 
 } // namespace forte

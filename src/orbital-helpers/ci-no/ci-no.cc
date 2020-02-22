@@ -27,6 +27,11 @@
  * @END LICENSE
  */
 
+#include "psi4/libpsi4util/PsiOutStream.h"
+
+#include "base_classes/mo_space_info.h"
+#include "sparse_ci/sigma_vector.h"
+
 #include "ci-no.h"
 
 using namespace psi;
@@ -55,12 +60,10 @@ std::string dimension_to_string(psi::Dimension dim) {
 
 CINO::CINO(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
            std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : OrbitalTransform(ints, mo_space_info), options_(options),
-      mo_space_info_(mo_space_info) {
-
-    fci_ints_ =
-        std::make_shared<ActiveSpaceIntegrals>(ints, mo_space_info_->corr_absolute_mo("ACTIVE"),
-                                               mo_space_info_->corr_absolute_mo("RESTRICTED_DOCC"));
+    : OrbitalTransform(ints, mo_space_info), options_(options) {
+    fci_ints_ = std::make_shared<ActiveSpaceIntegrals>(
+        ints, mo_space_info_->corr_absolute_mo("ACTIVE"), mo_space_info_->symmetry("ACTIVE"),
+        mo_space_info_->corr_absolute_mo("RESTRICTED_DOCC"));
 
     auto active_mo = mo_space_info_->corr_absolute_mo("ACTIVE");
     ambit::Tensor tei_active_aa = ints->aptei_aa_block(active_mo, active_mo, active_mo, active_mo);
@@ -137,16 +140,6 @@ void CINO::startup() {
         wavefunction_multiplicity_ = options_->get_int("MULTIPLICITY");
     }
 
-    diag_method_ = DLSolver;
-    if (options_->has_changed("DIAG_ALGORITHM")) {
-        if (options_->get_str("DIAG_ALGORITHM") == "FULL") {
-            diag_method_ = Full;
-        } else if (options_->get_str("DIAG_ALGORITHM") == "DLSTRING") {
-            diag_method_ = DLString;
-        } else if (options_->get_str("DIAG_ALGORITHM") == "DLDISK") {
-            diag_method_ = DLDisk;
-        }
-    }
     // Read Options
     rdm_level_ = options_->get_int("ACI_MAX_RDM");
     nactv_ = mo_space_info_->size("ACTIVE");
@@ -300,9 +293,8 @@ std::vector<Determinant> CINO::build_dets(int irrep) {
 /// Diagonalize the Hamiltonian in this basis
 std::pair<psi::SharedVector, psi::SharedMatrix>
 CINO::diagonalize_hamiltonian(const std::vector<Determinant>& dets, int nsolutions) {
-    std::pair<psi::SharedVector, psi::SharedMatrix> evals_evecs;
 
-    SparseCISolver sparse_solver(fci_ints_);
+    SparseCISolver sparse_solver;
     sparse_solver.set_parallel(true);
     sparse_solver.set_e_convergence(options_->get_double("E_CONVERGENCE"));
     sparse_solver.set_maxiter_davidson(options_->get_int("DL_MAXITER"));
@@ -311,8 +303,11 @@ CINO::diagonalize_hamiltonian(const std::vector<Determinant>& dets, int nsolutio
     sparse_solver.set_spin_project_full(true);
     sparse_solver.set_print_details(true);
 
-    sparse_solver.diagonalize_hamiltonian(dets, evals_evecs.first, evals_evecs.second, nsolutions,
-                                          wavefunction_multiplicity_, DLSolver);
+    // Here we use the SparseList algorithm to diagonalize the Hamiltonian
+    DeterminantHashVec detmap(dets);
+    auto sigma_vector = make_sigma_vector(detmap, fci_ints_, 0, SigmaVectorType::SparseList);
+    auto evals_evecs = sparse_solver.diagonalize_hamiltonian(detmap, sigma_vector, nsolutions,
+                                                             wavefunction_multiplicity_);
 
     outfile->Printf("\n\n    STATE      CI ENERGY");
     outfile->Printf("\n  ----------------------------");

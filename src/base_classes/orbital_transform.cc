@@ -36,7 +36,8 @@
 namespace forte {
 
 OrbitalTransform::OrbitalTransform(std::shared_ptr<ForteIntegrals> ints,
-                                   std::shared_ptr<MOSpaceInfo> mo_space_info): ints_(ints) {}
+                                   std::shared_ptr<MOSpaceInfo> mo_space_info)
+    : ints_(ints), mo_space_info_(mo_space_info) {}
 
 std::unique_ptr<OrbitalTransform>
 make_orbital_transformation(const std::string& type, std::shared_ptr<SCFInfo> scf_info,

@@ -35,7 +35,7 @@
 #include "helpers/iterative_solvers.h"
 
 #define PRINT_VARS(msg)                                                                            \
-    //    std::vector<std::pair<size_t,std::string>> v = \
+//    std::vector<std::pair<size_t,std::string>> v = \
 //        {{collapse_size_,"collapse_size_"}, \
 //        {subspace_size_,"subspace_size_"}, \
 //        {basis_size_,"basis_size_"}, \

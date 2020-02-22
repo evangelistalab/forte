@@ -26,8 +26,8 @@
  * @END LICENSE
  */
 
-#include "psi4/libpsi4util/process.h"
-#include "psi4/libpsio/psio.hpp"
+#include "psi4/libmints/matrix.h"
+
 #include "determinant_hashvector.h"
 #include <numeric>
 #include <cmath>

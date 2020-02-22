@@ -28,6 +28,7 @@
 
 #include <cmath>
 
+#include "psi4/psi4-dec.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
 
 #include "base_classes/mo_space_info.h"
@@ -38,10 +39,11 @@
 namespace forte {
 
 ActiveSpaceIntegrals::ActiveSpaceIntegrals(std::shared_ptr<ForteIntegrals> ints,
-                                           std::vector<size_t> active_mo,
-                                           std::vector<size_t> restricted_docc_mo)
+                                           const std::vector<size_t>& active_mo,
+                                           const std::vector<int>& active_mo_symmetry,
+                                           const std::vector<size_t>& restricted_docc_mo)
     : nmo_(active_mo.size()), ints_(ints), active_mo_(active_mo),
-      restricted_docc_mo_(restricted_docc_mo) {
+      active_mo_symmetry_(active_mo_symmetry), restricted_docc_mo_(restricted_docc_mo) {
     startup();
 }
 
@@ -157,6 +159,8 @@ void ActiveSpaceIntegrals::set_active_integrals_and_restricted_docc() {
 }
 
 std::vector<size_t> ActiveSpaceIntegrals::active_mo() const { return active_mo_; }
+
+std::vector<int> ActiveSpaceIntegrals::active_mo_symmetry() const { return active_mo_symmetry_; }
 
 std::vector<size_t> ActiveSpaceIntegrals::restricted_docc_mo() const { return restricted_docc_mo_; }
 
@@ -498,6 +502,7 @@ make_active_space_ints(std::shared_ptr<MOSpaceInfo> mo_space_info,
 
     // get the active/core vectors
     auto active_mo = mo_space_info->corr_absolute_mo(active_space);
+    auto active_mo_symmetry = mo_space_info->symmetry(active_space);
     std::vector<size_t> core_mo;
     for (const auto space : core_spaces) {
         auto mos = mo_space_info->corr_absolute_mo(space);
@@ -505,7 +510,8 @@ make_active_space_ints(std::shared_ptr<MOSpaceInfo> mo_space_info,
     }
 
     // allocate the active space integral object
-    auto as_ints = std::make_shared<ActiveSpaceIntegrals>(ints, active_mo, core_mo);
+    auto as_ints =
+        std::make_shared<ActiveSpaceIntegrals>(ints, active_mo, active_mo_symmetry, core_mo);
 
     // grab the integrals from the ForteIntegrals object
     ambit::Tensor tei_active_aa = ints->aptei_aa_block(active_mo, active_mo, active_mo, active_mo);

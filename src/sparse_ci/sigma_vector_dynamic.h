@@ -33,6 +33,10 @@
 #include "sigma_vector.h"
 #include "sorted_string_list.h"
 
+namespace psi {
+class Vector;
+}
+
 namespace forte {
 
 enum class SigmaVectorMode { Dynamic, OnTheFly };
@@ -46,9 +50,11 @@ class SigmaVectorDynamic : public SigmaVector {
     SigmaVectorDynamic(const DeterminantHashVec& space,
                        std::shared_ptr<ActiveSpaceIntegrals> fci_ints, size_t max_memory);
     ~SigmaVectorDynamic();
-    void compute_sigma(psi::SharedVector sigma, psi::SharedVector b);
-    void get_diagonal(psi::Vector& diag);
-    void add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& bad_states);
+    void compute_sigma(std::shared_ptr<psi::Vector> sigma, std::shared_ptr<psi::Vector> b) override;
+    void get_diagonal(psi::Vector& diag) override;
+    void add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& bad_states) override;
+    double compute_spin(const std::vector<double>& c) override;
+
     std::vector<std::vector<std::pair<size_t, double>>> bad_states_;
 
   protected:
@@ -60,14 +66,10 @@ class SigmaVectorDynamic : public SigmaVector {
     /// Number of sigma builds
     int num_builds_ = 0;
     double H_threshold_ = 1.0e-14;
-    /// Diagonal elements of the Hamiltonian
-    std::vector<double> diag_;
     /// A temporary sigma vector of size N_det
     std::vector<double> temp_b_;
     /// A temporary sigma vector of size N_det
     std::vector<double> temp_sigma_;
-    const DeterminantHashVec& space_;
-    std::shared_ptr<ActiveSpaceIntegrals> fci_ints_;
     SortedStringList a_sorted_string_list_;
     SortedStringList b_sorted_string_list_;
 
@@ -90,13 +92,13 @@ class SigmaVectorDynamic : public SigmaVector {
 
     void print_thread_stats();
     /// Scalar contribution to sigma
-    void compute_sigma_scalar(psi::SharedVector sigma, psi::SharedVector b);
+    void compute_sigma_scalar(std::shared_ptr<psi::Vector> sigma, std::shared_ptr<psi::Vector> b);
     /// Alpha-alpha single and double excitation contributions to sigma
-    void compute_sigma_aa(psi::SharedVector sigma, psi::SharedVector b);
+    void compute_sigma_aa(std::shared_ptr<psi::Vector> sigma, std::shared_ptr<psi::Vector> b);
     /// Beta-beta single and double excitation contributions to sigma
-    void compute_sigma_bb(psi::SharedVector sigma, psi::SharedVector b);
+    void compute_sigma_bb(std::shared_ptr<psi::Vector> sigma, std::shared_ptr<psi::Vector> b);
     /// Alpha-beta double excitation contributions to sigma
-    void compute_sigma_abab(psi::SharedVector sigma, psi::SharedVector b);
+    void compute_sigma_abab(std::shared_ptr<psi::Vector> sigma, std::shared_ptr<psi::Vector> b);
 
     /// Task to compute sigma_aa. Computes sigma and stores part of the Hamiltonian
     void sigma_aa_store_task(size_t task_id, size_t num_tasks);

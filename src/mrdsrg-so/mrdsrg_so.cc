@@ -60,7 +60,7 @@ std::shared_ptr<ActiveSpaceIntegrals> MRDSRG_SO::compute_Heff_actv() {
         "Computing active-space Hamiltonian is not yet implemented for spin-orbital code.");
 
     return std::make_shared<ActiveSpaceIntegrals>(
-        ints_, mo_space_info_->corr_absolute_mo("ACTIVE"),
+        ints_, mo_space_info_->corr_absolute_mo("ACTIVE"), mo_space_info_->symmetry("ACTIVE"),
         mo_space_info_->corr_absolute_mo("RESTRICTED_DOCC"));
 
     //    // de-normal-order DSRG transformed Hamiltonian

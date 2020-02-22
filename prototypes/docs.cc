@@ -13,7 +13,6 @@ void myMethod::add_options(Options& options) {
 }
 
 extern "C" int read_options(std::string name, Options& options) {
-    forte_options(name, options);
 
     if (name == "FORTE" || options.read_globals()) {
         myMethod::add_options(options);

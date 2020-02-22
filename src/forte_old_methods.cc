@@ -27,50 +27,13 @@
  * @END LICENSE
  */
 
-#include <cmath>
-#include <memory>
-
-#include <ambit/tensor.h>
-
-#include "psi4/libdpd/dpd.h"
-#include "psi4/libmints/molecule.h"
-#include "psi4/libmints/wavefunction.h"
-#include "psi4/libpsio/psio.hpp"
-#include "psi4/libtrans/integraltransform.h"
-#include "psi4/psi4-dec.h"
-#include "psi4/psifiles.h"
-
-#include "base_classes/rdms.h"
+#include "psi4/liboptions/liboptions.h"
 #include "base_classes/scf_info.h"
-#include "base_classes/mo_space_info.h"
 #include "base_classes/state_info.h"
 #include "base_classes/active_space_solver.h"
-
-#include "integrals/integrals.h"
-#include "integrals/active_space_integrals.h"
-
 #include "casscf/casscf.h"
-
-#include "orbital-helpers/localize.h"
-#include "orbital-helpers/mp2_nos.h"
-#include "orbital-helpers/semi_canonicalize.h"
-
-#include "sci/aci.h"
-#include "sci/asci.h"
-
-#include "orbital-helpers/ci-no/ci-no.h"
-#include "orbital-helpers/ci-no/mrci-no.h"
-#include "mrdsrg-so/mrdsrg_so.h"
-#include "mrdsrg-so/so-mrdsrg.h"
-#include "mrdsrg-spin-adapted/dsrg_mrpt.h"
-#include "mrdsrg-spin-integrated/active_dsrgpt2.h"
-#include "mrdsrg-spin-integrated/dsrg_mrpt3.h"
 #include "mrdsrg-spin-integrated/mcsrgpt2_mo.h"
-#include "mrdsrg-spin-integrated/mrdsrg.h"
-#include "mrdsrg-spin-integrated/dwms_mrpt2.h"
-#include "mrdsrg-helper/dsrg_transformed.h"
 
-#include "v2rdm/v2rdm.h"
 #include "helpers/timer.h"
 
 #ifdef HAVE_CHEMPS2
@@ -116,7 +79,9 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
         auto casscf = std::make_shared<CASSCF>(state, nroot, std::make_shared<SCFInfo>(ref_wfn),
                                                forte_options, mo_space_info, as_ints);
         final_energy = casscf->compute_energy();
-        if (options.get_str("DERTYPE") == "FIRST") { casscf->compute_gradient();}
+        if (options.get_str("DERTYPE") == "FIRST") {
+            casscf->compute_gradient();
+        }
     }
     if (options.get_str("JOB_TYPE") == "MR-DSRG-PT2") {
         std::string cas_type = options.get_str("ACTIVE_SPACE_SOLVER");

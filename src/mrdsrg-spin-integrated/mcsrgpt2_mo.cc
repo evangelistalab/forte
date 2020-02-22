@@ -34,6 +34,8 @@
 #include <string>
 #include <utility>
 
+#include "psi4/libpsi4util/PsiOutStream.h"
+
 #include "boost/algorithm/string/predicate.hpp"
 #include "boost/format.hpp"
 

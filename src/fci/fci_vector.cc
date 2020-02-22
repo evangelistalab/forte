@@ -31,6 +31,7 @@
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/pointgrp.h"
 #include "helpers/helpers.h"
+#include "helpers/printing.h"
 
 #include "base_classes/mo_space_info.h"
 #include "fci_vector.h"

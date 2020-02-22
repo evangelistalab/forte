@@ -31,7 +31,7 @@
 #include "psi4/libpsi4util/PsiOutStream.h"
 
 #include "base_classes/mo_space_info.h"
-#include "helpers/helpers.h"
+#include "helpers/printing.h"
 #include "boost/format.hpp"
 #include "dsrg_time.h"
 
@@ -186,5 +186,4 @@ bool DSRG_TIME::test_code(const std::string& code) {
     }
     return out;
 }
-}
-
+} // namespace forte

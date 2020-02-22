@@ -33,7 +33,7 @@ set forte {
   sigma 0.001
   nroot 1
   charge 0
-  diag_algorithm dlstring
+  diag_algorithm sparse
   spin_analysis true
   spin_basis NO
   spin_test true

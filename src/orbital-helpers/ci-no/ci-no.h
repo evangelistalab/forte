@@ -115,8 +115,6 @@ class CINO : public OrbitalTransform {
     // ==> CINO Options <==
     /// Add missing degenerate determinants excluded from the aimed selection?
     bool project_out_spin_contaminants_ = true;
-    /// The eigensolver type
-    DiagonalizationMethod diag_method_;
     /// The multiplicity of the reference
     int wavefunction_multiplicity_ = 0;
     // The number of correlated mos

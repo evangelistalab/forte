@@ -26,18 +26,40 @@
  * @END LICENSE
  */
 
-#include "determinant_sq_operator.h"
+#ifndef _sigma_vector_sparse_list_h_
+#define _sigma_vector_sparse_list_h_
+
+#include "sigma_vector.h"
+
+namespace psi {
+class Vector;
+}
 
 namespace forte {
 
-DeterminantSQOperator::DeterminantSQOperator() {}
+/**
+ * @brief The SigmaVectorSparseList class
+ * Computes the sigma vector from a creation list sparse Hamiltonian.
+ */
+class SigmaVectorSparseList : public SigmaVector {
+  public:
+    SigmaVectorSparseList(const DeterminantHashVec& space,
+                          std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
 
-void DeterminantSQOperator::add_operator(const std::vector<int>& a_ann,
-                                         const std::vector<int>& a_cre,
-                                         const std::vector<int>& b_ann,
-                                         const std::vector<int>& b_cre, double value) {
-    operators_.push_back(op_idx_t(a_ann, a_cre, b_ann, b_cre));
-    values_.push_back(value);
-}
+    void compute_sigma(std::shared_ptr<psi::Vector> sigma, std::shared_ptr<psi::Vector> b);
+    void get_diagonal(psi::Vector& diag);
+    void add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& bad_states_);
+    double compute_spin(const std::vector<double>& c) override;
+
+    std::vector<std::vector<std::pair<size_t, double>>> bad_states_;
+
+  protected:
+    bool print_;
+    bool use_disk_ = false;
+    /// Substitutions lists
+    std::shared_ptr<DeterminantSubstitutionLists> op_;
+};
 
 } // namespace forte
+
+#endif // _sigma_vector_sparse_list_h_

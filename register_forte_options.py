@@ -385,6 +385,9 @@ def register_aci_options(forte_options):
     forte_options.add_bool("ACI_ENFORCE_SPIN_COMPLETE", True,
                            "Enforce determinant spaces to be spin-complete?")
 
+    forte_options.add_bool("ACI_ENFORCE_SPIN_COMPLETE_P", False,
+                           "Enforce determinant in the P space to be spin-complete?")
+
     forte_options.add_bool(
         "SCI_PROJECT_OUT_SPIN_CONTAMINANTS", True,
         "Project out spin contaminants in Davidson-Liu's algorithm?")
@@ -508,14 +511,8 @@ def register_aci_options(forte_options):
     forte_options.add_int("ACTIVE_GUESS_SIZE", 1000,
                           "Number of determinants for CI guess")
 
-    forte_options.add_str(
-        "DIAG_ALGORITHM", "SOLVER",
-        ["DAVIDSON", "FULL", "DAVIDSONLIST", "SPARSE", "SOLVER"],
+    forte_options.add_str("DIAG_ALGORITHM", "SPARSE",["DYNAMIC","FULL","SPARSE"],
         "The diagonalization method")
-
-    forte_options.add_str("SIGMA_BUILD_TYPE", "SPARSE",
-                          ["SPARSE", "HZ", "MMULT"],
-                          "The sigma builder algorithm")
 
     forte_options.add_bool("FORCE_DIAG_METHOD", False,
                            "Force the diagonalization procedure?")
