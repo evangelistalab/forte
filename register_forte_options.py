@@ -23,14 +23,14 @@ def register_forte_options(forte_options):
     register_old_options(forte_options)
 
 def register_driver_options(forte_options):
+    forte_options.set_group("")
     forte_options.add_str('JOB_TYPE', 'NEWDRIVER', [
-        'NONE', 'ACI', 'PCI', 'CAS', 'DMRG', 'SR-DSRG', 'SR-DSRG-ACI',
-        'SR-DSRG-PCI', 'DSRG-MRPT2', 'DSRG-MRPT3', 'MR-DSRG-PT2',
-        'THREE-DSRG-MRPT2', 'SOMRDSRG', 'MRDSRG', 'MRDSRG_SO', 'CASSCF',
-        'ACTIVE-DSRGPT2', 'DWMS-DSRGPT2', 'DSRG_MRPT', 'TASKS'
+        'NONE','NEWDRIVER','MR-DSRG-PT2', 'CASSCF'
     ], 'Specify the job type')
 
     forte_options.add_str('DERTYPE', 'NONE', ['NONE', 'FIRST'], 'Derivative order')
+
+    forte_options.add_double("E_CONVERGENCE", 1.0e-9, "The energy convergence criterion")
 
     forte_options.add_str(
         'ACTIVE_SPACE_SOLVER', '', ['FCI', 'ACI', 'CAS'],
@@ -68,6 +68,7 @@ def register_driver_options(forte_options):
 
 
 def register_avas_options(forte_options):
+    forte_options.set_group("AVAS")
     forte_options.add_bool("AVAS", False, "Form AVAS orbitals?")
     forte_options.add_double(
         "AVAS_SIGMA", 0.98,
@@ -90,6 +91,7 @@ def register_avas_options(forte_options):
         "threshold based selection.")
 
 def register_cino_options(forte_options):
+    forte_options.set_group("CINO")
     forte_options.add_bool("CINO", False, "Do a CINO computation?")
 
     forte_options.add_str("CINO_TYPE", "CIS", ["CIS", "CISD"],
@@ -97,7 +99,7 @@ def register_cino_options(forte_options):
 
     forte_options.add_int("CINO_NROOT", 1, "The number of roots computed")
 
-    forte_options.add_array(
+    forte_options.add_int_array(
         "CINO_ROOTS_PER_IRREP",
         "The number of excited states per irreducible representation")
     forte_options.add_double(
@@ -108,6 +110,8 @@ def register_cino_options(forte_options):
         "{ass frozen_docc, actice_docc, and restricted_docc?")
 
 def register_mrcino_options(forte_options):
+    forte_options.set_group("MRCINO")
+
     forte_options.add_bool("MRCINO", False, "Do a MRCINO computation?")
 
     forte_options.add_str("MRCINO_TYPE", "CIS", ["CIS", "CISD"],
@@ -115,7 +119,7 @@ def register_mrcino_options(forte_options):
 
     forte_options.add_int("MRCINO_NROOT", 1, "The number of roots computed")
 
-    forte_options.add_array(
+    forte_options.add_int_array(
         "MRCINO_ROOTS_PER_IRREP",
         "The number of excited states per irreducible representation")
     forte_options.add_double(
@@ -128,6 +132,7 @@ def register_mrcino_options(forte_options):
         "or not")
 
 def register_embedding_options(forte_options):
+    forte_options.set_group("Embedding")
     forte_options.add_bool(
         "EMBEDDING", False, 
         "Whether to perform embedding partition and projection")
@@ -167,19 +172,20 @@ def register_embedding_options(forte_options):
         "Enable this option will generate PAOs equivlent to ASET virtuals, instead of using threshold")
 
 def register_mo_space_info_options(forte_options):
-    forte_options.add_array(
+    forte_options.set_group("MO Space Info")
+    forte_options.add_int_array(
         "FROZEN_DOCC",
         "Number of frozen occupied orbitals per irrep (in Cotton order)")
-    forte_options.add_array(
+    forte_options.add_int_array(
         "RESTRICTED_DOCC",
         "Number of restricted doubly occupied orbitals per irrep (in Cotton order)"
     )
-    forte_options.add_array(
+    forte_options.add_int_array(
         "ACTIVE", " Number of active orbitals per irrep (in Cotton order)")
-    forte_options.add_array(
+    forte_options.add_int_array(
         "RESTRICTED_UOCC",
         "Number of restricted unoccupied orbitals per irrep (in Cotton order)")
-    forte_options.add_array(
+    forte_options.add_int_array(
         "FROZEN_UOCC",
         "Number of frozen unoccupied orbitals per irrep (in Cotton order)")
 
@@ -189,7 +195,7 @@ def register_mo_space_info_options(forte_options):
     #     *  Format: [irrep, mo_1, mo_2, irrep, mo_3, mo_4]
     #     *          Irrep and MO indices are 1-based (NOT 0-based)!
     #    -*/
-    forte_options.add_array(
+    forte_options.add_int_array(
         "ROTATE_MOS",
         "An array of MOs to swap in the format [irrep, mo_1, mo_2, irrep, mo_3, mo_4]. Irrep and MO indices are 1-based (NOT 0-based)!"
     )
@@ -203,21 +209,24 @@ def register_mo_space_info_options(forte_options):
         "AVG_WEIGHT",
         "An array of weights [[w1_1, w1_2, ..., w1_n], [w2_1, w2_2, ..., w2_n], ...]"
     )
-    forte_options.add_array("NROOTPI",
+    forte_options.add_int_array("NROOTPI",
                             "Number of roots per irrep (in Cotton order)")
 
 
 def register_active_space_solver_options(forte_options):
+    forte_options.set_group("Active Space Solver")
     forte_options.add_int('NROOT', 1, 'The number of roots computed')
     forte_options.add_int('ROOT', 0,
                           'The root selected for state-specific computations')
 
 
 def register_pt2_options(forte_options):
+    forte_options.set_group("PT2")
     forte_options.add_double("PT2_MAX_MEM", 1.0,
                              " Maximum size of the determinant hash (GB)")
 
 def register_pci_options(forte_options):
+    forte_options.set_group("PCI")
     forte_options.add_str("PCI_GENERATOR", "WALL-CHEBYSHEV", [
         "LINEAR", "QUADRATIC", "CUBIC", "QUARTIC", "POWER", "TROTTER", "OLSEN",
         "DAVIDSON", "MITRUSHENKOV", "EXP-CHEBYSHEV", "WALL-CHEBYSHEV",
@@ -229,7 +238,7 @@ def register_pci_options(forte_options):
     forte_options.add_double("PCI_SPAWNING_THRESHOLD", 0.001,
                              "The determinant importance threshold")
 
-    forte_options.add_double(
+    forte_options.add_int(
         "PCI_MAX_GUESS_SIZE", 10000,
         "The maximum number of determinants used to form the "
         "guess wave function")
@@ -339,6 +348,7 @@ def register_pci_options(forte_options):
 
 
 def register_fci_options(forte_options):
+    forte_options.set_group("FCI")
     forte_options.add_int('FCI_MAXITER', 30,
                           'Maximum number of iterations for FCI code')
     forte_options.add_bool('FCI_TEST_RDMS', False,
@@ -351,6 +361,7 @@ def register_fci_options(forte_options):
 
 
 def register_aci_options(forte_options):
+    forte_options.set_group("ACI")
     forte_options.add_double("ACI_CONVERGENCE", 1e-9,
                              "ACI Convergence threshold")
     
@@ -497,7 +508,7 @@ def register_aci_options(forte_options):
     forte_options.add_double("ACI_RELAX_SIGMA", 0.01,
                              "Sigma for reference relaxation")
 
-    forte_options.add_int("ACI_NBATCH", 1, "Number of batches in screening")
+    forte_options.add_int("ACI_NBATCH", 0, "Number of batches in screening")
 
     forte_options.add_int("ACI_MAX_MEM", 1000,
                           "Sets max memory for batching algorithm (MB)")
@@ -519,6 +530,7 @@ def register_aci_options(forte_options):
 
 
 def register_davidson_liu_options(forte_options):
+    forte_options.set_group("Davidson-Liu")
     forte_options.add_int("DL_MAXITER", 100,
                           "The maximum number of Davidson-Liu iterations")
     forte_options.add_int(
@@ -531,6 +543,7 @@ def register_davidson_liu_options(forte_options):
 
 
 def register_asci_options(forte_options):
+    forte_options.set_group("ASCI")
     forte_options.add_double("ASCI_E_CONVERGENCE", 1e-5, "ASCI energy convergence threshold")
 
     forte_options.add_int("ASCI_TDET", 2000, "ASCI Max det")
@@ -540,6 +553,7 @@ def register_asci_options(forte_options):
     forte_options.add_double("ASCI_PRESCREEN_THRESHOLD", 1e-12, "ASCI prescreening threshold")
 
 def register_fci_mo_options(forte_options):
+    forte_options.set_group("FCIMO")
     forte_options.add_str("FCIMO_ACTV_TYPE", "COMPLETE", ["COMPLETE", "CIS", "CISD", "DOCI"],
                      "The active space type")
 
@@ -553,6 +567,7 @@ def register_fci_mo_options(forte_options):
     # forte_options.add_bool("FCIMO_IAO_ANALYSIS", False, "Intrinsic atomic orbital analysis")
 
 def register_integral_options(forte_options):
+    forte_options.set_group("Integrals")
     forte_options.add_str(
         "INT_TYPE", "CONVENTIONAL",
         ["CONVENTIONAL", "DF", "CHOLESKY", "DISKDF", "DISTDF", "OWNINTEGRALS"],
@@ -570,6 +585,7 @@ def register_integral_options(forte_options):
                            "Print the one- and two-electron integrals?")
 
 def register_dsrg_options(forte_options):
+    forte_options.set_group("DSRG")
     forte_options.add_double("DSRG_S", 1.0e10,"The end value of the integration parameter s")
     forte_options.add_double("DSRG_POWER", 2.0, "The power of the parameter s in the regularizer")
 
@@ -711,6 +727,7 @@ def register_dsrg_options(forte_options):
     forte_options.add_int("DSRG_DIIS_MAX_VEC", 6, "Maximum size of DIIS vectors")
 
 def register_dwms_options(forte_options):
+    forte_options.set_group("DWMS")
     forte_options.add_double("DWMS_ZETA", 0.0, """Automatic Gaussian width cutoff for the density weights
           Weights of state α:
              Wi = exp(-ζ * (Eα - Ei)^2) / sum_j exp(-ζ * (Eα - Ej)^2)
@@ -757,12 +774,14 @@ def register_dwms_options(forte_options):
                         "Energy convergence criteria for DWMS iteration")
 
 def register_localize_options(forte_options):
+    forte_options.set_group("Localize")
     forte_options.add_str("LOCALIZE", "PIPEK_MEZEY", ["PIPEK_MEZEY", "BOYS"],
                           "The method used to localize the orbitals")
-    forte_options.add_array("LOCALIZE_SPACE",
+    forte_options.add_int_array("LOCALIZE_SPACE",
                             "Sets the orbital space for localization")
 
 def register_casscf_options(forte_options):
+    forte_options.set_group("CASSCF")
     forte_options.add_str("CASSCF_CI_SOLVER", "CAS",
                           "The active space solver to use in CASSCF")
     forte_options.add_int("CASSCF_ITERATIONS", 30,
@@ -819,6 +838,7 @@ def register_casscf_options(forte_options):
 
 
 def register_old_options(forte_options):
+    forte_options.set_group("Old")
     forte_options.add_bool(
         "NAT_ORBS_PRINT", False,
         "View the natural orbitals with their symmetry information")
@@ -828,7 +848,12 @@ def register_old_options(forte_options):
 
     forte_options.add_bool("MEMORY_SUMMARY", False, "Print summary of memory")
 
+    forte_options.add_str("SCF_TYPE", "PK", "The integrals used in the SCF calculation")
+    forte_options.add_str("REFERENCE", "", "The SCF refernce type")
 
+    forte_options.add_int("DIIS_MAX_VECS",5,"The maximum number of DIIS vectors");
+    forte_options.add_int("DIIS_MIN_VECS",2,"The minimum number of DIIS vectors");
+    forte_options.add_int("MAXITER", 100, "The maximum number of iterations")
 
     forte_options.add_double("RELAX_E_CONVERGENCE", 1.0e-8, "The energy relaxation convergence criterion")
 
