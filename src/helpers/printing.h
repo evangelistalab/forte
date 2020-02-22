@@ -29,6 +29,9 @@
 #ifndef _printing_h_
 #define _printing_h_
 
+#include <vector>
+#include <string>
+
 namespace forte {
 
 enum class PrintLevel { Quiet = 0, Mini = 1, Default = 2, Debug = 3 };
