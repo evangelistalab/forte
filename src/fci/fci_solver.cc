@@ -44,6 +44,7 @@
 #include "fci_vector.h"
 #include "string_lists.h"
 #include "helpers/helpers.h"
+#include "helpers/printing.h"
 
 #ifdef HAVE_GA
 #include <ga.h>

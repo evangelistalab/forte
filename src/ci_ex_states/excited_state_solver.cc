@@ -454,42 +454,6 @@ void ExcitedStateSolver::wfn_to_file(DeterminantHashVec& det_space, psi::SharedM
     final_wfn.close();
 }
 
-// std::vector<std::pair<double, double>>
-// ExcitedStateSolver::compute_spin(DeterminantHashVec& space, std::shared_ptr<WFNOperator> op,
-//                                 psi::SharedMatrix evecs, int nroot) {
-//    std::vector<std::pair<double, double>> spin_vec(nroot);
-
-//    if (sci_->sigma_vector_type() == SigmaVectorType::Dynamic) {
-//        for (size_t n = 0; n < nroot_; ++n) {
-//            double S2 = op->s2_direct(space, evecs, n);
-//            double S = std::fabs(0.5 * (std::sqrt(1.0 + 4.0 * S2) - 1.0));
-//            spin_vec[n] = std::make_pair(S, S2);
-//        }
-//    } else {
-//        for (size_t n = 0; n < nroot_; ++n) {
-//            double S2 = op->s2(space, evecs, n);
-//            double S = std::fabs(0.5 * (std::sqrt(1.0 + 4.0 * S2) - 1.0));
-//            spin_vec[n] = std::make_pair(S, S2);
-//        }
-//    }
-//    return spin_vec;
-//}
-
-double
-ExcitedStateSolver::compute_spin_contamination(DeterminantHashVec& space,
-                                               std::shared_ptr<DeterminantSubstitutionLists> op,
-                                               psi::SharedMatrix evecs, int nroot) {
-    auto spin = sparse_solver_->spin(); /*compute_spin(space, op, evecs, nroot);*/
-    double spin_contam = 0.0;
-    for (int n = 0; n < nroot; ++n) {
-        spin_contam += spin[n];
-    }
-    spin_contam /= static_cast<double>(nroot);
-    spin_contam -= (0.25 * (state_.multiplicity() * state_.multiplicity() - 1.0));
-
-    return spin_contam;
-}
-
 std::vector<RDMs> ExcitedStateSolver::rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
                                            int max_rdm_level) {
 

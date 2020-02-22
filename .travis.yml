@@ -48,7 +48,7 @@ before_script:
       -DPYTHON_EXECUTABLE=${HOME}/miniconda/envs/tenv/bin/python
       -DENABLE_CODECOV=ON
       -DMAX_DET_ORB=${MAX_DET_ORB}
-  - make -j2 VERBOSE=1
+  - make -j2
   - export PYTHONPATH="${HOME}/build/evangelistalab:$PYTHONPATH"
 
 script:

@@ -362,13 +362,6 @@ class AdaptiveCI : public SelectedCIMethod {
     bool check_stuck(const std::vector<std::vector<double>>& energy_history,
                      psi::SharedVector evals);
 
-    /// Check for spin contamination
-    double compute_spin_contamination(DeterminantHashVec& space, DeterminantSubstitutionLists& op,
-                                      psi::SharedMatrix evecs, int nroot);
-
-    /// Convert from determinant to string representation
-    // void convert_to_string(const std::vector<Determinant>& space);
-
     /// Compute overlap for root following
     int root_follow(DeterminantHashVec& P_ref, std::vector<double>& P_ref_evecs,
                     DeterminantHashVec& P_space, psi::SharedMatrix P_evecs, int num_ref_roots);
