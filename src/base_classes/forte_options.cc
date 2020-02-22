@@ -26,12 +26,13 @@
  * @END LICENSE
  */
 
+#include "psi4/libpsi4util/PsiOutStream.h"
+
 #include "base_classes/forte_options.h"
 #include "base_classes/mo_space_info.h"
 #include "helpers/helpers.h"
 #include "helpers/string_algorithms.h"
 
-#include "psi4/libpsi4util/PsiOutStream.h"
 
 using namespace pybind11::literals;
 
@@ -318,10 +319,6 @@ py::object process_psi4_array_data(psi::Data& data) {
         return py::int_(data.to_integer());
     }
     return list;
-}
-
-void ForteOptions::update_psi_options(psi::Options& options) {
-    // TODO implement or delete because obsolete?
 }
 
 std::string ForteOptions::generate_documentation() const {

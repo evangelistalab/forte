@@ -28,6 +28,8 @@
  */
 
 #include "psi4/liboptions/liboptions.h"
+#include "psi4/libpsi4util/PsiOutStream.h"
+
 #include "base_classes/scf_info.h"
 #include "base_classes/state_info.h"
 #include "base_classes/active_space_solver.h"

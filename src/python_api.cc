@@ -103,7 +103,6 @@ void export_ForteOptions(py::module& m) {
              "Push the options list to Psi4")
         .def("get_options_from_psi4", &ForteOptions::get_options_from_psi4,
              "Read the value of options from Psi4")
-        .def("update_psi_options", &ForteOptions::update_psi_options)
         .def("generate_documentation", &ForteOptions::generate_documentation);
 }
 

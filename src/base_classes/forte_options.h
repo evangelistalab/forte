@@ -203,11 +203,6 @@ class ForteOptions {
     std::string generate_documentation() const;
 
     /**
-     * @brief Update the local copy of psi_options_
-     */
-    void update_psi_options(psi::Options& options);
-
-    /**
      * @brief Return a python dictionary with all the options registered
      */
     pybind11::dict dict();

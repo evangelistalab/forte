@@ -353,9 +353,7 @@ def run_forte(name, **kwargs):
     # Get the option object
     options = psi4.core.get_options()
     options.set_current_module('FORTE')
-    forte.forte_options.update_psi_options(options)
     forte.forte_options.get_options_from_psi4(options)
-
 
     if ('DF' in options.get_str('INT_TYPE')):
         aux_basis = psi4.core.BasisSet.build(ref_wfn.molecule(), 'DF_BASIS_MP2',
@@ -451,7 +449,7 @@ def gradient_forte(name, **kwargs):
     optstash = p4util.OptionsState(['GLOBALS', 'DERTYPE'])
     options = psi4.core.get_options()
     options.set_current_module('FORTE')
-    forte.forte_options.update_psi_options(options)
+    forte.forte_options.get_options_from_psi4(options)
 
     if ('DF' in options.get_str('INT_TYPE')):
         raise Exception('analytic gradient is not implemented for density fitting')
@@ -500,6 +498,7 @@ def gradient_forte(name, **kwargs):
         Ub = orb_t.get_Ub()
 
         ints.rotate_orbitals(Ua,Ub)
+
     # Run gradient computation
     energy = forte.forte_old_methods(ref_wfn, forte.forte_options, ints, mo_space_info)
     derivobj = psi4.core.Deriv(ref_wfn)
