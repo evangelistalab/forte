@@ -372,8 +372,11 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_xms() {
     std::vector<std::vector<double>> Edsrg_ms(nentry, std::vector<double>());
 
     for (int n = 0; n < nentry; ++n) {
-        int irrep = (foptions_->psi_options())["AVG_STATE"][n][0].to_integer();
-        int multi = (foptions_->psi_options())["AVG_STATE"][n][1].to_integer();
+        py::list avg_state_list = foptions_->get_gen_list("AVG_STATE")[n];
+
+        int irrep = py::cast<int>(avg_state_list[0]);
+        int multi = py::cast<int>(avg_state_list[1]);
+
         int nstates = eigens_[n].size();
         std::vector<forte::Determinant> p_space = p_spaces_[n];
 

@@ -151,7 +151,7 @@ void MRCINO::compute_transformation() {
 
 void MRCINO::startup() {
     wavefunction_multiplicity_ = 1;
-    if (options_->has_changed("MULTIPLICITY")) {
+    if (options_->get_int("MULTIPLICITY") >= 1) {
         wavefunction_multiplicity_ = options_->get_int("MULTIPLICITY");
     }
 

@@ -184,7 +184,9 @@ make_state_weights_map(std::shared_ptr<ForteOptions> options,
                        std::shared_ptr<psi::Wavefunction> wfn) {
     std::map<StateInfo, std::vector<double>> state_weights_map;
     auto state = make_state_info_from_psi_wfn(wfn);
-    if ((options->psi_options())["AVG_STATE"].size() == 0) {
+    py::list avg_state = options->get_gen_list("AVG_STATE");
+
+    if (avg_state.size() == 0) {
 
         int nroot = options->get_int("NROOT");
         int root = options->get_int("ROOT");
@@ -195,9 +197,10 @@ make_state_weights_map(std::shared_ptr<ForteOptions> options,
     } else {
         double sum_of_weights = 0.0;
         size_t nstates = 0;
-        size_t nentry = (options->psi_options())["AVG_STATE"].size();
+        size_t nentry = avg_state.size();
         for (size_t i = 0; i < nentry; ++i) {
-            if ((options->psi_options())["AVG_STATE"][i].size() != 3) {
+            py::list avg_state_list = avg_state[i];
+            if (avg_state_list.size() != 3) {
                 psi::outfile->Printf("\n  Error: invalid input of AVG_STATE. Each "
                                      "entry should take an array of three numbers.");
                 throw std::runtime_error("Invalid input of AVG_STATE");
@@ -205,11 +208,11 @@ make_state_weights_map(std::shared_ptr<ForteOptions> options,
 
             // read data
             // irreducible representation
-            int irrep = (options->psi_options())["AVG_STATE"][i][0].to_integer();
+            int irrep = py::cast<int>(avg_state_list[0]);
             // multiplicity (2S + 1)
-            int multi = (options->psi_options())["AVG_STATE"][i][1].to_integer();
+            int multi = py::cast<int>(avg_state_list[1]);
             // number of states with this irrep and multiplicity
-            int nstates_this = (options->psi_options())["AVG_STATE"][i][2].to_integer();
+            int nstates_this = py::cast<int>(avg_state_list[2]);
 
             // check for errors
             int nirrep = wfn->nirrep();
@@ -233,15 +236,21 @@ make_state_weights_map(std::shared_ptr<ForteOptions> options,
             }
 
             std::vector<double> weights;
-            if ((options->psi_options())["AVG_WEIGHT"].has_changed()) {
-                if ((options->psi_options())["AVG_WEIGHT"].size() != nentry) {
+            py::list avg_weight = options->get_gen_list("AVG_WEIGHT");
+            if (avg_weight.size() == 0) {
+                // use equal weights
+                weights = std::vector<double>(nstates_this, 1.0);
+            } else {
+                if (avg_weight.size() != nentry) {
                     psi::outfile->Printf("\n  Error: mismatched number of entries in "
                                          "AVG_STATE (%d) and AVG_WEIGHT (%d).",
-                                         nentry, (options->psi_options())["AVG_WEIGHT"].size());
+                                         nentry, avg_weight.size());
                     throw std::runtime_error("Mismatched number of entries in AVG_STATE "
                                              "and AVG_WEIGHT.");
                 }
-                int nweights = (options->psi_options())["AVG_WEIGHT"][i].size();
+
+                py::list avg_weight_list = avg_weight[i];
+                int nweights = avg_weight_list.size();
                 if (nweights != nstates_this) {
                     psi::outfile->Printf("\n  Error: mismatched number of weights "
                                          "in entry %d of AVG_WEIGHT. Asked for %d "
@@ -250,16 +259,13 @@ make_state_weights_map(std::shared_ptr<ForteOptions> options,
                     throw std::runtime_error("Mismatched number of weights in AVG_WEIGHT.");
                 }
                 for (int n = 0; n < nstates_this; ++n) {
-                    double w = (options->psi_options())["AVG_WEIGHT"][i][n].to_double();
+                    double w = py::cast<double>(avg_weight_list[n]);
                     if (w < 0.0) {
                         psi::outfile->Printf("\n  Error: negative weights in AVG_WEIGHT.");
                         throw std::runtime_error("Negative weights in AVG_WEIGHT.");
                     }
                     weights.push_back(w);
                 }
-            } else {
-                // use equal weights
-                weights = std::vector<double>(nstates_this, 1.0);
             }
             sum_of_weights = std::accumulate(std::begin(weights), std::end(weights), 0.0);
             state_weights_map[state] = weights;

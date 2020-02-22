@@ -327,7 +327,7 @@ void CASSCF::startup() {
                 std::make_shared<DiskDFJK>(ints_->basisset(), ints_->get_basisset("DF_BASIS_SCF"));
         } else {
             JK_ = JK::build_JK(ints_->basisset(), psi::BasisSet::zero_ao_basis_set(),
-                               options_->psi_options());
+                               psi::Process::environment.options);
         }
     }
     JK_->set_memory(psi::Process::environment.get_memory() * 0.8);

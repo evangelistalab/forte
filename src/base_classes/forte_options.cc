@@ -29,6 +29,7 @@
 #include "base_classes/forte_options.h"
 #include "base_classes/mo_space_info.h"
 #include "helpers/helpers.h"
+#include "helpers/string_algorithms.h"
 
 #include "psi4/libpsi4util/PsiOutStream.h"
 
@@ -70,19 +71,19 @@ const std::string& ForteOptions::get_group() { return group_; }
 
 void ForteOptions::add(const std::string& label, const std::string& type, py::object default_value,
                        const std::string& description) {
-    std::string label_uc = upper(label);
+    std::string label_uc = upper_string(label);
     dict_[label_uc.c_str()] = make_dict_entry(type, group_, default_value, description);
 }
 
 void ForteOptions::add(const std::string& label, const std::string& type, py::object default_value,
                        py::list allowed_values, const std::string& description) {
-    std::string label_uc = upper(label);
+    std::string label_uc = upper_string(label);
     dict_[label_uc.c_str()] =
         make_dict_entry(type, group_, default_value, allowed_values, description);
 }
 
 std::pair<py::object, std::string> ForteOptions::get(const std::string& label) {
-    std::string label_uc = upper(label);
+    std::string label_uc = upper_string(label);
     auto result = std::make_pair(py::cast<py::object>(Py_None), std::string("None"));
     if (dict_.contains(label_uc.c_str())) {
         auto dict_entry = dict_[label_uc.c_str()];

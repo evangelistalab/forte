@@ -131,7 +131,7 @@ void MASTER_DSRG::read_options() {
         eri_df_ = true;
     }
 
-    multi_state_ = (foptions_->psi_options())["AVG_STATE"].size() != 0;
+    multi_state_ = foptions_->get_gen_list("AVG_STATE").size() != 0;
     multi_state_algorithm_ = foptions_->get_str("DSRG_MULTI_STATE");
 
     do_dm_ = foptions_->get_bool("DSRG_DIPOLE");
