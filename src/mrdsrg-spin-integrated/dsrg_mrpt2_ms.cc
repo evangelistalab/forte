@@ -29,6 +29,7 @@
 #include <iomanip>
 
 #include "helpers/timer.h"
+#include "helpers/printing.h"
 #include "ci_rdm/ci_rdms.h"
 #include "fci/fci_solver.h"
 #include "sci/fci_mo.h"

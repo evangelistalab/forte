@@ -33,7 +33,7 @@
 #include "sparse_ci/determinant_substitution_lists.h"
 #include "forte-def.h"
 #include "helpers/timer.h"
-#include "helpers/helpers.h"
+#include "helpers/printing.h"
 
 #ifdef _OPENMP
 #include <omp.h>

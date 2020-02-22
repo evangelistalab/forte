@@ -26,10 +26,12 @@
  * @END LICENSE
  */
 
+#include "psi4/psi4-dec.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/vector.h"
-#include "helpers/helpers.h"
+
+#include "helpers/printing.h"
 #include "base_classes/rdms.h"
 
 #include "localize.h"

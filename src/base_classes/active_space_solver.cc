@@ -39,7 +39,7 @@
 #include "base_classes/forte_options.h"
 #include "base_classes/rdms.h"
 #include "base_classes/mo_space_info.h"
-#include "helpers/helpers.h"
+#include "helpers/printing.h"
 #include "integrals/active_space_integrals.h"
 #include "mrdsrg-helper/dsrg_transformed.h"
 #include "active_space_method.h"

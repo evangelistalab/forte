@@ -49,12 +49,6 @@ using namespace psi;
 
 namespace forte {
 
-void print_h2(const std::string& text, const std::string& left_separator,
-              const std::string& right_separator) {
-    outfile->Printf("\n\n  %s %s %s\n", left_separator.c_str(), text.c_str(),
-                    right_separator.c_str());
-}
-
 std::string to_string(const std::vector<std::string>& vec_str, const std::string& sep) {
     if (vec_str.size() == 0)
         return std::string();

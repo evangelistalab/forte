@@ -32,6 +32,8 @@
 
 #include "dsrg_mrpt.h"
 #include "helpers/timer.h"
+#include "helpers/printing.h"
+
 
 using namespace psi;
 

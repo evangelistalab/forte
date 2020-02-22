@@ -204,6 +204,8 @@ void AdaptiveCI::set_method_variables(
 }
 
 void AdaptiveCI::find_q_space() {
+    print_h2("Finding the Q space");
+
     local_timer build_space;
 
     // First get the F space, using one of many algorithms
@@ -627,7 +629,8 @@ void AdaptiveCI::diagonalize_P_space() {
     }
 
     if (!quiet_mode_) {
-        print_h2(cycle_h);
+        print_h1(cycle_h);
+        print_h2("Diagonalizing the Hamiltonian in the P space");
         outfile->Printf("\n  Initial P space dimension: %zu", P_space_.size());
     }
 
@@ -693,7 +696,7 @@ void AdaptiveCI::diagonalize_P_space() {
 }
 
 void AdaptiveCI::diagonalize_PQ_space() {
-    outfile->Printf("\n\n  ==> Diagonalize the Hamiltonian in the P + Q space <==");
+    print_h2("Diagonalizing the Hamiltonian in the P + Q space");
 
     num_ref_roots_ = std::min(nroot_, int(PQ_space_.size()));
 
@@ -771,6 +774,8 @@ bool AdaptiveCI::check_convergence() {
 
 void AdaptiveCI::prune_PQ_to_P() {
     // Step 5. Prune the P + Q space to get an updated P space
+    print_h2("Pruning the Q space");
+
     prune_q_space(PQ_space_, P_space_, PQ_evecs_, num_ref_roots_);
 
     // Print information about the wave function

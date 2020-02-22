@@ -4,7 +4,7 @@
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/dipole.h"
 
-#include "helpers/helpers.h"
+#include "helpers/printing.h"
 #include "helpers/timer.h"
 
 #include "master_mrdsrg.h"
