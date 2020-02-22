@@ -29,27 +29,15 @@
 #ifndef _forte_options_h_
 #define _forte_options_h_
 
+#include <pybind11/pybind11.h>
+
 #include "psi4/liboptions/liboptions.h"
 #include <string>
 #include <vector>
 
+namespace py = pybind11;
+
 namespace forte {
-
-// Types to store options
-
-// For the bool, int, and double types store:
-// ("label", default value, "description")
-using bool_opt_t = std::tuple<std::string, bool, std::string>;
-using int_opt_t = std::tuple<std::string, int, std::string>;
-using double_opt_t = std::tuple<std::string, double, std::string>;
-
-// For the string type stores:
-// ("label", default value, "description",vector<"allowed values">)
-using str_opt_t = std::tuple<std::string, std::string, std::string, std::vector<std::string>>;
-
-// For the array type stores:
-// ("label", "description")
-using array_opt_t = std::tuple<std::string, std::string>;
 
 /**
  * @brief The ForteOptions class
@@ -62,10 +50,43 @@ class ForteOptions {
     ForteOptions();
 
     /**
-     * @brief ForteOptions
-     * @param options a psi4 Options object
+     * @brief Set the group to which options are added
+     * @param group a string with the group name (default = "")
      */
-    ForteOptions(psi::Options& options);
+    void set_group(const std::string& group = "");
+
+    /**
+     * @brief Get the group to which options are added
+     * @return the group name
+     */
+    const std::string& get_group();
+
+    /**
+     * @brief Add a python object option
+     * @param label Option label
+     * @param type the option type
+     * @param default_value default value of the option
+     * @param description description of the option
+     */
+    void add(const std::string& label, const std::string& type, pybind11::object default_value,
+             const std::string& description);
+
+    /**
+     * @brief Add a python object option
+     * @param label Option label
+     * @param type the option type
+     * @param default_value default value of the option
+     * @param description description of the option
+     */
+    void add(const std::string& label, const std::string& type, pybind11::object default_value,
+             pybind11::list allowed_values, const std::string& description);
+
+    /**
+     * @brief Get a python object option
+     * @param label Option label
+     * @return a py::object containing the result
+     */
+    std::pair<py::object, std::string> get(const std::string& label);
 
     /**
      * @brief Add a boolean option
@@ -117,6 +138,8 @@ class ForteOptions {
      * @param description Description of the option
      */
     void add_array(const std::string& label, const std::string& description = "");
+    void add_int_array(const std::string& label, const std::string& description = "");
+    void add_double_array(const std::string& label, const std::string& description = "");
 
     /**
      * @brief Get a boolean option
@@ -143,6 +166,13 @@ class ForteOptions {
     std::string get_str(const std::string& label);
 
     /**
+     * @brief Get a general python list
+     * @param label
+     * @return a py list
+     */
+    py::list get_gen_list(const std::string& label);
+
+    /**
      * @brief Get a vector of int option
      * @param label Option label
      */
@@ -155,13 +185,16 @@ class ForteOptions {
     std::vector<double> get_double_vec(const std::string& label);
 
     /**
-     * @brief If an option is changed
-     * @param label Option label
+     * @brief Register the options with Psi4's options object
+     * @param options a Psi4 option object
      */
-    bool has_changed(const std::string& label);
-
-    /// Add the options to psi4's options class
     void push_options_to_psi4(psi::Options& options);
+
+    /**
+     * @brief Read options from a Psi4's options object
+     * @param options a Psi4 option object
+     */
+    void get_options_from_psi4(psi::Options& options);
 
     /**
      * @brief Generate documentation for the options registered with this object
@@ -174,16 +207,16 @@ class ForteOptions {
      */
     void update_psi_options(psi::Options& options);
 
-    /// temporary solution for the option array problem
-    psi::Options& psi_options() { return psi_options_; }
+    /**
+     * @brief Return a python dictionary with all the options registered
+     */
+    pybind11::dict dict();
+
+    void set_dict(pybind11::dict dict) { dict_ = dict; }
 
   private:
-    std::vector<bool_opt_t> bool_opts_;
-    std::vector<int_opt_t> int_opts_;
-    std::vector<double_opt_t> double_opts_;
-    std::vector<str_opt_t> str_opts_;
-    std::vector<array_opt_t> array_opts_;
-    psi::Options psi_options_;
+    pybind11::dict dict_;
+    std::string group_ = "";
 };
 } // namespace forte
 
