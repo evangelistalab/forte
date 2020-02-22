@@ -31,6 +31,8 @@ def register_driver_options(forte_options):
     forte_options.add_str('DERTYPE', 'NONE', ['NONE', 'FIRST'], 'Derivative order')
 
     forte_options.add_double("E_CONVERGENCE", 1.0e-9, "The energy convergence criterion")
+    forte_options.add_double("D_CONVERGENCE", 1.0e-6, "The density convergence criterion")
+
 
     forte_options.add_str(
         'ACTIVE_SPACE_SOLVER', '', ['FCI', 'ACI', 'CAS'],
