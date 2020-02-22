@@ -66,6 +66,8 @@ def register_driver_options(forte_options):
 
     forte_options.add_str("ACTIVE_REF_TYPE", "CAS", "Initial guess for active space wave functions");
 
+    forte_options.add_int("PRINT", 0,"""Set the print level.""")
+
 
 def register_avas_options(forte_options):
     forte_options.set_group("AVAS")
