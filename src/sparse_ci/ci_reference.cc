@@ -72,10 +72,7 @@ CI_Reference::CI_Reference(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<Fo
     subspace_size_ = options->get_int("ACTIVE_GUESS_SIZE");
 
     // Reference type
-    ref_type_ = "CAS";
-    if (options->has_changed("ACTIVE_REF_TYPE")) {
-        ref_type_ = options->get_str("ACTIVE_REF_TYPE");
-    }
+    ref_type_ = options->get_str("ACTIVE_REF_TYPE");
 
     // First determine number of alpha and beta electrons
     // Assume twice_ms =( Na - Nb )

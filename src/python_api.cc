@@ -76,7 +76,9 @@ void export_SparseCISolver(py::module& m);
 void export_ForteOptions(py::module& m) {
     py::class_<ForteOptions, std::shared_ptr<ForteOptions>>(m, "ForteOptions")
         .def(py::init<>())
-        .def(py::init<psi::Options&>())
+        .def("set_dict", &ForteOptions::set_dict)
+        .def("dict", &ForteOptions::dict)
+        .def("set_group", &ForteOptions::set_group, "Set the options group")
         .def("add_bool", &ForteOptions::add_bool, "Add a boolean option")
         .def("add_int", &ForteOptions::add_int, "Add an integer option")
         .def("add_double", &ForteOptions::add_double, "Add a double option")
@@ -89,13 +91,18 @@ void export_ForteOptions(py::module& m) {
                                      const std::vector<std::string>&, const std::string&)) &
                  ForteOptions::add_str,
              "Add a string option")
-        .def("add_array", &ForteOptions::add_array, "Add an array option")
+        .def("add_int_array", &ForteOptions::add_int_array, "Add an array of integers option")
+        .def("add_double_array", &ForteOptions::add_double_array, "Add an array of doubles option")
+        .def("add_array", &ForteOptions::add_array, "Add an array option for general elements")
         .def("get_bool", &ForteOptions::get_bool, "Get a boolean option")
         .def("get_int", &ForteOptions::get_int, "Get an integer option")
         .def("get_double", &ForteOptions::get_double, "Get a double option")
         .def("get_str", &ForteOptions::get_str, "Get a string option")
         .def("get_int_vec", &ForteOptions::get_int_vec, "Get a vector of integers option")
-        .def("push_options_to_psi4", &ForteOptions::push_options_to_psi4)
+        .def("push_options_to_psi4", &ForteOptions::push_options_to_psi4,
+             "Push the options list to Psi4")
+        .def("get_options_from_psi4", &ForteOptions::get_options_from_psi4,
+             "Read the value of options from Psi4")
         .def("update_psi_options", &ForteOptions::update_psi_options)
         .def("generate_documentation", &ForteOptions::generate_documentation);
 }
@@ -181,8 +188,12 @@ PYBIND11_MODULE(forte, m) {
     m.def("print_method_banner", &print_method_banner, "text"_a, "separator"_a = "-",
           "Print a method banner");
     m.def("make_mo_space_info", &make_mo_space_info, "Make a MOSpaceInfo object");
-    m.def("make_mo_space_info_from_map", &make_mo_space_info_from_map,
-          "Make a MOSpaceInfo object from a map of space name (string) to a vector");
+//    m.def("make_mo_space_info_from_map", &make_mo_space_info_from_map,
+//          "Make a MOSpaceInfo object from a map of space name (string) to a vector");
+    m.def("make_mo_space_info_from_map", &make_mo_space_info_from_map, "ref_wfn"_a,
+          "mo_space_map"_a, "reorder"_a = std::vector<size_t>(),
+          "Make a MOSpaceInfo object using a dictionary");
+
     m.def("make_aosubspace_projector", &make_aosubspace_projector, "Make a AOSubspace projector");
     m.def("make_avas", &make_avas, "Make AVAS orbitals");
     m.def("make_fragment_projector", &make_fragment_projector,

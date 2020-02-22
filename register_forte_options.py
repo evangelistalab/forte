@@ -533,8 +533,6 @@ def register_davidson_liu_options(forte_options):
 def register_asci_options(forte_options):
     forte_options.add_double("ASCI_E_CONVERGENCE", 1e-5, "ASCI energy convergence threshold")
 
-    forte_options.add_int("ASCI_MAX_CYCLE", 20, "ASCI MAX Cycle")
-
     forte_options.add_int("ASCI_TDET", 2000, "ASCI Max det")
 
     forte_options.add_int("ASCI_CDET", 200, "ASCI Max reference det")

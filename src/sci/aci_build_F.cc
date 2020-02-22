@@ -737,7 +737,7 @@ double AdaptiveCI::get_excited_determinants_batch_vecsort(
     const size_t n_dets = P_space.size();
 
     int nmo = as_ints_->nmo();
-    double max_mem = options_->get_double("ACI_MAX_MEM");
+    double max_mem = options_->get_int("ACI_MAX_MEM");
     double aci_scale = options_->get_double("ACI_SCALE_SIGMA");
 
     // Guess the total memory needed to store all singles and doubles out of all dets
@@ -760,7 +760,7 @@ double AdaptiveCI::get_excited_determinants_batch_vecsort(
     int nbin = nruns;
     outfile->Printf("\n  Setting nbin to %d based on estimated memory (%6.3f MB)", nbin, guess_mem);
 
-    if (options_->has_changed("ACI_NBATCH")) {
+    if (options_->get_int("ACI_NBATCH") > 0) {
         nbin = options_->get_int("ACI_NBATCH");
         outfile->Printf("\n  Overwriting nbin to %d based on user input", nbin);
     }
@@ -872,7 +872,7 @@ AdaptiveCI::get_excited_determinants_batch(SharedMatrix evecs, SharedVector eval
     const size_t n_dets = P_space.size();
 
     int nmo = as_ints_->nmo();
-    double max_mem = options_->get_double("ACI_MAX_MEM");
+    double max_mem = options_->get_int("ACI_MAX_MEM");
     double aci_scale = options_->get_double("ACI_SCALE_SIGMA");
 
     size_t nocc2 = nalpha_ * nalpha_;
@@ -887,7 +887,7 @@ AdaptiveCI::get_excited_determinants_batch(SharedMatrix evecs, SharedVector eval
     int nbin = nruns;
     outfile->Printf("\n  Setting nbin to %d based on estimated memory (%6.3f MB)", nbin, guess_mem);
 
-    if (options_->has_changed("ACI_NBATCH")) {
+    if (options_->get_int("ACI_NBATCH") > 0) {
         nbin = options_->get_int("ACI_NBATCH");
         outfile->Printf("\n  Overwriting nbin to %d based on user input", nbin);
     }
