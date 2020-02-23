@@ -31,7 +31,7 @@ def test_sparse_ci():
 
     options = psi4.core.get_options()
     options.set_current_module('FORTE')
-    forte_options.update_psi_options(options)
+    forte_options.get_options_from_psi4(options)
 
     # Setup forte and prepare the active space integral class
     mo_space_info = forte.make_mo_space_info(wfn, forte_options)
